@@ -1,0 +1,2484 @@
+PROTOHLGS DOCUMENTATION
+
+
+============================================================================================================================================
+============================================================================================================================================
+============================================================================================================================================
+---IMPORTANT VISUAL STUDIO NOTE:
+The project can now automatically copy the DLL's to your Half-Life mod folder (AbsoluteZero?) and run the game on compile for convenience.
+In Visual Studio, there are four places that need to point to your installed game directory.
+1. In the solution explorer (open with the "View" tab at the top of visual studio, "Solution Explorer" if the window is missing)...
+   Right-click the "cl_dll" project and pick "Properties".
+   See the left-hand menu for "Configuration Properties", down to "Debugging".
+   In the right-pane, look to the "Command" and "Working Directory" lines. Change these to refer to your own hl.exe file and folder it is in, respectively.
+2. Go down to "Build Events" in the left-pane. See the "Post-Build Event" (may need to open Build Events).
+   See the "Command Line" line to the right. It is one line but may be hard to look at. Click once in the box to the right and hit the arrow on the far right. Click "<Edit...>" below.
+   Now change this directory to refer to the place to place the client.dll (your game folder up to the "AbsoluteZero" or whatever you call it)
+   Should end in "/cl_dlls/client.dll".
+3. Repeat step 1. for the "hl" project in the solution explorer.
+4. Repeat step 2. for the "hl" project (properties probably still open). Of course with "/dll/az.dll" at the end of this path instead.
+   
+If this is set up right, compiling the project (with no errors) should automatically start the game with the up to date DLLs placed in.
+Make sure by deleting your DLL's manually in your game mod folder ("cl_dlls/client.dll" and "dll/az.dll") and compiling. Check the version with, in console:
+"protoDateC" and S, and "protoVersionC" and S.  Autocomplete should help.
+
+The project's version.h file lets you change the reported "version" (a letter typically) to prove the up-to-date DLLs made it over too.
+
+
+============================================================================================================================================
+============================================================================================================================================
+============================================================================================================================================
+
+DEBUG FEATURE. In debug or release builds, if you're having startup trouble, or think CVars aren't getting applied clientside, make a file called "helpme.txt", can remain empty, in your game folder (something like AbsoluteZero, some folder within .../Half-Life/). The presence of this file alone turns on some printouts that may help figure things out. Note that some other printouts still require the "enableModPrintouts" CVar to be 1.
+
+
+
+
+
+
+
+
+HELPFUL: every entity (CBaseEntity or descendent) has a "edict()" instance method.
+         "ENT( yourEntityOrDescendent )" is also helpful.
+
+ATTENTION: Looks like the "UTIL_EmitAmbientSound" can also play sentences.
+
+Also, setting a monster's "pev->nextthink" to 0 may sound like a neat way to make it play instantly (after all, we're certianly past 0 at any point of time after start), but this actually disables the think method so that it cannot be called.
+To set a monster's think method to be called instantly, just set pev->nextthink to 0.1 or gpGlobals->time.
+
+MONSTER THINK LOGIC:
+For monster think logic, the core is "MonsterThink()" as seen in monsters.cpp. It calls RunAI() which can be seen in monsterstate.cpp. RunAI then calls FCheckAITrigger() (see if something about this monster satisfies a map condition, such as the agrunts dying in one map to signify spawning more and opening a door), PrescheduleThink() (has no logic in the base monster class, to be used or not in child classes), and then MaintainSchedule() (general logic to continue this schedule task by task or pick a new one).
+
+Many existing monsters override PrescheduleThink(), but I override MonsterThink() instead. More control this way, but understand the monster is braindead and animationless if CBaseMonster::MonsterThink() (or whatever the parent class is in front) goes uncalled.
+
+
+
+
+
+
+
+GLITCH FOUND IN HALF LIFE:
+Fire (left-mosue button tested) quickly. Click very fast or hold a little, and don't move the mouse at all.
+If you do it right, the weapon will continue firing even though you released the button.  Moving the mouse at all will make it stop firing.
+
+
+
+NOTE: The Half-Life SDK, as-is, came with an issue: the solution for CL_DLL includes "util.h" for CL_DLL, even though there isn't a util.h in the CL_DLL folder.
+It is a missing refernce. Removed.
+
+Also for the CL_DLL solution, made the "cl_dll" directory a default include. no idea why it wasn't but "dlls" was. Mistake?
+
+Looks like the as-is was using the "C/C++/Additional Include Directories" feature, not the "VC++ Directories/Include Directories" like I thought.
+
+There is now a more viable printout method available.
+In most clientside or serverside spots alike, use "easyPrint" or "easyPrintLine" (includes a newline at the end without being told).  Treat this like "printf" in C.
+Example:   easyPrintLine("some constant text: %d, %.2f, %s", 4, 7.2, "othertext")
+Result:    some constant text: 4, 7.20, othertext   (carriage return here)
+
+***Further note: this "easyPrintLine" requires "enableModPrintouts" to be on, which may not typically be the case for most users. For messages that must make it like describing a recent command, use "easyForcePrintLine" instead.
+
+
+
+
+A few sounds:
+~m4a1_silencer_on & off:   Counter-Strike Zero (glock silencer add / remove sounds)
+~Silencer.wav:         uh, some voice with that arcade-like announcer?  I dunno.
+
+
+
+Apparently, the player model's color can be customized in real time through CVars "bottomcolor" and "topcolor", defaults of 0 and 30 accordingly. There is probably a CVar for player decal choice & color too out there.
+For decals, the cl_logocolor is used. Any of these values is suitable (default is #Valve_Orange ):
+#Valve_Blue, #Valve_Brown, #Valve_Dkgray, #Valve_Ltblue, #Valve_Ltgray, #Valve_Green, #Valve_Orange, #Valve_Red, #Valve_Yellow
+(It looks like the logo must still be set in the Multiplayer tab in Options to take effect at all)
+
+
+mp_decals is a CVar that determines what to change r_decals to at the start of a multiplayer game. r_decals has an effect ingame and in real time with edits; mp_decals is merely copied to it to take effect. See config.cfg or userconfig.cfg to edit mp_decals.
+Also, it appears an r_decals setting of 90 is actually 1. It is as though the real decal limit subtracts 90 from r_decals and makes that the limit. For instance, an r_decals setting of 100 results in a limit of 10 decals before the oldest disappears. I bring this up because an unaltered NGHL half-life install sets mp_decals (and thus r_decals) to 90, or effectively 1 decal.
+
+
+
+NOTICE - client calls CVar creation through CVAR_CREATE, and offers CVar name, as well as options for initial value and flags. Returns a pointer to the new CVar.
+         server calls CVar creation through CVAR_REGISTER and takes a pointer to a "cvar_t" type variable (made up of name, default value, optional flags) as a parameter.
+             The newly created CVar is not returned; it must be acquired separately.
+
+
+			 
+The FL_WORLDBRUSH flag for pev->flags, added through "pev->flags |= FL_WORLDBRUSH;", looks interesting. 
+func_break.cpp says it will block all tracelines.
+It looks like in the case of unbreakable glasss, it detects glass as unbreakable by doing an "IsBreakable" check and a check for transparency (rendermode other than kRenderNormal).
+If so, this breakable gets the FL_WORLDBRUSH flag so that linetraces that ignore glass aren't even allowed to pass. Probably to prevent monsters with ranged attacks from trying to futily use them through unbreakable glass.
+
+
+GENERAL POINTER ABOUT TRACELINES - Don't trust that pHit being non-null alone is a good indication that the line trace necessarily hit something, check flFraciton too to see if it is 1 for no interrupting blocking object along the trace. Traceline results are rarely actually NULL, but at least report colliding with "Worldspawn", even if they clearly still don't collide with anything (nothing in the way from point A to point B, not even anything invisible).
+The point is, be sure to check if the hit entity "pHit" is worldspawn first, and, if so, check to see if flFraction is 1. If it is, that means it is indeed the case nothing was actually hit and for some reason "Worldspawn" also consists of the air the trace ended at.
+			 
+
+			 
+			 
+CINEMATICS - monsters may have a linked "scripted_sequence" object, called the "CCineMonster" class in C++ code (really) in the form of a "m_pCine" instance variable. Monsters in the MONSTERSTATE_SCRIPT state can check their associated "m_pCine" for other information like whether it is interruptible or not (spawnflag 32, 5th power of 2, AKA "SF_SCRIPT_NOINTERRUPT" in C++ code).
+			 
+			 
+			 
+			 
+			 
+			 
+			 
+
+			 
+===================================================================================================================
+
+QUICK HELP:
+in console...
+type "fixcvar" or "fixcvars" to reset most CVars to their default values.
+type "fixprecache" or "fixcache" to make "precacheAll" and "soundSentenceSave" become "1".
+~Should only be an issue if done since a precache-related error in-game, but, to be safe restart the game (close / re-launch)
+ after doing this.
+
+CVar "nothingHurts" can be good for testing AI.  Use 1 to make nothing deal damage to one another, and 2 to make the player an exception to that rule for convenience (0 returns to normal)
+
+
+SCRIPT: hardware check:
+IEngineStudio.IsHardware()       ~returns a bool, so it can be used like so:
+if ( IEngineStudio.IsHardware() )
+{ ...
+
+Beware of using "UTIL_drawBox" too much (or just anything line-drawing, that ends up going to "TE_ShowLine").  If used every single frame or on way too many monsters (just, the point is, if you draw too many lines), calls will eventually start to get completely ignored, making things very confusing for update-checks.
+Instead, try only drawing lines at intervals (1 sec?), or at solid events that happen for not many frames at a time / without time inbetween.
+
+
+It seems as though more sounds can be played in "CHAN_STREAM" than in most others (namely, CHAN_WEAPON).
+Consider delegating sounds to CHAN_STREAM if the current channel seems to be unfit for playing a certain number of sounds at the same time, or some sounds interrupt others too easily.
+
+Collision getting you down?  Try messing with "SetObjectCollisionBox" for collision that affects only places that register shots in a model and don't block other movable entities.
+
+
+In places that are compiled by the server / client separately (like weapons.cpp or egon.cpp, or all weapons for that matter), you should try to
+refer to CVars in server-side only blocks (denoted by "#ifndef CLIENT_DLL", or "if not defined, clientside").
+Why referring to CVars in client-side causes a crash, despite getting CVars clientside by GUI being just fine.  Why?  Potatoes.  Potatoes.  Potatoes.  Fucking.  Potatoes.
+
+
+channel priority (incomplete)
+~this is poorly understood.  Even telling what channel has pure 'priority' (play nothing / don't replace anything from this channel if a lower channel requests a sound) is difficult:
+
+CHAN_WEAPON			seems commonly used, probably relatively low priority.
+CHAN_VOICE			high priority.
+CHAN_ITEM			even higher priority (at least it doesn't get block by "CHAN_VOICE"'s aggressiveness).
+CHAN_BODY			uncertain.  Probably low.
+CHAN_STREAM			seems unused (as of retail, is used by the mod).  Good priority, can store a lot of sounds at a time, but still succumbs to voice & item.
+CHAN_STATIC			seems to be used almost (if not completely) exclusively by the player's voice.  Probably top priority (those messages are meant to be important).
+
+
+channel_item > channel_voice >  channel_weapon & channel_stream
+
+===================================================================================================================
+
+added commands (search for "givedist" & "givelook" in client.cpp for the workings):
+givedist - works like "give", but spawns something a distance from you (see "offsetgivedistance" below).
+givelook - works like "give", but spawns something where your cursor intersects with a surface with a vertical offset (see "offsetgivelookvertica"l below).
+ent_create - same as "givelook".  Provided as an alias for those familiar with the Source 2 engine, since the result seems similar.
+
+removeFireFly - command, just call on its own.  Removes the glowing yellow dots from monsters that currently have it.
+showBounds - command.  Do when targeting a particular NPC to display its two types of main bounds (smaller collision and larger hit bounds) as two separate red boxes of dark red dotted lines.  These boxes last for 30 seconds and do not move with the entity.
+showBoundsAll - command.  Applies to all entities in a fair radius of the player.  Be careful, as too many entities will cause it to fail.  Best use "showBounds" individually when possible.
+
+sneaky - command; give no other number (just type "sneaky").  Toggles both player-sound-mute (AKA, impulse 105) and calls "notarget".  Isn't very smart, so just stick to using "sneaky" instead of either of the others.
+
+autoSneaky - Mode CVar, affecting the two settings related to the AI detecting the player (notarget: the AI can't see the player when on, and "noSound": the AI can't hear the player when on):
+-1: force noTarget and "noSound" to be off (player makes sound to the AI) immediately and at startup.
+0: no effect, left as it is from the recent save (off by default).  DOES NOT REVERT TURNED-ON NOTARGET / NOSOUND ALONE.
+1: force noTarget and "noSound" to be on immediately and at startup.
+~Changing this setting has an effect immediately, except for = 0.
+~Note that this is meant to act as solid memory between all saving / loading for the two AI cheats.  Using "sneaky" in addition to autoSneaky is fine, but could get confusing if you forget.  When in doubt, "fixCvar" works to turn it off too, or set autoSneaky to -1 to forget in all saves at startup (re-save needed to seal the deal).
+
+myCoords - command; print out the player's origin and angles as X,Y,Z coordinates.
+entCoords, monsterCoords - Find the thing the player is looking at (crosshair) and print out its coords.  Must be an entity / monster.
+remove, removeEnt, entRemove - mimmicks impulse 203, without the possible "can't take damage" restriction.  Removes the entity / monster the player is looking at from the game.  Does not count as "provoking" provokables.
+
+setMyHealth, getMyHealth - set / get health of the player.  To set health, provide a number too (separated by space).  Values between 1 and 100 (inclusive) advised.
+setEntHealth, getEntHealth - set / get health of the entity / monster in the player's crosshairs.  Provide a number to set the health of this entity.  Leave it out to get the health / maxhealth of the entity instead.
+~Example:
+~entHealth      - may tell you      monster_barney's health: 27 monster_barney's maxHealth: 35"
+~entHealth 33   - sets this monster_barney's health to 33.
+~Also has keywords for setting:     "setEntHealth full" restores ent health to max health, "setEntHealth dead" sets ent health to 0.
+
+~Commands "coords" and "health", inspecific to player ("my") or other monster ("ent") will check to see if there is something in the crossharis.  If so, applies to that. If not, applies to self.
+~Can still apply to odd things like "door" entities!  Easy mistake.
+
+hitbox, showhitbox
+~Use this command to show info about the monster's (sub) hit boxes. They are attached to bones on the monster (moving with changes in rotation / position) and used to further fine-tune collision for raycasts, not movement collision. See them with "r_drawentities 3" or "r_drawentities 4". "r_drawentities 1" is back to normal.
+~If given no number, shows all boxes. If given a number separated by a space, assumes it is for that numbered box (the order seen in the monster's list of hitboxes).
+~Special names "hitboxbone" and "hitboxgroup" use this input number to show hitboxes of those particular properties only.
+
+drawpath / drawpathall / drawpathstop
+~Use "drawpath" with an NPC targeted in the crosshairs to designate them for drawing a path on any movement.
+~Alternatively, type a monster ID after the command to pick a monster of that ID instead, if it exists.
+~Not to be confused with the "drawDebugPathfinding" CVar which draws for all NPC's but only on generating a new route, not every movement frame.
+~Use "drawpath" on the same NPC to disable drawing their path at movement.
+~"drawpathall" and "drawpathstop" sets "drawpath" for all monsters in a wide area accordingly.
+
+drawfov / drawfovall / drawfovstop
+~Similar to drawPath, use with a number to suggest a monster of that ID, or don't include a number to try to find a monster in the crosshairs. This designates that monster for drawing their FOV as two green lines for left and right extents. A blue line represents the exact direction it is facing.
+
+
+offsetgivedistance - number.  The distance to spawn something away from where you are looking.  Beware that too great a distance may spawn something under the world if you look down too far.
+offsetgivelookvertical - number.  The vertical offset in spawning something with "givelook", used in case aiming square at the ground still causes something to fall through.  Default is 2.  For stationary / non-gravity-affected objects, consider trying 0.  Increasingly positive values bring higher above ground.
+
+note that the above CVars only affect givedist & givelook respectively.
+
+wpn_glocksilencer - number, MODEVAR, 0, 1, 2.  Regardless, now right-clicking does not rapid-fire (does nothing if "wpn_glocksilencer" is off).  If this CVar is on, right-clicking initiates the silencer-toggle animation (attach or detach).
+~wpn_glocksilencer can also be "2" to force silencer availability at all times (will be indifferent of having picked up a pick-up yet or not).
+ 
+hud_logo - number, boolean.  If on, shows a logo similar (possibly identical) to that shown in some alpha / e3 (not sure) demos.  This feature was present in the game files all along, but I could not find a way to turn it on.  Connected logo visibility to the cvar.
+hud_brokentrans - number, boolean.  Meant to emulate the broken transparency effect seen in some alphas / e3's (the faded-black appearing in front of most rendered GUI text and graphics, likely in front because it makes the numbers themselves darker than the primary colors present in retail otherwise).  Unfortunately, the closer to black a color becomes, the more transparent (up to invisible) it becomes, so the best I could get was a faded light-gray.
+testVar - unused, but a string.  Planned on use for receiving the output of simple tests, more viable methods discovered.
+
+
+hideFP, hideAll, hideMyShit - sets drawViewModel to 0 and drawHUD to -1 (crosshair block too). Effectively hides all drawn graphics, good for screenshots.
+
+showFP, showAll, showMyShit - sets drawViewModel to 1 and drawHUD to 1. Reverts the above.
+
+
+
+
+CHEATS - several new cheat-related vars are available.  Try them.
+cheat_infiniteclip - when on, clips should never decrease.
+cheat_infiniteammo - when on, reloads will not deplete ammo.  (Note that either of these two vars being on will make non-clip weapons like the gauss or hand grenades endless).
+cheat_minimumfiredelay - when on, the "cheat_minimumfiredelaycustom"'s value is used as the delay between firing a weapon.  Some weapons customize this a bit (satchel primary fire, throwable bugs, RPG, and hornet primary fire) to avoid projectiles getting stuck mid-air at the default value, but most don't.
+cheat_minimumfiredelaycustom - this is not simply "on or off".  It is a float, preferrably small, to replace the default delay between most weapon fire times ONLY IF "cheat_minimumfiredelay" is on.
+
+cheat_nogaussrecoil - when on, the gauss secondary fire does not cause recoil.  Useful with the minfiredelay being on with the gauss's secondary fire, as it will throw you around very fast (may be desirable sometimes).  This is unaffected by mass-cheat edit terms.
+
+cheat_iwantguts (0) - when on, gibs (guts) spawned will fly towards you 100% of the time, given nothing is in the arc's way. BLOOD FOR THE BLOOD GOD.
+
+animationFramerateMulti (1) - ADJUSTABLE. When 1, no effect. When below 1, all monster anims are slower. When above 1, all monster anims are faster. This is a multiple applied to every monster's animation framerate.
+
+Some common heplful mass-cheat edits:
+everything, gimmie, gimmy, gimmi, fuckmyshitup 			- get all weapons, ammo, and a health refill in a way that can't make you get stuck to unused pickup-ables (like impulse 101).
+neverrunout, supergun					- infinite ammo and clip-size.
+cheat, allcheats, fuckeverything, iamshivagodofdeath 	- same as above, but also includes the minimumfiredelay cheat.
+minimumdelay, dakka, neverenoughdakka 			- minimumfiredelay only.
+nocheat, nocheats, disablecheats			- disable all cheat-related vars.
+
+fixcvar(s), resetcvars, unfuckup, unfuckupcvars		- reset most Mod-created CVars to their defaults.  Also prompts about a few sensitive ones.
+
+fixprecache, fixcache, cachefix, precachefix		- set "precacheAll" to 1 and "soundSentenceSave" to 1.  Separate from "fixcvar" in case these vars' current values are preferred.
+
+thealmightybarnacle 					- turns off a hidden cheat that allows barnacles to eat any living thing, be it lowly cockroaches, gargantuas, apaches, or even Nihilanth himself.  Heck, even other barnacles (yo dawg,).  Type again to disable the cheat.  Should be remembered per save file.
+
+peaceOut (0) - BOOL. Cheat. When on, makes all monsters lose the will to fight, no matter how little sense it makes.
+
+drawViewModel (1) - BOOL. When off, the player's view model will not be rendered. Does not include effects such as ejected brass.
+
+drawHUD (1) - BOOL + MODES. When off, the player HUD will not be rendered. Has some other modes. All listed. Note that this overrides a "crosshair" CVar of 1.
+0: off (no HUD, no crosshair)
+1: normal (HUD + Crosshair)
+2: HUD only (no crosshair)
+3: crosshair only (no HUD)
+
+
+
+New NPCs:
+
+Mr. Friendly - "monster_friendly", or "friendly".
+
+Scans for corpses and areas outside of the player's sight. Eats them and makes barnacle chewing noises.
+
+Uses the vomit animation for eating for now.
+
+Piss one off and it will try to bring you closer with the double-whip. When close up, it can vomit, making a low-pitched scientist scream. This rapidly cuts armor.
+(May need some particle effect or graphical cue to show it is vomiting beside just the vomiting gesture)
+
+
+Kingpin - "monster_kingpin"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+MORE CVARS:
+gaussRecoilSendsUpInSP - when on, the gauss secondary fire can send the player upwards too, just like in multiplayer.
+
+hud_version - binary.  when 1, simulates the E3 GUI (yellow, somewhat close to release in functionality). when 0, looks like the more noticably different green pre-E3.  Note that both have many features in common, but pre-E3 lacks the bottom-left damage-status indicators.
+preE3UsesFailColors - binary.  When 1, and "hud_version" is 0 (pre-E3), the GUI's weaponselect will shade empty weapons as red instead of green.
+E3UsesFailColors - binary.  Same as above but for E3: shade empty weapons red.
+
+hud_batterydraw - binary.  when on, the battery's fill-line is drawn somewhere between the top and bottom (horizontally).  If 0, the fill-line is drawn somewhere between the left & right (vertically).
+
+canShowWeaponSelectAtDeath - binary.  Preserves an archaic bug from some builds.  When on, weapon select and some other pieces of GUI will continue to be available in weapon select (has no functionality though).
+
+endlessFlashlightBattery - binary.  Probably seems like common sense (the flash light now lacks an energy meter), but it does start out as 1.
+
+forceDrawBatteryNumber - binary.  If on, a number is drawn in the current GUI (E3 or pre-E3)'s style above the battery, portraying its value (remaining battery).  For debugging; more accurate than "uh, 1/3" or "almost empty?".
+
+canapplyDefaultFOV - binary.  Generally not useful, but change to "1" to force the screen to update the default FOV with the screensize.  Since the screen can't size without a restart, it is not too useful.
+
+timedDamageIgnoresArmor - binary.  If on, all timed damage will ignore the player's armor, dealing damage to health and flashing the screen (some does not when armor is not ignored).
+timedDamageEndlessOnHard - binary.  If on and "skill" is set to 3 (hard difficulty), curable damages never decrease.  (technically, they never decrease beyond ONE step, so that some common canister logic still works).  Still endless.
+
+
+
+canDropInSinglePlayer - binary. If on, the player can "drop" the currently equipped weapon in single player ("drop" in console), just like in multiplayer.
+
+playerForceCrossbowMode (1) - MODEVAR. When non-zero, forces the crossbow to behave like in singleplayer or multiplayer. 
+0 - no change; up to the real mode.
+1 - forces single player. 
+2 - forces multiplayer. Sniper fire when zoomed in, explosions when zoomed out.
+
+
+tripmineAnimWaitsForFinish - binary.  If on, the delay between placing tripmines will be long enough to show the whole animation (new segment added + the old).
+
+disablePauseSinglePlayer (0) - BOOL. If 1, pausing in single player immediately unpauses the game engine to mimic a multiplayer pause (game still runs behind the console / menu).
+
+itemBatteryPrerequisite - binary.  If on, canisters (except adrenaline) and long jump require at least one battery charge (suit / HEV battery, armor battery, same idea) to function at all.  No charge is removed, it is just required.
+
+skipTFDamageTextures - binary.  If on, some damage-indicator texture indexes are skipped so that the new one may be seen in the expected place.  I do not expect this to change, but the CVAR is here if these slots should NOT be skipped.
+~better explanation:  There are some cases where sprites are expected to be loaded in a particular order and aren't really referred to by name.  The most common example of this would be numbers, like "m_HUD_number_0".  Where are the rest of "m_HUD_number_#"?  Implied by taking "m_HUD_number_0" and adding 1 to get "m_HUD_number_1" and so on.  Look at "<half life dir>/protoHLGS/sprites/hud.txt", the list of all loaded sprites.  Many entries are the same as their names across client-side variables (in this case, search "number_0", removing "m_HUD").  The next numbers are loaded one-after-the-other, so this is why this system works.  If number_0's index is 48, one could just acquire this index and then add to it go reasonably get the other numbers then.
+~So what does this mean for damage indicators?  They happen to be loaded in a similar way.  "dmg_bio" is like the "zero": it is the first.  However, by script logic, it seems to be entirely skipped, as it seems to just refer to that anthrax icon like "poison" does.  Anyways, that is unimportant: consider "dmg_poison" the "zero" point.  So the statuses are loaded one-by-one, and the timed damage the player can receive are also stored in this same order.  So, it is a similar process: get my damage type (like #3), add that as an offset to "dmg_poison"'s index, get the right sprite.
+~So what's the problem?  Search in "health.h" for "//tf defines".  These are some icons that are not loaded in hud.txt (damage indicator icons end with the shock, then, before I added the bleeding icon, some numbers start).  So, if ever anticipating the TF2 damage icons, one must factor in these missing indexes that have NOTHING in them if they are just skipped.  This is what the CVar is for:  should an index go beyond dmg_shock, the image offset will be lowered by 5 so that, after skipping the TF damages (game logic can still sift through them), upon reaching "dmg_bleed", it picks up the right image and not, say, dmg_poison + 12 (where it would be if the TF damage indicators were there), but dmg_poison + 8: dmg_bleed.
+
+playerExtraPainSoundsMode (2) - MODEVAR. Only applies if mutePlayerPainSound is off.
+0 - no change. Only "PainSound" works.
+1 - can call for an alternate way of pain sound chances with "PainChance". Mutually exclusive of the usual "PainSound" called for taking damage.
+    PainChance has a 3/5 chance of picking one of the same 3 pain sounds.
+	2/5 chance of playing nothing.
+2 - only "PainChance" works, "PainSound" turned off. Makes more sense.
+
+weaponSelectSoundPlayOnMousewheel - binary.  If on, the weapon-select sound for scrolling through weapons of an open category plays for any new selection  when using the mouse wheel (usually silent).
+
+timedDamageDisableViewPunch - binary.  If on, timed damage's continued pulsing damage will never punch the view (cause the sudden offset that softly goes back to normal).
+
+batteryDrainsAtDeath - binary.  If on, battery drains at death (does not apply if revivable by non-gibbing and having an antidote).
+
+batteryDrainsAtAdrenalineMode - 0, 1, 2, 3.  0 does nothing. 1 drains battery at incapaciation (out of health).  2 drains at adrenaline use.  3 drains at revive.
+
+timedDamageReviveRemoveMode - 0, 1, 2, 3.  0 does nothing. 1 removes timed damage at incapacitation (out of health).  2 removes timed damages at adrenaline use. 3 removes timed damages at revive. 
+timedDamageDeathRemoveMode - 0, 1, 2.  0 does nothing.  1 remvoes timed damage immediately at death.  2 remvoes timed damage at death (but less strictly; they will still flash for a little while).
+
+
+r_shadows - restored variable from previous builds.  Turn shadows on.  Seems to be workin in pre-steampipe release, not steampipe.
+
+default_fov - not binary.  probably already in the game (kinda fuzzy on this).  Controls the Field-of-vision of the First-person view (unsure of 3rd) when NOT zoomed in the crossbow or python (new).
+~Note that being too small makes vision unhelpful (far too zoomed; see too little; the slightest mouse movement causes a wild change), and being too great crunches & exaggerates vision approaching the center.
+~Good values seem to be 90 for the 4:3 ratio of screen width/height (640x480, 800x600), while 105 is good for widescreen's 16:9.
+~This can be assigned automatically by "auto_adjust_fov_aspect", see below.
+
+auto_adjust_fov_aspect - binary.  When 1,the "default_fov" is assigned a value derived from a linear formula to best scale the FOV for varying screen width / height ratios.  A wider screen needs a greater FOV to get the most out of it.
+~Note that it is only applied at startup, or when toggling it back to "1" from off, so that user-forced values take precedence.  (At restart, if auto_adjust_fov_aspect remains on, the FOV will return to the generated default).
+
+auto_adjust_zoomfov - binary.  If 1, the python and crossbow zoom CVars are set automatically as multiples of the starting FOV.  Should be turned off before making changes to either zooms manually.
+python_zoomfov - not binary.  FOV to use when zooming with the python.  Depends on "default_fov" if "auto_adjust_zoomfov" is 1, but can be a user-given value too.
+crossbow_zoomfov - not binary.  ditto, for the crossbow.
+
+revolverLaserScope - binary.  When on, even in singleplayer, the revolver always has the scope (part of the model) and a laser that shows on zoom.
+
+canTakeLongJump - 0, 1, 2.  If 0, can never pick up the long-jump item if m_fLongJump is on (generally always now).  if 1, can pick up the longjump ONCE if missing some long-jump charge.  If 2, can pick up as long as there is less long jump charge than the max.
+~The "item_longjump" now refills all longjump charge when touched (and is allowed to be), as opposed to "item_longjumpcharge" (looks identical, but not subject to any restrictions on pickup other than the user not having max'd out charge, only restores one long-jumpi charge, or 1/4 of the meter).
+
+printOutCommonTimables - shows the most wanted timed-damage values of this player in printout when on.
+~Note that printouts only occur when there is any timed damage (triggering the printout), reduces console spam.
+
+cl_fvox - CVar related to whether the player's FVOX system is on or off (on by default).  A control can be mapped to this CVAR to toggle it, I imagine, so it feels like an ingame control.
+
+forceAllowMonsterSpawning - binary (off by default).  When on, spawning NPCs is allowed anywhere, even in multiplayer.  Unsure if this syncs well with all players, would be neat if it did already.
+~NOTICE: This CVar was created before I became aware of "mp_allowmonsters", which effectively does the exact same thing for multi-player games (ignored in single-player; always read as "true" in there).
+~Regardless, this CVar will stay.  It now stays between exiting / running the game so that you don't have to adjust mp_allowmonsters each time.  Just know that both "forceAllowMonsterSpawning" AND "mp_allowmonsters" must BOTH be turned off (0) to truly disable spawning in-game.
+~If necessary, I can make it discern between the player trying to spawn anything by "give" commands and the level trying to spawn something (does not now).
+
+~NOTE: on the subject of multiplayer variables, the ambiguously named "weaponstay" means respawnable weapons respawn instantly on being picked up, I think (not whether the player keeps weapons between a respawn).
+
+houndeyeAttackMode - mode, 0, 1, 2, 3.  From 0 to 3, progresses from retail to the alpha as it was found (likely unfinished, I doubt its missing sound / random attack variation was intended, most of this is still fixed in mode 1, the default).
+if 0, the houndeye effect is purely the retail.
+if 1, the houndeye uses the same "attack" (charging; jittering) animation and consistent time as retail.
+      uses the alpha charge-effect from #1 onward.
+if 2, the houndeye uses the alpha charge-effect's variable time and non-standard "angry idle" animation (tapping a foot rapidly).
+if 3, same as 2 but missing the charge-sound (came this way when uncommented and crudely made to work).
+
+precacheAll - binary, on by default.  Some maps may crash if they already have a lot of stuff precached, where "precacheAll" may just put a little too much in there.
+Note that this is required to be on to spawn NPCs not intended by the map (not at least 1 already there at creation).
+If you encounter a precache error (getting forced back to the main menu with something mentioning precache in console), just restart the game and turn off "precacheAll".
+Try using "precacheAll" on simple maps, like training maps, for the best chances of working and having a good testing sandbox.
+See the "PRECACHE ERROR" for more details.
+
+ospreyIgnoresGruntCount - binary, off by default.  When on, the osprey will bypass its usual check for grunts (not sure how that works), so that, if spawned in unusual maps, it will not despawn in under 2 seconds.  It still won't  fly, as it lacks the flight AI (not sure if spawning in a map with an Osprey would make any difference).
+
+barnacleCanGib (0) - BOOL (with modes when on).
+0 - off, retail behavior. Loses collision at death.
+1 - When on, barnaclces can be gibbed (model disappears and some organic gibs are spawned when killed with sufficient damage or types, usually explosions).
+2 - same, but barnacles can not be gibbed in one hit.  They are harder to gib (needs strong / multiple explosions).
+
+sentryCanGib (0) - BOOL, with modes. Whether sentries can gib. These are the auto guns on stands that sometimes start asleep.
+0 - off, retail. Model stays invulnerable and collisionless.
+1 - fades model out like censored gibbing without gibs.
+2 - instantly removes model without any gibs.
+3 - spawns gibs using metalplategibs.mdl 0-12
+4 - spawns gibs using metalplategibs_dark.mdl 0-12
+5 - spawns gibs using metalplategibs_green.mdl 0-12
+6 - spawns gibs using metalgibs.mdl 1-5
+7 - spawns gibsu sing shrapnel.mdl
+8 - spawns gibs using  g_hgibs.mdl
+
+turretCanGib (0) - BOOL, with modes. Whether turrets can gib. These are the ceiling mounted auto guns.
+~same modes as sentryCanGib
+
+miniturretCanGib (0) - BOOL, with modes. Same.
+
+---
+***Other turret CVars are general to all turrets, including the entity named Turret, the miniturret, and sentry.
+---
+
+turretBleedsOil (0) - BOOL. When on, turrets bleed black oil.
+turretDamageDecal (0) - BOOL. When on, turrets create black oil decals nearby when taking damage. 
+turretGibDecal (0) - BOOL. When on, turret gibs (if spawned per type of turret - see XCanGib CVars above) make the oil decal on hitting the ground like how ordinary gibs make blood decals.
+
+
+
+drownDrawPainMode - partially finished mode var (0, 1, 2).  default is 1.
+0 = nothing extra while drowning.  (Default does NOT draw any sort of pain flash or arrows)
+1 = use the pain effect to fade the whole screen constantly while drowning.
+2 = draw flash each time drown damage is inflicted (each second).  Arrows can still show up for other sources of damage while underwater.
+3 = draw flash and arrows in all directions (also second-ly).
+4 = CUT.  edit water fog color to be tinted red while drowning (NOT DONE, NO EFFECT YET, UNSURE IF EDITING FOG COLOR BY SCRIPT IS POSSIBLE).
+
+playerBrightLight - binary, defaults to 0.  If on, the player generates a lot of light for a fair distance.  Disables flash light while on.  Good for debugging in dark places.
+
+////DEPRECATED.  See "sparksExplosionMulti" instead.
+////explosionsHaveSparks - binary (with extra "2").  If on, explosions retain the sparkshowers that spray the area in sparks (but they will still use the new spark particle, the gold gauss-like balls).
+////
+
+WARNING: this makes it very likely to crash the game from too many explosions if you go cheat-crazy!  Set this to "2" to use alternate, cheaper sparks for explosion (1/6 the particlces generated).
+
+
+cl_ladder - mode var, (0, 1, 2) - Modes for player ladder movement / view-effect
+0 = nothing changed from retail.
+1 = alpha ladder sine-movement (slow, then fast to emulate taking steps on a ladder), + view punches, uses retail step sounds.
+2 = same as 1, but replace retail step sounds with player pain grunts.
+
+handGrenadesUseOldBounceSound - binary.  If on, hand greandes use the sounds of the satchel instead (g_bounce) for hitting something.
+
+painArrowColorMode - mode.
+0 = off.
+1 = use this GUI setup's default (becomes 4 for pre-E3, 2 for E3).
+2 = draw red.
+3 = draw green.
+4 = vary with pre-E3's GUI health color.
+
+painFlashColorMode - mode.
+~Same effects from the modes above, but applies to the entire screen flash that plays on taking damage.
+
+cl_explosion - binary.  If on, uses a quake explosion instead of the default one with the sprite, explosion-sound effect, and yellow flickering particles (retail).  The quake one sends shrapnel flying around with the grey-dot particle effect / trail.
+~see debug vars further below such as "shrapRand" for customizing bits about the quake explosion's shrapnel too.
+
+quakeExplosionSound (2) - modevar (only applies when "cl_explosion" is on, or non-zero)
+0: no sound.
+1: plays old/explode 0, 1, or 2 (quake explode sound)
+2: plays weapons/explode 3, 4, or 5 (retail explode sound)
+
+explosionDebrisSoundVolume (0.6) - ADJUSTABLE.  This is the volume of the debris1, 2, or 3 alongside any explosion (regardless of "cl_explosion" or "quakeExplosionSound").
+~0 = no sound, 1 = loudest possible.  Decimals between allowed.
+~quake explosion sounds (quakeExplosionSound = 1) are relatively quiet, and may compete with debris sounds.
+
+
+disablePainPunchAutomatic - binary.  Turn on to test harsh jump effects without the default "+ 2" punch on the X axis from taking any damage (see only what the drop-script's punch is).
+~Can always remove the auto-pain punch for fall-inflicted damage if needed (just trust the drop script in pm_shared handles this).
+
+mp5GrenadeInheritsPlayerVelocity - binary (w/ extra mode).  If on, player-fired mp5s will apply the player's velocity at the tie of firing in addition to their normal launch / throw forward forces.
+~By default (off), only the forward launch / throw force is used, so moving left / right and firing will mean the projectile won't be moving that much left / right either.
+~With ANY other number, it will make this the new multiple of the player's speed to use instead!  So, 0.3 means 30% of the player's speed.
+crossbowInheritsPlayerVelocity - applies to the crossbow.
+fastHornetsInheritsPlayerVelocity - same for secondary-fire hornets.
+
+snarkInheritsPlayerVelocity - ADJUSTABLE. What factor of the player's velocity at the time of throw the snark will take.
+~Such as, moving left or right influences the snark's starting velocity from the throw, but by how much? 17% of the player's gets added? etc.
+
+chumtoadInheritsPlayerVelocity - ADJUSTABLE. What factor of the player's velocity at the time of throw the chumtoad will take.
+
+
+
+
+pissedNPCs - binary.  Makes the NPCs dialogue replaced with some... interesting things to say.
+~if 2, it just makes a test sound.
+
+announcerIsAJerk - binary. That vox announcer guy? He has it out for Freeman's ass now.
+
+
+weaponPickupPlaysAnyReloadSounds - binary.  If 1, plays reload sounds "reload#" 1, 2, and 3 at random instead of "9mmclip1".
+weaponSelectUsesReloadSounds - binary.  If 1, moving over weapons in weapon select plays "reload#" 1, 2, 3 at random instead.
+
+mirrorsReflectOnlyNPCs - binary.  If 1, mirrors only reflect NPCs (generally, living enemies and friendlies).
+mirrorsDoNotReflectPlayer - binary.  If 1, the player (first or third person) is an exception to rendering in the mirror (being shown in the reflection).
+
+NPCsTalkMore - binary.  If 1, NPCs will be more likely to talk.  Beware that some conditions still prevent talking (hard to say what they are at times).
+
+
+nothingHurts - binary (w/ extra mode).  If 1, most things (including the player) can't damage anything else, assuming they deal damage through the usual "takeDamage" method applied to the receiver.
+~if 2, enemies (NPCs) still can't damage each other or the player, but the player can damage them back.  Use to conveniently pick-off NPCs in "no-target" observation.
+
+
+fleshHitMakesSound - boolean; when 1, any enemies that are shot on skin (blood sprays; think alien grunt non-armor or any part of a human grunt, zombie, etc.) will play "bullet_hit1" or ...2.
+
+mutePlayerWeaponFire - boolean.  When 1, most player weapons make no noise on firing (at least the actual "gun" ones, does not include tripmines, throwables, egon is iffy)
+
+muteRicochetSound - mode var:
+if 0, no effect.
+if 1, Ricochet sounds are muted. TE_GUNSHOT has to be disabled as it automatically plays the ricochet sound.
+if 2, same effect as value 1 and mutes UTIL_Ricochet (handles the armor flash effect on hitting hgrunt helemets or agrunt plated armor)
+
+muteBulletHitSounds (0) - Bool.  When 1, any texture-hit sounds, including flesh-hit-sounds (weapons/bullet_hit1 & 2) do not play.
+
+mutePlayerPainSounds (0) - BOOL. Does play hit-related player sound effects such as pain, even if "playerExtraPainSoundsMode" states to.  Does not include death sounds or the typical flesh hit sounds from hgrunt bullets.
+
+muteTempEntityGroundHitSound - Bool.  When 1, any generated temp entity sounds (sounds on hitting & bouncing off the ground) will not play. This includes the ring from ammunition shells hitting the ground.
+~most commonly func_breakable gibs (broken boxes' or vents whose pieces make noises on hitting the ground, also bullet casings)
+
+
+altSquadRulesRuntime - mode var:
+if 0, no effect; spawning in real-time causes squad monsters to only form squads in pairs, as they can only work with monsters not already in a squad (solo's cannot form squads, hence, every even-numbered spawn can form a squad with the solo)
+if 1, grunts spawned in real-time (not by the map at startup, it seems) are affected by a new extra rule: if I cannot make a squad out of other people (all already in a squad, typically), try joining an existing squad.  (will go solo if all squads are maxed out)
+if 2, same as 1, but also applies to map-spawned monsters.  (should not be necessary, as, when created via map, all monsters appear at the same time and so the "leader" recruits all those needed at once; others do not appear later and need to "join" individually)
+
+
+E3ShowsDamageIcons - on E3 GUI (hud_version = 1), toggles showing damage icons.
+preE3ShowsDamageIcons - ditto for pre-E3 GUI (hud_version = 0).
+
+gargantuaCorpseDeath - mode var.
+0: resembles retail: explosions & transform effect at death. 
+1: the gargantua drops to a gibbable corpse like any other.  (gibbable only when finished dropping)
+2: same as 1, but gibbable any time after losing all health.
+3: same as 1, but never gibbable.
+4: same as 1, but takes more damage to kill as a corpse.
+5: same as 2, but takes more damage to kill as a corpse.
+6: same as 0, but does the whole death animation before doing the explosion & transform effect.
+
+gargantuaFallSound - modevar (only applicable for "gargantuaCorpseDeath" values other than 0, where the anim actually makes it to the corpse hitting the floor):
+0 - no sound on falling
+1 - play a deep body thud.
+2 - play the joke metal "clink".
+
+
+gargantuaBleeds - modevar:
+0 - no effect occurs when the gargantua is shot.
+1 - gargantua bleeds like any other alien: blood-drip particles and sound (for bullet impact if applicable).
+2 - gargantua bleeds, but no sound plays.
+3 - hitting the gargantua Ricochets (like retail)
+
+handGrenadePickupYieldsOne - boolean var.  If 1, grenade pickups give only one grenade instead of the usual five that retail does (more in-tune with the appearance, as the pickup looks like a single grenade, not a box of them).
+
+useAlphaCrosshair - boolean var (may require restart or choosing another weapon to take effect).  When on, the crosshair is replaced with the alpha font's letter "t" instead.  It is actually a graphic meant to resemble it.  When off, retail's behavior for handling crosshairs is used.
+
+allowAlphaCrosshairWithoutGuns - boolean var (experimental).  When off, the alpha crosshair (only applicable when that is turned on) should not show when the player has no weapons equipped.  It seems the devs never really checked for this circumstance much, so it is difficult to work with.  This takes effect on starting a map fresh from running Half-Life, but on starting or loading a map from another map with weapons, the crosshair will still show regardless of this CVar.
+
+egonEffectsMode - modevar:
+0 = minimal.
+1 = normal.
+2 = normal + new beam noise effect (other beam?).
+3 = colorized (Christmas mode), for making seeing the beams at setting 2 easier.  the "normal" beam (also seen in retail) is red, while the extra new one is green.
+
+egonHitCloud - boolean.  If 1, a blue cloud appears where the egon strikes (disperses when the user stops firing if it is secondary)
+
+
+allowPainDrawWithoutSuit - boolean.  If 1, pain arrows (big, wide arrows that can occur in the four cardinal directions at the center of the screen to indicate the direction of recent damage) can be rendered without a suit too.
+
+infiniteLongJumpCharge - boolean.  If 1, player longjumps do not consume "long jump charge", and the long jump charge is always at least one.
+
+noFlinchOnHard - boolean.  If 1, enemies tend not to flinch from sudden damage (this gives a window of time for hitting enemies some more).  Defaults to on.
+
+
+
+
+
+
+
+
+protoModVersion - a CVar that is not really meant to be changed (does not save on restart).  Shows the current version of ProtoHLGS (ensures you are using the latest build for reporting current bugs)
+protoModDate - same, shows the date of the build (also set manually by the builder, not automatic)
+
+thoroughHitBoxUpdates - boolean. if 1, hit-box (AKA collisionBounds) are updated at the start of enemy death animations (always seems to occur after it is finished regardless of this CVar).
+
+cheat_touchNeverExplodes - boolean.  If 1, projectiles that explode on touch (rockets and AR grenades) no longer explode on touch.  Other means, such as timer, will still cause explosions (see rockets).  Have fun with bouncing-grenade spam, disable after that for some fireworks!
+
+useAlphaSparks - boolean.  If 1 (default), semi-transparent particle balls are drawn instead of Retail's spark effect (curved lines & light flash texture).  0 returns to retail.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+normalSpeedMulti - float (defaults to 1).  This is a multiple applied to the player's foot speed.
+noclipSpeedMulti - float (defaults to 1).  This is a multiple applied to the player's noclip speed.
+jumpForceMulti - float (defaults to 1).  A multiple of the force in the usual player jump (also applies to longjumps)
+
+
+
+hassaultFriendlyFire - bool, defaults to 1.  Determines whether hassaults are cautious of firing at friendlies or not.  (1 = does not care, 0 = tries not to).
+
+hassaultIdleSpinSound - modevar (sounds are in sound/hassault).
+~How to play the hw_spin sound.  Always occurs between having spun-up (ready to fire) and spun-down.
+0: do not play.
+1: period: play the full length of the sound (0.214 seconds) before playing again.
+2: play continuously (every frame?  Unsure if it does that exactly)
+3: same as 1 (period), but is interrupted / does not play when any fire sound(s) play.
+4: same as 2, but does not play when any fire sound(s) play.
+
+hassaultFireSound - modevar.
+0: firing makes no sound.
+1: each individual shot plays individual fire sounds hw_shoot1, 2, or 3 at random.
+2: plays hw_gun4 continuously (loops) while firing.
+3: plays hw_gun4 continuously (per frame) while firing.  Probably not fantastic.
+
+hassaultIdleSpinSoundChannel - (6) channel, numbered, for the HAssault's idle spin sound to use:
+CHAN_AUTO			0
+CHAN_WEAPON			1
+CHAN_VOICE			2
+CHAN_ITEM			3
+CHAN_BODY			4
+CHAN_STREAM			5			// allocate stream channel from the static or dynamic area
+CHAN_STATIC			6			// allocate channel from the static area 
+CHAN_NETWORKVOICE_BASE	7		// voice data coming across the network
+CHAN_NETWORKVOICE_END	500		// network voice data reserves slots (CHAN_NETWORKVOICE_BASE through)
+~NOTICE: use of values outside of range 0, 500 could crash, never tested.  Just revert the CVar or run unfuckup when nothing is there to crash (it only works in-game, unfortunately).
+
+hassaultSpinUpDownSoundChannel - (3) channel, numbered, for the HAssault's spin up / down sounds to use:
+(same, see channel list above)
+
+hassaultFireSoundChannel - (1) channel, numbered, for the HAssault's fire sound to use:
+(same, see channel list above)
+
+
+hassaultWaitTime - (4.0) time he spends waiting before trying to chase the player since seeing any action.
+*Note that CVar "hassaultSpinMovement" controls whether the hassault walks or runs while still spinning, if wait time is less than spinup remain time.
+
+hassaultSpinupRemainTime - (8.5) time he spends still spinning, before spinning down since seeing any action.
+hassaultResidualAttackTime - (0.34) time he spends firing at the last location spotted should the player break sight.
+hassaultSpinupStartTime - (1.5) time between spotting an enemy and actually firing, since spawned or since stopped spinning to start again.  Includes the spin-startup sound, so just stands there with the idle spinning sound if this is any longer than the duration of the startup spin sound.
+
+hassaultVoicePitchMin - (86) bounds for the pitch of the HAssault's voice lines (just HGrunt lines) to be played at (random in range).
+hassaultVoicePitchMax - (93)
+
+hassaultFireSpread - (0.06) amount of spread for this weapon (simulates inaccuracy), more and more noticable with distance.
+~Spread is equal in all directions.
+~0 is perfect (no spread), 1 is... wildly inaccurate, consider under 0.2.
+~Common values per programming:
+1DEGREES	0.00873
+2DEGREES	0.01745
+3DEGREES	0.02618
+4DEGREES	0.03490
+5DEGREES	0.04362
+6DEGREES	0.05234
+7DEGREES	0.06105
+8DEGREES	0.06976
+9DEGREES	0.07846
+10DEGREES	0.08716
+15DEGREES	0.13053
+20DEGREES	0.17365
+
+
+hassassinCrossbowReloadSoundDelay (1.1) - FLOAT. Delay in seconds to play "weapons/xbow_realod1.wav" after a hassassin starts a reload.
+
+hassassinForceCrossbowMode (1) - MODE. Same as playerForceCrossbowMode, but for hassassins.
+
+
+
+chumtoadPlayDeadFoolChance (0.5) - Adjustable (0 - 1). chance that a chumtoad will successfully fool enemies that get close while playing dead. Check is performed once when playing dead and affects all enimes (worked / didn't work). Even if the attempt fails, enemies will not realize the chumtoad is playing dead until they get close, turning hostile. 0 is always fail, 1 is always succeed.
+
+
+
+geigerChannel - (6) channel, numbered, for the geiger counter that plays when near radiation.
+(same, see channel list above)
+
+
+
+scientistHealNPC (0) - BOOL. idle scientists (not following the player or in fear) will look for friendly NPCs (other scientists / barnies) nearby in need of healing (70% of less of health).  Same cool down for player healing.
+
+scientistHealCooldown (44) - time that has to pass since a scientist last healed before he may heal again.
+~retail default is actually 60, but changed to 44 in case of healing NPCs (makes other NPCs using scientist heal's less of an inconvenience)
+~changing the CVar does not affect scientists already waiting for a cooldown to expire.
+
+scientistHealNPCDebug (0) - BOOL. when 1, draws a box at scientists' feet telling:
+~Grey: delay b/w healing in place.  Has to cool-down before the scientist will attempt to heal again.
+~White: trying to get closer to and heal an NPC.
+~Green: following the player.  Always following the player, not whether trying to heal or not.
+~Red: has a target ent, but isn't trying to heal or following the player.  Inconsistent state usually, please report.
+~White - idle and available to heal NPCs or the player (when following).
+
+bulletholeAlertRange (800) - bullets hitting a surface will alert creatures in this range to look in the shooter's general direction.
+~IMPORTANT: only applies to StukaBats when "bulletholeAlertStukaOnly" is on (defaults to on).
+~As of default retail (this value being "0" then), bullet impacts alone do not alert monsters.  Hitting monsters directly OR firing close (just because of the weapon's own firing noise) would alert monsters though.
+~For example, go some place far away from an hgrunt spawned facing a wall and fire with an accurate weapon (glock) at the wall near him.  In retail, he would not so much as flinch at this.
+~Does NOT affect non-bullet weapons like crossbow or gauss rifle.  Untested.
+
+bulletholeAlertStukaOnly (1) - "bulletholeAlertRange" will only apply to Stukas.  That is, only stukabats can hear bullets hitting something near them.
+
+
+
+
+scientistHealNPCFract (0.8) - fraction that scientists require NPCs to have of their health remaining (at most) before they want to heal them.
+~Requires "scientistHealNPC" to do anything.
+
+seeMonsterHealth (0) - all monsters get drawn healthbars that scale from red to yellow to green.
+
+
+bullsquidRangeDisabled (0) - BOOL.  When on, bullsquids will no longer try to fire spit.  They will always try to chase the player to get into melee range, possibly no matter how far away.
+~Useful for testing how a decent path-finding NPC should behave (stopping to spit is distracting from finding native path-finding flaws)
+
+applyLKPPathFixToAll (0) - BOOL.  When on, applies the LKP-PATH fix to all monsters, not just certain new ones.
+~The LKP-PATH issue is when a monster takes the path to the last-known-position to the player (such as when breaking sight), or just cheating and getting the player's position regardless (some do this when they have no leads).  Then, even on seeing the player during this route, it will still keep going on that route, however much there is left (can seem kind of dumb).
+~The fix is to allow any path to be interrupted if it sees the enemy (and isn't necessarily on its way TO the enemy itself).  Makes the most sense for melee-inclined monsters, possibly still OK for ranged ones (which are usually designed to not be so easily tricked, as-is).
+~Seems to cause some creatures problems, like bullsquids just staring at you (with ranged attack turned off).  Even with ranged attack on, that's still bad as it means they are incapable of chasing you at all.
+
+timedDamageAffectsMonsters (1) - BOOL.  When on, monsters (including friendly NPCs like Barney / Scientist) take timed damage that attacks usually deal only to the player.  They will make noise as they take timed damage just like the player does.
+~May work well with healable scientists?
+
+zombieBulletResistance (1) - BOOL.  This is whether or not Zombies use the "sk_zombie_bulletresistance" entry in skills.cfg (if it exists) to resist a certain amount of damage from bullets per difficulty level.
+~If off, ignored like in retail (a strong developer hint suggests zombies were meant to have an innate resistance to bullets, but it was bugged)
+
+zombieExtraBulletPushback (0) - float.  This is how much bullet damage applies a (possible) extra-pushback to zombies.
+~If 0, no extra pushback (like usually in retail).
+~Otherwise, it is a multiple of the force that is usually applied (make under 1 to weaken, above 1 to strengthen).
+
+
+panthereyeHasCloakingAbility (0) - DECIMAL (0 - 1).  When on (positive, non-zero), the PantherEye will "cloak", or become very transparent, when trying to sneak around the player.
+~Getting too close or making it aggressive will force the cloak off.  It will come back if it loses aggro.
+~1 is totally invisible, 0 means never cloaks, anywhere inbetween adjusts the cloak transparency.
+
+
+
+
+hgruntHeadshotGore (1) - BOOL.  When on, a killing-headshot from a weapon dealing at least as much damage as the Python (revolver) will show the "missing head" - head.
+~Does not apply if "germanCensorship" is on.
+
+hgruntSpeedMulti (1) - Adjustable.  Multiple applied to HGrunt speed.  Best to test strafing.
+~0 is stationary (will try to move, but can't), under 1 is slower, 1 is normal speed, over is faster.
+
+
+hgruntLockStrafeTime (0.67) - MODE.
+-1: locked forever until the next turn in the path.
+0: not locked; instantly stops strafing (or at the end of this animation loop)
+0+: Makes the hgrunt stay fixed on using the strafe-anim once for this long once he starts using it and decides to stop (player is too far from 90 degrees away from movement direction).
+~Will drop the strafe on stopping movement or hitting a corner on a route (past a straight line in path-finding)
+~Does not count strafe-moves that are predetermined, such as trying to sidestep left / right to get out of view.  Those are always locked.
+
+hgruntLockRunAndGunTime (0.5) - Same, but applies to the "run&gun" animation instead.
+
+
+
+hgruntForceStrafeFireAnim (0) - BOOL.  When on, hgrunts will never use the normal "strafeleft" & right anims, only the "..._fire" variants.  Does not affect when it wants to fire (friendly fire or out of ammo still stops this)
+~Won't fire at all when "hgruntForceStrafeFireAnim" is on of course.
+
+
+hgruntStrafeAlwaysHasAmmo (0) - BOOL.  When on, hgrunts are not barred from firing from strafing because they ran out of ammo (still only on hard difficulty)
+
+hgruntTinyClip (0) - BOOL.  When on, HGrunts only get "3" rounds for one burst-fire before having to reload.  Good for giving opportunities for strafing.
+
+hgruntPrintOut (0) - print out information related to how much the HGrunt is trying to move this frame, if applicable.
+~Most, if not all other printouts removed from the HGrunt.
+
+hgruntBrassEjectForwardOffset (18) - pushes the point of brass ejection forward and backwards (greater = forward, lesser = backward)
+
+hgruntAllowGrenades (1) - BOOL. Whether the hgrunt can ever throw or drop grenades.
+
+
+
+
+IGNORED HGRUNT CVAR:::
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+~~~(depends on difficulty instead!)
+hgruntAllowStrafeFire (0) - BOOL.  When on, hgrunts may switch to the "strafeDIRECTION_fire" variant for shooting while strafing.
+~With "hgruntForceStrafeFireAnim", always keeps the ..._fire animation but still never fires.
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+EVENT CVARS (all default to "1" for on).  Some are related to the player view model, no idea how many.
+~Say so if something important is not included here.
+~Events can apply to monsters too.
+event5001Allowed (RENAMED: this is now "cl_muzzleflash" and available on release builds).  SPECIAL: set to 2 to disable only the player view model muzzle flash, leave monsters / third person appearance unaffected.
+event5011Allowed
+event5021Allowed
+event5031Allowed
+event5002Allowed
+event5004Allowed
+
+cl_muzzleflash (1) - BOOL. Controls whether the muzzle flash can occur on the player view model.
+agrunt_muzzleflash (1) - BOOL. Controls whether the muzzle flash can occur for agrunts.
+
+eventsAreFabulous (0) - If on, all of the aforementioned 5000 events will generate lots of sparks!
+
+glockOldReloadLogic (1) - If on, reloading while the glock is not empty will add one extra round beyond the default maximum.
+~This is because one bullet is still in the firing-chamber when not completely empty.
+~Also adds one extra round on picking up a glock (if you don't have one yet).  Again, loaded firing chamber.
+
+glockOldReloadLogicBarney (1) - If on, the above applies to Barney's glock too (that is, Barney having a glock, not after the player grabs his)
+
+barneyDroppedGlockAmmoCap (12) - The amount of ammo, at most, a Barney's dropped glock can give a player who picks it up.
+~SPECIAL VALUES (negatives):
+-1: Force 12 always (full non-old).
+-2: Force 13 always (full old).
+~The default of 12 means that a Barney using the "oldReloadingLogic" at full ammo will still only drop a glock with 12 ammo at most.
+
+
+hgruntRunAndGunDistance (390) - if the HGrunt's target is this far away and he is close to in front of them while running, he will use the runandgun animation to fire.
+~ -1 means off.
+
+
+islaveReviveFriendMode (0) - how does an ISlave revive friends?
+0: near fully implemented as-is in the base game.  The ISlave will sometimes fire a thicker "revive beam" (?) at a downed islave instead of attacking, reanimating them.
+1: decides to walk to a downed islave and do the "downup" animation to revive them.
+2: can do either of the above.
+
+islaveReviveFriendChance (0.4) - percentage.  How likely in a "turn" (a time between attacks or any other action) the ISlave is to use a means of reviving a downed ISlave (how it does this depends on "islaveReviveFriendMode").
+islaveReviveFriendRange (230) - distance.  How far will an ISlave check for friends to revive?
+
+islaveReviveSelfMinDelay (14) - delay (seconds).  Lower bound of the range of time an ISlave can auto-revive in, it's been allowed by the "islaveReviveSelfChance", chance of being able to self revive at all.
+islaveReviveSelfMaxDelay (32) - delay (seconds).  Max bound of the above.
+
+islaveReviveSelfChance (0) - percentage.  How likely an ISlave, at death, is to auto-revive sometime between the time interval above.
+~Now defaults to off (0), but 65% (0.65) was the old value.
+
+
+firstPersonIdleDelayMin (5) - DECIMAL.  Delay (random in range) that must pass for an idle animation to be called on the player first-person weapon since the last animation played.
+firstPersonIdleDelayMax (10)
+
+glockUseLastBulletAnim (0) - whether firing the final bullet in a glock magazine shows a slightly different firing animation.
+~If other steps should be taken, such as removing all other cases of the distended magazine following this, say so.
+
+playerBarnacleVictimViewOffset (-6) - by how many units (distance) should the player's camera be pushed / pulled forwards / backwards when grabbed by a barnacle?  Does not affect the third-person player model's location.
+~0 = no offset.  negative is backwards, positive is forwards.
+
+
+hassaultExtraMuzzleFlashRadius (0.85)  - gets huge fast, not limited to 1.
+hassaultExtraMuzzleFlashBrightness (0.78) - scale of 0 to 1.
+hassaultExtraMuzzleFlashForward (4.6) - how far forwards (gun-direction) to move the flash in units.
+
+playerReviveInvincibilityTime (1.6) - the player can be invincible for # seconds long following an adrenaline revive, taking no damage (or at least being unkillable).
+playerReviveBuddhaMode (1) - when 1, the player gets "Buddha" mode instead of blocking damage during the post-revive delay above.  That means damage is still taken, but the player will have at most 1 hit point no matter what.
+
+playerReviveTimeBlocksTimedDamage (1) - MODE VAR.
+0: timed damage can still be initiated during the post-revive-delay, but still won't do harm until the post-revive-delay is over.
+1: timed damage can not be started during post-revive delay, but the suit will still say something about it.
+2: time damage can not be started, nor will the suit say anything about it, during post-revive-delay.
+
+hassaultSpinMovement (1) - MODEVAR. How is the hassault's mobility while the minigun is spinning (makes noise, can fire anytime)
+*Can make a factor of difficulty if wanted
+0 - cannot move while the minigun is spinning.
+1 - can walk slowly while the minigun is spinning.
+2 - can run while the minigun is spinning.
+
+hassaultBulletDamageMulti (1.2) - multiple applied to HAssault standard bullet damage (the default for the mp5 is "7").  A value of 1 is no change from this.
+hassaultBulletsPerShot (2) - how many bullets are fired per designated "shoot" event on the HAssault?
+hassaultFireAnimSpeedMulti (2.2) - a multiple applied to the speed of the HAssault's firing animation.  This increases the rate of firing events as well (fires more often in the same time)
+
+hassaultMeleeAttackEnabled (1) - BOOL. When on, hassault attempts to kick foes back into firing range. There is a 1 second delay before melee attacks are allowed since when firing begins.
+
+
+
+hassaultMeleeAttackEnabled 1 HIDDENS
+
+hgruntStrafeAnimSpeedMulti (1.25) - multiple applied to HGrunt strafing animation speed.
+hgruntRunAndGunAnimSpeedMulti (1.14) - multiple applied to HGrunt "run&gun" animation speed.
+
+stukaInflictsBleeding (0) - ADJUSTABLE, 0 - 1.  When above 0, the Stuka has this chance (out of 1) of inflicting "bleeding" damage.  solid "1" deals bleeding in any melee attack.
+
+cineAllowSequenceOverwrite (0) - BOOL.  Allow an entity under cinematics already in-sequence to be touched by another, or at least more loosely, when on (1).
+
+animationKilledBoundsRemoval (1) - MODEVAR, applies to all entities (barring possible exception CVars)
+0: no part of death anim alters bounds.
+1: at the start of the death anim (falling down), monster loses collision bounds.
+2: at the end of the death anim (last frame of anim), monster loses collision bounds.  (RETAIL DEFAULT)
+
+gargantuaKilledBoundsAssist (1) - MODEVAR. (BOOL right now)  Anything here takes precedence for the gargantua:
+0: no change (whatever "animationKilledBoundsRemoval" says)
+1: for full garganta death anims (falling over), an attempt is made to change bounds to cover where the corpse lands.  Will kill (gib) anything in that place first.
+
+
+
+
+----------------------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------------------------
+bullsquid SPIT VARS.
+
+
+
+cl_bullsquidspit (0) - will alter "bullsquidSpitUseAlphaModel" and "bullsquidSpitUseAlphaEffect" (takes precedence over them):
+0: RETAIL. changes them to 0 (spit sprite and retail sprite spit effect)
+1: ALPHA. changes them to 1 (alpha model and alpha quake dot spit effect)
+~anything else (-1): no effect, see the aforementioned CVars for specific settings.
+
+cl_bullsquidspitarc (0) - BOOL.  When 0, uses retail's straight-shot at a constant speed of 900 for any distance instead.  When 1, projectile is affected by gravity so arc logic is used and trajectory + gravity CVars above apply.
+
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+bullsquid SPIT TRAJECTORY VARS - the system for bullsquid arc spit works as follows:
+NOTICE::: most CVars here in general require "bullsquidSpitArc" to be 1 to have any effect!
+~We first ask the question: what is the distance between the bullsquid itself and the target?  Now, see if this fits between the "DistMin" and "DistMax" ranget (input).
+~If it is within range, it is scaled accordingly so that the closer the distance is to "distMin", the closer to "timeMin" it takes to hit the target.
+~Same for being closer to "distMax" (it takes closer to "timeMax" to hit it)
+~Example: say distmin & max is 30 to 100, and our timemin & max is 1 to 3.  Actual distance happens to be 40.
+~         what is 40 in the dist range?   (40 - 30) / 70.  That is about 0.143.  And the time taken to hit should be: (0.143 * 2) + 1.
+~         Result: takes 1.286 seconds to hit.  Not much further than the min-time, just like our distance (40) was not much further than mindist.  YAY TRANSFORMS.
+~IF the distance is out of bounds (below distMin or above distMax), we won't scale the time like this.  Instead, we just pretend the distance WERE the min / max, and keep the speed the same.
+~The result is, the spit will hit the target in less time overall the further below the distMin you are, or the spit will hit the target in more time overall the further above the distMax you are.
+~Example: say we have the same min&max stats for dist&time as above, and the actual distance is 160.
+~         take   distMax / timeMax: 100 / 3, = 33.333.    At this velocity, it would take 4.8 seconds to reach te target (dist, 160, divided by velocity = time).  This makes sense: we are above the max bound for dist, so it takes longer the further beyond the max bound of dist we go.
+
+bullsquidSpitTrajTimeMin (0.80) - BOUNDS for the time spit takes to hit a target, see explanation above.
+bullsquidSpitTrajTimeMax (1.3)
+bullsquidSpitTrajDistMin (900) - BOUNDS for the distance applied to the time bounds above (accordingly), see explanation above.
+bullsquidSpitTrajDistMax (1400)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+bullsquidSpitGravityMulti (1) - the multiple applied to bullsquid spit's gravity.  0 will still force a default of "1".
+~"1" means, no change; normal gravity established by sv_gravity.  This factors into the arc needed to reach the position given the distance and speed picked.
+~less than 1 = less gravity (less arc needed).
+
+bullsquidSpitUseAlphaModel (1) - When 1, uses spit.mdl instead of the splat sprite (0).
+bullsquidSpitUseAlphaEffect (1) - When 1, spawns the alpha blood particles instead of the retail spit sprite (0).
+bullsquidSpitEffectSpread (0.37) - The amount of spread applied to spit on the alphaEffect (1 for "...UseAlphaEffect").  Scale of 0 (perfect) to 1 (wild).
+
+bullsquidSpitEffectMin (90) - range for the amount of spit particles to generate per firing in one "spawn".
+bullsquidSpitEffectMax (120)
+bullsquidSpitEffectSpawn (4) - how many times to spawn the random number of particles mentioned, at firing.
+
+bullsquidSpitEffectHitMin (60) - range for the amount of spit particles to generate per particles hitting a surface (bounce off the wall)
+bullsquidSpitEffectHitMax (80) - 
+bullsquidSpitEffectHitSpawn (4) - how many times to spawn the random number of particles mentioned, at hitting a surface.
+
+bullsquidSpitSpriteScale (0.5) - the scale to apply to the spit effect, if "bullsquidSpitUseAlphaModel" is 0 (retail spirte)
+bullsquidSpitAlphaScale (0.8) - DISABLED, NOT WORKING - the scale to apply to the spit effect, if "bullsquidSpitUseAlphaModel" is 1 (alpha model)
+
+
+----------------------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------------------------
+
+
+
+
+friendlyPianoFollowVolume (0.7) - ADJUSTABLE. Volume to play the Mr. Friendly's piano music while following the player. 0 mutes.
+friendlyPianoOtherVolume (1.0) - ADJUSTABLE. Volume to play the Mr. Friendly piano music for getting startled or killed by the player. 0 mutes.
+
+tentacleAlertSound (1) - BOOLEAN. An alert sound for the Tentacle (giant tentacles that come from the ground, sensitive to sound) was cut. This restores it. 
+tentacleSwingSound1 (0) - BOOLEAN. Toggle on/off the first hit sound that plays while a tentacle strikes.
+tentacleSwingSound2 (0) - BOOLEAN. Toggle on/off the second hit sound that plays while a tentacle strikes.
+
+
+
+
+
+
+
+playerFollowerMax (2) - ADJUSTABLE. How many friendly NPC's can follow the player at a time.
+
+scientistBravery (1) - lets scientists "fend for themselves" with a weak punch attack as a last resort, if "1".
+
+barneyUnholsterTime (18) - how many seconds a Barney must be idle (combat-wise) before undrawing the weapon.  Cannot undraw if following the player (actively following).
+~  -1 makes Barney never unholster like in retail.  0 is unholster ASAP (not following; nothing else on the mind, still)
+
+barneyUnholsterAnimChoice (1) - whether to use the sequence named "disarm" or unholstering or just use a reversed "draw" anim (pulling the pistol out),  slightly slowed down.
+
+trailTypeTest (-1) - MODEVAR. an easy way to see the possible alpha particle effects (just dot-resmbling sprites).
+-1: off.
+anything else (recommended range: 0 - 7): the type of particle effect applied to rifle grenades, explosion shrapnel (of alpha "quake" explosions), and hornets.
+
+hornetTrail (0) - MODEVAR. The trail effect(s) for hornets to use.
+0: retail trail (solid transparent line, still orange & blue)
+1: quake dot trail (orange trail, type 6)
+2: solid transparent line & quake dot trails.
+3: off
+
+hornetTrailSolidColor (1) - MODEVAR. Pick the solid trail colors (applicable if "hornetTrail" is 0 or 2 above):
+0: retail
+1: alpha
+2: ted's colors
+
+
+
+hornetDeathModEasy (2) - MODEVAR. the choice of hornet death, per difficulty.  Same rules apply for the other difficulty vars below:
+0: retail.
+1: shot-down (flies to the ground) for any death, not gibbable at all.
+2: shot-down for dying by non-gibbing causes (like shot). Otherwise, gibbed (disappears).
+3: shot-down for dying anytime. Can be gibbed after this.
+4: always gib (disappears).
+
+hornetDeathModMedium (2)
+hornetDeathModHard (0)
+
+hornetZoomPuff (0) - BOOL.  When on, Hornets spawn a puff on starting a dart motion (retail has it on).
+
+cl_hornetspiral (0) - BOOL. Adjusts other CVars related to the hornet spiral effect to resemble alpha footage:
+0: RETAIL: no spiral.  hornetSpiral=0, hornetSpeedMulti=1, hornetSpeedDartMulti=2, agruntHornetRandomness=0.1
+1: ALPHA: spiral.  hornetSpiral=1, hornetSpeedMulti=0.6, hornetSpeedDartMulti=2.3, agruntHornetRandomness=0.02
+-1: no effect.  Adjust specific CVars above.
+
+cl_hornettrail (0) - BOOL.  Adjusts other CVars related to the hornet's trail
+0: RETAIL: hornetTrail=0, hornetZoomPuff=1
+1: ALPHA: hornetTrail=1, hornetZoomPuff=0
+-1: no effect.  Adjust specific CVars above.
+
+
+
+hornetSpiral (0) - BOOL.  When on, the hornet will try to move in a corkscrew-like motion (until it darts to a target).
+hornetSpiralPeriod (0.11) - DECIMAL. the smaller it is, the faster the hornet moves in a spiral motion.  At much smaller than 0.07, the trail may look jagged.
+hornetSpiralAmplitude (59) - DECIMAL. how large the "circle" of the corkscrew around the hornet is (how far it moves from its usual bee-line).
+
+
+
+hornetSpeedMulti (1) - DECIMAL. Speed mod applied to hornets, player or not.
+hornetSpeedDartMulti (2) - DECIMAL. The speed mutli applied to hornets that decide to dart towards a nearby target.  Cumulative with "hornetSpeedMulti", so halfing that will half this as well (double this to compensate).
+cl_rockettrail (0) - BOOL. set to 1 to see the rocket's alpha trail instead of retail's white-line trail.
+rocketTrailAlphaInterval (0.035) - DECIMAL. The time between spawning a rocket trail sprite (seconds).
+rocketTrailAlphaScale (0.21) - DECIMAL. The scale (size-multi) applied to the rocket alpha trail's sprite.  Note that "1" is very large.
+rocketSkipIgnite (1) - BOOL.  If on, the slight upwards bounce & wait before ignition are skipped.  Ignition starts instantly (the rocket moves in a straight line from start immediately)
+
+agruntHornetRandomness (0.1) - DECIMAL. How much agrunt-fired hornets will randomly change position at a point of time.  0.1 is the retail default.
+
+
+
+hud_drawAmmoBar (0) - BOOL.  When 1, draws the ammunition bar (fuller the more ammo there is; shows the remaining out of the most that could be stored).
+hud_weaponSelectHidesLower (1) - BOOL.  When 1, hides the lower GUI (health, armor) when selecting a weapon.
+
+hud_drawSidebarMode (0) - MODEVAR.
+0: only draw during weapon select.
+1: only draw when not in weapon select.
+2: always draw.
+
+
+
+
+
+
+
+
+
+EXTA GAUSS CVARS
+----------------------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------------------------
+
+gaussmode (0) - MODEVAR. Resets back to 0 when changed to 1 or 2 (but sets other gauss-related CVars).
+----------------------------------------------------
+0: no effect.
+
+1: RETAIL settings for gauss CVars. Sets these...
+gauss_primaryonly 0
+gauss_reflectdealsdamage 1
+gauss_chargeanimdelay 0
+gauss_chargeworkdelay 0
+gauss_secondarychargetimereq 0.5
+gauss_primaryreflects 1
+gauss_primarypierces 1
+gauss_secondaryreflects 1
+gauss_secondarypierces 1
+gauss_primarypunchthrough 0
+gauss_secondarypunchthrough 1
+
+2: QUAKE settings for gauss CVars. Sets these...
+gauss_primaryonly 1
+gauss_reflectdealsdamage 1
+gauss_chargeanimdelay 1.0
+gauss_chargeworkdelay 3.0
+gauss_secondarychargetimereq 0.8
+gauss_primaryreflects 1
+gauss_primarypierces 0
+gauss_secondaryreflects 0
+gauss_secondarypierces 1
+gauss_primarypunchthrough 0
+gauss_secondarypunchthrough 1
+
+----------------------------------------------------
+
+--CVARs:
+gauss_primaryonly (1) - BOOL.  When on, the primary fire button now handles secondary fire (white lasers) as well.  Tap for primary fire, hold down for secondary fire.  The secondary fire button does nothing.
+gauss_reflectdealsdamage (1) - BOOL. any reflected gauss strikes generate an area of damage just like retail.
+gauss_chargeanimdelay (1.0) - DECIMAL. the seconds required to start playing its spinup animation.
+gauss_chargeworkdelay (3.0) - DECIMAL. the seconds required for the charge to start turning ammo into "charge" for more damage on release (pracitcally "work")
+gauss_secondarychargetimereq (0.8 ) - DECIMAL. the seconds required to count this as primary fire instead of secondary fire.  Advisiable to keep less than "gaussquake_chargeworkdelay".
+gauss_primaryreflects (1) - BOOL. determines whether primary fire can reflect off surfaces.
+gauss_primarypierces (0) - BOOL. determines whether primary fire can continue through an enemy.
+gauss_secondaryreflects (0) - BOOL. determines whether secondary fire can reflect off surfaces.
+gauss_secondarypierces (1) - BOOL. determines whether primary fire can continue through an enemy.
+gauss_primarypunchthrough (0) - BOOL. determines whether primary fire can travel some distance through walls on a hit it can't reflect off of.
+gauss_secondarypunchthrough (1) - BOOL. determines whether secondary fire can travel some distance through walls on a hit it can't reflect off of.
+
+----------------------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------------------------
+
+
+
+
+
+Pain Flash Opacity CVars:
+----------------------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------------------------
+Fine-tune the behavior of the pain flash. There are two things to keep in mind:
+* The system starts with one variable, the "cumulative", that goes between 0 and possibly beyond 1.
+  It can stay above 1 to keep the draw opacity frozen at 100% when any more damage is done. It decreases with time.
+* The draw opacity is determined in real time. If the cumulative is at least 1, it is solid.
+  Otherwise, opacity decreases with the cumulative to 0. Cumulative of 0.5 is half-opacity, Cumulative 1.5 is 100% opacity that stays until the cumulative falls to below 1.
+
+--CVARs:
+painFlashDmgMin (0.3) - DECIMAL. Range of 0 to 1. Minimum amount added to the cumulative on any non-zero damage attack (armor may prevent small attacks from touching the health, see "painFlashIgnoreArmor")
+painFlashDmgExMult (0.08) - DECIMAL. Amount to multiply damage dealt by, which is added to the cumulative.
+                            Example: A gargantua melee attack deals 10 damage, so with a default painFlashDmgExMult setting of 0.08, it ends up adding 0.8 to the cumulative.
+painFlashCumulativeMinDrowning (0.5) - DECIMAL. Range of 0 to 1. Requires "drownDrawPainMode" to be set to 1. When drowning, forces the cumulative (opacity) to this high.
+painFlashCumulativeMax (1.4) - DECIMAL. How high the cumulative can be. Affects the most time possible for the flash to stay its brightest without taking more damage.
+painFlashDrawOpacityMax (0.8) - DECIMAL. Range of 0 to 1. How high can the drawn opacity be. Can be used to reduce the intensity of the "maximum" opacity that a cumulative above 1 stays fixed at.
+    Example: with a painFlashCumulativeMax of 1.4 and a painFlashDrawOpacityMax of 0.7, a cumulative between 0.7 and 1.4 will still provide an opacity of 0.7. Scales any increases in cumulative too (given a jump of 0.4, with a painFlashDrawOpacityMax of 0.5, the jump becomes 0.2 instead).
+
+painArrowDrawOpacityMin - (0.5) - DECIMAL. Range of 0 to 1. The least opacity possible for arrows (they still disappear when the direction cumulative drops to 0).
+painArrowDrawOpacityMax - (1) - DECIMAL. Range of 0 to 1. The greatest opacity possible for arrows.
+painFlashFadeMult (1.7) - DECIMAL. Affects how quickly the cumulative decreases with time. Higher values "increase" the decay, making it decrease faster. Example: 6 is very fast, 0.2 is very slow.
+painArrowFadeMult (1.5) - DECIMAL. Same, for how quickly pain arrows fade.
+painFlashIgnoreArmor (0.5) - DECIMAL, range of 0 to 1. If 0, like retail (damage all absorbed by armor shows nothing). If 1, even damage absorbed by armor shows the same pain effect. If between 0 and 1, scales tothat portion of painFlashMaxOpacity if absorbed by armor.
+    Example: such as, a painFlashIgnoreArmor of 0.5 and a painFlashDrawOpacityMax of 0.8 will make the resulting change in cumulative, given all damage aborbed by armor, 0.4 (40%) of what it would have been had it affected health.
+painFlashDirTolerance (0.8) - DECIMAL. Range of 0 to 1. How easily a direction can count towards one of the four carindal directions. Higher is more flexible.
+    Example: is 10 degrees off from a line straight forward enough to count as from the North direction? Value of 0.8 says yes, 0.01 says no.
+painArrowCumulativeAppearMin (0.4) - DECIMAL. Range of 0 to 1. Can ONLY draw a directional cumulative at all when it is above this much.
+painFlashPrintouts (0) - BOOL, 0 or 1. Whether to show printouts on taking damage or the perceived direction + final cumulative effect of the damage. Separate printouts happen for different directions (diagonal) at the same time.
+painArrowCumulativeDmgJump (1.2) - DECIMAL. Range of 0 to 1 (and above). How much damage wants to push the cumulative. Values above 1 may cause the arrow to stay at max opacity until it drops below 1, where it will likely scale down as usual.
+    Example: with a painArrowCumulativeDmgJump of 1.5, an attack purely from the front would cause the "front" directional cumulative to jump to 1.5, drawing the arrow at full opacity (painArrowDrawOpacityMax), until it drops below painArrowDrawOpacityMax.
+
+----------------------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------------------------
+
+
+
+Item Flash Opacity CVars:
+----------------------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------------------------
+Using some items (currently only the canisters: antidote, radiation, adrenaline) shows a flash.
+These settings are similar to those similarly named in the "Pain Flash Opacity CVars" section above.
+itemFlashCumulativeJump (1.15) - DECIMAL. Range: above 0. Values of 1 or above keep the flash solid at max opacity for longer.
+itemFlashDrawOpacityMin (0.0) - DECIMAL. Range of 0 to 1. The minimum opacity that may be drawn.
+itemFlashDrawOpacityMax (0.75) - DECIMAL. Range of 0 to 1. Max opacity to draw.
+itemFlashFadeMult (1.5) - DECIMAL. How quickly the fade disappears. A higher value makes the fade happen faster (fade takes less time).
+----------------------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------------------------
+
+
+
+
+Pathfinding CVars
+----------------------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------------------------
+~also see pathfindPrintout
+
+pathfindFidgetFailTime (0.2) - FLOAT. Amount of time that failing in pathfinding allows to register as counting towards giving up (or at least waiting a few seconds before trying again).
+                               Increasing the value makes it count more time (like failing in the last 0.7 seconds instead of the last 0.4 seconds) since the last failure as a reason to give up.
+                               The game's true default is 0.2. Unsure how much further really helps.
+
+WARNING: THIS VAR IS DUMMIED OUT.
+pathfindTopRampFixDistance (100) - FLOAT. Monster tries to pathfind this far in front of it to see if it changes its decision if looking down from a ramp at a goal or node.
+                                 ~ if 0, does not try the fix.
+                                 ~ If too large, may "fail" for trying to pathfind to a place too high above ground (down the ramp, more distance).
+                                 ~ A less crude approach can help with this later. In particular, angling it so that the monster is a little higher / nudged towards the edge of the ramp (imaginary; "as-if" conditions for a test), perhaps raised a bit, and the test loc is lowered to the ground.
+                                 
+                                 
+pathfindTopRampFixDraw (0) - BOOL. If on, draws the most recent test taken bypathfindTopRampFixDistance.
+                                 ~green line: line from original location to the test location. (implies the pre-check for getting from loation to test loc passed)
+                                 ~blue line: line from test location to the goal in mind (actual goal or current node along path).
+                                 ~red line: line from original location to the test location. The pre-check failed, such as running into a wall or being too high above ground (like going off a cliff).
+
+
+pathfindLooseMapNodes (0) - BOOL. If on, map nodes taken by monsters will skip the "CheckLocalMove" check and use a simpler hull trace check instead, implying a node-to-node traversal will probably be ok. May have side effects of dumb AI thinking it can go somewhere it really can't from time to time.                               
+pathfindRampFix (0) - BOOL. If on, the AI should have an easier time using ramps. May be helped by "pathfindLooseMapNodes" being turned on.
+
+
+
+pathfindNodeToleranceMulti (1) - ADJUSTABLE. How much / less distance must be between a monster and a target node to satisfy "reaching" the node? This is a multiple on that. 1 is no change. Under 1 is less (strict: dangerous!), over 1 is more (tolerant).
+
+
+
+
+----------------------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------------------------
+
+
+crossbowFirePlaysReloadSound (0) - BOOL. Whether to play weapons/xbow_reload1.wav at the moment of firing clientside.
+
+crossbowReloadSoundDelay (-1) - FLOAT. Delay in seconds to play "weapons/xbow_reload1.wav" after the player starts a reload.
+~If -1, does not play at all.
+~If turned back on, a reasonable choice is 2.4 .
+
+
+
+
+
+
+
+		
+baseEntityDamagePushNormalMulti (0) - FLOAT. Retail default of 5. Base entitys can be pushed by damage, monsters do not inherit this behavior and are also unaffected by the below relevant CVars. Multiple applied to the damage dealt, which also factors in the monster's bounding box size.
+~It appears that a force against the ground produces some very odd appearance glitches, like the model going crazy distances forwards and backwards in the direction the entity is facing for a moment, at least in retail when this is used as-is.
+
+baseEntityDamagePushVerticalBoost (0) - FLOAT. How far upwards entities can be pushed by damage, regardless of its direction. This is a base amount of vertical velocity added regardless of damage. Cumulative with baseEntityDamagePushNormalMulti. Keeping it small may be best if used.
+
+baseEntityDamagePushVerticalMulti (0) - FLOAT. How far upwards entities can be pushed by damage, regardless of its direction. This is a multiple applied to damage for upwards velocity. Cumulative with baseEntityDamagePushNormalMulti. Keeping it smaller may be best if used.
+
+baseEntityDamagePushVerticalMinimum (0) - FLOAT. Retail did not have a base entity damage push minimum. The lowest amount of vertical push from base entity damage allowed. Anything less gets forced to this minimum. At the default of 0, this effectively prevents push against the ground, but a tiny positive value may help let a push have more effect as walking entities do not slide.
+
+
+viewModelPrintouts (0) - BOOL. Whether to print out any calls to viewModel animation methods, namely "SendWeaponAnim". Debug builds do a better job of stating whether they are clientside or server, an important detail. It is also possible for the server to issue an animation to the client, which is then followed up soon and indicated by the printout "Client: Received anim from server. Existing anim: # New: #". Beware of conflicts between what anim the server picks to send and what anim the client picks on its own.
+
+viewModelSyncFixPrintouts (0) - BOOL. When on, plays a message that tries to detect certain severe server-client synch issues, like one that causes two shells to eject out of a single-fire shotgun fire, likely four for a double-fire shotgun fire.
+
+textureHitSoundPrintouts (0) - BOOL. Whether to print out the sounds made by texture impacts, typically bullets. Step sounds are handled by pm_shared.c and not included by this. Sounds may  come from clientside (EV) or serverside (SND).
+
+scheduleInterruptPrintouts (0) - BOOL. See a report of schedules that are interrupted, on what monster they were interrupted, and two columns of bits: bits that interrupt the schedule when on (per the schedule's own interrupt mask), and bits the monster has activated.
+~For instance, although a schedule may be interruptable by seeing the enemy, such as in
+  se_ene 1 0
+The 2nd bit is 0, meaning the monster does not currently have that bit activated (does not see an enemy). There is no interruption. Conversely:
+  se_ene 0 1
+Means, the schedule does not allow seeing the enemy to interrupt the schedule, but the monster happens to see the enemy. Both bits must be "1" to interrupt the schedule.
+~The last two bits marked "9" are interruptable in any schedule (Failed and Success bits). Note that finished schedules have a task of "-1" since running out of tasks is a common sign of a finished schedule.
+
+animationPrintouts (0) - BOOL. See various printouts from various points across CBaseMonster's MonsterThink method before, during, and after important animation calls. Most relevant methods called are in animating.cpp and also have printouts for this CVar.
+
+
+pathfindStumpedMode (2) - MODEVAR. How to handle losing sight of the enemy after breaking sight and seeing nothing at their last known position. Typically waits when the enemy has been lost before re-routing, if applicable, if pathfindStumpedWaitTime is above 0. See choices.
+0: Drop the enemy, forget them instantly, no wait time. May pick up an old enemy, otherwise likely to stand in place.
+1: Re-routes to the last known position set when this monster was stumped when done waiting, which may be out of date compared to the enemy's present location.
+2: Re-route to the monster's current location immediately when done waiting.
+3: Skip any calls to wait methods or even turning to look at the last-known position when stumped. Goes straight to re-routing to the enemy. RETAIL, generally.
+
+pathfindStumpedWaitTime (10) - ADJUSTABLE. Amount of time to look at the last known position before proceeding accorindg to pathfindStumpedMode. re-routing to the enemy's current location. Applies to pathfindStumped modes 2 and 3.
+
+pathfindStumpedForgetEnemy (0) - BOOL. Whether to drop the current enemy after going to the last known position from StumpedModes 1 or 2 above, not much different from mode 0. There will be a similar reaction to seeing a new enemy when seeing the same enemy again.
+
+pathfindEdgeCheck (1) - BOOL. Lets NPCs check to see if they are close to a goal node on failing to move ever so slightly closer to one that may be nearby, such as walking up to a wall and failing because pathfinding won't let them get any closer. If turned on, should count this scenario is movement completion to move on with other things.
+
+RadiusDamageDrawDebug (1) - BOOL. When on, draws a line from an explosion to the player if the player was hit. Also makes some printouts about what an explosion hit or tried to hit and details about the line-traces. A blue line indicates where the player decided to draw the falling blood dot effect.
+
+AlienRadiationImmunity (0) - BOOL. Makes aliens immune to timed radiation damage, at least the timed version that maps give.
+
+customLogoSprayMode (0) - MODEVAR. So far only two modes.
+0: retail's spraypaint behavior: spray a single image with the player's custom spray decal and color. These will most likely remain defaults as the multiplayer page of the options with these settings is unavailable in this mod.
+1: Spray the animating lambda decal insetad of the player's custom spray decal (ignored). Does not appear to factor in the player's custom spray decal color. Defaults to a similar if not identical orange-yellow color.
+
+
+monsterFadeOutRate (100) - ADJUSTABLE. How much monster opacity decreases in one second when fading out, out of 255 (opaque, starting). Players fade when germanCensorship is on or gibs are banned for any other reason.
+~For instance, set to 100, it takes a little under 3 seconds to fade out since 100 times 3 is 300, out of 255.
+playerFadeOutRate (120) - ADJUSTABLE. How much player opacity decreases in one second when fading out. See monsterFadeOutRate.
+
+
+monsterAIForceFindDistance (0) - ADJUSTABLE. Used to be 256 in retail, value of 0 effectively disables this feature.
+~If a monster's designated enemy is up to this close to the monster, the monster will force its LKP to match that monster, which gives at least a delayed reaction for knowing where the monster is. This is regardless of noise or inflicting damage while that close.
+~In short, if a monster's enemy is less than this distance from a given monster, the monster will immediately or soon face the enemy, even if completely silent. Call it a 6th sense.
+
+drawDebugEnemyLKP (0) - BOOL. If on, draws any monster's recored enemy last known position (m_vecEnemyLKP) as a blue vertical line to be noticable. The actual point is the center of this line.
+~Can be used to see where a monster last saw its enemy for debugging AI issues or understanding them in the first place, like whether the enemy is failing to update LKP in accordance with a clearly visible enemy, or updates LKP for an enemy clearly out of sight and not to get out of a stumped method (does not make sense to see the enemy this easily or out of the back of its head without any noise)
+
+trackchangePrintouts (0) - BOOL. See lots of printouts regarding CFuncTrackChange and its child CFuncTrackAuto.
+
+//
+//!!! LAST NORMAL CVAR!
+//
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ENTITIES:
+env_model
+env_modelsimple
+~has only  "m_iszSequence".  a string to be the name of a sequence to run 24/7 (say so if it doesn't seem to be working)
+
+
+
+
+NEW SKILL CVARS:
+sk_hornet_health - health given to a spawned hornet, indifferent of from the player or agrunt (can make separate).  Defaults to 1 if unspecified for all difficulties.
+sk_plr_hornet - damage for the player's hornet!  OK not to provide, defaults to 7 for all difficulties (hard-coded retail default from before)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+STUcheckDistH
+STUcheckDistV
+STUcheckDistD
+~Where to check, Horizontally, Vertically, and Diagonally (bottom only) for getting too close to a surface in the mentioned direction.
+
+STUextraTriangH
+STUextraTriangV
+~triangulation extra multiple.  Makes the routes it takes around objects a bit larger than just barely passing to reduce risk of snagging.
+
+STUrepelMulti
+~multiple applied to the force to get a stuka off of a surface.  A multi of "1" gets it to the edge alone.
+
+STUspeedMulti
+~multiple of stuka speed (for movement)
+
+STUexplodeTest  - DO NOT USE
+STUYawSpeedMulti - multiple of stuka speed for rotation (default of 0.88)
+
+STUDetection - mode var.  0, 1, 2.  Describes how easily the Stuka is triggered (or, "provoked") from a starting neutral state.
+0: most laxed.  Taking damage or hearing a loud noise nearby will trigger it.
+1: in addition to above, the player being in line-of-sigt (when the Stuka is not hanging from the ceiling) will also trigger it.
+2: most active.  Same vision as usual combat when not hanging, and will attack the player as soon as they are in proximity.
+
+
+shutupstuka - (NOW defaults to 1) stop the stukabat's "scientist scream" sound effect, when on.  Peace for the ears!
+stukaAdvancedCombat - boolean, defaults to 0.  If 1, the stuka will hover instead of fly at close proximity to target (possibly try to strafe around in the future), and do the "dive_cycler" animation on going at the target for a quick strike.  Otherwise (value = 1), flies for all movement, hovers only at midair with no movement or moving mainly up / down.
+
+
+
+
+
+
+
+germanCensorship - when 1, all red blood is colored black-grey, all human-gibs are replaced with robotic ones, and most human models are replaced with robots.  Germany be wack yo.
+*NOT TO BE CONFUSED WITH THE "CONTENT LOCK" FEATURE UNDER title screen -> Options -> Lock tab
+*"Content Lock" appears to set the following four CVars to 0 or 1 dependong on whether it is off or on:
+violence_ablood - show alien blood.  Never draws if 0.
+violence_hblood - show human blood.  Never draws if 0.
+violence_agibs - show alien gibs.  If 0, a "gibbed" enemy releases no parts and just fades out in place.
+violence_hgibs - ditto for people.
+*Note that if the "Content Lock" is turned on (violence_blood's are 1), not even the black-grey German blood will  be rendered.
+*"Content Lock" appears to be checked at game startup, turning on / off all violence_ CVars.  Changing any violence_ manually will still affect the present game regardless of Content lock setting, but changes would be reverted at next startup.
+*existing script MAY try to refer to some CVar "sv_language", but the game claims this does not exist.
+This name is NOT being reused to avoid any chance of conflict (think of "germanCensorship" just being "1 = German, 0 = Anything else" as a replacement)
+
+allowGermanModels (1) - BOOL. When on, substitution German robot models will be used instead of human ones where they exist. Requires germanCensorship to be 1.
+
+germanRobotGibs (1) - BOOL. Whether robots can spawn gibs from g_hgibs.mdl when destroyed. If off, robots simply fade out just like they would if the robot replacement models weren't available (allowGermanModels is off).
+~Requires "allowGermanModels" to be on for robot model replacements first.
+germanRobotBleedsOil (1) - BOOL. Whether robots bleed oil on taking damage.
+germanRobotDamageDecal (1) - BOOL. Whether damage done to robots, typically bullets and explosions, can draw oil decals on nearby surfaces similar to blood decals.
+germanRobotGibsDecal (1) - BOOL. Whether robot gibs leave oil on hitting the ground just like ordinary gibs do with blood.
+
+
+
+chromeEffect - defaults to 0.  When 1, try to make the chrome effect as seen on first-person weapon view models shift with movement.  The "light source" for the chrome is set to the origin of the world, as it was discovered by accident.
+0: off.
+1: on.
+~Please report any side-effects with attachment points, namely the gauss laser or the egon stream while this CVar is on / off, or in the abscence / presence of mirrors.
+
+hiddenMemPrintout (0).  When 1, shows printouts related to hidden (non-autocomplete) CVars.
+~Hard to be useful unless the save system is already working, as hidden CVars cannot be set until you are
+ ingame.  Applies to release builds only.
+
+leaderlessSquadAllowed (1) - When 1, squads spawned at startup with monsters of netnames (or "Squad names") can form, even if no member of the netname is designated as a "leader" by spawnflag (the very first of the netname, in spawn order, is picked as leader and recruits the others into its squad).
+~If any of the netname is picked to be the leader by spawnflag, this preference will still stand.
+
+nodeConnectionBreakableCheck (1) - MODEVAR. Mainly, this is to see if some breakble object (like glass) is between the nodes.  If so, don't allow that as a possible route to the enemy (would lead to... getting stuck on the glass and near irreversably fixated sometimes).
+~Does not make the offender forget the enemy seen through the glass, so they may still be fixated but just stand in place, as seen with a Barney.
+~0: no change, default behavior.
+~1: a "breakable" recorded as b/w two connections (check at startup) marks that connection as blocked.
+~2: same, but the dynamic (real-time) check is used instead.
+~3: 1 and 2 combined;  whichever works first.
+
+
+
+
+
+
+METHOD:
+fixStuka - reverts the above Stuka debug vars to their defaults that they started with at build.
+
+superman - sets normalSpeedMulti and jumpForceMulti to 3.  Sets noclipSpeedMulti to 5.
+normalman - sets normalSpeedMulti and jumpForceMulti to 1, noclipSpeedMulti to 2.5.
+
+revive, getup, risefromthegrave, suprisemotherfucker, alyxisnaked, myparentsarenthome - respawn the player in place, even without antidotes. If the player is not dead, aim at a dead monster (NPC) to revive it instead through playing its death animation backwards. Requires cheats.
+
+god2 (also go) - same as "god".  Invulnerable to damage (battery is not).
+noclip2 (also nocli) - same as "noclip".  Collision free flying, use "NoclipSpeedMulti" to increase the speed of noclip.
+~"god" and "noclip" immitations.  These commands seem built-in and insistent on engine restrictions at times, like requiring a new map for sv_cheats to take effect, or not working at all in multi-player regardless.
+~one-letter-off versions provided for priority in the middle of typing.
+
+gib, gibbed, explode, myheadasplode - gib the player on command.
+
+pleaseDontCrash, DontCrash - runs some CVars that just turn off the gauss-explosion particles and explosion shrapnel.
+~To be specific, it just does
+explosionShrapnelMulti 0
+sparksAllMulti 0
+
+crash, divideByZero, iWantMyDesktop, iWannaGoHome - the game ends.  Yep.  This exists for some reason.
+
+id, getid - take the thing in the crosshairs.  If it is a monster, print a number unique only to it.  Good for tracking down who's printing out what.
+
+
+
+
+/////////////////////////////////////////////
+PARTY / TECHNO / RAVE  CHEAT
+/////////////////////////////////////////////
+
+partyon, partytime, getwasted, fuckedup, rave - enable "myStrobe", "peopleStrobe", "forceWorldLightOff", "wildHeads".
+partyoff, partytimesover, nomoreclubbing, getbacktowork - disable the above 4 vars
+hyperrave, hardcore - WARNING: madness.
+
+fixparty, resetparty - reset all party CVars.
+
+forceWorldLightOff - bool, defaults to 0.  Turn all map-related light maps off (not fake light sprites though)
+wildHeads - bool, defaults to 0.  When on, scientists and barny's go mad.
+
+myStrobe - bool, defaults to 0.  When on, the player generates tons of club lights whever he goes.
+peopleStrobe - bool, defaults to 0.  When on, barny's and scientists have a massive club going on.  Crazy lights.
+
+raveEffectSpawnInterval - (0.22) time period between spawning rave effects.  That is, when this much time passes, spawn one light effect and "raveLaserFrequency" # of lasers.
+strobeDurationMin - (0.08)
+strobeDurationMax - (0.14)  min & max times a strobe light can last after spawn (randomized in this range) 
+strobeRadiusMin - (240)
+strobeRadiusMax - (410)  min & max amount of light a strobe light produces (random in range)
+strobeSpawnDistHori - (180) dist between 30 and THIS CVar that a strobe could possibly appear in on the XY plane (a "floor")
+strobeSpawnDistVertMin - (25)
+strobeSpawnDistVertMax - (75) - min & max dist above and below the strobe light could appear in.
+strobeMultiColor - (1) - boolean.  If 1, each flash is a random bright color.  At 0, all flashes are white.
+
+
+raveLaserEnabled (1) - allow "Lasers" to be spawned.  Triggered / disabled by parton / partyoff respectively.
+raveLaserSpawnFreq (2.3) - how many lasers appear in one spawn frame (AKA, when one light appears)?
+~Note that decimal values such as "2.3" will be guaranteed to produce the whole # of lasers (always 2 at least), and then treat the decimal as a chance of producing another one (30% chance of 3rd laser for 2.3).
+~Another example: 4.7 will generate 4 lasers, and have a 70% chance of generating a fifth.   "4" would generate 4 lasers only each time.
+raveLaserLength (180) - how long is a laser?  It is centered near the source's origin.
+raveLaserSpawnDistHoriMin (50) - random offset for spawning away on the X-Z plane (flat-ways, forward / backward and left/right)
+raveLaserSpawnDistHoriMax (110)
+raveLaserSpawnDistVertMin (-5) - random offset for appearing above or below the source.
+raveLaserSpawnDistVertMax (45)
+raveLaserBrightnessMin (1.0) - random brightness, expected range is 0 - 1.  Best not touch.
+~0 is invisible, 1 is brightest that preserves color (any higher starts forcing extremes, such as (255, 12, 0) to become bright yellow instead of off-red).  See footnote below for more info.
+raveLaserBrightnessMax (1.0)
+raveLaserDurationMin (0.06) - random time the laser lasts.
+raveLaserDurationMax (0.12)
+raveLaserThicknessMin (0.8) - random laser thickness.
+raveLaserThicknessMax (2.6)
+raveLaserNoiseMin (0) - random laser noise.  The default "0" bounds forces a normal straight line (laser), but play around to produce lightning-effects.
+raveLaserNoiseMax (0)
+raveLaserFrameRateMin (10) - unknown, but likely factors into how quickly the lightning from "noise" being non-0 animates.
+raveLaserFrameRateMax (10)
+raveLaserMultiColor - (1) - whether lasers use multiple colors or are always white.
+
+imAllFuckedUp (0) - try 1, uh, you'll figure it out.
+thatWasntGrass (0) - try 1, another case of, "you'll figure it out".
+thatWasntPunch (0) - try 1, the scientists and barneys are a little "odd" today.
+
+BRIGHTNESS FOOTNOTE:
+~It appears the RGB values, usually bytes (integers of range 0 - 255) need to be interpreted in range (0, 255^2) instead
+ to work as expected for lasers.  Or, in other words, get the RGB value between 0 and 255, then divide by 255 squared
+ (= 65025).  The result is 0 to 0.00392, where "0.00392" is maximum brightness. Why is this necessary?  No idea. 
+ What does this have to do with brightness?  It appears all "brightness" is is a multiple that acts upon the R,G,B before they're applied in-engine.  So just making it 1 (multiplication by 1) makes it have no effect.
+ To test, the brightness was set to 1/255 (0.00392) and sent colors were just divided by only 255, not squared.  It worked exactly the same.
+ If RGB values end up too far above 0.00392, they will just be horribly exaggerated.
+ (255, 20, 20), divided improperly, would show up as pure white.   (255, 75, 0) would show up as bright yellow, not slightly off-red (tint of orange).
+ Note that the engine treats anything less than full brightness as transparency at the same intensity of color, so lowering the
+ brightness will just make the lasers a blend of dimmer and thinner around the edges.  A brightness of 0, making all RGB colors 0 (since it is multiplied by them),
+ will not show up as black (expected for (0,0,0) ) so much as simply not appear at all.
+
+ 
+ANOTHER RANDOM CHEAT (because why not)
+iHaveAscended (0) - 1. Ascend to a higher plane of existence and see in all directions at the same time.
+ 
+ 
+ 
+ 
+ 
+/////////////////////////////////////////////
+/////////////////////////////////////////////
+/////////////////////////////////////////////
+
+
+
+/////////////////////////////////////////////
+FOG
+/////////////////////////////////////////////
+When the rendering mode is OpenGL (see Options -> Video tab -> Render dropdown), fog can be rendered depending on some CVars.
+~Note that it seems imposslbe to render any custom fog when underwater (or, when player->pev->waterlevel = 3) because the game forces the fog this way.
+fogTest - mode var.
+0: no effect
+1: render green fog at all times.
+2: render party fog, changes colors fairly often.
+
+fogNear - distance fog starts showing up.
+fogFar - distance fog ends.
+~making these values exactly the same is really weird.  Making them way too close is also pretty strange.
+
+
+
+/////////////////////////////////////////////
+CAMERA EDITS
+/////////////////////////////////////////////
+~Adjust the camera.  Give it a constant offset or a fixed rotation / position (best with "thirdperson", of course)
+
+myCameraSucks (0) - primary var to work with the below.  At "0", no effect, normal camera behavior.
+0: normal.
+1: freeze the camera where it is now.  Could have other side effects, very crude edit.  Load a game / go to a new map to see the camera's default position (unchanged)
+2: allows the CVars below to have influence on the player camera.
+3: normal (CVars below ignored), and prints out camera angles.
+4: allows CVars below to work, and prints out camera angles.
+
+//Note that these CVars follow some rules in regard to priority:
+//~If a "Fixed" CVar is -1, that axis for position / rotation will be free, allowing the offset to have an impact.
+// That is, -1 for a position fixed var allows that axis to take the player's position into account.  -1 for a rotation fixed var allows the camera to take the player's rotation into account.
+//~If a "Fixed" CVar isn't -1, the corresponding "Offset" CVar is completely ignored.
+//~Offset Cvars act upon the given position / rotation respectively, and just add to it.  Makes the most sense for positions.
+// The default camera CVars show a "top-down" view of the player.
+
+METHOD:
+fixCamera, resetCamera - change camera CVars to the default, sets "myCameraSucks" to 0.
+
+cameraPosFixedX (-1) - left & right
+cameraPosFixedY (-1) - forward & backward
+cameraPosFixedZ (-1) - up & down
+cameraPosOffX (0) - 
+cameraPosOffY (0) - 
+cameraPosOffZ (260) - 
+cameraRotFixedX (90) - up & down
+cameraRotFixedY (-1) - left & right
+cameraRotFixedZ (-1) - roll?
+cameraRotOffX (0) - 
+cameraRotOffY (0) - 
+cameraRotOffZ (0) - 
+		
+/////////////////////////////////////////////
+/////////////////////////////////////////////
+/////////////////////////////////////////////
+
+
+
+
+
+
+/////////////////////////////////////////////
+SOUNDTEST & SENTENCETEST
+/////////////////////////////////////////////
+
+soundtest - give it a sound after a space.  Example:
+soundtest player/pl_swim1.wav
+~Note that errors are usually cryptic, as "sound not precached" will be the error for
+ either a missing sound, missing the extension, or the game indeed did not "precache" it but it exists.
+
+Use "sentencetest" instead for sentences, OR just put a "!" in front in soundtest.
+Example:
+soundtest !HOLO_FANTASTIC
+sentencetest HOLO_FANTASTIC
+sentencetest !HOLO_FANTASTIC
+~(all do the same exact thing)
+
+~do NOT use "sentencetest" for direct sound references.  Many sounds are already in sentence form, like so:
+soundtest !bullchicken_bc_attack3
+sentencetest bullchicken_bc_attack3
+~the formula for sound path to sentence name is "directory_name", all lowercase, no extension.
+~mostly the sounds for enemies are done this way.  Do NOT expect it to work for anything not in "sentences.txt".
+
+/////////////////////////////////////////////
+/////////////////////////////////////////////
+/////////////////////////////////////////////
+
+
+/////////////////////////////////////////////
+JUKEBOX
+/////////////////////////////////////////////
+Access Jukebox commands by typing "jukebox", followed by (optional) the sound to play (or keyword).
+  jukebox
+with nothing else, will play a random song from Half-Life01.mp3 to Half-Life17.mp3, usually found in valve/media.  Not intelligent; only limited to those 17 filenames.
+  jukebox Half-Life08.mp3
+~given a filename, .mp3 or not (implied always), plays it.  Pretty much simplified "mp3 play media/Half-Life08.mp3"
+  jukebox stop     OR     jukebox off
+~cancel playing music.  Same as "mp3 stop".
+/////////////////////////////////////////////
+/////////////////////////////////////////////
+/////////////////////////////////////////////
+
+
+
+
+
+
+/////////////////////////////////////////////
+~SOME DEBUG VARS.  Best not touch unless you're testing around or have some goal in mind.
+/////////////////////////////////////////////
+
+
+
+showtriggers (0) - BOOLEAN. The "showtriggers" CVar referred to throughout bmodels.cpp and triggers.cpp has been restored.
+~Is it meaningful in the places it is called for? Possibly, if there ever was anything to show in the first place.
+
+drawBarnacleDebug - draw a red box to show the barnacle's grab-zone (always shown on easy difficulty), or the wider lower-zone (shown on normal / hard difficulty until something steps inside, showing the red grab-zone as it lowers).
+~the tentacle must be down to at least an NPC's eye level before it can grab it in the red-zone.
+
+
+apacheForceCinBounds - force the apache to use alternate bounds, regardless of the spawnflag "SF_MONSTER_APACHE_CINBOUNDS" being present (which will always take precedence if it is present).  Prerequisite for "apacheBottomBoundAdj" to take effect.
+apacheBottomBoundAdj - affect the bottom collision bound of the apache, but only to those with the "SF_MONSTER_APACHE_CINBOUNDS" spawnflag set or if CVar "apacheForceCinBounds" is on.
+apacheInfluence - make "m_flNextRocket" = 9999999 on apaches at death, if turned on.  Test?
+
+
+
+playerUseDrawDebug (0) - BOOLEAN. When on, the line traces used to detect if anything separates the player from the selected object for the USE action will be drawn. If successful, the line will be bright green and should make it from the player to the object uninterrupted. If red, it was broken along the way and failed. This check wasn't done in the base game. An alternate line-trace may be done in case the first failed which may pass and still allow the use.
+
+playerChumtoadThrowDrawDebug (0) - BOOLEAN. When on, line-traces done to check if the player is too close to a wall when spawning a chumtoad are drawn. If any one line gets interrupted, a chumtoad is not spawned and the player's chumtoad count remains unchanged. Use this to see if some invisible map geometry is blocking the player from spawning chumtoads in places that look unobstructed, printouts may help see its classname.
+
+
+
+drawDebugPathfinding - boolean.  If 1, renders lines for calls to "checkLocalMove" (path-finding method to see if a straight-shot from point A to point B is legal).  Lines are mint green if they passed, orange if they failed, red if they failed AND block further triangulation.  Usually includes triangulation.  Set to "0" to turn off (defaults to 0).
+drawDebugPathfinding2 - boolean.  If 1, draws extra parts related to a Stukabat's pathfinding (or, rather, preventative / responsive measures to getting stuck).
+
+drawCollisionBoundsAtDeath - boolean.  If 1, draws a dark-red dotted line box around the area an enemy collides with other entities.  This box lasts for 30 seconds and is only drawn on death, as it makes no sense to move on something that moves (the box cannot follow or be updated frame-after-frame)
+drawHitBoundsAtDeath - boolean.  If 1, a box like above is drawn once at death, lasts 30 seconds, but covers a "hit" range instead.  This range is the area the player can register hits for an object in but not collide with (likely not mutually exclusive).  Good to enlarge for fallen corpses from death anims to still fit inside (consider making the "setCollisionBox" check for death and return a much bigger box if this is the case).
+
+crazyMonsterPrintouts (0) - print out some things regarding how schedules work, used for debugging "can melee attack 1".
+movementIsCompletePrintout (0) - anything will print out when it is waiting for "Movement" to be complete (a type of task that signifies to re-build the current path being followed)
+~now also draws some lines for a common pathfindingtask TASK_MOVE_TO_ENEMY_RANGE. Red line is the given monster's current goal (route leads to this), and red is the given monster's enemy last known position, updated to match the enemy when in sight.
+
+bulletHoleAlertPrintout (0) - print out whenever something hears a bullet-hole hit (or doesn't, but is in the extra collection range that searches for hearing that allows a monster to hear it further away, or requires the monster to be closer).
+barneyPrintouts (0) - barny prints out his enemy (monster to fire at, or lack thereof) each frame.
+monsterSpawnPrintout (0) - when on, monsters print out their classname (monster_something) and spawn flags (often set by the map).
+houndeyePrintout (0) - some printouts related to houndeye AI.
+hgruntPrintout (0) 
+panthereyePrintout (0) 
+gargantuaPrintout (0) 
+squadmonsterPrintout (0)
+hassaultPrintout (0)
+nodeDetailPrintout (0) - some printouts related to monsters using nodes in real-time (AS OF WRITING; NOT MUCH YET)
+chumtoadPrintout (0) - BOOL. If on, the chumtoad shows some printouts.
+pathfindPrintout (0) - BOOL. If on, print out several things related to pathfinding.
+friendlyPrintout (0) - BOOL. you know the drill.
+
+
+drawDebugCine (0) - draw out cinematic nodes as cyan blue.
+
+
+
+SOUND TESTING - see how sound works.
+~ ISNOMER; anything named "all" here applies only to islave and (possibly) the controller.
+soundAttenuationAll (0.85) - RANGE(0 - 4)
+soundAttenuationStuka (0.85) - RANGE(0 - 4) how well the sound carries over distance.  Higher values make sound drop off faster with distance.
+soundVolumeAll (1) - RANGE(0 - 1)
+soundVolumeStuka (1) RANGE(0 - 1)
+
+cineChangelevelFix (3) - MODEVAR.  Has to do with minor additions for allowing cine(matic) entities to flow better through transitions, or in the best way possible.
+~cinematics not wanting to move b/w transitions is not an inherent problem.  What CAN be is if the thing they are attached to IS sent to the next level, but its cine ent is NOT.  This delinks the cine ent, and even on going back, it will not re-pick it up (plus there are immediate changes... hard to avoid these in some cases in any way, if the cine ent isn't even close enough to the transition zone but the host ent is)
+0: no change.  cine entities can not be moved through transitions, even if in the general area.
+1: cine entities CAN be moved through transitions if in the general area.
+2: exclues 1.  Only re-links transition entities to their host ents when they are re-activated (return to their host level).
+3: both 1 & 2, most complete fix.
+
+
+
+
+meleeDrawBloodModeA - Mode variable, for drawing blood when "checkTraceHullAttack" is used in a melee attack meant to draw blood.
+0: don't draw any blood.
+1: use CheckTraceHullAttack's usual "vecEndPos" to draw blood.  Usually very close to the melee attacker itself.
+2: use hit of a normal Trace-Line using CheckTraceHull's same start & end points (start = center of attacker's model, end = some distance in the direction the attacker is facing FROM THE CENTER)
+3: use hit of a normal Trace-Line using CheckTraceHull's same start (start = center of attacker's model, end = some distance in the direction the attacker is facing FROM THE EYES)
+4: use hit of a normal Trace-Line using CheckTraceHull's same start (start = center of attacker's model, end = victim's eye position)
+5: use hit of a normal Trace-Line using CheckTraceHull's same start (start = center of attacker's model, end = victim's body target). (Body target is usually the victim model's center)
+6: use hit of a normal Trace-Line using (start = eye position of the attacker, end = some distance in the direction the attacker is facing FROM THE CENTER)
+7: use hit of a normal Trace-Line using (start = eye position of the attacker, end = some distance in the direction the attacker is facing FROM THE EYES)
+8: use hit of a normal Trace-Line using (start = eye position of the attacker, end = eye position of the victim)
+9: use hit of a normal Trace-Line using (start = eye position of the attacker, end = victim's "body target")
+
+
+meleeDrawBloodModeB - Mode variable, for drawing blood when "checkTraceHullAttack" is not used in a melee attack meant to draw blood.
+~(Mode 1 is very similar to A's 1, just immitates CheckTraceHullAttack.   Modes 0 & 2 - 6 are identical.)
+0: don't draw any blood.
+1: Call CheckTraceHullAttack anyway and use the usual "vecEndPos" to draw blood.  Usually very close to the melee attacker itself.
+2: use hit of a normal Trace-Line using CheckTraceHull's same start & end points (start = center of attacker's model, end = some distance in the direction the attacker is facing FROM THE CENTER)
+3: use hit of a normal Trace-Line using CheckTraceHull's same start (start = center of attacker's model, end = some distance in the direction the attacker is facing FROM THE EYES)
+4: use hit of a normal Trace-Line using CheckTraceHull's same start (start = center of attacker's model, end = victim's eye position)
+5: use hit of a normal Trace-Line using CheckTraceHull's same start (start = center of attacker's model, end = victim's body target)
+6: use hit of a normal Trace-Line using (start = eye position of the attacker, end = some distance in the direction the attacker is facing FROM THE CENTER)
+7: use hit of a normal Trace-Line using (start = eye position of the attacker, end = some distance in the direction the attacker is facing FROM THE EYES)
+8: use hit of a normal Trace-Line using (start = eye position of the attacker, end = eye position of the victim)
+9: use hit of a normal Trace-Line using (start = eye position of the attacker, end = victim's "body target")
+
+
+meleeDrawBloodModeBFix (1) - BOOL. For meleeDrawBloodModeB = 1, the tracehull seems to have issues with headcrabs registering blood trace, possibly due to just being so close.
+~This pushes the start of the tracehull further back behind the origin, towards where the entity is facing.  Only for meleeDrawBloodModeB = 1 though.
+~Can help the tracehull work as expected (the blood being drawn at a more reasonable location than missing the player and going behind to the furthest point possible of the trace).
+
+meleeDrawBloodModeAOffset (7) - FLOAT. In any case of meleeDrawBloodModeA, pushs the blood-draw-location back so many units along the line (may make it easier to see)
+meleeDrawBloodModeBOffset (7) - FLOAT. Same, but for ModeA.
+
+debugDrawBloodTrace (0) - when 1, draw the location of the most recent trace-line related to blood-drawing when the player is attacked by something that taps into blood-tracelines.
+
+
+
+
+
+blockChangeLevelTrigger (0) - BOOLEAN.  If on, prevents the usual "change-level" area triggers from working.
+
+blockMultiTrigger (0) - BOOL. If on, prevents Multi triggers from working, which disables a wide variety of other triggers, if not all of them.
+
+blockMusicTrigger (0) - BOOL. If on, stops map features that try to change the music. Namely, stops CTargetCDAudio (target_cdaudio) or CTriggerCDAudio (trigger_cdaudio) from sending music requests.
+
+hideNodeGraphRebuildNotice (1) - BOOLEAN.  If on, hides the yellow "Node Graph out of Date. Rebuilding..." that appears on running a map without nodegraph data.
+
+
+
+
+
+ignoreIsolatedNodes (1) - BOOLEAN.  If 1, nodes that have no outgoing connections will be ignored by pathfinding approximations (trying to tie in current start / destination points to path nodes to tie into the flow).
+
+drawNodeAll (0) - BOOLEAN - ADJUSTABLE. Whether to draw all nodes on the map as single RED vertical lines that pass through the node's origin (generally snapped to the ground).
+~Set to a value above 10 to become the minimum range for drawing nodes instead to preserve drawing (too much can crash the game)
+
+drawNodeSpecial (-1) - INTEGER. When above -1 (and legal), draws this particular node white instead.
+~Does not require "drawNodeAll".
+~IGNORED if "drawNodeAlternateTime" is above 0 and being used.
+
+drawNodeConnections (0) - MODE. 
+0: nothing.
+1: The currently designated special node will render its connections outgoing to other nodes as purple lines.
+2: Any nodes rendered (special, all, or under "drawNodeAll"'s range) will have their connections rendered.
+
+drawNodeAlternateTime (0) - DECIMAL. When above 0, will change the currently shaded white AI node every "variable" number of seconds, and print out what the currently shaded AI node is by its ID.
+~Stare at a node until it turns white to tell what it is.
+~OVERSHADOWS "drawSpecialNode"'s picked ID.
+~example: a value of 2.5 means the AI node marked "special" (white) changes every 2.5 seconds.
+
+nodeSearchStartVerticalOffset (30) - DECIMAL.  A vertical offset (positive is above) to the checks done for finding the nearest node.  Being above 0 may help for movement-checks not to get snagged on terrain and give up.
+
+
+
+
+COMMANDS AGAIN:
+
+debugNode, nodeDebug - turn on the key node-debugging CVars (drawNodeAll to 230, drawNodeConnections to 2).
+debugNodeWeak, nodeDebugWeak - turn drawNodeAll to 500, drawNodeConnections to 1 (so connections don't spam)
+debugNodeOff, nodeDebugOff - turn off all node-debugging-related-CVars.
+
+
+reportAI - if targeted at a monster or descendents, prints out a lot of information about its current state and AI. Schedule name, task number (line up with the enumeration in tasks.h), etc.
+~Can also give a number instead to get the same information out of a monster of a particular ID. Such as:
+  reportAI 14
+will try to find a monster with a MonsterID of 14 and print out its stats.
+MonsterID is assigned by spawn order and does not reset to fill in gaps created by deleted monsters.
+
+report - if target at any entity, returns some general information and possibly information specific to that type of entity.
+~calls reportAI when used on monsters or monster descendents. Does not take MonsterID as only monsters have those.
+
+
+
+squadReport - if targeted at a SquadMonster or descendents (hgrunt, houndeye, stuka, etc.), prints out that monster's squad's info (members, leader, and where the picked monster is in the list)
+
+nodeCon, nodeConnections - supply a number (node ID) to temporarily show all outgoing connections as red-dotted lines.
+
+getclosestnode, nearestNode - argument(s) optional (each separated by space).  By default, gets the nearest node to the player, NOT the crosshairs.
+ARGUMENTS:
+ai - get the nearestnode exactly how the AI would from this location (a bit different; requires some validation and proof of being able to get there)
+special - marks the closest node as the "special" node, shading it white.
+target - change the search location to where the crosshairs are looking.
+
+printoutisolatednodes - print a list of all nodes that have no outgoing connections.  This is significant because, as far as I know, only outgoing connections matter to the pathfinding.
+printoutisolatednodes - print a list of all nodes that have no outgoing connections.  This is significant because, as far as I know, only outgoing connections matter to the pathfinding.
+
+printoutnodemap - print a list of each node's outgoing connections.
+~Format is:     Node#: outgoing1, outgoing2, outgoing3...      for all Node #'s.
+
+NodeTP, TPNode, TeleportToNode - with a node ID for an argument, send the player to the node's location.
+~May clip through terrain in some cases; noclip out.
+
+TeleportToMonster, MonsterTP - with a monster ID for an argument, send the player to that monster's location.
+~use "autoSneaky 1" first to stop the monster from reacting, and use noclip to get unstuck.
+
+apacheRocket - generate and send an apache HVR rocket toward the crosshairs.  BOOM.
+checklocalmove - Treats the player like an AI monster and sees if it would be valid to straight-shot from here to the destination.  Says "SUCCESS!" or "Stopped this far:" for how far it got before failing.
+
+moveEnt - gets the entity at the crosshairs and moves it to your position (best with noclip).  Does not support coordinates by entry.
+forcetaskcomplete - gets the monster at the crosshairs and "completes" the current task it is on in the AI, allowing it to move on to the next task in this schedule (or pick a new schedule if that was the last task of the current schedule).
+forcefailtask - gets the monster at the crosshairs and "fails" the task, which terminates the entire schedule regardless of how many tasks were left in order to pick a new one (before going through a possible "fail" task, possibly set by a recent schedule to fall back on)
+forgettarget - gets the monster at the crosshairs, sets "m_hTarget" to NULL (an entity to focus on, possibly not combat related, like a scientist knowing to follow the player).   (can crash in the middle of some tasks)
+forgetenemy - gets the monster at the crosshairs, sets "m_hEnemy" to NULL.  Will most likely fetch the nearest hostile in sight as a new enemy (can crash in the middle of some tasks)
+forgetenemyandtarget - gets the monster at the crosshairs, forgets both enemy & target.
+
+getSize - gets the monster at the crosshairs, prints out info about two ways of getting size:  mins & maxs, and absmin & absmax.  Reports the delta of each, as well as the total "size" of each.
+~"mins & maxs" more often has to do with the crude, square collision box that blocks movement by other entities.  It is often set by script, so results could be inconsistent with expectation.  IE, agrunt and gargantua have identical "maxs - mins" size, as their hitboxes just say to use the same 64x64x64 area.
+~"absmin & absmax" more often has to do with an even wider box that is often automatically set by the model's own physical extents, and usually mean the area that is checked for when determining whether a bullet / source of damage struck a inner model hitbox (a crude rotated cube), and then a more precise one on the model's own surface.  The gargantua's absmax - absmin is greater than that of the agrunt.
+
+removeAllMonsters - deletes all non-player monsters. Good for reducing printout spam.
+
+drawPathTrack # - draws the specified path_track. ID determined by spawn order.
+~draws a vertical green or red line at this path_track's origin, dependong on whether the SF_PATH_DISABLED spawn flag is not or is present accordingly.
+~draws a yellow line from this path_track's origin to the previous path_track link's origin, if given.
+~draws a blue line from this path_track's origin to the next path_track link's origin, if given.
+~draws a white line from this path_track's origin to the alternate 
+~Also generates a "report" printout of this path_track, since they can not be seen to be targeted by player crosshairs for reports.
+
+teleportPathTrack # - moves the player to the origin of the path_track of this ID. Turn on noclip first.
+
+drawTrackChange # - draws the specified func_trackchange.
+~draws a cyan (blue-green) line at the func_trackchange's origin. May be obscured or underground. Try teleportTrackChange.
+~draws the top and bottom path_track links exactly like drawPathTrack individal calls.
+~Also generates a "report" of this func_trackchange. This will show its top and bottom path_track link's IDs.
+
+teleportTrackChange # - moves the player to the origin of this teleportTrackChange.
+
+enablepathtrack # - removes the SF_PATH_DISABLED spawn flag, which may be adjusted in real time by target firing or other logic.
+~allows movement if it was blocking, but does not guaranteed related entities like func_trackchange are listening anymore.
+
+disablepathtrack # - adds the SF_PATH_DISABLED spawn flag.
+~blocks a train that tries to pass this path_track.
+
+
+
+
+
+--------------------------------------------------------------------------------------
+SPARKS MULTI CVARS - adjust how many of the default "6" sparks appear for each spark generaiton call.  Only applies if "useAlphaSparks" is on (1).
+~WARNING.  Too many particles (alpha sparks) will crash the game.  Multiples above 1 unadvised, and an env multiple of even "1" crashes in some places.
+~use 0.17 for one spark.  Values round down, so best go slightly higher than the # desired to be safe.
+~under 0.17 by much produces 0 sparks (or, just say 0).
+~1.0 is the full 6 sparks.  0.5 is 3 sparks.
+~There is a spawnflag that can be accepted named "SF_BEAM_REDUCEDSPARKS" for CBeam entities. This flag is defined as such:
+ #define SF_BEAM_REDUCEDSPARKS	0x0200  //2^9
+~There is also a spawnflag named "SF_ENVSPARK_REDUCEDSPARKS" for env_spark (same value):
+ #define SF_ENVSPARK_REDUCEDSPARKS	0x0200  //2^9
+~all defaults are "1", except for Env.  Scale of 0 - 1 expected.
+
+resetSparks
+~method to reset all sparks-related CVars to straight 1's (envMulti to 0.5):
+
+
+sparksAllMulti - float.  Multiple applied to all spark generation calls.  Below are for more specific cases (on top of this one). 
+~For instance, if "sparksEnvMulti" were 0.4 and "sparksAllMulti" were 0.5, the resulting amount of env sparks would actually be 0.4 * 0.5 = 0.2 as many (1/5).
+
+sparksEnvMulti (default of 0.5 instead)
+sparksButtonMulti
+sparksPlayerCrossbowMulti
+sparksComputerHitMulti
+sparksTurretDeathMulti
+sparksOspreyHitMulti
+sparksExplosionMulti
+sparksBeamMulti
+sparksAIFailMulti
+--------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------
+QUAKE EXPLOSION SHRAPNEL CVARS - applies to the pieces of shrapnel created by "cl_explosion" being on.  Defaults provided.
+shrapRand, 190
+shrapRandHeightExtra, 140
+shrapMode, 1
+explosionShrapnelMulti, 1
+--------------------------------------------------------------------------------------
+
+/////////////////////////////////////////////
+/////////////////////////////////////////////
+/////////////////////////////////////////////
+
+
+
+playerBulletHitEffectForceServer (0) - BOOL. force whether effects related to the player's bullet hitting a surface (bullethole decal, texture-hit sound) are called by the client or server. By default, they are called by the client. When 1, the server will cal lfor these effects just like NPCs do.
+*Note: This is NOT TE_GUNSHOT, which is still always serverside and unrelated to this. Can look into playing TE_GUNSHOT clientside too if interested.
+
+playerWeaponForceSpreadMode (0) - MODEVAR. If non-zero, forces weapons whose spread is altered in multiplayer (shotgun and mp5) to always use either the singleplayer or multiplayer spread regardless of being in actual singleplayer or multiplayer.
+0 - no effect; default behavior per game.
+1 - forces singleplayer behavior: spread radius is circular.
+2 - forces multiplayer behavior: spread radius of the shotgun is less wide and taller, supposedly for being more likely to hit other fast-moving players. The mp5's spread radius is greater overall in multiplayer.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+valve/resource/gameui_english.txt:   string links?
+
+valve/resource/TrackerScheme.res:   fonts.  "Xirod"?
+~NOTE:  "ControlText"  is for the server-text in console.
+~"BrightControlText",  oddly enough dimmer actually,  is client-text in console.
+
+
+
+
+****************************************************************************************************************************
+****************************************************************************************************************************
+****************************************************************************************************************************
+END OF CVARS
+****************************************************************************************************************************
+****************************************************************************************************************************
+****************************************************************************************************************************
+
+
+NEW SPAWN FLAGS!
+Beams:
+~SF_BEAM_REDUCEDSPARKS - 0x0200.  This beam will spawn half the usual particle balls (in case of partical overflow crashes)
+
+Apache:
+~SF_MONSTER_APACHE_CINBOUNDS - 1024.  This apache has a more accurate hitbox for sitting on the ground (see CVar "apacheForceCinBounds")
+
+Stukabat:
+~SF_MONSTER_STUKA_ONGROUND - 8.  The stukabat will try to spawn snapped to the ground if it is sufficiently close.  Otherwise, it will try to spawn to a surface above (also if close enough).  If both checks fail, it spawns mid-air, hovering (support for a flying-route may follow?)
+
+Scientist:
+~SF_MONSTER_TALKMONSTER_BLOODY - 8.  whether a scientist (only, yet) spawns with the dirty skin (alpha models) or not.  off = no, on = yes.
+
+HGrunt:
+~SF_HGRUNT_DISALLOW_PROMOTION - 8. causes an HGrunt to not allow itself to be replaced with an HAssault (commando version) at map / level start.
+                                   By default, one hgrunt in a squad is selected to be replaced with an HAssault if no other HAssault is found at mapstart.
+
+
+OTHER FLAGS (general):
+~Squad leader - 32.  Space that leaders of squads seem to use (declared "leader" by the map), so best not use this for squad-monsters for any other purpose.
+~SF_MONSTER_DYNAMICSPAWN - 2^30, or "2 to the 30th".  Enemies spawned in real-time, like by the player's spawn commands, get this tag.  Unverified if those spawned by other means (other NPCs, Gonarch?) also receive it.
+
+~SF_PICKUP_NOREPLACE - 8 - Used to tell a spawned weapon (snark, chumtoad) not to replace itself with the walkable version. This is also to stop the version spawned by a walkable from wanting to spawn.
+
+
+
+
+UNRESOLVED EXTERNAL COMPILATION ERRORS NOTE
+...also, I feel that, for any future scripters, a good note is that a REALLY confusing error is when the compiler complains about an "unresolved external symbol" (IE, telling it to expect a method by name / preliminary details, like what args to accept, but never defining it), despite doing EXACTLY that.       It is often because of script that compiles both server-side AND client-side,  so the server-side was the one likely handled, but the client-side WASN'T, even if the client-side is completely unused (usually the case).   So do what the dev's did: in hl_baseentity.cpp,   a ton of the same events are just dummied (same identification stuff, do nothing).    This kind of thing is VERY frustrating to find out for the first time..
+~Note that this should only happen in script that is run by both the client and server (usually, only the server needs to do anything), so only methods called in script run client / serverside need to be dummied client-side.  If unsure, just try to dummy anyways and see if it complains about not seeing it.  You may need to separate the prototyping (class stuff) from the implementations (what methods do) to inherit from serverside .h files to get the needed prototypes in scope (getting implementations multiple times causes tons of errors!).
+
+
+
+
+
+
+
+GOING TO NEW MAP NO LONGER NEEDED FOR SV_CHEATS CHANGES TO TAKE EFFECT!
+Yep, change "sv_cheats" at anytime and it's effects will apply instantly.
+You can spawn things immediately after loading a game, provided sv_cheats was 1 prior to saving it.
+This is because of changes in "client.cpp" and "player.cpp" that check "sv_cheats" and update "g_flWeaponCheat", the determiner of several console commands, namely give & impulse commands, upon using a command involving "g_flWeaponCheat".  Before, only loading a new map triggered that update.
+
+
+NEW SPAWNNABLES
+item_antidote (already there, but your HUD shows it where the emptying-bucket symbol is).  Likely used for stopping continuing toxic - damage effects.
+item_adrenaline (cloned from antidote, uses w_adrenaline.mdl for the in-game pickup-able).  Likely used to give the player a jumpstart at death (not-gibbed).
+item_radiation (same idea s the above.  A syringe for radiation treatment, stopping continuing damage of that kind.  Uses the w_rad.mdl model.
+~The above have no funciton / way of being used.  The antidote has some script in player.cpp that relates to stopping longer-lasting toxic damage, but I don't know of a way to trigger that / use an antidote.
+~Same story for the adrenaline: some mentioning of it, not used.
+~All items use the antidote's suit voice "antitoxin levels 100%" or something like that.  Search for others?
+item_longjumpcharge (a clone of the "item_longjump" that gives one "long jump charge" instead of the long jump ability, which is now implied always on, but requires said charges to work).
+
+
+
+Also, experiment with removed enemys, like monster_bloater, monster_rat (or maybe just rat), etc, since most models are now precached on map start.
+
+
+
+
+
+Noteworthy new methods:
+CBaseEntity::precacheAll() in cbase.cpp
+This method is called by "world.cpp"'s CWorld :: Precache method, since that method ends up getting called upon loading a saved game or going to a new map.
+It effectively makes any resources (models, sounds, textures) listed pre-cached and available in any map.
+It is the result of pasting the contents of many entity's precache lists from across the project into this method, then filtering that to remove any copies to make it take less lines (halved in size).  Some entities precache the same things as others, like a zombie claw sound effect for a generic swipe sound.
+If you want to see the list before the duplicate reduction, say so.
+If you spawn an entity and the game crashes, check the error relating to precaching and report what you tried to spawn, along with what the error says.  Adding that entity's precache list / adding particular precache statements to the indicated file should fix that.
+
+PRECACHE ERROR
+NOTE::: There seem to be two prominent types of precache errors.
+
+1) One from loading too many entities:
+Host_Error: PF_precache_sound_I: Sound 'X' failed to precache because the item count is over the 512 limit
+~This error happened because too much stuff was precached.  Try turning "precacheAll" off (that's CVar now) to solve this.
+~Too much stuff is precached because this particualr map may have a lot of stuff precached already (even sounds).
+~But, turning off precacheAll makes the next error possible:
+
+2) One from attempting to create (almost always player spawning) something the map has not precached ahead of time:
+Host_Error: PF_precache_model_I: 'X' Precache can only be done in spawn functions
+
+So, the best idea is to find a place that has few entities precached (most maps in the training course seem okay), turn on precacheAll, save/reload, spawn away.
+In most of the game, go with "precacheAll" off, but if you do need it on, request a skimmed-down version that has what you need.
+
+IMPORTANT: either of the above precache errors will send you back to the main menu.  
+Don't load any maps (or load / start a game), because the precache error can cause some rather nasty clientside glitches.  Just restart the game.
+Best change "precacheAll" in the menu, in a level itself should be okay though.
+
+
+
+
+
+
+Chud::drawAdditiveFilter
+~clientside: in hud.cpp
+called in place of "SPR_DrawAdditive", but accepts the same vars.
+Will draw whatever it was meant to, and draw the broken-transparency on top of it if "showBrokenHUDAlpha", a reference to the cvar, is true.
+
+CHudHealth::deriveColorFromHealth
+~clientside: in health.cpp
+sets the r, g, b arguments (incoming as addresses to the vars they refer to in an outside context) depending on a split formula.  Color ends up traversing from green to yellow from 100 to 70, and yellow to red (orange inbetween) from 70 to 0.  The midpoint (70, the var "yellowMark") can be changed gracefully.
+
+
+CEgon::ItemPreFrame in egon.cpp
+The method happens right before every frame and handles what to do if the player holds the secondary attack control (run until the animation to toggle b/w primary and secondary is done), is flexibile for being interrupted / cancled by releasing.
+
+
+About the glock silencer:
+glock silencer now working!  CVars related to whether it is currently "on" or not are no longer necessary.
+Just see "wpn_glocksilencer"
+
+
+
+
+
+WORTH MENTIONING
+major changes to "CHud::DrawHudNumber" (in hud_redraw.cpp) to accept the "fontID" integer argument.
+Between 0, 1, and 2, draws the standard, boxed, and tiny fonts respectively.
+~OUT OF DATE, much has been added, see this method for yourself.
+
+
+
+
+
+COMMUNICATING BETWEEN THE SERVER AND THE CLIENT
+I haven't done much testing with this, but this format can be used to send arguments to methods between places usually unreachable (example from player.cpp shown):
+
+MESSAGE_BEGIN( MSG_ONE, gmsgBattery, NULL, pev );
+	WRITE_SHORT( (int)pev->armorvalue);
+MESSAGE_END();
+
+This works anywhere in methods where you want to send an argument (pev->armorvalue) to a method elsewhere, provided a few things are setup.
+
+Top-level, not particular to any method (found in player.cpp):
+int gmsgBattery = 0;
+
+Inside "LinkUserMessages" of player.cpp (I assume other places called in a similar fashion work):
+gmsgBattery = REG_USER_MSG( "Battery", 2);
+..."MsgFunc_Battery" will be the name of the method the signal "gmsgBattery" connects to.  It's number is rather arbitrary, more of a separate ID given to it.  The "MsgFunc_" part is implied and should not show up here, and will make more sense later.
+
+Then, you need to setup a place to receive the message.  The client's "battery.cpp" file has the following:
+
+Top-level (yep, semicolon not required):
+DECLARE_MESSAGE(m_Battery, Battery)
+
+"m_Battery" is the particular instance of some class that has the method to be received.
+"Battery" should be the exact same thing from "REG_USER_MSG( "Battery"...;", the "Battery".
+
+Then, this, "CHudBattery::Init", from battery.cpp:
+HOOK_MESSAGE(Battery);
+
+It is another part of connecting the method to the external call.  Again, same "Battery".
+
+And finally, "int CHudBattery:: MsgFunc_Battery", also battery.cpp, is the method to be reached upon the call.
+These two lines in that method seem to be the most significant:
+BEGIN_READ( pbuf, iSize );
+int x = READ_SHORT();
+
+I think "BEGIN_READ( pbuf, iSize );" is required for getting any arguments sent from the external call, and "x = READ_SHORT();" gets the first argument (int).
+That gets the "pev->armorvalue" sent much further above.
+All in all, the player's armor (server) ends up connected to what's displayed onscreen (the client).
+
+
+
+
+
+
+
+
+
+MANAGING / CREATING EVENTS
+It seems that events are a convenient way for server-side script to access client-side script, which certainly has its benefits.
+The best example of its use is to trigger animation events for the first-person view from the server's logic (just fired?  Play the recoil, make bullet decal, etc.).
+However, it can be used more simply to just call a method in hl_evdlm.cpp that is clientside.
+
+To do this (one way that's worked)...
+1. Declare a number to represent the event in a place that is compiled relatively early (to ensure most places you may want it will have access to it at their time of compile).
+~Example: goto "combat.cpp", one such place.  Anywhere in top-level scope (but to stay organized, put it under "MODDD - CUSTOM EVENTS HERE"), add your new event var in a new line:
+	unsigned short g_EVENTNAME;
+~That's all, but feel free to refer to your var here in combat.cpp if it is needed.  For anywhere else, follow step 4 first in that file.
+2. That number var needs to be used to store this event as an ID (handled by the engine).  Events are linked b/w the server and client by files, but it seems fine if the file is completely empty.
+~Goto client.cpp's "ClientPrecache" method.  At the bottom, you should see "MODDD - LINK EVENTS TO FILES, SERVERSIDE".  Insert a line like this:
+	g_EVENTNAME = PRECACHE_EVENT( 1, events/EVENTNAME.sc);
+~I haven't tested with a missing file, so you should go to the mod folder (...Valve/Half-Life/ProtoHLGS as of this time), to the "events" folder, and adding "EVENTNAME.sc" as a file.   Just make a new text document, rename it to "EVENTNAME", and make its extension ".sc".  Enable common file extensions (in Windows, under folder options) on your system if this new text document is missing its standard ".txt" to be changed.
+3. Still in client.cpp, there is one more step here.  Near the top, after any #include lines (just a preference, mostly), notice "MODDD - including event ID's".  Make a line like this:
+	extern unsigned short g_EVENTNAME;
+~This tells the compiler to expect a top-level var of this name and type to be present by the time compilation reaches this file.  This is needed to ensure you are editing the exact same var.  Otherwise, edits done in this file (precaching the event to link / use it) would never translate over to any other files.  Missing it altogether would make the compiler give up on "unknown symbol g_EVENTNAME".
+4. Apply step #3 to any file (generally serverside .cpp files specific to objects / broad types like "weapons") to make this event available.
+5. Now, to call the event, insert this line in the method where the event should be called:
+	PLAYBACK_EVENT_FULL (FEV_GLOBAL, NULL, g_EVENTNAME, 0.0, (float *)&SOMELOCATION, (float *)&SOMEDIRECTION, 0.0, 0.0, 0, 0, FALSE, FALSE);
+~WOA, What!  Let's break that down...
+~FEV_GLOBAL  - unsure, but no issues with it, see "event_flags.h" for other event flags, fool around if you want to later.
+~NULL        - this spot is a reference to the thing calling the method.  For some events, this is unnecessary, so just send nothing: NULL.  However, weapon-firing events care about who fired it, so those would send "m_pPlayer->edict()" instead.
+~g_EVENTNAME - your event index that was declared in combat.cpp (or some other early-compiling place), and linked to the file for use in "client.cpp".  If the compiler complains about it being unavailable, follow step 4 for this file (but still make sure the other steps have been followed).
+~0.0         - delay before playing the event.  I haven't tested around much to see if its intuitive (in GoldSource, trust NOTHING, relying on assumptions rarely turns out well).
+~(float *)&SOMELOCATION - This is referring to some Vector (series of 3 numbers) declared earlier.  It must be converted to a float pointer to be interpreted as an array of 3 floats (hence the cast, the  "(float *)" part).  If you already are using an array of 3 floats, skip that cast, as well as the "&", since getting the address of an array is redundant.
+~(float *)&SOMEDIRECTION - Same as before, but this is often used for sending generated projectiles / particles / something contextually sensitive in a direction (if used that way).  If this is indeterminable / unavailable, just send "Vector(0,0,0)" in place of "SOMEDIRECTION" to send all 0's, consider randomizing the direction in the actual event later if particles should fly around from the source.
+0.0, 0.0, 0, 0, FALSE, FALSE
+~Talking about these at the same time, because there's not much to it.  These are pairs of numbers of the same type: float (decimals), int (whole #'s), and Booleans (0 or 1, FALSE or TRUE).
+~They can be used by the event for logic.  For instance, the alpha-sparks effect uses the first integer (3rd argument here) to denote the number of particles to spawn.  This way, two separate events need not be created for such a trivial difference in logic.
+~If unused, just skip them and use 0-like values.  Straight 0's would have been okay, but this makes it more clear what's what (don't send floats in places where whole #'s are expected, unless you want to lose the decimal to truncation, bool's don't fare well with values other than 0 or 1 without a firm grasp of boolean logic, etc.)
+OKAY.  So the server can now find our event and call it.   But what will the client do?  It doesn't know how to understand the event!  So, load it from there too, and define what to do when this event is called!
+6. goto "hl_events.cpp".  Scroll down a bit to see several events prototyp'd as "void EV_something( ...) ".  Look near the bottom for the customs that have been added already.
+~Add a line like this (but take note of the end bracket "}" there.  Place this line BEFORE that, make new lines if you have to):
+	void EV_EVENTNAME (struct event_args_s *args);
+~Also, note that this name does NOT need to match up with the server-side one exactly.  Events are linked b/w the server/client by the file, not by having the same name as their client / server counterparts (but you can still do this).
+7. Still in "hl_events.cpp",  goto the bottom.  Also before that "}", insert this line:
+	gEngfuncs.pfnHookEvent( "events/EVENTNAME.sc",				EV_EVENTNAME );
+~of course, the file part (EVENTNAME.sc) does have to match your named, empty file in the "protoHLGS/events" folder.  The right-hand part must match the name of the event declared above.
+
+
+8.  Getting close.  Goto "ev_hldm.cpp".  Scroll down a bit below like before and, again, notice the other custom events.  Add a line like this (again, regard the "}", before that):
+void EV_EVENTNAME( event_args_t* args);
+
+9.  Still in ev_hldm.cpp, go to the very bottom (preferrably, but between most methods should be fine too) and make a new method like this:
+void EV_EVENTNAME (event_args_t *args)
+{
+
+}
+~...And THIS is where the event will actually do something from the client's perspective!
+Some things can be done from the client that are impossible / harder to pull off on the server.
+Some common pointers though:
+~It IS kinda important to actually use some of the stuff send (location, direction (possibly), intended parameters, etc.).  To do this, use lines like these:
+args->origin
+args->angles
+args->iparam1
+args->iparam2
+args->fparam1
+args->fparam2
+args->bparam1
+args->bparam2
+...There may be others, see "event_args.h" for all things available to the "args" var (but only rely on things that you expect the server to actually send as non-zero values.  Why treat a var that's always 0 as a factor?).
+Also, referring to models (or sprites, this works for both, interestingly) is very useful to do at runtime with a line like this:
+int someModel = gEngfuncs.pEventAPI->EV_FindModelIndex( "sprites/MODELNAME.mdl" );
+(note that sprites end in the ".spr" extension.  No difference in use though).
+This "someModel" var can be given to methods that require a model, like several effect methods in "r_efx.h".
+NOTE that you need to have precached this event already at the time the map was loaded in order to use it, or else the effect will likely fail to show up!  A good place to precache most things is "client.cpp" in "ClientPrecache" (again).
+~So, in our case, to precache "MODELNAME":
+PRECACHE_MODEL( "models/MODELNAME.mdl" );
+~I believe any "precache" call returns a number (Index) that can be used to hold on to this precached thing, but this probably won't be helpful for you.  I haven't tested, but I don't think that same ID translates well from the server/client message, so it is best to stick with re-getting the server-precached thing anyways like before (the dev's did it this way, I trust it is for a reason).
+
+But, consider testing your event to make sure everything is set up correctly.  Just put a print statement:
+	easyPrintLine("EVENTNAME CALLED!")
+...and see if this shows up when the server-side method you placed the event call in (step #4) is called.  Consider putting a print statement in there too to make sure the server is sending the event message in the first place.
+
+Finally, see other methods for pointers on things that client-side script can do.  Happy hunting!
+
+
+
+SOME NOTES ON THE INHERITENCE HEIRARCY:
+inheritence is used quite a bit throughout this program, but the greatest case of it is for all living game entities
+(enemies, npc's, the player, etc.)
+
+
+
+
+
+METHOD STUBS FOR CLIENT (covers all three classes below)
+hl_baseentity.cpp
+
+CBaseEntity:    cbase.h,        cbase.cpp
+CBaseMonster:   basemonster.h, monsters.h, combat.cpp, monsters.cpp, defaultai.cpp, AI_BaseNPC_Schedule.cpp   (why is this a mess...)
+CBasePlayer:    Player.h   Player.cpp
+
+~also consider "monsterstate.cpp", and "SquadMonster" .h & .cpp.
+
+
+DEBUG DIFFERENCES:
+Note that compiling with "Debug" (as opposed to "Release") has some sublte differences, such as some extra
+console messages that can print out for AI failures and sparks appearing above the heads of NPCs that fail
+to perform a task, can't get a schedule, whichever.
+The yellow dots that appear on badly placed enemies (spawned partially in a wall, not enough room, can't be 
+auto-adjusted) always appear regardless of debug or release compiling, and regardless of whether the user
+starts the game with the "-dev" flag on.
+As for the script, see "schedule.cpp" and search for "UTIL_Sparks", a line that, further above, depends on
+the constant "DEBUG" existing.  This constant ONLY exists when compiling in "Debug", but not directly.
+Go to dlls/extdll.h and, near the top, there is
+#ifdef _DEBUG
+#define DEBUG 1
+#endif
+...I can only imply that "#ifdef _DEBUG" is referring to a variable (_DEBUG, separate from DEBUG) that only exists
+when compiling in "Debug".  If so, it then creates "DEBUG".
+Or, in other words, "_DEBUG" is a constant created (or marked as "true") when compiling in "Debug", while "DEBUG"
+is a similarly named constant created just by the dev's of Half Life.
+Why?  No idea.  But know that both mean pretty much the same thing, and the 2nd one pretty much just exists to fuck up
+searches.  (oh yea, do I have a chip on my shoulder).
+
+Anyhow, do not mix up this sparking with the supposed, but definitely irrelevant, "PATH_SPARKLE_DEBUG" that is defined
+(or was) in trains.h.  It was found, commented out by the developers, and so is never on, regardless of compiling mode.
+I tried turning it on and can not notice any difference.  Then again, I never noticed the sparks on NPCs, so that 
+doesn't really mean anything.
+"PATH_SPARKLE_DEBUG" is referred to a few times in "pathcorner.cpp", and one part required some editing to even compile.
+So, who knows, it may be broken because of some "logic" errors (script that is legal, but behaves differently from a 
+misunderstanding b/w the programmer and the compiler / engine).
+
+
+
+
+
+
+
+
+~search by raw text of "not in table" across the files:
+C:\Users\Administrator\Desktop\SM\HLS1 AZ\dlls\AI_BaseNPC_Schedule.cpp : CONTAINS: "not in table".
+C:\Users\Administrator\Desktop\SM\HLS1 AZ\dlls\cbase.cpp : CONTAINS: "not in table".
+C:\Users\Administrator\Desktop\SM\HLS1 AZ\dlls\debughl\cbase.obj : CONTAINS: "not in table".
+C:\Users\Administrator\Desktop\SM\HLS1 AZ\dlls\debughl\hl.dll : CONTAINS: "not in table".
+C:\Users\Administrator\Desktop\SM\HLS1 AZ\dlls\debughl\schedule.obj : CONTAINS: "not in table".
+C:\Users\Administrator\Desktop\SM\HLS1 AZ\dlls\Releasehl\cbase.obj : CONTAINS: "not in table".
+C:\Users\Administrator\Desktop\SM\HLS1 AZ\dlls\Releasehl\hl.dll : CONTAINS: "not in table".
+C:\Users\Administrator\Desktop\SM\HLS1 AZ\dlls\schedule.cpp : CONTAINS: "not in table".
+
+
+C:\Users\Administrator\Desktop\SM\HLS1 AZ\dlls\barney.cpp : CONTAINS: "= monsterstate_prone".
+C:\Users\Administrator\Desktop\SM\HLS1 AZ\dlls\hgrunt.cpp : CONTAINS: "= monsterstate_prone".
+C:\Users\Administrator\Desktop\SM\HLS1 AZ\dlls\monsters.cpp : CONTAINS: "= monsterstate_prone".
+C:\Users\Administrator\Desktop\SM\HLS1 AZ\dlls\monsterstate.cpp : CONTAINS: "= monsterstate_prone".
+C:\Users\Administrator\Desktop\SM\HLS1 AZ\dlls\talkmonster.cpp : CONTAINS: "= monsterstate_prone".
+
+useful?
+someMonster = MonsterEDICT->MyMonsterPointer();
+
+
+
+
+NOTE: types of "edict_t*" can be converted to a more workable class, usually like this:
+
+CBaseEntity* someEntity = CBaseEntity::Instance(someEdict);
+...experiment with other classes, cast if necessary.
+
+ALSO: consider using "postItemFrameThink" instead of "postItemFrame" (same for "preItemFrame") to have more control.  The ordinary "postItemFrame" seems to not get called if the player has recently fired (waiting for the delay made from "m_flFireDelay to pass).  "postItemFrameThink", however, happens regardless of that (again, same for pre).
+
+
+client-side (the "cl_dll" folder) has "cl_util.h" and "util.cpp", while
+server-side (the "dll" folder) has "util.h" and "util.cpp".     They are prototype / implementation pairs.
+
+
+Need to add a command tied by console (IE, call a method by typing something in console, no varaibles, by "pfnAddCommand")?   If it happens to be server-side (to get access to things client-side, the only place to do "pfnAddCommand", can't get to), consider making a method client-side anyways that does this:
+gEngfuncs.pfnClientCmd("IGNOREmyCVar 1");
+
+then, in client.cpp's (serverside) postFrame method (or anywhere called every frame, maybe "PlayerPostThink"), check to see if "IGNOREmyCVar" (common naming for variables that aren't intended to be changed by the user) has been set to "1", and, if so, do the server-side things needed there.
+
+
+
+
+
+
+
+Play MP3 files in run-time like so:
+mp3 play media/FILENAME.mp3
+
+~unknown if other sub-folders would work the same (alternatives to the "media" folder, that is)
+
+
+
+
+
+
+
+
+
+//////////////////
+SPAWNFLAG NOTES
+
+Damage types from halflife.fgd (see Half-Life model SDK)
+		0 : "GENERIC"
+		1 : "CRUSH"
+		2 : "BULLET"
+		4 : "SLASH"
+		8 : "BURN"
+		16 : "FREEZE"
+		32 : "FALL"
+		64 : "BLAST"
+		128 : "CLUB"
+		256 : "SHOCK"
+		512 : "SONIC"
+		1024 : "ENERGYBEAM"
+		16384: "DROWN"
+		32768 : "PARALYSE"
+		65536 : "NERVEGAS"
+		131072 : "POISON"
+		262144 : "RADIATION"
+		524288 : "DROWNRECOVER"
+		1048576 : "CHEMICAL"
+		2097152 : "SLOWBURN"
+		4194304 : "SLOWFREEZE"
+
+~also see halflife.fgd for how spawnflags are divvied out (to powers of 2 as well).
+~Can issue "halflife.fgd" on request.
+~Common place for halflife.fgd in the sdk:
+  ...\Half-Life SDK\Hammer Editor\fgd\half-life\halflife.fgd
+
+  
+  
+  ...in setting up GUI (script), see the method "AddHudElem" client-side.  It links a given GUI section (ammo, health, etc.) to a place in "m_pHudList", commonly in "init" methods per GUI piece.
+  
+  Also, see method "Redraw" in "hud_redraw.cpp" for where each member of the list has its "draw" method called.
+
+
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///SENTENCES TUTORIAL
+///sentences.txt
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+you edit "sentences.txt" in your HL installation's mod folder (like ProtoHLGS for us), its under the folder "sound".  You add sounds like this, one per line:
+
+name folder/wavfilenoext wavfilenoext wavfilenoext...
+
+so you just give the folder once, slash, one file, then subsequently only refer to files.  Can not refer to another path, only in the same path, so any sounds for one sentence have to be in the same folder, I believe.  There are options like pitch adjustment, start / end offsets, like   wavfilenoext(s20 e80 p50).  s20 = start 20% in, e80 = end 80% in, p50 = half normal pitch,  unsure what "t" does but it is an option.  Careful about too many sounds as only so many are allowed to be read before it gives up reading sentences.
+oh yea, so some random sentence name won't be picked up by the existing game though.  You could hijack an existing sentence-list, like "HG_TAUNT#" (there's a section of sentences numbered like that), so you can append whatever you want to add it to the pool or erase them and start with your own.  Backups advised.
+
+
+
+
+
+
+~The "entities" console command, present since retail, is certainly something.  Maybe that's useful?
+~Seems to print out the positions of everything that exists in-level.
+
+
+
+
+
+NOTICE: new spawnables for breakables by these indexes for the .fgd:
+
+spawnobject(choices) : "Spawn On Break" : 0 =
+    [
+        0: "Nothing"
+		...
+		22: "item_antidote"
+		23: "item_adrenaline"
+		24: "item_radiation"
+		25: "item_longjumpcharge"
+	]
+(I'm using actual spawnable names, in design of the FGD, these can be anything more appealing, but what is what matches by number)
+
+
+
+
+
+
+
+
+HIDDEN SAVE SYSTEM INFO: copied to docs for importance.
+
+MAJOR: hidden CVars can now be saved (Release mode only; no CVars are hidden on debug, and save just fine).
+The only way I know of is getting the HL.exe executable path (don't know how to get the mod folder's name,
+in case that is changed beyond what it comes as) and just using that folder.
+
+hiddenMemPrintout
+To see printouts related to the hidden CVar system, turn "hiddenMemPrintout" on.
+
+Unfortunately, the system kind of has to be working already for this to be terribly useful, as this
+CVar is also hidden and can't be changed until you are ingame (when loading is already done).  You
+can see printouts for saving though on editing any hidden CVar.
+
+For instance, ingame, in a release build, in console, try
+germanCensorship 1
+
+Then exit the game and restart.  It should remember "germanCensorship" being something other than the
+default of 0.
+
+Files are saved to ...<hl.exe's folder>\absZeroMem.txt
+
+in name - value pairs, like a config value, but this only works for CVars in my format.  Ordinary CVars 
+or other commands cannot be put here, use the usual config.
+
+
+
+IMPORTANT: Cinematics (Scriped_Sequence, check your .fgd) now have a new option for m_fMoveTo.
+Insert a new line like this, after the latest (5):
+		6 : "Instantaneous NOSCRIPT"
+...Same as teleport (4), but this should stop the issue with monsters getting stuck in the "Scripted" state, which turns off AI most of the time.
+
+
+
+
+
+
+
+	//MODDD - soundsentencesave
+	EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "player/sprayer.wav", 1, ATTN_NORM, TRUE);
+	
+	
+Sentence or Pitch shift ignored. > 16 playing!
+Sentence or Pitch shift ignored. > 16 playing!
+Sentence or Pitch shift ignored. > 16 playing!
+Sentence or Pitch shift ignored. > 16 playing!
+NOTE: not wise to use soundsentencesave for things played rapidly like geiger sounds...  this gets spammed.
+
+
+
+HELPFUL BUILT-IN CVARS:
+
+r_drawentities (1) - int; can draw models differently to emphasize hitboxes with numbers other than 1.
+ 
+ 
+ 
+
+~Contact:   blue24ser@yahoo.com
+	    blue24 on steam.

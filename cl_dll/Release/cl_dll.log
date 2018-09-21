@@ -1,0 +1,111 @@
+﻿Build started 8/30/2018 1:17:30 AM.
+     1>Project "C:\Users\Administrator\Desktop\SM\HLS1 AZ\cl_dll\cl_dll.vcxproj" on node 2 (build target(s)).
+     1>InitializeBuildStatus:
+         Touching ".\Release\cl_dll.unsuccessfulbuild".
+       ClCompile:
+         C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\CL.exe /c /I..\cl_dll /I..\game_shared\NEW /I..\game_shared /I..\utils\vgui\include /I..\engine /I..\common /I..\pm_shared /I..\dlls /Zi /nologo /W3 /WX- /O2 /Ob1 /Oy- /D WIN32 /D NDEBUG /D _WINDOWS /D CLIENT_DLL /D CLIENT_WEAPONS /D _CRT_SECURE_NO_WARNINGS /D _CRT_NONSTDC_NO_DEPRECATE /D _VC80_UPGRADE=0x0600 /D _WINDLL /GF /Gm- /EHsc /MT /GS /Gy /fp:precise /Zc:wchar_t /Zc:forScope /Fo".\Release/" /Fd".\Release/vc100.pdb" /Gd /TP /wd4482 /analyze- /errorReport:prompt ..\dlls\mp5.cpp
+         mp5.cpp
+         All outputs are up-to-date.
+       Link:
+         C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:".\Release\client.dll" /INCREMENTAL:NO /NOLOGO winmm.lib ../utils/vgui/lib/win32_vc6/vgui.lib wsock32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /ManifestFile:".\Release\client.dll.intermediate.manifest" /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /PDB:".\Release/client.pdb" /MAP:".\Release/client.map" /SUBSYSTEM:WINDOWS /TLBID:1 /DYNAMICBASE:NO /IMPLIB:".\Release/client.lib" /MACHINE:X86 /DLL .\Release/chumtoadweapon.obj
+         .\Release/glock.obj
+         .\Release/util_entity.obj
+         .\Release/util_printout.obj
+         .\Release/util_shared.obj
+         .\Release/ammo.obj
+         .\Release/ammo_secondary.obj
+         .\Release/ammohistory.obj
+         .\Release/battery.obj
+         .\Release/cdll_int.obj
+         .\Release/com_weapons.obj
+         .\Release/custom_message.obj
+         .\Release/death.obj
+         .\Release/demo.obj
+         .\Release/entity.obj
+         .\Release/ev_common.obj
+         .\Release/events.obj
+         .\Release/flashlight.obj
+         .\Release/GameStudioModelRenderer.obj
+         .\Release/geiger.obj
+         .\Release/health.obj
+         .\Release/hud.obj
+         .\Release/hud_msg.obj
+         .\Release/hud_redraw.obj
+         .\Release/hud_servers.obj
+         .\Release/hud_spectator.obj
+         .\Release/hud_update.obj
+         .\Release/in_camera.obj
+         .\Release/input.obj
+         .\Release/inputw32.obj
+         .\Release/menu.obj
+         .\Release/message.obj
+         .\Release/parsemsg.obj
+         .\Release/pm_debug.obj
+         .\Release/pm_math.obj
+         .\Release/pm_shared.obj
+         .\Release/saytext.obj
+         .\Release/status_icons.obj
+         .\Release/statusbar.obj
+         .\Release/studio_util.obj
+         .\Release/StudioModelRenderer.obj
+         .\Release/text_message.obj
+         .\Release/train.obj
+         .\Release/tri.obj
+         .\Release/util.obj
+         .\Release/vgui_checkbutton2.obj
+         .\Release/vgui_ClassMenu.obj
+         .\Release/vgui_ConsolePanel.obj
+         .\Release/vgui_ControlConfigPanel.obj
+         .\Release/vgui_CustomObjects.obj
+         .\Release/vgui_grid.obj
+         .\Release/vgui_helpers.obj
+         .\Release/vgui_int.obj
+         .\Release/vgui_listbox.obj
+         .\Release/vgui_loadtga.obj
+         .\Release/vgui_MOTDWindow.obj
+         .\Release/vgui_SchemeManager.obj
+         .\Release/vgui_ScorePanel.obj
+         .\Release/vgui_ServerBrowser.obj
+         .\Release/vgui_SpectatorPanel.obj
+         .\Release/vgui_TeamFortressViewport.obj
+         .\Release/vgui_teammenu.obj
+         .\Release/view.obj
+         .\Release/crossbow.obj
+         .\Release/crowbar.obj
+         .\Release/egon.obj
+         .\Release/ev_hldm.obj
+         .\Release/gauss.obj
+         .\Release/handgrenade.obj
+         .\Release/hl_baseentity.obj
+         .\Release/hl_events.obj
+         .\Release/hl_objects.obj
+         .\Release/hl_weapons.obj
+         .\Release/hornetgun.obj
+         .\Release/interface.obj
+         .\Release/mp5.obj
+         .\Release/python.obj
+         .\Release/rpg.obj
+         .\Release/satchel.obj
+         .\Release/shotgun.obj
+         .\Release/squeakgrenade.obj
+         .\Release/tripmine.obj
+         .\Release/vgui_scrollbar2.obj
+         .\Release/vgui_slider2.obj
+         .\Release/voice_banmgr.obj
+         .\Release/voice_status.obj
+            Creating library .\Release/client.lib and object .\Release/client.exp
+         cl_dll.vcxproj -> C:\Users\Administrator\Desktop\SM\HLS1 AZ\cl_dll\.\Release\client.dll
+       Manifest:
+         c:\Program Files (x86)\Microsoft SDKs\Windows\v7.0A\bin\mt.exe /nologo /verbose /outputresource:".\Release\client.dll;#2" /manifest .\Release\client.dll.intermediate.manifest
+       PostBuildEvent:
+         copy ".\Release\client.dll" "C:\Program Files (x86)\Valve\Half-Life NGHLv3\AbsoluteZero\cl_dlls\client.dll"
+         :VCEnd
+                 1 file(s) copied.
+       FinalizeBuildStatus:
+         Deleting file ".\Release\cl_dll.unsuccessfulbuild".
+         Touching ".\Release\cl_dll.lastbuildstate".
+     1>Done Building Project "C:\Users\Administrator\Desktop\SM\HLS1 AZ\cl_dll\cl_dll.vcxproj" (build target(s)).
+
+Build succeeded.
+
+Time Elapsed 00:00:02.17

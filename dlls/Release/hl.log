@@ -1,0 +1,144 @@
+﻿Build started 8/30/2018 1:17:30 AM.
+     1>Project "C:\Users\Administrator\Desktop\SM\HLS1 AZ\dlls\hl.vcxproj" on node 3 (build target(s)).
+     1>InitializeBuildStatus:
+         Creating ".\Release\hl.unsuccessfulbuild" because "AlwaysCreate" was specified.
+       ClCompile:
+         C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\CL.exe /c /I..\dlls\rope /I..\game_shared\NEW /I..\dlls /I..\engine /I..\common /I..\pm_shared /I..\game_shared /Zi /nologo /W3 /WX- /O2 /Ob1 /Oy- /D NDEBUG /D WIN32 /D _WINDOWS /D QUIVER /D VOXEL /D QUAKE2 /D VALVE_DLL /D CLIENT_WEAPONS /D _CRT_SECURE_NO_WARNINGS /D _CRT_NONSTDC_NO_DEPRECATE /D _VC80_UPGRADE=0x0600 /D _WINDLL /GF /Gm- /EHsc /MT /GS /Gy /fp:precise /Zc:wchar_t /Zc:forScope /Fo".\Release/" /Fd".\Release/vc100.pdb" /Gd /TP /analyze- /errorReport:prompt mp5.cpp
+         mp5.cpp
+         All outputs are up-to-date.
+       Link:
+         C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:".\Release/hl.dll" /INCREMENTAL:NO /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /DEF:".\hl.def" /MANIFEST /ManifestFile:".\Release\hl.dll.intermediate.manifest" /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /DEBUG /PDB:".\Release/hl.pdb" /MAP:".\Release/hl.map" /SUBSYSTEM:WINDOWS /TLBID:1 /DYNAMICBASE:NO /IMPLIB:".\Release\hl.lib" /MACHINE:X86 /DLL .\Release/util_printout.obj
+         .\Release/util_shared.obj
+         .\Release/aflock.obj
+         .\Release/agrunt.obj
+         .\Release/airtank.obj
+         .\Release/animating.obj
+         .\Release/animation.obj
+         .\Release/apache.obj
+         .\Release/barnacle.obj
+         .\Release/barney.obj
+         .\Release/basemonster.obj
+         .\Release/bigmomma.obj
+         .\Release/bloater.obj
+         .\Release/bmodels.obj
+         .\Release/bullsquid.obj
+         .\Release/buttons.obj
+         .\Release/cbase.obj
+         .\Release/chumtoad.obj
+         .\Release/chumtoadweapon.obj
+         .\Release/client.obj
+         .\Release/client_message.obj
+         .\Release/combat.obj
+         .\Release/controller.obj
+         .\Release/crossbow.obj
+         .\Release/crossbowbolt.obj
+         .\Release/crowbar.obj
+         .\Release/custom_debug.obj
+         .\Release/decals.obj
+         .\Release/defaultai.obj
+         .\Release/doors.obj
+         .\Release/effects.obj
+         .\Release/egon.obj
+         .\Release/explode.obj
+         .\Release/flyingmonster.obj
+         .\Release/friendly.obj
+         .\Release/func_break.obj
+         .\Release/func_tank.obj
+         .\Release/game.obj
+         .\Release/gamerules.obj
+         .\Release/gargantua.obj
+         .\Release/gauss.obj
+         .\Release/genericmonster.obj
+         .\Release/ggrenade.obj
+         .\Release/globals.obj
+         .\Release/glock.obj
+         .\Release/gman.obj
+         .\Release/hassault.obj
+         .\Release/h_ai.obj
+         .\Release/h_battery.obj
+         .\Release/h_cine.obj
+         .\Release/h_cycler.obj
+         .\Release/h_export.obj
+         .\Release/handgrenade.obj
+         .\Release/hassassin.obj
+         .\Release/headcrab.obj
+         .\Release/healthkit.obj
+         .\Release/hgrunt.obj
+         .\Release/kingpin.obj
+         .\Release/panthereye.obj
+         .\Release/pickupwalker.obj
+         .\Release/CElectrifiedWire.obj
+         .\Release/CRope.obj
+         .\Release/CRopeSample.obj
+         .\Release/CRopeSegment.obj
+         .\Release/stukabat.obj
+         .\Release/hornet.obj
+         .\Release/hornetgun.obj
+         .\Release/houndeye.obj
+         .\Release/ichthyosaur.obj
+         .\Release/islave.obj
+         .\Release/items.obj
+         .\Release/leech.obj
+         .\Release/lights.obj
+         .\Release/maprules.obj
+         .\Release/monstermaker.obj
+         .\Release/monsterstate.obj
+         .\Release/mortar.obj
+         .\Release/mp5.obj
+         .\Release/multiplay_gamerules.obj
+         .\Release/nihilanth.obj
+         .\Release/nodes.obj
+         .\Release/osprey.obj
+         .\Release/pathcorner.obj
+         .\Release/plane.obj
+         .\Release/plats.obj
+         .\Release/player.obj
+         .\Release/pm_debug.obj
+         .\Release/pm_math.obj
+         .\Release/pm_shared.obj
+         .\Release/python.obj
+         .\Release/rat.obj
+         .\Release/roach.obj
+         .\Release/rpg.obj
+         .\Release/satchel.obj
+         .\Release/schedule.obj
+         .\Release/scientist.obj
+         .\Release/scripted.obj
+         .\Release/shotgun.obj
+         .\Release/singleplay_gamerules.obj
+         .\Release/skill.obj
+         .\Release/sound.obj
+         .\Release/soundent.obj
+         .\Release/spectator.obj
+         .\Release/squadmonster.obj
+         .\Release/squeakgrenade.obj
+         .\Release/subs.obj
+         .\Release/talkmonster.obj
+         .\Release/teamplay_gamerules.obj
+         .\Release/tentacle.obj
+         .\Release/triggers.obj
+         .\Release/tripmine.obj
+         .\Release/turret.obj
+         .\Release/util.obj
+         .\Release/voice_gamemgr.obj
+         .\Release/util_entity.obj
+         .\Release/weapons.obj
+         .\Release/world.obj
+         .\Release/xen.obj
+         .\Release/zombie.obj
+            Creating library .\Release\hl.lib and object .\Release\hl.exp
+         hl.vcxproj -> C:\Users\Administrator\Desktop\SM\HLS1 AZ\dlls\.\Release\hl.dll
+       Manifest:
+         c:\Program Files (x86)\Microsoft SDKs\Windows\v7.0A\bin\mt.exe /nologo /verbose /outputresource:".\Release/hl.dll;#2" /manifest .\Release\hl.dll.intermediate.manifest
+       PostBuildEvent:
+         copy ".\Release\hl.dll" "C:\Program Files (x86)\Valve\Half-Life NGHLv3\AbsoluteZero\dlls\az.dll"
+         :VCEnd
+                 1 file(s) copied.
+       FinalizeBuildStatus:
+         Deleting file ".\Release\hl.unsuccessfulbuild".
+         Touching ".\Release\hl.lastbuildstate".
+     1>Done Building Project "C:\Users\Administrator\Desktop\SM\HLS1 AZ\dlls\hl.vcxproj" (build target(s)).
+
+Build succeeded.
+
+Time Elapsed 00:00:02.55
