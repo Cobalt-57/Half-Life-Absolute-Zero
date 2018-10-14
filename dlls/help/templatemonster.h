@@ -16,47 +16,10 @@
 #include "util.h"
 #include "cbase.h"
 #include "basemonster.h"
-#include "schedule.h"
-#include "activity.h"
-#include "animation.h"
 
-#include "defaultai.h"
-#include "soundent.h"
-#include "game.h"
-
-#include "basemonster.h"
-
-
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifndef TEMPLATEMONSTER_H
 #define TEMPLATEMONSTER_H
-
-//sequences in the anim, in the order they appear in the anim. Some anims have the same display name and so should just be referenced by order
-//(numbered index), named well after purpose and based on display names for clarity. Safer this way.
-enum templateMonster_sequence {  //key: frames, FPS
-	TEMPLATEMONSTER_XXX,
-
-};
-
-
-//custom schedules
-enum
-{
-	SCHED_TEMPLATEMONSTER_XXX = LAST_COMMON_SCHEDULE + 1,
-	SCHED_TEMPLATEMONSTER_YYY,
-	SCHED_TEMPLATEMONSTER_ZZZ,
-
-
-};
-
-//custom tasks
-enum
-{
-	TASK_TEMPLATEMONSTER_XXX = LAST_COMMON_TASK + 1,
-	TASK_TEMPLATEMONSTER_YYY,
-	TASK_TEMPLATEMONSTER_ZZZ,
-	
-
-};
 
 
 class CTemplateMonster : public CBaseMonster{
@@ -91,6 +54,8 @@ public:
 	
 	void Precache(void);
 	void Spawn(void);
+
+	void SetEyePosition(void);
 	
 	Schedule_t *GetSchedule( void );
 	Schedule_t* GetScheduleOfType( int Type);

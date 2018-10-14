@@ -217,7 +217,7 @@ EASY_CVAR_EXTERN(textureHitSoundPrintouts)
 
 EASY_CVAR_EXTERN(playerWeaponTracerMode)
 
-
+EASY_CVAR_EXTERN(egonEffectsMode)
 
 
 
@@ -2586,6 +2586,7 @@ enum EGON_FIREMODE { FIRE_NARROW, FIRE_WIDE};
 BEAM *pBeam;
 BEAM *pBeam2;
 
+
 void EV_EgonFire( event_args_t *args )
 {
 	int idx, iFireState, iFireMode;
@@ -2598,7 +2599,17 @@ void EV_EgonFire( event_args_t *args )
 	
 	int iStartup = args->bparam1;
 
+	int hasSpiralBeam;
 
+
+
+	if(EASY_CVAR_GET(egonEffectsMode == 3)){
+		//only the narrow beam gets it.
+		hasSpiralBeam = (iFireMode == FIRE_NARROW);
+	}else{
+		//otherwise, alsways has it.
+		hasSpiralBeam = TRUE;
+	}
 
 	
 	if(EASY_CVAR_GET(mutePlayerWeaponFire) != 1 ){
@@ -2625,72 +2636,93 @@ void EV_EgonFire( event_args_t *args )
 
 	if ( EV_IsLocal( idx ) ){
 		
-		//MODDD - if wide, assume normal anim.  Otherwise, assume "alt fire" anim instead.
+		//MODDD - if FIRE_NARROW, assume normal anim.  Otherwise, assume FIRE_WIDE anim instead.
 		//MODDD - circumstances for using NARROW and WIDE swapped.
 		if ( iFireMode == FIRE_NARROW ){
 			//gEngfuncs.pEventAPI->EV_WeaponAnimation ( g_fireAnims1[ gEngfuncs.pfnRandomLong( 0, 3 ) ], 1 );
 			//MODDD - anims 1 and 2 seem to be defunct.  Removing from random range   [0, 3] --> [2, 3]
 			gEngfuncs.pEventAPI->EV_WeaponAnimation ( g_fireAnims1[ gEngfuncs.pfnRandomLong( 2, 3 ) ], 1 );
-		}else{//narrow
+		}else{//wide
 			gEngfuncs.pEventAPI->EV_WeaponAnimation ( g_fireAnims2[0], 1 );
 		}
 		
 	}
 
-	if ( iStartup == 1 && EV_IsLocal( idx ) && !pBeam && !pBeam2 && cl_lw->value ) //Adrian: Added the cl_lw check for those lital people that hate weapon prediction.
-	{
-		vec3_t vecSrc, vecEnd, origin, angles, forward, right, up;
-		pmtrace_t tr;
 
-		cl_entity_t *pl = gEngfuncs.GetEntityByIndex( idx );
+	//hasSpiralBeam = FALSE;
 
-		//easyPrintLine("EGONEVENT2 %d", pl != 0 );
-		if ( pl )
+	//if ( hasSpiralBeam ){
+	if(1){
+		//gets the spiral.
+
+
+		if ( iStartup == 1 && EV_IsLocal( idx ) && !pBeam && !pBeam2 && cl_lw->value ) //Adrian: Added the cl_lw check for those lital people that hate weapon prediction.
 		{
-			VectorCopy( gHUD.m_vecAngles, angles );
-			
-			AngleVectors( angles, forward, right, up );
+			vec3_t vecSrc, vecEnd, origin, angles, forward, right, up;
+			pmtrace_t tr;
 
-			EV_GetGunPosition( args, vecSrc, pl->origin );
+			cl_entity_t *pl = gEngfuncs.GetEntityByIndex( idx );
 
-			VectorMA( vecSrc, 2048, forward, vecEnd );
-
-			gEngfuncs.pEventAPI->EV_SetUpPlayerPrediction( false, true );	
-				
-			// Store off the old count
-			gEngfuncs.pEventAPI->EV_PushPMStates();
-			
-			// Now add in all of the players.
-			gEngfuncs.pEventAPI->EV_SetSolidPlayers ( idx - 1 );	
-
-			gEngfuncs.pEventAPI->EV_SetTraceHull( 2 );
-			gEngfuncs.pEventAPI->EV_PlayerTrace( vecSrc, vecEnd, PM_STUDIO_BOX, -1, &tr );
-
-			gEngfuncs.pEventAPI->EV_PopPMStates();
-
-			int iBeamModelIndex = gEngfuncs.pEventAPI->EV_FindModelIndex( EGON_BEAM_SPRITE );
-
-			float r = 50.0f;
-			float g = 50.0f;
-			float b = 125.0f;
-
-			if ( IEngineStudio.IsHardware() )
+			//easyPrintLine("EGONEVENT2 %d", pl != 0 );
+			if ( pl )
 			{
-				r /= 100.0f;
-				g /= 100.0f;
-			}
-				
-		
-			pBeam = gEngfuncs.pEfxAPI->R_BeamEntPoint ( idx | 0x1000, tr.endpos, iBeamModelIndex, 99999, 3.5, 0.2, 0.7, 55, 0, 0, r, g, b );
+				VectorCopy( gHUD.m_vecAngles, angles );
 			
-			//easyPrintLine("EGONEVENT3 %d", pBeam != 0 );
-			if ( pBeam )
-				 pBeam->flags |= ( FBEAM_SINENOISE );
+				AngleVectors( angles, forward, right, up );
+
+				EV_GetGunPosition( args, vecSrc, pl->origin );
+
+				VectorMA( vecSrc, 2048, forward, vecEnd );
+
+				gEngfuncs.pEventAPI->EV_SetUpPlayerPrediction( false, true );	
+				
+				// Store off the old count
+				gEngfuncs.pEventAPI->EV_PushPMStates();
+			
+				// Now add in all of the players.
+				gEngfuncs.pEventAPI->EV_SetSolidPlayers ( idx - 1 );	
+
+				gEngfuncs.pEventAPI->EV_SetTraceHull( 2 );
+				gEngfuncs.pEventAPI->EV_PlayerTrace( vecSrc, vecEnd, PM_STUDIO_BOX, -1, &tr );
+
+				gEngfuncs.pEventAPI->EV_PopPMStates();
+
+				int iBeamModelIndex = gEngfuncs.pEventAPI->EV_FindModelIndex( EGON_BEAM_SPRITE );
+
+				float r = 50.0f;
+				float g = 50.0f;
+				float b = 125.0f;
+
+				if ( IEngineStudio.IsHardware() )
+				{
+					r /= 100.0f;
+					g /= 100.0f;
+				}
+				
+				if(hasSpiralBeam){
+					//spiral purple beam.
+					pBeam = gEngfuncs.pEfxAPI->R_BeamEntPoint ( idx | 0x1000, tr.endpos, iBeamModelIndex, 99999, 3.5, 0.2, 0.7, 55, 0, 0, r, g, b );
+			
+					//easyPrintLine("EGONEVENT3 %d", pBeam != 0 );
+					if ( pBeam )
+						 pBeam->flags |= ( FBEAM_SINENOISE );
+
+				}
  
-			pBeam2 = gEngfuncs.pEfxAPI->R_BeamEntPoint ( idx | 0x1000, tr.endpos, iBeamModelIndex, 99999, 5.0, 0.08, 0.7, 25, 0, 0, r, g, b );
+				//straight purple beam.
+				pBeam2 = gEngfuncs.pEfxAPI->R_BeamEntPoint ( idx | 0x1000, tr.endpos, iBeamModelIndex, 99999, 5.0, 0.08, 0.7, 25, 0, 0, r, g, b );
+				
+			}
 		}
-	}
-}
+
+
+
+	
+	}//END OF spiral beam check
+
+
+
+}//END OF EV_EgonFire
 
 void EV_EgonStop( event_args_t *args )
 {

@@ -44,9 +44,6 @@
     <ClCompile Include="bigmomma.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="bloater.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="bmodels.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -374,6 +371,9 @@
     <ClCompile Include="basemonster.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="floater.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="activity.h">
@@ -581,6 +581,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="plats.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="floater.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

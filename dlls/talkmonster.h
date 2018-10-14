@@ -130,6 +130,7 @@ public:
 
 	//This is a talk monster because the "TalkMonster" class is unaware of its children.  Can still work thanks to virtual methods.
 	CTalkMonster* scientistTryingToHealMe;
+	EHANDLE scientistTryingToHealMeEHANDLE;
 
 	virtual void forgetHealNPC(void);
 

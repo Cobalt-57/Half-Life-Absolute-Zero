@@ -472,9 +472,9 @@ BOOL derivedClass::GibMonsterGib(BOOL fGibSpawnsDecal){\
 
 #define GENERATE_GIBMONSTERGIB_IMPLEMENTATION_DUMMY_CLIENT(derivedClass) GENERATE_GIBMONSTERGIB_IMPLEMENTATION_DUMMY(derivedClass)
 
-//don't do this.
-//#define GENERATE_GIBMONSTERGIB_PARENT_CALL(parentClass)\
-//parentClass::GibMonsterGib(fGibSpawnsDecal)
+//only do this if making no changes to how a monster gibs. Any changes should completely replace the parent method's general case.
+#define GENERATE_GIBMONSTERGIB_PARENT_CALL(parentClass)\
+parentClass::GibMonsterGib(fGibSpawnsDecal)
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -508,9 +508,9 @@ void derivedClass::GibMonsterSound(BOOL fGibbed){\
 
 #define GENERATE_GIBMONSTERSOUND_IMPLEMENTATION_DUMMY_CLIENT(derivedClass) GENERATE_GIBMONSTERSOUND_IMPLEMENTATION_DUMMY(derivedClass)
 
-//don't do this.
-//#define GENERATE_GIBMONSTERSOUND_PARENT_CALL(parentClass)\
-//parentClass::GibMonsterSound(fGibbed)
+//only do this if making no changes to how a monster determines a gib sound. Any changes should completely replace the parent method's general case.
+#define GENERATE_GIBMONSTERSOUND_PARENT_CALL(parentClass)\
+parentClass::GibMonsterSound(fGibbed)
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -895,7 +895,8 @@ public:
 	virtual void BarnacleVictimBitten( entvars_t *pevBarnacle );
 	virtual void BarnacleVictimReleased( void );
 
-	void SetEyePosition ( void );
+	//MODDD - virtual. This can be hardcoded now.
+	virtual void SetEyePosition ( void );
 
 	BOOL FShouldEat( void );// see if a monster is 'hungry'
 	void Eat ( float flFullDuration );// make the monster 'full' for a while.

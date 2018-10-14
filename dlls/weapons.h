@@ -162,7 +162,7 @@ public:
 #define HORNET_MAX_CARRY		8
 #define M203_GRENADE_MAX_CARRY	12
 //MODDD
-#define CHUMTOAD_MAX_CARRY		20
+#define CHUMTOAD_MAX_CARRY		5
 
 
 
@@ -205,7 +205,7 @@ public:
 #define SNARK_DEFAULT_GIVE			5
 #define HIVEHAND_DEFAULT_GIVE		8
 //MODDD
-#define CHUMTOAD_DEFAULT_GIVE		5
+#define CHUMTOAD_DEFAULT_GIVE		1
 
 // The amount of ammo given to a player by an ammo item.
 #define AMMO_URANIUMBOX_GIVE	20
@@ -1116,6 +1116,12 @@ class CGauss : public CBasePlayerWeapon
 {
 public:
 
+	int ohShitSon;
+	int ohFuckSonny;
+	
+	//MOTHERappreciater HOW DO YOU NOT HAVE THIS
+	CGauss(void);
+
 #ifndef CLIENT_DLL
 	int		Save( CSave &save );
 	int		Restore( CRestore &restore );
@@ -1151,6 +1157,8 @@ public:
 	void chargeWork(void);
 	void postChargeAnimCheck(void);
 	void attemptFirePrimary(void);
+
+	float getAmmoChargeInterval(void);
 
 	void WeaponIdle( void );
 	

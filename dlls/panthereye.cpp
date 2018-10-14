@@ -19,6 +19,11 @@
 
 #include "panthereye.h"
 
+#include "custom_debug.h"
+
+
+extern DLL_GLOBAL int		g_iSkillLevel;
+
 
 #define newPathDelayDuration 0.5;
 
@@ -27,8 +32,8 @@ extern float global_panthereyeHasCloakingAbility;
 extern float global_panthereyeJumpDotTol;
 
 extern float global_panthereyePrintout;
+EASY_CVAR_EXTERN(animationFramerateMulti)
 
-extern DLL_GLOBAL int		g_iSkillLevel;
 					
 
 
@@ -36,7 +41,34 @@ extern DLL_GLOBAL int		g_iSkillLevel;
 
 
 
+BOOL CPantherEye::testLeapNoBlock(void){
 
+	//jump!... or try to.
+	TraceResult tr;
+
+
+	if(m_hEnemy != NULL){
+		Vector vTestStart = pev->origin + Vector(0, 0, 10);
+		Vector vTestEnd = m_hEnemy->pev->origin + Vector(0, 0, 10);
+		UTIL_TraceHull( vTestStart, vTestEnd, dont_ignore_monsters, head_hull, ENT( m_hEnemy->pev ), &tr );
+				
+		DebugLine_ClearAll();
+		DebugLine_Setup(0, vTestStart, vTestEnd, tr.flFraction);
+
+		//don't do the "!tr.fAllSolid" check.  ?
+		if((tr.flFraction >= 1.0 || tr.pHit == m_hEnemy.Get() )  ){
+			//did not hit anything on the way or hit the enemy? it is OK.
+			//proceed
+		}else{
+			//stop!
+			return FALSE;
+		}
+	}else{
+		//go ahead regardless.?
+	}
+
+	return TRUE;
+}//END OF testLeapNoBlock
 
 
 
@@ -207,17 +239,6 @@ int CPantherEye::LookupActivityHard(int activity){
 	
 	int i = 0;
 
-	m_flFramerateSuggestion = 1;
-
-	pev->framerate = 1;
-	//is this safe?
-
-	/*
-	m_flFramerateSuggestion = -1;
-	//pev->frame = 6;
-	return LookupSequence("get_bug");
-	*/
-
 
 	int iRandChoice = 0;
 	int iRandWeightChoice = 0;
@@ -227,6 +248,21 @@ int CPantherEye::LookupActivityHard(int activity){
 			
 	//pev->framerate = 1;
 	int maxRandWeight = 30;
+
+
+
+	
+
+	m_flFramerateSuggestion = 1;
+	m_flFrameRate = 1;
+	pev->framerate = 1;
+	//is this safe?
+
+	/*
+	m_flFramerateSuggestion = -1;
+	//pev->frame = 6;
+	return LookupSequence("get_bug");
+	*/
 
 	//any animation events in progress?  Clear it.
 	resetEventQueue();
@@ -360,6 +396,16 @@ int CPantherEye::LookupActivityHard(int activity){
 					return LookupSequence("attack_simple_claw");
 				break;
 			}
+		break;
+		
+		case ACT_MELEE_ATTACK2:
+			m_flFramerateSuggestion = 0.95f;
+
+			//jump with the delay.
+			//animEventQueuePush(10.35f/(15.0f), 2 );
+			
+			return LookupSequence("crouch_to_jump");
+		break;
 		case ACT_SMALL_FLINCH:
 			//NOTE: animation "flinch" seems to be a clone of "flinch_light".
 			m_flFramerateSuggestion = 1.4f;
@@ -368,7 +414,6 @@ int CPantherEye::LookupActivityHard(int activity){
 		case ACT_BIG_FLINCH:
 			m_flFramerateSuggestion = 2.5f;
 			return LookupSequence("flinch_hard");
-		break;	
 		break;
 		case ACT_DIEVIOLENT:
 			return LookupSequence("death_simple");
@@ -406,10 +451,9 @@ int CPantherEye::LookupActivityHard(int activity){
 int CPantherEye::tryActivitySubstitute(int activity){
 	
 	int i = 0;
-
 	int iRandChoice = 0;
 	int iRandWeightChoice = 0;
-	
+
 	char* animChoiceString = NULL;
 	int* weightsAbs = NULL;
 			
@@ -483,6 +527,10 @@ int CPantherEye::tryActivitySubstitute(int activity){
 					return LookupSequence("attack_simple_claw");
 				break;
 			}
+		break;
+		case ACT_MELEE_ATTACK2:
+			return LookupSequence("crouch_to_jump");
+		break;
 		case ACT_SMALL_FLINCH:
 			//NOTE: animation "flinch" seems to be a clone of "flinch_light".
 			return LookupSequence("flinch_light");
@@ -553,7 +601,7 @@ void CPantherEye::HandleEventQueueEvent(int arg_eventID){
 	//		ALERT( at_console, "Slash right!\n" );
 
 				//half-damage, the second swipe is a less pronounced claw swipe.
-			CBaseEntity *pHurt = CheckTraceHullAttack( 84, gSkillData.panthereyeDmgClaw/2, DMG_BLEEDING );
+			CBaseEntity *pHurt = CheckTraceHullAttack( 84*1.2, gSkillData.panthereyeDmgClaw/2, DMG_BLEEDING );
 			if ( pHurt )
 			{
 				if ( pHurt->pev->flags & (FL_MONSTER|FL_CLIENT) )
@@ -576,8 +624,6 @@ void CPantherEye::HandleEventQueueEvent(int arg_eventID){
 			}
 		case 1:
 			{
-			//TODO: Search for a cockroach near the front and kill it.
-						
 			//
 			UTIL_MakeVectors(pev->angles);
 
@@ -620,7 +666,17 @@ void CPantherEye::HandleEventQueueEvent(int arg_eventID){
 			}
 		case 2:
 			{
-			//jump!
+
+			BOOL isJumpOkay = testLeapNoBlock();
+			if(!isJumpOkay){
+				TaskFail();
+				//force a new animation to be fetched.
+				m_Activity = ACT_RESET;
+				this->SetActivity(ACT_IDLE);
+				return;
+			}
+
+
 
 			ClearBits( pev->flags, FL_ONGROUND );
 
@@ -637,12 +693,19 @@ void CPantherEye::HandleEventQueueEvent(int arg_eventID){
 				// How fast does the headcrab need to travel to reach that height given gravity?
 				float height = (m_hEnemy->pev->origin.z + m_hEnemy->pev->view_ofs.z - pev->origin.z);
 
+				float speedExtraMult = 1;
 				//was a minimum of 15.
-				if (height < 12)
-					height = 12;
+				if (height < 11)
+					height = 11;
+
+				if(height > 40){
+					//CRUDE. Take how much height was above 40 and let it add to speedExtraMult.
+					speedExtraMult = 1 + (height - 40) / 40;
+					height = 40;
+				}
 
 				//was 2 * gravity * height.
-				float speed = sqrt( 1.5 * gravity * height );
+				float speed = sqrt( 1.7 * gravity * height * speedExtraMult);
 				float time = speed / gravity;
 
 				// Scale the sideways velocity to get there at the right time
@@ -650,7 +713,7 @@ void CPantherEye::HandleEventQueueEvent(int arg_eventID){
 				//vecJumpDir = (m_hEnemy->pev->origin + m_hEnemy->pev->view_ofs - pev->origin);
 
 				//must jump at least "240" far...
-				vecJumpDir = max( (m_hEnemy->pev->origin + m_hEnemy->pev->view_ofs - pev->origin).Length() - 80, 240 ) * gpGlobals->v_forward;
+				vecJumpDir = max( (m_hEnemy->pev->origin + m_hEnemy->pev->view_ofs - pev->origin).Length() - 80, 320 ) * gpGlobals->v_forward;
 				
 				vecJumpDir = vecJumpDir * ( 1.0 / time );
 
@@ -664,9 +727,9 @@ void CPantherEye::HandleEventQueueEvent(int arg_eventID){
 
 				//I'm not entirely sure what this is doing...
 				//OH, I see, forcing a dist of 650 exactly, factoring out the old value.  It's how vectors work.
-				if (distance > 650)
+				if (distance > 950)
 				{
-					vecJumpDir = vecJumpDir * ( 650.0 / distance );
+					vecJumpDir = vecJumpDir * ( 950.0 / distance );
 				}
 
 			}
@@ -705,7 +768,7 @@ void CPantherEye :: HandleAnimEvent( MonsterEvent_t *pEvent )
 		{
 			// do stuff for this event.
 	//		ALERT( at_console, "Slash right!\n" );
-			CBaseEntity *pHurt = CheckTraceHullAttack( 84, gSkillData.panthereyeDmgClaw, DMG_BLEEDING );
+			CBaseEntity *pHurt = CheckTraceHullAttack( 84*1.2, gSkillData.panthereyeDmgClaw, DMG_BLEEDING );
 			if ( pHurt )
 			{
 				if ( pHurt->pev->flags & (FL_MONSTER|FL_CLIENT) )
@@ -733,6 +796,7 @@ void CPantherEye :: HandleAnimEvent( MonsterEvent_t *pEvent )
 
 CPantherEye::CPantherEye(void){
 
+	stareTime = 0;
 
 	maxWaitPVSTime = -1;
 	chaseMode = -1;
@@ -756,6 +820,11 @@ CPantherEye::CPantherEye(void){
 
 }
 
+
+
+
+
+
 //=========================================================
 // Spawn
 //=========================================================
@@ -764,7 +833,10 @@ void CPantherEye::Spawn()
 	Precache( );
 
 	SET_MODEL(ENT(pev), "models/panthereye.mdl");
-	UTIL_SetSize( pev, Vector(-30, -30, 0), Vector(30, 30, 40) );
+	//UTIL_SetSize( pev, Vector(-30, -30, 0), Vector(30, 30, 40) );
+	UTIL_SetSize( pev, VEC_HUMAN_HULL_MIN, VEC_HUMAN_HULL_MAX );
+
+
 
 	pev->classname = MAKE_STRING("monster_panthereye");
 
@@ -776,7 +848,7 @@ void CPantherEye::Spawn()
 	//MODDD - NOTE: can "view_ofs" just come from a model?  Verify by printout maybe?
 
 
-	pev->view_ofs		= VEC_VIEW;// position of the eyes relative to monster's origin.
+	//pev->view_ofs		= VEC_VIEW;// position of the eyes relative to monster's origin.
 	m_flFieldOfView		= 0.5;// indicates the width of this monster's forward view cone ( as a dotproduct result )
 	m_MonsterState		= MONSTERSTATE_NONE;
 	m_afCapability		= bits_CAP_DOORS_GROUP;
@@ -787,6 +859,13 @@ void CPantherEye::Spawn()
 	sneakMode = -1;
 	
 }
+
+
+
+void CPantherEye::SetEyePosition(void){
+	pev->view_ofs = VEC_VIEW;
+}//END OF SetEyePosition
+
 
 extern int global_useSentenceSave;
 //=========================================================
@@ -853,7 +932,7 @@ BOOL CPantherEye::CheckMeleeAttack1 ( float flDot, float flDist )
 		EASY_CVAR_PRINTIF_PRE(panthereyePrintout, easyPrintLine("NO ENEMY"));
 	}
 	*/
-	if ( !HasConditions( bits_COND_ENEMY_OCCLUDED ) && flDist <= 100 	&& 
+	if ( !HasConditions( bits_COND_ENEMY_OCCLUDED ) && flDist <= 90 	&& 
 	 m_hEnemy != NULL &&
 	 m_hEnemy ->Classify() != CLASS_ALIEN_BIOWEAPON &&
 	 m_hEnemy ->Classify() != CLASS_PLAYER_BIOWEAPON   )
@@ -868,6 +947,68 @@ BOOL CPantherEye::CheckMeleeAttack1 ( float flDot, float flDist )
 
 	return FALSE;
 }
+
+
+
+
+
+BOOL CPantherEye::CheckMeleeAttack2 ( float flDot, float flDist )
+{
+	/*
+	if(m_hEnemy != NULL){
+		EASY_CVAR_PRINTIF_PRE(panthereyePrintout, easyPrintLine("SO::: %d, %.2f %.2f %d", !HasConditions( bits_COND_ENEMY_OCCLUDED ), flDist, flDot, m_hEnemy ->Classify() ));
+	}else{
+		EASY_CVAR_PRINTIF_PRE(panthereyePrintout, easyPrintLine("NO ENEMY"));
+	}
+	*/
+
+
+	float enemyFloorZ;
+	
+	
+
+	if(m_hEnemy != NULL){
+
+		if(m_hEnemy->IsPlayer()){
+			//If the enemy is a player, their origin is the center. adjust accordingly.
+			enemyFloorZ = m_hEnemy->pev->origin.z - 30;
+		}else{
+			//origin is already at the floor.
+			enemyFloorZ = m_hEnemy->pev->origin.z;
+		}
+
+		//easyForcePrintLine("eeee %.2f", abs(this->pev->origin.z - enemyFloorZ));
+	}
+
+
+	if ( m_hEnemy != NULL &&
+		!HasConditions( bits_COND_ENEMY_OCCLUDED ) && flDist >= 270 && flDist <= 410 &&
+		abs(this->pev->origin.z - enemyFloorZ) < 30 &&     //not too much veritcal difference allowed, this is for a long floor-wise leap.
+	 m_hEnemy ->Classify() != CLASS_ALIEN_BIOWEAPON &&
+	 m_hEnemy ->Classify() != CLASS_PLAYER_BIOWEAPON   )
+	{
+
+		//lastly, is the path unobstructed?
+		
+		BOOL isJumpOkay = testLeapNoBlock();
+		if(!isJumpOkay)return FALSE;
+
+		//also need to be looking closely enough.
+		if(flDot >= 0.91){
+			return TRUE;
+		}
+
+	}
+
+	return FALSE;
+}
+
+
+
+
+
+
+
 
 
 int CPantherEye::IgnoreConditions ( void )
@@ -1337,6 +1478,18 @@ Schedule_t* CPantherEye::GetScheduleOfType( int Type){
 			//nothing from above?  We're sneaking around.
 			return slPanthereyeSneakToLocation;
 		break;
+
+		//Don't stare into space for 15 seconds. Just sneakwait for being more reactive.
+		case SCHED_PATHFIND_STUMPED:
+			return &slPanthereyeSneakWait[0];
+		break;
+
+
+		case SCHED_MELEE_ATTACK2:
+			//the MELEE_ATTACK_1 sched is okay. #2 needs to use a custom schedule to
+			//(be able to) turn while prepping the jump.
+			return &slPanthereyeJumpAtEnemy[0];
+		break;
 		case SCHED_FAIL:
 		case SCHED_CHASE_ENEMY_FAILED:
 			//what is usually called on failure.  Can call something else if preferred.
@@ -1346,6 +1499,45 @@ Schedule_t* CPantherEye::GetScheduleOfType( int Type){
 
 	return CBaseMonster::GetScheduleOfType(Type);
 }
+
+
+
+void CPantherEye::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, float flInterval )
+{
+//	float flYaw = UTIL_VecToYaw ( m_Route[ m_iRouteIndex ].vecLocation - pev->origin );// build a yaw that points to the goal.
+//	WALK_MOVE( ENT(pev), flYaw, m_flGroundSpeed * flInterval, WALKMOVE_NORMAL );
+
+
+	if(this->m_pSchedule == slPanthereyeJumpAtEnemy){
+		//dont do it
+		return;
+	}
+
+
+	if ( m_IdealActivity != m_movementActivity )
+		m_IdealActivity = m_movementActivity;
+
+	float flTotal = m_flGroundSpeed * pev->framerate * EASY_CVAR_GET(animationFramerateMulti) * flInterval;
+	float flStep;
+	while (flTotal > 0.001)
+	{
+		// don't walk more than 16 units or stairs stop working
+		flStep = min( 16.0, flTotal );
+
+
+		UTIL_MoveToOrigin ( ENT(pev), m_Route[ m_iRouteIndex ].vecLocation, flStep, MOVE_NORMAL );
+		flTotal -= flStep;
+	}
+	// ALERT( at_console, "dist %f\n", m_flGroundSpeed * pev->framerate * flInterval );
+
+
+}//END OF MoveExecute
+
+
+
+
+
+
 
 void CPantherEye::StartTask ( Task_t *pTask ){
 
@@ -1386,9 +1578,15 @@ void CPantherEye::StartTask ( Task_t *pTask ){
 				isCornered = TRUE;
 			}
 
-			timeTillSneakAgain = gpGlobals->time + RANDOM_LONG(7, 16);
+			timeTillSneakAgain = gpGlobals->time + RANDOM_LONG(5, 11);
 
-			if( m_hEnemy != NULL && UTIL_IsFacing(m_hEnemy->pev, pev->origin, 0.3) && (isCornered && (m_hEnemy->pev->origin - pev->origin).Length() < 350)  ){
+			if( m_hEnemy != NULL &&
+				UTIL_IsFacing(m_hEnemy->pev, pev->origin, 0.3) && (
+				    (isCornered && (m_hEnemy->pev->origin - pev->origin).Length() < 350*20) ||
+				    (stareTime > 0 && stareTime > 2.6 && (m_hEnemy->pev->origin - pev->origin).Length() < 350*20)   //(gpGlobals->timie - stareTime > 2.6)
+				)
+					
+			){
 				//go aggro!
 				pissedOffTime = gpGlobals->time + 5;
 				ChangeSchedule(GetSchedule());
@@ -1398,6 +1596,13 @@ void CPantherEye::StartTask ( Task_t *pTask ){
 				//try sneaking again sooner?  Be easier to piss off since couldn't update cover...  Being cornered makes most things easier to piss off.
 				isPissable = TRUE;
 				timeTillSneakAgain = gpGlobals->time + RANDOM_LONG(4, 8);
+			}
+
+
+			//Can turn while waiting.
+			if ( !FacingIdeal() ){
+				SetTurnActivity();
+				ChangeYaw( pev->yaw_speed );
 			}
 
 		break;
@@ -1434,10 +1639,19 @@ void CPantherEye::StartTask ( Task_t *pTask ){
 			
 			//desired frame / framerate (factor in pev->framerate if other than "1" by multiplying default framerate by pev->framerate BEFORE division)
 			
-			this->setAnimationSmart("crouch_to_jump", 0.95f);  //m_flFramerateSuggestion and pev->framerate become "2".
-			resetEventQueue();
+			//this->setAnimationSmart("crouch_to_jump", 0.95f);  //m_flFramerateSuggestion and pev->framerate become "2".
+			
+			//resetEventQueue();
+			
+			
 			animEventQueuePush(10.35f/(15.0f), 2 );
-						
+			//animEventQueuePush(10.35f/(15.0f), 2 );
+				
+			
+			
+			this->SetSequenceByName("crouch_to_jump", 0.95f);
+			
+					
 			
 		break;
 		case TASK_WAIT_PVS:
@@ -1497,14 +1711,14 @@ void CPantherEye::StartTask ( Task_t *pTask ){
 
 
 void CPantherEye::RunTask ( Task_t *pTask ){
-
+	easyForcePrintLine("HEY YOOOO %s %d", getScheduleName(), pTask->iTask);
 	
 	BOOL isEnemyLookingAtMe = FALSE;
 
 
 
 
-	//NOTE: should only do this logic check if alive of course.  Oh computers...
+	//NOTE: should only do this logic check if alive of course.
 	if(pev->deadflag == DEAD_NO && !deadSetActivityBlock && !iAmDead){
 
 		if(pissedOffTime == -1 && runawayTime == -1){
@@ -1525,25 +1739,25 @@ void CPantherEye::RunTask ( Task_t *pTask ){
 			BOOL tryRunAway = FALSE;
 
 			//how far does the player have to be to look at me to piss me off?
-			float lookAtMePissRange = 115;
+			float lookAtMePissRange = 115 * 20;
 
 			//how close does the player have to be, regardless of anything, to piss me off?
-			float distancePissRange = 70;
+			float distancePissRange = 70 * 20;
 
 			//if hurt (took damage), how far do I have to be to go on the attack instead of flee?
-			float fightOrFlightRange = 400;
+			float fightOrFlightRange = 400 * 20;
 
 
 			if(isCornered){
-				lookAtMePissRange = 340;
-				distancePissRange = 230;
+				lookAtMePissRange = 340 * 20;
+				distancePissRange = 230 * 20;
 				//nowhere to go?  I'm coming for you.
-				fightOrFlightRange = 1600;
+				fightOrFlightRange = 1600 * 20;
 			}else if(isPissable){
 				//just more anxious than usual.
-				lookAtMePissRange = 200;
-				distancePissRange = 80;
-				fightOrFlightRange = 500;
+				lookAtMePissRange = 200 * 20;
+				distancePissRange = 80 * 20;
+				fightOrFlightRange = 500 * 20;
 			}
 
 
@@ -1564,6 +1778,9 @@ void CPantherEye::RunTask ( Task_t *pTask ){
 				if(UTIL_IsFacing(m_hEnemy->pev, pev->origin, 0.3)){
 					//if they face me anytime, face them.
 
+					stareTime += gpGlobals->frametime;
+
+
 					//they are.
 					isEnemyLookingAtMe = TRUE;
 
@@ -1572,9 +1789,13 @@ void CPantherEye::RunTask ( Task_t *pTask ){
 					if(  (isCornered || (m_pSchedule == slPanthereyeSneakToLocation || m_pSchedule == slPantherEyeCoverFail) && (tsknbr == TASK_PANTHEREYE_SNEAK_WAIT || tsknbr == TASK_PANTHEREYE_COVER_FAIL_WAIT) ) ){
 						//likely waiting.
 						MakeIdealYaw(m_hEnemy->pev->origin);
-						ChangeYaw(99);
+
+						//instant yaw change. is that a good idea?
+						//ChangeYaw(99);
 					}
 
+				}else{
+					stareTime = 0;
 				}
 
 
@@ -1591,9 +1812,9 @@ void CPantherEye::RunTask ( Task_t *pTask ){
 						//EASY_CVAR_PRINTIF_PRE(panthereyePrintout, easyPrintLine("WELL DDDD %d", UTIL_IsFacingAway(m_hEnemy->pev, pev->origin, 0.3) )); 
 						if(UTIL_IsFacingAway(m_hEnemy->pev, pev->origin, global_panthereyeJumpDotTol) ){
 							//can jump...?
-							if(distanceFromEnemy < 320){
+							if(distanceFromEnemy < 360 * 20){
 
-								if(distanceFromEnemy < 130){
+								if(distanceFromEnemy < 130 * 20){
 									//too close, just go as normal.
 									pissOff = TRUE;
 								}else{
@@ -1621,7 +1842,7 @@ void CPantherEye::RunTask ( Task_t *pTask ){
 				else{
 					if(!HasConditions(bits_COND_ENEMY_OCCLUDED) && HasConditions(bits_COND_SEE_ENEMY)){
 
-						if(distanceFromEnemy < 300){
+						if(distanceFromEnemy < 300 * 20){
 							//if mad, gets mad easier!
 							pissOff = TRUE;
 						}
@@ -1630,6 +1851,9 @@ void CPantherEye::RunTask ( Task_t *pTask ){
 
 				}
 
+			}else{
+				//if occluded, reset stare time.
+				stareTime = 0;
 			}
 			//EASY_CVAR_PRINTIF_PRE(panthereyePrintout, easyPrintLine("WHAT DA %d", HasConditions(bits_COND_LIGHT_DAMAGE)));
 			//If attacked recently, be a bit more easy to attack, or flee.  "fight or flight"
@@ -1698,6 +1922,7 @@ void CPantherEye::RunTask ( Task_t *pTask ){
 			//no enemy?  Reset all timers.
 			runawayTime = -1;
 			pissedOffTime = -1;
+			stareTime = 0;
 		}
 
 
@@ -1736,7 +1961,7 @@ void CPantherEye::RunTask ( Task_t *pTask ){
 			
 				//too crass of an interruption, try something else...?
 
-				//WUZ CIRCLIN
+				//was CIRCLIN
 				if(m_pSchedule == slPanthereyeChaseEnemy){
 					//TaskFail();
 					EASY_CVAR_PRINTIF_PRE(panthereyePrintout, easyPrintLine("!!!!! IM NOT A RAGING <thing>"));
@@ -1896,7 +2121,7 @@ void CPantherEye::RunTask ( Task_t *pTask ){
 			//before the first event check...
 			if(animEventQueueTime[0] != -1 && (animEventQueueTime[0] + animEventQueueStartTime > gpGlobals->time) ){
 				//just the start of the anim, can still turn...
-				//TODO: do we need to update ideal_yaw (MAKE_YAW)?
+
 				MakeIdealYaw(m_hEnemy->pev->origin);
 
 				ChangeYaw(42);

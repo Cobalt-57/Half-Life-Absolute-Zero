@@ -1242,13 +1242,13 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CGargantua)
 	ALERT( at_aiconsole, "CGargantua::TakeDamage\n");
 
 
+
+
 	EASY_CVAR_PRINTIF_PRE(gargantuaPrintout, easyPrintLine( "GARG DAMAGE %.2f", pev->health ));
 	//easyForcePrintLine("????????????? %d %d", IsAlive(), pev->deadflag);
 	if ( IsAlive() )
 	{
 
-		
-		
 		
 		//usal checks.
 		if ( !(bitsDamageType & GARG_DAMAGE) )
@@ -1292,6 +1292,7 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CGargantua)
 		//when in the dying anim and "gargantuaCorpseDeath" is 1 or 4, do not take damage yet.
 		return 1;
 	}
+
 
 	return GENERATE_TAKEDAMAGE_PARENT_CALL(CBaseMonster);
 }

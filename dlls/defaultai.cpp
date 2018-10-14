@@ -1798,6 +1798,12 @@ Schedule_t* CBaseMonster :: GetScheduleOfType ( int Type )
 	case SCHED_CHASE_ENEMY_FAILED:
 		{
 			//MODDD NOTE - nothing special? damn.
+			//ACTUALLY YES, force an update on the enemy LKP just to unclog things maybe.
+
+			if(m_hEnemy != NULL){
+				this->m_vecEnemyLKP = m_hEnemy->pev->origin;
+			}
+
 			return &slFail[ 0 ];
 		}
 	case SCHED_SMALL_FLINCH:

@@ -3,22 +3,12 @@
 // FLOATER (floater) (split into .h & .cpp for prototype & implementation details accordingly)
 //=========================================================
 
-
-
-#include	"extdll.h"
-#include	"util.h"
-#include	"cbase.h"
-#include "basemonster.h"
-#include	"schedule.h"
-#include	"activity.h"
-#include	"animation.h"
-
-#include "defaultai.h"
-#include "soundent.h"
-#include "game.h"
-
+#include "extdll.h"
+#include "util.h"
+#include "cbase.h"
 #include "basemonster.h"
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #ifndef FLOATER_H
 #define FLOATER_H
@@ -26,22 +16,107 @@
 
 class CFloater : public CBaseMonster{
 public:
-	
-	CUSTOM_SCHEDULES;
-	
+
+	static const char* pDeathSounds[];
+	static const char* pAlertSounds[];
+	static const char* pIdleSounds[];
+	static const char* pPainSounds[];
+	static const char* pAttackSounds[];
+	static const char* pAttackHitSounds[];
+	static const char* pAttackMissSounds[];
+
+	/*
 	//save info
 	//////////////////////////////////////////////////////////////////////////////////
-	virtual int		Save( CSave &save ); 
-	virtual int		Restore( CRestore &restore );
-	
-	static	TYPEDESCRIPTION m_SaveData[];
+	static TYPEDESCRIPTION m_SaveData[];
+	virtual int Save( CSave &save ); 
+	virtual int Restore( CRestore &restore );
 	//////////////////////////////////////////////////////////////////////////////////
+	*/
 
+	CFloater(void);
 
+	CUSTOM_SCHEDULES;
+
+	void DeathSound ( void );
+	void AlertSound ( void );
+	void IdleSound ( void );
+	void PainSound ( void );
+	void AttackSound ( void );
+	
+	void Precache(void);
+	void Spawn(void);
+
+	void SetEyePosition(void);
+	
+	Schedule_t *GetSchedule( void );
+	Schedule_t* GetScheduleOfType( int Type);
+
+	void ScheduleChange();
+	Schedule_t* GetStumpedWaitSchedule(void);
+	
+	void StartTask( Task_t *pTask );
+	void RunTask( Task_t *pTask );
 
 	
+	BOOL CheckMeleeAttack1 ( float flDot, float flDist );
+	BOOL CheckMeleeAttack2 ( float flDot, float flDist );
+	BOOL CheckRangeAttack1 ( float flDot, float flDist );
+	BOOL CheckRangeAttack2 ( float flDot, float flDist );
+	
+	void EXPORT CustomTouch ( CBaseEntity *pOther );
+	
+	void MonsterThink( void );
+	void PrescheduleThink(void);
+
+	int Classify(void);
+	BOOL isOrganic(void);
+	int IRelationship ( CBaseEntity *pTarget );
+	
+	void ReportAIState( void );
+
+	//NOTICE - make these the "_VIRTUAL" versions if this monster could possibly have child classes made.
+	//         Such as, the CTalkMonster having child classes CBarney and CScientist.
+	GENERATE_TRACEATTACK_PROTOTYPE
+	GENERATE_TAKEDAMAGE_PROTOTYPE
+
+	GENERATE_DEADTAKEDAMAGE_PROTOTYPE
+	
+	GENERATE_GIBMONSTER_PROTOTYPE
+
+	GENERATE_GIBMONSTERGIB_PROTOTYPE
+
+	//uncomment and implement these if needed. The defaults are good for most cases.
+	//GENERATE_GIBMONSTERSOUND_PROTOTYPE
+	//GENERATE_GIBMONSTEREND_PROTOTYPE
+
+	GENERATE_KILLED_PROTOTYPE
+
+	void SetYawSpeed(void);
+
+	BOOL getMonsterBlockIdleAutoUpdate(void);
+	BOOL forceIdleFrameReset(void);
+	BOOL usesAdvancedAnimSystem(void);
+
+	void SetActivity ( Activity NewActivity );
+
+	int LookupActivityHard(int activity);
+	int tryActivitySubstitute(int activity);
+
+	void HandleEventQueueEvent(int arg_eventID);
+	void HandleAnimEvent(MonsterEvent_t *pEvent );
+
 };//END OF class CFloater
 
 
 
+
+
+
 #endif //END OF #ifdef FLOATER_H
+
+
+
+
+
+

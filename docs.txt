@@ -279,18 +279,15 @@ drawHUD (1) - BOOL + MODES. When off, the player HUD will not be rendered. Has s
 
 New NPCs:
 
-Mr. Friendly - "monster_friendly", or "friendly".
-
-Scans for corpses and areas outside of the player's sight. Eats them and makes barnacle chewing noises.
-
-Uses the vomit animation for eating for now.
-
-Piss one off and it will try to bring you closer with the double-whip. When close up, it can vomit, making a low-pitched scientist scream. This rapidly cuts armor.
-(May need some particle effect or graphical cue to show it is vomiting beside just the vomiting gesture)
-
+Mr. Friendly - "monster_friendly"
+-Scans for corpses and areas outside of the player's sight. Eats them and makes barnacle chewing noises.
+-Uses the vomit animation for eating for now.
+-Piss one off and it will try to bring you closer with the double-whip. When close up, it can vomit, making a low-pitched scientist scream. This rapidly cuts armor.
 
 Kingpin - "monster_kingpin"
+-powers up nearby alien grunts if alerted.
 
+floater - "monster_floater" or old name, "monster_bloater".
 
 
 
@@ -444,6 +441,20 @@ turretGibDecal (0) - BOOL. When on, turret gibs (if spawned per type of turret -
 
 
 
+
+
+cl_drawExtraZeros (0) - draw two extra triplets of zeroes according to a pre-release.
+
+healthcolor_fullRedMin - minimum amount of red that reaches the healthcolor, even at full health's bright green (adds a yellow tint).
+~Not out of 255, go higher to influence it more.
+
+healthcolor_brightness - 0 to 255 (well under advised). How bright the rendered color is, translates to transparency the less it is.
+
+healthcolor_yellowMark - 0 to 100. Amount of health that changes the health color from green to yellow to red.
+~Example: yellowMark of 70 says, health from 0 to 70 is red to yellow, 70 to 100 is yellow to green.
+
+
+
 drownDrawPainMode - partially finished mode var (0, 1, 2).  default is 1.
 0 = nothing extra while drowning.  (Default does NOT draw any sort of pain flash or arrows)
 1 = use the pain effect to fade the whole screen constantly while drowning.
@@ -579,11 +590,12 @@ useAlphaCrosshair - boolean var (may require restart or choosing another weapon 
 
 allowAlphaCrosshairWithoutGuns - boolean var (experimental).  When off, the alpha crosshair (only applicable when that is turned on) should not show when the player has no weapons equipped.  It seems the devs never really checked for this circumstance much, so it is difficult to work with.  This takes effect on starting a map fresh from running Half-Life, but on starting or loading a map from another map with weapons, the crosshair will still show regardless of this CVar.
 
-egonEffectsMode - modevar:
+egonEffectsMode (3) - modevar:
 0 = minimal.
 1 = normal.
 2 = normal + new beam noise effect (other beam?).
-3 = colorized (Christmas mode), for making seeing the beams at setting 2 easier.  the "normal" beam (also seen in retail) is red, while the extra new one is green.
+3 = pre-release settings. Primary fire has the purple spiral and one purple straight beam. Secondary has no spiral but has a straight purple and a straight blue beam.
+4 = colorized (Christmas mode), for making seeing the beams at setting 2 easier.  the "normal" beam (also seen in retail) is red, while the extra new one is green.
 
 egonHitCloud - boolean.  If 1, a blue cloud appears where the egon strikes (disperses when the user stops firing if it is secondary)
 

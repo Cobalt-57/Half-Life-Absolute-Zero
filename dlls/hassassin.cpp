@@ -78,7 +78,7 @@ enum
 //#define HASSASSIN_CROSSBOW_RELOAD_APPLY_DELAY 1.1
 EASY_CVAR_EXTERN(hassassinCrossbowReloadSoundDelay)
 
-#define HASSASSIN_CROSSBOW_RELOAD_ANIM "die_simple"
+#define HASSASSIN_CROSSBOW_RELOAD_ANIM "reload"
 
 
 
@@ -1853,7 +1853,7 @@ BOOL CHAssassin::onResetBlend0(void){
 Vector CHAssassin::GetGunPosition(void){
 
 	//NOTE - unknown if attachments are a good idea here. Use default behavior instead.
-	return CBaseMonster::GetGunPosition();
+	//return CBaseMonster::GetGunPosition();
 	
 
 	Vector vecGunPos;

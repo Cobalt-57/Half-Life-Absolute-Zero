@@ -79,6 +79,10 @@ EASY_CVAR_EXTERN(weaponSelectSoundPlayOnMousewheel)
 
 EASY_CVAR_EXTERN(drawViewModel)
 EASY_CVAR_EXTERN(drawHUD)
+EASY_CVAR_EXTERN(cl_drawExtraZeros)
+
+
+
 
 
 
@@ -1436,6 +1440,8 @@ void CHudAmmo::UserCmd_PrevWeapon(void)
 
 
 
+
+
 int CHudAmmo::Draw(float flTime)
 {
 
@@ -1456,6 +1462,34 @@ int CHudAmmo::Draw(float flTime)
 
 
 
+
+	//ok then?
+
+	
+	if(EASY_CVAR_GET(cl_drawExtraZeros)){
+		
+		gHUD.getGenericGUIColor(r, g, b);
+
+		
+		gHUD.DrawHudNumber(ScreenWidth - 64, ScreenHeight - 56, DHN_DRAWZERO | DHN_3DIGITS, 0, r, g, b, 0, 1);
+		gHUD.DrawHudNumber(ScreenWidth - 80, ScreenHeight - 28, DHN_DRAWZERO | DHN_3DIGITS, 0, r, g, b, 0, 1);
+
+
+	}//END OF cl_drawExtraZeros check
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 	if ( (gHUD.m_iHideHUDDisplay & ( HIDEHUD_WEAPONS | HIDEHUD_ALL )) )
 		return 1;
 
@@ -1472,8 +1506,10 @@ int CHudAmmo::Draw(float flTime)
 
 
 
+
+
 	
-	bool forceShowZero = FALSE;
+	BOOL forceShowZero = FALSE;
 
 	//if dead, and cannot show the weapon select screen, don't bother drawing ammo.
 	//Can depend on "global2_hud_version" too, I think the E3 (yellow) may just never draw the ammo at death or something.
@@ -1488,6 +1524,14 @@ int CHudAmmo::Draw(float flTime)
 		}
 		
 	}
+
+
+
+
+
+
+
+
 
 
 
@@ -1804,8 +1848,14 @@ int CHudAmmo::Draw(float flTime)
 						//MODDD - Anyways, those kinds of ammo should be drawn at the bottom of the GUI instead (where the secondary ammo (MP5 grenades) is now)
 						x = ScreenWidth - (5 * AmmoWidth);
 						//y = ScreenHeight - gHUD.m_iFontHeight - gHUD.m_iFontHeight/2;
-						y = (ScreenHeight - (iNumberHeight*1.5) );
+						
+						//OLD.
+						//y = (ScreenHeight - (iNumberHeight*1.5) );
 					
+						y = ScreenHeight - gHUD.m_iFontHeight*1.5 + 5;
+
+
+
 						//NOTICE: JUst confirming.  Does the crowbar need a check so as to not even attempt to draw a number here?
 						//No issues so far, just pointing that out.
 						x = gHUD.DrawHudNumber(x, y, iFlags | DHN_3DIGITS, primaryAmmoTotal, r, g, b, 0, 1);
@@ -1838,7 +1888,7 @@ int CHudAmmo::Draw(float flTime)
 
 				//MODDD
 				//y -= gHUD.m_iFontHeight + gHUD.m_iFontHeight/4;
-				y = ScreenHeight - gHUD.m_iFontHeight - gHUD.m_iFontHeight/2 + 5;
+				y = ScreenHeight - gHUD.m_iFontHeight*1.5 + 5;
 
 				//MODDD - changed to draw under the primary ammo's slash.
 				//x = ScreenWidth - 4 * AmmoWidth - iIconWidth;

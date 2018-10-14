@@ -116,6 +116,18 @@ extern float global2_itemFlashFadeMult;
 
 
 
+EASY_CVAR_EXTERN(healthcolor_fullRedMin)
+EASY_CVAR_EXTERN(healthcolor_brightness)
+EASY_CVAR_EXTERN(healthcolor_yellowMark)
+
+
+
+
+
+
+
+
+
 //MODDD - new vars for the new fade system.
 float cumulativeFade = 0;
 //float fadeIncrement = 0.45;
@@ -962,6 +974,8 @@ int CHudHealth::DrawPain(float flTime)
 }
 
 
+
+
 //MODDD - method added so that any changes to health-related colors across the program are consistent.
 void CHudHealth::deriveColorFromHealth(int &r, int &g, int &b, int &a){
 	
@@ -970,14 +984,27 @@ void CHudHealth::deriveColorFromHealth(int &r, int &g, int &b, int &a){
 		//NOTICE: not involving the "a" value (for scaling colors) in Pre E3.
 		
 		//How bright can all of the color components (r, g, b) potentially be?  (0 - 255)
-		const int brightness = COLOR_PRE_E3_BRIGHTNESS;
+
+		//At full health, how red is it? Adds a tiny bit of yellow alongside the bright green.
+		
+		
+		
+		//const float fullRedMin = 20;
+		//const float brightness = (float)COLOR_PRE_E3_BRIGHTNESS;
 
 		//At what point is the GUI going from green to yellow? Measure of health (0 - 100)
-		const int yellowMark = 70;
+		//const float yellowMark = 70 + fullRedMin;
+
+		
+		float fullRedMin = EASY_CVAR_GET(healthcolor_fullRedMin);
+		float brightness = EASY_CVAR_GET(healthcolor_brightness);
+		float yellowMark = EASY_CVAR_GET(healthcolor_yellowMark);
+
+
 	
 		if(m_iHealth >= yellowMark){
 			//r = (int) (( ( -m_iHealth +yellowMark+100  ) /((float)yellowMark)) *175 );
-			r = (int) (( ( -m_iHealth +100  ) /((float) (100-yellowMark) )) *brightness );
+			r = (int) (( ( -m_iHealth + fullRedMin + 100  ) /((float) (100.0 + fullRedMin - yellowMark) )) *brightness );
 			g = brightness;
 			b = 5;
 		}else{

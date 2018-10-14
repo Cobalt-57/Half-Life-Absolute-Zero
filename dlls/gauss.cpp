@@ -82,6 +82,23 @@ EASY_CVAR_EXTERN(gauss_chargeInterval_MP)
 
 LINK_ENTITY_TO_CLASS( weapon_gauss, CGauss );
 
+
+
+
+
+CGauss::CGauss(void){
+
+	this->ohShitSon = -666.6667;
+	ohFuckSonny = -1;
+
+}
+
+
+
+
+
+
+
 float CGauss::GetFullChargeTime( void )
 {
 #ifdef CLIENT_DLL
@@ -179,11 +196,13 @@ int CGauss::GetItemInfo(ItemInfo *p)
 BOOL CGauss::Deploy( )
 {
 	m_pPlayer->m_flPlayAftershock = 0.0;
-	return DefaultDeploy( "models/v_gauss.mdl", "models/p_gauss.mdl", GAUSS_DRAW, "gauss", 0, 0, 36.0/60.0, -1 );
+	return DefaultDeploy( "models/v_gauss.mdl", "models/p_gauss.mdl", GAUSS_DRAW, "gauss", 0, 0, (36.0f + 1.0f)/(64.0f), -1 );
 }
 
 void CGauss::Holster( int skiplocal /* = 0 */ )
 {
+
+	//does this just stop sounds?
 	PLAYBACK_EVENT_FULL( FEV_RELIABLE | FEV_GLOBAL, m_pPlayer->edict(), m_usGaussFire, 0.01, (float *)&m_pPlayer->pev->origin, (float *)&m_pPlayer->pev->angles, 0.0, 0.0, 0, 0, 0, 1 );
 	
 	//m_pPlayer->m_flNextAttack = UTIL_WeaponTimeBase() + 0.5;
@@ -195,7 +214,7 @@ void CGauss::Holster( int skiplocal /* = 0 */ )
 
 
 	
-	DefaultHolster(GAUSS_HOLSTER, skiplocal, 0, (31.0f/60.0f) );
+	DefaultHolster(GAUSS_HOLSTER, skiplocal, 0, (31.0f + 1.0f)/(60.0f) );
 
 }
 
@@ -348,14 +367,16 @@ void CGauss::ItemPreFrame(){
 
 void CGauss::ItemPostFrame(){
 
-	easyForcePrintLine("WHATS YO GAAAAME ia:%d starthro:%.2f sc:%.2f sca:%.2f scp:%.2f t:%.2f",
+	/*
+	easyForcePrintLine("WHATS YO GAAAAME ia:%d fs:%d starthro:%.2f sc:%.2f sca:%.2f scp:%.2f t:%.2f",
 		m_fInAttack,
+		m_fireState,
 		m_flStartThrow,
 		m_pPlayer->m_flStartCharge,
 		m_pPlayer->m_flStartChargeAnim,
 		m_pPlayer->m_flStartChargePreSuperDuper,
 		gpGlobals->time);
-
+		*/
 	CBasePlayerWeapon::ItemPostFrame();
 
 }
@@ -375,10 +396,6 @@ void CGauss::SecondaryAttack()
 
 
 }//END OF getNextAmmoBurnDelay()
-
-
-
-
 
 
 
@@ -420,8 +437,7 @@ void CGauss::chargeWork(){
 
 	if ( m_fInAttack == 0 )
 	{
-
-
+		ohFuckSonny = 0;
 
 		//////easyForcePrintLine("WHAT? WHAT? %.2f", m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType]);
 		if ( m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] <= 0 )
@@ -459,30 +475,46 @@ void CGauss::chargeWork(){
 		
 
 		m_flStartThrow = gpGlobals->time + EASY_CVAR_GET(gauss_chargeworkdelay);
+		///??   yes... bizarrely, startThrow uses fixed time, not relative to 0.
 
+		
 
+		//ROLD ASS
 		m_pPlayer->m_flStartChargePreSuperDuper = gpGlobals->time;  //just record me.
 
 	}
 	else if (m_fInAttack == 1)
 	{
+		if(ohFuckSonny != m_fInAttack){
+			ohFuckSonny = m_fInAttack;
+
+		}
+
+
+
+
+
 		//stopBlockLooping();
 		
 		//this->attemptFirePrimary();
 		//return;
 
-		easyForcePrintLine("I REACHED HERE???!!!! comp: starthro:%.2f t:%.2f", m_flStartThrow, gpGlobals->time);
+		//easyForcePrintLine("I REACHED HERE???!!!! comp: starthro:%.2f t:%.2f", m_flStartThrow, gpGlobals->time);
 
-			if( m_flStartThrow < gpGlobals->time ){
-				easyForcePrintLine("OH SHIT I DID THE SHIT DO YOU SEE THIS SHIT DAMN");
-				m_pPlayer->m_flStartCharge = gpGlobals->time;
-				m_pPlayer->m_flAmmoStartCharge = UTIL_WeaponTimeBase() + GetFullChargeTime();
-			
-				//move on and actually collect charge?
-				m_fInAttack = 2;
+		if( m_flStartThrow < gpGlobals->time ){
 				
-				m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + EASY_CVAR_GET(gauss_secondarychargemindelay);   //TODO!!!! todo
-			}
+			//OH SHIT SON   I MOVED YOU.
+			/*
+			m_pPlayer->m_flStartCharge = gpGlobals->time;
+			m_pPlayer->m_flAmmoStartCharge = UTIL_WeaponTimeBase() + GetFullChargeTime();
+			*/
+				
+			//move on and actually collect charge?
+			m_fInAttack = 2;
+				
+			//MOVED DOWN
+			//m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + EASY_CVAR_GET(gauss_secondarychargemindelay);   //TODO!!!! todo
+		}
 
 
 
@@ -490,9 +522,47 @@ void CGauss::chargeWork(){
 	else if (m_fInAttack == 2)
 	{
 		
+		if(ohFuckSonny != m_fInAttack){
+			ohFuckSonny = m_fInAttack;
+			
+			//easyForcePrintLine("OH SHIT I DID THE SHIT DO YOU SEE THIS SHIT DAMN");
+			
+
+			if(EASY_CVAR_GET(gauss_primaryonly) != 1){
+				//only allow when primary fire is disallowed.
+				m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + EASY_CVAR_GET(gauss_secondarychargemindelay);   //TODO!!!! todo
+				m_pPlayer->m_flNextAmmoBurn = UTIL_WeaponTimeBase();
+			}else{
+				//is that okay?
+				this->pev->fuser1 = UTIL_WeaponTimeBase() + EASY_CVAR_GET(gauss_secondarychargemindelay);
+				m_pPlayer->m_flNextAmmoBurn = UTIL_WeaponTimeBase() + getAmmoChargeInterval();   // + 0.1
+			}
+
+			
+
+
+			m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType]--;// take one ammo just to start the spin
+				
+
+
+			easyForcePrintLine("OH FUCK MAN WORK CHARGIN STARTIN");
+			m_pPlayer->m_flStartCharge = gpGlobals->time;
+			m_pPlayer->m_flAmmoStartCharge = UTIL_WeaponTimeBase() + GetFullChargeTime();
+		}
+
+
+
+		BOOL moveToNextPhase = FALSE;
+
+		if(EASY_CVAR_GET(gauss_primaryonly) != 1){
+			moveToNextPhase = (m_flTimeWeaponIdle <= UTIL_WeaponTimeBase());
+		}else{
+			moveToNextPhase = (pev->fuser1 <= UTIL_WeaponTimeBase());
+		}
+
 		//easyForcePrintLine("????????????????? %.2f %.2f", m_flTimeWeaponIdle, UTIL_WeaponTimeBase() );
-		if (m_flTimeWeaponIdle <= UTIL_WeaponTimeBase())
-		{
+		
+		if(moveToNextPhase){
 			m_fInAttack = 3;
 		}
 		
@@ -501,7 +571,10 @@ void CGauss::chargeWork(){
 
 	}else if (m_fInAttack == 3)
 	{
+		if(ohFuckSonny != m_fInAttack){
+			ohFuckSonny = m_fInAttack;
 
+		}
 
 
 		/*
@@ -516,20 +589,12 @@ void CGauss::chargeWork(){
 		//if ( UTIL_WeaponTimeBase() >= m_pPlayer->m_flNextAmmoBurn && m_pPlayer->m_flNextAmmoBurn != 1000 )
 		if ( UTIL_WeaponTimeBase() >= m_pPlayer->m_flNextAmmoBurn && m_pPlayer->m_flNextAmmoBurn != 1000 )
 		{
-#ifdef CLIENT_DLL
-	if ( bIsMultiplayer() )
-#else
-	if ( g_pGameRules->IsMultiplayer() )
-#endif
-			{
-				m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType]--;
-				m_pPlayer->m_flNextAmmoBurn = UTIL_WeaponTimeBase() + EASY_CVAR_GET(gauss_chargeInterval_MP);   // + 0.1
-			}
-			else
-			{
-				m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType]--;
-				m_pPlayer->m_flNextAmmoBurn = UTIL_WeaponTimeBase() + EASY_CVAR_GET(gauss_chargeInterval_SP);   // + 0.3;
-			}
+
+			m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType]--;
+			m_pPlayer->m_flNextAmmoBurn = UTIL_WeaponTimeBase() + getAmmoChargeInterval();   // + 0.1
+			
+	
+			easyForcePrintLine("OH FUCK MAN YOU DROP AMMO %d", m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType]);
 		}
 
 		if ( m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] <= 0 )
@@ -622,6 +687,7 @@ void CGauss::postChargeAnimCheck(){
 
 	if(m_fireState == 0){
 
+		ohShitSon = 0;
 
 
 		//send delay!
@@ -631,12 +697,34 @@ void CGauss::postChargeAnimCheck(){
 
 	}else if(m_fireState == 1){
 
+		if(ohShitSon != m_fireState){
+			ohShitSon = m_fireState;
+
+
+		}
 		
 			//stopBlockLooping();
 
 		//return;
 		if(m_flReleaseThrow < gpGlobals->time){
 
+			m_fireState = 2;
+
+		
+		}
+
+	}else if(m_fireState == 2){
+		
+		if(ohShitSon != m_fireState){
+			ohShitSon = m_fireState;
+
+			
+			//NO SON NO.
+			//m_pPlayer->m_flStartCharge = gpGlobals->time;
+			//m_pPlayer->m_flAmmoStartCharge = UTIL_WeaponTimeBase() + GetFullChargeTime();
+
+
+			
 			//////easyForcePrintLine("DO I HAPPEN??? %.2f ", gpGlobals->time);
 
 			//m_pPlayer->m_flStartCharge = gpGlobals->time;
@@ -655,21 +743,45 @@ void CGauss::postChargeAnimCheck(){
 			//target = 30.5
 
 			//time is 30.4 seconds.  pass? no.  time is under
+			
+
+			
+			//only allow when primary fire is disallowed.
+			//MODDD NO, moved to the logic (chargeWork) instead.
+			//m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType]--;// take one ammo just to start the spin
+			//m_pPlayer->m_flNextAmmoBurn = UTIL_WeaponTimeBase();
+
+			
+			//NOTICE - 
+			//m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType]--;// take one ammo just to start the spin
+			//m_pPlayer->m_flNextAmmoBurn = UTIL_WeaponTimeBase();
+
 
 			this->m_flReleaseThrow = gpGlobals->time + 0.5;
-			m_fireState = 2;
 
 
-			m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType]--;// take one ammo just to start the spin
-			m_pPlayer->m_flNextAmmoBurn = UTIL_WeaponTimeBase();
-		
-		}
+			//???!!!
 
-	}else if(m_fireState == 2){
+		}//end of ODAMN
+
+
 
 		//????????
 			stopBlockLooping();
 			//easyForcePrintLine("???? " + 
+
+
+	
+		if(ohShitSon != m_fireState){
+			ohShitSon = m_fireState;
+
+
+
+		}
+
+
+
+
 		if (this->m_flReleaseThrow < gpGlobals->time)
 		{
 			m_pPlayer->m_flStartChargeAnim = gpGlobals->time;
@@ -725,7 +837,8 @@ void CGauss::StartFireDecision( void ){
 		float timePassed = gpGlobals->time - m_pPlayer->m_flStartChargePreSuperDuper;
 		//easyForcePrintLine("TimePassed!! : %.2f : %.2f", timePassed, EASY_CVAR_GET(gauss_secondarychargetimereq)  );
 
-		if(timePassed > EASY_CVAR_GET(gauss_secondarychargetimereq) ){
+		easyForcePrintLine("AW SHIT MAN %.2f", timePassed);
+		if(m_fInAttack > 1 && timePassed > EASY_CVAR_GET(gauss_secondarychargetimereq) ){
 			//proceed with defaults: secondary attack.
 			m_fPrimaryFire = FALSE;
 		}else{
@@ -882,13 +995,14 @@ void CGauss::Fire( Vector vecOrigSrc, Vector vecDir, float flDamage )
 	if(m_fPrimaryFire){
 		
 		//It seems only "fire2" is ever used, so using that one's length instead.
+		//...our modded model's "fire2" now takes 30/30 seconds, so maintaining.
 		//m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + (31.0/30.0);
-		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + (40.0/30.0) + randomIdleAnimationDelay();;
+		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + (31.0/30.0) + randomIdleAnimationDelay();;
 	}else{
 		//No need to set the idle time for secondary fire, as that is charging (release has to set the idle time)
 		//Actually, it is fine here.  Fire is called when released, so it works here too.
 		//m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + (41.0/30.0);
-		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + (40.0/30.0) + randomIdleAnimationDelay();;
+		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + (31.0/30.0) + randomIdleAnimationDelay();;
 
 	}
 
@@ -1090,6 +1204,24 @@ void CGauss::Fire( Vector vecOrigSrc, Vector vecDir, float flDamage )
 
 
 
+//Depending on multiplayer or singleplayer, return the appropriate CVar for this.
+float CGauss::getAmmoChargeInterval(void){
+	
+	if(WEAPON_DEFAULT_MULTIPLAYER_CHECK)
+	{
+		return EASY_CVAR_GET(gauss_chargeInterval_MP);
+	}
+	else
+	{
+		return EASY_CVAR_GET(gauss_chargeInterval_SP);
+	}
+}//END OF getAmmoChargeInterval
+
+
+
+
+
+
 void CGauss::WeaponIdle( void )
 {
 
@@ -1119,6 +1251,12 @@ void CGauss::WeaponIdle( void )
 	//easyForcePrintLine("AAACK!!!!!!");
 	if (m_fInAttack != 0)
 	{
+		easyForcePrintLine("MY STATZ: mia: %d mf: %d",
+			m_fInAttack,
+			m_fireState
+		);
+
+
 		StartFireDecision();   //is that okay?
 		m_fInAttack = 0;
 		m_fireState = 0;
@@ -1141,7 +1279,7 @@ void CGauss::WeaponIdle( void )
 		else
 		{
 			iAnim = GAUSS_FIDGET;
-			m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 3;
+			m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + (71.0f + 1.0f)/(30.0f);
 		}
 
 		return;

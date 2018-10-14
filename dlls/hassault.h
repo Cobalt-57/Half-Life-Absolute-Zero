@@ -31,6 +31,9 @@
 class CHAssault : public CSquadMonster
 {
 public:
+	
+	float SafeSetBlending ( int iBlender, float flValue );
+
 
 
 	float signal1Cooldown;
@@ -162,7 +165,8 @@ public:
 	BOOL CheckRangeAttack2 ( float flDot, float flDist );
 
 	void SetActivity(Activity NewActivity);
-
+	
+	void SetTurnActivity(void);
 
 	GENERATE_TRACEATTACK_PROTOTYPE
 	GENERATE_TAKEDAMAGE_PROTOTYPE
@@ -472,13 +476,16 @@ Schedule_t	slHAssault_spin[] =
 		bits_COND_ENEMY_DEAD		|
 		bits_COND_HEAVY_DAMAGE		|
 		bits_COND_ENEMY_OCCLUDED	|
-		bits_COND_HEAR_SOUND		|
+		//bits_COND_HEAR_SOUND		|
 		//bits_COND_GRUNT_NOFIRE		|
 		bits_COND_SPECIAL1	|
 		bits_COND_CAN_MELEE_ATTACK1	|
 		bits_COND_NO_AMMO_LOADED,
 		
-		bits_SOUND_DANGER | bits_SOUND_PLAYER | bits_SOUND_WORLD,
+		//FOR CRYIN OUT LOUD DONT INTERRUPT THE SPIN.  or maybe it's ok?
+		//But at least find a way not to interrupt the startup spin anim perhaps if so?
+		//bits_SOUND_DANGER | bits_SOUND_PLAYER | bits_SOUND_WORLD,
+		0,
 
 		"tlHAssault_spin"
 	},

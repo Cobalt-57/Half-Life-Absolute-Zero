@@ -1420,12 +1420,14 @@ void CScientist :: HandleAnimEvent( MonsterEvent_t *pEvent )
 	switch( pEvent->event )
 	{
 	case SCIENTIST_AE_HEAL:		// Heal my target (if within range)
+		{
 		Heal();
 
 		//re-pick a new TargetEnt.
 		forgetHealNPC();
 
 		break;
+		}
 	case SCIENTIST_AE_NEEDLEON:
 		{
 		oldBody = pev->body;
@@ -1438,8 +1440,8 @@ void CScientist :: HandleAnimEvent( MonsterEvent_t *pEvent )
 		}
 
 		//easyPrintLine("NEW BODY1 %d", pev->body);
-		}
 		break;
+		}
 	case SCIENTIST_AE_NEEDLEOFF:
 		{
 		oldBody = pev->body;
@@ -1451,9 +1453,8 @@ void CScientist :: HandleAnimEvent( MonsterEvent_t *pEvent )
 		}
 
 		//easyPrintLine("NEW BODY2 %d", pev->body);
-		}
 		break;
-
+		}
 	default:
 		CTalkMonster::HandleAnimEvent( pEvent );
 	}
@@ -2309,7 +2310,7 @@ Schedule_t *CScientist :: GetSchedule ( void )
 					thisNameSucks = static_cast<CTalkMonster*>(testMon);
 					
 					//only allow one scientist to try to reach this NPC.  That is, this NPC's own "scientistTryingToHealMe" is null, that is.
-					if(thisNameSucks != NULL && thisNameSucks->scientistTryingToHealMe == NULL && thisDistance < leastDistanceYet && CanHeal(testMon)){
+					if(thisNameSucks != NULL && thisNameSucks->scientistTryingToHealMeEHANDLE == NULL && thisDistance < leastDistanceYet && CanHeal(testMon)){
 						//healTargetNPC = testMon;
 						m_hTargetEnt = testMon;
 						bestChoiceYet = thisNameSucks;
@@ -2326,6 +2327,7 @@ Schedule_t *CScientist :: GetSchedule ( void )
 				//NOT THE thisNameSucks!
 				//thisNameSucks->scientistTryingToHealMe = this;
 				bestChoiceYet->scientistTryingToHealMe = this;
+				bestChoiceYet->scientistTryingToHealMeEHANDLE = this;
 			}
 
 
@@ -2643,8 +2645,13 @@ void CScientist::MonsterThink(void){
 
 
 	//easyForcePrintLine("AYY YO WHAT THE helk %.2f %.2f", gpGlobals->time, pev->dmgtime);
-	
-	if( (m_pSchedule == slFollow || m_pSchedule == slFaceTarget || m_pSchedule == slHeal) &&
+	int tempTaskNumber = this->getTaskNumber();
+	if( 
+		(
+			m_pSchedule == slFollow ||
+			m_pSchedule == slFaceTarget ||
+			(m_pSchedule == slHeal && tempTaskNumber != TASK_HEAL && tempTaskNumber !=  TASK_PLAY_SEQUENCE_FACE_TARGET)
+		) &&
 		(m_hTargetEnt == NULL || (m_hTargetEnt != NULL && !m_hTargetEnt->IsAlive()) )
 		)  {
 		//Fail if who we're supposed to follow dies.
@@ -3422,6 +3429,7 @@ void CScientist::StartFollowing(CBaseEntity *pLeader){
 
 void CScientist::forgetHealNPC(void){
 	
+
 	if(healNPCChosen){
 		healNPCChosen = FALSE;
 
@@ -3435,9 +3443,14 @@ void CScientist::forgetHealNPC(void){
 				CTalkMonster* thisNameSucks = static_cast<CTalkMonster*>(testEnt);
 				if(thisNameSucks != NULL){
 					thisNameSucks->scientistTryingToHealMe = NULL;
+					thisNameSucks->scientistTryingToHealMeEHANDLE = NULL;
 				}
 			}
 		}
+
+		const char* poopee = getScheduleName();
+		int poopii = getTaskNumber();
+
 
 		m_hTargetEnt = NULL;
 	}

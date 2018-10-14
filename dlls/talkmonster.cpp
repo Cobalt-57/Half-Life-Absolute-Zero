@@ -852,9 +852,10 @@ GENERATE_KILLED_IMPLEMENTATION(CTalkMonster)
 
 	m_hTargetEnt = NULL;
 	
-	if(scientistTryingToHealMe != NULL ){
+	if(scientistTryingToHealMeEHANDLE != NULL ){
 		scientistTryingToHealMe->forgetHealNPC();
 		scientistTryingToHealMe = NULL;
+		scientistTryingToHealMeEHANDLE = NULL;
 	}
 	//If I am a scientist, I will forget anything I wanted to heal.
 	forgetHealNPC();
@@ -1840,6 +1841,7 @@ CTalkMonster::CTalkMonster(void){
 	madDir = FALSE;
 	canGoRavingMad = FALSE;
 	scientistTryingToHealMe = NULL;
+	scientistTryingToHealMeEHANDLE = NULL;
 
 	//madInterSentencesMaxLocation = NULL;
 	madInterSentencesLocation = NULL;

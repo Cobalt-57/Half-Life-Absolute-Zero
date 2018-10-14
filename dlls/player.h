@@ -161,6 +161,7 @@ public:
 
 	float friendlyCheckTime;
 	
+	EHANDLE closestFriendlyMemEHANDLE;
 	CFriendly* closestFriendlyMem;
 	float horrorPlayTimePreDelay;
 	float horrorPlayTime;

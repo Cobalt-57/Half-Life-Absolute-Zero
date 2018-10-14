@@ -24,7 +24,7 @@
 #define RGB_GREENISH 0x0000A000 //0,160,0
 
 //MODDD - new constant.  This is the brightness of the Pre-E3's GUI (the green one), range: 0 - 255
-#define COLOR_PRE_E3_BRIGHTNESS 150
+#define COLOR_PRE_E3_BRIGHTNESS 125
 
 
 

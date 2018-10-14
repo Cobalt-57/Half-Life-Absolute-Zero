@@ -85,6 +85,9 @@ Add game specific, client-side objects here
 */
 void Game_AddObjects( void )
 {
-	if ( pBeam && pBeam2 )
+
+	//MODDD - holdup. Why not run if either is present? Either may get picked now. Knows not to render the null one anyways then.
+	//if ( pBeam && pBeam2 )
+	if(pBeam || pBeam2)
 		UpdateBeams();
 }

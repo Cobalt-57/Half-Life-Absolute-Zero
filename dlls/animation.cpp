@@ -937,8 +937,10 @@ float SetBlending( void *pmodel, entvars_t *pev, int iBlender, float flValue )
 
 	//easyPrintLineANIMATION("BLENDAH:::: %d", setting);
 
-
-	return setting * (1.0 / 255.0) * (pseqdesc->blendend[iBlender] - pseqdesc->blendstart[iBlender]) + pseqdesc->blendstart[iBlender];
+	float temp = setting * (1.0 / 255.0) * (pseqdesc->blendend[iBlender] - pseqdesc->blendstart[iBlender]) + pseqdesc->blendstart[iBlender];
+	
+	//easyForcePrintLine("YO YO YO %.2f", temp);
+	return temp;
 }
 
 

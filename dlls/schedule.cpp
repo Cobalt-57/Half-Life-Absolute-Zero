@@ -1796,6 +1796,15 @@ void CBaseMonster :: StartTask ( Task_t *pTask )
 
 		}
 	break;
+	case TASK_UPDATE_LKP:
+		{
+		//Force me to know the enemy's location.
+		if(m_hEnemy != NULL){
+			m_vecEnemyLKP = m_hEnemy->pev->origin;
+		}
+		TaskComplete();
+		break;
+		}
 	case TASK_WAIT_PVS:
 	case TASK_WAIT_INDEFINITE:
 		{
@@ -1820,6 +1829,13 @@ void CBaseMonster :: StartTask ( Task_t *pTask )
 		}
 	case TASK_MOVE_TO_TARGET_RANGE:
 		{
+
+			if(m_hTargetEnt == NULL){
+				//HOW DARE YOU.  HOw. DARE. YOU.
+				TaskFail();
+				return;
+			}
+
 			if ( (m_hTargetEnt->pev->origin - pev->origin).Length() < 1 )
 				TaskComplete();
 			else

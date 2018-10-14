@@ -1881,6 +1881,7 @@ CBasePlayer::CBasePlayer(void){
 
 	friendlyCheckTime = -1;
 	
+	closestFriendlyMemEHANDLE = NULL;
 	closestFriendlyMem = NULL;
 	horrorPlayTimePreDelay = -1;
 	horrorPlayTime = -1;
@@ -3235,8 +3236,10 @@ void CBasePlayer::PreThink(void)
 			//selected!
 			closestFriendly->horrorSelected = TRUE;
 			closestFriendlyMem = closestFriendly;
+			closestFriendlyMemEHANDLE = closestFriendly;
 		}else{
 			closestFriendlyMem = NULL;
+			closestFriendlyMemEHANDLE = NULL;
 		}
 
 
@@ -3245,7 +3248,7 @@ void CBasePlayer::PreThink(void)
 
 
 
-	if(closestFriendlyMem && (pev->deadflag == DEAD_NO) && EASY_CVAR_GET(friendlyPianoFollowVolume) > 0 ){
+	if(closestFriendlyMemEHANDLE && (pev->deadflag == DEAD_NO) && EASY_CVAR_GET(friendlyPianoFollowVolume) > 0 ){
 
 		if(horrorPlayTimePreDelay != -1 && horrorPlayTimePreDelay < gpGlobals->time){
 			horrorPlayTimePreDelay = -1;
@@ -3265,7 +3268,7 @@ void CBasePlayer::PreThink(void)
 
 
 				//TODO: make the volume a factor of distance?
-				float tempVol = ( ((-(this->pev->origin - closestFriendlyMem->pev->origin).Length()) / 3000) + EASY_CVAR_GET(friendlyPianoFollowVolume)+0.1 );
+				float tempVol = ( ((-(this->pev->origin - closestFriendlyMemEHANDLE->pev->origin).Length()) / 3000) + EASY_CVAR_GET(friendlyPianoFollowVolume)+0.1 );
 
 				if(tempVol < 0){
 					//don't play? no point.

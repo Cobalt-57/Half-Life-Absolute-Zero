@@ -3448,7 +3448,7 @@ int CBaseMonster :: CheckLocalMove ( const Vector &vecStart, const Vector &vecEn
 
 
 
-	if(  (monsterID == 4 || monsterID == 6) && EASY_CVAR_GET(drawDebugPathfinding) == 1){
+	if( EASY_CVAR_GET(drawDebugPathfinding) == 1){
 		switch(iReturn){
 			case LOCALMOVE_INVALID:
 				//ORANGE
@@ -5681,7 +5681,10 @@ float	CBaseMonster::VecToYaw ( Vector vecDir )
 		return pev->angles.y;
 
 	return UTIL_VecToYaw( vecDir );
+
 }
+
+
 
 
 //=========================================================
@@ -6066,9 +6069,10 @@ void CBaseMonster::ReportAIState( void )
 
 	ALERT_TYPE level = at_console;
 
-	static const char *pStateNames[] = { "None", "Idle", "Combat", "Alert", "Hunt", "Prone", "Scripted", "Dead" };
+	//mirrors the states listed in util.h's MONSTERSTATE enum.
+	static const char *pStateNames[] = { "None", "Idle", "Combat", "Alert", "Hunt", "Prone", "Script", "PlayDead", "Dead" };
 
-
+	
 
 	easyForcePrintLine("%s ID:%d", getClassname(), monsterID);
 
@@ -6077,6 +6081,7 @@ void CBaseMonster::ReportAIState( void )
 
 	easyForcePrintLine("ACTS: Current:%s  Ideal:%s  Movement:%s", getActivityName(m_Activity), getActivityName(m_IdealActivity), getActivityName(m_movementActivity));
 		
+	easyForcePrintLine("WTF %d %d", (int)this->m_MonsterState, (int)this->m_IdealMonsterState);
 	easyForcePrintLine("STATES: Current: %s  Ideal: %s", pStateNames[this->m_MonsterState], pStateNames[this->m_IdealMonsterState]);
 
 
@@ -6085,7 +6090,7 @@ void CBaseMonster::ReportAIState( void )
 
 	if ( m_pSchedule )
 	{
-		easyForcePrint("Schedule: %s FailSchedType:%d\n", getScheduleName(), m_failSchedule);
+		easyForcePrint("Schedule: %s || FailSchedType:%d\n", getScheduleName(), m_failSchedule);
 		Task_t *pTask = GetTask();
 		if ( pTask ){
 			easyForcePrint("Task#: %d (schedindex:%d) ", pTask->iTask, m_iScheduleIndex );
@@ -6210,6 +6215,7 @@ void CBaseMonster::ReportAIState( void )
 	//easyForcePrintLine("isOrganic:%d", isOrganic());
 
 	easyForcePrintLine("EXTRA: flags:%d effects:%d renderfx:%d rendermode:%d renderamt:%.2f gamestate:%d solid:%d movetype:%d", pev->flags, pev->effects, pev->renderfx, pev->rendermode, pev->renderamt, pev->gamestate, pev->solid, pev->movetype);
+	easyForcePrintLine("Eyepos: (%.2f,%.2f,%.2f)", pev->view_ofs.x, pev->view_ofs.y, pev->view_ofs.z);
 
 	easyForcePrintLine("-------------------------------------------------------------");
 

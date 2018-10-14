@@ -122,6 +122,7 @@ public:
 	void forgetReviveTarget(void);
 
 	CISlave* monsterTryingToReviveMe;
+	EHANDLE monsterTryingToReviveMeEHANDLE;
 	BOOL reviveTargetChosen;
 	int beingRevived;
 	float reviveFriendAnimStartTime;
@@ -374,7 +375,7 @@ void CISlave::ReportAIState( void )
 
 	easyPrintLine("MONSTER ID: %d HEALER ID: %d BEING REV?: %d REVIVINGOTHER?: %d REVIVING MONSTER ID: %d FRAMERATE: %.2f FRAME: %.2f DIST_TO_TARGET: %.2f, ACTM: %d, ACTI: %d, ACT: %d TIMs: %.2f %.2f",
 		monsterID,
-		(this->monsterTryingToReviveMe!=NULL) ? this->monsterTryingToReviveMe->monsterID : -1,
+		(this->monsterTryingToReviveMeEHANDLE!=NULL) ? this->monsterTryingToReviveMe->monsterID : -1,
 		beingRevived,
 		this->reviveTargetChosen,
 		(reviveTargetChosen) ? m_hTargetEnt->MyMonsterPointer()->monsterID : -1,
@@ -1200,7 +1201,7 @@ CISlave* CISlave::findISlaveToRevive(BOOL requireLineTrace, float argStartMaxDis
 				CBaseMonster* tempMonster = pEntity->GetMonsterPointer();
 				CISlave* tempIslave = tempMonster != NULL ? static_cast<CISlave*>(tempMonster) : NULL;
 				
-				if(tempIslave != NULL && tempIslave->monsterTryingToReviveMe == NULL && tempIslave->beingRevived == FALSE && tempIslave->ShouldFadeOnDeath() == FALSE){
+				if(tempIslave != NULL && tempIslave->monsterTryingToReviveMeEHANDLE == NULL && tempIslave->beingRevived == FALSE && tempIslave->ShouldFadeOnDeath() == FALSE){
 					float d = (pev->origin - pEntity->pev->origin).Length();
 					if (d < flDist)
 					{
@@ -1289,6 +1290,7 @@ void CISlave :: StartTask ( Task_t *pTask )
 			if (reviveTargetChosen && m_hDead != NULL && bestChoiceYet->okayToRevive() ){
 				//return TRUE;
 				bestChoiceYet->monsterTryingToReviveMe = this;
+				bestChoiceYet->monsterTryingToReviveMeEHANDLE = this;
 				
 				bestChoiceYet->beingRevived = 1;
 				UTIL_SetSize(bestChoiceYet->pev, VEC_HUMAN_HULL_MIN, VEC_HUMAN_HULL_MAX);
@@ -1422,7 +1424,7 @@ void CISlave::riseFromTheGrave(void){
 void CISlave::startReanimation(){
 	
 	selfReviveTime = -1;
-	if(monsterTryingToReviveMe != NULL){
+	if(monsterTryingToReviveMeEHANDLE != NULL){
 		/*
 		monsterTryingToReviveMe->reviveTargetChosen = FALSE;
 		monsterTryingToReviveMe->m_hTargetEnt = NULL;
@@ -1480,14 +1482,14 @@ void CISlave::makeThingForgetReviveInfo(CBaseEntity* thing, CISlave* thingSpecif
 		thingSpecific->beingRevived = 0;
 	}
 	thingSpecific->monsterTryingToReviveMe = NULL;
-
+	thingSpecific->monsterTryingToReviveMeEHANDLE = NULL;
 }
 
 
 void CISlave::forgetReviveTarget(void){
 	
 	//meh, just do both, why not.
-	if(monsterTryingToReviveMe != NULL){
+	if(monsterTryingToReviveMeEHANDLE != NULL){
 		monsterTryingToReviveMe->forgetReviveTarget();
 	}
 
@@ -1686,6 +1688,7 @@ void CISlave :: RunTask( Task_t *pTask )
 					//done in riseFromTheGrave()
 					
 					//poopier->monsterTryingToReviveMe = NULL;
+					//poopier->monsterTryingToReviveMeEHANDLE = NULL;
 					//reviveTargetChosen = FALSE;
 					targetIsDeadException = FALSE;
 					poopier->riseFromTheGrave();
@@ -1825,7 +1828,10 @@ CISlave::CISlave(void){
 	canReviveFriend = FALSE;
 	selfReviveTime = -1;
 	finishingReviveFriendAnim = FALSE;
+
 	monsterTryingToReviveMe = NULL;
+	monsterTryingToReviveMeEHANDLE = NULL;
+
 	reviveTargetChosen = FALSE;
 	beingRevived = FALSE;
 	reviveFriendAnimStartTime = -1;
@@ -2057,6 +2063,7 @@ Schedule_t *CISlave :: GetSchedule( void )
 				//NOT THE thisNameSucks!!!!
 				//thisNameSucks->monsterTryingToReviveMe = this;
 				bestChoiceYet->monsterTryingToReviveMe = this;
+				bestChoiceYet->monsterTryingToReviveMeEHANDLE = this;
 				targetIsDeadException = TRUE;
 
 				//???

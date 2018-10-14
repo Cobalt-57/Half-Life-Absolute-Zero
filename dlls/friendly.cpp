@@ -1684,11 +1684,13 @@ GENERATE_KILLED_IMPLEMENTATION(CFriendly){
 		if(m_hEnemy && m_hEnemy->IsPlayer()){
 			CBasePlayer* tempPlayer = static_cast<CBasePlayer*>(CBaseEntity::Instance(m_hEnemy.Get() ));
 
+			//if the player's closest mr. friendly was me, disassociate me with the player since I'm about to be deleted.
 			if(tempPlayer->closestFriendlyMem == this){
 				tempPlayer->horrorPlayTime = -1;
 				//stop!
 				stopHorrorSound();
 				tempPlayer->closestFriendlyMem = NULL;
+				tempPlayer->closestFriendlyMemEHANDLE = NULL;
 			}
 
 			//easyForcePrintLine("WELL?!! %d : %d", m_hEnemy!=NULL, (m_hEnemy!=NULL)?m_hEnemy->IsPlayer():-1 );
@@ -2050,11 +2052,12 @@ CBaseEntity* CFriendly::getNearestDeadBody(void){
 					//if our fraction is not 1.0 (miss? and the thing hit (if anything was hit) is not pEntiyScan (the corpse), we hit something blocking the view.
 					//Good.
 					
+					/*
 					thePlaya->debugVect1Success = (trSeeCheck.flFraction >= 1.0 && !trSeeCheck.fStartSolid && !trSeeCheck.fAllSolid);
 					thePlaya->debugVect1Draw = TRUE;
 					thePlaya->debugVect1Start = pPlayerEntityScan->EyePosition();
 					thePlaya->debugVect1End = thePlaya->debugVect1Start + (testMon->pev->origin + Vector(0, 0, 10) - thePlaya->debugVect1Start) * trSeeCheck.flFraction   ;
-
+					*/
 
 					//easyForcePrintLine("ARE YOU daft man %.2f:%s", trSeeCheck.flFraction, FClassname(CBaseEntity::Instance(trSeeCheck.pHit)) );
 					if(trSeeCheck.flFraction != 1.0 && CBaseEntity::Instance(trSeeCheck.pHit)->pev != pEntityScan->pev ){

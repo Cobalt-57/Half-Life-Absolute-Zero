@@ -1430,7 +1430,7 @@ void CBarney::womboCombo(void){
 					
 				/*
 				//only allow one scientist to try to reach this NPC.  That is, this NPC's own "scientistTryingToHealMe" is null, that is.
-				if(thisNameSucks != NULL && thisNameSucks->scientistTryingToHealMe == NULL && thisDistance < leastDistanceYet){
+				if(thisNameSucks != NULL && thisNameSucks->scientistTryingToHealMeEHANDLE == NULL && thisDistance < leastDistanceYet){
 					//healTargetNPC = testMon;
 					bestChoiceYet = thisNameSucks;
 					leastDistanceYet = thisDistance;

@@ -1,7 +1,54 @@
 
+
 #include "templateMonster.h"
 
-extern float global_noFlinchOnHard;
+//Includes. What files or CVars are necessary?
+#include "schedule.h"
+#include "activity.h"
+#include "animation.h"
+
+#include "defaultai.h"
+#include "soundent.h"
+#include "game.h"
+
+
+
+
+EASY_CVAR_EXTERN(noFlinchOnHard)
+
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+//sequences in the anim, in the order they appear in the anim. Some anims have the same display name and so should just be referenced by order
+//(numbered index), named well after purpose and based on display names for clarity. Safer this way.
+enum templateMonster_sequence{  //key: frames, FPS
+	TEMPLATEMONSTER_XXX,
+
+};
+
+
+//custom schedules
+enum{
+	SCHED_TEMPLATEMONSTER_XXX = LAST_COMMON_SCHEDULE + 1,
+	SCHED_TEMPLATEMONSTER_YYY,
+	SCHED_TEMPLATEMONSTER_ZZZ,
+
+
+};
+
+//custom tasks
+enum{
+	TASK_TEMPLATEMONSTER_XXX = LAST_COMMON_TASK + 1,
+	TASK_TEMPLATEMONSTER_YYY,
+	TASK_TEMPLATEMONSTER_ZZZ,
+	
+
+};
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
 
 
 
@@ -203,10 +250,14 @@ void CTemplateMonster::Spawn( void )
 	//NOTE - you have to make this exist over in skill.h and handle some other setup (gamerules.cpp, and the CVar in game.cpp)!
 	//example: skilldata_t member "scientistHealth" and CVar "sk_scientist_health".
 	pev->health			= gSkillData.templatemonsterHealth;
-	pev->view_ofs		= Vector ( 0, 0, 20 );// position of the eyes relative to monster's origin.
-	pev->yaw_speed		= 5;//!!! should we put this in the monster's changeanim function since turn rates may vary with state/anim?
+
+	//NOTICE - don't set "pev->view_ofs" here! Do it through the "SetEyePosition" method instead, which is called by MonsterInit (delayed slightly in real time)
+	//pev->view_ofs		= Vector ( 0, 0, 20 );// position of the eyes relative to monster's origin.
+
 	m_flFieldOfView		= 0.5;// indicates the width of this monster's forward view cone ( as a dotproduct result )
 	m_MonsterState		= MONSTERSTATE_NONE;
+
+	pev->yaw_speed		= 100;//bound to change often from "SetYawSpeed". Likely meaningless here but a default can't hurt.
 
 	MonsterInit();
 
@@ -214,6 +265,15 @@ void CTemplateMonster::Spawn( void )
 	//SetTouch( NULL );
 
 }//END OF Spawn();
+
+
+void CTemplateMonster::SetEyePosition(void){
+	//Don't call the parent and instead force view_ofs to use a hardcoded eye position.
+	//pev->view_ofs = VEC_VIEW;
+
+	//The default way reads the model for eye position.
+	CBaseMonster::SetEyePosition();
+}//END OF SetEyePosition
 
 
 //based off of GetSchedule for CBaseMonster in schedule.cpp.
@@ -503,7 +563,7 @@ void CTemplateMonster::MonsterThink(){
 // PrescheduleThink - this function runs after conditions are collected and before scheduling code is run.
 //NOTE - PrescheduleThink is called by RunAI of monsterstate.cpp, which is called from MonsterThink in the parent CBaseMonster class (monsters.cpp).
 //The "MonsterThink" below still occurs earlier than PrescheduleThink
-void CHAssault::PrescheduleThink (){
+void CTemplateMonster::PrescheduleThink (){
 
 
 
@@ -582,6 +642,8 @@ GENERATE_GIBMONSTER_IMPLEMENTATION(CTemplateMonster)
 // If this monster has a special way of spawning gibs or checking whether to spawn gibs, handle that here and remove the parent call.
 // The parent GIBMONSTERGIB method is supposed to handle generic cases like determining whether to spawn human or alien gibs based on
 // Classify(), or robot gibs under german censorship. This implementation can be specific to just this monster instead.
+//NOTICE - do NOT do something special here AND call the parent method through GENERATE_GIBMONSTERGIB_PARENT_CALL.
+//Anything done here is meant to completely replace how the parent method gibs a monster in general. None of it is required.
 GENERATE_GIBMONSTERGIB_IMPLEMENTATION(CTemplateMonster)
 {
 	
@@ -609,14 +671,21 @@ GENERATE_KILLED_IMPLEMENTATION(CTemplateMonster)
 
 void CTemplateMonster::SetYawSpeed( void ){
 	int ys;
-
+	
 	ys = 200;
 
 	//Switch on current activity m_Activity to determine yaw speed and set it?
-
+	
+	
+	switch ( m_Activity )
+	{
+	case ACT_IDLE:
+		//ys = 100;
+	break;
+	}
+	
 
 	pev->yaw_speed = ys;
-	return;
 }//END OF SetYawSpeed
 
 

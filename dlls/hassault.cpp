@@ -93,6 +93,16 @@ extern BOOL globalPSEUDO_germanModel_hassaultFound;
 
 
 
+float CHAssault::SafeSetBlending ( int iBlender, float flValue ){
+
+	if(pev->sequence == 5){
+		//startup spin? reverse the angle.
+		flValue *= -1;
+	}
+
+
+	return CBaseAnimating::SetBlending(iBlender, flValue);
+}//END OF SafeSetBlending
 
 
 
@@ -113,7 +123,7 @@ void CHAssault::AimAtEnemy(Vector& refVecShootOrigin, Vector& refVecShootDir ){
 		Vector vectoFlat = Vector(vecto.x, vecto.y, 0).Normalize();
 
 		refVecShootDir = vectoFlat;
-		SetBlending( 0, 0 );
+		SafeSetBlending( 0, 0 );
 		return;
 	}else{
 		//Vector vecShootOrigin = GetGunPositionAI();
@@ -147,13 +157,13 @@ void CHAssault::AimAtEnemy(Vector& refVecShootOrigin, Vector& refVecShootDir ){
 
 				//only the pitch changes, so reuse the same angle, doesn't not differ groundwise.
 				//Vector angDir2D = Vector(angDirAI.x, angDirAI.y, 0).Normalize();
-				//SetBlending( 0, angDir2D.x );
+				//SafeSetBlending( 0, angDir2D.x );
 				
 
 
 
 				//wait... just aim straight, sheesh.
-				SetBlending(0, 0);
+				SafeSetBlending(0, 0);
 
 				
 				refVecShootOrigin = GetGunPosition(); //no change needed.
@@ -174,7 +184,9 @@ void CHAssault::AimAtEnemy(Vector& refVecShootOrigin, Vector& refVecShootDir ){
 
 		refVecShootOrigin = GetGunPosition();
 		refVecShootDir = ShootAtEnemy(refVecShootOrigin);
-		SetBlending( 0, angDirAI.x );
+		
+		SafeSetBlending( 0, angDirAI.x );
+		//SafeSetBlending( 0, 30 );
 		
 	}
 
@@ -832,7 +844,7 @@ void CHAssault :: Shoot ( void )
 //	m_cAmmoLoaded--;// take away a bullet!
 
 //	Vector angDir = UTIL_VecToAngles( vecShootDir );
-//	SetBlending( 0, angDir.x );
+//	SafeSetBlending( 0, angDir.x );
 	
 	if(global_hassaultFireSound == 1){
 		switch(RANDOM_LONG(0,2))
@@ -890,7 +902,7 @@ void CHAssault :: Shoot ( void )
 	//This will use the gun position for AI instead so that the pitch doesn't jitter around.
 	//MODDD - just like hgrunt does it.
 	//Vector angDir = UTIL_VecToAngles( vecShootDirAI );
-	//SetBlending( 0, angDir.x );
+	//SafeSetBlending( 0, angDir.x );
 
 }
 
@@ -930,7 +942,7 @@ void CHAssault :: ShootAtForceFireTarget ( void )
 //	m_cAmmoLoaded--;// take away a bullet!
 
 //	Vector angDir = UTIL_VecToAngles( vecShootDir );
-//	SetBlending( 0, angDir.x );
+//	SafeSetBlending( 0, angDir.x );
 	
 	if(global_hassaultFireSound == 1){
 		switch(RANDOM_LONG(0,2))
@@ -993,7 +1005,7 @@ void CHAssault :: ShootAtForceFireTarget ( void )
 	//MODDD - just like hgrunt does it.
 	Vector angDir = UTIL_VecToAngles( vecShootDirAI );
 
-	SetBlending( 0, angDir.x );
+	SafeSetBlending( 0, angDir.x );
 }
 
 
@@ -1033,7 +1045,20 @@ void CHAssault::attemptStopIdleSpinSound(BOOL forceStop){
 	}
 }
 		
+void CHAssault::SetTurnActivity(void){
+	//If in the spinup anim, don't interrupt it with a turn.
 
+
+	if(pev->sequence == 5){
+
+		//no.
+	}else{
+		//see if a change to a turn activity makes sense as normal.
+		CSquadMonster::SetTurnActivity();
+	}
+
+
+}//END OF SetTurnActivity
 
 
 void CHAssault::SetActivity(Activity NewActivity){
@@ -2196,7 +2221,7 @@ Schedule_t* CHAssault::GetSchedule(){
 							//can't ranged attack, but can see them?  Attempt to get closer...
 							return GetScheduleOfType( SCHED_CHASE_ENEMY );
 						}
-						EASY_CVAR_PRINTIF_PRE(hassaultPrintout, easyPrintLine( "PHALLUS2"));
+						EASY_CVAR_PRINTIF_PRE(hassaultPrintout, easyPrintLine( "lets not do that."));
 						m_IdealActivity = ACT_IDLE;
 						return GetScheduleOfType( SCHED_COMBAT_FACE );
 					}
@@ -2510,6 +2535,8 @@ void CHAssault :: MonsterThink ( void )
 	//If something should be placed here that does (or in a lot of places really), have a dead check first.
 
 
+	//easyForcePrintLine("ID:%d SEQ:%d SCHED:%s TASK:%d", monsterID, this->pev->sequence, getScheduleName(), getTaskNumber());
+
 	//easyForcePrintLine("ugh YOU. sched:%s task:%d fr:%.2f f:%.2f s:%d act:%d iact:%d", getScheduleName(), getTaskNumber(), pev->framerate, pev->frame, pev->sequence, m_Activity, m_IdealActivity);
 
 
@@ -2693,7 +2720,7 @@ void CHAssault :: MonsterThink ( void )
 //
 				//}else{
 				//	//Have to set the blending
-				//	SetBlending( 0, 0 );
+				//	SafeSetBlending( 0, 0 );
 				//}
 				
 		}else{
@@ -2800,7 +2827,7 @@ void CHAssault :: MonsterThink ( void )
 	
 
 	//EASY_CVAR_EXTERN(testVar);
-	//SetBlending( 0, 	EASY_CVAR_GET(testVar) );
+	//SafeSetBlending( 0, 	EASY_CVAR_GET(testVar) );
 
 
 	CSquadMonster::MonsterThink();
@@ -2939,6 +2966,9 @@ int CHAssault::LookupActivityHard(int activity){
 			  )
 			){
 				//spinning up or maintaining spin? Just return the firing anim, the logic will know to freeze the anim at this frame.
+				//...actually don't trust it, just freeze it now.
+				pev->framerate = 0;
+				m_flFramerateSuggestion = 0;
 				return LookupSequence("attack"); //firing sequence.
 			}else{
 				//nothing unusual.
@@ -3155,7 +3185,7 @@ BOOL CHAssault::onResetBlend0(void){
 	Vector angDir = UTIL_VecToAngles( vecShootDir );
 	//easyForcePrintLine("angDir.x %.2f", angDir.x);
 	
-	SetBlending( 0, angDir.x );
+	SafeSetBlending( 0, angDir.x );
 	*/
 
 
@@ -3163,7 +3193,7 @@ BOOL CHAssault::onResetBlend0(void){
 	Vector vecShootOrigin;
 	Vector vecShootDir;
 	AimAtEnemy(vecShootOrigin, vecShootDir);
-
+	
 	return TRUE;
 
 

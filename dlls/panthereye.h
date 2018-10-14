@@ -22,6 +22,9 @@ class CPantherEye : public CBaseMonster
 {
 public:
 	
+
+	BOOL testLeapNoBlock(void);
+
 	int  IRelationship( CBaseEntity *pTarget );
 	void panthereye_findCoverFromEnemy(void);
 
@@ -65,8 +68,14 @@ public:
 
 
 
+	
+
 	void Spawn( void );
 	void Precache( void );
+	
+	void SetEyePosition(void);
+
+
 	void SetYawSpeed( void );
 	int  Classify ( void );
 	
@@ -80,6 +89,11 @@ public:
 
 
 	BOOL CheckMeleeAttack1 ( float flDot, float flDist );
+	BOOL CheckMeleeAttack2 ( float flDot, float flDist );
+	
+
+	void MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, float flInterval );
+
 
 	float bugAnimBlockedTime;
 	BOOL waitingForNewPath;
@@ -94,7 +108,7 @@ public:
 	//4: charge directly at foe.  (leads to attack melee1).
 
 
-
+	float stareTime;
 
     float maxWaitPVSTime;
 
@@ -449,14 +463,43 @@ Schedule_t	slPanthereyeSneakToLocation[] =
 		tlPanthereyeSneakToLocation,
 		ARRAYSIZE ( tlPanthereyeSneakToLocation ),
 		//TODO: much more!  sound_  stuff too.
-		0,
-		0,
+		bits_COND_ENEMY_DEAD |
+		bits_COND_CAN_RANGE_ATTACK1	|
+		bits_COND_CAN_MELEE_ATTACK1	|
+		bits_COND_CAN_RANGE_ATTACK2	|
+		bits_COND_CAN_MELEE_ATTACK2,
+
+		bits_SOUND_DANGER,
 		"Panther_sneakToLocation"
 	},
 };
 
 
 
+//Go straight to sneakwait. Has its uses.
+Task_t	tlPanthereyeSneakWait[] =
+{
+	{ TASK_UPDATE_LKP,	(float)0					},
+	{ TASK_PANTHEREYE_SNEAK_WAIT,	(float)0					},
+	
+};
+
+Schedule_t	slPanthereyeSneakWait[] =
+{
+	{
+		tlPanthereyeSneakWait,
+		ARRAYSIZE ( tlPanthereyeSneakWait ),
+		//TODO: much more!  sound_  stuff too.
+		bits_COND_ENEMY_DEAD |
+		bits_COND_CAN_RANGE_ATTACK1	|
+		bits_COND_CAN_MELEE_ATTACK1	|
+		bits_COND_CAN_RANGE_ATTACK2	|
+		bits_COND_CAN_MELEE_ATTACK2,
+
+		bits_SOUND_DANGER,
+		"Panther_sneakWait"
+	},
+};
 
 
 
@@ -627,6 +670,7 @@ Task_t	tlPantherEyeGenericFail[] =
 	//{ TASK_SET_ACTIVITY,		(float)ACT_IDLE },
 	{ TASK_WAIT,				(float)0.2		},
 	{ TASK_WAIT_PVS,			(float)0		},
+	{ TASK_UPDATE_LKP, (float)0		},
 };
 
 Schedule_t	slPantherEyeGenericFail[] =
@@ -749,6 +793,7 @@ DEFINE_CUSTOM_SCHEDULES( CPantherEye )
 	slPanthereyeChaseEnemy,
 
 	slPanthereyeGetIntoCirclingRange,
+	slPanthereyeSneakWait,
 	slPanthereyeSneakToLocation,
 	//slPanthereyeFlee,
 	slPanthereyeTakeCoverFromOrigin,

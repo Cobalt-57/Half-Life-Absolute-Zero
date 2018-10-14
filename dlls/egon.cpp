@@ -644,7 +644,7 @@ void CEgon::ItemPostFrame(){
 	//MODDD - primary fire is now narrow instead of wide, since it has no delay animation (tradeoff).
 	
 
-	easyForcePrintLine("IM GONNA no %.2f %.2f", m_flTimeWeaponIdle, UTIL_WeaponTimeBase());
+	//easyForcePrintLine("IM GONNA no %.2f %.2f", m_flTimeWeaponIdle, UTIL_WeaponTimeBase());
 
 
 	if(m_flReleaseThrow == 0){
@@ -911,6 +911,7 @@ void CEgon::UpdateEffect( const Vector &startPoint, const Vector &endPoint, floa
 	float egonEffectsModeVar = EASY_CVAR_GET(egonEffectsMode);
 	float egonHitCloudVar = EASY_CVAR_GET(egonHitCloud);
 
+
 	//if ( !m_pBeam )
 	if(!effectsExist)
 	{
@@ -922,23 +923,66 @@ void CEgon::UpdateEffect( const Vector &startPoint, const Vector &endPoint, floa
 		m_pBeam->SetBrightness( 255 - (timeBlend*180) );
 		m_pBeam->SetWidth( 40 - (timeBlend*20) );
 
-		if ( m_fInAttack == FIRE_WIDE )
-			m_pBeam->SetColor( 30 + (25*timeBlend), 30 + (30*timeBlend), 64 + 80*fabs(sin(gpGlobals->time*10)) );
-		else
+
+		if(egonEffectsModeVar == 3){
+			//pre-release colors. this is blue always (and only exists for secondary fire).
 			m_pBeam->SetColor( 60 + (25*timeBlend), 120 + (30*timeBlend), 64 + 80*fabs(sin(gpGlobals->time*10)) );
+		}else{
+			//beam colors work as usual.
+			if ( m_fInAttack == FIRE_WIDE )
+				//purple?
+				m_pBeam->SetColor( 30 + (25*timeBlend), 30 + (30*timeBlend), 64 + 80*fabs(sin(gpGlobals->time*10)) );
+			else
+				//blue?
+				m_pBeam->SetColor( 60 + (25*timeBlend), 120 + (30*timeBlend), 64 + 80*fabs(sin(gpGlobals->time*10)) );
+
+		}
+
 
 	}
 
 	if(m_pNoise){
-		m_pNoise->SetColor( 30 + (25*timeBlend), 30 + (30*timeBlend), 64 + 80*fabs(sin(gpGlobals->time*10)) );
+		if(egonEffectsModeVar == 3){
+			//pre-release colors. Only present for wide fire. and blue.?
+			//To make less transparent multiply each by 1.7. including the multiples of variables. OR just the whole thing in parenthesis each argument.
+			//m_pNoise->SetColor( 60 + (25*timeBlend), 120 + (30*timeBlend), 64 + 80*fabs(sin(gpGlobals->time*10)) );
+			//...no, don't make it blue-er? I think?
+			
+			//m_pNoise->SetColor( 30 + (25*timeBlend), 30 + (30*timeBlend), 64 + 80*fabs(sin(gpGlobals->time*10)) );
+
+			//...just keep it constant to what it started as. huh.
+		
+		}else{
+			//normal... maybe.
+			m_pNoise->SetColor( 30 + (25*timeBlend), 30 + (30*timeBlend), 64 + 80*fabs(sin(gpGlobals->time*10)) );
+		}
 	
 		m_pNoise->SetStartPos( endPoint );
 	
 	}
 
 
-	if(egonEffectsModeVar == 3){
-		//CHRISTMAS MODE!
+	/*
+	
+		if ( m_fInAttack == FIRE_WIDE )
+		{
+			m_pNoise->SetColor( 50, 50, 255 );
+			m_pNoise->SetNoise( 8 );
+		}
+		else
+		{
+			m_pNoise->SetColor( 80, 120, 255 );
+			m_pNoise->SetNoise( 2 );
+		}
+
+	*/
+
+
+
+
+
+	if(egonEffectsModeVar == 4){
+		//CHRISTMAS MODE!  Makes what beam is what for egonEffectsMode #2 easier to spot.
 		if(m_pBeam){
 			m_pBeam->SetColor( 255,0 ,0 );
 		}
@@ -992,8 +1036,13 @@ void CEgon::CreateEffect( void )
 	DestroyEffect();
 
 	effectsExist = TRUE;
-	if(egonEffectsModeVar >= 1){
 
+
+	//NOT if 3!
+	if(egonEffectsModeVar >= 1 && egonEffectsModeVar != 3){
+
+
+		
 		m_pBeam = CBeam::BeamCreate( EGON_BEAM_SPRITE, 40 );
 		m_pBeam->PointEntInit( vecSrc, m_pPlayer->entindex()  );
 		//MODDD - commented out.  Causes the beam not to sufficiently shrink when nearing a surface you're firing at, causing the effect to clip backwards into the player & gun.
@@ -1002,6 +1051,7 @@ void CEgon::CreateEffect( void )
 		m_pBeam->pev->spawnflags |= SF_BEAM_TEMPORARY;	// Flag these to be destroyed on save/restore or level transition
 		//if(testVar == 0 || testVar == 2 ){
 		//	m_pBeam->pev->flags |= FL_SKIPLOCALHOST;
+		////...does this need to stay commented out?
 		//}
 		m_pBeam->pev->owner = m_pPlayer->edict();
 
@@ -1017,12 +1067,10 @@ void CEgon::CreateEffect( void )
 			m_pBeam->SetScrollRate( 110 );
 			m_pBeam->SetNoise( 5 );
 		}
-
-
-	
+		
 	}
 
-	if(egonEffectsModeVar >= 2){
+	if(egonEffectsModeVar >= 2 && egonEffectsModeVar != 3){
 
 		m_pNoise = CBeam::BeamCreate( EGON_BEAM_SPRITE, 55 );
 		//new?
@@ -1053,15 +1101,101 @@ void CEgon::CreateEffect( void )
 		//m_pNoise->Point
 	}
 
+
+
+	
+
+	//choice 3, pre-release, has special rules.
+	//for primary fire, the two clientside lasers only: spiral and the thicker straight one.
+	//For secondary fire, the clientside thicker straight and m_pBeam and m_pNoise (but of narrow fire).
+	if(egonEffectsModeVar == 3){
+
+		
+		//noise beam gets some different behavior.
+
+		//For wide only.
+		
+		if ( m_fInAttack == FIRE_WIDE ){
+
+
+			
+			m_pBeam = CBeam::BeamCreate( EGON_BEAM_SPRITE, 40 );
+			m_pBeam->PointEntInit( vecSrc, m_pPlayer->entindex()  );
+			//MODDD - commented out.  Causes the beam not to sufficiently shrink when nearing a surface you're firing at, causing the effect to clip backwards into the player & gun.
+			//m_pBeam->SetFlags( BEAM_FSINE );
+			m_pBeam->SetEndAttachment( 1 );
+			m_pBeam->pev->spawnflags |= SF_BEAM_TEMPORARY;	// Flag these to be destroyed on save/restore or level transition
+			//if(testVar == 0 || testVar == 2 ){
+			//	m_pBeam->pev->flags |= FL_SKIPLOCALHOST;
+			//}
+			m_pBeam->pev->owner = m_pPlayer->edict();
+
+
+
+			//if ( m_fInAttack == FIRE_WIDE )
+			//{
+			//	m_pBeam->SetScrollRate( 50 );
+			//	m_pBeam->SetNoise( 20 );
+			//}
+			//else
+			//{
+			////Actually want narrow mode's features.
+				m_pBeam->SetScrollRate( 110 );
+				m_pBeam->SetNoise( 5 );
+			//}
+
+
+
+
+
+
+
+
+			m_pNoise = CBeam::BeamCreate( EGON_BEAM_SPRITE, 55 );
+			//new?
+			//m_pNoise->SetFlags( BEAM_FSINE );
+
+			m_pNoise->PointEntInit( vecSrc, m_pPlayer->entindex() );
+			m_pNoise->SetScrollRate( 25 );
+			m_pNoise->SetBrightness( 100 );
+			m_pNoise->SetEndAttachment( 1 );
+			m_pNoise->pev->spawnflags |= SF_BEAM_TEMPORARY;
+			//if(testVar == 0 || testVar == 1){
+			//	m_pNoise->pev->flags |= FL_SKIPLOCALHOST;
+			//}
+			m_pNoise->pev->owner = m_pPlayer->edict();
+
+
+			//if ( m_fInAttack == FIRE_WIDE )
+			//{
+			//	m_pNoise->SetColor( 50, 50, 255 );
+			//	m_pNoise->SetNoise( 8 );
+			//}
+			//else
+			//{
+			////actually want narrow's features.
+				m_pNoise->SetColor( 80, 120, 255 );
+				m_pNoise->SetNoise( 2 );
+			//}
+
+		}
+		
+		//m_pNoise->Point
+	}
+
+
+
+
+
 	
 	if(egonHitCloudVar == 1){
 
-	m_pSprite = CSprite::SpriteCreate( EGON_FLARE_SPRITE, pev->origin, FALSE );
-	m_pSprite->pev->scale = 1.0;
-	m_pSprite->SetTransparency( kRenderGlow, 255, 255, 255, 255, kRenderFxNoDissipation );
-	m_pSprite->pev->spawnflags |= SF_SPRITE_TEMPORARY;
-	//m_pSprite->pev->flags |= FL_SKIPLOCALHOST;
-	m_pSprite->pev->owner = m_pPlayer->edict();
+		m_pSprite = CSprite::SpriteCreate( EGON_FLARE_SPRITE, pev->origin, FALSE );
+		m_pSprite->pev->scale = 1.0;
+		m_pSprite->SetTransparency( kRenderGlow, 255, 255, 255, 255, kRenderFxNoDissipation );
+		m_pSprite->pev->spawnflags |= SF_SPRITE_TEMPORARY;
+		//m_pSprite->pev->flags |= FL_SKIPLOCALHOST;
+		m_pSprite->pev->owner = m_pPlayer->edict();
 
 	}
 
