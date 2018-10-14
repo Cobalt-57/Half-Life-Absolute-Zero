@@ -3711,43 +3711,6 @@ void ClientCommand( edict_t *pEntity )
 		EASY_CVAR_SET_DEBUGONLY_CLIENTONLY(drawHUD, 1);
 		EASY_CVAR_SET_DEBUGONLY_CLIENTONLY(drawViewModel, 1);
 		
-	}else if( FStrEq(pcmdRefinedRef, "penis")){
-		
-		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev);
-		//const char* arg1ref = CMD_ARGV(1);
-
-		if(g_flWeaponCheat == 0.0){
-			easyForcePrintLine("OO)))))))))))))))))))))))))D");
-			return;
-		}
-
-		/*
-		
-		message_ymg(ENT(pev));
-		EMIT_SOUND_DYN( tempplayer->edict(), CHAN_STATIC, "meme/ymg.wav", 1.0, 0.5, 0, 100);
-
-		*/
-
-		CBaseEntity* forwardEnt = ::FindEntityForward( tempplayer);
-		
-		if(forwardEnt != NULL){
-			CBaseMonster* tempMon = forwardEnt->GetMonsterPointer();
-			if(tempMon != NULL){
-				/*
-				tempMon->pev->flags &= ~ FL_ONGROUND;
-				tempMon->pev->origin = tempMon->pev->origin + Vector(0, 0, 12);
-				*/
-				if(FClassnameIs(tempMon->pev, "monster_scientist")){
-					//make it scream
-					tempMon->tempMethod();
-				}else{
-					easyForcePrintLine("NO! PLEASE!");
-				}
-			}
-		}
-
-
-
 	}else if( FStrEq(pcmdRefinedRef, "apacherocket") || FStrEq(pcmdRefinedRef, "bigrocket") || FStrEq(pcmdRefinedRef, "boom") ){
 	
 		
