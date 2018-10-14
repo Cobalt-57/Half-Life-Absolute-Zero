@@ -7305,6 +7305,10 @@ BOOL CBaseMonster::getForceAllowNewEnemy(CBaseEntity* pOther){
 }
 
 
+void CBaseMonster::tempMethod(void){
+	//by default nothing.
+}//END OF tempMethod
+
 
 
 

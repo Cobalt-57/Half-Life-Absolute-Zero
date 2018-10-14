@@ -833,8 +833,8 @@ void CPantherEye::Spawn()
 	Precache( );
 
 	SET_MODEL(ENT(pev), "models/panthereye.mdl");
-	//UTIL_SetSize( pev, Vector(-30, -30, 0), Vector(30, 30, 40) );
-	UTIL_SetSize( pev, VEC_HUMAN_HULL_MIN, VEC_HUMAN_HULL_MAX );
+	UTIL_SetSize( pev, Vector(-30, -30, 0), Vector(30, 30, 40) );
+	//UTIL_SetSize( pev, VEC_HUMAN_HULL_MIN, VEC_HUMAN_HULL_MAX );
 
 
 

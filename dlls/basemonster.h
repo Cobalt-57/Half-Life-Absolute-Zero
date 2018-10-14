@@ -424,6 +424,8 @@ public:
 	virtual BOOL hasSeeEnemyFix(void);
 	virtual BOOL getForceAllowNewEnemy(CBaseEntity* pOther);
 
+	virtual void tempMethod(void);
+
 	virtual BOOL getGermanModelRequirement(void);
 	virtual const char* getGermanModel(void);
 	virtual const char* getNormalModel(void);

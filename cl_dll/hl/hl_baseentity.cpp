@@ -340,6 +340,8 @@ SCHEDULE_TYPE CBaseMonster::getHeardBaitSoundSchedule(){return (SCHEDULE_TYPE)0;
 BOOL CBaseMonster::hasSeeEnemyFix(){return FALSE;}
 BOOL CBaseMonster::getForceAllowNewEnemy(CBaseEntity* pOther){return FALSE;}
 
+void CBaseMonster::tempMethod(void){};
+
 void CBaseMonster::setPhysicalHitboxForDeath(){return;}
 void CBaseMonster::DeathAnimationStart(){return;}
 void CBaseMonster::DeathAnimationEnd(){return;}

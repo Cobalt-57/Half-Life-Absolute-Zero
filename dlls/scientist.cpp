@@ -173,6 +173,8 @@ class CScientist : public CTalkMonster
 {
 public:
 
+	static const char* pDeathSounds[];
+
 	float aggro;
 
 	float aggroCooldown;
@@ -281,6 +283,9 @@ public:
 	void DeathSound( void );
 	void PainSound( void );
 
+	void tempMethod(void);
+
+
 	void TalkInit( void );
 
 	GENERATE_KILLED_PROTOTYPE
@@ -323,6 +328,18 @@ private:
 	float m_healTime;
 	float m_fearTime;
 };
+
+
+const char* CScientist::pDeathSounds[] = 
+{
+	"scientist/sci_die1.wav",
+	"scientist/sci_die2.wav",
+	"scientist/sci_die3.wav",
+	"scientist/sci_die4.wav",
+};
+
+
+
 
 int CScientist::numberOfModelBodyParts = -1;
 
@@ -1678,6 +1695,11 @@ void CScientist :: Precache( void )
 	PRECACHE_SOUND("scientist/sci_pain4.wav");
 	PRECACHE_SOUND("scientist/sci_pain5.wav");
 
+
+
+	PRECACHE_SOUND_ARRAY(pDeathSounds);
+
+
 	
 	//MODDD - can now play "Strike" sounds on hitting something with the kick.  NEW DATA STUFF
 	PRECACHE_SOUND("zombie/claw_strike1.wav");
@@ -1938,12 +1960,29 @@ void CScientist :: PainSound ( void )
 	}
 }
 
+
+void CScientist::tempMethod(void){
+	
+	//force the pain sound to be played?
+	//m_painTime = -1;
+	DeathSound();
+
+}//END OF tempMethod
+
 //=========================================================
 // DeathSound
 //=========================================================
 void CScientist :: DeathSound ( void )
 {
-	PainSound();
+
+	//sci_die1
+
+
+	//PainSound();
+	
+	EMIT_SOUND_FILTERED( edict(), CHAN_VOICE, RANDOM_SOUND_ARRAY(pDeathSounds), 1.0, ATTN_NORM, 0, GetVoicePitch() );
+
+
 }
 
 

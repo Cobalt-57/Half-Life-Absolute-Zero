@@ -6458,6 +6458,11 @@ void precacheAll(void){
 		PRECACHE_SOUND("garg/gar_attack1.wav", TRUE);
 
 
+		//Only do this if precacheAllVar is on and soundSentenceSave is off.
+		//precacheAllVar being off suggests each entity will precache this stuff as it occurs in the map for the first time.
+		//soundSentenceSaveVar being on suggests the soundSentenceSave system is avoiding hte need for precacheing these things to begin with.
+		// (Sounds require sentence.txt equivalents to skip precaches and be played there instead of normally, the file's name follows a format for easy automatic 
+		//  translation between plain file name and the sentence name).
 		if(!soundSentenceSaveVar){
 			//NOTICE - bodysplat sound already precached in ClientPrecache to be guaranteed to get precached, it may be played normally even with the soundsentencesave on.
 
@@ -6559,6 +6564,12 @@ void precacheAll(void){
 			PRECACHE_SOUND("scientist/sci_pain3.wav");
 			PRECACHE_SOUND("scientist/sci_pain4.wav");
 			PRECACHE_SOUND("scientist/sci_pain5.wav");
+			
+			PRECACHE_SOUND("scientist/sci_die1.wav");
+			PRECACHE_SOUND("scientist/sci_die2.wav");
+			PRECACHE_SOUND("scientist/sci_die3.wav");
+			PRECACHE_SOUND("scientist/sci_die4.wav");
+
 			PRECACHE_SOUND("apache/ap_rotor4.wav");
 	
 			PRECACHE_SOUND("apache/ap_rotor1.wav");

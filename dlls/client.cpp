@@ -3728,17 +3728,23 @@ void ClientCommand( edict_t *pEntity )
 
 		*/
 
-
 		CBaseEntity* forwardEnt = ::FindEntityForward( tempplayer);
-
+		
 		if(forwardEnt != NULL){
 			CBaseMonster* tempMon = forwardEnt->GetMonsterPointer();
 			if(tempMon != NULL){
+				/*
 				tempMon->pev->flags &= ~ FL_ONGROUND;
 				tempMon->pev->origin = tempMon->pev->origin + Vector(0, 0, 12);
+				*/
+				if(FClassnameIs(tempMon->pev, "monster_scientist")){
+					//make it scream
+					tempMon->tempMethod();
+				}else{
+					easyForcePrintLine("NO! PLEASE!");
+				}
 			}
 		}
-
 
 
 
