@@ -21,10 +21,26 @@ class CFlyingMonster : public CBaseMonster
 {
 public:
 
+	CFlyingMonster(void);
+	
+	
+	// UNDONE:  Save/restore this stuff!!!
+	//I shall do your wish man from the past.  (Yea I know, I have a way with words)
+
+	//save info
+	//////////////////////////////////////////////////////////////////////////////////
+	static TYPEDESCRIPTION m_SaveData[];
+	virtual int Save( CSave &save ); 
+	virtual int Restore( CRestore &restore );
+	//////////////////////////////////////////////////////////////////////////////////
+
+
+
 	GENERATE_TRACEATTACK_PROTOTYPE_VIRTUAL
 	GENERATE_TAKEDAMAGE_PROTOTYPE_VIRTUAL
 
-	int 		CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, CBaseEntity *pTarget, float *pflDist );// check validity of a straight move through space
+	//MODDD - you too?!
+	virtual int 		CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, CBaseEntity *pTarget, float *pflDist );// check validity of a straight move through space
 	BOOL		FTriangulate ( const Vector &vecStart , const Vector &vecEnd, float flDist, CBaseEntity *pTargetEnt, Vector *pApex );
 	Activity	GetStoppedActivity( void );
 
@@ -33,9 +49,11 @@ public:
 	void		Stop( void );
 	float		ChangeYaw( int speed );
 	void		HandleAnimEvent( MonsterEvent_t *pEvent );
-	void		MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, float flInterval );
-	void		Move( float flInterval = 0.1 );
-	BOOL		ShouldAdvanceRoute( float flWaypointDist );
+
+	//MODDD - not virtual. Why the HELL not.
+	virtual void		MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, float flInterval );
+	virtual void		Move( float flInterval = 0.1 );
+	virtual BOOL		ShouldAdvanceRoute( float flWaypointDist );
 
 	inline void	SetFlyingMomentum( float momentum ) { m_momentum = momentum; }
 	inline void	SetFlyingFlapSound( const char *pFlapSound ) { m_pFlapSound = pFlapSound; }
@@ -45,8 +63,10 @@ public:
 	BOOL		ProbeZ( const Vector &position, const Vector &probe, float *pFraction );
 	
 
-	
-	// UNDONE:  Save/restore this stuff!!!
+
+
+
+
 protected:
 	Vector		m_vecTravel;		// Current direction
 	float		m_flightSpeed;		// Current flight speed (decays when not flapping or gliding)

@@ -426,6 +426,10 @@ public:
 
 	virtual void tempMethod(void);
 
+	virtual BOOL needsMovementBoundFix(void);
+	virtual void cheapKilled(void);
+	virtual void cheapKilledFlier(void);
+
 	virtual BOOL getGermanModelRequirement(void);
 	virtual const char* getGermanModel(void);
 	virtual const char* getNormalModel(void);
@@ -770,7 +774,8 @@ public:
 
 	BOOL FGetNodeRoute ( Vector vecDest );
 	
-	inline
+	//MODDD - not inline as of now.  I need my breakpoints.
+	//inline
 	void TaskComplete( void ) {
 		if ( !HasConditions(bits_COND_TASK_FAILED) ){
 			m_iTaskStatus = TASKSTATUS_COMPLETE;

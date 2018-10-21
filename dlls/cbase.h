@@ -331,6 +331,7 @@ public:
 	
 	//MODDD
 	BOOL spawnedDynamically;
+	BOOL firstSpawnCall;
 	BOOL flagForced;
 	
 	//MODDD

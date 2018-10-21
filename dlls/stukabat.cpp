@@ -629,6 +629,9 @@ void CStukaBat :: Spawn()
 
 	pev->classname = MAKE_STRING("monster_stukabat");
 
+
+	//MODDD NOTE - would other types work better? Alternate between _SLIDEBOX for ground movement, _BBOX for air?
+	//             ichy uses SOLID_BBOX.
 	pev->solid			= SOLID_SLIDEBOX;  //SOLID_TRIGGER?  Difference?
 	pev->movetype		= MOVETYPE_FLY;
 
@@ -1325,6 +1328,7 @@ void CStukaBat::abortAttack(){
 //=========================================================
 void CStukaBat :: RunTask ( Task_t *pTask )
 {
+	easyForcePrintLine("WHAT? %d", pTask->iTask);
 	//reset, no landBrake unless specified by this task running.
 	landBrake = FALSE;
 	
@@ -3575,7 +3579,8 @@ void CStukaBat::MonsterThink(){
 
 				if(!onGround){
 					//ENABLE???
-					pev->movetype = MOVETYPE_FLY;
+					//WAIT. Do we want this or MOVETYPE_FLY ??? AHHHHH.
+					pev->movetype = MOVETYPE_BOUNCEMISSILE;
 					pev->flags |= FL_FLY;
 				
 					seekingFoodOnGround = FALSE;
@@ -4241,7 +4246,11 @@ void CStukaBat::checkFloor(const Vector& vecSuggestedDir, const float& travelMag
 	}//END OF if(!onGround)
 
 
-}
+}//END OF checkFloor
+
+
+
+
 
 //plus or minus, so effectively double these in degrees.
 //Fliers get more tolerance at least while flying.

@@ -1062,36 +1062,12 @@ GENERATE_KILLED_IMPLEMENTATION(CKingPin){
 		firstCall = TRUE;
 	}
 
-
-
 	//MODDD - is still doing here ok?
 	GENERATE_KILLED_PARENT_CALL(CBaseMonster);
 
-
-
 	//if you have the "FL_KILLME" flag, it means this is about to get deleted (gibbed). No point in doing any of this then.
 	if(firstCall && !(pev->flags & FL_KILLME) ){
-
-		this->m_IdealMonsterState = MONSTERSTATE_DEAD;
-		//MODDD - major HACK - pathetic stand-in death anim until there is a proper death anim.
-		this->pev->gravity = 0;
-		pev->movetype		= MOVETYPE_NONE;
-		this->pev->origin = pev->origin + Vector(0, 0, 13.4);   //so it isn't poking through the ground. Yes this will look really weird.
-		this->pev->angles = Vector(0, 0, 90);
-		this->pev->framerate = 0;
-		this->m_flFramerateSuggestion = 0;
-		this->m_flFrameRate = 0;
-
-		//this->pev->frame = 255;
-		//this->m_fSequenceFinished = TRUE;
-
-
-
-
-	
-		DeathAnimationStart();
-		DeathAnimationEnd();
-		
+		cheapKilled();
 	}//END OF firstCall check
 	
 	

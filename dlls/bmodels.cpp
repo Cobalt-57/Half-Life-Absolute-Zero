@@ -80,10 +80,15 @@ void CFuncWall :: Spawn( void )
 	pev->angles		= g_vecZero;
 	pev->movetype	= MOVETYPE_PUSH;  // so it doesn't get pushed by anything
 	pev->solid		= SOLID_BSP;
+	
+	//ARE YOU MAD MANSLEY
 	SET_MODEL( ENT(pev), STRING(pev->model) );
+	//SET_MODEL( ENT(pev), "models/panthereye.mdl" );
 	
 	// If it can't move/go away, it's really part of the world
 	pev->flags |= FL_WORLDBRUSH;
+
+	//	pev->effects = EF_NODRAW;
 }
 
 BOOL CFuncWall::IsWorldAffiliated(){
@@ -92,6 +97,7 @@ BOOL CFuncWall::IsWorldAffiliated(){
 
 void CFuncWall :: Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
 {
+
 	if ( ShouldToggle( useType, (int)(pev->frame)) )
 		pev->frame = 1 - pev->frame;
 }

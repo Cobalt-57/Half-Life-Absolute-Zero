@@ -668,6 +668,13 @@ void CPantherEye::HandleEventQueueEvent(int arg_eventID){
 			{
 
 			BOOL isJumpOkay = testLeapNoBlock();
+
+
+			//In any case this counts for setting the leap cooldown. Don't even try again for a little if this attempt is
+			//suddenly blocked and interrupted.
+			leapAttackCooldown = gpGlobals->time + 5;
+
+
 			if(!isJumpOkay){
 				TaskFail();
 				//force a new animation to be fetched.
@@ -797,6 +804,7 @@ void CPantherEye :: HandleAnimEvent( MonsterEvent_t *pEvent )
 CPantherEye::CPantherEye(void){
 
 	stareTime = 0;
+	leapAttackCooldown = 0;
 
 	maxWaitPVSTime = -1;
 	chaseMode = -1;
@@ -964,6 +972,15 @@ BOOL CPantherEye::CheckMeleeAttack2 ( float flDot, float flDist )
 
 
 	float enemyFloorZ;
+
+
+
+	if(gpGlobals->time >= leapAttackCooldown){
+		//it is ok to do the leap attack.
+	}else{
+		//not enough time passed since the last one.
+		return FALSE;
+	}
 	
 	
 
@@ -1502,34 +1519,22 @@ Schedule_t* CPantherEye::GetScheduleOfType( int Type){
 
 
 
+
+BOOL CPantherEye::needsMovementBoundFix(void){
+	return TRUE;
+}
+
+
+
 void CPantherEye::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, float flInterval )
 {
-//	float flYaw = UTIL_VecToYaw ( m_Route[ m_iRouteIndex ].vecLocation - pev->origin );// build a yaw that points to the goal.
-//	WALK_MOVE( ENT(pev), flYaw, m_flGroundSpeed * flInterval, WALKMOVE_NORMAL );
-
-
 	if(this->m_pSchedule == slPanthereyeJumpAtEnemy){
 		//dont do it
 		return;
 	}
 
-
-	if ( m_IdealActivity != m_movementActivity )
-		m_IdealActivity = m_movementActivity;
-
-	float flTotal = m_flGroundSpeed * pev->framerate * EASY_CVAR_GET(animationFramerateMulti) * flInterval;
-	float flStep;
-	while (flTotal > 0.001)
-	{
-		// don't walk more than 16 units or stairs stop working
-		flStep = min( 16.0, flTotal );
-
-
-		UTIL_MoveToOrigin ( ENT(pev), m_Route[ m_iRouteIndex ].vecLocation, flStep, MOVE_NORMAL );
-		flTotal -= flStep;
-	}
-	// ALERT( at_console, "dist %f\n", m_flGroundSpeed * pev->framerate * flInterval );
-
+	//otherwise just do what the parent class does, it works.
+	CBaseMonster::MoveExecute(pTargetEnt, vecDir, flInterval);
 
 }//END OF MoveExecute
 

@@ -515,6 +515,11 @@ CBaseEntity::CBaseEntity(void){
 	//assume not spawned dynamically (by "give" commands in-game, not at a map / boundary's first load)
 	spawnedDynamically = FALSE;
 
+
+	//THIS IS LOOSELY IMPLEMENTED. It is up to somewhere else calling spawn() on this, where it expects it not to be the first spawn call,
+	//to turn this off to FALSE before calling. This isn't to be saved.  Could be if absolutely necessary though.
+	firstSpawnCall = TRUE;
+
 	//barnacleVictimException = FALSE; ???
 
 	iAmDead = FALSE;

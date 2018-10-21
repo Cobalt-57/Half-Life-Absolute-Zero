@@ -33,6 +33,7 @@ public:
 	static TYPEDESCRIPTION m_SaveData[];
 	
 	float faceLookTime;
+	float leapAttackCooldown;
 
 	BOOL isPissable;
 	BOOL isCornered;
@@ -91,7 +92,8 @@ public:
 	BOOL CheckMeleeAttack1 ( float flDot, float flDist );
 	BOOL CheckMeleeAttack2 ( float flDot, float flDist );
 	
-
+	
+	BOOL needsMovementBoundFix(void);
 	void MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, float flInterval );
 
 

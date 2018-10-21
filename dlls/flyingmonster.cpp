@@ -29,6 +29,58 @@ extern DLL_GLOBAL edict_t		*g_pBodyQueueHead;
 
 
 
+TYPEDESCRIPTION	CFlyingMonster::m_SaveData[] = 
+{
+	DEFINE_FIELD( CFlyingMonster, m_vecTravel, FIELD_VECTOR ),
+	DEFINE_FIELD( CFlyingMonster, m_flightSpeed, FIELD_FLOAT ),
+	DEFINE_FIELD( CFlyingMonster, m_stopTime, FIELD_TIME ),
+	DEFINE_FIELD( CFlyingMonster, m_momentum, FIELD_FLOAT ),
+	DEFINE_FIELD( CFlyingMonster, m_pFlapSound, FIELD_CHARACTER ),
+	
+};
+
+//IMPLEMENT_SAVERESTORE( CFlyingMonster, CBaseMonster );
+int CFlyingMonster::Save( CSave &save )
+{
+	if ( !CBaseMonster::Save(save) )
+		return 0;
+	int iWriteFieldsResult = save.WriteFields( "CFlyingMonster", this, m_SaveData, ARRAYSIZE(m_SaveData) );
+
+	return iWriteFieldsResult;
+}
+int CFlyingMonster::Restore( CRestore &restore )
+{
+	if ( !CBaseMonster::Restore(restore) )
+		return 0;
+	int iReadFieldsResult = restore.ReadFields( "CFlyingMonster", this, m_SaveData, ARRAYSIZE(m_SaveData) );
+
+	return iReadFieldsResult;
+}
+
+
+
+
+
+//MODDD - some init for the new variables.
+CFlyingMonster::CFlyingMonster(void){
+
+	m_vecTravel = Vector(0, 0, 0);
+	m_flightSpeed = 0;
+	m_stopTime = 0;
+	m_momentum = 0;
+	m_pFlapSound = NULL;
+
+}
+
+
+
+
+
+
+
+
+
+
 
 GENERATE_TRACEATTACK_IMPLEMENTATION_ROUTETOPARENT(CFlyingMonster, CBaseMonster)
 GENERATE_TAKEDAMAGE_IMPLEMENTATION_ROUTETOPARENT(CFlyingMonster, CBaseMonster)
@@ -44,6 +96,11 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CFlyingMonster)
 	return GENERATE_TAKEDAMAGE_PARENT_CALL(CBaseMonster);
 }
 */
+
+
+
+
+
 
 
 
@@ -184,7 +241,9 @@ BOOL CFlyingMonster:: ShouldAdvanceRoute( float flWaypointDist )
 
 void CFlyingMonster::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, float flInterval )
 {
-	if ( pev->movetype == MOVETYPE_FLY )
+
+	//MODDD - added type MOVETYPE_BOUNCEMISSILE too. It has its uses...
+	if ( pev->movetype == MOVETYPE_FLY || pev->movetype == MOVETYPE_BOUNCEMISSILE )
 	{
 		if ( gpGlobals->time - m_stopTime > 1.0 )
 		{

@@ -9,6 +9,9 @@
 #include "soundent.h"
 #include "game.h"
 
+#include "custom_debug.h"
+
+
 /*
 #include	"extdll.h"
 #include	"util.h"
@@ -19,9 +22,17 @@
 
 
 EASY_CVAR_EXTERN(noFlinchOnHard)
+EASY_CVAR_EXTERN(animationFramerateMulti)
+
+EASY_CVAR_EXTERN(drawDebugPathfinding)
+EASY_CVAR_EXTERN(drawDebugPathfinding2)
 
 
-
+EASY_CVAR_EXTERN(STUrepelMulti)
+EASY_CVAR_EXTERN(STUcheckDistV)
+EASY_CVAR_EXTERN(STUcheckDistH)
+EASY_CVAR_EXTERN(STUcheckDistD)
+EASY_CVAR_EXTERN(STUSpeedMulti)
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -197,10 +208,10 @@ TYPEDESCRIPTION	CFloater::m_SaveData[] =
 	
 };
 
-//IMPLEMENT_SAVERESTORE( CFloater, CBaseMonster );
+//IMPLEMENT_SAVERESTORE( CFloater, CFlyingMonster );
 int CFloater::Save( CSave &save )
 {
-	if ( !CBaseMonster::Save(save) )
+	if ( !CFlyingMonster::Save(save) )
 		return 0;
 	int iWriteFieldsResult = save.WriteFields( "CFloater", this, m_SaveData, ARRAYSIZE(m_SaveData) );
 
@@ -208,7 +219,7 @@ int CFloater::Save( CSave &save )
 }
 int CFloater::Restore( CRestore &restore )
 {
-	if ( !CBaseMonster::Restore(restore) )
+	if ( !CFlyingMonster::Restore(restore) )
 		return 0;
 	int iReadFieldsResult = restore.ReadFields( "CFloater", this, m_SaveData, ARRAYSIZE(m_SaveData) );
 
@@ -238,9 +249,13 @@ int CFloater::Restore( CRestore &restore )
 
 CFloater::CFloater(void){
 
+	m_flightSpeed = 0;
+	tempCheckTraceLineBlock = FALSE;
+	m_velocity = Vector(0,0,0);
+
+	lastVelocityChange = -1;
 
 }//END OF CFloater constructor
-
 
 
 
@@ -279,7 +294,7 @@ DEFINE_CUSTOM_SCHEDULES( CFloater )
 	//slFloaterZZZ,
 
 };
-IMPLEMENT_CUSTOM_SCHEDULES( CFloater, CBaseMonster );
+IMPLEMENT_CUSTOM_SCHEDULES( CFloater, CFlyingMonster );
 
 	
 
@@ -363,27 +378,40 @@ void CFloater::Spawn( void )
 	Precache( );
 
 	setModel("models/floater.mdl");
-	UTIL_SetSize( pev, VEC_HUMAN_HULL_MIN, VEC_HUMAN_HULL_MAX );
+	//UTIL_SetSize( pev, VEC_HUMAN_HULL_MIN, VEC_HUMAN_HULL_MAX );
+	UTIL_SetSize( pev, Vector( -8, -8, 0 ), Vector( 8, 8, 28 ));
 
 	pev->classname = MAKE_STRING("monster_floater");
 
-	pev->solid			= SOLID_SLIDEBOX;
+	SetBits(pev->flags, FL_FLY);
+
+	
+	pev->solid			= SOLID_BBOX;  //not SOLID_SLIDEBOX
 	pev->movetype		= MOVETYPE_FLY;
-	pev->spawnflags		|= FL_FLY;
+
+
+	pev->solid			= SOLID_SLIDEBOX;  //SOLID_TRIGGER?  Difference?
+	pev->movetype		= MOVETYPE_BOUNCEMISSILE;
+	
+
+
 	m_bloodColor		= BLOOD_COLOR_GREEN;
 	pev->effects		= 0;
 	//NOTE - you have to make this exist over in skill.h and handle some other setup (gamerules.cpp, and the CVar in game.cpp)!
 	//example: skilldata_t member "scientistHealth" and CVar "sk_scientist_health".
 	pev->health			= gSkillData.floaterHealth;
 	pev->view_ofs		= VEC_VIEW;/// position of the eyes relative to monster's origin.
-	m_flFieldOfView		= 0.5;// indicates the width of this monster's forward view cone ( as a dotproduct result )
+	m_flFieldOfView		= VIEW_FIELD_WIDE;// indicates the width of this monster's forward view cone ( as a dotproduct result )
 	m_MonsterState		= MONSTERSTATE_NONE;
 
 	pev->yaw_speed		= 100;//bound to change often from "SetYawSpeed". Likely meaningless here but a default can't hurt.
 
 	MonsterInit();
 
-	//SetTouch(&CFloater::CustomTouch );
+
+	m_flightSpeed = 400;
+
+	SetTouch(&CFloater::CustomTouch );
 	//SetTouch( NULL );
 
 
@@ -391,15 +419,395 @@ void CFloater::Spawn( void )
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	
+
+
+
+int CFloater :: CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, CBaseEntity *pTarget, float *pflDist )
+{
+	int iReturn;
+
+	/*
+	// UNDONE: need to check more than the endpoint
+	if (FBitSet(pev->flags, FL_SWIM) && (UTIL_PointContents(vecEnd) != CONTENTS_WATER))
+	{
+		// ALERT(at_aiconsole, "can't swim out of water\n");
+		return FALSE;
+	}
+	*/
+
+
+
+
+
+
+
+
+
+	
+
+
+
+
+
+
+
+
+	UTIL_MakeVectors( pev->angles );
+		
+
+	
+	TraceResult trTopLeft;
+	TraceResult trTopRight;
+	TraceResult trBottomLeft;
+	TraceResult trBottomRight;
+	
+	Vector vecOff;
+	float boundXSize = abs(pev->mins.x);
+	float boundYSize = abs(pev->mins.y);
+	float boundZSize = abs(pev->maxs.z/2);
+
+	//Vector vecCenter = Vector(pev->origin.x, pev->origin.y, pev->origin.z + (pev->maxs.z - pev->mins.z)/2.0);
+	Vector vecCenterRel = Vector(0, 0, (pev->maxs.z - pev->mins.z)/2.0);
+	
+	Vector vecStartAlt = vecStart + vecCenterRel + gpGlobals->v_forward * boundXSize*1.3;
+	Vector vecEndAlt = vecEnd + vecCenterRel + -gpGlobals->v_forward * boundXSize*1.3;
+	
+
+	DebugLine_ClearAll();
+
+	vecOff = -gpGlobals->v_right * boundYSize*1.3 + gpGlobals->v_up * boundZSize*1.3;
+	UTIL_TraceHull( vecStartAlt + vecOff, vecEndAlt + vecOff, dont_ignore_monsters, point_hull, edict(), &trTopLeft );
+	DebugLine_Setup(0, vecStartAlt+vecOff, vecEndAlt+vecOff, trTopLeft.flFraction);
+
+	vecOff = gpGlobals->v_right * boundYSize*1.3 + gpGlobals->v_up * boundZSize*1.3;
+	UTIL_TraceHull( vecStartAlt + vecOff, vecEndAlt + vecOff, dont_ignore_monsters, point_hull, edict(), &trTopRight );
+	DebugLine_Setup(1, vecStartAlt+vecOff, vecEndAlt+vecOff, trTopRight.flFraction);
+
+	vecOff = -gpGlobals->v_right * boundYSize*1.3 + -gpGlobals->v_up * boundZSize*1.3;
+	UTIL_TraceHull( vecStartAlt + vecOff, vecEndAlt + vecOff, dont_ignore_monsters, point_hull, edict(), &trBottomLeft );
+	DebugLine_Setup(4, vecStartAlt+vecOff, vecEndAlt+vecOff, trBottomLeft.flFraction);
+
+	vecOff = gpGlobals->v_right * boundYSize*1.3 + -gpGlobals->v_up * boundZSize*1.3;
+	UTIL_TraceHull( vecStartAlt + vecOff, vecEndAlt + vecOff, dont_ignore_monsters, point_hull, edict(), &trBottomRight );
+	DebugLine_Setup(3, vecStartAlt+vecOff, vecEndAlt+vecOff, trBottomRight.flFraction);
+
+	float minFraction;
+	trTopLeft.flFraction<trTopRight.flFraction?minFraction=trTopLeft.flFraction:minFraction=trTopRight.flFraction;
+	minFraction<trBottomLeft.flFraction?minFraction=minFraction:minFraction=trBottomLeft.flFraction;
+	minFraction<trBottomRight.flFraction?minFraction=minFraction:minFraction=trBottomRight.flFraction;
+	//minFraction<trCenter.flFraction?minFraction=minFraction:minFraction=trCenter.flFraction;
+	BOOL tracesSolid;
+	BOOL tracesStartSolid;
+	tracesSolid = (trTopLeft.fAllSolid != 0 || trTopRight.fAllSolid != 0 || trBottomLeft.fAllSolid != 0 || trBottomRight.fAllSolid != 0); //|| trCenter.fAllSolid != 0);
+	tracesStartSolid = (trTopLeft.fStartSolid != 0 || trTopRight.fStartSolid != 0 || trBottomLeft.fStartSolid != 0 || trBottomRight.fStartSolid != 0); //|| trCenter.fStartSolid != 0);
+		
+	
+
+	/*
+	if ( (tracesSolid == FALSE && tracesStartSolid == FALSE && minFraction >= 1.0)  ) //|| EASY_CVAR_GET(testVar) == 2)
+	//if ( tr.fAllSolid == 0 && tr.fStartSolid == 0 && tr.flFraction >= 1.0)
+	{
+		//if(minFractionStore != NULL){ *minFractionStore = minFraction; }  //on success, the caller wants to know the minimum fraction seen, if a place to put it is provided.
+		//return TRUE;
+		//no, fall through.
+	}else{
+		//no go.
+		return LOCALMOVE_INVALID_DONT_TRIANGULATE;
+	}
+
+	//return FALSE;
+
+
+
+	if (pflDist)
+	{
+		*pflDist = minFraction * (vecEnd - vecStart).Length();
+	}
+
+	iReturn = LOCALMOVE_VALID;
+	*/
+
+	
+	//if(tracesStartSolid || minFraction < 1.0)
+
+
+
+
+
+	
+
+
+	
+	TraceResult tr;
+
+
+	//UTIL_TraceHull( vecStart + Vector( 0, 0, 32 ), vecEnd + Vector( 0, 0, 32 ), dont_ignore_monsters, large_hull, edict(), &tr );
+	UTIL_TraceHull( vecStart + Vector( 0, 0, 4), vecEnd + Vector( 0, 0, 4), dont_ignore_monsters, point_hull, edict(), &tr );
+	
+	// ALERT( at_console, "%.0f %.0f %.0f : ", vecStart.x, vecStart.y, vecStart.z );
+	// ALERT( at_console, "%.0f %.0f %.0f\n", vecEnd.x, vecEnd.y, vecEnd.z );
+
+	if (pflDist)
+	{
+		*pflDist = ( (tr.vecEndPos - Vector( 0, 0, 32 )) - vecStart ).Length();// get the distance.
+	}
+	
+
+
+	// ALERT( at_console, "check %d %d %f\n", tr.fStartSolid, tr.fAllSolid, tr.flFraction );
+	if (tr.fStartSolid || tr.flFraction < 1.0)
+	{
+		if ( pTarget && pTarget->edict() == gpGlobals->trace_ent ){
+			iReturn = LOCALMOVE_VALID;
+		}else{
+			iReturn = LOCALMOVE_INVALID;
+		}
+	}else{
+		iReturn = LOCALMOVE_VALID;
+	}
+	
+	
+
+	
+
+	if( EASY_CVAR_GET(drawDebugPathfinding) == 1){
+		switch(iReturn){
+			case LOCALMOVE_INVALID:
+				//ORANGE
+				//DrawRoute( pev, m_Route, m_iRouteIndex, 239, 165, 16 );
+				DrawRoute( pev, m_Route, m_iRouteIndex, 48, 33, 4 );
+			break;
+			case LOCALMOVE_INVALID_DONT_TRIANGULATE:
+				//RED
+				//DrawRoute( pev, m_Route, m_iRouteIndex, 234, 23, 23 );
+				DrawRoute( pev, m_Route, m_iRouteIndex, 47, 5, 5 );
+			break;
+			case LOCALMOVE_VALID:
+				//GREEN
+				//DrawRoute( pev, m_Route, m_iRouteIndex, 97, 239, 97 );
+				DrawRoute( pev, m_Route, m_iRouteIndex, 20, 48, 20 );
+			break;
+		}
+	}
+
+
+
+	return iReturn;
+}
+
+
+
+//Copied from flyingmonster.cpp. Our sequence may not properly convey the m_flGroundSpeed.
+void CFloater::Move( float flInterval )
+{
+	if ( pev->movetype == MOVETYPE_FLY )
+		m_flGroundSpeed = m_flightSpeed;
+	CFlyingMonster::Move( flInterval );
+}
+
+
+BOOL CFloater::ShouldAdvanceRoute( float flWaypointDist )
+{
+	// Get true 3D distance to the goal so we actually reach the correct height
+	if ( m_Route[ m_iRouteIndex ].iType & bits_MF_IS_GOAL )
+		flWaypointDist = ( m_Route[ m_iRouteIndex ].vecLocation - pev->origin ).Length();
+
+	if ( flWaypointDist <= 64 + (m_flGroundSpeed * gpGlobals->frametime) )
+		return TRUE;
+
+	return FALSE;
+}
+
+
+
+
+
+void CFloater::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, float flInterval )
+{
+
+	/*
+	if ( m_IdealActivity != m_movementActivity )
+		m_IdealActivity = m_movementActivity;
+
+	// ALERT( at_console, "move %.4f %.4f %.4f : %f\n", vecDir.x, vecDir.y, vecDir.z, flInterval );
+
+	// float flTotal = m_flGroundSpeed * pev->framerate * flInterval;
+	// UTIL_MoveToOrigin ( ENT(pev), m_Route[ m_iRouteIndex ].vecLocation, flTotal, MOVE_STRAFE );
+
+	//m_velocity = m_velocity * 0.8 + m_flGroundSpeed * vecDir * 0.2;
+	
+	//UTIL_MoveToOrigin ( ENT(pev), pev->origin + m_velocity, m_velocity.Length() * flInterval, MOVE_STRAFE );
+	m_flGroundSpeed = 124;
+	UTIL_MoveToOrigin ( ENT(pev), m_Route[ m_iRouteIndex ].vecLocation, (m_flGroundSpeed * flInterval), MOVE_STRAFE );
+	
+	
+
+
+	
+	*/
+
+
+
+
+	/*
+	Vector vecSuggestedDir = (m_Route[m_iRouteIndex].vecLocation - pev->origin).Normalize();
+	//float velMag = flStep * global_STUSpeedMulti;
+	float velMag = m_flGroundSpeed * global_STUSpeedMulti;
+
+	CFlyingMonster::MoveExecute(pTargetEnt, vecDir, flInterval);
+	*/
+    //checkFloor(vecSuggestedDir, velMag, flInterval);
+
+
+	if ( m_IdealActivity != m_movementActivity )
+	{
+		m_IdealActivity = m_movementActivity;
+		m_flGroundSpeed = m_flightSpeed = 200;
+	}
+
+
+	//m_flGroundSpeed = 200;
+
+	float flTotal = 0;
+	float flStepTimefactored = m_flGroundSpeed * pev->framerate * EASY_CVAR_GET(animationFramerateMulti) * flInterval;
+	float flStep = m_flGroundSpeed * 1 * 1;
+	
+
+
+	float velMag = flStep * global_STUSpeedMulti;
+
+	float timeAdjust = (pev->framerate * EASY_CVAR_GET(animationFramerateMulti) * flInterval);
+	float distOneFrame = velMag * pev->framerate * EASY_CVAR_GET(animationFramerateMulti) * flInterval;
+	
+	Vector dest = m_Route[ m_iRouteIndex ].vecLocation;
+	Vector vectBetween = (dest - pev->origin);
+	float distBetween = vectBetween.Length();
+	Vector dirTowardsDest = vectBetween.Normalize();
+	Vector _velocity;
+
+	if(distOneFrame <= distBetween){
+		_velocity = dirTowardsDest * velMag;
+	}else{
+		_velocity = dirTowardsDest * distBetween/timeAdjust;
+	}
+
+	//UTIL_printLineVector("MOVEOUT", velMag);
+	//easyPrintLineGroup2("HELP %.8ff %.8f", velMag, flInterval);
+
+	//UTIL_drawLineFrame(pev->origin, dest, 64, 255, 0, 0);
+
+	
+	m_velocity = m_velocity * 0.8 + _velocity * 0.2;
+
+	//m_velocity = m_velocity * 0.8 + m_flGroundSpeed * vecDir * 0.2;
+
+	Vector flatVelocity = Vector(_velocity.x, _velocity.y, 0);
+	Vector vertVelocity = Vector(0, 0, _velocity.z);
+
+	//pev->velocity = _velocity;
+	pev->velocity = m_velocity;
+
+	Vector vecSuggestedDir = (m_Route[m_iRouteIndex].vecLocation - pev->origin).Normalize();
+
+	checkFloor(vecSuggestedDir, velMag, flInterval);
+
+
+	lastVelocityChange = gpGlobals->time;
+
+
+
+
+}//END OF MoveExecute
+
+
+
+/*
+
+void CFloater::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, float flInterval )
+{
+	//m_flGroundSpeed = 25;
+	if ( pev->movetype == MOVETYPE_FLY )
+	{
+		if ( gpGlobals->time - m_stopTime > 1.0 )
+		{
+			if ( m_IdealActivity != m_movementActivity )
+			{
+				m_IdealActivity = m_movementActivity;
+				m_flGroundSpeed = m_flightSpeed = 200;
+			}
+		}
+		//Vector vecMove = pev->origin + (( vecDir + (m_vecTravel * m_momentum) ).Normalize() * (m_flGroundSpeed * flInterval));
+		Vector vecMove = m_Route[ m_iRouteIndex ].vecLocation;
+
+		if ( m_IdealActivity != m_movementActivity )
+		{
+			m_flightSpeed = UTIL_Approach( 100, m_flightSpeed, 75 * gpGlobals->frametime );
+			if ( m_flightSpeed < 100 )
+				m_stopTime = gpGlobals->time;
+		}
+		else
+			m_flightSpeed = UTIL_Approach( 20, m_flightSpeed, 300 * gpGlobals->frametime );
+		
+		if ( CheckLocalMove ( pev->origin, vecMove, pTargetEnt, NULL ) )
+		{
+			m_vecTravel = (vecMove - pev->origin);
+			m_vecTravel = m_vecTravel.Normalize();
+			
+			//UTIL_MoveToOrigin(ENT(pev), vecMove, (m_flGroundSpeed * flInterval), MOVE_STRAFE);
+			UTIL_MoveToOrigin ( ENT(pev), m_Route[ m_iRouteIndex ].vecLocation, (m_flGroundSpeed * flInterval), MOVE_NORMAL );
+
+			//pev->origin = pev->origin + (vecMove - pev->origin).Normalize()*(m_flGroundSpeed * flInterval);
+		}
+		else
+		{
+			m_IdealActivity = GetStoppedActivity();
+			m_stopTime = gpGlobals->time;
+			m_vecTravel = g_vecZero;
+		}
+	}
+	else
+		CBaseMonster::MoveExecute( pTargetEnt, vecDir, flInterval );
+}
+
+*/
+
+
 void CFloater::SetEyePosition(void){
-	CBaseMonster::SetEyePosition();
-	pev->view_ofs = VEC_VIEW;
+	CFlyingMonster::SetEyePosition();
+	//pev->view_ofs = VEC_VIEW;
 }//END OF SetEyePosition
 
 
 
 
-//based off of GetSchedule for CBaseMonster in schedule.cpp.
+//based off of GetSchedule for CFlyingMonster in schedule.cpp.
 Schedule_t* CFloater::GetSchedule ( void )
 {
 	//MODDD - safety.
@@ -597,7 +1005,7 @@ Schedule_t* CFloater::GetScheduleOfType( int Type){
 		break;
 	}//END OF switch(Type)
 	
-	return CBaseMonster::GetScheduleOfType(Type);
+	return CFlyingMonster::GetScheduleOfType(Type);
 }//END OF GetScheduleOfType
 
 
@@ -612,13 +1020,13 @@ void CFloater::ScheduleChange(){
 	
 	
 	
-	CBaseMonster::ScheduleChange(); //Call the parent.
+	CFlyingMonster::ScheduleChange(); //Call the parent.
 
 }//END OF ScheduleChange
 
 
 Schedule_t* CFloater::GetStumpedWaitSchedule(){
-	return CBaseMonster::GetStumpedWaitSchedule();
+	return CFlyingMonster::GetStumpedWaitSchedule();
 }//END OF GetStumpedWaitSchedule
 
 
@@ -632,7 +1040,7 @@ void CFloater::StartTask( Task_t *pTask ){
 
 		break;
 		default:
-			CBaseMonster::StartTask( pTask );
+			CFlyingMonster::StartTask( pTask );
 		break;
 	}//END OF switch
 
@@ -647,7 +1055,7 @@ void CFloater::RunTask( Task_t *pTask ){
 
 		break;
 		default:
-			CBaseMonster::RunTask(pTask);
+			CFlyingMonster::RunTask(pTask);
 		break;
 	}//END OF switch
 
@@ -671,7 +1079,20 @@ BOOL CFloater::CheckRangeAttack2( float flDot, float flDist ){
 
 
 void CFloater::CustomTouch( CBaseEntity *pOther ){
+	
+	//easyForcePrintLine("OH no IM a person friend %s", pOther!=NULL?pOther->getClassname():"WTF");
 
+
+	//does this even work? uhh..
+
+	//CHEAP FIX:
+
+	if(pOther == NULL){
+		return; //??????
+	}
+
+	//groundTouchCheckDuration = gpGlobals->time + 4;
+	
 }
 
 
@@ -679,18 +1100,27 @@ void CFloater::CustomTouch( CBaseEntity *pOther ){
 void CFloater::MonsterThink(){
 
 
+	
+	if(pev->deadflag == DEAD_NO && lastVelocityChange != -1 && (gpGlobals->time - lastVelocityChange) > 0.24  ){
+		//no edits to velocity?  Start slowing down a lot.
+		m_velocity = m_velocity * 0.15;
+		pev->velocity = m_velocity;
+		lastVelocityChange = gpGlobals->time;
+	}else{
 
-	CBaseMonster::MonsterThink();
+	}
+
+	CFlyingMonster::MonsterThink();
 }//END OF MonsterThink
 
 // PrescheduleThink - this function runs after conditions are collected and before scheduling code is run.
-//NOTE - PrescheduleThink is called by RunAI of monsterstate.cpp, which is called from MonsterThink in the parent CBaseMonster class (monsters.cpp).
+//NOTE - PrescheduleThink is called by RunAI of monsterstate.cpp, which is called from MonsterThink in the parent CFlyingMonster class (monsters.cpp).
 //The "MonsterThink" below still occurs earlier than PrescheduleThink
 void CFloater::PrescheduleThink (){
 
 
 
-	CBaseMonster::PrescheduleThink();
+	CFlyingMonster::PrescheduleThink();
 }//END OF PrescheduleThink
 
 
@@ -711,13 +1141,13 @@ BOOL CFloater::isOrganic(){
 
 int CFloater::IRelationship( CBaseEntity *pTarget ){
 
-	return CBaseMonster::IRelationship(pTarget);
+	return CFlyingMonster::IRelationship(pTarget);
 }//END OF IRelationship
 
 
 void CFloater::ReportAIState(){
 	//call the parent, and add on to that.
-	CBaseMonster::ReportAIState();
+	CFlyingMonster::ReportAIState();
 	//print anything special with easyForcePrintLine
 }//END OF ReportAIState()
 
@@ -730,28 +1160,28 @@ GENERATE_TRACEATTACK_IMPLEMENTATION(CFloater)
 
 
 
-	GENERATE_TRACEATTACK_PARENT_CALL(CBaseMonster);
+	GENERATE_TRACEATTACK_PARENT_CALL(CFlyingMonster);
 }
 
 GENERATE_TAKEDAMAGE_IMPLEMENTATION(CFloater)
 {
 	
-	//CBaseMonster already calls PainSound.
+	//CFlyingMonster already calls PainSound.
 	//PainSound();
 
 
-	return GENERATE_TAKEDAMAGE_PARENT_CALL(CBaseMonster);
+	return GENERATE_TAKEDAMAGE_PARENT_CALL(CFlyingMonster);
 }
 
 
 
-//NOTE - called by CBaseMonster's TakeDamage method. If that isn't called, DeadTakeDamage won't get called naturally.
+//NOTE - called by CFlyingMonster's TakeDamage method. If that isn't called, DeadTakeDamage won't get called naturally.
 GENERATE_DEADTAKEDAMAGE_IMPLEMENTATION(CFloater)
 {
 
 
 
-	return GENERATE_DEADTAKEDAMAGE_PARENT_CALL(CBaseMonster);
+	return GENERATE_DEADTAKEDAMAGE_PARENT_CALL(CFlyingMonster);
 }//END OF DeadTakeDamage
 
 
@@ -764,7 +1194,7 @@ GENERATE_DEADTAKEDAMAGE_IMPLEMENTATION(CFloater)
 // such as only spawning two alien gibs for the ChumToad. The others are good as defaults.
 GENERATE_GIBMONSTER_IMPLEMENTATION(CFloater)
 {
-	GENERATE_GIBMONSTER_PARENT_CALL(CBaseMonster);
+	GENERATE_GIBMONSTER_PARENT_CALL(CFlyingMonster);
 }
 
 
@@ -783,7 +1213,7 @@ GENERATE_GIBMONSTERGIB_IMPLEMENTATION(CFloater)
 
 
 
-	return GENERATE_GIBMONSTERGIB_PARENT_CALL(CBaseMonster);
+	return GENERATE_GIBMONSTERGIB_PARENT_CALL(CFlyingMonster);
 }
 
 //The other related methods, GIBMONSTERSOUND and GIBMONSTEREND, are well suited to the majority of cases.
@@ -795,8 +1225,28 @@ GENERATE_KILLED_IMPLEMENTATION(CFloater)
 {
 
 
+	//safe?
+	pev->velocity = Vector(0, 0, 0);
+	m_velocity = Vector(0, 0, 0);
 
-	GENERATE_KILLED_PARENT_CALL(CBaseMonster);
+
+	BOOL firstCall = FALSE;
+	if(pev->deadflag == DEAD_NO){
+		//keep this in mind...
+		firstCall = TRUE;
+	}
+
+	//MODDD - is still doing here ok?
+	GENERATE_KILLED_PARENT_CALL(CFlyingMonster);
+
+	//if you have the "FL_KILLME" flag, it means this is about to get deleted (gibbed). No point in doing any of this then.
+	if(firstCall && !(pev->flags & FL_KILLME) ){
+		cheapKilledFlier();
+	}//END OF firstCall check
+	
+
+
+
 }//END OF Killed
 
 
@@ -839,14 +1289,14 @@ BOOL CFloater::usesAdvancedAnimSystem(void){
 }
 
 void CFloater::SetActivity( Activity NewActivity ){
-	CBaseMonster::SetActivity(NewActivity);
+	CFlyingMonster::SetActivity(NewActivity);
 }
 
 
 
 //IMPORTANT. To get the animation from the model the usual way, you must use "CBaseAnimating::LookupActivity(activity);" to do so,
-//           do NOT forget the "CBaseAnimating::" in front and do NOT use any other base class along the way, like CSquadMonster or CBaseMonster.
-//           Need to call CBaseAnimating's primitive version because CBaseMonster's LookupActivity may now call LookupActivityHard or tryActivitySubstitute
+//           do NOT forget the "CBaseAnimating::" in front and do NOT use any other base class along the way, like CSquadMonster or CFlyingMonster.
+//           Need to call CBaseAnimating's primitive version because CFlyingMonster's LookupActivity may now call LookupActivityHard or tryActivitySubstitute
 //           on its own, which would trigger an infinite loop of calls (stack overflow):
 //           * This class calling LookupActivityHard, persay, falling back to calling...
 //           * Monster's LookupActivity, deciding to call the...
@@ -934,10 +1384,519 @@ void CFloater::HandleAnimEvent(MonsterEvent_t *pEvent ){
 	}
 
 	default:
-		CBaseMonster::HandleAnimEvent( pEvent );
+		CFlyingMonster::HandleAnimEvent( pEvent );
 	break;
 	}//END OF switch
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//inline
+void CFloater::checkTraceLine(const Vector& vecSuggestedDir, const float& travelMag, const float& flInterval, const Vector& vecStart, const Vector& vecRelativeEnd, const int& moveDist){
+	checkTraceLine(vecSuggestedDir, travelMag, flInterval, vecStart, vecRelativeEnd, moveDist, TRUE);
+}
+//Vector& const vecRelstar, ???   Vector& const reactionMove,
+//inline
+void CFloater::checkTraceLine(const Vector& vecSuggestedDir, const float& travelMag, const float& flInterval, const Vector& vecStart, const Vector& vecRelativeEnd, const int& moveDist, const BOOL canBlockFuture){
+	
+
+	//WELL WHAT THE whatIN what IS MOVIN YA.
+	//return;
+
+	TraceResult tr;
+
+	//    * moveDist ??
+	Vector vecRelativeEndScale = vecRelativeEnd * moveDist;
+
+	if(!tempCheckTraceLineBlock){
+
+		//Vector vecEnd = vecStart + Vector(0, 0, 38);
+		UTIL_TraceLine(vecStart, vecStart + vecRelativeEndScale, ignore_monsters, ENT(pev), &tr);
+		if(tr.flFraction < 1.0){
+			//hit something!
+
+			//Get projection
+			// = sugdir - proj. of sugdir onto the normal vector.
+
+			//does this work?
+			float dist = tr.flFraction * (float)moveDist;
+			float toMove = moveDist - dist;
+			//pev->origin = pev->origin + -toMove*vecRelativeEnd;
+		
+			float timeAdjust = (pev->framerate * EASY_CVAR_GET(animationFramerateMulti) * flInterval);
+			
+			Vector vecMoveParallel = UTIL_projectionComponent(vecSuggestedDir, tr.vecPlaneNormal).Normalize() * (travelMag * 1);
+			//Vector vecMoveParallel = Vector(0,0,0);
+
+			if(timeAdjust == 0){
+				//easyPrintLineGroup2("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+				return;
+			}else{
+				//...
+			}
+
+			Vector vecMoveRepel = (tr.vecPlaneNormal*toMove*global_STUrepelMulti)/1;
+			
+			//pev->origin = pev->origin + vecMoveParallel;
+			////UTIL_MoveToOrigin ( ENT(pev), pev->origin + -toMove*vecRelativeEnd + vecMoveParallel , travelMag, MOVE_STRAFE );
+		
+			//Vector vecTotalAdjust = vecMoveParallel + vecMoveRepel;
+			Vector vecTotalAdjust = vecMoveParallel*timeAdjust + vecMoveRepel;
+
+
+			//???    + -(toMove*1)*vecRelativeEnd
+			//pev->velocity = pev->velocity  + ((vecMoveParallel + vecMoveRepel)/timeAdjust);
+			
+			//MODDD NOTICE - We have a big problem here.
+			/*
+			UTIL_MoveToOrigin is nice because it only moves the origin of a given entity (this one) up to so far
+			until it collides with anything, other monsters or map geometry, if anything is in the way. 
+			A direct pev->origin set does not offer this at all.
+			Problem is, UTIL_MoveToOrigin can also hang on the same corner we are, so it won't move the stuka
+			at all past a corner it is caught on because it is "blocked" by that same corner.
+			Way to get around: Move one coord at a time, all of the X-ways, then Y-ways, then Z-ways.
+			
+			//TODO - this still isn't perfect. It would be better to let the direction we're repelling
+			//from play a role in whether the X or Y gets to run first for instance, but generally doing x, y, z
+			//individually at all is still better than not.
+			
+			*/
+			//JUST SPLIT IT UP!
+			Vector vecTotalAdjustX = Vector(vecTotalAdjust.x, 0, 0);
+			Vector vecTotalAdjustY = Vector(0, vecTotalAdjust.y, 0);
+			Vector vecTotalAdjustZ = Vector(0, 0, vecTotalAdjust.z);
+
+			UTIL_MoveToOrigin ( ENT(pev), pev->origin + vecTotalAdjustX , vecTotalAdjustX.Length(), MOVE_STRAFE );
+			UTIL_MoveToOrigin ( ENT(pev), pev->origin + vecTotalAdjustY , vecTotalAdjustY.Length(), MOVE_STRAFE );
+			UTIL_MoveToOrigin ( ENT(pev), pev->origin + vecTotalAdjustZ , vecTotalAdjustZ.Length(), MOVE_STRAFE );
+
+
+
+
+			//pev->origin = pev->origin + tr.vecPlaneNormal*toMove*global_repelMulti;
+			//easyPrintLineGroup2("MOOO %s: SPEED: %.2f", STRING(tr.pHit->v.classname), travelMag );
+			//EASY_CVAR_PRINTIF_PRE(stukaPrintout, UTIL_printLineVector("VECCCC", tr.vecPlaneNormal ) );
+
+			if(canBlockFuture){
+				tempCheckTraceLineBlock = TRUE;
+			}
+			//MODDAHHH 0.91, 5, 0.44, 4.56
+			//easyPrintLineGroup2("MODDAHHH %.2f, %d, %.2f, %.2f ", tr.flFraction, moveDist, toMove, (tr.vecEndPos - vecStart).Length());
+
+		}//END OF if(tr.flFraction < 1.0)
+	}//END OF if(!tempCheckTraceLineBlock)
+	
+	if(global_drawDebugPathfinding2 == 1){
+		UTIL_drawLineFrame(vecStart, vecStart + vecRelativeEndScale, 16, 0, 255, 0);
+	}
+
+}
+
+
+
+
+inline
+void CFloater::checkTraceLineTest(const Vector& vecSuggestedDir, const float& travelMag, const float& flInterval, const Vector& vecStart, const Vector& vecRelativeEnd, const int& moveDist){
+	checkTraceLineTest(vecSuggestedDir, travelMag, flInterval, vecStart, vecRelativeEnd, moveDist, TRUE);
+}
+//Vector& const vecRelstar, ???   Vector& const reactionMove,
+inline
+void CFloater::checkTraceLineTest(const Vector& vecSuggestedDir, const float& travelMag, const float& flInterval, const Vector& vecStart, const Vector& vecRelativeEnd, const int& moveDist, const BOOL canBlockFuture){
+	
+	
+	//WELL WHAT THE whatIN what IS MOVIN YA.
+	//return;
+
+	//tempCheckTraceLineBlock = FALSE;
+
+	TraceResult tr;
+
+	//    * moveDist ??
+	Vector vecRelativeEndScale = vecRelativeEnd * moveDist;
+
+	if(!tempCheckTraceLineBlock){
+
+		//Vector vecEnd = vecStart + Vector(0, 0, 38);
+		UTIL_TraceLine(vecStart, vecStart + vecRelativeEndScale, ignore_monsters, ENT(pev), &tr);
+		if(tr.flFraction < 1.0){
+			//hit something!
+
+			//Get projection
+			// = sugdir - proj. of sugdir onto the normal vector.
+
+			//does this work?
+			float dist = tr.flFraction * (float)moveDist;
+			float toMove = moveDist - dist;
+			//pev->origin = pev->origin + -toMove*vecRelativeEnd;
+		
+			float timeAdjust = (pev->framerate * EASY_CVAR_GET(animationFramerateMulti) * flInterval);
+			
+			Vector vecMoveParallel = UTIL_projectionComponent(vecSuggestedDir, tr.vecPlaneNormal).Normalize() * (travelMag * 1);
+			//Vector vecMoveParallel = Vector(0,0,0);
+
+			if(timeAdjust == 0){
+				//easyPrintLineGroup2("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+				return;
+			}else{
+				//...
+			}
+
+			Vector vecMoveRepel = (tr.vecPlaneNormal*toMove*global_STUrepelMulti)/1;
+			
+			//pev->origin = pev->origin + vecMoveParallel;
+			////UTIL_MoveToOrigin ( ENT(pev), pev->origin + -toMove*vecRelativeEnd + vecMoveParallel , travelMag, MOVE_STRAFE );
+		
+			//Vector vecTotalAdjust = vecMoveParallel + vecMoveRepel;
+			Vector vecTotalAdjust = vecMoveParallel*timeAdjust + vecMoveRepel;
+
+
+			//???    + -(toMove*1)*vecRelativeEnd
+			//pev->velocity = pev->velocity  + ((vecMoveParallel + vecMoveRepel)/timeAdjust);
+			
+			//UTIL_MoveToOrigin ( ENT(pev), pev->origin + vecTotalAdjust , vecTotalAdjust.Length(), MOVE_STRAFE );
+			//pev->origin = pev->origin + vecTotalAdjust;
+
+			//MODDD NOTICE - We have a big problem here.
+			/*
+			UTIL_MoveToOrigin is nice because it only moves the origin of a given entity (this one) up to so far
+			until it collides with anything, other monsters or map geometry, if anything is in the way. 
+			A direct pev->origin set does not offer this at all.
+			Problem is, UTIL_MoveToOrigin can also hang on the same corner we are, so it won't move the stuka
+			at all past a corner it is caught on because it is "blocked" by that same corner.
+			Way to get around: Move one coord at a time, all of the X-ways, then Y-ways, then Z-ways.
+			
+			//TODO - this still isn't perfect. It would be better to let the direction we're repelling
+			//from play a role in whether the X or Y gets to run first for instance, but generally doing x, y, z
+			//individually at all is still better than not.
+			
+			*/
+			//JUST SPLIT IT UP!
+			Vector vecTotalAdjustX = Vector(vecTotalAdjust.x, 0, 0);
+			Vector vecTotalAdjustY = Vector(0, vecTotalAdjust.y, 0);
+			Vector vecTotalAdjustZ = Vector(0, 0, vecTotalAdjust.z);
+
+			UTIL_MoveToOrigin ( ENT(pev), pev->origin + vecTotalAdjustX , vecTotalAdjustX.Length(), MOVE_STRAFE );
+			UTIL_MoveToOrigin ( ENT(pev), pev->origin + vecTotalAdjustY , vecTotalAdjustY.Length(), MOVE_STRAFE );
+			UTIL_MoveToOrigin ( ENT(pev), pev->origin + vecTotalAdjustZ , vecTotalAdjustZ.Length(), MOVE_STRAFE );
+
+
+
+
+			//easyForcePrintLine("BUT YOU MOVE????? %.2f ", vecTotalAdjust.Length());
+			::UTIL_drawLineFrame(pev->origin, pev->origin + vecTotalAdjust,40, 255, 0, 0);
+
+			//pev->origin = pev->origin + tr.vecPlaneNormal*toMove*global_repelMulti;
+			//easyPrintLineGroup2("MOOO %s: SPEED: %.2f", STRING(tr.pHit->v.classname), travelMag );
+			//EASY_CVAR_PRINTIF_PRE(stukaPrintout, UTIL_printLineVector("VECCCC", tr.vecPlaneNormal ) );
+
+			if(canBlockFuture){
+				tempCheckTraceLineBlock = TRUE;
+			}
+			//MODDAHHH 0.91, 5, 0.44, 4.56
+			//easyPrintLineGroup2("MODDAHHH %.2f, %d, %.2f, %.2f ", tr.flFraction, moveDist, toMove, (tr.vecEndPos - vecStart).Length());
+
+		}//END OF if(tr.flFraction < 1.0)
+	}//END OF if(!tempCheckTraceLineBlock)
+	
+	if(global_drawDebugPathfinding2 == 1){
+		UTIL_drawLineFrame(vecStart, vecStart + vecRelativeEndScale, 16, 0, 255, 0);
+	}
+
+}
+
+
+
+
+
+
+
+
+
+void CFloater::checkFloor(const Vector& vecSuggestedDir, const float& travelMag, const float& flInterval){
+
+	//return;
+	/*
+	if(turnThatOff){
+		//we're not doing the checks in this case.
+		return;
+	}
+	*/
+	//UTIL_drawBoxFrame(pev->absmin, pev->absmax, 16, 0, 0, 255);
+	if(global_drawDebugPathfinding2 == 1){
+		UTIL_drawBoxFrame(pev->origin + pev->mins, pev->origin + pev->maxs, 16, 0, 0, 255);
+	}
+	
+	int maxX = pev->maxs.x;
+	int maxY = pev->maxs.y;
+	int maxZ = pev->maxs.z;
+	
+	int minX = pev->mins.x;
+	int minY = pev->mins.y;
+	int minZ = pev->mins.z;
+	//     Min      Max
+	//z = bottom / top
+	//x = left / right
+	//y = back / forward
+
+
+	float boundMultiple = 0.7f;
+
+	Vector vecTopRightForward = pev->origin + pev->maxs*boundMultiple;
+	
+	Vector vecTopLeftForward = pev->origin + Vector(minX, maxY, maxZ)*boundMultiple;
+	Vector vecTopRightBackward = pev->origin + Vector(maxX, minY, maxZ)*boundMultiple;
+	Vector vecTopLeftBackward = pev->origin + Vector(minX, minY, maxZ)*boundMultiple;
+
+	Vector vecBottomLeftBackward = pev->origin + pev->mins*boundMultiple;
+	
+	Vector vecBottomLeftForward = pev->origin + Vector(minX, maxY, minZ)*boundMultiple;
+	Vector vecBottomRightBackward = pev->origin + Vector(maxX, minY, minZ)*boundMultiple;
+	Vector vecBottomRightForward = pev->origin + Vector(maxX, maxY, minZ)*boundMultiple;
+	
+	//const float root2 = 1.41421356;
+	//const float root3 = ?;
+	const float root2rec = 0.70710678;
+	const float root3rec = 0.57735027;
+
+	/*
+	int checkDist = 18;
+	int checkDistV = 32;
+	
+	int checkDistD = 38;
+	*/
+
+	int checkDist = global_STUcheckDistH;
+	int checkDistV = global_STUcheckDistV;
+	
+	int checkDistD = global_STUcheckDistD;
+
+
+	//float Vector push;
+	
+	if(vecSuggestedDir.x > 0.8){
+		//checkCollisionLeft(vecTopLeftForward, 2);
+		tempCheckTraceLineBlock = FALSE;
+		checkTraceLine(vecSuggestedDir, travelMag, flInterval, vecTopRightForward, Vector(1, 0, 0), checkDist);
+		checkTraceLine(vecSuggestedDir, travelMag, flInterval, vecTopRightBackward, Vector(1, 0, 0), checkDist);
+		checkTraceLine(vecSuggestedDir, travelMag, flInterval, vecBottomRightForward, Vector(1, 0, 0), checkDist);
+		checkTraceLine(vecSuggestedDir, travelMag, flInterval, vecBottomRightBackward, Vector(1, 0, 0), checkDist);
+		
+	}else if (vecSuggestedDir.x < -0.8){
+		
+		tempCheckTraceLineBlock = FALSE;
+		checkTraceLine(vecSuggestedDir, travelMag, flInterval, vecTopLeftForward, Vector(-1, 0, 0), checkDist);
+		checkTraceLine(vecSuggestedDir, travelMag, flInterval, vecTopLeftBackward, Vector(-1, 0, 0), checkDist);
+		checkTraceLine(vecSuggestedDir, travelMag, flInterval, vecBottomLeftForward, Vector(-1, 0, 0), checkDist);
+		checkTraceLine(vecSuggestedDir, travelMag, flInterval, vecBottomLeftBackward, Vector(-1, 0, 0), checkDist);
+		
+	}
+
+	if(vecSuggestedDir.y > 0.8){
+		//checkCollisionLeft(vecTopLeftForward, 2);
+		tempCheckTraceLineBlock = FALSE;
+		checkTraceLine(vecSuggestedDir, travelMag, flInterval, vecTopLeftForward, Vector(0, 1, 0), checkDist);
+		checkTraceLine(vecSuggestedDir, travelMag, flInterval, vecTopRightForward, Vector(0, 1, 0), checkDist);
+		checkTraceLine(vecSuggestedDir, travelMag, flInterval, vecBottomLeftForward, Vector(0, 1, 0), checkDist);
+		checkTraceLine(vecSuggestedDir, travelMag, flInterval, vecBottomRightForward, Vector(0, 1, 0), checkDist);
+		
+	}else if (vecSuggestedDir.y < -0.8){
+
+		tempCheckTraceLineBlock = FALSE;
+		checkTraceLine(vecSuggestedDir, travelMag, flInterval, vecTopLeftBackward, Vector(0, -1, 0), checkDist);
+		checkTraceLine(vecSuggestedDir, travelMag, flInterval, vecTopRightBackward, Vector(0, -1, 0), checkDist);
+		checkTraceLine(vecSuggestedDir, travelMag, flInterval, vecBottomLeftBackward, Vector(0, -1, 0), checkDist);
+		checkTraceLine(vecSuggestedDir, travelMag, flInterval, vecBottomRightBackward, Vector(0, -1, 0), checkDist);
+	}
+
+
+
+	BOOL onGround = FALSE;
+	if(!onGround){
+
+		if(vecSuggestedDir.z > 0){
+			//checkCollisionLeft(vecTopLeftForward, 2);
+
+			if(vecSuggestedDir.z > 0.3){
+				tempCheckTraceLineBlock = FALSE;
+				checkTraceLine(vecSuggestedDir, travelMag, flInterval, vecTopLeftForward, Vector(0, 0, 1), checkDistV);
+				checkTraceLine(vecSuggestedDir, travelMag, flInterval, vecTopRightForward, Vector(0, 0, 1), checkDistV);
+				checkTraceLine(vecSuggestedDir, travelMag, flInterval, vecTopLeftBackward, Vector(0, 0, 1), checkDistV);
+				checkTraceLine(vecSuggestedDir, travelMag, flInterval, vecTopRightBackward, Vector(0, 0, 1), checkDistV);
+			}
+			
+
+			BOOL topLeftForwardCheck = FALSE;
+			BOOL topLeftBackwardCheck = FALSE;
+			BOOL topRightForwardCheck = FALSE;
+			BOOL topRightBackwardCheck = FALSE;
+
+			if(vecSuggestedDir.x > 0.5){
+				//do the right ones.
+				topRightForwardCheck = TRUE;
+				topRightBackwardCheck = TRUE;
+			}else if(vecSuggestedDir.x < 0.5){
+				topLeftForwardCheck = TRUE;
+				topLeftBackwardCheck = TRUE;
+			}
+
+			if(vecSuggestedDir.y > 0.5){
+				//do the forward ones.
+				topRightForwardCheck = TRUE;
+				topLeftForwardCheck = TRUE;
+			}else if(vecSuggestedDir.y < 0.5){
+				topRightBackwardCheck = TRUE;
+				topLeftBackwardCheck = TRUE;
+			}
+			
+
+			//TEST - ENABLE ALL
+			topRightForwardCheck = TRUE;
+			topLeftForwardCheck = TRUE;
+			topRightBackwardCheck = TRUE;
+			topLeftBackwardCheck = TRUE;
+
+
+			
+			tempCheckTraceLineBlock = FALSE; //is that okay?
+			if(topRightForwardCheck)checkTraceLine(vecSuggestedDir, travelMag, flInterval, vecTopRightForward, Vector(root3rec, root3rec, -root3rec), checkDistD);
+			if(topLeftForwardCheck)checkTraceLine(vecSuggestedDir, travelMag, flInterval, vecTopRightBackward, Vector(root3rec, -root3rec, -root3rec), checkDistD);
+			if(topRightBackwardCheck)checkTraceLine(vecSuggestedDir, travelMag, flInterval, vecTopLeftForward, Vector(-root3rec, root3rec, -root3rec), checkDistD);
+			if(topLeftBackwardCheck)checkTraceLine(vecSuggestedDir, travelMag, flInterval, vecTopLeftBackward, Vector(-root3rec, -root3rec, -root3rec), checkDistD);
+			
+
+
+			//easyForcePrintLine("AWWWWW SHIT %.2f %.2f", vecSuggestedDir.x, vecSuggestedDir.y);
+
+
+			/*
+			if(vecSuggestedDir.x > 0){
+				if(vecSuggestedDir.y > 0){
+					checkTraceLine(vecSuggestedDir, travelMag, flInterval, vecTopRightForward, Vector(root3rec, root3rec, -root3rec), checkDistD);
+				}else if(vecSuggestedDir.y < 0){
+					checkTraceLine(vecSuggestedDir, travelMag, flInterval, vecTopRightBackward, Vector(root3rec, -root3rec, -root3rec), checkDistD);
+				}
+			}else if(vecSuggestedDir.x < 0){
+				if(vecSuggestedDir.y > 0){
+					checkTraceLine(vecSuggestedDir, travelMag, flInterval, vecTopLeftForward, Vector(-root3rec, root3rec, -root3rec), checkDistD);
+				}else if(vecSuggestedDir.y < 0){
+					checkTraceLine(vecSuggestedDir, travelMag, flInterval, vecTopLeftBackward, Vector(-root3rec, -root3rec, -root3rec), checkDistD);
+				}
+			}
+			*/
+
+
+
+
+
+
+			//just try bottom checks at least, even with no Z direction. Diagonals can be important.
+		}else if (vecSuggestedDir.z <= 0){
+		
+			if(vecSuggestedDir.z < -0.3){
+				tempCheckTraceLineBlock = FALSE;
+				checkTraceLine(vecSuggestedDir, travelMag, flInterval, vecBottomLeftForward, Vector(0, 0, -1), checkDistV);
+				checkTraceLine(vecSuggestedDir, travelMag, flInterval, vecBottomRightForward, Vector(0, 0, -1), checkDistV);
+				checkTraceLine(vecSuggestedDir, travelMag, flInterval, vecBottomLeftBackward, Vector(0, 0, -1), checkDistV);
+				checkTraceLine(vecSuggestedDir, travelMag, flInterval, vecBottomRightBackward, Vector(0, 0, -1), checkDistV);
+			}
+
+			
+
+			
+			BOOL bottomLeftForwardCheck = FALSE;
+			BOOL bottomLeftBackwardCheck = FALSE;
+			BOOL bottomRightForwardCheck = FALSE;
+			BOOL bottomRightBackwardCheck = FALSE;
+
+			if(vecSuggestedDir.x > 0.5){
+				//do the right ones.
+				bottomRightForwardCheck = TRUE;
+				bottomRightBackwardCheck = TRUE;
+			}else if(vecSuggestedDir.x < 0.5){
+				bottomLeftForwardCheck = TRUE;
+				bottomLeftBackwardCheck = TRUE;
+			}
+
+			if(vecSuggestedDir.y > 0.5){
+				//do the forward ones.
+				bottomRightForwardCheck = TRUE;
+				bottomLeftForwardCheck = TRUE;
+			}else if(vecSuggestedDir.y < 0.5){
+				bottomRightBackwardCheck = TRUE;
+				bottomLeftBackwardCheck = TRUE;
+			}
+			
+
+			//TEST - ENABLE ALL
+			bottomRightForwardCheck = TRUE;
+			bottomLeftForwardCheck = TRUE;
+			bottomRightBackwardCheck = TRUE;
+			bottomLeftBackwardCheck = TRUE;
+
+			tempCheckTraceLineBlock = FALSE; //is that okay?
+			if(bottomRightForwardCheck)checkTraceLine(vecSuggestedDir, travelMag, flInterval, vecBottomRightForward, Vector(root3rec, root3rec, -root3rec), checkDistD);
+			if(bottomLeftForwardCheck)checkTraceLine(vecSuggestedDir, travelMag, flInterval, vecBottomRightBackward, Vector(root3rec, -root3rec, -root3rec), checkDistD);
+			if(bottomRightBackwardCheck)checkTraceLine(vecSuggestedDir, travelMag, flInterval, vecBottomLeftForward, Vector(-root3rec, root3rec, -root3rec), checkDistD);
+			if(bottomLeftBackwardCheck)checkTraceLine(vecSuggestedDir, travelMag, flInterval, vecBottomLeftBackward, Vector(-root3rec, -root3rec, -root3rec), checkDistD);
+			
+
+
+
+			/*
+			if(vecSuggestedDir.x > 0){
+				if(vecSuggestedDir.y > 0){
+					checkTraceLine(vecSuggestedDir, travelMag, flInterval, vecBottomRightForward, Vector(root3rec, root3rec, -root3rec), checkDistD);
+				}else if(vecSuggestedDir.y < 0){
+					checkTraceLine(vecSuggestedDir, travelMag, flInterval, vecBottomRightBackward, Vector(root3rec, -root3rec, -root3rec), checkDistD);
+				}
+			}else if(vecSuggestedDir.x < 0){
+				if(vecSuggestedDir.y > 0){
+					checkTraceLine(vecSuggestedDir, travelMag, flInterval, vecBottomLeftForward, Vector(-root3rec, root3rec, -root3rec), checkDistD);
+				}else if(vecSuggestedDir.y < 0){
+					checkTraceLine(vecSuggestedDir, travelMag, flInterval, vecBottomLeftBackward, Vector(-root3rec, -root3rec, -root3rec), checkDistD);
+				}
+			}
+			*/
+
+			
+			//checkTraceLineTest(vecSuggestedDir, travelMag, flInterval, vecBottomRightBackward, Vector(root3rec, -root3rec, -root3rec), checkDistD, FALSE);
+			
+
+
+		}
+
+	}//END OF if(!onGround)
+
+
+}//END OF checkFloor
+
+
+
+
+
+
+
 
 
 

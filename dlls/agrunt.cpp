@@ -93,6 +93,9 @@ public:
 
 	void Spawn( void );
 	void Precache( void );
+
+	BOOL needsMovementBoundFix(void);
+
 	void SetYawSpeed ( void );
 	int  Classify ( void );
 	BOOL isOrganic(void);
@@ -1317,12 +1320,28 @@ void CAGrunt :: Precache()
 	global_useSentenceSave = 0;	
 
 }	
+
+
+
+
+BOOL CAGrunt::needsMovementBoundFix(void){
+	return TRUE;
+}
+
+
+
+
+
+
+
+
+
+
+
 	
 //=========================================================
 // AI Schedules Specific to this monster
 //=========================================================
-
-
 
 
 

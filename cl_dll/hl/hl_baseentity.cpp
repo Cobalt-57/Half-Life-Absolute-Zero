@@ -341,6 +341,10 @@ BOOL CBaseMonster::hasSeeEnemyFix(){return FALSE;}
 BOOL CBaseMonster::getForceAllowNewEnemy(CBaseEntity* pOther){return FALSE;}
 
 void CBaseMonster::tempMethod(void){};
+BOOL CBaseMonster::needsMovementBoundFix(void){return FALSE;};
+void CBaseMonster::cheapKilled(void){};
+void CBaseMonster::cheapKilledFlier(void){};
+
 
 void CBaseMonster::setPhysicalHitboxForDeath(){return;}
 void CBaseMonster::DeathAnimationStart(){return;}

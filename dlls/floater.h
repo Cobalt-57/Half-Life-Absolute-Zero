@@ -7,6 +7,7 @@
 #include "util.h"
 #include "cbase.h"
 #include "basemonster.h"
+#include "flyingmonster.h"
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -14,7 +15,7 @@
 #define FLOATER_H
 
 
-class CFloater : public CBaseMonster{
+class CFloater : public CFlyingMonster{
 public:
 
 	static const char* pDeathSounds[];
@@ -24,6 +25,11 @@ public:
 	static const char* pAttackSounds[];
 	static const char* pAttackHitSounds[];
 	static const char* pAttackMissSounds[];
+
+	float m_flightSpeed;
+	BOOL tempCheckTraceLineBlock;
+	Vector m_velocity;
+	float lastVelocityChange;
 
 	/*
 	//save info
@@ -38,6 +44,8 @@ public:
 
 	CUSTOM_SCHEDULES;
 
+
+
 	void DeathSound ( void );
 	void AlertSound ( void );
 	void IdleSound ( void );
@@ -46,6 +54,13 @@ public:
 	
 	void Precache(void);
 	void Spawn(void);
+	
+
+	int CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, CBaseEntity *pTarget, float *pflDist );
+	
+	void Move( float flInterval );
+	BOOL ShouldAdvanceRoute( float flWaypointDist );
+	void MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, float flInterval );
 
 	void SetEyePosition(void);
 	
@@ -97,6 +112,8 @@ public:
 	BOOL getMonsterBlockIdleAutoUpdate(void);
 	BOOL forceIdleFrameReset(void);
 	BOOL usesAdvancedAnimSystem(void);
+	
+
 
 	void SetActivity ( Activity NewActivity );
 
@@ -105,6 +122,19 @@ public:
 
 	void HandleEventQueueEvent(int arg_eventID);
 	void HandleAnimEvent(MonsterEvent_t *pEvent );
+	
+
+
+
+	void checkTraceLine(const Vector& vecSuggestedDir, const float& travelMag, const float& flInterval, const Vector& vecStart, const Vector& vecRelativeEnd, const int& moveDist);
+	void checkTraceLine(const Vector& vecSuggestedDir, const float& travelMag, const float& flInterval, const Vector& vecStart, const Vector& vecRelativeEnd, const int& moveDist, const BOOL canBlockFuture);
+	
+	void checkTraceLineTest(const Vector& vecSuggestedDir, const float& travelMag, const float& flInterval, const Vector& vecStart, const Vector& vecRelativeEnd, const int& moveDist);
+	void checkTraceLineTest(const Vector& vecSuggestedDir, const float& travelMag, const float& flInterval, const Vector& vecStart, const Vector& vecRelativeEnd, const int& moveDist, const BOOL canBlockFuture);
+	
+	void checkFloor(const Vector& vecSuggestedDir, const float& travelMag, const float& flInterval);
+
+
 
 };//END OF class CFloater
 

@@ -1,8 +1,7 @@
 
 
 //~should increment between noticable releases.
-//#define protoModVersion "1.5u"
-#define protoModVersion "1.6t"
+#define protoModVersion "1.6v"
 
 //~date of compilation.
 //~to pick automatically, leave this commented out.  WARNING: always the date you ran half life, just freeze a date here!

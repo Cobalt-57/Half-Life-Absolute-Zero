@@ -1588,7 +1588,7 @@ void CScientist :: Spawn( void )
 
 
 	//easyPrintLine("I AMS %d %d", pev->body, trueBody);
-	if(spawnedDynamically){
+	if(spawnedDynamically && firstSpawnCall){
 		pev->body = -1;
 		//signal a randomization if spawned by the player.
 	}else{

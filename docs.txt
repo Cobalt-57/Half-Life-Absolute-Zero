@@ -440,9 +440,6 @@ turretDamageDecal (0) - BOOL. When on, turrets create black oil decals nearby wh
 turretGibDecal (0) - BOOL. When on, turret gibs (if spawned per type of turret - see XCanGib CVars above) make the oil decal on hitting the ground like how ordinary gibs make blood decals.
 
 
-
-
-
 cl_drawExtraZeros (0) - draw two extra triplets of zeroes according to a pre-release.
 
 healthcolor_fullRedMin - minimum amount of red that reaches the healthcolor, even at full health's bright green (adds a yellow tint).
@@ -1247,6 +1244,15 @@ pathfindRampFix (0) - BOOL. If on, the AI should have an easier time using ramps
 
 
 pathfindNodeToleranceMulti (1) - ADJUSTABLE. How much / less distance must be between a monster and a target node to satisfy "reaching" the node? This is a multiple on that. 1 is no change. Under 1 is less (strict: dangerous!), over 1 is more (tolerant).
+
+
+
+
+
+pathfindLargeBoundFix (0) - BOOL. For NPCs that have trouble going up or down inclines, this may help.
+~Re-does straight line path-find checks to see if they would work for typical human-sized bounds, which work properly with ramps.
+~Only applies to monsters selected for trying this extra check, such as panthereyes and agrunts.
+
 
 
 

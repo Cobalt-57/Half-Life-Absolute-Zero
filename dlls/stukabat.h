@@ -366,7 +366,6 @@ public:
 	//DO NOT FORGET "EXPORT"!
 	void EXPORT customTouch(CBaseEntity *pOther);
 	
-	void checkFloor(const Vector& vecSuggestedDir, const float& travelMag, const float& flInterval);
 
 	float MoveYawDegreeTolerance(void);
 	
@@ -405,6 +404,10 @@ public:
 	
 	void checkTraceLineTest(const Vector& vecSuggestedDir, const float& travelMag, const float& flInterval, const Vector& vecStart, const Vector& vecRelativeEnd, const int& moveDist);
 	void checkTraceLineTest(const Vector& vecSuggestedDir, const float& travelMag, const float& flInterval, const Vector& vecStart, const Vector& vecRelativeEnd, const int& moveDist, const BOOL canBlockFuture);
+	
+	void checkFloor(const Vector& vecSuggestedDir, const float& travelMag, const float& flInterval);
+
+
 
 	EHANDLE* getEnemy();
 

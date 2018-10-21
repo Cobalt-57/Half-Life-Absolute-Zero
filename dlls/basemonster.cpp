@@ -20,6 +20,14 @@
 
 */
 
+
+
+
+//#define USE_MOVEMENT_BOUND_FIX
+#define USE_MOVEMENT_BOUND_FIX_ALT
+
+
+
 #include "extdll.h"
 
 #include "basemonster.h"  //MODDD - is this addition necessary?
@@ -106,6 +114,7 @@ EASY_CVAR_EXTERN(animationKilledBoundsRemoval)
 
 EASY_CVAR_EXTERN(drawDebugEnemyLKP)
 
+EASY_CVAR_EXTERN(pathfindLargeBoundFix)
 
 
 // Global Savedata for monster
@@ -3357,6 +3366,10 @@ int CBaseMonster :: CheckLocalMove ( const Vector &vecStart, const Vector &vecEn
 	float	flDist;
 	float	flStep, stepSize;
 	int		iReturn;
+#if defined(USE_MOVEMENT_BOUND_FIX) || defined(USE_MOVEMENT_BOUND_FIX_ALT)
+	Vector oldMins;
+	Vector oldMaxs;
+#endif
 
 	vecStartPos = pev->origin;
 	
@@ -3389,9 +3402,33 @@ int CBaseMonster :: CheckLocalMove ( const Vector &vecStart, const Vector &vecEn
 		return FALSE;
 	}
 */
+
+	
+
+
+	
+#if defined(USE_MOVEMENT_BOUND_FIX)
+	if(needsMovementBoundFix()){
+		//Plays better with the engine to do checks with these bounds against ramps. No clue why.
+		//UTIL_SetSize( pev, Vector(-30, -30, 0), Vector(30, 30, 40) );
+
+		//record the old bounds for getting them back.
+		oldMins = pev->mins;
+		oldMaxs = pev->maxs;
+
+		UTIL_SetSize( pev, VEC_HUMAN_HULL_MIN, VEC_HUMAN_HULL_MAX );
+	}
+#endif
+
+	
+
+
+
+
 	// this loop takes single steps to the goal.
 	for ( flStep = 0 ; flStep < flDist ; flStep += LOCAL_STEP_SIZE )
 	{
+		Vector oldOrigin;
 		stepSize = LOCAL_STEP_SIZE;
 
 		if ( (flStep + LOCAL_STEP_SIZE) >= (flDist-1) )
@@ -3399,8 +3436,50 @@ int CBaseMonster :: CheckLocalMove ( const Vector &vecStart, const Vector &vecEn
 		
 //		UTIL_ParticleEffect ( pev->origin, g_vecZero, 255, 25 );
 
+
+		
+		oldOrigin = pev->origin;
 		if ( !WALK_MOVE( ENT(pev), flYaw, stepSize, WALKMOVE_CHECKONLY ) )
 		{// can't take the next step, fail!
+
+
+
+
+
+
+#ifdef USE_MOVEMENT_BOUND_FIX_ALT
+			if( EASY_CVAR_GET(pathfindLargeBoundFix) == 1 && needsMovementBoundFix() ){
+				CBaseEntity* whut = CBaseEntity::Instance(gpGlobals->trace_ent);
+
+				if(whut != NULL){
+					easyForcePrintLine("%s:%d MBFclm: %s:%d isW:%d", getClassname(), monsterID, whut->getClassname(), 
+						(whut->GetMonsterPointer() != NULL)?whut->GetMonsterPointer()->monsterID:-1
+						, whut->IsWorld());
+				}
+
+				if(whut == NULL || whut->IsWorld()){
+					//WAIT. You get one more chance.
+					oldMins = pev->mins;
+					oldMaxs = pev->maxs;
+					UTIL_SetSize( pev, VEC_HUMAN_HULL_MIN, VEC_HUMAN_HULL_MAX );
+					pev->origin = oldOrigin;
+					if(!WALK_MOVE( ENT(pev), flYaw, stepSize, WALKMOVE_CHECKONLY )){
+						//still fail? it is ok to run the script below that accepts failure.
+						UTIL_SetSize(pev, oldMins, oldMaxs);
+						continue;
+					}else{
+						//success? no, allowed to keep going.
+						UTIL_SetSize(pev, oldMins, oldMaxs);
+						continue;
+					}
+					UTIL_SetSize(pev, oldMins, oldMaxs);
+				}
+			}
+
+#endif
+
+
+
 
 			if ( pflDist != NULL )
 			{
@@ -3424,6 +3503,14 @@ int CBaseMonster :: CheckLocalMove ( const Vector &vecStart, const Vector &vecEn
 
 		}
 	}
+
+	
+#if defined(USE_MOVEMENT_BOUND_FIX)
+	if(needsMovementBoundFix()){
+		//undo the bound change.
+		UTIL_SetSize( pev, oldMins, oldMaxs );
+	}
+#endif
 
 	if ( iReturn == LOCALMOVE_VALID && 	!(pev->flags & (FL_FLY|FL_SWIM) ) && (!pTarget || (pTarget->pev->flags & FL_ONGROUND)) )
 	{
@@ -4030,6 +4117,7 @@ BOOL CBaseMonster :: BuildRoute ( const Vector &vecGoal, int iMoveFlag, CBaseEnt
 
 
 //NOTICE - now no different from "BuildRoute" above!
+//^Oh how outdated this comment is.  Let this be a time capsule.
 BOOL CBaseMonster :: BuildRouteSimple ( const Vector &vecGoal, int iMoveFlag, CBaseEntity *pTarget )
 {
 	float	flDist;
@@ -4785,10 +4873,34 @@ BOOL CBaseMonster:: ShouldAdvanceRoute( float flWaypointDist, float flInterval )
 
 void CBaseMonster::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, float flInterval )
 {
+#if defined(USE_MOVEMENT_BOUND_FIX) || defined(USE_MOVEMENT_BOUND_FIX_ALT)
+	Vector oldMins;
+	Vector oldMaxs;
+	float flYaw;
+		
+#endif
 //	float flYaw = UTIL_VecToYaw ( m_Route[ m_iRouteIndex ].vecLocation - pev->origin );// build a yaw that points to the goal.
 //	WALK_MOVE( ENT(pev), flYaw, m_flGroundSpeed * flInterval, WALKMOVE_NORMAL );
 	if ( m_IdealActivity != m_movementActivity )
 		m_IdealActivity = m_movementActivity;
+
+	
+#ifdef USE_MOVEMENT_BOUND_FIX
+	if(needsMovementBoundFix()){
+		oldMins = pev->mins;
+		oldMaxs = pev->maxs;
+		UTIL_SetSize( pev, VEC_HUMAN_HULL_MIN, VEC_HUMAN_HULL_MAX );
+	}
+#endif
+
+
+
+
+#ifdef USE_MOVEMENT_BOUND_FIX_ALT
+	flYaw = UTIL_VecToYaw ( m_Route[ m_iRouteIndex ].vecLocation - pev->origin );
+#endif
+
+
 
 	float flTotal = m_flGroundSpeed * pev->framerate * EASY_CVAR_GET(animationFramerateMulti) * flInterval;
 	float flStep;
@@ -4798,10 +4910,107 @@ void CBaseMonster::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, f
 		flStep = min( 16.0, flTotal );
 
 
+
+#ifndef USE_MOVEMENT_BOUND_FIX_ALT
+		//Normal way!
 		UTIL_MoveToOrigin ( ENT(pev), m_Route[ m_iRouteIndex ].vecLocation, flStep, MOVE_NORMAL );
+
+#else
+
+		if( !(EASY_CVAR_GET(pathfindLargeBoundFix) == 1 && needsMovementBoundFix() ) ){
+			//Normal way!
+			UTIL_MoveToOrigin ( ENT(pev), m_Route[ m_iRouteIndex ].vecLocation, flStep, MOVE_NORMAL );
+		}else{
+		//ALTERNATE.
+		/////////////////////////////////////////////////////////////////////////////////////
+		//MODDD - MAJOR. is that okay?
+		//pTarget->edict() == gpGlobals->trace_ent
+		if ( !WALK_MOVE( ENT(pev), flYaw, flStep, WALKMOVE_NORMAL ) ){
+
+			/*
+			if ( pflDist != NULL )
+			{
+				*pflDist = flStep;
+			}
+			if ( pTarget && pTarget->edict() == gpGlobals->trace_ent )
+			{
+				// if this step hits target ent, the move is legal.
+				iReturn = LOCALMOVE_VALID;
+				break;
+			}
+			else
+			{
+				// If we're going toward an entity, and we're almost getting there, it's OK.
+//				if ( pTarget && fabs( flDist - iStep ) < LOCAL_STEP_SIZE )
+//					fReturn = TRUE;
+//				else
+				iReturn = LOCALMOVE_INVALID;
+				break;
+			}
+			*/
+
+			//if(gpGlobals->trace_ent != NULL){
+				CBaseEntity* whut = CBaseEntity::Instance(gpGlobals->trace_ent);
+
+				if(whut != NULL){
+					easyForcePrintLine("%s:%d MBFme: %s:%d isW:%d", getClassname(), monsterID, whut->getClassname(), 
+						(whut->GetMonsterPointer() != NULL)?whut->GetMonsterPointer()->monsterID:-1
+						, whut->IsWorld());
+				}
+
+				if(whut == NULL || whut->IsWorld()){
+					//it is ok... maybe?  Check to see if the reason this was hit was because it was a ramp?
+					//
+					//resize me.
+					oldMins = pev->mins;
+					oldMaxs = pev->maxs;
+					UTIL_SetSize( pev, VEC_HUMAN_HULL_MIN, VEC_HUMAN_HULL_MAX );
+
+					if(!WALK_MOVE( ENT(pev), flYaw, flStep, WALKMOVE_NORMAL )){
+						//still no? that's the last shot you get.
+						AdvanceRoute(flStep, flInterval);
+						break;
+					}
+
+					UTIL_SetSize( pev, oldMins, oldMaxs );
+
+				}else{
+					//not the world? entity? etc.? assume it is not okay.
+					AdvanceRoute(flStep, flInterval);
+					break;
+				}
+			//}
+
+
+		}//END OF if(!WALK_MOVE( ... ) )
+
+		}//END OF else OF pathfindLargeBoundFix check
+
+
+
+		/////////////////////////////////////////////////////////////////////////////////////
+
+#endif
+
+		
+
+
+
+
 		flTotal -= flStep;
 	}
 	// ALERT( at_console, "dist %f\n", m_flGroundSpeed * pev->framerate * flInterval );
+
+	
+#ifdef USE_MOVEMENT_BOUND_FIX
+	if(needsMovementBoundFix()){
+		//and revert.
+		UTIL_SetSize( pev, oldMins, oldMaxs );
+	}
+#endif
+
+
+
 }
 
 
@@ -4922,7 +5131,6 @@ void CBaseMonster :: StartMonster ( void )
 
 
 	//MODDD NOTE - Oddly enough? missing "SF_MONSTER_FALL_TO_GROUND" causes the monster to fall to the ground. Interdasting.
-	//MODDD
 	//if ( pev->movetype != MOVETYPE_FLY && !FBitSet( pev->spawnflags, SF_MONSTER_FALL_TO_GROUND ) )
 	if ( !canFly && !FBitSet( pev->spawnflags, SF_MONSTER_FALL_TO_GROUND ) )
 	{
@@ -5024,6 +5232,10 @@ void CBaseMonster :: MovementComplete( void )
 	
 	case TASKSTATUS_RUNNING_TASK:
 		ALERT( at_error, "Movement completed twice!\n" );
+
+		//MODDD - new. This now also counts as TaskComplete. The Stuka needs it this way to be stumpable.  
+		//...yes that seems funny, make more specific if other things are messed up as a result.
+		//TaskComplete();
 		break;
 
 	case TASKSTATUS_COMPLETE:		
@@ -6216,6 +6428,9 @@ void CBaseMonster::ReportAIState( void )
 
 	easyForcePrintLine("EXTRA: flags:%d effects:%d renderfx:%d rendermode:%d renderamt:%.2f gamestate:%d solid:%d movetype:%d", pev->flags, pev->effects, pev->renderfx, pev->rendermode, pev->renderamt, pev->gamestate, pev->solid, pev->movetype);
 	easyForcePrintLine("Eyepos: (%.2f,%.2f,%.2f)", pev->view_ofs.x, pev->view_ofs.y, pev->view_ofs.z);
+	easyForcePrint("BOUNDS: mins: (%.2f,%.2f,%.2f)", pev->mins.x, pev->mins.y, pev->mins.z);
+	easyForcePrintLine("maxs: (%.2f,%.2f,%.2f)", pev->maxs.x, pev->maxs.y, pev->maxs.z);
+
 
 	easyForcePrintLine("-------------------------------------------------------------");
 
@@ -6963,7 +7178,7 @@ void CBaseMonster::Spawn( ){
 	//MonsterInit is a better place that's often called by most monster Spawn scripts. Beware of those that don't even do that.
 
 	recognizablyDead = FALSE;
-	
+	firstSpawnCall = FALSE;
 	CBaseToggle::Spawn();
 
 	//setModelCustom();
@@ -7306,9 +7521,66 @@ BOOL CBaseMonster::getForceAllowNewEnemy(CBaseEntity* pOther){
 
 
 void CBaseMonster::tempMethod(void){
-	//by default nothing.
+	//by default nothing. Use me for testing with client calls
+	//(point at this monster ingame, crosshairs, and type some command that calls this one's tempMethod)
 }//END OF tempMethod
 
 
 
 
+//Monsters with bigger bounds may need them to be temporarily reduced to play better with the pathfiding.
+//Side effects not well understood yet, see if this is really worth it.
+//By default off, enable per monsters as needed.
+BOOL CBaseMonster::needsMovementBoundFix(){
+	return FALSE;
+}//END OF needsMovementBoundFix
+
+
+void CBaseMonster::cheapKilled(void){
+	this->m_IdealMonsterState = MONSTERSTATE_DEAD;
+	//MODDD - major HACK - pathetic stand-in death anim until there is a proper death anim.
+	this->pev->gravity = 0;
+	pev->movetype		= MOVETYPE_NONE;
+	this->pev->origin = pev->origin + Vector(0, 0, 13.4);   //so it isn't poking through the ground. Yes this will look really weird.
+	this->pev->angles = Vector(0, 0, 90);
+	this->pev->framerate = 0;
+	this->m_flFramerateSuggestion = 0;
+	this->m_flFrameRate = 0;
+
+	//this->pev->frame = 255;
+	//this->m_fSequenceFinished = TRUE;
+
+
+	DeathAnimationStart();
+	DeathAnimationEnd();
+}//END OF cheapKilled
+
+
+//Version of cheapKilled for flying monsters. They should still drop to the ground as expected, not akwardly freeze in mid-air.  Or maybe they should? dunno.
+void CBaseMonster::cheapKilledFlier(void){
+	this->m_IdealMonsterState = MONSTERSTATE_DEAD;
+	//MODDD - major HACK - pathetic stand-in death anim until there is a proper death anim.
+	//this->pev->gravity = 0;
+
+	//Not working out so great anymore.  okay then..
+	//pev->movetype		= MOVETYPE_STEP;
+
+	//this->pev->origin = pev->origin + Vector(0, 0, 13.4);   //so it isn't poking through the ground. Yes this will look really weird.
+	
+	//Copied from Flyer's killed script
+	ClearBits( pev->flags, FL_ONGROUND );
+	//pev->angles.z = 0;
+	//pev->angles.x = 0;
+
+	this->pev->angles = Vector(0, 0, 90);
+	this->pev->framerate = 0;
+	this->m_flFramerateSuggestion = 0;
+	this->m_flFrameRate = 0;
+
+	//this->pev->frame = 255;
+	//this->m_fSequenceFinished = TRUE;
+
+
+	DeathAnimationStart();
+	DeathAnimationEnd();
+}//END OF cheapKilledFlier
