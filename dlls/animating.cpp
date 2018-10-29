@@ -50,6 +50,8 @@ TYPEDESCRIPTION	CBaseAnimating::m_SaveData[] =
 	DEFINE_FIELD( CBaseMonster, m_flGroundSpeed, FIELD_FLOAT ),
 	DEFINE_FIELD( CBaseMonster, m_flLastEventCheck, FIELD_TIME ),
 	DEFINE_FIELD( CBaseMonster, m_fSequenceFinished, FIELD_BOOLEAN ),
+	//MODDD - save you too.
+	DEFINE_FIELD( CBaseMonster, m_fSequenceFinishedSinceLoop, FIELD_BOOLEAN ),
 	DEFINE_FIELD( CBaseMonster, m_fSequenceLoops, FIELD_BOOLEAN ),
 
 	//MODDD - save this?
@@ -147,7 +149,8 @@ CBaseAnimating::CBaseAnimating(void){
 	//float queuedAnimFrameCutoff[8];
 	//float queuedAnimFrameCutoffSuggestion[8];
 
-
+	m_fSequenceFinished = FALSE;
+	m_fSequenceFinishedSinceLoop = FALSE;
 
 }
 
@@ -164,6 +167,7 @@ void CBaseAnimating::checkEndOfAnimation(void){
 
 	//by default, this sequence is unfinished. The frame going past cutoff in the appropriate direction below will change this to TRUE instead.
 	m_fSequenceFinished = FALSE;
+	//But not you, m_fSequenceFinishedSinceLoop. You stay on until you have a reason to be set back to FALSE (new anim)
 
 	if(pev->framerate == 0){
 		return;
@@ -260,6 +264,7 @@ void CBaseAnimating::checkEndOfAnimation(void){
 	{
 		
 		m_fSequenceFinished = TRUE;
+		m_fSequenceFinishedSinceLoop = TRUE;  //why yes it is.
 
 
 		//Bound check just in case.
@@ -746,6 +751,8 @@ void CBaseAnimating :: ResetSequenceInfo ( )
 	//pev->frame = 222;
 
 	m_fSequenceFinished = FALSE;
+	m_fSequenceFinishedSinceLoop = FALSE;  //new anim? a loop has not had a chance to be completed (that counts).
+
 	m_flLastEventCheck = gpGlobals->time;
 
 
@@ -890,8 +897,10 @@ void CBaseAnimating :: ResetSequenceInfoSafe ( )
 	//pev->framerate = 1.0;
 	pev->framerate = m_flFramerateSuggestion;
 	//pev->frame = 222;
-
+	
 	m_fSequenceFinished = FALSE;
+	m_fSequenceFinishedSinceLoop = FALSE;  //new anim? a loop has not had a chance to be completed (that counts).
+
 	m_flLastEventCheck = gpGlobals->time;
 
 

@@ -60,6 +60,8 @@ extern float global2PSEUDO_determinedFOV;
 
 extern float global2_hud_drawsidebarmode;
 
+extern cvar_t* cvar2_cl_server_interpolation;
+extern float global2_cl_server_interpolation;
 
 
 class CHLVoiceStatusHelper : public IVoiceStatusHelper
@@ -880,7 +882,8 @@ void CHud :: Init( void )
 
 	CVAR_CREATE( "zoom_sensitivity_ratio", "1.2", 0 );
 
-
+	
+	cvar2_cl_server_interpolation = CVAR_CREATE( "cl_server_interpolation", "1", FCVAR_CLIENTDLL | FCVAR_ARCHIVE );
 
 
 

@@ -1161,6 +1161,36 @@ Schedule_t slDie[] =
 	},
 };
 
+
+//MODDD - new. Die, but loop on the death anim instead.
+//        This replaces the Die schedule above for fliers or anything else using it.
+//        Don't call that after calling this or vice versa.
+//        TASK_DIE_LOOP must still be satisfied at some point (like hitting the ground).
+//        This must be satisfied by a check to some variable ticked on from hitting the ground
+//        in the monster's own "RunTask" method for TASK_DIE_LOOP.
+//        After TASK_DIE_LOOP completes, a typical death sequence is picked as usual (TASK_DIE runs).
+//        If it would be better to pick the death sequence at the immediate time of death and
+//        recall that later during TASK_DIE below (after TASK_DIE_LOOP decides it is done),
+//        that should be done instead. Unsure.
+Task_t tlDieLoop[] =
+{
+	{ TASK_STOP_MOVING,			0				 },
+	{ TASK_SOUND_DIE,		(float)0			 },
+	{ TASK_DIE_LOOP,				(float)0			 },
+	{ TASK_DIE,				(float)0			 },
+};
+
+Schedule_t slDieLoop[] =
+{
+	{
+		tlDieLoop,
+		ARRAYSIZE( tlDieLoop ),
+		0,
+		0,
+		"Die Loop"
+	},
+};
+
 //=========================================================
 // Victory Dance
 //=========================================================
@@ -1640,6 +1670,7 @@ Schedule_t *CBaseMonster::m_scheduleList[] =
 	slChaseEnemyFailed,
 	slSmallFlinch,
 	slDie,
+	slDieLoop,   //BOB SAGGET
 	slVictoryDance,
 	slBarnacleVictimGrab,
 	slBarnacleVictimChomp,
@@ -1892,6 +1923,11 @@ Schedule_t* CBaseMonster :: GetScheduleOfType ( int Type )
 	case SCHED_DIE:
 		{
 			return &slDie[ 0 ];
+		}
+	//MODDD - new
+	case SCHED_DIE_LOOP:
+		{
+			return &slDieLoop[ 0 ];
 		}
 	case SCHED_TAKE_COVER_FROM_ORIGIN:
 		{

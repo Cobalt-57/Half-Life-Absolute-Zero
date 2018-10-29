@@ -1146,17 +1146,19 @@ CBaseEntity * CBaseEntity::Create( const char *szName, const Vector &vecOrigin, 
 
 
 void CBaseEntity::ReportGeneric(){
-	char binaryBuffer[33];
-
 	//To be determined further by each entity class and its own specific variables. But this general info is ok.
 	//Child classes implementing this method should call their parent methods to reach any other parent specifics available.
 
 	easyForcePrintLine("Classname:%s targetname:%s netname:%s", STRING(pev->classname), pev->targetname!=NULL?STRING(pev->targetname):"_NONE_", pev->netname!=NULL?STRING(pev->netname):"_NONE_");
 	easyForcePrintLine("nextthink:%.2f ltime:%.2f currenttime:%.2f", pev->nextthink, pev->ltime, gpGlobals->time);
 
-	convertIntToBinary(binaryBuffer, (unsigned int)pev->spawnflags, 32u);
+	
 
-	easyForcePrintLine("Spawnflags binary: %s", binaryBuffer);
+
+
+	easyForcePrint("Spawnflags: ");
+	printLineIntAsBinary((unsigned int)pev->spawnflags, 32u);
+
 	easyForcePrintLine("Sequence:%d Frame:%.2f Framerate:%.2f", pev->sequence, pev->frame, pev->framerate);
 	easyForcePrintLine("Flags:%d renderfx:%d rendermode:%d renderamt:%.2f gamestate:%d solid:%d movetype:%d", pev->flags, pev->renderfx, pev->rendermode, pev->renderamt, pev->gamestate, pev->solid, pev->movetype);
 

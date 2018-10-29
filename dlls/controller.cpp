@@ -27,10 +27,44 @@
 #include	"weapons.h"
 #include	"squadmonster.h"
 
+//Separated.
+#include "controller_zap_ball.h"
+#include "controller_head_ball.h"
 
 
 
 EASY_CVAR_EXTERN(animationFramerateMulti)
+
+
+
+
+
+//Sequences, in the order they appear in the model. Some sequences have the same display name and so should just
+//be referenced by order (numbered index).
+enum floater_sequence{  //key: frames, FPS
+	SEQ_CONTROLLER_ATTACK1,
+	SEQ_CONTROLLER_ATTACK2,
+	SEQ_CONTROLLER_THROW,
+	SEQ_CONTROLLER_IDLE2,
+	SEQ_CONTROLLER_BLOCK,
+	SEQ_CONTROLLER_SHOOT,
+	SEQ_CONTROLLER_FLINCH1,
+	SEQ_CONTROLLER_FLINCH2,
+	SEQ_CONTROLLER_FALL,
+	SEQ_CONTROLLER_FORWARD,
+	SEQ_CONTROLLER_BACKWARD,
+	SEQ_CONTROLLER_UP,
+	SEQ_CONTROLLER_DOWN,
+	SEQ_CONTROLLER_RIGHT,
+	SEQ_CONTROLLER_LEFT,
+	SEQ_CONTROLLER_FLOAT,  //SAME?
+	SEQ_CONTROLLER_WALK,   //SAME?
+	SEQ_CONTROLLER_RUN,    //SAME?
+	SEQ_CONTROLLER_DIE1
+	
+
+};
+
 
 
 
@@ -48,7 +82,7 @@ EASY_CVAR_EXTERN(animationFramerateMulti)
 class CController : public CSquadMonster
 {
 public:
-	CController();
+	CController(void);
 
 	virtual int		Save( CSave &save );
 	virtual int		Restore( CRestore &restore );
@@ -118,6 +152,16 @@ public:
 	GENERATE_KILLED_PROTOTYPE
 
 	GENERATE_GIBMONSTER_PROTOTYPE
+
+	
+	//TEST: what happens if already touching the ground before death? Test!!
+	void OnKilledSetTouch(void);
+	int getLoopingDeathSequence(void);
+	
+	void EXPORT KilledFallingTouch ( CBaseEntity *pOther );
+
+	BOOL hitGroundDead;
+
 
 	CSprite *m_pBall[2];	// hand balls
 	int m_iBall[2];			// how bright it should be
@@ -265,6 +309,10 @@ GENERATE_KILLED_IMPLEMENTATION(CController)
 	}
 
 	GENERATE_KILLED_PARENT_CALL(CSquadMonster);
+	
+	//MODDD - safety. Must fall once killed, just in case.
+	pev->movetype = MOVETYPE_TOSS;
+
 }
 
 
@@ -284,6 +332,9 @@ GENERATE_GIBMONSTER_IMPLEMENTATION(CController)
 	}
 	GENERATE_GIBMONSTER_PARENT_CALL(CSquadMonster);
 }
+
+
+
 
 
 
@@ -411,6 +462,7 @@ void CController :: HandleAnimEvent( MonsterEvent_t *pEvent )
 
 CController::CController(){
 
+	hitGroundDead = FALSE;
 }
 
 //=========================================================
@@ -716,7 +768,9 @@ void CController :: RunTask ( Task_t *pTask )
 		MakeIdealYaw( m_vecEnemyLKP );
 		ChangeYaw( pev->yaw_speed );
 
-		if (m_fSequenceFinished)
+		//if (m_fSequenceFinished)
+		//MODDD - "m_fSequenceFinishedSinceLoop" is better a ttimes now. m_fSequenceFinished is ticked if this is the very frame it finished on.
+		if(m_fSequenceFinishedSinceLoop)
 		{
 			m_fInCombat = FALSE;
 		}
@@ -751,6 +805,13 @@ void CController :: RunTask ( Task_t *pTask )
 			}
 		}
 		break;
+
+	case TASK_DIE_LOOP:{
+		if(hitGroundDead){
+			TaskComplete();
+		}
+	break;}
+
 	default: 
 		CSquadMonster :: RunTask ( pTask );
 		break;
@@ -775,22 +836,29 @@ Schedule_t *CController :: GetSchedule ( void )
 		break;
 
 	case MONSTERSTATE_COMBAT:
+	{
+		Vector vecTmp = UTIL_Intersect( Vector( 0, 0, 0 ), Vector( 100, 4, 7 ), Vector( 2, 10, -3 ), 20.0 );
+
+		// dead enemy
+		if ( HasConditions ( bits_COND_LIGHT_DAMAGE ) )
 		{
-			Vector vecTmp = UTIL_Intersect( Vector( 0, 0, 0 ), Vector( 100, 4, 7 ), Vector( 2, 10, -3 ), 20.0 );
-
-			// dead enemy
-			if ( HasConditions ( bits_COND_LIGHT_DAMAGE ) )
-			{
-				// m_iFrustration++;
-			}
-			if ( HasConditions ( bits_COND_HEAVY_DAMAGE ) )
-			{
-				// m_iFrustration++;
-			}
+			// m_iFrustration++;
 		}
-		break;
+		if ( HasConditions ( bits_COND_HEAVY_DAMAGE ) )
+		{
+			// m_iFrustration++;
+		}
 	}
+	break;
+	//MODDD - not that interesting actually.
+	case MONSTERSTATE_DEAD:
+	{
+		return GetScheduleOfType( SCHED_DIE );
+	}
+	break;
 
+
+	}//END OF switch
 	return CSquadMonster :: GetSchedule();
 }
 
@@ -814,7 +882,13 @@ Schedule_t* CController :: GetScheduleOfType ( int Type )
 		return slControllerTakeCover;
 	case SCHED_FAIL:
 		return slControllerFail;
-	}
+	case SCHED_DIE:{
+		return flierDeathSchedule();
+	break;}
+
+
+	}//END OF switch
+	
 
 	return CBaseMonster :: GetScheduleOfType( Type );
 }
@@ -1169,333 +1243,28 @@ void CController::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, fl
 
 
 
-
-
-
-
-
-
-
-
-//=========================================================
-// Controller bouncy ball attack
-//=========================================================
-class CControllerHeadBall : public CBaseMonster
-{
-	//MODDD - why no public?
-public:
-	CControllerHeadBall();
-
-	void Spawn( void );
-	void Precache( void );
-	void EXPORT HuntThink( void );
-	void EXPORT DieThink( void );
-	void EXPORT BounceTouch( CBaseEntity *pOther );
-	void MovetoTarget( Vector vecTarget );
-	void Crawl( void );
-	int m_iTrail;
-	int m_flNextAttack;
-	Vector m_vecIdeal;
-	EHANDLE m_hOwner;
-};
-LINK_ENTITY_TO_CLASS( controller_head_ball, CControllerHeadBall );
-
-
-
-CControllerHeadBall::CControllerHeadBall(){
-
+//TEST: what happens if already touching the ground before death? Test!!
+void CController::OnKilledSetTouch(void){
+	SetTouch(&CController::KilledFallingTouch);
 }
 
-void CControllerHeadBall :: Spawn( void )
-{
-	Precache( );
-	// motor
-	pev->movetype = MOVETYPE_FLY;
-	pev->solid = SOLID_BBOX;
-
-	SET_MODEL(ENT(pev), "sprites/xspark4.spr");
-	pev->rendermode = kRenderTransAdd;
-	pev->rendercolor.x = 255;
-	pev->rendercolor.y = 255;
-	pev->rendercolor.z = 255;
-	pev->renderamt = 255;
-	pev->scale = 2.0;
-
-	UTIL_SetSize(pev, Vector( 0, 0, 0), Vector(0, 0, 0));
-	UTIL_SetOrigin( pev, pev->origin );
-
-	SetThink( &CControllerHeadBall::HuntThink );
-	SetTouch( &CControllerHeadBall::BounceTouch );
-
-	m_vecIdeal = Vector( 0, 0, 0 );
-
-	pev->nextthink = gpGlobals->time + 0.1;
-
-	m_hOwner = Instance( pev->owner );
-	pev->dmgtime = gpGlobals->time;
+int CController::getLoopingDeathSequence(void){
+	return SEQ_CONTROLLER_FALL;
 }
 
-
-extern int global_useSentenceSave;
-void CControllerHeadBall :: Precache( void )
-{
-
-	PRECACHE_MODEL("sprites/xspark1.spr");
-	
-	global_useSentenceSave = TRUE;
-	PRECACHE_SOUND("weapons/electro4.wav", TRUE);//don't skip. This is precached by the player gauss, just keep it.
-	PRECACHE_SOUND("debris/zap4.wav");
-	global_useSentenceSave = FALSE;
-
-}
-
-
-void CControllerHeadBall :: HuntThink( void  )
-{
-	pev->nextthink = gpGlobals->time + 0.1;
-
-	pev->renderamt -= 5;
-
-	MESSAGE_BEGIN( MSG_BROADCAST, SVC_TEMPENTITY );
-		WRITE_BYTE( TE_ELIGHT );
-		WRITE_SHORT( entindex( ) );		// entity, attachment
-		WRITE_COORD( pev->origin.x );		// origin
-		WRITE_COORD( pev->origin.y );
-		WRITE_COORD( pev->origin.z );
-		WRITE_COORD( pev->renderamt / 16 );	// radius
-		WRITE_BYTE( 255 );	// R
-		WRITE_BYTE( 255 );	// G
-		WRITE_BYTE( 255 );	// B
-		WRITE_BYTE( 2 );	// life * 10
-		WRITE_COORD( 0 ); // decay
-	MESSAGE_END();
-
-	// check world boundaries
-	if (gpGlobals->time - pev->dmgtime > 5 || pev->renderamt < 64 || m_hEnemy == NULL || m_hOwner == NULL || pev->origin.x < -4096 || pev->origin.x > 4096 || pev->origin.y < -4096 || pev->origin.y > 4096 || pev->origin.z < -4096 || pev->origin.z > 4096)
-	{
-		SetTouch( NULL );
-		UTIL_Remove( this );
-		return;
+void CController::KilledFallingTouch( CBaseEntity *pOther ){
+	if(pOther == NULL){
+		return; //??????
 	}
-
-	MovetoTarget( m_hEnemy->Center( ) );
-
-	if ((m_hEnemy->Center() - pev->origin).Length() < 64)
-	{
-		TraceResult tr;
-
-		UTIL_TraceLine( pev->origin, m_hEnemy->Center(), dont_ignore_monsters, ENT(pev), &tr );
-
-		CBaseEntity *pEntity = CBaseEntity::Instance(tr.pHit);
-		if (pEntity != NULL && pEntity->pev->takedamage)
-		{
-			ClearMultiDamage( );
-			pEntity->TraceAttack( m_hOwner->pev, gSkillData.controllerDmgZap, pev->velocity, &tr, DMG_SHOCK );
-			ApplyMultiDamage( pev, m_hOwner->pev );
-		}
-
-		MESSAGE_BEGIN( MSG_BROADCAST, SVC_TEMPENTITY );
-			WRITE_BYTE( TE_BEAMENTPOINT );
-			WRITE_SHORT( entindex() );
-			WRITE_COORD( tr.vecEndPos.x );
-			WRITE_COORD( tr.vecEndPos.y );
-			WRITE_COORD( tr.vecEndPos.z );
-			WRITE_SHORT( g_sModelIndexLaser );
-			WRITE_BYTE( 0 ); // frame start
-			WRITE_BYTE( 10 ); // framerate
-			WRITE_BYTE( 3 ); // life
-			WRITE_BYTE( 20 );  // width
-			WRITE_BYTE( 0 );   // noise
-			WRITE_BYTE( 255 );   // r, g, b
-			WRITE_BYTE( 255 );   // r, g, b
-			WRITE_BYTE( 255 );   // r, g, b
-			WRITE_BYTE( 255 );	// brightness
-			WRITE_BYTE( 10 );		// speed
-		MESSAGE_END();
-
-
-		UTIL_EmitAmbientSound_Filtered( ENT(pev), tr.vecEndPos, "weapons/electro4.wav", 0.5, ATTN_NORM, 0, RANDOM_LONG( 140, 160 ), FALSE );
-
-		m_flNextAttack = gpGlobals->time + 3.0;
-
-		SetThink( &CControllerHeadBall::DieThink );
-		pev->nextthink = gpGlobals->time + 0.3;
-	}
-
-	// Crawl( );
-}
-
-
-void CControllerHeadBall :: DieThink( void  )
-{
-	UTIL_Remove( this );
-}
-
-
-void CControllerHeadBall :: MovetoTarget( Vector vecTarget )
-{
-	// accelerate
-	float flSpeed = m_vecIdeal.Length();
-	if (flSpeed == 0)
-	{
-		m_vecIdeal = pev->velocity;
-		flSpeed = m_vecIdeal.Length();
-	}
-
-	if (flSpeed > 400)
-	{
-		m_vecIdeal = m_vecIdeal.Normalize( ) * 400;
-	}
-	m_vecIdeal = m_vecIdeal + (vecTarget - pev->origin).Normalize() * 100;
-	pev->velocity = m_vecIdeal;
-}
-
-
-
-void CControllerHeadBall :: Crawl( void  )
-{
-
-	Vector vecAim = Vector( RANDOM_FLOAT( -1, 1 ), RANDOM_FLOAT( -1, 1 ), RANDOM_FLOAT( -1, 1 ) ).Normalize( );
-	Vector vecPnt = pev->origin + pev->velocity * 0.3 + vecAim * 64;
-
-	MESSAGE_BEGIN( MSG_BROADCAST, SVC_TEMPENTITY );
-		WRITE_BYTE( TE_BEAMENTPOINT );
-		WRITE_SHORT( entindex() );
-		WRITE_COORD( vecPnt.x);
-		WRITE_COORD( vecPnt.y);
-		WRITE_COORD( vecPnt.z);
-		WRITE_SHORT( g_sModelIndexLaser );
-		WRITE_BYTE( 0 ); // frame start
-		WRITE_BYTE( 10 ); // framerate
-		WRITE_BYTE( 3 ); // life
-		WRITE_BYTE( 20 );  // width
-		WRITE_BYTE( 0 );   // noise
-		WRITE_BYTE( 255 );   // r, g, b
-		WRITE_BYTE( 255 );   // r, g, b
-		WRITE_BYTE( 255 );   // r, g, b
-		WRITE_BYTE( 255 );	// brightness
-		WRITE_BYTE( 10 );		// speed
-	MESSAGE_END();
-}
-
-
-void CControllerHeadBall::BounceTouch( CBaseEntity *pOther )
-{
-	Vector vecDir = m_vecIdeal.Normalize( );
-
-	TraceResult tr = UTIL_GetGlobalTrace( );
-
-	float n = -DotProduct(tr.vecPlaneNormal, vecDir);
-
-	vecDir = 2.0 * tr.vecPlaneNormal * n + vecDir;
-
-	m_vecIdeal = vecDir * m_vecIdeal.Length();
+	hitGroundDead = TRUE;
 }
 
 
 
 
-class CControllerZapBall : public CBaseMonster
-{
-	//MODDD - why no public?
-public:
-	CControllerZapBall();
-	void Spawn( void );
-	void Precache( void );
-	void EXPORT AnimateThink( void );
-	void EXPORT ExplodeTouch( CBaseEntity *pOther );
 
-	EHANDLE m_hOwner;
-};
-LINK_ENTITY_TO_CLASS( controller_energy_ball, CControllerZapBall );
-
-
-CControllerZapBall::CControllerZapBall(){
-
-}
-
-void CControllerZapBall :: Spawn( void )
-{
-	Precache( );
-	// motor
-	pev->movetype = MOVETYPE_FLY;
-	pev->solid = SOLID_BBOX;
-
-	SET_MODEL(ENT(pev), "sprites/xspark4.spr");
-	pev->rendermode = kRenderTransAdd;
-	pev->rendercolor.x = 255;
-	pev->rendercolor.y = 255;
-	pev->rendercolor.z = 255;
-	pev->renderamt = 255;
-	pev->scale = 0.5;
-
-	UTIL_SetSize(pev, Vector( 0, 0, 0), Vector(0, 0, 0));
-	UTIL_SetOrigin( pev, pev->origin );
-
-	SetThink( &CControllerZapBall::AnimateThink );
-	SetTouch( &CControllerZapBall::ExplodeTouch );
-
-	m_hOwner = Instance( pev->owner );
-	pev->dmgtime = gpGlobals->time; // keep track of when ball spawned
-	pev->nextthink = gpGlobals->time + 0.1;
-}
-
-extern int global_useSentenceSave;
-void CControllerZapBall :: Precache( void )
-{
-	PRECACHE_MODEL("sprites/xspark4.spr");
-	//NOTE: uh, sounds found marked-out?  whatever, surrounding anyways.
-
-	global_useSentenceSave = TRUE;
-	// PRECACHE_SOUND("debris/zap4.wav");
-	// PRECACHE_SOUND("weapons/electro4.wav");
-
-	global_useSentenceSave = FALSE;
-}
-
-
-void CControllerZapBall :: AnimateThink( void  )
-{
-	pev->nextthink = gpGlobals->time + 0.1;
-	
-	pev->frame = ((int)pev->frame + 1) % 11;
-
-	if (gpGlobals->time - pev->dmgtime > 5 || pev->velocity.Length() < 10)
-	{
-		SetTouch( NULL );
-		UTIL_Remove( this );
-	}
-}
-
-
-void CControllerZapBall::ExplodeTouch( CBaseEntity *pOther )
-{
-	if (pOther->pev->takedamage)
-	{
-		TraceResult tr = UTIL_GetGlobalTrace( );
-
-		entvars_t	*pevOwner;
-		if (m_hOwner != NULL)
-		{
-			pevOwner = m_hOwner->pev;
-		}
-		else
-		{
-			pevOwner = pev;
-		}
-
-		ClearMultiDamage( );
-		pOther->TraceAttack(pevOwner, gSkillData.controllerDmgBall, pev->velocity.Normalize(), &tr, DMG_ENERGYBEAM ); 
-		ApplyMultiDamage( pevOwner, pevOwner );
-
-		easyForcePrintLine("DAT SOUND");
-		UTIL_EmitAmbientSound_Filtered( ENT(pev), tr.vecEndPos, "weapons/electro4.wav", 0.3, ATTN_NORM, 0, RANDOM_LONG( 90, 99 ), FALSE );
-
-	}
-
-	UTIL_Remove( this );
-}
-
+//MODDD - two types of balls moved to their own files, controller_zap_ball and controller_head_ball .h / .cpp.
+//        Other monsters may include and use them as well.
 
 
 #endif		// !OEM && !HLDEMO

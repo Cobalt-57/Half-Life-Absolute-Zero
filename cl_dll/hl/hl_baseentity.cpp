@@ -344,6 +344,10 @@ void CBaseMonster::tempMethod(void){};
 BOOL CBaseMonster::needsMovementBoundFix(void){return FALSE;};
 void CBaseMonster::cheapKilled(void){};
 void CBaseMonster::cheapKilledFlier(void){};
+void CBaseMonster::OnKilledSetTouch(void){};
+int CBaseMonster::getLoopingDeathSequence(void){return 0;};
+Schedule_t* CBaseMonster::flierDeathSchedule(void){return NULL;}
+
 
 
 void CBaseMonster::setPhysicalHitboxForDeath(){return;}

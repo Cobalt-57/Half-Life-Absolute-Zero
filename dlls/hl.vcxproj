@@ -391,6 +391,8 @@
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
+    <ClCompile Include="controller_head_ball.cpp" />
+    <ClCompile Include="controller_zap_ball.cpp" />
     <ClCompile Include="crossbow.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -1074,6 +1076,8 @@
     <ClInclude Include="chumtoadweapon.h" />
     <ClInclude Include="client.h" />
     <ClInclude Include="client_message.h" />
+    <ClInclude Include="controller_head_ball.h" />
+    <ClInclude Include="controller_zap_ball.h" />
     <ClInclude Include="custom_debug.h" />
     <ClInclude Include="decals.h" />
     <ClInclude Include="defaultai.h" />

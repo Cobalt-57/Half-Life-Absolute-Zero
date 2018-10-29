@@ -30,6 +30,7 @@ public:
 	BOOL tempCheckTraceLineBlock;
 	Vector m_velocity;
 	float lastVelocityChange;
+	BOOL hitGroundDead;
 
 	/*
 	//save info
@@ -80,6 +81,7 @@ public:
 	BOOL CheckRangeAttack2 ( float flDot, float flDist );
 	
 	void EXPORT CustomTouch ( CBaseEntity *pOther );
+	void EXPORT KilledFallingTouch ( CBaseEntity *pOther );
 	
 	void MonsterThink( void );
 	void PrescheduleThink(void);
@@ -134,6 +136,8 @@ public:
 	
 	void checkFloor(const Vector& vecSuggestedDir, const float& travelMag, const float& flInterval);
 
+	void OnKilledSetTouch(void);
+	int CFloater::getLoopingDeathSequence(void);
 
 
 };//END OF class CFloater

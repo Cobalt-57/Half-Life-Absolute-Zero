@@ -277,6 +277,18 @@ void easyForcePrintLine(const char *szFmt, ... )
 	PRINT_VA_LINE
 }
 
+//PrintLine methods without arguments. That means, just print a new line.
+void easyPrintLine()
+{
+	if(EASY_CVAR_GET(enableModPrintouts) == 0){
+		return;
+	}	
+	DEFAULT_ENGINE_HANDLE.DEFAULT_PRINTOUT_METHOD("\n");
+}
+void easyForcePrintLine()
+{
+	DEFAULT_ENGINE_HANDLE.DEFAULT_PRINTOUT_METHOD("\n");
+}
 
 
 

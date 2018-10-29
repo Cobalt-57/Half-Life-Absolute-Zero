@@ -1488,9 +1488,22 @@ void convertIntToBinary(char* buffer, unsigned int arg, unsigned int binaryDigit
 	}
 	
 	//return string(aryChrReturn);
-}
+}//END OF convertIntToBinary
 
 
+//Similar to above, but prints the converted int to standard output (easyForcePrintLine) without giving a reference to the binary string to the caller.
+void printIntAsBinary(unsigned int arg, unsigned int binaryDigits){
+	char binaryBuffer[33];
+	convertIntToBinary(binaryBuffer, arg, binaryDigits);
+	easyForcePrint(binaryBuffer);
+}//END OF printIntAsBinary
+
+//Same as above but add a newline character.
+void printLineIntAsBinary(unsigned int arg, unsigned int binaryDigits){
+	char binaryBuffer[33];
+	convertIntToBinary(binaryBuffer, arg, binaryDigits);
+	easyForcePrintLine(binaryBuffer);
+}//END OF printIntAsBinary
 
 
 

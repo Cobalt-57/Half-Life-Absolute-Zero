@@ -25,9 +25,6 @@
 //=========================================================
 // Monster's Anim Events Go Here
 //=========================================================
-#define	STUKABAT_TAKEAPISS	1
-//...
-
 
 
 
@@ -414,6 +411,19 @@ public:
 	void ReportAIState(void);
 
 	Schedule_t* GetStumpedWaitSchedule(void);
+
+
+	void OnKilledSetTouch(void);
+	int getLoopingDeathSequence(void);
+	
+	void EXPORT KilledFallingTouch ( CBaseEntity *pOther );
+
+	BOOL hitGroundDead;
+
+
+
+
+
 
 
 	Activity recentActivity;

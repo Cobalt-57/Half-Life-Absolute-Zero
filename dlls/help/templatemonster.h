@@ -1,9 +1,7 @@
-
-
 //******************************************************************************************************************
-//***TEMPLATE MONSTER***
-//clone this and edit to make custom monsters.
-//Comment out some things if unused, like save info (.cpp-wise too) and the CUSTOM_SCHEDULES in .h and DEFINE_CUSTOM_SCHEDULES, IMPLEMENT_CUSTOM_SCHEDULES in .cpp***
+// ***TEMPLATE MONSTER***
+// clone this and edit to make custom monsters.
+// Comment out some things if unused, like save info (.cpp-wise too) and the CUSTOM_SCHEDULES in .h and DEFINE_CUSTOM_SCHEDULES, IMPLEMENT_CUSTOM_SCHEDULES in .cpp***
 //******************************************************************************************************************
 
 //=========================================================
@@ -108,8 +106,8 @@ public:
 
 	void SetActivity ( Activity NewActivity );
 
-	int LookupActivityHard(int activity);
 	int tryActivitySubstitute(int activity);
+	int LookupActivityHard(int activity);
 
 	void HandleEventQueueEvent(int arg_eventID);
 	void HandleAnimEvent(MonsterEvent_t *pEvent );

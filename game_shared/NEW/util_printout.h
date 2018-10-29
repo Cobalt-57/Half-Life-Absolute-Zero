@@ -57,6 +57,8 @@ extern void easyPrint(const char *szFmt, ... );
 extern void easyForcePrint(const char *szFmt, ...);
 extern void easyPrintLine(const char *szFmt, ...);
 extern void easyForcePrintLine(const char *szFmt, ...);
+extern void easyPrintLine();
+extern void easyForcePrintLine();
 
 
 extern void UTIL_printLineVector(const Vector& theVector);

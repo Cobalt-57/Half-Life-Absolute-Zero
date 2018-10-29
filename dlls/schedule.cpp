@@ -569,7 +569,6 @@ void CBaseMonster :: MaintainSchedule ( void )
 		// UNDONE: Twice?!!!
 		if ( m_Activity != m_IdealActivity )
 		{
-			//easyPrintLine("PUMP MY HUMP!!!! 1");
 			SetActivity ( m_IdealActivity );
 		}
 		if(global_crazyMonsterPrintouts == 1){
@@ -644,7 +643,6 @@ void CBaseMonster :: MaintainSchedule ( void )
 		signalActivityUpdate = FALSE;
 
 
-		//easyPrintLine("RUMP MY HUMP!!!! 2");
 		SetActivity ( m_IdealActivity );
 	}
 
@@ -1209,6 +1207,13 @@ void CBaseMonster :: RunTask ( Task_t *pTask )
 			}
 			break;
 		}
+	case TASK_DIE_LOOP:
+	{
+		//No default behavior. Runs indefinitely unless a child class implements this and tells it when to stop with "TaskComplete" and let TASK_DIE proceed as usual
+		//(pick a typical death sequence, run until the end and freeze at the last frame).
+
+	break;
+	}
 	case TASK_RANGE_ATTACK1_NOTURN:
 	case TASK_MELEE_ATTACK1_NOTURN:
 	case TASK_MELEE_ATTACK2_NOTURN:
@@ -1950,14 +1955,14 @@ void CBaseMonster :: StartTask ( Task_t *pTask )
 	case TASK_MELEE_ATTACK1:
 		{
 			m_IdealActivity = ACT_MELEE_ATTACK1;
-			this->signalActivityUpdate = TRUE;
+			//this->signalActivityUpdate = TRUE;
 			break;
 		}
 	case TASK_MELEE_ATTACK2_NOTURN:
 	case TASK_MELEE_ATTACK2:
 		{
 			m_IdealActivity = ACT_MELEE_ATTACK2;
-			this->signalActivityUpdate = TRUE;
+			//this->signalActivityUpdate = TRUE;
 			break;
 		}
 	case TASK_RANGE_ATTACK1_NOTURN:
@@ -1966,16 +1971,19 @@ void CBaseMonster :: StartTask ( Task_t *pTask )
 			m_IdealActivity = ACT_RANGE_ATTACK1;
 
 			//MODDD - CRITICAL NEW.
-			this->signalActivityUpdate = TRUE;
+			//this->signalActivityUpdate = TRUE;
 			//Force the activity to pick a new anim even if already on that activity.
 			//This stops the monster from freezing on the last set animation if already on the activity for some reason.
+			//...ACTUALLY don't do this. Look at the end of TASK_RANGE_ATTACK1 and others for setting the current activity to ACT_RESET.
+			//This effectively forces the sequence to be regathered too.  Doing it here too is actually redundant.
+			//See if a monster isn't doing the same at the end of their own TASK_RANGE_ATTACK1 or similar.
 			break;
 		}
 	case TASK_RANGE_ATTACK2_NOTURN:
 	case TASK_RANGE_ATTACK2:
 		{
 			m_IdealActivity = ACT_RANGE_ATTACK2;
-			this->signalActivityUpdate = TRUE;
+			//this->signalActivityUpdate = TRUE;
 			break;
 		}
 
@@ -2292,12 +2300,39 @@ case TASK_GET_PATH_TO_BESTSCENT:
 		}
 	case TASK_DIE:
 		{
-
+			
+			
 			DeathAnimationStart();
-
+			
 
 			break;
 		}
+	case TASK_DIE_LOOP:
+	{
+		//Starter for the task.
+		//In a monster that calls for SCHED_DIE_LOOP instead of SCHED_DIE, ensure "getLoopingDeathSequence" is overridden to refer
+		//to a fitting (falling?) sequence to loop until it has a reason to be interrupted (hit the ground)
+		//It is still up to the monster itself to tell how TASK_DIE_LOOP calls TaskComplete (on hitting the ground).
+		this->SetSequenceByIndex(getLoopingDeathSequence(), 1.0f);
+
+		//These calls / settings are based off of "DeathAnimationStart" from basemonster.cpp.
+		//It is implied this sort of thing happens at the start of death.
+		RouteClear();
+		deadSetActivityBlock = TRUE;
+
+		
+		//don't force re-getting an animation just yet.
+		//A new animation comes from a discrepency between m_Activity and m_IdealActivity, so forcing both stops regetting an animation.
+		//also BOB SAGGETS FUCKING ASS. GetDeathActivity doesn't work if the pev->deadflag isn't DEAD_NO.
+		m_IdealActivity = GetDeathActivity();
+		m_Activity = m_IdealActivity;
+		
+		pev->deadflag = DEAD_DYING;
+		
+
+
+		break;
+	}
 	case TASK_SOUND_WAKE:
 		{
 			AlertSound();

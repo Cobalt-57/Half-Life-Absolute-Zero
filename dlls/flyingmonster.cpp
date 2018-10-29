@@ -190,8 +190,24 @@ float CFlyingMonster :: ChangeYaw( int speed )
 //MODDD NOTE - does the stuka need to take any of this into account too?
 GENERATE_KILLED_IMPLEMENTATION(CFlyingMonster)
 {
+
+	//MODDD NOTE - Dear flying monster... why MOVETYPE_STEP at killed? This freezes the monster in place instead of letting it fall to the ground.
+	//             Keeping it this way in fear of side effects of changing it, but any other custom monsters should set movetype to MOVETYPE_TOSS
+	//             to take gravity into effect.  "pev->gravity" of 0 still has gravity with the right movetype, and looks to be ignored otherwise anyways.
+	//Question: why does tis issue only happen sometimes? Why does the movetype somtimes end up TOSS anyways, and sometiems become STEP?
+	//Because "Killed" can be called if a monster runs out of health again WHILE in the DEAD_DYING pev->dead choice.
+	//And that time, it goes here but the monster's base KILLED method that would force the movetype to TOSS anyways is skipped this time.
+	//Typically, the first time a mosnter is killed (pev->dead of DEAD_NO becoming DEAD_DYING), the base Killed call below will
+	//force the movetype to MOVETYPE_TOSS (properly) in the BecomeDead call.
+	//When in DEAD_DYTING while this is called, that never happens. So MOVETYPE_STEP is left. Eh.
 	pev->movetype = MOVETYPE_STEP;
-	ClearBits( pev->flags, FL_ONGROUND );
+
+	//MODDD - only disable the ONGROUND bit if this is the first Killed call.
+	//Any Killed calls while dead don't need to keep resetting this.
+	if(pev->deadflag == DEAD_NO){
+		ClearBits( pev->flags, FL_ONGROUND );
+	}
+
 	pev->angles.z = 0;
 	pev->angles.x = 0;
 	GENERATE_KILLED_PARENT_CALL(CBaseMonster);
@@ -362,3 +378,35 @@ float CFlyingMonster::FloorZ( const Vector &position )
 	return down.z;
 }
 
+
+
+
+/*
+void CFlyingMonster::StartTask( Task_t *pTask ){
+
+	switch( pTask->iTask ){
+		case TASK_DIE:
+		{
+
+		}
+		default:
+			CBaseMonster::StartTask( pTask );
+		break;
+	}//END OF switch
+
+}//END OF StartTask
+
+void CFlyingMonster::RunTask( Task_t *pTask ){
+	
+	switch( pTask->iTask ){
+		case TASK_DIE:
+		{
+
+		}
+		default:
+			CBaseMonster::RunTask(pTask);
+		break;
+	}//END OF switch
+
+}//END OF RunTask
+*/

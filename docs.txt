@@ -1256,6 +1256,15 @@ pathfindLargeBoundFix (0) - BOOL. For NPCs that have trouble going up or down in
 
 
 
+flyerKilledFallingLoop (0) - BOOL. Fliers (flying NPCs/monsters) that have a looping animation for falling while killed mid-air will use this animation instead of skipping straight to a death animation that assumes the ground has been touched.
+~Touching the ground proceeds to the typical death animation.
+
+
+cl_server_interpolation (1) - BOOL. Whether server-sent entities are subject to interpolation.
+~Interpolation gives a smoothness in animation between frames of think logic (by the server), which happens every 1/10th of a second (slower than a framerate like 60 fps).
+~Turning off does not apply to viewmodels. They are naturally rendered smoothly by the client regardless.
+
+
 
 ----------------------------------------------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------------------------------------

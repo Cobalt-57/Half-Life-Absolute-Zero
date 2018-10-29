@@ -40,6 +40,23 @@
 #include "hassault.h"
 
 
+//Try to use these to make some forced sequence work easier to understand?
+enum hassault_sequence{  //key: frames, FPS
+	SEQ_HASSAULT_IDLE1,
+	SEQ_HASSAULT_IDLE2,
+	SEQ_HASSAULT_CREEPING_WALK,
+	SEQ_HASSAULT_TURN_LEFT,
+	SEQ_HASSAULT_TURN_RIGHT,
+	SEQ_HASSAULT_ATTACK,
+	SEQ_HASSAULT_SMALL_PAIN1,
+	SEQ_HASSAULT_SMALL_PAIN2,
+	SEQ_HASSAULT_DIE_BACKWARDS,
+	SEQ_HASSAULT_DIE_CRUMPLE,
+	SEQ_HASSAULT_DIE_VIOLENT,
+	SEQ_HASSAULT_HEAVY_AMBUSH
+
+};
+
 
 #define HASSAULT_SENTENCE_VOLUME (float)0.46
 
@@ -95,7 +112,7 @@ extern BOOL globalPSEUDO_germanModel_hassaultFound;
 
 float CHAssault::SafeSetBlending ( int iBlender, float flValue ){
 
-	if(pev->sequence == 5){
+	if(pev->sequence == SEQ_HASSAULT_ATTACK){
 		//startup spin? reverse the angle.
 		flValue *= -1;
 	}
@@ -1049,7 +1066,7 @@ void CHAssault::SetTurnActivity(void){
 	//If in the spinup anim, don't interrupt it with a turn.
 
 
-	if(pev->sequence == 5){
+	if(pev->sequence == SEQ_HASSAULT_ATTACK){
 
 		//no.
 	}else{
@@ -1738,6 +1755,16 @@ void CHAssault :: RunTask ( Task_t *pTask )
 			TaskComplete();
 		}
 		*/
+
+
+		if ( m_fSequenceFinished )
+		{
+			//Force a reset, cut out the middleman!
+			//pev->frame = 0;
+			//...wait doesn't this already naturally loop? what?
+		}
+
+
 
 
 
@@ -2544,7 +2571,7 @@ void CHAssault :: MonsterThink ( void )
 
 		//movementBaseFramerate
 		//currently ACT_CREEPING_WALK, the only movement anim. no run one.
-		if(pev->sequence == 2){
+		if(pev->sequence == SEQ_HASSAULT_CREEPING_WALK){
 
 
 			if(gpGlobals->time <= rageTimer){
@@ -2679,7 +2706,7 @@ void CHAssault :: MonsterThink ( void )
 	
 	
 	//HACKY: way to see if the player is in the attack anim but spinning. If so, stay frozen at frame 0 of that animation.
-	if(m_Activity == ACT_IDLE && pev->sequence == 7){
+	if(m_Activity == ACT_IDLE && pev->sequence == SEQ_HASSAULT_SMALL_PAIN2){
 
 
 
@@ -2695,7 +2722,7 @@ void CHAssault :: MonsterThink ( void )
 		){
 			//can ranged attack and facing the enemy, frozen in this sequence? We're probably aiming at them. Adjust your pitch or it could look silly.
 		
-				pev->sequence = 7;
+				pev->sequence = SEQ_HASSAULT_SMALL_PAIN2;
 				this->pev->frame = 0;
 				this->pev->framerate = 0;
 
@@ -2726,7 +2753,7 @@ void CHAssault :: MonsterThink ( void )
 		}else{
 
 			//not spinning up or spun up? Just animate like you should.
-			//if(pev->sequence == 7){
+			//if(pev->sequence == SEQ_HASSAULT_SMALL_PAIN2){
 				pev->framerate = 1;
 				this->signalActivityUpdate = TRUE;
 				SetActivity(ACT_IDLE);

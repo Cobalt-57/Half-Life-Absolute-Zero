@@ -51,9 +51,19 @@ float global2PSEUDO_grabbedByBarancle = 0;
 //is this accessible everywhere?
 EASY_CVAR_DECLARATION_CLIENT_MASS
 
+
+
+cvar_t* cvar2_cl_server_interpolation = NULL;
+float global2_cl_server_interpolation = -1;
+
 void updateClientCVarRefs(){
 
 	EASY_CVAR_UPDATE_CLIENT_MASS
+
+	if(cvar2_cl_server_interpolation != NULL && cvar2_cl_server_interpolation->value != global2_cl_server_interpolation){\
+		global2_cl_server_interpolation = cvar2_cl_server_interpolation->value;\
+	}
+
 	
 	//just keeping this in sync...   NO, see hud_redraw for where this is updated. that works too.
 	//global2PSEUDO_IGNOREcameraMode = gHUD.CVar_cameraModeMem;

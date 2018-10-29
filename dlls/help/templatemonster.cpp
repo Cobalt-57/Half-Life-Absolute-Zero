@@ -1,6 +1,6 @@
 
 
-#include "templateMonster.h"
+#include "templatemonster.h"
 
 //Includes. What files or CVars are necessary?
 #include "schedule.h"
@@ -20,10 +20,10 @@ EASY_CVAR_EXTERN(noFlinchOnHard)
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-//sequences in the anim, in the order they appear in the anim. Some anims have the same display name and so should just be referenced by order
-//(numbered index), named well after purpose and based on display names for clarity. Safer this way.
+//Sequences, in the order they appear in the model. Some sequences have the same display name and so should just
+//be referenced by order (numbered index).
 enum templateMonster_sequence{  //key: frames, FPS
-	TEMPLATEMONSTER_XXX,
+	SEQ_TEMPLATEMONSTER_XXX,
 
 };
 
@@ -719,6 +719,21 @@ void CTemplateMonster::SetActivity( Activity NewActivity ){
 //           * Child class's LookupActivityHard for a possible substitution, falling back to...
 //           Repeat the last two ad infinitum. Crash.
 
+int CTemplateMonster::tryActivitySubstitute(int activity){
+	int i = 0;
+
+	//no need for default, just falls back to the normal activity lookup.
+	switch(activity){
+		case ACT_IDLE:
+			return SEQ_TEMPLATEMONSTER_XXX;
+		break;
+	}//END OF switch
+
+
+	//not handled by above? Rely on the model's anim for this activity if there is one.
+	return CBaseAnimating::LookupActivity(activity);
+}//END OF tryActivitySubstitute
+
 int CTemplateMonster::LookupActivityHard(int activity){
 	int i = 0;
 	m_flFramerateSuggestion = 1;
@@ -734,7 +749,7 @@ int CTemplateMonster::LookupActivityHard(int activity){
 	switch(activity){
 		case ACT_IDLE:
 			//random chance?
-			return TEMPLATEMONSTER_XXX;
+			//return SEQ_TEMPLATEMONSTER_XXX;
 		break;
 	}//END OF switch
 	
@@ -743,20 +758,6 @@ int CTemplateMonster::LookupActivityHard(int activity){
 }//END OF LookupActivityHard
 
 
-int CTemplateMonster::tryActivitySubstitute(int activity){
-	int i = 0;
-
-	//no need for default, just falls back to the normal activity lookup.
-	switch(activity){
-		case ACT_IDLE:
-			return CBaseAnimating::LookupActivity(activity);
-		break;
-	}//END OF switch
-
-
-	//not handled by above? Rely on the model's anim for this activity if there is one.
-	return CBaseAnimating::LookupActivity(activity);
-}//END OF tryActivitySubstitute(
 
 //Handles custom events sent from "LookupActivityHard", which sends events as timed delays along with picking an animation in script.
 //So this handles script-provided events, not model ones.

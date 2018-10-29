@@ -159,7 +159,7 @@ void CBaseMonster :: RunAI ( void )
 		easyPrintLine("SHUUUT1 %d", HasConditions(bits_COND_CAN_MELEE_ATTACK1));
 	}
 	
-	//I WILL CUT YOU AND CUT YOU AND CUT YOU UNTIL YOUR FACE HAS A LOT OF CUTS AND FALLS OUT OF THE BONE
+	//     : )
 	MaintainSchedule();
 
 	if(global_crazyMonsterPrintouts == 1){

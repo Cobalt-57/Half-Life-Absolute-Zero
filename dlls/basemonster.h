@@ -429,6 +429,9 @@ public:
 	virtual BOOL needsMovementBoundFix(void);
 	virtual void cheapKilled(void);
 	virtual void cheapKilledFlier(void);
+	virtual void OnKilledSetTouch(void);
+	virtual int getLoopingDeathSequence(void);
+	static Schedule_t* flierDeathSchedule(void);
 
 	virtual BOOL getGermanModelRequirement(void);
 	virtual const char* getGermanModel(void);

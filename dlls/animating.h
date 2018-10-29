@@ -170,6 +170,10 @@ public:
 	BOOL				m_fSequenceFinished;// flag set when StudioAdvanceFrame moves across a frame boundry
 	BOOL				m_fSequenceLoops;	// true if the sequence loops
 	
+	//MODDD - NEW. Stays on even after the animation loops around, only turned off on changing animation.
+	//(properly with Reset that is)
+	BOOL				m_fSequenceFinishedSinceLoop;// flag set when StudioAdvanceFrame moves across a frame boundry
+	
 };
 
 #endif //END OF BASEANIMATING_H

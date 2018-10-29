@@ -116,6 +116,7 @@ EASY_CVAR_EXTERN(drawDebugEnemyLKP)
 
 EASY_CVAR_EXTERN(pathfindLargeBoundFix)
 
+EASY_CVAR_EXTERN(flyerKilledFallingLoop)
 
 // Global Savedata for monster
 // UNDONE: Save schedule data?  Can this be done?  We may
@@ -1835,7 +1836,8 @@ void CBaseMonster :: MonsterThink ( void )
 			pev->sequence = iSequence;	// Set to new anim (if it's there)
 			ResetSequenceInfo( );
 
-
+			//MODDD IMPORTANT. Go ahead and let the system know this sequence finshed at least once, sometimes that matters. Even a replacement different idle sequence.
+			m_fSequenceFinishedSinceLoop = TRUE;
 
 
 			//MODDD - panthereye has issues if the anim is not explicitly reset this way.  No idea why.
@@ -6279,6 +6281,8 @@ char* getActivityName(Activity arg_act){
 void CBaseMonster::ReportAIState( void )
 {
 
+
+	//m_pfnThink m_pfnTouch
 	ALERT_TYPE level = at_console;
 
 	//mirrors the states listed in util.h's MONSTERSTATE enum.
@@ -6293,7 +6297,6 @@ void CBaseMonster::ReportAIState( void )
 
 	easyForcePrintLine("ACTS: Current:%s  Ideal:%s  Movement:%s", getActivityName(m_Activity), getActivityName(m_IdealActivity), getActivityName(m_movementActivity));
 		
-	easyForcePrintLine("WTF %d %d", (int)this->m_MonsterState, (int)this->m_IdealMonsterState);
 	easyForcePrintLine("STATES: Current: %s  Ideal: %s", pStateNames[this->m_MonsterState], pStateNames[this->m_IdealMonsterState]);
 
 
@@ -6423,6 +6426,13 @@ void CBaseMonster::ReportAIState( void )
 	}else{
 		easyForcePrintLine("CINE: %s:%d  sf:%d ob:%d targetname:%s target:%s iszE:%s globalname: %s", m_pCine->getClassname(), m_pCine->monsterID, m_pCine->pev->spawnflags, m_pCine->ObjectCaps(),  STRING(m_pCine->pev->targetname), STRING(m_pCine->pev->target),  STRING( m_pCine->m_iszEntity ), STRING(m_pCine->pev->globalname ) );
 	}
+	
+
+	easyForcePrint("Capability: ");
+	printLineIntAsBinary((unsigned int)m_afCapability, 32u);
+
+
+	//
 
 	//easyForcePrintLine("isOrganic:%d", isOrganic());
 
@@ -7037,10 +7047,15 @@ void CBaseMonster::DeathAnimationStart(){
 	RouteClear();	
 			
 	m_IdealActivity = GetDeathActivity();
+	signalActivityUpdate = TRUE;
 
 	pev->deadflag = DEAD_DYING;
 
 	deadSetActivityBlock = TRUE;
+	
+	//ensure the death activity we pick (or have picked) gets to run.
+	signalActivityUpdate = TRUE;
+
 
 	//easyPrintLine("ARE YOU SOME KIND OF insecure person??? %.2f %d", global_thoroughHitBoxUpdates, pev->deadflag );
 	//MODDD
@@ -7088,6 +7103,9 @@ void CBaseMonster::DeathAnimationEnd(){
 			CSoundEnt::InsertSound ( bits_SOUND_CARCASS, pev->origin, 384, 30 );
 		}
 	}
+
+	//Something calling us may need to know not to try resetting the activity.
+	signalActivityUpdate = FALSE;
 
 	//an event.
 	onDeathAnimationEnd();
@@ -7584,3 +7602,30 @@ void CBaseMonster::cheapKilledFlier(void){
 	DeathAnimationStart();
 	DeathAnimationEnd();
 }//END OF cheapKilledFlier
+
+
+//When killed, how do we handle the "Touch" callback method from the engine?
+//Default says to set it to NULL. Override this for different behavior.
+//i.e., fliers / hover-ers can tell this to interrupt a falling cycler animation on colliding with anything (the ground?).
+//In that case, default behavior of turning touch off would leave you scratching your head as to why it ignores everything after killed.
+void CBaseMonster::OnKilledSetTouch(void){
+	SetTouch(NULL);
+}
+
+//Makes the most sense for fliers to have looping falling animations at deaths in air.
+//By default, -1 means none.
+//This is called for by the 
+int CBaseMonster::getLoopingDeathSequence(void){
+	return -1;
+}
+
+
+//Depending on the value of CVar flyerKilledFallingLoop, pick the schedule that uses the looping animation or don't.
+Schedule_t* CBaseMonster::flierDeathSchedule(void){
+	if(EASY_CVAR_GET(flyerKilledFallingLoop) == 1){
+		return slDieLoop;
+	}else{
+		return slDie;
+	}
+}
+

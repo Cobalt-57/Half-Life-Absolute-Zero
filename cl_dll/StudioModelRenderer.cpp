@@ -63,6 +63,8 @@ extern float global2_r_shadows;
 extern float global2PSEUDO_IGNOREcameraMode;
 EASY_CVAR_EXTERN(drawViewModel);
 
+extern float global2_cl_server_interpolation;
+
 /////////////////////
 // Implementation of CStudioModelRenderer.h
 
@@ -1686,10 +1688,6 @@ int CStudioModelRenderer::StudioDrawModel( int flags )
 
 
 
-
-
-
-
 	
 	IEngineStudio.GetTimes( &m_nFrameCount, &m_clTime, &m_clOldTime );
 
@@ -1752,10 +1750,41 @@ int CStudioModelRenderer::StudioDrawModel( int flags )
 	
 	m_pCurrentEntity = IEngineStudio.GetCurrentEntity();
 	
+
+
+
+
+
+
+
 	
 	if( (m_pCurrentEntity->curstate.renderfx & ISVIEWMODEL) == ISVIEWMODEL){
 		easyPrintLineDummy("FLAG1. s:%d b:%d", m_pCurrentEntity->curstate.sequence, m_pCurrentEntity->curstate.iuser1 );
 	}
+
+
+	
+	
+	if(EASY_CVAR_GET(cl_server_interpolation) != 0){
+		//not off, typical setting.
+		m_fDoInterp = 1;
+	}else{
+		//off, only apply to server-sent entities. this is too bizarre (frozen on first frame) for viewmodel stuff.
+		if( (m_pCurrentEntity->curstate.renderfx & ISVIEWMODEL) == ISVIEWMODEL){
+			//usual setting
+			m_fDoInterp = 1;
+		}else{
+			//don't
+			m_fDoInterp = 0;
+		}
+	}
+
+
+
+
+
+
+
 	
 
 	/*

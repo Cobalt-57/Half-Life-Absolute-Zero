@@ -374,6 +374,12 @@
     <ClCompile Include="floater.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="controller_head_ball.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="controller_zap_ball.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="activity.h">
@@ -584,6 +590,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="floater.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="controller_head_ball.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="controller_zap_ball.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

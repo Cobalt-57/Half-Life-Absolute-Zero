@@ -1529,7 +1529,11 @@ GENERATE_KILLED_IMPLEMENTATION(CBaseMonster)
 	}
 	else if ( pev->flags & FL_MONSTER )
 	{
-		SetTouch( NULL );
+
+		//WARNING - bad assumption! Leave what to do to the touch method up to the monster in question.
+		//Fliers may want to detect when they touch the ground to stop a falling cycler.
+		//SetTouch( NULL );
+		OnKilledSetTouch();
 		BecomeDead();
 	}
 	
@@ -2513,6 +2517,8 @@ GLOBALS ASSUMED SET:  g_iSkillLevel
 */
 
 //MODDD - new TakeDamage interception.
+//MODDD - TODO. extra idea. Perhaps with a deadflag of DEAD_DYING,
+//        DeadTakeDamage should be called too? Just an idea.
 GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBaseMonster){
 
 	//TEMP

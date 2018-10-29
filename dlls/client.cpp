@@ -3711,6 +3711,52 @@ void ClientCommand( edict_t *pEntity )
 		EASY_CVAR_SET_DEBUGONLY_CLIENTONLY(drawHUD, 1);
 		EASY_CVAR_SET_DEBUGONLY_CLIENTONLY(drawViewModel, 1);
 		
+	}else if( FStrEq(pcmdRefinedRef, "setsequence") || FStrEq(pcmdRefinedRef, "sequence") || FStrEq(pcmdRefinedRef, "setanimation") ){
+		
+		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev);
+		CBaseEntity* forwardEnt = NULL;
+		const char* arg1ref = CMD_ARGV(1);
+		int seqNumb;
+		
+		if(!isStringEmpty(arg1ref)){
+			//get the monster with this ID.
+			try{
+				int numbAttempt = tryStringToInt(arg1ref);
+				//forwardEnt = getMonsterWithID(numbAttempt);
+				seqNumb = numbAttempt;
+			}catch(int){
+				easyForcePrintLine("Problem reading number.  (arg must be whole number)");
+				return;
+			}
+		}else{
+			easyForcePrintLine("Must provide sequence number (number from 0 to max number of sequences in model.");
+			return;
+		}
+		
+
+
+		{
+			//no argument provided? Try to see if there is a monster in front of the player.
+			forwardEnt = FindEntityForward(tempplayer);
+		}
+
+
+		if(forwardEnt == NULL){
+			//can't do this.
+			easyForcePrintLine("***No entity found.***");
+		}else{
+			
+			CBaseMonster* tempMon;
+			if(  (tempMon = forwardEnt->GetMonsterPointer() ) != NULL){
+				tempMon->SetSequenceByIndex(seqNumb, 1);
+			}else{
+				easyForcePrintLine("***Entity \"%s\" is not a monster / NPC.***", forwardEnt->getClassname() );
+			}
+			
+			
+
+		}
+
 	}else if( FStrEq(pcmdRefinedRef, "apacherocket") || FStrEq(pcmdRefinedRef, "bigrocket") || FStrEq(pcmdRefinedRef, "boom") ){
 	
 		

@@ -96,6 +96,7 @@ extern Schedule_t slSmallFlinch[];
 // Die!
 //=========================================================
 extern Schedule_t slDie[];
+extern Schedule_t slDieLoop[];
 
 //=========================================================
 //	Universal Error Schedule

@@ -233,7 +233,8 @@ extern void saveHiddenCVars(void);
 
 
 extern void convertIntToBinary(char* buffer, unsigned int arg, unsigned int binaryDigits);
-
+extern void printIntAsBinary(unsigned int arg, unsigned int binaryDigits);
+extern void printLineIntAsBinary(unsigned int arg, unsigned int binaryDigits);
 
 
 

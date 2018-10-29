@@ -57,7 +57,7 @@ typedef enum {
 	ACT_DIESIMPLE,
 	ACT_DIEBACKWARD,
 	ACT_DIEFORWARD,
-	ACT_DIEVIOLENT,
+	ACT_DIEVIOLENT,         //MODDD NOTE TODO - waitasec. Is this even ever called? GetDeathActivity in combat.cpp never mentions this!
 	ACT_BARNACLE_HIT,		// barnacle tongue hits a monster
 	ACT_BARNACLE_PULL,		// barnacle is lifting the monster ( loop )
 	ACT_BARNACLE_CHOMP,		// barnacle latches on to the monster

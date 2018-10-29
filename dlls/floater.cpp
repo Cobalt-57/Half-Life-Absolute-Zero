@@ -35,21 +35,42 @@ EASY_CVAR_EXTERN(STUcheckDistD)
 EASY_CVAR_EXTERN(STUSpeedMulti)
 
 
+
+/*
+//TODO. spawn balls of death as ranaged attack.
+//TODO. Start fall cylcer at death, use animation for hitting the ground on touching the ground (possible?).
+
+//what. is this default behavior?
+void CController::Stop( void ) 
+{ 
+	m_IdealActivity = GetStoppedActivity(); 
+}
+*/
+
+
+
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 //sequences in the anim, in the order they appear in the anim. Some anims have the same display name and so should just be referenced by order
 //(numbered index), named well after purpose and based on display names for clarity. Safer this way.
-enum templateMonster_sequence{  //key: frames, FPS
-	FLOATER_XXX,
+enum floater_sequence{  //key: frames, FPS
+	SEQ_FLOATER_IDLE1,
+	SEQ_FLOATER_TURN_LEFT,
+	SEQ_FLOATER_TURN_RIGHT,
+	SEQ_FLOATER_SHOOT,
+	SEQ_FLOATER_DIE,
+	SEQ_FLOATER_FALL_LOOP,
+	SEQ_FLOATER_FALL_DIE,
+	SEQ_FLOATER_FLINCH,
+
 
 };
 
 
 //custom schedules
 enum{
-	SCHED_FLOATER_XXX = LAST_COMMON_SCHEDULE + 1,
-	SCHED_FLOATER_YYY,
-	SCHED_FLOATER_ZZZ,
+	SCHED_FLOATER_RANGE_ATTACK = LAST_COMMON_SCHEDULE + 1,
 
 
 };
@@ -57,19 +78,11 @@ enum{
 //custom tasks
 enum{
 	TASK_FLOATER_XXX = LAST_COMMON_TASK + 1,
-	TASK_FLOATER_YYY,
-	TASK_FLOATER_ZZZ,
 	
 
 };
 
 
-
-
-
-
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 
@@ -193,9 +206,6 @@ const char* CFloater::pAttackMissSounds[] =
 
 
 
-//=========================================================
-// Monster's Anim Events Go Here
-//=========================================================
 //...did not come with a melee anim. what.
 #define	BLOATER_AE_ATTACK_MELEE1		0x01
 
@@ -254,34 +264,40 @@ CFloater::CFloater(void){
 	m_velocity = Vector(0,0,0);
 
 	lastVelocityChange = -1;
+	
+	hitGroundDead = FALSE;
 
 }//END OF CFloater constructor
 
 
 
-//schedule details here......
 
-Task_t	tlFloaterXXX[] =
+//Thank you bullsquid, you know what is up dog.
+Task_t	tlFloaterRangeAttack1[] =
 {
-	{ TASK_FLOATER_XXX,			0				},
-	{ TASK_FLOATER_YYY,			0				},
-	{ TASK_FLOATER_ZZZ,			0				},
+	{ TASK_STOP_MOVING,			0				},
+	{ TASK_FACE_IDEAL,			(float)0		},
+	{ TASK_RANGE_ATTACK1,		(float)0		},
+	{ TASK_SET_ACTIVITY,		(float)ACT_IDLE	},
 };
-
-Schedule_t	slFloaterXXX[] =
+Schedule_t	slFloaterRangeAttack1[] =
 {
-	{
-		tlFloaterXXX,
-		ARRAYSIZE ( tlFloaterXXX ),
+	{ 
+		tlFloaterRangeAttack1,
+		ARRAYSIZE ( tlFloaterRangeAttack1 ), 
+		bits_COND_NEW_ENEMY			|
+		bits_COND_ENEMY_DEAD		|
+		bits_COND_HEAVY_DAMAGE		|
+		//bits_COND_ENEMY_OCCLUDED	|
+		bits_COND_NO_AMMO_LOADED,   //er, wat?
 		0,
-		0,
-		//bits_COND_XXX | bits_COND_YYY | bits_COND_ZZZ,
-		//bits_SOUND_XXX | bits_SOUND_YYY | bits_SOUND_ZZZ,
-		"floaterXXX"
+		"Floater Range Attack1"
 	},
 };
 
-//repeat for tl / sl FloaterYYY and tl / sl FloaterZZZ.
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 
 
 
@@ -289,7 +305,7 @@ Schedule_t	slFloaterXXX[] =
 
 DEFINE_CUSTOM_SCHEDULES( CFloater )
 {
-	slFloaterXXX,
+	slFloaterRangeAttack1,
 	//slFloaterYYY,
 	//slFloaterZZZ,
 
@@ -383,7 +399,10 @@ void CFloater::Spawn( void )
 
 	pev->classname = MAKE_STRING("monster_floater");
 
-	SetBits(pev->flags, FL_FLY);
+	//SetBits(pev->flags, FL_FLY);
+	pev->flags |= FL_FLY;
+
+
 
 	
 	pev->solid			= SOLID_BBOX;  //not SOLID_SLIDEBOX
@@ -391,7 +410,7 @@ void CFloater::Spawn( void )
 
 
 	pev->solid			= SOLID_SLIDEBOX;  //SOLID_TRIGGER?  Difference?
-	pev->movetype		= MOVETYPE_BOUNCEMISSILE;
+	//pev->movetype		= MOVETYPE_BOUNCEMISSILE;
 	
 
 
@@ -478,7 +497,7 @@ int CFloater :: CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, C
 
 
 
-
+	/*
 	UTIL_MakeVectors( pev->angles );
 		
 
@@ -527,7 +546,8 @@ int CFloater :: CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, C
 	BOOL tracesStartSolid;
 	tracesSolid = (trTopLeft.fAllSolid != 0 || trTopRight.fAllSolid != 0 || trBottomLeft.fAllSolid != 0 || trBottomRight.fAllSolid != 0); //|| trCenter.fAllSolid != 0);
 	tracesStartSolid = (trTopLeft.fStartSolid != 0 || trTopRight.fStartSolid != 0 || trBottomLeft.fStartSolid != 0 || trBottomRight.fStartSolid != 0); //|| trCenter.fStartSolid != 0);
-		
+
+	*/
 	
 
 	/*
@@ -674,7 +694,7 @@ void CFloater::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, float
 	*/
 
 
-
+	
 
 	/*
 	Vector vecSuggestedDir = (m_Route[m_iRouteIndex].vecLocation - pev->origin).Normalize();
@@ -691,7 +711,10 @@ void CFloater::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, float
 		m_IdealActivity = m_movementActivity;
 		m_flGroundSpeed = m_flightSpeed = 200;
 	}
-
+	m_flGroundSpeed = m_flightSpeed = 10;
+	//TEST - just force it?
+	//m_flGroundSpeed = m_flightSpeed = 200;
+	//this->SetSequenceByIndex(SEQ_FLOATER_TURN_LEFT, 1);
 
 	//m_flGroundSpeed = 200;
 
@@ -1000,9 +1023,16 @@ Schedule_t* CFloater::GetSchedule ( void )
 Schedule_t* CFloater::GetScheduleOfType( int Type){
 	
 	switch(Type){
-		case SCHED_FLOATER_XXX:
 
+		case SCHED_DIE:
+			return flierDeathSchedule();
 		break;
+		case SCHED_RANGE_ATTACK1:
+			return slFloaterRangeAttack1;
+		break;
+
+
+
 	}//END OF switch(Type)
 	
 	return CFlyingMonster::GetScheduleOfType(Type);
@@ -1054,6 +1084,11 @@ void CFloater::RunTask( Task_t *pTask ){
 		case TASK_FLOATER_XXX:
 
 		break;
+		case TASK_DIE_LOOP:{
+			if(hitGroundDead){
+				TaskComplete();
+			}
+		break;}
 		default:
 			CFlyingMonster::RunTask(pTask);
 		break;
@@ -1070,6 +1105,15 @@ BOOL CFloater::CheckMeleeAttack2( float flDot, float flDist ){
 	return FALSE;
 }
 BOOL CFloater::CheckRangeAttack1( float flDot, float flDist ){
+
+	//DEBUG - why you no work!!!??
+
+	if ( flDot > 0.5 && flDist > 256 && flDist <= 2048 )
+	{
+		easyForcePrintLine("YAY?!");
+		return TRUE;
+	}
+	easyForcePrintLine("NAY?!");
 	return FALSE;
 }
 BOOL CFloater::CheckRangeAttack2( float flDot, float flDist ){
@@ -1079,10 +1123,18 @@ BOOL CFloater::CheckRangeAttack2( float flDot, float flDist ){
 
 
 void CFloater::CustomTouch( CBaseEntity *pOther ){
+	int x = 46;
+	if(pOther == NULL){
+		return; //??????
+	}
+}
+
+
+void CFloater::KilledFallingTouch( CBaseEntity *pOther ){
 	
 	//easyForcePrintLine("OH no IM a person friend %s", pOther!=NULL?pOther->getClassname():"WTF");
 
-
+	int x = 46;
 	//does this even work? uhh..
 
 	//CHEAP FIX:
@@ -1091,16 +1143,27 @@ void CFloater::CustomTouch( CBaseEntity *pOther ){
 		return; //??????
 	}
 
+
+	hitGroundDead = TRUE;
+
 	//groundTouchCheckDuration = gpGlobals->time + 4;
 	
 }
 
 
 
+
+
+
+
+
+
+
+
 void CFloater::MonsterThink(){
 
 
-	
+	/*
 	if(pev->deadflag == DEAD_NO && lastVelocityChange != -1 && (gpGlobals->time - lastVelocityChange) > 0.24  ){
 		//no edits to velocity?  Start slowing down a lot.
 		m_velocity = m_velocity * 0.15;
@@ -1109,6 +1172,7 @@ void CFloater::MonsterThink(){
 	}else{
 
 	}
+	*/
 
 	CFlyingMonster::MonsterThink();
 }//END OF MonsterThink
@@ -1225,25 +1289,35 @@ GENERATE_KILLED_IMPLEMENTATION(CFloater)
 {
 
 
-	//safe?
-	pev->velocity = Vector(0, 0, 0);
-	m_velocity = Vector(0, 0, 0);
-
+	
 
 	BOOL firstCall = FALSE;
 	if(pev->deadflag == DEAD_NO){
 		//keep this in mind...
 		firstCall = TRUE;
+
+		//Only reset the velocity if this is the first Killed call (since we stop following).
+		//Any further resets will look like gravity suddenly stops with each shot (Killed call again).
+		pev->velocity = Vector(0, 0, 0);
+		m_velocity = Vector(0, 0, 0);
 	}
 
 	//MODDD - is still doing here ok?
 	GENERATE_KILLED_PARENT_CALL(CFlyingMonster);
 
+	//HACK. guarantee we fall to the ground, even if killed while in the DEAD_DYING state.
+	//...which forces MOVETYPE_STEP, and is not very good.
+
+	pev->movetype = MOVETYPE_TOSS;
+
+
+
+	/*
 	//if you have the "FL_KILLME" flag, it means this is about to get deleted (gibbed). No point in doing any of this then.
 	if(firstCall && !(pev->flags & FL_KILLME) ){
 		cheapKilledFlier();
 	}//END OF firstCall check
-	
+	*/
 
 
 
@@ -1305,10 +1379,33 @@ void CFloater::SetActivity( Activity NewActivity ){
 //           * Child class's LookupActivityHard for a possible substitution, falling back to...
 //           Repeat the last two ad infinitum. Crash.
 
+int CFloater::tryActivitySubstitute(int activity){
+	int i = 0;
+
+	//no need for default, just falls back to the normal activity lookup.
+	switch(activity){
+		//Let whoever know we have these anims.
+		case ACT_IDLE:
+			return SEQ_FLOATER_IDLE1;
+		break;
+		case ACT_WALK:
+		case ACT_RUN:
+			return SEQ_FLOATER_IDLE1;
+		break;
+	}//END OF switch
+
+
+	//not handled by above? Rely on the model's anim for this activity if there is one.
+	return CBaseAnimating::LookupActivity(activity);
+}//END OF tryActivitySubstitute
+
+
+
 int CFloater::LookupActivityHard(int activity){
 	int i = 0;
 	m_flFramerateSuggestion = 1;
 	pev->framerate = 1;
+	m_iForceLoops = -1;  //signal to leave looping up to the model.
 	//any animation events in progress?  Clear it.
 	resetEventQueue();
 
@@ -1316,39 +1413,42 @@ int CFloater::LookupActivityHard(int activity){
 	//    this->animEventQueuePush(10.0f / 30.0f, 3);  //Sets event #3 to happen at 1/3 of a second
 	//    return LookupSequence("die_backwards");      //will play animation die_backwards
 
+
+	
 	//no need for default, just falls back to the normal activity lookup.
 	switch(activity){
 		case ACT_IDLE:
-			//random chance?
-			return FLOATER_XXX;
+			return SEQ_FLOATER_IDLE1;
 		break;
+		case ACT_WALK:
+		case ACT_RUN:
+			return SEQ_FLOATER_IDLE1;
+		break;
+		case ACT_TURN_LEFT:
+		case ACT_TURN_RIGHT:
+			m_iForceLoops = TRUE;
+			//otherwise what is returned is fine.
+		break;
+		case ACT_RANGE_ATTACK1:
+			//wait, it has this mapped already. Put it here if this ever changes.
+
+		break;
+
 	}//END OF switch
+	
 	
 	//not handled by above?  try the real deal.
 	return CBaseAnimating::LookupActivity(activity);
 }//END OF LookupActivityHard
 
 
-int CFloater::tryActivitySubstitute(int activity){
-	int i = 0;
-
-	//no need for default, just falls back to the normal activity lookup.
-	switch(activity){
-		case ACT_IDLE:
-			return CBaseAnimating::LookupActivity(activity);
-		break;
-	}//END OF switch
-
-
-	//not handled by above? Rely on the model's anim for this activity if there is one.
-	return CBaseAnimating::LookupActivity(activity);
-}//END OF tryActivitySubstitute(
 
 //Handles custom events sent from "LookupActivityHard", which sends events as timed delays along with picking an animation in script.
 //So this handles script-provided events, not model ones.
 void CFloater::HandleEventQueueEvent(int arg_eventID){
 
 	switch(arg_eventID){
+		//fire the ball.
 	case 0:
 	{
 
@@ -1892,19 +1992,14 @@ void CFloater::checkFloor(const Vector& vecSuggestedDir, const float& travelMag,
 }//END OF checkFloor
 
 
+//TEST: what happens if already touching the ground before death? Test!!
+void CFloater::OnKilledSetTouch(void){
+	SetTouch(&CFloater::KilledFallingTouch);
+}
 
-
-
-
-
-
-
-
-
-
-
-
-
+int CFloater::getLoopingDeathSequence(void){
+	return SEQ_FLOATER_FALL_LOOP;
+}
 
 
 

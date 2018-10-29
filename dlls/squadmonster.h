@@ -159,9 +159,8 @@ public:
 
 	//MADE VIRTUAL!!!
 	virtual BOOL FValidateCover ( const Vector &vecCoverLocation );
-
-	MONSTERSTATE GetIdealState ( void );
-	Schedule_t	*GetScheduleOfType ( int iType );
+	virtual MONSTERSTATE GetIdealState ( void );
+	virtual Schedule_t	*GetScheduleOfType ( int iType );
 
 
 	//MODDD - HOW WERE YOU NOT VIRTUAL??!

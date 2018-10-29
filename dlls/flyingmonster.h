@@ -63,8 +63,10 @@ public:
 	BOOL		ProbeZ( const Vector &position, const Vector &probe, float *pFraction );
 	
 
-
-
+	/*
+	virtual void StartTask( Task_t *pTask );
+	virtual void RunTask( Task_t *pTask );
+	*/
 
 
 protected:

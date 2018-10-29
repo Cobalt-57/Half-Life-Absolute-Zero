@@ -33,6 +33,10 @@ SERVERSIDE (dlls)
 
 -bloater.cpp has been replaced with floater.h and floater.cpp.  More fitting to the final name.
 
+-The two ball (projectile, one dumb and one smart) classes from controller.cpp have been made into their own .h / .cpp files and added to the dll build:
+ class CControllerZapBall -> controller_zap_ball.h & .cpp
+ class CControllerHeadBall -> controller_head_ball.h & .cpp
+
 SHARED (game_shared)
 -files stored in a NEW subfolder for neatness, keep this in mind for new visual studio environments. Add this game_shared/NEW as a search path.
 

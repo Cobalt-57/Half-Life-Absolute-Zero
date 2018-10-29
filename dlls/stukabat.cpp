@@ -33,6 +33,49 @@ extern float global_stukaInflictsBleeding;
 
 //Stuka Bat's implementation.  Separate for organization.
 
+
+
+
+
+
+
+enum stukaBat_sequence{  //key: frames, FPS
+	SEQ_STUKABAT_LAND_CEILING,
+	SEQ_STUKABAT_LAND_GROUND,
+	SEQ_STUKABAT_ATTACK_BOMB,
+	SEQ_STUKABAT_ATTACK_CLAW,
+	SEQ_STUKABAT_DIVE_CYCLER,
+	SEQ_STUKABAT_DEATH_FALL_SIMPLE,
+	SEQ_STUKABAT_DEATH_FALL_VIOLENT,
+	SEQ_STUKABAT_FALL_CYCLER,
+	SEQ_STUKABAT_FLINCH_BIG,
+	SEQ_STUKABAT_FLINCH_SMALL,
+	SEQ_STUKABAT_FLYING_CYCLER,
+	SEQ_STUKABAT_FLYING_TURN_LEFT,
+	SEQ_STUKABAT_FLYING_TURN_RIGHT,
+	SEQ_STUKABAT_HOVER,
+	SEQ_STUKABAT_DIE_ON_GROUND,
+	SEQ_STUKABAT_FLINCH_ON_GROUND,
+	SEQ_STUKABAT_EAT_ON_GROUND,
+	SEQ_STUKABAT_DISPLAY_FIDGET_ON_GROUND,
+	SEQ_STUKABAT_SUBTLE_FIDGET_ON_GROUND,
+	SEQ_STUKABAT_GROUND_WALK,
+	SEQ_STUKABAT_SUBTLE_FIDGET,
+	SEQ_STUKABAT_PREEN_FIDGET,
+	SEQ_STUKABAT_SWING_FIDGET,
+	SEQ_STUKABAT_TAKE_OFF_FROM_LAND
+	
+};
+
+
+
+
+
+
+
+
+
+
 //=========================================================
 // Classify - indicates this monster's place in the 
 // relationship table.
@@ -458,6 +501,8 @@ void CStukaBat :: HandleAnimEvent( MonsterEvent_t *pEvent )
 
 
 CStukaBat::CStukaBat() : stukaPrint(StukaPrintQueueManager("STUKA")){
+	
+	hitGroundDead = FALSE;
 
 	recentActivity = ACT_RESET;
 
@@ -1351,6 +1396,11 @@ void CStukaBat :: RunTask ( Task_t *pTask )
 	switch ( pTask->iTask )
 	{
 	
+	case TASK_DIE_LOOP:{
+		if(hitGroundDead){
+			TaskComplete();
+		}
+	break;}
 	case TASK_STUKA_WAIT_FOR_ANIM:
 
 		if(blockSetActivity == -1){
@@ -2384,6 +2434,25 @@ Schedule_t* CStukaBat :: GetScheduleOfType ( int Type )
 	// ALERT( at_console, "%d\n", m_iFrustration );
 	switch	( Type )
 	{
+	case SCHED_DIE:{
+		if
+		(
+			(
+			onGround == FALSE &&
+			pev->sequence != SEQ_STUKABAT_LAND_CEILING &&
+			pev->sequence != SEQ_STUKABAT_LAND_GROUND
+			)
+			||
+			snappedToCeiling
+		)
+		{
+			//flying or hanging? leave this up to whether we support the falling cycler or cut straight to the flying dead animation.
+			return flierDeathSchedule();
+		}else{
+			//on the ground? handle this normally.
+			return slDie;
+		}
+	break;}
 	case SCHED_CHASE_ENEMY:
 	{
 		easyPrintLineGroup1("STUKA SCHED %d: slStukaBatChaseEnemy", monsterID);
@@ -2553,7 +2622,7 @@ void CStukaBat :: SetActivity ( Activity NewActivity, BOOL forceReset )
 
 	BOOL warpRandomAnim = FALSE;
 
-	if(eating){
+	if(eating && NewActivity != ACT_DIESIMPLE && NewActivity != ACT_DIEVIOLENT){
 		//nothing else allowed.
 		return;
 	}
@@ -4327,11 +4396,61 @@ int CStukaBat::LookupActivityHard(int activity){
 
 			return CBaseAnimating::LookupActivity(activity);
 		break;
+		case ACT_DIESIMPLE:
+			if
+			(
+				(
+				onGround == FALSE &&
+				pev->sequence != SEQ_STUKABAT_LAND_CEILING &&
+				pev->sequence != SEQ_STUKABAT_LAND_GROUND
+				)
+				||
+				snappedToCeiling
+			)
+			{
+				return SEQ_STUKABAT_DEATH_FALL_SIMPLE;
+			}else{
+				return SEQ_STUKABAT_DIE_ON_GROUND;
+			}
+		break;
+		case ACT_DIEVIOLENT:
+			//only in the air, or hanging from the ceiling.
+			if
+			(
+				(
+				onGround == FALSE &&
+				pev->sequence != SEQ_STUKABAT_LAND_CEILING &&
+				pev->sequence != SEQ_STUKABAT_LAND_GROUND
+				)
+				||
+				snappedToCeiling
+			)
+			{
+				return SEQ_STUKABAT_DEATH_FALL_VIOLENT;
+			}else{
+				return SEQ_STUKABAT_DIE_ON_GROUND;
+			}
+			
+		break;
+
 	}//END OF switch(...)
 	
 	//not handled by above?  try the real deal.
 	return CBaseAnimating::LookupActivity(activity);
 }//END OF LookupActivityHard(...)
+
+//quick reference
+/*
+SEQ_STUKABAT_LAND_CEILING
+SEQ_STUKABAT_LAND_GROUND
+SEQ_STUKABAT_TAKE_OFF_FROM_LAND
+
+SEQ_STUKABAT_DEATH_FALL_SIMPLE,
+SEQ_STUKABAT_DEATH_FALL_VIOLENT,
+SEQ_STUKABAT_DIE_ON_GROUND,
+*/
+
+
 
 
 int CStukaBat::tryActivitySubstitute(int activity){
@@ -4370,4 +4489,23 @@ void CStukaBat::ReportAIState(void){
 Schedule_t* CStukaBat::GetStumpedWaitSchedule(){
 	return slStukaPathfindStumped;
 }//END OF GetStumpedWaitSchedule
+
+
+
+
+//TEST: what happens if already touching the ground before death? Test!!
+void CStukaBat::OnKilledSetTouch(void){
+	SetTouch(&CStukaBat::KilledFallingTouch);
+}
+
+int CStukaBat::getLoopingDeathSequence(void){
+	return SEQ_STUKABAT_FALL_CYCLER;
+}
+
+void CStukaBat::KilledFallingTouch( CBaseEntity *pOther ){
+	if(pOther == NULL){
+		return; //??????
+	}
+	hitGroundDead = TRUE;
+}
 
