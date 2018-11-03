@@ -2762,36 +2762,46 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBaseMonster){
 		if ( pevAttacker->flags & (FL_MONSTER | FL_CLIENT) )
 		{// only if the attack was a monster or client!
 			
+			BOOL updatedEnemyLKP = FALSE;  //turn on if we do.
+
 			// enemy's last known position is somewhere down the vector that the attack came from.
 			if (pevInflictor)
 			{
+				//MODDD NOTE - "bits_COND_SEE_ENEMY" appears to still be on for monsters that have a straight line to their enemy but aren't necessarily turned to them.
+				//             So the condition being off is kindof an odd choice?
 				if (m_hEnemy == NULL || pevInflictor == m_hEnemy->pev || !HasConditions(bits_COND_SEE_ENEMY))
 				{
 					m_vecEnemyLKP = pevInflictor->origin;
+					updatedEnemyLKP = TRUE;
+				}else{
+					//MODDD NOTE -don't update the LKP at all? This will happen if...
+					//    (m_hEnemy != NULL && pev->inflictor != m_hEnemy->pev && HasConditions(bits_COND_SEE_ENEMY))
+					//...so while looking straight at an enemy or being able to and taking damage from another source,
+					//the LKP is unaffected. that is fine.
 				}
 			}
 			else
 			{
 				m_vecEnemyLKP = pev->origin + ( g_vecAttackDir * 64 ); 
+				updatedEnemyLKP = TRUE;
 			}
 
-			MakeIdealYaw( m_vecEnemyLKP );
+			//MODDD - If we didn't change the LKP, why look in its direction?
+			if(updatedEnemyLKP){
+				MakeIdealYaw( m_vecEnemyLKP );
+
+				//MODDD - also let the enemy know to not get stumped on investigating the LKP.
+				// It makes no sense to investigate the LKP set by getting hit by something and give up on
+				// going outside of cover to find the enemy. 
+				//unstumpable = TRUE;
+			}
 
 			// add pain to the conditions 
 			// !!!HACKHACK - fudged for now. Do we want to have a virtual function to determine what is light and 
 			// heavy damage per monster class?
 			// MODDD - I hear your cries, original devs. So shall it be done!
-			/*
-			if ( flDamage > 0 )
-			{
-				SetConditions(bits_COND_LIGHT_DAMAGE);
-			}
-
-			if ( flDamage >= 20 )
-			{
-				SetConditions(bits_COND_HEAVY_DAMAGE);
-			}
-			*/
+			// Default behavior for the base monster in OnTakeDamageSetConditions, plus not triggering schedule-interrupting conditions
+			// ("Took Damage Recently" or something) for timed damage, which just looks annoying. Why react to predictable damage?
 			OnTakeDamageSetConditions(pevInflictor, pevAttacker, flDamage, bitsDamageType, bitsDamageTypeMod);
 
 		}

@@ -69,7 +69,7 @@ void DebugLine_ClearAll(){
 	}
 }
 void DebugLine_RenderAll(){
-
+	//return;
 	/*
 	float fracto = abs(cos(gpGlobals->time/3));
 	easyForcePrintLine("WHAT? %.2f : %.2f", gpGlobals->time, fracto);
@@ -110,23 +110,23 @@ void DebugDrawable_pathTrack::checkDrawLines(){
 
 		if(m_pPathTrackRef->pev->spawnflags & SF_PATH_DISABLED){
 			//color it red.
-			UTIL_drawLineFrame( m_pPathTrackRef->pev->origin + Vector(0, 0, -30), m_pPathTrackRef->pev->origin + Vector(0, 0, 30), 8, 255, 0, 0);
+			UTIL_drawLineFrame( m_pPathTrackRef->pev->origin + Vector(0, 0, -30), m_pPathTrackRef->pev->origin + Vector(0, 0, 30), DEBUG_LINE_WIDTH, 255, 0, 0);
 		}else{
 			//color it green.
-			UTIL_drawLineFrame( m_pPathTrackRef->pev->origin + Vector(0, 0, -30), m_pPathTrackRef->pev->origin + Vector(0, 0, 30), 8, 0, 255, 0);
+			UTIL_drawLineFrame( m_pPathTrackRef->pev->origin + Vector(0, 0, -30), m_pPathTrackRef->pev->origin + Vector(0, 0, 30), DEBUG_LINE_WIDTH, 0, 255, 0);
 		}
 
 		if(m_pPathTrackRef->m_pprevious != NULL){
 			//line to previous is yellow.
-			UTIL_drawLineFrame( m_pPathTrackRef->pev->origin, m_pPathTrackRef->m_pprevious->pev->origin, 8, 255, 255, 0);
+			UTIL_drawLineFrame( m_pPathTrackRef->pev->origin, m_pPathTrackRef->m_pprevious->pev->origin, DEBUG_LINE_WIDTH, 255, 255, 0);
 		}
 		if(m_pPathTrackRef->m_pnext != NULL){
 			//line to next is blue.
-			UTIL_drawLineFrame( m_pPathTrackRef->pev->origin, m_pPathTrackRef->m_pnext->pev->origin, 8, 0, 0, 255);
+			UTIL_drawLineFrame( m_pPathTrackRef->pev->origin, m_pPathTrackRef->m_pnext->pev->origin, DEBUG_LINE_WIDTH, 0, 0, 255);
 		}
 		if(m_pPathTrackRef->m_paltpath != NULL){
 			//line to alternate is white. Rarely exists most likely.
-			UTIL_drawLineFrame( m_pPathTrackRef->pev->origin, m_pPathTrackRef->m_paltpath->pev->origin, 8, 255, 255, 255);
+			UTIL_drawLineFrame( m_pPathTrackRef->pev->origin, m_pPathTrackRef->m_paltpath->pev->origin, DEBUG_LINE_WIDTH, 255, 255, 255);
 		}
 	}
 }//END OF DebugDrawable_pathTrack's checkDrawLines
@@ -149,7 +149,7 @@ void DebugLine_Setup(int argID, Vector vecStart, Vector vecEnd, int r, int g, in
 	}
 
 	DebugDrawable& thisLine = aryDebugLines[argID];
-	thisLine.l1.setup(TRUE, r, g, b, 8, vecStart.x, vecStart.y, vecStart.z, vecEnd.x, vecEnd.y, vecEnd.z);
+	thisLine.l1.setup(TRUE, r, g, b, DEBUG_LINE_WIDTH, vecStart.x, vecStart.y, vecStart.z, vecEnd.x, vecEnd.y, vecEnd.z);
 	
 	thisLine.l2.canDraw = FALSE;  //only one line here.
 }//END OF CreateDebugLine
@@ -247,16 +247,16 @@ void DebugLine_Setup(int argID, Vector vecStart, Vector vecEnd, float fraction, 
 
 	if(fraction <= 0){
 		//all fail, just draw the 2nd line only.
-		thisLine.l1.setup(TRUE, failR, failG, failB, 8, vecAltStart.x, vecAltStart.y, vecAltStart.z, vecAltEnd.x, vecAltEnd.y, vecAltEnd.z);
+		thisLine.l1.setup(TRUE, failR, failG, failB, DEBUG_LINE_WIDTH, vecAltStart.x, vecAltStart.y, vecAltStart.z, vecAltEnd.x, vecAltEnd.y, vecAltEnd.z);
 		thisLine.l2.canDraw = FALSE;
 	}else if(fraction >= 1){
 		//all success.
-		thisLine.l1.setup(TRUE, successR, successG, successB, 8, vecStart.x, vecStart.y, vecStart.z, vecNewEnd.x, vecNewEnd.y, vecNewEnd.z);
+		thisLine.l1.setup(TRUE, successR, successG, successB, DEBUG_LINE_WIDTH, vecStart.x, vecStart.y, vecStart.z, vecNewEnd.x, vecNewEnd.y, vecNewEnd.z);
 		thisLine.l2.canDraw = FALSE;
 	}else{
 		//inbetween.
-		thisLine.l1.setup(TRUE, successR, successG, successB, 8, vecStart.x, vecStart.y, vecStart.z, vecNewEnd.x, vecNewEnd.y, vecNewEnd.z);
-		thisLine.l2.setup(TRUE, failR, failG, failB, 8, vecAltStart.x, vecAltStart.y, vecAltStart.z, vecAltEnd.x, vecAltEnd.y, vecAltEnd.z);
+		thisLine.l1.setup(TRUE, successR, successG, successB, DEBUG_LINE_WIDTH, vecStart.x, vecStart.y, vecStart.z, vecNewEnd.x, vecNewEnd.y, vecNewEnd.z);
+		thisLine.l2.setup(TRUE, failR, failG, failB, DEBUG_LINE_WIDTH, vecAltStart.x, vecAltStart.y, vecAltStart.z, vecAltEnd.x, vecAltEnd.y, vecAltEnd.z);
 	}
 
 

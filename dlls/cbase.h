@@ -615,7 +615,6 @@ public:
 	// used by monsters that are created by the MonsterMaker
 	virtual	void UpdateOwner( void ) { return; };
 
-
 	//
 	static CBaseEntity* CreateManual( const char *szName, const Vector &vecOrigin, const Vector &vecAngles, edict_t *pentOwner );
 	static CBaseEntity* Create( const char *szName, const Vector &vecOrigin, const Vector &vecAngles, edict_t *pentOwner = NULL );
@@ -628,6 +627,11 @@ public:
 
 	virtual Vector Center( ) { return (pev->absmax + pev->absmin) * 0.5; }; // center point of entity
 	virtual Vector EyePosition( ) { return pev->origin + pev->view_ofs; };			// position of eyes
+
+	//MODDD - new. Don't add the position in this one.
+	//Anything overriding EyePosition should override EyeOffset too.
+	virtual Vector EyeOffset( ) { return pev->view_ofs; };			// position of eyes
+
 	virtual Vector EarPosition( ) { return pev->origin + pev->view_ofs; };			// position of ears
 	virtual Vector BodyTarget( const Vector &posSrc ) { return Center( ); };		// position to shoot at
 	//MODDD - This method was created to mimick BodyTarget (a clone of it most of the time across the rest

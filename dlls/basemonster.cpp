@@ -1880,7 +1880,7 @@ void CBaseMonster :: MonsterThink ( void )
 	if(EASY_CVAR_GET(peaceOut) == 1){
 
 		if(m_hEnemy != NULL){
-			//like, no way, man. Let's just smoke a fat blunt and sit on the couch all day.
+			//all is forgiven.
 			m_hEnemy = NULL;
 			if(this->m_MonsterState == MONSTERSTATE_COMBAT || this->m_IdealMonsterState == MONSTERSTATE_COMBAT){
 				this->m_MonsterState = MONSTERSTATE_IDLE;
@@ -1892,7 +1892,9 @@ void CBaseMonster :: MonsterThink ( void )
 
 	
 	if(EASY_CVAR_GET(drawDebugEnemyLKP)){
-		::DebugLine_Setup(2, m_vecEnemyLKP + Vector(0, 0, 8), m_vecEnemyLKP + Vector(0, 0, -8), 0, 0, 255);
+		//::DebugLine_Setup(2, m_vecEnemyLKP + Vector(0, 0, 8), m_vecEnemyLKP + Vector(0, 0, -8), 0, 0, 255);
+		//no... just draw it this frame only.
+		::UTIL_drawPointFrame(m_vecEnemyLKP + Vector(0, 0, 8), DEBUG_LINE_WIDTH, 255, 255, 0);
 	}
 	
 	//easyForcePrintLine("FRAMEB:%.2f seq:%d loop:%d fin:%d", this->pev->frame, pev->sequence, m_fSequenceLoops, m_fSequenceFinished);
@@ -4818,9 +4820,10 @@ void CBaseMonster :: Move ( float flInterval )
 	}
 
 
+	BOOL movementCanAutoTurn = getMovementCanAutoTurn();
 
-
-	if(facingNextNode){
+	//if movementCanAutoTurn is off, force a movement.
+	if(!movementCanAutoTurn || facingNextNode){
 		MoveExecute( pTargetEnt, vecDir, flInterval );
 	}else{
 		//try to face it?
@@ -4829,8 +4832,7 @@ void CBaseMonster :: Move ( float flInterval )
 		}
 		SetTurnActivity();
 
-
-	}
+	}//END OF else OF facingNextNode
 
 
 
@@ -5480,6 +5482,7 @@ BOOL CBaseMonster :: BuildNearestRoute ( Vector vecThreat, Vector vecViewOffset,
 
 	if ( iMyNode == NO_NODE )
 	{
+		easyForcePrintLine("MONSTERID:%d Here ye here ye, I could not find a nearby node! I suck!", monsterID);
 		ALERT ( at_aiconsole, "BuildNearestRoute() - %s has no nearest node!\n", STRING(pev->classname));
 		return FALSE;
 	}
@@ -7628,4 +7631,11 @@ Schedule_t* CBaseMonster::flierDeathSchedule(void){
 		return slDie;
 	}
 }
+
+//Can this monster automatically turn to face a node better in ::Move above?
+//Turn off for things that may play with direction faced (like strafing hgrunts while they are expected to strafe)
+BOOL CBaseMonster::getMovementCanAutoTurn(void){
+	//without a reason not to, defaults to yes all the time.
+	return TRUE;
+}//END OF getMovementCanAutoTurn
 

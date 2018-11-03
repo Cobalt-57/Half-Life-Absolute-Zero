@@ -347,7 +347,7 @@ void CBaseMonster::cheapKilledFlier(void){};
 void CBaseMonster::OnKilledSetTouch(void){};
 int CBaseMonster::getLoopingDeathSequence(void){return 0;};
 Schedule_t* CBaseMonster::flierDeathSchedule(void){return NULL;}
-
+BOOL CBaseMonster::getMovementCanAutoTurn(void){return FALSE;};
 
 
 void CBaseMonster::setPhysicalHitboxForDeath(){return;}

@@ -33,29 +33,16 @@
 
 
 
+
 #include "turret.h" //to call the turret class's static model references for a possible re-precache at a map/level change.
 #include "barnacle.h" //to reset its static standard gib var.
+#include "squidspit.h" //precache its model in a way that stores its index to a static integer. Like retail did.
 
 
 #include "trains.h"
 
 #include "custom_debug.h"
 
-
-
-
-BOOL loadedGame = FALSE;
-
-
-
-float UTIL_WeaponTimeBase( void )
-{
-#if defined( CLIENT_WEAPONS )
-	return 0.0;
-#else
-	return gpGlobals->time;
-#endif
-}
 
 
 
@@ -202,14 +189,18 @@ GibInfo_t aryGibInfo[] = {
 
 extern DLL_GLOBAL int		g_iSkillLevel;
 
+extern DLL_GLOBAL	short	g_sModelIndexLaser;// holds the index for the laser beam
+
+
+
+
+
 
 //MODDD - moved from player.
 int giPrecacheGrunt = 0;
 
 
-
-
-
+BOOL loadedGame = FALSE;
 
 //float previousFrameTime;
 BOOL gamePaused = FALSE;
@@ -260,6 +251,29 @@ void U_Srand( unsigned int seed )
 {
 	glSeed = seed_table[ seed & 0xff ];
 }
+
+
+
+
+
+
+
+
+
+float UTIL_WeaponTimeBase( void )
+{
+#if defined( CLIENT_WEAPONS )
+	return 0.0;
+#else
+	return gpGlobals->time;
+#endif
+}
+
+
+
+
+
+
 
 
 
@@ -4676,22 +4690,19 @@ Vector UTIL_MirrorPos ( Vector endpos )
 
 
 
-extern DLL_GLOBAL	short	g_sModelIndexLaser;// holds the index for the laser beam
 
 
-
-
-void UTIL_drawLine(const Vector& vec1, const Vector& vec2){
-	UTIL_drawLine(vec1.x, vec1.y, vec1.z, vec2.x, vec2.y, vec2.z);
+void UTIL_TE_ShowLine(const Vector& vec1, const Vector& vec2){
+	UTIL_TE_ShowLine(vec1.x, vec1.y, vec1.z, vec2.x, vec2.y, vec2.z);
 }
 
 
-void UTIL_drawLine(int x1, int y1, int z1, int x2, int y2, int z2){
+void UTIL_TE_ShowLine(float x1, float y1, float z1, float x2, float y2, float z2){
 
 
 	MESSAGE_BEGIN( MSG_BROADCAST, SVC_TEMPENTITY );
 		WRITE_BYTE( TE_SHOWLINE);
-				
+
 		WRITE_COORD( x1 );
 		WRITE_COORD( y1 );
 		WRITE_COORD( z1 );
@@ -4710,11 +4721,11 @@ void UTIL_drawRect(const Vector& vec1, const Vector& vec2){
 	UTIL_drawRect(vec1.x, vec1.y, vec1.z, vec2.x, vec2.y, vec2.z);
 }
 
-void UTIL_drawRect(int x1, int y1, int z1, int x2, int y2, int z2){
-	UTIL_drawLine(x1, y1, z1, x2, y2, z1);
-	UTIL_drawLine(x2, y2, z1, x2, y2, z2);
-	UTIL_drawLine(x2, y2, z2, x1, y1, z2);
-	UTIL_drawLine(x1, y1, z2, x1, y1, z1);
+void UTIL_drawRect(float x1, float y1, float z1, float x2, float y2, float z2){
+	UTIL_TE_ShowLine(x1, y1, z1, x2, y2, z1);
+	UTIL_TE_ShowLine(x2, y2, z1, x2, y2, z2);
+	UTIL_TE_ShowLine(x2, y2, z2, x1, y1, z2);
+	UTIL_TE_ShowLine(x1, y1, z2, x1, y1, z1);
 	
 }
 
@@ -4728,26 +4739,26 @@ void UTIL_drawBox(const Vector& vec1, const Vector& vec2){
 }
 
 
-void UTIL_drawBox(int x1, int y1, int z1, int x2, int y2, int z2){
+void UTIL_drawBox(float x1, float y1, float z1, float x2, float y2, float z2){
 
-	UTIL_drawLine(x1, y1, z1, x1, y2, z1);
-	UTIL_drawLine(x1, y1, z1, x2, y1, z1);
-	UTIL_drawLine(x1, y1, z1, x1, y1, z2);
+	UTIL_TE_ShowLine(x1, y1, z1, x1, y2, z1);
+	UTIL_TE_ShowLine(x1, y1, z1, x2, y1, z1);
+	UTIL_TE_ShowLine(x1, y1, z1, x1, y1, z2);
 	
-	UTIL_drawLine(x2, y1, z1, x2, y2, z1);
-	UTIL_drawLine(x2, y1, z1, x2, y1, z2);
+	UTIL_TE_ShowLine(x2, y1, z1, x2, y2, z1);
+	UTIL_TE_ShowLine(x2, y1, z1, x2, y1, z2);
 	
-	UTIL_drawLine(x1, y2, z1, x2, y2, z1);
-	UTIL_drawLine(x1, y2, z1, x1, y2, z2);
+	UTIL_TE_ShowLine(x1, y2, z1, x2, y2, z1);
+	UTIL_TE_ShowLine(x1, y2, z1, x1, y2, z2);
 
-	UTIL_drawLine(x2, y2, z1, x2, y2, z2);
+	UTIL_TE_ShowLine(x2, y2, z1, x2, y2, z2);
 
-	UTIL_drawLine(x1, y1, z2, x1, y2, z2);
-	UTIL_drawLine(x1, y1, z2, x2, y1, z2);
+	UTIL_TE_ShowLine(x1, y1, z2, x1, y2, z2);
+	UTIL_TE_ShowLine(x1, y1, z2, x2, y1, z2);
 	
-	UTIL_drawLine(x2, y1, z2, x2, y2, z2);
+	UTIL_TE_ShowLine(x2, y1, z2, x2, y2, z2);
 	
-	UTIL_drawLine(x1, y2, z2, x2, y2, z2);
+	UTIL_TE_ShowLine(x1, y2, z2, x2, y2, z2);
 
 }//END OF UTIL_drawBox
 
@@ -4766,85 +4777,79 @@ void UTIL_drawBox(int x1, int y1, int z1, int x2, int y2, int z2){
 
 
 
-//TE_BEAMPOINTS
-
-#define BLABLABLA frameStart, frameRate, life, width, noise, r, g, b, brightness, speed
-//#define BLABLABLA2 0, 10, 1, width, 0, r, g, b, 255, 10
-#define BLABLABLA2 width, r, g, b
-
+void UTIL_drawLineFrame(const Vector& vec1, const Vector& vec2, int r, int g, int b){
+	UTIL_drawLineFrame( vec1.x, vec1.y, vec1.z, vec2.x, vec2.y, vec2.z, DEBUG_LINE_WIDTH, r, g, b);
+}
 
 void UTIL_drawLineFrame(const Vector& vec1, const Vector& vec2, int width, int r, int g, int b){
-	UTIL_drawLineFrame( vec1.x, vec1.y, vec1.z, vec2.x, vec2.y, vec2.z, BLABLABLA2);
+	UTIL_drawLineFrame( vec1.x, vec1.y, vec1.z, vec2.x, vec2.y, vec2.z, width, r, g, b);
 	//UTIL_drawLineFrame( roundToNearest(vec1.x), roundToNearest(vec1.y), roundToNearest(vec1.z), roundToNearest(vec2.x), roundToNearest(vec2.y), roundToNearest(vec2.z), BLABLABLA2);
 }
 
 
-void UTIL_drawLineFrame(int x1, int y1, int z1, int x2, int y2, int z2, int width, int r, int g, int b){
+void UTIL_drawLineFrame(float x1, float y1, float z1, float x2, float y2, float z2, int width, int r, int g, int b){
+	//Fill in defaults. No one wants to specify all that other stuff.
+	UTIL_TE_BeamPoints(x1, y1, z1, x2, y2, z2, 0, 10, 1, width, 0, r, g, b, 255, 10);
+}//END OF UTIL_drawLineFrame
 
 
-	MESSAGE_BEGIN( MSG_BROADCAST, SVC_TEMPENTITY );
-		WRITE_BYTE( TE_BEAMPOINTS);
-		WRITE_COORD( x1 );
-		WRITE_COORD( y1 );
-		WRITE_COORD( z1 );
-		WRITE_COORD( x2 );
-		WRITE_COORD( y2 );
-		WRITE_COORD( z2 );
 
-		WRITE_SHORT( g_sModelIndexLaser );
-		WRITE_BYTE( 0 ); // frame start
-		WRITE_BYTE( 10 ); // framerate
-		WRITE_BYTE( 1 ); // life
-		WRITE_BYTE( width );  // width
-		WRITE_BYTE( 0 );   // noise
-		WRITE_BYTE( r );   // r, g, b
-		WRITE_BYTE( g );   // r, g, b
-		WRITE_BYTE( b );   // r, g, b
-		WRITE_BYTE( 255 );	// brightness
-		WRITE_BYTE( 10 );		// speed
-	MESSAGE_END();
-}
+
+//Draw a vertical line going through this point, with the point as the center of the line. This makes it easier to see the point than drawing at one X, Y, Z coordinate (nearly impossible to see sometimes)
+void UTIL_drawPointFrame(const Vector& vecPoint, int width, int r, int g, int b){
+	UTIL_drawPointFrame(vecPoint.x, vecPoint.y, vecPoint.z, width, r, g, b);
+}//END OF UTIL_drawPointFrame
+
+void UTIL_drawPointFrame(float point_x, float point_y, float point_z, int width, int r, int g, int b){
+	//UTIL_drawLineFrame(vecPoint + Vector(0, 0, -30), vecPoint + Vector(0,0, 30), width, r, g, b);
+	UTIL_drawLineFrame(point_x, point_y, point_z + -30, point_x, point_y, point_z + 30, width, r, g, b);
+}//END OF UTIL_drawPointFrame
+
+
+
+
+
 
 
 void UTIL_drawRectFrame(const Vector& vec1, const Vector& vec2, int width, int r, int g, int b){
-	UTIL_drawRectFrame(vec1.x, vec1.y, vec1.z, vec2.x, vec2.y, vec2.z, BLABLABLA2);
+	UTIL_drawRectFrame(vec1.x, vec1.y, vec1.z, vec2.x, vec2.y, vec2.z, width, r, g, b);
 }
 
-void UTIL_drawRectFrame(int x1, int y1, int z1, int x2, int y2, int z2, int width, int r, int g, int b){
-	UTIL_drawLineFrame(x1, y1, z1, x2, y2, z1, BLABLABLA2);
-	UTIL_drawLineFrame(x2, y2, z1, x2, y2, z2, BLABLABLA2);
-	UTIL_drawLineFrame(x2, y2, z2, x1, y1, z2, BLABLABLA2);
-	UTIL_drawLineFrame(x1, y1, z2, x1, y1, z1, BLABLABLA2);
+void UTIL_drawRectFrame(float x1, float y1, float z1, float x2, float y2, float z2, int width, int r, int g, int b){
+	UTIL_drawLineFrame(x1, y1, z1, x2, y2, z1, width, r, g, b);
+	UTIL_drawLineFrame(x2, y2, z1, x2, y2, z2, width, r, g, b);
+	UTIL_drawLineFrame(x2, y2, z2, x1, y1, z2, width, r, g, b);
+	UTIL_drawLineFrame(x1, y1, z2, x1, y1, z1, width, r, g, b);
 	
 }
 
 void UTIL_drawBoxFrame(const Vector& vec1, const Vector& vec2, int width, int r, int g, int b){
-	UTIL_drawBoxFrame(vec1.x, vec1.y, vec1.z, vec2.x, vec2.y, vec2.z, BLABLABLA2);
+	UTIL_drawBoxFrame(vec1.x, vec1.y, vec1.z, vec2.x, vec2.y, vec2.z, width, r, g, b);
 }
 
 
 	
 
-void UTIL_drawBoxFrame(int x1, int y1, int z1, int x2, int y2, int z2, int width, int r, int g, int b){
+void UTIL_drawBoxFrame(float x1, float y1, float z1, float x2, float y2, float z2, int width, int r, int g, int b){
 
-	UTIL_drawLineFrame(x1, y1, z1, x1, y2, z1, BLABLABLA2);
-	UTIL_drawLineFrame(x1, y1, z1, x2, y1, z1, BLABLABLA2);
-	UTIL_drawLineFrame(x1, y1, z1, x1, y1, z2, BLABLABLA2);
+	UTIL_drawLineFrame(x1, y1, z1, x1, y2, z1, width, r, g, b);
+	UTIL_drawLineFrame(x1, y1, z1, x2, y1, z1, width, r, g, b);
+	UTIL_drawLineFrame(x1, y1, z1, x1, y1, z2, width, r, g, b);
 	
-	UTIL_drawLineFrame(x2, y1, z1, x2, y2, z1, BLABLABLA2);
-	UTIL_drawLineFrame(x2, y1, z1, x2, y1, z2, BLABLABLA2);
+	UTIL_drawLineFrame(x2, y1, z1, x2, y2, z1, width, r, g, b);
+	UTIL_drawLineFrame(x2, y1, z1, x2, y1, z2, width, r, g, b);
 	
-	UTIL_drawLineFrame(x1, y2, z1, x2, y2, z1, BLABLABLA2);
-	UTIL_drawLineFrame(x1, y2, z1, x1, y2, z2, BLABLABLA2);
+	UTIL_drawLineFrame(x1, y2, z1, x2, y2, z1, width, r, g, b);
+	UTIL_drawLineFrame(x1, y2, z1, x1, y2, z2, width, r, g, b);
 
-	UTIL_drawLineFrame(x2, y2, z1, x2, y2, z2, BLABLABLA2);
+	UTIL_drawLineFrame(x2, y2, z1, x2, y2, z2, width, r, g, b);
 
-	UTIL_drawLineFrame(x1, y1, z2, x1, y2, z2, BLABLABLA2);
-	UTIL_drawLineFrame(x1, y1, z2, x2, y1, z2, BLABLABLA2);
+	UTIL_drawLineFrame(x1, y1, z2, x1, y2, z2, width, r, g, b);
+	UTIL_drawLineFrame(x1, y1, z2, x2, y1, z2, width, r, g, b);
 	
-	UTIL_drawLineFrame(x2, y1, z2, x2, y2, z2, BLABLABLA2);
+	UTIL_drawLineFrame(x2, y1, z2, x2, y2, z2, width, r, g, b);
 	
-	UTIL_drawLineFrame(x1, y2, z2, x2, y2, z2, BLABLABLA2);
+	UTIL_drawLineFrame(x1, y2, z2, x2, y2, z2, width, r, g, b);
 
 }//END OF UTIL_drawBoxFrame
 
@@ -4860,7 +4865,7 @@ void UTIL_drawLineFrameBoxAround(const Vector& vec1, int width, int boxSize, int
 
 //draw a box centered around a point for emphasis, and a 3D cross through the point itself.
 
-void UTIL_drawLineFrameBoxAround(int x1, int y1, int z1, int width, int boxSize, int r, int g, int b){
+void UTIL_drawLineFrameBoxAround(float x1, float y1, float z1, int width, int boxSize, int r, int g, int b){
 	int halfwidth = boxSize/2;
 	UTIL_drawBoxFrame(x1-halfwidth, y1-halfwidth, z1-halfwidth, x1+halfwidth, y1+halfwidth, z1+halfwidth, width, r, g, b);
 
@@ -4888,7 +4893,7 @@ void UTIL_drawLineFrameBoxAround2(const Vector& vec1, int width, int boxSize, in
 
 //draw a box centered around a point for emphasis, and a 3D cross through the point itself.
 
-void UTIL_drawLineFrameBoxAround2(int x1, int y1, int z1, int width, int boxSize, int r, int g, int b){
+void UTIL_drawLineFrameBoxAround2(float x1, float y1, float z1, int width, int boxSize, int r, int g, int b){
 	int halfwidth = boxSize/2;
 	UTIL_drawBoxFrame(x1-halfwidth, y1-halfwidth, z1-halfwidth, x1+halfwidth, y1+halfwidth, z1+halfwidth, width, r, g, b);
 
@@ -4920,7 +4925,7 @@ void UTIL_drawLineFrameBoxAround3(const Vector& vec1, int width, int boxSize, in
 
 //draw a box centered around a point for emphasis, and a 3D cross through the point itself.
 
-void UTIL_drawLineFrameBoxAround3(int x1, int y1, int z1, int width, int boxSize, int r, int g, int b){
+void UTIL_drawLineFrameBoxAround3(float x1, float y1, float z1, int width, int boxSize, int r, int g, int b){
 	int halfwidth = boxSize/2;
 	UTIL_drawBoxFrame(x1-halfwidth, y1-halfwidth, z1-halfwidth, x1+halfwidth, y1+halfwidth, z1+halfwidth, width, r, g, b);
 
@@ -4970,12 +4975,12 @@ void UTIL_drawLineFrameBoxAround3(int x1, int y1, int z1, int width, int boxSize
 
 
 
-void UTIL_drawLineCustom(const Vector& vec1, const Vector& vec2, int frameStart, int frameRate, int life, int width, int noise, int r, int g, int b, int brightness, int speed ){
-	UTIL_drawLineCustom(vec1.x, vec1.y, vec1.z, vec2.x, vec2.y, vec2.z, BLABLABLA);
+void UTIL_TE_BeamPoints(const Vector& vec1, const Vector& vec2, int frameStart, int frameRate, int life, int width, int noise, int r, int g, int b, int brightness, int speed ){
+	UTIL_TE_BeamPoints(vec1.x, vec1.y, vec1.z, vec2.x, vec2.y, vec2.z, frameStart, frameRate, life, width, noise, r, g, b, brightness, speed);
 }
 
 
-void UTIL_drawLineCustom(int x1, int y1, int z1, int x2, int y2, int z2, int frameStart, int frameRate, int life, int width, int noise, int r, int g, int b, int brightness, int speed){
+void UTIL_TE_BeamPoints(float x1, float y1, float z1, float x2, float y2, float z2, int frameStart, int frameRate, int life, int width, int noise, int r, int g, int b, int brightness, int speed){
 
 
 	MESSAGE_BEGIN( MSG_BROADCAST, SVC_TEMPENTITY );
@@ -5005,50 +5010,50 @@ void UTIL_drawLineCustom(int x1, int y1, int z1, int x2, int y2, int z2, int fra
 
 
 
-void UTIL_drawRectCustom(const Vector& vec1, const Vector& vec2, int frameStart, int frameRate, int life, int width, int noise, int r, int g, int b, int brightness, int speed){
-	UTIL_drawRectCustom(vec1.x, vec1.y, vec1.z, vec2.x, vec2.y, vec2.z, BLABLABLA);
+void UTIL_TE_BeamPoints_Rect(const Vector& vec1, const Vector& vec2, int frameStart, int frameRate, int life, int width, int noise, int r, int g, int b, int brightness, int speed){
+	UTIL_TE_BeamPoints_Rect(vec1.x, vec1.y, vec1.z, vec2.x, vec2.y, vec2.z, frameStart, frameRate, life, width, noise, r, g, b, brightness, speed);
 }
 
-void UTIL_drawRectCustom(int x1, int y1, int z1, int x2, int y2, int z2, int frameStart, int frameRate, int life, int width, int noise, int r, int g, int b, int brightness, int speed){
-	UTIL_drawLineCustom(x1, y1, z1, x2, y2, z1, BLABLABLA);
-	UTIL_drawLineCustom(x2, y2, z1, x2, y2, z2, BLABLABLA);
-	UTIL_drawLineCustom(x2, y2, z2, x1, y1, z2, BLABLABLA);
-	UTIL_drawLineCustom(x1, y1, z2, x1, y1, z1, BLABLABLA);
+void UTIL_TE_BeamPoints_Rect(float x1, float y1, float z1, float x2, float y2, float z2, int frameStart, int frameRate, int life, int width, int noise, int r, int g, int b, int brightness, int speed){
+	UTIL_TE_BeamPoints(x1, y1, z1, x2, y2, z1, frameStart, frameRate, life, width, noise, r, g, b, brightness, speed);
+	UTIL_TE_BeamPoints(x2, y2, z1, x2, y2, z2, frameStart, frameRate, life, width, noise, r, g, b, brightness, speed);
+	UTIL_TE_BeamPoints(x2, y2, z2, x1, y1, z2, frameStart, frameRate, life, width, noise, r, g, b, brightness, speed);
+	UTIL_TE_BeamPoints(x1, y1, z2, x1, y1, z1, frameStart, frameRate, life, width, noise, r, g, b, brightness, speed);
 	
-}
-
-
-
-
-
-
-void UTIL_drawBoxCustom(const Vector& vec1, const Vector& vec2, int frameStart, int frameRate, int life, int width, int noise, int r, int g, int b, int brightness, int speed){
-	UTIL_drawBoxCustom(vec1.x, vec1.y, vec1.z, vec2.x, vec2.y, vec2.z, BLABLABLA);
 }
 
 
-void UTIL_drawBoxCustom(int x1, int y1, int z1, int x2, int y2, int z2, int frameStart, int frameRate, int life, int width, int noise, int r, int g, int b, int brightness, int speed){
 
-	UTIL_drawLineCustom(x1, y1, z1, x1, y2, z1, BLABLABLA);
-	UTIL_drawLineCustom(x1, y1, z1, x2, y1, z1, BLABLABLA);
-	UTIL_drawLineCustom(x1, y1, z1, x1, y1, z2, BLABLABLA);
-	
-	UTIL_drawLineCustom(x2, y1, z1, x2, y2, z1, BLABLABLA);
-	UTIL_drawLineCustom(x2, y1, z1, x2, y1, z2, BLABLABLA);
-	
-	UTIL_drawLineCustom(x1, y2, z1, x2, y2, z1, BLABLABLA);
-	UTIL_drawLineCustom(x1, y2, z1, x1, y2, z2, BLABLABLA);
 
-	UTIL_drawLineCustom(x2, y2, z1, x2, y2, z2, BLABLABLA);
 
-	UTIL_drawLineCustom(x1, y1, z2, x1, y2, z2, BLABLABLA);
-	UTIL_drawLineCustom(x1, y1, z2, x2, y1, z2, BLABLABLA);
-	
-	UTIL_drawLineCustom(x2, y1, z2, x2, y2, z2, BLABLABLA);
-	
-	UTIL_drawLineCustom(x1, y2, z2, x2, y2, z2, BLABLABLA);
 
-}//END OF UTIL_drawBoxCustom
+void UTIL_TE_BeamPoints_Box(const Vector& vec1, const Vector& vec2, int frameStart, int frameRate, int life, int width, int noise, int r, int g, int b, int brightness, int speed){
+	UTIL_TE_BeamPoints_Box(vec1.x, vec1.y, vec1.z, vec2.x, vec2.y, vec2.z, frameStart, frameRate, life, width, noise, r, g, b, brightness, speed);
+}
+
+
+void UTIL_TE_BeamPoints_Box(float x1, float y1, float z1, float x2, float y2, float z2, int frameStart, int frameRate, int life, int width, int noise, int r, int g, int b, int brightness, int speed){
+
+	UTIL_TE_BeamPoints(x1, y1, z1, x1, y2, z1, frameStart, frameRate, life, width, noise, r, g, b, brightness, speed);
+	UTIL_TE_BeamPoints(x1, y1, z1, x2, y1, z1, frameStart, frameRate, life, width, noise, r, g, b, brightness, speed);
+	UTIL_TE_BeamPoints(x1, y1, z1, x1, y1, z2, frameStart, frameRate, life, width, noise, r, g, b, brightness, speed);
+	
+	UTIL_TE_BeamPoints(x2, y1, z1, x2, y2, z1, frameStart, frameRate, life, width, noise, r, g, b, brightness, speed);
+	UTIL_TE_BeamPoints(x2, y1, z1, x2, y1, z2, frameStart, frameRate, life, width, noise, r, g, b, brightness, speed);
+	
+	UTIL_TE_BeamPoints(x1, y2, z1, x2, y2, z1, frameStart, frameRate, life, width, noise, r, g, b, brightness, speed);
+	UTIL_TE_BeamPoints(x1, y2, z1, x1, y2, z2, frameStart, frameRate, life, width, noise, r, g, b, brightness, speed);
+
+	UTIL_TE_BeamPoints(x2, y2, z1, x2, y2, z2, frameStart, frameRate, life, width, noise, r, g, b, brightness, speed);
+
+	UTIL_TE_BeamPoints(x1, y1, z2, x1, y2, z2, frameStart, frameRate, life, width, noise, r, g, b, brightness, speed);
+	UTIL_TE_BeamPoints(x1, y1, z2, x2, y1, z2, frameStart, frameRate, life, width, noise, r, g, b, brightness, speed);
+	
+	UTIL_TE_BeamPoints(x2, y1, z2, x2, y2, z2, frameStart, frameRate, life, width, noise, r, g, b, brightness, speed);
+	
+	UTIL_TE_BeamPoints(x1, y2, z2, x2, y2, z2, frameStart, frameRate, life, width, noise, r, g, b, brightness, speed);
+
+}//END OF UTIL_TE_BeamPoints_Box
 
 
 
@@ -7032,11 +7037,15 @@ void precacheAll(void){
 
 
 	PRECACHE_MODEL("models/bullsquid.mdl");
-	//MODDD - using this instead.  JUST PRECACHE BOTH!
-	PRECACHE_MODEL("sprites/bigspit.spr");//spitprojectile.
-	PRECACHE_MODEL("models/spit.mdl");
 
-	PRECACHE_MODEL("sprites/tinyspit.spr");//clientsidespittle.
+	//CSquidSpit::precacheStatic();   //necessary?
+	//No need. Its precaches are already below.
+	PRECACHE_MODEL("sprites/bigspit.spr");//spit projectile.
+	PRECACHE_MODEL("models/spit.mdl");
+	
+	//Just call this to set a static model reference (integer? by load order?) correctly.
+	CSquidSpit::precacheStatic();
+	//PRECACHE_MODEL("sprites/tinyspit.spr");//clientside spittle.
 
 	
 

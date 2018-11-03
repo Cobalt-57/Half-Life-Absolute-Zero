@@ -26,20 +26,24 @@ public:
 	static const char* pAttackHitSounds[];
 	static const char* pAttackMissSounds[];
 
+	
+	float explodeDelay;
 	float m_flightSpeed;
 	BOOL tempCheckTraceLineBlock;
 	Vector m_velocity;
 	float lastVelocityChange;
 	BOOL hitGroundDead;
 
-	/*
+	float shootCooldown;
+
+	
 	//save info
 	//////////////////////////////////////////////////////////////////////////////////
 	static TYPEDESCRIPTION m_SaveData[];
 	virtual int Save( CSave &save ); 
 	virtual int Restore( CRestore &restore );
 	//////////////////////////////////////////////////////////////////////////////////
-	*/
+	
 
 	CFloater(void);
 
@@ -137,8 +141,12 @@ public:
 	void checkFloor(const Vector& vecSuggestedDir, const float& travelMag, const float& flInterval);
 
 	void OnKilledSetTouch(void);
-	int CFloater::getLoopingDeathSequence(void);
+	int getLoopingDeathSequence(void);
 
+	Vector BodyTarget(const Vector &posSrc);
+	Vector BodyTargetMod(const Vector &posSrc);
+
+	void onDeathAnimationEnd(void);
 
 };//END OF class CFloater
 

@@ -150,6 +150,9 @@ Activity CFlyingMonster :: GetStoppedActivity( void )
 		return ACT_IDLE;
 
 	return ACT_HOVER; 
+	
+	//return ACT_IDLE;
+
 }
 
 

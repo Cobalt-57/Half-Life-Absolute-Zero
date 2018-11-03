@@ -15,6 +15,10 @@ class CPathTrack;
 #define DEBUG_LINES_MAX 16
 #define DEBUG_PATHTRACK_DRAW_MAX 2
 
+//For anywhere else that wants to know this?
+#define DEBUG_LINE_WIDTH 8
+
+
 
 class DebugLine{
 public:

@@ -772,7 +772,8 @@ int CISlave :: ISoundMask ( void)
 
 
 
-
+//NOTICE: default behavior for "onDeathAnimationEnd" is to turn the think method off. So the check for whether this monster will be self-revived or not makes sense here.
+//A self reviving monster can't even check its own countdown timer for revival if its think method is turned off.
 void CISlave::onDeathAnimationEnd(void){
 	
 	//let's have a planned revive...

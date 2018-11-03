@@ -633,47 +633,54 @@ extern void UTIL_PRECACHESOUND_ARRAY(const char* a[], int aSize, BOOL dontSkipSa
 
 
 
-extern void UTIL_drawLine(const Vector& vec1, const Vector& vec2);
-extern void UTIL_drawLine(int x1, int y1, int z1, int x2, int y2, int z2);
+extern void UTIL_TE_ShowLine(const Vector& vec1, const Vector& vec2);
+extern void UTIL_TE_ShowLine(float x1, float y1, float z1, float x2, float y2, float z2);
 
 extern void UTIL_drawRect(const Vector& vec1, const Vector& vec2);
-extern void UTIL_drawRect(int x1, int y1, int z1, int x2, int y2, int z2);
+extern void UTIL_drawRect(float x1, float y1, float z1, float x2, float y2, float z2);
 
 extern void UTIL_drawBox(const Vector& vec1, const Vector& vec2);
-extern void UTIL_drawBox(int x1, int y1, int z1, int x2, int y2, int z2);
+extern void UTIL_drawBox(float x1, float y1, float z1, float x2, float y2, float z2);
 
 
 
 
 
+extern void UTIL_drawLineFrame(const Vector& vec1, const Vector& vec2, int r, int g, int b);
 extern void UTIL_drawLineFrame(const Vector& vec1, const Vector& vec2, int width, int r, int g, int b);
-extern void UTIL_drawLineFrame(int x1, int y1, int z1, int x2, int y2, int z2, int width, int r, int g, int b);
+extern void UTIL_drawLineFrame(float x1, float y1, float z1, float x2, float y2, float z2, int width, int r, int g, int b);
+
+extern void UTIL_drawPointFrame(const Vector& vecPoint, int width, int r, int g, int b);
+extern void UTIL_drawPointFrame(float point_x, float point_y, float point_z, int width, int r, int g, int b);
+
 
 extern void UTIL_drawRectFrame(const Vector& vec1, const Vector& vec2, int width, int r, int g, int b);
-extern void UTIL_drawRectFrame(int x1, int y1, int z1, int x2, int y2, int z2, int width, int r, int g, int b);
+extern void UTIL_drawRectFrame(float x1, float y1, float z1, float x2, float y2, float z2, int width, int r, int g, int b);
 
 extern void UTIL_drawBoxFrame(const Vector& vec1, const Vector& vec2, int width, int r, int g, int b);
-extern void UTIL_drawBoxFrame(int x1, int y1, int z1, int x2, int y2, int z2, int width, int r, int g, int b);
+extern void UTIL_drawBoxFrame(float x1, float y1, float z1, float x2, float y2, float z2, int width, int r, int g, int b);
 
 extern void UTIL_drawLineFrameBoxAround(const Vector& vec1, int width, int boxSize, int r, int g, int b);
-extern void UTIL_drawLineFrameBoxAround(int x1, int y1, int z1, int width, int boxSize, int r, int g, int b);
+extern void UTIL_drawLineFrameBoxAround(float x1, float y1, float z1, int width, int boxSize, int r, int g, int b);
 
 extern void UTIL_drawLineFrameBoxAround2(const Vector& vec1, int width, int boxSize, int r, int g, int b);
-extern void UTIL_drawLineFrameBoxAround2(int x1, int y1, int z1, int width, int boxSize, int r, int g, int b);
+extern void UTIL_drawLineFrameBoxAround2(float x1, float y1, float z1, int width, int boxSize, int r, int g, int b);
 
 extern void UTIL_drawLineFrameBoxAround3(const Vector& vec1, int width, int boxSize, int r, int g, int b);
-extern void UTIL_drawLineFrameBoxAround3(int x1, int y1, int z1, int width, int boxSize, int r, int g, int b);
+extern void UTIL_drawLineFrameBoxAround3(float x1, float y1, float z1, int width, int boxSize, int r, int g, int b);
 
 
 
-extern void UTIL_drawLineCustom(const Vector& vec1, const Vector& vec2, int frameStart, int frameRate, int life, int width, int noise, int r, int g, int b, int brightness, int speed);
-extern void UTIL_drawLineCustom(int x1, int y1, int z1, int x2, int y2, int z2, int frameStart, int frameRate, int life, int width, int noise, int r, int g, int b, int brightness, int speed);
 
-extern void UTIL_drawRectCustom(const Vector& vec1, const Vector& vec2, int frameStart, int frameRate, int life, int width, int noise, int r, int g, int b, int brightness, int speed);
-extern void UTIL_drawRectCustom(int x1, int y1, int z1, int x2, int y2, int z2, int frameStart, int frameRate, int life, int width, int noise, int r, int g, int b, int brightness, int speed);
 
-extern void UTIL_drawBoxCustom(const Vector& vec1, const Vector& vec2, int frameStart, int frameRate, int life, int width, int noise, int r, int g, int b, int brightness, int speed);
-extern void UTIL_drawBoxCustom(int x1, int y1, int z1, int x2, int y2, int z2, int frameStart, int frameRate, int life, int width, int noise, int r, int g, int b, int brightness, int speed);
+extern void UTIL_TE_BeamPoints(const Vector& vec1, const Vector& vec2, int frameStart, int frameRate, int life, int width, int noise, int r, int g, int b, int brightness, int speed);
+extern void UTIL_TE_BeamPoints(float x1, float y1, float z1, float x2, float y2, float z2, int frameStart, int frameRate, int life, int width, int noise, int r, int g, int b, int brightness, int speed);
+
+extern void UTIL_TE_BeamPoints_Rect(const Vector& vec1, const Vector& vec2, int frameStart, int frameRate, int life, int width, int noise, int r, int g, int b, int brightness, int speed);
+extern void UTIL_TE_BeamPoints_Rect(float x1, float y1, float z1, float x2, float y2, float z2, int frameStart, int frameRate, int life, int width, int noise, int r, int g, int b, int brightness, int speed);
+
+extern void UTIL_TE_BeamPoints_Box(const Vector& vec1, const Vector& vec2, int frameStart, int frameRate, int life, int width, int noise, int r, int g, int b, int brightness, int speed);
+extern void UTIL_TE_BeamPoints_Box(float x1, float y1, float z1, float x2, float y2, float z2, int frameStart, int frameRate, int life, int width, int noise, int r, int g, int b, int brightness, int speed);
 
 
 

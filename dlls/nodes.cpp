@@ -1044,6 +1044,12 @@ int	CGraph :: FindNearestNode ( const Vector &vecOrigin,  int afNodeTypes )
 	int	i;
 	TraceResult tr;
 
+
+
+	//MODDD - DANGEROUS HACK.
+	//afNodeTypes |= bits_NODE_LAND | bits_NODE_WATER | bits_NODE_AIR;
+
+
 	if ( !m_fGraphPresent || !m_fGraphPointersSet )
 	{// protect us in the case that the node graph isn't available
 		ALERT ( at_aiconsole, "Graph not ready!\n" );
@@ -1053,7 +1059,12 @@ int	CGraph :: FindNearestNode ( const Vector &vecOrigin,  int afNodeTypes )
 	// Check with the cache
 	//
 	ULONG iHash = (CACHE_SIZE-1) & Hash((void *)(const float *)vecOrigin, sizeof(vecOrigin));
-	if (m_Cache[iHash].v == vecOrigin)
+
+	//MODDD - extra check.  allowed to return a -1 node? really?
+	//...then again, memory is memory. If it failed before, it won't change. guess this is ok.
+
+	//if (m_Cache[iHash].n != -1 && m_Cache[iHash].v == vecOrigin)
+	if(m_Cache[iHash].v == vecOrigin)
 	{
 		//ALERT(at_aiconsole, "Cache Hit.\n");
 		return m_Cache[iHash].n;

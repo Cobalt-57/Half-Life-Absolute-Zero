@@ -631,6 +631,7 @@
     <ClCompile Include="rope\CRope.cpp" />
     <ClCompile Include="rope\CRopeSample.cpp" />
     <ClCompile Include="rope\CRopeSegment.cpp" />
+    <ClCompile Include="squidspit.cpp" />
     <ClCompile Include="stukabat.cpp" />
     <ClCompile Include="hornet.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -1123,6 +1124,7 @@
     <ClInclude Include="soundent.h" />
     <ClInclude Include="spectator.h" />
     <ClInclude Include="squadmonster.h" />
+    <ClInclude Include="squidspit.h" />
     <ClInclude Include="stukabat.h" />
     <ClInclude Include="talkmonster.h" />
     <ClInclude Include="teamplay_gamerules.h" />

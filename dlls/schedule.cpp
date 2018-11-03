@@ -567,6 +567,8 @@ void CBaseMonster :: MaintainSchedule ( void )
 			easyPrintLine("OOPS A PLENTY 12 %d", HasConditions(bits_COND_CAN_MELEE_ATTACK1));
 		}
 		// UNDONE: Twice?!!!
+
+		//MODDD TODO - add a check for " || signalActivityUpdate" too? may cause things to break, careful.
 		if ( m_Activity != m_IdealActivity )
 		{
 			SetActivity ( m_IdealActivity );
@@ -765,6 +767,20 @@ void CBaseMonster :: RunTask ( Task_t *pTask )
 			// don't do anything.
 			break;
 		}
+
+
+	case TASK_WAIT_ENEMY_LOOSE_SIGHT:{
+
+		//keep looking at the enemy.
+		MakeIdealYaw ( m_vecEnemyLKP );
+		ChangeYaw( pev->yaw_speed ); 
+
+		//only continue if we loose sight of the enemy.
+		if(!HasConditions(bits_COND_SEE_ENEMY)){
+			TaskComplete();
+		}	
+	break;}
+
 	case TASK_WAIT:
 	case TASK_WAIT_RANDOM:
 	case TASK_WAIT_STUMPED:
@@ -1245,6 +1261,7 @@ void CBaseMonster :: RunTask ( Task_t *pTask )
 
 			if ( m_fSequenceFinished )
 			{
+				//MODDD NOTE - BEWARE. This is likely to pick the same range attack activity again if the ideal activity remains that way.
 				m_Activity = ACT_RESET;
 				TaskComplete();
 			}
@@ -1619,14 +1636,14 @@ void CBaseMonster :: StartTask ( Task_t *pTask )
 		{
 			if ( FindCover( pev->origin, pev->view_ofs, 0, CoverRadius() ) )
 			{
-				easyPrintLine("TASK_FIND_COVER_FROM_ORIGIN: I FOUND COVER OKAYYYYYYYYYY");
+				easyForcePrintLine("TASK_FIND_COVER_FROM_ORIGIN: I FOUND COVER OKAYYYYYYYYYY");
 				// then try for plain ole cover
 				m_flMoveWaitFinished = gpGlobals->time + pTask->flData;
 				TaskComplete();
 			}
 			else
 			{
-				easyPrintLine("TASK_FIND_COVER_FROM_ORIGIN: IM TOO BUSY CHOKIN ON MEGA... ok that is crude.");
+				easyForcePrintLine("TASK_FIND_COVER_FROM_ORIGIN: I FAIL HARD.");
 				// no cover!
 				TaskFail();
 			}
@@ -1758,6 +1775,13 @@ void CBaseMonster :: StartTask ( Task_t *pTask )
 	case TASK_CHECK_STUMPED:
 		{
 			easyForcePrintLine("I MUST SAY, I AM STUMPED.");
+
+			//TaskComplete();
+			//return;
+			//no dont do it!!!!
+
+
+
 
 			//It is possible we're facing our last known position, but just repeatedly getting satisifed with that.
 			//Do a check. Are we looking at the enemy right now? If not, we need to force the LKP to the player to seek them.
@@ -2027,7 +2051,7 @@ void CBaseMonster :: StartTask ( Task_t *pTask )
 	case TASK_GET_PATH_TO_ENEMY_LKP:
 		{
 
-			const char* penissss = m_pSchedule->pName;
+			//const char* schedName = m_pSchedule->pName;
 
 			
 			//if ( BuildRoute ( m_vecEnemyLKP, bits_MF_TO_LOCATION, NULL ) )

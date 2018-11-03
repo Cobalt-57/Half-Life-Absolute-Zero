@@ -10,7 +10,7 @@
 #include "defaultai.h"
 #include "soundent.h"
 #include "game.h"
-
+#include "decals.h"
 
 
 
@@ -92,12 +92,27 @@ const char* CTemplateMonster::pAttackMissSounds[] =
 
 
 /*
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//SAVE / RESTORE SCRIPT
+//Before uncommenting, must have at least one entry. Yes, C / C++ really hates empty constant arrays.
+//See examples of entries in basemonster.cpp. like:
+//    DEFINE_FIELD( CBaseMonster, m_flNextAttack, FIELD_TIME ),
+//For save type (last parameter), pay attention to some things that go a little beyond data type, like being a time.
+//FIELD_TIME factors in the change between game time from loading a different game.
+//But for ordinary fields that don't need that adjustment (FIELD_FLOAT), this will royally... mess them up. Subtracting game time from a remembered angle for instance makes no sense.
+//See the "_fieldtypes" enumeration of eiface.h for all save types.
+
 TYPEDESCRIPTION	CTemplateMonster::m_SaveData[] = 
 {
 	
 };
 
+//This line does the Save / Restore methods minimally but leaves out the opportunity for doing more with them. Doing both is redundant.
 //IMPLEMENT_SAVERESTORE( CTemplateMonster, CBaseMonster );
+
+//Typically want to do things after the iWriteFieldsResult or iReadFieldsResult. For writing it may not matter,
+//but reading may require parent class vars to already be loaded if they are depended on.
+//Also beware of depending on this same class's vars during loading, depending on vars not yet loaded is bad.
 int CTemplateMonster::Save( CSave &save )
 {
 	if ( !CBaseMonster::Save(save) )
@@ -114,6 +129,7 @@ int CTemplateMonster::Restore( CRestore &restore )
 
 	return iReadFieldsResult;
 }
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 */
 
 

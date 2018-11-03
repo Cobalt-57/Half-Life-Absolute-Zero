@@ -713,6 +713,27 @@ Schedule_t	slCombatFaceNoStump[] =
 };
 
 
+//Just uh, face and stay that way. look. that's it.
+Task_t tlCombatLook[] =
+{
+	{ TASK_STOP_MOVING,				0				},
+	{ TASK_SET_ACTIVITY,			(float)ACT_IDLE	},
+	{ TASK_FACE_ENEMY,				(float)0		},
+	{ TASK_WAIT_ENEMY_LOOSE_SIGHT,			(float)0		},
+};
+
+Schedule_t slCombatLook[] =
+{
+	{ 
+		tlCombatLook,
+		ARRAYSIZE ( tlCombatLook ), 
+		bits_COND_CAN_ATTACK			|
+		bits_COND_NEW_ENEMY				|
+		bits_COND_ENEMY_DEAD,
+		0,
+		"CombatLook"
+	},
+};
 
 
 
@@ -1040,6 +1061,37 @@ Schedule_t slChaseEnemySmart[] =
 	},
 };
 
+//MODDD - same, but interrupted by seeing the enemy.
+Task_t tlChaseEnemySmart_StopSight[] = 
+{
+	{ TASK_SET_FAIL_SCHEDULE,	(float)SCHED_CHASE_ENEMY_FAILED	},
+	//{ TASK_GET_PATH_TO_ENEMY,	(float)0		},
+	//{ TASK_RUN_PATH,			(float)0		},
+	{ TASK_MOVE_TO_ENEMY_RANGE,(float)0		},
+	{ TASK_CHECK_STUMPED,(float)0			},
+};
+
+Schedule_t slChaseEnemySmart_StopSight[] =
+{
+	{ 
+		tlChaseEnemySmart_StopSight,
+		ARRAYSIZE ( tlChaseEnemySmart_StopSight ),
+		bits_COND_NEW_ENEMY			|
+		//MODDD - added, the bullsquid counts this.  Why doesn't everything?
+		bits_COND_ENEMY_DEAD |
+
+		bits_COND_CAN_RANGE_ATTACK1	|
+		bits_COND_CAN_MELEE_ATTACK1	|
+		bits_COND_CAN_RANGE_ATTACK2	|
+		bits_COND_CAN_MELEE_ATTACK2	|
+		bits_COND_TASK_FAILED		|
+		bits_COND_HEAR_SOUND |
+		bits_COND_SEE_ENEMY,
+		
+		bits_SOUND_DANGER,
+		"Chase Enemy Smart StopSight"
+	},
+};
 
 
 
@@ -1655,6 +1707,7 @@ Schedule_t *CBaseMonster::m_scheduleList[] =
 	slCombatStand,
 	slCombatFace,
 	slCombatFaceNoStump,
+	slCombatLook,
 	slCombatFaceSound,
 	slStandoff,
 	slArmWeapon,
@@ -1667,6 +1720,7 @@ Schedule_t *CBaseMonster::m_scheduleList[] =
 	slSpecialAttack2,
 	slChaseEnemy,
 	slChaseEnemySmart,
+	slChaseEnemySmart_StopSight,
 	slChaseEnemyFailed,
 	slSmallFlinch,
 	slDie,
@@ -1816,12 +1870,22 @@ Schedule_t* CBaseMonster :: GetScheduleOfType ( int Type )
 			return &slCombatFace[ 0 ];
 			//return &slCombatFaceSound[0];
 		}
+	case SCHED_COMBAT_FACE_NOSTUMP:{
+		return &slCombatFaceNoStump[0];
+	break;}
+	case SCHED_COMBAT_LOOK:{
+		return &slCombatLook[0];
+    break;}
 	case SCHED_CHASE_ENEMY:
 		{
 			//MODDD - see what happens.
 			//return &slChaseEnemy[ 0 ];
 			return &slChaseEnemySmart[0];
 		}
+	case SCHED_CHASE_ENEMY_STOP_SIGHT:{
+		//MODDD - new. Same as slChaseEnemySmart, but stops if the enemy is in sight.
+			return &slChaseEnemySmart_StopSight[0];
+	break;}
 	case SCHED_CHASE_ENEMY_SMART:
 		{
 			return &slChaseEnemySmart[ 0 ];

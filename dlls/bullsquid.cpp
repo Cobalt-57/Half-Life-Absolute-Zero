@@ -30,38 +30,17 @@
 #include	"soundent.h"
 #include	"game.h"
 
+#include "squidspit.h"
+
+
 #define		SQUID_SPRINT_DIST	256 // how close the squid has to get before starting to sprint and refusing to swerve
 
-int			   iSquidSpitSprite;
+
 
 //MODDD
 extern float global_bullsquidRangeDisabled;
 
 
-
-extern float global_bullsquidSpitTrajTimeMin;
-extern float global_bullsquidSpitTrajTimeMax;
-extern float global_bullsquidSpitTrajDistMin;
-extern float global_bullsquidSpitTrajDistMax;
-
-extern float global_bullsquidSpitGravityMulti;
-
-extern float global_cl_bullsquidspitarc;
-extern float global_bullsquidSpitUseAlphaModel;
-extern float global_bullsquidSpitUseAlphaEffect;
-
-extern float global_bullsquidSpitEffectSpread;
-
-extern float global_bullsquidSpitEffectMin;
-extern float global_bullsquidSpitEffectMax;
-extern float global_bullsquidSpitEffectHitMin;
-extern float global_bullsquidSpitEffectHitMax;
-extern float global_bullsquidSpitEffectSpawn;
-extern float global_bullsquidSpitEffectHitSpawn;
-
-
-extern float global_bullsquidSpitAlphaScale;
-extern float global_bullsquidSpitSpriteScale;
 
 
 //=========================================================
@@ -85,487 +64,6 @@ enum
 {
 	TASK_SQUID_HOPTURN = LAST_COMMON_TASK + 1,
 };
-
-//=========================================================
-// Bullsquid's spit projectile
-//=========================================================
-
-//NOTICE - we need animating functionality in case this is a model!
-//class CSquidSpit : public CBaseEntity
-class CSquidSpit : public CBaseAnimating
-{
-public:
-	CSquidSpit();
-	BOOL usesSoundSentenceSave(void);
-
-	void Spawn( void );
-
-	//MODDD - new field in there.
-	static void Shoot( entvars_t *pevOwner, Vector vecStart, Vector vecVelocity, const Vector& vecDest, const Vector& vecMinBounds, const Vector& vecMaxBounds );
-	void Touch( CBaseEntity *pOther );
-	void EXPORT Animate( void );
-
-	virtual int		Save( CSave &save );
-	virtual int		Restore( CRestore &restore );
-	static	TYPEDESCRIPTION m_SaveData[];
-
-
-	
-	GENERATE_TRACEATTACK_PROTOTYPE
-	GENERATE_TAKEDAMAGE_PROTOTYPE
-
-
-	int  m_maxFrame;
-};
-
-
-//IMPORTANT - dummied out!
-GENERATE_TRACEATTACK_IMPLEMENTATION_DUMMY(CSquidSpit)
-GENERATE_TAKEDAMAGE_IMPLEMENTATION_DUMMY(CSquidSpit)
-
-
-
-
-LINK_ENTITY_TO_CLASS( squidspit, CSquidSpit );
-
-TYPEDESCRIPTION	CSquidSpit::m_SaveData[] = 
-{
-	DEFINE_FIELD( CSquidSpit, m_maxFrame, FIELD_INTEGER ),
-};
-
-IMPLEMENT_SAVERESTORE( CSquidSpit, CBaseEntity );
-
-CSquidSpit::CSquidSpit(){
-
-}
-
-BOOL CSquidSpit::usesSoundSentenceSave(void){
-	return TRUE;
-}
-
-
-
-Vector getParticleDir(const Vector& vecVelDir){
-	Vector vecVelDir2D = Vector(
-		vecVelDir.x + RANDOM_FLOAT(-global_bullsquidSpitEffectSpread, global_bullsquidSpitEffectSpread),
-		vecVelDir.y + RANDOM_FLOAT(-global_bullsquidSpitEffectSpread, global_bullsquidSpitEffectSpread),
-		0).Normalize();
-
-
-	return Vector(vecVelDir2D.x, vecVelDir2D.y, 1);
-}
-
-
-
-void CSquidSpit:: Spawn( void )
-{
-	pev->movetype = MOVETYPE_FLY;
-	pev->classname = MAKE_STRING( "squidspit" );
-	
-	pev->solid = SOLID_BBOX;
-	pev->rendermode = kRenderTransAlpha;
-	pev->renderamt = 255;
-
-	
-	//MODDD - how's this?
-	if(global_bullsquidSpitUseAlphaModel == 1){
-		SET_MODEL(ENT(pev), "models/spit.mdl");
-	}else{
-		SET_MODEL(ENT(pev), "sprites/bigspit.spr");
-	}
-
-
-	pev->frame = 0;
-	pev->scale = 0.5;
-
-	UTIL_SetSize( pev, Vector( 0, 0, 0), Vector(0, 0, 0) );
-
-	m_maxFrame = (float) MODEL_FRAMES( pev->modelindex ) - 1;
-
-}
-
-
-
-//#include "cbase.h"
-
-void CSquidSpit::Animate( void )
-{
-
-	if(global_bullsquidSpitUseAlphaModel == 1){
-		
-		StudioFrameAdvance( );
-		pev->angles = UTIL_velocityToAngles(pev->velocity);
-	}else{
-		
-		//sprite.
-		if ( pev->frame++ )
-		{
-			if ( pev->frame > m_maxFrame )
-			{
-				pev->frame = 0;
-			}
-		}
-
-	}//END OF model / spirte checks
-
-	pev->nextthink = gpGlobals->time + 0.1;
-
-
-	
-	//this->pev->gravity = 1;
-	//easyForcePrintLine("MAH GRAV: %.2f", this->pev->gravity);
-}
-
-//MODDD - new field, the enemy for location information.
-void CSquidSpit::Shoot( entvars_t *pevOwner, Vector vecStart, Vector vecVelocity, const Vector& vecDest, const Vector& vecMinBounds, const Vector& vecMaxBounds  )
-{
-	int i = 0;
-
-	CSquidSpit *pSpit = GetClassPtr( (CSquidSpit *)NULL );
-	pSpit->Spawn();
-	
-	UTIL_SetOrigin( pSpit->pev, vecStart );
-	pSpit->pev->velocity = vecVelocity;
-	pSpit->pev->owner = ENT(pevOwner);
-
-	pSpit->SetThink ( &CSquidSpit::Animate );
-	pSpit->pev->nextthink = gpGlobals->time + 0.1;
-
-
-	
-	if(global_bullsquidSpitUseAlphaModel == 1){
-		pSpit->pev->scale = global_bullsquidSpitAlphaScale;
-		//SCALE DOES NOT WORK WITH MODELS. OH WELL.
-	}else{
-		pSpit->pev->scale = global_bullsquidSpitSpriteScale;
-	}
-	
-
-
-	if(global_cl_bullsquidspitarc == 1){
-		//MODDD - new again.
-		pSpit->pev->movetype = MOVETYPE_TOSS;
-		pSpit->pev->solid = SOLID_BBOX;
-		UTIL_SetSize( pSpit->pev, Vector( 0, 0, 0), Vector(0, 0, 0) );
-	}else{
-		
-
-		if(global_bullsquidSpitUseAlphaEffect == 1){
-			//Vector velocityFinalDir = vecVelocity.Normalize();
-			//float spitSpeed = vecVelocity.Length() * 0.6;
-			
-			//Vector vecVelocityNorm = Vector(vecVelocity.x, vecVelocity.y, vecVelocity.z * 2).Normalize();
-			Vector vecVelocityNorm = vecVelocity.Normalize();
-
-			for(i = 0; i < global_bullsquidSpitEffectSpawn; i++){
-
-				
-				Vector particleDir = getParticleDir(vecVelocityNorm);
-				//UTIL_BloodStream(vecStart, (velocityFinalDir + Vector(RANDOM_FLOAT(-global_bullsquidSpitEffectSpread, global_bullsquidSpitEffectSpread), RANDOM_FLOAT(-global_bullsquidSpitEffectSpread, global_bullsquidSpitEffectSpread), RANDOM_FLOAT(-global_bullsquidSpitEffectSpread, global_bullsquidSpitEffectSpread) ) ) * spitSpeed  , BLOOD_COLOR_YELLOW, RANDOM_LONG((long)global_bullsquidSpitEffectMin, (long)global_bullsquidSpitEffectMax));
-				UTIL_BloodStream(vecStart, particleDir, BLOOD_COLOR_YELLOW, RANDOM_LONG((long)global_bullsquidSpitEffectMin, (long)global_bullsquidSpitEffectMax));
-			}
-		}
-
-		UTIL_SetSize( pSpit->pev, Vector( 0, 0, 0), Vector(0, 0, 0) );
-		//everything above is good enough.
-		return;
-	}
-
-
-	/*
-	if(targetEnt == NULL){
-		//just rely on the "vecVelocity" already assigned?
-		return;
-	}
-	*/
-
-
-	Vector dest;
-	//EyePosition( ) { return pev->origin + pev->view_ofs;
-
-	Vector vecEnemySize = vecMinBounds - vecMaxBounds;
-
-	if(vecEnemySize.x > 10 && vecEnemySize.y > 10 && vecEnemySize.z > 7){
-		
-	dest = Vector(
-		RANDOM_FLOAT(vecMinBounds.x + 2.5, vecMaxBounds.x - 2.5),
-		RANDOM_FLOAT(vecMinBounds.y + 2.5, vecMaxBounds.y - 2.5),
-		RANDOM_FLOAT(vecMinBounds.z + 2.5, vecMaxBounds.z - 2.5)
-		);
-
-	}else{
-		//size i too small, different.
-		dest = vecDest + Vector(RANDOM_FLOAT(-5, 5), RANDOM_FLOAT(-5, 5), RANDOM_FLOAT(-2, 4));
-	}
-
-
-
-
-	//if(targetEnt->IsPlayer() == TRUE){
-		
-		//dest = vecDest + Vector(RANDOM_FLOAT(-4, 4), RANDOM_FLOAT(-4, 4), RANDOM_FLOAT(-3, 3));
-
-	//get the size of the thing...  reduce a bit, that's our target zone.
-
-
-
-
-
-
-
-	//}else{
-	//	dest = targetEnt->pev->origin + targetEnt->pev->view_ofs + Vector(RANDOM_FLOAT(-36, 36), RANDOM_FLOAT(-36, 36), RANDOM_FLOAT(-9, 2));
-	//}
-
-	///if(isHead == TRUE){
-	//	dest = pevPlayer->origin + pevPlayer->view_ofs + Vector(RANDOM_FLOAT(-5, 5), RANDOM_FLOAT(-5, 5), RANDOM_FLOAT(-5, 1));
-	//}else{
-		
-	//}
-
-
-	Vector distVector = ( dest ) - vecStart;
-
-	Vector distVector2D = Vector(distVector.x, distVector.y, 0);
-
-	Vector towardsPlayer = distVector.Normalize();
-	Vector towardsPlayer2D =  distVector2D.Normalize();
-				
-	float distFloorwise = distVector.Length2D();
-	float distVertical = distVector.z;
-
-	//angle...
-	/*
-	float ang = 0;
-	if(distVertical ==0){
-		ang = 90 *(M_PI / 180.0);
-	}else{
-		ang = atan(distVertical / distFloorwise);
-	}
-	*/
-
-	//velocity must be at least X.
-	float velocitySpeed = 0;
-
-
-
-	/*
-	float timeMin = 0.70;
-	float timeMax = 1.56;
-	float distMin = 800;
-	float distMax = 1400;
-	*/
-
-
-	/*
-	bullsquidSpitTrajTimeMin
-	bullsquidSpitTrajTimeMax
-	bullsquidSpitTrajDistMin
-	bullsquidSpitTrajDistMax
-	*/
-
-	float timeMin = global_bullsquidSpitTrajTimeMin;
-	float timeMax = global_bullsquidSpitTrajTimeMax;
-	float distMin = global_bullsquidSpitTrajDistMin;
-	float distMax = global_bullsquidSpitTrajDistMax;
-
-	float timeDelta = timeMax - timeMin;
-	float distDelta = distMax - distMin;
-	
-	pSpit->pev->gravity = global_bullsquidSpitGravityMulti;
-
-	//easyForcePrintLine("MAH GRAV: %.2f", this->pev->gravity);
-
-	//how long do we want to take to reach the target?
-	if(distFloorwise < distMin){
-		//just minimum speed, whatever the time is (at minimum, hits in 0.6 seconds).  That is, 600 * 1.25.
-		velocitySpeed = distMin / timeMin;
-	}else if(distFloorwise > distMax){
-		//too great?  cap it.  whatever the time is (at maximum, hits in 1.6 seconds).
-		velocitySpeed = distMax / timeMax;   //about 1500 * 0.625, for reaching in 1.6 seconds.
-	}else{
-		//inbetween?  Let's scale the time it takes...
-		//600 - 1500...
-		float filter = (distFloorwise - distMin) / distDelta;
-		//time range: 0.8 - 1.6.
-		filter = filter*timeDelta + timeMin;
-		
-		//velocitySpeed = distFloorwise * 1.25; //hit in 0.8 of a second.
-
-		velocitySpeed = distFloorwise * filter;
-	}
-
-
-
-
-
-	/*
-	if(velocitySpeed < 600){
-		velocitySpeed = 600;
-	}
-	if(velocitySpeed > 900){
-		velocitySpeed = 900;
-	}
-
-	*/
-
-
-	/*
-	if(isHead){
-		pGib->pev->origin = pGib->pev->origin + (towardsPlayer) * 8;
-
-		//little faster.
-		velocitySpeed *= 1.11f;
-	}
-	*/
-
-
-	//float velocityXComp = cos(ang) * velocity;
-	//float velocityYComp = sin(ang) * velocity;
-
-	//Vector velocityFloorwise = velocity * ;
-
-	//110 / 250
-
-	float timeToReachDest = distFloorwise / velocitySpeed;
-
-	//grav?   sv_grav?
-				
-				
-	float gravity = g_psv_gravity->value * (pSpit->pev->gravity != 0?pSpit->pev->gravity:1 );
-	//easyForcePrintLine("???GGG %.2f", gravity);
-	Vector velocityFinal = towardsPlayer2D * velocitySpeed;
-	float velocityVertical = (distVertical + 0.5 * gravity * pow(timeToReachDest, 2.0f ) ) / (timeToReachDest);
-	
-	//easyForcePrintLine("WHYYYYYY %.2f :: %.2f %.2f %.2f   %.2f %.2f", velocityVertical, distVertical, gravity, timeToReachDest, towardsPlayer.x, towardsPlayer.y);
-
-	velocityFinal.z = velocityVertical * 1.0f;
-	velocityFinal.x *= 1.0;
-	velocityFinal.y *= 1.0;
-
-	//pGib->pev->velocity.z += 100;
-
-
-	//Vector tempp = towardsPlayer2D * velocity;
-
-	pSpit->pev->velocity = velocityFinal;
-	
-	if(global_bullsquidSpitUseAlphaModel == 1){
-		//yes, right now.
-		pSpit->pev->angles = UTIL_velocityToAngles(pSpit->pev->velocity);
-	}
-
-	
-	//UTIL_BloodStream(vecSpitOffset, vecSpitDir, BloodColor(), RANDOM_LONG(40, 70));
-	//UTIL_BloodStream(vecSpitOffset, vecSpitDir, BloodColor(), RANDOM_LONG(40, 70));
-	//UTIL_BloodStream(vecSpitOffset, vecSpitDir, BloodColor(), RANDOM_LONG(40, 70));
-	
-	//global_bullsquidSpitUseAlphaEffect
-	
-	if(global_bullsquidSpitUseAlphaEffect == 1){
-		
-		//velocityFinal.z = velocityFinal.z * 2.6;
-		//Vector velocityFinalDir = velocityFinal.Normalize();
-		
-		
-		
-		//easyForcePrintLine("THE FINAL SPEEEEEED::: %.2f",velocityFinal.Length());
-		float spitSpeed = velocityFinal.Length() * 3;
-		
-		Vector vecVelocityNorm = velocityFinal.Normalize();
-
-		for(i = 0; i < global_bullsquidSpitEffectSpawn; i++){
-			//UTIL_BloodStream(vecStart, (velocityFinalDir + Vector(RANDOM_FLOAT(-global_bullsquidSpitEffectSpread, global_bullsquidSpitEffectSpread), RANDOM_FLOAT(-global_bullsquidSpitEffectSpread, global_bullsquidSpitEffectSpread), RANDOM_FLOAT(-global_bullsquidSpitEffectSpread, global_bullsquidSpitEffectSpread) ) ) * spitSpeed  , BLOOD_COLOR_YELLOW, RANDOM_LONG(7, 15));
-			//UTIL_BloodStream(vecStart, UTIL_RandomBloodVector()  , BLOOD_COLOR_YELLOW, RANDOM_LONG(38, 46));
-
-			//extern float global_testVar;
-			
-			Vector particleDir = getParticleDir(vecVelocityNorm);
-
-			//UTIL_BloodStream(vecStart, (velocityFinalDir + Vector(RANDOM_FLOAT(-global_bullsquidSpitEffectSpread, global_bullsquidSpitEffectSpread), RANDOM_FLOAT(-global_bullsquidSpitEffectSpread, global_bullsquidSpitEffectSpread), RANDOM_FLOAT(-global_bullsquidSpitEffectSpread, global_bullsquidSpitEffectSpread) ) ).Normalize(), BLOOD_COLOR_YELLOW, RANDOM_LONG((long)global_bullsquidSpitEffectMin, (long)global_bullsquidSpitEffectMax));
-			UTIL_BloodStream(vecStart, particleDir, BLOOD_COLOR_YELLOW, RANDOM_LONG((long)global_bullsquidSpitEffectMin, (long)global_bullsquidSpitEffectMax));
-			
-		}
-	}
-
-}
-
-void CSquidSpit :: Touch ( CBaseEntity *pOther )
-{
-	int i = 0;
-	TraceResult tr;
-	int		iPitch;
-
-	// splat sound
-	iPitch = RANDOM_FLOAT( 90, 110 );
-
-	EMIT_SOUND_FILTERED( ENT(pev), CHAN_VOICE, "bullchicken/bc_acid1.wav", 1, ATTN_NORM, 0, iPitch );	
-
-	switch ( RANDOM_LONG( 0, 1 ) )
-	{
-	case 0:
-		EMIT_SOUND_FILTERED( ENT(pev), CHAN_WEAPON, "bullchicken/bc_spithit1.wav", 1, ATTN_NORM, 0, iPitch );	
-		break;
-	case 1:
-		EMIT_SOUND_FILTERED( ENT(pev), CHAN_WEAPON, "bullchicken/bc_spithit2.wav", 1, ATTN_NORM, 0, iPitch );	
-		break;
-	}
-
-	if ( !pOther->pev->takedamage )
-	{
-
-		// make a splat on the wall
-		UTIL_TraceLine( pev->origin, pev->origin + pev->velocity * 10, dont_ignore_monsters, ENT( pev ), &tr );
-		UTIL_DecalTrace(&tr, DECAL_SPIT1 + RANDOM_LONG(0,1));
-
-
-		if(global_bullsquidSpitUseAlphaEffect == 0){
-			// make some flecks
-			MESSAGE_BEGIN( MSG_PVS, SVC_TEMPENTITY, tr.vecEndPos );
-				WRITE_BYTE( TE_SPRITE_SPRAY );
-				WRITE_COORD( tr.vecEndPos.x);	// pos
-				WRITE_COORD( tr.vecEndPos.y);	
-				WRITE_COORD( tr.vecEndPos.z);	
-				WRITE_COORD( tr.vecPlaneNormal.x);	// dir
-				WRITE_COORD( tr.vecPlaneNormal.y);	
-				WRITE_COORD( tr.vecPlaneNormal.z);	
-				WRITE_SHORT( iSquidSpitSprite );	// model
-				WRITE_BYTE ( 5 );			// count
-				WRITE_BYTE ( 30 );			// speed
-				WRITE_BYTE ( 80 );			// noise ( client will divide by 100 )
-			MESSAGE_END();
-
-		}else if(global_bullsquidSpitUseAlphaEffect == 1){
-
-			Vector velocityFinalDir = pev->velocity.Normalize();
-			float spitSpeed = pev->velocity.Length() * 0.36;
-
-			Vector velocityFlyOff = tr.vecPlaneNormal;
-			//velocityFlyOff.z += pev->velocity.z *0.1;
-
-			Vector velocityFlyOffNorm = velocityFlyOff.Normalize();
-
-
-
-			for(i = 0; i < global_bullsquidSpitEffectHitSpawn; i++){
-				Vector particleDir = getParticleDir(velocityFlyOffNorm);
-				//UTIL_BloodStream(tr.vecEndPos, (velocityFlyOffNorm + Vector(RANDOM_FLOAT(-global_bullsquidSpitEffectSpread, global_bullsquidSpitEffectSpread), RANDOM_FLOAT(-global_bullsquidSpitEffectSpread, global_bullsquidSpitEffectSpread), RANDOM_FLOAT(-global_bullsquidSpitEffectSpread, global_bullsquidSpitEffectSpread) ) ) * spitSpeed  , BLOOD_COLOR_YELLOW, RANDOM_LONG((long)global_bullsquidSpitEffectHitMin, (long)global_bullsquidSpitEffectHitMax));
-				UTIL_BloodStream(tr.vecEndPos, particleDir, BLOOD_COLOR_YELLOW, RANDOM_LONG((long)global_bullsquidSpitEffectHitMin, (long)global_bullsquidSpitEffectHitMax));
-			}
-
-		}
-
-	}
-	else
-	{
-		//MODDD - bullsquid spit does toxic (poison) damage.
-		//pOther->TakeDamage ( pev, pev, gSkillData.bullsquidDmgSpit, DMG_GENERIC );
-		pOther->TakeDamage ( pev, pev, gSkillData.bullsquidDmgSpit, DMG_POISON );
-	}
-
-	SetThink ( &CBaseEntity::SUB_Remove );
-	pev->nextthink = gpGlobals->time;
-}
 
 //=========================================================
 // Monster's Anim Events Go Here
@@ -999,14 +497,13 @@ void CBullsquid :: HandleAnimEvent( MonsterEvent_t *pEvent )
 			vecSpitOffset = ( pev->origin + vecSpitOffset );
 			
 			//MODDD - use LKP instead, when we can at least.
-			Vector vecSpitDirOLD = ( ( m_hEnemy->pev->origin + m_hEnemy->pev->view_ofs ) - vecSpitOffset ).Normalize();
+			//Vector vecSpitDirOLD = ( ( m_hEnemy->pev->origin + m_hEnemy->pev->view_ofs ) - vecSpitOffset ).Normalize();
 			
-			vecSpitDir = ( ( m_vecEnemyLKP +  ((m_hEnemy!=NULL)?(m_hEnemy->pev->view_ofs):(Vector(0,0,0)))   ) - vecSpitOffset ).Normalize();
+			vecSpitDir = ( ( m_vecEnemyLKP +  ((m_hEnemy!=NULL)?(m_hEnemy->EyeOffset()):(Vector(0,0,5)))   ) - vecSpitOffset ).Normalize();
 			
 			//easyForcePrintLine("WHATTTTT %.2f %.2f %.2f ::: %.2f %.2f %.2f", m_vecEnemyLKP.x, m_vecEnemyLKP.y, m_vecEnemyLKP.z, m_hEnemy->pev->origin.x, m_hEnemy->pev->origin.y, m_hEnemy->pev->origin.z);
 			//UTIL_printLineVector("HEEEa", vecSpitDirOLD);
 			//UTIL_printLineVector("HEEEr", vecSpitDir);
-
 
 			vecSpitDir.x += RANDOM_FLOAT( -0.05, 0.05 );
 			vecSpitDir.y += RANDOM_FLOAT( -0.05, 0.05 );
@@ -1016,28 +513,13 @@ void CBullsquid :: HandleAnimEvent( MonsterEvent_t *pEvent )
 			// do stuff for this event.
 			AttackSound();
 
+			//MODDD - stuff moved to the shoot method.
 
 
 
-			if(global_bullsquidSpitUseAlphaEffect == 0){
-				//no alpha effect? retail will just do this.
-				//MODDD - use the blood particles instead.
-				// spew the spittle temporary ents.
-				MESSAGE_BEGIN( MSG_PVS, SVC_TEMPENTITY, vecSpitOffset );
-					WRITE_BYTE( TE_SPRITE_SPRAY );
-					WRITE_COORD( vecSpitOffset.x);	// pos
-					WRITE_COORD( vecSpitOffset.y);	
-					WRITE_COORD( vecSpitOffset.z);	
-					WRITE_COORD( vecSpitDir.x);	// dir
-					WRITE_COORD( vecSpitDir.y);	
-					WRITE_COORD( vecSpitDir.z);	
-					WRITE_SHORT( iSquidSpitSprite );	// model
-					WRITE_BYTE ( 15 );			// count
-					WRITE_BYTE ( 210 );			// speed
-					WRITE_BYTE ( 25 );			// noise ( client will divide by 100 )
-				MESSAGE_END();
-			}
-			
+
+
+
 			//GENERATE GLORIOUS BLOOD INSTEAD!!!!
 			//...let the Shoot method handle this, it gets the direction nicely.
 
@@ -1046,7 +528,11 @@ void CBullsquid :: HandleAnimEvent( MonsterEvent_t *pEvent )
 			//MODDD - slow this down a ton for testing!
 			//CSquidSpit::Shoot( pev, vecSpitOffset, vecSpitDir * 900 );
 			
-			CSquidSpit::Shoot( pev, vecSpitOffset, vecSpitDir * 900, (m_hEnemy!=NULL&&((tempMon=m_hEnemy->MyMonsterPointer())!=NULL))?m_vecEnemyLKP+tempMon->pev->view_ofs:this->m_vecEnemyLKP, (tempMon!=NULL)?tempMon->pev->mins+tempMon->pev->origin: m_vecEnemyLKP, (tempMon!=NULL)?tempMon->pev->maxs+tempMon->pev->origin: m_vecEnemyLKP   );
+			//MODDD - new. Can also let the SQuidSpit class determine a lot of things given a parent too for ease of use.
+			//CSquidSpit::Shoot( pev, vecSpitOffset, vecSpitDir, 900, (m_hEnemy!=NULL&&((tempMon=m_hEnemy->MyMonsterPointer())!=NULL))?m_vecEnemyLKP+tempMon->pev->view_ofs:this->m_vecEnemyLKP, (tempMon!=NULL)?tempMon->pev->mins+tempMon->pev->origin: m_vecEnemyLKP, (tempMon!=NULL)?tempMon->pev->maxs+tempMon->pev->origin: m_vecEnemyLKP   );
+
+			CSquidSpit::Shoot( this, vecSpitOffset, vecSpitDir, 900 );
+
 		}
 		break;
 
@@ -1202,13 +688,8 @@ void CBullsquid :: Precache()
 	PRECACHE_MODEL("models/bullsquid.mdl");
 	
 
-	//MODDD - using this instead.  NAH just precache both.
-	PRECACHE_MODEL("sprites/bigspit.spr");// spit projectile.
-	PRECACHE_MODEL("models/spit.mdl");
-
-	
-	iSquidSpitSprite = PRECACHE_MODEL("sprites/tinyspit.spr");// client side spittle.
-
+	//sprite precache left to the SquidSpit file (separate).
+	CSquidSpit::precacheStatic();
 
 	global_useSentenceSave = TRUE;
 

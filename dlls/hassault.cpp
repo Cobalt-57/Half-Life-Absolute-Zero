@@ -3045,7 +3045,7 @@ int CHAssault::LookupActivityHard(int activity){
 			//WHY DONT YOU WORK???!
 			int testAnim = CBaseAnimating::LookupActivity(iSelectedActivity);
 			if(testAnim == -1){
-				//ah fuck, just make the crawal faster.
+				//just make the crawl faster.
 
 				m_flFramerateSuggestion *= 2.5;
 				//all the ways!!!

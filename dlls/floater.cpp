@@ -11,6 +11,8 @@
 
 #include "custom_debug.h"
 
+#include "squidspit.h"
+#include "weapons.h"
 
 /*
 #include	"extdll.h"
@@ -52,8 +54,8 @@ void CController::Stop( void )
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-//sequences in the anim, in the order they appear in the anim. Some anims have the same display name and so should just be referenced by order
-//(numbered index), named well after purpose and based on display names for clarity. Safer this way.
+//sequences in the model. Some sequences have the same display name and so should just be referenced by order
+//(numbered index).
 enum floater_sequence{  //key: frames, FPS
 	SEQ_FLOATER_IDLE1,
 	SEQ_FLOATER_TURN_LEFT,
@@ -207,15 +209,16 @@ const char* CFloater::pAttackMissSounds[] =
 
 
 //...did not come with a melee anim. what.
-#define	BLOATER_AE_ATTACK_MELEE1		0x01
+//Leftover from the old bloater.cpp file.
+//#define	BLOATER_AE_ATTACK_MELEE1		0x01
 
 
 
 
-/*
+
 TYPEDESCRIPTION	CFloater::m_SaveData[] = 
 {
-	
+	DEFINE_FIELD( CFloater, explodeDelay, FIELD_TIME ),
 };
 
 //IMPLEMENT_SAVERESTORE( CFloater, CFlyingMonster );
@@ -235,7 +238,7 @@ int CFloater::Restore( CRestore &restore )
 
 	return iReadFieldsResult;
 }
-*/
+
 
 
 
@@ -259,6 +262,10 @@ int CFloater::Restore( CRestore &restore )
 
 CFloater::CFloater(void){
 
+	explodeDelay = -1;
+
+	shootCooldown = 0;
+
 	m_flightSpeed = 0;
 	tempCheckTraceLineBlock = FALSE;
 	m_velocity = Vector(0,0,0);
@@ -278,7 +285,11 @@ Task_t	tlFloaterRangeAttack1[] =
 	{ TASK_STOP_MOVING,			0				},
 	{ TASK_FACE_IDEAL,			(float)0		},
 	{ TASK_RANGE_ATTACK1,		(float)0		},
-	{ TASK_SET_ACTIVITY,		(float)ACT_IDLE	},
+	
+	//No, letting the end of TASK_RANGE_ATTACK1 handle this on our end instead.
+	//We need the activity shift to idle to be instant.
+	//{ TASK_SET_ACTIVITY,		(float)ACT_IDLE	},
+
 };
 Schedule_t	slFloaterRangeAttack1[] =
 {
@@ -367,6 +378,10 @@ void CFloater::Precache( void )
 {
 	PRECACHE_MODEL("models/floater.mdl");
 
+	
+	//sprite precache left to the SquidSpit file (separate).
+	CSquidSpit::precacheStatic();
+
 	global_useSentenceSave = TRUE;
 	
 	
@@ -393,9 +408,12 @@ void CFloater::Spawn( void )
 {
 	Precache( );
 
+	//well you certainly aren't going to explode.
+	explodeDelay = -1;
+
 	setModel("models/floater.mdl");
 	//UTIL_SetSize( pev, VEC_HUMAN_HULL_MIN, VEC_HUMAN_HULL_MAX );
-	UTIL_SetSize( pev, Vector( -8, -8, 0 ), Vector( 8, 8, 28 ));
+	UTIL_SetSize( pev, Vector( -9, -9, 2 ), Vector( 9, 9, 48 ));
 
 	pev->classname = MAKE_STRING("monster_floater");
 
@@ -492,12 +510,17 @@ int CFloater :: CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, C
 	
 
 
-
-
-
-
-
 	/*
+	//Vector goalDir = vecEnd - vecStart;
+
+	//Gets a yaw (0 - 360 degrees).
+	//To radians:
+	//float goal_pitch = UTIL_VecToYaw(vecEnd - vecStart) * (CONST_PI/180.0f);
+
+	Vector goal_direction = (vecEnd - vecStart).Normalize();
+	Vector goal_direction_adjacent = CrossProduct(goal_direction, Vector(0, 0, 1) ).Normalize();
+
+	
 	UTIL_MakeVectors( pev->angles );
 		
 
@@ -515,25 +538,31 @@ int CFloater :: CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, C
 	//Vector vecCenter = Vector(pev->origin.x, pev->origin.y, pev->origin.z + (pev->maxs.z - pev->mins.z)/2.0);
 	Vector vecCenterRel = Vector(0, 0, (pev->maxs.z - pev->mins.z)/2.0);
 	
-	Vector vecStartAlt = vecStart + vecCenterRel + gpGlobals->v_forward * boundXSize*1.3;
-	Vector vecEndAlt = vecEnd + vecCenterRel + -gpGlobals->v_forward * boundXSize*1.3;
+	Vector whut = pev->origin;
+	Vector vecStartAlt = vecStart + vecCenterRel + goal_direction * boundXSize*1.3;
+	Vector vecEndAlt = vecEnd + vecCenterRel + -goal_direction * boundXSize*1.3;
 	
+
+
+	DebugLine_SetupPoint(7, vecStartAlt, 255, 255, 255);
+
+	DebugLine_SetupPoint(8, vecEndAlt, 255, 0, 0);
 
 	DebugLine_ClearAll();
 
-	vecOff = -gpGlobals->v_right * boundYSize*1.3 + gpGlobals->v_up * boundZSize*1.3;
+	vecOff = -goal_direction_adjacent * boundYSize*1.3 + gpGlobals->v_up * boundZSize*1.3;
 	UTIL_TraceHull( vecStartAlt + vecOff, vecEndAlt + vecOff, dont_ignore_monsters, point_hull, edict(), &trTopLeft );
 	DebugLine_Setup(0, vecStartAlt+vecOff, vecEndAlt+vecOff, trTopLeft.flFraction);
 
-	vecOff = gpGlobals->v_right * boundYSize*1.3 + gpGlobals->v_up * boundZSize*1.3;
+	vecOff = goal_direction_adjacent * boundYSize*1.3 + gpGlobals->v_up * boundZSize*1.3;
 	UTIL_TraceHull( vecStartAlt + vecOff, vecEndAlt + vecOff, dont_ignore_monsters, point_hull, edict(), &trTopRight );
 	DebugLine_Setup(1, vecStartAlt+vecOff, vecEndAlt+vecOff, trTopRight.flFraction);
 
-	vecOff = -gpGlobals->v_right * boundYSize*1.3 + -gpGlobals->v_up * boundZSize*1.3;
+	vecOff = -goal_direction_adjacent * boundYSize*1.3 + -gpGlobals->v_up * boundZSize*1.3;
 	UTIL_TraceHull( vecStartAlt + vecOff, vecEndAlt + vecOff, dont_ignore_monsters, point_hull, edict(), &trBottomLeft );
 	DebugLine_Setup(4, vecStartAlt+vecOff, vecEndAlt+vecOff, trBottomLeft.flFraction);
 
-	vecOff = gpGlobals->v_right * boundYSize*1.3 + -gpGlobals->v_up * boundZSize*1.3;
+	vecOff = goal_direction_adjacent * boundYSize*1.3 + -gpGlobals->v_up * boundZSize*1.3;
 	UTIL_TraceHull( vecStartAlt + vecOff, vecEndAlt + vecOff, dont_ignore_monsters, point_hull, edict(), &trBottomRight );
 	DebugLine_Setup(3, vecStartAlt+vecOff, vecEndAlt+vecOff, trBottomRight.flFraction);
 
@@ -547,10 +576,10 @@ int CFloater :: CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, C
 	tracesSolid = (trTopLeft.fAllSolid != 0 || trTopRight.fAllSolid != 0 || trBottomLeft.fAllSolid != 0 || trBottomRight.fAllSolid != 0); //|| trCenter.fAllSolid != 0);
 	tracesStartSolid = (trTopLeft.fStartSolid != 0 || trTopRight.fStartSolid != 0 || trBottomLeft.fStartSolid != 0 || trBottomRight.fStartSolid != 0); //|| trCenter.fStartSolid != 0);
 
-	*/
+	
 	
 
-	/*
+	
 	if ( (tracesSolid == FALSE && tracesStartSolid == FALSE && minFraction >= 1.0)  ) //|| EASY_CVAR_GET(testVar) == 2)
 	//if ( tr.fAllSolid == 0 && tr.fStartSolid == 0 && tr.flFraction >= 1.0)
 	{
@@ -572,12 +601,12 @@ int CFloater :: CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, C
 	}
 
 	iReturn = LOCALMOVE_VALID;
-	*/
+	
 
 	
 	//if(tracesStartSolid || minFraction < 1.0)
 
-
+	*/
 
 
 
@@ -649,7 +678,9 @@ void CFloater::Move( float flInterval )
 {
 	if ( pev->movetype == MOVETYPE_FLY )
 		m_flGroundSpeed = m_flightSpeed;
-	CFlyingMonster::Move( flInterval );
+	
+	//CFlyingMonster::Move( flInterval );
+	CBaseMonster::Move(flInterval);
 }
 
 
@@ -711,7 +742,10 @@ void CFloater::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, float
 		m_IdealActivity = m_movementActivity;
 		m_flGroundSpeed = m_flightSpeed = 200;
 	}
-	m_flGroundSpeed = m_flightSpeed = 10;
+	
+	//m_flGroundSpeed = m_flightSpeed = 200;
+
+	//m_flGroundSpeed = m_flightSpeed = 10;
 	//TEST - just force it?
 	//m_flGroundSpeed = m_flightSpeed = 200;
 	//this->SetSequenceByIndex(SEQ_FLOATER_TURN_LEFT, 1);
@@ -822,9 +856,11 @@ void CFloater::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, float
 */
 
 
+
+//If the model won't tell us, we have to make one.
 void CFloater::SetEyePosition(void){
-	CFlyingMonster::SetEyePosition();
-	//pev->view_ofs = VEC_VIEW;
+	//CFlyingMonster::SetEyePosition();
+	pev->view_ofs = Vector(0, 0, 42 - 8);//VEC_VIEW;
 }//END OF SetEyePosition
 
 
@@ -943,7 +979,7 @@ Schedule_t* CFloater::GetSchedule ( void )
 				{
 					// chase!
 					//easyPrintLine("ducks??");
-					return GetScheduleOfType( SCHED_CHASE_ENEMY );
+					return GetScheduleOfType( SCHED_CHASE_ENEMY_STOP_SIGHT );
 				}
 			}
 			else  
@@ -972,7 +1008,10 @@ Schedule_t* CFloater::GetSchedule ( void )
 				if ( !HasConditions(bits_COND_CAN_RANGE_ATTACK1 | bits_COND_CAN_MELEE_ATTACK1) )
 				{
 					// if we can see enemy but can't use either attack type, we must need to get closer to enemy
-					return GetScheduleOfType( SCHED_CHASE_ENEMY );
+					//return GetScheduleOfType( SCHED_CHASE_ENEMY );
+
+					//Nope, you're a ranged specialist. Still prefer to stare.
+					return GetScheduleOfType( SCHED_COMBAT_LOOK );
 				}
 				else if ( !FacingIdeal() )
 				{
@@ -1066,7 +1105,16 @@ void CFloater::StartTask( Task_t *pTask ){
 
 
 	switch( pTask->iTask ){
-		case TASK_FLOATER_XXX:
+
+
+		case TASK_RANGE_ATTACK1:
+			shootCooldown = gpGlobals->time + 2;
+			CFlyingMonster::StartTask(pTask);
+		break;
+		case TASK_STOP_MOVING:
+			this->m_velocity = Vector(0, 0, 0);
+			pev->velocity = Vector(0,0,0);
+			CFlyingMonster::StartTask(pTask);
 
 		break;
 		default:
@@ -1081,9 +1129,15 @@ void CFloater::RunTask( Task_t *pTask ){
 	//EASY_CVAR_PRINTIF_PRE(templatePrintout, easyPrintLine("RunTask: sched:%s task:%d", this->m_pSchedule->pName, pTask->iTask) );
 	
 	switch( pTask->iTask ){
-		case TASK_FLOATER_XXX:
-
-		break;
+		case TASK_RANGE_ATTACK1:{
+			if ( m_fSequenceFinished )
+			{
+				//m_Activity = ACT_IDLE;
+				//m_IdealActivity?
+				SetActivity(ACT_HOVER);
+				TaskComplete();
+			}
+		break;}
 		case TASK_DIE_LOOP:{
 			if(hitGroundDead){
 				TaskComplete();
@@ -1108,12 +1162,21 @@ BOOL CFloater::CheckRangeAttack1( float flDot, float flDist ){
 
 	//DEBUG - why you no work!!!??
 
-	if ( flDot > 0.5 && flDist > 256 && flDist <= 2048 )
+	if(gpGlobals->time >= shootCooldown){
+		//past cooldown? allowed.
+	}else{
+		//no.
+		return FALSE;
+	}
+
+
+	//if ( flDot > 0.5 && flDist > 256 && flDist <= 2048 )
+	if ( flDot > 0.5 && flDist <= 1024 )
 	{
-		easyForcePrintLine("YAY?!");
+		//easyForcePrintLine("YAY?!");
 		return TRUE;
 	}
-	easyForcePrintLine("NAY?!");
+	//easyForcePrintLine("NAY?!");
 	return FALSE;
 }
 BOOL CFloater::CheckRangeAttack2( float flDot, float flDist ){
@@ -1162,6 +1225,14 @@ void CFloater::KilledFallingTouch( CBaseEntity *pOther ){
 
 void CFloater::MonsterThink(){
 
+	//ITS A ME, DUMM-IO.  ...please kill me
+	return;
+
+
+
+
+	//easyForcePrintLine("IM GONNA %d %d", m_Activity, m_IdealActivity);
+	//easyForcePrintLine("MY EYES: %.2f %.2f %.2f", pev->view_ofs.x,pev->view_ofs.y,pev->view_ofs.z);
 
 	/*
 	if(pev->deadflag == DEAD_NO && lastVelocityChange != -1 && (gpGlobals->time - lastVelocityChange) > 0.24  ){
@@ -1173,6 +1244,14 @@ void CFloater::MonsterThink(){
 
 	}
 	*/
+
+
+	if(explodeDelay != -1 && gpGlobals->time >= explodeDelay){
+		//If we're going to explode and time is up, well, explode.
+		GibMonster();
+		return;
+	}
+
 
 	CFlyingMonster::MonsterThink();
 }//END OF MonsterThink
@@ -1274,9 +1353,33 @@ GENERATE_GIBMONSTERGIB_IMPLEMENTATION(CFloater)
 {
 	
 
+	//BOOM.
+
+	int iContents = UTIL_PointContents ( pev->origin );
+	short spriteChosen;
+	if (iContents != CONTENTS_WATER)
+	{
+		spriteChosen = g_sModelIndexFireball;
+	}
+	else
+	{
+		spriteChosen = g_sModelIndexWExplosion;
+	}
+	UTIL_Explosion(pev, pev->origin + Vector(0, 0, 8), spriteChosen, (160 - 50) * 0.60, 15, TE_EXPLFLAG_NOSOUND | TE_EXPLFLAG_NOPARTICLES, pev->origin + Vector(0, 0, 16), 1 );
+	
+
+
+//void RadiusDamage( Vector vecSrc, entvars_t *pevInflictor, entvars_t *pevAttacker, float flDamage, float flRadius, int iClassIgnore, int bitsDamageType )
+//void RadiusDamage( Vector vecSrc, entvars_t *pevInflictor, entvars_t *pevAttacker, float flDamage, float flRadius, int iClassIgnore, int bitsDamageType, int bitsDamageTypeMod )
 
 
 
+	RadiusDamage(pev->origin, pev, pev, gSkillData.bullsquidDmgSpit, 160.0f,
+		CLASS_MACHINE | CLASS_ALIEN_MILITARY | CLASS_ALIEN_PASSIVE | CLASS_ALIEN_MONSTER | CLASS_ALIEN_PREY | CLASS_ALIEN_PREDATOR | CLASS_INSECT | CLASS_BARNACLE,
+		DMG_POISON);
+
+
+	//Calling the parent method is still okay in this case. Spawning gib pieces / censorship checks should still take place.
 	return GENERATE_GIBMONSTERGIB_PARENT_CALL(CFlyingMonster);
 }
 
@@ -1362,9 +1465,24 @@ BOOL CFloater::usesAdvancedAnimSystem(void){
 	return TRUE;
 }
 
-void CFloater::SetActivity( Activity NewActivity ){
-	CFlyingMonster::SetActivity(NewActivity);
-}
+void CFloater::SetActivity(Activity NewActivity ){
+
+	//Little check. If this is to change IDLE to HOVER or HOVER to IDLE, don't reset the animation.
+	//it's fine the way it is, the are one and the same.
+
+	if((NewActivity == ACT_IDLE || NewActivity == ACT_HOVER) &&
+		(m_Activity == ACT_IDLE || m_Activity == ACT_HOVER)){
+
+		m_Activity = ACT_HOVER;
+		m_IdealActivity = ACT_HOVER;
+		return;
+	}else{
+		//proceed normally.
+		CFlyingMonster::SetActivity(NewActivity);
+	}
+
+}//END OF SetActivity
+
 
 
 
@@ -1390,6 +1508,13 @@ int CFloater::tryActivitySubstitute(int activity){
 		break;
 		case ACT_WALK:
 		case ACT_RUN:
+			return SEQ_FLOATER_IDLE1;
+		break;
+		//Do these break anything?
+		case ACT_FLY:
+			return SEQ_FLOATER_IDLE1;
+		break;
+		case ACT_HOVER:
 			return SEQ_FLOATER_IDLE1;
 		break;
 	}//END OF switch
@@ -1431,9 +1556,19 @@ int CFloater::LookupActivityHard(int activity){
 		break;
 		case ACT_RANGE_ATTACK1:
 			//wait, it has this mapped already. Put it here if this ever changes.
+			//But what the hey, give it a custom event.
+			
+			animEventQueuePush(5.0f / 30.0f, 0);
+			m_iForceLoops = FALSE;
 
 		break;
-
+		//Do these break anything?
+		case ACT_FLY:
+			return SEQ_FLOATER_IDLE1;
+		break;
+		case ACT_HOVER:
+			return SEQ_FLOATER_IDLE1;
+		break;
 	}//END OF switch
 	
 	
@@ -1448,10 +1583,29 @@ int CFloater::LookupActivityHard(int activity){
 void CFloater::HandleEventQueueEvent(int arg_eventID){
 
 	switch(arg_eventID){
-		//fire the ball.
 	case 0:
 	{
 
+		//break;
+
+		//fire a bullsquid projectile? not psychic like the kingpin.
+		Vector	vecSpitOffset;
+		Vector	vecSpitDir;
+
+		UTIL_MakeVectors ( pev->angles );
+
+		vecSpitOffset = ( pev->origin + gpGlobals->v_right * 0 + gpGlobals->v_forward * 18 + gpGlobals->v_up * 22 );		
+		
+		vecSpitDir = ( ( m_vecEnemyLKP +  ((m_hEnemy!=NULL)?(m_hEnemy->EyeOffset()):(Vector(0,0,5)))   ) - vecSpitOffset ).Normalize();
+		
+		vecSpitDir.x += RANDOM_FLOAT( -0.05, 0.05 );
+		vecSpitDir.y += RANDOM_FLOAT( -0.05, 0.05 );
+		vecSpitDir.z += RANDOM_FLOAT( -0.05, 0 );
+
+		// do stuff for this event.
+		AttackSound();
+
+		CSquidSpit::Shoot( this, vecSpitOffset, vecSpitDir, 900 );
 
 	break;
 	}
@@ -2001,5 +2155,21 @@ int CFloater::getLoopingDeathSequence(void){
 	return SEQ_FLOATER_FALL_LOOP;
 }
 
+//Everything should just aim at my head.
+Vector CFloater::BodyTarget(const Vector &posSrc){
+	return Vector(pev->origin.x, pev->origin.y, pev->origin.z + pev->maxs.z - 8);
+}
+Vector CFloater::BodyTargetMod(const Vector &posSrc){
+	return Vector(pev->origin.x, pev->origin.y, pev->origin.z + pev->maxs.z - 8);
+}
 
+
+void CFloater::onDeathAnimationEnd(){
+	
+	//This monster is now a ticking time bomb...
+	//Also don't call the parent onDeathAnimationEnd. That's what stops the think method (could not even keep track of the countdown timer then)
+
+	explodeDelay = gpGlobals->time + RANDOM_FLOAT(4, 6);
+
+}//END OF onDeathAnimationEnd
 

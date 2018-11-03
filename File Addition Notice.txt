@@ -37,6 +37,8 @@ SERVERSIDE (dlls)
  class CControllerZapBall -> controller_zap_ball.h & .cpp
  class CControllerHeadBall -> controller_head_ball.h & .cpp
 
+ -Bullsquid projectile (CSquidSpit) moved from bullsquid.cpp to its own files too: squidspit.h / .cpp.
+
 SHARED (game_shared)
 -files stored in a NEW subfolder for neatness, keep this in mind for new visual studio environments. Add this game_shared/NEW as a search path.
 

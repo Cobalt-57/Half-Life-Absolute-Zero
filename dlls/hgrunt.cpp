@@ -97,7 +97,56 @@ EASY_CVAR_EXTERN(hgruntAllowGrenades)
 
 
 
+//sequences in the model. Some sequences have the same display name and so should just be referenced by order
+//(numbered index).
+enum floater_sequence{  //key: frames, FPS
+	SEQ_HGRUNT_WALK1,
+	SEQ_HGRUNT_WALK2,
+	SEQ_HGRUNT_RUN,
+	SEQ_HGRUNT_CRAWL,
+	SEQ_HGRUNT_VICTORY_DANCE,
+	SEQ_HGRUNT_COWER,
+	SEQ_HGRUNT_SM_FLINCH,
+	SEQ_HGRUNT_LEFT_LEGS_SM_FLINCH,
+	SEQ_HGRUNT_RIGHT_LEGS_SM_FLINCH,
+	SEQ_HGRUNT_RIGHT_ARM_FLINCH,
+	SEQ_HGRUNT_LEFT_ARM_FLINCH,
+	SEQ_HGRUNT_LAUNCH_GRENADE,
+	SEQ_HGRUNT_THROW_GRENADE,
+	SEQ_HGRUNT_IDLE1,
+	SEQ_HGRUNT_IDLE2,
+	SEQ_HGRUNT_COMBAT_IDLE,
+	SEQ_HGRUNT_FRONT_KICK,
+	SEQ_HGRUNT_CROUCHING_IDLE,
+	SEQ_HGRUNT_CROUCHING_WAIT,
+	SEQ_HGRUNT_CROUCHING_MP5,
+	SEQ_HGRUNT_STANDING_MP5,
+	SEQ_HGRUNT_RELOAD_MP5,
+	SEQ_HGRUNT_CROUCHING_SHOTGUN,
+	SEQ_HGRUNT_STANDING_SHOTGUN,
+	SEQ_HGRUNT_RELOAD_SHOTGUN,
+	SEQ_HGRUNT_ADVANCE_SIGNAL,
+	SEQ_HGRUNT_FLANK_SIGNAL,
+	SEQ_HGRUNT_RETREAT_SIGNAL,
+	SEQ_HGRUNT_DROP_GRENADE,
+	SEQ_HGRUNT_LIMPING_WALK,
+	SEQ_HGRUNT_LIMPING_RUN,
+	SEQ_HGRUNT_180L,
+	SEQ_HGRUNT_180R,
+	SEQ_HGRUNT_STRAFE_LEFT,
+	SEQ_HGRUNT_STRAFE_RIGHT,
+	SEQ_HGRUNT_STRAFE_LEFT_FIRE,
+	SEQ_HGRUNT_STRAFE_RIGHT_FIRE,
+	SEQ_HGRUNT_RUN_AND_GUN,
+	SEQ_HGRUNT_DIE_BACK_1,
+	SEQ_HGRUNT_DIE_FORWARD,
+	SEQ_HGRUNT_DIE_SIMPLE,
+	SEQ_HGRUNT_DIE_BACKWARDS,
+	SEQ_HGRUNT_DIE_HEADSHOT,  //TODO - specifcally call for perhaps??
+	SEQ_HGRUNT_DIE_GUTSHOT,
+	//...rest continued at barnacled1.  This is fine.
 
+};
 
 
 
@@ -299,6 +348,11 @@ public:
 	void SetYawSpeed ( void );
 	int  Classify ( void );
 	BOOL isOrganic(void){return !CanUseGermanModel();}
+	Vector EyePosition(void);
+	Vector EyeOffset(void);
+	Vector BodyTarget(const Vector &posSrc);
+	Vector BodyTargetMod(const Vector &posSrc);
+	BOOL getMovementCanAutoTurn(void);
 	
 	BOOL getGermanModelRequirement(void);
 	const char* getGermanModel(void);
@@ -1132,13 +1186,16 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CHGrunt)
 	//is this okay?
 	//m_IdealActivity != m_movementActivity
 
-
+	//return 0;
 
 	//HACK -
 	if(flDamage < gSkillData.plrDmg357){
 		//less than python damage?  We've been scammed!
 		missingHeadPossible = FALSE;
 	}
+
+	
+
 
 
 	if(bitsDamageType & DMG_BLAST && m_Activity == ACT_COWER){
@@ -1231,7 +1288,26 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CHGrunt)
 
 	//EASY_CVAR_PRINTIF_PRE(hgruntPrintout, easyPrintLine("PASSSSS???? %d %d %d", pev->deadflag == DEAD_NO, m_pSchedule != slhgruntStrafeToLocation, (m_IdealActivity != m_movementActivity || this->m_movementGoal == MOVEGOAL_NONE)) );
 
-	if(m_MonsterState != MONSTERSTATE_PRONE && lastStrafeCoverCheck <= gpGlobals->time && pev->deadflag == DEAD_NO && m_pSchedule != slhgruntStrafeToLocation && (m_IdealActivity != m_movementActivity || this->m_movementGoal == MOVEGOAL_NONE)  ){
+
+
+
+
+
+	if(
+		m_MonsterState != MONSTERSTATE_PRONE &&
+		lastStrafeCoverCheck <= gpGlobals->time &&
+		pev->deadflag == DEAD_NO &&
+		m_pSchedule != slhgruntStrafeToLocation &&
+		(
+		m_IdealActivity != m_movementActivity ||
+		this->m_movementGoal == MOVEGOAL_NONE
+		)
+		&&
+		//This ensures the damage isn't coming from a continual source (poison, radiation).
+		//Moving sideways in response to taking damage from a likely out-of-sight enemy is... odd looking.
+		!(bitsDamageTypeMod & (DMG_TIMEDEFFECT|DMG_TIMEDEFFECTIGNORE) )
+	)
+	{
 		//standing?
 
 		lastStrafeCoverCheck = gpGlobals->time + 0.8f;
@@ -1395,6 +1471,7 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CHGrunt)
 
 	return GENERATE_TAKEDAMAGE_PARENT_CALL(CSquadMonster);
 }//END OF TakeDamage
+
 
 
 
@@ -1656,6 +1733,118 @@ int	CHGrunt :: Classify ( void )
 {
 	return	CLASS_HUMAN_MILITARY;
 }
+
+
+
+Vector CHGrunt::EyePosition(void){
+
+	//If crouching in the animation, the center of the hitbox (and eyes) go down a little.
+	if(
+	  pev->sequence == SEQ_HGRUNT_COWER ||
+	  pev->sequence == SEQ_HGRUNT_CRAWL ||
+	  pev->sequence == SEQ_HGRUNT_CROUCHING_MP5 ||
+	  pev->sequence == SEQ_HGRUNT_RELOAD_MP5 ||
+	  pev->sequence == SEQ_HGRUNT_CROUCHING_SHOTGUN ||
+	  pev->sequence == SEQ_HGRUNT_RELOAD_SHOTGUN ||
+	  pev->sequence == SEQ_HGRUNT_LIMPING_RUN ||
+	  pev->sequence == SEQ_HGRUNT_CROUCHING_IDLE ||
+	  pev->sequence == SEQ_HGRUNT_CROUCHING_WAIT
+	)
+	{
+		return pev->origin + Vector(pev->view_ofs.x, pev->view_ofs.y, pev->view_ofs.z - 18);
+	}else{
+		//default behavior works... minus a little.
+		return pev->origin + Vector(pev->view_ofs.x, pev->view_ofs.y, pev->view_ofs.z - 2);
+	}
+};
+
+Vector CHGrunt::EyeOffset(void){
+
+	//If crouching in the animation, the center of the hitbox (and eyes) go down a little.
+	if(
+	  pev->sequence == SEQ_HGRUNT_COWER ||
+	  pev->sequence == SEQ_HGRUNT_CRAWL ||
+	  pev->sequence == SEQ_HGRUNT_CROUCHING_MP5 ||
+	  pev->sequence == SEQ_HGRUNT_RELOAD_MP5 ||
+	  pev->sequence == SEQ_HGRUNT_CROUCHING_SHOTGUN ||
+	  pev->sequence == SEQ_HGRUNT_RELOAD_SHOTGUN ||
+	  pev->sequence == SEQ_HGRUNT_LIMPING_RUN ||
+	  pev->sequence == SEQ_HGRUNT_CROUCHING_IDLE ||
+	  pev->sequence == SEQ_HGRUNT_CROUCHING_WAIT
+	)
+	{
+		return Vector(pev->view_ofs.x, pev->view_ofs.y, pev->view_ofs.z - 18);
+	}else{
+		//default behavior works... minus a little.
+		return Vector(pev->view_ofs.x, pev->view_ofs.y, pev->view_ofs.z - 2);
+	}
+};
+
+
+Vector CHGrunt::BodyTarget(const Vector &posSrc){
+
+	//If crouching in the animation, the center of the hitbox (and eyes) go down a little.
+	if(
+	  pev->sequence == SEQ_HGRUNT_COWER ||
+	  pev->sequence == SEQ_HGRUNT_CRAWL ||
+	  pev->sequence == SEQ_HGRUNT_CROUCHING_MP5 ||
+	  pev->sequence == SEQ_HGRUNT_RELOAD_MP5 ||
+	  pev->sequence == SEQ_HGRUNT_CROUCHING_SHOTGUN ||
+	  pev->sequence == SEQ_HGRUNT_RELOAD_SHOTGUN ||
+	  pev->sequence == SEQ_HGRUNT_LIMPING_RUN ||
+	  pev->sequence == SEQ_HGRUNT_CROUCHING_IDLE ||
+	  pev->sequence == SEQ_HGRUNT_CROUCHING_WAIT
+	)
+	{
+		Vector typicalCenter = CSquadMonster::BodyTarget(posSrc);
+		return Vector(typicalCenter.x, typicalCenter.y, typicalCenter.z - 6);
+	}else{
+		//default behavior works.
+		return CSquadMonster::BodyTarget(posSrc);
+	}
+};
+
+Vector CHGrunt::BodyTargetMod(const Vector &posSrc){
+
+	//If crouching in the animation, the center of the hitbox (and eyes) go down a little.
+	if(
+	  pev->sequence == SEQ_HGRUNT_COWER ||
+	  pev->sequence == SEQ_HGRUNT_CRAWL ||
+	  pev->sequence == SEQ_HGRUNT_CROUCHING_MP5 ||
+	  pev->sequence == SEQ_HGRUNT_RELOAD_MP5 ||
+	  pev->sequence == SEQ_HGRUNT_CROUCHING_SHOTGUN ||
+	  pev->sequence == SEQ_HGRUNT_RELOAD_SHOTGUN ||
+	  pev->sequence == SEQ_HGRUNT_LIMPING_RUN ||
+	  pev->sequence == SEQ_HGRUNT_CROUCHING_IDLE ||
+	  pev->sequence == SEQ_HGRUNT_CROUCHING_WAIT
+	)
+	{
+		Vector typicalCenter = CSquadMonster::BodyTarget(posSrc);
+		return Vector(typicalCenter.x, typicalCenter.y, typicalCenter.z - 6);
+	}else{
+		//default behavior works.
+		return CSquadMonster::BodyTarget(posSrc);
+	}
+};
+
+
+
+
+
+
+
+
+
+
+
+BOOL CHGrunt::getMovementCanAutoTurn(void){
+	if(strafeMode == -1){
+		return TRUE;
+	}else{
+		//strafing? forbid the auto turn, can get really confusing to deal with.
+		return FALSE;
+	}
+}//END OF getMovementCanAutoTurn
 
 
 
