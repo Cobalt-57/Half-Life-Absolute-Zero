@@ -1226,7 +1226,7 @@ void CFloater::KilledFallingTouch( CBaseEntity *pOther ){
 void CFloater::MonsterThink(){
 
 	//ITS A ME, DUMM-IO.  ...please kill me
-	return;
+	//return;
 
 
 
