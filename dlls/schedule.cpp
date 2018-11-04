@@ -1121,6 +1121,19 @@ void CBaseMonster :: RunTask ( Task_t *pTask )
 			}
 			break;
 		}
+	case TASK_WAIT_FOR_MOVEMENT_TIMED:
+		//Same as above, but will be interrupted if too much time passes.
+		if(gpGlobals->time >= waitForMovementTimed_Start){
+			TaskFail();
+			break;
+		}
+		if (MovementIsComplete())
+		{
+			TaskComplete();
+			RouteClear();		// Stop moving
+		}
+
+	break;
 	case TASK_WAIT_FOR_MOVEMENT_RANGE:
 		{
 
@@ -2291,7 +2304,6 @@ case TASK_GET_PATH_TO_BESTSCENT:
 			break;
 		}
 
-
 	case TASK_WAIT_FOR_MOVEMENT:
 		{
 			//easyPrintLine("IMA vividly do something rather foul %d", FRouteClear());
@@ -2301,7 +2313,17 @@ case TASK_GET_PATH_TO_BESTSCENT:
 			}
 			break;
 		}
-		//MODDD - going to let the "run" method handle this one better...
+	case TASK_WAIT_FOR_MOVEMENT_TIMED:{
+		//uses the data for how long the monster may spend on this task.
+		waitForMovementTimed_Start = gpGlobals->time + pTask->flData;
+		if (FRouteClear())
+		{
+			TaskComplete();
+		}
+	break;}
+
+
+	//MODDD - going to let the "run" method handle this one better...
 	case TASK_WAIT_FOR_MOVEMENT_RANGE:
 		{
 			//easyPrintLine("IMA vividly do something rather foul %d", FRouteClear());

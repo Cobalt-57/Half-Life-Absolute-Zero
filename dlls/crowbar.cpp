@@ -22,6 +22,8 @@
 #include "player.h"
 #include "gamerules.h"
 
+#include "custom_debug.h"
+
 
 #define	CROWBAR_BODYHIT_VOLUME 128
 #define	CROWBAR_WALLHIT_VOLUME 512
@@ -401,14 +403,9 @@ int CCrowbar::Swing( int fFirst )
 	
 			
 			
-			m_pPlayer->debugVect1Draw = FALSE;
-			m_pPlayer->debugVect1Start = Vector(tr.vecEndPos) + Vector(7, 0, 0);
-			m_pPlayer->debugVect1End = Vector(tr.vecEndPos) + Vector(-7, 0, 0);
-			m_pPlayer->debugVect1Success = FALSE;
-			m_pPlayer->debugVect2Draw = FALSE;
-			m_pPlayer->debugVect2Start = Vector(tr.vecEndPos) + Vector(0, -7, 0);
-			m_pPlayer->debugVect2End = Vector(tr.vecEndPos) + Vector(0, 7, 0);
-			m_pPlayer->debugVect2Success = FALSE;
+			////DebugLine_ClearAll
+			//::DebugLine_Setup(0, Vector(tr.vecEndPos) + Vector(7, 0, 0), Vector(tr.vecEndPos) + Vector(-7, 0, 0), 255, 0, 0 );
+			//::DebugLine_Setup(1, Vector(tr.vecEndPos) + Vector(0, -7, 0), Vector(tr.vecEndPos) + Vector(0, 7, 0), 255, 0, 0 );
 
 			
 			CBaseEntity *pHit = CBaseEntity::Instance( tr.pHit );

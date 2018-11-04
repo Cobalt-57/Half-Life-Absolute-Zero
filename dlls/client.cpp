@@ -4056,10 +4056,10 @@ void ClientCommand( edict_t *pEntity )
 
 
 				//MODDD - 
-				if(/*tempMonster->monsterID == 4 ||*/ tempMonster->monsterID == 5 || tempMonster->monsterID == 6){
-					//remove all but those! TESTING
-					continue;
-				}
+				//if(/*tempMonster->monsterID == 4 ||*/ tempMonster->monsterID == 5 || tempMonster->monsterID == 6){
+				//	//remove all but those! TESTING
+				//	continue;
+				//}
 
 
 				easyForcePrintLine("*REMOVED %s", tempMonster->getClassname(), tempMonster->monsterID);

@@ -1518,7 +1518,7 @@ Task_t	tlRandomWander[] =
 	{ TASK_FACE_IDEAL,				(float)0				},
 	{ TASK_WALK_PATH,				(float)0				},
 	{ TASK_RANDOMWANDER_TEST,			0			},
-	{TASK_WAIT_FOR_MOVEMENT, 0},
+	{ TASK_WAIT_FOR_MOVEMENT_TIMED, 5},
 	//{ TASK_SET_ACTIVITY,			(float)ACT_IDLE	},
 	//{ TASK_WAIT_PVS,				0				},
 };
@@ -1553,7 +1553,7 @@ Task_t	tlRandomWanderUninterruptable[] =
 	{ TASK_FACE_IDEAL,				(float)0				},
 	{ TASK_WALK_PATH,				(float)0				},
 	{ TASK_RANDOMWANDER_TEST,			0			},
-	{TASK_WAIT_FOR_MOVEMENT, 0},
+	{ TASK_WAIT_FOR_MOVEMENT_TIMED, 5},
 	//{ TASK_SET_ACTIVITY,			(float)ACT_IDLE	},
 	//{ TASK_WAIT_PVS,				0				},
 };

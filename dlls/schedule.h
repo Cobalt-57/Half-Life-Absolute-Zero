@@ -196,6 +196,7 @@ typedef enum
 		TASK_REMEMBER,
 		TASK_FORGET,
 		TASK_WAIT_FOR_MOVEMENT,			// wait until MovementIsComplete()
+		TASK_WAIT_FOR_MOVEMENT_TIMED,
 
 		//MODDD - new tasks.
 		TASK_SET_SEQUENCE_BY_NAME,     //NOT IN THERE.  Eh, store something containing the anim name as a string yourself and call that when needed per monster.  Nothing standardized here.

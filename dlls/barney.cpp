@@ -203,6 +203,8 @@ public:
 	void SayProvoked(void);
 	void SaySuspicious(void);
 	void SayLeaderDied(void);
+	void SayNearPassive(void);
+	void SayNearCautious(void);
 
 	
 	BOOL canResetBlend0(void);
@@ -260,6 +262,138 @@ void CBarney::SaySuspicious(void){
 void CBarney::SayLeaderDied(void){
 	PainSound(TRUE); //force the pain sound
 }
+
+
+void CBarney::SayNearPassive(void){
+
+	switch(RANDOM_LONG(0, 13)){
+	case 0:
+		PlaySentence( "BA_QUESTION10", 4, VOL_NORM, ATTN_NORM );
+	break;
+	case 1:
+		PlaySentence( "BA_QUESTION12", 4, VOL_NORM, ATTN_NORM );
+	break;
+	case 2:
+		PlaySentence( "BA_QUESTION13", 4, VOL_NORM, ATTN_NORM );
+	break;
+	case 3:
+		PlaySentence( "BA_SMELL1", 4, VOL_NORM, ATTN_NORM );
+	break;
+	case 4:
+		PlaySentence( "BA_SMELL2", 4, VOL_NORM, ATTN_NORM );
+	break;
+	default:
+		//nothing
+	break;
+	}//END OF switch
+
+}
+void CBarney::SayNearCautious(void){
+
+
+	switch(RANDOM_LONG(0, 37)){
+	case 0:
+		PlaySentence( "BA_OK0", 4, VOL_NORM, ATTN_NORM );
+	break;
+	case 1:
+		PlaySentence( "BA_OK2", 4, VOL_NORM, ATTN_NORM );
+	break;
+	case 2:
+		PlaySentence( "BA_OK5", 4, VOL_NORM, ATTN_NORM );
+	break;
+	case 3:
+		PlaySentence( "BA_OK6", 4, VOL_NORM, ATTN_NORM );
+	break;
+	case 4:
+		PlaySentence( "BA_QUESTION0", 4, VOL_NORM, ATTN_NORM );
+	break;
+	case 5:
+		PlaySentence( "BA_QUESTION3", 4, VOL_NORM, ATTN_NORM );
+	break;
+	case 6:
+		PlaySentence( "BA_QUESTION4", 4, VOL_NORM, ATTN_NORM );
+	break;
+	case 7:
+		PlaySentence( "BA_QUESTION6", 4, VOL_NORM, ATTN_NORM );
+	break;
+	case 8:
+		PlaySentence( "BA_QUESTION7", 4, VOL_NORM, ATTN_NORM );
+	break;
+	case 9:
+		PlaySentence( "BA_QUESTION8", 4, VOL_NORM, ATTN_NORM );
+	break;
+	case 10:
+		PlaySentence( "BA_QUESTION9", 4, VOL_NORM, ATTN_NORM );
+	break;
+	case 11:
+		PlaySentence( "BA_QUESTION10", 4, VOL_NORM, ATTN_NORM );
+	break;
+	case 12:
+		PlaySentence( "BA_QUESTION11", 4, VOL_NORM, ATTN_NORM );
+	break;
+	case 13:
+		PlaySentence( "BA_QUESTION12", 4, VOL_NORM, ATTN_NORM );
+	break;
+	case 14:
+		PlaySentence( "BA_QUESTION13", 4, VOL_NORM, ATTN_NORM );
+	break;
+	case 15:
+		PlaySentence( "BA_QUESTION14", 4, VOL_NORM, ATTN_NORM );
+	break;
+	case 16:
+		PlaySentence( "BA_HELLO6", 4, VOL_NORM, ATTN_NORM );
+	break;
+	case 17:
+		PlaySentence( "BA_IDLE0", 4, VOL_NORM, ATTN_NORM );
+	break;
+	case 18:
+		PlaySentence( "BA_IDLE1", 4, VOL_NORM, ATTN_NORM );
+	break;
+	case 19:
+		PlaySentence( "BA_IDLE2", 4, VOL_NORM, ATTN_NORM );
+	break;
+	case 20:
+		PlaySentence( "BA_IDLE3", 4, VOL_NORM, ATTN_NORM );
+	break;
+	case 21:
+		PlaySentence( "BA_IDLE6", 4, VOL_NORM, ATTN_NORM );
+	break;
+	case 22:
+		PlaySentence( "BA_IDLE7", 4, VOL_NORM, ATTN_NORM );
+	break;
+	case 23:
+		PlaySentence( "BA_IDLE9", 4, VOL_NORM, ATTN_NORM );
+	break;
+	case 24:
+		PlaySentence( "BA_IDLE10", 4, VOL_NORM, ATTN_NORM );
+	break;
+	case 25:
+		PlaySentence( "BA_ATTACK2", 4, VOL_NORM, ATTN_NORM );
+	break;
+	case 26:
+		PlaySentence( "BA_ATTACK5", 4, VOL_NORM, ATTN_NORM );
+	break;
+	case 27:
+		PlaySentence( "BA_HEAR0", 4, VOL_NORM, ATTN_NORM );
+	break;
+	case 28:
+		PlaySentence( "BA_HEAR1", 4, VOL_NORM, ATTN_NORM );
+	break;
+	case 29:
+		PlaySentence( "BA_HEAR2", 4, VOL_NORM, ATTN_NORM );
+	break;
+	case 30:
+		PlaySentence( "BA_STOP3", 4, VOL_NORM, ATTN_NORM );
+	break;
+	case 31:
+		PlaySentence( "BA_STOP4", 4, VOL_NORM, ATTN_NORM );
+	break;
+
+	}//END OF switch
+}//END OF SayNearCautious
+
+
+
 
 
 
@@ -687,11 +821,16 @@ const char* CBarney::getNormalModel(void){
 int CBarney::IRelationship( CBaseEntity *pTarget )
 {
 
+	/*
+	//Moved to TalkMonster's.
 	//MODDD TODO - for provokable but unprovoked things, maybe make Barnies point their guns and stare at it when not following, or scientist do a fear anim while staring at it?
 	if(pTarget->isProvokable() && !pTarget->isProvoked() ){
 		//I have no reason to pick a fight with this unprovoked, neutral enemy.
 		return R_NO;
 	}
+	*/
+
+
 
 	return CTalkMonster::IRelationship( pTarget );
 }

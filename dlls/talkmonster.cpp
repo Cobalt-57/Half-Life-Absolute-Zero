@@ -1543,6 +1543,14 @@ void CTalkMonster::SayLeaderDied(void){
 
 }
 
+void CTalkMonster::SayNearPassive(void){
+	
+}
+void CTalkMonster::SayNearCautious(void){
+	
+}
+
+
 
 GENERATE_TRACEATTACK_IMPLEMENTATION(CTalkMonster)
 {
@@ -1833,6 +1841,15 @@ BOOL CTalkMonster :: IsTalking( void )
 
 
 CTalkMonster::CTalkMonster(void){
+	
+	closestCautiousNPC = NULL;
+	closestCautiousNPC_memory = NULL;
+	closestCautiousNPC_distance = 0;
+	closestPassiveNPC = NULL;
+	closestPassiveNPC_memory = NULL;
+	closestPassiveNPC_distance = 0;
+
+
 	nextMadEffect = -1;
 	madYaw = 0;
 	
@@ -1999,9 +2016,25 @@ void CTalkMonster::MonsterThink(void){
 
 
 
+	
+	// player using this entity is alive and wounded?
+
+	//Before calling MonsterThink, set the distances for recording the closest suspicious and passive NPC.
+	//passive meaning chumtoad (aliens), not the scientist. conversation script is enough as-is.
+	//Anything further away, even in sight, is not interesting.
+	closestCautiousNPC_distance = 1600;
+	closestCautiousNPC = NULL;
+	closestPassiveNPC_distance = 800;
+	closestPassiveNPC = NULL;
 
 	CBaseMonster::MonsterThink();
-}
+
+	//Check to see if anything was picked? maybe to pick a schedule next time?
+	//Even if the NPC picked up is NULL (none), it is ok. this clears the memory then.
+	closestCautiousNPC_memory = closestCautiousNPC;
+	closestPassiveNPC_memory = closestPassiveNPC;
+
+}//END OF monsterThink
 
 
 
@@ -2045,6 +2078,33 @@ void CTalkMonster :: TrySmellTalk( void )
 int CTalkMonster::IRelationship( CBaseEntity *pTarget )
 {
 	if(!UTIL_IsAliveEntity(pTarget)){
+		return R_NO;
+	}
+
+	//MODDD TODO - for provokable but unprovoked things, maybe make Barnies point their guns and stare at it when not following, or scientist do a fear anim while staring at it?
+	if(pTarget->isProvokable() && !pTarget->isProvoked() ){
+		//I have no reason to pick a fight with this unprovoked, neutral enemy.
+		//...but we can still be cautious around it.
+
+		if( (pev->origin - pTarget->pev->origin).Length() < closestCautiousNPC_distance){
+			//this is now the closest thing to be suspicious of. And there even is something close to be suspicious of to begin with.
+			//Barnies will get their guns out around this. Maybe even stop to point it at them sometimes.
+			closestCautiousNPC = pTarget;
+		}
+
+		return R_NO;
+	}
+
+
+	if(FClassnameIs(pTarget->pev, "monster_chumtoad")){
+		//don't be mean to chumtoads.
+
+		if( (pev->origin - pTarget->pev->origin).Length() < closestPassiveNPC_distance){
+			//this is now the closest non-intimidating thing.
+			//To look at every so often.
+			closestPassiveNPC = pTarget;
+		}
+
 		return R_NO;
 	}
 

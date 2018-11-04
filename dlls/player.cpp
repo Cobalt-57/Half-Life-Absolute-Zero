@@ -1886,11 +1886,6 @@ CBasePlayer::CBasePlayer(void){
 	horrorPlayTimePreDelay = -1;
 	horrorPlayTime = -1;
 
-	debugVect1Draw = FALSE;
-	debugVect2Draw = FALSE;
-	debugVect3Draw = FALSE;
-	debugVect4Draw = FALSE;
-	debugVect5Draw = FALSE;
 
 
 
@@ -2735,11 +2730,7 @@ void CBasePlayer::PlayerUse ( void )
 		flUseSuccess = FALSE;
 
 		if(EASY_CVAR_GET(playerUseDrawDebug)){
-			debugVect1Draw = FALSE;
-			debugVect2Draw = FALSE;
-			debugVect3Draw = FALSE;
-			debugVect4Draw = FALSE;
-			debugVect5Draw = FALSE;
+			::DebugLine_ClearAll();
 		}
 	}
 
@@ -3153,34 +3144,6 @@ void CBasePlayer::PreThink(void)
 	}
 
 
-
-	
-	int r = 0, g = 0, b = 0, thicc=0;
-	if(debugVect1Draw){
-		r = 0;g=0;b=0;
-		if(debugVect1Success){g=255;thicc=4;}else{r= 255;thicc=12;}
-		UTIL_drawLineFrame(debugVect1Start, debugVect1End, thicc, r, g, b);
-	}
-	if(debugVect2Draw){
-		r = 0;g=0;b=0;
-		if(debugVect2Success){g=255;thicc=4;}else{r= 255;thicc=12;}
-		UTIL_drawLineFrame(debugVect2Start, debugVect2End, thicc, r, g, b);
-	}
-	if(debugVect3Draw){
-		r = 0;g=0;b=0;
-		if(debugVect3Success){g=255;thicc=4;}else{r= 255;thicc=12;}
-		UTIL_drawLineFrame(debugVect3Start, debugVect3End, thicc, r, g, b);
-	}
-	if(debugVect4Draw){
-		r = 0;g=0;b=0;
-		if(debugVect4Success){g=255;thicc=4;}else{r= 255;thicc=12;}
-		UTIL_drawLineFrame(debugVect4Start, debugVect4End, thicc, r, g, b);
-	}
-	if(debugVect5Draw){
-		r = 0;g=0;b=0;
-		if(debugVect5Success){g=255;thicc=4;}else{r= 255;thicc=12;}
-		UTIL_drawLineFrame(debugVect5Start, debugVect5End, thicc, r, g, b);
-	}
 
 	
 

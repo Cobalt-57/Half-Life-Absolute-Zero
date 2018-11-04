@@ -1,6 +1,8 @@
 
 #include "chumtoad.h"
 
+#include "custom_debug.h"
+
 //This is the proper way to make something fall to the ground. Also set pev->groundentity to NULL.
 //ClearBits( pList[i]->pev->flags, FL_ONGROUND );
 //pList[i]->pev->groundentity = NULL;
@@ -168,7 +170,7 @@ Task_t	tlMovePossible[] =
 	{ TASK_FACE_IDEAL,				(float)0				},
 	{ TASK_WALK_PATH,				(float)0				},
 	{ TASK_TOAD_HOPPOSSIBLE,			0			},
-	{TASK_WAIT_FOR_MOVEMENT, 0},
+	{ TASK_WAIT_FOR_MOVEMENT_TIMED, 9},
 
 
 
@@ -188,7 +190,6 @@ Schedule_t	slMovePossible[] =
 		"slMovePossible"
 	},
 };
-
 
 
 
@@ -510,6 +511,7 @@ IMPLEMENT_CUSTOM_SCHEDULES( CChumToad, CBaseMonster );
 CChumToad::CChumToad(void){
 
 	testTimer = -1;
+	m_hEntitySittingOn = NULL;
 
 	playDeadSuccessful = FALSE;
 
@@ -552,6 +554,12 @@ TYPEDESCRIPTION	CChumToad::m_SaveData[] =
 	//DEFINE_FIELD( CChumToad, forceStopInitFallTimer, FIELD_TIME ),
 	DEFINE_FIELD( CChumToad, initFall, FIELD_BOOLEAN ),
 	DEFINE_FIELD( CChumToad, generalFall, FIELD_BOOLEAN ),
+	
+	//MODDD TODO - save other ehandle things? scientist NPC to heal? islave NPC to revive? mr. friendly player reference, player mr. friendly reference? etc.
+	DEFINE_FIELD( CChumToad, m_hEntitySittingOn, FIELD_EHANDLE ),
+	
+
+
 	
 };
 
@@ -697,7 +705,7 @@ void CChumToad::Spawn( void )
 	//////SetThink( &CChumToad::ChumToadThink );
 	//////pev->nextthink = gpGlobals->time + 0.1;
 
-	////SetTouch(&CChumToad::ChumToadTouch );
+	SetTouch(&CChumToad::ChumToadTouch );
 
 	//m_flNextHunt = gpGlobals->time + 1E6;
 	//???
@@ -725,6 +733,9 @@ void CChumToad::Spawn( void )
 
 	if ( pev->owner )
 		m_hOwner = Instance( pev->owner );
+
+	//Don't use this system! It bad!
+	pev->owner = NULL;
 
 	//m_flNextBounceSoundTime = gpGlobals->time;// reset each time a snark is spawned.
 
@@ -842,6 +853,47 @@ void CChumToad::Spawn( void )
 
 
 
+
+
+
+
+
+void CChumToad::ChumToadTouch( CBaseEntity *pOther ){
+
+	//NEVERMIND
+	return;
+
+
+	if(
+		pOther != NULL &&
+		!(pOther->IsWorld()) && pOther != NULL &&
+		!(pev->flags & FL_ONGROUND) &&
+		//if already on top of something and this touch is for that same thing, this isn't really going to help.
+		(m_hEntitySittingOn==NULL || (pOther->edict() != m_hEntitySittingOn->edict())  )
+	){
+		//If not on the ground and touching an entity other than the map, need to know if what we just touched is immediately below.
+		//If it is an entity (assume it can move), we need to do checks to see if the entity moves out from underneath us in the future
+		//to "know" to fall. Yep.
+
+
+
+
+
+
+		//TODO - routine checks again.
+		CBaseEntity* entityBelow = getEntityBelow();
+
+		if( entityBelow != NULL && entityBelow->edict() == pOther->edict() ){
+			//is this non-world entity below the same one we touched? if so we fell on this touched entity.
+			m_hEntitySittingOn = entityBelow;
+		}
+
+
+
+
+	}//END OF if(!(pev->flags & FL_ONGROUND))
+
+}//END OF ChumToadTouch
 	
 void CChumToad::SetActivity ( Activity NewActivity )
 {
@@ -1464,26 +1516,10 @@ void CChumToad :: StartTask ( Task_t *pTask )
 
 			initFall = TRUE;
 
-			//UNTILT RIGHT NOW
-
-			if(pev->flags & FL_ONGROUND){
-				// lie flat
-				pev->angles.x = 0;
-				pev->angles.z = 0;
-				TaskComplete();
-			}
 		break;
 		case TASK_TOAD_WAIT_FOR_DROP:
 			
-				//TaskComplete();
-				//ChangeSchedule(slToadLand);
-			
-			if(pev->flags & FL_ONGROUND){
-				pev->angles.x = 0;
-				pev->angles.z = 0;
-				TaskComplete();
-				//ChangeSchedule(slToadInitFallSlide);
-			}
+			//nothing, let runtask handle this
 
 		break;
 		case TASK_TOAD_WAIT_FOR_SLIDE:
@@ -1657,11 +1693,20 @@ void CChumToad :: StartTask ( Task_t *pTask )
 
 
 
+//(m_pSchedule == slMovePossible || m_pSchedule == slRandomWander)
+
 void CChumToad::RunTask ( Task_t *pTask ){
 	
 	EASY_CVAR_PRINTIF_PRE(chumtoadPrintout, easyPrintLine("RunTask: sched:%s task:%d", this->m_pSchedule->pName, pTask->iTask) );
 	
 	switch ( pTask->iTask ){
+		
+		//debug!
+		case TASK_WAIT_FOR_MOVEMENT:
+			::UTIL_drawPointFrame(vecHopDest, 12, 255, 255, 255);
+			CBaseMonster :: StartTask ( pTask );
+
+		break;
 
 		case TASK_DIE:
 
@@ -1677,20 +1722,67 @@ void CChumToad::RunTask ( Task_t *pTask ){
 			CBaseMonster::RunTask(pTask);
 		break;
 		case TASK_TOAD_INIT_WAIT_FOR_DROP:
-			if(pev->flags & FL_ONGROUND){
-				pev->angles.x = 0;
-				pev->angles.z = 0;
-				TaskComplete();
-			}
-			//little more time for sliding?
-
-		break;
 		case TASK_TOAD_WAIT_FOR_DROP:
 			
-				//TaskComplete();
-				//ChangeSchedule(slToadLand);
+			//little more time for sliding?
+
+			//TaskComplete();
+			//ChangeSchedule(slToadLand);
+
+
+			if(monsterID == 9){
+				int x = 4;
+			}
 			
-			if(pev->flags & FL_ONGROUND){
+			if(m_hEntitySittingOn){
+				
+				//if sitting on something, check to see if we should fall.
+				//it appears this never really has a chance to be effective.
+				const char* tessst = m_hEntitySittingOn->getClassname();
+				//check. are we still sitting on it?
+				CBaseEntity* entityBelow = getEntityBelow();
+				if(entityBelow == NULL){
+					//if nothing is below me, go ahead and fall.
+					pev->flags &= ~FL_ONGROUND;
+					m_hEntitySittingOn = NULL;
+				}else if(entityBelow->IsWorld()){
+					//Just move!	
+					pev->angles.x = 0;
+					pev->angles.z = 0;
+					TaskComplete();
+					break;
+				}
+
+			}else if(pev->flags & FL_ONGROUND){
+				//check, what is below me.
+				CBaseEntity* entityBelow = getEntityBelow();
+
+				//Apparently this will ignore things directly tied, but never pass through the world.
+				//what? who knows but this seems to work. let's just move on.
+				if(entityBelow == NULL){
+					//nothing.. what? interrupt?
+					pev->flags &= ~FL_ONGROUND;
+					break;
+				}else{
+					if(entityBelow->IsWorld()){
+						//this is ok.
+						m_hEntitySittingOn = NULL;
+					}else{
+						//on top of this entity?
+						m_hEntitySittingOn = entityBelow;
+					}
+				}
+			}
+
+
+			
+
+
+
+			
+			//only continue if not sitting on an entity. That messes things up.
+			if(pev->flags & FL_ONGROUND && m_hEntitySittingOn == NULL){
+
 				pev->angles.x = 0;
 				pev->angles.z = 0;
 				TaskComplete();
@@ -1851,6 +1943,11 @@ void CChumToad::RunTask ( Task_t *pTask ){
 
 void CChumToad::MonsterThink ( void )
 {
+	//DebugLine_ClearAll();
+		
+	
+		
+
 
 
 
@@ -1941,7 +2038,9 @@ void CChumToad::firstLand(){
 void CChumToad::Land(){
 	
 	//no connection anymore. Mostly to let chumtoads be collidable with the player.
-	pev->owner = NULL;
+	//pev->owner = NULL;
+	//NOPE. we change this.
+
 
 	EASY_CVAR_PRINTIF_PRE(chumtoadPrintout, easyPrintLine("chumtoad: LAND CALLED! First?" ) );
 	
@@ -2195,7 +2294,8 @@ int CChumToad::IRelationship ( CBaseEntity *pTarget )
 		return R_DEFAULT;
 	break;
 	case CLASS_HUMAN_PASSIVE:
-		return R_DEFAULT;
+		//scientist don't care about chumtoads. But (TODO) stare at them from time to time. Same with barnies really.
+		return R_NO;
 	break;
 	case CLASS_HUMAN_MILITARY:
 		return R_HT;
@@ -2229,7 +2329,8 @@ int CChumToad::IRelationship ( CBaseEntity *pTarget )
 		return R_DEFAULT;
 	break;
 	case CLASS_PLAYER_ALLY:
-		return R_DEFAULT;
+		//spawned by the player or not, friendlies don't care about chumtoads.
+		return R_NO;
 	break;
 	case CLASS_PLAYER_BIOWEAPON:
 		return R_HT;
@@ -2557,3 +2658,91 @@ void CChumToad::onDeathAnimationEnd(void){
 	//Close the eye just in case.
 	pev->skin = numberOfEyeSkins - 1;
 }
+
+
+
+
+
+
+//See if there is an entity below me. Can return NULL if not too.
+CBaseEntity* CChumToad::getEntityBelow(void){
+
+	
+
+		//assume the origin is at the floor of this entity.
+		const Vector backLeftBottom = pev->origin + Vector(pev->mins.x, pev->mins.y, 0);
+		const Vector backRightBottom = pev->origin + Vector(pev->mins.x, pev->maxs.y, 0);
+		const Vector forwardLeftBottom = pev->origin + Vector(pev->maxs.x, pev->mins.y, 0);
+		const Vector forwardRightBottom = pev->origin + Vector(pev->maxs.x, pev->maxs.y, 0);
+
+		const Vector vecDown = Vector(0, 0, -1);
+		float distDown = 8;
+
+		TraceResult tr_backLeftBottom;
+		TraceResult tr_backRightBottom;
+		TraceResult tr_forwardLeftBottom;
+		TraceResult tr_forwardRightBottom;
+		UTIL_TraceLine(backLeftBottom, backLeftBottom + vecDown * distDown, dont_ignore_monsters, dont_ignore_glass, ENT(pev), &tr_backLeftBottom);
+		UTIL_TraceLine(backRightBottom, backRightBottom + vecDown * distDown, dont_ignore_monsters, dont_ignore_glass, ENT(pev), &tr_backRightBottom);
+		UTIL_TraceLine(forwardLeftBottom, forwardLeftBottom + vecDown * distDown, dont_ignore_monsters, dont_ignore_glass, ENT(pev), &tr_forwardLeftBottom);
+		UTIL_TraceLine(forwardRightBottom, forwardRightBottom + vecDown * distDown, dont_ignore_monsters, dont_ignore_glass, ENT(pev), &tr_forwardRightBottom);
+
+		
+		//DebugLine_Setup(0, backLeftBottom, backLeftBottom + vecDown * distDown, tr_backLeftBottom.flFraction);
+		//DebugLine_Setup(1, backRightBottom, backRightBottom + vecDown * distDown, tr_backRightBottom.flFraction);
+		//DebugLine_Setup(2, forwardLeftBottom, forwardLeftBottom + vecDown * distDown, tr_forwardLeftBottom.flFraction);
+		//DebugLine_Setup(3, forwardRightBottom, forwardRightBottom + vecDown * distDown, tr_forwardRightBottom.flFraction);
+
+		//MODDD NOTE - watch the required and thorw distance above (gpGlobals->forward * #) and flFraction! If it is too small, chumtoads can be thrown "through" walls, like map walls, and clip through. Looks weird and the toad leaves this universe.
+		
+		
+		//BOOL tracesSolid;
+		//BOOL tracesStartSolid;
+		//tracesSolid = (tr_backLeftBottom.fAllSolid != 0 || tr_backRightBottom.fAllSolid != 0 || tr_forwardLeftBottom.fAllSolid != 0 || tr_forwardRightBottom.fAllSolid != 0);
+		//tracesStartSolid = (tr_backLeftBottom.fStartSolid != 0 || tr_backRightBottom.fStartSolid != 0 || tr_forwardLeftBottom.fStartSolid != 0 || tr_forwardRightBottom.fStartSolid != 0);
+		
+		//if(tracesSolid == FALSE && tracesStartSolid == FALSE)
+		{
+			float minFraction = 1.00;
+			CBaseEntity* entityBelow = NULL;
+			TraceResult* trBestTrace = NULL;
+		
+
+			if(tr_backLeftBottom.fAllSolid == FALSE && tr_backLeftBottom.flFraction < minFraction){
+				minFraction = tr_backLeftBottom.flFraction;
+				trBestTrace = &tr_backLeftBottom;
+			}
+			if(tr_backRightBottom.fAllSolid == FALSE && tr_backRightBottom.flFraction < minFraction){
+				minFraction = tr_backRightBottom.flFraction;
+				trBestTrace = &tr_backRightBottom;
+			}
+			if(tr_forwardLeftBottom.fAllSolid == FALSE && tr_forwardLeftBottom.flFraction < minFraction){
+				minFraction = tr_forwardLeftBottom.flFraction;
+				trBestTrace = &tr_forwardLeftBottom;
+			}
+			if(tr_forwardRightBottom.fAllSolid == FALSE && tr_forwardRightBottom.flFraction < minFraction){
+				minFraction = tr_forwardRightBottom.flFraction;
+				trBestTrace = &tr_forwardRightBottom;
+			}
+
+
+			if(trBestTrace != NULL){
+				if(trBestTrace->pHit != NULL){
+					return CBaseEntity::Instance(trBestTrace->pHit);
+				}
+			}
+
+		}//END OF trace basic checks
+
+		return NULL;
+
+}//END OF getEntityBelow
+	
+
+
+
+
+
+
+
+

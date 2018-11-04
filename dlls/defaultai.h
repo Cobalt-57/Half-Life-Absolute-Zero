@@ -110,4 +110,7 @@ extern Schedule_t slWalkToScript[];
 extern Schedule_t slRunToScript[];
 extern Schedule_t slWaitScript[];
 
+//MODDD - new
+extern Schedule_t slRandomWander[];
+
 #endif		// DEFAULTAI_H

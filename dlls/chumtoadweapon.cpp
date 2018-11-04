@@ -3,6 +3,7 @@
 
 #include "chumtoadweapon.h"
 
+#include "custom_debug.h"
 
 
 
@@ -391,6 +392,8 @@ void CChumToadWeapon::Holster( int skiplocal /* = 0 */ )
 //ALSO, if the 
 BOOL CChumToadWeapon::checkThrowValid(Vector trace_origin, float* minFractionStore){
 
+
+
 	
 		UTIL_MakeVectors( m_pPlayer->pev->v_angle );
 		TraceResult tr;
@@ -422,17 +425,22 @@ BOOL CChumToadWeapon::checkThrowValid(Vector trace_origin, float* minFractionSto
 		TraceResult trUp;
 		TraceResult trDown;
 		
-		Vector vecStartLeft = trace_origin + gpGlobals->v_forward * 20 + -gpGlobals->v_right * 20;
-		Vector vecStartCenter = trace_origin + gpGlobals->v_forward * 20;
-		Vector vecStartRight = trace_origin + gpGlobals->v_forward * 20 + gpGlobals->v_right * 20;
-		Vector vecEndLeft = trace_origin + gpGlobals->v_forward * 100 + -gpGlobals->v_right * 20;
-		Vector vecEndCenter = trace_origin + gpGlobals->v_forward * 100;
-		Vector vecEndRight = trace_origin + gpGlobals->v_forward * 100 + gpGlobals->v_right * 20;
+		const float checkDistStart = 15;
+		const float checkAdj = 12;
+		const float checkDistEnd = 80;
+
+
+		Vector vecStartLeft = trace_origin + gpGlobals->v_forward * checkDistStart + -gpGlobals->v_right * checkAdj;
+		Vector vecStartCenter = trace_origin + gpGlobals->v_forward * checkDistStart;
+		Vector vecStartRight = trace_origin + gpGlobals->v_forward * checkDistStart + gpGlobals->v_right * checkAdj;
+		Vector vecEndLeft = trace_origin + gpGlobals->v_forward * checkDistEnd + -gpGlobals->v_right * checkAdj;
+		Vector vecEndCenter = trace_origin + gpGlobals->v_forward * checkDistEnd;
+		Vector vecEndRight = trace_origin + gpGlobals->v_forward * checkDistEnd + gpGlobals->v_right * checkAdj;
 		
-		Vector vecStartUp = trace_origin + gpGlobals->v_forward * 20 + gpGlobals->v_up * 20;
-		Vector vecStartDown = trace_origin + gpGlobals->v_forward * 20 + -gpGlobals->v_up * 20;
-		Vector vecEndUp = trace_origin + gpGlobals->v_forward * 100 + gpGlobals->v_up * 20;
-		Vector vecEndDown = trace_origin + gpGlobals->v_forward * 100 + -gpGlobals->v_up * 20;
+		Vector vecStartUp = trace_origin + gpGlobals->v_forward * checkDistStart + gpGlobals->v_up * checkAdj;
+		Vector vecStartDown = trace_origin + gpGlobals->v_forward * checkDistStart + -gpGlobals->v_up * checkAdj;
+		Vector vecEndUp = trace_origin + gpGlobals->v_forward * checkDistEnd + gpGlobals->v_up * checkAdj;
+		Vector vecEndDown = trace_origin + gpGlobals->v_forward * checkDistEnd + -gpGlobals->v_up * checkAdj;
 
 		UTIL_TraceLine( vecStartLeft, vecEndLeft, dont_ignore_monsters, this->m_pPlayer->edict(), &trLeft );
 		UTIL_TraceLine( vecStartCenter, vecEndCenter, dont_ignore_monsters, this->m_pPlayer->edict(), &trCenter );
@@ -476,12 +484,13 @@ BOOL CChumToadWeapon::checkThrowValid(Vector trace_origin, float* minFractionSto
 			//MODDD - IMPORTANT LESSON! A fraction (flFraction) can still be 1.0 and have collided with something as close as possible! Unknown why it reports 1.0 then instead of 0 (for 0% of the way).
 			//Checking for "pHit being null" should work though.
 
+			/*
 			m_pPlayer->debugVect1Success = (trLeft.flFraction >= 1.0 && !trLeft.fStartSolid && !trLeft.fAllSolid);
 			m_pPlayer->debugVect2Success = (trCenter.flFraction >= 1.0 && !trCenter.fStartSolid && !trCenter.fAllSolid);
 			m_pPlayer->debugVect3Success = (trRight.flFraction >= 1.0 && !trRight.fStartSolid && !trRight.fAllSolid);
 			m_pPlayer->debugVect4Success = (trUp.flFraction >= 1.0 && !trUp.fStartSolid && !trUp.fAllSolid);
 			m_pPlayer->debugVect5Success = (trDown.flFraction >= 1.0 && !trDown.fStartSolid && !trDown.fAllSolid);
-
+			*/
 
 		
 			if(trLeft.pHit != NULL){easyForcePrintLine("trLeft HIT %s", STRING(trLeft.pHit->v.classname));}
@@ -490,23 +499,24 @@ BOOL CChumToadWeapon::checkThrowValid(Vector trace_origin, float* minFractionSto
 			if(trUp.pHit != NULL){easyForcePrintLine("trUp HIT %s", STRING(trUp.pHit->v.classname));}
 			if(trDown.pHit != NULL){easyForcePrintLine("trDown HIT %s", STRING(trDown.pHit->v.classname));}
 		
-			m_pPlayer->debugVect1Draw = TRUE;
-			m_pPlayer->debugVect2Draw = TRUE;
-			m_pPlayer->debugVect3Draw = TRUE;
-			m_pPlayer->debugVect4Draw = TRUE;
-			m_pPlayer->debugVect5Draw = TRUE;
-		
-			this->m_pPlayer->debugVect1Start = vecStartLeft;
-			this->m_pPlayer->debugVect1End = vecStartLeft + gpGlobals->v_forward * 80*trLeft.flFraction;
-			this->m_pPlayer->debugVect2Start = vecStartCenter;
-			this->m_pPlayer->debugVect2End = vecStartCenter + gpGlobals->v_forward * 80*trCenter.flFraction;
-			this->m_pPlayer->debugVect3Start = vecStartRight;
-			this->m_pPlayer->debugVect3End = vecStartRight + gpGlobals->v_forward * 80*trRight.flFraction;
-			this->m_pPlayer->debugVect4Start = vecStartUp;
-			this->m_pPlayer->debugVect4End = vecStartUp + gpGlobals->v_forward * 80*trUp.flFraction;
-			this->m_pPlayer->debugVect5Start = vecStartDown;
-			this->m_pPlayer->debugVect5End = vecStartDown + gpGlobals->v_forward * 80*trDown.flFraction;		
-		
+			DebugLine_ClearAll();
+
+			//HACKER SACKS.
+			if(trLeft.fStartSolid && !trLeft.fAllSolid)trLeft.flFraction = 0;
+			if(trCenter.fStartSolid && !trCenter.fAllSolid)trCenter.flFraction = 0;
+			if(trRight.fStartSolid && !trRight.fAllSolid)trRight.flFraction = 0;
+			if(trUp.fStartSolid && !trUp.fAllSolid)trUp.flFraction = 0;
+			if(trDown.fStartSolid && !trDown.fAllSolid)trDown.flFraction = 0;
+
+			DebugLine_Setup(0, vecStartLeft, vecEndLeft, trLeft.flFraction);
+			DebugLine_Setup(1, vecStartCenter, vecEndCenter, trCenter.flFraction);
+			DebugLine_Setup(2, vecStartRight, vecEndRight, trRight.flFraction);
+			DebugLine_Setup(3, vecStartUp, vecEndUp, trUp.flFraction);
+			DebugLine_Setup(4, vecStartDown, vecEndDown, trDown.flFraction);
+
+
+
+
 	
 			//wall: 4, 7     SOLID_BSP, MOVETYPE_PUSH
 			//grunt: 3, 4    SOLID_SLIDEBOX, MOVETYPE_STEP
@@ -638,7 +648,7 @@ void CChumToadWeapon::PrimaryAttack()
 		Vector trace_origin;
 		// HACK HACK:  Ugly hacks to handle change in origin based on new physics code for players
 		// Move origin up if crouched and start trace a bit outside of body ( 20 units instead of 16 )
-		trace_origin = m_pPlayer->pev->origin;
+		trace_origin = m_pPlayer->pev->origin + m_pPlayer->pev->view_ofs;
 		if ( m_pPlayer->pev->flags & FL_DUCKING )
 		{
 			trace_origin = trace_origin - ( VEC_HULL_MIN - VEC_DUCK_HULL_MIN );
@@ -685,7 +695,7 @@ void CChumToadWeapon::PrimaryAttack()
 
 			//MODDD 
 			if(m_pPlayer->cheat_minimumfiredelayMem == 0){
-				m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + CHUMTOAD_THROW_DELAY + 0.3f;
+				m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + CHUMTOAD_THROW_DELAY + 0.5f;
 				//chumtoadThrowReverseDelay = m_flNextPrimaryAttack - CHUMTOAD_THROW_DELAY;  //time to throw the chumtoad, counting backwards.
 				pev->fuser1 = UTIL_WeaponTimeBase() + CHUMTOAD_THROW_DELAY;
 			}else{
@@ -696,7 +706,7 @@ void CChumToadWeapon::PrimaryAttack()
 			}
 			//NOTE: this ends up being the delay before doing the re-draw animation (can still fire before then, unaffected by the time of the "throw" animation that hides the hands)
 			//To be clear, the "(# / #)" part is still just animation frames divided by animation framerate.
-			m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + (36.0/ 24.0) + 0.7f;
+			m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + (16.0/ 24.0) + 0.7f;
 
 
 
@@ -770,7 +780,6 @@ void CChumToadWeapon::ItemPostFrame(){
 #ifndef CLIENT_DLL
 
 
-	//you... fuckin... shitstain.
 
 	//easyForcePrintLine("WHAT? npa:%.2f: ctrd:%.2f wfct:%d", m_flNextPrimaryAttack, pev->fuser1, waitingForChumtoadThrow);
 	//if(m_flStartThrow != -1 && m_flStartThrow <= 0){
@@ -782,7 +791,7 @@ void CChumToadWeapon::ItemPostFrame(){
 		Vector trace_origin;
 		// HACK HACK:  Ugly hacks to handle change in origin based on new physics code for players
 		// Move origin up if crouched and start trace a bit outside of body ( 20 units instead of 16 )
-		trace_origin = m_pPlayer->pev->origin;
+		trace_origin = m_pPlayer->pev->origin + m_pPlayer->pev->view_ofs;
 		if ( m_pPlayer->pev->flags & FL_DUCKING )
 		{
 			trace_origin = trace_origin - ( VEC_HULL_MIN - VEC_DUCK_HULL_MIN );

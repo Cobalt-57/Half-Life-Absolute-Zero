@@ -27,12 +27,14 @@ enum chumtoadweapon_e {  //key: frames, FPS
 	CHUMTOADWEAPON_FIDGETCROAK, //51, 16
 	CHUMTOADWEAPON_DOWN, //21, 21
 	CHUMTOADWEAPON_UP, //36, 36
-	CHUMTOADWEAPON_THROW, //36, 24
+	CHUMTOADWEAPON_THROW, //16, 24
 
 };
 
 //how far into the throw animation to do another check and spawn the chumtoad.
-#define CHUMTOAD_THROW_DELAY (20.0f / 24.0f)
+//#define CHUMTOAD_THROW_DELAY (20.0f / 24.0f)
+//instant now.
+#define CHUMTOAD_THROW_DELAY 0
 
 
 

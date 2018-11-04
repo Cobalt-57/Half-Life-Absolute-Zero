@@ -105,14 +105,19 @@ class CChumToad : public CBaseMonster{
     public:
 
 	float testTimer;
+	EHANDLE m_hEntitySittingOn;
+
 
     CChumToad(void);
+
+
 	void HandleEventQueueEvent(int arg_eventID);
 
 	void SetYawSpeed(void);
 	BOOL getMonsterBlockIdleAutoUpdate(void);
 	int Classify(void);
 	BOOL getForceAllowNewEnemy(CBaseEntity* pOther);
+
 
 
 	//save info
@@ -144,6 +149,9 @@ class CChumToad : public CBaseMonster{
 	void onPlayDead();
 	void playDeadSendMonstersAway();
 	void onDeathAnimationEnd(void);
+
+	CBaseEntity* getEntityBelow(void);
+
 
 	BOOL IsAlive_FromAI( CBaseMonster* whoWantsToKnow );
 	
@@ -205,6 +213,9 @@ class CChumToad : public CBaseMonster{
 	//int TakeDamage( entvars_t *pevInflictor, entvars_t *pevAttacker, float flDamage, int bitsDamageType, int bitsDamageTypeMod );
 	
 	void MonsterThink ( void );
+
+	
+	void EXPORT ChumToadTouch ( CBaseEntity *pOther );
 	void SetActivity ( Activity NewActivity );
 
 

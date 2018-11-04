@@ -6285,6 +6285,10 @@ void CBaseMonster::ReportAIState( void )
 {
 
 
+
+	//this->pev->movetype = MOVETYPE_TOSS;
+	//ClearBits( pev->flags, FL_ONGROUND );
+
 	//m_pfnThink m_pfnTouch
 	ALERT_TYPE level = at_console;
 

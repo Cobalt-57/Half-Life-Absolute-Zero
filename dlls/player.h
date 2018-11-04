@@ -711,27 +711,6 @@ public:
 	Vector debugDrawVectRecentGive2;
 
 
-	Vector debugVect1Start;
-	Vector debugVect1End;
-	Vector debugVect2Start;
-	Vector debugVect2End;
-	Vector debugVect3Start;
-	Vector debugVect3End;
-	Vector debugVect4Start;
-	Vector debugVect4End;
-	Vector debugVect5Start;
-	Vector debugVect5End;
-	BOOL debugVect1Draw;
-	BOOL debugVect2Draw;
-	BOOL debugVect3Draw;
-	BOOL debugVect4Draw;
-	BOOL debugVect5Draw;
-	
-	BOOL debugVect1Success;
-	BOOL debugVect2Success;
-	BOOL debugVect3Success;
-	BOOL debugVect4Success;
-	BOOL debugVect5Success;
 	///////////////////////////////////////////////////////////////////////////
 	///////////////////////////////////////////////////////////////////////////
 

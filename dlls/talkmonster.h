@@ -113,7 +113,13 @@ enum
 class CTalkMonster : public CBaseMonster
 {
 public:
-
+	
+	EHANDLE closestCautiousNPC;
+	EHANDLE closestCautiousNPC_memory;
+	float closestCautiousNPC_distance;
+	EHANDLE closestPassiveNPC;
+	EHANDLE closestPassiveNPC_memory;
+	float closestPassiveNPC_distance;
 
 
 	//MODDD
@@ -250,6 +256,8 @@ public:
 	virtual void SayProvoked(void);
 	virtual void SaySuspicious(void);
 	virtual void SayLeaderDied(void);
+	virtual void SayNearPassive(void);
+	virtual void SayNearCautious(void);
 	
 	GENERATE_TRACEATTACK_PROTOTYPE_VIRTUAL
 	GENERATE_TAKEDAMAGE_PROTOTYPE_VIRTUAL

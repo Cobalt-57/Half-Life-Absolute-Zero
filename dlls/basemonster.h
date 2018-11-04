@@ -247,6 +247,7 @@ public:
 
 		//new
 		BOOL disableEnemyAutoNode;
+		BOOL waitForMovementTimed_Start;
 
 		
 		//MODDD - new
