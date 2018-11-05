@@ -307,6 +307,7 @@
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
+    <ClCompile Include="archer.cpp" />
     <ClCompile Include="barnacle.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -1067,6 +1068,7 @@
     <ClInclude Include="activitymap.h" />
     <ClInclude Include="animating.h" />
     <ClInclude Include="animation.h" />
+    <ClInclude Include="archer.h" />
     <ClInclude Include="barnacle.h" />
     <ClInclude Include="basebutton.h" />
     <ClInclude Include="basemonster.h" />

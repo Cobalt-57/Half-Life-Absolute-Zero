@@ -349,6 +349,8 @@ int CBaseMonster::getLoopingDeathSequence(void){return 0;};
 Schedule_t* CBaseMonster::flierDeathSchedule(void){return NULL;}
 BOOL CBaseMonster::getMovementCanAutoTurn(void){return FALSE;};
 
+void CBaseMonster::updateEnemyLKP(void){};
+void CBaseMonster::setEnemyLKP(const Vector& argNewVector){};
 
 void CBaseMonster::setPhysicalHitboxForDeath(){return;}
 void CBaseMonster::DeathAnimationStart(){return;}
@@ -445,7 +447,13 @@ void CBaseMonster :: MonsterInit ( void ) { }
 void CBaseMonster :: MonsterInitThink ( void ) { }
 void CBaseMonster :: StartMonster ( void ) { }
 void CBaseMonster :: MovementComplete( void ) { }
+
+//MODDD - new, moved outside of basemonster.h so it must show up implemented (dummied) here.
+void CBaseMonster::TaskFail(void){};
+
 int CBaseMonster::TaskIsRunning( void ) { return 0; }
+
+
 int CBaseMonster::IRelationship ( CBaseEntity *pTarget ) { return 0; }
 BOOL CBaseMonster :: FindCover ( Vector vecThreat, Vector vecViewOffset, float flMinDist, float flMaxDist ) { return FALSE; }
 BOOL CBaseMonster :: BuildNearestRoute ( Vector vecThreat, Vector vecViewOffset, float flMinDist, float flMaxDist ) { return FALSE; }

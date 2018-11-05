@@ -527,12 +527,15 @@ void CHornet :: TrackTarget ( void )
 	
 		if ( m_hEnemy != NULL && FVisible( m_hEnemy ))
 		{
-			m_vecEnemyLKP = m_hEnemy->BodyTarget( pev->origin );
+			//m_vecEnemyLKP = ...;
+			setEnemyLKP( m_hEnemy->BodyTarget( pev->origin ) );
 		}
 		else
 		{
 			//m_vecEnemyLKP = m_vecEnemyLKP + pev->velocity * m_flFlySpeed * 0.1;
-			m_vecEnemyLKP = m_vecEnemyLKP + vecFlightDirTrue * m_flFlySpeed * 0.1;
+			
+			//m_vecEnemyLKP = ...;
+			setEnemyLKP(m_vecEnemyLKP + vecFlightDirTrue * m_flFlySpeed * 0.1);
 
 		}
 

@@ -1896,7 +1896,8 @@ Schedule_t* CBaseMonster :: GetScheduleOfType ( int Type )
 			//ACTUALLY YES, force an update on the enemy LKP just to unclog things maybe.
 
 			if(m_hEnemy != NULL){
-				this->m_vecEnemyLKP = m_hEnemy->pev->origin;
+				//this->m_vecEnemyLKP = m_hEnemy->pev->origin;
+				setEnemyLKP(m_hEnemy->pev->origin);
 			}
 
 			return &slFail[ 0 ];
@@ -2047,7 +2048,8 @@ void CBaseMonster::ScheduleChange(void){
 		if(EASY_CVAR_GET(pathfindStumpedMode) == 2){
 			//reget this to keep it up to date!
 			if(m_hEnemy != NULL){
-				m_vecEnemyLKP = m_hEnemy->pev->origin;
+				//m_vecEnemyLKP = m_hEnemy->pev->origin;
+				setEnemyLKP(m_hEnemy->pev->origin);
 			}
 		}
 		

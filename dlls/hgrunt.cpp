@@ -2055,6 +2055,9 @@ BOOL CHGrunt::getIsStrafeLocked(void){
 
 
 void CHGrunt :: MonsterThink ( void ){
+
+
+
 	/*
 	EASY_CVAR_PRINTIF(global_hgruntPrintout, "yay %d", test2() );
 	EASY_CVAR_PRINTIF_PRE(hgruntPrintout, easyPrintLine( "yey %d", test()) ) ;
@@ -3073,6 +3076,11 @@ void CHGrunt :: Precache()
 //=========================================================
 void CHGrunt :: StartTask ( Task_t *pTask )
 {
+
+
+	if(monsterID == 1){
+		int x = 0;
+	}
 	
 	//return;
 	EASY_CVAR_PRINTIF_PRE(hgruntPrintout, easyPrintLine("HGRUNT STARTTASK eeee %s %d", getScheduleName(), getTaskNumber()));
@@ -3607,7 +3615,7 @@ void CHGrunt :: RunTask ( Task_t *pTask )
 						nextPositionCheckTime = gpGlobals->time + 1.0f;
 					}else{
 						//no good!  Stop!
-						TaskFail();
+						//TaskFail();
 						nextPositionCheckTime = -1;
 						return;
 					}
@@ -3891,7 +3899,11 @@ Schedule_t slGruntEstablishLineOfFire[] =
 		bits_COND_ENEMY_DEAD		|
 		bits_COND_CAN_RANGE_ATTACK1	|
 		bits_COND_CAN_MELEE_ATTACK1	|
-		bits_COND_CAN_RANGE_ATTACK2	|
+		
+		//MODDD - removing this as an interrupter.
+		//Being interrupted by being able to throw grenades, even if not in a grenade-throwing role, is potentially annoying.
+		//bits_COND_CAN_RANGE_ATTACK2	|
+
 		bits_COND_CAN_MELEE_ATTACK2	|
 		bits_COND_HEAR_SOUND,
 
@@ -4212,7 +4224,10 @@ Schedule_t	slGruntSweep[] =
 		bits_COND_LIGHT_DAMAGE	|
 		bits_COND_HEAVY_DAMAGE	|
 		bits_COND_CAN_RANGE_ATTACK1	|
-		bits_COND_CAN_RANGE_ATTACK2	|
+		
+		//MODDD - perhaps not.
+		//bits_COND_CAN_RANGE_ATTACK2	|
+		
 		bits_COND_HEAR_SOUND,
 
 		bits_SOUND_WORLD		|// sound flags
@@ -4886,6 +4901,10 @@ Schedule_t *CHGrunt :: GetSchedule( void )
 				}
 			}
 
+			if(monsterID==1){
+				easyForcePrintLine("I AM YEAH %d : %d", HasConditions( bits_COND_SEE_ENEMY ), HasConditions ( bits_COND_CAN_RANGE_ATTACK1 ) );
+			}
+
 			if ( HasConditions( bits_COND_SEE_ENEMY ) && !HasConditions ( bits_COND_CAN_RANGE_ATTACK1 ) )
 			{
 				return GetScheduleOfType ( SCHED_GRUNT_ESTABLISH_LINE_OF_FIRE );
@@ -4910,6 +4929,10 @@ Schedule_t* CHGrunt :: GetScheduleOfType ( int Type )
 
 
 	easyForcePrintLine("HGRUNT%d GetSchedOfType: %d", monsterID, Type);
+
+	if(monsterID == 1){
+		int x = 4;
+	}
 
 	//MODDD - new schedule?  Forget the touch method.
 	this->SetTouch(NULL);

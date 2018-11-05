@@ -248,7 +248,9 @@ public:
 		//new
 		BOOL disableEnemyAutoNode;
 		BOOL waitForMovementTimed_Start;
-
+		
+		BOOL investigatingAltLKP;
+		Vector m_vecEnemyLKP_Real;
 		
 		//MODDD - new
 		CBaseMonster(void);
@@ -434,6 +436,10 @@ public:
 	virtual int getLoopingDeathSequence(void);
 	static Schedule_t* flierDeathSchedule(void);
 	virtual BOOL getMovementCanAutoTurn(void);
+
+	void updateEnemyLKP(void);
+	void setEnemyLKP(const Vector& argNewVector);
+	void setEnemyLKP_Investigate(const Vector& argNewVector);
 
 	virtual BOOL getGermanModelRequirement(void);
 	virtual const char* getGermanModel(void);
@@ -788,19 +794,12 @@ public:
 	}
 	void MovementComplete( void );
 	
-	//For now not inline, harder to debug inlines (use break points).
+
+	//For now not inline, harder to debug inlines (use break points).  Also moved to basemonster.cpp, easier to test with breakpoints, disabling + recompiling, etc.
 	//inline
-	void TaskFail( void ) {
-		SetConditions(bits_COND_TASK_FAILED);
+	void TaskFail( void );
 
-		//if(FClassnameIs(this->pev, "monster_scientist")){
-		if(monsterID == 4){
-			//break point!
-			const char* imLazy = (m_pSchedule!=NULL)?m_pSchedule->pName:"NULL!";
-			int x = 7;
-		}
 
-	}
 	inline void TaskBegin( void ) { m_iTaskStatus = TASKSTATUS_RUNNING; }
 	int TaskIsRunning( void );
 	inline int TaskIsComplete( void ) { return (m_iTaskStatus == TASKSTATUS_COMPLETE); }

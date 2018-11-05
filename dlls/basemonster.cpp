@@ -1175,27 +1175,29 @@ void CBaseMonster::heardBulletHit(entvars_t* pevShooter){
 	//I heard it.
 	entvars_t* pevListener = pev;
 	CBaseMonster* monListener = this;
-	//Who shot?
 
-	// react to the damage (get mad)
+
+	// react to the sound
 	if ( (pevListener->flags & FL_MONSTER) && !FNullEnt(pevShooter) )
 	{
 		if ( pevShooter->flags & (FL_MONSTER | FL_CLIENT) )
-		{// only if the attack was a monster or client!
+		{
+			// only if the attacker was a monster or client!
 			
 			// enemy's last known position is somewhere down the vector that the attack came from.
 			if (pevShooter)
 			{
 				if (monListener->m_hEnemy == NULL || pevShooter == monListener->m_hEnemy->pev || !monListener->HasConditions(bits_COND_SEE_ENEMY))
 				{
-					monListener->m_vecEnemyLKP = pevShooter->origin;
+					monListener->setEnemyLKP(pevShooter->origin);
 				}
 			}
 			else
 			{
-				monListener->m_vecEnemyLKP = monListener->pev->origin + ( g_vecAttackDir * 64 ); 
+				monListener->setEnemyLKP(monListener->pev->origin + ( g_vecAttackDir * 64 )); 
 			}
 
+			//want to face your LKP, yes?
 			monListener->MakeIdealYaw( monListener->m_vecEnemyLKP );
 
 			/*
@@ -2103,7 +2105,8 @@ BOOL CBaseMonster::FRefreshRouteChaseEnemySmart(void){
 	m_vecMoveGoal = m_hEnemy->pev->origin;
 
 	//MODDD - new?
-	m_vecEnemyLKP = m_hEnemy->pev->origin;
+	//m_vecEnemyLKP = m_hEnemy->pev->origin;
+	setEnemyLKP(m_hEnemy->pev->origin);
 	*/
 
 	m_vecMoveGoal = m_vecEnemyLKP;
@@ -2173,7 +2176,8 @@ BOOL CBaseMonster :: FRefreshRoute ( void )
 			break;
 
 		case MOVEGOAL_ENEMY:
-			//m_vecEnemyLKP = m_hEnemy->pev->origin; //!!!
+			////m_vecEnemyLKP = m_hEnemy->pev->origin; //!!!
+			//setEnemyLKP(m_hEnemy->pev->origin);
 			returnCode = BuildRoute( m_vecEnemyLKP, bits_MF_TO_ENEMY, m_hEnemy );
 
 			//MODDD - CHECK. Is automatically setting "m_vecMoveGoal" to the goal of this path ok? m_vecMoveGoal is usually an input.
@@ -2679,7 +2683,9 @@ int CBaseMonster :: CheckEnemy ( CBaseEntity *pEnemy )
 		CBaseMonster *pEnemyMonster;
 
 		iUpdatedLKP = TRUE;
-		m_vecEnemyLKP = pEnemy->pev->origin;
+		
+		//m_vecEnemyLKP = pEnemy->pev->origin;
+		setEnemyLKP(pEnemy->pev->origin);
 
 		pEnemyMonster = pEnemy->MyMonsterPointer();
 
@@ -2696,7 +2702,8 @@ int CBaseMonster :: CheckEnemy ( CBaseEntity *pEnemy )
 		if (pEnemy->pev->velocity != Vector( 0, 0, 0))
 		{
 			// trail the enemy a bit
-			m_vecEnemyLKP = m_vecEnemyLKP - pEnemy->pev->velocity * RANDOM_FLOAT( -0.05, 0 );
+			//m_vecEnemyLKP = ...
+			setEnemyLKP(m_vecEnemyLKP - pEnemy->pev->velocity * RANDOM_FLOAT( -0.05, 0 ));
 		}
 		else
 		{
@@ -2715,7 +2722,8 @@ int CBaseMonster :: CheckEnemy ( CBaseEntity *pEnemy )
 		// enemy is. 
 		
 		iUpdatedLKP = TRUE;
-		m_vecEnemyLKP = pEnemy->pev->origin;
+		//m_vecEnemyLKP = pEnemy->pev->origin;
+		setEnemyLKP(pEnemy->pev->origin);
 		
 	}
 	
@@ -2740,6 +2748,12 @@ int CBaseMonster :: CheckEnemy ( CBaseEntity *pEnemy )
 	if ( FCanCheckAttacks() )	
 	{
 		CheckAttacks ( m_hEnemy, flDistToEnemy );
+
+		//MODDD - test?
+
+		//if(monsterID==1){ easyForcePrintLine("WOO %d", HasConditions(bits_COND_CAN_RANGE_ATTACK2));  }
+
+
 	}else{
 		//MODDD MAJOR - if unable to check attacks, assume they would have failed anyways. Don't keep memory of attack conditions that now survive schedule changes.
 		ClearConditions( bits_COND_CAN_RANGE_ATTACK1 | bits_COND_CAN_RANGE_ATTACK2 | bits_COND_CAN_MELEE_ATTACK1 |bits_COND_CAN_MELEE_ATTACK2 );
@@ -2927,8 +2941,11 @@ BOOL CBaseMonster::PopEnemy()
 	refreshStack();
 
 	if (m_intOldEnemyNextIndex > 0) {
+
 		m_hEnemy = m_hOldEnemy[m_intOldEnemyNextIndex - 1];
-		m_vecEnemyLKP = m_vecOldEnemy[m_intOldEnemyNextIndex];
+
+		//m_vecEnemyLKP = m_vecOldEnemy[m_intOldEnemyNextIndex];
+		setEnemyLKP(m_vecOldEnemy[m_intOldEnemyNextIndex]);
 
 		m_intOldEnemyNextIndex--;
 		return TRUE;
@@ -5249,6 +5266,26 @@ void CBaseMonster :: MovementComplete( void )
 }
 
 
+
+void CBaseMonster::TaskFail(void)
+{
+	SetConditions(bits_COND_TASK_FAILED);
+
+	
+	if(monsterID == 1){
+		int x = 4;
+	}
+
+
+	//if(FClassnameIs(this->pev, "monster_scientist")){
+	if(monsterID == 4){
+		//break point!
+		const char* imLazy = (m_pSchedule!=NULL)?m_pSchedule->pName:"NULL!";
+		int x = 7;
+	}
+
+}
+
 int CBaseMonster::TaskIsRunning( void )
 {
 	if ( m_iTaskStatus != TASKSTATUS_COMPLETE && 
@@ -6945,7 +6982,10 @@ BOOL CBaseMonster :: GetEnemy ( void )
 					PushEnemy( m_hEnemy, m_vecEnemyLKP );
 					SetConditions(bits_COND_NEW_ENEMY);
 					m_hEnemy = pNewEnemy;
-					m_vecEnemyLKP = m_hEnemy->pev->origin;
+					
+					//m_vecEnemyLKP = m_hEnemy->pev->origin;
+					setEnemyLKP(m_hEnemy->pev->origin);
+
 				}
 				// if the new enemy has an owner, take that one as well
 				if (pNewEnemy->pev->owner != NULL)
@@ -7642,4 +7682,27 @@ BOOL CBaseMonster::getMovementCanAutoTurn(void){
 	//without a reason not to, defaults to yes all the time.
 	return TRUE;
 }//END OF getMovementCanAutoTurn
+
+
+
+//If there is an enemy, set the m_vecEnemyLKP to the enemy's current position
+void CBaseMonster::updateEnemyLKP(void){
+	if(m_hEnemy != NULL){
+		m_vecEnemyLKP = m_hEnemy->pev->origin;
+		investigatingAltLKP = FALSE; //this is the real deal.
+	}
+}
+void CBaseMonster::setEnemyLKP(const Vector& argNewVector){
+	m_vecEnemyLKP = argNewVector;
+	investigatingAltLKP = FALSE; //this is the real deal.
+}//END OF setEnemyLKP
+
+//Push this new vector to m_vecEnemyLKP.
+//Save the old enemy LKP to another var to back up to when done with that.
+void CBaseMonster::setEnemyLKP_Investigate(const Vector& argToInvestigate){
+	m_vecEnemyLKP_Real = m_vecEnemyLKP;
+	m_vecEnemyLKP = argToInvestigate;
+	investigatingAltLKP = TRUE;
+}
+
 

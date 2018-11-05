@@ -383,6 +383,9 @@
     <ClCompile Include="squidspit.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="archer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="activity.h">
@@ -602,6 +605,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="squidspit.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="archer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

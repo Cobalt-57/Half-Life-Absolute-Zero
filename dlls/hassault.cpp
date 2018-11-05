@@ -2230,7 +2230,9 @@ Schedule_t* CHAssault::GetSchedule(){
 					}
 
 					//MODDD - is that ok?
-					m_vecEnemyLKP = m_hEnemy->pev->origin;
+					//m_vecEnemyLKP = m_hEnemy->pev->origin;
+					setEnemyLKP(m_hEnemy->pev->origin);
+					
 					this->nonStumpableCombatLook = FALSE;
 					return GetScheduleOfType( SCHED_COMBAT_FACE );
 				}

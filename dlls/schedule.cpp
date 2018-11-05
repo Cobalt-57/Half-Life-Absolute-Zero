@@ -300,7 +300,8 @@ BOOL CBaseMonster :: FScheduleValid ( void )
 
 		
 		//if(FClassnameIs(this->pev, "monster_scientist"))
-		if(EASY_CVAR_GET(scheduleInterruptPrintouts))easyForcePrintLine("%s:%d SCHEDULE INTERRUPTED. Name:%s task:%d\n"
+		if(EASY_CVAR_GET(scheduleInterruptPrintouts))
+			easyForcePrintLine("%s:%d SCHEDULE INTERRUPTED. Name:%s task:%d\n"
 			"%s: %d %d\n"
 			"%s: %d %d\n"
 			"%s: %d %d\n"
@@ -713,6 +714,9 @@ void CBaseMonster :: RunTask ( Task_t *pTask )
 		{
 
 
+			//if(monsterID == 1)easyForcePrintLine("HOO MANN sched:%s ang:%.2f ideal:%.2f", m_pSchedule->pName, UTIL_AngleMod( pev->angles.y ), pev->ideal_yaw );
+			
+
 			MakeIdealYaw( m_vecEnemyLKP );
 
 			ChangeYaw( pev->yaw_speed );
@@ -946,7 +950,8 @@ void CBaseMonster :: RunTask ( Task_t *pTask )
 				if( (FInViewCone( m_hEnemy ) && FVisible(m_hEnemy)) || HasConditions(bits_COND_LIGHT_DAMAGE | bits_COND_HEAVY_DAMAGE) ){
 
 
-					//m_vecEnemyLKP = m_hEnemy->pev->origin;
+					////m_vecEnemyLKP = ...
+					//setEnemyLKP(m_hEnemy->pev->origin);
 
 					//MODDD NOTE - should we check to see there is a clear line of sight with the enemy, regardless of facing direction, before forcing a reroute? ){
 
@@ -1733,7 +1738,8 @@ void CBaseMonster :: StartTask ( Task_t *pTask )
 			//  if we're going to just route to the enemy's modern position anyways and skip the rest of this schedule.
 			if(EASY_CVAR_GET(pathfindStumpedMode) == 3){
 				//is this okay?
-				m_vecEnemyLKP = m_hEnemy->pev->origin;
+				//m_vecEnemyLKP = ...
+				setEnemyLKP(m_hEnemy->pev->origin);
 
 				TaskFail();
 				ChangeSchedule(GetSchedule());
@@ -1787,6 +1793,10 @@ void CBaseMonster :: StartTask ( Task_t *pTask )
 		}
 	case TASK_CHECK_STUMPED:
 		{
+			//Completeing this task will let the monster pick a different schedule as usual.
+			//Set the fail schedule to something desired and call "TaskFail" to do that instead, like staring for 15 seconds when stumped before re-getting the enemy's location from the engine.
+			//You cheater!
+
 			easyForcePrintLine("I MUST SAY, I AM STUMPED.");
 
 			//TaskComplete();
@@ -1801,6 +1811,22 @@ void CBaseMonster :: StartTask ( Task_t *pTask )
 
 			if(!HasConditions(bits_COND_SEE_ENEMY)){
 				//Not looking at the enemy, but looking at LKP (presumably)?
+
+
+				
+				//If I was checking out a place I took damage at instead of chasing the enemy directly and I fail to see the enem
+				if(investigatingAltLKP){
+					//no longer!  Restore the LKP to the "real" one where the enemy was last sighted. If it hasn't been updated since that is.
+					//Any changes to LKP since will change "investigatingAltLKP" to false that put it at the enemy's real location again of course.
+					investigatingAltLKP = FALSE;
+					m_vecEnemyLKP = m_vecEnemyLKP_Real;
+					//TaskFail();
+					TaskComplete();
+					return;
+				}
+
+
+
 
 
 				if(EASY_CVAR_GET(pathfindStumpedMode) == 0){
@@ -1821,7 +1847,9 @@ void CBaseMonster :: StartTask ( Task_t *pTask )
 					//Go actually look at them next time to break this cycle.
 
 					//safety feature, do this all the time.
-					m_vecEnemyLKP = m_hEnemy->pev->origin;
+					//m_vecEnemyLKP = ...
+					setEnemyLKP(m_hEnemy->pev->origin);
+					
 					//Before we resume, pause for a little.
 					//...Actually this will suffice, just fail regardless.
 					m_failSchedule = SCHED_PATHFIND_STUMPED;  //A variant of FAIL that will be interrupted like idle, by sounds, seeing the enemy, etc.
@@ -1842,7 +1870,8 @@ void CBaseMonster :: StartTask ( Task_t *pTask )
 		{
 		//Force me to know the enemy's location.
 		if(m_hEnemy != NULL){
-			m_vecEnemyLKP = m_hEnemy->pev->origin;
+			//m_vecEnemyLKP = ...
+			setEnemyLKP( m_hEnemy->pev->origin);
 		}
 		TaskComplete();
 		break;
@@ -2106,7 +2135,9 @@ void CBaseMonster :: StartTask ( Task_t *pTask )
 			}
 
 			//Clearly we want to just route to the enemy. Update the LKP to not confuse the pathfinding.
-			m_vecEnemyLKP = m_hEnemy->pev->origin;
+			//m_vecEnemyLKP = ...
+			setEnemyLKP(m_hEnemy->pev->origin);
+			
 
 			if ( BuildRoute ( pEnemy->pev->origin, bits_MF_TO_ENEMY, pEnemy ) )
 			{

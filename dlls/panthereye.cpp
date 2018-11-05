@@ -2010,12 +2010,14 @@ void CPantherEye::RunTask ( Task_t *pTask ){
 		
 	case TASK_FACE_ENEMY:
 		if(HasConditions(bits_COND_SEE_ENEMY)){
-			m_vecEnemyLKP = m_hEnemy->pev->origin;
+			//m_vecEnemyLKP = ...
+			setEnemyLKP(m_hEnemy->pev->origin);
 		}else{
 
 			if(!HasConditions(bits_COND_ENEMY_OCCLUDED)){
 				//if not occluded, try to see anyways?
-				m_vecEnemyLKP = m_hEnemy->pev->origin;
+				//m_vecEnemyLKP = ...
+				setEnemyLKP(m_hEnemy->pev->origin);
 			}else{
 				//can't see the enemy?  Can't face them.
 				TaskFail();

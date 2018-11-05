@@ -2762,39 +2762,48 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBaseMonster){
 		if ( pevAttacker->flags & (FL_MONSTER | FL_CLIENT) )
 		{// only if the attack was a monster or client!
 			
-			BOOL updatedEnemyLKP = FALSE;  //turn on if we do.
 
-			// enemy's last known position is somewhere down the vector that the attack came from.
-			if (pevInflictor)
-			{
-				//MODDD NOTE - "bits_COND_SEE_ENEMY" appears to still be on for monsters that have a straight line to their enemy but aren't necessarily turned to them.
-				//             So the condition being off is kindof an odd choice?
-				if (m_hEnemy == NULL || pevInflictor == m_hEnemy->pev || !HasConditions(bits_COND_SEE_ENEMY))
+
+			if( !(bitsDamageTypeMod & (DMG_TIMEDEFFECT|DMG_TIMEDEFFECTIGNORE)) ){
+				//MODDD - if this is continual damage (e.g. poison, radiation), don't allow the LKP to be updated! timed damage tells us nothing and shouldn't disturb anything.
+				BOOL updatedEnemyLKP = FALSE;  //turn on if we do.
+
+				// enemy's last known position is somewhere down the vector that the attack came from.
+				if (pevInflictor)
 				{
-					m_vecEnemyLKP = pevInflictor->origin;
-					updatedEnemyLKP = TRUE;
-				}else{
-					//MODDD NOTE -don't update the LKP at all? This will happen if...
-					//    (m_hEnemy != NULL && pev->inflictor != m_hEnemy->pev && HasConditions(bits_COND_SEE_ENEMY))
-					//...so while looking straight at an enemy or being able to and taking damage from another source,
-					//the LKP is unaffected. that is fine.
+					//MODDD NOTE - "bits_COND_SEE_ENEMY" appears to still be on for monsters that have a straight line to their enemy but aren't necessarily turned to them.
+					//             So the condition being off is kindof an odd choice?
+					if (m_hEnemy == NULL || pevInflictor == m_hEnemy->pev || !HasConditions(bits_COND_SEE_ENEMY))
+					{
+						setEnemyLKP_Investigate(pevInflictor->origin);
+						updatedEnemyLKP = TRUE;
+					}else{
+						//MODDD NOTE -don't update the LKP at all? This will happen if...
+						//    (m_hEnemy != NULL && pev->inflictor != m_hEnemy->pev && HasConditions(bits_COND_SEE_ENEMY))
+						//...so while looking straight at an enemy or being able to and taking damage from another source,
+						//the LKP is unaffected. that is fine.
+					}
 				}
-			}
-			else
-			{
-				m_vecEnemyLKP = pev->origin + ( g_vecAttackDir * 64 ); 
-				updatedEnemyLKP = TRUE;
-			}
+				else
+				{
+					setEnemyLKP_Investigate(pev->origin + ( g_vecAttackDir * 64 ));
+					updatedEnemyLKP = TRUE;
+				}
 
-			//MODDD - If we didn't change the LKP, why look in its direction?
-			if(updatedEnemyLKP){
-				MakeIdealYaw( m_vecEnemyLKP );
+				//MODDD - If we didn't change the LKP, why look in its direction?
+				//...undone, perhaps we should look at the enemy if they damaged us? whatever, err on defalt behavior.
+				//if(updatedEnemyLKP){
+					MakeIdealYaw( m_vecEnemyLKP );
 
-				//MODDD - also let the enemy know to not get stumped on investigating the LKP.
-				// It makes no sense to investigate the LKP set by getting hit by something and give up on
-				// going outside of cover to find the enemy. 
-				//unstumpable = TRUE;
-			}
+					//MODDD - also let the enemy know to not get stumped on investigating the LKP.
+					// It makes no sense to investigate the LKP set by getting hit by something and give up on
+					// going outside of cover to find the enemy. 
+					//unstumpable = TRUE;
+				//}
+
+			}//END OF timed damage check
+
+
 
 			// add pain to the conditions 
 			// !!!HACKHACK - fudged for now. Do we want to have a virtual function to determine what is light and 
