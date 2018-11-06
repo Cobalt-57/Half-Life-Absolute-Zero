@@ -12,16 +12,16 @@
 *   use or distribution of this code by or to any unlicensed person is illegal.
 *
 ****/
-#include	"extdll.h"
-#include	"util.h"
-#include	"cbase.h"
+#include "extdll.h"
+#include "util.h"
+#include "cbase.h"
 #include "basemonster.h"
-#include	"schedule.h"
-#include	"talkmonster.h"
-#include	"defaultai.h"
-#include	"scripted.h"
-#include	"soundent.h"
-#include	"animation.h"
+#include "schedule.h"
+#include "talkmonster.h"
+#include "defaultai.h"
+#include "scripted.h"
+#include "soundent.h"
+#include "animation.h"
 
 
 
@@ -175,6 +175,68 @@ Schedule_t	slIdleSpeak[] =
 		"Idle Speak"
 	},
 };
+
+
+
+
+
+Task_t	tlSpeakAboutCautious[] =
+{
+	{ TASK_TLK_SPEAK_CAUTIOUS,		(float)0		},// set the talkTarget to the cautious monster. and say something.
+	{ TASK_TLK_IDEALYAW_TIGHT,	(float)0		},// look at who I'm talking to
+	{ TASK_FACE_IDEAL,		(float)0		}, 
+	{ TASK_SET_ACTIVITY,	(float)ACT_SIGNAL3	},
+	{ TASK_TLK_EYECONTACT,	(float)0		},
+	{ TASK_WAIT_RANDOM,		(float)0.5		},
+};
+
+Schedule_t	slSpeakAboutCautious[] =
+{
+	{ 
+		tlSpeakAboutCautious,
+		ARRAYSIZE ( tlSpeakAboutCautious ), 
+		bits_COND_NEW_ENEMY		|
+		bits_COND_CLIENT_PUSH	|
+		bits_COND_LIGHT_DAMAGE	|
+		bits_COND_HEAVY_DAMAGE,
+		0,
+		"Speak About Cautious"
+	},
+};
+
+
+
+Task_t	tlSpeakAboutPassive[] =
+{
+	{ TASK_TLK_SPEAK_PASSIVE,		(float)0		},// set the talkTarget to the cautious monster. and say something.
+	{ TASK_TLK_IDEALYAW_TIGHT,	(float)0		},// look at who I'm talking to
+	{ TASK_FACE_IDEAL,		(float)0		}, 
+	{ TASK_SET_ACTIVITY,	(float)ACT_SIGNAL3	},
+	{ TASK_TLK_EYECONTACT,	(float)0		},
+	{ TASK_WAIT_RANDOM,		(float)0.5		},
+};
+
+Schedule_t	slSpeakAboutPassive[] =
+{
+	{ 
+		tlSpeakAboutPassive,
+		ARRAYSIZE ( tlSpeakAboutPassive ), 
+		bits_COND_NEW_ENEMY		|
+		bits_COND_CLIENT_PUSH	|
+		bits_COND_LIGHT_DAMAGE	|
+		bits_COND_HEAVY_DAMAGE,
+		0,
+		"Speak About Passive"
+	},
+};
+
+
+
+
+
+
+
+
 
 Task_t	tlIdleSpeakWait[] =
 {
@@ -436,6 +498,10 @@ DEFINE_CUSTOM_SCHEDULES( CTalkMonster )
 {
 	slIdleResponse,
 	slIdleSpeak,
+	//MODDD - new
+	slSpeakAboutCautious,
+	slSpeakAboutPassive,
+
 	slIdleHello,
 	slIdleSpeakWait,
 	slIdleStopShooting,
@@ -481,6 +547,22 @@ void CTalkMonster :: StartTask( Task_t *pTask )
 		TaskComplete();
 		break;
 
+	//MODDD - some new ones.
+	
+	case TASK_TLK_SPEAK_CAUTIOUS:
+		// ask question or make statement
+		FNearCautiousSpeak();
+		TaskComplete();
+		break;
+		
+	case TASK_TLK_SPEAK_PASSIVE:
+		// ask question or make statement
+		FNearPassiveSpeak();
+		TaskComplete();
+		break;
+
+
+
 	case TASK_TLK_RESPOND:
 		// respond to question
 		IdleRespond();
@@ -513,7 +595,6 @@ void CTalkMonster :: StartTask( Task_t *pTask )
 	case TASK_TLK_IDEALYAW:
 		if (m_hTalkTarget != NULL)
 		{
-
 			pev->yaw_speed = 60;
 			float yaw = VecToYaw(m_hTalkTarget->pev->origin - pev->origin) - pev->angles.y;
 
@@ -530,7 +611,30 @@ void CTalkMonster :: StartTask( Task_t *pTask )
 			}
 		}
 		TaskComplete();
-		break;
+	break;
+	case TASK_TLK_IDEALYAW_TIGHT:
+		//Same as above, but closer than 45 degrees.
+		if (m_hTalkTarget != NULL)
+		{
+			pev->yaw_speed = 60;
+			float yaw = VecToYaw(m_hTalkTarget->pev->origin - pev->origin) - pev->angles.y;
+
+			if (yaw > 180) yaw -= 360;
+			if (yaw < -180) yaw += 360;
+
+			if (yaw < 0)
+			{
+				pev->ideal_yaw = min( yaw + 17, 0 ) + pev->angles.y;
+			}
+			else
+			{
+				pev->ideal_yaw = max( yaw - 17, 0 ) + pev->angles.y;
+			}
+		}
+		TaskComplete();
+	break;
+
+
 
 	case TASK_TLK_HEADRESET:
 		// reset head position after looking at something
@@ -1406,6 +1510,9 @@ int CTalkMonster :: FIdleSpeak ( void )
 				//!!!KELLY - here's a cool spot to have the talkmonster talk about the dead player if we want.
 				// "Oh dear, Gordon Freeman is dead!" -Scientist
 				// "Damn, I can't do this without you." -Barney
+				
+				//MODDD - this is now done elsewhere, I forget how exactly. Damn you, laziness.
+
 			}
 		}
 	}
@@ -1460,6 +1567,55 @@ int CTalkMonster :: FIdleSpeak ( void )
 	return FALSE;
 }
 
+
+BOOL CTalkMonster::FNearCautiousSpeak(void){
+	
+	//if ( RANDOM_LONG(0,1) )
+	{
+		if(closestCautiousNPC_memory != NULL)
+		{
+			m_hTalkTarget = closestCautiousNPC_memory;
+			
+			SayNearCautious();
+			m_nSpeak++;
+			return TRUE;
+		}
+	}
+
+	// didn't speak
+	Talk( 0 );
+	CTalkMonster::g_talkWaitTime = 0;
+	return FALSE;
+}
+
+
+
+BOOL CTalkMonster::FNearPassiveSpeak(void){
+	
+	//if ( RANDOM_LONG(0,1) )
+	{
+		if(closestPassiveNPC_memory != NULL)
+		{
+			m_hTalkTarget = closestPassiveNPC_memory;
+			
+			SayNearPassive();
+			m_nSpeak++;
+			return TRUE;
+		}
+	}
+
+	// didn't speak
+	Talk( 0 );
+	CTalkMonster::g_talkWaitTime = 0;
+	return FALSE;
+}
+
+
+
+
+
+
+
 void CTalkMonster::PlayScriptedSentence( const char *pszSentence, float duration, float volume, float attenuation, BOOL bConcurrent, CBaseEntity *pListener )
 {
 	if ( !bConcurrent )
@@ -1493,6 +1649,29 @@ void CTalkMonster::PlaySentence( const char *pszSentence, float duration, float 
 	// If you say anything, don't greet the player - you may have already spoken to them
 	SetBits(m_bitsSaid, bit_saidHelloPlayer);
 }
+
+
+//If not giving a sentence group, use this. No exclamation mark required.
+void CTalkMonster::PlaySentenceSingular(const char *pszSentence, float duration, float volume, float attenuation ){
+	//Just play the sentence given. But the system does require an exclamation mark for whatever reason.
+
+	static char sentenceToPlay[127];
+
+
+	
+	CTalkMonster::g_talkWaitTime = gpGlobals->time + duration + 2.0;
+
+	sentenceToPlay[0] = '!';
+	copyString(pszSentence, &sentenceToPlay[1], 127 - 1);
+	
+	EMIT_SOUND_DYN( edict(), CHAN_VOICE, sentenceToPlay, volume, attenuation, 0, GetVoicePitch());
+
+}//END OF PlaySentenceSingular
+
+
+
+
+
 
 //=========================================================
 // Talk - set a timer that tells us when the monster is done
@@ -1543,9 +1722,15 @@ void CTalkMonster::SayLeaderDied(void){
 
 }
 
+//Am I near a non-intimidating monster, like a scientist near a chumtoad?
 void CTalkMonster::SayNearPassive(void){
 	
 }
+//Similar to SayNearCautious, but works every frame near a monster to be cautious around.
+void CTalkMonster::OnNearCautious(void){
+
+}
+//Near something cautious (monster easily turned hostile but not yet), act scared or anxious.
 void CTalkMonster::SayNearCautious(void){
 	
 }
@@ -1742,11 +1927,23 @@ Schedule_t* CTalkMonster :: GetScheduleOfType ( int Type )
 	case SCHED_IDLE_STAND:
 		{
 			canGoRavingMad = TRUE;
-		
+			
 			// if never seen player, try to greet him
 			if (!FBitSet(m_bitsSaid, bit_saidHelloPlayer))
 			{
-				return slIdleHello;
+				//Also do some preliminary checks.
+				//If we're just standing around and don't even see a player to say "hello" to, what is the point of calling this schedule?
+				CBaseEntity *pPlayer = FindNearestFriend(TRUE);
+				if (pPlayer && !entityHidden(pPlayer) )
+				{
+					if (FInViewCone(pPlayer) && FVisible(pPlayer)){
+						//original was just this line.
+						return slIdleHello;
+					}
+				}
+				/////////////////////
+
+				
 			}
 
 			// sustained light wounds?
@@ -1768,12 +1965,26 @@ Schedule_t* CTalkMonster :: GetScheduleOfType ( int Type )
 				return slIdleStand;
 			}
 
+			
+	
+
+			if(closestCautiousNPC_memory != NULL && FOkToSpeak() && RANDOM_LONG(0, 2) == 0){
+				return slSpeakAboutCautious;
+			}
+			if(closestPassiveNPC_memory != NULL && FOkToSpeak() && RANDOM_LONG(0, 3) == 0){
+				return slSpeakAboutPassive;
+			}
+
+
 			// talk about world
 			if (FOkToSpeak() && RANDOM_LONG(0,m_nSpeak * 2) == 0)
 			{
 				//ALERT ( at_console, "standing idle speak\n" );
 				return slIdleSpeak;
 			}
+
+
+
 			
 			if ( !IsTalking() && HasConditions ( bits_COND_SEE_CLIENT ) && RANDOM_LONG( 0, 6 ) == 0 )
 			{
@@ -1799,6 +2010,18 @@ Schedule_t* CTalkMonster :: GetScheduleOfType ( int Type )
 					// look at who we're talking to
 					//...can't go mad here though.
 					canGoRavingMad = FALSE;
+
+
+					//MODDD - if you don't have a route, don't forget to uh.. stand still.
+					if(this->FRouteClear()){
+						//setActivity(this->GetStoppedActivity());
+						//borrowed from TASK_STOP_MOVING
+						if ( m_IdealActivity == m_movementActivity || m_movementActivity == ACT_IDLE )
+						{
+							m_IdealActivity = GetStoppedActivity();
+						}
+					}
+
 					return slTlkIdleEyecontact;
 				}else{
 					// regular standing idle
@@ -2028,6 +2251,12 @@ void CTalkMonster::MonsterThink(void){
 	closestPassiveNPC = NULL;
 
 	CBaseMonster::MonsterThink();
+	
+	//closestPassiveNPC
+	if(closestCautiousNPC != NULL){
+		//Barnies should wip out their guns.
+		this->OnNearCautious();
+	}
 
 	//Check to see if anything was picked? maybe to pick a schedule next time?
 	//Even if the NPC picked up is NULL (none), it is ok. this clears the memory then.
@@ -2081,6 +2310,13 @@ int CTalkMonster::IRelationship( CBaseEntity *pTarget )
 		return R_NO;
 	}
 
+	if(FClassnameIs(pTarget->pev, "monster_stukabat")){
+		
+		BOOL isProAble = pTarget->isProvokable();
+		BOOL isProv = pTarget->isProvoked();
+		int x = 4;
+	}
+
 	//MODDD TODO - for provokable but unprovoked things, maybe make Barnies point their guns and stare at it when not following, or scientist do a fear anim while staring at it?
 	if(pTarget->isProvokable() && !pTarget->isProvoked() ){
 		//I have no reason to pick a fight with this unprovoked, neutral enemy.
@@ -2094,7 +2330,6 @@ int CTalkMonster::IRelationship( CBaseEntity *pTarget )
 
 		return R_NO;
 	}
-
 
 	if(FClassnameIs(pTarget->pev, "monster_chumtoad")){
 		//don't be mean to chumtoads.
@@ -2111,7 +2346,8 @@ int CTalkMonster::IRelationship( CBaseEntity *pTarget )
 	if ( pTarget->IsPlayer() )
 		if ( m_afMemory & bits_MEMORY_PROVOKED )
 			return R_HT;
-	return CBaseMonster::IRelationship( pTarget );
+	BOOL defaultReturned = CBaseMonster::IRelationship( pTarget );
+	return defaultReturned;
 }
 
 

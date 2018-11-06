@@ -2549,7 +2549,7 @@ void CBasePlayer::PlayerUse ( void )
 	
 
 	//MODDD - slight adjustment. Go forwards a bit to search instead... UNDONE.
-	while ((pObject = UTIL_FindEntityInSphere( pObject, pev->origin, PLAYER_SEARCH_RADIUS )) != NULL)
+	while ((pObject = UTIL_FindEntityInSphere( pObject, pev->origin, PLAYER_SEARCH_RADIUS*20 )) != NULL)
 	//while ((pObject = UTIL_FindEntityInSphere( pObject, pev->origin + gpGlobals->v_forward * 64, PLAYER_SEARCH_RADIUS )) != NULL)
 	{
 

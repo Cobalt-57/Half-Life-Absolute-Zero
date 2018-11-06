@@ -651,7 +651,9 @@ int CStukaBat::IRelationship( CBaseEntity *pTarget )
 		if ( (TRUE ) && ! (m_afMemory & bits_MEMORY_PROVOKED ))
 			return R_NO;
 	*/
-	return CBaseMonster::IRelationship( pTarget );
+
+	BOOL defaultReturned = CBaseMonster::IRelationship( pTarget );
+	return defaultReturned;
 }
 
 
@@ -1563,6 +1565,7 @@ void CStukaBat :: RunTask ( Task_t *pTask )
 			//(typically #0, or with the GOAL bit set). And that the enemy is in sight.
 			//If not, it's just weird looking to attack thin air or when the enemy isn't even directly in front yet.
 
+			BOOL gah = HasConditions(bits_COND_SEE_ENEMY);
 
 			if(HasConditions(bits_COND_SEE_ENEMY) && m_Route[m_iRouteIndex].iType & bits_MF_IS_GOAL){
 				//we care about the enemy being in range, proceed as usual.
@@ -2753,7 +2756,7 @@ void CStukaBat :: SetActivity ( Activity NewActivity, BOOL forceReset )
 	if(NewActivity != ACT_CROUCHIDLE || !warpRandomAnim || m_fSequenceFinished){
 
 
-		//FUCK THIS GAY EARTH AND ALL THE GODDAMN GAY PUPPIES MOTHERFUCKER
+		//calling the parent is okay.
 		CBaseMonster::SetActivity(NewActivity);
 
 		////iSequence = LookupActivity ( NewActivity );
@@ -3578,6 +3581,16 @@ void CStukaBat::MonsterThink(){
 	//Vector vecTry = UTIL_YawToVec(pev->ideal_yaw);
 	//EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyPrintLine("ang: %.2f vect: (%.2f %.2f %.2f)", pev->ideal_yaw, vecTry.x, vecTry.y, vecTry.z));
 	//EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyPrintLine("onGround:%d queueToggleGround%d", onGround, queueToggleGround));
+
+
+	if(this->m_Activity == ACT_HOVER && m_fSequenceFinished){
+		//reset it?? This can hapen when in the attack schedule (TASK_ACTION is prominent).
+		//It changes the animation, but keeps the activity set the way it is (likely ACT_HOVER).
+		//So when it stops the attack, the game needs to be told to pick a new fitting sequence for ACT_HOVER instead.
+		SetActivity(ACT_HOVER);
+	}
+
+
 
 	SetYawSpeed();
 

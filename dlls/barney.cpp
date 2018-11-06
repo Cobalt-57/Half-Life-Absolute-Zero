@@ -36,6 +36,10 @@ extern float global_germanCensorship;
 extern BOOL globalPSEUDO_germanModel_barneyFound;
 
 
+//Yes, need to know this ahead of time.
+extern Schedule_t slBarneyEnemyDraw[];
+
+
 
 //=========================================================
 // Monster's Anim Events Go Here
@@ -204,6 +208,8 @@ public:
 	void SaySuspicious(void);
 	void SayLeaderDied(void);
 	void SayNearPassive(void);
+
+	void OnNearCautious(void);
 	void SayNearCautious(void);
 
 	
@@ -266,127 +272,141 @@ void CBarney::SayLeaderDied(void){
 
 void CBarney::SayNearPassive(void){
 
-	switch(RANDOM_LONG(0, 13)){
+	switch(RANDOM_LONG(0, 4)){
 	case 0:
-		PlaySentence( "BA_QUESTION10", 4, VOL_NORM, ATTN_NORM );
+		PlaySentenceSingular( "BA_QUESTION10", 4, VOL_NORM, ATTN_NORM );
 	break;
 	case 1:
-		PlaySentence( "BA_QUESTION12", 4, VOL_NORM, ATTN_NORM );
+		PlaySentenceSingular( "BA_QUESTION12", 4, VOL_NORM, ATTN_NORM );
 	break;
 	case 2:
-		PlaySentence( "BA_QUESTION13", 4, VOL_NORM, ATTN_NORM );
+		PlaySentenceSingular( "BA_QUESTION13", 4, VOL_NORM, ATTN_NORM );
 	break;
 	case 3:
-		PlaySentence( "BA_SMELL1", 4, VOL_NORM, ATTN_NORM );
+		PlaySentenceSingular( "BA_SMELL1", 4, VOL_NORM, ATTN_NORM );
 	break;
 	case 4:
-		PlaySentence( "BA_SMELL2", 4, VOL_NORM, ATTN_NORM );
+		PlaySentenceSingular( "BA_SMELL2", 4, VOL_NORM, ATTN_NORM );
 	break;
 	default:
-		//nothing
+
 	break;
 	}//END OF switch
 
 }
+
+
+void CBarney::OnNearCautious(void){
+	
+	
+	if(m_fGunDrawn == FALSE && m_pSchedule != slBarneyEnemyDraw){
+		//Barney will have his gun out around potential hostiles. He's ready for anything.
+		ChangeSchedule(slBarneyEnemyDraw);
+	}
+	
+	unholsterTimer = gpGlobals->time + global_barneyUnholsterTime;
+
+}//END OF onNearCautious
+
 void CBarney::SayNearCautious(void){
 
 
-	switch(RANDOM_LONG(0, 37)){
+	switch(RANDOM_LONG(0, 31)){
 	case 0:
-		PlaySentence( "BA_OK0", 4, VOL_NORM, ATTN_NORM );
+		PlaySentenceSingular( "BA_OK0", 4, VOL_NORM, ATTN_NORM );
 	break;
 	case 1:
-		PlaySentence( "BA_OK2", 4, VOL_NORM, ATTN_NORM );
+		PlaySentenceSingular( "BA_OK2", 4, VOL_NORM, ATTN_NORM );
 	break;
 	case 2:
-		PlaySentence( "BA_OK5", 4, VOL_NORM, ATTN_NORM );
+		PlaySentenceSingular( "BA_OK5", 4, VOL_NORM, ATTN_NORM );
 	break;
 	case 3:
-		PlaySentence( "BA_OK6", 4, VOL_NORM, ATTN_NORM );
+		PlaySentenceSingular( "BA_OK6", 4, VOL_NORM, ATTN_NORM );
 	break;
 	case 4:
-		PlaySentence( "BA_QUESTION0", 4, VOL_NORM, ATTN_NORM );
+		PlaySentenceSingular( "BA_QUESTION0", 4, VOL_NORM, ATTN_NORM );
 	break;
 	case 5:
-		PlaySentence( "BA_QUESTION3", 4, VOL_NORM, ATTN_NORM );
+		PlaySentenceSingular( "BA_QUESTION3", 4, VOL_NORM, ATTN_NORM );
 	break;
 	case 6:
-		PlaySentence( "BA_QUESTION4", 4, VOL_NORM, ATTN_NORM );
+		PlaySentenceSingular( "BA_QUESTION4", 4, VOL_NORM, ATTN_NORM );
 	break;
 	case 7:
-		PlaySentence( "BA_QUESTION6", 4, VOL_NORM, ATTN_NORM );
+		PlaySentenceSingular( "BA_QUESTION6", 4, VOL_NORM, ATTN_NORM );
 	break;
 	case 8:
-		PlaySentence( "BA_QUESTION7", 4, VOL_NORM, ATTN_NORM );
+		PlaySentenceSingular( "BA_QUESTION7", 4, VOL_NORM, ATTN_NORM );
 	break;
 	case 9:
-		PlaySentence( "BA_QUESTION8", 4, VOL_NORM, ATTN_NORM );
+		PlaySentenceSingular( "BA_QUESTION8", 4, VOL_NORM, ATTN_NORM );
 	break;
 	case 10:
-		PlaySentence( "BA_QUESTION9", 4, VOL_NORM, ATTN_NORM );
+		PlaySentenceSingular( "BA_QUESTION9", 4, VOL_NORM, ATTN_NORM );
 	break;
 	case 11:
-		PlaySentence( "BA_QUESTION10", 4, VOL_NORM, ATTN_NORM );
+		PlaySentenceSingular( "BA_QUESTION10", 4, VOL_NORM, ATTN_NORM );
 	break;
 	case 12:
-		PlaySentence( "BA_QUESTION11", 4, VOL_NORM, ATTN_NORM );
+		PlaySentenceSingular( "BA_QUESTION11", 4, VOL_NORM, ATTN_NORM );
 	break;
 	case 13:
-		PlaySentence( "BA_QUESTION12", 4, VOL_NORM, ATTN_NORM );
+		PlaySentenceSingular( "BA_QUESTION12", 4, VOL_NORM, ATTN_NORM );
 	break;
 	case 14:
-		PlaySentence( "BA_QUESTION13", 4, VOL_NORM, ATTN_NORM );
+		PlaySentenceSingular( "BA_QUESTION13", 4, VOL_NORM, ATTN_NORM );
 	break;
 	case 15:
-		PlaySentence( "BA_QUESTION14", 4, VOL_NORM, ATTN_NORM );
+		PlaySentenceSingular( "BA_QUESTION14", 4, VOL_NORM, ATTN_NORM );
 	break;
 	case 16:
-		PlaySentence( "BA_HELLO6", 4, VOL_NORM, ATTN_NORM );
+		PlaySentenceSingular( "BA_HELLO6", 4, VOL_NORM, ATTN_NORM );
 	break;
 	case 17:
-		PlaySentence( "BA_IDLE0", 4, VOL_NORM, ATTN_NORM );
+		PlaySentenceSingular( "BA_IDLE0", 4, VOL_NORM, ATTN_NORM );
 	break;
 	case 18:
-		PlaySentence( "BA_IDLE1", 4, VOL_NORM, ATTN_NORM );
+		PlaySentenceSingular( "BA_IDLE1", 4, VOL_NORM, ATTN_NORM );
 	break;
 	case 19:
-		PlaySentence( "BA_IDLE2", 4, VOL_NORM, ATTN_NORM );
+		PlaySentenceSingular( "BA_IDLE2", 4, VOL_NORM, ATTN_NORM );
 	break;
 	case 20:
-		PlaySentence( "BA_IDLE3", 4, VOL_NORM, ATTN_NORM );
+		PlaySentenceSingular( "BA_IDLE3", 4, VOL_NORM, ATTN_NORM );
 	break;
 	case 21:
-		PlaySentence( "BA_IDLE6", 4, VOL_NORM, ATTN_NORM );
+		PlaySentenceSingular( "BA_IDLE6", 4, VOL_NORM, ATTN_NORM );
 	break;
 	case 22:
-		PlaySentence( "BA_IDLE7", 4, VOL_NORM, ATTN_NORM );
+		PlaySentenceSingular( "BA_IDLE7", 4, VOL_NORM, ATTN_NORM );
 	break;
 	case 23:
-		PlaySentence( "BA_IDLE9", 4, VOL_NORM, ATTN_NORM );
+		PlaySentenceSingular( "BA_IDLE9", 4, VOL_NORM, ATTN_NORM );
 	break;
 	case 24:
-		PlaySentence( "BA_IDLE10", 4, VOL_NORM, ATTN_NORM );
+		PlaySentenceSingular( "BA_IDLE10", 4, VOL_NORM, ATTN_NORM );
 	break;
 	case 25:
-		PlaySentence( "BA_ATTACK2", 4, VOL_NORM, ATTN_NORM );
+		PlaySentenceSingular( "BA_ATTACK2", 4, VOL_NORM, ATTN_NORM );
 	break;
 	case 26:
-		PlaySentence( "BA_ATTACK5", 4, VOL_NORM, ATTN_NORM );
+		PlaySentenceSingular( "BA_ATTACK5", 4, VOL_NORM, ATTN_NORM );
 	break;
 	case 27:
-		PlaySentence( "BA_HEAR0", 4, VOL_NORM, ATTN_NORM );
+		PlaySentenceSingular( "BA_HEAR0", 4, VOL_NORM, ATTN_NORM );
 	break;
 	case 28:
-		PlaySentence( "BA_HEAR1", 4, VOL_NORM, ATTN_NORM );
+		PlaySentenceSingular( "BA_HEAR1", 4, VOL_NORM, ATTN_NORM );
 	break;
 	case 29:
-		PlaySentence( "BA_HEAR2", 4, VOL_NORM, ATTN_NORM );
+		PlaySentenceSingular( "BA_HEAR2", 4, VOL_NORM, ATTN_NORM );
 	break;
 	case 30:
-		PlaySentence( "BA_STOP3", 4, VOL_NORM, ATTN_NORM );
+		PlaySentenceSingular( "BA_STOP3", 4, VOL_NORM, ATTN_NORM );
 	break;
 	case 31:
-		PlaySentence( "BA_STOP4", 4, VOL_NORM, ATTN_NORM );
+		PlaySentenceSingular( "BA_STOP4", 4, VOL_NORM, ATTN_NORM );
 	break;
 
 	}//END OF switch
@@ -997,7 +1017,7 @@ void CBarney :: BarneyFirePistol ( void )
 //MODDD - was "think", made "MonsterThink"...
 void CBarney :: MonsterThink(void){
 	
-
+	easyForcePrintLine("IM SUPER %d", HasConditions( bits_COND_ENEMY_DEAD ));
 
 
 
@@ -1631,7 +1651,7 @@ Schedule_t *CBarney :: GetSchedule ( void )
 
 
 	
-	//easyForcePrintLine("MY TIMAAAAA ASS %d    %d %d %d ::: %.2f %.2f", m_fGunDrawn, HasConditions( bits_COND_HEAR_SOUND ), HasConditions(bits_COND_SEE_ENEMY), HasConditions(bits_COND_NEW_ENEMY), gpGlobals->time, unholsterTimer);
+	//easyForcePrintLine("MY timer %d    %d %d %d ::: %.2f %.2f", m_fGunDrawn, HasConditions( bits_COND_HEAR_SOUND ), HasConditions(bits_COND_SEE_ENEMY), HasConditions(bits_COND_NEW_ENEMY), gpGlobals->time, unholsterTimer);
 
 
 	canUnholster=FALSE;
@@ -1730,11 +1750,15 @@ Schedule_t *CBarney :: GetSchedule ( void )
 		if ( HasConditions(bits_COND_LIGHT_DAMAGE | bits_COND_HEAVY_DAMAGE))
 		{
 			// flinch if hurt
-			return GetScheduleOfType( SCHED_SMALL_FLINCH );
+			//return GetScheduleOfType( SCHED_SMALL_FLINCH );
+
+			//COME ON BARNEY. FACE IT!
+			return GetScheduleOfType(SCHED_ALERT_SMALL_FLINCH);
 		}
 
 		//MODDD
 		//easyPrintLine("AMMO: %d   %d", m_cAmmoLoaded, (BARNEY_WEAPON_CLIP_SIZE/2) );
+		
 		if ( m_cAmmoLoaded < BARNEY_WEAPON_CLIP_SIZE / 2 )
 		{
 			//barney would rather reload than follow if the clip size is less than half.
@@ -2045,7 +2069,11 @@ int CBarney::LookupActivityHard(int activity){
 			}
 			
 		break;
-	}
+		case ACT_VICTORY_DANCE:
+			m_flFramerateSuggestion = 1.11;
+			return LookupSequence("hambone");
+		break;
+	}//END OF switch
 	//not handled by above?  try the real deal.
 	return CBaseAnimating::LookupActivity(activity);
 }
@@ -2081,8 +2109,11 @@ int CBarney::tryActivitySubstitute(int activity){
 				return CBaseAnimating::LookupActivity(activity);
 			}
 		break;
+		case ACT_VICTORY_DANCE:
+			return LookupSequence("hambone");
+		break;
 
-	}
+	}//END OF switch
 	
 	//not handled by above?
 	return CBaseAnimating::LookupActivity(activity);

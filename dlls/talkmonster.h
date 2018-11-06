@@ -93,7 +93,15 @@ enum
 	TASK_TLK_IDEALYAW,		// set ideal yaw to face who I'm talking to
 	TASK_FACE_PLAYER,		// Face the player
 
-	TASK_FOLLOW_SUCCESSFUL,  //MODDD new. Report that we made it to whoever we wanted to follow so we can reset the consecutive follow fails count. Put this after TASK_MOVE_TO_TARGET_RANGE in schedules.
+	//MODDD new. Report that we made it to whoever we wanted to follow so we can reset the consecutive follow fails count. Put this after TASK_MOVE_TO_TARGET_RANGE in schedules.
+	TASK_FOLLOW_SUCCESSFUL, 
+	//MODDD - more new.
+	TASK_TLK_IDEALYAW_TIGHT,
+	TASK_TLK_SPEAK_CAUTIOUS,
+	TASK_TLK_SPEAK_PASSIVE,
+	
+
+
 
 	LAST_TALKMONSTER_TASK,			// MUST be last
 };
@@ -113,7 +121,7 @@ enum
 class CTalkMonster : public CBaseMonster
 {
 public:
-	
+
 	EHANDLE closestCautiousNPC;
 	EHANDLE closestCautiousNPC_memory;
 	float closestCautiousNPC_distance;
@@ -188,7 +196,11 @@ public:
 	
 	int				IRelationship ( CBaseEntity *pTarget );
 	virtual int		CanPlaySentence( BOOL fDisregardState );
+	
 	virtual void	PlaySentence( const char *pszSentence, float duration, float volume, float attenuation );
+	//MODDD - new version
+	virtual void PlaySentenceSingular( const char *pszSentence, float duration, float volume, float attenuation );
+
 	void			PlayScriptedSentence( const char *pszSentence, float duration, float volume, float attenuation, BOOL bConcurrent, CBaseEntity *pListener );
 	void			KeyValue( KeyValueData *pkvd );
 
@@ -257,7 +269,13 @@ public:
 	virtual void SaySuspicious(void);
 	virtual void SayLeaderDied(void);
 	virtual void SayNearPassive(void);
+	virtual void OnNearCautious(void);
 	virtual void SayNearCautious(void);
+
+	//MODDD - also new. Not implementable.
+	BOOL FNearCautiousSpeak(void);
+	BOOL FNearPassiveSpeak(void);
+
 	
 	GENERATE_TRACEATTACK_PROTOTYPE_VIRTUAL
 	GENERATE_TAKEDAMAGE_PROTOTYPE_VIRTUAL

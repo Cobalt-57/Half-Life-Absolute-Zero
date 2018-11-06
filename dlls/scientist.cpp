@@ -969,64 +969,66 @@ void CScientist::SayLeaderDied(void){
 
 //Say a sentence to express interest in something, like stopping to stare at a chumtoad.
 void CScientist::SayNearPassive(void){
+
+
 	
-	switch(RANDOM_LONG(0, 28)){
+	switch(RANDOM_LONG(0, 17)){
 	case 0:
-		PlaySentence( "SC_QUESTION0", 4, VOL_NORM, ATTN_NORM );
+		PlaySentenceSingular( "SC_QUESTION0", 4, VOL_NORM, ATTN_NORM );
 	break;
 	case 1:
-		PlaySentence( "SC_QUESTION2", 4, VOL_NORM, ATTN_NORM );
+		PlaySentenceSingular( "SC_QUESTION2", 4, VOL_NORM, ATTN_NORM );
 	break;
 	case 2:
-		PlaySentence( "SC_QUESTION7", 4, VOL_NORM, ATTN_NORM );
+		PlaySentenceSingular( "SC_QUESTION7", 4, VOL_NORM, ATTN_NORM );
 	break;
 	case 3:
-		PlaySentence( "SC_QUESTION8", 4, VOL_NORM, ATTN_NORM );
+		PlaySentenceSingular( "SC_QUESTION8", 4, VOL_NORM, ATTN_NORM );
 	break;
 	case 4:
-		PlaySentence( "SC_QUESTION10", 4, VOL_NORM, ATTN_NORM );
+		PlaySentenceSingular( "SC_QUESTION10", 4, VOL_NORM, ATTN_NORM );
 	break;
 	case 5:
-		PlaySentence( "SC_QUESTION11", 4, VOL_NORM, ATTN_NORM );
+		PlaySentenceSingular( "SC_QUESTION11", 4, VOL_NORM, ATTN_NORM );
 	break;
 	case 6:
-		PlaySentence( "SC_QUESTION16", 4, VOL_NORM, ATTN_NORM );
+		PlaySentenceSingular( "SC_QUESTION16", 4, VOL_NORM, ATTN_NORM );
 	break;
 	case 7:
-		PlaySentence( "SC_QUESTION17", 4, VOL_NORM, ATTN_NORM );
+		PlaySentenceSingular( "SC_QUESTION17", 4, VOL_NORM, ATTN_NORM );
 	break;
 	case 8:
-		PlaySentence( "SC_QUESTION18", 4, VOL_NORM, ATTN_NORM );
+		PlaySentenceSingular( "SC_QUESTION18", 4, VOL_NORM, ATTN_NORM );
 	break;
 	case 9:
-		PlaySentence( "SC_QUESTION22", 4, VOL_NORM, ATTN_NORM );
+		PlaySentenceSingular( "SC_QUESTION22", 4, VOL_NORM, ATTN_NORM );
 	break;
 	case 10:
-		PlaySentence( "SC_IDLE3", 4, VOL_NORM, ATTN_NORM );
+		PlaySentenceSingular( "SC_IDLE3", 4, VOL_NORM, ATTN_NORM );
 	break;
 	case 11:
-		PlaySentence( "SC_IDLE4", 4, VOL_NORM, ATTN_NORM );
+		PlaySentenceSingular( "SC_IDLE4", 4, VOL_NORM, ATTN_NORM );
 	break;
 	case 12:
-		PlaySentence( "SC_IDLE5", 4, VOL_NORM, ATTN_NORM );
+		PlaySentenceSingular( "SC_IDLE5", 4, VOL_NORM, ATTN_NORM );
 	break;
 	case 13:
-		PlaySentence( "SC_IDLE11", 4, VOL_NORM, ATTN_NORM );
+		PlaySentenceSingular( "SC_IDLE11", 4, VOL_NORM, ATTN_NORM );
 	break;
 	case 14:
-		PlaySentence( "SC_IDLE13", 4, VOL_NORM, ATTN_NORM );
+		PlaySentenceSingular( "SC_IDLE13", 4, VOL_NORM, ATTN_NORM );
 	break;
 	case 15:
-		PlaySentence( "SC_MONST1", 4, VOL_NORM, ATTN_NORM );
+		PlaySentenceSingular( "SC_MONST1", 4, VOL_NORM, ATTN_NORM );
 	break;
 	case 16:
-		PlaySentence( "SC_SMELL2", 4, VOL_NORM, ATTN_NORM );
+		PlaySentenceSingular( "SC_SMELL2", 4, VOL_NORM, ATTN_NORM );
 	break;
 	case 17:
-		PlaySentence( "SC_SMELL3", 4, VOL_NORM, ATTN_NORM );
+		PlaySentenceSingular( "SC_SMELL3", 4, VOL_NORM, ATTN_NORM );
 	break;
 	default:
-		//the rest of the cases are unused. say nothing.
+
 	break;
 	}//END OF switch
 
@@ -1038,81 +1040,81 @@ void CScientist::SayNearCautious(void){
 	
 
 
-	switch(RANDOM_LONG(0, 30)){
+	switch(RANDOM_LONG(0, 23)){
 	case 0:
-		PlaySentence( "SC_HEAR0", 4, VOL_NORM, ATTN_NORM );
+		PlaySentenceSingular( "SC_HEAR0", 4, VOL_NORM, ATTN_NORM );
 	break;
 	case 1:
-		PlaySentence( "SC_HEAR1", 4, VOL_NORM, ATTN_NORM );
+		PlaySentenceSingular( "SC_HEAR1", 4, VOL_NORM, ATTN_NORM );
 	break;
 	case 2:
-		PlaySentence( "SC_HEAR2", 4, VOL_NORM, ATTN_NORM );
+		PlaySentenceSingular( "SC_HEAR2", 4, VOL_NORM, ATTN_NORM );
 	break;
 	case 3:
-		PlaySentence( "SC_FEAR0", 4, VOL_NORM, ATTN_NORM );
+		PlaySentenceSingular( "SC_FEAR0", 4, VOL_NORM, ATTN_NORM );
 	break;
 	case 4:
-		PlaySentence( "SC_FEAR1", 4, VOL_NORM, ATTN_NORM );
+		PlaySentenceSingular( "SC_FEAR1", 4, VOL_NORM, ATTN_NORM );
 	break;
 	case 5:
-		PlaySentence( "SC_FEAR2", 4, VOL_NORM, ATTN_NORM );
+		PlaySentenceSingular( "SC_FEAR2", 4, VOL_NORM, ATTN_NORM );
 	break;
 	case 6:
-		PlaySentence( "SC_FEAR4", 4, VOL_NORM, ATTN_NORM );
+		PlaySentenceSingular( "SC_FEAR4", 4, VOL_NORM, ATTN_NORM );
 	break;
 	case 7:
-		PlaySentence( "SC_FEAR5", 4, VOL_NORM, ATTN_NORM );
+		PlaySentenceSingular( "SC_FEAR5", 4, VOL_NORM, ATTN_NORM );
 	break;
 	case 8:
-		PlaySentence( "SC_FEAR6", 4, VOL_NORM, ATTN_NORM );
+		PlaySentenceSingular( "SC_FEAR6", 4, VOL_NORM, ATTN_NORM );
 	break;
 	case 9:
-		PlaySentence( "SC_FEAR7", 4, VOL_NORM, ATTN_NORM );
+		PlaySentenceSingular( "SC_FEAR7", 4, VOL_NORM, ATTN_NORM );
 	break;
 	case 10:
-		PlaySentence( "SC_FEAR8", 4, VOL_NORM, ATTN_NORM );
+		PlaySentenceSingular( "SC_FEAR8", 4, VOL_NORM, ATTN_NORM );
 	break;
 	case 11:
-		PlaySentence( "SC_FEAR9", 4, VOL_NORM, ATTN_NORM );
+		PlaySentenceSingular( "SC_FEAR9", 4, VOL_NORM, ATTN_NORM );
 	break;
 	case 12:
-		PlaySentence( "SC_FEAR10", 4, VOL_NORM, ATTN_NORM );
+		PlaySentenceSingular( "SC_FEAR10", 4, VOL_NORM, ATTN_NORM );
 	break;
 	case 13:
-		PlaySentence( "SC_FEAR11", 4, VOL_NORM, ATTN_NORM );
+		PlaySentenceSingular( "SC_FEAR11", 4, VOL_NORM, ATTN_NORM );
 	break;
 	case 14:
-		PlaySentence( "SC_FEAR12", 4, VOL_NORM, ATTN_NORM );
+		PlaySentenceSingular( "SC_FEAR12", 4, VOL_NORM, ATTN_NORM );
 	break;
 	case 15:
-		PlaySentence( "SC_SCREAM1", 4, VOL_NORM, ATTN_NORM );
+		PlaySentenceSingular( "SC_SCREAM1", 4, VOL_NORM, ATTN_NORM );
 	break;
 	case 16:
-		PlaySentence( "SC_SCREAM3", 4, VOL_NORM, ATTN_NORM );
+		PlaySentenceSingular( "SC_SCREAM3", 4, VOL_NORM, ATTN_NORM );
 	break;
 	case 17:
-		PlaySentence( "SC_SCREAM4", 4, VOL_NORM, ATTN_NORM );
+		PlaySentenceSingular( "SC_SCREAM4", 4, VOL_NORM, ATTN_NORM );
 	break;
 	case 18:
-		PlaySentence( "SC_SCREAM5", 4, VOL_NORM, ATTN_NORM );
+		PlaySentenceSingular( "SC_SCREAM5", 4, VOL_NORM, ATTN_NORM );
 	break;
 	case 19:
-		PlaySentence( "SC_SCREAM10", 4, VOL_NORM, ATTN_NORM );
+		PlaySentenceSingular( "SC_SCREAM10", 4, VOL_NORM, ATTN_NORM );
 	break;
 	case 20:
-		PlaySentence( "SC_SCREAM11", 4, VOL_NORM, ATTN_NORM );
+		PlaySentenceSingular( "SC_SCREAM11", 4, VOL_NORM, ATTN_NORM );
 	break;
 	case 21:
-		PlaySentence( "SC_QUESTION4", 4, VOL_NORM, ATTN_NORM );
+		PlaySentenceSingular( "SC_QUESTION4", 4, VOL_NORM, ATTN_NORM );
 	break;
 	case 22:
-		PlaySentence( "SC_QUESTION5", 4, VOL_NORM, ATTN_NORM );
+		PlaySentenceSingular( "SC_QUESTION5", 4, VOL_NORM, ATTN_NORM );
 	break;
 	case 23:
-		PlaySentence( "SC_IDLE13", 4, VOL_NORM, ATTN_NORM );
+		PlaySentenceSingular( "SC_IDLE13", 4, VOL_NORM, ATTN_NORM );
 	break;
 	default:
-		//the rest of the cases are unused. say nothing.
+
 	break;
 	}//END OF switch
 

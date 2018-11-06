@@ -300,7 +300,7 @@ BOOL CBaseMonster :: FScheduleValid ( void )
 
 		
 		//if(FClassnameIs(this->pev, "monster_scientist"))
-		if(EASY_CVAR_GET(scheduleInterruptPrintouts))
+		//if(EASY_CVAR_GET(scheduleInterruptPrintouts))
 			easyForcePrintLine("%s:%d SCHEDULE INTERRUPTED. Name:%s task:%d\n"
 			"%s: %d %d\n"
 			"%s: %d %d\n"

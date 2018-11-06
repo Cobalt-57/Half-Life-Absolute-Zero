@@ -963,6 +963,14 @@ void CBaseMonster :: Look ( int iDistance )
 
 				 )
 			{
+
+
+				if( !strcmp(getClassname(), "monster_stukabat")){
+						
+					const char* what = pSightEnt->getClassname();
+					const char* huh = m_hEnemy!=NULL?m_hEnemy->getClassname():"NONE";
+					int x = 6;
+				}
 				
 				//if(FClassnameIs(pev, "monster_chumtoad"))easyForcePrintLine("DOES IT PASS??? %s %d %d %d %d", pSightEnt->getClassnameShort(), (IRelationship( pSightEnt ) != R_NO), FInViewCone( pSightEnt ), (!FBitSet( pSightEnt->pev->flags, FL_NOTARGET )), FVisible( pSightEnt )   );
 
@@ -1005,6 +1013,9 @@ void CBaseMonster :: Look ( int iDistance )
 					if(global_crazyMonsterPrintouts){
 						easyPrintLine("FLAGGER 64 3::? (%d) %s %s", (pSightEnt == m_hEnemy), FClassname(pSightEnt), FClassname(m_hEnemy)  );
 					}
+
+
+
 					if ( pSightEnt == m_hEnemy )
 					{
 						// we know this ent is visible, so if it also happens to be our enemy, store that now.
