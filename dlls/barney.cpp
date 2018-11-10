@@ -2069,10 +2069,13 @@ int CBarney::LookupActivityHard(int activity){
 			}
 			
 		break;
+		/*
 		case ACT_VICTORY_DANCE:
 			m_flFramerateSuggestion = 1.11;
 			return LookupSequence("hambone");
 		break;
+		*/
+
 	}//END OF switch
 	//not handled by above?  try the real deal.
 	return CBaseAnimating::LookupActivity(activity);
@@ -2109,9 +2112,11 @@ int CBarney::tryActivitySubstitute(int activity){
 				return CBaseAnimating::LookupActivity(activity);
 			}
 		break;
+		/*
 		case ACT_VICTORY_DANCE:
 			return LookupSequence("hambone");
 		break;
+		*/
 
 	}//END OF switch
 	
