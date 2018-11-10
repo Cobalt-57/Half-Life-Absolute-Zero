@@ -321,7 +321,7 @@ char PM_FindTextureType( char *name )
 void PM_PlayStepSound( int step, float fvol )
 {
 	//MODDD - new.
-	int longJumpMode;
+	int playerLadderMovement;
 
 	static int iSkipStep = 0;
 	int irand;
@@ -336,18 +336,19 @@ void PM_PlayStepSound( int step, float fvol )
 
 
 
-	longJumpMode = atoi( pmove->PM_Info_ValueForKey( pmove->physinfo, "plm" ) );
 
-	if(step == STEP_LADDER && longJumpMode != 0){
-		//If longJumpMode is anything but 0, we use player.cpp to play ladder sounds instead.
+	playerLadderMovement = atoi( pmove->PM_Info_ValueForKey( pmove->physinfo, "plm" ) );
+
+	if(step == STEP_LADDER && playerLadderMovement != 0){
+		//If playerLadderMovement is anything but 0, we use player.cpp to play ladder sounds instead.
 		return;
 	}
 
 	/*
 	if(pmove->server){
-		pmove->Con_DPrintf("S444 %d\n", longJumpMode);
+		pmove->Con_DPrintf("S444 %d\n", playerLadderMovement);
 	}else{
-		pmove->Con_DPrintf("C444 %d\n", longJumpMode);
+		pmove->Con_DPrintf("C444 %d\n", playerLadderMovement);
 	}
 	*/
 
@@ -2187,10 +2188,13 @@ void PM_LadderMove( physent_t *pLadder )
 	float varGen;
 	float varApply;
 	float varRaw;
-	int longJumpMode = 0;
+	int playerLadderMovement = 0;
 	float ladderSpeed;
 	int filterediuser4;
 	float normalSpeedMult = 1;
+	float ladderCycleMulti;
+	float ladderSpeedMulti;
+	float ladderCycleActual;
 	
 	if ( pmove->movetype == MOVETYPE_NOCLIP )
 		return;
@@ -2234,36 +2238,40 @@ void PM_LadderMove( physent_t *pLadder )
 		}
 		*/
 
-		longJumpMode = atoi( pmove->PM_Info_ValueForKey( pmove->physinfo, "plm" ) );
+		playerLadderMovement = atoi( pmove->PM_Info_ValueForKey( pmove->physinfo, "plm" ) );
 
 		normalSpeedMult = getSafeSqureRoot(atof( pmove->PM_Info_ValueForKey( pmove->physinfo, "nsm" ) ));
 		
+		ladderCycleMulti = atof( pmove->PM_Info_ValueForKey( pmove->physinfo, "lcm" ) );
+		ladderSpeedMulti = getSafeSqureRoot(atof( pmove->PM_Info_ValueForKey( pmove->physinfo, "lsm" ) ));
 
 
-		if(longJumpMode == 0){
+		if(playerLadderMovement == 0){
 			//if 0, use retail's ladder speed.
 			ladderSpeed = MAX_CLIMB_SPEEDPRE;
 		}else{
 			ladderSpeed = MAX_CLIMB_SPEED;
 		}
 		
-		//LADDER STUFF WAS HERE BOY!
+		//LADDER STUFF WAS HERE!
 
 		//the counter we are concerned with.
 		filterediuser4 = pmove->iuser4 & ~(FLAG_JUMPED | FLAG_RESET_RECEIVED);
 		
 
-		if(filterediuser4 >= ladderCycle){
-			filterediuser4-= ladderCycle;
+		ladderCycleActual = LADDER_CYCLE_BASE*ladderCycleMulti;
+
+		if(filterediuser4 >= ladderCycleActual){
+			filterediuser4-= ladderCycleActual;
 		}
 		
 
 
-		if(longJumpMode == 0){
+		if(playerLadderMovement == 0){
 			//if 0, retail's ladder movement is constant (no sine slow-down to immitate steps).
 			varGen = 1;
 		}else{
-			varGen = sin( (float)( (float)filterediuser4 / (ladderCycle) * M_PI) );
+			varGen = sin( (float)( (float)filterediuser4 / (ladderCycleActual ) * M_PI) );
 		}
 
 		//can't be negative.
@@ -2282,7 +2290,7 @@ void PM_LadderMove( physent_t *pLadder )
 		
 		//could "pmove->frametime" be used to be consistent b/w framerates other than 60?   But the devs didn't use it for ladder-move logic.
 
-		varApply = ladderSpeed * varGen * normalSpeedMult;
+		varApply = ladderSpeed * varGen * ladderSpeedMulti;
 		varRaw = ladderSpeed;
 		
 

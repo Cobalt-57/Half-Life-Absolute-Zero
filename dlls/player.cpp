@@ -177,6 +177,9 @@ EASY_CVAR_EXTERN(nothingHurts)
 EASY_CVAR_EXTERN(RadiusDamageDrawDebug)
 EASY_CVAR_EXTERN(customLogoSprayMode)
 
+EASY_CVAR_EXTERN(ladderCycleMulti)
+EASY_CVAR_EXTERN(ladderSpeedMulti)
+
 
 
 
@@ -5758,6 +5761,8 @@ void CBasePlayer::PostThink()
 	int filterediuser4 = pev->iuser4 & ~(FLAG_JUMPED | FLAG_RESET_RECEIVED);
 	
 
+	//printLineIntAsBinary( 4294967295u, 32);
+
 	//CBasePlayer* tempplayerTTT = this;
 	//easyPrintLine("VIEW ANGLES?! %.2f %.2f %.2f", tempplayerTTT->pev->v_angle.x, tempplayerTTT->pev->v_angle.y, tempplayerTTT->pev->v_angle.z);
 
@@ -5895,7 +5900,7 @@ void CBasePlayer::PostThink()
 	
 	
 	
-	if(filterediuser4 > 0.3833 * 10000 && !alreadyPassedLadderCheck){
+	if(filterediuser4 > LADDER_CYCLE_BASE*EASY_CVAR_GET(ladderCycleMulti) && !alreadyPassedLadderCheck){
 		float flvol = 1;
 		int	rndSound;//sound randomizer
 
@@ -6303,6 +6308,8 @@ void CBasePlayer::commonReset(void){
 	normalSpeedMultiMem = -1;
 	noclipSpeedMultiMem = -1;
 	jumpForceMultiMem = -1;
+	ladderCycleMultiMem = -1;
+	ladderSpeedMultiMem = -1;
 
 	//not for a CVar.
 	clearWeaponFlag = -1;
@@ -8686,12 +8693,8 @@ void CBasePlayer :: UpdateClientData( void )
 		normalSpeedMultiMem = global_normalSpeedMulti;
 		//keep this CVar in sync with pm_shared...
 		if(normalSpeedMultiMem != 0){
-
-
-
 			char buffer[13];
 			tryFloatToStringBuffer(buffer, global_normalSpeedMulti);
-
 			g_engfuncs.pfnSetPhysicsKeyValue( edict(), "nsm", buffer );
 		}else{
 			g_engfuncs.pfnSetPhysicsKeyValue( edict(), "nsm", "0" );
@@ -8710,6 +8713,40 @@ void CBasePlayer :: UpdateClientData( void )
 			g_engfuncs.pfnSetPhysicsKeyValue( edict(), "jfm", "0" );
 		}
 	}
+
+	if(ladderCycleMultiMem != EASY_CVAR_GET(ladderCycleMulti) ){
+		ladderCycleMultiMem = EASY_CVAR_GET(ladderCycleMulti);
+		//keep this CVar in sync with pm_shared...
+		if(ladderCycleMultiMem != 0){
+
+			char buffer[13];
+			tryFloatToStringBuffer(buffer, EASY_CVAR_GET(ladderCycleMulti));
+			
+			g_engfuncs.pfnSetPhysicsKeyValue( edict(), "lcm", buffer );
+		}else{
+			g_engfuncs.pfnSetPhysicsKeyValue( edict(), "lcm", "0" );
+		}
+	}
+	if(ladderSpeedMultiMem != EASY_CVAR_GET(ladderSpeedMulti) ){
+		ladderSpeedMultiMem = EASY_CVAR_GET(ladderSpeedMulti);
+		//keep this CVar in sync with pm_shared...
+		if(ladderCycleMultiMem != 0){
+
+			char buffer[13];
+			tryFloatToStringBuffer(buffer, EASY_CVAR_GET(ladderSpeedMulti));
+			
+			g_engfuncs.pfnSetPhysicsKeyValue( edict(), "lsm", buffer );
+		}else{
+			g_engfuncs.pfnSetPhysicsKeyValue( edict(), "lsm", "0" );
+		}
+	}
+	
+
+
+
+
+
+
 
 	if(infiniteLongJumpChargeMem != global_infiniteLongJumpCharge){
 		infiniteLongJumpChargeMem = global_infiniteLongJumpCharge;

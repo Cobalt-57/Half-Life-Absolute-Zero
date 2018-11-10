@@ -909,7 +909,9 @@ void CScientist::SayProvoked(void){
 
 	}else if(aggro <= 0){
 		//try the fight or flight. No random chance of going agro if there is valid cover though.
-		ChangeSchedule(GetScheduleOfType(SCHED_FIGHT_OR_FLIGHT));
+
+		//UH OH. IS THIS LINE OFFENDING? Let's say this in a different place perhaps.
+		//ChangeSchedule(GetScheduleOfType(SCHED_FIGHT_OR_FLIGHT));
 
 	}else{  //aggro above > 0? for now, no effect, they are already angry.
 
@@ -2043,7 +2045,11 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CScientist)
 			m_fearTime = gpGlobals->time;  //something meant to hit me. 
 		}
 
-		
+
+
+
+		//IS THIS LINE OFFENDING?  search for the other example.
+		/*
 		if(aggro != -1 && aggro < 1 && (m_hEnemy == NULL || m_hEnemy != attackerEnt) ){
 			//took damage from something other what I expected to run from and I'm not feeling very brave? Hurry up and run away!
 			aggro = -1;
@@ -2054,7 +2060,7 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CScientist)
 
 			alreadyRunningAway = TRUE;
 		}
-		
+		*/
 
 	}
 
@@ -2076,12 +2082,14 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CScientist)
 		}
 	}
 
-	//
+	//MODDD - the base talkmonster now handles this with a little tolerance.
+	/*
 	if ( pevInflictor && pevInflictor->flags & FL_CLIENT )
 	{
 		Remember( bits_MEMORY_PROVOKED );
 		StopFollowing( TRUE );
 	}
+	*/
 
 
 

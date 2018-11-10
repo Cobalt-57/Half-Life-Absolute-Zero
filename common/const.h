@@ -39,7 +39,7 @@
 #define CONST_DEG_TO_RAD_CONV 0.017453293
 #define CONST_RAD_TO_DEG_CONV 57.295779506
 
-#define ladderCycle (0.3833 * 10000)
+#define LADDER_CYCLE_BASE (0.3833 * 10000)
 
 
 

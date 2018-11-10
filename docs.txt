@@ -239,7 +239,6 @@ showFP, showAll, showMyShit - sets drawViewModel to 1 and drawHUD to 1. Reverts 
 
 
 
-
 CHEATS - several new cheat-related vars are available.  Try them.
 cheat_infiniteclip - when on, clips should never decrease.
 cheat_infiniteammo - when on, reloads will not deplete ammo.  (Note that either of these two vars being on will make non-clip weapons like the gauss or hand grenades endless).
@@ -267,6 +266,8 @@ thealmightybarnacle 					- turns off a hidden cheat that allows barnacles to eat
 
 peaceOut (0) - BOOL. Cheat. When on, makes all monsters lose the will to fight, no matter how little sense it makes.
 
+
+
 drawViewModel (1) - BOOL. When off, the player's view model will not be rendered. Does not include effects such as ejected brass.
 
 drawHUD (1) - BOOL + MODES. When off, the player HUD will not be rendered. Has some other modes. All listed. Note that this overrides a "crosshair" CVar of 1.
@@ -274,6 +275,10 @@ drawHUD (1) - BOOL + MODES. When off, the player HUD will not be rendered. Has s
 1: normal (HUD + Crosshair)
 2: HUD only (no crosshair)
 3: crosshair only (no HUD)
+
+THIS JUST IN - there are already "r_drawviewmodel" and "hud_draw" that do these okay. Well $hi+.
+
+
 
 
 
@@ -650,11 +655,11 @@ useAlphaSparks - boolean.  If 1 (default), semi-transparent particle balls are d
 
 
 
-normalSpeedMulti - float (defaults to 1).  This is a multiple applied to the player's foot speed.
-noclipSpeedMulti - float (defaults to 1).  This is a multiple applied to the player's noclip speed.
-jumpForceMulti - float (defaults to 1).  A multiple of the force in the usual player jump (also applies to longjumps)
-
-
+normalSpeedMulti - float (1).  TMultiple applied to the player's foot speed.
+noclipSpeedMulti - float (1).  Multiple applied to the player's noclip speed.
+jumpForceMulti - float (1).  Multiple of the force in the usual player jump (also applies to longjumps)
+ladderCycleMulti- float (1). Multiple applied to the ladder's cycle length. Smaller is more often (quicker, shorter-distance cycles), larger is less often (slower, longer-distance cycles). Similar (same?) distance covered in the same amount of time total.
+ladderSpeedMulti - float (1). Multiple applied to the distance covered in one ladder cycle.
 
 hassaultFriendlyFire - bool, defaults to 1.  Determines whether hassaults are cautious of firing at friendlies or not.  (1 = does not care, 0 = tries not to).
 
@@ -1347,7 +1352,7 @@ drawDebugEnemyLKP (0) - BOOL. If on, draws any monster's recored enemy last know
 trackchangePrintouts (0) - BOOL. See lots of printouts regarding CFuncTrackChange and its child CFuncTrackAuto.
 
 floaterDummy (0) - BOOL. Floaters lose AI. Good for watching how enemies (to this monster) behave around this.
-~use "nothingHurts 2" to disable damage from non-players.
+~use "nothingHurts 2" to disable damage from non-players, use "autoSneaky 1" to make the player invisible to the AI for decisions.
 ~Permanently kills any existing floater's AI. Load a new map / save before to get it back.
 
 

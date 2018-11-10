@@ -103,6 +103,9 @@ public:
 
 	float m_flBlink;
 
+	//MODDD - yes
+	float chaseEnemyAttackSoundCooldown;
+
 	float m_flEnemyTouched;
 	BOOL  m_bOnAttack;
 
@@ -354,7 +357,11 @@ int	CIchthyosaur :: Classify ( void )
 //=========================================================
 BOOL CIchthyosaur :: CheckMeleeAttack1 ( float flDot, float flDist )
 {
-	if ( flDot >= 0.7 && m_flEnemyTouched > gpGlobals->time - 0.2 )
+	//MODDD - added a distance requirement that can satisfy it too.
+	//Also, "flDot" is for the correctness between what angle I am facing now and what angle I want to face (like towards the enemy).
+
+
+ 	if ( flDot >= 0.7 && (m_flEnemyTouched > gpGlobals->time - 0.2) || (flDist < 280)  )
 	{
 		return TRUE;
 	}
@@ -465,14 +472,26 @@ void CIchthyosaur :: HandleAnimEvent( MonsterEvent_t *pEvent )
 			if (m_hEnemy != NULL && FVisible( m_hEnemy ))
 			{
 				CBaseEntity *pHurt = m_hEnemy;
+				float dirCorrectness;
 
-				if (m_flEnemyTouched < gpGlobals->time - 0.2 && (m_hEnemy->BodyTarget( pev->origin ) - pev->origin).Length() > (32+16+32))
+				//MODDD - need to know what this is for debugging?
+				//ALSO using MOD distance instead.
+				float distanceToEnemyBody = (m_hEnemy->BodyTargetMod( pev->origin ) - pev->origin).Length();
+
+				if (m_flEnemyTouched < gpGlobals->time - 0.2 && distanceToEnemyBody > 94) //(32+16+32)) that was 80.
 					break;
 
-				Vector vecShootDir = ShootAtEnemy( pev->origin );
+
+				//MODDD - using MOD version of ShootAtEnemy.
+				Vector vecShootDir = ShootAtEnemyMod( pev->origin );
 				UTIL_MakeAimVectors ( pev->angles );
 
-				if (DotProduct( vecShootDir, gpGlobals->v_forward ) > 0.707)
+
+				dirCorrectness = DotProduct( vecShootDir, gpGlobals->v_forward );
+
+				//MODDD - little more flexible angle. This is a big jaw.
+				//if (dirCorrectness > 0.707)
+				if (dirCorrectness > 0.6)
 				{
 					m_bOnAttack = TRUE;
 					pHurt->pev->punchangle.z = -18;
@@ -511,6 +530,8 @@ void CIchthyosaur :: HandleAnimEvent( MonsterEvent_t *pEvent )
 
 
 CIchthyosaur::CIchthyosaur(){
+
+	chaseEnemyAttackSoundCooldown = 0;
 
 }
 
@@ -634,7 +655,14 @@ Schedule_t* CIchthyosaur :: GetScheduleOfType ( int Type )
 	case SCHED_DIE:
 		return slTwitchDie;
 	case SCHED_CHASE_ENEMY:
-		AttackSound( );
+		//MODDD - this is very spammy. SCHED_CHASE_ENEMY is interrupted by being able to do a Range Attack (bits_COND_CAN_RANGE_ATTACK1),
+		//        which also leads to calling this schedule anyways.
+		// Gave this a cooldown before playing another attack sound.
+		if(gpGlobals->time >= chaseEnemyAttackSoundCooldown){
+			chaseEnemyAttackSoundCooldown = gpGlobals->time + RANDOM_FLOAT(4.6, 9.2);
+			AttackSound( );
+		}
+
 	}
 
 	return CBaseMonster :: GetScheduleOfType( Type );

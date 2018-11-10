@@ -951,6 +951,8 @@ public:
 	float noclipSpeedMultiMem;
 	float normalSpeedMultiMem;
 	float jumpForceMultiMem;
+	float ladderCycleMultiMem;
+	float ladderSpeedMultiMem;
 	
 	int clearWeaponFlag;
 

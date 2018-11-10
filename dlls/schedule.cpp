@@ -1280,7 +1280,7 @@ void CBaseMonster :: RunTask ( Task_t *pTask )
 			if ( m_fSequenceFinished )
 			{
 				//MODDD NOTE - BEWARE. This is likely to pick the same range attack activity again if the ideal activity remains that way.
-				m_Activity = ACT_RESET;
+ 				m_Activity = ACT_RESET;
 				TaskComplete();
 			}
 			break;
