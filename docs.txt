@@ -1346,6 +1346,11 @@ drawDebugEnemyLKP (0) - BOOL. If on, draws any monster's recored enemy last know
 
 trackchangePrintouts (0) - BOOL. See lots of printouts regarding CFuncTrackChange and its child CFuncTrackAuto.
 
+floaterDummy (0) - BOOL. Floaters lose AI. Good for watching how enemies (to this monster) behave around this.
+~use "nothingHurts 2" to disable damage from non-players.
+~Permanently kills any existing floater's AI. Load a new map / save before to get it back.
+
+
 //
 //!!! LAST NORMAL CVAR!
 //

@@ -36,6 +36,7 @@ EASY_CVAR_EXTERN(STUcheckDistH)
 EASY_CVAR_EXTERN(STUcheckDistD)
 EASY_CVAR_EXTERN(STUSpeedMulti)
 
+EASY_CVAR_EXTERN(floaterDummy)
 
 
 /*
@@ -1225,7 +1226,10 @@ void CFloater::KilledFallingTouch( CBaseEntity *pOther ){
 
 void CFloater::MonsterThink(){
 
-	
+	if(EASY_CVAR_GET(floaterDummy) == 1){
+		//no thought for you.
+		return;
+	}
 
 
 	//easyForcePrintLine("IM GONNA %d %d", m_Activity, m_IdealActivity);
