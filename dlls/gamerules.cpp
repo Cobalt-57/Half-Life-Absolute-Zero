@@ -176,6 +176,9 @@ void CGameRules::RefreshSkillData ( void )
 	// Apache 
 	gSkillData.apacheHealth = GetSkillCvar( "sk_apache_health");
 
+	// Barnacle
+	gSkillData.barnacleHealth = GetSkillCvar( "sk_barnacle_health");
+
 	// Barney
 	gSkillData.barneyHealth = GetSkillCvar( "sk_barney_health");
 

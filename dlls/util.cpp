@@ -597,48 +597,15 @@ void UTIL_MoveToOrigin( edict_t *pent, const Vector &vecGoal, float flDist, int 
 
 //MODDD - this is a version of "UTIL_EntitiesInBox" that can also find barnacles.
 //They are ignored by the tag search because they lack any.  So, this just does an extra check fo "monster_barnacle" particularly.
+//UPDATE - barnacles are ignored because they lacked FL_MONSTER, which has been given back.
+//This is now no longer necessary. It just added a check like so
+//    if ( flagMask && !( FStrEq(STRING(pEdict->v.classname), "monster_barnacle") ) && !(pEdict->v.flags & flagMask) )
+/*
 int UTIL_EntitiesInBoxAlsoBarnacles( CBaseEntity **pList, int listMax, const Vector &mins, const Vector &maxs, int flagMask )
 {
-	edict_t		*pEdict = g_engfuncs.pfnPEntityOfEntIndex( 1 );
-	CBaseEntity *pEntity;
-	int			count;
-
-	count = 0;
-
-	if ( !pEdict )
-		return count;
-
-	for ( int i = 1; i < gpGlobals->maxEntities; i++, pEdict++ )
-	{
-		if ( pEdict->free )	// Not in use
-			continue;
-		
-		if ( flagMask && !( FStrEq(STRING(pEdict->v.classname), "monster_barnacle") ) && !(pEdict->v.flags & flagMask) )	// Does it meet the criteria?
-			continue;
-
-		if ( mins.x > pEdict->v.absmax.x ||
-			 mins.y > pEdict->v.absmax.y ||
-			 mins.z > pEdict->v.absmax.z ||
-			 maxs.x < pEdict->v.absmin.x ||
-			 maxs.y < pEdict->v.absmin.y ||
-			 maxs.z < pEdict->v.absmin.z )
-			 continue;
-
-		pEntity = CBaseEntity::Instance(pEdict);
-		if ( !pEntity )
-			continue;
-
-		pList[ count ] = pEntity;
-		count++;
-
-		if ( count >= listMax )
-			return count;
-	}
-
-	return count;
-
-
+	//....
 }
+*/
 
 int UTIL_EntitiesInBox( CBaseEntity **pList, int listMax, const Vector &mins, const Vector &maxs, int flagMask )
 {
@@ -2719,7 +2686,7 @@ void UTIL_PlaySound(edict_t* entity, int channel, const char *pszName, float vol
 			//already a sentence, send as is.
 			strcpy(&interpretationFINAL[0], pszName);
 		}
-		//easyPrintLine("UTIL_PlaySound - used sentence: |||%s|||", interpretationFINAL);
+		//easyForcePrintLine("UTIL_PlaySound - used sentence: |||%s|||", interpretationFINAL);
 
 		/*
 		if(pMonster != NULL && pMonster->pev != NULL){

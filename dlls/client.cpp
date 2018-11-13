@@ -2025,8 +2025,10 @@ void ClientCommand( edict_t *pEntity )
 			//if ( pEntity->pev->takedamage )
 
 			//in case there's any cleaning to do first (stop looping sounds).
-			pEntityForward->onForceDelete();
-
+			//pEntityForward->onDelete();
+			//SUB_Remove calls this already, no need to manually  call onDelete.
+			
+			pEntityForward->pev->nextthink = gpGlobals->time;
 			pEntityForward->SetThink(&CBaseEntity::SUB_Remove);
 		}else{
 			easyForcePrintLine("Could not find something to remove!");
@@ -2391,6 +2393,10 @@ void ClientCommand( edict_t *pEntity )
 				//got it!
 				//easyForcePrintLine("ARE YOU DAFT MAN?! 3");
 				testMon->ReportAIState();
+
+				//testMon->pev->waterlevel = 1;  //does foricng it work?
+				//..no.
+
 				//easyForcePrintLine("ARE YOU DAFT MAN?! 4");
 			}
 		}else{
@@ -3535,6 +3541,43 @@ void ClientCommand( edict_t *pEntity )
 
 
 	
+	}else if( FStrEq(pcmdRefinedRef, "setmyorigin") ){
+		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *) pev);
+		const char* arg1ref = CMD_ARGV(1);
+		const char* arg2ref = CMD_ARGV(2);
+		const char* arg3ref = CMD_ARGV(3);
+
+		if(g_flWeaponCheat == 0.0){
+			easyForcePrintLine("No origin trickery for you, cheater!");
+			return;
+		}
+
+		//ambiguous as to whether this is what is in the crosshairs or the player itself.  Try to figure it out:
+		
+
+
+		if(arg1ref == NULL || arg2ref == NULL || arg3ref == NULL){
+			easyForcePrintLine("Need 3 parameters.");
+			return;
+		}
+		
+		
+
+		float xVal = tryStringToFloat(arg1ref);
+
+		float yVal = tryStringToFloat(arg2ref);
+		float zVal = tryStringToFloat(arg3ref);
+
+		//forwardEnt->pev->origin = Vector(xVal, yVal, zVal);
+		UTIL_SetOrigin (tempplayer->pev, Vector(xVal, yVal, zVal) );// take him off ground so engine doesn't instantly reset onground 
+		//forwardEnt->pev->flags |= FL_ONGROUND
+		tempplayer->pev->flags &= ~FL_ONGROUND;
+
+		//easyForcePrintLine("MODEL: %s", STRING(forwardEnt->pev->model));
+		
+
+
+	
 	}else if( FStrEq(pcmdRefinedRef, "drawpath") || FStrEq(pcmdRefinedRef, "pathdraw") || FStrEq(pcmdRefinedRef, "drawnpcpath")  ){
 		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *) pev);
 		const char* arg1ref = CMD_ARGV(1);
@@ -4041,6 +4084,12 @@ void ClientCommand( edict_t *pEntity )
 			{
 				if ( pEdict->free )	// Not in use
 					continue;
+
+				//TEST WHY NO REMOV
+				if(FClassnameIs(pEdict, "monster_barnacle")){
+					int x = 66; //?
+				}
+
 				if ( !(pEdict->v.flags & (FL_CLIENT|FL_MONSTER)) )	// Not a client/monster ?
 					continue;
 
@@ -4065,7 +4114,7 @@ void ClientCommand( edict_t *pEntity )
 				easyForcePrintLine("*REMOVED %s", tempMonster->getClassname(), tempMonster->monsterID);
 				//made it here? Remove it.
 				//::UTIL_Remove(tempMonster);
-				tempMonster->onForceDelete();
+				//tempMonster->onDelete();   automatically called by SUB_REMOVE, don't manually call this.
 				tempMonster->SetThink(&CBaseEntity::SUB_Remove);
 				tempMonster->pev->nextthink = gpGlobals->time;
 			}//END OF list through all entities.
@@ -4105,7 +4154,7 @@ void ClientCommand( edict_t *pEntity )
 				//made it here? Remove it.
 				////::UTIL_Remove(tempMonster);
 				//actually do it this way below instead.
-				//pEntity->onForceDelete();
+				//pEntity->onDelete();
 				//pEntity->SetThink(&CBaseEntity::SUB_Remove);
 				//pEntity->pev->nextthink = gpGlobals->time;
 

@@ -16,12 +16,15 @@
 // barnacle - stationary ceiling mounted 'fishing' monster
 //=========================================================
 
-#include	"extdll.h"
+#include "extdll.h"
 #include "barnacle.h"
-#include	"util.h"
-#include	"cbase.h"
+#include "util.h"
+#include "cbase.h"
 #include "basemonster.h"
-#include	"schedule.h"
+#include "schedule.h"
+
+#include "defaultai.h"
+
 
 //MODDD
 //#include "skill.h"
@@ -89,6 +92,84 @@ CBarnacle::CBarnacle(){
 
 	smallerTest = FALSE;
 }
+
+
+	
+int CBarnacle::IRelationship( CBaseEntity *pTarget ){
+
+
+
+	
+	if(pTarget->getIsBarnacleVictimException() == TRUE){
+		//automatic dislike to allow pulling up.
+		return R_DL;
+	}
+
+
+
+	//First a check to see if the target wants to force a different relationship.
+	int forcedRelationshipTest = pTarget->forcedRelationshipWith(this);
+	
+	if(forcedRelationshipTest != R_DEFAULT){
+		//The other monster (pTarget) is forcing this monster to have an attitude towards it other than what the table may suggest.
+		return forcedRelationshipTest;
+	}else{}  //return below as usual.
+
+
+
+	
+	//Just imagine myself as ALIEN_MONSTER. I hate the things it hates.
+	//And things with the barnacleVictim exception set.
+
+	//Or in other words, what would an ALIEN_MONSTER hate? If it would hate this, so would I.
+	//return IRelationshipOfClass(ALIEN_MONSTER, pTarget);
+	int standardRelation = iEnemy[ CLASS_ALIEN_MONSTER ][ pTarget->Classify() ];
+
+	return standardRelation;
+
+
+}//END OF IRelationship
+
+
+
+//Other monsters need to know not to be hostile towards me.
+int CBarnacle::forcedRelationshipWith(CBaseEntity *pWith){
+	//return R_DEFAULT;
+	return R_NO;
+}
+
+
+
+
+void CBarnacle::EndOfRevive(int preReviveSequence){
+	
+	//LEAVE THIS OUT. I don't do what most mosnters do.
+	/*
+	SetThink( &CBaseMonster::MonsterInitThink );
+	//SetThink ( &CBaseMonster::CallMonsterThink );
+	pev->nextthink = gpGlobals->time + 0.1;
+	
+	SetUse ( &CBaseMonster::MonsterUse );
+	*/
+
+
+	m_IdealMonsterState	= MONSTERSTATE_ALERT;// Assume monster will be alert, having come back from the dead and all.
+	m_MonsterState = MONSTERSTATE_ALERT; //!!!
+
+	m_IdealActivity = ACT_IDLE;
+	m_Activity = ACT_IDLE; //!!! No sequence changing, force the activity to this now.
+
+	pev->sequence = -1; //force reset.
+	SetSequenceByIndex(preReviveSequence, -1, FALSE);
+
+	ChangeSchedule(slWaitForSequence );
+}//END OF EndOfRevive
+
+
+
+
+
+
 
 
 
@@ -182,6 +263,12 @@ int	CBarnacle :: Classify ( void )
 {
 	//NOTE:::   uh, there is "CLASS_BARNACLE".  Weird that this isn't used instead?
 	//Although nothing (monsters) pays attention to the barnacle ingame because its flags are 0, maybe.
+	//Strangely some Xen creatures use CLASS_BARNACLE to signify being ignored though. No idea.
+
+	//Unfortunately it may not be a good idea to use CLASS_BARNACLE without specially checking for it.
+	//Its value is 99, and it isn't worth editing the entire relationship array just to add a class for one monster only.
+	//Other script for making the barnacle ignore-able by AI is much better.
+	
 	return	CLASS_ALIEN_MONSTER;
 }
 
@@ -229,13 +316,25 @@ void CBarnacle :: Spawn()
 
 	m_bloodColor		= BLOOD_COLOR_RED;
 	pev->effects		= EF_INVLIGHT; // take light from the ceiling 
-	pev->health			= 25;
+
+
+	//MODDD - now comes from skilldata (text file)
+	pev->health			= gSkillData.barnacleHealth; //25;
+
+	//MODDD - since MonsterInit isn't called.
+	pev->max_health		= pev->health;
+
+
 	m_flFieldOfView		= 0.5;// indicates the width of this monster's forward view cone ( as a dotproduct result )
 	m_MonsterState		= MONSTERSTATE_NONE;
 	m_flKillVictimTime	= 0;
 	m_cGibs				= 0;
 	m_fLiftingPrey		= FALSE;
-	m_flTongueAdj		= -100;
+	
+	//MODDD - isn't setting this at spawn a good idea?
+	m_flAltitude = 0;
+
+	m_flTongueAdj = -100;
 
 	InitBoneControllers();
 
@@ -246,12 +345,20 @@ void CBarnacle :: Spawn()
 
 	UTIL_SetOrigin ( pev, pev->origin );
 
-	//MODDD - just a note.
-	//a barnacle has pev->flags = "0", or absolutely nothing, it seems.  Probably so that other things don't try to target it (grunts, as seen in retail, can run into them).
-	//EASY_CVAR_PRINTIF_PRE(barnaclePrintout, easyPrintLine("BARNACLE FLAGS::: %d", pev->flags) );
+	//MODDD IMPORTANT - the barnacle does not run "MonsterInit". This is worth pointing out guys!
+	// So this monster avoids receiving the FL_MONSTER flag that most things would receive just fine. 
+	// Little odd as clearly this is still a "creature" or "monster" in that sense.
+	// There are even other places that work to exclude barnacles from checks otherwise.
+	pev->flags |= FL_MONSTER;
 
 	
-}
+	if(monsterID == -1){
+		//MODDD - must do manually since init is skipped.
+		monsterID = monsterIDLatest;
+		monsterIDLatest++;
+	}
+	
+}//END OF Spawn
 
 
 
@@ -339,7 +446,12 @@ void CBarnacle :: BarnacleThink ( void )
 				tryOffset = pVictim->getBarnaclePulledTopOffset();
 			}
 
-			if ( fabs( pev->origin.z - ( vecNewEnemyOrigin.z + m_hEnemy->pev->view_ofs.z - 8 + tryOffset ) ) < BARNACLE_BODY_HEIGHT )
+			//easyForcePrintLine("barnacle%d WHATS HAPPENIN %.2f", monsterID, pev->origin.z - ( vecNewEnemyOrigin.z + m_hEnemy->pev->view_ofs.z - 8 + tryOffset )    );
+
+			//if ( fabs( pev->origin.z - ( vecNewEnemyOrigin.z + m_hEnemy->pev->view_ofs.z - 8 + tryOffset ) ) < BARNACLE_BODY_HEIGHT )
+
+			//MODDD - why fabs? if this were negative it would go into the barnacle more, that is okay.
+			if( ( pev->origin.z - ( vecNewEnemyOrigin.z + m_hEnemy->pev->view_ofs.z - 8 + tryOffset ) ) < BARNACLE_BODY_HEIGHT )
 			{
 		// prey has just been lifted into position ( if the victim origin + eye height + 8 is higher than the bottom of the barnacle, it is assumed that the head is within barnacle's body )
 				m_fLiftingPrey = FALSE;
@@ -789,6 +901,10 @@ GENERATE_KILLED_IMPLEMENTATION(CBarnacle)
 			pVictim->BarnacleVictimReleased();
 		}
 
+		//released? ok, good. forget this enemy. Yes, this must be said.
+		m_hEnemy = NULL;
+
+
 		if(pev->solid != SOLID_NOT){
 			//consider warping the newly released victim a little below the grab point so they don't get stuck in this dead barnacle's model:
 			
@@ -876,6 +992,8 @@ GENERATE_KILLED_IMPLEMENTATION(CBarnacle)
 //=========================================================
 void CBarnacle :: WaitTillDead ( void )
 {
+
+
 	pev->nextthink = gpGlobals->time + 0.1;
 
 	float flInterval = StudioFrameAdvance( 0.1 );
@@ -886,6 +1004,13 @@ void CBarnacle :: WaitTillDead ( void )
 		// death anim finished. 
 		StopAnimation();
 		SetThink ( NULL );
+
+		
+		//MODDD - is that okay?
+		//    this->DeathAnimationEnd();
+		//kindof overkill, really just need this.
+		pev->deadflag = DEAD_DEAD;
+
 	}
 }
 
@@ -1027,12 +1152,8 @@ CBaseEntity *CBarnacle :: TongueTouchEnt ( float *pflLength, float *pflLengthMin
 	//MODDD - uses the "entityFlags" that can be intercepted by having the CVar on.
 	int count = 0;
 
-	if(CVarMem != 1){
-		count = UTIL_EntitiesInBox( pList, 10, mins, maxs, (FL_CLIENT|FL_MONSTER) );
-	}else{
-		count = UTIL_EntitiesInBoxAlsoBarnacles( pList, 10, mins, maxs, (FL_CLIENT|FL_MONSTER) );
-	}
-
+	count = UTIL_EntitiesInBox( pList, 10, mins, maxs, (FL_CLIENT|FL_MONSTER) );
+	
 
 
 
@@ -1047,18 +1168,33 @@ CBaseEntity *CBarnacle :: TongueTouchEnt ( float *pflLength, float *pflLengthMin
 			//FClassnameIs(pList[i]->pev, "monster_alien_slave")    obsolete way of checking.
 			
 			BOOL passedRelationTest = TRUE;
+			const char* debugClassname = STRING(pList[i]->pev->classname);
+
+			if( !strcmp(debugClassname, "monster_apache") ){
+				int x = 66;
+			}
 
 			if(CVarMem != 1){
 
 				//Vector temp = (pList[i]->pev->absmax - pList[i]->pev->absmin);
 				Vector temp = pList[i]->pev->maxs - pList[i]->pev->mins;
 
-				passedRelationTest = ((IRelationship( pList[i] )  > R_NO) || (pList[i]->getIsBarnacleVictimException() == TRUE)) 
-					//&& ( (pList[i]->pev->size.x * pList[i]->pev->size.y * pList[i]->pev->size.z) < 27000);
-					&& (temp.x * temp.y * temp.z < 500000);   //300000?
+				float monstaSiz = temp.x * temp.y * temp.z;
+				//size of apache: 262144.00
+
+				
+				passedRelationTest = (
+					//As an ALIEN_MONSTER, I actually have to dislike them.
+					((IRelationship( pList[i] ) > R_NO) ) &&
+					//( (pList[i]->pev->size.x * pList[i]->pev->size.y * pList[i]->pev->size.z) < 27000) &&
+					//(monstaSiz < 200000) &&   //300000?
+					!pList[i]->GetMonsterPointer()->isSizeGiant()
+				);
+				
+
 
 				//bound size??
-				EASY_CVAR_PRINTIF_PRE(barnaclePrintout, easyPrintLine("PENIS %.2f", temp.x * temp.y * temp.z));
+				EASY_CVAR_PRINTIF_PRE(barnaclePrintout, easyPrintLine("lets not perhaps %.2f", temp.x * temp.y * temp.z));
 
 
 				//This 2nd check is to avoid trying to eat ridiculously large entities.

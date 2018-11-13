@@ -69,10 +69,13 @@ public:
 	void Precache( void );
 	int  Classify( void ) { return CLASS_HUMAN_MILITARY; };
 	BOOL isOrganic(void);
+	BOOL isSizeGiant(void);
 
 	int  BloodColor( void ) { return DONT_BLEED; }
 	
 	GENERATE_KILLED_PROTOTYPE
+
+	void onDelete(void);
 	
 	GENERATE_GIBMONSTER_PROTOTYPE
 
@@ -194,6 +197,11 @@ void CApache :: Spawn( void )
 	UTIL_SetOrigin( pev, pev->origin );
 
 
+	
+
+	
+	//MODDD - did... did this get changed? Why?
+	pev->flags |= FL_MONSTER;
 
 	pev->takedamage		= DAMAGE_AIM;
 	pev->health			= gSkillData.apacheHealth;
@@ -218,9 +226,6 @@ void CApache :: Spawn( void )
 	}
 
 	m_iRockets = 10;
-
-	
-	pev->renderfx |= FL_MONSTER;
 
 }
 
@@ -274,6 +279,11 @@ void CApache::StartupUse( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYP
 BOOL CApache::isOrganic(void){
 	return FALSE;
 }
+//For things that want to know like barnacles, yes. this is not exactly person-sized.
+BOOL CApache::isSizeGiant(void){
+	return TRUE;
+}
+
 
 GENERATE_KILLED_IMPLEMENTATION(CApache)
 {
@@ -298,6 +308,14 @@ GENERATE_KILLED_IMPLEMENTATION(CApache)
 		m_flNextRocket = gpGlobals->time + 15.0;
 	}
 }
+
+void CApache::onDelete(void){
+
+	STOP_SOUND_FILTERED( ENT(pev), CHAN_STATIC, "apache/ap_rotor2.wav" );
+
+}//END OF onDelete
+
+
 
 void CApache :: DyingThink( void )
 {

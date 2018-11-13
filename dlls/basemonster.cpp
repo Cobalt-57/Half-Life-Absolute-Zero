@@ -118,6 +118,17 @@ EASY_CVAR_EXTERN(pathfindLargeBoundFix)
 
 EASY_CVAR_EXTERN(flyerKilledFallingLoop)
 
+EASY_CVAR_EXTERN(barnacleGrabNoInterpolation)
+
+
+
+
+
+
+
+
+
+
 // Global Savedata for monster
 // UNDONE: Save schedule data?  Can this be done?  We may
 // lose our enemy pointer or other data (goal ent, target, etc)
@@ -177,6 +188,11 @@ TYPEDESCRIPTION	CBaseMonster::m_SaveData[] =
 	DEFINE_ARRAY( CBaseMonster, m_rgbTimeBasedDamage, FIELD_CHARACTER, CDMG_TIMEBASED ),
 	DEFINE_FIELD( CBaseMonster, m_bloodColor, FIELD_INTEGER ),
 	DEFINE_FIELD( CBaseMonster, m_failSchedule, FIELD_INTEGER ),
+	DEFINE_FIELD( CBaseMonster, hardSetFailSchedule, FIELD_BOOLEAN ),  //MODDD - saved now too.
+	DEFINE_FIELD( CBaseMonster, scheduleSurvivesStateChange, FIELD_BOOLEAN ),  //MODDD - saved now too.
+
+	
+	
 
 	DEFINE_FIELD( CBaseMonster, m_flHungryTime, FIELD_TIME ),
 	DEFINE_FIELD( CBaseMonster, m_flDistTooFar, FIELD_FLOAT ),
@@ -193,6 +209,37 @@ TYPEDESCRIPTION	CBaseMonster::m_SaveData[] =
 	DEFINE_FIELD( CBaseMonster, monsterID, FIELD_INTEGER ),
 
 };
+
+
+
+
+
+
+//MODDD - moved from method iRelationship to instance scope. Accessible from other places now.
+//static int iEnemy[14][14] =
+int CBaseMonster::iEnemy[14][14] =
+{			 //   NONE	 MACH	 PLYR	 HPASS	 HMIL	 AMIL	 APASS	 AMONST	APREY	 APRED	 INSECT	PLRALY	PBWPN	ABWPN
+/*NONE*/		{ R_NO	,R_NO	,R_NO	,R_NO	,R_NO	,R_NO	,R_NO	,R_NO	,R_NO	,R_NO	,R_NO	,R_NO,	R_NO,	R_NO	},
+/*MACHINE*/		{ R_NO	,R_NO	,R_DL	,R_DL	,R_NO	,R_DL	,R_DL	,R_DL	,R_DL	,R_DL	,R_NO	,R_DL,	R_DL,	R_DL	},
+/*PLAYER*/		{ R_NO	,R_DL	,R_NO	,R_NO	,R_DL	,R_DL	,R_DL	,R_DL	,R_DL	,R_DL	,R_NO	,R_NO,	R_DL,	R_DL	},
+/*HUMANPASSIVE*/{ R_NO	,R_NO	,R_AL	,R_AL	,R_HT	,R_FR	,R_NO	,R_HT	,R_DL	,R_FR	,R_NO	,R_AL,	R_NO,	R_NO	},
+/*HUMANMILITAR*/{ R_NO	,R_NO	,R_HT	,R_DL	,R_NO	,R_HT	,R_DL	,R_DL	,R_DL	,R_DL	,R_NO	,R_HT,	R_NO,	R_NO	},
+/*ALIENMILITAR*/{ R_NO	,R_DL	,R_HT	,R_DL	,R_HT	,R_NO	,R_NO	,R_NO	,R_NO	,R_NO	,R_NO	,R_DL,	R_NO,	R_NO	},
+/*ALIENPASSIVE*/{ R_NO	,R_NO	,R_NO	,R_NO	,R_NO	,R_NO	,R_NO	,R_NO	,R_NO	,R_NO	,R_NO	,R_NO,	R_NO,	R_NO	},
+/*ALIENMONSTER*/{ R_NO	,R_DL	,R_DL	,R_DL	,R_DL	,R_NO	,R_NO	,R_NO	,R_NO	,R_NO	,R_NO	,R_DL,	R_NO,	R_NO	},
+/*ALIENPREY   */{ R_NO	,R_NO	,R_DL	,R_DL	,R_DL	,R_NO	,R_NO	,R_NO	,R_NO	,R_FR	,R_NO	,R_DL,	R_NO,	R_NO	},
+/*ALIENPREDATO*/{ R_NO	,R_NO	,R_DL	,R_DL	,R_DL	,R_NO	,R_NO	,R_NO	,R_HT	,R_DL	,R_NO	,R_DL,	R_NO,	R_NO	},
+/*INSECT*/		{ R_FR	,R_FR	,R_FR	,R_FR	,R_FR	,R_NO	,R_FR	,R_FR	,R_FR	,R_FR	,R_NO	,R_FR,	R_NO,	R_NO	},
+/*PLAYERALLY*/	{ R_NO	,R_DL	,R_AL	,R_AL	,R_DL	,R_DL	,R_DL	,R_DL	,R_DL	,R_DL	,R_NO	,R_NO,	R_NO,	R_NO	},
+/*PBIOWEAPON*/	{ R_NO	,R_NO	,R_DL	,R_DL	,R_DL	,R_DL	,R_DL	,R_DL	,R_DL	,R_DL	,R_NO	,R_DL,	R_NO,	R_DL	},
+/*ABIOWEAPON*/	{ R_NO	,R_NO	,R_DL	,R_DL	,R_DL	,R_AL	,R_NO	,R_NO	,R_DL	,R_NO	,R_NO	,R_DL,	R_DL,	R_NO	}
+};
+
+
+
+
+
+
 
 
 
@@ -272,6 +319,9 @@ int CBaseMonster::monsterIDLatest = 0;
 //MODDD - new
 CBaseMonster::CBaseMonster(){
 
+	hardSetFailSchedule = FALSE;
+	scheduleSurvivesStateChange = FALSE;
+
 	disableEnemyAutoNode = FALSE;
 
 	m_fNewScheduleThisFrame = FALSE;
@@ -344,6 +394,16 @@ BOOL CBaseMonster::isSizeGiant(void){
 	//most monsters are not drastically larger than the player (the Gargantua is).
 	return FALSE;
 }
+
+//By default, all monsters are organic. This is easier since most fall under that category.
+//Just make sentries / other robotics exceptions (return FALSE to this)
+BOOL CBaseMonster::isOrganic(){
+	return TRUE;
+}
+
+
+
+
 float CBaseMonster::getBarnaclePulledTopOffset(void){
 	//by default, no offset, the default offset of -8 works.  This, if non-zero, is added to that one.
 	return 0;
@@ -650,6 +710,7 @@ void CBaseMonster :: BarnacleVictimBitten ( entvars_t *pevBarnacle )
 	{
 		ChangeSchedule( pNewSchedule );
 	}
+
 }
 
 //=========================================================
@@ -661,12 +722,25 @@ void CBaseMonster :: BarnacleVictimReleased ( void )
 	m_IdealMonsterState = MONSTERSTATE_IDLE;
 
 	pev->velocity = g_vecZero;
+
+	//MODDD NOTE - the old movetype is step? quite an assumption, careful.
+	//  Would resetting the origin be safe? turn off a onGround flag? etc.
+	//this bit is new though.
+	UTIL_SetOrigin(pev, pev->origin);
+
 	pev->movetype = MOVETYPE_STEP;
+
+	
+	//MODDD - turn interpolation back on when released
+	if(EASY_CVAR_GET(barnacleGrabNoInterpolation) == 1){
+		pev->effects &= ~EF_NOINTERP;
+	}
+
 }
 
 
 void CBaseMonster::testMethod(void){
-	easyPrintLine("I AM A fabulous person.");
+	easyPrintLine("test message goes here.");
 }
 
 
@@ -775,6 +849,8 @@ void CBaseMonster :: Listen ( void )
 	{
 		//!!!WATCH THIS SPOT IF YOU ARE HAVING SOUND RELATED BUGS!
 		// Make sure your schedule AND personal sound masks agree!
+		
+		//TEST MAJOR
 		iMySounds &= m_pSchedule->iSoundMask;
 	}
 	
@@ -2473,10 +2549,23 @@ BOOL CBaseMonster :: FBecomeProne ( void )
 {
 	if ( FBitSet ( pev->flags, FL_ONGROUND ) )
 	{
+		//MODDD NOTE - minus to remove something from a bitmask? Well you see something new everyday.
+		// This is okay IF the bit is set. OTherwise subtacting would make the whole thing negative and weird.
+		// weird to do it this way when  "pev->flags &= ~FL_ONGROUND" would've done it.
 		pev->flags -= FL_ONGROUND;
 	}
 
 	m_IdealMonsterState = MONSTERSTATE_PRONE;
+
+	
+	
+	//MODDD - turn off interpolation when bitten.
+	if(EASY_CVAR_GET(barnacleGrabNoInterpolation) == 1){
+		pev->effects |= EF_NOINTERP;
+	}
+	
+
+
 	return TRUE;
 }
 
@@ -5075,7 +5164,11 @@ void CBaseMonster :: MonsterInit ( void )
 	pev->effects		= 0;
 	pev->takedamage		= DAMAGE_AIM;
 	pev->ideal_yaw		= pev->angles.y;
+
+	//MODDD NOTE - this line assumes the monster's health was set during Spawn before MonsterInit was called. Just make sure of that.
+	//    Also monsters that skip MonsterInit may want to do this too.
 	pev->max_health		= pev->health;
+
 	pev->deadflag		= DEAD_NO;
 	m_IdealMonsterState	= MONSTERSTATE_IDLE;// Assume monster will be idle, until proven otherwise
 
@@ -5325,24 +5418,6 @@ int CBaseMonster::TaskIsRunning( void )
 //=========================================================
 int CBaseMonster::IRelationship ( CBaseEntity *pTarget )
 {
-	static int iEnemy[14][14] =
-	{			 //   NONE	 MACH	 PLYR	 HPASS	 HMIL	 AMIL	 APASS	 AMONST	APREY	 APRED	 INSECT	PLRALY	PBWPN	ABWPN
-	/*NONE*/		{ R_NO	,R_NO	,R_NO	,R_NO	,R_NO	,R_NO	,R_NO	,R_NO	,R_NO	,R_NO	,R_NO	,R_NO,	R_NO,	R_NO	},
-	/*MACHINE*/		{ R_NO	,R_NO	,R_DL	,R_DL	,R_NO	,R_DL	,R_DL	,R_DL	,R_DL	,R_DL	,R_NO	,R_DL,	R_DL,	R_DL	},
-	/*PLAYER*/		{ R_NO	,R_DL	,R_NO	,R_NO	,R_DL	,R_DL	,R_DL	,R_DL	,R_DL	,R_DL	,R_NO	,R_NO,	R_DL,	R_DL	},
-	/*HUMANPASSIVE*/{ R_NO	,R_NO	,R_AL	,R_AL	,R_HT	,R_FR	,R_NO	,R_HT	,R_DL	,R_FR	,R_NO	,R_AL,	R_NO,	R_NO	},
-	/*HUMANMILITAR*/{ R_NO	,R_NO	,R_HT	,R_DL	,R_NO	,R_HT	,R_DL	,R_DL	,R_DL	,R_DL	,R_NO	,R_HT,	R_NO,	R_NO	},
-	/*ALIENMILITAR*/{ R_NO	,R_DL	,R_HT	,R_DL	,R_HT	,R_NO	,R_NO	,R_NO	,R_NO	,R_NO	,R_NO	,R_DL,	R_NO,	R_NO	},
-	/*ALIENPASSIVE*/{ R_NO	,R_NO	,R_NO	,R_NO	,R_NO	,R_NO	,R_NO	,R_NO	,R_NO	,R_NO	,R_NO	,R_NO,	R_NO,	R_NO	},
-	/*ALIENMONSTER*/{ R_NO	,R_DL	,R_DL	,R_DL	,R_DL	,R_NO	,R_NO	,R_NO	,R_NO	,R_NO	,R_NO	,R_DL,	R_NO,	R_NO	},
-	/*ALIENPREY   */{ R_NO	,R_NO	,R_DL	,R_DL	,R_DL	,R_NO	,R_NO	,R_NO	,R_NO	,R_FR	,R_NO	,R_DL,	R_NO,	R_NO	},
-	/*ALIENPREDATO*/{ R_NO	,R_NO	,R_DL	,R_DL	,R_DL	,R_NO	,R_NO	,R_NO	,R_HT	,R_DL	,R_NO	,R_DL,	R_NO,	R_NO	},
-	/*INSECT*/		{ R_FR	,R_FR	,R_FR	,R_FR	,R_FR	,R_NO	,R_FR	,R_FR	,R_FR	,R_FR	,R_NO	,R_FR,	R_NO,	R_NO	},
-	/*PLAYERALLY*/	{ R_NO	,R_DL	,R_AL	,R_AL	,R_DL	,R_DL	,R_DL	,R_DL	,R_DL	,R_DL	,R_NO	,R_NO,	R_NO,	R_NO	},
-	/*PBIOWEAPON*/	{ R_NO	,R_NO	,R_DL	,R_DL	,R_DL	,R_DL	,R_DL	,R_DL	,R_DL	,R_DL	,R_NO	,R_DL,	R_NO,	R_DL	},
-	/*ABIOWEAPON*/	{ R_NO	,R_NO	,R_DL	,R_DL	,R_DL	,R_AL	,R_NO	,R_NO	,R_DL	,R_NO	,R_NO	,R_DL,	R_DL,	R_NO	}
-	};
-
 
 	//NOTICE - Bioweapon's relationship with AMONST changed from R_DL to R_NO so that snarks don't attack alien monsters that otherwise are uninsterested in them.
 	//Besides, is there really all that big of a difference between ALIEN_MILITARY and ALIEN_MONSTER or even ALIEN_PREDATOR?
@@ -6472,7 +6547,7 @@ void CBaseMonster::ReportAIState( void )
 	*/
 	
 	easyForcePrint("Health: %.2f / %.2f\n", pev->health, pev->max_health );
-	easyForcePrintLine("Sequence ID: %d Frame: %.2f Framerate: %.2f spawnflag: %d deadflag: %d yawspd: %.2f loops: %d sequencefinished: %d ThinkACTIVE: %d nextThink: %.2f currentTime: %.2f targetname:%s target:%s globalname:%s gravity: %.2f movetype: %d", pev->sequence, pev->frame, pev->framerate, pev->spawnflags, pev->deadflag, pev->yaw_speed, this->m_fSequenceLoops, this->m_fSequenceFinished, (m_pfnThink!=NULL), pev->nextthink, gpGlobals->time,  STRING(pev->targetname), STRING(pev->target), STRING(pev->globalname ), pev->gravity, pev->movetype);
+	easyForcePrintLine("Sequence ID: %d Frame: %.2f Framerate: %.2f spawnflag: %d deadflag: %d yawspd: %.2f loops: %d sequencefinished: %d ThinkACTIVE: %d nextThink: %.2f currentTime: %.2f targetname:%s target:%s globalname:%s", pev->sequence, pev->frame, pev->framerate, pev->spawnflags, pev->deadflag, pev->yaw_speed, this->m_fSequenceLoops, this->m_fSequenceFinished, (m_pfnThink!=NULL), pev->nextthink, gpGlobals->time,  STRING(pev->targetname), STRING(pev->target), STRING(pev->globalname ) );
 
 
 
@@ -6491,7 +6566,7 @@ void CBaseMonster::ReportAIState( void )
 
 	//easyForcePrintLine("isOrganic:%d", isOrganic());
 
-	easyForcePrintLine("EXTRA: flags:%d effects:%d renderfx:%d rendermode:%d renderamt:%.2f gamestate:%d solid:%d movetype:%d", pev->flags, pev->effects, pev->renderfx, pev->rendermode, pev->renderamt, pev->gamestate, pev->solid, pev->movetype);
+	easyForcePrintLine("EXTRA: flags:%d effects:%d renderfx:%d rendermode:%d renderamt:%.2f gamestate:%d solid:%d waterlevel:%d gravity:%.2f movetype:%d", pev->flags, pev->effects, pev->renderfx, pev->rendermode, pev->renderamt, pev->gamestate, pev->solid, pev->waterlevel, pev->gravity, pev->movetype);
 	easyForcePrintLine("Eyepos: (%.2f,%.2f,%.2f)", pev->view_ofs.x, pev->view_ofs.y, pev->view_ofs.z);
 	easyForcePrint("BOUNDS: mins: (%.2f,%.2f,%.2f)", pev->mins.x, pev->mins.y, pev->mins.z);
 	easyForcePrintLine("maxs: (%.2f,%.2f,%.2f)", pev->maxs.x, pev->maxs.y, pev->maxs.z);
@@ -7128,6 +7203,9 @@ void CBaseMonster::DeathAnimationStart(){
 
 }//END OF DeathAnimationStart
 
+
+//MODDD TODO - would it be possible to use "SetSequenceBox" to set the bounds
+//             in a way that guarantees the corpse is hittable?
 void CBaseMonster::DeathAnimationEnd(){
 	
 	//do we need to force the frame to 255 in here?
@@ -7173,12 +7251,6 @@ void CBaseMonster::onDeathAnimationEnd(){
 	//...nothing in the broadest case.
 	//except that.
 	SetThink ( NULL );
-}
-
-//By default, all monsters are organic. This is easier since most fall under that category.
-//Just make sentries / other robotics exceptions (return FALSE to this)
-BOOL CBaseMonster::isOrganic(){
-	return TRUE;
 }
 
 //MODDD - new.
@@ -7436,7 +7508,7 @@ void CBaseMonster::startReanimation(){
 	
 	
 	*/
-	//This should set the monster's health to "pev->maxhealth".
+	//This should set the monster's health to "pev->max_health".
 	Spawn();
 
 
@@ -7504,13 +7576,6 @@ void CBaseMonster::startReanimation(){
 	
 
 
-	//Should work even for squad monsters. They override StartMonster, which MonsterInitThink soon calls.
-	SetThink( &CBaseMonster::MonsterInitThink );
-	//SetThink ( &CBaseMonster::CallMonsterThink );
-	pev->nextthink = gpGlobals->time + 0.1;
-	
-	SetUse ( &CBaseMonster::MonsterUse );
-
 
 
 
@@ -7526,6 +7591,15 @@ void CBaseMonster::startReanimation(){
 //Override to let a monster determine how to revive the monster on its own, like pick a different animation.
 //Default behavior is to play the existing animation over again.
 void CBaseMonster::EndOfRevive(int preReviveSequence){
+
+	//Should work even for squad monsters. They override StartMonster, which MonsterInitThink soon calls.
+	SetThink( &CBaseMonster::MonsterInitThink );
+	//SetThink ( &CBaseMonster::CallMonsterThink );
+	pev->nextthink = gpGlobals->time + 0.1;
+	
+	SetUse ( &CBaseMonster::MonsterUse );
+
+
 
 	m_IdealMonsterState	= MONSTERSTATE_ALERT;// Assume monster will be alert, having come back from the dead and all.
 	m_MonsterState = MONSTERSTATE_ALERT; //!!!
@@ -7715,5 +7789,57 @@ void CBaseMonster::setEnemyLKP_Investigate(const Vector& argToInvestigate){
 	m_vecEnemyLKP = argToInvestigate;
 	investigatingAltLKP = TRUE;
 }
+
+
+
+
+
+
+
+
+//Moved to the base monster for usefullness.  Probably needs to be overridden per monster.
+//More of a special utility per monster, bound not to really be salvagable on its own here.
+CBaseEntity* CBaseMonster::getNearestDeadBody(void){
+
+	CBaseEntity* pEntityScan = NULL;
+	CBaseMonster* testMon = NULL;
+	float thisDistance;
+	CBaseEntity* bestChoiceYet = NULL;
+	float leastDistanceYet = 1200; //furthest I go to a dead body.
+
+	//does UTIL_MonstersInSphere work?
+	while ((pEntityScan = UTIL_FindEntityInSphere( pEntityScan, pev->origin, 800 )) != NULL)
+	{
+		if(pEntityScan->pev == this->pev){
+			//is it me? skip it.
+			continue;
+		}
+
+		testMon = pEntityScan->MyMonsterPointer();
+		//if(testMon != NULL && testMon->pev != this->pev && ( FClassnameIs(testMon->pev, "monster_scientist") || FClassnameIs(testMon->pev, "monster_barney")  ) ){
+
+		//Don't try to eat leeches, too tiny. Nothing else this small leaves a corpse.
+		if(testMon != NULL && (testMon->pev->deadflag == DEAD_DEAD || ( (testMon->pev->flags & (FL_CLIENT)) && testMon->pev->deadflag == DEAD_RESPAWNABLE && !(testMon->pev->effects &EF_NODRAW) ) ) && testMon->isSizeGiant() == FALSE && testMon->isOrganic() && !(::FClassnameIs(testMon->pev, "monster_leech") ) ){
+			thisDistance = (testMon->pev->origin - pev->origin).Length();
+			
+			if(thisDistance < leastDistanceYet){
+				//WAIT, one more check. Look nearby for players.
+
+				//UTIL_TraceLine ( node.m_vecOrigin + vecViewOffset, vecLookersOffset, ignore_monsters, ignore_glass,  ENT(pev), &tr );
+				
+				bestChoiceYet = testMon;
+				leastDistanceYet = thisDistance;
+				
+			}//END OF minimum distance yet
+		}//END OF entity scan null check
+
+	}//END OF while loop through all entities in an area to see which are corpses.
+	return bestChoiceYet;
+
+}//END OF getNearestDeadBody
+
+
+
+
 
 

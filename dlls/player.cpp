@@ -5966,7 +5966,7 @@ void CBasePlayer::PostThink()
 		altLadderStep = !altLadderStep;  //alternates.
 		
 	}else{
-		if(filterediuser4 < 0.3833 * 10000){
+		if(filterediuser4 < LADDER_CYCLE_BASE){
 			//reset!
 			alreadyPassedLadderCheck = FALSE;
 		}
@@ -9556,6 +9556,11 @@ BOOL CBasePlayer :: FBecomeProne ( void )
 	this->grabbedByBarnacle = TRUE;
 
 	m_afPhysicsFlags |= PFLAG_ONBARNACLE;
+
+
+	//MODDD TODO - is this a good idea?
+	//pev->effects |= EF_NOINTERP;
+
 	return TRUE;
 }
 
@@ -9579,6 +9584,11 @@ void CBasePlayer :: BarnacleVictimReleased ( void )
 	this->grabbedByBarnacle = FALSE;
 
 	m_afPhysicsFlags &= ~PFLAG_ONBARNACLE;
+
+	
+	//MODDD TODO - is this a good idea?
+	//pev->effects &= ~EF_NOINTERP;
+
 }
 
 

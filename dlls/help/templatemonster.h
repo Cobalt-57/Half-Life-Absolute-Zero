@@ -61,8 +61,8 @@ public:
 	void ScheduleChange();
 	Schedule_t* GetStumpedWaitSchedule(void);
 	
-	void StartTask( Task_t *pTask );
-	void RunTask( Task_t *pTask );
+	void StartTask( Task_t* pTask );
+	void RunTask( Task_t* pTask );
 
 	
 	BOOL CheckMeleeAttack1 ( float flDot, float flDist );
@@ -70,7 +70,7 @@ public:
 	BOOL CheckRangeAttack1 ( float flDot, float flDist );
 	BOOL CheckRangeAttack2 ( float flDot, float flDist );
 	
-	void EXPORT CustomTouch ( CBaseEntity *pOther );
+	void EXPORT CustomTouch( CBaseEntity* pOther );
 	
 	void MonsterThink( void );
 	void PrescheduleThink(void);
@@ -98,6 +98,8 @@ public:
 
 	GENERATE_KILLED_PROTOTYPE
 
+	void onDelete(void);
+
 	void SetYawSpeed(void);
 
 	BOOL getMonsterBlockIdleAutoUpdate(void);
@@ -110,7 +112,7 @@ public:
 	int LookupActivityHard(int activity);
 
 	void HandleEventQueueEvent(int arg_eventID);
-	void HandleAnimEvent(MonsterEvent_t *pEvent );
+	void HandleAnimEvent(MonsterEvent_t* pEvent );
 
 };//END OF class CTemplateMonster
 

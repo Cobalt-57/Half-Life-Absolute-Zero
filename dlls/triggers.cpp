@@ -1900,7 +1900,7 @@ int CChangeLevel::ChangeList( LEVELLIST *pLevelList, int maxList )
 	
 
 	pEdicttt = g_engfuncs.pfnPEntityOfEntIndex( 1 );
-	pEntityyy;
+
 	if ( pEdicttt ){
 		for ( int i = 1; i < gpGlobals->maxEntities; i++, pEdicttt++ ){
 			if ( pEdicttt->free )	// Not in use
@@ -1927,7 +1927,7 @@ int CChangeLevel::ChangeList( LEVELLIST *pLevelList, int maxList )
 
 	
 	pEdicttt = g_engfuncs.pfnPEntityOfEntIndex( 1 );
-	pEntityyy;
+
 	if ( pEdicttt ){
 		for ( int i = 1; i < gpGlobals->maxEntities; i++, pEdicttt++ ){
 			if ( pEdicttt->free )	// Not in use
@@ -2078,7 +2078,7 @@ int CChangeLevel::ChangeList( LEVELLIST *pLevelList, int maxList )
 
 
 	pEdicttt = g_engfuncs.pfnPEntityOfEntIndex( 1 );
-	pEntityyy;
+
 	if ( pEdicttt ){
 		for ( int i = 1; i < gpGlobals->maxEntities; i++, pEdicttt++ ){
 			if ( pEdicttt->free )	// Not in use
@@ -2109,9 +2109,6 @@ int CChangeLevel::ChangeList( LEVELLIST *pLevelList, int maxList )
 
 		}//END OF loop
 	}
-
-
-
 
 
 

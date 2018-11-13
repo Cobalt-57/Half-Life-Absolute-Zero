@@ -91,8 +91,9 @@ void CBaseEntity::ReportGeneric(){}
 
 
 //MODDD
+BOOL CBaseEntity::isSizeGiant(void){return FALSE;}
 BOOL CBaseEntity::isOrganic(void){return FALSE;}
-void CBaseEntity::onForceDelete(void){}
+void CBaseEntity::onDelete(void){}
 
 void CBaseEntity::Spawn(void){}
 //MODDD
@@ -102,6 +103,9 @@ CBaseEntity::CBaseEntity(void){}
 //defined now.
 void CBaseMonster::Activate(void){}
 void CBaseMonster::Spawn(void){}
+
+CBaseEntity* CBaseMonster::getNearestDeadBody(void){return NULL;};
+
 
 BOOL CBaseMonster::getGermanModelRequirement(void){return FALSE;}
 const char* CBaseMonster::getGermanModel(void){return NULL;}
@@ -357,7 +361,6 @@ void CBaseMonster::DeathAnimationStart(){return;}
 void CBaseMonster::DeathAnimationEnd(){return;}
 void CBaseMonster::onDeathAnimationEnd(){return;}
 
-BOOL CBaseMonster::isOrganic(){return FALSE;}
 int CBaseMonster::LookupActivityFiltered(int NewAcitivty){return 0;}
 int CBaseMonster::LookupActivity(int NewActivity){return 0;};
 int CBaseMonster::LookupActivityHeaviest(int NewActivity){return 0;};
@@ -455,6 +458,10 @@ int CBaseMonster::TaskIsRunning( void ) { return 0; }
 
 
 int CBaseMonster::IRelationship ( CBaseEntity *pTarget ) { return 0; }
+
+//Canned.
+//int CBaseMonster::IRelationshipOfClass (int argClassValue, CBaseEntity* pTarget ){return 0;};
+
 BOOL CBaseMonster :: FindCover ( Vector vecThreat, Vector vecViewOffset, float flMinDist, float flMaxDist ) { return FALSE; }
 BOOL CBaseMonster :: BuildNearestRoute ( Vector vecThreat, Vector vecViewOffset, float flMinDist, float flMaxDist ) { return FALSE; }
 //MODDD - also here.  Not sure why it needs to be though.
@@ -667,6 +674,8 @@ int CBaseMonster::convert_itbd_to_damage(int i){ return 0;}
 void CBaseMonster::CheckTimeBasedDamage(void){}
 //void CBaseMonster::Think(void){}
 BOOL CBaseMonster::isSizeGiant(void){return FALSE;}
+BOOL CBaseMonster::isOrganic(){return FALSE;}
+
 BOOL CBaseEntity::getIsBarnacleVictimException(void){return FALSE;}
 float CBaseMonster::getBarnaclePulledTopOffset(void){return 0;}
 float CBaseMonster::getBarnacleForwardOffset(void){return 0;}

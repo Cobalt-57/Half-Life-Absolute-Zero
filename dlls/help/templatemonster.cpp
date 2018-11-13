@@ -28,7 +28,7 @@ enum templateMonster_sequence{  //key: frames, FPS
 };
 
 
-//custom schedules
+//custom schedule enum
 enum{
 	SCHED_TEMPLATEMONSTER_XXX = LAST_COMMON_SCHEDULE + 1,
 	SCHED_TEMPLATEMONSTER_YYY,
@@ -37,7 +37,7 @@ enum{
 
 };
 
-//custom tasks
+//custom task enum
 enum{
 	TASK_TEMPLATEMONSTER_XXX = LAST_COMMON_TASK + 1,
 	TASK_TEMPLATEMONSTER_YYY,
@@ -293,7 +293,7 @@ void CTemplateMonster::SetEyePosition(void){
 
 
 //based off of GetSchedule for CBaseMonster in schedule.cpp.
-Schedule_t* CTemplateMonster::GetSchedule ( void )
+Schedule_t* CTemplateMonster::GetSchedule( void )
 {
 	//MODDD - safety.
 	if(iAmDead){
@@ -485,9 +485,9 @@ Schedule_t* CTemplateMonster::GetSchedule ( void )
 Schedule_t* CTemplateMonster::GetScheduleOfType( int Type){
 	
 	switch(Type){
-		case SCHED_TEMPLATEMONSTER_XXX:
+		case SCHED_TEMPLATEMONSTER_XXX:{
 
-		break;
+		break;}
 	}//END OF switch(Type)
 	
 	return CBaseMonster::GetScheduleOfType(Type);
@@ -517,31 +517,31 @@ Schedule_t* CTemplateMonster::GetStumpedWaitSchedule(){
 
 
 
-void CTemplateMonster::StartTask( Task_t *pTask ){
+void CTemplateMonster::StartTask( Task_t* pTask ){
 
 
 	switch( pTask->iTask ){
-		case TASK_TEMPLATEMONSTER_XXX:
+		case TASK_TEMPLATEMONSTER_XXX:{
 
-		break;
-		default:
+		break;}
+		default:{
 			CBaseMonster::StartTask( pTask );
-		break;
+		break;}
 	}//END OF switch
 
 }//END OF StartTask
 
-void CTemplateMonster::RunTask( Task_t *pTask ){
+void CTemplateMonster::RunTask( Task_t* pTask ){
 	
 	//EASY_CVAR_PRINTIF_PRE(templatePrintout, easyPrintLine("RunTask: sched:%s task:%d", this->m_pSchedule->pName, pTask->iTask) );
 	
 	switch( pTask->iTask ){
-		case TASK_TEMPLATEMONSTER_XXX:
+		case TASK_TEMPLATEMONSTER_XXX:{
 
-		break;
-		default:
+		break;}
+		default:{
 			CBaseMonster::RunTask(pTask);
-		break;
+		break;}
 	}//END OF switch
 
 }//END OF RunTask
@@ -563,9 +563,9 @@ BOOL CTemplateMonster::CheckRangeAttack2( float flDot, float flDist ){
 
 
 
-void CTemplateMonster::CustomTouch( CBaseEntity *pOther ){
+void CTemplateMonster::CustomTouch( CBaseEntity* pOther ){
 
-}
+}//END OF CustomTouch
 
 
 
@@ -683,6 +683,13 @@ GENERATE_KILLED_IMPLEMENTATION(CTemplateMonster)
 	GENERATE_KILLED_PARENT_CALL(CBaseMonster);
 }//END OF Killed
 
+//When this monster is about to be removed from the game (FL_KILLME is set in pev->flags, or REMOVE_ENTITY is about to be used),
+//make sure any looping sounds (automatic for short-duration sounds for whatever reason) are told to stop, or else they will go on forever.
+//How things are removed by not fitting into map transitions is not understood as well. It is probaby up to the engine depending on whether or not something
+//is marked a certain way by method "ChangeList" of triggers.cpp.
+void CTemplateMonster::onDelete(void){
+
+}//END OF onDelete
 
 
 void CTemplateMonster::SetYawSpeed( void ){
@@ -693,12 +700,13 @@ void CTemplateMonster::SetYawSpeed( void ){
 	//Switch on current activity m_Activity to determine yaw speed and set it?
 	
 	
-	switch ( m_Activity )
-	{
-	case ACT_IDLE:
+	switch ( m_Activity ){
+
+	case ACT_IDLE:{
 		//ys = 100;
-	break;
-	}
+	break;}
+
+	}//END OF switch
 	
 
 	pev->yaw_speed = ys;
@@ -740,9 +748,9 @@ int CTemplateMonster::tryActivitySubstitute(int activity){
 
 	//no need for default, just falls back to the normal activity lookup.
 	switch(activity){
-		case ACT_IDLE:
+		case ACT_IDLE:{
 			return SEQ_TEMPLATEMONSTER_XXX;
-		break;
+		break;}
 	}//END OF switch
 
 
@@ -763,10 +771,10 @@ int CTemplateMonster::LookupActivityHard(int activity){
 
 	//no need for default, just falls back to the normal activity lookup.
 	switch(activity){
-		case ACT_IDLE:
+		case ACT_IDLE:{
 			//random chance?
 			//return SEQ_TEMPLATEMONSTER_XXX;
-		break;
+		break;}
 	}//END OF switch
 	
 	//not handled by above?  try the real deal.
@@ -780,39 +788,37 @@ int CTemplateMonster::LookupActivityHard(int activity){
 void CTemplateMonster::HandleEventQueueEvent(int arg_eventID){
 
 	switch(arg_eventID){
-	case 0:
-	{
+		case 0:{
 
 
-	break;
-	}
-	case 1:
-	{
+		break;}
+		case 1:{
 
 
-	break;
-	}
+		break;}
 	}//END OF switch
-
 
 }//END OF HandleEventQueueEvent
 
 
 //This handles events built into the model, not custom hard-coded ones (above).
-void CTemplateMonster::HandleAnimEvent(MonsterEvent_t *pEvent ){
-	switch( pEvent->event ){
-	case 0:
-	{
+void CTemplateMonster::HandleAnimEvent(MonsterEvent_t* pEvent ){
+	
+	switch(pEvent->event){
+		case 0:{
 
-	break;
-	}
 
-	default:
-		CBaseMonster::HandleAnimEvent( pEvent );
-	break;
+		break;}
+		case 1:{
+
+
+		break;}
+		default:{
+			CBaseMonster::HandleAnimEvent( pEvent );
+		break;}
 	}//END OF switch
-}
 
+}//END OF HandleAnimEvent
 
 
 

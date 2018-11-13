@@ -1182,8 +1182,18 @@ void CMomentaryRotButton::Return( void )
 	float value = CBaseToggle::AxisDelta( pev->spawnflags, pev->angles, m_start ) / m_flMoveDistance;
 
 	UpdateAllButtons( value, 0 );	// This will end up calling UpdateSelfReturn() n times, but it still works right
-	if ( value > 0 )
+
+	//MODDD - SEVERE CHANGE.  don't call at 0? no let them handle this too!
+	// But keep the value fixed to 0 then.
+	//if ( value > 0 )
+	//	UpdateTarget( value );
+
+	if ( value > 0 ){
 		UpdateTarget( value );
+	}else{
+		UpdateTarget( 0 );
+	}
+		
 }
 
 

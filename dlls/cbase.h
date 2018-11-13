@@ -289,6 +289,7 @@ public:
 	
 
 	//MODDD - new. 
+	virtual BOOL isSizeGiant(void);
 	virtual BOOL isOrganic(void);
 
 	//MODDD - moved here from delay.
@@ -300,7 +301,7 @@ public:
 
 
 	//MODDD
-	virtual void onForceDelete(void);
+	virtual void onDelete(void);
 
 	//MODDD
 	const char* getClassname(void);
@@ -481,7 +482,9 @@ public:
 
 	virtual void Think( void ) { if (m_pfnThink) (this->*m_pfnThink)(); };
 	
-	//MODDD
+
+
+	//MODDD TODO - likely unnecessary anymore, remove at some point after testing and proving this.
 	BOOL iAmDead;
 
 	

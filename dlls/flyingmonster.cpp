@@ -301,6 +301,8 @@ void CFlyingMonster::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir,
 }
 
 
+//MODDD NOTE - is this called by anywhere at all? Is this just completley unused?
+//Same for ProbeZ and FloorZ??
 float CFlyingMonster::CeilingZ( const Vector &position )
 {
 	TraceResult tr;

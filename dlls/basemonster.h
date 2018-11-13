@@ -245,6 +245,10 @@ public:
 		} SCRIPTSTATE;
 
 
+		//MODDD - moved outside iRelationship.
+		static int iEnemy[14][14];
+
+
 		//new
 		BOOL disableEnemyAutoNode;
 		BOOL waitForMovementTimed_Start;
@@ -282,7 +286,6 @@ public:
 		virtual void DeathAnimationEnd(void);
 		virtual void onDeathAnimationEnd(void);
 
-		virtual BOOL isOrganic(void);
 		virtual int LookupActivityFiltered(int NewAcitivty);
 		virtual int LookupActivity(int NewActivity);
 		virtual int LookupActivityHeaviest(int NewActivity);
@@ -344,6 +347,8 @@ public:
 		void setAnimation(char* animationName, BOOL forceException, BOOL forceLoopsProperty, int extraLogic);
 
 		virtual BOOL isSizeGiant(void);
+		virtual BOOL isOrganic(void);
+
 		virtual float getBarnaclePulledTopOffset(void);
 
 		virtual float getBarnacleForwardOffset(void);
@@ -420,6 +425,9 @@ public:
 	BOOL				m_rgbTimeBasedFirstFrame[CDMG_TIMEBASED];
 	float				m_tbdPrev;				// Time-based damage timer
 
+	BOOL hardSetFailSchedule;
+	BOOL scheduleSurvivesStateChange;
+
 	//MODDD - canned.
 	//BOOL usingGermanModel;
 
@@ -440,6 +448,9 @@ public:
 	void updateEnemyLKP(void);
 	void setEnemyLKP(const Vector& argNewVector);
 	void setEnemyLKP_Investigate(const Vector& argNewVector);
+
+	
+	virtual CBaseEntity* getNearestDeadBody(void);
 
 	virtual BOOL getGermanModelRequirement(void);
 	virtual const char* getGermanModel(void);
@@ -652,6 +663,10 @@ public:
 
 	//NOTICE: beware of IRelationship's implementation in dlls/mpstubb.cpp if changing. By default it is identical to monster.cpp's implementation
 	virtual int IRelationship ( CBaseEntity *pTarget );
+
+	//MODDD - new. Sometimes a monster may want to know what a certain class would think of another target, instead of its own class.
+	//Nah, canned.
+	//static int IRelationshipOfClass(int argClassifyValue, CBaseEntity* pTarget);
 
 
 	virtual void MonsterInit ( void );

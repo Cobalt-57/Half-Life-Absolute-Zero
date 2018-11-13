@@ -109,6 +109,9 @@ void CBaseEntity::UpdateOnRemove( void )
 {
 	int	i;
 
+	//MODDD - any entity has its own cleanup method. By default it does nothing.
+	this->onDelete();
+
 	if ( FBitSet( pev->flags, FL_GRAPHED ) )
 	{
 	// this entity was a LinkEnt in the world node graph, so we must remove it from

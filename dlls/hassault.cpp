@@ -2505,7 +2505,10 @@ Schedule_t* CHAssault::GetScheduleOfType(int Type){
 }
 
 
-void CHAssault::onForceDelete(void){
+//Sounds with short durations tend to continue after they are called once, as though it is assumed they are supposed to loop.
+//So they must be explicitly stopped.
+//Why can't sounds looping automatically be a setting of its own in script? No idea.
+void CHAssault::onDelete(void){
 	STOP_SOUND_FILTERED(ENT(pev), getIdleSpinChannel(), "hassault/hw_spin.wav");
 	STOP_SOUND_FILTERED(ENT(pev), getIdleSpinChannel(), "hassault/hw_spindown.wav");
 	STOP_SOUND_FILTERED(ENT(pev), getIdleSpinChannel(), "hassault/hw_spinup.wav");

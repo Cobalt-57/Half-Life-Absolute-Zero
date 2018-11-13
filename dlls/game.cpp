@@ -71,6 +71,11 @@ cvar_t	sk_apache_health1	= {"sk_apache_health1","0"};
 cvar_t	sk_apache_health2	= {"sk_apache_health2","0"};
 cvar_t	sk_apache_health3	= {"sk_apache_health3","0"};
 
+// MODDD - new. Barnacle
+cvar_t	sk_barnacle_health1	= {"sk_barnacle_health1","25"};
+cvar_t	sk_barnacle_health2	= {"sk_barnacle_health2","25"};
+cvar_t	sk_barnacle_health3	= {"sk_barnacle_health3","25"};
+
 // Barney
 cvar_t	sk_barney_health1	= {"sk_barney_health1","0"};
 cvar_t	sk_barney_health2	= {"sk_barney_health2","0"};
@@ -771,6 +776,12 @@ void GameDLLInit( void )
 	CVAR_REGISTER ( &sk_apache_health1 );// {"sk_apache_health1","0"};
 	CVAR_REGISTER ( &sk_apache_health2 );// {"sk_apache_health2","0"};
 	CVAR_REGISTER ( &sk_apache_health3 );// {"sk_apache_health3","0"};
+
+	// MODDD - Barnacle
+	CVAR_REGISTER ( &sk_barnacle_health1 );
+	CVAR_REGISTER ( &sk_barnacle_health2 );
+	CVAR_REGISTER ( &sk_barnacle_health3 );
+
 
 	// Barney
 	CVAR_REGISTER ( &sk_barney_health1 );// {"sk_barney_health1","0"};

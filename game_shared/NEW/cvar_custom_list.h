@@ -624,8 +624,9 @@
 #define DEFAULT_pathfindLargeBoundFix 0
 #define DEFAULT_flyerKilledFallingLoop 0
 #define DEFAULT_floaterDummy 0
-#define DEFAULT_ladderCycleMulti 1
-#define DEFAULT_ladderSpeedMulti 1
+#define DEFAULT_ladderCycleMulti 0.9
+#define DEFAULT_ladderSpeedMulti 1.55
+#define DEFAULT_barnacleGrabNoInterpolation 0
 
 #define EASY_CVAR_HASH_MASS\
 	EASY_CVAR_HASH(strobeDurationMin, 0)\
@@ -1240,6 +1241,7 @@
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(floaterDummy, floaterdummy)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(ladderCycleMulti, laddercyclemulti)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(ladderSpeedMulti, ladderspeedmulti)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(barnacleGrabNoInterpolation, barnaclegrabnointerpolation)\
 	DUMMY
 
 #define EASY_CVAR_HIDDEN_SAVE_MASS\
@@ -1685,6 +1687,7 @@
 	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(floaterDummy)\
 	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(ladderCycleMulti)\
 	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(ladderSpeedMulti)\
+	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(barnacleGrabNoInterpolation)\
 	DUMMY
 
 #define EASY_CVAR_HIDDEN_LOAD_MASS\
@@ -2130,6 +2133,7 @@
 	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(floaterDummy, floaterdummy)\
 	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(ladderCycleMulti, laddercyclemulti)\
 	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(ladderSpeedMulti, ladderspeedmulti)\
+	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(barnacleGrabNoInterpolation, barnaclegrabnointerpolation)\
 	DUMMY
 
 #define EASY_CVAR_DECLARATION_SERVER_MASS\
@@ -2591,6 +2595,7 @@
 	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY(floaterDummy)\
 	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY(ladderCycleMulti)\
 	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY(ladderSpeedMulti)\
+	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY(barnacleGrabNoInterpolation)\
 	DUMMY
 
 #define EASY_CVAR_DECLARATION_CLIENT_MASS\
@@ -3052,6 +3057,7 @@
 	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY(floaterDummy)\
 	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY(ladderCycleMulti)\
 	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY(ladderSpeedMulti)\
+	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY(barnacleGrabNoInterpolation)\
 	DUMMY
 
 #define EASY_CVAR_UPDATE_SERVER_MASS\
@@ -3513,6 +3519,7 @@
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(floaterDummy)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(ladderCycleMulti)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(ladderSpeedMulti)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(barnacleGrabNoInterpolation)\
 	DUMMY
 
 #define EASY_CVAR_UPDATE_CLIENT_MASS\
@@ -3974,6 +3981,7 @@
 	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY(floaterDummy)\
 	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY(ladderCycleMulti)\
 	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY(ladderSpeedMulti)\
+	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY(barnacleGrabNoInterpolation)\
 	DUMMY
 
 #define EASY_CVAR_CREATE_SERVER_SETUP_MASS\
@@ -4441,6 +4449,7 @@
 	EASY_CVAR_CREATE_CLIENT_A_DEBUGONLY(floaterDummy)\
 	EASY_CVAR_CREATE_CLIENT_A_DEBUGONLY(ladderCycleMulti)\
 	EASY_CVAR_CREATE_CLIENT_A_DEBUGONLY(ladderSpeedMulti)\
+	EASY_CVAR_CREATE_CLIENT_A_DEBUGONLY(barnacleGrabNoInterpolation)\
 	DUMMY
 
 #define EASY_CVAR_RESET_MASS\
@@ -4901,6 +4910,7 @@
 	EASY_CVAR_RESET_DEBUGONLY(floaterDummy)\
 	EASY_CVAR_RESET_DEBUGONLY(ladderCycleMulti)\
 	EASY_CVAR_RESET_DEBUGONLY(ladderSpeedMulti)\
+	EASY_CVAR_RESET_DEBUGONLY(barnacleGrabNoInterpolation)\
 	DUMMY
 
 #define EASY_CVAR_EXTERN_MASS\
@@ -5362,5 +5372,6 @@
 	EASY_CVAR_EXTERN_DEBUGONLY(floaterDummy)\
 	EASY_CVAR_EXTERN_DEBUGONLY(ladderCycleMulti)\
 	EASY_CVAR_EXTERN_DEBUGONLY(ladderSpeedMulti)\
+	EASY_CVAR_EXTERN_DEBUGONLY(barnacleGrabNoInterpolation)\
 	DUMMY
 

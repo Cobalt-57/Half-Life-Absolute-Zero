@@ -536,7 +536,11 @@ BOOL CBaseEntity::usesSoundSentenceSave(void){
 }
 
 
-
+BOOL CBaseEntity::isSizeGiant(void){
+	//things larger than usual, like gargantuas, apaches, can just say they are.
+	//Things expecting roughly human-sized things like barnacles should know to skip these.
+	return FALSE;
+}
 BOOL CBaseEntity::isOrganic(void){
 	//entities must individually say they are to count for some things like having edible corpses.
 	return FALSE;
@@ -544,10 +548,11 @@ BOOL CBaseEntity::isOrganic(void){
 
 
 //MODDD - when an entity is forcibly deleted (currently, only by the player doing entRemove), run this method to see if anything needs to be done right before cleanup (like stopping a looping sound).
-void CBaseEntity::onForceDelete(void){
+void CBaseEntity::onDelete(void){
 
 }
-//const char* getClassname(void);
+
+
 
 const char* CBaseEntity::getClassname(void){
 	const char* test = STRING(pev->classname);

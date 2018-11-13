@@ -39,10 +39,15 @@ public:
 	void Precache( void );
 	int  Classify( void ) { return CLASS_ALIEN_MILITARY; };
 	int  BloodColor( void ) { return BLOOD_COLOR_YELLOW; }
+
+	//MODDD - good to know.
+	BOOL isSizeGiant(void){return TRUE;}
 	
 	GENERATE_KILLED_PROTOTYPE
 	
 	GENERATE_GIBMONSTER_PROTOTYPE
+
+	float getBarnaclePulledTopOffset(void);
 
 	void SetObjectCollisionBox( void )
 	{
@@ -1072,6 +1077,10 @@ void CNihilanth :: 	TargetSphere( USE_TYPE useType, float value )
 }
 
 
+//MODDD - are you crazy??!
+float CNihilanth::getBarnaclePulledTopOffset(void){
+	return 260;
+}
 
 void CNihilanth :: HandleAnimEvent( MonsterEvent_t *pEvent )
 {

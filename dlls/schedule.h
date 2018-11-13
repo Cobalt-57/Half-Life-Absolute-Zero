@@ -219,6 +219,16 @@ typedef enum
 		TASK_FACE_PREV_LKP,
 		TASK_WAIT_STUMPED,
 
+		//This is typically redundant as TASK_DIE in the base monster already calls method "DeathAnimationEnd".
+		//Things that don't do that in TASK_DIE and do something afterwards, like the ichy's decision to float instead,
+		//need to know to call DeathAnimationEnd when they reach the top (and finish TASK_DIE, if we're not letting it last forever there).
+		//In short, use TASK_DIE_END to call DeathAnimationEnd if TASK_DIE is overriden and doesn't.
+		//It kills the think method and sets a few other things, like scent for being dead.
+		//TASK_DIE_END,  
+		// NEVERMIND. Not worth it. Just call DeathAnimationEnd from the ichy before completing that task. sheesh.
+
+		TASK_SET_FAIL_SCHEDULE_HARD, //MODDD - new.
+
 		//MODDD - make other versions for other attacks?
 		TASK_CHECK_RANGED_ATTACK_1,
 

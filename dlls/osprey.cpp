@@ -62,6 +62,7 @@ public:
 
 	int  Classify( void ) { return CLASS_MACHINE; };
 	BOOL isOrganic(void);
+	BOOL isSizeGiant(void);
 
 	int  BloodColor( void ) { return DONT_BLEED; }
 	
@@ -636,6 +637,9 @@ int COsprey::TakeDamage( entvars_t *pevInflictor, entvars_t *pevAttacker, float 
 
 BOOL COsprey::isOrganic(void){
 	return FALSE;
+}
+BOOL COsprey::isSizeGiant(void){
+	return TRUE;
 }
 
 GENERATE_KILLED_IMPLEMENTATION(COsprey)

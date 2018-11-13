@@ -2888,7 +2888,7 @@ void CScientist::MonsterThink(void){
 	
 	//easyPrintLine("WELL??? t:%d e:%d COND: see:%d ne:%d sf:%d sdh:%d", m_hTargetEnt!=NULL, m_hEnemy!=NULL, this->HasConditions(bits_COND_SEE_ENEMY), this->HasConditions(bits_COND_NEW_ENEMY), this->HasConditions(bits_COND_SEE_FEAR), this->HasConditions(bits_COND_SEE_HATE|bits_COND_SEE_DISLIKE) );
 
-	while(true){
+	while(TRUE){
 		if(aggro > 0){
 
 			if((aggroOrigin - pev->origin).Length() > 270 ){
@@ -2898,6 +2898,10 @@ void CScientist::MonsterThink(void){
 				//ChangeSchedule(slScientistCover);//  ???
 				break;
 			}
+
+
+			/*
+			//IS THIS LINE OFFENDING
 			CSound* eh = NULL;
 			if( (eh=this->PBestSound()) != NULL && (eh->m_iType|bits_SOUND_DANGER|bits_SOUND_COMBAT) ){
 				//easyPrintLine("WOOOOOOOOOOOOOOO");
@@ -2909,6 +2913,7 @@ void CScientist::MonsterThink(void){
 				}
 				break;
 			}
+			*/
 
 			//ChangeSchedule(slScientistCover);  ???
 

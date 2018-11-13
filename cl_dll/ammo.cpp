@@ -1453,7 +1453,26 @@ int CHudAmmo::Draw(float flTime)
 	int a, x, y, r, g, b;
 	int AmmoWidth;
 
+	
+	BOOL isRPG = FALSE;
+	int ammoDrawPrimary = 0;    //Likely to be the primary ammo clip.
+	int ammoDrawSecondary = 0;   //Likely to be the total primary ammo. Side by side with ammoDrawPrimary.
+	int ammoDrawTertiary = 0;  //Likely to be the total secondary ammo. A separate line from Primary and Secondary.
+	BOOL ammoDrawPrimary_draw = FALSE;
+	BOOL ammoDrawSecondary_draw = FALSE;
+	BOOL ammoDrawTertiary_draw = FALSE;
 
+	
+	int iFlags = DHN_DRAWZERO; // draw 0 values
+	WEAPON* pw = m_pWeapon; // shorthand
+	int primaryAmmoClip;
+	int primaryAmmoTotal;
+	int secondaryAmmoTotal;
+
+	
+	
+	
+	
 
 
 	if (!(gHUD.m_iWeaponBits & (1<<(WEAPON_SUIT)) ))
@@ -1463,27 +1482,17 @@ int CHudAmmo::Draw(float flTime)
 
 
 
-	//ok then?
 
-	
+
+
+	//old way. We don't want overlapping with things that are already drawn actually.
+	/*
 	if(EASY_CVAR_GET(cl_drawExtraZeros)){
-		
 		gHUD.getGenericGUIColor(r, g, b);
-
-		
 		gHUD.DrawHudNumber(ScreenWidth - 64, ScreenHeight - 56, DHN_DRAWZERO | DHN_3DIGITS, 0, r, g, b, 0, 1);
 		gHUD.DrawHudNumber(ScreenWidth - 80, ScreenHeight - 28, DHN_DRAWZERO | DHN_3DIGITS, 0, r, g, b, 0, 1);
-
-
 	}//END OF cl_drawExtraZeros check
-
-
-
-
-
-
-
-
+	*/
 
 
 
@@ -1666,11 +1675,6 @@ int CHudAmmo::Draw(float flTime)
 
 
 
-	int primaryAmmoClip;
-	int primaryAmmoTotal;
-	int secondaryAmmoTotal;
-
-
 
 	if(!forceShowZero){
 		//NOTE: the later seen "pw" is just shorthand for "m_pWeapon".
@@ -1726,12 +1730,13 @@ int CHudAmmo::Draw(float flTime)
 	
 
 
-	WEAPON *pw = m_pWeapon; // shorthand
 	
 	//I will assume this is what cuts off the crowbar's attempt at drawing ammo.
+	//MODDD - don't do this check anymore. We even already check for iAmmoType being < 0. Want to draw extra zeros
+	//        possibly in place of all blank ammo counters too.
 	// SPR_Draw Ammo
-	if ((pw->iAmmoType < 0) && (pw->iAmmo2Type < 0))
-		return 0;
+	//if ((pw->iAmmoType < 0) && (pw->iAmmo2Type < 0))
+	//	return 0;
 
 
 
@@ -1739,9 +1744,6 @@ int CHudAmmo::Draw(float flTime)
 
 
 
-
-
-	int iFlags = DHN_DRAWZERO; // draw 0 values
 
 	//m_HUD_number_0   is just the plain font, not the boxed or tiny one.
 	AmmoWidth = gHUD.GetSpriteRect(gHUD.m_HUD_number_0).right - gHUD.GetSpriteRect(gHUD.m_HUD_number_0).left;
@@ -1765,217 +1767,200 @@ int CHudAmmo::Draw(float flTime)
 
 
 
-	bool isRPG = FALSE;
-	
+
 
 	//MODDD - this is how we check to see if the currently equipped weapon is the rpg:
 	if(checkEqualStrings(m_pWeapon->szName, "weapon_rpg", 10)){
 		isRPG = TRUE;
 	}
 
+
+
+	//In either HUD there are three possible places to draw numbers. Those places will be determined by HUD version.
+	//These are not necessarly named after whether they are for "primary" ammo (mp5 bullets) or "secondary" ammo (mp5 grenades).
+	ammoDrawPrimary = 0;    //Likely to be the primary ammo clip.
+	ammoDrawSecondary = 0;   //Likely to be the total primary ammo. Side by side with ammoDrawPrimary.
+	ammoDrawTertiary = 0;  //Likely to be the total secondary ammo. A separate line from Primary and Secondary.
+	ammoDrawPrimary_draw = FALSE;
+	ammoDrawSecondary_draw = FALSE;
+	ammoDrawTertiary_draw = FALSE;
+
+
+	
+	if(EASY_CVAR_GET(cl_drawExtraZeros) == 1){
+		//draw all number places, even if it stays to the default of 0.
+		//ammoDrawPrimary_draw = TRUE;
+		//but not you... strangely.
+		ammoDrawSecondary_draw = TRUE;
+		ammoDrawTertiary_draw = TRUE;
+	}else if(EASY_CVAR_GET(cl_drawExtraZeros) == 2){
+		//all three.
+		ammoDrawPrimary_draw = TRUE;
+		ammoDrawSecondary_draw = TRUE;
+		ammoDrawTertiary_draw = TRUE;
+	}
+
+
+
 	if(global2_hud_version == 0){
-
-
 		int iNumberHeight = gHUD.GetSpriteRect(gHUD.m_HUD_number_0).bottom - gHUD.GetSpriteRect(gHUD.m_HUD_number_0).top;
 		//y = (ScreenHeight - gHUD.m_iFontHeight*2.75);
 		y = (ScreenHeight - (iNumberHeight*2.5) );
-	
 		
-		//gHUD.testVar->string = m_pWeapon->szName;
+		//// Does weapon have any ammo at all?
+		if(m_pWeapon->iAmmoType > 0){
 
-		//if(!forceShowZero){
-		//MODDD - if "isRPG", do something else...
-			if(!isRPG){
-			// Does weapon have any ammo at all?
-				if (m_pWeapon->iAmmoType > 0){
-					int iIconWidth = m_pWeapon->rcAmmo.right - m_pWeapon->rcAmmo.left;
-		
-					if (primaryAmmoClip >= 0){
-						// room for the number and the '|' and the current ammo
-						//MODDD - also, not supplying the new arguemnt (fondID of 0, 1, or 2) means it will be 0: plain font.
-						//x = ScreenWidth - (8 * AmmoWidth) - iIconWidth;
-						x = ScreenWidth - (8 * AmmoWidth) - 1;
-						x = gHUD.DrawHudNumber(x, y, iFlags | DHN_3DIGITS, primaryAmmoClip, r, g, b, 0, 1);
-
-						wrect_t rc;
-						rc.top = 0;
-						rc.left = 0;
-						rc.right = AmmoWidth;
-						rc.bottom = 100;
-
-						//MODDD - "iBarWidth" will now be the width of the slash instead.
-						//int iBarWidth =  AmmoWidth/10;
-						int iBarWidth = gHUD.GetSpriteRect(m_HUD_slash).right - gHUD.GetSpriteRect(m_HUD_slash).left;
-
-						//MODDD - removed - no need for extra space as an equidistant character.
-						//x += AmmoWidth/2;
-
-
-						//MODDD
-						//UnpackRGB(r,g,b, RGB_YELLOWISH);
-
-						//MODDD - draw a slash instead.
-						/*
-						// draw the | bar
-						FillRGBA(x, y, iBarWidth, gHUD.m_iFontHeight, r, g, b, a);
-						*/
+			if(m_pWeapon->iAmmoType > 0){
+				//most weapons in general with any kind of ammo (not the crowbar)
+				
+				if(primaryAmmoClip >= 0){
+					if(isRPG){
+						//the RPG gets special rules.
+						ammoDrawTertiary_draw = TRUE;
+						ammoDrawTertiary = primaryAmmoClip + primaryAmmoTotal;
+					}else{
+						//Weapons with a clip and total ammo count to draw from when reloading.
+						ammoDrawPrimary_draw = TRUE;
+						ammoDrawPrimary = primaryAmmoClip;
 						
-						
-						//SPR_Set(gHUD.GetSprite(m_HUD_slash), r, g, b );
-						////// NYYYYY   SPR_Set(GetSprite(m_HUD_number_0 + k), r, g, b );
-						gHUD.drawAdditiveFilter( gHUD.GetSprite(m_HUD_slash), r, g, b, 0, x, y, &gHUD.GetSpriteRect(m_HUD_slash), 1);
-						////////////////////////////////////////////////////////////////////////////
+						ammoDrawSecondary_draw = TRUE;
+						ammoDrawSecondary = primaryAmmoTotal;
 
-
-						//MODDD - removed - no need for extra space as an equidistant character.
-						//x += iBarWidth + AmmoWidth/2;
-						x += iBarWidth;
-
-						// GL Seems to need this
-						//ScaleColors(r, g, b, a );
-						x = gHUD.DrawHudNumber(x, y, iFlags | DHN_3DIGITS, primaryAmmoTotal, r, g, b, 0, 1);		
-
-
+						// Does weapon have seconday ammo?
+						if(pw->iAmmo2Type > 0){
+							ammoDrawTertiary_draw = TRUE;
+							ammoDrawTertiary = secondaryAmmoTotal;
+						}
 					}
-					else
-					{
-						// SPR_Draw a bullets only line
-						//MODDD - assuming this is used for the uranium weapons only (gauss / tau cannon & gluon) 
-						//
-			
-						//x = ScreenWidth - 4 * AmmoWidth - iIconWidth;
-
-						//MODDD - Anyways, those kinds of ammo should be drawn at the bottom of the GUI instead (where the secondary ammo (MP5 grenades) is now)
-						x = ScreenWidth - (5 * AmmoWidth);
-						//y = ScreenHeight - gHUD.m_iFontHeight - gHUD.m_iFontHeight/2;
-						
-						//OLD.
-						//y = (ScreenHeight - (iNumberHeight*1.5) );
-					
-						y = ScreenHeight - gHUD.m_iFontHeight*1.5 + 5;
-
-
-
-						//NOTICE: JUst confirming.  Does the crowbar need a check so as to not even attempt to draw a number here?
-						//No issues so far, just pointing that out.
-						x = gHUD.DrawHudNumber(x, y, iFlags | DHN_3DIGITS, primaryAmmoTotal, r, g, b, 0, 1);
-			
-					}
-
-					//MODDD - icon removed.
-					/*
-					// Draw the ammo Icon
-					int iOffset = (m_pWeapon->rcAmmo.bottom - m_pWeapon->rcAmmo.top)/8;
-					SPR_Set(m_pWeapon->hAmmo, r, g, b);
-					SPR_DrawAdditive(0, x, y - iOffset, &m_pWeapon->rcAmmo);
-					*/
+				}else{
+					//clipless weapons that only count and draw from total ammo.
+					ammoDrawTertiary_draw = TRUE;
+					ammoDrawTertiary = primaryAmmoTotal;
 				}
-
-			}//END OF if(!isRPG)
-			else{
-				//For the RPG, just add the clip and remaining ammo.  Draw that as a single number.
-				//The effect is that reloading makes no difference on the single number shown.
-				//Firing removes one, however (and thus, to reload OR fire, it must be at least 1).
-				x = ScreenWidth - (5 * AmmoWidth) - 1;
-				y = (ScreenHeight - (iNumberHeight*1.5) ) + 5;
-				x = gHUD.DrawHudNumber(x, y, iFlags | DHN_3DIGITS, primaryAmmoClip + primaryAmmoTotal, r, g, b, 0, 1);
 			}
-
-			// Does weapon have seconday ammo?
-			//(this is not contained by the "!isRPG" check? odd.)
+		}else{
+			//no primary ammo type? is there a secondary ammo count though?
 			if(pw->iAmmo2Type > 0){
-				int iIconWidth = m_pWeapon->rcAmmo2.right - m_pWeapon->rcAmmo2.left;
-
-				//MODDD
-				//y -= gHUD.m_iFontHeight + gHUD.m_iFontHeight/4;
-				y = ScreenHeight - gHUD.m_iFontHeight*1.5 + 5;
-
-				//MODDD - changed to draw under the primary ammo's slash.
-				//x = ScreenWidth - 4 * AmmoWidth - iIconWidth;
-				x = ScreenWidth - (5 * AmmoWidth) - 1;
-				x = gHUD.DrawHudNumber(x, y, iFlags|DHN_3DIGITS, secondaryAmmoTotal, r, g, b, 0, 1);
-
-				//MODDD - icon removed.
-				/*
-				// Draw the ammo Icon
-				SPR_Set(m_pWeapon->hAmmo2, r, g, b);
-				int iOffset = (m_pWeapon->rcAmmo2.bottom - m_pWeapon->rcAmmo2.top)/8;
-				SPR_DrawAdditive(0, x, y - iOffset, &m_pWeapon->rcAmmo2);
-				*/
-
-			}//END OF if(pw->iAmmo2Type > 0)
+				ammoDrawTertiary_draw = TRUE;
+				ammoDrawTertiary = secondaryAmmoTotal;
+			}
+		}//END OF iAmmoType check
 		
-		/*
-		}//END OF if(forceShowZero)
-		else{
-			//just draw 0.
-			x = ScreenWidth - (8 * AmmoWidth) - 1;
-			x = gHUD.DrawHudNumber(x, y, iFlags | DHN_3DIGITS, 0, r, g, b);
+
+
+		
+		
+		x = ScreenWidth - (8 * AmmoWidth) - 1;
+
+		if(ammoDrawPrimary_draw){
+			x = gHUD.DrawHudNumber(x, y, iFlags | DHN_3DIGITS, ammoDrawPrimary, r, g, b, 0, 1);
+		}else{
+			//advance the x anyways.
+			x += gHUD.DrawHUDNumber_widthOnly(iFlags | DHN_3DIGITS, ammoDrawPrimary, 0);
 		}
-		*/
+
+
+
+		if(ammoDrawPrimary_draw && ammoDrawSecondary_draw){
+			//only draw a slash if there are two numbers to be seprated (primary & secondary)
+			gHUD.drawAdditiveFilter( gHUD.GetSprite(m_HUD_slash), r, g, b, 0, x, y, &gHUD.GetSpriteRect(m_HUD_slash), 1);
+		}
+		//advance the X regardless of drawing the bar.
+		int iBarWidth = gHUD.GetSpriteRect(m_HUD_slash).right - gHUD.GetSpriteRect(m_HUD_slash).left;
+		x += iBarWidth;
+
+
+		if(ammoDrawSecondary_draw){
+			//IMPORTANT!!! This depends on the existing X being set. So it will still be in the primary ammo's spot if that is not drawn.
+			//outdated, now handled ok.
+			x = gHUD.DrawHudNumber(x, y, iFlags | DHN_3DIGITS, ammoDrawSecondary, r, g, b, 0, 1);	
+		}
+
+		if(ammoDrawTertiary_draw){
+			x = ScreenWidth - (5 * AmmoWidth) - 1;
+			y = (ScreenHeight - (iNumberHeight*1.5) ) + 5;
+			x = gHUD.DrawHudNumber(x, y, iFlags | DHN_3DIGITS, ammoDrawTertiary, r, g, b, 0, 1);
+		}
+
 
 	}//END OF if(global2_hud_version == 0)
 	else{
 
-		//what is "pw->iAmmoType" again?
-
-		//used again.
-		ScaleColors(r, g, b, a );
 
 
-		//if(!forceShowZero){
+		if(m_pWeapon->iAmmoType > 0){
 
-			if(!isRPG){
+			if(m_pWeapon->iAmmoType > 0){
+				//most weapons in general with any kind of ammo (not the crowbar)
 
-			//TOTAL
-			x = ScreenWidth - (30 + 24*3) + 13 + 8 -1 + 2 + 1;
-			y = ScreenHeight - 45;
-			//NOTICE: JUst confirming.  Does the crowbar need a check so as to not even attempt to draw a number here?
-						//No issues so far, just pointing that out.
-			gHUD.DrawHudNumber(x, y, DHN_DRAWZERO|DHN_3DIGITS|DHN_DRAWPLACE|DHN_EMPTYDIGITSUNFADED , primaryAmmoTotal, r, g, b, 4);
-			
+				if(primaryAmmoClip >= 0){
+					if(isRPG){
+						//the RPG gets special rules.
+						ammoDrawSecondary_draw = TRUE;
+						ammoDrawSecondary = primaryAmmoClip + primaryAmmoTotal;
+					}else{
+						//Weapons with a clip and total ammo count to draw from when reloading.
+						ammoDrawPrimary_draw = TRUE;
+						ammoDrawPrimary = primaryAmmoClip;
+						
+						ammoDrawSecondary_draw = TRUE;
+						ammoDrawSecondary = primaryAmmoTotal;
 
-			if(primaryAmmoClip >= 0){
-				//Hard-coded bar graphic.
-				x = ScreenWidth - 90;
-				y = ScreenHeight - 48;
-				int iHeight = 33;
-				int iWidth = 3;
-				FillRGBA(x, y, iWidth, iHeight, r, g, b, a);
-
-				//CLIP
-				x = ScreenWidth - 114 - (24 * 3) + 5 + 21 + 1;
-				y = ScreenHeight - 45;
-				gHUD.DrawHudNumber(x, y, DHN_DRAWZERO|DHN_3DIGITS|DHN_DRAWPLACE|DHN_EMPTYDIGITSUNFADED , primaryAmmoClip, r, g, b, 4);
+						// Does weapon have seconday ammo?
+						if(pw->iAmmo2Type > 0){
+							ammoDrawTertiary_draw = TRUE;
+							ammoDrawTertiary = secondaryAmmoTotal;
+						}
+					}
+				}else{
+					//clipless weapons that only count and draw from total ammo.
+					ammoDrawSecondary_draw = TRUE;
+					ammoDrawSecondary = primaryAmmoTotal;
+				}
 			}
+		}else{
+			//no primary ammo type? is there a secondary ammo count though?
+			if(pw->iAmmo2Type > 0){
+				ammoDrawTertiary_draw = TRUE;
+				ammoDrawTertiary = secondaryAmmoTotal;
+			}
+		}//END OF iAmmoType check
+
+
 
 		
-			if (pw->iAmmo2Type > 0 && secondaryAmmoTotal > 0) {
-				//SECONDARY
-				x = ScreenWidth - (30 + 24*3 + 0) + 13 + 8 + 2;
-				y = ScreenHeight - 59 - 33 + 20 - 4 - 10;
-				gHUD.DrawHudNumber(x, y, DHN_DRAWZERO|DHN_2DIGITS|DHN_DRAWPLACE|DHN_EMPTYDIGITSUNFADED , secondaryAmmoTotal, r, g, b, 4);
-			}
+		//used again.
+		ScaleColors(r, g, b, a );
+		
+		if(ammoDrawPrimary_draw){
+			x = ScreenWidth - 114 - (24 * 3) + 5 + 21 + 1;
+			y = ScreenHeight - 45;
+			gHUD.DrawHudNumber(x, y, DHN_DRAWZERO|DHN_3DIGITS|DHN_DRAWPLACE|DHN_EMPTYDIGITSUNFADED , ammoDrawPrimary, r, g, b, 4);
+		}
 
-		}else{
-
+		if(ammoDrawPrimary_draw && ammoDrawSecondary_draw){
+			//only draw a bar if there are two numbers to be seprated (primary & secondary)
+			//Hard-coded bar graphic.
+			x = ScreenWidth - 90;
+			y = ScreenHeight - 48;
+			int iHeight = 33;
+			int iWidth = 3;
+			FillRGBA(x, y, iWidth, iHeight, r, g, b, a);
+		}
+		
+		if(ammoDrawSecondary_draw){
 			x = ScreenWidth - (30 + 24*3) + 13 + 8 -1 + 2 + 1;
 			y = ScreenHeight - 45;
-			gHUD.DrawHudNumber(x, y, DHN_DRAWZERO|DHN_3DIGITS|DHN_DRAWPLACE|DHN_EMPTYDIGITSUNFADED, primaryAmmoClip + primaryAmmoTotal, r, g, b, 4);
-
-
+			gHUD.DrawHudNumber(x, y, DHN_DRAWZERO|DHN_3DIGITS|DHN_DRAWPLACE|DHN_EMPTYDIGITSUNFADED , ammoDrawSecondary, r, g, b, 4);
 		}
-			//
-		/*
-		}//END OF if(!forceShowZero)
-		else{
-			//just draw 0.
 
+		if(ammoDrawTertiary_draw){
+			x = ScreenWidth - (30 + 24*3 + 0) + 13 + 8 + 2;
+			y = ScreenHeight - 59 - 33 + 20 - 4 - 10;
+			gHUD.DrawHudNumber(x, y, DHN_DRAWZERO|DHN_2DIGITS|DHN_DRAWPLACE|DHN_EMPTYDIGITSUNFADED , ammoDrawTertiary, r, g, b, 4);
 		}
-		*/
 
-
-	}//END OF else OF if(global2_hud_version == 0)  [effectively: if(global2_hud_version == 1) ]
+	}//END OF hud_version checks
 
 
 

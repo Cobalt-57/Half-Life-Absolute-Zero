@@ -219,9 +219,10 @@ const char* CArcher::pAttackMissSounds[] =
 
 
 
+/*
 TYPEDESCRIPTION	CArcher::m_SaveData[] = 
 {
-	DEFINE_FIELD( CArcher, explodeDelay, FIELD_TIME ),
+	DEFINE_FIELD( CArcher, ????, FIELD_TIME ),
 };
 
 //IMPLEMENT_SAVERESTORE( CArcher, CFlyingMonster );
@@ -241,7 +242,7 @@ int CArcher::Restore( CRestore &restore )
 
 	return iReadFieldsResult;
 }
-
+*/
 
 
 
@@ -262,8 +263,6 @@ int CArcher::Restore( CRestore &restore )
 
 
 CArcher::CArcher(void){
-
-	explodeDelay = -1;
 
 	shootCooldown = 0;
 
@@ -409,8 +408,6 @@ void CArcher::Spawn( void )
 {
 	Precache( );
 
-	//well you certainly aren't going to explode.
-	explodeDelay = -1;
 
 	setModel("models/archer.mdl");
 	//UTIL_SetSize( pev, VEC_HUMAN_HULL_MIN, VEC_HUMAN_HULL_MAX );
@@ -418,8 +415,8 @@ void CArcher::Spawn( void )
 
 	pev->classname = MAKE_STRING("monster_archer");
 
-	//SetBits(pev->flags, FL_FLY);
-	pev->flags |= FL_FLY;
+	//I am underwater.
+	pev->flags |= FL_SWIM;
 
 
 
@@ -1242,13 +1239,6 @@ void CArcher::MonsterThink(){
 
 	}
 	*/
-
-
-	if(explodeDelay != -1 && gpGlobals->time >= explodeDelay){
-		//If we're going to explode and time is up, well, explode.
-		GibMonster();
-		return;
-	}
 
 
 	CFlyingMonster::MonsterThink();
@@ -2166,10 +2156,9 @@ Vector CArcher::BodyTargetMod(const Vector &posSrc){
 
 void CArcher::onDeathAnimationEnd(){
 	
-	//This monster is now a ticking time bomb...
-	//Also don't call the parent onDeathAnimationEnd. That's what stops the think method (could not even keep track of the countdown timer then)
 
-	explodeDelay = gpGlobals->time + RANDOM_FLOAT(4, 6);
+	//wait. Do we want to float like the ichy does?
+	//TODO
 
 }//END OF onDeathAnimationEnd
 

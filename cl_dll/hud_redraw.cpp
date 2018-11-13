@@ -506,34 +506,17 @@ int CHud :: DrawHudStringReverse( int xpos, int ypos, int iMinX, char *szString,
 	return xpos;
 }
 
-//MODDD - implementation of "DrawHudNumber" without the new last arg.  Imply that it is 0 (plain text).
-int CHud :: DrawHudNumber( int x, int y, int iFlags, int iNumber, int r, int g, int b){
-	return DrawHudNumber(x, y, iFlags, iNumber, r, g, b, 0, 0);
-}
 
-int CHud :: DrawHudNumber( int x, int y, int iFlags, int iNumber, int r, int g, int b, int fontID){
-	return DrawHudNumber(x, y, iFlags, iNumber, r, g, b, fontID, 0);
-}
 
-//MODDD - first DrawHudNumber has a new argument: "fontID".
-//For fontID, 0 = normal (ammo usually), boxed (health), and tiny (antidote HUD)
-int CHud :: DrawHudNumber( int x, int y, int iFlags, int iNumber, int r, int g, int b, int fontID, const int& canDrawBrokenTrans)
-{
-
+//How long would this number be if drawn?
+int CHud::DrawHUDNumber_widthOnly(int iFlags, int iNumber, int fontID){
 	
-	int drawAltTransValue = 0;
-	if(canDrawBrokenTrans){
-		drawAltTransValue = 1;
-	}
-
-
 	//MODDD - now uses the new boxed number widths instead of the other if "useBoxedNumbers".
 	//"m_HUD_number_0+10" gets boxed number 0.
 	//int iWidth = GetSpriteRect(m_HUD_number_0).right - GetSpriteRect(m_HUD_number_0).left;
 	int iWidth = 0;
 
 	int myFontIDZero = 0;
-
 
 	if(fontID == 0){
 		myFontIDZero = m_HUD_number_0;
@@ -553,7 +536,76 @@ int CHud :: DrawHudNumber( int x, int y, int iFlags, int iNumber, int r, int g, 
 	
 	iWidth = GetSpriteRect(myFontIDZero).right - GetSpriteRect(myFontIDZero).left;
 	
+	if(iNumber == 0){
 
+	}
+
+	if(iFlags & DHN_3DIGITS || iNumber >= 100){
+		return iWidth*3;
+	}else if(iFlags & DHN_2DIGITS || iNumber >= 10){
+		return iWidth*2;
+	}else{
+
+		if(iNumber > 0){
+			return iWidth;
+		}else{
+			if(iFlags & DHN_DRAWZERO){
+				return iWidth;
+			}
+		}
+		return 0;
+		
+	}
+
+	//what?
+	return 0;
+}//END OF DrawHUDNumber_widthOnly
+
+
+
+//MODDD - implementation of "DrawHudNumber" without the new last arg.  Imply that it is 0 (plain text).
+int CHud :: DrawHudNumber( int x, int y, int iFlags, int iNumber, int r, int g, int b){
+	return DrawHudNumber(x, y, iFlags, iNumber, r, g, b, 0, 0);
+}
+
+int CHud :: DrawHudNumber( int x, int y, int iFlags, int iNumber, int r, int g, int b, int fontID){
+	return DrawHudNumber(x, y, iFlags, iNumber, r, g, b, fontID, 0);
+}
+
+//MODDD - first DrawHudNumber has a new argument: "fontID".
+//For fontID, 0 = normal (ammo usually), boxed (health), and tiny (antidote HUD)
+int CHud :: DrawHudNumber( int x, int y, int iFlags, int iNumber, int r, int g, int b, int fontID, const int& canDrawBrokenTrans)
+{
+	int drawAltTransValue = 0;
+	if(canDrawBrokenTrans){
+		drawAltTransValue = 1;
+	}
+
+	//MODDD - now uses the new boxed number widths instead of the other if "useBoxedNumbers".
+	//"m_HUD_number_0+10" gets boxed number 0.
+	//int iWidth = GetSpriteRect(m_HUD_number_0).right - GetSpriteRect(m_HUD_number_0).left;
+	int iWidth = 0;
+
+	int myFontIDZero = 0;
+
+	if(fontID == 0){
+		myFontIDZero = m_HUD_number_0;
+	}else if(fontID == 1){
+		myFontIDZero = m_HUD_number_0_health;
+	}else if(fontID == 2){
+		myFontIDZero = m_HUD_number_1_tiny;
+	}
+	//MODDD - altgui
+	else if(fontID == 3){
+		myFontIDZero = m_HUD_number_0_E3R;
+	}else if(fontID == 4){
+		//SAME.
+		myFontIDZero = m_HUD_number_0_E3R;
+	}
+
+	
+	iWidth = GetSpriteRect(myFontIDZero).right - GetSpriteRect(myFontIDZero).left;
+	
 	int k;
 
 	//MODDD - new var be more faded for filler "0" digits (transparency is actually melded into the numbers,
@@ -572,23 +624,15 @@ int CHud :: DrawHudNumber( int x, int y, int iFlags, int iNumber, int r, int g, 
 	}
 
 	if(fontID != 2){
-	
-		if (iNumber > 0)
-		{
+		if(iNumber > 0){
 			// SPR_Draw 100's
-			if (iNumber >= 100)
-			{
-				 k = iNumber/100;
-				 //MODDD
-
-			
-				
+			if (iNumber >= 100){
+				k = iNumber/100;
+				//MODDD
 				drawAdditiveFilter(GetSprite(myFontIDZero + k), r, g, b, 0, x, y, &GetSpriteRect(myFontIDZero + k), canDrawBrokenTrans);
 				x += iWidth;
 			}
-		
-			else if (iFlags & (DHN_3DIGITS))
-			{
+			else if (iFlags & (DHN_3DIGITS)){
 				////SPR_DrawAdditive( 0, x, y, &rc );
 				//x += iWidth;
 				//MODDD - this means, draw the "0" anyways (always 3 digits)
@@ -600,48 +644,33 @@ int CHud :: DrawHudNumber( int x, int y, int iFlags, int iNumber, int r, int g, 
 				}
 				x += iWidth;
 				//////////////////////////////////////////////
-
 			}
 
-
-
 			// SPR_Draw 10's
-			if (iNumber >= 10)
-			{
+			if (iNumber >= 10){
 				k = (iNumber % 100)/10;
 				//MODDD
-			
-
 				drawAdditiveFilter(GetSprite(myFontIDZero + k), r, g, b, 0, x, y, &GetSpriteRect(myFontIDZero + k), canDrawBrokenTrans);
 				x += iWidth;
 			}
-			else if (iFlags & (DHN_3DIGITS | DHN_2DIGITS))
-			{
+			else if (iFlags & (DHN_3DIGITS | DHN_2DIGITS)){
 				////SPR_DrawAdditive( 0, x, y, &rc );
 				//x += iWidth;
 				//MODDD - ditto, still draw the 2nd digit.
 				k = 0;
-
 				if(! (iFlags & (DHN_DRAWPLACE)) ){
 
 					drawAdditiveFilter(GetSprite(myFontIDZero + k), fadedr, fadedg, fadedb, 0, x, y, &GetSpriteRect(myFontIDZero + k), drawAltTransValue);
 				}
 				x += iWidth;
-
 			}
-
 			// SPR_Draw ones
 			k = iNumber % 10;
-
-
 			drawAdditiveFilter(GetSprite(myFontIDZero + k), r, g, b, 0,  x, y, &GetSpriteRect(myFontIDZero + k), canDrawBrokenTrans);
 			x += iWidth;
 		}//END OF if (iNumber > 0)
-		else if (iFlags & DHN_DRAWZERO) 
-		{
-			
+		else if (iFlags & DHN_DRAWZERO){
 			k = iNumber;
-			
 			int digits = 1;
 
 			if(iFlags & (DHN_3DIGITS)){
@@ -650,58 +679,35 @@ int CHud :: DrawHudNumber( int x, int y, int iFlags, int iNumber, int r, int g, 
 				digits = 2;
 			}
 
-
 			//IF we're not just drawing a place, draw all the digit positions filled with 0's.
 			if(!(iFlags & DHN_DRAWPLACE) ){
 				//MODDD - create 3 zeroes with a simple loop.
 				for(int i = 0; i < digits; i++){
-
 					drawAdditiveFilter(GetSprite(myFontIDZero + k), fadedr, fadedg, fadedb, 0, x, y, &GetSpriteRect(myFontIDZero + k), drawAltTransValue);
 					x += iWidth;
-
 					k = iNumber;
 				}
-
 			//Otherwise, skip all digit positions but the one's place for a "0".
 			}else{
-
 				for(int i = 0; i < digits - 1; i++){
 					x += iWidth;
 				}
-
 				drawAdditiveFilter(GetSprite(myFontIDZero + k), fadedr, fadedg, fadedb, 0, x, y, &GetSpriteRect(myFontIDZero + k), drawAltTransValue);
 				x += iWidth;
-
 				k = iNumber;
-
-
 			}
-
-
 		}//END OF else OF if (iFlags & DHN_DRAWZERO) 
-
-
-	//END OF if(fontID != 2)
-	}else{
+	}//END OF if(fontID != 2)
+	else{
 		//This is the tiny font.  Only numbers 1 through 5 are written / could be ripped for it.
 		//I assume "0" just means don't draw, and the syringes have a max of 5 for each type.
-
-		
-
-
 		k = iNumber;
-
 		if(k >= 1 && k <= 5){
 			//on drawing, apply an offset of - 1 (since the starting ID is for #1, not #0).
 			drawAdditiveFilter(GetSprite(myFontIDZero + k - 1), r, g, b, 0, x, y, &GetSpriteRect(myFontIDZero + k - 1), canDrawBrokenTrans);
 			x += iWidth;
 		}
-
-		
-
-
 	}//END OF else OF if(myFontID != 2)
-
 	return x;
 }
 

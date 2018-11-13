@@ -1730,6 +1730,10 @@ float CISlave::getBarnaclePulledTopOffset(void){
 
 
 
+
+//MODDD - do we need to do something for ACT_BARNACLE_CHEW  too?  ACT_BARNACLE_CHOMP ?
+//Actually those are already in the model. They can be involved below to adjust their framerates similarly.
+
 int CISlave::LookupActivityHard(int activity){
 
 

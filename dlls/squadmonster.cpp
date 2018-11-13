@@ -167,6 +167,11 @@ GENERATE_KILLED_IMPLEMENTATION(CSquadMonster){
 	GENERATE_KILLED_PARENT_CALL(CBaseMonster);
 }
 
+//MODDD TODO - should what's above be done in "onDelete" instead, so that even unusual removal guarantees removing this from the squad?
+//             may still work out regardless with Edicts detecting when something goes NULL.
+
+
+
 // These functions are still awaiting conversion to CSquadMonster 
 
 

@@ -167,7 +167,8 @@ void CBaseMonster :: ChangeSchedule ( Schedule_t *pNewSchedule )
 
 
 	m_failSchedule		= SCHED_NONE;
-
+	hardSetFailSchedule = FALSE;  //MODDD - any fail schedule resets also turn this off.
+	scheduleSurvivesStateChange = FALSE;  //MODDD - also new. Default schedule behavior: state changes force the schedule to want to change.
 
 	m_fNewScheduleThisFrame = TRUE; //for recording. Notify if this same schedule ends up having a task complete or the schedule marked for failure before
 	// this same frame (MonsterThink) ends once. If so ChangeSchedule was immediately followed by TaskComplete or TaskFail, must know not to do that.
@@ -300,7 +301,7 @@ BOOL CBaseMonster :: FScheduleValid ( void )
 
 		
 		//if(FClassnameIs(this->pev, "monster_scientist"))
-		//if(EASY_CVAR_GET(scheduleInterruptPrintouts))
+		if(EASY_CVAR_GET(scheduleInterruptPrintouts) == 1)
 			easyForcePrintLine("%s:%d SCHEDULE INTERRUPTED. Name:%s task:%d\n"
 			"%s: %d %d\n"
 			"%s: %d %d\n"
@@ -418,7 +419,12 @@ void CBaseMonster :: MaintainSchedule ( void )
 	// validate existing schedule 
 
 
-		if ( !FScheduleValid() || m_MonsterState != m_IdealMonsterState )
+		//MODDD - a schedule with "scheduleSurvivesStateChange" set to TRUE will disregard state changes. But the schedule going invalid by having interruptible conditions from the schedule is still possible.
+		//if ( (!FScheduleValid() || m_MonsterState != m_IdealMonsterState) )
+		if ( (!FScheduleValid() || (!scheduleSurvivesStateChange && m_MonsterState != m_IdealMonsterState)  ) )
+
+		
+
 		{
 			if(global_crazyMonsterPrintouts)easyForcePrintLine("MaintainSchedule: INVALID A %d %d %d", FScheduleValid(), m_MonsterState, m_IdealMonsterState);
 
@@ -467,16 +473,27 @@ void CBaseMonster :: MaintainSchedule ( void )
 					}
 				}
 			}
-			if ( HasConditions( bits_COND_TASK_FAILED ) && m_MonsterState == m_IdealMonsterState )
+
+			//BOOL temppp = HasConditions( bits_COND_TASK_FAILED );
+
+			//MODDD - a hard-set fail schedule will run regardless of the monster state matching the ideal or not.  Use if getting out of a schedule MUST do the fail schedule.
+			//        It will even run for any kind of interruption. Typical failure (from say, seeing an enemy in the middle of a schedule marked as interruptable by that) would not do this.
+			if ( hardSetFailSchedule ||  (HasConditions( bits_COND_TASK_FAILED ) && ( m_MonsterState == m_IdealMonsterState)) )
 			{
+				//Keep track of whether this was set by a hard fail schedule or not. The schedule changes below can do some freaky things.
+				BOOL wasSetByHardFail = hardSetFailSchedule;
+
 				if(global_crazyMonsterPrintouts == 1){
 					easyPrintLine("OOPS A PLENTY 5 %d", HasConditions(bits_COND_CAN_MELEE_ATTACK1));
 				}
 				if ( m_failSchedule != SCHED_NONE ){
 					pNewSchedule = GetScheduleOfType( m_failSchedule );
+					//MODDD - new section.
 				}else{
 					pNewSchedule = GetScheduleOfType( SCHED_FAIL );
 				}
+
+
 				// schedule was invalid because the current task failed to start or complete
 				ALERT ( at_aiconsole, "Schedule Failed at %d!\n", m_iScheduleIndex );
 				if(global_crazyMonsterPrintouts == 1){
@@ -486,6 +503,20 @@ void CBaseMonster :: MaintainSchedule ( void )
 				if(global_crazyMonsterPrintouts == 1){
 					easyPrintLine("OOPS A PLENTY 7 %d", HasConditions(bits_COND_CAN_MELEE_ATTACK1));
 				}
+
+				//"hardSetFailSchedule" gets affected by the ChangeSchedule above unfortunately.  Its value before that change is what matters.
+				//If so, this schedule needs to resist changing from a desire to change states.
+				if(wasSetByHardFail){
+					//This schedule must survive state changes.
+					scheduleSurvivesStateChange = TRUE;
+				}
+
+				
+				//MODDD - Now that hardSetFailSchedule has been involved in a decision, it does not need to stay on (if it is)
+				hardSetFailSchedule = FALSE;
+
+
+
 			}
 			else
 			{
@@ -2507,11 +2538,20 @@ case TASK_GET_PATH_TO_BESTSCENT:
 
 	case TASK_SET_FAIL_SCHEDULE:
 		m_failSchedule = (int)pTask->flData;
+		hardSetFailSchedule = FALSE;
 		TaskComplete();
 		break;
 
+	//MODDD - new. Same as setting a fail schedule, but mark it as hard. This fail schedule cannot be skipped by changing states (like alert to combat).
+	case TASK_SET_FAIL_SCHEDULE_HARD:
+		m_failSchedule = (int)pTask->flData;
+		hardSetFailSchedule = TRUE;
+		TaskComplete();
+	break;
+
 	case TASK_CLEAR_FAIL_SCHEDULE:
 		m_failSchedule = SCHED_NONE;
+		hardSetFailSchedule = FALSE; //MODDD - resets turn this off.
 		TaskComplete();
 		break;
 

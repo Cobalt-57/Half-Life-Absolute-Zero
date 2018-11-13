@@ -843,6 +843,10 @@ void CRotDoor :: SetToggleState( int state )
 class CMomentaryDoor : public CBaseToggle
 {
 public:
+
+	CMomentaryDoor(void);
+
+
 	void	Spawn( void );
 	void Precache( void );
 
@@ -853,11 +857,22 @@ public:
 	void	Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value );
 	virtual int	ObjectCaps( void ) { return CBaseToggle :: ObjectCaps() & ~FCAP_ACROSS_TRANSITION; }
 
+	//MODDD - is that safe?
+	//virtual void Think( void );
+
+
 	virtual int	Save( CSave &save );
 	virtual int	Restore( CRestore &restore );
 	static	TYPEDESCRIPTION m_SaveData[];
 
-	BYTE	m_bMoveSnd;			// sound a door makes while moving	
+	BYTE	m_bMoveSnd;			// sound a door makes while moving
+	
+	//float stopSoundDelay;  //MODDD
+	float previousValue;
+	BOOL hasPreviousValue;
+	float previousValueDelta;
+	
+
 };
 
 LINK_ENTITY_TO_CLASS( momentary_door, CMomentaryDoor );
@@ -868,6 +883,17 @@ TYPEDESCRIPTION	CMomentaryDoor::m_SaveData[] =
 };
 
 IMPLEMENT_SAVERESTORE( CMomentaryDoor, CBaseToggle );
+
+
+//MODDD
+CMomentaryDoor::CMomentaryDoor(void){
+	//stopSoundDelay = -1;
+	previousValue = 0;
+	hasPreviousValue = FALSE;
+	previousValueDelta = 0;
+}//END OF constructor
+
+
 
 void CMomentaryDoor::Spawn( void )
 {
@@ -982,17 +1008,115 @@ void CMomentaryDoor::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYP
 		value = 1.0;
 	Vector move = m_vecPosition1 + (value * (m_vecPosition2 - m_vecPosition1));
 	
+
 	Vector delta = move - pev->origin;
 	float speed = delta.Length() * 10;
 
-	if ( speed != 0 )
-	{
-		// This entity only thinks when it moves, so if it's thinking, it's in the process of moving
-		// play the sound when it starts moving
-		if ( pev->nextthink < pev->ltime || pev->nextthink == 0 )
-			EMIT_SOUND(ENT(pev), CHAN_STATIC, (char*)STRING(pev->noiseMoving), 1, ATTN_NORM);
+	/*
+	const char* activatorClassnameDebug = NULL;
+	const char* callerClassnameDebug = NULL;
+	
+	if(pActivator != NULL){
+		activatorClassnameDebug = pActivator->getClassname();
+	}
+	if(pCaller != NULL){
+		callerClassnameDebug = pCaller->getClassname();
+	}
+	*/
 
-		LinearMove( move, speed );
+	BOOL canPlaySound = FALSE;
+	BOOL canStopSound = FALSE;
+
+	if(hasPreviousValue){
+		float valueDelta = value - previousValue;
+		if(previousValueDelta * valueDelta < 0){
+			//If in 
+			canPlaySound = TRUE;
+		}
+		previousValueDelta = valueDelta;
+	}else{
+		//No previous value? This is a first then.
+		if(speed != 0){
+			canPlaySound = TRUE;
+		}
 	}
 
-}
+	
+	if ( speed != 0 )
+	{
+		//MODDD - new section. Determine whether to make a sound like so.
+		/*
+		if(previousValue * value <= 0){
+			//the signs are different or either is 0 (only previousSpeed could be)?
+			//either starting from nothing in either direction or changing directions, play the sound this once.
+			canPlaySound = TRUE;
+		}
+		*/
+		
+		// This entity only thinks when it moves, so if it's thinking, it's in the process of moving
+		// play the sound when it starts moving
+		//if ( pev->nextthink < pev->ltime || pev->nextthink == 0 ){
+		// <play sound...>
+
+		//stopSoundDelay = gpGlobals->time + 4;
+
+		LinearMove( move, speed );
+	}else{
+		if(previousValue != 0){
+			// was moving before, stopped now? Stop the noise.
+			// Seems this isn't getting called since Use isn't called after the door stops.
+			// So this doesn't get a chance to be reached.
+			canStopSound = TRUE;
+		}
+	}
+	
+	hasPreviousValue = TRUE;
+	previousValue = value;
+
+	
+
+	//MODDD - HACKER SACKS - if my activator is about to stop thinking, then I'd better shut up.
+	//    if(pev->nextthink <= 0 || m_pfnThink==NULL){
+
+	//ANOTHER WAY OF TELLING:   value <= 0 || >= 1 ???
+	if(value <= 0 || value >= 1 || (pActivator != NULL && (pActivator->pev->nextthink <= 0)) ){
+		//turning the think method off? The noise must cease.
+		canStopSound = TRUE;
+	}
+
+
+
+	
+	if(canStopSound){
+		easyForcePrintLine("CMomentaryDoor STOPSND %s", STRING(pev->noiseMoving));
+		STOP_SOUND(ENT(pev), CHAN_STATIC, (char*)STRING(pev->noiseMoving));
+		hasPreviousValue = FALSE;
+		previousValueDelta = 0;
+	}else if(canPlaySound){
+		easyForcePrintLine("CMomentaryDoor PLAYSND %s", STRING(pev->noiseMoving));
+		//const char* debugNoiseMoving = STRING(pev->noiseMoving);
+		//STOP_SOUND(ENT(pev), CHAN_STATIC, (char*)STRING(pev->noiseMoving)); //1, ATTN_NORM);
+		STOP_SOUND(ENT(pev), CHAN_STATIC, (char*)STRING(pev->noiseMoving));
+		EMIT_SOUND(ENT(pev), CHAN_STATIC, (char*)STRING(pev->noiseMoving), 1, ATTN_NORM);
+	}
+
+	
+
+
+
+}//END OF Use
+
+
+/*
+//MODDD - new... nevermind
+void CMomentaryDoor::Think(){
+	if(stopSoundDelay != -1 && gpGlobals->time >= stopSoundDelay){
+		stopSoundDelay = -1;
+		STOP_SOUND(ENT(pev), CHAN_STATIC, (char*)STRING(pev->noiseMoving)); //1, ATTN_NORM);
+	}
+	CBaseToggle::Think();
+}//END OF Think
+*/
+
+
+

@@ -27,11 +27,13 @@ struct skilldata_t
 	int iSkillLevel; // game skill level
 
 // Monster Health & Damage
-	float	agruntHealth;
+	float agruntHealth;
 	float agruntDmgPunch;
 
 	float apacheHealth;
 	
+	float barnacleHealth;
+
 	float barneyHealth;
 
 	float bigmommaHealthFactor;		// Multiply each node's health by this
@@ -108,11 +110,8 @@ struct skilldata_t
 
 
 	//MODDD TODO MAJOR - new NPCs.
-	//friendly
 	//snapbug
 	//archer
-	//kingpin
-	//floater
 	//flyer?
 
 

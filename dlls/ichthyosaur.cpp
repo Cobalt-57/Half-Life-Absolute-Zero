@@ -34,6 +34,15 @@
 
 #define ICHTHYOSAUR_SPEED 150
 
+//MODDD - new. How fast this creature floats to the top. Divided by two each time it reaches the top and floats down until it is
+//        slow enough to be deemed stationary and kill the think method like most monsters do.
+//        This avoids annoying water wade sounds while it rapidly moves between water levels.
+// IMPORTANT - If the water level could ever be changed, the think method shouldn't be killed. There can be checks to see if the
+//             water level changes after being stationary (float / sink again at full speed), or a timing check to restore the
+//             floatSinkSpeed to its full (initial) value if too much time passes without switching.
+//             Without this a diffferent waterlevel would leave this creatue stuck where it stopped thinking.
+#define ICHTHYOSAUR_SINKSPEED_INITIAL 8
+
 extern CGraph WorldGraph;
 
 #define EYE_MAD		0
@@ -113,7 +122,12 @@ public:
 	float m_flMinSpeed;
 	float m_flMaxDist;
 
-	CBeam *m_pBeam;
+	//MODDD - new. float / sink speed to get even at the surface.
+	float floatSinkSpeed;
+	int oldWaterLevel;
+
+	//MODDD - not commented out? debug feature to see what direction its facing.
+	//CBeam *m_pBeam;
 
 	float m_flNextAlert;
 
@@ -376,6 +390,17 @@ void CIchthyosaur::BiteTouch( CBaseEntity *pOther )
 		m_flEnemyTouched = gpGlobals->time;
 		m_bOnAttack = TRUE;
 	}
+
+
+	/*
+	//MODDD TODO
+	if(m_pSchedule == slTwitchDie && getTaskNumber() == TASK_ICHTHYOSAUR_FLOAT){
+		//if we can determine that the thing is above and blocking, stop here?
+		//perhaps check to see if the top of this monster is above water at the time of collision? that may be good enough.
+		TaskComplete();
+	}
+	*/
+
 }
 
 void CIchthyosaur::CombatUse( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
@@ -442,6 +467,13 @@ GENERATE_KILLED_IMPLEMENTATION(CIchthyosaur)
 	//Is calling direct parent CFlyingMonster instead of CBaseMonster ok?
 	GENERATE_KILLED_PARENT_CALL(CFlyingMonster);
 	pev->velocity = Vector( 0, 0, 0 );
+
+	//MODDD NOTE
+	//Forcing the movetype to MOVETYPE_STEP in CFlyingMonster's Killed above can be bad for the floating logic.
+	//Or flyers in general ever really, MOVETYPE_TOSS falls just fine. no idea why
+	pev->movetype = MOVETYPE_FLY;
+
+
 }
 
 void CIchthyosaur::BecomeDead( void )
@@ -532,6 +564,9 @@ void CIchthyosaur :: HandleAnimEvent( MonsterEvent_t *pEvent )
 CIchthyosaur::CIchthyosaur(){
 
 	chaseEnemyAttackSoundCooldown = 0;
+
+	floatSinkSpeed = ICHTHYOSAUR_SINKSPEED_INITIAL;
+	oldWaterLevel = -1;
 
 }
 
@@ -697,6 +732,7 @@ void CIchthyosaur::StartTask(Task_t *pTask)
 		break;
 
 	case TASK_ICHTHYOSAUR_FLOAT:
+		floatSinkSpeed = ICHTHYOSAUR_SINKSPEED_INITIAL;
 		pev->skin = EYE_BASE;
 		SetSequenceByName( "bellyup" );
 		break;
@@ -797,6 +833,12 @@ void CIchthyosaur :: RunTask ( Task_t *pTask )
 		}
 		break;
 	case TASK_DIE:
+
+		//MODDD NOTE - this is... quite different from how the base monster handles TASK_DIE.
+		//             If this schedule is completed, it must kill the think method like TASK_DIE usually would.
+		//    Otherwise, GetSchedule will happen again at the end and say "I feel like being dead now... I pick a death animation!"
+		//    and loop the death anim forever.
+
 		if ( m_fSequenceFinished )
 		{
 			pev->deadflag = DEAD_DEAD;
@@ -810,12 +852,45 @@ void CIchthyosaur :: RunTask ( Task_t *pTask )
 		pev->velocity = pev->velocity * 0.8;
 		if (pev->waterlevel > 1 && pev->velocity.z < 64)
 		{
-			pev->velocity.z += 8;
+			//MODDD NOTE - below water? go up.
+			pev->velocity.z += floatSinkSpeed;
 		}
 		else 
 		{
-			pev->velocity.z -= 8;
+			//MODDD NOTE - above water? go down.
+			pev->velocity.z -= floatSinkSpeed;
+
+			//MODDD - make the amount of sinking velocity a variable, starting at 8 at the start of this task.
+			//Reduce by half each time it reaches the surface.
+			//When it is sufficiently small, end this task and maybe shift the origin.
+
+
+			//if( abs(pev->velocity.z) <= 16){
+			//}
+
 		}
+
+		if(oldWaterLevel != -1 && pev->waterlevel != oldWaterLevel && pev->waterlevel <= 1){
+			//if we have an old water level to compare to, it does not match the current, and the current water level is above water...
+			//cut the floatSinkSpeed in half
+			floatSinkSpeed = floatSinkSpeed / 2;
+		}
+
+		oldWaterLevel = pev->waterlevel;
+
+		if(floatSinkSpeed < 0.4){
+			//rest: 848
+			//desired: 847 
+
+			//If we're slow enough above water, go ahead and stop.
+			Vector adjustedOrigin = pev->origin + Vector(0, 0, -0.4);  //does this help make it visible from below and above water?
+			::UTIL_SetOrigin(pev, adjustedOrigin);
+			pev->velocity.z = 0;
+			DeathAnimationEnd();  //kill the think method. done.
+			TaskComplete();
+		}
+
+
 		// ALERT( at_console, "%f\n", pev->velocity.z );
 		break;
 
@@ -1002,7 +1077,7 @@ void CIchthyosaur::Swim( )
 		// ALERT( at_console, "run  %.2f\n", pev->framerate );
 	}
 
-/*
+	/*
 	if (!m_pBeam)
 	{
 		m_pBeam = CBeam::BeamCreate( "sprites/laserbeam.spr", 80 );
@@ -1011,7 +1086,8 @@ void CIchthyosaur::Swim( )
 		m_pBeam->SetColor( 255, 180, 96 );
 		m_pBeam->SetBrightness( 192 );
 	}
-*/
+	*/
+
 #define PROBE_LENGTH 150
 	Angles = UTIL_VecToAngles( m_SaveVelocity );
 	Angles.x = -Angles.x;
@@ -1044,10 +1120,10 @@ void CIchthyosaur::Swim( )
 
 	// ALERT( at_console, "Steer %f %f %f\n", SteeringVector.x, SteeringVector.y, SteeringVector.z );
 
-/*
+	/*
 	m_pBeam->SetStartPos( pev->origin + pev->velocity );
 	m_pBeam->RelinkBeam( );
-*/
+	*/
 
 	// ALERT( at_console, "speed %f\n", m_flightSpeed );
 	

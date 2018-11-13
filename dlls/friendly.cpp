@@ -1997,6 +1997,8 @@ void CFriendly::HandleAnimEvent(MonsterEvent_t *pEvent ){
 
 
 
+
+//Version that also checks to see if the player is looking at a corpse. reduces desirability.
 CBaseEntity* CFriendly::getNearestDeadBody(void){
 
 	CBaseEntity* pEntityScan = NULL;

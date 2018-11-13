@@ -222,8 +222,8 @@ public:
 	float timeToStare;
 	float vomitCooldown;
 	float nextChewSound;
-	CBaseEntity* playerToLookAt;
-	CBaseEntity* corpseToSeek;
+	EHANDLE playerToLookAt;
+	EHANDLE corpseToSeek;
 
 	BOOL rapidVomitCheck;
 	BOOL rapidVomitCheck_ScheduleFinish;

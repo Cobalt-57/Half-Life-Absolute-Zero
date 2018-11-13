@@ -658,8 +658,8 @@ useAlphaSparks - boolean.  If 1 (default), semi-transparent particle balls are d
 normalSpeedMulti - float (1).  TMultiple applied to the player's foot speed.
 noclipSpeedMulti - float (1).  Multiple applied to the player's noclip speed.
 jumpForceMulti - float (1).  Multiple of the force in the usual player jump (also applies to longjumps)
-ladderCycleMulti- float (1). Multiple applied to the ladder's cycle length. Smaller is more often (quicker, shorter-distance cycles), larger is less often (slower, longer-distance cycles). Similar (same?) distance covered in the same amount of time total.
-ladderSpeedMulti - float (1). Multiple applied to the distance covered in one ladder cycle.
+ladderCycleMulti- float (0.9). Multiple applied to the ladder's cycle length. Smaller is more often (quicker, shorter-distance cycles), larger is less often (slower, longer-distance cycles). Similar (same?) distance covered in the same amount of time total.
+ladderSpeedMulti - float (1.55). Multiple applied to the distance covered in one ladder cycle.
 
 hassaultFriendlyFire - bool, defaults to 1.  Determines whether hassaults are cautious of firing at friendlies or not.  (1 = does not care, 0 = tries not to).
 
@@ -842,6 +842,13 @@ hgruntAllowStrafeFire (0) - BOOL.  When on, hgrunts may switch to the "strafeDIR
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+barnacleGrabNoInterpolation (0) - BOOL. If on, monsters grabbed by barnacles lose interpolation.
+~This may reduce some of the glitchiness in height as they travel to the top. Or not.
+
+
 
 
 

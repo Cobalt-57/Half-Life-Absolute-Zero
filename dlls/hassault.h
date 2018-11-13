@@ -65,7 +65,7 @@ public:
 	float getBarnacleForwardOffset(void);
 	float getBarnaclePulledTopOffset(void);
 	Vector debugDrawVect;
-	void onForceDelete(void);
+	void onDelete(void);
 
 	BOOL usesAdvancedAnimSystem(void);
 	int tryActivitySubstitute(int activity);

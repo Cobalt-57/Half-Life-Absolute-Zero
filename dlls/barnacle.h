@@ -26,6 +26,12 @@ public:
 
 	static int BarnacleGetStandardGibSpawnID(void);
 
+	
+	int IRelationship ( CBaseEntity *pTarget );
+	int forcedRelationshipWith(CBaseEntity *pWith);
+
+	void EndOfRevive(int preReviveSequence);
+
 	void SetActivity ( Activity NewActivity );
 
 	BOOL loweredPreviously;
