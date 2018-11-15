@@ -39,9 +39,9 @@ public:
 	
 	//save info
 	//////////////////////////////////////////////////////////////////////////////////
-	static TYPEDESCRIPTION m_SaveData[];
-	virtual int Save( CSave &save ); 
-	virtual int Restore( CRestore &restore );
+	//static TYPEDESCRIPTION m_SaveData[];
+	//virtual int Save( CSave &save ); 
+	//virtual int Restore( CRestore &restore );
 	//////////////////////////////////////////////////////////////////////////////////
 	
 

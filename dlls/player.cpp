@@ -5966,7 +5966,7 @@ void CBasePlayer::PostThink()
 		altLadderStep = !altLadderStep;  //alternates.
 		
 	}else{
-		if(filterediuser4 < LADDER_CYCLE_BASE){
+		if(filterediuser4 < LADDER_CYCLE_BASE*EASY_CVAR_GET(ladderCycleMulti)){
 			//reset!
 			alreadyPassedLadderCheck = FALSE;
 		}
