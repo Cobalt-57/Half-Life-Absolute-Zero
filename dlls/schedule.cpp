@@ -1287,7 +1287,8 @@ void CBaseMonster :: RunTask ( Task_t *pTask )
 		{
 			if ( m_fSequenceFinished )
 			{
-				m_Activity = ACT_RESET;
+				//MODD - removed, see below.
+				//m_Activity = ACT_RESET;
 				TaskComplete();
 			}
 			break;
@@ -1311,7 +1312,7 @@ void CBaseMonster :: RunTask ( Task_t *pTask )
 			if ( m_fSequenceFinished )
 			{
 				//MODDD NOTE - BEWARE. This is likely to pick the same range attack activity again if the ideal activity remains that way.
- 				m_Activity = ACT_RESET;
+ 				//m_Activity = ACT_RESET;
 				TaskComplete();
 			}
 			break;
@@ -2051,6 +2052,13 @@ void CBaseMonster :: StartTask ( Task_t *pTask )
 	case TASK_MELEE_ATTACK1_NOTURN:
 	case TASK_MELEE_ATTACK1:
 		{
+			//MODDD - added.
+			m_Activity = ACT_RESET;  //force me to re-get this!
+			//m_fSequenceFinished = FALSE;
+			//pev->frame = 0;
+
+
+
 			m_IdealActivity = ACT_MELEE_ATTACK1;
 			//this->signalActivityUpdate = TRUE;
 			break;
@@ -2058,6 +2066,11 @@ void CBaseMonster :: StartTask ( Task_t *pTask )
 	case TASK_MELEE_ATTACK2_NOTURN:
 	case TASK_MELEE_ATTACK2:
 		{
+			//MODDD - added.
+			m_Activity = ACT_RESET;  //force me to re-get this!
+			//m_fSequenceFinished = FALSE;
+			//pev->frame = 0;
+
 			m_IdealActivity = ACT_MELEE_ATTACK2;
 			//this->signalActivityUpdate = TRUE;
 			break;
@@ -2065,6 +2078,17 @@ void CBaseMonster :: StartTask ( Task_t *pTask )
 	case TASK_RANGE_ATTACK1_NOTURN:
 	case TASK_RANGE_ATTACK1:
 		{
+			//MODDD - safety check.  If we already HAVE this ideal activity set, send a signal to re-get it.
+			// COULD also do "SetActivity" to guarantee doing this but... side effects?  this has stung me one-too-many times.
+			//if(this->m_fSequenceFinished && m_IdealActivity == ACT_RANGE_ATTACK1){
+			//...
+			//}
+
+			//wait how about this.
+			m_Activity = ACT_RESET;  //force me to re-get this!
+			//m_fSequenceFinished = FALSE;
+			//pev->frame = 0;
+
 			m_IdealActivity = ACT_RANGE_ATTACK1;
 
 			//MODDD - CRITICAL NEW.
@@ -2079,6 +2103,11 @@ void CBaseMonster :: StartTask ( Task_t *pTask )
 	case TASK_RANGE_ATTACK2_NOTURN:
 	case TASK_RANGE_ATTACK2:
 		{
+			//MODDD - added.
+			m_Activity = ACT_RESET;  //force me to re-get this!
+			//m_fSequenceFinished = FALSE;
+			//pev->frame = 0;
+
 			m_IdealActivity = ACT_RANGE_ATTACK2;
 			//this->signalActivityUpdate = TRUE;
 			break;
@@ -2114,6 +2143,11 @@ void CBaseMonster :: StartTask ( Task_t *pTask )
 	case TASK_SET_ACTIVITY:
 		{
 			m_IdealActivity = (Activity)(int)pTask->flData;
+
+
+			//HACK HACK - what if you do this
+			//SetActivity(m_IdealActivity);
+
 			TaskComplete();
 			break;
 		}

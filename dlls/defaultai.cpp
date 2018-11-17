@@ -195,6 +195,33 @@ Schedule_t	slFail[] =
 	},
 };
 
+
+//MODDD - Clone of tl / slFail above, but takes 0.2 seconds instead of 2.
+Task_t	tlFailQuick[] =
+{
+	{ TASK_STOP_MOVING,			0				},
+	{ TASK_SET_ACTIVITY,		(float)ACT_IDLE },   //is this even a good idea here? probably.
+	{ TASK_WAIT,				(float)0.2		},
+	{ TASK_WAIT_PVS,			(float)0		},
+};
+
+Schedule_t	slFailQuick[] =
+{
+	{
+		tlFailQuick,
+		ARRAYSIZE ( tlFailQuick ),
+		bits_COND_CAN_ATTACK,
+		0,
+		"Fail Quick"
+	},
+};
+
+
+
+
+
+
+
 //=========================================================
 //	Idle Schedules
 //=========================================================
@@ -1036,6 +1063,9 @@ Schedule_t	slBaFollow[] =
 //MODDD - Chase enemy schedule, SMART.
 Task_t tlChaseEnemySmart[] = 
 {
+	
+	{ TASK_SET_ACTIVITY,		(float)ACT_IDLE},   //MODDD is this okay?
+
 	{ TASK_SET_FAIL_SCHEDULE,	(float)SCHED_CHASE_ENEMY_FAILED	},
 	//{ TASK_GET_PATH_TO_ENEMY,	(float)0		},
 	//{ TASK_RUN_PATH,			(float)0		},
@@ -1145,6 +1175,9 @@ case TASK_MOVE_TO_TARGET_RANGE:
 // Chase enemy failure schedule
 Task_t	tlChaseEnemyFailed[] =
 {
+	//And what if we fail while failing (such as seeking a path for cover from the enemy)?
+	//Don't just stand staring.
+	{ TASK_SET_FAIL_SCHEDULE,		(float)SCHED_FAIL_QUICK		},
 	{ TASK_STOP_MOVING,				(float)0					},
 	{ TASK_WAIT,					(float)0.2					},
 	{ TASK_FIND_COVER_FROM_ENEMY,	(float)0					},
@@ -1169,7 +1202,7 @@ Schedule_t	slChaseEnemyFailed[] =
 		bits_COND_HEAR_SOUND,
 
 		bits_SOUND_DANGER,
-		"tlChaseEnemyFailed"
+		"slChaseEnemyFailed"
 	},
 };
 
@@ -1743,6 +1776,7 @@ Schedule_t *CBaseMonster::m_scheduleList[] =
 	slFail,
 
 	//MODDD - additions
+	slFailQuick,
 	slWaitForSequence,
 	slAnimationSmart,
 	slAnimationSmartAndStop,
@@ -1817,7 +1851,7 @@ Schedule_t* CBaseMonster :: GetScheduleOfType ( int Type )
 //				ALERT( at_aiconsole, "Starting script %s for %s\n", STRING( m_pCine->m_iszPlay ), STRING(pev->classname) );
 
 			//YOU ARE 1
-			//easyForcePrintLine("YOUR PUNK ASS SAYZ %d ::: %d", monsterID, m_pCine->m_fMoveTo);
+			//easyForcePrintLine("what %d ::: %d", monsterID, m_pCine->m_fMoveTo);
 			//return GetScheduleOfType( SCHED_IDLE_STAND );
 
 			switch ( m_pCine->m_fMoveTo )
@@ -2029,6 +2063,9 @@ Schedule_t* CBaseMonster :: GetScheduleOfType ( int Type )
 		{
 			return slFail;
 		}
+	case SCHED_FAIL_QUICK:{
+		return slFailQuick;
+	break;}
 	default:
 		{
 			ALERT ( at_console, "GetScheduleOfType()\nNo CASE for Schedule Type %d!\n", Type );

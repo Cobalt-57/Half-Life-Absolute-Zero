@@ -34,7 +34,7 @@ extern float global_panthereyeJumpDotTol;
 extern float global_panthereyePrintout;
 EASY_CVAR_EXTERN(animationFramerateMulti)
 
-					
+EASY_CVAR_EXTERN(drawDebugPathfinding2)
 
 
 
@@ -52,8 +52,7 @@ BOOL CPantherEye::testLeapNoBlock(void){
 		Vector vTestEnd = m_hEnemy->pev->origin + Vector(0, 0, 10);
 		UTIL_TraceHull( vTestStart, vTestEnd, dont_ignore_monsters, head_hull, ENT( m_hEnemy->pev ), &tr );
 				
-		DebugLine_ClearAll();
-		DebugLine_Setup(0, vTestStart, vTestEnd, tr.flFraction);
+		if(EASY_CVAR_GET(drawDebugPathfinding2) == 1)DebugLine_Setup(0, vTestStart, vTestEnd, tr.flFraction);
 
 		//don't do the "!tr.fAllSolid" check.  ?
 		if((tr.flFraction >= 1.0 || tr.pHit == m_hEnemy.Get() )  ){

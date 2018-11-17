@@ -1362,11 +1362,14 @@ void CHAssault :: StartTask ( Task_t *pTask ){
 		//MODDD SEE
 		meleeAttackTimeMax = gpGlobals->time + ((76.0f - 23.0f)/30.0f);
 
+
+		/*
 		if(m_IdealActivity == ACT_MELEE_ATTACK1){
 			//pev->frame = 0;
 			//m_fSequenceFinished = FALSE;
-			//signalActivityUpdate = TRUE;  //force an animation reset as soon as possible.
+			signalActivityUpdate = TRUE;  //force an animation reset as soon as possible.
 		}
+		*/
 		
 		CBaseMonster :: StartTask( pTask );
 	break;
@@ -1585,7 +1588,7 @@ void CHAssault :: RunTask ( Task_t *pTask )
 			//m_IdealActivity = ACT_IDLE;
 			//SetActivity(ACT_IDLE);
 			//!!!
-			signalActivityUpdate = TRUE;  //in case we need to restart this animation next time.
+			//signalActivityUpdate = TRUE;  //in case we need to restart this animation next time.
 			TaskComplete();
 			return;
 		}
@@ -3082,14 +3085,16 @@ int CHAssault::LookupActivityHard(int activity){
 			//pev->renderfx |= STOPINTR;
 			//pev->framerate = 1.2;
 			
+
+			/*
 			this->animFrameStartSuggestion = 2;
 			this->animFrameCutoffSuggestion = 230;  //these are out of 255. 255 is 100%, at the end.
-			
+			*/
 
 
 			this->animationFPSSuggestion = 30;
 			//does this even do anything?
-			this->animationFramesSuggestion = 76;
+			//this->animationFramesSuggestion = 76;
 
 
 			this->animEventQueuePush(5.0f / 30.0f, 0);

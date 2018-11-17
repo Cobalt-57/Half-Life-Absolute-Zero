@@ -657,7 +657,8 @@ void CWorld :: Precache( void )
 	for ( int i = 0; i < DLL_DECALLIST_SIZE; i++ ){
 		gDecals[i].index = DECAL_INDEX( gDecals[i].name );
 
-		if(EASY_CVAR_GET(hiddenMemPrintout) == 1)easyForcePrintLine("DECAL DERIVATION: %s %d", gDecals[i].name, gDecals[i].index);
+		if(EASY_CVAR_GET(hiddenMemPrintout) == 1)
+		easyForcePrintLine("DECAL DERIVATION: %s %d", gDecals[i].name, gDecals[i].index);
 	}
 
 // init the WorldGraph.

@@ -5373,6 +5373,7 @@ void CBaseMonster :: MovementComplete( void )
 
 void CBaseMonster::TaskFail(void)
 {
+	//easyForcePrintLine("I PHAIL %.2f sched:%s task:%d", gpGlobals->time, getScheduleName(), getTaskNumber());
 	SetConditions(bits_COND_TASK_FAILED);
 
 	
