@@ -83,6 +83,13 @@ int CPantherEye::IRelationship( CBaseEntity *pTarget )
 	}
 	*/
 
+	//DOOMMARINE23 Quick fix so Panthereyes ally towards instead of hate, other Panthereyes
+	if ( FClassnameIs( pTarget->pev, "monster_panthereye" ) )
+	{
+		return R_AL;
+	}
+	// END DOOOMMARINE23
+
 	if(!pTarget->isForceHated(this) && pTarget->Classify() == CLASS_ALIEN_PREY){
 		//don't hate, just "Dislike" instead.
 		return R_DL;
