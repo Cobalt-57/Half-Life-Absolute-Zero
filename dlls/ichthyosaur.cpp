@@ -18,6 +18,16 @@
 // icthyosaur - evin, satan fish monster
 //=========================================================
 
+
+//TODO - in primaryAttack shcedule, sometimes gets hung up in
+//TASK_FACE_ENEMY.  Maybe facing its ideal dart position
+//is a better metric in this case?
+
+
+
+
+
+
 #include	"extdll.h"
 #include	"util.h"
 #include	"cbase.h"
@@ -848,6 +858,19 @@ void CIchthyosaur :: RunTask ( Task_t *pTask )
 		break;
 
 	case TASK_ICHTHYOSAUR_FLOAT:
+
+
+		//yea this is really pointless to anticipate, but whatever.
+		if(pev->waterlevel == 0 && pev->velocity.Length() < 0.001){
+			//on land and stopped moving? stop.
+			DeathAnimationEnd();
+			pev->movetype = MOVETYPE_TOSS; //fall if whatever this is on top of stops?
+			//can't float again without think logic though.
+			TaskComplete();
+			return;
+		}
+
+
 		pev->angles.x = UTIL_ApproachAngle( 0, pev->angles.x, 20 );
 		pev->velocity = pev->velocity * 0.8;
 		if (pev->waterlevel > 1 && pev->velocity.z < 64)
@@ -869,6 +892,7 @@ void CIchthyosaur :: RunTask ( Task_t *pTask )
 			//}
 
 		}
+
 
 		if(oldWaterLevel != -1 && pev->waterlevel != oldWaterLevel && pev->waterlevel <= 1){
 			//if we have an old water level to compare to, it does not match the current, and the current water level is above water...
@@ -1035,6 +1059,9 @@ void CIchthyosaur :: Stop( void )
 
 void CIchthyosaur::Swim( )
 {
+	//pev->velocity = Vector(10, 0, 30);
+	//return;
+
 	int retValue = 0;
 
 	Vector start = pev->origin;
@@ -1106,6 +1133,8 @@ void CIchthyosaur::Swim( )
 	Angles = Vector( -pev->angles.x, pev->angles.y, pev->angles.z );
 	UTIL_MakeVectorsPrivate(Angles, Forward, Right, Up);
 	// ALERT( at_console, "%f : %f\n", Angles.x, Forward.z );
+
+
 
 	float flDot = DotProduct( Forward, m_SaveVelocity );
 	if (flDot > 0.5)
@@ -1228,6 +1257,8 @@ Vector CIchthyosaur::DoProbe(const Vector &Probe)
 	BOOL bBumpedSomething = ProbeZ(pev->origin, Probe, &frac);
 
 	TraceResult tr;
+
+	//(edict_t *pEdict, const float *v1, const float *v2, int fNoMonsters, edict_t *pentToSkip, TraceResult *ptr);
 	TRACE_MONSTER_HULL(edict(), pev->origin, Probe, dont_ignore_monsters, edict(), &tr);
 	if ( tr.fAllSolid || tr.flFraction < 0.99 )
 	{

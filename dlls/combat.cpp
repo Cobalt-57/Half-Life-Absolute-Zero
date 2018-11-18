@@ -1961,9 +1961,15 @@ BOOL CBaseEntity :: FVisible ( CBaseEntity *pEntity )
 		return FALSE;
 
 	// don't look through water
-	if ((pev->waterlevel != 3 && pEntity->pev->waterlevel == 3) 
-		|| (pev->waterlevel == 3 && pEntity->pev->waterlevel == 0))
-		return FALSE;
+	//MODDD - some monsters that want to surface to do a ranged attack in the water, like archers,
+	//        may need the ability to see through water.
+	//This if-then is the addition.
+	if(SeeThroughWaterLine() == FALSE){
+		if ((pev->waterlevel != 3 && pEntity->pev->waterlevel == 3) 
+			|| (pev->waterlevel == 3 && pEntity->pev->waterlevel == 0))
+			return FALSE;
+	}
+
 
 	vecLookerOrigin = pev->origin + pev->view_ofs;//look through the caller's 'eyes'
 	vecTargetOrigin = pEntity->EyePosition();

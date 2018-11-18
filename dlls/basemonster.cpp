@@ -6407,7 +6407,7 @@ char* getActivityName(Activity arg_act){
 
 void CBaseMonster::ReportAIState( void )
 {
-
+	float currentYaw = UTIL_AngleMod( pev->angles.y );
 
 
 	//this->pev->movetype = MOVETYPE_TOSS;
@@ -6547,9 +6547,9 @@ void CBaseMonster::ReportAIState( void )
 	}
 	*/
 	
-	easyForcePrint("Health: %.2f / %.2f\n", pev->health, pev->max_health );
-	easyForcePrintLine("Sequence ID: %d Frame: %.2f Framerate: %.2f spawnflag: %d deadflag: %d yawspd: %.2f loops: %d sequencefinished: %d ThinkACTIVE: %d nextThink: %.2f currentTime: %.2f targetname:%s target:%s globalname:%s", pev->sequence, pev->frame, pev->framerate, pev->spawnflags, pev->deadflag, pev->yaw_speed, this->m_fSequenceLoops, this->m_fSequenceFinished, (m_pfnThink!=NULL), pev->nextthink, gpGlobals->time,  STRING(pev->targetname), STRING(pev->target), STRING(pev->globalname ) );
-
+	easyForcePrintLine("Health: %.2f / %.2f", pev->health, pev->max_health );
+	easyForcePrintLine("Sequence ID:%d Frame:%.2f Framerate:%.2f spawnflag:%d deadflag:%d loops:%d sequencefinished:%d ThinkACTIVE:%d nextThink:%.2f currentTime:%.2f targetname:%s target:%s globalname:%s", pev->sequence, pev->frame, pev->framerate, pev->spawnflags, pev->deadflag, this->m_fSequenceLoops, this->m_fSequenceFinished, (m_pfnThink!=NULL), pev->nextthink, gpGlobals->time,  STRING(pev->targetname), STRING(pev->target), STRING(pev->globalname ) );
+	easyForcePrintLine("Yaw:%.2f Ideal:%.2f yawspd:%.2f", currentYaw, pev->ideal_yaw, pev->yaw_speed);
 
 
 	if(m_pCine == NULL){
@@ -7838,8 +7838,6 @@ CBaseEntity* CBaseMonster::getNearestDeadBody(void){
 	return bestChoiceYet;
 
 }//END OF getNearestDeadBody
-
-
 
 
 

@@ -148,6 +148,9 @@ public:
 
 	void onDeathAnimationEnd(void);
 
+	BOOL SeeThroughWaterLine(void);
+
+
 };//END OF class CArcher
 
 

@@ -51,6 +51,20 @@ void CController::Stop( void )
 
 
 
+//TODO - archer needs to be able to do a check to see if the enemy is past the waterlevel.
+//       If so, it can try to move straight up, towards the enemy or a blend. Just route to the surface where there is empty
+//       space so it makes sense to rise above the water there.  Don't goto a spot if some platform or dock is in the way.
+//       Then it can do a ranged sea-land attack however many times and submerge, even be interrupted to submerge sooner
+//       or more urgently on taking damage?
+
+//       CheckLocalMove needs to see if the destination is towards a different waterlevel than the source.
+//       (or really just not underwater at all, archers should never move anywhere outside of water)
+//       But maybe make it a little less sensitive when going above the water slightly to do a sea-land attack.
+
+//       Finally when itself and the enemy are both underwater, it really acts like an underwater bullsquid.
+//       Use ranged projectiles if possible, and follow the enemy otherwise. Can melee when close enough.
+
+//       QUESTION: there are sequences sink, dead_float, die1 and die2.  Does one of the "die"s lead to floating to the top (die2?) and the other sinking (die1)?
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -2161,4 +2175,13 @@ void CArcher::onDeathAnimationEnd(){
 	//TODO
 
 }//END OF onDeathAnimationEnd
+
+
+//I can goto the surface of water to do ranged attacks too. I have to know if I can by seeing where the enemy is.
+//And be able to track the enemy above water (from itself being underwater) to even begin to determine that.
+BOOL CArcher::SeeThroughWaterLine(void){
+	return TRUE;
+}//END OF SeeThroughWaterLine
+
+
 

@@ -1148,6 +1148,17 @@ CBaseEntity * CBaseEntity::Create( const char *szName, const Vector &vecOrigin, 
 
 
 
+//Whether a monster can see monsters through the water line.
+//That is, whether submerged monsters can see monsters above the water, and vice versa (whichever this monster is).
+//Not whether other monsters can see this one itself past the waterline necessarily.
+//Defaults to FALSE like retail. Special cases need TRUE.
+BOOL CBaseEntity::SeeThroughWaterLine(void){
+	return FALSE;
+}//END OF SeeThroughWaterLine
+
+
+
+
 
 
 void CBaseEntity::ReportGeneric(){
