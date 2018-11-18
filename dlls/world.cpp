@@ -145,6 +145,36 @@ void CDecal :: StaticDecal( void )
 	else
 		modelIndex = 0;
 
+//DOOMMARINE23 If we're in censorship mode, replace all dynamic blood placed by the level designer with censored versions.
+//WELCOME TO IF/ELSE HELL
+		if (global_germanCensorship)
+		{	
+			if ((int)pev->skin >= 230 && (int)pev->skin <= 237)	//Dynamic Human Blood {blood1 through {blood 8
+				{
+					(int)pev->skin = 98 + RANDOM_LONG(0,1); // Human blood turns into oil (98 and 99)
+				}
+			
+			else if ((int)pev->skin >= 244 && (int)pev-> skin <= 245) //{BIGBLOOD1 and {BIGBLOOD2
+				{
+					(int)pev->skin = 98 + RANDOM_LONG(0,1); //Big Human blood turns into oil (98 and 99) TODO: Unique Big Oil Decals!
+				}
+
+			else if ((int)pev->skin >= 224 && (int)pev-> skin <= 229) //{BLOODHAND1 through {BLOODHAND6
+				{
+					(int)pev->skin = 98 + RANDOM_LONG(0,1); //Bloody Hands iturns into oil (98 and 99) TODO: Unique Oily Hand Decals!
+				}
+
+			else if ((int)pev->skin >= 43 && (int)pev-> skin <= 48)	//Dynamic Yellow Blood {yblood1 through {yblood6 turns into PLACEHOLDER YORE DEAD FREEMAN
+				{
+					(int)pev->skin = 143;
+				}
+
+			else
+				{
+					(int)pev->skin = (int)pev->skin; //We're not any kind of blood, just display as intended
+				} 
+		}
+
 	g_engfuncs.pfnStaticDecal( pev->origin, (int)pev->skin, entityIndex, modelIndex );
 
 	SUB_Remove();
