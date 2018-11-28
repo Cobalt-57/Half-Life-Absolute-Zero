@@ -1207,71 +1207,88 @@ void CBaseMonster :: RunTask ( Task_t *pTask )
 			break;
 		}
 	case TASK_DIE:
+	{
+
+		if(pev->frame >= (255*0.4)){
+			//40% of the way there? Anything should be able to tell we're dead to stop marking this as an enemy / focus on something else.
+			//MODDD TODO - make this adjustable per death anim per monster? Sounds tricky and unworthwhile most of the time, but the option could exist.
+			//This is just used so the AI can know to drop this enemy a little early (they sure look dead) and move on in the heat of combat.
+			recognizablyDead = TRUE;
+		}
+
+		//Is the end 255 or 256?! DAMN.
+		if ( m_fSequenceFinished && pev->frame >= 255 )
 		{
 
-			if(pev->frame >= (255*0.4)){
-				//40% of the way there? Anything should be able to tell we're dead to stop marking this as an enemy / focus on something else.
-				//MODDD TODO - make this adjustable per death anim per monster? Sounds tricky and unworthwhile most of the time, but the option could exist.
-				//This is just used so the AI can know to drop this enemy a little early (they sure look dead) and move on in the heat of combat.
-				recognizablyDead = TRUE;
+			//MODDD - FOR DEBUGGING
+			if(global_drawCollisionBoundsAtDeath == 1){
+				UTIL_drawBox(pev->origin + pev->mins, pev->origin + pev->maxs);
 			}
-
-			//Is the end 255 or 256?! DAMN.
-			if ( m_fSequenceFinished && pev->frame >= 255 )
-			{
-
-				//MODDD - FOR DEBUGGING
-				if(global_drawCollisionBoundsAtDeath == 1){
-					UTIL_drawBox(pev->origin + pev->mins, pev->origin + pev->maxs);
-				}
-				if(global_drawHitBoundsAtDeath == 1){
-					UTIL_drawBox(pev->absmin, pev->absmax);
-				}
-				
-
-
-
-				//MODDD - does not seem effective, scrapped.
-				
-				/*
-				CBaseMonster::smartResize();
-				//if(gpGlobals->time > 20 && gpGlobals->time < 21){
-					//UTIL_printoutVector(pev->origin);
-					easyPrintLine("GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG");
-					easyPrintLine("GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG");
-					easyPrintLine("GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG");
-					easyPrintLine("GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG");
-					easyPrintLine("GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG");
-					easyPrintLine("ahhh %.2f %.2f %.2f, %.2f %.2f %.2f", pev->mins.x, pev->mins.y, pev->mins.z, pev->maxs.x, pev->maxs.y, pev->maxs.z );
-					UTIL_drawBox(pev->origin + pev->mins, pev->origin + pev->maxs);
-				//}
-				*/
-				
-				DeathAnimationEnd();
-				
-
-				//MODDD
-				//pev->solid = SOLID_TRIGGER;
-				//pev->movetype = MOVETYPE_NONE;
-
-
-				/*
-				//pev->movetype = MOVETYPE_NOCLIP;
-				
-				//MODDD - set size.
-				//UTIL_SetSize ( pev, Vector ( -64, -64, -64 ), Vector ( 64, 64, 64 ) );
-
-				UTIL_SetSize( pev, Vector(-16, -16, -32), Vector(16, 16, 0) );
-
-				//pev->classname = MAKE_STRING("monster_barnacle");
-
-				pev->solid			= SOLID_SLIDEBOX;
-				pev->movetype		= MOVETYPE_NONE;
-				*/
-
+			if(global_drawHitBoundsAtDeath == 1){
+				UTIL_drawBox(pev->absmin, pev->absmax);
 			}
-			break;
+				
+
+
+
+			//MODDD - does not seem effective, scrapped.
+				
+			/*
+			CBaseMonster::smartResize();
+			//if(gpGlobals->time > 20 && gpGlobals->time < 21){
+				//UTIL_printoutVector(pev->origin);
+				easyPrintLine("GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG");
+				easyPrintLine("GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG");
+				easyPrintLine("GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG");
+				easyPrintLine("GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG");
+				easyPrintLine("GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG");
+				easyPrintLine("ahhh %.2f %.2f %.2f, %.2f %.2f %.2f", pev->mins.x, pev->mins.y, pev->mins.z, pev->maxs.x, pev->maxs.y, pev->maxs.z );
+				UTIL_drawBox(pev->origin + pev->mins, pev->origin + pev->maxs);
+			//}
+			*/
+				
+			DeathAnimationEnd();
+				
+
+			//MODDD
+			//pev->solid = SOLID_TRIGGER;
+			//pev->movetype = MOVETYPE_NONE;
+
+
+			/*
+			//pev->movetype = MOVETYPE_NOCLIP;
+				
+			//MODDD - set size.
+			//UTIL_SetSize ( pev, Vector ( -64, -64, -64 ), Vector ( 64, 64, 64 ) );
+
+			UTIL_SetSize( pev, Vector(-16, -16, -32), Vector(16, 16, 0) );
+
+			//pev->classname = MAKE_STRING("monster_barnacle");
+
+			pev->solid			= SOLID_SLIDEBOX;
+			pev->movetype		= MOVETYPE_NONE;
+			*/
+
 		}
+		break;
+	}
+	case TASK_DIE_SIMPLE:{
+		//Cloned from ichy.
+		//MODDD NEW - this is called for just calling TaskComplete() instead of doing a lot of standard death (resize + kill think call).
+		//            Handle it yourself in the next task.
+		//MODDD NOTE - this is... quite different from how the base monster handles TASK_DIE.
+		//             If this schedule is completed, it must kill the think method like TASK_DIE usually would.
+		//    Otherwise, GetSchedule will happen again at the end and say "I feel like being dead now... I pick a death animation!"
+		//    and loop the death anim forever.
+
+		if ( m_fSequenceFinished )
+		{
+			pev->deadflag = DEAD_DEAD;
+
+			TaskComplete( );
+		}
+	break;}
+
 	case TASK_DIE_LOOP:
 	{
 		//No default behavior. Runs indefinitely unless a child class implements this and tells it when to stop with "TaskComplete" and let TASK_DIE proceed as usual
@@ -1279,6 +1296,64 @@ void CBaseMonster :: RunTask ( Task_t *pTask )
 
 	break;
 	}
+	//MODDD - MOVED FROM ichthyosaur.cpp, renamed from TASK_ICHTHYOSAUR_FLOAT
+	case TASK_WATER_DEAD_FLOAT:{
+
+		//yea this is really pointless to anticipate, but whatever.
+		if(pev->waterlevel == 0 && pev->velocity.Length() < 0.001){
+			//on land and stopped moving? stop.
+			DeathAnimationEnd();
+			pev->movetype = MOVETYPE_TOSS; //fall if whatever this is on top of stops?
+			//can't float again without think logic though.
+			TaskComplete();
+			return;
+		}
+
+		pev->angles.x = UTIL_ApproachAngle( 0, pev->angles.x, 20 );
+		pev->velocity = pev->velocity * 0.8;
+		if (pev->waterlevel > 1 && pev->velocity.z < 64)
+		{
+			//MODDD NOTE - below water? go up.
+			pev->velocity.z += floatSinkSpeed;
+		}
+		else 
+		{
+			//MODDD NOTE - above water? go down.
+			pev->velocity.z -= floatSinkSpeed;
+
+			//MODDD - make the amount of sinking velocity a variable, starting at 8 at the start of this task.
+			//Reduce by half each time it reaches the surface.
+			//When it is sufficiently small, end this task and maybe shift the origin.
+
+			//if( abs(pev->velocity.z) <= 16){
+			//}
+		}
+
+		if(oldWaterLevel != -1 && pev->waterlevel != oldWaterLevel && pev->waterlevel <= 1){
+			//if we have an old water level to compare to, it does not match the current, and the current water level is above water...
+			//cut the floatSinkSpeed in half
+			floatSinkSpeed = floatSinkSpeed / 2;
+		}
+
+		oldWaterLevel = pev->waterlevel;
+
+		if(floatSinkSpeed < 0.4){
+			//rest: 848
+			//desired: 847 
+
+			//If we're slow enough above water, go ahead and stop.
+			Vector adjustedOrigin = pev->origin + Vector(0, 0, -0.4);  //does this help make it visible from below and above water?
+			::UTIL_SetOrigin(pev, adjustedOrigin);
+			pev->velocity.z = 0;
+			DeathAnimationEnd();  //kill the think method. done.
+			TaskComplete();
+		}
+
+
+		// ALERT( at_console, "%f\n", pev->velocity.z );
+	break;}
+
+
 	case TASK_RANGE_ATTACK1_NOTURN:
 	case TASK_MELEE_ATTACK1_NOTURN:
 	case TASK_MELEE_ATTACK2_NOTURN:
@@ -1325,6 +1400,12 @@ void CBaseMonster :: RunTask ( Task_t *pTask )
 			}
 		}
 		break;
+	case TASK_BIG_FLINCH:{
+		if ( m_fSequenceFinished )
+		{
+			TaskComplete();
+		}
+	break;}
 	case TASK_WAIT_FOR_SCRIPT:
 		{
 			if ( m_pCine->m_iDelay <= 0 && gpGlobals->time >= m_pCine->m_startTime )
@@ -2440,15 +2521,20 @@ case TASK_GET_PATH_TO_BESTSCENT:
 			m_IdealActivity = GetSmallFlinchActivity();
 			break;
 		}
+	case TASK_BIG_FLINCH:{
+		m_IdealActivity = GetBigFlinchActivity();
+		break;
+	break;}
 	case TASK_DIE:
 		{
-			
-			
 			DeathAnimationStart();
 			
-
 			break;
 		}
+	case TASK_DIE_SIMPLE:{
+		DeathAnimationStart();
+	break;}
+	
 	case TASK_DIE_LOOP:
 	{
 		//Starter for the task.
@@ -2475,6 +2561,11 @@ case TASK_GET_PATH_TO_BESTSCENT:
 
 		break;
 	}
+	//MODDD - also new
+	case TASK_WATER_DEAD_FLOAT:
+		floatSinkSpeed = WATER_DEAD_SINKSPEED_INITIAL;
+	break;
+
 	case TASK_SOUND_WAKE:
 		{
 			AlertSound();
@@ -2826,6 +2917,14 @@ Schedule_t *CBaseMonster :: GetSchedule ( void )
 				return GetScheduleOfType ( SCHED_VICTORY_DANCE );
 			}
 
+
+			//MODDD - new.  Taking a huge amount of damage forces the big flinch and look
+			if(HasConditions(bits_COND_HEAVY_DAMAGE)){
+				return GetScheduleOfType(SCHED_ALERT_BIG_FLINCH);
+			}
+
+
+
 			if ( HasConditions(bits_COND_LIGHT_DAMAGE | bits_COND_HEAVY_DAMAGE) )
 			{
 				if ( fabs( FlYawDiff() ) < (1.0 - m_flFieldOfView) * 60 ) // roughly in the correct direction
@@ -2867,9 +2966,17 @@ Schedule_t *CBaseMonster :: GetSchedule ( void )
 				}
 			}
 
+			//int testtt = HasConditions(bits_COND_HEAVY_DAMAGE);
+
 			if ( HasConditions(bits_COND_NEW_ENEMY) )
 			{
 				return GetScheduleOfType ( SCHED_WAKE_ANGRY );
+			}
+			//MODDD - NEW.  Must be pasted to most monster's GetSchedule's to have an effect since most use their own custom versions completely or nearly so.
+			else if(HasConditions(bits_COND_HEAVY_DAMAGE)){
+				//MODDD - taking heavy damage is more drastic now with its own check.
+				//It won't happen often enough to need memory for blocking.
+				return GetScheduleOfType(SCHED_BIG_FLINCH);
 			}
 			//MODDD - other condition.  If "noFlinchOnHard" is on and the skill is hard, don't flinch from getting hit.
 			else if (HasConditions(bits_COND_LIGHT_DAMAGE) && !HasMemory( bits_MEMORY_FLINCHED) && !(global_noFlinchOnHard==1 && g_iSkillLevel==SKILL_HARD)  )

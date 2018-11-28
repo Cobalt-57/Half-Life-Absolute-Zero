@@ -28,30 +28,24 @@
 
 
 
-#include	"extdll.h"
-#include	"util.h"
-#include	"cbase.h"
+#include "extdll.h"
+#include "util.h"
+#include "cbase.h"
 #include "basemonster.h"
-#include	"schedule.h"
-#include    "flyingmonster.h"
-#include	"nodes.h"
-#include	"soundent.h"
-#include	"animation.h"
-#include	"effects.h"
-#include	"weapons.h"
+#include "schedule.h"
+#include "flyingmonster.h"
+#include "nodes.h"
+#include "soundent.h"
+#include "animation.h"
+#include "effects.h"
+#include "weapons.h"
+
+#include "defaultai.h"  //why not?
 
 #define SEARCH_RETRY	16
 
 #define ICHTHYOSAUR_SPEED 150
 
-//MODDD - new. How fast this creature floats to the top. Divided by two each time it reaches the top and floats down until it is
-//        slow enough to be deemed stationary and kill the think method like most monsters do.
-//        This avoids annoying water wade sounds while it rapidly moves between water levels.
-// IMPORTANT - If the water level could ever be changed, the think method shouldn't be killed. There can be checks to see if the
-//             water level changes after being stationary (float / sink again at full speed), or a timing check to restore the
-//             floatSinkSpeed to its full (initial) value if too much time passes without switching.
-//             Without this a diffferent waterlevel would leave this creatue stuck where it stopped thinking.
-#define ICHTHYOSAUR_SINKSPEED_INITIAL 8
 
 extern CGraph WorldGraph;
 
@@ -132,9 +126,6 @@ public:
 	float m_flMinSpeed;
 	float m_flMaxDist;
 
-	//MODDD - new. float / sink speed to get even at the surface.
-	float floatSinkSpeed;
-	int oldWaterLevel;
 
 	//MODDD - not commented out? debug feature to see what direction its facing.
 	//CBeam *m_pBeam;
@@ -267,7 +258,7 @@ enum
 {
 	TASK_ICHTHYOSAUR_CIRCLE_ENEMY = LAST_COMMON_TASK + 1,
 	TASK_ICHTHYOSAUR_SWIM,
-	TASK_ICHTHYOSAUR_FLOAT,
+	//TASK_ICHTHYOSAUR_FLOAT,   //MODDD - changed to "TASK_WATER_DEAD_FLOAT', made more general. moved to schedule.h
 };
 
 //=========================================================
@@ -337,24 +328,9 @@ static Schedule_t	slCircleEnemy[] =
 };
 
 
-Task_t tlTwitchDie[] =
-{
-	{ TASK_STOP_MOVING,			0		 },
-	{ TASK_SOUND_DIE,			(float)0 },
-	{ TASK_DIE,					(float)0 },
-	{ TASK_ICHTHYOSAUR_FLOAT,	(float)0 },
-};
+//MODDD - "slTwitchDie" changed to "slDieWaterFloat". And moved to defaultai.cpp
+//        Setting a monster's own animation for floating is still necessary for the start of TASK_WATER_DEAD_FLOAT though.
 
-Schedule_t slTwitchDie[] =
-{
-	{
-		tlTwitchDie,
-		ARRAYSIZE( tlTwitchDie ),
-		0,
-		0,
-		"Die"
-	},
-};
 
 
 DEFINE_CUSTOM_SCHEDULES(CIchthyosaur)
@@ -362,7 +338,7 @@ DEFINE_CUSTOM_SCHEDULES(CIchthyosaur)
     slSwimAround,
 	slSwimAgitated,
 	slCircleEnemy,
-	slTwitchDie,
+	//slTwitchDie,
 };
 IMPLEMENT_CUSTOM_SCHEDULES(CIchthyosaur, CFlyingMonster);
 
@@ -575,9 +551,6 @@ CIchthyosaur::CIchthyosaur(){
 
 	chaseEnemyAttackSoundCooldown = 0;
 
-	floatSinkSpeed = ICHTHYOSAUR_SINKSPEED_INITIAL;
-	oldWaterLevel = -1;
-
 }
 
 //=========================================================
@@ -698,7 +671,9 @@ Schedule_t* CIchthyosaur :: GetScheduleOfType ( int Type )
 	case SCHED_FAIL:
 		return slSwimAgitated;
 	case SCHED_DIE:
-		return slTwitchDie;
+		//MODDD - renamed
+		//return slTwitchDie;
+		return slDieWaterFloat;
 	case SCHED_CHASE_ENEMY:
 		//MODDD - this is very spammy. SCHED_CHASE_ENEMY is interrupted by being able to do a Range Attack (bits_COND_CAN_RANGE_ATTACK1),
 		//        which also leads to calling this schedule anyways.
@@ -740,13 +715,12 @@ void CIchthyosaur::StartTask(Task_t *pTask)
 		}
 		CFlyingMonster::StartTask(pTask);
 		break;
-
-	case TASK_ICHTHYOSAUR_FLOAT:
-		floatSinkSpeed = ICHTHYOSAUR_SINKSPEED_INITIAL;
+	//MODDD - renamed from TASK_ICHTHYOSAUR_FLOAT
+	case TASK_WATER_DEAD_FLOAT:
 		pev->skin = EYE_BASE;
 		SetSequenceByName( "bellyup" );
-		break;
-
+		CFlyingMonster::StartTask(pTask);
+	break;
 	default:
 		CFlyingMonster::StartTask(pTask);
 		break;
@@ -842,81 +816,19 @@ void CIchthyosaur :: RunTask ( Task_t *pTask )
 			TaskComplete( );
 		}
 		break;
+		/*
 	case TASK_DIE:
-
-		//MODDD NOTE - this is... quite different from how the base monster handles TASK_DIE.
-		//             If this schedule is completed, it must kill the think method like TASK_DIE usually would.
-		//    Otherwise, GetSchedule will happen again at the end and say "I feel like being dead now... I pick a death animation!"
-		//    and loop the death anim forever.
-
+		//NOTICE - this overridden behavior is no longer necessary.
+		//The base "slDieWaterFloat" schedule calls TASK_DIE_SIMPLE which waits for the sequence to finish and set the deadflag just like here. 
 		if ( m_fSequenceFinished )
 		{
 			pev->deadflag = DEAD_DEAD;
 
 			TaskComplete( );
 		}
-		break;
-
-	case TASK_ICHTHYOSAUR_FLOAT:
-
-
-		//yea this is really pointless to anticipate, but whatever.
-		if(pev->waterlevel == 0 && pev->velocity.Length() < 0.001){
-			//on land and stopped moving? stop.
-			DeathAnimationEnd();
-			pev->movetype = MOVETYPE_TOSS; //fall if whatever this is on top of stops?
-			//can't float again without think logic though.
-			TaskComplete();
-			return;
-		}
-
-
-		pev->angles.x = UTIL_ApproachAngle( 0, pev->angles.x, 20 );
-		pev->velocity = pev->velocity * 0.8;
-		if (pev->waterlevel > 1 && pev->velocity.z < 64)
-		{
-			//MODDD NOTE - below water? go up.
-			pev->velocity.z += floatSinkSpeed;
-		}
-		else 
-		{
-			//MODDD NOTE - above water? go down.
-			pev->velocity.z -= floatSinkSpeed;
-
-			//MODDD - make the amount of sinking velocity a variable, starting at 8 at the start of this task.
-			//Reduce by half each time it reaches the surface.
-			//When it is sufficiently small, end this task and maybe shift the origin.
-
-
-			//if( abs(pev->velocity.z) <= 16){
-			//}
-
-		}
-
-
-		if(oldWaterLevel != -1 && pev->waterlevel != oldWaterLevel && pev->waterlevel <= 1){
-			//if we have an old water level to compare to, it does not match the current, and the current water level is above water...
-			//cut the floatSinkSpeed in half
-			floatSinkSpeed = floatSinkSpeed / 2;
-		}
-
-		oldWaterLevel = pev->waterlevel;
-
-		if(floatSinkSpeed < 0.4){
-			//rest: 848
-			//desired: 847 
-
-			//If we're slow enough above water, go ahead and stop.
-			Vector adjustedOrigin = pev->origin + Vector(0, 0, -0.4);  //does this help make it visible from below and above water?
-			::UTIL_SetOrigin(pev, adjustedOrigin);
-			pev->velocity.z = 0;
-			DeathAnimationEnd();  //kill the think method. done.
-			TaskComplete();
-		}
-
-
-		// ALERT( at_console, "%f\n", pev->velocity.z );
-		break;
+		*/
+	break;
+	//MODDD - TASK_ICHTHYOSAUR_FLOAT renamed TASK_WATER_FLOAT_DEAD and made more general (schedule.cpp)
 
 	default: 
 		CFlyingMonster :: RunTask ( pTask );

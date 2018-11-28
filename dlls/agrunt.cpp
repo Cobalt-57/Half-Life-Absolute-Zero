@@ -40,7 +40,7 @@ extern float global_agrunt_muzzleflash;
 
 extern unsigned short g_sCustomBallsPowerup;
 
-
+EASY_CVAR_EXTERN(testVar)
 
 //=========================================================
 // monster-specific schedule types
@@ -180,6 +180,8 @@ public:
 	
 	Vector GetGunPosition( void );
 	Vector GetGunPositionAI(void);
+
+	void OnTakeDamageSetConditions(entvars_t *pevInflictor, entvars_t *pevAttacker, float flDamage, int bitsDamageType, int bitsDamageTypeMod);
 
 
 
@@ -1821,11 +1823,31 @@ Schedule_t *CAGrunt :: GetSchedule ( void )
 	{
 	case MONSTERSTATE_COMBAT:
 		{
+
 // dead enemy
 			if ( HasConditions( bits_COND_ENEMY_DEAD ) )
 			{
 				// call base class, all code to handle dead enemies is centralized there.
 				return CBaseMonster :: GetSchedule();
+			}
+
+
+			
+			
+			//MODDD - heavy damage must flinch. The new standard for heavy damage (70% of max health) in one hit that is.
+			if(HasConditions(bits_COND_HEAVY_DAMAGE)){
+				return GetScheduleOfType(SCHED_BIG_FLINCH);
+			}
+
+			
+			//MODDD - extra condition required to flinch (or, specifically forbidden)
+			//        Now uses LIGHT_DAMAGE instead of HEAVY for the small flinch activity, but it still requires 20 damage to happen instead to mirror retail's intentions.
+			//  ALSO, moved here from below.  If flinching is possible, do that.
+			//  And added back the MEMORY_FLINCHED check seen in a lot of other areas.
+			//if ( HasConditions ( bits_COND_HEAVY_DAMAGE ) && (!(global_noFlinchOnHard==1 && g_iSkillLevel==SKILL_HARD)) )
+			if ( HasConditions ( bits_COND_LIGHT_DAMAGE ) && !HasMemory( bits_MEMORY_FLINCHED) && (!(global_noFlinchOnHard==1 && g_iSkillLevel==SKILL_HARD)) )
+			{
+ 				return GetScheduleOfType( SCHED_SMALL_FLINCH );
 			}
 
 			if ( HasConditions(bits_COND_NEW_ENEMY) )
@@ -1840,11 +1862,7 @@ Schedule_t *CAGrunt :: GetSchedule ( void )
 				return GetScheduleOfType ( SCHED_MELEE_ATTACK1 );
 			}
 
-			//MODDD - extra condition required to flinch (or, specifically forbidden)
-			if ( HasConditions ( bits_COND_HEAVY_DAMAGE ) && (!(global_noFlinchOnHard==1 && g_iSkillLevel==SKILL_HARD)) )
-			{
- 				return GetScheduleOfType( SCHED_SMALL_FLINCH );
-			}
+			//MODDD - old small flinch location.
 
 	// can attack
 			if ( HasConditions ( bits_COND_CAN_RANGE_ATTACK1 ) && OccupySlot ( bits_SLOTS_AGRUNT_HORNET ) )
@@ -2024,18 +2042,22 @@ int CAGrunt::LookupActivityHard(int activity){
 		break;
 		case ACT_RANGE_ATTACK1:
 		case ACT_RANGE_ATTACK2:
-			if(g_iSkillLevel < SKILL_HARD){
-				m_flFramerateSuggestion = 1.28;
-			}else{
-				m_flFramerateSuggestion = 1.4;
+			if(g_iSkillLevel == SKILL_EASY){
+				m_flFramerateSuggestion = 1.0;
+			}else if(g_iSkillLevel == SKILL_MEDIUM){
+				m_flFramerateSuggestion = 1.22;
+			}else if(g_iSkillLevel == SKILL_HARD){
+				m_flFramerateSuggestion = 1.37;
 			}
 		break;
 		case ACT_MELEE_ATTACK1:
 		case ACT_MELEE_ATTACK2:
-			if(g_iSkillLevel < SKILL_HARD){
-				m_flFramerateSuggestion = 1.6;
-			}else{
-				m_flFramerateSuggestion = 1.85;
+			if(g_iSkillLevel == SKILL_EASY){
+				m_flFramerateSuggestion = 1.0;
+			}else if(g_iSkillLevel == SKILL_MEDIUM){
+				m_flFramerateSuggestion = 1.4;
+			}else if(g_iSkillLevel == SKILL_HARD){
+				m_flFramerateSuggestion = 1.8;
 			}
 		break;
 		case ACT_SMALL_FLINCH:
@@ -2047,10 +2069,12 @@ int CAGrunt::LookupActivityHard(int activity){
 		case ACT_FLINCH_RIGHTARM:
 		case ACT_FLINCH_LEFTLEG:
 		case ACT_FLINCH_RIGHTLEG:
-			if(g_iSkillLevel < SKILL_HARD){
-				m_flFramerateSuggestion = 1.7;
-			}else{
-				m_flFramerateSuggestion = 2.1;
+			if(g_iSkillLevel == SKILL_EASY){
+				m_flFramerateSuggestion = 1.0;
+			}else if(g_iSkillLevel == SKILL_MEDIUM){
+				m_flFramerateSuggestion = 1.6;
+			}else if(g_iSkillLevel == SKILL_HARD){
+				m_flFramerateSuggestion = 2.0;
 			}
 		break;
 	}//END OF switch(...)
@@ -2141,6 +2165,8 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CAGrunt)
 			powerupCauseEntDirectedEnemy = NULL;
 		}
 	}
+
+
 
 	//easyForcePrintLine("AGrunt:: TOOK DAMAGE. Health:%.2f Damage:%.2f Blast:%d Gib:: N:%d A:%d", pev->health, flDamage, (bitsDamageType & DMG_BLAST), (bitsDamageType & DMG_NEVERGIB), (bitsDamageType & DMG_ALWAYSGIB) );
 
@@ -2323,4 +2349,64 @@ Vector CAGrunt::GetGunPositionAI(void){
 
 
 
+
+
+//Copy, takes more to make this guy react.
+void CAGrunt::OnTakeDamageSetConditions(entvars_t *pevInflictor, entvars_t *pevAttacker, float flDamage, int bitsDamageType, int bitsDamageTypeMod){
+
+	//MODDD - intervention. Timed damage might not affect the AI since it could get needlessly distracting.
+
+	
+
+
+	if(bitsDamageTypeMod & (DMG_TIMEDEFFECT|DMG_TIMEDEFFECTIGNORE) ){
+		//If this is continual timed damage, don't register as any damage condition. Not worth possibly interrupting the AI.
+		return;
+	}
+
+	
+	//default case from CBaseMonster's TakeDamage.
+	//if ( flDamage > 0 )
+	if(flDamage >= 20)
+	{
+		SetConditions(bits_COND_LIGHT_DAMAGE);
+		forgetSmallFlinchTime = gpGlobals->time + DEFAULT_FORGET_SMALL_FLINCH_TIME;
+	}
+
+	//MODDD - HEAVY_DAMAGE was unused before.  For using the BIG_FLINCH activity that is (never got communicated)
+	//    Stricter requirement:  this attack took 70% of health away.
+	//    The agrunt used to use this so that its only flinch was for heavy damage (above 20 in one attack), but that's easy by overriding this OnTakeDamageSetconditions method now.
+	//    Keep it to using light damage for that instead.
+	//if ( flDamage >= 20 )
+	
+	if(flDamage >= pev->max_health * 0.55 && gpGlobals->time >= forgetBigFlinchTime)
+	{
+		SetConditions(bits_COND_HEAVY_DAMAGE);
+		forgetSmallFlinchTime = gpGlobals->time + DEFAULT_FORGET_SMALL_FLINCH_TIME;
+		forgetBigFlinchTime = gpGlobals->time + 10;  //agrunt has a longer big flinch anim than most so just do this.
+	}
+
+
+	if(EASY_CVAR_GET(testVar) == 10){
+		//any damage causes me now.
+		SetConditions(bits_COND_HEAVY_DAMAGE);
+	}
+
+	easyForcePrintLine("%s:%d OnTkDmgSetCond raw:%.2f fract:%.2f", getClassname(), monsterID, flDamage, (flDamage / pev->max_health));
+
+
+}//END OF OnTakeDamageSetConditions
+
+
+
+
 //TODO - should a kingpin get killed with poweredup agrunts, they should have their "powerupCauseEntDirectedEnemy"'s reset to NULL. no more obligation to focus on its enemy.
+
+
+
+
+
+
+
+
+

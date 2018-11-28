@@ -279,7 +279,7 @@ void CGameRules::RefreshSkillData ( void )
 	gSkillData.zombieDmgBothSlash = GetSkillCvar( "sk_zombie_dmg_both_slash");
 	//MODDD - Zombie damage reistance.
 	gSkillData.zombieBulletResistance = GetSkillCvar( "sk_zombie_bulletresistance");
-
+	gSkillData.zombieBulletPushback = GetSkillCvar("sk_zombie_bulletpushback");
 
 
 

@@ -58,6 +58,20 @@
 #define MONSTER_CUT_CORNER_DIST		8 // 8 means the monster's bounding box is contained without the box of the node in WC
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 Vector VecBModelOrigin( entvars_t* pevBModel );
 
 extern DLL_GLOBAL	BOOL	g_fDrawLines;
@@ -318,6 +332,14 @@ int CBaseMonster::monsterIDLatest = 0;
 
 //MODDD - new
 CBaseMonster::CBaseMonster(){
+	
+	
+	forgetSmallFlinchTime = -1;
+	forgetBigFlinchTime = -1;
+
+	floatSinkSpeed = WATER_DEAD_SINKSPEED_INITIAL;
+	oldWaterLevel = -1;
+
 
 	hardSetFailSchedule = FALSE;
 	scheduleSurvivesStateChange = FALSE;
@@ -1737,6 +1759,17 @@ void CBaseMonster :: MonsterThink ( void )
 	///pev->renderfx |= NOMUZZLEFLASH;
 	pev->nextthink = gpGlobals->time + 0.1;// keep monster thinking.
 	
+
+
+	if(forgetSmallFlinchTime != -1 && gpGlobals->time >= forgetSmallFlinchTime){
+		forgetSmallFlinchTime = -1;
+		this->Forget(bits_MEMORY_FLINCHED);
+	}
+	if(forgetBigFlinchTime != -1 && gpGlobals->time >= forgetBigFlinchTime){
+		forgetBigFlinchTime = -1;
+		//this->Forget(bits_MEMORY_BIG_FLINCHED);
+	}
+
 
 
 	//TODO - test frame. is 255 or 256 the last??
@@ -7400,7 +7433,6 @@ int CBaseMonster :: LookupActivityHeaviest(int activity )
 
 
 
-
 //MODDD - new method for determining whether to register a case of damage as worthy of LIGHT_DAMAGE or HEAVY_DAMAGE for the AI.
 //        Can result in interrupting the current schedule.
 //        This is expected to get called from CBaseMonster's TakeDamage method in combat.cpp. This method may be customized per monster,
@@ -7409,6 +7441,8 @@ void CBaseMonster::OnTakeDamageSetConditions(entvars_t *pevInflictor, entvars_t 
 
 	//MODDD - intervention. Timed damage might not affect the AI since it could get needlessly distracting.
 
+
+	
 
 	if(bitsDamageTypeMod & (DMG_TIMEDEFFECT|DMG_TIMEDEFFECTIGNORE) ){
 		//If this is continual timed damage, don't register as any damage condition. Not worth possibly interrupting the AI.
@@ -7420,12 +7454,32 @@ void CBaseMonster::OnTakeDamageSetConditions(entvars_t *pevInflictor, entvars_t 
 	if ( flDamage > 0 )
 	{
 		SetConditions(bits_COND_LIGHT_DAMAGE);
+
+		//MODDD NEW - set a timer to forget a flinch-preventing memory bit.
+		forgetSmallFlinchTime = gpGlobals->time + DEFAULT_FORGET_SMALL_FLINCH_TIME;
 	}
 
-	if ( flDamage >= 20 )
+	//MODDD - HEAVY_DAMAGE was unused before.  For using the BIG_FLINCH activity that is (never got communicated)
+	//    Stricter requirement:  this attack took 70% of health away.
+	//    The agrunt used to use this so that its only flinch was for heavy damage (above 20 in one attack), but that's easy by overriding this OnTakeDamageSetconditions method now.
+	//    Keep it to using light damage for that instead.
+	//if ( flDamage >= 20 )
+	if(flDamage >=  pev->max_health * 0.55 || flDamage >= 30 && gpGlobals->time >= forgetBigFlinchTime )
 	{
 		SetConditions(bits_COND_HEAVY_DAMAGE);
+		forgetSmallFlinchTime = gpGlobals->time + DEFAULT_FORGET_SMALL_FLINCH_TIME;
+		forgetBigFlinchTime = gpGlobals->time + DEFAULT_FORGET_BIG_FLINCH_TIME;
 	}
+
+
+	if(EASY_CVAR_GET(testVar) == 10){
+		//any damage causes me now.
+		SetConditions(bits_COND_HEAVY_DAMAGE);
+	}
+
+	easyForcePrintLine("%s:%d OnTkDmgSetCond raw:%.2f fract:%.2f", getClassname(), monsterID, flDamage, (flDamage / pev->max_health));
+
+
 
 }//END OF OnTakeDamageSetConditions
 
@@ -7838,6 +7892,20 @@ CBaseEntity* CBaseMonster::getNearestDeadBody(void){
 	return bestChoiceYet;
 
 }//END OF getNearestDeadBody
+
+//Whether to do the usual "Look" method for checking for new or existing enemies.
+//Needed by archers to be able to call "Look" despite the player never going underwater (causes the PVS check to pass at least once to start combat).
+BOOL CBaseMonster::ignores_PVS_check(void){
+	return FALSE;
+}//END OF ignores_PVS_check
+
+
+
+
+
+
+
+
 
 
 

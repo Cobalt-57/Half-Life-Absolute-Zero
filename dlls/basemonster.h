@@ -31,6 +31,12 @@
 
 
 
+
+#define DEFAULT_FORGET_SMALL_FLINCH_TIME 12;
+#define DEFAULT_FORGET_BIG_FLINCH_TIME 6;
+
+
+
 // CHECKLOCALMOVE result types 
 #define	LOCALMOVE_INVALID					0 // move is not possible
 #define LOCALMOVE_INVALID_DONT_TRIANGULATE	1 // move is not possible, don't try to triangulate
@@ -162,6 +168,9 @@ BOOL FBoxVisible ( entvars_t *pevLooker, entvars_t *pevTarget, Vector &vecTarget
 #define bits_MEMORY_FLINCHED			( 1 << 6 )// Has already flinched
 #define bits_MEMORY_KILLED				( 1 << 7 )// HACKHACK -- remember that I've already called my Killed()
 
+//#define bits_MEMORY_BIG_FLINCHED			( 1 << 8 )// MODDD - new. Has already big flinched
+//...nevermind, also cut.  Just check "forgetBigFlinchTime".  Laziness.
+
 //#define bits_MEMORY_COVER_RECENTFAIL	( 1 << 8) //MODDD - cut for now. New memory flag to signify that a recent request for cover has failed and not to try that again.
 
 #define bits_MEMORY_CUSTOM4				( 1 << 28 )	// Monster-specific memory
@@ -208,6 +217,34 @@ enum
 		8 : "Hear Player"
 		9 : "Hear Combat"
 */
+
+
+
+
+
+
+
+//MODDD - new. How fast this creature floats to the top. Divided by two each time it reaches the top and floats down until it is
+//        slow enough to be deemed stationary and kill the think method like most monsters do.
+//        This avoids annoying water wade sounds while it rapidly moves between water levels.
+// IMPORTANT - If the water level could ever be changed, the think method shouldn't be killed. There can be checks to see if the
+//             water level changes after being stationary (float / sink again at full speed), or a timing check to restore the
+//             floatSinkSpeed to its full (initial) value if too much time passes without switching.
+//             Without this a diffferent waterlevel would leave this creatue stuck where it stopped thinking.
+#define WATER_DEAD_SINKSPEED_INITIAL 8
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -321,7 +358,13 @@ public:
 		//MODDD - new, to block state changes when pulled up.
 		//possible glitch that enemies just stay stuck in a standing animation while pulled up?  This may solve that.
 		BOOL barnacleLocked;
-		MONSTERSTATE		queuedMonsterState;// monster's current state
+		MONSTERSTATE		queuedMonsterState;
+
+		
+		float forgetSmallFlinchTime;
+		float forgetBigFlinchTime;
+
+
 
 
 
@@ -425,11 +468,23 @@ public:
 	BOOL				m_rgbTimeBasedFirstFrame[CDMG_TIMEBASED];
 	float				m_tbdPrev;				// Time-based damage timer
 
+	//MODDD - new
 	BOOL hardSetFailSchedule;
 	BOOL scheduleSurvivesStateChange;
 
 	//MODDD - canned.
 	//BOOL usingGermanModel;
+
+	//MODDD - new. float / sink speed to get even at the surface.
+	//Used by a schedule possibly.
+	int oldWaterLevel;
+	float floatSinkSpeed;
+
+
+
+
+
+
 
 	//MODDD - new var
 	virtual BOOL hasSeeEnemyFix(void);
@@ -451,6 +506,8 @@ public:
 
 	
 	virtual CBaseEntity* getNearestDeadBody(void);
+
+	virtual BOOL ignores_PVS_check(void);
 
 	virtual BOOL getGermanModelRequirement(void);
 	virtual const char* getGermanModel(void);
@@ -959,6 +1016,9 @@ public:
 	float UpdateTarget ( entvars_t *pevTarget );
 	virtual Activity GetDeathActivity ( void );
 	Activity GetSmallFlinchActivity( void );
+
+	//MODDD - new
+	Activity GetBigFlinchActivity(void);
 
 	GENERATE_KILLED_PROTOTYPE_VIRTUAL
 	//virtual void Killed( entvars_t *pevAttacker, int iGib );

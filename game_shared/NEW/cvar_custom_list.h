@@ -256,7 +256,7 @@
 #define DEFAULT_barneyPrintouts 0
 #define DEFAULT_monsterSpawnPrintout 0
 #define DEFAULT_zombieBulletResistance 1
-#define DEFAULT_zombieExtraBulletPushback 1
+#define DEFAULT_zombieBulletPushback 1
 #define DEFAULT_houndeyePrintout 0
 #define DEFAULT_quakeExplosionSound 2
 #define DEFAULT_explosionDebrisSoundVolume 0.6
@@ -884,7 +884,7 @@
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(barneyPrintouts, barneyprintouts)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(monsterSpawnPrintout, monsterspawnprintout)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(zombieBulletResistance, zombiebulletresistance)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(zombieExtraBulletPushback, zombieextrabulletpushback)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(zombieBulletPushback, zombieBulletPushback)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(houndeyePrintout, houndeyeprintout)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(quakeExplosionSound, quakeexplosionsound)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(explosionDebrisSoundVolume, explosiondebrissoundvolume)\
@@ -1330,7 +1330,7 @@
 	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(barneyPrintouts)\
 	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(monsterSpawnPrintout)\
 	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(zombieBulletResistance)\
-	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(zombieExtraBulletPushback)\
+	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(zombieBulletPushback)\
 	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(houndeyePrintout)\
 	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(quakeExplosionSound)\
 	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(explosionDebrisSoundVolume)\
@@ -1776,7 +1776,7 @@
 	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(barneyPrintouts, barneyprintouts)\
 	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(monsterSpawnPrintout, monsterspawnprintout)\
 	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(zombieBulletResistance, zombiebulletresistance)\
-	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(zombieExtraBulletPushback, zombieextrabulletpushback)\
+	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(zombieBulletPushback, zombieBulletPushback)\
 	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(houndeyePrintout, houndeyeprintout)\
 	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(quakeExplosionSound, quakeexplosionsound)\
 	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(explosionDebrisSoundVolume, explosiondebrissoundvolume)\
@@ -2225,7 +2225,7 @@
 	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY(barneyPrintouts)\
 	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY(monsterSpawnPrintout)\
 	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY(zombieBulletResistance)\
-	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY(zombieExtraBulletPushback)\
+	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY(zombieBulletPushback)\
 	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY(houndeyePrintout)\
 	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY(quakeExplosionSound)\
 	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY(explosionDebrisSoundVolume)\
@@ -2687,7 +2687,7 @@
 	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY(barneyPrintouts)\
 	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY(monsterSpawnPrintout)\
 	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY(zombieBulletResistance)\
-	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY(zombieExtraBulletPushback)\
+	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY(zombieBulletPushback)\
 	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY(houndeyePrintout)\
 	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY(quakeExplosionSound)\
 	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY(explosionDebrisSoundVolume)\
@@ -3149,7 +3149,7 @@
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(barneyPrintouts)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(monsterSpawnPrintout)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(zombieBulletResistance)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(zombieExtraBulletPushback)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(zombieBulletPushback)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(houndeyePrintout)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(quakeExplosionSound)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(explosionDebrisSoundVolume)\
@@ -3611,7 +3611,7 @@
 	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY(barneyPrintouts)\
 	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY(monsterSpawnPrintout)\
 	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY(zombieBulletResistance)\
-	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY(zombieExtraBulletPushback)\
+	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY(zombieBulletPushback)\
 	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY(houndeyePrintout)\
 	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY(quakeExplosionSound)\
 	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY(explosionDebrisSoundVolume)\
@@ -4079,7 +4079,7 @@
 	EASY_CVAR_CREATE_CLIENT_A_DEBUGONLY(barneyPrintouts)\
 	EASY_CVAR_CREATE_CLIENT_A_DEBUGONLY(monsterSpawnPrintout)\
 	EASY_CVAR_CREATE_CLIENT_A_DEBUGONLY(zombieBulletResistance)\
-	EASY_CVAR_CREATE_CLIENT_A_DEBUGONLY(zombieExtraBulletPushback)\
+	EASY_CVAR_CREATE_CLIENT_A_DEBUGONLY(zombieBulletPushback)\
 	EASY_CVAR_CREATE_CLIENT_A_DEBUGONLY(houndeyePrintout)\
 	EASY_CVAR_CREATE_CLIENT_A_DEBUGONLY(quakeExplosionSound)\
 	EASY_CVAR_CREATE_CLIENT_A_DEBUGONLY(explosionDebrisSoundVolume)\
@@ -4541,7 +4541,7 @@
 	EASY_CVAR_RESET_DEBUGONLY(barneyPrintouts)\
 	EASY_CVAR_RESET_DEBUGONLY(monsterSpawnPrintout)\
 	EASY_CVAR_RESET_DEBUGONLY(zombieBulletResistance)\
-	EASY_CVAR_RESET_DEBUGONLY(zombieExtraBulletPushback)\
+	EASY_CVAR_RESET_DEBUGONLY(zombieBulletPushback)\
 	EASY_CVAR_RESET_DEBUGONLY(houndeyePrintout)\
 	EASY_CVAR_RESET_DEBUGONLY(quakeExplosionSound)\
 	EASY_CVAR_RESET_DEBUGONLY(explosionDebrisSoundVolume)\
@@ -5002,7 +5002,7 @@
 	EASY_CVAR_EXTERN_DEBUGONLY(barneyPrintouts)\
 	EASY_CVAR_EXTERN_DEBUGONLY(monsterSpawnPrintout)\
 	EASY_CVAR_EXTERN_DEBUGONLY(zombieBulletResistance)\
-	EASY_CVAR_EXTERN_DEBUGONLY(zombieExtraBulletPushback)\
+	EASY_CVAR_EXTERN_DEBUGONLY(zombieBulletPushback)\
 	EASY_CVAR_EXTERN_DEBUGONLY(houndeyePrintout)\
 	EASY_CVAR_EXTERN_DEBUGONLY(quakeExplosionSound)\
 	EASY_CVAR_EXTERN_DEBUGONLY(explosionDebrisSoundVolume)\

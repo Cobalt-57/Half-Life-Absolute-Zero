@@ -1238,6 +1238,12 @@ GENERATE_GIBMONSTEREND_IMPLEMENTATION(CBaseMonster){
 
 
 
+
+//MODDD TODO MAJOR - the activity ACT_DIEVIOLENT goes completley unused. When should it be called for?
+//  On any overkill death (lots of negative health)?  Taking heavy damage at the same time as death (damage of one attack is at least 70% of max health)?
+//  Bodyshot that dealt a lot of overkill damage? what?   Plus checks for whether forwards / backwards is acceptable to go before picking a particular violent anim...
+//  this may be a little involved.
+
 //=========================================================
 // GetDeathActivity - determines the best type of death
 // anim to play.
@@ -1409,7 +1415,28 @@ Activity CBaseMonster :: GetSmallFlinchActivity ( void )
 	}
 
 	return flinchActivity;
-}
+}//END OF GetSmallFlinchActivity
+
+
+Activity CBaseMonster::GetBigFlinchActivity(void){
+	
+	Activity flinchActivity;
+
+	flinchActivity = ACT_BIG_FLINCH;
+
+	// do we have a sequence for this big flinch?
+	if ( LookupActivity ( flinchActivity ) == ACTIVITY_NOT_AVAILABLE )
+	{
+		flinchActivity = ACT_SMALL_FLINCH;
+	}
+
+	return flinchActivity;
+}//END OF GetBigFlinchActivity
+
+
+
+
+
 
 
 void CBaseMonster::BecomeDead( void )

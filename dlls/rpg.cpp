@@ -12,6 +12,37 @@
 *   without written permission from Valve LLC.
 *
 ****/
+
+
+
+//MODDDD TODO - 
+/*
+  1. FIRING UNDERWATER IS STILL POSSIBLE (since retail).  Should it stay this way?
+
+
+  2. PROBLEM:
+  If for some reason the RPG's m_cActiveRockets, as seen in "m_pLauncher->m_cActiveRockets--",
+  isn't called even when the flying rocket is removed, the game will think there is still a rocket
+  en route and deny letting the player reload while smart fire (laser pointer) is on.  It feels silly.
+
+  This seems more likely to happen if firing rockets underwater and watching them for a long time when they go off.
+  No idea what happens differnetly to cause not turning m_cActiveRockets down by 1 like it should.
+
+  A more secure version of this would have an array of up to say, 10 missiles at a time
+  (for safety even though 4 should be plenty), deny firing missiles if whatever max is exceeded.
+  for keeping EDICTs of all missiles ever launched.
+  When one goes null, that spot is opened for another rocket to take when it fires.
+  The idea is, this guarantees being able to check whether or not there are any rockets still
+  traveling.  If all slots are NULL, there is indeed no rocket fired left.
+  
+*/
+
+
+
+
+
+
+
 #if !defined( OEM_BUILD )
 
 #include "extdll.h"
@@ -22,6 +53,8 @@
 #include "nodes.h"
 #include "player.h"
 #include "gamerules.h"
+
+
 
 
 //extern:
@@ -117,7 +150,8 @@ LINK_ENTITY_TO_CLASS( rpg_rocket, CRpgRocket );
 
 CRpgRocket::CRpgRocket(void){
 	ignited = FALSE;
-}
+	alreadyDeleted = FALSE;
+}//END OF CRpgRocket constructor
 
 
 //=========================================================
@@ -200,15 +234,32 @@ void CRpgRocket :: Spawn( void )
 //=========================================================
 void CRpgRocket :: RocketTouch ( CBaseEntity *pOther )
 {
-	if ( m_pLauncher )
-	{
+	if( m_pLauncher ){
 		// my launcher is still around, tell it I'm dead.
 		m_pLauncher->m_cActiveRockets--;
+		alreadyDeleted = TRUE;
+	}else{
+		easyForcePrintLine("CRpgRocket RED ALERT A: ROCKET LAUNCHER MISSING?! WHAT");
 	}
 
 	STOP_SOUND( edict(), CHAN_VOICE, "weapons/rocket1.wav" );
 	ExplodeTouch( pOther );
 }
+
+void CRpgRocket::onDelete(){
+	//Should this be deleted, at least formally, remove a rocket.
+
+	if(!alreadyDeleted){
+		easyForcePrintLine("CRpgRocket AHA! I GOT YOU");
+		if( m_pLauncher ){
+			// my launcher is still around, tell it I'm dead.
+			m_pLauncher->m_cActiveRockets--;
+		}else{
+			easyForcePrintLine("CRpgRocket RED ALERT B: ROCKET LAUNCHER MISSING?! WHAT");
+		}
+	}
+}
+
 
 //=========================================================
 //=========================================================

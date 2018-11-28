@@ -1102,6 +1102,9 @@ public:
 	void EXPORT FollowThink( void );
 	void EXPORT IgniteThink( void );
 	void EXPORT RocketTouch( CBaseEntity *pOther );
+
+	void onDelete(void);
+
 	static CRpgRocket *CreateRpgRocket( Vector vecOrigin, Vector vecAngles, CBaseEntity *pOwner, CRpg *pLauncher );
 
 	int m_iTrail;
@@ -1109,6 +1112,9 @@ public:
 	CRpg *m_pLauncher;// pointer back to the launcher that fired me. 
 
 	BOOL ignited;
+
+	//MODDD - new
+	BOOL alreadyDeleted;
 
 };
 

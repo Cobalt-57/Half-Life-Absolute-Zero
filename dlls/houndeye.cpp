@@ -2017,6 +2017,13 @@ Schedule_t *CHoundeye :: GetSchedule( void )
 				return CBaseMonster :: GetSchedule();
 			}
 
+
+			
+			//MODDD - heavy damage must flinch.
+			if(HasConditions(bits_COND_HEAVY_DAMAGE)){
+				return GetScheduleOfType(SCHED_BIG_FLINCH);
+			}
+
 			if ( HasConditions( bits_COND_LIGHT_DAMAGE | bits_COND_HEAVY_DAMAGE ) )
 			{
 				if ( RANDOM_FLOAT( 0 , 1 ) <= 0.4 )

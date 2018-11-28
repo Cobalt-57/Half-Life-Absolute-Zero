@@ -321,6 +321,10 @@ cvar_t	sk_zombie_health3 = {"sk_zombie_health3","0"};
 cvar_t	sk_zombie_bulletresistance1 = {"sk_zombie_bulletresistance1","0"};
 cvar_t	sk_zombie_bulletresistance2 = {"sk_zombie_bulletresistance2","0"};
 cvar_t	sk_zombie_bulletresistance3 = {"sk_zombie_bulletresistance3","0"};
+//MODDD - also
+cvar_t	sk_zombie_bulletpushback1 = {"sk_zombie_bulletpushback1","0"};
+cvar_t	sk_zombie_bulletpushback2 = {"sk_zombie_bulletpushback2","0"};
+cvar_t	sk_zombie_bulletpushback3 = {"sk_zombie_bulletpushback3","0"};
 
 
 
@@ -1033,6 +1037,13 @@ void GameDLLInit( void )
 	CVAR_REGISTER(&sk_zombie_bulletresistance1);
 	CVAR_REGISTER(&sk_zombie_bulletresistance2);
 	CVAR_REGISTER(&sk_zombie_bulletresistance3);
+	//MODDD - also
+	CVAR_REGISTER(&sk_zombie_bulletpushback1);
+	CVAR_REGISTER(&sk_zombie_bulletpushback2);
+	CVAR_REGISTER(&sk_zombie_bulletpushback3);
+
+
+
 
 
 	

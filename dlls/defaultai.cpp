@@ -491,6 +491,35 @@ Schedule_t	slAlertSmallFlinch[] =
 	},
 };
 
+
+
+
+
+//MODDD NEW - same as above but for very high damage.
+Task_t	tlAlertBigFlinch[] =
+{
+	{ TASK_STOP_MOVING,				0						},
+	{ TASK_REMEMBER,				(float)bits_MEMORY_FLINCHED },
+	{ TASK_BIG_FLINCH,			(float)0				},
+	{ TASK_SET_SCHEDULE,			(float)SCHED_ALERT_FACE	},
+};
+
+Schedule_t	slAlertBigFlinch[] =
+{
+	{ 
+		tlAlertBigFlinch,
+		ARRAYSIZE ( tlAlertBigFlinch ),
+		0,
+		0,
+		"Alert Big Flinch"
+	},
+};
+
+
+
+
+
+
 //=========================================================
 // AlertIdle Schedules
 //=========================================================
@@ -911,8 +940,11 @@ Schedule_t	slPrimaryMeleeAttack[] =
 		ARRAYSIZE ( tlPrimaryMeleeAttack1 ), 
 		bits_COND_NEW_ENEMY			|
 		bits_COND_ENEMY_DEAD		|
+		
+		//MODDD - restoring heavy damage as interruptable.
 		//bits_COND_LIGHT_DAMAGE		|
-		//bits_COND_HEAVY_DAMAGE		|
+		bits_COND_HEAVY_DAMAGE		|
+
 		bits_COND_ENEMY_OCCLUDED,
 		0,
 		"Primary Melee Attack"
@@ -934,8 +966,11 @@ Schedule_t	slSecondaryMeleeAttack[] =
 		ARRAYSIZE ( tlSecondaryMeleeAttack1 ), 
 		bits_COND_NEW_ENEMY			|
 		bits_COND_ENEMY_DEAD		|
+
+		//MODDD - restoring heavy damage as interruptable.
 		//bits_COND_LIGHT_DAMAGE		|
-		//bits_COND_HEAVY_DAMAGE		|
+		bits_COND_HEAVY_DAMAGE		|
+
 		bits_COND_ENEMY_OCCLUDED,
 		0,
 		"Secondary Melee Attack"
@@ -1228,6 +1263,33 @@ Schedule_t slSmallFlinch[] =
 	},
 };
 
+
+
+
+//MODDD - new, slBigFlinch. Not here before, why?
+Task_t tlBigFlinch[] =
+{
+	{ TASK_REMEMBER,			(float)bits_MEMORY_FLINCHED },  //I guess?  just to stop other small flinches as usual.
+	{ TASK_STOP_MOVING,			0	},
+	{ TASK_BIG_FLINCH,		0	},
+};
+
+Schedule_t slBigFlinch[] =
+{
+	{
+		tlBigFlinch,
+		ARRAYSIZE ( tlBigFlinch ),
+		0,
+		0,
+		"Big Flinch"
+	},
+};
+
+
+
+
+
+
 //=========================================================
 // Die!
 //=========================================================
@@ -1248,6 +1310,8 @@ Schedule_t slDie[] =
 		"Die"
 	},
 };
+
+
 
 
 //MODDD - new. Die, but loop on the death anim instead.
@@ -1278,6 +1342,37 @@ Schedule_t slDieLoop[] =
 		"Die Loop"
 	},
 };
+
+
+
+
+//MODDD - ichthyosaur's "slTwitchDie" schedule moved here and renamed to be more general.  Other water monsters may like this to start from.
+Task_t tlDieWaterFloat[] =
+{
+	{ TASK_STOP_MOVING,			0		 },
+	{ TASK_SOUND_DIE,			(float)0 },
+	//MODDD - below was TASK_DIE, expected to be overridden to be simpler. Now it's... TASK_DIE_SIMPLE.  yup.
+	{ TASK_DIE_SIMPLE,					(float)0 },
+	{ TASK_WATER_DEAD_FLOAT,	(float)0 },
+};
+
+Schedule_t slDieWaterFloat[] =
+{
+	{
+		tlDieWaterFloat,
+		ARRAYSIZE( tlDieWaterFloat ),
+		0,
+		0,
+		"DieWaterFloat"
+	},
+};
+
+
+
+
+
+
+
 
 //=========================================================
 // Victory Dance
@@ -1633,7 +1728,10 @@ Schedule_t	slTakeCoverFromBestSound[] =
 	{ 
 		tlTakeCoverFromBestSound,
 		ARRAYSIZE ( tlTakeCoverFromBestSound ), 
-		bits_COND_NEW_ENEMY,
+		bits_COND_NEW_ENEMY |
+		//MODDD CRITICAL - now interruptable by heavy damage.  May or may not be a good thing.
+		bits_COND_HEAVY_DAMAGE
+		,
 		0,
 		"TakeCoverFromBestSound"
 	},
@@ -1738,6 +1836,7 @@ Schedule_t *CBaseMonster::m_scheduleList[] =
 	slWakeAngry,
 	slAlertFace,
 	slAlertSmallFlinch,
+	slAlertBigFlinch, //MODDD
 	slAlertStand,
 	slInvestigateSound,
 	slCombatStand,
@@ -1759,8 +1858,10 @@ Schedule_t *CBaseMonster::m_scheduleList[] =
 	slChaseEnemySmart_StopSight,
 	slChaseEnemyFailed,
 	slSmallFlinch,
+	slBigFlinch,  //MODDD
 	slDie,
-	slDieLoop,   //BOB SAGGET
+	slDieLoop,  //MODDD - new
+	slDieWaterFloat,  //MODDD - new
 	slVictoryDance,
 	slBarnacleVictimGrab,
 	slBarnacleVictimChomp,
@@ -1947,6 +2048,12 @@ Schedule_t* CBaseMonster :: GetScheduleOfType ( int Type )
 		{
 			return &slAlertSmallFlinch[ 0 ];
 		}
+	case SCHED_BIG_FLINCH:{
+		return &slBigFlinch[0];
+	break;}
+	case SCHED_ALERT_BIG_FLINCH:{
+		return &slAlertBigFlinch[0];
+	break;}
 	case SCHED_RELOAD:
 		{
 			return &slReload[ 0 ];

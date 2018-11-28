@@ -127,6 +127,7 @@ struct skilldata_t
 	float zombieDmgBothSlash;
 	//MODDD - extra zombie feature
 	float zombieBulletResistance;
+	float zombieBulletPushback;
 
 
 	

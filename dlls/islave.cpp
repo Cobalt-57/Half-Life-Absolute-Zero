@@ -61,6 +61,13 @@ enum
 
 
 
+
+
+//MODDD - anything above its real declaration need to know about it?
+extern Schedule_t	slSlaveAttack1[];
+
+
+
 extern float global_islaveReviveFriendMode;
 extern float global_islaveReviveFriendChance;
 extern float global_islaveReviveFriendRange;
@@ -1938,8 +1945,32 @@ GENERATE_TRACEATTACK_IMPLEMENTATION(CISlave)
 	if (bitsDamageType & DMG_SHOCK)
 		return;
 
+
+
+	//???!!!
+	
+	switch(ptr->iHitgroup){
+		//either of these.
+		case HITGROUP_LEFTARM:
+		case HITGROUP_RIGHTARM:
+
+			if(m_pSchedule == slSlaveAttack1){
+				//interruptable by this?
+				m_failSchedule = SCHED_BIG_FLINCH;
+				TaskFail();
+
+				//this->SetConditions(bits_COND_HEAVY_DAMAGE);
+				//this->m_ifail
+				//TaskFail();
+			}
+
+		break;
+	}//END OF switch
+	
+
+
 	GENERATE_TRACEATTACK_PARENT_CALL(CSquadMonster);
-}
+}//END OF TRACEATTACK
 
 
 //=========================================================
@@ -2044,7 +2075,16 @@ Schedule_t *CISlave :: GetSchedule( void )
 	switch (m_MonsterState)
 	{
 	case MONSTERSTATE_COMBAT:
+
+
 		// dead enemy
+		//MODDD - woa, for a while this got pushed way below.  It's fine to go back up here right?
+		if ( HasConditions( bits_COND_ENEMY_DEAD ) )
+		{
+			// call base class, all code to handle dead enemies is centralized there.
+			return CBaseMonster :: GetSchedule();
+		}
+
 
 		//if(global_islaveCanRevive == 1){ 
 		//canReviveFriend = (RANDOM_LONG(0, 4) == 0);
@@ -2056,6 +2096,10 @@ Schedule_t *CISlave :: GetSchedule( void )
 		}
 
 		//
+
+
+
+
 
 
 
@@ -2101,12 +2145,6 @@ Schedule_t *CISlave :: GetSchedule( void )
 
 
 
-		if ( HasConditions( bits_COND_ENEMY_DEAD ) )
-		{
-			// call base class, all code to handle dead enemies is centralized there.
-			return CBaseMonster :: GetSchedule();
-		}
-
 		if (pev->health < 20 || m_iBravery < 0)
 		{
 			if (!HasConditions( bits_COND_CAN_MELEE_ATTACK1 ))
@@ -2151,6 +2189,13 @@ Schedule_t *CISlave :: GetSchedule( void )
 		if ( HasConditions(bits_COND_NEW_ENEMY) )
 		{
 			return GetScheduleOfType ( SCHED_WAKE_ANGRY );
+		}
+
+		//MODDD - new
+		else if(HasConditions(bits_COND_HEAVY_DAMAGE)){
+			//MODDD - taking heavy damage is more drastic now with its own check.
+			//It won't happen often enough to need memory for blocking.
+			return GetScheduleOfType(SCHED_BIG_FLINCH);
 		}
 		//MODDD - other condition.  If "noFlinchOnHard" is on and the skill is hard, don't flinch from getting hit.
 		else if (HasConditions(bits_COND_LIGHT_DAMAGE) && !HasMemory( bits_MEMORY_FLINCHED) && !(global_noFlinchOnHard==1 && g_iSkillLevel==SKILL_HARD)  )

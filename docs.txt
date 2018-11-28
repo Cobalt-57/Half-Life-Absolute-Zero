@@ -783,9 +783,8 @@ timedDamageAffectsMonsters (1) - BOOL.  When on, monsters (including friendly NP
 zombieBulletResistance (1) - BOOL.  This is whether or not Zombies use the "sk_zombie_bulletresistance" entry in skills.cfg (if it exists) to resist a certain amount of damage from bullets per difficulty level.
 ~If off, ignored like in retail (a strong developer hint suggests zombies were meant to have an innate resistance to bullets, but it was bugged)
 
-zombieExtraBulletPushback (0) - float.  This is how much bullet damage applies a (possible) extra-pushback to zombies.
-~If 0, no extra pushback (like usually in retail).
-~Otherwise, it is a multiple of the force that is usually applied (make under 1 to weaken, above 1 to strengthen).
+zombieBulletPushback (0) - BOOL.  Whether bullets apply pushback to zombies.
+~Not adjustable itself, only turns on reading sikll.cfg for "sk_zombie_bulletpushback" 1, 2, and 3 for a multiple to act on how intense pushback is per difficulty. Base amount is 1. Towards 0 for less influence to none, above 1 for more pushback.
 
 
 panthereyeHasCloakingAbility (0) - DECIMAL (0 - 1).  When on (positive, non-zero), the PantherEye will "cloak", or become very transparent, when trying to sneak around the player.

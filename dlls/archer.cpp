@@ -23,6 +23,12 @@
 */
 
 
+
+//TODO MAJOR - is it a problem if the death sequence replies on loading a save when floating to the top is blocked by something?
+//             probably not, and this is kinda easily fixable if so.
+
+
+
 EASY_CVAR_EXTERN(noFlinchOnHard)
 EASY_CVAR_EXTERN(animationFramerateMulti)
 
@@ -991,7 +997,8 @@ Schedule_t* CArcher::GetSchedule ( void )
 				{
 					// chase!
 					//easyPrintLine("ducks??");
-					return GetScheduleOfType( SCHED_CHASE_ENEMY_STOP_SIGHT );
+					//return GetScheduleOfType( SCHED_CHASE_ENEMY_STOP_SIGHT );
+					GetScheduleOfType(SCHED_CHASE_ENEMY);
 				}
 			}
 			else  
@@ -1020,10 +1027,7 @@ Schedule_t* CArcher::GetSchedule ( void )
 				if ( !HasConditions(bits_COND_CAN_RANGE_ATTACK1 | bits_COND_CAN_MELEE_ATTACK1) )
 				{
 					// if we can see enemy but can't use either attack type, we must need to get closer to enemy
-					//return GetScheduleOfType( SCHED_CHASE_ENEMY );
-
-					//Nope, you're a ranged specialist. Still prefer to stare.
-					return GetScheduleOfType( SCHED_COMBAT_LOOK );
+					return GetScheduleOfType( SCHED_CHASE_ENEMY );
 				}
 				else if ( !FacingIdeal() )
 				{
@@ -1076,7 +1080,8 @@ Schedule_t* CArcher::GetScheduleOfType( int Type){
 	switch(Type){
 
 		case SCHED_DIE:
-			return flierDeathSchedule();
+			//return flierDeathSchedule();
+			return slDieWaterFloat;
 		break;
 		case SCHED_RANGE_ATTACK1:
 			return slArcherRangeAttack1;
@@ -1118,9 +1123,13 @@ void CArcher::StartTask( Task_t *pTask ){
 
 	switch( pTask->iTask ){
 
+		case TASK_DIE:
+			//just do what the parent does.
+			CFlyingMonster::StartTask(pTask);
+		break;
 
 		case TASK_RANGE_ATTACK1:
-			shootCooldown = gpGlobals->time + 2;
+			shootCooldown = gpGlobals->time + RANDOM_LONG(3.5, 6.2);
 			CFlyingMonster::StartTask(pTask);
 		break;
 		case TASK_STOP_MOVING:
@@ -1129,6 +1138,15 @@ void CArcher::StartTask( Task_t *pTask ){
 			CFlyingMonster::StartTask(pTask);
 
 		break;
+
+		case TASK_WATER_DEAD_FLOAT:
+			//pev->skin = EYE_BASE;
+			//SetSequenceByName( "bellyup" );
+			SetSequenceByIndex(SEQ_ARCHER_DEAD_FLOAT);
+			CFlyingMonster::StartTask(pTask);
+		break;
+
+
 		default:
 			CFlyingMonster::StartTask( pTask );
 		break;
@@ -1142,6 +1160,11 @@ void CArcher::RunTask( Task_t *pTask ){
 	
 	switch( pTask->iTask ){
 		case TASK_RANGE_ATTACK1:{
+
+			
+			MakeIdealYaw ( m_vecEnemyLKP );
+			ChangeYaw ( pev->yaw_speed );
+
 			if ( m_fSequenceFinished )
 			{
 				//m_Activity = ACT_IDLE;
@@ -1150,11 +1173,19 @@ void CArcher::RunTask( Task_t *pTask ){
 				TaskComplete();
 			}
 		break;}
+
+		/*
 		case TASK_DIE_LOOP:{
 			if(hitGroundDead){
 				TaskComplete();
 			}
 		break;}
+		*/
+
+	
+
+
+
 		default:
 			CFlyingMonster::RunTask(pTask);
 		break;
@@ -1165,6 +1196,11 @@ void CArcher::RunTask( Task_t *pTask ){
 
 
 BOOL CArcher::CheckMeleeAttack1( float flDot, float flDist ){
+	if ( flDist <= 64 && flDot >= 0.7 && m_hEnemy != NULL )
+	{
+		return TRUE;
+	}
+
 	return FALSE;
 }
 BOOL CArcher::CheckMeleeAttack2( float flDot, float flDist ){
@@ -1396,6 +1432,8 @@ GENERATE_KILLED_IMPLEMENTATION(CArcher)
 
 	
 
+	/*
+
 	BOOL firstCall = FALSE;
 	if(pev->deadflag == DEAD_NO){
 		//keep this in mind...
@@ -1414,6 +1452,25 @@ GENERATE_KILLED_IMPLEMENTATION(CArcher)
 	//...which forces MOVETYPE_STEP, and is not very good.
 
 	pev->movetype = MOVETYPE_TOSS;
+	*/
+
+
+
+
+	//Copy of how the ichy does it to want to float to the top. Or part of it.
+	
+	//Is calling direct parent CFlyingMonster instead of CBaseMonster ok?
+	GENERATE_KILLED_PARENT_CALL(CFlyingMonster);
+	pev->velocity = Vector( 0, 0, 0 );
+
+	//MODDD NOTE
+	//Forcing the movetype to MOVETYPE_STEP in CFlyingMonster's Killed above can be bad for the floating logic.
+	//Or flyers in general ever really, MOVETYPE_TOSS falls just fine. no idea why
+	pev->movetype = MOVETYPE_FLY;
+
+
+
+
 
 
 
@@ -1512,6 +1569,9 @@ int CArcher::tryActivitySubstitute(int activity){
 		case ACT_RUN:
 			return SEQ_ARCHER_IDLE1;
 		break;
+		case ACT_MELEE_ATTACK1:
+			return SEQ_ARCHER_BITE;
+		break;
 		case ACT_RANGE_ATTACK1:
 			return SEQ_ARCHER_SHOOT;
 		break;
@@ -1558,6 +1618,10 @@ int CArcher::LookupActivityHard(int activity){
 		case ACT_TURN_RIGHT:
 			m_iForceLoops = TRUE;
 			//otherwise what is returned is fine.
+		break;
+		case ACT_MELEE_ATTACK1:
+			animEventQueuePush(45.0f, 1);
+			return SEQ_ARCHER_BITE;
 		break;
 		case ACT_RANGE_ATTACK1:
 			
@@ -1615,6 +1679,32 @@ void CArcher::HandleEventQueueEvent(int arg_eventID){
 	case 1:
 	{
 
+		//melee bite?
+		CBaseEntity *pHurt = CheckTraceHullAttack( 70, gSkillData.bullsquidDmgBite, DMG_SLASH, DMG_BLEEDING );
+		if ( pHurt )
+		{
+			if ( pHurt->pev->flags & (FL_MONSTER|FL_CLIENT) )
+			{
+				pHurt->pev->punchangle.x = 5;
+
+				//zombie's both arm slash velocity pull.
+				//pHurt->pev->velocity = pHurt->pev->velocity + gpGlobals->v_forward * -100;
+				
+				pHurt->pev->velocity = pHurt->pev->velocity - gpGlobals->v_forward * 13;
+				pHurt->pev->velocity = pHurt->pev->velocity + gpGlobals->v_up * 4;
+				//MODDD TODO - Should there be a random velocity applied since this is underwater?
+			}
+			EMIT_SOUND_FILTERED ( ENT(pev), CHAN_WEAPON, pAttackHitSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackHitSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
+		}
+		else
+			EMIT_SOUND_FILTERED ( ENT(pev), CHAN_WEAPON, pAttackMissSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackMissSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
+
+
+		/*
+		//MODDD TODO - do this later when we have the sound?
+		if (RANDOM_LONG(0,1))
+			AttackSound();
+		*/
 
 	break;
 	}
@@ -2172,7 +2262,8 @@ void CArcher::onDeathAnimationEnd(){
 	
 
 	//wait. Do we want to float like the ichy does?
-	//TODO
+	//It does nothing special.  Just keep it to what the parent does.
+	CFlyingMonster::onDeathAnimationEnd();
 
 }//END OF onDeathAnimationEnd
 
@@ -2182,6 +2273,26 @@ void CArcher::onDeathAnimationEnd(){
 BOOL CArcher::SeeThroughWaterLine(void){
 	return TRUE;
 }//END OF SeeThroughWaterLine
+
+BOOL CArcher::ignores_PVS_check(void){
+	return TRUE;
+}//END OF ignores_PVS_check
+
+
+
+
+//MODDD - mimick how the ichy does this.
+void CArcher::BecomeDead( void )
+{
+	pev->takedamage = DAMAGE_YES;// don't let autoaim aim at corpses.
+
+	// give the corpse half of the monster's original maximum health. 
+	pev->health = pev->max_health / 2;
+	pev->max_health = 5; // max_health now becomes a counter for how many blood decals the corpse can place.
+}//END OF BecomeDead
+
+
+//TODO - implement the probe?  Ensure the monster stays underwater like the ichy does.
 
 
 

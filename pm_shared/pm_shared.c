@@ -2398,7 +2398,11 @@ void PM_LadderMove( physent_t *pLadder )
 
 				//0.017 ??
 				//pmove->iuser1 += (int) (Length(pmove->velocity) * 100);
-				filterediuser4 += 1 * (int)(pmove->frametime * 1 * 10000) * normalSpeedMult;
+
+
+				//MODDD - don't multiply by normalSpeedMulti now! The ladder speed is affected by its own
+				//CVar now
+				filterediuser4 += 1 * (int)(pmove->frametime * 1 * 10000); // * normalSpeedMult;
 				//this var gets bumped by 1 for progression (when to play a noise, reset value per sin function's period)
 
 				/*

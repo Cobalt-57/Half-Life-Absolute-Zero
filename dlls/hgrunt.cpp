@@ -4780,6 +4780,11 @@ Schedule_t *CHGrunt :: GetSchedule( void )
 				return GetScheduleOfType ( SCHED_GRUNT_COVER_AND_RELOAD );
 			}
 
+			//MODDD - heavy damage must flinch.
+			else if(HasConditions(bits_COND_HEAVY_DAMAGE)){
+				return GetScheduleOfType(SCHED_BIG_FLINCH);
+			}
+
 // damaged just a little
 			else if ( HasConditions( bits_COND_LIGHT_DAMAGE ) )
 			{

@@ -1109,7 +1109,7 @@ void CFloater::StartTask( Task_t *pTask ){
 
 
 		case TASK_RANGE_ATTACK1:
-			shootCooldown = gpGlobals->time + 2;
+			shootCooldown = gpGlobals->time + RANDOM_LONG(2.2, 2.6);
 			CFlyingMonster::StartTask(pTask);
 		break;
 		case TASK_STOP_MOVING:
@@ -1131,6 +1131,11 @@ void CFloater::RunTask( Task_t *pTask ){
 	
 	switch( pTask->iTask ){
 		case TASK_RANGE_ATTACK1:{
+
+			
+			MakeIdealYaw ( m_vecEnemyLKP );
+			ChangeYaw ( pev->yaw_speed );
+
 			if ( m_fSequenceFinished )
 			{
 				//m_Activity = ACT_IDLE;

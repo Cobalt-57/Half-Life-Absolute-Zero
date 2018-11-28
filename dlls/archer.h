@@ -150,6 +150,10 @@ public:
 
 	BOOL SeeThroughWaterLine(void);
 
+	BOOL ignores_PVS_check(void);
+
+	void BecomeDead(void);
+
 
 };//END OF class CArcher
 

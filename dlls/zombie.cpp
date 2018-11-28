@@ -31,7 +31,7 @@
 
 //MODDD - extern
 extern float global_zombieBulletResistance;
-extern float global_zombieExtraBulletPushback;
+extern float global_zombieBulletPushback;
 extern DLL_GLOBAL int		g_iSkillLevel;
 
 
@@ -458,7 +458,7 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CZombie)
 {
 	
 
-	if (this->m_MonsterState != MONSTERSTATE_SCRIPT && pev->movetype != MOVETYPE_FLY && pev->deadflag == DEAD_NO && ((global_zombieExtraBulletPushback != 0 && bitsDamageType & DMG_BULLET) || bitsDamageType == DMG_BULLET) ){
+	if (this->m_MonsterState != MONSTERSTATE_SCRIPT && pev->movetype != MOVETYPE_FLY && pev->deadflag == DEAD_NO && ((global_zombieBulletPushback != 0 && bitsDamageType & DMG_BULLET)) ){ //|| bitsDamageType == DMG_BULLET) ){
 		
 		
 		//Vector vecDir = pev->origin - (pevInflictor->absmin + pevInflictor->absmax) * 0.5;
@@ -470,7 +470,8 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CZombie)
 			Vector vecDir = ( pInflictor->Center() - Vector ( 0, 0, 10 ) - Center() ).Normalize();
 			vecDir = g_vecAttackDir = vecDir.Normalize();
 
-			pev->velocity = pev->velocity + vecDir * (-DamageForce( flDamage ) * global_zombieExtraBulletPushback);
+			//Actually check skill.cfg (sk_zombie_bulletpushback) for how intense the pushback is per difficulty.
+			pev->velocity = pev->velocity + vecDir * (-DamageForce( flDamage ) * gSkillData.zombieBulletPushback);
 
 			if(pev->flags & FL_ONGROUND){
 				::UTIL_SetOrigin(pev, Vector(pev->origin.x, pev->origin.y, pev->origin.z + 0.3));
@@ -485,14 +486,17 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CZombie)
 		}
 
 
-		//float flForce = DamageForce( flDamage ) * global_zombieExtraBulletPushback;
+		//float flForce = DamageForce( flDamage ) * global_zombieBulletPushback;
 		//pev->velocity = pev->velocity + vecDir * flForce;
 
-	}
+	}//END OF bullet pushback check
+
+
+
 
 	//MODDD - (comment below found as-is)
 	// Take 30% damage from bullets
-	if ( (global_zombieBulletResistance == 1 && bitsDamageType & DMG_BULLET) || bitsDamageType == DMG_BULLET )
+	if ( (global_zombieBulletResistance == 1 && bitsDamageType & DMG_BULLET)) //|| bitsDamageType == DMG_BULLET )
 	{
 		//flDamage *= 0.3;
 		

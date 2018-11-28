@@ -105,7 +105,7 @@ void CBaseMonster::Activate(void){}
 void CBaseMonster::Spawn(void){}
 
 CBaseEntity* CBaseMonster::getNearestDeadBody(void){return NULL;};
-
+BOOL CBaseMonster::ignores_PVS_check(void){return FALSE;};
 
 BOOL CBaseMonster::getGermanModelRequirement(void){return FALSE;}
 const char* CBaseMonster::getGermanModel(void){return NULL;}
