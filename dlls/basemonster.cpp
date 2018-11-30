@@ -333,6 +333,7 @@ int CBaseMonster::monsterIDLatest = 0;
 //MODDD - new
 CBaseMonster::CBaseMonster(){
 	
+	killedHealth = 0;
 	
 	forgetSmallFlinchTime = -1;
 	forgetBigFlinchTime = -1;
@@ -7895,9 +7896,37 @@ CBaseEntity* CBaseMonster::getNearestDeadBody(void){
 
 //Whether to do the usual "Look" method for checking for new or existing enemies.
 //Needed by archers to be able to call "Look" despite the player never going underwater (causes the PVS check to pass at least once to start combat).
-BOOL CBaseMonster::ignores_PVS_check(void){
+BOOL CBaseMonster::noncombat_Look_ignores_PVS_check(void){
 	return FALSE;
-}//END OF ignores_PVS_check
+}//END OF noncombat_Look_ignores_PVS_check
+
+
+//It is up to an individual monster with a violent death sequence, regardless of whether it's mapped to activity ACT_DIEVIOLENT or not, to
+//override this and say "TRUE", along with providing its own rule for a clear distance check.  That is, if whatevre distance forwards/backwards
+//(typically backwards) is safe.  But it varries from monster to monster's sequence, just have to make it so the sequence can't clip through anything
+//and look really weird.
+//It is also OK if the sequence for violent death is not tied to ACT_DIEVIOLENT. It must then be picked in "LookupViolentDeathSequence" manually.
+//The default of that picks the sequence from the model as expected (if mapped to ACT_DIEVIOLENT).
+BOOL CBaseMonster::violentDeathAllowed(void){
+	return FALSE;
+}//END OF hasViolentDeathSequence
+
+//If the violent death sequence is mapped to ACT_DIEVIOLENT, no need to override this. Otherwise, change this to return that sequence exactly.
+//Or lookup by name, whichever.
+//BEWARE - not yet hooked up to make any difference!
+int CBaseMonster::LookupViolentDeathSequence(void){
+	return LookupActivity(ACT_DIEVIOLENT);
+}//END OF LookupViolentDeathSequence
+
+//This method MUST be overridden to do line traces forwards / backwards to see if there is enough space in whatever direction to play the animation
+//to avoid clipping through things.  If this is unnecessary, leave this as it is.  But "hasViolentDeathSequence" must  be overridden to return TRUE;
+//above regardless.
+BOOL CBaseMonster::violentDeathClear(void){
+	return TRUE;
+}//END OF
+
+
+
 
 
 

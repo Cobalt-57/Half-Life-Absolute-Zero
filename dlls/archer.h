@@ -150,7 +150,7 @@ public:
 
 	BOOL SeeThroughWaterLine(void);
 
-	BOOL ignores_PVS_check(void);
+	BOOL noncombat_Look_ignores_PVS_check(void);
 
 	void BecomeDead(void);
 

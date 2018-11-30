@@ -162,6 +162,8 @@ public:
 		}
 	}
 
+
+
 	//UTIL_SetSize(pev, VEC_HUMAN_HULL_MIN, VEC_HUMAN_HULL_MAX);
 	
 
@@ -172,11 +174,19 @@ public:
 	
 	void TalkInit( void );
 
+
 	//MODDD
 	GENERATE_TRACEATTACK_PROTOTYPE
 	GENERATE_TAKEDAMAGE_PROTOTYPE
 	
 	GENERATE_KILLED_PROTOTYPE
+
+	
+	BOOL violentDeathAllowed(void);
+	BOOL violentDeathClear(void);
+
+
+
 	
 	virtual int		Save( CSave &save );
 	virtual int		Restore( CRestore &restore );
@@ -1355,6 +1365,11 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBarney)
 
 
 
+
+
+
+
+
 void CBarney::PainSound(void){
 	PainSound(FALSE); //by default, typical. Obey the cooldown.
 }
@@ -1375,6 +1390,12 @@ void CBarney :: PainSound ( BOOL bypassCooldown )
 	case 2: EMIT_SOUND_FILTERED( ENT(pev), CHAN_VOICE, "barney/ba_pain3.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
 	}
 }
+
+
+
+
+
+
 
 //=========================================================
 // DeathSound 
@@ -2163,5 +2184,27 @@ BOOL CBarney::onResetBlend0(void){
 }
 
 
+
+
+
+
+
+BOOL CBarney::violentDeathAllowed(void){
+	return TRUE;
+}
+BOOL CBarney::violentDeathClear(void){
+	TraceResult tr;
+	Vector vecStart = Center();
+
+	UTIL_MakeVectors ( pev->angles );
+	UTIL_TraceHull ( vecStart, vecStart - gpGlobals->v_forward * 192, dont_ignore_monsters, head_hull, edict(), &tr );
+	
+	// Nothing in the way? it's good.
+	if ( tr.flFraction == 1.0 ){
+		return TRUE;
+	}
+
+	return FALSE;
+}//END OF violentDeathAllowed
 
 

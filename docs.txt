@@ -1267,7 +1267,7 @@ pathfindLargeBoundFix (0) - BOOL. For NPCs that have trouble going up or down in
 
 
 
-flyerKilledFallingLoop (0) - BOOL. Fliers (flying NPCs/monsters) that have a looping animation for falling while killed mid-air will use this animation instead of skipping straight to a death animation that assumes the ground has been touched.
+flyerKilledFallingLoop (1) - BOOL. Fliers (flying NPCs/monsters) that have a looping animation for falling while killed mid-air will use this animation instead of skipping straight to a death animation that assumes the ground has been touched.
 ~Touching the ground proceeds to the typical death animation.
 
 

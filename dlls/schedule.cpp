@@ -810,10 +810,28 @@ void CBaseMonster :: RunTask ( Task_t *pTask )
 		MakeIdealYaw ( m_vecEnemyLKP );
 		ChangeYaw( pev->yaw_speed ); 
 
-		//only continue if we loose sight of the enemy.
+		//only continue if we loose sight of the enemy. Presumably to start chasting to get them back in sight?
 		if(!HasConditions(bits_COND_SEE_ENEMY)){
 			TaskComplete();
 		}	
+	break;}
+	case TASK_WAIT_ENEMY_ENTER_WATER:{
+		MakeIdealYaw ( m_vecEnemyLKP );
+		ChangeYaw( pev->yaw_speed ); 
+
+		//Is the enemy in the water, presumably like ourselves?
+		if(m_hEnemy == NULL){
+			//what?
+			TaskFail();
+			return;
+		}
+
+		if(m_hEnemy->pev->waterlevel == 3){
+			//They are in the water? Done waiting.
+			//Is there a need for a bits_COND_SEE_ENEMY check too?  Probably not, we can route to them most likely.
+			TaskComplete();
+		}
+
 	break;}
 
 	case TASK_WAIT:
@@ -2998,7 +3016,7 @@ Schedule_t *CBaseMonster :: GetSchedule ( void )
 					//easyPrintLine("ducks??");
 
 					if(m_hEnemy != NULL && IRelationship(m_hEnemy) == R_FR){
-						//if I fear this enemy, and they are not seen and are occluded, just state.
+						//if I fear this enemy, and they are not seen and are occluded, just stare.
 						return GetScheduleOfType(SCHED_COMBAT_FACE);
 					}else{
 						return GetScheduleOfType( SCHED_CHASE_ENEMY );

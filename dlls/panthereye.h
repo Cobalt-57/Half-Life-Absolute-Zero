@@ -92,9 +92,28 @@ public:
 	BOOL CheckMeleeAttack1 ( float flDot, float flDist );
 	BOOL CheckMeleeAttack2 ( float flDot, float flDist );
 	
-	
+
 	BOOL needsMovementBoundFix(void);
 	void MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, float flInterval );
+	
+
+	// No range attacks
+	BOOL CheckRangeAttack1 ( float flDot, float flDist ) { return FALSE; }
+	BOOL CheckRangeAttack2 ( float flDot, float flDist ) { return FALSE; }
+	
+
+	BOOL violentDeathAllowed(void);
+	BOOL violentDeathClear(void);
+
+
+
+
+
+
+
+
+
+
 
 
 	float bugAnimBlockedTime;
@@ -136,9 +155,6 @@ public:
 
 	
 
-	// No range attacks
-	BOOL CheckRangeAttack1 ( float flDot, float flDist ) { return FALSE; }
-	BOOL CheckRangeAttack2 ( float flDot, float flDist ) { return FALSE; }
 	
 	//MODDD
 	GENERATE_TAKEDAMAGE_PROTOTYPE

@@ -44,6 +44,7 @@ typedef enum
 		SCHED_COMBAT_FACE,
 		SCHED_COMBAT_FACE_NOSTUMP,  //MODDD - new
 		SCHED_COMBAT_LOOK,  //MODDD - new
+		SCHED_WAIT_FOR_ENEMY_TO_ENTER_WATER, //MODDD
 		SCHED_COMBAT_STAND,
 		SCHED_CHASE_ENEMY,
 		SCHED_CHASE_ENEMY_STOP_SIGHT,
@@ -184,7 +185,7 @@ typedef enum
 		TASK_FIND_COVER_FROM_ORIGIN,
 		TASK_EAT,
 		TASK_DIE,
-		TASK_DIE_SIMPLE,  //MODDD - new
+		TASK_DIE_SIMPLE,  //MODDD - new.  NOTICE: Completely unrelated to ACT_DIESIMPLE.
 		TASK_DIE_LOOP,  //MODDD - new.
 		TASK_WAIT_FOR_SCRIPT,
 		TASK_PLAY_SCRIPT,
@@ -194,6 +195,7 @@ typedef enum
 		TASK_WAIT_RANDOM,
 		TASK_WAIT_INDEFINITE,
 		TASK_WAIT_ENEMY_LOOSE_SIGHT, //MODDD - new. Variant that completes if sight of the current enemy is lost.
+		TASK_WAIT_ENEMY_ENTER_WATER, //MODDD - new. Wait for the enemy to get back in the water. Stare at the LKP (last known position) until then.
 		TASK_STOP_MOVING,
 		TASK_TURN_LEFT,
 		TASK_TURN_RIGHT,

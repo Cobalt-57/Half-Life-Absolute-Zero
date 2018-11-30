@@ -364,6 +364,8 @@ public:
 		float forgetSmallFlinchTime;
 		float forgetBigFlinchTime;
 
+		float killedHealth;
+
 
 
 
@@ -507,7 +509,13 @@ public:
 	
 	virtual CBaseEntity* getNearestDeadBody(void);
 
-	virtual BOOL ignores_PVS_check(void);
+	virtual BOOL noncombat_Look_ignores_PVS_check(void);
+	
+	virtual BOOL violentDeathAllowed(void);
+	virtual int LookupViolentDeathSequence(void);
+	virtual BOOL violentDeathClear(void);
+
+
 
 	virtual BOOL getGermanModelRequirement(void);
 	virtual const char* getGermanModel(void);

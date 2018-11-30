@@ -520,7 +520,13 @@ int CArcher :: CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, CB
 
 
 
-
+	
+	//Now wait a moment.  We can't move to a point that's out of the water can we? Deny if so.
+	int conPosition = UTIL_PointContents(vecEnd);
+	if( conPosition != CONTENTS_WATER){
+		//Water only!
+		return LOCALMOVE_INVALID_DONT_TRIANGULATE;
+	}
 
 
 
@@ -660,6 +666,9 @@ int CArcher :: CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, CB
 		iReturn = LOCALMOVE_VALID;
 	}
 	
+
+
+
 	
 
 	
@@ -1079,12 +1088,57 @@ Schedule_t* CArcher::GetScheduleOfType( int Type){
 	
 	switch(Type){
 
+		case SCHED_CHASE_ENEMY:{
+			//HOLD UP.  Does it really make sense to try this?
+
+			if(m_hEnemy == NULL || m_hEnemy->pev->waterlevel == 3){
+				//our enemy disappeared (???) or is in the water? ok. proceed as usual.
+				//If they disappeared this will fail pretty fast. How'd it get called anyways?
+				return slChaseEnemySmart;
+			}else{
+				//Enemy isn't in the water? Wait for them to come back. Can interrupt by being able to attack too.
+				return slWaitForEnemyToEnterWater;
+			}
+
+		break;}
+		case SCHED_CHASE_ENEMY_FAILED:{
+			//Repeat from what schedule.cpp.  I'm not calling the parent method just for this.
+			if(m_hEnemy != NULL){
+				//this->m_vecEnemyLKP = m_hEnemy->pev->origin;
+				setEnemyLKP(m_hEnemy->pev->origin);
+			}
+
+			if(m_hEnemy != NULL && m_hEnemy->pev->waterlevel == 3){
+				//enemy is in the water and you failed?  Typical pathfind fail I guess.
+				return &slFail[ 0 ];
+			}else{
+				//Enemy isn't in the water?  No wonder we can't get to them.
+				//Just stick to staring with continual checks for the enemy being in the water or not.
+				//That is be a little more reactive while waiting than just staring into space.
+				return &slWaitForEnemyToEnterWater[ 0 ];
+			}
+
+		break;}
+		
+
+
 		case SCHED_DIE:
 			//return flierDeathSchedule();
 			return slDieWaterFloat;
 		break;
 		case SCHED_RANGE_ATTACK1:
-			return slArcherRangeAttack1;
+
+			if(m_hEnemy == NULL || m_hEnemy->pev->waterlevel == 3){
+				//Our enemy disappeared (will fail soon?) or is still in the water? Typical attack, nothing special.
+				return slArcherRangeAttack1;
+			}else{
+				//Enemy isn't in the water?  Let's see if emerging at the surface of the water to do an attack is possible.
+				//return slWaitForEnemyToEnterWater;
+				//...
+				//TODO. change this later.
+				return slArcherRangeAttack1;
+			}
+
 		break;
 
 
@@ -2274,7 +2328,7 @@ BOOL CArcher::SeeThroughWaterLine(void){
 	return TRUE;
 }//END OF SeeThroughWaterLine
 
-BOOL CArcher::ignores_PVS_check(void){
+BOOL CArcher::noncombat_Look_ignores_PVS_check(void){
 	return TRUE;
 }//END OF ignores_PVS_check
 

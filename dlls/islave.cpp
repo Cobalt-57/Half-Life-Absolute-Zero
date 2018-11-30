@@ -165,8 +165,6 @@ public:
 	GENERATE_TRACEATTACK_PROTOTYPE
 	GENERATE_TAKEDAMAGE_PROTOTYPE
 
-
-
 	float getBarnacleForwardOffset(void);
 
 	BOOL getIsBarnacleVictimException(void);
@@ -202,6 +200,14 @@ public:
 	void WackBeam( int side, CBaseEntity *pEntity );
 	void ZapBeam( int side );
 	void BeamGlow( void );
+
+	BOOL violentDeathAllowed(void);
+	BOOL violentDeathClear(void);
+
+
+
+
+
 
 	int m_iBravery;
 
@@ -2446,3 +2452,23 @@ void CISlave :: ClearBeams( )
 
 	STOP_SOUND_FILTERED( ENT(pev), CHAN_WEAPON, "debris/zap4.wav" );
 }
+
+
+BOOL CISlave::violentDeathAllowed(void){
+	return TRUE;
+}
+BOOL CISlave::violentDeathClear(void){
+	TraceResult tr;
+	Vector vecStart = Center();
+
+	UTIL_MakeVectors ( pev->angles );
+	UTIL_TraceHull ( vecStart, vecStart - gpGlobals->v_forward * 68, dont_ignore_monsters, head_hull, edict(), &tr );
+	
+	// Nothing in the way? it's good.
+	if ( tr.flFraction == 1.0 ){
+		return TRUE;
+	}
+
+	return FALSE;
+}//END OF violentDeathAllowed
+

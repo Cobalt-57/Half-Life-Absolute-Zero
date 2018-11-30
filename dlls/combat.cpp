@@ -1244,6 +1244,8 @@ GENERATE_GIBMONSTEREND_IMPLEMENTATION(CBaseMonster){
 //  Bodyshot that dealt a lot of overkill damage? what?   Plus checks for whether forwards / backwards is acceptable to go before picking a particular violent anim...
 //  this may be a little involved.
 
+//MODDD - ALSO, reorganized this a bit to remove some redundancies.  Should have equivalent behavior.
+
 //=========================================================
 // GetDeathActivity - determines the best type of death
 // anim to play.
@@ -1251,7 +1253,8 @@ GENERATE_GIBMONSTEREND_IMPLEMENTATION(CBaseMonster){
 Activity CBaseMonster :: GetDeathActivity ( void )
 {
 	Activity	deathActivity;
-	BOOL		fTriedDirection;
+	//BOOL		fTriedDirection;
+	BOOL		fCanTryDirection = FALSE; //MODDD - new.
 	float		flDot;
 	TraceResult	tr;
 	Vector		vecSrc;
@@ -1264,106 +1267,97 @@ Activity CBaseMonster :: GetDeathActivity ( void )
 
 	vecSrc = Center();
 
-	fTriedDirection = FALSE;
+	//fTriedDirection = FALSE;
 	deathActivity = ACT_DIESIMPLE;// in case we can't find any special deaths to do.
 
-	UTIL_MakeVectors ( pev->angles );
-	flDot = DotProduct ( gpGlobals->v_forward, g_vecAttackDir * -1 );
 
 	switch ( m_LastHitGroup )
 	{
 		// try to pick a region-specific death.
 	case HITGROUP_HEAD:
-		deathActivity = ACT_DIE_HEADSHOT;
+		if(LookupActivity(ACT_DIE_HEADSHOT) != ACTIVITY_NOT_AVAILABLE){
+			//do it!
+			deathActivity = ACT_DIE_HEADSHOT;
+		}else{
+			//try that instead
+			fCanTryDirection = TRUE;
+		}
 		break;
 
 	case HITGROUP_STOMACH:
-		deathActivity = ACT_DIE_GUTSHOT;
+		if(LookupActivity(ACT_DIE_GUTSHOT) != ACTIVITY_NOT_AVAILABLE){
+			//do it!
+			deathActivity = ACT_DIE_GUTSHOT;
+		}else{
+			//try that instead
+			fCanTryDirection = TRUE;
+		}
 		break;
 
 	case HITGROUP_GENERIC:
 		// try to pick a death based on attack direction
-		fTriedDirection = TRUE;
-
-		if ( flDot > 0.3 )
-		{
-			deathActivity = ACT_DIEFORWARD;
-		}
-		else if ( flDot <= -0.3 )
-		{
-			deathActivity = ACT_DIEBACKWARD;
-		}
+		fCanTryDirection = TRUE;
 		break;
 
 	default:
 		// try to pick a death based on attack direction
-		fTriedDirection = TRUE;
-
-		if ( flDot > 0.3 )
-		{
-			deathActivity = ACT_DIEFORWARD;
-		}
-		else if ( flDot <= -0.3 )
-		{
-			deathActivity = ACT_DIEBACKWARD;
-		}
+		fCanTryDirection = TRUE;
 		break;
 	}
 
 
-	// can we perform the prescribed death?
-	if ( LookupActivity ( deathActivity ) == ACTIVITY_NOT_AVAILABLE )
-	{
-		// no! did we fail to perform a directional death? 
-		if ( fTriedDirection )
+	if(fCanTryDirection){
+		UTIL_MakeVectors ( pev->angles );
+		flDot = DotProduct ( gpGlobals->v_forward, g_vecAttackDir * -1 );
+		//Haven't found a good death activity above (has a sequence available)? Try the directions.
+		if ( flDot > 0.3 )
 		{
-			// if yes, we're out of options. Go simple.
-			deathActivity = ACT_DIESIMPLE;
+			if(LookupActivity(ACT_DIEFORWARD) != ACTIVITY_NOT_AVAILABLE){
+				//One more check.
+				// make sure there's room to fall forward
+				UTIL_TraceHull ( vecSrc, vecSrc + gpGlobals->v_forward * 64, dont_ignore_monsters, head_hull, edict(), &tr );
+				// Nothing in the way? it's good.
+				if ( tr.flFraction == 1.0 )
+				{
+					deathActivity = ACT_DIEFORWARD;
+				}
+			}//END OF ACT_DIEFORWARD check
 		}
-		else
+		else if ( flDot <= -0.3 )
 		{
-			// cannot perform the ideal region-specific death, so try a direction.
-			if ( flDot > 0.3 )
-			{
-				deathActivity = ACT_DIEFORWARD;
+
+			//MODDD INJECTION - is ACT_DIEVIOLENT possible?
+			// It must be allowed by this particular monster to be used, regardless of having a sequence mapped by the model.
+			// This way we can promise some attention was paid to whether it needs a trace check or not, which varries per monster.
+			// There is no standard length of trace that will satisfy all violent death animations.  violentDeathClear will handle that.
+			if(violentDeathAllowed() && violentDeathClear()){
+				//Apparently this is OK.
+				//But if there are ever multiple violent death anims, we need to use this as a signal to pick
+				//a more specific one later possibly, like what one passed its own distance check.
+				deathActivity = ACT_DIEVIOLENT;
+			}else{
+				//give DIEBACKWARD a chance as usual.
+				if(LookupActivity(ACT_DIEBACKWARD) != ACTIVITY_NOT_AVAILABLE){
+					//One more check.
+					// make sure there's room to fall backward
+					UTIL_TraceHull ( vecSrc, vecSrc - gpGlobals->v_forward * 64, dont_ignore_monsters, head_hull, edict(), &tr );
+					// Nothing in the way? it's good.
+					if ( tr.flFraction == 1.0 )
+					{
+						deathActivity = ACT_DIEBACKWARD;
+					}
+				}//END OF ACT_DIEBACKWARD check
 			}
-			else if ( flDot <= -0.3 )
-			{
-				deathActivity = ACT_DIEBACKWARD;
-			}
-		}
-	}
 
-	if ( LookupActivity ( deathActivity ) == ACTIVITY_NOT_AVAILABLE )
-	{
-		// if we're still invalid, simple is our only option.
-		deathActivity = ACT_DIESIMPLE;
-	}
 
-	if ( deathActivity == ACT_DIEFORWARD )
-	{
-			// make sure there's room to fall forward
-			UTIL_TraceHull ( vecSrc, vecSrc + gpGlobals->v_forward * 64, dont_ignore_monsters, head_hull, edict(), &tr );
 
-			if ( tr.flFraction != 1.0 )
-			{
-				deathActivity = ACT_DIESIMPLE;
-			}
-	}
+		}//END OF flDot checks
+	}//END OF fCanTryDirection
 
-	if ( deathActivity == ACT_DIEBACKWARD )
-	{
-			// make sure there's room to fall backward
-			UTIL_TraceHull ( vecSrc, vecSrc - gpGlobals->v_forward * 64, dont_ignore_monsters, head_hull, edict(), &tr );
 
-			if ( tr.flFraction != 1.0 )
-			{
-				deathActivity = ACT_DIESIMPLE;
-			}
-	}
 
 	return deathActivity;
-}
+}//END OF GetDeathActivity
 
 //=========================================================
 // GetSmallFlinchActivity - determines the best type of flinch
@@ -1546,6 +1540,11 @@ GENERATE_KILLED_IMPLEMENTATION(CBaseMonster)
 	}
 	
 
+	// Before any mods to health, record what it was for monitoring overkill.
+	//////killedHealth = pev->health;
+	// ACTUALLY just make it the amount of damage dealth by the last attack.
+	// may feel a little better this way.
+	
 
 
 	if	( ShouldGibMonster( iGib ) )
@@ -2707,8 +2706,13 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBaseMonster){
 		//MODDD - removing this. We can send the inflictor to killed now.
 		//g_pevLastInflictor = pevInflictor;
 
+		//See note about killedHealth further below.
+		killedHealth = -flDamage;
+
+
 		attemptResetTimedDamage(TRUE);
 
+		float MYHEALTH = pev->health;
 		
 		if ( bitsDamageType & DMG_ALWAYSGIB )
 		{

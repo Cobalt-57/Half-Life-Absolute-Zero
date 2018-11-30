@@ -318,6 +318,11 @@ public:
 
 	void ReportAIState(void);
 
+	BOOL violentDeathAllowed(void);
+	BOOL violentDeathClear(void);
+
+
+
 	
 //MODDD - new data stuff.
 	static const char *pAttackHitSounds[];
@@ -3873,6 +3878,35 @@ int CScientist::tryActivitySubstitute(int activity){
 	//not handled by above?
 	return CBaseAnimating::LookupActivity(activity);
 }
+
+
+
+
+
+
+
+BOOL CScientist::violentDeathAllowed(void){
+	return TRUE;
+}
+BOOL CScientist::violentDeathClear(void){
+	TraceResult tr;
+	Vector vecStart = Center();
+
+	UTIL_MakeVectors ( pev->angles );
+	UTIL_TraceHull ( vecStart, vecStart - gpGlobals->v_forward * 80, dont_ignore_monsters, head_hull, edict(), &tr );
+	
+	// Nothing in the way? it's good.
+	if ( tr.flFraction == 1.0 ){
+		return TRUE;
+	}
+
+	return FALSE;
+}//END OF violentDeathAllowed
+
+
+
+
+
 
 
 

@@ -198,6 +198,8 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CStukaBat)
 	m_afMemory |= bits_MEMORY_PROVOKED;
 
 
+
+
 	
 	PRINTQUEUE_STUKA_SEND(stukaPrint.tookDamage, "TOOK DMG");
 
@@ -221,7 +223,21 @@ GENERATE_KILLED_IMPLEMENTATION(CStukaBat)
 	chargeIndex = -1;
 
 	queueToggleGround = FALSE;
-	snappedToCeiling = FALSE;
+	
+	//MODDD - not yet! We'll turn this off after picking a fitting death anim.
+	//Knowing we were snapped to the ceiling at the time of death (picking an activity / sequence) is important, tells us to fall.
+	//snappedToCeiling = FALSE;
+
+	if(snappedToCeiling == TRUE){
+		//still do it but...?
+		snappedToCeiling = FALSE;
+		onGround = FALSE;
+
+		//Teleport me down slightly for safety.
+		pev->origin = Vector(pev->origin.x, pev->origin.y, pev->origin.z - 6);
+	}
+	
+
 	queueToggleSnappedToCeiling = FALSE;
 
 
@@ -757,10 +773,10 @@ void CStukaBat::checkStartSnap(){
 	if(m_iSpawnLoc == 0){
 		//Auto-choose if the player spawned me (cheats).  Need to determine whether to snap to the ground, ceiling, or nothing (if neither is close)
 		//this time, "ignore_monsters" as opposed to "dont_ignore_monsters".
-		vecEnd = vecStart + Vector(0, 0, 8);
+		vecEnd = vecStart + Vector(0, 0, 40);
 		UTIL_TraceLine(vecStart, vecEnd, ignore_monsters, ENT(pev), &trUp);
 
-		vecEnd = vecStart + Vector(0, 0, -8);
+		vecEnd = vecStart + Vector(0, 0, -24);
 		UTIL_TraceLine(vecStart, vecEnd, ignore_monsters, ENT(pev), &trDown);
 
 		distFromUp = -1;
@@ -798,7 +814,7 @@ void CStukaBat::checkStartSnap(){
 			UTIL_TraceLine(vecStart, vecEnd, ignore_monsters, ENT(pev), &trDown);
 
 			if(trDown.flFraction < 1.0){
-				certainOfLoc = true;
+				certainOfLoc = TRUE;
 			}
 		}
 		if(certainOfLoc){
@@ -825,7 +841,7 @@ void CStukaBat::checkStartSnap(){
 			UTIL_TraceLine(vecStart, vecEnd, ignore_monsters, ENT(pev), &trUp);
 
 			if(trUp.flFraction < 1.0){
-				certainOfLoc = true;
+				certainOfLoc = TRUE;
 			}
 		}
 		if(certainOfLoc){
@@ -2442,11 +2458,11 @@ Schedule_t* CStukaBat :: GetScheduleOfType ( int Type )
 		(
 			(
 			onGround == FALSE &&
-			pev->sequence != SEQ_STUKABAT_LAND_CEILING &&
 			pev->sequence != SEQ_STUKABAT_LAND_GROUND
 			)
 			||
 			snappedToCeiling
+			|| (pev->sequence == SEQ_STUKABAT_LAND_CEILING) //landing on or leaving the ceiling?  You fall.
 		)
 		{
 			//flying or hanging? leave this up to whether we support the falling cycler or cut straight to the flying dead animation.
@@ -3003,7 +3019,9 @@ void CStukaBat :: SetTurnActivityCustom ( void )
 
 			m_flGroundSpeed = 350;
 			//if(m_IdealActivity == ACT_FLY)
-				setAnimation("Flying_Cycler", TRUE, FALSE, 3);
+			//MODDD - why was this turning looping off? Are you daft man??!
+			//(and yes I'm talking to myself. Classy)
+				setAnimation("Flying_Cycler", TRUE, TRUE, 3);
 				//recentActivity = ACT_FLY;
 				//moveFlyNoInterrupt = gpGlobals->time + 11.0/12.0;
 				moveFlyNoInterrupt = gpGlobals->time + (26.0-1.6)/35.0;
@@ -4414,11 +4432,9 @@ int CStukaBat::LookupActivityHard(int activity){
 			(
 				(
 				onGround == FALSE &&
-				pev->sequence != SEQ_STUKABAT_LAND_CEILING &&
 				pev->sequence != SEQ_STUKABAT_LAND_GROUND
 				)
-				||
-				snappedToCeiling
+				|| snappedToCeiling || pev->sequence == SEQ_STUKABAT_LAND_CEILING
 			)
 			{
 				return SEQ_STUKABAT_DEATH_FALL_SIMPLE;
@@ -4432,11 +4448,9 @@ int CStukaBat::LookupActivityHard(int activity){
 			(
 				(
 				onGround == FALSE &&
-				pev->sequence != SEQ_STUKABAT_LAND_CEILING &&
 				pev->sequence != SEQ_STUKABAT_LAND_GROUND
 				)
-				||
-				snappedToCeiling
+				|| snappedToCeiling || pev->sequence == SEQ_STUKABAT_LAND_CEILING
 			)
 			{
 				return SEQ_STUKABAT_DEATH_FALL_VIOLENT;
@@ -4519,6 +4533,29 @@ void CStukaBat::KilledFallingTouch( CBaseEntity *pOther ){
 	if(pOther == NULL){
 		return; //??????
 	}
+	const char* test = pOther->getClassname();
 	hitGroundDead = TRUE;
 }
+
+
+
+BOOL CStukaBat::violentDeathAllowed(void){
+	return TRUE;
+}
+BOOL CStukaBat::violentDeathClear(void){
+	//No, it's a falling death. Don't do a linetrace, maybe an overkill check??
+
+	float yeayea = pev->health;
+
+	//is that ok?
+	if(killedHealth < -10){
+		return TRUE;
+	}
+
+
+	return FALSE;
+}//END OF violentDeathAllowed
+
+
+
 

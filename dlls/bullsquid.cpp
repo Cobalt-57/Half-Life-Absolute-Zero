@@ -113,6 +113,9 @@ public:
 	//MODDD - new
 	//void Think();
 
+	BOOL violentDeathAllowed(void);
+	BOOL violentDeathClear(void);
+
 	int	Save( CSave &save ); 
 	int Restore( CRestore &restore );
 
@@ -1325,4 +1328,28 @@ MONSTERSTATE CBullsquid :: GetIdealState ( void )
 
 	return m_IdealMonsterState;
 }
+
+
+
+
+BOOL CBullsquid::violentDeathAllowed(void){
+	return TRUE;
+}
+BOOL CBullsquid::violentDeathClear(void){
+	TraceResult tr;
+	Vector vecStart = Center();
+
+	UTIL_MakeVectors ( pev->angles );
+	UTIL_TraceHull ( vecStart, vecStart - gpGlobals->v_forward * 90, dont_ignore_monsters, head_hull, edict(), &tr );
+	
+	// Nothing in the way? it's good.
+	if ( tr.flFraction == 1.0 ){
+		return TRUE;
+	}
+
+	return FALSE;
+}//END OF violentDeathAllowed
+
+
+
 

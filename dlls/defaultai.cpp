@@ -773,6 +773,8 @@ Schedule_t	slCombatFaceNoStump[] =
 
 
 //Just uh, face and stay that way. look. that's it.
+//Interrupted by being able to attack.  Good for ranged specialists who may wait between shots (cooldown / reload) and don't
+//necessarily want to get closer to their foe in the meantime.
 Task_t tlCombatLook[] =
 {
 	{ TASK_STOP_MOVING,				0				},
@@ -1160,6 +1162,34 @@ Schedule_t slChaseEnemySmart_StopSight[] =
 		"Chase Enemy Smart StopSight"
 	},
 };
+
+
+
+//MODDD - clone of slCombatLook.
+//Modified to be interrupted by the enemy returning to the water.
+//Otherwise trying to get closer won't really do you any good.
+Task_t tlWaitForEnemyToEnterWater[] =
+{
+	{ TASK_STOP_MOVING,				0				},
+	{ TASK_SET_ACTIVITY,			(float)ACT_IDLE	},
+	{ TASK_FACE_ENEMY,				(float)0		},
+	{ TASK_WAIT_ENEMY_ENTER_WATER,			(float)0		},
+};
+
+Schedule_t slWaitForEnemyToEnterWater[] =
+{
+	{ 
+		tlWaitForEnemyToEnterWater,
+		ARRAYSIZE ( tlWaitForEnemyToEnterWater ), 
+		bits_COND_CAN_ATTACK			|
+		bits_COND_NEW_ENEMY				|
+		bits_COND_ENEMY_DEAD,
+		0,
+		"slWaitForEnemyToEnterWater"
+	},
+};
+
+
 
 
 
@@ -1843,6 +1873,7 @@ Schedule_t *CBaseMonster::m_scheduleList[] =
 	slCombatFace,
 	slCombatFaceNoStump,
 	slCombatLook,
+	slWaitForEnemyToEnterWater, //MODDD
 	slCombatFaceSound,
 	slStandoff,
 	slArmWeapon,
@@ -2014,6 +2045,9 @@ Schedule_t* CBaseMonster :: GetScheduleOfType ( int Type )
 	case SCHED_COMBAT_LOOK:{
 		return &slCombatLook[0];
     break;}
+	case SCHED_WAIT_FOR_ENEMY_TO_ENTER_WATER:{
+		return &slWaitForEnemyToEnterWater[0];
+	break;}
 	case SCHED_CHASE_ENEMY:
 		{
 			//MODDD - see what happens.

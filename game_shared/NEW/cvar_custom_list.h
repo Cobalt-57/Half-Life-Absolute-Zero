@@ -622,7 +622,7 @@
 #define DEFAULT_healthcolor_yellowMark 70
 #define DEFAULT_cl_drawExtraZeros 0
 #define DEFAULT_pathfindLargeBoundFix 0
-#define DEFAULT_flyerKilledFallingLoop 0
+#define DEFAULT_flyerKilledFallingLoop 1
 #define DEFAULT_floaterDummy 0
 #define DEFAULT_ladderCycleMulti 0.9
 #define DEFAULT_ladderSpeedMulti 1.55

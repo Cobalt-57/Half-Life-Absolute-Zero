@@ -59,6 +59,9 @@ extern Schedule_t	slCombatFace[];
 extern Schedule_t slCombatFaceNoStump[];
 extern Schedule_t slCombatFaceSound[];
 
+//MODDD - new
+extern Schedule_t slWaitForEnemyToEnterWater[];
+
 //=========================================================
 // reload schedule
 //=========================================================

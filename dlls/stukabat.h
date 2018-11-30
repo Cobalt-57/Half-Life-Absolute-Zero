@@ -415,8 +415,16 @@ public:
 
 	void OnKilledSetTouch(void);
 	int getLoopingDeathSequence(void);
+
+
 	
 	void EXPORT KilledFallingTouch ( CBaseEntity *pOther );
+
+	
+	BOOL violentDeathAllowed(void);
+	BOOL violentDeathClear(void);
+
+
 
 	BOOL hitGroundDead;
 
