@@ -4548,7 +4548,7 @@ BOOL CStukaBat::violentDeathClear(void){
 	float yeayea = pev->health;
 
 	//is that ok?
-	if(killedHealth < -10){
+	if(lastDamageReceived > 10){
 		return TRUE;
 	}
 

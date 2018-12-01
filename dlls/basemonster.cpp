@@ -333,7 +333,7 @@ int CBaseMonster::monsterIDLatest = 0;
 //MODDD - new
 CBaseMonster::CBaseMonster(){
 	
-	killedHealth = 0;
+	lastDamageReceived = 0;
 	
 	forgetSmallFlinchTime = -1;
 	forgetBigFlinchTime = -1;

@@ -2705,9 +2705,9 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBaseMonster){
 	{
 		//MODDD - removing this. We can send the inflictor to killed now.
 		//g_pevLastInflictor = pevInflictor;
+		
 
-		//See note about killedHealth further below.
-		killedHealth = -flDamage;
+		lastDamageReceived = flDamage;
 
 
 		attemptResetTimedDamage(TRUE);

@@ -2379,7 +2379,10 @@ void CAGrunt::OnTakeDamageSetConditions(entvars_t *pevInflictor, entvars_t *pevA
 	//    Keep it to using light damage for that instead.
 	//if ( flDamage >= 20 )
 	
-	if(flDamage >= pev->max_health * 0.55 && gpGlobals->time >= forgetBigFlinchTime)
+
+	//Damage above 40 also causes bigflinch for tougher creatures like agrunts,
+	//just to make sure a revolver shot can cause a bigflinch.
+	if(flDamage >= pev->max_health * 0.55 || flDamage >= 40 && gpGlobals->time >= forgetBigFlinchTime)
 	{
 		SetConditions(bits_COND_HEAVY_DAMAGE);
 		forgetSmallFlinchTime = gpGlobals->time + DEFAULT_FORGET_SMALL_FLINCH_TIME;

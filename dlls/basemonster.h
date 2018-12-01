@@ -364,7 +364,7 @@ public:
 		float forgetSmallFlinchTime;
 		float forgetBigFlinchTime;
 
-		float killedHealth;
+		float lastDamageReceived;
 
 
 

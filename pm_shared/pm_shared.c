@@ -1065,6 +1065,9 @@ void PM_Accelerate (vec3_t wishdir, float wishspeed, float accel)
 	// Determine amount of accleration.
 	accelspeed = accel * pmove->frametime * wishspeed * pmove->friction;
 	
+	
+	
+
 	// Cap at addspeed
 	if (accelspeed > addspeed)
 		accelspeed = addspeed;
@@ -1074,6 +1077,8 @@ void PM_Accelerate (vec3_t wishdir, float wishspeed, float accel)
 	{
 		pmove->velocity[i] += accelspeed * wishdir[i];	
 	}
+
+
 }
 
 /*
@@ -1101,12 +1106,15 @@ void PM_WalkMove ()
 	float downdist, updist;
 	float normalSpeedMult = 1;
 
+
 	pmtrace_t trace;
 	
 	// Copy movement amounts
 	fmove = pmove->cmd.forwardmove;
 	smove = pmove->cmd.sidemove;
 	
+	
+	//return;
 	// Zero out z components of movement vectors
 	pmove->forward[2] = 0;
 	pmove->right[2]   = 0;
@@ -1117,9 +1125,40 @@ void PM_WalkMove ()
 	//MODDD - allow influence from a CVar.
 	normalSpeedMult = getSafeSqureRoot(atof( pmove->PM_Info_ValueForKey( pmove->physinfo, "nsm" ) ));
 	
+
+
+
+
+
+
+
+
 	for (i=0 ; i<2 ; i++)       // Determine x and y parts of velocity
 		wishvel[i] = pmove->forward[i]*fmove*normalSpeedMult + pmove->right[i]*smove*normalSpeedMult;
 	
+
+	
+	/*
+		if(pmove->server){
+			pmove->Con_Printf("Stes1 %f\n", wishvel[0]);
+			pmove->Con_Printf("Stes2 %f\n", wishvel[1]);
+
+		}else{
+			pmove->Con_Printf("Ctes1 %f\n", wishvel[0]);
+			pmove->Con_Printf("Ctes2 %f\n", wishvel[1]);
+		}
+		*/
+
+
+
+
+
+
+
+
+
+
+
 	wishvel[2] = 0;             // Zero out z part of velocity
 
 	VectorCopy (wishvel, wishdir);   // Determine maginitude of speed of move
@@ -1134,7 +1173,11 @@ void PM_WalkMove ()
 	{
 		VectorScale (wishvel, pmove->maxspeed/wishspeed, wishvel);
 		wishspeed = pmove->maxspeed;
+		//
 	}
+
+
+	
 
 	// Set pmove velocity
 	pmove->velocity[2] = 0;
@@ -1156,12 +1199,19 @@ void PM_WalkMove ()
 	//if (!pmove->velocity[0] && !pmove->velocity[1] && !pmove->velocity[2])
 	//	return;
 
+	//return;
+
+
+
+
+
 	oldonground = pmove->onground;
 
 // first try just moving to the destination	
 	dest[0] = pmove->origin[0] + pmove->velocity[0]*pmove->frametime;
 	dest[1] = pmove->origin[1] + pmove->velocity[1]*pmove->frametime;	
 	dest[2] = pmove->origin[2];
+
 
 	// first try moving directly to the next spot
 	VectorCopy (dest, start);
@@ -1181,10 +1231,24 @@ void PM_WalkMove ()
 	if (pmove->waterjumptime)         // If we are jumping out of water, don't do anything more.
 		return;
 
+
+
+
+
+
+
+
+
+
+
+
 	// Try sliding forward both on ground and up 16 pixels
 	//  take the move that goes farthest
 	VectorCopy (pmove->origin, original);       // Save out original pos &
 	VectorCopy (pmove->velocity, originalvel);  //  velocity.
+
+
+
 
 	// Slide move
 	clip = PM_FlyMove ();
@@ -1239,6 +1303,7 @@ void PM_WalkMove ()
 		     + (down[1] - original[1])*(down[1] - original[1]);
 	updist   = (pmove->up[0]   - original[0])*(pmove->up[0]   - original[0])
 		     + (pmove->up[1]   - original[1])*(pmove->up[1]   - original[1]);
+
 
 	if (downdist > updist)
 	{

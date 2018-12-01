@@ -1054,7 +1054,10 @@ Schedule_t slChaseEnemy[] =
 		bits_COND_CAN_RANGE_ATTACK2	|
 		bits_COND_CAN_MELEE_ATTACK2	|
 		bits_COND_TASK_FAILED		|
-		bits_COND_HEAR_SOUND,
+		bits_COND_HEAR_SOUND	|
+		//MODDD - why wasn't at least heavy damage always possible??
+		//bits_COND_LIGHT_DAMAGE |
+		bits_COND_HEAVY_DAMAGE,
 		
 		bits_SOUND_DANGER,
 		"Chase Enemy"
@@ -1124,7 +1127,9 @@ Schedule_t slChaseEnemySmart[] =
 		bits_COND_CAN_RANGE_ATTACK2	|
 		bits_COND_CAN_MELEE_ATTACK2	|
 		bits_COND_TASK_FAILED		|
-		bits_COND_HEAR_SOUND,
+		bits_COND_HEAR_SOUND |
+		//bits_COND_LIGHT_DAMAGE |
+		bits_COND_HEAVY_DAMAGE,
 		
 		bits_SOUND_DANGER,
 		"Chase Enemy Smart"
@@ -1156,7 +1161,9 @@ Schedule_t slChaseEnemySmart_StopSight[] =
 		bits_COND_CAN_MELEE_ATTACK2	|
 		bits_COND_TASK_FAILED		|
 		bits_COND_HEAR_SOUND |
-		bits_COND_SEE_ENEMY,
+		bits_COND_SEE_ENEMY |
+		//bits_COND_LIGHT_DAMAGE |
+		bits_COND_HEAVY_DAMAGE,
 		
 		bits_SOUND_DANGER,
 		"Chase Enemy Smart StopSight"
@@ -1183,7 +1190,9 @@ Schedule_t slWaitForEnemyToEnterWater[] =
 		ARRAYSIZE ( tlWaitForEnemyToEnterWater ), 
 		bits_COND_CAN_ATTACK			|
 		bits_COND_NEW_ENEMY				|
-		bits_COND_ENEMY_DEAD,
+		bits_COND_ENEMY_DEAD |
+		//bits_COND_LIGHT_DAMAGE |
+		bits_COND_HEAVY_DAMAGE,
 		0,
 		"slWaitForEnemyToEnterWater"
 	},
@@ -1616,7 +1625,9 @@ Schedule_t	slTakeCoverFromOrigin[] =
 	{ 
 		tlTakeCoverFromOrigin,
 		ARRAYSIZE ( tlTakeCoverFromOrigin ), 
-		bits_COND_NEW_ENEMY,
+		bits_COND_NEW_ENEMY |
+		//MODDD CRITICAL - now interruptable by heavy damage.  May or may not be a good thing.
+		bits_COND_HEAVY_DAMAGE,
 		0,
 		"TakeCoverFromOrigin"
 	},
@@ -1789,7 +1800,9 @@ Schedule_t	slTakeCoverFromEnemy[] =
 	{ 
 		tlTakeCoverFromEnemy,
 		ARRAYSIZE ( tlTakeCoverFromEnemy ), 
-		bits_COND_NEW_ENEMY,
+		bits_COND_NEW_ENEMY |
+		//MODDD CRITICAL - now interruptable by heavy damage.  May or may not be a good thing.
+		bits_COND_HEAVY_DAMAGE,
 		0,
 		"tlTakeCoverFromEnemy"
 	},
@@ -1817,7 +1830,9 @@ Schedule_t	slTakeCoverFromEnemyOrChase[] =
 	{ 
 		tlTakeCoverFromEnemyOrChase,
 		ARRAYSIZE ( tlTakeCoverFromEnemyOrChase ), 
-		bits_COND_NEW_ENEMY,
+		bits_COND_NEW_ENEMY |
+		//MODDD CRITICAL - now interruptable by heavy damage.  May or may not be a good thing.
+		bits_COND_HEAVY_DAMAGE,
 		0,
 		"tlTakeCoverFromEnemyOrChase"
 	},

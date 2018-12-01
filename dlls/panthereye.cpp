@@ -36,6 +36,7 @@ EASY_CVAR_EXTERN(animationFramerateMulti)
 
 EASY_CVAR_EXTERN(drawDebugPathfinding2)
 
+EASY_CVAR_EXTERN(testVar)
 
 
 
@@ -413,24 +414,26 @@ int CPantherEye::LookupActivityHard(int activity){
 			return LookupSequence("crouch_to_jump");
 		break;
 		case ACT_SMALL_FLINCH:
-			//NOTE: animation "flinch" seems to be a clone of "flinch_light".
-			m_flFramerateSuggestion = 1.4f;
-			return LookupSequence("flinch_light");
-		break;
 		case ACT_BIG_FLINCH:
-			m_flFramerateSuggestion = 2.5f;
-			return LookupSequence("flinch_hard");
+			if(g_iSkillLevel == SKILL_EASY){
+				m_flFramerateSuggestion = 1.0;
+			}else if(g_iSkillLevel == SKILL_MEDIUM){
+				m_flFramerateSuggestion = 1.6;
+			}else if(g_iSkillLevel == SKILL_HARD){
+				m_flFramerateSuggestion = 2.0;
+			}
+			return CBaseAnimating::LookupActivity(activity);
 		break;
 		case ACT_DIEVIOLENT:
-			return LookupSequence("death_simple");
+			return LookupSequence("death_violent");
 		break;
 		case ACT_TURN_LEFT:
-			m_flFramerateSuggestion = 2.3f;
-			return LookupSequence("turn_left");
+			m_flFramerateSuggestion = 2.1f;
+			return CBaseAnimating::LookupActivity(activity);
 		break;
 		case ACT_TURN_RIGHT:
-			m_flFramerateSuggestion = 2.3f;
-			return LookupSequence("turn_right");
+			m_flFramerateSuggestion = 2.1f;
+			return CBaseAnimating::LookupActivity(activity);
 		break;
 		case ACT_RUN:
 			//base method does fine, we just want to... 'intervene', so to speak.
@@ -440,7 +443,7 @@ int CPantherEye::LookupActivityHard(int activity){
 			}else if(g_iSkillLevel == SKILL_MEDIUM){
 				m_flFramerateSuggestion = 1.14;
 			}else if(g_iSkillLevel == SKILL_HARD){
-				m_flFramerateSuggestion = 1.22;
+				m_flFramerateSuggestion = 1.23;
 			}
 			return CBaseAnimating::LookupActivity(activity);
 		break;
@@ -535,25 +538,24 @@ int CPantherEye::tryActivitySubstitute(int activity){
 			}
 		break;
 		case ACT_MELEE_ATTACK2:
-			return LookupSequence("crouch_to_jump");
+			return CBaseAnimating::LookupActivity(activity);
 		break;
 		case ACT_SMALL_FLINCH:
-			//NOTE: animation "flinch" seems to be a clone of "flinch_light".
-			return LookupSequence("flinch_light");
+			return CBaseAnimating::LookupActivity(activity);
 		break;
 		case ACT_BIG_FLINCH:
-			return LookupSequence("flinch_hard");
+			return CBaseAnimating::LookupActivity(activity);
 		break;
 		case ACT_DIEVIOLENT:
-			return LookupSequence("death_simple");
+			return LookupSequence("death_violent");
 		break;
 		case ACT_TURN_LEFT:
 			//gets it right, but add framerate:
 			//...other version of lookup.  HARD
-			return LookupSequence("turn_left");
+			return CBaseAnimating::LookupActivity(activity);
 		break;
 		case ACT_TURN_RIGHT:
-			return LookupSequence("turn_right");
+			return CBaseAnimating::LookupActivity(activity);
 		break;
 
 
@@ -1281,6 +1283,10 @@ Schedule_t *CPantherEye::GetSchedule ( void )
 				return GetScheduleOfType ( SCHED_VICTORY_DANCE );
 			}
 
+			if(HasConditions(bits_COND_HEAVY_DAMAGE)){
+				return GetScheduleOfType(SCHED_BIG_FLINCH);
+			}
+
 			if ( HasConditions(bits_COND_LIGHT_DAMAGE | bits_COND_HEAVY_DAMAGE) )
 			{
 				if ( fabs( FlYawDiff() ) < (1.0 - m_flFieldOfView) * 60 ) // roughly in the correct direction
@@ -1326,6 +1332,10 @@ Schedule_t *CPantherEye::GetSchedule ( void )
 			if ( HasConditions(bits_COND_NEW_ENEMY) )
 			{
 				return GetScheduleOfType ( SCHED_WAKE_ANGRY );
+			}
+			//MODDD - new.  Can do the big flinch.
+			else if(HasConditions(bits_COND_HEAVY_DAMAGE)){
+				return GetScheduleOfType(SCHED_BIG_FLINCH);
 			}
 			//MODDD - other condition.  If "noFlinchOnHard" is on and the skill is hard, don't flinch from getting hit.
 			else if (HasConditions(bits_COND_LIGHT_DAMAGE) && !HasMemory( bits_MEMORY_FLINCHED) && !(global_noFlinchOnHard==1 && g_iSkillLevel==SKILL_HARD)  )
@@ -1722,7 +1732,7 @@ void CPantherEye::StartTask ( Task_t *pTask ){
 
 
 void CPantherEye::RunTask ( Task_t *pTask ){
-	easyForcePrintLine("HEY YOOOO %s %d", getScheduleName(), pTask->iTask);
+	//easyForcePrintLine("HEY YOOOO %s %d", getScheduleName(), pTask->iTask);
 	
 	BOOL isEnemyLookingAtMe = FALSE;
 
@@ -2198,6 +2208,56 @@ BOOL CPantherEye::violentDeathClear(void){
 }//END OF violentDeathAllowed
 
 
+
+
+
+//Copy, takes more to make this guy react.
+void CPantherEye::OnTakeDamageSetConditions(entvars_t *pevInflictor, entvars_t *pevAttacker, float flDamage, int bitsDamageType, int bitsDamageTypeMod){
+
+	//MODDD - intervention. Timed damage might not affect the AI since it could get needlessly distracting.
+
+	
+
+
+	if(bitsDamageTypeMod & (DMG_TIMEDEFFECT|DMG_TIMEDEFFECTIGNORE) ){
+		//If this is continual timed damage, don't register as any damage condition. Not worth possibly interrupting the AI.
+		return;
+	}
+
+	
+	//default case from CBaseMonster's TakeDamage.
+	//if ( flDamage > 0 )
+	if(flDamage >= 20)
+	{
+		SetConditions(bits_COND_LIGHT_DAMAGE);
+		forgetSmallFlinchTime = gpGlobals->time + DEFAULT_FORGET_SMALL_FLINCH_TIME;
+	}
+
+	//MODDD - HEAVY_DAMAGE was unused before.  For using the BIG_FLINCH activity that is (never got communicated)
+	//    Stricter requirement:  this attack took 70% of health away.
+	//    The agrunt used to use this so that its only flinch was for heavy damage (above 20 in one attack), but that's easy by overriding this OnTakeDamageSetconditions method now.
+	//    Keep it to using light damage for that instead.
+	//if ( flDamage >= 20 )
+	
+	//Damage above 40 also causes bigflinch for tougher creatures like panthereyes,
+	//just to make sure a revolver shot can cause a bigflinch.
+	if(flDamage >= pev->max_health * 0.55 || flDamage >= 40 && gpGlobals->time >= forgetBigFlinchTime)
+	{
+		SetConditions(bits_COND_HEAVY_DAMAGE);
+		forgetSmallFlinchTime = gpGlobals->time + DEFAULT_FORGET_SMALL_FLINCH_TIME;
+		forgetBigFlinchTime = gpGlobals->time + 10;  //agrunt has a longer big flinch anim than most so just do this.
+	}
+
+
+	if(EASY_CVAR_GET(testVar) == 10){
+		//any damage causes me now.
+		SetConditions(bits_COND_HEAVY_DAMAGE);
+	}
+
+	easyForcePrintLine("%s:%d OnTkDmgSetCond raw:%.2f fract:%.2f", getClassname(), monsterID, flDamage, (flDamage / pev->max_health));
+
+
+}//END OF OnTakeDamageSetConditions
 
 
 

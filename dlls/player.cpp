@@ -3067,9 +3067,6 @@ void CBasePlayer::UpdateStatusBar()
 
 void CBasePlayer::PreThink(void)
 {
-
-
-
 	/*
 	if(normalSpeedMultiMem != global_normalSpeedMulti){
 		normalSpeedMultiMem = global_normalSpeedMulti;
@@ -3488,7 +3485,8 @@ void CBasePlayer::PreThink(void)
 
 
 
-
+	
+	
 
 	int buttonsChanged = (m_afButtonLast ^ pev->button);	// These buttons have changed this frame
 	
@@ -3505,8 +3503,10 @@ void CBasePlayer::PreThink(void)
 	UTIL_MakeVectors(pev->v_angle);             // is this still used?
 	
 	ItemPreFrame( );
+
 	WaterMove();
 
+	
 	if ( g_pGameRules && g_pGameRules->FAllowFlashlight() )
 		m_iHideHUD &= ~HIDEHUD_FLASHLIGHT;
 	else
@@ -3516,11 +3516,12 @@ void CBasePlayer::PreThink(void)
 	// JOHN: checks if new client data (for HUD and view control) needs to be sent to the client
 	UpdateClientData();
 	
+	//return;
 	CheckTimeBasedDamage();
-
 	CheckSuitUpdate();
 
 
+	
 	if(currentSuitSoundEventTime != -1 && currentSuitSoundEventTime <= gpGlobals->time){
 		//If waiting on an event and it is time to play it, do just that.
 		currentSuitSoundEventTime = -1;
@@ -5760,7 +5761,6 @@ void CBasePlayer::PostThink()
 	if(global_testVar == -1)return;
 	int filterediuser4 = pev->iuser4 & ~(FLAG_JUMPED | FLAG_RESET_RECEIVED);
 	
-
 	//printLineIntAsBinary( 4294967295u, 32);
 
 	//CBasePlayer* tempplayerTTT = this;

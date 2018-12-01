@@ -572,10 +572,6 @@ float CBaseAnimating :: StudioFrameAdvance ( float flInterval )
 
 
 
-	//if(FClassnameIs(this->pev, "monster_human_grunt")){
-	//	easyPrintLine("DOES IT LOOP?! %d", m_fSequenceLoops);
-	//}
-
 
 
 
@@ -605,6 +601,14 @@ float CBaseAnimating :: StudioFrameAdvance ( float flInterval )
 
 	//keep this for reference. ... TODO if we bother to do this actually.
 	float recentFrameAdvance = flInterval * m_flFrameRate * pev->framerate * EASY_CVAR_GET(animationFramerateMulti);
+	
+	/*
+	if(FClassnameIs(this->pev, "monster_panthereye")){
+		int x = 666;
+		easyForcePrintLine("MY RECENT FRAMETIME %.2f : %.2f", pev->frame, recentFrameAdvance);
+		//	easyPrintLine("DOES IT LOOP?! %d", m_fSequenceLoops);
+	}
+	*/
 
 	pev->frame += recentFrameAdvance;
 	pev->animtime = gpGlobals->time;

@@ -105,7 +105,8 @@ public:
 	BOOL violentDeathAllowed(void);
 	BOOL violentDeathClear(void);
 
-
+	
+	void OnTakeDamageSetConditions(entvars_t *pevInflictor, entvars_t *pevAttacker, float flDamage, int bitsDamageType, int bitsDamageTypeMod);
 
 
 
@@ -389,7 +390,9 @@ Schedule_t	slPanthereyeTakeCoverFromEnemy[] =
 	{ 
 		tlPanthereyeTakeCoverFromEnemy,
 		ARRAYSIZE ( tlPanthereyeTakeCoverFromEnemy ), 
-		bits_COND_NEW_ENEMY,
+		bits_COND_NEW_ENEMY |
+		//MODDD CRITICAL - now interruptable by heavy damage.  May or may not be a good thing.
+		bits_COND_HEAVY_DAMAGE,
 		0,
 		"PanthereyeTakeCoverFromEnemy"
 	},
@@ -417,7 +420,9 @@ Schedule_t	slPanthereyeTakeCoverFromOrigin[] =
 	{ 
 		tlPanthereyeTakeCoverFromOrigin,
 		ARRAYSIZE ( tlPanthereyeTakeCoverFromOrigin ), 
-		bits_COND_NEW_ENEMY,
+		bits_COND_NEW_ENEMY |
+		//MODDD CRITICAL - now interruptable by heavy damage.  May or may not be a good thing.
+		bits_COND_HEAVY_DAMAGE,
 		0,
 		"PanthereyeTakeCoverFromOrigin"
 	},
@@ -441,7 +446,9 @@ Schedule_t	slPanthereyeTakeCoverFromBestSound[] =
 	{ 
 		tlPanthereyeTakeCoverFromBestSound,
 		ARRAYSIZE ( tlPanthereyeTakeCoverFromBestSound ), 
-		bits_COND_NEW_ENEMY,
+		bits_COND_NEW_ENEMY |
+		//MODDD CRITICAL - now interruptable by heavy damage.  May or may not be a good thing.
+		bits_COND_HEAVY_DAMAGE,
 		0,
 		"PanthereyeTakeCoverFromBestSound"
 	},
@@ -485,7 +492,9 @@ Schedule_t	slPanthereyeSneakToLocation[] =
 		bits_COND_CAN_RANGE_ATTACK1	|
 		bits_COND_CAN_MELEE_ATTACK1	|
 		bits_COND_CAN_RANGE_ATTACK2	|
-		bits_COND_CAN_MELEE_ATTACK2,
+		bits_COND_CAN_MELEE_ATTACK2 |
+		bits_COND_LIGHT_DAMAGE  |
+		bits_COND_HEAVY_DAMAGE,
 
 		bits_SOUND_DANGER,
 		"Panther_sneakToLocation"
@@ -512,7 +521,9 @@ Schedule_t	slPanthereyeSneakWait[] =
 		bits_COND_CAN_RANGE_ATTACK1	|
 		bits_COND_CAN_MELEE_ATTACK1	|
 		bits_COND_CAN_RANGE_ATTACK2	|
-		bits_COND_CAN_MELEE_ATTACK2,
+		bits_COND_CAN_MELEE_ATTACK2 |
+		bits_COND_LIGHT_DAMAGE  |
+		bits_COND_HEAVY_DAMAGE,
 
 		bits_SOUND_DANGER,
 		"Panther_sneakWait"
@@ -579,7 +590,9 @@ Schedule_t slPanthereyeChaseEnemy[] =
 		bits_COND_CAN_RANGE_ATTACK2	|
 		bits_COND_CAN_MELEE_ATTACK2	|
 		bits_COND_TASK_FAILED		|
-		bits_COND_HEAR_SOUND,
+		bits_COND_HEAR_SOUND |
+		//bits_COND_LIGHT_DAMAGE  |
+		bits_COND_HEAVY_DAMAGE,
 		
 		bits_SOUND_DANGER,
 		"Panthereye Chase Enemy"
@@ -612,7 +625,9 @@ Schedule_t slPanthereyeGetIntoCirclingRange[] =
 		bits_COND_CAN_RANGE_ATTACK2	|
 		bits_COND_CAN_MELEE_ATTACK2	|
 		bits_COND_TASK_FAILED		|
-		bits_COND_HEAR_SOUND,
+		bits_COND_HEAR_SOUND	|
+		bits_COND_LIGHT_DAMAGE  |
+		bits_COND_HEAVY_DAMAGE,
 		
 		bits_SOUND_DANGER,
 		"Panthereye Getintocircl"
@@ -649,14 +664,12 @@ Schedule_t	slPanthereyeGetBug[] =
 		tlPanthereyeGetBug,
 		ARRAYSIZE ( tlPanthereyeGetBug ),
 		//TODO: much more!  sound_  stuff too.
-		bits_COND_CAN_ATTACK,
+		bits_COND_CAN_ATTACK | 
+		bits_COND_HEAVY_DAMAGE,
 		0,
 		"Panther_getbug"
 	},
 };
-
-
-
 
 
 
@@ -672,7 +685,8 @@ Schedule_t	slPantherEyeCoverFail[] =
 	{
 		tlPantherEyeCoverFail,
 		ARRAYSIZE ( tlPantherEyeCoverFail ),
-		bits_COND_CAN_ATTACK,
+		bits_COND_CAN_ATTACK | 
+		bits_COND_HEAVY_DAMAGE,
 		0,
 		"Panther_genFail"
 	},
@@ -696,7 +710,7 @@ Schedule_t	slPantherEyeGenericFail[] =
 	{
 		tlPantherEyeGenericFail,
 		ARRAYSIZE ( tlPantherEyeGenericFail ),
-		0,
+		bits_COND_HEAVY_DAMAGE,
 		0,
 		"Panther_genFail"
 	},

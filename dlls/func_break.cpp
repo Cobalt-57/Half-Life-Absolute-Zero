@@ -31,6 +31,8 @@ extern DLL_GLOBAL Vector		g_vecAttackDir;
 
 //MODDD
 extern float global_sparksComputerHitMulti;
+EASY_CVAR_EXTERN(testVar);
+
 
 // =================== FUNC_Breakable ==============================================
 
@@ -1062,6 +1064,7 @@ void CPushable :: Move( CBaseEntity *pOther, int push )
 {
 	entvars_t*	pevToucher = pOther->pev;
 	int playerTouch = 0;
+	int maxSpeedTemp;
 
 	// Is entity standing on this pushable ?
 	if ( FBitSet(pevToucher->flags,FL_ONGROUND) && pevToucher->groundentity && VARS(pevToucher->groundentity) == pev )
@@ -1098,15 +1101,38 @@ void CPushable :: Move( CBaseEntity *pOther, int push )
 	else 
 		factor = 0.25;
 
+
+
+	//will be needed soon.
+	maxSpeedTemp = MaxSpeed();
+
+	//factor = EASY_CVAR_GET(testVar);
+	
+
+	
+	pev->velocity.x = pevToucher->velocity.x * factor;
+	pev->velocity.y = pevToucher->velocity.y * factor;
+	//MODDD - original
+	/*
 	pev->velocity.x += pevToucher->velocity.x * factor;
 	pev->velocity.y += pevToucher->velocity.y * factor;
+	*/
+
 
 	float length = sqrt( pev->velocity.x * pev->velocity.x + pev->velocity.y * pev->velocity.y );
-	if ( push && (length > MaxSpeed()) )
+	
+
+	easyForcePrintLine("PUSHVEL len:%.2f", length);
+
+	
+	//if ( push && (length > maxSpeedTemp) )
+	//MODDD - always require the length check now!
+	if ((length > maxSpeedTemp) )
 	{
-		pev->velocity.x = (pev->velocity.x * MaxSpeed() / length );
-		pev->velocity.y = (pev->velocity.y * MaxSpeed() / length );
+		pev->velocity.x = (pev->velocity.x * maxSpeedTemp / length );
+		pev->velocity.y = (pev->velocity.y * maxSpeedTemp / length );
 	}
+	
 	if ( playerTouch )
 	{
 		pevToucher->velocity.x = pev->velocity.x;
