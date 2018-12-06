@@ -91,6 +91,7 @@ void CBaseEntity::ReportGeneric(){}
 
 
 //MODDD
+BOOL CBaseEntity::isMovetypeFlying(void) const{return FALSE;}
 BOOL CBaseEntity::isSizeGiant(void){return FALSE;}
 BOOL CBaseEntity::isOrganic(void){return FALSE;}
 void CBaseEntity::onDelete(void){}
@@ -683,6 +684,7 @@ BOOL CBaseMonster::usesSoundSentenceSave(void){return FALSE;}
 int CBaseMonster::convert_itbd_to_damage(int i){ return 0;}
 void CBaseMonster::CheckTimeBasedDamage(void){}
 //void CBaseMonster::Think(void){}
+
 BOOL CBaseMonster::isSizeGiant(void){return FALSE;}
 BOOL CBaseMonster::isOrganic(){return FALSE;}
 

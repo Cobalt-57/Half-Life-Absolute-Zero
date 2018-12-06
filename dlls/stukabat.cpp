@@ -977,13 +977,16 @@ void CStukaBat:: getPathToEnemyCustom(){
 	//Vector vecDest = m_hEnemy->pev->origin;
 	Vector vecDest = this->m_vecEnemyLKP;
 
-	if ( BuildRouteSimple ( vecDest, bits_MF_TO_ENEMY, m_hEnemy )  )
+	if ( BuildRoute ( vecDest, bits_MF_TO_ENEMY, m_hEnemy )  )
 	{
+		int x = 66;
 		//TaskComplete();
 		//???!!!
 	}
-	else if (BuildNearestRouteSimple( vecDest, m_hEnemy->pev->view_ofs, 0, (vecDest - pev->origin).Length() )  )
+	//else if (BuildNearestRouteSimple( vecDest, m_hEnemy->pev->view_ofs, 0, (vecDest - pev->origin).Length() )  )
+	else if (BuildNearestRoute( vecDest, m_hEnemy->pev->view_ofs, 0, 20000 )  )
 	{
+		int x = 66;
 		//TaskComplete();
 		//???!!!
 	}
@@ -1043,6 +1046,9 @@ void CStukaBat :: StartTask ( Task_t *pTask )
 	}
 	case TASK_WAIT:
 		//this is all schedule.cpp does here.  Why did I not just do this?
+
+		//is this okay?
+		this->m_IdealActivity = ACT_HOVER;
 
 		EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyPrintLine("TASK_WAIT %s GT:%.2f WF:%.2f", m_pSchedule->pName, gpGlobals->time, m_flWaitFinished));
 		m_flWaitFinished = gpGlobals->time + pTask->flData;	
@@ -1487,6 +1493,16 @@ void CStukaBat :: RunTask ( Task_t *pTask )
 	case TASK_ACTION:
 
 
+
+		//If we're close to our LKP, we need to give up, get stumped and re-route.
+		//float distanceToCorpse = (pev->origin - corpseToSeek->pev->origin).Length();  //m_vecEnemyLKP).Length();
+		if((pev->origin - m_vecEnemyLKP).Length() < 20 && !this->HasConditions(bits_COND_SEE_ENEMY)){
+			//huh. give up for now.
+			TaskComplete();
+			return;
+		}
+
+
 		//MODDD TODO - is "getEnemy" really necessary? Would "m_hEnemy" with a null check before be sufficient?
 		//if(getEnemy() != NULL && getEnemy()->Get()->v.deadflag == DEAD_NO){
 		if(m_hEnemy != NULL){
@@ -1762,7 +1778,6 @@ void CStukaBat :: RunTask ( Task_t *pTask )
 					//m_Activity = ACT_RESET;  //is that ok?
 					m_IdealActivity = ACT_HOVER;
 
-					//FUCK THIS QUEER EARTH
 					//SetActivity(ACT_HOVER);
 					//pev->sequence = 13;
 					//setAnimation("Hover", TRUE, TRUE, 0);
@@ -3110,6 +3125,52 @@ BOOL CStukaBat:: ShouldAdvanceRoute( float flWaypointDist )
 
 
 
+
+
+
+
+//Clone of the flyer's CheckLocalMove.
+int CStukaBat :: CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, CBaseEntity *pTarget, float *pflDist )
+{
+	// UNDONE: need to check more than the endpoint
+	if (FBitSet(pev->flags, FL_SWIM) && (UTIL_PointContents(vecEnd) != CONTENTS_WATER))
+	{
+		// ALERT(at_aiconsole, "can't swim out of water\n");
+		return FALSE;
+	}
+
+	TraceResult tr;
+
+	//MODDD - try smaller?
+	//UTIL_TraceHull( vecStart + Vector( 0, 0, 32 ), vecEnd + Vector( 0, 0, 32 ), dont_ignore_monsters, large_hull, edict(), &tr );
+	UTIL_TraceHull( vecStart + Vector( 0, 0, 32 ), vecEnd + Vector( 0, 0, 32 ), dont_ignore_monsters, head_hull, edict(), &tr );
+
+	// ALERT( at_console, "%.0f %.0f %.0f : ", vecStart.x, vecStart.y, vecStart.z );
+	// ALERT( at_console, "%.0f %.0f %.0f\n", vecEnd.x, vecEnd.y, vecEnd.z );
+
+	if (pflDist)
+	{
+		*pflDist = ( (tr.vecEndPos - Vector( 0, 0, 32 )) - vecStart ).Length();// get the distance.
+	}
+
+	// ALERT( at_console, "check %d %d %f\n", tr.fStartSolid, tr.fAllSolid, tr.flFraction );
+	if (tr.fStartSolid || tr.flFraction < 1.0)
+	{
+		if ( pTarget && pTarget->edict() == gpGlobals->trace_ent )
+			return LOCALMOVE_VALID;
+		return LOCALMOVE_INVALID;
+	}
+
+	return LOCALMOVE_VALID;
+}
+
+
+
+
+
+
+
+
 //NOTICE - there are three possible routes here. Comment the ones above to fall down to that route.
 /*
 1. (most of this method) LOOSE. like how the controller does it. TraceHull (instead of the usual WALK_MOVE).
@@ -3119,6 +3180,7 @@ but obviously can fit through).
 2. At the very end (CheckLocalMove), the usual way monsters do collision. Unsure if this is always ok for flyers.
 May make them averse to going over floorless / steep gaps (thinks walking monsters can't cross).
 */
+/*
 int CStukaBat :: CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, CBaseEntity *pTarget, float *pflDist )
 {
 	int iReturn = LOCALMOVE_VALID;
@@ -3127,7 +3189,20 @@ int CStukaBat :: CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, 
 	TraceResult tr;
 	//UTIL_TraceHull( vecStart + Vector( 0, 0, 32), vecEnd + Vector( 0, 0, 32), dont_ignore_monsters, large_hull, edict(), &tr );
 	//UTIL_TraceHull( vecStart + Vector( 0, 0, 32), vecEnd + Vector( 0, 0, 32), dont_ignore_monsters, head_hull, edict(), &tr );
-	UTIL_TraceHull( vecStart + Vector( 0, 0, 4), vecEnd + Vector( 0, 0, 4), dont_ignore_monsters, point_hull, edict(), &tr );
+	
+	
+	//UTIL_TraceHull( vecStart + Vector( 0, 0, 4), vecEnd + Vector( 0, 0, 4), dont_ignore_monsters, point_hull, edict(), &tr );
+	
+	edict_t* toIgnore;
+	if(pTarget == NULL){
+		toIgnore = NULL;
+	}else{
+		toIgnore = pTarget->edict();
+	}
+	TRACE_MONSTER_HULL(edict(), pev->origin, vecEnd, dont_ignore_monsters, toIgnore, &tr);
+
+
+
 
 	if (pflDist)
 	{
@@ -3135,40 +3210,42 @@ int CStukaBat :: CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, 
 	}
 
 	// ALERT( at_console, "check %d %d %f\n", tr.fStartSolid, tr.fAllSolid, tr.flFraction );
-	if (tr.fStartSolid || tr.flFraction < 1.0)
+	//if (tr.fStartSolid || tr.flFraction < 1.0)
+	if (tr.fAllSolid || tr.flFraction < 1.0)
 	{
-		if ( pTarget && pTarget->edict() == gpGlobals->trace_ent ){
+		//if ( pTarget && pTarget->edict() == gpGlobals->trace_ent ){
+		if ( pTarget && pTarget->edict() == tr.pHit ){
 			iReturn = LOCALMOVE_VALID;
 		}else{
 			iReturn = LOCALMOVE_INVALID;
 		}
 	}
 	//SPECIAL DRAWS just for the stuka. uncomment to see this.
-	/*
-	switch(iReturn){
-		case LOCALMOVE_INVALID:
-			//ORANGE
-			//DrawRoute( pev, m_Route, m_iRouteIndex, 239, 165, 16 );
-			DrawRoute( pev, m_Route, m_iRouteIndex, 48, 33, 4 );
-		break;
-		case LOCALMOVE_INVALID_DONT_TRIANGULATE:
-			//RED
-			//DrawRoute( pev, m_Route, m_iRouteIndex, 234, 23, 23 );
-			DrawRoute( pev, m_Route, m_iRouteIndex, 47, 5, 5 );
-		break;
-		case LOCALMOVE_VALID:
-			//GREEN
-			//DrawRoute( pev, m_Route, m_iRouteIndex, 97, 239, 97 );
-			DrawRoute( pev, m_Route, m_iRouteIndex, 20, 48, 20 );
-		break;
-	}
-	*/
+	//
+	//switch(iReturn){
+	//	case LOCALMOVE_INVALID:
+	//		//ORANGE
+	//		//DrawRoute( pev, m_Route, m_iRouteIndex, 239, 165, 16 );
+	//		DrawRoute( pev, m_Route, m_iRouteIndex, 48, 33, 4 );
+	//	break;
+	//	case LOCALMOVE_INVALID_DONT_TRIANGULATE:
+	//		//RED
+	//		//DrawRoute( pev, m_Route, m_iRouteIndex, 234, 23, 23 );
+	//		DrawRoute( pev, m_Route, m_iRouteIndex, 47, 5, 5 );
+	//	break;
+	//	case LOCALMOVE_VALID:
+	//		//GREEN
+	//		//DrawRoute( pev, m_Route, m_iRouteIndex, 97, 239, 97 );
+	//		DrawRoute( pev, m_Route, m_iRouteIndex, 20, 48, 20 );
+	//	break;
+	//}
+	
 	return iReturn;
 
 	//Not reached. Comment out all above to do this instead.
 	return CBaseMonster::CheckLocalMove(vecStart, vecEnd, pTarget, pflDist);
 }
-
+*/
 
 
 
@@ -3243,6 +3320,11 @@ void CStukaBat::safeSetBlockSetActivity(float timer){
 
 void CStukaBat::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, float flInterval )
 {
+
+	//MODDD - TESTING?!!
+	//return CSquadMonster::MoveExecute(pTargetEnt, vecDir, flInterval);
+
+
 
 	tryDetachFromCeiling();
 
@@ -4109,6 +4191,16 @@ void CStukaBat::checkTraceLineTest(const Vector& vecSuggestedDir, const float& t
 
 
 void CStukaBat::checkFloor(const Vector& vecSuggestedDir, const float& travelMag, const float& flInterval){
+
+
+
+	//No more my friend, as long as you have enough rubies.
+	//what am I smoking
+	return;
+
+
+
+
 
 	if(turnThatOff){
 		//we're not doing the checks in this case.

@@ -536,6 +536,14 @@ BOOL CBaseEntity::usesSoundSentenceSave(void){
 }
 
 
+
+//Count MOVETYPE_BOUNCEMISSILE too. It may be used sometimes?
+BOOL CBaseEntity::isMovetypeFlying(void) const{
+	return (pev->movetype == MOVETYPE_FLY || pev->movetype == MOVETYPE_BOUNCEMISSILE);
+	//exclude TOSS for now, it obeys gravity.
+	//MOVETYPE_TOSS
+}
+
 BOOL CBaseEntity::isSizeGiant(void){
 	//things larger than usual, like gargantuas, apaches, can just say they are.
 	//Things expecting roughly human-sized things like barnacles should know to skip these.

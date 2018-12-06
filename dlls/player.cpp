@@ -1875,6 +1875,8 @@ void CBasePlayer::DebugCall3(){
 CBasePlayer::CBasePlayer(void){
 
 
+	framesUntilPushStops = -1;
+
 	m_bHolstering = FALSE;
 	m_pQueuedActiveItem = NULL;
 	m_fCustomHolsterWaitTime = -1;
@@ -3108,6 +3110,21 @@ void CBasePlayer::PreThink(void)
 	if(fApplyTempVelocity){
 		fApplyTempVelocity = FALSE;
 		pev->velocity = velocityApplyTemp;
+	}
+
+
+	
+
+	//MODDD - new crate pushing system.  See if the modifier needs to be reset from a lack of signal to say it's still being pushed, since
+	//        we seem to have no explicit "release" event.  It can simply be when you aren't pushing for a few frames.
+	if(framesUntilPushStops >= 0){
+		framesUntilPushStops--;
+		if(framesUntilPushStops <= 0){
+			//Ran out of push frames? Remove the influence from pushSpeedMulti (1 = no change).
+			//Any sort of pushing, use'ing or physically touching, keeps "framesUntilPushStops" forced above 0. So this is a good release mechanism.
+			framesUntilPushStops = -1;
+			pushSpeedMulti = 1;
+		}
 	}
 
 
@@ -6295,6 +6312,9 @@ BOOL CBasePlayer::playerHasLongJump(){
 void CBasePlayer::commonReset(void){
 	
 
+	//should be ok?
+	framesUntilPushStops = -1;
+
 	//negative 2 means, don't prompt the user about this change.
 	fvoxEnabledMem = -2;
 
@@ -6304,6 +6324,10 @@ void CBasePlayer::commonReset(void){
 	iWasFrozenToday = -1;
 
 	hasGlockSilencerMem = -1;
+
+	//This discrepency forces writing to the physics keys at least once.
+	pushSpeedMultiMem = -1;
+	pushSpeedMulti = 1;
 	
 	normalSpeedMultiMem = -1;
 	noclipSpeedMultiMem = -1;
@@ -8674,6 +8698,22 @@ void CBasePlayer :: UpdateClientData( void )
 	}
 
 	}//END OF SCOPE
+
+
+	
+
+	//NOTICE - this physics key, psm (push speed multiplier) is NOT controlled by CVar, hidden or not.
+	//         Pushing a crate with varrying friction (weight, size, whatever to feel accurate) affects the player speed differently.
+	if(pushSpeedMultiMem != pushSpeedMulti){
+		pushSpeedMultiMem = pushSpeedMulti;
+		if(pushSpeedMultiMem != 0){
+			char buffer[13];
+			tryFloatToStringBuffer(buffer, pushSpeedMulti);
+			g_engfuncs.pfnSetPhysicsKeyValue( edict(), "psm", buffer );
+		}else{
+			g_engfuncs.pfnSetPhysicsKeyValue( edict(), "psm", "0" );
+		}
+	}
 
 	
 	if(noclipSpeedMultiMem != global_noclipSpeedMulti){

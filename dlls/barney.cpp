@@ -1575,6 +1575,9 @@ Schedule_t* CBarney :: GetScheduleOfType ( int Type )
 
 
 
+
+
+
 //MODDD .... yep.
 void CBarney::womboCombo(void){
 	
@@ -2090,6 +2093,43 @@ int CBarney::LookupActivityHard(int activity){
 			}
 			
 		break;
+		case ACT_IDLE:{
+			//First off, are we talking right now?
+			if(IsTalking()){
+				//Limit the animations we can choose from a little more.
+				//Most people don't typically move around too much while looking at someone and talking to them,
+				//compared to just standing around or listening to a long conversation.
+				//BUT, simulare the wold weights.  The sum of all weights of the available animations
+				//(see a scientist.qc file from decompiling the model) is used instead of course.
+
+				//50, 1, 10, 10,
+				const int animationWeightTotal = 50;
+				const int animationWeightChoice = RANDOM_LONG(0, animationWeightTotal-1);
+
+				//if(animationWeightChoice < 50){
+					return LookupSequence("idle1");
+				//}
+			}else{
+				//Not talking?  One more filter...
+				//Are we in predisaster?
+				if(FBitSet(pev->spawnflags, SF_MONSTER_PREDISASTER)){
+					//Don't allow "idle_look". We have no reason to look scared yet, ordinary day so far.
+					const int animationWeightTotal = 50+10;
+					const int animationWeightChoice = RANDOM_LONG(0, animationWeightTotal-1);
+
+					if(animationWeightChoice < 50){
+						return LookupSequence("idle1");
+					}else{ //if(animationWeightChoice < 50+10){
+						return LookupSequence("idle3");
+					}
+				}else{
+					//Just pick from the model, any idle animation is okay right now.
+					return CBaseAnimating::LookupActivity(activity);
+				}
+				
+			}//END OF IsTalking check
+			
+		break;}
 		/*
 		case ACT_VICTORY_DANCE:
 			m_flFramerateSuggestion = 1.11;

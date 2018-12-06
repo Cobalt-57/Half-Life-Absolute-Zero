@@ -2779,9 +2779,9 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBaseMonster){
 
 				//
 				if ((*m_bitsDamageTypeRef) & (convert_itbd_to_damage(i) )){
-						m_rgbTimeBasedDamage[i] = 0;
-						//MODDD - next frame this is brought up will be the first one again.
-						m_rgbTimeBasedFirstFrame[i] = TRUE;
+					m_rgbTimeBasedDamage[i] = 0;
+					//MODDD - next frame this is brought up will be the first one again.
+					m_rgbTimeBasedFirstFrame[i] = TRUE;
 				}
 
 
@@ -3314,6 +3314,7 @@ void RadiusDamage( Vector vecSrc, entvars_t *pevInflictor, entvars_t *pevAttacke
 	if ( !pevAttacker )
 		pevAttacker = pevInflictor;
 
+
 	// iterate on all entities in the vicinity.
 	while ((pEntity = UTIL_FindEntityInSphere( pEntity, vecSrc, flRadius )) != NULL)
 	{
@@ -3382,6 +3383,9 @@ void RadiusDamage( Vector vecSrc, entvars_t *pevInflictor, entvars_t *pevAttacke
 			}
 		}
 	}
+
+	//easyForcePrintLine("I FINISHED OKAY");
+
 }
 
 

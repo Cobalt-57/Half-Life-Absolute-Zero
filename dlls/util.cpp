@@ -1693,7 +1693,7 @@ Vector UTIL_YawToVec( const float &yaw )
 {
 	//yaw is from 0 to 359.999, I think?
 
-	//KEep in mind, trigonometry is for arclettes (whatever the  hell they're called), not degrees.
+	//Keep in mind, trigonometry is for arclettes (whatever the  hell they're called), not degrees.
 	//~RADIANS, you fool!
 
 	float yawInRads = yaw * (M_PI / 180.0);

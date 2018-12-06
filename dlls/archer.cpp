@@ -1443,35 +1443,7 @@ GENERATE_GIBMONSTER_IMPLEMENTATION(CArcher)
 //Anything done here is meant to completely replace how the parent method gibs a monster in general. None of it is required.
 GENERATE_GIBMONSTERGIB_IMPLEMENTATION(CArcher)
 {
-	
-
-	//BOOM.
-
-	int iContents = UTIL_PointContents ( pev->origin );
-	short spriteChosen;
-	if (iContents != CONTENTS_WATER)
-	{
-		spriteChosen = g_sModelIndexFireball;
-	}
-	else
-	{
-		spriteChosen = g_sModelIndexWExplosion;
-	}
-	UTIL_Explosion(pev, pev->origin + Vector(0, 0, 8), spriteChosen, (160 - 50) * 0.60, 15, TE_EXPLFLAG_NOSOUND | TE_EXPLFLAG_NOPARTICLES, pev->origin + Vector(0, 0, 16), 1 );
-	
-
-
-//void RadiusDamage( Vector vecSrc, entvars_t *pevInflictor, entvars_t *pevAttacker, float flDamage, float flRadius, int iClassIgnore, int bitsDamageType )
-//void RadiusDamage( Vector vecSrc, entvars_t *pevInflictor, entvars_t *pevAttacker, float flDamage, float flRadius, int iClassIgnore, int bitsDamageType, int bitsDamageTypeMod )
-
-
-
-	RadiusDamage(pev->origin, pev, pev, gSkillData.bullsquidDmgSpit, 160.0f,
-		CLASS_MACHINE | CLASS_ALIEN_MILITARY | CLASS_ALIEN_PASSIVE | CLASS_ALIEN_MONSTER | CLASS_ALIEN_PREY | CLASS_ALIEN_PREDATOR | CLASS_INSECT | CLASS_BARNACLE,
-		DMG_POISON);
-
-
-	//Calling the parent method is still okay in this case. Spawning gib pieces / censorship checks should still take place.
+	//Nothing special.  Embarassing how long the floater's poison gib explosion stayed here.
 	return GENERATE_GIBMONSTERGIB_PARENT_CALL(CFlyingMonster);
 }
 

@@ -23,6 +23,11 @@
 */
 
 
+
+//MODDD TODO - remove the snapper for stuckness.
+// would MOVETYPE_BOUNCEMISSILE help more?
+
+
 EASY_CVAR_EXTERN(noFlinchOnHard)
 EASY_CVAR_EXTERN(animationFramerateMulti)
 
@@ -263,6 +268,7 @@ int CFloater::Restore( CRestore &restore )
 
 CFloater::CFloater(void){
 
+	explodedYet = FALSE;
 	explodeDelay = -1;
 
 	shootCooldown = 0;
@@ -1357,36 +1363,56 @@ GENERATE_GIBMONSTER_IMPLEMENTATION(CFloater)
 //Anything done here is meant to completely replace how the parent method gibs a monster in general. None of it is required.
 GENERATE_GIBMONSTERGIB_IMPLEMENTATION(CFloater)
 {
-	
-
 	//BOOM.
 
-	int iContents = UTIL_PointContents ( pev->origin );
-	short spriteChosen;
-	if (iContents != CONTENTS_WATER)
-	{
-		spriteChosen = g_sModelIndexFireball;
+
+
+	//if( !(pev->solid == SOLID_NOT || (pev->flags & FL_KILLME) || m_pfnThink == &CBaseEntity::SUB_Remove)  ){
+	//Doesn't work in time, just do your own check!
+	if(!explodedYet){
+		explodedYet = TRUE;
+		//if you haven't exploded yet you are allowed to.
+		//But if any of these are met (trying to fade out or waiting to get deleted), don't. We risk an endless loop.
+		
+		int iContents = UTIL_PointContents ( pev->origin );
+		short spriteChosen;
+		if (iContents != CONTENTS_WATER)
+		{
+			spriteChosen = g_sModelIndexFireball;
+		}
+		else
+		{
+			spriteChosen = g_sModelIndexWExplosion;
+		}
+
+
+		//Let's register the monster as dead before doing the explosion, that may also help.
+		BOOL parentResult = GENERATE_GIBMONSTERGIB_PARENT_CALL(CFlyingMonster);
+
+		UTIL_Explosion(pev, pev->origin + Vector(0, 0, 8), spriteChosen, (160 - 50) * 0.60, 15, TE_EXPLFLAG_NOSOUND | TE_EXPLFLAG_NOPARTICLES, pev->origin + Vector(0, 0, 16), 1 );
+
+		//BEWARE: RadiusDamage can damage this monster itself and trigger and endless loop of "Killed" on this monster, "GibMonster" for explosive damage,
+		//        then back to here where it does RadiusDamage, Killed, Gibmonster, RadiusDamage, Killed, Gibmonster, etc.  Because taking damage while dead
+		//        can still trigger Killed/Gibmonster.
+		RadiusDamage(pev->origin, pev, pev, gSkillData.bullsquidDmgSpit, 160.0f,
+			CLASS_MACHINE | CLASS_ALIEN_MILITARY | CLASS_ALIEN_PASSIVE | CLASS_ALIEN_MONSTER | CLASS_ALIEN_PREY | CLASS_ALIEN_PREDATOR | CLASS_INSECT | CLASS_BARNACLE,
+			DMG_POISON);
+
+
+		return parentResult;
+
+	}else{
+		//Calling the parent method is still okay in this case. Spawning gib pieces / censorship checks should still take place.
+		return GENERATE_GIBMONSTERGIB_PARENT_CALL(CFlyingMonster);
+
 	}
-	else
-	{
-		spriteChosen = g_sModelIndexWExplosion;
-	}
-	UTIL_Explosion(pev, pev->origin + Vector(0, 0, 8), spriteChosen, (160 - 50) * 0.60, 15, TE_EXPLFLAG_NOSOUND | TE_EXPLFLAG_NOPARTICLES, pev->origin + Vector(0, 0, 16), 1 );
+
 	
-
-
-//void RadiusDamage( Vector vecSrc, entvars_t *pevInflictor, entvars_t *pevAttacker, float flDamage, float flRadius, int iClassIgnore, int bitsDamageType )
-//void RadiusDamage( Vector vecSrc, entvars_t *pevInflictor, entvars_t *pevAttacker, float flDamage, float flRadius, int iClassIgnore, int bitsDamageType, int bitsDamageTypeMod )
-
-
-
-	RadiusDamage(pev->origin, pev, pev, gSkillData.bullsquidDmgSpit, 160.0f,
-		CLASS_MACHINE | CLASS_ALIEN_MILITARY | CLASS_ALIEN_PASSIVE | CLASS_ALIEN_MONSTER | CLASS_ALIEN_PREY | CLASS_ALIEN_PREDATOR | CLASS_INSECT | CLASS_BARNACLE,
-		DMG_POISON);
+	
 
 
 	//Calling the parent method is still okay in this case. Spawning gib pieces / censorship checks should still take place.
-	return GENERATE_GIBMONSTERGIB_PARENT_CALL(CFlyingMonster);
+	//return GENERATE_GIBMONSTERGIB_PARENT_CALL(CFlyingMonster);
 }
 
 //The other related methods, GIBMONSTERSOUND and GIBMONSTEREND, are well suited to the majority of cases.
@@ -1396,8 +1422,9 @@ GENERATE_GIBMONSTERGIB_IMPLEMENTATION(CFloater)
 
 GENERATE_KILLED_IMPLEMENTATION(CFloater)
 {
-
-
+	
+	//GENERATE_KILLED_PARENT_CALL(CBaseMonster);
+	//return;
 	
 
 	BOOL firstCall = FALSE;
@@ -1413,6 +1440,7 @@ GENERATE_KILLED_IMPLEMENTATION(CFloater)
 
 	//MODDD - is still doing here ok?
 	GENERATE_KILLED_PARENT_CALL(CFlyingMonster);
+	//GENERATE_KILLED_PARENT_CALL(CBaseMonster);
 
 	//HACK. guarantee we fall to the ground, even if killed while in the DEAD_DYING state.
 	//...which forces MOVETYPE_STEP, and is not very good.

@@ -197,20 +197,32 @@ public:
 	int				IRelationship ( CBaseEntity *pTarget );
 	virtual int		CanPlaySentence( BOOL fDisregardState );
 	
+
+
+
 	virtual void	PlaySentence( const char *pszSentence, float duration, float volume, float attenuation );
 	//MODDD - new version
 	virtual void PlaySentenceSingular( const char *pszSentence, float duration, float volume, float attenuation );
+
+
+	//MODDD - also new.
+	void PlaySentenceUninterruptable(const char *pszSentence, float duration, float volume, float attenuation, BOOL bConcurrent);
+	void PlaySentenceTo(const char *pszSentence, float duration, float volume, float attenuation, BOOL bConcurrent, CBaseEntity *pListener );
+
 
 	void			PlayScriptedSentence( const char *pszSentence, float duration, float volume, float attenuation, BOOL bConcurrent, CBaseEntity *pListener );
 	void			KeyValue( KeyValueData *pkvd );
 
 
-	//..these weren't virtual.
-	//THESE. WERE. NOT. FUCKING. VIRTUAL.
-	//OH YOU DIRTY MOTHERFUCKER. I\'LL PLAY JUMPROPE WITH YOUR GODDAMN INTESTINES IN HELL SHITLICKER
+	//..these weren't virtual. why not.
 	// AI functions
 	virtual void			SetActivity ( Activity newActivity );
+
+	//MODDD - this one's new though. huh.
+	virtual Schedule_t* GetSchedule();
+
 	virtual Schedule_t		*GetScheduleOfType ( int Type );
+
 	virtual void			StartTask( Task_t *pTask );
 	virtual void			RunTask( Task_t *pTask );
 	virtual void			HandleAnimEvent( MonsterEvent_t *pEvent );
@@ -308,10 +320,15 @@ public:
 	float followAgainTime;
 	int consecutiveFollowFails;
 	float followResetFailTime;
+	BOOL wasLookingAtTalker;
 
 
 	EHANDLE		m_hTalkTarget;	// who to look at while talking
 	CUSTOM_SCHEDULES;
+
+
+	virtual void initiateAss();
+
 };
 
 

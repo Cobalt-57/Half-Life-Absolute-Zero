@@ -3497,9 +3497,14 @@ were contacted during the move.
 void PM_PlayerMove ( qboolean server )
 {
 	physent_t *pLadder = NULL;
+	float pushSpeedMult; //MODDD - new temp var
 
 	// Are we running server code?
 	pmove->server = server;                
+
+	
+
+
 
 	// Adjust speeds etc.
 	PM_CheckParamters();
@@ -3578,11 +3583,33 @@ void PM_PlayerMove ( qboolean server )
 		}
 	}
 
+
+	
 	// Slow down, I'm pulling it! (a box maybe) but only when I'm standing on ground
+	//MODDD - behavior changed. Instead, hold down use does NOT cause a base slowdown of always 30% like this (effectively friction, more effort
+	//        into movement gets sucked away to look slower).
+	//        But not all crates should slow you down equally, right?
+	//        In the new system, a crate's weight (friction really) affects how much it slows the player pushing or use'ing on it.
+	//        The box otherwise moves consistently with the player's velocity, but forces the player to slow down while use'ing on it,
+	//        or forces the player to slow down if pushing the box.
+	//        This can be done by setting a physics flag on the player when a box makes contact with the player (physical touch-push) or is use'd by
+	//        the player.  So a heavier box will slow the player down much more on being use'd or physically touch-pushed, but a lighter one will
+	//        not affect the player much while being moved.
+	/*
 	if ( ( pmove->onground != -1 ) && ( pmove->cmd.buttons & IN_USE) )
 	{
 		VectorScale( pmove->velocity, 0.3, pmove->velocity );
 	}
+	*/
+
+	//MODDD - NEW WAY. Is the push speed modifier physics flag set?
+	//pushSpeedMult = getSafeSqureRoot(atof( pmove->PM_Info_ValueForKey( pmove->physinfo, "psm" ) ));
+	pushSpeedMult = atof(pmove->PM_Info_ValueForKey( pmove->physinfo, "psm" ));
+	if(pushSpeedMult != 1){
+		VectorScale( pmove->velocity, pushSpeedMult, pmove->velocity  );
+	}
+
+	
 
 	// Handle movement
 	switch ( pmove->movetype )

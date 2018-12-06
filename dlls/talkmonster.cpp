@@ -453,8 +453,9 @@ Task_t	tlTlkIdleEyecontact[] =
 
 	//MODDD - CRITICAL. Removing this part of the IdleEyecontact schedule. What is the point of this?
 	//It just makes the animation fidget a lot and inevitably reverting back to idle as soon as possible anyways, even mid animation.
-	//{ TASK_SET_ACTIVITY,	(float)ACT_SIGNAL3	},
-
+	//...but it's just necessary to break the turning animation.  What else could this possibly be doing?!
+	//It appears a check is done for ACT_SIGNAL3 across talk monsters, and if the model lacks it (Valve's scientist does), it just gets changed to ACT_IDLE in SetActivity for talkers.
+	{ TASK_SET_ACTIVITY,	(float)ACT_SIGNAL3	},
 	{ TASK_TLK_EYECONTACT,	(float)0		},// Wait until speaker is done
 };
 
@@ -534,6 +535,26 @@ void CTalkMonster :: StartTask( Task_t *pTask )
 {
 	switch ( pTask->iTask )
 	{
+
+	case TASK_SET_ACTIVITY:{
+		//MODDD - yes, this needs to have new behavior. Or a little check really.
+		
+		m_IdealActivity = (Activity)(int)pTask->flData;
+
+		if(m_IdealActivity == ACT_SIGNAL3){
+			//MODDD NOTICE - no modeles yet support this ACT, so this effectively resets an idle animation
+			//               in progress. It just looks kinda weird to sometimes jump to new idle animations
+			//               for seemingly no reason. Just force this to ACT_IDLE to stop the system from 
+			//               doing that.
+
+			m_IdealActivity = ACT_IDLE;
+
+		}
+
+
+		TaskComplete();
+	break;}
+
 		//MODDD - new, simple.
 	case TASK_FOLLOW_SUCCESSFUL:
 	{	
@@ -595,6 +616,7 @@ void CTalkMonster :: StartTask( Task_t *pTask )
 	case TASK_TLK_IDEALYAW:
 		if (m_hTalkTarget != NULL)
 		{
+			wasLookingAtTalker = TRUE;  //clearly we want to.
 			pev->yaw_speed = 60;
 			float yaw = VecToYaw(m_hTalkTarget->pev->origin - pev->origin) - pev->angles.y;
 
@@ -609,6 +631,11 @@ void CTalkMonster :: StartTask( Task_t *pTask )
 			{
 				pev->ideal_yaw = max( yaw - 45, 0 ) + pev->angles.y;
 			}
+		}else{
+			//MODDD - if for whatever reason the talker is null, mark where you are facing now as the ideal yaw to just
+			//        keep facing the way you already are?
+			wasLookingAtTalker = FALSE;  //also mark we weren't looking at anyone in particular.
+			pev->ideal_yaw = pev->angles.y;
 		}
 		TaskComplete();
 	break;
@@ -616,6 +643,7 @@ void CTalkMonster :: StartTask( Task_t *pTask )
 		//Same as above, but closer than 45 degrees.
 		if (m_hTalkTarget != NULL)
 		{
+			wasLookingAtTalker = TRUE;  //clearly we want to.
 			pev->yaw_speed = 60;
 			float yaw = VecToYaw(m_hTalkTarget->pev->origin - pev->origin) - pev->angles.y;
 
@@ -630,6 +658,11 @@ void CTalkMonster :: StartTask( Task_t *pTask )
 			{
 				pev->ideal_yaw = max( yaw - 17, 0 ) + pev->angles.y;
 			}
+		}else{
+			//MODDD - if for whatever reason the talker is null, mark where you are facing now as the ideal yaw to just
+			//        keep facing the way you already are?
+			wasLookingAtTalker = FALSE;  //also mark we weren't looking at anyone in particular.
+			pev->ideal_yaw = pev->angles.y;
 		}
 		TaskComplete();
 	break;
@@ -639,6 +672,7 @@ void CTalkMonster :: StartTask( Task_t *pTask )
 	case TASK_TLK_HEADRESET:
 		// reset head position after looking at something
 		m_hTalkTarget = NULL;
+		wasLookingAtTalker = FALSE;
 		TaskComplete();
 		break;
 
@@ -725,6 +759,7 @@ void CTalkMonster :: StartTask( Task_t *pTask )
 
 	case TASK_PLAY_SCRIPT:
 		m_hTalkTarget = NULL;
+		wasLookingAtTalker = FALSE;
 		CBaseMonster::StartTask( pTask );
 		break;
 
@@ -832,19 +867,49 @@ void CTalkMonster :: RunTask( Task_t *pTask )
 		{
 			easyForcePrintLine("OH no?! %d %d %d %d", !IsMoving(), IsTalking(), m_hTalkTarget != NULL, !entityHidden(m_hTalkTarget));
 
-			if (!IsMoving() && IsTalking() && m_hTalkTarget != NULL && !entityHidden(m_hTalkTarget) )
+
+
+			/*
+			//WAIT just change the preferred activity in the schedule like a normal person SHEESH.
+			if(this->m_Activity == ACT_TURN_LEFT || this->m_Activity == ACT_TURN_RIGHT && this->m_fSequenceFinished){
+				//Finished the activity and we're done turning?  Stop that sequence then..
+				easyForcePrintLine("DO I LOOP %d %d %d", this->m_fSequenceLoops, this->m_fSequenceFinished, this->m_fSequenceFinishedSinceLoop);
+			}
+			*/
+
+			//m_IdealActivity = ACT_IDLE;
+
+			
+
+			//MODDD - hold on.  If "wasLookingAtTalker" is FALSE, we don't care about the TalkTalker being NULL. Of course it is.
+			//if (!IsMoving() && IsTalking() && m_hTalkTarget != NULL && !entityHidden(m_hTalkTarget) )
+			if (!IsMoving() && IsTalking() )
 			{
 				// ALERT( at_console, "waiting %f\n", m_flStopTalkTime - gpGlobals->time );
-			
-				BOOL isPlayer = m_hTalkTarget->IsPlayer();
+				easyForcePrintLine("%s:%d wasLookingAtTalker? %d", getClassname(), monsterID, wasLookingAtTalker);
+
+				if(!wasLookingAtTalker){
+					//Wasn't looking at a talker, but we're talking? Just let it finish.
+					break;  //don't complete yet.
+				}else{
+					//Now the extra check: does this talker still exist?
+					if(m_hTalkTarget != NULL && !entityHidden(m_hTalkTarget)){
+
+						BOOL isPlayer = m_hTalkTarget->IsPlayer();
+
+						IdleHeadTurn( m_hTalkTarget->pev->origin );
+						break; //good, don't complete.
+					}else{
+						easyForcePrintLine("I, %s:%d LOST TRACK OF MY TALKER AND MUST CEASE STARING AT THAT WHICH NO LONGER PARTAKES IN THE SWEET FRUIT OF EXISTANCE.", getClassname(), monsterID);
+					}
+				}//END OF wasLookingAtTalker check
 
 
-				IdleHeadTurn( m_hTalkTarget->pev->origin );
-			}
-			else
-			{
-				TaskComplete();
-			}
+			}//END OF not moving AND not talking checks
+
+			//made it here? we're done.
+			TaskComplete();
+
 			break;
 		}
 
@@ -1613,7 +1678,37 @@ BOOL CTalkMonster::FNearPassiveSpeak(void){
 
 
 
+//Similar to PlaySentence in general, or even PlayScriptedSentence, but not to any NPC in particular. No look direction.
+void CTalkMonster::PlaySentenceUninterruptable(const char *pszSentence, float duration, float volume, float attenuation, BOOL bConcurrent){
+	
+	if ( !bConcurrent )
+		ShutUpFriends();
 
+	ClearConditions( bits_COND_CLIENT_PUSH );	// Forget about moving!  I've got something to say!
+	m_useTime = gpGlobals->time + duration;
+	PlaySentence( pszSentence, duration, volume, attenuation );
+
+	m_hTalkTarget = NULL;
+	
+	ChangeSchedule(slTlkIdleEyecontact);
+	PlaySentence(pszSentence, duration, volume, attenuation);
+
+}//END OF PlaySentenceTo
+
+
+//Same as PlayScriptedSentence, but a bit more aggressive. Changes the current schedule to eye contact as well.
+void CTalkMonster::PlaySentenceTo(const char *pszSentence, float duration, float volume, float attenuation, BOOL bConcurrent, CBaseEntity *pListener ){
+
+	//CTalkMonster::g_talkWaitTime = gpGlobals->time + duration;
+	//Also sets this.
+	//No need, it is already set in TalkMonster's "Talk" method, called by PlaySentence ultimately (which is called of course too).
+	//m_flStopTalkTime = gpGlobals->time + duration;
+
+	
+	ChangeSchedule(slTlkIdleEyecontact);
+	PlayScriptedSentence(pszSentence, duration, volume, attenuation, bConcurrent, pListener);
+
+}//END OF PlaySentenceTo
 
 
 void CTalkMonster::PlayScriptedSentence( const char *pszSentence, float duration, float volume, float attenuation, BOOL bConcurrent, CBaseEntity *pListener )
@@ -1868,10 +1963,24 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CTalkMonster)
 
 
 
+
+Schedule_t* CTalkMonster::GetSchedule(){
+	//No "GetSchedule" of our own?
+	//Just reset this each time, any schedule starts fresh assuming there is a talker (since this was retail behavior)
+	wasLookingAtTalker = TRUE;
+
+
+	return CBaseMonster::GetSchedule();
+}//END OF GetSchedule
+
+
+
+
+
 Schedule_t* CTalkMonster :: GetScheduleOfType ( int Type )
 {
 
-
+	
 	
 	easyForcePrintLine("%s:%d WHATS GOOD IM CTalkMonster AND I PICKED SCHED TYPE %d", getClassname(), monsterID, Type);
 
@@ -2072,6 +2181,8 @@ CTalkMonster::CTalkMonster(void){
 	closestPassiveNPC_memory = NULL;
 	closestPassiveNPC_distance = 0;
 
+	//Checked at the start of a schedule(s?) to see if we're supposed to be looking at a talker or not.
+	wasLookingAtTalker = FALSE;
 
 	nextMadEffect = -1;
 	madYaw = 0;
@@ -2596,3 +2707,14 @@ void CTalkMonster::ReportAIState(){
 
 	easyForcePrintLine("TALKMONSTER: consecutiveFollowFails:%d", consecutiveFollowFails);
 }
+
+
+void CTalkMonster::initiateAss(){
+	//default: no behavior?
+}
+
+
+
+
+
+

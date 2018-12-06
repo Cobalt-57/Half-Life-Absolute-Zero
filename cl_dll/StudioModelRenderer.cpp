@@ -948,6 +948,32 @@ void CStudioModelRenderer::StudioFxTransform( cl_entity_t *ent, float transform[
 			transform[2][1] *= scale;
 		}
 	break;
+	//MODDD - oh god they're gonna hate me for this
+	case kRenderFxImplode:
+		{
+			float scale;
+			//easyForcePrintLine("WHAT IS THAT %.2f %.2f %.2f", transform[0][3], transform[1][3], transform[2][3]);
+
+			scale = 1.0 - ( m_clTime - ent->curstate.animtime) * 2.2;
+			if ( scale < 0.01 )
+				scale = 0.01;
+			transform[0][1] *= scale;
+			transform[1][1] *= scale;
+			transform[2][1] *= scale;
+			//??
+			transform[0][0] *= scale;
+			transform[1][0] *= scale;
+			transform[2][0] *= scale;
+			transform[0][2] *= scale;
+			transform[1][2] *= scale;
+			transform[2][2] *= scale;
+			//transform[0][3] *= scale;
+			//transform[1][3] *= scale;
+			//The second index being 3 actually sets the position of this instead of the scale, at first indeces 0, 1, 2 (x, y, z).
+			//So this little edit keeps the monster on the ground while it shrinks, if it does at all (at a scale of 1, it is unchanged)
+			transform[2][3] = transform[2][3] - (transform[2][3] * (1 - scale) ); //0 + scale;
+		}
+	break;
 
 	}
 }

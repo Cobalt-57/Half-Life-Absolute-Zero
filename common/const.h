@@ -811,6 +811,7 @@ enum
 	kRenderFxHologram,			// kRenderFxDistort + distance fade
 	kRenderFxDeadPlayer,		// kRenderAmt is the player index
 	kRenderFxExplode,			// Scale up really big!
+	kRenderFxImplode,           //MODDD - new. Opposite of Explode, shrink fast instead.
 	kRenderFxGlowShell,			// Glowing Shell
 	kRenderFxClampMinScale,		// Keep this sprite from getting very small (SPRITES only!)
 

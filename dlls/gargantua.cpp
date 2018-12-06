@@ -78,6 +78,9 @@ extern float global_gargantuaBleeds;
 extern float global_animationKilledBoundsRemoval;
 extern float global_gargantuaKilledBoundsAssist;
 
+EASY_CVAR_EXTERN(testVar)
+
+
 // Spiral Effect
 class CSpiral : public CBaseEntity
 {
@@ -307,6 +310,15 @@ public:
 
 	void FlameDamage( Vector vecStart, Vector vecEnd, entvars_t *pevInflictor, entvars_t *pevAttacker, float flDamage, int iClassIgnore, int bitsDamageType );
 
+	//MODDD - new. What causes heavy damage? It takes a lot to do that to me.
+	void OnTakeDamageSetConditions(entvars_t *pevInflictor, entvars_t *pevAttacker, float flDamage, int bitsDamageType, int bitsDamageTypeMod);
+
+	//MODDD - advanced anim.  Just to change flinch speeds per difficulty.
+	BOOL usesAdvancedAnimSystem(void);
+	int LookupActivityHard(int activity);
+	int tryActivitySubstitute(int activity);
+
+
 	virtual int		Save( CSave &save );
 	virtual int		Restore( CRestore &restore );
 	static	TYPEDESCRIPTION m_SaveData[];
@@ -494,8 +506,9 @@ Schedule_t	slGargFlame[] =
 {
 	{ 
 		tlGargFlame,
-		ARRAYSIZE ( tlGargFlame ), 
-		0,
+		ARRAYSIZE ( tlGargFlame ),
+		//MODDD - interruptable by heavy damage
+		bits_COND_HEAVY_DAMAGE,
 		0,
 		"GargFlame"
 	},
@@ -515,7 +528,9 @@ Schedule_t	slGargSwipe[] =
 	{ 
 		tlGargSwipe,
 		ARRAYSIZE ( tlGargSwipe ), 
-		bits_COND_CAN_MELEE_ATTACK2,
+		bits_COND_CAN_MELEE_ATTACK2 ||
+		//MODDD - interruptable by heavy damage
+		bits_COND_HEAVY_DAMAGE,
 		0,
 		"GargSwipe"
 	},
@@ -1324,6 +1339,17 @@ void CGargantua::DeathEffect( void )
 }
 
 
+
+/*
+void CGargantua::Killed( entvars_t *pevAttacker, int iGib )
+{
+	EyeOff();
+	UTIL_Remove( m_pEyeGlow );
+	m_pEyeGlow = NULL;
+	CBaseMonster::Killed( pevAttacker, GIB_NEVER );
+}
+*/
+
 GENERATE_KILLED_IMPLEMENTATION(CGargantua)
 {
 	EyeOff();
@@ -1389,8 +1415,7 @@ GENERATE_KILLED_IMPLEMENTATION(CGargantua)
 
 		
 	}
-	
-		GENERATE_KILLED_PARENT_CALL(CBaseMonster);
+
 
 
 	if(valueOf == 4 || valueOf == 5){
@@ -1400,11 +1425,27 @@ GENERATE_KILLED_IMPLEMENTATION(CGargantua)
 			//pev->health = 30;
 		}
 	}
+	
 
 
 
+	if(pev->deadflag == DEAD_NO){
+		//The first blow can never gib this creature.  It's too big to be killed in one hit,
+		//no matter how many before that, and just disappear into flying gibs.
+		CBaseMonster::Killed( pevInflictor, pevAttacker, GIB_NEVER );
+	}else{
 
-}
+		if(valueOf == 0 || valueOf == 6){
+			//Retail explosion transform effect mid-death anim.
+			//Still never gibbable. The death anim ends in gibbing itself so let it finish.
+			CBaseMonster::Killed( pevInflictor, pevAttacker, GIB_NEVER );
+		}else{
+			//Going to leave a corpse.  Let it be gibbable this time.
+			//DYING or DEAD?  eh, gibbable. This is possible now.
+			GENERATE_KILLED_PARENT_CALL(CBaseMonster);
+		}
+	}
+}//END OF killed
 
 //=========================================================
 // CheckMeleeAttack1
@@ -1888,7 +1929,7 @@ void CGargantua::RunTask( Task_t *pTask )
 					UTIL_drawBox(pev->absmin, pev->absmax);
 				}
 					
-				//easyForcePrintLine("ARE YOU GAY %.2f", global_gargantuaKilledBoundsAssist);
+
 				pev->deadflag = DEAD_DEAD;
 				StopAnimation();
 				//easyPrintLine("DEAD: boxFlat?   %d", (BBoxFlat()));
@@ -2171,6 +2212,117 @@ void SpawnExplosion( Vector center, float randomRange, float time, int magnitude
 	pExplosion->pev->nextthink = gpGlobals->time + time;
 }
 
+
+
+//MODDD - new method for determining whether to register a case of damage as worthy of LIGHT_DAMAGE or HEAVY_DAMAGE for the AI.
+//        Can result in interrupting the current schedule.
+//        This is expected to get called from CBaseMonster's TakeDamage method in combat.cpp. This method may be customized per monster,
+//        should start with a copy of this method without calling the parent method, not much here.
+void CGargantua::OnTakeDamageSetConditions(entvars_t *pevInflictor, entvars_t *pevAttacker, float flDamage, int bitsDamageType, int bitsDamageTypeMod){
+
+	//MODDD - intervention. Timed damage might not affect the AI since it could get needlessly distracting.
+
+
+	
+
+	if(bitsDamageTypeMod & (DMG_TIMEDEFFECT|DMG_TIMEDEFFECTIGNORE) ){
+		//If this is continual timed damage, don't register as any damage condition. Not worth possibly interrupting the AI.
+		return;
+	}
+
+	
+	//default case from CBaseMonster's TakeDamage.
+	if ( flDamage > 20 )
+	{
+		SetConditions(bits_COND_LIGHT_DAMAGE);
+
+		//MODDD NEW - set a timer to forget a flinch-preventing memory bit.
+		forgetSmallFlinchTime = gpGlobals->time + DEFAULT_FORGET_SMALL_FLINCH_TIME;
+	}
+
+	//MODDD - HEAVY_DAMAGE was unused before.  For using the BIG_FLINCH activity that is (never got communicated)
+	//    Stricter requirement:  this attack took 70% of health away.
+	//    The agrunt used to use this so that its only flinch was for heavy damage (above 20 in one attack), but that's easy by overriding this OnTakeDamageSetconditions method now.
+	//    Keep it to using light damage for that instead.
+	//if ( flDamage >= 20 )
+	if(flDamage >=  pev->max_health * 0.55 || flDamage >= 80 && gpGlobals->time >= forgetBigFlinchTime )
+	{
+		SetConditions(bits_COND_HEAVY_DAMAGE);
+		forgetSmallFlinchTime = gpGlobals->time + DEFAULT_FORGET_SMALL_FLINCH_TIME*2.3;
+		forgetBigFlinchTime = gpGlobals->time + DEFAULT_FORGET_BIG_FLINCH_TIME*2.2;
+	}
+
+
+	if(EASY_CVAR_GET(testVar) == 10){
+		//any damage causes me now.
+		SetConditions(bits_COND_HEAVY_DAMAGE);
+	}
+
+	easyForcePrintLine("%s:%d OnTkDmgSetCond raw:%.2f fract:%.2f", getClassname(), monsterID, flDamage, (flDamage / pev->max_health));
+
+
+
+}//END OF OnTakeDamageSetConditions
+
+
+
+
+
+
+
+BOOL CGargantua::usesAdvancedAnimSystem(void){
+	return TRUE;
+}
+
+
+
+
+int CGargantua::LookupActivityHard(int activity){
+	int i = 0;
+	m_flFramerateSuggestion = 1;
+	pev->framerate = 1;
+	//any animation events in progress?  Clear it.
+	resetEventQueue();
+
+	switch(activity){
+		case ACT_SMALL_FLINCH:
+		case ACT_BIG_FLINCH:			//MODDD NOTE - is this effective?
+		case ACT_FLINCH_HEAD:
+		case ACT_FLINCH_CHEST:
+		case ACT_FLINCH_STOMACH:
+		case ACT_FLINCH_LEFTARM:
+		case ACT_FLINCH_RIGHTARM:
+		case ACT_FLINCH_LEFTLEG:
+		case ACT_FLINCH_RIGHTLEG:
+			if(g_iSkillLevel == SKILL_EASY){
+				m_flFramerateSuggestion = 1.1;
+			}else if(g_iSkillLevel == SKILL_MEDIUM){
+				m_flFramerateSuggestion = 1.5;
+			}else if(g_iSkillLevel == SKILL_HARD){
+				m_flFramerateSuggestion = 1.8;
+			}
+		break;
+	}//END OF switch(...)
+	
+	//not handled by above?  try the real deal.
+	return CBaseAnimating::LookupActivity(activity);
+}//END OF LookupActivityHard(...)
+
+
+int CGargantua::tryActivitySubstitute(int activity){
+	int i = 0;
+
+	//no need for default, just falls back to the normal activity lookup.
+	switch(activity){
+		case ACT_RUN:
+
+		break;
+	}//END OF switch(...)
+
+
+	//not handled by above? We're not using the script to determine animation then. Rely on the model's anim for this activity if there is one.
+	return CBaseAnimating::LookupActivity(activity);
+}//END OF tryActivitySubstitute(...)
 
 
 #endif

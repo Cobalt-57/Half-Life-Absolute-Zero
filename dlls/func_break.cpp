@@ -27,6 +27,11 @@
 #include "decals.h"
 #include "explode.h"
 
+//...really? never had to include this before?
+#include "player.h"
+
+
+
 extern DLL_GLOBAL Vector		g_vecAttackDir;
 
 //MODDD
@@ -1065,6 +1070,20 @@ void CPushable :: Move( CBaseEntity *pOther, int push )
 	entvars_t*	pevToucher = pOther->pev;
 	int playerTouch = 0;
 	int maxSpeedTemp;
+	float length;
+
+	
+
+
+
+	float pushSpeedFactor = ((m_maxSpeed) / 400) + 0.1;
+
+
+	if(pushSpeedFactor < 0.16)pushSpeedFactor = 0.16;  //no less than this allowed.
+	if(pushSpeedFactor > 1.0)pushSpeedFactor = 1.0;
+
+
+
 
 	// Is entity standing on this pushable ?
 	if ( FBitSet(pevToucher->flags,FL_ONGROUND) && pevToucher->groundentity && VARS(pevToucher->groundentity) == pev )
@@ -1079,6 +1098,7 @@ void CPushable :: Move( CBaseEntity *pOther, int push )
 
 	if ( pOther->IsPlayer() )
 	{
+		//MODDD NOTE - this means, a player making physical contact and not holding down the use or forward buttons will skip the rest of this method.
 		if ( push && !(pevToucher->button & (IN_FORWARD|IN_USE)) )	// Don't push unless the player is pushing forward and NOT use (pull)
 			return;
 		playerTouch = 1;
@@ -1110,33 +1130,94 @@ void CPushable :: Move( CBaseEntity *pOther, int push )
 	
 
 	
-	pev->velocity.x = pevToucher->velocity.x * factor;
-	pev->velocity.y = pevToucher->velocity.y * factor;
-	//MODDD - original
+
+
+	//apply friction?
+	factor = factor * pushSpeedFactor;
+
+	if(push){
+		//physical contact? rather plain.
+		if(playerTouch){
+			pev->velocity.x += pevToucher->velocity.x * 0.72;
+			pev->velocity.y += pevToucher->velocity.y * 0.72;
+		}else{
+			//give it some more oomph for box to box touches.
+			pev->velocity.x += pevToucher->velocity.x * 0.8;
+			pev->velocity.y += pevToucher->velocity.y * 0.8;
+		}
+	}else{
+		//It is possible the player is against the box and needs to shove it a little further to start a real push than just staying stopped in front.
+		//Also don't apply factor or pushSpeedFactor. Those already slow the player down.
+		//Let the crate keep up with the player mostly
+		Vector forceIntent;
+
+		if(playerTouch){
+			if(pevToucher->velocity.Length2D() < 10){
+				//The player probably wants the box to move in the direction they are facing. Go ahead and shove it with
+				//a little more force.
+				forceIntent = ::UTIL_YawToVec(pevToucher->angles.y) * 140;
+			}else{
+				//move as the player intended.
+				//There's probably a fancier way to blend into the player velocity instead but this works.
+				forceIntent = pevToucher->velocity;
+			}
+		}else{
+			//wait.. only the player can do "use"? whatever.
+			forceIntent = pev->velocity + pevToucher->velocity * 0.8;
+		}
+
+		pev->velocity.x = forceIntent.x;
+		pev->velocity.y = forceIntent.y;
+	}
+
+
+	//MODDD - original. was cumulative. Above matches player velocity instead.
 	/*
 	pev->velocity.x += pevToucher->velocity.x * factor;
 	pev->velocity.y += pevToucher->velocity.y * factor;
 	*/
 
 
-	float length = sqrt( pev->velocity.x * pev->velocity.x + pev->velocity.y * pev->velocity.y );
+	length = sqrt( pev->velocity.x * pev->velocity.x + pev->velocity.y * pev->velocity.y );
 	
 
-	easyForcePrintLine("PUSHVEL len:%.2f", length);
+	//easyForcePrintLine("PUSHVEL len:%.2f phys?%d pushervel:%.2f", length, push, pevToucher->velocity.Length2D());
 
 	
 	//if ( push && (length > maxSpeedTemp) )
 	//MODDD - always require the length check now!
+	//MODDD - actually remove the speed length check.  The new system doesn't need this, the box can only move as fast as the player.
+	//        Tossing around not supported, loses control too much.
+	/*
 	if ((length > maxSpeedTemp) )
 	{
 		pev->velocity.x = (pev->velocity.x * maxSpeedTemp / length );
 		pev->velocity.y = (pev->velocity.y * maxSpeedTemp / length );
 	}
-	
+	*/
+
+
 	if ( playerTouch )
 	{
-		pevToucher->velocity.x = pev->velocity.x;
-		pevToucher->velocity.y = pev->velocity.y;
+
+		
+
+		//MODDD - tell the player to slow down based on my friction (to simulate difficulty moving this around... heavier / more friction slows the player down much more)
+		CBasePlayer* playerRef = static_cast<CBasePlayer*>( CBaseEntity::Instance(pevToucher) );
+		playerRef->pushSpeedMulti = pushSpeedFactor;
+		playerRef->framesUntilPushStops = 12;
+
+		//easyForcePrintLine("SPEED FACTO: %.2f", pushSpeedFactor);
+		
+		
+		
+		//CBasePlayer *pl = ( CBasePlayer *) CBasePlayer::Instance( pev );
+		//CBasePlayer *pPlayer = (CBasePlayer *)GET_PRIVATE(pEntity);
+
+
+		//???
+		//pevToucher->velocity.x = pev->velocity.x;
+		//pevToucher->velocity.y = pev->velocity.y;
 		if ( (gpGlobals->time - m_soundTime) > 0.7 )
 		{
 			m_soundTime = gpGlobals->time;
@@ -1152,6 +1233,11 @@ void CPushable :: Move( CBaseEntity *pOther, int push )
 		}
 	}
 }
+
+
+
+
+
 
 #if 0
 void CPushable::StopSound( void )

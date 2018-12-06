@@ -948,6 +948,12 @@ public:
 	//cvar_t* infiniteLongJumpCharge;
 	float infiniteLongJumpChargeMem;
 	
+
+	int framesUntilPushStops;
+	
+	float pushSpeedMulti;
+	float pushSpeedMultiMem;
+
 	float noclipSpeedMultiMem;
 	float normalSpeedMultiMem;
 	float jumpForceMultiMem;

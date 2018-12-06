@@ -481,7 +481,9 @@ int	CGraph :: FindNearestLink ( const Vector &vecTestPoint, int *piNearestLink, 
 
 int	CGraph::HullIndex( const CBaseEntity *pEntity )
 {
-	if ( pEntity->pev->movetype == MOVETYPE_FLY)
+	//MODDD - accept the possiblity of other flying movetypes as well!
+	//if ( pEntity->pev->movetype == MOVETYPE_FLY)
+	if(pEntity->isMovetypeFlying())
 		return NODE_FLY_HULL;
 
 	if ( pEntity->pev->mins == Vector( -12, -12, 0 ) )
@@ -498,8 +500,15 @@ int	CGraph::HullIndex( const CBaseEntity *pEntity )
 
 int	CGraph::NodeType( const CBaseEntity *pEntity )
 {
-	if ( pEntity->pev->movetype == MOVETYPE_FLY)
+
+	//if ( pEntity->pev->movetype == MOVETYPE_FLY)
+	if(pEntity->isMovetypeFlying())
 	{
+		
+		//MODDD TODO - checking for the presence of the FL_SWIM flag may be more helpful here than checking
+		//whether the thing happens to be in the water or not?
+
+
 		if (pEntity->pev->waterlevel != 0)
 		{
 			return bits_NODE_WATER;

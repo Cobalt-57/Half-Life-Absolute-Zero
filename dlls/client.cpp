@@ -52,6 +52,8 @@
 
 #include "trains.h"
 
+#include "talkmonster.h"
+
 
 
 
@@ -3746,7 +3748,6 @@ void ClientCommand( edict_t *pEntity )
 
 	}else if( FStrEq(pcmdRefinedRef, "hidemyshit") || FStrEq(pcmdRefinedRef, "hideall") || FStrEq(pcmdRefinedRef, "hidefp") ){
 
-		easyForcePrintLine("WHAAAAT???");
 		EASY_CVAR_SET_DEBUGONLY_CLIENTONLY(drawHUD, -1);
 		EASY_CVAR_SET_DEBUGONLY_CLIENTONLY(drawViewModel, 0);
 		
@@ -3960,6 +3961,18 @@ void ClientCommand( edict_t *pEntity )
 
 
 
+
+	}
+	else if(FStrEq(pcmdRefinedRef, "myasshungers")){
+		
+		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev);
+		CBaseEntity* forwardEnt = FindEntityForward(tempplayer);
+
+		if(forwardEnt != NULL && FClassnameIs(forwardEnt->pev, "monster_scientist")){
+
+			CTalkMonster* sciRef = static_cast<CTalkMonster*>(forwardEnt);
+			sciRef->initiateAss();
+		}
 
 	}
 	else if ( FStrEq(pcmdRefinedRef, "debug1" ) )

@@ -321,7 +321,8 @@ public:
 	BOOL violentDeathAllowed(void);
 	BOOL violentDeathClear(void);
 
-
+	void initiateAss(void);
+	void myAssHungers(void);
 
 	
 //MODDD - new data stuff.
@@ -334,6 +335,7 @@ private:
 	float m_painTime;
 	float m_healTime;
 	float m_fearTime;
+	float explodeDelay;
 };
 
 
@@ -1728,6 +1730,8 @@ CScientist::CScientist(void){
 
 	//givenModelBody = -1;
 
+	explodeDelay = -1;
+
 	aggroOrigin = Vector(0,0,0); //???
 
 	aggroCooldown = -1;
@@ -2161,7 +2165,9 @@ void CScientist :: DeathSound ( void )
 
 	//PainSound();
 	
-	EMIT_SOUND_FILTERED( edict(), CHAN_VOICE, RANDOM_SOUND_ARRAY(pDeathSounds), 1.0, ATTN_NORM, 0, GetVoicePitch() );
+	if(explodeDelay == -1){
+		EMIT_SOUND_FILTERED( edict(), CHAN_VOICE, RANDOM_SOUND_ARRAY(pDeathSounds), 1.0, ATTN_NORM, 0, GetVoicePitch() );
+	}
 
 
 }
@@ -2171,8 +2177,17 @@ GENERATE_KILLED_IMPLEMENTATION(CScientist)
 {
 	//test();
 	//easyPrintLine("YEAHHHH %d", numberOfModelBodyParts);
-	SetUse( NULL );
-	GENERATE_KILLED_PARENT_CALL(CTalkMonster);
+
+	if(explodeDelay != -2){
+		//not doing that? ok, normal behavior.
+		SetUse( NULL );
+		GENERATE_KILLED_PARENT_CALL(CTalkMonster);
+	}else{
+		//The glitch. Skip to calling the base monster, interrupting other talkers reciting lines isn't ok.
+		StopTalking();
+		SetUse( NULL );
+		GENERATE_KILLED_PARENT_CALL(CBaseMonster);
+	}
 }
 
 
@@ -2864,6 +2879,9 @@ void CScientist::MonsterThink(void){
 
 
 
+	easyForcePrintLine("YO YO YO id:%d act:%d ideal:%d seq:%d fr:%.2f lps:%d fin:%d lfin:%d", monsterID, m_Activity, m_IdealActivity, this->pev->sequence, pev->frame, m_fSequenceLoops, this->m_fSequenceFinished, this->m_fSequenceFinishedSinceLoop);
+
+
 	//easyForcePrintLine("AYY YO WHAT THE helk %.2f %.2f", gpGlobals->time, pev->dmgtime);
 	int tempTaskNumber = this->getTaskNumber();
 	if( 
@@ -2978,8 +2996,40 @@ void CScientist::MonsterThink(void){
 	}
 
 
+
+
+	if(explodeDelay == -3){
+		//start the process.
+		myAssHungers();
+	}
+
+	if(explodeDelay == -2){
+		this->TakeDamage(pev, pev, 99999, DMG_ALWAYSGIB, 0);
+		//this->Killed(pev, pev, GIB_ALWAYS);
+		//return;
+	}
+
 	CTalkMonster::MonsterThink();
-}
+
+	
+
+	
+
+	if(explodeDelay > -1 && gpGlobals->time >= explodeDelay){
+		pev->renderfx = kRenderFxImplode;
+		pev->rendercolor.x = 255;
+		pev->rendercolor.y = 0;
+		pev->rendercolor.z = 0;
+		StopAnimation();
+		pev->nextthink = gpGlobals->time + 0.5;
+		//SetThink( &CBaseEntity::SUB_Remove );
+		explodeDelay = -2;
+		//return;
+	}
+
+
+
+}//END OF MonsterThink
 
 
 
@@ -3826,30 +3876,69 @@ int CScientist::LookupActivityHard(int activity){
 
 	m_flFramerateSuggestion = 1;
 
-	int iRandChoice = 0;
-	int iRandWeightChoice = 0;
-	
-	char* animChoiceString = NULL;
-	int* weightsAbs = NULL;
-			
-	//pev->framerate = 1;
-	int maxRandWeight = 30;
+
+
+
 
 
 
 	//let's do m_IdealActivity??
 	//uh... why?  nevermind then.
 	switch(activity){
-		case ACT_MELEE_ATTACK2:
+		case ACT_MELEE_ATTACK2:{
 			//here comes the train... the PAIN TRAIN.
 			m_flFramerateSuggestion = 1.3;
 			this->animEventQueuePush(6.7f / 30.0f, 0);
 			return LookupSequence("punch");
-		break;
-	}
+		break;}
+		case ACT_IDLE:{
+			//First off, are we talking right now?
+			if(IsTalking()){
+				//Limit the animations we can choose from a little more.
+				//Most people don't typically move around too much while looking at someone and talking to them,
+				//compared to just standing around or listening to a long conversation.
+				//BUT, simulare the wold weights.  The sum of all weights of the available animations
+				//(see a scientist.qc file from decompiling the model) is used instead of course.
+
+				const int animationWeightTotal = 90+20;
+				const int animationWeightChoice = RANDOM_LONG(0, animationWeightTotal-1);
+
+				if(animationWeightChoice < 90){
+					return LookupSequence("idle1");
+				}else{ //if(animationWeightChoice < 90+20){
+					return LookupSequence("idle_subtle_alpha");
+				}
+			}else{
+				//Not talking?  One more filter...
+				//Are we in predisaster?
+				if(FBitSet(pev->spawnflags, SF_MONSTER_PREDISASTER)){
+					//Don't allow "idle_look". We have no reason to look scared yet, ordinary day so far.
+					const int animationWeightTotal = 90+20+3+2+1;
+					const int animationWeightChoice = RANDOM_LONG(0, animationWeightTotal-1);
+
+					if(animationWeightChoice < 90){
+						return LookupSequence("idle1");
+					}else if(animationWeightChoice < 90+20){
+						return LookupSequence("idle_subtle_alpha");
+					}else if(animationWeightChoice < 90+20+3){
+						return LookupSequence("idle_brush");
+						//no idle_look
+					}else if(animationWeightChoice < 90+20+3+2){
+						return LookupSequence("idle_adjust");
+					}else{ //if(animationWeightChoice < 90+20+3+2+1){
+						return LookupSequence("idle_yawn");
+					}
+				}else{
+					//Just pick from the model, any idle animation is okay right now.
+					return CBaseAnimating::LookupActivity(activity);
+				}
+			}//END OF IsTalking check
+			
+		break;}
+	}//END OF switch
 	//not handled by above?  try the real deal.
 	return CBaseAnimating::LookupActivity(activity);
-}
+}//END OF LookupActivityHard
 
 
 int CScientist::tryActivitySubstitute(int activity){
@@ -3872,6 +3961,8 @@ int CScientist::tryActivitySubstitute(int activity){
 		case ACT_MELEE_ATTACK2:
 			return LookupSequence("punch");
 		break;
+		//No need for ACT_IDLE here. The point of tryActivitySubstitute is to
+		//merely see if there is any sequence available for this activity, specifics don't help.
 
 	}
 	
@@ -3907,6 +3998,81 @@ BOOL CScientist::violentDeathClear(void){
 
 
 
+
+
+void CScientist::initiateAss(void){
+	//not directly... do this and start the method when the think method runs next.
+	//Yes this fucking joke requires some design decisions. What am I doing.
+	explodeDelay = -3;
+}
+
+void CScientist::myAssHungers(void){
+	ShutUpFriends();
+
+	CBaseEntity* pEntityScan = NULL;
+	CBaseEntity* testMon = NULL;
+	float thisDistance;
+	float leastDistanceYet;
+	CTalkMonster* thisNameSucks;
+	CTalkMonster* bestChoiceYet;
+
+	//I'm number 1!
+	CTalkMonster* pickedNumber2 = NULL;
+
+	//does UTIL_MonstersInSphere work?
+	while ((pEntityScan = UTIL_FindEntityInSphere( pEntityScan, pev->origin, 600 )) != NULL)
+	{
+		testMon = pEntityScan->MyMonsterPointer();
+		//if(testMon != NULL && testMon->pev != this->pev && ( FClassnameIs(testMon->pev, "monster_scientist") || FClassnameIs(testMon->pev, "monster_barney")  ) ){
+		if(testMon != NULL && testMon->pev != this->pev && UTIL_IsAliveEntity(testMon) && testMon->isTalkMonster() ){
+			thisDistance = (testMon->pev->origin - pev->origin).Length();
+					
+			thisNameSucks = static_cast<CTalkMonster*>(testMon);
+					
+			/*
+			//only allow one scientist to try to reach this NPC.  That is, this NPC's own "scientistTryingToHealMe" is null, that is.
+			if(thisNameSucks != NULL && thisNameSucks->scientistTryingToHealMeEHANDLE == NULL && thisDistance < leastDistanceYet){
+				//healTargetNPC = testMon;
+				bestChoiceYet = thisNameSucks;
+				leastDistanceYet = thisDistance;
+				//break;
+			}
+			*/
+
+			if(pickedNumber2 == NULL){
+				pickedNumber2 = thisNameSucks;
+				break;
+			}
+
+		}
+
+	}//END OF while(...)
+
+
+	
+	
+	if(pickedNumber2 != NULL){
+		//Other one will look at me.
+		pickedNumber2->PlaySentenceTo("!meme_my_ass_hungers_a", 21, 1.0, ATTN_NORM, TRUE, this);
+		//I won't look at him.
+		this->PlaySentenceUninterruptable("!meme_my_ass_hungers_b", 21, 1.0, ATTN_NORM, TRUE);
+		this->explodeDelay = gpGlobals->time + 13.3 - 0.8;
+	}
+	
+	
+	/*
+	//solo only what.
+		//pickedNumber2->PlaySentenceTo("!meme_my_ass_hungers_a", 21, 1.0, ATTN_NORM, TRUE, this);
+		//I won't look at him.
+		this->PlaySentenceUninterruptable("!meme_my_ass_hungers_b", 21, 1.0, ATTN_NORM, TRUE);
+		this->explodeDelay = gpGlobals->time + 13.3 - 0.8;
+	*/
+	//TEST
+	//this->PlaySentenceUninterruptable("!meme_my_ass_hungers_b", 21, 1.0, ATTN_NORM, TRUE);
+
+
+
+}//END OF myAssHungers
 
 
 
