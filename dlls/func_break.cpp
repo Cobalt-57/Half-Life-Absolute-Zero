@@ -1082,7 +1082,13 @@ void CPushable :: Move( CBaseEntity *pOther, int push )
 	if(pushSpeedFactor < 0.16)pushSpeedFactor = 0.16;  //no less than this allowed.
 	if(pushSpeedFactor > 1.0)pushSpeedFactor = 1.0;
 
+	
 
+
+	//MODDDN NOTE - the "VARS" part below effectly makes it,
+	//if(... &pevToucher->groundentity->v == pev){
+	//
+	//}
 
 
 	// Is entity standing on this pushable ?

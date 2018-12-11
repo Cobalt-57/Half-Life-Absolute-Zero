@@ -7529,7 +7529,7 @@ void CBaseMonster::OnTakeDamageSetConditions(entvars_t *pevInflictor, entvars_t 
 		SetConditions(bits_COND_HEAVY_DAMAGE);
 	}
 
-	easyForcePrintLine("%s:%d OnTkDmgSetCond raw:%.2f fract:%.2f", getClassname(), monsterID, flDamage, (flDamage / pev->max_health));
+	//easyForcePrintLine("%s:%d OnTkDmgSetCond raw:%.2f fract:%.2f", getClassname(), monsterID, flDamage, (flDamage / pev->max_health));
 
 
 

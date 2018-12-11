@@ -1028,7 +1028,7 @@ void CBarney :: BarneyFirePistol ( void )
 //MODDD - was "think", made "MonsterThink"...
 void CBarney :: MonsterThink(void){
 	
-	easyForcePrintLine("IM SUPER %d", HasConditions( bits_COND_ENEMY_DEAD ));
+	easyForcePrintLine("IM SUPER %d : seq:%d fr:%.2f fin:%d", HasConditions( bits_COND_ENEMY_DEAD ), pev->sequence, pev->frame, this->m_fSequenceFinished);
 
 
 
@@ -1091,11 +1091,18 @@ void CBarney :: SetActivity ( Activity NewActivity )
 {
 	int	iSequence;
 
-	if ( NewActivity == m_Activity )
-		return;
+
+	//hm...
+	//if ( NewActivity == m_Activity )
+	//	return;
 
 
 	if(NewActivity == ACT_RELOAD){
+
+		if ( NewActivity == m_Activity ){
+			//SAFETY: don't call this multiple times if it's been called already.
+			return;
+		}
 		
 		ClearConditions(bits_COND_NO_AMMO_LOADED);
 		reloadSoundTime = gpGlobals->time + 0.72f;

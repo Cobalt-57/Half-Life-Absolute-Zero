@@ -1580,7 +1580,7 @@ void CHAssault :: RunTask ( Task_t *pTask )
 		//Actually aim for a litle earlier if we're still able to attack. No need to return all the way to resting position.
 		if(m_fSequenceFinished || (HasConditions(bits_COND_CAN_MELEE_ATTACK1)  && pev->frame >= 220)  )
 		{
-			//m_Activity = ACT_RESET;
+			m_Activity = ACT_RESET;
 			//m_IdealActivity = ACT_RESET;
 			//MODDD - is this better?
 

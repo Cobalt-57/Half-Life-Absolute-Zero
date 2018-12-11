@@ -1016,7 +1016,9 @@ void CAGrunt :: HandleAnimEvent( MonsterEvent_t *pEvent )
 			// m_vecEnemyLKP should be center of enemy body
 			Vector vecArmPos;
 			Vector vecDirToEnemy;
+			Vector vecDirToEnemyAI;
 			Vector angDir;
+			Vector angDirAI;
 
 			if (HasConditions( bits_COND_SEE_ENEMY))
 			{
@@ -1027,19 +1029,25 @@ void CAGrunt :: HandleAnimEvent( MonsterEvent_t *pEvent )
 				//Vector vecShootDir = ShootAtEnemy( vecShootOrigin );
 
 				//MODDD - NAH. go ahead and use the precise version.
-				/*
 				vecDirToEnemy = ( ( m_vecEnemyLKP ) - pev->origin );
 				angDir = UTIL_VecToAngles( vecDirToEnemy );
 				vecDirToEnemy = vecDirToEnemy.Normalize();
-				*/
+				
+
+				/*
+				Vector vecShootOriginAI = GetGunPositionAI();
+				vecDirToEnemyAI = ShootAtEnemyMod(vecShootOriginAI());
+				angDirAI = UTIL_VecToAngles(vecDirToEnemyAI);
 
 				Vector vecShootOrigin = GetGunPosition();
 				vecDirToEnemy = ShootAtEnemyMod( vecShootOrigin );
 				angDir = UTIL_VecToAngles(vecDirToEnemy);
+				*/
 
 			}
 			else
 			{
+				//angDirAI = pev->angles;
 				angDir = pev->angles;
 				UTIL_MakeAimVectors( angDir );
 				vecDirToEnemy = gpGlobals->v_forward;
@@ -1056,6 +1064,7 @@ void CAGrunt :: HandleAnimEvent( MonsterEvent_t *pEvent )
 			}
 
 			SetBlending( 0, angDir.x );
+
 
 			//MODDD - easier to recognize.
 			//GetAttachment( 0, vecArmPos, vecArmDir );
@@ -2340,9 +2349,35 @@ Vector CAGrunt::GetGunPosition(void){
 	return vecGunPos;
 }//END OF GetGunPosition
 
+
 Vector CAGrunt::GetGunPositionAI(void){
-	//Clone of GetGunPosition from monsters.cpp. The GetGunPositionAI method of CBaseMonster would have called Monster's GetGunPosition, but we've made ours more specific.
+	////Clone of GetGunPosition from monsters.cpp. The GetGunPositionAI method of CBaseMonster would have called Monster's GetGunPosition, but we've made ours more specific.
 	return CBaseMonster::GetGunPosition();
+	////CHANGED.
+
+
+	/*
+	Vector v_forward, v_right, v_up, angle;
+
+
+	//TEST: if I WERE facing the enemy right now...
+	if(m_hEnemy != NULL){
+		angle = ::UTIL_VecToAngles(m_hEnemy->pev->origin - pev->origin);
+	}else{
+		angle = pev->angles;
+	}
+	
+	angle.x = 0; //pitch is not a factor here.
+	UTIL_MakeVectorsPrivate( angle, v_forward, v_right, v_up);
+	
+	const Vector vecSrc = pev->origin 
+					+ v_forward * m_HackedGunPos.y 
+					+ v_right * m_HackedGunPos.x 
+					+ v_up * m_HackedGunPos.z;
+
+	return vecSrc;
+	*/
+
 }//END OF GetGunPositionAI
 
 
