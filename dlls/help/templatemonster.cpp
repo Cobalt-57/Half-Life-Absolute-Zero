@@ -594,6 +594,13 @@ int	CTemplateMonster::Classify(){
 BOOL CTemplateMonster::isOrganic(){
 	return TRUE;
 }
+//IF a differnet null size is fitting, pick that instead.
+//Otherwise it's assumed by fitting into one of the stock sizes in node.cpp's HullIndex method.
+//The fallback NODE_HUMAN_HULL may not be very good, so specify a node type here instead.
+//Choices are: NODE_POINT_HULL, NODE_SMALL_HULL, NODE_HUMAN_HULL, NODE_LARGE_HULL, NODE_FLY_HULL
+int CTemplateMonster::getHullIndexForNodes(void){
+	return NODE_DEFAULT_HULL;
+}//END OF getHullIndexForNodes
 
 int CTemplateMonster::IRelationship( CBaseEntity *pTarget ){
 

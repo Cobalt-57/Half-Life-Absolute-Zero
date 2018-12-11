@@ -907,7 +907,8 @@ void CBaseMonster :: RunTask ( Task_t *pTask )
 				// Set the appropriate activity based on an overlapping range
 				// overlap the range to prevent oscillation
 				//MODDD - new possible satisfying condition. I am closer to my target's absolute position than the goaldist. I know, stunning.
-				if ( distance < pTask->flData || myDistToTargetEnt < pTask->flData )
+				//if ( distance < pTask->flData || myDistToTargetEnt < pTask->flData )
+				if(myDistToTargetEnt < pTask->flData)
 				{
 					if(global_movementIsCompletePrintout)easyForcePrintLine("FINISH!!!");
 					TaskComplete();
@@ -1083,7 +1084,11 @@ void CBaseMonster :: RunTask ( Task_t *pTask )
 
 
 					m_vecMoveGoal = m_vecEnemyLKP;
-					BOOL test = FRefreshRoute();
+					//BOOL test = FRefreshRoute();
+					//MODDD - WHY DID YOU USE THE OLD VERSION ANYWAYS?!
+					// Or don't, hell if I know.
+					//  ...  FRefreshRouteChaseEnemySmart
+					BOOL test = FRefreshRouteChaseEnemySmart();
 					
 					if(!test){if(global_movementIsCompletePrintout)easyForcePrintLine("TASK_MOVE_TO_ENEMY_RANGE: FAILURE 3"); TaskFail();}else{if(global_movementIsCompletePrintout)easyForcePrintLine("TASK_MOVE_TO_ENEMY_RANGE: SUCCESS 3");};
 				}
@@ -1101,7 +1106,7 @@ void CBaseMonster :: RunTask ( Task_t *pTask )
 					//MODDD - NO. This alls for a re-route.
 					
 					m_vecMoveGoal = m_vecEnemyLKP;
-					BOOL test = FRefreshRoute();
+					BOOL test = FRefreshRouteChaseEnemySmart();
 					if(!test)TaskFail();
 
 				}
@@ -2250,7 +2255,12 @@ void CBaseMonster :: StartTask ( Task_t *pTask )
 			TaskComplete();
 			break;
 		}
-
+		
+	case TASK_SET_ACTIVITY_FORCE:{
+		//MODDD - new. Similar to TASK_SET_ACTIVITY above, but enforces picking a new sequence.
+		SetActivity( (Activity)(int)pTask->flData );
+		TaskComplete();
+	break;}
 
 		//MODDD - We're forcing even GET_PATH_TO_ENEMY to use the LastKnownPath instead.
 	case TASK_GET_PATH_TO_ENEMY:

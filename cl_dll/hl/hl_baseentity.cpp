@@ -94,6 +94,7 @@ void CBaseEntity::ReportGeneric(){}
 BOOL CBaseEntity::isMovetypeFlying(void) const{return FALSE;}
 BOOL CBaseEntity::isSizeGiant(void){return FALSE;}
 BOOL CBaseEntity::isOrganic(void){return FALSE;}
+int CBaseEntity::getHullIndexForNodes(void) const{return 0;}
 void CBaseEntity::onDelete(void){}
 
 void CBaseEntity::Spawn(void){}

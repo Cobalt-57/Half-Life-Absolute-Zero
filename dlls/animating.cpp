@@ -189,6 +189,10 @@ void CBaseAnimating::checkEndOfAnimation(void){
 		tempCutoff = (pev->framerate >= 0)?256:0;
 	}
 
+	if(FClassnameIs(this->pev, "monster_stukabat")){
+		int wat = 4;
+	}
+
 	if(pev->framerate >= 0){
 		//we count the frame being above the cutoff as "too far".
 		if(pev->frame >= tempCutoff){

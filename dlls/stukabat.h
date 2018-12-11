@@ -424,6 +424,8 @@ public:
 	BOOL violentDeathAllowed(void);
 	BOOL violentDeathClear(void);
 
+	Activity getIdleActivity(void);
+
 
 
 	BOOL hitGroundDead;
@@ -432,7 +434,7 @@ public:
 
 
 
-
+	Vector scentLocationMem;
 
 	Activity recentActivity;
 	int attackIndex;
@@ -462,6 +464,8 @@ public:
 	BOOL dontResetActivity;
 
 	float suicideAttackCooldown;
+
+	float lastEnemey2DDistance;
 
 	
 	float HearingSensitivity( );
@@ -600,6 +604,8 @@ const char *CStukaBat::pDeathSounds[] =
 enum
 {
 	TASK_SOUND_ATTACK = LAST_COMMON_TASK + 1,
+	TASK_STUKABAT_LAND_PRE,
+	TASK_STUKABAT_LAND,
 	TASK_GET_PATH_TO_LANDING,
 	TASK_GET_PATH_TO_BESTSCENT_FOOT,
 	TASK_ACTION,
@@ -747,7 +753,6 @@ Schedule_t	slStukaIdleHang[] =
 
 
 
-
 Task_t	tlStukaIdleGround[] =
 {
 	//{ TASK_STOP_MOVING,			0				},
@@ -767,7 +772,7 @@ Schedule_t	slStukaIdleGround[] =
 		bits_COND_HEAVY_DAMAGE	|
 		bits_COND_HEAR_SOUND	|
 		bits_COND_SMELL_FOOD	|
-		bits_COND_SMELL			|
+		//bits_COND_SMELL			|
 		bits_COND_PROVOKED,
 
 		bits_SOUND_COMBAT		|// sound flags
@@ -806,7 +811,7 @@ Schedule_t	slStukaIdleHover[] =
 		bits_COND_HEAVY_DAMAGE	|
 		bits_COND_HEAR_SOUND	|
 		bits_COND_SMELL_FOOD	|
-		bits_COND_SMELL			|
+		//bits_COND_SMELL			|
 		bits_COND_PROVOKED,
 
 		bits_SOUND_COMBAT		|// sound flags
@@ -949,8 +954,8 @@ Task_t tlStukaBatFindEat[] =
 	//{ TASK_STOP_MOVING,				(float)0				},
 	
 	{ TASK_GET_PATH_TO_BESTSCENT,	(float)0				},
-	{ TASK_WAIT,	(float)1		}
-
+	//{ TASK_WAIT,	(float)1		}
+	{ TASK_WAIT_FOR_MOVEMENT, (float) 0},
 
 };
 
@@ -983,6 +988,9 @@ Task_t tlStukaBatAttemptLand[] =
 	//{ TASK_STOP_MOVING,				(float)0				},
 	
 	{ TASK_GET_PATH_TO_LANDING,	(float)0				},
+	{ TASK_WAIT_FOR_MOVEMENT, (float) 0},
+	{ TASK_STUKABAT_LAND_PRE, (float) 0},
+	{ TASK_STUKABAT_LAND, (float) 0},
 	//{ TASK_WAIT,	(float)1		}
 
 
@@ -1019,7 +1027,8 @@ Task_t tlStukaBatCrawlToFood[] =
 	//{ TASK_STOP_MOVING,				(float)0				},
 	
 	{ TASK_GET_PATH_TO_BESTSCENT_FOOT,	(float)0				},
-	{ TASK_WAIT,	(float)1		}
+	//{ TASK_WAIT,	(float)1		}
+	{ TASK_WAIT_FOR_MOVEMENT, (float) 0},
 
 
 };
@@ -1052,11 +1061,17 @@ Task_t tlStukaBatEat[] =
 {
 	{ TASK_STOP_MOVING,				(float)0				},
 	
-	
+	{ TASK_SET_ACTIVITY_FORCE,			(float)ACT_EAT},
 	{ TASK_FACE_IDEAL,				(float)0				},
 	{ TASK_WAIT,	(float)2		},
 	{ TASK_EAT,	(float)50				},
-	{ TASK_WAIT,	(float)2		}
+	{ TASK_WAIT,	(float)8		},
+	//If in the middle of one eating cycle, go ahead and let it finish.
+	{ TASK_WAIT_FOR_SEQUENCEFINISH, (float) 0 },
+	//Just send a signal to pick a different activity, this should work out.
+	{ TASK_SET_ACTIVITY, (float)ACT_RESET },
+
+	//{TASK_SET_ACTIVITY_FORCE, (float)ACT_CROUCHIDLE},
 
 
 };
@@ -1069,7 +1084,7 @@ Schedule_t slStukaBatEat[] =
 		ARRAYSIZE( tlStukaBatEat ),
 		bits_COND_LIGHT_DAMAGE	|
 		bits_COND_HEAVY_DAMAGE	|
-		bits_COND_NEW_ENEMY,
+		bits_COND_NEW_ENEMY |
 		
 		/*
 		// even though HEAR_SOUND/SMELL FOOD doesn't break this schedule, we need this mask
@@ -1077,7 +1092,21 @@ Schedule_t slStukaBatEat[] =
 		bits_SOUND_MEAT			|
 		bits_SOUND_CARCASS,
 		*/
-		0,
+		bits_COND_SEE_DISLIKE		|
+		bits_COND_SEE_HATE      |
+		bits_COND_SEE_FEAR		|
+		bits_COND_LIGHT_DAMAGE	|
+		bits_COND_HEAVY_DAMAGE	|
+		bits_COND_HEAR_SOUND	|
+		//bits_COND_SMELL_FOOD	|
+		//bits_COND_SMELL			|
+		bits_COND_PROVOKED,
+
+		bits_SOUND_COMBAT		|// sound flags
+		bits_SOUND_WORLD		|
+		bits_SOUND_PLAYER		|
+		bits_SOUND_DANGER,
+
 		"StukaBatEat"
 	}
 };

@@ -898,6 +898,9 @@ void COsprey :: ShowDamage( void )
 
 GENERATE_TRACEATTACK_IMPLEMENTATION(COsprey)
 {
+	//return;
+
+
 	// ALERT( at_console, "%d %.0f\n", ptr->iHitgroup, flDamage );
 
 	// only so much per engine

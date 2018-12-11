@@ -37,7 +37,6 @@
 
 	
 #include "nodes.h"
-//#include "basemonster.h"
 #include "animation.h"
 #include "saverestore.h"
 #include "weapons.h"
@@ -508,6 +507,7 @@ void CBaseMonster::setAnimation(char* animationName, BOOL forceException, BOOL f
 		if(!pass){
 			return;
 		}
+
 		pev->sequence		= iSequence;	// Set to the reset anim (if it's there)
 		pev->frame			= 0;		// FIX: frame counter shouldn't be reset when its the same activity as before
 		//???
@@ -1761,6 +1761,8 @@ void CBaseMonster :: MonsterThink ( void )
 	pev->nextthink = gpGlobals->time + 0.1;// keep monster thinking.
 	
 
+	
+
 
 	if(forgetSmallFlinchTime != -1 && gpGlobals->time >= forgetSmallFlinchTime){
 		forgetSmallFlinchTime = -1;
@@ -1978,6 +1980,9 @@ void CBaseMonster :: MonsterThink ( void )
 	{
 		//easyForcePrintLine("GET good sonny A");
 		Move( flInterval );
+		//MODDD - flInterval may be reset on the same frame the animation is changed.  If that is ok, keep using Move(flInterval) like retail does.
+		//Move(gpGlobals->frametime);
+
 	}
 #if _DEBUG	
 	else 
@@ -2239,7 +2244,8 @@ BOOL CBaseMonster::FRefreshRouteChaseEnemySmart(void){
 		//TaskComplete();
 		returnCode = TRUE;
 	}
-	else if (BuildNearestRoute( m_vecMoveGoal, pEnemy->pev->view_ofs, 0, (pEnemy->pev->origin - pev->origin).Length() ))
+	//else if (BuildNearestRoute( m_vecMoveGoal, pEnemy->pev->view_ofs, 0, (pEnemy->pev->origin - pev->origin).Length() ))
+	else if (BuildNearestRoute( m_vecMoveGoal, pEnemy->pev->view_ofs, 0, (m_vecEnemyLKP - pev->origin).Length() ))
 	{
 		//TaskComplete();
 		returnCode = TRUE;
@@ -2310,6 +2316,12 @@ BOOL CBaseMonster :: FRefreshRoute ( void )
 
 		case MOVEGOAL_LOCATION:
 			returnCode = BuildRoute( m_vecMoveGoal, bits_MF_TO_LOCATION, NULL );
+
+			//MODDD - can we do a nearest instead?
+			if(returnCode == FALSE){
+				returnCode = BuildNearestRoute(m_vecMoveGoal, pev->view_ofs, 0, (m_vecMoveGoal - pev->origin).Length() );
+			}
+
 			break;
 
 		case MOVEGOAL_TARGETENT:
@@ -3618,10 +3630,14 @@ int CBaseMonster :: CheckLocalMove ( const Vector &vecStart, const Vector &vecEn
 					oldMaxs = pev->maxs;
 					UTIL_SetSize( pev, VEC_HUMAN_HULL_MIN, VEC_HUMAN_HULL_MAX );
 					pev->origin = oldOrigin;
+
+
 					if(!WALK_MOVE( ENT(pev), flYaw, stepSize, WALKMOVE_CHECKONLY )){
 						//still fail? it is ok to run the script below that accepts failure.
 						UTIL_SetSize(pev, oldMins, oldMaxs);
-						continue;
+						//WAIT. Allow below to run in this case or not?  I don't know man!!
+						//But slowdowns can happen sometimes from this.  Why??
+						//continue;
 					}else{
 						//success? no, allowed to keep going.
 						UTIL_SetSize(pev, oldMins, oldMaxs);
@@ -3640,6 +3656,9 @@ int CBaseMonster :: CheckLocalMove ( const Vector &vecStart, const Vector &vecEn
 			{
 				*pflDist = flStep;
 			}
+
+			const char* DEBUGSHIT = (gpGlobals->trace_ent!=NULL)?CBaseEntity::Instance(gpGlobals->trace_ent)->getClassname():"WHUT";
+
 			if ( pTarget && pTarget->edict() == gpGlobals->trace_ent )
 			{
 				// if this step hits target ent, the move is legal.
@@ -3827,10 +3846,23 @@ void CBaseMonster :: AdvanceRoute ( float distance, float flInterval )
 		}
 		else	// At goal!!!
 		{
-			if(EASY_CVAR_GET(pathfindPrintout)==1)easyForcePrintLine("MovementComplete Call 456: dist? %.2f req: %.2f", distance, m_flGroundSpeed * pev->framerate * EASY_CVAR_GET(animationFramerateMulti) * flInterval );
+			//MODDD NOTE - hold on. This extra check before calling "MovementComplete" is retail behavior at least.
+			//Factoring in framerate, interval and "pathfindNodeToleranceMulti" for passing are new.
+			//But why is this check here to begin with? We can only get here (AdvanceRoute) from "ShouldAdvanceRoute" passing which already does the
+			//distance check towards the next node or goal.  So it's redundant: how could this check fail if ShouldAdvanceRoute said we should advance?
+			//The checks above for not being towards the goal node / point don't even do any extra checks, they just bump up the node as told.
+			//I got nothing.
+
+			const float rawMoveSpeedPerSec = (m_flGroundSpeed * pev->framerate * EASY_CVAR_GET(animationFramerateMulti) * flInterval );
+			const float moveDistTest = rawMoveSpeedPerSec * EASY_CVAR_GET(pathfindNodeToleranceMulti);  //defaults to 1 for no effect.
+			const float moveDistTol = max(moveDistTest, 8);  //must be at least 8.
+
+
+
+			if(EASY_CVAR_GET(pathfindPrintout)==1)easyForcePrintLine("MovementComplete Call 456: dist:%.2f spd:%.2f req:%.2f", distance, rawMoveSpeedPerSec, moveDistTol );
 			//BETTER FIX!
 			//if ( distance < m_flGroundSpeed * 0.2 /* FIX */ )
-			if( distance < m_flGroundSpeed * pev->framerate * EASY_CVAR_GET(animationFramerateMulti) * flInterval)
+			if( distance < moveDistTol)
 			{
 				MovementComplete();
 			}
@@ -4577,7 +4609,6 @@ BOOL CBaseMonster :: FTriangulate ( const Vector &vecStart , const Vector &vecEn
 void CBaseMonster :: Move ( float flInterval ) 
 {
 	
-	//MODDD - DANGEROUS!
 
 	if(drawPathConstant){
 		DrawRoute( pev, m_Route, m_iRouteIndex, 0, 0, 176 );
@@ -4713,6 +4744,16 @@ void CBaseMonster :: Move ( float flInterval )
 		}
 	}else{
 		localMovePass = (CheckLocalMove ( pev->origin, pev->origin + vecDir * flCheckDist, pTargetEnt, &flDist ) == LOCALMOVE_VALID);
+
+		if(localMovePass){
+			//if it passed, likely didn't bother writing anything to flDist. Just go ahead and assume it was full, that is what passing means.
+			flDist = flCheckDist;
+		}
+
+		if(drawPathConstant){
+			//Show the result of the recent localMove?
+			::DebugLine_Setup(0, pev->origin, pev->origin + vecDir * flCheckDist, (flDist / flCheckDist) );
+		}
 
 		if(!localMovePass){
 			EASY_CVAR_PRINTIF_PRE(pathfindPrintout, easyForcePrintLine("%s:ID%d Move: CheckLocalMove Failed!", getClassnameShort(), monsterID) ) ;
@@ -5009,7 +5050,7 @@ void CBaseMonster :: Move ( float flInterval )
 BOOL CBaseMonster:: ShouldAdvanceRoute( float flWaypointDist, float flInterval )
 {
 	const float rawMoveSpeedPerSec = (m_flGroundSpeed * pev->framerate * EASY_CVAR_GET(animationFramerateMulti) * flInterval );
-	const float moveDistTest = rawMoveSpeedPerSec * 1;//EASY_CVAR_GET(pathfindNodeToleranceMulti);
+	const float moveDistTest = rawMoveSpeedPerSec * EASY_CVAR_GET(pathfindNodeToleranceMulti);  //defaults to 1 for no effect.
 	const float moveDistTol = max(moveDistTest, 8);  //must be at least 8.
 
 	//FINISH YO FIX
@@ -5615,6 +5656,9 @@ BOOL CBaseMonster :: BuildNearestRoute ( Vector vecThreat, Vector vecViewOffset,
 	Vector	vecLookersOffset;
 	TraceResult tr;
 
+	//HACKY HACKY
+	//flMaxDist = 9999;
+
 	if ( !flMaxDist )
 	{
 		// user didn't supply a MaxDist, so work up a crazy one.
@@ -5637,6 +5681,9 @@ BOOL CBaseMonster :: BuildNearestRoute ( Vector vecThreat, Vector vecViewOffset,
 
 	iMyNode = WorldGraph.FindNearestNode( pev->origin, this );
 	iMyHullIndex = WorldGraph.HullIndex( this );
+
+	//MODDD - CHEAT CHEAT CHEAT!
+	//iMyHullIndex = NODE_POINT_HULL;
 
 	if ( iMyNode == NO_NODE )
 	{
@@ -6290,6 +6337,10 @@ BOOL CBaseMonster :: FGetNodeRoute ( Vector vecDest )
 	// valid src and dest nodes were found, so it's safe to proceed with
 	// find shortest path
 	int iNodeHull = WorldGraph.HullIndex( this ); // make this a monster virtual function
+	
+	//MODDD - CHEAT CHEAT CHEAT!
+	//iNodeHull = NODE_POINT_HULL;
+
 	iResult = WorldGraph.FindShortestPath ( iPath, iSrcNode, iDestNode, iNodeHull, m_afCapability );
 
 

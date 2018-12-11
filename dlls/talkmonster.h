@@ -198,19 +198,32 @@ public:
 	virtual int		CanPlaySentence( BOOL fDisregardState );
 	
 
-
-
-	virtual void	PlaySentence( const char *pszSentence, float duration, float volume, float attenuation );
+	
+	virtual void	PlaySentence( const char *pszSentence, float duration, float volume, float attenuation);
 	//MODDD - new version
+	virtual void	PlaySentenceNoPitch( const char *pszSentence, float duration, float volume, float attenuation );
+	//MODDD - pitch supported as argument.  Still defaults to calling a talker's own particular pitch (randomly decided at spawn).
+	virtual void	PlaySentence( const char *pszSentence, float duration, float volume, float attenuation, int pitch );
+
 	virtual void PlaySentenceSingular( const char *pszSentence, float duration, float volume, float attenuation );
+	virtual void PlaySentenceNoPitchSingular( const char *pszSentence, float duration, float volume, float attenuation );
+	virtual void PlaySentenceSingular( const char *pszSentence, float duration, float volume, float attenuation, int pitch );
 
 
 	//MODDD - also new.
 	void PlaySentenceUninterruptable(const char *pszSentence, float duration, float volume, float attenuation, BOOL bConcurrent);
+	void PlaySentenceNoPitchUninterruptable(const char *pszSentence, float duration, float volume, float attenuation, BOOL bConcurrent);
+	void PlaySentenceUninterruptable(const char *pszSentence, float duration, float volume, float attenuation, int pitch, BOOL bConcurrent);
+
 	void PlaySentenceTo(const char *pszSentence, float duration, float volume, float attenuation, BOOL bConcurrent, CBaseEntity *pListener );
+	void PlaySentenceNoPitchTo(const char *pszSentence, float duration, float volume, float attenuation, BOOL bConcurrent, CBaseEntity *pListener );
+	void PlaySentenceTo(const char *pszSentence, float duration, float volume, float attenuation, int pitch, BOOL bConcurrent, CBaseEntity *pListener );
 
-
+	
 	void			PlayScriptedSentence( const char *pszSentence, float duration, float volume, float attenuation, BOOL bConcurrent, CBaseEntity *pListener );
+	void			PlayScriptedSentenceNoPitch( const char *pszSentence, float duration, float volume, float attenuation, BOOL bConcurrent, CBaseEntity *pListener );
+	void			PlayScriptedSentence( const char *pszSentence, float duration, float volume, float attenuation, int pitch, BOOL bConcurrent, CBaseEntity *pListener );
+
 	void			KeyValue( KeyValueData *pkvd );
 
 

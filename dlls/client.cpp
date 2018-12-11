@@ -3950,15 +3950,8 @@ void ClientCommand( edict_t *pEntity )
 				*/
 			}
 
-
-
-
-
-
-
 			
-		}
-
+		}//END OF tempPlayer and weapon cheat checks
 
 
 
@@ -3974,8 +3967,72 @@ void ClientCommand( edict_t *pEntity )
 			sciRef->initiateAss();
 		}
 
-	}
-	else if ( FStrEq(pcmdRefinedRef, "debug1" ) )
+	}else if(FStrEq(pcmdRefinedRef, "forcenodeupdate")){
+		if(g_flWeaponCheat == 0.0){
+			easyForcePrintLine("Enable cheats first. \"scheduleNodeUpdate\" does not require cheats.");
+			return;
+		}
+
+
+		if(WorldGraph.m_cNodes > 0){
+			//Need to keep track of created nodes for calling their ->spawn's.
+			int nodeCount = WorldGraph.m_cNodes;
+			CNodeEnt** aryNodeEnt = new CNodeEnt*[nodeCount];
+
+			
+
+			//Build node ent's from the existing nodes on the map to rebuild the nodes and connections.
+			for(int i = 0; i < nodeCount; i++){
+				const char* spawnName;
+				if(WorldGraph.m_pNodes[i].m_afNodeInfo & bits_NODE_AIR){
+					spawnName = "info_node_air";
+				}else{
+					spawnName = "info_node";
+				}
+
+				//"CreateManual" instead of "Create" skips the DispatchSpawn call.
+				//Not that it may even be necessary at all for node entities.  Calling ->spawn straight should do it.
+				CNodeEnt* thisNode = static_cast<CNodeEnt*>(CBaseEntity::CreateManual(
+					spawnName,
+					WorldGraph.m_pNodes[ i ].m_vecOrigin,
+					Vector(0, WorldGraph.m_pNodes[ i ].m_flHintYaw, 0)
+				));
+
+				aryNodeEnt[i] = thisNode;
+			
+				thisNode->m_sHintType = WorldGraph.m_pNodes[ i ].m_sHintType;
+				thisNode->m_sHintActivity = WorldGraph.m_pNodes[ i ].m_sHintActivity;
+
+			}//END OF for
+
+			
+
+			//Clear the graph to signify it needs rebuilding.
+			WorldGraph.InitGraph();
+			WorldGraph.AllocNodes();
+			
+			//Now call each created node's Spawn.
+			for(int i = 0; i < nodeCount; i++){
+				aryNodeEnt[i]->Spawn();
+			}
+			
+			
+
+			delete[] aryNodeEnt;
+
+
+			easyForcePrintLine("Nodes rebuilding...");
+		}else{
+			easyForcePrintLine("ERROR: no nodes present or building in progress.");
+		}
+
+	}else if(FStrEq(pcmdRefinedRef, "schedulenodeupdate")) {
+		
+		//the next map loaded will enforce regenerating the node graph regardless of coming from a file already or not.
+		_scheduleNodeUpdate = TRUE;
+		easyForcePrintLine("Scheduling node update. Start a map to rebuild nodes / skip node file.");
+
+	}else if ( FStrEq(pcmdRefinedRef, "debug1" ) )
 	{
 		//YEAH
 		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev) ;

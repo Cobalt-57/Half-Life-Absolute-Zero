@@ -1678,26 +1678,42 @@ BOOL CTalkMonster::FNearPassiveSpeak(void){
 
 
 
-//Similar to PlaySentence in general, or even PlayScriptedSentence, but not to any NPC in particular. No look direction.
+
 void CTalkMonster::PlaySentenceUninterruptable(const char *pszSentence, float duration, float volume, float attenuation, BOOL bConcurrent){
+	PlaySentenceUninterruptable(pszSentence, duration, volume, attenuation, GetVoicePitch(), bConcurrent);
+}
+void CTalkMonster::PlaySentenceNoPitchUninterruptable(const char *pszSentence, float duration, float volume, float attenuation, BOOL bConcurrent){
+	PlaySentenceUninterruptable(pszSentence, duration, volume, attenuation, 100, bConcurrent);
+}
+
+//Similar to PlaySentence in general, or even PlayScriptedSentence, but not to any NPC in particular. No look direction.
+void CTalkMonster::PlaySentenceUninterruptable(const char *pszSentence, float duration, float volume, float attenuation, int pitch, BOOL bConcurrent){
 	
 	if ( !bConcurrent )
 		ShutUpFriends();
 
 	ClearConditions( bits_COND_CLIENT_PUSH );	// Forget about moving!  I've got something to say!
 	m_useTime = gpGlobals->time + duration;
-	PlaySentence( pszSentence, duration, volume, attenuation );
+	//PlaySentence( pszSentence, duration, volume, attenuation );
 
 	m_hTalkTarget = NULL;
 	
+	PlaySentence(pszSentence, duration, volume, attenuation, pitch);
 	ChangeSchedule(slTlkIdleEyecontact);
-	PlaySentence(pszSentence, duration, volume, attenuation);
 
 }//END OF PlaySentenceTo
 
 
-//Same as PlayScriptedSentence, but a bit more aggressive. Changes the current schedule to eye contact as well.
+
 void CTalkMonster::PlaySentenceTo(const char *pszSentence, float duration, float volume, float attenuation, BOOL bConcurrent, CBaseEntity *pListener ){
+	PlaySentenceTo(pszSentence, duration, volume, attenuation, GetVoicePitch(), bConcurrent, pListener);
+}//END OF PlaySentenceTo
+void CTalkMonster::PlaySentenceNoPitchTo(const char *pszSentence, float duration, float volume, float attenuation, BOOL bConcurrent, CBaseEntity *pListener ){
+	PlaySentenceTo(pszSentence, duration, volume, attenuation, 100, bConcurrent, pListener);
+}//END OF PlaySentenceTo
+
+//Same as PlayScriptedSentence, but a bit more aggressive. Changes the current schedule to eye contact as well.
+void CTalkMonster::PlaySentenceTo(const char *pszSentence, float duration, float volume, float attenuation, int pitch, BOOL bConcurrent, CBaseEntity *pListener ){
 
 	//CTalkMonster::g_talkWaitTime = gpGlobals->time + duration;
 	//Also sets this.
@@ -1705,27 +1721,48 @@ void CTalkMonster::PlaySentenceTo(const char *pszSentence, float duration, float
 	//m_flStopTalkTime = gpGlobals->time + duration;
 
 	
+	PlayScriptedSentence(pszSentence, duration, volume, attenuation, pitch, bConcurrent, pListener);
 	ChangeSchedule(slTlkIdleEyecontact);
-	PlayScriptedSentence(pszSentence, duration, volume, attenuation, bConcurrent, pListener);
 
 }//END OF PlaySentenceTo
 
 
+
 void CTalkMonster::PlayScriptedSentence( const char *pszSentence, float duration, float volume, float attenuation, BOOL bConcurrent, CBaseEntity *pListener )
+{
+	PlayScriptedSentence(pszSentence, duration, volume, attenuation, GetVoicePitch(), bConcurrent, pListener);
+}
+void CTalkMonster::PlayScriptedSentenceNoPitch( const char *pszSentence, float duration, float volume, float attenuation, BOOL bConcurrent, CBaseEntity *pListener )
+{
+	PlayScriptedSentence(pszSentence, duration, volume, attenuation, 100, bConcurrent, pListener);
+}
+void CTalkMonster::PlayScriptedSentence( const char *pszSentence, float duration, float volume, float attenuation, int pitch, BOOL bConcurrent, CBaseEntity *pListener )
 {
 	if ( !bConcurrent )
 		ShutUpFriends();
 
 	ClearConditions( bits_COND_CLIENT_PUSH );	// Forget about moving!  I've got something to say!
 	m_useTime = gpGlobals->time + duration;
-	PlaySentence( pszSentence, duration, volume, attenuation );
+	PlaySentence( pszSentence, duration, volume, attenuation, pitch );
 
 	m_hTalkTarget = pListener;
 }
 
-void CTalkMonster::PlaySentence( const char *pszSentence, float duration, float volume, float attenuation )
-{
 
+
+
+//MODDD - version of PlaySentence that doesn't take pitch. Assumes a pitch of GetVoicePitch() effectively (this talker's own pitch) like retail.
+void CTalkMonster::PlaySentence(const char* pszSentence, float duration, float volume, float attenuation){
+	PlaySentence(pszSentence, duration, volume, attenuation, GetVoicePitch());
+}//END OF PlaySentence
+
+//Similar, but forces a pitch of 100 (unaltered from the sound file)
+void CTalkMonster::PlaySentenceNoPitch(const char* pszSentence, float duration, float volume, float attenuation){
+	PlaySentence(pszSentence, duration, volume, attenuation, 100);
+}//END OF PlaySentenceNoPitch
+
+void CTalkMonster::PlaySentence( const char *pszSentence, float duration, float volume, float attenuation, int pitch )
+{
 	//easyPrintLine("PLAYING SENTENC %s", pszSentence);
 
 	
@@ -1736,9 +1773,9 @@ void CTalkMonster::PlaySentence( const char *pszSentence, float duration, float 
 
 	CTalkMonster::g_talkWaitTime = gpGlobals->time + duration + 2.0;
 	if ( pszSentence[0] == '!' ){
-		EMIT_SOUND_DYN( edict(), CHAN_VOICE, pszSentence, volume, attenuation, 0, GetVoicePitch());
+		EMIT_SOUND_DYN( edict(), CHAN_VOICE, pszSentence, volume, attenuation, 0, pitch);
 	}else{
-		SENTENCEG_PlayRndSz( edict(), pszSentence, volume, attenuation, 0, GetVoicePitch() );
+		SENTENCEG_PlayRndSz( edict(), pszSentence, volume, attenuation, 0, pitch );
 	}
 
 	// If you say anything, don't greet the player - you may have already spoken to them
@@ -1746,21 +1783,27 @@ void CTalkMonster::PlaySentence( const char *pszSentence, float duration, float 
 }
 
 
-//If not giving a sentence group, use this. No exclamation mark required.
-void CTalkMonster::PlaySentenceSingular(const char *pszSentence, float duration, float volume, float attenuation ){
-	//Just play the sentence given. But the system does require an exclamation mark for whatever reason.
 
+
+
+void CTalkMonster::PlaySentenceSingular(const char *pszSentence, float duration, float volume, float attenuation ){
+	PlaySentenceSingular(pszSentence, duration, volume, attenuation, GetVoicePitch());
+}//END OF PlaySentenceSingular
+void CTalkMonster::PlaySentenceNoPitchSingular(const char *pszSentence, float duration, float volume, float attenuation ){
+	PlaySentenceSingular(pszSentence, duration, volume, attenuation, 100);
+}//END OF PlaySentenceNoPitchSingular
+
+//If not giving a sentence group, use this. No exclamation mark required.
+void CTalkMonster::PlaySentenceSingular(const char *pszSentence, float duration, float volume, float attenuation, int pitch ){
+	//Just play the sentence given. But the system does require an exclamation mark for whatever reason.
 	static char sentenceToPlay[127];
 
-
-	
 	CTalkMonster::g_talkWaitTime = gpGlobals->time + duration + 2.0;
 
 	sentenceToPlay[0] = '!';
 	copyString(pszSentence, &sentenceToPlay[1], 127 - 1);
 	
-	EMIT_SOUND_DYN( edict(), CHAN_VOICE, sentenceToPlay, volume, attenuation, 0, GetVoicePitch());
-
+	EMIT_SOUND_DYN( edict(), CHAN_VOICE, sentenceToPlay, volume, attenuation, 0, pitch);
 }//END OF PlaySentenceSingular
 
 

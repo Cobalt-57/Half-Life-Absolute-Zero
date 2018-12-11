@@ -548,7 +548,8 @@ Task_t	tlBaFollow[] =
 
 	{ TASK_MOVE_TO_TARGET_RANGE,(float)128		},	// Move within 128 of target ent (client)
 	{ TASK_FOLLOW_SUCCESSFUL, (float)0		},
-	{ TASK_SET_SCHEDULE,		(float)SCHED_TARGET_FACE },
+	//MODDD - scientists dummied out this call as of retail, so shouldn't barnies too?  No need for these schedules to call each other back-and-forth.
+	//{ TASK_SET_SCHEDULE,		(float)SCHED_TARGET_FACE },
 };
 
 Schedule_t	slBaFollow[] =

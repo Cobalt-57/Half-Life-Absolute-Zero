@@ -42,7 +42,7 @@
 #include "trains.h"
 
 #include "custom_debug.h"
-
+#include "nodes.h"
 
 
 
@@ -1636,6 +1636,7 @@ Vector UTIL_velocityToAngles( const Vector &vecVel){
 	Vector vecVelDir = vecVel.Normalize();
 	Vector vecVelDir2D = Vector(vecVelDir.x, vecVelDir.y, 0).Normalize();
 
+	
 	//angle X component is pitch: how far looking up or down?   Based on Z component of velocity.
 	float xComp = asin(vecVelDir.z) * (180.0f / M_PI);  //get as degrees... yes, really.
 	
@@ -1661,6 +1662,9 @@ Vector UTIL_velocityToAngles( const Vector &vecVel){
 			yComp = 0;
 		}
 	}else{
+
+		//But wait there is atan2.  Aaaaahhhhh fuck.
+
 		//neither flattened X or Y is 0?  ok.
 		if(vecVelDir2D.x >= 0){
 			//right-half of the graph (quadrants I and IV).  OK.
@@ -8026,6 +8030,24 @@ void OnBeforeChangeLevelTransition(){
 	//just to be safe.
 	DebugLine_ClearAll();
 }
+
+
+
+
+
+//MODDD - another new event, even earlier than OnMapLoadStart.  Called by Engine-called method "ResetGlobalState".
+//Possibly as early as it gets, even earlier than a Map instance being made. The Map (CWorld constructor being called) happens after this.
+//More importantly, not only is this called before ANY spawn/precache methods, but also before even any KeyValue reads, otherwise thought
+//to be the earliest possible until this was found.
+void OnMapLoadPreStart(){
+	
+	//Must reset these to defaults in case of changing the map.
+	node_linktest_height = 8;
+	node_hulltest_height = 8;
+	node_hulltest_heightswap = FALSE;
+}
+
+
 
 //MODDD - new event, called by CWorld's precache method (first thing precached since starting a map or calling changelevel, transition or not).
 void OnMapLoadStart(){

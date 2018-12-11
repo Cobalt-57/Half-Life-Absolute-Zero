@@ -9,6 +9,8 @@
 
 
 
+
+
 EASY_CVAR_EXTERN(animationFramerateMulti)
 
 extern float global_drawDebugPathfinding2;
@@ -32,6 +34,36 @@ extern float global_stukaInflictsBleeding;
 
 
 //Stuka Bat's implementation.  Separate for organization.
+
+
+
+/*
+#define STUKABAT_DIVE_DISTANCE 600
+#define STUKABAT_ATTACK_DISTANCE 300
+
+#define STUKABAT_MOVESPEED_WALK 65
+#define STUKABAT_MOVESPEED_HOVER 75
+#define STUKABAT_MOVESPEED_FLYING_TURN 280
+#define STUKABAT_MOVESPEED_FLYING_CYCLER 350
+#define STUKABAT_MOVESPEED_DIVE_CYCLER 410
+#define STUKABAT_MOVESPEED_ATTACK_BOMB 480
+#define STUKABAT_MOVESPEED_ATTACK_CLAW 80
+*/
+
+
+#define STUKABAT_DIVE_DISTANCE 330
+#define STUKABAT_ATTACK_DISTANCE 240
+
+#define STUKABAT_MOVESPEED_WALK 70
+#define STUKABAT_MOVESPEED_HOVER 210
+#define STUKABAT_MOVESPEED_FLYING_TURN 150
+#define STUKABAT_MOVESPEED_FLYING_CYCLER 160
+#define STUKABAT_MOVESPEED_DIVE_CYCLER 260
+#define STUKABAT_MOVESPEED_ATTACK_BOMB 260
+#define STUKABAT_MOVESPEED_ATTACK_CLAW 120
+
+
+
 
 
 
@@ -518,6 +550,8 @@ void CStukaBat :: HandleAnimEvent( MonsterEvent_t *pEvent )
 
 CStukaBat::CStukaBat() : stukaPrint(StukaPrintQueueManager("STUKA")){
 	
+	lastEnemey2DDistance = 0;
+
 	hitGroundDead = FALSE;
 
 	recentActivity = ACT_RESET;
@@ -743,6 +777,7 @@ void CStukaBat::checkStartSnap(){
 	TraceResult trDown;
 	TraceResult trUp;
 	Vector vecStart = pev->origin;
+	Vector vecStartLower = pev->origin + Vector(0, 0, -5);  //start a little below in case I got spawned against the ceiling.
 	Vector vecEnd;
 	
 	float distFromUp = -1;
@@ -773,10 +808,10 @@ void CStukaBat::checkStartSnap(){
 	if(m_iSpawnLoc == 0){
 		//Auto-choose if the player spawned me (cheats).  Need to determine whether to snap to the ground, ceiling, or nothing (if neither is close)
 		//this time, "ignore_monsters" as opposed to "dont_ignore_monsters".
-		vecEnd = vecStart + Vector(0, 0, 40);
-		UTIL_TraceLine(vecStart, vecEnd, ignore_monsters, ENT(pev), &trUp);
+		vecEnd = vecStartLower + Vector(0, 0, 33 + 5 + 32);
+		UTIL_TraceLine(vecStartLower, vecEnd, ignore_monsters, ENT(pev), &trUp);
 
-		vecEnd = vecStart + Vector(0, 0, -24);
+		vecEnd = vecStart + Vector(0, 0, -32);
 		UTIL_TraceLine(vecStart, vecEnd, ignore_monsters, ENT(pev), &trDown);
 
 		distFromUp = -1;
@@ -784,7 +819,15 @@ void CStukaBat::checkStartSnap(){
 	
 		//actually hit something?
 		if(trUp.flFraction < 1.0){
-			distFromUp = (vecStart - trUp.vecEndPos).Length();
+			distFromUp = (vecStartLower - trUp.vecEndPos).Length();
+			if(distFromUp < 28+5){
+				//Force us a little lower...
+				//NO don't do it here, we do it later just fine.
+				//The "vecStartLower" above is all that was needed.
+				//UTIL_SetOrigin(pev, pev->origin + Vector(0, 0, ));
+				//float shiftDown = (28+5) - distFromUp;
+				//pev->origin = pev->origin + Vector(0, 0, -shiftDown);
+			}
 		}
 		if(trDown.flFraction < 1.0){
 			distFromDown = (vecStart - trDown.vecEndPos).Length();
@@ -806,11 +849,13 @@ void CStukaBat::checkStartSnap(){
 			m_iSpawnLoc = 3;
 		}
 	}//END OF if m_iSpawnLoc == 0)
+
+
 	if(m_iSpawnLoc == 1){
 		//ground, snap to bottom.
 		if(!certainOfLoc){
 			//check for the ground.
-			vecEnd = vecStart + Vector(0, 0, -800);
+			vecEnd = vecStart + Vector(0, 0, -160);
 			UTIL_TraceLine(vecStart, vecEnd, ignore_monsters, ENT(pev), &trDown);
 
 			if(trDown.flFraction < 1.0){
@@ -837,8 +882,8 @@ void CStukaBat::checkStartSnap(){
 
 		if(!certainOfLoc){
 			//check for the ceiling.
-			vecEnd = vecStart + Vector(0, 0, 800);
-			UTIL_TraceLine(vecStart, vecEnd, ignore_monsters, ENT(pev), &trUp);
+			vecEnd = vecStartLower + Vector(0, 0, 160);
+			UTIL_TraceLine(vecStartLower, vecEnd, ignore_monsters, ENT(pev), &trUp);
 
 			if(trUp.flFraction < 1.0){
 				certainOfLoc = TRUE;
@@ -1017,6 +1062,359 @@ void CStukaBat :: StartTask ( Task_t *pTask )
 	//??
 	switch ( pTask->iTask )
 	{
+
+
+
+		
+	case TASK_STUKABAT_LAND:{
+		
+
+		turnThatOff = TRUE;
+				
+		
+		PRINTQUEUE_STUKA_SEND(stukaPrint.eatRelated, "ANI: Land_ground!");
+				
+		turnThatOff = TRUE;
+				
+
+		setAnimation("Land_ground", TRUE, FALSE, 2);
+
+		//blockSetActivity = gpGlobals->time + (48.0f/12.0f);
+		blockSetActivity = gpGlobals->time + (26.0f/12.0f);
+		queueToggleGround = TRUE;
+				
+		/*
+		//We're landing, just force it to ACT_CROUCHIDLE
+		if ( m_IdealActivity == m_movementActivity )
+		{
+			m_IdealActivity = GetStoppedActivity();
+		}
+		*/
+		m_IdealActivity = ACT_CROUCHIDLE;
+
+
+		RouteClear();
+		ChangeSchedule(slStukaBatAnimWait);
+
+		/*
+		setAnimation("Take_off_from_land", TRUE, FALSE, 2);
+		//41.6f/12.0f ???
+		blockSetActivity = gpGlobals->time + (29.0f/12.0f);
+		queueToggleGround = TRUE;
+		return GetScheduleOfType(SCHED_STUKABAT_ANIMWAIT);
+		*/
+	break;}
+
+
+	case TASK_GET_PATH_TO_BESTSCENT_FOOT:{
+		CSound *pScent;
+		Vector tempGoal;
+		Vector scentSpot;
+		Vector toSpot;
+		Vector dirToSpot;
+		float distToSpot;
+
+	
+		
+
+		pScent = PBestScent();
+		//easyForcePrintLine("SO IS MY SCENT NULL? %d", (pScent==NULL));
+		if(pScent != NULL){
+			//tempGoal = Vector(pev->origin.x, pev->origin.y, pScent->m_vecOrigin.z + 6);
+			
+			scentSpot = pScent->m_vecOrigin;
+			//if we use this for by foot for some reason?
+			scentLocationMem = scentSpot;
+
+
+
+			seekingFoodOnGround = TRUE;
+		}else{
+			//no scent? we're done.
+			seekingFoodOnGround = FALSE;
+			TaskFail();
+			return;
+		}
+
+
+
+		//should there be a better way to turn off "seekingFoodOnGround"?
+
+		//UTIL_drawLineFrameBoxAround(pev->origin, 3, 24, 255, 255, 0);
+		//UTIL_drawLineFrameBoxAround(tempGoal, 3, 24, 255, 125, 0);
+
+		//easyForcePrintLine("TELL ME %.2f %.2f %.2f", pScent->m_vecOrigin.x, pScent->m_vecOrigin.y, pScent->m_vecOrigin.z);
+		
+		toSpot = (scentSpot - pev->origin);
+		dirToSpot = toSpot.Normalize();
+		distToSpot = toSpot.Length();
+
+		tempGoal = scentSpot + dirToSpot * -20;
+
+		
+		if(distToSpot < 30){
+			//we've gotten this far, we're doing this anyways.
+			m_failSchedule = SCHED_STUKABAT_EAT;  //just start eating, it's okay to.
+		}
+
+
+
+		MakeIdealYaw( tempGoal );
+		//not flying, perhaps "Move" or "MoveExecute" should handle this...?
+		ChangeYaw( pev->yaw_speed );
+
+		//RouteClear();
+		this->m_movementGoal = MOVEGOAL_LOCATION;
+		m_vecMoveGoal = tempGoal;
+
+		
+		
+		if ( BuildRoute ( tempGoal, bits_MF_TO_LOCATION, NULL ) )
+		{	
+			//Is that okay?
+			this->SetActivity(ACT_WALK);
+
+			TaskComplete();
+		}
+		else if (BuildNearestRoute( tempGoal, pev->view_ofs, 0, distToSpot ))
+		{	
+			//Is that okay?
+			this->SetActivity(ACT_WALK);
+
+			TaskComplete();
+		}
+		else
+		{
+			m_failSchedule = SCHED_STUKABAT_EAT;  //just start eating, it's okay to.
+
+			//means, already facing the ideal Yaw.  So that "is facing?"  just goes with this.
+			//uh no, just go ahead and face whatever we wanted to, it is ok.
+			//pev->ideal_yaw = this->pev->angles.y;
+
+			eating = TRUE;
+			eatingAnticipatedEnd = gpGlobals->time + 7;
+
+			RouteClear();
+			TaskFail();
+		}
+
+
+		
+	break;}
+
+
+
+
+
+	case TASK_GET_PATH_TO_BESTSCENT:{
+	
+		CSound *pScent;
+	
+		//getPathToEnemyCustom();
+
+		pScent = PBestScent();
+			
+		if(pScent == NULL){
+			TaskFail();
+			//???
+			seekingFoodOnGround = FALSE;
+			return;
+		}
+
+		float scent_ZOffset = 5;
+			
+		Vector scent_Loc = pScent->m_vecOrigin + Vector(0, 0, scent_ZOffset);
+
+
+		MakeIdealYaw( scent_Loc );
+		ChangeYaw( pev->yaw_speed );
+
+
+
+			
+		this->m_movementGoal = MOVEGOAL_LOCATION;
+		m_vecMoveGoal = scent_Loc;
+		if ( BuildRouteSimple ( scent_Loc, bits_MF_TO_LOCATION, NULL ) )
+		{
+
+			TaskComplete();
+		}
+		//No need for viewoffset, the 2nd argument. scent_loc already has this.
+		else if (BuildNearestRouteSimple( scent_Loc, Vector(0,0,0), 0, (scent_Loc - pev->origin).Length() ))
+		{
+			TaskComplete();
+		}
+		else
+		{
+			// no way to get there =(
+			PRINTQUEUE_STUKA_SEND(stukaPrint.eatRelated, "PathToBestScent failed!!" );
+			TaskFail();
+		}
+
+	break;}
+
+	case TASK_GET_PATH_TO_LANDING:{
+		CSound *pScent;
+		BOOL timetostop;
+		Vector tempGoal;
+		BOOL tryPath = TRUE;
+		Vector scentSpot;
+
+		//m_IdealActivity = ACT_HOVER;  //good idea?
+
+		//going to land soon, stall movement on the X-Y plane.
+		//NOTICE - is this still effective?
+		
+		Vector toSpot;
+		float distanceToSpot;
+		float distanceToSpot2D;
+		int triesLeft = 4;
+
+		landBrake = TRUE;
+
+
+		/*
+		if(onGround || queueToggleGround){
+			///????
+			TaskComplete();
+			return;
+		}
+		*/
+
+
+		//timetostop = FALSE;
+		/*
+		if(blockSetActivity > -1 && queueToggleGround == TRUE){
+			PRINTQUEUE_STUKA_SEND(stukaPrint.eatRelated, "timeTo Stop" );
+			//TaskComplete();
+			//tryPath = FALSE;
+				
+			timetostop = TRUE;
+			return;
+		}
+		*/
+
+		//if(!timetostop){
+			pScent = PBestScent();
+			if(pScent != NULL){
+				//Pick a random spot away from the scent actually.
+				//tempGoal = Vector(pev->origin.x, pev->origin.y, pScent->m_vecOrigin.z + 6);
+
+				scentSpot = pScent->m_vecOrigin;
+				scentLocationMem = scentSpot;
+
+
+			}else{
+				//no scent? we're done.
+				TaskFail();
+				return;
+			}
+		//}
+			
+		toSpot = (scentSpot - pev->origin);
+		distanceToSpot = toSpot.Length();
+		distanceToSpot2D = toSpot.Length2D();
+			
+		//If we're close enough to our goal we don't care, just end early.
+		if( distanceToSpot <= 36 || distanceToSpot2D <= 28){ //&& blockSetActivity == -1){
+
+			TaskComplete();
+			this->MovementComplete(); //let the next task be skipped too.
+			return;
+		}
+
+
+		while(triesLeft > 0){
+			float randomAng = RANDOM_FLOAT(0, 360);
+			Vector randomDir = UTIL_YawToVec(randomAng);
+
+			tempGoal = scentSpot + Vector(0, 0, 48) + randomDir * RANDOM_FLOAT(30, 50);
+
+
+			PRINTQUEUE_STUKA_SEND(stukaPrint.eatRelated, "vecDiffLength:%.2f", (tempGoal - pev->origin).Length() );
+			PRINTQUEUE_STUKA_SEND(stukaPrint.eatRelated, "blockSetAct:%.2f", blockSetActivity );
+			//PRINTQUEUE_STUKA_SEND(stukaPrint.eatRelated, "timetostop:%d", timetostop );
+
+			//UTIL_drawLineFrameBoxAround(pev->origin, 3, 24, 255, 255, 0);
+			//UTIL_drawLineFrameBoxAround(tempGoal, 3, 24, 255, 125, 0);
+			
+			//if(timetostop){
+			//	return;
+			//}
+
+			BOOL queueFailure = FALSE;
+
+
+
+
+			this->m_movementGoal = MOVEGOAL_LOCATION;
+			//is it redundatn to say this now?
+			m_vecMoveGoal = tempGoal;
+
+
+
+			if ( BuildRoute ( tempGoal, bits_MF_TO_LOCATION, NULL ) )
+			{
+				PRINTQUEUE_STUKA_SEND(stukaPrint.eatRelated, "LANDROUTE_1!"  );
+
+				
+				TaskComplete();
+				return;
+			}
+			else if (BuildNearestRoute( tempGoal, pev->view_ofs, 0, (tempGoal - pev->origin).Length() ))
+			{
+				PRINTQUEUE_STUKA_SEND(stukaPrint.eatRelated, "LANDROUTE_2!"  );
+
+				TaskComplete();
+				return;
+			}
+			else
+			{
+				// no way to get there =(
+				PRINTQUEUE_STUKA_SEND(stukaPrint.eatRelated, "LANDROUTE_hay"  );
+
+				//queueFailure = TRUE;  //only if we're not already close enough... doing the check below.
+				
+			}
+
+			triesLeft--;
+
+		}//END OF while(triesLeft)
+
+
+		//didn't get it in enough tries? Give up this time.
+		this->RouteClear();
+		TaskFail();
+
+
+
+		//that blockSetActivity == -1 was good, right?
+
+
+
+						/*
+			if( (m_vecMoveGoal - pev->origin).Length() <= 16){ //&& blockSetActivity == -1){
+				
+
+			}else{
+				if(queueFailure){
+					//Not just too close for pathing but counts for success? Then fail.
+					TaskFail();
+					//??? ok.
+					return;
+				}
+			}
+			*/
+
+	break;}
+
+
+
+
+
+
+
+
 	case TASK_CHECK_STUMPED:
 	{
 
@@ -1029,16 +1427,20 @@ void CStukaBat :: StartTask ( Task_t *pTask )
 		CSquadMonster::StartTask(pTask);
 		break;
 	}
-	case TASK_SET_ACTIVITY:
-		{
-			blockSetActivity = -1;
+	case TASK_SET_ACTIVITY:{
+		blockSetActivity = -1;
 
-
-			//easyForcePrintLine("DID YOU GET THAT YOU STUPID oh my goodness gracious me??");
-			m_IdealActivity = (Activity)(int)pTask->flData;
-			TaskComplete();
-			break;
+		if( this->m_pSchedule == slStukaBatEat){
+			//stop doing this now!
+			eating = FALSE;
 		}
+
+		CSquadMonster::StartTask(pTask);
+	break;}
+	case TASK_SET_ACTIVITY_FORCE:{
+		blockSetActivity = -1;
+		CSquadMonster::StartTask(pTask);
+	break;}
 	case TASK_SMALL_FLINCH:
 	{
 		m_IdealActivity = GetSmallFlinchActivity();
@@ -1048,7 +1450,14 @@ void CStukaBat :: StartTask ( Task_t *pTask )
 		//this is all schedule.cpp does here.  Why did I not just do this?
 
 		//is this okay?
-		this->m_IdealActivity = ACT_HOVER;
+		//Get what idle activity is fitting for me in this state.
+
+		if(m_pSchedule != slStukaBatEat){
+			this->m_IdealActivity = getIdleActivity();
+		}else{
+			//proceed with eating I guess.
+			this->m_IdealActivity = ACT_EAT;
+		}
 
 		EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyPrintLine("TASK_WAIT %s GT:%.2f WF:%.2f", m_pSchedule->pName, gpGlobals->time, m_flWaitFinished));
 		m_flWaitFinished = gpGlobals->time + pTask->flData;	
@@ -1059,8 +1468,6 @@ void CStukaBat :: StartTask ( Task_t *pTask )
 
 		CSquadMonster :: StartTask ( pTask );
 		break;
-
-
 		//see schedule.cpp for hte originals.
 	case TASK_FIND_NEAR_NODE_COVER_FROM_ENEMY:
 		{
@@ -1401,13 +1808,8 @@ void CStukaBat :: RunTask ( Task_t *pTask )
 	//reset, no landBrake unless specified by this task running.
 	landBrake = FALSE;
 	
-	Vector vecDiff;
-	BOOL timetostop;
 
-	CSound *pScent;
-	Vector tempGoal;
 	CBaseEntity* temper;
-	BOOL tryPath = TRUE;
 
 	//CBaseEntity *pEnemy = m_hEnemy;
 	float dist2d;
@@ -1419,6 +1821,59 @@ void CStukaBat :: RunTask ( Task_t *pTask )
 
 	switch ( pTask->iTask )
 	{
+
+
+
+		
+	case TASK_STUKABAT_LAND_PRE:{
+		//Check. Is it ok to move vertically?
+
+		
+		PRINTQUEUE_STUKA_SEND(stukaPrint.eatRelated, "LANDROUTE_close"  );
+
+		//pev->origin = tempGoal;
+
+		Vector floorVect = UTIL_getFloor(pev->origin, 120, ignore_monsters, ENT(pev));
+
+		//EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyPrintLine("WHAT THE hay IS THIS? %.2f %.2f %.2f AND THAT? %.2f %.2f %.2f", floorVect.x, floorVect.y, floorVect.z, pev->origin.x,pev->origin.y,pev->origin.z));
+
+		if( isErrorVector(floorVect)){
+			PRINTQUEUE_STUKA_SEND(stukaPrint.eatRelated, "LANDROUTE_floorFAIL"  );
+			//uh, what?
+			TaskFail();
+			return;
+		}else{
+			float verticalDist;
+			PRINTQUEUE_STUKA_SEND(stukaPrint.eatRelated, "LANDROUTE_floorOK"  );
+			//TaskComplete();
+
+			m_velocity.x = 0;
+			m_velocity.y = 0;
+			pev->velocity.x = 0;
+			pev->velocity.y = 0;
+
+			verticalDist = abs(floorVect.z - pev->origin.z);
+
+			if(verticalDist < 12){
+				//finish up.
+				m_velocity.z = 0;
+				pev->velocity.z = 0;
+				UTIL_MoveToOrigin ( ENT(pev), floorVect, (pev->origin - floorVect).Length(), MOVE_STRAFE );
+				TaskComplete();
+				return;
+			}else{
+				m_IdealActivity = ACT_HOVER;
+				//Then get closer.
+				//Keep going straight down.
+				m_velocity.z = -22;
+				pev->velocity.z = -22;
+				//UTIL_MoveToOrigin ( ENT(pev), floorVect, 6, MOVE_STRAFE );
+			}
+		}
+	break;}
+
+
+
 	
 	case TASK_DIE_LOOP:{
 		if(hitGroundDead){
@@ -1440,21 +1895,61 @@ void CStukaBat :: RunTask ( Task_t *pTask )
 	case TASK_WAIT_FOR_MOVEMENT:
 	case TASK_WAIT:
 	case TASK_WAIT_FACE_ENEMY:
-	case TASK_WAIT_PVS:
-		{		
-			EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyPrintLine("BEWARE - the Stuka is waiting! %d %d F", eating, getEnemy()!=NULL));
-			/*
-			//no, wrap animation-changes into a schedule!
-			//check if blockSetActivity is done?
-			if(blockSetActivity == -1){
+	case TASK_WAIT_PVS:{		
+
+
+		//Going to a secent? Be a little more lenient on completing this WAIT_FOR_MOVEMENT task.
+		if(m_pSchedule == slStukaBatFindEat || m_pSchedule == slStukaBatCrawlToFood){
+			//if we're close enough to the goal just stop.
+			if(m_Route[ m_iRouteIndex ].iType & bits_MF_IS_GOAL){
+				float distToGoal = (m_Route[ m_iRouteIndex ].vecLocation - pev->origin).Length();
+				if(distToGoal < 32){
+					TaskComplete();
+					return;
+				}
+			}
+
+
+		}
+
+		if(m_pSchedule == slStukaBatAttemptLand){
+			float distToGoal2D = (scentLocationMem - pev->origin).Length2D();
+			if( distToGoal2D <= 28 && blockSetActivity == -1){
+				//good enough, just stop to land already.
 				TaskComplete();
 				return;
 			}
+
+			/*
+			if(m_Route[ m_iRouteIndex ].iType & bits_MF_IS_GOAL){
+				float distToGoal2D_other = (m_Route[ m_iRouteIndex ].vecLocation - pev->origin).Length2D();
+				if(distToGoal2D_other <= 26){
+					//TaskComplete();
+					//wat?
+					return;
+				}
+			}
 			*/
-		CSquadMonster::RunTask(pTask);
-		break;
 
 		}
+
+
+
+
+
+
+
+		EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyPrintLine("BEWARE - the Stuka is waiting! %d %d F", eating, getEnemy()!=NULL));
+		/*
+		//no, wrap animation-changes into a schedule!
+		//check if blockSetActivity is done?
+		if(blockSetActivity == -1){
+			TaskComplete();
+			return;
+		}
+		*/
+		CSquadMonster::RunTask(pTask);
+	break;}
 	
 	case TASK_WAIT_INDEFINITE:
 	
@@ -1579,13 +2074,17 @@ void CStukaBat :: RunTask ( Task_t *pTask )
 
 			dist3d = (pev->origin - m_hEnemy->pev->origin).Length();
 			dist2d = (pev->origin - m_hEnemy->pev->origin).Length2D();
+			lastEnemey2DDistance = dist2d;
 			if(dist3d <= 58){
 				combatCloseEnough = TRUE;
 			}else{
 				combatCloseEnough = FALSE;
 			}
 
-			m_flGroundSpeed = 380;
+
+			//Don't set m_flGroundSpeed in this method, leave that up to
+			//MoveExecute. It can do these checks okay.
+			//m_flGroundSpeed = 380;
 
 			//also, if index is non-negative, disallow changing anims automatically (and vice versa)?
 
@@ -1641,7 +2140,9 @@ void CStukaBat :: RunTask ( Task_t *pTask )
 
 				if(dist3d  <= 72 || (dist3d <= 114 && dist2d <= 55)  ){
 					attackIndex = 1;
-					m_flGroundSpeed = 80;   //??
+
+					//except now perhaps?
+					m_flGroundSpeed = STUKABAT_MOVESPEED_ATTACK_CLAW;   //??
 					setAnimation("attack_claw", TRUE, FALSE, 2);
 					float animScaler = getMeleeAnimScaler();
 					pev->framerate = animScaler;
@@ -1669,12 +2170,13 @@ void CStukaBat :: RunTask ( Task_t *pTask )
 						}
 					}
 
-					if(dist3d < 600){
+
+					if(dist3d < STUKABAT_DIVE_DISTANCE){
 						EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyPrintLine("START THE DIVING stuff fine fellow! %.2f", gpGlobals->time ));
 						chargeIndex = 0;
 						//block set activity??
 					}
-					if(dist3d < 300){
+					if(dist3d < STUKABAT_ATTACK_DISTANCE){
 						chargeIndex = 1;
 					}
 				}
@@ -1699,7 +2201,7 @@ void CStukaBat :: RunTask ( Task_t *pTask )
 				if(dist3d  <= 72 || (dist3d <= 114 && dist2d <= 55)  ){
 
 					attackIndex = 1;
-					m_flGroundSpeed = 80;  //???
+					m_flGroundSpeed = STUKABAT_MOVESPEED_ATTACK_CLAW;  //???
 					setAnimation("attack_claw", TRUE, FALSE, 2);
 						
 					float animScaler = getMeleeAnimScaler();
@@ -1721,12 +2223,14 @@ void CStukaBat :: RunTask ( Task_t *pTask )
 						AttackSound();
 				}//END OF (dist check)
 				else{
-					if(dist3d < 600){
+					
+
+					if(dist3d < STUKABAT_DIVE_DISTANCE){
 						EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyPrintLine("START THE DIVING stuff fine fellow! %.2f", gpGlobals->time ));
 						chargeIndex = 0;
 						//block set activity??
 					}
-					if(dist3d < 300){
+					if(dist3d < STUKABAT_ATTACK_DISTANCE){
 						chargeIndex = 1;
 					}
 					easyPrintLineGroup2("YAY NO");
@@ -1842,249 +2346,8 @@ void CStukaBat :: RunTask ( Task_t *pTask )
 	case TASK_RANGE_ATTACK2:
 
 	break;
-	case TASK_GET_PATH_TO_BESTSCENT:
-		{
-			//getPathToEnemyCustom();
 
-			pScent = PBestScent();
-			
-			if(pScent == NULL){
-				TaskFail();
-				//???
-				seekingFoodOnGround = FALSE;
-				return;
-			}
-
-			float scent_ZOffset = 5;
-			
-			Vector scent_Loc = pScent->m_vecOrigin + Vector(0, 0, scent_ZOffset);
-
-
-			MakeIdealYaw( scent_Loc );
-			ChangeYaw( pev->yaw_speed );
-
-
-
-			
-			this->m_movementGoal = MOVEGOAL_LOCATION;
-			m_vecMoveGoal = scent_Loc;
-			if ( BuildRouteSimple ( scent_Loc, bits_MF_TO_LOCATION, NULL ) )
-			{
-
-				TaskComplete();
-			}
-			//No need for viewoffset, the 2nd argument. scent_loc already has this.
-			else if (BuildNearestRouteSimple( scent_Loc, Vector(0,0,0), 0, (scent_Loc - pev->origin).Length() ))
-			{
-				TaskComplete();
-			}
-			else
-			{
-				// no way to get there =(
-				PRINTQUEUE_STUKA_SEND(stukaPrint.eatRelated, "PathToBestScent failed!!" );
-				TaskFail();
-			}
-
-			break;
-		}
-	case TASK_GET_PATH_TO_LANDING:
-		{
-
-		//going to land soon, stall movement on the X-Y plane.
-		landBrake = TRUE;
-
-		/*
-			if(onGround || queueToggleGround){
-				///????
-				TaskComplete();
-				return;
-			}
-			*/
-
-
-			timetostop = FALSE;
-			if(blockSetActivity > -1 && queueToggleGround == TRUE){
-				PRINTQUEUE_STUKA_SEND(stukaPrint.eatRelated, "timeTo Stop" );
-				//TaskComplete();
-				tryPath = FALSE;
-				
-				timetostop = TRUE;
-				return;
-			}
-
-			if(!timetostop){
-				pScent = PBestScent();
-				if(pScent != NULL){
-					tempGoal = Vector(pev->origin.x, pev->origin.y, pScent->m_vecOrigin.z + 6);
-				}else{
-					//no scent? we're done.
-					TaskFail();
-					return;
-				}
-			}
-
-			
-			vecDiff = (tempGoal - pev->origin);
-
-
-			PRINTQUEUE_STUKA_SEND(stukaPrint.eatRelated, "vecDiffLength:%.2f", vecDiff.Length() );
-			PRINTQUEUE_STUKA_SEND(stukaPrint.eatRelated, "blockSetAct:%.2f", blockSetActivity );
-			PRINTQUEUE_STUKA_SEND(stukaPrint.eatRelated, "timetostop:%d", timetostop );
-
-			//UTIL_drawLineFrameBoxAround(pev->origin, 3, 24, 255, 255, 0);
-			//UTIL_drawLineFrameBoxAround(tempGoal, 3, 24, 255, 125, 0);
-			
-			if(timetostop){
-				return;
-			}
-
-			BOOL queueFailure = FALSE;
-
-
-			this->m_movementGoal = MOVEGOAL_LOCATION;
-			m_vecMoveGoal = tempGoal;
-			if ( BuildRouteSimple ( tempGoal, bits_MF_TO_LOCATION, NULL ) )
-			{
-				PRINTQUEUE_STUKA_SEND(stukaPrint.eatRelated, "LANDROUTE_1!"  );
-
-				
-				TaskComplete();
-			}
-			else if (BuildNearestRouteSimple( tempGoal, tempGoal + Vector(0, 0, 0), 0, (tempGoal - pev->origin).Length() ))
-			{
-				PRINTQUEUE_STUKA_SEND(stukaPrint.eatRelated, "LANDROUTE_2!"  );
-
-				TaskComplete();
-			}
-			else
-			{
-				// no way to get there =(
-				PRINTQUEUE_STUKA_SEND(stukaPrint.eatRelated, "LANDROUTE_hay"  );
-
-				queueFailure = TRUE;  //only if we're not already close enough... doing the check below.
-			}
-			//that blockSetActivity == -1 was good, right?
-
-
-
-			if( (tempGoal - pev->origin).Length() <= 12 && blockSetActivity == -1){
-				
-				PRINTQUEUE_STUKA_SEND(stukaPrint.eatRelated, "LANDROUTE_close"  );
-
-				//pev->origin = tempGoal;
-
-				Vector floorVect = UTIL_getFloor(pev->origin, 60, ignore_monsters, ENT(pev));
-
-
-				if( isErrorVector(floorVect)){
-					PRINTQUEUE_STUKA_SEND(stukaPrint.eatRelated, "LANDROUTE_floorFAIL"  );
-					//uh, what?
-					TaskFail();
-					return;
-				}else{
-					PRINTQUEUE_STUKA_SEND(stukaPrint.eatRelated, "LANDROUTE_floorOK"  );
-					UTIL_MoveToOrigin ( ENT(pev), floorVect, (pev->origin - floorVect).Length(), MOVE_STRAFE );
-				}
-
-				turnThatOff = TRUE;
-				
-				EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyPrintLine("WHAT THE hay IS THIS? %.2f %.2f %.2f AND THAT? %.2f %.2f %.2f", floorVect.x, floorVect.y, floorVect.z, pev->origin.x,pev->origin.y,pev->origin.z));
-
-				PRINTQUEUE_STUKA_SEND(stukaPrint.eatRelated, "ANI: Land_ground!");
-				
-				turnThatOff = TRUE;
-				
-
-				setAnimation("Land_ground", TRUE, FALSE, 2);
-
-				//blockSetActivity = gpGlobals->time + (48.0f/12.0f);
-				blockSetActivity = gpGlobals->time + (26.0f/12.0f);
-				queueToggleGround = TRUE;
-				
-				if ( m_IdealActivity == m_movementActivity )
-				{
-					m_IdealActivity = GetStoppedActivity();
-				}
-				RouteClear();
-				ChangeSchedule(slStukaBatAnimWait);
-
-				/*
-				setAnimation("Take_off_from_land", TRUE, FALSE, 2);
-				//41.6f/12.0f ???
-				blockSetActivity = gpGlobals->time + (29.0f/12.0f);
-				queueToggleGround = TRUE;
-				return GetScheduleOfType(SCHED_STUKABAT_ANIMWAIT);
-				*/
-
-			}else{
-				if(queueFailure){
-					//Not just too close for pathing but counts for success? Then fail.
-					TaskFail();
-					//??? ok.
-					return;
-				}
-			}
-			return;
-		break;
-	}
-	case TASK_GET_PATH_TO_BESTSCENT_FOOT:
-
-		pScent = PBestScent();
-		//easyForcePrintLine("SO IS MY SCENT NULL? %d", (pScent==NULL));
-		if(pScent != NULL){
-			//tempGoal = Vector(pev->origin.x, pev->origin.y, pScent->m_vecOrigin.z + 6);
-			tempGoal = pScent->m_vecOrigin;
-			seekingFoodOnGround = TRUE;
-		}else{
-			//no scent? we're done.
-			seekingFoodOnGround = FALSE;
-			TaskFail();
-			return;
-		}
-		//should there be a better way to turn off "seekingFoodOnGround"?
-
-		//UTIL_drawLineFrameBoxAround(pev->origin, 3, 24, 255, 255, 0);
-		//UTIL_drawLineFrameBoxAround(tempGoal, 3, 24, 255, 125, 0);
-
-		//easyForcePrintLine("TELL ME ABOUT YO SELF %.2f %.2f %.2f", pScent->m_vecOrigin.x, pScent->m_vecOrigin.y, pScent->m_vecOrigin.z);
-		
-		MakeIdealYaw( pScent->m_vecOrigin );
-		//not flying, perhaps "Move" or "MoveExecute" should handle this...?
-		ChangeYaw( pev->yaw_speed );
-
-		//RouteClear();
-		this->m_movementGoal = MOVEGOAL_LOCATION;
-		m_vecMoveGoal = pScent->m_vecOrigin;
-
-		/*
-		if ( BuildRouteSimple ( pScent->m_vecOrigin, bits_MF_TO_LOCATION, NULL ) )
-		{
-			TaskComplete();
-		}
-		else if (BuildNearestRouteSimple( pScent->m_vecOrigin, pScent->m_vecOrigin + Vector(0, 0, 0), 0, (pScent->m_vecOrigin - pev->origin).Length() ))
-		{
-			TaskComplete();
-		}
-		else
-		//NOTICE: path-finding script removed. Stukabat starts eating here instead.
-		*/
-		{
-			m_failSchedule = SCHED_STUKABAT_EAT;  //just start eating, it's okay to.
-
-			//means, already facing the ideal Yaw.  So that "is facing?"  just goes with this.
-			pev->ideal_yaw = this->pev->angles.y;
-
-			eating = TRUE;
-			eatingAnticipatedEnd = gpGlobals->time + 7;
-
-			TaskFail();
-		}
-
-
-		
-	break;
-
-
+	
 
 
 	default: 
@@ -2302,10 +2565,11 @@ Schedule_t *CStukaBat :: GetSchedule ( void )
 	PRINTQUEUE_STUKA_SEND(stukaPrint.getSchedule, "FOODREQ:%d %d %d %d", m_MonsterState, (m_MonsterState == MONSTERSTATE_COMBAT || m_MonsterState == MONSTERSTATE_ALERT), canSeeEnemy == FALSE, HasConditions(bits_COND_SMELL_FOOD) || eating  );
 	
 	BOOL fallToIdling = FALSE;
+	BOOL smellz = HasConditions(bits_COND_SMELL_FOOD);
 	if(m_MonsterState == MONSTERSTATE_IDLE || m_MonsterState == MONSTERSTATE_COMBAT || m_MonsterState == MONSTERSTATE_ALERT){
 
 		if ( snappedToCeiling == FALSE && canSeeEnemy == FALSE &&
-			HasConditions(bits_COND_SMELL_FOOD) || eating)
+			smellz || eating)
 		{
 
 			abortAttack();
@@ -2339,7 +2603,11 @@ Schedule_t *CStukaBat :: GetSchedule ( void )
 					if(trDown.flFraction < 1.0){
 						//found the floor, get down.
 						return GetScheduleOfType( SCHED_STUKABAT_ATTEMPTLAND );
+					}else{
+						//get closer??
+						return GetScheduleOfType( SCHED_STUKABAT_FINDEAT );
 					}
+
 
 					EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyPrintLine("POO POO 5"));
 
@@ -2496,7 +2764,8 @@ Schedule_t* CStukaBat :: GetScheduleOfType ( int Type )
 	case SCHED_ALERT_STAND:
 	{
 
-		return slStukaBatChaseEnemy;
+		//return slStukaBatChaseEnemy;
+		//unwise, just leave this up to the base class.
 		break;
 	}
 
@@ -2656,7 +2925,13 @@ void CStukaBat :: SetActivity ( Activity NewActivity, BOOL forceReset )
 
 	BOOL warpRandomAnim = FALSE;
 
-	if(eating && NewActivity != ACT_DIESIMPLE && NewActivity != ACT_DIEVIOLENT){
+
+	if(eating && m_hEnemy != NULL){
+		//not eating anymore, interrupted.
+		eating = FALSE;
+	}
+
+	if(eating && NewActivity != ACT_EAT && NewActivity != ACT_DIESIMPLE && NewActivity != ACT_DIEVIOLENT){
 		//nothing else allowed.
 		return;
 	}
@@ -2911,7 +3186,7 @@ void CStukaBat :: SetActivity ( Activity NewActivity, BOOL forceReset )
 	switch(NewActivity)
 	{
 	case ACT_WALK:
-		m_flGroundSpeed = 65;
+		m_flGroundSpeed = STUKABAT_MOVESPEED_WALK;
 
 		
 		//iSequence = LookupActivity ( ACT_WALK_HURT );
@@ -2919,19 +3194,19 @@ void CStukaBat :: SetActivity ( Activity NewActivity, BOOL forceReset )
 		break;
 
 	case ACT_HOVER:
-		m_flGroundSpeed = 75;
+		m_flGroundSpeed = STUKABAT_MOVESPEED_HOVER;
 
 		break;
 	case ACT_FLY:
-		m_flGroundSpeed = 350;
+		m_flGroundSpeed = STUKABAT_MOVESPEED_FLYING_CYCLER;
 		//m_flGroundSpeed = 88;
 
 		break;
 	case ACT_FLY_LEFT:
-		m_flGroundSpeed = 280;
+		m_flGroundSpeed = STUKABAT_MOVESPEED_FLYING_TURN;
 		break;
 	case ACT_FLY_RIGHT:
-		m_flGroundSpeed = 280;
+		m_flGroundSpeed = STUKABAT_MOVESPEED_FLYING_TURN;
 		break;
 
 
@@ -2942,9 +3217,13 @@ void CStukaBat :: SetActivity ( Activity NewActivity, BOOL forceReset )
 		break;
 
 	default:
+
+		/*
+		//Uhh.. is this a good idea?
 		if(attackIndex <= -1){
 			m_flGroundSpeed = 65;
 		}
+		*/
 		break;
 	}
 
@@ -3015,7 +3294,7 @@ void CStukaBat :: SetTurnActivityCustom ( void )
 		//m_movementActivity = ACT_FLY_RIGHT;
 		if(moveFlyNoInterrupt == -1){
 			setAnimation("Flying_turn_right", TRUE, TRUE, 3);
-			m_flGroundSpeed = 280;
+			m_flGroundSpeed = STUKABAT_MOVESPEED_FLYING_TURN;
 			//recentActivity = ACT_FLY;
 			moveFlyNoInterrupt = gpGlobals->time + 9.2/12.0;
 		}
@@ -3025,14 +3304,14 @@ void CStukaBat :: SetTurnActivityCustom ( void )
 		//m_movementActivity = ACT_FLY_LEFT;
 		if(moveFlyNoInterrupt == -1){
 			setAnimation("Flying_turn_left", TRUE, TRUE, 3);
-			m_flGroundSpeed = 280;
+			m_flGroundSpeed = STUKABAT_MOVESPEED_FLYING_TURN;
 			//recentActivity = ACT_FLY;
 			moveFlyNoInterrupt = gpGlobals->time + 9.2/12.0;
 		}
 	}else{
 		if(moveFlyNoInterrupt == -1){
 
-			m_flGroundSpeed = 350;
+			m_flGroundSpeed = STUKABAT_MOVESPEED_FLYING_CYCLER;
 			//if(m_IdealActivity == ACT_FLY)
 			//MODDD - why was this turning looping off? Are you daft man??!
 			//(and yes I'm talking to myself. Classy)
@@ -3070,6 +3349,9 @@ Activity CStukaBat::GetStoppedActivity(){
 	if(onGround){
 		actreturn = ACT_CROUCHIDLE;
 	}else{
+		//wait no...
+		actreturn = ACT_HOVER;
+		/*
 		if(combatCloseEnough){
 			
 			actreturn = ACT_HOVER;
@@ -3077,6 +3359,7 @@ Activity CStukaBat::GetStoppedActivity(){
 			
 			actreturn = ACT_FLY;
 		}
+		*/
 	}
 	//NO
 	//damn...?
@@ -3154,8 +3437,27 @@ int CStukaBat :: CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, 
 	}
 
 	// ALERT( at_console, "check %d %d %f\n", tr.fStartSolid, tr.fAllSolid, tr.flFraction );
+	
+	//Uh.. is that okay?
+	if(tr.fStartSolid){
+		//or should we do thsi?
+		Vector vecDir = (vecEnd - vecStart).Normalize();
+		UTIL_TraceHull( vecStart + Vector( 0, 0, 32 ) + vecDir * 6, vecEnd + Vector( 0, 0, 32 ), dont_ignore_monsters, head_hull, edict(), &tr );
+
+		return LOCALMOVE_VALID;
+	}
+	
 	if (tr.fStartSolid || tr.flFraction < 1.0)
+	//if(tr.flFraction < 1.0)
 	{
+
+		/*
+		if(gpGlobals->trace_ent != NULL){
+			CBaseEntity* tempEnt = CBaseEntity::Instance(gpGlobals->trace_ent );
+			easyForcePrintLine("??? %s", tempEnt->getClassname());
+		}
+		*/
+
 		if ( pTarget && pTarget->edict() == gpGlobals->trace_ent )
 			return LOCALMOVE_VALID;
 		return LOCALMOVE_INVALID;
@@ -3355,6 +3657,7 @@ void CStukaBat::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, floa
 
 			//MODDD - EXPERIMENTAL.  Is that okay?
 			ChangeSchedule( slStukaBatAnimWait);
+			return;
 
 			//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 			//should we "return" here...?
@@ -3393,7 +3696,7 @@ void CStukaBat::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, floa
 
 				if(tempEnemy != NULL && tempEnemy->Get() != NULL){
 
-					m_flGroundSpeed = 410;
+					m_flGroundSpeed = STUKABAT_MOVESPEED_DIVE_CYCLER;
 					
 					dontResetActivity = TRUE;
 					setAnimation("Dive_cycler", TRUE, FALSE, 3);
@@ -3418,7 +3721,7 @@ void CStukaBat::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, floa
 
 				if(tempEnemy != NULL && tempEnemy->Get() != NULL){
 
-					m_flGroundSpeed = 480;
+					m_flGroundSpeed = STUKABAT_MOVESPEED_ATTACK_BOMB;
 					dontResetActivity = TRUE;
 					setAnimation("Attack_bomb", TRUE, FALSE, 3);
 					dontResetActivity = FALSE;
@@ -3436,17 +3739,51 @@ void CStukaBat::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, floa
 
 
 		//if(moveFlyNoInterrupt == -1){
-		if(chargeIndex == -1){
+		if(chargeIndex <= -1){
 		
+
+
+
 			//UTIL_MakeAimVectors( pev->angles );
 			UTIL_MakeVectors( pev->angles );
 			float x = DotProduct( gpGlobals->v_forward, m_velocity );
 			float y = DotProduct( gpGlobals->v_right, m_velocity );
 			float z = DotProduct( gpGlobals->v_up, m_velocity );
 
-			if (fabs(x) > fabs(y) && fabs(x) > fabs(z))
+			BOOL shouldHover = FALSE;
+
+			if(m_hEnemy != NULL){
+				
+				if(
+					(m_movementActivity==ACT_HOVER && lastEnemey2DDistance < 430) ||
+					(m_movementActivity!=ACT_HOVER && lastEnemey2DDistance < 320)
+				){
+					shouldHover = TRUE;
+				}
+			}else{
+				if(m_Route[ m_iRouteIndex ].iType & bits_MF_IS_GOAL){
+					//if going towards the goal, check the distance between me and the goal node.
+					//NOTICE - this does not factor in the current node that isn't neceessarily the goal node being
+					//extremely close to the goal, thus not counting to hover instead. Eh whatever, unlikely scenario.
+					float distToGoal2D = (m_Route[ m_iRouteIndex ].vecLocation - pev->origin).Length2D();
+					if(
+						(m_movementActivity==ACT_HOVER && distToGoal2D < 430) ||
+						(m_movementActivity!=ACT_HOVER && distToGoal2D < 320)
+					){
+						shouldHover = TRUE;
+					}
+				}
+			}
+
+
+			if(shouldHover){
+				m_flGroundSpeed = STUKABAT_MOVESPEED_HOVER;
+				m_movementActivity = ACT_HOVER;
+			}else if (fabs(x) > fabs(y) && fabs(x) > fabs(z))
 			{
-				m_flGroundSpeed = 350;
+				
+				//wait, setTurnActivityCustom is about to set the ground speed anyways.
+				//m_flGroundSpeed = 350;
 				m_movementActivity = ACT_FLY;
 
 				SetTurnActivityCustom();
@@ -3460,7 +3797,7 @@ void CStukaBat::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, floa
 			}
 			else if (fabs(y) > fabs(z))
 			{
-				m_flGroundSpeed = 350;
+				//m_flGroundSpeed = 350;
 				m_movementActivity = ACT_FLY;
 
 				SetTurnActivityCustom();
@@ -3482,7 +3819,7 @@ void CStukaBat::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, floa
 			}
 			else
 			{
-				m_flGroundSpeed = 75;
+				m_flGroundSpeed = STUKABAT_MOVESPEED_HOVER;
 				m_movementActivity = ACT_HOVER;
 
 				//return LookupSequence( "Hover");
@@ -3499,7 +3836,7 @@ void CStukaBat::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, floa
 	}//END OF if(!on
 	else{
 
-		m_flGroundSpeed = 65;
+		m_flGroundSpeed = STUKABAT_MOVESPEED_WALK;
 		m_movementActivity = ACT_WALK;
 
 	}
@@ -3512,7 +3849,7 @@ void CStukaBat::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, floa
 	PRINTQUEUE_STUKA_SEND(stukaPrint.moveRelated, "MOVE4 (%d)", combatCloseEnough);
 	if(combatCloseEnough){
 		//slow down!
-		m_flGroundSpeed = 75;
+		m_flGroundSpeed = STUKABAT_MOVESPEED_HOVER;
 		m_movementActivity = ACT_HOVER;
 
 		if ( m_IdealActivity != m_movementActivity )
@@ -3683,7 +4020,7 @@ void CStukaBat::MonsterThink(){
 	//EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyPrintLine("onGround:%d queueToggleGround%d", onGround, queueToggleGround));
 
 
-	if(this->m_Activity == ACT_HOVER && m_fSequenceFinished){
+	if(this->m_Activity == ACT_HOVER && usingCustomSequence && m_fSequenceFinished){
 		//reset it?? This can hapen when in the attack schedule (TASK_ACTION is prominent).
 		//It changes the animation, but keeps the activity set the way it is (likely ACT_HOVER).
 		//So when it stops the attack, the game needs to be told to pick a new fitting sequence for ACT_HOVER instead.
@@ -3730,11 +4067,15 @@ void CStukaBat::MonsterThink(){
 			eatingAnticipatedEnd = -1;
 		}
 
+		/*
+		//Don't do it this way, that is just plain bad.
+		//We have a perfectly good activity for this.
 		if(eating){
 			//setAnimation("Eat_on_ground", TRUE, TRUE, 2);
 			//???
 			setAnimation("Eat_on_ground", TRUE, TRUE, 2);
 		}
+		*/
 
 		//easyPrintLineGroup2("GGGGGGG %.2f %.2f", blockSetActivity, gpGlobals->time);
 		if(blockSetActivity != -1 && blockSetActivity <= gpGlobals->time){
@@ -3771,7 +4112,8 @@ void CStukaBat::MonsterThink(){
 					//pev->origin.z += 41;
 					UTIL_MoveToOrigin ( ENT(pev), pev->origin + Vector(0, 0, 41), 41, MOVE_STRAFE );
 				
-					m_IdealActivity = ACT_FLY;
+					//you sure about that? ACT_FLY? why not ACT_HOVER?
+					//m_IdealActivity = ACT_HOVER;
 
 					//setactivity?
 
@@ -3779,7 +4121,7 @@ void CStukaBat::MonsterThink(){
 
 
 					recentActivity = ACT_RESET;
-					SetActivity(ACT_FLY);
+					SetActivity(ACT_HOVER);
 
 					//turn the auto-pushers back on, don't want to snag.
 					turnThatOff = FALSE;
@@ -3828,11 +4170,11 @@ void CStukaBat::MonsterThink(){
 
 				if(!snappedToCeiling){
 					//pev->origin.z += 41;  //??????
-					m_IdealActivity = ACT_FLY;
+					//m_IdealActivity = ACT_FLY;
 					//adjust for the suggested change in position from that take-off anim
 
 					recentActivity = ACT_RESET;
-					SetActivity(ACT_FLY);
+					SetActivity(ACT_HOVER);
 
 
 				}else{
@@ -4649,5 +4991,21 @@ BOOL CStukaBat::violentDeathClear(void){
 }//END OF violentDeathAllowed
 
 
+Activity CStukaBat::getIdleActivity(void){
+
+	if(snappedToCeiling){
+		return ACT_IDLE;
+	}else{
+		if(onGround){
+			return ACT_CROUCHIDLE;
+		}else{
+			//a way to "stand" relatively still in mid-air?
+			return ACT_HOVER;
+		}
+
+	}
+
+
+}//END OF getIdleActivity)
 
 

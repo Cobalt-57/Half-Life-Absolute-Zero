@@ -21,6 +21,16 @@
 #include "util.h"
 #include "cbase.h"
 
+//MODDD - NEW.  From nodes.cpp.
+extern BOOL _scheduleNodeUpdate;
+
+
+//MODDD - new config settings node-wide to be set by the map (CWorld) if certain KeyValue's are set.
+extern float node_linktest_height;
+extern float node_hulltest_height;
+extern BOOL node_hulltest_heightswap;
+
+
 
 //=========================================================
 // nodes.h
@@ -78,10 +88,10 @@ public:
 #define		bits_LINK_FLY_HULL		( 1 << 3 )// a flying big box can fit through this connection
 #define		bits_LINK_DISABLED		( 1 << 4 )// link is not valid when the set
 
-#define		NODE_SMALL_HULL			0
-#define		NODE_HUMAN_HULL			1
-#define		NODE_LARGE_HULL			2
-#define		NODE_FLY_HULL			3
+
+
+//MODDD - NODE_HULL constants moved to cbase.h for more accessibility.
+//        Any entity should be able to specify that now if it needs to.
 
 class CLink
 {
@@ -290,6 +300,8 @@ public:
 //=========================================================
 class CNodeEnt : public CBaseEntity
 {
+	//MODDD - also why not public.
+public:
 	void Spawn( void );
 	void KeyValue( KeyValueData *pkvd );
 	virtual int	ObjectCaps( void ) { return CBaseEntity :: ObjectCaps() & ~FCAP_ACROSS_TRANSITION; }

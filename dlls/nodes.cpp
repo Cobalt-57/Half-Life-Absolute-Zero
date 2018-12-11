@@ -28,8 +28,37 @@
 #include	"animation.h"
 #include	"doors.h"
 
+
+
+
+//MODDD - NEW.  The player can schedule a node update for the next time a map is loaded.
+BOOL _scheduleNodeUpdate = FALSE;
+
+//MODDD - retail behavior HULL_STEP_SIZE is 16!
 #define	HULL_STEP_SIZE 16// how far the test hull moves on each step
-#define	NODE_HEIGHT	8	// how high to lift nodes off the ground after we drop them all (make stair/ramp mapping easier)
+
+//MODDD - split into the two variables below, now settable by KeyValues for the entire map (CWorld, see world.cpp's KeyValue method)
+// Any calls to displaying nodes or routes use "node_linktest_height" in place of NODE_HEIGHT now.
+//#define	NODE_HEIGHT	8	// how high to lift nodes off the ground after we drop them all (make stair/ramp mapping easier)
+
+//MODDD - how much height to add to nodes when doing the line traces between them to see what nodes can see each other.
+//This lets nodes reach greater heights just for visibility-checks between nodes (raw connnections) without interfering
+//with the WALK_MOVE hullchecks, which can be upset by too great of a height to start from apparently.
+//But those checks never get a ch8nce to run if a ramp/incline is in the way that is otherwise completely passable.
+//For exact retail behavior, use 0.
+float node_linktest_height = 8;
+
+//MODDD - this too. Vertical offset applied to nodes before the test hull goes to each of them.
+//Independent of the TRACE_EXTRA offset above.
+//For exact retail behavior, use 8.
+float node_hulltest_height = 8;
+
+//MODDD - new. If this constant is defined, a hull test between two nodes where the start is higher than the other
+//        will be swapped to begin at the lower node instead. This seems to work better with checks that work one way
+//        but not the other, to report both ways work.
+BOOL node_hulltest_heightswap = FALSE;
+	
+
 
 // to help eliminate node clutter by level designers, this is used to cap how many other nodes
 // any given node is allowed to 'see' in the first stage of graph creation "LinkVisibleNodes()".
@@ -129,6 +158,10 @@ void CGraph :: InitGraph( void)
 
 	m_iLastActiveIdleSearch = 0;
 	m_iLastCoverSearch = 0;
+
+	//MODDD - if this was forced by a user call, forget it now.
+	_scheduleNodeUpdate = FALSE;
+
 }
 	
 //=========================================================
@@ -465,11 +498,11 @@ int	CGraph :: FindNearestLink ( const Vector &vecTestPoint, int *piNearestLink, 
 		
 		WRITE_COORD(MSG_BROADCAST, m_pNodes[ m_pLinkPool[ iNearestLink ].m_iSrcNode ].m_vecOrigin.x );
 		WRITE_COORD(MSG_BROADCAST, m_pNodes[ m_pLinkPool[ iNearestLink ].m_iSrcNode ].m_vecOrigin.y );
-		WRITE_COORD(MSG_BROADCAST, m_pNodes[ m_pLinkPool[ iNearestLink ].m_iSrcNode ].m_vecOrigin.z + NODE_HEIGHT);
+		WRITE_COORD(MSG_BROADCAST, m_pNodes[ m_pLinkPool[ iNearestLink ].m_iSrcNode ].m_vecOrigin.z + node_linktest_height);
 
 		WRITE_COORD(MSG_BROADCAST, m_pNodes[ m_pLinkPool[ iNearestLink ].m_iDestNode ].m_vecOrigin.x );
 		WRITE_COORD(MSG_BROADCAST, m_pNodes[ m_pLinkPool[ iNearestLink ].m_iDestNode ].m_vecOrigin.y );
-		WRITE_COORD(MSG_BROADCAST, m_pNodes[ m_pLinkPool[ iNearestLink ].m_iDestNode ].m_vecOrigin.z + NODE_HEIGHT);
+		WRITE_COORD(MSG_BROADCAST, m_pNodes[ m_pLinkPool[ iNearestLink ].m_iDestNode ].m_vecOrigin.z + node_linktest_height);
 	}
 */
 
@@ -481,6 +514,18 @@ int	CGraph :: FindNearestLink ( const Vector &vecTestPoint, int *piNearestLink, 
 
 int	CGraph::HullIndex( const CBaseEntity *pEntity )
 {
+
+	//MODDD - other behavior.
+	//If we specifically return a type of hull for this entity, rely on that instead.
+	int nodeTypeAttempt = pEntity->getHullIndexForNodes();
+
+	if(nodeTypeAttempt == NODE_DEFAULT_HULL){
+		//continue with retail's way of determining node type below I guess.
+	}else{
+		//If it isn't DEFAULT we made it a different way for a reason. Use this.
+		return nodeTypeAttempt;
+	}
+
 	//MODDD - accept the possiblity of other flying movetypes as well!
 	//if ( pEntity->pev->movetype == MOVETYPE_FLY)
 	if(pEntity->isMovetypeFlying())
@@ -590,7 +635,17 @@ BOOL CGraph::pathBetweenClear(int curNode, int destNode){
 
 	
 	if(tr.flFraction != 1.0){
-		easyForcePrintLine("!!!! BLOCKED BY pathBetweenClear! Notes: %d - %d. Monster:%s:%d", curNode, destNode);
+		if(tr.pHit != NULL){
+			int theMonsterID = -1;
+			CBaseEntity* tempEnt = CBaseEntity::Instance(tr.pHit);
+			CBaseMonster* tempMon;
+			if((tempMon = tempEnt->GetMonsterPointer()) != NULL){
+				theMonsterID = tempMon->monsterID;
+			}
+			easyForcePrintLine("!!!! BLOCKED BY pathBetweenClear! Notes: %d - %d. blocker:%s:%d", curNode, destNode, tempEnt->getClassname(), theMonsterID);
+		}else{
+			easyForcePrintLine("!!!! BLOCKED BY pathBetweenClear! Notes: %d - %d. blocker:???", curNode, destNode);
+		}
 	}
 	
 
@@ -759,6 +814,11 @@ int CGraph :: FindShortestPath ( int *piPath, int iStart, int iDest, int iHull, 
 
 		switch( iHull )
 		{
+		//MODDD - new. POINT sets iHullMask to 0 to mean, no requirements.  "(...someMask & iHullMask) != iHullMask" will never pass to skip
+		//        a node since "any bitmask & 0" has to result in 0 and match 0.
+		case NODE_POINT_HULL:
+			iHullMask = 0;
+			break;
 		case NODE_SMALL_HULL:
 			iHullMask = bits_LINK_SMALL_HULL;
 			break;
@@ -912,11 +972,11 @@ int CGraph :: FindShortestPath ( int *piPath, int iStart, int iDest, int iHull, 
 				
 				WRITE_COORD( m_pNodes[ piPath[ i ] ].m_vecOrigin.x );
 				WRITE_COORD( m_pNodes[ piPath[ i ] ].m_vecOrigin.y );
-				WRITE_COORD( m_pNodes[ piPath[ i ] ].m_vecOrigin.z + NODE_HEIGHT );
+				WRITE_COORD( m_pNodes[ piPath[ i ] ].m_vecOrigin.z + node_linktest_height );
 
 				WRITE_COORD( m_pNodes[ piPath[ i + 1 ] ].m_vecOrigin.x );
 				WRITE_COORD( m_pNodes[ piPath[ i + 1 ] ].m_vecOrigin.y );
-				WRITE_COORD( m_pNodes[ piPath[ i + 1 ] ].m_vecOrigin.z + NODE_HEIGHT );
+				WRITE_COORD( m_pNodes[ piPath[ i + 1 ] ].m_vecOrigin.z + node_linktest_height );
 			MESSAGE_END();
 		}
 	}
@@ -928,11 +988,11 @@ int CGraph :: FindShortestPath ( int *piPath, int iStart, int iDest, int iHull, 
 		
 		WRITE_COORD( m_pNodes[ 4 ].m_vecOrigin.x );
 		WRITE_COORD( m_pNodes[ 4 ].m_vecOrigin.y );
-		WRITE_COORD( m_pNodes[ 4 ].m_vecOrigin.z + NODE_HEIGHT );
+		WRITE_COORD( m_pNodes[ 4 ].m_vecOrigin.z + node_linktest_height );
 
 		WRITE_COORD( m_pNodes[ 9 ].m_vecOrigin.x );
 		WRITE_COORD( m_pNodes[ 9 ].m_vecOrigin.y );
-		WRITE_COORD( m_pNodes[ 9 ].m_vecOrigin.z + NODE_HEIGHT );
+		WRITE_COORD( m_pNodes[ 9 ].m_vecOrigin.z + node_linktest_height );
 	MESSAGE_END();
 #endif
 
@@ -987,10 +1047,6 @@ void inline UpdateRange(int &minValue, int &maxValue, int Goal, int Best)
 void CGraph :: CheckNode(Vector vecOrigin, int iNode)
 {
 
-	//lel.  okay.
-	if(global_testVar == -24){
-		if(iNode == 27 || iNode == 31) return;
-	}
 
     // Have we already seen this point before?.
     //
@@ -1010,11 +1066,10 @@ void CGraph :: CheckNode(Vector vecOrigin, int iNode)
 		TraceResult tr;
 
 		// make sure that vecOrigin can trace to this node!
-		if(global_nodeSearchStartVerticalOffset != 0){
-			UTIL_TraceLine ( vecOrigin + Vector(0,0,global_nodeSearchStartVerticalOffset), m_pNodes[ iNode ].m_vecOriginPeek, ignore_monsters, 0, &tr );
-		}else{
-
-		}
+		//MODDD - involving nodeSearchStartVerticalOFfset now.
+		//UTIL_TraceLine ( vecOrigin, m_pNodes[ iNode ].m_vecOriginPeek, ignore_monsters, 0, &tr );
+		UTIL_TraceLine ( vecOrigin + Vector(0,0,global_nodeSearchStartVerticalOffset), m_pNodes[ iNode ].m_vecOriginPeek, ignore_monsters, 0, &tr );
+		
 
 		if ( tr.flFraction == 1.0 )
 		{
@@ -1315,11 +1370,11 @@ void CGraph :: ShowNodeConnections ( int iNode )
 			
 			WRITE_COORD( m_pNodes[ iNode ].m_vecOrigin.x );
 			WRITE_COORD( m_pNodes[ iNode ].m_vecOrigin.y );
-			WRITE_COORD( m_pNodes[ iNode ].m_vecOrigin.z + NODE_HEIGHT );
+			WRITE_COORD( m_pNodes[ iNode ].m_vecOrigin.z + node_linktest_height );
 
 			WRITE_COORD( vecSpot.x );
 			WRITE_COORD( vecSpot.y );
-			WRITE_COORD( vecSpot.z + NODE_HEIGHT );
+			WRITE_COORD( vecSpot.z + node_linktest_height );
 		MESSAGE_END();
 
 	}
@@ -1350,10 +1405,10 @@ void CGraph::ShowNodeConnectionsFrame(int iNode){
 
 		UTIL_drawLineFrame(m_pNodes[ iNode ].m_vecOrigin.x,
 			m_pNodes[ iNode ].m_vecOrigin.y,
-			m_pNodes[ iNode ].m_vecOrigin.z + NODE_HEIGHT,
+			m_pNodes[ iNode ].m_vecOrigin.z + node_linktest_height,
 			vecSpot.x,
 			vecSpot.y,
-			vecSpot.z + NODE_HEIGHT, 7, 255, 0, 100 );
+			vecSpot.z + node_linktest_height, 7, 255, 0, 100 );
 
 	}
 }
@@ -1385,6 +1440,8 @@ int CGraph :: LinkVisibleNodes ( CLink *pLinkPool, FILE *file, int *piBadNode )
 	// number back.
 	*piBadNode = 0;
 
+	//MODDD - new.
+	float linkVisibleExtraVertical;
 
 	if ( m_cNodes <= 0 )
 	{
@@ -1456,8 +1513,19 @@ int CGraph :: LinkVisibleNodes ( CLink *pLinkPool, FILE *file, int *piBadNode )
 			tr.pHit = NULL;// clear every time so we don't get stuck with last trace's hit ent
 			pTraceEnt = 0;
 
-			UTIL_TraceLine ( m_pNodes[ i ].m_vecOrigin,
-							 m_pNodes[ j ].m_vecOrigin,
+
+
+			
+			//Since nodeInfo must match between nodes i and j being compared, if the source is LAND assume it applies to both.
+			if(m_pNodes[ i ].m_afNodeInfo & bits_NODE_LAND){
+				linkVisibleExtraVertical = node_linktest_height;
+			}else{
+				linkVisibleExtraVertical = 0;
+			}
+
+			//MODDD - allow for a vertical offset for raw line traces.
+			UTIL_TraceLine ( Vector(m_pNodes[ i ].m_vecOrigin.x, m_pNodes[ i ].m_vecOrigin.y, m_pNodes[ i ].m_vecOrigin.z + linkVisibleExtraVertical),
+							 Vector(m_pNodes[ j ].m_vecOrigin.x, m_pNodes[ j ].m_vecOrigin.y, m_pNodes[ j ].m_vecOrigin.z + linkVisibleExtraVertical),
 							 ignore_monsters,
 							 g_pBodyQueueHead,//!!!HACKHACK no real ent to supply here, using a global we don't care about
 							 &tr );
@@ -1471,8 +1539,9 @@ int CGraph :: LinkVisibleNodes ( CLink *pLinkPool, FILE *file, int *piBadNode )
 				
 				pTraceEnt = tr.pHit;// store the ent that the trace hit, for comparison
 	
-				UTIL_TraceLine ( m_pNodes[ j ].m_vecOrigin,
-								 m_pNodes[ i ].m_vecOrigin,
+				//MODDD - allow for a vertical offset for raw line traces.
+				UTIL_TraceLine ( Vector(m_pNodes[ j ].m_vecOrigin.x, m_pNodes[ j ].m_vecOrigin.y, m_pNodes[ j ].m_vecOrigin.z + linkVisibleExtraVertical),
+								 Vector(m_pNodes[ i ].m_vecOrigin.x, m_pNodes[ i ].m_vecOrigin.y, m_pNodes[ i ].m_vecOrigin.z + linkVisibleExtraVertical),
 								 ignore_monsters,
 								 g_pBodyQueueHead,//!!!HACKHACK no real ent to supply here, using a global we don't care about
 								 &tr );
@@ -1696,6 +1765,8 @@ BOOL CTestHull::isOrganic(void){
 //=========================================================
 // CTestHull::Spawn
 //=========================================================
+//MODDD NOTE - the supplied argument "pevMasterNode" is completley unused.
+//             It's staying here for... reasons? guess it got left over.
 void CTestHull :: Spawn( entvars_t *pevMasterNode )
 {
 	SET_MODEL(ENT(pev), "models/player.mdl");
@@ -1748,6 +1819,20 @@ void CTestHull::DropDelay ( void )
 //=========================================================
 void CNodeEnt :: KeyValue( KeyValueData *pkvd )
 {
+
+	//MODDD NOTE - is there one called "nodeid"?  Because it sure is ignored as of retail.
+	//It may look kinda like this?  Should be checked to see it isn't bogus anyways if this
+	//were ever done.
+	/*
+	if (FStrEq(pkvd->szKeyName, "nodeid"))
+	{
+		nodeid_suggestion = atoi( pkvd->szValue );
+		pkvd->fHandled = TRUE;
+	}
+	*/
+
+
+
 	if (FStrEq(pkvd->szKeyName, "hinttype"))
 	{
 		m_sHintType = (short)atoi( pkvd->szValue );
@@ -1776,6 +1861,7 @@ void CNodeEnt :: Spawn( void )
 		return;
 	}
 
+
 	if ( WorldGraph.m_cNodes == 0 )
 	{// this is the first node to spawn, spawn the test hull entity that builds and walks the node tree
 		CTestHull *pHull = GetClassPtr((CTestHull *)NULL);
@@ -1788,20 +1874,28 @@ void CNodeEnt :: Spawn( void )
 		return;
 	}
 
+
 	WorldGraph.m_pNodes[ WorldGraph.m_cNodes ].m_vecOriginPeek =
 		WorldGraph.m_pNodes[ WorldGraph.m_cNodes ].m_vecOrigin = pev->origin;
+	
 	WorldGraph.m_pNodes[ WorldGraph.m_cNodes ].m_flHintYaw = pev->angles.y;
 	WorldGraph.m_pNodes[ WorldGraph.m_cNodes ].m_sHintType = m_sHintType;
 	WorldGraph.m_pNodes[ WorldGraph.m_cNodes ].m_sHintActivity = m_sHintActivity;
+
 
 	if (FClassnameIs( pev, "info_node_air" ))
 		WorldGraph.m_pNodes[ WorldGraph.m_cNodes ].m_afNodeInfo = bits_NODE_AIR;
 	else
 		WorldGraph.m_pNodes[ WorldGraph.m_cNodes ].m_afNodeInfo = 0;
 
+
 	WorldGraph.m_cNodes++;
 
 	REMOVE_ENTITY( edict() );
+
+
+
+
 }
 
 //=========================================================
@@ -1855,6 +1949,11 @@ void CTestHull :: BuildNodeGraph( void )
 
 	CNode	*pSrcNode;// node we're currently working with
 	CNode	*pDestNode;// the other node in comparison operations
+	
+	//MODDD - new variables to be the same as pSrcNode and pDestNode or swapped if necessary before doing a check.
+	//Some WALK_MOVE calls on elevation / inclines / stairs may be better checking the higher one vs. the lower one.
+	CNode	*pHullTest_SrcNode;
+	CNode	*pHullTest_DestNode;
 
 	BOOL	fSkipRemainingHulls;//if smallest hull can't fit, don't check any others
 	BOOL	fPairsValid;// are all links in the graph evenly paired?
@@ -1884,6 +1983,9 @@ void CTestHull :: BuildNodeGraph( void )
 	float	flYaw;// use this stuff to walk the hull between nodes
 	float	flDist;
 	int		step;
+
+	//MODDD - apply anotehr offset to land-based nodes.
+	float hulltestExtraVertical;
 
 	SetThink ( &CBaseEntity::SUB_Remove );// no matter what happens, the hull gets rid of itself.
 	pev->nextthink = gpGlobals->time;
@@ -1986,8 +2088,10 @@ void CTestHull :: BuildNodeGraph( void )
 					tr.vecEndPos = trEnt.vecEndPos;
 			}
 
+			//MODDD - don't add node_linktest_height anymore. It's going to just get subtracted anyways.
+			//Checking to see what is land based or not later is perfectly fine.  This height change gets reverted anyways.
 			WorldGraph.m_pNodes[i].m_vecOriginPeek.z = 
-				WorldGraph.m_pNodes[i].m_vecOrigin.z = tr.vecEndPos.z + NODE_HEIGHT;
+				WorldGraph.m_pNodes[i].m_vecOrigin.z = tr.vecEndPos.z;// + node_linktest_height;
 		}
 	}
 
@@ -2039,6 +2143,9 @@ void CTestHull :: BuildNodeGraph( void )
 			fSkipRemainingHulls = FALSE;
 			for ( hull = 0 ; hull < MAX_NODE_HULLS; hull++ )
 			{
+				//MODDD NOTE - this skip may look a little odd since each check removes hull-passable flags, but
+				//             it makes sense. The smallest (earliest) hull check that fails already removes all
+				//             larger flags, making the bigger checks and even flag removals unnecessary.
 				if (fSkipRemainingHulls && (hull == NODE_HUMAN_HULL || hull == NODE_LARGE_HULL)) // skip the remaining walk hulls
 					continue;
 
@@ -2059,7 +2166,44 @@ void CTestHull :: BuildNodeGraph( void )
 					break;
 				}
 
-				UTIL_SetOrigin ( pev, pSrcNode->m_vecOrigin );// place the hull on the node
+
+
+				//MODDD - new pDestNode assignment location.
+				pDestNode = &WorldGraph.m_pNodes [ pTempPool[ pSrcNode->m_iFirstLink + j ].m_iDestNode ];
+
+
+
+				if(node_hulltest_heightswap != TRUE){
+					//RETAIL BEHAVIOR - no swaps.
+					pHullTest_SrcNode = pSrcNode;
+					pHullTest_DestNode = pDestNode;
+				}else{
+				
+					if(pSrcNode->m_vecOrigin.z >= pDestNode->m_vecOrigin.z){
+						//Swap to keep the start point of the WALK_MOVE check the lower of the two points.
+						pHullTest_SrcNode = pDestNode;
+						pHullTest_DestNode = pSrcNode;
+					}else{
+						//leave the way it is.
+						pHullTest_SrcNode = pSrcNode;
+						pHullTest_DestNode = pDestNode;
+					}
+				}
+
+				
+				if(pHullTest_SrcNode->m_afNodeInfo & bits_NODE_LAND){
+					hulltestExtraVertical = node_hulltest_height;
+				}else{
+					hulltestExtraVertical = 0;
+				}
+
+				
+				//MODDD - can be moved up a little too.
+				//UTIL_SetOrigin ( pev, pHullTest_SrcNode->m_vecOrigin );// place the hull on the node
+				UTIL_SetOrigin ( pev, Vector(pHullTest_SrcNode->m_vecOrigin.x, pHullTest_SrcNode->m_vecOrigin.y, pHullTest_SrcNode->m_vecOrigin.z + hulltestExtraVertical) );// place the hull on the node
+				
+
+
 
 				if ( !FBitSet ( pev->flags, FL_ONGROUND ) )
 				{
@@ -2081,23 +2225,33 @@ void CTestHull :: BuildNodeGraph( void )
 					}
 					return;
 				}
-				
-				pDestNode = &WorldGraph.m_pNodes [ pTempPool[ pSrcNode->m_iFirstLink + j ].m_iDestNode ];
 
-				vecSpot = pDestNode->m_vecOrigin;
+
+
+				//MODDD - old pDestNode assignment location
+				
+
+				if(pHullTest_DestNode->m_afNodeInfo & bits_NODE_LAND){
+					hulltestExtraVertical = node_hulltest_height;
+				}else{
+					hulltestExtraVertical = 0;
+				}
+
+				//MODDD - can be moved up a little too.
+				vecSpot = Vector(pHullTest_DestNode->m_vecOrigin.x, pHullTest_DestNode->m_vecOrigin.y, pHullTest_DestNode->m_vecOrigin.z + hulltestExtraVertical);
 				//vecSpot.z = pev->origin.z;
 
 				if (hull < NODE_FLY_HULL)
 				{
 					int SaveFlags = pev->flags;
 					int MoveMode = WALKMOVE_WORLDONLY;
-					if (pSrcNode->m_afNodeInfo & bits_NODE_WATER)
+					if (pHullTest_SrcNode->m_afNodeInfo & bits_NODE_WATER)
 					{
 						pev->flags |= FL_SWIM;
 						MoveMode = WALKMOVE_NORMAL;
 					}
 
-					flYaw = UTIL_VecToYaw ( pDestNode->m_vecOrigin - pev->origin );
+					flYaw = UTIL_VecToYaw ( pHullTest_DestNode->m_vecOrigin - pev->origin );
 
 					flDist = ( vecSpot - pev->origin ).Length2D();
 
@@ -2120,12 +2274,47 @@ void CTestHull :: BuildNodeGraph( void )
 						}
 					}
 
+
+					
+					/*
+					if(i == 18 || j == 18 || i == 30 || j == 30){
+						//Ayy yo.
+						int x = 4;
+					}
+					*/
+
+
+					
+					/*
+				if( (pTempPool[ pSrcNode->m_iFirstLink + j ].m_iDestNode == 18 || pTempPool[ pSrcNode->m_iFirstLink + j ].m_iDestNode == 25) &&
+					(pTempPool[ pSrcNode->m_iFirstLink + j ].m_iSrcNode == 18 || pTempPool[ pSrcNode->m_iFirstLink + j ].m_iSrcNode == 25) &&
+					(i == 18 || i == 25) ){
+						int x = 44;
+						//OH SHIT SON
+						fWalkFailed = FALSE;
+				}
+				*/
+
+
+
+
+					
+					//MODDD NOTE - ...  okay. what is this unfinished comment supposed to say?
+					//All I see is the monster's origin is further away than 64 from the goal (vecSpot).
+					//Yea this never happens it seems anyways.
+					
 					if (!fWalkFailed && (pev->origin - vecSpot).Length() > 64)
 					{
 						// ALERT( at_console, "bogus walk\n");
 						// we thought we 
 						fWalkFailed = TRUE;
 					}
+					
+					
+
+					//WARNING - HORRIBLY HACKY
+					//fWalkFailed = FALSE;
+
 
 					if (fWalkFailed)
 					{
@@ -2150,14 +2339,18 @@ void CTestHull :: BuildNodeGraph( void )
 							pTempPool[ pSrcNode->m_iFirstLink + j ].m_afLinkInfo &= ~bits_LINK_LARGE_HULL;
 							break;
 						}
+					}else{
+						//break point. did anything... not fail?
+						int x = 4;
 					}
 					pev->flags = SaveFlags;
 				}
 				else
 				{
+					//MODDD - CHECK. Is this accurate?  Or will it lead to sending paths that break when tried the moment they begin?
 					TraceResult tr;
 
-					UTIL_TraceHull( pSrcNode->m_vecOrigin + Vector( 0, 0, 32 ), pDestNode->m_vecOriginPeek + Vector( 0, 0, 32 ), ignore_monsters, large_hull, ENT( pev ), &tr );
+					UTIL_TraceHull( pHullTest_SrcNode->m_vecOrigin + Vector( 0, 0, 32 ), pHullTest_DestNode->m_vecOriginPeek + Vector( 0, 0, 32 ), ignore_monsters, large_hull, ENT( pev ), &tr );
 					if (tr.fStartSolid || tr.flFraction < 1.0)
 					{
 						pTempPool[ pSrcNode->m_iFirstLink + j ].m_afLinkInfo &= ~bits_LINK_FLY_HULL;
@@ -2272,13 +2465,16 @@ void CTestHull :: BuildNodeGraph( void )
 
 	// Push all of the LAND nodes down to the ground now. Leave the water and air nodes alone.
 	//
+	//MODDD - no longer necessary, this offset is not applied to begin with anymore.
+	/*
 	for ( i = 0 ; i < WorldGraph.m_cNodes ; i++ )
 	{
 		if ((WorldGraph.m_pNodes[ i ].m_afNodeInfo & bits_NODE_LAND))
 		{
-			WorldGraph.m_pNodes[ i ].m_vecOrigin.z -= NODE_HEIGHT;
+			WorldGraph.m_pNodes[ i ].m_vecOrigin.z -= node_linktest_height;
 		}
 	}
+	*/
 
 
 	if ( pTempPool )
@@ -2310,6 +2506,7 @@ void CTestHull :: BuildNodeGraph( void )
 //=========================================================
 // returns a hardcoded path.
 //=========================================================
+//MODDD NOTE - this method is never called.  Well ok then.
 void CTestHull :: PathFind ( void )
 {
 	int	iPath[ 50 ];
@@ -2345,11 +2542,11 @@ void CTestHull :: PathFind ( void )
 			
 			WRITE_COORD( pNode->m_vecOrigin.x );
 			WRITE_COORD( pNode->m_vecOrigin.y );
-			WRITE_COORD( pNode->m_vecOrigin.z + NODE_HEIGHT );
+			WRITE_COORD( pNode->m_vecOrigin.z + node_linktest_height );
 
 			WRITE_COORD( pNextNode->m_vecOrigin.x);
 			WRITE_COORD( pNextNode->m_vecOrigin.y);
-			WRITE_COORD( pNextNode->m_vecOrigin.z + NODE_HEIGHT);
+			WRITE_COORD( pNextNode->m_vecOrigin.z + node_linktest_height);
 		MESSAGE_END();
 
 		pNode = pNextNode;
@@ -3735,6 +3932,10 @@ EnoughSaid:
 
 
 
+
+
+//MODDD - Well that was always there.  Nevermind me, I'm a moron.
+
 //=========================================================
 // CNodeViewer - Draws a graph of the shorted path from all nodes
 // to current location (typically the player).  It then draws
@@ -3764,6 +3965,12 @@ LINK_ENTITY_TO_CLASS( node_viewer_human, CNodeViewer );
 LINK_ENTITY_TO_CLASS( node_viewer_fly, CNodeViewer );
 LINK_ENTITY_TO_CLASS( node_viewer_large, CNodeViewer );
 
+//MODDD - new.
+LINK_ENTITY_TO_CLASS( node_viewer_point, CNodeViewer );
+LINK_ENTITY_TO_CLASS( node_viewer_point_air, CNodeViewer );
+LINK_ENTITY_TO_CLASS( node_viewer_small, CNodeViewer );
+
+
 void CNodeViewer::Spawn( )
 {
 	if ( !WorldGraph.m_fGraphPresent || !WorldGraph.m_fGraphPointersSet )
@@ -3774,7 +3981,24 @@ void CNodeViewer::Spawn( )
 	}
 
 
-	if (FClassnameIs( pev, "node_viewer_fly"))
+
+	//MODDD - why wasn't there at least SMALL too??
+	if (FClassnameIs( pev, "node_viewer_point"))
+	{
+		m_iHull = NODE_POINT_HULL;
+		m_afNodeType = bits_NODE_LAND | bits_NODE_WATER;
+		m_vecColor = Vector( 255, 150, 255 );
+	}else if (FClassnameIs( pev, "node_viewer_point_air"))
+	{
+		m_iHull = NODE_POINT_HULL;
+		m_afNodeType = bits_NODE_AIR;
+		m_vecColor = Vector( 255, 255, 255 );
+	}else if (FClassnameIs( pev, "node_viewer_small"))
+	{
+		m_iHull = NODE_SMALL_HULL;
+		m_afNodeType = bits_NODE_LAND | bits_NODE_WATER;
+		m_vecColor = Vector( 160, 255, 255 );
+	}else if (FClassnameIs( pev, "node_viewer_fly"))
 	{
 		m_iHull = NODE_FLY_HULL;
 		m_afNodeType = bits_NODE_AIR;
@@ -3878,7 +4102,9 @@ void CNodeViewer :: DrawThink( void )
 {
 	pev->nextthink = gpGlobals->time;
 
-	for (int i = 0; i < 10; i++)
+	//for (int i = 0; i < 10; i++)
+	//MODDD - no more limit!  or... uh-oh?
+	while(TRUE)
 	{
 		if (m_iDraw == m_nVisited)
 		{
@@ -3891,11 +4117,11 @@ void CNodeViewer :: DrawThink( void )
 			WRITE_BYTE( TE_BEAMPOINTS );
 			WRITE_COORD( WorldGraph.m_pNodes[ m_aFrom[m_iDraw] ].m_vecOrigin.x );
 			WRITE_COORD( WorldGraph.m_pNodes[ m_aFrom[m_iDraw] ].m_vecOrigin.y );
-			WRITE_COORD( WorldGraph.m_pNodes[ m_aFrom[m_iDraw] ].m_vecOrigin.z + NODE_HEIGHT );
+			WRITE_COORD( WorldGraph.m_pNodes[ m_aFrom[m_iDraw] ].m_vecOrigin.z + node_linktest_height );
 
 			WRITE_COORD( WorldGraph.m_pNodes[ m_aTo[m_iDraw] ].m_vecOrigin.x );
 			WRITE_COORD( WorldGraph.m_pNodes[ m_aTo[m_iDraw] ].m_vecOrigin.y );
-			WRITE_COORD( WorldGraph.m_pNodes[ m_aTo[m_iDraw] ].m_vecOrigin.z + NODE_HEIGHT );
+			WRITE_COORD( WorldGraph.m_pNodes[ m_aTo[m_iDraw] ].m_vecOrigin.z + node_linktest_height );
 			WRITE_SHORT( g_sModelIndexLaser );
 			WRITE_BYTE( 0 ); // framerate
 			WRITE_BYTE( 0 ); // framerate

@@ -4053,10 +4053,10 @@ void CScientist::myAssHungers(void){
 	
 	if(pickedNumber2 != NULL){
 		//Other one will look at me.
-		pickedNumber2->PlaySentenceTo("!meme_my_ass_hungers_a", 21, 1.0, ATTN_NORM, TRUE, this);
+		pickedNumber2->PlaySentenceNoPitchTo("!meme_my_ass_hungers_a", 21, 1.0, ATTN_NORM, TRUE, this);
 		//I won't look at him.
-		this->PlaySentenceUninterruptable("!meme_my_ass_hungers_b", 21, 1.0, ATTN_NORM, TRUE);
-		this->explodeDelay = gpGlobals->time + 13.3 - 0.8;
+		this->PlaySentenceNoPitchUninterruptable("!meme_my_ass_hungers_b", 21, 1.0, ATTN_NORM, TRUE);
+		this->explodeDelay = gpGlobals->time + 13.4 - 0.8;
 	}
 	
 	

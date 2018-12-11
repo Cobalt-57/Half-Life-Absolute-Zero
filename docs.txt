@@ -1,5 +1,11 @@
-PROTOHLGS DOCUMENTATION
+ABSOLUTE ZERO DOCUMENTATION
 
+Ingame: To see what map you're on, go in console, type "status".  Look at "Map  :"...
+
+
+Thanks IGN, see this:
+thirdperson
+cam_idealyaw 0 (or 1?)
 
 ============================================================================================================================================
 ============================================================================================================================================
@@ -117,6 +123,27 @@ The point is, be sure to check if the hit entity "pHit" is worldspawn first, and
 			 
 CINEMATICS - monsters may have a linked "scripted_sequence" object, called the "CCineMonster" class in C++ code (really) in the form of a "m_pCine" instance variable. Monsters in the MONSTERSTATE_SCRIPT state can check their associated "m_pCine" for other information like whether it is interruptible or not (spawnflag 32, 5th power of 2, AKA "SF_SCRIPT_NOINTERRUPT" in C++ code).
 			 
+			 
+			 
+			 
+			 
+			 
+			 
+NEW MAP KEYVALUES FOR NODES
+
+Alright, they're now in KeyValues for World (worldspawn?), kinda like that "pre-disaster" flag should've been.  I don't know if those are things that have to be set up in the Map editor FGD or however, but if you wanted to adjust them they are
+
+node_linktest_height (float, 8) - how high above the ground a land node should go to do a check for connections with other nodes.
+node_hulltest_height (float, 8) - similar to above, but for the WALK_MOVE checks for varrying bound sizes.  Less likely to benefit from changes.
+node_hulltest_heightswap (BOOL, 0) - Whether to swap what node is used for the start of a WALK_MOVE since there's a better chance of success going from lower to higher on inclines for whatever reason.
+
+I've found these make a1a2b's hall around the central area work fine:
+node_linktest_height 14
+node_hulltest_heightswap  1
+
+If these are never adjusted, there is no change to behavior for that map.  It's forced to the defaults on any new map so they don't stick if changed.  And you likely have to force the nodes to regenerate.  Go ingame and type
+    forceNodeUpdate
+to do that.  Any other time the map is loaded the same state of node places / connections is retained.
 			 
 			 
 			 

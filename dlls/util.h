@@ -29,6 +29,9 @@
 #include "activity.h"
 #include "enginecallback.h"
 
+//MODDD - needed to have "CGlobalState" available to prototypes here.
+#include "saverestore.h"
+
 
 //#include "custom_debug.h"
 
@@ -1174,9 +1177,9 @@ extern void turnWorldLightsOff();
 
 
 
-#include "saverestore.h"
 
 extern void OnBeforeChangeLevelTransition(void);
+extern void OnMapLoadPreStart(void);
 extern void OnMapLoadStart(void);
 extern void OnMapLoadEnd(void);
 

@@ -77,6 +77,7 @@ public:
 
 	int Classify(void);
 	BOOL isOrganic(void);
+	int getHullIndexForNodes(void);
 	int IRelationship ( CBaseEntity *pTarget );
 	
 	void ReportAIState( void );

@@ -66,7 +66,18 @@ CBaseEntity
 
 
 
+//MODDD - moved from nodes.h, accessible in more places.
+//MODDD - new.  Don't treat like the usual NODE HULL types below. 
+//              NODE_POINT_DEFAULT says we're leaving up what NODE HULL this is to retail behavior, the checks in 
+//              NODE_POINT_HULL is to say, pretend like our entity has no size. Just allow if there is a node connection at all.
+//              For debugging route problems to see if the issue is caused by a hull being too big even if a path was found.
+#define		NODE_DEFAULT_HULL		-2
+#define		NODE_POINT_HULL			-1
 
+#define		NODE_SMALL_HULL			0
+#define		NODE_HUMAN_HULL			1
+#define		NODE_LARGE_HULL			2
+#define		NODE_FLY_HULL			3
 
 
 
@@ -293,6 +304,7 @@ public:
 	//MODDD - new. 
 	virtual BOOL isSizeGiant(void);
 	virtual BOOL isOrganic(void);
+	virtual int getHullIndexForNodes(void) const;
 
 	//MODDD - moved here from delay.
 	int getNumberOfBodyParts(void);
@@ -621,7 +633,7 @@ public:
 	virtual	void UpdateOwner( void ) { return; };
 
 	//
-	static CBaseEntity* CreateManual( const char *szName, const Vector &vecOrigin, const Vector &vecAngles, edict_t *pentOwner );
+	static CBaseEntity* CreateManual( const char *szName, const Vector &vecOrigin, const Vector &vecAngles, edict_t *pentOwner = NULL );
 	static CBaseEntity* Create( const char *szName, const Vector &vecOrigin, const Vector &vecAngles, edict_t *pentOwner = NULL );
 	static CBaseEntity* Create( const char *szName, const Vector &vecOrigin, const Vector &vecAngles, int setSpawnFlags, edict_t *pentOwner = NULL );
 
@@ -1138,6 +1150,9 @@ push_trigger_data
 class CWorld : public CBaseEntity
 {
 public:
+	//MODDD - constructor?
+	CWorld(void);
+
 	void Spawn( void );
 	void Precache( void );
 	void KeyValue( KeyValueData *pkvd );

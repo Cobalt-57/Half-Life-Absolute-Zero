@@ -6227,7 +6227,9 @@ void CBasePlayer::grantAllItems(){
 		GiveNamedItemIfLacking( "weapon_9mmhandgun" ); //same as "weapon_glock"
 		GiveNamedItemIfLacking( "weapon_9mmAR" ); //same as "weapon_mp5"
 		GiveNamedItemIfLacking( "weapon_357" ); //same as "weapon_python"
-		GiveNamedItemIfLacking( "weapon_crossbow" );
+		
+		//crossbow moved to last
+
 		GiveNamedItemIfLacking( "weapon_gauss" );
 		GiveNamedItemIfLacking( "weapon_hornetgun" );
 		GiveNamedItemIfLacking( "weapon_tripmine" );
@@ -6240,6 +6242,9 @@ void CBasePlayer::grantAllItems(){
 		GiveNamedItemIfLacking( "weapon_handgrenade" );
 		GiveNamedItemIfLacking( "weapon_snark" );
 		GiveNamedItemIfLacking( "weapon_chumtoad" );
+
+		//Deploy this instead.
+		GiveNamedItemIfLacking( "weapon_crossbow" );
 
 	globalflag_muteDeploySound = FALSE;
 
@@ -7642,6 +7647,9 @@ edict_t* CBasePlayer::GiveNamedItem( const char *pszName, int pszSpawnFlags, con
 	//used to spawn it.
 
 
+
+	/*
+	//Nope, no more special rules for you.
 	if(FStrEq(pszNameFinal, "monster_stuka") || FStrEq(pszNameFinal, "stuka") || FStrEq(pszNameFinal, "monster_stukabat") || FStrEq(pszNameFinal, "monster_stuka")  ){
 		//extraOffset = -2;
 		
@@ -7670,8 +7678,7 @@ edict_t* CBasePlayer::GiveNamedItem( const char *pszName, int pszSpawnFlags, con
 		}//END OF if(tr != NULL)
 
 	}//END OF if(<stukabat spawned>)
-
-
+	*/
 
 	
 	//easyPrintLine("DAHHH %s ::: %.2f", STRING(pent->v.classname), extraOffset);

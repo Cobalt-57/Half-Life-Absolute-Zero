@@ -554,6 +554,16 @@ BOOL CBaseEntity::isOrganic(void){
 	return FALSE;
 }
 
+//Override me if specifying a different hull is necessary.
+//For things that don't fit evenly into certain sizes as seen in nodes.cpp's HullIndex method,
+//a NODE_HUMAN_HULL may be implied. Even something larger than the largest or smaller than the smallest gets this
+//assumption. It is not very good, so just say what an entity prefers here.
+int CBaseEntity::getHullIndexForNodes(void) const{
+	return NODE_DEFAULT_HULL;
+}//END OF getHullIndexForNodes
+
+
+
 
 //MODDD - when an entity is forcibly deleted (currently, only by the player doing entRemove), run this method to see if anything needs to be done right before cleanup (like stopping a looping sound).
 void CBaseEntity::onDelete(void){

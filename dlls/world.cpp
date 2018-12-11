@@ -485,6 +485,10 @@ void ResetGlobalState( void )
 {
 	gGlobalState.ClearStates();
 	gInitHUD = TRUE;	// Init the HUD on a new game / load game
+
+	//MODDD - call this event.
+	OnMapLoadPreStart();
+
 }
 
 // moved CWorld class definition to cbase.h
@@ -502,6 +506,20 @@ LINK_ENTITY_TO_CLASS( worldspawn, CWorld );
 
 extern DLL_GLOBAL BOOL		g_fGameOver;
 float g_flWeaponCheat; 
+
+
+
+
+
+
+
+CWorld::CWorld(void){
+
+	int x = 4;
+
+}//END OF CWorld constructor
+
+
 
 
 
@@ -691,11 +709,16 @@ void CWorld :: Precache( void )
 		easyForcePrintLine("DECAL DERIVATION: %s %d", gDecals[i].name, gDecals[i].index);
 	}
 
+	//Keep track of "_scheduleNodeUpdate", because it's about to get reset by InitGraph below.
+	BOOL _scheduleNodeUpdate_tempmem = _scheduleNodeUpdate;
+
 // init the WorldGraph.
 	WorldGraph.InitGraph();
 
 // make sure the .NOD file is newer than the .BSP file.
-	if ( !WorldGraph.CheckNODFile ( ( char * )STRING( gpGlobals->mapname ) ) )
+	//MODDD - NEW.  If the user wants to force the map to rebuild this time, go ahead.
+	//if ( !WorldGraph.CheckNODFile ( ( char * )STRING( gpGlobals->mapname ) ) )
+	if ( _scheduleNodeUpdate_tempmem || !WorldGraph.CheckNODFile ( ( char * )STRING( gpGlobals->mapname ) ) )
 	{// NOD file is not present, or is older than the BSP file.
 		WorldGraph.AllocNodes ();
 	}
@@ -754,13 +777,35 @@ void CWorld :: Precache( void )
 
 
 }
-
-
 //
 // Just to ignore the "wad" field.
 //
 void CWorld :: KeyValue( KeyValueData *pkvd )
 {
+
+	//node_linktest_height = 14;
+	//node_hulltest_heightswap = TRUE;
+	
+	//MODDD - new to be set by the map potentially.
+	if ( FStrEq(pkvd->szKeyName, "node_linktest_height") )
+	{
+		node_linktest_height = (float)atof(pkvd->szValue);
+		pkvd->fHandled = TRUE;
+	}
+	if ( FStrEq(pkvd->szKeyName, "node_hulltest_height") )
+	{
+		node_hulltest_height = (float)atof(pkvd->szValue);
+		pkvd->fHandled = TRUE;
+	}
+	if ( FStrEq(pkvd->szKeyName, "node_hulltest_heightswap") )
+	{
+		node_hulltest_heightswap = atoi(pkvd->szValue);
+		pkvd->fHandled = TRUE;
+	}
+
+
+
+
 	if ( FStrEq(pkvd->szKeyName, "skyname") )
 	{
 		// Sent over net now.
