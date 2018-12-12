@@ -186,6 +186,10 @@ void CBreakable::Spawn( void )
 
 	setModel(STRING(pev->model) );//set size and link into world.
 
+	//safety.
+	pev->classname = MAKE_STRING("func_breakable");
+
+
 	SetTouch( &CBreakable::BreakTouch );
 	if ( FBitSet( pev->spawnflags, SF_BREAK_TRIGGER_ONLY ) )		// Only break on trigger
 		SetTouch( NULL );
@@ -772,7 +776,6 @@ void CBreakable::Die( void )
 	Vector modVect2 = Vector(0, 0, 0);
 
 
-	//CGibProp::SpawnRandomPropGibs(vecSpot + modVect1, vecSpot2 + modVect2, vecVelocity);
 	//get bounds?
 
 	//Spawns gibs ordinarilly.
@@ -918,6 +921,8 @@ public:
 	virtual BOOL isBreakableOrchild(void);
 	virtual BOOL isDestructibleInanimate(void);
 
+	virtual float massInfluence(void);
+
 
 	void	Spawn ( void );
 	void	Precache( void );
@@ -968,6 +973,9 @@ void CPushable :: Spawn( void )
 	pev->movetype	= MOVETYPE_PUSHSTEP;
 	pev->solid		= SOLID_BBOX;
 	setModel( STRING(pev->model) );
+
+	//safety.
+	pev->classname = MAKE_STRING("func_pushable");
 
 	easyForcePrintLine("CPushable: Spawn. Model: %s Spawnflags: %d", STRING(pev->model), pev->spawnflags);
 
@@ -1072,6 +1080,9 @@ void CPushable :: Move( CBaseEntity *pOther, int push )
 	int maxSpeedTemp;
 	float length;
 
+	//MODDD - new.  Whether to allow this object to be affected by vertical force,
+	//        namely floatables being pushed down by the player underwater.
+	//BOOL allowVerticalPush = FALSE;
 	
 
 
@@ -1095,9 +1106,28 @@ void CPushable :: Move( CBaseEntity *pOther, int push )
 	if ( FBitSet(pevToucher->flags,FL_ONGROUND) && pevToucher->groundentity && VARS(pevToucher->groundentity) == pev )
 	{
 		// Only push if floating
-		if ( pev->waterlevel > 0 )
-			pev->velocity.z += pevToucher->velocity.z * 0.1;
+		//MODDD NOTICE - something can still have a waterlevel of 3, the max depth, even if the top of it is poking above the surface like the 
+		//               floating barrels in c2a3 when unlocked from near the floor.
+		//               The pushable table in the flooded room in c1a2 or a1a2 has a waterlevel of 1.
+		if ( pev->waterlevel > 0 ){
+			//MODDD - don't do this exactly, fall down to other behavior but mark a flag allowing vertical momentum for this push.
+			//allowVerticalPush = TRUE;
 
+			//No, maintain retail behavior, it's fine I guess.
+			pev->velocity.z += pevToucher->velocity.z * 0.1;
+			
+
+
+
+
+		}else{
+			//waterlevel of 0? not underwater at all? don't proceed.
+			return;
+		}
+
+		//MODDD - retail behavior is to stop this method early if the toucher is touching this object from the top by being grounded to it.
+		//        But jumping off this object, like the table in the flooded room, still counts as a "touch" that isn't grounded somehow. Careful.
+		//        ...nevermind, let's still do it this way.
 		return;
 	}
 
@@ -1135,7 +1165,12 @@ void CPushable :: Move( CBaseEntity *pOther, int push )
 	//factor = EASY_CVAR_GET(testVar);
 	
 
-	
+	//Hold on. Are we trying to jump off? It's possible for a frame to be not marked as grounded with this entity as the groundentity, but still be touching.
+	//Check for that...
+
+	if(push && pOther->pev->absmin.z >= this->pev->absmax.z - 8){
+		return;
+	}
 
 
 	//apply friction?
@@ -1147,9 +1182,17 @@ void CPushable :: Move( CBaseEntity *pOther, int push )
 			pev->velocity.x += pevToucher->velocity.x * 0.72;
 			pev->velocity.y += pevToucher->velocity.y * 0.72;
 		}else{
-			//give it some more oomph for box to box touches.
-			pev->velocity.x += pevToucher->velocity.x * 0.8;
-			pev->velocity.y += pevToucher->velocity.y * 0.8;
+			//Not the player? Use its mass to influence how far it pushes me.
+			//This isn't specified for most monsters as monsters pushing this very often really isn't expected.
+			//But projectiles (arrows) or hornets could hit this and going flying looks kinda silly.
+			pev->velocity.x += pevToucher->velocity.x * pOther->massInfluence() * pushSpeedFactor;
+			pev->velocity.y += pevToucher->velocity.y * pOther->massInfluence() * pushSpeedFactor;
+				
+			//the other object will slow down any frame it touches me.  IF it is not another pusable.
+			if(!FClassnameIs(pevToucher, "func_pushable")){
+				pOther->pev->velocity.x *= 0.6;
+				pOther->pev->velocity.y *= 0.6;
+			}
 		}
 	}else{
 		//It is possible the player is against the box and needs to shove it a little further to start a real push than just staying stopped in front.
@@ -1158,7 +1201,8 @@ void CPushable :: Move( CBaseEntity *pOther, int push )
 		Vector forceIntent;
 
 		if(playerTouch){
-			if(pevToucher->velocity.Length2D() < 10){
+			float toucherSpeed = pevToucher->velocity.Length2D();
+			if(toucherSpeed < 6 && toucherSpeed > 1){
 				//The player probably wants the box to move in the direction they are facing. Go ahead and shove it with
 				//a little more force.
 				forceIntent = ::UTIL_YawToVec(pevToucher->angles.y) * 140;
@@ -1205,8 +1249,6 @@ void CPushable :: Move( CBaseEntity *pOther, int push )
 
 	if ( playerTouch )
 	{
-
-		
 
 		//MODDD - tell the player to slow down based on my friction (to simulate difficulty moving this around... heavier / more friction slows the player down much more)
 		CBasePlayer* playerRef = static_cast<CBasePlayer*>( CBaseEntity::Instance(pevToucher) );
@@ -1290,3 +1332,8 @@ BOOL CPushable::isDestructibleInanimate(void){
 	//for parent conditions, FORCE us to return false.
 	return (m_Material != matUnbreakableGlass && !(pev->spawnflags & SF_BREAK_TRIGGER_ONLY) ) && (pev->spawnflags & SF_PUSH_BREAKABLE);
 }
+
+float CPushable::massInfluence(void){
+	return 0.82f;
+}
+

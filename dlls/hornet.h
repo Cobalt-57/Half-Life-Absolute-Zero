@@ -71,6 +71,7 @@ public:
 	GENERATE_DEADTAKEDAMAGE_PROTOTYPE
 	GENERATE_KILLED_PROTOTYPE
 	
+	float massInfluence(void);
 
 	float			m_flStopAttack;
 	int				m_iHornetType;

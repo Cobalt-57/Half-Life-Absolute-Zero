@@ -80,6 +80,9 @@ public:
 	
 	BOOL isOrganic(void);
 	
+	float massInfluence(void);
+
+	
 	GENERATE_GIBMONSTER_PROTOTYPE
 
 	virtual int		Save( CSave &save ); 
@@ -284,6 +287,12 @@ BOOL CSqueakGrenade::isOrganic(void){
 	return TRUE;
 }
 
+float CSqueakGrenade::massInfluence(void){
+	return 0.20f;
+}//END OF massInfluence
+
+
+
 
 void CSqueakGrenade::HuntThink( void )
 {
@@ -339,7 +348,9 @@ void CSqueakGrenade::HuntThink( void )
 
 	UTIL_MakeVectors( pev->angles );
 
-	if (m_hEnemy == NULL || !m_hEnemy->IsAlive())
+	//MODDD - use the better check.
+	//if (m_hEnemy == NULL || !m_hEnemy->IsAlive())
+	if(m_hEnemy == NULL || !m_hEnemy->IsAlive_FromAI(this))
 	{
 		// find target, bounce a bit towards it.
 		Look( 512 );

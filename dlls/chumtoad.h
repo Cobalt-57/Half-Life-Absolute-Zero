@@ -170,6 +170,8 @@ class CChumToad : public CBaseMonster{
 	int LookupActivityHard(int activity);
 	int tryActivitySubstitute(int activity);
 
+	float massInfluence(void);
+
 	
 	
 	//????

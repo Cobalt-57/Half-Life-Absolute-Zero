@@ -20,6 +20,8 @@ public:
 	void EXPORT AnimateThink( void );
 	void EXPORT ExplodeTouch( CBaseEntity *pOther );
 
+	float massInfluence(void);
+
 	EHANDLE m_hOwner;
 };
 

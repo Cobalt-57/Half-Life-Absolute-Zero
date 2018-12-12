@@ -53,8 +53,9 @@
 
 
 
-
-#define MONSTER_CUT_CORNER_DIST		8 // 8 means the monster's bounding box is contained without the box of the node in WC
+//MODDD - unused, now factors in the monster's current expected distance to cover this frame (groundspeed & frame time) 
+//        for a better tolerance instead.  Still a hard minimum of 8 to pass just in case it would otherwise be too small.
+//#define MONSTER_CUT_CORNER_DIST		8 // 8 means the monster's bounding box is contained without the box of the node in WC
 
 
 
@@ -3004,7 +3005,8 @@ void CBaseMonster::PushEnemy( CBaseEntity *pEnemy, Vector &vecLastKnownPos )
 
 	//MODDD - NEW. Is it ok to deny if the currently suggested addition is the current enemy (m_hEnemy) already? It is possible this never happens.
 	if(pEnemy == m_hEnemy){
-		easyForcePrintLine("%s:ID%d !!!PushEnemy: denied adding the current enemy to the stack! %s", this->getClassnameShort(), this->monsterID, m_hEnemy->getClassnameShort());
+		//no need to say this every time now.
+		//easyForcePrintLine("%s:ID%d !!!PushEnemy: denied adding the current enemy to the stack! %s", this->getClassnameShort(), this->monsterID, m_hEnemy->getClassnameShort());
 		return;
 	}
 
@@ -5053,7 +5055,6 @@ BOOL CBaseMonster:: ShouldAdvanceRoute( float flWaypointDist, float flInterval )
 	const float moveDistTest = rawMoveSpeedPerSec * EASY_CVAR_GET(pathfindNodeToleranceMulti);  //defaults to 1 for no effect.
 	const float moveDistTol = max(moveDistTest, 8);  //must be at least 8.
 
-	//FINISH YO FIX
 	EASY_CVAR_PRINTIF_PRE(pathfindPrintout, easyForcePrintLine("%s:%d SHOULD I ADVANCE KIND SIR? d:%.2f rm:%.2f tol:%.2f pass:%d", FClassname(this), monsterID, (flWaypointDist), rawMoveSpeedPerSec, moveDistTol, (flWaypointDist <= moveDistTol) ) );
 	//if ( flWaypointDist <= MONSTER_CUT_CORNER_DIST )
 	
@@ -5687,7 +5688,9 @@ BOOL CBaseMonster :: BuildNearestRoute ( Vector vecThreat, Vector vecViewOffset,
 
 	if ( iMyNode == NO_NODE )
 	{
-		easyForcePrintLine("MONSTERID:%d Here ye here ye, I could not find a nearby node! I suck!", monsterID);
+		if(EASY_CVAR_GET(pathfindPrintout)==1)easyForcePrintLine("Path %s:%d Here ye here ye, I could not find a nearby node! I suck!", getClassname(), monsterID);
+			
+		
 		ALERT ( at_aiconsole, "BuildNearestRoute() - %s has no nearest node!\n", STRING(pev->classname));
 		return FALSE;
 	}

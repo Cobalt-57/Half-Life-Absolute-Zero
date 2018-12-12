@@ -72,6 +72,9 @@ void CCrossbowBolt::Spawn( )
 
 	SetTouch( &CCrossbowBolt::BoltTouch );
 	SetThink( &CCrossbowBolt::BubbleThink );
+	
+	//MODDD NOTE - why is this " + 0.2" instead of " + 0.1" like most think methods and even BubbleThink's own think refresh?
+	//             The world may never know.
 	pev->nextthink = gpGlobals->time + 0.2;
 }
 
@@ -286,5 +289,12 @@ void CCrossbowBolt::ExplodeThink( void )
 
 	UTIL_Remove(this);
 }
+
+
+
+float CCrossbowBolt::massInfluence(void){
+	return 0.03f;
+}//END OF massInfluence
+
 
 

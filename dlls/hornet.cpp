@@ -1120,5 +1120,13 @@ GENERATE_KILLED_IMPLEMENTATION(CHornet){
 
 
 
-}
+}//END OF Killed
+
+
+float CHornet::massInfluence(void){
+	return 0.01f;
+}//END OF massInfluence
+
+
+
 

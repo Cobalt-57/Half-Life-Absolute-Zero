@@ -831,119 +831,15 @@ void CGib::SpawnRandomGibs(entvars_t* pevVictim, int cGibs, const char* argGibPa
 
 
 
+float CGib::massInfluence(void){
+	return 0.11f;
+}//END OF massInfluence
+
+
+
 
 GENERATE_TRACEATTACK_IMPLEMENTATION_DUMMY(CGib)
 GENERATE_TAKEDAMAGE_IMPLEMENTATION_DUMMY(CGib)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/*
-void CGibProp::Spawn(const char* szGibModel ){
-	//anything differently maybe?
-	CGib::Spawn(szGibModel);
-
-}
-
-
-#define ROCKET_TRAIL 2
-//extern unsigned short g_sTrail;    Not needed, already in the same file!
-
-//MODDD
-void CGibProp::SpawnRandomPropGibs(Vector vecMin, Vector vecMax, Vector vecVel){
-	int cSplat;
-	int cGibs = 40;  //gibs (things flying around) to spawn?
-
-
-	easyPrintLine("WHAT AR DEY@ %.2f, %.2f, %.2f,     %.2f, %.2f, %.2f", vecMin.x, vecMin.y, vecMin.z, vecMax.x, vecMax.y, vecMax.z); 
-
-
-
-	for ( cSplat = 0 ; cSplat < cGibs ; cSplat++ )
-	{
-		CGib *pGib = GetClassPtr( (CGib *)NULL );
-		
-		//not sure how to get this?
-		int MAXGIBS = 3;
-
-		pGib->Spawn( "models/woodgibs.mdl" );
-		pGib->pev->body = RANDOM_LONG(0,MAXGIBS-1);
-		//pGib->pev->body = 999;
-
-
-		//pGib->pev->rendermode = 46;   //WTF?  for effects = 46???
-		//pGib->pev->effects |= 4;
-		pGib->pev->renderfx |= DONOTDRAWSHADOW;
-		
-
-
-
-			// spawn the gib somewhere in the monster's bounding volume
-			pGib->pev->origin.x = vecMin.x + vecMax.x * (RANDOM_FLOAT ( 0 , 1 ) );
-			pGib->pev->origin.y = vecMin.y + vecMax.y * (RANDOM_FLOAT ( 0 , 1 ) );
-			pGib->pev->origin.z = vecMin.z + vecMax.z * (RANDOM_FLOAT ( 0 , 1 ) ) + 1;	// absmin.z is in the floor because the engine subtracts 1 to enlarge the box
-
-			// make the gib fly away from the attack vector
-			//pGib->pev->velocity = g_vecAttackDir * -1;
-			pGib->pev->velocity = vecVel;
-
-			// mix in some noise
-			pGib->pev->velocity.x += RANDOM_FLOAT ( -0.25, 0.25 );
-			pGib->pev->velocity.y += RANDOM_FLOAT ( -0.25, 0.25 );
-			pGib->pev->velocity.z += RANDOM_FLOAT ( -0.25, 0.25 );
-
-			//?
-			//pGib->pev->velocity = pGib->pev->velocity * RANDOM_FLOAT ( 300, 400 );
-
-			pGib->pev->avelocity.x = RANDOM_FLOAT ( 100, 200 );
-			pGib->pev->avelocity.y = RANDOM_FLOAT ( 100, 300 );
-
-			// copy owner's blood color
-			//pGib->m_bloodColor = (CBaseEntity::Instance(pevVictim))->BloodColor();
-			
-
-			//pGib->pev->velocity = Vector(3, 3, 3);
-			//
-			//if ( pevVictim->health > -50)
-			//{
-			//	pGib->pev->velocity = pGib->pev->velocity * 0.7;
-			//}
-			//else if ( pevVictim->health > -200)
-			//{
-			//	pGib->pev->velocity = pGib->pev->velocity * 2;
-			//}
-			//else
-			//{
-			//	pGib->pev->velocity = pGib->pev->velocity * 4;
-			//}
-			//
-
-
-			pGib->pev->solid = SOLID_BBOX;
-			UTIL_SetSize ( pGib->pev, Vector( 0 , 0 , 0 ), Vector ( 0, 0, 0 ) );
-		
-		pGib->LimitVelocity();
-
-
-		PLAYBACK_EVENT_FULL (FEV_GLOBAL, pGib->edict(), g_sTrail, 0.0, 
-		(float *)&pGib->pev->origin, (float *)&pGib->pev->angles, 0.7, 0.0, pGib->entindex(), ROCKET_TRAIL, 0, 0);
-
-
-
-	}
-
-}
-*/
 
 
 

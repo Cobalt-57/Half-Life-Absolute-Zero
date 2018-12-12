@@ -545,7 +545,7 @@ void CBullsquid :: HandleAnimEvent( MonsterEvent_t *pEvent )
 			//MODDD - adding bleeding by the 2nd mask (where it would be expected).
 			CBaseEntity *pHurt = CheckTraceHullAttack( 70, gSkillData.bullsquidDmgBite, DMG_SLASH, DMG_BLEEDING );
 			
-			if ( pHurt )
+			if ( pHurt && !pHurt->blocksImpact() )
 			{
 				//pHurt->pev->punchangle.z = -15;
 				//pHurt->pev->punchangle.x = -45;
@@ -559,7 +559,7 @@ void CBullsquid :: HandleAnimEvent( MonsterEvent_t *pEvent )
 		{
 
 			CBaseEntity *pHurt = CheckTraceHullAttack( 70, gSkillData.bullsquidDmgWhip, DMG_CLUB | DMG_ALWAYSGIB, 0 );
-			if ( pHurt ) 
+			if ( pHurt && !pHurt->blocksImpact() ) 
 			{
 				pHurt->pev->punchangle.z = -20;
 				pHurt->pev->punchangle.x = 20;
@@ -617,17 +617,21 @@ void CBullsquid :: HandleAnimEvent( MonsterEvent_t *pEvent )
 					}
 
 					
-					//pHurt->pev->punchangle.x = RANDOM_LONG(0,34) - 5;
-					//pHurt->pev->punchangle.z = RANDOM_LONG(0,49) - 25;
-					//pHurt->pev->punchangle.y = RANDOM_LONG(0,89) - 45;
-		
-					// screeshake transforms the viewmodel as well as the viewangle. No problems with seeing the ends of the viewmodels.
-					UTIL_ScreenShake( pHurt->pev->origin, 25.0, 1.5, 0.7, 2 );
 
-					if ( pHurt->IsPlayer() )
-					{
-						UTIL_MakeVectors( pev->angles );
-						pHurt->pev->velocity = pHurt->pev->velocity + gpGlobals->v_forward * 300 + gpGlobals->v_up * 300;
+					if(!pHurt->blocksImpact()){
+						
+						//pHurt->pev->punchangle.x = RANDOM_LONG(0,34) - 5;
+						//pHurt->pev->punchangle.z = RANDOM_LONG(0,49) - 25;
+						//pHurt->pev->punchangle.y = RANDOM_LONG(0,89) - 45;
+
+						// screeshake transforms the viewmodel as well as the viewangle. No problems with seeing the ends of the viewmodels.
+						UTIL_ScreenShake( pHurt->pev->origin, 25.0, 1.5, 0.7, 2 );
+
+						if ( pHurt->IsPlayer() )
+						{
+							UTIL_MakeVectors( pev->angles );
+							pHurt->pev->velocity = pHurt->pev->velocity + gpGlobals->v_forward * 300 + gpGlobals->v_up * 300;
+						}
 					}
 				}
 			}

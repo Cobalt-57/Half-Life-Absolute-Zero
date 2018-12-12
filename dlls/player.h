@@ -363,6 +363,8 @@ public:
 	BOOL playerHasSuit();
 	BOOL playerHasLongJump();
 
+	BOOL blocksImpact(void);
+
 	//MODDD - new.  Accept a new parameter (optional: assuming "false" if not given)
 	virtual void Spawn(BOOL revived);
 	virtual void Spawn( void );

@@ -612,7 +612,7 @@ void CPantherEye::HandleEventQueueEvent(int arg_eventID){
 			CBaseEntity *pHurt = CheckTraceHullAttack( 84*1.2, gSkillData.panthereyeDmgClaw/2, DMG_BLEEDING );
 			if ( pHurt )
 			{
-				if ( pHurt->pev->flags & (FL_MONSTER|FL_CLIENT) )
+				if ( (pHurt->pev->flags & (FL_MONSTER|FL_CLIENT)) && !pHurt->blocksImpact() )
 				{
 					pHurt->pev->punchangle.z = -18;
 					pHurt->pev->punchangle.x = 5;
@@ -786,7 +786,7 @@ void CPantherEye :: HandleAnimEvent( MonsterEvent_t *pEvent )
 			CBaseEntity *pHurt = CheckTraceHullAttack( 84*1.2, gSkillData.panthereyeDmgClaw, DMG_BLEEDING );
 			if ( pHurt )
 			{
-				if ( pHurt->pev->flags & (FL_MONSTER|FL_CLIENT) )
+				if ( (pHurt->pev->flags & (FL_MONSTER|FL_CLIENT)) && !pHurt->blocksImpact() )
 				{
 					pHurt->pev->punchangle.z = -18;
 					pHurt->pev->punchangle.x = 5;

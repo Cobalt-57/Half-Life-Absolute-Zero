@@ -36,6 +36,9 @@ public:
 	GENERATE_TRACEATTACK_PROTOTYPE
 	GENERATE_TAKEDAMAGE_PROTOTYPE
 
+	float massInfluence(void);
+
+
 	static int iSquidSpitSprite;
 	int m_maxFrame;
 };

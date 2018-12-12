@@ -109,7 +109,7 @@ static int TurretBloodColorBlackFilter(){
 	}
 	*/
 
-	//Changed how this works. Always say BLEED.
+	//Changed how this works. Always say this.
 	return BLOOD_COLOR_BLACK;
 }
 
@@ -1387,10 +1387,11 @@ GENERATE_GIBMONSTER_IMPLEMENTATION(CBaseTurret){
 	//
 
 
-	easyForcePrintLine("IM HELLA GAY");
-	easyForcePrintLine("BITCH I HOPE YOU PLAYIN %d", (getGibInfoRef()==NULL) );
-	easyForcePrintLine("OH SHIT FAGGOT %s", getGibInfoRef()->modelPath);
-	easyForcePrintLine("IM HELLA DAY");
+	if(getGibInfoRef()!=NULL){
+		easyForcePrintLine("gib model: %s", getGibInfoRef()->modelPath);
+	}else{
+		easyForcePrintLine("Im about to crash from a missing gibInfoRef yaaaaay");
+	}
 
 	if( isStringEmpty(getGibInfoRef()->modelPath)){
 		//no gib model to work with. Don't bother.

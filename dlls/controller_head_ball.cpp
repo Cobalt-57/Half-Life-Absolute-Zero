@@ -198,3 +198,15 @@ void CControllerHeadBall::BounceTouch( CBaseEntity *pOther )
 	m_vecIdeal = vecDir * m_vecIdeal.Length();
 }
 
+
+float CControllerHeadBall::massInfluence(void){
+	return 0.05f;
+}//END OF massInfluence
+
+
+
+
+
+
+
+

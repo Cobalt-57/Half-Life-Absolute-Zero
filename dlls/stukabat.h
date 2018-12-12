@@ -692,8 +692,7 @@ Schedule_t slStukaBatChaseEnemy[] =
 		| bits_COND_CAN_RANGE_ATTACK1 | bits_COND_CAN_RANGE_ATTACK2 //???  | bits_COND_SMELL_FOOD
 		//| bits_COND_SEE_DISLIKE | bits_COND_SEE_ENEMY | bits_COND_SEE_HATE | bits_COND_SEE_NEMESIS | bits_COND_HEAR_SOUND | bits_COND_SMELL
 		*/
-		0
-		,
+		0,
 
 		bits_SOUND_MEAT|bits_SOUND_CARCASS,
 		"StukaBatChaseEnemy"

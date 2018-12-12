@@ -120,6 +120,7 @@ EASY_CVAR_EXTERN(healthcolor_fullRedMin)
 EASY_CVAR_EXTERN(healthcolor_brightness)
 EASY_CVAR_EXTERN(healthcolor_yellowMark)
 
+EASY_CVAR_EXTERN(hideDamage)
 
 
 
@@ -708,12 +709,17 @@ int CHudHealth::DrawItemFlash(float flTime){
 
 
 
-
+//This method draws the arrows of varrying transparency to suggest damage direction and intensity.
+//Also draws the screen flash.
 int CHudHealth::DrawPain(float flTime)
 {
 
 
-
+	
+	if(EASY_CVAR_GET(hideDamage) == 1){
+		//don't do it.
+		return 1;
+	}
 
 	
 	if ( global2_allowPainDrawWithoutSuit == 0 && !(gHUD.m_iWeaponBits & (1<<(WEAPON_SUIT)) ) )
@@ -1093,13 +1099,18 @@ void CHudHealth::deriveColorFromHealth(int &r, int &g, int &b){
 
 
 
-
+//Only draws the timed damage indicators to the bottom-left, like radiation, toxins, burning, freezing, bleeding, etc.
 int CHudHealth::DrawDamage(float flTime)
 {
 	int r, g, b, a = 0;
 	DAMAGE_IMAGE *pdmg;
 
 
+
+	if(EASY_CVAR_GET(hideDamage) == 1){
+		//don't do it.
+		return 1;
+	}
 
 	//MODDD - can't draw damage without a suit (these are part of the suit's UI)
 	if (!(gHUD.m_iWeaponBits & (1<<(WEAPON_SUIT)) ))

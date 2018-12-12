@@ -14,6 +14,12 @@
 ****/
 
 
+
+//MODDD TODO - the melee attack seems to be completely unused, even as of retail there wasn't any case of checking for an area in front to do a
+//             melee attack (CheckTraceHullAttack, TakeDamage, punchangle, velocity shove).
+//             So the melee attack anim went completely unused and wouldn't do anything (physically) even if it did play.
+//             Check to see if it has any events in HandleAnimEvent if played at all, and if not can create our own hardcoded ones the usual way.
+
 //MODDD TODO - FUTURE. Perhaps the HAssassin should do a check for  nearby undetonated grenades, player or hgrunt / hassassin-thrown, 
 //                     and make an effort not to jump into their blast radius? Looks silly when that happens.
 

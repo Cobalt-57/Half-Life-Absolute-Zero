@@ -166,6 +166,7 @@
 #define healthcolor_brightness_ID 164
 #define healthcolor_yellowMark_ID 165
 #define cl_drawExtraZeros_ID 166
+#define hideDamage_ID 167
 
 
 #define DEFAULT_gruntsCanHaveMP5Grenade 0
@@ -433,7 +434,7 @@
 #define DEFAULT_canTakeLongJump 2
 #define DEFAULT_printOutCommonTimables 0
 #define DEFAULT_playerBrightLight 0
-#define DEFAULT_disablePainPunchAutomatic 0
+#define DEFAULT_disablePainPunchAutomatic 1
 #define DEFAULT_gargantuaCorpseDeath 1
 #define DEFAULT_gargantuaFallSound 1
 #define DEFAULT_gargantuaBleeds 1
@@ -627,6 +628,7 @@
 #define DEFAULT_ladderCycleMulti 0.9
 #define DEFAULT_ladderSpeedMulti 1.55
 #define DEFAULT_barnacleGrabNoInterpolation 0
+#define DEFAULT_hideDamage 0
 
 #define EASY_CVAR_HASH_MASS\
 	EASY_CVAR_HASH(strobeDurationMin, 0)\
@@ -796,6 +798,7 @@
 	EASY_CVAR_HASH(healthcolor_brightness, 164)\
 	EASY_CVAR_HASH(healthcolor_yellowMark, 165)\
 	EASY_CVAR_HASH(cl_drawExtraZeros, 166)\
+	EASY_CVAR_HASH(hideDamage, 167)\
 	DUMMY
 
 #define EASY_CVAR_HIDDEN_LIST\
@@ -884,7 +887,7 @@
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(barneyPrintouts, barneyprintouts)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(monsterSpawnPrintout, monsterspawnprintout)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(zombieBulletResistance, zombiebulletresistance)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(zombieBulletPushback, zombieBulletPushback)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(zombieBulletPushback, zombiebulletpushback)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(houndeyePrintout, houndeyeprintout)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(quakeExplosionSound, quakeexplosionsound)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(explosionDebrisSoundVolume, explosiondebrissoundvolume)\
@@ -1242,6 +1245,7 @@
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(ladderCycleMulti, laddercyclemulti)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(ladderSpeedMulti, ladderspeedmulti)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(barnacleGrabNoInterpolation, barnaclegrabnointerpolation)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTONLY(hideDamage, hidedamage, 167)\
 	DUMMY
 
 #define EASY_CVAR_HIDDEN_SAVE_MASS\
@@ -1688,6 +1692,7 @@
 	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(ladderCycleMulti)\
 	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(ladderSpeedMulti)\
 	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(barnacleGrabNoInterpolation)\
+	EASY_CVAR_HIDDEN_SAVE_CLIENTONLY(hideDamage)\
 	DUMMY
 
 #define EASY_CVAR_HIDDEN_LOAD_MASS\
@@ -1776,7 +1781,7 @@
 	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(barneyPrintouts, barneyprintouts)\
 	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(monsterSpawnPrintout, monsterspawnprintout)\
 	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(zombieBulletResistance, zombiebulletresistance)\
-	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(zombieBulletPushback, zombieBulletPushback)\
+	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(zombieBulletPushback, zombiebulletpushback)\
 	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(houndeyePrintout, houndeyeprintout)\
 	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(quakeExplosionSound, quakeexplosionsound)\
 	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(explosionDebrisSoundVolume, explosiondebrissoundvolume)\
@@ -2134,6 +2139,7 @@
 	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(ladderCycleMulti, laddercyclemulti)\
 	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(ladderSpeedMulti, ladderspeedmulti)\
 	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(barnacleGrabNoInterpolation, barnaclegrabnointerpolation)\
+	EASY_CVAR_HIDDEN_LOAD_CLIENTONLY(hideDamage, hidedamage)\
 	DUMMY
 
 #define EASY_CVAR_DECLARATION_SERVER_MASS\
@@ -2596,6 +2602,7 @@
 	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY(ladderCycleMulti)\
 	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY(ladderSpeedMulti)\
 	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY(barnacleGrabNoInterpolation)\
+	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY_CLIENTONLY(hideDamage)\
 	DUMMY
 
 #define EASY_CVAR_DECLARATION_CLIENT_MASS\
@@ -3058,6 +3065,7 @@
 	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY(ladderCycleMulti)\
 	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY(ladderSpeedMulti)\
 	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY(barnacleGrabNoInterpolation)\
+	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY_CLIENTONLY(hideDamage)\
 	DUMMY
 
 #define EASY_CVAR_UPDATE_SERVER_MASS\
@@ -3520,6 +3528,7 @@
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(ladderCycleMulti)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(ladderSpeedMulti)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(barnacleGrabNoInterpolation)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTONLY(hideDamage, 167)\
 	DUMMY
 
 #define EASY_CVAR_UPDATE_CLIENT_MASS\
@@ -3982,6 +3991,7 @@
 	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY(ladderCycleMulti)\
 	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY(ladderSpeedMulti)\
 	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY(barnacleGrabNoInterpolation)\
+	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY_CLIENTONLY(hideDamage)\
 	DUMMY
 
 #define EASY_CVAR_CREATE_SERVER_SETUP_MASS\
@@ -4450,6 +4460,7 @@
 	EASY_CVAR_CREATE_CLIENT_A_DEBUGONLY(ladderCycleMulti)\
 	EASY_CVAR_CREATE_CLIENT_A_DEBUGONLY(ladderSpeedMulti)\
 	EASY_CVAR_CREATE_CLIENT_A_DEBUGONLY(barnacleGrabNoInterpolation)\
+	EASY_CVAR_CREATE_CLIENT_AC_DEBUGONLY(hideDamage)\
 	DUMMY
 
 #define EASY_CVAR_RESET_MASS\
@@ -4911,6 +4922,7 @@
 	EASY_CVAR_RESET_DEBUGONLY(ladderCycleMulti)\
 	EASY_CVAR_RESET_DEBUGONLY(ladderSpeedMulti)\
 	EASY_CVAR_RESET_DEBUGONLY(barnacleGrabNoInterpolation)\
+	EASY_CVAR_RESET_DEBUGONLY_CLIENTONLY(hideDamage)\
 	DUMMY
 
 #define EASY_CVAR_EXTERN_MASS\
@@ -5373,5 +5385,6 @@
 	EASY_CVAR_EXTERN_DEBUGONLY(ladderCycleMulti)\
 	EASY_CVAR_EXTERN_DEBUGONLY(ladderSpeedMulti)\
 	EASY_CVAR_EXTERN_DEBUGONLY(barnacleGrabNoInterpolation)\
+	EASY_CVAR_EXTERN_DEBUGONLY_CLIENTONLY(hideDamage)\
 	DUMMY
 

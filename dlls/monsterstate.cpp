@@ -255,9 +255,11 @@ MONSTERSTATE CBaseMonster :: GetIdealState ( void )
 		*/
 		{
 
+			/*
 			if(FClassnameIs(pev, "monster_scientist")){
-				easyForcePrintLine("FUCKING. WELL. %d %d", iConditions & (bits_COND_NEW_ENEMY), iConditions & (bits_COND_SEE_ENEMY) );
+				easyForcePrintLine("hey ya. %d %d", iConditions & (bits_COND_NEW_ENEMY), iConditions & (bits_COND_SEE_ENEMY) );
 			}
+			*/
 
 			if ( iConditions & (bits_COND_NEW_ENEMY|bits_COND_SEE_ENEMY) )			
 			{

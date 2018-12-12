@@ -1155,15 +1155,18 @@ void CAGrunt :: HandleAnimEvent( MonsterEvent_t *pEvent )
 			
 			if ( pHurt )
 			{
-				pHurt->pev->punchangle.y = -25;
-				pHurt->pev->punchangle.x = 8;
-
-				// OK to use gpGlobals without calling MakeVectors, cause CheckTraceHullAttack called it above.
-				if ( pHurt->IsPlayer() )
-				{
-					// this is a player. Knock him around.
-					pHurt->pev->velocity = pHurt->pev->velocity + gpGlobals->v_right * 250;
+				if(!pHurt->blocksImpact()){
+					pHurt->pev->punchangle.y = -25;
+					pHurt->pev->punchangle.x = 8;
+					// OK to use gpGlobals without calling MakeVectors, cause CheckTraceHullAttack called it above.
+					if ( pHurt->IsPlayer() )
+					{
+						// this is a player. Knock him around.
+						pHurt->pev->velocity = pHurt->pev->velocity + gpGlobals->v_right * 250;
+					}
 				}
+
+				
 
 				EMIT_SOUND_FILTERED ( ENT(pev), CHAN_WEAPON, pAttackHitSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackHitSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
 
@@ -1190,14 +1193,16 @@ void CAGrunt :: HandleAnimEvent( MonsterEvent_t *pEvent )
 
 			if ( pHurt )
 			{
-				pHurt->pev->punchangle.y = 25;
-				pHurt->pev->punchangle.x = 8;
-
-				// OK to use gpGlobals without calling MakeVectors, cause CheckTraceHullAttack called it above.
-				if ( pHurt->IsPlayer() )
-				{
-					// this is a player. Knock him around.
-					pHurt->pev->velocity = pHurt->pev->velocity + gpGlobals->v_right * -250;
+				
+				if(!pHurt->blocksImpact()){
+					pHurt->pev->punchangle.y = 25;
+					pHurt->pev->punchangle.x = 8;
+					// OK to use gpGlobals without calling MakeVectors, cause CheckTraceHullAttack called it above.
+					if ( pHurt->IsPlayer() )
+					{
+						// this is a player. Knock him around.
+						pHurt->pev->velocity = pHurt->pev->velocity + gpGlobals->v_right * -250;
+					}
 				}
 
 				EMIT_SOUND_FILTERED ( ENT(pev), CHAN_WEAPON, pAttackHitSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackHitSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );

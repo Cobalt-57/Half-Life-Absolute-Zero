@@ -208,8 +208,8 @@ void CMonsterMaker::MakeMonster( void )
 		// delay already overloaded for this entity, so can't call SUB_UseTargets()
 		FireTargets( STRING(pev->target), this, this, USE_TOGGLE, 0 );
 	}
-
-	easyForcePrintLine("OH SHIT %s %.2f %.2f %.2f", STRING(m_iszMonsterClassname), pev->origin.x, pev->origin.y, pev->origin.z);
+	
+	//easyForcePrintLine("MakeMonster made a monster:%s at (%.2f, %.2f, %.2f)", STRING(m_iszMonsterClassname), pev->origin.x, pev->origin.y, pev->origin.z);
 
 	pevCreate = VARS( pent );
 	pevCreate->origin = pev->origin;

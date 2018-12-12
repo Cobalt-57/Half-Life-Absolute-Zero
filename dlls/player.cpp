@@ -47,6 +47,8 @@ EASY_CVAR_EXTERN(playerFadeOutRate)
 
 EASY_CVAR_EXTERN(holsterAnims)
 
+EASY_CVAR_EXTERN(hideDamage)
+
 
 
 
@@ -352,13 +354,16 @@ void CBasePlayer::resetLongJumpCharge(){
 
 }
 
+
+//NOTICE - this is the default "PainSound" method that any Monster has.  It is called by the base monster class's TakeDamage method.
+//Below, PainChance is custom and new for the player, and can only be called by the Player in here.
 void CBasePlayer :: PainSound( void )
 {
 	
 	float	flRndSound;//sound randomizer
 
 	//disallow making noise if this CVar is on.
-	if(global_mutePlayerPainSounds == 1 || global_playerExtraPainSoundsMode == 2){
+	if(EASY_CVAR_GET(hideDamage) == 1 || global_mutePlayerPainSounds == 1 || global_playerExtraPainSoundsMode == 2){
 		//playerExtraPainSoundsMode of 2 suggets that we don't want to use the default PainSound method at all.
 		return;
 	}
@@ -371,7 +376,7 @@ void CBasePlayer :: PainSound( void )
 		EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "player/pl_pain6.wav", 1, ATTN_NORM, TRUE);
 	else
 		EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "player/pl_pain7.wav", 1, ATTN_NORM, TRUE);
-}
+}//END OF PainSound
 
 
 //A chance of 3 / 5 to play pain, 2 / 5 nothing.  Spotted across the script, condensed here for ease of (re)use.
@@ -379,11 +384,11 @@ void CBasePlayer :: PainChance( void )
 {
 
 	//disallow making noise if this CVar is on.
-	if(global_mutePlayerPainSounds == 1){
+	if(EASY_CVAR_GET(hideDamage) == 1 || global_mutePlayerPainSounds == 1){
 		return;
 	}
 
-		//NOTICE that #4 and #5 are possible (which, as of writing, do nothing at all: no sound).
+	//NOTICE that #4 and #5 are possible (which, as of writing, do nothing at all: no sound).
 	switch (RANDOM_LONG(1,5)) 
 	{
 	case 1: 
@@ -397,7 +402,7 @@ void CBasePlayer :: PainChance( void )
 		break;
 	}
 
-}
+}//END OF PainChance
 
 
 
@@ -638,23 +643,30 @@ GENERATE_TRACEATTACK_IMPLEMENTATION(CBasePlayer)
 
 
 		if(EASY_CVAR_GET(RadiusDamageDrawDebug) == 1)DebugLine_Setup(1, ptr->vecEndPos + Vector(0, 0, -20), ptr->vecEndPos + Vector(0, 0, 20), 0, 0, 255);
-		DrawAlphaBlood(flDamage, ptr->vecEndPos);
+		
+		if(EASY_CVAR_GET(hideDamage) != 1){
+			DrawAlphaBlood(flDamage, ptr->vecEndPos);
 
+			//already seems to play?  Verify!
+			/*
+			if(useBulletHitSound && (pevAttacker != NULL && (pevAttacker->renderfx & (ISPLAYER | ISNPC))) ){
+				UTIL_playFleshHitSound(pev);
+			}
+			*/
 
-		//already seems to play?  Verify!
-		/*
-		if(useBulletHitSound && (pevAttacker != NULL && (pevAttacker->renderfx & (ISPLAYER | ISNPC))) ){
-			UTIL_playFleshHitSound(pev);
-		}
-		*/
+			
+			TraceBleed( flDamage, vecDir, ptr, bitsDamageType, bitsDamageTypeMod );
+		}//END OF hideDamage check
 
 		//easyForcePrintLine("AddMultiDamage CALL FROM TRACEATTACK. Attacker:%s Victim:%s hitgrp:%d Dmg:%.2f", pevAttacker!=NULL?STRING(pevAttacker->classname):"NULL", this->getClassname(), ptr->iHitgroup, flDamage);
 		
-		TraceBleed( flDamage, vecDir, ptr, bitsDamageType, bitsDamageTypeMod );
 		AddMultiDamage( pevAttacker, this, flDamage, bitsDamageType, bitsDamageTypeMod );
 	}//END OF if pev->takedamage
 
 }//END OF TraceAttack
+
+
+
 
 /*
 	Take some damage.  
@@ -662,12 +674,8 @@ GENERATE_TRACEATTACK_IMPLEMENTATION(CBasePlayer)
 	type will cause the damage time countdown to be reset.  Thus the ongoing effects of poison, radiation
 	etc are implemented with subsequent calls to TakeDamage using DMG_GENERIC.
 */
-
 #define ARMOR_RATIO	 0.2	// Armor Takes 80% of the damage
 #define ARMOR_BONUS  0.5	// Each Point of Armor is work 1/x points of health
-
-
-
 //MODDD - this one NOW accepts the "unsigned int".  It may be used to better convey a greater power of 2.
 //Otherwise, capacity is wasted on negatives (unused).
 GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBasePlayer)
@@ -866,9 +874,9 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBasePlayer)
 
 
 			if ((*m_bitsDamageTypeRef) & (convert_itbd_to_damage(i) )){
-					m_rgbTimeBasedDamage[i] = 0;
-					//MODDD - next frame this is brought up will be the first one again.
-					m_rgbTimeBasedFirstFrame[i] = TRUE;
+				m_rgbTimeBasedDamage[i] = 0;
+				//MODDD - next frame this is brought up will be the first one again.
+				m_rgbTimeBasedFirstFrame[i] = TRUE;
 			}
 
 
@@ -904,11 +912,11 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBasePlayer)
 		// DMG_SHOCK
 
 
-	//HM.  This seems redundant with the base monster class... ?  It does this now.
+	//This seems redundant with the base monster class... ?  It does this now.
 
 	/*
 	m_bitsDamageType |= bitsDamage; // Save this so we can report it to the client
-	//MODDD - complimentary.f
+	//MODDD - complimentary
 	m_bitsDamageTypeMod |= bitsDamageMod;
 	*/
 
@@ -916,6 +924,16 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBasePlayer)
 
 	m_bitsHUDDamage = -1;  // make sure the damage bits get resent
 	m_bitsModHUDDamage = -1;
+
+
+
+
+	if(EASY_CVAR_GET(hideDamage) == 1){
+		//If so, skip the rest of this method.  It's only about making fvox chatter on taking damage.
+		return fTookDamage;
+	}
+
+
 
 
 	//MODDD - NOTE
@@ -952,11 +970,6 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBasePlayer)
 			ffound = TRUE;
 		}
 		
-
-
-		
-
-
 
 
 		if (bitsDamage & DMG_CLUB)
@@ -1100,7 +1113,7 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBasePlayer)
 	//That is okay anyways.  The continued effects (DMG_TIMEDEFFECT) are what this CVar is concerned with.
 	if(global_disablePainPunchAutomatic != 1){
 		if(global_timedDamageDisableViewPunch == 0 || !(bitsDamageTypeMod & (DMG_TIMEDEFFECT | DMG_TIMEDEFFECTIGNORE) )   ){
-			//pev->punchangle.x = -2;
+			pev->punchangle.x = -2;
 		}
 	}
 
@@ -6533,6 +6546,18 @@ void CBasePlayer::Spawn( void ){
 }
 
 
+//The hideDamage CVar makes the player unaffected by punches.
+//It is still up to individual cases to check for this "blocksImpact" feature of any entity and know not to do the camera punch + movement force if it is on.
+BOOL CBasePlayer::blocksImpact(void){
+
+	if(EASY_CVAR_GET(hideDamage) != 1){
+		return FALSE;
+	}else{
+		return TRUE;
+	}
+
+}//END OF blocksImpact
+
 void CBasePlayer::Spawn( BOOL revived )
 {
 	this->recognizablyDead = FALSE;
@@ -9470,7 +9495,10 @@ void CBasePlayer :: UpdateClientData( void )
 		m_bitsDamageType &= DMG_TIMEBASED;
 		//MODDD
 		m_bitsModHUDDamage &= (DMG_TIMEBASEDMOD);
-	}
+	}//END OF Crazy damage check
+
+
+
 
 	// Update Flashlight
 	if ((m_flFlashLightTime) && (m_flFlashLightTime <= gpGlobals->time))

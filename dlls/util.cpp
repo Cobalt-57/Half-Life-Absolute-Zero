@@ -929,6 +929,12 @@ void UTIL_ScreenShake( const Vector &center, float amplitude, float frequency, f
 		if ( !pPlayer || !(pPlayer->pev->flags & FL_ONGROUND) )	// Don't shake if not onground
 			continue;
 
+		//MODDD - another possible condition. The player is blocking any impact.
+		if(pPlayer->blocksImpact()){
+			continue;
+		}
+
+
 		localAmplitude = 0;
 
 		if ( radius <= 0 )

@@ -30,6 +30,9 @@
 
 
 
+EASY_CVAR_EXTERN(pathfindPrintout)
+
+
 
 //MODDD - NEW.  The player can schedule a node update for the next time a map is loaded.
 BOOL _scheduleNodeUpdate = FALSE;
@@ -763,7 +766,9 @@ int CGraph :: FindShortestPath ( int *piPath, int iStart, int iDest, int iHull, 
 	if (iStart == iDest)
 	{
 
-		easyForcePrintLine("WARNING!!! FindShortestPath reports the start and end nodes are exactly the same. Returning start position, satisfied!");
+		if(EASY_CVAR_GET(pathfindPrintout) == 1){
+			easyForcePrintLine("WARNING!!! FindShortestPath reports the start and end nodes are exactly the same. Returning start position, satisfied!");
+		}
 
 		piPath[0] = iStart;
 		piPath[1] = iDest;

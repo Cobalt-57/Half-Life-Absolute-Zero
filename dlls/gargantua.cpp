@@ -1528,7 +1528,7 @@ void CGargantua::HandleAnimEvent(MonsterEvent_t *pEvent)
 			CBaseEntity *pHurt = GargantuaCheckTraceHullAttack( GARG_ATTACKDIST + 10.0, gSkillData.gargantuaDmgSlash, DMG_SLASH, DMG_BLEEDING );
 			if (pHurt)
 			{
-				if ( pHurt->pev->flags & (FL_MONSTER|FL_CLIENT) )
+				if ( (pHurt->pev->flags & (FL_MONSTER|FL_CLIENT)) && !pHurt->blocksImpact() )
 				{
 					pHurt->pev->punchangle.x = -30; // pitch
 					pHurt->pev->punchangle.y = -30;	// yaw

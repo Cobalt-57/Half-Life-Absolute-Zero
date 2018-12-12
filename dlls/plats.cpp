@@ -1368,7 +1368,7 @@ void CFuncTrackTrain::DeadEnd( void )
 	else
 		ALERT( at_aiconsole, "\n" );
 
-	//MODDD - OH SHIT BITCH
+	//MODDD - OH heavens
 	SetThink(NULL);
 
 }

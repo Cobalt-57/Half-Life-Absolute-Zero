@@ -2743,8 +2743,10 @@ void CHGrunt :: HandleAnimEvent( MonsterEvent_t *pEvent )
 
 				// SOUND HERE!
 				UTIL_MakeVectors( pev->angles );
-				pHurt->pev->punchangle.x = 15;
-				pHurt->pev->velocity = pHurt->pev->velocity + gpGlobals->v_forward * 100 + gpGlobals->v_up * 50;
+				if(!pHurt->blocksImpact()){
+					pHurt->pev->punchangle.x = 15;
+					pHurt->pev->velocity = pHurt->pev->velocity + gpGlobals->v_forward * 100 + gpGlobals->v_up * 50;
+				}
 				pHurt->TakeDamage( pev, pev, gSkillData.hgruntDmgKick, DMG_CLUB );
 
 				//derp.

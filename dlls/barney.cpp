@@ -1028,7 +1028,7 @@ void CBarney :: BarneyFirePistol ( void )
 //MODDD - was "think", made "MonsterThink"...
 void CBarney :: MonsterThink(void){
 	
-	easyForcePrintLine("IM SUPER %d : seq:%d fr:%.2f fin:%d", HasConditions( bits_COND_ENEMY_DEAD ), pev->sequence, pev->frame, this->m_fSequenceFinished);
+	//easyForcePrintLine("IM SUPER %d : seq:%d fr:%.2f fin:%d", HasConditions( bits_COND_ENEMY_DEAD ), pev->sequence, pev->frame, this->m_fSequenceFinished);
 
 
 

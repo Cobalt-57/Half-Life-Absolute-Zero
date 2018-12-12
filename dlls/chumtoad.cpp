@@ -2666,6 +2666,7 @@ void CChumToad::onDeathAnimationEnd(void){
 
 //See if there is an entity below me. Can return NULL if not too.
 //NOTICE - look at how breakables see if the player is on top or not.  That might be miles better than this.
+//  Or even the mr. friendly's absmax - abxmin comparison, that's not bad either.
 CBaseEntity* CChumToad::getEntityBelow(void){
 	
 	//if ( FBitSet(pevToucher->flags,FL_ONGROUND) && pevToucher->groundentity && VARS(pevToucher->groundentity) == pev )
@@ -2745,6 +2746,9 @@ CBaseEntity* CChumToad::getEntityBelow(void){
 }//END OF getEntityBelow
 	
 
+float CChumToad::massInfluence(void){
+	return 0.24f;
+}//END OF massInfluence
 
 
 

@@ -1709,12 +1709,9 @@ void CArcher::HandleEventQueueEvent(int arg_eventID){
 		CBaseEntity *pHurt = CheckTraceHullAttack( 70, gSkillData.bullsquidDmgBite, DMG_SLASH, DMG_BLEEDING );
 		if ( pHurt )
 		{
-			if ( pHurt->pev->flags & (FL_MONSTER|FL_CLIENT) )
+			if ( (pHurt->pev->flags & (FL_MONSTER|FL_CLIENT)) && !pHurt->blocksImpact() )
 			{
 				pHurt->pev->punchangle.x = 5;
-
-				//zombie's both arm slash velocity pull.
-				//pHurt->pev->velocity = pHurt->pev->velocity + gpGlobals->v_forward * -100;
 				
 				pHurt->pev->velocity = pHurt->pev->velocity - gpGlobals->v_forward * 13;
 				pHurt->pev->velocity = pHurt->pev->velocity + gpGlobals->v_up * 4;

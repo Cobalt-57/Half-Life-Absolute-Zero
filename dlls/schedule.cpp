@@ -692,9 +692,9 @@ void CBaseMonster :: RunTask ( Task_t *pTask )
 {
 
 	
-	if(m_pSchedule == slPathfindStumped){
-		easyForcePrintLine("RunTask: %s:%d task: %d", getClassname(), monsterID, pTask->iTask);
-	}
+	//if(m_pSchedule == slPathfindStumped){
+	//	easyForcePrintLine("STUMPED RunTask: %s:%d task: %d", getClassname(), monsterID, pTask->iTask);
+	//}
 
 
 	switch ( pTask->iTask )
@@ -1522,23 +1522,25 @@ void CBaseMonster :: SetTurnActivity ( void )
 //=========================================================
 void CBaseMonster :: StartTask ( Task_t *pTask )
 {
-	//easyForcePrintLine("EACH DAY I DIE SOME MORE StartTask sched:%s: task:%d index:%d", getScheduleName(), pTask->iTask, m_iScheduleIndex);
+	//easyForcePrintLine("StartTask sched:%s: task:%d index:%d", getScheduleName(), pTask->iTask, m_iScheduleIndex);
 
 
-	if(m_pSchedule == slPathfindStumped){
-		easyForcePrintLine("StartTask: %s:%d task: %d", getClassname(), monsterID, pTask->iTask);
-	}
+	//if(m_pSchedule == slPathfindStumped){
+	//	easyForcePrintLine("STUMPED StartTask: %s:%d task: %d", getClassname(), monsterID, pTask->iTask);
+	//}
 
 
+	/*
 	switch(pTask->iTask){
 	case TASK_PLAY_SEQUENCE_FACE_ENEMY:
 	case TASK_PLAY_SEQUENCE_FACE_TARGET:
 	case TASK_PLAY_SEQUENCE:
 	if(pTask->flData == ACT_EXCITED || pTask->flData == ACT_CROUCH || pTask->flData == ACT_CROUCHIDLE){
-		if(FClassnameIs(this->pev, "monster_scientist")){easyForcePrintLine("I WILL BREAK YOUR FIRST BORN CHILDS FACE!!!");}
+		if(FClassnameIs(this->pev, "monster_scientist")){easyForcePrintLine("I WILL think unpleasant thoughts");}
 	}
 	break;
 	}
+	*/
 
 
 	switch ( pTask->iTask )
@@ -1790,7 +1792,7 @@ void CBaseMonster :: StartTask ( Task_t *pTask )
 		{
 			if ( FindCover( pev->origin, pev->view_ofs, 0, CoverRadius() ) )
 			{
-				easyForcePrintLine("TASK_FIND_COVER_FROM_ORIGIN: I FOUND COVER OKAYYYYYYYYYY");
+				//easyForcePrintLine("TASK_FIND_COVER_FROM_ORIGIN: I FOUND COVER OKAYYYYYYYYYY");
 				// then try for plain ole cover
 				m_flMoveWaitFinished = gpGlobals->time + pTask->flData;
 				TaskComplete();
@@ -1933,7 +1935,7 @@ void CBaseMonster :: StartTask ( Task_t *pTask )
 			//Set the fail schedule to something desired and call "TaskFail" to do that instead, like staring for 15 seconds when stumped before re-getting the enemy's location from the engine.
 			//You cheater!
 
-			easyForcePrintLine("I MUST SAY, I AM STUMPED.");
+			//easyForcePrintLine("I MUST SAY, I AM STUMPED.");
 
 			//TaskComplete();
 			//return;
@@ -1978,7 +1980,7 @@ void CBaseMonster :: StartTask ( Task_t *pTask )
 				m_vecEnemyLKP_prev = m_vecEnemyLKP; //the old to look at for a little.
 
 
-				easyForcePrintLine("AHHH. I don\'t see the enemy. Has enemy to seek? %d", (m_hEnemy != NULL));
+				//easyForcePrintLine("AHHH. I don\'t see the enemy. Has enemy to seek? %d", (m_hEnemy != NULL));
 				if(m_hEnemy != NULL){
 					//Go actually look at them next time to break this cycle.
 
@@ -1996,7 +1998,7 @@ void CBaseMonster :: StartTask ( Task_t *pTask )
 				}
 
 			}else{
-				easyForcePrintLine("But it is ok, I see the enemy at least.");
+				//easyForcePrintLine("But it is ok, I see the enemy at least.");
 				TaskComplete();  //If we actually can see the enemy now, no need for corrective action.
 			}
 
@@ -2079,7 +2081,7 @@ void CBaseMonster :: StartTask ( Task_t *pTask )
 				BOOL test = FRefreshRouteChaseEnemySmart();
 				
 				if(!test){
-					easyForcePrintLine("!!! %s:%d YOU HAVE ALREADY FAILED.", this->getClassname(), this->monsterID);
+					//easyForcePrintLine("!!! %s:%d YOU HAVE ALREADY FAILED.", this->getClassname(), this->monsterID);
 					TaskFail();
 				};
 			}

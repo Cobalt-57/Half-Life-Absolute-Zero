@@ -1073,6 +1073,8 @@ public:
 	
 	void EXPORT CustomHVRExplodeTouch ( CBaseEntity *pOther );
 
+	float massInfluence(void);
+
 	int m_iTrail;
 	Vector m_vecForward;
 };
@@ -1229,6 +1231,17 @@ void CApacheHVR :: AccelerateThink( void  )
 
 	pev->nextthink = gpGlobals->time + 0.1;
 }
+
+
+
+float CApacheHVR::massInfluence(void){
+	return 0.40f;
+}//END OF massInfluence
+
+
+
+
+
 
 
 #endif

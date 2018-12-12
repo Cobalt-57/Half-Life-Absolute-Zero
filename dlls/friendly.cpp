@@ -1211,6 +1211,9 @@ BOOL CFriendly::CheckRangeAttack2( float flDot, float flDist ){
 
 
 
+
+//TODO - we could also do a check like how breakables do for telling if something is on top or not.
+//But the absmin - absmax comparison doesn't look too bad either.  Perhaps the chumtoad could also benefit from that?  eh, options.
 void CFriendly::CustomTouch( CBaseEntity *pOther ){
 	//easyForcePrintLine("TOUCH REGISTERED WITH %s", ::FClassname(pOther));
 
@@ -1219,13 +1222,15 @@ void CFriendly::CustomTouch( CBaseEntity *pOther ){
 	
 	CBaseMonster* tempMonsterOther = pOther->GetMonsterPointer();
 	
+	//The point of this is, if a monster is on top of me that I hate (relationship-wise), throw it off in a random direction.  No free rides for you.
 	if ( pOther->pev->flags & (FL_MONSTER|FL_CLIENT) && tempMonsterOther!=NULL ){
 
 		if(IRelationship(pOther) > R_NO){
 			//easyForcePrintLine("HOW ABOUT THIS? OTHER: %.2f %.2f %.2f ME: %.2f %.2f %.2f", pOther->pev->origin.z, pOther->pev->absmin.z, pOther->pev->absmax.z, pev->origin.z, pev->absmin.z, pev->absmax.z);
 			if(pOther->pev->absmin.z >= this->pev->absmax.z - 8 &&
-				pOther->pev->velocity.Length() < 150 && (fApplyTempVelocity==FALSE || tempMonsterOther->velocityApplyTemp.Length() < 150)
+				pOther->pev->velocity.Length() < 150 && (tempMonsterOther->fApplyTempVelocity==FALSE || tempMonsterOther->velocityApplyTemp.Length() < 150)
 			){
+				//get off of me!
 				//launch this hostile off.
 				float flRandomDirection = RANDOM_FLOAT(0, 2*M_PI);
 				float vecX = cos(flRandomDirection) * 160;
@@ -1233,28 +1238,27 @@ void CFriendly::CustomTouch( CBaseEntity *pOther ){
 			
 				//easyForcePrintLine("GET OFF!!!! %s %.2f %.2f %.2f", FClassname(pOther), flRandomDirection, vecX, vecY);
 				
-
 				//UTIL_MoveToOrigin ( ENT(pev), pev->origin + Vector(0, 0, 41), 41, MOVE_STRAFE );
 				//pOther->pev->origin.z += 25;
 				//UTIL_MoveToOrigin ( ENT(pOther->pev), pOther->pev->origin + Vector(0, 0, 45), 45, MOVE_STRAFE );
 				//pOther->pev->velocity = pOther->pev->velocity + Vector(vecX, vecY, 1800);
 				//pOther->pev->velocity = Vector(vecX, vecY, 1800);
 				
-				if (IsPlayer())
+				/*
+				if (tempMonsterOther->IsPlayer())
 					UTIL_MakeVectors( pev->angles );
 				else
 					UTIL_MakeAimVectors( pev->angles );
-				//pOther->pev->velocity = pOther->pev->velocity - gpGlobals->v_forward * 480 + gpGlobals->v_up * 170 + gpGlobals->v_right * 46;
-				
+				pOther->pev->velocity = pOther->pev->velocity - gpGlobals->v_forward * 480 + gpGlobals->v_up * 170 + gpGlobals->v_right * 46;
+				*/
 
 				tempMonsterOther->fApplyTempVelocity = TRUE;
 				tempMonsterOther->velocityApplyTemp = pOther->pev->velocity + Vector(vecX, vecY, 70);
 
-			}
-			//get off of me!
-		}
+			}//END OF bound check
+		}//END Of hate check
 
-	}
+	}//END OF monster check
 
 
 
@@ -1854,7 +1858,7 @@ void CFriendly::HandleEventQueueEvent(int arg_eventID){
 		CBaseEntity *pHurt = CheckTraceHullAttack( 88, gSkillData.zombieDmgBothSlash, DMG_SLASH );
 		if ( pHurt )
 		{
-			if ( pHurt->pev->flags & (FL_MONSTER|FL_CLIENT) )
+			if ( (pHurt->pev->flags & (FL_MONSTER|FL_CLIENT)) && !pHurt->blocksImpact() )
 			{
 				pHurt->pev->punchangle.z = -18;
 				pHurt->pev->punchangle.x = 7;
@@ -1873,20 +1877,10 @@ void CFriendly::HandleEventQueueEvent(int arg_eventID){
 	case 1:{
 		//"double whip" (long range) melee, 1st attack
 		
-
-		/*
-		pHurt->pev->punchangle.x = 15;
-		//for now..
-		pHurt->pev->velocity = pHurt->pev->velocity + gpGlobals->v_forward * 47 + gpGlobals->v_up * 28;
-		pHurt->TakeDamage( pev, pev, gSkillData.hassaultDmgMelee*0.7, DMG_CLUB );
-		*/
-
-
-
 		CBaseEntity *pHurt = CheckTraceHullAttack( Vector(0, 0, EASY_CVAR_GET(testVar) ), 137, gSkillData.zombieDmgBothSlash, DMG_SLASH );
 		if ( pHurt )
 		{
-			if ( pHurt->pev->flags & (FL_MONSTER|FL_CLIENT) )
+			if ( (pHurt->pev->flags & (FL_MONSTER|FL_CLIENT)) && !pHurt->blocksImpact())
 			{
 				pHurt->pev->punchangle.z = -18;
 				pHurt->pev->punchangle.x = -6;
@@ -1907,7 +1901,7 @@ void CFriendly::HandleEventQueueEvent(int arg_eventID){
 		CBaseEntity *pHurt = CheckTraceHullAttack( Vector(0, 0, EASY_CVAR_GET(testVar) ), 120, gSkillData.zombieDmgBothSlash, DMG_SLASH );
 		if ( pHurt )
 		{
-			if ( pHurt->pev->flags & (FL_MONSTER|FL_CLIENT) )
+			if ( (pHurt->pev->flags & (FL_MONSTER|FL_CLIENT)) && !pHurt->blocksImpact() )
 			{
 				pHurt->pev->punchangle.z = -18;
 				pHurt->pev->punchangle.x = 6;
@@ -1927,25 +1921,8 @@ void CFriendly::HandleEventQueueEvent(int arg_eventID){
 	case 3:{
 		//vomit
 
-		/*
-		//TODO - drain all player shields on any contact at all, or rapidly for a short duration in front of the monster (while puking)?
-		CBaseEntity *pHurt = CheckTraceHullAttack( 70, gSkillData.zombieDmgOneSlash, DMG_SLASH );
-		if ( pHurt )
-		{
-			if ( pHurt->pev->flags & (FL_MONSTER|FL_CLIENT) )
-			{
-				pHurt->pev->punchangle.z = -18;
-				pHurt->pev->punchangle.x = RANDOM_FLOAT(-10, 10);
-				pHurt->pev->velocity = pHurt->pev->velocity - gpGlobals->v_right * 100;
-			}
-			// Play a random attack hit sound
-			//EMIT_SOUND_FILTERED ( ENT(pev), CHAN_WEAPON, pAttackHitSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackHitSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
-		}
-		else // Play a random attack miss sound
-			//EMIT_SOUND_FILTERED ( ENT(pev), CHAN_WEAPON, pAttackMissSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackMissSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
-
-		*/
-		//if (RANDOM_LONG(0,1))
+		//Drains all player shields more rapidly by upping the think method's rate instead, and doing the usual think logic at its usual interval.
+		//Little math to see how many shorter think ticks add up to a typical think tick (0.1 seconds).  That's done in MonsterThink in this class.
 
 		VomitVoiceSound();
 
@@ -1956,27 +1933,6 @@ void CFriendly::HandleEventQueueEvent(int arg_eventID){
 
 }//END OF HandleEventQueueEvent(...)
 
-/*
-// do stuff for this event.
-	//		ALERT( at_console, "Slash right!\n" );
-			CBaseEntity *pHurt = CheckTraceHullAttack( 70, gSkillData.zombieDmgOneSlash, DMG_SLASH );
-			if ( pHurt )
-			{
-				if ( pHurt->pev->flags & (FL_MONSTER|FL_CLIENT) )
-				{
-					pHurt->pev->punchangle.z = -18;
-					pHurt->pev->punchangle.x = 5;
-					pHurt->pev->velocity = pHurt->pev->velocity - gpGlobals->v_right * 100;
-				}
-				// Play a random attack hit sound
-				EMIT_SOUND_FILTERED ( ENT(pev), CHAN_WEAPON, pAttackHitSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackHitSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
-			}
-			else // Play a random attack miss sound
-				EMIT_SOUND_FILTERED ( ENT(pev), CHAN_WEAPON, pAttackMissSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackMissSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
-
-			if (RANDOM_LONG(0,1))
-				AttackSound();
-				*/
 
 
 void CFriendly::HandleAnimEvent(MonsterEvent_t *pEvent ){
@@ -1994,7 +1950,6 @@ void CFriendly::HandleAnimEvent(MonsterEvent_t *pEvent ){
 	break;
 	}//END OF switch(...)
 }
-
 
 
 

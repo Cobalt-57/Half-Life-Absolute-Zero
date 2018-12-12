@@ -232,8 +232,10 @@ public:
 	void SetAbsAngles(const Vector& arg_newOrigin);
 
 	
-	virtual BOOL isBasePlayerWeapon(void){return FALSE;};
+	virtual BOOL isBasePlayerWeapon(void){return FALSE;}
 
+	virtual BOOL blocksImpact(void);
+	virtual float massInfluence(void);
 
 
 	BOOL alreadySaved;
@@ -282,7 +284,6 @@ public:
 	//Note that this will only be used by Monsters in TASK_DIE to denote when the AI should, for all intents and purposes, consider this as DEAD_DEAD and pick a new enemy.
 	//This should not replace be trusted for checking already DEAD_DEAD things which can be set that way without going through TASK_DIE.
 	BOOL recognizablyDead;
-
 
 
 
@@ -1058,29 +1059,14 @@ public:
 	GENERATE_TRACEATTACK_PROTOTYPE
 	GENERATE_TAKEDAMAGE_PROTOTYPE
 
-
-
-};
-
-
-/*
-//REMOVED.  Unnecessary.
-//MODDD - new
-class CGibProp : public CGib
-{
-public:
-	void Spawn( const char *szGibModel );
-	
-	static void SpawnRandomPropGibs(Vector vecMin, Vector vecMax, Vector vecVel);
+	float massInfluence(void);
 
 };
-*/
 
 
 
 
 //MODDD - CBaseButton used to be here, moved to its own file basebutton.h. Implementations still in buttons.cpp or wherever they were.
-
 
 //
 // Weapons 

@@ -49,6 +49,8 @@ class CSatchelCharge : public CGrenade
 	void EXPORT SatchelSlide( CBaseEntity *pOther );
 	void EXPORT SatchelThink( void );
 
+	float massInfluence(void);
+
 public:
 	void Deactivate( void );
 };
@@ -179,6 +181,22 @@ void CSatchelCharge :: BounceSound( void )
 
 
 LINK_ENTITY_TO_CLASS( weapon_satchel, CSatchel );
+
+
+
+float CSatchelCharge::massInfluence(void){
+	return 0.18f;
+}
+
+
+
+
+
+
+
+
+
+
 
 
 //=========================================================

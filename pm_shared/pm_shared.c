@@ -3606,9 +3606,22 @@ void PM_PlayerMove ( qboolean server )
 	//pushSpeedMult = getSafeSqureRoot(atof( pmove->PM_Info_ValueForKey( pmove->physinfo, "psm" ) ));
 	pushSpeedMult = atof(pmove->PM_Info_ValueForKey( pmove->physinfo, "psm" ));
 	if(pushSpeedMult != 1){
-		VectorScale( pmove->velocity, pushSpeedMult, pmove->velocity  );
-	}
+		//no, apply to the X and Y coordinates only.
+		//VectorScale( pmove->velocity, pushSpeedMult, pmove->velocity  );
 
+		pmove->velocity[0] = pmove->velocity[0]*pushSpeedMult;
+		pmove->velocity[1] = pmove->velocity[1]*pushSpeedMult;
+	}
+	//pmove->ConD//pushSpeedMult
+
+	/*
+	if(pmove->server){
+		// Con_Printf or Con_DPrintf ???
+		pmove->Con_Printf("S psm:%.2f\n",  pushSpeedMult   );
+	}else{
+		pmove->Con_Printf("C psm:%.2f\n",  pushSpeedMult   );
+	}
+	*/
 	
 
 	// Handle movement

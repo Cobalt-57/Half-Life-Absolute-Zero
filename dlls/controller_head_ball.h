@@ -22,10 +22,16 @@ public:
 	void EXPORT BounceTouch( CBaseEntity *pOther );
 	void MovetoTarget( Vector vecTarget );
 	void Crawl( void );
+
+	float massInfluence(void);
+
+
 	int m_iTrail;
 	int m_flNextAttack;
 	Vector m_vecIdeal;
 	EHANDLE m_hOwner;
+
+
 };
 
 

@@ -512,16 +512,22 @@ void CIchthyosaur :: HandleAnimEvent( MonsterEvent_t *pEvent )
 				if (dirCorrectness > 0.6)
 				{
 					m_bOnAttack = TRUE;
-					pHurt->pev->punchangle.z = -18;
-					pHurt->pev->punchangle.x = 5;
-					pHurt->pev->velocity = pHurt->pev->velocity - gpGlobals->v_right * 300;
-					if (pHurt->IsPlayer())
-					{
-						pHurt->pev->angles.x += RANDOM_FLOAT( -35, 35 );
-						pHurt->pev->angles.y += RANDOM_FLOAT( -90, 90 );
-						pHurt->pev->angles.z = 0;
-						pHurt->pev->fixangle = TRUE;
+
+					if(!pHurt->blocksImpact()){
+						pHurt->pev->punchangle.z = -18;
+						pHurt->pev->punchangle.x = 5;
+						pHurt->pev->velocity = pHurt->pev->velocity - gpGlobals->v_right * 300;
+						if (pHurt->IsPlayer())
+						{
+							//MODDD NOTE - hold on WHAT.
+							// Why is this mechanic for modifying actual angle, not just punch angle,
+							pHurt->pev->angles.x += RANDOM_FLOAT( -35, 35 );
+							pHurt->pev->angles.y += RANDOM_FLOAT( -90, 90 );
+							pHurt->pev->angles.z = 0;
+							pHurt->pev->fixangle = TRUE;
+						}
 					}
+
 					pHurt->TakeDamage( pev, pev, gSkillData.ichthyosaurDmgShake, DMG_SLASH );
 					//MODDD
 					UTIL_fromToBlood(this, pHurt, gSkillData.ichthyosaurDmgShake, 128);

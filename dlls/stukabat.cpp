@@ -52,7 +52,7 @@ extern float global_stukaInflictsBleeding;
 
 
 #define STUKABAT_DIVE_DISTANCE 330
-#define STUKABAT_ATTACK_DISTANCE 240
+#define STUKABAT_ATTACK_DISTANCE (260 + -(getMeleeAnimScaler()- 1)*80 )
 
 #define STUKABAT_MOVESPEED_WALK 70
 #define STUKABAT_MOVESPEED_HOVER 210
@@ -177,17 +177,17 @@ float CStukaBat::getMeleeAnimScaler(void){
 
 	switch(g_iSkillLevel){
 	case SKILL_EASY:
-		return 1.08;
+		return 1.16;
 	break;
 	case SKILL_MEDIUM:
-		return 1.12;
+		return 1.32;
 	break;
 	case SKILL_HARD:
-		return 1.17;
+		return 1.64;
 	break;
 	default:
 		//easy?
-		return 1.08;
+		return 1.16;
 	break;
 	}
 }
@@ -2255,7 +2255,7 @@ void CStukaBat :: RunTask ( Task_t *pTask )
 						UTIL_fromToBlood(this, m_hEnemy, gSkillData.stukaBatDmgClaw, 75);
 
 
-						if ( m_hEnemy->pev->flags & (FL_MONSTER|FL_CLIENT) )
+						if ( (m_hEnemy->pev->flags & (FL_MONSTER|FL_CLIENT)) && !m_hEnemy->blocksImpact() )
 						{
 							m_hEnemy->pev->punchangle.z = -18;
 							m_hEnemy->pev->punchangle.x = 5;

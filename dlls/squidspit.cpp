@@ -574,3 +574,17 @@ void CSquidSpit :: Touch ( CBaseEntity *pOther )
 	SetThink ( &CBaseEntity::SUB_Remove );
 	pev->nextthink = gpGlobals->time;
 }
+
+
+
+
+float CSquidSpit::massInfluence(void){
+	return 0.03f;
+}//END OF massInfluence
+
+
+
+
+
+
+

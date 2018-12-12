@@ -2261,7 +2261,7 @@ Schedule_t* CScientist :: GetScheduleOfType ( int Type )
 	Schedule_t *psched;
 
 
-	easyForcePrintLine("WHATS GOOD IM SCIENTIST:%d AND I PICKED SCHED TYPE %d", monsterID, Type);
+	//easyForcePrintLine("WHATS GOOD IM SCIENTIST:%d AND I PICKED SCHED TYPE %d", monsterID, Type);
 
 
 
@@ -2879,7 +2879,7 @@ void CScientist::MonsterThink(void){
 
 
 
-	easyForcePrintLine("YO YO YO id:%d act:%d ideal:%d seq:%d fr:%.2f lps:%d fin:%d lfin:%d", monsterID, m_Activity, m_IdealActivity, this->pev->sequence, pev->frame, m_fSequenceLoops, this->m_fSequenceFinished, this->m_fSequenceFinishedSinceLoop);
+	//easyForcePrintLine("imascientist id:%d act:%d ideal:%d seq:%d fr:%.2f lps:%d fin:%d lfin:%d", monsterID, m_Activity, m_IdealActivity, this->pev->sequence, pev->frame, m_fSequenceLoops, this->m_fSequenceFinished, this->m_fSequenceFinishedSinceLoop);
 
 
 	//easyForcePrintLine("AYY YO WHAT THE helk %.2f %.2f", gpGlobals->time, pev->dmgtime);
@@ -3758,7 +3758,7 @@ BOOL CScientist::CheckMeleeAttack2(float flDot, float flDist){
 		}
 	}
 
-	easyForcePrintLine("WAAAAT %.2f", flDist);
+	//easyForcePrintLine("WAAAAT %.2f", flDist);
 
 	//allow any dot product, we're facing the enemy fast enough.
 	//if ( flDist <= 47 && 
@@ -3794,7 +3794,7 @@ void CScientist::HandleEventQueueEvent(int arg_eventID){
 			CBaseEntity *pHurt = CheckTraceHullAttack( 57, gSkillData.scientistDmgPunch, DMG_CLUB );
 			if ( pHurt )
 			{
-				if ( pHurt->pev->flags & (FL_MONSTER|FL_CLIENT) )
+				if ( !(pHurt->pev->flags & (FL_MONSTER|FL_CLIENT)) && !pHurt->blocksImpact() )
 				{
 					pHurt->pev->punchangle.z = -18;
 					pHurt->pev->punchangle.x = 5;
@@ -3838,24 +3838,6 @@ void CScientist::HandleEventQueueEvent(int arg_eventID){
 				EMIT_SOUND_FILTERED ( ENT(pev), CHAN_WEAPON, pAttackMissSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackMissSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
 			}
 
-			/*
-		if ( pHurt )
-		{
-
-			//MODDD - TODO:  make this draw blood on the victim...
-
-			// SOUND HERE!
-			UTIL_MakeVectors( pev->angles );
-			pHurt->pev->punchangle.x = 15;
-			//for now..
-			pHurt->pev->velocity = pHurt->pev->velocity + gpGlobals->v_forward * 47 + gpGlobals->v_up * 28;
-			pHurt->TakeDamage( pev, pev, gSkillData.hassaultDmgMelee*0.7, DMG_CLUB );
-
-			//EMIT_SOUND_FILTERED ( ENT(pev), CHAN_WEAPON, pAttackHitSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackHitSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
-			EMIT_SOUND_FILTERED ( ENT(pev), CHAN_WEAPON, pAttackHitSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackHitSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
-							
-		}
-		*/
 		break;
 
 

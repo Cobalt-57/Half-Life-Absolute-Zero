@@ -865,7 +865,7 @@ void CTalkMonster :: RunTask( Task_t *pTask )
 
 	case TASK_TLK_EYECONTACT:
 		{
-			easyForcePrintLine("OH no?! %d %d %d %d", !IsMoving(), IsTalking(), m_hTalkTarget != NULL, !entityHidden(m_hTalkTarget));
+			//easyForcePrintLine("OH no?! %d %d %d %d", !IsMoving(), IsTalking(), m_hTalkTarget != NULL, !entityHidden(m_hTalkTarget));
 
 
 
@@ -886,7 +886,7 @@ void CTalkMonster :: RunTask( Task_t *pTask )
 			if (!IsMoving() && IsTalking() )
 			{
 				// ALERT( at_console, "waiting %f\n", m_flStopTalkTime - gpGlobals->time );
-				easyForcePrintLine("%s:%d wasLookingAtTalker? %d", getClassname(), monsterID, wasLookingAtTalker);
+				//easyForcePrintLine("%s:%d wasLookingAtTalker? %d", getClassname(), monsterID, wasLookingAtTalker);
 
 				if(!wasLookingAtTalker){
 					//Wasn't looking at a talker, but we're talking? Just let it finish.
@@ -900,7 +900,7 @@ void CTalkMonster :: RunTask( Task_t *pTask )
 						IdleHeadTurn( m_hTalkTarget->pev->origin );
 						break; //good, don't complete.
 					}else{
-						easyForcePrintLine("I, %s:%d LOST TRACK OF MY TALKER AND MUST CEASE STARING AT THAT WHICH NO LONGER PARTAKES IN THE SWEET FRUIT OF EXISTANCE.", getClassname(), monsterID);
+						//easyForcePrintLine("I, %s:%d LOST TRACK OF MY TALKER AND MUST CEASE STARING AT THAT WHICH NO LONGER PARTAKES IN THE SWEET FRUIT OF EXISTANCE.", getClassname(), monsterID);
 					}
 				}//END OF wasLookingAtTalker check
 
@@ -2025,7 +2025,7 @@ Schedule_t* CTalkMonster :: GetScheduleOfType ( int Type )
 
 	
 	
-	easyForcePrintLine("%s:%d WHATS GOOD IM CTalkMonster AND I PICKED SCHED TYPE %d", getClassname(), monsterID, Type);
+	//easyForcePrintLine("%s:%d WHATS GOOD IM CTalkMonster AND I PICKED SCHED TYPE %d", getClassname(), monsterID, Type);
 
 	canGoRavingMad = FALSE; //by default.	
 	BOOL passCondition = 0;

@@ -73,6 +73,8 @@ public:
 
 	virtual void BounceSound( void );
 	virtual int	BloodColor( void ) { return DONT_BLEED; }
+
+	virtual float massInfluence(void);
 	
 	GENERATE_KILLED_PROTOTYPE_VIRTUAL
 	//virtual void Killed( entvars_t *pevAttacker, int iGib );
@@ -1105,6 +1107,9 @@ public:
 
 	void onDelete(void);
 
+	float massInfluence(void);
+
+
 	static CRpgRocket *CreateRpgRocket( Vector vecOrigin, Vector vecAngles, CBaseEntity *pOwner, CRpg *pLauncher );
 
 	int m_iTrail;
@@ -1570,6 +1575,8 @@ class CCrossbowBolt : public CBaseEntity
 	void EXPORT BubbleThink( void );
 	void EXPORT BoltTouch( CBaseEntity *pOther );
 	void EXPORT ExplodeThink( void );
+
+	float massInfluence(void);
 
 	int m_iTrail;
 

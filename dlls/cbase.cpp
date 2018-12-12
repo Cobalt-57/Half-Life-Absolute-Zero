@@ -1230,7 +1230,18 @@ void CBaseEntity::SetAbsAngles(const Vector& arg_newAngles){
 }
 
 
+//Does this entity resist the effects of physical attacks?
+//By default no.
+BOOL CBaseEntity::blocksImpact(void){
+	return FALSE;
+}//END OF Impact
 
-
+//How much of an effect this has on other pushable entities.
+//Things smaller than average should reduce this number. This larger should increase it.
+//Most things won't touch pushables very often.
+//But things that would look silly making a pushable go flying (like arrows or hornets) should make this tiny to not look so strange.
+float CBaseEntity::massInfluence(void){
+	return 0.7f;
+}//END OF massInfluence
 
 

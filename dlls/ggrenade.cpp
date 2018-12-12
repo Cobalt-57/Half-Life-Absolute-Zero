@@ -720,5 +720,13 @@ void CGrenade :: UseSatchelCharges( entvars_t *pevOwner, SATCHELCODE code )
 	}
 }
 
+
+
+float CGrenade::massInfluence(void){
+	return 0.18f;
+}
+
+
+
 //======================end grenade
 

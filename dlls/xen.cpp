@@ -390,8 +390,10 @@ void CXenTree :: HandleAnimEvent( MonsterEvent_t *pEvent )
 					{
 						sound = TRUE;
 						pList[i]->TakeDamage( pev, pev, 25, DMG_CRUSH | DMG_SLASH );
-						pList[i]->pev->punchangle.x = 15;
-						pList[i]->pev->velocity = pList[i]->pev->velocity + forward * 100;
+						if(!pList[i]->blocksImpact()){
+							pList[i]->pev->punchangle.x = 15;
+							pList[i]->pev->velocity = pList[i]->pev->velocity + forward * 100;
+						}
 					}
 				}
 			}

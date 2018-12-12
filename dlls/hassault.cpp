@@ -432,13 +432,15 @@ void CHAssault::HandleEventQueueEvent(int arg_eventID){
 		{
 
 			//MODDD - TODO:  make this draw blood on the victim...
-
-			// SOUND HERE!
 			UTIL_MakeVectors( pev->angles );
-			pHurt->pev->punchangle.x = 15;
-			//for now..
-			pHurt->pev->velocity = pHurt->pev->velocity + gpGlobals->v_forward * 47 + gpGlobals->v_up * 28;
-			pHurt->TakeDamage( pev, pev, gSkillData.hassaultDmgMelee*0.7, DMG_CLUB );
+
+			if(!pHurt->blocksImpact()){
+				//for now..
+				pHurt->pev->punchangle.x = 15;
+				pHurt->pev->velocity = pHurt->pev->velocity + gpGlobals->v_forward * 47 + gpGlobals->v_up * 28;
+			}
+
+			pHurt->TakeDamage( pev, pev, gSkillData.hassaultDmgMelee*0.6, DMG_CLUB );
 
 			//EMIT_SOUND_FILTERED ( ENT(pev), CHAN_WEAPON, pAttackHitSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackHitSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
 			EMIT_SOUND_FILTERED ( ENT(pev), CHAN_WEAPON, pAttackHitSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackHitSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
@@ -454,12 +456,14 @@ void CHAssault::HandleEventQueueEvent(int arg_eventID){
 		{
 
 			//MODDD - TODO:  make this draw blood on the victim...
-
-			// SOUND HERE!
 			UTIL_MakeVectors( pev->angles );
-			pHurt->pev->punchangle.x = 15;
-			//for now..
-			pHurt->pev->velocity = pHurt->pev->velocity + gpGlobals->v_forward * 225 + gpGlobals->v_up * 88;
+			
+			if(!pHurt->blocksImpact()){
+				//for now..
+				pHurt->pev->punchangle.x = 15;
+				pHurt->pev->velocity = pHurt->pev->velocity + gpGlobals->v_forward * 225 + gpGlobals->v_up * 88;
+			}
+
 			pHurt->TakeDamage( pev, pev, gSkillData.hassaultDmgMelee, DMG_CLUB );
 			EMIT_SOUND_FILTERED ( ENT(pev), CHAN_WEAPON, pAttackHitSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackHitSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
 							

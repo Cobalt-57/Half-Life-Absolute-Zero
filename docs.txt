@@ -306,6 +306,14 @@ drawHUD (1) - BOOL + MODES. When off, the player HUD will not be rendered. Has s
 THIS JUST IN - there are already "r_drawviewmodel" and "hud_draw" that do these okay. Well $hi+.
 
 
+hideDamage (0) - BOOL. When on, all signs or indications of damage are turned off, including player sounds, fvox chatter, screen pain flashes + directions and timed damage icons.
+
+
+
+
+
+
+
 
 
 
@@ -339,26 +347,26 @@ floater - "monster_floater" or old name, "monster_bloater".
 MORE CVARS:
 gaussRecoilSendsUpInSP - when on, the gauss secondary fire can send the player upwards too, just like in multiplayer.
 
-hud_version - binary.  when 1, simulates the E3 GUI (yellow, somewhat close to release in functionality). when 0, looks like the more noticably different green pre-E3.  Note that both have many features in common, but pre-E3 lacks the bottom-left damage-status indicators.
-preE3UsesFailColors - binary.  When 1, and "hud_version" is 0 (pre-E3), the GUI's weaponselect will shade empty weapons as red instead of green.
-E3UsesFailColors - binary.  Same as above but for E3: shade empty weapons red.
+hud_version - BOOL.  when 1, simulates the E3 GUI (yellow, somewhat close to release in functionality). when 0, looks like the more noticably different green pre-E3.  Note that both have many features in common, but pre-E3 lacks the bottom-left damage-status indicators.
+preE3UsesFailColors - BOOL.  When 1, and "hud_version" is 0 (pre-E3), the GUI's weaponselect will shade empty weapons as red instead of green.
+E3UsesFailColors - BOOL.  Same as above but for E3: shade empty weapons red.
 
-hud_batterydraw - binary.  when on, the battery's fill-line is drawn somewhere between the top and bottom (horizontally).  If 0, the fill-line is drawn somewhere between the left & right (vertically).
+hud_batterydraw - BOOL.  when on, the battery's fill-line is drawn somewhere between the top and bottom (horizontally).  If 0, the fill-line is drawn somewhere between the left & right (vertically).
 
-canShowWeaponSelectAtDeath - binary.  Preserves an archaic bug from some builds.  When on, weapon select and some other pieces of GUI will continue to be available in weapon select (has no functionality though).
+canShowWeaponSelectAtDeath - BOOL.  Preserves an archaic bug from some builds.  When on, weapon select and some other pieces of GUI will continue to be available in weapon select (has no functionality though).
 
-endlessFlashlightBattery - binary.  Probably seems like common sense (the flash light now lacks an energy meter), but it does start out as 1.
+endlessFlashlightBattery - BOOL.  Probably seems like common sense (the flash light now lacks an energy meter), but it does start out as 1.
 
-forceDrawBatteryNumber - binary.  If on, a number is drawn in the current GUI (E3 or pre-E3)'s style above the battery, portraying its value (remaining battery).  For debugging; more accurate than "uh, 1/3" or "almost empty?".
+forceDrawBatteryNumber - BOOL.  If on, a number is drawn in the current GUI (E3 or pre-E3)'s style above the battery, portraying its value (remaining battery).  For debugging; more accurate than "uh, 1/3" or "almost empty?".
 
-canapplyDefaultFOV - binary.  Generally not useful, but change to "1" to force the screen to update the default FOV with the screensize.  Since the screen can't size without a restart, it is not too useful.
+canapplyDefaultFOV - BOOL.  Generally not useful, but change to "1" to force the screen to update the default FOV with the screensize.  Since the screen can't size without a restart, it is not too useful.
 
-timedDamageIgnoresArmor - binary.  If on, all timed damage will ignore the player's armor, dealing damage to health and flashing the screen (some does not when armor is not ignored).
-timedDamageEndlessOnHard - binary.  If on and "skill" is set to 3 (hard difficulty), curable damages never decrease.  (technically, they never decrease beyond ONE step, so that some common canister logic still works).  Still endless.
+timedDamageIgnoresArmor - BOOL.  If on, all timed damage will ignore the player's armor, dealing damage to health and flashing the screen (some does not when armor is not ignored).
+timedDamageEndlessOnHard - BOOL.  If on and "skill" is set to 3 (hard difficulty), curable damages never decrease.  (technically, they never decrease beyond ONE step, so that some common canister logic still works).  Still endless.
 
 
 
-canDropInSinglePlayer - binary. If on, the player can "drop" the currently equipped weapon in single player ("drop" in console), just like in multiplayer.
+canDropInSinglePlayer - BOOL. If on, the player can "drop" the currently equipped weapon in single player ("drop" in console), just like in multiplayer.
 
 playerForceCrossbowMode (1) - MODEVAR. When non-zero, forces the crossbow to behave like in singleplayer or multiplayer. 
 0 - no change; up to the real mode.
@@ -366,13 +374,13 @@ playerForceCrossbowMode (1) - MODEVAR. When non-zero, forces the crossbow to beh
 2 - forces multiplayer. Sniper fire when zoomed in, explosions when zoomed out.
 
 
-tripmineAnimWaitsForFinish - binary.  If on, the delay between placing tripmines will be long enough to show the whole animation (new segment added + the old).
+tripmineAnimWaitsForFinish - BOOL.  If on, the delay between placing tripmines will be long enough to show the whole animation (new segment added + the old).
 
 disablePauseSinglePlayer (0) - BOOL. If 1, pausing in single player immediately unpauses the game engine to mimic a multiplayer pause (game still runs behind the console / menu).
 
-itemBatteryPrerequisite - binary.  If on, canisters (except adrenaline) and long jump require at least one battery charge (suit / HEV battery, armor battery, same idea) to function at all.  No charge is removed, it is just required.
+itemBatteryPrerequisite - BOOL.  If on, canisters (except adrenaline) and long jump require at least one battery charge (suit / HEV battery, armor battery, same idea) to function at all.  No charge is removed, it is just required.
 
-skipTFDamageTextures - binary.  If on, some damage-indicator texture indexes are skipped so that the new one may be seen in the expected place.  I do not expect this to change, but the CVAR is here if these slots should NOT be skipped.
+skipTFDamageTextures - BOOL.  If on, some damage-indicator texture indexes are skipped so that the new one may be seen in the expected place.  I do not expect this to change, but the CVAR is here if these slots should NOT be skipped.
 ~better explanation:  There are some cases where sprites are expected to be loaded in a particular order and aren't really referred to by name.  The most common example of this would be numbers, like "m_HUD_number_0".  Where are the rest of "m_HUD_number_#"?  Implied by taking "m_HUD_number_0" and adding 1 to get "m_HUD_number_1" and so on.  Look at "<half life dir>/protoHLGS/sprites/hud.txt", the list of all loaded sprites.  Many entries are the same as their names across client-side variables (in this case, search "number_0", removing "m_HUD").  The next numbers are loaded one-after-the-other, so this is why this system works.  If number_0's index is 48, one could just acquire this index and then add to it go reasonably get the other numbers then.
 ~So what does this mean for damage indicators?  They happen to be loaded in a similar way.  "dmg_bio" is like the "zero": it is the first.  However, by script logic, it seems to be entirely skipped, as it seems to just refer to that anthrax icon like "poison" does.  Anyways, that is unimportant: consider "dmg_poison" the "zero" point.  So the statuses are loaded one-by-one, and the timed damage the player can receive are also stored in this same order.  So, it is a similar process: get my damage type (like #3), add that as an offset to "dmg_poison"'s index, get the right sprite.
 ~So what's the problem?  Search in "health.h" for "//tf defines".  These are some icons that are not loaded in hud.txt (damage indicator icons end with the shock, then, before I added the bleeding icon, some numbers start).  So, if ever anticipating the TF2 damage icons, one must factor in these missing indexes that have NOTHING in them if they are just skipped.  This is what the CVar is for:  should an index go beyond dmg_shock, the image offset will be lowered by 5 so that, after skipping the TF damages (game logic can still sift through them), upon reaching "dmg_bleed", it picks up the right image and not, say, dmg_poison + 12 (where it would be if the TF damage indicators were there), but dmg_poison + 8: dmg_bleed.
@@ -384,11 +392,11 @@ playerExtraPainSoundsMode (2) - MODEVAR. Only applies if mutePlayerPainSound is 
 	2/5 chance of playing nothing.
 2 - only "PainChance" works, "PainSound" turned off. Makes more sense.
 
-weaponSelectSoundPlayOnMousewheel - binary.  If on, the weapon-select sound for scrolling through weapons of an open category plays for any new selection  when using the mouse wheel (usually silent).
+weaponSelectSoundPlayOnMousewheel - BOOL.  If on, the weapon-select sound for scrolling through weapons of an open category plays for any new selection  when using the mouse wheel (usually silent).
 
-timedDamageDisableViewPunch - binary.  If on, timed damage's continued pulsing damage will never punch the view (cause the sudden offset that softly goes back to normal).
+timedDamageDisableViewPunch - BOOL.  If on, timed damage's continued pulsing damage will never punch the view (cause the sudden offset that softly goes back to normal).
 
-batteryDrainsAtDeath - binary.  If on, battery drains at death (does not apply if revivable by non-gibbing and having an antidote).
+batteryDrainsAtDeath - BOOL.  If on, battery drains at death (does not apply if revivable by non-gibbing and having an antidote).
 
 batteryDrainsAtAdrenalineMode - 0, 1, 2, 3.  0 does nothing. 1 drains battery at incapaciation (out of health).  2 drains at adrenaline use.  3 drains at revive.
 
@@ -398,19 +406,19 @@ timedDamageDeathRemoveMode - 0, 1, 2.  0 does nothing.  1 remvoes timed damage i
 
 r_shadows - restored variable from previous builds.  Turn shadows on.  Seems to be workin in pre-steampipe release, not steampipe.
 
-default_fov - not binary.  probably already in the game (kinda fuzzy on this).  Controls the Field-of-vision of the First-person view (unsure of 3rd) when NOT zoomed in the crossbow or python (new).
+default_fov - not BOOL.  probably already in the game (kinda fuzzy on this).  Controls the Field-of-vision of the First-person view (unsure of 3rd) when NOT zoomed in the crossbow or python (new).
 ~Note that being too small makes vision unhelpful (far too zoomed; see too little; the slightest mouse movement causes a wild change), and being too great crunches & exaggerates vision approaching the center.
 ~Good values seem to be 90 for the 4:3 ratio of screen width/height (640x480, 800x600), while 105 is good for widescreen's 16:9.
 ~This can be assigned automatically by "auto_adjust_fov_aspect", see below.
 
-auto_adjust_fov_aspect - binary.  When 1,the "default_fov" is assigned a value derived from a linear formula to best scale the FOV for varying screen width / height ratios.  A wider screen needs a greater FOV to get the most out of it.
+auto_adjust_fov_aspect - BOOL.  When 1,the "default_fov" is assigned a value derived from a linear formula to best scale the FOV for varying screen width / height ratios.  A wider screen needs a greater FOV to get the most out of it.
 ~Note that it is only applied at startup, or when toggling it back to "1" from off, so that user-forced values take precedence.  (At restart, if auto_adjust_fov_aspect remains on, the FOV will return to the generated default).
 
-auto_adjust_zoomfov - binary.  If 1, the python and crossbow zoom CVars are set automatically as multiples of the starting FOV.  Should be turned off before making changes to either zooms manually.
-python_zoomfov - not binary.  FOV to use when zooming with the python.  Depends on "default_fov" if "auto_adjust_zoomfov" is 1, but can be a user-given value too.
-crossbow_zoomfov - not binary.  ditto, for the crossbow.
+auto_adjust_zoomfov - BOOL.  If 1, the python and crossbow zoom CVars are set automatically as multiples of the starting FOV.  Should be turned off before making changes to either zooms manually.
+python_zoomfov - not BOOL.  FOV to use when zooming with the python.  Depends on "default_fov" if "auto_adjust_zoomfov" is 1, but can be a user-given value too.
+crossbow_zoomfov - not BOOL.  ditto, for the crossbow.
 
-revolverLaserScope - binary.  When on, even in singleplayer, the revolver always has the scope (part of the model) and a laser that shows on zoom.
+revolverLaserScope - BOOL.  When on, even in singleplayer, the revolver always has the scope (part of the model) and a laser that shows on zoom.
 
 canTakeLongJump - 0, 1, 2.  If 0, can never pick up the long-jump item if m_fLongJump is on (generally always now).  if 1, can pick up the longjump ONCE if missing some long-jump charge.  If 2, can pick up as long as there is less long jump charge than the max.
 ~The "item_longjump" now refills all longjump charge when touched (and is allowed to be), as opposed to "item_longjumpcharge" (looks identical, but not subject to any restrictions on pickup other than the user not having max'd out charge, only restores one long-jumpi charge, or 1/4 of the meter).
@@ -420,7 +428,7 @@ printOutCommonTimables - shows the most wanted timed-damage values of this playe
 
 cl_fvox - CVar related to whether the player's FVOX system is on or off (on by default).  A control can be mapped to this CVAR to toggle it, I imagine, so it feels like an ingame control.
 
-forceAllowMonsterSpawning - binary (off by default).  When on, spawning NPCs is allowed anywhere, even in multiplayer.  Unsure if this syncs well with all players, would be neat if it did already.
+forceAllowMonsterSpawning - BOOL (off by default).  When on, spawning NPCs is allowed anywhere, even in multiplayer.  Unsure if this syncs well with all players, would be neat if it did already.
 ~NOTICE: This CVar was created before I became aware of "mp_allowmonsters", which effectively does the exact same thing for multi-player games (ignored in single-player; always read as "true" in there).
 ~Regardless, this CVar will stay.  It now stays between exiting / running the game so that you don't have to adjust mp_allowmonsters each time.  Just know that both "forceAllowMonsterSpawning" AND "mp_allowmonsters" must BOTH be turned off (0) to truly disable spawning in-game.
 ~If necessary, I can make it discern between the player trying to spawn anything by "give" commands and the level trying to spawn something (does not now).
@@ -434,13 +442,13 @@ if 1, the houndeye uses the same "attack" (charging; jittering) animation and co
 if 2, the houndeye uses the alpha charge-effect's variable time and non-standard "angry idle" animation (tapping a foot rapidly).
 if 3, same as 2 but missing the charge-sound (came this way when uncommented and crudely made to work).
 
-precacheAll - binary, on by default.  Some maps may crash if they already have a lot of stuff precached, where "precacheAll" may just put a little too much in there.
+precacheAll - BOOL, on by default.  Some maps may crash if they already have a lot of stuff precached, where "precacheAll" may just put a little too much in there.
 Note that this is required to be on to spawn NPCs not intended by the map (not at least 1 already there at creation).
 If you encounter a precache error (getting forced back to the main menu with something mentioning precache in console), just restart the game and turn off "precacheAll".
 Try using "precacheAll" on simple maps, like training maps, for the best chances of working and having a good testing sandbox.
 See the "PRECACHE ERROR" for more details.
 
-ospreyIgnoresGruntCount - binary, off by default.  When on, the osprey will bypass its usual check for grunts (not sure how that works), so that, if spawned in unusual maps, it will not despawn in under 2 seconds.  It still won't  fly, as it lacks the flight AI (not sure if spawning in a map with an Osprey would make any difference).
+ospreyIgnoresGruntCount - BOOL, off by default.  When on, the osprey will bypass its usual check for grunts (not sure how that works), so that, if spawned in unusual maps, it will not despawn in under 2 seconds.  It still won't  fly, as it lacks the flight AI (not sure if spawning in a map with an Osprey would make any difference).
 
 barnacleCanGib (0) - BOOL (with modes when on).
 0 - off, retail behavior. Loses collision at death.
@@ -491,10 +499,10 @@ drownDrawPainMode - partially finished mode var (0, 1, 2).  default is 1.
 3 = draw flash and arrows in all directions (also second-ly).
 4 = CUT.  edit water fog color to be tinted red while drowning (NOT DONE, NO EFFECT YET, UNSURE IF EDITING FOG COLOR BY SCRIPT IS POSSIBLE).
 
-playerBrightLight - binary, defaults to 0.  If on, the player generates a lot of light for a fair distance.  Disables flash light while on.  Good for debugging in dark places.
+playerBrightLight - BOOL, defaults to 0.  If on, the player generates a lot of light for a fair distance.  Disables flash light while on.  Good for debugging in dark places.
 
 ////DEPRECATED.  See "sparksExplosionMulti" instead.
-////explosionsHaveSparks - binary (with extra "2").  If on, explosions retain the sparkshowers that spray the area in sparks (but they will still use the new spark particle, the gold gauss-like balls).
+////explosionsHaveSparks - BOOL (with extra "2").  If on, explosions retain the sparkshowers that spray the area in sparks (but they will still use the new spark particle, the gold gauss-like balls).
 ////
 
 WARNING: this makes it very likely to crash the game from too many explosions if you go cheat-crazy!  Set this to "2" to use alternate, cheaper sparks for explosion (1/6 the particlces generated).
@@ -505,7 +513,7 @@ cl_ladder - mode var, (0, 1, 2) - Modes for player ladder movement / view-effect
 1 = alpha ladder sine-movement (slow, then fast to emulate taking steps on a ladder), + view punches, uses retail step sounds.
 2 = same as 1, but replace retail step sounds with player pain grunts.
 
-handGrenadesUseOldBounceSound - binary.  If on, hand greandes use the sounds of the satchel instead (g_bounce) for hitting something.
+handGrenadesUseOldBounceSound - BOOL.  If on, hand greandes use the sounds of the satchel instead (g_bounce) for hitting something.
 
 painArrowColorMode - mode.
 0 = off.
@@ -517,7 +525,7 @@ painArrowColorMode - mode.
 painFlashColorMode - mode.
 ~Same effects from the modes above, but applies to the entire screen flash that plays on taking damage.
 
-cl_explosion - binary.  If on, uses a quake explosion instead of the default one with the sprite, explosion-sound effect, and yellow flickering particles (retail).  The quake one sends shrapnel flying around with the grey-dot particle effect / trail.
+cl_explosion - BOOL.  If on, uses a quake explosion instead of the default one with the sprite, explosion-sound effect, and yellow flickering particles (retail).  The quake one sends shrapnel flying around with the grey-dot particle effect / trail.
 ~see debug vars further below such as "shrapRand" for customizing bits about the quake explosion's shrapnel too.
 
 quakeExplosionSound (2) - modevar (only applies when "cl_explosion" is on, or non-zero)
@@ -530,10 +538,10 @@ explosionDebrisSoundVolume (0.6) - ADJUSTABLE.  This is the volume of the debris
 ~quake explosion sounds (quakeExplosionSound = 1) are relatively quiet, and may compete with debris sounds.
 
 
-disablePainPunchAutomatic - binary.  Turn on to test harsh jump effects without the default "+ 2" punch on the X axis from taking any damage (see only what the drop-script's punch is).
+disablePainPunchAutomatic - BOOL.  Turn on to test harsh jump effects without the default "+ 2" punch on the X axis from taking any damage (see only what the drop-script's punch is).
 ~Can always remove the auto-pain punch for fall-inflicted damage if needed (just trust the drop script in pm_shared handles this).
 
-mp5GrenadeInheritsPlayerVelocity - binary (w/ extra mode).  If on, player-fired mp5s will apply the player's velocity at the tie of firing in addition to their normal launch / throw forward forces.
+mp5GrenadeInheritsPlayerVelocity - BOOL (w/ extra mode).  If on, player-fired mp5s will apply the player's velocity at the tie of firing in addition to their normal launch / throw forward forces.
 ~By default (off), only the forward launch / throw force is used, so moving left / right and firing will mean the projectile won't be moving that much left / right either.
 ~With ANY other number, it will make this the new multiple of the player's speed to use instead!  So, 0.3 means 30% of the player's speed.
 crossbowInheritsPlayerVelocity - applies to the crossbow.
@@ -547,22 +555,22 @@ chumtoadInheritsPlayerVelocity - ADJUSTABLE. What factor of the player's velocit
 
 
 
-pissedNPCs - binary.  Makes the NPCs dialogue replaced with some... interesting things to say.
+pissedNPCs - BOOL.  Makes the NPCs dialogue replaced with some... interesting things to say.
 ~if 2, it just makes a test sound.
 
-announcerIsAJerk - binary. That vox announcer guy? He has it out for Freeman's ass now.
+announcerIsAJerk - BOOL. That vox announcer guy? He has it out for Freeman's ass now.
 
 
-weaponPickupPlaysAnyReloadSounds - binary.  If 1, plays reload sounds "reload#" 1, 2, and 3 at random instead of "9mmclip1".
-weaponSelectUsesReloadSounds - binary.  If 1, moving over weapons in weapon select plays "reload#" 1, 2, 3 at random instead.
+weaponPickupPlaysAnyReloadSounds - BOOL.  If 1, plays reload sounds "reload#" 1, 2, and 3 at random instead of "9mmclip1".
+weaponSelectUsesReloadSounds - BOOL.  If 1, moving over weapons in weapon select plays "reload#" 1, 2, 3 at random instead.
 
-mirrorsReflectOnlyNPCs - binary.  If 1, mirrors only reflect NPCs (generally, living enemies and friendlies).
-mirrorsDoNotReflectPlayer - binary.  If 1, the player (first or third person) is an exception to rendering in the mirror (being shown in the reflection).
+mirrorsReflectOnlyNPCs - BOOL.  If 1, mirrors only reflect NPCs (generally, living enemies and friendlies).
+mirrorsDoNotReflectPlayer - BOOL.  If 1, the player (first or third person) is an exception to rendering in the mirror (being shown in the reflection).
 
-NPCsTalkMore - binary.  If 1, NPCs will be more likely to talk.  Beware that some conditions still prevent talking (hard to say what they are at times).
+NPCsTalkMore - BOOL.  If 1, NPCs will be more likely to talk.  Beware that some conditions still prevent talking (hard to say what they are at times).
 
 
-nothingHurts - binary (w/ extra mode).  If 1, most things (including the player) can't damage anything else, assuming they deal damage through the usual "takeDamage" method applied to the receiver.
+nothingHurts - BOOL (w/ extra mode).  If 1, most things (including the player) can't damage anything else, assuming they deal damage through the usual "takeDamage" method applied to the receiver.
 ~if 2, enemies (NPCs) still can't damage each other or the player, but the player can damage them back.  Use to conveniently pick-off NPCs in "no-target" observation.
 
 
@@ -940,7 +948,7 @@ hassaultExtraMuzzleFlashBrightness (0.78) - scale of 0 to 1.
 hassaultExtraMuzzleFlashForward (4.6) - how far forwards (gun-direction) to move the flash in units.
 
 playerReviveInvincibilityTime (1.6) - the player can be invincible for # seconds long following an adrenaline revive, taking no damage (or at least being unkillable).
-playerReviveBuddhaMode (1) - when 1, the player gets "Buddha" mode instead of blocking damage during the post-revive delay above.  That means damage is still taken, but the player will have at most 1 hit point no matter what.
+playerReviveBuddhaMode (1) - when 1, the player gets "Buddha" mode instead of blocking damage during the post-revive delay above. That means damage is still taken, but the player will have at most 1 hit point no matter what.
 
 playerReviveTimeBlocksTimedDamage (1) - MODE VAR.
 0: timed damage can still be initiated during the post-revive-delay, but still won't do harm until the post-revive-delay is over.
@@ -1041,7 +1049,7 @@ bullsquidSpitAlphaScale (0.8) - DISABLED, NOT WORKING - the scale to apply to th
 ----------------------------------------------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------------------------------------
 
-
+holsterAnims (1) - whether the player plays holster animations for unloading the current weapon before picking the selected one on changing weapons.
 
 
 friendlyPianoFollowVolume (0.7) - ADJUSTABLE. Volume to play the Mr. Friendly's piano music while following the player. 0 mutes.
@@ -1062,7 +1070,7 @@ playerFollowerMax (2) - ADJUSTABLE. How many friendly NPC's can follow the playe
 scientistBravery (1) - lets scientists "fend for themselves" with a weak punch attack as a last resort, if "1".
 
 barneyUnholsterTime (18) - how many seconds a Barney must be idle (combat-wise) before undrawing the weapon.  Cannot undraw if following the player (actively following).
-~  -1 makes Barney never unholster like in retail.  0 is unholster ASAP (not following; nothing else on the mind, still)
+~  -1 makes Barney never unholster like in retail.  0 is unholster ASAP (not following)
 
 barneyUnholsterAnimChoice (1) - whether to use the sequence named "disarm" or unholstering or just use a reversed "draw" anim (pulling the pistol out),  slightly slowed down.
 
