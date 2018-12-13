@@ -200,6 +200,8 @@ typedef enum
 		TASK_STOP_MOVING,
 		TASK_TURN_LEFT,
 		TASK_TURN_RIGHT,
+		TASK_TURN_LEFT_FORCE_ACT,  //MODDD
+		TASK_TURN_RIGHT_FORCE_ACT, //MODDD
 		TASK_REMEMBER,
 		TASK_FORGET,
 		TASK_WAIT_FOR_MOVEMENT,			// wait until MovementIsComplete()
@@ -211,6 +213,7 @@ typedef enum
 
 		TASK_SET_SEQUENCE_BY_NUMBER,   //set the sequence by its index in the monster's model (#0, #1, #2, ... #64, etc.)
 		TASK_WAIT_FOR_SEQUENCEFINISH,
+		TASK_RESTORE_FRAMERATE,
 
 		//MODDD - important complement to "TASK_MOVE_TO_TARGET_RANGE" without a target entity in mind. Just a position (m_vecGoalPos or something)
 		TASK_MOVE_TO_POINT_RANGE,

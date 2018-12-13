@@ -515,7 +515,11 @@ float g_flWeaponCheat;
 
 CWorld::CWorld(void){
 
-	int x = 4;
+	//If never specified, the defaults remain as such.  They are to be applied on restoring.
+	m_fl_node_linktest_height = 8;
+	m_fl_node_hulltest_height = 8;
+	m_f_node_hulltest_heightswap = FALSE;
+
 
 }//END OF CWorld constructor
 
@@ -528,6 +532,10 @@ extern void updateCVarRefs(const Vector* arg_suggestedOrigin);
 
 void CWorld :: Spawn( void )
 {
+
+	applyCustomMapSettings();
+
+
 	
 	//screw this, no good.
 	//SetThink(&CWorld::WorldThink );
@@ -789,21 +797,20 @@ void CWorld :: KeyValue( KeyValueData *pkvd )
 	//MODDD - new to be set by the map potentially.
 	if ( FStrEq(pkvd->szKeyName, "node_linktest_height") )
 	{
-		node_linktest_height = (float)atof(pkvd->szValue);
+		m_fl_node_linktest_height = (float)atof(pkvd->szValue);
 		pkvd->fHandled = TRUE;
 	}
 	if ( FStrEq(pkvd->szKeyName, "node_hulltest_height") )
 	{
-		node_hulltest_height = (float)atof(pkvd->szValue);
+		m_fl_node_hulltest_height = (float)atof(pkvd->szValue);
 		pkvd->fHandled = TRUE;
 	}
 	if ( FStrEq(pkvd->szKeyName, "node_hulltest_heightswap") )
 	{
-		node_hulltest_heightswap = atoi(pkvd->szValue);
+		m_f_node_hulltest_heightswap = atoi(pkvd->szValue);
 		pkvd->fHandled = TRUE;
 	}
-
-
+	
 
 
 	if ( FStrEq(pkvd->szKeyName, "skyname") )
@@ -914,35 +921,40 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CWorld){
 
 
 
-/*
 TYPEDESCRIPTION	CWorld::m_SaveData[] = 
 {
-	//DEFINE_FIELD( CFriendly, m_fPissedAtPlayer, FIELD_BOOLEAN ),
-	//DEFINE_FIELD( CFriendly, m_fPissedAtPlayerAlly, FIELD_BOOLEAN ),
-	//DEFINE_FIELD( CFriendly, m_fPissedAtHumanMilitary, FIELD_BOOLEAN ),
+	DEFINE_FIELD( CWorld, m_fl_node_linktest_height, FIELD_FLOAT ),
+	DEFINE_FIELD( CWorld, m_fl_node_hulltest_height, FIELD_FLOAT ),
+	DEFINE_FIELD( CWorld, m_f_node_hulltest_heightswap, FIELD_BOOLEAN ),
 	
 };
-*/
 
-/*
-//IMPLEMENT_SAVERESTORE( CFriendly, CBaseMonster );
+
+
+//IMPLEMENT_SAVERESTORE( CWorld, CBaseEntity );
 int CWorld::Save( CSave &save )
 {
 	if ( !CBaseEntity::Save(save) )
 		return 0;
-	//return save.WriteFields( "CFriendly", this, m_SaveData, ARRAYSIZE(CBaseEntity::m_SaveData) );
-	return save.WriteFields( "CWorld", this, m_SaveData, 0 );
+
+	int saveFieldResult = save.WriteFields( "CWorld", this, m_SaveData, ARRAYSIZE(CWorld::m_SaveData) );
+
+
+	return saveFieldResult;
 }
 int CWorld::Restore( CRestore &restore )
 {
-	easyForcePrintLine("I AM SUPER GAY");
 
 	if ( !CBaseEntity::Restore(restore) )
 		return 0;
-	//int readFieldsResult = restore.ReadFields( "CFriendly", this, m_SaveData, ARRAYSIZE(CBaseEntity::m_SaveData) );
-	int readFieldsResult = restore.ReadFields( "CWorld", this, m_SaveData, 0 );
+
+	int readFieldsResult = restore.ReadFields( "CWorld", this, m_SaveData, ARRAYSIZE(CWorld::m_SaveData) );
 	
-	easyForcePrintLine("I AM SUPER GAYIAN");
+
+	//Plug in what I loaded:
+	applyCustomMapSettings();
+
+
 
 	//no good.
 	//SetThink(&CWorld::WorldThink );
@@ -950,7 +962,7 @@ int CWorld::Restore( CRestore &restore )
 
 	return readFieldsResult;
 }
-*/
+
 
 
 /*
@@ -967,6 +979,23 @@ void CWorld::WorldThink(void){
 	//CBaseEntity::Think();
 }//END OF WorldThink
 */
+
+
+
+//MODDD - load new settings / variables / config / whatever saved per map so that it may take effect if necessary.
+//For instance, nodes don't know how to access the map so these global "node_" variables can be modified on loading a new map or restoring an existing
+//so that the values at the time of that map's creation per the user's save file are used.
+void CWorld::applyCustomMapSettings(void){
+	
+	//Clearly these need to take effect.
+	node_linktest_height = m_fl_node_linktest_height;
+	node_hulltest_height = m_fl_node_hulltest_height;
+	node_hulltest_heightswap = m_f_node_hulltest_heightswap;
+}//END Of applyCustomMapSettings
+
+
+
+
 
 
 

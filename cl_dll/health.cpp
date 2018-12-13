@@ -985,7 +985,6 @@ int CHudHealth::DrawPain(float flTime)
 //MODDD - method added so that any changes to health-related colors across the program are consistent.
 void CHudHealth::deriveColorFromHealth(int &r, int &g, int &b, int &a){
 	
-	
 	if(global2_hud_version == 0){
 		//NOTICE: not involving the "a" value (for scaling colors) in Pre E3.
 		
@@ -993,21 +992,17 @@ void CHudHealth::deriveColorFromHealth(int &r, int &g, int &b, int &a){
 
 		//At full health, how red is it? Adds a tiny bit of yellow alongside the bright green.
 		
-		
-		
 		//const float fullRedMin = 20;
 		//const float brightness = (float)COLOR_PRE_E3_BRIGHTNESS;
 
 		//At what point is the GUI going from green to yellow? Measure of health (0 - 100)
 		//const float yellowMark = 70 + fullRedMin;
 
-		
-		float fullRedMin = EASY_CVAR_GET(healthcolor_fullRedMin);
-		float brightness = EASY_CVAR_GET(healthcolor_brightness);
-		float yellowMark = EASY_CVAR_GET(healthcolor_yellowMark);
+		const float fullRedMin = EASY_CVAR_GET(healthcolor_fullRedMin);
+		const float brightness = EASY_CVAR_GET(healthcolor_brightness);
+		const float yellowMark = EASY_CVAR_GET(healthcolor_yellowMark);
 
 
-	
 		if(m_iHealth >= yellowMark){
 			//r = (int) (( ( -m_iHealth +yellowMark+100  ) /((float)yellowMark)) *175 );
 			r = (int) (( ( -m_iHealth + fullRedMin + 100  ) /((float) (100.0 + fullRedMin - yellowMark) )) *brightness );
@@ -1038,9 +1033,9 @@ void CHudHealth::deriveColorFromHealth(int &r, int &g, int &b, int &a){
 		GetPainColor( r, g, b );
 		ScaleColors(r, g, b, a );
 
-
 	}
-}
+
+}//END OF deriveColorFromHealth
 
 
 
@@ -1053,15 +1048,14 @@ void CHudHealth::deriveColorFromHealth(int &r, int &g, int &b){
 	if(global2_hud_version == 0){
 		//NOTICE: not involving the "a" value (for scaling colors) in Pre E3.
 		
-		//How bright can all of the color components (r, g, b) potentially be?  (0 - 255)
-		const int brightness = COLOR_PRE_E3_BRIGHTNESS;
+		const float fullRedMin = EASY_CVAR_GET(healthcolor_fullRedMin);
+		const float brightness = EASY_CVAR_GET(healthcolor_brightness);
+		const float yellowMark = EASY_CVAR_GET(healthcolor_yellowMark);
 
-		//At what point is the GUI going from green to yellow? Measure of health (0 - 100)
-		const int yellowMark = 70;
-	
+
 		if(m_iHealth >= yellowMark){
 			//r = (int) (( ( -m_iHealth +yellowMark+100  ) /((float)yellowMark)) *175 );
-			r = (int) (( ( -m_iHealth +100  ) /((float) (100-yellowMark) )) *brightness );
+			r = (int) (( ( -m_iHealth + fullRedMin + 100  ) /((float) (100.0 + fullRedMin - yellowMark) )) *brightness );
 			g = brightness;
 			b = 5;
 		}else{

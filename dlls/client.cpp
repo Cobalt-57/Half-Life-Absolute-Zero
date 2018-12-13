@@ -1987,20 +1987,6 @@ void ClientCommand( edict_t *pEntity )
 				}
 
 				tempMon->startReanimation();
-				//tempMon->pev->framerate = -1;
-				//tempMon->ResetSequenceInfo();
-				//tempMon->pev->health = 666;
-
-				//easyForcePrintLine("FUCK YOU MOTHERFUCKER %d", oldSeq);
-				/*
-			
-				tempMon->m_flFramerateSuggestion = -1;
-				tempMon->pev->framerate = -1;
-				tempMon->pev->sequence = oldSeq;
-				tempMon->pev->frame = 255;
-				tempMon->m_fSequenceFinished = FALSE;
-				//tempMon->resetFrame();
-				*/
 
 			}else{
 				easyForcePrintLine("ERROR: Could not find an entity / monster in crosshairs.");

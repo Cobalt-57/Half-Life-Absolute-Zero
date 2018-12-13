@@ -513,7 +513,9 @@ public:
 	virtual BOOL violentDeathAllowed(void);
 	virtual int LookupViolentDeathSequence(void);
 	virtual BOOL violentDeathClear(void);
-
+	
+	void lookAtEnemyLKP(void);
+	void predictActRepeat(int arg_bits_cond);
 
 
 	virtual BOOL getGermanModelRequirement(void);
@@ -957,6 +959,7 @@ public:
 	int FindHintNode ( void );
 	virtual BOOL FCanActiveIdle ( void );
 	virtual void SetTurnActivity ( void );
+	virtual void SetTurnActivityForceAct(void);
 	float FLSoundVolume ( CSound *pSound );
 
 	BOOL MoveToNode( Activity movementAct, float waitTime, const Vector &goal );
@@ -1063,6 +1066,8 @@ public:
 
 	virtual	Vector GetGunPosition( void );
 	virtual Vector GetGunPositionAI(void);
+
+	virtual void lookAtEnemy_pitch(void);
 
 	virtual int TakeHealth( float flHealth, int bitsDamageType );
 	

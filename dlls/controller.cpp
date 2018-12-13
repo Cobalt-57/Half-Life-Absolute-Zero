@@ -41,7 +41,7 @@ EASY_CVAR_EXTERN(animationFramerateMulti)
 
 //Sequences, in the order they appear in the model. Some sequences have the same display name and so should just
 //be referenced by order (numbered index).
-enum floater_sequence{  //key: frames, FPS
+enum controller_sequence{  //key: frames, FPS
 	SEQ_CONTROLLER_ATTACK1,
 	SEQ_CONTROLLER_ATTACK2,
 	SEQ_CONTROLLER_THROW,

@@ -204,6 +204,7 @@ public:
 	BOOL violentDeathAllowed(void);
 	BOOL violentDeathClear(void);
 
+	void onDelete(void);
 
 
 
@@ -1355,7 +1356,7 @@ void CISlave :: StartTask ( Task_t *pTask )
 		//????
 
 	break;
-	case TASK_ISLAVE_SET_REVIVE_SELF_SEQUENCE:
+	case TASK_ISLAVE_SET_REVIVE_SELF_SEQUENCE:{
 		
 		//0 = dieheadshot-RES
 		//1 = diesimple-RES
@@ -1364,6 +1365,8 @@ void CISlave :: StartTask ( Task_t *pTask )
 
 		//wait.. why do we always say "backwards"?  At least I do.  oh well.
 
+		//???????????
+		int testa = LookupSequence("dieforward");
 
 		//pick a revive anim based on how I died.
 		if(pev->sequence == LookupSequence("dieheadshot")){
@@ -1374,6 +1377,10 @@ void CISlave :: StartTask ( Task_t *pTask )
 			this->SetSequenceByName("diebackward-RES");
 		}else if(pev->sequence == LookupSequence("dieforward")){
 			this->SetSequenceByName("dieforward-RES");
+		}else if(pev->sequence == 27){
+			//the DIE_VIOLENT one?  Just play this in reverse and restore the framerate.
+			this->SetSequenceByIndex(pev->sequence, -1, FALSE);
+			ChangeSchedule(slWaitForReviveSequence);
 		}
 
 		//ResetSequenceInfo();
@@ -1384,7 +1391,7 @@ void CISlave :: StartTask ( Task_t *pTask )
 
 
 
-	break;
+	break;}
 	case TASK_ISLAVE_SET_REVIVE_SEQUENCE:
 		//ok.
 		
@@ -1464,6 +1471,12 @@ void CISlave::EndOfRevive(int preReviveSequence){
 
 
 	
+	m_IdealMonsterState	= MONSTERSTATE_ALERT;// Assume monster will be alert, having come back from the dead and all.
+	m_MonsterState = MONSTERSTATE_ALERT; //!!!
+
+	m_IdealActivity = ACT_IDLE;
+	m_Activity = ACT_IDLE; //!!! No sequence changing, force the activity to this now.
+
 	
 	//CBaseMonster::startReanimation();
 	ChangeSchedule(slISlaveReviveSelf );
@@ -2471,4 +2484,17 @@ BOOL CISlave::violentDeathClear(void){
 
 	return FALSE;
 }//END OF violentDeathAllowed
+
+
+void CISlave::onDelete(void){
+	//If suddenly removed, clean up my beams if active.
+	ClearBeams();
+}//END OF onDelete
+
+
+
+
+
+
+
 

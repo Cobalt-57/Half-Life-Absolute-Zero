@@ -483,7 +483,8 @@ BOOL CBaseMonster :: BuildNearestRoute ( Vector vecThreat, Vector vecViewOffset,
 //MODDD - also here.  Not sure why it needs to be though.
 BOOL CBaseMonster :: BuildNearestRouteSimple( Vector vecThreat, Vector vecViewOffset, float flMinDist, float flMaxDist ) { return FALSE; }
 
-void CBaseMonster::SetTurnActivity(){}
+void CBaseMonster::SetTurnActivity(void){}
+void CBaseMonster::SetTurnActivityForceAct(void){}
 
 CBaseEntity *CBaseMonster :: BestVisibleEnemy ( void ) { return NULL; }
 BOOL CBaseMonster :: FInViewCone ( CBaseEntity *pEntity ) { return FALSE; }
@@ -563,6 +564,7 @@ void CBaseAnimating :: SetBodygroup( int iGroup, int iValue ) { }
 int CBaseAnimating :: GetBodygroup( int iGroup ) { return 0; }
 Vector CBaseMonster :: GetGunPosition( void ) { return g_vecZero; }
 Vector CBaseMonster::GetGunPositionAI(void){return g_vecZero;}
+void CBaseMonster::lookAtEnemy_pitch(void){}
 
 
 

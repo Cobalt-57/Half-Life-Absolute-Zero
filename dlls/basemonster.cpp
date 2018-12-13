@@ -2190,6 +2190,8 @@ BOOL CBaseMonster :: FRouteClear ( void )
 
 //MODDD - new. Clone of FRefreshRoute that better incorporates the method calls done in "CHASE_ENEMY"'s schedule.
 BOOL CBaseMonster::FRefreshRouteChaseEnemySmart(void){
+
+
 	BOOL returnCode;
 
 	
@@ -6293,6 +6295,26 @@ Vector CBaseMonster::GetGunPositionAI(){
 
 
 
+//MODDD - this is commonly used to aim the torso of a monster pitch-wise to look at its enemy.  The model must support this,
+//        and this is assuming blend #0 handles that.
+void CBaseMonster::lookAtEnemy_pitch(void){
+	Vector vecShootDir;
+	Vector angDir;
+	UTIL_MakeVectors(pev->angles);
+	vecShootDir = ShootAtEnemyMod( GetGunPosition() );
+	angDir = UTIL_VecToAngles( vecShootDir );
+	
+	// make angles +-180
+	if (angDir.x > 180){
+		angDir.x = angDir.x - 360;
+	}
+
+	SetBlending( 0, angDir.x );
+}//END OF lookAtEnemy_pitch
+
+
+
+
 
 //=========================================================
 // NODE GRAPH
@@ -6496,7 +6518,6 @@ char* getActivityName(Activity arg_act){
 void CBaseMonster::ReportAIState( void )
 {
 	float currentYaw = UTIL_AngleMod( pev->angles.y );
-
 
 	//this->pev->movetype = MOVETYPE_TOSS;
 	//ClearBits( pev->flags, FL_ONGROUND );
@@ -7720,7 +7741,7 @@ void CBaseMonster::EndOfRevive(int preReviveSequence){
 	pev->sequence = -1; //force reset.
 	SetSequenceByIndex(preReviveSequence, -1, FALSE);
 
-	ChangeSchedule(slWaitForSequence );
+	ChangeSchedule(slWaitForReviveSequence );
 }//END OF EndOfRevive
 
 
@@ -7979,7 +8000,17 @@ BOOL CBaseMonster::violentDeathClear(void){
 	return TRUE;
 }//END OF
 
+void CBaseMonster::lookAtEnemyLKP(void){
+					
+	MakeIdealYaw ( m_vecEnemyLKP );
+	ChangeYaw ( pev->yaw_speed );
+}
 
+void CBaseMonster::predictActRepeat(int arg_bits_cond){
+	if(HasConditions(arg_bits_cond)){
+		m_Activity = ACT_RESET;
+	}
+}
 
 
 

@@ -1468,7 +1468,8 @@ void CStukaBat :: StartTask ( Task_t *pTask )
 
 		CSquadMonster :: StartTask ( pTask );
 		break;
-		//see schedule.cpp for hte originals.
+		//see schedule.cpp for the originals.
+	//OKAY this is horrendous. luckily they are never called. they should at least call the parent,  CSquadMonster::StartTask(pTask)
 	case TASK_FIND_NEAR_NODE_COVER_FROM_ENEMY:
 		{
 			return;

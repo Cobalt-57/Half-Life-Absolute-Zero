@@ -701,6 +701,8 @@ void CBaseMonster :: RunTask ( Task_t *pTask )
 	{
 	case TASK_TURN_RIGHT:
 	case TASK_TURN_LEFT:
+	case TASK_TURN_RIGHT_FORCE_ACT:
+	case TASK_TURN_LEFT_FORCE_ACT:
 		{
 			ChangeYaw( pev->yaw_speed );
 
@@ -1378,43 +1380,54 @@ void CBaseMonster :: RunTask ( Task_t *pTask )
 
 
 	case TASK_RANGE_ATTACK1_NOTURN:
+	case TASK_RANGE_ATTACK2_NOTURN:
 	case TASK_MELEE_ATTACK1_NOTURN:
 	case TASK_MELEE_ATTACK2_NOTURN:
-	case TASK_RANGE_ATTACK2_NOTURN:
 	case TASK_RELOAD_NOTURN:
+	{
+		if ( m_fSequenceFinished )
 		{
-			if ( m_fSequenceFinished )
-			{
-				//MODD - removed, see below.
-				m_Activity = ACT_RESET;
-				TaskComplete();
-			}
-			break;
+			//MODDD - removed, see below.  REtail behavior was ONLY this line
+			//m_Activity = ACT_RESET;
+
+			switch( pTask->iTask ){
+				case TASK_RANGE_ATTACK1:{predictActRepeat(bits_COND_CAN_RANGE_ATTACK1); break;}
+				case TASK_RANGE_ATTACK2:{predictActRepeat(bits_COND_CAN_RANGE_ATTACK2); break;}
+				case TASK_MELEE_ATTACK1:{predictActRepeat(bits_COND_CAN_MELEE_ATTACK1); break;}
+				case TASK_MELEE_ATTACK2:{predictActRepeat(bits_COND_CAN_MELEE_ATTACK2); break;}
+				case TASK_SPECIAL_ATTACK1:{predictActRepeat(bits_COND_SPECIAL1); break;}
+				case TASK_SPECIAL_ATTACK2:{predictActRepeat(bits_COND_SPECIAL2); break;}
+			}//END OF inner switch
+
+			TaskComplete();
 		}
+	break;}
 	case TASK_RANGE_ATTACK1:
+	case TASK_RANGE_ATTACK2:
 	case TASK_MELEE_ATTACK1:
 	case TASK_MELEE_ATTACK2:
-	case TASK_RANGE_ATTACK2:
 	case TASK_SPECIAL_ATTACK1:
 	case TASK_SPECIAL_ATTACK2:
 	case TASK_RELOAD:
-		{
+	{
+		lookAtEnemyLKP();
 
-			//easyPrintLine("????????? %d", m_fSequenceFinished);
+		if ( m_fSequenceFinished ){
+			//MODDD NOTE - BEWARE. This is likely to pick the same range attack activity again if the ideal activity remains that way.
+ 			//m_Activity = ACT_RESET;
 
+			switch( pTask->iTask ){
+				case TASK_RANGE_ATTACK1:{predictActRepeat(bits_COND_CAN_RANGE_ATTACK1); break;}
+				case TASK_RANGE_ATTACK2:{predictActRepeat(bits_COND_CAN_RANGE_ATTACK2); break;}
+				case TASK_MELEE_ATTACK1:{predictActRepeat(bits_COND_CAN_MELEE_ATTACK1); break;}
+				case TASK_MELEE_ATTACK2:{predictActRepeat(bits_COND_CAN_MELEE_ATTACK2); break;}
+				case TASK_SPECIAL_ATTACK1:{predictActRepeat(bits_COND_SPECIAL1); break;}
+				case TASK_SPECIAL_ATTACK2:{predictActRepeat(bits_COND_SPECIAL2); break;}
+			}//END OF inner switch
 
-
-			MakeIdealYaw ( m_vecEnemyLKP );
-			ChangeYaw ( pev->yaw_speed );
-
-			if ( m_fSequenceFinished )
-			{
-				//MODDD NOTE - BEWARE. This is likely to pick the same range attack activity again if the ideal activity remains that way.
- 				m_Activity = ACT_RESET;
-				TaskComplete();
-			}
-			break;
+			TaskComplete();
 		}
+	break;}
 	case TASK_SMALL_FLINCH:
 		{
 			if ( m_fSequenceFinished )
@@ -1453,19 +1466,17 @@ void CBaseMonster :: RunTask ( Task_t *pTask )
 
 	
 	//MODDD - new
-	case TASK_WAIT_FOR_SEQUENCEFINISH:
-		{
+	case TASK_WAIT_FOR_SEQUENCEFINISH:{
 
-			//easyForcePrintLine("!!!!!!!!!!!!!!!!!!!!!!! %d", m_fSequenceFinished);
-			//BEWARE: looping anims may just keep going!  
-			//If necessary, anims could have a separate "loopedOnce" flag to be set when the anim would have usually ended but decided to loop instead, that is read HERE instead.
-			if(m_fSequenceFinished){
-				TaskComplete();
-			}
-
-
-		break;
+		//easyForcePrintLine("!!!!!!!!!!!!!!!!!!!!!!! %d", m_fSequenceFinished);
+		//BEWARE: looping anims may just keep going!  
+		//If necessary, anims could have a separate "loopedOnce" flag to be set when the anim would have usually ended but decided to loop instead, that is read HERE instead.
+		if(m_fSequenceFinished){
+			TaskComplete();
 		}
+
+
+	break;}
 
 
 
@@ -1478,15 +1489,7 @@ void CBaseMonster :: RunTask ( Task_t *pTask )
 // the monster is facing and determines whether or not to
 // select one of the 180 turn animations.
 //=========================================================
-void CBaseMonster :: SetTurnActivity ( void )
-{
-
-
-	if(this->iAmDead == TRUE || !UTIL_IsAliveEntity(this) || deadSetActivityBlock){
-		easyForcePrintLine("!!! SETTURNACTIVITY CALLED WHILE DEAD? BLASPHEMY !!! Printing out my stats...");
-		this->ReportAIState();
-		return;
-	}
+void CBaseMonster :: SetTurnActivity ( void ){
 
 	float flYD;
 	flYD = FlYawDiff();
@@ -1507,13 +1510,35 @@ void CBaseMonster :: SetTurnActivity ( void )
 	}
 
 
-	
 	if(FClassnameIs(pev, "monster_houndeye") && LookupActivity ( ACT_TURN_RIGHT ) == ACTIVITY_NOT_AVAILABLE && LookupActivity ( ACT_TURN_LEFT ) == ACTIVITY_NOT_AVAILABLE ){
 		easyForcePrintLine("HOUNDEYE ISSUE::: SETTURNACTIVITY BETTER BE DOING STUFF...... yawdelta: %.2f resulting act: %d", flYD, m_IdealActivity );
 	}
 
+}//END OF SetTurnActivity
 
-}
+
+//MODDD - same as above but forces the turn activity.
+void CBaseMonster :: SetTurnActivityForceAct ( void ){
+	float flYD;
+	flYD = FlYawDiff();
+
+	if ( flYD <= -45 && LookupActivity ( ACT_TURN_RIGHT ) != ACTIVITY_NOT_AVAILABLE )
+	{// big right turn
+		//m_IdealActivity = ACT_TURN_RIGHT;
+		SetActivity(ACT_TURN_RIGHT);
+	}
+	else if ( flYD > 45 && LookupActivity ( ACT_TURN_LEFT ) != ACTIVITY_NOT_AVAILABLE )
+	{// big left turn
+		//m_IdealActivity = ACT_TURN_LEFT;
+		SetActivity(ACT_TURN_LEFT);
+	}
+
+}//END OF SetTurnActivityForceAct
+
+
+
+
+
 
 //=========================================================
 // Start task - selects the correct activity and performs
@@ -1545,24 +1570,30 @@ void CBaseMonster :: StartTask ( Task_t *pTask )
 
 	switch ( pTask->iTask )
 	{
-	case TASK_TURN_RIGHT:
-		{
+	case TASK_TURN_RIGHT:{
 			float flCurrentYaw;
-			
 			flCurrentYaw = UTIL_AngleMod( pev->angles.y );
 			pev->ideal_yaw = UTIL_AngleMod( flCurrentYaw - pTask->flData );
 			SetTurnActivity();
-			break;
-		}
-	case TASK_TURN_LEFT:
-		{
+	break;}
+	case TASK_TURN_LEFT:{
 			float flCurrentYaw;
-			
 			flCurrentYaw = UTIL_AngleMod( pev->angles.y );
 			pev->ideal_yaw = UTIL_AngleMod( flCurrentYaw + pTask->flData );
 			SetTurnActivity();
-			break;
-		}
+	break;}
+	case TASK_TURN_RIGHT_FORCE_ACT:{
+			float flCurrentYaw;
+			flCurrentYaw = UTIL_AngleMod( pev->angles.y );
+			pev->ideal_yaw = UTIL_AngleMod( flCurrentYaw - pTask->flData );
+			SetTurnActivityForceAct();
+	break;}
+	case TASK_TURN_LEFT_FORCE_ACT:{
+			float flCurrentYaw;
+			flCurrentYaw = UTIL_AngleMod( pev->angles.y );
+			pev->ideal_yaw = UTIL_AngleMod( flCurrentYaw + pTask->flData );
+			SetTurnActivityForceAct();
+	break;}
 	case TASK_REMEMBER:
 		{
 			Remember ( (int)pTask->flData );
@@ -2198,7 +2229,12 @@ void CBaseMonster :: StartTask ( Task_t *pTask )
 			//pev->frame = 0;
 			*/
 			m_IdealActivity = ACT_RANGE_ATTACK1;
-			
+			//m_Activity = ACT_RESET;
+			//SetActivity(ACT_RANGE_ATTACK1);
+
+
+			//int derp = this->m_fSequenceLoops;
+			//int x;
 
 			//TEST...
 			//SetActivity(ACT_RANGE_ATTACK1);
@@ -2223,6 +2259,10 @@ void CBaseMonster :: StartTask ( Task_t *pTask )
 			//pev->frame = 0;
 
 			m_IdealActivity = ACT_RANGE_ATTACK2;
+			//m_Activity = ACT_RESET;
+			//SetActivity(ACT_RANGE_ATTACK2);
+
+
 			//this->signalActivityUpdate = TRUE;
 			break;
 		}
@@ -2463,6 +2503,10 @@ case TASK_GET_PATH_TO_BESTSCENT:
 		}
 	case TASK_RUN_PATH:
 		{
+			//MODDD SUGGESTION - would it be a good idea to clear "m_flMoveWaitFinished" here too?
+			//                   Or really in any path generation or RouteClear?
+			m_flMoveWaitFinished = gpGlobals->time;
+
 			// UNDONE: This is in some default AI and some monsters can't run? -- walk instead?
 			if ( LookupActivity( ACT_RUN ) != ACTIVITY_NOT_AVAILABLE )
 			{
@@ -2838,10 +2882,16 @@ case TASK_GET_PATH_TO_BESTSCENT:
 			TaskFail();
 		}
 	break;
-  
-  
+	case TASK_RESTORE_FRAMERATE:{
+		pev->framerate = 1;
+		m_flFramerateSuggestion = 1;
 
+		//pick anything else, please.
+		m_Activity = ACT_RESET;
+		m_IdealActivity = ACT_RESET;
 
+		TaskComplete();
+	break;}
 
 
 

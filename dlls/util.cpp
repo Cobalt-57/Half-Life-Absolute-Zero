@@ -8047,10 +8047,7 @@ void OnBeforeChangeLevelTransition(){
 //to be the earliest possible until this was found.
 void OnMapLoadPreStart(){
 	
-	//Must reset these to defaults in case of changing the map.
-	node_linktest_height = 8;
-	node_hulltest_height = 8;
-	node_hulltest_heightswap = FALSE;
+
 }
 
 

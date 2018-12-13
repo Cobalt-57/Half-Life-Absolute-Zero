@@ -127,6 +127,7 @@ public:
 	BOOL CheckMeleeAttack1 ( float flDot, float flDist );
 	BOOL CheckRangeAttack1 ( float flDot, float flDist );
 	void StartTask ( Task_t *pTask );
+	void RunTask( Task_t* pTask );  //MODDD - new
 	void AlertSound( void );
 	void DeathSound ( void );
 	void PainSound ( void );
@@ -1800,6 +1801,28 @@ void CAGrunt :: StartTask ( Task_t *pTask )
 	}
 }
 
+
+
+
+
+void CAGrunt::RunTask( Task_t* pTask ){
+	
+	switch( pTask->iTask ){
+		case TASK_RANGE_ATTACK1:{
+			lookAtEnemy_pitch();
+			CSquadMonster::RunTask(pTask);
+		break;}
+		default:{
+			CSquadMonster::RunTask(pTask);
+		break;}
+	}//END OF switch
+
+}//END OF RunTask
+
+
+
+
+
 //=========================================================
 // GetSchedule - Decides which type of schedule best suits
 // the monster's current state and conditions. Then calls
@@ -1981,6 +2004,11 @@ BOOL CAGrunt::canResetBlend0(void){
 BOOL CAGrunt::onResetBlend0(void){
 	//add something?
 	
+
+	
+	lookAtEnemy_pitch();
+	/*
+	//MODDD - REPLACED. This should do it fine.
 	Vector vecDirToEnemy;
 	Vector angDir;
 
@@ -2008,6 +2036,7 @@ BOOL CAGrunt::onResetBlend0(void){
 	}
 	//easyForcePrintLine("YOU GOON %d ::: %.2f", HasConditions( bits_COND_SEE_ENEMY), angDir.x );
 	SetBlending( 0, angDir.x );
+	*/
 
 
 	return TRUE;
@@ -2343,7 +2372,6 @@ void CAGrunt::ReportAIState(void){
 
 
 
-//(-17.14, -39.45, 46.50)
 Vector CAGrunt::GetGunPosition(void){
 	//maybe this would be better?
 	Vector vecGunPos;
@@ -2358,7 +2386,7 @@ Vector CAGrunt::GetGunPosition(void){
 Vector CAGrunt::GetGunPositionAI(void){
 	////Clone of GetGunPosition from monsters.cpp. The GetGunPositionAI method of CBaseMonster would have called Monster's GetGunPosition, but we've made ours more specific.
 	return CBaseMonster::GetGunPosition();
-	////CHANGED.
+	////CHANGED.  Just using the hacked position to determine this.
 
 
 	/*

@@ -1147,14 +1147,22 @@ public:
 	GENERATE_TRACEATTACK_PROTOTYPE_VIRTUAL
 	GENERATE_TAKEDAMAGE_PROTOTYPE_VIRTUAL
 
-	/*
+	
 	//////////////////////////////////////////////////////////////////////////////////
-	//static TYPEDESCRIPTION m_SaveData[];
+	static TYPEDESCRIPTION m_SaveData[];
 	virtual int Save( CSave &save ); 
 	virtual int Restore( CRestore &restore );
 	//////////////////////////////////////////////////////////////////////////////////
-	void EXPORT WorldThink( void );
-	*/
+	//void EXPORT WorldThink( void );
+
+	void applyCustomMapSettings(void);
+
+
+	
+	//Must reset these to defaults in case of changing the map.
+	float m_fl_node_linktest_height;
+	float m_fl_node_hulltest_height;
+	BOOL m_f_node_hulltest_heightswap;
 
 	BOOL IsWorld(void);
 	BOOL IsWorldAffiliated(void);

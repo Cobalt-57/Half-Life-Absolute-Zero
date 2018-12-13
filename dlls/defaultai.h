@@ -16,6 +16,7 @@
 #define DEFAULTAI_H
 
 extern Schedule_t slWaitForSequence[];
+extern Schedule_t slWaitForReviveSequence[];
 
 //=========================================================
 // Failed

@@ -97,9 +97,15 @@ EASY_CVAR_EXTERN(hgruntAllowGrenades)
 
 
 
+extern Schedule_t slGruntSweep[];
+
+
+
+
+
 //sequences in the model. Some sequences have the same display name and so should just be referenced by order
 //(numbered index).
-enum floater_sequence{  //key: frames, FPS
+enum hgrunt_sequence{  //key: frames, FPS
 	SEQ_HGRUNT_WALK1,
 	SEQ_HGRUNT_WALK2,
 	SEQ_HGRUNT_RUN,
@@ -1934,14 +1940,16 @@ void CHGrunt :: Shoot ( void )
 	m_cAmmoLoaded--;// take away a bullet!
 
 
-	
+	/*
+	//MODDD - no, handle this any frame while firing instead.
 	//MODDD - look more consistently when aiming.
 	Vector vecShootDirMod = ShootAtEnemyMod( vecShootOrigin);
 
 	Vector angDir = UTIL_VecToAngles( vecShootDirMod );
-	//easyForcePrintLine("YOU BLASTARD %.2f", angDir.x);
 	SetBlending( 0, angDir.x );
+	*/
 }
+
 
 //=========================================================
 // Shoot
@@ -1972,8 +1980,8 @@ void CHGrunt :: Shotgun ( void )
 
 	m_cAmmoLoaded--;// take away a bullet!
 
-	Vector angDir = UTIL_VecToAngles( vecShootDir );
-	SetBlending( 0, angDir.x );
+	//Vector angDir = UTIL_VecToAngles( vecShootDir );
+	//SetBlending( 0, angDir.x );
 
 #endif
 
@@ -3320,8 +3328,15 @@ int CHGrunt::LookupActivityHard(int activity){
 	//easyForcePrintLine("LookupActivityHard: %d", activity);
 
 	switch(activity){
-
-
+		
+		case ACT_TURN_RIGHT:
+		case ACT_TURN_LEFT:
+		{
+			if(m_pSchedule == slGruntSweep){
+				//turn slower.
+				m_flFramerateSuggestion = 0.92;
+			}
+		break;}
 		
 		case ACT_STRAFE_LEFT:
 		case ACT_STRAFE_RIGHT:
@@ -3599,6 +3614,16 @@ void CHGrunt :: RunTask ( Task_t *pTask )
 
 	switch ( pTask->iTask )
 	{
+
+
+	//can't hurt doing either?
+	case TASK_RANGE_ATTACK1:
+	case TASK_PLAY_SEQUENCE_FACE_ENEMY:
+	{
+
+		lookAtEnemy_pitch();
+		CSquadMonster::RunTask(pTask);
+	break;}
 	case TASK_WAIT_FOR_MOVEMENT:
 		
 
@@ -3889,7 +3914,11 @@ Task_t tlGruntEstablishLineOfFire[] =
 	{ TASK_GRUNT_SPEAK_SENTENCE,(float)0						},
 	{ TASK_RUN_PATH,			(float)0						},
 	{ TASK_WAIT_FOR_MOVEMENT,	(float)0						},
-	{ TASK_CHECK_STUMPED,	(float)0						},
+
+	//MODDD - extra step.
+	//{ TASK_CHECK_STUMPED,	(float)0						},
+	//Actually no. If we get to the goal and don't see the enemy, do a sweep first. Seeing them will interrupt the sweep.
+	{ TASK_SET_SCHEDULE,			(float)SCHED_GRUNT_SWEEP	},
 };
 
 Schedule_t slGruntEstablishLineOfFire[] =
@@ -3945,7 +3974,8 @@ Task_t	tlGruntCombatFace1[] =
 	{ TASK_STOP_MOVING,				0							},
 	{ TASK_SET_ACTIVITY,			(float)ACT_IDLE				},
 	{ TASK_FACE_ENEMY,				(float)0					},
-	{ TASK_WAIT,					(float)1.5					},
+	//MODDD - now faces the enemy instead, good to keep up to date during this waiting time.
+	{ TASK_WAIT_FACE_ENEMY,					(float)1.5					},
 	{ TASK_SET_SCHEDULE,			(float)SCHED_GRUNT_SWEEP	},
 };
 
@@ -3959,7 +3989,8 @@ Schedule_t	slGruntCombatFace[] =
 		bits_COND_CAN_RANGE_ATTACK1		|
 		bits_COND_CAN_RANGE_ATTACK2,
 		0,
-		"Combat Face"
+		//MODDD - why named so generic? "Combat Face"? what?
+		"hgrunt Combat Face"
 	},
 };
 
@@ -4107,10 +4138,25 @@ Schedule_t	slGruntTakeCover[] =
 Task_t	tlGruntGrenadeCover1[] =
 {
 	{ TASK_STOP_MOVING,						(float)0							},
-	{ TASK_FIND_COVER_FROM_ENEMY,			(float)99							},
+
+	//MODDD - bug in the base game found? Holy moly.
+	//        This isn't a minimum or maximum distance, this ends up setting m_flMoveWaitFinished, a time typically used
+	//        to deny movement such as waiting for a door to open.  So this makes the HGrunt want to stand still for 99 seconds
+	//        next time if it is not cleared between then.  Don't look at me.
+	//        And see the TASK_CLEAR_MOVE_WAIT below? That resets m_flMoveWaitFinished.
+	//        But I bet it got interrupted if this schedule were to fail... even though it has no fail conditions?
+	//        It doesn't make failure completely impossible though. Other tasks like TASK_FIND_FAR_NODE_COVER_FROM_ENEMY
+	//        could very well fail and leave the m_flMoveWaitFinished uncleared to perma-pause whatever future schedule 
+	//        calls "Move" in monster. I don't see what the purpose of settting m_flMoveWaitFinished was to begin with.
+	//        And the cherry on top? HGrunt is the only one, and in this one schedule, the only ever use of "TASK_CLEAR_MOVE_WAIT".
+	//        So nowhere else even manipulates m_flMoveWaitFinshed by schedule like this, at least not so drastically (99 seconds).
+	//        More importantly, this is the only place TASK_FIND_COVER_FROM_ENEMY gets a non-zero extra float parameter at all.
+	//{ TASK_FIND_COVER_FROM_ENEMY,			(float)99							},
+	{ TASK_FIND_COVER_FROM_ENEMY,			(float)0							},
+
 	{ TASK_FIND_FAR_NODE_COVER_FROM_ENEMY,	(float)384							},
 	{ TASK_PLAY_SEQUENCE,					(float)ACT_SPECIAL_ATTACK1			},
-	{ TASK_CLEAR_MOVE_WAIT,					(float)0							},
+	//MODDD - unnecessary now.{ TASK_CLEAR_MOVE_WAIT,					(float)0							},
 	{ TASK_RUN_PATH,						(float)0							},
 	{ TASK_WAIT_FOR_MOVEMENT,				(float)0							},
 	//MODDD NOTE - not a "TAKE_COVER_FROM_SOUND" or from origin since we've... dropped a live grenade?
@@ -4205,15 +4251,33 @@ Schedule_t slGruntHideReload[] =
 	}
 };
 
+
+
 //=========================================================
 // Do a turning sweep of the area
 //=========================================================
+//MODDD NOTICE - the end of this may be a good place for a TASK_CHECK_STUMPED.  But be careful.
 Task_t	tlGruntSweep[] =
 {
+
+	/*
+	//ACTUALLY changed a little more. Now looks +- 90 degrees instead.
 	{ TASK_TURN_LEFT,			(float)179	},
 	{ TASK_WAIT,				(float)1	},
 	{ TASK_TURN_LEFT,			(float)179	},
 	{ TASK_WAIT,				(float)1	},
+	*/
+
+	
+	{ TASK_TURN_LEFT_FORCE_ACT,			(float)89	},
+	{ TASK_WAIT,				(float)1.5	},
+	{ TASK_TURN_RIGHT_FORCE_ACT,			(float)179	},
+	{ TASK_WAIT,				(float)1.5	},
+	{ TASK_TURN_LEFT_FORCE_ACT,			(float)90	},
+	{ TASK_WAIT,				(float)1.0	},
+	
+	//MODDD - now see if re-routing is necessary, perhaps after staring into space for a little.
+	{ TASK_CHECK_STUMPED,	(float)0						},
 };
 
 Schedule_t	slGruntSweep[] =
@@ -5429,6 +5493,10 @@ BOOL CHGrunt::canResetBlend0(){
 
 BOOL CHGrunt::onResetBlend0(void){
 
+	lookAtEnemy_pitch();
+	return TRUE;
+
+	/*
 	//easyForcePrintLine("HOW IT GO   %d", (m_hEnemy!=NULL));
 	if (m_hEnemy == NULL)
 	{
@@ -5446,6 +5514,7 @@ BOOL CHGrunt::onResetBlend0(void){
 	SetBlending( 0, angDir.x );
 
 	return TRUE;
+	*/
 }
 
 

@@ -49,6 +49,26 @@ Schedule_t	slWaitForSequence[] =
 	},
 };
 
+//Same as above but sets pev->framerate and m_flFramerateSuggestion to 1 when done for safety.
+Task_t tlWaitForReviveSequence[] =
+{
+	{ TASK_WAIT_FOR_SEQUENCEFINISH,	(float)0				},
+	{ TASK_RESTORE_FRAMERATE,	(float)0				},
+};
+Schedule_t	slWaitForReviveSequence[] =
+{
+	{ 
+		tlWaitForReviveSequence,
+		ARRAYSIZE ( tlWaitForReviveSequence ), 
+		//BITS_COND... (fill-inable)
+		0,
+		
+		//bis_sound_... (fill-inable)
+		0,
+		"WaitForReviveSequence"
+	},
+};
+
 
 
 
@@ -1925,6 +1945,7 @@ Schedule_t *CBaseMonster::m_scheduleList[] =
 	//MODDD - additions
 	slFailQuick,
 	slWaitForSequence,
+	slWaitForReviveSequence,
 	slAnimationSmart,
 	slAnimationSmartAndStop,
 	slInvestigateSoundBait,
