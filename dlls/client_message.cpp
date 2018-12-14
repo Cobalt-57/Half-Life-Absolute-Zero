@@ -33,7 +33,6 @@ int gmsgDamage = 0;
 int gmsgBattery = 0;
 
 //MODDD - new event
-int gmsgTester = 0;
 int gmsgAntidoteP = 0;
 int gmsgAdrenalineP = 0;
 int gmsgRadiationP = 0;
@@ -142,7 +141,6 @@ void LinkUserMessages( void )
 
 
 	//MODDD
-	gmsgTester = REG_USER_MSG("Tester", 2);
 	gmsgAntidoteP = REG_USER_MSG( "AntidoteP", 2);
 	gmsgAdrenalineP = REG_USER_MSG( "AdrenalineP", 2);
 	gmsgRadiationP = REG_USER_MSG( "RadiationP", 2);

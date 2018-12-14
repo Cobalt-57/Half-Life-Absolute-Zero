@@ -304,7 +304,6 @@ public:
 	int VidInit( void );
 	int Draw(float flTime);
 	int MsgFunc_Battery(const char *pszName,  int iSize, void *pbuf );
-	int MsgFunc_Tester(const char *pszName,  int iSize, void *pbuf );
 
 
 private:
@@ -560,6 +559,8 @@ public:
 
 	void drawPartialFromLeft(const SpriteHandle_t & arg_sprite, const wrect_t* arg_rect, const float arg_portion, const int & x, const int & y,  int & r, int & g, int & b);
 	void drawPartialFromLeft(const SpriteHandle_t & arg_sprite, const wrect_t* arg_rect, const float arg_portion, const int & x, const int & y,  int & r, int & g, int & b, const int& canDrawBrokenTrans);
+	void drawPartialFromRight(const SpriteHandle_t & arg_sprite, const wrect_t* arg_rect, const float arg_portion, const int & x, const int & y,  int & r, int & g, int & b);
+	void drawPartialFromRight(const SpriteHandle_t & arg_sprite, const wrect_t* arg_rect, const float arg_portion, const int & x, const int & y,  int & r, int & g, int & b, const int& canDrawBrokenTrans);
 
 	void attemptDrawBrokenTrans(int arg_startx, int arg_starty, wrect_t* rect);
 	void attemptDrawBrokenTransLight(int arg_startx, int arg_starty, wrect_t* rect);
@@ -578,10 +579,10 @@ public:
 	void playWeaponSelectMoveSound();
 
 
-	int DrawHudNumber(int x, int y, int iFlags, int iNumber, int r, int g, int b );
+	int DrawHudNumber(int x, int y, int iFlags, int iNumber, const int& r, const int& g, const int& b );
 	//MODDD - additional argument for "DrawHudNumber" : "useBoxedNumber".
-	int DrawHudNumber(int x, int y, int iFlags, int iNumber, int r, int g, int b, int fontID );
-	int DrawHudNumber( int x, int y, int iFlags, int iNumber, int r, int g, int b, int fontID, const int& canDrawBrokenTrans);
+	int DrawHudNumber(int x, int y, int iFlags, int iNumber, const int& r, const int& g, const int& b, int fontID );
+	int DrawHudNumber(int x, int y, int iFlags, int iNumber, const int& r, const int& g, const int& b, int fontID, const int& canDrawBrokenTrans);
 
 	int DrawHudString(int x, int y, int iMaxX, char *szString, int r, int g, int b );
 	int DrawHudStringReverse( int xpos, int ypos, int iMinX, char *szString, int r, int g, int b );

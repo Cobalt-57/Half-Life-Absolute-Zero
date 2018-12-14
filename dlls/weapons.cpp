@@ -2267,54 +2267,6 @@ TYPEDESCRIPTION	CSatchel::m_SaveData[] =
 IMPLEMENT_SAVERESTORE( CSatchel, CBasePlayerWeapon );
 
 
-//TYPEDESCRIPTION	CEgon::m_SaveData[] = 
-//{
-//	/*
-//#if defined( CLIENT_WEAPONS )
-//	DEFINE_FIELD( CBasePlayerWeapon, m_flNextPrimaryAttack, FIELD_FLOAT ),
-//	DEFINE_FIELD( CBasePlayerWeapon, m_flNextSecondaryAttack, FIELD_FLOAT ),
-//	DEFINE_FIELD( CBasePlayerWeapon, m_flTimeWeaponIdle, FIELD_FLOAT ),
-//#else	// CLIENT_WEAPONS
-//	DEFINE_FIELD( CBasePlayerWeapon, m_flNextPrimaryAttack, FIELD_TIME ),
-//	DEFINE_FIELD( CBasePlayerWeapon, m_flNextSecondaryAttack, FIELD_TIME ),
-//	DEFINE_FIELD( CBasePlayerWeapon, m_flTimeWeaponIdle, FIELD_TIME ),
-//#endif	// CLIENT_WEAPONS
-//	DEFINE_FIELD( CBasePlayerWeapon, m_iPrimaryAmmoType, FIELD_INTEGER ),
-//	DEFINE_FIELD( CBasePlayerWeapon, m_iSecondaryAmmoType, FIELD_INTEGER ),
-//	DEFINE_FIELD( CBasePlayerWeapon, m_iClip, FIELD_INTEGER ),
-//	DEFINE_FIELD( CBasePlayerWeapon, m_iDefaultAmmo, FIELD_INTEGER ),
-////	DEFINE_FIELD( CBasePlayerWeapon, m_iClientClip, FIELD_INTEGER )	 , reset to zero on load so hud gets updated correctly
-////  DEFINE_FIELD( CBasePlayerWeapon, m_iClientWeaponState, FIELD_INTEGER ), reset to zero on load so hud gets updated correctly
-//*/
-//	DEFINE_FIELD( CEgon, dummy, FIELD_INTEGER),
-//
-//};
-
-
-/*
-//IMPLEMENT_SAVERESTORE( CEgon, CBasePlayerWeapon );
-
-//IMPLEMENT_SAVERESTORE( CStukaBat, CSquadMonster );
-//NOTE: copied here for customization.
-int CEgon::Save( CSave &save )
-{
-	if ( !CBasePlayerWeapon::Save(save) )
-		return 0;
-	return save.WriteFields( "CEgon", this, m_SaveData, ARRAYSIZE(m_SaveData) );
-}
-int CEgon::Restore( CRestore &restore )
-{
-
-
-	if ( !CBasePlayerWeapon::Restore(restore) )
-		return 0;
-
-	int result = restore.ReadFields( "CEgon", this, m_SaveData, ARRAYSIZE(m_SaveData) );
-	m_flReleaseThrow = -4;
-	return result;
-
-}
-*/
 
 
 

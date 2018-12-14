@@ -548,7 +548,7 @@ void CStukaBat :: HandleAnimEvent( MonsterEvent_t *pEvent )
 }
 
 
-CStukaBat::CStukaBat() : stukaPrint(StukaPrintQueueManager("STUKA")){
+CStukaBat::CStukaBat(void) : stukaPrint(StukaPrintQueueManager("STUKA")){
 	
 	lastEnemey2DDistance = 0;
 
@@ -619,6 +619,21 @@ CStukaBat::CStukaBat() : stukaPrint(StukaPrintQueueManager("STUKA")){
 	landBrake = FALSE;
 
 }
+
+
+#if REMOVE_ORIGINAL_NAMES != 1
+	LINK_ENTITY_TO_CLASS( monster_stukabat, CStukaBat );
+#endif
+
+#if EXTRA_NAMES > 0
+	LINK_ENTITY_TO_CLASS( stukabat, CStukaBat );
+	
+	#if EXTRA_NAMES == 2
+		LINK_ENTITY_TO_CLASS( stuka, CStukaBat );
+	#endif
+#endif
+
+
 
 
 

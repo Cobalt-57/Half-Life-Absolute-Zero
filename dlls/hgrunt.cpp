@@ -493,10 +493,10 @@ public:
 
 
 #if EXTRA_NAMES > 0
-	LINK_ENTITY_TO_CLASS( hgrunt, CHGrunt );
+	LINK_ENTITY_TO_CLASS( human_grunt, CHGrunt );
 
 	#if EXTRA_NAMES == 2
-		LINK_ENTITY_TO_CLASS( human_grunt, CHGrunt );
+		LINK_ENTITY_TO_CLASS( hgrunt, CHGrunt );
 	#endif
 
 #endif

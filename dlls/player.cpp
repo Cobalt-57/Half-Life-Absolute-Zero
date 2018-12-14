@@ -363,7 +363,7 @@ void CBasePlayer :: PainSound( void )
 	float	flRndSound;//sound randomizer
 
 	//disallow making noise if this CVar is on.
-	if(EASY_CVAR_GET(hideDamage) == 1 || global_mutePlayerPainSounds == 1 || global_playerExtraPainSoundsMode == 2){
+	if(EASY_CVAR_GET(hideDamage) >= 1 || global_mutePlayerPainSounds == 1 || global_playerExtraPainSoundsMode == 2){
 		//playerExtraPainSoundsMode of 2 suggets that we don't want to use the default PainSound method at all.
 		return;
 	}
@@ -384,7 +384,7 @@ void CBasePlayer :: PainChance( void )
 {
 
 	//disallow making noise if this CVar is on.
-	if(EASY_CVAR_GET(hideDamage) == 1 || global_mutePlayerPainSounds == 1){
+	if(EASY_CVAR_GET(hideDamage) >= 1 || global_mutePlayerPainSounds == 1){
 		return;
 	}
 
@@ -644,7 +644,8 @@ GENERATE_TRACEATTACK_IMPLEMENTATION(CBasePlayer)
 
 		if(EASY_CVAR_GET(RadiusDamageDrawDebug) == 1)DebugLine_Setup(1, ptr->vecEndPos + Vector(0, 0, -20), ptr->vecEndPos + Vector(0, 0, 20), 0, 0, 255);
 		
-		if(EASY_CVAR_GET(hideDamage) != 1){
+		//NEVERMIND THIS REDUCTION. Other places don't disable bleeding per this Var so it's a lost cause. Just leave this, not too jarring or distracting.
+		//if(EASY_CVAR_GET(hideDamage) <= 0){
 			DrawAlphaBlood(flDamage, ptr->vecEndPos);
 
 			//already seems to play?  Verify!
@@ -656,7 +657,7 @@ GENERATE_TRACEATTACK_IMPLEMENTATION(CBasePlayer)
 
 			
 			TraceBleed( flDamage, vecDir, ptr, bitsDamageType, bitsDamageTypeMod );
-		}//END OF hideDamage check
+		//}//END OF hideDamage check
 
 		//easyForcePrintLine("AddMultiDamage CALL FROM TRACEATTACK. Attacker:%s Victim:%s hitgrp:%d Dmg:%.2f", pevAttacker!=NULL?STRING(pevAttacker->classname):"NULL", this->getClassname(), ptr->iHitgroup, flDamage);
 		
@@ -925,10 +926,10 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBasePlayer)
 	m_bitsHUDDamage = -1;  // make sure the damage bits get resent
 	m_bitsModHUDDamage = -1;
 
+	
 
 
-
-	if(EASY_CVAR_GET(hideDamage) == 1){
+	if(EASY_CVAR_GET(hideDamage) >= 1){
 		//If so, skip the rest of this method.  It's only about making fvox chatter on taking damage.
 		return fTookDamage;
 	}
@@ -6550,7 +6551,7 @@ void CBasePlayer::Spawn( void ){
 //It is still up to individual cases to check for this "blocksImpact" feature of any entity and know not to do the camera punch + movement force if it is on.
 BOOL CBasePlayer::blocksImpact(void){
 
-	if(EASY_CVAR_GET(hideDamage) != 1){
+	if(EASY_CVAR_GET(hideDamage) <= 0){
 		return FALSE;
 	}else{
 		return TRUE;
@@ -9402,12 +9403,6 @@ void CBasePlayer :: UpdateClientData( void )
 			WRITE_SHORT( (int)pev->armorvalue);
 		MESSAGE_END();
 
-		/*
-		ASSERT( gmsgTester > 0 );
-		MESSAGE_BEGIN( MSG_ONE, gmsgTester, NULL, pev );
-			WRITE_SHORT( (int)pev->armorvalue);
-		MESSAGE_END();
-		*/
 	}
 
 
@@ -9424,12 +9419,6 @@ void CBasePlayer :: UpdateClientData( void )
 		//UpdClientC
 		
 
-		/*
-		ASSERT( gmsgTester > 0 );
-		MESSAGE_BEGIN( MSG_ONE, gmsgTester, NULL, pev );
-			WRITE_SHORT( (int)pev->armorvalue);
-		MESSAGE_END();
-		*/
 	}
 
 

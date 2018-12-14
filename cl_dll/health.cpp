@@ -27,6 +27,23 @@
 #include "parsemsg.h"
 #include <string.h>
 
+
+//EASY_CVAR_EXTERN(testVar)
+
+EASY_CVAR_EXTERN(timedDamage_brightnessMax)
+EASY_CVAR_EXTERN(timedDamage_brightnessMin)
+EASY_CVAR_EXTERN(timedDamage_brightnessCap)
+EASY_CVAR_EXTERN(timedDamage_brightnessFloor)
+EASY_CVAR_EXTERN(timedDamage_flashSpeed)
+EASY_CVAR_EXTERN(timedDamage_debug)
+
+		
+		
+
+
+
+
+
 DECLARE_MESSAGE(m_Health, Health )
 DECLARE_MESSAGE(m_Health, Damage )
 
@@ -34,7 +51,6 @@ DECLARE_MESSAGE(m_Health, Damage )
 //MODDD
 DECLARE_MESSAGE(m_Health, Drowning )
 DECLARE_MESSAGE(m_Health, HUDItemFsh )
-
 
 
 
@@ -122,6 +138,7 @@ EASY_CVAR_EXTERN(healthcolor_yellowMark)
 
 EASY_CVAR_EXTERN(hideDamage)
 
+EASY_CVAR_EXTERN(timedDamage_extraBrightness)
 
 
 
@@ -475,16 +492,21 @@ int CHudHealth::Draw(float flTime)
 
 			if(global2_hud_version == 0){
 
-				//MODDD - say "true" for "useBoxedNumbers".  Also, set x to HealthWidth / 2 (commented out above) and set y properly.
-				x = HealthWidth /2;
-				//MODDD - higher
-				y = ScreenHeight - ((int)(HealthHeight*1.5)) - 1;
+				if( EASY_CVAR_GET(timedDamage_debug) <= 0 || EASY_CVAR_GET(timedDamage_debug) == 1 || EASY_CVAR_GET(timedDamage_debug) == 3 || EASY_CVAR_GET(timedDamage_debug) == 4 || EASY_CVAR_GET(timedDamage_debug) == 6){
+					//MODDD - say "true" for "useBoxedNumbers".  Also, set x to HealthWidth / 2 (commented out above) and set y properly.
+					x = HealthWidth /2;
+					//MODDD - higher
+					y = ScreenHeight - ((int)(HealthHeight*1.5)) - 1;
 
-				//If not dead, draw normally.
-				x = gHUD.DrawHudNumber(x, y, DHN_3DIGITS | DHN_DRAWZERO, m_iHealth, r, g, b, 1, 1);
+					//If not dead, draw normally.
+					x = gHUD.DrawHudNumber(x, y, DHN_3DIGITS | DHN_DRAWZERO, m_iHealth, r, g, b, 1, 1);
 
 
-				x += HealthWidth/2;
+					x += HealthWidth/2;
+				}else if(EASY_CVAR_GET(timedDamage_debug) == 2 || EASY_CVAR_GET(timedDamage_debug) == 5){
+					drawTimedDamageIcon(0, giDmgWidth/8, ScreenHeight - giDmgHeight * 2 + giDmgHeight*1.5, r, g, b);
+				}
+
 
 
 			}else{
@@ -716,7 +738,7 @@ int CHudHealth::DrawPain(float flTime)
 
 
 	
-	if(EASY_CVAR_GET(hideDamage) == 1){
+	if(EASY_CVAR_GET(hideDamage) >= 1){
 		//don't do it.
 		return 1;
 	}
@@ -1005,12 +1027,12 @@ void CHudHealth::deriveColorFromHealth(int &r, int &g, int &b, int &a){
 
 		if(m_iHealth >= yellowMark){
 			//r = (int) (( ( -m_iHealth +yellowMark+100  ) /((float)yellowMark)) *175 );
-			r = (int) (( ( -m_iHealth + fullRedMin + 100  ) /((float) (100.0 + fullRedMin - yellowMark) )) *brightness );
+			r = (int) (( ( -m_iHealth + fullRedMin + 100  ) /((float) (100.0 + fullRedMin - yellowMark) )) * brightness );
 			g = brightness;
 			b = 5;
 		}else{
 			r = brightness;
-			g = (int) (( ( m_iHealth  ) /((float)yellowMark)) *brightness );
+			g = (int) (( ( m_iHealth  ) /((float)yellowMark)) * brightness );
 			b = 5;
 		}
 
@@ -1055,12 +1077,12 @@ void CHudHealth::deriveColorFromHealth(int &r, int &g, int &b){
 
 		if(m_iHealth >= yellowMark){
 			//r = (int) (( ( -m_iHealth +yellowMark+100  ) /((float)yellowMark)) *175 );
-			r = (int) (( ( -m_iHealth + fullRedMin + 100  ) /((float) (100.0 + fullRedMin - yellowMark) )) *brightness );
+			r = (int) (( ( -m_iHealth + fullRedMin + 100  ) /((float) (100.0 + fullRedMin - yellowMark) )) * brightness );
 			g = brightness;
 			b = 5;
 		}else{
 			r = brightness;
-			g = (int) (( ( m_iHealth  ) /((float)yellowMark)) *brightness );
+			g = (int) (( ( m_iHealth  ) /((float)yellowMark)) * brightness );
 			b = 5;
 		}
 
@@ -1100,11 +1122,14 @@ int CHudHealth::DrawDamage(float flTime)
 	DAMAGE_IMAGE *pdmg;
 
 
-
-	if(EASY_CVAR_GET(hideDamage) == 1){
-		//don't do it.
+	
+	//Actually... nevermind, status indicators aren't too distracting and it's good to be aware of these going on.
+	//We'd practically hide the GUI if we didn't want this.  ONLY if 2 instead now.
+	if(EASY_CVAR_GET(timedDamage_debug) <= 0 && EASY_CVAR_GET(hideDamage) >= 2){
+		//don't do it.  If we're debugging clearly we want to see it though (above 0)
 		return 1;
 	}
+	
 
 	//MODDD - can't draw damage without a suit (these are part of the suit's UI)
 	if (!(gHUD.m_iWeaponBits & (1<<(WEAPON_SUIT)) ))
@@ -1112,8 +1137,15 @@ int CHudHealth::DrawDamage(float flTime)
 
 	//MODDD
 	//if (!m_bitsDamage)
-	if (!m_bitsDamage && ! m_bitsDamageMod)
-		return 1;
+	
+	
+	if(EASY_CVAR_GET(timedDamage_debug) <= 0){
+		if (!m_bitsDamage && !m_bitsDamageMod)
+			return 1;
+	}
+
+
+
 
 	//MODDD
 	if(gHUD.m_fPlayerDead && global2_timedDamageDeathRemoveMode == 1){
@@ -1154,48 +1186,65 @@ int CHudHealth::DrawDamage(float flTime)
 		//gHUD.getGenericOrangeColor(r, g, b);
 		deriveColorFromHealth(r, g, b);
 
+		if(EASY_CVAR_GET(timedDamage_debug) <= 0 || EASY_CVAR_GET(timedDamage_debug) == 4|| EASY_CVAR_GET(timedDamage_debug) == 5 || EASY_CVAR_GET(timedDamage_debug) == 6){
+			//MODDD - customizable.
+			//a = (int)( fabs(sin(flTime*2)) * 256.0);
+			float const brightnessRange = EASY_CVAR_GET(timedDamage_brightnessMax) - EASY_CVAR_GET(timedDamage_brightnessMin);
+			a = (int)( fabs(sin(flTime*EASY_CVAR_GET(timedDamage_flashSpeed) )) * brightnessRange + EASY_CVAR_GET(timedDamage_brightnessMin) );
 
-		a = (int)( fabs(sin(flTime*2)) * 256.0);
-		ScaleColors(r, g, b, a);
-
-		
-		for (i = 0; i < NUM_DMG_TYPES; i++){
-
-			int imaoffset = 0;
-			//if not loading the TF2 textures, it will throw the image-index offset off.   Adjust as necessary.
-			if(global2_skipTFDamageTextures == 1){
-				if(i > 7){
-					imaoffset = -4;
-				}
+			if(EASY_CVAR_GET(timedDamage_brightnessCap) >= 0){
+				//if "a" is smaller than the cap, it stays. If "a" is greater, it is forced to the cap.
+				a = min(a, EASY_CVAR_GET(timedDamage_brightnessCap));
+			}
+			if(EASY_CVAR_GET(timedDamage_brightnessFloor) >= 0){
+				//if "a" is greater than the floor, it stays. If "a" is less, it is forced to the floor.
+				a = max(a, EASY_CVAR_GET(timedDamage_brightnessFloor));
 			}
 
-			int* m_rgbTimeBasedDamgeRef = 0;
-			if(i <= 11){
-				//use the old bitmask.
-				m_rgbTimeBasedDamgeRef = &m_bitsDamage;
-			}else{
-				//use the new bitmask.
-				m_rgbTimeBasedDamgeRef = &m_bitsDamageMod;
-			}
-
-
-
-			if ((*m_rgbTimeBasedDamgeRef) & giDmgFlags[i])
-			{
-				pdmg = &m_dmg[i];
-				//MODDD - slighlty different position.
-				//SPR_DrawAdditive(0, pdmg->x, pdmg->y, &gHUD.GetSpriteRect(m_HUD_dmg_bio + i));
-				
-				wrect_t* tempRect = &gHUD.GetSpriteRect(m_HUD_dmg_bio + i + imaoffset);
-				gHUD.attemptDrawBrokenTrans(pdmg->x - 2, pdmg->y + 5 + extraYOffset, tempRect);
-
-				SPR_Set(gHUD.GetSprite(m_HUD_dmg_bio + i + imaoffset), r, g, b );
-				SPR_DrawAdditive(0, pdmg->x - 2, pdmg->y + 5 + extraYOffset, tempRect );
-			
-			}
-
+			ScaleColors(r, g, b, a);
 		}
-	}
+		
+
+		if(EASY_CVAR_GET(timedDamage_debug) <= 0){
+
+			for (i = 0; i < NUM_DMG_TYPES; i++){
+				int* m_rgbTimeBasedDamgeRef = 0;
+				if(i <= 11){
+					//use the old bitmask.
+					m_rgbTimeBasedDamgeRef = &m_bitsDamage;
+				}else{
+					//use the new bitmask.
+					m_rgbTimeBasedDamgeRef = &m_bitsDamageMod;
+				}
+				
+				if ((*m_rgbTimeBasedDamgeRef) & giDmgFlags[i]){
+					//pass, proceed.
+					drawTimedDamageIcon(i, r, g, b);
+				}
+
+			}//END OF for loop through damage types.
+
+		}//END OF timedDamage_debug check
+		else if(EASY_CVAR_GET(timedDamage_debug) == 1 || EASY_CVAR_GET(timedDamage_debug) == 2 || EASY_CVAR_GET(timedDamage_debug) == 4 || EASY_CVAR_GET(timedDamage_debug) == 5){
+			drawTimedDamageIcon(0, giDmgWidth/8, ScreenHeight - giDmgHeight * 2, r, g, b);
+		}else if(EASY_CVAR_GET(timedDamage_debug) == 3 || EASY_CVAR_GET(timedDamage_debug) == 6){
+			//draw the health number in this place instead!
+			int HealthWidth = gHUD.GetSpriteRect(gHUD.m_HUD_number_0+10).right - gHUD.GetSpriteRect(gHUD.m_HUD_number_0+10).left;
+			int HealthHeight = gHUD.GetSpriteRect(gHUD.m_HUD_number_0+10).bottom - gHUD.GetSpriteRect(gHUD.m_HUD_number_0+10).top;
+			int x;
+			int y;
+
+			//x = HealthWidth /2;
+			//y = ScreenHeight - ((int)(HealthHeight*1.5)) - 1;
+			
+			x = HealthWidth /2;
+			y = ScreenHeight - giDmgHeight * 2 - 20;
+
+			//If not dead, draw normally.
+			x = gHUD.DrawHudNumber(x, y, DHN_3DIGITS | DHN_DRAWZERO, m_iHealth, r, g, b, 1, 1);
+		}
+
+	}//END OF show damage icon allowed checks
 
 
 
@@ -1326,4 +1375,53 @@ void CHudHealth::setUniformDamage(float damageAmount){
 
 }//END OF setUniformDamage(...)
 
+
+
+
+void CHudHealth::drawTimedDamageIcon(int arg_index, const int& r, const int& g, const int& b){
+	//symbol to draw relying on the damage icon's own recorded X and Y instead. This is retail behavior
+	//where the icon draw locations are set at the time damage is taken.
+	drawTimedDamageIcon(arg_index, -1, -1, r, g, b);
+}
+
+//MODDD - Method for drawing a timed damage icon now that it happens in multiple places.
+void CHudHealth::drawTimedDamageIcon(int arg_index, int arg_draw_x, int arg_draw_y, const int& r, const int& g, const int& b){
+	int imaoffset = 0;
+	const int i = arg_index;
+	int draw_x;
+	int draw_y;
+	DAMAGE_IMAGE *pdmg;
+
+
+	//if not loading the TF2 textures, it will throw the image-index offset off.   Adjust as necessary.
+	if(global2_skipTFDamageTextures == 1){
+		if(i > 7){
+			imaoffset = -4;
+		}
+	}
+	int extraYOffset = 0;
+
+	if(global2_hud_version == 0){
+		extraYOffset = -41;
+	}
+	pdmg = &m_dmg[i];
+
+	if(arg_draw_x == -1 && arg_draw_y == -1){
+		//just use where the icon already is.
+		draw_x = pdmg->x;
+		draw_y = pdmg->y;
+	}else{
+		//anything else? use that instead.
+		draw_x = arg_draw_x;
+		draw_y = arg_draw_y;
+	}
+
+	wrect_t* tempRect = &gHUD.GetSpriteRect(m_HUD_dmg_bio + i + imaoffset);
+	gHUD.attemptDrawBrokenTrans(draw_x - 2, draw_y + 5 + extraYOffset, tempRect);
+
+	SPR_Set(gHUD.GetSprite(m_HUD_dmg_bio + i + imaoffset), r, g, b );
+	SPR_DrawAdditive(0, draw_x - 2, draw_y + 5 + extraYOffset, tempRect );
+
+
+}//END OF drawTimedDamageIcon
 

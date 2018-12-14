@@ -37,7 +37,6 @@ extern int gmsgDamage;
 extern int gmsgBattery;
 
 //MODDD - new event
-extern int gmsgTester;
 extern int gmsgAntidoteP;
 extern int gmsgAdrenalineP;
 extern int gmsgRadiationP;

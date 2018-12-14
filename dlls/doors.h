@@ -33,6 +33,10 @@
 #define SF_DOOR_ROTATE_X			128
 #define SF_DOOR_USE_ONLY			256	// door must be opened by player's use button.
 #define SF_DOOR_NOMONSTERS			512	// Monster can't open
+
+//MODDD - new
+#define SF_DOOR_HEAL				1024
+
 #define SF_DOOR_SILENT				0x80000000
 
 

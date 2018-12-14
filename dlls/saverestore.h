@@ -19,6 +19,14 @@
 #include "util_entity.h"
 
 
+
+
+
+//MODDD TODO - could MAX_ENTITYARRAY be increased beyond 64? Or would this cause something engine-related not to work right?
+
+
+
+
 class CBaseEntity;
 
 class CSaveRestoreBuffer

@@ -362,19 +362,50 @@ void CHud::drawPartialFromLeft(const SpriteHandle_t & arg_sprite, const wrect_t*
 	int widthDiff = arg_rect->right - arg_rect->left;
 
 	//rc.left  += widthDiff * (-arg_portion + 1); //((float)(100-(min(100,m_iBat))) * 0.01);	// battery can go from 0 to 100 so * 0.01 goes from 0 to 1
-	
-	rc.right += widthDiff * (arg_portion + -1);
+	rc.right += (int)ceil(widthDiff * (arg_portion + -1));
 
-	if (rc.right > rc.left)
-	{
-
+	if (rc.right > rc.left){
 		//gHUD.drawAdditiveFilter( 0, x, y - iOffset + (rc.top - m_prc2->top), &rc);
 		gHUD.drawAdditiveFilter( arg_sprite, r, g, b, 0, x, y, &rc, canDrawBrokenTrans);
-		
 	}
-
 }
 
+
+
+
+void CHud::drawPartialFromRight(const SpriteHandle_t & arg_sprite, const wrect_t* arg_rect, const float arg_portion, const int & x, const int & y,  int & r, int & g, int & b){
+	drawPartialFromRight(arg_sprite, arg_rect, arg_portion, x, y, r, g, b, 0);
+}
+void CHud::drawPartialFromRight(const SpriteHandle_t & arg_sprite, const wrect_t* arg_rect, const float arg_portion, const int & x, const int & y,  int & r, int & g, int & b, const int& canDrawBrokenTrans){
+	wrect_t rc = *arg_rect;
+	int draw_x = x;
+	int widthDiff = arg_rect->right - arg_rect->left;
+
+	//rc.right += widthDiff * (arg_portion + -1);
+
+	//do this instead?
+	rc.left += widthDiff * (-arg_portion + 1);
+	draw_x += widthDiff * (-arg_portion + 1);
+
+	if (rc.right > rc.left){
+		gHUD.drawAdditiveFilter( arg_sprite, r, g, b, 0, draw_x, y, &rc, canDrawBrokenTrans);
+	}
+	
+	//alternate?
+	/*
+	float m_flBat = arg_portion;
+	int m_iWidth = widthDiff;
+	
+    int iOffset = (int) floor(m_iWidth * (1.0 - m_flBat));
+    if (iOffset < m_iWidth)
+    {
+        rc.left += iOffset;
+
+        SPR_Set(arg_sprite, r, g, b );
+        SPR_DrawAdditive( 0, x + iOffset, y, &rc);
+    }
+	*/
+}
 
 
 

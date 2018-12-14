@@ -839,6 +839,23 @@ CPantherEye::CPantherEye(void){
 
 
 
+#if REMOVE_ORIGINAL_NAMES != 1
+	LINK_ENTITY_TO_CLASS( monster_panthereye, CPantherEye );
+#endif
+
+#if EXTRA_NAMES > 0
+	LINK_ENTITY_TO_CLASS( panthereye, CPantherEye );
+	
+	#if EXTRA_NAMES == 2
+		LINK_ENTITY_TO_CLASS( panther, CPantherEye );
+	#endif
+	
+#endif
+
+
+
+
+
 
 
 //=========================================================

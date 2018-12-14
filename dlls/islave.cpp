@@ -1358,6 +1358,8 @@ void CISlave :: StartTask ( Task_t *pTask )
 	break;
 	case TASK_ISLAVE_SET_REVIVE_SELF_SEQUENCE:{
 		
+		
+
 		//0 = dieheadshot-RES
 		//1 = diesimple-RES
 		//2 = diebackward-RES

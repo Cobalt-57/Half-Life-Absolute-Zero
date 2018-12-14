@@ -167,6 +167,12 @@
 #define healthcolor_yellowMark_ID 165
 #define cl_drawExtraZeros_ID 166
 #define hideDamage_ID 167
+#define timedDamage_brightnessMax_ID 168
+#define timedDamage_brightnessMin_ID 169
+#define timedDamage_brightnessCap_ID 170
+#define timedDamage_brightnessFloor_ID 171
+#define timedDamage_flashSpeed_ID 172
+#define timedDamage_debug_ID 173
 
 
 #define DEFAULT_gruntsCanHaveMP5Grenade 0
@@ -629,6 +635,12 @@
 #define DEFAULT_ladderSpeedMulti 1.55
 #define DEFAULT_barnacleGrabNoInterpolation 0
 #define DEFAULT_hideDamage 0
+#define DEFAULT_timedDamage_brightnessMax 256
+#define DEFAULT_timedDamage_brightnessMin 0
+#define DEFAULT_timedDamage_brightnessCap -1
+#define DEFAULT_timedDamage_brightnessFloor -1
+#define DEFAULT_timedDamage_flashSpeed 2
+#define DEFAULT_timedDamage_debug 0
 
 #define EASY_CVAR_HASH_MASS\
 	EASY_CVAR_HASH(strobeDurationMin, 0)\
@@ -799,6 +811,12 @@
 	EASY_CVAR_HASH(healthcolor_yellowMark, 165)\
 	EASY_CVAR_HASH(cl_drawExtraZeros, 166)\
 	EASY_CVAR_HASH(hideDamage, 167)\
+	EASY_CVAR_HASH(timedDamage_brightnessMax, 168)\
+	EASY_CVAR_HASH(timedDamage_brightnessMin, 169)\
+	EASY_CVAR_HASH(timedDamage_brightnessCap, 170)\
+	EASY_CVAR_HASH(timedDamage_brightnessFloor, 171)\
+	EASY_CVAR_HASH(timedDamage_flashSpeed, 172)\
+	EASY_CVAR_HASH(timedDamage_debug, 173)\
 	DUMMY
 
 #define EASY_CVAR_HIDDEN_LIST\
@@ -1246,6 +1264,12 @@
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(ladderSpeedMulti, ladderspeedmulti)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(barnacleGrabNoInterpolation, barnaclegrabnointerpolation)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTONLY(hideDamage, hidedamage, 167)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTONLY(timedDamage_brightnessMax, timeddamage_brightnessmax, 168)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTONLY(timedDamage_brightnessMin, timeddamage_brightnessmin, 169)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTONLY(timedDamage_brightnessCap, timeddamage_brightnesscap, 170)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTONLY(timedDamage_brightnessFloor, timeddamage_brightnessfloor, 171)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTONLY(timedDamage_flashSpeed, timeddamage_flashspeed, 172)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTONLY(timedDamage_debug, timeddamage_debug, 173)\
 	DUMMY
 
 #define EASY_CVAR_HIDDEN_SAVE_MASS\
@@ -1693,6 +1717,12 @@
 	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(ladderSpeedMulti)\
 	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(barnacleGrabNoInterpolation)\
 	EASY_CVAR_HIDDEN_SAVE_CLIENTONLY(hideDamage)\
+	EASY_CVAR_HIDDEN_SAVE_CLIENTONLY(timedDamage_brightnessMax)\
+	EASY_CVAR_HIDDEN_SAVE_CLIENTONLY(timedDamage_brightnessMin)\
+	EASY_CVAR_HIDDEN_SAVE_CLIENTONLY(timedDamage_brightnessCap)\
+	EASY_CVAR_HIDDEN_SAVE_CLIENTONLY(timedDamage_brightnessFloor)\
+	EASY_CVAR_HIDDEN_SAVE_CLIENTONLY(timedDamage_flashSpeed)\
+	EASY_CVAR_HIDDEN_SAVE_CLIENTONLY(timedDamage_debug)\
 	DUMMY
 
 #define EASY_CVAR_HIDDEN_LOAD_MASS\
@@ -2140,6 +2170,12 @@
 	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(ladderSpeedMulti, ladderspeedmulti)\
 	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(barnacleGrabNoInterpolation, barnaclegrabnointerpolation)\
 	EASY_CVAR_HIDDEN_LOAD_CLIENTONLY(hideDamage, hidedamage)\
+	EASY_CVAR_HIDDEN_LOAD_CLIENTONLY(timedDamage_brightnessMax, timeddamage_brightnessmax)\
+	EASY_CVAR_HIDDEN_LOAD_CLIENTONLY(timedDamage_brightnessMin, timeddamage_brightnessmin)\
+	EASY_CVAR_HIDDEN_LOAD_CLIENTONLY(timedDamage_brightnessCap, timeddamage_brightnesscap)\
+	EASY_CVAR_HIDDEN_LOAD_CLIENTONLY(timedDamage_brightnessFloor, timeddamage_brightnessfloor)\
+	EASY_CVAR_HIDDEN_LOAD_CLIENTONLY(timedDamage_flashSpeed, timeddamage_flashspeed)\
+	EASY_CVAR_HIDDEN_LOAD_CLIENTONLY(timedDamage_debug, timeddamage_debug)\
 	DUMMY
 
 #define EASY_CVAR_DECLARATION_SERVER_MASS\
@@ -2603,6 +2639,12 @@
 	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY(ladderSpeedMulti)\
 	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY(barnacleGrabNoInterpolation)\
 	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY_CLIENTONLY(hideDamage)\
+	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY_CLIENTONLY(timedDamage_brightnessMax)\
+	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY_CLIENTONLY(timedDamage_brightnessMin)\
+	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY_CLIENTONLY(timedDamage_brightnessCap)\
+	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY_CLIENTONLY(timedDamage_brightnessFloor)\
+	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY_CLIENTONLY(timedDamage_flashSpeed)\
+	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY_CLIENTONLY(timedDamage_debug)\
 	DUMMY
 
 #define EASY_CVAR_DECLARATION_CLIENT_MASS\
@@ -3066,6 +3108,12 @@
 	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY(ladderSpeedMulti)\
 	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY(barnacleGrabNoInterpolation)\
 	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY_CLIENTONLY(hideDamage)\
+	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY_CLIENTONLY(timedDamage_brightnessMax)\
+	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY_CLIENTONLY(timedDamage_brightnessMin)\
+	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY_CLIENTONLY(timedDamage_brightnessCap)\
+	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY_CLIENTONLY(timedDamage_brightnessFloor)\
+	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY_CLIENTONLY(timedDamage_flashSpeed)\
+	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY_CLIENTONLY(timedDamage_debug)\
 	DUMMY
 
 #define EASY_CVAR_UPDATE_SERVER_MASS\
@@ -3529,6 +3577,12 @@
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(ladderSpeedMulti)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(barnacleGrabNoInterpolation)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTONLY(hideDamage, 167)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTONLY(timedDamage_brightnessMax, 168)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTONLY(timedDamage_brightnessMin, 169)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTONLY(timedDamage_brightnessCap, 170)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTONLY(timedDamage_brightnessFloor, 171)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTONLY(timedDamage_flashSpeed, 172)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTONLY(timedDamage_debug, 173)\
 	DUMMY
 
 #define EASY_CVAR_UPDATE_CLIENT_MASS\
@@ -3992,6 +4046,12 @@
 	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY(ladderSpeedMulti)\
 	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY(barnacleGrabNoInterpolation)\
 	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY_CLIENTONLY(hideDamage)\
+	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY_CLIENTONLY(timedDamage_brightnessMax)\
+	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY_CLIENTONLY(timedDamage_brightnessMin)\
+	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY_CLIENTONLY(timedDamage_brightnessCap)\
+	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY_CLIENTONLY(timedDamage_brightnessFloor)\
+	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY_CLIENTONLY(timedDamage_flashSpeed)\
+	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY_CLIENTONLY(timedDamage_debug)\
 	DUMMY
 
 #define EASY_CVAR_CREATE_SERVER_SETUP_MASS\
@@ -4461,6 +4521,12 @@
 	EASY_CVAR_CREATE_CLIENT_A_DEBUGONLY(ladderSpeedMulti)\
 	EASY_CVAR_CREATE_CLIENT_A_DEBUGONLY(barnacleGrabNoInterpolation)\
 	EASY_CVAR_CREATE_CLIENT_AC_DEBUGONLY(hideDamage)\
+	EASY_CVAR_CREATE_CLIENT_AC_DEBUGONLY(timedDamage_brightnessMax)\
+	EASY_CVAR_CREATE_CLIENT_AC_DEBUGONLY(timedDamage_brightnessMin)\
+	EASY_CVAR_CREATE_CLIENT_AC_DEBUGONLY(timedDamage_brightnessCap)\
+	EASY_CVAR_CREATE_CLIENT_AC_DEBUGONLY(timedDamage_brightnessFloor)\
+	EASY_CVAR_CREATE_CLIENT_AC_DEBUGONLY(timedDamage_flashSpeed)\
+	EASY_CVAR_CREATE_CLIENT_AC_DEBUGONLY(timedDamage_debug)\
 	DUMMY
 
 #define EASY_CVAR_RESET_MASS\
@@ -4923,6 +4989,12 @@
 	EASY_CVAR_RESET_DEBUGONLY(ladderSpeedMulti)\
 	EASY_CVAR_RESET_DEBUGONLY(barnacleGrabNoInterpolation)\
 	EASY_CVAR_RESET_DEBUGONLY_CLIENTONLY(hideDamage)\
+	EASY_CVAR_RESET_DEBUGONLY_CLIENTONLY(timedDamage_brightnessMax)\
+	EASY_CVAR_RESET_DEBUGONLY_CLIENTONLY(timedDamage_brightnessMin)\
+	EASY_CVAR_RESET_DEBUGONLY_CLIENTONLY(timedDamage_brightnessCap)\
+	EASY_CVAR_RESET_DEBUGONLY_CLIENTONLY(timedDamage_brightnessFloor)\
+	EASY_CVAR_RESET_DEBUGONLY_CLIENTONLY(timedDamage_flashSpeed)\
+	EASY_CVAR_RESET_DEBUGONLY_CLIENTONLY(timedDamage_debug)\
 	DUMMY
 
 #define EASY_CVAR_EXTERN_MASS\
@@ -5386,5 +5458,11 @@
 	EASY_CVAR_EXTERN_DEBUGONLY(ladderSpeedMulti)\
 	EASY_CVAR_EXTERN_DEBUGONLY(barnacleGrabNoInterpolation)\
 	EASY_CVAR_EXTERN_DEBUGONLY_CLIENTONLY(hideDamage)\
+	EASY_CVAR_EXTERN_DEBUGONLY_CLIENTONLY(timedDamage_brightnessMax)\
+	EASY_CVAR_EXTERN_DEBUGONLY_CLIENTONLY(timedDamage_brightnessMin)\
+	EASY_CVAR_EXTERN_DEBUGONLY_CLIENTONLY(timedDamage_brightnessCap)\
+	EASY_CVAR_EXTERN_DEBUGONLY_CLIENTONLY(timedDamage_brightnessFloor)\
+	EASY_CVAR_EXTERN_DEBUGONLY_CLIENTONLY(timedDamage_flashSpeed)\
+	EASY_CVAR_EXTERN_DEBUGONLY_CLIENTONLY(timedDamage_debug)\
 	DUMMY
 

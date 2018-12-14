@@ -581,10 +581,22 @@ inline void STOP_SOUND(edict_t *entity, int channel, const char *sample)
 
 
 //MODDD - filtered version, so that "STOP" can apply to the sentence-trick too.
+//        And yes it works, it goes through _FILTERED like the rest of the soundsentencesave system.
+//        After all even a "STOP" is just an order through the exact same sound playing system.
 inline void STOP_SOUND_FILTERED(edict_t *entity, int channel, const char *sample)
 {
 	EMIT_SOUND_FILTERED(entity, channel, sample, 0, 0, SND_STOP, PITCH_NORM);
 }
+//And me too for specifying whether to use the soundSentenceSave in the call instead of leaving it up to context (the setting on the entity)
+inline void STOP_SOUND_FILTERED(edict_t *entity, int channel, const char *sample, BOOL useSoundSentenceSave)
+{
+	EMIT_SOUND_FILTERED(entity, channel, sample, 0, 0, SND_STOP, PITCH_NORM, useSoundSentenceSave);
+}
+
+
+
+
+
 
 
 void EMIT_SOUND_SUIT(edict_t *entity, const char *sample);

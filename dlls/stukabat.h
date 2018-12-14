@@ -190,7 +190,7 @@ public:
 	
 	StukaPrintQueueManager stukaPrint;
 
-	CStukaBat();
+	CStukaBat(void);
 	
 	float getMeleeAnimScaler(void);
 	float getAttackDelay(void);
@@ -476,22 +476,6 @@ public:
 	int m_voicePitch;
 
 };
-
-
-#if REMOVE_ORIGINAL_NAMES != 1
-	LINK_ENTITY_TO_CLASS( monster_stukabat, CStukaBat );
-#endif
-
-#if EXTRA_NAMES > 0
-	LINK_ENTITY_TO_CLASS( stukabat, CStukaBat );
-	
-	
-	#if EXTRA_NAMES == 2
-		LINK_ENTITY_TO_CLASS( stuka, CStukaBat );
-	#endif
-	
-
-#endif
 
 
 

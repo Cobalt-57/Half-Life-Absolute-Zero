@@ -28,6 +28,12 @@
 #include "basetoggle.h"
 #include "basebutton.h"
 
+#include "player.h"
+
+
+#include "healthmodule.h"
+
+
 //last? what?
 //#include "doors.h"
 
@@ -769,19 +775,284 @@ button or trigger field activates the door.
 3)	stone chain
 4)	screechy metal
 */
-class CRotDoor : public CBaseDoor
+
+
+
+
+//MODDD RESUME - serious problem. We can't use the same ent for healing / a door as think is needed for both. independend think times.
+//               But this door can just choose to spawn an entity with only the HealthModule, and use itself for thinks. that would work fine.
+//TOMORROW PLEASE
+
+class CRotDoor : public CBaseDoor, I_HealthModule_Parent
 {
 public:
-	void Spawn( void );
+	
+	
+
+	HealthModule healthModuleInstance;  //guaranteed instance.
+	
+	//static TYPEDESCRIPTION m_SaveData[];
+	virtual int Save( CSave &save );
+	virtual int Restore( CRestore &restore );
+
+	CRotDoor(void);
+	//BOOL usesSoundSentenceSave(void);
+	
+	void I_HealthModule_ChargeEmpty(void);
+	void I_HealthModule_ChargeRestored(void);
+	void I_HealthModule_UseStart(void);
+	void I_HealthModule_UseEnd(void);
+	
+	void I_HealthModule_SetThink_UseEnd(void);
+	void I_HealthModule_SetThink_ChargeRestored(void);
+	
+	//Moved to HealthModule. This is completely internal to healing logic.
+	//void EXPORT Off(void);
+
+	//Moved to HealthModule. This is completely internal to healing logic.
+	//void EXPORT Recharge(void);
+	void EXPORT UseEnd(void);
+	void EXPORT ChargeRestored(void);
+	
+	void KeyValue( KeyValueData *pkvd );
+	
+	//MODDD - new.
+	void Activate();
+	//void Spawn( );
+	void Precache( void );
+	virtual void Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value );
+
+
+
+
+
+
+
+
+	virtual void Spawn( void );
 	virtual void SetToggleState( int state );
 };
 
 LINK_ENTITY_TO_CLASS( func_door_rotating, CRotDoor );
 
 
+
+
+
+
+CRotDoor::CRotDoor(void){
+	
+}
+
+
+
+/*
+TYPEDESCRIPTION CRotDoor::m_SaveData[] =
+{
+    //...
+};
+*/
+
+//IMPLEMENT_SAVERESTORE( CRotDoor, CBaseDoor );
+
+//MODDD - NEW. Let the healthModuleInstance know to save / restore here, otherwise it has no way of getting called.
+//        Only entities are called straight from the engine on saving / loading for this.
+//Yes, CBaseToggle is the direct parent of CWallHealth here but CBaseEntity was chosen instead.
+//Not sure if CBaseToggle was deliberately skipped, but keeping it that way.
+int CRotDoor::Save( CSave &save )
+{
+	if ( !CBaseDoor::Save(save) )
+		return 0;
+	//int iWriteFieldsResult = save.WriteFields( "CRotDoor", this, m_SaveData, ARRAYSIZE(m_SaveData) );
+
+	//return iWriteFieldsResult;
+
+	if(pev->spawnflags & SF_DOOR_HEAL){
+		int iWriteFields_HealthModule_Result = healthModuleInstance.Save(save);
+		return iWriteFields_HealthModule_Result;
+	}else{
+		return 1;
+	}
+}
+int CRotDoor::Restore( CRestore &restore )
+{
+	if ( !CBaseDoor::Restore(restore) )
+		return 0;
+
+	//Establish that I'm the parent entity again.
+	healthModuleInstance.setup(static_cast <CBaseEntity*>(this), static_cast <I_HealthModule_Parent*>(this));
+
+	//int iReadFieldsResult = restore.ReadFields( "CRotDoor", this, m_SaveData, ARRAYSIZE(m_SaveData) );
+
+	//return iReadFieldsResult;
+
+	if(pev->spawnflags & SF_DOOR_HEAL){
+		int iReadFields_HealthModule_Result = healthModuleInstance.Restore(restore);
+		return iReadFields_HealthModule_Result;
+	}else{
+		return 1;
+	}
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+//MODDD - also new event methods required by the HealthModule instance for callbacks.
+void CRotDoor::I_HealthModule_ChargeEmpty(void){
+	//pev->frame = 1;
+	//turn the door if this happens?
+}
+void CRotDoor::I_HealthModule_ChargeRestored(void){
+	//pev->frame = 0;
+}
+void CRotDoor::I_HealthModule_UseStart(void){
+
+}
+void CRotDoor::I_HealthModule_UseEnd(void){
+
+}
+
+void CRotDoor::I_HealthModule_SetThink_UseEnd(void){
+	SetThink( static_cast <void (CBaseEntity::*)(void)>(&CRotDoor::UseEnd) );
+}
+void CRotDoor::I_HealthModule_SetThink_ChargeRestored(void){
+	SetThink( static_cast <void (CBaseEntity::*)(void)>(&CRotDoor::ChargeRestored) );
+}
+
+void CRotDoor::UseEnd(void){
+	healthModuleInstance.UseEnd();
+}
+
+void CRotDoor::ChargeRestored(void){
+	healthModuleInstance.ChargeRestored();
+}
+
+
+
+
+
+
+void CRotDoor::KeyValue( KeyValueData *pkvd )
+{
+	/*
+	if(!healthModuleInstance.establishedParentYet){
+		//incredibly hacky, but KeyValue appears to be the earliest thing called in an entity. And it may be needed to set
+		//things in our healthModule.  Not that it even needs to know who the parent is at this point.  Ah well.
+		healthModuleInstance.setup(static_cast <CBaseEntity*>(this), static_cast <I_HealthModule_Parent*>(this));
+	}
+	*/
+
+	//Let my healthModuleInstance have a say first.
+
+	if(pev->spawnflags & SF_DOOR_HEAL){
+		healthModuleInstance.KeyValue(pkvd);
+		
+		if(pkvd->fHandled == FALSE){
+			CBaseDoor::KeyValue( pkvd );
+		}
+	}else{
+		CBaseDoor::KeyValue( pkvd );
+	}
+
+}
+
+
+void CRotDoor::Activate(){
+	CBaseDoor::Activate();
+}
+
+
+void CRotDoor::Precache()
+{
+	if(pev->spawnflags & SF_DOOR_HEAL){
+		healthModuleInstance.Precache();
+	}
+}
+
+
+
+
+
+
+
+
+/*
+	- Must be a flag
+- When flag is enabled
+    * Check if the player doesn't have 100 hp
+        * If the player doesn't have 100hp, let the door to open
+            *Give the player X amount of health (make it to use the already existing values from the healthcharger in skill.cfg
+            *Make sure you can't get any more HP afterwards (I can prevent this by forcing the door to never go back to normal
+            *Of course make it play a sound when using (medshot4.wav) and one when you are already full HP (medshotno1.wav)
+*/
+void CRotDoor::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
+{
+	//???
+	//if ( useType != USE_SET )		// Momentary buttons will pass down a float in here
+	//	return;
+
+	//if ( value > 1.0 )
+	//	value = 1.0;
+
+
+
+	//DEBUG: awlays pass for now.?
+	//pev->spawnflags |= SF_DOOR_HEAL;
+
+	if(pev->spawnflags & SF_DOOR_HEAL){
+		healthModuleInstance.Use(pActivator, pCaller, useType, value);
+
+		//on taking, send a signal to do
+		//    CBaseDoor::Use(pActivator, pCaller, useType, value);
+
+	}else{
+
+		//do whatever the parent does.
+		CBaseDoor::Use(pActivator, pCaller, useType, value);
+	}
+
+}//END OF Use
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 void CRotDoor::Spawn( void )
 {
-	Precache();
+	
+	
+	if((pev->spawnflags & SF_DOOR_HEAL) && !healthModuleInstance.establishedParentYet){
+		healthModuleInstance.setup(static_cast <CBaseEntity*>(this), static_cast <I_HealthModule_Parent*>(this));
+	}
+
+	Precache( );
+
+	if((pev->spawnflags & SF_DOOR_HEAL)){
+		healthModuleInstance.Spawn();
+	}
+
+
+
+
 	// set the axis of rotation
 	CBaseToggle::AxisDir( pev );
 

@@ -585,6 +585,30 @@ CHAssault::CHAssault(){
 
 
 
+#if REMOVE_ORIGINAL_NAMES != 1
+	//BLUE24 here.  Just as I found, leaving here.
+	//NOTICE - it looks like other monsters use full names like "monster_human_grunt" in retail for spawning.
+	//         In the case of CHassault shouldn't this be, "monster_human_assault" for the default  name to match?
+	//         CHANGE MADE.
+	LINK_ENTITY_TO_CLASS( monster_human_assault, CHAssault );
+	LINK_ENTITY_TO_CLASS( monster_astro, CHAssault );
+#endif
+
+#if EXTRA_NAMES > 0
+	LINK_ENTITY_TO_CLASS( human_assault, CHAssault );
+	LINK_ENTITY_TO_CLASS( astro, CHAssault );
+
+	#if EXTRA_NAMES == 2
+		LINK_ENTITY_TO_CLASS( monster_hassault, CHAssault );
+		LINK_ENTITY_TO_CLASS( hassault, CHAssault );
+	#endif
+	
+	//no extras.
+
+#endif
+
+
+
 float CHAssault::getBarnacleForwardOffset(void){
 	return 1.2f;
 }

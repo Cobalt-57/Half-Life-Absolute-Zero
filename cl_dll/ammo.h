@@ -79,13 +79,6 @@ public:
 	
 
 
-
-
-
-	
-	// int MsgFunc_Tester(const char *pszName,  int iSize, void *pbuf );
-
-
 	void SlotInput( int iSlot );
 	void _cdecl UserCmd_Slot1( void );
 	void _cdecl UserCmd_Slot2( void );

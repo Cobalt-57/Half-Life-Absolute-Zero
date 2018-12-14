@@ -185,6 +185,9 @@ private:
 	
 	//MODDD - new
 	void setUniformDamage(float damageAmount);
+	
+	void drawTimedDamageIcon(int arg_index, const int& r, const int& g, const int& b);
+	void drawTimedDamageIcon(int arg_index, int arg_draw_x, int arg_draw_y, const int& r, const int& g, const int& b);
 
 
 	//MODDD

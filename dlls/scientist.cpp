@@ -4038,7 +4038,7 @@ void CScientist::myAssHungers(void){
 		pickedNumber2->PlaySentenceNoPitchTo("!meme_my_ass_hungers_a", 21, 1.0, ATTN_NORM, TRUE, this);
 		//I won't look at him.
 		this->PlaySentenceNoPitchUninterruptable("!meme_my_ass_hungers_b", 21, 1.0, ATTN_NORM, TRUE);
-		this->explodeDelay = gpGlobals->time + 13.4 - 0.8;
+		this->explodeDelay = gpGlobals->time + 14.1 - 0.8;
 	}
 	
 	

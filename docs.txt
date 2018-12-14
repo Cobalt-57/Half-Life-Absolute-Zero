@@ -306,15 +306,31 @@ drawHUD (1) - BOOL + MODES. When off, the player HUD will not be rendered. Has s
 THIS JUST IN - there are already "r_drawviewmodel" and "hud_draw" that do these okay. Well $hi+.
 
 
-hideDamage (0) - BOOL. When on, all signs or indications of damage are turned off, including player sounds, fvox chatter, screen pain flashes + directions and timed damage icons.
+hideDamage (0) - BOOL (modevar). When 1, all signs or indications of damage are turned off, including player sounds, fvox chatter, screen pain flashes + directions.
+~if set to "2" instead, also includes hiding timed damage icons.
 
 
+timedDamage_debug (0) - MODEVAR. For 1 to 4, ignores actual player damage and draws a single toxin icon consistently.
+0: no effect.
+1: always solid toxin icon, health # bottom
+2: always solid toxin icon, draws the icon at the bottom too using the health number's color.
+3: draw the health number above solid and below.
+4: flashing toxin icon, health # bottom.  Most like the typical ingame way.
+5: flashing solid toxin icon, draws the icon at the bottom too using the health number's color.
+6: draw the health number above (using the flash) and below solidly as usual.
+
+timedDamage_brightnessMax (256) - ADJUSTABLE, range 0-256. How high the brightness goes in one cycle.
+timedDamage_brightnessMin (0) - ADJUSTABLE, range 0-256. How low the brightness goes in one cycle.
+timedDamage_brightnessCap (-1) - ADJUSTABLE, range 0-256. If non-negative, the brightness freezes if it goes over this limit.
+timedDamage_brightnessFloor (-1) - ADJUSTABLE, range 0-256. If non-negative, the brightness freezes if it goes under this limit.
+timedDamage_flashSpeed (2) - ADJUSTABLE. Affects the time it takes to complete one flash cycle. Higher is faster, decimals allowed.
 
 
-
-
-
-
+playerWeaponTracerMode - MODEVAR. uhh.. why isn't this described in here by now?
+0: no effect, probably.
+1: show tracers clientside, not always.
+2: show tracers serverside, always.
+...support for more combinations may be desired.
 
 
 New NPCs:

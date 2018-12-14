@@ -449,8 +449,7 @@ int CHud :: Redraw( float flTime, int intermission )
 //NOTICE: This method probably looks strange, not being one of "CHud".
 //It is just a top-level method sitting on its own.
 //It is actually the implementation of a top-level prototype in "cl_util.h".
-//This method may always be referred to in any other context, just don't try to re-define it
-//(make another top-level method of the same name).
+//This method may always be referred to in any other context, just don't try to re-declare or re-define it.
 void ScaleColors( int &r, int &g, int &b, int a )
 {
 	float x = (float)a / 255.0f;
@@ -564,17 +563,17 @@ int CHud::DrawHUDNumber_widthOnly(int iFlags, int iNumber, int fontID){
 
 
 //MODDD - implementation of "DrawHudNumber" without the new last arg.  Imply that it is 0 (plain text).
-int CHud :: DrawHudNumber( int x, int y, int iFlags, int iNumber, int r, int g, int b){
+int CHud :: DrawHudNumber( int x, int y, int iFlags, int iNumber, const int& r, const int& g, const int& b){
 	return DrawHudNumber(x, y, iFlags, iNumber, r, g, b, 0, 0);
 }
 
-int CHud :: DrawHudNumber( int x, int y, int iFlags, int iNumber, int r, int g, int b, int fontID){
+int CHud :: DrawHudNumber( int x, int y, int iFlags, int iNumber, const int& r, const int& g, const int& b, int fontID){
 	return DrawHudNumber(x, y, iFlags, iNumber, r, g, b, fontID, 0);
 }
 
 //MODDD - first DrawHudNumber has a new argument: "fontID".
 //For fontID, 0 = normal (ammo usually), boxed (health), and tiny (antidote HUD)
-int CHud :: DrawHudNumber( int x, int y, int iFlags, int iNumber, int r, int g, int b, int fontID, const int& canDrawBrokenTrans)
+int CHud :: DrawHudNumber( int x, int y, int iFlags, int iNumber, const int& r, const int& g, const int& b, int fontID, const int& canDrawBrokenTrans)
 {
 	int drawAltTransValue = 0;
 	if(canDrawBrokenTrans){

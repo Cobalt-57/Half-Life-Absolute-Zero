@@ -3557,7 +3557,7 @@ Vector CBaseEntity::FireBulletsPlayer ( ULONG cShots, Vector vecSrc, Vector vecD
 		
 
 		if(EASY_CVAR_GET(playerWeaponTracerMode) == 2){
-			//Render bullet effects serverside, and always.
+			//Render tracer effects serverside, and always.
 			iTracerFreq = 1;
 
 			//MODDD - why was this bit removed from the player's FireBullets?

@@ -36,7 +36,6 @@ extern int gmsgAntidoteP;
 extern int gmsgAdrenalineP;
 extern int gmsgRadiationP;
 extern int gmsgUpdateAirTankAirTime;
-extern int gmsgTester;
 
 //MODDD
 extern float global_wpn_glocksilencer;

@@ -255,6 +255,8 @@ void CTemplateMonster::Spawn( void )
 	Precache( );
 
 	setModel("models/templatemonster.mdl");
+
+	//UTIL_SetOrigin(pev, pev->origin)   //some BSP stuff does this, no idea why.
 	UTIL_SetSize(pev, Vector(-12, -12, 0), Vector(12, 12, 24));
 
 	pev->classname = MAKE_STRING("monster_templatemonster");

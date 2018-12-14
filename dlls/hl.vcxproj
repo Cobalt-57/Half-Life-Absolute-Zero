@@ -545,6 +545,7 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="hassault.cpp" />
+    <ClCompile Include="healthmodule.cpp" />
     <ClCompile Include="h_ai.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -1097,6 +1098,8 @@
     <ClInclude Include="game.h" />
     <ClInclude Include="gamerules.h" />
     <ClInclude Include="hassault.h" />
+    <ClInclude Include="healthkit.h" />
+    <ClInclude Include="healthmodule.h" />
     <ClInclude Include="hornet.h" />
     <ClInclude Include="items.h" />
     <ClInclude Include="kingpin.h" />

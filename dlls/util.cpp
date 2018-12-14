@@ -8045,6 +8045,7 @@ void OnBeforeChangeLevelTransition(){
 //Possibly as early as it gets, even earlier than a Map instance being made. The Map (CWorld constructor being called) happens after this.
 //More importantly, not only is this called before ANY spawn/precache methods, but also before even any KeyValue reads, otherwise thought
 //to be the earliest possible until this was found.
+//BUT BEWARE - this does not get called on going between transitions!
 void OnMapLoadPreStart(){
 	
 

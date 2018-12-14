@@ -13,40 +13,22 @@
 *
 ****/
 #include "extdll.h"
+#include "healthkit.h"
+
+
 #include "util.h"
-#include "cbase.h"
 
 #include "basetoggle.h"
-
-#include "basemonster.h"
 #include "weapons.h"
 #include "nodes.h"
-#include "player.h"
-#include "items.h"
+
+#include "skill.h"
 #include "gamerules.h"
 
 extern int gmsgItemPickup;
 
-class CHealthKit : public CItem
-{
 
-	//MODDD - why no public?
-public:
-	CHealthKit();
-	BOOL usesSoundSentenceSave(void);
-	void Spawn( void );
-	void Precache( void );
-	BOOL MyTouch( CBasePlayer *pPlayer );
-
-/*
-	virtual int		Save( CSave &save ); 
-	virtual int		Restore( CRestore &restore );
-	
-	static	TYPEDESCRIPTION m_SaveData[];
-*/
-
-};
-
+//MODDD - class CHealthKit moved to healthkit.h
 
 LINK_ENTITY_TO_CLASS( item_healthkit, CHealthKit );
 
@@ -60,7 +42,7 @@ TYPEDESCRIPTION	CHealthKit::m_SaveData[] =
 IMPLEMENT_SAVERESTORE( CHealthKit, CItem);
 */
 
-CHealthKit::CHealthKit(){
+CHealthKit::CHealthKit(void){
 
 }
 BOOL CHealthKit::usesSoundSentenceSave(void){
@@ -146,36 +128,30 @@ BOOL CHealthKit::MyTouch( CBasePlayer *pPlayer )
 
 
 
+
+
+
+
+
+
+
+
+
 //-------------------------------------------------------------
 // Wall mounted health kit
 //-------------------------------------------------------------
-class CWallHealth : public CBaseToggle
-{
-public:
-	CWallHealth();
-	BOOL usesSoundSentenceSave(void);
 
-	void Spawn( );
-	void Precache( void );
-	void EXPORT Off(void);
-	void EXPORT Recharge(void);
-	void KeyValue( KeyValueData *pkvd );
-	BOOL IsWorldAffiliated(void);
+CWallHealth::CWallHealth(void){
 	
-	void Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value );
-	virtual int	ObjectCaps( void ) { return (CBaseToggle :: ObjectCaps() | FCAP_CONTINUOUS_USE) & ~FCAP_ACROSS_TRANSITION; }
-	virtual int		Save( CSave &save );
-	virtual int		Restore( CRestore &restore );
+}
 
-	static	TYPEDESCRIPTION m_SaveData[];
 
-	float m_flNextCharge; 
-	int		m_iReactivate ; // DeathMatch Delay until reactvated
-	int		m_iJuice;
-	int		m_iOn;			// 0 = off, 1 = startup, 2 = going
-	float   m_flSoundTime;
-};
 
+
+//MODDD - class CWallHealth moved to healthkit.h
+
+//MODDD - save data moved to the HealthModule class, of which CWallHealth has one of..
+/*
 TYPEDESCRIPTION CWallHealth::m_SaveData[] =
 {
 	DEFINE_FIELD( CWallHealth, m_flNextCharge, FIELD_TIME),
@@ -184,48 +160,116 @@ TYPEDESCRIPTION CWallHealth::m_SaveData[] =
 	DEFINE_FIELD( CWallHealth, m_iOn, FIELD_INTEGER),
 	DEFINE_FIELD( CWallHealth, m_flSoundTime, FIELD_TIME),
 };
+*/
 
-IMPLEMENT_SAVERESTORE( CWallHealth, CBaseEntity );
+//IMPLEMENT_SAVERESTORE( CWallHealth, CBaseEntity );
+
+//MODDD - NEW. Let the healthModuleInstance know to save / restore here, otherwise it has no way of getting called.
+//        Only entities are called straight from the engine on saving / loading for this.
+//Yes, CBaseToggle is the direct parent of CWallHealth here but CBaseEntity was chosen instead.
+//Not sure if CBaseToggle was deliberately skipped, but keeping it that way.
+int CWallHealth::Save( CSave &save )
+{
+	if ( !CBaseEntity::Save(save) )
+		return 0;
+	//int iWriteFieldsResult = save.WriteFields( "CWallHealth", this, m_SaveData, ARRAYSIZE(m_SaveData) );
+
+	//return iWriteFieldsResult;
+
+	int iWriteFields_HealthModule_Result = healthModuleInstance.Save(save);
+	return iWriteFields_HealthModule_Result;
+}
+int CWallHealth::Restore( CRestore &restore )
+{
+	if ( !CBaseEntity::Restore(restore) )
+		return 0;
+
+	//Establish that I'm the parent entity again.
+	healthModuleInstance.setup(static_cast <CBaseEntity*>(this), static_cast <I_HealthModule_Parent*>(this));
+
+	//int iReadFieldsResult = restore.ReadFields( "CWallHealth", this, m_SaveData, ARRAYSIZE(m_SaveData) );
+
+	//return iReadFieldsResult;
+
+	int iReadFields_HealthModule_Result = healthModuleInstance.Restore(restore);
+	return iReadFields_HealthModule_Result;
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
 
 LINK_ENTITY_TO_CLASS(func_healthcharger, CWallHealth);
 
 
+
+
+//MODDD - also new event methods required by the HealthModule instance for callbacks.
+void CWallHealth::I_HealthModule_ChargeEmpty(void){
+	pev->frame = 1;
+}
+void CWallHealth::I_HealthModule_ChargeRestored(void){
+	pev->frame = 0;
+}
+void CWallHealth::I_HealthModule_UseStart(void){
+
+}
+void CWallHealth::I_HealthModule_UseEnd(void){
+
+}
+
+void CWallHealth::I_HealthModule_SetThink_UseEnd(void){
+	SetThink( static_cast <void (CBaseEntity::*)(void)>(&CWallHealth::UseEnd) );
+}
+void CWallHealth::I_HealthModule_SetThink_ChargeRestored(void){
+	SetThink( static_cast <void (CBaseEntity::*)(void)>(&CWallHealth::ChargeRestored) );
+}
+
+void CWallHealth::UseEnd(void){
+	healthModuleInstance.UseEnd();
+}
+
+void CWallHealth::ChargeRestored(void){
+	healthModuleInstance.ChargeRestored();
+}
+
+
+
+
+
+
 void CWallHealth::KeyValue( KeyValueData *pkvd )
 {
-	if (	FStrEq(pkvd->szKeyName, "style") ||
-				FStrEq(pkvd->szKeyName, "height") ||
-				FStrEq(pkvd->szKeyName, "value1") ||
-				FStrEq(pkvd->szKeyName, "value2") ||
-				FStrEq(pkvd->szKeyName, "value3"))
-	{
-		pkvd->fHandled = TRUE;
+	/*
+	if(!healthModuleInstance.establishedParentYet){
+		//incredibly hacky, but KeyValue appears to be the earliest thing called in an entity. And it may be needed to set
+		//things in our healthModule.  Not that it even needs to know who the parent is at this point.  Ah well.
+		healthModuleInstance.setup(static_cast <CBaseEntity*>(this), static_cast <I_HealthModule_Parent*>(this));
 	}
-	else if (FStrEq(pkvd->szKeyName, "dmdelay"))
-	{
-		m_iReactivate = atoi(pkvd->szValue);
-		pkvd->fHandled = TRUE;
-	}
-	else
+	*/
+
+	//Let my healthModuleInstance have a say first.
+	healthModuleInstance.KeyValue(pkvd);
+
+	if(pkvd->fHandled == FALSE){
 		CBaseToggle::KeyValue( pkvd );
+	}
 }
 
 
-BOOL CWallHealth::IsWorldAffiliated(){
-    return TRUE;
-}
-
-CWallHealth::CWallHealth(){
-
-}
-
-BOOL CWallHealth::usesSoundSentenceSave(void){
-	return TRUE;
+void CWallHealth::Activate(){
+	CBaseToggle::Activate();
 }
 
 
-
+//MODDD MAJOR - functionality that's best re-used for use'able health in general like this moved to the HealthModule class.
+//              Call relevant methods of healthModuleInstance (HealthModule) to hook it up to this entity (CWallHealth).
 void CWallHealth::Spawn()
 {
+	if(!healthModuleInstance.establishedParentYet){
+		healthModuleInstance.setup(static_cast <CBaseEntity*>(this), static_cast <I_HealthModule_Parent*>(this));
+	}
+
 	Precache( );
 
 	pev->solid		= SOLID_BSP;
@@ -234,137 +278,46 @@ void CWallHealth::Spawn()
 	UTIL_SetOrigin(pev, pev->origin);		// set size and link into world
 	UTIL_SetSize(pev, pev->mins, pev->maxs);
 	SET_MODEL(ENT(pev), STRING(pev->model) );
-	m_iJuice = gSkillData.healthchargerCapacity;
+
 	pev->frame = 0;
+
+	healthModuleInstance.Spawn();
 
 }
 
 
-extern int global_useSentenceSave;
 
 void CWallHealth::Precache()
 {
-	global_useSentenceSave = TRUE;
-	PRECACHE_SOUND("items/medshot4.wav");
-	PRECACHE_SOUND("items/medshotno1.wav");
-	PRECACHE_SOUND("items/medcharge4.wav");
-	global_useSentenceSave = FALSE;
+	healthModuleInstance.Precache();
 }
 
 
 void CWallHealth::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
 { 
-	// Make sure that we have a caller
-	if (!pActivator)
-		return;
-	// if it's not a player, ignore
-	if ( !pActivator->IsPlayer() )
-		return;
-
-	// if there is no juice left, turn it off
-	if (m_iJuice <= 0)
-	{
-		pev->frame = 1;			
-		Off();
-	}
-
-	//GetClassPtr((CBasePlayer *)pev) ;    not needed here, not working with a PEV, but the "entity" itself.
-	//since pPlayer is a child along the line ( a child of CBaseEntity), a direct cast should be okay.
-	CBasePlayer* pPlayer = (CBasePlayer*) (pActivator);
-
-
-	//easyPrintLine("HEALING??? %d, %d, %d", pPlayer->m_rgbTimeBasedDamage[itbd_Bleeding], (pPlayer->m_bitsDamageTypeMod & DMG_BLEEDING), pPlayer->m_bitsDamageTypeMod);
-	
-	
-	//MODDD - any healing items / charge removes the bleeding timed damage effect, if present.
-		if(pPlayer->m_rgbTimeBasedDamage[itbd_Bleeding] > 0 || pPlayer->m_bitsDamageTypeMod & DMG_BLEEDING){
-			int choice = RANDOM_LONG(0,1);
-			//Note that, upon playing either of the two sounds, we don't want to play either until 30 seconds have passed.
-			//The other sound that was not picked must also be repeat-blocked or else both will be played in succession
-			//upon wall-charger healing (the damage-removal has a slight delay).
-			if(choice == 0){
-				//hiss, wound_sterilized
-				pPlayer->SetSuitUpdate("!HEV_HEAL6", FALSE, SUIT_NEXT_IN_30SEC);
-				pPlayer->forceRepeatBlock("!HEV_HEAL7", FALSE, SUIT_NEXT_IN_30SEC);
-			}else if(choice == 1){
-				//hiss, morphine_shot
-				pPlayer->SetSuitUpdate("!HEV_HEAL7", FALSE, SUIT_NEXT_IN_30SEC);
-				pPlayer->forceRepeatBlock("!HEV_HEAL6", FALSE, SUIT_NEXT_IN_30SEC);
-
-			}
-			pPlayer->m_rgbTimeBasedDamage[itbd_Bleeding] = 0;
-			pPlayer->m_rgbTimeBasedFirstFrame[itbd_Bleeding] = TRUE;
-			//necessary? isn't for antidote / anti-toxin (radiation item), though.
-			//Apply to the other bitmask, since this is new (old one was full).
-			pPlayer->m_bitsDamageTypeMod &= ~DMG_BLEEDING;
-		}
-
-
-
-	// if the player doesn't have the suit, or there is no juice left, make the deny noise
-	if ((m_iJuice <= 0) || (!(pActivator->pev->weapons & (1<<WEAPON_SUIT))) || (pActivator-> pev-> health == 100))
-	{
-		if (m_flSoundTime <= gpGlobals->time)
-		{
-			m_flSoundTime = gpGlobals->time + 0.62;
-			EMIT_SOUND_FILTERED(ENT(pev), CHAN_ITEM, "items/medshotno1.wav", 1.0, ATTN_NORM );
-		}
-		return;
-	}
-
-	pev->nextthink = pev->ltime + 0.25;
-	SetThink(&CWallHealth::Off);
-
-	// Time to recharge yet?
-
-	if (m_flNextCharge >= gpGlobals->time)
-		return;
-
-	// Play the on sound or the looping charging sound
-	if (!m_iOn)
-	{
-		m_iOn++;
-		EMIT_SOUND_FILTERED(ENT(pev), CHAN_ITEM, "items/medshot4.wav", 1.0, ATTN_NORM );
-		m_flSoundTime = 0.56 + gpGlobals->time;
-	}
-	if ((m_iOn == 1) && (m_flSoundTime <= gpGlobals->time))
-	{
-		m_iOn++;
-		EMIT_SOUND_FILTERED(ENT(pev), CHAN_STATIC, "items/medcharge4.wav", 1.0, ATTN_NORM );
-	}
-
-
-	// charge the player
-	if ( pActivator->TakeHealth( 1, DMG_GENERIC ) )
-	{
-		m_iJuice--;
-	}
-
-	// govern the rate of charge
-	m_flNextCharge = gpGlobals->time + 0.1;
+	//Tell my instance I am being used.
+	healthModuleInstance.Use(pActivator, pCaller, useType, value);
 }
 
-void CWallHealth::Recharge(void)
-{
-		EMIT_SOUND_FILTERED(ENT(pev), CHAN_ITEM, "items/medshot4.wav", 1.0, ATTN_NORM );
-	m_iJuice = gSkillData.healthchargerCapacity;
-	pev->frame = 0;			
-	SetThink( &CBaseEntity::SUB_DoNothing );
+
+
+
+
+
+
+BOOL CWallHealth::IsWorldAffiliated(){
+    return TRUE;
 }
 
-void CWallHealth::Off(void)
-{
-	// Stop looping sound.
-	if (m_iOn > 1)
-		STOP_SOUND_FILTERED( ENT(pev), CHAN_STATIC, "items/medcharge4.wav" );
 
-	m_iOn = 0;
-
-	if ((!m_iJuice) &&  ( ( m_iReactivate = g_pGameRules->FlHealthChargerRechargeTime() ) > 0) )
-	{
-		pev->nextthink = pev->ltime + m_iReactivate;
-		SetThink(&CWallHealth::Recharge);
-	}
-	else
-		SetThink( &CBaseEntity::SUB_DoNothing );
+BOOL CWallHealth::usesSoundSentenceSave(void){
+	return TRUE;
 }
+
+
+
+
+
+
+
+

@@ -10,6 +10,8 @@ CLIENTSIDE (cl_dll)
  That means throughout some parts of ammo.cpp, references had to be done through the closest known instance instead, which means no change for accessing gpActiveSel & gpLastSel from any WeaponsResource methods (already instances of the class), need "gWR." in front to access the gp vars from CHudAmmo methods (its own WeaponsResource instance), and need "gHUD.m_Ammo.gWR." in front to access gp vars from anywhere else. This gets them through the GUI instance, the ammo instance, and then the WeaponsResource instance. custom_message.cpp needed to be able to access the gp's this way.
 *Also, the CHudAmmo class has been moved from hud.h to ammo.h. A few includes could be reword to go at the top since they no longer rely on occuring at such a specific place with the right things included ahead of time by an outside context... what.
 
+
+
 SERVERSIDE (dlls)
 
 -client_message.h & .cpp - Any message ID varaibles and message linkup for sending messages to the client have been moved here. They used to be stored mainly, if not fully, in player.cpp. Stored separately for neatness and accessibility.
@@ -31,13 +33,19 @@ SERVERSIDE (dlls)
 
 -trains.h existed before, but also has (a) new class(es) moved there.
 
--bloater.cpp has been replaced with floater.h and floater.cpp.  More fitting to the final name.
+-bloater.cpp has been replaced with floater.h and floater.cpp. More fitting to the final name.
+
+-Classes of healthkit.cpp moved to new file healthkit.h.
 
 -The two ball (projectile, one dumb and one smart) classes from controller.cpp have been made into their own .h / .cpp files and added to the dll build:
  class CControllerZapBall -> controller_zap_ball.h & .cpp
  class CControllerHeadBall -> controller_head_ball.h & .cpp
 
- -Bullsquid projectile (CSquidSpit) moved from bullsquid.cpp to its own files too: squidspit.h / .cpp.
+-Bullsquid projectile (CSquidSpit) moved from bullsquid.cpp to its own files too: squidspit.h / .cpp.
+
+-healthmodule.h & .cpp - for storing info about how a CWallHealth maintains healing information such as charge left.
+                         Include an instance of HealthModule with proper setup to get that same functionality in different places.
+
 
 SHARED (game_shared)
 -files stored in a NEW subfolder for neatness, keep this in mind for new visual studio environments. Add this game_shared/NEW as a search path.

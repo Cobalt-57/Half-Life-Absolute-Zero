@@ -11,6 +11,9 @@
 #include "wrect.h"
 #include "cl_dll.h"
 
+//MODDD - new. Is that a good idea?
+#include "cl_util.h"
+
 
 #define RGB_YELLOWISH 0x00FFA000 //255,160,0
 #define RGB_REDISH 0x00FF1010 //255,160,0

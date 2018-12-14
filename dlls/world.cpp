@@ -481,6 +481,7 @@ void RestoreGlobalState( SAVERESTOREDATA *pSaveData )
 }
 
 
+//BEWARE! This does not get called on going between map transitions.
 void ResetGlobalState( void )
 {
 	gGlobalState.ClearStates();
@@ -529,6 +530,14 @@ CWorld::CWorld(void){
 
 
 extern void updateCVarRefs(const Vector* arg_suggestedOrigin);
+
+
+
+//WARNING - this never gets called it seems!
+void CWorld::Activate(void){
+	CBaseEntity::Activate();
+}
+
 
 void CWorld :: Spawn( void )
 {

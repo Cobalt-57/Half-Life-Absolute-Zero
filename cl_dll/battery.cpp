@@ -26,7 +26,6 @@
 #include <stdio.h>
 
 DECLARE_MESSAGE(m_Battery, Battery)
-DECLARE_MESSAGE(m_Battery, Tester)
 
 
 //MODDD - externs
@@ -42,7 +41,6 @@ int CHudBattery::Init(void)
 	m_iFlags = 0;
 
 	HOOK_MESSAGE(Battery);
-	HOOK_MESSAGE(Tester);
 
 	gHUD.AddHudElem(this);
 
@@ -100,28 +98,6 @@ int CHudBattery:: MsgFunc_Battery(const char *pszName,  int iSize, void *pbuf )
 
 	return 1;
 }
-
-int CHudBattery:: MsgFunc_Tester(const char *pszName,  int iSize, void *pbuf )
-{
-
-	BEGIN_READ( pbuf, iSize );
-	int x = READ_SHORT();
-
-	/*
-	if (x != m_iBat)
-	{
-		m_fFade = FADE_TIME;
-		
-	}
-	m_iBat = 100;
-	gHUD.m_Health.m_iHealth = 100;
-	*/
-
-	return 1;
-}
-
-
-
 
 
 
@@ -271,9 +247,11 @@ int CHudBattery::Draw(float flTime)
 		if(global2_hud_batterydraw == 0){
 			//across.
 			gHUD.drawPartialFromLeft(m_SpriteHandle_t2, m_prc2, ((float)m_iBat / (float)100 ), x, y - iOffset , r, g, b);
-		}else{
+		}else if(global2_hud_batterydraw == 1){
 			//vertically.
 			gHUD.drawPartialFromBottom(m_SpriteHandle_t2, m_prc2, ((float)m_iBat / (float)100 ), x, y - iOffset , r, g, b);
+		}else if(global2_hud_batterydraw == 2){
+			gHUD.drawPartialFromRight(m_SpriteHandle_t2, m_prc2, ((float)m_iBat / (float)100 ), x, y - iOffset , r, g, b);
 		}
 		
 
