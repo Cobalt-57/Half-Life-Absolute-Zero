@@ -185,7 +185,7 @@ int CWallHealth::Restore( CRestore &restore )
 		return 0;
 
 	//Establish that I'm the parent entity again.
-	healthModuleInstance.setup(static_cast <CBaseEntity*>(this), static_cast <I_HealthModule_Parent*>(this));
+	healthModuleInstance.setupRestore(static_cast <CBaseEntity*>(this), static_cast <I_HealthModule_Parent*>(this));
 
 	//int iReadFieldsResult = restore.ReadFields( "CWallHealth", this, m_SaveData, ARRAYSIZE(m_SaveData) );
 
@@ -211,7 +211,10 @@ void CWallHealth::I_HealthModule_ChargeEmpty(void){
 void CWallHealth::I_HealthModule_ChargeRestored(void){
 	pev->frame = 0;
 }
-void CWallHealth::I_HealthModule_UseStart(void){
+void CWallHealth::I_HealthModule_UseStart(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value){
+
+}
+void CWallHealth::I_HealthModule_UseContinuous(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value){
 
 }
 void CWallHealth::I_HealthModule_UseEnd(void){
@@ -224,6 +227,28 @@ void CWallHealth::I_HealthModule_SetThink_UseEnd(void){
 void CWallHealth::I_HealthModule_SetThink_ChargeRestored(void){
 	SetThink( static_cast <void (CBaseEntity::*)(void)>(&CWallHealth::ChargeRestored) );
 }
+
+void CWallHealth::I_HealthModule_SetThink_Custom(void){
+	SetThink( static_cast <void (CBaseEntity::*)(void)>(&CWallHealth::CustomThink) );
+}
+void CWallHealth::CustomThink(void){
+	healthModuleInstance.CustomThink();
+}
+
+void CWallHealth::ReportGeneric(void){
+
+	int test = (this->m_pfnThink == NULL);
+
+	CBaseToggle::ReportGeneric();
+
+	//HACK: turn my charge back on if out.
+	//if(healthModuleInstance.m_iJuice <= 0){
+	//	healthModuleInstance.ChargeRestored();
+	//}
+
+}//END OF ReportGeneric
+
+
 
 void CWallHealth::UseEnd(void){
 	healthModuleInstance.UseEnd();
@@ -258,6 +283,11 @@ void CWallHealth::KeyValue( KeyValueData *pkvd )
 
 
 void CWallHealth::Activate(){
+
+	//is this more appropriate?
+	//healthModuleInstance.setup(static_cast <CBaseEntity*>(this), static_cast <I_HealthModule_Parent*>(this));
+
+
 	CBaseToggle::Activate();
 }
 
@@ -267,10 +297,14 @@ void CWallHealth::Activate(){
 void CWallHealth::Spawn()
 {
 	if(!healthModuleInstance.establishedParentYet){
-		healthModuleInstance.setup(static_cast <CBaseEntity*>(this), static_cast <I_HealthModule_Parent*>(this));
+		healthModuleInstance.setupSpawn(static_cast <CBaseEntity*>(this), static_cast <I_HealthModule_Parent*>(this));
 	}
 
 	Precache( );
+
+	healthModuleInstance.Spawn();
+
+
 
 	pev->solid		= SOLID_BSP;
 	pev->movetype	= MOVETYPE_PUSH;
@@ -281,7 +315,6 @@ void CWallHealth::Spawn()
 
 	pev->frame = 0;
 
-	healthModuleInstance.Spawn();
 
 }
 
@@ -295,6 +328,8 @@ void CWallHealth::Precache()
 
 void CWallHealth::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
 { 
+	//int test = (this->m_pfnThink == &CWallHealth::CustomThink);
+
 	//Tell my instance I am being used.
 	healthModuleInstance.Use(pActivator, pCaller, useType, value);
 }

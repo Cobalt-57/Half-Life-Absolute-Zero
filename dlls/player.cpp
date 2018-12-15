@@ -2601,6 +2601,15 @@ void CBasePlayer::PlayerUse ( void )
 	pObject = pClosest;
 
 
+	//DEBUG.
+	/*
+	if(pObject){
+		easyForcePrintLine("PLAYER USE: %s", pObject->getClassname());
+	}else{
+		easyForcePrintLine("PLAYER USE: nothing.");
+	}
+	*/
+
 
 	BOOL flUseSuccess = FALSE;
 	

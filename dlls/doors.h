@@ -47,9 +47,14 @@
 class CBaseDoor : public CBaseToggle
 {
 public:
+	
+	CBaseDoor(void);
+
+
 	void Spawn( void );
 	void Precache( void );
 	virtual void KeyValue( KeyValueData *pkvd );
+
 
 	virtual BOOL IsWorldAffiliated(void);
 
@@ -74,12 +79,20 @@ public:
 	// used to selectivly override defaults
 	void EXPORT DoorTouch( CBaseEntity *pOther );
 
+	//MODDD - new
+	virtual void AngularMove( Vector vecDestAngle, float flSpeed );
+
 	// local functions
 	int DoorActivate( );
 	void EXPORT DoorGoUp( void );
 	void EXPORT DoorGoDown( void );
 	void EXPORT DoorHitTop( void );
 	void EXPORT DoorHitBottom( void );
+
+	//MODDD - event methods for doing something in particular on hitting the top or bottom, so long as the base door's DoorHitTop and DoorHitBottom are used.
+	//By default nothing happens, but heal doors can use this.
+	virtual void OnDoorHitTop(void);
+	virtual void OnDoorHitBottom(void);
 	
 	BYTE	m_bHealthValue;// some doors are medi-kit doors, they give players health
 	

@@ -1195,6 +1195,7 @@ void CBaseEntity::ReportGeneric(){
 
 	easyForcePrintLine("Sequence:%d Frame:%.2f Framerate:%.2f", pev->sequence, pev->frame, pev->framerate);
 	easyForcePrintLine("Flags:%d renderfx:%d rendermode:%d renderamt:%.2f gamestate:%d solid:%d movetype:%d", pev->flags, pev->renderfx, pev->rendermode, pev->renderamt, pev->gamestate, pev->solid, pev->movetype);
+	easyForcePrintLine("ThinkACTIVE:%d curtime:%.2f nextthink:%.2f ltime:%.2f", (m_pfnThink!=NULL), gpGlobals->time, pev->nextthink, pev->ltime);
 
 
 }//END OF ReportGeneric

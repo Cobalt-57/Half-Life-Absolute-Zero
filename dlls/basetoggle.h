@@ -51,9 +51,10 @@ public:
 	virtual float	GetDelay( void ) { return m_flWait; }
 
 	// common member functions
-	void LinearMove( Vector	vecDest, float flSpeed );
+	//MODDD - LinearMove and AngularMove made virtual. Shouldn't have to be overridden too often though.
+	virtual void LinearMove( Vector	vecDest, float flSpeed );
 	void EXPORT LinearMoveDone( void );
-	void AngularMove( Vector vecDestAngle, float flSpeed );
+	virtual void AngularMove( Vector vecDestAngle, float flSpeed );
 	void EXPORT AngularMoveDone( void );
 	BOOL IsLockedByMaster( void );
 

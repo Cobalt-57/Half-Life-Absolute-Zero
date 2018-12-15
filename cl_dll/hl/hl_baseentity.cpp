@@ -249,6 +249,14 @@ void CBaseToggle::PostRestore() { }
 
 void CBaseToggle :: KeyValue( struct KeyValueData_s * ) { }
 
+//MODDD - required niw that they are virtual
+void CBaseToggle::LinearMove( Vector	vecDest, float flSpeed ){};
+void CBaseToggle::AngularMove( Vector vecDestAngle, float flSpeed ){};
+
+
+
+
+
 // CGrenade Stubs
 void CGrenade::BounceSound( void ) { }
 
