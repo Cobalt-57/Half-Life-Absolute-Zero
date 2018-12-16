@@ -32,10 +32,14 @@
 
 
 #include "healthmodule.h"
+#include "lights.h"
 
 
 //last? what?
 //#include "doors.h"
+
+
+EASY_CVAR_EXTERN(wallHealthDoor_closeDelay)
 
 
 extern void SetMovedir(entvars_t* ev);
@@ -568,9 +572,49 @@ extern Vector VecBModelOrigin( entvars_t* pevBModel );
 //
 // Starts the door going to its "up" position (simply ToggleData->vecPosition2).
 //
+//MODDD - contents moved to OnDoorGoUp instead. DoorGoUp is an EXPORT'd function that may be called by the engine, so it
+//        isn't as reliable for virtual things (child classes overriding to make their own versions).  So this way, a separate
+//        non-event version OnDoorGoUp can be used instead.  That can be virtual and be overridable by child classes.
+//        And the parent here can start by using it instead too.
+//        Same story for DoorHitBottom, DoorGoDown, and DoorGoUp (which can be directly called or used for engine events).
 void CBaseDoor::DoorGoUp( void )
 {
-	entvars_t	*pevActivator;
+	OnDoorGoUp();
+}
+
+
+//
+// The door has reached the "up" position.  Either go back down, or wait for another activation.
+//
+void CBaseDoor::DoorHitTop( void )
+{
+	OnDoorHitTop(); //MODDD - may want to know.
+
+}
+
+
+//
+// Starts the door going to its "down" position (simply ToggleData->vecPosition1).
+//
+void CBaseDoor::DoorGoDown( void )
+{
+	OnDoorGoDown();
+}
+
+//
+// The door has reached the "down" position.  Back to quiescence.
+//
+void CBaseDoor::DoorHitBottom( void )
+{
+	OnDoorHitBottom(); //MODDD - may want to know.
+}
+
+
+
+
+void CBaseDoor::OnDoorGoUp(void){
+	
+	//entvars_t	*pevActivator;
 
 	// It could be going-down, if blocked.
 	ASSERT(m_toggle_state == TS_AT_BOTTOM || m_toggle_state == TS_GOING_DOWN);
@@ -583,42 +627,15 @@ void CBaseDoor::DoorGoUp( void )
 	m_toggle_state = TS_GOING_UP;
 	
 	SetMoveDone( &CBaseDoor::DoorHitTop );
-	if ( FClassnameIs(pev, "func_door_rotating"))		// !!! BUGBUG Triggered doors don't work with this yet
-	{
-		float	sign = 1.0;
-
-		if ( m_hActivator != NULL )
-		{
-			pevActivator = m_hActivator->pev;
-			
-			if ( !FBitSet( pev->spawnflags, SF_DOOR_ONEWAY ) && pev->movedir.y ) 		// Y axis rotation, move away from the player
-			{
-				Vector vec = pevActivator->origin - pev->origin;
-				Vector angles = pevActivator->angles;
-				angles.x = 0;
-				angles.z = 0;
-				UTIL_MakeVectors (angles);
-	//			Vector vnext = (pevToucher->origin + (pevToucher->velocity * 10)) - pev->origin;
-				UTIL_MakeVectors ( pevActivator->angles );
-				Vector vnext = (pevActivator->origin + (gpGlobals->v_forward * 10)) - pev->origin;
-				if ( (vec.x*vnext.y - vec.y*vnext.x) < 0 )
-					sign = -1.0;
-			}
-		}
-		AngularMove(m_vecAngle2*sign, pev->speed);
-	}
-	else
-		LinearMove(m_vecPosition2, pev->speed);
+	
+	//MODDD - behavior for CRotDoor moved to... CRotDoor's version of this method. I know, shocking.
+	
+	LinearMove(m_vecPosition2, pev->speed);
 }
 
 
-//
-// The door has reached the "up" position.  Either go back down, or wait for another activation.
-//
-void CBaseDoor::DoorHitTop( void )
-{
-	OnDoorHitTop(); //MODDD - may want to know.
-
+void CBaseDoor::OnDoorHitTop(void){
+	
 	if ( !FBitSet( pev->spawnflags, SF_DOOR_SILENT ) )
 	{
 		STOP_SOUND(ENT(pev), CHAN_STATIC, (char*)STRING(pev->noiseMoving) );
@@ -638,25 +655,12 @@ void CBaseDoor::DoorHitTop( void )
 	else
 	{
 		// In flWait seconds, DoorGoDown will fire, unless wait is -1, then door stays open
-		//MODDD
-		if(!(pev->spawnflags & SF_DOOR_HEAL)){
-			//normal.
-			pev->nextthink = pev->ltime + m_flWait;
-			SetThink( &CBaseDoor::DoorGoDown );
-		}else{
-			//MODDD - nevermind this, the rot door will handle when to close on its own, and involve "m_flWait" if it is reliably set.
-			//doorGoDownDelay = gpGlobals->time + m_flWait;
-		}
-
+		pev->nextthink = pev->ltime + m_flWait;
+		SetThink( &CBaseDoor::DoorGoDown );
+		
 		if ( m_flWait == -1 )
 		{
-			//MODDD
-			if(!(pev->spawnflags & SF_DOOR_HEAL)){
-				pev->nextthink = -1;
-			}else{
-				//huh?
-				//doorGoDownDelay = -1;
-			}
+			pev->nextthink = -1;
 		}
 	}
 
@@ -665,14 +669,11 @@ void CBaseDoor::DoorHitTop( void )
 		FireTargets( STRING(pev->netname), m_hActivator, this, USE_TOGGLE, 0 );
 
 	SUB_UseTargets( m_hActivator, USE_TOGGLE, 0 ); // this isn't finished
-}
+}//END OF OnDoorHitTop
 
 
-//
-// Starts the door going to its "down" position (simply ToggleData->vecPosition1).
-//
-void CBaseDoor::DoorGoDown( void )
-{
+void CBaseDoor::OnDoorGoDown(void){
+	
 	if ( !FBitSet( pev->spawnflags, SF_DOOR_SILENT ) )
 		EMIT_SOUND(ENT(pev), CHAN_STATIC, (char*)STRING(pev->noiseMoving), 1, ATTN_NORM);
 	
@@ -682,18 +683,14 @@ void CBaseDoor::DoorGoDown( void )
 	m_toggle_state = TS_GOING_DOWN;
 
 	SetMoveDone( &CBaseDoor::DoorHitBottom );
-	if ( FClassnameIs(pev, "func_door_rotating"))//rotating door
-		AngularMove( m_vecAngle1, pev->speed);
-	else
-		LinearMove( m_vecPosition1, pev->speed);
-}
+	
+	//MODDD - rotating door check here also moved to CRotDoor.
 
-//
-// The door has reached the "down" position.  Back to quiescence.
-//
-void CBaseDoor::DoorHitBottom( void )
-{
-	OnDoorHitBottom(); //MODDD - may want to know.
+	LinearMove( m_vecPosition1, pev->speed);
+}//END OF OnDoorGoDown
+
+
+void CBaseDoor::OnDoorHitBottom(void){
 
 	if ( !FBitSet( pev->spawnflags, SF_DOOR_SILENT ) )
 	{
@@ -717,15 +714,7 @@ void CBaseDoor::DoorHitBottom( void )
 	// Fire the close target (if startopen is set, then "top" is closed) - netname is the close target
 	if ( pev->netname && !(pev->spawnflags & SF_DOOR_START_OPEN) )
 		FireTargets( STRING(pev->netname), m_hActivator, this, USE_TOGGLE, 0 );
-}
-
-//no default behavior.
-void CBaseDoor::OnDoorHitTop(void){
-
-}
-void CBaseDoor::OnDoorHitBottom(void){
-
-}
+}//END OF OnDoorHitBottom
 
 
 
@@ -854,6 +843,8 @@ class CRotDoor : public CBaseDoor, I_HealthModule_Parent
 public:
 	float angularMoveDoneTime;
 	float doorCloseDelay;
+	BOOL turnedOffHealLight;
+	
 	
 
 	HealthModule healthModuleInstance;  //guaranteed instance.
@@ -881,11 +872,15 @@ public:
 
 	void EXPORT CustomThink(void);
 	
+	void turnOffHealLight(void);
+
 	//MODDD - new override in case of something special the health wall door healer needs.
 	virtual void AngularMove( Vector vecDestAngle, float flSpeed );
 
-	void OnDoorHitTop(void);
-	void OnDoorHitBottom(void);
+	virtual void OnDoorGoUp(void);
+	virtual void OnDoorHitTop(void);
+	virtual void OnDoorGoDown(void);
+	virtual void OnDoorHitBottom(void);
 
 	void ReportGeneric(void);
 	
@@ -909,19 +904,14 @@ public:
 
 	
 	virtual int	ObjectCaps( void ){
-		if(pev->spawnflags & SF_DOOR_HEAL){
-			//add CONTINUOUS_USE, remove FCAP_ACROSS_TRANSITION (although CBaseDoor already does that 100% of the time)
-			return (CBaseDoor :: ObjectCaps() | FCAP_CONTINUOUS_USE) & ~FCAP_ACROSS_TRANSITION;
-		}else{
+		if(!(pev->spawnflags & SF_DOOR_HEAL)){
 			//just the default behavior.
 			return (CBaseDoor :: ObjectCaps());
+		}else{
+			//add CONTINUOUS_USE, remove FCAP_ACROSS_TRANSITION (although CBaseDoor already does that 100% of the time)
+			return (CBaseDoor :: ObjectCaps() | FCAP_CONTINUOUS_USE) & ~FCAP_ACROSS_TRANSITION;
 		}
 	}//END OF ObjectCaps
-
-
-
-
-
 
 
 
@@ -943,6 +933,7 @@ CRotDoor::CRotDoor(void){
 	currentPreference = HDP_CLOSED;
 	angularMoveDoneTime = -1;
 	doorCloseDelay = -1;
+	turnedOffHealLight = FALSE;
 
 }//END OF CRotDoor constructor
 
@@ -954,6 +945,7 @@ CRotDoor::CRotDoor(void){
 TYPEDESCRIPTION CRotDoor::m_SaveData[] =
 {
 	DEFINE_FIELD( CRotDoor, angularMoveDoneTime, FIELD_TIME),
+	DEFINE_FIELD( CRotDoor, turnedOffHealLight, FIELD_BOOLEAN),
 	
     //...
 };
@@ -973,13 +965,16 @@ int CRotDoor::Save( CSave &save )
 
 	//return iWriteFieldsResult;
 
-	if(pev->spawnflags & SF_DOOR_HEAL){
+	if(!(pev->spawnflags & SF_DOOR_HEAL)){
+		return iWriteFieldsResult;
+	}else{
 		if(iWriteFieldsResult){
 			int iWriteFields_HealthModule_Result = healthModuleInstance.Save(save);
 			return iWriteFields_HealthModule_Result;
+		}else{
+			//what?
+			return 0;
 		}
-	}else{
-		return iWriteFieldsResult;
 	}
 }
 int CRotDoor::Restore( CRestore &restore )
@@ -997,13 +992,16 @@ int CRotDoor::Restore( CRestore &restore )
 
 	//return iReadFieldsResult;
 
-	if(pev->spawnflags & SF_DOOR_HEAL){
+	if(!(pev->spawnflags & SF_DOOR_HEAL)){
+		return iReadFieldsResult;
+	}else{
 		if(iReadFieldsResult){
 			int iReadFields_HealthModule_Result = healthModuleInstance.Restore(restore);
 			return iReadFields_HealthModule_Result;
+		}else{
+			//what?
+			return 0;
 		}
-	}else{
-		return iReadFieldsResult;
 	}
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1035,22 +1033,23 @@ void CRotDoor::I_HealthModule_UseContinuous(CBaseEntity *pActivator, CBaseEntity
 }
 
 void CRotDoor::onDoorUse(void){
-	if(m_toggle_state == TS_AT_BOTTOM){
-		//Closed? Open me.
+	if(m_toggle_state == TS_AT_BOTTOM || m_toggle_state == TS_GOING_DOWN){
+		//Closed or closing? Open me.
 		currentPreference = HDP_OPEN;
 	}
 	if(m_toggle_state == TS_AT_TOP){
 		//This resets the close delay.
 		doorCloseDelay = gpGlobals->time + m_flWait;
 	}
-	//}
 }
 
 
 
 void CRotDoor::I_HealthModule_UseEnd(void){
+	
 
-}
+}//END OF I_HealthModule_UseEnd
+
 
 void CRotDoor::I_HealthModule_SetThink_UseEnd(void){
 	SetThink( static_cast <void (CBaseEntity::*)(void)>(&CRotDoor::UseEnd) );
@@ -1061,7 +1060,10 @@ void CRotDoor::I_HealthModule_SetThink_ChargeRestored(void){
 
 void CRotDoor::UseEnd(void){
 	healthModuleInstance.UseEnd();
-}
+
+
+
+}//END OF UseEnd
 
 void CRotDoor::ChargeRestored(void){
 	healthModuleInstance.ChargeRestored();
@@ -1074,6 +1076,9 @@ void CRotDoor::I_HealthModule_SetThink_Custom(void){
 void CRotDoor::CustomThink(void){
 	//This think method is only possible if we have the healer spawnflag.
 	
+	//int test = (this->m_pfnThink==NULL);
+
+
 	if(angularMoveDoneTime != -1 && gpGlobals->time >= angularMoveDoneTime){
 		angularMoveDoneTime = -1;
 		AngularMoveDone();
@@ -1100,7 +1105,13 @@ void CRotDoor::CustomThink(void){
 			DoorGoUp();
 		}
 
+
+		if(currentPreference == HDP_CLOSED && healthModuleInstance.m_iJuice <= 0){
+			turnOffHealLight();  //turn off the light to signify this charger is empty.
+		}
+		
 	}
+
 	if(m_toggle_state == TS_AT_TOP){
 		
 		if(healthModuleInstance.m_iJuice <= 0){
@@ -1117,6 +1128,50 @@ void CRotDoor::CustomThink(void){
 
 
 }//END OF CustomThink
+
+
+void CRotDoor::turnOffHealLight(void){
+	//If out of health, look for the light entity and turn it off.
+	if(!turnedOffHealLight){
+
+		if( !FStringNull ( pev->target ) ){
+			edict_t* pentTarget = NULL;
+			edict_t* pentLight = NULL;
+
+			//pentTarget = FIND_ENTITY_BY_TARGETNAME(pentTarget, STRING(pev->target));
+			while( (FNullEnt( pentTarget = FIND_ENTITY_BY_TARGETNAME(pentTarget, STRING(pev->target)) ) ) == FALSE){
+				if( VARS( pentTarget ) != pev){
+
+					pentLight = pentTarget;
+
+					//only makes sense to pick up this one. If there's multiple with the same name that's a map issue.
+					break;
+				}
+			}//END OF while
+			
+			if(!FNullEnt(pentLight )){
+				//easyForcePrintLine("I got a light: %s", STRING(pentLight->v.classname) );
+
+				if(FStrEq(STRING(pentLight->v.classname), "light") == TRUE){
+					//the cast can work.
+					CBaseEntity* otherEnt = CBaseEntity::Instance(pentLight);
+					CLight* otherEnt_light = static_cast<CLight*>(otherEnt);
+					otherEnt_light->TurnOff();
+				
+					turnedOffHealLight = TRUE;
+
+				}else{
+					easyForcePrintLine("WallHealthDoor: ERROR. targetname \"%s\" found, but is not of classname \"light\". Classname: \"%s\".", STRING(pentLight->v.classname) );
+				}
+
+			}else{
+				easyForcePrintLine("WallHealthDoor: ERROR. targetname \"%s\" not found. No light to connect.", STRING(pev->target) );
+			}
+		}else{
+			easyForcePrintLine("WallHealthDoor: ERROR. targetname string is blank, no light to connect.");
+		}
+	}//END OF turnedOffHealLight check
+}//END OF turnOffHealLight
 
 
 
@@ -1142,7 +1197,7 @@ void CRotDoor :: AngularMove( Vector vecDestAngle, float flSpeed )
 		
 		// set destdelta to the vector needed to move
 		Vector vecDestDelta = vecDestAngle - pev->angles;
-	
+		
 		// divide by speed to get time to reach dest
 		float flTravelTime = vecDestDelta.Length() / flSpeed;
 
@@ -1162,21 +1217,117 @@ void CRotDoor :: AngularMove( Vector vecDestAngle, float flSpeed )
 
 
 
+void CRotDoor::OnDoorGoUp(void){
+	//MODDD - some base behavior moved from CBaseDoor.
 
+	entvars_t	*pevActivator;
+
+	// It could be going-down, if blocked.
+	ASSERT(m_toggle_state == TS_AT_BOTTOM || m_toggle_state == TS_GOING_DOWN);
+
+	// emit door moving and stop sounds on CHAN_STATIC so that the multicast doesn't
+	// filter them out and leave a client stuck with looping door sounds!
+	if ( !FBitSet( pev->spawnflags, SF_DOOR_SILENT ) )
+		EMIT_SOUND(ENT(pev), CHAN_STATIC, (char*)STRING(pev->noiseMoving), 1, ATTN_NORM);
+
+	m_toggle_state = TS_GOING_UP;
+	
+	SetMoveDone( &CBaseDoor::DoorHitTop );
+	
+	//MODDD - moved from the part of CBaseDoor's method that checks for being CRotDoor.
+	// !!! BUGBUG Triggered doors don't work with this yet
+	float	sign = 1.0;
+
+	if ( m_hActivator != NULL )
+	{
+		pevActivator = m_hActivator->pev;
+			
+		if ( !FBitSet( pev->spawnflags, SF_DOOR_ONEWAY ) && pev->movedir.y ) 		// Y axis rotation, move away from the player
+		{
+			Vector vec = pevActivator->origin - pev->origin;
+			Vector angles = pevActivator->angles;
+			angles.x = 0;
+			angles.z = 0;
+			UTIL_MakeVectors (angles);
+//			Vector vnext = (pevToucher->origin + (pevToucher->velocity * 10)) - pev->origin;
+			UTIL_MakeVectors ( pevActivator->angles );
+			Vector vnext = (pevActivator->origin + (gpGlobals->v_forward * 10)) - pev->origin;
+			if ( (vec.x*vnext.y - vec.y*vnext.x) < 0 )
+				sign = -1.0;
+		}
+	}
+	AngularMove(m_vecAngle2*sign, pev->speed);
+	
+}//END OF OnDoorGoUp
 
 void CRotDoor::OnDoorHitTop(void){
-	if(currentPreference == HDP_OPEN){
-		//I want to stay open for at least this much longer.
-		doorCloseDelay = gpGlobals->time + m_flWait;
+
+
+	if(!(pev->spawnflags & SF_DOOR_HEAL)){
+		CBaseDoor::OnDoorHitTop();
+	}else{
+		//We want this much of the parent class to happen.
+		if ( !FBitSet( pev->spawnflags, SF_DOOR_SILENT ) )
+		{
+			STOP_SOUND(ENT(pev), CHAN_STATIC, (char*)STRING(pev->noiseMoving) );
+			EMIT_SOUND(ENT(pev), CHAN_STATIC, (char*)STRING(pev->noiseArrived), 1, ATTN_NORM);
+		}
+
+		ASSERT(m_toggle_state == TS_GOING_UP);
+		m_toggle_state = TS_AT_TOP;
+
+
+		if(currentPreference == HDP_OPEN){
+			//I want to stay open for at least this much longer.
+			doorCloseDelay = gpGlobals->time + m_flWait;
+		}
 	}
-}
+}//END OF OnDoorHitTop
+
+
+//MODDD - moved from CBaseDoor to be more specific to here.
+void CRotDoor::OnDoorGoDown(void){
+	
+	if ( !FBitSet( pev->spawnflags, SF_DOOR_SILENT ) )
+		EMIT_SOUND(ENT(pev), CHAN_STATIC, (char*)STRING(pev->noiseMoving), 1, ATTN_NORM);
+	
+#ifdef DOOR_ASSERT
+	ASSERT(m_toggle_state == TS_AT_TOP);
+#endif // DOOR_ASSERT
+	m_toggle_state = TS_GOING_DOWN;
+
+	SetMoveDone( &CBaseDoor::DoorHitBottom );
+
+	//MODDD
+	AngularMove( m_vecAngle1, pev->speed);
+}//END OF OnDoorGoDown
+
+
 void CRotDoor::OnDoorHitBottom(void){
-	//nothing special?
-}
+
+	if(!(pev->spawnflags & SF_DOOR_HEAL)){
+		CBaseDoor::OnDoorHitBottom();
+	}else{
+
+		//Like the parent but a lot of this stuff is no longer necessary.
+		
+		if ( !FBitSet( pev->spawnflags, SF_DOOR_SILENT ) )
+		{
+			STOP_SOUND(ENT(pev), CHAN_STATIC, (char*)STRING(pev->noiseMoving) );
+			EMIT_SOUND(ENT(pev), CHAN_STATIC, (char*)STRING(pev->noiseArrived), 1, ATTN_NORM);
+		}
+
+		ASSERT(m_toggle_state == TS_GOING_DOWN);
+		m_toggle_state = TS_AT_BOTTOM;
+	}
+
+}//END OF OnDoorHitBottom
 
 
 
 void CRotDoor::ReportGeneric(void){
+
+	//int test = (this->m_pfnThink==NULL);
 
 	CBaseDoor::ReportGeneric();
 
@@ -1205,14 +1356,14 @@ void CRotDoor::KeyValue( KeyValueData *pkvd )
 
 	//Let my healthModuleInstance have a say first.
 
-	if(pev->spawnflags & SF_DOOR_HEAL){
+	if(!(pev->spawnflags & SF_DOOR_HEAL)){
+		CBaseDoor::KeyValue( pkvd );
+	}else{
 		healthModuleInstance.KeyValue(pkvd);
 		
 		if(pkvd->fHandled == FALSE){
 			CBaseDoor::KeyValue( pkvd );
 		}
-	}else{
-		CBaseDoor::KeyValue( pkvd );
 	}
 
 }
@@ -1256,24 +1407,17 @@ void CRotDoor::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useT
 	//if ( value > 1.0 )
 	//	value = 1.0;
 
-
-
 	//DEBUG: awlays pass for now.?
 	//pev->spawnflags |= SF_DOOR_HEAL;
 
-	if(pev->spawnflags & SF_DOOR_HEAL){
+	if(!(pev->spawnflags & SF_DOOR_HEAL)){
+		//do whatever the parent does.
+		CBaseDoor::Use(pActivator, pCaller, useType, value);
+	}else{
 		healthModuleInstance.Use(pActivator, pCaller, useType, value);
 		
 		//at least do this like the base class does. Just in case?
 		m_hActivator = pActivator;
-
-		//on taking, send a signal to do
-		//    CBaseDoor::Use(pActivator, pCaller, useType, value);
-
-	}else{
-
-		//do whatever the parent does.
-		CBaseDoor::Use(pActivator, pCaller, useType, value);
 	}
 
 }//END OF Use
@@ -1312,14 +1456,50 @@ void CRotDoor::Spawn( void )
 	Precache( );
 
 	if((pev->spawnflags & SF_DOOR_HEAL)){
+
+		//Is enforcing this a good idea?
+		/*
+		pev->spawnflags &= ~SF_DOOR_START_OPEN;
+		pev->spawnflags &= ~SF_DOOR_ROTATE_BACKWARDS;
+		pev->spawnflags |= SF_DOOR_PASSABLE;
+		pev->spawnflags |= SF_DOOR_ONEWAY;
+		pev->spawnflags &= ~SF_DOOR_NO_AUTO_RETURN;
+		pev->spawnflags &= ~SF_DOOR_ROTATE_Z;
+		pev->spawnflags &= ~SF_DOOR_ROTATE_X;
+		pev->spawnflags |= SF_DOOR_USE_ONLY;
+		pev->spawnflags |= SF_DOOR_NOMONSTERS;
+		*/
+		//SF_DOOR_SILENT?  exclude it.
+		//pev->spawnflags = (pev->spawnflags | (SF_DOOR_PASSABLE | SF_DOOR_ONEWAY | SF_DOOR_USE_ONLY | SF_DOOR_NOMONSTERS)) & ~(SF_DOOR_START_OPEN | SF_DOOR_ROTATE_BACKWARDS | SF_DOOR_NO_AUTO_RETURN | SF_DOOR_ROTATE_Z | SF_DOOR_ROTATE_X);
+		
+		int test = (pev->spawnflags | (SF_DOOR_PASSABLE | SF_DOOR_ONEWAY | SF_DOOR_USE_ONLY | SF_DOOR_NOMONSTERS)) & ~(SF_DOOR_START_OPEN | SF_DOOR_ROTATE_BACKWARDS | SF_DOOR_NO_AUTO_RETURN | SF_DOOR_ROTATE_Z | SF_DOOR_ROTATE_X);
+		//int test2 = ( (SF_DOOR_PASSABLE | SF_DOOR_ONEWAY | SF_DOOR_USE_ONLY | SF_DOOR_NOMONSTERS)) & ~(SF_DOOR_START_OPEN | SF_DOOR_ROTATE_BACKWARDS | SF_DOOR_NO_AUTO_RETURN | SF_DOOR_ROTATE_Z | SF_DOOR_ROTATE_X);
+		
+		pev->spawnflags = test;
+
+
+		//easyForcePrint("yes:");
+		//printLineIntAsBinary((unsigned int)test, 32u);
+		//printLineIntAsBinary((unsigned int)test2, 32u);
+		
 		healthModuleInstance.Spawn();
 
-		//also, THIS must be something. Defaulting to 4 seconds if not provided properly from KeyValues.
+		//also, THIS must be something. Defaulting to this CVar's # of seconds if not provided properly from KeyValues.
 		if(m_flWait < 0){
-			m_flWait = 2.5f;
+			m_flWait = EASY_CVAR_GET(wallHealthDoor_closeDelay);
 		}
+		
+		
+		//UTIL_MakeVectors( pev->angles );
+		//gpGlobals->v_forward ??
 
-	}
+		//const char* stringtest1 = STRING(pev->target);
+		//const char* stringtest2 = STRING(pev->targetname);
+
+
+
+		//this->ReportGeneric();
+	}//END OF heal check
 
 
 

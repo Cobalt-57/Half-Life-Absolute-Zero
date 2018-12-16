@@ -46,6 +46,7 @@ SERVERSIDE (dlls)
 -healthmodule.h & .cpp - for storing info about how a CWallHealth maintains healing information such as charge left.
                          Include an instance of HealthModule with proper setup to get that same functionality in different places.
 
+-lights.h - stores classes from lights.cpp for including elsewhere.
 
 SHARED (game_shared)
 -files stored in a NEW subfolder for neatness, keep this in mind for new visual studio environments. Add this game_shared/NEW as a search path.

@@ -21,27 +21,13 @@
 */
 
 #include "extdll.h"
+#include "lights.h"
 #include "util.h"
 #include "cbase.h"
 
 
 
-class CLight : public CPointEntity
-{
-public:
-	virtual void	KeyValue( KeyValueData* pkvd ); 
-	virtual void	Spawn( void );
-	void	Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value );
-
-	virtual int		Save( CSave &save );
-	virtual int		Restore( CRestore &restore );
-	
-	static	TYPEDESCRIPTION m_SaveData[];
-
-private:
-	int		m_iStyle;
-	int		m_iszPattern;
-};
+//MODDD - CLight class moved to lights.h
 LINK_ENTITY_TO_CLASS( light, CLight );
 
 TYPEDESCRIPTION	CLight::m_SaveData[] = 
@@ -116,33 +102,43 @@ void CLight :: Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useT
 
 		if (FBitSet(pev->spawnflags, SF_LIGHT_START_OFF))
 		{
-			if (m_iszPattern)
-				LIGHT_STYLE(m_iStyle, (char *)STRING( m_iszPattern ));
-			else
-				LIGHT_STYLE(m_iStyle, "m");
-			ClearBits(pev->spawnflags, SF_LIGHT_START_OFF);
+			TurnOn();  //MODDD - readability.
 		}
 		else
 		{
-			LIGHT_STYLE(m_iStyle, "a");
-			SetBits(pev->spawnflags, SF_LIGHT_START_OFF);
+			TurnOff();  //MODDD - readability.
 		}
 	}
 }
 
+
+//force it on.
+void CLight::TurnOn(void){
+	
+	if (m_iszPattern)
+		LIGHT_STYLE(m_iStyle, (char *)STRING( m_iszPattern ));
+	else
+		LIGHT_STYLE(m_iStyle, "m");
+	ClearBits(pev->spawnflags, SF_LIGHT_START_OFF);
+}
+//force it off.
+void CLight::TurnOff(void){
+	
+	LIGHT_STYLE(m_iStyle, "a");
+	SetBits(pev->spawnflags, SF_LIGHT_START_OFF);
+}
+
+
+
 //
 // shut up spawn functions for new spotlights
 //
+
+//MODDD NOTE - there is no light_spot separate class.
 LINK_ENTITY_TO_CLASS( light_spot, CLight );
 
 
-class CEnvLight : public CLight
-{
-public:
-	void	KeyValue( KeyValueData* pkvd ); 
-	void	Spawn( void );
-};
-
+//MODDD - CEnvLight moved to lights.h
 LINK_ENTITY_TO_CLASS( light_environment, CEnvLight );
 
 void CEnvLight::KeyValue( KeyValueData* pkvd )

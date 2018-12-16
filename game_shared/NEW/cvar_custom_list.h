@@ -641,6 +641,7 @@
 #define DEFAULT_timedDamage_brightnessFloor -1
 #define DEFAULT_timedDamage_flashSpeed 2
 #define DEFAULT_timedDamage_debug 0
+#define DEFAULT_wallHealthDoor_closeDelay 0.75
 
 #define EASY_CVAR_HASH_MASS\
 	EASY_CVAR_HASH(strobeDurationMin, 0)\
@@ -1270,6 +1271,7 @@
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTONLY(timedDamage_brightnessFloor, timeddamage_brightnessfloor, 171)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTONLY(timedDamage_flashSpeed, timeddamage_flashspeed, 172)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTONLY(timedDamage_debug, timeddamage_debug, 173)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(wallHealthDoor_closeDelay, wallhealthdoor_closedelay)\
 	DUMMY
 
 #define EASY_CVAR_HIDDEN_SAVE_MASS\
@@ -1723,6 +1725,7 @@
 	EASY_CVAR_HIDDEN_SAVE_CLIENTONLY(timedDamage_brightnessFloor)\
 	EASY_CVAR_HIDDEN_SAVE_CLIENTONLY(timedDamage_flashSpeed)\
 	EASY_CVAR_HIDDEN_SAVE_CLIENTONLY(timedDamage_debug)\
+	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(wallHealthDoor_closeDelay)\
 	DUMMY
 
 #define EASY_CVAR_HIDDEN_LOAD_MASS\
@@ -2176,6 +2179,7 @@
 	EASY_CVAR_HIDDEN_LOAD_CLIENTONLY(timedDamage_brightnessFloor, timeddamage_brightnessfloor)\
 	EASY_CVAR_HIDDEN_LOAD_CLIENTONLY(timedDamage_flashSpeed, timeddamage_flashspeed)\
 	EASY_CVAR_HIDDEN_LOAD_CLIENTONLY(timedDamage_debug, timeddamage_debug)\
+	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(wallHealthDoor_closeDelay, wallhealthdoor_closedelay)\
 	DUMMY
 
 #define EASY_CVAR_DECLARATION_SERVER_MASS\
@@ -2645,6 +2649,7 @@
 	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY_CLIENTONLY(timedDamage_brightnessFloor)\
 	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY_CLIENTONLY(timedDamage_flashSpeed)\
 	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY_CLIENTONLY(timedDamage_debug)\
+	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY(wallHealthDoor_closeDelay)\
 	DUMMY
 
 #define EASY_CVAR_DECLARATION_CLIENT_MASS\
@@ -3114,6 +3119,7 @@
 	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY_CLIENTONLY(timedDamage_brightnessFloor)\
 	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY_CLIENTONLY(timedDamage_flashSpeed)\
 	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY_CLIENTONLY(timedDamage_debug)\
+	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY(wallHealthDoor_closeDelay)\
 	DUMMY
 
 #define EASY_CVAR_UPDATE_SERVER_MASS\
@@ -3583,6 +3589,7 @@
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTONLY(timedDamage_brightnessFloor, 171)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTONLY(timedDamage_flashSpeed, 172)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTONLY(timedDamage_debug, 173)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(wallHealthDoor_closeDelay)\
 	DUMMY
 
 #define EASY_CVAR_UPDATE_CLIENT_MASS\
@@ -4052,6 +4059,7 @@
 	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY_CLIENTONLY(timedDamage_brightnessFloor)\
 	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY_CLIENTONLY(timedDamage_flashSpeed)\
 	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY_CLIENTONLY(timedDamage_debug)\
+	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY(wallHealthDoor_closeDelay)\
 	DUMMY
 
 #define EASY_CVAR_CREATE_SERVER_SETUP_MASS\
@@ -4527,6 +4535,7 @@
 	EASY_CVAR_CREATE_CLIENT_AC_DEBUGONLY(timedDamage_brightnessFloor)\
 	EASY_CVAR_CREATE_CLIENT_AC_DEBUGONLY(timedDamage_flashSpeed)\
 	EASY_CVAR_CREATE_CLIENT_AC_DEBUGONLY(timedDamage_debug)\
+	EASY_CVAR_CREATE_CLIENT_A_DEBUGONLY(wallHealthDoor_closeDelay)\
 	DUMMY
 
 #define EASY_CVAR_RESET_MASS\
@@ -4995,6 +5004,7 @@
 	EASY_CVAR_RESET_DEBUGONLY_CLIENTONLY(timedDamage_brightnessFloor)\
 	EASY_CVAR_RESET_DEBUGONLY_CLIENTONLY(timedDamage_flashSpeed)\
 	EASY_CVAR_RESET_DEBUGONLY_CLIENTONLY(timedDamage_debug)\
+	EASY_CVAR_RESET_DEBUGONLY(wallHealthDoor_closeDelay)\
 	DUMMY
 
 #define EASY_CVAR_EXTERN_MASS\
@@ -5464,5 +5474,6 @@
 	EASY_CVAR_EXTERN_DEBUGONLY_CLIENTONLY(timedDamage_brightnessFloor)\
 	EASY_CVAR_EXTERN_DEBUGONLY_CLIENTONLY(timedDamage_flashSpeed)\
 	EASY_CVAR_EXTERN_DEBUGONLY_CLIENTONLY(timedDamage_debug)\
+	EASY_CVAR_EXTERN_DEBUGONLY(wallHealthDoor_closeDelay)\
 	DUMMY
 

@@ -23,9 +23,13 @@
 
 
 // doors
-#define SF_DOOR_ROTATE_Y			0
+//MODDD - this spawnflag is... completely unused. 0? How can that be included or excluded by anything?
+//        The constant isn't used at least. Just weird.
+//#define SF_DOOR_ROTATE_Y			0
+
 #define	SF_DOOR_START_OPEN			1
 #define SF_DOOR_ROTATE_BACKWARDS	2
+//                                  4 was unused.  But it might still be some other higher entity flag, who knows.
 #define SF_DOOR_PASSABLE			8
 #define SF_DOOR_ONEWAY				16
 #define	SF_DOOR_NO_AUTO_RETURN		32
@@ -90,8 +94,10 @@ public:
 	void EXPORT DoorHitBottom( void );
 
 	//MODDD - event methods for doing something in particular on hitting the top or bottom, so long as the base door's DoorHitTop and DoorHitBottom are used.
-	//By default nothing happens, but heal doors can use this.
+	//The event (EXPORT'd) methods above call these instead so that child classes just have to override the "On" versions instead.
+	virtual void OnDoorGoUp(void);
 	virtual void OnDoorHitTop(void);
+	virtual void OnDoorGoDown(void);
 	virtual void OnDoorHitBottom(void);
 	
 	BYTE	m_bHealthValue;// some doors are medi-kit doors, they give players health

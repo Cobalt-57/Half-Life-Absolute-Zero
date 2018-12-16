@@ -1219,7 +1219,7 @@ void CScientist :: StartTask( Task_t *pTask )
 	case TASK_PLAY_SEQUENCE_FACE_ENEMY:
 	case TASK_PLAY_SEQUENCE_FACE_TARGET:
 	case TASK_PLAY_SEQUENCE:
-		easyPrintLine("WHAT THE FUUUUUCK %.2f", pTask->flData);
+		easyPrintLine("WHAT THE hey %.2f", pTask->flData);
 		if(pTask->flData == ACT_EXCITED || pTask->flData == ACT_CROUCH || pTask->flData == ACT_CROUCHIDLE){
 			if(gpGlobals->time > playFearAnimCooldown ){
 				//allowed.

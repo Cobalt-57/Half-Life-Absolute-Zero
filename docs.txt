@@ -381,6 +381,14 @@ timedDamageIgnoresArmor - BOOL.  If on, all timed damage will ignore the player'
 timedDamageEndlessOnHard - BOOL.  If on and "skill" is set to 3 (hard difficulty), curable damages never decrease.  (technically, they never decrease beyond ONE step, so that some common canister logic still works).  Still endless.
 
 
+wallHealthDoor_closeDelay (0.75) - ADJUSTABLE. How long a door'ed wall health keeps the door open before closing automatically.
+~Do NOT set below 0.1. A reasonable minimum is 0.12 to be near-instant.
+~A wall health door out of health closes immediately regardless.
+~Only applies to wallHealthDoors that do not manually set their "wait" key-value.
+~Only applies for new maps. Changing in the middle of a game or loading has no effect on existing wallHealthDoors.
+
+
+
 
 canDropInSinglePlayer - BOOL. If on, the player can "drop" the currently equipped weapon in single player ("drop" in console), just like in multiplayer.
 

@@ -3940,9 +3940,12 @@ void ClientCommand( edict_t *pEntity )
 		}//END OF tempPlayer and weapon cheat checks
 
 
+		
 
-	}
-	else if(FStrEq(pcmdRefinedRef, "myasshungers")){
+
+
+
+	}else if(FStrEq(pcmdRefinedRef, "myasshungers")){
 		
 		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev);
 		CBaseEntity* forwardEnt = FindEntityForward(tempplayer);
@@ -3952,6 +3955,29 @@ void ClientCommand( edict_t *pEntity )
 			CTalkMonster* sciRef = static_cast<CTalkMonster*>(forwardEnt);
 			sciRef->initiateAss();
 		}
+
+	}else if(FStrEq(pcmdRefinedRef, "listofentities")){
+		
+		int i = 0;
+		CBaseEntity *pList[500];
+
+		//FL_CLIENT|FL_MONSTER
+		int count = UTIL_EntitiesInBox( pList, 500, Vector(-99999,-99999,-99999), Vector(99999,99999,99999), 0 );
+		easyForcePrintLine("***ENTITY LIST***");
+		for ( i = 0; i < count; i++){
+			CBaseEntity* ent = pList[i];
+			easyForcePrintLine("#%d classname:%s netname:%s target:%s targetname:%s",
+				i,
+				ent->pev->classname!=NULL?STRING(ent->pev->classname):"_",
+				ent->pev->netname!=NULL?STRING(ent->pev->netname):"_",
+				ent->pev->target!=NULL?STRING(ent->pev->target):"_",
+				ent->pev->targetname!=NULL?STRING(ent->pev->targetname):"_"
+				
+				
+			);
+		}//END
+
+
 
 	}else if(FStrEq(pcmdRefinedRef, "forcenodeupdate")){
 		if(g_flWeaponCheat == 0.0){

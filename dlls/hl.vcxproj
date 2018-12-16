@@ -1103,6 +1103,7 @@
     <ClInclude Include="hornet.h" />
     <ClInclude Include="items.h" />
     <ClInclude Include="kingpin.h" />
+    <ClInclude Include="lights.h" />
     <ClInclude Include="maprules.h" />
     <ClInclude Include="monsterevent.h" />
     <ClInclude Include="nodes.h" />
