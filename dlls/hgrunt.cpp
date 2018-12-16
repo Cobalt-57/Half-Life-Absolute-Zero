@@ -1290,7 +1290,7 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CHGrunt)
 	}//END OF blast damage and act_cower (ducking for cover) check.
 
 
-	//EASY_CVAR_PRINTIF_PRE(hgruntPrintout, easyPrintLine("WHUT %d :: ACT ideal:%d, cur:%d  :: poop.", this->m_movementGoal, m_IdealActivity, m_movementActivity));
+	//EASY_CVAR_PRINTIF_PRE(hgruntPrintout, easyPrintLine("WHUT %d :: ACT ideal:%d, cur:%d.", this->m_movementGoal, m_IdealActivity, m_movementActivity));
 
 	//EASY_CVAR_PRINTIF_PRE(hgruntPrintout, easyPrintLine("PASSSSS???? %d %d %d", pev->deadflag == DEAD_NO, m_pSchedule != slhgruntStrafeToLocation, (m_IdealActivity != m_movementActivity || this->m_movementGoal == MOVEGOAL_NONE)) );
 

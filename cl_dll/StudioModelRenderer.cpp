@@ -1021,7 +1021,7 @@ float CStudioModelRenderer::StudioEstimateFrame( mstudioseqdesc_t *pseqdesc )
 	/*
 	if((m_pCurrentEntity->curstate.renderfx & ISNPC) && !( (m_pCurrentEntity->curstate.renderfx & ISVIEWMODEL) == ISVIEWMODEL)   ){
 		//Check these?
-		easyForcePrintLine("YO WHATS GOOD MY PENIS IS THICK %d %d %d %d %.2f %.2f %.2f %.2f",
+		easyForcePrintLine("YO WHATS GOOD %d %d %d %d %.2f %.2f %.2f %.2f",
 			m_pCurrentEntity->curstate.iuser1,
 			m_pCurrentEntity->curstate.iuser2,
 			m_pCurrentEntity->curstate.iuser3,

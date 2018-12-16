@@ -2066,9 +2066,6 @@ CL: UPDATE A: 0.88 -> 0.87
 	//MODDD - little insertion here...
 	//LITTLE TIP ABOUT WEAPON ANIMS: send an anim with 128 as part of a bitmask and it will animate backwards!
 	
-	//float poop = CVAR_GET_FLOAT("testVar");
-
-
 
 
 
@@ -2185,11 +2182,11 @@ CL: UPDATE A: 0.88 -> 0.87
 		//can only work if our weapon is a snark or chumtoad.
 
 		if(pWeapon->m_iId == WEAPON_SNARK){
-			CSqueak* poopiez = static_cast<CSqueak*>(pWeapon);
-			poopiez->m_fJustThrown = stored_m_fJustThrown;
+			CSqueak* tempSqueak = static_cast<CSqueak*>(pWeapon);
+			tempSqueak->m_fJustThrown = stored_m_fJustThrown;
 		}else if(pWeapon->m_iId == WEAPON_CHUMTOAD){
-			CChumToadWeapon* poopiez = static_cast<CChumToadWeapon*>(pWeapon);
-			poopiez->m_fJustThrown = stored_m_fJustThrown;
+			CChumToadWeapon* tempToad = static_cast<CChumToadWeapon*>(pWeapon);
+			tempToad->m_fJustThrown = stored_m_fJustThrown;
 		}
 		flag_apply_m_fJustThrown = FALSE;
 	}

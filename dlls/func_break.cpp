@@ -1189,7 +1189,9 @@ void CPushable :: Move( CBaseEntity *pOther, int push )
 			pev->velocity.y += pevToucher->velocity.y * pOther->massInfluence() * pushSpeedFactor;
 				
 			//the other object will slow down any frame it touches me.  IF it is not another pusable.
-			if(!FClassnameIs(pevToucher, "func_pushable")){
+			//And trains, they can look weird if thrown off.  This should really be a virtual method like massInfluence (pushSlowdown?) if much more needs it.
+			//Any other fixed moving things like this should probably be ignored for velocity changes by pushables.
+			if(!FClassnameIs(pevToucher, "func_pushable") && !FClassnameIs(pevToucher, "func_train")){
 				pOther->pev->velocity.x *= 0.6;
 				pOther->pev->velocity.y *= 0.6;
 			}

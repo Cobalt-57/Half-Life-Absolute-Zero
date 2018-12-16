@@ -1710,17 +1710,17 @@ void CISlave :: RunTask( Task_t *pTask )
 			
 			CBaseEntity* testEnt = Instance(m_hTargetEnt->pev);
 			if(testEnt != NULL){
-				CISlave* poopier = static_cast<CISlave*>(testEnt);
-				if(poopier != NULL && poopier->beingRevived < 2){
+				CISlave* tempSlave = static_cast<CISlave*>(testEnt);
+				if(tempSlave != NULL && tempSlave->beingRevived < 2){
 
-					poopier->beingRevived = 2;
+					tempSlave->beingRevived = 2;
 					//done in riseFromTheGrave()
 					
-					//poopier->monsterTryingToReviveMe = NULL;
-					//poopier->monsterTryingToReviveMeEHANDLE = NULL;
+					//tempSlave->monsterTryingToReviveMe = NULL;
+					//tempSlave->monsterTryingToReviveMeEHANDLE = NULL;
 					//reviveTargetChosen = FALSE;
 					targetIsDeadException = FALSE;
-					poopier->riseFromTheGrave();
+					tempSlave->riseFromTheGrave();
 					m_hTargetEnt = NULL;
 					finishingReviveFriendAnim = TRUE;
 

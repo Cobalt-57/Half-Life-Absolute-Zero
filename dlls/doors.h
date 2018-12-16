@@ -38,8 +38,18 @@
 #define SF_DOOR_USE_ONLY			256	// door must be opened by player's use button.
 #define SF_DOOR_NOMONSTERS			512	// Monster can't open
 
+//IMPORTANT NOTE - Bits #10 to 12 (powers of 2 1024, 2048 and 4096) are seemingly randomly given to func_door_rotation's
+//                 across several recovered maps. It may be best to avoid using these as bits 13 to 30 were tested and 
+//                 appear to be completely unused.
+//                 This was not tested for plain func_door's or any other type of entity.
+//                 It is unknown whether there are similar cases of garbage flags completely unreferenced by script in
+//                 retail / the original SDK.  Accidentally using those to mean something could mean random entities
+//                 take their effects without screening each one.
+
+
 //MODDD - new
-#define SF_DOOR_HEAL				1024
+//#define SF_DOOR_HEAL				1024
+#define SF_DOOR_HEAL				(1 << 13)  //or 8192.
 
 #define SF_DOOR_SILENT				0x80000000
 

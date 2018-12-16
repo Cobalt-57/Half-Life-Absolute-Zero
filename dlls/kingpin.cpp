@@ -1153,7 +1153,7 @@ void CKingPin::powerUpMonsters(void){
 			//if(thisDistance < POWERUP_APPLY_RANGE){
 			//no duh.
 
-			easyForcePrintLine("ILL EAT POOP %d", testMon->monsterID);
+			easyForcePrintLine("ILL probably not %d", testMon->monsterID);
 			//This can reset the powerup duration for monsters that are already powered up.
 			testMon->setPoweredUpOn(this, 12);
 

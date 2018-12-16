@@ -1015,7 +1015,7 @@ void CStukaBat:: getPathToEnemyCustom(){
 
 	BOOL enemyPresent = !(m_hEnemy==NULL||m_hEnemy.Get()==NULL|| CBaseMonster::Instance(m_hEnemy.Get())==NULL  || m_hEnemy->pev->deadflag != DEAD_NO);
 
-	//EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyPrintLine("POOPY %d", (m_hEnemy==NULL) ) );
+	//EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyPrintLine("ererererer %d", (m_hEnemy==NULL) ) );
 
 	if ( !enemyPresent )
 	{

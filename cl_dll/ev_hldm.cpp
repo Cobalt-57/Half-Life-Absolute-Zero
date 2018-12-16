@@ -1887,10 +1887,6 @@ void EV_FriendlyVomit( event_args_t* args){
 	int m_iHotglowGreen;
 	m_iHotglowGreen = gEngfuncs.pEventAPI->EV_FindModelIndex( "sprites/hotglow_green.spr" );
 	
-	int tesst = gEngfuncs.pEventAPI->EV_FindModelIndex( "sprites/penis.spr" );
-
-	//easyForcePrintLine("IS IT OK? %d %d %d", m_iHotglowGreen, tesst, duckyou);
-
 
 	vec3_t origin;
 	vec3_t ang;

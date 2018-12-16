@@ -83,6 +83,7 @@ public:
 	
 	GENERATE_KILLED_PROTOTYPE
 	
+	//MODDD NOTE - yes even as of the SDK as-is there is a never implemented method called "Poop" ._.
 	void Poop ( void );
 	BOOL FPathBlocked( void );
 	//void KeyValue( KeyValueData *pkvd );

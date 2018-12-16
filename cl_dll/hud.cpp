@@ -420,7 +420,8 @@ int CHud::canDrawSidebar(void){
 
 
 //inline
-//I SHALL SLAUGHTER YOUR FIRST BORN CHILD AND CELEBRATE ON TOP OF ITS RANCID, STINKING REMAINS
+//maybe don't inline methods expected to call other methods.  Or if they're implemented in a file/place
+//external to the class's {   } body.  I don't remember what about this caused the crash exactly.
 void CHud::drawAdditiveFilter(int sprite, const int& r, const int& g, const int& b, int huh, int x, int y, wrect_t* rect){
 	drawAdditiveFilter(sprite, r, g, b, huh, x, y, rect, 0);
 }

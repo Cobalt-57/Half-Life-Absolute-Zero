@@ -192,14 +192,6 @@ void EstablishGutLoverGib(CGib* pGib, entvars_t* pevVictim, const Vector gibSpaw
 	//can't do this without the victim.
 	if(!pevVictim)return;
 
-	/*
-	UTIL_printLineVector("gay1", pGib->pev->origin);
-
-	UTIL_printLineVector("gay2", pevVictim->origin);
-	UTIL_printLineVector("gay3", pevPlayer->origin);
-	easyForcePrintLine("ISHEAD %d", isHead);
-	*/
-	
 
 	if(isHead == TRUE){
 		pGib->pev->origin = gibSpawnOrigin;

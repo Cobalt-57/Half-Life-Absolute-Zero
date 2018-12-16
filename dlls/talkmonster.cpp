@@ -694,13 +694,13 @@ void CTalkMonster :: StartTask( Task_t *pTask )
 		consecutiveFollowFails++;  //this counts as one failure.
 		
 		//MODDD - woa there, let's not be so hasty. It's possible the follow method failed because another NPC was in the way. Wait a little and try again.
-		if(consecutiveFollowFails < 5){
+		if(consecutiveFollowFails < 8){
 			
 			//m_IdealActivity = GetStoppedActivity();    //what the TASK_STOP_MOVING task does.
 			this->m_IdealActivity = ACT_IDLE;  //safe?
 
 
-			followAgainTime = gpGlobals->time + 5;
+			followAgainTime = gpGlobals->time + 2;
 			easyForcePrintLine("OKAY? %d sched: %s", consecutiveFollowFails, getScheduleName());
 
 

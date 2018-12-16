@@ -2842,8 +2842,8 @@ void CScientist::Heal( void )
 		
 		if(monsterAttempt->IsPlayer()){
 			//send an HEV update.
-			CBasePlayer* penis = static_cast<CBasePlayer*>(monsterAttempt);
-			penis->SetSuitUpdate("!HEV_HEAL_GNC", FALSE, SUIT_REPEAT_OK);
+			CBasePlayer* uhhhhh = static_cast<CBasePlayer*>(monsterAttempt);
+			uhhhhh->SetSuitUpdate("!HEV_HEAL_GNC", FALSE, SUIT_REPEAT_OK);
 		}
 	}
 	monsterAttempt->attemptResetTimedDamage(TRUE);
@@ -3723,8 +3723,8 @@ void CScientist::forgetHealNPC(void){
 			}
 		}
 
-		const char* poopee = getScheduleName();
-		int poopii = getTaskNumber();
+		const char* heyy = getScheduleName();
+		int hooo = getTaskNumber();
 
 
 		m_hTargetEnt = NULL;

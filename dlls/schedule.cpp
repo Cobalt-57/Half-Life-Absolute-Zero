@@ -455,7 +455,7 @@ void CBaseMonster :: MaintainSchedule ( void )
 				 (m_IdealMonsterState != MONSTERSTATE_SCRIPT || m_IdealMonsterState == m_MonsterState) )
 			{
 
-				//easyForcePrintLine("POOPIN PENIS (%d && %d) %d (%d && %d)", m_afConditions, !HasConditions(bits_COND_SCHEDULE_DONE), (m_pSchedule && (m_pSchedule->iInterruptMask & bits_COND_SCHEDULE_DONE)), (m_MonsterState == MONSTERSTATE_COMBAT), (m_hEnemy==NULL) );
+				//easyForcePrintLine("doooop (%d && %d) %d (%d && %d)", m_afConditions, !HasConditions(bits_COND_SCHEDULE_DONE), (m_pSchedule && (m_pSchedule->iInterruptMask & bits_COND_SCHEDULE_DONE)), (m_MonsterState == MONSTERSTATE_COMBAT), (m_hEnemy==NULL) );
 				if (	(m_afConditions && !HasConditions(bits_COND_SCHEDULE_DONE)) ||
 						
 					//Sorry... What? Doesn't any schedule being done count as being done? They don't have to explicitly say they are interrupted by being done, 

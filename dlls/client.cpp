@@ -3962,20 +3962,77 @@ void ClientCommand( edict_t *pEntity )
 		CBaseEntity *pList[500];
 
 		//FL_CLIENT|FL_MONSTER
-		int count = UTIL_EntitiesInBox( pList, 500, Vector(-99999,-99999,-99999), Vector(99999,99999,99999), 0 );
-		easyForcePrintLine("***ENTITY LIST***");
-		for ( i = 0; i < count; i++){
-			CBaseEntity* ent = pList[i];
-			easyForcePrintLine("#%d classname:%s netname:%s target:%s targetname:%s",
-				i,
-				ent->pev->classname!=NULL?STRING(ent->pev->classname):"_",
-				ent->pev->netname!=NULL?STRING(ent->pev->netname):"_",
-				ent->pev->target!=NULL?STRING(ent->pev->target):"_",
-				ent->pev->targetname!=NULL?STRING(ent->pev->targetname):"_"
+		int count = UTIL_EntitiesInBox( pList, 500, Vector(-99999999,-99999999,-99999999), Vector(99999999,99999999,99999999), 0 );
+		
+		if(count > 0){
+			easyForcePrintLine("***ENTITY LIST***");
+			for ( i = 0; i < count; i++){
+				CBaseEntity* ent = pList[i];
+				easyForcePrintLine("#%d classname:%s netname:%s target:%s targetname:%s",
+					i,
+					ent->pev->classname!=NULL?STRING(ent->pev->classname):"_",
+					ent->pev->netname!=NULL?STRING(ent->pev->netname):"_",
+					ent->pev->target!=NULL?STRING(ent->pev->target):"_",
+					ent->pev->targetname!=NULL?STRING(ent->pev->targetname):"_"
 				
 				
-			);
-		}//END
+				);
+			}//END
+		}else{
+			easyForcePrintLine("*No entities found!... that can\'t be right.");
+		}
+
+
+	}else if( FStrEq(pcmdRefinedRef, "healcheck") || FStrEq(pcmdRefinedRef, "healers") || FStrEq(pcmdRefinedRef, "wallhealthdoor") || FStrEq(pcmdRefinedRef, "wallhealthdoorcheck") || FStrEq(pcmdRefinedRef, "heallist") || FStrEq(pcmdRefinedRef, "wallhealthdoorlist")  ){
+		
+		int i = 0;
+		CBaseEntity *pList[500];
+
+		//FL_CLIENT|FL_MONSTER
+		int count = UTIL_EntitiesInBox( pList, 500, Vector(-99999999,-99999999,-99999999), Vector(99999999,99999999,99999999), 0 );
+		BOOL anyYet = FALSE;
+
+
+		if(count > 0){
+
+
+			easyForcePrintLine("***HEALER LIST... actually bits 13 to 30 now***");
+			for ( i = 0; i < count; i++){
+				int flagFound = -1;
+				CBaseEntity* ent = pList[i];
+
+				//that is SF_DOOR_HEAL.
+
+				//(1<<10)   (1<<11) | (1<<12) |
+				if(FClassnameIs(ent->pev, "func_door_rotating") && (ent->pev->spawnflags & ( (1<<13) | (1<<14) | (1<<15) | (1<<16) | (1<<17) | (1<<18) | (1<<19) | (1<<20) | (1<<21) | (1<<22) | (1<<23) | (1<<24) | (1<<25) | (1<<26) | (1<<27) | (1<<28) | (1<<29) | (1<<30) ) ) ){
+
+					anyYet = TRUE;
+
+					easyForcePrint("#%d classname:%s netname:%s target:%s targetname:%s origin:(%.2f, %.2f, %.2f) spawnflags:",
+						i,
+						ent->pev->classname!=NULL?STRING(ent->pev->classname):"_",
+						ent->pev->netname!=NULL?STRING(ent->pev->netname):"_",
+						ent->pev->target!=NULL?STRING(ent->pev->target):"_",
+						ent->pev->targetname!=NULL?STRING(ent->pev->targetname):"_",
+						ent->pev->origin.x, ent->pev->origin.y, ent->pev->origin.z
+					);
+					printIntAsBinary( (unsigned int) ent->pev->spawnflags, 32u);
+					easyForcePrintLine();
+				}
+
+				
+				
+				
+				
+			}//END
+
+			if(!anyYet){
+				easyForcePrintLine("*No wallDoorHealth\'s or like-flagged things found!");
+			}
+
+		}else{
+			easyForcePrintLine("No entities found to begin with? what?");
+		}
 
 
 

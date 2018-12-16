@@ -172,6 +172,8 @@ typedef void (CBaseEntity::*USEPTR)( CBaseEntity *pActivator, CBaseEntity *pCall
 #define R_BA    4//
 
 
+#define	SF_NORESPAWN	( 1 << 30 )// !!!set this bit on guns and stuff that should never respawn.
+
 
 
 
@@ -189,8 +191,6 @@ class CSound;
 #endif
 
 
-
-#define	SF_NORESPAWN	( 1 << 30 )// !!!set this bit on guns and stuff that should never respawn.
 
 //
 // EHANDLE. Safe way to point to CBaseEntities who may die between frames

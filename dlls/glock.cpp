@@ -395,7 +395,6 @@ int CGlock::GetItemInfo(ItemInfo *p)
 		p->iMaxClip = GLOCK_MAX_CLIP;
 		//pl->m_rgAmmo[gun->m_iPrimaryAmmoType]
 	}
-	//easyPrintLine("WHAT ARE YOU GAYBOY %d", p->iMaxClip);
 	ItemInfoArray[ m_iId ].iMaxClip = p->iMaxClip;
 	
 	//p->iMaxClip = GLOCK_MAX_CLIP - 1;
