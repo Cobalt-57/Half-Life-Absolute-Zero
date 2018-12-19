@@ -23,6 +23,7 @@ class CPantherEye : public CBaseMonster
 public:
 	
 
+	float HearingSensitivity(void);
 	BOOL testLeapNoBlock(void);
 
 	int  IRelationship( CBaseEntity *pTarget );

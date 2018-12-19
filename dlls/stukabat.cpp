@@ -2075,6 +2075,7 @@ void CStukaBat :: RunTask ( Task_t *pTask )
 			if(maxDiveTime != -1 && maxDiveTime <= gpGlobals->time){
 				abortAttack();
 				blockSetActivity = -1;
+				//attackAgainDelay = gpGlobals->time + 3; //don't try diving again for a little.
 			}
 
 			if(!enemyPresent){
@@ -2190,6 +2191,10 @@ void CStukaBat :: RunTask ( Task_t *pTask )
 					if(dist3d < STUKABAT_DIVE_DISTANCE){
 						EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyPrintLine("START THE DIVING stuff fine fellow! %.2f", gpGlobals->time ));
 						chargeIndex = 0;
+						if(maxDiveTime == -1){
+							//not already that?
+							maxDiveTime = gpGlobals->time + 3.4f;
+						}
 						//block set activity??
 					}
 					if(dist3d < STUKABAT_ATTACK_DISTANCE){
@@ -2198,6 +2203,10 @@ void CStukaBat :: RunTask ( Task_t *pTask )
 				}
 
 			}else if(attackIndex == 0){
+
+				if(monsterID == 1){
+					int x = 432;
+				}
 
 				if(maxDiveTime != -1 && maxDiveTime <= gpGlobals->time){
 					abortAttack();
@@ -2244,6 +2253,10 @@ void CStukaBat :: RunTask ( Task_t *pTask )
 					if(dist3d < STUKABAT_DIVE_DISTANCE){
 						EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyPrintLine("START THE DIVING stuff fine fellow! %.2f", gpGlobals->time ));
 						chargeIndex = 0;
+						if(maxDiveTime == -1){
+							//not already that?
+							maxDiveTime = gpGlobals->time + 3.4f;
+						}
 						//block set activity??
 					}
 					if(dist3d < STUKABAT_ATTACK_DISTANCE){

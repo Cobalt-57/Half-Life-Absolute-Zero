@@ -40,6 +40,12 @@
 //#include "extdll.h"
 //#include "util.h"  <-- includes  """ #include "enginecallback.h" """
 
+
+//Why does this include mess so much stuff up? Whatever, I just need a PI constant.
+#define M_PI		3.14159265358979323846
+//#include "mathlib.h"
+
+
 //ALSO UNNECESSARY, actually. just use "gEngfuncs".
 //#include "enginecallback.h"
 //should be acceptable.
@@ -86,6 +92,8 @@ void EV_Mirror( struct event_args_s *args );
 void EV_TrainPitchAdjust( struct event_args_s *args );
 
 //MODDD
+void EV_Trail_EngineChoice(event_args_t* args);
+void EV_imitation7(event_args_t* args);
 void EV_Trail( event_args_t *args  );
 void EV_rocketAlphaTrail( event_args_t *args  );
 
@@ -2464,7 +2472,10 @@ void EV_FireCrossbow2( event_args_t *args )
 				bolt->flags |= ( FTENT_CLIENTCUSTOM ); //So it calls the callback function.
 				bolt->entity.baseline.vuser1 = tr.endpos - forward * 10; // Pull out a little bit
 				bolt->entity.baseline.vuser2 = vBoltAngles; //Look forward!
-				bolt->callback = EV_BoltCallback; //So we can set the angles and origin back. (Stick the bolt to the wall)
+
+				//MODDD - be explicit! It's the address OF the method you want!
+				//        compiler figures it out anyways I suppose.
+				bolt->callback = &EV_BoltCallback; //So we can set the angles and origin back. (Stick the bolt to the wall)
 			}
 		}
 	}
@@ -3035,14 +3046,463 @@ int EV_TFC_IsAllyTeam( int iTeam1, int iTeam2 )
 
 
 
+
+
+
+
+const float matrix_rot_x[3][3] = {
+	1, 0, 0,
+	0, 0, -1,
+	0, 1, 0
+};
+
+const float matrix_rot_y[3][3] = {
+	0, 0, 1,
+	0, 1, 0,
+	-1, 0, 0
+};
+
+const float matrix_rot_z[3][3] = {
+	0, -1, 0,
+	1, 0, 0,
+	0, 0, 1
+};
+
+void matrixMult(const Vector& m_1, const float m_2[3][3], Vector& v_out){
+
+	v_out.x = m_1.x * m_2[0][0] + m_1.y * m_2[0][1] + m_1.z * m_2[0][2];
+	v_out.y = m_1.x * m_2[1][0] + m_1.y * m_2[1][1] + m_1.z * m_2[1][2];
+	v_out.z = m_1.x * m_2[2][0] + m_1.y * m_2[2][1] + m_1.z * m_2[2][2];
+
+}//END OF matrixMult
+
+
+
+//If this is called, make sure a "log" folder exists under the same folder as hl.exe, NOT the mod folder (Absolute Zero)!
+void writeColorPickerChoices(void){
+	int r, g, b;
+	FILE* myFile;
+	
+	myFile = fopen("log/r.txt", "w");  //"a+t");
+	if(myFile){
+		for(int i = 0; i <= 255; i++){
+			r = i;
+			g = 0;
+			b = 0;
+			fprintf(myFile, "%3d, %3d, %3d ::: %3d\n", r, g, b, gEngfuncs.pEfxAPI->R_LookupColor( r, g, b ));
+		}
+		fclose(myFile);
+	}
+	myFile = fopen("log/g.txt", "w");  //"a+t");
+	if(myFile){
+		for(int i = 0; i <= 255; i++){
+			r = 0;
+			g = i;
+			b = 0;
+			fprintf(myFile, "%3d, %3d, %3d ::: %3d\n", r, g, b, gEngfuncs.pEfxAPI->R_LookupColor( r, g, b ));
+		}
+		fclose(myFile);
+	}
+	myFile = fopen("log/b.txt", "w");  //"a+t");
+	if(myFile){
+		for(int i = 0; i <= 255; i++){
+			r = 0;
+			g = 0;
+			b = i;
+			fprintf(myFile, "%3d, %3d, %3d ::: %3d\n", r, g, b, gEngfuncs.pEfxAPI->R_LookupColor( r, g, b ));
+		}
+		fclose(myFile);
+	}
+}//END OF wirteColorPickerChoices
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//0.27f;
+#define TEST_PARTICLE_LIFE 0.18f;
+//0.0167f;
+#define TEST_PARTICLE_SPAWN_CYCLE_TIME 0.0f;
+
+//MODDD - methods slightly modified from entity.cpp, found commented out.
+void TEST_ParticleCallback( struct particle_s *particle, float frametime )
+{
+	int i;
+
+			
+
+	const float timeStart = particle->die - TEST_PARTICLE_LIFE;
+	const float timeSinceStart = gEngfuncs.GetClientTime() - timeStart;
+
+
+	int r;
+	int g;
+	int b;
+	
+	b = 0;
+
+	//warp from that bright yellow (255, 255, 0) to a smokey gray (121, 121, 121);
+
+	//how far along am I?
+	const float timeFract = timeSinceStart / TEST_PARTICLE_LIFE;
+
+	/*
+	r = 255 + (121 - 255)*timeFract;
+	g = 255 + (121 - 255)*timeFract;
+	b = 0;
+	*/
+	
+	
+
+	/*
+
+	r = 255 + (0 - 255)*timeFract;
+	//g = 255 + (0 - 255)*timeFract;
+	g = 255 + (0 - 255)*timeFract;
+	b = 0;
+	*/
+
+	//Unreliable, ugh.
+	//Just look at the palette itself and see if there's a row that looks good.
+	//Indexes work as left to right, top to bottom. 16 per row, starting at 0.  So if the count goes over 16 (like 16 itself including #0),
+	//that picks the next row's first color. Up to the last #255.
+	//particle->color = 	gEngfuncs.pEfxAPI->R_LookupColor( r, g, b );
+
+	particle->color = 96 + (int)ceil(15.0f*(1.0f - timeFract));
+
+
+
+	//
+
+	/*
+	r = 255;
+	g = 255;
+	b = 0;
+			
+
+	p->color = 	gEngfuncs.pEfxAPI->R_LookupColor( r, g, b );
+	//What is the point of R_GetPackedColor?? Just setting p->color above seems to work alone?
+	gEngfuncs.pEfxAPI->R_GetPackedColor( &p->packedColor, p->color );
+	*/
+
+
+
+	for ( i = 0; i < 3; i++ )
+	{
+		particle->org[ i ] += particle->vel[ i ] * frametime;
+	}
+}
+
+
+
+
+
+
+
+
+
+//cvar_t *color = NULL;
+void TEST_Particles( const Vector& v_origin, const Vector& v_velocity )
+{
+	//static float lasttime;
+	//float curtime;
+	
+	//curtime = gEngfuncs.GetClientTime();
+
+	//if ( ( curtime - lasttime ) < 2.0 )
+	//	return;
+
+	//lasttime = curtime;
+
+	// Create a few particles
+	
+	
+	if(v_velocity.Length() > 0){
+		particle_t *p;
+		int i, j;
+		//const int numParticles = 26;
+		//const int numParticles = 32;
+		const int numParticles = 24;
+		
+		//LETS TEST.
+		Vector forward = v_velocity.Normalize();
+		Vector right;
+		Vector up;
+
+		if(forward == Vector(0, 0, 1)){
+			//matches the up vector exactly?  A cross product with 0, 0, 1 would not work then.  It would be (0, 0, 0), or no direction at all.
+			//Just use fixed vectors for the rest for this special case.
+			
+			//My "right" can be one way floor-wise, my "up" is another floor-wise. X and Y respectively, either order.
+			right = Vector(1, 0, 0);
+			up = Vector (0, 1, 0);
+
+		}else{
+			//Determine what the right and up vectors are. This helps with the trigonometry to place points around me in a circle, equidistantly spaced in degrees.
+			
+			//matrixMult(forward, matrix_rot_z, right);
+			//matrixMult(right, matrix_rot_y, right);
+			
+			right = CrossProduct(forward, Vector(0, 0, 1));
+
+			//Yes, this produces a good relative up vector. It does feel just diabolical.
+			up = CrossProduct(right, forward);
+
+			//Normalize both.
+			right = right.Normalize();
+			up = up.Normalize();
+
+		}
+
+		//At this point it is established what vector goes forward, up, and right from that.  Up and right and all possible combinations of each
+		//in a circular fashion form a plane for drawing circles around. I'm sure that makes perfect sense.
+
+
+		
+		for ( i = 0; i < numParticles; i++ ){
+			int r, g, b;
+			p = gEngfuncs.pEfxAPI->R_AllocParticle( TEST_ParticleCallback );
+			if ( !p )
+				break;
+
+
+
+
+			//for ( j = 0; j < 3; j++ )
+			//{
+				//p->org[ j ] = v_origin[ j ] + gEngfuncs.pfnRandomFloat( -32.0, 32.0 );;
+				//p->vel[ j ] = gEngfuncs.pfnRandomFloat( -100.0, 100.0 );
+			//}
+
+			//First of all, get whatever portion around the circle this is.
+		
+
+			//Each 1/#'th will be covered.
+			//For instance, if numParticles were 12, it would be 1/12'th.  so 0/12, 1/12, 2/12, 3/12, ... 9/12, 10/12, 11/12.
+			//Exclude the last whole one (12/12) since that wraps around to the start of the circle, redundant with 0/12.
+			float circleRad = 2*M_PI * (((float)i) / ((float)numParticles));
+		
+			float circle_x = cos(circleRad);
+			float circle_y = sin(circleRad);
+			
+
+
+
+
+			//p->org = v_origin + (circle_x * v_right) * 3 + (circle_y * v_up) * 3;
+			//p->vel = (circle_x * v_right) + (circle_y * v_up);
+			p->org = v_origin + (circle_x * right) * 2 + (circle_y * up) * 2;
+			
+			p->vel = (circle_x * right) * 68 + (circle_y * up) * 68;
+			//p->vel = Vector(0, 0, 0);
+
+
+			//2, 1, 3
+			//
+
+	/*
+	  2,  3, -1    A
+	x 0,  0,  1
+	= 3, -2,  0    B
+
+	   3, -2,  0    B
+	x  2,  3, -1    A
+	=  2,  3, 13    C
+	*/
+
+
+
+
+			//p->org = v_origin;
+			//p->vel = Vector(1, 1, 1);
+			//CrossProduct(v_velocity, Vector(0, 0, 1));
+
+
+
+
+			r = 255;
+			g = 255;  //why is green so gray looking??
+			b = 0;
+
+			//wtf?
+			/*
+			someBeam->r = colorReceive[0]/65025.0f;
+			someBeam->g = colorReceive[1]/65025.0f;
+			someBeam->b = colorReceive[2]/65025.0f;	
+			*/
+
+			//p->color = 	gEngfuncs.pEfxAPI->R_LookupColor( r, g, b );
+			p->color = 96 + 15;
+			
+			//What is the point of R_GetPackedColor?? Just setting p->color above seems to work alone?
+			gEngfuncs.pEfxAPI->R_GetPackedColor( &p->packedColor, p->color );
+
+
+			// p->die is set to current time so all you have to do is add an additional time to it
+			//p->die += 1.5;
+			//nah...
+			//p->die = gEngfuncs.GetClientTime() + 0.3;
+			p->die += TEST_PARTICLE_LIFE;
+
+
+		}//END OF for each particle to spawn
+
+
+	}//END OF velocity length check
+
+
+
+
+}//END OF TEST_Particles
+
+
+
+void EV_imitation7_think ( struct tempent_s *ent, float frametime, float currenttime )
+{
+	if ( currenttime < ent->entity.baseline.fuser1 )
+		return;
+
+
+	if ( ent->entity.origin == ent->entity.attachment[0] ){
+		//HAVE LENIENCY.  Wait for this to be frozen for 0.15 seconds, sheesh.
+		if(ent->entity.baseline.fuser2 != -1){
+			if(ent->entity.baseline.fuser2 < gEngfuncs.GetClientTime() ){
+				ent->die = gEngfuncs.GetClientTime();
+			}
+		}else{
+			//countdown...
+			ent->entity.baseline.fuser2 = gEngfuncs.GetClientTime() + 0.3f;
+		}
+
+	}else{
+		ent->entity.baseline.fuser2 = -1;  //not dying now.
+    	VectorCopy ( ent->entity.origin, ent->entity.attachment[0] );
+	}
+
+
+	
+	//gEngfuncs.pEfxAPI->R_TempSprite( tr.endpos, vec3_origin, 0.2, m_iGlow, kRenderGlow, kRenderFxNoDissipation, flDamage * n / 255.0, flDamage * n * 0.5 * 0.1, FTENT_FADEOUT );
+
+				//vec3_t fwd;
+				//VectorAdd( tr.endpos, tr.plane.normal, fwd );
+
+				//gEngfuncs.pEfxAPI->R_Sprite_Trail( TE_SPRITETRAIL, tr.endpos, fwd, m_iBalls, 3, 0.1, gEngfuncs.pfnRandomFloat( 10, 20 ) / 100.0, 100,
+				//					255, 100 );
+	
+	/*
+	int eckz = gEngfuncs.pEventAPI->EV_FindModelIndex( "sprites/explode1.spr" );
+
+	//not sure if "life" is necessary, seems to expire at the end of the last frame without any looping and/or cycle tags.  (framerate is 10, I assume,  10 frames per second:  9 frames, so  9 / 10 = 0.9 seconds to finish the anim.
+	TEMPENTITY* eh = gEngfuncs.pEfxAPI->R_TempSprite( ent->entity.origin, vec3_origin, global2_rocketTrailAlphaScale, eckz, kRenderGlow, kRenderFxNoDissipation, 250.0 / 255.0, 0.91f, FTENT_SPRANIMATE );
+	//eh->fadeSpeed = 3.3f;  ???
+	//eh->entity.curstate.scale = global2_rocketTrailAlphaScale;
+	*/
+
+
+	//Instead of the little explosion puffs, radiate particles.
+	
+	vec3_t vecSrc, angles, forward, right, up;
+	
+	//I... guess this is velocity.
+	vec3_t velo = ent->entity.origin - ent->entity.prevstate.origin;
+
+	VectorCopy( ent->entity.origin, vecSrc );
+	
+	/*
+	//VectorCopy( ent->entity.angles, angles );  //or "ent->entity.baseline.angles" ?
+	VectorCopy( ent->entity.baseline.angles, angles );
+	AngleVectors ( angles, forward, right, up );
+	*/
+
+	TEST_Particles(vecSrc, velo);
+
+
+
+
+	//TEST - real slow for now!
+	ent->entity.baseline.fuser1 = gEngfuncs.GetClientTime() + TEST_PARTICLE_SPAWN_CYCLE_TIME;
+	//ent->entity.baseline.fuser1 = gEngfuncs.GetClientTime() + 1.0f;
+}//END OF EV_imitation7_think
+
+
+void EV_imitation7(event_args_t* args){
+	int iEntIndex = args->iparam1;
+	TEMPENTITY *pTrailSpawner = NULL;
+
+	
+	pTrailSpawner = gEngfuncs.pEfxAPI->CL_TempEntAllocNoModel ( args->origin );
+	
+
+	if ( pTrailSpawner != NULL){
+	    pTrailSpawner->entity.baseline.fuser2 = -1; //if that is fine?
+	    //pTrailSpawner->flags |= ( FTENT_PLYRATTACHMENT );
+		pTrailSpawner->flags |= ( FTENT_PLYRATTACHMENT | FTENT_COLLIDEKILL | FTENT_CLIENTCUSTOM | FTENT_COLLIDEWORLD );
+
+	    pTrailSpawner->clientIndex = iEntIndex;
+	    pTrailSpawner->callback = &EV_imitation7_think;
+
+	    //pTrailSpawner->entity.baseline.sequence = args->iparam2 + 68;
+
+
+	   
+	    pTrailSpawner->die = gEngfuncs.GetClientTime() + 10; // Just in case
+	   
+		//When is my first think cycle?
+	    pTrailSpawner->entity.baseline.fuser1 = gEngfuncs.GetClientTime() + 0.02f;
+	}
+
+
+}//END OF EV_imitation7
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 //MODDD - new, testing some DMC - quake stuff.
-
-
-
-
-
-
-
 
 void EV_RocketTrailCallback ( struct tempent_s *ent, float frametime, float currenttime )
 {
@@ -3078,7 +3538,8 @@ void EV_RocketTrailCallback ( struct tempent_s *ent, float frametime, float curr
 
 
 
-
+	//Not set up to re-think. Or is that automatic..?
+	//that is set ent->entity.baseline.fuser1 to some GetClientTime() + 0.03 or something.
 
 	/*
 	//Make the Rocket light up. ( And only rockets, no Grenades ).
@@ -3103,16 +3564,112 @@ void EV_RocketTrailCallback ( struct tempent_s *ent, float frametime, float curr
 
 
 
+
+
 #define GRENADE_TRAIL 1
 #define ROCKET_TRAIL 2
 
+
+
+
+void EV_Trail_EngineChoice_Think ( struct tempent_s *ent, float frametime, float currenttime ){
+
+	if ( currenttime < ent->entity.baseline.fuser1 )
+		return;
+
+	if ( ent->entity.origin == ent->entity.attachment[0] ){
+		//HAVE LENIENCY.  Wait for this to be frozen for 0.15 seconds, sheesh.
+		if(ent->entity.baseline.fuser2 != -1){
+			if(ent->entity.baseline.fuser2 < gEngfuncs.GetClientTime() ){
+				ent->die = gEngfuncs.GetClientTime();
+			}
+		}else{
+			//countdown...
+			ent->entity.baseline.fuser2 = gEngfuncs.GetClientTime() + 0.3f;
+		}
+
+	}else{
+		ent->entity.baseline.fuser2 = -1;  //not dying now.
+    	VectorCopy ( ent->entity.origin, ent->entity.attachment[0] );
+	}
+	
+
+
+	gEngfuncs.pEfxAPI->R_RocketTrail (ent->entity.prevstate.origin, ent->entity.origin, (int)ent->entity.baseline.iuser1 );
+	
+
+	//TEST - real slow for now!
+	ent->entity.baseline.fuser1 = gEngfuncs.GetClientTime() + 0;//+ 0.0167;
+	//ent->entity.baseline.fuser1 = gEngfuncs.GetClientTime() + 1.0f;
+
+	
+
+}//END OF EV_imitation7
+
+
+
+
+
+//Similar to EV_Trail but pick what trail # to use from the engine (quake particles?) for choices 0 to 7 inclusive in iParam2 (the second whole number one, typically after giving entity index)
+void EV_Trail_EngineChoice( event_args_t *args){
+	
+	int iEntIndex = args->iparam1;
+	TEMPENTITY *pTrailSpawner = NULL;
+
+	
+	pTrailSpawner = gEngfuncs.pEfxAPI->CL_TempEntAllocNoModel ( args->origin );
+	
+	
+
+	if ( pTrailSpawner != NULL)
+	{
+	    pTrailSpawner->entity.baseline.fuser2 = -1; //if that is fine?
+
+	    //pTrailSpawner->flags |= ( FTENT_PLYRATTACHMENT | FTENT_COLLIDEKILL | FTENT_CLIENTCUSTOM | FTENT_SMOKETRAIL | FTENT_COLLIDEWORLD );
+	    pTrailSpawner->flags |= ( FTENT_SPIRAL|FTENT_PLYRATTACHMENT |FTENT_COLLIDEKILL | FTENT_CLIENTCUSTOM | FTENT_COLLIDEWORLD );
+
+	    if(args->iparam2 == 6){
+		    //orange trail.
+		    pTrailSpawner->flags |= FTENT_ORANGETRAIL;
+	    }else{
+		    //smoky?
+		    pTrailSpawner->flags |= FTENT_SMOKETRAIL;
+	    }
+
+	    pTrailSpawner->callback = &EV_Trail_EngineChoice_Think;
+	    pTrailSpawner->clientIndex = iEntIndex;
+
+		//save me!
+		pTrailSpawner->entity.baseline.iuser1 = args->iparam2;
+
+	    //pTrailSpawner->entity.baseline.sequence = args->iparam2 + 68;
+
+	    pTrailSpawner->die = gEngfuncs.GetClientTime() + 10; // Just in case
+	    pTrailSpawner->entity.baseline.fuser1 = gEngfuncs.GetClientTime() + 0; //+ 0.0167;
+	}
+	
+
+}//END OF EV_Trail_EngineChoice
+
+
+
+
+
+
+
+
+//
+
+//NOTE - I am  trail.sc
+//ALSO - yes, trailTypeTest may be sent to me as iParam2 but it clearly isn't having an influence here in that case.
+//See entitiy.cpp's place where it checks for trailTypeTest.  That is much more inclusive of any partical effect ever.
 void EV_Trail (event_args_t *args)
 {
 
 
-
 	int iEntIndex = args->iparam1;
 	TEMPENTITY *pTrailSpawner = NULL;
+
 	
 	pTrailSpawner = gEngfuncs.pEfxAPI->CL_TempEntAllocNoModel ( args->origin );
 	
@@ -3121,44 +3678,39 @@ void EV_Trail (event_args_t *args)
 
 	if ( pTrailSpawner != NULL)
 	{
-		pTrailSpawner->entity.baseline.fuser2 = -1; //if that is fine?
+	    pTrailSpawner->entity.baseline.fuser2 = -1; //if that is fine?
 
-	   //pTrailSpawner->flags |= ( FTENT_PLYRATTACHMENT | FTENT_COLLIDEKILL | FTENT_CLIENTCUSTOM | FTENT_SMOKETRAIL | FTENT_COLLIDEWORLD );
-	   pTrailSpawner->flags |= ( FTENT_SPIRAL|FTENT_PLYRATTACHMENT |FTENT_COLLIDEKILL | FTENT_CLIENTCUSTOM | FTENT_COLLIDEWORLD );
+	    //pTrailSpawner->flags |= ( FTENT_PLYRATTACHMENT | FTENT_COLLIDEKILL | FTENT_CLIENTCUSTOM | FTENT_SMOKETRAIL | FTENT_COLLIDEWORLD );
+	    pTrailSpawner->flags |= ( FTENT_SPIRAL|FTENT_PLYRATTACHMENT |FTENT_COLLIDEKILL | FTENT_CLIENTCUSTOM | FTENT_COLLIDEWORLD );
 
-	   if(args->iparam2 == 6){
-		   //orange trail.
-		   pTrailSpawner->flags |= FTENT_ORANGETRAIL;
-	   }else{
-		   //smoky?
-		   pTrailSpawner->flags |= FTENT_SMOKETRAIL;
-	   }
+	    if(args->iparam2 == 6){
+		    //orange trail.
+		    pTrailSpawner->flags |= FTENT_ORANGETRAIL;
+	    }else{
+		    //smoky?
+		    pTrailSpawner->flags |= FTENT_SMOKETRAIL;
+	    }
 
-	   pTrailSpawner->callback = EV_RocketTrailCallback;
-	   pTrailSpawner->clientIndex = iEntIndex;
-
-
-
-	   /*
-	   //???
-	   if ( args->iparam2 == GRENADE_TRAIL )
-		    pTrailSpawner->entity.baseline.sequence = 69;
-	   else if ( args->iparam2 == ROCKET_TRAIL )
-		   pTrailSpawner->entity.baseline.sequence = 70;
-		   */
-	   //pTrailSpawner->entity.baseline.sequence = args->iparam2 + 68;
+	    pTrailSpawner->callback = &EV_RocketTrailCallback;
+	    pTrailSpawner->clientIndex = iEntIndex;
 
 
 
+	    /*
+	    //???
+	    if ( args->iparam2 == GRENADE_TRAIL )
+            pTrailSpawner->entity.baseline.sequence = 69;
+	    else if ( args->iparam2 == ROCKET_TRAIL )
+		    pTrailSpawner->entity.baseline.sequence = 70;
+		    */
+	    //pTrailSpawner->entity.baseline.sequence = args->iparam2 + 68;
 
-	   pTrailSpawner->die = gEngfuncs.GetClientTime() + 10; // Just in case
-	   pTrailSpawner->entity.baseline.fuser1 = gEngfuncs.GetClientTime() + 0.5; // Don't try to die till 500ms ahead
+	    pTrailSpawner->die = gEngfuncs.GetClientTime() + 10; // Just in case
+	    pTrailSpawner->entity.baseline.fuser1 = gEngfuncs.GetClientTime() + 0.5; // Don't try to die till 500ms ahead
 	}
 
 
 }
-
-
 
 
 
@@ -3217,6 +3769,8 @@ void EV_rocketAlphaTrailThink ( struct tempent_s *ent, float frametime, float cu
 }
 
 
+
+//NOTE - I am  trailra.sc
 void EV_rocketAlphaTrail (event_args_t *args)
 {
 
@@ -3243,7 +3797,7 @@ void EV_rocketAlphaTrail (event_args_t *args)
 	   pTrailSpawner->flags |= ( FTENT_PLYRATTACHMENT  | FTENT_CLIENTCUSTOM );
 
 
-	   pTrailSpawner->callback = EV_rocketAlphaTrailThink;
+	   pTrailSpawner->callback = &EV_rocketAlphaTrailThink;
 	   pTrailSpawner->clientIndex = iEntIndex;
 
 

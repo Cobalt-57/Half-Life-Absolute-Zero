@@ -1080,12 +1080,12 @@ void DLLEXPORT HUD_TempEntUpdate (
 
 
 
-			if(global2_trailTypeTest > -1){
+			if(global2_trailTypeTest != -1){
 				//we will use "global_trailTypeTest" as the trail type.
 				//if ( (pTemp->flags & FTENT_SMOKETRAIL) )
 				{
 					//DEFAULT IS 1!!!
-					gEngfuncs.pEfxAPI->R_RocketTrail (pTemp->entity.prevstate.origin, pTemp->entity.origin, (int)global2_trailTypeTest );
+				//	gEngfuncs.pEfxAPI->R_RocketTrail (pTemp->entity.prevstate.origin, pTemp->entity.origin, (int)global2_trailTypeTest );
 				}
 
 			}else{

@@ -616,20 +616,34 @@ void CTemplateMonster::ReportAIState(){
 	//print anything special with easyForcePrintLine
 }//END OF ReportAIState()
 
+//Should this monster be any better or worse at hearing than usual?  Higher meants it hears the same sound from a greater distance.
+float CTemplateMonster::HearingSensitivity(void){
+	return 1.0f;
+}//END OF HearingSensitivity
+
+//To have a schedule interrupted by a schedule (and maybe even picked up by conditions at all?), it has to be part of
+//this list at least. And part of the sound interrupt list on a schedule. And the schedule has to be interruptible by sounds, period, in the general interrupt conditions part.
+//See some other sounds not included by default.
+//bits_SOUND_CARCASS, bits_SOUND_MEAT and bits_SOUND_GARBAGE (is that used?) for eating form, but support that properly.
+//bits_SOUND_DANGER is placed by the anticipated locations of thrown grenades to tell smart things to flee from them. Maybe not alien creatures.
+int CTemplateMonster::ISoundMask(void){
+	return	bits_SOUND_WORLD	|
+			bits_SOUND_COMBAT	|
+			bits_SOUND_PLAYER	|
+			//MODDD - new
+			bits_SOUND_BAIT;
+}//END OF ISoundMask
 
 
 
-
-GENERATE_TRACEATTACK_IMPLEMENTATION(CTemplateMonster)
-{
+GENERATE_TRACEATTACK_IMPLEMENTATION(CTemplateMonster){
 
 
 
 	GENERATE_TRACEATTACK_PARENT_CALL(CBaseMonster);
 }
 
-GENERATE_TAKEDAMAGE_IMPLEMENTATION(CTemplateMonster)
-{
+GENERATE_TAKEDAMAGE_IMPLEMENTATION(CTemplateMonster){
 
 
 
@@ -639,8 +653,7 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CTemplateMonster)
 
 
 //NOTE - called by CBaseMonster's TakeDamage method. If that isn't called, DeadTakeDamage won't get called naturally.
-GENERATE_DEADTAKEDAMAGE_IMPLEMENTATION(CTemplateMonster)
-{
+GENERATE_DEADTAKEDAMAGE_IMPLEMENTATION(CTemplateMonster){
 
 
 
@@ -669,8 +682,7 @@ GENERATE_GIBMONSTER_IMPLEMENTATION(CTemplateMonster)
 // Classify(), or robot gibs under german censorship. This implementation can be specific to just this monster instead.
 //NOTICE - do NOT do something special here AND call the parent method through GENERATE_GIBMONSTERGIB_PARENT_CALL.
 //Anything done here is meant to completely replace how the parent method gibs a monster in general. None of it is required.
-GENERATE_GIBMONSTERGIB_IMPLEMENTATION(CTemplateMonster)
-{
+GENERATE_GIBMONSTERGIB_IMPLEMENTATION(CTemplateMonster){
 	
 
 
@@ -684,8 +696,7 @@ GENERATE_GIBMONSTERGIB_IMPLEMENTATION(CTemplateMonster)
 
 
 
-GENERATE_KILLED_IMPLEMENTATION(CTemplateMonster)
-{
+GENERATE_KILLED_IMPLEMENTATION(CTemplateMonster){
 
 
 

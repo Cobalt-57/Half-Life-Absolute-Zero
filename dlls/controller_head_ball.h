@@ -25,7 +25,7 @@ public:
 
 	float massInfluence(void);
 
-
+	float nextNormalThinkTime;
 	int m_iTrail;
 	int m_flNextAttack;
 	Vector m_vecIdeal;

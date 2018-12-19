@@ -62,6 +62,7 @@
 
 //2^0 = 1:	NO, waitTillSeen
 //2^1 = 2:	NO, gag
+//2^2 = 4:  NO, HITMONSTERCLIP.
 //2^3 = 8:	OPEN!
 //2^4 = 16:	NO, PRISONER
 //2^5 = 32: NO, squadleader (for non-squad monsters, perhaps open, but also used by turrets)
@@ -69,7 +70,8 @@
 //2^7, 8, 9:	NO
 //2^10 = 1024: OPEN!
 //2^11 = 2048: possibly no.
-//beyond?  test to be certain...   some readings, if in the "int" rage of 2^0 - 2^31 (inclusive), are still cut high-wards (that is, just plain not sent / transferred to here for seeing)
+//beyond?  test to be certain...   some readings, if in the "int" range of 2^0 - 2^31 (inclusive), are still cut high-wards (that is, just plain not sent / transferred to here for seeing)
+//No, that's only for network-sent things.
 
 //in short: 2^3 = 8 and 2^10 = 1024 are the best spots for custom flags.
 

@@ -24,7 +24,12 @@
 
 
 
-//MODDD TODO - remove the snapper for stuckness.
+//TODO - replace my death explosion effect with some green particles like the friendly vomit kinda scattering
+//       and slowly falling maybe? make a more organic squishing sound if possible?
+
+
+
+
 // would MOVETYPE_BOUNCEMISSILE help more?
 
 
@@ -431,11 +436,11 @@ void CFloater::Spawn( void )
 
 	
 	pev->solid			= SOLID_BBOX;  //not SOLID_SLIDEBOX
-	pev->movetype		= MOVETYPE_FLY;
+	//pev->movetype		= MOVETYPE_FLY;
 
 
 	pev->solid			= SOLID_SLIDEBOX;  //SOLID_TRIGGER?  Difference?
-	//pev->movetype		= MOVETYPE_BOUNCEMISSILE;
+	pev->movetype		= MOVETYPE_BOUNCEMISSILE;
 	
 
 
@@ -683,7 +688,7 @@ int CFloater :: CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, C
 //Copied from flyingmonster.cpp. Our sequence may not properly convey the m_flGroundSpeed.
 void CFloater::Move( float flInterval )
 {
-	if ( pev->movetype == MOVETYPE_FLY )
+	if ( this->isMovetypeFlying() )
 		m_flGroundSpeed = m_flightSpeed;
 	
 	//CFlyingMonster::Move( flInterval );
@@ -1923,7 +1928,7 @@ void CFloater::checkTraceLineTest(const Vector& vecSuggestedDir, const float& tr
 
 void CFloater::checkFloor(const Vector& vecSuggestedDir, const float& travelMag, const float& flInterval){
 
-	//return;
+	return;
 	/*
 	if(turnThatOff){
 		//we're not doing the checks in this case.

@@ -1147,6 +1147,7 @@ hornetSpiralAmplitude (59) - DECIMAL. how large the "circle" of the corkscrew ar
 
 hornetSpeedMulti (1) - DECIMAL. Speed mod applied to hornets, player or not.
 hornetSpeedDartMulti (2) - DECIMAL. The speed mutli applied to hornets that decide to dart towards a nearby target.  Cumulative with "hornetSpeedMulti", so halfing that will half this as well (double this to compensate).
+
 cl_rockettrail (0) - BOOL. set to 1 to see the rocket's alpha trail instead of retail's white-line trail.
 rocketTrailAlphaInterval (0.035) - DECIMAL. The time between spawning a rocket trail sprite (seconds).
 rocketTrailAlphaScale (0.21) - DECIMAL. The scale (size-multi) applied to the rocket alpha trail's sprite.  Note that "1" is very large.

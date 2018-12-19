@@ -1390,15 +1390,18 @@ void CBaseMonster :: RunTask ( Task_t *pTask )
 			//MODDD - removed, see below.  REtail behavior was ONLY this line
 			//m_Activity = ACT_RESET;
 
-			switch( pTask->iTask ){
-				case TASK_RANGE_ATTACK1:{predictActRepeat(bits_COND_CAN_RANGE_ATTACK1); break;}
-				case TASK_RANGE_ATTACK2:{predictActRepeat(bits_COND_CAN_RANGE_ATTACK2); break;}
-				case TASK_MELEE_ATTACK1:{predictActRepeat(bits_COND_CAN_MELEE_ATTACK1); break;}
-				case TASK_MELEE_ATTACK2:{predictActRepeat(bits_COND_CAN_MELEE_ATTACK2); break;}
-				case TASK_SPECIAL_ATTACK1:{predictActRepeat(bits_COND_SPECIAL1); break;}
-				case TASK_SPECIAL_ATTACK2:{predictActRepeat(bits_COND_SPECIAL2); break;}
-			}//END OF inner switch
-
+			//TODO!!!
+			if(canPredictActRepeat()){
+				switch( pTask->iTask ){
+					case TASK_RANGE_ATTACK1:{predictActRepeat(bits_COND_CAN_RANGE_ATTACK1); break;}
+					case TASK_RANGE_ATTACK2:{predictActRepeat(bits_COND_CAN_RANGE_ATTACK2); break;}
+					case TASK_MELEE_ATTACK1:{predictActRepeat(bits_COND_CAN_MELEE_ATTACK1); break;}
+					case TASK_MELEE_ATTACK2:{predictActRepeat(bits_COND_CAN_MELEE_ATTACK2); break;}
+					case TASK_SPECIAL_ATTACK1:{predictActRepeat(bits_COND_SPECIAL1); break;}
+					case TASK_SPECIAL_ATTACK2:{predictActRepeat(bits_COND_SPECIAL2); break;}
+				}//END OF inner switch
+			}
+			
 			TaskComplete();
 		}
 	break;}
@@ -1416,14 +1419,16 @@ void CBaseMonster :: RunTask ( Task_t *pTask )
 			//MODDD NOTE - BEWARE. This is likely to pick the same range attack activity again if the ideal activity remains that way.
  			//m_Activity = ACT_RESET;
 
-			switch( pTask->iTask ){
-				case TASK_RANGE_ATTACK1:{predictActRepeat(bits_COND_CAN_RANGE_ATTACK1); break;}
-				case TASK_RANGE_ATTACK2:{predictActRepeat(bits_COND_CAN_RANGE_ATTACK2); break;}
-				case TASK_MELEE_ATTACK1:{predictActRepeat(bits_COND_CAN_MELEE_ATTACK1); break;}
-				case TASK_MELEE_ATTACK2:{predictActRepeat(bits_COND_CAN_MELEE_ATTACK2); break;}
-				case TASK_SPECIAL_ATTACK1:{predictActRepeat(bits_COND_SPECIAL1); break;}
-				case TASK_SPECIAL_ATTACK2:{predictActRepeat(bits_COND_SPECIAL2); break;}
-			}//END OF inner switch
+			if(canPredictActRepeat()){
+				switch( pTask->iTask ){
+					case TASK_RANGE_ATTACK1:{predictActRepeat(bits_COND_CAN_RANGE_ATTACK1); break;}
+					case TASK_RANGE_ATTACK2:{predictActRepeat(bits_COND_CAN_RANGE_ATTACK2); break;}
+					case TASK_MELEE_ATTACK1:{predictActRepeat(bits_COND_CAN_MELEE_ATTACK1); break;}
+					case TASK_MELEE_ATTACK2:{predictActRepeat(bits_COND_CAN_MELEE_ATTACK2); break;}
+					case TASK_SPECIAL_ATTACK1:{predictActRepeat(bits_COND_SPECIAL1); break;}
+					case TASK_SPECIAL_ATTACK2:{predictActRepeat(bits_COND_SPECIAL2); break;}
+				}//END OF inner switch
+			}
 
 			TaskComplete();
 		}
@@ -1472,6 +1477,10 @@ void CBaseMonster :: RunTask ( Task_t *pTask )
 		//BEWARE: looping anims may just keep going!  
 		//If necessary, anims could have a separate "loopedOnce" flag to be set when the anim would have usually ended but decided to loop instead, that is read HERE instead.
 		if(m_fSequenceFinished){
+
+			//MODDD - hoping that doesn't break anything. Not that usingCustomSequence was everpart of retail to begin with.
+			this->usingCustomSequence = FALSE;
+
 			TaskComplete();
 		}
 
@@ -2521,7 +2530,7 @@ case TASK_GET_PATH_TO_BESTSCENT:
 		}
 	case TASK_WALK_PATH:
 		{
-			if ( pev->movetype == MOVETYPE_FLY )
+			if ( isMovetypeFlying() )
 			{
 				m_movementActivity = ACT_FLY;
 			}

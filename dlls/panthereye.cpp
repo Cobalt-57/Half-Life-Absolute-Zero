@@ -16,6 +16,10 @@
 // Panthereye - By Osiris / OsirisGodoftheDead / THE_YETI
 //=========================================================
 
+//TODO - TRACE_MONSTER_HULL(edict(), pev->origin, Probe, dont_ignore_monsters, m_hEnemy->edict(), &tr);
+//       is this a better check for seeing if jumping is still okay?
+
+
 
 #include "panthereye.h"
 
@@ -39,7 +43,9 @@ EASY_CVAR_EXTERN(drawDebugPathfinding2)
 EASY_CVAR_EXTERN(testVar)
 
 
-
+float CPantherEye::HearingSensitivity(void){
+	return 2.2f;
+}//END OF HearingSensitivity
 
 
 BOOL CPantherEye::testLeapNoBlock(void){
@@ -538,7 +544,8 @@ int CPantherEye::tryActivitySubstitute(int activity){
 			}
 		break;
 		case ACT_MELEE_ATTACK2:
-			return CBaseAnimating::LookupActivity(activity);
+			//Don't trust the model for this.
+			return LookupSequence("crouch_to_jump");
 		break;
 		case ACT_SMALL_FLINCH:
 			return CBaseAnimating::LookupActivity(activity);
@@ -886,6 +893,9 @@ void CPantherEye::Spawn()
 	m_MonsterState		= MONSTERSTATE_NONE;
 	m_afCapability		= bits_CAP_DOORS_GROUP;
 
+	//MODDD - force this. Apparently it's not happening otherwise if we don't have an activity mapped to MELEE_ATTACK2 or whatever.
+	m_afCapability |= bits_CAP_RANGE_ATTACK2;
+
 	MonsterInit();
 
 	//start out not sneaking.
@@ -1071,8 +1081,10 @@ BOOL CPantherEye::hasSeeEnemyFix(void){
 //Based off of headcrab's "LeapTouch".  Not a method from CBaseMonster.
 void CPantherEye::LeapTouch ( CBaseEntity *pOther )
 {
-	if ( !pOther->pev->takedamage )
+	float velocityLength2D;
+	if ( !pOther->pev->takedamage || pOther->MyMonsterPointer() == NULL)
 	{
+		//incapabable of taking damage or not a monster? I can't damage this.
 		return;
 	}
 
@@ -1085,13 +1097,26 @@ void CPantherEye::LeapTouch ( CBaseEntity *pOther )
 	}
 
 	// Don't hit if back on ground
+	// But beware, looks like FL_ONGROUND doesn't get set (on) while in that MOVETYPE (toss?) for jumping and slidnig a bit.
+	// Checking for a minimum velocity may be nice to help.
+	velocityLength2D = pev->velocity.Length2D();
+	if(velocityLength2D < 180){
+		//too slow, don't count.
+		return;
+	}
+
 	if ( !FBitSet( pev->flags, FL_ONGROUND ) )
 	{
+		float damageMulti;
 		//generic attack sound?
 		EMIT_SOUND_FILTERED( edict(), CHAN_WEAPON, RANDOM_SOUND_ARRAY(pLeapAttackHitSounds), 1, ATTN_IDLE, 0, 100 );
 		
 		//Increase damage beyond default?  Probably not.?
-		pOther->TakeDamage( pev, pev, gSkillData.panthereyeDmgClaw, DMG_SLASH );
+		//Actually let's let the damage depend on the velocity.  Full damage for over 600, goes down towards the minimum.
+		//The factor must be between 0.30 and 1.25.
+		damageMulti = max( (min(velocityLength2D, 900.0f) / 900.0f) * 1.30f, 0.25f);
+
+		pOther->TakeDamage( pev, pev, gSkillData.panthereyeDmgClaw * damageMulti, DMG_SLASH );
 	}
 
 	SetTouch( NULL );
@@ -1242,6 +1267,12 @@ void CPantherEye::SetActivity ( Activity NewActivity )
 //based off of GetSchedule for CBaseMonster in schedule.cpp.
 Schedule_t *CPantherEye::GetSchedule ( void )
 {
+
+
+	
+	SetTouch( NULL );
+	//Safety. In case of picking a new schedule, don't try the damage touch for throwing myself at an enemy, has to be set freshly.
+
 
 	if(!iAmDead && deadSetActivityBlock){
 		//////easyForcePrintLine("WHAT THE HELL IS WRONG WITH YOOOUUUUUUUUU %d : %s %d %d   ::: %d %d", monsterID, m_pSchedule!=NULL?m_pSchedule->pName:"NULL", pev->deadflag, m_MonsterState, monsterID, iAmDead, iAmDead, deadSetActivityBlock);

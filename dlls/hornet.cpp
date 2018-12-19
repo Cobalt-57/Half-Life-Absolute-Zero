@@ -362,25 +362,34 @@ old colors
 	//MODDD - quake dot trail?
 	//easyForcePrintLine("YOU STUPID lover %d %d", (int)global_trailTypeTest, (int)global_hornetTrail);
 
-	if(global_trailTypeTest > -1){
-		//This was just for a test.  Enable (along with some other things in place), and this should make mp5 grenades fly with a trail of grey dots.
-		PLAYBACK_EVENT_FULL (FEV_GLOBAL, this->edict(), g_sTrail, 0.0, 
-		(float *)&this->pev->origin, (float *)&this->pev->angles, 0.7, 0.0, this->entindex(), (int)global_trailTypeTest, 0, 0);
+
+	/*
+	if(TRUE){
+		//do I work?
+		PLAYBACK_EVENT_FULL (FEV_GLOBAL, this->edict(), g_sTrailEngineChoice, 0.0, (float *)&this->pev->origin, (float *)&this->pev->angles, 0.7, 0.0, this->entindex(), 7, 0, 0);
+
+	}else */
+	
+	if(global_trailTypeTest == -3){
+		//SPECIAL: test the immitation7.
+		PLAYBACK_EVENT_FULL (FEV_GLOBAL, this->edict(), g_sImitation7, 0.0, (float *)&this->pev->origin, (float *)&this->pev->angles, 0.7, 0.0, this->entindex(), 0, 0, 0);
 	}else if(global_trailTypeTest == -2){
 		//This was just for a test.  Enable (along with some other things in place), and this should make mp5 grenades fly with a trail of grey dots.
-		PLAYBACK_EVENT_FULL (FEV_GLOBAL, this->edict(), g_sTrailRA, 0.0, 
-		(float *)&this->pev->origin, (float *)&this->pev->angles, 0.7, 0.0, this->entindex(), 0, 0, 0);
-	
+		PLAYBACK_EVENT_FULL (FEV_GLOBAL, this->edict(), g_sTrailRA, 0.0, (float *)&this->pev->origin, (float *)&this->pev->angles, 0.7, 0.0, this->entindex(), 0, 0, 0);
+	}else if(global_trailTypeTest > -1){
+		//This was just for a test.  Enable (along with some other things in place), and this should make mp5 grenades fly with a trail of grey dots.
+		//PLAYBACK_EVENT_FULL (FEV_GLOBAL, this->edict(), g_sTrail, 0.0, (float *)&this->pev->origin, (float *)&this->pev->angles, 0.7, 0.0, this->entindex(), (int)global_trailTypeTest, 0, 0);
+		PLAYBACK_EVENT_FULL (FEV_GLOBAL, this->edict(), g_sTrailEngineChoice, 0.0, (float *)&this->pev->origin, (float *)&this->pev->angles, 0.7, 0.0, this->entindex(), (int)global_trailTypeTest, 0, 0);
 	}else if(global_hornetTrail == 1 || global_hornetTrail == 2){
 
 		//NOTE: particle type is "6", 3rd to last parameter here.
-		PLAYBACK_EVENT_FULL (FEV_GLOBAL, this->edict(), g_sTrail, 0.0, 
-		(float *)&this->pev->origin, (float *)&this->pev->angles, 0.7, 0.0, this->entindex(), 6, 0, 0);
+		PLAYBACK_EVENT_FULL (FEV_GLOBAL, this->edict(), g_sTrail, 0.0, (float *)&this->pev->origin, (float *)&this->pev->angles, 0.7, 0.0, this->entindex(), 6, 0, 0);
 	}
 	
 	
 
-	if(global_hornetTrail == 0 || global_hornetTrail == 2){
+	//Don't do this unless global_trailTypeTest is -1. Any trailTypeTest'ing likely doesn't want to be bothered by transparent line trail graphics.
+	if( global_trailTypeTest == -1 && (global_hornetTrail == 0 || global_hornetTrail == 2) ){
 
 
 	int clrChoice1[3];

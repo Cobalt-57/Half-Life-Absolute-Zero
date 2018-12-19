@@ -8,6 +8,7 @@ LINK_ENTITY_TO_CLASS( controller_head_ball, CControllerHeadBall );
 
 CControllerHeadBall::CControllerHeadBall(void){
 
+	nextNormalThinkTime = 0;
 }
 
 void CControllerHeadBall :: Spawn( void )
@@ -56,75 +57,90 @@ void CControllerHeadBall :: Precache( void )
 
 void CControllerHeadBall :: HuntThink( void  )
 {
-	pev->nextthink = gpGlobals->time + 0.1;
 
-	pev->renderamt -= 5;
+	//MODDD - I think twice as fast only to spawn the used-to-be-commented-out lighning effect more often.
+	//        Still do the rest of the logic at the same rate (0.1 seconds) like how Mr. friendly vomit handles it.
+	pev->nextthink = gpGlobals->time + 0.05;
 
-	MESSAGE_BEGIN( MSG_BROADCAST, SVC_TEMPENTITY );
-		WRITE_BYTE( TE_ELIGHT );
-		WRITE_SHORT( entindex( ) );		// entity, attachment
-		WRITE_COORD( pev->origin.x );		// origin
-		WRITE_COORD( pev->origin.y );
-		WRITE_COORD( pev->origin.z );
-		WRITE_COORD( pev->renderamt / 16 );	// radius
-		WRITE_BYTE( 255 );	// R
-		WRITE_BYTE( 255 );	// G
-		WRITE_BYTE( 255 );	// B
-		WRITE_BYTE( 2 );	// life * 10
-		WRITE_COORD( 0 ); // decay
-	MESSAGE_END();
 
-	// check world boundaries
-	if (gpGlobals->time - pev->dmgtime > 5 || pev->renderamt < 64 || m_hEnemy == NULL || m_hOwner == NULL || pev->origin.x < -4096 || pev->origin.x > 4096 || pev->origin.y < -4096 || pev->origin.y > 4096 || pev->origin.z < -4096 || pev->origin.z > 4096)
-	{
-		SetTouch( NULL );
-		UTIL_Remove( this );
-		return;
-	}
 
-	MovetoTarget( m_hEnemy->Center( ) );
-
-	if ((m_hEnemy->Center() - pev->origin).Length() < 64)
-	{
-		TraceResult tr;
-
-		UTIL_TraceLine( pev->origin, m_hEnemy->Center(), dont_ignore_monsters, ENT(pev), &tr );
-
-		CBaseEntity *pEntity = CBaseEntity::Instance(tr.pHit);
-		if (pEntity != NULL && pEntity->pev->takedamage)
-		{
-			ClearMultiDamage( );
-			pEntity->TraceAttack( m_hOwner->pev, gSkillData.controllerDmgZap, pev->velocity, &tr, DMG_SHOCK );
-			ApplyMultiDamage( pev, m_hOwner->pev );
-		}
+	if(gpGlobals->time >= nextNormalThinkTime){
+		
+		pev->renderamt -= 5;
 
 		MESSAGE_BEGIN( MSG_BROADCAST, SVC_TEMPENTITY );
-			WRITE_BYTE( TE_BEAMENTPOINT );
-			WRITE_SHORT( entindex() );
-			WRITE_COORD( tr.vecEndPos.x );
-			WRITE_COORD( tr.vecEndPos.y );
-			WRITE_COORD( tr.vecEndPos.z );
-			WRITE_SHORT( g_sModelIndexLaser );
-			WRITE_BYTE( 0 ); // frame start
-			WRITE_BYTE( 10 ); // framerate
-			WRITE_BYTE( 3 ); // life
-			WRITE_BYTE( 20 );  // width
-			WRITE_BYTE( 0 );   // noise
-			WRITE_BYTE( 255 );   // r, g, b
-			WRITE_BYTE( 255 );   // r, g, b
-			WRITE_BYTE( 255 );   // r, g, b
-			WRITE_BYTE( 255 );	// brightness
-			WRITE_BYTE( 10 );		// speed
+			WRITE_BYTE( TE_ELIGHT );
+			WRITE_SHORT( entindex( ) );		// entity, attachment
+			WRITE_COORD( pev->origin.x );		// origin
+			WRITE_COORD( pev->origin.y );
+			WRITE_COORD( pev->origin.z );
+			WRITE_COORD( pev->renderamt / 16 );	// radius
+			WRITE_BYTE( 255 );	// R
+			WRITE_BYTE( 255 );	// G
+			WRITE_BYTE( 255 );	// B
+			WRITE_BYTE( 2 );	// life * 10
+			WRITE_COORD( 0 ); // decay
 		MESSAGE_END();
 
+		// check world boundaries
+		if (gpGlobals->time - pev->dmgtime > 5 || pev->renderamt < 64 || m_hEnemy == NULL || m_hOwner == NULL || pev->origin.x < -4096 || pev->origin.x > 4096 || pev->origin.y < -4096 || pev->origin.y > 4096 || pev->origin.z < -4096 || pev->origin.z > 4096)
+		{
+			SetTouch( NULL );
+			UTIL_Remove( this );
+			return;
+		}
 
-		UTIL_EmitAmbientSound_Filtered( ENT(pev), tr.vecEndPos, "weapons/electro4.wav", 0.5, ATTN_NORM, 0, RANDOM_LONG( 140, 160 ), FALSE );
+		MovetoTarget( m_hEnemy->Center( ) );
 
-		m_flNextAttack = gpGlobals->time + 3.0;
+		if ((m_hEnemy->Center() - pev->origin).Length() < 64)
+		{
+			TraceResult tr;
 
-		SetThink( &CControllerHeadBall::DieThink );
-		pev->nextthink = gpGlobals->time + 0.3;
-	}
+			UTIL_TraceLine( pev->origin, m_hEnemy->Center(), dont_ignore_monsters, ENT(pev), &tr );
+
+			CBaseEntity *pEntity = CBaseEntity::Instance(tr.pHit);
+			if (pEntity != NULL && pEntity->pev->takedamage)
+			{
+				ClearMultiDamage( );
+				pEntity->TraceAttack( m_hOwner->pev, gSkillData.controllerDmgZap, pev->velocity, &tr, DMG_SHOCK );
+				ApplyMultiDamage( pev, m_hOwner->pev );
+			}
+
+
+			//MODDD - noise boost. and color cange.
+			MESSAGE_BEGIN( MSG_BROADCAST, SVC_TEMPENTITY );
+				WRITE_BYTE( TE_BEAMENTPOINT );
+				WRITE_SHORT( entindex() );
+				WRITE_COORD( tr.vecEndPos.x );
+				WRITE_COORD( tr.vecEndPos.y );
+				WRITE_COORD( tr.vecEndPos.z );
+				WRITE_SHORT( g_sModelIndexLaser );
+				WRITE_BYTE( 0 ); // frame start
+				WRITE_BYTE( 10 ); // framerate
+				WRITE_BYTE( 2 ); // life. WAS 3.
+				WRITE_BYTE( 20 );  // width
+				WRITE_BYTE( 80 );   // noise. WAS 0
+				WRITE_BYTE( 255 );   // r, g, b. Were all 255 before.
+				WRITE_BYTE( 255 );   // r, g, b
+				WRITE_BYTE( 80 );   // r, g, b
+				WRITE_BYTE( 255 );	// brightness
+				WRITE_BYTE( 10 );		// speed
+			MESSAGE_END();
+
+
+			UTIL_EmitAmbientSound_Filtered( ENT(pev), tr.vecEndPos, "weapons/electro4.wav", 0.5, ATTN_NORM, 0, RANDOM_LONG( 140, 160 ), FALSE );
+
+			m_flNextAttack = gpGlobals->time + 3.0;
+
+			SetThink( &CControllerHeadBall::DieThink );
+			pev->nextthink = gpGlobals->time + 0.3;
+		}
+
+		nextNormalThinkTime = gpGlobals->time + 0.1;
+
+	}//END OF nextNormalThinkTime check
+
+
 
 
 	//MODDD - this call used to be commented out, enabled because we're crazy! Draws some white lines around the ball I guess.
@@ -164,6 +180,9 @@ void CControllerHeadBall :: Crawl( void  )
 	Vector vecAim = Vector( RANDOM_FLOAT( -1, 1 ), RANDOM_FLOAT( -1, 1 ), RANDOM_FLOAT( -1, 1 ) ).Normalize( );
 	Vector vecPnt = pev->origin + pev->velocity * 0.3 + vecAim * 64;
 
+	//MODDD NOTE - being straight white lines isn't very electricity-like. How about wavy (noise) and a tint of something else? purple?
+	//             Based off the islave, 20 looks fairly direct and 80 is pretty wild.
+
 	MESSAGE_BEGIN( MSG_BROADCAST, SVC_TEMPENTITY );
 		WRITE_BYTE( TE_BEAMENTPOINT );
 		WRITE_SHORT( entindex() );
@@ -173,12 +192,12 @@ void CControllerHeadBall :: Crawl( void  )
 		WRITE_SHORT( g_sModelIndexLaser );
 		WRITE_BYTE( 0 ); // frame start
 		WRITE_BYTE( 10 ); // framerate
-		WRITE_BYTE( 3 ); // life
+		WRITE_BYTE( 2 ); // life. WAS 3.
 		WRITE_BYTE( 20 );  // width
-		WRITE_BYTE( 0 );   // noise
+		WRITE_BYTE( 80 );   // noise.  WAS 0
+		WRITE_BYTE( 255 );   // r, g, b. Were all 255 before.
 		WRITE_BYTE( 255 );   // r, g, b
-		WRITE_BYTE( 255 );   // r, g, b
-		WRITE_BYTE( 255 );   // r, g, b
+		WRITE_BYTE( 80 );   // r, g, b
 		WRITE_BYTE( 255 );	// brightness
 		WRITE_BYTE( 10 );		// speed
 	MESSAGE_END();

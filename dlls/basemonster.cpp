@@ -1159,6 +1159,11 @@ void CBaseMonster :: Look ( int iDistance )
 // ISoundMask - returns a bit mask indicating which types
 // of sounds this monster regards. In the base class implementation,
 // monsters care about all sounds, but no scents.
+// MODDD NOTE - and not the one fired by the anticipated landing spot of
+//              grenades for knowing to flee from that, bits_SOUND_DANGER,
+//              apparently.
+//              Not that dumb aliens are supposed to react to that anyways
+//              but include it as needed for smarter things.
 //=========================================================
 int CBaseMonster :: ISoundMask ( void )
 {
@@ -3333,7 +3338,7 @@ void CBaseMonster::SetSequenceByIndex(int iSequence, BOOL safeReset)
 
 		pev->sequence		= iSequence;	// Set to the reset anim (if it's there)
 		
-		easyForcePrintLine("hahahahaha: s%d fs%.2f", iSequence, m_flFramerateSuggestion);
+		//easyForcePrintLine("SetSequenceByIndex: ses:%d fs:%.2f", iSequence, m_flFramerateSuggestion);
 		if(!safeReset){
 			ResetSequenceInfo( );
 		}else{
@@ -4463,7 +4468,7 @@ BOOL CBaseMonster :: FTriangulate ( const Vector &vecStart , const Vector &vecEn
 
 	vecLeft = pev->origin + ( vecForward * ( flDist + sizeX ) ) - vecDir * ( sizeX * 3 );
 	vecRight = pev->origin + ( vecForward * ( flDist + sizeX ) ) + vecDir * ( sizeX * 3 );
-	if (pev->movetype == MOVETYPE_FLY)
+	if (isMovetypeFlying())
 	{
 		vecTop = pev->origin + (vecForward * flDist) + (vecDirUp * sizeZ * 3);
 		vecBottom = pev->origin + (vecForward * flDist) - (vecDirUp *  sizeZ * 3);
@@ -4472,7 +4477,7 @@ BOOL CBaseMonster :: FTriangulate ( const Vector &vecStart , const Vector &vecEn
 	vecFarSide = m_Route[ m_iRouteIndex ].vecLocation;
 	
 	vecDir = vecDir * sizeX * 2;
-	if (pev->movetype == MOVETYPE_FLY)
+	if (pev->movetype == isMovetypeFlying() )
 		vecDirUp = vecDirUp * sizeZ * 2;
 
 	for ( i = 0 ; i < 8; i++ )
@@ -4501,7 +4506,7 @@ BOOL CBaseMonster :: FTriangulate ( const Vector &vecStart , const Vector &vecEn
 #endif
 
 #if 0
-		if (pev->movetype == MOVETYPE_FLY)
+		if (isMovetypeFlying())
 		{
 			MESSAGE_BEGIN( MSG_BROADCAST, SVC_TEMPENTITY );
 				WRITE_BYTE( TE_SHOWLINE );
@@ -4550,7 +4555,7 @@ BOOL CBaseMonster :: FTriangulate ( const Vector &vecStart , const Vector &vecEn
 			}
 		}
 
-		if (pev->movetype == MOVETYPE_FLY)
+		if (isMovetypeFlying())
 		{
 			if ( CheckLocalMove( pev->origin, vecTop, pTargetEnt, NULL ) == LOCALMOVE_VALID)
 			{
@@ -4584,7 +4589,7 @@ BOOL CBaseMonster :: FTriangulate ( const Vector &vecStart , const Vector &vecEn
 
 		vecRight = vecRight + vecDir;
 		vecLeft = vecLeft - vecDir;
-		if (pev->movetype == MOVETYPE_FLY)
+		if (isMovetypeFlying())
 		{
 			vecTop = vecTop + vecDirUp;
 			vecBottom = vecBottom - vecDirUp;
@@ -4786,6 +4791,9 @@ void CBaseMonster :: Move ( float flInterval )
 
 		EASY_CVAR_PRINTIF_PRE(pathfindPrintout, easyPrintLine("%s:ID%d Pathfinding: ROUTE A", getClassnameShort(), monsterID) );
 		pBlocker = CBaseEntity::Instance( gpGlobals->trace_ent );
+
+		//easyForcePrintLine("I AM THE BLOCKER AND I SUCK RAISINS %s", pBlocker->getClassname());
+
 		if (pBlocker)
 		{
 			DispatchBlocked( edict(), pBlocker->edict() );
@@ -5327,15 +5335,12 @@ void CBaseMonster :: StartMonster ( void )
 		m_afCapability |= bits_CAP_MELEE_ATTACK2;
 	}
 
-	BOOL canFly = (pev->movetype == MOVETYPE_FLY || pev->movetype == MOVETYPE_BOUNCEMISSILE);
-
 	// Raise monster off the floor one unit, then drop to floor
 	
 
 
 	//MODDD NOTE - Oddly enough? missing "SF_MONSTER_FALL_TO_GROUND" causes the monster to fall to the ground. Interdasting.
-	//if ( pev->movetype != MOVETYPE_FLY && !FBitSet( pev->spawnflags, SF_MONSTER_FALL_TO_GROUND ) )
-	if ( !canFly && !FBitSet( pev->spawnflags, SF_MONSTER_FALL_TO_GROUND ) )
+	if ( !isMovetypeFlying() && !FBitSet( pev->spawnflags, SF_MONSTER_FALL_TO_GROUND ) )
 	{
 
 		if(global_crazyMonsterPrintouts)easyForcePrintLine("YOU amazing piece of work");
@@ -5383,8 +5388,8 @@ void CBaseMonster :: StartMonster ( void )
 			m_movementGoal = MOVEGOAL_PATHCORNER;
 			
 
-			//if ( pev->movetype == MOVETYPE_FLY )
-			if(canFly)
+			//MODDD - is this appropriate for swimmers too?
+			if(isMovetypeFlying())
 				m_movementActivity = ACT_FLY;
 			else
 				m_movementActivity = ACT_WALK;

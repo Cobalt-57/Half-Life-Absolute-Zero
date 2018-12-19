@@ -55,30 +55,11 @@ extern Vector VecBModelOrigin( entvars_t* pevBModel );
 
 
 
-//MODDD - event shorts go here.
-//////////////////////////////////////////////////////////////////////////
-unsigned short g_sTrail;
-unsigned short g_sTrailRA;
-unsigned short g_sCustomBalls;
-unsigned short g_sCustomBallsPowerup;
-unsigned short g_quakeExplosionEffect;
-unsigned short g_decalGunshotCustomEvent;
-unsigned short g_sFreakyLight;
-unsigned short g_sFriendlyVomit;
-
-//////////////////////////////////////////////////////////////////////////
-
-unsigned short model_explosivestuff;
-
-
-
 
 extern float global_cheat_iwantguts;
 
 extern float globalPSEUDO_canApplyGermanCensorship;
 extern BOOL globalPSEUDO_germanModel_hgibFound;
-
-
 
 
 
@@ -88,18 +69,8 @@ extern GibInfo_t aryGibInfo[];
 
 
 
-
-
-
 //MODDD - hidden cheat.  Not a CVar, so that it can't be seen by console's autocomplete
 float cheat_barnacleEatsEverything = 0;
-short g_sGaussBallSprite = 0;
-short g_sBallVomitSprite = 0;
-
-
-
-
-
 
 
 

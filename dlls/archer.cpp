@@ -1646,7 +1646,8 @@ int CArcher::LookupActivityHard(int activity){
 			//otherwise what is returned is fine.
 		break;
 		case ACT_MELEE_ATTACK1:
-			animEventQueuePush(45.0f, 1);
+			animEventQueuePush(4.0f / 13.0f , 1);
+			animEventQueuePush(14.0f / 13.0f , 1);
 			return SEQ_ARCHER_BITE;
 		break;
 		case ACT_RANGE_ATTACK1:
@@ -1679,9 +1680,12 @@ void CArcher::HandleEventQueueEvent(int arg_eventID){
 	case 0:
 	{
 
+
+		/*
 		//break;
 
 		//fire a bullsquid projectile? not psychic like the kingpin.
+		//No, still can have electricity based stuff. Do that.
 		Vector	vecSpitOffset;
 		Vector	vecSpitDir;
 
@@ -1699,6 +1703,64 @@ void CArcher::HandleEventQueueEvent(int arg_eventID){
 		AttackSound();
 
 		CSquidSpit::Shoot( this, vecSpitOffset, vecSpitDir, 900 );
+		*/
+
+
+
+
+		
+		if(m_hEnemy == NULL){
+			//stop?
+			TaskFail();
+			return;
+		}
+
+			
+		//m_IdealActivity = ACT_RANGE_ATTACK1;
+
+		//create the ball
+		Vector vecStart, angleGun;
+		Vector vecForward;
+
+
+
+		//GetAttachment( 0, vecStart, angleGun );
+			
+		::UTIL_MakeVectorsPrivate(pev->angles, vecForward, NULL, NULL);
+
+		vecStart = pev->origin + vecForward * 18 + Vector(0, 0, 60);
+
+		MESSAGE_BEGIN( MSG_BROADCAST, SVC_TEMPENTITY );
+			WRITE_BYTE( TE_ELIGHT );
+			WRITE_SHORT( entindex( ) + 0x1000 );		// entity, attachment
+			WRITE_COORD( 0 );		// origin
+			WRITE_COORD( 0 );
+			WRITE_COORD( 0 );
+			WRITE_COORD( 32 );	// radius
+			WRITE_BYTE( 0 );	// R
+			WRITE_BYTE( 62 );	// G
+			WRITE_BYTE( 255 );	// B
+			WRITE_BYTE( 10 );	// life * 10
+			WRITE_COORD( 32 ); // decay
+		MESSAGE_END();
+
+		CBaseMonster *pBall = (CBaseMonster*)Create( "controller_head_ball", vecStart, pev->angles, edict() );
+
+		pBall->pev->velocity = Vector( vecForward.x * 100, vecForward.y * 100, 0 );
+		pBall->m_hEnemy = m_hEnemy;
+
+
+		//should there be some generic electricity sound for launching this ball? what does the houndeye do?
+
+		//this->playPsionicLaunchSound();
+		//this->SetSequenceByIndex(KINGPIN_PSIONIC_LAUNCH);
+
+
+
+
+
+
+
 
 	break;
 	}

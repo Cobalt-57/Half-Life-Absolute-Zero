@@ -40,7 +40,28 @@ extern globalvars_t				*gpGlobals;
 
 
 
+
+extern unsigned short g_sTrailEngineChoice;
+extern unsigned short g_sImitation7;
+extern unsigned short g_sTrail;
+extern unsigned short g_sTrailRA;
+extern unsigned short g_sCustomBalls;
+extern unsigned short g_sCustomBallsPowerup;
+extern unsigned short g_quakeExplosionEffect;
+extern unsigned short g_decalGunshotCustomEvent;
+extern unsigned short g_sFreakyLight;
+extern unsigned short g_sFriendlyVomit;
+
+
+
+
 extern int giPrecacheGrunt;
+
+
+
+
+
+
 
 
 //MODDD - referred to in here, yes.

@@ -47,6 +47,41 @@
 
 
 
+
+
+
+//MODDD - event ID's.
+unsigned short g_sTrailEngineChoice;
+unsigned short g_sImitation7;
+unsigned short g_sTrail;
+unsigned short g_sTrailRA;
+unsigned short g_sCustomBalls;
+unsigned short g_sCustomBallsPowerup;
+unsigned short g_quakeExplosionEffect;
+unsigned short g_decalGunshotCustomEvent;
+unsigned short g_sFreakyLight;
+unsigned short g_sFriendlyVomit;
+
+
+unsigned short model_explosivestuff;
+
+short g_sGaussBallSprite = 0;
+short g_sBallVomitSprite = 0;
+
+
+
+
+
+
+
+extern int giPrecacheGrunt;
+
+
+
+
+
+
+
 float global_soundSentenceSave = -1;  //This is linked to the CVar.
 int global_useSentenceSave = 0;   //This is for script only, used to make mass-recognizing lots of sound precache calls --> sentances easier.
 float global_pissedNPCs = -1;
@@ -59,6 +94,12 @@ float forceWorldLightOffMem = -1;
 cvar_t* cvar_soundSentenceSave = NULL;
 cvar_t* cvar_pissedNPCs = NULL;
 cvar_t* cvar_cl_explosion = NULL;
+
+
+
+
+
+
 
 
 
@@ -5731,21 +5772,7 @@ int UTIL_BloodColorRedFilter(BOOL robotReplacementModelExists){
 
 
 
-//MODDD - including event ID's.
-extern unsigned short g_sTrail;
-extern unsigned short g_sTrailRA;
-extern unsigned short g_sCustomBalls;
-extern unsigned short g_sCustomBallsPowerup;
-extern unsigned short g_quakeExplosionEffect;
-extern unsigned short g_decalGunshotCustomEvent;
-extern unsigned short g_sFreakyLight;
-extern unsigned short g_sFriendlyVomit;
 
-
-extern unsigned short model_explosivestuff;
-
-
-extern int giPrecacheGrunt;
 
 //OTHER MAJOR PRECAHCE METHODS:
 //World.cpp's W_Precache
@@ -6229,8 +6256,9 @@ void ClientPrecache( void )
 	if (giPrecacheGrunt && !precacheAllVar)
 		UTIL_PrecacheOther("monster_human_grunt");
 
-
 	//MODDD - LINK EVENTS TO FILES, SERVERSIDE
+	g_sTrailEngineChoice = PRECACHE_EVENT(1, "events/trail_enginechoice.sc");
+	g_sImitation7 = PRECACHE_EVENT(1, "events/imitation7.sc");
 	g_sTrail = PRECACHE_EVENT( 1, "events/trail.sc" );
 	g_sTrailRA = PRECACHE_EVENT(1, "events/trailra.sc");
 	g_sCustomBalls = PRECACHE_EVENT( 1, "events/customballs.sc");

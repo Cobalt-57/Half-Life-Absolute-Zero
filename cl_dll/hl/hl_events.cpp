@@ -48,6 +48,8 @@ void EV_Mirror( struct event_args_s *args );//temporary mirror stuff
 void EV_TrainPitchAdjust( struct event_args_s *args );
 
 //MODDD
+void EV_Trail_EngineChoice(struct event_args_s* args );
+void EV_imitation7(struct event_args_s* args );
 void EV_Trail (struct event_args_s *args );
 void EV_rocketAlphaTrail (struct event_args_s *args );
 void EV_ShowBalls (struct event_args_s *args );
@@ -109,6 +111,9 @@ void Game_HookEvents( void )
 	gEngfuncs.pfnHookEvent( "events/mirror.sc", 				EV_Mirror );
 
 	//MODDD
+	
+	gEngfuncs.pfnHookEvent( "events/trail_enginechoice.sc",		EV_Trail_EngineChoice );
+	gEngfuncs.pfnHookEvent( "events/imitation7.sc",				EV_imitation7 );
 	gEngfuncs.pfnHookEvent( "events/trail.sc",					EV_Trail );
 	gEngfuncs.pfnHookEvent( "events/trailra.sc",				EV_rocketAlphaTrail );
 	gEngfuncs.pfnHookEvent( "events/customballs.sc",			EV_ShowBalls );

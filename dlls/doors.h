@@ -48,8 +48,8 @@
 
 
 //MODDD - new
-//#define SF_DOOR_HEAL				1024
-#define SF_DOOR_HEAL				(1 << 13)  //or 8192.
+#define SF_DOOR_HEAL				1024
+//#define SF_DOOR_HEAL				(1 << 13)  //or 8192.
 
 #define SF_DOOR_SILENT				0x80000000
 

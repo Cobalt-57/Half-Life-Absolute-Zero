@@ -79,6 +79,10 @@ public:
 	BOOL isOrganic(void);
 	int getHullIndexForNodes(void);
 	int IRelationship ( CBaseEntity *pTarget );
+	float HearingSensitivity(void);
+	int ISoundMask(void);
+
+
 	
 	void ReportAIState( void );
 

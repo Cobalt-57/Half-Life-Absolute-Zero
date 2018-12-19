@@ -599,6 +599,9 @@ BOOL CChumToad::getMonsterBlockIdleAutoUpdate(){
 	//return FALSE;
 
 	//Actually...
+	if(monsterID == 24){
+		int x = 34;
+	}
 
 
 	//easyForcePrintLine("DO YOU???? %.2f", toadPlayDeadTimer);
@@ -1948,7 +1951,10 @@ void CChumToad::MonsterThink ( void )
 	
 		
 
-
+	
+	if(monsterID == 24){
+		int x = 34;
+	}
 
 
 	if(pev->deadflag == DEAD_NO){

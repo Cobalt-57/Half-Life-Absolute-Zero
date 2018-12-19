@@ -146,7 +146,7 @@ BOOL CFlyingMonster :: FTriangulate ( const Vector &vecStart , const Vector &vec
 
 Activity CFlyingMonster :: GetStoppedActivity( void )
 { 
-	if ( pev->movetype != MOVETYPE_FLY )		// UNDONE: Ground idle here, IDLE may be something else
+	if ( !isMovetypeFlying() )		// UNDONE: Ground idle here, IDLE may be something else
 		return ACT_IDLE;
 
 	return ACT_HOVER; 
@@ -172,7 +172,7 @@ void CFlyingMonster :: Stop( void )
 
 float CFlyingMonster :: ChangeYaw( int speed )
 {
-	if ( pev->movetype == MOVETYPE_FLY )
+	if ( isMovetypeFlying() )
 	{
 		float diff = FlYawDiff();
 		float target = 0;
@@ -239,7 +239,7 @@ void CFlyingMonster :: HandleAnimEvent( MonsterEvent_t *pEvent )
 
 void CFlyingMonster :: Move( float flInterval )
 {
-	if ( pev->movetype == MOVETYPE_FLY )
+	if ( isMovetypeFlying() )
 		m_flGroundSpeed = m_flightSpeed;
 	CBaseMonster::Move( flInterval );
 }
@@ -261,8 +261,7 @@ BOOL CFlyingMonster:: ShouldAdvanceRoute( float flWaypointDist )
 void CFlyingMonster::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, float flInterval )
 {
 
-	//MODDD - added type MOVETYPE_BOUNCEMISSILE too. It has its uses...
-	if ( pev->movetype == MOVETYPE_FLY || pev->movetype == MOVETYPE_BOUNCEMISSILE )
+	if ( isMovetypeFlying() )
 	{
 		if ( gpGlobals->time - m_stopTime > 1.0 )
 		{
