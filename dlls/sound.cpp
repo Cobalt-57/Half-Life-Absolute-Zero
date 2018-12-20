@@ -1887,8 +1887,11 @@ float TEXTURETYPE_PlaySound(TraceResult *ptr,  Vector vecSrc, Vector vecEnd, int
 		cnt = 3;
 		break;
 	case CHAR_TEX_FLESH:
+
 		if (iBulletType == BULLET_PLAYER_CROWBAR)
-			return 0.0; // crowbar already makes this sound   MODDD NOTE - actually it plays "cbar_hitbod#", but it is similar. Don't need to play the usual anyways.
+			return 0.0; // crowbar already makes this sound
+		//MODDD NOTE - actually it plays "cbar_hitbod#", but it is similar. Don't need to play the usual anyways.
+
 		fvol = 1.0;	fvolbar = 0.2;
 		rgsz[0] = "weapons/bullet_hit1.wav";
 		rgsz[1] = "weapons/bullet_hit2.wav";
@@ -1934,7 +1937,8 @@ float TEXTURETYPE_PlaySound(TraceResult *ptr,  Vector vecSrc, Vector vecEnd, int
 		UTIL_EmitAmbientSound(ENT(0), ptr->vecEndPos, rgsz[RANDOM_LONG(0,cnt-1)], fvol, fattn, 0, 96 + RANDOM_LONG(0,0xf));
 		//EMIT_SOUND_DYN( ENT(m_pPlayer->pev), CHAN_WEAPON, rgsz[RANDOM_LONG(0,cnt-1)], fvol, ATTN_NORM, 0, 96 + RANDOM_LONG(0,0xf));
 	}
-			
+	
+
 	return fvolbar;
 }
 

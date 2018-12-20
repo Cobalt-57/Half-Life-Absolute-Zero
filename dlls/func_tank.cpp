@@ -865,6 +865,7 @@ void CFuncTankLaser::Fire( const Vector &barrelEnd, const Vector &forward, entva
 		int bulletCount = (gpGlobals->time - m_fireLast) * m_fireRate;
 		if ( bulletCount )
 		{
+			
 			for ( i = 0; i < bulletCount; i++ )
 			{
 				m_pLaser->pev->origin = barrelEnd;
@@ -876,6 +877,7 @@ void CFuncTankLaser::Fire( const Vector &barrelEnd, const Vector &forward, entva
 				m_pLaser->FireAtPoint( tr );
 				m_pLaser->pev->nextthink = 0;
 			}
+			
 			CFuncTank::Fire( barrelEnd, forward, pev );
 		}
 	}

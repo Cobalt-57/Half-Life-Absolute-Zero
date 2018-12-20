@@ -257,7 +257,7 @@ enum
 
 
 
-
+//remove "iAmDead" at some point. really not helpful.
 
 
 //
@@ -285,6 +285,7 @@ public:
 
 		//MODDD - moved outside iRelationship.
 		static int iEnemy[14][14];
+
 
 
 		//new
@@ -513,11 +514,15 @@ public:
 	virtual BOOL noncombat_Look_ignores_PVS_check(void);
 	
 	virtual BOOL violentDeathAllowed(void);
-	virtual int LookupViolentDeathSequence(void);
+	virtual BOOL violentDeathDamageRequirement(void);
 	virtual BOOL violentDeathClear(void);
 	
 	void lookAtEnemyLKP(void);
 	void predictActRepeat(int arg_bits_cond);
+
+	virtual BOOL canPredictActRepeat(void);
+
+
 
 
 	virtual BOOL getGermanModelRequirement(void);
@@ -998,9 +1003,13 @@ public:
 
 	//MODDD - new version that can expect the 2nd bitmask.
 	CBaseEntity *CheckTraceHullAttack( float flDist, int iDamage, int iDmgType );
+	CBaseEntity *CheckTraceHullAttack( float flDist, int iDamage, int iDmgType, TraceResult* out_tr);
 	CBaseEntity *CheckTraceHullAttack( float flDist, int iDamage, int iDmgType, int iDmgTypeMod );
+	CBaseEntity *CheckTraceHullAttack( float flDist, int iDamage, int iDmgType, int iDmgTypeMod, TraceResult* out_tr);
 	CBaseEntity *CheckTraceHullAttack( const Vector vecStartOffset, float flDist, int iDamage, int iDmgType );
+	CBaseEntity *CheckTraceHullAttack( const Vector vecStartOffset, float flDist, int iDamage, int iDmgType, TraceResult* out_tr );
 	CBaseEntity *CheckTraceHullAttack( const Vector vecStartOffset, float flDist, int iDamage, int iDmgType, int iDmgTypeMod );
+	CBaseEntity *CheckTraceHullAttack( const Vector vecStartOffset, float flDist, int iDamage, int iDmgType, int iDmgTypeMod, TraceResult* out_tr );
 	BOOL FacingIdeal( void );
 	BOOL FacingIdeal(float argDegreeTolerance);
 

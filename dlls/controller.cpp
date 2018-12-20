@@ -77,7 +77,9 @@ enum controller_sequence{  //key: frames, FPS
 #define CONTROLLER_AE_POWERUP_FULL	4
 #define CONTROLLER_AE_POWERUP_HALF	5
 
-#define CONTROLLER_FLINCH_DELAY			2		// at most one flinch every n secs
+
+//MODDD - too bad you were unused.
+//#define CONTROLLER_FLINCH_DELAY			2		// at most one flinch every n secs
 
 class CController : public CSquadMonster
 {
@@ -128,7 +130,8 @@ public:
 	BOOL ShouldAdvanceRoute( float flWaypointDist );
 	int LookupFloat( );
 
-	float m_flNextFlinch;
+	//MODDD - unused as-is variable, too bad.
+	//float m_flNextFlinch;
 
 	float m_flShootTime;
 	float m_flShootEnd;
@@ -677,9 +680,19 @@ void CController :: StartTask ( Task_t *pTask )
 
 int CController::LookupFloat( )
 {
+	//m_velocity = Vector(0, 0, 0);
+
+	//only do this change if the current sequence is over, we really don't need
+	//to rapidly set to "up" between movements.
 	if (m_velocity.Length( ) < 32.0)
 	{
-		return LookupSequence( "up" );
+
+		if(m_fSequenceFinished){
+			return LookupSequence( "up" );
+		}else{
+			//don't affect the squence at all.
+			return -1;
+		}
 	}
 
 	UTIL_MakeAimVectors( pev->angles );
@@ -696,10 +709,18 @@ int CController::LookupFloat( )
 	}
 	else if (fabs(y) > fabs(z))
 	{
+		/*
 		if (y > 0)
 			return LookupSequence( "right");
 		else
 			return LookupSequence( "left");
+		*/
+		//MODDD - swapping. If it's supposed to look like swimming through the air,
+		//shouldn't the push be away from the direction you want to move?
+		if (y > 0)
+			return LookupSequence( "left");
+		else
+			return LookupSequence( "right");
 	}
 	else
 	{
@@ -793,10 +814,17 @@ void CController :: RunTask ( Task_t *pTask )
 				ResetSequenceInfo( );
 				m_fInCombat = TRUE;
 			}
-			else
+			//MODDD - extra check. If I'm supposed to be stopped don't even try this.
+			//        I pick idle animations fine, right?
+			else if(this->IsMoving())
 			{
 				int iFloat = LookupFloat( );
-				if (m_fSequenceFinished || iFloat != pev->sequence)
+				//if (m_fSequenceFinished || iFloat != pev->sequence)
+				//MODDD - if it loops, don't force a reset. It just
+				//        messes up interpolation and resets the animation after
+				//        already going into the second automatic restart a tiny
+				//        bit.
+				if (iFloat != -1 && iFloat != pev->sequence)
 				{
 					pev->sequence = iFloat;
 					pev->frame = 0;
@@ -837,7 +865,8 @@ Schedule_t *CController :: GetSchedule ( void )
 
 	case MONSTERSTATE_COMBAT:
 	{
-		Vector vecTmp = UTIL_Intersect( Vector( 0, 0, 0 ), Vector( 100, 4, 7 ), Vector( 2, 10, -3 ), 20.0 );
+		//MODDD NOTE - uhhh......  ????? ............ ?????????????????????????
+		//Vector vecTmp = UTIL_Intersect( Vector( 0, 0, 0 ), Vector( 100, 4, 7 ), Vector( 2, 10, -3 ), 20.0 );
 
 		// dead enemy
 		if ( HasConditions ( bits_COND_LIGHT_DAMAGE ) )
@@ -896,6 +925,20 @@ Schedule_t* CController :: GetScheduleOfType ( int Type )
 
 
 
+
+
+//MODDD NOTE - so why does it pick one or the other with such broad, sometimes
+//             overlapping conditions?
+//  If rangedAttack1 is given the Okay, it runs, period.  That is distance is
+//  at least 256.
+//  But if it is not okay, rangedAttack2 gets the chance.
+//  It requires a distance of at least 64 instead.
+//  So long story short, attack1 always gets picked if further away than 256.
+//  But between a distance of 64 and 256, Attack2 gets picked instead.
+//  (and obviously neither if the distance exceeds 2048)
+
+// Attack1 is a bunch of smaller dumb zap balls,
+// Attack2 is the bigger homing head ball.
 
 //=========================================================
 // CheckRangeAttack1  - shoot a bigass energy ball out of their head
@@ -999,6 +1042,10 @@ extern void DrawRoute( entvars_t *pev, WayPoint_t *m_Route, int m_iRouteIndex, i
 
 void CController::Stop( void ) 
 { 
+
+	//MODDD - shouldn't this also be a signal to zero my velocity?
+	m_velocity = Vector(0, 0, 0);
+
 	m_IdealActivity = GetStoppedActivity(); 
 }
 

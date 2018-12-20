@@ -172,9 +172,14 @@ public:
 	void StartTask ( Task_t *pTask );
 	void RunTask ( Task_t *pTask );
 
+	int getHullIndexForNodes(void);
+
+
+
 	//originally 784.
 	float CoverRadius( void ) { return 1200; }
-		
+	
+
 	
 	
 	CUSTOM_SCHEDULES;
@@ -824,4 +829,6 @@ DEFINE_CUSTOM_SCHEDULES( CPantherEye )
 };
 
 IMPLEMENT_CUSTOM_SCHEDULES( CPantherEye, CBaseMonster );
+
+
 

@@ -165,6 +165,15 @@ void CBaseAnimating::checkEndOfAnimation(void){
 	pev->renderfx &= ~STOPINTR;
 
 
+	/*
+	CBaseMonster* tempMon = this->GetMonsterPointer();
+	if(tempMon != NULL && tempMon->monsterID >= -1){
+		if(tempMon->monsterID == 6){
+			int x = 45;
+		}
+	}
+	*/
+
 	//by default, this sequence is unfinished. The frame going past cutoff in the appropriate direction below will change this to TRUE instead.
 	m_fSequenceFinished = FALSE;
 	//But not you, m_fSequenceFinishedSinceLoop. You stay on until you have a reason to be set back to FALSE (new anim)

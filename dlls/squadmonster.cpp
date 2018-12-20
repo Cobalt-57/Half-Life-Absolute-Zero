@@ -898,7 +898,7 @@ void CSquadMonster :: StartMonster( void )
 		}
 
 
-		//if(FClassnameIs(pev, "monster_hassault")){
+		//if(FClassnameIs(pev, "monster_human_assault")){
 		if(skipSquadStartup){
 			//it appears this is completely unnecessaray, but oh well.  (being assigned to a squad right at creation already disables this whole startup block)
 			EASY_CVAR_PRINTIF(global_squadmonsterPrintout, "STARTUP SKIPPED!");
@@ -953,7 +953,7 @@ void CSquadMonster :: StartMonster( void )
 		}
 		
 		
-		if ( FClassnameIs ( pev, "monster_human_grunt" ) && testLeader != NULL && !FClassnameIs(testLeader->pev, "monster_hassault") )
+		if ( FClassnameIs ( pev, "monster_human_grunt" ) && testLeader != NULL && !FClassnameIs(testLeader->pev, "monster_human_assault") )
 		{
 
 			BOOL forbidLeaderChange = FALSE;
@@ -981,7 +981,7 @@ void CSquadMonster :: StartMonster( void )
 							eligibleChange = pMember;
 						}
 
-						if(selectedLeader == NULL && FClassnameIs(pMember->pev, "monster_hassault") ){
+						if(selectedLeader == NULL && FClassnameIs(pMember->pev, "monster_human_assault") ){
 							//Make this the leader!
 							selectedLeader = pMember;
 							//break;
@@ -1056,14 +1056,14 @@ void CSquadMonster :: StartMonster( void )
 
 
 			//this is an INTERVENTION
-			//CBaseEntity *pReplacement = CBaseEntity::Create( "monster_hassault", testLeader->pev->origin, testLeader->pev->angles );
+			//CBaseEntity *pReplacement = CBaseEntity::Create( "monster_human_assault", testLeader->pev->origin, testLeader->pev->angles );
 			
 
 
 			edict_t	*pent;
 			CBaseEntity *pReplacement;
 
-			pent = CREATE_NAMED_ENTITY( MAKE_STRING( "monster_hassault" ));
+			pent = CREATE_NAMED_ENTITY( MAKE_STRING( "monster_human_assault" ));
 			if ( FNullEnt( pent ) )
 			{
 				//ALERT ( at_console, "NULL Ent in Create!\n" );

@@ -149,6 +149,10 @@ void CBaseMonster :: ChangeSchedule ( Schedule_t *pNewSchedule )
 	}
 
 
+	//MODDD - is this safe to assume when changing schedules?
+	//        Don't want to feel obliged to stick with an animation that may no longer be fitting.
+	this->usingCustomSequence = FALSE;
+
 
 	m_pSchedule			= pNewSchedule;
 	m_iScheduleIndex	= 0;
@@ -1390,7 +1394,6 @@ void CBaseMonster :: RunTask ( Task_t *pTask )
 			//MODDD - removed, see below.  REtail behavior was ONLY this line
 			//m_Activity = ACT_RESET;
 
-			//TODO!!!
 			if(canPredictActRepeat()){
 				switch( pTask->iTask ){
 					case TASK_RANGE_ATTACK1:{predictActRepeat(bits_COND_CAN_RANGE_ATTACK1); break;}

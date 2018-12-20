@@ -836,14 +836,19 @@ GENERATE_GIBMONSTER_IMPLEMENTATION(CKingPin)
 //if dead and a poweredup monster's directedEnemyIssuer is THIS, forget its directedEnemy. !!!
 GENERATE_KILLED_IMPLEMENTATION(CKingPin){
 
-	deTargetMyCommandedMonsters();
-
-
 	BOOL firstCall = FALSE;
+	if(firstTimeKilled){
+		firstCall = TRUE;
+		//no need to re-do this check again.
+		deTargetMyCommandedMonsters();
+	}
+
+	/*
 	if(pev->deadflag == DEAD_NO){
 		//keep this in mind...
 		firstCall = TRUE;
 	}
+	*/
 
 	//MODDD - is still doing here ok?
 	GENERATE_KILLED_PARENT_CALL(CBaseMonster);

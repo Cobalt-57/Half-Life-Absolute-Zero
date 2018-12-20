@@ -118,8 +118,10 @@ CBaseEntity* CBaseMonster::getNearestDeadBody(void){return NULL;}
 BOOL CBaseMonster::noncombat_Look_ignores_PVS_check(void){return FALSE;}
 
 BOOL CBaseMonster::violentDeathAllowed(void){return FALSE;}
-int CBaseMonster::LookupViolentDeathSequence(void){return 0;}
+BOOL CBaseMonster::violentDeathDamageRequirement(void){return FALSE;}
 BOOL CBaseMonster::violentDeathClear(void){return FALSE;}
+
+BOOL CBaseMonster::canPredictActRepeat(void){return FALSE;}
 
 
 
@@ -160,8 +162,12 @@ int CBaseEntity::Save( CSave &save ) { return 1; }
 int CBaseEntity::Restore( CRestore &restore ) { return 1; }
 void CBaseEntity::PostRestore(){};
 
+void CBaseEntity::playMetallicHitSound(int arg_channel, float arg_volume){}
+
 BOOL CBaseEntity::IsWorld(){return FALSE;}
 BOOL CBaseEntity::IsWorldAffiliated(){return FALSE;}
+BOOL CBaseEntity::IsWorldOrAffiliated(){return FALSE;}
+
 BOOL CBaseEntity::IsBreakable(){return FALSE;}
 
 //MODDD - new

@@ -1189,7 +1189,7 @@ Activity CBaseMonster :: GetDeathActivity ( void )
 			// It must be allowed by this particular monster to be used, regardless of having a sequence mapped by the model.
 			// This way we can promise some attention was paid to whether it needs a trace check or not, which varries per monster.
 			// There is no standard length of trace that will satisfy all violent death animations.  violentDeathClear will handle that.
-			if(violentDeathAllowed() && violentDeathClear()){
+			if(violentDeathAllowed() && violentDeathDamageRequirement() && violentDeathClear()){
 				//Apparently this is OK.
 				//But if there are ever multiple violent death anims, we need to use this as a signal to pick
 				//a more specific one later possibly, like what one passed its own distance check.
@@ -1436,6 +1436,10 @@ GENERATE_KILLED_IMPLEMENTATION(CBaseMonster)
 	//pev->enemy = ENT( pevAttacker );//why? (sjb)
 	
 	m_IdealMonsterState = MONSTERSTATE_DEAD;
+
+
+	firstTimeKilled = FALSE;  //certainly won't be anymore.
+
 }//END OF Killed
 
 
@@ -1644,17 +1648,26 @@ void CGib :: Spawn( const char *szGibModel, BOOL spawnsDecal )
 //=========================================================
 //MODDD - note that the old form, missing the 2nd mask, now  redirects to the new form and just sends "0"
 //for the 2nd mask.  Safe to assume no damages meant there if nothing is supplied for it.
-CBaseEntity* CBaseMonster :: CheckTraceHullAttack( float flDist, int iDamage, int iDmgType )
-{
-	return CheckTraceHullAttack(Vector(0,0,0), flDist, iDamage, iDmgType, 0);
+CBaseEntity* CBaseMonster::CheckTraceHullAttack( float flDist, int iDamage, int iDmgType ){
+	return CheckTraceHullAttack(Vector(0,0,0), flDist, iDamage, iDmgType, 0, NULL);
 }
-CBaseEntity* CBaseMonster :: CheckTraceHullAttack( float flDist, int iDamage, int iDmgType, int iDmgTypeMod )
-{
-	return CheckTraceHullAttack(Vector(0,0,0), flDist, iDamage, iDmgType, iDmgTypeMod);
+CBaseEntity* CBaseMonster::CheckTraceHullAttack( float flDist, int iDamage, int iDmgType, TraceResult* out_traceResult ){
+	return CheckTraceHullAttack(Vector(0,0,0), flDist, iDamage, iDmgType, 0, out_traceResult);
 }
-CBaseEntity* CBaseMonster :: CheckTraceHullAttack( const Vector vecStartOffset, float flDist, int iDamage, int iDmgType )
-{
-	return CheckTraceHullAttack(vecStartOffset, flDist, iDamage, iDmgType, 0);
+CBaseEntity* CBaseMonster::CheckTraceHullAttack( float flDist, int iDamage, int iDmgType, int iDmgTypeMod ){
+	return CheckTraceHullAttack(Vector(0,0,0), flDist, iDamage, iDmgType, iDmgTypeMod, NULL);
+}
+CBaseEntity* CBaseMonster::CheckTraceHullAttack( float flDist, int iDamage, int iDmgType, int iDmgTypeMod, TraceResult* out_traceResult ){
+	return CheckTraceHullAttack(Vector(0,0,0), flDist, iDamage, iDmgType, iDmgTypeMod, out_traceResult);
+}
+CBaseEntity* CBaseMonster::CheckTraceHullAttack( const Vector vecStartOffset, float flDist, int iDamage, int iDmgType ){
+	return CheckTraceHullAttack(vecStartOffset, flDist, iDamage, iDmgType, 0, NULL);
+}
+CBaseEntity* CBaseMonster::CheckTraceHullAttack( const Vector vecStartOffset, float flDist, int iDamage, int iDmgType, TraceResult* out_traceResult ){
+	return CheckTraceHullAttack(vecStartOffset, flDist, iDamage, iDmgType, 0, out_traceResult);
+}
+CBaseEntity* CBaseMonster :: CheckTraceHullAttack( const Vector vecStartOffset, float flDist, int iDamage, int iDmgType, int iDmgTypeMod ){
+	return CheckTraceHullAttack(vecStartOffset, flDist, iDamage, iDmgType, iDmgTypeMod, NULL);
 }
 
 
@@ -1663,7 +1676,7 @@ CBaseEntity* CBaseMonster :: CheckTraceHullAttack( const Vector vecStartOffset, 
 //MODDD - version of the same method below that can expect the 2nd damge mask too.
 //TODO - send the entity (monster) calling this method as a paramter and use it to see if the thing hit matches its "m_hEnemy" (if this calling entity has one).
 //       If it does not match the enemy, try separate checks in case something else (crate, friend, etc.) was accidentally hit?
-CBaseEntity* CBaseMonster :: CheckTraceHullAttack( const Vector vecStartOffset, float flDist, int iDamage, int iDmgType, int iDmgTypeMod )
+CBaseEntity* CBaseMonster :: CheckTraceHullAttack( const Vector vecStartOffset, float flDist, int iDamage, int iDmgType, int iDmgTypeMod, TraceResult* out_traceResult )
 {
 	TraceResult tr;
 
@@ -1699,6 +1712,9 @@ CBaseEntity* CBaseMonster :: CheckTraceHullAttack( const Vector vecStartOffset, 
 			//hit something, and it isn't worldpawn? Use that instead!
 			//easyForcePrintLine("ALT A!");
 			thingHit = trB.pHit;
+		}else{
+			//hit sound anyways?
+			//TEXTURETYPE_PlaySound(&tr, vecStart, vecEnd, 0);
 		}
 
 		/*
@@ -1725,7 +1741,13 @@ CBaseEntity* CBaseMonster :: CheckTraceHullAttack( const Vector vecStartOffset, 
 			//hit something, and it isn't worldpawn? Use that instead!
 			//easyForcePrintLine("ALT B!");
 			thingHit = trB.pHit;
+		}else{
+			//hit sound anyways?
+			//TEXTURETYPE_PlaySound(&tr, vecStartB, vecEndB, 0);
 		}
+	}else{
+		//original hit  wasn't worldspawn? ok.
+		
 	}
 
 
@@ -1746,7 +1768,8 @@ CBaseEntity* CBaseMonster :: CheckTraceHullAttack( const Vector vecStartOffset, 
 	if ( thingHit )
 	{
 		CBaseEntity *pEntity = CBaseEntity::Instance( thingHit );
-
+		
+		
 		if ( iDamage > 0 )
 		{
 			pEntity->TakeDamage( pev, pev, iDamage, iDmgType, iDmgTypeMod );
@@ -1763,8 +1786,15 @@ CBaseEntity* CBaseMonster :: CheckTraceHullAttack( const Vector vecStartOffset, 
 
 		}
 
+		if(out_traceResult != NULL){
+			//copy our lineTrace to the destination if provided.
+			*out_traceResult = tr;
+		}
+
 		return pEntity;
 	}
+
+	//don't copy anything?
 
 	return NULL;
 }
@@ -1793,12 +1823,12 @@ BOOL CBaseMonster :: FInViewCone ( CBaseEntity *pEntity )
 
 	if ( flDot > m_flFieldOfView )
 	{
-		//if(FClassnameIs(this->pev, "monster_hassault")&&FClassnameIs(pEntity->pev, "player"))easyForcePrintLine("FInViewCone: %s%d : %s dot:%.2f fov:%.2f pass:%d", this->getClassname(), monsterID, pEntity->getClassname(), flDot, m_flFieldOfView, 1);
+		//if(FClassnameIs(this->pev, "monster_human_assault")&&FClassnameIs(pEntity->pev, "player"))easyForcePrintLine("FInViewCone: %s%d : %s dot:%.2f fov:%.2f pass:%d", this->getClassname(), monsterID, pEntity->getClassname(), flDot, m_flFieldOfView, 1);
 		return TRUE;
 	}
 	else
 	{
-		//if(FClassnameIs(this->pev, "monster_hassault")&&FClassnameIs(pEntity->pev, "player"))easyForcePrintLine("FInViewCone: %s%d : %s dot:%.2f fov:%.2f pass:%d", this->getClassname(), monsterID, pEntity->getClassname(), flDot, m_flFieldOfView, 0);
+		//if(FClassnameIs(this->pev, "monster_human_assault")&&FClassnameIs(pEntity->pev, "player"))easyForcePrintLine("FInViewCone: %s%d : %s dot:%.2f fov:%.2f pass:%d", this->getClassname(), monsterID, pEntity->getClassname(), flDot, m_flFieldOfView, 0);
 		return FALSE;
 	}
 }
@@ -2113,6 +2143,10 @@ GENERATE_KILLED_IMPLEMENTATION(CBaseEntity)
 
 	pev->takedamage = DAMAGE_NO;
 	pev->deadflag = DEAD_DEAD;
+
+	//MODDD - do we need to?
+	firstTimeKilled = FALSE;
+
 	UTIL_Remove( this );
 }
 
@@ -2858,6 +2892,9 @@ GENERATE_DEADTAKEDAMAGE_IMPLEMENTATION(CBaseMonster)
 	// kill the corpse if enough damage was done to destroy the corpse and the damage is of a type that is allowed to destroy the corpse.
 	if ( bitsDamageType & DMG_GIB_CORPSE )
 	{
+		//MODDD NOTE - the same "Killed" as running out of health the first time while alive?
+		//             That's... an akward design choice. Why not a separate "CorpseKilled" or something?
+		//             Other places may need to be aware they may be getting their "Killed" called from a dead monster probably wanting to gib.
 		if ( pev->health <= flDamage )
 		{
 			pev->health = -50;

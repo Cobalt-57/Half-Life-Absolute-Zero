@@ -466,6 +466,9 @@ if 1, the houndeye uses the same "attack" (charging; jittering) animation and co
 if 2, the houndeye uses the alpha charge-effect's variable time and non-standard "angry idle" animation (tapping a foot rapidly).
 if 3, same as 2 but missing the charge-sound (came this way when uncommented and crudely made to work).
 
+houndeye_attack_canGib (BOOL) - 0. If on (1), houndeye attacks can destroy monsters on killing blows or gib corpses like in retail.
+
+
 precacheAll - BOOL, on by default.  Some maps may crash if they already have a lot of stuff precached, where "precacheAll" may just put a little too much in there.
 Note that this is required to be on to spawn NPCs not intended by the map (not at least 1 already there at creation).
 If you encounter a precache error (getting forced back to the main menu with something mentioning precache in console), just restart the game and turn off "precacheAll".

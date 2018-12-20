@@ -422,6 +422,7 @@ public:
 
 	
 	BOOL violentDeathAllowed(void);
+	BOOL violentDeathDamageRequirement(void);
 	BOOL violentDeathClear(void);
 
 	Activity getIdleActivity(void);

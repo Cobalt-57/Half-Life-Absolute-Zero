@@ -117,9 +117,8 @@ public:
 
 	BOOL getMonsterBlockIdleAutoUpdate(void);
 	BOOL forceIdleFrameReset(void);
+	BOOL canPredictActRepeat(void);
 	BOOL usesAdvancedAnimSystem(void);
-	
-
 
 	void SetActivity ( Activity NewActivity );
 

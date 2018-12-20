@@ -210,6 +210,8 @@ public:
 
 	CBaseEntity * operator = (CBaseEntity *pEntity);
 	CBaseEntity * operator ->();
+
+	CBaseEntity* GetEntity();
 };
 
 
@@ -350,6 +352,9 @@ public:
 	BOOL firstSpawnCall;
 	BOOL flagForced;
 	
+	//is this the first time calling Killed? important sometimes.
+	BOOL firstTimeKilled;
+
 	//MODDD
 	virtual BOOL usesSoundSentenceSave(void);
 
@@ -379,9 +384,15 @@ public:
 
 	void PostRestore(void);
 
+
+
+
+	virtual void playMetallicHitSound(int arg_channel, float arg_volume);
+
 	//Made because this check is done a lot for traces. Need to know if a wall, floor, any part of the map, etc. was hit
 	virtual BOOL IsWorld(void);
 	virtual BOOL IsWorldAffiliated(void);
+	BOOL IsWorldOrAffiliated(void);  //NOT virtual. Never needs to be special.
 	virtual BOOL IsBreakable(void);
 
 	virtual int		ObjectCaps( void ) { return FCAP_ACROSS_TRANSITION; }

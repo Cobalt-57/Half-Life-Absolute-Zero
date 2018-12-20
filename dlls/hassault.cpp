@@ -631,7 +631,8 @@ void CHAssault :: Spawn()
 
 	UTIL_SetSize( pev, VEC_HUMAN_HULL_MIN, VEC_HUMAN_HULL_MAX );
 
-	pev->classname = MAKE_STRING("monster_hassault");
+	//pev->classname = MAKE_STRING("monster_hassault");
+	pev->classname = MAKE_STRING("monster_human_assault");
 
 	pev->solid			= SOLID_SLIDEBOX;
 	pev->movetype		= MOVETYPE_STEP;

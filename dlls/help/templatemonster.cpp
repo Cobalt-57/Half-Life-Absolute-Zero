@@ -636,6 +636,42 @@ int CTemplateMonster::ISoundMask(void){
 
 
 
+
+//Whether to do the usual "Look" method for checking for new or existing enemies.
+//Needed by archers to be able to call "Look" despite the player never going underwater (causes the PVS check to pass at least once to start combat).
+BOOL CTemplateMonster::noncombat_Look_ignores_PVS_check(void){
+	return FALSE;
+}//END OF noncombat_Look_ignores_PVS_check
+
+//You must explicitly allow this monster to be able to do the violent death at all, whether it has one available from the model
+//or not (but it should be if allowed).  Use the custom animation system and override what ACT_DIEVIOLENT returns if the model doesn't do it right or at all.
+BOOL CTemplateMonster::violentDeathAllowed(void){
+	return FALSE;
+}//END OF hasViolentDeathSequence
+
+//Default case should work fine for most monsters.
+//Only allow a violent death animation if the last hit solidly did this much damage.
+//Could do checks on m_LastHitGroup too (see method GetDeathActivity of combat.cpp)
+BOOL CTemplateMonster::violentDeathDamageRequirement(void){
+	return (lastDamageReceived >= 20);
+}
+
+//This method MUST be overridden to do line traces forwards / backwards to see if there is enough space in whatever direction to play the animation
+//to avoid clipping through things.  If this is unnecessary, leave this as it is.  But "hasViolentDeathSequence" must  be overridden to return TRUE;
+//above regardless.
+BOOL CTemplateMonster::violentDeathClear(void){
+	return TRUE;
+}//END OF
+
+
+
+
+
+
+
+
+
+
 GENERATE_TRACEATTACK_IMPLEMENTATION(CTemplateMonster){
 
 
@@ -742,10 +778,14 @@ BOOL CTemplateMonster::getMonsterBlockIdleAutoUpdate(void){
 BOOL CTemplateMonster::forceIdleFrameReset(void){
 	return FALSE;
 }
+//Whether this monster can re-pick the same animation before the next frame starts if it anticipates it getting picked.
+//This is subtly retail behavior, but may not always play well.
+BOOL CTemplateMonster::canPredictActRepeat(void){
+	return TRUE;
+}
 BOOL CTemplateMonster::usesAdvancedAnimSystem(void){
 	return TRUE;
 }
-
 void CTemplateMonster::SetActivity( Activity NewActivity ){
 	CBaseMonster::SetActivity(NewActivity);
 }

@@ -318,6 +318,8 @@ public:
 	int LookupActivityHard(int activity);
 	int tryActivitySubstitute(int activity);
 
+	int getHullIndexForNodes(void);
+
 
 	virtual int		Save( CSave &save );
 	virtual int		Restore( CRestore &restore );
@@ -2232,7 +2234,8 @@ void CGargantua::OnTakeDamageSetConditions(entvars_t *pevInflictor, entvars_t *p
 
 	
 	//default case from CBaseMonster's TakeDamage.
-	if ( flDamage > 20 )
+	//Also count being in a non-combat state to force looking in that direction.
+	if(m_MonsterState == MONSTERSTATE_IDLE || m_MonsterState == MONSTERSTATE_ALERT || flDamage > 20 )
 	{
 		SetConditions(bits_COND_LIGHT_DAMAGE);
 
@@ -2325,4 +2328,17 @@ int CGargantua::tryActivitySubstitute(int activity){
 }//END OF tryActivitySubstitute(...)
 
 
+
+int CGargantua::getHullIndexForNodes(void){
+    return NODE_LARGE_HULL;  //...ya think?
+}
+
+
+
+
+
 #endif
+
+
+
+

@@ -184,7 +184,8 @@ public:
 
 	void OnTakeDamageSetConditions(entvars_t *pevInflictor, entvars_t *pevAttacker, float flDamage, int bitsDamageType, int bitsDamageTypeMod);
 
-
+	
+	int getHullIndexForNodes(void);
 
 
 
@@ -1892,6 +1893,7 @@ Schedule_t *CAGrunt :: GetSchedule ( void )
 				return GetScheduleOfType( SCHED_WAKE_ANGRY );
 			}
 
+	//MODDD - this comment. what? Did you get pasted from the islave, original dev's?
 	// zap player!
 			if ( HasConditions ( bits_COND_CAN_MELEE_ATTACK1 ) )
 			{
@@ -2434,8 +2436,9 @@ void CAGrunt::OnTakeDamageSetConditions(entvars_t *pevInflictor, entvars_t *pevA
 
 	
 	//default case from CBaseMonster's TakeDamage.
+	//Also count being in a non-combat state to force looking in that direction.
 	//if ( flDamage > 0 )
-	if(flDamage >= 20)
+	if(m_MonsterState == MONSTERSTATE_IDLE || m_MonsterState == MONSTERSTATE_ALERT || flDamage >= 15)
 	{
 		SetConditions(bits_COND_LIGHT_DAMAGE);
 		forgetSmallFlinchTime = gpGlobals->time + DEFAULT_FORGET_SMALL_FLINCH_TIME;
@@ -2469,10 +2472,9 @@ void CAGrunt::OnTakeDamageSetConditions(entvars_t *pevInflictor, entvars_t *pevA
 }//END OF OnTakeDamageSetConditions
 
 
-
-
-//TODO - should a kingpin get killed with poweredup agrunts, they should have their "powerupCauseEntDirectedEnemy"'s reset to NULL. no more obligation to focus on its enemy.
-
+int CAGrunt::getHullIndexForNodes(void){
+    return NODE_LARGE_HULL;  //safe?
+}
 
 
 

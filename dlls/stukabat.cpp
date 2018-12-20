@@ -5005,18 +5005,15 @@ void CStukaBat::KilledFallingTouch( CBaseEntity *pOther ){
 BOOL CStukaBat::violentDeathAllowed(void){
 	return TRUE;
 }
+
+BOOL CStukaBat::violentDeathDamageRequirement(void){
+	//little more fragile since it's a flier so easier to knock around from impact?
+	return (lastDamageReceived >= 10);
+}
+
 BOOL CStukaBat::violentDeathClear(void){
-	//No, it's a falling death. Don't do a linetrace, maybe an overkill check??
-
-	float yeayea = pev->health;
-
-	//is that ok?
-	if(lastDamageReceived > 10){
-		return TRUE;
-	}
-
-
-	return FALSE;
+	//No, it's a falling death. Don't do a linetrace.
+	return TRUE;
 }//END OF violentDeathAllowed
 
 

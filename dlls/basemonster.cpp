@@ -135,6 +135,8 @@ EASY_CVAR_EXTERN(flyerKilledFallingLoop)
 EASY_CVAR_EXTERN(barnacleGrabNoInterpolation)
 
 
+EASY_CVAR_EXTERN(testVar)
+
 
 
 
@@ -230,6 +232,7 @@ TYPEDESCRIPTION	CBaseMonster::m_SaveData[] =
 
 
 //MODDD - moved from method iRelationship to instance scope. Accessible from other places now.
+//   And why did ALIENMONSTER and ALIENPREY have a R_NO with MACHINE? Machines (like sentries, part of security or human military) certainly hate them.
 //static int iEnemy[14][14] =
 int CBaseMonster::iEnemy[14][14] =
 {			 //   NONE	 MACH	 PLYR	 HPASS	 HMIL	 AMIL	 APASS	 AMONST	APREY	 APRED	 INSECT	PLRALY	PBWPN	ABWPN
@@ -241,8 +244,8 @@ int CBaseMonster::iEnemy[14][14] =
 /*ALIENMILITAR*/{ R_NO	,R_DL	,R_HT	,R_DL	,R_HT	,R_NO	,R_NO	,R_NO	,R_NO	,R_NO	,R_NO	,R_DL,	R_NO,	R_NO	},
 /*ALIENPASSIVE*/{ R_NO	,R_NO	,R_NO	,R_NO	,R_NO	,R_NO	,R_NO	,R_NO	,R_NO	,R_NO	,R_NO	,R_NO,	R_NO,	R_NO	},
 /*ALIENMONSTER*/{ R_NO	,R_DL	,R_DL	,R_DL	,R_DL	,R_NO	,R_NO	,R_NO	,R_NO	,R_NO	,R_NO	,R_DL,	R_NO,	R_NO	},
-/*ALIENPREY   */{ R_NO	,R_NO	,R_DL	,R_DL	,R_DL	,R_NO	,R_NO	,R_NO	,R_NO	,R_FR	,R_NO	,R_DL,	R_NO,	R_NO	},
-/*ALIENPREDATO*/{ R_NO	,R_NO	,R_DL	,R_DL	,R_DL	,R_NO	,R_NO	,R_NO	,R_HT	,R_DL	,R_NO	,R_DL,	R_NO,	R_NO	},
+/*ALIENPREY   */{ R_NO	,R_DL	,R_DL	,R_DL	,R_DL	,R_NO	,R_NO	,R_NO	,R_NO	,R_FR	,R_NO	,R_DL,	R_NO,	R_NO	},
+/*ALIENPREDATO*/{ R_NO	,R_DL	,R_DL	,R_DL	,R_DL	,R_NO	,R_NO	,R_NO	,R_HT	,R_DL	,R_NO	,R_DL,	R_NO,	R_NO	},
 /*INSECT*/		{ R_FR	,R_FR	,R_FR	,R_FR	,R_FR	,R_NO	,R_FR	,R_FR	,R_FR	,R_FR	,R_NO	,R_FR,	R_NO,	R_NO	},
 /*PLAYERALLY*/	{ R_NO	,R_DL	,R_AL	,R_AL	,R_DL	,R_DL	,R_DL	,R_DL	,R_DL	,R_DL	,R_NO	,R_NO,	R_NO,	R_NO	},
 /*PBIOWEAPON*/	{ R_NO	,R_NO	,R_DL	,R_DL	,R_DL	,R_DL	,R_DL	,R_DL	,R_DL	,R_DL	,R_NO	,R_DL,	R_NO,	R_DL	},
@@ -333,6 +336,8 @@ int CBaseMonster::monsterIDLatest = 0;
 //MODDD - new
 CBaseMonster::CBaseMonster(){
 	
+	firstTimeKilled = TRUE;
+
 	lastDamageReceived = 0;
 	
 	forgetSmallFlinchTime = -1;
@@ -1753,8 +1758,6 @@ BOOL CBaseMonster::usesAdvancedAnimSystem(void){
 
 
 
-EASY_CVAR_EXTERN(testVar)
-
 //=========================================================
 // Monster Think - calls out to core AI functions and handles this
 // monster's specific animation events
@@ -1910,7 +1913,9 @@ void CBaseMonster :: MonsterThink ( void )
 	//Is that last part OKAY?
 	//if ( m_MonsterState != MONSTERSTATE_SCRIPT && m_MonsterState != MONSTERSTATE_DEAD && m_Activity == ACT_IDLE && m_fSequenceFinished )
 	
-
+	if(monsterID == 6){
+		int x = 45;
+	}
 
 	if(EASY_CVAR_GET(animationPrintouts) == 1 && monsterID >= -1)easyForcePrintLine("%s:%d Anim info IDLE RESET check?: custo:%d autoblock:%d stateForbid:%d idle?%d seqfin?%d - frame:%.2f done:%d",
 			getClassname(), monsterID,
@@ -1924,7 +1929,7 @@ void CBaseMonster :: MonsterThink ( void )
 		//!(m_pSchedule != NULL && getTaskNumber() ==  
 		
 		//!(m_fSequenceLoops && usingCustomSequence) && 
-		!usingCustomSequence &&
+		!IsMoving() && !usingCustomSequence &&
 		!getMonsterBlockIdleAutoUpdate() && m_MonsterState != MONSTERSTATE_SCRIPT && m_MonsterState != MONSTERSTATE_DEAD && ( (m_Activity == ACT_IDLE && m_fSequenceFinished) ) ) 
 	{
 		int iSequence;
@@ -1962,6 +1967,9 @@ void CBaseMonster :: MonsterThink ( void )
 		}
 		if ( iSequence != ACTIVITY_NOT_AVAILABLE )
 		{
+			int oldSequence = pev->sequence;
+			//BOOL resetFrameYet = FALSE;
+
 			
 			//easyPrintLine("ANIMATION CHANGE!!!! B");
 			pev->sequence = iSequence;	// Set to new anim (if it's there)
@@ -1970,9 +1978,11 @@ void CBaseMonster :: MonsterThink ( void )
 			//MODDD IMPORTANT. Go ahead and let the system know this sequence finshed at least once, sometimes that matters. Even a replacement different idle sequence.
 			m_fSequenceFinishedSinceLoop = TRUE;
 
-
-			//MODDD - panthereye has issues if the anim is not explicitly reset this way.  No idea why.
-			if(forceIdleFrameReset()){
+			
+			//MODDD - why wasn't this here before?!  Why do we assume the new sequence will reset the frame? We sure don't know that?
+			//        Even without forceIdleFrameReset.
+			if(forceIdleFrameReset() || !(iSequence == oldSequence && this->m_fSequenceLoops) ){
+				//if this is the same sequence and it loops, no need to reset.
 				resetFrame();
 			}
 		}
@@ -2197,18 +2207,26 @@ BOOL CBaseMonster :: FRouteClear ( void )
 BOOL CBaseMonster::FRefreshRouteChaseEnemySmart(void){
 
 
+	//WHUT
+	//return FRefreshRoute();
+	
+
+
+
 	BOOL returnCode;
+
+	
+	/*	
+	if(m_hEnemy == NULL){
+		//what's the point?
+		//...but we can still follow the existing LKP? I don't know.
+		return FALSE;
+	}
+	*/
 
 	
 	//case TASK_GET_PATH_TO_ENEMY:
 	CBaseEntity *pEnemy = m_hEnemy;
-
-	if ( pEnemy == NULL )
-	{
-		//TaskFail();
-		returnCode = FALSE;
-		return returnCode;  //force a return early. There isn't a point in doing any more of this method if there is no enemy.
-	}
 
 
 	disableEnemyAutoNode = TRUE;
@@ -2226,7 +2244,8 @@ BOOL CBaseMonster::FRefreshRouteChaseEnemySmart(void){
 
 
 
-
+	//was this... missing?
+	RouteNew();
 
 
 
@@ -2311,9 +2330,25 @@ BOOL CBaseMonster :: FRefreshRoute ( void )
 			break;
 
 		case MOVEGOAL_ENEMY:
+
+			/*
+			if(m_hEnemy == FALSE){
+				//what's the point?
+				//...but we can still follow the existing LKP? I don't know.
+				return FALSE;
+			}
+			*/
+
 			////m_vecEnemyLKP = m_hEnemy->pev->origin; //!!!
 			//setEnemyLKP(m_hEnemy->pev->origin);
 			returnCode = BuildRoute( m_vecEnemyLKP, bits_MF_TO_ENEMY, m_hEnemy );
+
+
+			//MODDD - why wasn't there a BuildNearestRoute attempt if above failed?
+			if (returnCode == FALSE)
+			{
+				returnCode = BuildNearestRoute( m_vecEnemyLKP, m_hEnemy->pev->view_ofs, 0, (m_vecEnemyLKP - pev->origin).Length() );
+			}
 
 			//MODDD - CHECK. Is automatically setting "m_vecMoveGoal" to the goal of this path ok? m_vecMoveGoal is usually an input.
 			if(returnCode){
@@ -3628,9 +3663,11 @@ int CBaseMonster :: CheckLocalMove ( const Vector &vecStart, const Vector &vecEn
 				CBaseEntity* whut = CBaseEntity::Instance(gpGlobals->trace_ent);
 
 				if(whut != NULL){
+					/*
 					easyForcePrintLine("%s:%d MBFclm: %s:%d isW:%d", getClassname(), monsterID, whut->getClassname(), 
 						(whut->GetMonsterPointer() != NULL)?whut->GetMonsterPointer()->monsterID:-1
 						, whut->IsWorld());
+					*/
 				}
 
 				if(whut == NULL || whut->IsWorld()){
@@ -6379,6 +6416,22 @@ BOOL CBaseMonster :: FGetNodeRoute ( Vector vecDest )
 		//That is, if the # of nodes returned is 2 and they are exactly equal, it means we returned our own position.
 		//---Should we set some flag to do something about this...? Ranged AI can just try another nearby node also close to the enemy
 		//to see if that is a point with a clear shot?
+
+		//go ahead and try the straight-shot.
+		CBaseEntity* goalEnt = NULL;
+		if(m_hEnemy != NULL){
+			//goalEnt = (CBaseEntity *)GET_PRIVATE( m_hEnemy.Get( ) );
+			goalEnt = m_hEnemy.GetEntity();
+		}
+
+		if(this->CheckLocalMove(pev->origin, m_vecMoveGoal, goalEnt, NULL)){
+			//it is okay apparently.
+			int x = 45;
+		}else{
+			//No!
+			return FALSE;
+		}
+
 	}
 
 
@@ -7531,8 +7584,10 @@ void CBaseMonster::OnTakeDamageSetConditions(entvars_t *pevInflictor, entvars_t 
 	}
 
 	
+
 	//default case from CBaseMonster's TakeDamage.
-	if ( flDamage > 0 )
+	//Also count being in a non-combat state to force looking in that direction.  But maybe at least 0 damage should be a requirement too, even in cases where the minimum damage for LIGHT is above 0?
+	if (m_MonsterState == MONSTERSTATE_IDLE || m_MonsterState == MONSTERSTATE_ALERT || flDamage > 0 )
 	{
 		SetConditions(bits_COND_LIGHT_DAMAGE);
 
@@ -7606,6 +7661,8 @@ void CBaseMonster::startReanimation(){
 
 
 	pev->deadflag = DEAD_NO;
+
+	firstTimeKilled = TRUE;  //another Killed call will be the first as far as I'm concerned.
 	
 	iAmDead = FALSE;
 	recognizablyDead = FALSE;
@@ -7985,18 +8042,17 @@ BOOL CBaseMonster::noncombat_Look_ignores_PVS_check(void){
 //override this and say "TRUE", along with providing its own rule for a clear distance check.  That is, if whatevre distance forwards/backwards
 //(typically backwards) is safe.  But it varries from monster to monster's sequence, just have to make it so the sequence can't clip through anything
 //and look really weird.
-//It is also OK if the sequence for violent death is not tied to ACT_DIEVIOLENT. It must then be picked in "LookupViolentDeathSequence" manually.
-//The default of that picks the sequence from the model as expected (if mapped to ACT_DIEVIOLENT).
+//It is also OK if the sequence for violent death is not tied to ACT_DIEVIOLENT in the model. Then pick it for ACT_DIEVIOLENT in the custom animation system instead.
 BOOL CBaseMonster::violentDeathAllowed(void){
 	return FALSE;
 }//END OF hasViolentDeathSequence
 
-//If the violent death sequence is mapped to ACT_DIEVIOLENT, no need to override this. Otherwise, change this to return that sequence exactly.
-//Or lookup by name, whichever.
-//BEWARE - not yet hooked up to make any difference!
-int CBaseMonster::LookupViolentDeathSequence(void){
-	return LookupActivity(ACT_DIEVIOLENT);
-}//END OF LookupViolentDeathSequence
+//Default case should work fine for most monsters.
+//Only allow a violent death animation if the last hit solidly did this much damage.
+//Could do checks on m_LastHitGroup too (see method GetDeathActivity of combat.cpp)
+BOOL CBaseMonster::violentDeathDamageRequirement(void){
+	return (lastDamageReceived >= 20);
+}
 
 //This method MUST be overridden to do line traces forwards / backwards to see if there is enough space in whatever direction to play the animation
 //to avoid clipping through things.  If this is unnecessary, leave this as it is.  But "hasViolentDeathSequence" must  be overridden to return TRUE;
@@ -8011,12 +8067,20 @@ void CBaseMonster::lookAtEnemyLKP(void){
 	ChangeYaw ( pev->yaw_speed );
 }
 
+//Is this montser able to predict re-picking the same activity in the next frame?
+//If so, and the conditions for it are met, this can be set to do so.
+//BUT not all monsters play nicely with this. Some fidget for a moment on the same animation for a frame and stop
+//if it does not get picked.
 void CBaseMonster::predictActRepeat(int arg_bits_cond){
 	if(HasConditions(arg_bits_cond)){
 		m_Activity = ACT_RESET;
 	}
 }
 
+//Am I able to use the "predictActRepeat" check above at all? Defaults to TRUE, set differently when problematic.
+BOOL CBaseMonster::canPredictActRepeat(void){
+	return TRUE;
+}//END OF canPredictActRepeat
 
 
 

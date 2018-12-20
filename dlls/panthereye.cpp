@@ -16,8 +16,9 @@
 // Panthereye - By Osiris / OsirisGodoftheDead / THE_YETI
 //=========================================================
 
-//TODO - TRACE_MONSTER_HULL(edict(), pev->origin, Probe, dont_ignore_monsters, m_hEnemy->edict(), &tr);
-//       is this a better check for seeing if jumping is still okay?
+
+
+//TODO - same auto jumpoff mechanic for getting foes off my back as the Mr. Friendly does?
 
 
 
@@ -56,14 +57,53 @@ BOOL CPantherEye::testLeapNoBlock(void){
 
 	if(m_hEnemy != NULL){
 		Vector vTestStart = pev->origin + Vector(0, 0, 10);
+
 		Vector vTestEnd = m_hEnemy->pev->origin + Vector(0, 0, 10);
-		UTIL_TraceHull( vTestStart, vTestEnd, dont_ignore_monsters, head_hull, ENT( m_hEnemy->pev ), &tr );
+		
+		/*
+		//DEBUG - player pos?
+		edict_t *pPlayer = FIND_CLIENT_IN_PVS( edict() );
+		CBaseEntity* someEnt = NULL;
+		if(pPlayer != NULL){
+			someEnt = CBaseEntity::Instance(pPlayer);
+		}else{
+			return FALSE;
+		}
+		Vector vTestEnd = someEnt->pev->origin + Vector(0, 0, 10);
+		
+		//vTestEnd = vTestStart + ((vTestEnd - vTestStart).Normalize() * (vTestEnd - vTestStart).Length() * 0.5);
+		*/
+
+		//old way?
+		//UTIL_TraceHull( vTestStart, vTestEnd, dont_ignore_monsters, head_hull, ENT( m_hEnemy->pev ), &tr );
 				
+		
+		//TRACE_MONSTER_HULL(edict(), vTestStart, vTestEnd, dont_ignore_monsters, m_hEnemy->edict(), &tr);
+
+		//First paramter is the entity to use for the hull size. 5th parameter is the entity to ignore.
+		//May be tempting to make it the enemy, but don't. Make it the same entity (me) checking against another and just
+		//allow a collision with that target entity if it happens.
+		TRACE_MONSTER_HULL(edict(), vTestStart, vTestEnd, dont_ignore_monsters, edict(), &tr);
+		//is this a better check for seeing if jumping is still okay?
+
 		if(EASY_CVAR_GET(drawDebugPathfinding2) == 1)DebugLine_Setup(0, vTestStart, vTestEnd, tr.flFraction);
 
 		//don't do the "!tr.fAllSolid" check.  ?
-		if((tr.flFraction >= 1.0 || tr.pHit == m_hEnemy.Get() )  ){
-			//did not hit anything on the way or hit the enemy? it is OK.
+		//and !tr.fStartSolid ?  Why is that always true even if on the ground and the origin is bumped up? ugh.
+
+		const char* hitName;
+		if(tr.pHit != NULL){
+			hitName = STRING(tr.pHit->v.classname);
+		}else{
+			hitName = "NULL";
+		}
+		//easyForcePrintLine(hitName);
+
+		//NOTE - if relation R_NO with what was hit is ever included for satisfying this, be sure to exclude what's hit by a "worldspawn" classnamecheck,
+		//       or more completely, as an entity, IsWorld and IsWorldAffiliated.
+
+		if(  tr.flFraction >= 1.0 || (tr.pHit != NULL && (tr.pHit == m_hEnemy.Get() || this->IRelationship(m_hEnemy) > R_NO))    ){
+			//did not hit anything on the way or hit the enemy? or something I would have attacked anyways? it is OK.
 			//proceed
 		}else{
 			//stop!
@@ -235,9 +275,9 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CPantherEye)
 
 
 
-//I will.
+//I will.  Or the issue is fixed now? probably.
 BOOL CPantherEye::forceIdleFrameReset(void){
-	return TRUE;
+	return FALSE;
 }
 
 
@@ -625,8 +665,15 @@ void CPantherEye::HandleEventQueueEvent(int arg_eventID){
 					pHurt->pev->punchangle.x = 5;
 					pHurt->pev->velocity = pHurt->pev->velocity - gpGlobals->v_right * 100;
 				}
-				// Play a random attack hit sound
-				EMIT_SOUND_FILTERED ( ENT(pev), CHAN_WEAPON, pAttackHitSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackHitSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
+				
+				if(pHurt->isOrganic() || pHurt->IsWorldOrAffiliated() ){
+					// Play a random attack hit sound
+					EMIT_SOUND_FILTERED ( ENT(pev), CHAN_WEAPON, pAttackHitSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackHitSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
+				}else{
+					
+					playMetallicHitSound(CHAN_WEAPON, 0.71f);
+				}
+
 			}
 			else // Play a random attack miss sound
 				EMIT_SOUND_FILTERED ( ENT(pev), CHAN_WEAPON, pAttackMissSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackMissSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
@@ -790,7 +837,10 @@ void CPantherEye :: HandleAnimEvent( MonsterEvent_t *pEvent )
 		{
 			// do stuff for this event.
 	//		ALERT( at_console, "Slash right!\n" );
-			CBaseEntity *pHurt = CheckTraceHullAttack( 84*1.2, gSkillData.panthereyeDmgClaw, DMG_BLEEDING );
+
+			//TraceResult trRecord;
+
+			CBaseEntity *pHurt = CheckTraceHullAttack( 84*1.2, gSkillData.panthereyeDmgClaw, DMG_BLEEDING); // &trRecord );
 			if ( pHurt )
 			{
 				if ( (pHurt->pev->flags & (FL_MONSTER|FL_CLIENT)) && !pHurt->blocksImpact() )
@@ -800,7 +850,49 @@ void CPantherEye :: HandleAnimEvent( MonsterEvent_t *pEvent )
 					pHurt->pev->velocity = pHurt->pev->velocity - gpGlobals->v_right * 100;
 				}
 				// Play a random attack hit sound
-				EMIT_SOUND_FILTERED ( ENT(pev), CHAN_WEAPON, pAttackHitSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackHitSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
+				if(pHurt->isOrganic() || pHurt->IsWorldOrAffiliated() ){
+					//yes, if organic or the map. Because we have no way of seeing what plane on the map was hit for a texture sound from that.
+
+					EMIT_SOUND_FILTERED ( ENT(pev), CHAN_WEAPON, pAttackHitSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackHitSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
+				}else{
+
+
+					playMetallicHitSound(CHAN_WEAPON, 0.71f);
+
+
+
+
+					/*
+					//naa, ditch this system.  We can't reliably see what texture we hit.
+
+					TraceResult trOK;
+					Vector vecStart = trRecord.vecEndPos + trRecord.vecPlaneNormal * 5;
+					Vector vecEnd = vecStart + trRecord.vecPlaneNormal * -80;
+					UTIL_TraceLine(vecStart, vecEnd, dont_ignore_monsters, ENT(pev), &trOK);
+					TEXTURETYPE_PlaySound(&trOK, vecStart, vecEnd, 0);
+
+					DebugLine_Setup(1, vecStart, vecEnd, trOK.flFraction);
+					*/
+
+					/*
+					::UTIL_MakeAimVectors(this->pev->angles);
+					TraceResult tr;
+					Vector vecStart = pev->origin + Vector(0, 0, 12);
+					Vector vecEnd = vecStart + (gpGlobals->v_forward * (84*1.2) );
+
+					
+					UTIL_TraceLine(vecStart, vecEnd, dont_ignore_monsters, ENT(pev), &tr);
+					//UTIL_TraceHull( vecStart, vecEnd, dont_ignore_monsters, head_hull, ENT(pev), &tr );
+					//should we query what was hit for something more appropriate?
+
+					const char* thingHit = tr.pHit!=NULL?STRING(tr.pHit->v.classname):"NULL";
+
+					//BULLET_NONE     #include "weapons.h"
+					TEXTURETYPE_PlaySound(&tr, vecStart, vecEnd, 0);
+					*/
+
+				}
+
 			}
 			else // Play a random attack miss sound
 				EMIT_SOUND_FILTERED ( ENT(pev), CHAN_WEAPON, pAttackMissSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackMissSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
@@ -1031,6 +1123,9 @@ BOOL CPantherEye::CheckMeleeAttack2 ( float flDot, float flDist )
 
 		//easyForcePrintLine("eeee %.2f", abs(this->pev->origin.z - enemyFloorZ));
 	}
+
+	//MODDD - STOP ME LATER
+	//flDist = 300;
 
 
 	if ( m_hEnemy != NULL &&
@@ -1592,6 +1687,7 @@ BOOL CPantherEye::needsMovementBoundFix(void){
 
 void CPantherEye::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, float flInterval )
 {
+
 	if(this->m_pSchedule == slPanthereyeJumpAtEnemy){
 		//dont do it
 		return;
@@ -1599,7 +1695,7 @@ void CPantherEye::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, fl
 
 	//otherwise just do what the parent class does, it works.
 	CBaseMonster::MoveExecute(pTargetEnt, vecDir, flInterval);
-
+	
 }//END OF MoveExecute
 
 
@@ -1790,7 +1886,7 @@ void CPantherEye::RunTask ( Task_t *pTask ){
 	//NOTE: should only do this logic check if alive of course.
 	if(pev->deadflag == DEAD_NO && !deadSetActivityBlock && !iAmDead){
 
-		if(pissedOffTime == -1 && runawayTime == -1){
+		if(pissedOffTime == -1 && runawayTime == -1 && m_hEnemy != NULL){
 			//nothing all that strong, and an enemy about?  Sneak time!
 			sneakMode = 0;
 		}else{
@@ -2274,8 +2370,9 @@ void CPantherEye::OnTakeDamageSetConditions(entvars_t *pevInflictor, entvars_t *
 
 	
 	//default case from CBaseMonster's TakeDamage.
+	//Also count being in a non-combat state to force looking in that direction.
 	//if ( flDamage > 0 )
-	if(flDamage >= 20)
+	if(m_MonsterState == MONSTERSTATE_IDLE || m_MonsterState == MONSTERSTATE_ALERT || flDamage >= 15)
 	{
 		SetConditions(bits_COND_LIGHT_DAMAGE);
 		forgetSmallFlinchTime = gpGlobals->time + DEFAULT_FORGET_SMALL_FLINCH_TIME;
@@ -2304,8 +2401,14 @@ void CPantherEye::OnTakeDamageSetConditions(entvars_t *pevInflictor, entvars_t *
 
 	easyForcePrintLine("%s:%d OnTkDmgSetCond raw:%.2f fract:%.2f", getClassname(), monsterID, flDamage, (flDamage / pev->max_health));
 
-
+	
 }//END OF OnTakeDamageSetConditions
+
+int CPantherEye::getHullIndexForNodes(void){
+    return NODE_LARGE_HULL;  //safe?
+}
+
+
 
 
 

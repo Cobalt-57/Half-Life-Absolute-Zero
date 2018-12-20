@@ -46,6 +46,7 @@ extern CGraph WorldGraph;
 //MODDD
 extern float global_houndeyeAttackMode;
 extern float global_houndeyePrintout;
+EASY_CVAR_EXTERN(houndeye_attack_canGib)
 
 
 //=========================================================
@@ -176,6 +177,15 @@ public:
 
 	//MODDD - test
 	int SquadRecruit( int searchRadius, int maxMembers );
+	
+	//MODDD - new. Enter the 21st century!
+	BOOL getMonsterBlockIdleAutoUpdate(void);
+	BOOL forceIdleFrameReset(void);
+	BOOL canPredictActRepeat(void);
+	BOOL usesAdvancedAnimSystem(void);
+
+	int tryActivitySubstitute(int activity);
+	int LookupActivityHard(int activity);
 
 
 	static int numberOfEyeSkins;
@@ -377,26 +387,26 @@ void CHoundeye :: SetActivity ( Activity NewActivity )
 
 		if(NewActivity == ACT_SPECIAL_ATTACK1 && global_houndeyeAttackMode == 1){
 			//if this is 1, we want the retail-charge animation to apply instead.  This is why.
-				m_Activity = NewActivity;
+			m_Activity = NewActivity;
 
-				/*
-				iSequence = LookupSequence( "attack" );
-				canSetAnim = TRUE;
-				if (canSetAnim == TRUE && iSequence > ACTIVITY_NOT_AVAILABLE )
-				{
-					pev->sequence		= iSequence;	// Set to the reset anim (if it's there)
-					pev->frame			= 0;		// FIX: frame counter shouldn't be reset when its the same activity as before
-					ResetSequenceInfo();
-					SetYawSpeed();
-				}
-				*/
-				setAnimation("attack", TRUE);
+			/*
+			iSequence = LookupSequence( "attack" );
+			canSetAnim = TRUE;
+			if (canSetAnim == TRUE && iSequence > ACTIVITY_NOT_AVAILABLE )
+			{
+				pev->sequence		= iSequence;	// Set to the reset anim (if it's there)
+				pev->frame			= 0;		// FIX: frame counter shouldn't be reset when its the same activity as before
+				ResetSequenceInfo();
+				SetYawSpeed();
+			}
+			*/
+			setAnimation("attack", TRUE);
 
 
-				//MODDD IMPORTANT:  THIS USED TO BE canSetAnim == FALSE, which did nothing.
-				//In case that was SOMEHOW better, not doing anything, comment out this line!
-				canSetAnim = FALSE;
-				//CSquadMonster :: SetActivity ( NewActivity );
+			//MODDD IMPORTANT:  THIS USED TO BE canSetAnim == FALSE, which did nothing.
+			//In case that was SOMEHOW better, not doing anything, comment out this line!
+			canSetAnim = FALSE;
+			//CSquadMonster :: SetActivity ( NewActivity );
 
 
 		}else{
@@ -935,7 +945,12 @@ void CHoundeye :: SonicAttack (BOOL useAlt )
 
 				if (flAdjustedDamage > 0 )
 				{
-					pEntity->TakeDamage ( pev, pev, flAdjustedDamage, DMG_SONIC | DMG_ALWAYSGIB );
+					int damageType = DMG_SONIC;
+					if(EASY_CVAR_GET(houndeye_attack_canGib)){
+						damageType |= DMG_ALWAYSGIB;
+					}
+
+					pEntity->TakeDamage ( pev, pev, flAdjustedDamage, damageType );
 				}
 			}
 		}
@@ -1151,10 +1166,6 @@ void CHoundeye :: StartTask ( Task_t *pTask )
 
 
 }
-
-
-
-
 
 
 
@@ -1443,6 +1454,8 @@ void CHoundeye :: RunTask ( Task_t *pTask )
 		//EASY_CVAR_PRINTIF_PRE(houndeyePrintout, easyPrintLine( "LEADeRLOOK??????? sf:%d t:%.2f tm:%.2f", m_fSequenceFinished, gpGlobals->time, leaderlookTimeMax));
 		if ( m_fSequenceFinished || gpGlobals->time >= leaderlookTimeMax )
 		{
+			//if this ends mark the sequence as over.
+			usingCustomSequence = FALSE;
 			TaskComplete();
 		}
 
@@ -2071,4 +2084,86 @@ Schedule_t *CHoundeye :: GetSchedule( void )
 	
 	return choice;
 }
+
+
+
+
+
+//
+
+
+
+
+
+
+BOOL CHoundeye::getMonsterBlockIdleAutoUpdate(void){
+	return FALSE;
+}
+BOOL CHoundeye::forceIdleFrameReset(void){
+	return FALSE;
+}
+//Whether this monster can re-pick the same animation before the next frame starts if it anticipates it getting picked.
+//This is subtly retail behavior, but may not always play well.
+BOOL CHoundeye::canPredictActRepeat(void){
+	return TRUE;
+}
+BOOL CHoundeye::usesAdvancedAnimSystem(void){
+	return TRUE;
+}
+
+
+
+int CHoundeye::tryActivitySubstitute(int activity){
+	int i = 0;
+
+	//no need for default, just falls back to the normal activity lookup.
+	/*
+	switch(activity){
+		case ACT_IDLE:{
+			//return SEQ_TEMPLATEMONSTER_XXX;
+		break;}
+	}//END OF switch
+	*/
+
+	//not handled by above? Rely on the model's anim for this activity if there is one.
+	return CBaseAnimating::LookupActivity(activity);
+}//END OF tryActivitySubstitute
+
+int CHoundeye::LookupActivityHard(int activity){
+	int i = 0;
+	m_flFramerateSuggestion = 1;
+	pev->framerate = 1;
+	//any animation events in progress?  Clear it.
+	resetEventQueue();
+
+	//Within an ACTIVITY, pick an animation like this (with whatever logic / random check first):
+	//    this->animEventQueuePush(10.0f / 30.0f, 3);  //Sets event #3 to happen at 1/3 of a second
+	//    return LookupSequence("die_backwards");      //will play animation die_backwards
+
+	if(monsterID == 6){
+		int x = 45;
+	}
+
+	//no need for default, just falls back to the normal activity lookup.
+	switch(activity){
+		case ACT_IDLE:{
+			if(InSquad() && IsLeader() && !m_fAsleep){
+				//random chance: 30%?
+				if(RANDOM_FLOAT(0, 1) <= 0.18){
+					//this->SetSequenceByName("leaderlook");
+					return LookupSequence("leaderlook");
+				}
+			}
+		break;}
+	}//END OF switch
+	
+	//not handled by above?  try the real deal.
+	return CBaseAnimating::LookupActivity(activity);
+}//END OF LookupActivityHard
+
+
+
+
+
+
 

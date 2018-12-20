@@ -1015,6 +1015,17 @@ Schedule_t* CArcher::GetSchedule ( void )
 
 				//easyPrintLine("I say, really now? %d %d", HasConditions(bits_COND_CAN_RANGE_ATTACK1), HasConditions(bits_COND_CAN_RANGE_ATTACK2) );
 
+
+				// If in melee range, just do that instead.
+				if ( HasConditions(bits_COND_CAN_MELEE_ATTACK1) )
+				{
+					return GetScheduleOfType( SCHED_MELEE_ATTACK1 );
+				}
+				if ( HasConditions(bits_COND_CAN_MELEE_ATTACK2) )
+				{
+					return GetScheduleOfType( SCHED_MELEE_ATTACK2 );
+				}
+
 				// we can see the enemy
 				if ( HasConditions(bits_COND_CAN_RANGE_ATTACK1) )
 				{
@@ -1024,14 +1035,8 @@ Schedule_t* CArcher::GetSchedule ( void )
 				{
 					return GetScheduleOfType( SCHED_RANGE_ATTACK2 );
 				}
-				if ( HasConditions(bits_COND_CAN_MELEE_ATTACK1) )
-				{
-					return GetScheduleOfType( SCHED_MELEE_ATTACK1 );
-				}
-				if ( HasConditions(bits_COND_CAN_MELEE_ATTACK2) )
-				{
-					return GetScheduleOfType( SCHED_MELEE_ATTACK2 );
-				}
+
+
 				//MODDD - NOTE - is that intentional?  range1 & melee1,  and not say,  melee1 & melee2???
 				if ( !HasConditions(bits_COND_CAN_RANGE_ATTACK1 | bits_COND_CAN_MELEE_ATTACK1) )
 				{
@@ -1546,9 +1551,14 @@ BOOL CArcher::getMonsterBlockIdleAutoUpdate(void){
 BOOL CArcher::forceIdleFrameReset(void){
 	return FALSE;
 }
+//not so good for me?
+BOOL CArcher::canPredictActRepeat(void){
+	return FALSE;
+}
 BOOL CArcher::usesAdvancedAnimSystem(void){
 	return TRUE;
 }
+
 
 void CArcher::SetActivity(Activity NewActivity ){
 

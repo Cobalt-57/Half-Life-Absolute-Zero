@@ -82,6 +82,12 @@ public:
 	float HearingSensitivity(void);
 	int ISoundMask(void);
 
+	
+	BOOL noncombat_Look_ignores_PVS_check(void);
+	
+	BOOL violentDeathAllowed(void);
+	BOOL violentDeathDamageRequirement(void);
+	BOOL violentDeathClear(void);
 
 	
 	void ReportAIState( void );
@@ -109,6 +115,7 @@ public:
 
 	BOOL getMonsterBlockIdleAutoUpdate(void);
 	BOOL forceIdleFrameReset(void);
+	BOOL canPredictActRepeat(void);
 	BOOL usesAdvancedAnimSystem(void);
 
 	void SetActivity ( Activity NewActivity );

@@ -460,6 +460,7 @@ edict_t * EHANDLE::Get( void )
 	return NULL; 
 };
 
+
 edict_t * EHANDLE::Set( edict_t *pent ) 
 { 
 	m_pent = pent;  
@@ -501,6 +502,23 @@ CBaseEntity * EHANDLE :: operator -> ()
 	return (CBaseEntity *)GET_PRIVATE( Get( ) ); 
 }
 
+//MODDD - why isn't getting the private data (CBaseEntity pointer) directly in a method call an option?
+//        Basically what the "->" operator does but returns the CBaseEntity pointer itself instead of using it
+//        to get at the CBaseEntity's own methods.
+//        Could... this suppport templates?  like <SomeType T> or however that works?  Whatever, static casting on
+//        the user's end works okay.
+CBaseEntity* EHANDLE::GetEntity(){
+	return (CBaseEntity *)GET_PRIVATE( Get( ) );
+}
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+
+
 
 
 
@@ -526,6 +544,8 @@ CBaseEntity::CBaseEntity(void){
 
 	
 	recognizablyDead = FALSE; //golly gee, doubt it.
+
+	firstTimeKilled = TRUE;
 
 }
 
@@ -912,6 +932,24 @@ void CBaseEntity::PostRestore(){
 }
 
 
+
+
+//Ensure this is always precached.  Player sound so it is, and does not need the soundSentenceSave system.
+void CBaseEntity::playMetallicHitSound(int arg_channel, float arg_volume){
+	//default to CHAN_ITEM or CHAN_WEAPON if unspecified?  Most enemies use CHAN_WEAPON so probably that. CHAN_ITEM may have just been for coming from the player crowbar.
+	switch( RANDOM_LONG(0,1) ){
+	case 0:
+		EMIT_SOUND_DYN(ENT(pev), arg_channel, "weapons/cbar_hit1.wav", arg_volume, ATTN_NORM, 0, 103 + RANDOM_LONG(0,3)); 
+		break;
+	case 1:
+		EMIT_SOUND_DYN(ENT(pev), arg_channel, "weapons/cbar_hit2.wav", arg_volume, ATTN_NORM, 0, 103 + RANDOM_LONG(0,3)); 
+		break;
+	}
+}//END OF playMetallicHitSound
+
+
+
+
 BOOL CBaseEntity::IsWorld(){
 	return FALSE;  //uhhh.... I don't think I'm the world.
 }
@@ -919,6 +957,12 @@ BOOL CBaseEntity::IsWorldAffiliated(){
 	//This is only for entities placed at map creation that help make the map more interactive, like func_brekable, func_button or func_wall (ladders).
 	return FALSE;  
 }
+BOOL CBaseEntity::IsWorldOrAffiliated(){
+	//Just a shortcut for being either the world or affiliated with it.
+	return (IsWorld() || IsWorldAffiliated());
+}
+
+
 BOOL CBaseEntity::IsBreakable(){
 	//This isn't a general adjective. It is for func_breakable's that are able to take damage.
 	//This method was already present in func_breakble, but not all entities, making it a little inconvenient.
