@@ -102,7 +102,7 @@ BOOL CPantherEye::testLeapNoBlock(void){
 		//NOTE - if relation R_NO with what was hit is ever included for satisfying this, be sure to exclude what's hit by a "worldspawn" classnamecheck,
 		//       or more completely, as an entity, IsWorld and IsWorldAffiliated.
 
-		if(  tr.flFraction >= 1.0 || (tr.pHit != NULL && (tr.pHit == m_hEnemy.Get() || this->IRelationship(m_hEnemy) > R_NO))    ){
+		if(  tr.flFraction >= 1.0 || (tr.pHit != NULL && (tr.pHit == m_hEnemy.Get() || this->IRelationship( CBaseEntity::Instance(tr.pHit) ) > R_NO))    ){
 			//did not hit anything on the way or hit the enemy? or something I would have attacked anyways? it is OK.
 			//proceed
 		}else{
