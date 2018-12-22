@@ -101,6 +101,7 @@ extern Schedule_t slSmallFlinch[];
 //=========================================================
 extern Schedule_t slDie[];
 extern Schedule_t slDieLoop[];
+extern Schedule_t slDieFallLoop[];
 extern Schedule_t slDieWaterFloat[];
 
 //=========================================================

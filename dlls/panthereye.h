@@ -105,7 +105,7 @@ public:
 
 	BOOL violentDeathAllowed(void);
 	BOOL violentDeathClear(void);
-
+	int violentDeathPriority(void);
 	
 	void OnTakeDamageSetConditions(entvars_t *pevInflictor, entvars_t *pevAttacker, float flDamage, int bitsDamageType, int bitsDamageTypeMod);
 

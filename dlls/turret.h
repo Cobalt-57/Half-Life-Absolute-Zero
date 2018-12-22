@@ -52,6 +52,7 @@ public:
 
 	int Classify(void);
 	virtual BOOL isOrganic(void);
+	virtual BOOL isOrganicLogic(void);
 	///////////////////////////////////////////////////////////////////////////////////////
 
 	//MODDD - turrets have this variable, why not use it? In fact just rely on default behavior.

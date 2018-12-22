@@ -31,6 +31,7 @@
 #include "controller_zap_ball.h"
 #include "controller_head_ball.h"
 
+#include "defaultai.h"
 
 
 EASY_CVAR_EXTERN(animationFramerateMulti)
@@ -157,14 +158,8 @@ public:
 	GENERATE_GIBMONSTER_PROTOTYPE
 
 	
-	//TEST: what happens if already touching the ground before death? Test!!
-	void OnKilledSetTouch(void);
 	int getLoopingDeathSequence(void);
 	
-	void EXPORT KilledFallingTouch ( CBaseEntity *pOther );
-
-	BOOL hitGroundDead;
-
 
 	CSprite *m_pBall[2];	// hand balls
 	int m_iBall[2];			// how bright it should be
@@ -465,7 +460,7 @@ void CController :: HandleAnimEvent( MonsterEvent_t *pEvent )
 
 CController::CController(){
 
-	hitGroundDead = FALSE;
+
 }
 
 //=========================================================
@@ -832,13 +827,8 @@ void CController :: RunTask ( Task_t *pTask )
 				}
 			}
 		}
-		break;
+	break;
 
-	case TASK_DIE_LOOP:{
-		if(hitGroundDead){
-			TaskComplete();
-		}
-	break;}
 
 	default: 
 		CSquadMonster :: RunTask ( pTask );
@@ -1290,21 +1280,10 @@ void CController::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, fl
 
 
 
-//TEST: what happens if already touching the ground before death? Test!!
-void CController::OnKilledSetTouch(void){
-	SetTouch(&CController::KilledFallingTouch);
-}
-
 int CController::getLoopingDeathSequence(void){
 	return SEQ_CONTROLLER_FALL;
 }
 
-void CController::KilledFallingTouch( CBaseEntity *pOther ){
-	if(pOther == NULL){
-		return; //??????
-	}
-	hitGroundDead = TRUE;
-}
 
 
 

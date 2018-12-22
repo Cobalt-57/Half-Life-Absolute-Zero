@@ -80,6 +80,9 @@ public:
 	//virtual void Killed( entvars_t *pevAttacker, int iGib );
 
 	virtual BOOL isOrganic(void);
+	virtual BOOL usesSoundSentenceSave(void);
+
+
 
 	BOOL m_fRegisteredSound;// whether or not this grenade has issued its DANGER sound to the world sound list yet.
 };
@@ -1111,12 +1114,15 @@ public:
 
 
 	static CRpgRocket *CreateRpgRocket( Vector vecOrigin, Vector vecAngles, CBaseEntity *pOwner, CRpg *pLauncher );
+	static CRpgRocket *CreateRpgRocket( Vector vecOrigin, Vector vecAngles, Vector arg_vecMoveDirection, CBaseEntity *pOwner, CRpg *pLauncher );
 
 	int m_iTrail;
 	float m_flIgniteTime;
 	CRpg *m_pLauncher;// pointer back to the launcher that fired me. 
 
 	BOOL ignited;
+
+	Vector vecMoveDirectionMemory;
 
 	//MODDD - new
 	BOOL alreadyDeleted;
@@ -1569,7 +1575,13 @@ extern float global_sparksPlayerCrossbowMulti;
 // speed - the ideal magnitude of my velocity
 class CCrossbowBolt : public CBaseEntity
 {
+
+	//MODDD - a ... defined constructor defaults to private, but the auto-generated one didn't? I got nothing.
+public:
+	CCrossbowBolt(void);
+
 	void Spawn( void );
+	void Spawn( BOOL useTracer, BOOL arg_noDamage );
 	void Precache( void );
 	int  Classify ( void );
 	void EXPORT BubbleThink( void );
@@ -1578,10 +1590,14 @@ class CCrossbowBolt : public CBaseEntity
 
 	float massInfluence(void);
 
-	int m_iTrail;
 
-public:
+	int m_iTrail;
+	Vector recentVelocity;
+	BOOL noDamage;
+
 	static CCrossbowBolt *BoltCreate( void );
+	static CCrossbowBolt *BoltCreate( BOOL useTracer, BOOL arg_noDamage );
+
 };
 
 

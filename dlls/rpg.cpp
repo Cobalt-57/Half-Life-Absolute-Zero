@@ -62,6 +62,15 @@ extern unsigned short g_sTrailRA;
 extern float global_cl_rockettrail;
 extern float global_rocketSkipIgnite;
 
+EASY_CVAR_EXTERN(myRocketsAreBarney)
+
+	
+
+//MODDD - don't ask.
+void saySomethingBarneyRocket(CBaseEntity* entRef);
+
+
+
 
 enum rpg_e {
 	RPG_IDLE = 0,
@@ -149,6 +158,9 @@ LINK_ENTITY_TO_CLASS( rpg_rocket, CRpgRocket );
 
 
 CRpgRocket::CRpgRocket(void){
+
+	//don't touch vecMoveDirectionMemory, it gets set when the entity's spawned.
+
 	ignited = FALSE;
 	alreadyDeleted = FALSE;
 }//END OF CRpgRocket constructor
@@ -156,20 +168,163 @@ CRpgRocket::CRpgRocket(void){
 
 //=========================================================
 //=========================================================
+
+
 CRpgRocket *CRpgRocket::CreateRpgRocket( Vector vecOrigin, Vector vecAngles, CBaseEntity *pOwner, CRpg *pLauncher )
+{
+	Vector moveDir;
+	//That is, if I were facing in the direction of those angles, how would I move?
+	//Whether the owner is player or not affects how we get the forward direction from vecAngles.
+	if(pOwner->IsPlayer()){
+		//account for the view pitch being inverted for some reason.
+		UTIL_MakeVectors( vecAngles );
+	}else{
+		UTIL_MakeAimVectors( vecAngles );
+	}
+	moveDir = gpGlobals->v_forward;
+
+
+	return CreateRpgRocket(vecOrigin, vecAngles, moveDir, pOwner, pLauncher);
+}
+
+//MODDD - now accepts the direction to move in separately from angles. Or guesses it if not provided.
+CRpgRocket *CRpgRocket::CreateRpgRocket( Vector vecOrigin, Vector vecAngles, Vector arg_vecMoveDirection, CBaseEntity *pOwner, CRpg *pLauncher )
 {
 	CRpgRocket *pRocket = GetClassPtr( (CRpgRocket *)NULL );
 
 	UTIL_SetOrigin( pRocket->pev, vecOrigin );
+	
+	//MODDD - fine, but make sure we set vecMoveDirectionMemory to that.
 	pRocket->pev->angles = vecAngles;
+
+	if(EASY_CVAR_GET(myRocketsAreBarney) == 1){
+		pRocket->pev->angles.x -= 90;
+	}
+
+	
+	pRocket->vecMoveDirectionMemory = arg_vecMoveDirection;
+
+
 	pRocket->Spawn();
 	pRocket->SetTouch( &CRpgRocket::RocketTouch );
 	pRocket->m_pLauncher = pLauncher;// remember what RPG fired me. 
 	pRocket->m_pLauncher->m_cActiveRockets++;// register this missile as active for the launcher
 	pRocket->pev->owner = pOwner->edict();
 
+	if(EASY_CVAR_GET(myRocketsAreBarney) == 1){
+		//say something witty I guess.
+		saySomethingBarneyRocket(pRocket);
+	}
+
 	return pRocket;
 }
+
+
+
+
+
+void saySomethingBarneyRocket(CBaseEntity* entRef){
+
+	float attenuationChoice = ATTN_NORM - 0.5f;
+	int theChoice = (int)RANDOM_LONG(0, 27);
+
+	//CHAN_VOICE? CHAN_WEAPON?
+	int channelChoice = CHAN_VOICE;
+
+	//easyForcePrintLine("HERE? %d", theChoice);
+	switch(theChoice){
+	case 0:
+		SENTENCEG_PlaySingular(entRef->edict(), channelChoice, "BA_MAD6", 1.0f, attenuationChoice);
+	break;
+	case 1:
+		SENTENCEG_PlaySingular(entRef->edict(), channelChoice, "BA_MAD1", 1.0f, attenuationChoice);
+	break;
+	case 2:
+		SENTENCEG_PlaySingular(entRef->edict(), channelChoice, "BA_KILL6", 1.0f, attenuationChoice);
+	break;
+	case 3:
+		SENTENCEG_PlaySingular(entRef->edict(), channelChoice, "BA_KILL5", 1.0f, attenuationChoice);
+	break;
+	case 4:
+		SENTENCEG_PlaySingular(entRef->edict(), channelChoice, "BA_POK3", 1.0f, attenuationChoice);
+	break;
+	case 5:
+		SENTENCEG_PlaySingular(entRef->edict(), channelChoice, "BA_STOP3", 1.0f, attenuationChoice);
+	break;
+	case 6:
+		SENTENCEG_PlaySingular(entRef->edict(), channelChoice, "BA_KILL2", 1.0f, attenuationChoice);
+	break;
+	case 7:
+		SENTENCEG_PlaySingular(entRef->edict(), channelChoice, "BA_MAD4", 1.0f, attenuationChoice);
+	break;
+	case 8:
+		SENTENCEG_PlaySingular(entRef->edict(), channelChoice, "BA_SHOT3", 1.0f, attenuationChoice);
+	break;
+	case 9:
+		SENTENCEG_PlaySingular(entRef->edict(), channelChoice, "BA_ATTACK6", 1.0f, attenuationChoice);
+	break;
+	case 10:
+		SENTENCEG_PlaySingular(entRef->edict(), channelChoice, "BA_ATTACK4", 1.0f, attenuationChoice);
+	break;
+	case 11:
+		SENTENCEG_PlaySingular(entRef->edict(), channelChoice, "BA_ATTACK2", 1.0f, attenuationChoice);
+	break;
+	case 12:
+		SENTENCEG_PlaySingular(entRef->edict(), channelChoice, "BA_ATTACK1", 1.0f, attenuationChoice);
+	break;
+	case 13:
+		SENTENCEG_PlaySingular(entRef->edict(), channelChoice, "BA_ATTACK0", 1.0f, attenuationChoice);
+	break;
+	case 14:
+		SENTENCEG_PlaySingular(entRef->edict(), channelChoice, "BA_IDLE9", 1.0f, attenuationChoice);
+	break;
+	case 15:
+		SENTENCEG_PlaySingular(entRef->edict(), channelChoice, "BA_IDLE6", 1.0f, attenuationChoice);
+	break;
+	case 16:
+		SENTENCEG_PlaySingular(entRef->edict(), channelChoice, "BA_IDLE3", 1.0f, attenuationChoice);
+	break;
+	case 17:
+		SENTENCEG_PlaySingular(entRef->edict(), channelChoice, "BA_STARE2", 1.0f, attenuationChoice);
+	break;
+	case 18:
+		SENTENCEG_PlaySingular(entRef->edict(), channelChoice, "BA_ANSWER0", 1.0f, attenuationChoice);
+	break;
+	case 19:
+		SENTENCEG_PlaySingular(entRef->edict(), channelChoice, "BA_WAIT4", 1.0f, attenuationChoice);
+	break;
+	case 20:
+		SENTENCEG_PlaySingular(entRef->edict(), channelChoice, "BA_ZOMBIE2", 1.0f, attenuationChoice);
+	break;
+	case 21:
+		SENTENCEG_PlaySingular(entRef->edict(), channelChoice, "BA_ZOMBIE4", 1.0f, attenuationChoice);
+	break;
+	case 22:
+		SENTENCEG_PlaySingular(entRef->edict(), channelChoice, "barney_ba_pain1", 1.0f, attenuationChoice);
+	break;
+	case 23:
+		SENTENCEG_PlaySingular(entRef->edict(), channelChoice, "barney_ba_pain2", 1.0f, attenuationChoice);
+	break;
+	case 24:
+		SENTENCEG_PlaySingular(entRef->edict(), channelChoice, "BA_TENTACLE", 1.0f, attenuationChoice);
+	break;
+	case 25:
+		EMIT_SOUND_DYN(entRef->edict(), channelChoice, "barney/c1a4_ba_octo2.wav", 1.0f, attenuationChoice, 0, 100);
+	break;
+	case 26:
+		EMIT_SOUND_DYN(entRef->edict(), channelChoice, "barney/c1a4_ba_octo3.wav", 1.0f, attenuationChoice, 0, 100);
+	break;
+	case 27:
+		EMIT_SOUND_DYN(entRef->edict(), channelChoice, "barney/c1a4_ba_octo4.wav", 1.0f, attenuationChoice, 0, 100);
+	break;
+	
+	}//END OF switch
+
+	
+}//END OF saySomethingBarneyRocket
+
+
+
 
 //=========================================================
 //=========================================================
@@ -182,7 +337,14 @@ void CRpgRocket :: Spawn( void )
 	pev->movetype = MOVETYPE_BOUNCE;
 	pev->solid = SOLID_BBOX;
 
-	SET_MODEL(ENT(pev), "models/rpgrocket.mdl");
+
+	if(EASY_CVAR_GET(myRocketsAreBarney) != 1){
+		SET_MODEL(ENT(pev), "models/rpgrocket.mdl");
+	}else{
+		SET_MODEL(ENT(pev), "models/barney.mdl");
+	}
+
+
 	UTIL_SetSize(pev, Vector( 0, 0, 0), Vector(0, 0, 0));
 	UTIL_SetOrigin( pev, pev->origin );
 
@@ -194,9 +356,17 @@ void CRpgRocket :: Spawn( void )
 
 	if(global_rocketSkipIgnite != 1){
 
-		pev->angles.x -= 30;
-		UTIL_MakeVectors( pev->angles );
-		pev->angles.x = -(pev->angles.x + 30);
+		if(EASY_CVAR_GET(myRocketsAreBarney) != 1){
+			pev->angles.x -= 30;
+			UTIL_MakeVectors( pev->angles );
+			pev->angles.x = -(pev->angles.x + 30);
+		}else{
+			//why 90? to correct for the angle we were sent with, barny is always off by 90 to face the right way.
+			pev->angles.x += -30 + 90;
+			UTIL_MakeVectors( pev->angles );
+			//and why was this that whole -(angle + 30) above anyways? no clue.
+			pev->angles.x = -(pev->angles.x + 30) - 90;
+		}
 
 		//MODDD - come again later.
 		//easyPrintLine("????????? %d", pev->owner == NULL);
@@ -244,13 +414,22 @@ void CRpgRocket :: RocketTouch ( CBaseEntity *pOther )
 
 	STOP_SOUND( edict(), CHAN_VOICE, "weapons/rocket1.wav" );
 	ExplodeTouch( pOther );
+
+	
+	//making any noise? stop.
+	EMIT_SOUND( edict(), CHAN_VOICE, "common/null.wav", 1.0, ATTN_IDLE );
+	EMIT_SOUND( edict(), CHAN_WEAPON, "common/null.wav", 1.0, ATTN_IDLE );
+	//STOP_SOUND(edict(), CHAN_VOICE, "");
+	//STOP_SOUND(edict(), CHAN_WEAPON, "");
+
+
 }
 
 void CRpgRocket::onDelete(){
 	//Should this be deleted, at least formally, remove a rocket.
 
 	if(!alreadyDeleted){
-		easyForcePrintLine("CRpgRocket AHA! I GOT YOU");
+		//easyForcePrintLine("CRpgRocket AHA! I GOT YOU");
 		if( m_pLauncher ){
 			// my launcher is still around, tell it I'm dead.
 			m_pLauncher->m_cActiveRockets--;
@@ -258,6 +437,11 @@ void CRpgRocket::onDelete(){
 			easyForcePrintLine("CRpgRocket RED ALERT B: ROCKET LAUNCHER MISSING?! WHAT");
 		}
 	}
+
+	
+	//making any noise? stop.
+	EMIT_SOUND( edict(), CHAN_VOICE, "common/null.wav", 1.0, ATTN_IDLE );
+	EMIT_SOUND( edict(), CHAN_WEAPON, "common/null.wav", 1.0, ATTN_IDLE );
 }
 
 float CRpgRocket::massInfluence(void){
@@ -272,6 +456,17 @@ void CRpgRocket :: Precache( void )
 	PRECACHE_MODEL("models/rpgrocket.mdl");
 	m_iTrail = PRECACHE_MODEL("sprites/smoke.spr");
 	PRECACHE_SOUND ("weapons/rocket1.wav");
+
+	if(EASY_CVAR_GET(myRocketsAreBarney) == 1){
+		PRECACHE_MODEL("models/barney.mdl");
+
+		PRECACHE_SOUND("barney/c1a4_ba_octo2.wav");
+		PRECACHE_SOUND("barney/c1a4_ba_octo3.wav");
+		PRECACHE_SOUND("barney/c1a4_ba_octo4.wav");
+		
+	}
+
+
 }
 
 
@@ -281,17 +476,22 @@ void CRpgRocket :: IgniteThink( void  )
 
 	pev->movetype = MOVETYPE_FLY;
 	
-	if(global_cl_rockettrail == 0){
+	if(global_cl_rockettrail == 0 || global_cl_rockettrail == 2){
 		pev->effects |= EF_LIGHT;
 	}
 	ignited = TRUE;
 
-	// make rocket sound
-	EMIT_SOUND( ENT(pev), CHAN_VOICE, "weapons/rocket1.wav", 1, 0.5 );
+	if(EASY_CVAR_GET(myRocketsAreBarney) != 1){
+		// make rocket sound
+		EMIT_SOUND( ENT(pev), CHAN_VOICE, "weapons/rocket1.wav", 1, 0.5 );
+	}else{
+		EMIT_SOUND( ENT(pev), CHAN_WEAPON, "weapons/rocket1.wav", 0.17, 0.5 );
+	}
+
 
 
 	if(global_cl_rockettrail == 0){
-
+		//EASY_CVAR_GET(myRocketsAreBarney) == 1
 
 		//MODDD - can we make the end of the trail disappear right at the moment of impact so it doesn't teleport to the explosion's inevitable offset away from the hit surface?
 		//ACTUALLY... it may be better to make it so the explosion just happens at an offset of the rocket's hit place and the rocket itself does not teleport to that offset at all.
@@ -332,14 +532,19 @@ void CRpgRocket :: IgniteThink( void  )
 void CRpgRocket :: FollowThink( void  )
 {
 	CBaseEntity *pOther = NULL;
-	Vector vecTarget;
+	//Vector vecTarget;
 	Vector vecDir;
 	float flDist, flMax, flDot;
 	TraceResult tr;
 
-	UTIL_MakeAimVectors( pev->angles );
 
-	vecTarget = gpGlobals->v_forward;
+	//MODDD - no, just keep track of what direction you're supposed to move in
+	//        separately.
+	//UTIL_MakeAimVectors( pev->angles );
+	//vecTarget = gpGlobals->v_forward;
+
+	//(just use vecMoveDirectionMemory)
+
 	flMax = 4096;
 	
 	// Examine all entities within a reasonable radius
@@ -356,18 +561,28 @@ void CRpgRocket :: FollowThink( void  )
 			if ((flDot > 0) && (flDist * (1 - flDot) < flMax))
 			{
 				flMax = flDist * (1 - flDot);
-				vecTarget = vecDir;
+				//MODDD - ye.
+				//vecTarget = vecDir;
+				vecMoveDirectionMemory = vecDir;
 			}
 		}
 	}
 
-	pev->angles = UTIL_VecToAngles( vecTarget );
+	//MODDD - actually this is fine.  buuuuut
+	//pev->angles = UTIL_VecToAngles( vecTarget );
+	pev->angles = UTIL_VecToAngles( vecMoveDirectionMemory );
+
+	if(EASY_CVAR_GET(myRocketsAreBarney) == 1){
+		pev->angles.x -= 90;
+	}
+
+	//MODDD - both mentions of vecTarget replaced with vecMoveDirectionMemory.
 
 	// this acceleration and turning math is totally wrong, but it seems to respond well so don't change it.
 	float flSpeed = pev->velocity.Length();
 	if (gpGlobals->time - m_flIgniteTime < 1.0)
 	{
-		pev->velocity = pev->velocity * 0.2 + vecTarget * (flSpeed * 0.8 + 400);
+		pev->velocity = pev->velocity * 0.2 + vecMoveDirectionMemory * (flSpeed * 0.8 + 400);
 		if (pev->waterlevel == 3)
 		{
 			// go slow underwater
@@ -379,14 +594,29 @@ void CRpgRocket :: FollowThink( void  )
 		} 
 		else 
 		{
-			if (pev->velocity.Length() > 2000)
+			float maxSpeed = 2000;
+
+			if(EASY_CVAR_GET(myRocketsAreBarney) == 1){
+				//reduce it instead, we need to make sure we don't miss the glory of barney.
+				maxSpeed = 450;
+			}
+
+			if (pev->velocity.Length() > maxSpeed)
 			{
-				pev->velocity = pev->velocity.Normalize() * 2000;
+				pev->velocity = pev->velocity.Normalize() * maxSpeed;
 			}
 		}
 	}
 	else
 	{
+		float aboveToNotExplodeVelocity = 1500;
+		float velocityPreserveMulti = 0.798f;
+
+		if(EASY_CVAR_GET(myRocketsAreBarney) == 1){
+			aboveToNotExplodeVelocity = 240;
+			velocityPreserveMulti = 0.801f;
+		}
+
 		//MODDD - NOTE: the alpha trail does not use this light, so that is not a good indication.  Use the var "ignited" instead.
 		//if (pev->effects & EF_LIGHT)
 		if(ignited)
@@ -397,11 +627,16 @@ void CRpgRocket :: FollowThink( void  )
 			ignited = FALSE;
 			STOP_SOUND( ENT(pev), CHAN_VOICE, "weapons/rocket1.wav" );
 		}
-		pev->velocity = pev->velocity * 0.2 + vecTarget * flSpeed * 0.798;
-		if (pev->waterlevel == 0 && pev->velocity.Length() < 1500)
+		pev->velocity = pev->velocity * 0.2 + vecMoveDirectionMemory * flSpeed * velocityPreserveMulti;
+		
+		//MODDD - allow a little less, what's the point of this?  And explicitly allowing it to be out of the water like this, potentially endless if underwater?
+		//        What were y'all thinking???
+		if (pev->waterlevel == 0 && pev->velocity.Length() < aboveToNotExplodeVelocity)
 		{
 			Detonate( );
 		}
+
+
 	}
 	// ALERT( at_console, "%.0f\n", flSpeed );
 

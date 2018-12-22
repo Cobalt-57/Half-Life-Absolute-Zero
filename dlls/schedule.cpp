@@ -1318,13 +1318,12 @@ void CBaseMonster :: RunTask ( Task_t *pTask )
 		}
 	break;}
 
-	case TASK_DIE_LOOP:
-	{
+	case TASK_DIE_LOOP:{
 		//No default behavior. Runs indefinitely unless a child class implements this and tells it when to stop with "TaskComplete" and let TASK_DIE proceed as usual
 		//(pick a typical death sequence, run until the end and freeze at the last frame).
 
-	break;
-	}
+		//CHANGE OF PLANS. For falling fliers, no need to give this any special behavior, the generic "KilledFinishTouch" will work fine in progressing for this.
+	break;}
 	//MODDD - MOVED FROM ichthyosaur.cpp, renamed from TASK_ICHTHYOSAUR_FLOAT
 	case TASK_WATER_DEAD_FLOAT:{
 
@@ -1479,7 +1478,7 @@ void CBaseMonster :: RunTask ( Task_t *pTask )
 		//easyForcePrintLine("!!!!!!!!!!!!!!!!!!!!!!! %d", m_fSequenceFinished);
 		//BEWARE: looping anims may just keep going!  
 		//If necessary, anims could have a separate "loopedOnce" flag to be set when the anim would have usually ended but decided to loop instead, that is read HERE instead.
-		if(m_fSequenceFinished){
+		if(m_fSequenceFinished || m_fSequenceFinishedSinceLoop){
 
 			//MODDD - hoping that doesn't break anything. Not that usingCustomSequence was everpart of retail to begin with.
 			this->usingCustomSequence = FALSE;
@@ -2629,8 +2628,7 @@ case TASK_GET_PATH_TO_BESTSCENT:
 		DeathAnimationStart();
 	break;}
 	
-	case TASK_DIE_LOOP:
-	{
+	case TASK_DIE_LOOP:{
 		//Starter for the task.
 		//In a monster that calls for SCHED_DIE_LOOP instead of SCHED_DIE, ensure "getLoopingDeathSequence" is overridden to refer
 		//to a fitting (falling?) sequence to loop until it has a reason to be interrupted (hit the ground)
@@ -2653,8 +2651,14 @@ case TASK_GET_PATH_TO_BESTSCENT:
 		
 
 
-		break;
-	}
+	break;}
+	case TASK_SET_FALL_DEAD_TOUCH:{
+		//Just set my touch to anticipate hitting the ground and moving on to the next task (TASK_DIE) for the anim for hitting the ground to finish.
+		
+		SetTouch(&CBaseMonster::KilledFinishTouch);
+
+		TaskComplete();
+	break;}
 	//MODDD - also new
 	case TASK_WATER_DEAD_FLOAT:
 		floatSinkSpeed = WATER_DEAD_SINKSPEED_INITIAL;
@@ -2904,7 +2908,26 @@ case TASK_GET_PATH_TO_BESTSCENT:
 
 		TaskComplete();
 	break;}
+	case TASK_GATE_ORGANICLOGIC_NEAR_LKP:{
+		//any organicLogic's near the last known position?
+		CBaseEntity* test;
+		test = getNearestDeadBody(this->m_vecEnemyLKP, 200);
 
+		//TODO - do a linetrace from a little above the current m_vecEnemyLKP to the found corpse's real location and pick a little above that
+		//       for a new m_vecEnemyLKP to get guaranteed closer to that?
+		//So far this is just a pass / fail gate.
+
+		if(test != NULL){
+			//there is something organicLogic - dead.  move on.
+			TaskComplete();
+		}else{
+			//nothing? don't go there.
+			TaskFail();
+			return;
+		}
+
+
+	break;}
 
 
 

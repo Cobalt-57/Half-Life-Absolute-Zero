@@ -927,6 +927,23 @@ int SENTENCEG_PlaySequentialSz(edict_t *entity, const char *szrootname, float vo
 int SENTENCEG_GetIndex(const char *szrootname);
 int SENTENCEG_Lookup(const char *sample, char *sentencenum);
 
+
+//MODDD - why did we have no option for playing a singular sentence on any particular entity like a utility, not just TalkMonster's???
+// And don't send over an exclamation mark, we already add one here.
+void SENTENCEG_PlaySingular(entvars_t* entity, int arg_channel, const char *pszSentence, float volume, float attenuation );
+void SENTENCEG_PlaySingular(edict_t* entity, int arg_channel, const char *pszSentence, float volume, float attenuation );
+void SENTENCEG_PlaySingular(entvars_t* entity, int arg_channel, const char *pszSentence, float volume, float attenuation, int flag );
+void SENTENCEG_PlaySingular(edict_t* entity, int arg_channel, const char *pszSentence, float volume, float attenuation, int flag );
+void SENTENCEG_PlaySingular(entvars_t* entity, int arg_channel, const char *pszSentence, float volume, float attenuation, int flag, int pitch );
+void SENTENCEG_PlaySingular(edict_t* entity, int arg_channel, const char *pszSentence, float volume, float attenuation, int flag, int pitch );
+
+
+
+
+
+
+
+
 void TEXTURETYPE_Init();
 char TEXTURETYPE_Find(char *name);
 float TEXTURETYPE_PlaySound(TraceResult *ptr,  Vector vecSrc, Vector vecEnd, int iBulletType);
@@ -1220,6 +1237,7 @@ extern void ResetDynamicStaticIDs(void);
 extern void SaveDynamicIDs(CGlobalState* argGS);
 extern void RestoreDynamicIDs(CGlobalState* argGS);
 
+extern BOOL GermanModelOrganicLogic(void);
 
 
 

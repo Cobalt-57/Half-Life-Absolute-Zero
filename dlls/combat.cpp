@@ -1098,12 +1098,7 @@ GENERATE_GIBMONSTEREND_IMPLEMENTATION(CBaseMonster){
 
 
 
-//MODDD TODO MAJOR - the activity ACT_DIEVIOLENT goes completley unused. When should it be called for?
-//  On any overkill death (lots of negative health)?  Taking heavy damage at the same time as death (damage of one attack is at least 70% of max health)?
-//  Bodyshot that dealt a lot of overkill damage? what?   Plus checks for whether forwards / backwards is acceptable to go before picking a particular violent anim...
-//  this may be a little involved.
-
-//MODDD - ALSO, reorganized this a bit to remove some redundancies.  Should have equivalent behavior.
+//MODDD - Reorganized this a bit to remove some redundancies.  Should have equivalent behavior.
 
 //=========================================================
 // GetDeathActivity - determines the best type of death
@@ -1117,6 +1112,15 @@ Activity CBaseMonster :: GetDeathActivity ( void )
 	float		flDot;
 	TraceResult	tr;
 	Vector		vecSrc;
+	int violentDeathPriorityValue;
+
+	//MODDD - how soon should I check for the violentDeath compared to other ACT's and return early if violent death is allowed?
+	violentDeathPriorityValue = violentDeathPriority();
+
+	if(!violentDeathAllowed()){
+		//then forget it.
+		violentDeathPriorityValue = -1;
+	}
 
 	if ( pev->deadflag != DEAD_NO )
 	{
@@ -1124,10 +1128,17 @@ Activity CBaseMonster :: GetDeathActivity ( void )
 		return m_IdealActivity;
 	}
 
+
+	if(violentDeathPriorityValue == 1 && violentDeathDamageRequirement() && violentDeathClear()){
+		return ACT_DIEVIOLENT;
+	}
+
+
 	vecSrc = Center();
 
 	//fTriedDirection = FALSE;
 	deathActivity = ACT_DIESIMPLE;// in case we can't find any special deaths to do.
+
 
 
 	switch ( m_LastHitGroup )
@@ -1165,7 +1176,17 @@ Activity CBaseMonster :: GetDeathActivity ( void )
 	}
 
 
+
+
+
+
 	if(fCanTryDirection){
+
+		
+		if(violentDeathPriorityValue == 2 && violentDeathDamageRequirement() && violentDeathClear()){
+			return ACT_DIEVIOLENT;
+		}
+
 		UTIL_MakeVectors ( pev->angles );
 		flDot = DotProduct ( gpGlobals->v_forward, g_vecAttackDir * -1 );
 		//Haven't found a good death activity above (has a sequence available)? Try the directions.
@@ -1189,12 +1210,20 @@ Activity CBaseMonster :: GetDeathActivity ( void )
 			// It must be allowed by this particular monster to be used, regardless of having a sequence mapped by the model.
 			// This way we can promise some attention was paid to whether it needs a trace check or not, which varries per monster.
 			// There is no standard length of trace that will satisfy all violent death animations.  violentDeathClear will handle that.
+			
+			if(violentDeathPriorityValue == 3 && violentDeathDamageRequirement() && violentDeathClear()){
+				return ACT_DIEVIOLENT;
+			}
+			
+			/*
 			if(violentDeathAllowed() && violentDeathDamageRequirement() && violentDeathClear()){
 				//Apparently this is OK.
 				//But if there are ever multiple violent death anims, we need to use this as a signal to pick
 				//a more specific one later possibly, like what one passed its own distance check.
 				deathActivity = ACT_DIEVIOLENT;
-			}else{
+			}else
+			*/
+			{
 				//give DIEBACKWARD a chance as usual.
 				if(LookupActivity(ACT_DIEBACKWARD) != ACTIVITY_NOT_AVAILABLE){
 					//One more check.
@@ -1509,7 +1538,8 @@ void CGib :: WaitTillLand ( void )
 		pev->nextthink = gpGlobals->time + m_lifeTime;
 
 		// If you bleed, you stink!... unless you're a robot, gears don't really attract eaters.
-		if ( m_bloodColor != DONT_BLEED && m_bloodColor != BLOOD_COLOR_BLACK )
+		// But exceptions are exceptions (GermanModelOrganicLogic).
+		if ( m_bloodColor != DONT_BLEED && (GermanModelOrganicLogic() || m_bloodColor != BLOOD_COLOR_BLACK)  )
 		{
 			// ok, start stinkin!
 			CSoundEnt::InsertSound ( bits_SOUND_MEAT, pev->origin, 384, 25 );

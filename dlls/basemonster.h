@@ -395,6 +395,7 @@ public:
 
 		virtual BOOL isSizeGiant(void);
 		virtual BOOL isOrganic(void);
+		virtual BOOL isOrganicLogic(void);
 
 		virtual float getBarnaclePulledTopOffset(void);
 
@@ -500,6 +501,9 @@ public:
 	virtual void cheapKilled(void);
 	virtual void cheapKilledFlier(void);
 	virtual void OnKilledSetTouch(void);
+
+	EXPORT void KilledFinishTouch( CBaseEntity *pOther );
+
 	virtual int getLoopingDeathSequence(void);
 	static Schedule_t* flierDeathSchedule(void);
 	virtual BOOL getMovementCanAutoTurn(void);
@@ -509,14 +513,18 @@ public:
 	void setEnemyLKP_Investigate(const Vector& argNewVector);
 
 	
-	virtual CBaseEntity* getNearestDeadBody(void);
+	virtual CBaseEntity* getNearestDeadBody(const Vector& arg_searchOrigin, const float arg_maxDist);
 
 	virtual BOOL noncombat_Look_ignores_PVS_check(void);
 	
 	virtual BOOL violentDeathAllowed(void);
 	virtual BOOL violentDeathDamageRequirement(void);
 	virtual BOOL violentDeathClear(void);
-	
+	virtual int violentDeathPriority(void);
+
+	//not really meant to be implemented in other places but in case it happens, I trust whoever else knows what they're doing.
+	virtual BOOL violentDeathClear_BackwardsCheck(float argDistance);
+
 	void lookAtEnemyLKP(void);
 	void predictActRepeat(int arg_bits_cond);
 

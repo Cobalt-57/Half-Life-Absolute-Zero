@@ -173,6 +173,7 @@
 #define timedDamage_brightnessFloor_ID 171
 #define timedDamage_flashSpeed_ID 172
 #define timedDamage_debug_ID 173
+#define myRocketsAreBarney_ID 174
 
 
 #define DEFAULT_gruntsCanHaveMP5Grenade 0
@@ -405,6 +406,8 @@
 #define DEFAULT_blockChangeLevelTrigger 0
 #define DEFAULT_blockMusicTrigger 0
 #define DEFAULT_blockMultiTrigger 0
+#define DEFAULT_blockTeleportTrigger 0
+#define DEFAULT_blockHurtTrigger 0
 #define DEFAULT_blockAutosaveTrigger 0
 #define DEFAULT_hideNodeGraphRebuildNotice 1
 #define DEFAULT_barnacleTongueRetractDelay 2
@@ -643,6 +646,8 @@
 #define DEFAULT_timedDamage_debug 0
 #define DEFAULT_wallHealthDoor_closeDelay 0.75
 #define DEFAULT_houndeye_attack_canGib 0
+#define DEFAULT_myRocketsAreBarney 0
+#define DEFAULT_hassassinCrossbowDebug 0
 
 #define EASY_CVAR_HASH_MASS\
 	EASY_CVAR_HASH(strobeDurationMin, 0)\
@@ -819,6 +824,7 @@
 	EASY_CVAR_HASH(timedDamage_brightnessFloor, 171)\
 	EASY_CVAR_HASH(timedDamage_flashSpeed, 172)\
 	EASY_CVAR_HASH(timedDamage_debug, 173)\
+	EASY_CVAR_HASH(myRocketsAreBarney, 174)\
 	DUMMY
 
 #define EASY_CVAR_HIDDEN_LIST\
@@ -1046,6 +1052,8 @@
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(blockChangeLevelTrigger, blockchangeleveltrigger)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(blockMusicTrigger, blockmusictrigger)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(blockMultiTrigger, blockmultitrigger)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(blockTeleportTrigger, blockteleporttrigger)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(blockHurtTrigger, blockhurttrigger)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(blockAutosaveTrigger, blockautosavetrigger)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(hideNodeGraphRebuildNotice, hidenodegraphrebuildnotice)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(barnacleTongueRetractDelay, barnacletongueretractdelay)\
@@ -1274,6 +1282,8 @@
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTONLY(timedDamage_debug, timeddamage_debug, 173)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(wallHealthDoor_closeDelay, wallhealthdoor_closedelay)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(houndeye_attack_canGib, houndeye_attack_cangib)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTONLY(myRocketsAreBarney, myrocketsarebarney, 174)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(hassassinCrossbowDebug, hassassincrossbowdebug)\
 	DUMMY
 
 #define EASY_CVAR_HIDDEN_SAVE_MASS\
@@ -1501,6 +1511,8 @@
 	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(blockChangeLevelTrigger)\
 	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(blockMusicTrigger)\
 	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(blockMultiTrigger)\
+	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(blockTeleportTrigger)\
+	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(blockHurtTrigger)\
 	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(blockAutosaveTrigger)\
 	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(hideNodeGraphRebuildNotice)\
 	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(barnacleTongueRetractDelay)\
@@ -1729,6 +1741,8 @@
 	EASY_CVAR_HIDDEN_SAVE_CLIENTONLY(timedDamage_debug)\
 	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(wallHealthDoor_closeDelay)\
 	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(houndeye_attack_canGib)\
+	EASY_CVAR_HIDDEN_SAVE_CLIENTONLY(myRocketsAreBarney)\
+	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(hassassinCrossbowDebug)\
 	DUMMY
 
 #define EASY_CVAR_HIDDEN_LOAD_MASS\
@@ -1956,6 +1970,8 @@
 	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(blockChangeLevelTrigger, blockchangeleveltrigger)\
 	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(blockMusicTrigger, blockmusictrigger)\
 	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(blockMultiTrigger, blockmultitrigger)\
+	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(blockTeleportTrigger, blockteleporttrigger)\
+	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(blockHurtTrigger, blockhurttrigger)\
 	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(blockAutosaveTrigger, blockautosavetrigger)\
 	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(hideNodeGraphRebuildNotice, hidenodegraphrebuildnotice)\
 	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(barnacleTongueRetractDelay, barnacletongueretractdelay)\
@@ -2184,6 +2200,8 @@
 	EASY_CVAR_HIDDEN_LOAD_CLIENTONLY(timedDamage_debug, timeddamage_debug)\
 	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(wallHealthDoor_closeDelay, wallhealthdoor_closedelay)\
 	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(houndeye_attack_canGib, houndeye_attack_cangib)\
+	EASY_CVAR_HIDDEN_LOAD_CLIENTONLY(myRocketsAreBarney, myrocketsarebarney)\
+	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(hassassinCrossbowDebug, hassassincrossbowdebug)\
 	DUMMY
 
 #define EASY_CVAR_DECLARATION_SERVER_MASS\
@@ -2417,6 +2435,8 @@
 	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY(blockChangeLevelTrigger)\
 	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY(blockMusicTrigger)\
 	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY(blockMultiTrigger)\
+	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY(blockTeleportTrigger)\
+	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY(blockHurtTrigger)\
 	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY(blockAutosaveTrigger)\
 	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY(hideNodeGraphRebuildNotice)\
 	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY(barnacleTongueRetractDelay)\
@@ -2655,6 +2675,8 @@
 	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY_CLIENTONLY(timedDamage_debug)\
 	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY(wallHealthDoor_closeDelay)\
 	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY(houndeye_attack_canGib)\
+	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY_CLIENTONLY(myRocketsAreBarney)\
+	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY(hassassinCrossbowDebug)\
 	DUMMY
 
 #define EASY_CVAR_DECLARATION_CLIENT_MASS\
@@ -2888,6 +2910,8 @@
 	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY(blockChangeLevelTrigger)\
 	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY(blockMusicTrigger)\
 	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY(blockMultiTrigger)\
+	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY(blockTeleportTrigger)\
+	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY(blockHurtTrigger)\
 	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY(blockAutosaveTrigger)\
 	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY(hideNodeGraphRebuildNotice)\
 	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY(barnacleTongueRetractDelay)\
@@ -3126,6 +3150,8 @@
 	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY_CLIENTONLY(timedDamage_debug)\
 	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY(wallHealthDoor_closeDelay)\
 	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY(houndeye_attack_canGib)\
+	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY_CLIENTONLY(myRocketsAreBarney)\
+	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY(hassassinCrossbowDebug)\
 	DUMMY
 
 #define EASY_CVAR_UPDATE_SERVER_MASS\
@@ -3359,6 +3385,8 @@
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(blockChangeLevelTrigger)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(blockMusicTrigger)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(blockMultiTrigger)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(blockTeleportTrigger)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(blockHurtTrigger)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(blockAutosaveTrigger)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(hideNodeGraphRebuildNotice)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(barnacleTongueRetractDelay)\
@@ -3597,6 +3625,8 @@
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTONLY(timedDamage_debug, 173)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(wallHealthDoor_closeDelay)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(houndeye_attack_canGib)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTONLY(myRocketsAreBarney, 174)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(hassassinCrossbowDebug)\
 	DUMMY
 
 #define EASY_CVAR_UPDATE_CLIENT_MASS\
@@ -3830,6 +3860,8 @@
 	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY(blockChangeLevelTrigger)\
 	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY(blockMusicTrigger)\
 	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY(blockMultiTrigger)\
+	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY(blockTeleportTrigger)\
+	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY(blockHurtTrigger)\
 	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY(blockAutosaveTrigger)\
 	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY(hideNodeGraphRebuildNotice)\
 	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY(barnacleTongueRetractDelay)\
@@ -4068,6 +4100,8 @@
 	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY_CLIENTONLY(timedDamage_debug)\
 	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY(wallHealthDoor_closeDelay)\
 	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY(houndeye_attack_canGib)\
+	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY_CLIENTONLY(myRocketsAreBarney)\
+	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY(hassassinCrossbowDebug)\
 	DUMMY
 
 #define EASY_CVAR_CREATE_SERVER_SETUP_MASS\
@@ -4307,6 +4341,8 @@
 	EASY_CVAR_CREATE_CLIENT_A_DEBUGONLY(blockChangeLevelTrigger)\
 	EASY_CVAR_CREATE_CLIENT_A_DEBUGONLY(blockMusicTrigger)\
 	EASY_CVAR_CREATE_CLIENT_A_DEBUGONLY(blockMultiTrigger)\
+	EASY_CVAR_CREATE_CLIENT_A_DEBUGONLY(blockTeleportTrigger)\
+	EASY_CVAR_CREATE_CLIENT_A_DEBUGONLY(blockHurtTrigger)\
 	EASY_CVAR_CREATE_CLIENT_A_DEBUGONLY(blockAutosaveTrigger)\
 	EASY_CVAR_CREATE_CLIENT_A_DEBUGONLY(hideNodeGraphRebuildNotice)\
 	EASY_CVAR_CREATE_CLIENT_A_DEBUGONLY(barnacleTongueRetractDelay)\
@@ -4545,6 +4581,8 @@
 	EASY_CVAR_CREATE_CLIENT_AC_DEBUGONLY(timedDamage_debug)\
 	EASY_CVAR_CREATE_CLIENT_A_DEBUGONLY(wallHealthDoor_closeDelay)\
 	EASY_CVAR_CREATE_CLIENT_A_DEBUGONLY(houndeye_attack_canGib)\
+	EASY_CVAR_CREATE_CLIENT_AC_DEBUGONLY(myRocketsAreBarney)\
+	EASY_CVAR_CREATE_CLIENT_A_DEBUGONLY(hassassinCrossbowDebug)\
 	DUMMY
 
 #define EASY_CVAR_RESET_MASS\
@@ -4778,6 +4816,8 @@
 	EASY_CVAR_RESET_DEBUGONLY(blockChangeLevelTrigger)\
 	EASY_CVAR_RESET_DEBUGONLY(blockMusicTrigger)\
 	EASY_CVAR_RESET_DEBUGONLY(blockMultiTrigger)\
+	EASY_CVAR_RESET_DEBUGONLY(blockTeleportTrigger)\
+	EASY_CVAR_RESET_DEBUGONLY(blockHurtTrigger)\
 	EASY_CVAR_RESET_DEBUGONLY(blockAutosaveTrigger)\
 	EASY_CVAR_RESET_DEBUGONLY(hideNodeGraphRebuildNotice)\
 	EASY_CVAR_RESET_DEBUGONLY(barnacleTongueRetractDelay)\
@@ -5015,6 +5055,8 @@
 	EASY_CVAR_RESET_DEBUGONLY_CLIENTONLY(timedDamage_debug)\
 	EASY_CVAR_RESET_DEBUGONLY(wallHealthDoor_closeDelay)\
 	EASY_CVAR_RESET_DEBUGONLY(houndeye_attack_canGib)\
+	EASY_CVAR_RESET_DEBUGONLY_CLIENTONLY(myRocketsAreBarney)\
+	EASY_CVAR_RESET_DEBUGONLY(hassassinCrossbowDebug)\
 	DUMMY
 
 #define EASY_CVAR_EXTERN_MASS\
@@ -5248,6 +5290,8 @@
 	EASY_CVAR_EXTERN_DEBUGONLY(blockChangeLevelTrigger)\
 	EASY_CVAR_EXTERN_DEBUGONLY(blockMusicTrigger)\
 	EASY_CVAR_EXTERN_DEBUGONLY(blockMultiTrigger)\
+	EASY_CVAR_EXTERN_DEBUGONLY(blockTeleportTrigger)\
+	EASY_CVAR_EXTERN_DEBUGONLY(blockHurtTrigger)\
 	EASY_CVAR_EXTERN_DEBUGONLY(blockAutosaveTrigger)\
 	EASY_CVAR_EXTERN_DEBUGONLY(hideNodeGraphRebuildNotice)\
 	EASY_CVAR_EXTERN_DEBUGONLY(barnacleTongueRetractDelay)\
@@ -5486,5 +5530,7 @@
 	EASY_CVAR_EXTERN_DEBUGONLY_CLIENTONLY(timedDamage_debug)\
 	EASY_CVAR_EXTERN_DEBUGONLY(wallHealthDoor_closeDelay)\
 	EASY_CVAR_EXTERN_DEBUGONLY(houndeye_attack_canGib)\
+	EASY_CVAR_EXTERN_DEBUGONLY_CLIENTONLY(myRocketsAreBarney)\
+	EASY_CVAR_EXTERN_DEBUGONLY(hassassinCrossbowDebug)\
 	DUMMY
 

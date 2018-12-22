@@ -28,18 +28,35 @@ EASY_CVAR_EXTERN(crossbowInheritsPlayerVelocity)
 //EASY_CVAR_EXTERN(crossbowReloadSoundDelay)
 
 
-CCrossbowBolt *CCrossbowBolt::BoltCreate( void )
-{
+CCrossbowBolt::CCrossbowBolt(void){
+	recentVelocity = Vector(0,0,0);
+	noDamage = FALSE;
+}//END OF CCrossbowBolt constructor
+
+
+CCrossbowBolt *CCrossbowBolt::BoltCreate( void ){
+	return BoltCreate(TRUE, FALSE);
+}
+CCrossbowBolt *CCrossbowBolt::BoltCreate( BOOL useTracer, BOOL arg_noDamage ){
 	// Create a new entity with CCrossbowBolt private data
 	CCrossbowBolt *pBolt = GetClassPtr( (CCrossbowBolt *)NULL );
 	pBolt->pev->classname = MAKE_STRING("bolt");
-	pBolt->Spawn();
+	pBolt->Spawn(useTracer, arg_noDamage);
 
 	return pBolt;
 }
 
-void CCrossbowBolt::Spawn( )
+
+
+
+void CCrossbowBolt::Spawn(){
+	Spawn(TRUE, FALSE);
+}
+
+void CCrossbowBolt::Spawn(BOOL useTracer, BOOL arg_noDamage)
 {
+	noDamage = arg_noDamage;
+
 	Precache( );
 	pev->movetype = MOVETYPE_FLY;
 	pev->solid = SOLID_BBOX;
@@ -50,22 +67,27 @@ void CCrossbowBolt::Spawn( )
 
 	SET_MODEL(ENT(pev), "models/crossbow_bolt.mdl");
 	
+
 	//MODDD - this section has been added.
 	///////////////////////////////////////////////////////
-	MESSAGE_BEGIN(MSG_BROADCAST, SVC_TEMPENTITY);
+	if(useTracer){
 
-	WRITE_BYTE(TE_BEAMFOLLOW);
-	WRITE_SHORT(entindex());	// entity
-	WRITE_SHORT(m_iTrail);	// model
-	WRITE_BYTE(10); // life
-	WRITE_BYTE(1.5);  // width
-	WRITE_BYTE(224);   // r, g, b
-	WRITE_BYTE(224);   // r, g, b
-	WRITE_BYTE(255);   // r, g, b
-	WRITE_BYTE(100);	// brightness
+		MESSAGE_BEGIN(MSG_BROADCAST, SVC_TEMPENTITY);
+
+		WRITE_BYTE(TE_BEAMFOLLOW);
+		WRITE_SHORT(entindex());	// entity
+		WRITE_SHORT(m_iTrail);	// model
+		WRITE_BYTE(10); // life
+		WRITE_BYTE(1.5);  // width
+		WRITE_BYTE(224);   // r, g, b
+		WRITE_BYTE(224);   // r, g, b
+		WRITE_BYTE(255);   // r, g, b
+		WRITE_BYTE(100);	// brightness
 	
-	MESSAGE_END();
+		MESSAGE_END();
+	}//END OF useTracer check
 	///////////////////////////////////////////////////////
+
 
 	UTIL_SetOrigin( pev, pev->origin );
 	UTIL_SetSize(pev, Vector(0, 0, 0), Vector(0, 0, 0));
@@ -104,6 +126,10 @@ void CCrossbowBolt::BoltTouch( CBaseEntity *pOther )
 	BOOL goingToExplode = FALSE;
 	int iBitsDamage = 0;
 
+	//MODDD - is that safe?
+	recentVelocity = pev->velocity;
+
+
 
 	float* cvarToUse = NULL;
 
@@ -141,46 +167,45 @@ void CCrossbowBolt::BoltTouch( CBaseEntity *pOther )
 
 		pevOwner = VARS( pev->owner );
 
-		// UNDONE: this needs to call TraceAttack instead
-		ClearMultiDamage( );
-		//MODDD - added DMG_POISON.
-		gMultiDamage.type = DMG_BULLET | DMG_POISON;
 
+		if(!noDamage){
 
+			// UNDONE: this needs to call TraceAttack instead
+			ClearMultiDamage( );
+			//MODDD - added DMG_POISON.
+			gMultiDamage.type = DMG_BULLET | DMG_POISON;
 
+			if(goingToExplode){
+				//explosions gib. Look like it.
+				gMultiDamage.type |= DMG_BLAST | DMG_ALWAYSGIB;
+			}else{
+				gMultiDamage.type = DMG_BULLET | DMG_NEVERGIB | DMG_POISON;
+			}
 
-		if(goingToExplode){
-			//explosions gib. Look like it.
-			gMultiDamage.type |= DMG_BLAST | DMG_ALWAYSGIB;
-		}else{
-			gMultiDamage.type = DMG_BULLET | DMG_NEVERGIB | DMG_POISON;
-		}
+			if ( pOther->IsPlayer() )
+			{
+				//iBitsDamage = DMG_NEVERGIB;
+				//easyForcePrintLine("OW! 1A %s health:%.2f dmg:%.2f", pOther->getClassname(), pOther->pev->health, gSkillData.plrDmgCrossbowClient);
+				pOther->TraceAttack(pevOwner, gSkillData.plrDmgCrossbowClient, pev->velocity.Normalize(), &tr, gMultiDamage.type, gMultiDamage.typeMod ); 
+				//easyForcePrintLine("OW! 2A %s health:%.2f", pOther->getClassname(), pOther->pev->health);
+			}
+			else
+			{
+				//iBitsDamage = DMG_BULLET | DMG_NEVERGIB;
+				//easyForcePrintLine("OW! 1B %s health:%.2f dmg:%.2f", pOther->getClassname(), pOther->pev->health, gSkillData.plrDmgCrossbowMonster);
+				pOther->TraceAttack(pevOwner, gSkillData.plrDmgCrossbowMonster, pev->velocity.Normalize(), &tr, gMultiDamage.type, gMultiDamage.typeMod ); 
+				//easyForcePrintLine("OW! 2B %s health:%.2f", pOther->getClassname(), pOther->pev->health);
+			}
 
-
-
-
-		if ( pOther->IsPlayer() )
-		{
-			//iBitsDamage = DMG_NEVERGIB;
-			//easyForcePrintLine("OW! 1A %s health:%.2f dmg:%.2f", pOther->getClassname(), pOther->pev->health, gSkillData.plrDmgCrossbowClient);
-			pOther->TraceAttack(pevOwner, gSkillData.plrDmgCrossbowClient, pev->velocity.Normalize(), &tr, gMultiDamage.type ); 
-			//easyForcePrintLine("OW! 2A %s health:%.2f", pOther->getClassname(), pOther->pev->health);
-		}
-		else
-		{
-			//iBitsDamage = DMG_BULLET | DMG_NEVERGIB;
-			//easyForcePrintLine("OW! 1B %s health:%.2f dmg:%.2f", pOther->getClassname(), pOther->pev->health, gSkillData.plrDmgCrossbowMonster);
-			pOther->TraceAttack(pevOwner, gSkillData.plrDmgCrossbowMonster, pev->velocity.Normalize(), &tr, gMultiDamage.type ); 
-			//easyForcePrintLine("OW! 2B %s health:%.2f", pOther->getClassname(), pOther->pev->health);
-		}
-
-
-		//ClearMultiDamage();
-		//gMultiDamage.type = DMG_BULLET | DMG_NEVERGIB;
+			//ClearMultiDamage();
+			//gMultiDamage.type = DMG_BULLET | DMG_NEVERGIB;
 		
-		//easyForcePrintLine("OW! 3 %s health:%.2f", pOther->getClassname(), pOther->pev->health);
-		//easyForcePrintLine("!!!CROSSBOWBOLT: ApplyMultiDamage CALL!!!");
-		ApplyMultiDamage( pev, pevOwner );
+			//easyForcePrintLine("OW! 3 %s health:%.2f", pOther->getClassname(), pOther->pev->health);
+			//easyForcePrintLine("!!!CROSSBOWBOLT: ApplyMultiDamage CALL!!!");
+			ApplyMultiDamage( pev, pevOwner );
+
+		}//END OF noDamage
+
 		
 		//easyForcePrintLine("OW! 4 %s health:%.2f", pOther->getClassname(), pOther->pev->health);
 
@@ -212,7 +237,11 @@ void CCrossbowBolt::BoltTouch( CBaseEntity *pOther )
 		SetThink( &CBaseEntity::SUB_Remove );
 		pev->nextthink = gpGlobals->time;// this will get changed below if the bolt is allowed to stick in what it hit.
 
-		if ( FClassnameIs( pOther->pev, "worldspawn" ) )
+		//MODDD - can stick to other map-related things so long as they don't move.
+		//if ( FClassnameIs( pOther->pev, "worldspawn" ) )
+		//if(pOther->IsWorldOrAffiliated() && pOther->pev->movetype == MOVETYPE_NONE)
+		//...why do some static map things use MOVETYPE_PUSH? foget this.
+		if(pOther->IsWorld())
 		{
 			// if what we hit is static architecture, can stay around for a while.
 			Vector vecDir = pev->velocity.Normalize( );
@@ -251,11 +280,18 @@ void CCrossbowBolt::BubbleThink( void )
 	UTIL_BubbleTrail( pev->origin - pev->velocity * 0.1, pev->origin, 1 );
 }
 
+
 void CCrossbowBolt::ExplodeThink( void )
 {
 	int iContents = UTIL_PointContents ( pev->origin );
 	int iScale;
 	
+	
+	//NEW?
+	int shrapMod = 1;  //safe?
+	Vector vecSpot;
+
+
 	pev->dmg = 40;
 	iScale = 10;
 
@@ -271,6 +307,67 @@ void CCrossbowBolt::ExplodeThink( void )
 		spriteChosen = g_sModelIndexWExplosion;
 	}
 
+
+
+	//MODDD - mimicking how ggrenade.cpp's Explode method, called by some touch method (ExplodeTouch) does it with its trace it sends.
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	TraceResult pTrace;
+	vecSpot = pev->origin - recentVelocity.Normalize() * 32;
+	UTIL_TraceLine( vecSpot, vecSpot + recentVelocity.Normalize() * 64, ignore_monsters, ENT(pev), &pTrace );
+	
+	//MODDD - new
+	Vector explosionEffectStartRetail = pev->origin;
+	Vector explosionEffectStartQuake = pev->origin;
+
+
+	Vector explosionOrigin = pev->origin; //by default.
+
+	// Pull out of the wall a bit
+	if ( pTrace.flFraction != 1.0 )
+	{
+
+		//MODDD - let's not change our own origin, just record this.
+		//pev->origin = ...
+		//used to double as both the explosionOrigin and explosionEffectStartRetail ?
+		explosionOrigin = pTrace.vecEndPos + (pTrace.vecPlaneNormal * (pev->dmg - 24) * 0.6);
+		explosionEffectStartRetail = pTrace.vecEndPos + (pTrace.vecPlaneNormal * (pev->dmg*1.1 - 24) * 0.6);
+
+		//MODDD
+		explosionEffectStartQuake = pTrace.vecEndPos + (pTrace.vecPlaneNormal * 5);
+		
+	}
+
+	//...
+	CSoundEnt::InsertSound ( bits_SOUND_COMBAT, explosionOrigin, NORMAL_EXPLOSION_VOLUME, 3.0 );
+	entvars_t *pevOwner;
+	if ( pev->owner )
+		pevOwner = VARS( pev->owner );
+	else
+		pevOwner = NULL;
+	//...
+
+
+	UTIL_Explosion(pev, explosionEffectStartRetail, spriteChosen, iScale, 15, TE_EXPLFLAG_NONE, explosionEffectStartQuake, shrapMod );
+	//MODDD - sending explosionOrigin instead of defaulting to pev->origin.
+	//RadiusDamageAutoRadius ( explosionOrigin, pev, pevOwner, pev->dmg, CLASS_NONE, bitsDamageType, bitsDamageTypeMod );
+	RadiusDamage( explosionOrigin, pev, pevOwner, pev->dmg, 128, CLASS_NONE, DMG_BLAST | DMG_ALWAYSGIB );
+	
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+
+
+
+
+
+
+	/*
 	//MODDD - sent through filter.
 	UTIL_Explosion(pev, pev->origin, spriteChosen, iScale, 15, TE_EXPLFLAG_NONE);
 	
@@ -286,6 +383,9 @@ void CCrossbowBolt::ExplodeThink( void )
 
 	//easyForcePrintLine("!!!CROSSBOWBOLT: RADIUS DAMAGE CALL!!!");
 	::RadiusDamage( pev->origin, pev, pevOwner, pev->dmg, 128, CLASS_NONE, DMG_BLAST | DMG_ALWAYSGIB );
+	*/
+
+
 
 	UTIL_Remove(this);
 }

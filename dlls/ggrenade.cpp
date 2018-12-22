@@ -131,9 +131,9 @@ void CGrenade::Explode( TraceResult *pTrace, int bitsDamageType, int bitsDamageT
 	pev->takedamage = DAMAGE_NO;
 
 	//MODDD - new
-	Vector explosionEffectStart = pTrace->vecEndPos;
+	Vector explosionEffectStart = pev->origin;
 
-
+	//also retail's origin.
 	Vector explosionOrigin = pev->origin; //by default.
 
 	// Pull out of the wall a bit
@@ -144,7 +144,7 @@ void CGrenade::Explode( TraceResult *pTrace, int bitsDamageType, int bitsDamageT
 		//pev->origin = ...
 		explosionOrigin = pTrace->vecEndPos + (pTrace->vecPlaneNormal * (pev->dmg - 24) * 0.6);;
 
-		//MODDD
+		//MODDD - actually used for placing the quake explosion effect, if it is called for instead.
 		explosionEffectStart = pTrace->vecEndPos + (pTrace->vecPlaneNormal * 5);
 
 	}
@@ -248,20 +248,20 @@ void CGrenade::Explode( TraceResult *pTrace, int bitsDamageType, int bitsDamageT
 
 
 	
-	int randDebrisSound = RANDOM_LONG(0, 2);
 	//randDebrisSound = 1;
 	//easyPrintLine("DEBRIS SOUND: %d", randDebrisSound);
 
 	if(global_explosionDebrisSoundVolume > 0){
+		int randDebrisSound = RANDOM_LONG(0, 2);
 
-		float debrisVolumeChoice = min(global_explosionDebrisSoundVolume, 1);
+		float debrisVolumeChoice = clamp(global_explosionDebrisSoundVolume, 0, 1);
 
 		switch ( randDebrisSound )
 		{
 			//NOTE: volume, the argument after the string-path, used to be 0.55.  Now 0.78.
-			case 0:	EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "weapons/debris1.wav", debrisVolumeChoice, ATTN_NORM, 0, 84);	break;
-			case 1:	EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "weapons/debris2.wav", debrisVolumeChoice, ATTN_NORM, 0, 84);	break;
-			case 2:	EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "weapons/debris3.wav", debrisVolumeChoice, ATTN_NORM, 0, 84);	break;
+			case 0:	EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "weapons/debris1.wav", debrisVolumeChoice, ATTN_NORM, 0, 84, FALSE);	break;
+			case 1:	EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "weapons/debris2.wav", debrisVolumeChoice, ATTN_NORM, 0, 84, FALSE);	break;
+			case 2:	EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "weapons/debris3.wav", debrisVolumeChoice, ATTN_NORM, 0, 84, FALSE);	break;
 		}
 	}
 	
@@ -325,6 +325,12 @@ BOOL CGrenade::isOrganic(void){
 	//typically not.
 	return FALSE;
 }
+
+//I do not.  Player weapons don't.
+BOOL CGrenade::usesSoundSentenceSave(void){
+	return FALSE;
+}
+
 
 // Timed grenade, this think is called when time runs out.
 void CGrenade::DetonateUse( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )

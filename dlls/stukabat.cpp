@@ -552,8 +552,6 @@ CStukaBat::CStukaBat(void) : stukaPrint(StukaPrintQueueManager("STUKA")){
 	
 	lastEnemey2DDistance = 0;
 
-	hitGroundDead = FALSE;
-
 	recentActivity = ACT_RESET;
 
 	attackIndex = -1;
@@ -1890,12 +1888,6 @@ void CStukaBat :: RunTask ( Task_t *pTask )
 
 
 
-	
-	case TASK_DIE_LOOP:{
-		if(hitGroundDead){
-			TaskComplete();
-		}
-	break;}
 	case TASK_STUKA_WAIT_FOR_ANIM:
 
 		if(blockSetActivity == -1){
@@ -4983,21 +4975,8 @@ Schedule_t* CStukaBat::GetStumpedWaitSchedule(){
 
 
 
-//TEST: what happens if already touching the ground before death? Test!!
-void CStukaBat::OnKilledSetTouch(void){
-	SetTouch(&CStukaBat::KilledFallingTouch);
-}
-
 int CStukaBat::getLoopingDeathSequence(void){
 	return SEQ_STUKABAT_FALL_CYCLER;
-}
-
-void CStukaBat::KilledFallingTouch( CBaseEntity *pOther ){
-	if(pOther == NULL){
-		return; //??????
-	}
-	const char* test = pOther->getClassname();
-	hitGroundDead = TRUE;
 }
 
 
@@ -5015,6 +4994,23 @@ BOOL CStukaBat::violentDeathClear(void){
 	//No, it's a falling death. Don't do a linetrace.
 	return TRUE;
 }//END OF violentDeathAllowed
+
+//Just allow violent death all the time, doubt the other GUTSHOT and HEADSHOT ACT's even have any sequences for me.
+int CStukaBat::violentDeathPriority(void){
+	return 1;
+}//END OF violentDeathPriority
+
+/*
+Activity CBaseMonster :: GetDeathActivity ( void ){
+
+	if(violentDeathDamageRequirement()){
+		//Fliers are a little harder to hit in a direction maybe so just go ahead and register if the damage is met.
+		return ACT_DIE_VIOLENT;
+	}
+
+	return CSquadMonster::GetDeathActivity(void);
+}//END OF GetDeathActivity
+*/
 
 
 Activity CStukaBat::getIdleActivity(void){

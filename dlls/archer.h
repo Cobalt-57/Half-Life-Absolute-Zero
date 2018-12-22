@@ -32,7 +32,6 @@ public:
 	BOOL tempCheckTraceLineBlock;
 	Vector m_velocity;
 	float lastVelocityChange;
-	BOOL hitGroundDead;
 
 	float shootCooldown;
 
@@ -85,7 +84,6 @@ public:
 	BOOL CheckRangeAttack2 ( float flDot, float flDist );
 	
 	void EXPORT CustomTouch ( CBaseEntity *pOther );
-	void EXPORT KilledFallingTouch ( CBaseEntity *pOther );
 	
 	void MonsterThink( void );
 	void PrescheduleThink(void);
@@ -139,7 +137,6 @@ public:
 	
 	void checkFloor(const Vector& vecSuggestedDir, const float& travelMag, const float& flInterval);
 
-	void OnKilledSetTouch(void);
 	int getLoopingDeathSequence(void);
 
 	Vector BodyTarget(const Vector &posSrc);

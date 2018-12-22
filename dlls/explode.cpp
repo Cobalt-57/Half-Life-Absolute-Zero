@@ -114,7 +114,7 @@ void CShower::Touch( CBaseEntity *pOther )
 class CEnvExplosion : public CBaseMonster
 {
 public:
- BOOL isOrganic(void);
+    BOOL isOrganic(void);
 	void Spawn( );
 	void EXPORT Smoke ( void );
 	void KeyValue( KeyValueData *pkvd );

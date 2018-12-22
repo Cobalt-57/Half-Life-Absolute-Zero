@@ -429,6 +429,15 @@ BOOL CBaseMonster::isOrganic(){
 	return TRUE;
 }
 
+BOOL CBaseMonster::isOrganicLogic(){
+	//This means, if this monster is organic.. of course it's OrganicLogic.
+	//But if it isn't organic, and this monster is using a german model replacement, we're going to treat it like it was organic.
+	//Specific monsters can also just make this method return TRUE or FALSE constantly for consistent behavior for
+	//dropping carcass scents at death.
+	//This includes an ordinary "isOrganic" check so checking both isn't usually necessary.
+	return (isOrganic() || (GermanModelOrganicLogic() && getGermanModel()!=NULL ));
+}
+
 
 
 
@@ -7403,7 +7412,8 @@ void CBaseMonster::DeathAnimationEnd(){
 	else
 	{
 		// body is gonna be around for a while, so have it stink for a bit.
-		if(isOrganic()){
+		// German robots still will if they are supposed to behave like normal.
+		if(isOrganicLogic() ){
 			CSoundEnt::InsertSound ( bits_SOUND_CARCASS, pev->origin, 384, 30 );
 		}
 	}
@@ -7822,7 +7832,7 @@ int CBaseMonster::BloodColorRedFilter(){
 }
 
 int CBaseMonster::CanUseGermanModel(){
-	//If we can our german model and found ours
+	//If we can use our german model and found ours
 	return (getGermanModelsAllowed() && getGermanModelRequirement()==1 );
 }
 
@@ -7933,9 +7943,29 @@ void CBaseMonster::cheapKilledFlier(void){
 //Default says to set it to NULL. Override this for different behavior.
 //i.e., fliers / hover-ers can tell this to interrupt a falling cycler animation on colliding with anything (the ground?).
 //In that case, default behavior of turning touch off would leave you scratching your head as to why it ignores everything after killed.
+//HOWEVER the new slDieFallLoop schedule include setting Touch to KilledFinishTouch which works for all monsters.  This method (OnKilledSetTouch) may no longer be necessary.
 void CBaseMonster::OnKilledSetTouch(void){
 	SetTouch(NULL);
 }
+
+//I need to finish the looping death animation with the "OnKilledSetTouch" one.
+void CBaseMonster::KilledFinishTouch( CBaseEntity *pOther ){
+	if(pOther == NULL){
+		return; //??????
+	}
+	
+	//hitGroundDead = TRUE;
+	
+	//old was "slDieLoop".
+	//Do we even need the schedule + task check?  Touch anything, complete my task.
+	//if(m_pSchedule == slDieFallLoop && this->getTaskNumber() == TASK_DIE_LOOP){
+		TaskComplete();
+		SetTouch(NULL); //don't need to do this again.
+	//}
+
+}//END OF KilledFinishTouch
+
+
 
 //Makes the most sense for fliers to have looping falling animations at deaths in air.
 //By default, -1 means none.
@@ -7948,7 +7978,8 @@ int CBaseMonster::getLoopingDeathSequence(void){
 //Depending on the value of CVar flyerKilledFallingLoop, pick the schedule that uses the looping animation or don't.
 Schedule_t* CBaseMonster::flierDeathSchedule(void){
 	if(EASY_CVAR_GET(flyerKilledFallingLoop) == 1){
-		return slDieLoop;
+		//used to be "slDieLoop"
+		return slDieFallLoop;
 	}else{
 		return slDie;
 	}
@@ -7992,16 +8023,16 @@ void CBaseMonster::setEnemyLKP_Investigate(const Vector& argToInvestigate){
 
 //Moved to the base monster for usefullness.  Probably needs to be overridden per monster.
 //More of a special utility per monster, bound not to really be salvagable on its own here.
-CBaseEntity* CBaseMonster::getNearestDeadBody(void){
+CBaseEntity* CBaseMonster::getNearestDeadBody(const Vector& arg_searchOrigin, const float arg_maxDist){
 
 	CBaseEntity* pEntityScan = NULL;
 	CBaseMonster* testMon = NULL;
 	float thisDistance;
 	CBaseEntity* bestChoiceYet = NULL;
-	float leastDistanceYet = 1200; //furthest I go to a dead body.
+	float leastDistanceYet = arg_maxDist; //furthest I go to a dead body.
 
 	//does UTIL_MonstersInSphere work?
-	while ((pEntityScan = UTIL_FindEntityInSphere( pEntityScan, pev->origin, 800 )) != NULL)
+	while ((pEntityScan = UTIL_FindEntityInSphere( pEntityScan, arg_searchOrigin, 800 )) != NULL)
 	{
 		if(pEntityScan->pev == this->pev){
 			//is it me? skip it.
@@ -8011,9 +8042,13 @@ CBaseEntity* CBaseMonster::getNearestDeadBody(void){
 		testMon = pEntityScan->MyMonsterPointer();
 		//if(testMon != NULL && testMon->pev != this->pev && ( FClassnameIs(testMon->pev, "monster_scientist") || FClassnameIs(testMon->pev, "monster_barney")  ) ){
 
+		//MODDD TODO - should this be able to be fooled by things playing dead?
+		//             Use "testMon->IsAlive_FromAI()" to be fool-able instead of straight deadflag checks.  But the player one (FL_CLIENT check first) is still fine.
+		
+
 		//Don't try to eat leeches, too tiny. Nothing else this small leaves a corpse.
-		if(testMon != NULL && (testMon->pev->deadflag == DEAD_DEAD || ( (testMon->pev->flags & (FL_CLIENT)) && testMon->pev->deadflag == DEAD_RESPAWNABLE && !(testMon->pev->effects &EF_NODRAW) ) ) && testMon->isSizeGiant() == FALSE && testMon->isOrganic() && !(::FClassnameIs(testMon->pev, "monster_leech") ) ){
-			thisDistance = (testMon->pev->origin - pev->origin).Length();
+		if(testMon != NULL && (testMon->pev->deadflag == DEAD_DEAD || ( (testMon->pev->flags & (FL_CLIENT)) && testMon->pev->deadflag == DEAD_RESPAWNABLE && !(testMon->pev->effects &EF_NODRAW) ) ) && testMon->isSizeGiant() == FALSE && testMon->isOrganicLogic() && !(::FClassnameIs(testMon->pev, "monster_leech") ) ){
+			thisDistance = (testMon->pev->origin - arg_searchOrigin).Length();
 			
 			if(thisDistance < leastDistanceYet){
 				//WAIT, one more check. Look nearby for players.
@@ -8059,7 +8094,67 @@ BOOL CBaseMonster::violentDeathDamageRequirement(void){
 //above regardless.
 BOOL CBaseMonster::violentDeathClear(void){
 	return TRUE;
-}//END OF
+}//END OF violentDeathClear
+
+//MODDD - the priority that ACT_DIEVIOLENT gets compared to other activities.  That is, even if the conditions for a violent death act are met or could
+//        be met if checked, what activities should get picked first anyways if their criteria matches at the same time?  Only applies if "violentDeathAllowed" is TRUE.
+//Modes:
+//1: top. violent death happens if the conditions are met period above all other death activities.
+//2: mid. violent death happens before (priority over) any directional death checks (forwards and backwards), but after (loses to) the model hitbox check ones
+//   (ACT_DIE_HEADSHOT and ACT_DIE_GUTSHOT)
+//3: low. violent death happens only during the last hit being on the front of the enemy to compete with ACT_DIEBACKWARD, which it takes precedence over if so.
+//   Otherwise, all other death acts get priority.
+int CBaseMonster::violentDeathPriority(void){
+	return 3;
+}//END OF violentDeathPriority
+
+
+//a utility for checking to see if behind a monster by up to "argDistance" is completely unobstructed and is of the same ground level as this entity.
+//That way a violent death anim can't work when there's a cliff backwards. Does not know to fall as the model's movement is just part of the animation.
+BOOL CBaseMonster::violentDeathClear_BackwardsCheck(float argDistance){
+	TraceResult tr;
+	Vector vecStart;
+	Vector vecEnd;
+	Vector vecGroundEnd;
+
+	UTIL_MakeVectors ( pev->angles );
+	
+	vecStart = Center();
+	vecEnd = vecStart - gpGlobals->v_forward * argDistance;
+	vecGroundEnd = (pev->origin + Vector(0, 0, pev->mins.z) ) - gpGlobals->v_forward * argDistance;
+
+	
+	
+	UTIL_TraceHull ( vecStart, vecEnd, dont_ignore_monsters, head_hull, edict(), &tr );
+	
+	
+
+
+
+
+
+
+
+	// Nothing in the way? it's good.
+	if ( tr.flFraction == 1.0 ){
+		//return TRUE;
+		//not yet, there's another hoop to go through.
+	}else{
+		return FALSE;
+	}
+
+	//Pretty good distance. would that make us fall either? Is there ground at this place "vecEnd"?
+	//UTIL_TraceLine or UTIL_TraceLine?
+	UTIL_TraceLine ( vecGroundEnd, vecGroundEnd + Vector(0, 0, -4), dont_ignore_monsters, edict(), &tr );
+	float zDelta = abs(tr.vecEndPos.z - pev->origin.z);
+	if(!tr.fStartSolid && !tr.fAllSolid && tr.flFraction < 1.0 && zDelta < 3){
+		//it is good!
+		return TRUE;
+	}
+	
+	return FALSE;
+}//END OF violentDeathClear_BackwardsCheck
+
 
 void CBaseMonster::lookAtEnemyLKP(void){
 					

@@ -1750,6 +1750,8 @@ void ClientCommand( edict_t *pEntity )
 		
 	}else if ( FStrEq(pcmdRefinedRef, "sentencetest" ) ){
 
+		
+
 
 			CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev) ;
 			
@@ -4101,20 +4103,76 @@ void ClientCommand( edict_t *pEntity )
 		_scheduleNodeUpdate = TRUE;
 		easyForcePrintLine("Scheduling node update. Start a map to rebuild nodes / skip node file.");
 
-	}else if ( FStrEq(pcmdRefinedRef, "debug1" ) )
-	{
+	}else if(FStrEq(pcmdRefinedRef, "blockalltriggers") || FStrEq(pcmdRefinedRef, "unblockalltriggers")) {
+		
+		if(g_flWeaponCheat == 0.0){
+			easyForcePrintLine("Let\'s not toy with integral map features.");
+			return;
+		}
+
+
+		const char* arg1ref = CMD_ARGV(1);
+		int argValue;
+		float argValueAsFloat;
+
+		//what's our word choice?
+		int defaultValue = 0;
+		if(FStrEq(pcmdRefinedRef, "blockalltriggers")){
+			defaultValue = 1;
+		}
+		
+		if(!isStringEmpty(arg1ref)){
+			//get the monster with this ID.
+			try{
+				int numbAttempt = tryStringToInt(arg1ref);
+				//forwardEnt = getMonsterWithID(numbAttempt);
+				argValue = numbAttempt;
+				if( !(argValue == 0 || argValue == 1) ){
+					throw 1;
+				}
+			}catch(int){
+				easyForcePrintLine("Problem reading number.  (arg must be 0 or 1)");
+				return;
+			}
+
+			//proceed to interpret argValue.
+			if(defaultValue == 0){
+				//the word "unblock" was used? it means the opposite instead.
+				argValue = (argValue==1)?argValue=0:argValue=1;
+			}
+
+		}else{
+			//assume it is what was typed.
+			argValue = defaultValue;
+		}
+
+		argValueAsFloat = (float) argValue;
+		
+		EASY_CVAR_SET_DEBUGONLY(blockAutosaveTrigger, argValueAsFloat);
+		EASY_CVAR_SET_DEBUGONLY(blockChangeLevelTrigger, argValueAsFloat);
+		EASY_CVAR_SET_DEBUGONLY(blockMultiTrigger, argValueAsFloat);
+		EASY_CVAR_SET_DEBUGONLY(blockTeleportTrigger, argValueAsFloat);
+		EASY_CVAR_SET_DEBUGONLY(blockHurtTrigger, argValueAsFloat);
+		EASY_CVAR_SET_DEBUGONLY(blockMusicTrigger, argValueAsFloat);
+
+		if(argValue == 0){
+			easyForcePrintLine("All triggers unblocked.");
+		}else{
+			easyForcePrintLine("All triggers blocked.");
+		}
+
+
+	}else if ( FStrEq(pcmdRefinedRef, "debug1" ) ){
 		//YEAH
 		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev) ;
 		tempplayer->DebugCall1();
 	}
-	else if ( FStrEq(pcmdRefinedRef, "debug2" ) )
-	{
+	else if ( FStrEq(pcmdRefinedRef, "debug2" ) ){
 		//YEAH
 		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev) ;
 		tempplayer->DebugCall2();
 	}
-	else if ( FStrEq(pcmdRefinedRef, "debug3" ) )
-	{
+	else if ( FStrEq(pcmdRefinedRef, "debug3" ) ){
 		//YEAH
 		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev) ;
 		tempplayer->DebugCall3();

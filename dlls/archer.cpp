@@ -292,7 +292,6 @@ CArcher::CArcher(void){
 
 	lastVelocityChange = -1;
 	
-	hitGroundDead = FALSE;
 
 }//END OF CArcher constructor
 
@@ -431,7 +430,7 @@ void CArcher::Spawn( void )
 
 	setModel("models/archer.mdl");
 	//UTIL_SetSize( pev, VEC_HUMAN_HULL_MIN, VEC_HUMAN_HULL_MAX );
-	UTIL_SetSize( pev, Vector( -9, -9, 2 ), Vector( 9, 9, 48 ));
+	UTIL_SetSize( pev, Vector( -10, -10, 2 ), Vector( 9, 9, 38 ));
 
 	pev->classname = MAKE_STRING("monster_archer");
 
@@ -642,7 +641,7 @@ int CArcher :: CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, CB
 
 
 	//UTIL_TraceHull( vecStart + Vector( 0, 0, 32 ), vecEnd + Vector( 0, 0, 32 ), dont_ignore_monsters, large_hull, edict(), &tr );
-	UTIL_TraceHull( vecStart + Vector( 0, 0, 4), vecEnd + Vector( 0, 0, 4), dont_ignore_monsters, point_hull, edict(), &tr );
+	UTIL_TraceHull( vecStart + Vector( 0, 0, 4), vecEnd + Vector( 0, 0, 4), dont_ignore_monsters, head_hull, edict(), &tr );
 	
 	// ALERT( at_console, "%.0f %.0f %.0f : ", vecStart.x, vecStart.y, vecStart.z );
 	// ALERT( at_console, "%.0f %.0f %.0f\n", vecEnd.x, vecEnd.y, vecEnd.z );
@@ -1007,7 +1006,7 @@ Schedule_t* CArcher::GetSchedule ( void )
 					// chase!
 					//easyPrintLine("ducks??");
 					//return GetScheduleOfType( SCHED_CHASE_ENEMY_STOP_SIGHT );
-					GetScheduleOfType(SCHED_CHASE_ENEMY);
+					return GetScheduleOfType(SCHED_CHASE_ENEMY);
 				}
 			}
 			else  
@@ -1036,7 +1035,6 @@ Schedule_t* CArcher::GetSchedule ( void )
 					return GetScheduleOfType( SCHED_RANGE_ATTACK2 );
 				}
 
-
 				//MODDD - NOTE - is that intentional?  range1 & melee1,  and not say,  melee1 & melee2???
 				if ( !HasConditions(bits_COND_CAN_RANGE_ATTACK1 | bits_COND_CAN_MELEE_ATTACK1) )
 				{
@@ -1052,6 +1050,7 @@ Schedule_t* CArcher::GetSchedule ( void )
 				{
 					ALERT ( at_aiconsole, "No suitable combat schedule!\n" );
 				}
+
 			}
 			break;
 		}
@@ -1192,8 +1191,9 @@ void CArcher::StartTask( Task_t *pTask ){
 			CFlyingMonster::StartTask(pTask);
 		break;
 		case TASK_STOP_MOVING:
-			this->m_velocity = Vector(0, 0, 0);
-			pev->velocity = Vector(0,0,0);
+			//why so instant?
+			//this->m_velocity = Vector(0, 0, 0);
+			//pev->velocity = Vector(0,0,0);
 			CFlyingMonster::StartTask(pTask);
 
 		break;
@@ -1232,14 +1232,6 @@ void CArcher::RunTask( Task_t *pTask ){
 				TaskComplete();
 			}
 		break;}
-
-		/*
-		case TASK_DIE_LOOP:{
-			if(hitGroundDead){
-				TaskComplete();
-			}
-		break;}
-		*/
 
 	
 
@@ -1300,30 +1292,6 @@ void CArcher::CustomTouch( CBaseEntity *pOther ){
 }
 
 
-void CArcher::KilledFallingTouch( CBaseEntity *pOther ){
-	
-	//easyForcePrintLine("OH no IM a person friend %s", pOther!=NULL?pOther->getClassname():"WTF");
-
-	int x = 46;
-	//does this even work? uhh..
-
-	//CHEAP FIX:
-
-	if(pOther == NULL){
-		return; //??????
-	}
-
-
-	hitGroundDead = TRUE;
-
-	//groundTouchCheckDuration = gpGlobals->time + 4;
-	
-}
-
-
-
-
-
 
 
 
@@ -1348,6 +1316,25 @@ void CArcher::MonsterThink(){
 
 	}
 	*/
+
+
+	
+	
+	BOOL isItMovin = this->IsMoving();
+
+	if(pev->deadflag == DEAD_NO && !isItMovin){
+		//reduce our velocity each turn.
+
+		if(m_velocity.Length() > 0 || pev->velocity.Length() > 0){
+			m_velocity = m_velocity * 0.74;
+			if(m_velocity.Length() < 0.02){
+				//just stop already.
+				m_velocity = Vector(0, 0, 0);
+			}
+			pev->velocity = m_velocity;
+		}
+	}
+
 
 
 	CFlyingMonster::MonsterThink();
@@ -1731,6 +1718,7 @@ void CArcher::HandleEventQueueEvent(int arg_eventID){
 		//create the ball
 		Vector vecStart, angleGun;
 		Vector vecForward;
+		TraceResult tr;
 
 
 
@@ -1739,6 +1727,17 @@ void CArcher::HandleEventQueueEvent(int arg_eventID){
 		::UTIL_MakeVectorsPrivate(pev->angles, vecForward, NULL, NULL);
 
 		vecStart = pev->origin + vecForward * 18 + Vector(0, 0, 60);
+
+		//HOLD ON. Do a test. Does vecStart still go in valid space?
+		UTIL_TraceLine(pev->origin, vecStart, dont_ignore_monsters, this->edict(), &tr);
+
+
+		if(!tr.fStartSolid && !tr.fAllSolid && tr.flFraction >= 1.0){
+			//pass, go ahead and use this "vecStart" to spawn something.
+		}else{
+			//no? try this intead.
+			vecStart = pev->origin + vecForward * 60;
+		}
 
 		MESSAGE_BEGIN( MSG_BROADCAST, SVC_TEMPENTITY );
 			WRITE_BYTE( TE_ELIGHT );
@@ -1779,6 +1778,28 @@ void CArcher::HandleEventQueueEvent(int arg_eventID){
 
 		//melee bite?
 		CBaseEntity *pHurt = CheckTraceHullAttack( 70, gSkillData.bullsquidDmgBite, DMG_SLASH, DMG_BLEEDING );
+		
+		if(!pHurt){
+			//didn't get anything? Is our enemy in an odd spot like directly below or above? If so count to stop abusing this mechanic.
+			
+			if(m_hEnemy != NULL){
+				Vector deltaToEnemy = (m_hEnemy->pev->origin - pev->origin);
+				float distToEnemy = deltaToEnemy.Length();
+				float distToEnemy2D = deltaToEnemy.Length2D();
+
+				if(distToEnemy < 84 && distToEnemy2D < 60){
+
+					float zDiff = abs(m_hEnemy->Center().z - this->Center().z);
+					if(zDiff > 30){
+						//just hurt the enemy.
+						pHurt = m_hEnemy;
+					}
+				}
+			}
+
+		}
+		
+		
 		if ( pHurt )
 		{
 			if ( (pHurt->pev->flags & (FL_MONSTER|FL_CLIENT)) && !pHurt->blocksImpact() )
@@ -2333,11 +2354,6 @@ void CArcher::checkFloor(const Vector& vecSuggestedDir, const float& travelMag, 
 
 }//END OF checkFloor
 
-
-//TEST: what happens if already touching the ground before death? Test!!
-void CArcher::OnKilledSetTouch(void){
-	SetTouch(&CArcher::KilledFallingTouch);
-}
 
 int CArcher::getLoopingDeathSequence(void){
 	//TODO - this is underwater, this may work a little differently. gravity? etc?

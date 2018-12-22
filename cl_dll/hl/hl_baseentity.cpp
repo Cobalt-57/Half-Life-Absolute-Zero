@@ -114,12 +114,15 @@ CBaseEntity::CBaseEntity(void){}
 void CBaseMonster::Activate(void){}
 void CBaseMonster::Spawn(void){}
 
-CBaseEntity* CBaseMonster::getNearestDeadBody(void){return NULL;}
+CBaseEntity* CBaseMonster::getNearestDeadBody(const Vector& arg_searchOrigin, const float arg_maxDist){return NULL;}
 BOOL CBaseMonster::noncombat_Look_ignores_PVS_check(void){return FALSE;}
 
 BOOL CBaseMonster::violentDeathAllowed(void){return FALSE;}
 BOOL CBaseMonster::violentDeathDamageRequirement(void){return FALSE;}
 BOOL CBaseMonster::violentDeathClear(void){return FALSE;}
+int CBaseMonster::violentDeathPriority(void){return 0;}
+
+BOOL CBaseMonster::violentDeathClear_BackwardsCheck(float argDistance){return FALSE;}
 
 BOOL CBaseMonster::canPredictActRepeat(void){return FALSE;}
 
@@ -282,6 +285,7 @@ GENERATE_KILLED_IMPLEMENTATION_DUMMY_CLIENT(CGrenade)
 //void CGrenade::Killed( entvars_t *, int ) { }
 
 BOOL CGrenade::isOrganic(){return FALSE;}
+BOOL CGrenade::usesSoundSentenceSave(){return FALSE;}
 
 void CGrenade::Spawn( void ) { }
 CGrenade * CGrenade:: ShootTimed( entvars_t *pevOwner, Vector vecStart, Vector vecVelocity, float time ){ return 0; }
@@ -342,8 +346,8 @@ BOOL CBaseMonster :: CheckMeleeAttack1 ( float flDot, float flDist ) { return FA
 BOOL CBaseMonster :: CheckMeleeAttack2 ( float flDot, float flDist ) { return FALSE; }
 
 //MODDD - new
-void CBaseMonster::ScheduleChange(){};
-Schedule_t* CBaseMonster::GetStumpedWaitSchedule(){return NULL;};
+void CBaseMonster::ScheduleChange(){}
+Schedule_t* CBaseMonster::GetStumpedWaitSchedule(){return NULL;}
 
 void CBaseMonster :: CheckAttacks ( CBaseEntity *pTarget, float flDist ) { }
 BOOL CBaseMonster :: FCanCheckAttacks ( void ) { return FALSE; }
@@ -374,17 +378,20 @@ SCHEDULE_TYPE CBaseMonster::getHeardBaitSoundSchedule(){return (SCHEDULE_TYPE)0;
 BOOL CBaseMonster::hasSeeEnemyFix(){return FALSE;}
 BOOL CBaseMonster::getForceAllowNewEnemy(CBaseEntity* pOther){return FALSE;}
 
-void CBaseMonster::tempMethod(void){};
-BOOL CBaseMonster::needsMovementBoundFix(void){return FALSE;};
-void CBaseMonster::cheapKilled(void){};
-void CBaseMonster::cheapKilledFlier(void){};
-void CBaseMonster::OnKilledSetTouch(void){};
-int CBaseMonster::getLoopingDeathSequence(void){return 0;};
-Schedule_t* CBaseMonster::flierDeathSchedule(void){return NULL;}
-BOOL CBaseMonster::getMovementCanAutoTurn(void){return FALSE;};
+void CBaseMonster::tempMethod(void){}
+BOOL CBaseMonster::needsMovementBoundFix(void){return FALSE;}
+void CBaseMonster::cheapKilled(void){}
+void CBaseMonster::cheapKilledFlier(void){}
+void CBaseMonster::OnKilledSetTouch(void){}
 
-void CBaseMonster::updateEnemyLKP(void){};
-void CBaseMonster::setEnemyLKP(const Vector& argNewVector){};
+void CBaseMonster::KilledFinishTouch( CBaseEntity *pOther ){}
+
+int CBaseMonster::getLoopingDeathSequence(void){return 0;}
+Schedule_t* CBaseMonster::flierDeathSchedule(void){return NULL;}
+BOOL CBaseMonster::getMovementCanAutoTurn(void){return FALSE;}
+
+void CBaseMonster::updateEnemyLKP(void){}
+void CBaseMonster::setEnemyLKP(const Vector& argNewVector){}
 
 void CBaseMonster::setPhysicalHitboxForDeath(){return;}
 void CBaseMonster::DeathAnimationStart(){return;}
@@ -392,10 +399,10 @@ void CBaseMonster::DeathAnimationEnd(){return;}
 void CBaseMonster::onDeathAnimationEnd(){return;}
 
 int CBaseMonster::LookupActivityFiltered(int NewAcitivty){return 0;}
-int CBaseMonster::LookupActivity(int NewActivity){return 0;};
-int CBaseMonster::LookupActivityHeaviest(int NewActivity){return 0;};
+int CBaseMonster::LookupActivity(int NewActivity){return 0;}
+int CBaseMonster::LookupActivityHeaviest(int NewActivity){return 0;}
 
-void CBaseMonster::OnTakeDamageSetConditions(entvars_t *pevInflictor, entvars_t *pevAttacker, float flDamage, int bitsDamageType, int bitsDamageTypeMod){};
+void CBaseMonster::OnTakeDamageSetConditions(entvars_t *pevInflictor, entvars_t *pevAttacker, float flDamage, int bitsDamageType, int bitsDamageTypeMod){}
 
 
 void CBaseMonster::setAnimationSmart(const char* arg_animName){return;}
@@ -482,7 +489,7 @@ void CBaseMonster :: StartMonster ( void ) { }
 void CBaseMonster :: MovementComplete( void ) { }
 
 //MODDD - new, moved outside of basemonster.h so it must show up implemented (dummied) here.
-void CBaseMonster::TaskFail(void){};
+void CBaseMonster::TaskFail(void){}
 
 int CBaseMonster::TaskIsRunning( void ) { return 0; }
 
@@ -490,7 +497,7 @@ int CBaseMonster::TaskIsRunning( void ) { return 0; }
 int CBaseMonster::IRelationship ( CBaseEntity *pTarget ) { return 0; }
 
 //Canned.
-//int CBaseMonster::IRelationshipOfClass (int argClassValue, CBaseEntity* pTarget ){return 0;};
+//int CBaseMonster::IRelationshipOfClass (int argClassValue, CBaseEntity* pTarget ){return 0;}
 
 BOOL CBaseMonster :: FindCover ( Vector vecThreat, Vector vecViewOffset, float flMinDist, float flMaxDist ) { return FALSE; }
 BOOL CBaseMonster :: BuildNearestRoute ( Vector vecThreat, Vector vecViewOffset, float flMinDist, float flMaxDist ) { return FALSE; }
@@ -712,6 +719,7 @@ void CBaseMonster::CheckTimeBasedDamage(void){}
 
 BOOL CBaseMonster::isSizeGiant(void){return FALSE;}
 BOOL CBaseMonster::isOrganic(){return FALSE;}
+BOOL CBaseMonster::isOrganicLogic(){return FALSE;}
 
 BOOL CBaseEntity::getIsBarnacleVictimException(void){return FALSE;}
 float CBaseMonster::getBarnaclePulledTopOffset(void){return 0;}
@@ -726,11 +734,11 @@ void CBaseMonster::setPoweredUpOff(void){}
 void CBaseMonster::setPoweredUpOn(CBaseMonster* argPoweredUpCauseEnt, float argHowLong ){}
 void CBaseMonster::forgetForcedEnemy(CBaseMonster* argIssuing, BOOL argPassive){}
 
-void CBaseMonster::startReanimation(void){};
-void CBaseMonster::EndOfRevive(int preReviveSequence){};
+void CBaseMonster::startReanimation(void){}
+void CBaseMonster::EndOfRevive(int preReviveSequence){}
 float CBaseMonster::MoveYawDegreeTolerance(){return 0;}
-int CBaseMonster::BloodColorRedFilter(){return 0;};
-int CBaseMonster::CanUseGermanModel(){return 0;};
+int CBaseMonster::BloodColorRedFilter(){return 0;}
+int CBaseMonster::CanUseGermanModel(){return 0;}
 
 BOOL CBaseMonster::attemptFindCoverFromEnemy(Task_t* pTask){return FALSE;}
 WayPoint_t* CBaseMonster::GetGoalNode(){return NULL;}
@@ -769,7 +777,7 @@ BOOL CBasePlayer::HasNamedPlayerItem(const char *pszItemName){return FALSE;}
 
 int CBaseMonster::Restore( class CRestore & ) { return 1; }
 int CBaseMonster::Save( class CSave & ) { return 1; }
-void CBaseMonster::PostRestore(){};
+void CBaseMonster::PostRestore(){}
 
 int TrainSpeed(int iSpeed, int iMax) { 	return 0; }
 void CBasePlayer :: DeathSound( void ) { }

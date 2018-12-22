@@ -427,8 +427,9 @@ int GetAnimationEvent( void *pmodel, entvars_t *pev, MonsterEvent_t *pMonsterEve
 
 	if (pseqdesc->numframes > 1)
 	{
-		flStart *= (pseqdesc->numframes - 1) / 256.0;
-		flEnd *= (pseqdesc->numframes - 1) / 256.0;
+		//MODDD - it's all floats right?
+		flStart *= (pseqdesc->numframes - 1) / 256.0f;
+		flEnd *= (pseqdesc->numframes - 1) / 256.0f;
 	}
 	else
 	{
@@ -446,8 +447,9 @@ int GetAnimationEvent( void *pmodel, entvars_t *pev, MonsterEvent_t *pMonsterEve
 
 
 
-
-
+	//until proven otherwise, this didn't loop around. And only looping animations (argLoops) can even do that.
+	//otherwise, an anim sits frozen at the end (frame 256, out of 256).
+	loopPass = FALSE;
 
 
 
@@ -490,17 +492,21 @@ int GetAnimationEvent( void *pmodel, entvars_t *pev, MonsterEvent_t *pMonsterEve
 		if(pev->framerate >= 0){
 			//loopPass = (flEnd >= pseqdesc->numframes - 1 && pevent[index].frame < flEnd - pseqdesc->numframes + 1) ;
 			if(flEnd >= pseqdesc->numframes - 1){
+				loopPass = TRUE;
 				//too high? We think the loop happened.
 				flEnd -= (pseqdesc->numframes - 1);
-				flStart = 0;
+				//nope, let an event pass if it went above the leftover flStart, since we skipped those end frames!
+				//flStart = 0;
 			}
 		}else{
 			//loopPass = (flEnd <= 0                       && pevent[index].frame > flEnd + pseqdesc->numframes - 1) ;
 
-			if(flEnd <= 0){
+			if(flEnd < 0){
+				loopPass = TRUE;
 				//too low?
 				flEnd += (pseqdesc->numframes - 1);
-				flStart = (pseqdesc->numframes - 1 );
+				//nope, let an event pass if it went below the leftover flStart
+				//flStart = (pseqdesc->numframes - 1 );
 			}
 		}
 			
@@ -521,10 +527,23 @@ int GetAnimationEvent( void *pmodel, entvars_t *pev, MonsterEvent_t *pMonsterEve
 		if ( pevent[index].event >= EVENT_CLIENT )
 			continue;
 
+		//?????
+
+		/*
+		if(pevent[index].event == 10 || pevent[index].event == 11){
+			int x = pevent[index].event;
+			int te1 = pevent[index].frame;
+			int te2 = pevent[index].type;
+			char what = pevent[index].options[0];
+			int breakme = 666;
+		}
+		*/
+
 
 		//by default. Loop pass will be TRUE For looping anims that would have had an event
 		//between the frames skipped by the (assumed?) jump from the very end back to this point.
-		loopPass = FALSE;
+		//loopPass = FALSE;
+		//...but in the middle of checking events? why?
 
 		//Need to let backwards animations trigger a wrap-around too. The one now is just for positive framerates.
 		//argLoops = TRUE;
@@ -545,12 +564,27 @@ int GetAnimationEvent( void *pmodel, entvars_t *pev, MonsterEvent_t *pMonsterEve
 
 		if(pev->framerate >= 0){
 			float relativeFrame = pevent[index].frame;
-			ordinaryPass =  (relativeFrame >= flStart && relativeFrame < flEnd);
+
+			if(!loopPass){
+				//nothing special.
+				ordinaryPass =  (relativeFrame >= flStart && relativeFrame < flEnd);
+			}else{
+				//If our event was skipped from the leftover flStart to the last frame possible,
+				//or between the first frame possible (0) and flEnd's new place, count it.
+				ordinaryPass = (relativeFrame >= flStart || relativeFrame < flEnd);
+			}
 
 		}else{
 			float relativeFrame =  ( ( pseqdesc->numframes - 1) - pevent[index].frame);
 			//easyForcePrintLine("absfr:%.2f relfr%.2f res:%.2f ree:%.2f", pevent[index].frame, relativeFrame, flStart, flEnd);
-			ordinaryPass =  ( relativeFrame >= flEnd && relativeFrame < flStart);
+			if(!loopPass){
+				//nothing special.
+				ordinaryPass =  ( relativeFrame >= flEnd && relativeFrame < flStart);
+			}else{
+				//If our event was skipped from the leftover flStart to the last frame possible,
+				//or between the first frame possible (0) and flEnd's new place, count it.
+				ordinaryPass = (relativeFrame >= flEnd || relativeFrame < flStart);
+			}
 
 		}
 

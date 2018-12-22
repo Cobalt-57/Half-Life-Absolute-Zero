@@ -2337,20 +2337,12 @@ BOOL CPantherEye::violentDeathAllowed(void){
 	return TRUE;
 }
 BOOL CPantherEye::violentDeathClear(void){
-	TraceResult tr;
-	Vector vecStart = Center();
-
-	UTIL_MakeVectors ( pev->angles );
-	UTIL_TraceHull ( vecStart, vecStart - gpGlobals->v_forward * 220, dont_ignore_monsters, head_hull, edict(), &tr );
-	
-	// Nothing in the way? it's good.
-	if ( tr.flFraction == 1.0 ){
-		return TRUE;
-	}
-
-	return FALSE;
+	//Works for a lot of things going backwards.
+	return violentDeathClear_BackwardsCheck(430);
 }//END OF violentDeathAllowed
-
+int CPantherEye::violentDeathPriority(void){
+	return 3;
+}
 
 
 

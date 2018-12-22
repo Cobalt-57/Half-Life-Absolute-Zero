@@ -283,8 +283,6 @@ CFloater::CFloater(void){
 	m_velocity = Vector(0,0,0);
 
 	lastVelocityChange = -1;
-	
-	hitGroundDead = FALSE;
 
 }//END OF CFloater constructor
 
@@ -423,9 +421,11 @@ void CFloater::Spawn( void )
 	//well you certainly aren't going to explode.
 	explodeDelay = -1;
 
+
+
 	setModel("models/floater.mdl");
 	//UTIL_SetSize( pev, VEC_HUMAN_HULL_MIN, VEC_HUMAN_HULL_MAX );
-	UTIL_SetSize( pev, Vector( -9, -9, 2 ), Vector( 9, 9, 48 ));
+	UTIL_SetSize( pev, Vector( -9, -9, 0 ), Vector( 9, 9, 48 ));
 
 	pev->classname = MAKE_STRING("monster_floater");
 
@@ -630,7 +630,9 @@ int CFloater :: CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, C
 
 
 	//UTIL_TraceHull( vecStart + Vector( 0, 0, 32 ), vecEnd + Vector( 0, 0, 32 ), dont_ignore_monsters, large_hull, edict(), &tr );
-	UTIL_TraceHull( vecStart + Vector( 0, 0, 4), vecEnd + Vector( 0, 0, 4), dont_ignore_monsters, point_hull, edict(), &tr );
+
+	//MODDD - large_hull is probably the safest for fliers in general.  point_hull if using the bounce system. or maybe head_hull?
+	UTIL_TraceHull( vecStart + Vector( 0, 0, 4), vecEnd + Vector( 0, 0, 4), dont_ignore_monsters, head_hull, edict(), &tr );
 	
 	// ALERT( at_console, "%.0f %.0f %.0f : ", vecStart.x, vecStart.y, vecStart.z );
 	// ALERT( at_console, "%.0f %.0f %.0f\n", vecEnd.x, vecEnd.y, vecEnd.z );
@@ -1124,8 +1126,9 @@ void CFloater::StartTask( Task_t *pTask ){
 			CFlyingMonster::StartTask(pTask);
 		break;
 		case TASK_STOP_MOVING:
-			this->m_velocity = Vector(0, 0, 0);
-			pev->velocity = Vector(0,0,0);
+			//Why so instant?
+			//this->m_velocity = Vector(0, 0, 0);
+			//pev->velocity = Vector(0,0,0);
 			CFlyingMonster::StartTask(pTask);
 
 		break;
@@ -1152,11 +1155,6 @@ void CFloater::RunTask( Task_t *pTask ){
 				//m_Activity = ACT_IDLE;
 				//m_IdealActivity?
 				SetActivity(ACT_HOVER);
-				TaskComplete();
-			}
-		break;}
-		case TASK_DIE_LOOP:{
-			if(hitGroundDead){
 				TaskComplete();
 			}
 		break;}
@@ -1190,6 +1188,10 @@ BOOL CFloater::CheckRangeAttack1( float flDot, float flDist ){
 	//if ( flDot > 0.5 && flDist > 256 && flDist <= 2048 )
 	if ( flDot > 0.5 && flDist <= 1024 )
 	{
+		//actually there is one more check to do.  Is there a little wider of a straight line of sight available, not just barely peeking around a wall?
+		
+
+
 		//easyForcePrintLine("YAY?!");
 		return TRUE;
 	}
@@ -1210,29 +1212,6 @@ void CFloater::CustomTouch( CBaseEntity *pOther ){
 }
 
 
-void CFloater::KilledFallingTouch( CBaseEntity *pOther ){
-	
-	//easyForcePrintLine("OH no IM a person friend %s", pOther!=NULL?pOther->getClassname():"WTF");
-
-	int x = 46;
-	//does this even work? uhh..
-
-	//CHEAP FIX:
-
-	if(pOther == NULL){
-		return; //??????
-	}
-
-
-	hitGroundDead = TRUE;
-
-	//groundTouchCheckDuration = gpGlobals->time + 4;
-	
-}
-
-
-
-
 
 
 
@@ -1241,6 +1220,7 @@ void CFloater::KilledFallingTouch( CBaseEntity *pOther ){
 
 
 void CFloater::MonsterThink(){
+	
 
 	if(EASY_CVAR_GET(floaterDummy) == 1){
 		//no thought for you.
@@ -1261,6 +1241,22 @@ void CFloater::MonsterThink(){
 
 	}
 	*/
+
+	
+	BOOL isItMovin = this->IsMoving();
+
+	if(pev->deadflag == DEAD_NO && !isItMovin){
+		//reduce our velocity each turn.
+
+		if(m_velocity.Length() > 0 || pev->velocity.Length() > 0){
+			m_velocity = m_velocity * 0.74;
+			if(m_velocity.Length() < 0.02){
+				//just stop already.
+				m_velocity = Vector(0, 0, 0);
+			}
+			pev->velocity = m_velocity;
+		}
+	}
 
 
 	if(explodeDelay != -1 && gpGlobals->time >= explodeDelay){
@@ -1432,10 +1428,7 @@ GENERATE_KILLED_IMPLEMENTATION(CFloater)
 	//return;
 	
 
-	BOOL firstCall = FALSE;
-	if(pev->deadflag == DEAD_NO){
-		//keep this in mind...
-		firstCall = TRUE;
+	if(firstTimeKilled){
 
 		//Only reset the velocity if this is the first Killed call (since we stop following).
 		//Any further resets will look like gravity suddenly stops with each shot (Killed call again).
@@ -2185,10 +2178,6 @@ void CFloater::checkFloor(const Vector& vecSuggestedDir, const float& travelMag,
 }//END OF checkFloor
 
 
-//TEST: what happens if already touching the ground before death? Test!!
-void CFloater::OnKilledSetTouch(void){
-	SetTouch(&CFloater::KilledFallingTouch);
-}
 
 int CFloater::getLoopingDeathSequence(void){
 	return SEQ_FLOATER_FALL_LOOP;

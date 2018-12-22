@@ -255,14 +255,56 @@ void CCrossbow::FireSniperBolt()
 
 	UTIL_TraceLine(vecSrc, vecSrc + vecDir * 8192, dont_ignore_monsters, m_pPlayer->edict(), &tr);
 
+
+
+
 #ifndef CLIENT_DLL
-	if ( tr.pHit->v.takedamage )
-	{
-		ClearMultiDamage( );
-		CBaseEntity::Instance(tr.pHit)->TraceAttack(m_pPlayer->pev, 120, vecDir, &tr, DMG_BULLET | DMG_NEVERGIB ); 
-		ApplyMultiDamage( pev, m_pPlayer->pev );
-	}
+
+	//MODDD - no NULL check? Are you daft man?
+	if(tr.pHit != NULL){
+
+		
+		CBaseEntity* tempEnt = CBaseEntity::Instance(tr.pHit);
+		
+		//MODDD - can stick to other map-related things so long as they don't move.
+		//if ( FClassnameIs( pOther->pev, "worldspawn" ) )
+		//if(pOther->IsWorldOrAffiliated() && pOther->pev->movetype == MOVETYPE_NONE)
+		//...why do some static map things use MOVETYPE_PUSH? foget this.
+		/*
+		if(tempEnt->IsWorld()){
+			//make a crossbow bolt stick out of this.
+			CCrossbowBolt *pBolt = CCrossbowBolt::BoltCreate();
+			pBolt->pev->origin = tr.vecEndPos;
+			pBolt->pev->angles = anglesAim;
+			pBolt->pev->owner = m_pPlayer->edict();
+			pBolt->pev->velocity = Vector(0,0,0);
+		}
+		*/
+
+		if ( tr.pHit->v.takedamage )
+		{
+			ClearMultiDamage( );
+			CBaseEntity::Instance(tr.pHit)->TraceAttack(m_pPlayer->pev, 120, vecDir, &tr, DMG_BULLET | DMG_NEVERGIB ); 
+			ApplyMultiDamage( pev, m_pPlayer->pev );
+		}
+		
+		
+		//Tell this bolt not to deal damage because we already dealt the damage before even creating this bolt.
+		CCrossbowBolt *pBolt = CCrossbowBolt::BoltCreate(FALSE, TRUE);
+		pBolt->pev->origin = tr.vecEndPos;
+
+		//HACKY - set the velocity to let the arrow determine its own position as the Touch is called below.
+		pBolt->pev->velocity = vecDir;
+
+		pBolt->BoltTouch(tempEnt);
+		
+
+	}//END OF pHit null check
+
 #endif
+
+
+
 }
 
 void CCrossbow::FireBolt()

@@ -663,7 +663,13 @@ BOOL CTemplateMonster::violentDeathClear(void){
 	return TRUE;
 }//END OF
 
-
+//Bascially, priority is in order from 1 to 3. 1 is in front of all other DIE act's if conditions are met, even
+//at the same time as any other DIE act's. 2 is after GUTSHOT and HEADSHOT. 3 only competes with ACT_DIEBACKWARDS, otherwise never gets a chance.
+//Note that animations that appear to throw the model strongly backwards benefit from 3, but fliers just look more dramatic on falling.
+//Fliers could use 1 or 2 instead.
+int CTemplateMonster::violentDeathPriority(void){
+	return 3;
+}//END OF violentDeathPriority
 
 
 

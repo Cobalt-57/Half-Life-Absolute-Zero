@@ -4523,6 +4523,8 @@ IMPLEMENT_CUSTOM_SCHEDULES( CHGrunt, CSquadMonster );
 //=========================================================
 void CHGrunt :: SetActivity ( Activity NewActivity )
 {
+	//MODDD - good idea?
+	signalActivityUpdate = FALSE;
 
 
 	int	iSequence = ACTIVITY_NOT_AVAILABLE;
@@ -5434,7 +5436,7 @@ void CDeadHGrunt :: Spawn( void )
 	MonsterInitDead();
 
 
-	if(isOrganic()){
+	if(isOrganicLogic()){
 		//MODDD - emit a stench that eaters will pick up.
 		CSoundEnt::InsertSound ( bits_SOUND_CARCASS, pev->origin, 384, SOUND_NEVER_EXPIRE );
 	}

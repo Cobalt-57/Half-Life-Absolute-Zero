@@ -88,6 +88,7 @@ public:
 	BOOL violentDeathAllowed(void);
 	BOOL violentDeathDamageRequirement(void);
 	BOOL violentDeathClear(void);
+	int violentDeathPriority(void);
 
 	
 	void ReportAIState( void );

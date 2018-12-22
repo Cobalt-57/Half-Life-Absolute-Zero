@@ -92,6 +92,10 @@ EASY_CVAR_EXTERN(hassassinCrossbowReloadSoundDelay)
 extern float global_thatWasntPunch;
 
 
+EASY_CVAR_EXTERN(hassassinCrossbowDebug);
+
+
+
 
 
 
@@ -1299,7 +1303,13 @@ void CHAssassin :: StartTask ( Task_t *pTask )
 
 		
 			if(m_cAmmoLoaded > 0){
-				m_fSequenceLoops = FALSE;
+				//MODDD - interesting... why was this sequence ever marked to loop if the hassassin can only fire one shot
+				//        before reloading (changing anims)?
+				
+				if(EASY_CVAR_GET(hassassinCrossbowDebug) != 1){
+					m_fSequenceLoops = FALSE;
+				}
+
 				shootEventOffset = 0;
 				CBaseMonster :: StartTask ( pTask );
 			}else{
@@ -1341,10 +1351,6 @@ void CHAssassin :: StartTask ( Task_t *pTask )
 
 
 
-
-
-
-EASY_CVAR_EXTERN(testVar);
 
 
 
@@ -1447,14 +1453,20 @@ void CHAssassin :: RunTask ( Task_t *pTask )
 	case TASK_RANGE_ATTACK1:
 
 		
-		//if(EASY_CVAR_GET(testVar) != 1){
+		if(EASY_CVAR_GET(hassassinCrossbowDebug) != 1){
 			if(m_fSequenceFinished == TRUE){
 				//done.
 				SetActivity(ACT_COMBAT_IDLE);
 				//m_IdealActivity = ACT_RESET;
 				TaskComplete();
 			}
-		//}
+		}else{
+
+			if(m_fSequenceFinished == TRUE){
+				//TaskComplete();
+				//pev->frame = 0; //??
+			}
+		}
 		
 	break;
 	case TASK_RANGE_ATTACK2:
@@ -1738,7 +1750,13 @@ Schedule_t* CHAssassin :: GetScheduleOfType ( int Type )
 			return CBaseMonster :: GetScheduleOfType( SCHED_RANGE_ATTACK2 );
 		}else{
 			//too soon since thrown a grenade / enemy is occluded? Just reload.
-			return slAssassinReload;
+			if(m_cAmmoLoaded > 0){
+				//MODDD - why was this SCHED_RANGE_ATTACK2 ??? that is for grenades.
+				return CBaseMonster :: GetScheduleOfType( SCHED_RANGE_ATTACK1 );
+			}else{
+				//reload!
+				return slAssassinReload;
+			}
 		}
 
 	break;
@@ -1907,16 +1925,33 @@ int CHAssassin::LookupActivityHard(int activity){
 	m_flFramerateSuggestion = 1;
 	switch(activity){
 		case ACT_RANGE_ATTACK1:
+			
 			m_flFramerateSuggestion = 1;
-			m_iForceLoops = 0; //no loopping.
+			//m_flFramerateSuggestion = -1;
+
+
+			if(EASY_CVAR_GET(hassassinCrossbowDebug) != 1){
+				m_iForceLoops = 0; //no loopping.
+			}
+
 			return LookupSequence("shoot");
 		break;
 		case ACT_IDLE_ANGRY:
-			
+			//MODDD TODO - "Shoot" sequence? inconsistencies with above?  WHAT IS THIS MESS.
+
+
 			m_flFramerateSuggestion = 0;
 
 			pev->frame = 0;
 			this->m_fSequenceFinished = TRUE;  //just to be safe. If this even stays or is necessary at all.
+
+
+			
+			if(EASY_CVAR_GET(hassassinCrossbowDebug) != 1){
+				m_iForceLoops = 0; //no loopping.
+			}
+
+
 
 			return LookupSequence("shoot");
 			//return CBaseAnimating::LookupActivity(activity);

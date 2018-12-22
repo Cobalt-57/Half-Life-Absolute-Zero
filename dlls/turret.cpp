@@ -1366,6 +1366,10 @@ int	CBaseTurret::Classify ( void )
 BOOL CBaseTurret::isOrganic(void){
 	return FALSE;
 }
+BOOL CBaseTurret::isOrganicLogic(void){
+	//doesn't hurt to be safe.  Never treat me as organic in any way.
+	return FALSE;
+}
 
 
 GENERATE_GIBMONSTER_IMPLEMENTATION(CBaseTurret){

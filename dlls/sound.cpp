@@ -1598,6 +1598,58 @@ int SENTENCEG_Lookup(const char *sample, char *sentencenum)
 }
 
 
+
+
+
+//MODDD - these are new.  Available for all entities as utilities.
+void SENTENCEG_PlaySingular(entvars_t* entity, int arg_channel, const char *pszSentence, float volume, float attenuation ){
+	SENTENCEG_PlaySingular(ENT(entity), arg_channel, pszSentence, volume, attenuation, 0, 100);
+}
+void SENTENCEG_PlaySingular(edict_t* entity, int arg_channel, const char *pszSentence, float volume, float attenuation ){
+	SENTENCEG_PlaySingular(entity, arg_channel, pszSentence, volume, attenuation, 0, 100);
+}
+
+void SENTENCEG_PlaySingular(entvars_t* entity, int arg_channel, const char *pszSentence, float volume, float attenuation, int flag ){
+	SENTENCEG_PlaySingular(ENT(entity), arg_channel, pszSentence, volume, attenuation, flag, 100);
+}
+void SENTENCEG_PlaySingular(edict_t* entity, int arg_channel, const char *pszSentence, float volume, float attenuation, int flag ){
+	SENTENCEG_PlaySingular(entity, arg_channel, pszSentence, volume, attenuation, flag, 100);
+}
+
+void SENTENCEG_PlaySingular(entvars_t* entity, int arg_channel, const char *pszSentence, float volume, float attenuation, int flag, int pitch ){
+	SENTENCEG_PlaySingular(ENT(entity), arg_channel, pszSentence, volume, attenuation, flag, pitch);
+}
+void SENTENCEG_PlaySingular(edict_t* entity, int arg_channel, const char *pszSentence, float volume, float attenuation, int flag, int pitch ){
+	//Just play the sentence given. But the system does require an exclamation mark for whatever reason.
+	static char sentenceToPlay[127];
+
+	sentenceToPlay[0] = '!';
+	copyString(pszSentence, &sentenceToPlay[1], 127 - 1);
+	
+	//CHAN_VOICE ?
+	EMIT_SOUND_DYN(entity, arg_channel, sentenceToPlay, volume, attenuation, flag, pitch);
+}//END OF SENTENCEG_PlaySingular
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 //MODDD - EMIT_SOUND_FILTERED method implementations (used to be EMIT_SOUND and EMIT_SOUND_DYN directly) have been moved to util.cpp.
 //        No reason to be separate from the rest of the sound-handling stuff ultimately in util.cpp.
 

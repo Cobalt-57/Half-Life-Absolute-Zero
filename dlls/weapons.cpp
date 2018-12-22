@@ -2190,6 +2190,10 @@ TYPEDESCRIPTION	CRpgRocket::m_SaveData[] =
 	DEFINE_FIELD( CRpgRocket, m_pLauncher, FIELD_CLASSPTR ),
 	//MODDD - new
 	DEFINE_FIELD( CRpgRocket, alreadyDeleted, FIELD_BOOLEAN ),
+	DEFINE_FIELD( CRpgRocket, ignited, FIELD_BOOLEAN ),
+	DEFINE_FIELD( CRpgRocket, vecMoveDirectionMemory, FIELD_VECTOR ),
+
+	
 };
 IMPLEMENT_SAVERESTORE( CRpgRocket, CGrenade );
 

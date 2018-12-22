@@ -5840,8 +5840,13 @@ void W_Precache(void)
 	// custom items...
 
 
-
-
+	
+	/*
+	//NOTICE - these are already precached by the weapon_satchel, which is called here for precaching all the assets of.
+	PRECACHE_SOUND("weapons/g_bounce1.wav");
+	PRECACHE_SOUND("weapons/g_bounce2.wav");
+	PRECACHE_SOUND("weapons/g_bounce3.wav");
+	*/
 
 
 	// common world objects
@@ -8161,6 +8166,18 @@ void RestoreDynamicIDs(CGlobalState* argGS){
 	loadedGame = TRUE;
 
 }//END OF RestoreGlobalState
+
+
+
+BOOL GermanModelOrganicLogic(){
+	//Do german models still have the behavior of their organic originals, like being attractive to scavenger enemies
+	//when dead?
+	//Can make this a CVar later.
+	return TRUE;
+}
+
+
+
 
 
 

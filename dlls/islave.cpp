@@ -203,6 +203,7 @@ public:
 
 	BOOL violentDeathAllowed(void);
 	BOOL violentDeathClear(void);
+	int violentDeathPriority(void);
 
 	void onDelete(void);
 
@@ -2473,20 +2474,11 @@ BOOL CISlave::violentDeathAllowed(void){
 	return TRUE;
 }
 BOOL CISlave::violentDeathClear(void){
-	TraceResult tr;
-	Vector vecStart = Center();
-
-	UTIL_MakeVectors ( pev->angles );
-	UTIL_TraceHull ( vecStart, vecStart - gpGlobals->v_forward * 68, dont_ignore_monsters, head_hull, edict(), &tr );
-	
-	// Nothing in the way? it's good.
-	if ( tr.flFraction == 1.0 ){
-		return TRUE;
-	}
-
-	return FALSE;
+	return violentDeathClear_BackwardsCheck(50);
 }//END OF violentDeathAllowed
-
+int CISlave::violentDeathPriority(void){
+	return 3;
+}
 
 void CISlave::onDelete(void){
 	//If suddenly removed, clean up my beams if active.

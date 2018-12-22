@@ -55,10 +55,12 @@ extern void SetMovedir(entvars_t* pev);
 extern Vector VecBModelOrigin( entvars_t* pevBModel );
 
 //MODDD - custom extern
-extern float global_blockChangeLevelTrigger;
-extern float global_blockAutosaveTrigger;
+EASY_CVAR_EXTERN(blockChangeLevelTrigger)
+EASY_CVAR_EXTERN(blockAutosaveTrigger)
 EASY_CVAR_EXTERN(blockMultiTrigger)
 EASY_CVAR_EXTERN(blockMusicTrigger)
+EASY_CVAR_EXTERN(blockTeleportTrigger)
+EASY_CVAR_EXTERN(blockHurtTrigger)
 
 extern float global_animationKilledBoundsRemoval;
 
@@ -705,6 +707,7 @@ LINK_ENTITY_TO_CLASS( trigger_cdaudio, CTriggerCDAudio );
 // !!!HACK - overloaded HEALTH to avoid adding new field
 void CTriggerCDAudio :: Touch ( CBaseEntity *pOther )
 {
+
 	if(EASY_CVAR_GET(blockMusicTrigger) == 1){
 		return;
 	}
@@ -815,9 +818,21 @@ void CTargetCDAudio::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYP
 }
 
 // only plays for ONE client, so only use in single play!
+//MODDD TODO - but couldn't you do a for loop for all plays and send a signal to start playing it for each?  Whatever.
 void CTargetCDAudio::Think( void )
 {
 	edict_t *pClient;
+	
+
+	//MODDD - moved think up to here. Why give up thinking just because of a client that's not connected or getting blocked?
+	pev->nextthink = gpGlobals->time + 0.5;
+
+	if(EASY_CVAR_GET(blockMusicTrigger) == 1){
+		//NOTICE - blocking doesn't remove me like calling "Play" would have done. Not that this is very important if it never plays I imagine.
+		return;
+	}
+
+
 	
 	// manually find the single player. 
 	pClient = g_engfuncs.pfnPEntityOfEntIndex( 1 );
@@ -826,7 +841,7 @@ void CTargetCDAudio::Think( void )
 	if ( !pClient )
 		return;
 	
-	pev->nextthink = gpGlobals->time + 0.5;
+	//MODDD - old nextthink set location
 
 	if ( (pClient->v.origin - pev->origin).Length() <= pev->scale )
 		Play();
@@ -1150,6 +1165,12 @@ void CBaseTrigger :: HurtTouch ( CBaseEntity *pOther )
 		return;
 
 	
+	//MODDD - can block the trigger too. Only players from using it.
+	if(global_blockHurtTrigger == 1 && (pOther != NULL && pOther->IsPlayer()) ){
+		return;
+	}
+
+
 	//MODDD CRITICAL... sortof.
 	//Well. Even I have to give up.
 	//I can't figure out what makes a player trigger a touch method, even when the game is paused while the player is inside.
@@ -1404,8 +1425,8 @@ void CBaseTrigger :: MultiTouch( CBaseEntity *pOther )
 void CBaseTrigger :: ActivateMultiTrigger( CBaseEntity *pActivator )
 {
 
-	//MODDD - can block the multi trigger too.
-	if(global_blockMultiTrigger == 1){
+	//MODDD - can block the multi trigger too. Only players from using it.
+	if(global_blockMultiTrigger == 1 && (pActivator != NULL && pActivator->IsPlayer()) ){
 		return;
 	}
 
@@ -2282,6 +2303,16 @@ void CBaseTrigger :: TeleportTouch( CBaseEntity *pOther )
 {
 	entvars_t* pevToucher = pOther->pev;
 	edict_t	*pentTarget = NULL;
+
+
+
+	
+	//MODDD - can block the trigger too. Only players from using it.
+	if(global_blockTeleportTrigger == 1 && (pOther != NULL && pOther->IsPlayer()) ){
+		return;
+	}
+
+
 
 	// Only teleport monsters or clients
 	if ( !FBitSet( pevToucher->flags, FL_CLIENT|FL_MONSTER ) )

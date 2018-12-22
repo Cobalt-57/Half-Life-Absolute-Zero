@@ -106,8 +106,9 @@ void CControllerHeadBall :: HuntThink( void  )
 				ApplyMultiDamage( pev, m_hOwner->pev );
 			}
 
-
 			//MODDD - noise boost. and color cange.
+			//ALSO, this looks similar to the Crawl method's TE_BEAMENTPOINT, but this only happens if very close to the player.
+			//To look like a connection with the player right before the shock damage likely?
 			MESSAGE_BEGIN( MSG_BROADCAST, SVC_TEMPENTITY );
 				WRITE_BYTE( TE_BEAMENTPOINT );
 				WRITE_SHORT( entindex() );
@@ -126,7 +127,7 @@ void CControllerHeadBall :: HuntThink( void  )
 				WRITE_BYTE( 255 );	// brightness
 				WRITE_BYTE( 10 );		// speed
 			MESSAGE_END();
-
+			
 
 			UTIL_EmitAmbientSound_Filtered( ENT(pev), tr.vecEndPos, "weapons/electro4.wav", 0.5, ATTN_NORM, 0, RANDOM_LONG( 140, 160 ), FALSE );
 
@@ -140,12 +141,10 @@ void CControllerHeadBall :: HuntThink( void  )
 
 	}//END OF nextNormalThinkTime check
 
-
-
-
+	
 	//MODDD - this call used to be commented out, enabled because we're crazy! Draws some white lines around the ball I guess.
 	Crawl( );
-}
+}//END OF HuntThink
 
 
 void CControllerHeadBall :: DieThink( void  )
@@ -178,10 +177,23 @@ void CControllerHeadBall :: Crawl( void  )
 {
 
 	Vector vecAim = Vector( RANDOM_FLOAT( -1, 1 ), RANDOM_FLOAT( -1, 1 ), RANDOM_FLOAT( -1, 1 ) ).Normalize( );
-	Vector vecPnt = pev->origin + pev->velocity * 0.3 + vecAim * 64;
+	Vector anticipatedOrigin = pev->origin + pev->velocity * 0.3;
+	Vector vecPnt = anticipatedOrigin + vecAim * 64;
+
+
 
 	//MODDD NOTE - being straight white lines isn't very electricity-like. How about wavy (noise) and a tint of something else? purple?
 	//             Based off the islave, 20 looks fairly direct and 80 is pretty wild.
+
+	/*
+	easyForcePrintLine("CControllerHeadBall: Crawl: %d: or:(%.2f %.2f %.2f) v:(%.2f %.2f %.2f) gl:(%.2f %.2f %.2f)",
+		entindex(),
+		pev->origin.x, pev->origin.y, pev->origin.z,
+		pev->velocity.x, pev->velocity.y, pev->velocity.z,
+		anticipatedOrigin.x, anticipatedOrigin.y, anticipatedOrigin.z
+	);
+	*/
+
 
 	MESSAGE_BEGIN( MSG_BROADCAST, SVC_TEMPENTITY );
 		WRITE_BYTE( TE_BEAMENTPOINT );
@@ -201,6 +213,35 @@ void CControllerHeadBall :: Crawl( void  )
 		WRITE_BYTE( 255 );	// brightness
 		WRITE_BYTE( 10 );		// speed
 	MESSAGE_END();
+	
+
+	
+	/*
+	UTIL_drawLineFrame(pev->origin - Vector(0,0,46), pev->origin + Vector(0,0,46), 16, 0, 255, 0);
+
+	//MODDD - DEBUG
+	MESSAGE_BEGIN( MSG_BROADCAST, SVC_TEMPENTITY );
+		WRITE_BYTE( TE_BEAMENTPOINT );
+		WRITE_SHORT( entindex() );
+		WRITE_COORD( pev->origin.x);
+		WRITE_COORD( pev->origin.y);
+		WRITE_COORD( pev->origin.z + 80 );
+		WRITE_SHORT( g_sModelIndexLaser );
+		WRITE_BYTE( 0 ); // frame start
+		WRITE_BYTE( 10 ); // framerate
+		WRITE_BYTE( 2 ); // life. WAS 3.
+		WRITE_BYTE( 20 );  // width
+		WRITE_BYTE( 0 );   // noise.  WAS 0
+		WRITE_BYTE( 80 );   // r, g, b. Were all 255 before.
+		WRITE_BYTE( 80 );   // r, g, b
+		WRITE_BYTE( 255 );   // r, g, b
+		WRITE_BYTE( 255 );	// brightness
+		WRITE_BYTE( 10 );		// speed
+	MESSAGE_END();
+	*/
+
+
+	
 }
 
 

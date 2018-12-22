@@ -7901,6 +7901,13 @@ void CBasePlayer::ImpulseCommands( )
 	PlayerUse();
 		
 	int iImpulse = (int)pev->impulse;
+
+	//MODDD - why wasn't there a 0 check here? Skip the checks below if we're still 0 from using a sent impulse already.
+	if(iImpulse == 0){
+		return;
+	}
+
+
 	switch (iImpulse)
 	{
 	case 99:
@@ -7930,6 +7937,7 @@ void CBasePlayer::ImpulseCommands( )
 		}
 	case 100:
         // temporary flashlight for level designers
+		//MODDD NOTE - and this is the same mechanism for turning the player flashlight on/off even in ordinary ingame use apparently.
         if ( FlashlightIsOn() )
 		{
 			FlashlightTurnOff();
@@ -8539,6 +8547,12 @@ void CBasePlayer::ItemPostFrame()
 	//MODDDD - no, reverted to normal for now...
 	//m_pActiveItem->ItemPostFrame( );
 	
+
+
+	
+	//MODDD - also moved here.  "ImpulseCommands", also responsible for the "use" key, should happen regardless of having a weapon or not.
+	//MODDD - yet another move! Now above m_flNextAttack for faster flashlight action.
+	ImpulseCommands();
 		
 
 #if defined( CLIENT_WEAPONS )
@@ -8552,8 +8566,6 @@ void CBasePlayer::ItemPostFrame()
 		return;
 	}
 
-	//MODDD - also moved here.  "ImpulseCommands", also responsible for the "use" key, should happen regardless of having a weapon or not.
-	ImpulseCommands();
 
 	//MODDD - this is done (the if-then) instead so that "impulseCommands" can happen regardless of whether the weapon is null or not.
 	if(canCallItemPostFrame){

@@ -413,23 +413,18 @@ public:
 	Schedule_t* GetStumpedWaitSchedule(void);
 
 
-	void OnKilledSetTouch(void);
 	int getLoopingDeathSequence(void);
 
-
-	
-	void EXPORT KilledFallingTouch ( CBaseEntity *pOther );
 
 	
 	BOOL violentDeathAllowed(void);
 	BOOL violentDeathDamageRequirement(void);
 	BOOL violentDeathClear(void);
+	int violentDeathPriority(void);
 
 	Activity getIdleActivity(void);
 
 
-
-	BOOL hitGroundDead;
 
 
 

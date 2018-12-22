@@ -184,6 +184,7 @@ public:
 	
 	BOOL violentDeathAllowed(void);
 	BOOL violentDeathClear(void);
+	int violentDeathPriority(void);
 
 
 
@@ -2004,7 +2005,7 @@ void CDeadBarney :: Spawn( )
 
 
 	
-	if(isOrganic()){
+	if(isOrganicLogic()){
 		//MODDD - emit a stench that eaters will pick up.
 		CSoundEnt::InsertSound ( bits_SOUND_CARCASS, pev->origin, 384, SOUND_NEVER_EXPIRE );
 	}
@@ -2253,20 +2254,12 @@ BOOL CBarney::violentDeathAllowed(void){
 	return TRUE;
 }
 BOOL CBarney::violentDeathClear(void){
-	TraceResult tr;
-	Vector vecStart = Center();
-
-	UTIL_MakeVectors ( pev->angles );
-	UTIL_TraceHull ( vecStart, vecStart - gpGlobals->v_forward * 192, dont_ignore_monsters, head_hull, edict(), &tr );
-	
-	// Nothing in the way? it's good.
-	if ( tr.flFraction == 1.0 ){
-		return TRUE;
-	}
-
-	return FALSE;
+	//Works for a lot of things going backwards.
+	return violentDeathClear_BackwardsCheck(200);
 }//END OF violentDeathAllowed
-
+int CBarney::violentDeathPriority(void){
+	return 3;
+}
 
 //MODDD - notice. No need to implement GetGunPosition and GetGunPositionAI, their defaults
 // both use the hacked gun position instead.  AGrunt shows querying the model itself for GetGunPosition instead,

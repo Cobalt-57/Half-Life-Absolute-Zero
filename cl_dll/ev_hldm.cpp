@@ -227,6 +227,7 @@ EASY_CVAR_EXTERN(playerWeaponTracerMode)
 
 EASY_CVAR_EXTERN(egonEffectsMode)
 
+EASY_CVAR_EXTERN(myRocketsAreBarney)
 
 
 
@@ -2542,8 +2543,15 @@ void EV_FireRpg( event_args_t *args )
 	
 	
 	if(EASY_CVAR_GET(mutePlayerWeaponFire) != 1 ){
-		gEngfuncs.pEventAPI->EV_PlaySound( idx, origin, CHAN_WEAPON, "weapons/rocketfire1.wav", 0.9, ATTN_NORM, 0, PITCH_NORM );
-		gEngfuncs.pEventAPI->EV_PlaySound( idx, origin, CHAN_ITEM, "weapons/glauncher.wav", 0.7, ATTN_NORM, 0, PITCH_NORM );
+		if(EASY_CVAR_GET(myRocketsAreBarney) != 1){
+			//ordinary
+			gEngfuncs.pEventAPI->EV_PlaySound( idx, origin, CHAN_WEAPON, "weapons/rocketfire1.wav", 0.9, ATTN_NORM, 0, PITCH_NORM );
+			gEngfuncs.pEventAPI->EV_PlaySound( idx, origin, CHAN_ITEM, "weapons/glauncher.wav", 0.7, ATTN_NORM, 0, PITCH_NORM );
+		}else{
+			//we wanna hear barney!
+			gEngfuncs.pEventAPI->EV_PlaySound( idx, origin, CHAN_WEAPON, "weapons/rocketfire1.wav", 0.17, ATTN_NORM, 0, PITCH_NORM );
+			gEngfuncs.pEventAPI->EV_PlaySound( idx, origin, CHAN_ITEM, "weapons/glauncher.wav", 0.14, ATTN_NORM, 0, PITCH_NORM );
+		}
 	}
 
 	//Only play the weapon anims if I shot it. 

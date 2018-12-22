@@ -1979,9 +1979,9 @@ CBaseEntity* CFriendly::getNearestDeadBody(void){
 			//EASY_CVAR_PRINTIF_PRE(friendlyPrintout, easyPrintLine("Friendly: is corpse ok? DUCK NO NOT A MONSTER: classname:%s", FClassname(pEntityScan) ) );
 		}
 		
-		;
+
 		//Don't try to eat leeches, too tiny. Nothing else this small leaves a corpse.
-		if(testMon != NULL && (testMon->pev->deadflag == DEAD_DEAD || ( (testMon->pev->flags & (FL_CLIENT)) && testMon->pev->deadflag == DEAD_RESPAWNABLE && !(testMon->pev->effects &EF_NODRAW) ) ) && testMon->isSizeGiant() == FALSE && testMon->isOrganic() && !(::FClassnameIs(testMon->pev, "monster_leech") ) ){
+		if(testMon != NULL && (testMon->pev->deadflag == DEAD_DEAD || ( (testMon->pev->flags & (FL_CLIENT)) && testMon->pev->deadflag == DEAD_RESPAWNABLE && !(testMon->pev->effects &EF_NODRAW) ) ) && testMon->isSizeGiant() == FALSE && (testMon->isOrganicLogic() ) && !(::FClassnameIs(testMon->pev, "monster_leech") ) ){
 			thisDistance = (testMon->pev->origin - pev->origin).Length();
 			EASY_CVAR_PRINTIF_PRE(friendlyPrintout, easyPrintLine("Friendly: corpsecheck2: dist? %.2f", thisDistance ));
 	

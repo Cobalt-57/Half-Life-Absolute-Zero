@@ -293,6 +293,10 @@ thealmightybarnacle 					- turns off a hidden cheat that allows barnacles to eat
 
 peaceOut (0) - BOOL. Cheat. When on, makes all monsters lose the will to fight, no matter how little sense it makes.
 
+myRocketsAreBarney (0) - BOOL. Fire RPG rockets if you dare. May require a map restart without precacheAll on.
+
+
+
 
 
 drawViewModel (1) - BOOL. When off, the player's view model will not be rendered. Does not include effects such as ejected brass.
@@ -555,7 +559,7 @@ painFlashColorMode - mode.
 cl_explosion - BOOL.  If on, uses a quake explosion instead of the default one with the sprite, explosion-sound effect, and yellow flickering particles (retail).  The quake one sends shrapnel flying around with the grey-dot particle effect / trail.
 ~see debug vars further below such as "shrapRand" for customizing bits about the quake explosion's shrapnel too.
 
-quakeExplosionSound (2) - modevar (only applies when "cl_explosion" is on, or non-zero)
+quakeExplosionSound (2) - modevar (only applies when "cl_explosion" is on, or non-zero). Unaffected by explosionDebrisSoundVolume.
 0: no sound.
 1: plays old/explode 0, 1, or 2 (quake explode sound)
 2: plays weapons/explode 3, 4, or 5 (retail explode sound)
@@ -1151,13 +1155,19 @@ hornetSpiralAmplitude (59) - DECIMAL. how large the "circle" of the corkscrew ar
 hornetSpeedMulti (1) - DECIMAL. Speed mod applied to hornets, player or not.
 hornetSpeedDartMulti (2) - DECIMAL. The speed mutli applied to hornets that decide to dart towards a nearby target.  Cumulative with "hornetSpeedMulti", so halfing that will half this as well (double this to compensate).
 
-cl_rockettrail (0) - BOOL. set to 1 to see the rocket's alpha trail instead of retail's white-line trail.
+cl_rockettrail (0) - MODEVAR.
+0 - retail, white flare light and white solid tracer line.
+1 - alpha trail of small fire puffs.
+2 - retail flare only.
+3 (or -1) - none.
+
 rocketTrailAlphaInterval (0.035) - DECIMAL. The time between spawning a rocket trail sprite (seconds).
 rocketTrailAlphaScale (0.21) - DECIMAL. The scale (size-multi) applied to the rocket alpha trail's sprite.  Note that "1" is very large.
 rocketSkipIgnite (1) - BOOL.  If on, the slight upwards bounce & wait before ignition are skipped.  Ignition starts instantly (the rocket moves in a straight line from start immediately)
 
 agruntHornetRandomness (0.1) - DECIMAL. How much agrunt-fired hornets will randomly change position at a point of time.  0.1 is the retail default.
 
+hassassinCrossbowDebug (0) - BOOL. Not for the faint of heart.
 
 
 hud_drawAmmoBar (0) - BOOL.  When 1, draws the ammunition bar (fuller the more ammo there is; shows the remaining out of the most that could be stored).
@@ -1882,11 +1892,24 @@ debugDrawBloodTrace (0) - when 1, draw the location of the most recent trace-lin
 
 
 
-blockChangeLevelTrigger (0) - BOOLEAN.  If on, prevents the usual "change-level" area triggers from working.
 
-blockMultiTrigger (0) - BOOL. If on, prevents Multi triggers from working, which disables a wide variety of other triggers, if not all of them.
+blockAllTriggers, unblockAllTriggers - BOOLEAN. Actually a command.
+Sets the block-trigger CVars below to the same setting. Can be supplied a number or have its effect implied by name. i.e., blockAllTriggers sets them on, unblockAllTriggers sets them off.
+
+blockAutosaveTrigger (0) - BOOL. If on, prevents trigger_autosave from working for the player.
+
+blockChangeLevelTrigger (0) - BOOLEAN.  If on, prevents the trigger_changelevel triggers from working. Also stops other means of changing the level on demand such as buttons or timed events calling for the "Use" feature. Any blocked calls to change the level besides directly from a trigger show printouts.
+
+blockMultiTrigger (0) - BOOL. If on, prevents Multi triggers ("trigger"?) from working for the player, which disables a wide variety of other triggers for general actions.
+
+blockTeleportTrigger (0) - BOOL. If on, prevents trigger_teleport from working for the player.
+
+blockHurtTrigger (0) - BOOL. If on, prevents trigger_hurt from working for the player.
 
 blockMusicTrigger (0) - BOOL. If on, stops map features that try to change the music. Namely, stops CTargetCDAudio (target_cdaudio) or CTriggerCDAudio (trigger_cdaudio) from sending music requests.
+That includes "Use" requests for target_cdaudio or continual radius checks by the "radius" keyvalue. What's the point of that when there's trigger_cdaudio?
+
+
 
 hideNodeGraphRebuildNotice (1) - BOOLEAN.  If on, hides the yellow "Node Graph out of Date. Rebuilding..." that appears on running a map without nodegraph data.
 

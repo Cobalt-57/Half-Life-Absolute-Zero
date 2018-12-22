@@ -320,6 +320,7 @@ public:
 
 	BOOL violentDeathAllowed(void);
 	BOOL violentDeathClear(void);
+	int violentDeathPriority(void);
 
 	void initiateAss(void);
 	void myAssHungers(void);
@@ -3287,7 +3288,7 @@ void CDeadScientist :: Spawn( )
 	//MODDD - emit a stench that eaters will pick up.
 	//MODDD TODO - IMPORTANT: will this be preserved between save / restores? Need to make sure.
 	
-	if(isOrganic()){
+	if(isOrganicLogic()){
 		CSoundEnt::InsertSound ( bits_SOUND_CARCASS, pev->origin, 384, SOUND_NEVER_EXPIRE );
 	}
 }
@@ -3956,26 +3957,20 @@ int CScientist::tryActivitySubstitute(int activity){
 
 
 
-
+//MODDD TODO - NOTICE - the scientist is a little... backwards in this regard.
+//The violent death anim is a backwards flip.  The ACT_DIEBACKWARDS though is noticably backing up and then falling forward.
+//Perhaps even the forward / backward distances for success/fail of DIEFORWARDS / BACKWARDS should be virtual methods per BaseMonster child class too?
 
 BOOL CScientist::violentDeathAllowed(void){
 	return TRUE;
 }
 BOOL CScientist::violentDeathClear(void){
-	TraceResult tr;
-	Vector vecStart = Center();
-
-	UTIL_MakeVectors ( pev->angles );
-	UTIL_TraceHull ( vecStart, vecStart - gpGlobals->v_forward * 80, dont_ignore_monsters, head_hull, edict(), &tr );
-	
-	// Nothing in the way? it's good.
-	if ( tr.flFraction == 1.0 ){
-		return TRUE;
-	}
-
-	return FALSE;
+	//Works for a lot of things going backwards.
+	return violentDeathClear_BackwardsCheck(90);
 }//END OF violentDeathAllowed
-
+int CScientist::violentDeathPriority(void){
+	return 3;
+}
 
 
 

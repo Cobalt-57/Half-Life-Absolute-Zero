@@ -1418,7 +1418,7 @@ CBaseEntity* CZombie::getNearestDeadBody(Vector argSearchOrigin, float argMaxDis
 			testMon != NULL &&
 			( (testMon->pev->deadflag == DEAD_DEAD || testMon->pev->deadflag == DEAD_DYING) || ( (testMon->pev->flags & (FL_CLIENT)) && testMon->pev->deadflag == DEAD_RESPAWNABLE && !(testMon->pev->effects &EF_NODRAW) ) ) &&
 			testMon->isSizeGiant() == FALSE &&
-			testMon->isOrganic() &&
+			testMon->isOrganicLogic() &&
 			//!(::FClassnameIs(testMon->pev, "monster_leech") ) && 
 			//must be human to want to eat it. Horror trope.
 			(classifyResult == CLASS_PLAYER || classifyResult == CLASS_HUMAN_PASSIVE || classifyResult == CLASS_HUMAN_MILITARY || classifyResult == CLASS_PLAYER_ALLY)

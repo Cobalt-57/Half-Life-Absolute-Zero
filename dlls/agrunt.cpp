@@ -1540,11 +1540,20 @@ Schedule_t	slAGruntTakeCoverFromEnemy[] =
 //=========================================================
 // Victory dance!
 //=========================================================
+//MODDD - Is it possible to check to see if the recent enemy was organic (or organicLogic) and if so, only then route to the corpse
+//        for the eating animation? Maybe an area check of anything organic near the LKP would be good enough?
 Task_t	tlAGruntVictoryDance[] =
 {
 	{ TASK_STOP_MOVING,						(float)0					},
 	{ TASK_SET_FAIL_SCHEDULE,				(float)SCHED_AGRUNT_THREAT_DISPLAY	},
-	{ TASK_WAIT,							(float)0.2					},
+	
+
+	{ TASK_SET_ACTIVITY,					(float)ACT_IDLE				},
+	//MODDD - was 0.2, changed to 5 to give whatever died some more time to die.
+	{ TASK_WAIT,							(float)5					},
+	//MODDD - and new.  Fails if there isn't even anything dead or organic near the LKP.
+	{ TASK_GATE_ORGANICLOGIC_NEAR_LKP,		(float)0					},
+
 	{ TASK_AGRUNT_GET_PATH_TO_ENEMY_CORPSE,	(float)0					},
 	{ TASK_WALK_PATH,						(float)0					},
 	{ TASK_WAIT_FOR_MOVEMENT,				(float)0					},
