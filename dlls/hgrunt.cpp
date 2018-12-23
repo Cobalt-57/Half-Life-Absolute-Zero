@@ -397,7 +397,9 @@ public:
 	int	Save( CSave &save );
 	int Restore( CRestore &restore );
 
-	CBaseEntity	*Kick( void );
+	//MODDD - moved to CBaseMonster and renamed HumanKick to be callable by other monsters.
+	//CBaseEntity	*Kick( void );
+
 	Schedule_t	*GetSchedule( void );
 	Schedule_t  *GetScheduleOfType ( int Type );
 
@@ -1868,28 +1870,7 @@ const char* CHGrunt::getNormalModel(void){
 
 
 
-
-//=========================================================
-//=========================================================
-CBaseEntity *CHGrunt :: Kick( void )
-{
-	TraceResult tr;
-
-	UTIL_MakeVectors( pev->angles );
-	Vector vecStart = pev->origin;
-	vecStart.z += pev->size.z * 0.5;
-	Vector vecEnd = vecStart + (gpGlobals->v_forward * 70);
-
-	UTIL_TraceHull( vecStart, vecEnd, dont_ignore_monsters, head_hull, ENT(pev), &tr );
-
-	if ( tr.pHit )
-	{
-		CBaseEntity *pEntity = CBaseEntity::Instance( tr.pHit );
-		return pEntity;
-	}
-
-	return NULL;
-}
+//MODDD - CHGrunt Kick has been moved to CBaseMonster to be callable by any other monster like HAssassins. And renamed to HumanKick.
 
 //=========================================================
 // GetGunPosition	return the end of the barrel
@@ -2744,7 +2725,7 @@ void CHGrunt :: HandleAnimEvent( MonsterEvent_t *pEvent )
 
 		case HGRUNT_AE_KICK:
 		{
-			CBaseEntity *pHurt = Kick();
+			CBaseEntity *pHurt = HumanKick();
 
 			if ( pHurt )
 			{
@@ -2761,6 +2742,9 @@ void CHGrunt :: HandleAnimEvent( MonsterEvent_t *pEvent )
 				//EMIT_SOUND_FILTERED( ENT(pev), CHAN_WEAPON, "hgrunt/gr_pain3.wav", 1, ATTN_NORM );
 				EMIT_SOUND_FILTERED ( ENT(pev), CHAN_WEAPON, pAttackHitSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackHitSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
 
+			}else{
+				//play woosh sound?
+				playStandardMeleeAttackMissSound();
 			}
 		}
 		break;
@@ -3009,6 +2993,8 @@ void CHGrunt :: Precache()
 	PRECACHE_SOUND("zombie/claw_strike1.wav");
 	PRECACHE_SOUND("zombie/claw_strike2.wav");
 	PRECACHE_SOUND("zombie/claw_strike3.wav");
+
+	precacheStandardMeleeAttackMissSounds(); //MODDD - lazy lazy.
 
 	global_useSentenceSave = FALSE;
 

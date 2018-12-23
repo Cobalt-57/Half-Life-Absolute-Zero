@@ -36,23 +36,6 @@
 #ifndef KINGPIN_H
 #define KINGPIN_H
 
-//sequences in the anim, in the order they appear in the anim. Some anims have the same display name and so should just be referenced by order
-//(numbered index), named well after purpose and based on display names for clarity. Safer this way.
-enum kingPin_sequence {  //key: frames, FPS
-	KINGPIN_IDLE,
-	KINGPIN_WALK,
-	KINGPIN_RUN,
-
-};
-
-//placeholders for now.
-#define KINGPIN_SCYTHE 0
-#define KINGPIN_PSIONIC_CHARGE 1
-#define KINGPIN_PSIONIC_LAUNCH 0
-#define KINGPIN_DIE 0
-#define KINGPIN_POWERUP 0
-//TODO - should there be an anim for deflecting projectiles or is that passive roughly in the direction it's looking? or all directions all the time?
-
 
 //custom schedules
 enum

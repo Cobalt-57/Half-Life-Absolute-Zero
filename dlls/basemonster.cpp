@@ -256,6 +256,23 @@ int CBaseMonster::iEnemy[14][14] =
 
 
 
+const char* CBaseMonster::pStandardAttackHitSounds[] = 
+{
+	"zombie/claw_strike1.wav",
+	"zombie/claw_strike2.wav",
+	"zombie/claw_strike3.wav",
+};
+
+const char* CBaseMonster::pStandardAttackMissSounds[] = 
+{
+	"zombie/claw_miss1.wav",
+	"zombie/claw_miss2.wav",
+};
+
+
+
+
+
 
 
 
@@ -336,6 +353,10 @@ int CBaseMonster::monsterIDLatest = 0;
 //MODDD - new
 CBaseMonster::CBaseMonster(){
 	
+
+	timeOfDeath_activity = ACT_RESET;
+	timeOfDeath_sequence = 0;
+
 	firstTimeKilled = TRUE;
 
 	lastDamageReceived = 0;
@@ -7352,7 +7373,7 @@ void CBaseMonster::setPhysicalHitboxForDeath(void){
 
 //All ripped from the start of TASK_DIE in schedule.cpp.
 void CBaseMonster::DeathAnimationStart(){
-
+	
 	
 	RouteClear();	
 			
@@ -8181,7 +8202,49 @@ BOOL CBaseMonster::canPredictActRepeat(void){
 
 
 
+//MODDD - came from hgrunt.cpp, used to be named Kick. Now callable by other monsters too.
+//        This is probably some old version of checking for entities in front before it was standardized to
+//        CheckTraceHullAttack.  But whatever, this could even indirectly call that too instead.
 
+CBaseEntity* CBaseMonster:: HumanKick( void ){
+	return HumanKick(70);  //default.
+}
+
+CBaseEntity* CBaseMonster:: HumanKick(float argCheckDistance ){
+	TraceResult tr;
+
+	UTIL_MakeVectors( pev->angles );
+	Vector vecStart = pev->origin;
+	vecStart.z += pev->size.z * 0.5;
+	Vector vecEnd = vecStart + (gpGlobals->v_forward * argCheckDistance);
+
+	UTIL_TraceHull( vecStart, vecEnd, dont_ignore_monsters, head_hull, ENT(pev), &tr );
+
+	if ( tr.pHit )
+	{
+		CBaseEntity *pEntity = CBaseEntity::Instance( tr.pHit );
+
+		return pEntity;
+	}
+
+	return NULL;
+}
+
+
+
+void CBaseMonster::precacheStandardMeleeAttackMissSounds(void){
+	PRECACHE_SOUND_ARRAY(pStandardAttackMissSounds);
+}
+void CBaseMonster::precacheStandardMeleeAttackHitSounds(void){
+	PRECACHE_SOUND_ARRAY(pStandardAttackHitSounds);
+}
+
+void CBaseMonster::playStandardMeleeAttackMissSound(void){
+	EMIT_SOUND_FILTERED ( ENT(pev), CHAN_WEAPON, RANDOM_SOUND_ARRAY(pStandardAttackMissSounds), 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
+}
+void CBaseMonster::playStandardMeleeAttackHitSound(void){
+	EMIT_SOUND_FILTERED ( ENT(pev), CHAN_WEAPON, RANDOM_SOUND_ARRAY(pStandardAttackHitSounds), 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
+}
 
 
 

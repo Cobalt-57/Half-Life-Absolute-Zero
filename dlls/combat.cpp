@@ -1706,6 +1706,7 @@ CBaseEntity* CBaseMonster :: CheckTraceHullAttack( const Vector vecStartOffset, 
 //MODDD - version of the same method below that can expect the 2nd damge mask too.
 //TODO - send the entity (monster) calling this method as a paramter and use it to see if the thing hit matches its "m_hEnemy" (if this calling entity has one).
 //       If it does not match the enemy, try separate checks in case something else (crate, friend, etc.) was accidentally hit?
+//       ...right now it just does the re-checks if the world was hit.  BUT can choose to return the world anyways if no other entity is hit by rechecks.
 CBaseEntity* CBaseMonster :: CheckTraceHullAttack( const Vector vecStartOffset, float flDist, int iDamage, int iDmgType, int iDmgTypeMod, TraceResult* out_traceResult )
 {
 	TraceResult tr;

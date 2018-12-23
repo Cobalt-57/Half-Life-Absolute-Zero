@@ -286,6 +286,9 @@ public:
 		//MODDD - moved outside iRelationship.
 		static int iEnemy[14][14];
 
+		//MODDD - new, for all monsters. Because the zombie ones are reused so much.
+		static const char *pStandardAttackHitSounds[];
+		static const char *pStandardAttackMissSounds[];
 
 
 		//new
@@ -530,7 +533,15 @@ public:
 
 	virtual BOOL canPredictActRepeat(void);
 
+	//could be overridden but probably won't be.  Give it a customizable distance to check if that's the problem.
+	virtual CBaseEntity* HumanKick(void);
+	virtual CBaseEntity* HumanKick(float argCheckDistance);
 
+	//Never actually used by the base monster class. Must be called by a given monster, and can be implemented there to be more specific or custom if necessary.
+	virtual void precacheStandardMeleeAttackMissSounds(void);
+	virtual void precacheStandardMeleeAttackHitSounds(void);
+	virtual void playStandardMeleeAttackMissSound(void);
+	virtual void playStandardMeleeAttackHitSound(void);
 
 
 	virtual BOOL getGermanModelRequirement(void);
@@ -541,7 +552,7 @@ public:
 
 
 	//MODDD
-	virtual BOOL skipSpawnStuckCheck(void){return FALSE;};
+	virtual BOOL skipSpawnStuckCheck(void){return FALSE;}
 
 	
 

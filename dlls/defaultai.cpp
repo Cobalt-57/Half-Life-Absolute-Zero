@@ -1354,6 +1354,7 @@ Schedule_t slBigFlinch[] =
 //=========================================================
 Task_t tlDie1[] =
 {
+	{ TASK_RECORD_DEATH_STATS,  0		},
 	{ TASK_STOP_MOVING,			0				 },
 	{ TASK_SOUND_DIE,		(float)0			 },
 	{ TASK_DIE,				(float)0			 },
@@ -1375,6 +1376,7 @@ Schedule_t slDie[] =
 //MODDD - simpler version of slDieFallLoop below that does less for you.  Still use below for flyer's falling.
 Task_t tlDieLoop[] =
 {
+	{ TASK_RECORD_DEATH_STATS,  0		},
 	{ TASK_STOP_MOVING,			0				 },
 	{ TASK_SOUND_DIE,		(float)0			 },
 	{ TASK_DIE_LOOP,				(float)0			 },
@@ -1407,6 +1409,7 @@ Schedule_t slDieLoop[] =
 //        for a new varaible to handle that now.
 Task_t tlFallDieLoop[] =
 {
+	{ TASK_RECORD_DEATH_STATS,  0		},
 	{ TASK_STOP_MOVING,			0				 },
 	{ TASK_SOUND_DIE,		(float)0			 },
 	{ TASK_SET_FALL_DEAD_TOUCH,		(float)0			 },
@@ -1435,6 +1438,7 @@ Schedule_t slDieFallLoop[] =
 //MODDD - ichthyosaur's "slTwitchDie" schedule moved here and renamed to be more general.  Other water monsters may like this to start from.
 Task_t tlDieWaterFloat[] =
 {
+	{ TASK_RECORD_DEATH_STATS,  0		},
 	{ TASK_STOP_MOVING,			0		 },
 	{ TASK_SOUND_DIE,			(float)0 },
 	//MODDD - below was TASK_DIE, expected to be overridden to be simpler. Now it's... TASK_DIE_SIMPLE.  yup.
@@ -1475,7 +1479,11 @@ Schedule_t slVictoryDance[] =
 	{
 		tlVictoryDance,
 		ARRAYSIZE( tlVictoryDance ),
-		0,
+		//MODDD - used to be uninterruptable, now interruptable by taking damage while in a victory dance.
+		//        Also more obervent foes like hassassins should have this interruptable by so much as seeing a new enemy.
+		//        They are not one to party early.
+		bits_COND_LIGHT_DAMAGE |
+		bits_COND_HEAVY_DAMAGE,
 		0,
 		"Victory Dance"
 	},

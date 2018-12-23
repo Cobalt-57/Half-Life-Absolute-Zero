@@ -2928,7 +2928,13 @@ case TASK_GET_PATH_TO_BESTSCENT:
 
 
 	break;}
+	case TASK_RECORD_DEATH_STATS:{
+		//Record a few things before continuing with this death schedule where changes could be made by so much as being told to stop moving.
+		timeOfDeath_activity = m_Activity;
+		timeOfDeath_sequence = pev->sequence;
 
+		TaskComplete();
+	break;}
 
 
 

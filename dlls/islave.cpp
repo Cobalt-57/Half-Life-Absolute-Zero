@@ -32,6 +32,68 @@
 
 extern DLL_GLOBAL int		g_iSkillLevel;
 
+
+
+
+
+//MODD - keep track of sequences in the model.
+//       Easier to see if something about a model's sequence changes compared to whe the script expects it to be below.
+enum islave_sequence {  //key: frames, FPS
+	ISLAVE_IDLE1,  //33, 15
+	ISLAVE_IDLE2,  //33, 15
+	ISLAVE_IDLE3,  //20, 15
+	ISLAVE_CROUCH,  //25, 15
+	ISLAVE_WALK1,  //34, 15
+	ISLAVE_WALK2,  //34, 15
+	ISLAVE_RUN1,  //26, 25
+	ISLAVE_RIGHT,  //20, 15
+	ISLAVE_LEFT,  //15, 15
+	ISLAVE_JUMP,  //45, 15
+	ISLAVE_STAIRSUP,  //26, 15
+	ISLAVE_ATTACK1,  //33, 22
+	ISLAVE_ZAPATTACK1,  //35, 15
+	ISLAVE_FLINCH2,  //8, 15
+	ISLAVE_LAFLINCH,  //11, 15
+	ISLAVE_RAFLINCH, //11, 15
+	ISLAVE_LLFLINCH,  //11, 15
+	ISLAVE_RLFLINCH, //11, 15
+	ISLAVE_BIGFLINCH, //40, 15
+	ISLAVE_BARNACLE1, //9, 12
+	ISLAVE_BARNACLE2, //15, 22
+	ISLAVE_BARNACLE3,  //6, 8
+	ISLAVE_BARNACLE4,  //31, 10
+	ISLAVE_DIEHEADSHOT, //40, 20
+	ISLAVE_DIESIMPLE, //80, 20
+	ISLAVE_DIEFORWARD,  //30, 20
+	ISLAVE_DIEBACKWARD,  //70, 20
+	ISLAVE_DIEVIOLENT,  //70, 20  named "dieforward" but actually mapped to ACT_DIEVIOLENT. and dieforward is the same name as another earlier.
+	ISLAVE_COLLAR1, //60, 18
+	ISLAVE_COLLAR2,  //30, 18
+	ISLAVE_PUSHUP, //50, 20
+	ISLAVE_GRAB,  //65, 20
+	ISLAVE_UPDOWN,  //50, 20
+	ISLAVE_DOWNUP,  //65, 20
+	ISLAVE_JIBBER, //60, 30
+	ISLAVE_JABBER,  //60, 30
+	ISLAVE_PEPSIHIT, //31, 25
+	ISLAVE_PEPSITOPPLE,  //101, 18
+	ISLAVE_PEPSIIDLE,  //17, 18
+	ISLAVE_BUTTONPUSH,  //90, 15
+	ISLAVE_VALVEFRY,  //80, 15
+	ISLAVE_DIEHEADSHOT_RES,  //40, 20
+	ISLAVE_DIESIMPLE_RES,  //39, 20
+	ISLAVE_DIEBACKWARD_RES,  //40, 20
+	ISLAVE_DIEFORWARD_RES,  //40, 40
+
+
+
+};
+
+
+
+
+
+
 //=========================================================
 // Monster's Anim Events Go Here
 //=========================================================
@@ -119,7 +181,6 @@ public:
 	int tryActivitySubstitute(int activity);
 	BOOL usesAdvancedAnimSystem(void);
 
-	int deathIndex;
 	BOOL finishingReviveFriendAnim;
 
 	void riseFromTheGrave(void);
@@ -1369,18 +1430,18 @@ void CISlave :: StartTask ( Task_t *pTask )
 		//wait.. why do we always say "backwards"?  At least I do.  oh well.
 
 		//???????????
-		int testa = LookupSequence("dieforward");
+		//int testa = LookupSequence("dieforward");
 
 		//pick a revive anim based on how I died.
-		if(pev->sequence == LookupSequence("dieheadshot")){
-			this->SetSequenceByName("dieheadshot-RES");
-		}else if(pev->sequence == LookupSequence("diesimple")){
-			this->SetSequenceByName("diesimple-RES");
-		}else if(pev->sequence == LookupSequence("diebackward")){
-			this->SetSequenceByName("diebackward-RES");
-		}else if(pev->sequence == LookupSequence("dieforward")){
-			this->SetSequenceByName("dieforward-RES");
-		}else if(pev->sequence == 27){
+		if(pev->sequence == ISLAVE_DIEHEADSHOT){
+			this->SetSequenceByIndex(ISLAVE_DIEHEADSHOT_RES);
+		}else if(pev->sequence == ISLAVE_DIESIMPLE){
+			this->SetSequenceByIndex(ISLAVE_DIESIMPLE_RES);
+		}else if(pev->sequence == ISLAVE_DIEBACKWARD){
+			this->SetSequenceByIndex(ISLAVE_DIEBACKWARD_RES);
+		}else if(pev->sequence == ISLAVE_DIEFORWARD){
+			this->SetSequenceByIndex(ISLAVE_DIEFORWARD_RES);
+		}else if(pev->sequence == ISLAVE_DIEVIOLENT){
 			//the DIE_VIOLENT one?  Just play this in reverse and restore the framerate.
 			this->SetSequenceByIndex(pev->sequence, -1, FALSE);
 			ChangeSchedule(slWaitForReviveSequence);
@@ -1407,7 +1468,7 @@ void CISlave :: StartTask ( Task_t *pTask )
 				
 				pev->frame = 0;
 				//this->SetSequenceByName("downup");
-				this->pev->sequence = LookupSequence("downup");
+				this->pev->sequence = ISLAVE_DOWNUP;
 				ResetSequenceInfo( );
 				SetYawSpeed();
 
@@ -1791,16 +1852,16 @@ int CISlave::LookupActivityHard(int activity){
 	//switch( (int)CVAR_GET_FLOAT("testVar") ){
 		case ACT_DIE_HEADSHOT:
 			//not randomized between this and the "-RES" version for now...
-			return LookupSequence("dieheadshot");
+			return ISLAVE_DIEHEADSHOT;
 		break;
 		case ACT_DIESIMPLE :
-			return LookupSequence("diesimple");
+			return ISLAVE_DIESIMPLE;
 		break;
 		case ACT_DIEBACKWARD :
-			return LookupSequence("diebackward");
+			return ISLAVE_DIEBACKWARD;
 		break;
 		case ACT_DIEFORWARD :
-			return LookupSequence("dieforward");
+			return ISLAVE_DIEFORWARD;
 		break;
 		case ACT_BARNACLE_HIT:
 			//just some intervention.
@@ -1826,16 +1887,16 @@ int CISlave::tryActivitySubstitute(int activity){
 	switch(activity){
 		case ACT_DIE_HEADSHOT:
 			//not randomized between this and the "-RES" version for now...
-			return LookupSequence("dieheadshot");
+			return ISLAVE_DIEHEADSHOT;
 		break;
 		case ACT_DIESIMPLE :
-			return LookupSequence("diesimple");
+			return ISLAVE_DIESIMPLE;
 		break;
 		case ACT_DIEBACKWARD :
-			return LookupSequence("diebackward");
+			return ISLAVE_DIEBACKWARD;
 		break;
 		case ACT_DIEFORWARD :
-			return LookupSequence("dieforward");
+			return ISLAVE_DIEFORWARD;
 		break;
 	}
 
@@ -1869,13 +1930,6 @@ CISlave::CISlave(void){
 	reviveTargetChosen = FALSE;
 	beingRevived = FALSE;
 	reviveFriendAnimStartTime = -1;
-
-	deathIndex = -1;
-	//How did I die (if dead of course):
-	//0 = dieheadshot-RES
-	//1 = diesimple-RES
-	//2 = diebackwards-RES
-	//3 = dieforward-RES
 
 }
 

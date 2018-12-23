@@ -633,11 +633,13 @@ void EMIT_GROUPNAME_SUIT(edict_t *entity, const char *groupname);
 //#define PRECACHE_SOUND_ARRAY UTIL_PRECACHESOUND_ARRAY
 
 
-//No need to worry, this "method?" is almost completely unused.
+//No need to worry, this "method?" is almost completely unused.  Looks to be only used in xen.cpp.
+//It skips any soundSentenceSave checks, plays straight without the sentence system.
 #define EMIT_SOUND_ARRAY_DYN( chan, array ) \
 	EMIT_SOUND_DYN ( ENT(pev), chan , array [ RANDOM_LONG(0,ARRAYSIZE( array )-1) ], 1.0, ATTN_NORM, 0, RANDOM_LONG(95,105) ); 
 
 //This is used a lot more - much more flexible.
+//This doesn't actually play the sound, it just grabs one sound path string from the array. It's up to the caller to give it the usual volume, attenuation, flags, pitch.
 #define RANDOM_SOUND_ARRAY( array ) (array) [ RANDOM_LONG(0,ARRAYSIZE( (array) )-1) ]
 
 

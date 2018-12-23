@@ -14,6 +14,9 @@
 ****/
 
 
+//ANIMATION COMMENT. Why are fly_down and fly_attack the exact same animation? May have been something preserved in retail.
+//                   They are both for being midair and moving downwards, but fly_attack has events for firing while going downwards.
+//                   Even though it can only happen once since this crosshow needs reloading between single use.
 
 //MODDD TODO - the melee attack seems to be completely unused, even as of retail there wasn't any case of checking for an area in front to do a
 //             melee attack (CheckTraceHullAttack, TakeDamage, punchangle, velocity shove).
@@ -44,6 +47,50 @@
 #include	"game.h"
 
 extern DLL_GLOBAL int  g_iSkillLevel;
+
+
+
+
+//idle1 looks like we're kinda bored and fidgeting with the crossbow.
+//idle2 is crouched over like in hiding, or maybe surprised at being found.
+//idle 3 is just standing.
+
+enum hAssassin_sequence {
+	HASSASSIN_IDLE1_CROSSBOW, //181, 30
+	HASSASSIN_IDLE3, //61, 30
+	HASSASSIN_IDLE2, //31, 22
+	HASSASSIN_RUN,  //21, 40
+	HASSASSIN_WALK,  //82, 35
+	HASSASSIN_SHOOT,  //9, 30
+	HASSASSIN_RELOAD, //31, 30
+	HASSASSIN_GRENADETHROW, //16, 30
+	HASSASSIN_KICK, //33, 35
+	HASSASSIN_KICKSHORT, //22, 30
+	HASSASSIN_DEATH_DURING_RUN,  //121, 37
+	HASSASSIN_DIE_BACKWARDS, //23, 24
+	HASSASSIN_DIE_SIMPLE, //61, 28
+	HASSASSIN_JUMP, //19, 25
+	HASSASSIN_FLY_UP, //12, 25
+	HASSASSIN_FLY_DOWN, //26, 30
+	HASSASSIN_FLY_ATTACK, //26, 30
+	HASSASSIN_LANDFROMJUMP, //26, 30
+	HASSASSIN_VICTORY_IDLE2, //61, 15
+
+
+
+};
+
+
+
+
+
+
+
+
+
+
+
+
 
 //=========================================================
 // monster-specific schedule types
@@ -138,8 +185,10 @@ public:
 	void HandleAnimEvent( MonsterEvent_t *pEvent );
 	Schedule_t* GetSchedule ( void );
 	Schedule_t* GetScheduleOfType ( int Type );
-	BOOL CheckMeleeAttack1 ( float flDot, float flDist );	// jump
-	// BOOL CheckMeleeAttack2 ( float flDot, float flDist );
+
+	//MODDD - melee attack #1 used to be jump. Now that's #2, #1 is a real melee attack.
+	BOOL CheckMeleeAttack1 ( float flDot, float flDist );	// melee attack
+	BOOL CheckMeleeAttack2 ( float flDot, float flDist );   // jump
 	BOOL CheckRangeAttack1 ( float flDot, float flDist );	// shoot
 	BOOL CheckRangeAttack2 ( float flDot, float flDist );	// throw grenade
 	void StartTask ( Task_t *pTask );
@@ -170,6 +219,9 @@ public:
 	float m_flDiviation;
 
 	float m_flNextJump;
+	//MODDD - longer alternate time.  The original above is for physically refusing to jump that often, this is just "I'd rather not yet".
+	float m_flNextJumpPrefer;
+
 	Vector m_vecJumpVelocity;
 
 	float m_flNextGrenadeCheck;
@@ -183,8 +235,8 @@ public:
 	int		m_iShell;
 
 	//NEW
+	float meleeAttackCooldown;
 	float reloadApplyTime;
-	int shootEventOffset;
 	BOOL droppedWeapon;
 	float groundTouchCheckDuration;
 
@@ -227,6 +279,7 @@ Schedule_t	slAssassinFail[] =
 		bits_COND_CAN_RANGE_ATTACK1 |
 		bits_COND_CAN_RANGE_ATTACK2 |
 		bits_COND_CAN_MELEE_ATTACK1 |
+		bits_COND_CAN_MELEE_ATTACK2 |
 		bits_COND_HEAR_SOUND,
 	
 		bits_SOUND_DANGER |
@@ -238,18 +291,24 @@ Schedule_t	slAssassinFail[] =
 
 //=========================================================
 // Enemy exposed Agrunt's cover
+// (MODDD NOTE - perhaps you mean assassin's? dang'd copy+pasted comments)
 //=========================================================
 Task_t	tlAssassinExposed[] =
 {
 	{ TASK_STOP_MOVING,			(float)0							},
 	
 	//Set activity to looking ready to fire?
-	{ TASK_SET_ACTIVITY,		(float)ACT_IDLE_ANGRY },
-
+	//MODDD - removed. We don't seem to have any activity mapped to IDLE_ANGRY.
+	//{ TASK_SET_ACTIVITY,		(float)ACT_IDLE_ANGRY },
+	
+	//...but setting the activity at all is wise at least.
+	{ TASK_SET_ACTIVITY,		    (float)ACT_COMBAT_IDLE			    },
+	{ TASK_WAIT,  (float) 0.2										},
 
 
 	//MODDD - Woa  hey, at least face the enemy first! How are you firing that crossbow, even pistol before sideways?
 	{ TASK_FACE_ENEMY,			(float)0							},
+	{ TASK_WAIT,  (float) 0.3										},
 
 	//Special task. This will FAIL the schedule if we are unable to make a ranged attack.
 	{ TASK_CHECK_RANGED_ATTACK_1,(float)0							},
@@ -267,7 +326,8 @@ Schedule_t slAssassinExposed[] =
 	{
 		tlAssassinExposed,
 		ARRAYSIZE ( tlAssassinExposed ),
-		bits_COND_CAN_MELEE_ATTACK1,
+		bits_COND_CAN_MELEE_ATTACK1 |
+		bits_COND_CAN_MELEE_ATTACK2,
 		0,
 		"AssassinExposed",
 	},
@@ -297,6 +357,7 @@ Schedule_t	slAssassinTakeCoverFromEnemy[] =
 		ARRAYSIZE ( tlAssassinTakeCoverFromEnemy ), 
 		bits_COND_NEW_ENEMY |
 		bits_COND_CAN_MELEE_ATTACK1		|
+		bits_COND_CAN_MELEE_ATTACK2		|
 		bits_COND_HEAR_SOUND,
 		
 		bits_SOUND_DANGER,
@@ -333,7 +394,12 @@ Schedule_t	slAssassinTakeCoverFromEnemy2[] =
 		tlAssassinTakeCoverFromEnemy2,
 		ARRAYSIZE ( tlAssassinTakeCoverFromEnemy2 ), 
 		bits_COND_NEW_ENEMY |
-		bits_COND_CAN_MELEE_ATTACK2		|
+
+		//MODDD - wait. This was originally interruptable only by MELEE_ATTACK2 despite not even having a melee attack #2? Jump used to be melee attack #1. Curious.
+		//        Perhaps this wasn't meant be interruptible by being able to jump.  Changing to being interruptable by melee only now (the new #1).
+		//bits_COND_CAN_MELEE_ATTACK2		|
+		bits_COND_CAN_MELEE_ATTACK1		|
+
 		bits_COND_HEAR_SOUND,
 		
 		bits_SOUND_DANGER,
@@ -347,7 +413,7 @@ Schedule_t	slAssassinTakeCoverFromEnemy2[] =
 //=========================================================
 Task_t	tlAssassinTakeCoverFromBestSound[] =
 {
-	{ TASK_SET_FAIL_SCHEDULE,			(float)SCHED_MELEE_ATTACK1	},
+	{ TASK_SET_FAIL_SCHEDULE,			(float)SCHED_MELEE_ATTACK2	},
 	{ TASK_STOP_MOVING,					(float)0					},
 	{ TASK_FIND_COVER_FROM_BEST_SOUND,	(float)0					},
 	{ TASK_RUN_PATH,					(float)0					},
@@ -377,7 +443,9 @@ Schedule_t	slAssassinTakeCoverFromBestSound[] =
 Task_t	tlAssassinHide[] =
 {
 	{ TASK_STOP_MOVING,			0						 },
-	{ TASK_SET_ACTIVITY,		(float)ACT_IDLE			 },
+	//MODDD - look like we're trying to hide at least, crouched is better specifically from COMBAT_IDLE
+	//{ TASK_SET_ACTIVITY,		(float)ACT_IDLE			 },
+	{ TASK_SET_ACTIVITY,		(float)ACT_COMBAT_IDLE			 },
 	{ TASK_WAIT,				(float)5				 },
 	{ TASK_SET_SCHEDULE,		(float)SCHED_CHASE_ENEMY },
 };
@@ -577,6 +645,60 @@ Schedule_t	slAssassinReload[] =
 
 
 
+//MODDD - cloned from the generic MeleeAttack1 in defaultai.cpp
+Task_t	tlAssassinMeleeAttack[] =
+{
+	{ TASK_STOP_MOVING,			0				},
+	{ TASK_FACE_ENEMY,			(float)0		},
+	{ TASK_MELEE_ATTACK1,		(float)0		},
+};
+
+Schedule_t	slAssassinMeleeAttack[] =
+{
+	{ 
+		tlAssassinMeleeAttack,
+		ARRAYSIZE ( tlAssassinMeleeAttack ), 
+		bits_COND_NEW_ENEMY			|
+		bits_COND_ENEMY_DEAD		|
+		
+		//MODDD - restoring heavy damage as interruptable.
+		//bits_COND_LIGHT_DAMAGE		|
+		bits_COND_HEAVY_DAMAGE		|
+
+		bits_COND_ENEMY_OCCLUDED,
+		0,
+		"HAssassin Melee Attack"
+	},
+};
+
+
+//MODDD - new. Clone of the slVictoryDance schedule in defaultai.cpp, but easier to interrupt.
+Task_t tlAssassinVictoryDance[] =
+{
+	{ TASK_STOP_MOVING,			0							},
+	{ TASK_PLAY_SEQUENCE,		(float)ACT_VICTORY_DANCE	},
+	{ TASK_WAIT,				(float)0					},
+};
+
+Schedule_t slAssassinVictoryDance[] =
+{
+	{
+		tlAssassinVictoryDance,
+		ARRAYSIZE( tlAssassinVictoryDance ),
+		bits_COND_NEW_ENEMY |
+		bits_COND_SEE_ENEMY |
+		bits_COND_LIGHT_DAMAGE |
+		bits_COND_HEAVY_DAMAGE,
+		0,
+		"HAssassin Victory Dance"
+	},
+};
+
+
+
+
+
+
 
 DEFINE_CUSTOM_SCHEDULES( CHAssassin )
 {
@@ -592,6 +714,8 @@ DEFINE_CUSTOM_SCHEDULES( CHAssassin )
 	slAssassinJumpLand,
 	slAssassinTakeCoverReload, //MODDD - new
 	slAssassinReload, //MODDD - new
+	slAssassinMeleeAttack, //MODDD - me too
+	slAssassinVictoryDance, //MODDD
 };
 
 IMPLEMENT_CUSTOM_SCHEDULES( CHAssassin, CBaseMonster );
@@ -641,6 +765,7 @@ TYPEDESCRIPTION	CHAssassin::m_SaveData[] =
 	DEFINE_FIELD( CHAssassin, m_flDiviation, FIELD_FLOAT ),
 
 	DEFINE_FIELD( CHAssassin, m_flNextJump, FIELD_TIME ),
+	DEFINE_FIELD( CHAssassin, m_flNextJumpPrefer, FIELD_TIME ),  //MODDD - new.
 	DEFINE_FIELD( CHAssassin, m_vecJumpVelocity, FIELD_VECTOR ),
 
 	DEFINE_FIELD( CHAssassin, m_flNextGrenadeCheck, FIELD_TIME ),
@@ -728,69 +853,27 @@ void CHAssassin::MonsterThink(){
 	if(global_thatWasntPunch == 1 && this->m_fSequenceFinished){
 
 			switch(RANDOM_LONG(0, 20)){
-			case 0:
-				this->SetSequenceByName("idle2");
-			break;
-			case 1:
-				this->SetSequenceByName("idle2");
-			break;
-			case 2:
-				this->SetSequenceByName("grenadethrow");
-			break;
-			case 3:
-				this->SetSequenceByName("grenadethrow");
-			break;
-			case 4:
-				this->SetSequenceByName("grenadethrow");
-			break;
-			case 5:
-				this->SetSequenceByName("grenadethrow");
-			break;
-			case 6:
-				this->SetSequenceByName("grenadethrow");
-			break;
-			case 7:
-				this->SetSequenceByName("grenadethrow");
-			break;
-			case 8:
-				this->SetSequenceByName("kick");
-			break;
-			case 9:
-				this->SetSequenceByName("kick");
-			break;
-			case 10:
-				this->SetSequenceByName("kick");
-			break;
-			case 11:
-				this->SetSequenceByName("kickshort");
-			break;
-			case 12:
-				this->SetSequenceByName("jump");
-			break;
-			case 13:
-				this->SetSequenceByName("jump");
-			break;
-			case 14:
-				this->SetSequenceByName("fly_up");
-			break;
-			case 15:
-				this->SetSequenceByName("fly_up");
-			break;
-			case 16:
-				this->SetSequenceByName("fly_down");
-			break;
-			case 17:
-				this->SetSequenceByName("fly_down");
-			break;
-			case 18:
-				this->SetSequenceByName("land_from_jump");
-			break;
-			case 19:
-				this->SetSequenceByName("land_from_jump");
-			break;
-			case 20:
-				this->SetSequenceByName("land_from_jump");
-			break;
+			case 0:SetSequenceByName("idle2");break;
+			case 1:SetSequenceByName("idle2");break;
+			case 2:SetSequenceByName("grenadethrow");break;
+			case 3:SetSequenceByName("grenadethrow");break;
+			case 4:SetSequenceByName("grenadethrow");break;
+			case 5:SetSequenceByName("grenadethrow");break;
+			case 6:SetSequenceByName("grenadethrow");break;
+			case 7:SetSequenceByName("grenadethrow");break;
+			case 8:SetSequenceByName("kick");break;
+			case 9:SetSequenceByName("kick");break;
+			case 10:SetSequenceByName("kick");break;
+			case 11:SetSequenceByName("kickshort");break;
+			case 12:SetSequenceByName("jump");break;
+			case 13:SetSequenceByName("jump");break;
+			case 14:SetSequenceByName("fly_up");break;
+			case 15:SetSequenceByName("fly_up");break;
+			case 16:SetSequenceByName("fly_down");break;
+			case 17:SetSequenceByName("fly_down");break;
+			case 18:SetSequenceByName("land_from_jump");break;
+			case 19:SetSequenceByName("land_from_jump");break;
+			case 20:SetSequenceByName("land_from_jump");break;
 			}
 
 	}
@@ -983,7 +1066,7 @@ void CHAssassin :: Shoot ( void )
 //=========================================================
 void CHAssassin :: HandleAnimEvent( MonsterEvent_t *pEvent )
 {
-	//easyForcePrintLine("WHAT THE heck IS THiS stuff event:%d evoff:%d seq:%d fr:%.2f", pEvent->event, shootEventOffset, pev->sequence, pev->frame);
+	//easyForcePrintLine("WHAT THE heck IS THiS stuff event:%d seq:%d fr:%.2f", pEvent->event, pev->sequence, pev->frame);
 
 	if(global_thatWasntPunch == 1){
 		//Best not to.
@@ -1000,13 +1083,10 @@ void CHAssassin :: HandleAnimEvent( MonsterEvent_t *pEvent )
 	case ASSASSIN_AE_SHOOT1:
 		{
 
-			//Not necessary anymore, remove this var entirely later.
-			//if(shootEventOffset == 1){
-				//only the 2nd one is ok.
+			if(m_cAmmoLoaded > 0){
 				Shoot( );
-			//}
-			//shootEventOffset += 1;
-
+			}
+			
 			break;
 		}
 	case ASSASSIN_AE_TOSS1:
@@ -1028,7 +1108,11 @@ void CHAssassin :: HandleAnimEvent( MonsterEvent_t *pEvent )
 			pev->movetype = MOVETYPE_TOSS;
 			pev->flags &= ~FL_ONGROUND;
 			pev->velocity = m_vecJumpVelocity;
+
+			//MODDD - increase the jump delay to increase the chances of a melee kick instead from reapproaching too soon.
+			//        ...in a different way.
 			m_flNextJump = gpGlobals->time + 3.0;
+			m_flNextJumpPrefer = gpGlobals->time + 15.0;
 			break;
 		}
 		//return; ..why was this here?
@@ -1040,8 +1124,13 @@ void CHAssassin :: HandleAnimEvent( MonsterEvent_t *pEvent )
 
 CHAssassin::CHAssassin(){
 	reloadApplyTime = -1;
-	shootEventOffset = 0;
 	groundTouchCheckDuration = -1;
+
+	//can't hurt?
+	meleeAttackCooldown = 0;
+	m_flNextJump = 0;
+	m_flNextJumpPrefer = 0;
+
 }
 
 //=========================================================
@@ -1063,13 +1152,25 @@ void CHAssassin :: Spawn()
 	pev->health			= gSkillData.hassassinHealth;
 	m_flFieldOfView		= VIEW_FIELD_WIDE; // indicates the width of this monster's forward view cone ( as a dotproduct result )
 	m_MonsterState		= MONSTERSTATE_NONE;
-	m_afCapability		= bits_CAP_MELEE_ATTACK1 | bits_CAP_DOORS_GROUP;
+
+	//actually automatically picks these up just from having ACT's for each (MELEE_ATTACK1 and 2), but being explicit doesn't hurt.
+	m_afCapability		= bits_CAP_MELEE_ATTACK1 | bits_CAP_MELEE_ATTACK2 | bits_CAP_DOORS_GROUP;
 	pev->friction		= 1;
 
 	m_HackedGunPos		= Vector( 0, 24, 48 );
 
-	m_iTargetRanderamt	= 20;
-	pev->renderamt		= 20;
+
+	pev->renderamt		= 255; //full.
+
+	//MODDD - shouldn't this just start at whatever makes sense for the hassassin to become anyways?
+	if(g_iSkillLevel != SKILL_HARD){
+		//we're not cloaking.
+		m_iTargetRanderamt	= 255;
+	}else{
+		//we are cloaking, go ahead.
+		m_iTargetRanderamt	= 20;
+	}
+
 	pev->rendermode		= kRenderTransTexture;
 
 	MonsterInit();
@@ -1103,6 +1204,21 @@ void CHAssassin :: Precache()
 
 
 	PRECACHE_SOUND("debris/beamstart1.wav");
+
+
+	//const char* what = CBaseMonster::pStandardAttackHitSounds[0];
+
+	//MODDD - has a melee attack + the usual sounds now.
+	//anything using "sizeof", a C call (maybe C++?) needs to have that thing defined or at least implemented in the same file.
+	//why? no clue. But we certainly aren't doing this by calling CBaseMonster's arrays directly at least.
+	//Just call a method from there to handle this instead. Never enough of those...
+	//PRECACHE_SOUND_ARRAY(CBaseMonster::pStandardAttackMissSounds);
+	//PRECACHE_SOUND_ARRAY(CBaseMonster::pStandardAttackHitSounds);
+	precacheStandardMeleeAttackMissSounds();
+	precacheStandardMeleeAttackHitSounds();
+
+
+
 	global_useSentenceSave = FALSE;
 
 	m_iShell = PRECACHE_MODEL ("models/shell.mdl");// brass shell
@@ -1112,17 +1228,71 @@ void CHAssassin :: Precache()
 //AI SCHEDULES MOVED TO THE TOP OF THIS FILE
 
 
+
+
+//MODDD - clone of the hgrunt's CheckMeleeAttack1.
+//        Also CheckMeleeAttack1 used to be for the jump back when there wasn't a melee attack at all (retail).
+//        CheckMeleeAttack1 is now used for the melee attack. CheckMeleeAttack2 is for the jump  instead.
+BOOL CHAssassin :: CheckMeleeAttack1 ( float flDot, float flDist )
+{
+	CBaseMonster *pEnemy;
+
+	//Melee attack gets a cooldown.  This allows a jump to happen immediately after.
+	//Any melee attack should also reset the jump cooldown to possibly allow that immediately after.
+	//And being unable to jump bypasses the melee cooldown. If it's all we can do it's better than standing and
+	//looking stupid.
+	if(gpGlobals->time < meleeAttackCooldown && !(this->HasConditionsFrame(bits_COND_CAN_MELEE_ATTACK2)) ){
+		return FALSE;
+	}
+
+
+	if ( m_hEnemy != NULL )
+	{
+		pEnemy = m_hEnemy->MyMonsterPointer();
+
+		if ( !pEnemy )
+		{
+			return FALSE;
+		}
+	}
+
+
+	//MODDD - extra. If I am able to jump (cool down has passed, space above, etc.), and I am certain I could jump instead of this was turned down
+	//        (has the COND_MELEE_ATTACK2 on), make this false to allow that to happen instead.
+	//        ...too compilcated, just put this preference in choosing the melee attack or jump schedules at GetSchedule or GetScheduleOfType instead.
+	/*
+	if(this->HasConditionsFrame(bits_COND_MELEE_ATTACK2)){
+		return FALSE;
+	}
+	*/
+
+
+	if ( flDist <= 64 && flDot >= 0.7	&&
+		 pEnemy->Classify() != CLASS_ALIEN_BIOWEAPON &&
+		 pEnemy->Classify() != CLASS_PLAYER_BIOWEAPON )
+	{
+		return TRUE;
+	}
+	return FALSE;
+}
+
+
+
+
 //=========================================================
 // CheckMeleeAttack1 - jump like crazy if the enemy gets too close. 
 //=========================================================
-BOOL CHAssassin :: CheckMeleeAttack1 ( float flDot, float flDist )
+BOOL CHAssassin :: CheckMeleeAttack2 ( float flDot, float flDist )
 {
 
 	if(m_hEnemy == NULL){
 		return FALSE;
 	}
 
-	if ( m_flNextJump < gpGlobals->time && (flDist <= 128 || HasMemory( bits_MEMORY_BADJUMP )) )
+	//MODDD - using m_flNextJumpPrefer instead of the original m_flNextJump.
+	//        m_flNextJumpPrefer has a longer cooldown timer to give melee more of a chance, and m_flNextJump is still used for emergency jumps,
+	//        like failing to find cover.  A melee attack isn't always a feasible substitution for jumping, so jumping sooner for cover reasons is fine.
+	if ( m_flNextJumpPrefer < gpGlobals->time && (flDist <= 128 || HasMemory( bits_MEMORY_BADJUMP )) )
 	{
 		TraceResult	tr;
 
@@ -1147,6 +1317,8 @@ BOOL CHAssassin :: CheckMeleeAttack1 ( float flDot, float flDist )
 	}
 	return FALSE;
 }
+
+
 
 //=========================================================
 // CheckRangeAttack1  - drop a cap in their ass
@@ -1295,6 +1467,15 @@ void CHAssassin :: StartTask ( Task_t *pTask )
 
 	switch ( pTask->iTask )
 	{
+	case TASK_MELEE_ATTACK1:{
+		meleeAttackCooldown = gpGlobals->time + 4;
+		
+		//Allow jumping immediately after one melee attack.
+		m_flNextJump = gpGlobals->time;
+		m_flNextJumpPrefer = gpGlobals->time;
+
+		CBaseMonster::StartTask(pTask);
+	break;}
 
 	case TASK_RANGE_ATTACK1:
 		{
@@ -1310,7 +1491,6 @@ void CHAssassin :: StartTask ( Task_t *pTask )
 					m_fSequenceLoops = FALSE;
 				}
 
-				shootEventOffset = 0;
 				CBaseMonster :: StartTask ( pTask );
 			}else{
 				//nope? skip this.
@@ -1510,7 +1690,8 @@ void CHAssassin :: RunTask ( Task_t *pTask )
 			{
 				pev->sequence = LookupSequence( "fly_up" );
 			}
-			else if (HasConditions ( bits_COND_SEE_ENEMY ))
+			//MODDD - extra requirement. Has ammo?
+			else if (HasConditions ( bits_COND_SEE_ENEMY ) && this->m_cAmmoLoaded > 0)
 			{
 				pev->sequence = LookupSequence( "fly_attack" );
 				pev->frame = 0;
@@ -1638,14 +1819,28 @@ Schedule_t *CHAssassin :: GetSchedule ( void )
 				m_iFrustration++;
 			}
 
+			
 
 
-		// jump player!
+			//MODDD - new melee check.  Get close too fast before the jump can start or
+			//        too soon since a recent jump away and this happens.
 			if ( HasConditions ( bits_COND_CAN_MELEE_ATTACK1 ) )
 			{
 				// ALERT( at_console, "melee attack 1\n");
 				return GetScheduleOfType ( SCHED_MELEE_ATTACK1 );
 			}
+
+			
+		// jump player!
+			//MODD - used to be melee attack #1. now is #2.
+			if ( HasConditions ( bits_COND_CAN_MELEE_ATTACK2 ) )
+			{
+				// ALERT( at_console, "melee attack 2\n");
+				return GetScheduleOfType ( SCHED_MELEE_ATTACK2 );
+			}
+
+
+
 
 		// throw grenade
 			if ( HasConditions ( bits_COND_CAN_RANGE_ATTACK2 ) )
@@ -1798,13 +1993,33 @@ Schedule_t* CHAssassin :: GetScheduleOfType ( int Type )
 		break;
 	case SCHED_CHASE_ENEMY:
 		return slAssassinHunt;
+
+
+
 	case SCHED_MELEE_ATTACK1:
+		return slAssassinMeleeAttack;
+	break;
+
+	//MODDD - used to be for MELEE_ATTACK1.
+	case SCHED_MELEE_ATTACK2:
 		if (pev->flags & FL_ONGROUND)
 		{
 			if (m_flNextJump > gpGlobals->time)
 			{
 				// can't jump yet, go ahead and fail
-				return slAssassinFail;
+				//MODDD NOTE - ...wait how is this possible? That condition shouldn't have been met to allow SCHED_MELEE_ATTACK1 to even
+				//             be requested?
+				//             It is possible from another method saying to pick this schedule if it fails. That skips the condition check.
+				//             ...Instead just go into the hassassin's melee attack I guess.
+				
+				//return slAssassinFail;
+				if(HasConditions(bits_COND_CAN_MELEE_ATTACK1)){
+					return slAssassinMeleeAttack;
+				}else{
+					//then I can't really do anything.
+					return slAssassinFail;
+				}
+
 			}
 			else
 			{
@@ -1820,7 +2035,15 @@ Schedule_t* CHAssassin :: GetScheduleOfType ( int Type )
 		return slAssassinJumpAttack;
 	case SCHED_ASSASSIN_JUMP_LAND:
 		return slAssassinJumpLand;
-	}
+
+
+	
+	case SCHED_VICTORY_DANCE:{
+		return slAssassinVictoryDance;
+	break;}
+
+
+	}//END OF switch
 
 	return CBaseMonster :: GetScheduleOfType( Type );
 }
@@ -1890,10 +2113,10 @@ Vector CHAssassin::GetGunPosition(void){
 
 
 Vector CHAssassin::GetGunPositionAI(void){
-	//NOTE - same as above.
+	//Use the fixed origin given rotation instead for a little more consistency than some arm point that may float around.
 	return CBaseMonster::GetGunPositionAI();
 
-
+	/*
 	Vector forward, angle;
 	angle = pev->angles;
 	
@@ -1901,6 +2124,7 @@ Vector CHAssassin::GetGunPositionAI(void){
 	UTIL_MakeVectorsPrivate( angle, forward, NULL, NULL );
 
 	return pev->origin + Vector( 0, 0, 43 ) + forward * 41;
+	*/
 }//END OF GetGunPositionAI
 
 
@@ -1924,7 +2148,48 @@ int CHAssassin::LookupActivityHard(int activity){
 
 	m_flFramerateSuggestion = 1;
 	switch(activity){
-		case ACT_RANGE_ATTACK1:
+		case ACT_DIESIMPLE:
+		case ACT_DIEBACKWARD:
+		case ACT_DIEFORWARD:
+		case ACT_DIEVIOLENT:
+		case ACT_DIE_HEADSHOT:
+		case ACT_DIE_CHESTSHOT:
+		case ACT_DIE_GUTSHOT:
+		case ACT_DIE_BACKSHOT:{
+			//If any death activitiy is called while running, force this to play.
+			if(timeOfDeath_activity == ACT_RUN){
+			//if(this->IsMoving() == TRUE && this->m_movementActivity == ACT_RUN){
+				return HASSASSIN_DEATH_DURING_RUN;
+			}else{
+				return CBaseAnimating::LookupActivity(activity);
+			}
+		break;}
+
+		case ACT_COMBAT_IDLE:{
+			//Our model has no explicit ACT_COMBAT_IDLE sequences.
+			//How about the crouched over idle?
+			return HASSASSIN_IDLE2;
+		break;}
+		case ACT_MELEE_ATTACK1:{
+			//NOTICE - sequence "kick" is already mapped to ACT_MELEE_ATTACK1, but sequence "kickshort" is mapped to ACT_MELEE_ATTACK2.
+			//         It's going to make more sense to keep "jump" as ACT_MELEE_ATTACK2 and just pick between "kick" and "kickshort" randomly.
+			float randomChoice = RANDOM_LONG(0, 1);
+			
+			if(randomChoice == 0){
+
+				animEventQueuePush(5.0f / 35.0f, 5);
+				animEventQueuePush(21.0f / 35.0f, 5);
+
+				return HASSASSIN_KICK;
+			}else{  //1?
+				
+				animEventQueuePush(10.0f / 30.0f, 6);
+
+				return HASSASSIN_KICKSHORT;
+			}
+
+		break;}
+		case ACT_RANGE_ATTACK1:{
 			
 			m_flFramerateSuggestion = 1;
 			//m_flFramerateSuggestion = -1;
@@ -1934,34 +2199,19 @@ int CHAssassin::LookupActivityHard(int activity){
 				m_iForceLoops = 0; //no loopping.
 			}
 
-			return LookupSequence("shoot");
-		break;
-		case ACT_IDLE_ANGRY:
-			//MODDD TODO - "Shoot" sequence? inconsistencies with above?  WHAT IS THIS MESS.
-
-
-			m_flFramerateSuggestion = 0;
-
-			pev->frame = 0;
-			this->m_fSequenceFinished = TRUE;  //just to be safe. If this even stays or is necessary at all.
-
-
-			
-			if(EASY_CVAR_GET(hassassinCrossbowDebug) != 1){
-				m_iForceLoops = 0; //no loopping.
-			}
-
-
-
-			return LookupSequence("shoot");
-			//return CBaseAnimating::LookupActivity(activity);
-		break;
-		case ACT_RELOAD:
+			return HASSASSIN_SHOOT;
+		break;}
+		case ACT_IDLE_ANGRY:{
+			//should this really do anything special?  or copy ACT_RANGE_ATTACK1? probably not that.
+			//maybe freeze a frame from "shoot" for a bit? probably unnecessary.
+			return CBaseAnimating::LookupActivity(activity);
+		break;}
+		case ACT_RELOAD:{
 			//MODDD - placeholder. Update this when we have a real crossbow reload animation!
 			return LookupSequence(HASSASSIN_CROSSBOW_RELOAD_ANIM);
-		break;
+		break;}
 
-		case ACT_WALK:
+		case ACT_WALK:{
 
 			//events.
 			this->animEventQueuePush(2.0f / 35.0f, 1);
@@ -1969,14 +2219,14 @@ int CHAssassin::LookupActivityHard(int activity){
 			this->animEventQueuePush(44.0f / 35.0f, 1);
 			this->animEventQueuePush(65.0 / 35.0f, 2);
 			return CBaseAnimating::LookupActivity(activity);
-		break;
-		case ACT_RUN:
+		break;}
+		case ACT_RUN:{
 			
 			this->animEventQueuePush(8.0f / 40.0f, 3);
 			this->animEventQueuePush(17.0f / 40.0f, 4);
 
 			return CBaseAnimating::LookupActivity(activity);
-		break;
+		break;}
 		
 
 	}
@@ -2004,17 +2254,23 @@ int CHAssassin::tryActivitySubstitute(int activity){
 
 
 	switch(activity){
-		case ACT_RANGE_ATTACK1:
-			return LookupSequence("shoot");
-		break;
-		case ACT_IDLE_ANGRY:
-			return LookupSequence("shoot");
-			//return CBaseAnimating::LookupActivity(activity);
-		break;
-		case ACT_RELOAD:
+		case ACT_COMBAT_IDLE:{
+			return HASSASSIN_IDLE2;
+		break;}
+		case ACT_MELEE_ATTACK1:{
+			//really just to say we have something.  Really picks between KICK and KICKSHORT.
+			return HASSASSIN_KICK;
+		break;}
+		case ACT_RANGE_ATTACK1:{
+			return HASSASSIN_SHOOT;
+		break;}
+		case ACT_IDLE_ANGRY:{
+			return CBaseAnimating::LookupActivity(activity);
+		break;}
+		case ACT_RELOAD:{
 			//MODDD - placeholder. Update this when we have a real crossbow reload animation!
 			return LookupSequence(HASSASSIN_CROSSBOW_RELOAD_ANIM);
-		break;
+		break;}
 
 	}//END OF switch
 
@@ -2035,50 +2291,92 @@ int CHAssassin::tryActivitySubstitute(int activity){
 void CHAssassin::HandleEventQueueEvent(int arg_eventID){
 
 	switch(arg_eventID){
-	case 0:
-	{
+	case 0:{
 
 
-	break;
-	}
-	case 1:
-	{
+	break;}
+	case 1:{
 		//right foot, walk
 		switch( RANDOM_LONG( 0, 1 ) ){
 		case 0:	EMIT_SOUND_FILTERED( ENT(pev), CHAN_BODY, "player/pl_step1.wav", 0.28, ATTN_NORM, FALSE);	break;
 		case 1:	EMIT_SOUND_FILTERED( ENT(pev), CHAN_BODY, "player/pl_step3.wav", 0.28, ATTN_NORM, FALSE);	break;
 		}
-	break;
-	}
-	case 2:
-	{
+	break;}
+	case 2:{
 		//left foot, walk
 		switch( RANDOM_LONG( 0, 1 ) )
 		{
 		case 0:	EMIT_SOUND_FILTERED( ENT(pev), CHAN_BODY, "player/pl_step2.wav", 0.28, ATTN_NORM, FALSE);	break;
 		case 1:	EMIT_SOUND_FILTERED( ENT(pev), CHAN_BODY, "player/pl_step4.wav", 0.28, ATTN_NORM, FALSE);	break;
 		}
-	break;
-	}
-	case 3:
-	{
+	break;}
+	case 3:{
 		//right foot, run
 		switch( RANDOM_LONG( 0, 1 ) ){
 		case 0:	EMIT_SOUND_FILTERED( ENT(pev), CHAN_BODY, "player/pl_step1.wav", 0.5, ATTN_NORM, FALSE);	break;
 		case 1:	EMIT_SOUND_FILTERED( ENT(pev), CHAN_BODY, "player/pl_step3.wav", 0.5, ATTN_NORM, FALSE);	break;
 		}
-	break;
-	}
-	case 4:
-	{
+	break;}
+	case 4:{
 		//left foot, run
 		switch( RANDOM_LONG( 0, 1 ) )
 		{
 		case 0:	EMIT_SOUND_FILTERED( ENT(pev), CHAN_BODY, "player/pl_step2.wav", 0.5, ATTN_NORM, FALSE);	break;
 		case 1:	EMIT_SOUND_FILTERED( ENT(pev), CHAN_BODY, "player/pl_step4.wav", 0.5, ATTN_NORM, FALSE);	break;
 		}
-	break;
-	}
+	break;}
+
+	//shorter kick
+	case 5:{
+		
+		CBaseEntity *pHurt = HumanKick();
+
+		if ( pHurt )
+		{
+
+			// SOUND HERE!
+			UTIL_MakeVectors( pev->angles );
+			if(!pHurt->blocksImpact()){
+				pHurt->pev->punchangle.x = 15;
+				pHurt->pev->velocity = pHurt->pev->velocity + gpGlobals->v_forward * 80 + gpGlobals->v_up * 60;
+			}
+
+			//is taking the hgrunt's kick damage okay?
+			pHurt->TakeDamage( pev, pev, gSkillData.hgruntDmgKick, DMG_CLUB );
+
+			//derp.
+			//EMIT_SOUND_FILTERED( ENT(pev), CHAN_WEAPON, "hgrunt/gr_pain3.wav", 1, ATTN_NORM );
+			playStandardMeleeAttackHitSound();
+		}else{
+			playStandardMeleeAttackMissSound();
+		}
+	break;}
+
+	//longer kick
+	case 6:{
+		
+		CBaseEntity *pHurt = HumanKick();
+
+		if ( pHurt )
+		{
+
+			// SOUND HERE!
+			UTIL_MakeVectors( pev->angles );
+			if(!pHurt->blocksImpact()){
+				pHurt->pev->punchangle.x = 15;
+				pHurt->pev->velocity = pHurt->pev->velocity + gpGlobals->v_forward * 140 + gpGlobals->v_up * 65;
+			}
+
+			//is taking the hgrunt's kick damage okay?
+			pHurt->TakeDamage( pev, pev, gSkillData.hgruntDmgKick, DMG_CLUB );
+
+			//derp.
+			//EMIT_SOUND_FILTERED( ENT(pev), CHAN_WEAPON, "hgrunt/gr_pain3.wav", 1, ATTN_NORM );
+			playStandardMeleeAttackHitSound();
+		}else{
+			playStandardMeleeAttackMissSound();
+		}
+	break;}
 
 	
 
@@ -2086,7 +2384,6 @@ void CHAssassin::HandleEventQueueEvent(int arg_eventID){
 
 
 }//END OF HandleEventQueueEvent
-
 
 
 

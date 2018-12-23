@@ -3958,7 +3958,7 @@ void ClientCommand( edict_t *pEntity )
 			sciRef->initiateAss();
 		}
 
-	}else if(FStrEq(pcmdRefinedRef, "listofentities")){
+	}else if(FStrEq(pcmdRefinedRef, "listofentities") || FStrEq(pcmdRefinedRef, "listentities") ){
 		
 		int i = 0;
 		CBaseEntity *pList[500];

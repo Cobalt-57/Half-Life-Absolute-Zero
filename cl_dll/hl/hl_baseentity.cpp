@@ -126,6 +126,15 @@ BOOL CBaseMonster::violentDeathClear_BackwardsCheck(float argDistance){return FA
 
 BOOL CBaseMonster::canPredictActRepeat(void){return FALSE;}
 
+CBaseEntity* CBaseMonster::HumanKick(void){return NULL;}
+CBaseEntity* CBaseMonster::HumanKick(float argCheckDistance){return NULL;}
+
+void CBaseMonster::precacheStandardMeleeAttackMissSounds(void){}
+void CBaseMonster::precacheStandardMeleeAttackHitSounds(void){}
+void CBaseMonster::playStandardMeleeAttackMissSound(void){}
+void CBaseMonster::playStandardMeleeAttackHitSound(void){}
+
+
 
 
 BOOL CBaseMonster::getGermanModelRequirement(void){return FALSE;}

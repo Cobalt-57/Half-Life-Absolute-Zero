@@ -43,6 +43,8 @@
 
 #include "custom_debug.h"
 #include "nodes.h"
+#include "lights.h"
+
 
 
 
@@ -5390,6 +5392,7 @@ void turnWorldLightsOn(){
 
 }
 
+
 void turnWorldLightsOff(){
 	// 0 normal
 	LIGHT_STYLE(0, "a");
@@ -5436,6 +5439,49 @@ void turnWorldLightsOff(){
 
 	// 63 testing
 	LIGHT_STYLE(63, "a");
+
+
+	//NEW. Also turn the lights off of any light entities.
+	
+	edict_t		*pEdict = g_engfuncs.pfnPEntityOfEntIndex( 1 );
+	CBaseEntity* pEntity;
+	
+	if(pEdict){
+		for ( int i = 1; i < gpGlobals->maxEntities; i++, pEdict++ ){
+			if ( pEdict->free )	// Not in use
+				continue;
+		
+			//if ( flagMask && !(pEdict->v.flags & flagMask) )	// Does it meet the criteria?
+			//	continue;
+
+			pEntity = CBaseEntity::Instance(pEdict);
+			if ( !pEntity )
+				continue;
+
+			const char* entClassname = pEntity->getClassname();
+			if(
+				FStrEq(entClassname, "light") ||
+				FStrEq(entClassname, "light_spot") ||
+				FStrEq(entClassname, "light_environment"))
+			{
+				//yay lightz
+				CLight* lightRef = static_cast<CLight*>(pEntity);
+				lightRef->TurnOff();
+			}
+			
+
+			if(FStrEq(entClassname, "env_glow")){
+				//pEntity->pev->nextthink = 0;
+				//::UTIL_Remove(pEntity);
+				pEntity->pev->effects |= EF_NODRAW;
+			}
+
+
+		}//END OF for loop through all entities.
+	}//END OF initial entity edict check
+
+
+
 
 	global_forceWorldLightOff = 1;
 
@@ -6500,14 +6546,20 @@ void precacheAll(void){
 			PRECACHE_SOUND("squeek/sqk_deploy1.wav");
 			*/
 
+
+			//NOTICE - not worth making the precache standard attack miss / hit sound methods static.  All their sounds are already included in here.
+			//CBaseMonster::precacheStandardMeleeAttackMissSounds();
+			//CBaseMonster::precacheStandardMeleeAttackHitSounds();
+
+			PRECACHE_SOUND("zombie/claw_miss1.wav");
+			PRECACHE_SOUND("zombie/claw_miss2.wav");
 			PRECACHE_SOUND("zombie/claw_strike1.wav");
 			PRECACHE_SOUND("zombie/claw_strike2.wav");
 			PRECACHE_SOUND("zombie/claw_strike3.wav");
+
 			PRECACHE_SOUND("garg/gar_flameoff1.wav");
 			PRECACHE_SOUND("garg/gar_flameon1.wav");
 			PRECACHE_SOUND("garg/gar_flamerun1.wav");
-			PRECACHE_SOUND("zombie/claw_miss1.wav");
-			PRECACHE_SOUND("zombie/claw_miss2.wav");
 			PRECACHE_SOUND("garg/gar_step1.wav");
 			PRECACHE_SOUND("garg/gar_step2.wav");
 			PRECACHE_SOUND("garg/gar_idle1.wav");

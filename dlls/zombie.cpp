@@ -569,11 +569,13 @@ void CZombie :: HandleAnimEvent( MonsterEvent_t *pEvent )
 				// Play a random attack hit sound
 				EMIT_SOUND_FILTERED ( ENT(pev), CHAN_WEAPON, pAttackHitSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackHitSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
 			}
-			else // Play a random attack miss sound
+			else{ // Play a random attack miss sound
 				EMIT_SOUND_FILTERED ( ENT(pev), CHAN_WEAPON, pAttackMissSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackMissSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
+			}
 
-			if (RANDOM_LONG(0,1))
+			if (RANDOM_LONG(0,1)){
 				AttackSound();
+			}
 		}
 		break;
 
@@ -592,11 +594,13 @@ void CZombie :: HandleAnimEvent( MonsterEvent_t *pEvent )
 				}
 				EMIT_SOUND_FILTERED ( ENT(pev), CHAN_WEAPON, pAttackHitSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackHitSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
 			}
-			else
+			else{
 				EMIT_SOUND_FILTERED ( ENT(pev), CHAN_WEAPON, pAttackMissSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackMissSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
+			}
 
-			if (RANDOM_LONG(0,1))
+			if (RANDOM_LONG(0,1)){
 				AttackSound();
+			}
 		}
 		break;
 
@@ -614,17 +618,19 @@ void CZombie :: HandleAnimEvent( MonsterEvent_t *pEvent )
 				}
 				EMIT_SOUND_FILTERED ( ENT(pev), CHAN_WEAPON, pAttackHitSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackHitSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
 			}
-			else
+			else{
 				EMIT_SOUND_FILTERED ( ENT(pev), CHAN_WEAPON, pAttackMissSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackMissSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
+			}
 
-			if (RANDOM_LONG(0,1))
+			if (RANDOM_LONG(0,1)){
 				AttackSound();
+			}
 		}
 		break;
 
-		default:
+		default:{
 			CBaseMonster::HandleAnimEvent( pEvent );
-			break;
+		break;}
 	}
 }
 

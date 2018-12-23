@@ -426,7 +426,7 @@ void CHAssault::HandleEventQueueEvent(int arg_eventID){
 	switch(arg_eventID){
 	case 0:
 		{		
-		CBaseEntity *pHurt = Kick();
+		CBaseEntity *pHurt = HumanKick(77);
 
 		if ( pHurt )
 		{
@@ -445,12 +445,14 @@ void CHAssault::HandleEventQueueEvent(int arg_eventID){
 			//EMIT_SOUND_FILTERED ( ENT(pev), CHAN_WEAPON, pAttackHitSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackHitSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
 			EMIT_SOUND_FILTERED ( ENT(pev), CHAN_WEAPON, pAttackHitSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackHitSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
 							
+		}else{
+			playStandardMeleeAttackMissSound();
 		}
 	break;
 		}
 	case 1:
 		{
-		CBaseEntity *pHurt = Kick();
+		CBaseEntity *pHurt = HumanKick(82);
 
 		if ( pHurt )
 		{
@@ -467,6 +469,8 @@ void CHAssault::HandleEventQueueEvent(int arg_eventID){
 			pHurt->TakeDamage( pev, pev, gSkillData.hassaultDmgMelee, DMG_CLUB );
 			EMIT_SOUND_FILTERED ( ENT(pev), CHAN_WEAPON, pAttackHitSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackHitSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
 							
+		}else{
+			playStandardMeleeAttackMissSound();
 		}
 	break;
 		}
@@ -723,7 +727,8 @@ void CHAssault :: Precache()
 	//already covered in "pAttackMissSounds".  Check it.
 	//PRECACHE_SOUND("zombie/claw_miss2.wav");// because we use the basemonster SWIPE animation event
 
-	
+	//zombie strike's precached by the hgrunt already.
+	//precacheStandardMeleeAttackMissSounds(); //MODDD - lazy lazy.
 
 
 
@@ -2900,27 +2905,6 @@ void CHAssault :: MonsterThink ( void )
 
 }
 
-
-//copied from CHGrunt
-CBaseEntity* CHAssault :: Kick( void )
-{
-	TraceResult tr;
-
-	UTIL_MakeVectors( pev->angles );
-	Vector vecStart = pev->origin;
-	vecStart.z += pev->size.z * 0.5;
-	Vector vecEnd = vecStart + (gpGlobals->v_forward * 77);
-
-	UTIL_TraceHull( vecStart, vecEnd, dont_ignore_monsters, head_hull, ENT(pev), &tr );
-	
-	if ( tr.pHit )
-	{
-		CBaseEntity *pEntity = CBaseEntity::Instance( tr.pHit );
-		return pEntity;
-	}
-
-	return NULL;
-}
 
 
 

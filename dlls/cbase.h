@@ -355,6 +355,9 @@ public:
 	//is this the first time calling Killed? important sometimes.
 	BOOL firstTimeKilled;
 
+	Activity timeOfDeath_activity;
+	int timeOfDeath_sequence;
+
 	//MODDD
 	virtual BOOL usesSoundSentenceSave(void);
 

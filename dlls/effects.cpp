@@ -1175,6 +1175,9 @@ void CGlow::Spawn( void )
 	pev->effects		= 0;
 	pev->frame			= 0;
 
+	//what??
+	//const char* modNam = STRING(pev->model);
+
 	PRECACHE_MODEL( (char *)STRING(pev->model) );
 	setModel( STRING(pev->model) );
 

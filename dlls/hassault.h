@@ -184,9 +184,7 @@ public:
 	BOOL soundgiven;
 	int		m_iBrassShell;
 	void MonsterThink( void );
-//	virtual void HAssaultThink( void );
-	CBaseEntity* Kick( void );
-
+	
 
 	//MADE VIRTUAL!!!
 	BOOL FValidateCover ( const Vector &vecCoverLocation );

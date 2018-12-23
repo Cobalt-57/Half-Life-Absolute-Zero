@@ -18,6 +18,62 @@ extern float global_noFlinchOnHard;
 
 
 
+//sequences in the anim, in the order they appear in the anim. Some anims have the same display name and so should just be referenced by order
+//(numbered index), named well after purpose and based on display names for clarity. Safer this way.
+
+/*
+enum kingPin_sequence {  //key: frames, FPS
+	KINGPIN_IDLE,
+	KINGPIN_WALK,
+	KINGPIN_RUN,
+
+};
+*/
+
+//ANIMATION COMMENT - don't know if the "run" animation puts the kingping forwards a little much? When it stops to do "attack_" anything
+//                    it appears to be pushed back noticably, or on changing from "idle1" to "run" it pushes forwards.
+
+//                    Also is the point while standing overall a little pushed to the back, maybe the run's position is correct?
+//                    move a little to the left or right while it tries to melee, it pushes itself left or right in a circular fashion instead of rotating on its own center.
+
+
+
+//MODDD - the islave should prefer walking a lot too.
+//        TODO QUESTION - Should thrown projectiles like grenades be reflected? how about chumtoads, snarks?  Already sure crossbow bolts / RPG rounds should be reflected.
+
+
+
+
+
+enum kingPin_sequence {  //key: frames, FPS
+	KINGPIN_ATTACK_BOTH,  //21, 30
+	KINGPIN_ATTACK_LEFT,  //21, 30
+	KINGPIN_ATTACK_RIGHT, //21, 30
+	KINGPIN_DIE_FORWARD,  //41, 30
+	KINGPIN_DIE_HEADSHOT,  //47, 30
+	KINGPIN_DIE_SIMPLE,  //71, 30
+	KINGPIN_MAGE_START,  //16, 30
+	KINGPIN_MAGE_LOOP,  //16, 30
+	KINGPIN_MAGE_END,  //15, 30
+	KINGPIN_SMALL_FLINCH1,  //16, 30  WARNING - broken yet.
+	KINGPIN_SMALL_FLINCH2,  //16, 30
+	KINGPIN_IDLE1,  //121, 22
+	KINGPIN_WALK,  //41, 30
+	KINGPIN_RUN  //20, 30
+
+
+};
+
+
+
+//placeholders for now.
+#define KINGPIN_SCYTHE 0
+#define KINGPIN_PSIONIC_CHARGE 1
+#define KINGPIN_PSIONIC_LAUNCH 0
+#define KINGPIN_DIE 0
+#define KINGPIN_POWERUP 0
+//TODO - should there be an anim for deflecting projectiles or is that passive roughly in the direction it's looking? or all directions all the time?
+
 
 
 
@@ -908,10 +964,8 @@ int CKingPin::LookupActivityHard(int activity){
 
 	//no need for default, just falls back to the normal activity lookup.
 	switch(activity){
-		case ACT_IDLE:
-			//return CBaseAnimating::LookupActivity(activity);
-			return KINGPIN_IDLE;
-		break;
+		
+		/*
 		case ACT_MELEE_ATTACK1:
 			//pev->flags &= ~EF_NOINTERP;
 			//pev->effects |= EF_NOINTERP;
@@ -921,14 +975,15 @@ int CKingPin::LookupActivityHard(int activity){
 			//pev->framerate = 6;
 			return KINGPIN_SCYTHE;
 		break;
+		*/
+		/*
 		case ACT_RANGE_ATTACK1:
 			m_flFramerateSuggestion = 3;
 			this->animEventQueuePush(60.0f/22.0f, 1);
 			return KINGPIN_PSIONIC_LAUNCH;
 		break;
-		case ACT_DIESIMPLE:
-			return KINGPIN_DIE;
-		break;
+		*/
+
 	}//END OF switch(...)
 	
 	//not handled by above?  try the real deal.
@@ -941,19 +996,14 @@ int CKingPin::tryActivitySubstitute(int activity){
 
 	//no need for default, just falls back to the normal activity lookup.
 	switch(activity){
-		case ACT_IDLE:
-			//return CBaseAnimating::LookupActivity(activity);
-			return KINGPIN_IDLE;
-		break;
+		/*
 		case ACT_MELEE_ATTACK1:
 			return KINGPIN_SCYTHE;
 		break;
 		case ACT_RANGE_ATTACK1:
 			return KINGPIN_PSIONIC_LAUNCH;
 		break;
-		case ACT_DIESIMPLE:
-			return KINGPIN_DIE;
-		break;
+		*/
 	}//END OF switch(...)
 
 
