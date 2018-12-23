@@ -26,6 +26,7 @@
 
 //TODO - replace my death explosion effect with some green particles like the friendly vomit kinda scattering
 //       and slowly falling maybe? make a more organic squishing sound if possible?
+//       DONE.  But should some other organic sound effect accompany this kind of "explosion"? the generic gibmonster crunch sound may be good enough.
 
 
 
@@ -631,7 +632,7 @@ int CFloater :: CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, C
 
 	//UTIL_TraceHull( vecStart + Vector( 0, 0, 32 ), vecEnd + Vector( 0, 0, 32 ), dont_ignore_monsters, large_hull, edict(), &tr );
 
-	//MODDD - large_hull is probably the safest for fliers in general.  point_hull if using the bounce system. or maybe head_hull?
+	//MODDD - large_hull is probably the safest for flyers in general.  point_hull if using the bounce system. or maybe head_hull?
 	UTIL_TraceHull( vecStart + Vector( 0, 0, 4), vecEnd + Vector( 0, 0, 4), dont_ignore_monsters, head_hull, edict(), &tr );
 	
 	// ALERT( at_console, "%.0f %.0f %.0f : ", vecStart.x, vecStart.y, vecStart.z );
@@ -1078,7 +1079,7 @@ Schedule_t* CFloater::GetScheduleOfType( int Type){
 	switch(Type){
 
 		case SCHED_DIE:
-			return flierDeathSchedule();
+			return flyerDeathSchedule();
 		break;
 		case SCHED_RANGE_ATTACK1:
 			return slFloaterRangeAttack1;
@@ -1355,6 +1356,7 @@ GENERATE_GIBMONSTER_IMPLEMENTATION(CFloater)
 
 
 
+
 //Parameters: BOOL fGibSpawnsDecal
 //Returns: BOOL. Did this monster spawn gibs and is safe to stop drawing?
 // If this monster has a special way of spawning gibs or checking whether to spawn gibs, handle that here and remove the parent call.
@@ -1390,7 +1392,14 @@ GENERATE_GIBMONSTERGIB_IMPLEMENTATION(CFloater)
 		//Let's register the monster as dead before doing the explosion, that may also help.
 		BOOL parentResult = GENERATE_GIBMONSTERGIB_PARENT_CALL(CFlyingMonster);
 
-		UTIL_Explosion(pev, pev->origin + Vector(0, 0, 8), spriteChosen, (160 - 50) * 0.60, 15, TE_EXPLFLAG_NOSOUND | TE_EXPLFLAG_NOPARTICLES, pev->origin + Vector(0, 0, 16), 1 );
+
+		
+		
+
+		//do this actually.
+		PLAYBACK_EVENT_FULL (FEV_GLOBAL, this->edict(), g_sFloaterExplode, 0.0, (float *)&this->pev->origin, (float *)&this->pev->angles, 0.0, 0.0, this->entindex(), 0, 0, 0);
+
+		//UTIL_Explosion(pev, pev->origin + Vector(0, 0, 8), spriteChosen, (160 - 50) * 0.60, 15, TE_EXPLFLAG_NOSOUND | TE_EXPLFLAG_NOPARTICLES, pev->origin + Vector(0, 0, 16), 1 );
 
 		//BEWARE: RadiusDamage can damage this monster itself and trigger and endless loop of "Killed" on this monster, "GibMonster" for explosive damage,
 		//        then back to here where it does RadiusDamage, Killed, Gibmonster, RadiusDamage, Killed, Gibmonster, etc.  Because taking damage while dead
@@ -1450,7 +1459,7 @@ GENERATE_KILLED_IMPLEMENTATION(CFloater)
 	/*
 	//if you have the "FL_KILLME" flag, it means this is about to get deleted (gibbed). No point in doing any of this then.
 	if(firstCall && !(pev->flags & FL_KILLME) ){
-		cheapKilledFlier();
+		cheapKilledFlyer();
 	}//END OF firstCall check
 	*/
 

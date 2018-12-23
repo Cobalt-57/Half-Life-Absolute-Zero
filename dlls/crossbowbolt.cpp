@@ -340,7 +340,7 @@ void CCrossbowBolt::ExplodeThink( void )
 	}
 
 	//...
-	CSoundEnt::InsertSound ( bits_SOUND_COMBAT, explosionOrigin, NORMAL_EXPLOSION_VOLUME, 3.0 );
+	CSoundEnt::InsertSound ( bits_SOUND_COMBAT, explosionOrigin, NORMAL_EXPLOSION_VOLUME / 2.0f, 3.0 );
 	entvars_t *pevOwner;
 	if ( pev->owner )
 		pevOwner = VARS( pev->owner );

@@ -390,13 +390,13 @@ BOOL CBaseMonster::getForceAllowNewEnemy(CBaseEntity* pOther){return FALSE;}
 void CBaseMonster::tempMethod(void){}
 BOOL CBaseMonster::needsMovementBoundFix(void){return FALSE;}
 void CBaseMonster::cheapKilled(void){}
-void CBaseMonster::cheapKilledFlier(void){}
+void CBaseMonster::cheapKilledFlyer(void){}
 void CBaseMonster::OnKilledSetTouch(void){}
 
 void CBaseMonster::KilledFinishTouch( CBaseEntity *pOther ){}
 
 int CBaseMonster::getLoopingDeathSequence(void){return 0;}
-Schedule_t* CBaseMonster::flierDeathSchedule(void){return NULL;}
+Schedule_t* CBaseMonster::flyerDeathSchedule(void){return NULL;}
 BOOL CBaseMonster::getMovementCanAutoTurn(void){return FALSE;}
 
 void CBaseMonster::updateEnemyLKP(void){}

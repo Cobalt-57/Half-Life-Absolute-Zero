@@ -1127,7 +1127,7 @@ Schedule_t* CArcher::GetScheduleOfType( int Type){
 
 
 		case SCHED_DIE:
-			//return flierDeathSchedule();
+			//return flyerDeathSchedule();
 			return slDieWaterFloat;
 		break;
 		case SCHED_RANGE_ATTACK1:
@@ -1495,7 +1495,7 @@ GENERATE_KILLED_IMPLEMENTATION(CArcher)
 	/*
 	//if you have the "FL_KILLME" flag, it means this is about to get deleted (gibbed). No point in doing any of this then.
 	if(firstCall && !(pev->flags & FL_KILLME) ){
-		cheapKilledFlier();
+		cheapKilledFlyer();
 	}//END OF firstCall check
 	*/
 

@@ -16,51 +16,11 @@
 #include "../cl_util.h"
 #include "event_api.h"
 
-extern "C"
-{
-// HLDM
-void EV_FireGlock1( struct event_args_s *args  );
-void EV_FireGlock2( struct event_args_s *args  );
-void EV_FireShotGunSingle( struct event_args_s *args  );
-void EV_FireShotGunDouble( struct event_args_s *args  );
-void EV_FireMP5( struct event_args_s *args  );
-void EV_FireMP52( struct event_args_s *args  );
-void EV_FirePython( struct event_args_s *args  );
-void EV_FireGauss( struct event_args_s *args  );
-void EV_SpinGauss( struct event_args_s *args  );
-void EV_Crowbar( struct event_args_s *args );
-void EV_FireCrossbow( struct event_args_s *args );
-void EV_FireCrossbow2( struct event_args_s *args );
-void EV_FireRpg( struct event_args_s *args );
-void EV_EgonFire( struct event_args_s *args );
-void EV_EgonStop( struct event_args_s *args );
-void EV_HornetGunFire( struct event_args_s *args );
-void EV_TripmineFire( struct event_args_s *args );
-void EV_SnarkFire( struct event_args_s *args );
-//MODDD
-void EV_ChumToadFire( struct event_args_s *args );
 
+#include "ev_hldm.h"
 
+//MODDD - EV_... prototypes moved to ev_hldm.h.
 
-//MODDDMIRROR
-void EV_Mirror( struct event_args_s *args );//temporary mirror stuff
-
-void EV_TrainPitchAdjust( struct event_args_s *args );
-
-//MODDD
-void EV_Trail_EngineChoice(struct event_args_s* args );
-void EV_imitation7(struct event_args_s* args );
-void EV_Trail (struct event_args_s *args );
-void EV_rocketAlphaTrail (struct event_args_s *args );
-void EV_ShowBalls (struct event_args_s *args );
-void EV_ShowBallsPowerup (struct event_args_s *args );
-void EV_QuakeExplosionEffect (struct event_args_s *args);
-void EV_HLDM_DecalGunshotCustomEvent  (struct event_args_s *args);
-void EV_FreakyLight  (struct event_args_s *args);
-void EV_FriendlyVomit  (struct event_args_s *args);
-
-
-}
 
 /*
 ======================
@@ -122,6 +82,7 @@ void Game_HookEvents( void )
 	gEngfuncs.pfnHookEvent( "events/gunshotnew.sc",				EV_HLDM_DecalGunshotCustomEvent );
 	gEngfuncs.pfnHookEvent( "events/freakylight.sc",			EV_FreakyLight );
 	gEngfuncs.pfnHookEvent( "events/friendlyvomit.sc",			EV_FriendlyVomit );
+	gEngfuncs.pfnHookEvent( "events/floaterexplode.sc",			EV_FloaterExplode );
 
 	
 

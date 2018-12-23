@@ -1396,7 +1396,7 @@ Schedule_t slDieLoop[] =
 
 
 //MODDD - new. Die, but loop on the death anim instead.
-//        This replaces the Die schedule above for fliers or anything else using it.
+//        This replaces the Die schedule above for flyers or anything else using it.
 //        Don't call that after calling this or vice versa.
 //        TASK_DIE_LOOP must still be satisfied at some point (like hitting the ground).
 //        This must be satisfied by a check to some variable ticked on from hitting the ground

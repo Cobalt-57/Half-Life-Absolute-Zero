@@ -902,7 +902,7 @@ Schedule_t* CController :: GetScheduleOfType ( int Type )
 	case SCHED_FAIL:
 		return slControllerFail;
 	case SCHED_DIE:{
-		return flierDeathSchedule();
+		return flyerDeathSchedule();
 	break;}
 
 

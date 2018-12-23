@@ -1322,7 +1322,7 @@ void CBaseMonster :: RunTask ( Task_t *pTask )
 		//No default behavior. Runs indefinitely unless a child class implements this and tells it when to stop with "TaskComplete" and let TASK_DIE proceed as usual
 		//(pick a typical death sequence, run until the end and freeze at the last frame).
 
-		//CHANGE OF PLANS. For falling fliers, no need to give this any special behavior, the generic "KilledFinishTouch" will work fine in progressing for this.
+		//CHANGE OF PLANS. For falling flyers, no need to give this any special behavior, the generic "KilledFinishTouch" will work fine in progressing for this.
 	break;}
 	//MODDD - MOVED FROM ichthyosaur.cpp, renamed from TASK_ICHTHYOSAUR_FLOAT
 	case TASK_WATER_DEAD_FLOAT:{
@@ -2656,8 +2656,8 @@ case TASK_GET_PATH_TO_BESTSCENT:
 		//Just set my touch to anticipate hitting the ground and moving on to the next task (TASK_DIE) for the anim for hitting the ground to finish.
 		
 		SetTouch(&CBaseMonster::KilledFinishTouch);
-
 		TaskComplete();
+
 	break;}
 	//MODDD - also new
 	case TASK_WATER_DEAD_FLOAT:

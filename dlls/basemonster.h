@@ -502,13 +502,13 @@ public:
 
 	virtual BOOL needsMovementBoundFix(void);
 	virtual void cheapKilled(void);
-	virtual void cheapKilledFlier(void);
+	virtual void cheapKilledFlyer(void);
 	virtual void OnKilledSetTouch(void);
 
 	EXPORT void KilledFinishTouch( CBaseEntity *pOther );
 
 	virtual int getLoopingDeathSequence(void);
-	static Schedule_t* flierDeathSchedule(void);
+	Schedule_t* flyerDeathSchedule(void);
 	virtual BOOL getMovementCanAutoTurn(void);
 
 	void updateEnemyLKP(void);

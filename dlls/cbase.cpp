@@ -557,10 +557,10 @@ BOOL CBaseEntity::usesSoundSentenceSave(void){
 
 
 
-//Is this monster a flier for the purposes of pathfinding or what nodes to use?
-//Fliers use a different type of nodes than the typical snapped-to-ground ones.
-//Fliers are things that defy gravity and can move anywhere on the Z axis really.  Not just anything that can jump.
-//Don't worry about swimming (pev->flags having FL_SWIM I think).  Swimmers are just fliers with a different coat of paint
+//Is this monster a flyer for the purposes of pathfinding or what nodes to use?
+//Flyers use a different type of nodes than the typical snapped-to-ground ones.
+//Flyers are things that defy gravity and can move anywhere on the Z axis really.  Not just anything that can jump.
+//Don't worry about swimming (pev->flags having FL_SWIM I think).  Swimmers are just flyers with a different coat of paint
 //and already know to use their own in-water nodes.
 BOOL CBaseEntity::isMovetypeFlying(void) const{
 	return (pev->movetype == MOVETYPE_FLY || pev->movetype == MOVETYPE_BOUNCEMISSILE);

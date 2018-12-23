@@ -63,50 +63,9 @@ void VectorAngles( const float *forward, float *angles );
 
 extern cvar_t *cl_lw;
 
-extern "C"
-{
 
-// HLDM
-void EV_FireGlock1( struct event_args_s *args  );
-void EV_FireGlock2( struct event_args_s *args  );
-void EV_FireShotGunSingle( struct event_args_s *args  );
-void EV_FireShotGunDouble( struct event_args_s *args  );
-void EV_FireMP5( struct event_args_s *args  );
-void EV_FireMP52( struct event_args_s *args  );
-void EV_FirePython( struct event_args_s *args  );
-void EV_FireGauss( struct event_args_s *args  );
-void EV_SpinGauss( struct event_args_s *args  );
-void EV_Crowbar( struct event_args_s *args  );
-void EV_FireCrossbow( struct event_args_s *args  );
-void EV_FireCrossbow2( struct event_args_s *args  );
-void EV_FireRpg( struct event_args_s *args  );
-void EV_EgonFire( struct event_args_s *args  );
-void EV_EgonStop( struct event_args_s *args  );
-void EV_HornetGunFire( struct event_args_s *args  );
-void EV_TripmineFire( struct event_args_s *args  );
-void EV_SnarkFire( struct event_args_s *args  );
+//MODDD - event method EV_... prototypes / externs moved to ev_hldm.h
 
-//MODDDMIRROR
-void EV_Mirror( struct event_args_s *args ); 
-
-void EV_TrainPitchAdjust( struct event_args_s *args );
-
-//MODDD
-void EV_Trail_EngineChoice(event_args_t* args);
-void EV_imitation7(event_args_t* args);
-void EV_Trail( event_args_t *args  );
-void EV_rocketAlphaTrail( event_args_t *args  );
-
-void EV_ShowBalls( event_args_t* args);
-void EV_ShowBallsPowerup( event_args_t* args);
-void EV_QuakeExplosionEffect( event_args_t* args);
-void EV_HLDM_DecalGunshotCustomEvent( event_args_t* args);
-
-void EV_FreakyLight( event_args_t* args);
-void EV_FriendlyVomit( event_args_t* args);
-
-
-}
 
 #define VECTOR_CONE_1DEGREES Vector( 0.00873, 0.00873, 0.00873 )
 #define VECTOR_CONE_2DEGREES Vector( 0.01745, 0.01745, 0.01745 )
@@ -1594,9 +1553,6 @@ void createBallPowerup(int* sprite, Vector* loc){
 
 
 void createBallVomit(int* sprite, Vector* loc, Vector* dir){
-
-
-
 	float randomStrength = 80;
 
 	/*
@@ -1634,6 +1590,102 @@ void createBallVomit(int* sprite, Vector* loc, Vector* dir){
 
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+void floaterGasCallback ( struct tempent_s *ent, float frametime, float currenttime )
+{
+	if ( currenttime < ent->entity.baseline.fuser1 )
+		return;
+
+	/*
+	if ( ent->entity.origin == ent->entity.attachment[0] ){
+		//HAVE LENIENCY.  Wait for this to be frozen for 0.15 seconds, sheesh.
+		if(ent->entity.baseline.fuser2 != -1){
+			if(ent->entity.baseline.fuser2 < gEngfuncs.GetClientTime() ){
+				ent->die = gEngfuncs.GetClientTime();
+			}
+		}else{
+			//countdown...
+			ent->entity.baseline.fuser2 = gEngfuncs.GetClientTime() + 0.3f;
+		}
+
+	}else{
+		ent->entity.baseline.fuser2 = -1;  //not dying now.
+    	VectorCopy ( ent->entity.origin, ent->entity.attachment[0] );
+	}
+	*/
+
+	//ent->entity.origin = ent->entity.origin + Vector(0, 0, -frametime * 2);
+
+	if(ent->entity.baseline.origin[2] > -3.8){
+		ent->entity.baseline.origin[2] += -0.8;
+	}else{
+		ent->entity.baseline.origin[2] = -3.8;
+	}
+
+	//TEST - real slow for now!
+	ent->entity.baseline.fuser1 = gEngfuncs.GetClientTime() + 0;
+}//END OF EV_imitation7_think
+
+
+
+
+void createBallFloaterGas(int* sprite, const Vector& loc){
+
+	float randomStrength = 14;
+
+	/*
+	float randx = gEngfuncs.pfnRandomFloat(-randomStrength, randomStrength);
+	float randy = gEngfuncs.pfnRandomFloat(-randomStrength, randomStrength);
+	float randz = gEngfuncs.pfnRandomFloat(-randomStrength, randomStrength);
+	*/
+	float randx = gEngfuncs.pfnRandomFloat(-randomStrength, randomStrength);
+	float randy = gEngfuncs.pfnRandomFloat(-randomStrength, randomStrength);
+	float randz = 80 + gEngfuncs.pfnRandomFloat(0, 30);
+
+	float randScale = gEngfuncs.pfnRandomFloat(0.88, 1.06);
+
+	/*
+	if(gEngfuncs.pfnRandomLong(0, 1) == 0){
+		randx *= -1;
+	}
+	if(gEngfuncs.pfnRandomLong(0, 1) == 0){
+		randy *= -1;
+	}
+	
+	if(gEngfuncs.pfnRandomLong(0, 1) == 0){
+		randz *= -1;
+	}
+	*/
+
+	
+	Vector locWhat = loc;
+	vec3_t rot = Vector(randx, randy, randz);
+
+	//FTENT_SLOWGRAVITY  ?
+	TEMPENTITY* eh = gEngfuncs.pEfxAPI->R_TempSprite( locWhat, rot, randScale, *sprite, kRenderGlow, kRenderFxNoDissipation, 160.0 / 255.0, 1.8f, FTENT_CLIENTCUSTOM | FTENT_COLLIDEWORLD | FTENT_FADEOUT );
+	if(eh){
+		eh->fadeSpeed = 0.07f;
+		eh->bounceFactor = 0;
+		eh->callback = &floaterGasCallback;
+		
+	}else{
+		easyForcePrintLine("WHY YOU FAIL");
+	}
+	//easyPrintLine("??? %.2f", eh->bounceFactor);
+
+}
 
 
 
@@ -1911,6 +1963,35 @@ void EV_FriendlyVomit( event_args_t* args){
 	}
 
 }//END OF EV_FriendlyVomit
+
+
+
+//MODDD - TODO. should behavior varry from being destroyed mid-fall or while on the ground?  such as gibbed midair or auto-exploded?
+void EV_FloaterExplode( event_args_t* args){
+
+	int duckyou = gEngfuncs.pEventAPI->EV_FindModelIndex( "sprites/hotglow.spr" );
+
+	int m_iHotglowGreen;
+	m_iHotglowGreen = gEngfuncs.pEventAPI->EV_FindModelIndex( "sprites/hotglow_green.spr" );
+	
+
+	vec3_t origin;
+	vec3_t ang;
+	//vec3_origin
+	VectorCopy( args->origin, origin );
+	VectorCopy( args->angles, ang);
+
+	int ballsToSpawn = 8;
+	
+	int balls = ballsToSpawn;
+	for(int i = 0; i < balls; i++){
+		createBallFloaterGas(&m_iHotglowGreen, origin + Vector(0, 0, 12) );
+	}
+
+}//END OF EV_FloaterExplode
+
+
+
 
 
 

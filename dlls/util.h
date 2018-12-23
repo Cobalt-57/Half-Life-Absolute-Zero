@@ -51,7 +51,7 @@ extern unsigned short g_quakeExplosionEffect;
 extern unsigned short g_decalGunshotCustomEvent;
 extern unsigned short g_sFreakyLight;
 extern unsigned short g_sFriendlyVomit;
-
+extern unsigned short g_sFloaterExplode;
 
 
 

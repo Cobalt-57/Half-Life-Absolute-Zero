@@ -7840,7 +7840,7 @@ void CBaseMonster::EndOfRevive(int preReviveSequence){
 
 //Overridable. Whether a monster wants to turn to face a node up to so many degrees (such as +- 45 degrees before going back to walking or running).
 // as this is plus or minus already, negative values make no sense. Negative 1 allows all angles as well.
-//Monsters that can strafe like hgrunts or fliers may want to override this to depend on some other factor, like being mid-strafe or flight or not.
+//Monsters that can strafe like hgrunts or flyers may want to override this to depend on some other factor, like being mid-strafe or flight or not.
 float CBaseMonster::MoveYawDegreeTolerance(){
 	//return -1;
 	return 35;
@@ -7931,7 +7931,7 @@ void CBaseMonster::cheapKilled(void){
 
 
 //Version of cheapKilled for flying monsters. They should still drop to the ground as expected, not akwardly freeze in mid-air.  Or maybe they should? dunno.
-void CBaseMonster::cheapKilledFlier(void){
+void CBaseMonster::cheapKilledFlyer(void){
 	this->m_IdealMonsterState = MONSTERSTATE_DEAD;
 	//MODDD - major HACK - pathetic stand-in death anim until there is a proper death anim.
 	//this->pev->gravity = 0;
@@ -7957,12 +7957,12 @@ void CBaseMonster::cheapKilledFlier(void){
 
 	DeathAnimationStart();
 	DeathAnimationEnd();
-}//END OF cheapKilledFlier
+}//END OF cheapKilledFlyer
 
 
 //When killed, how do we handle the "Touch" callback method from the engine?
 //Default says to set it to NULL. Override this for different behavior.
-//i.e., fliers / hover-ers can tell this to interrupt a falling cycler animation on colliding with anything (the ground?).
+//i.e., flyers / hover-ers can tell this to interrupt a falling cycler animation on colliding with anything (the ground?).
 //In that case, default behavior of turning touch off would leave you scratching your head as to why it ignores everything after killed.
 //HOWEVER the new slDieFallLoop schedule include setting Touch to KilledFinishTouch which works for all monsters.  This method (OnKilledSetTouch) may no longer be necessary.
 void CBaseMonster::OnKilledSetTouch(void){
@@ -7988,7 +7988,7 @@ void CBaseMonster::KilledFinishTouch( CBaseEntity *pOther ){
 
 
 
-//Makes the most sense for fliers to have looping falling animations at deaths in air.
+//Makes the most sense for flyers to have looping falling animations at deaths in air.
 //By default, -1 means none.
 //This is called for by the 
 int CBaseMonster::getLoopingDeathSequence(void){
@@ -7997,13 +7997,31 @@ int CBaseMonster::getLoopingDeathSequence(void){
 
 
 //Depending on the value of CVar flyerKilledFallingLoop, pick the schedule that uses the looping animation or don't.
-Schedule_t* CBaseMonster::flierDeathSchedule(void){
+Schedule_t* CBaseMonster::flyerDeathSchedule(void){
+	
+	
 	if(EASY_CVAR_GET(flyerKilledFallingLoop) == 1){
-		//used to be "slDieLoop"
-		return slDieFallLoop;
-	}else{
-		return slDie;
-	}
+
+		//First a check. If we are very close or virtually on the ground, just skip to the typical die method to do the "hitting the ground" animation.
+
+		TraceResult tr;
+		Vector vecStart = pev->origin + Vector(0, 0, pev->mins.z);
+
+		UTIL_TraceLine(vecStart, vecStart + Vector(0, 0, -6), dont_ignore_monsters, this->edict(), &tr);
+
+		if(tr.fStartSolid || tr.fAllSolid || tr.flFraction < 1.0){
+			//go to "slDie" below.
+		}else{
+			//clear? send this.
+			return slDieFallLoop;
+		}
+
+	}//END OF flyerKilledFallingLoop check
+
+
+
+	//default
+	return slDie;
 }
 
 //Can this monster automatically turn to face a node better in ::Move above?

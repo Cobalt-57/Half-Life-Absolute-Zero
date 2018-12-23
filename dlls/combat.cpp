@@ -1445,7 +1445,7 @@ GENERATE_KILLED_IMPLEMENTATION(CBaseMonster)
 	{
 
 		//WARNING - bad assumption! Leave what to do to the touch method up to the monster in question.
-		//Fliers may want to detect when they touch the ground to stop a falling cycler.
+		//Flyers may want to detect when they touch the ground to stop a falling cycler.
 		//SetTouch( NULL );
 		OnKilledSetTouch();
 		BecomeDead();

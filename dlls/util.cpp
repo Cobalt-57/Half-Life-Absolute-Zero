@@ -63,7 +63,7 @@ unsigned short g_quakeExplosionEffect;
 unsigned short g_decalGunshotCustomEvent;
 unsigned short g_sFreakyLight;
 unsigned short g_sFriendlyVomit;
-
+unsigned short g_sFloaterExplode;
 
 unsigned short model_explosivestuff;
 
@@ -6319,7 +6319,8 @@ void ClientPrecache( void )
 
 	g_sFreakyLight = PRECACHE_EVENT( 1, "events/freakylight.sc" );
 	g_sFriendlyVomit = PRECACHE_EVENT( 1, "events/friendlyvomit.sc");
-
+	
+	g_sFloaterExplode = PRECACHE_EVENT( 1, "events/floaterexplode.sc");
 	
 
 		

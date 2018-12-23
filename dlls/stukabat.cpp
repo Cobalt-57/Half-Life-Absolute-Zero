@@ -2770,7 +2770,7 @@ Schedule_t* CStukaBat :: GetScheduleOfType ( int Type )
 		)
 		{
 			//flying or hanging? leave this up to whether we support the falling cycler or cut straight to the flying dead animation.
-			return flierDeathSchedule();
+			return flyerDeathSchedule();
 		}else{
 			//on the ground? handle this normally.
 			return slDie;
@@ -4808,7 +4808,7 @@ void CStukaBat::checkFloor(const Vector& vecSuggestedDir, const float& travelMag
 
 
 //plus or minus, so effectively double these in degrees.
-//Fliers get more tolerance at least while flying.
+//Flyers get more tolerance at least while flying.
 //The method that involves this from CBaseMonster is probably overridden here and this call is never made.
 float CStukaBat::MoveYawDegreeTolerance(){
 	//return -1;
@@ -4986,7 +4986,7 @@ BOOL CStukaBat::violentDeathAllowed(void){
 }
 
 BOOL CStukaBat::violentDeathDamageRequirement(void){
-	//little more fragile since it's a flier so easier to knock around from impact?
+	//little more fragile since it's a flyer so easier to knock around from impact?
 	return (lastDamageReceived >= 10);
 }
 
@@ -5004,7 +5004,7 @@ int CStukaBat::violentDeathPriority(void){
 Activity CBaseMonster :: GetDeathActivity ( void ){
 
 	if(violentDeathDamageRequirement()){
-		//Fliers are a little harder to hit in a direction maybe so just go ahead and register if the damage is met.
+		//Flyers are a little harder to hit in a direction maybe so just go ahead and register if the damage is met.
 		return ACT_DIE_VIOLENT;
 	}
 
