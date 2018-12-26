@@ -444,9 +444,10 @@ Task_t	tlArcherSurfaceAttackPlanFail[] =
 {
 	//now return to roughly around the old point. or just anywhere not at the surface to hide a bit.
 	{ TASK_SET_FAIL_SCHEDULE, (float)SCHED_ARCHER_FAIL_WAIT },
-	{ TASK_ARCHER_SEEK_RANDOM_WANDER_POINT,  (float)0   },
-	{ TASK_RUN_PATH,  (float)0 },
-	{ TASK_WAIT_FOR_MOVEMENT,  (float)0},
+	
+	//{ TASK_ARCHER_SEEK_RANDOM_WANDER_POINT,  (float)0   },
+	//{ TASK_RUN_PATH,  (float)0 },
+	//{ TASK_WAIT_FOR_MOVEMENT,  (float)0},
 };
 
 Schedule_t	slArcherSurfaceAttackPlanFail[] =
@@ -470,7 +471,7 @@ Task_t	tlArcherFailWait[] =
 	//now return to roughly around the old point. or just anywhere not at the surface to hide a bit.
 	{ TASK_STOP_MOVING,			0				},
 	{ TASK_SET_ACTIVITY,		(float)ACT_IDLE },
-	{ TASK_WAIT,				(float)3		},
+	{ TASK_WAIT,				(float)1		},
 	//{ TASK_WAIT_PVS,			(float)0		},
 };
 
@@ -905,18 +906,29 @@ BOOL CArcher::ShouldAdvanceRoute( float flWaypointDist, float flInterval )
 		if ( m_Route[ m_iRouteIndex ].iType & bits_MF_IS_GOAL )
 			flWaypointDist = ( m_Route[ m_iRouteIndex ].vecLocation - pev->origin ).Length();
 
-		if(flWaypointDist < 6.0f){
-			return TRUE;
+		if(m_Route[ m_iRouteIndex ].iType & bits_MF_IS_GOAL){
+
+			if(flWaypointDist < 16.0f){
+				//HACK - we want to stop here exactly, Z-wise. Stop all velocity.
+
+				m_velocity = Vector(0, 0, 0);
+				pev->velocity = Vector(0, 0, 0);
+				UTIL_MoveToOrigin ( ENT(pev), Vector(pev->origin.x, pev->origin.y, m_Route[ m_iRouteIndex ].vecLocation.z), abs(m_Route[ m_iRouteIndex ].vecLocation.z - pev->origin.z) , MOVE_STRAFE );
+			
+				return TRUE;
+			}else{
+				return FALSE;
+			}
+
+		}//END OF goal check
+		else{
+			//do it the way the flier would.
+			return CFlyingMonster::ShouldAdvanceRoute(flWaypointDist, flInterval);
 		}
+
 	}else{
-		//typical lenient way.
-
-		// Get true 3D distance to the goal so we actually reach the correct height
-		if ( m_Route[ m_iRouteIndex ].iType & bits_MF_IS_GOAL )
-			flWaypointDist = ( m_Route[ m_iRouteIndex ].vecLocation - pev->origin ).Length();
-
-		if ( flWaypointDist <= 64 + (m_flGroundSpeed * gpGlobals->frametime) )
-			return TRUE;
+		//typical flyer way.
+		return CFlyingMonster::ShouldAdvanceRoute(flWaypointDist, flInterval);
 
 	}
 
@@ -1499,21 +1511,28 @@ void CArcher::StartTask( Task_t *pTask ){
 
 			Vector surfaceGuess;
 			int tries = 4;
+			int minorTries = 64;
 
 			//try 4 times to see if a point is able to attack the enemy (straight line-trace, unobstructed)
 			
-			while(tries >= 0){
+			while(tries >= 0 && minorTries >= 0){
 				TraceResult trTemp;
 				
-				float randomSurfaceDir_x = RANDOM_FLOAT(0, 600);
-				float randomSurfaceDir_y = RANDOM_FLOAT(0, 600);
+				float randomSurfaceDir_x = RANDOM_FLOAT(0, 900);
+				float randomSurfaceDir_y = RANDOM_FLOAT(0, 900);
 				int surfaceGuessContents;
 				Vector surfaceGuessAboveWaterLevel;
 
 				tries--;
-
+				minorTries--;
 
 				surfaceGuess = originAtWaterLevel + Vector(randomSurfaceDir_x, randomSurfaceDir_y, 0);
+
+				if(UTIL_PointContents(surfaceGuess - Vector(0, 0, 8)) != CONTENTS_WATER){
+					//this isn't even the water? out of bounds, etc.?  Forget this.
+					tries++;  //allow another plain try.
+					continue;
+				}
 
 				//check. If this point is in a solid place it's no good.
 				surfaceGuessContents = UTIL_PointContents(surfaceGuess);
@@ -1524,9 +1543,10 @@ void CArcher::StartTask( Task_t *pTask ){
 				}
 
 				//is above and below a little unobstructed?
-				UTIL_TraceLine(surfaceGuess + Vector(0, 0, -60), surfaceGuess + Vector(0, 0, 30), dont_ignore_monsters, edict(), &trTemp);
+				UTIL_TraceLine(surfaceGuess + Vector(0, 0, -60), surfaceGuess + Vector(0, 0, 38), dont_ignore_monsters, edict(), &trTemp);
 
-				if(trTemp.fStartSolid || trTemp.fAllSolid || trTemp.flFraction < 1.0f){
+				//if(trTemp.fStartSolid || trTemp.fAllSolid || trTemp.flFraction < 1.0f){
+				if(trTemp.fAllSolid || trTemp.flFraction < 1.0f){
 					//if this was obstructed or solid in any way, don't allow it.
 					continue;
 				}
@@ -1537,7 +1557,9 @@ void CArcher::StartTask( Task_t *pTask ){
 				//CHEAT - use the enemy's real position.
 				UTIL_TraceLine(surfaceGuessAboveWaterLevel, m_hEnemy->Center(), dont_ignore_monsters, edict(), &trTemp);
 
-				if(trTemp.fStartSolid || trTemp.fAllSolid){
+
+				//trTemp.fStartSolid ||
+				if( trTemp.fAllSolid){
 					continue;
 				}
 
@@ -1587,7 +1609,8 @@ void CArcher::StartTask( Task_t *pTask ){
 			//yes, the real enemy position. cheat and just grab it straight.  instead of this->m_vecEnemyLKP
 			UTIL_TraceLine(littleAboveThat, m_hEnemy->Center(), dont_ignore_monsters, edict(), &trTemp);
 
-			if(trTemp.fStartSolid || trTemp.fAllSolid){
+			//trTemp.fStartSolid || 
+			if(trTemp.fAllSolid){
 				//nope.
 				TaskFail(); return;
 			}
@@ -2309,7 +2332,8 @@ void CArcher::HandleEventQueueEvent(int arg_eventID){
 		UTIL_TraceLine(pev->origin, vecStart, dont_ignore_monsters, this->edict(), &tr);
 
 
-		if(!tr.fStartSolid && !tr.fAllSolid && tr.flFraction >= 1.0){
+		//!tr.fStartSolid && !
+		if(tr.fAllSolid && tr.flFraction >= 1.0){
 			//pass, go ahead and use this "vecStart" to spawn something.
 		}else{
 			//no? try this intead.

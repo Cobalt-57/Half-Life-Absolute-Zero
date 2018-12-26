@@ -4752,7 +4752,21 @@ void CBaseMonster :: Move ( float flInterval )
 
 	// local move to waypoint.
 	vecDir = ( m_Route[ m_iRouteIndex ].vecLocation - pev->origin ).Normalize();
-	flWaypointDist = ( m_Route[ m_iRouteIndex ].vecLocation - pev->origin ).Length2D();
+
+	//MODDD - HOLD ON!  Why is this always "Length2D()"?  Even for flyers? 
+	//        When would flyers call for Length2D instead of typical Length (includes Z axis)?
+	//flWaypointDist = ( m_Route[ m_iRouteIndex ].vecLocation - pev->origin ).Length2D();
+
+	if( !isMovetypeFlying()){
+		//not a flyer? Default behavior.
+		flWaypointDist = ( m_Route[ m_iRouteIndex ].vecLocation - pev->origin ).Length2D();
+	}else{
+		//Otherwise, use 3D distance instead.  If there's ever a time the Length2D is still preferred... eh. why?
+		flWaypointDist = ( m_Route[ m_iRouteIndex ].vecLocation - pev->origin ).Length();
+	}
+
+
+
 	
 	MakeIdealYaw ( m_Route[ m_iRouteIndex ].vecLocation );
 	ChangeYaw ( pev->yaw_speed );
