@@ -34,6 +34,9 @@ extern DLL_GLOBAL int		g_iSkillLevel;
 
 
 
+//MODDD TODO - should an islave force itself to attack even if it feels cowardly, IF it fails to find cover, or is exposed after finding cover at least once?
+
+
 
 
 //MODD - keep track of sequences in the model.
@@ -854,16 +857,25 @@ void CISlave::onDeathAnimationEnd(void){
 	
 	//let's have a planned revive...
 
-	BOOL canRevive = (global_islaveReviveSelfChance > 0 && RANDOM_FLOAT(0, 1) <= global_islaveReviveSelfChance );
+	//If I plan on fading though, ignore all this and just let me fade out. No chance of self-revive to avoid spam.
 
-	if(canRevive){
+	if(!this->ShouldFadeOnDeath()){
+		BOOL canRevive = (global_islaveReviveSelfChance > 0 && RANDOM_FLOAT(0, 1) <= global_islaveReviveSelfChance );
 
-		selfReviveTime = gpGlobals->time + RANDOM_LONG(global_islaveReviveSelfMinDelay, global_islaveReviveSelfMaxDelay);
+		if(canRevive){
 
-		//note that we omitt the think unlink if we plan on reviving.  Need something to count the time left until a self-revive.
+			selfReviveTime = gpGlobals->time + RANDOM_LONG(global_islaveReviveSelfMinDelay, global_islaveReviveSelfMaxDelay);
+
+			//note that we omitt the think unlink if we plan on reviving.  Need something to count the time left until a self-revive.
+		}else{
+			//kill the "think" linkup like in normal death.
+			SetThink ( NULL );
+		}
 	}else{
-		//kill the "think" linkup like in normal death.
-		SetThink ( NULL );
+		
+		//parent method would also do nothing so don't call it.
+		//...this decision may age poorly.  Whatever just call it even if it denies doing anything at the moment.
+		CSquadMonster::onDeathAnimationEnd();
 	}
 
 
@@ -1276,19 +1288,24 @@ CISlave* CISlave::findISlaveToRevive(BOOL requireLineTrace, float argStartMaxDis
 
 				//MODDD - extra requirement: no one is currently trying to revive this one already.
 				CBaseMonster* tempMonster = pEntity->GetMonsterPointer();
-				CISlave* tempIslave = tempMonster != NULL ? static_cast<CISlave*>(tempMonster) : NULL;
-				
-				if(tempIslave != NULL && tempIslave->monsterTryingToReviveMeEHANDLE == NULL && tempIslave->beingRevived == FALSE && tempIslave->ShouldFadeOnDeath() == FALSE){
-					float d = (pev->origin - pEntity->pev->origin).Length();
-					if (d < flDist)
-					{
-						m_hDead = pEntity;
-						flDist = d;
-						bestChoiceYet = tempIslave;
-						reviveTargetChosen = TRUE;  //is this line okay??
-					}
-				}//END OF tempISlave != NULL && ...)
 
+				//If this monster is fading (since dead and this is true), don't try to revive. Not worth your time.
+				if(!tempMonster->ShouldFadeOnDeath()){
+
+					CISlave* tempIslave = tempMonster != NULL ? static_cast<CISlave*>(tempMonster) : NULL;
+				
+					if(tempIslave != NULL && tempIslave->monsterTryingToReviveMeEHANDLE == NULL && tempIslave->beingRevived == FALSE && tempIslave->ShouldFadeOnDeath() == FALSE){
+						float d = (pev->origin - pEntity->pev->origin).Length();
+						if (d < flDist)
+						{
+							m_hDead = pEntity;
+							flDist = d;
+							bestChoiceYet = tempIslave;
+							reviveTargetChosen = TRUE;  //is this line okay??
+						}
+					}//END OF tempISlave != NULL && ...)
+
+				}//END OF shouldFadeOnDeath check
 
 				//m_iBravery--;
 			}

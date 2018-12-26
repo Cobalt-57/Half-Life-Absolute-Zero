@@ -302,7 +302,7 @@ public:
 	virtual void SetActivity ( Activity NewActivity );
 	virtual void SetActivity ( Activity NewActivity, BOOL forceReset );
 
-	BOOL ShouldAdvanceRoute( float flWaypointDist );
+	BOOL ShouldAdvanceRoute( float flWaypointDist, float flInterval );
 	int LookupFloat( );
 	
 	int  ISoundMask( void );

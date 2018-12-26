@@ -2663,6 +2663,7 @@ void CChumToad::playDeadSendMonstersAway(){
 void CChumToad::onDeathAnimationEnd(void){
 	//Close the eye just in case.
 	pev->skin = numberOfEyeSkins - 1;
+	CBaseMonster::onDeathAnimationEnd();
 }
 
 

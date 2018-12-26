@@ -35,12 +35,14 @@ public:
 
 	float shootCooldown;
 
+	Vector preSurfaceAttackLocation;
+
 	
 	//save info
 	//////////////////////////////////////////////////////////////////////////////////
-	//static TYPEDESCRIPTION m_SaveData[];
-	//virtual int Save( CSave &save ); 
-	//virtual int Restore( CRestore &restore );
+	static TYPEDESCRIPTION m_SaveData[];
+	virtual int Save( CSave &save ); 
+	virtual int Restore( CRestore &restore );
 	//////////////////////////////////////////////////////////////////////////////////
 	
 
@@ -59,11 +61,14 @@ public:
 	void Precache(void);
 	void Spawn(void);
 	
+	
+	Activity	GetStoppedActivity( void );
+	void		Stop( void );
 
 	int CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, CBaseEntity *pTarget, float *pflDist );
 	
 	void Move( float flInterval );
-	BOOL ShouldAdvanceRoute( float flWaypointDist );
+	BOOL ShouldAdvanceRoute( float flWaypointDist, float flInterval );
 	void MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, float flInterval );
 
 	void SetEyePosition(void);
@@ -149,6 +154,10 @@ public:
 	BOOL noncombat_Look_ignores_PVS_check(void);
 
 	void BecomeDead(void);
+	
+	Vector DoVerticalProbe(float flInterval);
+
+	BOOL attemptBuildRandomWanderRoute(const float& argWaterLevel);
 
 
 };//END OF class CArcher

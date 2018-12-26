@@ -809,6 +809,10 @@ int CHudAmmo::MsgFunc_ClearWpn(const char *pszName, int iSize, void *pbuf ){
 	//Forcing this reset!
 	//easyPrintLine("*********WEAP RESET!!!!!!!!!!***********");
 	m_pWeapon = NULL;
+
+	//MODDD - this as well?
+	gWR.gpActiveSel = NULL;
+
 	updateCrosshair();
 
 	return 1;
@@ -849,7 +853,14 @@ int CHudAmmo::MsgFunc_CurWeapon(const char *pszName, int iSize, void *pbuf )
 
 	if ( iId < 1 )
 	{
-		SetCrosshairFiltered(0, nullrc, 0, 0, 0);
+		//MODDD - we do indeed want to force the crosshair off, don't just let the alpha crosshair being possible change anything.
+		//SetCrosshairFiltered(0, nullrc, 0, 0, 0);
+		//SetCrosshairFiltered(0, nullrc, 0, 0, 0, TRUE);
+		//or... leave what to do up to "updateCrosshair" as usual? that is probably best.
+		//but the point of this was to set the current weapon to NULL.
+		m_pWeapon = NULL;
+		gWR.gpActiveSel = NULL;
+		updateCrosshair();
 		return 0;
 	}
 
@@ -1116,6 +1127,7 @@ void CHudAmmo::updateCrosshair(void){
 
 		if(m_pWeapon){
 
+			//MODDD TODO - uh, is this crude "90" check okay?  if we never go back to retail crosshairs probably won't matter.
 			if ( gHUD.m_iFOV >= 90 )
 			{ // normal crosshairs
 				if (recentOnTarget && m_pWeapon->hAutoaim)

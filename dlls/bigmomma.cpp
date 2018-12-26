@@ -14,6 +14,13 @@
 ****/
 #if !defined( OEM_BUILD ) && !defined( HLDEMO_BUILD )
 
+
+
+//MODDD NOTE - note that CBMortar does not have a Precache method. The gonarch class (CBigMomma) includes precaches for all its sounds.
+//             CBMortar may need to be told to use the Sound Sentence Save system.
+
+
+
 //=========================================================
 // monster template
 //=========================================================
@@ -109,6 +116,10 @@ public:
 	static CBMortar *Shoot( edict_t *pOwner, Vector vecStart, Vector vecVelocity );
 	void Touch( CBaseEntity *pOther );
 	void EXPORT Animate( void );
+
+	//MODDD - need to be told to use this since the parent skips precaches if using the sentence save feature.
+	//        This way it uses the sentence equivalents instead of failing to play unprecached sounds.
+	BOOL usesSoundSentenceSave(void);
 
 	virtual int		Save( CSave &save );
 	virtual int		Restore( CRestore &restore );
@@ -1132,7 +1143,9 @@ void CBigMomma::RunTask( Task_t *pTask )
 
 	case TASK_PLAY_NODE_PRESEQUENCE:
 	case TASK_PLAY_NODE_SEQUENCE:
-		if ( m_fSequenceFinished )
+
+		//MODDD - include looping since too!
+		if ( m_fSequenceFinished || this->m_fSequenceFinishedSinceLoop )
 		{
 			m_Activity = ACT_RESET;
 			TaskComplete();
@@ -1295,6 +1308,13 @@ void CBMortar::Animate( void )
 		}
 	}
 }
+
+
+//inherits from CBaseEntity which does not know to use the soundSentenceSave system by default.
+BOOL CBMortar::usesSoundSentenceSave(void){
+	return TRUE;
+}
+
 
 CBMortar *CBMortar::Shoot( edict_t *pOwner, Vector vecStart, Vector vecVelocity )
 {

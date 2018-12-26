@@ -797,6 +797,12 @@ void CBaseMonster :: RunTask ( Task_t *pTask )
 	break;
 	case TASK_WAIT_PVS:
 		{
+			//MODDD - alternate way to pass. If we're marked to ignore PVS checks, ignore this too.
+			if(noncombat_Look_ignores_PVS_check()){
+				TaskComplete();
+				return;
+			}
+
 			if ( !FNullEnt(FIND_CLIENT_IN_PVS(edict())) )
 			{
 				TaskComplete();
@@ -837,6 +843,10 @@ void CBaseMonster :: RunTask ( Task_t *pTask )
 			//Is there a need for a bits_COND_SEE_ENEMY check too?  Probably not, we can route to them most likely.
 			TaskComplete();
 		}
+
+		
+
+
 
 	break;}
 

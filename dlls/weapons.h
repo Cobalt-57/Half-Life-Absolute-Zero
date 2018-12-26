@@ -1593,10 +1593,13 @@ public:
 
 	int m_iTrail;
 	Vector recentVelocity;
+	Vector m_velocity;  //velocity set by some outside source. Kept for memory in case of other influences.
+	float m_speed;  //why is this set separately? isn't it redundant being supplied this and a velocity, which is kinda both a direction and speed in one? who knows.
+	float realNextThink;
 	BOOL noDamage;
 
-	static CCrossbowBolt *BoltCreate( void );
-	static CCrossbowBolt *BoltCreate( BOOL useTracer, BOOL arg_noDamage );
+	static CCrossbowBolt *BoltCreate(const Vector& arg_velocity, float arg_speed );
+	static CCrossbowBolt *BoltCreate(const Vector& arg_velocity, float arg_speed, BOOL useTracer, BOOL arg_noDamage );
 
 };
 

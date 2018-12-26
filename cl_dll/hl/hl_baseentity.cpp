@@ -134,6 +134,8 @@ void CBaseMonster::precacheStandardMeleeAttackHitSounds(void){}
 void CBaseMonster::playStandardMeleeAttackMissSound(void){}
 void CBaseMonster::playStandardMeleeAttackHitSound(void){}
 
+BOOL CBaseMonster::traceResultObstructionValidForAttack(const TraceResult& arg_tr){return FALSE;}
+
 
 
 

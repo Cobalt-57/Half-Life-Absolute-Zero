@@ -25,23 +25,34 @@ LINK_ENTITY_TO_CLASS( crossbow_bolt, CCrossbowBolt );
 EASY_CVAR_EXTERN(playerForceCrossbowMode)
 EASY_CVAR_EXTERN(hassassinForceCrossbowMode)
 EASY_CVAR_EXTERN(crossbowInheritsPlayerVelocity)
+EASY_CVAR_EXTERN(crossbowBoltDirectionAffectedByWater)
 //EASY_CVAR_EXTERN(crossbowReloadSoundDelay)
 
 
 CCrossbowBolt::CCrossbowBolt(void){
 	recentVelocity = Vector(0,0,0);
 	noDamage = FALSE;
+	realNextThink = 0;
 }//END OF CCrossbowBolt constructor
 
 
-CCrossbowBolt *CCrossbowBolt::BoltCreate( void ){
-	return BoltCreate(TRUE, FALSE);
+CCrossbowBolt *CCrossbowBolt::BoltCreate(const Vector& arg_velocity, float arg_speed ){
+	return BoltCreate(arg_velocity, arg_speed, TRUE, FALSE);
 }
-CCrossbowBolt *CCrossbowBolt::BoltCreate( BOOL useTracer, BOOL arg_noDamage ){
+CCrossbowBolt *CCrossbowBolt::BoltCreate(const Vector& arg_velocity, float arg_speed, BOOL useTracer, BOOL arg_noDamage ){
 	// Create a new entity with CCrossbowBolt private data
 	CCrossbowBolt *pBolt = GetClassPtr( (CCrossbowBolt *)NULL );
 	pBolt->pev->classname = MAKE_STRING("bolt");
+
+	
+	pBolt->m_velocity = arg_velocity;
+	pBolt->m_speed = arg_speed;
+
+	pBolt->pev->velocity = arg_velocity;
+	pBolt->pev->speed = arg_speed;
+
 	pBolt->Spawn(useTracer, arg_noDamage);
+
 
 	return pBolt;
 }
@@ -95,9 +106,13 @@ void CCrossbowBolt::Spawn(BOOL useTracer, BOOL arg_noDamage)
 	SetTouch( &CCrossbowBolt::BoltTouch );
 	SetThink( &CCrossbowBolt::BubbleThink );
 	
+
 	//MODDD NOTE - why is this " + 0.2" instead of " + 0.1" like most think methods and even BubbleThink's own think refresh?
 	//             The world may never know.
-	pev->nextthink = gpGlobals->time + 0.2;
+	//pev->nextthink = gpGlobals->time + 0.2;
+	realNextThink = gpGlobals->time + 0.2f;
+	pev->nextthink = gpGlobals->time;
+	
 }
 
 
@@ -270,15 +285,42 @@ void CCrossbowBolt::BoltTouch( CBaseEntity *pOther )
 	//easyForcePrintLine("OW! 5 %s health:%.2f", pOther->getClassname(), pOther->pev->health);
 }
 
+
+//this Think is picked for the bolt anytime, regardless of being in the water or not.
+//It only makes bubbles if it is underwater.
 void CCrossbowBolt::BubbleThink( void )
 {
-	pev->nextthink = gpGlobals->time + 0.1;
 
-	if (pev->waterlevel == 0)
-		return;
 
-	UTIL_BubbleTrail( pev->origin - pev->velocity * 0.1, pev->origin, 1 );
-}
+	//think every single frame of game logic, but only run the retail logic every 0.1 seconds for the same behavior there.
+	pev->nextthink = gpGlobals->time;
+	
+	
+	if(EASY_CVAR_GET(crossbowBoltDirectionAffectedByWater) != 1){
+		//forcing velocity to the one that fired me's intention every frame can preserve direction underwater.
+		pev->velocity = m_velocity;
+	}
+
+
+
+	if(gpGlobals->time >= realNextThink ){
+		//one typical think cycle.
+		realNextThink = gpGlobals->time + 0.1;	
+
+
+
+		if (pev->waterlevel == 0)
+			return;
+
+		UTIL_BubbleTrail( pev->origin - pev->velocity * 0.1, pev->origin, 1 );
+
+	}//END OF realNextThink check
+
+
+	
+
+	
+}//END OF BubbleThink
 
 
 void CCrossbowBolt::ExplodeThink( void )

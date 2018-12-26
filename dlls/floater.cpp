@@ -495,6 +495,18 @@ void CFloater::Spawn( void )
 
 
 
+
+
+Activity CFloater::GetStoppedActivity( void ){
+	return CFlyingMonster::GetStoppedActivity();
+}
+void CFloater::Stop(){
+	//perhaps we don't want to step on the brakes so soon? It's ok to float a little in the direction we're moving,
+	//naturally slow down to a stop anyways without MoveExecute forcing a velocity, or in MonsterThink if detected as stopped.
+
+	CFlyingMonster::Stop();
+}
+
 	
 
 
@@ -644,6 +656,11 @@ int CFloater :: CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, C
 	}
 	
 
+	if(tr.fStartSolid){
+		//what??
+		return LOCALMOVE_VALID;
+	}
+
 
 	// ALERT( at_console, "check %d %d %f\n", tr.fStartSolid, tr.fAllSolid, tr.flFraction );
 	if (tr.fStartSolid || tr.flFraction < 1.0)
@@ -688,6 +705,8 @@ int CFloater :: CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, C
 
 
 
+
+
 //Copied from flyingmonster.cpp. Our sequence may not properly convey the m_flGroundSpeed.
 void CFloater::Move( float flInterval )
 {
@@ -699,7 +718,7 @@ void CFloater::Move( float flInterval )
 }
 
 
-BOOL CFloater::ShouldAdvanceRoute( float flWaypointDist )
+BOOL CFloater::ShouldAdvanceRoute( float flWaypointDist, float flInterval )
 {
 	// Get true 3D distance to the goal so we actually reach the correct height
 	if ( m_Route[ m_iRouteIndex ].iType & bits_MF_IS_GOAL )
@@ -1404,7 +1423,7 @@ GENERATE_GIBMONSTERGIB_IMPLEMENTATION(CFloater)
 		//BEWARE: RadiusDamage can damage this monster itself and trigger and endless loop of "Killed" on this monster, "GibMonster" for explosive damage,
 		//        then back to here where it does RadiusDamage, Killed, Gibmonster, RadiusDamage, Killed, Gibmonster, etc.  Because taking damage while dead
 		//        can still trigger Killed/Gibmonster.
-		RadiusDamage(pev->origin, pev, pev, gSkillData.bullsquidDmgSpit, 160.0f,
+		RadiusDamage(pev->origin, pev, pev, gSkillData.bullsquidDmgSpit / 2.0f, 200.0f,
 			CLASS_MACHINE | CLASS_ALIEN_MILITARY | CLASS_ALIEN_PASSIVE | CLASS_ALIEN_MONSTER | CLASS_ALIEN_PREY | CLASS_ALIEN_PREDATOR | CLASS_INSECT | CLASS_BARNACLE,
 			DMG_POISON);
 
@@ -2206,7 +2225,13 @@ void CFloater::onDeathAnimationEnd(){
 	//This monster is now a ticking time bomb...
 	//Also don't call the parent onDeathAnimationEnd. That's what stops the think method (could not even keep track of the countdown timer then)
 
-	explodeDelay = gpGlobals->time + RANDOM_FLOAT(4, 6);
+	explodeDelay = gpGlobals->time + RANDOM_FLOAT(4.7, 7.5);
+
+	//Purposefully don't call the parent method in CFlyingMonster (really CBaseMonster).
+	//We want the think to remain just for us to detonate. The point of fading is to avoid spam anyways,
+	//which can't happen as floaters detonate after even the corpse stays for so long.
+	//(oh hey I kinda already made this comment)
+	//CFlyingMonster::onDeathAnimationEnd();
 
 }//END OF onDeathAnimationEnd
 

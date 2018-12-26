@@ -193,27 +193,52 @@ void CControllerHeadBall :: Crawl( void  )
 		anticipatedOrigin.x, anticipatedOrigin.y, anticipatedOrigin.z
 	);
 	*/
-
-
-	MESSAGE_BEGIN( MSG_BROADCAST, SVC_TEMPENTITY );
-		WRITE_BYTE( TE_BEAMENTPOINT );
-		WRITE_SHORT( entindex() );
-		WRITE_COORD( vecPnt.x);
-		WRITE_COORD( vecPnt.y);
-		WRITE_COORD( vecPnt.z);
-		WRITE_SHORT( g_sModelIndexLaser );
-		WRITE_BYTE( 0 ); // frame start
-		WRITE_BYTE( 10 ); // framerate
-		WRITE_BYTE( 2 ); // life. WAS 3.
-		WRITE_BYTE( 20 );  // width
-		WRITE_BYTE( 80 );   // noise.  WAS 0
-		WRITE_BYTE( 255 );   // r, g, b. Were all 255 before.
-		WRITE_BYTE( 255 );   // r, g, b
-		WRITE_BYTE( 80 );   // r, g, b
-		WRITE_BYTE( 255 );	// brightness
-		WRITE_BYTE( 10 );		// speed
-	MESSAGE_END();
 	
+	//MODDD - ripped from flyingmonster.cpp's ProbeZ method. Checks to see if our current position is in the water and the end point of this
+	//        lightning line would put it out of water, or vice versa.
+	int conPosition = UTIL_PointContents(vecPnt);
+	//if ( (((pev->flags) & FL_SWIM) == FL_SWIM) ^ (conPosition == CONTENTS_WATER))
+
+	BOOL canDraw = FALSE;
+
+	if(pev->waterlevel == 0){
+		//only pass if the end point is out of water.
+		if(conPosition != CONTENTS_WATER){
+			canDraw = TRUE;
+		}
+	}else if(pev->waterlevel == 3){
+		//only pass if in the water
+		if(conPosition == CONTENTS_WATER){
+			canDraw = TRUE;
+		}
+	}else{
+		//1 or 2? is anything okay between these?
+		canDraw = TRUE;
+	}
+
+
+	if(canDraw){
+
+		MESSAGE_BEGIN( MSG_BROADCAST, SVC_TEMPENTITY );
+			WRITE_BYTE( TE_BEAMENTPOINT );
+			WRITE_SHORT( entindex() );
+			WRITE_COORD( vecPnt.x);
+			WRITE_COORD( vecPnt.y);
+			WRITE_COORD( vecPnt.z);
+			WRITE_SHORT( g_sModelIndexLaser );
+			WRITE_BYTE( 0 ); // frame start
+			WRITE_BYTE( 10 ); // framerate
+			WRITE_BYTE( 2 ); // life. WAS 3.
+			WRITE_BYTE( 20 );  // width
+			WRITE_BYTE( 80 );   // noise.  WAS 0
+			WRITE_BYTE( 255 );   // r, g, b. Were all 255 before.
+			WRITE_BYTE( 255 );   // r, g, b
+			WRITE_BYTE( 80 );   // r, g, b
+			WRITE_BYTE( 255 );	// brightness
+			WRITE_BYTE( 10 );		// speed
+		MESSAGE_END();
+	
+	}
 
 	
 	/*

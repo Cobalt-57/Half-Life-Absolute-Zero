@@ -1018,23 +1018,26 @@ void CHAssassin :: Shoot ( void )
 	        EMIT_SOUND(ENT(pev), CHAN_WEAPON, "weapons/xbow_fire1.wav", RANDOM_FLOAT(0.78, 0.94), ATTN_NORM);
 	    break;
 	}
+	Vector arrowVelocity;
+	float arrowSpeed;
 
+	if (this->pev->waterlevel == 3)
+	{
+		arrowVelocity = vecShootDir * BOLT_WATER_VELOCITY;
+		arrowSpeed = BOLT_WATER_VELOCITY;
+	}
+	else
+	{
+		arrowVelocity = vecShootDir * BOLT_AIR_VELOCITY;
+		arrowSpeed = BOLT_AIR_VELOCITY;
+	}
 
-	CCrossbowBolt *pBolt = CCrossbowBolt::BoltCreate();
+	CCrossbowBolt *pBolt = CCrossbowBolt::BoltCreate(arrowVelocity, arrowSpeed);
 	pBolt->pev->origin = vecShootOrigin;
 	pBolt->pev->angles = anglesAim;
 	pBolt->pev->owner = this->edict();
 
-	if (this->pev->waterlevel == 3)
-	{
-		pBolt->pev->velocity = vecShootDir * BOLT_WATER_VELOCITY;
-		pBolt->pev->speed = BOLT_WATER_VELOCITY;
-	}
-	else
-	{
-		pBolt->pev->velocity = vecShootDir * BOLT_AIR_VELOCITY;
-		pBolt->pev->speed = BOLT_AIR_VELOCITY;
-	}
+	
 	pBolt->pev->avelocity.z = 10;
 
 

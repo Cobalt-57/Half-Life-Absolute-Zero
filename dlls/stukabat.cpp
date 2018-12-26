@@ -3412,15 +3412,16 @@ void CStukaBat :: Move ( float flInterval )
 
 
 
-BOOL CStukaBat:: ShouldAdvanceRoute( float flWaypointDist )
+BOOL CStukaBat:: ShouldAdvanceRoute( float flWaypointDist, float flInterval )
 {
-	//was 32?
-	if ( flWaypointDist <= 500  )
+	//was 32?  yea let's scale this back again.
+	//if ( flWaypointDist <= 500  )
+	if ( flWaypointDist <= 50  )
 	{
 		return TRUE;
 	}
 	return FALSE;
-	//return CSquadMonster::ShouldAdvanceRoute(flWaypointDist);
+	//return CSquadMonster::ShouldAdvanceRoute(flWaypointDist, flInterval);
 }
 
 
@@ -3464,6 +3465,7 @@ int CStukaBat :: CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, 
 		//or should we do thsi?
 		Vector vecDir = (vecEnd - vecStart).Normalize();
 		UTIL_TraceHull( vecStart + Vector( 0, 0, 32 ) + vecDir * 6, vecEnd + Vector( 0, 0, 32 ), dont_ignore_monsters, head_hull, edict(), &tr );
+		//what you didn't even check this new trace X_X
 
 		return LOCALMOVE_VALID;
 	}

@@ -49,6 +49,8 @@
 
 extern CGraph WorldGraph;
 
+//MODDD - looks like the eye idea was ditched, this is not on the model.
+
 #define EYE_MAD		0
 #define EYE_BASE	1
 #define EYE_CLOSED	2

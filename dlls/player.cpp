@@ -1387,11 +1387,22 @@ void CBasePlayer::RemoveAllItems( BOOL removeSuit )
 
 	UpdateClientData();
 	// send Selected Weapon Message to our client
+
+	//MODDD NOTICE - this does not clear the equipped weapon, the client event notices there isn't even a weapon ID 0
+	//               and ignore the request, leaving it set to the existing weapon with its clip remaining.
+	//               Try gmsgClearWeapon instead.
+	/*
 	MESSAGE_BEGIN( MSG_ONE, gmsgCurWeapon, NULL, pev );
 		WRITE_BYTE(0);
 		WRITE_BYTE(0);
 		WRITE_BYTE(0);
 	MESSAGE_END();
+	*/
+	
+	MESSAGE_BEGIN( MSG_ONE, gmsgClearWeapon, NULL, pev );
+	MESSAGE_END();
+
+
 
 }
 
@@ -1517,13 +1528,20 @@ GENERATE_KILLED_IMPLEMENTATION(CBasePlayer)
 
 
 
-
+	
 	// Tell Ammo Hud that the player is dead
 	MESSAGE_BEGIN( MSG_ONE, gmsgCurWeapon, NULL, pev );
 		WRITE_BYTE(0);
 		WRITE_BYTE(0XFF);
 		WRITE_BYTE(0xFF);
 	MESSAGE_END();
+	
+	//MODDD - this is more accurate?
+	
+	//MESSAGE_BEGIN( MSG_ONE, gmsgClearWeapon, NULL, pev );
+	//MESSAGE_END();
+	
+
 
 	//MODDD - new way of telling the HUD that the player is dead.  The above is
 	//a bit indirect of a way that is incompatible with the current approach.
@@ -10024,7 +10042,19 @@ void CBasePlayer::DropPlayerItem ( char *pszItemName )
 		// item we want to drop and hit a BREAK;  pWeapon is the item.
 		if ( pWeapon )
 		{
-			g_pGameRules->GetNextBestWeapon( this, pWeapon );
+			BOOL getNextSuccess = g_pGameRules->GetNextBestWeapon( this, pWeapon );
+
+			
+			// m_pActiveItem == NULL
+			if(!getNextSuccess || pWeapon==m_pActiveItem){
+				//send a signal to clear the currently equipped weapon.
+				MESSAGE_BEGIN( MSG_ONE, gmsgClearWeapon, NULL, pev );
+				MESSAGE_END();
+			}
+
+
+
+
 
 			UTIL_MakeVectors ( pev->angles ); 
 
@@ -10054,8 +10084,10 @@ void CBasePlayer::DropPlayerItem ( char *pszItemName )
 				else
 				{
 					// pack half of the ammo
-					pWeaponBox->PackAmmo( MAKE_STRING(pWeapon->pszAmmo1()), m_rgAmmo[ iAmmoIndex ] / 2 );
-					m_rgAmmo[ iAmmoIndex ] /= 2; 
+					//MODDD - but don't loose one if there's an odd number.  or... even, however that works.
+					pWeaponBox->PackAmmo( MAKE_STRING(pWeapon->pszAmmo1()), (int) ceil( m_rgAmmo[ iAmmoIndex ] / 2.0f ) );
+					m_rgAmmo[ iAmmoIndex ] = (int)floor(m_rgAmmo[ iAmmoIndex ] / 2.0f);
+					
 				}
 
 			}

@@ -1608,26 +1608,6 @@ void floaterGasCallback ( struct tempent_s *ent, float frametime, float currentt
 	if ( currenttime < ent->entity.baseline.fuser1 )
 		return;
 
-	/*
-	if ( ent->entity.origin == ent->entity.attachment[0] ){
-		//HAVE LENIENCY.  Wait for this to be frozen for 0.15 seconds, sheesh.
-		if(ent->entity.baseline.fuser2 != -1){
-			if(ent->entity.baseline.fuser2 < gEngfuncs.GetClientTime() ){
-				ent->die = gEngfuncs.GetClientTime();
-			}
-		}else{
-			//countdown...
-			ent->entity.baseline.fuser2 = gEngfuncs.GetClientTime() + 0.3f;
-		}
-
-	}else{
-		ent->entity.baseline.fuser2 = -1;  //not dying now.
-    	VectorCopy ( ent->entity.origin, ent->entity.attachment[0] );
-	}
-	*/
-
-	//ent->entity.origin = ent->entity.origin + Vector(0, 0, -frametime * 2);
-
 	if(ent->entity.baseline.origin[2] > -3.8){
 		ent->entity.baseline.origin[2] += -0.8;
 	}else{
@@ -1638,6 +1618,21 @@ void floaterGasCallback ( struct tempent_s *ent, float frametime, float currentt
 	ent->entity.baseline.fuser1 = gEngfuncs.GetClientTime() + 0;
 }//END OF EV_imitation7_think
 
+
+void floaterBigGasCallback ( struct tempent_s *ent, float frametime, float currenttime )
+{
+	if ( currenttime < ent->entity.baseline.fuser1 )
+		return;
+
+	if(ent->entity.baseline.origin[2] > -3.4){
+		ent->entity.baseline.origin[2] += -0.5;
+	}else{
+		ent->entity.baseline.origin[2] = -3.4;
+	}
+
+	//TEST - real slow for now!
+	ent->entity.baseline.fuser1 = gEngfuncs.GetClientTime() + 0;
+}//END OF EV_imitation7_think
 
 
 
@@ -1687,6 +1682,31 @@ void createBallFloaterGas(int* sprite, const Vector& loc){
 
 }
 
+void createBigBallFloaterGas(int* sprite, const Vector& loc){
+
+	float randomStrength = 6;
+
+	float randx = gEngfuncs.pfnRandomFloat(-randomStrength, randomStrength);
+	float randy = gEngfuncs.pfnRandomFloat(-randomStrength, randomStrength);
+	float randz = 30 + gEngfuncs.pfnRandomFloat(0, 30);
+
+	float randScale = gEngfuncs.pfnRandomFloat(2.5, 2.9);
+
+	Vector locWhat = loc;
+	vec3_t rot = Vector(randx, randy, randz);
+
+	//FTENT_SLOWGRAVITY  ?
+	TEMPENTITY* eh = gEngfuncs.pEfxAPI->R_TempSprite( locWhat, rot, randScale, *sprite, kRenderGlow, kRenderFxNoDissipation, 100.0 / 255.0, 1.0f, FTENT_CLIENTCUSTOM | FTENT_COLLIDEWORLD | FTENT_FADEOUT );
+	if(eh){
+		eh->fadeSpeed = 0.06f;
+		eh->bounceFactor = 0;
+		eh->callback = &floaterBigGasCallback;
+		
+	}else{
+		easyForcePrintLine("WHY YOU FAIL");
+	}
+
+}
 
 
 
@@ -1983,6 +2003,9 @@ void EV_FloaterExplode( event_args_t* args){
 
 	int ballsToSpawn = 8;
 	
+	createBigBallFloaterGas(&m_iHotglowGreen, origin + Vector(0, 0, 20));
+
+
 	int balls = ballsToSpawn;
 	for(int i = 0; i < balls; i++){
 		createBallFloaterGas(&m_iHotglowGreen, origin + Vector(0, 0, 12) );

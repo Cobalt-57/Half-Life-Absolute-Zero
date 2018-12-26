@@ -53,7 +53,7 @@ public:
 	//MODDD - not virtual. Why the HELL not.
 	virtual void		MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, float flInterval );
 	virtual void		Move( float flInterval = 0.1 );
-	virtual BOOL		ShouldAdvanceRoute( float flWaypointDist );
+	virtual BOOL		ShouldAdvanceRoute( float flWaypointDist, float flInterval );
 
 	inline void	SetFlyingMomentum( float momentum ) { m_momentum = momentum; }
 	inline void	SetFlyingFlapSound( const char *pFlapSound ) { m_pFlapSound = pFlapSound; }

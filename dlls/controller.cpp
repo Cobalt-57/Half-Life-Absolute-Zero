@@ -128,7 +128,7 @@ public:
 	int  CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, CBaseEntity *pTarget, float *pflDist );
 	void MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, float flInterval );
 	void SetActivity ( Activity NewActivity );
-	BOOL ShouldAdvanceRoute( float flWaypointDist );
+	BOOL ShouldAdvanceRoute( float flWaypointDist, float flInterval );
 	int LookupFloat( );
 
 	//MODDD - unused as-is variable, too bad.
@@ -1190,7 +1190,7 @@ void CController :: Move ( float flInterval )
 		{
 			MoveExecute( pTargetEnt, vecDir, flMoveDist / m_flGroundSpeed );
 
-			if ( ShouldAdvanceRoute( flWaypointDist - flMoveDist ) )
+			if ( ShouldAdvanceRoute( flWaypointDist - flMoveDist, flInterval ) )
 			{
 				AdvanceRoute( flWaypointDist, flInterval );
 			}
@@ -1225,7 +1225,8 @@ void CController :: Move ( float flInterval )
 
 
 
-BOOL CController:: ShouldAdvanceRoute( float flWaypointDist )
+//MODDD - added flInterval, but it looks like controllers never really cared about anything too precise here.
+BOOL CController:: ShouldAdvanceRoute( float flWaypointDist, float flInterval )
 {
 	if ( flWaypointDist <= 32  )
 	{

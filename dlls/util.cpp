@@ -3448,12 +3448,36 @@ Vector UTIL_ClampVectorToBoxNonNormalized( const Vector &input, const Vector &cl
 	return sourceVector;
 }
 
+
+
+//MODDD - the as-is version can be fooled into picking a water level below oneself if the floor is closer than the top of the
+//        water.  But it's possible you are supposed to always supply a minz equal to the position's .z coordinate for that reason.
+//        I want more flexibility to know when to fall into the water though.
+//        So a check. If we're already in the water, don't be satisfied with a choice below our current .z. We have to find an answer upwards.
+//        If not in the water (AIR?), we need to find a water level below ourselves.  That may come naturally though.
+//        Keep in mind there are other CONTENTS_ types besides just WATER.  There are AIR and SOLID, may help to differentiate.
+//        SOLID probably includes going out of bounds of the map (into solid blackness)
 float UTIL_WaterLevel( const Vector &position, float minz, float maxz )
 {
+	BOOL alreadyInWater = (UTIL_PointContents(position) == CONTENTS_WATER);
+	int pointContentsTemp;
+
+	if(alreadyInWater){
+		minz = position.z; //go no lower.
+	}else{
+		//go no higher.
+		maxz = position.z;
+	}
+
+
+
 	Vector midUp = position;
 	midUp.z = minz;
 
-	if (UTIL_PointContents(midUp) != CONTENTS_WATER)
+	pointContentsTemp = UTIL_PointContents(midUp);
+
+	//MODDD - don't allow CONTENTS_SOLID to end early. It could just be at or past (beneath) the floor of this body of water.
+	if (pointContentsTemp != CONTENTS_WATER && pointContentsTemp != CONTENTS_SOLID)
 		return minz;
 
 	midUp.z = maxz;
@@ -3464,13 +3488,27 @@ float UTIL_WaterLevel( const Vector &position, float minz, float maxz )
 	while (diff > 1.0)
 	{
 		midUp.z = minz + diff/2.0;
-		if (UTIL_PointContents(midUp) == CONTENTS_WATER)
+
+		pointContentsTemp = UTIL_PointContents(midUp);
+		if (pointContentsTemp == CONTENTS_WATER)
 		{
 			minz = midUp.z;
 		}
-		else
+		else if (pointContentsTemp != CONTENTS_SOLID)
 		{
 			maxz = midUp.z;
+		}
+		else
+		{
+			//MODDD - NEW. If equal to solid, it depends on what direction we want to go based on "alreadyInWater".
+			if(alreadyInWater){
+				//lean on being below this.
+				maxz = midUp.z;
+			}else{
+				//lean on being above this.
+				minz = midUp.z;
+			}
+
 		}
 		diff = maxz - minz;
 	}

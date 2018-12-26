@@ -858,6 +858,9 @@ void CNihilanth :: NextActivity( )
 					}
 					else
 					{
+						//MODDD - out of places to teleport to?  Force a zap.
+						//        Could've sworn some versions of the game allow teleport balls to happen regardldess and just repeat
+						//        the last teleported sub-place (purple place with holes into water, spawned gargantua 2nd time) without any new changes.
 						m_iTeleport++;
 						pev->sequence = LookupSequence( "attack1" ); // zap
 					}

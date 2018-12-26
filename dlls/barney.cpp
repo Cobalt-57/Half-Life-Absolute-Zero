@@ -1042,6 +1042,10 @@ void CBarney :: MonsterThink(void){
 	
 	//easyForcePrintLine("IM SUPER %d : seq:%d fr:%.2f fin:%d", HasConditions( bits_COND_ENEMY_DEAD ), pev->sequence, pev->frame, this->m_fSequenceFinished);
 
+	//DUMMY BARNEY.
+	return;
+
+
 
 
 

@@ -1,5 +1,14 @@
 
 
+//TODO - should infiniteLongJumpCharge being on also force the spring icon in ammo.cpp to look shaded? if so make it broadcasted (HIDDENC) to the client to see it there easily.
+
+
+//"Can't find the world"
+//Should bullsquidspit be reduced since it does that continual toxin damage already?
+//Same for other status alignment dealers (besides bleeding melee damage)?
+
+
+
 //~should increment between noticable releases.
 #define protoModVersion "1.8v"
 

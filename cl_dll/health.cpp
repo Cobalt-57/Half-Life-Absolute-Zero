@@ -427,6 +427,11 @@ int CHudHealth::Draw(float flTime)
 	int a = 0, x, y;
 
 
+	if(gHUD.frozenMem ){
+		//Don't draw health while frozen.
+		return 0;
+	}
+
 
 	//MODDD - moved here to prevent mentioned bug.  Also, note that the name PAIN_NAME has been altered to use a white-version (the red isn't as flexible with different colors)
 	if ( !m_SpriteHandle_t )

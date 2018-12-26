@@ -73,7 +73,9 @@ extern int gmsgAmmoPickup;
 extern int gmsgWeapPickup;
 extern int gmsgItemPickup;
 extern int gmsgHideWeapon;
-extern int gmsgSetCurWeap;
+
+//extern int gmsgSetCurWeap;
+
 extern int gmsgSayText;
 extern int gmsgTextMsg;
 extern int gmsgSetFOV;

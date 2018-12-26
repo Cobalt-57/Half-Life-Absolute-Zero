@@ -69,7 +69,10 @@ int gmsgAmmoPickup = 0;
 int gmsgWeapPickup = 0;
 int gmsgItemPickup = 0;
 int gmsgHideWeapon = 0;
-int gmsgSetCurWeap = 0;
+
+//MODDD - unused. Redundant with gmsgCurWeapon perhaps?
+//int gmsgSetCurWeap = 0;
+
 int gmsgSayText = 0;
 int gmsgTextMsg = 0;
 int gmsgSetFOV = 0;

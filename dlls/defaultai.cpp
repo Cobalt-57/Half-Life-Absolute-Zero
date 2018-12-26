@@ -161,7 +161,7 @@ Task_t	tlPathfindStumped[] =
 	
 	{ TASK_SET_ACTIVITY,		(float)ACT_IDLE },
 	{ TASK_WAIT_STUMPED,				(float)0		},
-	{ TASK_WAIT_PVS,			(float)0		},
+	//{ TASK_WAIT_PVS,			(float)0		},
 };
 
 Schedule_t	slPathfindStumped[] =
@@ -402,6 +402,12 @@ Task_t tlWakeAngry1[] =
 	{ TASK_STOP_MOVING,			0				},
 	{ TASK_SET_ACTIVITY,		(float)ACT_IDLE },
 	{ TASK_SOUND_WAKE,			(float)0	},
+
+	//MODDD - since this schedule is only called on having a new enemy, doesn't it make sense to make sure
+	//        our ideal angle is towards the enemy before facing "whatever" the "ideal" is?
+	//        Saw a glitch where an islave kept spinning forever because it started with a yaw around 700 degrees.
+	{ TASK_FACE_ENEMY,			(float)0    },
+
 	{ TASK_FACE_IDEAL,			(float)0	},
 };
 
@@ -1200,7 +1206,12 @@ Task_t tlWaitForEnemyToEnterWater[] =
 	{ TASK_STOP_MOVING,				0				},
 	{ TASK_SET_ACTIVITY,			(float)ACT_IDLE	},
 	{ TASK_FACE_ENEMY,				(float)0		},
+
+	//why? make sure we aren't stuck in a turning animation.
+	{ TASK_SET_ACTIVITY,			(float)ACT_IDLE },
+
 	{ TASK_WAIT_ENEMY_ENTER_WATER,			(float)0		},
+	
 };
 
 Schedule_t slWaitForEnemyToEnterWater[] =

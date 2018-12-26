@@ -265,6 +265,7 @@ void CCrossbow::FireSniperBolt()
 
 		
 		CBaseEntity* tempEnt = CBaseEntity::Instance(tr.pHit);
+		Vector arrowVelocity;
 		
 		//MODDD - can stick to other map-related things so long as they don't move.
 		//if ( FClassnameIs( pOther->pev, "worldspawn" ) )
@@ -277,7 +278,7 @@ void CCrossbow::FireSniperBolt()
 			pBolt->pev->origin = tr.vecEndPos;
 			pBolt->pev->angles = anglesAim;
 			pBolt->pev->owner = m_pPlayer->edict();
-			pBolt->pev->velocity = Vector(0,0,0);
+			pBolt->m_velocity = Vector(0,0,0);
 		}
 		*/
 
@@ -288,13 +289,14 @@ void CCrossbow::FireSniperBolt()
 			ApplyMultiDamage( pev, m_pPlayer->pev );
 		}
 		
+		//HACKY - set the velocity to let the arrow determine its own position as the Touch is called below.
+		//pBolt->pev->velocity = vecDir;
+		arrowVelocity = vecDir;
 		
 		//Tell this bolt not to deal damage because we already dealt the damage before even creating this bolt.
-		CCrossbowBolt *pBolt = CCrossbowBolt::BoltCreate(FALSE, TRUE);
+		CCrossbowBolt *pBolt = CCrossbowBolt::BoltCreate(arrowVelocity, 0, FALSE, TRUE);
 		pBolt->pev->origin = tr.vecEndPos;
 
-		//HACKY - set the velocity to let the arrow determine its own position as the Touch is called below.
-		pBolt->pev->velocity = vecDir;
 
 		pBolt->BoltTouch(tempEnt);
 		
@@ -354,30 +356,41 @@ void CCrossbow::FireBolt()
 	Vector vecSrc	 = m_pPlayer->GetGunPosition( ) - gpGlobals->v_up * 2;
 	Vector vecDir	 = gpGlobals->v_forward;
 
-#ifndef CLIENT_DLL
-	CCrossbowBolt *pBolt = CCrossbowBolt::BoltCreate();
-	pBolt->pev->origin = vecSrc;
-	pBolt->pev->angles = anglesAim;
-	pBolt->pev->owner = m_pPlayer->edict();
 
+
+
+#ifndef CLIENT_DLL
+
+	Vector arrowVelocity;
+	float arrowSpeed;
+	//MODDD - just decide this ahead of spawning the arrow, and give it to the arrow.
 	if (m_pPlayer->pev->waterlevel == 3)
 	{
 		//MODDd - SEE BELOW.
 		//pBolt->pev->velocity = vecDir * BOLT_WATER_VELOCITY;
-		pBolt->pev->velocity = vecDir * BOLT_WATER_VELOCITY + UTIL_GetProjectileVelocityExtra(m_pPlayer->pev->velocity, EASY_CVAR_GET(crossbowInheritsPlayerVelocity) );
+		arrowVelocity = vecDir * BOLT_WATER_VELOCITY + UTIL_GetProjectileVelocityExtra(m_pPlayer->pev->velocity, EASY_CVAR_GET(crossbowInheritsPlayerVelocity) );
 
 
-		pBolt->pev->speed = BOLT_WATER_VELOCITY;
+		arrowSpeed = BOLT_WATER_VELOCITY;
 	}
 	else
 	{
 		//MODDD - allow to be affected by "affectedByPlayerVelocity"
 		//pBolt->pev->velocity = vecDir * BOLT_AIR_VELOCITY;
-		pBolt->pev->velocity = vecDir * BOLT_AIR_VELOCITY + UTIL_GetProjectileVelocityExtra(m_pPlayer->pev->velocity, EASY_CVAR_GET(crossbowInheritsPlayerVelocity) );
+		arrowVelocity = vecDir * BOLT_AIR_VELOCITY + UTIL_GetProjectileVelocityExtra(m_pPlayer->pev->velocity, EASY_CVAR_GET(crossbowInheritsPlayerVelocity) );
 
-		pBolt->pev->speed = BOLT_AIR_VELOCITY;
+		arrowSpeed = BOLT_AIR_VELOCITY;
 	}
 
+
+
+
+	CCrossbowBolt *pBolt = CCrossbowBolt::BoltCreate(arrowVelocity, arrowSpeed);
+	pBolt->pev->origin = vecSrc;
+	pBolt->pev->angles = anglesAim;
+	pBolt->pev->owner = m_pPlayer->edict();
+
+	
 	//MODDD NOTE - a slight angular Z movement (or roll)? Did they really expect people to notice a slight roll on a speeding cylindrical object?
 	pBolt->pev->avelocity.z = 10;
 

@@ -245,7 +245,7 @@ void CFlyingMonster :: Move( float flInterval )
 }
 
 
-BOOL CFlyingMonster:: ShouldAdvanceRoute( float flWaypointDist )
+BOOL CFlyingMonster:: ShouldAdvanceRoute( float flWaypointDist, float flInterval )
 {
 	// Get true 3D distance to the goal so we actually reach the correct height
 	if ( m_Route[ m_iRouteIndex ].iType & bits_MF_IS_GOAL )

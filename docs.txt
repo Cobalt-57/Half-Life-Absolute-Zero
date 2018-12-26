@@ -583,6 +583,10 @@ snarkInheritsPlayerVelocity - ADJUSTABLE. What factor of the player's velocity a
 
 chumtoadInheritsPlayerVelocity - ADJUSTABLE. What factor of the player's velocity at the time of throw the chumtoad will take.
 
+crossbowBoltDirectionAffectedByWater (1) - BOOL. Whether crossbow bolts should be affected by water. As of retail (engine quirk), they tend to move in a more horizontal fashion while underwater. As in, if aimed below straight horizontal, they go higher than expected. If aimed above straight horizontal, they go lower than expected. At extremes, near vertical below or above, it is less noticable.
+~Perhaps only vertical velocity (z) is affected while under water.  Arrows are still told to move at half of the speed as if fired in the air but there is no mention of "z" velocity being any more affected. This is supported by arrows fired straight up or down also being noticably slower than ones fired sideways.
+~value of 0 stops this behavior.
+
 
 
 

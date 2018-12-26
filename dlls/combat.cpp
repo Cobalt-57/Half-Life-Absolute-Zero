@@ -1054,6 +1054,10 @@ GENERATE_GIBMONSTEREND_IMPLEMENTATION(CBaseMonster){
 
 	if ( fGibbed )
 	{
+		
+		//MODDD MAJOR - new. Stop the voice channel when deleted.
+		EMIT_SOUND(ENT(pev), CHAN_VOICE, "common/null.wav", 1, ATTN_NORM);
+
 		pev->effects = EF_NODRAW; // make the model invisible.
 		
 		if ( !IsPlayer() )

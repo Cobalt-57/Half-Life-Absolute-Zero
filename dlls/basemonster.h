@@ -543,6 +543,9 @@ public:
 	virtual void playStandardMeleeAttackMissSound(void);
 	virtual void playStandardMeleeAttackHitSound(void);
 
+	//don't override this.  it's a general utility that pops up in a lot of places.  Just use custom code if any part of it needs changes.
+	BOOL traceResultObstructionValidForAttack(const TraceResult& arg_tr);
+
 
 	virtual BOOL getGermanModelRequirement(void);
 	virtual const char* getGermanModel(void);

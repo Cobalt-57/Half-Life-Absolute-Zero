@@ -1929,6 +1929,12 @@ void CBaseMonster :: MonsterThink ( void )
 	
 	//float flInterval = 0;
 	float flInterval = StudioFrameAdvance( ); // animate
+	//MODDD MAJOR MAJOR MAJOR NOTE - is using the same interval from animation across the rest of logic bad?
+	//Should gpGlobals->frametime be used instead?  This has seemed reliable 99% of the time in any case.
+	//Seems changing the animation way too often (every think frame) could reset the anim time, forcing an interval of 0 which
+	//breaks the tolerance checks for advancing path nodes.  But for that... don't set animations that often then.
+
+
 	if(EASY_CVAR_GET(animationPrintouts) == 1 && monsterID >= -1)easyForcePrintLine("%s:%d Anim info C? frame:%.2f done:%d", getClassname(), monsterID, pev->frame, m_fSequenceFinished);
 
 
@@ -3929,19 +3935,28 @@ void CBaseMonster :: AdvanceRoute ( float distance, float flInterval )
 			//The checks above for not being towards the goal node / point don't even do any extra checks, they just bump up the node as told.
 			//I got nothing.
 
+			/*
 			const float rawMoveSpeedPerSec = (m_flGroundSpeed * pev->framerate * EASY_CVAR_GET(animationFramerateMulti) * flInterval );
 			const float moveDistTest = rawMoveSpeedPerSec * EASY_CVAR_GET(pathfindNodeToleranceMulti);  //defaults to 1 for no effect.
 			const float moveDistTol = max(moveDistTest, 8);  //must be at least 8.
 
-
-
 			if(EASY_CVAR_GET(pathfindPrintout)==1)easyForcePrintLine("MovementComplete Call 456: dist:%.2f spd:%.2f req:%.2f", distance, rawMoveSpeedPerSec, moveDistTol );
 			//BETTER FIX!
-			//if ( distance < m_flGroundSpeed * 0.2 /* FIX */ )
+			//if ( distance < m_flGroundSpeed * 0.2  ) // FIX
 			if( distance < moveDistTol)
 			{
 				MovementComplete();
 			}
+			*/
+			
+			//MODDD - replaced with ShouldAdvanceRoute call since the logic's really the same.  
+			//...this exact check HAD to pass to even make it to this point. Just skip it and continue already.
+			//   We wanted to advance, we called this method BECAUSE we were close enough, just go. Say you're done. Thank you.
+			//if(ShouldAdvanceRoute(distance, flInterval)){
+				MovementComplete();
+			//}
+
+
 		}
 	}
 }
@@ -5231,6 +5246,8 @@ void CBaseMonster::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, f
 						(whut->GetMonsterPointer() != NULL)?whut->GetMonsterPointer()->monsterID:-1
 						, whut->IsWorld());
 				}
+
+				//These "AdvanceRoute" calls. Isn't that a tad drastic of an assumption?
 
 				if(whut == NULL || whut->IsWorld()){
 					//it is ok... maybe?  Check to see if the reason this was hit was because it was a ramp?
@@ -7049,6 +7066,17 @@ Vector CBaseMonster :: ShootAtEnemyMod( const Vector &shootOrigin )
 //=========================================================
 BOOL CBaseMonster :: FacingIdeal( void )
 {
+	
+	/*
+	float flCurrentYaw = UTIL_AngleMod( pev->angles.y );
+
+	//if ( flCurrentYaw == pev->ideal_yaw )
+	easyForcePrintLine("monsterID:%d WHAT?? diff:%.2f cur:%.2f ideal:%.2f", monsterID, FlYawDiff(), flCurrentYaw, pev->ideal_yaw);
+	*/
+
+
+
+
 	if ( fabs( FlYawDiff() ) <= 0.006 )//!!!BUGBUG - no magic numbers!!!
 	{
 		return TRUE;
@@ -7437,19 +7465,25 @@ void CBaseMonster::DeathAnimationEnd(){
 		if(isOrganicLogic() ){
 			CSoundEnt::InsertSound ( bits_SOUND_CARCASS, pev->origin, 384, 30 );
 		}
+
 	}
 
 	//Something calling us may need to know not to try resetting the activity.
 	signalActivityUpdate = FALSE;
-
-	//an event.
+	
+	//an event.  But ONLY if not fading out.  At least in the default case,
+	//it is up to other monsters whether they care about that, like auto-detonators (floaters).
 	onDeathAnimationEnd();
 }//END OF DeathAnimationEnd
 
 void CBaseMonster::onDeathAnimationEnd(){
 	//...nothing in the broadest case.
 	//except that.
-	SetThink ( NULL );
+	if(!this->ShouldFadeOnDeath()){
+		//Don't do it if I'm already fading out.  Let other monsters decide if they want to do something else
+		//instead or depend on this at all.
+		SetThink ( NULL );
+	}
 }
 
 //MODDD - new.
@@ -8264,7 +8298,34 @@ void CBaseMonster::playStandardMeleeAttackHitSound(void){
 	EMIT_SOUND_FILTERED ( ENT(pev), CHAN_WEAPON, RANDOM_SOUND_ARRAY(pStandardAttackHitSounds), 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
 }
 
+BOOL CBaseMonster::traceResultObstructionValidForAttack(const TraceResult& arg_tr){
+	//Given a TraceResult that has already been written to by some trace method,
+	//did anything block the trace and, if so, was it something I can live with attacking?
+	//IMPORTANT - does not include fStartSolid and fAllSolid checks, handle those separately.
 
+	if(arg_tr.flFraction < 1.0f && arg_tr.pHit != NULL){
+		//what is blocking me?
+		//CBaseEntity* tempEnt = CBaseEntity::Instance(trTemp.pHit);
+
+		const char* daName = STRING(arg_tr.pHit->v.classname);
+
+		if(m_hEnemy != NULL && arg_tr.pHit == m_hEnemy.Get()){
+			//has an enemy, matches it? this is acceptable.
+		}else{
+			//anything else blocking? wait... maybe I hate it anyways.
+			CBaseEntity* tempEnt = CBaseEntity::Instance(arg_tr.pHit);
+			if(this->IRelationship(tempEnt) > R_NO){
+				//horray, I hate it anyways.
+			}else{
+				//let's not.
+				return FALSE;
+			}
+		}
+	}//END OF fraction and thing-hit checks.
+
+
+	return TRUE;
+}//END OF traceResultObstructionValidForAttack
 
 
 

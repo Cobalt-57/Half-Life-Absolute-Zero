@@ -104,6 +104,14 @@ int CHudBattery:: MsgFunc_Battery(const char *pszName,  int iSize, void *pbuf )
 
 int CHudBattery::Draw(float flTime)
 {
+
+
+	if(gHUD.frozenMem ){
+		//Don't draw while frozen.
+		return 0;
+	}
+
+
 	//MODDD - only draw if the weapon select screen is not on.
 	if( (!gHUD.canDrawBottomStats && global2_hud_weaponselecthideslower == 1) ){
 		return 1;

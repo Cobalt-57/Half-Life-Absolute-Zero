@@ -58,12 +58,14 @@ public:
 	
 	void Precache(void);
 	void Spawn(void);
-	
+
+	Activity	GetStoppedActivity( void );
+	void		Stop( void );
 
 	int CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, CBaseEntity *pTarget, float *pflDist );
 	
 	void Move( float flInterval );
-	BOOL ShouldAdvanceRoute( float flWaypointDist );
+	BOOL ShouldAdvanceRoute( float flWaypointDist, float flInterval );
 	void MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, float flInterval );
 
 	void SetEyePosition(void);

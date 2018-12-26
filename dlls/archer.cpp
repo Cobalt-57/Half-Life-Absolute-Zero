@@ -24,6 +24,10 @@
 
 
 
+//TODO MAJOR-ER.  Huge problem with the controller head balls / same balls the archer uses.
+//                If lightning effects are created while the source of lightning is still underwater but the endpoint is above.
+//                FIXABLE maybe...
+
 //TODO MAJOR - is it a problem if the death sequence replies on loading a save when floating to the top is blocked by something?
 //             probably not, and this is kinda easily fixable if so.
 
@@ -44,9 +48,12 @@ EASY_CVAR_EXTERN(STUSpeedMulti)
 
 
 
+//I would prefer to be this far off of the waterlevel if I intend to touch the surface.
+#define DESIRED_WATERLEVEL_SURFACE_OFFSET -7
+
+
+
 /*
-//TODO. spawn balls of death as ranaged attack.
-//TODO. Start fall cylcer at death, use animation for hitting the ground on touching the ground (possible?).
 
 //what. is this default behavior?
 void CController::Stop( void ) 
@@ -100,15 +107,26 @@ enum archer_sequence{  //key: frames, FPS
 
 //custom schedules
 enum{
+	//what.
 	SCHED_ARCHER_RANGE_ATTACK = LAST_COMMON_SCHEDULE + 1,
-
+	SCHED_ARCHER_RETREAT_INTO_WATER,
+	SCHED_ARCHER_SURFACE_ATTACK_PLAN_FAIL,
+	SCHED_ARCHER_FAIL_WAIT,
 
 };
 
 //custom tasks
 enum{
-	TASK_ARCHER_XXX = LAST_COMMON_TASK + 1,
+	TASK_ARCHER_SEEK_BELOW_WATER_SURFACE_ATTACK_POINT = LAST_COMMON_TASK + 1,
+	TASK_ARCHER_GATE_UPDATE_LKP_AT_WATER_SURFACE_IF_UNOBSCURED,
+	TASK_ARCHER_SEEK_WATER_SURFACE_ATTACK_POINT,
+	TASK_ARCHER_SEEK_WATER_SUBMERGE,
+	TASK_ARCHER_SEEK_RETREAT_INTO_WATER,
+
+	TASK_ARCHER_SEEK_RANDOM_WANDER_POINT,
 	
+	TASK_ARCHER_WAIT_FOR_MOVEMENT_STRICT,
+
 
 };
 
@@ -239,10 +257,10 @@ const char* CArcher::pAttackMissSounds[] =
 
 
 
-/*
+
 TYPEDESCRIPTION	CArcher::m_SaveData[] = 
 {
-	DEFINE_FIELD( CArcher, ????, FIELD_TIME ),
+	DEFINE_FIELD( CArcher, preSurfaceAttackLocation, FIELD_VECTOR ),
 };
 
 //IMPLEMENT_SAVERESTORE( CArcher, CFlyingMonster );
@@ -262,7 +280,7 @@ int CArcher::Restore( CRestore &restore )
 
 	return iReadFieldsResult;
 }
-*/
+
 
 
 
@@ -292,6 +310,7 @@ CArcher::CArcher(void){
 
 	lastVelocityChange = -1;
 	
+
 
 }//END OF CArcher constructor
 
@@ -326,6 +345,153 @@ Schedule_t	slArcherRangeAttack1[] =
 };
 
 
+//Really the ranged attack 1 surrounded by steps to ensure a random point at the water level's surface is picked that puts the enemy in a line of fire and is
+//reachable by the archer can be use to make an attack, followed by returning to the same point or maybe moving randomly a bit underwater too.
+Task_t	tlArcherSurfaceRangeAttack[] =
+{
+	//TODO - set a fail schedule that wanders to a nearby random point around the same depth in the water, or even
+	//       guarantee some depth away from the surface vertically?
+	
+	//If I fail this early, don't spam the game with pathfind calls.  Wait a little before trying again,
+	//even pick a random position underwater to go to.
+	{ TASK_SET_FAIL_SCHEDULE, (float)SCHED_ARCHER_SURFACE_ATTACK_PLAN_FAIL },
+
+	{ TASK_STOP_MOVING,			0				},
+	{ TASK_ARCHER_SEEK_BELOW_WATER_SURFACE_ATTACK_POINT,  (float)0 },  //this only passes if a route could be made to the point it picked.
+	{ TASK_RUN_PATH,  (float)0 },
+	{ TASK_WAIT_FOR_MOVEMENT,  (float)0},
+
+	//Cheat a little. If there's a direct line of sight to the enemy from right above at the water surface, use this to turn to face them.
+	{ TASK_ARCHER_GATE_UPDATE_LKP_AT_WATER_SURFACE_IF_UNOBSCURED,  (float)0},
+
+
+	//at this point, if there is a failure, know to retreat into the water. Like the enemy moving and no longer being able
+	//to be attacked from this point at the surface now that I've made it here or close.
+	{ TASK_SET_FAIL_SCHEDULE, (float)SCHED_ARCHER_RETREAT_INTO_WATER },
+
+	{ TASK_ARCHER_SEEK_WATER_SURFACE_ATTACK_POINT, (float)0 },
+	//{ TASK_SET_ACTIVITY, (float)ACT_FLY},
+	{ TASK_RUN_PATH,  (float)0 },
+	{ TASK_ARCHER_WAIT_FOR_MOVEMENT_STRICT,  (float)0},
+
+
+	//now try the ranged attack.
+	{ TASK_FACE_IDEAL,			(float)0		},
+	{ TASK_RANGE_ATTACK1,		(float)0		},
+
+	//go back into the water straight vertically without turning.
+	{ TASK_ARCHER_SEEK_WATER_SUBMERGE, (float) 0  },
+	//{ TASK_SET_ACTIVITY, (float)ACT_FLY},
+	{ TASK_RUN_PATH,  (float)0 },
+	{ TASK_ARCHER_WAIT_FOR_MOVEMENT_STRICT,  (float)0},
+	
+
+	//return to the murky depths to plot your next sinister move.
+	{TASK_SET_SCHEDULE, (float)SCHED_ARCHER_RETREAT_INTO_WATER},
+
+	
+	//No, letting the end of TASK_RANGE_ATTACK1 handle this on our end instead.
+	//We need the activity shift to idle to be instant.
+	//{ TASK_SET_ACTIVITY,		(float)ACT_IDLE	},
+
+};
+Schedule_t	slArcherSurfaceRangeAttack[] =
+{
+	{ 
+		tlArcherSurfaceRangeAttack,
+		ARRAYSIZE ( tlArcherSurfaceRangeAttack ), 
+		bits_COND_NEW_ENEMY			|
+		bits_COND_ENEMY_DEAD		|
+		bits_COND_HEAVY_DAMAGE		|
+		//bits_COND_ENEMY_OCCLUDED	|
+		bits_COND_NO_AMMO_LOADED,   //er, wat?
+		0,
+		"Archer Surface Range Attack"
+	},
+};
+
+
+
+
+Task_t	tlArcherRetreatIntoWater[] =
+{
+	//now return to roughly around the old point. or just anywhere not at the surface to hide a bit.
+	{ TASK_ARCHER_SEEK_RETREAT_INTO_WATER,  (float)0   },
+	{ TASK_RUN_PATH,  (float)0 },
+	{ TASK_WAIT_FOR_MOVEMENT,  (float)0},
+};
+
+Schedule_t	slArcherRetreatIntoWater[] =
+{
+	{ 
+		tlArcherRetreatIntoWater,
+		ARRAYSIZE ( tlArcherRetreatIntoWater ), 
+		bits_COND_NEW_ENEMY			|
+		bits_COND_ENEMY_DEAD		|
+		bits_COND_HEAVY_DAMAGE		|
+		//bits_COND_ENEMY_OCCLUDED	|
+		bits_COND_NO_AMMO_LOADED,   //er, wat?
+		0,
+		"Archer Retreat Into Water"
+	},
+};
+
+
+
+
+
+Task_t	tlArcherSurfaceAttackPlanFail[] =
+{
+	//now return to roughly around the old point. or just anywhere not at the surface to hide a bit.
+	{ TASK_SET_FAIL_SCHEDULE, (float)SCHED_ARCHER_FAIL_WAIT },
+	{ TASK_ARCHER_SEEK_RANDOM_WANDER_POINT,  (float)0   },
+	{ TASK_RUN_PATH,  (float)0 },
+	{ TASK_WAIT_FOR_MOVEMENT,  (float)0},
+};
+
+Schedule_t	slArcherSurfaceAttackPlanFail[] =
+{
+	{ 
+		tlArcherSurfaceAttackPlanFail,
+		ARRAYSIZE ( tlArcherSurfaceAttackPlanFail ), 
+		bits_COND_NEW_ENEMY			|
+		bits_COND_ENEMY_DEAD		|
+		bits_COND_HEAVY_DAMAGE		|
+		//bits_COND_ENEMY_OCCLUDED	|
+		bits_COND_NO_AMMO_LOADED,   //er, wat?
+		0,
+		"Archer Surface Attack Plan Fail"
+	},
+};
+
+
+Task_t	tlArcherFailWait[] =
+{
+	//now return to roughly around the old point. or just anywhere not at the surface to hide a bit.
+	{ TASK_STOP_MOVING,			0				},
+	{ TASK_SET_ACTIVITY,		(float)ACT_IDLE },
+	{ TASK_WAIT,				(float)3		},
+	//{ TASK_WAIT_PVS,			(float)0		},
+};
+
+Schedule_t	slArcherFailWait[] =
+{
+	{ 
+		tlArcherFailWait,
+		ARRAYSIZE ( tlArcherFailWait ), 
+		bits_COND_NEW_ENEMY			|
+		bits_COND_ENEMY_DEAD		|
+		bits_COND_HEAVY_DAMAGE		|
+		//bits_COND_ENEMY_OCCLUDED	|
+		bits_COND_NO_AMMO_LOADED,   //er, wat?
+		0,
+		"Archer Fail Wait"
+	},
+};
+
+
+
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -336,8 +502,10 @@ Schedule_t	slArcherRangeAttack1[] =
 DEFINE_CUSTOM_SCHEDULES( CArcher )
 {
 	slArcherRangeAttack1,
-	//slArcherYYY,
-	//slArcherZZZ,
+	slArcherSurfaceRangeAttack,
+	slArcherRetreatIntoWater,
+	slArcherSurfaceAttackPlanFail,
+	slArcherFailWait,
 
 };
 IMPLEMENT_CUSTOM_SCHEDULES( CArcher, CFlyingMonster );
@@ -430,7 +598,7 @@ void CArcher::Spawn( void )
 
 	setModel("models/archer.mdl");
 	//UTIL_SetSize( pev, VEC_HUMAN_HULL_MIN, VEC_HUMAN_HULL_MAX );
-	UTIL_SetSize( pev, Vector( -10, -10, 2 ), Vector( 9, 9, 38 ));
+	UTIL_SetSize( pev, Vector( -12, -12, 0 ), Vector( 12, 12, 16 ));
 
 	pev->classname = MAKE_STRING("monster_archer");
 
@@ -496,6 +664,18 @@ void CArcher::Spawn( void )
 
 
 
+
+
+
+Activity CArcher::GetStoppedActivity( void ){
+	return CFlyingMonster::GetStoppedActivity();
+}
+void CArcher::Stop(){
+	//perhaps we don't want to step on the brakes so soon? It's ok to float a little in the direction we're moving,
+	//naturally slow down to a stop anyways without MoveExecute forcing a velocity, or in MonsterThink if detected as stopped.
+
+	CFlyingMonster::Stop();
+}
 
 
 
@@ -652,6 +832,10 @@ int CArcher :: CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, CB
 	}
 	
 
+	if(tr.fStartSolid){
+		//that's all?  uhhh.. pass for now. this situation sucks.
+		return LOCALMOVE_VALID;
+	}
 
 	// ALERT( at_console, "check %d %d %f\n", tr.fStartSolid, tr.fAllSolid, tr.flFraction );
 	if (tr.fStartSolid || tr.flFraction < 1.0)
@@ -710,14 +894,31 @@ void CArcher::Move( float flInterval )
 }
 
 
-BOOL CArcher::ShouldAdvanceRoute( float flWaypointDist )
+BOOL CArcher::ShouldAdvanceRoute( float flWaypointDist, float flInterval )
 {
-	// Get true 3D distance to the goal so we actually reach the correct height
-	if ( m_Route[ m_iRouteIndex ].iType & bits_MF_IS_GOAL )
-		flWaypointDist = ( m_Route[ m_iRouteIndex ].vecLocation - pev->origin ).Length();
 
-	if ( flWaypointDist <= 64 + (m_flGroundSpeed * gpGlobals->frametime) )
-		return TRUE;
+	if(getTaskNumber() == TASK_ARCHER_WAIT_FOR_MOVEMENT_STRICT){
+		//Tighter standards!
+		
+		//AND YES THIS EXPLAINS A LOOOOOOOOT.
+		// Get true 3D distance to the goal so we actually reach the correct height
+		if ( m_Route[ m_iRouteIndex ].iType & bits_MF_IS_GOAL )
+			flWaypointDist = ( m_Route[ m_iRouteIndex ].vecLocation - pev->origin ).Length();
+
+		if(flWaypointDist < 6.0f){
+			return TRUE;
+		}
+	}else{
+		//typical lenient way.
+
+		// Get true 3D distance to the goal so we actually reach the correct height
+		if ( m_Route[ m_iRouteIndex ].iType & bits_MF_IS_GOAL )
+			flWaypointDist = ( m_Route[ m_iRouteIndex ].vecLocation - pev->origin ).Length();
+
+		if ( flWaypointDist <= 64 + (m_flGroundSpeed * gpGlobals->frametime) )
+			return TRUE;
+
+	}
 
 	return FALSE;
 }
@@ -728,6 +929,11 @@ BOOL CArcher::ShouldAdvanceRoute( float flWaypointDist )
 
 void CArcher::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, float flInterval )
 {
+
+
+
+	const float waterLevel = UTIL_WaterLevel(pev->origin, pev->origin.z - 512, pev->origin.z + 4096.0);
+	const float waterLevelIdeal = waterLevel + DESIRED_WATERLEVEL_SURFACE_OFFSET;
 
 	/*
 	if ( m_IdealActivity != m_movementActivity )
@@ -768,61 +974,142 @@ void CArcher::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, float 
 		m_IdealActivity = m_movementActivity;
 		m_flGroundSpeed = m_flightSpeed = 200;
 	}
+
+
+
+	if(pev->origin.z <= waterLevelIdeal){
 	
-	//m_flGroundSpeed = m_flightSpeed = 200;
+		//I can move.
 
-	//m_flGroundSpeed = m_flightSpeed = 10;
-	//TEST - just force it?
-	//m_flGroundSpeed = m_flightSpeed = 200;
-	//this->SetSequenceByIndex(SEQ_ARCHER_TURN_LEFT, 1);
+		//m_flGroundSpeed = m_flightSpeed = 200;
 
-	//m_flGroundSpeed = 200;
+		//m_flGroundSpeed = m_flightSpeed = 10;
+		//TEST - just force it?
+		//m_flGroundSpeed = m_flightSpeed = 200;
+		//this->SetSequenceByIndex(SEQ_ARCHER_TURN_LEFT, 1);
 
-	float flTotal = 0;
-	float flStepTimefactored = m_flGroundSpeed * pev->framerate * EASY_CVAR_GET(animationFramerateMulti) * flInterval;
-	float flStep = m_flGroundSpeed * 1 * 1;
+		//m_flGroundSpeed = 200;
+
+		float flTotal = 0;
+		float flStepTimefactored = m_flGroundSpeed * pev->framerate * EASY_CVAR_GET(animationFramerateMulti) * flInterval;
+		float flStep = m_flGroundSpeed * 1 * 1;
 	
 
 
-	float velMag = flStep * global_STUSpeedMulti;
+		float velMag = flStep * global_STUSpeedMulti;
 
-	float timeAdjust = (pev->framerate * EASY_CVAR_GET(animationFramerateMulti) * flInterval);
-	float distOneFrame = velMag * pev->framerate * EASY_CVAR_GET(animationFramerateMulti) * flInterval;
+		float timeAdjust = (pev->framerate * EASY_CVAR_GET(animationFramerateMulti) * flInterval);
+		float distOneFrame = velMag * pev->framerate * EASY_CVAR_GET(animationFramerateMulti) * flInterval;
 	
-	Vector dest = m_Route[ m_iRouteIndex ].vecLocation;
-	Vector vectBetween = (dest - pev->origin);
-	float distBetween = vectBetween.Length();
-	Vector dirTowardsDest = vectBetween.Normalize();
-	Vector _velocity;
+		Vector dest = m_Route[ m_iRouteIndex ].vecLocation;
+		Vector vectBetween = (dest - pev->origin);
+		float distBetween = vectBetween.Length();
+		Vector dirTowardsDest = vectBetween.Normalize();
+		Vector _velocity;
 
-	if(distOneFrame <= distBetween){
-		_velocity = dirTowardsDest * velMag;
+
+
+		//MODDD - wait why don't you just use the supplied vecDir from monsterThink taht derives the direction the same way (from me to the next m_iRouteIndex waypoint)?
+		dirTowardsDest = vecDir;
+		//HACK, REVERT ME!!!
+		distOneFrame = 0;
+
+
+
+		if(distOneFrame <= distBetween){
+			_velocity = dirTowardsDest * velMag;
+		}else{
+			_velocity = dirTowardsDest * distBetween/timeAdjust;
+		}
+
+		//UTIL_printLineVector("MOVEOUT", velMag);
+		//easyPrintLineGroup2("HELP %.8ff %.8f", velMag, flInterval);
+
+		//UTIL_drawLineFrame(pev->origin, dest, 64, 255, 0, 0);
+
+	
+		m_velocity = m_velocity * 0.8 + _velocity * 0.2;
+
+		//m_velocity = m_velocity * 0.8 + m_flGroundSpeed * vecDir * 0.2;
+
+		Vector flatVelocity = Vector(_velocity.x, _velocity.y, 0);
+		Vector vertVelocity = Vector(0, 0, _velocity.z);
+
+
+		//are we pushed back by the water?
+		//Vector offset = DoVerticalProbe(flInterval);
+		//m_velocity = m_velocity - offset;
+
+
+		//or pev->velocity.z ?
+		float anticipatedZ = pev->origin.z + m_velocity.z * flInterval;
+
+		float differDence = anticipatedZ - waterLevelIdeal;
+
+		//30
+
+
+		//20---------
+
+
+		//origin: 18.  velocity: 12.
+
+
+		if(anticipatedZ >= waterLevelIdeal - 1){
+		
+			//
+
+
+			/*
+			//float tempEEE = ( ((float)(pev->origin.z)) + (anticipatedZ - waterLevel));
+			float anticipatedMoveDistance = m_velocity.z * flInterval;
+
+			if(anticipatedMoveDistance < differDence){
+				//still only move towards the water at most by this amount.
+				//m_velocity = Vector(m_velocity.x, m_velocity.y, abs(m_velocity.z) * -1);
+				m_velocity.z -= 3;
+			}else{
+				//puts us exactly at the water level if it would've gone past.
+				m_velocity.z = 0;
+				pev->origin.z = waterLevel;
+			}
+			*/
+
+			m_velocity.z = 0;
+			//pev->origin.z = waterLevel;
+
+			UTIL_MoveToOrigin ( ENT(pev), Vector(pev->origin.x, pev->origin.y, waterLevelIdeal), abs(pev->origin.z - waterLevelIdeal) , MOVE_STRAFE );
+			
+			//m_velocity.z = 0;
+		}
+
+
+
+
+
+
+
+
+
+		//pev->velocity = _velocity;
+		pev->velocity = m_velocity;
+
+		//Vector vecSuggestedDir = (m_Route[m_iRouteIndex].vecLocation - pev->origin).Normalize();
+		//checkFloor(vecSuggestedDir, velMag, flInterval);
+
+
+		lastVelocityChange = gpGlobals->time;
+
+
 	}else{
-		_velocity = dirTowardsDest * distBetween/timeAdjust;
+		//I'm above the water.
+		//what?
+
+		//m_velocity = m_velocity * 0.8 + _velocity * 0.2;
+		m_velocity.z -= 26;
+		pev->velocity = m_velocity;
+
 	}
-
-	//UTIL_printLineVector("MOVEOUT", velMag);
-	//easyPrintLineGroup2("HELP %.8ff %.8f", velMag, flInterval);
-
-	//UTIL_drawLineFrame(pev->origin, dest, 64, 255, 0, 0);
-
-	
-	m_velocity = m_velocity * 0.8 + _velocity * 0.2;
-
-	//m_velocity = m_velocity * 0.8 + m_flGroundSpeed * vecDir * 0.2;
-
-	Vector flatVelocity = Vector(_velocity.x, _velocity.y, 0);
-	Vector vertVelocity = Vector(0, 0, _velocity.z);
-
-	//pev->velocity = _velocity;
-	pev->velocity = m_velocity;
-
-	Vector vecSuggestedDir = (m_Route[m_iRouteIndex].vecLocation - pev->origin).Normalize();
-
-	checkFloor(vecSuggestedDir, velMag, flInterval);
-
-
-	lastVelocityChange = gpGlobals->time;
 
 
 
@@ -1092,6 +1379,18 @@ Schedule_t* CArcher::GetScheduleOfType( int Type){
 	
 	switch(Type){
 
+
+		case SCHED_ARCHER_FAIL_WAIT:
+			return slArcherFailWait;
+		break;
+
+		case SCHED_ARCHER_SURFACE_ATTACK_PLAN_FAIL:{
+			return slArcherSurfaceAttackPlanFail;
+		break;}
+
+		case SCHED_ARCHER_RETREAT_INTO_WATER:{
+			return slArcherRetreatIntoWater;
+		break;}
 		case SCHED_CHASE_ENEMY:{
 			//HOLD UP.  Does it really make sense to try this?
 
@@ -1101,7 +1400,8 @@ Schedule_t* CArcher::GetScheduleOfType( int Type){
 				return slChaseEnemySmart;
 			}else{
 				//Enemy isn't in the water? Wait for them to come back. Can interrupt by being able to attack too.
-				return slWaitForEnemyToEnterWater;
+				//slWaitForEnemyToEnterWater ?
+				return slArcherSurfaceRangeAttack;
 			}
 
 		break;}
@@ -1119,18 +1419,19 @@ Schedule_t* CArcher::GetScheduleOfType( int Type){
 				//Enemy isn't in the water?  No wonder we can't get to them.
 				//Just stick to staring with continual checks for the enemy being in the water or not.
 				//That is be a little more reactive while waiting than just staring into space.
-				return &slWaitForEnemyToEnterWater[ 0 ];
+				//slWaitForEnemyToEnterWater ?
+				return &slArcherSurfaceRangeAttack[ 0 ];
 			}
 
 		break;}
 		
 
 
-		case SCHED_DIE:
+		case SCHED_DIE:{
 			//return flyerDeathSchedule();
 			return slDieWaterFloat;
-		break;
-		case SCHED_RANGE_ATTACK1:
+		break;}
+		case SCHED_RANGE_ATTACK1:{
 
 			if(m_hEnemy == NULL || m_hEnemy->pev->waterlevel == 3){
 				//Our enemy disappeared (will fail soon?) or is still in the water? Typical attack, nothing special.
@@ -1140,10 +1441,10 @@ Schedule_t* CArcher::GetScheduleOfType( int Type){
 				//return slWaitForEnemyToEnterWater;
 				//...
 				//TODO. change this later.
-				return slArcherRangeAttack1;
+				return slArcherSurfaceRangeAttack;
 			}
 
-		break;
+		break;}
 
 
 
@@ -1180,35 +1481,263 @@ void CArcher::StartTask( Task_t *pTask ){
 
 
 	switch( pTask->iTask ){
+		
+		case TASK_ARCHER_SEEK_BELOW_WATER_SURFACE_ATTACK_POINT:{
 
-		case TASK_DIE:
+			if(m_hEnemy == NULL){
+				//???
+				TaskFail();
+				return;
+			}
+
+			//Get the water level.
+			float waterLevel = UTIL_WaterLevel(pev->origin, pev->origin.z, pev->origin.z + 4096.0);
+
+			//if my origin were at the waterlevel instead, where would it be with the X and Y unaffected?
+			//points to try to surface at will be picked from this at random.
+			Vector originAtWaterLevel = Vector(pev->origin.x, pev->origin.y, waterLevel);
+
+			Vector surfaceGuess;
+			int tries = 4;
+
+			//try 4 times to see if a point is able to attack the enemy (straight line-trace, unobstructed)
+			
+			while(tries >= 0){
+				TraceResult trTemp;
+				
+				float randomSurfaceDir_x = RANDOM_FLOAT(0, 600);
+				float randomSurfaceDir_y = RANDOM_FLOAT(0, 600);
+				int surfaceGuessContents;
+				Vector surfaceGuessAboveWaterLevel;
+
+				tries--;
+
+
+				surfaceGuess = originAtWaterLevel + Vector(randomSurfaceDir_x, randomSurfaceDir_y, 0);
+
+				//check. If this point is in a solid place it's no good.
+				surfaceGuessContents = UTIL_PointContents(surfaceGuess);
+
+				if(surfaceGuessContents == CONTENTS_SOLID){
+					//invalid.
+					continue;
+				}
+
+				//is above and below a little unobstructed?
+				UTIL_TraceLine(surfaceGuess + Vector(0, 0, -60), surfaceGuess + Vector(0, 0, 30), dont_ignore_monsters, edict(), &trTemp);
+
+				if(trTemp.fStartSolid || trTemp.fAllSolid || trTemp.flFraction < 1.0f){
+					//if this was obstructed or solid in any way, don't allow it.
+					continue;
+				}
+
+				//is a line from the anticipated surface point to the enemy unobstructed?
+				surfaceGuessAboveWaterLevel = surfaceGuess + Vector(0, 0, 16);
+
+				//CHEAT - use the enemy's real position.
+				UTIL_TraceLine(surfaceGuessAboveWaterLevel, m_hEnemy->Center(), dont_ignore_monsters, edict(), &trTemp);
+
+				if(trTemp.fStartSolid || trTemp.fAllSolid){
+					continue;
+				}
+
+				
+				DebugLine_Setup(6, surfaceGuessAboveWaterLevel, m_hEnemy->Center(), trTemp.flFraction );
+
+
+
+				if(!traceResultObstructionValidForAttack(trTemp)){
+					continue;
+				}
+
+				//last check: can we get a route to this point?
+				if(BuildRoute(surfaceGuess + Vector(0, 0, -60), bits_MF_TO_LOCATION, NULL)){
+					//okay!	
+				}else{
+					//oh dear.  Any other tries like BuildRouteNearest?
+					continue;
+				}
+
+				//got down here? I suppose that is success, assume there is a path to follow.
+				//And mark the current point for coming back to later maybe.
+				preSurfaceAttackLocation = pev->origin;
+				TaskComplete();
+				return;
+
+			}//END OF while tries remain
+
+			//didn't TaskComplete() and end early above? we failed to find a good point.
+			TaskFail();
+
+		break;}
+		case TASK_ARCHER_GATE_UPDATE_LKP_AT_WATER_SURFACE_IF_UNOBSCURED:{
+			if(m_hEnemy == NULL){
+				//???
+				TaskFail();
+				return;
+			}
+
+			//Is it still possible for me to do a straight-line attack from a little above the surface point I picked?
+			TraceResult trTemp;
+			
+			float waterLevel = UTIL_WaterLevel(pev->origin, pev->origin.z, pev->origin.z + 4096.0);
+			Vector originAtWaterLevel = Vector(pev->origin.x, pev->origin.y, waterLevel);
+			Vector littleAboveThat = originAtWaterLevel + Vector(0, 0, 12);
+
+			//yes, the real enemy position. cheat and just grab it straight.  instead of this->m_vecEnemyLKP
+			UTIL_TraceLine(littleAboveThat, m_hEnemy->Center(), dont_ignore_monsters, edict(), &trTemp);
+
+			if(trTemp.fStartSolid || trTemp.fAllSolid){
+				//nope.
+				TaskFail(); return;
+			}
+
+			if(!traceResultObstructionValidForAttack(trTemp)){
+				TaskFail(); return;
+			}
+
+			//if I made it here, seems fine. pass.  And set the LKP to where the enemy is now.
+			this->m_vecEnemyLKP = m_hEnemy->pev->origin;
+			TaskComplete();
+
+
+		break;}
+		case TASK_ARCHER_SEEK_WATER_SURFACE_ATTACK_POINT:{
+			//we're just below. should be a clear route to the top.
+			float waterLevel = UTIL_WaterLevel(pev->origin, pev->origin.z, pev->origin.z + 4096.0);
+			Vector originAtWaterLevel = Vector(pev->origin.x, pev->origin.y, waterLevel + DESIRED_WATERLEVEL_SURFACE_OFFSET);
+			
+			//TODO - set surface animation?  wait until so far from the top? what way to do it?
+			this->SetSequenceByIndex(SEQ_ARCHER_SURFACE, 1.7f);
+
+
+			//TODO - can I make it there? does this need to be offset above or below a little or need a Probe exception to allow going higher?
+			
+			
+			
+			//if(BuildRoute(originAtWaterLevel, bits_MF_TO_LOCATION, NULL)){
+			if(TRUE){
+				int iMoveFlag = bits_MF_TO_LOCATION;
+				RouteNew();
+				m_movementGoal = MOVEGOAL_LOCATION;
+				m_vecMoveGoal = originAtWaterLevel;
+				
+				m_Route[ 0 ].vecLocation = m_vecMoveGoal;
+				m_Route[ 0 ].iType = iMoveFlag | bits_MF_IS_GOAL;
+
+
+
+				//okay!	
+			}else{
+				//oh dear.  Any other tries like BuildRouteNearest?
+				TaskFail(); return;
+			}
+
+			TaskComplete();
+
+		break;}
+		case TASK_ARCHER_SEEK_WATER_SUBMERGE:{
+			//go back down?
+			Vector originLower = pev->origin + Vector(0, 0, -8);
+			float waterLevel = UTIL_WaterLevel(originLower, originLower.z, originLower.z + 4096.0);
+			
+			//TODO - set submerge animation? wait until so far from the top? what way to do it?
+			this->SetSequenceByIndex(SEQ_ARCHER_SURFACE, -1.7f);
+
+			Vector wellBelowOrigin = Vector(pev->origin.x, pev->origin.y, waterLevel - 60);
+			
+			if(BuildRoute(wellBelowOrigin, bits_MF_TO_LOCATION, NULL)){
+				//okay!	
+			}else{
+				//oh dear.  Any other tries like BuildRouteNearest?
+				TaskFail(); return;
+			}
+
+			TaskComplete();
+
+		break;}
+		case TASK_ARCHER_SEEK_RETREAT_INTO_WATER:{
+			//go back to the previous point, or pick some random point below the surface if it isn't possible to.  Or scramble anyways, whatever.
+
+			float waterLevel = UTIL_WaterLevel(pev->origin, pev->origin.z, pev->origin.z + 4096.0);
+			BOOL pathSuccess;
+
+			::DebugLine_SetupPoint(5, preSurfaceAttackLocation, 0, 0, 255);
+
+			if(BuildRoute(preSurfaceAttackLocation, bits_MF_TO_LOCATION, NULL)){
+				//okay!	
+				pathSuccess = TRUE;
+			}else{
+				//oh.
+				pathSuccess = FALSE;
+			}
+
+
+			if(!pathSuccess){
+				
+				if(attemptBuildRandomWanderRoute(waterLevel)){
+					//at least that worked.
+					TaskComplete();
+					return;
+				}
+
+
+				//actually this is no good, the loop above would've ended early if it passed instead.
+				TaskFail();
+				return;
+
+			}//END OF pathSuccess check
+
+
+			TaskComplete();
+
+		break;}
+		case TASK_ARCHER_SEEK_RANDOM_WANDER_POINT:{
+			//Perhaps it would help to try from someplace else?
+			
+			float waterLevel = UTIL_WaterLevel(pev->origin, pev->origin.z, pev->origin.z + 4096.0);
+
+			if(attemptBuildRandomWanderRoute(waterLevel)){
+				TaskComplete();
+				return;
+			}
+
+			//I fail at responding to a failure? GAH this is bad.
+			TaskFail();
+			return;
+
+		break;}
+
+
+
+		case TASK_DIE:{
 			//just do what the parent does.
 			CFlyingMonster::StartTask(pTask);
-		break;
+		break;}
 
-		case TASK_RANGE_ATTACK1:
+		case TASK_RANGE_ATTACK1:{
 			shootCooldown = gpGlobals->time + RANDOM_LONG(3.5, 6.2);
 			CFlyingMonster::StartTask(pTask);
-		break;
-		case TASK_STOP_MOVING:
+		break;}
+		case TASK_STOP_MOVING:{
 			//why so instant?
 			//this->m_velocity = Vector(0, 0, 0);
 			//pev->velocity = Vector(0,0,0);
 			CFlyingMonster::StartTask(pTask);
 
-		break;
+		break;}
 
-		case TASK_WATER_DEAD_FLOAT:
+		case TASK_WATER_DEAD_FLOAT:{
 			//pev->skin = EYE_BASE;
 			//SetSequenceByName( "bellyup" );
 			SetSequenceByIndex(SEQ_ARCHER_DEAD_FLOAT);
 			CFlyingMonster::StartTask(pTask);
-		break;
+		break;}
 
 
-		default:
+		default:{
 			CFlyingMonster::StartTask( pTask );
-		break;
+		break;}
 	}//END OF switch
 
 }//END OF StartTask
@@ -1232,14 +1761,48 @@ void CArcher::RunTask( Task_t *pTask ){
 				TaskComplete();
 			}
 		break;}
+		
+		case TASK_MOVE_TO_ENEMY_RANGE:{
+			//Should I be interrupted by noticing the enemy leaves the water?
+			
+			if(m_hEnemy==NULL || m_hEnemy->pev->waterlevel == 0){
+				TaskFail();
+				return;
+			}
+			
+			CBaseMonster::RunTask(pTask);
+
+		break;}
+
+		case TASK_ARCHER_WAIT_FOR_MOVEMENT_STRICT:{
+			/*
+			if(global_movementIsCompletePrintout == 1){
+				easyPrintLine("%s:%d: IS MOVEMENT COMPLETE?: %d", getClassname(), monsterID, MovementIsComplete());
+				easyPrintLine("MOVEGOAL: %d", this->m_movementGoal);
+
+				if(this->m_movementGoal == MOVEGOAL_LOCATION){
+					UTIL_printLineVector("GOAL LOC:", this->m_vecMoveGoal);
+				}
+
+			}
+			*/
+			if (MovementIsComplete())
+			{
+				TaskComplete();
+				RouteClear();		// Stop moving
+			}
+
+		break;}
+
+
 
 	
 
 
 
-		default:
+		default:{
 			CFlyingMonster::RunTask(pTask);
-		break;
+		break;}
 	}//END OF switch
 
 }//END OF RunTask
@@ -1301,6 +1864,20 @@ void CArcher::CustomTouch( CBaseEntity *pOther ){
 void CArcher::MonsterThink(){
 
 	
+	//MODDD - DEBUG TIME. do I go above the water?
+
+	/*
+	m_flGroundSpeed = 100;
+	m_flightSpeed = 100;
+	MoveExecute(NULL, Vector(0, 0, 1), gpGlobals->frametime);
+	pev->nextthink = gpGlobals->time + 0.1;
+
+	return;
+	*/
+	////////////////////////////////////////////////////////////////////////////////
+
+
+
 
 
 	//easyForcePrintLine("IM GONNA %d %d", m_Activity, m_IdealActivity);
@@ -2098,7 +2675,7 @@ void CArcher::checkTraceLineTest(const Vector& vecSuggestedDir, const float& tra
 
 void CArcher::checkFloor(const Vector& vecSuggestedDir, const float& travelMag, const float& flInterval){
 
-	//return;
+	return;
 	/*
 	if(turnThatOff){
 		//we're not doing the checks in this case.
@@ -2404,6 +2981,133 @@ void CArcher::BecomeDead( void )
 
 
 //TODO - implement the probe?  Ensure the monster stays underwater like the ichy does.
+Vector CArcher::DoVerticalProbe(float flInterval)
+{
+	
+
+	/*
+	float waterLevel = UTIL_WaterLevel(pev->origin, pev->origin.z - 512, pev->origin.z + 4096.0);
+
+	//or pev->velocity.z ?
+	float anticipatedZ = pev->origin.z + m_velocity.z * flInterval;
+
+	float differDence = anticipatedZ - waterLevel;
+
+	//30
+
+
+	//20---------
+
+
+	//origin: 18.  velocity: 12.
+
+
+
+	if(anticipatedZ > waterLevel){
+		
+		//
+
+		//float tempEEE = ( ((float)(pev->origin.z)) + (anticipatedZ - waterLevel));
+		float anticipatedMoveDistance = m_velocity.z * flInterval;
+
+		if(anticipatedMoveDistance < differDence){
+			//still only move towards the water at most by this amount.
+			return Vector(0, 0, m_velocity.z * 2);
+		}else{
+			//puts us exactly at the water level if it would've gone past.
+			return Vector(0, 0, waterLevel);
+		}
+
+
+		//m_velocity.z = 0;
+
+		return Vector(0, 0, 0);
+	}
+	*/
+
+
+	//Vector WallNormal = Vector(0,0,-1); // WATER normal is Straight Down for fish.
+	//float frac;
+
+	////or pev->velocity.z ??  m_flightSpeed??
+	//Vector Probe = pev->origin + Vector(0, 0, pev->velocity.z);
+
+	//BOOL bBumpedSomething = ProbeZ(pev->origin, Probe, &frac);
+
+	//TraceResult tr;
+
+
+	//if (bBumpedSomething )
+	//{
+	//	Vector ProbeDir = Probe - pev->origin;
+
+	//	/*
+	//	Vector NormalToProbeAndWallNormal = CrossProduct(ProbeDir, WallNormal);
+	//	Vector SteeringVector = CrossProduct( NormalToProbeAndWallNormal, ProbeDir);
+
+	//	float SteeringForce = m_flightSpeed * (1-frac) * (DotProduct(WallNormal.Normalize(), m_SaveVelocity.Normalize()));
+	//	if (SteeringForce < 0.0)
+	//	{
+	//		SteeringForce = -SteeringForce;
+	//	}
+	//	SteeringVector = SteeringForce * SteeringVector.Normalize();
+	//	
+	//	return SteeringVector;
+	//	*/
+	//	//return Vector(0, 0, m_flightSpeed * (1-frac));
+	//	return Vector(0, 0, pev->velocity.z * (1-frac));
+	//}
+
+	return Vector(0, 0, 0);
+}
+
+
+
+
+//See if I can find a point sufficiently below a body of water for wandering towards.
+//Nothing to do with the surface attack, but could come from failing to find a good position. It may be easier to find an attack position from a different place anyways.
+//But some attempt to be remotely near the enemy may be nice... not that this is always easy to judge as a good metric for what counts as a good attack point
+//(target in view, or would be if at the surface). TODO.
+//Returns whether a route was successfully built or not.  Tries stop if one is built of course.
+BOOL CArcher::attemptBuildRandomWanderRoute(const float& argWaterLevel){
+
+	//perhaps we can pick a random point under the waterlevel to go to?  Even a nearby node at random?  hm.
+	int tries = 4;
+
+	
+
+	while(tries >= 0){
+		tries--;
+
+		float depthChoice = RANDOM_FLOAT(450, 800);
+		Vector originBelowSurface = Vector(pev->origin.x, pev->origin.y, argWaterLevel - depthChoice);
+
+		float randomSurfaceDir_x = RANDOM_FLOAT(0, 600);
+		float randomSurfaceDir_y = RANDOM_FLOAT(0, 600);
+
+		Vector waterHideGuess = originBelowSurface + Vector(randomSurfaceDir_x, randomSurfaceDir_y, 0);
+
+		//can we make a route to there?
+		if(BuildRoute(waterHideGuess, bits_MF_TO_LOCATION, NULL)){
+			//okay!
+
+		}else{
+			//oh.
+			continue;
+		}
+
+		//made it? success.
+		//TaskComplete();
+		//return;
+		return TRUE;
+
+	}//END OF while tries left
+
+
+	//ran out of tries? oh well.
+	return FALSE;
+}//END OF attemptBuildRandomWanderRoute
+
 
 
 
