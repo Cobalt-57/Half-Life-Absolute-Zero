@@ -37,24 +37,6 @@
 #define KINGPIN_H
 
 
-//custom schedules
-enum
-{
-	SCHED_KINGPIN_POWERUP = LAST_COMMON_SCHEDULE + 1,
-	SCHED_KINGPIN_MOVE_TO_POWERUP,
-	SCHED_KINGPIN_ZZZ,
-
-
-};
-
-//custom tasks
-enum
-{
-	TASK_KINGPIN_PSIONIC_CHARGE = LAST_COMMON_TASK + 1,
-	TASK_KINGPIN_PSIONIC_LAUNCH,
-
-};
-
 
 class CKingPin : public CBaseMonster{
 public:
@@ -64,17 +46,23 @@ public:
 	static const char* pIdleSounds[];
 	static const char* pPainSounds[];
 	static const char* pAttackSounds[];
+
+	//NEW!!!
+	static const char* pElectricBarrageHitSounds[];
+	static const char* pElectricBarrageFireSounds[];
+	static const char* pElectricBarrageEndSounds[];
+
 	static const char* pAttackHitSounds[];
 	static const char* pAttackMissSounds[];
 
-	/*
+	
 	//save info
 	//////////////////////////////////////////////////////////////////////////////////
 	static TYPEDESCRIPTION m_SaveData[];
 	virtual int Save( CSave &save ); 
 	virtual int Restore( CRestore &restore );
 	//////////////////////////////////////////////////////////////////////////////////
-	*/
+	
 
 
 	//nah, don't keep track of this.
@@ -85,6 +73,10 @@ public:
 	float forceEnemyOnPoweredUpMonstersHardCooldown;
 	float forgetRecentInflictingMonsterCooldown;
 	EHANDLE recentInflictingMonster;
+
+	int m_voicePitch;
+
+
 
 	CKingPin(void);
 
@@ -99,6 +91,8 @@ public:
 	
 	void Precache(void);
 	void Spawn(void);
+
+	void SetEyePosition(void);
 	
 	Schedule_t *GetSchedule( void );
 	Schedule_t* GetScheduleOfType( int Type);
@@ -161,6 +155,7 @@ public:
 	
 	void SetObjectCollisionBox( void )
 	{
+		/*
 		//EASY_CVAR_PRINTIF_PRE(gargantuaPrintout, easyPrintLine( "garg deadflag? %d", pev->deadflag));
 		//could it be re-adjusted for "DEAD_DEAD" too?
 		if(pev->deadflag != DEAD_NO){
@@ -171,7 +166,34 @@ public:
 			CBaseMonster::SetObjectCollisionBox();
 
 		}
+		*/
+
+		//no need to do anything special anymore I think.
+		CBaseMonster::SetObjectCollisionBox();
 	}
+
+
+	void ScheduleChange(void);
+
+
+
+	void playForceFieldElectricBarrageFireSound(void);
+	void playForceFieldElectricBarrageHitSound(void);
+
+	void playForceFieldReflectSound(void);
+
+	void playSuperBallFireSound(void);
+
+	void playElectricBarrageStartSound(void);
+	void playElectricBarrageLoopSound(void);
+	void playElectricBarrageEndSound(void);
+	
+
+	void playElectricLaserChargeSound(void);
+	void playElectricLaserFireSound(void);
+	void playElectricLaserHitSound(void);
+
+
 
 
 

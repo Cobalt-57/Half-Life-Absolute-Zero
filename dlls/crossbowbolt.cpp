@@ -121,7 +121,11 @@ void CCrossbowBolt::Precache( )
 	PRECACHE_MODEL ("models/crossbow_bolt.mdl");
 	PRECACHE_SOUND("weapons/xbow_hitbod1.wav");
 	PRECACHE_SOUND("weapons/xbow_hitbod2.wav");
+	
+	//MODDD - do we even actually ever play this? Not even in clientside events (cl_dll/ev_hldm.cpp)? 
+	//        That's ok, this sounds terrible anyways. At least at the same default volume as everything else which is blisteringly loud in any sound player for some reason.
 	PRECACHE_SOUND("weapons/xbow_fly1.wav");
+
 	PRECACHE_SOUND("weapons/xbow_hit1.wav");
 	PRECACHE_SOUND("fvox/beep.wav");
 

@@ -14,36 +14,13 @@ extern float global_noFlinchOnHard;
 
 
 
+//TODO - is SetEyePosition reading an eye position from the model or should it be hard-coded?
 
 
 
 
 //sequences in the anim, in the order they appear in the anim. Some anims have the same display name and so should just be referenced by order
 //(numbered index), named well after purpose and based on display names for clarity. Safer this way.
-
-/*
-enum kingPin_sequence {  //key: frames, FPS
-	KINGPIN_IDLE,
-	KINGPIN_WALK,
-	KINGPIN_RUN,
-
-};
-*/
-
-//ANIMATION COMMENT - don't know if the "run" animation puts the kingping forwards a little much? When it stops to do "attack_" anything
-//                    it appears to be pushed back noticably, or on changing from "idle1" to "run" it pushes forwards.
-
-//                    Also is the point while standing overall a little pushed to the back, maybe the run's position is correct?
-//                    move a little to the left or right while it tries to melee, it pushes itself left or right in a circular fashion instead of rotating on its own center.
-
-
-
-//MODDD - the islave should prefer walking a lot too.
-//        TODO QUESTION - Should thrown projectiles like grenades be reflected? how about chumtoads, snarks?  Already sure crossbow bolts / RPG rounds should be reflected.
-
-
-
-
 
 enum kingPin_sequence {  //key: frames, FPS
 	KINGPIN_ATTACK_BOTH,  //21, 30
@@ -65,13 +42,42 @@ enum kingPin_sequence {  //key: frames, FPS
 };
 
 
+/*
+enum kingPin_sequence {  //key: frames, FPS
+	KINGPIN_IDLE,
+	KINGPIN_WALK,
+	KINGPIN_RUN,
+
+};
+*/
+
+
+//ANIMATION COMMENT - don't know if the "run" animation puts the kingpin forwards a little much? When it stops to do "attack_" anything
+//                    it appears to be pushed back noticably, or on changing from "idle1" to "run" it pushes forwards.
+
+//                    Also is the point while standing overall a little pushed to the back, maybe the run's position is correct?
+//                    move a little to the left or right while it tries to melee, it pushes itself left or right in a circular fashion instead of rotating on its own center.
+
+
+
+//MODDD - the islave should prefer walking a lot too.
+//        TODO QUESTION - Should thrown projectiles like grenades be reflected? how about chumtoads, snarks?  Already sure crossbow bolts / RPG rounds should be reflected.
+
+
+
+
+
+
+
 
 //placeholders for now.
+/*
 #define KINGPIN_SCYTHE 0
 #define KINGPIN_PSIONIC_CHARGE 1
 #define KINGPIN_PSIONIC_LAUNCH 0
 #define KINGPIN_DIE 0
 #define KINGPIN_POWERUP 0
+*/
 //TODO - should there be an anim for deflecting projectiles or is that passive roughly in the direction it's looking? or all directions all the time?
 
 
@@ -83,7 +89,41 @@ enum kingPin_sequence {  //key: frames, FPS
 
 
 
+	
 
+//custom schedules
+enum
+{
+	//SCHED_KINGPIN_POWERUP = LAST_COMMON_SCHEDULE + 1,
+	//SCHED_KINGPIN_MOVE_TO_POWERUP,
+	//SCHED_KINGPIN_ZZZ,
+
+	
+
+	SCHED_KINGPIN_ELECTRIC_BARRAGE = LAST_COMMON_SCHEDULE + 1,
+	SCHED_KINGPIN_ELECTRIC_LASER,
+	SCHED_KINGPIN_SUPERBALL,
+
+
+};
+
+//custom tasks
+enum
+{
+	//TASK_KINGPIN_PSIONIC_CHARGE = LAST_COMMON_TASK + 1,
+	//TASK_KINGPIN_PSIONIC_LAUNCH,
+	
+	TASK_KINGPIN_ELECTRIC_BARRAGE_START = LAST_COMMON_TASK + 1,
+	TASK_KINGPIN_ELECTRIC_BARRAGE_LOOP,
+	TASK_KINGPIN_ELECTRIC_BARRAGE_END,
+	TASK_KINGPIN_ELECTRIC_LASER_CHARGE,
+	TASK_KINGPIN_ELECTRIC_LASER_FIRE,
+	TASK_KINGPIN_ELECTRIC_LASER_END,
+	TASK_KINGPIN_SUPERBALL_START,
+	TASK_KINGPIN_SUPERBALL_FIRE,
+	TASK_KINGPIN_SUPERBALL_END,
+
+};
 
 
 
@@ -106,7 +146,75 @@ enum kingPin_sequence {  //key: frames, FPS
 
 
 
+const char *CKingPin::pDeathSounds[] = 
+{
+	"controller/con_die1.wav",
+	"controller/con_die2.wav",
+};
 
+const char *CKingPin::pAlertSounds[] = 
+{
+	"controller/con_alert1.wav",
+	"controller/con_alert2.wav",
+	"controller/con_alert3.wav",
+};
+
+
+const char *CKingPin::pIdleSounds[] = 
+{
+	"controller/con_idle1.wav",
+	"controller/con_idle2.wav",
+	"controller/con_idle3.wav",
+	"controller/con_idle4.wav",
+	"controller/con_idle5.wav",
+	"ambience/alien_chatter.wav",
+};
+const char *CKingPin::pPainSounds[] = 
+{
+	"controller/con_pain1.wav",
+	"controller/con_pain2.wav",
+	"controller/con_pain3.wav",
+};
+
+
+const char *CKingPin::pAttackSounds[] = 
+{
+	"controller/con_attack1.wav",
+	"controller/con_attack2.wav",
+	"controller/con_attack3.wav",
+};
+
+
+
+
+//NEW!!!
+const char* CKingPin::pElectricBarrageHitSounds[] =
+{
+	"debris/zap1.wav",
+	"debris/zap3.wav",
+	"debris/zap8.wav",
+};
+
+const char* CKingPin::pElectricBarrageFireSounds[] =
+{
+	"debris/beamstart4.wav",
+	"debris/beamstart6.wav",
+	"debris/beamstart10.wav",
+	"debris/beamstart11.wav",
+};
+
+const char* CKingPin::pElectricBarrageEndSounds[] =
+{
+	
+	//stop powerup sound
+	"debris/zap3.wav",
+	"debris/zap4.wav",
+	"debris/zap6.wav",
+};
+
+
+
+/*
 const char* CKingPin::pDeathSounds[] = 
 {
 	"kingpin/kingpin_death.wav",
@@ -128,6 +236,7 @@ const char* CKingPin::pAttackSounds[] =
 {
 	"kingpin/kingpin_attack.wav",
 };
+*/
 const char* CKingPin::pAttackHitSounds[] = 
 {
 	"zombie/claw_strike1.wav",
@@ -145,10 +254,13 @@ const char* CKingPin::pAttackMissSounds[] =
 
 
 
-/*
+
 TYPEDESCRIPTION	CKingPin::m_SaveData[] = 
 {
 	
+	DEFINE_FIELD( CKingPin, m_voicePitch, FIELD_INTEGER),
+
+
 };
 
 //IMPLEMENT_SAVERESTORE( CKingPin, CBaseMonster );
@@ -168,7 +280,7 @@ int CKingPin::Restore( CRestore &restore )
 
 	return iReadFieldsResult;
 }
-*/
+
 
 
 
@@ -204,6 +316,8 @@ CKingPin::CKingPin(void){
 //schedule details here......
 
 
+
+/*
 Task_t	tlKingpinRangeAttack1[] =
 {
 	{ TASK_STOP_MOVING,			0				},
@@ -230,10 +344,139 @@ Schedule_t	slKingpinRangeAttack1[] =
 		"Kingpin Range Attack1"
 	},
 };
+*/
 
 
 
 
+
+//Ripped from slPrimaryMeleeAttack1 of defaultai.cpp.
+Task_t	tlKingpinMeleeAttack[] =
+{
+	{ TASK_STOP_MOVING,			0				},
+	{ TASK_FACE_ENEMY,			(float)0		},
+	{ TASK_MELEE_ATTACK1,		(float)0		},
+};
+
+Schedule_t	slKingpinMeleeAttack[] =
+{
+	{ 
+		tlKingpinMeleeAttack,
+		ARRAYSIZE ( tlKingpinMeleeAttack ), 
+		bits_COND_NEW_ENEMY			|
+		bits_COND_ENEMY_DEAD		|
+		
+		//MODDD - restoring heavy damage as interruptable.
+		//bits_COND_LIGHT_DAMAGE		|
+		bits_COND_HEAVY_DAMAGE		|
+
+		bits_COND_ENEMY_OCCLUDED,
+		0,
+		"Kingpin Melee Attack"
+	},
+};
+
+
+
+
+
+
+
+Task_t	tlKingpinElectricBarrage[] =
+{
+	{ TASK_STOP_MOVING,			0				},
+	{ TASK_FACE_ENEMY,			(float)0		},
+	//{ TASK_RANGE_ATTACK1,		(float)0		},
+	{ TASK_KINGPIN_ELECTRIC_BARRAGE_START, (float)0},
+	{ TASK_KINGPIN_ELECTRIC_BARRAGE_LOOP, (float)0},
+	{ TASK_KINGPIN_ELECTRIC_BARRAGE_END, (float)0},
+};
+
+Schedule_t	slKingpinElectricBarrage[] =
+{
+	{ 
+		tlKingpinElectricBarrage,
+		ARRAYSIZE ( tlKingpinElectricBarrage ), 
+		bits_COND_NEW_ENEMY			|
+		bits_COND_ENEMY_DEAD		|
+		bits_COND_LIGHT_DAMAGE		|
+		bits_COND_HEAVY_DAMAGE		|
+		//bits_COND_ENEMY_OCCLUDED	|
+		bits_COND_NO_AMMO_LOADED	|
+		bits_COND_HEAR_SOUND,
+		
+
+		0,
+		//bits_SOUND_DANGER,
+
+		"Kingpin Electric Barrage"
+	},
+};
+
+
+Task_t	tlKingpinElectricLaser[] =
+{
+	{ TASK_STOP_MOVING,			0				},
+	{ TASK_FACE_ENEMY,			(float)0		},
+	//{ TASK_RANGE_ATTACK1,		(float)0		},
+	{ TASK_KINGPIN_ELECTRIC_LASER_CHARGE, (float)0},
+	{ TASK_KINGPIN_ELECTRIC_LASER_FIRE, (float)0},
+	{ TASK_KINGPIN_ELECTRIC_LASER_END, (float)0},
+};
+
+Schedule_t	slKingpinElectricLaser[] =
+{
+	{ 
+		tlKingpinElectricLaser,
+		ARRAYSIZE ( tlKingpinElectricLaser ), 
+		bits_COND_NEW_ENEMY			|
+		bits_COND_ENEMY_DEAD		|
+		//bits_COND_LIGHT_DAMAGE		|
+		bits_COND_HEAVY_DAMAGE		|
+		//bits_COND_ENEMY_OCCLUDED	|
+		bits_COND_NO_AMMO_LOADED	|
+		bits_COND_HEAR_SOUND,
+		
+
+		0,
+		//bits_SOUND_DANGER,
+
+		"Kingpin Electric Laser"
+	},
+};
+
+
+
+Task_t	tlKingpinSuperBall[] =
+{
+	{ TASK_STOP_MOVING,			0				},
+	{ TASK_FACE_ENEMY,			(float)0		},
+	//{ TASK_RANGE_ATTACK1,		(float)0		},
+	{ TASK_KINGPIN_SUPERBALL_START, (float)0},
+	{ TASK_KINGPIN_SUPERBALL_FIRE, (float)0},
+	{ TASK_KINGPIN_SUPERBALL_END, (float)0},
+};
+
+Schedule_t	slKingpinSuperBall[] =
+{
+	{ 
+		tlKingpinSuperBall,
+		ARRAYSIZE ( tlKingpinSuperBall ), 
+		bits_COND_NEW_ENEMY			|
+		bits_COND_ENEMY_DEAD		|
+		//bits_COND_LIGHT_DAMAGE		|
+		bits_COND_HEAVY_DAMAGE		|
+		//bits_COND_ENEMY_OCCLUDED	|
+		bits_COND_NO_AMMO_LOADED	|
+		bits_COND_HEAR_SOUND,
+		
+
+		0,
+		//bits_SOUND_DANGER,
+
+		"Kingpin Super Ball"
+	},
+};
 
 
 
@@ -266,7 +509,10 @@ Schedule_t	slKingPinXXX[] =
 
 DEFINE_CUSTOM_SCHEDULES( CKingPin )
 {
-	slKingpinRangeAttack1,
+	slKingpinMeleeAttack,
+	slKingpinElectricBarrage,
+	slKingpinElectricLaser,
+	slKingpinSuperBall,
 
 };
 IMPLEMENT_CUSTOM_SCHEDULES( CKingPin, CBaseMonster );
@@ -277,28 +523,38 @@ IMPLEMENT_CUSTOM_SCHEDULES( CKingPin, CBaseMonster );
 
 //MODDD - sound calls dummied out until they actually exist.
 void CKingPin::DeathSound( void ){
-	int pitch = 95 + RANDOM_LONG(0,9);
-	//EMIT_SOUND_FILTERED( edict(), CHAN_VOICE, RANDOM_SOUND_ARRAY(pDeathSounds), 1.0, ATTN_IDLE, 0, pitch );
+	int pitch = m_voicePitch + RANDOM_LONG(0,4);
+	EMIT_SOUND_FILTERED( edict(), CHAN_VOICE, RANDOM_SOUND_ARRAY(pDeathSounds), 1.0, ATTN_IDLE, 0, pitch );
 }
 void CKingPin::AlertSound( void ){
-	int pitch = 95 + RANDOM_LONG(0,9);
-	//EMIT_SOUND_FILTERED( edict(), CHAN_VOICE, RANDOM_SOUND_ARRAY(pAlertSounds), 1.0, ATTN_NORM, 0, pitch );
+	int pitch = m_voicePitch + RANDOM_LONG(0,4);
+	EMIT_SOUND_FILTERED( edict(), CHAN_VOICE, RANDOM_SOUND_ARRAY(pAlertSounds), 1.0, ATTN_NORM, 0, pitch );
 }
 void CKingPin::IdleSound( void ){
-	int pitch = 95 + RANDOM_LONG(0,9);
-	// Play a random idle sound
-	//EMIT_SOUND_FILTERED( edict(), CHAN_VOICE, RANDOM_SOUND_ARRAY(pIdleSounds), 1.0, ATTN_NORM, 0, pitch );
+
+	if(RANDOM_LONG(0, 2) <= 1){  //2/3
+		int pitch = m_voicePitch + RANDOM_LONG(0,4);
+
+		// Play a random idle sound
+		EMIT_SOUND_FILTERED( edict(), CHAN_VOICE, RANDOM_SOUND_ARRAY(pIdleSounds), 1.0, ATTN_NORM, 0, pitch );
+	}else{  //1/3
+		int pitch = 99 + RANDOM_LONG(0, 6);
+		//the special one?
+		EMIT_SOUND_FILTERED( edict(), CHAN_VOICE, "ambience/alien_chatter.wav", 1.0, ATTN_NORM, 0, pitch );
+	}
+
+
 }
 void CKingPin::PainSound( void ){
-	int pitch = 95 + RANDOM_LONG(0,9);
+	int pitch = m_voicePitch + RANDOM_LONG(0,4);
 	if (RANDOM_LONG(0,5) < 2){
-		//EMIT_SOUND_FILTERED( edict(), CHAN_VOICE, RANDOM_SOUND_ARRAY(pPainSounds), 1.0, ATTN_NORM, 0, pitch );
+		EMIT_SOUND_FILTERED( edict(), CHAN_VOICE, RANDOM_SOUND_ARRAY(pPainSounds), 1.0, ATTN_NORM, 0, pitch );
 	}
 }
 void CKingPin::AttackSound( void ){
-	int pitch = 95 + RANDOM_LONG(0,9);
+	int pitch = m_voicePitch + RANDOM_LONG(0,4);
 	// Play a random attack sound
-	//EMIT_SOUND_FILTERED( edict(), CHAN_VOICE, RANDOM_SOUND_ARRAY(pAttackSounds), 1.0, ATTN_NORM, 0, pitch );
+	EMIT_SOUND_FILTERED( edict(), CHAN_VOICE, RANDOM_SOUND_ARRAY(pAttackSounds), 1.0, ATTN_NORM, 0, pitch );
 }
 
 
@@ -313,13 +569,17 @@ void CKingPin::Precache( void )
 	//PRECACHE_SOUND("kingpin/kingpin_XXX.wav");
 	
 	//NOTICE - attempting to precace files that don't exist crashes the game.
-	/*
+	
 	PRECACHE_SOUND_ARRAY(pDeathSounds);
 	PRECACHE_SOUND_ARRAY(pAlertSounds);
 	PRECACHE_SOUND_ARRAY(pIdleSounds);
 	PRECACHE_SOUND_ARRAY(pPainSounds);
 	PRECACHE_SOUND_ARRAY(pAttackSounds);
-	*/
+	
+	PRECACHE_SOUND_ARRAY(pElectricBarrageHitSounds);
+	PRECACHE_SOUND_ARRAY(pElectricBarrageFireSounds);
+	PRECACHE_SOUND_ARRAY(pElectricBarrageEndSounds);
+
 	PRECACHE_SOUND_ARRAY(pAttackHitSounds);
 	PRECACHE_SOUND_ARRAY(pAttackMissSounds);
 
@@ -329,8 +589,29 @@ void CKingPin::Precache( void )
 	PRECACHE_SOUND("houndeye/he_blast1.wav");
 	PRECACHE_SOUND("houndeye/he_blast2.wav");
 	PRECACHE_SOUND("houndeye/he_blast3.wav");
+	
+	PRECACHE_SOUND("ambience/zapmachine.wav");
+	PRECACHE_SOUND("ambience/particle_suck1.wav");
+	
+	
+	//PRECACHE_SOUND("weapons/electro4.wav", TRUE);  //no sentence equivalent... wait below does it already.
+	PRECACHE_SOUND("weapons/electro5.wav", TRUE);  //YOU DOOFUS all the weapons/electro's were precached by the player!
+	PRECACHE_SOUND("weapons/electro6.wav", TRUE);
+
+	PRECACHE_SOUND("weapons/gauss2.wav", TRUE); //precached by player.
+	PRECACHE_SOUND("weapons/mine_charge.wav", TRUE); //precached by player.
 
 	
+	PRECACHE_SOUND("garg/gar_stomp1.wav");
+	
+	PRECACHE_SOUND("x/x_shoot1.wav");
+	//PRECACHE_SOUND("debris/beamstart4.wav");
+	
+	
+	
+
+
+
 
 	//For the KingpinBall.
 	/////////////////////////////////////////////////////////
@@ -368,21 +649,45 @@ void CKingPin::Spawn( void )
 	m_bloodColor		= BLOOD_COLOR_GREEN;
 	pev->effects		= 0;
 	pev->health			= gSkillData.kingpinHealth;
-	pev->view_ofs		= Vector ( 0, 0, 20 );// position of the eyes relative to monster's origin.
+	//pev->view_ofs		= Vector ( 0, 0, 20 );// position of the eyes relative to monster's origin.
 	pev->yaw_speed		= 5;//!!! should we put this in the monster's changeanim function since turn rates may vary with state/anim?
-	m_flFieldOfView		= 0.5;// indicates the width of this monster's forward view cone ( as a dotproduct result )
+
+	m_flFieldOfView		= VIEW_FIELD_FULL;// indicates the width of this monster's forward view cone ( as a dotproduct result )
+
+	//Kingpin was described as having 360 degree vision from having all kinds of eyes or ways to get that kind of sensory information.
+	//But should still be stunnable to open up the back for vulnerability.
+	//Perhaps shots to the head, even from the front, should still get some bonus anyways?
+
+
 	m_MonsterState		= MONSTERSTATE_NONE;
+
+	m_afCapability		= bits_CAP_MELEE_ATTACK1 | bits_CAP_RANGE_ATTACK1; //| bits_CAP_DOORS_GROUP;
 
 	MonsterInit();
 
 
+	//MODDD - CVar me?
+	//m_voicePitch = randomValueInt((int)global_hassaultVoicePitchMin, (int)global_hassaultVoicePitchMax);
 
+	m_voicePitch = randomValueInt(66, 76);
 
 
 	//SetTouch(&CKingPin::CustomTouch );
 	//SetTouch( NULL );
 
 }//END OF Spawn();
+
+
+
+
+void CKingPin::SetEyePosition(void){
+	//Don't call the parent and instead force view_ofs to use a hardcoded eye position.
+	//pev->view_ofs = VEC_VIEW;
+
+	//The default way reads the model for eye position.
+	CBaseMonster::SetEyePosition();
+}//END OF SetEyePosition
+
 
 
 //based off of GetSchedule for CBaseMonster in schedule.cpp.
@@ -604,6 +909,7 @@ Schedule_t* CKingPin::GetSchedule ( void )
 Schedule_t* CKingPin::GetScheduleOfType( int Type){
 	
 	switch(Type){
+		/*
 		case SCHED_KINGPIN_POWERUP:
 			
 			//do this animation.
@@ -613,8 +919,15 @@ Schedule_t* CKingPin::GetScheduleOfType( int Type){
 		case SCHED_KINGPIN_MOVE_TO_POWERUP:
 			//... what?
 		break;
+		*/
+
+		case SCHED_MELEE_ATTACK1:
+			return slKingpinMeleeAttack;
+		break;
 		case SCHED_RANGE_ATTACK1:
-			return slKingpinRangeAttack1;
+			
+			//!!! TODO
+			//return slKingpinRangeAttack1;
 		break;
 	}//END OF switch(Type)
 	
@@ -628,6 +941,9 @@ void CKingPin::StartTask( Task_t *pTask ){
 
 	switch( pTask->iTask ){
 		
+
+
+		/*
 		case TASK_KINGPIN_PSIONIC_CHARGE:
 		{
 			
@@ -658,6 +974,7 @@ void CKingPin::StartTask( Task_t *pTask ){
 
 		break;
 		}
+		*/
 		default:
 			CBaseMonster::StartTask( pTask );
 		break;
@@ -670,6 +987,9 @@ void CKingPin::RunTask( Task_t *pTask ){
 	//EASY_CVAR_PRINTIF_PRE(templatePrintout, easyPrintLine("RunTask: sched:%s task:%d", this->m_pSchedule->pName, pTask->iTask) );
 	
 	switch( pTask->iTask ){
+
+
+		/*
 		case TASK_KINGPIN_PSIONIC_CHARGE:
 
 			//ripped houndeye.
@@ -701,6 +1021,8 @@ void CKingPin::RunTask( Task_t *pTask ){
 			}
 
 		break;
+		*/
+
 		default:
 			CBaseMonster::RunTask(pTask);
 		break;
@@ -964,6 +1286,29 @@ int CKingPin::LookupActivityHard(int activity){
 
 	//no need for default, just falls back to the normal activity lookup.
 	switch(activity){
+
+		case ACT_MELEE_ATTACK1:{
+			
+			//TODO - events.
+
+			switch(RANDOM_LONG(0, 2)){
+				case 0:
+
+
+					return KINGPIN_ATTACK_LEFT;
+				break;
+				case 1:
+
+
+					return KINGPIN_ATTACK_RIGHT;
+				break;
+				case 2:
+
+					return KINGPIN_ATTACK_BOTH;
+				break;
+			}//END OF switch
+
+		break;}
 		
 		/*
 		case ACT_MELEE_ATTACK1:
@@ -996,10 +1341,13 @@ int CKingPin::tryActivitySubstitute(int activity){
 
 	//no need for default, just falls back to the normal activity lookup.
 	switch(activity){
+		
+		case ACT_MELEE_ATTACK1:{
+			//no need for random logic.  Just say we have one.
+			return KINGPIN_ATTACK_BOTH;
+		break;}
+		
 		/*
-		case ACT_MELEE_ATTACK1:
-			return KINGPIN_SCYTHE;
-		break;
 		case ACT_RANGE_ATTACK1:
 			return KINGPIN_PSIONIC_LAUNCH;
 		break;
@@ -1042,6 +1390,9 @@ void CKingPin::HandleEventQueueEvent(int arg_eventID){
 	}
 	case 1:
 	{
+		//super ball.  USe pathfinding to route towards the enemy if there are air nodes.
+		//Otherwise just immitate a typical controller ball, that's the best we can do.
+
 		//psionic launch (actually launch a ball)
 
 		
@@ -1329,6 +1680,134 @@ void CKingPin::playPsionicLaunchSound(){
 	break;
 	}
 }//END OF playPsionicLaunchSound()
+
+
+
+
+void CKingPin::ScheduleChange(void){
+
+
+	Schedule_t* endSchedule = this->m_pSchedule;
+
+
+	if(endSchedule == slKingpinElectricBarrage){
+		int taskNumba = getTaskNumber();
+		if(taskNumba == TASK_KINGPIN_ELECTRIC_BARRAGE_START || taskNumba == TASK_KINGPIN_ELECTRIC_BARRAGE_LOOP){
+			playElectricBarrageEndSound();
+		}
+	}
+
+
+
+}//END OF ScheduleChange
+
+
+
+
+/*
+void CKingPin::playSuperBallStartSound(void){
+	int pitch = 100;
+	
+	EMIT_SOUND_FILTERED( edict(), CHAN_VOICE, "ambience/alien_hollow.wav", 1.0, ATTN_NORM, 0, pitch );
+}
+
+*/
+
+
+
+void CKingPin::playForceFieldElectricBarrageFireSound(void){
+	int pitch = 96 + RANDOM_LONG(0, 5);
+	EMIT_SOUND_FILTERED( edict(), CHAN_VOICE, RANDOM_SOUND_ARRAY(pElectricBarrageFireSounds), 1.0, ATTN_NORM, 0, pitch );
+}
+
+void CKingPin::playForceFieldElectricBarrageHitSound(void){
+	int pitch = 96 + RANDOM_LONG(0, 5);
+	EMIT_SOUND_FILTERED( edict(), CHAN_VOICE, RANDOM_SOUND_ARRAY(pElectricBarrageHitSounds), 1.0, ATTN_NORM, 0, pitch );
+}
+
+
+
+
+void CKingPin::playForceFieldReflectSound(void){
+	int pitch = 150 + RANDOM_LONG(-5, 5);
+	
+	EMIT_SOUND_FILTERED( edict(), CHAN_VOICE, "debris/beamstart4.wav", 1.0, ATTN_NORM, 0, pitch );
+}
+
+
+
+void CKingPin::playSuperBallFireSound(void){
+	int pitch = 100 + RANDOM_LONG(-5, 5);
+	
+	EMIT_SOUND_FILTERED( edict(), CHAN_VOICE, "x/x_shoot1.wav", 1.0, ATTN_NORM, 0, pitch );
+}
+
+
+void CKingPin::playElectricBarrageStartSound(void){
+	int pitch = 108;
+	EMIT_SOUND_FILTERED( edict(), CHAN_VOICE, "ambience/particle_suck1.wav", 1.0, ATTN_NORM, 0, pitch );
+}//END OF playElectricBarrageStartSound
+
+
+void CKingPin::playElectricBarrageLoopSound(void){
+	int pitch = 112;
+
+	//x/x_teleattack1.wav  ???
+	
+
+	EMIT_SOUND_FILTERED( edict(), CHAN_VOICE, "ambience/zapmachine.wav", 1.0, ATTN_NORM, 0, pitch );
+}//END OF playElectricBarrageStartSound
+
+
+
+
+void CKingPin::playElectricBarrageEndSound(void){
+	int pitch = 108 + RANDOM_LONG(0,4);
+	EMIT_SOUND_FILTERED( edict(), CHAN_VOICE, RANDOM_SOUND_ARRAY(pElectricBarrageEndSounds), 1.0, ATTN_NORM, 0, pitch );
+	
+
+}//END OF playElectricBarrageEndSound
+
+
+
+
+void CKingPin::playElectricLaserChargeSound(void){
+	int pitch = 89;
+	
+	EMIT_SOUND_FILTERED( edict(), CHAN_WEAPON, "weapons/mine_charge.wav", 1.0, ATTN_NORM, 0, pitch, FALSE );
+
+}
+
+
+void CKingPin::playElectricLaserFireSound(void){
+	int pitch = 92;
+	EMIT_SOUND_FILTERED( edict(), CHAN_WEAPON, "weapons/gauss2.wav", 1.0, ATTN_NORM, 0, pitch, FALSE );
+	
+
+
+}
+
+//That is, at the location hit, regardless of hitting anything organic or not.
+void CKingPin::playElectricLaserHitSound(void){
+	int pitch = 102;
+	EMIT_SOUND_FILTERED( edict(), CHAN_VOICE, "garg/gar_stomp1.wav", 1.0, ATTN_NORM, 0, pitch );
+
+
+	switch(RANDOM_LONG(0, 2)){
+	case 0:
+		//precached by the client always, so don't use the soundSentenceSave system for this one.
+		EMIT_SOUND_FILTERED( edict(), CHAN_VOICE, "weapons/electro4.wav", 1.0, ATTN_NORM, 0, pitch, FALSE );
+	break;
+	case 1:
+		EMIT_SOUND_FILTERED( edict(), CHAN_VOICE, "weapons/electro5.wav", 1.0, ATTN_NORM, 0, pitch, FALSE );
+	break;
+	case 2:
+		EMIT_SOUND_FILTERED( edict(), CHAN_VOICE, "weapons/electro6.wav", 1.0, ATTN_NORM, 0, pitch, FALSE );
+	break;
+	}//END OF switch
+	
+}
+
 
 
 

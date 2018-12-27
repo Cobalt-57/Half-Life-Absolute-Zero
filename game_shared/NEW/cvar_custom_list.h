@@ -634,6 +634,7 @@
 #define DEFAULT_pathfindLargeBoundFix 0
 #define DEFAULT_flyerKilledFallingLoop 1
 #define DEFAULT_floaterDummy 0
+#define DEFAULT_barneyDummy 0
 #define DEFAULT_ladderCycleMulti 0.9
 #define DEFAULT_ladderSpeedMulti 1.55
 #define DEFAULT_barnacleGrabNoInterpolation 0
@@ -1271,6 +1272,7 @@
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(pathfindLargeBoundFix, pathfindlargeboundfix)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(flyerKilledFallingLoop, flyerkilledfallingloop)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(floaterDummy, floaterdummy)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(barneyDummy, barneydummy)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(ladderCycleMulti, laddercyclemulti)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(ladderSpeedMulti, ladderspeedmulti)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(barnacleGrabNoInterpolation, barnaclegrabnointerpolation)\
@@ -1731,6 +1733,7 @@
 	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(pathfindLargeBoundFix)\
 	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(flyerKilledFallingLoop)\
 	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(floaterDummy)\
+	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(barneyDummy)\
 	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(ladderCycleMulti)\
 	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(ladderSpeedMulti)\
 	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(barnacleGrabNoInterpolation)\
@@ -2191,6 +2194,7 @@
 	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(pathfindLargeBoundFix, pathfindlargeboundfix)\
 	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(flyerKilledFallingLoop, flyerkilledfallingloop)\
 	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(floaterDummy, floaterdummy)\
+	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(barneyDummy, barneydummy)\
 	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(ladderCycleMulti, laddercyclemulti)\
 	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(ladderSpeedMulti, ladderspeedmulti)\
 	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(barnacleGrabNoInterpolation, barnaclegrabnointerpolation)\
@@ -2667,6 +2671,7 @@
 	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY(pathfindLargeBoundFix)\
 	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY(flyerKilledFallingLoop)\
 	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY(floaterDummy)\
+	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY(barneyDummy)\
 	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY(ladderCycleMulti)\
 	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY(ladderSpeedMulti)\
 	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY(barnacleGrabNoInterpolation)\
@@ -3143,6 +3148,7 @@
 	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY(pathfindLargeBoundFix)\
 	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY(flyerKilledFallingLoop)\
 	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY(floaterDummy)\
+	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY(barneyDummy)\
 	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY(ladderCycleMulti)\
 	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY(ladderSpeedMulti)\
 	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY(barnacleGrabNoInterpolation)\
@@ -3619,6 +3625,7 @@
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(pathfindLargeBoundFix)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(flyerKilledFallingLoop)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(floaterDummy)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(barneyDummy)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(ladderCycleMulti)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(ladderSpeedMulti)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(barnacleGrabNoInterpolation)\
@@ -4095,6 +4102,7 @@
 	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY(pathfindLargeBoundFix)\
 	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY(flyerKilledFallingLoop)\
 	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY(floaterDummy)\
+	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY(barneyDummy)\
 	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY(ladderCycleMulti)\
 	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY(ladderSpeedMulti)\
 	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY(barnacleGrabNoInterpolation)\
@@ -4577,6 +4585,7 @@
 	EASY_CVAR_CREATE_CLIENT_A_DEBUGONLY(pathfindLargeBoundFix)\
 	EASY_CVAR_CREATE_CLIENT_A_DEBUGONLY(flyerKilledFallingLoop)\
 	EASY_CVAR_CREATE_CLIENT_A_DEBUGONLY(floaterDummy)\
+	EASY_CVAR_CREATE_CLIENT_A_DEBUGONLY(barneyDummy)\
 	EASY_CVAR_CREATE_CLIENT_A_DEBUGONLY(ladderCycleMulti)\
 	EASY_CVAR_CREATE_CLIENT_A_DEBUGONLY(ladderSpeedMulti)\
 	EASY_CVAR_CREATE_CLIENT_A_DEBUGONLY(barnacleGrabNoInterpolation)\
@@ -5052,6 +5061,7 @@
 	EASY_CVAR_RESET_DEBUGONLY(pathfindLargeBoundFix)\
 	EASY_CVAR_RESET_DEBUGONLY(flyerKilledFallingLoop)\
 	EASY_CVAR_RESET_DEBUGONLY(floaterDummy)\
+	EASY_CVAR_RESET_DEBUGONLY(barneyDummy)\
 	EASY_CVAR_RESET_DEBUGONLY(ladderCycleMulti)\
 	EASY_CVAR_RESET_DEBUGONLY(ladderSpeedMulti)\
 	EASY_CVAR_RESET_DEBUGONLY(barnacleGrabNoInterpolation)\
@@ -5528,6 +5538,7 @@
 	EASY_CVAR_EXTERN_DEBUGONLY(pathfindLargeBoundFix)\
 	EASY_CVAR_EXTERN_DEBUGONLY(flyerKilledFallingLoop)\
 	EASY_CVAR_EXTERN_DEBUGONLY(floaterDummy)\
+	EASY_CVAR_EXTERN_DEBUGONLY(barneyDummy)\
 	EASY_CVAR_EXTERN_DEBUGONLY(ladderCycleMulti)\
 	EASY_CVAR_EXTERN_DEBUGONLY(ladderSpeedMulti)\
 	EASY_CVAR_EXTERN_DEBUGONLY(barnacleGrabNoInterpolation)\

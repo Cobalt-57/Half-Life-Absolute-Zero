@@ -272,6 +272,7 @@ const char *CNihilanth::pBallSounds[] =
 	"X/x_ballattack1.wav",
 };
 
+//MODDD NOTE - looks like this is never called for?  The comments on the rest of the sound arrays are a little off anyways.
 const char *CNihilanth::pShootSounds[] = 
 {
 	"X/x_shoot1.wav",

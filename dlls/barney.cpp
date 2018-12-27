@@ -35,6 +35,8 @@ extern float global_germanCensorship;
 
 extern BOOL globalPSEUDO_germanModel_barneyFound;
 
+EASY_CVAR_EXTERN(barneyDummy)
+
 
 //Yes, need to know this ahead of time.
 extern Schedule_t slBarneyEnemyDraw[];
@@ -1042,8 +1044,12 @@ void CBarney :: MonsterThink(void){
 	
 	//easyForcePrintLine("IM SUPER %d : seq:%d fr:%.2f fin:%d", HasConditions( bits_COND_ENEMY_DEAD ), pev->sequence, pev->frame, this->m_fSequenceFinished);
 
-	//DUMMY BARNEY.
-	return;
+
+	if(EASY_CVAR_GET(barneyDummy)){
+		//DUMMY BARNEY.
+		pev->nextthink = gpGlobals->time + 0.1;
+		return;
+	}
 
 
 

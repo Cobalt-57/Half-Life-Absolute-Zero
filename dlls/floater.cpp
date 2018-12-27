@@ -1244,6 +1244,7 @@ void CFloater::MonsterThink(){
 
 	if(EASY_CVAR_GET(floaterDummy) == 1){
 		//no thought for you.
+		pev->nextthink = gpGlobals->time + 0.1;
 		return;
 	}
 

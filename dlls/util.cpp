@@ -5995,6 +5995,9 @@ void W_Precache(void)
 	// tripmine
 	UTIL_PrecacheOtherWeapon( "weapon_tripmine" );
 
+	//MODDD NOTE - Wondering about weapons/mine_charge ?  It's covered by weapon_tripmine. So it is guaranteed to be available for the gargantua too.
+
+
 #if !defined( OEM_BUILD ) && !defined( HLDEMO_BUILD )
 	// satchel charge
 	UTIL_PrecacheOtherWeapon( "weapon_satchel" );
@@ -6973,6 +6976,24 @@ void precacheAll(void){
 			//archer
 
 			//kingpin
+	
+			PRECACHE_SOUND("ambience/zapmachine.wav");
+			PRECACHE_SOUND("ambience/particle_suck1.wav");
+			PRECACHE_SOUND("debris/zap3.wav");
+			PRECACHE_SOUND("debris/zap6.wav");
+			PRECACHE_SOUND("debris/zap8.wav");
+			PRECACHE_SOUND("ambience/alien_chatter.wav");
+			PRECACHE_SOUND("x/x_shoot1.wav");
+			PRECACHE_SOUND("debris/beamstart4.wav");
+			PRECACHE_SOUND("debris/beamstart6.wav");
+			PRECACHE_SOUND("debris/beamstart10.wav");
+			PRECACHE_SOUND("debris/beamstart11.wav");
+			
+
+
+			
+			
+
 
 
 			//floater

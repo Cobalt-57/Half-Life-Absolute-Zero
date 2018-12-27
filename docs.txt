@@ -1436,8 +1436,8 @@ trackchangePrintouts (0) - BOOL. See lots of printouts regarding CFuncTrackChang
 
 floaterDummy (0) - BOOL. Floaters lose AI. Good for watching how enemies (to this monster) behave around this.
 ~use "nothingHurts 2" to disable damage from non-players, use "autoSneaky 1" to make the player invisible to the AI for decisions.
-~Permanently kills any existing floater's AI. Load a new map / save before to get it back.
 
+barneyDummy (0) - BOOL. Barney's lose AI.
 
 //
 //!!! LAST NORMAL CVAR!
