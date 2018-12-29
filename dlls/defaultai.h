@@ -89,6 +89,7 @@ extern Schedule_t slSecondaryMeleeAttack[];
 // Chase enemy schedule
 extern Schedule_t slChaseEnemy[];
 extern Schedule_t slChaseEnemySmart[];
+extern Schedule_t slChaseEnemySmart_StopSight[];
 
 //=========================================================
 // small flinch, used when a relatively minor bit of damage

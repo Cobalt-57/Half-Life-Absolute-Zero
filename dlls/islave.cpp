@@ -36,6 +36,8 @@ extern DLL_GLOBAL int		g_iSkillLevel;
 
 //MODDD TODO - should an islave force itself to attack even if it feels cowardly, IF it fails to find cover, or is exposed after finding cover at least once?
 
+//Also the light from a lightning charge stays on even if that schedule is interrupted since the light is made to stay on for a set amount of time since it is created.
+//That isn't too big of a deal though.
 
 
 
@@ -1154,7 +1156,18 @@ BOOL CISlave :: CheckRangeAttack1 ( float flDot, float flDist )
 		return FALSE;
 	}
 
-	return CSquadMonster::CheckRangeAttack1( flDot, flDist );
+
+	//MODDD NOTE - you guys couldn't be bothered to give this a custom range (flDist?) damn devs!
+	//Lucky coincidence 784 makes sense. The electric bolt phyisically only travels 1024 since the trace for it goes that far.
+	//Pasted it here anyways because hey, we might want tweaking sometime.
+
+	if ( flDist > 64 && flDist <= 784 && flDot >= 0.5 )
+	{
+		return TRUE;
+	}
+	return FALSE;
+
+	//return CSquadMonster::CheckRangeAttack1( flDot, flDist );
 }
 
 //=========================================================

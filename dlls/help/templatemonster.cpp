@@ -301,6 +301,19 @@ void CTemplateMonster::SetEyePosition(void){
 }//END OF SetEyePosition
 
 
+//default, override if necessary.
+float CTemplateMonster::getDistTooFar(void){
+	return 1024.0;
+}
+//default, override if necessary.
+float CTemplateMonster::getDistLook(void){
+	return 2048.0;
+}
+
+
+
+
+
 //based off of GetSchedule for CBaseMonster in schedule.cpp.
 Schedule_t* CTemplateMonster::GetSchedule( void )
 {
@@ -556,6 +569,17 @@ void CTemplateMonster::RunTask( Task_t* pTask ){
 }//END OF RunTask
 
 
+//IMPORTANT. Easy to overlook, but this filter can be frustrating if you forget about it.
+//           It's required to even do the CheckMelee and CheckRange attack methods below.
+//           Classes that have attacks that may not require a direct line of sight to the enemy, like throwing a grenade, override this
+//           to remove the bits_COND_SEE_ENEMY part. But be sure to include it back in specific Check methods that still need it.
+BOOL CTemplateMonster::FCanCheckAttacks(void){
+	if ( HasConditions(bits_COND_SEE_ENEMY) && !HasConditions( bits_COND_ENEMY_TOOFAR ) ){
+		return TRUE;
+	}
+
+	return FALSE;
+}//END OF FCanCheckAttacks
 
 BOOL CTemplateMonster::CheckMeleeAttack1( float flDot, float flDist ){
 	return FALSE;

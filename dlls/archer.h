@@ -159,6 +159,7 @@ public:
 
 	BOOL attemptBuildRandomWanderRoute(const float& argWaterLevel);
 
+	BOOL FCanCheckAttacks(void);
 
 };//END OF class CArcher
 

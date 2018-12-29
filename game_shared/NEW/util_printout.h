@@ -65,7 +65,7 @@ extern void UTIL_printLineVector(const Vector& theVector);
 extern void UTIL_printLineVector(const float vX, const float vY, const float vZ);
 extern void UTIL_printLineVector(const char* printLabel, const Vector& theVector);
 extern void UTIL_printLineVector(const char* printLabel, const float vX, const float vY, const float vZ);
-extern void UTIL_printVector(Vector& theVector);
+extern void UTIL_printVector(const Vector& theVector);
 extern void UTIL_printVector(const float vX, const float vY, const float vZ);
 extern void UTIL_printVector(const char* printLabel, const Vector& theVector);
 extern void UTIL_printVector(const char* printLabel, const float vX, const float vY, const float vZ);

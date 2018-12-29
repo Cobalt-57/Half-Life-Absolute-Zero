@@ -1989,6 +1989,8 @@ void CPantherEye::RunTask ( Task_t *pTask ){
 										//b/w 130 and 320?  JUMP
 										RouteClear();
 										ChangeSchedule(slPanthereyeJumpAtEnemy);
+										//Best to stop this call here if we change schedules yes?
+										return;
 									}
 								}
 
@@ -2044,6 +2046,7 @@ void CPantherEye::RunTask ( Task_t *pTask ){
 				if(startRunningAway && pissedOffTime == -1){
 					EASY_CVAR_PRINTIF_PRE(panthereyePrintout, easyPrintLine("!!!!! IM A STUPID <thing>"));
 					ChangeSchedule(GetSchedule());
+					return;  //let this be called freshly by the next frame of think logic.
 				}
 
 			}
@@ -2078,6 +2081,7 @@ void CPantherEye::RunTask ( Task_t *pTask ){
 				if(startRunningAway){
 					EASY_CVAR_PRINTIF_PRE(panthereyePrintout, easyPrintLine("!!!!! IM A RAGING <thing>"));
 					ChangeSchedule(GetSchedule());
+					return;  //let this be called freshly.
 				}
 
 			}
@@ -2102,7 +2106,7 @@ void CPantherEye::RunTask ( Task_t *pTask ){
 					//TaskFail();
 					EASY_CVAR_PRINTIF_PRE(panthereyePrintout, easyPrintLine("!!!!! IM NOT A STUPID <thing>"));
 					ChangeSchedule(GetSchedule());
-					return;
+					return;  //let this be called freshly
 				}
 
 			}else{
@@ -2110,7 +2114,7 @@ void CPantherEye::RunTask ( Task_t *pTask ){
 				/*
 				if(m_pSchedule != slTakeCoverFromBestSound){
 					ChangeSchedule(slTakeCoverFromBestSound);
-					return;
+					return;  //let this be called freshly
 				}
 				*/
 			}
@@ -2132,7 +2136,7 @@ void CPantherEye::RunTask ( Task_t *pTask ){
 					//TaskFail();
 					EASY_CVAR_PRINTIF_PRE(panthereyePrintout, easyPrintLine("!!!!! IM NOT A RAGING <thing>"));
 					ChangeSchedule(GetSchedule());
-					return;
+					return;  //let this be called freshly
 				}
 			
 

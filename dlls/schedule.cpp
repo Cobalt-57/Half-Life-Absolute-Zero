@@ -1662,7 +1662,15 @@ void CBaseMonster :: StartTask ( Task_t *pTask )
 	case TASK_STOP_MOVING:
 		{
 			//easyForcePrintLine("WEEEEEEEEEEEEEEEEEEELLLLLLLLLLLLLLLLLLLLLLLLA %d %d %d", m_IdealActivity, m_movementActivity, this->usingCustomSequence);
-			if ( m_IdealActivity == m_movementActivity )
+
+			//MODDD - but isn't it also possible for our m_movementActivity to be set to ACT_IDLE by basemonster.cpp's RouteClear method?
+			//Extra check:
+			//if ( m_IdealActivity == m_movementActivity )
+			Activity myStoppedActivity = GetStoppedActivity();
+
+			//Now, if the ideal activity isn't the stopped activity, AND it is the movement activity, we can do this change.
+			//I suppose if Ideal was matching both the Stopped activity and movement ACT, it would've done nothing but good to be safe.
+			if(m_IdealActivity != myStoppedActivity && m_IdealActivity == m_movementActivity)
 			{
 				m_IdealActivity = GetStoppedActivity();
 			}
@@ -2337,6 +2345,14 @@ void CBaseMonster :: StartTask ( Task_t *pTask )
 	case TASK_GET_PATH_TO_ENEMY:
 	case TASK_GET_PATH_TO_ENEMY_LKP:
 		{
+			CBaseEntity* enemyTest;
+
+			if(m_hEnemy != NULL){
+				//send along a reference to the enemy itself.  Can't hurt I imagine.
+				enemyTest = m_hEnemy.GetEntity();
+			}else{
+				enemyTest = NULL;
+			}
 
 			//const char* schedName = m_pSchedule->pName;
 
@@ -2346,11 +2362,11 @@ void CBaseMonster :: StartTask ( Task_t *pTask )
 			//is it safe to use bits_MF_TO_ENEMY to get "MOVEGOAL_ENEMY" anyways?
 			//Looks like it. This just says to send the current "m_hEnemy" to path methods like CheckLocalMove to mark them as exceptions for
 			//colliding with. After all it would be silly to say "Path to player failed", because the "player" was in the way of the destination point!
-			if ( BuildRoute ( m_vecEnemyLKP, bits_MF_TO_ENEMY, NULL ) )
+			if ( BuildRoute ( m_vecEnemyLKP, bits_MF_TO_ENEMY, enemyTest ) )
 			{
 				TaskComplete();
 			}
-			else if (BuildNearestRoute( m_vecEnemyLKP, pev->view_ofs, 0, (m_vecEnemyLKP - pev->origin).Length() )  )
+			else if (BuildNearestRoute( m_vecEnemyLKP, pev->view_ofs, 0, (m_vecEnemyLKP - pev->origin).Length(), bits_MF_TO_ENEMY, enemyTest )  )
 			{
 				TaskComplete();
 			}

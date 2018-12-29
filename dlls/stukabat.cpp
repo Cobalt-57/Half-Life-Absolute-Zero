@@ -1042,7 +1042,7 @@ void CStukaBat:: getPathToEnemyCustom(){
 		//???!!!
 	}
 	//else if (BuildNearestRouteSimple( vecDest, m_hEnemy->pev->view_ofs, 0, (vecDest - pev->origin).Length() )  )
-	else if (BuildNearestRoute( vecDest, m_hEnemy->pev->view_ofs, 0, 20000 )  )
+	else if (BuildNearestRoute( vecDest, m_hEnemy->pev->view_ofs, 0, (m_hEnemy->pev->origin - pev->origin).Length() + 1024, bits_MF_TO_ENEMY, m_hEnemy  )  )
 	{
 		int x = 66;
 		//TaskComplete();
@@ -1247,13 +1247,13 @@ void CStukaBat :: StartTask ( Task_t *pTask )
 			
 		this->m_movementGoal = MOVEGOAL_LOCATION;
 		m_vecMoveGoal = scent_Loc;
-		if ( BuildRouteSimple ( scent_Loc, bits_MF_TO_LOCATION, NULL ) )
+		if ( BuildRoute ( scent_Loc, bits_MF_TO_LOCATION, NULL ) )
 		{
 
 			TaskComplete();
 		}
 		//No need for viewoffset, the 2nd argument. scent_loc already has this.
-		else if (BuildNearestRouteSimple( scent_Loc, Vector(0,0,0), 0, (scent_Loc - pev->origin).Length() ))
+		else if (BuildNearestRoute( scent_Loc, Vector(0,0,0), 0, (scent_Loc - pev->origin).Length() ))
 		{
 			TaskComplete();
 		}
@@ -1581,16 +1581,23 @@ void CStukaBat :: StartTask ( Task_t *pTask )
 	//pasted from monsters.cpp.
 	case TASK_GET_PATH_TO_ENEMY_LKP:
 	{
+		CBaseEntity* enemyTest;
+
+		if(m_hEnemy != NULL){
+			enemyTest = m_hEnemy.GetEntity();
+		}else{
+			enemyTest = NULL;
+		}
 		
 
 		//changed too.
 		//if ( BuildRouteSimple ( m_vecEnemyLKP, bits_MF_TO_LOCATION, NULL ) )
-		if ( BuildRouteSimple ( m_vecEnemyLKP, bits_MF_TO_ENEMY, NULL ) )
+		if ( BuildRoute ( m_vecEnemyLKP, bits_MF_TO_ENEMY, enemyTest ) )
 		{
 			TaskComplete();
 		}
 			
-		else if (BuildNearestRouteSimple( m_vecEnemyLKP, pev->view_ofs, 0, (m_vecEnemyLKP - pev->origin).Length() ))
+		else if (BuildNearestRoute( m_vecEnemyLKP, pev->view_ofs, 0, (m_vecEnemyLKP - pev->origin).Length() + 1024, bits_MF_TO_ENEMY, enemyTest ))
 		{
 			TaskComplete();
 		}
@@ -1629,8 +1636,9 @@ void CStukaBat :: StartTask ( Task_t *pTask )
 			return;
 
 			//eh, is that really okay?   Just to the "player"?...   sounds weird.
+			//And we don't even give BuildNearestRoute a chance anyways.
 			CBaseEntity *pPlayer = CBaseEntity::Instance( FIND_ENTITY_BY_CLASSNAME( NULL, "player" ) );
-			if ( BuildRouteSimple ( m_vecMoveGoal, bits_MF_TO_LOCATION, pPlayer ) )
+			if ( BuildRoute ( m_vecMoveGoal, bits_MF_TO_LOCATION, pPlayer ) )
 			{
 				TaskComplete();
 			}

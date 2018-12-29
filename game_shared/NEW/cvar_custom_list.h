@@ -650,6 +650,7 @@
 #define DEFAULT_myRocketsAreBarney 0
 #define DEFAULT_hassassinCrossbowDebug 0
 #define DEFAULT_crossbowBoltDirectionAffectedByWater 0
+#define DEFAULT_kingpinDebug 0
 
 #define EASY_CVAR_HASH_MASS\
 	EASY_CVAR_HASH(strobeDurationMin, 0)\
@@ -1288,6 +1289,7 @@
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTONLY(myRocketsAreBarney, myrocketsarebarney, 174)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(hassassinCrossbowDebug, hassassincrossbowdebug)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(crossbowBoltDirectionAffectedByWater, crossbowboltdirectionaffectedbywater)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(kingpinDebug, kingpindebug)\
 	DUMMY
 
 #define EASY_CVAR_HIDDEN_SAVE_MASS\
@@ -1749,6 +1751,7 @@
 	EASY_CVAR_HIDDEN_SAVE_CLIENTONLY(myRocketsAreBarney)\
 	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(hassassinCrossbowDebug)\
 	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(crossbowBoltDirectionAffectedByWater)\
+	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(kingpinDebug)\
 	DUMMY
 
 #define EASY_CVAR_HIDDEN_LOAD_MASS\
@@ -2210,6 +2213,7 @@
 	EASY_CVAR_HIDDEN_LOAD_CLIENTONLY(myRocketsAreBarney, myrocketsarebarney)\
 	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(hassassinCrossbowDebug, hassassincrossbowdebug)\
 	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(crossbowBoltDirectionAffectedByWater, crossbowboltdirectionaffectedbywater)\
+	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(kingpinDebug, kingpindebug)\
 	DUMMY
 
 #define EASY_CVAR_DECLARATION_SERVER_MASS\
@@ -2687,6 +2691,7 @@
 	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY_CLIENTONLY(myRocketsAreBarney)\
 	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY(hassassinCrossbowDebug)\
 	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY(crossbowBoltDirectionAffectedByWater)\
+	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY(kingpinDebug)\
 	DUMMY
 
 #define EASY_CVAR_DECLARATION_CLIENT_MASS\
@@ -3164,6 +3169,7 @@
 	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY_CLIENTONLY(myRocketsAreBarney)\
 	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY(hassassinCrossbowDebug)\
 	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY(crossbowBoltDirectionAffectedByWater)\
+	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY(kingpinDebug)\
 	DUMMY
 
 #define EASY_CVAR_UPDATE_SERVER_MASS\
@@ -3641,6 +3647,7 @@
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTONLY(myRocketsAreBarney, 174)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(hassassinCrossbowDebug)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(crossbowBoltDirectionAffectedByWater)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(kingpinDebug)\
 	DUMMY
 
 #define EASY_CVAR_UPDATE_CLIENT_MASS\
@@ -4118,6 +4125,7 @@
 	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY_CLIENTONLY(myRocketsAreBarney)\
 	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY(hassassinCrossbowDebug)\
 	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY(crossbowBoltDirectionAffectedByWater)\
+	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY(kingpinDebug)\
 	DUMMY
 
 #define EASY_CVAR_CREATE_SERVER_SETUP_MASS\
@@ -4601,6 +4609,7 @@
 	EASY_CVAR_CREATE_CLIENT_AC_DEBUGONLY(myRocketsAreBarney)\
 	EASY_CVAR_CREATE_CLIENT_A_DEBUGONLY(hassassinCrossbowDebug)\
 	EASY_CVAR_CREATE_CLIENT_A_DEBUGONLY(crossbowBoltDirectionAffectedByWater)\
+	EASY_CVAR_CREATE_CLIENT_A_DEBUGONLY(kingpinDebug)\
 	DUMMY
 
 #define EASY_CVAR_RESET_MASS\
@@ -5077,6 +5086,7 @@
 	EASY_CVAR_RESET_DEBUGONLY_CLIENTONLY(myRocketsAreBarney)\
 	EASY_CVAR_RESET_DEBUGONLY(hassassinCrossbowDebug)\
 	EASY_CVAR_RESET_DEBUGONLY(crossbowBoltDirectionAffectedByWater)\
+	EASY_CVAR_RESET_DEBUGONLY(kingpinDebug)\
 	DUMMY
 
 #define EASY_CVAR_EXTERN_MASS\
@@ -5554,5 +5564,6 @@
 	EASY_CVAR_EXTERN_DEBUGONLY_CLIENTONLY(myRocketsAreBarney)\
 	EASY_CVAR_EXTERN_DEBUGONLY(hassassinCrossbowDebug)\
 	EASY_CVAR_EXTERN_DEBUGONLY(crossbowBoltDirectionAffectedByWater)\
+	EASY_CVAR_EXTERN_DEBUGONLY(kingpinDebug)\
 	DUMMY
 

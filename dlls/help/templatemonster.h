@@ -55,6 +55,10 @@ public:
 
 	void SetEyePosition(void);
 	
+	float getDistTooFar(void);
+	float getDistLook(void);
+
+	
 	Schedule_t *GetSchedule( void );
 	Schedule_t* GetScheduleOfType( int Type);
 
@@ -64,7 +68,9 @@ public:
 	void StartTask( Task_t* pTask );
 	void RunTask( Task_t* pTask );
 
-	
+
+	BOOL FCanCheckAttacks(void);
+
 	BOOL CheckMeleeAttack1 ( float flDot, float flDist );
 	BOOL CheckMeleeAttack2 ( float flDot, float flDist );
 	BOOL CheckRangeAttack1 ( float flDot, float flDist );

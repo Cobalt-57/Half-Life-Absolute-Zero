@@ -627,7 +627,20 @@ void CController :: StartTask ( Task_t *pTask )
 		break;
 	case TASK_GET_PATH_TO_ENEMY_LKP:
 		{
-			if (BuildNearestRoute( m_vecEnemyLKP, pev->view_ofs, pTask->flData, (m_vecEnemyLKP - pev->origin).Length() + 1024 ))
+			CBaseEntity* enemyTest;
+
+			//MODDD - send along the enemy if we still have one.
+			if(m_hEnemy != NULL){
+				enemyTest = m_hEnemy.GetEntity();
+			}else{
+				enemyTest = NULL;
+			}
+
+			//MODDD NOTE - the interesting (new? different? unique?) thing here is sending the distance between the enemyLKP and my origin... not that, the PLUS 1024 here.
+			//             why isn't that elsewhere? isn't there some possibility of a route needing to go outwards or out of the way a bit? Must not come up much.
+			//             Is this kind of situation more likely for flyers then?  Questions questions.
+			//  Anyways, we are sending along the moveflag (TO_ENEMY) and a reference to the enemy, if it exists. The more information the merrier for pathfinding.
+			if (BuildNearestRoute( m_vecEnemyLKP, pev->view_ofs, pTask->flData, (m_vecEnemyLKP - pev->origin).Length() + 1024, bits_MF_TO_ENEMY, enemyTest ))
 			{
 				TaskComplete();
 			}
@@ -649,7 +662,8 @@ void CController :: StartTask ( Task_t *pTask )
 				return;
 			}
 
-			if (BuildNearestRoute( pEnemy->pev->origin, pEnemy->pev->view_ofs, pTask->flData, (pEnemy->pev->origin - pev->origin).Length() + 1024 ))
+			//MODDD - like above, sending more info. Moveflag and enemy reference which looks to be guaranteed (task fails if we don't have one or it expired)
+			if (BuildNearestRoute( pEnemy->pev->origin, pEnemy->pev->view_ofs, pTask->flData, (pEnemy->pev->origin - pev->origin).Length() + 1024, bits_MF_TO_ENEMY, pEnemy ))
 			{
 				TaskComplete();
 			}

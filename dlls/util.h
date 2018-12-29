@@ -423,6 +423,24 @@ inline void UTIL_MakeVectorsPrivate( const Vector &vecAngles, float *p_vForward,
 	g_engfuncs.pfnAngleVectors( vecAngles, p_vForward, p_vRight, p_vUp );
 }
 
+//MODDD - new, why wasn't there a private "aim" vectors version too?
+//Just like "UTIL_MakeAimVectors", this just inverts the "x" angle before sending it to the same engine method (pfnAngleVectors instead in this case).
+//or... does MakeAimVectorsPrivate alone already imply what "Aim" does for the gpGlobals vectors version?
+//TESTED.  Yes, MakeAimVectorsPrivate is 1-to-1 the same as MakeAimVectors (global vector equivalent).  Better to verify than ride on a wrong assumption.
+inline void UTIL_MakeAimVectorsPrivate( const Vector &vecAngles, float *p_vForward, float *p_vRight, float *p_vUp )
+{
+	float rgflVec[3];
+	vecAngles.CopyToArray(rgflVec);
+	rgflVec[0] = -rgflVec[0];
+	//MAKE_VECTORS(rgflVec);
+	g_engfuncs.pfnAngleVectors(rgflVec, p_vForward, p_vRight, p_vUp );
+}
+
+//MODDD NOTE - a UTIL_MakeInvVectorsPrivate (based off of UTIL_MakeInvVectors) could also be made if needed.  Bring that SWAP define over here if so.
+
+
+
+
 extern void			UTIL_MakeAimVectors		( const Vector &vecAngles ); // like MakeVectors, but assumes pitch isn't inverted
 extern void			UTIL_MakeInvVectors		( const Vector &vec, globalvars_t *pgv );
 

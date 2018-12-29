@@ -136,6 +136,8 @@ void CBaseMonster::playStandardMeleeAttackHitSound(void){}
 
 BOOL CBaseMonster::traceResultObstructionValidForAttack(const TraceResult& arg_tr){return FALSE;}
 
+float CBaseMonster::getDistTooFar(void){return 0.0f;}
+float CBaseMonster::getDistLook(void){return 0.0f;}
 
 
 
@@ -474,8 +476,6 @@ void CBaseMonster :: AdvanceRoute ( float distance, float flInterval ) { }
 int CBaseMonster :: RouteClassify( int iMoveFlag ) { return 0; }
 BOOL CBaseMonster :: BuildRoute ( const Vector &vecGoal, int iMoveFlag, CBaseEntity *pTarget ) { return FALSE; }
 
-//MODDD - also here.  why not.
-BOOL CBaseMonster :: BuildRouteSimple ( const Vector &vecGoal, int iMoveFlag, CBaseEntity *pTarget ) { return FALSE; }
 
 BOOL CBaseMonster::NoFriendlyFireImp(const Vector& startVec, const Vector& endVec){return FALSE;}
 
@@ -512,8 +512,7 @@ int CBaseMonster::IRelationship ( CBaseEntity *pTarget ) { return 0; }
 
 BOOL CBaseMonster :: FindCover ( Vector vecThreat, Vector vecViewOffset, float flMinDist, float flMaxDist ) { return FALSE; }
 BOOL CBaseMonster :: BuildNearestRoute ( Vector vecThreat, Vector vecViewOffset, float flMinDist, float flMaxDist ) { return FALSE; }
-//MODDD - also here.  Not sure why it needs to be though.
-BOOL CBaseMonster :: BuildNearestRouteSimple( Vector vecThreat, Vector vecViewOffset, float flMinDist, float flMaxDist ) { return FALSE; }
+BOOL CBaseMonster::BuildNearestRoute( Vector vecThreat, Vector vecViewOffset, float flMinDist, float flMaxDist, int iMoveFlag, CBaseEntity* pTarget ){return FALSE;}
 
 void CBaseMonster::SetTurnActivity(void){}
 void CBaseMonster::SetTurnActivityForceAct(void){}

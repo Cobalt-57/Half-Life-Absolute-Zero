@@ -5818,6 +5818,10 @@ void CBasePlayer::PostThink()
 {
 	if(global_testVar == -1)return;
 	int filterediuser4 = pev->iuser4 & ~(FLAG_JUMPED | FLAG_RESET_RECEIVED);
+
+
+
+
 	
 	//printLineIntAsBinary( 4294967295u, 32);
 

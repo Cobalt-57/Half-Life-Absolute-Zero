@@ -2308,7 +2308,7 @@ BOOL CBaseMonster::FRefreshRouteChaseEnemySmart(void){
 		returnCode = TRUE;
 	}
 	//else if (BuildNearestRoute( m_vecMoveGoal, pEnemy->pev->view_ofs, 0, (pEnemy->pev->origin - pev->origin).Length() ))
-	else if (BuildNearestRoute( m_vecMoveGoal, pEnemy->pev->view_ofs, 0, (m_vecEnemyLKP - pev->origin).Length() ))
+	else if (BuildNearestRoute( m_vecMoveGoal, pEnemy->pev->view_ofs, 0, (m_vecEnemyLKP - pev->origin).Length(), iMoveFlaggg, pEnemy ))
 	{
 		//TaskComplete();
 		returnCode = TRUE;
@@ -2383,7 +2383,7 @@ BOOL CBaseMonster :: FRefreshRoute ( void )
 			//MODDD - why wasn't there a BuildNearestRoute attempt if above failed?
 			if (returnCode == FALSE)
 			{
-				returnCode = BuildNearestRoute( m_vecEnemyLKP, m_hEnemy->pev->view_ofs, 0, (m_vecEnemyLKP - pev->origin).Length() );
+				returnCode = BuildNearestRoute( m_vecEnemyLKP, m_hEnemy->pev->view_ofs, 0, (m_vecEnemyLKP - pev->origin).Length(), bits_MF_TO_ENEMY, m_hEnemy );
 			}
 
 			//MODDD - CHECK. Is automatically setting "m_vecMoveGoal" to the goal of this path ok? m_vecMoveGoal is usually an input.
@@ -2398,7 +2398,7 @@ BOOL CBaseMonster :: FRefreshRoute ( void )
 
 			//MODDD - can we do a nearest instead?
 			if(returnCode == FALSE){
-				returnCode = BuildNearestRoute(m_vecMoveGoal, pev->view_ofs, 0, (m_vecMoveGoal - pev->origin).Length() );
+				returnCode = BuildNearestRoute(m_vecMoveGoal, pev->view_ofs, 0, (m_vecMoveGoal - pev->origin).Length(), bits_MF_TO_LOCATION, NULL );
 			}
 
 			break;
@@ -2407,6 +2407,12 @@ BOOL CBaseMonster :: FRefreshRoute ( void )
 			if (m_hTargetEnt != NULL)
 			{
 				returnCode = BuildRoute( m_hTargetEnt->pev->origin, bits_MF_TO_TARGETENT, m_hTargetEnt );
+
+				if(!returnCode){
+					//is this okay?
+					returnCode = BuildNearestRoute( m_hTargetEnt->pev->origin, m_hTargetEnt->pev->view_ofs, 0, (m_hTargetEnt->pev->origin - this->pev->origin).Length() + 500, bits_MF_TO_TARGETENT, m_hTargetEnt  );
+				}
+
 			}else{
 				returnCode = FALSE;
 			}
@@ -4394,80 +4400,6 @@ BOOL CBaseMonster :: BuildRoute ( const Vector &vecGoal, int iMoveFlag, CBaseEnt
 
 
 
-//NOTICE - now no different from "BuildRoute" above!
-//^Oh how outdated this comment is.  Let this be a time capsule.
-BOOL CBaseMonster :: BuildRouteSimple ( const Vector &vecGoal, int iMoveFlag, CBaseEntity *pTarget )
-{
-	float	flDist;
-	Vector	vecApex;
-	int		iLocalMove;
-
-	RouteNew();
-	m_movementGoal = RouteClassify( iMoveFlag );
-
-// so we don't end up with no moveflags
-	m_Route[ 0 ].vecLocation = vecGoal;
-	m_Route[ 0 ].iType = iMoveFlag | bits_MF_IS_GOAL;
-
-// check simple local move
-	iLocalMove = CheckLocalMove( pev->origin, vecGoal, pTarget, &flDist );
-
-	if ( iLocalMove == LOCALMOVE_VALID )
-	{
-		// monster can walk straight there!
-		return TRUE;
-	}
-// try to triangulate around any obstacles.
-	else if ( iLocalMove != LOCALMOVE_INVALID_DONT_TRIANGULATE && FTriangulate( pev->origin, vecGoal, flDist, pTarget, &vecApex ) )
-	{
-		// there is a slightly more complicated path that allows the monster to reach vecGoal
-		m_Route[ 0 ].vecLocation = vecApex;
-		m_Route[ 0 ].iType = (iMoveFlag | bits_MF_TO_DETOUR);
-
-		m_Route[ 1 ].vecLocation = vecGoal;
-		m_Route[ 1 ].iType = iMoveFlag | bits_MF_IS_GOAL;
-
-			/*
-			WRITE_BYTE(MSG_BROADCAST, SVC_TEMPENTITY);
-			WRITE_BYTE(MSG_BROADCAST, TE_SHOWLINE);
-			WRITE_COORD(MSG_BROADCAST, vecApex.x );
-			WRITE_COORD(MSG_BROADCAST, vecApex.y );
-			WRITE_COORD(MSG_BROADCAST, vecApex.z );
-			WRITE_COORD(MSG_BROADCAST, vecApex.x );
-			WRITE_COORD(MSG_BROADCAST, vecApex.y );
-			WRITE_COORD(MSG_BROADCAST, vecApex.z + 128 );
-			*/
-
-		RouteSimplify( pTarget );
-		return TRUE;
-	}
-
-	
-	//MODDD - simple can now use nodes too, no difference from non-simple.   IS THAT OKAY???...
-
-// last ditch, try nodes
-	if ( FGetNodeRoute( vecGoal ) )
-	{
-//		ALERT ( at_console, "Can get there on nodes\n" );
-		m_vecMoveGoal = vecGoal;
-		RouteSimplify( pTarget );
-		return TRUE;
-	}
-	
-	// b0rk
-	return FALSE;
-}
-
-
-
-
-
-
-
-
-
-
-
 
 
 //=========================================================
@@ -5372,8 +5304,12 @@ void CBaseMonster :: MonsterInit ( void )
 
 	m_hEnemy			= NULL;
 
-	m_flDistTooFar		= 1024.0;
-	m_flDistLook		= 2048.0;
+	//MODDD - these are now received from overridable methods instead so that child classes can change them.
+	//        What else would the point of them being instance variables be?
+	//        that and they really should just be per class as methods like this instead of per individual monster (instance).
+	//        Really, when is say, one Kingpin going to have different DistTooFar or DistLook than any other Kingpin?
+	m_flDistTooFar		= getDistTooFar();
+	m_flDistLook		= getDistLook();
 
 	//MODDD - flag for mirror recognition.
 	pev->renderfx |= ISNPC;
@@ -5753,7 +5689,13 @@ BOOL CBaseMonster :: FindCover ( Vector vecThreat, Vector vecViewOffset, float f
 // if MaxDist isn't supplied, it defaults to a reasonable 
 // value
 //=========================================================
-BOOL CBaseMonster :: BuildNearestRoute ( Vector vecThreat, Vector vecViewOffset, float flMinDist, float flMaxDist )
+//MODDD - now supports optional moveflags and target entity just like BuildRoute does to send to it if provided.
+BOOL CBaseMonster :: BuildNearestRoute ( Vector vecThreat, Vector vecViewOffset, float flMinDist, float flMaxDist ){
+	//default moveflag is bits_MF_TO_LOCATION.  That was always sent to BuildRoute in BuildNearestRoute as of retail.
+	return BuildNearestRoute(vecThreat, vecViewOffset, flMinDist, flMaxDist, bits_MF_TO_LOCATION, NULL);
+}
+
+BOOL CBaseMonster :: BuildNearestRoute ( Vector vecThreat, Vector vecViewOffset, float flMinDist, float flMaxDist, int iMoveFlag, CBaseEntity* pTarget )
 {
 	int i;
 	int iMyHullIndex;
@@ -5824,7 +5766,9 @@ BOOL CBaseMonster :: BuildNearestRoute ( Vector vecThreat, Vector vecViewOffset,
 				if (tr.flFraction == 1.0)
 				{
 					// try to actually get there
-					if ( BuildRoute ( node.m_vecOrigin, bits_MF_TO_LOCATION, NULL ) )
+					//MODDD - involve the now parameterized "iMoveFlag" and "pTarget".
+					//if ( BuildRoute ( node.m_vecOrigin, bits_MF_TO_LOCATION, NULL ) )
+					if ( BuildRoute ( node.m_vecOrigin, iMoveFlag, pTarget ) )
 					{
 						flMaxDist = flDist;
 						m_vecMoveGoal = node.m_vecOrigin;
@@ -5836,102 +5780,7 @@ BOOL CBaseMonster :: BuildNearestRoute ( Vector vecThreat, Vector vecViewOffset,
 	}
 
 	return FALSE;
-}
-
-
-
-
-//MODDD
-
-//=========================================================
-// BuildNearestRoute - tries to build a route as close to the target
-// as possible, even if there isn't a path to the final point.
-//
-// If supplied, search will return a node at least as far
-// away as MinDist from vecThreat, but no farther than MaxDist. 
-// if MaxDist isn't supplied, it defaults to a reasonable 
-// value
-//=========================================================
-
-
-
-//MODDD - this was identical the whole time...   what kinda drugs was I on a year ago?
-BOOL CBaseMonster :: BuildNearestRouteSimple ( Vector vecThreat, Vector vecViewOffset, float flMinDist, float flMaxDist )
-{
-	int i;
-	int iMyHullIndex;
-	int iMyNode;
-	float flDist;
-	Vector	vecLookersOffset;
-	TraceResult tr;
-
-	if ( !flMaxDist )
-	{
-		// user didn't supply a MaxDist, so work up a crazy one.
-		flMaxDist = 784;
-	}
-
-	if ( flMinDist > 0.5 * flMaxDist)
-	{
-#if _DEBUG
-		ALERT ( at_console, "FindCover MinDist (%.0f) too close to MaxDist (%.0f)\n", flMinDist, flMaxDist );
-#endif
-		flMinDist = 0.5 * flMaxDist;
-	}
-
-	if ( !WorldGraph.m_fGraphPresent || !WorldGraph.m_fGraphPointersSet )
-	{
-		ALERT ( at_aiconsole, "Graph not ready for BuildNearestRoute!\n" );
-		return FALSE;
-	}
-
-	iMyNode = WorldGraph.FindNearestNode( pev->origin, this );
-	iMyHullIndex = WorldGraph.HullIndex( this );
-
-	if ( iMyNode == NO_NODE )
-	{
-		ALERT ( at_aiconsole, "BuildNearestRoute() - %s has no nearest node!\n", STRING(pev->classname));
-		return FALSE;
-	}
-
-	vecLookersOffset = vecThreat + vecViewOffset;// calculate location of enemy's eyes
-
-	// we'll do a rough sample to find nodes that are relatively nearby
-	for ( i = 0 ; i < WorldGraph.m_cNodes ; i++ )
-	{
-		int nodeNumber = (i + WorldGraph.m_iLastCoverSearch) % WorldGraph.m_cNodes;
-
-		CNode &node = WorldGraph.Node( nodeNumber );
-		WorldGraph.m_iLastCoverSearch = nodeNumber + 1; // next monster that searches for cover node will start where we left off here.
-
-		// can I get there?
-		if (WorldGraph.NextNodeInRoute( iMyNode, nodeNumber, iMyHullIndex, 0 ) != iMyNode)
-		{
-			flDist = ( vecThreat - node.m_vecOrigin ).Length();
-
-			// is it close?
-			if ( flDist > flMinDist && flDist < flMaxDist)
-			{
-				// can I see where I want to be from there?
-				UTIL_TraceLine( node.m_vecOrigin + pev->view_ofs, vecLookersOffset, ignore_monsters, edict(), &tr );
-
-				if (tr.flFraction == 1.0)
-				{
-					// try to actually get there
-					if ( BuildRoute ( node.m_vecOrigin, bits_MF_TO_LOCATION, NULL ) )
-					{
-						flMaxDist = flDist;
-						m_vecMoveGoal = node.m_vecOrigin;
-						return TRUE; // UNDONE: keep looking for something closer!
-					}
-				}
-			}
-		}
-	}
-
-	return FALSE;
-}
-
+}//END OF BuildNearestRoute
 
 
 
@@ -6088,7 +5937,6 @@ CBaseEntity *CBaseMonster :: BestVisibleEnemy ( void )
 //=========================================================
 void CBaseMonster :: MakeIdealYaw( Vector vecTarget )
 {
-	Vector	vecProjection;
 	
 	
 
@@ -6096,6 +5944,7 @@ void CBaseMonster :: MakeIdealYaw( Vector vecTarget )
 	// strafing monster needs to face 90 degrees away from its goal
 	if ( m_movementActivity == ACT_STRAFE_LEFT )
 	{
+		Vector	vecProjection;
 		vecProjection.x = -vecTarget.y;
 		vecProjection.y = vecTarget.x;
 
@@ -6105,6 +5954,7 @@ void CBaseMonster :: MakeIdealYaw( Vector vecTarget )
 	}
 	else if ( m_movementActivity == ACT_STRAFE_RIGHT )
 	{
+		Vector	vecProjection;
 		vecProjection.x = vecTarget.y;
 		vecProjection.y = vecTarget.x;
 
@@ -6114,8 +5964,8 @@ void CBaseMonster :: MakeIdealYaw( Vector vecTarget )
 	}
 	else
 	{
-		vecProjection.x = vecTarget.x;
-		vecProjection.y = vecTarget.y;
+		//vecProjection.x = vecTarget.x;
+		//vecProjection.y = vecTarget.y;
 
 
 		//UTIL_drawLineFrame(pev->origin, (vecProjection + Vector(0, 0, vecTarget.z + 10) ), 7, 255, 255, 255 );
@@ -8340,6 +8190,18 @@ BOOL CBaseMonster::traceResultObstructionValidForAttack(const TraceResult& arg_t
 
 	return TRUE;
 }//END OF traceResultObstructionValidForAttack
+
+
+
+
+//default, override if necessary.
+float CBaseMonster::getDistTooFar(void){
+	return 1024.0;
+}
+//default, override if necessary.
+float CBaseMonster::getDistLook(void){
+	return 2048.0;
+}
 
 
 

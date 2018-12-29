@@ -37,6 +37,9 @@
 #define KINGPIN_H
 
 
+#define KINGPIN_SHOCKER_RADIUS 260
+#define KINGPIN_MAX_BEAMS 4
+
 
 class CKingPin : public CBaseMonster{
 public:
@@ -52,8 +55,12 @@ public:
 	static const char* pElectricBarrageFireSounds[];
 	static const char* pElectricBarrageEndSounds[];
 
+	
+	static const char* pShockerFireSounds[];
+
 	static const char* pAttackHitSounds[];
 	static const char* pAttackMissSounds[];
+
 
 	
 	//save info
@@ -75,6 +82,40 @@ public:
 	EHANDLE recentInflictingMonster;
 
 	int m_voicePitch;
+	
+	//thanks islave.
+	CBeam* m_pBeam[KINGPIN_MAX_BEAMS];
+	int m_iBeams;  //this is the soft max, or how many beams there are currently.
+	//Can also be thought of as what ID is empty and next in line for making a beam of.
+	//We're going to allow it to wrap around back to 0 if it reaches the hard max, KINGPIN_MAX_BEAMS. The max itself is not an available index.
+	//example: a KINGPIN_MAX_BEAMS of 6 allows indexes 0 through 5 but not 6.  So if m_iBeams reaches 6, reset it to 0 to start from the beginning.
+	//         Won't cause an issue unless a beam is already in that place, but they expire fast.
+
+	//And this is new. At what time should a beam expire?  Needed since they don't remove themselves automatically.
+	//ISlave's never did, they are manually cleared by "ClearBeams" each time there.
+	float m_flBeamExpireTime[KINGPIN_MAX_BEAMS];
+
+
+	float chargeFinishTime;
+
+	int electricBarrageShotsFired;
+	float electricBarrageNextFireTime;
+	float electricBarrageStopTime;
+	float electricBarrageIdleEndTime;
+
+	float primaryAttackCooldownTime;
+	float enemyHiddenResponseTime;
+	float enemyHiddenChaseTime;
+	float giveUpChaseTime;
+	float administerShockerTime;
+
+
+	float accumulatedDamageTaken;
+
+	CSprite* chargeEffect;
+
+	int m_iSpriteTexture;
+
 
 
 
@@ -123,6 +164,8 @@ public:
 	GENERATE_GIBMONSTER_PROTOTYPE
 	
 	GENERATE_KILLED_PROTOTYPE
+
+	void onDelete(void);
 
 	void SetYawSpeed(void);
 
@@ -177,8 +220,6 @@ public:
 
 
 
-	void playForceFieldElectricBarrageFireSound(void);
-	void playForceFieldElectricBarrageHitSound(void);
 
 	void playForceFieldReflectSound(void);
 
@@ -186,14 +227,45 @@ public:
 
 	void playElectricBarrageStartSound(void);
 	void playElectricBarrageLoopSound(void);
+	void stopElectricBarrageLoopSound(void);
 	void playElectricBarrageEndSound(void);
+	
+	void playElectricBarrageFireSound();
+	void playElectricBarrageHitSound(CBaseEntity* arg_target, const Vector& arg_location);
 	
 
 	void playElectricLaserChargeSound(void);
 	void playElectricLaserFireSound(void);
-	void playElectricLaserHitSound(void);
+	void playElectricLaserHitSound(CBaseEntity* arg_target, const Vector& arg_location);
+	
+	void fireElectricBarrageLaser(void);
+	void fireElectricDenseLaser(void);
+	void fireSuperBall(void);
+	void fireSpeedMissile(void);
+	void createSpeedMissileHornet(const Vector& arg_location, const Vector& arg_floatVelocity);
 
+	
+	CBeam*& getNextBeam(void);
+	void SetupBeams(void);
+	void ClearBeams(void);
+	void CheckBeams(void);
 
+	BOOL turnToFaceEnemyLKP(void);
+	float getDotProductWithEnemyLKP(void);
+
+	void createChargeEffect(void);
+	void updateChargeEffect(void);
+	void removeChargeEffect(void);
+
+	BOOL FCanCheckAttacks(void);
+	
+	float getDistTooFar(void);
+	float getDistLook(void);
+
+	void setPrimaryAttackCooldown(void);
+
+	void playShockerFireSound(CBaseEntity* arg_target, const Vector& arg_location);
+	void administerShocker(void);
 
 
 

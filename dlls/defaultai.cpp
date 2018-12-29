@@ -2131,20 +2131,21 @@ Schedule_t* CBaseMonster :: GetScheduleOfType ( int Type )
 	case SCHED_WAIT_FOR_ENEMY_TO_ENTER_WATER:{
 		return &slWaitForEnemyToEnterWater[0];
 	break;}
-	case SCHED_CHASE_ENEMY:
-		{
-			//MODDD - see what happens.
-			//return &slChaseEnemy[ 0 ];
-			return &slChaseEnemySmart[0];
-		}
+	case SCHED_CHASE_ENEMY:{
+		//MODDD - see what happens.
+		//return &slChaseEnemy[ 0 ];
+		return &slChaseEnemySmart[0];
+	break;}
 	case SCHED_CHASE_ENEMY_STOP_SIGHT:{
 		//MODDD - new. Same as slChaseEnemySmart, but stops if the enemy is in sight.
 			return &slChaseEnemySmart_StopSight[0];
 	break;}
-	case SCHED_CHASE_ENEMY_SMART:
-		{
-			return &slChaseEnemySmart[ 0 ];
-		}
+	case SCHED_CHASE_ENEMY_SMART:{
+		return &slChaseEnemySmart[ 0 ];
+	break;}
+	case SCHED_CHASE_ENEMY_SMART_STOP_SIGHT:{
+		return &slChaseEnemySmart_StopSight[ 0 ];
+	break;}
 	case SCHED_CHASE_ENEMY_FAILED:
 		{
 			//MODDD NOTE - nothing special? damn.

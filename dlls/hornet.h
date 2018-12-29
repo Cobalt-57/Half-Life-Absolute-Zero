@@ -59,6 +59,13 @@ public:
 	void IgniteTrail( void );
 	void EXPORT StartTrack ( void );
 	void EXPORT StartDart ( void );
+
+	//MODDD - new for the kingpin to call.
+	void EXPORT StartSpeedMissile(void);
+	void EXPORT SpeedMissileDartStart(void);
+	void EXPORT SpeedMissileDartContinuous(void);
+
+
 	void EXPORT TrackTarget ( void );
 	void EXPORT TrackTouch ( CBaseEntity *pOther );
 	void EXPORT DartTouch( CBaseEntity *pOther );
@@ -76,5 +83,11 @@ public:
 	float			m_flStopAttack;
 	int				m_iHornetType;
 	float			m_flFlySpeed;
+
+	//MODDD - new.
+	float expireTime;
+	Vector speedMissileDartTarget;
+	Vector speedMissileDartDirection;
+
 };
 

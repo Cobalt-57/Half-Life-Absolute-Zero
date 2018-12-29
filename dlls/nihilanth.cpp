@@ -1221,6 +1221,8 @@ void CNihilanth :: HandleAnimEvent( MonsterEvent_t *pEvent )
 		}
 		break;
 	case 7:
+
+		//MODDD NOTE MAJOR - why was this section commented out...?  Found this way as-is.
 		/*
 		Vector vecSrc, vecAngles;
 		GetAttachment( 0, vecSrc, vecAngles ); 

@@ -786,7 +786,8 @@ void CTalkMonster :: RunTask( Task_t *pTask )
 			//Calling TaskComplete() or TaskFail() skips the first task of the new schedule or cancels the entire schedule accordingly.
 			//NOT WHAT YOU WANT
 
-			TaskComplete();
+			//...what did I just tell you.
+			//TaskComplete();
 		}
 		break;
 		}

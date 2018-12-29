@@ -546,6 +546,8 @@ public:
 	//don't override this.  it's a general utility that pops up in a lot of places.  Just use custom code if any part of it needs changes.
 	BOOL traceResultObstructionValidForAttack(const TraceResult& arg_tr);
 
+	virtual float getDistTooFar(void);
+	virtual float getDistLook(void);
 
 	virtual BOOL getGermanModelRequirement(void);
 	virtual const char* getGermanModel(void);
@@ -938,11 +940,14 @@ public:
 
 	virtual void SetYawSpeed ( void ) { return; };// allows different yaw_speeds for each activity
 	
-	BOOL BuildRoute ( const Vector &vecGoal, int iMoveFlag, CBaseEntity *pTarget );
-	BOOL BuildRouteSimple ( const Vector &vecGoal, int iMoveFlag, CBaseEntity *pTarget );
+	//MODDD - made virtual like BuildNearestRoute was. If something overrides this we should probably use their version.
+	virtual BOOL BuildRoute ( const Vector &vecGoal, int iMoveFlag, CBaseEntity *pTarget );
 
+	//MODDD - now accepts an optional moveflag and optional target entity just like BuildRoute does. To whatever route it makes with BuildRoute,
+	//        it should be able to pass that information along just as if BuildRoute were called plainly.
+	//        But calling BuildNearestRoute without those things is possible too for pure retail behavior.
 	virtual BOOL BuildNearestRoute ( Vector vecThreat, Vector vecViewOffset, float flMinDist, float flMaxDist );
-	virtual BOOL BuildNearestRouteSimple ( Vector vecThreat, Vector vecViewOffset, float flMinDist, float flMaxDist );
+	virtual BOOL BuildNearestRoute ( Vector vecThreat, Vector vecViewOffset, float flMinDist, float flMaxDist, int iMoveFlag, CBaseEntity* pTarget );
 
 
 

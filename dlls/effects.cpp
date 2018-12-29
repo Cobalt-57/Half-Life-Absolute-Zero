@@ -239,6 +239,11 @@ CBeam *CBeam::BeamCreate( const char *pSpriteName, int width )
 {
 	// Create a new entity with CBeam private data
 	CBeam *pBeam = GetClassPtr( (CBeam *)NULL );
+
+	//MODDD NOTE - why is the created beam's classname being set here? Why not in the CBeam class's own "spawn" method?
+	//             assuming that ever gets called in this process (GetClassPtr vs. CreateNamedEntity, or
+	//             CREATE_NAMED_ENTITY, which is called by CBaseEntity::Create).
+
 	pBeam->pev->classname = MAKE_STRING("beam");
 
 	pBeam->BeamInit( pSpriteName, width );

@@ -3503,11 +3503,17 @@ void ClientCommand( edict_t *pEntity )
 		//ambiguous as to whether this is what is in the crosshairs or the player itself.  Try to figure it out:
 		
 
-
-		if(arg1ref == NULL || arg2ref == NULL || arg3ref == NULL){
+		if(
+			arg1ref == NULL || arg2ref == NULL || arg3ref == NULL ||
+			isStringEmpty(arg1ref) || isStringEmpty(arg2ref) || isStringEmpty(arg3ref)
+		){
 			easyForcePrintLine("Need 3 parameters.");
 			return;
 		}
+
+
+
+
 		CBaseEntity* forwardEnt = FindEntityForward(tempplayer);
 
 		if(forwardEnt == NULL){
@@ -3515,19 +3521,26 @@ void ClientCommand( edict_t *pEntity )
 			easyForcePrintLine("NO entity found.");
 			return;
 		}else{
+			
+			try{
+			
+				float xVal = tryStringToFloat(arg1ref);
 
-			float xVal = tryStringToFloat(arg1ref);
+				float yVal = tryStringToFloat(arg2ref);
+				float zVal = tryStringToFloat(arg3ref);
 
-			float yVal = tryStringToFloat(arg2ref);
-			float zVal = tryStringToFloat(arg3ref);
+				//forwardEnt->pev->origin = Vector(xVal, yVal, zVal);
+				UTIL_SetOrigin (forwardEnt->pev, Vector(xVal, yVal, zVal) );// take him off ground so engine doesn't instantly reset onground 
+				//forwardEnt->pev->flags |= FL_ONGROUND
+				forwardEnt->pev->flags &= ~FL_ONGROUND;
 
-			//forwardEnt->pev->origin = Vector(xVal, yVal, zVal);
-			UTIL_SetOrigin (forwardEnt->pev, Vector(xVal, yVal, zVal) );// take him off ground so engine doesn't instantly reset onground 
-			//forwardEnt->pev->flags |= FL_ONGROUND
-			forwardEnt->pev->flags &= ~FL_ONGROUND;
+				//easyForcePrintLine("MODEL: %s", STRING(forwardEnt->pev->model));
 
-			//easyForcePrintLine("MODEL: %s", STRING(forwardEnt->pev->model));
-		}
+			}catch(int){
+				easyForcePrintLine("ERROR - could not parse inputs. No commas or non numeric characters allowed.");
+			}
+
+		}//END OF forwardEnt check
 
 
 	
@@ -3546,26 +3559,32 @@ void ClientCommand( edict_t *pEntity )
 		
 
 
-		if(arg1ref == NULL || arg2ref == NULL || arg3ref == NULL){
+		if(
+			arg1ref == NULL || arg2ref == NULL || arg3ref == NULL ||
+			isStringEmpty(arg1ref) || isStringEmpty(arg2ref) || isStringEmpty(arg3ref)
+		){
 			easyForcePrintLine("Need 3 parameters.");
 			return;
 		}
 		
 		
+		try{
 
-		float xVal = tryStringToFloat(arg1ref);
+			float xVal = tryStringToFloat(arg1ref);
 
-		float yVal = tryStringToFloat(arg2ref);
-		float zVal = tryStringToFloat(arg3ref);
+			float yVal = tryStringToFloat(arg2ref);
+			float zVal = tryStringToFloat(arg3ref);
 
-		//forwardEnt->pev->origin = Vector(xVal, yVal, zVal);
-		UTIL_SetOrigin (tempplayer->pev, Vector(xVal, yVal, zVal) );// take him off ground so engine doesn't instantly reset onground 
-		//forwardEnt->pev->flags |= FL_ONGROUND
-		tempplayer->pev->flags &= ~FL_ONGROUND;
+			//forwardEnt->pev->origin = Vector(xVal, yVal, zVal);
+			UTIL_SetOrigin (tempplayer->pev, Vector(xVal, yVal, zVal) );// take him off ground so engine doesn't instantly reset onground 
+			//forwardEnt->pev->flags |= FL_ONGROUND
+			tempplayer->pev->flags &= ~FL_ONGROUND;
 
-		//easyForcePrintLine("MODEL: %s", STRING(forwardEnt->pev->model));
+			//easyForcePrintLine("MODEL: %s", STRING(forwardEnt->pev->model));
 		
-
+		}catch(int){
+			easyForcePrintLine("ERROR - could not parse inputs. No commas or non numeric characters allowed.");
+		}
 
 	
 	}else if( FStrEq(pcmdRefinedRef, "drawpath") || FStrEq(pcmdRefinedRef, "pathdraw") || FStrEq(pcmdRefinedRef, "drawnpcpath")  ){
@@ -4162,6 +4181,56 @@ void ClientCommand( edict_t *pEntity )
 		}
 
 
+	}else if(FStrEq(pcmdRefinedRef, "testangles") || FStrEq(pcmdRefinedRef, "angletest")) {
+		easyForcePrintLine("***MAke sure mode printouts are enabled.");
+
+		//test angles, like pev->angles.
+		//angles are
+		//x: pitch (orientation aimed up/down from facing straight horizontal across, think of from a side-view, 0 is straight horizontal, positive is tilted to look up, negative is tilted to look down),
+		//y: yaw (orientation looking in a direction against the floor, think of from a top-down view like a circle, with the typical north, east, south, west directions to go in).
+		//z: roll (think of it as adjacent to pitch. look at the model from the front instead, and turn it in a swivelling way (sideways).)
+		Vector angleTest = Vector(36, 90, 0);
+
+		Vector vecForward1;
+		Vector vecRight1;
+		Vector vecUp1;
+
+		Vector vecForward2;
+		Vector vecRight2;
+		Vector vecUp2;
+		
+		easyForcePrint("Private Plain Vectors:");
+		UTIL_MakeVectorsPrivate(angleTest, vecForward1, vecRight1, vecUp1);
+		UTIL_printVector(vecForward1);
+		UTIL_printVector(vecRight1);
+		UTIL_printVector(vecUp1);
+		easyForcePrintLine();
+		
+		
+		easyForcePrint("Private Aim Vectors:");
+		UTIL_MakeAimVectorsPrivate(angleTest, vecForward2, vecRight2, vecUp2);
+		UTIL_printVector(vecForward2);
+		UTIL_printVector(vecRight2);
+		UTIL_printVector(vecUp2);
+		easyForcePrintLine();
+
+
+		easyForcePrint("Global Plain Vectors:");
+		UTIL_MakeVectors(angleTest);
+		UTIL_printVector(gpGlobals->v_forward);
+		UTIL_printVector(gpGlobals->v_right);
+		UTIL_printVector(gpGlobals->v_up);
+		easyForcePrintLine();
+
+		easyForcePrint("Global Aim Vectors:");
+		UTIL_MakeAimVectors(angleTest);
+		UTIL_printVector(gpGlobals->v_forward);
+		UTIL_printVector(gpGlobals->v_right);
+		UTIL_printVector(gpGlobals->v_up);
+		easyForcePrintLine();
+
+		
+		
 	}else if ( FStrEq(pcmdRefinedRef, "debug1" ) ){
 		//YEAH
 		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev) ;

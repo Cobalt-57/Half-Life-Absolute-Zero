@@ -1564,7 +1564,7 @@ void CArcher::StartTask( Task_t *pTask ){
 				}
 
 				
-				DebugLine_Setup(6, surfaceGuessAboveWaterLevel, m_hEnemy->Center(), trTemp.flFraction );
+				//DebugLine_Setup(6, surfaceGuessAboveWaterLevel, m_hEnemy->Center(), trTemp.flFraction );
 
 
 
@@ -1685,7 +1685,7 @@ void CArcher::StartTask( Task_t *pTask ){
 			float waterLevel = UTIL_WaterLevel(pev->origin, pev->origin.z, pev->origin.z + 4096.0);
 			BOOL pathSuccess;
 
-			::DebugLine_SetupPoint(5, preSurfaceAttackLocation, 0, 0, 255);
+			//::DebugLine_SetupPoint(5, preSurfaceAttackLocation, 0, 0, 255);
 
 			if(BuildRoute(preSurfaceAttackLocation, bits_MF_TO_LOCATION, NULL)){
 				//okay!	
@@ -1833,6 +1833,8 @@ void CArcher::RunTask( Task_t *pTask ){
 
 
 BOOL CArcher::CheckMeleeAttack1( float flDot, float flDist ){
+
+	//of course no ev->flags, FL_ONGROUND check, they may be swimmin';
 	if ( flDist <= 64 && flDot >= 0.7 && m_hEnemy != NULL )
 	{
 		return TRUE;
@@ -3131,6 +3133,29 @@ BOOL CArcher::attemptBuildRandomWanderRoute(const float& argWaterLevel){
 	//ran out of tries? oh well.
 	return FALSE;
 }//END OF attemptBuildRandomWanderRoute
+
+
+
+//let's be safe here...  don't exclude the player being immediately out of view.
+BOOL CArcher::FCanCheckAttacks(void){
+
+	if(m_hEnemy == NULL || (m_hEnemy->pev->waterlevel == 3)  ){
+		//If there is no enemy or they are in the water with me, do whatever the base class does?
+		return CBaseMonster::FCanCheckAttacks();
+	}
+
+
+	//otherwise, for enemies out of water, we can do checks without having a direct line of sight with the enemy.
+	if ( !HasConditions( bits_COND_ENEMY_TOOFAR ) )
+	{
+		return TRUE;
+	}
+	else
+	{
+		return FALSE;
+	}
+}
+
 
 
 

@@ -1173,6 +1173,16 @@ agruntHornetRandomness (0.1) - DECIMAL. How much agrunt-fired hornets will rando
 
 hassassinCrossbowDebug (0) - BOOL. Not for the faint of heart.
 
+kingpinDebug (0) - MODEVAR.  Affects what schedule is picked for the kingpin when it chooses to pick a ranged attack schedule at random.
+0: no effect. Schedule is picked on range to the enemy and by random chance. Some schedules are more likely than others or impossible at certain ranges.
+1: chase enemy, stop at sight.
+2: shock attack followup.  Does not stop at sight.  Meant to follow a short-range shockwave attackt while they are dazed and confused.
+3: shocker. short-ranged shockwave attack that punches the enemy's view heavily. Approaches for melee attacks in the confusion.
+4: electric barrage. Charges up and fires small purple bolts (1/4 islave beam damage each) rapidly. Turns off after a while if the target is obscurred.
+5: electricLaser. Charges up and fires a strong red laser at the target for triple islave beam damage.
+6: speed missile attack. Really spawns 3 hornets that slowly move outard from the kingpin and then dart toward the target with a tiny bit of homing if they move, without sounds or puff clouds.
+7: super ball. Clone of the controller head ball for now, pathfinding not supported yet.
+
 
 hud_drawAmmoBar (0) - BOOL.  When 1, draws the ammunition bar (fuller the more ammo there is; shows the remaining out of the most that could be stored).
 hud_weaponSelectHidesLower (1) - BOOL.  When 1, hides the lower GUI (health, armor) when selecting a weapon.
@@ -1351,6 +1361,9 @@ flyerKilledFallingLoop (1) - BOOL. Fliers (flying NPCs/monsters) that have a loo
 cl_server_interpolation (1) - BOOL. Whether server-sent entities are subject to interpolation.
 ~Interpolation gives a smoothness in animation between frames of think logic (by the server), which happens every 1/10th of a second (slower than a framerate like 60 fps).
 ~Turning off does not apply to viewmodels. They are naturally rendered smoothly by the client regardless.
+
+NOTICE - there is an as-is command, "interp", that claims to turn interpolation off too.
+It might in a different way.  It seems to cause clientside events like hgrunt muzzle flashes to stay frozen in the whole 1/10th second timeframe they occupy.  Maybe longer? unsure.
 
 
 

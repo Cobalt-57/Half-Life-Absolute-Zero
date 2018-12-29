@@ -3,6 +3,11 @@
 //TODO - should infiniteLongJumpCharge being on also force the spring icon in ammo.cpp to look shaded? if so make it broadcasted (HIDDENC) to the client to see it there easily.
 
 
+//MAJOR!  
+//Does "ag_fire1", 2, and 3 being played clientside (cl_dll/ev_hldm.cpp) and never serverside mean only the player firing hornets hears the hornet fire sound?
+//If so, this contradicts hearing the hornet fire sound from agrunts.  Why do they make the same ag_fire# noise for others to hear, but other players don't make the same noise for others to hear?
+
+
 //"Can't find the world"
 //Should bullsquidspit be reduced since it does that continual toxin damage already?
 //Same for other status alignment dealers (besides bleeding melee damage)?
@@ -10,7 +15,7 @@
 
 
 //~should increment between noticable releases.
-#define protoModVersion "1.8w"
+#define protoModVersion "1.8x"
 
 //~date of compilation.
 //~to pick automatically, leave this commented out.  WARNING: always the date you ran half life, just freeze a date here!
