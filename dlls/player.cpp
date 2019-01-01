@@ -6592,8 +6592,7 @@ BOOL CBasePlayer::blocksImpact(void){
 
 void CBasePlayer::Spawn( BOOL revived )
 {
-	this->recognizablyDead = FALSE;
-	this->iAmDead = FALSE;  //just in case these happen.
+	recognizablyDead = FALSE;
 
 
 

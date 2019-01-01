@@ -9,9 +9,9 @@
 // KING PIN (monster_kingpin) (split into .h & .cpp for prototype & implementation details accordingly)
 //=========================================================
 
-//Max range to search for powerup-able monsters. Bigger than the APPLY range below. If the closest monster is outside of APPLY but within SEARCH, this KingPin may walk closer to get in APPLY range.
+//Max range to search for powerup-able monsters. Bigger than the APPLY range below. If the closest monster is outside of APPLY but within SEARCH, this Kingpin may walk closer to get in APPLY range.
 #define POWERUP_SEARCH_RANGE 2100
-//Max range this KingPin may use the Power Up ability. May also walk towards monsters and then use it if they are not too far away (within SEARCH range at least).
+//Max range this Kingpin may use the Power Up ability. May also walk towards monsters and then use it if they are not too far away (within SEARCH range at least).
 #define POWERUP_APPLY_RANGE 1600
 
 
@@ -41,7 +41,7 @@
 #define KINGPIN_MAX_BEAMS 4
 
 
-class CKingPin : public CBaseMonster{
+class CKingpin : public CBaseMonster{
 public:
 
 	static const char* pDeathSounds[];
@@ -119,7 +119,7 @@ public:
 
 
 
-	CKingPin(void);
+	CKingpin(void);
 
 
 	CUSTOM_SCHEDULES;
@@ -136,6 +136,7 @@ public:
 	void SetEyePosition(void);
 	
 	Schedule_t *GetSchedule( void );
+	Schedule_t* pickChaseOrStaySchedule(void);
 	Schedule_t* GetScheduleOfType( int Type);
 	
 	void StartTask( Task_t *pTask );
@@ -158,6 +159,8 @@ public:
 	
 	GENERATE_TRACEATTACK_PROTOTYPE
 	GENERATE_TAKEDAMAGE_PROTOTYPE
+
+	void OnTakeDamageSetConditions(entvars_t *pevInflictor, entvars_t *pevAttacker, float flDamage, int bitsDamageType, int bitsDamageTypeMod);
 
 	GENERATE_DEADTAKEDAMAGE_PROTOTYPE
 	
@@ -235,11 +238,12 @@ public:
 	
 
 	void playElectricLaserChargeSound(void);
+	void stopElectricLaserChargeSound(void);
 	void playElectricLaserFireSound(void);
 	void playElectricLaserHitSound(CBaseEntity* arg_target, const Vector& arg_location);
 	
 	void fireElectricBarrageLaser(void);
-	void fireElectricDenseLaser(void);
+	void fireElectricDenseLaser(CBaseEntity* arg_hitIntention, const Vector& arg_hitTargetPoint);
 	void fireSuperBall(void);
 	void fireSpeedMissile(void);
 	void createSpeedMissileHornet(const Vector& arg_location, const Vector& arg_floatVelocity);
@@ -267,9 +271,10 @@ public:
 	void playShockerFireSound(CBaseEntity* arg_target, const Vector& arg_location);
 	void administerShocker(void);
 
+	BOOL needsMovementBoundFix(void);
 
 
-};//END OF class CKingPin
+};//END OF class CKingpin
 
 
 

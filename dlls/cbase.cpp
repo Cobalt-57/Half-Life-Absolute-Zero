@@ -540,8 +540,6 @@ CBaseEntity::CBaseEntity(void){
 
 	//barnacleVictimException = FALSE; ???
 
-	iAmDead = FALSE;
-
 	
 	recognizablyDead = FALSE; //golly gee, doubt it.
 
@@ -782,7 +780,6 @@ TYPEDESCRIPTION	CBaseEntity::m_SaveData[] =
 	DEFINE_FIELD( CBaseEntity, m_pfnBlocked, FIELD_FUNCTION ),
 	
 	//MODDD
-	DEFINE_FIELD( CBaseEntity, iAmDead, FIELD_BOOLEAN ),
 	DEFINE_FIELD( CBaseEntity, recognizablyDead, FIELD_BOOLEAN ),
 
 	//

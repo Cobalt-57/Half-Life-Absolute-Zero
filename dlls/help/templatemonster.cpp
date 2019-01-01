@@ -318,7 +318,7 @@ float CTemplateMonster::getDistLook(void){
 Schedule_t* CTemplateMonster::GetSchedule( void )
 {
 	//MODDD - safety.
-	if(iAmDead){
+	if(pev->deadflag != DEAD_NO){
 		return GetScheduleOfType( SCHED_DIE );
 	}
 	SCHEDULE_TYPE baitSched = getHeardBaitSoundSchedule();
@@ -419,9 +419,15 @@ Schedule_t* CTemplateMonster::GetSchedule( void )
 				// we can't see the enemy
 				if ( !HasConditions(bits_COND_ENEMY_OCCLUDED) )
 				{
-					// enemy is unseen, but not occluded!
-					// turn to face enemy
-					return GetScheduleOfType( SCHED_COMBAT_FACE );
+					
+					if(!FacingIdeal()){
+						// enemy is unseen, but not occluded!
+						// turn to face enemy
+						return GetScheduleOfType(SCHED_COMBAT_FACE);
+					}else{
+						//We're facing the LKP already. Then we have to go to that point and declare we're stumped there if we still see nothing.
+						return GetScheduleOfType(SCHED_CHASE_ENEMY);
+					}
 				}
 				else
 				{
@@ -722,6 +728,20 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CTemplateMonster){
 
 	return GENERATE_TAKEDAMAGE_PARENT_CALL(CBaseMonster);
 }
+
+
+//Given these features sent over from TakeDamage (or TAKEDAMAGE), should I mark bits_COND_LIGHT_DAMAGE or bits_COND_HEAVY_DAMAGE?
+//Override this if those should occur more or less commonly, or even affect the cooldowns for either happening.
+//They can be exploitable if spammable to make a monster helplessly interrupted all the time.
+
+//Copy this method from CBaseMonster if using it to have the most flexibility, and don't call the parent method at all then.
+void CTemplateMonster::OnTakeDamageSetConditions(entvars_t *pevInflictor, entvars_t *pevAttacker, float flDamage, int bitsDamageType, int bitsDamageTypeMod){
+
+
+	CBaseMonster::OnTakeDamageSetConditions(pevInflictor, pevAttacker, flDamage, bitsDamageType, bitsDamageTypeMod);
+
+}//END OF OnTakeDamageSetConditions
+
 
 
 

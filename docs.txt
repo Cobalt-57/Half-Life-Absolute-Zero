@@ -61,6 +61,17 @@ Many existing monsters override PrescheduleThink(), but I override MonsterThink(
 
 
 
+CONDITIONS - comparing SEE_ENEMY and ENEMY_OCCLUDED.
+bits_COND_SEE_ENEMY and bits_COND_ENEMY_OCCLUDED may sound similar, but they are a little different.
+bits_COND_SEE_ENEMY requires the enemy to be in the viewcone of the current monster (in sight).
+bits_COND_ENEMY_OCCLUDED, being absent, says that the monster COULD see its current enemy if it were facing a different direction.
+ Or in other words, there is a straight line between this monster's eyes and it's enemy's position, regardless of the direction the monster is facing.
+
+so OCCLUDED being true implies SEE_ENEMY must be false. But OCCLUDED being false can allow SEE_ENEMY to be either true or false.
+
+
+
+
 
 
 GLITCH FOUND IN HALF LIFE:

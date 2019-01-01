@@ -1542,6 +1542,13 @@ Schedule_t* CBarney :: GetScheduleOfType ( int Type )
 			// face enemy, then draw.
 			return slBarneyEnemyDraw;
 		}
+
+		//MODDD NOTE - lacking any fallback in caes the enemy is NULL may look strange, but since SCHED_ARM_WEAPON is a default SCHED_...
+		//             present for all entities, the base monster class's GetScheduleOfType method of schedule.cpp has something in this case
+		//             to be used.  It's... nearly identical but doesn't face the enemy.
+		//             well that design choice was... interesting.  surely that task can canel itself or decide to do nothing if m_hEnemy
+		//             were NULL.
+
 		break;
 
 	// Hook these to make a looping schedule

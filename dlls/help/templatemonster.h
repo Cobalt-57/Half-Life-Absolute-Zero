@@ -104,6 +104,8 @@ public:
 	GENERATE_TRACEATTACK_PROTOTYPE
 	GENERATE_TAKEDAMAGE_PROTOTYPE
 
+	void OnTakeDamageSetConditions(entvars_t *pevInflictor, entvars_t *pevAttacker, float flDamage, int bitsDamageType, int bitsDamageTypeMod);
+
 	GENERATE_DEADTAKEDAMAGE_PROTOTYPE
 	
 	GENERATE_GIBMONSTER_PROTOTYPE

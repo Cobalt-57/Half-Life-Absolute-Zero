@@ -3592,6 +3592,7 @@ void UTIL_Remove( CBaseEntity *pEntity )
 
 
 //MODDD
+//also requires this entity to be finished with the death animation (DEAD_DEAD)
 BOOL UTIL_IsDeadEntity( CBaseEntity* ent){
 
 	if(!ent){
@@ -3601,7 +3602,7 @@ BOOL UTIL_IsDeadEntity( CBaseEntity* ent){
 		return FALSE;
 	}
 
-	if(!ent->iAmDead || ent->pev->deadflag != DEAD_DEAD){
+	if(! ent->pev->deadflag != DEAD_DEAD){
 		//not good enough to say dead.
 		return FALSE;
 	}
@@ -3622,7 +3623,7 @@ BOOL UTIL_IsDeadEntity( CBaseEntity* ent){
 
 //MODDD - same as IsValidEntity for Entity, but also has a pev->deadflag check.
 //This is a literal check, not for the AI to be tricked or have a slightly delayed reaction to for things with the DEAD_DYING deadflag (death anim in progress).
-//use "
+//flag DEAD_NO only.
 BOOL UTIL_IsAliveEntity( CBaseEntity* ent){
 
 	if(!ent){
@@ -3632,7 +3633,7 @@ BOOL UTIL_IsAliveEntity( CBaseEntity* ent){
 		return FALSE;
 	}
 
-	if(ent->iAmDead || ent->pev->deadflag != DEAD_NO){
+	if(ent->pev->deadflag != DEAD_NO){
 		//must be dead.
 		return FALSE;
 	}

@@ -625,13 +625,14 @@ void CAGrunt::setPoweredUpOn(CBaseMonster* argPoweredUpCauseEnt, float argHowLon
 	}
 	
 	
+	/*
 	pev->renderamt = 0;
 	pev->rendermode = kRenderNormal;
 	pev->renderfx = kRenderFxGlowShell;
 	pev->rendercolor.x = (int)(100*0.6);
 	pev->rendercolor.y = 0;
 	pev->rendercolor.z = (int)(255*0.6);
-
+	*/
 
 
 
@@ -2462,7 +2463,7 @@ void CAGrunt::OnTakeDamageSetConditions(entvars_t *pevInflictor, entvars_t *pevA
 
 	//Damage above 40 also causes bigflinch for tougher creatures like agrunts,
 	//just to make sure a revolver shot can cause a bigflinch.
-	if(flDamage >= pev->max_health * 0.55 || flDamage >= 40 && gpGlobals->time >= forgetBigFlinchTime)
+	if(gpGlobals->time >= forgetBigFlinchTime && (flDamage >=  pev->max_health * 0.55 || flDamage >= 40) )
 	{
 		SetConditions(bits_COND_HEAVY_DAMAGE);
 		forgetSmallFlinchTime = gpGlobals->time + DEFAULT_FORGET_SMALL_FLINCH_TIME;

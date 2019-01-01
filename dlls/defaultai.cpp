@@ -745,6 +745,11 @@ Schedule_t	slCombatStand[] =
 //NOTICE - it is possible to get a monster pursuing the player to stare at a wall and keep calling this "Combat Face" schedule 
 //         if the player is not occluded but the monster is still satisfied just looking at the "last known position".
 //         So, little intervention... TASK_CHECK_STUMPED
+//UPDATE!!!
+//Nevermind, any type of combatface will be using "slCombatFaceNoStump" to behave like retail.
+//Whether to be stumped or not needs to be up to pathfinding reaching a target (m_vecEnemyLKP) and not knowing
+//what else to do.  Just looking in a direction and declaring oneself "stumped" when getting closer to that LKP
+//could've revealed the enemy is not smart.
 
 //=========================================================
 // CombatFace Schedule
@@ -2119,7 +2124,8 @@ Schedule_t* CBaseMonster :: GetScheduleOfType ( int Type )
 	case SCHED_COMBAT_FACE:
 		{
 			//MODDD - CRITICAL TEST
-			return &slCombatFace[ 0 ];
+			return &slCombatFaceNoStump[0];
+			//return &slCombatFace[ 0 ];
 			//return &slCombatFaceSound[0];
 		}
 	case SCHED_COMBAT_FACE_NOSTUMP:{

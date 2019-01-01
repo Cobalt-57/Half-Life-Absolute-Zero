@@ -1149,19 +1149,22 @@ Schedule_t *CChumToad::GetSchedule ( void )
 				// we can't see the enemy
 				if ( !HasConditions(bits_COND_ENEMY_OCCLUDED) )
 				{
-					// enemy is unseen, but not occluded!
-					// turn to face enemy
-					//return GetScheduleOfType( SCHED_COMBAT_FACE );
-
-					//better handling.
-					return GetScheduleOfType( SCHED_PANTHEREYE_CHASE_ENEMY );
+					
+					if(!FacingIdeal()){
+						// enemy is unseen, but not occluded!
+						// turn to face enemy
+						return GetScheduleOfType(SCHED_COMBAT_FACE);
+					}else{
+						//We're facing the LKP already. Then we have to go to that point and declare we're stumped there if we still see nothing.
+						return GetScheduleOfType(SCHED_CHASE_ENEMY);
+					}
 
 				}
 				else
 				{
 					// chase!
 					///EASY_CVAR_PRINTIF_PRE(panthereyePrintout, easyPrintLine("ducks??"));
-					return GetScheduleOfType( SCHED_PANTHEREYE_CHASE_ENEMY );
+					return GetScheduleOfType( SCHED_CHASE_ENEMY );
 				}
 				*/
 				

@@ -16,6 +16,16 @@
 // Hornets
 //=========================================================
 
+
+
+//MODDD - ...you depend on the .cpp file including these before including hornet.h to make it relevant? really?
+//        What... what is this standard?
+
+#include "basemonster.h"
+
+
+
+
 //=========================================================
 // Hornet Defines
 //=========================================================
@@ -33,7 +43,7 @@ extern int iHornetPuff;
 class CHornet : public CBaseMonster
 {
 public:
-	CHornet();
+	CHornet(void);
 
 	float hornetPseudoNextThink;
 	float spiralStartTime;
@@ -60,11 +70,6 @@ public:
 	void EXPORT StartTrack ( void );
 	void EXPORT StartDart ( void );
 
-	//MODDD - new for the kingpin to call.
-	void EXPORT StartSpeedMissile(void);
-	void EXPORT SpeedMissileDartStart(void);
-	void EXPORT SpeedMissileDartContinuous(void);
-
 
 	void EXPORT TrackTarget ( void );
 	void EXPORT TrackTouch ( CBaseEntity *pOther );
@@ -83,11 +88,6 @@ public:
 	float			m_flStopAttack;
 	int				m_iHornetType;
 	float			m_flFlySpeed;
-
-	//MODDD - new.
-	float expireTime;
-	Vector speedMissileDartTarget;
-	Vector speedMissileDartDirection;
 
 };
 

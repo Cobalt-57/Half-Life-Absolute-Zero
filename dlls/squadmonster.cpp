@@ -156,7 +156,6 @@ void CSquadMonster :: ScheduleChange ( void )
 // Killed
 //=========================================================
 GENERATE_KILLED_IMPLEMENTATION(CSquadMonster){
-	iAmDead = TRUE;
 	VacateSlot();
 
 	if ( InSquad() )

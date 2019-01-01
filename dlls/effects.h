@@ -54,9 +54,18 @@ public:
 	}
 	void EXPORT AnimateThink( void );
 	void EXPORT ExpandThink( void );
+
+	//MODDD - new
+	void EXPORT AnimationScaleFadeInThink( void );
+
 	void Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value );
 	void Animate( float frames );
 	void Expand( float scaleSpeed, float fadeSpeed );
+	
+	//MODDD - new
+	void AnimationScaleFadeIn( float scaleSpeed, float fadeSpeed, float arg_startScale, float arg_targetScale, float arg_targetOpacity );
+
+
 	void SpriteInit( const char *pSpriteName, const Vector &origin );
 
 	inline void SetAttachment( edict_t *pEntity, int attachment )

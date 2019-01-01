@@ -1225,7 +1225,7 @@ void CPantherEye::LeapTouch ( CBaseEntity *pOther )
 void CPantherEye::MonsterThink ( void )
 {
 
-	if(!deadSetActivityBlock && !iAmDead && pev->deadflag == DEAD_NO){
+	if(!deadSetActivityBlock && pev->deadflag == DEAD_NO){
 		//ok?
 		//return;
 
@@ -1370,14 +1370,11 @@ Schedule_t *CPantherEye::GetSchedule ( void )
 	//Safety. In case of picking a new schedule, don't try the damage touch for throwing myself at an enemy, has to be set freshly.
 
 
-	if(!iAmDead && deadSetActivityBlock){
-		//////easyForcePrintLine("WHAT THE HELL IS WRONG WITH YOOOUUUUUUUUU %d : %s %d %d   ::: %d %d", monsterID, m_pSchedule!=NULL?m_pSchedule->pName:"NULL", pev->deadflag, m_MonsterState, monsterID, iAmDead, iAmDead, deadSetActivityBlock);
-	}
 
-	if(iAmDead || deadSetActivityBlock){
+	if(pev->deadflag != DEAD_NO || deadSetActivityBlock){
 		return GetScheduleOfType( SCHED_DIE );
 	}
-	if(!iAmDead && deadSetActivityBlock){
+	if(pev->deadflag == DEAD_NO && deadSetActivityBlock){
 		//////easyForcePrintLine("IM GONNA eat YOUR WHOLE box of raisins");
 	}
 
@@ -1491,9 +1488,16 @@ Schedule_t *CPantherEye::GetSchedule ( void )
 				// we can't see the enemy
 				if ( !HasConditions(bits_COND_ENEMY_OCCLUDED) )
 				{
-					// enemy is unseen, but not occluded!
-					// turn to face enemy
-					//return GetScheduleOfType( SCHED_COMBAT_FACE );
+					/*
+					if(!FacingIdeal()){
+						// enemy is unseen, but not occluded!
+						// turn to face enemy
+						return GetScheduleOfType(SCHED_COMBAT_FACE);
+					}else{
+						//We're facing the LKP already. Then we have to go to that point and declare we're stumped there if we still see nothing.
+						return GetScheduleOfType(SCHED_CHASE_ENEMY);
+					}
+					*/
 
 					//better handling.
 					return GetScheduleOfType( SCHED_PANTHEREYE_CHASE_ENEMY );
@@ -1607,8 +1611,8 @@ Schedule_t* CPantherEye::GetScheduleOfType( int Type){
 	EASY_CVAR_PRINTIF_PRE(panthereyePrintout, easyPrintLine("PANTHER: GET SCHEDULE OF TYPE: %d", Type));
 
 	
-	if( (iAmDead || deadSetActivityBlock) && Type != SCHED_DIE){
-		//////easyForcePrintLine("I WILL eat YOUR WHOLE box of rasinssss %d: %d %d ::: %d", monsterID, iAmDead, deadSetActivityBlock, Type);
+	if( (pev->deadflag != DEAD_NO || deadSetActivityBlock) && Type != SCHED_DIE){
+		//////easyForcePrintLine("I WILL eat YOUR WHOLE box of rasinssss %d: %d ::: %d", monsterID, deadSetActivityBlock, Type);
 	}
 
 
@@ -1885,7 +1889,7 @@ void CPantherEye::RunTask ( Task_t *pTask ){
 
 
 	//NOTE: should only do this logic check if alive of course.
-	if(pev->deadflag == DEAD_NO && !deadSetActivityBlock && !iAmDead){
+	if(pev->deadflag == DEAD_NO && !deadSetActivityBlock){
 
 		if(pissedOffTime == -1 && runawayTime == -1 && m_hEnemy != NULL){
 			//nothing all that strong, and an enemy about?  Sneak time!
@@ -2155,10 +2159,10 @@ void CPantherEye::RunTask ( Task_t *pTask ){
 		}
 
 
-	}//END OF if(pev->deadflag == DEAD_NO && !deadSetActivityBlock && !iAmDead)
+	}//END OF if(pev->deadflag == DEAD_NO && !deadSetActivityBlock)
 	else{
 
-		//////easyForcePrintLine(".....???????? %d : %d   %d %d %d", monsterID, pTask->iTask, pev->deadflag, deadSetActivityBlock, iAmDead);
+		//////easyForcePrintLine(".....???????? %d : %d   %d %d", monsterID, pTask->iTask, pev->deadflag, deadSetActivityBlock);
 	}
 
 	switch ( pTask->iTask ){
@@ -2383,7 +2387,7 @@ void CPantherEye::OnTakeDamageSetConditions(entvars_t *pevInflictor, entvars_t *
 	
 	//Damage above 40 also causes bigflinch for tougher creatures like panthereyes,
 	//just to make sure a revolver shot can cause a bigflinch.
-	if(flDamage >= pev->max_health * 0.55 || flDamage >= 40 && gpGlobals->time >= forgetBigFlinchTime)
+	if(gpGlobals->time >= forgetBigFlinchTime && (flDamage >=  pev->max_health * 0.55 || flDamage >= 40) )
 	{
 		SetConditions(bits_COND_HEAVY_DAMAGE);
 		forgetSmallFlinchTime = gpGlobals->time + DEFAULT_FORGET_SMALL_FLINCH_TIME;

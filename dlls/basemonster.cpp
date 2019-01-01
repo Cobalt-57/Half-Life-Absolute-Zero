@@ -1067,12 +1067,41 @@ void CBaseMonster :: Look ( int iDistance )
 		return;
 	}
 
+	int chuckTesta = 6666;
+	int chuckTestb = 6667;
+	const char* MYCLASSNAMEDAMN = getClassname();
+	const char* MYCLASSNAMEDAMNALT = STRING(pev->classname);
+	BOOL doesThatMotherfuckerEqualMyShit = strcmp(MYCLASSNAMEDAMN, "monster_barney");
 
+	BOOL fuckingResult = FClassnameIs(pev, "monster_barney");
+	if(FClassnameIs(pev, "monster_barney") == TRUE ){
+		int x = 666;
+		chuckTesta = 1337;
+	}
+
+	if(FClassnameIs(pev, "monster_barney") == TRUE ){
+		int x = 666;
+	}
+
+	if(fuckingResult){
+		int x = 666;
+		chuckTestb = 1338;
+	}
 
 
 	m_pLink = NULL;
 
+
+	BOOL test2 = FStrEq(STRING(pev->classname), "monster_barney");
+	BOOL test3 = strcmp(STRING(pev->classname), "monster_barney");
+
+
 	CBaseEntity	*pSightEnt = NULL;// the current visible entity that we're dealing with
+
+	BOOL whatTheFuck = FClassnameIs(pev, "monster_barney");
+
+
+
 
 	// See no evil if prisoner is set
 	if ( !FBitSet( pev->spawnflags, SF_MONSTER_PRISONER ) )
@@ -1087,30 +1116,60 @@ void CBaseMonster :: Look ( int iDistance )
 		{
 			pSightEnt = pList[i];
 			// !!!temporarily only considering other monsters and clients, don't see prisoners
+			
+			const char* sightedClassname = "derp";
+			BOOL sightedEntStillAliveByAI = FALSE;
+			if(pSightEnt != NULL){
+				sightedClassname = pSightEnt->getClassname();
+				sightedEntStillAliveByAI = IsAlive_FromAI(this);
+			}
+
+			
+			const char* enemyClassname = "DERR";
+			const char* myClassname = getClassname();
+			if(m_hEnemy != NULL){
+				enemyClassname = m_hEnemy->getClassname();
+			}else{
+
+			}
+			int yyy = 666;
+
+
+			int x = 666;
+
+			BOOL isThatFuckerAlive = pSightEnt->IsAlive_FromAI(this);
+			
+			int x2 = 666;
+
 			if ( pSightEnt != this												&& 
 				 !FBitSet( pSightEnt->pev->spawnflags, SF_MONSTER_PRISONER )	&& 
-				 pSightEnt->pev->health > 0 
+				 
+				 //MODDD - exluding this for now.  Still think it's alive for a tiny bit during the death animation.
+				 //pSightEnt->pev->health > 0 &&
 				 
 				 //MODDD - new conditions. Must be alive... wait, this really wasn't here before?! Without a check like this, the conditions can still be flagged
 				 //and cause the AI to act as though there is some hostile monster forwards, such as stopping a monster fooled by a chumtoad from wandering off
 				 //the millisecond it gets that schedule because the chumtoad playing dead is in front of it.
-				 && pSightEnt->IsAlive_FromAI(this)
+				 pSightEnt->IsAlive_FromAI(this)
 
 				 )
 			{
 
-
-				if( !strcmp(getClassname(), "monster_stukabat")){
-						
-					const char* what = pSightEnt->getClassname();
-					const char* huh = m_hEnemy!=NULL?m_hEnemy->getClassname():"NONE";
-					int x = 6;
-				}
 				
 				//if(FClassnameIs(pev, "monster_chumtoad"))easyForcePrintLine("DOES IT PASS??? %s %d %d %d %d", pSightEnt->getClassnameShort(), (IRelationship( pSightEnt ) != R_NO), FInViewCone( pSightEnt ), (!FBitSet( pSightEnt->pev->flags, FL_NOTARGET )), FVisible( pSightEnt )   );
 
 				// the looker will want to consider this entity
 				// don't check anything else about an entity that can't be seen, or an entity that you don't care about.
+				
+				//OKAY.  You are not too bright are ya.
+				int daRelation = IRelationship(pSightEnt);
+				BOOL isInDaViewcone = FInViewCone(pSightEnt);
+				BOOL isVisaba = FVisible(pSightEnt);
+				BOOL isDaFlagSet = FBitSet(pSightEnt->pev->flags, FL_NOTARGET);
+				
+				
+				int xxx = 666;
+				
 				if ( IRelationship( pSightEnt ) != R_NO && FInViewCone( pSightEnt ) && !FBitSet( pSightEnt->pev->flags, FL_NOTARGET ) && FVisible( pSightEnt ) )
 				{
 					if(global_crazyMonsterPrintouts){
@@ -1150,7 +1209,6 @@ void CBaseMonster :: Look ( int iDistance )
 					}
 
 
-
 					if ( pSightEnt == m_hEnemy )
 					{
 						// we know this ent is visible, so if it also happens to be our enemy, store that now.
@@ -1182,6 +1240,12 @@ void CBaseMonster :: Look ( int iDistance )
 						ALERT ( at_aiconsole, "%s can't assess %s\n", STRING(pev->classname), STRING(pSightEnt->pev->classname ) );
 						break;
 					}
+
+
+
+
+
+
 				}
 			}
 		}
@@ -1472,7 +1536,7 @@ void CBaseMonster::CheckTimeBasedDamage(void)
 	static float gtbdPrev = 0.0;
 
 	//no timed damage for 
-	if(this->iAmDead || pev->health <= 0 || pev->deadflag != DEAD_NO){
+	if( pev->health <= 0 || pev->deadflag != DEAD_NO){
 		return;
 	}
 
@@ -2871,13 +2935,20 @@ int CBaseMonster :: CheckEnemy ( CBaseEntity *pEnemy )
 	easyPrintLine("CanAttack2? %d", HasConditions(bits_COND_CAN_MELEE_ATTACK1));
 	}
 	
-
+	
 	//FLAG 666
 
 	//easyPrintLine("HEY WHO IS THAT ENEMY!? %s:: %d %d", pEnemy->getClassname(), pEnemy->IsAlive(), pEnemy->pev->deadflag);
 	//m_hEnemy!=NULL?easyPrintLine("HEY WHO IS MY ENEMY!? %s:: %d %d", m_hEnemy->getClassname(), m_hEnemy->IsAlive(), m_hEnemy->pev->deadflag):easyPrintLine("NOOEEE");
 	
 		//IsAlive_FromAI takes "this" mosnter as a parameter. It already knows what itself is.
+
+	if(FClassnameIs(pev, "monster_barney")){
+		int x = 666;
+	}
+
+	//Why does this wait to count an enemy as dead, but
+	//bits_COND_SEE_ENEMY sure happens instantly the moment of death?
 	if ( !pEnemy->IsAlive_FromAI(this) )
 	{
 		SetConditions ( bits_COND_ENEMY_DEAD );
@@ -5059,10 +5130,18 @@ void CBaseMonster :: Move ( float flInterval )
 		MoveExecute( pTargetEnt, vecDir, flInterval );
 	}else{
 		//try to face it?
-		if(m_IdealActivity == ACT_RUN || m_IdealActivity == ACT_WALK){
+		if(m_IdealActivity == ACT_RUN || m_IdealActivity == ACT_WALK || m_IdealActivity == ACT_HOVER || m_IdealActivity == ACT_FLY){
 			Stop();
 		}
+		
 		SetTurnActivity();
+		
+		if(m_IdealActivity != ACT_IDLE && m_IdealActivity != ACT_TURN_LEFT && m_IdealActivity != ACT_TURN_RIGHT){
+			//force the ideal activity to IDLE for now.  No need to be frozen in any other animation and turn.
+			//...is this a good idea or does it make things fidget for a frame?
+			m_IdealActivity = ACT_IDLE;
+		}
+		
 
 	}//END OF else OF facingNextNode
 
@@ -5553,6 +5632,10 @@ int CBaseMonster::IRelationship ( CBaseEntity *pTarget )
 		return forcedRelationshipTest;
 	}else{}  //return below as usual.
 
+
+
+	int thisMotherfucker = Classify();
+	int thatMotherfucker = pTarget->Classify();
 
 	int generalRelationship = iEnemy[ Classify() ][ pTarget->Classify() ];
 
@@ -7503,16 +7586,10 @@ int CBaseMonster :: LookupActivityHeaviest(int activity )
 void CBaseMonster::OnTakeDamageSetConditions(entvars_t *pevInflictor, entvars_t *pevAttacker, float flDamage, int bitsDamageType, int bitsDamageTypeMod){
 
 	//MODDD - intervention. Timed damage might not affect the AI since it could get needlessly distracting.
-
-
-	
-
 	if(bitsDamageTypeMod & (DMG_TIMEDEFFECT|DMG_TIMEDEFFECTIGNORE) ){
 		//If this is continual timed damage, don't register as any damage condition. Not worth possibly interrupting the AI.
 		return;
 	}
-
-	
 
 	//default case from CBaseMonster's TakeDamage.
 	//Also count being in a non-combat state to force looking in that direction.  But maybe at least 0 damage should be a requirement too, even in cases where the minimum damage for LIGHT is above 0?
@@ -7529,7 +7606,7 @@ void CBaseMonster::OnTakeDamageSetConditions(entvars_t *pevInflictor, entvars_t 
 	//    The agrunt used to use this so that its only flinch was for heavy damage (above 20 in one attack), but that's easy by overriding this OnTakeDamageSetconditions method now.
 	//    Keep it to using light damage for that instead.
 	//if ( flDamage >= 20 )
-	if(flDamage >=  pev->max_health * 0.55 || flDamage >= 30 && gpGlobals->time >= forgetBigFlinchTime )
+	if(gpGlobals->time >= forgetBigFlinchTime && (flDamage >=  pev->max_health * 0.55 || flDamage >= 30) )
 	{
 		SetConditions(bits_COND_HEAVY_DAMAGE);
 		forgetSmallFlinchTime = gpGlobals->time + DEFAULT_FORGET_SMALL_FLINCH_TIME;
@@ -7585,7 +7662,7 @@ void CBaseMonster::forgetForcedEnemy(CBaseMonster* argIssuing, BOOL argPassive){
 //Go revert islave to its backup for "riseFromTheGrave", this is not so great for it anymore.
 //Maybe it's still ok? verify...
 void CBaseMonster::startReanimation(){
-
+	int i;
 	
 
 
@@ -7593,7 +7670,6 @@ void CBaseMonster::startReanimation(){
 
 	firstTimeKilled = TRUE;  //another Killed call will be the first as far as I'm concerned.
 	
-	iAmDead = FALSE;
 	recognizablyDead = FALSE;
 	
 	//!!!
@@ -7602,6 +7678,16 @@ void CBaseMonster::startReanimation(){
 
 	//before spawn or init script may interfere.
 	int oldSeq = pev->sequence;
+
+	//no recollection of that.
+	m_hEnemy = NULL;
+
+	//And clear the list of old enemies.
+	//or m_intOldEnemyNextIndex - 1 ?
+	for(i = 0; i < MAX_OLD_ENEMIES; i++){
+		m_hOldEnemy[i] = NULL;
+	}
+
 				
 				
 	/*
@@ -7630,7 +7716,9 @@ void CBaseMonster::startReanimation(){
 	
 	
 	*/
+
 	//This should set the monster's health to "pev->max_health".
+	//And assume it calls "MonsterInit" again if it ever did before.
 	Spawn();
 
 
@@ -7714,14 +7802,7 @@ void CBaseMonster::startReanimation(){
 //Default behavior is to play the existing animation over again.
 void CBaseMonster::EndOfRevive(int preReviveSequence){
 
-	//Should work even for squad monsters. They override StartMonster, which MonsterInitThink soon calls.
-	SetThink( &CBaseMonster::MonsterInitThink );
-	//SetThink ( &CBaseMonster::CallMonsterThink );
-	pev->nextthink = gpGlobals->time + 0.1;
 	
-	SetUse ( &CBaseMonster::MonsterUse );
-
-
 
 	m_IdealMonsterState	= MONSTERSTATE_ALERT;// Assume monster will be alert, having come back from the dead and all.
 	m_MonsterState = MONSTERSTATE_ALERT; //!!!
@@ -7804,6 +7885,7 @@ void CBaseMonster::tempMethod(void){
 //Side effects not well understood yet, see if this is really worth it.
 //By default off, enable per monsters as needed.
 BOOL CBaseMonster::needsMovementBoundFix(){
+
 	return FALSE;
 }//END OF needsMovementBoundFix
 

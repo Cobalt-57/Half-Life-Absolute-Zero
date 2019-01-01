@@ -1012,7 +1012,6 @@ void CTalkMonster::setModel(const char* m){
 
 GENERATE_KILLED_IMPLEMENTATION(CTalkMonster)
 {
-	iAmDead = TRUE;
 	// If a client killed me (unless I was already Barnacle'd), make everyone else mad/afraid of him
 	if ( (pevAttacker->flags & FL_CLIENT) && m_MonsterState != MONSTERSTATE_PRONE )
 	{
@@ -2119,12 +2118,12 @@ Schedule_t* CTalkMonster :: GetScheduleOfType ( int Type )
 			}
 
 			
-	
-
-			if(closestCautiousNPC_memory != NULL && FOkToSpeak() && RANDOM_LONG(0, 2) == 0){
+			//40%
+			if(closestCautiousNPC_memory != NULL && FOkToSpeak() && RANDOM_LONG(0, 9) <= 3){
 				return slSpeakAboutCautious;
 			}
-			if(closestPassiveNPC_memory != NULL && FOkToSpeak() && RANDOM_LONG(0, 3) == 0){
+			//30%
+			if(closestPassiveNPC_memory != NULL && FOkToSpeak() && RANDOM_LONG(0, 9) <= 2){
 				return slSpeakAboutPassive;
 			}
 
@@ -2461,7 +2460,10 @@ void CTalkMonster :: TrySmellTalk( void )
 
 int CTalkMonster::IRelationship( CBaseEntity *pTarget )
 {
-	if(!UTIL_IsAliveEntity(pTarget)){
+
+
+	//if(!UTIL_IsAliveEntity(pTarget)){
+	if(!pTarget->IsAlive_FromAI(this)){
 		return R_NO;
 	}
 

@@ -946,11 +946,29 @@ void CBaseMonster :: RunTask ( Task_t *pTask )
 		}
 	case TASK_MOVE_TO_ENEMY_RANGE:
 		{
-
-			
-	//see TASK_WAIT_FOR_MOVEMENT_RANGE... interesting stuff.
+			//see TASK_WAIT_FOR_MOVEMENT_RANGE... interesting stuff.
 
 
+
+			//...is this a good idea?  And why wasn't it needed all this time?!
+			//ANSWER: because MoveExecute in basemonster.cpp, and (should?) in any child class implementing MoveExecute, needs to 
+			//        tell it to set the ideal activity to the movement activity if it is not set that way.
+			//        There are no checks against the movement activity being ACT_IDLE however, something else in there must change that.
+			//        Look at FRefreshRouteChaseEnemySmart, and possibly FRefreshRoute. At least the former does force the movement activity 
+			//        to ACT_RUN.
+			//        TODO MAJOR - Perhaps asking the monster what move activity is preferred would be best so flyers can say ACT_HOVER or ACT_FLY instead?
+
+			/* 
+			if(this->m_IdealActivity != this->m_movementActivity || this->m_movementActivity == ACT_IDLE){
+				//we need to force a fitting move activity.
+				if ( LookupActivity( ACT_RUN ) != ACTIVITY_NOT_AVAILABLE ){
+					m_movementActivity = ACT_RUN;
+				}
+				else{
+					m_movementActivity = ACT_WALK;
+				}
+			}
+			*/
 
 
 			if (MovementIsComplete()){
@@ -1413,6 +1431,16 @@ void CBaseMonster :: RunTask ( Task_t *pTask )
 					case TASK_SPECIAL_ATTACK2:{predictActRepeat(bits_COND_SPECIAL2); break;}
 				}//END OF inner switch
 			}
+
+			/*
+			if(m_Activity != ACT_RESET){
+				//HACKY MC HACKERSAXXX
+				//actually it doesn't look like this is really doing anything.
+				ChangeSchedule(GetSchedule());
+				return.
+			}
+			*/
+
 			
 			TaskComplete();
 		}
@@ -1441,6 +1469,16 @@ void CBaseMonster :: RunTask ( Task_t *pTask )
 					case TASK_SPECIAL_ATTACK2:{predictActRepeat(bits_COND_SPECIAL2); break;}
 				}//END OF inner switch
 			}
+			
+			/*
+			if(m_Activity != ACT_RESET){
+				//HACKY MC HACKERSAXXX
+				//actually it doesn't look like this is really doing anything.
+				//...Now calling this and then "MaintainSchedule"?  That would be truly dastardly.
+				ChangeSchedule(GetSchedule());
+				return.
+			}
+			*/
 
 			TaskComplete();
 		}
@@ -1934,12 +1972,14 @@ void CBaseMonster :: StartTask ( Task_t *pTask )
 		{
 			//HACK - since we know this is only called by the stumped method, do a check to see
 			//  if we're going to just route to the enemy's modern position anyways and skip the rest of this schedule.
+
+			//...we should probably still do this pathFindStumpedMode == 3 check in case something that doesn't use FACE_PREV_LKP checks for being stumped.
 			if(EASY_CVAR_GET(pathfindStumpedMode) == 3){
 				//is this okay?
 				//m_vecEnemyLKP = ...
 				setEnemyLKP(m_hEnemy->pev->origin);
 
-				TaskFail();
+				//TaskFail();  //is this even necessary?
 				ChangeSchedule(GetSchedule());
 				return;
 			}
@@ -2035,6 +2075,19 @@ void CBaseMonster :: StartTask ( Task_t *pTask )
 					TaskComplete();
 					return;
 				}
+
+
+				//Skip to re-routing towards the enemy, most likely.
+				if(EASY_CVAR_GET(pathfindStumpedMode) == 3){
+					//is this okay?
+					//m_vecEnemyLKP = ...
+					setEnemyLKP(m_hEnemy->pev->origin);
+
+					//TaskFail();  //is this even necessary?
+					ChangeSchedule(GetSchedule());
+					return;
+				}
+
 
 
 				m_vecEnemyLKP_prev = m_vecEnemyLKP; //the old to look at for a little.
@@ -3026,7 +3079,7 @@ int CBaseMonster::getTaskNumber(void){
 Schedule_t *CBaseMonster :: GetSchedule ( void )
 {
 	//MODDD - safety.
-	if(iAmDead){
+	if(pev->deadflag != DEAD_NO){
 		return GetScheduleOfType( SCHED_DIE );
 	}
 	SCHEDULE_TYPE baitSched = getHeardBaitSoundSchedule();
@@ -3143,9 +3196,15 @@ Schedule_t *CBaseMonster :: GetSchedule ( void )
 				// we can't see the enemy
 				if ( !HasConditions(bits_COND_ENEMY_OCCLUDED) )
 				{
-					// enemy is unseen, but not occluded!
-					// turn to face enemy
-					return GetScheduleOfType( SCHED_COMBAT_FACE );
+					
+					if(!FacingIdeal()){
+						// enemy is unseen, but not occluded!
+						// turn to face enemy
+						return GetScheduleOfType(SCHED_COMBAT_FACE);
+					}else{
+						//We're facing the LKP already. Then we have to go to that point and declare we're stumped there if we still see nothing.
+						return GetScheduleOfType(SCHED_CHASE_ENEMY);
+					}
 				}
 				else
 				{

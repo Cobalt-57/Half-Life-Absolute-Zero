@@ -546,6 +546,7 @@
     </ClCompile>
     <ClCompile Include="hassault.cpp" />
     <ClCompile Include="healthmodule.cpp" />
+    <ClCompile Include="hornet_kingpin.cpp" />
     <ClCompile Include="h_ai.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -1101,6 +1102,7 @@
     <ClInclude Include="healthkit.h" />
     <ClInclude Include="healthmodule.h" />
     <ClInclude Include="hornet.h" />
+    <ClInclude Include="hornet_kingpin.h" />
     <ClInclude Include="items.h" />
     <ClInclude Include="kingpin.h" />
     <ClInclude Include="lights.h" />

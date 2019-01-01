@@ -48,6 +48,9 @@ SERVERSIDE (dlls)
 
 -lights.h - stores classes from lights.cpp for including elsewhere.
 
+-hornet_kingpin.h & .cpp - stores CHornetKingpin, child class of CHornet. The kingpin's "Speed Missile" projectile with particular behavior.
+
+
 SHARED (game_shared)
 -files stored in a NEW subfolder for neatness, keep this in mind for new visual studio environments. Add this game_shared/NEW as a search path.
 

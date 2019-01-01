@@ -1395,8 +1395,6 @@ GENERATE_KILLED_IMPLEMENTATION(CBaseMonster)
 	unsigned int	cCount = 0;
 	BOOL			fDone = FALSE;
 
-	//MODDD - EMERGENCY TEST FLAG
-	iAmDead = TRUE;
 
 	//MODDD - if stuck to a barnacle, not anymore.
 	barnacleLocked = FALSE;
@@ -1920,8 +1918,11 @@ BOOL CBaseEntity :: FVisible ( CBaseEntity *pEntity )
 			return FALSE;
 	}
 
+	//MODDD - hold on. If we have a method just for getting the Eye Position of a given monster in case it has some special way of doing it,
+	//        why don't we use that method?  The FVisible for a target (vecOrigin) below even does that!
+	//vecLookerOrigin = pev->origin + pev->view_ofs;//look through the caller's 'eyes'
+	vecLookerOrigin = EyePosition();
 
-	vecLookerOrigin = pev->origin + pev->view_ofs;//look through the caller's 'eyes'
 	vecTargetOrigin = pEntity->EyePosition();
 
 	UTIL_TraceLine(vecLookerOrigin, vecTargetOrigin, ignore_monsters, ignore_glass, ENT(pev)/*pentIgnore*/, &tr);
@@ -1934,20 +1935,36 @@ BOOL CBaseEntity :: FVisible ( CBaseEntity *pEntity )
 	{
 		return TRUE;// line of sight is valid.
 	}
-}
+}//END OF FVisible
 
 //=========================================================
 // FVisible - returns true if a line can be traced from
 // the caller's eyes to the target vector
 //=========================================================
-BOOL CBaseEntity :: FVisible ( const Vector &vecOrigin )
+//MODDD - NAME YOUR STUFF PEOPLE!  "vecOrigin" for a paramater? Origin of what?!
+BOOL CBaseEntity :: FVisible ( const Vector &vecTargetOrigin )
 {
 	TraceResult tr;
 	Vector		vecLookerOrigin;
 	
 	vecLookerOrigin = EyePosition();//look through the caller's 'eyes'
 
-	UTIL_TraceLine(vecLookerOrigin, vecOrigin, ignore_monsters, ignore_glass, ENT(pev)/*pentIgnore*/, &tr);
+	//MODDD - also why was a similar waterlevel check absent?  Yes, we don't have a target entity provided so there is no "pev->waterlevel" of that one to
+	//        take, but we can just as well check the contents of vecTargetOrigin.  Water creatures would be royally fucked without the ability to do that.
+	////////////////////////////////////////////////////////////////////////////////////////
+	if(SeeThroughWaterLine() == FALSE){
+		//Is the target point in the water?
+		//The target point being CONTENTS_SOLID is also possible, but we're going to assume whoever is calling this way knows what they're doing.
+		int targetPointContents = UTIL_PointContents(vecTargetOrigin);
+
+		if ((pev->waterlevel != 3 && targetPointContents == CONTENTS_WATER) 
+			|| (pev->waterlevel == 3 && targetPointContents != CONTENTS_WATER ))
+			return FALSE;
+	}
+	////////////////////////////////////////////////////////////////////////////////////////
+
+
+	UTIL_TraceLine(vecLookerOrigin, vecTargetOrigin, ignore_monsters, ignore_glass, ENT(pev)/*pentIgnore*/, &tr);
 	
 	if (tr.flFraction != 1.0)
 	{
@@ -1957,10 +1974,77 @@ BOOL CBaseEntity :: FVisible ( const Vector &vecOrigin )
 	{
 		return TRUE;// line of sight is valid.
 	}
-}
+}//END OF FVisible
 
 
 
+
+//MODDD - now FVisible versions that can take a point to compare to another point or entity as well.
+//MODDD MAJOR NOTE - If we want to check the waterlevel of the origin itself, which may or may not be the same as
+//                   the waterlevel at the entity's eye point, we need to check that outside of this call before calling it
+//                   (along with the "SeeThroughWaterLine()" exception).
+//                   ...nah, just use the pev->origin of the Looker anyways (pev->waterlevel's for that point), this won't be static.
+BOOL CBaseEntity :: FVisible (const Vector& vecLookerOrigin, CBaseEntity *pEntity )
+{
+	TraceResult tr;
+	Vector		vecTargetOrigin;
+	
+	if (FBitSet( pEntity->pev->flags, FL_NOTARGET ))
+		return FALSE;
+
+	// don't look through water
+	//MODDD - some monsters that want to surface to do a ranged attack in the water, like archers,
+	//        may need the ability to see through water.
+	//This if-then is the addition.
+	if(SeeThroughWaterLine() == FALSE){
+		int lookerPointContents = UTIL_PointContents(vecLookerOrigin);
+
+		if ((lookerPointContents != CONTENTS_WATER && pEntity->pev->waterlevel == 3) 
+			|| (lookerPointContents == CONTENTS_WATER && pEntity->pev->waterlevel == 0))
+			return FALSE;
+	}
+
+	vecTargetOrigin = pEntity->EyePosition();
+
+	UTIL_TraceLine(vecLookerOrigin, vecTargetOrigin, ignore_monsters, ignore_glass, ENT(pev)/*pentIgnore*/, &tr);
+	
+	if (tr.flFraction != 1.0)
+	{
+		return FALSE;// Line of sight is not established
+	}
+	else
+	{
+		return TRUE;// line of sight is valid.
+	}
+}//END OF FVisible
+
+BOOL CBaseEntity :: FVisible (const Vector& vecLookerOrigin, const Vector &vecTargetOrigin )
+{
+	TraceResult tr;
+	
+	if(SeeThroughWaterLine() == FALSE){
+		//Is the target point in the water?
+		//The target point being CONTENTS_SOLID is also possible, but we're going to assume whoever is calling this way knows what they're doing.
+		int lookerPointContents = UTIL_PointContents(vecLookerOrigin);
+		int targetPointContents = UTIL_PointContents(vecTargetOrigin);
+
+		if ((lookerPointContents != CONTENTS_WATER && targetPointContents == CONTENTS_WATER) 
+			|| (lookerPointContents == CONTENTS_WATER && targetPointContents != CONTENTS_WATER ))
+			return FALSE;
+	}
+	
+
+	UTIL_TraceLine(vecLookerOrigin, vecTargetOrigin, ignore_monsters, ignore_glass, ENT(pev)/*pentIgnore*/, &tr);
+	
+	if (tr.flFraction != 1.0)
+	{
+		return FALSE;// Line of sight is not established
+	}
+	else
+	{
+		return TRUE;// line of sight is valid.
+	}
+}//END OF FVisible
 
 
 
@@ -2174,7 +2258,6 @@ int CBaseEntity::TakeHealth( float flHealth, int bitsDamageType )
 //void CBaseEntity::Killed( entvars_t *pevAttacker, int iGib )
 GENERATE_KILLED_IMPLEMENTATION(CBaseEntity)
 {
-	iAmDead = TRUE;
 
 	pev->takedamage = DAMAGE_NO;
 	pev->deadflag = DEAD_DEAD;

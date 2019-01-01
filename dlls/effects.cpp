@@ -1333,6 +1333,94 @@ void CSprite::ExpandThink( void )
 }
 
 
+
+
+
+
+
+//MODDD - copy of Expand that makes the sprite start invisible and fade into existance instead.
+//Can begin smaller than the target scale to grow to fit it, or begin larger than the target scale to shrink into it.
+//In either case, the sprite starts invisible (or near invisible) and gets more opacity as it grows/shrinks each frame
+//to fit the target scale.
+void CSprite::AnimationScaleFadeIn( float scaleSpeed, float fadeSpeed, float arg_startScale, float arg_targetScale, float arg_targetOpacity )
+{
+
+	//Given.
+	SetTransparency( kRenderTransAdd, 255, 255, 255, 0, kRenderFxNoDissipation );
+
+	pev->speed = scaleSpeed;
+	pev->health = fadeSpeed;
+
+	//reuse variables... ahoy!
+	pev->fuser1 = arg_targetScale;
+	pev->fuser2 = arg_targetOpacity;
+
+	pev->scale = arg_startScale;
+	
+
+	SetThink( &CSprite::AnimationScaleFadeInThink );
+
+	pev->nextthink	= gpGlobals->time;
+	m_lastTime		= gpGlobals->time;
+}//END OF AnimationScaleFadeIn
+
+
+void CSprite::AnimationScaleFadeInThink( void )
+{
+	const float frametime = gpGlobals->time - m_lastTime;
+
+	
+
+	if(pev->scale != pev->fuser1){
+		const float scaleChange = pev->speed * frametime;
+		//what direction brings us closer to the target scale?
+		if(pev->scale < pev->fuser1){
+			//current is less? make it higher, but no greater than the target.
+			pev->scale = min(pev->scale + scaleChange, pev->fuser1);
+		}else{
+			//target is greater?  make it lower, but no lesser than the target.
+			pev->scale = max(pev->scale - scaleChange, pev->fuser1);
+		}
+	}
+	
+	if(pev->renderamt != pev->fuser2){
+		const float opacityChange = pev->health * frametime;
+		//what direction brings us closer to the target opacity?
+		if(pev->renderamt < pev->fuser2){
+			//current is less? make it higher, but no greater than the target.
+			pev->renderamt = min(pev->renderamt + opacityChange, pev->fuser2);
+		}else{
+			//target is greater?  make it lower, but no lesser than the target.
+			pev->renderamt = max(pev->renderamt - opacityChange, pev->fuser2);
+		}
+	}
+
+
+
+	if(pev->scale == pev->fuser1 && pev->renderamt == pev->fuser2){
+		//nothing more to do, stop.
+		//pev->scale = pev->fuser1;
+		//pev->renderamt = pev->fuser2;
+
+		//SetThink(NULL);
+		//UTIL_Remove(this);
+
+		//this works fine.  Lead into typical animation from here on out just like the caller would've likely done.
+		//Any other behavior or method to call instead should be parameterized if this needs to be customized.
+		TurnOn();
+	}else{
+		pev->nextthink		= gpGlobals->time + 0.1;
+		m_lastTime			= gpGlobals->time;
+	}
+
+}//END OF AnimationScaleFadeInThink
+
+
+
+
+
+
+
 void CSprite::Animate( float frames )
 { 
 	pev->frame += frames;

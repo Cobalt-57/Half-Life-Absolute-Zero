@@ -1999,7 +1999,7 @@ Schedule_t* CHAssault::GetSchedule(){
 	nonStumpableCombatLook = FALSE; //by default.
 
 	//MODDD - safety.
-	if(iAmDead){
+	if(pev->deadflag != DEAD_NO){
 		return GetScheduleOfType( SCHED_DIE );
 	}
 
@@ -2271,7 +2271,18 @@ Schedule_t* CHAssault::GetSchedule(){
 					setEnemyLKP(m_hEnemy->pev->origin);
 					
 					this->nonStumpableCombatLook = FALSE;
-					return GetScheduleOfType( SCHED_COMBAT_FACE );
+
+
+
+					if(!FacingIdeal()){
+						// enemy is unseen, but not occluded!
+						// turn to face enemy
+						return GetScheduleOfType(SCHED_COMBAT_FACE);
+					}else{
+						//We're facing the LKP already. Then we have to go to that point and declare we're stumped there if we still see nothing.
+						return GetScheduleOfType(SCHED_CHASE_ENEMY);
+					}
+
 				}
 				else
 				{

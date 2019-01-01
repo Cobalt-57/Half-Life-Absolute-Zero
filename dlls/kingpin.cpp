@@ -5,7 +5,7 @@
 #include "controller_zap_ball.h"
 #include "controller_head_ball.h"
 
-#include "hornet.h"
+#include "hornet_kingpin.h"
 
 
 #include "custom_debug.h"
@@ -18,6 +18,7 @@ extern float global_noFlinchOnHard;
 
 EASY_CVAR_EXTERN(houndeye_attack_canGib)
 EASY_CVAR_EXTERN(kingpinDebug)
+EASY_CVAR_EXTERN(testVar)
 
 //ANIMATION COMMENT CRITICAL - why is "mage_loop" not set to loop?  whats up yo?
 
@@ -28,16 +29,17 @@ EASY_CVAR_EXTERN(kingpinDebug)
 
 
 
-#define CHARGE_POINT_UP 110
-#define CHARGE_POINT_FORWARD 60
+#define CHARGE_POINT_UP 94
+#define CHARGE_POINT_FORWARD 48
 
 
+#define KINPIN_ELECTRIC_LASER_CHARGETIME 1.6f
 
 
 //sequences in the anim, in the order they appear in the anim. Some anims have the same display name and so should just be referenced by order
 //(numbered index), named well after purpose and based on display names for clarity. Safer this way.
 
-enum kingPin_sequence {  //key: frames, FPS
+enum kingpin_sequence {  //key: frames, FPS
 	KINGPIN_ATTACK_BOTH,  //21, 30
 	KINGPIN_ATTACK_LEFT,  //21, 30
 	KINGPIN_ATTACK_RIGHT, //21, 30
@@ -58,7 +60,7 @@ enum kingPin_sequence {  //key: frames, FPS
 
 
 /*
-enum kingPin_sequence {  //key: frames, FPS
+enum kingpin_sequence {  //key: frames, FPS
 	KINGPIN_IDLE,
 	KINGPIN_WALK,
 	KINGPIN_RUN,
@@ -125,6 +127,8 @@ enum
 	SCHED_KINGPIN_ELECTRIC_BARRAGE_CHARGE_FAIL,
 	SCHED_KINGPIN_ELECTRIC_LASER_CHARGE_FAIL,
 
+	SCHED_KINGPIN_GENERIC_RANGE_FAIL,
+
 };
 
 //custom tasks
@@ -155,7 +159,9 @@ enum
 	TASK_KINGPIN_ELECTRIC_BARRAGE_CHARGE_INTERRUPTED,
 	TASK_KINGPIN_ELECTRIC_LASER_CHARGE_INTERRUPTED,
 
+
 	TASK_KINGPIN_SHOCKER_ADMINISTER,
+	TASK_GATE_KINGPIN_DISTANCE_MINIMUM,
 
 };
 
@@ -180,13 +186,13 @@ enum
 
 
 
-const char *CKingPin::pDeathSounds[] = 
+const char *CKingpin::pDeathSounds[] = 
 {
 	"controller/con_die1.wav",
 	"controller/con_die2.wav",
 };
 
-const char *CKingPin::pAlertSounds[] = 
+const char *CKingpin::pAlertSounds[] = 
 {
 	"controller/con_alert1.wav",
 	"controller/con_alert2.wav",
@@ -194,7 +200,7 @@ const char *CKingPin::pAlertSounds[] =
 };
 
 
-const char *CKingPin::pIdleSounds[] = 
+const char *CKingpin::pIdleSounds[] = 
 {
 	"controller/con_idle1.wav",
 	"controller/con_idle2.wav",
@@ -203,7 +209,7 @@ const char *CKingPin::pIdleSounds[] =
 	"controller/con_idle5.wav",
 	"ambience/alien_chatter.wav",
 };
-const char *CKingPin::pPainSounds[] = 
+const char *CKingpin::pPainSounds[] = 
 {
 	"controller/con_pain1.wav",
 	"controller/con_pain2.wav",
@@ -211,7 +217,7 @@ const char *CKingPin::pPainSounds[] =
 };
 
 
-const char *CKingPin::pAttackSounds[] = 
+const char *CKingpin::pAttackSounds[] = 
 {
 	"controller/con_attack1.wav",
 	"controller/con_attack2.wav",
@@ -222,14 +228,14 @@ const char *CKingPin::pAttackSounds[] =
 
 
 //NEW!!!
-const char* CKingPin::pElectricBarrageHitSounds[] =
+const char* CKingpin::pElectricBarrageHitSounds[] =
 {
 	"debris/zap1.wav",
 	"debris/zap3.wav",
 	"debris/zap8.wav",
 };
 
-const char* CKingPin::pElectricBarrageFireSounds[] =
+const char* CKingpin::pElectricBarrageFireSounds[] =
 {
 	"debris/beamstart4.wav",
 	"debris/beamstart6.wav",
@@ -237,7 +243,7 @@ const char* CKingPin::pElectricBarrageFireSounds[] =
 	"debris/beamstart11.wav",
 };
 
-const char* CKingPin::pElectricBarrageEndSounds[] =
+const char* CKingpin::pElectricBarrageEndSounds[] =
 {
 	
 	//stop powerup sound
@@ -246,7 +252,7 @@ const char* CKingPin::pElectricBarrageEndSounds[] =
 	"debris/zap6.wav",
 };
 
-const char* CKingPin::pShockerFireSounds[] =
+const char* CKingpin::pShockerFireSounds[] =
 {
 	"houndeye/he_blast1.wav",
 	"houndeye/he_blast2.wav",
@@ -256,35 +262,35 @@ const char* CKingPin::pShockerFireSounds[] =
 
 
 /*
-const char* CKingPin::pDeathSounds[] = 
+const char* CKingpin::pDeathSounds[] = 
 {
 	"kingpin/kingpin_death.wav",
 };
-const char* CKingPin::pAlertSounds[] = 
+const char* CKingpin::pAlertSounds[] = 
 {
 	"kingpin/kingpin_alert.wav",
 };
 
-const char* CKingPin::pIdleSounds[] = 
+const char* CKingpin::pIdleSounds[] = 
 {
 	"kingpin/kingpin_idle.wav",
 };
-const char* CKingPin::pPainSounds[] = 
+const char* CKingpin::pPainSounds[] = 
 {
 	"kingpin/kingpin_pain.wav",
 };
-const char* CKingPin::pAttackSounds[] = 
+const char* CKingpin::pAttackSounds[] = 
 {
 	"kingpin/kingpin_attack.wav",
 };
 */
-const char* CKingPin::pAttackHitSounds[] = 
+const char* CKingpin::pAttackHitSounds[] = 
 {
 	"zombie/claw_strike1.wav",
 	"zombie/claw_strike2.wav",
 	"zombie/claw_strike3.wav",
 };
-const char* CKingPin::pAttackMissSounds[] = 
+const char* CKingpin::pAttackMissSounds[] = 
 {
 	"zombie/claw_miss1.wav",
 	"zombie/claw_miss2.wav",
@@ -296,53 +302,53 @@ const char* CKingPin::pAttackMissSounds[] =
 
 
 
-TYPEDESCRIPTION	CKingPin::m_SaveData[] = 
+TYPEDESCRIPTION	CKingpin::m_SaveData[] = 
 {
 	
-	DEFINE_FIELD( CKingPin, chargeEffect, FIELD_CLASSPTR),
+	DEFINE_FIELD( CKingpin, chargeEffect, FIELD_CLASSPTR),
 	
-	DEFINE_ARRAY( CKingPin, m_pBeam, FIELD_CLASSPTR, KINGPIN_MAX_BEAMS ),
-	DEFINE_ARRAY( CKingPin, m_flBeamExpireTime, FIELD_TIME, KINGPIN_MAX_BEAMS ),
-	DEFINE_FIELD( CKingPin, m_iBeams, FIELD_INTEGER ),
-	DEFINE_FIELD( CKingPin, m_voicePitch, FIELD_INTEGER),
+	DEFINE_ARRAY( CKingpin, m_pBeam, FIELD_CLASSPTR, KINGPIN_MAX_BEAMS ),
+	DEFINE_ARRAY( CKingpin, m_flBeamExpireTime, FIELD_TIME, KINGPIN_MAX_BEAMS ),
+	DEFINE_FIELD( CKingpin, m_iBeams, FIELD_INTEGER ),
+	DEFINE_FIELD( CKingpin, m_voicePitch, FIELD_INTEGER),
 	
-	DEFINE_FIELD( CKingPin, electricBarrageShotsFired, FIELD_INTEGER ),
+	DEFINE_FIELD( CKingpin, electricBarrageShotsFired, FIELD_INTEGER ),
 
 	
-	DEFINE_FIELD( CKingPin, chargeFinishTime, FIELD_TIME ),
-	DEFINE_FIELD( CKingPin, electricBarrageNextFireTime, FIELD_TIME ),
-	DEFINE_FIELD( CKingPin, electricBarrageStopTime, FIELD_TIME ),
-	DEFINE_FIELD( CKingPin, electricBarrageIdleEndTime, FIELD_TIME ),
-	DEFINE_FIELD( CKingPin, administerShockerTime, FIELD_TIME ),
+	DEFINE_FIELD( CKingpin, chargeFinishTime, FIELD_TIME ),
+	DEFINE_FIELD( CKingpin, electricBarrageNextFireTime, FIELD_TIME ),
+	DEFINE_FIELD( CKingpin, electricBarrageStopTime, FIELD_TIME ),
+	DEFINE_FIELD( CKingpin, electricBarrageIdleEndTime, FIELD_TIME ),
+	DEFINE_FIELD( CKingpin, administerShockerTime, FIELD_TIME ),
 	
-	DEFINE_FIELD( CKingPin, primaryAttackCooldownTime, FIELD_TIME ),
-	DEFINE_FIELD( CKingPin, enemyHiddenResponseTime, FIELD_TIME ),
-	DEFINE_FIELD( CKingPin, enemyHiddenChaseTime, FIELD_TIME ),
-	DEFINE_FIELD( CKingPin, giveUpChaseTime, FIELD_TIME ),
+	DEFINE_FIELD( CKingpin, primaryAttackCooldownTime, FIELD_TIME ),
+	DEFINE_FIELD( CKingpin, enemyHiddenResponseTime, FIELD_TIME ),
+	DEFINE_FIELD( CKingpin, enemyHiddenChaseTime, FIELD_TIME ),
+	DEFINE_FIELD( CKingpin, giveUpChaseTime, FIELD_TIME ),
 	
-	DEFINE_FIELD( CKingPin, accumulatedDamageTaken, FIELD_FLOAT ),
+	DEFINE_FIELD( CKingpin, accumulatedDamageTaken, FIELD_FLOAT ),
 	
 	//why does the houndeye save this? who knows just do it too.
-	DEFINE_FIELD( CKingPin, m_iSpriteTexture, FIELD_INTEGER ),
+	DEFINE_FIELD( CKingpin, m_iSpriteTexture, FIELD_INTEGER ),
 	
 
 
 };
 
-//IMPLEMENT_SAVERESTORE( CKingPin, CBaseMonster );
-int CKingPin::Save( CSave &save )
+//IMPLEMENT_SAVERESTORE( CKingpin, CBaseMonster );
+int CKingpin::Save( CSave &save )
 {
 	if ( !CBaseMonster::Save(save) )
 		return 0;
-	int iWriteFieldsResult = save.WriteFields( "CKingPin", this, m_SaveData, ARRAYSIZE(m_SaveData) );
+	int iWriteFieldsResult = save.WriteFields( "CKingpin", this, m_SaveData, ARRAYSIZE(m_SaveData) );
 
 	return iWriteFieldsResult;
 }
-int CKingPin::Restore( CRestore &restore )
+int CKingpin::Restore( CRestore &restore )
 {
 	if ( !CBaseMonster::Restore(restore) )
 		return 0;
-	int iReadFieldsResult = restore.ReadFields( "CKingPin", this, m_SaveData, ARRAYSIZE(m_SaveData) );
+	int iReadFieldsResult = restore.ReadFields( "CKingpin", this, m_SaveData, ARRAYSIZE(m_SaveData) );
 
 	return iReadFieldsResult;
 }
@@ -352,21 +358,21 @@ int CKingPin::Restore( CRestore &restore )
 
 
 #if REMOVE_ORIGINAL_NAMES != 1
-	LINK_ENTITY_TO_CLASS( monster_kingpin, CKingPin );
+	LINK_ENTITY_TO_CLASS( monster_kingpin, CKingpin );
 #endif
 
 #if EXTRA_NAMES > 0
-	LINK_ENTITY_TO_CLASS( kingpin, CKingPin );
+	LINK_ENTITY_TO_CLASS( kingpin, CKingpin );
 	
 	#if EXTRA_NAMES == 2
-		LINK_ENTITY_TO_CLASS( king, CKingPin );
+		LINK_ENTITY_TO_CLASS( king, CKingpin );
 	#endif
 	
 #endif
 
 
 
-CKingPin::CKingPin(void){
+CKingpin::CKingpin(void){
 
 	SetupBeams();
 	
@@ -395,7 +401,7 @@ CKingPin::CKingPin(void){
 	chargeEffect = NULL;
 			
 
-}//END OF CKingPin constructor
+}//END OF CKingpin constructor
 
 
 
@@ -441,6 +447,7 @@ Schedule_t	slKingpinRangeAttack1[] =
 Task_t	tlKingpinMeleeAttack[] =
 {
 	{ TASK_STOP_MOVING,			0				},
+	//{ TASK_SET_ACTIVITY,        (float)ACT_IDLE },  //safety
 	{ TASK_FACE_ENEMY,			(float)0		},
 	{ TASK_MELEE_ATTACK1,		(float)0		},
 };
@@ -470,11 +477,15 @@ Schedule_t	slKingpinMeleeAttack[] =
 	
 Task_t	tlKingpinShocker[] =
 {
+	{ TASK_SET_FAIL_SCHEDULE_HARD, (float)SCHED_KINGPIN_GENERIC_RANGE_FAIL},
 	{ TASK_STOP_MOVING,			0				},
+	{ TASK_SET_ACTIVITY,        (float)ACT_IDLE },  //safety
 	{ TASK_FACE_ENEMY,			(float)0		},
 	
 	//give them the shocker.
 	{ TASK_KINGPIN_SHOCKER_ADMINISTER, (float)0},
+
+	{ TASK_GATE_KINGPIN_DISTANCE_MINIMUM, (float)0},
 
 	//then switch to chasing them in melee and cut their ass up.
 	{TASK_SET_SCHEDULE, (float)SCHED_CHASE_ENEMY_SMART_STOP_SIGHT_SHOCKER_FOLLOWUP},
@@ -486,7 +497,7 @@ Schedule_t	slKingpinShocker[] =
 	{ 
 		tlKingpinShocker,
 		ARRAYSIZE ( tlKingpinShocker ), 
-		bits_COND_NEW_ENEMY			|
+		//bits_COND_NEW_ENEMY			|
 		bits_COND_ENEMY_DEAD		|
 		//bits_COND_LIGHT_DAMAGE		|
 		bits_COND_HEAVY_DAMAGE		|
@@ -498,7 +509,7 @@ Schedule_t	slKingpinShocker[] =
 		0,
 		//bits_SOUND_DANGER,
 
-		"Kingpin Electric Barrage"
+		"Kingpin Shocker"
 	},
 };
 
@@ -510,7 +521,9 @@ Schedule_t	slKingpinShocker[] =
 
 Task_t	tlKingpinElectricBarrage[] =
 {
+	{ TASK_SET_FAIL_SCHEDULE_HARD, (float)SCHED_KINGPIN_GENERIC_RANGE_FAIL},
 	{ TASK_STOP_MOVING,			0				},
+	{ TASK_SET_ACTIVITY,        (float)ACT_IDLE },  //safety
 	{ TASK_FACE_ENEMY,			(float)0		},
 	//{ TASK_RANGE_ATTACK1,		(float)0		},
 	{ TASK_KINGPIN_ELECTRIC_BARRAGE_START, (float)0},
@@ -525,7 +538,7 @@ Schedule_t	slKingpinElectricBarrage[] =
 	{ 
 		tlKingpinElectricBarrage,
 		ARRAYSIZE ( tlKingpinElectricBarrage ), 
-		bits_COND_NEW_ENEMY			|
+		//bits_COND_NEW_ENEMY			|
 		bits_COND_ENEMY_DEAD		|
 		//bits_COND_LIGHT_DAMAGE		|
 		bits_COND_HEAVY_DAMAGE		|
@@ -545,7 +558,9 @@ Schedule_t	slKingpinElectricBarrage[] =
 
 Task_t	tlKingpinSpeedMissile[] =
 {
+	{ TASK_SET_FAIL_SCHEDULE_HARD, (float)SCHED_KINGPIN_GENERIC_RANGE_FAIL},
 	{ TASK_STOP_MOVING,			0				},
+	{ TASK_SET_ACTIVITY,        (float)ACT_IDLE },  //safety
 	{ TASK_FACE_ENEMY,			(float)0		},
 	//{ TASK_RANGE_ATTACK1,		(float)0		},
 	{ TASK_KINGPIN_SPEED_MISSILE_START, (float)0},
@@ -558,9 +573,9 @@ Schedule_t	slKingpinSpeedMissile[] =
 	{ 
 		tlKingpinSpeedMissile,
 		ARRAYSIZE ( tlKingpinSpeedMissile ), 
-		bits_COND_NEW_ENEMY			|
+		//bits_COND_NEW_ENEMY			|
 		bits_COND_ENEMY_DEAD		|
-		bits_COND_LIGHT_DAMAGE		|
+		//bits_COND_LIGHT_DAMAGE		|
 		bits_COND_HEAVY_DAMAGE		|
 		//bits_COND_ENEMY_OCCLUDED	|
 		bits_COND_NO_AMMO_LOADED,
@@ -577,6 +592,7 @@ Schedule_t	slKingpinSpeedMissile[] =
 
 Task_t	tlKingpinElectricLaser[] =
 {
+	{ TASK_SET_FAIL_SCHEDULE_HARD, (float)SCHED_KINGPIN_GENERIC_RANGE_FAIL},
 	{ TASK_STOP_MOVING,			0				},
 	{ TASK_FACE_ENEMY,			(float)0		},
 	//{ TASK_RANGE_ATTACK1,		(float)0		},
@@ -592,7 +608,7 @@ Schedule_t	slKingpinElectricLaser[] =
 	{ 
 		tlKingpinElectricLaser,
 		ARRAYSIZE ( tlKingpinElectricLaser ), 
-		bits_COND_NEW_ENEMY			|
+		//bits_COND_NEW_ENEMY			|
 		bits_COND_ENEMY_DEAD		|
 		//bits_COND_LIGHT_DAMAGE		|
 		bits_COND_HEAVY_DAMAGE		|
@@ -612,7 +628,9 @@ Schedule_t	slKingpinElectricLaser[] =
 
 Task_t	tlKingpinSuperBall[] =
 {
+	{ TASK_SET_FAIL_SCHEDULE_HARD, (float)SCHED_KINGPIN_GENERIC_RANGE_FAIL},
 	{ TASK_STOP_MOVING,			0				},
+	{ TASK_SET_ACTIVITY,        (float)ACT_IDLE },  //safety
 	{ TASK_FACE_ENEMY,			(float)0		},
 	//{ TASK_RANGE_ATTACK1,		(float)0		},
 	{ TASK_KINGPIN_SUPERBALL_START, (float)0},
@@ -625,7 +643,7 @@ Schedule_t	slKingpinSuperBall[] =
 	{ 
 		tlKingpinSuperBall,
 		ARRAYSIZE ( tlKingpinSuperBall ), 
-		bits_COND_NEW_ENEMY			|
+		//bits_COND_NEW_ENEMY			|
 		bits_COND_ENEMY_DEAD		|
 		//bits_COND_LIGHT_DAMAGE		|
 		bits_COND_HEAVY_DAMAGE		|
@@ -687,6 +705,21 @@ Schedule_t	slKingpinElectricLaserChargeFail[] =
 };
 
 
+Task_t	tlKingpinGenericRangeFail[] =
+{
+	{TASK_SET_ACTIVITY,   (float)ACT_IDLE},
+};
+
+Schedule_t	slKingpinGenericRangeFail[] =
+{
+	{
+		tlKingpinGenericRangeFail,
+		ARRAYSIZE ( tlKingpinGenericRangeFail ),
+		0,
+		0,
+		"Kingpin Generic Range Fail"
+	},
+};
 
 
 
@@ -743,32 +776,32 @@ Schedule_t slChaseEnemySmart_ShockerFollowup[] =
 
 
 /*
-Task_t	tlKingPinXXX[] =
+Task_t	tlKingpinXXX[] =
 {
 	{ TASK_KINGPIN_XXX,			0				},
 	{ TASK_KINGPIN_YYY,			0				},
 	{ TASK_KINGPIN_ZZZ,			0				},
 };
 
-Schedule_t	slKingPinXXX[] =
+Schedule_t	slKingpinXXX[] =
 {
 	{
-		tlKingPinXXX,
-		ARRAYSIZE ( tlKingPinXXX ),
+		tlKingpinXXX,
+		ARRAYSIZE ( tlKingpinXXX ),
 		bits_COND_XXX | bits_COND_YYY | bits_COND_ZZZ,
 		bits_SOUND_XXX | bits_SOUND_YYY | bits_SOUND_ZZZ,
-		"kingPinXXX"
+		"kingpinXXX"
 	},
 };
 
-//repeat for tl / sl KingPinYYY and tl / sl KingPinZZZ.
+//repeat for tl / sl KingpinYYY and tl / sl KingpinZZZ.
 
 
 */
 
 
 
-DEFINE_CUSTOM_SCHEDULES( CKingPin )
+DEFINE_CUSTOM_SCHEDULES( CKingpin )
 {
 	slKingpinMeleeAttack,
 	slKingpinShocker,
@@ -783,22 +816,22 @@ DEFINE_CUSTOM_SCHEDULES( CKingPin )
 	slChaseEnemySmart_ShockerFollowup,
 
 };
-IMPLEMENT_CUSTOM_SCHEDULES( CKingPin, CBaseMonster );
+IMPLEMENT_CUSTOM_SCHEDULES( CKingpin, CBaseMonster );
 
 
 
 	
 
 //MODDD - sound calls dummied out until they actually exist.
-void CKingPin::DeathSound( void ){
+void CKingpin::DeathSound( void ){
 	int pitch = m_voicePitch + RANDOM_LONG(0,4);
 	EMIT_SOUND_FILTERED( edict(), CHAN_VOICE, RANDOM_SOUND_ARRAY(pDeathSounds), 1.0, ATTN_IDLE, 0, pitch );
 }
-void CKingPin::AlertSound( void ){
+void CKingpin::AlertSound( void ){
 	int pitch = m_voicePitch + RANDOM_LONG(0,4);
 	EMIT_SOUND_FILTERED( edict(), CHAN_VOICE, RANDOM_SOUND_ARRAY(pAlertSounds), 1.0, ATTN_NORM, 0, pitch );
 }
-void CKingPin::IdleSound( void ){
+void CKingpin::IdleSound( void ){
 
 	if(RANDOM_LONG(0, 2) <= 1){  //2/3
 		int pitch = m_voicePitch + RANDOM_LONG(0,4);
@@ -813,13 +846,13 @@ void CKingPin::IdleSound( void ){
 
 
 }
-void CKingPin::PainSound( void ){
+void CKingpin::PainSound( void ){
 	int pitch = m_voicePitch + RANDOM_LONG(0,4);
 	if (RANDOM_LONG(0,5) < 2){
 		EMIT_SOUND_FILTERED( edict(), CHAN_VOICE, RANDOM_SOUND_ARRAY(pPainSounds), 1.0, ATTN_NORM, 0, pitch );
 	}
 }
-void CKingPin::AttackSound( void ){
+void CKingpin::AttackSound( void ){
 	int pitch = m_voicePitch + RANDOM_LONG(0,4);
 	// Play a random attack sound
 	EMIT_SOUND_FILTERED( edict(), CHAN_VOICE, RANDOM_SOUND_ARRAY(pAttackSounds), 1.0, ATTN_NORM, 0, pitch );
@@ -828,7 +861,7 @@ void CKingPin::AttackSound( void ){
 
 
 extern int global_useSentenceSave;
-void CKingPin::Precache( void )
+void CKingpin::Precache( void )
 {
 	PRECACHE_MODEL("models/kingpin.mdl");
 
@@ -916,7 +949,7 @@ void CKingPin::Precache( void )
 	
 	global_useSentenceSave = TRUE;
 
-	UTIL_PrecacheOther( "hornet" );
+	UTIL_PrecacheOther( "hornet_kingpin" );
 
 	global_useSentenceSave = FALSE;
 	
@@ -936,13 +969,13 @@ void CKingPin::Precache( void )
 
 
 
-void CKingPin::Spawn( void )
+void CKingpin::Spawn( void )
 {
 	Precache( );
 	
 	//model seems kinda off center. may be ok? unsure.
 	SET_MODEL(ENT(pev), "models/kingpin.mdl");
-	UTIL_SetSize(pev, Vector(-36, -36, 0), Vector(36, 36, 72));
+	UTIL_SetSize(pev, Vector(-36, -36, 0), Vector(36, 36, 100));
 
 	pev->classname = MAKE_STRING("monster_kingpin");
 
@@ -974,7 +1007,7 @@ void CKingPin::Spawn( void )
 	m_voicePitch = randomValueInt(66, 76);
 
 
-	//SetTouch(&CKingPin::CustomTouch );
+	//SetTouch(&CKingpin::CustomTouch );
 	//SetTouch( NULL );
 
 }//END OF Spawn();
@@ -982,7 +1015,7 @@ void CKingPin::Spawn( void )
 
 
 
-void CKingPin::SetEyePosition(void){
+void CKingpin::SetEyePosition(void){
 	//Don't call the parent and instead force view_ofs to use a hardcoded eye position.
 	//pev->view_ofs = VEC_VIEW;
 
@@ -993,10 +1026,10 @@ void CKingPin::SetEyePosition(void){
 
 
 //based off of GetSchedule for CBaseMonster in schedule.cpp.
-Schedule_t* CKingPin::GetSchedule ( void )
+Schedule_t* CKingpin::GetSchedule ( void )
 {
 	//MODDD - safety.
-	if(iAmDead){
+	if(pev->deadflag != DEAD_NO){
 		return GetScheduleOfType( SCHED_DIE );
 	}
 	SCHEDULE_TYPE baitSched = getHeardBaitSoundSchedule();
@@ -1123,17 +1156,23 @@ Schedule_t* CKingPin::GetSchedule ( void )
 				// we can't see the enemy
 				if ( !HasConditions(bits_COND_ENEMY_OCCLUDED) )
 				{
-					// enemy is unseen, but not occluded!
-					// turn to face enemy
-					return GetScheduleOfType( SCHED_COMBAT_FACE );
+					if(!FacingIdeal()){
+						// enemy is unseen, but not occluded!
+						// turn to face enemy
+						return GetScheduleOfType(SCHED_COMBAT_FACE);
+					}else{
+						//We're facing the LKP already. Then we have to go to that point and declare we're stumped there if we still see nothing.
+						//return GetScheduleOfType(SCHED_CHASE_ENEMY_STOP_SIGHT);
+						return pickChaseOrStaySchedule();
+					}
 				}
 				else
 				{
 					// chase!
 					//easyPrintLine("ducks??");
 
-					//I still prefer to look at my enemy in anticipation of sending a potent ranged attack.
-					return GetScheduleOfType( SCHED_CHASE_ENEMY_STOP_SIGHT );
+					
+					return pickChaseOrStaySchedule();
 				}
 			}
 			else  
@@ -1149,18 +1188,18 @@ Schedule_t* CKingPin::GetSchedule ( void )
 
 
 
-				if ( HasConditions(bits_COND_CAN_RANGE_ATTACK2) )
+				//because sometimes from interrupting an existing schedule, the conditions get cleared.
+				//The check in "pickChaseOrStaySchedule" will probably be the only pracitcal one but whatever.
+				if ( HasConditionsFrame(bits_COND_CAN_RANGE_ATTACK2) )
 				{
 					//Come taste my super balls!  ...oh kill me now.
-					
-					//return GetScheduleOfType( SCHED_RANGE_ATTACK2 );
-
 					return slKingpinSuperBall;
 				}
 				
 
-				if ( HasConditions(bits_COND_CAN_RANGE_ATTACK1) )
+				if ( HasConditionsFrame(bits_COND_CAN_RANGE_ATTACK1) )
 				{
+					float flDist;
 					if(m_hEnemy == NULL){
 						//... what?
 						return GetScheduleOfType(SCHED_IDLE_STAND);
@@ -1168,7 +1207,7 @@ Schedule_t* CKingPin::GetSchedule ( void )
 
 
 					//Make a decision.  How close are we to the enemy?
-					float flDist = (m_hEnemy->pev->origin - pev->origin).Length();
+					flDist = (m_hEnemy->pev->origin - pev->origin).Length();
 
 
 
@@ -1203,34 +1242,46 @@ Schedule_t* CKingPin::GetSchedule ( void )
 
 
 					
-					if(flDist <= 300.0f){
+					if(flDist <= 280.0f){
 						//100% chance shocker
 						return slKingpinShocker;
 
-					}if(flDist <= 500.0f){
-						//60% shocker.
-						//35% electric barrage.
-						//5% electric laser.
+					}else if(flDist <= 450.0f){
+						//80% shocker.
+						//20% electric barrage.
 						float randomChoice = RANDOM_FLOAT(0.0f, 1.0f);
 
-						if(randomChoice < 0.60f){
+						if(randomChoice < 0.80f){
 							return slKingpinShocker;
-						}else if(randomChoice < 0.60f + 0.35f){
+						}else{
+							return slKingpinElectricBarrage;
+						}
+
+
+					}else if(flDist <= 900.0f){
+						//20% shocker.
+						//70% electric barrage.
+						//10% electric laser.
+						float randomChoice = RANDOM_FLOAT(0.0f, 1.0f);
+
+						if(randomChoice < 0.20f){
+							return slKingpinShocker;
+						}else if(randomChoice < 0.20f + 0.70f){
 							return slKingpinElectricBarrage;
 						}else{
 							return slKingpinElectricLaser;
 						}
 
 
-					}else if(flDist <= 1500.0f){
-						//40% electric barrage
-						//35% speed missile
-						//25% electric laser
+					}else if(flDist <= 1600.0f){
+						//20% electric barrage
+						//40% speed missile
+						//40% electric laser
 						float randomChoice = RANDOM_FLOAT(0.0f, 1.0f);
 
-						if(randomChoice < 0.40f){
+						if(randomChoice < 0.20f){
 							return slKingpinElectricBarrage;
-						}else if(randomChoice < 0.40f + 0.35f){
+						}else if(randomChoice < 0.20f + 0.40f){
 							return slKingpinSpeedMissile;
 						}else{
 							return slKingpinElectricLaser;
@@ -1279,18 +1330,8 @@ Schedule_t* CKingPin::GetSchedule ( void )
 					//No, I still prefer to look at my enemy in anticipation of sending a potent ranged attack.
 
 					//if the enemy is too far away we do want to try to get closer though.  Or if the enemy has hidden for way too long.
-					if(
-						m_hEnemy != NULL &&
-						(
-						  ((m_hEnemy->pev->origin - pev->origin).Length() > 2600.0f) ||
-						  (gpGlobals->time >= enemyHiddenChaseTime)
-						)
-					){
-						return GetScheduleOfType( SCHED_CHASE_ENEMY_STOP_SIGHT );
-					}else{
-						//content with staring for now.
-						return GetScheduleOfType( SCHED_COMBAT_LOOK );
-					}
+					
+					return pickChaseOrStaySchedule();
 					
 				}
 				else if ( !FacingIdeal() )
@@ -1339,7 +1380,50 @@ Schedule_t* CKingPin::GetSchedule ( void )
 }//END OF GetSchedule()
 
 
-Schedule_t* CKingPin::GetScheduleOfType( int Type){
+
+
+
+//MODDD - special method for the kingpin to store some otherwise repeated script.
+Schedule_t* CKingpin::pickChaseOrStaySchedule(void){
+
+	//First, if I'm due for RANGED_ATTACK2 (enemy was behind cover for too long) to send a super ball, do so.
+	if ( HasConditionsFrame(bits_COND_CAN_RANGE_ATTACK2) )
+	{
+		//Come taste my super balls!  ...oh kill me now.
+		return slKingpinSuperBall;
+	}
+
+
+
+	if(
+		m_hEnemy != NULL &&
+		(
+			((m_hEnemy->pev->origin - pev->origin).Length() > 2600.0f) ||
+			(gpGlobals->time >= enemyHiddenChaseTime)
+		)
+	){
+		//If the enemy has moved far enough away, or it is time to chase the enemy, go ahead.
+		return GetScheduleOfType( SCHED_CHASE_ENEMY_STOP_SIGHT );
+	}else{
+		//otherwise I'd rather stay here.
+		return GetScheduleOfType( SCHED_COMBAT_LOOK );
+	}
+
+}//END OF pickChaseOrStaySchedule
+
+
+
+
+
+
+
+
+
+
+
+
+
+Schedule_t* CKingpin::GetScheduleOfType( int Type){
 	
 	switch(Type){
 		/*
@@ -1358,6 +1442,10 @@ Schedule_t* CKingPin::GetScheduleOfType( int Type){
 		case SCHED_CHASE_ENEMY_SMART_STOP_SIGHT:
 			//also, record when to give up a chase and allow an attack regardless of distance.
 			giveUpChaseTime = gpGlobals->time + RANDOM_FLOAT(3.5f, 4.6f);
+			
+			//!!is this a good idea too?
+			enemyHiddenChaseTime = gpGlobals->time + 10.0f;
+
 			return slChaseEnemySmart_StopSight;
 		break;
 		case SCHED_CHASE_ENEMY_SMART_STOP_SIGHT_SHOCKER_FOLLOWUP:
@@ -1405,41 +1493,23 @@ Schedule_t* CKingPin::GetScheduleOfType( int Type){
 		case SCHED_KINGPIN_ELECTRIC_LASER_CHARGE_FAIL:
 			return slKingpinElectricLaserChargeFail;
 		break;
+		case SCHED_KINGPIN_GENERIC_RANGE_FAIL:
+			return slKingpinGenericRangeFail;
+		break;
 		
 	}//END OF switch(Type)
 	
 	return CBaseMonster::GetScheduleOfType(Type);
 }//END OF GetScheduleOfType(...)
 
-/*
 
-
-		case TASK_KINGPIN_ELECTRIC_BARRAGE_START:
-		case TASK_KINGPIN_ELECTRIC_BARRAGE_CHARGE:
-		case TASK_KINGPIN_ELECTRIC_BARRAGE_LOOP:
-		case TASK_KINGPIN_ELECTRIC_BARRAGE_END:
-
-		case TASK_KINGPIN_SPEED_MISSILE_START:
-		case TASK_KINGPIN_SPEED_MISSILE_FIRE:
-		case TASK_KINGPIN_SPEED_MISSILE_END:
-
-		case TASK_KINGPIN_ELECTRIC_LASER_START:
-		case TASK_KINGPIN_ELECTRIC_LASER_CHARGE:
-		case TASK_KINGPIN_ELECTRIC_LASER_FIRE:
-		case TASK_KINGPIN_ELECTRIC_LASER_END:
-
-		case TASK_KINGPIN_SUPERBALL_START:
-		case TASK_KINGPIN_SUPERBALL_FIRE:
-		case TASK_KINGPIN_SUPERBALL_END:
-*/
-
-void CKingPin::StartTask( Task_t *pTask ){
+void CKingpin::StartTask( Task_t *pTask ){
 
 
 	switch( pTask->iTask ){
 		
 		
-		case TASK_KINGPIN_SHOCKER_ADMINISTER:
+		case TASK_KINGPIN_SHOCKER_ADMINISTER:{
 
 			administerShockerTime = gpGlobals->time + ((7.0f / 30.0f) / pev->framerate);
 
@@ -1449,10 +1519,37 @@ void CKingPin::StartTask( Task_t *pTask ){
 
 			//EEEEE
 
-		break;
+		break;}
+		case TASK_GATE_KINGPIN_DISTANCE_MINIMUM:{
+			float distanceToEnemy;
+			if(m_hEnemy == NULL){
+				//???????????
+				TaskFail();
+				return;
+			}
+
+			distanceToEnemy = (m_hEnemy->pev->origin - pev->origin).Length();
+
+			if(distanceToEnemy <= 500){
+				//commence the chase.
+				TaskComplete();
+				return;
+			}else{
+				//too far? don't bother, re-pick a different schedule.
+				//TaskFail();
+
+				//this is... probably better?
+				ChangeSchedule(GetSchedule());
+				return;
+			}
+			
+			
+
+		break;}
 
 
-		case TASK_KINGPIN_ELECTRIC_BARRAGE_CHARGE_INTERRUPTED:
+
+		case TASK_KINGPIN_ELECTRIC_BARRAGE_CHARGE_INTERRUPTED:{
 			if(pev->sequence == KINGPIN_MAGE_LOOP || pev->sequence == KINGPIN_MAGE_START){
 				//force it.
 				playElectricBarrageEndSound();
@@ -1463,18 +1560,19 @@ void CKingPin::StartTask( Task_t *pTask ){
 				//just proceed.
 				TaskComplete();
 			}
-		break;
-		case TASK_KINGPIN_ELECTRIC_LASER_CHARGE_INTERRUPTED:
+		break;}
+		case TASK_KINGPIN_ELECTRIC_LASER_CHARGE_INTERRUPTED:{
 			if(pev->sequence == KINGPIN_MAGE_LOOP || pev->sequence == KINGPIN_MAGE_START){
 				//force it.
 				//playElectricLaserEndSound();
 				removeChargeEffect();
+				stopElectricLaserChargeSound();
 				SetSequenceByIndex(KINGPIN_MAGE_END);
 			}else{
 				//just proceed.
 				TaskComplete();
 			}
-		break;
+		break;}
 
 
 		case TASK_KINGPIN_ELECTRIC_BARRAGE_START:{
@@ -1497,7 +1595,7 @@ void CKingPin::StartTask( Task_t *pTask ){
 			accumulatedDamageTaken = 0;  //start keeping track of this.
 
 
-			chargeFinishTime = gpGlobals->time + 1.5f;
+			chargeFinishTime = gpGlobals->time + 0.9f;
 
 		break;}
 		case TASK_KINGPIN_ELECTRIC_BARRAGE_LOOP:{
@@ -1541,17 +1639,108 @@ void CKingPin::StartTask( Task_t *pTask ){
 			accumulatedDamageTaken = 0;  //start keeping track of this.  may not actually use it this time.
 
 
-			chargeFinishTime = gpGlobals->time + 2.6f;
+			chargeFinishTime = gpGlobals->time + KINPIN_ELECTRIC_LASER_CHARGETIME;
 		break;}
 		case TASK_KINGPIN_ELECTRIC_LASER_FIRE:{
+			Vector vecStart;
+			Vector vecForward;
+			Vector vecRight;
+			Vector vecUp;
+			
+			UTIL_MakeAimVectorsPrivate(pev->angles, vecForward, vecRight, vecUp);
+
+			//vecStart = pev->origin + vecForward * 18 + Vector(0, 0, 60);
+			vecStart = pev->origin + vecUp * CHARGE_POINT_UP + vecForward * CHARGE_POINT_FORWARD;
+
+
+			Vector firePoint;
+			BOOL canFireLaser = FALSE;
+			CBaseEntity* fireHitIntention = NULL;
+
+			
 
 			//if we have to?
-			//stopElectricLaserChargeSound();
+			stopElectricLaserChargeSound();
 
 			removeChargeEffect();
 
-			playElectricLaserFireSound();
-			fireElectricDenseLaser();
+			if(m_hEnemy == NULL){
+				//???
+				//firePoint = m_vecEnemyLKP;
+				canFireLaser = FALSE;
+			}else{
+
+
+
+				//if(HasConditions(bits_COND_CAN_RANGE_ATTACK1)){
+				if(HasConditions(bits_COND_SEE_ENEMY)){
+					//clearly our enemy is in sight. Do it
+					canFireLaser = TRUE;
+					firePoint = m_hEnemy->BodyTargetMod(vecStart);
+				}else{
+
+					int i;
+					
+
+					for(i = 0; i < m_intOldEnemyNextIndex; i++){
+						//can we see this enemy instead?
+					
+						if(m_hOldEnemy[i] != NULL && m_hOldEnemy[i]->IsAlive_FromAI(this) ){
+
+							if(FVisible(m_hOldEnemy[i]) || FVisible(vecStart, m_hOldEnemy[i] )){
+								//visible from just myself or that point? it's good.
+								
+								firePoint = m_hOldEnemy[i]->BodyTargetMod(vecStart);
+								fireHitIntention = m_hOldEnemy[i];
+								canFireLaser = TRUE;
+								break;
+							}
+						}
+					}
+
+					//If our charge effect is present, it can also have a line of sight to the enemy.
+					//Otherwise sitting and doing nothing while the enemy (player) peeks at it is a little odd.
+
+					//TraceResult tr;
+					//UTIL_TraceLine(this->EyePosition(),
+					//wait we already have a method for this.
+
+
+					/*
+					//they are not? Can we pick a different enemy?
+					//TODO - this ain't workin.
+					BOOL getSuccess = GetEnemy();
+
+
+					//if(FVisible(m_hEnemy->EyePosition())){
+					if(getSuccess){
+						//this also counts.
+						canFireLaser = TRUE;
+					}
+					*/
+
+					//GO THROUGH THE ENEMY STACK AND SEE IF ONE OF THEM IS VISIBLE IF m_hENEMY IS NOT NULL AND NOT VISIBLE.
+					//ONLY THEN GIVE UP IF NONE IS GOOD.
+
+
+
+
+
+				}//END OF see enemy check.
+
+			}//END OF enemy null check
+			
+			if(canFireLaser){
+
+				fireElectricDenseLaser(fireHitIntention, firePoint);
+			}else{
+				//well that was anticlimactic. Nowhere for the laser to go.
+				//Make the same electric fizz out the electric barrage ending does for now.
+				playElectricBarrageEndSound();
+			}
+
+
+
 			TaskComplete();
 		break;}
 		case TASK_KINGPIN_ELECTRIC_LASER_END:{
@@ -1570,6 +1759,10 @@ void CKingPin::StartTask( Task_t *pTask ){
 		case TASK_KINGPIN_SUPERBALL_FIRE:{
 			playSuperBallFireSound();
 			fireSuperBall();
+
+			
+			enemyHiddenResponseTime = gpGlobals->time + RANDOM_FLOAT(5.9f, 7.6f);
+
 			TaskComplete();
 		break;}
 		case TASK_KINGPIN_SUPERBALL_END:{
@@ -1632,7 +1825,7 @@ void CKingPin::StartTask( Task_t *pTask ){
 
 }//END OF StartTask(...)
 
-void CKingPin::RunTask( Task_t *pTask ){
+void CKingpin::RunTask( Task_t *pTask ){
 	
 	//EASY_CVAR_PRINTIF_PRE(templatePrintout, easyPrintLine("RunTask: sched:%s task:%d", this->m_pSchedule->pName, pTask->iTask) );
 	
@@ -1754,7 +1947,8 @@ void CKingPin::RunTask( Task_t *pTask ){
 		case TASK_KINGPIN_ELECTRIC_LASER_CHARGE:{
 			
 			//the implosion effect is done in "updateChargeEffect", on checking for this schedule (electric laser).
-
+			turnToFaceEnemyLKP();
+			
 			if(gpGlobals->time >= chargeFinishTime){
 				TaskComplete();
 			}
@@ -1859,10 +2053,10 @@ void CKingPin::RunTask( Task_t *pTask ){
 
 
 
-BOOL CKingPin::CheckMeleeAttack1( float flDot, float flDist ){
+BOOL CKingpin::CheckMeleeAttack1( float flDot, float flDist ){
 	
 
-	if ( flDist <= 72 && flDot >= 0.75  ) //&& FBitSet ( m_hEnemy->pev->flags, FL_ONGROUND ) )
+	if ( flDist <= 88 && flDot >= 0.75  ) //&& FBitSet ( m_hEnemy->pev->flags, FL_ONGROUND ) )
 	{
 		return TRUE;
 	}
@@ -1872,13 +2066,14 @@ BOOL CKingPin::CheckMeleeAttack1( float flDot, float flDist ){
 
 }//END OF CheckMeleeAttack1
 
-BOOL CKingPin::CheckMeleeAttack2( float flDot, float flDist ){
+BOOL CKingpin::CheckMeleeAttack2( float flDot, float flDist ){
 	return FALSE;
 }//END OF CheckMeleeAttack2
 
 
-BOOL CKingPin::CheckRangeAttack1( float flDot, float flDist ){
-	
+BOOL CKingpin::CheckRangeAttack1( float flDot, float flDist ){
+	BOOL seesEnemy = FALSE;
+
 	//We're going to use RangeAttack1 for the general straight-forward attack methods
 	//electric barrage
 	//electric laser
@@ -1892,7 +2087,7 @@ BOOL CKingPin::CheckRangeAttack1( float flDot, float flDist ){
 	if(this->m_pSchedule == slChaseEnemySmart_StopSight || this->m_pSchedule == slChaseEnemySmart_ShockerFollowup){
 		//HOLD ON.  Allowing a ranged attack  will interrupt this schedule.
 		//If the enemy got far away enough that is ok, or if this it taking too long.
-		if( (flDist > 680.0f) || gpGlobals->time >= giveUpChaseTime){
+		if( (flDist > 520.0f) || gpGlobals->time >= giveUpChaseTime){
 			//return TRUE;
 			//the check below chould still fail.  If the enemy is too far away or occluded the chase can continue.
 		}else{
@@ -1908,9 +2103,55 @@ BOOL CKingPin::CheckRangeAttack1( float flDot, float flDist ){
 		return FALSE;  //not yet
 	}
 
+
+	if(HasConditions(bits_COND_SEE_ENEMY) && !HasConditions(bits_COND_ENEMY_OCCLUDED)){
+		//usual way.
+		seesEnemy = TRUE;
+
+	}//else if(this->chargeEffect != NULL){
+	//Removing the charge effect being present requirement.  The kingpin is one all-seeing bastard.
+	else{
+		Vector vecStart;
+		Vector vecForward;
+		Vector vecRight;
+		Vector vecUp;
+	
+			
+		UTIL_MakeAimVectorsPrivate(pev->angles, vecForward, vecRight, vecUp);
+
+		//vecStart = pev->origin + vecForward * 18 + Vector(0, 0, 60);
+		vecStart = pev->origin + vecUp * CHARGE_POINT_UP + vecForward * CHARGE_POINT_FORWARD;
+
+		//If our charge effect is present, it can also have a line of sight to the enemy.
+		//Otherwise sitting and doing nothing while the enemy (player) peeks at it is a little odd.
+
+		//TraceResult tr;
+		//UTIL_TraceLine(this->EyePosition(),
+		//wait we already have a method for this.
+		if(FVisible(vecStart, m_hEnemy->EyePosition())){
+			//this also counts.
+			//AND HACK: update our m_vecEnemyLKP to be safe.
+			setEnemyLKP(m_hEnemy->pev->origin);
+
+			seesEnemy = TRUE;
+		}
+
+	}//END OF sight checks.
+
+	
+
+
 	//Must be seen and not occluded, at least to initiate.
-	if (HasConditions(bits_COND_SEE_ENEMY) && !HasConditions(bits_COND_ENEMY_OCCLUDED) &&  flDist >= 0 && flDist <= 2600.0f && flDot >= 0.8 )
+	//Turn off the flDot check, we'll turn to face them soon enough if they're visible in any direction.
+	if( seesEnemy &&  flDist >= 0 && flDist <= 2600.0f) ///&& flDot >= 0.8 )
 	{
+		//HACK - count this as seeing the enemy in case it's indirectly through the beam.
+		//This actually works because "CheckAttacks" is called in basemonster.cpp by "CheckEnemy", which is called by monsterstate.cpp's "runAI" method.
+		//The important part is, this (RunAI -> CheckEnemy -> CheckAttacks -> CheckRangeAttack1) gets called AFTER Look (RunAI -> Look),
+		//so that this decision to override the bits_COND_SEE_ENEMY getting cleared by not having a direct line of sight actually lasts (we force it on but it was off)
+		//until the MaintainSchedule which calls StartTask / RunTask with the current schedule in mind.
+		//But "SetconditionsFrame" could've worked if that weren't the case.  Or maybe not, there would still be ways around that.
+		SetConditions(bits_COND_SEE_ENEMY);
 		return TRUE;
 	}
 	
@@ -1918,7 +2159,7 @@ BOOL CKingPin::CheckRangeAttack1( float flDot, float flDist ){
 	return FALSE;
 }//END OF CheckRangeAttack1
 
-BOOL CKingPin::CheckRangeAttack2( float flDot, float flDist ){
+BOOL CKingpin::CheckRangeAttack2( float flDot, float flDist ){
 	
 	//This is for the Super Ball homing attack, a ball like the head controller ball that uses air nodes for pathfinding.  But still rougly 
 	//follows it to be fairly avoidable like the head controller ball.
@@ -1928,6 +2169,11 @@ BOOL CKingPin::CheckRangeAttack2( float flDot, float flDist ){
 		//allow.
 	}else{
 		//too much direct action too soon.
+		return FALSE;
+	}
+
+	if(m_pSchedule == slChaseEnemy || m_pSchedule == slChaseEnemySmart || m_pSchedule == slChaseEnemySmart_StopSight || m_pSchedule == slChaseEnemySmart_ShockerFollowup || m_pSchedule == ::slPathfindStumped){
+		//If we're chasing the enemy or stumped, don't interrupt to do these things in any case.
 		return FALSE;
 	}
 
@@ -1944,13 +2190,16 @@ BOOL CKingPin::CheckRangeAttack2( float flDot, float flDist ){
 
 
 
-void CKingPin::CustomTouch( CBaseEntity *pOther ){
+void CKingpin::CustomTouch( CBaseEntity *pOther ){
 
 }
 
 
 
-void CKingPin::MonsterThink( void ){
+void CKingpin::MonsterThink( void ){
+
+
+
 
 
 	if(m_MonsterState == MONSTERSTATE_COMBAT){
@@ -1961,6 +2210,22 @@ void CKingPin::MonsterThink( void ){
 			this->powerUpMonsters();
 			powerUpNearbyMonstersCooldown = gpGlobals->time + 8;
 		}
+
+
+		
+
+		if(m_pSchedule == slCombatFaceNoStump || m_pSchedule == slCombatFace || m_pSchedule == slCombatLook){
+			//do a check.  Has enemyHiddenChaseTime been surpassed?
+			if(gpGlobals->time >= enemyHiddenChaseTime){
+				//just force it to stop from happening again too soon in any case.
+				//enemyHiddenChaseTime = gpGlobals->time + 40.0f;
+
+				//TaskFail();  //re-pick a following schedule most likely.
+				//or ChangeSchedule into that?  what is best.
+			}
+		}
+
+
 
 		if( 
 			//that is, if a monster recently damaged me, or our long-time cooldown is up....
@@ -2006,11 +2271,12 @@ void CKingPin::MonsterThink( void ){
 	CBaseMonster::MonsterThink();
 
 
-	if(this->HasConditions(bits_COND_SEE_ENEMY) && !this->HasConditions(bits_COND_ENEMY_OCCLUDED) ){
+	//if(this->HasConditionsFrame(bits_COND_SEE_ENEMY) && !this->HasConditionsFrame(bits_COND_ENEMY_OCCLUDED) ){
+	if(this->HasConditionsFrame(bits_COND_SEE_ENEMY) ){
 		//can see the enemy? not occluded?  Then reset the hidden time.
 
-		enemyHiddenResponseTime = gpGlobals->time + 14.0f;
-		enemyHiddenChaseTime = gpGlobals->time + 30.0f;
+		enemyHiddenResponseTime = gpGlobals->time + 12.0f;
+		enemyHiddenChaseTime = gpGlobals->time + 40.0f;
 	}
 
 
@@ -2022,20 +2288,20 @@ void CKingPin::MonsterThink( void ){
 
 
 
-int	CKingPin::Classify( void ){
+int	CKingpin::Classify( void ){
 	return CLASS_ALIEN_MONSTER;
 }
-BOOL CKingPin::isOrganic(void){
+BOOL CKingpin::isOrganic(void){
 	return TRUE;
 }
 
-int CKingPin::IRelationship( CBaseEntity *pTarget ){
+int CKingpin::IRelationship( CBaseEntity *pTarget ){
 
 	return CBaseMonster::IRelationship(pTarget);
 }//END OF IRelationship(...)
 
 
-void CKingPin::ReportAIState(void){
+void CKingpin::ReportAIState(void){
 	//call the parent, and add on to that.
 	CBaseMonster::ReportAIState();
 	//print anything special with easyForcePrintLine
@@ -2046,7 +2312,7 @@ void CKingPin::ReportAIState(void){
 
 
 
-GENERATE_TRACEATTACK_IMPLEMENTATION(CKingPin){
+GENERATE_TRACEATTACK_IMPLEMENTATION(CKingpin){
 
 	easyForcePrintLine("kingpin ID%d: I WAS JUST HIT AT HITBOX:%d", this->monsterID, ptr->iHitgroup);
 
@@ -2055,7 +2321,7 @@ GENERATE_TRACEATTACK_IMPLEMENTATION(CKingPin){
 	GENERATE_TRACEATTACK_PARENT_CALL(CBaseMonster);
 }
 
-GENERATE_TAKEDAMAGE_IMPLEMENTATION(CKingPin){
+GENERATE_TAKEDAMAGE_IMPLEMENTATION(CKingpin){
 
 
 	//Alert poweredupmonsters of this occurence in MonsterThink by the "recentlyDamage" feature!
@@ -2082,7 +2348,46 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CKingPin){
 	return GENERATE_TAKEDAMAGE_PARENT_CALL(CBaseMonster);
 }
 
-GENERATE_DEADTAKEDAMAGE_IMPLEMENTATION(CKingPin){
+
+void CKingpin::OnTakeDamageSetConditions(entvars_t *pevInflictor, entvars_t *pevAttacker, float flDamage, int bitsDamageType, int bitsDamageTypeMod){
+	
+	//MODDD - intervention. Timed damage might not affect the AI since it could get needlessly distracting.
+	if(bitsDamageTypeMod & (DMG_TIMEDEFFECT|DMG_TIMEDEFFECTIGNORE) ){
+		//If this is continual timed damage, don't register as any damage condition. Not worth possibly interrupting the AI.
+		return;
+	}
+
+	//default case from CBaseMonster's TakeDamage.
+	//Also count being in a non-combat state to force looking in that direction.  But maybe at least 0 damage should be a requirement too, even in cases where the minimum damage for LIGHT is above 0?
+	if (m_MonsterState == MONSTERSTATE_IDLE || m_MonsterState == MONSTERSTATE_ALERT || flDamage > 0 )
+	{
+		SetConditions(bits_COND_LIGHT_DAMAGE);
+
+		//MODDD NEW - set a timer to forget a flinch-preventing memory bit.
+		forgetSmallFlinchTime = gpGlobals->time + 9.0f;
+	}
+
+	//MODDD - HEAVY_DAMAGE was unused before.  For using the BIG_FLINCH activity that is (never got communicated)
+	//    Stricter requirement:  this attack took 70% of health away.
+	//    The agrunt used to use this so that its only flinch was for heavy damage (above 20 in one attack), but that's easy by overriding this OnTakeDamageSetconditions method now.
+	//    Keep it to using light damage for that instead.
+	//if ( flDamage >= 20 )
+	if( gpGlobals->time >= forgetBigFlinchTime && (flDamage >=  pev->max_health * 0.55 || flDamage >= 30)  )
+	{
+		SetConditions(bits_COND_HEAVY_DAMAGE);
+		forgetSmallFlinchTime = gpGlobals->time + 9.0f;
+		forgetBigFlinchTime = gpGlobals->time + 15.0f;
+	}
+
+
+
+
+}//END OF OnTakeDamageSetConditions
+
+
+
+
+GENERATE_DEADTAKEDAMAGE_IMPLEMENTATION(CKingpin){
 	
 	
 	return GENERATE_DEADTAKEDAMAGE_PARENT_CALL(CBaseMonster);
@@ -2090,7 +2395,7 @@ GENERATE_DEADTAKEDAMAGE_IMPLEMENTATION(CKingPin){
 
 
 //Parameters: integer named fGibSpawnsDecal
-GENERATE_GIBMONSTER_IMPLEMENTATION(CKingPin)
+GENERATE_GIBMONSTER_IMPLEMENTATION(CKingpin)
 {
 
 
@@ -2102,7 +2407,7 @@ GENERATE_GIBMONSTER_IMPLEMENTATION(CKingPin)
 
 
 //if dead and a poweredup monster's directedEnemyIssuer is THIS, forget its directedEnemy. !!!
-GENERATE_KILLED_IMPLEMENTATION(CKingPin){
+GENERATE_KILLED_IMPLEMENTATION(CKingpin){
 
 	BOOL firstCall = FALSE;
 	if(firstTimeKilled){
@@ -2137,14 +2442,14 @@ GENERATE_KILLED_IMPLEMENTATION(CKingPin){
 }//END OF Killed
 
 
-void CKingPin::onDelete(void){
+void CKingpin::onDelete(void){
 	ClearBeams();
 	removeChargeEffect();
 }
 
 
 
-void CKingPin::SetYawSpeed( void ){
+void CKingpin::SetYawSpeed( void ){
 	
 
 	
@@ -2160,13 +2465,13 @@ void CKingPin::SetYawSpeed( void ){
 
 
 		case KINGPIN_MAGE_START:
-			pev->yaw_speed = 0;
+			pev->yaw_speed = 12;
 		break;
 		case KINGPIN_MAGE_LOOP:
-			pev->yaw_speed = 75;
+			pev->yaw_speed = 48;
 		break;
 		case KINGPIN_MAGE_END:
-			pev->yaw_speed = 0;
+			pev->yaw_speed = 12;
 		break;
 
 
@@ -2177,6 +2482,15 @@ void CKingPin::SetYawSpeed( void ){
 	}//END OF switch
 
 
+	if(IsMoving()){
+		//don't allow us to get stuck. Allow at least some yaw speed.
+		if(pev->yaw_speed == 0){
+			pev->yaw_speed = 48;
+		}
+	}
+
+
+
 	
 }//END OF SetYawSpeed(...)
 
@@ -2184,23 +2498,23 @@ void CKingPin::SetYawSpeed( void ){
 
 
 
-BOOL CKingPin::getMonsterBlockIdleAutoUpdate(void){
+BOOL CKingpin::getMonsterBlockIdleAutoUpdate(void){
 	return FALSE;
 }
-BOOL CKingPin::forceIdleFrameReset(void){
+BOOL CKingpin::forceIdleFrameReset(void){
 	return FALSE;
 }
-BOOL CKingPin::usesAdvancedAnimSystem(void){
+BOOL CKingpin::usesAdvancedAnimSystem(void){
 	return TRUE;
 }
 
-void CKingPin::SetActivity( Activity NewActivity ){
+void CKingpin::SetActivity( Activity NewActivity ){
 	CBaseMonster::SetActivity(NewActivity);
 }
 
 
 
-int CKingPin::LookupActivityHard(int activity){
+int CKingpin::LookupActivityHard(int activity){
 	int i = 0;
 	m_flFramerateSuggestion = 1;
 	m_iForceLoops = -1;
@@ -2214,6 +2528,21 @@ int CKingPin::LookupActivityHard(int activity){
 
 	//no need for default, just falls back to the normal activity lookup.
 	switch(activity){
+
+		case ACT_SMALL_FLINCH:{
+			//There are two ACTs for flinching but the first one's broken.
+			//Just force the second one.
+			this->m_flFramerateSuggestion = 1.5f;
+			return KINGPIN_SMALL_FLINCH2;
+		break;}
+
+
+		case ACT_BIG_FLINCH:{
+			//unless a unique BIG_FLINCH mapped sequence shows up, I'll  just use the small flinch one(s) slowed down a little
+			//in comparison.
+			this->m_flFramerateSuggestion = 1.1f;
+			return KINGPIN_SMALL_FLINCH2;
+		break;}
 
 		case ACT_MELEE_ATTACK1:{
 			
@@ -2242,6 +2571,24 @@ int CKingPin::LookupActivityHard(int activity){
 			}//END OF switch
 
 		break;}
+
+		case ACT_WALK:{
+			return KINGPIN_WALK;
+		break;}
+		case ACT_RUN:{
+			return KINGPIN_RUN;
+		break;}
+
+					 
+		//Change these if turn animations are given. These are picking the IDLE1 to say to change it if significant turning is requested.
+		case ACT_TURN_LEFT:{
+			return KINGPIN_IDLE1;
+		break;}
+		case ACT_TURN_RIGHT:{
+			return KINGPIN_IDLE1;
+		break;}
+
+
 		
 		/*
 		case ACT_MELEE_ATTACK1:
@@ -2269,15 +2616,42 @@ int CKingPin::LookupActivityHard(int activity){
 }//END OF LookupActivityHard(...)
 
 
-int CKingPin::tryActivitySubstitute(int activity){
+int CKingpin::tryActivitySubstitute(int activity){
 	int i = 0;
 
 	//no need for default, just falls back to the normal activity lookup.
 	switch(activity){
 		
+
+		case ACT_SMALL_FLINCH:{
+			//There are two ACTs for flinching but the first one's broken.
+			//Just force the second one.
+			return KINGPIN_SMALL_FLINCH2;
+		break;}
+
+		case ACT_BIG_FLINCH:{
+			//There are two ACTs for flinching but the first one's broken.
+			//Just force the second one.
+			return KINGPIN_SMALL_FLINCH2;
+		break;}
+
 		case ACT_MELEE_ATTACK1:{
 			//no need for random logic.  Just say we have one.
 			return KINGPIN_ATTACK_BOTH;
+		break;}
+		case ACT_WALK:{
+			return KINGPIN_WALK;
+		break;}
+		case ACT_RUN:{
+			return KINGPIN_RUN;
+		break;}
+
+		//Change these if turn animations are given. These are picking the IDLE1 to say to change it if significant turning is requested.
+		case ACT_TURN_LEFT:{
+			return KINGPIN_IDLE1;
+		break;}
+		case ACT_TURN_RIGHT:{
+			return KINGPIN_IDLE1;
 		break;}
 		
 		/*
@@ -2294,13 +2668,13 @@ int CKingPin::tryActivitySubstitute(int activity){
 
 //Handles custom events sent from "LookupActivityHard", which sends events as timed delays along with picking an animation in script.
 //So this handles script-provided events, not model ones.
-void CKingPin::HandleEventQueueEvent(int arg_eventID){
+void CKingpin::HandleEventQueueEvent(int arg_eventID){
 
 	switch(arg_eventID){
 	case 0:{
 		//scythe attack, left.
 		//TODO - custom damage for the kingpin's attacks?
-		CBaseEntity *pHurt = CheckTraceHullAttack( 74, gSkillData.zombieDmgOneSlash * 1.4f, DMG_SLASH, DMG_BLEEDING );
+		CBaseEntity *pHurt = CheckTraceHullAttack( 100, gSkillData.zombieDmgOneSlash * 1.4f, DMG_SLASH, DMG_BLEEDING );
 		if ( pHurt )
 		{
 			if ( (pHurt->pev->flags & (FL_MONSTER|FL_CLIENT)) && !pHurt->blocksImpact()  )
@@ -2322,7 +2696,7 @@ void CKingPin::HandleEventQueueEvent(int arg_eventID){
 	case 1:{
 		//scythe attack, right.
 		//TODO - custom damage for the kingpin's attacks?
-		CBaseEntity *pHurt = CheckTraceHullAttack( 74, gSkillData.zombieDmgOneSlash * 1.2f, DMG_SLASH, DMG_BLEEDING );
+		CBaseEntity *pHurt = CheckTraceHullAttack( 100, gSkillData.zombieDmgOneSlash * 1.2f, DMG_SLASH, DMG_BLEEDING );
 		if ( pHurt )
 		{
 			if ( (pHurt->pev->flags & (FL_MONSTER|FL_CLIENT)) && !pHurt->blocksImpact()  )
@@ -2344,7 +2718,7 @@ void CKingPin::HandleEventQueueEvent(int arg_eventID){
 	case 2:{
 		//scythe attack, both.
 		//TODO - custom damage for the kingpin's attacks?
-		CBaseEntity *pHurt = CheckTraceHullAttack( 74, gSkillData.zombieDmgOneSlash * 1.8f, DMG_SLASH, DMG_BLEEDING );
+		CBaseEntity *pHurt = CheckTraceHullAttack( 100, gSkillData.zombieDmgOneSlash * 1.8f, DMG_SLASH, DMG_BLEEDING );
 		if ( pHurt )
 		{
 			if ( (pHurt->pev->flags & (FL_MONSTER|FL_CLIENT)) && !pHurt->blocksImpact()  )
@@ -2389,7 +2763,7 @@ void CKingPin::HandleEventQueueEvent(int arg_eventID){
 
 
 //This handles events built into the model, not custom hard-coded ones (above).
-void CKingPin::HandleAnimEvent(MonsterEvent_t *pEvent ){
+void CKingpin::HandleAnimEvent(MonsterEvent_t *pEvent ){
 	switch( pEvent->event ){
 	case 0:
 	{
@@ -2408,7 +2782,7 @@ void CKingPin::HandleAnimEvent(MonsterEvent_t *pEvent ){
 
 
 
-CBaseMonster* CKingPin::findClosestPowerupableMonster(void){
+CBaseMonster* CKingpin::findClosestPowerupableMonster(void){
 
 	CBaseEntity* pEntityScan = NULL;
 	CBaseMonster* testMon = NULL;
@@ -2452,7 +2826,7 @@ CBaseMonster* CKingPin::findClosestPowerupableMonster(void){
 
 
 
-void CKingPin::powerUpMonsters(void){
+void CKingpin::powerUpMonsters(void){
 
 	
 	CBaseEntity* pEntityScan = NULL;
@@ -2517,7 +2891,7 @@ void CKingPin::powerUpMonsters(void){
 
 
 
-void CKingPin::removeFromPoweredUpCommandList(CBaseMonster* argToRemove){
+void CKingpin::removeFromPoweredUpCommandList(CBaseMonster* argToRemove){
 
 	//yadda yadda. dropped feature.
 	
@@ -2526,7 +2900,7 @@ void CKingPin::removeFromPoweredUpCommandList(CBaseMonster* argToRemove){
 
 
 //When a Kingpin dies, it needs to tell monsters it gave an attack order to forget it.
-void CKingPin::deTargetMyCommandedMonsters(void){
+void CKingpin::deTargetMyCommandedMonsters(void){
 
 	
 	CBaseEntity* pEntityScan = NULL;
@@ -2565,7 +2939,7 @@ void CKingPin::deTargetMyCommandedMonsters(void){
 }//END OF deTargetMyCommandedMonsters
 
 
-void CKingPin::forceEnemyOnPoweredUpMonsters(CBaseEntity* monsterToForce, BOOL argPassive){
+void CKingpin::forceEnemyOnPoweredUpMonsters(CBaseEntity* monsterToForce, BOOL argPassive){
 	
 	CBaseEntity* pEntityScan = NULL;
 	CBaseMonster* testMon = NULL;
@@ -2604,7 +2978,7 @@ void CKingPin::forceEnemyOnPoweredUpMonsters(CBaseEntity* monsterToForce, BOOL a
 
 
 //this is being used for something else instead.
-void CKingPin::playPsionicLaunchSound(){
+void CKingpin::playPsionicLaunchSound(){
 	switch(RANDOM_LONG(0, 2)){
 	case 0:
 		EMIT_SOUND_FILTERED(ENT(pev), CHAN_WEAPON, "houndeye/he_blast1.wav", global_soundVolumeAll, global_soundAttenuationAll*0.5, 0, 80 + RANDOM_LONG(0, 5));
@@ -2621,7 +2995,7 @@ void CKingPin::playPsionicLaunchSound(){
 
 
 
-void CKingPin::ScheduleChange(void){
+void CKingpin::ScheduleChange(void){
 
 	/*
 	Schedule_t* endSchedule = this->m_pSchedule;
@@ -2644,7 +3018,7 @@ void CKingPin::ScheduleChange(void){
 
 
 /*
-void CKingPin::playSuperBallStartSound(void){
+void CKingpin::playSuperBallStartSound(void){
 	int pitch = 100;
 	
 	EMIT_SOUND_FILTERED( edict(), CHAN_VOICE, "ambience/alien_hollow.wav", 1.0, ATTN_NORM, 0, pitch );
@@ -2656,7 +3030,7 @@ void CKingPin::playSuperBallStartSound(void){
 
 
 
-void CKingPin::playForceFieldReflectSound(void){
+void CKingpin::playForceFieldReflectSound(void){
 	int pitch = 150 + RANDOM_LONG(-5, 5);
 	
 	EMIT_SOUND_FILTERED( edict(), CHAN_VOICE, "debris/beamstart4.wav", 1.0, ATTN_NORM - 0.3f, 0, pitch );
@@ -2664,37 +3038,37 @@ void CKingPin::playForceFieldReflectSound(void){
 
 
 
-void CKingPin::playSuperBallFireSound(void){
+void CKingpin::playSuperBallFireSound(void){
 	int pitch = 100 + RANDOM_LONG(-5, 5);
 	
 	EMIT_SOUND_FILTERED( edict(), CHAN_VOICE, "x/x_shoot1.wav", 1.0, ATTN_NORM - 0.6f, 0, pitch );
 }
 
 
-void CKingPin::playElectricBarrageStartSound(void){
+void CKingpin::playElectricBarrageStartSound(void){
 	int pitch = 112;
 	EMIT_SOUND_FILTERED( edict(), CHAN_VOICE, "ambience/particle_suck1.wav", 1.0, ATTN_NORM - 0.6f, 0, pitch );
 }//END OF playElectricBarrageStartSound
 
 
-void CKingPin::playElectricBarrageLoopSound(void){
+void CKingpin::playElectricBarrageLoopSound(void){
 	int pitch = 110;
 
 	//x/x_teleattack1.wav  ???
 	
 
-	EMIT_SOUND_FILTERED( edict(), CHAN_VOICE, "ambience/zapmachine.wav", 1.0, ATTN_NORM - 0.17f, 0, pitch );
+	EMIT_SOUND_FILTERED( edict(), CHAN_STATIC, "ambience/zapmachine.wav", 1.0, ATTN_NORM - 0.17f, 0, pitch );
 }//END OF playElectricBarrageStartSound
 
-void CKingPin::stopElectricBarrageLoopSound(void){
-	STOP_SOUND_FILTERED( edict(), CHAN_VOICE, "ambience/zapmachine.wav");
+void CKingpin::stopElectricBarrageLoopSound(void){
+	STOP_SOUND_FILTERED( edict(), CHAN_STATIC, "ambience/zapmachine.wav");
 }
 
 
 
-void CKingPin::playElectricBarrageEndSound(void){
+void CKingpin::playElectricBarrageEndSound(void){
 	int pitch = 90 + RANDOM_LONG(0,4);
-	EMIT_SOUND_FILTERED( edict(), CHAN_VOICE, RANDOM_SOUND_ARRAY(pElectricBarrageEndSounds), 1.0, ATTN_NORM - 0.5f, 0, pitch );
+	EMIT_SOUND_FILTERED( edict(), CHAN_STATIC, RANDOM_SOUND_ARRAY(pElectricBarrageEndSounds), 1.0, ATTN_NORM - 0.5f, 0, pitch );
 	
 
 }//END OF playElectricBarrageEndSound
@@ -2703,7 +3077,7 @@ void CKingPin::playElectricBarrageEndSound(void){
 
 
 
-void CKingPin::playElectricBarrageFireSound(void){
+void CKingpin::playElectricBarrageFireSound(void){
 	//maybe don't play a sound for this, it's spammy enough as it is.
 
 	//int pitch = 180;
@@ -2711,7 +3085,7 @@ void CKingPin::playElectricBarrageFireSound(void){
 	//pElectricBarrageFireSounds ????
 }
 
-void CKingPin::playElectricBarrageHitSound(CBaseEntity* arg_target, const Vector& arg_location){
+void CKingpin::playElectricBarrageHitSound(CBaseEntity* arg_target, const Vector& arg_location){
 	int pitch = 158 + RANDOM_LONG(0, 24);
 	
 	edict_t* toSend;
@@ -2740,15 +3114,28 @@ void CKingPin::playElectricBarrageHitSound(CBaseEntity* arg_target, const Vector
 
 
 
-void CKingPin::playElectricLaserChargeSound(void){
+void CKingpin::playElectricLaserChargeSound(void){
 	int pitch = 89;
 	
 	EMIT_SOUND_FILTERED( edict(), CHAN_WEAPON, "weapons/mine_charge.wav", 1.0, ATTN_NORM - 0.6f, 0, pitch, FALSE );
 
 }
 
+void CKingpin::stopElectricLaserChargeSound(void){
+	int pitch = 89;
+	
+	//STOP_SOUND_FILTERED( ENT(pev), CHAN_WEAPON, "debris/zap4.wav" );
+	STOP_SOUND_FILTERED( edict(), CHAN_WEAPON, "weapons/mine_charge.wav", FALSE);
 
-void CKingPin::playElectricLaserFireSound(void){
+}
+
+
+
+
+
+
+
+void CKingpin::playElectricLaserFireSound(void){
 	int pitch = 88;
 	EMIT_SOUND_FILTERED( edict(), CHAN_WEAPON, "weapons/gauss2.wav", 1.0, ATTN_NORM - 0.7f, 0, pitch, FALSE );
 	
@@ -2757,7 +3144,7 @@ void CKingPin::playElectricLaserFireSound(void){
 }
 
 //That is, at the location hit, regardless of hitting anything organic or not.
-void CKingPin::playElectricLaserHitSound(CBaseEntity* arg_target, const Vector& arg_location){
+void CKingpin::playElectricLaserHitSound(CBaseEntity* arg_target, const Vector& arg_location){
 	int pitch = 102;
 	//EMIT_SOUND_FILTERED( edict(), CHAN_VOICE, "garg/gar_stomp1.wav", 1.0, ATTN_NORM, 0, pitch );
 
@@ -2790,7 +3177,7 @@ void CKingPin::playElectricLaserHitSound(CBaseEntity* arg_target, const Vector& 
 
 
 
-CBeam*& CKingPin::getNextBeam(void){
+CBeam*& CKingpin::getNextBeam(void){
 	int returnID;
 
 	if(m_pBeam[m_iBeams] != NULL){
@@ -2817,7 +3204,7 @@ CBeam*& CKingPin::getNextBeam(void){
 
 //This is a smaller one for the rapid-fire laser barrage.
 //Only one laser in one call though.
-void CKingPin::fireElectricBarrageLaser(void){
+void CKingpin::fireElectricBarrageLaser(void){
 	
 	playElectricBarrageFireSound();
 
@@ -2834,11 +3221,11 @@ void CKingPin::fireElectricBarrageLaser(void){
 	UTIL_MakeAimVectors( pev->angles );
 
 	
-	vecSrc = pev->origin + gpGlobals->v_up * CHARGE_POINT_UP + gpGlobals->v_forward * CHARGE_POINT_FORWARD;
+	vecSrc = pev->origin + gpGlobals->v_up * CHARGE_POINT_UP + gpGlobals->v_forward * CHARGE_POINT_FORWARD + gpGlobals->v_forward * RANDOM_FLOAT(-9, 9) + gpGlobals->v_right * RANDOM_FLOAT(-9, 9) + gpGlobals->v_up * RANDOM_FLOAT(-9, 9);
 	vecAim = ShootAtEnemy( vecSrc );
 
 	//is that okay for inaccuracy?
-	float deflection = 0.034;
+	float deflection = 0.031;
 
 	vecAim = vecAim + gpGlobals->v_right * RANDOM_FLOAT( -deflection, deflection ) + gpGlobals->v_up * RANDOM_FLOAT( -deflection, deflection );
 
@@ -2881,13 +3268,15 @@ void CKingPin::fireElectricBarrageLaser(void){
 	playElectricBarrageHitSound(m_hEnemy, tr.vecEndPos);
 }//END OF fireElectricBarrageLaser
 
+
+
 //This is the strong loud single-fire one.
-void CKingPin::fireElectricDenseLaser(void){
+void CKingpin::fireElectricDenseLaser(CBaseEntity* arg_hitIntention, const Vector& arg_hitTargetPoint){
 
 	playElectricLaserFireSound();
 
-	
-	playElectricBarrageFireSound();
+	//??
+	//playElectricBarrageFireSound();
 
 
 	Vector vecSrc, vecAim;
@@ -2903,10 +3292,12 @@ void CKingPin::fireElectricDenseLaser(void){
 
 	
 	vecSrc = pev->origin + gpGlobals->v_up * CHARGE_POINT_UP + gpGlobals->v_forward * CHARGE_POINT_FORWARD;
-	vecAim = ShootAtEnemy( vecSrc );
+	
+	//vecAim = ShootAtEnemy( vecSrc );
+	vecAim = (arg_hitTargetPoint - vecSrc).Normalize();
 
 	//is that okay for inaccuracy?
-	float deflection = 0.002;
+	float deflection = 0.0003;
 
 	vecAim = vecAim + gpGlobals->v_right * RANDOM_FLOAT( -deflection, deflection ) + gpGlobals->v_up * RANDOM_FLOAT( -deflection, deflection );
 
@@ -2953,8 +3344,24 @@ void CKingPin::fireElectricDenseLaser(void){
 
 //homing ball of doom! Or is if there are air nodes.
 //TODO - actually be super homing, not just a controller head ball clone.
-void CKingPin::fireSuperBall(void){
+void CKingpin::fireSuperBall(void){
 	
+	//create the ball
+	Vector vecStart, angleGun;
+
+
+
+	Vector vecForward;
+	Vector vecRight;
+	Vector vecUp;
+
+
+
+	
+
+
+
+
 	//super ball.  USe pathfinding to route towards the enemy if there are air nodes.
 	//Otherwise just immitate a typical controller ball, that's the best we can do.
 
@@ -2969,17 +3376,24 @@ void CKingPin::fireSuperBall(void){
 
 	//m_IdealActivity = ACT_RANGE_ATTACK1;
 
-	//create the ball
-	Vector vecStart, angleGun;
-	Vector vecForward;
+
+
+
 
 
 
 	//GetAttachment( 0, vecStart, angleGun );
 			
-	UTIL_MakeAimVectorsPrivate(pev->angles, vecForward, NULL, NULL);
+	UTIL_MakeAimVectorsPrivate(pev->angles, vecForward, vecRight, vecUp);
 
-	vecStart = pev->origin + vecForward * 18 + Vector(0, 0, 60);
+	//vecStart = pev->origin + vecForward * 18 + Vector(0, 0, 60);
+	vecStart = pev->origin + vecUp * CHARGE_POINT_UP + vecForward * CHARGE_POINT_FORWARD;
+	
+
+
+
+
+
 
 	MESSAGE_BEGIN( MSG_BROADCAST, SVC_TEMPENTITY );
 		WRITE_BYTE( TE_ELIGHT );
@@ -3009,7 +3423,7 @@ void CKingPin::fireSuperBall(void){
 
 
 //three hornets that move outwards in a triangular fashion away from the top of the kingpin (spawn) at first, slowly forwards, and then zoom at the LKP without homing.
-void CKingPin::fireSpeedMissile(void){
+void CKingpin::fireSpeedMissile(void){
 
 	Vector vecForward;
 	Vector vecRight;
@@ -3017,11 +3431,11 @@ void CKingPin::fireSpeedMissile(void){
 	Vector vecSrc;
 
 	//including the sound here I guess.
-	int iPitch = 94;
+	int iPitch = 89 + RANDOM_LONG(0, 5);
 	switch(RANDOM_LONG(0, 2)){
-		case 0: EMIT_SOUND_FILTERED ( ENT(pev), CHAN_WEAPON, "agrunt/ag_fire1.wav", 1.0, ATTN_NORM, 0, iPitch ); break;
-		case 1: EMIT_SOUND_FILTERED ( ENT(pev), CHAN_WEAPON, "agrunt/ag_fire2.wav", 1.0, ATTN_NORM, 0, iPitch ); break;
-		case 2: EMIT_SOUND_FILTERED ( ENT(pev), CHAN_WEAPON, "agrunt/ag_fire3.wav", 1.0, ATTN_NORM, 0, iPitch ); break;
+		case 0: EMIT_SOUND_FILTERED ( ENT(pev), CHAN_WEAPON, "agrunt/ag_fire1.wav", 1.0, ATTN_NORM - 0.63f, 0, iPitch ); break;
+		case 1: EMIT_SOUND_FILTERED ( ENT(pev), CHAN_WEAPON, "agrunt/ag_fire2.wav", 1.0, ATTN_NORM - 0.63f, 0, iPitch ); break;
+		case 2: EMIT_SOUND_FILTERED ( ENT(pev), CHAN_WEAPON, "agrunt/ag_fire3.wav", 1.0, ATTN_NORM - 0.63f, 0, iPitch ); break;
 	}
 
 
@@ -3042,12 +3456,12 @@ void CKingPin::fireSpeedMissile(void){
 }//END OF fireSpeedMissile
 
 
-void CKingPin::createSpeedMissileHornet(const Vector& arg_location, const Vector& arg_floatVelocity){
+void CKingpin::createSpeedMissileHornet(const Vector& arg_location, const Vector& arg_floatVelocity){
 	Vector spawnLocation = arg_location + arg_floatVelocity * 30;
 	Vector dirToEnemyLKP = (m_vecEnemyLKP - pev->origin).Normalize();
 	CBaseMonster* pHornetMonster;
 
-	CBaseEntity* pHornet = CBaseEntity::Create( "hornet", spawnLocation, UTIL_VecToAngles( dirToEnemyLKP ), edict() );
+	CBaseEntity* pHornet = CBaseEntity::Create( "hornet_kingpin", spawnLocation, UTIL_VecToAngles( dirToEnemyLKP ), edict() );
 	//UTIL_MakeVectors ( pHornet->pev->angles );
 			
 	//MODDD - change, explanation above.
@@ -3055,21 +3469,35 @@ void CKingPin::createSpeedMissileHornet(const Vector& arg_location, const Vector
 
 
 
-	pHornet->pev->velocity = arg_floatVelocity * 34;
+	pHornet->pev->velocity = arg_floatVelocity * 25;
 	
 	//pHornet->pev->angles = UTIL_VecToAngles( pHornet->pev->velocity );
 
-	pHornet->SetThink( &CHornet::StartSpeedMissile );
-
+	//pHornet->SetThink( &CHornet::StartSpeedMissile );
+	//no need, the new one knows to do that.
 			
 
 	pHornetMonster = pHornet->MyMonsterPointer();
 
+	
+
 	if(pHornetMonster){
 		pHornetMonster->m_hEnemy = m_hEnemy;
 
-		CHornet* hornetRef = static_cast<CHornet*>(pHornet);
-		hornetRef->speedMissileDartTarget = m_vecEnemyLKP;
+		CHornetKingpin* hornetRef = static_cast<CHornetKingpin*>(pHornet);
+
+
+		if(m_hEnemy != NULL){
+			hornetRef->setup(m_hEnemy.GetEntity(), arg_floatVelocity * 6);
+		}else{
+			hornetRef->setup(this->m_vecEnemyLKP, arg_floatVelocity * 6);
+		}
+
+		//This will get overridden by havingan established enemy anyways.
+		//hornetRef->speedMissileDartTarget = m_vecEnemyLKP;
+		//Make sure they know to move a little aways from the direct center of the enemy.  Otherwise two of the three fired hornets may crash into each other
+		//as they near each other towards the target, particularly if the target moves backwards to give them a little more distance and likelihood of crashing into one another.
+		//hornetRef->speedMissileDartTargetOffset = arg_floatVelocity * 12;
 	}
 
 }//END OF createSpeedMissileHornet
@@ -3086,7 +3514,7 @@ void CKingPin::createSpeedMissileHornet(const Vector& arg_location, const Vector
 //similar to ClearBeams, but forces all m_pBeam's to NULL for safety.
 //Only to be used at startup (CKingpin constructor, anything unused must be NULL,
 //garbage memory or references won't be good)
-void CKingPin::SetupBeams(void){
+void CKingpin::SetupBeams(void){
 	for(int i = 0; i < KINGPIN_MAX_BEAMS; i++){
 		m_pBeam[i] = NULL;
 		m_flBeamExpireTime[i] = 0;
@@ -3094,7 +3522,7 @@ void CKingPin::SetupBeams(void){
 	m_iBeams = 0;
 }//END OF SetupBeams
 
-void CKingPin::ClearBeams(void){
+void CKingpin::ClearBeams(void){
 	int i;
 	for(i = 0; i < KINGPIN_MAX_BEAMS; i++){
 		if(m_pBeam[i] != NULL){
@@ -3106,11 +3534,11 @@ void CKingPin::ClearBeams(void){
 	m_iBeams = 0;
 	//pev->skin = 0;
 
-	STOP_SOUND_FILTERED( ENT(pev), CHAN_WEAPON, "debris/zap4.wav" );
+	//STOP_SOUND_FILTERED( ENT(pev), CHAN_WEAPON, "debris/zap4.wav", FALSE );
 }//END OF ClearBeams
 
 //Call me every frame of think logic.  Do any beams need to be cleaned up?
-void CKingPin::CheckBeams(void){
+void CKingpin::CheckBeams(void){
 	int i;
 	for(i = 0; i < KINGPIN_MAX_BEAMS; i++){
 		if(m_pBeam[i] != NULL){
@@ -3128,7 +3556,7 @@ void CKingPin::CheckBeams(void){
 
 
 //This logic comes up so much it may as well be turned into a simple method.
-BOOL CKingPin::turnToFaceEnemyLKP(void){
+BOOL CKingpin::turnToFaceEnemyLKP(void){
 	
 	MakeIdealYaw( m_vecEnemyLKP );
 	ChangeYaw( pev->yaw_speed );
@@ -3137,7 +3565,7 @@ BOOL CKingPin::turnToFaceEnemyLKP(void){
 }//END OF turnToFaceEnemyLKP
 
 
-float CKingPin::getDotProductWithEnemyLKP(void){
+float CKingpin::getDotProductWithEnemyLKP(void){
 	Vector myDirection;
 	Vector2D vec2LOS;
 
@@ -3152,7 +3580,7 @@ float CKingPin::getDotProductWithEnemyLKP(void){
 }//END OF getDotProductWithEnemyLKP
 
 
-void CKingPin::createChargeEffect(void){
+void CKingpin::createChargeEffect(void){
 	Vector vecSrc;
 	if(chargeEffect != NULL){
 		//???
@@ -3168,11 +3596,18 @@ void CKingPin::createChargeEffect(void){
 	chargeEffect = CSprite::SpriteCreate( "sprites/tele1.spr", vecSrc, TRUE );
 	if (chargeEffect)
 	{
+		//for during the animation when it begins.
+		chargeEffect->pev->framerate = 12.0;
+		chargeEffect->AnimationScaleFadeIn(6, 380, 2.5, 0.8f, 170);
+
+		
+		/*
 		chargeEffect->SetTransparency( kRenderTransAdd, 255, 255, 255, 170, kRenderFxNoDissipation );
 		//chargeEffect->SetAttachment( edict(), 1 );
 		chargeEffect->SetScale( 0.8f );
 		chargeEffect->pev->framerate = 12.0;
 		chargeEffect->TurnOn( );
+		*/
 	}
 	
 	/*
@@ -3197,7 +3632,7 @@ void CKingPin::createChargeEffect(void){
 
 }//END OF createChargeEffect
 
-void CKingPin::updateChargeEffect(void){
+void CKingpin::updateChargeEffect(void){
 
 	if(chargeEffect != NULL){
 		Vector vecForward;
@@ -3218,19 +3653,19 @@ void CKingPin::updateChargeEffect(void){
 			//electric laser's charge task wants an implode effect.
 			
 			//figure: how long did I start the charge ago?
-			float chargeStartTime = chargeFinishTime - 2.6f;
+			float chargeStartTime = chargeFinishTime - KINPIN_ELECTRIC_LASER_CHARGETIME;
 
 			//how long has passed since then?
 			float chargeTimeElapsed = gpGlobals->time - chargeStartTime;
 
 			//what portion of that are we done?
-			float chargeTimeFraction = chargeTimeElapsed / 2.6f;
+			float chargeTimeFraction = chargeTimeElapsed / KINPIN_ELECTRIC_LASER_CHARGETIME;
 
 			
 			float life;
 			//life = ((255 - pev->frame) / (pev->framerate * m_flFrameRate));
 			life = (1.0f - chargeTimeFraction);
-			if (life < 0.1) life = 0.1;
+			if (life < 0.05) life = 0.05;
 
 
 			MESSAGE_BEGIN( MSG_PAS, SVC_TEMPENTITY, pev->origin );
@@ -3238,9 +3673,9 @@ void CKingPin::updateChargeEffect(void){
 				WRITE_COORD( chargeEffectOrigin.x);
 				WRITE_COORD( chargeEffectOrigin.y);
 				WRITE_COORD( chargeEffectOrigin.z);
-				WRITE_BYTE( 50 * life + 100);  // radius
+				WRITE_BYTE( 50 * life + 150);  // radius
 				//WRITE_BYTE( pev->frame / 25.0 ); // count
-				WRITE_BYTE( ((int)(chargeTimeElapsed * 10.0f)) ); // count
+				WRITE_BYTE( ((int)( chargeTimeFraction * 16  )) ); // count
 				WRITE_BYTE( life * 10 ); // life
 			MESSAGE_END();
 
@@ -3257,14 +3692,14 @@ void CKingPin::updateChargeEffect(void){
 
 
 
-void CKingPin::removeChargeEffect(void){
+void CKingpin::removeChargeEffect(void){
 
 
 	if(chargeEffect != NULL){
 
 		//set it up to remove itself like how the egon does.
 		//That isn't go from scale #1 to #2, that's a scale speed and a fade speed.  Go figure.
-		chargeEffect->Expand( 6, 380 );
+		chargeEffect->Expand( 3, 460 );
 
 		chargeEffect = NULL;
 	}
@@ -3273,7 +3708,7 @@ void CKingPin::removeChargeEffect(void){
 
 
 //Like hgrunts, I can also check attacks while the enemy is behind walls.
-BOOL CKingPin::FCanCheckAttacks(void){
+BOOL CKingpin::FCanCheckAttacks(void){
 	if ( !HasConditions( bits_COND_ENEMY_TOOFAR ) )
 	{
 		return TRUE;
@@ -3286,11 +3721,11 @@ BOOL CKingPin::FCanCheckAttacks(void){
 
 
 //default, override if necessary.
-float CKingPin::getDistTooFar(void){
+float CKingpin::getDistTooFar(void){
 	return 1024.0 * 3.0f;
 }
 //default, override if necessary.
-float CKingPin::getDistLook(void){
+float CKingpin::getDistLook(void){
 	return 2048.0 * 1.5f;
 }
 
@@ -3298,13 +3733,28 @@ float CKingPin::getDistLook(void){
 
 
 
-void CKingPin::setPrimaryAttackCooldown(void){
-	primaryAttackCooldownTime = gpGlobals->time + RANDOM_FLOAT(2.0f, 3.6f);
+void CKingpin::setPrimaryAttackCooldown(void){
+
+	switch(g_iSkillLevel){
+	case SKILL_EASY:
+		primaryAttackCooldownTime = gpGlobals->time + RANDOM_FLOAT(2.6f, 3.5f);
+	break;
+	case SKILL_MEDIUM:
+		primaryAttackCooldownTime = gpGlobals->time + RANDOM_FLOAT(2.0f, 2.7f);
+	break;
+	case SKILL_HARD:
+		primaryAttackCooldownTime = gpGlobals->time + RANDOM_FLOAT(1.4f, 2.1f);
+	break;
+	default:
+		//???
+		primaryAttackCooldownTime = gpGlobals->time + RANDOM_FLOAT(2.2f, 3.3f);
+	break;
+	}//END OF switch
 }//END OF setPrimaryAttackCooldown
 
 
 
-void CKingPin::playShockerFireSound(CBaseEntity* arg_target, const Vector& arg_location){
+void CKingpin::playShockerFireSound(CBaseEntity* arg_target, const Vector& arg_location){
 	int pitch = 84 + RANDOM_LONG(0, 10);
 	//EMIT_SOUND_FILTERED( edict(), CHAN_WEAPON, RANDOM_SOUND_ARRAY(pShockerFireSounds), 1.0, ATTN_NORM, 0, pitch );
 	//arg_location
@@ -3323,7 +3773,7 @@ void CKingPin::playShockerFireSound(CBaseEntity* arg_target, const Vector& arg_l
 
 
 //do a houndeye shockwave, a little in the direction we're facing... or alot.
-void CKingPin::administerShocker(void){
+void CKingpin::administerShocker(void){
 	BOOL useAlt = TRUE;
 	float flAdjustedDamage;
 	float flDist;
@@ -3332,28 +3782,81 @@ void CKingPin::administerShocker(void){
 	Vector vecStart, angleGun;
 	Vector vecForward;
 	float shockerForwardDistance = 0;
+
+	TraceResult tr;
+	Vector vecStartFloorwise;
+
 	//GetAttachment( 0, vecStart, angleGun );
 			
 	UTIL_MakeAimVectorsPrivate(pev->angles, vecForward, NULL, NULL);
 
-	
+	Vector enemyPoint;
+	Vector vecTest;
+	float shockerZ;
 
-	if(m_hEnemy == NULL){
-		//?? generic amount.
-		shockerForwardDistance = 250.0f;
+	if(m_hEnemy != NULL){
+		enemyPoint = m_hEnemy->pev->origin;
 	}else{
-		float distanceToEnemy = (m_hEnemy->pev->origin - pev->origin).Length();
-		if(distanceToEnemy <= 300){
-			shockerForwardDistance = distanceToEnemy / 2.0f;
-		}else{
-			//just X in front of the enemy looking towards me.
-			shockerForwardDistance = distanceToEnemy - 150.0f;
-		}
+		//next best thing.
+		enemyPoint = m_vecEnemyLKP;
 	}
-	
+
+	float distanceToEnemy = (enemyPoint - pev->origin).Length();
+	if(distanceToEnemy <= 300.0f){
+		shockerForwardDistance = distanceToEnemy / 2.0f;
+	}else{
+		//just X in front of the enemy looking towards me.
+		shockerForwardDistance = distanceToEnemy - 150.0f;
+	}
+
+	//should there be a cap on distance like up to 580 points away?
+	//if(shockerForwardDistance > 580.0f){
+	//	shockerForwardDistance = 580.0f - 150.0f;
+	//}
+
+
 	//KINGPIN_SHOCKER_RADIUS
-	vecStart = pev->origin + vecForward * shockerForwardDistance + Vector(0, 0, zOff);
+	//This is guaranteed to be on the same level as the kingpin's ground though, not the target's.
+	//vecStart = pev->origin + vecForward * shockerForwardDistance + Vector(0, 0, zOff);
 	
+	//How about we use the kingpin's forward floor-wise (vecForward.x and .y), same shockerForwardDistance, take that point, and snap it to the ground?
+	vecStartFloorwise = Vector(pev->origin.x, pev->origin.y, 0) + Vector(vecForward.x, vecForward.y, 0) * shockerForwardDistance;
+
+	//go up or down?
+
+	if(enemyPoint.z >= pev->origin.z){
+		//above?
+	}
+
+	::DebugLine_SetupPoint(9, vecStartFloorwise + Vector(0, 0, enemyPoint.z), 255, 0, 0);
+
+
+	vecTest = Vector(vecStartFloorwise.x, vecStartFloorwise.y, enemyPoint.z + 6);
+
+	UTIL_TraceLine(vecTest, vecTest + Vector(0, 0, -140), ignore_monsters, edict(), &tr);
+
+	if(tr.fStartSolid || tr.fStartSolid){
+		//going through something at the start or entirely? Just use the enemy's Z.
+		shockerZ = enemyPoint.z + zOff;
+	}else{
+		
+		//did we hit at all?
+		if(tr.flFraction >= 1.0f){
+			//no? same thing.
+			shockerZ = enemyPoint.z + zOff;
+		}else{
+			//hit something?  go.
+			shockerZ = tr.vecEndPos.z + zOff;
+		}
+
+	}
+
+
+
+
+	vecStart = Vector(vecStartFloorwise.x, vecStartFloorwise.y, shockerZ);
+
+
 	playShockerFireSound(m_hEnemy, vecStart);
 
 
@@ -3423,6 +3926,9 @@ void CKingPin::administerShocker(void){
 			//if ( !FClassnameIs(pEntity->pev, "monster_houndeye") )
 			if(this->IRelationship(pEntity) > R_NO || isBreakable)
 			{
+				Vector deltaToShockwave;
+				Vector directionToShockwave;
+				Vector directionToShockwave2D;
 				float damageFactor;
 
 				//EASY_CVAR_PRINTIF_PRE(houndeyePrintout, easyPrintLine( "What did I hurt? %s", STRING(pEntity->pev->classname)));
@@ -3435,7 +3941,14 @@ void CKingPin::administerShocker(void){
 				
 				flAdjustedDamage = gSkillData.houndeyeDmgBlast;
 				
-				flDist = (pEntity->Center() - vecStart).Length();
+
+				//BodyTargetMod(pev->origin)  ?  Center()?  whichever works.
+				deltaToShockwave = (pEntity->Center() - vecStart);
+
+				directionToShockwave = (deltaToShockwave).Normalize();
+				directionToShockwave2D = Vector(directionToShockwave.x, directionToShockwave.y, 0);
+
+				flDist = (deltaToShockwave).Length();
 
 				//flAdjustedDamage -= ( flDist / KINGPIN_SHOCKER_RADIUS ) * flAdjustedDamage;
 				//flAdjustedDamage = flAdjustedDamage - (( flDist / KINGPIN_SHOCKER_RADIUS ) * flAdjustedDamage);
@@ -3451,7 +3964,7 @@ void CKingPin::administerShocker(void){
 				//? = 100 * (1 - 160/200)
 				//
 
-				if(pEntity->IsPlayer() && damageFactor > 0.0f){
+				if(pEntity->IsPlayer() && !pEntity->blocksImpact() && damageFactor > 0.0f){
 					//float randomAngle = RANDOM_FLOAT(0.0f, M_PI*2.0f);
 					
 					int randomZDir;
@@ -3480,10 +3993,10 @@ void CKingPin::administerShocker(void){
 					pEntity->pev->punchangle.z = sin(randomAngle) * 60.0f * damageFactor;
 					*/
 
-					pEntity->pev->punchangle.x = RANDOM_FLOAT(-1.0f, -0.7f) * 80.0f * damageFactor;
-					pEntity->pev->punchangle.z = randomZDir*RANDOM_FLOAT(-1.0f, -0.7f) * 300.0f * damageFactor;
+					pEntity->pev->punchangle.x = RANDOM_FLOAT(-1.0f, -0.7f) * 13.0f * damageFactor;
+					pEntity->pev->punchangle.z = randomZDir*RANDOM_FLOAT(-1.0f, -0.7f) * 27.0f * damageFactor;
 
-					pEntity->pev->punchangle.y = RANDOM_FLOAT(-0.2f, 0.2f) * 80.0f * damageFactor;
+					pEntity->pev->punchangle.y = RANDOM_FLOAT(-0.2f, 0.2f) * 13.0f * damageFactor;
 
 
 				}
@@ -3526,18 +4039,49 @@ void CKingPin::administerShocker(void){
 					}
 
 					pEntity->TakeDamage ( pev, pev, flAdjustedDamage, damageType );
+
+
+					//Another thing. Do some physical knockback.
+					//pEntity->pev->velocity = pEntity->pev->velocity - gpGlobals->v_forward * 420 + gpGlobals->v_up * 120 - gpGlobals->v_right * 45;
+
+					//HACK - if the directionToShockwave's Z is sufficiently small (absolute-value wise, distance from 0 positive or negative), force it to be a little higher positive.
+
+					if(abs(directionToShockwave.z) < 0.3f){
+						directionToShockwave.z = 0.8f;
+					}
+
+					//make it closer to 1 for this, since it is a decimal.
+					damageFactor = pow(damageFactor, (1.0f/3.0f) );
+
+					pEntity->pev->velocity = pEntity->pev->velocity + directionToShockwave2D * 560 * damageFactor + Vector(0, 0, directionToShockwave.z) * 380 * damageFactor;
+					//is this a good idea?
+					if(pEntity->pev->flags & FL_ONGROUND){
+						pEntity->pev->flags &= ~FL_ONGROUND;
+						UTIL_MoveToOrigin(pEntity->edict(), pEntity->pev->origin + Vector(0, 0, 2), 1, MOVE_STRAFE);
+					}
+
 				}
-			}
-		}
+
+			}//END OF relationship or breakable checks
+		}//END OF if other entity takes damage
 	}//END OF while thru entities in range list
 
-
-
-
-
-
-
 }//END OF administerShocker
+
+
+
+
+
+
+
+
+
+BOOL CKingpin::needsMovementBoundFix(void){
+
+	return TRUE;
+}//END OF needsMovementBoundFix
+
+
 
 
 

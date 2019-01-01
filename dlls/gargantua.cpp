@@ -2248,7 +2248,10 @@ void CGargantua::OnTakeDamageSetConditions(entvars_t *pevInflictor, entvars_t *p
 	//    The agrunt used to use this so that its only flinch was for heavy damage (above 20 in one attack), but that's easy by overriding this OnTakeDamageSetconditions method now.
 	//    Keep it to using light damage for that instead.
 	//if ( flDamage >= 20 )
-	if(flDamage >=  pev->max_health * 0.55 || flDamage >= 80 && gpGlobals->time >= forgetBigFlinchTime )
+
+
+	
+	if(gpGlobals->time >= forgetBigFlinchTime && (flDamage >=  pev->max_health * 0.55 || flDamage >= 70) )
 	{
 		SetConditions(bits_COND_HEAVY_DAMAGE);
 		forgetSmallFlinchTime = gpGlobals->time + DEFAULT_FORGET_SMALL_FLINCH_TIME*2.3;

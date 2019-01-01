@@ -484,11 +484,16 @@ public:
 	virtual void    StopSneaking( void ) {}
 	virtual BOOL	OnControls( entvars_t *pev ) { return FALSE; }
 	virtual BOOL    IsSneaking( void ) { return FALSE; }
-	virtual BOOL	IsAlive( void ) { return (pev->deadflag == DEAD_NO) && pev->health > 0; }
+
+
+	//MODDD - why does IsAlive check for above 0 health?  The deadflag is always properly adjusted if it goes under 0.
+	//virtual BOOL	IsAlive( void ) { return (pev->deadflag == DEAD_NO) && pev->health > 0; }
+	virtual BOOL IsAlive(void){return (pev->deadflag == DEAD_NO); }
 	//MODDD NEW - alternate version for special cases. Also factors in "recognizablyDead": change enemies after this one's gone far enough in the death anim.
 	//            Does this mean any case where health is below 0 but still alive are ignored by AI? Not that this should ever happen.
 	//            BLAH this is CBaseEntity, not CBaseMonster. Forget that, this precision really isn't helpful here.
-	virtual BOOL	IsAlive_FromAI( CBaseMonster* whoWantsToKnow ) { return (pev->deadflag == DEAD_NO || (pev->deadflag == DEAD_DYING && !recognizablyDead ) ) && pev->health > 0; }
+	//virtual BOOL IsAlive_FromAI( CBaseMonster* whoWantsToKnow ) { return (pev->deadflag == DEAD_NO || (pev->deadflag == DEAD_DYING && !recognizablyDead ) ) && pev->health > 0; }
+	virtual BOOL IsAlive_FromAI( CBaseMonster* whoWantsToKnow ) { return (pev->deadflag == DEAD_NO || (pev->deadflag == DEAD_DYING && !recognizablyDead ) ); }
 
 
 	virtual BOOL	IsBSPModel( void ) { return pev->solid == SOLID_BSP || pev->movetype == MOVETYPE_PUSHSTEP; }
@@ -510,12 +515,6 @@ public:
 	void (CBaseEntity ::*m_pfnBlocked)( CBaseEntity *pOther );
 
 	virtual void Think( void ) { if (m_pfnThink) (this->*m_pfnThink)(); };
-	
-
-
-	//MODDD TODO - likely unnecessary anymore, remove at some point after testing and proving this.
-	BOOL iAmDead;
-
 	
 
 
@@ -673,8 +672,13 @@ public:
 
 	virtual int Illumination( ) { return GETENTITYILLUM( ENT( pev ) ); };
 
-	virtual	BOOL FVisible ( CBaseEntity *pEntity );
-	virtual	BOOL FVisible ( const Vector &vecOrigin );
+	//MODDD NOTE - despite these being virtual, they are never implemented elsewhere.  May be for the best.
+	//             Adding features to these by other smaller implementable (virtual) methods, like the new
+	//             SeeThroughWaterLine, may be best.
+	virtual	BOOL FVisible (CBaseEntity *pEntity );
+	virtual	BOOL FVisible (const Vector &vecTargetOrigin );
+	virtual BOOL FVisible (const Vector& vecLookerOrigin, CBaseEntity *pEntity );
+	virtual BOOL FVisible (const Vector& vecLookerOrigin, const Vector &vecTargetOrigin );
 
 	virtual BOOL SeeThroughWaterLine(void);
 

@@ -389,6 +389,9 @@
     <ClCompile Include="healthmodule.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="hornet_kingpin.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="activity.h">
@@ -620,6 +623,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="lights.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="hornet_kingpin.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -59,6 +59,7 @@ extern Schedule_t	slCombatStand[];
 extern Schedule_t	slCombatFace[];
 extern Schedule_t slCombatFaceNoStump[];
 extern Schedule_t slCombatFaceSound[];
+extern Schedule_t slCombatLook[];
 
 //MODDD - new
 extern Schedule_t slWaitForEnemyToEnterWater[];

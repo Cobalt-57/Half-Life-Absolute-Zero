@@ -17,12 +17,16 @@
 //=========================================================
 
 #include	"extdll.h"
+
+//MODDD - not as soon of an include as possible? my own corresponding .h file?  Was above gamerules.h before.
+#include	"hornet.h"
+
 #include	"util.h"
 #include	"cbase.h"
 #include "basemonster.h"
 #include	"weapons.h"
 #include	"soundent.h"
-#include	"hornet.h"
+
 #include	"gamerules.h"
 
 
@@ -61,6 +65,26 @@ extern float global_hornetSpiralPeriod;
 extern float global_hornetSpiralAmplitude;
 
 
+
+
+
+CHornet::CHornet(void){
+
+
+	hornetTouchedAnything = FALSE;
+	hornetPseudoNextThink = -1;
+
+	vecFlightDirTrue = Vector(0,0,0);
+	vecFlightDirAlttt = Vector(0,0,0);
+	vecFlightDirMem = Vector(0,0,0);
+
+	spiralStartTime = 0;
+
+}
+
+
+
+
 LINK_ENTITY_TO_CLASS( hornet, CHornet );
 
 //=========================================================
@@ -71,12 +95,6 @@ TYPEDESCRIPTION	CHornet::m_SaveData[] =
 	DEFINE_FIELD( CHornet, m_flStopAttack, FIELD_TIME ),
 	DEFINE_FIELD( CHornet, m_iHornetType, FIELD_INTEGER ),
 	DEFINE_FIELD( CHornet, m_flFlySpeed, FIELD_FLOAT ),
-
-	//MODDD - new
-	DEFINE_FIELD( CHornet, expireTime, FIELD_TIME ),
-	DEFINE_FIELD( CHornet, speedMissileDartTarget, FIELD_VECTOR ),
-	DEFINE_FIELD( CHornet, speedMissileDartDirection, FIELD_VECTOR ),
-	
 
 };
 
@@ -150,22 +168,6 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CHornet)
 
 
 
-CHornet::CHornet(){
-
-
-	hornetTouchedAnything = FALSE;
-	hornetPseudoNextThink = -1;
-
-	vecFlightDirTrue = Vector(0,0,0);
-	vecFlightDirAlttt = Vector(0,0,0);
-	vecFlightDirMem = Vector(0,0,0);
-
-	spiralStartTime = 0;
-
-}
-
-
-
 //=========================================================
 //=========================================================
 void CHornet :: Spawn( void )
@@ -183,6 +185,10 @@ void CHornet :: Spawn( void )
 	pev->solid		= SOLID_BBOX;
 	pev->takedamage = DAMAGE_YES;
 	pev->flags		|= FL_MONSTER;
+
+
+	//why not?
+	pev->classname = MAKE_STRING("hornet");
 
 	//MODDD - possible skill CVar intervention...
 	//pev->health		= 1;// weak!
@@ -334,73 +340,6 @@ void CHornet :: StartDart ( void )
 	pev->nextthink = gpGlobals->time + 4;
 }
 
-
-//MODDD - new. The caller also must specify the "speedMissileDartTarget" to zoom in on soon.
-//should probably just subclass this to be its own kingpin special hornet if this works out.
-void CHornet::StartSpeedMissile(void)
-{
-	
-	
-	//SetThink( &CBaseEntity::SUB_Remove );
-	SetThink( &CHornet::SpeedMissileDartStart );
-	SetTouch( &CHornet::DartTouch );
-	pev->nextthink = gpGlobals->time + 0.73f;
-
-
-}
-
-
-void CHornet::SpeedMissileDartStart(void)
-{
-	//pev->velocity = Vector(0,0,0);
-
-	//ignite the trail here instead, custom.
-	PLAYBACK_EVENT_FULL (FEV_GLOBAL, this->edict(), g_sImitation7, 0.0, (float *)&this->pev->origin, (float *)&this->pev->angles, 0.7, 0.0, this->entindex(), 0, 0, 0);
-
-
-	expireTime = gpGlobals->time + 4.0f;
-
-	if(m_hEnemy != NULL){
-		//override: make speedMissileDartTarget the enemy's location now.
-		speedMissileDartTarget = m_hEnemy->pev->origin;
-	}
-
-	speedMissileDartDirection = (speedMissileDartTarget - pev->origin).Normalize();
-	
-
-	pev->velocity = speedMissileDartDirection * 600;
-
-	//face the direction I'm speeding in.
-	pev->angles = UTIL_VecToAngles( speedMissileDartDirection );
-
-	SetThink( &CHornet::SpeedMissileDartContinuous );
-	//SetTouch( &CHornet::DartTouch );
-	pev->nextthink = gpGlobals->time + 0.1;
-}
-
-void CHornet::SpeedMissileDartContinuous(void)
-{
-	//if(pev->velocity.Length() < 1600){
-
-		if(m_hEnemy != NULL){
-			//override: make speedMissileDartTarget the enemy's location now.
-			speedMissileDartTarget = m_hEnemy->pev->origin;
-			speedMissileDartDirection = (speedMissileDartTarget - pev->origin).Normalize();
-		}
-
-		pev->velocity = pev->velocity * 0.9f + speedMissileDartDirection * 280;
-	//}
-	
-	//SetThink( &CHornet::SpeedMissileDartContinuous );
-	//SetTouch( &CHornet::DartTouch );
-	pev->nextthink = gpGlobals->time + 0.1;
-
-	if(gpGlobals->time >= expireTime){
-		//just remove me.
-		SetThink( &CBaseEntity::SUB_Remove );
-	}
-
-}
 
 
 
@@ -1143,8 +1082,6 @@ GENERATE_KILLED_IMPLEMENTATION(CHornet){
 	unsigned int	cCount = 0;
 	BOOL			fDone = FALSE;
 
-	//MODDD - EMERGENCY TEST FLAG
-	iAmDead = TRUE;
 
 	//MODDD - if stuck to a barnacle, not anymore.
 	barnacleLocked = FALSE;

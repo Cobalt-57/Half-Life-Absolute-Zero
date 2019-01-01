@@ -2502,7 +2502,7 @@ Schedule_t *CStukaBat :: GetSchedule ( void )
 	*/
 
 	//MODDD - safety.
-	if(iAmDead){
+	if(pev->deadflag != DEAD_NO){
 		return GetScheduleOfType( SCHED_DIE );
 	}
 
@@ -4062,7 +4062,7 @@ void CStukaBat::MonsterThink(){
 
 	SetYawSpeed();
 
-	if(!deadSetActivityBlock && !iAmDead && pev->deadflag == DEAD_NO){
+	if(!deadSetActivityBlock && pev->deadflag == DEAD_NO){
 
 		if(pev->deadflag == DEAD_NO){
 			//not dead? influences on velocity not allowed.

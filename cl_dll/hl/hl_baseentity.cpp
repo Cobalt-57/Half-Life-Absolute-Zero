@@ -520,8 +520,12 @@ void CBaseMonster::SetTurnActivityForceAct(void){}
 CBaseEntity *CBaseMonster :: BestVisibleEnemy ( void ) { return NULL; }
 BOOL CBaseMonster :: FInViewCone ( CBaseEntity *pEntity ) { return FALSE; }
 BOOL CBaseMonster :: FInViewCone ( Vector *pOrigin ) { return FALSE; }
-BOOL CBaseEntity :: FVisible ( CBaseEntity *pEntity ) { return FALSE; }
-BOOL CBaseEntity :: FVisible ( const Vector &vecOrigin ) { return FALSE; }
+
+BOOL CBaseEntity :: FVisible (CBaseEntity *pEntity ) { return FALSE; }
+BOOL CBaseEntity :: FVisible (const Vector &vecTargetOrigin ) { return FALSE; }
+BOOL CBaseEntity :: FVisible (const Vector& vecLookerOrigin, CBaseEntity *pEntity ) { return FALSE; }
+BOOL CBaseEntity :: FVisible (const Vector& vecLookerOrigin, const Vector &vecTargetOrigin ) { return FALSE; }
+
 //MODDD - new
 BOOL CBaseEntity::SeeThroughWaterLine(void){return FALSE;}
 
