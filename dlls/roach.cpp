@@ -53,7 +53,7 @@ public:
 	float	m_flLastLightLevel;
 	float	m_flNextSmellTime;
 	int		Classify ( void );
-	void	Look ( int iDistance );
+	void	Look ( float flDistance );
 	int		ISoundMask ( void );
 	
 	// UNDONE: These don't necessarily need to be save/restored, but if we add more data, it may
@@ -153,7 +153,12 @@ void CRoach :: Spawn()
 	m_bloodColor		= BLOOD_COLOR_YELLOW;
 	pev->effects		= 0;
 	pev->health			= 1;
+
+	//MODDD NOTE - if the point of this monster is to look in 360 degrees (noted in the "Look" method below),
+	// why is this 0.5 and not -1.0?  -1.0 means being even 180 degrees behind me is OK for other things to be
+	// sighted, or +- 180 degrees both ways.
 	m_flFieldOfView		= 0.5;// indicates the width of this monster's forward view cone ( as a dotproduct result )
+
 	m_MonsterState		= MONSTERSTATE_NONE;
 
 	MonsterInit();
@@ -429,7 +434,8 @@ void CRoach :: Move ( float flInterval )
 // Look - overriden for the roach, which can virtually see 
 // 360 degrees.
 //=========================================================
-void CRoach :: Look ( int iDistance )
+//MODDD - just like the parent method in CBaseMonster.cpp, use a float for the distance parameter (iDistance, now flDistance) instead.
+void CRoach :: Look ( float flDistance )
 {
 	CBaseEntity	*pSightEnt = NULL;// the current visible entity that we're dealing with
 	CBaseEntity	*pPreviousEnt;// the last entity added to the link list 
@@ -451,7 +457,7 @@ void CRoach :: Look ( int iDistance )
 	// Does sphere also limit itself to PVS?
 	// Examine all entities within a reasonable radius
 	// !!!PERFORMANCE - let's trivially reject the ent list before radius searching!
-	while ((pSightEnt = UTIL_FindEntityInSphere( pSightEnt, pev->origin, iDistance )) != NULL)
+	while ((pSightEnt = UTIL_FindEntityInSphere( pSightEnt, pev->origin, flDistance )) != NULL)
 	{
 		// only consider ents that can be damaged. !!!temporarily only considering other monsters and clients
 		if (  pSightEnt->IsPlayer() || FBitSet ( pSightEnt->pev->flags, FL_MONSTER ) )

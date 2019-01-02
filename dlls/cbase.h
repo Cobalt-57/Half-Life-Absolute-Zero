@@ -882,6 +882,9 @@ public:
 #define DMG_DROWN			(1 << 14)	// Drowning
 // time-based damage
 //NOTE:  I believe this is just a way of saying, 1's for all timed damage (included), 0's for all else.
+//       Any actual continual time damage is indicated by the 2nd damage bit (bitsDamageTypeMod) having DMG_TIMEDEFFECT or DMG_TIMEDEFFECTIGNORE.
+//       This just shows the timed damages of the first bitmask as initial strikes.
+//       Any continual damage still uses the 2nd bitmask for the aforementioned choices regardless.
 #define DMG_TIMEBASED		(~(0x3fff))	// mask for time-based damage
 
 #define DMG_PARALYZE		(1 << 15)	// slows affected creature down
@@ -908,7 +911,13 @@ public:
 #define DMG_BLEEDING			(1 << 1)   // bleeding, usually inflicted from strong melee attacks.  Medkits cure it.
 #define DMG_TIMEDEFFECTIGNORE	(1 << 2)   //same as TIMEDEFFECT, but made to ignore armor (regardless of the cvar).
 #define DMG_BARNACLEBITE		(1 << 3)   //not timed.  Just sent by the barnacle's execution bite to NPCs to mark not to ignore (if they would).
-#define DMG_GAUSS				(1 << 4)   //coming from the player's gauss weapon. Some things (apache) are now immune to it.
+#define DMG_GAUSS				(1 << 4)   //coming from the player's gauss weapon. Some things (apache) are now immune to it.  ...or not? that got canceled.
+#define DMG_HITBOX_EQUAL		(1 << 5)   //signal that this type of damage can't be increased by hitting particular hitboxes.
+                                           //It is still completely up to any given monster's TraceAttack / TakeDamage to implement this
+										   //(check for the presence of DMG_HITBOX_EQUAL in bitsDamageTypeMod and deny enhancing damage
+										   // per headshots, etc. accordingly).
+										   //For instance, for lightning attacks, different amounts of damage for body, leg, arm, or headshots don't make sense.
+										   //It's possible damage from NPC's just shouldn't even do this kind of damage anyways.
 
 
 //Which types of damage in the new mask are secondary?

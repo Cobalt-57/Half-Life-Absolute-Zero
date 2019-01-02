@@ -1893,6 +1893,11 @@ int CISlave::LookupActivityHard(int activity){
 		case ACT_DIEFORWARD :
 			return ISLAVE_DIEFORWARD;
 		break;
+		case ACT_BIG_FLINCH:
+			//has the animation hooked up, just a tad slow maybe.
+			m_flFramerateSuggestion = 1.32f;
+			return CBaseAnimating::LookupActivity(activity);
+		break;
 		case ACT_BARNACLE_HIT:
 			//just some intervention.
 			this->m_flFramerateSuggestion = 1.27;
@@ -2535,7 +2540,8 @@ void CISlave :: ZapBeam( int side )
 	pEntity = CBaseEntity::Instance(tr.pHit);
 	if (pEntity != NULL && pEntity->pev->takedamage)
 	{
-		pEntity->TraceAttack( pev, gSkillData.slaveDmgZap, vecAim, &tr, DMG_SHOCK );
+		//MODDD - don't do damage differently to different hitboxes.
+		pEntity->TraceAttack( pev, gSkillData.slaveDmgZap, vecAim, &tr, DMG_SHOCK, DMG_HITBOX_EQUAL );
 	}
 	UTIL_EmitAmbientSound( ENT(pev), tr.vecEndPos, "weapons/electro4.wav", min(0.5 * global_soundVolumeAll, 1), global_soundAttenuationAll, 0, RANDOM_LONG( 140, 160 ) );
 }

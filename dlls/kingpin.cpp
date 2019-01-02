@@ -164,10 +164,12 @@ enum
 
 	TASK_KINGPIN_ELECTRIC_BARRAGE_CHARGE_INTERRUPTED,
 	TASK_KINGPIN_ELECTRIC_LASER_CHARGE_INTERRUPTED,
-
+	TASK_KINGPIN_GENERIC_RANGE_FAIL,
 
 	TASK_KINGPIN_SHOCKER_ADMINISTER,
 	TASK_GATE_KINGPIN_DISTANCE_MINIMUM,
+
+	
 
 };
 
@@ -716,7 +718,7 @@ Schedule_t	slKingpinElectricLaserChargeFail[] =
 
 Task_t	tlKingpinGenericRangeFail[] =
 {
-	{TASK_SET_ACTIVITY,   (float)ACT_IDLE},
+	{TASK_KINGPIN_GENERIC_RANGE_FAIL, (float)0   },
 };
 
 Schedule_t	slKingpinGenericRangeFail[] =
@@ -1534,6 +1536,11 @@ void CKingpin::StartTask( Task_t *pTask ){
 
 	switch( pTask->iTask ){
 		
+		case TASK_KINGPIN_GENERIC_RANGE_FAIL:
+			//just in case this interrupted a ranged attack very early.  returning to it too soon may look a little funny.
+			setPrimaryAttackCooldown();
+			TaskComplete();
+		break;
 		
 		case TASK_KINGPIN_SHOCKER_ADMINISTER:{
 
@@ -1577,7 +1584,9 @@ void CKingpin::StartTask( Task_t *pTask ){
 
 		case TASK_KINGPIN_ELECTRIC_BARRAGE_CHARGE_INTERRUPTED:{
 
-			
+			//just... call these anyways for safety.
+			removeChargeEffect();
+			stopElectricBarrageLoopSound();
 
 			if(pev->sequence == KINGPIN_MAGE_LOOP || pev->sequence == KINGPIN_MAGE_START){
 				
@@ -1585,8 +1594,6 @@ void CKingpin::StartTask( Task_t *pTask ){
 					//make a shorting-out sound.
 					playElectricBarrageEndSound();
 				}
-				removeChargeEffect();
-				stopElectricBarrageLoopSound();
 
 
 				if(m_IdealMonsterState == MONSTERSTATE_DEAD){
@@ -1613,7 +1620,9 @@ void CKingpin::StartTask( Task_t *pTask ){
 		break;}
 		case TASK_KINGPIN_ELECTRIC_LASER_CHARGE_INTERRUPTED:{
 			
-			
+			//just... call these anyways for safety.
+			removeChargeEffect();
+			stopElectricLaserChargeSound();
 
 			if(pev->sequence == KINGPIN_MAGE_LOOP || pev->sequence == KINGPIN_MAGE_START){
 				
@@ -1622,8 +1631,6 @@ void CKingpin::StartTask( Task_t *pTask ){
 					playElectricBarrageEndSound();
 				}
 
-				removeChargeEffect();
-				stopElectricLaserChargeSound();
 
 				if(m_IdealMonsterState == MONSTERSTATE_DEAD){
 					//No, dying takes precedence.  Let someting else handle this.
@@ -1742,27 +1749,40 @@ void CKingpin::StartTask( Task_t *pTask ){
 				firePoint = m_hEnemy->BodyTargetMod(vecStart);
 			}else{
 
-				int i;
+				CBaseEntity* testEntity;
+				testEntity = attemptFindTowardsPoint(m_vecEnemyLKP);
+				
+				if(testEntity != NULL){
+					canFireLaser = TRUE;
+					firePoint = testEntity->BodyTargetMod(vecStart);
+				}
+
+
 				
 
 				//...could we have also just done GetEnemy(TRUE); and seen if m_hEnemy was null after that?
 				//   this does check each memeber of the stack instead though.
 
+				/*
+				int i;
+				Vector vecForward;
+				Vector vecForward2D;
+				UTIL_MakeVectorsPrivate ( pev->angles, vecForward, NULL, NULL );
+				vecForward2D = vecForward.Make2D();
+				
 				for(i = 0; i < m_intOldEnemyNextIndex; i++){
 					//can we see this enemy instead?
 					
 					if(m_hOldEnemy[i] != NULL && m_hOldEnemy[i]->IsAlive_FromAI(this) ){
 						//thank you CheckAttacks of basemonster.cpp.
-						Vector vecForward;
 						Vector2D vec2LOS;
 						float flDot;
 
-						UTIL_MakeVectorsPrivate ( pev->angles, vecForward, NULL, NULL );
-
+						
 						vec2LOS = ( m_hOldEnemy[i]->pev->origin - pev->origin ).Make2D();
 						vec2LOS = vec2LOS.Normalize();
 							
-						flDot = DotProduct (vec2LOS , vecForward.Make2D() );
+						flDot = DotProduct (vec2LOS , vecForward2D() );
 
 
 						if(flDot >= 0.7f && (FVisible(m_hOldEnemy[i]) || FVisible(vecStart, m_hOldEnemy[i] )) ){
@@ -1775,6 +1795,15 @@ void CKingpin::StartTask( Task_t *pTask ){
 						}
 					}
 				}
+				*/
+
+
+
+
+
+
+
+
 
 				//If our charge effect is present, it can also have a line of sight to the enemy.
 				//Otherwise sitting and doing nothing while the enemy (player) peeks at it is a little odd.
@@ -2077,7 +2106,7 @@ void CKingpin::RunTask( Task_t *pTask ){
 		break;}
 		case TASK_KINGPIN_ELECTRIC_LASER_CHARGE:{
 
-			if(accumulatedDamageTaken >= 20){
+			if(accumulatedDamageTaken >= 25){
 				//taken too much damage? stop.
 				TaskFail();
 				return;
@@ -3444,7 +3473,8 @@ void CKingpin::fireElectricBarrageLaser(void){
 		ClearMultiDamage();
 
 		//TODO - different damage for the Kingping in skills!
-		pEntity->TraceAttack( pev, gSkillData.slaveDmgZap * 0.12f, vecAim, &tr, DMG_SHOCK );
+		//don't do damage differently to different hitboxes.
+		pEntity->TraceAttack( pev, gSkillData.slaveDmgZap * 0.12f, vecAim, &tr, DMG_SHOCK, DMG_HITBOX_EQUAL );
 		
 		//okay, why not apply this every time damage is dealt..?
 		ApplyMultiDamage(pev, pev);
@@ -3526,7 +3556,8 @@ void CKingpin::fireElectricDenseLaser(CBaseEntity* arg_hitIntention, const Vecto
 		ClearMultiDamage();
 
 		//TODO - different damage for the Kingping in skills!
-		pEntity->TraceAttack( pev, gSkillData.slaveDmgZap * 3.0f, vecAim, &tr, DMG_SHOCK );
+		//don't do damage differently to different hitboxes.
+		pEntity->TraceAttack( pev, gSkillData.slaveDmgZap * 3.0f, vecAim, &tr, DMG_SHOCK, DMG_HITBOX_EQUAL );
 		
 		//okay, why not apply this every time damage is dealt..?
 		ApplyMultiDamage(pev, pev);
@@ -4237,7 +4268,7 @@ void CKingpin::administerShocker(void){
 						damageType |= DMG_ALWAYSGIB;
 					}
 
-					pEntity->TakeDamage ( pev, pev, flAdjustedDamage, damageType );
+					pEntity->TakeDamage ( pev, pev, flAdjustedDamage, damageType, DMG_HITBOX_EQUAL );
 
 
 					//Another thing. Do some physical knockback.
@@ -4284,6 +4315,51 @@ BOOL CKingpin::needsMovementBoundFix(void){
 
 	return TRUE;
 }//END OF needsMovementBoundFix
+
+
+
+//MODDD - started as a clone of CBaseMonster's BestVisibleEnemy method (from the as-is SDK).
+//Modified to take a point instead, and see which entity is closest to the kingpin,
+//but still roughly in the same direction it is facing (towards this point).  A laser that fires some 140 or 180 degrees behind looks weird.
+CBaseEntity* CKingpin::attemptFindTowardsPoint(const Vector& arg_searchPoint){
+	CBaseEntity	*pReturn;
+	CBaseEntity	*pNextEnt;
+	float			flNearest;
+	float			flDist;
+
+	Vector2D vecDirToSearchPoint = (arg_searchPoint - this->EyePosition()).Make2D().Normalize();
+
+	flNearest = 3000;
+	pNextEnt = m_pLink;
+	pReturn = NULL;
+
+	while ( pNextEnt != NULL )
+	{
+		if ( pNextEnt->IsAlive_FromAI(this) )
+		{
+			//First a check. Is this near a straight line from this Kingpin to arg_searchPoint?
+			Vector2D vecTowardsEnemy = (pNextEnt->EyePosition() - this->EyePosition()).Make2D().Normalize();
+			float flDot = DotProduct(vecDirToSearchPoint, vecTowardsEnemy);
+
+
+			//based off of VIEW_FIELD_ULTRA_NARROW, which was +-25 degrees.
+			if(flDot >= 0.89){
+				//in the direction enough.
+				flDist = ( pNextEnt->pev->origin - pev->origin ).Length();
+				
+				if ( flDist <= flNearest )
+				{
+					flNearest = flDist;
+					pReturn = pNextEnt;
+				}
+			}
+		}
+
+		pNextEnt = pNextEnt->m_pLink;
+	}
+
+	return pReturn;
+}//END OF attemptFindTowardsPoint
 
 
 

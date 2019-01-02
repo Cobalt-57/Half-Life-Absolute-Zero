@@ -22,10 +22,19 @@
 
 //There is a drastic idea in basemonster.cpp of prioritizing chumtoads over other types of relationships.  Trying now, see if it's a problem.
 
+//QUESTION:  should damage enhancements per hitting player subhitboxes (head, arm, leg, body, etc.) be turned off for damage from NPC's?
+//           or altogether during single player?
+//           It seems if enemies never try to go for particular hitboxes for extra damage, getting hit there is just a matter of very
+//           bad luck or looking at something from an unlucky angle.  It could make some viewpoints cause you to be much more likely
+//           to take triple damage (headshot modifier for the player's TraceAttack, receiving).
+//           Currently a damagetype for the 2nd bitmask (bitsDamageTypeMod), named DMG_HITBOX_EQUAL, can forbid damgage enhancements from sub hitboxes.
+//           But enemies need that applied per enemy for it to work, if they take more/less damage from sub hitboxes.
+
+
 
 
 //~should increment between noticable releases.
-#define protoModVersion "1.9c"
+#define protoModVersion "1.9e"
 
 //~date of compilation.
 //~to pick automatically, leave this commented out.  WARNING: always the date you ran half life, just freeze a date here!

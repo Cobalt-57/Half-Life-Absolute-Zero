@@ -331,7 +331,7 @@ void CBaseMonster :: BarnacleVictimReleased ( void ) { }
 void CBaseMonster :: Listen ( void ) { }
 float CBaseMonster :: FLSoundVolume ( CSound *pSound ) { return 0.0; }
 BOOL CBaseMonster :: FValidateHintType ( short sHint ) { return FALSE; }
-void CBaseMonster :: Look ( int iDistance ) { }
+void CBaseMonster :: Look ( float flDistance ) { }
 int CBaseMonster :: ISoundMask ( void ) { return 0; }
 CSound* CBaseMonster :: PBestSound ( void ) { return NULL; }
 CSound* CBaseMonster :: PBestScent ( void ) { return NULL; } 

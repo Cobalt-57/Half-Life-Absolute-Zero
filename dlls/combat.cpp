@@ -3387,7 +3387,9 @@ void RadiusDamage( Vector vecSrc, entvars_t *pevInflictor, entvars_t *pevAttacke
 				{
 					ClearMultiDamage( );
 					//TODO - why do you put player blood at the blast center sometimes when the player & a baddie are hit at the same time???
-					pEntity->TraceAttack( pevInflictor, flAdjustedDamage, (tr.vecEndPos - vecSrc).Normalize( ), &tr, bitsDamageType, bitsDamageTypeMod );
+					//Fixed now... I think.
+					//And, marked not to do enhanced damage for hitting a particular sub hitbox (headshots?).  That can't be consistent.
+					pEntity->TraceAttack( pevInflictor, flAdjustedDamage, (tr.vecEndPos - vecSrc).Normalize( ), &tr, bitsDamageType, bitsDamageTypeMod | DMG_HITBOX_EQUAL );
 					ApplyMultiDamage( pevInflictor, pevAttacker );
 				}
 				else

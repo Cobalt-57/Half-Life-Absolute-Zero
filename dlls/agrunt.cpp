@@ -625,14 +625,14 @@ void CAGrunt::setPoweredUpOn(CBaseMonster* argPoweredUpCauseEnt, float argHowLon
 	}
 	
 	
-	/*
+	
 	pev->renderamt = 0;
 	pev->rendermode = kRenderNormal;
 	pev->renderfx = kRenderFxGlowShell;
 	pev->rendercolor.x = (int)(100*0.6);
 	pev->rendercolor.y = 0;
 	pev->rendercolor.z = (int)(255*0.6);
-	*/
+	
 
 
 
@@ -640,7 +640,7 @@ void CAGrunt::setPoweredUpOn(CBaseMonster* argPoweredUpCauseEnt, float argHowLon
 
 	if(m_fIsPoweredUp == FALSE){
 		//play the powerup sound?
-		EMIT_SOUND_FILTERED ( ENT(pev), CHAN_VOICE, "agrunt/ag_powerup.wav", 1.0, ATTN_NORM );
+		EMIT_SOUND_FILTERED ( ENT(pev), CHAN_VOICE, "agrunt/ag_powerup.wav", 1.0, ATTN_NORM, 0, RANDOM_LONG(95, 105) );
 	}
 
 

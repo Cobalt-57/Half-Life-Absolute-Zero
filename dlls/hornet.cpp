@@ -856,7 +856,9 @@ void CHornet::DieTouch ( CBaseEntity *pOther )
 			case 1:	EMIT_SOUND_FILTERED( ENT(pev), CHAN_VOICE, "hornet/ag_hornethit2.wav", 1, ATTN_NORM);	break;
 			case 2:	EMIT_SOUND_FILTERED( ENT(pev), CHAN_VOICE, "hornet/ag_hornethit3.wav", 1, ATTN_NORM);	break;
 		}
-			
+		
+		//MODDD - perhaps only allow hitbox based damage (lacking DMG_HITBOX_EQUAL for the 2nd damage bitmask)
+		//        if we're moving fast enough or dummy fire?
 		pOther->TakeDamage( pev, VARS( pev->owner ), pev->dmg, DMG_BULLET );
 	}
 
@@ -916,7 +918,8 @@ GENERATE_DEADTAKEDAMAGE_IMPLEMENTATION(CHornet){
 	//So may as well just call the parent method of CBaseMonster instead if no changes are to be made in the copy below.
 	return GENERATE_DEADTAKEDAMAGE_PARENT_CALL(CBaseMonster);
 	
-	
+	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	
 	
 

@@ -22,6 +22,13 @@
 
 
 
+//MODDD TODO MAJOR - in BestVisibleEnemy, could distance be a scalable priotity alongside relationship, instead of relationship being
+//                   100% overpowering?
+//                   for instance, a monster 3 miles away that's a nemesis that is sighted would draw more attention
+//                   than a big hulking agrunt that's 2 feet away slashing at me that's a "hated" would.
+//                   It's a bizarre picture.  At least in theory that's how it would work out, but see if it's such a problem it needs fixing.
+
+
 
 //#define USE_MOVEMENT_BOUND_FIX
 #define USE_MOVEMENT_BOUND_FIX_ALT
@@ -1053,7 +1060,8 @@ BOOL CBaseMonster :: FValidateHintType ( short sHint )
 // (linked via each ent's m_pLink field)
 //
 //=========================================================
-void CBaseMonster :: Look ( int iDistance )
+//MODDD - why was a distance (the parameter here) an int?  why not a decimal?
+void CBaseMonster :: Look ( float flDistance )
 {
 	int	iSighted = 0;
 
@@ -1067,13 +1075,14 @@ void CBaseMonster :: Look ( int iDistance )
 		return;
 	}
 
+	/*
 	int chuckTesta = 6666;
 	int chuckTestb = 6667;
 	const char* MYCLASSNAMEDAMN = getClassname();
 	const char* MYCLASSNAMEDAMNALT = STRING(pev->classname);
-	BOOL doesThatMotherfuckerEqualMyShit = strcmp(MYCLASSNAMEDAMN, "monster_barney");
+	BOOL doesThatThingEqualMyThing = strcmp(MYCLASSNAMEDAMN, "monster_barney");
 
-	BOOL fuckingResult = FClassnameIs(pev, "monster_barney");
+	BOOL thingResult = FClassnameIs(pev, "monster_barney");
 	if(FClassnameIs(pev, "monster_barney") == TRUE ){
 		int x = 666;
 		chuckTesta = 1337;
@@ -1083,23 +1092,26 @@ void CBaseMonster :: Look ( int iDistance )
 		int x = 666;
 	}
 
-	if(fuckingResult){
+	if(thingResult){
 		int x = 666;
 		chuckTestb = 1338;
 	}
 
 
-	m_pLink = NULL;
 
 
 	BOOL test2 = FStrEq(STRING(pev->classname), "monster_barney");
 	BOOL test3 = strcmp(STRING(pev->classname), "monster_barney");
 
 
+	BOOL whatTheHay = FClassnameIs(pev, "monster_barney");
+	*/
+
+
+
+	m_pLink = NULL;
+
 	CBaseEntity	*pSightEnt = NULL;// the current visible entity that we're dealing with
-
-	BOOL whatTheFuck = FClassnameIs(pev, "monster_barney");
-
 
 
 
@@ -1108,7 +1120,7 @@ void CBaseMonster :: Look ( int iDistance )
 	{
 		CBaseEntity *pList[100];
 
-		Vector delta = Vector( iDistance, iDistance, iDistance );
+		Vector delta = Vector( flDistance, flDistance, flDistance );
 
 		// Find only monsters/clients in box, NOT limited to PVS
 		int count = UTIL_EntitiesInBox( pList, 100, pev->origin - delta, pev->origin + delta, FL_CLIENT|FL_MONSTER );
@@ -1117,6 +1129,9 @@ void CBaseMonster :: Look ( int iDistance )
 			pSightEnt = pList[i];
 			// !!!temporarily only considering other monsters and clients, don't see prisoners
 			
+
+			//Good for doing breakpoints with.
+			/*
 			const char* sightedClassname = "derp";
 			BOOL sightedEntStillAliveByAI = FALSE;
 			if(pSightEnt != NULL){
@@ -1137,9 +1152,10 @@ void CBaseMonster :: Look ( int iDistance )
 
 			int x = 666;
 
-			BOOL isThatFuckerAlive = pSightEnt->IsAlive_FromAI(this);
+			BOOL isThatThingAlive = pSightEnt->IsAlive_FromAI(this);
 			
 			int x2 = 666;
+			*/
 
 			if ( pSightEnt != this												&& 
 				 !FBitSet( pSightEnt->pev->spawnflags, SF_MONSTER_PRISONER )	&& 
@@ -1162,13 +1178,14 @@ void CBaseMonster :: Look ( int iDistance )
 				// don't check anything else about an entity that can't be seen, or an entity that you don't care about.
 				
 				//OKAY.  You are not too bright are ya.
+				/*
 				int daRelation = IRelationship(pSightEnt);
 				BOOL isInDaViewcone = FInViewCone(pSightEnt);
 				BOOL isVisaba = FVisible(pSightEnt);
 				BOOL isDaFlagSet = FBitSet(pSightEnt->pev->flags, FL_NOTARGET);
-				
-				
 				int xxx = 666;
+				*/
+				
 				
 				if ( IRelationship( pSightEnt ) != R_NO && FInViewCone( pSightEnt ) && !FBitSet( pSightEnt->pev->flags, FL_NOTARGET ) && FVisible( pSightEnt ) )
 				{
@@ -5643,11 +5660,13 @@ int CBaseMonster::IRelationship ( CBaseEntity *pTarget )
 	}else{}  //return below as usual.
 
 
-
-	int thisMotherfucker = Classify();
-	int thatMotherfucker = pTarget->Classify();
+	/*
+	int thisThing = Classify();
+	int thatThing = pTarget->Classify();
+	*/
 
 	int generalRelationship = iEnemy[ Classify() ][ pTarget->Classify() ];
+	
 
 	/*
 	if(FClassnameIs(this->pev, "monster_scientist")){
@@ -5890,26 +5909,29 @@ CBaseEntity *CBaseMonster :: BestVisibleEnemy ( void )
 {
 	CBaseEntity	*pReturn;
 	CBaseEntity	*pNextEnt;
-	int			iNearest;
-	int			iDist;
+
+	//MODDD - ...why did these used to be integers?  any length is a decimal.
+	float			flNearest;
+	float			flDist;
+
 	int			iBestRelationship;
 
 	//MODDD - new. Also keep track of all feared enemeis separately.
 	CBaseEntity* pFearReturn;
-	int iFearNearest;
+	float flFearNearest;
 
-	int iNormalNearest;  //Of all enemies from Dislike to Nemesis, what is the closest distance found? Not necessarily the distance of the most despised / picked enemy.
+	float flNormalNearest;  //Of all enemies from Dislike to Nemesis, what is the closest distance found? Not necessarily the distance of the most despised / picked enemy.
 
-	iFearNearest = 8192;
+	flFearNearest = 8192;
 	pFearReturn = NULL;
 
 
 
-	iNearest = 8192;// so first visible entity will become the closest.
+	flNearest = 8192;// so first visible entity will become the closest.
 	pNextEnt = m_pLink;
 	pReturn = NULL;
 
-	iNormalNearest = 8192;
+	flNormalNearest = 8192;
 
 
 	//MODDD - MAJOR! Monsters with "R_FR" for "fear" can be marked enemies too, but AI should want to run away from feared creatures instead of confront them unless cornered.
@@ -5948,11 +5970,11 @@ CBaseEntity *CBaseMonster :: BestVisibleEnemy ( void )
 
 			if(relationshipWithNextEnt == R_FR){
 				
-				iDist = ( pNextEnt->pev->origin - pev->origin ).Length();
+				flDist = ( pNextEnt->pev->origin - pev->origin ).Length();
 				//If I fear this one and he's the closest, he's the best enemy yet.
-				if ( iDist <= iFearNearest )
+				if ( flDist <= flFearNearest )
 				{
-					iFearNearest = iDist;
+					flFearNearest = flDist;
 					pFearReturn = pNextEnt;
 				}
 
@@ -5965,11 +5987,11 @@ CBaseEntity *CBaseMonster :: BestVisibleEnemy ( void )
 
 
 				iBestRelationship = relationshipWithNextEnt;
-				iNearest = ( pNextEnt->pev->origin - pev->origin ).Length();
+				flNearest = ( pNextEnt->pev->origin - pev->origin ).Length();
 				pReturn = pNextEnt;
 
-				if(iNearest < iNormalNearest){
-					iNormalNearest = iNearest; //just keeping track of the closest "Dislike - Nemesis" range enemy.
+				if(flNearest < flNormalNearest){
+					flNormalNearest = flNearest; //just keeping track of the closest "Dislike - Nemesis" range enemy.
 				}
 				
 			}
@@ -5978,16 +6000,16 @@ CBaseEntity *CBaseMonster :: BestVisibleEnemy ( void )
 				// this entity is disliked just as much as the entity that
 				// we currently think is the best visible enemy, so we only
 				// get mad at it if it is closer.
-				iDist = ( pNextEnt->pev->origin - pev->origin ).Length();
+				flDist = ( pNextEnt->pev->origin - pev->origin ).Length();
 				
-				if ( iDist <= iNearest )
+				if ( flDist <= flNearest )
 				{
-					iNearest = iDist;
+					flNearest = flDist;
 					iBestRelationship = relationshipWithNextEnt;
 					pReturn = pNextEnt;
 				}
-				if(iDist < iNormalNearest){
-					iNormalNearest = iDist; //just keeping track of the closest "Dislike - Nemesis" range enemy.
+				if(flDist < flNormalNearest){
+					flNormalNearest = flDist; //just keeping track of the closest "Dislike - Nemesis" range enemy.
 				}
 
 			}
@@ -6011,7 +6033,7 @@ CBaseEntity *CBaseMonster :: BestVisibleEnemy ( void )
 	}else{
 		//both are not null? Whichever one is closer, do that. pReturn, the hostile, is a tie-breaker for equal distance.
 
-		if(iNormalNearest <= iFearNearest){
+		if(flNormalNearest <= flFearNearest){
 			return pReturn;
 		}else{
 			return pFearReturn;

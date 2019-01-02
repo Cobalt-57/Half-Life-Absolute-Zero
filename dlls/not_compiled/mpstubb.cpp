@@ -135,7 +135,8 @@ int CBaseMonster::IRelationship ( CBaseEntity *pTarget )
 // (linked via each ent's m_pLink field)
 //
 //=========================================================
-void CBaseMonster :: Look ( int iDistance )
+//MODDD - why am I bothering with this? iDistance to flDistance again.
+void CBaseMonster :: Look ( float flDistance )
 {
 	int	iSighted = 0;
 
@@ -148,7 +149,7 @@ void CBaseMonster :: Look ( int iDistance )
 
 	CBaseEntity *pList[100];
 
-	Vector delta = Vector( iDistance, iDistance, iDistance );
+	Vector delta = Vector( flDistance, flDistance, flDistance );
 
 	// Find only monsters/clients in box, NOT limited to PVS
 	int count = UTIL_EntitiesInBox( pList, 100, pev->origin - delta, pev->origin + delta, FL_CLIENT|FL_MONSTER );

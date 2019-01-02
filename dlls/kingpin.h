@@ -271,6 +271,8 @@ public:
 	void administerShocker(void);
 
 	BOOL needsMovementBoundFix(void);
+	
+	CBaseEntity* attemptFindTowardsPoint(const Vector& arg_searchPoint);
 
 
 };//END OF class CKingpin

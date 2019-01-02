@@ -950,7 +950,7 @@ void CHoundeye :: SonicAttack (BOOL useAlt )
 						damageType |= DMG_ALWAYSGIB;
 					}
 
-					pEntity->TakeDamage ( pev, pev, flAdjustedDamage, damageType );
+					pEntity->TakeDamage ( pev, pev, flAdjustedDamage, damageType, DMG_HITBOX_EQUAL );
 				}
 			}
 		}

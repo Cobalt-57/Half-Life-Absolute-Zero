@@ -1446,6 +1446,10 @@ void CBarney :: DeathSound ( void )
 
 
 
+//MODDD TODO - should explosion damage (DMG_BLAST) even pay attention to hitbox at all?
+//             should there be a check for bitsDamageTypeMod's DMG_HITBOX_EQUAL to not do any changes to damage,
+//             besides maybe reductions... oh these are all reducitons. Carry on, but a "headshot" treating blast
+//             damage differently still looks weird, no way that precision makes sense.
 GENERATE_TRACEATTACK_IMPLEMENTATION(CBarney)
 {
 	switch( ptr->iHitgroup)

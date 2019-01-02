@@ -612,30 +612,44 @@ GENERATE_TRACEATTACK_IMPLEMENTATION(CBasePlayer)
 	{
 		m_LastHitGroup = ptr->iHitgroup;
 
-		switch ( ptr->iHitgroup )
-		{
-		case HITGROUP_GENERIC:
-			break;
-		case HITGROUP_HEAD:
-			flDamage *= gSkillData.plrHead;
-			break;
-		case HITGROUP_CHEST:
-			flDamage *= gSkillData.plrChest;
-			break;
-		case HITGROUP_STOMACH:
-			flDamage *= gSkillData.plrStomach;
-			break;
-		case HITGROUP_LEFTARM:
-		case HITGROUP_RIGHTARM:
-			flDamage *= gSkillData.plrArm;
-			break;
-		case HITGROUP_LEFTLEG:
-		case HITGROUP_RIGHTLEG:
-			flDamage *= gSkillData.plrLeg;
-			break;
-		default:
-			break;
-		}
+		//MODDD - don't allow damage edits based on hitbox if this type of damage forbids it.
+		//It doesn't make sense for explosions or lightning to different damage based on where it hits.
+		//Or for enemies that don't even try to target hitboxes, it makes this mostly luck or looking at them
+		//from a bad (unlucky) angle to put your head in the way first.
+		//Kinda opens the question as to whether all NPC-based damage should have these damage enhancements off.
+		//Maybe turn them off all the time for single player? who knows.
+		//Also, some throw around these damage type for bitsDamageType for reductions to helmets, but not always all:
+		//(bitsDamageType & (DMG_BULLET | DMG_SLASH | DMG_BLAST | DMG_CLUB))
+		//...a lot of the times, damage types based on some natural force (in lack of a better term) like burn, shock, etc.
+		// may also be ok to assume for blocking hitbox checks.
+		if( !(bitsDamageTypeMod & DMG_HITBOX_EQUAL) ){
+
+			switch ( ptr->iHitgroup )
+			{
+			case HITGROUP_GENERIC:
+				break;
+			case HITGROUP_HEAD:
+				flDamage *= gSkillData.plrHead;
+				break;
+			case HITGROUP_CHEST:
+				flDamage *= gSkillData.plrChest;
+				break;
+			case HITGROUP_STOMACH:
+				flDamage *= gSkillData.plrStomach;
+				break;
+			case HITGROUP_LEFTARM:
+			case HITGROUP_RIGHTARM:
+				flDamage *= gSkillData.plrArm;
+				break;
+			case HITGROUP_LEFTLEG:
+			case HITGROUP_RIGHTLEG:
+				flDamage *= gSkillData.plrLeg;
+				break;
+			default:
+				break;
+			}
+
+		}//END OF DMG_HITBOX_EQUAL damage type check
 
 
 
