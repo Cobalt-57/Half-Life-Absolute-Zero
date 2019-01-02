@@ -2154,6 +2154,10 @@ void CFriendly::ScheduleChange(){
 
 
 
+int CFriendly::getHullIndexForNodes(void){
+    return NODE_LARGE_HULL;  //safe?
+}
+
 
 
 

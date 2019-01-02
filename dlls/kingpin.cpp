@@ -990,7 +990,7 @@ void CKingpin::Spawn( void )
 	
 	//model seems kinda off center. may be ok? unsure.
 	SET_MODEL(ENT(pev), "models/kingpin.mdl");
-	UTIL_SetSize(pev, Vector(-34, -34, 0), Vector(34, 34, 100));
+	UTIL_SetSize(pev, Vector(-32, -32, 0), Vector(32, 32, 100));
 
 	pev->classname = MAKE_STRING("monster_kingpin");
 
@@ -1539,6 +1539,9 @@ void CKingpin::StartTask( Task_t *pTask ){
 		case TASK_KINGPIN_GENERIC_RANGE_FAIL:
 			//just in case this interrupted a ranged attack very early.  returning to it too soon may look a little funny.
 			setPrimaryAttackCooldown();
+
+			m_IdealActivity = ACT_IDLE;  //just for safety.
+
 			TaskComplete();
 		break;
 		
@@ -4254,7 +4257,7 @@ void CKingpin::administerShocker(void){
 
 
 				//increase the damage a little to compensate for being off (location-wise) a bit.
-				flAdjustedDamage *= 1.30f;
+				flAdjustedDamage *= 1.20f;
 
 
 				//ALERT ( at_aiconsole, "Damage: %f\n", flAdjustedDamage );
@@ -4342,8 +4345,12 @@ CBaseEntity* CKingpin::attemptFindTowardsPoint(const Vector& arg_searchPoint){
 			float flDot = DotProduct(vecDirToSearchPoint, vecTowardsEnemy);
 
 
-			//based off of VIEW_FIELD_ULTRA_NARROW, which was +-25 degrees.
-			if(flDot >= 0.89){
+			//based off of VIEW_FIELD_ULTRA_NARROW, which was +-25 degrees for a value of 0.9.
+			//greater values towards 1.0 are more strict (1.0 being impossibly exact... decimals match
+			//exactly once in a thousand blue moons), 0 (+- 90 degrees), and -1 (+- 180 degrees, or
+			//effectively any angle away from me is satisfactory, since that wraps around all 360 
+			//degrees).
+			if(flDot >= 0.82){
 				//in the direction enough.
 				flDist = ( pNextEnt->pev->origin - pev->origin ).Length();
 				
@@ -4361,6 +4368,10 @@ CBaseEntity* CKingpin::attemptFindTowardsPoint(const Vector& arg_searchPoint){
 	return pReturn;
 }//END OF attemptFindTowardsPoint
 
+
+int CKingpin::getHullIndexForNodes(void){
+    return NODE_LARGE_HULL;  //safe?
+}
 
 
 

@@ -274,6 +274,7 @@ public:
 	
 	CBaseEntity* attemptFindTowardsPoint(const Vector& arg_searchPoint);
 
+	int getHullIndexForNodes(void);
 
 };//END OF class CKingpin
 

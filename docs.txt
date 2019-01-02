@@ -1778,16 +1778,27 @@ soundtest player/pl_swim1.wav
 
 Use "sentencetest" instead for sentences, OR just put a "!" in front in soundtest.
 Example:
-soundtest !HOLO_FANTASTIC
-sentencetest HOLO_FANTASTIC
-sentencetest !HOLO_FANTASTIC
+    soundtest !HOLO_FANTASTIC
+    sentencetest HOLO_FANTASTIC
+    sentencetest !HOLO_FANTASTIC
 ~(all do the same exact thing)
 
-~do NOT use "sentencetest" for direct sound references.  Many sounds are already in sentence form, like so:
-soundtest !bullchicken_bc_attack3
-sentencetest bullchicken_bc_attack3
+Other example.  Playing a bullsquid attack sound directly:
+    soundtest bullchicken/bc_attack3.wav
+Playing a bullsquid attack sound through a sentence (the exact name must exist in sentences.txt):
+    soundtest !bullchicken_bc_attack3
+    sentencetest bullchicken_bc_attack3
+~the first "soundtest" line, playing a .wav file directly without using a sentence, requires the sound to be precached.
+ Since the soundSentenceSave system skips for several sounds, direct plays won't work. You must use the sentence 
+ equivalent shown in the last two lines to play it if so.
 ~the formula for sound path to sentence name is "directory_name", all lowercase, no extension.
-~mostly the sounds for enemies are done this way.  Do NOT expect it to work for anything not in "sentences.txt".
+~mostly the sounds for enemies are done this way. Do NOT expect it to work for anything not in "sentences.txt".
+
+~NEW! Now supports playing a sound at a pitch.  Enter a number between 0 and 255 after the sound path or sentence name.
+~Examples:
+    soundtest bullchicken/bc_attack3.wav 120
+	sentencetest bullchicken_bc_attack3 120
+~...default pitch (raw sound) is 100.  This is implied if a pitch number is not provided.
 
 /////////////////////////////////////////////
 /////////////////////////////////////////////

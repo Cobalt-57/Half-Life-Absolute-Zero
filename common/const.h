@@ -845,15 +845,18 @@ enum
 
 };
 
-
-//100011
-
 //NOTE - going to take advantage of the other possible bits - values after the last enum list above.
 //       the "renderfx" variable used to have nothing to do with bitmasking, but now can include any values below
 //       to have those effects in addition to the setting above.
 //       Some bits can be reused for special circumstances, like only viewmodels using the 3rd bit (4, NOMUZZLEFLASH).
 
-//...is overlapping with "kRenderFxPulseFastWide" okay? Just checking.
+//This is in binary for, the first 5 bits (powers 0 to 4).  Those cover values from 1 to 31 inclusive.
+//This mask can be used to remove the new FX bits used for combinations of choices.
+//For instance, to see if the choice for renderFX is kRenderFxExplode, it would be best to do this:
+//    (m_pCurrentEntity->curstate.renderfx & RENDERFX_PRIMARY_BITS) == kRenderFxExplode
+#define RENDERFX_PRIMARY_BITS ( 0x0000001F  )
+//all other bits, from powers 5 to 31 (last), counting starting at 0.
+#define RENDERFX_SECONDARY_BITS ( 0xFFFFFFE0  )
 
 #define FORCE_NOLOOP (1 << 0) //ONLY use with "ISVIEWMODEL" !!!
 					//becomes  (16 | ISVIEWMODEL) or 176, total.

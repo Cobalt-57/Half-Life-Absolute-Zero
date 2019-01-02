@@ -314,6 +314,8 @@ public:
 	BOOL isProvoked(void);
 	
 	void ScheduleChange( void );
+	
+	int getHullIndexForNodes(void);
 
 };//END OF class CFriendly
 

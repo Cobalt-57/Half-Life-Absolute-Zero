@@ -907,9 +907,8 @@ void CStudioModelRenderer::StudioFxTransform( cl_entity_t *ent, float transform[
 {
 
 
-
-
-	switch( ent->curstate.renderfx )
+	//MODDD - only involve the primary bits.
+	switch( (ent->curstate.renderfx & RENDERFX_PRIMARY_BITS) )
 	{
 	case kRenderFxDistort:
 	case kRenderFxHologram:
@@ -948,7 +947,7 @@ void CStudioModelRenderer::StudioFxTransform( cl_entity_t *ent, float transform[
 			transform[2][1] *= scale;
 		}
 	break;
-	//MODDD - oh god they're gonna hate me for this
+	//MODDD - new
 	case kRenderFxImplode:
 		{
 			float scale;
@@ -1731,7 +1730,7 @@ int CStudioModelRenderer::StudioDrawModel( int flags )
 
 
 	//if (!strcmp(m_pCurrentEntity->model->name,"models/null.mdl"))
-	//if(m_pCurrentEntity->curstate.renderfx == kRenderFxHologram)
+	//if(  (m_pCurrentEntity->curstate.renderfx & RENDERFX_PRIMARY_BITS) == kRenderFxHologram)
 
 	//(m_pCurrentEntity->curstate.renderfx & ISPLAYER)   no, to determine whether to make the first-person reflection, we don't need the actual player on hand.
 	
@@ -1819,7 +1818,8 @@ int CStudioModelRenderer::StudioDrawModel( int flags )
 	}
 	*/
 
-	if( (m_pCurrentEntity->curstate.renderfx == kRenderFxDummy) ){
+	//MODDD - only check against the primary bits.
+	if( ( (m_pCurrentEntity->curstate.renderfx & RENDERFX_PRIMARY_BITS) == kRenderFxDummy) ){
 		//Don't render, this model was probably made just to grap the rendering system's attention
 		//for at least one call this frame.
 		return 0;
@@ -1910,7 +1910,8 @@ int CStudioModelRenderer::StudioDrawModel( int flags )
 	}
 
 	
-	if (m_pCurrentEntity->curstate.renderfx == kRenderFxDeadPlayer)
+	//MODDD - only check against the primary bits.
+	if ((m_pCurrentEntity->curstate.renderfx & RENDERFX_PRIMARY_BITS)  == kRenderFxDeadPlayer)
 	{
 		entity_state_t deadplayer;
 
@@ -2950,42 +2951,95 @@ void CStudioModelRenderer::StudioCalcAttachments( void )
 	}
 }
 
+
+
+
+
 /*
 ====================
 StudioRenderModel
 
 ====================
 */
+
+//MODDD NOTE IMPORTANT - it seems this, StudioRenderModel, is the public method to be called by anything that wishes to currently render something out.
+//                       That is, other similarly named methods, such as StudioRenderFinal, and the _Hardware and _Software variants, are meant to be 
+//                       called HERE insetad, and nowhere else.  They are too specific and unhelpful for anywhere else to call directly.
+
 void CStudioModelRenderer::StudioRenderModel( void )
 {
+	//MODDD - It is possible that renderfx choices are still meant to be only single values from 0 to 31 like in the as-is game.
+	//        If the engine expects them this way, and only this way, we need to make sure they're sent over in that state.
+	//        Any numbers outside of that range are just our own powers of 2 to make combinations out of one or several.
+	//        But if they cause the engine to misread renderfx, the retail behavior from the engine won't work as expected.
+
+	//Saving any secondary bits before the cutoff.
+	int secondaryBitsMem = (m_pCurrentEntity->curstate.renderfx & RENDERFX_SECONDARY_BITS );
+	//Cutoff. Only keep primary bits, solid values from 0 to 31 inclusive.
+	m_pCurrentEntity->curstate.renderfx = m_pCurrentEntity->curstate.renderfx & RENDERFX_PRIMARY_BITS;
+
+
 	IEngineStudio.SetChromeOrigin();
 	IEngineStudio.SetForceFaceFlags( 0 );
 
+
+	//MODDD - only count the primary bits (what was available in retail, or "as-is").
+	//        ...actually, already removed the secondary bits from renderfx during these calls up until the end of this method. Proceed as usual.
+	//if ( (m_pCurrentEntity->curstate.renderfx & RENDERFX_PRIMARY_BITS) == kRenderFxGlowShell )
 	if ( m_pCurrentEntity->curstate.renderfx == kRenderFxGlowShell )
 	{
+		//MODDD - hold on! Remember what the cutoff bits were to re-apply them.
+		//        A plain equals assignment would forget all of those.
+		//        ...actually already done, nevermind.
+		//int secondaryBitsMem = (m_pCurrentEntity->curstate.renderfx & RENDERFX_SECONDARY_BITS );
 		m_pCurrentEntity->curstate.renderfx = kRenderFxNone;
+		
 		StudioRenderFinal( );
 		
-		if ( !IEngineStudio.IsHardware() )
+		//MODDD - remove this check, we always need this. Apparently.
+		//if ( !IEngineStudio.IsHardware() )
 		{
 			gEngfuncs.pTriAPI->RenderMode( kRenderTransAdd );
 		}
-
+		
 		IEngineStudio.SetForceFaceFlags( STUDIO_NF_CHROME );
-
+		
+		
 		gEngfuncs.pTriAPI->SpriteTexture( m_pChromeSprite, 0 );
+
+		
+		
+		//MODDD - and restore the secondary bits, if any.
+		//        ...also, secondary bits will come back after all other calls in this method. So not yet.
 		m_pCurrentEntity->curstate.renderfx = kRenderFxGlowShell;
+		//m_pCurrentEntity->curstate.renderfx = kRenderFxGlowShell | secondaryBitsMem;
+
+
 
 		StudioRenderFinal( );
-		if ( !IEngineStudio.IsHardware() )
+		
+		//MODDD - remove this check, we always need this. Apparently.
+		//if ( !IEngineStudio.IsHardware() )
 		{
 			gEngfuncs.pTriAPI->RenderMode( kRenderNormal );
 		}
+
+
+		//MODDD - new. probably doesn't matter, but safety.
+		IEngineStudio.SetForceFaceFlags( 0 );
+
 	}
 	else
 	{
+		//IEngineStudio.SetForceFaceFlags( STUDIO_NF_CHROME );
 		StudioRenderFinal( );
 	}
+
+
+
+	//MODDD - now restore the secondary bits.
+	m_pCurrentEntity->curstate.renderfx = m_pCurrentEntity->curstate.renderfx | secondaryBitsMem;
+
 }
 
 /*

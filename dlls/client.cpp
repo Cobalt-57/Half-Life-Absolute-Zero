@@ -106,6 +106,7 @@ BOOL playerCanThink2 = FALSE;
 char queuedSound[127];
 BOOL playQueued = FALSE;
 float playQueuedTime = -1;
+int playQueuedPitch = 100;
 
 
 
@@ -1357,12 +1358,14 @@ void ClientCommand( edict_t *pEntity )
 		EASY_CVAR_SET_DEBUGONLY(normalSpeedMulti, 3);
 		EASY_CVAR_SET_DEBUGONLY(noclipSpeedMulti, 5);
 		EASY_CVAR_SET_DEBUGONLY(jumpForceMulti, 3);
+		EASY_CVAR_SET_DEBUGONLY(ladderSpeedMulti, DEFAULT_ladderSpeedMulti*3);
 
 	}else if( FStrEq(pcmdRefinedRef, "normalman")){
 
 		EASY_CVAR_SET_DEBUGONLY(normalSpeedMulti, 1);
 		EASY_CVAR_SET_DEBUGONLY(noclipSpeedMulti, 2.5);
 		EASY_CVAR_SET_DEBUGONLY(jumpForceMulti, 1);
+		EASY_CVAR_SET_DEBUGONLY(ladderSpeedMulti, DEFAULT_ladderSpeedMulti);
 
 	
 	}else if ( FStrEq(pcmdRefinedRef, "disablecheats") || FStrEq(pcmdRefinedRef, "disablecheat") || FStrEq(pcmdRefinedRef, "nocheating") || FStrEq(pcmdRefinedRef, "nocheats") || FStrEq(pcmdRefinedRef, "nocheat") || FStrEq(pcmdRefinedRef, "cheatingisforpussies") || FStrEq(pcmdRefinedRef, "winnersdontdodrugs") ){
@@ -1733,6 +1736,8 @@ void ClientCommand( edict_t *pEntity )
 				edict_t* tempEd = ENT(tempplayer->pev);
 				
 				int iszItem = ALLOC_STRING( CMD_ARGV(1) );
+				const char* argPitch = CMD_ARGV(2);
+
 				const char* pszName = STRING(iszItem);
 
 
@@ -1741,18 +1746,40 @@ void ClientCommand( edict_t *pEntity )
 				
 				copyString(pszName, queuedSound, 127 );
 
+				
+				
+				playQueuedPitch = 100;  //default pitch if not provided
+
+				if(argPitch != NULL && !isStringEmpty(argPitch)){
+					try{
+						int numbAttempt = tryStringToInt(argPitch);
+						//success? apply.
+						playQueuedPitch = numbAttempt;
+						if(playQueuedPitch > 255){
+							easyForcePrintLine("***Pitch can not exceed 255.");
+							playQueuedPitch = 255;
+						}else if(playQueuedPitch < 0){
+							easyForcePrintLine("***Pitch must be at least 0.");
+							playQueuedPitch = 0;
+						}
+					}catch(int){
+						easyForcePrintLine("***WARNING. 2nd arg, pitch, not understood. Must be a whole number.");
+					}
+				}
+
 				//a slight delay.  A sound playing instantly may cut off unexpectedly.
 				playQueuedTime = gpGlobals->time + 0.1f;
-				
+
 				playQueued = TRUE;
 
 			}
 		
 	}else if ( FStrEq(pcmdRefinedRef, "sentencetest" ) ){
+			
 
-		
+			
 
-
+			
 			CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev) ;
 			
 			if ( tempplayer){
@@ -1760,6 +1787,8 @@ void ClientCommand( edict_t *pEntity )
 				edict_t* tempEd = ENT(tempplayer->pev);
 				
 				int iszItem = ALLOC_STRING( CMD_ARGV(1) );
+				const char* argPitch = CMD_ARGV(2);
+
 				const char* pszName = STRING(iszItem);
 
 
@@ -1776,8 +1805,32 @@ void ClientCommand( edict_t *pEntity )
 					copyString(pszName, queuedSound, 127 );
 				}
 
+				
+
+
+				
+				playQueuedPitch = 100;  //default pitch if not provided
+
+				if(argPitch != NULL && !isStringEmpty(argPitch)){
+					try{
+						int numbAttempt = tryStringToInt(argPitch);
+						//success? apply.
+						playQueuedPitch = numbAttempt;
+						if(playQueuedPitch > 255){
+							easyForcePrintLine("***Pitch can not exceed 255.");
+							playQueuedPitch = 255;
+						}else if(playQueuedPitch < 0){
+							easyForcePrintLine("***Pitch must be at least 0.");
+							playQueuedPitch = 0;
+						}
+					}catch(int){
+						easyForcePrintLine("***WARNING. 2nd arg, pitch, not understood. Must be a whole number.");
+					}
+				}
+
 				//a slight delay.  A sound playing instantly may cut off unexpectedly.
 				playQueuedTime = gpGlobals->time + 0.1f;
+
 				playQueued = TRUE;
 
 			}
@@ -1947,7 +2000,9 @@ void ClientCommand( edict_t *pEntity )
 		
 
 		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev);
-		const char* arg1ref = CMD_ARGV(1);
+		
+		//???
+		//const char* arg1ref = CMD_ARGV(1);
 
 
 
@@ -4805,6 +4860,9 @@ void PlayerPostThink( edict_t *pEntity )
 
 
 
+	//NOTE - this does not automatically play sounds though the soundSentenceSave system.
+	//       Anything not starting with an exclamation mark or from "sentencetest", as opposed to "soundtest",
+	//       is played raw as any other typical sound and needs to be precached first to be played.
 	if(playQueued && pPlayer != NULL && playQueuedTime <= gpGlobals->time){
 		edict_t* tempEd = ENT(pPlayer->pev);
 				
@@ -4816,7 +4874,7 @@ void PlayerPostThink( edict_t *pEntity )
 
 		//...why the HELL Does what channel is picked have a difference on how sounds work?  This is just weird.
 		//-was CHAN_STREAM before.
-		EMIT_SOUND_DYN(pPlayer->edict(), CHAN_VOICE, queuedSound, 1, ATTN_NORM, 0, 100);
+		EMIT_SOUND_DYN(pPlayer->edict(), CHAN_VOICE, queuedSound, 1, ATTN_NORM, 0, playQueuedPitch);
 		
 		//called already.
 		playQueued = FALSE;
