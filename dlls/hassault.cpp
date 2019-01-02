@@ -217,6 +217,12 @@ int CHAssault::IRelationship ( CBaseEntity *pTarget )
 		//I just don't give a damn man
 		return R_NO;
 	}
+	
+	//MODDD - well the hgrunt has these priorties.
+	if ( FClassnameIs( pTarget->pev, "monster_alien_grunt" ) || ( FClassnameIs( pTarget->pev,  "monster_gargantua" ) ) )
+	{
+		return R_NM;
+	}
 
 	return CSquadMonster::IRelationship(pTarget);
 

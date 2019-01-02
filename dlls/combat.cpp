@@ -2680,7 +2680,7 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBaseMonster){
 
 
 
-	easyPrintLine("CBaseMonster:: name:%s:%d TOOK DAMAGE. health:%.2f Damage:%.2f Blast:%d Gib:: N:%d A:%d", getClassname(), monsterID, pev->health, flDamage, (bitsDamageType & DMG_BLAST), (bitsDamageType & DMG_NEVERGIB), (bitsDamageType & DMG_ALWAYSGIB) );
+	//easyPrintLine("CBaseMonster:: name:%s:%d TOOK DAMAGE. health:%.2f Damage:%.2f Blast:%d Gib:: N:%d A:%d", getClassname(), monsterID, pev->health, flDamage, (bitsDamageType & DMG_BLAST), (bitsDamageType & DMG_NEVERGIB), (bitsDamageType & DMG_ALWAYSGIB) );
 	//easyForcePrintLine("TakeDamage. %s:%d health:%.2f gib damge bits: %d %d", this->getClassname(), monsterID, pev->health, (bitsDamageType&DMG_NEVERGIB), (bitsDamageType&DMG_ALWAYSGIB) );
 	
 

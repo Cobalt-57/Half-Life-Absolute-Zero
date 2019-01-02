@@ -116,6 +116,9 @@ public:
 
 	int m_iSpriteTexture;
 
+	BOOL enemyNullTimeSet;
+
+
 
 
 
@@ -199,24 +202,20 @@ public:
 	void playPsionicLaunchSound(void);
 
 	
-	void SetObjectCollisionBox( void )
-	{
-		/*
-		//EASY_CVAR_PRINTIF_PRE(gargantuaPrintout, easyPrintLine( "garg deadflag? %d", pev->deadflag));
-		//could it be re-adjusted for "DEAD_DEAD" too?
+	void SetObjectCollisionBox( void ){
+
 		if(pev->deadflag != DEAD_NO){
-			//if we are dead?
-			pev->absmin = pev->origin + Vector(-65, -65, 0);
-			pev->absmax = pev->origin + Vector(65, 65, 72);
+			//no need to do anything special anymore I think.
+			//CBaseMonster::SetObjectCollisionBox();
+			pev->absmin = pev->origin + Vector(-64, -64, 0);
+			pev->absmax = pev->origin + Vector(64, 64, 60);
 		}else{
-			CBaseMonster::SetObjectCollisionBox();
-
+			// = DEAD_NO
+			pev->absmin = pev->origin + Vector(-32, -32, 0);
+			pev->absmax = pev->origin + Vector(32, 32, 110);
 		}
-		*/
-
-		//no need to do anything special anymore I think.
-		CBaseMonster::SetObjectCollisionBox();
-	}
+		
+	}//END OF SetObjectCollisionBox
 
 
 	void ScheduleChange(void);

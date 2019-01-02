@@ -1042,6 +1042,9 @@ public:
 	virtual void PrescheduleThink( void ) { return; };
 
 	BOOL GetEnemy ( void );
+	//MODDD - new version
+	BOOL GetEnemy (BOOL arg_forceWork );
+
 	void MakeDamageBloodDecal ( int cCount, float flNoise, TraceResult *ptr, const Vector &vecDir );
 	
 	

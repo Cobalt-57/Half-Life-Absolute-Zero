@@ -20,11 +20,12 @@
 //Same for other status alignment dealers (besides bleeding melee damage)?
 
 
+//There is a drastic idea in basemonster.cpp of prioritizing chumtoads over other types of relationships.  Trying now, see if it's a problem.
 
 
 
 //~should increment between noticable releases.
-#define protoModVersion "1.9a"
+#define protoModVersion "1.9c"
 
 //~date of compilation.
 //~to pick automatically, leave this commented out.  WARNING: always the date you ran half life, just freeze a date here!

@@ -3162,6 +3162,10 @@ Schedule_t *CBaseMonster :: GetSchedule ( void )
 				// clear the current (dead) enemy and try to find another.
 				m_hEnemy = NULL;
 
+				//MODDD MAJOR NOTE - hold on... how does this even work?
+				//                   GetEnemy does nothing if the current (or old schedule about to be changed to something new?) forbids being interrupted by a new enemy?
+				//                   Although a schedule being interruptable by conditions or not doesn't affect whether the conditions can be set period. That might make sense.
+				//                   So if any monster is in sight as marked by some SEE_... condition, it's allowed to commit it to m_hEnemy and pass.
 				if ( GetEnemy() )
 				{
 					ClearConditions( bits_COND_ENEMY_DEAD );

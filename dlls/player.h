@@ -853,6 +853,7 @@ public:
 	BOOL scheduleRemoveAllItemsIncludeSuit;
 
 	//NEW METHODS for organization.
+	void _commonReset(void);
 	void commonReset(void);
 	void updateTimedDamageDurations(int difficultyIndex);
 
@@ -970,6 +971,7 @@ public:
 	BOOL grabbedByBarnacle;
 	BOOL grabbedByBarnacleMem;
 
+	float minimumRespawnDelay;
 
 
 

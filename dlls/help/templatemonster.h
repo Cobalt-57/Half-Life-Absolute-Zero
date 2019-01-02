@@ -53,13 +53,15 @@ public:
 	void Precache(void);
 	void Spawn(void);
 
+	void SetObjectCollisionBox(void);
+
 	void SetEyePosition(void);
 	
 	float getDistTooFar(void);
 	float getDistLook(void);
 
 	
-	Schedule_t *GetSchedule( void );
+	Schedule_t* GetSchedule( void );
 	Schedule_t* GetScheduleOfType( int Type);
 
 	void ScheduleChange();

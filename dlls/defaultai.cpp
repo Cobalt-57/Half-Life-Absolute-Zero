@@ -465,7 +465,7 @@ Task_t	tlCombatFaceSound[] =
 	{ TASK_STOP_MOVING,				0				},
 	{ TASK_SET_ACTIVITY,			(float)ACT_IDLE	},
 	{ TASK_FACE_BEST_SOUND,	(float)0		},
-	{ TASK_CHECK_STUMPED,			(float)0		},
+	//{ TASK_CHECK_STUMPED,			(float)0		},
 };
 
 Schedule_t	slCombatFaceSound[] =

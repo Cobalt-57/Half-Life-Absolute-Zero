@@ -651,6 +651,7 @@
 #define DEFAULT_hassassinCrossbowDebug 0
 #define DEFAULT_crossbowBoltDirectionAffectedByWater 0
 #define DEFAULT_kingpinDebug 0
+#define DEFAULT_minimumRespawnDelay 2
 
 #define EASY_CVAR_HASH_MASS\
 	EASY_CVAR_HASH(strobeDurationMin, 0)\
@@ -1290,6 +1291,7 @@
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(hassassinCrossbowDebug, hassassincrossbowdebug)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(crossbowBoltDirectionAffectedByWater, crossbowboltdirectionaffectedbywater)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(kingpinDebug, kingpindebug)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(minimumRespawnDelay, minimumrespawndelay)\
 	DUMMY
 
 #define EASY_CVAR_HIDDEN_SAVE_MASS\
@@ -1752,6 +1754,7 @@
 	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(hassassinCrossbowDebug)\
 	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(crossbowBoltDirectionAffectedByWater)\
 	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(kingpinDebug)\
+	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(minimumRespawnDelay)\
 	DUMMY
 
 #define EASY_CVAR_HIDDEN_LOAD_MASS\
@@ -2214,6 +2217,7 @@
 	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(hassassinCrossbowDebug, hassassincrossbowdebug)\
 	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(crossbowBoltDirectionAffectedByWater, crossbowboltdirectionaffectedbywater)\
 	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(kingpinDebug, kingpindebug)\
+	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(minimumRespawnDelay, minimumrespawndelay)\
 	DUMMY
 
 #define EASY_CVAR_DECLARATION_SERVER_MASS\
@@ -2692,6 +2696,7 @@
 	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY(hassassinCrossbowDebug)\
 	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY(crossbowBoltDirectionAffectedByWater)\
 	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY(kingpinDebug)\
+	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY(minimumRespawnDelay)\
 	DUMMY
 
 #define EASY_CVAR_DECLARATION_CLIENT_MASS\
@@ -3170,6 +3175,7 @@
 	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY(hassassinCrossbowDebug)\
 	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY(crossbowBoltDirectionAffectedByWater)\
 	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY(kingpinDebug)\
+	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY(minimumRespawnDelay)\
 	DUMMY
 
 #define EASY_CVAR_UPDATE_SERVER_MASS\
@@ -3648,6 +3654,7 @@
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(hassassinCrossbowDebug)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(crossbowBoltDirectionAffectedByWater)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(kingpinDebug)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(minimumRespawnDelay)\
 	DUMMY
 
 #define EASY_CVAR_UPDATE_CLIENT_MASS\
@@ -4126,6 +4133,7 @@
 	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY(hassassinCrossbowDebug)\
 	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY(crossbowBoltDirectionAffectedByWater)\
 	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY(kingpinDebug)\
+	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY(minimumRespawnDelay)\
 	DUMMY
 
 #define EASY_CVAR_CREATE_SERVER_SETUP_MASS\
@@ -4610,6 +4618,7 @@
 	EASY_CVAR_CREATE_CLIENT_A_DEBUGONLY(hassassinCrossbowDebug)\
 	EASY_CVAR_CREATE_CLIENT_A_DEBUGONLY(crossbowBoltDirectionAffectedByWater)\
 	EASY_CVAR_CREATE_CLIENT_A_DEBUGONLY(kingpinDebug)\
+	EASY_CVAR_CREATE_CLIENT_A_DEBUGONLY(minimumRespawnDelay)\
 	DUMMY
 
 #define EASY_CVAR_RESET_MASS\
@@ -5087,6 +5096,7 @@
 	EASY_CVAR_RESET_DEBUGONLY(hassassinCrossbowDebug)\
 	EASY_CVAR_RESET_DEBUGONLY(crossbowBoltDirectionAffectedByWater)\
 	EASY_CVAR_RESET_DEBUGONLY(kingpinDebug)\
+	EASY_CVAR_RESET_DEBUGONLY(minimumRespawnDelay)\
 	DUMMY
 
 #define EASY_CVAR_EXTERN_MASS\
@@ -5565,5 +5575,6 @@
 	EASY_CVAR_EXTERN_DEBUGONLY(hassassinCrossbowDebug)\
 	EASY_CVAR_EXTERN_DEBUGONLY(crossbowBoltDirectionAffectedByWater)\
 	EASY_CVAR_EXTERN_DEBUGONLY(kingpinDebug)\
+	EASY_CVAR_EXTERN_DEBUGONLY(minimumRespawnDelay)\
 	DUMMY
 

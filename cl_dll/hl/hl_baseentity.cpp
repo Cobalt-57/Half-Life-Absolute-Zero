@@ -627,6 +627,8 @@ void CBaseMonster::CorpseFallThink( void ) { }
 void CBaseMonster :: MonsterInitDead( void ) { }
 BOOL CBaseMonster :: BBoxFlat ( void ) { return TRUE; }
 BOOL CBaseMonster :: GetEnemy ( void ) { return FALSE; }
+//MODDD
+BOOL CBaseMonster :: GetEnemy (BOOL arg_forceWork ){return FALSE;}
 
 
 GENERATE_TRACEATTACK_IMPLEMENTATION_DUMMY_CLIENT(CBaseMonster)

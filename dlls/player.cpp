@@ -48,6 +48,7 @@ EASY_CVAR_EXTERN(playerFadeOutRate)
 EASY_CVAR_EXTERN(holsterAnims)
 
 EASY_CVAR_EXTERN(hideDamage)
+EASY_CVAR_EXTERN(minimumRespawnDelay)
 
 
 
@@ -1639,6 +1640,11 @@ GENERATE_KILLED_IMPLEMENTATION(CBasePlayer)
 	}
 
 
+	//MODDD - set this.  Does not get seen if reviving by adrenaline.
+	minimumRespawnDelay = gpGlobals->time + EASY_CVAR_GET(minimumRespawnDelay);
+	
+
+
 }
 
 
@@ -1907,8 +1913,20 @@ void CBasePlayer::DebugCall3(){
 CBasePlayer::CBasePlayer(void){
 
 
-	framesUntilPushStops = -1;
+	//turning this into a method for how much is otherwise just duplicated at this point.
+	//We want a lot of the exact same things for CBasePlayer creation and resetting between map transitions.
+	_commonReset();
 
+	
+	iWasFrozenToday = FALSE;
+	m_fLongJumpMemory = FALSE;
+
+	//oldWaterMoveTime = -1;
+
+
+
+
+	
 	m_bHolstering = FALSE;
 	m_pQueuedActiveItem = NULL;
 	m_fCustomHolsterWaitTime = -1;
@@ -1950,21 +1968,17 @@ CBasePlayer::CBasePlayer(void){
 
 	skillMem = -1;
 
-	iWasFrozenToday = FALSE;
-
-	//oldWaterMoveTime = -1;
 
 	recentlyGrantedGlockSilencer = FALSE;
-	m_fLongJumpMemory = FALSE;
 	recentlySaidBattery = -1;  //do not save, meant to relate to what was recently said in-game yet.
 
 	altLadderStep = FALSE;   //this alternates b/w the two view punches (left & right).
 
 
-	if(cheat_barnacleEatsEverything == 0){
+	//if(cheat_barnacleEatsEverything == 0){
 		//then it has not been set yet.  This player will.    no, the player hasn't loaded "myref..." yes, so it will be 0 always.
 		//cheat_barnacleEatsEverything = myRef_barnacleEatsEverything;
-	}
+	//}
 
 	alreadyPassedLadderCheck = FALSE;
 
@@ -1975,7 +1989,6 @@ CBasePlayer::CBasePlayer(void){
 	sentCarcassScent = FALSE;
 
 	hasGlockSilencer = FALSE;
-	hasGlockSilencerMem = -1;
 
 	//always start ready?
 	//clearWeaponFlag = -1;
@@ -1999,6 +2012,8 @@ CBasePlayer::CBasePlayer(void){
 	sentenceFVoxCutoffStop = -1;
 
 	rawDamageSustained = 0;
+
+
 
 }//END OF CBasePlayer constructor
 
@@ -2438,11 +2453,18 @@ void CBasePlayer::PlayerDeathThink(void)
 	}
 
 
-	
 // wait for any button down,  or mp_forcerespawn is set and the respawn time is up
 	if (!fAnyButtonDown 
 		&& !( g_pGameRules->IsMultiplayer() && forcerespawn.value > 0 && (gpGlobals->time > (m_fDeadTime + 5))) )
 		return;
+
+
+	
+	if(gpGlobals->time < minimumRespawnDelay){
+		//don't pass this point yet.  Respawning way too soon is just annoying in debugging at times.
+		return;
+	}
+
 
 	pev->button = 0;
 	m_iRespawnFrames = 0;
@@ -6353,6 +6375,29 @@ BOOL CBasePlayer::playerHasLongJump(){
 }
 
 
+
+//MODDD - holds many of the things that used to be in the CBasePlayer constructor.
+//Now this can be called by that constructor, AND the "commonReset" method below to remove all those redundant variable resets.
+//This itself, "_commonReset" with the underscore, shouldn't be called straight by anything else.
+//The intention is the CBasePlayer constructor calls this only, and commonReset calls this in addition to some other things it 
+//needs to do now that the game has been created (can trust pev->... calls work, unlike in the constructor)
+//...oh.  actually almost nothing in common.  well ok then.
+void CBasePlayer::_commonReset(void){
+
+	
+	hasGlockSilencerMem = -1;
+	
+	//in case a game is loaded... just forget this.
+	minimumRespawnDelay = -1;
+
+	framesUntilPushStops = -1;
+
+
+}//END OF _commonReset
+
+
+
+
 //This holds a lot of commands common between just defaulting several attributes to say, "Please update me with the real value soon".
 //Methods that use this heavily are
 //Spawn
@@ -6361,9 +6406,7 @@ BOOL CBasePlayer::playerHasLongJump(){
 //ForceClientDllUpdate
 void CBasePlayer::commonReset(void){
 	
-
-	//should be ok?
-	framesUntilPushStops = -1;
+	_commonReset();
 
 	//negative 2 means, don't prompt the user about this change.
 	fvoxEnabledMem = -2;
@@ -6371,13 +6414,16 @@ void CBasePlayer::commonReset(void){
 	//or should this always just be forced to "global_barnacleCanGib" to stop a re-do each time?  Might not be necessary so much.
 	barnacleCanGibMem = -1;
 
+
+
 	iWasFrozenToday = -1;
 
-	hasGlockSilencerMem = -1;
+
 
 	//This discrepency forces writing to the physics keys at least once.
 	pushSpeedMultiMem = -1;
 	pushSpeedMulti = 1;
+
 	
 	normalSpeedMultiMem = -1;
 	noclipSpeedMultiMem = -1;
@@ -6392,7 +6438,7 @@ void CBasePlayer::commonReset(void){
 	autoSneakyMem = -2;  //because -1 is actually a valid value for triggering a check in this case.
 
 
-	infiniteLongJumpChargeMem = -1;
+	
 
 	//alphaCrosshairMem = -1;
 
@@ -6411,6 +6457,8 @@ void CBasePlayer::commonReset(void){
 
 	}
 
+
+	
 	drowning = FALSE;  //!!! FOR NOW.
 	drowningMem = -1;
 
@@ -6427,17 +6475,13 @@ void CBasePlayer::commonReset(void){
 	if (PLAYER_ALWAYSHASLONGJUMP){
 		m_fLongJump = TRUE;
 	}
-	
 
+
+	
 	//MODDD
 	deadflagmem = -1;
 
 	
-	//MODDD
-		//only spawn does this below, actually.  proceed?
-	m_fLongJumpMemory = m_fLongJump;
-	longJumpDelay = 0;
-	longJump_waitForRelease = FALSE;
 
 	//re-acquire pointers.
 	the_default_fov = 0;
@@ -6454,8 +6498,11 @@ void CBasePlayer::commonReset(void){
 	recoveryDelayMin = -1;
 
 	recentlyGibbed = FALSE;
-	
 
+
+
+
+	
 	canApplyDefaultFOVMem = 0;  //assume "no".  Will be contradicted if necessary.
 	
 	//MODDD
@@ -6469,7 +6516,6 @@ void CBasePlayer::commonReset(void){
 	//resetLongJumpCharge();
 	airTankAirTimeNeedsUpdate = TRUE;
 	
-	longJumpChargeNeedsUpdate = TRUE;
 
 	pythonZoomFOV = -1;
 	crossbowZoomFOV = -1;
@@ -6491,14 +6537,20 @@ void CBasePlayer::commonReset(void){
 
 
 
-
-
-
-
-
+	
 
 	cl_ladderMem = -1;
 
+
+	
+
+	infiniteLongJumpChargeMem = -1;
+	//MODDD
+	//only spawn does this below, actually.  proceed?
+	m_fLongJumpMemory = m_fLongJump;
+	longJumpDelay = 0;
+	longJump_waitForRelease = FALSE;
+	longJumpChargeNeedsUpdate = TRUE;
 
 
 	//MODDD - also new.  Just a check to see if the user does not have long jump, yet "longJumpCharge" is not negative 1 (don't draw to GUI).
@@ -6539,7 +6591,16 @@ void CBasePlayer::commonReset(void){
 	//MODDD
 	pev->renderfx |= ISPLAYER;
 
-}
+
+}//END OF commonReset
+
+
+
+
+
+
+
+
 
 void CBasePlayer::autoSneakyCheck(void){
 
@@ -7162,7 +7223,6 @@ void CBasePlayer::SelectNextItem( int iItem )
 		m_pActiveItem->UpdateItemInfo( );
 	}
 
-	//MODDD - should this go to "commonReset" too?
 	pev->renderfx |= ISPLAYER;
 
 }

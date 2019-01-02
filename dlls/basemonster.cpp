@@ -1219,8 +1219,18 @@ void CBaseMonster :: Look ( int iDistance )
 
 					// don't add the Enemy's relationship to the conditions. We only want to worry about conditions when
 					// we see monsters other than the Enemy.
+
+					//MODDD TODO MAJOR - would it be a good idea to piggyback off of the bits_COND_SEE_NEMESIS for 
+					//interrupting schedules if bait is sighted (R_BA)?
+					//or should that be it's own bits_COND_SEE_BAIT, would need its own bit and need to be added to several default (and monster-specific schedules).
 					switch ( IRelationship ( pSightEnt ) )
 					{
+					
+					//MODDD - trying out treating R_BA as NEMESIS.  See if that works out.
+					case	R_BA:
+						iSighted |= bits_COND_SEE_NEMESIS;		
+					break;
+
 					case	R_NM:
 						iSighted |= bits_COND_SEE_NEMESIS;		
 						break;
@@ -1456,7 +1466,7 @@ void CBaseMonster::wanderAway(const Vector& toWalkAwayFrom){
 	//Peraps changing to a "waitForWanderDelay" schedule, interruptible by practically anything, would work?
 
 
-	easyForcePrintLine("YOU, %s, GOT TOLD TO WANDER AWAY SO YOU BETTER LISTEN", this->getClassname());
+	easyForcePrintLine("YOU, %s:%d, GOT TOLD TO WANDER AWAY SO YOU BETTER LISTEN", this->getClassname(), monsterID);
 	//if(this->m_movementActivity == ACT_IDLE){
 		//m_movementActivity
 
@@ -7187,10 +7197,18 @@ BOOL CBaseMonster :: BBoxFlat ( void )
 	return TRUE;
 }
 
+
+
+//MODDD - new version.  Can accept whether this should ignore the _SEE conditions and schedule interruptable by NEW_ENEMY checks.
+//        RUNTASK logic wanting to search for new enemies in the middle of a task shouldn't be ignored simply because those requirements aren't met.
+BOOL CBaseMonster::GetEnemy(void){
+	return GetEnemy(FALSE);
+}
+
 //=========================================================
 // Get Enemy - tries to find the best suitable enemy for the monster.
 //=========================================================
-BOOL CBaseMonster :: GetEnemy ( void )
+BOOL CBaseMonster :: GetEnemy (BOOL arg_forceWork )
 {
 	CBaseEntity *pNewEnemy;
 
@@ -7211,13 +7229,9 @@ BOOL CBaseMonster :: GetEnemy ( void )
 	//MODDD - major. Adding FEAR as a condition here now.
 
 	//if ( HasConditions(bits_COND_SEE_HATE | bits_COND_SEE_DISLIKE | bits_COND_SEE_NEMESIS) )
-	if ( HasConditions(bits_COND_SEE_FEAR | bits_COND_SEE_HATE | bits_COND_SEE_DISLIKE | bits_COND_SEE_NEMESIS) )
+	if (arg_forceWork || HasConditions(bits_COND_SEE_FEAR | bits_COND_SEE_HATE | bits_COND_SEE_DISLIKE | bits_COND_SEE_NEMESIS) )
 	{
 		pNewEnemy = BestVisibleEnemy();
-
-		if(FClassnameIs(pev, "monster_scientist") ){
-			easyPrintLine("ARE YOU TRYING? n?%d : e?%d", pNewEnemy==NULL, m_hEnemy==NULL);
-		}
 
 		if ( pNewEnemy != m_hEnemy && pNewEnemy != NULL)
 		{
@@ -7236,7 +7250,7 @@ BOOL CBaseMonster :: GetEnemy ( void )
 
 				//MODDD - POINT OF FRUSTRATION HERE
 				//if ( m_pSchedule->iInterruptMask & bits_COND_NEW_ENEMY )
-				if ( m_pSchedule->iInterruptMask & bits_COND_NEW_ENEMY  || getForceAllowNewEnemy(pNewEnemy) )
+				if ( m_pSchedule->iInterruptMask & bits_COND_NEW_ENEMY || arg_forceWork || getForceAllowNewEnemy(pNewEnemy) )
 				{
 					PushEnemy( m_hEnemy, m_vecEnemyLKP );
 					SetConditions(bits_COND_NEW_ENEMY);
@@ -7265,6 +7279,9 @@ BOOL CBaseMonster :: GetEnemy ( void )
 			if ( m_pSchedule->iInterruptMask & bits_COND_NEW_ENEMY )
 			{
 				SetConditions(bits_COND_NEW_ENEMY);
+				//MODDD - hold on. Shouldn't we also rip the old enemy LKP from the stack too?
+				//        ACTUALLY The PopEnemy() call above automatically does that. It did even change m_hEnemy to the next enemy remembered in line.
+
 			}
 		}
 	}
@@ -7272,6 +7289,9 @@ BOOL CBaseMonster :: GetEnemy ( void )
 	if ( m_hEnemy != NULL )
 	{
 		// monster has an enemy.
+		//MODDD NOTE - returning trues just because m_hEnemy ends up "not null" isn't very informative.
+		//Perhaps we should return TRUE only if a new enemy was actually picked, or at least an attempt was made to pick the bestVisibleEnemy regarldess
+		//of it matching our old enemy or not?  Say we just... did something?
 		return TRUE;
 	}
 

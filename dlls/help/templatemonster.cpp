@@ -185,8 +185,7 @@ Schedule_t	slTemplateMonsterXXX[] =
 
 
 
-DEFINE_CUSTOM_SCHEDULES( CTemplateMonster )
-{
+DEFINE_CUSTOM_SCHEDULES( CTemplateMonster ){
 	slTemplateMonsterXXX,
 	slTemplateMonsterYYY,
 	slTemplateMonsterZZZ,
@@ -224,8 +223,7 @@ void CTemplateMonster::AttackSound( void ){
 
 
 extern int global_useSentenceSave;
-void CTemplateMonster::Precache( void )
-{
+void CTemplateMonster::Precache( void ){
 	PRECACHE_MODEL("models/templatemonster.mdl");
 
 	global_useSentenceSave = TRUE;
@@ -250,8 +248,7 @@ void CTemplateMonster::Precache( void )
 
 
 
-void CTemplateMonster::Spawn( void )
-{
+void CTemplateMonster::Spawn( void ){
 	Precache( );
 
 	setModel("models/templatemonster.mdl");
@@ -270,8 +267,7 @@ void CTemplateMonster::Spawn( void )
 	pev->health			= gSkillData.templatemonsterHealth;
 
 	//NOTICE - don't set "pev->view_ofs" here! Do it through the "SetEyePosition" method instead, which is called by MonsterInit (delayed slightly in real time)
-	//pev->view_ofs		= Vector ( 0, 0, 20 );// position of the eyes relative to monster's origin.
-
+	
 	m_flFieldOfView		= 0.5;// indicates the width of this monster's forward view cone ( as a dotproduct result )
 	m_MonsterState		= MONSTERSTATE_NONE;
 
@@ -282,7 +278,8 @@ void CTemplateMonster::Spawn( void )
 	//          called.):
 	//m_afCapability		= bits_CAP_MELEE_ATTACK1 | bits_CAP_DOORS_GROUP;
 
-	pev->yaw_speed		= 100;//bound to change often from "SetYawSpeed". Likely meaningless here but a default can't hurt.
+	//bound to change often from "SetYawSpeed". Likely meaningless here but a default can't hurt.
+	pev->yaw_speed		= 100;
 
 	MonsterInit();
 
@@ -290,6 +287,30 @@ void CTemplateMonster::Spawn( void )
 	//SetTouch( NULL );
 
 }//END OF Spawn();
+
+
+//Not to be confused with the bounds given by the Spawn method's "UTIL_SetSize".
+//That size is used for blocking other entities from occupying the same space.
+//This "ObjectCollisionBox" determines what area is able to be hit by linetraces (bullets) or
+//other damage checks.  So if that area from SetSize is not enough to include all of the monster,
+//namely the head, this needs to be overridden to go beyond and include those.
+//Otherwise firing at places just out of bounds but clearlyo n model like below te very tip of the
+//head won't register at all, for example.
+void CTemplateMonster::SetObjectCollisionBox(void){
+	
+	//remove this parent call if using below. Calling the parent is exclusive of setting absmin & max manually.
+	CBaseMonster::SetObjectCollisionBox();
+	
+	/*
+	if(pev->deadflag != DEAD_NO){
+		//any form of dead.
+		CBaseMonster::SetObjectCollisionBox();
+	}else{
+		pev->absmin = pev->origin + Vector(-X, -X, 0);
+		pev->absmax = pev->origin + Vector(X, X, Z);
+	}
+	*/
+}//END OF SetObjectCollisionBox
 
 
 void CTemplateMonster::SetEyePosition(void){
@@ -315,8 +336,7 @@ float CTemplateMonster::getDistLook(void){
 
 
 //based off of GetSchedule for CBaseMonster in schedule.cpp.
-Schedule_t* CTemplateMonster::GetSchedule( void )
-{
+Schedule_t* CTemplateMonster::GetSchedule( void ){
 	//MODDD - safety.
 	if(pev->deadflag != DEAD_NO){
 		return GetScheduleOfType( SCHED_DIE );

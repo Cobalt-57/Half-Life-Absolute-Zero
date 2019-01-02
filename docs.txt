@@ -1463,6 +1463,10 @@ floaterDummy (0) - BOOL. Floaters lose AI. Good for watching how enemies (to thi
 
 barneyDummy (0) - BOOL. Barney's lose AI.
 
+
+minimumRespawnDelay - DECIMAL. Enforces a minimum amount of time before a respawn may take place, suggested by pressing a key while dead in singleplayer and even overrides multiplayer's respawn delay.  But can't be shorter than the time it takes to do a death animation, if that was chosen to be done.
+
+
 //
 //!!! LAST NORMAL CVAR!
 //
