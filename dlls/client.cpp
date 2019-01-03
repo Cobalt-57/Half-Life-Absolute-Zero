@@ -1182,6 +1182,7 @@ void ClientCommand( edict_t *pEntity )
 	//MODDD - inserted new command: givedist.  Change the "givedoffset" var to change what distance items / weapons / npcs are spawned
 	//from you.  Although, at large distances (above 100 usually), looking down too much will make it spawn underground and fall through
 	//the world.
+	//MODDD TODO - all givedist commands should spawn something facing whoever spawned it?  or maybe the default angles of 0,0,0 are fine?
 	else if ( FStrEq(pcmdRefinedRef, "givedist" ) )
 	{
 
@@ -1200,6 +1201,20 @@ void ClientCommand( edict_t *pEntity )
 
 			///tempplayer->debugDrawVectRecentGive1 = pev->origin + pev->view_ofs;
 			///tempplayer->debugDrawVectRecentGive2 = vecDest;
+
+
+			/*
+			//TEST - make a breakable.  Tested in c3a2.
+			//...ugh.
+			CBaseEntity* pushableTest = CBaseEntity::CreateManual("func_breakable", vecDest, Vector(0, 0, 0), NULL);
+			
+			//pushableTest->pev->model = ALLOC_STRING("*27");
+			pushableTest->pev->model = ALLOC_STRING("models/agrunt.mdl");
+
+			pushableTest->Spawn();
+
+			return;
+			*/
 
 			tempplayer->GiveNamedItem( CMD_ARGV(1), attemptInterpretSpawnFlag(CMD_ARGV(2)), vecDest);
 

@@ -7294,6 +7294,15 @@ void precacheAll(void){
 
 
 
+//MODDD NOTE - The "arg_tolerance" of IsFacing and IsFacingAway show how much of a difference between where
+//             the target entity (pevTest) is looking now, angle-wise, and the point he should be looking at for the check,
+//             is allowed.
+//             Tolerance can not be negative, as a tolerance of 0 is already impossibly strict (exactly 1.0 or -1.0 respectively
+//             between IsFacing / IsFacingAway).
+//             A tolerance of 1.0 actually supports looking 180 degrees around, or +- 90.
+//             Use a tolerance of 2.0 to allow looking anywhere (360 degrees), +- 180.
+//             IN SHORT, the range of tolerance is 0 to 2.
+
 //DEFAULT DEGREES: about +/- 15?
 BOOL UTIL_IsFacing( entvars_t *pevTest, const Vector &vecLookAtTest )
 {
@@ -7364,6 +7373,9 @@ BOOL UTIL_IsFacingAway( entvars_t *pevTest, const Vector &vecLookAtTest, const f
 	angle.x = 0;
 	UTIL_MakeVectorsPrivate( angle, forward, NULL, NULL );
 	
+
+	easyForcePrintLine("HOW FAR HE BE FACIN AWAY %.2f TOL: %.2f", DotProduct( forward, vecDir ), (-1 + arg_tolerance) );
+
 	if ( DotProduct( forward, vecDir ) <= (-1 + arg_tolerance) )
 	{
 		return TRUE;

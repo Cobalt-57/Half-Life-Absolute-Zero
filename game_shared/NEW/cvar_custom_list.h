@@ -652,6 +652,7 @@
 #define DEFAULT_crossbowBoltDirectionAffectedByWater 0
 #define DEFAULT_kingpinDebug 0
 #define DEFAULT_minimumRespawnDelay 2
+#define DEFAULT_r_glowshell_debug 0
 
 #define EASY_CVAR_HASH_MASS\
 	EASY_CVAR_HASH(strobeDurationMin, 0)\
@@ -2697,6 +2698,7 @@
 	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY(crossbowBoltDirectionAffectedByWater)\
 	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY(kingpinDebug)\
 	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY(minimumRespawnDelay)\
+	EASY_CVAR_DECLARATION_SERVER(r_glowshell_debug)\
 	DUMMY
 
 #define EASY_CVAR_DECLARATION_CLIENT_MASS\
@@ -3176,6 +3178,7 @@
 	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY(crossbowBoltDirectionAffectedByWater)\
 	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY(kingpinDebug)\
 	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY(minimumRespawnDelay)\
+	EASY_CVAR_DECLARATION_CLIENT(r_glowshell_debug)\
 	DUMMY
 
 #define EASY_CVAR_UPDATE_SERVER_MASS\
@@ -3655,6 +3658,7 @@
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(crossbowBoltDirectionAffectedByWater)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(kingpinDebug)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(minimumRespawnDelay)\
+	EASY_CVAR_UPDATE_SERVER(r_glowshell_debug)\
 	DUMMY
 
 #define EASY_CVAR_UPDATE_CLIENT_MASS\
@@ -4134,6 +4138,7 @@
 	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY(crossbowBoltDirectionAffectedByWater)\
 	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY(kingpinDebug)\
 	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY(minimumRespawnDelay)\
+	EASY_CVAR_UPDATE_CLIENT(r_glowshell_debug)\
 	DUMMY
 
 #define EASY_CVAR_CREATE_SERVER_SETUP_MASS\
@@ -4619,6 +4624,7 @@
 	EASY_CVAR_CREATE_CLIENT_A_DEBUGONLY(crossbowBoltDirectionAffectedByWater)\
 	EASY_CVAR_CREATE_CLIENT_A_DEBUGONLY(kingpinDebug)\
 	EASY_CVAR_CREATE_CLIENT_A_DEBUGONLY(minimumRespawnDelay)\
+	EASY_CVAR_CREATE_CLIENT_AC(r_glowshell_debug)\
 	DUMMY
 
 #define EASY_CVAR_RESET_MASS\
@@ -5097,6 +5103,7 @@
 	EASY_CVAR_RESET_DEBUGONLY(crossbowBoltDirectionAffectedByWater)\
 	EASY_CVAR_RESET_DEBUGONLY(kingpinDebug)\
 	EASY_CVAR_RESET_DEBUGONLY(minimumRespawnDelay)\
+	EASY_CVAR_RESET(r_glowshell_debug)\
 	DUMMY
 
 #define EASY_CVAR_EXTERN_MASS\
@@ -5576,5 +5583,6 @@
 	EASY_CVAR_EXTERN_DEBUGONLY(crossbowBoltDirectionAffectedByWater)\
 	EASY_CVAR_EXTERN_DEBUGONLY(kingpinDebug)\
 	EASY_CVAR_EXTERN_DEBUGONLY(minimumRespawnDelay)\
+	EASY_CVAR_EXTERN(r_glowshell_debug)\
 	DUMMY
 

@@ -3172,18 +3172,6 @@ int CHAssault::LookupActivityHard(int activity){
 
 int CHAssault::tryActivitySubstitute(int activity){
 
-	int iRandChoice = 0;
-	int iRandWeightChoice = 0;
-	
-	char* animChoiceString = NULL;
-	int* weightsAbs = NULL;
-			
-	//pev->framerate = 1;
-	int maxRandWeight = 30;
-
-
-
-
 	//no need for default, just falls back to the normal activity lookup.
 	switch(activity){
 		case ACT_RANGE_ATTACK1:

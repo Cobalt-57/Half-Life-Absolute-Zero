@@ -3303,7 +3303,7 @@ void RadiusDamage( Vector vecSrc, entvars_t *pevInflictor, entvars_t *pevAttacke
 }
 void RadiusDamage( Vector vecSrc, entvars_t *pevInflictor, entvars_t *pevAttacker, float flDamage, float flRadius, int iClassIgnore, int bitsDamageType, int bitsDamageTypeMod )
 {
-
+	
 	if(EASY_CVAR_GET(RadiusDamageDrawDebug) == 1){
 		//pipe it to here instead
 		RadiusDamageTest(vecSrc, pevInflictor, pevAttacker, flDamage, flRadius, iClassIgnore, bitsDamageType, bitsDamageTypeMod);
@@ -3351,6 +3351,41 @@ void RadiusDamage( Vector vecSrc, entvars_t *pevInflictor, entvars_t *pevAttacke
 			vecSpot = pEntity->BodyTarget( vecSrc );
 			
 			UTIL_TraceLine ( vecSrc, vecSpot, dont_ignore_monsters, ENT(pevInflictor), &tr );
+
+
+			//what is origin yo. is it this yo.
+			//(-18.97,108.11,1.00)
+			
+			/*
+			
+			if(::FClassnameIs(pEntity->pev, "func_pushable")){
+				const char* myClassname = pEntity->getClassname();
+				Vector thisOrigin = pEntity->pev->origin;
+				const char* hitClassname = "_blank_";
+				const char* pevInflictorClassname = "_blank_";
+				const char* pevAttackerClassname = "_blank_";
+
+				if(tr.pHit != NULL){
+					hitClassname = STRING(tr.pHit->v.classname);
+				}
+
+				if(pevInflictor != NULL){
+					pevInflictorClassname = STRING(pevInflictor->classname);
+				}
+				if(pevAttacker != NULL){
+					pevAttackerClassname = STRING(pevAttacker->classname);
+				}
+
+
+				int x = 666;
+				::DebugLine_Setup(6, vecSrc, vecSpot, tr.flFraction);
+			}
+			*/
+
+			//Look uh.. if the player or whatever wants to get stupidly close to the point the spawned grenade is in the middle of clipping
+			//through the player or the object as it's fired, screw it. It's already good 99% of the time now. The check I got's good enough
+			//in ggrenade's Explode (trToEffectOrigin).
+
 
 			if ( tr.flFraction == 1.0 || tr.pHit == pEntity->edict() )
 			{// the explosion can 'see' this entity, so hurt them!

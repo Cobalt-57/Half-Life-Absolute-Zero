@@ -1468,6 +1468,8 @@ void CBaseMonster::heardBulletHit(entvars_t* pevShooter){
 void CBaseMonster::wanderAway(const Vector& toWalkAwayFrom){
 
 	//you are going to walk somewhere away from the given location.
+	//NOTICE - whoever called me already did the MONSTERSTATE checks to see we aren't telling something preoccupied to suddenly change its mind in
+	//whatever it's doing.  Only those that are IDLE or ALERT.
 
 	/*
 	//STOP task script from schedule.cpp for reference
@@ -5651,6 +5653,11 @@ int CBaseMonster::IRelationship ( CBaseEntity *pTarget )
 	//        May consider a "getRelationship()" later for forcing to hate.
 
 
+
+
+	//CHUMTOAD NEVER CALLS ME.  R_DEFAULT DOESNT WORK RETURNED FROM A CHILD CLASS, ITS SUPPOSED TO FIGURE THAT OUT ON ITS OWN
+	//  OR REDIRECT TO EITHER forceRelationshipWith OR  call the table here.
+	//Heck just call the parent CBaseMonster::Irelationship instead of returning R_DEFAULT, nothing else knows what to do with that.
 
 	int forcedRelationshipTest = pTarget->forcedRelationshipWith(this);
 	

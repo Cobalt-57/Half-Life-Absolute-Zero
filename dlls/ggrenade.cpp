@@ -27,6 +27,8 @@
 #include "soundent.h"
 #include "decals.h"
 
+//never, really now??!
+#include "custom_debug.h"
 
 //===================grenade
 
@@ -136,9 +138,15 @@ void CGrenade::Explode( TraceResult *pTrace, int bitsDamageType, int bitsDamageT
 	//also retail's origin.
 	Vector explosionOrigin = pev->origin; //by default.
 
+	//origin to do the explosion logic for, not necessiarly where the effect is spawned.
+	Vector explosionLogicOrigin = pev->origin;  //same.
+
 	// Pull out of the wall a bit
 	if ( pTrace->flFraction != 1.0 )
 	{
+		TraceResult trToEffectOrigin;
+		edict_t* ownerMem = NULL;
+
 
 		//MODDD - let's not change our own origin, just record this.
 		//pev->origin = ...
@@ -147,7 +155,45 @@ void CGrenade::Explode( TraceResult *pTrace, int bitsDamageType, int bitsDamageT
 		//MODDD - actually used for placing the quake explosion effect, if it is called for instead.
 		explosionEffectStart = pTrace->vecEndPos + (pTrace->vecPlaneNormal * 5);
 
-	}
+
+		
+		if(pev->owner != NULL){
+			//before we do this trace, we must drop the owner.  Restore it afterwards in case that matters
+			//for some other behavior.
+			//During a trace, an entity ignored (this->edict()) also indicates to ignore its pev->owner if it has one.
+			//This implied behavior will tear every hair out of your head.
+			//const char* ownerClassname = STRING(pev->owner->v.classname);
+
+			ownerMem = pev->owner;
+			pev->owner = NULL;
+		}
+
+
+		//MODDD -Check. Is there a straight line, unobstructed, from the surface to the explosionEffectStart?
+		Vector vecCheckStart;
+		//vecCheckStart = pTrace->vecEndPos + (pTrace->vecPlaneNormal * 0.1f);
+		vecCheckStart = pTrace->vecEndPos;
+		//and start just a little off from the pTrace->vecEndPos as to not collide with that surface itself. Just safety.
+		//...looks like we don't need to even do that.
+		UTIL_TraceLine(vecCheckStart, explosionOrigin, dont_ignore_monsters, this->edict(), &trToEffectOrigin);
+		if(trToEffectOrigin.fStartSolid || trToEffectOrigin.fAllSolid || trToEffectOrigin.flFraction < 1.0f){
+			//if there was any problem making it over, the logic origin should be vecCheckStart.
+			float distanceThatMadeItA = (trToEffectOrigin.vecEndPos - vecCheckStart).Length();
+			float distanceThatMadeItB = (explosionOrigin - vecCheckStart).Length() * trToEffectOrigin.flFraction;
+			explosionLogicOrigin = vecCheckStart;
+		}else{
+			//no problems? the retail behavior, same offset from the surface for RadiusDamage logic to start, is fine.
+			explosionLogicOrigin = explosionOrigin;
+		}
+		//::DebugLine_Setup(7, vecCheckStart, explosionOrigin, trToEffectOrigin.flFraction);
+		
+		//restore the pev->owner.
+		if(ownerMem != NULL){
+			pev->owner = ownerMem;
+		}
+
+
+	}//END OF surface hit check (pTrace)
 
 	//is this change from pev->origin to explosionOrigin ok?
 	int iContents = UTIL_PointContents ( explosionOrigin );
@@ -229,7 +275,14 @@ void CGrenade::Explode( TraceResult *pTrace, int bitsDamageType, int bitsDamageT
 
 	//MODDD - sending explosionOrigin instead of defaulting to pev->origin.
 	//RadiusDamageAutoRadius ( explosionOrigin, pev, pevOwner, pev->dmg, CLASS_NONE, bitsDamageType, bitsDamageTypeMod );
-	RadiusDamage( explosionOrigin, pev, pevOwner, pev->dmg, pev->dmg * 2.5, CLASS_NONE, bitsDamageType, bitsDamageTypeMod );
+	
+	//MODDD - and why were we still using explosionOrigin for the phyiscal damage spot all this time anyhow?
+	//...no, use the new explosionLogicOrigin instead.  If there is space out from the surface hit by the explosion, this records the same origin as the retail effect.
+	//But if something is in the way of even that, like a player firing a grenade while solidly against a crate, we don't want the player to block their own explosion
+	//from the crate because they thesmelves were in the way to block the explosion origin that got pushed behind.  That's... okay for the visible effect but not
+	//the explosion logic origin for doing radial damage.  It can't be blocked like that.
+	//RadiusDamage( explosionOrigin, pev, pevOwner, pev->dmg, pev->dmg * 2.5, CLASS_NONE, bitsDamageType, bitsDamageTypeMod );
+	RadiusDamage( explosionLogicOrigin, pev, pevOwner, pev->dmg, pev->dmg * 2.5, CLASS_NONE, bitsDamageType, bitsDamageTypeMod );
 	
 	
 	

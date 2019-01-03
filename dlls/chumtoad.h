@@ -58,31 +58,6 @@ chumtoad small walking npc that flees from preys, should attract bullsquids and 
 
 
 
-#define CHUMTOAD_CROAK_ATTRACT_RANGE 500
-
-
-#define CHUMTOAD_NORMAL_FOV 0.3
-#define CHUMTOAD_PLAYDEAD_FOV VIEW_FIELD_FULL
-
-
-enum chumtoad_e {  //key: frames, FPS
-	CHUMTOAD_IDLE1 = 0,  //31, 16
-	CHUMTOAD_IDLE2,  //31, 16
-	CHUMTOAD_IDLE3,  //31, 16
-	CHUMTOAD_FLINCH1, //23, 16
-	CHUMTOAD_FLINCH2, //11, 16
-	CHUMTOAD_HOP1,     //19, 60
-	CHUMTOAD_HOP2,     //19, 40
-	CHUMTOAD_SWIM, //31, 16
-	CHUMTOAD_DIE1, //36, 
-	CHUMTOAD_DIE2, //51, 25
-	CHUMTOAD_DIE3, //41, 30
-	CHUMTOAD_PLAYDEAD_START, //26, 16
-	CHUMTOAD_PLAYDEAD_IDLE, //21, 40
-	CHUMTOAD_PLAYDEAD_END, //26, 16
-
-};
-
 
 
 //or a parent of "CGrenade" like the CSqueakGrenade does?
@@ -172,6 +147,9 @@ class CChumToad : public CBaseMonster{
 
 	float massInfluence(void);
 
+	void OnTakeDamageSetConditions(entvars_t *pevInflictor, entvars_t *pevAttacker, float flDamage, int bitsDamageType, int bitsDamageTypeMod);
+	
+	int getHullIndexForNodes(void);
 	
 	
 	//????
@@ -226,6 +204,8 @@ class CChumToad : public CBaseMonster{
 
 	void StartTask ( Task_t *pTask );
 	void RunTask ( Task_t *pTask );
+	
+	float HearingSensitivity();
 
 
 
@@ -265,6 +245,8 @@ class CChumToad : public CBaseMonster{
 	
 	EHANDLE m_hOwner;
 	
+	BOOL playerFriend;
+	BOOL playerAllyFriend;
 
 
 };//END OF CChumToad

@@ -13,6 +13,25 @@
 *
 ****/
 
+
+
+
+
+//MODDD TODO - why is behavior inconsistent on hitting an area with missing piecs of the hitbox (func_pusable at least)?
+//Example: goto a3a1, go forwards and to the left in the room with the chair and the computer.  Push the chair away and get on top of it
+//         (noclip or jumpForceMulti).  crouch or stand near the top and look down and crowbar.  It's possible to rapid crowbar but still
+//         do miss sounds, no hits.  sigh I thought this was fixed everywhere, guess that was just for map geometry.
+
+
+
+
+
+
+
+
+
+
+
 #include "extdll.h"
 #include "util.h"
 #include "cbase.h"
@@ -23,6 +42,8 @@
 #include "gamerules.h"
 
 #include "custom_debug.h"
+
+
 
 
 #define	CROWBAR_BODYHIT_VOLUME 128

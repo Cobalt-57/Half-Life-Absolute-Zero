@@ -9,11 +9,75 @@
 
 
 
+
+//MODDD TODO SUPER DUPER ULTRA MEGA CRITICAL OF CERTAIN DOOM AND TOTAL OBLITERATION
+
+//Chumtoads. Have a "ACT_SWIM" sequence: "swim".  Awwwwwww shit.
+
+//I guess something simple would be for chumtoads thrown that detect a pev->waterlevel of 3 to float to the top and just stay there
+//while doing this activity.
+
+//The nodes definitely do not support movement between water and air/land. HOO boy, what were those dev's thinking.
+
+//Also, ACT_SWIM isn't even touched by the ichy.  The leech and player use it though, but no default behavior (CBaseMonster or nodes.cpp) uses it.
+
+
+
+
+//ALSO a word about the flinches now supported:  They are not very likely to happen.
+//Small flinch is hard to trigger overall in any running away schedules (is there just one?), and
+//they're all still likely to be overshadowed by playing dead, which, if decided, gives flinching no chance of happening.
+
+
+
+
 extern float global_noFlinchOnHard;
 extern float global_chumtoadPrintout;
 extern float global_chumtoadPlayDeadFoolChance;
 
+
+
+
+
+
 int CChumToad::numberOfEyeSkins = -1;
+
+
+
+
+
+
+
+#define CHUMTOAD_CROAK_ATTRACT_RANGE 500
+
+
+#define CHUMTOAD_NORMAL_FOV 0.3
+#define CHUMTOAD_PLAYDEAD_FOV VIEW_FIELD_FULL
+
+
+enum chumtoad_e {  //key: frames, FPS
+	CHUMTOAD_IDLE1 = 0,  //31, 16
+	CHUMTOAD_IDLE2,  //31, 16
+	CHUMTOAD_IDLE3,  //31, 16
+	CHUMTOAD_FLINCH1, //23, 16
+	CHUMTOAD_FLINCH2, //11, 16
+	CHUMTOAD_HOP1,     //19, 60
+	CHUMTOAD_HOP2,     //19, 40
+	CHUMTOAD_SWIM, //31, 16
+	CHUMTOAD_DIE1, //36, 
+	CHUMTOAD_DIE2, //51, 25
+	CHUMTOAD_DIE3, //41, 30
+	CHUMTOAD_PLAYDEAD_START, //26, 16
+	CHUMTOAD_PLAYDEAD_IDLE, //21, 40
+	CHUMTOAD_PLAYDEAD_END, //26, 16
+
+};
+
+
+
+
+
+
 
 
 
@@ -55,6 +119,7 @@ enum
 	SCHED_TOAD_WAKE_ANGRY,
 	SCHED_TOAD_ALERT_FACE,
 	SCHED_TOAD_ALERT_SMALL_FLINCH,
+	SCHED_TOAD_ALERT_BIG_FLINCH,
 	SCHED_TOAD_ALERT_STAND,
 };
 
@@ -222,7 +287,7 @@ Schedule_t	slToadRunAway[] =
 		tlToadRunAway,
 		ARRAYSIZE ( tlToadRunAway ), 
 		bits_COND_NEW_ENEMY,
-		0,
+		bits_COND_HEAVY_DAMAGE,
 		"slToadRunAway"
 	},
 };
@@ -251,10 +316,18 @@ Schedule_t	slToadIdleWait[] =
 		ARRAYSIZE ( tlToadIdleWait ),
 		//MODDD - new
 		bits_COND_SEE_ENEMY			|
-		bits_COND_NEW_ENEMY			|
+
+		bits_COND_NEW_ENEMY		|
+		bits_COND_SEE_FEAR		|  //these ok?
+		bits_COND_SEE_DISLIKE		|
+		bits_COND_SEE_HATE		|
+
 		bits_COND_LIGHT_DAMAGE		|
-		bits_COND_HEAVY_DAMAGE,
-		0,
+		bits_COND_HEAVY_DAMAGE      |
+		bits_COND_HEAR_SOUND,
+		bits_SOUND_COMBAT		|// sound flags
+		bits_SOUND_WORLD		|
+		bits_SOUND_PLAYER,
 		"slToadIdleWait"
 	},
 };
@@ -374,9 +447,12 @@ Schedule_t slToadWakeAngry[] =
 	{
 		tlToadWakeAngry1,
 		ARRAYSIZE ( tlToadWakeAngry1 ),
-		//0,
-		//MODDD		
-		bits_COND_SEE_ENEMY,
+		bits_COND_SEE_ENEMY |
+		bits_COND_NEW_ENEMY		|
+		bits_COND_SEE_FEAR		|  //these ok?
+		bits_COND_SEE_DISLIKE		|
+		bits_COND_SEE_HATE |
+		bits_COND_HEAVY_DAMAGE,
 		0,
 		"slToadWakeAngry"
 	}
@@ -422,6 +498,7 @@ Task_t	tlToadAlertSmallFlinch[] =
 	{ TASK_STOP_MOVING,				0						},
 	{ TASK_REMEMBER,				(float)bits_MEMORY_FLINCHED },
 	{ TASK_SMALL_FLINCH,			(float)0				},
+	{ TASK_SET_SCHEDULE,            (float)SCHED_TOAD_RUNAWAY },
 	//{ TASK_SET_SCHEDULE,			(float)SCHED_TOAD_ALERT_FACE	},   no need to look, start running soon.
 };
 
@@ -437,6 +514,34 @@ Schedule_t	slToadAlertSmallFlinch[] =
 		"slToadAlertSmallFlinch"
 	},
 };
+
+
+
+
+Task_t	tlToadAlertBigFlinch[] =
+{
+	{ TASK_STOP_MOVING,				0						},
+	{ TASK_REMEMBER,				(float)bits_MEMORY_FLINCHED },
+	{ TASK_BIG_FLINCH,			(float)0				},
+	{ TASK_SET_SCHEDULE,            (float)SCHED_TOAD_RUNAWAY },
+	//{ TASK_SET_SCHEDULE,			(float)SCHED_TOAD_ALERT_FACE	},   no need to look, start running soon.
+};
+
+Schedule_t	slToadAlertBigFlinch[] =
+{
+	{ 
+		tlToadAlertBigFlinch,
+		ARRAYSIZE ( tlToadAlertBigFlinch ),
+		0,
+		0,
+		"slToadAlertBigFlinch"
+	},
+};
+
+
+
+
+
 
 //=========================================================
 // AlertIdle Schedules
@@ -498,6 +603,7 @@ DEFINE_CUSTOM_SCHEDULES( CChumToad )
 	slToadWakeAngry,
 	slToadAlertFace,
 	slToadAlertSmallFlinch,
+	slToadAlertBigFlinch,
 	slToadAlertStand,
 
 };
@@ -543,6 +649,10 @@ CChumToad::CChumToad(void){
 	//necessary?
 	m_iMyClass = 0;
 
+	playerFriend = FALSE;
+	playerAllyFriend = FALSE;
+
+
 }//END OF CChumToad constructor
 
 
@@ -557,9 +667,11 @@ TYPEDESCRIPTION	CChumToad::m_SaveData[] =
 	
 	//MODDD TODO - save other ehandle things? scientist NPC to heal? islave NPC to revive? mr. friendly player reference, player mr. friendly reference? etc.
 	DEFINE_FIELD( CChumToad, m_hEntitySittingOn, FIELD_EHANDLE ),
+	DEFINE_FIELD( CChumToad, playerFriend, FIELD_BOOLEAN ),
+	DEFINE_FIELD( CChumToad, playerAllyFriend, FIELD_BOOLEAN ),
 	
 
-
+	
 	
 };
 
@@ -736,6 +848,12 @@ void CChumToad::Spawn( void )
 
 	if ( pev->owner )
 		m_hOwner = Instance( pev->owner );
+
+	if( (m_hOwner != NULL) && m_hOwner->IsPlayer()){
+		//I was thrown by the player.  Don't be scared by them.
+		playerFriend = TRUE;
+		playerAllyFriend = TRUE;
+	}
 
 	//Don't use this system! It bad!
 	pev->owner = NULL;
@@ -1018,14 +1136,17 @@ Schedule_t *CChumToad::GetSchedule ( void )
 
 			//MODDD - are these needed at all?
 			////////////////////////////////////////////////////////////////////////////////////
-			if( HasConditions(bits_COND_SEE_ENEMY)){
+			if( HasConditions(bits_COND_SEE_ENEMY )){
 				//run away? is this force okay?
 				return GetScheduleOfType( SCHED_TOAD_RUNAWAY);
 			}
+
+			/*
 			if ( HasConditions(bits_COND_LIGHT_DAMAGE | bits_COND_HEAVY_DAMAGE) )
 			{
 				return GetScheduleOfType( SCHED_TOAD_RUNAWAY);
 			}
+			*/
 			////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -1034,7 +1155,7 @@ Schedule_t *CChumToad::GetSchedule ( void )
 				return GetScheduleOfType( SCHED_TOAD_ALERT_FACE );
 			}
 
-			/*
+			//eh.. why not have the option?
 			else if ( FRouteClear() )
 			{
 				// no valid route!
@@ -1045,7 +1166,7 @@ Schedule_t *CChumToad::GetSchedule ( void )
 				// valid route. Get moving
 				return GetScheduleOfType( SCHED_IDLE_WALK );
 			}
-			*/
+			
 
 
 			//Try to do an idle wait + hop + croak later?
@@ -1070,15 +1191,21 @@ Schedule_t *CChumToad::GetSchedule ( void )
 				//
 
 			}
-
-			//MODDD - new
+			
+			
+			//MODDD - new... nevermind.  Seeing the enemy changes the state to COMBAT anyways, which handles this.
 			///////////////////////////////////////////////////////////////
+			/*
 			if( HasConditions(bits_COND_SEE_ENEMY)){
 				//run away? is this force okay?
 				return GetScheduleOfType( SCHED_TOAD_RUNAWAY);
 			}
-			///////////////////////////////////////////////////////////////
+			*/
 
+			//MODDD - new.  Taking a huge amount of damage forces the big flinch and look
+			if(HasConditions(bits_COND_HEAVY_DAMAGE)){
+				return GetScheduleOfType(SCHED_ALERT_BIG_FLINCH);
+			}
 
 			if ( HasConditions(bits_COND_LIGHT_DAMAGE | bits_COND_HEAVY_DAMAGE) )
 			{
@@ -1088,15 +1215,61 @@ Schedule_t *CChumToad::GetSchedule ( void )
 				}
 				else
 				{
-					//return GetScheduleOfType( SCHED_TOAD_ALERT_SMALL_FLINCH );
+					//return GetScheduleOfType( SCHED_ALERT_SMALL_FLINCH );
+					return GetScheduleOfType( SCHED_TOAD_ALERT_SMALL_FLINCH );
 					//You're cowardly. Don't stop to turn and stare at what damaged you. Just run.
-					return GetScheduleOfType( SCHED_TAKE_COVER_FROM_ORIGIN );
+					//actually we can still do a flinch animation.  Our own flinch schedule(s) will handle running away
+					//afterwards immediately.
+					//return GetScheduleOfType( SCHED_TAKE_COVER_FROM_ORIGIN );
 				}
 			}
 
+
 			else if ( HasConditions ( bits_COND_HEAR_SOUND ) )
 			{
+				//MODDD TODO - do the usual ALERT_FACE if this toad hasn't had any action in a while.
+				
+				//If something chasing me is looking at me enough, skip to running away.
+				//...oh wait, this state means we dropped the enemy.
+				//if(UTIL_IsFacing(m_hEnemy->pev, pev->origin, 0.6)
+
+				//Really all we care about here is not turning to stare at the player twenty times.
+				//Check the best sound and see if it's PLAYER noise.  If so THEN skip looking.
+				//Can't be too paranoid or else so much as a friendly walking nearby will scare me.
+				//Although any combat noise scaring a chumtoad, regardless of source, does seem fitting too...
+				//but not bits_SOUND_WORLD.  Rivers or droning machinery noise, whatever causes that, don't affect me.
+				BOOL inPanicMode = (panicTimer != -1 && gpGlobals->time < panicTimer);
+				CSound *pSound;
+				pSound = PBestSound();
+
+				ASSERT( pSound != NULL );
+
+
+				if(pSound != NULL){
+					if(pSound->m_iType & bits_SOUND_COMBAT){
+						//AH. LOUD.  ...maybe later, do a range check to see how close the sound is.
+						//direct line of sight to the sound origin?
+						//MODDD - TODO.
+
+						if(inPanicMode){
+							//If I was recently hurt and I'm in a hurry, keep it up.
+							return GetScheduleOfType(SCHED_TOAD_RUNAWAY);
+						}
+
+					}
+					if(pSound->m_iType & bits_SOUND_PLAYER){
+						//depends. is the player our friend?
+						if(!playerFriend){
+							return GetScheduleOfType(SCHED_TOAD_RUNAWAY);
+						}
+					}
+				}//END OF sound null check
+
+				
+				//generic fall thru: face whatever made the sound.
 				return GetScheduleOfType( SCHED_TOAD_ALERT_FACE );
+				
+				
 			}
 			else
 			{
@@ -1135,39 +1308,32 @@ Schedule_t *CChumToad::GetSchedule ( void )
 				return GetScheduleOfType(SCHED_TOAD_RUNAWAY);
 
 			}
+			//MODDD - new.
+			else if(HasConditions(bits_COND_HEAVY_DAMAGE)){
+				//MODDD - taking heavy damage is more drastic now with its own check.
+				//It won't happen often enough to need memory for blocking.
+				//And yes, the ALERT version because it says to run away after.  No need for separate ALERT and non-ALERT flinches.
+				return GetScheduleOfType(SCHED_TOAD_ALERT_BIG_FLINCH);
+			}
 			//MODDD - other condition.  If "noFlinchOnHard" is on and the skill is hard, don't flinch from getting hit.
-			else if (HasConditions(bits_COND_LIGHT_DAMAGE) && !HasMemory( bits_MEMORY_FLINCHED) && !(global_noFlinchOnHard==1 && g_iSkillLevel==SKILL_HARD)  )
+			else if (HasConditions(bits_COND_LIGHT_DAMAGE)  )
 			{
-				//For the chumtoad, this  has a chance of playing dead?
-				return GetScheduleOfType( SCHED_SMALL_FLINCH );
+				//CHANGE. We're running away whether or not we're due for a flinch animation yet.
+				if(!HasMemory( bits_MEMORY_FLINCHED) && !(global_noFlinchOnHard==1 && g_iSkillLevel==SKILL_HARD)){
+					
+					//For the chumtoad, this  has a chance of playing dead?
+					//...which will be handled separately by TakeDamage as usual.
+					//   We will still do a flinch animation and then run away.
+					return GetScheduleOfType( SCHED_TOAD_ALERT_SMALL_FLINCH );
+				}else{
+					//ordinary run away.
+					return GetScheduleOfType(SCHED_TOAD_RUNAWAY);
+				}
+				
+
 			}
 			else if ( !HasConditions(bits_COND_SEE_ENEMY) )
 			{
-
-
-				/*
-				// we can't see the enemy
-				if ( !HasConditions(bits_COND_ENEMY_OCCLUDED) )
-				{
-					
-					if(!FacingIdeal()){
-						// enemy is unseen, but not occluded!
-						// turn to face enemy
-						return GetScheduleOfType(SCHED_COMBAT_FACE);
-					}else{
-						//We're facing the LKP already. Then we have to go to that point and declare we're stumped there if we still see nothing.
-						return GetScheduleOfType(SCHED_CHASE_ENEMY);
-					}
-
-				}
-				else
-				{
-					// chase!
-					///EASY_CVAR_PRINTIF_PRE(panthereyePrintout, easyPrintLine("ducks??"));
-					return GetScheduleOfType( SCHED_CHASE_ENEMY );
-				}
-				*/
-				
 				//MODDD TODO.  Don't see the enemy? uh, ok? Assume we're hidden?
 				
 				m_MonsterState = MONSTERSTATE_ALERT;
@@ -1179,6 +1345,10 @@ Schedule_t *CChumToad::GetSchedule ( void )
 			else  
 			{
 				// we can see the enemy
+
+				//yea, right...
+
+				/*
 				if ( HasConditions(bits_COND_CAN_RANGE_ATTACK1) )
 				{
 					return GetScheduleOfType( SCHED_RANGE_ATTACK1 );
@@ -1195,26 +1365,9 @@ Schedule_t *CChumToad::GetSchedule ( void )
 				{
 					return GetScheduleOfType( SCHED_MELEE_ATTACK2 );
 				}
-
-				/*
-				if ( !HasConditions(bits_COND_CAN_RANGE_ATTACK1 | bits_COND_CAN_MELEE_ATTACK1) )
-				{
-					// if we can see enemy but can't use either attack type, we must need to get closer to enemy
-					//EASY_CVAR_PRINTIF_PRE(panthereyePrintout, easyPrintLine("ducks2"));
-					return GetScheduleOfType( SCHED_PANTHEREYE_CHASE_ENEMY );
-				}
-				else if ( !FacingIdeal() )
-				{
-					//turn
-					//return GetScheduleOfType( SCHED_COMBAT_FACE );
-
-					//better handling.
-					return GetScheduleOfType( SCHED_PANTHEREYE_CHASE_ENEMY );
-
-
-				}
 				*/
-				else
+
+				//else
 				{
 					//lets go runnin' and runnin'!
 
@@ -1224,14 +1377,7 @@ Schedule_t *CChumToad::GetSchedule ( void )
 
 					ALERT ( at_aiconsole, "No suitable combat schedule!\n" );
 				}
-
-
-
 			}
-
-
-
-
 			break;
 		}
 	case MONSTERSTATE_DEAD:
@@ -1335,6 +1481,9 @@ Schedule_t* CChumToad::GetScheduleOfType( int Type){
 		case SCHED_TOAD_ALERT_SMALL_FLINCH:
 			return &slToadAlertSmallFlinch[0];
 		break;
+		case SCHED_TOAD_ALERT_BIG_FLINCH:
+			return &slToadAlertBigFlinch[0];
+		break;
 		case SCHED_TOAD_ALERT_STAND:
 			return &slToadAlertStand[0];
 		break;
@@ -1435,10 +1584,21 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CChumToad)
 	//do this first to see if this killed the monster or not. If it did, we're in no place to play dead.
 	int tempDmg = GENERATE_TAKEDAMAGE_PARENT_CALL(CBaseMonster);
 	
+	if(pevAttacker != NULL){
+		CBaseEntity* pEntAttacker = CBaseEntity::Instance(pevAttacker);
+		
+		//If one of these used to be my friend, they aren't anymore.  Player attacking scares the frog from barnies too.
+		if(pEntAttacker->IsPlayer() ){
+			playerFriend = FALSE;
+			playerAllyFriend = FALSE;
+		}else if(pEntAttacker->Classify() == CLASS_PLAYER_ALLY){
+			playerAllyFriend = FALSE;
+		}//NOTE: scientists are CLASS_HUMAN_PASSIVE
 
+	}
 
 	//to see if we can play dead or stop playing dead, we must at least be on the ground.  And uh, not actually dead / dying.
-	if(this->m_MonsterState != MONSTERSTATE_DEAD && pev->deadflag != DEAD_DEAD && pev->flags & FL_ONGROUND){
+	if(this->m_IdealMonsterState != MONSTERSTATE_DEAD && m_MonsterState != MONSTERSTATE_DEAD && pev->deadflag == DEAD_NO && pev->flags & FL_ONGROUND){
 
 		//IM RUNNIN
 		panicTimer = gpGlobals->time + 10;
@@ -1709,7 +1869,7 @@ void CChumToad::RunTask ( Task_t *pTask ){
 		
 		//debug!
 		case TASK_WAIT_FOR_MOVEMENT:
-			::UTIL_drawPointFrame(vecHopDest, 12, 255, 255, 255);
+			//::UTIL_drawPointFrame(vecHopDest, 12, 255, 255, 255);
 			CBaseMonster :: StartTask ( pTask );
 
 		break;
@@ -1862,8 +2022,10 @@ void CChumToad::RunTask ( Task_t *pTask ){
 
 			if(HasConditions(bits_COND_SEE_ENEMY)){
 				//NOTICE: should we require that the enemy is looking at this chumtoad to do this too?
+				const BOOL isFacingAway = UTIL_IsFacingAway(m_hEnemy->pev, this->pev->origin, 1.3);
+				const float distToEnemy = (m_hEnemy->pev->origin - this->pev->origin).Length();
 
-				if(UTIL_IsFacingAway(m_hEnemy->pev, this->pev->origin, 0.25) && (m_hEnemy->pev->origin - this->pev->origin).Length() > 400  ){
+				if(isFacingAway && distToEnemy > 90  ){
 					//they won't see us if we get up, it's fine.
 				}else{
 					//not looking far away enough or too close? keep playing dead.
@@ -1944,6 +2106,18 @@ void CChumToad::RunTask ( Task_t *pTask ){
 	}//END OF switch(...)
 
 }//END OF RunTask(...)
+
+
+
+
+float CChumToad::HearingSensitivity(){
+	//good hearing.
+	return 1.8f;
+}
+
+
+
+
 
 
 
@@ -2294,61 +2468,92 @@ int CChumToad::IRelationship ( CBaseEntity *pTarget )
 
 	switch(pTarget->Classify()){
 	case CLASS_NONE:
-		return R_DEFAULT;
+		
+		//return R_DEFAULT;  ???
 	break;
 	case CLASS_MACHINE:
-		return R_DEFAULT;
-	break;
-	case CLASS_PLAYER:
-		return R_DEFAULT;
-	break;
-	case CLASS_HUMAN_PASSIVE:
-		//scientist don't care about chumtoads. But (TODO) stare at them from time to time. Same with barnies really.
-		return R_NO;
+		
+		//return R_DEFAULT;
+		return R_HT;   //uh.. ?
 	break;
 	case CLASS_HUMAN_MILITARY:
 		return R_HT;
 	break;
+
 	case CLASS_ALIEN_MILITARY:
-		//food?
+		//food?  do I try to run if they get close or look hungry maybe (agrunts)?
 		return R_NO;
-	break;
-	case CLASS_ALIEN_PASSIVE:
-		return R_DEFAULT;
 	break;
 	case CLASS_ALIEN_MONSTER:
 		//food?
 		return R_NO;
 	break;
+
+	case CLASS_ALIEN_PASSIVE:
+		//return R_DEFAULT;
+		
+		return R_NO;  //my kind of people... maybe?
+	break;
 	case CLASS_ALIEN_PREY:
 		//my class: other non-toad prey. Does it hate me too?
 
-		if(  FClassnameIs(pTarget->pev, "monster_chumtoad" ) == 1){
+		if(  FClassnameIs(pTarget->pev, "monster_chumtoad" ) == TRUE){
 			//We toads must stick together in this cold and unforgiving world.
 			return R_AL;
 		}
 
-		return R_HT;
+		//return R_HT;
+		return R_NO;
 	break;
 	case CLASS_ALIEN_PREDATOR:
 		//food?
 		return R_HT;
 	break;
 	case CLASS_INSECT:
-		return R_DEFAULT;
-	break;
-	case CLASS_PLAYER_ALLY:
-		//spawned by the player or not, friendlies don't care about chumtoads.
+		//return R_DEFAULT;
+
+		//finally, food for me...  TODO. implement that? eat cockroaches? do toads do that? maybe freaky purple alien ones do.
 		return R_NO;
 	break;
-	case CLASS_PLAYER_BIOWEAPON:
-		return R_HT;
+
+
+	//!!!
+	case CLASS_HUMAN_PASSIVE:
+		//scientists?  never fear them.
+		return R_NO;
 	break;
+	case CLASS_PLAYER:
+		if(playerFriend){
+			return R_NO;
+		}else{
+			return R_HT;
+		}
+	break;
+	case CLASS_PLAYER_ALLY:
+		if(playerAllyFriend){
+			return R_NO;
+		}else{
+			return R_HT;
+		}
+	break;
+
+	case CLASS_PLAYER_BIOWEAPON:
+		if(playerFriend){
+			return R_NO;
+		}else{
+			return R_HT;
+		}
+	break;
+
+	
+
+
 	case CLASS_ALIEN_BIOWEAPON:
 		return R_HT;
 	break;
 	case CLASS_BARNACLE:
-		return R_DEFAULT;
+		
+		//return R_DEFAULT;   //fall thru...
 	break;
 	}//END OF switch(...)
 
@@ -2508,8 +2713,49 @@ int CChumToad::LookupActivityHard(int activity){
 			EASY_CVAR_PRINTIF_PRE(chumtoadPrintout, easyPrintLine("What move act?? %d", ((int)activity) ));
 			return CHUMTOAD_HOP1;
 		break;
+		case ACT_SMALL_FLINCH:
+			//turn up the speed.
+			if(panicTimer != -1 && gpGlobals->time < panicTimer){
+				m_flFramerateSuggestion = 1.4f;
+			}else if(m_MonsterState == MONSTERSTATE_IDLE){
+				//slow.
+				m_flFramerateSuggestion = 1.0f;
+			}else if(m_MonsterState == MONSTERSTATE_ALERT){
+				m_flFramerateSuggestion = 1.0f;
+			}else{
+				//assume in a hurry to get out of danger.
+				m_flFramerateSuggestion = 1.14f;
+			}
 
+			return CBaseAnimating::LookupActivity(activity);
+		break;
+		case ACT_BIG_FLINCH:
+			//turn up the speed.
+			if(panicTimer != -1 && gpGlobals->time < panicTimer){
+				m_flFramerateSuggestion = 1.5f;
+			}else if(m_MonsterState == MONSTERSTATE_IDLE){
+				//slow.
+				m_flFramerateSuggestion = 1.0f;
+			}else if(m_MonsterState == MONSTERSTATE_ALERT){
+				m_flFramerateSuggestion = 1.1f;
+			}else{
+				//assume in a hurry to get out of danger.
+				m_flFramerateSuggestion = 1.21f;
+			}
 
+			return CBaseAnimating::LookupActivity(activity);
+		break;
+
+		//MODDD - see notes below about these.
+		case ACT_DIEVIOLENT:
+			return -1;
+		break;
+		case ACT_FEAR_DISPLAY:
+			return -1;
+		break;
+		case ACT_STAND:
+			return -1;
+		break;
 
 	}
 	
@@ -2519,21 +2765,6 @@ int CChumToad::LookupActivityHard(int activity){
 
 
 int CChumToad::tryActivitySubstitute(int activity){
-	
-	int i = 0;
-	int iRandChoice = 0;
-	int iRandWeightChoice = 0;
-	
-	char* animChoiceString = NULL;
-	int* weightsAbs = NULL;
-			
-	//pev->framerate = 1;
-	int maxRandWeight = 30;
-
-	//any animation events in progress?  Clear it.
-	resetEventQueue();
-
-	//EASY_CVAR_PRINTIF_PRE(panthereyePrintout, easyPrintLine("WHUT %d", m_fSequenceFinished));
 
 	//no need for default, just falls back to the normal activity lookup.
 	switch(activity){
@@ -2554,9 +2785,21 @@ int CChumToad::tryActivitySubstitute(int activity){
 			return CHUMTOAD_HOP1;
 		break;
 
+		//NOTE - several sequences in the model are linked to activities, but this was already made without those in mind.
+		//       Let's force the associations off just to avoid any possible side-effects from seeing them to be safe.
+		//       The custom DIEVIOLENT system assumes it's turned off for all entities regardless of the presence of any ACT_DIEVIOLENT
+		//       linked activity anyways for safety.  It must be forced on by script here, an implementable method.
+		case ACT_DIEVIOLENT:
+			return -1;
+		break;
+		case ACT_FEAR_DISPLAY:
+			return -1;
+		break;
+		case ACT_STAND:
+			return -1;
+		break;
 
-
-	}
+	}//END OF switch
 
 
 	//not handled by above?
@@ -2634,25 +2877,36 @@ void CChumToad::playDeadSendMonstersAway(){
 	CBaseEntity* pEntityScan = NULL;
 	CBaseMonster* testMon = NULL;
 	//does UTIL_MonstersInSphere work?
-	while ((pEntityScan = UTIL_FindEntityInSphere( pEntityScan, pev->origin, 240 )) != NULL)
+	while ((pEntityScan = UTIL_FindEntityInSphere( pEntityScan, pev->origin, 320 )) != NULL)
 	{
-		testMon = pEntityScan->MyMonsterPointer();
-		//if(testMon != NULL && testMon->pev != this->pev && ( FClassnameIs(testMon->pev, "monster_scientist") || FClassnameIs(testMon->pev, "monster_barney")  ) ){
+
+		if(pEntityScan->pev != this->pev){
+
+			testMon = pEntityScan->MyMonsterPointer();
+			//if(testMon != NULL && testMon->pev != this->pev && ( FClassnameIs(testMon->pev, "monster_scientist") || FClassnameIs(testMon->pev, "monster_barney")  ) ){
 		
-		if(
-			testMon != NULL &&
-			testMon->pev != this->pev &&
-			!(::FClassnameIs(testMon->pev, "monster_chumtoad")) &&
-			(testMon->m_MonsterState == MONSTERSTATE_IDLE || testMon->m_MonsterState == MONSTERSTATE_ALERT) &&
-			(testMon->m_IdealActivity != testMon->m_movementActivity || testMon->m_movementActivity == ACT_IDLE ) &&   //movementActivity of ACT_IDLE is another way of saying stopped.
-			UTIL_IsFacing(testMon->pev, pev->origin, 0.3)
-		){
 
-			testMon->wanderAway( this->pev->origin );
-			
-			
-		}
 
+			if(testMon != NULL){
+				int relationshipTest;
+				relationshipTest = IRelationship(testMon);
+
+				if(
+					//!(::FClassnameIs(testMon->pev, "monster_chumtoad")) &&   //this check is redundant with the relationship check.  Toads are friends.
+					//Check.  Do I want to run away from them?  If so, I can make them wander away.
+					(relationshipTest > R_NO || relationshipTest == R_FR) &&
+					(testMon->m_MonsterState == MONSTERSTATE_IDLE || testMon->m_MonsterState == MONSTERSTATE_ALERT) &&
+					(testMon->m_IdealActivity != testMon->m_movementActivity || testMon->m_movementActivity == ACT_IDLE ) &&   //movementActivity of ACT_IDLE is another way of saying stopped.
+					UTIL_IsFacing(testMon->pev, pev->origin, 0.4)
+			
+				){
+
+					testMon->wanderAway( this->pev->origin );
+				
+				
+				}//END OF all the other checks
+			}//END OF monster null check
+		}//END OF "entity found is not myself" check
 
 	}//END OF while(...)
 
@@ -2763,6 +3017,47 @@ float CChumToad::massInfluence(void){
 
 
 
+
+
+//MODDD - new method for determining whether to register a case of damage as worthy of LIGHT_DAMAGE or HEAVY_DAMAGE for the AI.
+//        Can result in interrupting the current schedule.
+//        This is expected to get called from CBaseMonster's TakeDamage method in combat.cpp. This method may be customized per monster,
+//        should start with a copy of this method without calling the parent method, not much here.
+void CChumToad::OnTakeDamageSetConditions(entvars_t *pevInflictor, entvars_t *pevAttacker, float flDamage, int bitsDamageType, int bitsDamageTypeMod){
+
+	//MODDD - intervention. Timed damage might not affect the AI since it could get needlessly distracting.
+	if(bitsDamageTypeMod & (DMG_TIMEDEFFECT|DMG_TIMEDEFFECTIGNORE) ){
+		//If this is continual timed damage, don't register as any damage condition. Not worth possibly interrupting the AI.
+		return;
+	}
+
+	//default case from CBaseMonster's TakeDamage.
+	//Also count being in a non-combat state to force looking in that direction.  But maybe at least 0 damage should be a requirement too, even in cases where the minimum damage for LIGHT is above 0?
+	if (m_MonsterState == MONSTERSTATE_IDLE || m_MonsterState == MONSTERSTATE_ALERT || flDamage > 0 )
+	{
+		SetConditions(bits_COND_LIGHT_DAMAGE);
+
+		//MODDD NEW - set a timer to forget a flinch-preventing memory bit.
+		forgetSmallFlinchTime = gpGlobals->time + 5;
+	}
+
+	if(gpGlobals->time >= forgetBigFlinchTime && (flDamage >=  pev->max_health * 0.55 || flDamage >= 15) )
+	{
+		SetConditions(bits_COND_HEAVY_DAMAGE);
+		forgetSmallFlinchTime = gpGlobals->time + 5;
+		forgetBigFlinchTime = gpGlobals->time + 3;
+	}
+
+	if(EASY_CVAR_GET(testVar) == 10){
+		//any damage causes me now.
+		SetConditions(bits_COND_HEAVY_DAMAGE);
+	}
+}//END OF OnTakeDamageSetConditions
+
+
+int CChumToad::getHullIndexForNodes(void){
+    return NODE_SMALL_HULL;  //safe?
+}
 
 
 

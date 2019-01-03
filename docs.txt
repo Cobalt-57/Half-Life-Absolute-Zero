@@ -1467,6 +1467,17 @@ barneyDummy (0) - BOOL. Barney's lose AI.
 minimumRespawnDelay - DECIMAL. Enforces a minimum amount of time before a respawn may take place, suggested by pressing a key while dead in singleplayer and even overrides multiplayer's respawn delay.  But can't be shorter than the time it takes to do a death animation, if that was chosen to be done.
 
 
+
+r_glowshell_debug - MODEVAR. For a rendering issue with agrunts using the glow-FX (powered up by a kingpin).  Descriptions pertain to StudioModelRenderer.cpp
+0: closest to retail.  Calls the seemingly useless IEngineStudio.GL_StudioDrawShadow all the time.  Good option.
+1: doesn't call IEngineStudio.GL_StudioDrawShadow, but forces RenderMode changes in StudioRenderModel (skip the "not IsHardware" checks). Good option.
+2: do both, call IEngineStudio.GL_StudioDrawShadow, and skip StudioRenderModel's "not IsHardware" checks. Good option, but maybe redundant.
+3: do neither.  Don't call IEngineStudio.GL_StudioDrawShadow, leave StudioRenderModel unaffected.  PROBLEM IN OpenGL or D3D renderer choices in Video options.
+
+
+
+
+
 //
 //!!! LAST NORMAL CVAR!
 //

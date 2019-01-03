@@ -19,6 +19,32 @@
   spawn, think, and use functions for entities that use brush models
 
 */
+
+
+
+
+
+//MODDD TODO - it would be nice to at least see where the constant offset for a breakable / pushable's origin is in memory (some obscure pev-> thing probably),
+//             which seems to come just from giving it a wildcard model like "*27".  You read that right, no "models/whatever.mdl", no folders, only asterisk and number.
+//             That taps into the particular map for, custom model #27 I assume.
+//             And includes some constant offset to apply to the origin.  Doing a "report" on a breakable / pushable that's never been moved before
+//             always reports origin (0, 0, 0) or (0, 0, 1) which is clearly not the case.  Moving a pushable puts an offset on that further.
+//             And forcing a breakble / pushable with a wildcard model to spawn (and forcing its model) doesn't put it at where you tell it to go,
+//             because of this constant offset is still being applied.  But spawning near the map's REAL origin (do "setMyOrigin 0 0 0" to go there)
+//             will make the discrepency less, but check the original map location of wherever the wildcard was you just called for.
+
+//             ...in other words dynamically spawning breakables (like through console commands give/givedist/givelook) is stupidly overcomplicated.
+//             Ditch this idea like a sack of puke and run as far as you can, if not further.
+
+
+
+
+
+
+
+
+
+
 #include "extdll.h"
 #include "util.h"
 #include "cbase.h"
@@ -165,7 +191,7 @@ IMPLEMENT_SAVERESTORE( CBreakable, CBaseEntity );
 
 void CBreakable::Spawn( void )
 {
-    Precache( );    
+    Precache( );
 
 	if ( FBitSet( pev->spawnflags, SF_BREAK_TRIGGER_ONLY ) )
 		pev->takedamage	= DAMAGE_NO;
@@ -195,8 +221,13 @@ void CBreakable::Spawn( void )
 		SetTouch( NULL );
 
 	// Flag unbreakable glass as "worldbrush" so it will block ALL tracelines
+	//MODDD NOTE - does this FL_WORLDBRUSH have other useful properties for checks then?  Or to refer to / check in our own tracelines?
 	if ( !IsBreakable() && pev->rendermode != kRenderNormal )
 		pev->flags |= FL_WORLDBRUSH;
+
+
+
+
 }
 
 
@@ -472,6 +503,26 @@ void CBreakable::DamageSound( void )
 	if (i)
 		EMIT_SOUND_DYN(ENT(pev), CHAN_VOICE, rgpsz[RANDOM_LONG(0,i-1)], fvol, ATTN_NORM, 0, pitch);
 }
+
+void CBreakable::ReportGeneric(){
+
+	CBaseDelay::ReportGeneric();
+	easyForcePrintLine("My model: %s", STRING(pev->model));
+	::UTIL_printLineVector("Origin", pev->origin);
+	
+	/*
+	Vector Amins = pev->absmin;
+	Vector Amaxs = pev->absmax;
+	Vector mins = pev->mins;
+	Vector maxs = pev->maxs;
+	*/
+	
+	//int x = 666;
+
+}//END OF ReportGeneric
+
+
+
 
 void CBreakable::BreakTouch( CBaseEntity *pOther )
 {
@@ -938,6 +989,8 @@ public:
 	virtual int		Restore( CRestore &restore );
 
 	inline float MaxSpeed( void ) { return m_maxSpeed; }
+
+	void ReportGeneric();
 	
 	GENERATE_TRACEATTACK_PROTOTYPE_VIRTUAL
 	GENERATE_TAKEDAMAGE_PROTOTYPE_VIRTUAL
@@ -1297,6 +1350,14 @@ void CPushable::StopSound( void )
 		STOP_SOUND( ENT(pev), CHAN_WEAPON, m_soundNames[m_lastSound] );
 }
 #endif
+
+
+
+void CPushable::ReportGeneric(){
+
+	CBaseDelay::ReportGeneric();
+	easyForcePrintLine("My model: %s", STRING(pev->model));
+}
 
 
 GENERATE_TRACEATTACK_IMPLEMENTATION(CPushable)

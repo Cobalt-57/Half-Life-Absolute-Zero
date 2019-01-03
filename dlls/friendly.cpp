@@ -1633,12 +1633,17 @@ GENERATE_TRACEATTACK_IMPLEMENTATION(CFriendly)
 
 GENERATE_TAKEDAMAGE_IMPLEMENTATION(CFriendly)
 {
-	CBaseEntity* pEntAttacker = CBaseEntity::Instance(pevAttacker);
-	
 	BOOL* pHateVarRef = NULL;
-	if(pEntAttacker->IsPlayer() ){pHateVarRef = &m_fPissedAtPlayer;}
-	else if(pEntAttacker->Classify() == CLASS_PLAYER_ALLY){pHateVarRef = &m_fPissedAtPlayerAlly;}   //NOTE: scientists are CLASS_HUMAN_PASSIVE
-	else if(pEntAttacker->Classify() == CLASS_HUMAN_MILITARY){pHateVarRef = &m_fPissedAtHumanMilitary;}   //NOTE: scientists are CLASS_HUMAN_PASSIVE
+
+	//no NULL check.  Are you daft man?
+	if(pevAttacker != NULL){
+		CBaseEntity* pEntAttacker = CBaseEntity::Instance(pevAttacker);
+	
+		if(pEntAttacker->IsPlayer() ){pHateVarRef = &m_fPissedAtPlayer;}
+		else if(pEntAttacker->Classify() == CLASS_PLAYER_ALLY){pHateVarRef = &m_fPissedAtPlayerAlly;}   //NOTE: scientists are CLASS_HUMAN_PASSIVE
+		else if(pEntAttacker->Classify() == CLASS_HUMAN_MILITARY){pHateVarRef = &m_fPissedAtHumanMilitary;}   //NOTE: scientists are CLASS_HUMAN_PASSIVE
+	}
+
 
 	if(pHateVarRef != NULL){
 		if(*pHateVarRef == FALSE){

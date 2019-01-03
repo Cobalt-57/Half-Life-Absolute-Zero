@@ -495,8 +495,6 @@ int CPantherEye::LookupActivityHard(int activity){
 			return CBaseAnimating::LookupActivity(activity);
 		break;
 
-
-
 	}
 	
 	//not handled by above?  try the real deal.
@@ -505,84 +503,17 @@ int CPantherEye::LookupActivityHard(int activity){
 
 
 int CPantherEye::tryActivitySubstitute(int activity){
-	
-	int i = 0;
-	int iRandChoice = 0;
-	int iRandWeightChoice = 0;
-
-	char* animChoiceString = NULL;
-	int* weightsAbs = NULL;
-			
-	//pev->framerate = 1;
-	int maxRandWeight = 30;
-
-	//any animation events in progress?  Clear it.
-	//MODDD - this is tryActivitySubstitute, often used to test if an activitiy is OK to call, not to do it in particular.
-	//Any actual effects just from just this check could be unwelcome.
-	//resetEventQueue();
-
 	//EASY_CVAR_PRINTIF_PRE(panthereyePrintout, easyPrintLine("AHH %d", m_fSequenceFinished));
 
 	//no need for default, just falls back to the normal activity lookup.
 	switch(activity){
 
 		case ACT_IDLE:
-			iRandChoice = -1;
-			
-			//each anim's chance of happening (not equal).
-			//int weights[] = {25, 3, 1, 1};
-			weightsAbs = new int[4];
-			weightsAbs[0] = 25;
-			weightsAbs[1] = 28;
-			weightsAbs[2] = 29;
-			weightsAbs[3] = 30;
-
-			//1 to highest possible (sum of all weights).
-			iRandWeightChoice = RANDOM_LONG(1, maxRandWeight);
-			//What range did we strike?
-			for(i = 0; i < 4; i++){
-				if(iRandWeightChoice <= weightsAbs[i]){
-					iRandChoice = i;
-					break;
-				}
-			}
-			delete[] weightsAbs;
-
-			//"get_bug" may make more sense when there is ACTUALLY a cockroach nearby.
-			//iRandChoice = 2;
-			switch(iRandChoice){
-				case 0:
-					animChoiceString = "subtle_motion";
-				break;
-				case 1:
-					animChoiceString = "idle_figit";
-				break;
-				case 2:
-					animChoiceString = "itch";
-				break;
-				case 3:
-					animChoiceString = "shakes";
-				break;
-			}
-			return LookupSequence(animChoiceString);
-
+			return LookupSequence("subtle_motion");
 		break;
 		case ACT_MELEE_ATTACK1:
-			//randomize...
-			iRandChoice = RANDOM_LONG(0, 2);
-			switch(iRandChoice){
-				case 0:
-					return LookupSequence("attack_primary");
-				break;
-				case 1:
-					//slightly longer right-swipe.
-					return LookupSequence("attack_main_claw");
-				break;
-				case 2:
-					//slightly faster left-swipe.
-					return LookupSequence("attack_simple_claw");
-				break;
-			}
+			//just say we have something, good enough.
+			return LookupSequence("attack_primary");
 		break;
 		case ACT_MELEE_ATTACK2:
 			//Don't trust the model for this.
@@ -605,7 +536,6 @@ int CPantherEye::tryActivitySubstitute(int activity){
 		case ACT_TURN_RIGHT:
 			return CBaseAnimating::LookupActivity(activity);
 		break;
-
 
 	}
 	

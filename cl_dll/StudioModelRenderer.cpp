@@ -38,7 +38,7 @@ engine_studio_api_t IEngineStudio;
 
 //MODDD - This section is new.
 /////////////////////////////////////////////////////////
-void(*GL_StudioDrawShadow)(void);
+void(*GL_StudioDrawShadow_Old)(void);
 
 __declspec(naked) void DropShadows(void)
 {
@@ -46,7 +46,7 @@ __declspec(naked) void DropShadows(void)
 	_asm
 	{
 		push ecx;
-		jmp[GL_StudioDrawShadow];
+		jmp[GL_StudioDrawShadow_Old];
 	}
 
 }
@@ -64,6 +64,11 @@ extern float global2PSEUDO_IGNOREcameraMode;
 EASY_CVAR_EXTERN(drawViewModel);
 
 extern float global2_cl_server_interpolation;
+
+EASY_CVAR_EXTERN(r_glowshell_debug)
+
+
+
 
 /////////////////////
 // Implementation of CStudioModelRenderer.h
@@ -2996,8 +3001,8 @@ void CStudioModelRenderer::StudioRenderModel( void )
 		
 		StudioRenderFinal( );
 		
-		//MODDD - remove this check, we always need this. Apparently.
-		//if ( !IEngineStudio.IsHardware() )
+		//MODDD - here and below, force allow the RenderMode calls if "renderDebug" is 1 or 2.
+		if ( (EASY_CVAR_GET(r_glowshell_debug) == 1 || EASY_CVAR_GET(r_glowshell_debug) == 2) || !IEngineStudio.IsHardware() )
 		{
 			gEngfuncs.pTriAPI->RenderMode( kRenderTransAdd );
 		}
@@ -3018,8 +3023,8 @@ void CStudioModelRenderer::StudioRenderModel( void )
 
 		StudioRenderFinal( );
 		
-		//MODDD - remove this check, we always need this. Apparently.
-		//if ( !IEngineStudio.IsHardware() )
+		
+		if ( (EASY_CVAR_GET(r_glowshell_debug) == 1 || EASY_CVAR_GET(r_glowshell_debug) == 2) || !IEngineStudio.IsHardware() )
 		{
 			gEngfuncs.pTriAPI->RenderMode( kRenderNormal );
 		}
@@ -3130,12 +3135,20 @@ void CStudioModelRenderer::StudioRenderFinal_Hardware( void )
 			IEngineStudio.GL_SetRenderMode( rendermode );
 			IEngineStudio.StudioDrawPoints();
 			
+			
+			//MODDD - VERY FREAKIN' IMPORTANT.  Below has... side effects if not careful.  With the glow effect being on.  Who knows.
+			//But DONT Skimp out on calling IEngineStudio.GL_StudioDrawShadow regardless (which seems to be completely unrelated to the Old shadows).
+			//If this is not called, the glow render effect (agrunts powered up by a kingpin) will cause all kinds of other bad order rendering issues.
+			//No idea whaaaaat wires are crossed simply by not calling this.  But whatever.
+			//Now, a CVar, renderDebug, controls what choice is made.  Either run GL_StudioDrawShadow here, or skip StudioRenderModel's !IsHardware checks
+			//(force a pass).  Or do both, or neither (you madman).  See the docs.
+			if(EASY_CVAR_GET(r_glowshell_debug) == 0 || EASY_CVAR_GET(r_glowshell_debug) == 2){
+				IEngineStudio.GL_StudioDrawShadow();
+			}
+			
 
-			//MODDD - this section is new too.
-			//It replaces this line:
-			//IEngineStudio.GL_StudioDrawShadow();
 			//////////////////////////////////////////////////////////////////////////////////////////////////
-			GL_StudioDrawShadow = (void(*)(void))(((unsigned int)IEngineStudio.GL_StudioDrawShadow) + 32);
+			GL_StudioDrawShadow_Old = (void(*)(void))(((unsigned int)IEngineStudio.GL_StudioDrawShadow) + 32);
 
 			//MODDD TODO - we also have a viewmodel check too, but regardless.
 			if (global2_r_shadows == 1 && gEngfuncs.GetViewModel() != m_pCurrentEntity) // FIX : Avoid view model
@@ -3147,6 +3160,9 @@ void CStudioModelRenderer::StudioRenderFinal_Hardware( void )
 				}
 			}
 			//////////////////////////////////////////////////////////////////////////////////////////////////
+			
+
+
 
 		}
 	}
