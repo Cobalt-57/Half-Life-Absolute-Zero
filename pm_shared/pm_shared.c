@@ -1106,8 +1106,12 @@ void PM_WalkMove ()
 	float downdist, updist;
 	float normalSpeedMult = 1;
 
-
-	pmtrace_t trace;
+	//MODDD - original trace "trace" given a... better name.
+	//        The original was made to see if we run into an incline going upwards (and counts for bumping against something way too tall/steep like a wall instead)
+	pmtrace_t traceInclineDetection_Forward;
+	
+	//MODDD 
+	pmtrace_t traceInclineDetection_Down;
 	
 	// Copy movement amounts
 	fmove = pmove->cmd.forwardmove;
@@ -1148,15 +1152,6 @@ void PM_WalkMove ()
 			pmove->Con_Printf("Ctes2 %f\n", wishvel[1]);
 		}
 		*/
-
-
-
-
-
-
-
-
-
 
 
 	wishvel[2] = 0;             // Zero out z part of velocity
@@ -1215,12 +1210,26 @@ void PM_WalkMove ()
 
 	// first try moving directly to the next spot
 	VectorCopy (dest, start);
-	trace = pmove->PM_PlayerTrace (pmove->origin, dest, PM_NORMAL, -1 );
+	traceInclineDetection_Forward = pmove->PM_PlayerTrace (pmove->origin, dest, PM_NORMAL, -1 );
 	// If we made it all the way, then copy trace end
 	//  as new player position.
-	if (trace.fraction == 1)
+	//MODDD NOTE - fraction of 1 says nothing is in the way. So we're trusting we can move forwards that much.
+	//             If this soon turns out to no longer be on the ground, we'll start falling by some other _MOVE method in here instead.
+	//BUUUUUUt... what if we want to smoothly move down an incline/stairs instead?  Can we detect that too?
+	if (traceInclineDetection_Forward.fraction == 1)
 	{
-		VectorCopy (trace.endpos, pmove->origin);
+
+		//MODDD - new block!
+		////////////////////////////////////////////////////////////////////////////////
+
+
+
+		
+		////////////////////////////////////////////////////////////////////////////////
+
+
+
+		VectorCopy (traceInclineDetection_Forward.endpos, pmove->origin);
 		return;
 	}
 
@@ -1266,13 +1275,13 @@ void PM_WalkMove ()
 	VectorCopy (pmove->origin, dest);
 	dest[2] += pmove->movevars->stepsize;
 	
-	trace = pmove->PM_PlayerTrace (pmove->origin, dest, PM_NORMAL, -1 );
+	traceInclineDetection_Forward = pmove->PM_PlayerTrace (pmove->origin, dest, PM_NORMAL, -1 );
 	// If we started okay and made it part of the way at least,
 	//  copy the results to the movement start position and then
 	//  run another move try.
-	if (!trace.startsolid && !trace.allsolid)
+	if (!traceInclineDetection_Forward.startsolid && !traceInclineDetection_Forward.allsolid)
 	{
-		VectorCopy (trace.endpos, pmove->origin);
+		VectorCopy (traceInclineDetection_Forward.endpos, pmove->origin);
 	}
 
 // slide move the rest of the way.
@@ -1283,19 +1292,28 @@ void PM_WalkMove ()
 	VectorCopy (pmove->origin, dest);
 	dest[2] -= pmove->movevars->stepsize;
 	
-	trace = pmove->PM_PlayerTrace (pmove->origin, dest, PM_NORMAL, -1 );
+	traceInclineDetection_Forward = pmove->PM_PlayerTrace (pmove->origin, dest, PM_NORMAL, -1 );
 
 	// If we are not on the ground any more then
 	//  use the original movement attempt
-	if ( trace.plane.normal[2] < 0.7)
+	if ( traceInclineDetection_Forward.plane.normal[2] < 0.7)
 		goto usedown;
+
+	//MODDD NOTICE - "goto usedown" above is getting called if the plane we hit can't be walked up, like an incline way to steep
+	// or flat-out a wall in the way.  So skipping to below instead of trying to skip to the top of it (below up to the downdist > updist comparison)
+	// That is for forcing the origin to the top of an incline I look to be trying to go up.
+
+
 	// If the trace ended up in empty space, copy the end
 	//  over to the origin.
-	if (!trace.startsolid && !trace.allsolid)
+	//MODDD NOTE - this might be what places us exactly at the ramp.
+	if (!traceInclineDetection_Forward.startsolid && !traceInclineDetection_Forward.allsolid)
 	{
-		VectorCopy (trace.endpos, pmove->origin);
+		VectorCopy (traceInclineDetection_Forward.endpos, pmove->origin);
 	}
 	// Copy this origion to up.
+	//MODDD NOTE - pmove->up being set below might be to help move up the incline more next frame? unsure.
+	//             Could be just to affect the updist calculation below too.
 	VectorCopy (pmove->origin, pmove->up);
 
 	// decide which one went farther
@@ -1305,13 +1323,28 @@ void PM_WalkMove ()
 		     + (pmove->up[1]   - original[1])*(pmove->up[1]   - original[1]);
 
 
+	
 	if (downdist > updist)
 	{
 usedown:
+		//MODDD NOTE - I get picked for running into walls.  Or by the "usedown" skip above.
 		VectorCopy (down   , pmove->origin);
 		VectorCopy (downvel, pmove->velocity);
-	} else // copy z value from slide move
+	} else{ // copy z value from slide move
+
+		//MODDD NOTE - I get picked for moving into ramps to slide up them instead.
 		pmove->velocity[2] = downvel[2];
+	
+	}
+
+
+	/*
+	usedown:
+	VectorCopy (down   , pmove->origin);
+	VectorCopy (downvel, pmove->velocity);
+
+	pmove->velocity[2] = downvel[2];
+	*/
 
 }
 

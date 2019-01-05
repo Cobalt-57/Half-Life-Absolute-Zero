@@ -16,22 +16,6 @@
 
 
 
-
-//MODDD TODO - why is behavior inconsistent on hitting an area with missing piecs of the hitbox (func_pusable at least)?
-//Example: goto a3a1, go forwards and to the left in the room with the chair and the computer.  Push the chair away and get on top of it
-//         (noclip or jumpForceMulti).  crouch or stand near the top and look down and crowbar.  It's possible to rapid crowbar but still
-//         do miss sounds, no hits.  sigh I thought this was fixed everywhere, guess that was just for map geometry.
-
-
-
-
-
-
-
-
-
-
-
 #include "extdll.h"
 #include "util.h"
 #include "cbase.h"
@@ -43,6 +27,15 @@
 
 #include "custom_debug.h"
 
+
+//MODDD NOTE - the crowbar doesn't seem to make any TextureHit call clientside, only serverside.
+//             Not necessarily an issue but just pointing that out.
+
+
+
+EASY_CVAR_EXTERN(testVar)
+EASY_CVAR_EXTERN(multiplayerCrowbarHitSoundMode)
+EASY_CVAR_EXTERN(muteCrowbarSounds)
 
 
 
@@ -129,7 +122,7 @@ void CCrowbar::Holster( int skiplocal /* = 0 */ )
 }
 
 
-//MODDD - little issue here. Never to bother to report whether we found ANY intersection.
+//MODDD - little issue here. Never bother to report whether we found ANY intersection.
 //In such a case, the trace result is returned in the way it was found but there is no way to tell that this is due to failure.
 //Checking to see if the trace changed at all seems hacky and may have a 1 in a billion chance of being wrong.
 //Just return a Boolean: found a point at all so it can be trusted that the trace now holds that, or no suitable point was found.
@@ -384,6 +377,12 @@ Vector FireBulletsPlayerEh ( ULONG cShots, Vector vecSrc, Vector vecDirShooting,
 
 int CCrowbar::Swing( int fFirst )
 {
+#ifndef CLIENT_DLL
+	//if muteCrowbarSounds is 0 or 1, we didn't hute hit sounds.
+	const BOOL canPlayHitSound = (EASY_CVAR_GET(muteCrowbarSounds) != 2 && EASY_CVAR_GET(muteCrowbarSounds) != 3);
+#endif
+
+
 	BOOL specialMiss = FALSE;
 	int fDidHit = FALSE;
 
@@ -472,6 +471,7 @@ int CCrowbar::Swing( int fFirst )
 	
 #endif
 	
+				//specialMiss = TRUE;
 
 
 
@@ -552,7 +552,8 @@ int CCrowbar::Swing( int fFirst )
 	else
 	{
 
-		
+		//return TRUE;
+
 
 		//int choicetemp2 = ((m_iSwing++) %3);
 		//easyPrintLine("bee %d", choicetemp2);
@@ -572,7 +573,6 @@ int CCrowbar::Swing( int fFirst )
 			m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + (19.0/24.0) + randomIdleAnimationDelay();
 			 break;
 		}
-		
 		#ifndef CLIENT_DLL
 			m_fireState = (++m_fireState) % 3;
 			//easyPrintLine("SERVAH");
@@ -636,19 +636,25 @@ int CCrowbar::Swing( int fFirst )
 			if(pEntity->Classify() != CLASS_NONE && pEntity->isOrganic() == TRUE)
 			{
 
-				if(useBulletHitSound){
+				if(canPlayHitSound){
 
-					// play thwack or smack sound
-					switch( RANDOM_LONG(0,2) )
-					{
-					case 0:
-						EMIT_SOUND(ENT(m_pPlayer->pev), CHAN_ITEM, "weapons/cbar_hitbod1.wav", 1, ATTN_NORM); break;
-					case 1:
-						EMIT_SOUND(ENT(m_pPlayer->pev), CHAN_ITEM, "weapons/cbar_hitbod2.wav", 1, ATTN_NORM); break;
-					case 2:
-						EMIT_SOUND(ENT(m_pPlayer->pev), CHAN_ITEM, "weapons/cbar_hitbod3.wav", 1, ATTN_NORM); break;
-					}
-				}
+					//MODDD - if the traceattack method of whatever was hit told us not to play a sound (like a ricochet, which already handled it on its own), we won't.
+					if(useBulletHitSound){
+
+						// play thwack or smack sound
+						switch( RANDOM_LONG(0,2) )
+						{
+						case 0:
+							EMIT_SOUND(ENT(m_pPlayer->pev), CHAN_ITEM, "weapons/cbar_hitbod1.wav", 1, ATTN_NORM); break;
+						case 1:
+							EMIT_SOUND(ENT(m_pPlayer->pev), CHAN_ITEM, "weapons/cbar_hitbod2.wav", 1, ATTN_NORM); break;
+						case 2:
+							EMIT_SOUND(ENT(m_pPlayer->pev), CHAN_ITEM, "weapons/cbar_hitbod3.wav", 1, ATTN_NORM); break;
+						}
+					}//END OF useBulletHitSound check
+
+				}//END OF canPlayHitSound check
+
 
 				//This now always happens for flesh (organic) hits.
 				m_pPlayer->m_iWeaponVolume = CROWBAR_BODYHIT_VOLUME;
@@ -678,20 +684,23 @@ int CCrowbar::Swing( int fFirst )
 				}
 
 
+				if(canPlayHitSound){
 
-				//!!!!!
-				//For now, metallics don't care about "useBulletHitSound", ricochet or not they play this. ... besides a little volume reduction on the hit sound actually.
+					//!!!!!
+					//For now, metallics don't care about "useBulletHitSound", ricochet or not they play this. ... besides a little volume reduction on the hit sound actually.
+				
+					// also play crowbar strike
+					switch( RANDOM_LONG(0,1) )
+					{
+					case 0:
+						EMIT_SOUND_DYN(ENT(m_pPlayer->pev), CHAN_ITEM, "weapons/cbar_hit1.wav", fvolbar, ATTN_NORM, 0, 103 + RANDOM_LONG(0,3)); 
+						break;
+					case 1:
+						EMIT_SOUND_DYN(ENT(m_pPlayer->pev), CHAN_ITEM, "weapons/cbar_hit2.wav", fvolbar, ATTN_NORM, 0, 103 + RANDOM_LONG(0,3)); 
+						break;
+					}
 
-				// also play crowbar strike
-				switch( RANDOM_LONG(0,1) )
-				{
-				case 0:
-					EMIT_SOUND_DYN(ENT(m_pPlayer->pev), CHAN_ITEM, "weapons/cbar_hit1.wav", fvolbar, ATTN_NORM, 0, 103 + RANDOM_LONG(0,3)); 
-					break;
-				case 1:
-					EMIT_SOUND_DYN(ENT(m_pPlayer->pev), CHAN_ITEM, "weapons/cbar_hit2.wav", fvolbar, ATTN_NORM, 0, 103 + RANDOM_LONG(0,3)); 
-					break;
-				}
+				}//END OF canPlayHitSound check
 
 				//MODDD - moved here, also for hitting metalic monsters. 0.6 multiple since that is a common reduction given by textures on world hits anyways.
 				m_pPlayer->m_iWeaponVolume = flVol * CROWBAR_WALLHIT_VOLUME*0.6;
@@ -709,30 +718,95 @@ int CCrowbar::Swing( int fFirst )
 
 		if (fHitWorld)
 		{
+			//MODDD NOTE IMPORTANT - it is still possible to hit an object with a more indirect trace like a HULL trace, but this does not
+			// tell exactly WHAT point was hit.  TEXTURETYPE_PlaySound for whatever reason, is much more strict and needs to hit an exact surface...
+			// or be close enough, it's an engine call to find what type of texture (plane) is hit for what sound to play.
+			// If it still doesn't find any texture / surface / plane, whatever you want to call it, we can just force it to play at the usual
+			// crowbar volume anyways.
+
+			BOOL forcedByMultiplayer = FALSE;
+
+			//MODDD - TEST ME... above is the original, unsure if the alternative below has better overall results.
 			float fvolbar = TEXTURETYPE_PlaySound(&tr, vecSrc, vecSrc + (vecEnd-vecSrc)*2, BULLET_PLAYER_CROWBAR);
+			//float fvolbar = TEXTURETYPE_PlaySound(&tr, vecSrc, (tr.vecEndPos + (tr.vecEndPos - vecSrc) * 4), BULLET_PLAYER_CROWBAR);
 
-			if ( g_pGameRules->IsMultiplayer() )
-			{
-				// override the volume here, cause we don't play texture sounds in multiplayer, 
-				// and fvolbar is going to be 0 from the above call.
 
-				fvolbar = 1;
-			}
+			//::DebugLine_ClearAll();
+			//::DebugLine_Setup(6, vecSrc, (tr.vecEndPos + (tr.vecEndPos - vecSrc) * 4), tr.flFraction);
+			//::DebugLine_Setup(7, vecSrc, vecSrc + (vecEnd-vecSrc)*2, tr.flFraction);
 
-			//easyForcePrintLine("ILL realize I hit the world or somethign world-related, here is my hitsound volume %.2f", fvolbar);
 
-			//fvolbar = 1;
+			//::DebugLine_SetupPoint(8, tr.vecEndPos, 0, 0, 255);
 
-			// also play crowbar strike
-			switch( RANDOM_LONG(0,1) )
-			{
-			case 0:
-				EMIT_SOUND_DYN(ENT(m_pPlayer->pev), CHAN_ITEM, "weapons/cbar_hit1.wav", fvolbar, ATTN_NORM, 0, 98 + RANDOM_LONG(0,3)); 
-				break;
-			case 1:
-				EMIT_SOUND_DYN(ENT(m_pPlayer->pev), CHAN_ITEM, "weapons/cbar_hit2.wav", fvolbar, ATTN_NORM, 0, 98 + RANDOM_LONG(0,3)); 
-				break;
-			}
+			
+			if(canPlayHitSound){
+
+				if ( g_pGameRules->IsMultiplayer() ){
+					//MODDD NOTE - check this out?  why is it that way if this is accurate still??
+					// override the volume here, cause we don't play texture sounds in multiplayer, 
+					// and fvolbar is going to be 0 from the above call.
+
+
+					switch((int)EASY_CVAR_GET(multiplayerCrowbarHitSoundMode)){
+					case 0:
+						//nothing.
+						fvolbar = 0;
+						forcedByMultiplayer = TRUE;
+					break;
+					case 1:
+						//leave it up to TEXTURETYPE anyways. No edits here.
+					
+					break;
+					case 2:
+						//force it to 0.6 like a lot of crowbar sounds.
+						fvolbar = 0.6;
+						forcedByMultiplayer = TRUE;
+					break;
+					case 3:
+						//retail.  Force it to max.
+						fvolbar = 1;
+						forcedByMultiplayer = TRUE;
+					break;
+					default:
+						//nothing?
+
+					break;
+					}//END OF switch
+				}//END OF IsMultiplayer check.
+
+
+				//if forced by multiplayer, don't bother. We meant to make it 0 or whatever.
+				if(fvolbar == 0 && !forcedByMultiplayer){
+					//NOTICE - it's possible we actually DID hit something (given taking this route from trace results, we did infact), but because
+					//         an extra linetrace is needed to detect what surface was hit, and it might have come from a HULL trace instead,
+					//         we aren't given the exact point that was hit, only that there was a hit.
+					//soooo should we force it to a safe default like 0.6 in that case??
+					//but how does it know to draw a decal at the same sometimes.. baffling.  Like it searches near the tr->vecEndPos (what it ultiamtely
+					//sends off to UTIL_DecalTrace in util.cpp).
+				
+					//If we WERE to assume a texture sound were picked or something, we would need to enforce the default here too.
+					//But the same sound (cbar_hit1 or 2.wav) is used always, so it's fine now.
+
+					fvolbar = 0.6;
+				
+				}
+
+
+				//fvolbar = 1;
+
+				// also play crowbar strike
+				switch( RANDOM_LONG(0,1) )
+				{
+				case 0:
+					EMIT_SOUND_DYN(ENT(m_pPlayer->pev), CHAN_ITEM, "weapons/cbar_hit1.wav", fvolbar, ATTN_NORM, 0, 98 + RANDOM_LONG(0,3)); 
+					break;
+				case 1:
+					EMIT_SOUND_DYN(ENT(m_pPlayer->pev), CHAN_ITEM, "weapons/cbar_hit2.wav", fvolbar, ATTN_NORM, 0, 98 + RANDOM_LONG(0,3)); 
+					break;
+				}
+
+			}//END OF canPlayHitSound check
+
 
 			/*
 			//MODDD - new.  Also serverside, make the particle effect when hitting a non-monster:

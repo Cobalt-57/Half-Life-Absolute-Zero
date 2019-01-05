@@ -28,7 +28,7 @@
 
 //MODDD - TODO. Notice that SCHED_INVESTIGATE_SOUND goes unused in most places. Could it be part of more human / intelligent alien NPC GetSchedule's?
 
-
+#pragma once
 
 #if !defined( OEM_BUILD ) && !defined( HLDEMO_BUILD )
 

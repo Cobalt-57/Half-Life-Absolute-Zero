@@ -13,8 +13,12 @@
 *
 ****/
 
+
+
 //IMPORTANT NOTE: most cases of "UTIL_WeaponTimeBase" have been replaced with "gpGlobals->time".
 //"UTIL_WeaponTimeBase" seems to return only 0 here, and that is not helpful for some things.
+
+#pragma once
 
 #if !defined( OEM_BUILD ) && !defined( HLDEMO_BUILD )
 

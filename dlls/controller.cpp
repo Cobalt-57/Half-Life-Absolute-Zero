@@ -12,6 +12,11 @@
 *   use or distribution of this code by or to any unlicensed person is illegal.
 *
 ****/
+
+
+#pragma once
+
+
 #if !defined( OEM_BUILD ) && !defined( HLDEMO_BUILD )
 
 //=========================================================

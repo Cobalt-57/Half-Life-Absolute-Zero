@@ -915,6 +915,34 @@ BOOL CBaseMonster :: CineCleanup( )
 		return FALSE;
 	}
 
+	//MODDD - block of script moved to this implementable method.  CBaseMonster's default is exactly the same.
+	OnCineCleanup(pOldCine);
+
+	// set them back into a normal state
+	pev->enemy = NULL;
+	if ( pev->health > 0 )
+		m_IdealMonsterState = MONSTERSTATE_IDLE; // m_previousState;
+	else
+	{
+		// Dropping out because he got killed
+		// Can't call killed() no attacker and weirdness (late gibbing) may result
+		m_IdealMonsterState = MONSTERSTATE_DEAD;
+		SetConditions( bits_COND_LIGHT_DAMAGE );
+		pev->deadflag = DEAD_DYING;
+		FCheckAITrigger();
+		pev->deadflag = DEAD_NO;
+	}
+
+
+	//	SetAnimation( m_MonsterState );
+	ClearBits(pev->spawnflags, SF_MONSTER_WAIT_FOR_SCRIPT );
+
+	return TRUE;
+}
+
+
+void CBaseMonster::OnCineCleanup(CCineMonster* pOldCine){
+
 	// If we actually played a sequence
 	if ( pOldCine && pOldCine->m_iszPlay )
 	{
@@ -968,28 +996,11 @@ BOOL CBaseMonster :: CineCleanup( )
 		// We should have some animation to put these guys in, but for now it's idle.
 		// Due to NOINTERP above, there won't be any blending between this anim & the sequence
 		m_Activity = ACT_RESET;
-	}
-	// set them back into a normal state
-	pev->enemy = NULL;
-	if ( pev->health > 0 )
-		m_IdealMonsterState = MONSTERSTATE_IDLE; // m_previousState;
-	else
-	{
-		// Dropping out because he got killed
-		// Can't call killed() no attacker and weirdness (late gibbing) may result
-		m_IdealMonsterState = MONSTERSTATE_DEAD;
-		SetConditions( bits_COND_LIGHT_DAMAGE );
-		pev->deadflag = DEAD_DYING;
-		FCheckAITrigger();
-		pev->deadflag = DEAD_NO;
-	}
+	}//END OF pOldCine->m_iszPlay check
+
+}//END OF OnCineCleanup
 
 
-	//	SetAnimation( m_MonsterState );
-	ClearBits(pev->spawnflags, SF_MONSTER_WAIT_FOR_SCRIPT );
-
-	return TRUE;
-}
 
 
 

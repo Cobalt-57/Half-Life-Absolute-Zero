@@ -3394,6 +3394,12 @@ const char* CBaseMonster::tryGetScheduleName(void){
 //MODDD- VIRTUAL
 void CBaseMonster :: SetActivity ( Activity NewActivity )
 {
+
+
+	if(monsterID == 14){
+		int x = 666;
+	}
+
 	
 	//MODDD TODO - on any loosely linked clones of SetActivity, they should also set "signalActivityUpdate" to false.
 	//This method getting called is supposed to be enough to satisfy the signal, like to force resetting to itself after a possible

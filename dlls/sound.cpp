@@ -26,10 +26,11 @@
 
 //MODDD
 extern float global_sparksComputerHitMulti;
-extern float global_muteBulletHitSounds;
+EASY_CVAR_EXTERN(muteBulletHitSounds)
 
 EASY_CVAR_EXTERN(announcerIsAJerk)
 EASY_CVAR_EXTERN(textureHitSoundPrintouts)
+EASY_CVAR_EXTERN(forceAllowServersideTextureSounds)
 
 
 
@@ -1813,10 +1814,6 @@ float TEXTURETYPE_PlaySound(TraceResult *ptr,  Vector vecSrc, Vector vecEnd, int
 // hit the world, try to play sound based on texture material type
 	
 
-	
-	if(global_muteBulletHitSounds == 1){
-		return 0;
-	}
 
 	char chTextureType;
 	float fvol;
@@ -1829,13 +1826,23 @@ float TEXTURETYPE_PlaySound(TraceResult *ptr,  Vector vecSrc, Vector vecEnd, int
 	int cnt;
 	float fattn = ATTN_NORM;
 
-	if ( !g_pGameRules->PlayTextureSounds() )
+	
+
+	if(EASY_CVAR_GET(muteBulletHitSounds) == 1){
+		return 0;
+	}
+
+	//MODDD - if CVar forceAllowServersideTextureSounds is 1, deny this early termination.
+	if (EASY_CVAR_GET(forceAllowServersideTextureSounds) != 1 && !g_pGameRules->PlayTextureSounds() )
 		return 0.0;
 
 	CBaseEntity *pEntity = CBaseEntity::Instance(ptr->pHit);
 
 	chTextureType = 0;
-
+	
+	//MODDD - why are we making such a strong assumption here?
+	//        Why not call pEntity->IsWorld or pEntity->IsWorldAffiliated?
+	//        uhh.. it's meant to work a certain way, check out combat.cpp's FireBulletsPlayer, around "doDefaultBulletHitEffectCheck && bulletHitEffectAllowed".
 	if (pEntity && pEntity->Classify() != CLASS_NONE && pEntity->Classify() != CLASS_MACHINE)
 		// hit body
 		chTextureType = CHAR_TEX_FLESH;

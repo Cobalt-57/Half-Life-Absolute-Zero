@@ -1790,6 +1790,7 @@ Vector CHGrunt::EyeOffset(void){
 
 
 Vector CHGrunt::BodyTarget(const Vector &posSrc){
+	//MODDD - also would checking for some ACTs help ease the sequence checks?
 
 	//If crouching in the animation, the center of the hitbox (and eyes) go down a little.
 	if(
@@ -1805,7 +1806,7 @@ Vector CHGrunt::BodyTarget(const Vector &posSrc){
 	)
 	{
 		Vector typicalCenter = CSquadMonster::BodyTarget(posSrc);
-		return Vector(typicalCenter.x, typicalCenter.y, typicalCenter.z - 6);
+		return Vector(typicalCenter.x, typicalCenter.y, typicalCenter.z - 8);
 	}else{
 		//default behavior works.
 		return CSquadMonster::BodyTarget(posSrc);
@@ -1833,6 +1834,9 @@ Vector CHGrunt::BodyTargetMod(const Vector &posSrc){
 		//default behavior works.
 		return CSquadMonster::BodyTarget(posSrc);
 	}
+
+	// eh.  couldn't we have done this to begin with to piggyback off of BodyTarget without anything else?
+	//return CHGrunt::BodyTarget(posSrc);
 };
 
 

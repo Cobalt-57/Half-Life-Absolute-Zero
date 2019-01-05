@@ -984,6 +984,10 @@ public:
 	void	EXPORT StopSound( void );
 //	virtual void	SetActivator( CBaseEntity *pActivator ) { m_pPusher = pActivator; }
 
+	//MODDD NOTE - it may be tempting to let pushables move across transitions, but be very careful.  It seems they still
+	//             depend on some offset given by the map, or maybe not.  But it could turn invisible too if there isn't
+	//             a model at that number ( "*27" for instance).  If a different models is suggested for that number,
+	//             it would suddenly change just by going to a new map.
 	virtual int	ObjectCaps( void ) { return (CBaseEntity :: ObjectCaps() & ~FCAP_ACROSS_TRANSITION) | FCAP_CONTINUOUS_USE; }
 	virtual int		Save( CSave &save );
 	virtual int		Restore( CRestore &restore );

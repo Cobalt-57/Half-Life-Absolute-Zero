@@ -199,7 +199,7 @@ extern float global_cl_hornetspiral;
 
 extern float global_mutePlayerPainSounds;
 EASY_CVAR_EXTERN(playerBulletHitEffectForceServer)
-EASY_CVAR_EXTERN(playerWeaponForceSpreadMode)
+EASY_CVAR_EXTERN(playerWeaponSpreadMode)
 
 EASY_CVAR_EXTERN(sentryCanGib)
 EASY_CVAR_EXTERN(miniturretCanGib)
@@ -2043,8 +2043,6 @@ void UTIL_DecalTrace( TraceResult *pTrace, int decalNumber )
 		}
 	}
 	
-
-	
 	//???????????????????????????????????????????????????? change index for wacky results. like 134.
 	
 	MESSAGE_BEGIN( MSG_BROADCAST, SVC_TEMPENTITY );
@@ -3602,7 +3600,7 @@ BOOL UTIL_IsDeadEntity( CBaseEntity* ent){
 		return FALSE;
 	}
 
-	if(! ent->pev->deadflag != DEAD_DEAD){
+	if(ent->pev->deadflag != DEAD_DEAD){
 		//not good enough to say dead.
 		return FALSE;
 	}

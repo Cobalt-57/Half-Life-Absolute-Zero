@@ -12,6 +12,10 @@
 *   without written permission from Valve LLC.
 *
 ****/
+
+
+#pragma once
+
 #if !defined( OEM_BUILD ) && !defined( HLDEMO_BUILD )
 
 #include "extdll.h"

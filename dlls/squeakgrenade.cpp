@@ -19,6 +19,7 @@
 
 
 
+#pragma once
 
 #if !defined( OEM_BUILD ) && !defined( HLDEMO_BUILD )
 

@@ -1149,6 +1149,10 @@ public:
 
 	BOOL ExitScriptedSequence( );
 	BOOL CineCleanup( );
+		
+	//MODDD - version that takes a significant piece for customizing per monster.
+	//        Called by CineCleanup above (which isn't implementable).
+	virtual void OnCineCleanup(CCineMonster* pOldCine);
 
 
 	CBaseEntity* DropItem ( char *pszItemName, const Vector &vecPos, const Vector &vecAng );// drop an item.

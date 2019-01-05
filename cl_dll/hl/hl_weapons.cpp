@@ -1381,9 +1381,13 @@ void UTIL_TraceLine( const Vector &vecStart, const Vector &vecEnd, IGNORE_MONSTE
 	ptr->flFraction = 1.0;
 }
 //MODDD - why not this too?
-void UTIL_TraceHull(){
-
+TraceResult	UTIL_GetGlobalTrace(){
+	//MODDD - mimicking how other dummied out versions handle it?
+	TraceResult tr;
+	tr.flFraction		= 1.0;
+	return tr;
 }
+
 void UTIL_TraceHull( const Vector &vecStart, const Vector &vecEnd, IGNORE_MONSTERS igmon, int hullNumber, edict_t *pentIgnore, TraceResult *ptr )
 {
 	memset( ptr, 0, sizeof( *ptr ) );

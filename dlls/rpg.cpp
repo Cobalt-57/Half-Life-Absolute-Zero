@@ -42,6 +42,7 @@
 
 
 
+#pragma once
 
 #if !defined( OEM_BUILD )
 

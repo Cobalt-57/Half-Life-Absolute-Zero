@@ -22,8 +22,8 @@ LINK_ENTITY_TO_CLASS( crossbow_bolt, CCrossbowBolt );
 
 
 
-EASY_CVAR_EXTERN(playerForceCrossbowMode)
-EASY_CVAR_EXTERN(hassassinForceCrossbowMode)
+EASY_CVAR_EXTERN(playerCrossbowMode)
+EASY_CVAR_EXTERN(hassassinCrossbowMode)
 EASY_CVAR_EXTERN(crossbowInheritsPlayerVelocity)
 EASY_CVAR_EXTERN(crossbowBoltDirectionAffectedByWater)
 //EASY_CVAR_EXTERN(crossbowReloadSoundDelay)
@@ -155,9 +155,9 @@ void CCrossbowBolt::BoltTouch( CBaseEntity *pOther )
 	if( pev->owner != NULL){
 		const char* ownerClassName = STRING(pev->owner->v.classname);
 		if( !strcmp(ownerClassName, "player")){
-			cvarToUse = &EASY_CVAR_GET(playerForceCrossbowMode);
+			cvarToUse = &EASY_CVAR_GET(playerCrossbowMode);
 		}else if(!strcmp(ownerClassName, "monster_human_assassin")){
-			cvarToUse = &EASY_CVAR_GET(hassassinForceCrossbowMode);
+			cvarToUse = &EASY_CVAR_GET(hassassinCrossbowMode);
 		}
 	}
 	

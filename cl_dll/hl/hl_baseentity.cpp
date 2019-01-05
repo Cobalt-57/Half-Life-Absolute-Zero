@@ -667,9 +667,11 @@ BOOL CBaseMonster::usesAdvancedAnimSystem(void){return FALSE;}
 
 
 
+void CBaseMonster::OnCineCleanup(CCineMonster* pOldCine){ }
 
 CBaseEntity* CBaseMonster :: DropItem ( char *pszItemName, const Vector &vecPos, const Vector &vecAng ) { return NULL; }
 BOOL CBaseMonster :: ShouldFadeOnDeath( void ) { return FALSE; }
+
 
 
 void RadiusDamageTest( Vector vecSrc, entvars_t *pevInflictor, entvars_t *pevAttacker, float flDamage, float flRadius, int iClassIgnore, int bitsDamageType, int bitsDamageTypeMod ){}

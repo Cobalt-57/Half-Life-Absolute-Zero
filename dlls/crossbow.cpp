@@ -12,6 +12,9 @@
 *   without written permission from Valve LLC.
 *
 ****/
+
+#pragma once
+
 #if !defined( OEM_BUILD ) && !defined( HLDEMO_BUILD )
 
 #include "extdll.h"
@@ -25,7 +28,7 @@
 
 
 
-EASY_CVAR_EXTERN(playerForceCrossbowMode)
+EASY_CVAR_EXTERN(playerCrossbowMode)
 EASY_CVAR_EXTERN(crossbowInheritsPlayerVelocity)
 EASY_CVAR_EXTERN(crossbowReloadSoundDelay)
 
@@ -197,7 +200,7 @@ void CCrossbow::PrimaryAttack( void )
 
 	if(m_fInZoom){
 		//If zoomed in, do a check for which mode to use.
-		if(EASY_CVAR_GET(playerForceCrossbowMode)!=2 && (EASY_CVAR_GET(playerForceCrossbowMode)==1 || !WEAPON_DEFAULT_MULTIPLAYER_CHECK) )
+		if(EASY_CVAR_GET(playerCrossbowMode)!=2 && (EASY_CVAR_GET(playerCrossbowMode)==1 || !WEAPON_DEFAULT_MULTIPLAYER_CHECK) )
 		{
 			//single player? no difference, fall to the usual DireBolt below.
 

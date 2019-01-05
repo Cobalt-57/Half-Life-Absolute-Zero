@@ -12,6 +12,10 @@
 *   without written permission from Valve LLC.
 *
 ****/
+
+
+#pragma once
+
 #if !defined( OEM_BUILD ) && !defined( HLDEMO_BUILD )
 
 #include "extdll.h"
@@ -734,6 +738,9 @@ void CPython::UpdateSpot( void )
 			m_pSpot = CLaserSpotPython::CreateSpot();
 		}
 
+		//MODDD TODO - for whatever reason this earlier line that made the laser pointer include the punch angle was commented out.  Restored.
+		//    ...nevermind.  Restore it IF the laser sight is actually visible during the delay before firing again, but maybe only if there's at
+		//    least one bullet left before having to reload.
 		//UTIL_MakeVectors( m_pPlayer->pev->v_angle + m_pPlayer->pev->punchangle );
 		UTIL_MakeVectors( m_pPlayer->pev->v_angle );
 

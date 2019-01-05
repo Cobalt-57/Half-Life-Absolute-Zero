@@ -54,6 +54,11 @@
 
 extern engine_studio_api_t IEngineStudio;
 
+//MODDD - is it safe to assume every integer of this tracerCount array is going to start at 0?  And not garbage memory?
+//        I assume it has one index per type of weapon to store the number of bullets
+//        fired yet per weapon for figuring out how often to draw a tracer effect.
+//        ...if what index is used comes from the "entity" index of the caller, we sure do hope it's between 0 and 31 
+//        inclusive then.
 static int tracerCount[ 32 ];
 
 extern "C" char PM_FindTextureType( char *name );
@@ -155,7 +160,7 @@ extern float global2_raveLaserSpawnFreq;
 
 extern float global2_muteRicochetSound;
 
-extern float global2_muteBulletHitSounds;
+EASY_CVAR_EXTERN(muteBulletHitSounds)
 
 extern float global2_rocketTrailAlphaInterval;
 extern float global2_rocketTrailAlphaScale;
@@ -174,7 +179,7 @@ EASY_CVAR_EXTERN(gauss_secondarypierces)
 EASY_CVAR_EXTERN(gauss_primarypunchthrough)
 EASY_CVAR_EXTERN(gauss_secondarypunchthrough)
 
-EASY_CVAR_EXTERN(playerWeaponForceSpreadMode)
+EASY_CVAR_EXTERN(playerWeaponSpreadMode)
 EASY_CVAR_EXTERN(playerBulletHitEffectForceServer)
 
 EASY_CVAR_EXTERN(mutePlayerWeaponFire)
@@ -184,10 +189,15 @@ EASY_CVAR_EXTERN(textureHitSoundPrintouts)
 
 EASY_CVAR_EXTERN(playerWeaponTracerMode)
 
+EASY_CVAR_EXTERN(decalTracerExclusivity)
+
 EASY_CVAR_EXTERN(egonEffectsMode)
 
 EASY_CVAR_EXTERN(myRocketsAreBarney)
 
+EASY_CVAR_EXTERN(muteCrowbarSounds)
+
+EASY_CVAR_EXTERN(forceAllowServersideTextureSounds)
 
 
 
@@ -216,8 +226,9 @@ float EV_HLDM_PlayTextureSound( int idx, pmtrace_t *ptr, float *vecSrc, float *v
 	// FIXME check if playtexture sounds movevar is set
 	//
 
-	//MODDD - the above was not written by me, appeared as-is.
-	if(global2_muteBulletHitSounds == 1){
+	//MODDD - the above was not written by me, appeared as-is.  Dunno what a "movevar" is. pm_shared.c thing? huh?
+	//Anyhow, mutes these sounds if "muteBulletHitSounds" is on, or the forceAllowServersideTextureSounds choice of 2 (only serverside allowed).
+	if(EASY_CVAR_GET(muteBulletHitSounds) == 1 || EASY_CVAR_GET(forceAllowServersideTextureSounds) == 2){
 		return 0;
 	}
 
@@ -437,9 +448,11 @@ void EV_HLDM_DecalGunshot( pmtrace_t *pTrace, int iBulletType )
 	}
 }
 
-int EV_HLDM_CheckTracer( int idx, float *vecSrc, float *end, float *forward, float *right, int iBulletType, int iTracerFreq, int *tracerCount )
+BOOL EV_HLDM_CheckTracer( int idx, float *vecSrc, float *end, float *forward, float *right, int iBulletType, int iTracerFreq, int *tracerCount )
 {
-	int tracer = 0;
+	//MODDD - renamed the genericly named "tracer" to "disableBulletHitDecal".  It's up to whoever calls this method to act on it by not drawing a decal...
+	//        for some odd reason.
+	int disableBulletHitDecal = FALSE;
 	int i;
 	qboolean player = idx >= 1 && idx <= gEngfuncs.GetMaxClients() ? true : false;
 
@@ -463,7 +476,7 @@ int EV_HLDM_CheckTracer( int idx, float *vecSrc, float *end, float *forward, flo
 		}
 		
 		if ( iTracerFreq != 1 )		// guns that always trace also always decal
-			tracer = 1;
+			disableBulletHitDecal = TRUE;
 
 		switch( iBulletType )
 		{
@@ -477,7 +490,7 @@ int EV_HLDM_CheckTracer( int idx, float *vecSrc, float *end, float *forward, flo
 		}
 	}
 
-	return tracer;
+	return disableBulletHitDecal;
 }
 
 
@@ -493,7 +506,9 @@ void EV_HLDM_FireBullets( int idx, float *forward, float *right, float *up, int 
 	int i;
 	pmtrace_t tr;
 	int iShot;
-	int tracer;
+
+	//MODDD - renamed "tracer" to this, made it a BOOL for clarity.
+	BOOL disableBulletHitDecal;
 
 
 
@@ -547,12 +562,49 @@ void EV_HLDM_FireBullets( int idx, float *forward, float *right, float *up, int 
 		gEngfuncs.pEventAPI->EV_SetTraceHull( 2 );
 		gEngfuncs.pEventAPI->EV_PlayerTrace( vecSrc, vecEnd, PM_STUDIO_BOX, -1, &tr );
 
-		if(EASY_CVAR_GET(playerWeaponTracerMode) == 1){
-			//retail: do tracers here as expected, and not necessarily every bullet.
-			tracer = EV_HLDM_CheckTracer( idx, vecSrc, tr.endpos, forward, right, iBulletType, iTracerFreq, tracerCount );
-		}else{
-			tracer = NULL;
-		}
+
+
+
+		//MODDD - check playerWeaponTracerMode to see if we need to do something special to iTracerFreq here for clientside.
+		//        Any clientside event is for the player here.
+		switch( (int)EASY_CVAR_GET(playerWeaponTracerMode)  ){
+		case 0:
+			//nothing.
+			iTracerFreq = 0;
+		break;
+		case 1:
+			//clientside, per whatever weapons said to do for tracers.  Leave "iTracerFreq" as it was sent.
+			
+		break;
+		case 2:
+			//serverside only (retail).  So nothing here.
+			iTracerFreq = 0;
+		break;
+		case 3:
+			//clientside and serverside as-is.  Let it proceed.
+
+		break;
+		case 4:
+			//clientside, all weapons, all shots. Force it.
+			iTracerFreq = 1;
+		break;
+		case 5:
+			//serverside, all weapons, all shots. Not here.
+			iTracerFreq = 0;
+		break;
+		case 6:
+			//clientside and serverside, all weapons, all shots. Go.
+			iTracerFreq = 1;
+		break;
+		default:
+			//unrecognized setting?  Default to whatever was sent like in retail.
+			
+		break;
+		}//END OF switch
+
+		disableBulletHitDecal = EV_HLDM_CheckTracer( idx, vecSrc, tr.endpos, forward, right, iBulletType, iTracerFreq, tracerCount );
+
+
 
 		// do damage, paint decals
 		if ( tr.fraction != 1.0 )
@@ -570,7 +622,9 @@ void EV_HLDM_FireBullets( int idx, float *forward, float *right, float *up, int 
 				
 				//MODDD NOTE - if this was a tracer don't do the usual gunshot and texturesound? what? Does this matter anymore now that the server can call for tracers
 				//             and do this regardless of CVar "playerWeaponTracerMode"?
-				if ( !tracer )
+				//             This seems to mirror the same "tracer" variable also local to fireBullets methods serverside (in dlls/combat.cpp).
+				//             It has been renamed to "disableBulletHitDecal" here as well.
+				if (EASY_CVAR_GET(decalTracerExclusivity) != 1 || !disableBulletHitDecal )
 				{
 					EV_HLDM_PlayTextureSound( idx, &tr, vecSrc, vecEnd, iBulletType );
 					EV_HLDM_DecalGunshot( &tr, iBulletType );
@@ -693,8 +747,10 @@ void EV_FireGlock1( event_args_t *args )
 	EV_GetGunPosition( args, vecSrc, origin );
 	
 	VectorCopy( forward, vecAiming );
-
-	EV_HLDM_FireBullets( idx, forward, right, up, 1, vecSrc, vecAiming, 8192, BULLET_PLAYER_9MM, 0, 0, args->fparam1, args->fparam2 );
+	
+	//MODDD - why was this missing "&tracerCount[idx-1]"?  Most other weapons had this even for tracer frequencies of 0.
+	//        Forcing a different frequency (or 1 for every single shot) causes a crash because that was null.
+	EV_HLDM_FireBullets( idx, forward, right, up, 1, vecSrc, vecAiming, 8192, BULLET_PLAYER_9MM, 0, &tracerCount[idx-1], args->fparam1, args->fparam2 );
 	
 	/*
 			gEngfuncs.GetLocalPlayer()->curstate.frame = 126;
@@ -853,11 +909,11 @@ void EV_FireShotGunDouble( event_args_t *args )
 	EV_GetGunPosition( args, vecSrc, origin );
 	VectorCopy( forward, vecAiming );
 
-	//playerWeaponForceSpreadMode.
+	//playerWeaponSpreadMode.
 	//0 = no effect (pick based on single or multiplayer as usual)
 	//1 = standard circle (single player)
 	//2 = wider, less tall (multiplayer)
-	if(EASY_CVAR_GET(playerWeaponForceSpreadMode)!=2 && (EASY_CVAR_GET(playerWeaponForceSpreadMode)==1 || !WEAPON_DEFAULT_MULTIPLAYER_CHECK) )
+	if(EASY_CVAR_GET(playerWeaponSpreadMode)!=2 && (EASY_CVAR_GET(playerWeaponSpreadMode)==1 || !WEAPON_DEFAULT_MULTIPLAYER_CHECK) )
 	{
 		//easyForcePrintLine("FLAG C-SINGLEPLAYER");
 		//single player circle
@@ -916,7 +972,7 @@ void EV_FireShotGunSingle( event_args_t *args )
 	VectorCopy( forward, vecAiming );
 
 	//MODDD - same, see above for the ShotGunSingle
-	if(EASY_CVAR_GET(playerWeaponForceSpreadMode)!=2 && (EASY_CVAR_GET(playerWeaponForceSpreadMode)==1 || !WEAPON_DEFAULT_MULTIPLAYER_CHECK) )
+	if(EASY_CVAR_GET(playerWeaponSpreadMode)!=2 && (EASY_CVAR_GET(playerWeaponSpreadMode)==1 || !WEAPON_DEFAULT_MULTIPLAYER_CHECK) )
 	{
 		EV_HLDM_FireBullets( idx, forward, right, up, 6, vecSrc, vecAiming, 2048, BULLET_PLAYER_BUCKSHOT, 0, &tracerCount[idx-1], 0.08716, 0.08716 );
 	}
@@ -1101,7 +1157,9 @@ void EV_FirePython( event_args_t *args )
 	
 	VectorCopy( forward, vecAiming );
 
-	EV_HLDM_FireBullets( idx, forward, right, up, 1, vecSrc, vecAiming, 8192, BULLET_PLAYER_357, 0, 0, args->fparam1, args->fparam2 );
+	//MODDD - why was this missing "&tracerCount[idx-1]"?  Most other weapons had this even for tracer frequencies of 0.
+	//        Forcing a different frequency (or 1 for every single shot) causes a crash because that was null.
+	EV_HLDM_FireBullets( idx, forward, right, up, 1, vecSrc, vecAiming, 8192, BULLET_PLAYER_357, 0, &tracerCount[idx-1], args->fparam1, args->fparam2 );
 }
 //======================
 //	    PHYTON END 
@@ -2431,7 +2489,10 @@ void EV_Crowbar( event_args_t *args )
 	VectorCopy( args->origin, origin );
 	
 	//Play Swing sound
-	gEngfuncs.pEventAPI->EV_PlaySound( idx, origin, CHAN_WEAPON, "weapons/cbar_miss1.wav", 1, ATTN_NORM, 0, PITCH_NORM); 
+	//MODDD - if the canPlayHitSound CVar permits.
+	if(EASY_CVAR_GET(muteCrowbarSounds) != 1 && EASY_CVAR_GET(muteCrowbarSounds) != 3){
+		gEngfuncs.pEventAPI->EV_PlaySound( idx, origin, CHAN_WEAPON, "weapons/cbar_miss1.wav", 1, ATTN_NORM, 0, PITCH_NORM); 
+	}
 
 
 	int swingMissChoice = args->iparam1;
@@ -2439,10 +2500,10 @@ void EV_Crowbar( event_args_t *args )
 	
 	if ( EV_IsLocal( idx ) )
 	{
+		//why this call??
 		gEngfuncs.pEventAPI->EV_WeaponAnimation( CROWBAR_ATTACK1MISS, 1 );
 
 
-		
 		//MODDD - handle by parameter now.
 		//switch( (g_iSwing++) % 3 )
 		switch(swingMissChoice)

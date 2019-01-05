@@ -1,5 +1,12 @@
 
 
+//PYTHON ISSUE.  Holding down after firing and running out of clip ammo makes it click a lot.  while zoomed it flickers oddly.
+
+//Is it ok to force
+//    #pragma once  
+//...to stop some of those #ifdef starting files from giving intellisense errors? test with the VS5 (visual studio 95) or whatever builds.
+
+
 //TODO - should infiniteLongJumpCharge being on also force the spring icon in ammo.cpp to look shaded? if so make it broadcasted (HIDDENC) to the client to see it there easily.
 
 
@@ -39,7 +46,7 @@
 
 
 //~should increment between noticable releases.
-#define protoModVersion "1.9h"
+#define protoModVersion "1.9k"
 
 //~date of compilation.
 //~to pick automatically, leave this commented out.  WARNING: always the date you ran half life, just freeze a date here!

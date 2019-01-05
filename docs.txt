@@ -158,6 +158,11 @@ to do that.  Any other time the map is loaded the same state of node places / co
 			 
 			 
 			 
+
+NOTICE - "VARS(eoNullEntity)" will create a reference to the entity of ID 0 (since eoNullEntity alone is really a #define for the number 0... nothing more complicated).
+so it effectively makes "VARS(0)".  And from a printout of that thing's classname, this says it's "worldspawn".
+so you could send worldspawn as an inflictor or attacker.  Which is fine I guess, but his does not look intuitive.
+Does "VARS(eoNullEntity)" look like it's trying to send the map itself (worldspawn) or some example blank NULL entity?  Whatever works but just be careful with that.
 			 
 			 
 			 
@@ -322,6 +327,7 @@ THIS JUST IN - there are already "r_drawviewmodel" and "hud_draw" that do these 
 
 
 hideDamage (0) - BOOL (modevar). When 1, all signs or indications of damage are turned off, including player sounds, fvox chatter, screen pain flashes + directions.
+~Also stops (all? most?) melee attacks from knocking the player around and the resulting viewpunch.
 ~if set to "2" instead, also includes hiding timed damage icons.
 
 
@@ -336,16 +342,41 @@ timedDamage_debug (0) - MODEVAR. For 1 to 4, ignores actual player damage and dr
 
 timedDamage_brightnessMax (256) - ADJUSTABLE, range 0-256. How high the brightness goes in one cycle.
 timedDamage_brightnessMin (0) - ADJUSTABLE, range 0-256. How low the brightness goes in one cycle.
-timedDamage_brightnessCap (-1) - ADJUSTABLE, range 0-256. If non-negative, the brightness freezes if it goes over this limit.
-timedDamage_brightnessFloor (-1) - ADJUSTABLE, range 0-256. If non-negative, the brightness freezes if it goes under this limit.
+timedDamage_brightnessCap (-1) - ADJUSTABLE, range 0-256. If non-negative, the brightness freezes if it goes over this limit. Otherwise implied 256.
+timedDamage_brightnessFloor (-1) - ADJUSTABLE, range 0-256. If non-negative, the brightness freezes if it goes under this limit. Otherwise implied 0.
 timedDamage_flashSpeed (2) - ADJUSTABLE. Affects the time it takes to complete one flash cycle. Higher is faster, decimals allowed.
 
 
-playerWeaponTracerMode - MODEVAR. uhh.. why isn't this described in here by now?
-0: no effect, probably.
-1: show tracers clientside, not always.
-2: show tracers serverside, always.
-...support for more combinations may be desired.
+
+playerWeaponTracerMode (5) - MODEVAR. Handles how to draw tracers from player weapons.
+~WARNING: "playerBulletHitEffectForceServer" can interfere with this.  If it denies any clientside ways of firing bullets, clientside choices below won't work.
+0: never draw tracers. Not even the mp5's.
+1: retail's default. Draw tracers from some weapons but clientside only, never server or for other players to see in multiplayer (verify this?)
+  ~It looks like the only weapon that ever uses tracers, and for every 2nd bullet, is the mp5.
+2: draw tracers for the same weapons but serverside instead.  Exact same behavior as mode #1 (clientside retail) not guaranteed if weapons have different tracer preferences serverside that went unused. Retail ignored any serverside tracer choices.
+3: both #1 and #2, still individually clientside and serverside by themselves.
+4: Render tracers clientside for all bullet weapons, every shot. May only show up for the player who fired the shots, but verify this.
+5: Render tracers serverside for all bullet weapons, every shot. Serverside to be shown to all players.
+6: Both #4 and #5. All bullet weapons, every shot, serverside and clientside. May be redundant.
+
+monsterWeaponTracerMode (2) - MODEVAR. Handles how monsters (AI-scripted NPC's) with bullet weapons draw tracers. Always serverside. Does not mirror playerWeaponTracerMode.
+0: never draw tracers.
+1: retail's defaults per monster. Some monsters draw tracers more often than others. Barney draws a tracer of every 4th bullet fired for instance.
+2: all monsters with bullet weapons draw tracers for every shot.
+
+decalTracerExclusivity (0) - BOOLEAN. Determines whether to use retail's oddly specific behavior for sometimes skipping decals: whenever a tracer effect is made for a bullet, but only for certain bullet types AND if tracers don't play every single time (MP5 for player for clientside only, otherwise that always make decals (serverside by playerWeaponTracerMode... 12MM bullets for monsters... sentries, apaches for example, serverside as with any NPC).
+~turn on (1) to keep it like retail had. No more specific modes or combinations unless requested.
+
+
+monsterToPlayerHitgroupSpecial (0) - BOOLEAN, but kindof MODEVAR.
+0: monsters can not do different amounts of damage to players based on what part of them is hit, like triple for headshots.
+1: retail. Monsters can do extra or reduced damage to players based on what part of them is hit just like other players can.
+2: semi. Monsters can do reduced damage if some part of skills.cfg says to for that part of a player (but as of retail skill.cfg, yet unchanged by the mod, nothing ever reduces damage, just maintains it).
+   They still can not do any extra damage, like triple for headshots.  Long story short, damage modifiers are possible but capped at 100% of the intention.
+***NOTE that this always includes non-player sources for its effects, such as damage dealt by the map or any other non-monster entities too.  Only player-to-player damage is truly unaffected.
+
+
+
 
 
 New NPCs:
@@ -356,7 +387,7 @@ Mr. Friendly - "monster_friendly"
 -Piss one off and it will try to bring you closer with the double-whip. When close up, it can vomit, making a low-pitched scientist scream. This rapidly cuts armor.
 
 Kingpin - "monster_kingpin"
--powers up nearby alien grunts if alerted.
+-powers up nearby alien grunts if alerted.  Has a variety of devastating psionic / electric attacks.  Will fire homing orbs of doom if the target hides for too long before chasing them down.
 
 floater - "monster_floater" or old name, "monster_bloater".
 
@@ -407,7 +438,7 @@ wallHealthDoor_closeDelay (0.75) - ADJUSTABLE. How long a door'ed wall health ke
 
 canDropInSinglePlayer - BOOL. If on, the player can "drop" the currently equipped weapon in single player ("drop" in console), just like in multiplayer.
 
-playerForceCrossbowMode (1) - MODEVAR. When non-zero, forces the crossbow to behave like in singleplayer or multiplayer. 
+playerCrossbowMode (1) - MODEVAR. When non-zero, forces the crossbow to behave like in singleplayer or multiplayer. 
 0 - no change; up to the real mode.
 1 - forces single player. 
 2 - forces multiplayer. Sniper fire when zoomed in, explosions when zoomed out.
@@ -633,6 +664,13 @@ muteBulletHitSounds (0) - Bool.  When 1, any texture-hit sounds, including flesh
 
 mutePlayerPainSounds (0) - BOOL. Does play hit-related player sound effects such as pain, even if "playerExtraPainSoundsMode" states to.  Does not include death sounds or the typical flesh hit sounds from hgrunt bullets.
 
+muteCrowbarSounds (0) - MODEVAR. What part of the crowbar to mute.
+~NOTE: this takes precedence over "multiplayerCrowbarHitSoundMode".
+0: no effect.
+1: no "miss" woosh sounds.
+2: no hit sounds, at least the metallic sound the crowbar usually makes (cbar_hitbod1, 2, 3.wav or cbar_hit1, 2.wav).  Texture sounds still play if called for.
+3: no "miss" woosh or typical metallic hit sounds.
+
 muteTempEntityGroundHitSound - Bool.  When 1, any generated temp entity sounds (sounds on hitting & bouncing off the ground) will not play. This includes the ring from ammunition shells hitting the ground.
 ~most commonly func_breakable gibs (broken boxes' or vents whose pieces make noises on hitting the ground, also bullet casings)
 
@@ -807,7 +845,7 @@ hassaultFireSpread - (0.06) amount of spread for this weapon (simulates inaccura
 
 hassassinCrossbowReloadSoundDelay (1.1) - FLOAT. Delay in seconds to play "weapons/xbow_realod1.wav" after a hassassin starts a reload.
 
-hassassinForceCrossbowMode (1) - MODE. Same as playerForceCrossbowMode, but for hassassins.
+hassassinCrossbowMode (1) - MODE. Same as playerCrossbowMode, but for hassassins.
 
 
 
@@ -1475,7 +1513,9 @@ r_glowshell_debug - MODEVAR. For a rendering issue with agrunts using the glow-F
 3: do neither.  Don't call IEngineStudio.GL_StudioDrawShadow, leave StudioRenderModel unaffected.  PROBLEM IN OpenGL or D3D renderer choices in Video options.
 
 
-
+cl_viewpunch - BOOLEAN. Viewpunch is the slight offset from where the player is currently looking that usually happens from taking melee hits, falling to the ground, or weapon recoil.
+If 0, viewpunch is ignored.
+If 1, works as usual (retail).
 
 
 //
@@ -2120,20 +2160,27 @@ explosionShrapnelMulti, 1
 
 
 
-playerBulletHitEffectForceServer (0) - BOOL. force whether effects related to the player's bullet hitting a surface (bullethole decal, texture-hit sound) are called by the client or server. By default, they are called by the client. When 1, the server will cal lfor these effects just like NPCs do.
+playerBulletHitEffectForceServer (0) - BOOL. force whether effects related to the player's bullet hitting a surface (bullethole decal, texture-hit sound) are called by the client or server. By default, they are called by the client. When 1, the server will call for these effects just like NPCs do.
 *Note: This is NOT TE_GUNSHOT, which is still always serverside and unrelated to this. Can look into playing TE_GUNSHOT clientside too if interested.
 
-playerWeaponForceSpreadMode (0) - MODEVAR. If non-zero, forces weapons whose spread is altered in multiplayer (shotgun and mp5) to always use either the singleplayer or multiplayer spread regardless of being in actual singleplayer or multiplayer.
+forceAllowServersideTextureSounds (0) - MODEVAR. Whether to force texturehit sounds to play for the server.  No difference in singleplayer as serverside texturehit sounds are allowed.
+~NOTICE: if "muteBulletHitSounds" is 1, this has no effect.
+0: off, no difference from retail. Multiplayer typically turns off serverside texturehit sounds.
+1: on. Does not affect whether texture sounds continue to play clientside or not.
+2: on, and mutes all clientside texturehit sounds.
+
+playerWeaponSpreadMode (0) - MODEVAR. If non-zero, forces weapons whose spread is altered in multiplayer (shotgun and mp5) to always use either the singleplayer or multiplayer spread regardless of being in actual singleplayer or multiplayer.
 0 - no effect; default behavior per game.
 1 - forces singleplayer behavior: spread radius is circular.
 2 - forces multiplayer behavior: spread radius of the shotgun is less wide and taller, supposedly for being more likely to hit other fast-moving players. The mp5's spread radius is greater overall in multiplayer.
 
 
-
-
-
-
-
+multiplayerCrowbarHitSoundMode (1) - MODEVAR. Only in multiplayer (maxplayers over 1, probably, requires restart if changed ingame). How to handle the volume of the crowbar hit sound (multiplayerCrowbarHitSoundMode).
+~NOTE: loses to "muteCrowbarSounds" if it is on.
+0: force crowbar hit sound off always.
+1: leave the crowbar hit volume up to the texture hit.
+2: force crowbar hit sound volume to 0.6, common default for a lot of texture hit sounds anyways.
+3: (retail) force crowbar hit sound volume to 1.0, max possible.
 
 
 

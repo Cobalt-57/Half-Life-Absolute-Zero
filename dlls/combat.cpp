@@ -105,8 +105,9 @@ EASY_CVAR_EXTERN(germanRobotGibsDecal)
 EASY_CVAR_EXTERN(monsterFadeOutRate)
 
 EASY_CVAR_EXTERN(playerWeaponTracerMode)
+EASY_CVAR_EXTERN(monsterWeaponTracerMode)
 
-
+EASY_CVAR_EXTERN(decalTracerExclusivity)
 
 
 
@@ -3459,8 +3460,77 @@ void RadiusDamage( Vector vecSrc, entvars_t *pevInflictor, entvars_t *pevAttacke
 
 
 
+//MODDD - new method to summarize tracer generating script and returning whether to block drawing a decal, based on whether a tracer was sent this time.
+//        Mirrors EV_HLDM_CheckTracer from clientside cl_dll/ev_hldm.cpp
+//        This script used to be sitting in FireBullets (for monsters other than the player) to fire bullets serverside, the only way they can.
+//        Now that the player can fire bullets serverside with some choices of CVar "playerWeaponTracerMode", it makes even more sense to make a method
+//        out of this too.
+BOOL CBaseEntity::CheckTracer(const Vector& vecSrc, const Vector& vecEnd, const Vector& vecDirForward, const Vector& vecDirRight, int iBulletType, int iTracerFreq, int* p_tracerCount){
 
+	BOOL disableBulletHitDecal = FALSE;
 
+	
+	//if (iTracerFreq != 0 && (tracerCount++ % iTracerFreq) == 0)
+	if (iTracerFreq != 0 && ((*p_tracerCount)++ % iTracerFreq) == 0)
+	{
+		Vector vecTracerSrc;
+
+		if ( IsPlayer() )
+		{// adjust tracer position for player
+			//MODDD NOTE - funny enough this was in retail, back when this block of script (this method) was ONLY in FireBullets, and not FireBulletsPlayer (the former of which the player does not call).
+			//             And it works here fine... assuming the player-only offset in sending a tracer turns out to be good?
+			//    And changed to use parameters vecDirRight and vecDirForward instead in case how those are obtained ever changes elsewhere.
+			//vecTracerSrc = vecSrc + Vector ( 0 , 0 , -4 ) + gpGlobals->v_right * 2 + gpGlobals->v_forward * 16;
+			vecTracerSrc = vecSrc + Vector ( 0 , 0 , -4 ) + vecDirRight * 2 + vecDirForward * 16;
+		}
+		else
+		{
+			vecTracerSrc = vecSrc;
+		}
+			
+		//MODDD NOTE - the comment below here was from the as-is SDK.  Uhhhh... what?
+		//             This poorly named "tracer" variable, being 1, will block some weapons from drawing a decal.  (NOTE: it has been renamed to "disableBulletHitDecal")
+		//             So it... forces weapons, that fire tracers at all but not every single time (iTracerFreq is NOT 1... and wasn't 0 to even make it this far),
+		//             to not render decals on the same frames they make tracer effects.
+		//             ...okaaaaaay. Why such a riddle to unravel. No shitty comments please, not that I'm perfect by any means.
+		//             Why would these be mutually exclusive of one another ever?  Defaulting this behavior off (always make decals regardless of 
+		//             a non-0, non-1 tracer frequency setting).
+		//             Lastly, if the only type of bullet that requires this "tracer" var (now disableBulletHitDecal) to be on being BULLET_MONSTER_12MM is confusing well...
+		//             I got nothing.
+		//             And even zanier.  See EV_HLDM_CheckTracer of ev_hldm.cpp.  It turns below into a method of its own... kinda like serverside should do.  In fact... done.
+		//             (this is that method)
+		//             Anyways, it specifically stops BULLET_PLAYER_MP5 from leaving a bullet decal if a tracer was made that particular time.  So for monsters
+		//             only 12MM is blocked, which certainly isn't what HGrunts even use (they use MP5s).  I just don't get it.
+
+		if ( iTracerFreq != 1 )		// guns that always trace also always decal
+			disableBulletHitDecal = TRUE;
+		switch( iBulletType )
+		{
+		case BULLET_MONSTER_MP5:
+		case BULLET_MONSTER_9MM:
+		case BULLET_MONSTER_12MM:
+		default:
+			//MODDD - so uh, that covers anything? particularly the "default:" part?
+
+			MESSAGE_BEGIN( MSG_PAS, SVC_TEMPENTITY, vecTracerSrc );
+				WRITE_BYTE( TE_TRACER );
+				WRITE_COORD( vecTracerSrc.x );
+				WRITE_COORD( vecTracerSrc.y );
+				WRITE_COORD( vecTracerSrc.z );
+				WRITE_COORD( vecEnd.x );  //WRITE_COORD( tr.vecEndPos.x );
+				WRITE_COORD( vecEnd.y );  //WRITE_COORD( tr.vecEndPos.y );
+				WRITE_COORD( vecEnd.z );  //WRITE_COORD( tr.vecEndPos.z );
+				
+				
+				
+			MESSAGE_END();
+			break;
+		}
+	}
+
+	return disableBulletHitDecal;
+
+}//END OF CheckTracer
 
 
 
@@ -3476,10 +3546,12 @@ Go to the trouble of combining multiple pellets into a single damage call.
 This version is used by Monsters.
 ================
 */
+//MODDD - borrowing blindly from gpGlobals->v_right and gpGlobals->v_up?  If every single place in the universe that calls our method
+//        sets them so we have no chance of relying on garbage from old angles putting their vectors in there...
 void CBaseEntity::FireBullets(ULONG cShots, Vector vecSrc, Vector vecDirShooting, Vector vecSpread, float flDistance, int iBulletType, int iTracerFreq, int iDamage, entvars_t *pevAttacker )
 {
 	static int tracerCount;
-	int tracer;
+	BOOL disableBulletHitDecal;
 	TraceResult tr;
 	Vector vecRight = gpGlobals->v_right;
 	Vector vecUp = gpGlobals->v_up;
@@ -3507,41 +3579,26 @@ void CBaseEntity::FireBullets(ULONG cShots, Vector vecSrc, Vector vecDirShooting
 		vecEnd = vecSrc + vecDir * flDistance;
 		UTIL_TraceLine(vecSrc, vecEnd, dont_ignore_monsters, ENT(pev)/*pentIgnore*/, &tr);
 
-		tracer = 0;
-		if (iTracerFreq != 0 && (tracerCount++ % iTracerFreq) == 0)
-		{
-			Vector vecTracerSrc;
 
-			if ( IsPlayer() )
-			{// adjust tracer position for player
-				vecTracerSrc = vecSrc + Vector ( 0 , 0 , -4 ) + gpGlobals->v_right * 2 + gpGlobals->v_forward * 16;
-			}
-			else
-			{
-				vecTracerSrc = vecSrc;
-			}
+		//MODDD - tracers added for the player, serverside, depending on playerWeaponTracerMode choice.
+		switch( (int)EASY_CVAR_GET(monsterWeaponTracerMode)  ){
+		case 0:
+			//nothing.
+			iTracerFreq = 0;
+		break;
+		case 1:
+			//whatever it was as provided this time (retail)
 			
-			if ( iTracerFreq != 1 )		// guns that always trace also always decal
-				tracer = 1;
-			switch( iBulletType )
-			{
-			case BULLET_MONSTER_MP5:
-			case BULLET_MONSTER_9MM:
-			case BULLET_MONSTER_12MM:
-			default:
+		break;
+		case 2:
+			//always
+			iTracerFreq = 1;
+		break;
+		}//END OF switch
 
-				MESSAGE_BEGIN( MSG_PAS, SVC_TEMPENTITY, vecTracerSrc );
-					WRITE_BYTE( TE_TRACER );
-					WRITE_COORD( vecTracerSrc.x );
-					WRITE_COORD( vecTracerSrc.y );
-					WRITE_COORD( vecTracerSrc.z );
-					WRITE_COORD( tr.vecEndPos.x );
-					WRITE_COORD( tr.vecEndPos.y );
-					WRITE_COORD( tr.vecEndPos.z );
-				MESSAGE_END();
-				break;
-			}
-		}
+
+		//MODDD - squeaky clean, moved to a method.  Like how cl_dll/ev_hldm.cpp did it.
+		disableBulletHitDecal = CheckTracer(vecSrc, tr.vecEndPos, gpGlobals->v_forward, gpGlobals->v_right, iBulletType, iTracerFreq, &tracerCount);
 
 
 
@@ -3587,8 +3644,7 @@ void CBaseEntity::FireBullets(ULONG cShots, Vector vecSrc, Vector vecDirShooting
 			case BULLET_MONSTER_12MM:		
 				pEntity->TraceAttack(pevAttacker, gSkillData.monDmg12MM, vecDir, &tr, DMG_BULLET, 0, TRUE, &bulletHitEffectAllowed);
 
-				//if(EASY_CVAR_GET(tracerMakesBulletHitEffect
-				if ( !tracer )
+				if ( EASY_CVAR_GET(decalTracerExclusivity) != 1 || !disableBulletHitDecal )
 				{
 					//TEXTURETYPE_PlaySound(&tr, vecSrc, vecEnd, iBulletType);
 					//DecalGunshot( &tr, iBulletType );
@@ -3682,7 +3738,7 @@ This version is used by Players, uses the random seed generator to sync client a
 Vector CBaseEntity::FireBulletsPlayer ( ULONG cShots, Vector vecSrc, Vector vecDirShooting, Vector vecSpread, float flDistance, int iBulletType, int iTracerFreq, int iDamage, entvars_t *pevAttacker, int shared_rand )
 {
 	static int tracerCount;
-	int tracer;
+	BOOL disableBulletHitDecal;
 	TraceResult tr;
 	Vector vecRight = gpGlobals->v_right;
 	Vector vecUp = gpGlobals->v_up;
@@ -3711,69 +3767,52 @@ Vector CBaseEntity::FireBulletsPlayer ( ULONG cShots, Vector vecSrc, Vector vecD
 		UTIL_TraceLine(vecSrc, vecEnd, dont_ignore_monsters, ENT(pev)/*pentIgnore*/, &tr);
 		
 
-		if(EASY_CVAR_GET(playerWeaponTracerMode) == 2){
-			//Render tracer effects serverside, and always.
+		//MODDD - tracers added for the player, serverside, depending on playerWeaponTracerMode choice.
+		switch( (int)EASY_CVAR_GET(playerWeaponTracerMode)  ){
+		case 0:
+			//nothing.
+			iTracerFreq = 0;
+		break;
+		case 1:
+			//clientside only (retail).  So nothing here.
+			iTracerFreq = 0;
+		break;
+		case 2:
+			//serverside, per whatever weapons said to do for tracers.  Leave "iTracerFreq" as it was sent.
+
+		break;
+		case 3:
+			//clientside and serverside as-is.  Let it proceed.
+
+		break;
+		case 4:
+			//clientside, all weapons, all shots. Not here.
+			iTracerFreq = 0;
+		break;
+		case 5:
+			//serverside, all weapons, all shots. Force it.
 			iTracerFreq = 1;
+		break;
+		case 6:
+			//clientside and serverside, all weapons, all shots. Go.
+			iTracerFreq = 1;
+		break;
+		default:
+			//unrecognized setting?  Default to nothing like retail did.
+			iTracerFreq = 0;
+		break;
+		}//END OF switch
 
-			//MODDD - why was this bit removed from the player's FireBullets?
-			tracer = 0;
-			if (iTracerFreq != 0 && (tracerCount++ % iTracerFreq) == 0)
-			{
-				Vector vecTracerSrc;
+		//MODDD - the idea was always here for FireBullets (monsters) above, but for the player, this is new.  Player's "disableBulletHitDecal" goes unused though.
+		disableBulletHitDecal = CheckTracer(vecSrc, tr.vecEndPos, gpGlobals->v_forward, gpGlobals->v_right, iBulletType, iTracerFreq, &tracerCount);
 
-				if ( IsPlayer() )
-				{// adjust tracer position for player
-					vecTracerSrc = vecSrc + Vector ( 0 , 0 , -4 ) + gpGlobals->v_right * 2 + gpGlobals->v_forward * 16;
-				}
-				else
-				{
-					vecTracerSrc = vecSrc;
-				}
-			
-				if ( iTracerFreq != 1 )		// guns that always trace also always decal
-					tracer = 1;
-
-				//so... everything? ok then
-				switch( iBulletType )
-				{
-				case BULLET_MONSTER_MP5:
-				case BULLET_MONSTER_9MM:
-				case BULLET_MONSTER_12MM:
-				default:
-
-					MESSAGE_BEGIN( MSG_PAS, SVC_TEMPENTITY, vecTracerSrc );
-						WRITE_BYTE( TE_TRACER );
-						WRITE_COORD( vecTracerSrc.x );
-						WRITE_COORD( vecTracerSrc.y );
-						WRITE_COORD( vecTracerSrc.z );
-						WRITE_COORD( tr.vecEndPos.x );
-						WRITE_COORD( tr.vecEndPos.y );
-						WRITE_COORD( tr.vecEndPos.z );
-					MESSAGE_END();
-					break;
-				}
-			}
-		
-		}//END OF playerWeaponTracerMode check
-
-
-
-
-
-
-
-
-
+		/*
 		//easyPrintLine("IS IT NULL????? %d", (CBaseEntity::Instance(tr.pHit)  == NULL) );
 		if(CBaseEntity::Instance(tr.pHit)  != NULL){
 			CBaseEntity *pEntity = CBaseEntity::Instance(tr.pHit);
-
-			
 			//easyPrintLine("NAME::: %s", STRING(pEntity->pev->classname) );
 		}
-
-
-
+		*/
 
 		//easyPrintLine("flFraction?", tr.flFraction); 
 		// do damage, paint decals
@@ -3782,9 +3821,6 @@ Vector CBaseEntity::FireBulletsPlayer ( ULONG cShots, Vector vecSrc, Vector vecD
 			CBaseEntity *pEntity = CBaseEntity::Instance(tr.pHit);
 			BOOL bulletHitEffectAllowed = TRUE; //by default.
 			BOOL doDefaultBulletHitEffectCheck = FALSE;  //set to TRUE if a case relies on a common default for this. Leave FALSE if the case handles this itself.
-
-			//m_MonsterState == MONSTERSTATE_SCRIPT
-			//!?!?
 
 			//tr.pHit->v.origin
 			//Note that this is an "AI Sound", or not a real one audible to the player, but one that checks for monsters nearby (distance) and alerts them if they are in hearing range.
@@ -3854,6 +3890,11 @@ Vector CBaseEntity::FireBulletsPlayer ( ULONG cShots, Vector vecSrc, Vector vecD
 			//if(doDefaultBulletHitEffectCheck && (EASY_CVAR_GET(playerBulletHitEffectForceServer)==1 || !FClassnameIs(pEntity->pev, "worldspawn")) && bulletHitEffectAllowed){
 			//if(doDefaultBulletHitEffectCheck && !FClassnameIs(pEntity->pev, "worldspawn") && bulletHitEffectAllowed){
 
+			//The "bulletHitEffectAllowed" can be turned off by a TraceAttack method, presumably because it decided to handle the effect itself
+			//and handling it here would be redundant.
+			//This is common for things that do a ricochet effect on detecting a hit on armor or a helmet (hgrunts, agrunts).  They turn it off.
+			//Note that, unless TEXTURETYPE_PlaySound detects a machine or the world (CLASS_NONE.. however crude that is) was hit,
+			//it's going to force a flesh sound.  Just keeping that in tune with retail to play nicely.
 			if(doDefaultBulletHitEffectCheck && bulletHitEffectAllowed){
 				TEXTURETYPE_PlaySound(&tr, vecSrc, vecEnd, iBulletType);
 				DecalGunshot( &tr, iBulletType );

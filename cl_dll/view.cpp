@@ -65,7 +65,7 @@ extern float global2PSEUDO_grabbedByBarancle;
 
 extern float global2_playerBarnacleVictimViewOffset;
 
-
+EASY_CVAR_EXTERN(cl_viewpunch)
 		
 
 
@@ -781,22 +781,33 @@ void V_CalcNormalRefdef ( struct ref_params_s *pparams )
 
 	
 	// Add in the punchangle, if any
-	VectorAdd ( pparams->viewangles, pparams->punchangle, pparams->viewangles );
-	//VectorAdd ( pparams->viewangles, vecTemp, pparams->viewangles );
+	// MODDD NOTE - is "pparams->punchangle" always 0's?  what is the point?  OHH.  It comes from raw settings from "pev->viewpunch" changes
+	//              done in melee attacks serverside, and that just got sent over here.  That's fine.
+	// Looks like "ev_punchangle" below actually comes from say, a weapon's lasting effect.
+
+	if(EASY_CVAR_GET(cl_viewpunch) != 0){
+		VectorAdd ( pparams->viewangles, pparams->punchangle, pparams->viewangles );
+		//VectorAdd ( pparams->viewangles, vecTemp, pparams->viewangles );
+	}
 
 
 	// Include client side punch, too
 
 	//MODDD - only use the punch if the "minimumfiredelay" cheat is off.  This way, rapid fire doesn't
 	//distort the real damage-point.
-	if(global2_cheat_minimumfiredelay == 0 ){
+	// Also we have another CVar just for stopping viewpunch.  Sometimes we don't need that distraction.
+	if( global2_cheat_minimumfiredelay != 1 && EASY_CVAR_GET(cl_viewpunch) != 0  ){
 		VectorAdd ( pparams->viewangles, (float *)&ev_punchangle, pparams->viewangles);
 	}else{
 
 	}
 
 
-
+	//MODDD - this seems to reduce the angle punch a little, given how much time has passed since last frame for how much reduction to apply.
+	//        This lets a view punch linearly lose its influence until it's gone pretty fast.
+	//        In particular, it reduces the total amount of ev_punchangle, makes it approach 0.
+	//        ev_punchangle is freshly added to our actual view-angles each frame (pparams->viewangles).
+	//        So looking in the same direction while a view punch happens and expires, leaves you looking in the exact same direction as before the punch.
 	V_DropPunchAngle ( pparams->frametime, (float *)&ev_punchangle );
 
 	// smooth out stair step ups

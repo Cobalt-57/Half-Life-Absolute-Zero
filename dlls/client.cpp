@@ -57,6 +57,24 @@
 
 
 
+
+CBaseEntity* crashableEntityRef = NULL;
+float crashableEntityReferTime = 0;
+int crashableEntityReferMode = 0;
+
+//test for what crashes.
+class CrashTest{
+	public:
+	void someMethod(){
+		int x = 6;
+	}
+};//END OF CrashTest class
+
+
+
+
+
+
 extern DLL_GLOBAL ULONG		g_ulModelIndexPlayer;
 extern DLL_GLOBAL BOOL		g_fGameOver;
 extern DLL_GLOBAL int		g_iSkillLevel;
@@ -2573,19 +2591,24 @@ void ClientCommand( edict_t *pEntity )
 			return;
 		}
 
-		BOOL godModeMem = tempplayer->pev->flags & FL_GODMODE;
-		
-		
-		if(godModeMem){
-			tempplayer->pev->flags &= ~FL_GODMODE;
-		}
+
+
+		//BOOL godModeMem = tempplayer->pev->flags & FL_GODMODE;
+		//if(godModeMem){
+		//	tempplayer->pev->flags &= ~FL_GODMODE;
+		//}
 
 		//"DMG_FALL" in there so we ignore battery.
-		tempplayer->TakeDamage(VARS(eoNullEntity), VARS(eoNullEntity), 255, DMG_FALL|DMG_ALWAYSGIB, 0);
+		//tempplayer->TakeDamage(VARS(eoNullEntity), VARS(eoNullEntity), 255, DMG_FALL|DMG_ALWAYSGIB, 0);
 
-		if(godModeMem){
-			tempplayer->pev->flags |= FL_GODMODE;
-		}
+		//straight-shot the health change and Killed() call to skip possible interference from godmode and "NothingHurts".
+		tempplayer->pev->health = -200;
+		tempplayer->Killed(NULL, GIB_ALWAYS);
+
+
+		//if(godModeMem){
+		//	tempplayer->pev->flags |= FL_GODMODE;
+		//}
 
 
 
@@ -2603,12 +2626,101 @@ void ClientCommand( edict_t *pEntity )
 			return;
 		}
 
-		//Hey, you asked for it!
-		int i = 1337;
-		int zero = 0;
+		const char* arg1ref = CMD_ARGV(1);
 
-		int crashTime = i / zero;
-		//easyForcePrintLine("%d", crashTime);
+		if(arg1ref != NULL && !isStringEmpty(arg1ref)){
+			
+			try{
+				int crashType = tryStringToInt(arg1ref);
+
+				switch(crashType){
+				case 0:{
+					//Classic: divide by 0.
+					int i = 1337;
+					int zero = 0;
+
+					int crashTime = i / zero;
+				break;}
+				case 1:{
+					//dereferencing a NULL pointer.
+					CrashTest* somePointer = NULL;
+					CrashTest someThing = (*somePointer);
+
+				break;}
+				case 2:{
+					//trying to access methods of a NULL pointer (of object type, has methods).
+					CrashTest* somePointer = NULL;
+					somePointer->someMethod();
+
+				break;}
+				case 3:{
+					//dereferencing a pointer to deleted memory.
+					CrashTest* somePointer = NULL;
+					somePointer = new CrashTest();
+					delete somePointer;
+
+					CrashTest someThing = (*somePointer);
+
+				break;}
+				case 4:{
+					//trying to access methods of a pointer to deleted memory (of object type, has methods)
+					CrashTest* somePointer = NULL;
+					somePointer = new CrashTest();
+					delete somePointer;
+					
+					somePointer->someMethod();
+					
+				break;}
+				case 5:{
+					crashableEntityRef = NULL;
+
+					crashableEntityReferTime = gpGlobals->time + 1.0f;
+					crashableEntityReferMode = 5;
+
+					easyForcePrintLine("You are doomed in T minus 1 seconds.");
+
+				break;}
+				case 6:{
+					crashableEntityRef = NULL;
+
+					crashableEntityReferTime = gpGlobals->time + 1.0f;
+					crashableEntityReferMode = 6;
+					
+					easyForcePrintLine("You are doomed in T minus 1 seconds.");
+				break;}
+				case 7:{
+					crashableEntityRef = CBaseEntity::CreateManual("monster_chumtoad", Vector(0,0,0), Vector(0,0,0), NULL);
+					UTIL_Remove(crashableEntityRef);
+
+					crashableEntityReferTime = gpGlobals->time + 1.0f;
+					crashableEntityReferMode = 5;
+					
+					easyForcePrintLine("You are doomed in T minus 1 seconds.");
+				break;}
+				case 8:{
+					crashableEntityRef = CBaseEntity::CreateManual("monster_chumtoad", Vector(0,0,0), Vector(0,0,0), NULL);
+					UTIL_Remove(crashableEntityRef);
+
+					crashableEntityReferTime = gpGlobals->time + 1.0f;
+					crashableEntityReferMode = 6;
+					
+					easyForcePrintLine("You are doomed in T minus 1 seconds.");
+				break;}
+				default:{
+					easyForcePrintLine("***Crash mode unrecognized.  Try a value from 0 to 8 as of the time of writing.");
+				break;}
+
+				}//END OF switch
+
+			}catch(int){
+				easyForcePrintLine("***I don\'t know how to crash like that.  Yes, really.  <invalid mode>");
+			}
+
+		}else{
+			easyForcePrintLine("Tell me how to crash! enter a number after that command.");
+		}
+
+
 
 	}else if( FStrEq(pcmdRefinedRef, "tpnode") || FStrEq(pcmdRefinedRef, "teleporttonode") || FStrEq(pcmdRefinedRef, "nodeteleport") || FStrEq(pcmdRefinedRef, "nodetp")){
 	
@@ -4894,6 +5006,35 @@ void PlayerPostThink( edict_t *pEntity )
 		//called already.
 		playQueued = FALSE;
 	}
+
+
+
+	if(crashableEntityReferTime > 0 && gpGlobals->time >= crashableEntityReferTime){
+		switch(crashableEntityReferMode){
+		case 5:{
+			//dereferencing a NULL entity.
+			const CBaseEntity& entRef = (*crashableEntityRef);
+		break;}
+		case 6:{
+			//accessing methods of a NULL entity.
+			crashableEntityRef->Spawn();
+		break;}
+		case 7:{
+			//dereferencing a deleted entity.
+			const CBaseEntity& entRef = (*crashableEntityRef);
+		break;}
+		case 8:{
+			//accessing methods of a deleted entity.
+			crashableEntityRef->Spawn();
+		break;}
+
+		}//END Of switch
+
+		crashableEntityReferTime = -1;  //.... what?
+	}//END OF crashable check
+
+
+
 
 
 

@@ -48,132 +48,135 @@
 #define muteTempEntityGroundHitSound_ID 46
 #define muteRicochetSound_ID 47
 #define mutePlayerWeaponFire_ID 48
-#define seeMonsterHealth_ID 49
-#define event5011Allowed_ID 50
-#define event5021Allowed_ID 51
-#define event5031Allowed_ID 52
-#define event5002Allowed_ID 53
-#define event5004Allowed_ID 54
-#define eventsAreFabulous_ID 55
-#define glockOldReloadLogic_ID 56
-#define testVar_ID 57
-#define painArrowColorMode_ID 58
-#define painFlashColorMode_ID 59
-#define allowPainDrawWithoutSuit_ID 60
-#define drownDrawPainMode_ID 61
-#define firstPersonIdleDelayMin_ID 62
-#define firstPersonIdleDelayMax_ID 63
-#define forceDrawBatteryNumber_ID 64
-#define canShowWeaponSelectAtDeath_ID 65
-#define endlessFlashlightBattery_ID 66
-#define preE3UsesFailColors_ID 67
-#define E3UsesFailColors_ID 68
-#define preE3ShowsDamageIcons_ID 69
-#define E3ShowsDamageIcons_ID 70
-#define playerForceCrossbowMode_ID 71
-#define tripmineAnimWaitsForFinish_ID 72
-#define revolverLaserScope_ID 73
-#define python_zoomfov_ID 74
-#define crossbow_zoomfov_ID 75
-#define canApplyDefaultFOV_ID 76
-#define auto_adjust_fov_aspect_ID 77
-#define auto_adjust_zoomfov_ID 78
-#define cheat_infiniteclip_ID 79
-#define cheat_infiniteammo_ID 80
-#define cheat_minimumfiredelay_ID 81
-#define cheat_minimumfiredelaycustom_ID 82
-#define cheat_nogaussrecoil_ID 83
-#define gaussRecoilSendsUpInSP_ID 84
-#define raveEffectSpawnInterval_ID 85
-#define fogTest_ID 86
-#define useAlphaCrosshair_ID 87
-#define allowAlphaCrosshairWithoutGuns_ID 88
-#define alphaCrosshairBlockedOnFrozen_ID 89
-#define mirrorsReflectOnlyNPCs_ID 90
-#define mirrorsDoNotReflectPlayer_ID 91
-#define germanCensorship_ID 92
-#define egonEffectsMode_ID 93
-#define egonHitCloud_ID 94
-#define enableModPrintouts_ID 95
-#define handGrenadePickupYieldsOne_ID 96
-#define skipTFDamageTextures_ID 97
-#define weaponSelectSoundPlayOnMousewheel_ID 98
-#define timedDamageDeathRemoveMode_ID 99
-#define weaponSelectUsesReloadSounds_ID 100
-#define glockUseLastBulletAnim_ID 101
-#define playerBarnacleVictimViewOffset_ID 102
-#define trailTypeTest_ID 103
-#define hornetTrail_ID 104
-#define hornetTrailSolidColor_ID 105
-#define hornetDeathModEasy_ID 106
-#define hornetDeathModMedium_ID 107
-#define hornetDeathModHard_ID 108
-#define hornetZoomPuff_ID 109
-#define hornetSpiral_ID 110
-#define hornetSpeedMulti_ID 111
-#define hornetSpeedDartMulti_ID 112
-#define rocketTrailAlphaInterval_ID 113
-#define rocketTrailAlphaScale_ID 114
-#define rocketSkipIgnite_ID 115
-#define gauss_primaryonly_ID 116
-#define gauss_reflectdealsdamage_ID 117
-#define gauss_chargeanimdelay_ID 118
-#define gauss_chargeworkdelay_ID 119
-#define gauss_secondarychargetimereq_ID 120
-#define gauss_primaryreflects_ID 121
-#define gauss_primarypierces_ID 122
-#define gauss_secondaryreflects_ID 123
-#define gauss_secondarypierces_ID 124
-#define gauss_primarypunchthrough_ID 125
-#define gauss_secondarypunchthrough_ID 126
-#define gauss_betweenattackdelay_ID 127
-#define gauss_secondarychargemindelay_ID 128
-#define gauss_chargeMaxAmmo_SP_ID 129
-#define gauss_chargeMaxAmmo_MP_ID 130
-#define gauss_chargeInterval_SP_ID 131
-#define gauss_chargeInterval_MP_ID 132
-#define painFlashDmgMin_ID 133
-#define painFlashDmgExMult_ID 134
-#define painFlashCumulativeMinDrowning_ID 135
-#define painFlashCumulativeMax_ID 136
-#define painFlashDrawOpacityMax_ID 137
-#define painArrowDrawOpacityMin_ID 138
-#define painArrowDrawOpacityMax_ID 139
-#define painFlashFadeMult_ID 140
-#define painArrowFadeMult_ID 141
-#define painFlashIgnoreArmor_ID 142
-#define painFlashDirTolerance_ID 143
-#define painArrowCumulativeAppearMin_ID 144
-#define painArrowCumulativeDmgJump_ID 145
-#define painFlashPrintouts_ID 146
-#define itemFlashCumulativeJump_ID 147
-#define itemFlashDrawOpacityMin_ID 148
-#define itemFlashDrawOpacityMax_ID 149
-#define itemFlashFadeMult_ID 150
-#define crossbowReloadSoundDelay_ID 151
-#define crossbowFirePlaysReloadSound_ID 152
-#define iHaveAscended_ID 153
-#define drawViewModel_ID 154
-#define drawHUD_ID 155
-#define playerBulletHitEffectForceServer_ID 156
-#define playerWeaponForceSpreadMode_ID 157
-#define viewModelPrintouts_ID 158
-#define viewModelSyncFixPrintouts_ID 159
-#define textureHitSoundPrintouts_ID 160
-#define holsterAnims_ID 161
-#define playerWeaponTracerMode_ID 162
-#define healthcolor_fullRedMin_ID 163
-#define healthcolor_brightness_ID 164
-#define healthcolor_yellowMark_ID 165
-#define cl_drawExtraZeros_ID 166
-#define hideDamage_ID 167
-#define timedDamage_brightnessMax_ID 168
-#define timedDamage_brightnessMin_ID 169
-#define timedDamage_brightnessCap_ID 170
-#define timedDamage_brightnessFloor_ID 171
-#define timedDamage_flashSpeed_ID 172
-#define timedDamage_debug_ID 173
-#define myRocketsAreBarney_ID 174
+#define muteCrowbarSounds_ID 49
+#define seeMonsterHealth_ID 50
+#define event5011Allowed_ID 51
+#define event5021Allowed_ID 52
+#define event5031Allowed_ID 53
+#define event5002Allowed_ID 54
+#define event5004Allowed_ID 55
+#define eventsAreFabulous_ID 56
+#define glockOldReloadLogic_ID 57
+#define testVar_ID 58
+#define painArrowColorMode_ID 59
+#define painFlashColorMode_ID 60
+#define allowPainDrawWithoutSuit_ID 61
+#define drownDrawPainMode_ID 62
+#define firstPersonIdleDelayMin_ID 63
+#define firstPersonIdleDelayMax_ID 64
+#define forceDrawBatteryNumber_ID 65
+#define canShowWeaponSelectAtDeath_ID 66
+#define endlessFlashlightBattery_ID 67
+#define preE3UsesFailColors_ID 68
+#define E3UsesFailColors_ID 69
+#define preE3ShowsDamageIcons_ID 70
+#define E3ShowsDamageIcons_ID 71
+#define playerCrossbowMode_ID 72
+#define tripmineAnimWaitsForFinish_ID 73
+#define revolverLaserScope_ID 74
+#define python_zoomfov_ID 75
+#define crossbow_zoomfov_ID 76
+#define canApplyDefaultFOV_ID 77
+#define auto_adjust_fov_aspect_ID 78
+#define auto_adjust_zoomfov_ID 79
+#define cheat_infiniteclip_ID 80
+#define cheat_infiniteammo_ID 81
+#define cheat_minimumfiredelay_ID 82
+#define cheat_minimumfiredelaycustom_ID 83
+#define cheat_nogaussrecoil_ID 84
+#define gaussRecoilSendsUpInSP_ID 85
+#define raveEffectSpawnInterval_ID 86
+#define fogTest_ID 87
+#define useAlphaCrosshair_ID 88
+#define allowAlphaCrosshairWithoutGuns_ID 89
+#define alphaCrosshairBlockedOnFrozen_ID 90
+#define mirrorsReflectOnlyNPCs_ID 91
+#define mirrorsDoNotReflectPlayer_ID 92
+#define germanCensorship_ID 93
+#define egonEffectsMode_ID 94
+#define egonHitCloud_ID 95
+#define enableModPrintouts_ID 96
+#define handGrenadePickupYieldsOne_ID 97
+#define skipTFDamageTextures_ID 98
+#define weaponSelectSoundPlayOnMousewheel_ID 99
+#define timedDamageDeathRemoveMode_ID 100
+#define weaponSelectUsesReloadSounds_ID 101
+#define glockUseLastBulletAnim_ID 102
+#define playerBarnacleVictimViewOffset_ID 103
+#define trailTypeTest_ID 104
+#define hornetTrail_ID 105
+#define hornetTrailSolidColor_ID 106
+#define hornetDeathModEasy_ID 107
+#define hornetDeathModMedium_ID 108
+#define hornetDeathModHard_ID 109
+#define hornetZoomPuff_ID 110
+#define hornetSpiral_ID 111
+#define hornetSpeedMulti_ID 112
+#define hornetSpeedDartMulti_ID 113
+#define rocketTrailAlphaInterval_ID 114
+#define rocketTrailAlphaScale_ID 115
+#define rocketSkipIgnite_ID 116
+#define gauss_primaryonly_ID 117
+#define gauss_reflectdealsdamage_ID 118
+#define gauss_chargeanimdelay_ID 119
+#define gauss_chargeworkdelay_ID 120
+#define gauss_secondarychargetimereq_ID 121
+#define gauss_primaryreflects_ID 122
+#define gauss_primarypierces_ID 123
+#define gauss_secondaryreflects_ID 124
+#define gauss_secondarypierces_ID 125
+#define gauss_primarypunchthrough_ID 126
+#define gauss_secondarypunchthrough_ID 127
+#define gauss_betweenattackdelay_ID 128
+#define gauss_secondarychargemindelay_ID 129
+#define gauss_chargeMaxAmmo_SP_ID 130
+#define gauss_chargeMaxAmmo_MP_ID 131
+#define gauss_chargeInterval_SP_ID 132
+#define gauss_chargeInterval_MP_ID 133
+#define painFlashDmgMin_ID 134
+#define painFlashDmgExMult_ID 135
+#define painFlashCumulativeMinDrowning_ID 136
+#define painFlashCumulativeMax_ID 137
+#define painFlashDrawOpacityMax_ID 138
+#define painArrowDrawOpacityMin_ID 139
+#define painArrowDrawOpacityMax_ID 140
+#define painFlashFadeMult_ID 141
+#define painArrowFadeMult_ID 142
+#define painFlashIgnoreArmor_ID 143
+#define painFlashDirTolerance_ID 144
+#define painArrowCumulativeAppearMin_ID 145
+#define painArrowCumulativeDmgJump_ID 146
+#define painFlashPrintouts_ID 147
+#define itemFlashCumulativeJump_ID 148
+#define itemFlashDrawOpacityMin_ID 149
+#define itemFlashDrawOpacityMax_ID 150
+#define itemFlashFadeMult_ID 151
+#define crossbowReloadSoundDelay_ID 152
+#define crossbowFirePlaysReloadSound_ID 153
+#define iHaveAscended_ID 154
+#define drawViewModel_ID 155
+#define drawHUD_ID 156
+#define playerBulletHitEffectForceServer_ID 157
+#define forceAllowServersideTextureSounds_ID 158
+#define playerWeaponSpreadMode_ID 159
+#define viewModelPrintouts_ID 160
+#define viewModelSyncFixPrintouts_ID 161
+#define textureHitSoundPrintouts_ID 162
+#define holsterAnims_ID 163
+#define playerWeaponTracerMode_ID 164
+#define decalTracerExclusivity_ID 165
+#define healthcolor_fullRedMin_ID 166
+#define healthcolor_brightness_ID 167
+#define healthcolor_yellowMark_ID 168
+#define cl_drawExtraZeros_ID 169
+#define hideDamage_ID 170
+#define timedDamage_brightnessMax_ID 171
+#define timedDamage_brightnessMin_ID 172
+#define timedDamage_brightnessCap_ID 173
+#define timedDamage_brightnessFloor_ID 174
+#define timedDamage_flashSpeed_ID 175
+#define timedDamage_debug_ID 176
+#define myRocketsAreBarney_ID 177
 
 
 #define DEFAULT_gruntsCanHaveMP5Grenade 0
@@ -246,6 +249,7 @@
 #define DEFAULT_houndeyeAttackMode 1
 #define DEFAULT_muteRicochetSound 0
 #define DEFAULT_mutePlayerWeaponFire 0
+#define DEFAULT_muteCrowbarSounds 0
 #define DEFAULT_scientistHealNPC 0
 #define DEFAULT_scientistHealNPCDebug 0
 #define DEFAULT_bulletholeAlertRange 300
@@ -324,8 +328,8 @@
 #define DEFAULT_E3UsesFailColors 1
 #define DEFAULT_preE3ShowsDamageIcons 1
 #define DEFAULT_E3ShowsDamageIcons 1
-#define DEFAULT_playerForceCrossbowMode 1
-#define DEFAULT_hassassinForceCrossbowMode 1
+#define DEFAULT_playerCrossbowMode 1
+#define DEFAULT_hassassinCrossbowMode 1
 #define DEFAULT_tripmineAnimWaitsForFinish 0
 #define DEFAULT_revolverLaserScope 1
 #define DEFAULT_python_zoomfov 0
@@ -600,7 +604,8 @@
 #define DEFAULT_drawHUD 1
 #define DEFAULT_disablePauseSinglePlayer 0
 #define DEFAULT_playerBulletHitEffectForceServer 0
-#define DEFAULT_playerWeaponForceSpreadMode 0
+#define DEFAULT_forceAllowServersideTextureSounds 0
+#define DEFAULT_playerWeaponSpreadMode 0
 #define DEFAULT_monsterAIForceFindDistance 0
 #define DEFAULT_baseEntityDamagePushNormalMulti 0
 #define DEFAULT_baseEntityDamagePushVerticalBoost 0
@@ -626,7 +631,11 @@
 #define DEFAULT_trackchangePrintouts 0
 #define DEFAULT_trackTrainPrintouts 0
 #define DEFAULT_holsterAnims 1
-#define DEFAULT_playerWeaponTracerMode 1
+#define DEFAULT_playerWeaponTracerMode 5
+#define DEFAULT_monsterWeaponTracerMode 2
+#define DEFAULT_decalTracerExclusivity 0
+#define DEFAULT_monsterToPlayerHitgroupSpecial 0
+#define DEFAULT_multiplayerCrowbarHitSoundMode 1
 #define DEFAULT_healthcolor_fullRedMin 15
 #define DEFAULT_healthcolor_brightness 125
 #define DEFAULT_healthcolor_yellowMark 70
@@ -653,6 +662,7 @@
 #define DEFAULT_kingpinDebug 0
 #define DEFAULT_minimumRespawnDelay 2
 #define DEFAULT_r_glowshell_debug 0
+#define DEFAULT_cl_viewpunch 1
 
 #define EASY_CVAR_HASH_MASS\
 	EASY_CVAR_HASH(strobeDurationMin, 0)\
@@ -704,132 +714,135 @@
 	EASY_CVAR_HASH(muteTempEntityGroundHitSound, 46)\
 	EASY_CVAR_HASH(muteRicochetSound, 47)\
 	EASY_CVAR_HASH(mutePlayerWeaponFire, 48)\
-	EASY_CVAR_HASH(seeMonsterHealth, 49)\
-	EASY_CVAR_HASH(event5011Allowed, 50)\
-	EASY_CVAR_HASH(event5021Allowed, 51)\
-	EASY_CVAR_HASH(event5031Allowed, 52)\
-	EASY_CVAR_HASH(event5002Allowed, 53)\
-	EASY_CVAR_HASH(event5004Allowed, 54)\
-	EASY_CVAR_HASH(eventsAreFabulous, 55)\
-	EASY_CVAR_HASH(glockOldReloadLogic, 56)\
-	EASY_CVAR_HASH(testVar, 57)\
-	EASY_CVAR_HASH(painArrowColorMode, 58)\
-	EASY_CVAR_HASH(painFlashColorMode, 59)\
-	EASY_CVAR_HASH(allowPainDrawWithoutSuit, 60)\
-	EASY_CVAR_HASH(drownDrawPainMode, 61)\
-	EASY_CVAR_HASH(firstPersonIdleDelayMin, 62)\
-	EASY_CVAR_HASH(firstPersonIdleDelayMax, 63)\
-	EASY_CVAR_HASH(forceDrawBatteryNumber, 64)\
-	EASY_CVAR_HASH(canShowWeaponSelectAtDeath, 65)\
-	EASY_CVAR_HASH(endlessFlashlightBattery, 66)\
-	EASY_CVAR_HASH(preE3UsesFailColors, 67)\
-	EASY_CVAR_HASH(E3UsesFailColors, 68)\
-	EASY_CVAR_HASH(preE3ShowsDamageIcons, 69)\
-	EASY_CVAR_HASH(E3ShowsDamageIcons, 70)\
-	EASY_CVAR_HASH(playerForceCrossbowMode, 71)\
-	EASY_CVAR_HASH(tripmineAnimWaitsForFinish, 72)\
-	EASY_CVAR_HASH(revolverLaserScope, 73)\
-	EASY_CVAR_HASH(python_zoomfov, 74)\
-	EASY_CVAR_HASH(crossbow_zoomfov, 75)\
-	EASY_CVAR_HASH(canApplyDefaultFOV, 76)\
-	EASY_CVAR_HASH(auto_adjust_fov_aspect, 77)\
-	EASY_CVAR_HASH(auto_adjust_zoomfov, 78)\
-	EASY_CVAR_HASH(cheat_infiniteclip, 79)\
-	EASY_CVAR_HASH(cheat_infiniteammo, 80)\
-	EASY_CVAR_HASH(cheat_minimumfiredelay, 81)\
-	EASY_CVAR_HASH(cheat_minimumfiredelaycustom, 82)\
-	EASY_CVAR_HASH(cheat_nogaussrecoil, 83)\
-	EASY_CVAR_HASH(gaussRecoilSendsUpInSP, 84)\
-	EASY_CVAR_HASH(raveEffectSpawnInterval, 85)\
-	EASY_CVAR_HASH(fogTest, 86)\
-	EASY_CVAR_HASH(useAlphaCrosshair, 87)\
-	EASY_CVAR_HASH(allowAlphaCrosshairWithoutGuns, 88)\
-	EASY_CVAR_HASH(alphaCrosshairBlockedOnFrozen, 89)\
-	EASY_CVAR_HASH(mirrorsReflectOnlyNPCs, 90)\
-	EASY_CVAR_HASH(mirrorsDoNotReflectPlayer, 91)\
-	EASY_CVAR_HASH(germanCensorship, 92)\
-	EASY_CVAR_HASH(egonEffectsMode, 93)\
-	EASY_CVAR_HASH(egonHitCloud, 94)\
-	EASY_CVAR_HASH(enableModPrintouts, 95)\
-	EASY_CVAR_HASH(handGrenadePickupYieldsOne, 96)\
-	EASY_CVAR_HASH(skipTFDamageTextures, 97)\
-	EASY_CVAR_HASH(weaponSelectSoundPlayOnMousewheel, 98)\
-	EASY_CVAR_HASH(timedDamageDeathRemoveMode, 99)\
-	EASY_CVAR_HASH(weaponSelectUsesReloadSounds, 100)\
-	EASY_CVAR_HASH(glockUseLastBulletAnim, 101)\
-	EASY_CVAR_HASH(playerBarnacleVictimViewOffset, 102)\
-	EASY_CVAR_HASH(trailTypeTest, 103)\
-	EASY_CVAR_HASH(hornetTrail, 104)\
-	EASY_CVAR_HASH(hornetTrailSolidColor, 105)\
-	EASY_CVAR_HASH(hornetDeathModEasy, 106)\
-	EASY_CVAR_HASH(hornetDeathModMedium, 107)\
-	EASY_CVAR_HASH(hornetDeathModHard, 108)\
-	EASY_CVAR_HASH(hornetZoomPuff, 109)\
-	EASY_CVAR_HASH(hornetSpiral, 110)\
-	EASY_CVAR_HASH(hornetSpeedMulti, 111)\
-	EASY_CVAR_HASH(hornetSpeedDartMulti, 112)\
-	EASY_CVAR_HASH(rocketTrailAlphaInterval, 113)\
-	EASY_CVAR_HASH(rocketTrailAlphaScale, 114)\
-	EASY_CVAR_HASH(rocketSkipIgnite, 115)\
-	EASY_CVAR_HASH(gauss_primaryonly, 116)\
-	EASY_CVAR_HASH(gauss_reflectdealsdamage, 117)\
-	EASY_CVAR_HASH(gauss_chargeanimdelay, 118)\
-	EASY_CVAR_HASH(gauss_chargeworkdelay, 119)\
-	EASY_CVAR_HASH(gauss_secondarychargetimereq, 120)\
-	EASY_CVAR_HASH(gauss_primaryreflects, 121)\
-	EASY_CVAR_HASH(gauss_primarypierces, 122)\
-	EASY_CVAR_HASH(gauss_secondaryreflects, 123)\
-	EASY_CVAR_HASH(gauss_secondarypierces, 124)\
-	EASY_CVAR_HASH(gauss_primarypunchthrough, 125)\
-	EASY_CVAR_HASH(gauss_secondarypunchthrough, 126)\
-	EASY_CVAR_HASH(gauss_betweenattackdelay, 127)\
-	EASY_CVAR_HASH(gauss_secondarychargemindelay, 128)\
-	EASY_CVAR_HASH(gauss_chargeMaxAmmo_SP, 129)\
-	EASY_CVAR_HASH(gauss_chargeMaxAmmo_MP, 130)\
-	EASY_CVAR_HASH(gauss_chargeInterval_SP, 131)\
-	EASY_CVAR_HASH(gauss_chargeInterval_MP, 132)\
-	EASY_CVAR_HASH(painFlashDmgMin, 133)\
-	EASY_CVAR_HASH(painFlashDmgExMult, 134)\
-	EASY_CVAR_HASH(painFlashCumulativeMinDrowning, 135)\
-	EASY_CVAR_HASH(painFlashCumulativeMax, 136)\
-	EASY_CVAR_HASH(painFlashDrawOpacityMax, 137)\
-	EASY_CVAR_HASH(painArrowDrawOpacityMin, 138)\
-	EASY_CVAR_HASH(painArrowDrawOpacityMax, 139)\
-	EASY_CVAR_HASH(painFlashFadeMult, 140)\
-	EASY_CVAR_HASH(painArrowFadeMult, 141)\
-	EASY_CVAR_HASH(painFlashIgnoreArmor, 142)\
-	EASY_CVAR_HASH(painFlashDirTolerance, 143)\
-	EASY_CVAR_HASH(painArrowCumulativeAppearMin, 144)\
-	EASY_CVAR_HASH(painArrowCumulativeDmgJump, 145)\
-	EASY_CVAR_HASH(painFlashPrintouts, 146)\
-	EASY_CVAR_HASH(itemFlashCumulativeJump, 147)\
-	EASY_CVAR_HASH(itemFlashDrawOpacityMin, 148)\
-	EASY_CVAR_HASH(itemFlashDrawOpacityMax, 149)\
-	EASY_CVAR_HASH(itemFlashFadeMult, 150)\
-	EASY_CVAR_HASH(crossbowReloadSoundDelay, 151)\
-	EASY_CVAR_HASH(crossbowFirePlaysReloadSound, 152)\
-	EASY_CVAR_HASH(iHaveAscended, 153)\
-	EASY_CVAR_HASH(drawViewModel, 154)\
-	EASY_CVAR_HASH(drawHUD, 155)\
-	EASY_CVAR_HASH(playerBulletHitEffectForceServer, 156)\
-	EASY_CVAR_HASH(playerWeaponForceSpreadMode, 157)\
-	EASY_CVAR_HASH(viewModelPrintouts, 158)\
-	EASY_CVAR_HASH(viewModelSyncFixPrintouts, 159)\
-	EASY_CVAR_HASH(textureHitSoundPrintouts, 160)\
-	EASY_CVAR_HASH(holsterAnims, 161)\
-	EASY_CVAR_HASH(playerWeaponTracerMode, 162)\
-	EASY_CVAR_HASH(healthcolor_fullRedMin, 163)\
-	EASY_CVAR_HASH(healthcolor_brightness, 164)\
-	EASY_CVAR_HASH(healthcolor_yellowMark, 165)\
-	EASY_CVAR_HASH(cl_drawExtraZeros, 166)\
-	EASY_CVAR_HASH(hideDamage, 167)\
-	EASY_CVAR_HASH(timedDamage_brightnessMax, 168)\
-	EASY_CVAR_HASH(timedDamage_brightnessMin, 169)\
-	EASY_CVAR_HASH(timedDamage_brightnessCap, 170)\
-	EASY_CVAR_HASH(timedDamage_brightnessFloor, 171)\
-	EASY_CVAR_HASH(timedDamage_flashSpeed, 172)\
-	EASY_CVAR_HASH(timedDamage_debug, 173)\
-	EASY_CVAR_HASH(myRocketsAreBarney, 174)\
+	EASY_CVAR_HASH(muteCrowbarSounds, 49)\
+	EASY_CVAR_HASH(seeMonsterHealth, 50)\
+	EASY_CVAR_HASH(event5011Allowed, 51)\
+	EASY_CVAR_HASH(event5021Allowed, 52)\
+	EASY_CVAR_HASH(event5031Allowed, 53)\
+	EASY_CVAR_HASH(event5002Allowed, 54)\
+	EASY_CVAR_HASH(event5004Allowed, 55)\
+	EASY_CVAR_HASH(eventsAreFabulous, 56)\
+	EASY_CVAR_HASH(glockOldReloadLogic, 57)\
+	EASY_CVAR_HASH(testVar, 58)\
+	EASY_CVAR_HASH(painArrowColorMode, 59)\
+	EASY_CVAR_HASH(painFlashColorMode, 60)\
+	EASY_CVAR_HASH(allowPainDrawWithoutSuit, 61)\
+	EASY_CVAR_HASH(drownDrawPainMode, 62)\
+	EASY_CVAR_HASH(firstPersonIdleDelayMin, 63)\
+	EASY_CVAR_HASH(firstPersonIdleDelayMax, 64)\
+	EASY_CVAR_HASH(forceDrawBatteryNumber, 65)\
+	EASY_CVAR_HASH(canShowWeaponSelectAtDeath, 66)\
+	EASY_CVAR_HASH(endlessFlashlightBattery, 67)\
+	EASY_CVAR_HASH(preE3UsesFailColors, 68)\
+	EASY_CVAR_HASH(E3UsesFailColors, 69)\
+	EASY_CVAR_HASH(preE3ShowsDamageIcons, 70)\
+	EASY_CVAR_HASH(E3ShowsDamageIcons, 71)\
+	EASY_CVAR_HASH(playerCrossbowMode, 72)\
+	EASY_CVAR_HASH(tripmineAnimWaitsForFinish, 73)\
+	EASY_CVAR_HASH(revolverLaserScope, 74)\
+	EASY_CVAR_HASH(python_zoomfov, 75)\
+	EASY_CVAR_HASH(crossbow_zoomfov, 76)\
+	EASY_CVAR_HASH(canApplyDefaultFOV, 77)\
+	EASY_CVAR_HASH(auto_adjust_fov_aspect, 78)\
+	EASY_CVAR_HASH(auto_adjust_zoomfov, 79)\
+	EASY_CVAR_HASH(cheat_infiniteclip, 80)\
+	EASY_CVAR_HASH(cheat_infiniteammo, 81)\
+	EASY_CVAR_HASH(cheat_minimumfiredelay, 82)\
+	EASY_CVAR_HASH(cheat_minimumfiredelaycustom, 83)\
+	EASY_CVAR_HASH(cheat_nogaussrecoil, 84)\
+	EASY_CVAR_HASH(gaussRecoilSendsUpInSP, 85)\
+	EASY_CVAR_HASH(raveEffectSpawnInterval, 86)\
+	EASY_CVAR_HASH(fogTest, 87)\
+	EASY_CVAR_HASH(useAlphaCrosshair, 88)\
+	EASY_CVAR_HASH(allowAlphaCrosshairWithoutGuns, 89)\
+	EASY_CVAR_HASH(alphaCrosshairBlockedOnFrozen, 90)\
+	EASY_CVAR_HASH(mirrorsReflectOnlyNPCs, 91)\
+	EASY_CVAR_HASH(mirrorsDoNotReflectPlayer, 92)\
+	EASY_CVAR_HASH(germanCensorship, 93)\
+	EASY_CVAR_HASH(egonEffectsMode, 94)\
+	EASY_CVAR_HASH(egonHitCloud, 95)\
+	EASY_CVAR_HASH(enableModPrintouts, 96)\
+	EASY_CVAR_HASH(handGrenadePickupYieldsOne, 97)\
+	EASY_CVAR_HASH(skipTFDamageTextures, 98)\
+	EASY_CVAR_HASH(weaponSelectSoundPlayOnMousewheel, 99)\
+	EASY_CVAR_HASH(timedDamageDeathRemoveMode, 100)\
+	EASY_CVAR_HASH(weaponSelectUsesReloadSounds, 101)\
+	EASY_CVAR_HASH(glockUseLastBulletAnim, 102)\
+	EASY_CVAR_HASH(playerBarnacleVictimViewOffset, 103)\
+	EASY_CVAR_HASH(trailTypeTest, 104)\
+	EASY_CVAR_HASH(hornetTrail, 105)\
+	EASY_CVAR_HASH(hornetTrailSolidColor, 106)\
+	EASY_CVAR_HASH(hornetDeathModEasy, 107)\
+	EASY_CVAR_HASH(hornetDeathModMedium, 108)\
+	EASY_CVAR_HASH(hornetDeathModHard, 109)\
+	EASY_CVAR_HASH(hornetZoomPuff, 110)\
+	EASY_CVAR_HASH(hornetSpiral, 111)\
+	EASY_CVAR_HASH(hornetSpeedMulti, 112)\
+	EASY_CVAR_HASH(hornetSpeedDartMulti, 113)\
+	EASY_CVAR_HASH(rocketTrailAlphaInterval, 114)\
+	EASY_CVAR_HASH(rocketTrailAlphaScale, 115)\
+	EASY_CVAR_HASH(rocketSkipIgnite, 116)\
+	EASY_CVAR_HASH(gauss_primaryonly, 117)\
+	EASY_CVAR_HASH(gauss_reflectdealsdamage, 118)\
+	EASY_CVAR_HASH(gauss_chargeanimdelay, 119)\
+	EASY_CVAR_HASH(gauss_chargeworkdelay, 120)\
+	EASY_CVAR_HASH(gauss_secondarychargetimereq, 121)\
+	EASY_CVAR_HASH(gauss_primaryreflects, 122)\
+	EASY_CVAR_HASH(gauss_primarypierces, 123)\
+	EASY_CVAR_HASH(gauss_secondaryreflects, 124)\
+	EASY_CVAR_HASH(gauss_secondarypierces, 125)\
+	EASY_CVAR_HASH(gauss_primarypunchthrough, 126)\
+	EASY_CVAR_HASH(gauss_secondarypunchthrough, 127)\
+	EASY_CVAR_HASH(gauss_betweenattackdelay, 128)\
+	EASY_CVAR_HASH(gauss_secondarychargemindelay, 129)\
+	EASY_CVAR_HASH(gauss_chargeMaxAmmo_SP, 130)\
+	EASY_CVAR_HASH(gauss_chargeMaxAmmo_MP, 131)\
+	EASY_CVAR_HASH(gauss_chargeInterval_SP, 132)\
+	EASY_CVAR_HASH(gauss_chargeInterval_MP, 133)\
+	EASY_CVAR_HASH(painFlashDmgMin, 134)\
+	EASY_CVAR_HASH(painFlashDmgExMult, 135)\
+	EASY_CVAR_HASH(painFlashCumulativeMinDrowning, 136)\
+	EASY_CVAR_HASH(painFlashCumulativeMax, 137)\
+	EASY_CVAR_HASH(painFlashDrawOpacityMax, 138)\
+	EASY_CVAR_HASH(painArrowDrawOpacityMin, 139)\
+	EASY_CVAR_HASH(painArrowDrawOpacityMax, 140)\
+	EASY_CVAR_HASH(painFlashFadeMult, 141)\
+	EASY_CVAR_HASH(painArrowFadeMult, 142)\
+	EASY_CVAR_HASH(painFlashIgnoreArmor, 143)\
+	EASY_CVAR_HASH(painFlashDirTolerance, 144)\
+	EASY_CVAR_HASH(painArrowCumulativeAppearMin, 145)\
+	EASY_CVAR_HASH(painArrowCumulativeDmgJump, 146)\
+	EASY_CVAR_HASH(painFlashPrintouts, 147)\
+	EASY_CVAR_HASH(itemFlashCumulativeJump, 148)\
+	EASY_CVAR_HASH(itemFlashDrawOpacityMin, 149)\
+	EASY_CVAR_HASH(itemFlashDrawOpacityMax, 150)\
+	EASY_CVAR_HASH(itemFlashFadeMult, 151)\
+	EASY_CVAR_HASH(crossbowReloadSoundDelay, 152)\
+	EASY_CVAR_HASH(crossbowFirePlaysReloadSound, 153)\
+	EASY_CVAR_HASH(iHaveAscended, 154)\
+	EASY_CVAR_HASH(drawViewModel, 155)\
+	EASY_CVAR_HASH(drawHUD, 156)\
+	EASY_CVAR_HASH(playerBulletHitEffectForceServer, 157)\
+	EASY_CVAR_HASH(forceAllowServersideTextureSounds, 158)\
+	EASY_CVAR_HASH(playerWeaponSpreadMode, 159)\
+	EASY_CVAR_HASH(viewModelPrintouts, 160)\
+	EASY_CVAR_HASH(viewModelSyncFixPrintouts, 161)\
+	EASY_CVAR_HASH(textureHitSoundPrintouts, 162)\
+	EASY_CVAR_HASH(holsterAnims, 163)\
+	EASY_CVAR_HASH(playerWeaponTracerMode, 164)\
+	EASY_CVAR_HASH(decalTracerExclusivity, 165)\
+	EASY_CVAR_HASH(healthcolor_fullRedMin, 166)\
+	EASY_CVAR_HASH(healthcolor_brightness, 167)\
+	EASY_CVAR_HASH(healthcolor_yellowMark, 168)\
+	EASY_CVAR_HASH(cl_drawExtraZeros, 169)\
+	EASY_CVAR_HASH(hideDamage, 170)\
+	EASY_CVAR_HASH(timedDamage_brightnessMax, 171)\
+	EASY_CVAR_HASH(timedDamage_brightnessMin, 172)\
+	EASY_CVAR_HASH(timedDamage_brightnessCap, 173)\
+	EASY_CVAR_HASH(timedDamage_brightnessFloor, 174)\
+	EASY_CVAR_HASH(timedDamage_flashSpeed, 175)\
+	EASY_CVAR_HASH(timedDamage_debug, 176)\
+	EASY_CVAR_HASH(myRocketsAreBarney, 177)\
 	DUMMY
 
 #define EASY_CVAR_HIDDEN_LIST\
@@ -900,12 +913,13 @@
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(houndeyeAttackMode, houndeyeattackmode)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(muteRicochetSound, mutericochetsound, 47)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(mutePlayerWeaponFire, muteplayerweaponfire, 48)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(muteCrowbarSounds, mutecrowbarsounds, 49)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(scientistHealNPC, scientisthealnpc)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(scientistHealNPCDebug, scientisthealnpcdebug)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(bulletholeAlertRange, bulletholealertrange)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(fleshhitmakessound, fleshhitmakessound)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(nothingHurts, nothinghurts)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(seeMonsterHealth, seemonsterhealth, 49)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(seeMonsterHealth, seemonsterhealth, 50)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(scientistHealNPCFract, scientisthealnpcfract)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(bullsquidRangeDisabled, bullsquidrangedisabled)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(applyLKPPathFixToAll, applylkppathfixtoall)\
@@ -941,13 +955,13 @@
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(hgruntStrafeAlwaysHasAmmo, hgruntstrafealwayshasammo)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(hgruntBrassEjectForwardOffset, hgruntbrassejectforwardoffset)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(agrunt_muzzleflash, agrunt_muzzleflash)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(event5011Allowed, event5011allowed, 50)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(event5021Allowed, event5021allowed, 51)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(event5031Allowed, event5031allowed, 52)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(event5002Allowed, event5002allowed, 53)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(event5004Allowed, event5004allowed, 54)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(eventsAreFabulous, eventsarefabulous, 55)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(glockOldReloadLogic, glockoldreloadlogic, 56)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(event5011Allowed, event5011allowed, 51)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(event5021Allowed, event5021allowed, 52)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(event5031Allowed, event5031allowed, 53)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(event5002Allowed, event5002allowed, 54)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(event5004Allowed, event5004allowed, 55)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(eventsAreFabulous, eventsarefabulous, 56)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(glockOldReloadLogic, glockoldreloadlogic, 57)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(glockOldReloadLogicBarney, glockoldreloadlogicbarney)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(barneyDroppedGlockAmmoCap, barneydroppedglockammocap)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(drawCollisionBoundsAtDeath, drawcollisionboundsatdeath)\
@@ -960,40 +974,40 @@
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(islaveReviveSelfChance, islavereviveselfchance)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(hgruntRunAndGunDistance, hgruntrunandgundistance)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(hgruntPrintout, hgruntprintout)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(testVar, testvar, 57)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(painArrowColorMode, painarrowcolormode, 58)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(painFlashColorMode, painflashcolormode, 59)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(allowPainDrawWithoutSuit, allowpaindrawwithoutsuit, 60)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(drownDrawPainMode, drowndrawpainmode, 61)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(firstPersonIdleDelayMin, firstpersonidledelaymin, 62)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(firstPersonIdleDelayMax, firstpersonidledelaymax, 63)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(forceDrawBatteryNumber, forcedrawbatterynumber, 64)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(testVar, testvar, 58)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(painArrowColorMode, painarrowcolormode, 59)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(painFlashColorMode, painflashcolormode, 60)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(allowPainDrawWithoutSuit, allowpaindrawwithoutsuit, 61)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(drownDrawPainMode, drowndrawpainmode, 62)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(firstPersonIdleDelayMin, firstpersonidledelaymin, 63)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(firstPersonIdleDelayMax, firstpersonidledelaymax, 64)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(forceDrawBatteryNumber, forcedrawbatterynumber, 65)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(offsetgivedistance, offsetgivedistance)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(offsetgivelookvertical, offsetgivelookvertical)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(canShowWeaponSelectAtDeath, canshowweaponselectatdeath, 65)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(endlessFlashlightBattery, endlessflashlightbattery, 66)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(preE3UsesFailColors, pree3usesfailcolors, 67)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(E3UsesFailColors, e3usesfailcolors, 68)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(preE3ShowsDamageIcons, pree3showsdamageicons, 69)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(E3ShowsDamageIcons, e3showsdamageicons, 70)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(playerForceCrossbowMode, playerforcecrossbowmode, 71)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(hassassinForceCrossbowMode, hassassinforcecrossbowmode)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(tripmineAnimWaitsForFinish, tripmineanimwaitsforfinish, 72)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(revolverLaserScope, revolverlaserscope, 73)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(python_zoomfov, python_zoomfov, 74)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(crossbow_zoomfov, crossbow_zoomfov, 75)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(canApplyDefaultFOV, canapplydefaultfov, 76)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(auto_adjust_fov_aspect, auto_adjust_fov_aspect, 77)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(auto_adjust_zoomfov, auto_adjust_zoomfov, 78)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(cheat_infiniteclip, cheat_infiniteclip, 79)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(cheat_infiniteammo, cheat_infiniteammo, 80)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(cheat_minimumfiredelay, cheat_minimumfiredelay, 81)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(cheat_minimumfiredelaycustom, cheat_minimumfiredelaycustom, 82)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(cheat_nogaussrecoil, cheat_nogaussrecoil, 83)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(canShowWeaponSelectAtDeath, canshowweaponselectatdeath, 66)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(endlessFlashlightBattery, endlessflashlightbattery, 67)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(preE3UsesFailColors, pree3usesfailcolors, 68)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(E3UsesFailColors, e3usesfailcolors, 69)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(preE3ShowsDamageIcons, pree3showsdamageicons, 70)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(E3ShowsDamageIcons, e3showsdamageicons, 71)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(playerCrossbowMode, playercrossbowmode, 72)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(hassassinCrossbowMode, hassassincrossbowmode)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(tripmineAnimWaitsForFinish, tripmineanimwaitsforfinish, 73)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(revolverLaserScope, revolverlaserscope, 74)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(python_zoomfov, python_zoomfov, 75)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(crossbow_zoomfov, crossbow_zoomfov, 76)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(canApplyDefaultFOV, canapplydefaultfov, 77)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(auto_adjust_fov_aspect, auto_adjust_fov_aspect, 78)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(auto_adjust_zoomfov, auto_adjust_zoomfov, 79)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(cheat_infiniteclip, cheat_infiniteclip, 80)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(cheat_infiniteammo, cheat_infiniteammo, 81)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(cheat_minimumfiredelay, cheat_minimumfiredelay, 82)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(cheat_minimumfiredelaycustom, cheat_minimumfiredelaycustom, 83)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(cheat_nogaussrecoil, cheat_nogaussrecoil, 84)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(autoSneaky, autosneaky)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(infiniteLongJumpCharge, infinitelongjumpcharge)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(cheat_touchNeverExplodes, cheat_touchneverexplodes)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(gaussRecoilSendsUpInSP, gaussrecoilsendsupinsp, 84)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(gaussRecoilSendsUpInSP, gaussrecoilsendsupinsp, 85)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(drawDebugPathfinding, drawdebugpathfinding)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(STUcheckDistH, stucheckdisth)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(STUcheckDistV, stucheckdistv)\
@@ -1012,9 +1026,9 @@
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(peopleStrobe, peoplestrobe)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(forceWorldLightOff, forceworldlightoff)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(wildHeads, wildheads)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(raveEffectSpawnInterval, raveeffectspawninterval, 85)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(raveEffectSpawnInterval, raveeffectspawninterval, 86)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(drawBarnacleDebug, drawbarnacledebug)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(fogTest, fogtest, 86)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(fogTest, fogtest, 87)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(sparksAllMulti, sparksallmulti)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(sparksEnvMulti, sparksenvmulti)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(sparksButtonMulti, sparksbuttonmulti)\
@@ -1031,9 +1045,9 @@
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(apacheForceCinBounds, apacheforcecinbounds)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(apacheBottomBoundAdj, apachebottomboundadj)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(apacheInfluence, apacheinfluence)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(useAlphaCrosshair, usealphacrosshair, 87)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(allowAlphaCrosshairWithoutGuns, allowalphacrosshairwithoutguns, 88)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(alphaCrosshairBlockedOnFrozen, alphacrosshairblockedonfrozen, 89)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(useAlphaCrosshair, usealphacrosshair, 88)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(allowAlphaCrosshairWithoutGuns, allowalphacrosshairwithoutguns, 89)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(alphaCrosshairBlockedOnFrozen, alphacrosshairblockedonfrozen, 90)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(hgruntRunAndGunDotMin, hgruntrunandgundotmin)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(panthereyeJumpDotTol, panthereyejumpdottol)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(panthereyePrintout, panthereyeprintout)\
@@ -1044,8 +1058,8 @@
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(friendlyPrintout, friendlyprintout)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(stukaPrintout, stukaprintout)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(timedDamageEndlessOnHard, timeddamageendlessonhard)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(mirrorsReflectOnlyNPCs, mirrorsreflectonlynpcs, 90)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(mirrorsDoNotReflectPlayer, mirrorsdonotreflectplayer, 91)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(mirrorsReflectOnlyNPCs, mirrorsreflectonlynpcs, 91)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(mirrorsDoNotReflectPlayer, mirrorsdonotreflectplayer, 92)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(altSquadRulesRuntime, altsquadrulesruntime)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(hgruntLockStrafeTime, hgruntlockstrafetime)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(ignoreIsolatedNodes, ignoreisolatednodes)\
@@ -1062,21 +1076,21 @@
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(blockAutosaveTrigger, blockautosavetrigger)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(hideNodeGraphRebuildNotice, hidenodegraphrebuildnotice)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(barnacleTongueRetractDelay, barnacletongueretractdelay)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(germanCensorship, germancensorship, 92)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(germanCensorship, germancensorship, 93)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(allowGermanModels, allowgermanmodels)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(germanRobotGibs, germanrobotgibs)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(germanRobotBleedsOil, germanrobotbleedsoil)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(germanRobotDamageDecal, germanrobotdamagedecal)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(germanRobotGibsDecal, germanrobotgibsdecal)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(egonEffectsMode, egoneffectsmode, 93)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(egonHitCloud, egonhitcloud, 94)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(enableModPrintouts, enablemodprintouts, 95)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(handGrenadePickupYieldsOne, handgrenadepickupyieldsone, 96)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(egonEffectsMode, egoneffectsmode, 94)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(egonHitCloud, egonhitcloud, 95)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(enableModPrintouts, enablemodprintouts, 96)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(handGrenadePickupYieldsOne, handgrenadepickupyieldsone, 97)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(handGrenadesUseOldBounceSound, handgrenadesuseoldbouncesound)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(skipTFDamageTextures, skiptfdamagetextures, 97)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(weaponSelectSoundPlayOnMousewheel, weaponselectsoundplayonmousewheel, 98)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(timedDamageDeathRemoveMode, timeddamagedeathremovemode, 99)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(weaponSelectUsesReloadSounds, weaponselectusesreloadsounds, 100)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(skipTFDamageTextures, skiptfdamagetextures, 98)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(weaponSelectSoundPlayOnMousewheel, weaponselectsoundplayonmousewheel, 99)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(timedDamageDeathRemoveMode, timeddamagedeathremovemode, 100)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(weaponSelectUsesReloadSounds, weaponselectusesreloadsounds, 101)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(barnacleCanGib, barnaclecangib)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(sentryCanGib, sentrycangib)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(miniturretCanGib, miniturretcangib)\
@@ -1113,8 +1127,8 @@
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(snarkInheritsPlayerVelocity, snarkinheritsplayervelocity)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(chumtoadInheritsPlayerVelocity, chumtoadinheritsplayervelocity)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(weaponPickupPlaysAnyReloadSounds, weaponpickupplaysanyreloadsounds)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(glockUseLastBulletAnim, glockuselastbulletanim, 101)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(playerBarnacleVictimViewOffset, playerbarnaclevictimviewoffset, 102)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(glockUseLastBulletAnim, glockuselastbulletanim, 102)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(playerBarnacleVictimViewOffset, playerbarnaclevictimviewoffset, 103)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(hgruntMovementDeltaCheck, hgruntmovementdeltacheck)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(hassaultExtraMuzzleFlashRadius, hassaultextramuzzleflashradius)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(hassaultExtraMuzzleFlashBrightness, hassaultextramuzzleflashbrightness)\
@@ -1162,65 +1176,65 @@
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(scientistBravery, scientistbravery)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(barneyUnholsterTime, barneyunholstertime)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(barneyUnholsterAnimChoice, barneyunholsteranimchoice)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(trailTypeTest, trailtypetest, 103)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(hornetTrail, hornettrail, 104)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(hornetTrailSolidColor, hornettrailsolidcolor, 105)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(hornetDeathModEasy, hornetdeathmodeasy, 106)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(hornetDeathModMedium, hornetdeathmodmedium, 107)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(hornetDeathModHard, hornetdeathmodhard, 108)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(hornetZoomPuff, hornetzoompuff, 109)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(hornetSpiral, hornetspiral, 110)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(hornetSpeedMulti, hornetspeedmulti, 111)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(hornetSpeedDartMulti, hornetspeeddartmulti, 112)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(rocketTrailAlphaInterval, rockettrailalphainterval, 113)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(rocketTrailAlphaScale, rockettrailalphascale, 114)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(rocketSkipIgnite, rocketskipignite, 115)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(trailTypeTest, trailtypetest, 104)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(hornetTrail, hornettrail, 105)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(hornetTrailSolidColor, hornettrailsolidcolor, 106)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(hornetDeathModEasy, hornetdeathmodeasy, 107)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(hornetDeathModMedium, hornetdeathmodmedium, 108)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(hornetDeathModHard, hornetdeathmodhard, 109)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(hornetZoomPuff, hornetzoompuff, 110)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(hornetSpiral, hornetspiral, 111)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(hornetSpeedMulti, hornetspeedmulti, 112)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(hornetSpeedDartMulti, hornetspeeddartmulti, 113)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(rocketTrailAlphaInterval, rockettrailalphainterval, 114)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(rocketTrailAlphaScale, rockettrailalphascale, 115)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(rocketSkipIgnite, rocketskipignite, 116)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(agruntHornetRandomness, agrunthornetrandomness)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(hornetSpiralPeriod, hornetspiralperiod)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(hornetSpiralAmplitude, hornetspiralamplitude)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(gauss_primaryonly, gauss_primaryonly, 116)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(gauss_reflectdealsdamage, gauss_reflectdealsdamage, 117)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(gauss_chargeanimdelay, gauss_chargeanimdelay, 118)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(gauss_chargeworkdelay, gauss_chargeworkdelay, 119)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(gauss_secondarychargetimereq, gauss_secondarychargetimereq, 120)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(gauss_primaryreflects, gauss_primaryreflects, 121)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(gauss_primarypierces, gauss_primarypierces, 122)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(gauss_secondaryreflects, gauss_secondaryreflects, 123)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(gauss_secondarypierces, gauss_secondarypierces, 124)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(gauss_primarypunchthrough, gauss_primarypunchthrough, 125)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(gauss_secondarypunchthrough, gauss_secondarypunchthrough, 126)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(gauss_betweenattackdelay, gauss_betweenattackdelay, 127)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(gauss_secondarychargemindelay, gauss_secondarychargemindelay, 128)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(gauss_chargeMaxAmmo_SP, gauss_chargemaxammo_sp, 129)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(gauss_chargeMaxAmmo_MP, gauss_chargemaxammo_mp, 130)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(gauss_chargeInterval_SP, gauss_chargeinterval_sp, 131)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(gauss_chargeInterval_MP, gauss_chargeinterval_mp, 132)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(painFlashDmgMin, painflashdmgmin, 133)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(painFlashDmgExMult, painflashdmgexmult, 134)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(painFlashCumulativeMinDrowning, painflashcumulativemindrowning, 135)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(painFlashCumulativeMax, painflashcumulativemax, 136)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(painFlashDrawOpacityMax, painflashdrawopacitymax, 137)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(painArrowDrawOpacityMin, painarrowdrawopacitymin, 138)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(painArrowDrawOpacityMax, painarrowdrawopacitymax, 139)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(painFlashFadeMult, painflashfademult, 140)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(painArrowFadeMult, painarrowfademult, 141)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(painFlashIgnoreArmor, painflashignorearmor, 142)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(painFlashDirTolerance, painflashdirtolerance, 143)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(painArrowCumulativeAppearMin, painarrowcumulativeappearmin, 144)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(painArrowCumulativeDmgJump, painarrowcumulativedmgjump, 145)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(painFlashPrintouts, painflashprintouts, 146)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(itemFlashCumulativeJump, itemflashcumulativejump, 147)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(itemFlashDrawOpacityMin, itemflashdrawopacitymin, 148)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(itemFlashDrawOpacityMax, itemflashdrawopacitymax, 149)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(itemFlashFadeMult, itemflashfademult, 150)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(gauss_primaryonly, gauss_primaryonly, 117)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(gauss_reflectdealsdamage, gauss_reflectdealsdamage, 118)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(gauss_chargeanimdelay, gauss_chargeanimdelay, 119)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(gauss_chargeworkdelay, gauss_chargeworkdelay, 120)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(gauss_secondarychargetimereq, gauss_secondarychargetimereq, 121)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(gauss_primaryreflects, gauss_primaryreflects, 122)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(gauss_primarypierces, gauss_primarypierces, 123)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(gauss_secondaryreflects, gauss_secondaryreflects, 124)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(gauss_secondarypierces, gauss_secondarypierces, 125)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(gauss_primarypunchthrough, gauss_primarypunchthrough, 126)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(gauss_secondarypunchthrough, gauss_secondarypunchthrough, 127)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(gauss_betweenattackdelay, gauss_betweenattackdelay, 128)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(gauss_secondarychargemindelay, gauss_secondarychargemindelay, 129)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(gauss_chargeMaxAmmo_SP, gauss_chargemaxammo_sp, 130)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(gauss_chargeMaxAmmo_MP, gauss_chargemaxammo_mp, 131)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(gauss_chargeInterval_SP, gauss_chargeinterval_sp, 132)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(gauss_chargeInterval_MP, gauss_chargeinterval_mp, 133)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(painFlashDmgMin, painflashdmgmin, 134)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(painFlashDmgExMult, painflashdmgexmult, 135)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(painFlashCumulativeMinDrowning, painflashcumulativemindrowning, 136)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(painFlashCumulativeMax, painflashcumulativemax, 137)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(painFlashDrawOpacityMax, painflashdrawopacitymax, 138)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(painArrowDrawOpacityMin, painarrowdrawopacitymin, 139)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(painArrowDrawOpacityMax, painarrowdrawopacitymax, 140)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(painFlashFadeMult, painflashfademult, 141)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(painArrowFadeMult, painarrowfademult, 142)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(painFlashIgnoreArmor, painflashignorearmor, 143)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(painFlashDirTolerance, painflashdirtolerance, 144)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(painArrowCumulativeAppearMin, painarrowcumulativeappearmin, 145)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(painArrowCumulativeDmgJump, painarrowcumulativedmgjump, 146)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(painFlashPrintouts, painflashprintouts, 147)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(itemFlashCumulativeJump, itemflashcumulativejump, 148)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(itemFlashDrawOpacityMin, itemflashdrawopacitymin, 149)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(itemFlashDrawOpacityMax, itemflashdrawopacitymax, 150)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(itemFlashFadeMult, itemflashfademult, 151)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(chumtoadPrintout, chumtoadprintout)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(crossbowReloadSoundDelay, crossbowreloadsounddelay, 151)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(crossbowFirePlaysReloadSound, crossbowfireplaysreloadsound, 152)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(crossbowReloadSoundDelay, crossbowreloadsounddelay, 152)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(crossbowFirePlaysReloadSound, crossbowfireplaysreloadsound, 153)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(pathfindFidgetFailTime, pathfindfidgetfailtime)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(pathfindPrintout, pathfindprintout)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(pathfindTopRampFixDistance, pathfindtoprampfixdistance)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(pathfindTopRampFixDraw, pathfindtoprampfixdraw)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(iHaveAscended, ihaveascended, 153)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(iHaveAscended, ihaveascended, 154)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(pathfindLooseMapNodes, pathfindloosemapnodes)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(pathfindRampFix, pathfindrampfix)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(chumtoadPlayDeadFoolChance, chumtoadplaydeadfoolchance)\
@@ -1237,19 +1251,20 @@
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(playerUseDrawDebug, playerusedrawdebug)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(playerChumtoadThrowDrawDebug, playerchumtoadthrowdrawdebug)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(peaceOut, peaceout)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTONLY(drawViewModel, drawviewmodel, 154)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTONLY(drawHUD, drawhud, 155)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTONLY(drawViewModel, drawviewmodel, 155)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTONLY(drawHUD, drawhud, 156)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(disablePauseSinglePlayer, disablepausesingleplayer)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(playerBulletHitEffectForceServer, playerbullethiteffectforceserver, 156)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(playerWeaponForceSpreadMode, playerweaponforcespreadmode, 157)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(playerBulletHitEffectForceServer, playerbullethiteffectforceserver, 157)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(forceAllowServersideTextureSounds, forceallowserversidetexturesounds, 158)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(playerWeaponSpreadMode, playerweaponspreadmode, 159)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(monsterAIForceFindDistance, monsteraiforcefinddistance)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(baseEntityDamagePushNormalMulti, baseentitydamagepushnormalmulti)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(baseEntityDamagePushVerticalBoost, baseentitydamagepushverticalboost)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(baseEntityDamagePushVerticalMulti, baseentitydamagepushverticalmulti)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(baseEntityDamagePushVerticalMinimum, baseentitydamagepushverticalminimum)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(viewModelPrintouts, viewmodelprintouts, 158)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(viewModelSyncFixPrintouts, viewmodelsyncfixprintouts, 159)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(textureHitSoundPrintouts, texturehitsoundprintouts, 160)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(viewModelPrintouts, viewmodelprintouts, 160)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(viewModelSyncFixPrintouts, viewmodelsyncfixprintouts, 161)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(textureHitSoundPrintouts, texturehitsoundprintouts, 162)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(hgruntAllowGrenades, hgruntallowgrenades)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(scheduleInterruptPrintouts, scheduleinterruptprintouts)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(animationPrintouts, animationprintouts)\
@@ -1266,12 +1281,16 @@
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(drawDebugEnemyLKP, drawdebugenemylkp)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(trackchangePrintouts, trackchangeprintouts)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(trackTrainPrintouts, tracktrainprintouts)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(holsterAnims, holsteranims, 161)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(playerWeaponTracerMode, playerweapontracermode, 162)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(healthcolor_fullRedMin, healthcolor_fullredmin, 163)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(healthcolor_brightness, healthcolor_brightness, 164)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(healthcolor_yellowMark, healthcolor_yellowmark, 165)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(cl_drawExtraZeros, cl_drawextrazeros, 166)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(holsterAnims, holsteranims, 163)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(playerWeaponTracerMode, playerweapontracermode, 164)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(monsterWeaponTracerMode, monsterweapontracermode)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(decalTracerExclusivity, decaltracerexclusivity, 165)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(monsterToPlayerHitgroupSpecial, monstertoplayerhitgroupspecial)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(multiplayerCrowbarHitSoundMode, multiplayercrowbarhitsoundmode)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(healthcolor_fullRedMin, healthcolor_fullredmin, 166)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(healthcolor_brightness, healthcolor_brightness, 167)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(healthcolor_yellowMark, healthcolor_yellowmark, 168)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTSENDOFF_BROADCAST(cl_drawExtraZeros, cl_drawextrazeros, 169)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(pathfindLargeBoundFix, pathfindlargeboundfix)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(flyerKilledFallingLoop, flyerkilledfallingloop)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(floaterDummy, floaterdummy)\
@@ -1279,16 +1298,16 @@
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(ladderCycleMulti, laddercyclemulti)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(ladderSpeedMulti, ladderspeedmulti)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(barnacleGrabNoInterpolation, barnaclegrabnointerpolation)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTONLY(hideDamage, hidedamage, 167)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTONLY(timedDamage_brightnessMax, timeddamage_brightnessmax, 168)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTONLY(timedDamage_brightnessMin, timeddamage_brightnessmin, 169)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTONLY(timedDamage_brightnessCap, timeddamage_brightnesscap, 170)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTONLY(timedDamage_brightnessFloor, timeddamage_brightnessfloor, 171)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTONLY(timedDamage_flashSpeed, timeddamage_flashspeed, 172)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTONLY(timedDamage_debug, timeddamage_debug, 173)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTONLY(hideDamage, hidedamage, 170)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTONLY(timedDamage_brightnessMax, timeddamage_brightnessmax, 171)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTONLY(timedDamage_brightnessMin, timeddamage_brightnessmin, 172)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTONLY(timedDamage_brightnessCap, timeddamage_brightnesscap, 173)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTONLY(timedDamage_brightnessFloor, timeddamage_brightnessfloor, 174)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTONLY(timedDamage_flashSpeed, timeddamage_flashspeed, 175)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTONLY(timedDamage_debug, timeddamage_debug, 176)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(wallHealthDoor_closeDelay, wallhealthdoor_closedelay)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(houndeye_attack_canGib, houndeye_attack_cangib)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTONLY(myRocketsAreBarney, myrocketsarebarney, 174)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY_CLIENTONLY(myRocketsAreBarney, myrocketsarebarney, 177)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(hassassinCrossbowDebug, hassassincrossbowdebug)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(crossbowBoltDirectionAffectedByWater, crossbowboltdirectionaffectedbywater)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(kingpinDebug, kingpindebug)\
@@ -1363,6 +1382,7 @@
 	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(houndeyeAttackMode)\
 	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(muteRicochetSound)\
 	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(mutePlayerWeaponFire)\
+	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(muteCrowbarSounds)\
 	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(scientistHealNPC)\
 	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(scientistHealNPCDebug)\
 	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(bulletholeAlertRange)\
@@ -1439,8 +1459,8 @@
 	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(E3UsesFailColors)\
 	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(preE3ShowsDamageIcons)\
 	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(E3ShowsDamageIcons)\
-	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(playerForceCrossbowMode)\
-	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(hassassinForceCrossbowMode)\
+	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(playerCrossbowMode)\
+	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(hassassinCrossbowMode)\
 	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(tripmineAnimWaitsForFinish)\
 	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(revolverLaserScope)\
 	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(python_zoomfov)\
@@ -1704,7 +1724,8 @@
 	EASY_CVAR_HIDDEN_SAVE_CLIENTONLY(drawHUD)\
 	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(disablePauseSinglePlayer)\
 	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(playerBulletHitEffectForceServer)\
-	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(playerWeaponForceSpreadMode)\
+	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(forceAllowServersideTextureSounds)\
+	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(playerWeaponSpreadMode)\
 	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(monsterAIForceFindDistance)\
 	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(baseEntityDamagePushNormalMulti)\
 	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(baseEntityDamagePushVerticalBoost)\
@@ -1731,6 +1752,10 @@
 	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(trackTrainPrintouts)\
 	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(holsterAnims)\
 	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(playerWeaponTracerMode)\
+	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(monsterWeaponTracerMode)\
+	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(decalTracerExclusivity)\
+	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(monsterToPlayerHitgroupSpecial)\
+	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(multiplayerCrowbarHitSoundMode)\
 	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(healthcolor_fullRedMin)\
 	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(healthcolor_brightness)\
 	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(healthcolor_yellowMark)\
@@ -1826,6 +1851,7 @@
 	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(houndeyeAttackMode, houndeyeattackmode)\
 	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(muteRicochetSound, mutericochetsound)\
 	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(mutePlayerWeaponFire, muteplayerweaponfire)\
+	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(muteCrowbarSounds, mutecrowbarsounds)\
 	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(scientistHealNPC, scientisthealnpc)\
 	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(scientistHealNPCDebug, scientisthealnpcdebug)\
 	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(bulletholeAlertRange, bulletholealertrange)\
@@ -1902,8 +1928,8 @@
 	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(E3UsesFailColors, e3usesfailcolors)\
 	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(preE3ShowsDamageIcons, pree3showsdamageicons)\
 	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(E3ShowsDamageIcons, e3showsdamageicons)\
-	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(playerForceCrossbowMode, playerforcecrossbowmode)\
-	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(hassassinForceCrossbowMode, hassassinforcecrossbowmode)\
+	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(playerCrossbowMode, playercrossbowmode)\
+	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(hassassinCrossbowMode, hassassincrossbowmode)\
 	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(tripmineAnimWaitsForFinish, tripmineanimwaitsforfinish)\
 	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(revolverLaserScope, revolverlaserscope)\
 	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(python_zoomfov, python_zoomfov)\
@@ -2167,7 +2193,8 @@
 	EASY_CVAR_HIDDEN_LOAD_CLIENTONLY(drawHUD, drawhud)\
 	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(disablePauseSinglePlayer, disablepausesingleplayer)\
 	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(playerBulletHitEffectForceServer, playerbullethiteffectforceserver)\
-	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(playerWeaponForceSpreadMode, playerweaponforcespreadmode)\
+	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(forceAllowServersideTextureSounds, forceallowserversidetexturesounds)\
+	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(playerWeaponSpreadMode, playerweaponspreadmode)\
 	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(monsterAIForceFindDistance, monsteraiforcefinddistance)\
 	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(baseEntityDamagePushNormalMulti, baseentitydamagepushnormalmulti)\
 	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(baseEntityDamagePushVerticalBoost, baseentitydamagepushverticalboost)\
@@ -2194,6 +2221,10 @@
 	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(trackTrainPrintouts, tracktrainprintouts)\
 	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(holsterAnims, holsteranims)\
 	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(playerWeaponTracerMode, playerweapontracermode)\
+	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(monsterWeaponTracerMode, monsterweapontracermode)\
+	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(decalTracerExclusivity, decaltracerexclusivity)\
+	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(monsterToPlayerHitgroupSpecial, monstertoplayerhitgroupspecial)\
+	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(multiplayerCrowbarHitSoundMode, multiplayercrowbarhitsoundmode)\
 	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(healthcolor_fullRedMin, healthcolor_fullredmin)\
 	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(healthcolor_brightness, healthcolor_brightness)\
 	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(healthcolor_yellowMark, healthcolor_yellowmark)\
@@ -2292,6 +2323,7 @@
 	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY(houndeyeAttackMode)\
 	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(muteRicochetSound)\
 	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(mutePlayerWeaponFire)\
+	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(muteCrowbarSounds)\
 	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY(scientistHealNPC)\
 	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY(scientistHealNPCDebug)\
 	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY(bulletholeAlertRange)\
@@ -2370,8 +2402,8 @@
 	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(E3UsesFailColors)\
 	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(preE3ShowsDamageIcons)\
 	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(E3ShowsDamageIcons)\
-	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(playerForceCrossbowMode)\
-	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY(hassassinForceCrossbowMode)\
+	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(playerCrossbowMode)\
+	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY(hassassinCrossbowMode)\
 	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(tripmineAnimWaitsForFinish)\
 	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(revolverLaserScope)\
 	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(python_zoomfov)\
@@ -2646,7 +2678,8 @@
 	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY_CLIENTONLY(drawHUD)\
 	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY(disablePauseSinglePlayer)\
 	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(playerBulletHitEffectForceServer)\
-	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(playerWeaponForceSpreadMode)\
+	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(forceAllowServersideTextureSounds)\
+	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(playerWeaponSpreadMode)\
 	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY(monsterAIForceFindDistance)\
 	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY(baseEntityDamagePushNormalMulti)\
 	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY(baseEntityDamagePushVerticalBoost)\
@@ -2673,6 +2706,10 @@
 	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY(trackTrainPrintouts)\
 	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(holsterAnims)\
 	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(playerWeaponTracerMode)\
+	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY(monsterWeaponTracerMode)\
+	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(decalTracerExclusivity)\
+	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY(monsterToPlayerHitgroupSpecial)\
+	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY(multiplayerCrowbarHitSoundMode)\
 	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(healthcolor_fullRedMin)\
 	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(healthcolor_brightness)\
 	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(healthcolor_yellowMark)\
@@ -2699,6 +2736,7 @@
 	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY(kingpinDebug)\
 	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY(minimumRespawnDelay)\
 	EASY_CVAR_DECLARATION_SERVER(r_glowshell_debug)\
+	EASY_CVAR_DECLARATION_SERVER(cl_viewpunch)\
 	DUMMY
 
 #define EASY_CVAR_DECLARATION_CLIENT_MASS\
@@ -2772,6 +2810,7 @@
 	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY(houndeyeAttackMode)\
 	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY_CLIENTSENDOFF_BROADCAST(muteRicochetSound)\
 	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY_CLIENTSENDOFF_BROADCAST(mutePlayerWeaponFire)\
+	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY_CLIENTSENDOFF_BROADCAST(muteCrowbarSounds)\
 	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY(scientistHealNPC)\
 	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY(scientistHealNPCDebug)\
 	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY(bulletholeAlertRange)\
@@ -2850,8 +2889,8 @@
 	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY_CLIENTSENDOFF_BROADCAST(E3UsesFailColors)\
 	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY_CLIENTSENDOFF_BROADCAST(preE3ShowsDamageIcons)\
 	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY_CLIENTSENDOFF_BROADCAST(E3ShowsDamageIcons)\
-	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY_CLIENTSENDOFF_BROADCAST(playerForceCrossbowMode)\
-	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY(hassassinForceCrossbowMode)\
+	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY_CLIENTSENDOFF_BROADCAST(playerCrossbowMode)\
+	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY(hassassinCrossbowMode)\
 	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY_CLIENTSENDOFF_BROADCAST(tripmineAnimWaitsForFinish)\
 	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY_CLIENTSENDOFF_BROADCAST(revolverLaserScope)\
 	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY_CLIENTSENDOFF_BROADCAST(python_zoomfov)\
@@ -3126,7 +3165,8 @@
 	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY_CLIENTONLY(drawHUD)\
 	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY(disablePauseSinglePlayer)\
 	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY_CLIENTSENDOFF_BROADCAST(playerBulletHitEffectForceServer)\
-	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY_CLIENTSENDOFF_BROADCAST(playerWeaponForceSpreadMode)\
+	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY_CLIENTSENDOFF_BROADCAST(forceAllowServersideTextureSounds)\
+	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY_CLIENTSENDOFF_BROADCAST(playerWeaponSpreadMode)\
 	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY(monsterAIForceFindDistance)\
 	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY(baseEntityDamagePushNormalMulti)\
 	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY(baseEntityDamagePushVerticalBoost)\
@@ -3153,6 +3193,10 @@
 	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY(trackTrainPrintouts)\
 	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY_CLIENTSENDOFF_BROADCAST(holsterAnims)\
 	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY_CLIENTSENDOFF_BROADCAST(playerWeaponTracerMode)\
+	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY(monsterWeaponTracerMode)\
+	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY_CLIENTSENDOFF_BROADCAST(decalTracerExclusivity)\
+	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY(monsterToPlayerHitgroupSpecial)\
+	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY(multiplayerCrowbarHitSoundMode)\
 	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY_CLIENTSENDOFF_BROADCAST(healthcolor_fullRedMin)\
 	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY_CLIENTSENDOFF_BROADCAST(healthcolor_brightness)\
 	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY_CLIENTSENDOFF_BROADCAST(healthcolor_yellowMark)\
@@ -3179,6 +3223,7 @@
 	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY(kingpinDebug)\
 	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY(minimumRespawnDelay)\
 	EASY_CVAR_DECLARATION_CLIENT(r_glowshell_debug)\
+	EASY_CVAR_DECLARATION_CLIENT(cl_viewpunch)\
 	DUMMY
 
 #define EASY_CVAR_UPDATE_SERVER_MASS\
@@ -3252,12 +3297,13 @@
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(houndeyeAttackMode)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(muteRicochetSound, 47)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(mutePlayerWeaponFire, 48)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(muteCrowbarSounds, 49)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(scientistHealNPC)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(scientistHealNPCDebug)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(bulletholeAlertRange)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(fleshhitmakessound)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(nothingHurts)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(seeMonsterHealth, 49)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(seeMonsterHealth, 50)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(scientistHealNPCFract)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(bullsquidRangeDisabled)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(applyLKPPathFixToAll)\
@@ -3295,13 +3341,13 @@
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(hgruntBrassEjectForwardOffset)\
 	EASY_CVAR_UPDATE_SERVER(cl_muzzleflash)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(agrunt_muzzleflash)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(event5011Allowed, 50)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(event5021Allowed, 51)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(event5031Allowed, 52)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(event5002Allowed, 53)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(event5004Allowed, 54)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(eventsAreFabulous, 55)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(glockOldReloadLogic, 56)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(event5011Allowed, 51)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(event5021Allowed, 52)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(event5031Allowed, 53)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(event5002Allowed, 54)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(event5004Allowed, 55)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(eventsAreFabulous, 56)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(glockOldReloadLogic, 57)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(glockOldReloadLogicBarney)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(barneyDroppedGlockAmmoCap)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(drawCollisionBoundsAtDeath)\
@@ -3314,40 +3360,40 @@
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(islaveReviveSelfChance)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(hgruntRunAndGunDistance)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(hgruntPrintout)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(testVar, 57)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(painArrowColorMode, 58)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(painFlashColorMode, 59)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(allowPainDrawWithoutSuit, 60)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(drownDrawPainMode, 61)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(firstPersonIdleDelayMin, 62)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(firstPersonIdleDelayMax, 63)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(forceDrawBatteryNumber, 64)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(testVar, 58)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(painArrowColorMode, 59)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(painFlashColorMode, 60)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(allowPainDrawWithoutSuit, 61)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(drownDrawPainMode, 62)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(firstPersonIdleDelayMin, 63)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(firstPersonIdleDelayMax, 64)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(forceDrawBatteryNumber, 65)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(offsetgivedistance)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(offsetgivelookvertical)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(canShowWeaponSelectAtDeath, 65)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(endlessFlashlightBattery, 66)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(preE3UsesFailColors, 67)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(E3UsesFailColors, 68)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(preE3ShowsDamageIcons, 69)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(E3ShowsDamageIcons, 70)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(playerForceCrossbowMode, 71)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(hassassinForceCrossbowMode)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(tripmineAnimWaitsForFinish, 72)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(revolverLaserScope, 73)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(python_zoomfov, 74)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(crossbow_zoomfov, 75)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(canApplyDefaultFOV, 76)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(auto_adjust_fov_aspect, 77)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(auto_adjust_zoomfov, 78)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(cheat_infiniteclip, 79)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(cheat_infiniteammo, 80)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(cheat_minimumfiredelay, 81)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(cheat_minimumfiredelaycustom, 82)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(cheat_nogaussrecoil, 83)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(canShowWeaponSelectAtDeath, 66)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(endlessFlashlightBattery, 67)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(preE3UsesFailColors, 68)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(E3UsesFailColors, 69)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(preE3ShowsDamageIcons, 70)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(E3ShowsDamageIcons, 71)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(playerCrossbowMode, 72)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(hassassinCrossbowMode)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(tripmineAnimWaitsForFinish, 73)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(revolverLaserScope, 74)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(python_zoomfov, 75)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(crossbow_zoomfov, 76)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(canApplyDefaultFOV, 77)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(auto_adjust_fov_aspect, 78)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(auto_adjust_zoomfov, 79)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(cheat_infiniteclip, 80)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(cheat_infiniteammo, 81)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(cheat_minimumfiredelay, 82)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(cheat_minimumfiredelaycustom, 83)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(cheat_nogaussrecoil, 84)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(autoSneaky)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(infiniteLongJumpCharge)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(cheat_touchNeverExplodes)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(gaussRecoilSendsUpInSP, 84)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(gaussRecoilSendsUpInSP, 85)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(drawDebugPathfinding)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(STUcheckDistH)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(STUcheckDistV)\
@@ -3366,9 +3412,9 @@
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(peopleStrobe)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(forceWorldLightOff)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(wildHeads)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(raveEffectSpawnInterval, 85)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(raveEffectSpawnInterval, 86)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(drawBarnacleDebug)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(fogTest, 86)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(fogTest, 87)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(sparksAllMulti)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(sparksEnvMulti)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(sparksButtonMulti)\
@@ -3385,9 +3431,9 @@
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(apacheForceCinBounds)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(apacheBottomBoundAdj)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(apacheInfluence)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(useAlphaCrosshair, 87)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(allowAlphaCrosshairWithoutGuns, 88)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(alphaCrosshairBlockedOnFrozen, 89)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(useAlphaCrosshair, 88)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(allowAlphaCrosshairWithoutGuns, 89)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(alphaCrosshairBlockedOnFrozen, 90)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(hgruntRunAndGunDotMin)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(panthereyeJumpDotTol)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(panthereyePrintout)\
@@ -3398,8 +3444,8 @@
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(friendlyPrintout)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(stukaPrintout)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(timedDamageEndlessOnHard)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(mirrorsReflectOnlyNPCs, 90)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(mirrorsDoNotReflectPlayer, 91)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(mirrorsReflectOnlyNPCs, 91)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(mirrorsDoNotReflectPlayer, 92)\
 	EASY_CVAR_UPDATE_SERVER(r_shadows)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(altSquadRulesRuntime)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(hgruntLockStrafeTime)\
@@ -3417,21 +3463,21 @@
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(blockAutosaveTrigger)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(hideNodeGraphRebuildNotice)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(barnacleTongueRetractDelay)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(germanCensorship, 92)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(germanCensorship, 93)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(allowGermanModels)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(germanRobotGibs)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(germanRobotBleedsOil)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(germanRobotDamageDecal)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(germanRobotGibsDecal)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(egonEffectsMode, 93)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(egonHitCloud, 94)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(enableModPrintouts, 95)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(handGrenadePickupYieldsOne, 96)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(egonEffectsMode, 94)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(egonHitCloud, 95)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(enableModPrintouts, 96)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(handGrenadePickupYieldsOne, 97)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(handGrenadesUseOldBounceSound)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(skipTFDamageTextures, 97)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(weaponSelectSoundPlayOnMousewheel, 98)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(timedDamageDeathRemoveMode, 99)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(weaponSelectUsesReloadSounds, 100)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(skipTFDamageTextures, 98)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(weaponSelectSoundPlayOnMousewheel, 99)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(timedDamageDeathRemoveMode, 100)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(weaponSelectUsesReloadSounds, 101)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(barnacleCanGib)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(sentryCanGib)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(miniturretCanGib)\
@@ -3468,8 +3514,8 @@
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(snarkInheritsPlayerVelocity)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(chumtoadInheritsPlayerVelocity)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(weaponPickupPlaysAnyReloadSounds)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(glockUseLastBulletAnim, 101)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(playerBarnacleVictimViewOffset, 102)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(glockUseLastBulletAnim, 102)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(playerBarnacleVictimViewOffset, 103)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(hgruntMovementDeltaCheck)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(hiddenMemPrintout)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(hassaultExtraMuzzleFlashRadius)\
@@ -3520,20 +3566,20 @@
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(scientistBravery)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(barneyUnholsterTime)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(barneyUnholsterAnimChoice)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(trailTypeTest, 103)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(hornetTrail, 104)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(hornetTrailSolidColor, 105)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(hornetDeathModEasy, 106)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(hornetDeathModMedium, 107)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(hornetDeathModHard, 108)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(hornetZoomPuff, 109)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(hornetSpiral, 110)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(hornetSpeedMulti, 111)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(hornetSpeedDartMulti, 112)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(trailTypeTest, 104)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(hornetTrail, 105)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(hornetTrailSolidColor, 106)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(hornetDeathModEasy, 107)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(hornetDeathModMedium, 108)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(hornetDeathModHard, 109)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(hornetZoomPuff, 110)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(hornetSpiral, 111)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(hornetSpeedMulti, 112)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(hornetSpeedDartMulti, 113)\
 	EASY_CVAR_UPDATE_SERVER(cl_rockettrail)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(rocketTrailAlphaInterval, 113)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(rocketTrailAlphaScale, 114)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(rocketSkipIgnite, 115)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(rocketTrailAlphaInterval, 114)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(rocketTrailAlphaScale, 115)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(rocketSkipIgnite, 116)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(agruntHornetRandomness)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(hornetSpiralPeriod)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(hornetSpiralAmplitude)\
@@ -3543,49 +3589,49 @@
 	EASY_CVAR_UPDATE_SERVER(hud_weaponselecthideslower)\
 	EASY_CVAR_UPDATE_SERVER(hud_drawsidebarmode)\
 	EASY_CVAR_UPDATE_SERVER(gaussmode)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(gauss_primaryonly, 116)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(gauss_reflectdealsdamage, 117)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(gauss_chargeanimdelay, 118)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(gauss_chargeworkdelay, 119)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(gauss_secondarychargetimereq, 120)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(gauss_primaryreflects, 121)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(gauss_primarypierces, 122)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(gauss_secondaryreflects, 123)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(gauss_secondarypierces, 124)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(gauss_primarypunchthrough, 125)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(gauss_secondarypunchthrough, 126)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(gauss_betweenattackdelay, 127)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(gauss_secondarychargemindelay, 128)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(gauss_chargeMaxAmmo_SP, 129)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(gauss_chargeMaxAmmo_MP, 130)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(gauss_chargeInterval_SP, 131)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(gauss_chargeInterval_MP, 132)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(painFlashDmgMin, 133)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(painFlashDmgExMult, 134)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(painFlashCumulativeMinDrowning, 135)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(painFlashCumulativeMax, 136)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(painFlashDrawOpacityMax, 137)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(painArrowDrawOpacityMin, 138)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(painArrowDrawOpacityMax, 139)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(painFlashFadeMult, 140)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(painArrowFadeMult, 141)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(painFlashIgnoreArmor, 142)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(painFlashDirTolerance, 143)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(painArrowCumulativeAppearMin, 144)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(painArrowCumulativeDmgJump, 145)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(painFlashPrintouts, 146)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(itemFlashCumulativeJump, 147)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(itemFlashDrawOpacityMin, 148)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(itemFlashDrawOpacityMax, 149)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(itemFlashFadeMult, 150)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(gauss_primaryonly, 117)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(gauss_reflectdealsdamage, 118)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(gauss_chargeanimdelay, 119)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(gauss_chargeworkdelay, 120)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(gauss_secondarychargetimereq, 121)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(gauss_primaryreflects, 122)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(gauss_primarypierces, 123)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(gauss_secondaryreflects, 124)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(gauss_secondarypierces, 125)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(gauss_primarypunchthrough, 126)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(gauss_secondarypunchthrough, 127)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(gauss_betweenattackdelay, 128)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(gauss_secondarychargemindelay, 129)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(gauss_chargeMaxAmmo_SP, 130)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(gauss_chargeMaxAmmo_MP, 131)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(gauss_chargeInterval_SP, 132)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(gauss_chargeInterval_MP, 133)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(painFlashDmgMin, 134)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(painFlashDmgExMult, 135)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(painFlashCumulativeMinDrowning, 136)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(painFlashCumulativeMax, 137)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(painFlashDrawOpacityMax, 138)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(painArrowDrawOpacityMin, 139)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(painArrowDrawOpacityMax, 140)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(painFlashFadeMult, 141)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(painArrowFadeMult, 142)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(painFlashIgnoreArmor, 143)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(painFlashDirTolerance, 144)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(painArrowCumulativeAppearMin, 145)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(painArrowCumulativeDmgJump, 146)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(painFlashPrintouts, 147)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(itemFlashCumulativeJump, 148)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(itemFlashDrawOpacityMin, 149)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(itemFlashDrawOpacityMax, 150)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(itemFlashFadeMult, 151)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(chumtoadPrintout)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(crossbowReloadSoundDelay, 151)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(crossbowFirePlaysReloadSound, 152)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(crossbowReloadSoundDelay, 152)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(crossbowFirePlaysReloadSound, 153)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(pathfindFidgetFailTime)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(pathfindPrintout)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(pathfindTopRampFixDistance)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(pathfindTopRampFixDraw)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(iHaveAscended, 153)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(iHaveAscended, 154)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(pathfindLooseMapNodes)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(pathfindRampFix)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(chumtoadPlayDeadFoolChance)\
@@ -3602,19 +3648,20 @@
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(playerUseDrawDebug)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(playerChumtoadThrowDrawDebug)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(peaceOut)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTONLY(drawViewModel, 154)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTONLY(drawHUD, 155)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTONLY(drawViewModel, 155)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTONLY(drawHUD, 156)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(disablePauseSinglePlayer)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(playerBulletHitEffectForceServer, 156)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(playerWeaponForceSpreadMode, 157)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(playerBulletHitEffectForceServer, 157)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(forceAllowServersideTextureSounds, 158)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(playerWeaponSpreadMode, 159)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(monsterAIForceFindDistance)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(baseEntityDamagePushNormalMulti)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(baseEntityDamagePushVerticalBoost)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(baseEntityDamagePushVerticalMulti)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(baseEntityDamagePushVerticalMinimum)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(viewModelPrintouts, 158)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(viewModelSyncFixPrintouts, 159)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(textureHitSoundPrintouts, 160)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(viewModelPrintouts, 160)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(viewModelSyncFixPrintouts, 161)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(textureHitSoundPrintouts, 162)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(hgruntAllowGrenades)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(scheduleInterruptPrintouts)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(animationPrintouts)\
@@ -3631,12 +3678,16 @@
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(drawDebugEnemyLKP)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(trackchangePrintouts)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(trackTrainPrintouts)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(holsterAnims, 161)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(playerWeaponTracerMode, 162)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(healthcolor_fullRedMin, 163)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(healthcolor_brightness, 164)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(healthcolor_yellowMark, 165)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(cl_drawExtraZeros, 166)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(holsterAnims, 163)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(playerWeaponTracerMode, 164)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(monsterWeaponTracerMode)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(decalTracerExclusivity, 165)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(monsterToPlayerHitgroupSpecial)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(multiplayerCrowbarHitSoundMode)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(healthcolor_fullRedMin, 166)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(healthcolor_brightness, 167)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(healthcolor_yellowMark, 168)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTSENDOFF_BROADCAST(cl_drawExtraZeros, 169)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(pathfindLargeBoundFix)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(flyerKilledFallingLoop)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(floaterDummy)\
@@ -3644,21 +3695,22 @@
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(ladderCycleMulti)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(ladderSpeedMulti)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(barnacleGrabNoInterpolation)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTONLY(hideDamage, 167)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTONLY(timedDamage_brightnessMax, 168)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTONLY(timedDamage_brightnessMin, 169)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTONLY(timedDamage_brightnessCap, 170)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTONLY(timedDamage_brightnessFloor, 171)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTONLY(timedDamage_flashSpeed, 172)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTONLY(timedDamage_debug, 173)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTONLY(hideDamage, 170)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTONLY(timedDamage_brightnessMax, 171)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTONLY(timedDamage_brightnessMin, 172)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTONLY(timedDamage_brightnessCap, 173)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTONLY(timedDamage_brightnessFloor, 174)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTONLY(timedDamage_flashSpeed, 175)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTONLY(timedDamage_debug, 176)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(wallHealthDoor_closeDelay)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(houndeye_attack_canGib)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTONLY(myRocketsAreBarney, 174)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY_CLIENTONLY(myRocketsAreBarney, 177)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(hassassinCrossbowDebug)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(crossbowBoltDirectionAffectedByWater)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(kingpinDebug)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(minimumRespawnDelay)\
 	EASY_CVAR_UPDATE_SERVER(r_glowshell_debug)\
+	EASY_CVAR_UPDATE_SERVER(cl_viewpunch)\
 	DUMMY
 
 #define EASY_CVAR_UPDATE_CLIENT_MASS\
@@ -3732,6 +3784,7 @@
 	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY(houndeyeAttackMode)\
 	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY_CLIENTSENDOFF_BROADCAST(muteRicochetSound)\
 	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY_CLIENTSENDOFF_BROADCAST(mutePlayerWeaponFire)\
+	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY_CLIENTSENDOFF_BROADCAST(muteCrowbarSounds)\
 	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY(scientistHealNPC)\
 	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY(scientistHealNPCDebug)\
 	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY(bulletholeAlertRange)\
@@ -3810,8 +3863,8 @@
 	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY_CLIENTSENDOFF_BROADCAST(E3UsesFailColors)\
 	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY_CLIENTSENDOFF_BROADCAST(preE3ShowsDamageIcons)\
 	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY_CLIENTSENDOFF_BROADCAST(E3ShowsDamageIcons)\
-	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY_CLIENTSENDOFF_BROADCAST(playerForceCrossbowMode)\
-	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY(hassassinForceCrossbowMode)\
+	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY_CLIENTSENDOFF_BROADCAST(playerCrossbowMode)\
+	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY(hassassinCrossbowMode)\
 	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY_CLIENTSENDOFF_BROADCAST(tripmineAnimWaitsForFinish)\
 	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY_CLIENTSENDOFF_BROADCAST(revolverLaserScope)\
 	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY_CLIENTSENDOFF_BROADCAST(python_zoomfov)\
@@ -4086,7 +4139,8 @@
 	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY_CLIENTONLY(drawHUD)\
 	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY(disablePauseSinglePlayer)\
 	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY_CLIENTSENDOFF_BROADCAST(playerBulletHitEffectForceServer)\
-	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY_CLIENTSENDOFF_BROADCAST(playerWeaponForceSpreadMode)\
+	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY_CLIENTSENDOFF_BROADCAST(forceAllowServersideTextureSounds)\
+	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY_CLIENTSENDOFF_BROADCAST(playerWeaponSpreadMode)\
 	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY(monsterAIForceFindDistance)\
 	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY(baseEntityDamagePushNormalMulti)\
 	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY(baseEntityDamagePushVerticalBoost)\
@@ -4113,6 +4167,10 @@
 	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY(trackTrainPrintouts)\
 	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY_CLIENTSENDOFF_BROADCAST(holsterAnims)\
 	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY_CLIENTSENDOFF_BROADCAST(playerWeaponTracerMode)\
+	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY(monsterWeaponTracerMode)\
+	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY_CLIENTSENDOFF_BROADCAST(decalTracerExclusivity)\
+	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY(monsterToPlayerHitgroupSpecial)\
+	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY(multiplayerCrowbarHitSoundMode)\
 	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY_CLIENTSENDOFF_BROADCAST(healthcolor_fullRedMin)\
 	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY_CLIENTSENDOFF_BROADCAST(healthcolor_brightness)\
 	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY_CLIENTSENDOFF_BROADCAST(healthcolor_yellowMark)\
@@ -4139,6 +4197,7 @@
 	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY(kingpinDebug)\
 	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY(minimumRespawnDelay)\
 	EASY_CVAR_UPDATE_CLIENT(r_glowshell_debug)\
+	EASY_CVAR_UPDATE_CLIENT(cl_viewpunch)\
 	DUMMY
 
 #define EASY_CVAR_CREATE_SERVER_SETUP_MASS\
@@ -4218,6 +4277,7 @@
 	EASY_CVAR_CREATE_CLIENT_A_DEBUGONLY(houndeyeAttackMode)\
 	EASY_CVAR_CREATE_CLIENT_A_DEBUGONLY(muteRicochetSound)\
 	EASY_CVAR_CREATE_CLIENT_A_DEBUGONLY(mutePlayerWeaponFire)\
+	EASY_CVAR_CREATE_CLIENT_A_DEBUGONLY(muteCrowbarSounds)\
 	EASY_CVAR_CREATE_CLIENT_A_DEBUGONLY(scientistHealNPC)\
 	EASY_CVAR_CREATE_CLIENT_A_DEBUGONLY(scientistHealNPCDebug)\
 	EASY_CVAR_CREATE_CLIENT_A_DEBUGONLY(bulletholeAlertRange)\
@@ -4296,8 +4356,8 @@
 	EASY_CVAR_CREATE_CLIENT_A_DEBUGONLY(E3UsesFailColors)\
 	EASY_CVAR_CREATE_CLIENT_A_DEBUGONLY(preE3ShowsDamageIcons)\
 	EASY_CVAR_CREATE_CLIENT_A_DEBUGONLY(E3ShowsDamageIcons)\
-	EASY_CVAR_CREATE_CLIENT_A_DEBUGONLY(playerForceCrossbowMode)\
-	EASY_CVAR_CREATE_CLIENT_A_DEBUGONLY(hassassinForceCrossbowMode)\
+	EASY_CVAR_CREATE_CLIENT_A_DEBUGONLY(playerCrossbowMode)\
+	EASY_CVAR_CREATE_CLIENT_A_DEBUGONLY(hassassinCrossbowMode)\
 	EASY_CVAR_CREATE_CLIENT_A_DEBUGONLY(tripmineAnimWaitsForFinish)\
 	EASY_CVAR_CREATE_CLIENT_A_DEBUGONLY(revolverLaserScope)\
 	EASY_CVAR_CREATE_CLIENT_A_DEBUGONLY(python_zoomfov)\
@@ -4572,7 +4632,8 @@
 	EASY_CVAR_CREATE_CLIENT_AC_DEBUGONLY(drawHUD)\
 	EASY_CVAR_CREATE_CLIENT_A_DEBUGONLY(disablePauseSinglePlayer)\
 	EASY_CVAR_CREATE_CLIENT_A_DEBUGONLY(playerBulletHitEffectForceServer)\
-	EASY_CVAR_CREATE_CLIENT_A_DEBUGONLY(playerWeaponForceSpreadMode)\
+	EASY_CVAR_CREATE_CLIENT_A_DEBUGONLY(forceAllowServersideTextureSounds)\
+	EASY_CVAR_CREATE_CLIENT_A_DEBUGONLY(playerWeaponSpreadMode)\
 	EASY_CVAR_CREATE_CLIENT_A_DEBUGONLY(monsterAIForceFindDistance)\
 	EASY_CVAR_CREATE_CLIENT_A_DEBUGONLY(baseEntityDamagePushNormalMulti)\
 	EASY_CVAR_CREATE_CLIENT_A_DEBUGONLY(baseEntityDamagePushVerticalBoost)\
@@ -4599,6 +4660,10 @@
 	EASY_CVAR_CREATE_CLIENT_A_DEBUGONLY(trackTrainPrintouts)\
 	EASY_CVAR_CREATE_CLIENT_A_DEBUGONLY(holsterAnims)\
 	EASY_CVAR_CREATE_CLIENT_A_DEBUGONLY(playerWeaponTracerMode)\
+	EASY_CVAR_CREATE_CLIENT_A_DEBUGONLY(monsterWeaponTracerMode)\
+	EASY_CVAR_CREATE_CLIENT_A_DEBUGONLY(decalTracerExclusivity)\
+	EASY_CVAR_CREATE_CLIENT_A_DEBUGONLY(monsterToPlayerHitgroupSpecial)\
+	EASY_CVAR_CREATE_CLIENT_A_DEBUGONLY(multiplayerCrowbarHitSoundMode)\
 	EASY_CVAR_CREATE_CLIENT_A_DEBUGONLY(healthcolor_fullRedMin)\
 	EASY_CVAR_CREATE_CLIENT_A_DEBUGONLY(healthcolor_brightness)\
 	EASY_CVAR_CREATE_CLIENT_A_DEBUGONLY(healthcolor_yellowMark)\
@@ -4625,6 +4690,7 @@
 	EASY_CVAR_CREATE_CLIENT_A_DEBUGONLY(kingpinDebug)\
 	EASY_CVAR_CREATE_CLIENT_A_DEBUGONLY(minimumRespawnDelay)\
 	EASY_CVAR_CREATE_CLIENT_AC(r_glowshell_debug)\
+	EASY_CVAR_CREATE_CLIENT_AC(cl_viewpunch)\
 	DUMMY
 
 #define EASY_CVAR_RESET_MASS\
@@ -4698,6 +4764,7 @@
 	EASY_CVAR_RESET_DEBUGONLY(houndeyeAttackMode)\
 	EASY_CVAR_RESET_DEBUGONLY_CLIENTSENDOFF_BROADCAST(muteRicochetSound)\
 	EASY_CVAR_RESET_DEBUGONLY_CLIENTSENDOFF_BROADCAST(mutePlayerWeaponFire)\
+	EASY_CVAR_RESET_DEBUGONLY_CLIENTSENDOFF_BROADCAST(muteCrowbarSounds)\
 	EASY_CVAR_RESET_DEBUGONLY(scientistHealNPC)\
 	EASY_CVAR_RESET_DEBUGONLY(scientistHealNPCDebug)\
 	EASY_CVAR_RESET_DEBUGONLY(bulletholeAlertRange)\
@@ -4776,8 +4843,8 @@
 	EASY_CVAR_RESET_DEBUGONLY_CLIENTSENDOFF_BROADCAST(E3UsesFailColors)\
 	EASY_CVAR_RESET_DEBUGONLY_CLIENTSENDOFF_BROADCAST(preE3ShowsDamageIcons)\
 	EASY_CVAR_RESET_DEBUGONLY_CLIENTSENDOFF_BROADCAST(E3ShowsDamageIcons)\
-	EASY_CVAR_RESET_DEBUGONLY_CLIENTSENDOFF_BROADCAST(playerForceCrossbowMode)\
-	EASY_CVAR_RESET_DEBUGONLY(hassassinForceCrossbowMode)\
+	EASY_CVAR_RESET_DEBUGONLY_CLIENTSENDOFF_BROADCAST(playerCrossbowMode)\
+	EASY_CVAR_RESET_DEBUGONLY(hassassinCrossbowMode)\
 	EASY_CVAR_RESET_DEBUGONLY_CLIENTSENDOFF_BROADCAST(tripmineAnimWaitsForFinish)\
 	EASY_CVAR_RESET_DEBUGONLY_CLIENTSENDOFF_BROADCAST(revolverLaserScope)\
 	EASY_CVAR_RESET_DEBUGONLY_CLIENTSENDOFF_BROADCAST(python_zoomfov)\
@@ -5051,7 +5118,8 @@
 	EASY_CVAR_RESET_DEBUGONLY_CLIENTONLY(drawHUD)\
 	EASY_CVAR_RESET_DEBUGONLY(disablePauseSinglePlayer)\
 	EASY_CVAR_RESET_DEBUGONLY_CLIENTSENDOFF_BROADCAST(playerBulletHitEffectForceServer)\
-	EASY_CVAR_RESET_DEBUGONLY_CLIENTSENDOFF_BROADCAST(playerWeaponForceSpreadMode)\
+	EASY_CVAR_RESET_DEBUGONLY_CLIENTSENDOFF_BROADCAST(forceAllowServersideTextureSounds)\
+	EASY_CVAR_RESET_DEBUGONLY_CLIENTSENDOFF_BROADCAST(playerWeaponSpreadMode)\
 	EASY_CVAR_RESET_DEBUGONLY(monsterAIForceFindDistance)\
 	EASY_CVAR_RESET_DEBUGONLY(baseEntityDamagePushNormalMulti)\
 	EASY_CVAR_RESET_DEBUGONLY(baseEntityDamagePushVerticalBoost)\
@@ -5078,6 +5146,10 @@
 	EASY_CVAR_RESET_DEBUGONLY(trackTrainPrintouts)\
 	EASY_CVAR_RESET_DEBUGONLY_CLIENTSENDOFF_BROADCAST(holsterAnims)\
 	EASY_CVAR_RESET_DEBUGONLY_CLIENTSENDOFF_BROADCAST(playerWeaponTracerMode)\
+	EASY_CVAR_RESET_DEBUGONLY(monsterWeaponTracerMode)\
+	EASY_CVAR_RESET_DEBUGONLY_CLIENTSENDOFF_BROADCAST(decalTracerExclusivity)\
+	EASY_CVAR_RESET_DEBUGONLY(monsterToPlayerHitgroupSpecial)\
+	EASY_CVAR_RESET_DEBUGONLY(multiplayerCrowbarHitSoundMode)\
 	EASY_CVAR_RESET_DEBUGONLY_CLIENTSENDOFF_BROADCAST(healthcolor_fullRedMin)\
 	EASY_CVAR_RESET_DEBUGONLY_CLIENTSENDOFF_BROADCAST(healthcolor_brightness)\
 	EASY_CVAR_RESET_DEBUGONLY_CLIENTSENDOFF_BROADCAST(healthcolor_yellowMark)\
@@ -5104,6 +5176,7 @@
 	EASY_CVAR_RESET_DEBUGONLY(kingpinDebug)\
 	EASY_CVAR_RESET_DEBUGONLY(minimumRespawnDelay)\
 	EASY_CVAR_RESET(r_glowshell_debug)\
+	EASY_CVAR_RESET(cl_viewpunch)\
 	DUMMY
 
 #define EASY_CVAR_EXTERN_MASS\
@@ -5177,6 +5250,7 @@
 	EASY_CVAR_EXTERN_DEBUGONLY(houndeyeAttackMode)\
 	EASY_CVAR_EXTERN_DEBUGONLY_CLIENTSENDOFF_BROADCAST(muteRicochetSound)\
 	EASY_CVAR_EXTERN_DEBUGONLY_CLIENTSENDOFF_BROADCAST(mutePlayerWeaponFire)\
+	EASY_CVAR_EXTERN_DEBUGONLY_CLIENTSENDOFF_BROADCAST(muteCrowbarSounds)\
 	EASY_CVAR_EXTERN_DEBUGONLY(scientistHealNPC)\
 	EASY_CVAR_EXTERN_DEBUGONLY(scientistHealNPCDebug)\
 	EASY_CVAR_EXTERN_DEBUGONLY(bulletholeAlertRange)\
@@ -5255,8 +5329,8 @@
 	EASY_CVAR_EXTERN_DEBUGONLY_CLIENTSENDOFF_BROADCAST(E3UsesFailColors)\
 	EASY_CVAR_EXTERN_DEBUGONLY_CLIENTSENDOFF_BROADCAST(preE3ShowsDamageIcons)\
 	EASY_CVAR_EXTERN_DEBUGONLY_CLIENTSENDOFF_BROADCAST(E3ShowsDamageIcons)\
-	EASY_CVAR_EXTERN_DEBUGONLY_CLIENTSENDOFF_BROADCAST(playerForceCrossbowMode)\
-	EASY_CVAR_EXTERN_DEBUGONLY(hassassinForceCrossbowMode)\
+	EASY_CVAR_EXTERN_DEBUGONLY_CLIENTSENDOFF_BROADCAST(playerCrossbowMode)\
+	EASY_CVAR_EXTERN_DEBUGONLY(hassassinCrossbowMode)\
 	EASY_CVAR_EXTERN_DEBUGONLY_CLIENTSENDOFF_BROADCAST(tripmineAnimWaitsForFinish)\
 	EASY_CVAR_EXTERN_DEBUGONLY_CLIENTSENDOFF_BROADCAST(revolverLaserScope)\
 	EASY_CVAR_EXTERN_DEBUGONLY_CLIENTSENDOFF_BROADCAST(python_zoomfov)\
@@ -5531,7 +5605,8 @@
 	EASY_CVAR_EXTERN_DEBUGONLY_CLIENTONLY(drawHUD)\
 	EASY_CVAR_EXTERN_DEBUGONLY(disablePauseSinglePlayer)\
 	EASY_CVAR_EXTERN_DEBUGONLY_CLIENTSENDOFF_BROADCAST(playerBulletHitEffectForceServer)\
-	EASY_CVAR_EXTERN_DEBUGONLY_CLIENTSENDOFF_BROADCAST(playerWeaponForceSpreadMode)\
+	EASY_CVAR_EXTERN_DEBUGONLY_CLIENTSENDOFF_BROADCAST(forceAllowServersideTextureSounds)\
+	EASY_CVAR_EXTERN_DEBUGONLY_CLIENTSENDOFF_BROADCAST(playerWeaponSpreadMode)\
 	EASY_CVAR_EXTERN_DEBUGONLY(monsterAIForceFindDistance)\
 	EASY_CVAR_EXTERN_DEBUGONLY(baseEntityDamagePushNormalMulti)\
 	EASY_CVAR_EXTERN_DEBUGONLY(baseEntityDamagePushVerticalBoost)\
@@ -5558,6 +5633,10 @@
 	EASY_CVAR_EXTERN_DEBUGONLY(trackTrainPrintouts)\
 	EASY_CVAR_EXTERN_DEBUGONLY_CLIENTSENDOFF_BROADCAST(holsterAnims)\
 	EASY_CVAR_EXTERN_DEBUGONLY_CLIENTSENDOFF_BROADCAST(playerWeaponTracerMode)\
+	EASY_CVAR_EXTERN_DEBUGONLY(monsterWeaponTracerMode)\
+	EASY_CVAR_EXTERN_DEBUGONLY_CLIENTSENDOFF_BROADCAST(decalTracerExclusivity)\
+	EASY_CVAR_EXTERN_DEBUGONLY(monsterToPlayerHitgroupSpecial)\
+	EASY_CVAR_EXTERN_DEBUGONLY(multiplayerCrowbarHitSoundMode)\
 	EASY_CVAR_EXTERN_DEBUGONLY_CLIENTSENDOFF_BROADCAST(healthcolor_fullRedMin)\
 	EASY_CVAR_EXTERN_DEBUGONLY_CLIENTSENDOFF_BROADCAST(healthcolor_brightness)\
 	EASY_CVAR_EXTERN_DEBUGONLY_CLIENTSENDOFF_BROADCAST(healthcolor_yellowMark)\
@@ -5584,5 +5663,6 @@
 	EASY_CVAR_EXTERN_DEBUGONLY(kingpinDebug)\
 	EASY_CVAR_EXTERN_DEBUGONLY(minimumRespawnDelay)\
 	EASY_CVAR_EXTERN(r_glowshell_debug)\
+	EASY_CVAR_EXTERN(cl_viewpunch)\
 	DUMMY
 

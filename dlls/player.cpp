@@ -40,16 +40,6 @@
 
 // #define DUCKFIX
 
-EASY_CVAR_EXTERN(friendlyPianoFollowVolume)
-EASY_CVAR_EXTERN(playerUseDrawDebug)
-EASY_CVAR_EXTERN(playerFadeOutRate)
-
-
-EASY_CVAR_EXTERN(holsterAnims)
-
-EASY_CVAR_EXTERN(hideDamage)
-EASY_CVAR_EXTERN(minimumRespawnDelay)
-
 
 
 
@@ -183,6 +173,18 @@ EASY_CVAR_EXTERN(customLogoSprayMode)
 EASY_CVAR_EXTERN(ladderCycleMulti)
 EASY_CVAR_EXTERN(ladderSpeedMulti)
 
+
+EASY_CVAR_EXTERN(friendlyPianoFollowVolume)
+EASY_CVAR_EXTERN(playerUseDrawDebug)
+EASY_CVAR_EXTERN(playerFadeOutRate)
+
+
+EASY_CVAR_EXTERN(holsterAnims)
+
+EASY_CVAR_EXTERN(hideDamage)
+EASY_CVAR_EXTERN(minimumRespawnDelay)
+
+EASY_CVAR_EXTERN(monsterToPlayerHitgroupSpecial)
 
 
 
@@ -610,6 +612,17 @@ GENERATE_TRACEATTACK_IMPLEMENTATION(CBasePlayer)
 
 	if ( pev->takedamage )
 	{
+		BOOL isAttackerPlayer = FALSE;
+
+		if(pevAttacker != NULL){
+			CBaseEntity* entTest = CBaseEntity::Instance(pevAttacker);
+			if(entTest->IsPlayer()){
+				isAttackerPlayer = TRUE;
+			}
+		}else{
+			//all we can assume. leave FALSE.
+		}
+		
 		m_LastHitGroup = ptr->iHitgroup;
 
 		//MODDD - don't allow damage edits based on hitbox if this type of damage forbids it.
@@ -622,31 +635,51 @@ GENERATE_TRACEATTACK_IMPLEMENTATION(CBasePlayer)
 		//(bitsDamageType & (DMG_BULLET | DMG_SLASH | DMG_BLAST | DMG_CLUB))
 		//...a lot of the times, damage types based on some natural force (in lack of a better term) like burn, shock, etc.
 		// may also be ok to assume for blocking hitbox checks.
-		if( !(bitsDamageTypeMod & DMG_HITBOX_EQUAL) ){
 
+		//ALSO - new CVar, "monsterToPlayerHitgroupSpecial".
+		//0: never special. Always 100% of intended damage.
+		//1: on. Monsters can do enhanced or reduced damage depending on the hitgroup hit, such as triple damage for headshots.
+		//2: semi. Monsters can potentially do reduced damage if any area reduces damage instead (as of retail skill.cfg settings, likely unchanged, nowhere), but never enhanced damage such as from headshots.
+		//   In other words, damage modifiers are possible from what hitgroup was touched, but it can't go above 100% of intended damage like triple.
+		if( (isAttackerPlayer || EASY_CVAR_GET(monsterToPlayerHitgroupSpecial) > 0) && !(bitsDamageTypeMod & DMG_HITBOX_EQUAL) ){
+			float damageModifier = 1.0f;
+			
 			switch ( ptr->iHitgroup )
 			{
 			case HITGROUP_GENERIC:
 				break;
 			case HITGROUP_HEAD:
-				flDamage *= gSkillData.plrHead;
+				//flDamage *= gSkillData.plrHead;
+				damageModifier = gSkillData.plrHead;
 				break;
 			case HITGROUP_CHEST:
-				flDamage *= gSkillData.plrChest;
+				damageModifier = gSkillData.plrChest;
 				break;
 			case HITGROUP_STOMACH:
-				flDamage *= gSkillData.plrStomach;
+				damageModifier = gSkillData.plrStomach;
 				break;
 			case HITGROUP_LEFTARM:
 			case HITGROUP_RIGHTARM:
-				flDamage *= gSkillData.plrArm;
+				damageModifier = gSkillData.plrArm;
 				break;
 			case HITGROUP_LEFTLEG:
 			case HITGROUP_RIGHTLEG:
-				flDamage *= gSkillData.plrLeg;
+				damageModifier = gSkillData.plrLeg;
 				break;
 			default:
 				break;
+			}
+
+			if(!isAttackerPlayer && EASY_CVAR_GET(monsterToPlayerHitgroupSpecial) == 2){
+				//Don't let the modifier picked exceed 100% for player-induced damage.
+				if(damageModifier > 1.0f){
+					damageModifier = 1.0f;
+				}
+			}
+
+			if(damageModifier != 1.0f){
+				//apply.
+				flDamage *= damageModifier;
 			}
 
 		}//END OF DMG_HITBOX_EQUAL damage type check

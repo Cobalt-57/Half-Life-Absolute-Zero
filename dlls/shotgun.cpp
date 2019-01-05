@@ -46,7 +46,7 @@ EASY_CVAR_EXTERN(cheat_infiniteclip)
 EASY_CVAR_EXTERN(cheat_infiniteammo)
 EASY_CVAR_EXTERN(cheat_minimumfiredelay)
 
-EASY_CVAR_EXTERN(playerWeaponForceSpreadMode)
+EASY_CVAR_EXTERN(playerWeaponSpreadMode)
 
 EASY_CVAR_EXTERN(viewModelPrintouts)
 		
@@ -349,8 +349,8 @@ void CShotgun::PrimaryAttack()
 
 
 	
-	//if (  EASY_CVAR_GET(playerWeaponForceSpreadMode)!=1 && (EASY_CVAR_GET(playerWeaponForceSpreadMode)==2 || WEAPON_DEFAULT_MULTIPLAYER_CHECK )  )
-	if(EASY_CVAR_GET(playerWeaponForceSpreadMode)!=2 && (EASY_CVAR_GET(playerWeaponForceSpreadMode)==1 || !WEAPON_DEFAULT_MULTIPLAYER_CHECK) )
+	//if (  EASY_CVAR_GET(playerWeaponSpreadMode)!=1 && (EASY_CVAR_GET(playerWeaponSpreadMode)==2 || WEAPON_DEFAULT_MULTIPLAYER_CHECK )  )
+	if(EASY_CVAR_GET(playerWeaponSpreadMode)!=2 && (EASY_CVAR_GET(playerWeaponSpreadMode)==1 || !WEAPON_DEFAULT_MULTIPLAYER_CHECK) )
 	{
 		// regular old, untouched spread. 
 		vecDir = m_pPlayer->FireBulletsPlayer( 6, vecSrc, vecAiming, VECTOR_CONE_10DEGREES, 2048, BULLET_PLAYER_BUCKSHOT, 0, 0, m_pPlayer->pev, m_pPlayer->random_seed );
@@ -467,7 +467,7 @@ void CShotgun::SecondaryAttack( void )
 	Vector vecDir;
 	
 
-	if(EASY_CVAR_GET(playerWeaponForceSpreadMode)!=2 && (EASY_CVAR_GET(playerWeaponForceSpreadMode)==1 || !WEAPON_DEFAULT_MULTIPLAYER_CHECK) )
+	if(EASY_CVAR_GET(playerWeaponSpreadMode)!=2 && (EASY_CVAR_GET(playerWeaponSpreadMode)==1 || !WEAPON_DEFAULT_MULTIPLAYER_CHECK) )
 	{
 		//easyForcePrintLine("FLAG S-SINGLEPLAYER");
 		// untouched default single player

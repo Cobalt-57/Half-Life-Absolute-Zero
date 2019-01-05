@@ -28,6 +28,8 @@
 
 #include "custom_debug.h"
 
+#include "defaultai.h"
+#include "scripted.h"
 
 //MODDD - extern
 extern float global_zombieBulletResistance;
@@ -49,9 +51,12 @@ extern DLL_GLOBAL int		g_iSkillLevel;
 
 //TODO - a touch event for the corpse to trigger TASK_WAIT_FOR_MOVEMENT_DUMB completion too??
 
+//TODO - should being interrupted by damage under schedule "WaitForScript" also be ablve to move to an uncrouch script?
 
 
-
+//what sequence is used for crouching over a corpse?
+//a full enum of all sequences is possible but... laziness.
+#define ZOMBIE_EATBODY 29
 
 
 
@@ -123,6 +128,28 @@ public:
 	void EXPORT ZombieTouch( CBaseEntity *pOther );
 	
 	CBaseEntity* getNearestDeadBody(Vector argSearchOrigin, float argMaxDist);
+	
+	void ScheduleChange(void);
+
+	void OnCineCleanup(CCineMonster* pOldCine);
+
+
+	Vector BodyTarget( const Vector &posSrc ) {
+		if(m_Activity == ACT_CROUCH || pev->sequence == ZOMBIE_EATBODY){
+			//we're lower, make other things aim lower.
+			//return Center( ) * 0.75 + EyePosition() * 0.25;
+			return Center( ) * 0.5 + EyePosition() * 0.15;
+		}else{
+			//what the base monster does.
+			return CBaseMonster::BodyTarget(posSrc);
+		}
+	};
+	Vector BodyTargetMod( const Vector &posSrc ) {
+		//redirect to our own BodyTarget method for convenience.
+		return CZombie::BodyTarget(posSrc);
+	};
+
+
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	
 	static const char *pAttackSounds[];
@@ -307,7 +334,11 @@ Task_t	tlZombieSeekCorpseEarlyFail[] =
 	{ TASK_STOP_MOVING,			0				},
 	{ TASK_SET_ACTIVITY,		(float)ACT_IDLE },
 	{ TASK_WAIT,				(float)6		},
-	{ TASK_WAIT_PVS,			(float)0		},
+
+	//MODDD - probably safe?
+	{ TASK_FACE_IDEAL,			(float)0	},
+
+	//{ TASK_WAIT_PVS,			(float)0		},
 };
 
 Schedule_t	slZombieSeekCorpseEarlyFail[] =
@@ -329,7 +360,12 @@ Task_t	tlZombieSeekCorpseQuickFail[] =
 	//{ TASK_SET_ACTIVITY,		(float)ACT_IDLE },
 	{ TASK_CHECK_GETUP_SEQUENCE, 0				},
 	{ TASK_WAIT,				(float)0.2		},
-	{ TASK_WAIT_PVS,			(float)0		},
+
+	//MODDD - is this a good idea?
+	{ TASK_SET_ACTIVITY,		(float)ACT_IDLE },
+	{ TASK_FACE_ENEMY,			(float)0    },
+	{ TASK_FACE_IDEAL,			(float)0	},
+	//{ TASK_WAIT_PVS,			(float)0		},
 };
 
 Schedule_t	slZombieSeekCorpseQuickFail[] =
@@ -641,6 +677,7 @@ CZombie::CZombie(){
 	m_hEnemy_CopyRef = NULL;
 	lookForCorpseTime = -1;
 	nextCorpseCheckTime = -1;
+
 }
 
 //=========================================================
@@ -771,6 +808,17 @@ void CZombie::MonsterThink(){
 Schedule_t* CZombie::GetSchedule( void )
 {
 
+	
+	Schedule_t* endedSchedule = m_pSchedule;
+	if(endedSchedule != NULL && endedSchedule == slWaitScript && pev->sequence == ZOMBIE_EATBODY && m_MonsterState != MONSTERSTATE_DEAD && m_IdealMonsterState != MONSTERSTATE_DEAD){
+		//If this schedule was interrupted / ended and it was ZOMBIE_EATBODY, do a quick getup animation.
+		//return GetScheduleOfType(SCHED_ZOMBIE_SEEK_CORPSE_QUICK_FAIL);
+		
+		return slZombieSeekCorpseQuickFail;
+	}
+
+
+
 
 
 	switch	( m_MonsterState )
@@ -873,7 +921,9 @@ void CZombie::StartTask(Task_t* pTask){
 		TaskComplete();
 	break;}
 	case TASK_CHECK_GETUP_SEQUENCE:{
-		if(this->m_Activity == ACT_CROUCH){
+
+		//Why is coming from "waitForScript"'s interruption leaving pev->sequence at 0 at this point?  WHO KNOWS.  WTF.
+		if(this->m_Activity == ACT_CROUCH || pev->sequence == ZOMBIE_EATBODY){
 			//we need to get up! Do a stand animation and complete when it is done (in RunTask)
 			this->m_flFramerateSuggestion = 1.3;
 			this->SetActivity(ACT_STAND);
@@ -1456,4 +1506,33 @@ CBaseEntity* CZombie::getNearestDeadBody(Vector argSearchOrigin, float argMaxDis
 	return bestChoiceYet;
 
 }//END OF getNearestDeadBody
+
+
+
+//MODDD - this is the event that runs alongside a schedule about to be changed (re-picking a schedule).
+void CZombie::ScheduleChange(void){
+
+	//...nevermind, not the best way to achieve what we wanted.
+	CBaseMonster::ScheduleChange();
+
+}//END OF ScheduleChange
+
+
+
+void CZombie::OnCineCleanup(CCineMonster* pOldCine){
+
+	/*
+	//Generally treat this like base monsters do.  But if we're about to do an uncrouch, don't do anything special in this place.
+	//REVOKED.  Do it per map as needed!
+	if(pev->sequence == ZOMBIE_EATBODY){
+		
+	}else{
+		CBaseMonster::OnCineCleanup(pOldCine);
+	}
+	*/
+
+	CBaseMonster::OnCineCleanup(pOldCine);
+
+}//END OF OnCineCleanup
+
 

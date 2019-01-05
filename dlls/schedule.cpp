@@ -405,6 +405,10 @@ void CBaseMonster :: MaintainSchedule ( void )
 		}
 		*/
 
+	if(monsterID == 14){
+		int x = 666;
+	}
+
 	if(global_crazyMonsterPrintouts == 1){
 		easyPrintLine("DOCKS1 %d", HasConditions(bits_COND_CAN_MELEE_ATTACK1));
 	}
@@ -1700,6 +1704,10 @@ void CBaseMonster :: StartTask ( Task_t *pTask )
 	case TASK_STOP_MOVING:
 		{
 			//easyForcePrintLine("WEEEEEEEEEEEEEEEEEEELLLLLLLLLLLLLLLLLLLLLLLLA %d %d %d", m_IdealActivity, m_movementActivity, this->usingCustomSequence);
+
+			if(monsterID == 14){
+				int x = 666;
+			}
 
 			//MODDD - but isn't it also possible for our m_movementActivity to be set to ACT_IDLE by basemonster.cpp's RouteClear method?
 			//Extra check:
