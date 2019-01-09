@@ -24,6 +24,10 @@
 
 
 
+//TODO - should I forbid underwater point choices in CheckLocalMove?  Like reverse of what the Archer does not (reject non-water vecEnd points)?
+//       it may be effectively in place naturally but chcek to be safe.  If this could ever come up.
+
+
 //TODO - replace my death explosion effect with some green particles like the friendly vomit kinda scattering
 //       and slowly falling maybe? make a more organic squishing sound if possible?
 //       DONE.  But should some other organic sound effect accompany this kind of "explosion"? the generic gibmonster crunch sound may be good enough.
@@ -426,7 +430,7 @@ void CFloater::Spawn( void )
 
 	setModel("models/floater.mdl");
 	//UTIL_SetSize( pev, VEC_HUMAN_HULL_MIN, VEC_HUMAN_HULL_MAX );
-	UTIL_SetSize( pev, Vector( -9, -9, 0 ), Vector( 9, 9, 48 ));
+	UTIL_SetSize( pev, Vector( -9, -9, 0 ), Vector( 9, 9, 46 ));
 
 	pev->classname = MAKE_STRING("monster_floater");
 
@@ -640,19 +644,19 @@ int CFloater :: CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, C
 
 	
 	TraceResult tr;
-
+	Vector vecStartTrace = vecStart + Vector( 0, 0, 12 );
 
 	//UTIL_TraceHull( vecStart + Vector( 0, 0, 32 ), vecEnd + Vector( 0, 0, 32 ), dont_ignore_monsters, large_hull, edict(), &tr );
 
 	//MODDD - large_hull is probably the safest for flyers in general.  point_hull if using the bounce system. or maybe head_hull?
-	UTIL_TraceHull( vecStart + Vector( 0, 0, 4), vecEnd + Vector( 0, 0, 4), dont_ignore_monsters, head_hull, edict(), &tr );
+	UTIL_TraceHull( vecStartTrace, vecEnd + Vector( 0, 0, 12), dont_ignore_monsters, head_hull, edict(), &tr );
 	
 	// ALERT( at_console, "%.0f %.0f %.0f : ", vecStart.x, vecStart.y, vecStart.z );
 	// ALERT( at_console, "%.0f %.0f %.0f\n", vecEnd.x, vecEnd.y, vecEnd.z );
 
 	if (pflDist)
 	{
-		*pflDist = ( (tr.vecEndPos - Vector( 0, 0, 32 )) - vecStart ).Length();// get the distance.
+		*pflDist = ( (tr.vecEndPos ) - vecStartTrace ).Length();// get the distance.
 	}
 	
 

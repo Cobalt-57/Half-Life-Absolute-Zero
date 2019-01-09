@@ -54,6 +54,7 @@ class CSatchelCharge : public CGrenade
 	void EXPORT SatchelThink( void );
 
 	float massInfluence(void);
+	int GetProjectileType(void);
 
 public:
 	void Deactivate( void );
@@ -191,7 +192,10 @@ LINK_ENTITY_TO_CLASS( weapon_satchel, CSatchel );
 float CSatchelCharge::massInfluence(void){
 	return 0.18f;
 }
-
+int CSatchelCharge::GetProjectileType(void){
+	//do we need a custom type for remote charges like this?
+	return PROJECTILE_GRENADE;
+}
 
 
 

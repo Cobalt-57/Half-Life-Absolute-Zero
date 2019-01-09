@@ -3453,17 +3453,18 @@ int CStukaBat :: CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, 
 	}
 
 	TraceResult tr;
+	Vector vecStartTrace = vecStart + Vector( 0, 0, 16 );
 
 	//MODDD - try smaller?
 	//UTIL_TraceHull( vecStart + Vector( 0, 0, 32 ), vecEnd + Vector( 0, 0, 32 ), dont_ignore_monsters, large_hull, edict(), &tr );
-	UTIL_TraceHull( vecStart + Vector( 0, 0, 32 ), vecEnd + Vector( 0, 0, 32 ), dont_ignore_monsters, head_hull, edict(), &tr );
+	UTIL_TraceHull( vecStartTrace, vecEnd + Vector( 0, 0, 16 ), dont_ignore_monsters, head_hull, edict(), &tr );
 
 	// ALERT( at_console, "%.0f %.0f %.0f : ", vecStart.x, vecStart.y, vecStart.z );
 	// ALERT( at_console, "%.0f %.0f %.0f\n", vecEnd.x, vecEnd.y, vecEnd.z );
 
 	if (pflDist)
 	{
-		*pflDist = ( (tr.vecEndPos - Vector( 0, 0, 32 )) - vecStart ).Length();// get the distance.
+		*pflDist = ( (tr.vecEndPos ) - vecStartTrace ).Length();// get the distance.
 	}
 
 	// ALERT( at_console, "check %d %d %f\n", tr.fStartSolid, tr.fAllSolid, tr.flFraction );
@@ -3472,7 +3473,8 @@ int CStukaBat :: CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, 
 	if(tr.fStartSolid){
 		//or should we do thsi?
 		Vector vecDir = (vecEnd - vecStart).Normalize();
-		UTIL_TraceHull( vecStart + Vector( 0, 0, 32 ) + vecDir * 6, vecEnd + Vector( 0, 0, 32 ), dont_ignore_monsters, head_hull, edict(), &tr );
+		UTIL_TraceHull( vecStartTrace + vecDir * 6, vecEnd + Vector( 0, 0, 32 ), dont_ignore_monsters, head_hull, edict(), &tr );
+		//MODDD SUPER WTF
 		//what you didn't even check this new trace X_X
 
 		return LOCALMOVE_VALID;

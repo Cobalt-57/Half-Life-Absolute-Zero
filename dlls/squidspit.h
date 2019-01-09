@@ -37,6 +37,7 @@ public:
 	GENERATE_TAKEDAMAGE_PROTOTYPE
 
 	float massInfluence(void);
+	int GetProjectileType(void);
 
 
 	static int iSquidSpitSprite;

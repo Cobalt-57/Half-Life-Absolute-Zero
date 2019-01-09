@@ -1155,6 +1155,9 @@ float CHornet::massInfluence(void){
 	return 0.01f;
 }//END OF massInfluence
 
+int CHornet::GetProjectileType(void){
+	return PROJECTILE_ORGANIC_HOSTILE;
+}
 
 
 

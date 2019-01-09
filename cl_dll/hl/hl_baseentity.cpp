@@ -91,12 +91,13 @@ void CBaseEntity::ReportGeneric(){}
 
 BOOL CBaseEntity::blocksImpact(void){return FALSE;}
 float CBaseEntity::massInfluence(void){return 0;}
+int CBaseEntity::GetProjectileType(void){return 0;}
 
 
 //Yes, player has this too.
 BOOL CBasePlayer::blocksImpact(void){return FALSE;}
 float CGrenade::massInfluence(void){return 0;}
-
+int CGrenade::GetProjectileType(void){return 0;}
 
 //MODDD
 BOOL CBaseEntity::isMovetypeFlying(void) const{return FALSE;}

@@ -98,3 +98,9 @@ float CControllerZapBall::massInfluence(void){
 	return 0.05f;
 }//END OF massInfluence
 
+int CControllerZapBall::GetProjectileType(void){
+	return PROJECTILE_ENERGYBALL;
+}
+
+
+

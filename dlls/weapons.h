@@ -75,6 +75,7 @@ public:
 	virtual int	BloodColor( void ) { return DONT_BLEED; }
 
 	virtual float massInfluence(void);
+	virtual int GetProjectileType(void);
 	
 	GENERATE_KILLED_PROTOTYPE_VIRTUAL
 	//virtual void Killed( entvars_t *pevAttacker, int iGib );
@@ -1111,6 +1112,7 @@ public:
 	void onDelete(void);
 
 	float massInfluence(void);
+	int GetProjectileType(void);
 
 
 	static CRpgRocket *CreateRpgRocket( Vector vecOrigin, Vector vecAngles, CBaseEntity *pOwner, CRpg *pLauncher );
@@ -1392,7 +1394,7 @@ public:
 	void WeaponIdle( void );
 
 	//MODDD - new.
-	CHandGrenade();
+	CHandGrenade(void);
 	void ItemPreFrame( void );
 	
 	virtual BOOL UseDecrement( void )
@@ -1589,6 +1591,7 @@ public:
 	void EXPORT ExplodeThink( void );
 
 	float massInfluence(void);
+	int GetProjectileType(void);
 
 
 	int m_iTrail;

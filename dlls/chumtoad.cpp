@@ -3014,6 +3014,9 @@ float CChumToad::massInfluence(void){
 	return 0.24f;
 }//END OF massInfluence
 
+int CChumToad::GetProjectileType(void){
+	return PROJECTILE_ORGANIC_HARMLESS;
+}
 
 
 

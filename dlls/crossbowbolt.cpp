@@ -442,5 +442,9 @@ float CCrossbowBolt::massInfluence(void){
 	return 0.03f;
 }//END OF massInfluence
 
+int CCrossbowBolt::GetProjectileType(void){
+	return PROJECTILE_BOLT;
+}
+
 
 

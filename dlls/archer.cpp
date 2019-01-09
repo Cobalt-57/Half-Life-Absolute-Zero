@@ -14,6 +14,8 @@
 #include "squidspit.h"
 #include "weapons.h"
 
+#include "archer_ball.h"
+
 /*
 #include	"extdll.h"
 #include	"util.h"
@@ -442,6 +444,7 @@ Schedule_t	slArcherRetreatIntoWater[] =
 
 Task_t	tlArcherSurfaceAttackPlanFail[] =
 {
+	{ TASK_STOP_MOVING, (float)0 },
 	//now return to roughly around the old point. or just anywhere not at the surface to hide a bit.
 	{ TASK_SET_FAIL_SCHEDULE, (float)SCHED_ARCHER_FAIL_WAIT },
 	
@@ -599,7 +602,7 @@ void CArcher::Spawn( void )
 
 	setModel("models/archer.mdl");
 	//UTIL_SetSize( pev, VEC_HUMAN_HULL_MIN, VEC_HUMAN_HULL_MAX );
-	UTIL_SetSize( pev, Vector( -12, -12, 0 ), Vector( 12, 12, 16 ));
+	UTIL_SetSize( pev, Vector( -16, -16, 0 ), Vector( 16, 16, 18 ));
 
 	pev->classname = MAKE_STRING("monster_archer");
 
@@ -819,17 +822,18 @@ int CArcher :: CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, CB
 
 	
 	TraceResult tr;
+	Vector vecStartTrace = vecStart + Vector( 0, 0, 6 );
 
 
 	//UTIL_TraceHull( vecStart + Vector( 0, 0, 32 ), vecEnd + Vector( 0, 0, 32 ), dont_ignore_monsters, large_hull, edict(), &tr );
-	UTIL_TraceHull( vecStart + Vector( 0, 0, 4), vecEnd + Vector( 0, 0, 4), dont_ignore_monsters, head_hull, edict(), &tr );
+	UTIL_TraceHull( vecStartTrace, vecEnd + Vector( 0, 0, 6), dont_ignore_monsters, head_hull, edict(), &tr );
 	
 	// ALERT( at_console, "%.0f %.0f %.0f : ", vecStart.x, vecStart.y, vecStart.z );
 	// ALERT( at_console, "%.0f %.0f %.0f\n", vecEnd.x, vecEnd.y, vecEnd.z );
 
 	if (pflDist)
 	{
-		*pflDist = ( (tr.vecEndPos - Vector( 0, 0, 32 )) - vecStart ).Length();// get the distance.
+		*pflDist = ( (tr.vecEndPos ) - vecStartTrace ).Length();// get the distance.
 	}
 	
 
@@ -2339,11 +2343,11 @@ void CArcher::HandleEventQueueEvent(int arg_eventID){
 
 
 		//!tr.fStartSolid && !
-		if(tr.fAllSolid && tr.flFraction >= 1.0){
+		if(!tr.fAllSolid && tr.flFraction >= 1.0){
 			//pass, go ahead and use this "vecStart" to spawn something.
 		}else{
 			//no? try this intead.
-			vecStart = pev->origin + vecForward * 60;
+			vecStart = pev->origin + vecForward * 66;
 		}
 
 		MESSAGE_BEGIN( MSG_BROADCAST, SVC_TEMPENTITY );
@@ -2360,7 +2364,7 @@ void CArcher::HandleEventQueueEvent(int arg_eventID){
 			WRITE_COORD( 32 ); // decay
 		MESSAGE_END();
 
-		CBaseMonster *pBall = (CBaseMonster*)Create( "controller_head_ball", vecStart, pev->angles, edict() );
+		CBaseMonster *pBall = (CBaseMonster*)Create( "archer_ball", vecStart, pev->angles, edict() );
 
 		pBall->pev->velocity = Vector( vecForward.x * 100, vecForward.y * 100, 0 );
 		pBall->m_hEnemy = m_hEnemy;

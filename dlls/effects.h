@@ -63,6 +63,7 @@ public:
 	void Expand( float scaleSpeed, float fadeSpeed );
 	
 	//MODDD - new
+	void AnimationScaleFadeIn_TimeTarget(float arg_startScale, float arg_targetScale, float arg_targetOpacity, float arg_timeTarget );
 	void AnimationScaleFadeIn( float scaleSpeed, float fadeSpeed, float arg_startScale, float arg_targetScale, float arg_targetOpacity );
 
 

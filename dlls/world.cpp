@@ -521,6 +521,7 @@ CWorld::CWorld(void){
 	m_fl_node_hulltest_height = 8;
 	m_f_node_hulltest_heightswap = FALSE;
 
+	m_f_map_anyAirNodes = FALSE;
 
 }//END OF CWorld constructor
 
@@ -542,7 +543,7 @@ void CWorld::Activate(void){
 void CWorld :: Spawn( void )
 {
 
-	applyCustomMapSettings();
+	applyLoadedCustomMapSettingsToGlobal();
 
 
 	
@@ -749,6 +750,10 @@ void CWorld :: Precache( void )
 		else
 		{
 			ALERT ( at_console, "\n*Graph Loaded!\n" );
+
+			//MODDD - if we found any air nodes, need to apply that to here.
+			//...nevermind, we do this anyways at util.cpp's OnMapLoadEnd regardless of loading from a file or not.
+			//getCustomMapSettingsFromGlobal();
 		}
 	}
 
@@ -935,6 +940,7 @@ TYPEDESCRIPTION	CWorld::m_SaveData[] =
 	DEFINE_FIELD( CWorld, m_fl_node_linktest_height, FIELD_FLOAT ),
 	DEFINE_FIELD( CWorld, m_fl_node_hulltest_height, FIELD_FLOAT ),
 	DEFINE_FIELD( CWorld, m_f_node_hulltest_heightswap, FIELD_BOOLEAN ),
+	DEFINE_FIELD( CWorld, m_f_map_anyAirNodes, FIELD_BOOLEAN ),
 	
 };
 
@@ -961,7 +967,7 @@ int CWorld::Restore( CRestore &restore )
 	
 
 	//Plug in what I loaded:
-	applyCustomMapSettings();
+	applyLoadedCustomMapSettingsToGlobal();
 
 
 
@@ -992,17 +998,23 @@ void CWorld::WorldThink(void){
 
 
 //MODDD - load new settings / variables / config / whatever saved per map so that it may take effect if necessary.
-//For instance, nodes don't know how to access the map so these global "node_" variables can be modified on loading a new map or restoring an existing
+//For instance, nodes don't know how to access the map so these global variables can be modified on loading a new map or restoring an existing
 //so that the values at the time of that map's creation per the user's save file are used.
-void CWorld::applyCustomMapSettings(void){
+void CWorld::applyLoadedCustomMapSettingsToGlobal(void){
 	
 	//Clearly these need to take effect.
 	node_linktest_height = m_fl_node_linktest_height;
 	node_hulltest_height = m_fl_node_hulltest_height;
 	node_hulltest_heightswap = m_f_node_hulltest_heightswap;
-}//END Of applyCustomMapSettings
+
+}//END Of applyLoadedCustomMapSettingsToGlobal
 
 
+//MODDD - for hte other way around.  Settings set by nodes.cpp should be sent to here instead.
+void CWorld::getCustomMapSettingsFromGlobal(void){
+	
+	m_f_map_anyAirNodes = map_anyAirNodes;
+}
 
 
 

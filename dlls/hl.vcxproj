@@ -308,6 +308,7 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="archer.cpp" />
+    <ClCompile Include="archer_ball.cpp" />
     <ClCompile Include="barnacle.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -628,6 +629,7 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="kingpin.cpp" />
+    <ClCompile Include="kingpin_ball.cpp" />
     <ClCompile Include="panthereye.cpp" />
     <ClCompile Include="pickupwalker.cpp" />
     <ClCompile Include="rope\CElectrifiedWire.cpp" />
@@ -1071,6 +1073,7 @@
     <ClInclude Include="animating.h" />
     <ClInclude Include="animation.h" />
     <ClInclude Include="archer.h" />
+    <ClInclude Include="archer_ball.h" />
     <ClInclude Include="barnacle.h" />
     <ClInclude Include="basebutton.h" />
     <ClInclude Include="basemonster.h" />
@@ -1105,6 +1108,7 @@
     <ClInclude Include="hornet_kingpin.h" />
     <ClInclude Include="items.h" />
     <ClInclude Include="kingpin.h" />
+    <ClInclude Include="kingpin_ball.h" />
     <ClInclude Include="lights.h" />
     <ClInclude Include="maprules.h" />
     <ClInclude Include="monsterevent.h" />

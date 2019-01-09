@@ -29,6 +29,7 @@ extern BOOL _scheduleNodeUpdate;
 extern float node_linktest_height;
 extern float node_hulltest_height;
 extern BOOL node_hulltest_heightswap;
+extern BOOL map_anyAirNodes;
 
 
 

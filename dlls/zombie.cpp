@@ -16,6 +16,13 @@
 // Zombie
 //=========================================================
 
+
+//TODO - zombies seem to fly a little more if hit while idle and they don't move.  Turn on autosneaky and see.
+//       It's as though they need some natural friction or something to slow down velocity forces from that bullet force CVar.
+
+
+
+
 // UNDONE: Don't flinch every time you get hit
 
 #include "extdll.h"

@@ -20,10 +20,18 @@ public:
 	void EXPORT HuntThink( void );
 	void EXPORT DieThink( void );
 	void EXPORT BounceTouch( CBaseEntity *pOther );
-	void MovetoTarget( Vector vecTarget );
-	void Crawl( void );
 
-	float massInfluence(void);
+	virtual void MovetoTarget( Vector vecTarget );
+
+	virtual void Crawl( void );
+
+	virtual float massInfluence(void);
+	virtual int GetProjectileType(void);
+
+	virtual float nearZapDamage(void);
+	virtual float getFadeOutAmount(void);
+
+	void velocityCheck(const float& arg_maxSpeed);
 
 	float nextNormalThinkTime;
 	int m_iTrail;

@@ -449,6 +449,10 @@ float CRpgRocket::massInfluence(void){
 	return 0.23f;
 }
 
+int CRpgRocket::GetProjectileType(void){
+	return PROJECTILE_ROCKET;
+}
+
 
 //=========================================================
 //=========================================================

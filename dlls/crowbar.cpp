@@ -599,7 +599,7 @@ int CCrowbar::Swing( int fFirst )
 
 		ClearMultiDamage( );
 
-		BOOL useBulletHitSound;
+		BOOL useBulletHitSound = TRUE;
 
 		if ( (m_flNextPrimaryAttack + 1 < UTIL_WeaponTimeBase() ) || g_pGameRules->IsMultiplayer() )
 		{

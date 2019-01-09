@@ -1,5 +1,15 @@
 
 
+
+//SON. OF. A. BITCH.
+//Use this in touch methods, we can trust it to return what surface was recently touched.
+//WHY IS THIS NOT SUPPLIED BY A PARAMETER IN TOUCH METHODS FUCK.  The chumtoad's touch method would be
+//a lot less of a mess with this, most likely.
+// TraceResult tr = UTIL_GetGlobalTrace( );
+// float n = -DotProduct(tr.vecPlaneNormal, vecDir);
+
+
+
 //PYTHON ISSUE.  Holding down after firing and running out of clip ammo makes it click a lot.  while zoomed it flickers oddly.
 
 //Is it ok to force

@@ -786,6 +786,10 @@ float CGrenade::massInfluence(void){
 }
 
 
+int CGrenade::GetProjectileType(void){
+	return PROJECTILE_GRENADE;
+}
+
 
 //======================end grenade
 

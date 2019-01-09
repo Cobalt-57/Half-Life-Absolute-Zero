@@ -39,6 +39,7 @@
 
 #define KINGPIN_SHOCKER_RADIUS 260
 #define KINGPIN_MAX_BEAMS 4
+#define KINGPIN_MAX_REFLECTEFFECT 6
 
 
 class CKingpin : public CBaseMonster{
@@ -94,6 +95,14 @@ public:
 	//And this is new. At what time should a beam expire?  Needed since they don't remove themselves automatically.
 	//ISlave's never did, they are manually cleared by "ClearBeams" each time there.
 	float m_flBeamExpireTime[KINGPIN_MAX_BEAMS];
+	
+	CSprite* chargeEffect;
+	
+	EHANDLE m_pEntityToReflect[KINGPIN_MAX_REFLECTEFFECT];
+	CSprite* m_pReflectEffect[KINGPIN_MAX_REFLECTEFFECT];
+	float m_flReflectEffectApplyTime[KINGPIN_MAX_REFLECTEFFECT];
+	float m_flReflectEffectExpireTime[KINGPIN_MAX_REFLECTEFFECT];
+	int m_iReflectEffect;  //soft max.
 
 
 	float chargeFinishTime;
@@ -112,7 +121,6 @@ public:
 
 	float accumulatedDamageTaken;
 
-	CSprite* chargeEffect;
 
 	int m_iSpriteTexture;
 
@@ -251,7 +259,13 @@ public:
 	CBeam*& getNextBeam(void);
 	void SetupBeams(void);
 	void ClearBeams(void);
-	void CheckBeams(void);
+	void UpdateBeams(void);
+
+	int getNextReflectHandleID(void);
+	void SetupReflectEffects(void);
+	void ClearReflectEffects(void);
+	void UpdateReflectEffects(void);
+	BOOL AlreadyReflectingEntity(CBaseEntity* arg_Check);
 
 	BOOL turnToFaceEnemyLKP(void);
 	float getDotProductWithEnemyLKP(void);
@@ -275,6 +289,10 @@ public:
 	CBaseEntity* attemptFindTowardsPoint(const Vector& arg_searchPoint);
 
 	int getHullIndexForNodes(void);
+
+
+	void attemptReflectProjectileStart(CBaseEntity* arg_toReflect);
+
 
 };//END OF class CKingpin
 

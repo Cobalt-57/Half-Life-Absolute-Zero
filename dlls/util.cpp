@@ -8244,7 +8244,14 @@ void OnMapLoadEnd(){
 	DebugLine_drawTime = -1;
 	queueYMG_stopSend = TRUE;
 	
+	CBaseEntity* tempEnt = CBaseEntity::Instance(0);
+	if(tempEnt != NULL && FClassnameIs(tempEnt->pev, "worldspawn")){
+		//In case any node ent's spawned with an AIR type, let the worldspawn entity know.
+		CWorld* worldRef = static_cast<CWorld*>(tempEnt);
+		worldRef->getCustomMapSettingsFromGlobal();
+	}
 	
+
 }//END OF OnMapLoadEnd
 
 

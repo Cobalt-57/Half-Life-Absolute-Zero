@@ -1077,6 +1077,8 @@ public:
 	void EXPORT CustomHVRExplodeTouch ( CBaseEntity *pOther );
 
 	float massInfluence(void);
+	int GetProjectileType(void);
+
 
 	int m_iTrail;
 	Vector m_vecForward;
@@ -1240,6 +1242,10 @@ void CApacheHVR :: AccelerateThink( void  )
 float CApacheHVR::massInfluence(void){
 	return 0.40f;
 }//END OF massInfluence
+
+int CApacheHVR::GetProjectileType(void){
+	return PROJECTILE_ROCKET;
+}
 
 
 

@@ -146,6 +146,7 @@ class CChumToad : public CBaseMonster{
 	int tryActivitySubstitute(int activity);
 
 	float massInfluence(void);
+	int GetProjectileType(void);
 
 	void OnTakeDamageSetConditions(entvars_t *pevInflictor, entvars_t *pevAttacker, float flDamage, int bitsDamageType, int bitsDamageTypeMod);
 	

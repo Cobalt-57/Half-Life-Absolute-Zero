@@ -76,14 +76,15 @@ public:
 	void EXPORT DartTouch( CBaseEntity *pOther );
 	void EXPORT DieTouch ( CBaseEntity *pOther );
 	
-	GENERATE_TRACEATTACK_PROTOTYPE
-	GENERATE_TAKEDAMAGE_PROTOTYPE
+	GENERATE_TRACEATTACK_PROTOTYPE_VIRTUAL
+	GENERATE_TAKEDAMAGE_PROTOTYPE_VIRTUAL
 
 	//MODDD - new.
 	GENERATE_DEADTAKEDAMAGE_PROTOTYPE
 	GENERATE_KILLED_PROTOTYPE
 	
 	float massInfluence(void);
+	int GetProjectileType(void);
 
 	float			m_flStopAttack;
 	int				m_iHornetType;

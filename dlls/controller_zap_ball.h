@@ -21,6 +21,7 @@ public:
 	void EXPORT ExplodeTouch( CBaseEntity *pOther );
 
 	float massInfluence(void);
+	int GetProjectileType(void);
 
 	EHANDLE m_hOwner;
 };

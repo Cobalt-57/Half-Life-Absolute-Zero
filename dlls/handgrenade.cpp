@@ -40,7 +40,7 @@ LINK_ENTITY_TO_CLASS( weapon_handgrenade, CHandGrenade );
 EASY_CVAR_EXTERN(handGrenadePickupYieldsOne);
 
 
-CHandGrenade::CHandGrenade(){
+CHandGrenade::CHandGrenade(void){
 
 	//NEW VAR.  If -500, we are cheating.  Better for syncing.
 	m_fireState = 0;
@@ -611,6 +611,11 @@ void CHandGrenade::WeaponIdle( void )
 	}
 }
 
+
+
+//NOTICE: this file does not include the projectile.  See "ShootTimed" above called by "PrimaryAttack".
+//        Looks like our projectile is still a generic GGrenade object with a hand grenade model just like MP5
+//        grenades.
 
 
 

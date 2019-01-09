@@ -161,6 +161,26 @@ public:
 
 	BOOL FCanCheckAttacks(void);
 
+
+
+	
+	void SetObjectCollisionBox( void ){
+
+		if(pev->deadflag != DEAD_NO){
+			//no need to do anything special anymore I think.
+			//CBaseMonster::SetObjectCollisionBox();
+			pev->absmin = pev->origin + Vector(-26, -26, 0);
+			pev->absmax = pev->origin + Vector(26, 26, 26);
+		}else{
+			// = DEAD_NO
+			pev->absmin = pev->origin + Vector(-26, -26, 0);
+			pev->absmax = pev->origin + Vector(26, 26, 26);
+		}
+		
+	}//END OF SetObjectCollisionBox
+
+
+
 };//END OF class CArcher
 
 

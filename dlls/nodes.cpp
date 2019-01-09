@@ -62,6 +62,12 @@ float node_hulltest_height = 8;
 BOOL node_hulltest_heightswap = FALSE;
 	
 
+//MODDD - new. Has this map ever had any "Air" type nodes placed?  Some things may want to query this.
+//        Generally fliers should not be placed in maps without any air nodes, but some things, like hte kingpin's super homing
+//        electric ball, can still behave like an ordinary controller head ball if not.
+BOOL map_anyAirNodes = FALSE;
+
+
 
 // to help eliminate node clutter by level designers, this is used to cap how many other nodes
 // any given node is allowed to 'see' in the first stage of graph creation "LinkVisibleNodes()".
@@ -110,6 +116,11 @@ CLink::CLink(void){
 //=========================================================
 void CGraph :: InitGraph( void)
 {
+
+
+	//MODDD - new. This keeps track of whether any air nodes have been spawned this time.
+	map_anyAirNodes = FALSE;
+
 
 	// Make the graph unavailable
 	//
@@ -1888,10 +1899,15 @@ void CNodeEnt :: Spawn( void )
 	WorldGraph.m_pNodes[ WorldGraph.m_cNodes ].m_sHintActivity = m_sHintActivity;
 
 
-	if (FClassnameIs( pev, "info_node_air" ))
+	if (FClassnameIs( pev, "info_node_air" )){
 		WorldGraph.m_pNodes[ WorldGraph.m_cNodes ].m_afNodeInfo = bits_NODE_AIR;
-	else
+		
+		//MODDD - yes?
+		map_anyAirNodes = TRUE;
+
+	}else{
 		WorldGraph.m_pNodes[ WorldGraph.m_cNodes ].m_afNodeInfo = 0;
+	}
 
 
 	WorldGraph.m_cNodes++;
@@ -2915,6 +2931,18 @@ int CGraph :: FLoadGraph ( char *szMapName )
 		//
 		m_fGraphPresent = TRUE;
 		m_fGraphPointersSet = FALSE;
+
+		//MODDD - one more thing.  Is any of the nodes created an AIR node?
+		for(int i = 0; i < m_cNodes; i++){
+			//CWorldGraph
+			//WorldGraph.m_pNodes
+			if(m_pNodes[i].m_afNodeInfo & bits_NODE_AIR){
+				//found one? we're good.
+				map_anyAirNodes = TRUE;
+				break;
+			}
+		}
+
 		
 		FREE_FILE(aMemFile);
 

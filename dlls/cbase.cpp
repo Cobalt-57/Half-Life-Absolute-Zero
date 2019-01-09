@@ -1291,4 +1291,11 @@ float CBaseEntity::massInfluence(void){
 	return 0.7f;
 }//END OF massInfluence
 
+//What type of projectile am I, if I am a projectile at all?
+//This includes bolts, grenades, and rockets.  Really any entity with the sole purpose of moving in one direction or following a target just to do damage.
+//Can include throwable organics too (snarks / chumtoads).
+int CBaseEntity::GetProjectileType(void){
+	return PROJECTILE_NONE;
+}
+
 

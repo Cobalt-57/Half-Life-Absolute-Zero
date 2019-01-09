@@ -31,7 +31,6 @@ class CHornetKingpin : public CHornet{
 	
 	void EXPORT SmartDieTouch(CBaseEntity* pOther );
 
-	
 	//MODDD - new.
 	float expireTime;
 	Vector speedMissileDartTarget;

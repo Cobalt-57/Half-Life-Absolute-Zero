@@ -2,8 +2,9 @@
 #include "kingpin.h"
 
 
-#include "controller_zap_ball.h"
-#include "controller_head_ball.h"
+//#include "controller_zap_ball.h"
+//#include "controller_head_ball.h"
+#include "kingpin_ball.h"
 
 #include "hornet_kingpin.h"
 
@@ -19,6 +20,17 @@ extern float global_noFlinchOnHard;
 EASY_CVAR_EXTERN(houndeye_attack_canGib)
 EASY_CVAR_EXTERN(kingpinDebug)
 EASY_CVAR_EXTERN(testVar)
+
+
+//TODO - slightly slower mage loop anim for charging the electirc laser?
+//different pulse noise for teleporting preparation?
+//the freezy one for doing the teleport? a few particles fly of after doing it?
+
+//a scale-in fade effect before homing balls are made during its charge??
+
+
+
+
 
 
 //TODO MAJOR CONCERN - why don't ISLave beams (and thus Kingpin beams / sprites) seem to set SF_BEAM_TEMPORARY / SF_SPRITE_TEMPORARY for them?
@@ -318,6 +330,17 @@ TYPEDESCRIPTION	CKingpin::m_SaveData[] =
 	DEFINE_ARRAY( CKingpin, m_pBeam, FIELD_CLASSPTR, KINGPIN_MAX_BEAMS ),
 	DEFINE_ARRAY( CKingpin, m_flBeamExpireTime, FIELD_TIME, KINGPIN_MAX_BEAMS ),
 	DEFINE_FIELD( CKingpin, m_iBeams, FIELD_INTEGER ),
+	
+	
+	DEFINE_ARRAY( CKingpin, m_pEntityToReflect, FIELD_EHANDLE, KINGPIN_MAX_REFLECTEFFECT ),
+	DEFINE_ARRAY( CKingpin, m_pReflectEffect, FIELD_CLASSPTR, KINGPIN_MAX_REFLECTEFFECT ),
+	DEFINE_ARRAY( CKingpin, m_flReflectEffectApplyTime, FIELD_TIME, KINGPIN_MAX_REFLECTEFFECT ),
+	DEFINE_ARRAY( CKingpin, m_flReflectEffectExpireTime, FIELD_TIME, KINGPIN_MAX_REFLECTEFFECT ),
+	DEFINE_FIELD( CKingpin, m_iReflectEffect, FIELD_INTEGER ),
+
+	
+
+
 	DEFINE_FIELD( CKingpin, m_voicePitch, FIELD_INTEGER),
 	
 	DEFINE_FIELD( CKingpin, electricBarrageShotsFired, FIELD_INTEGER ),
@@ -923,6 +946,8 @@ void CKingpin::Precache( void )
 	
 	
 	
+	//OH YEAH.
+	PRECACHE_MODEL("sprites/hotglow_ff.spr");
 
 
 
@@ -1710,7 +1735,7 @@ void CKingpin::StartTask( Task_t *pTask ){
 			createChargeEffect();
 			
 			this->m_iForceLoops = TRUE;
-			SetSequenceByIndex(KINGPIN_MAGE_LOOP);
+			SetSequenceByIndex(KINGPIN_MAGE_LOOP, 0.7f);
 			this->m_iForceLoops = -1;
 
 			playElectricLaserChargeSound();
@@ -2371,6 +2396,68 @@ void CKingpin::MonsterThink( void ){
 
 
 
+
+	if(m_IdealMonsterState != MONSTERSTATE_DEAD){
+		CBaseEntity* pEntityScan = NULL;
+
+		//if there is some sort of projectile headed towards me, we will try to reflect it.
+		while ((pEntityScan = UTIL_FindEntityInSphere( pEntityScan, pev->origin, 600 )) != NULL){
+
+			if(!(pEntityScan->pev->flags & FL_KILLME)){
+				//If this is not scheduled for deletion
+
+				const int otherProjType = pEntityScan->GetProjectileType();
+
+				/*
+				switch(otherProjType){
+				case PROJECTILE_NONE:
+					//can't work with that?
+					
+				break;
+				case PROJECTILE_BOLT:
+
+				break;
+				case PROJECTILE_GRENADE:
+
+				break;
+				case PROJECTILE_ROCKET:
+
+				break;
+				case PROJECTILE_ENERGYBALL:
+
+				break;
+				case PROJECTILE_ORGANIC_DUMB:
+
+				break;
+				case PROJECTILE_ORGANIC_HARMLESS:
+					
+				break;
+				case PROJECTILE_ORGANIC_HOSTILE:
+
+				break;
+				}//END OF switch
+				*/
+
+				if(otherProjType > PROJECTILE_NONE){
+					//that's it?
+					attemptReflectProjectileStart(pEntityScan);
+				}
+
+
+
+
+			}//END OF fl_killme check
+
+		}//END OF while loop through nearby entities
+
+
+	}//END OF dead check
+
+
+
+
+
+
 	if(m_MonsterState == MONSTERSTATE_COMBAT){
 		//Periodically power up monstesr and make them target my enemy.
 
@@ -2449,7 +2536,7 @@ void CKingpin::MonsterThink( void ){
 	}
 
 
-	CheckBeams();
+	UpdateBeams();
 	updateChargeEffect();
 
 }//END OF MonsterThink(...)
@@ -2617,6 +2704,7 @@ GENERATE_KILLED_IMPLEMENTATION(CKingpin){
 	*/
 	
 	ClearBeams();
+	ClearReflectEffects();
 	removeChargeEffect();
 
 	
@@ -3386,6 +3474,217 @@ CBeam*& CKingpin::getNextBeam(void){
 }
 
 
+
+
+//similar to ClearBeams, but forces all m_pBeam's to NULL for safety.
+//Only to be used at startup (CKingpin constructor, anything unused must be NULL,
+//garbage memory or references won't be good)
+void CKingpin::SetupBeams(void){
+	for(int i = 0; i < KINGPIN_MAX_BEAMS; i++){
+		m_pBeam[i] = NULL;
+		m_flBeamExpireTime[i] = 0;
+	}
+	m_iBeams = 0;
+}//END OF SetupBeams
+
+void CKingpin::ClearBeams(void){
+	int i;
+	for(i = 0; i < KINGPIN_MAX_BEAMS; i++){
+		if(m_pBeam[i] != NULL){
+			UTIL_Remove( m_pBeam[i] );
+			m_pBeam[i] = NULL;
+			m_flBeamExpireTime[i] = 0;
+		}
+	}//END OF for loop through beams
+	m_iBeams = 0;
+	//pev->skin = 0;
+
+	//STOP_SOUND_FILTERED( ENT(pev), CHAN_WEAPON, "debris/zap4.wav", FALSE );
+}//END OF ClearBeams
+
+//Call me every frame of think logic.  Do any beams need to be cleaned up?
+void CKingpin::UpdateBeams(void){
+	int i;
+	for(i = 0; i < KINGPIN_MAX_BEAMS; i++){
+		if(m_pBeam[i] != NULL){
+			//has this been surpassed?
+			if(gpGlobals->time >= m_flBeamExpireTime[i]){
+				UTIL_Remove( m_pBeam[i] );
+				m_pBeam[i] = NULL;
+			}//END OF time check
+		}//END OF null check
+	}//END OF for loop through beams
+
+}//END OF UpdateBeams
+
+
+
+
+
+
+
+/*
+	m_pEntityToReflect
+	m_pReflectEffect
+	m_flReflectEffectExpireTime
+	m_iReflectEffect
+*/
+	
+
+//CSprite** arg_reflectEffect, EHANDLE* arg_entityToReflect
+int CKingpin::getNextReflectHandleID(void){
+
+	//TOdo: return an open ID insyread. find one thru all, no overwriting / deleting anythong in progress.
+	//return -1 for none avail.
+	//or this works too.?
+
+	int returnID = -1;
+	int i;
+	int i_raw;
+	int maxItr = KINGPIN_MAX_REFLECTEFFECT;
+
+	for(i = m_iReflectEffect, i_raw = 0; i_raw < KINGPIN_MAX_REFLECTEFFECT; i++, i_raw++){
+		
+		if(i >= KINGPIN_MAX_REFLECTEFFECT){
+			//LOOP AROUND
+			i = 0;
+		}
+
+		//if(m_flReflectEffectExpireTime[i] == 0 || gpGlobals->time > m_flReflectEffectExpireTime[i]){
+		if(m_pReflectEffect[i] == NULL){
+			// if not set or already used, this is ok to grab.
+			returnID = i;
+			// next to start from.
+			m_iReflectEffect = (i + 1) % KINGPIN_MAX_REFLECTEFFECT;
+			break;
+		}
+
+	}//END OF for
+
+	
+	if(returnID != -1){
+		//success, return pointers to those items.
+		//Leave it up to the caller to set cooldown or whatever.
+		return returnID;
+	}else{
+		//oh well.
+		return -1;
+	}
+
+
+
+
+	//assuming we're using this now... no
+	//m_flReflectEffectExpireTime[returnID] = gpGlobals->time + 0.2f;
+
+
+}
+
+
+
+
+//similar to ClearBeams, but forces all m_pReflectEffect's to NULL for safety.
+//Only to be used at startup (CKingpin constructor, anything unused must be NULL,
+//garbage memory or references won't be good)
+void CKingpin::SetupReflectEffects(void){
+	for(int i = 0; i < KINGPIN_MAX_REFLECTEFFECT; i++){
+		m_pEntityToReflect[i] = NULL;
+		m_pReflectEffect[i] = NULL;
+		m_flReflectEffectExpireTime[i] = 0;
+		m_flReflectEffectApplyTime[i] = 0;
+	}
+	m_iReflectEffect = 0;
+}//END OF SetupReflectEffects
+
+void CKingpin::ClearReflectEffects(void){
+	int i;
+	for(i = 0; i < KINGPIN_MAX_REFLECTEFFECT; i++){
+		if(m_pReflectEffect[i] != NULL){
+			UTIL_Remove( m_pReflectEffect[i] );
+			m_pReflectEffect[i] = NULL;
+			m_flReflectEffectExpireTime[i] = 0;
+			m_flReflectEffectApplyTime[i] = 0;
+		}
+	}//END OF for loop through ref
+	m_iReflectEffect = 0;
+	//pev->skin = 0;
+
+	//STOP_SOUND_FILTERED( ENT(pev), CHAN_WEAPON, "debris/zap4.wav", FALSE );
+}//END OF ClearReflectEffects
+
+//Call me every frame of think logic.  Do any refs need to be cleaned up?
+void CKingpin::UpdateReflectEffects(void){
+	int i;
+	for(i = 0; i < KINGPIN_MAX_REFLECTEFFECT; i++){
+		if(m_pReflectEffect[i] != NULL){
+			//has this been surpassed?
+			if(m_flReflectEffectApplyTime[i] != -1 && gpGlobals->time >= m_flReflectEffectApplyTime[i]){
+				m_flReflectEffectApplyTime[i] = -1;
+
+				//Reflect the entity there sucka!
+				//TODO OH SHIT
+				if(m_pEntityToReflect[i] != NULL){
+					//still valid? reflect!
+					Vector flatVelocity = Vector(m_pEntityToReflect[i]->pev->velocity.x, m_pEntityToReflect[i]->pev->velocity.y, 0);
+
+					m_pEntityToReflect[i]->pev->velocity = flatVelocity * -1 + Vector(0, 0, 100);
+					
+					if(m_pEntityToReflect[i]->pev->movetype == MOVETYPE_FLY){
+						//I will fall.
+						m_pEntityToReflect[i]->pev->movetype = MOVETYPE_TOSS;
+					}else if(m_pEntityToReflect[i]->pev->movetype == MOVETYPE_BOUNCEMISSILE){
+						m_pEntityToReflect[i]->pev->movetype = MOVETYPE_BOUNCE;
+					}
+				}
+
+
+
+				//OH YAH
+				m_pReflectEffect[i]->Expand(0.1, (255 / 0.3f));
+
+				
+			}//END OF ReflectEffecTApplyTime check
+
+			if(gpGlobals->time >= m_flReflectEffectExpireTime[i]){
+				if(m_pReflectEffect[i] != NULL){
+					UTIL_Remove( m_pReflectEffect[i] );
+				}
+				m_pReflectEffect[i] = NULL;
+			}//END OF time check
+		}//END OF null check
+	}//END OF for loop through ref
+
+}//END OF UpdateReflectEffects
+
+
+BOOL CKingpin::AlreadyReflectingEntity(CBaseEntity* arg_check){
+	int i;
+
+	for(i = 0; i < KINGPIN_MAX_REFLECTEFFECT; i++){
+		if(m_pReflectEffect[i] != NULL){
+			//check.
+			if(m_pEntityToReflect[i].Get() == arg_check->edict()){
+				//already in there? say so.
+				return TRUE;
+			}
+		}
+	}//END OF for
+	
+
+	//didn't find one? say so.
+	return FALSE;
+}//END OF AlreadyReflectingEntity
+
+
+
+
+
+
+
+
+
+
+
 //This is a smaller one for the rapid-fire laser barrage.
 //Only one laser in one call though.
 void CKingpin::fireElectricBarrageLaser(void){
@@ -3579,18 +3878,9 @@ void CKingpin::fireSuperBall(void){
 	
 	//create the ball
 	Vector vecStart, angleGun;
-
-
-
 	Vector vecForward;
 	Vector vecRight;
 	Vector vecUp;
-
-
-
-	
-
-
 
 
 	//super ball.  USe pathfinding to route towards the enemy if there are air nodes.
@@ -3640,10 +3930,12 @@ void CKingpin::fireSuperBall(void){
 		WRITE_COORD( 32 ); // decay
 	MESSAGE_END();
 
-	CBaseMonster *pBall = (CBaseMonster*)Create( "controller_head_ball", vecStart, pev->angles, edict() );
+	CBaseMonster *pBall = (CBaseMonster*)CreateManual( "kingpin_ball", vecStart, pev->angles, edict() );
 
 	pBall->pev->velocity = Vector( vecForward.x * 100, vecForward.y * 100, 0 );
 	pBall->m_hEnemy = m_hEnemy;
+
+	pBall->Spawn();
 
 
 	//this->playPsionicLaunchSound();
@@ -3721,10 +4013,13 @@ void CKingpin::createSpeedMissileHornet(const Vector& arg_location, const Vector
 
 
 		if(m_hEnemy != NULL){
-			hornetRef->setup(m_hEnemy.GetEntity(), arg_floatVelocity * 6);
+			hornetRef->setup(m_hEnemy.GetEntity(), arg_floatVelocity * 10);
 		}else{
-			hornetRef->setup(this->m_vecEnemyLKP, arg_floatVelocity * 6);
+			hornetRef->setup(this->m_vecEnemyLKP, arg_floatVelocity * 10);
 		}
+
+		hornetRef->pev->owner = this->edict();  //good idea?
+
 
 		//This will get overridden by havingan established enemy anyways.
 		//hornetRef->speedMissileDartTarget = m_vecEnemyLKP;
@@ -3736,54 +4031,6 @@ void CKingpin::createSpeedMissileHornet(const Vector& arg_location, const Vector
 }//END OF createSpeedMissileHornet
 
 
-
-
-
-
-
-
-
-
-//similar to ClearBeams, but forces all m_pBeam's to NULL for safety.
-//Only to be used at startup (CKingpin constructor, anything unused must be NULL,
-//garbage memory or references won't be good)
-void CKingpin::SetupBeams(void){
-	for(int i = 0; i < KINGPIN_MAX_BEAMS; i++){
-		m_pBeam[i] = NULL;
-		m_flBeamExpireTime[i] = 0;
-	}
-	m_iBeams = 0;
-}//END OF SetupBeams
-
-void CKingpin::ClearBeams(void){
-	int i;
-	for(i = 0; i < KINGPIN_MAX_BEAMS; i++){
-		if(m_pBeam[i] != NULL){
-			UTIL_Remove( m_pBeam[i] );
-			m_pBeam[i] = NULL;
-			m_flBeamExpireTime[i] = 0;
-		}
-	}//END OF for loop through beams
-	m_iBeams = 0;
-	//pev->skin = 0;
-
-	//STOP_SOUND_FILTERED( ENT(pev), CHAN_WEAPON, "debris/zap4.wav", FALSE );
-}//END OF ClearBeams
-
-//Call me every frame of think logic.  Do any beams need to be cleaned up?
-void CKingpin::CheckBeams(void){
-	int i;
-	for(i = 0; i < KINGPIN_MAX_BEAMS; i++){
-		if(m_pBeam[i] != NULL){
-			//has this been surpassed?
-			if(gpGlobals->time >= m_flBeamExpireTime[i]){
-				UTIL_Remove( m_pBeam[i] );
-				m_pBeam[i] = NULL;
-			}//END OF time check
-		}//END OF null check
-	}//END OF for loop through beams
-
-}//END OF CheckBeams
 
 
 
@@ -4373,6 +4620,46 @@ int CKingpin::getHullIndexForNodes(void){
     return NODE_LARGE_HULL;  //safe?
 }
 
+
+
+void CKingpin::attemptReflectProjectileStart(CBaseEntity* arg_toReflect){
+	
+	int emptyReflectHandleID;
+	Vector anticipatedProjectileOrigin;
+
+	//Is this entity already being reflected?
+	if(AlreadyReflectingEntity(arg_toReflect)){
+		//stop.  No need to set a slot for this.
+		return;
+	}
+
+	emptyReflectHandleID = this->getNextReflectHandleID();
+
+	if(emptyReflectHandleID == -1){
+		//also stop.  No slots available.
+		return;
+	}
+
+	//Good, now set this slot up to reflect this entity soon with an effect.
+	m_pEntityToReflect[emptyReflectHandleID] = arg_toReflect;
+
+	//TODO - use a new glowsprite colored sky blue for this.
+	//where? where we think the entity will land in 0.3 seconds or however long..?
+
+	anticipatedProjectileOrigin = arg_toReflect->pev->origin + arg_toReflect->pev->velocity * 0.3;
+
+	m_pReflectEffect[emptyReflectHandleID] = CSprite::SpriteCreate( "sprites/hotglow_ff.spr", anticipatedProjectileOrigin, TRUE );
+	m_pReflectEffect[emptyReflectHandleID]->AnimationScaleFadeIn_TimeTarget(1.1, 0.8f, 170, 0.3);
+
+	m_flReflectEffectApplyTime[emptyReflectHandleID] = gpGlobals->time + 0.3;
+	m_flReflectEffectExpireTime[emptyReflectHandleID] = gpGlobals->time + 0.6;
+	
+
+
+
+	
+
+}//END OF attemptReflectProjectileStart
 
 
 

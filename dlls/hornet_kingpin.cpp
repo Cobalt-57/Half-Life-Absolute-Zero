@@ -45,12 +45,19 @@ IMPLEMENT_SAVERESTORE( CHornetKingpin, CHornet );
 void CHornetKingpin :: Spawn( void ){
 	CHornet::Spawn();
 	//do what the parent does.
+	
+	pev->movetype	= MOVETYPE_BOUNCEMISSILE;
 
 
 	pev->classname = MAKE_STRING("hornet_kingpin");
 	
+	//even smaller.  They must not collide with each other mid-flight.
+	UTIL_SetSize( pev, Vector( -0.5, -0.5, -0.5 ), Vector( 0.5, 0.5, 0.5 ) );
+
 	//safe default.
 	m_hEnemy = NULL;
+
+
 
 	//but change the starting think to this to tie into the rest of our own logic instead.
 	SetThink(&CHornetKingpin::StartSpeedMissile);
@@ -98,7 +105,10 @@ void CHornetKingpin::StartSpeedMissile(void){
 	
 	//SetThink( &CBaseEntity::SUB_Remove );
 	SetThink( &CHornetKingpin::SpeedMissileDartStart );
-	SetTouch( &CHornetKingpin::DartTouch );
+
+	//AHHHH. leave it to SmartDieTouch please!!
+	//SetTouch( &CHornetKingpin::DartTouch );
+
 	pev->nextthink = gpGlobals->time + 0.73f;
 
 
@@ -138,12 +148,34 @@ void CHornetKingpin::SpeedMissileDartContinuous(void){
 
 		if(m_hEnemy != NULL){
 			//override: make speedMissileDartTarget the enemy's location now.
-			speedMissileDartTarget = m_hEnemy->BodyTargetMod(pev->origin) + speedMissileDartTargetOffset;
+
+			const float distToEnemy = (m_hEnemy->pev->origin - pev->origin).Length();
+
+			if(distToEnemy < 600){
+				//forget the offset.
+				speedMissileDartTarget = m_hEnemy->BodyTargetMod(pev->origin);
+			}else{
+				//use the offset.
+				speedMissileDartTarget = m_hEnemy->BodyTargetMod(pev->origin) + speedMissileDartTargetOffset;
+			}
+			
+
 			speedMissileDartDirection = (speedMissileDartTarget - pev->origin).Normalize();
 		}
 
-		pev->velocity = pev->velocity * 0.9f + speedMissileDartDirection * 280;
+		pev->velocity = pev->velocity * 0.84f + speedMissileDartDirection * 360;
 	//}
+
+
+
+	pev->angles = UTIL_VecToAngles( pev->velocity );
+	//pev->angles.z = 0;
+	//pev->angles.x = 0;
+
+
+
+
+
 	
 	//SetThink( &CHornet::SpeedMissileDartContinuous );
 	//SetTouch( &CHornet::DartTouch );
@@ -166,11 +198,14 @@ void CHornetKingpin::SmartDieTouch(CBaseEntity* pOther )
 {
 
 	//only collide IF the other thing is NOT a hornet_kingpin.
-	if(pOther && !FClassnameIs(pOther->pev, "hornet_kingpin") ){
+	//if(pOther && !FClassnameIs(pOther->pev, "hornet_kingpin") ){
+	if(pOther){
+
+		const char* otherClassname = pOther->getClassname();
 	
 		//MODDD TODO - should it turn off sounds for "pother->IsWorldOrAffiliated"?
 		//func_door's for whatever reason have pev->takedamage on apparently.
-		if(pOther->pev->takedamage ){
+		if(pOther->pev->takedamage && !FClassnameIs(pOther->pev, "hornet_kingpin") ){
 			switch (RANDOM_LONG(0,2))
 			{// buzz when you plug someone
 				case 0:	EMIT_SOUND_FILTERED( ENT(pev), CHAN_VOICE, "hornet/ag_hornethit1.wav", 1, ATTN_NORM);	break;
@@ -186,11 +221,13 @@ void CHornetKingpin::SmartDieTouch(CBaseEntity* pOther )
 
 		SetThink ( &CBaseEntity::SUB_Remove );
 		pev->nextthink = gpGlobals->time + 1;// stick around long enough for the sound to finish!
+		//pev->nextthink = gpGlobals->time + 0;
 
 	}//END OF other hornet_kingpin check
-
+	
 
 }//END OF SmartDieTouch
+
 
 
 

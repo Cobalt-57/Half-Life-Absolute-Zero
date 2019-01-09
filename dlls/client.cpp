@@ -55,6 +55,8 @@
 #include "talkmonster.h"
 
 
+extern BOOL map_anyAirNodes;
+
 
 
 
@@ -4159,6 +4161,15 @@ void ClientCommand( edict_t *pEntity )
 			sciRef->initiateAss();
 		}
 
+	}else if(FStrEq(pcmdRefinedRef, "isthereanyairnodes") ){
+
+		if(map_anyAirNodes == TRUE){
+			easyForcePrintLine("YA DERE IS SOME AIR NODES");
+		}else{
+			easyForcePrintLine("NEIN");
+		}
+	
+	
 	}else if(FStrEq(pcmdRefinedRef, "listofentities") || FStrEq(pcmdRefinedRef, "listentities") ){
 		
 		int i = 0;
@@ -4288,6 +4299,13 @@ void ClientCommand( edict_t *pEntity )
 				aryNodeEnt[i]->Spawn();
 			}
 			
+			//Any air nodes? need to let the world know.
+			//...oh this has to be difficult.
+			CBaseEntity* entTest = CBaseEntity::Instance(0);
+			if(entTest != NULL && FClassnameIs(entTest->pev, "worldspawn")){
+				CWorld* worldRef = static_cast<CWorld*>(entTest);
+				worldRef->getCustomMapSettingsFromGlobal();
+			}
 			
 
 			delete[] aryNodeEnt;

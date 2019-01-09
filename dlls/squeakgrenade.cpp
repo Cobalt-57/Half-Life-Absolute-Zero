@@ -82,6 +82,7 @@ public:
 	BOOL isOrganic(void);
 	
 	float massInfluence(void);
+	int GetProjectileType(void);
 
 	
 	GENERATE_GIBMONSTER_PROTOTYPE
@@ -291,7 +292,9 @@ BOOL CSqueakGrenade::isOrganic(void){
 float CSqueakGrenade::massInfluence(void){
 	return 0.20f;
 }//END OF massInfluence
-
+int CSqueakGrenade::GetProjectileType(void){
+	return PROJECTILE_ORGANIC_HOSTILE;
+}
 
 
 
@@ -328,7 +331,13 @@ void CSqueakGrenade::HuntThink( void )
 		pev->velocity = pev->velocity * 0.9;
 		pev->velocity.z += 8.0;
 	}
-	else if (pev->movetype = MOVETYPE_FLY)
+	//MODDD - WOA THERE.  A mistake from the as-is dev's?  Now that's a treat.
+	//Effectively this always sets pev->movetype TO MOVETYPE_FLOAT since it's a single equals (assignment, not a condition or check).
+	//And since the result,  pev->movetype is not 0, it passes.
+	//In other wors, the is the same as just having only "else".  The movetype is changed 100% of the time this else is reached at all.
+	//...but it's also the only other choice and setting to the same MOVETYPE_BOUNCE when it's already that doesn't change anything.
+	//else if (pev->movetype = MOVETYPE_FLY)
+	else
 	{
 		pev->movetype = MOVETYPE_BOUNCE;
 	}

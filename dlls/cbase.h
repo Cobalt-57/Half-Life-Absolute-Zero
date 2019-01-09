@@ -85,6 +85,31 @@ CBaseEntity
 
 
 
+//MODDD - new set of constants.  Sometimes we need to tell different types of projectiles apart from one another.
+//safe default for all entities.  Override "GetProjectileType" to change per entity class.
+#define PROJECTILE_NONE 0
+//Just the crossbow's bolt.
+#define PROJECTILE_BOLT 1
+//mp5 grenades, hand grenades. Moderate weighted non-propelled grenandes.
+#define PROJECTILE_GRENADE 2
+//projectile with a strong sense of direction, propelled, following or not.
+#define PROJECTILE_ROCKET 3
+//balls of electricity from controllers, archers, kingpins.
+#define PROJECTILE_ENERGYBALL 4
+//organic projectiles that are usually big green and toxic like bullsquid spit.
+#define PROJECTILE_ORGANIC_DUMB 5
+//living things that act like projectiles but can't do damage (chumtoads)
+#define PROJECTILE_ORGANIC_HARMLESS 6
+//living things that act like damaging projectiles on impact, with at least minimal AI to separate it from ORGANIC_DUMB.
+#define PROJECTILE_ORGANIC_HOSTILE 7
+
+
+
+
+
+
+
+
 
 // C functions for external declarations that call the appropriate C++ methods
 
@@ -238,6 +263,7 @@ public:
 
 	virtual BOOL blocksImpact(void);
 	virtual float massInfluence(void);
+	virtual int GetProjectileType(void);
 
 
 	BOOL alreadySaved;
@@ -1188,7 +1214,8 @@ public:
 	//////////////////////////////////////////////////////////////////////////////////
 	//void EXPORT WorldThink( void );
 
-	void applyCustomMapSettings(void);
+	void applyLoadedCustomMapSettingsToGlobal(void);
+	void getCustomMapSettingsFromGlobal(void);
 
 
 	
@@ -1196,6 +1223,7 @@ public:
 	float m_fl_node_linktest_height;
 	float m_fl_node_hulltest_height;
 	BOOL m_f_node_hulltest_heightswap;
+	BOOL m_f_map_anyAirNodes;
 
 	BOOL IsWorld(void);
 	BOOL IsWorldAffiliated(void);

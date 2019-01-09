@@ -1705,10 +1705,6 @@ void CBaseMonster :: StartTask ( Task_t *pTask )
 		{
 			//easyForcePrintLine("WEEEEEEEEEEEEEEEEEEELLLLLLLLLLLLLLLLLLLLLLLLA %d %d %d", m_IdealActivity, m_movementActivity, this->usingCustomSequence);
 
-			if(monsterID == 14){
-				int x = 666;
-			}
-
 			//MODDD - but isn't it also possible for our m_movementActivity to be set to ACT_IDLE by basemonster.cpp's RouteClear method?
 			//Extra check:
 			//if ( m_IdealActivity == m_movementActivity )
@@ -1716,8 +1712,11 @@ void CBaseMonster :: StartTask ( Task_t *pTask )
 
 			//Now, if the ideal activity isn't the stopped activity, AND it is the movement activity, we can do this change.
 			//I suppose if Ideal was matching both the Stopped activity and movement ACT, it would've done nothing but good to be safe.
-			if(m_IdealActivity != myStoppedActivity && m_IdealActivity == m_movementActivity)
+			//MODDD - also supporting a change if we're in LEFT or RIGHT turn activities.
+			if(m_IdealActivity != myStoppedActivity && m_IdealActivity == m_movementActivity 
+				|| m_Activity == ACT_TURN_LEFT || m_Activity == ACT_TURN_RIGHT)
 			{
+
 				m_IdealActivity = GetStoppedActivity();
 			}
 			//easyForcePrintLine("WEEEEEEEEEEEEEEEEEEELLLLLLLLLLLLLLLLLLLLLLLLB %d %d %d", m_IdealActivity, m_movementActivity, this->usingCustomSequence);
@@ -2179,35 +2178,31 @@ void CBaseMonster :: StartTask ( Task_t *pTask )
 
 		//MODDD - this is forced to involve the enemy LKP now instead, even at the start.
 	case TASK_MOVE_TO_ENEMY_RANGE:
-		{
-
-			if(m_hEnemy == NULL){
-				//what??
-				TaskFail();
-				return;
-			}
-
-
-			//if ( (m_hEnemy->pev->origin - pev->origin).Length() < 1 )
-			if ( (m_vecEnemyLKP - pev->origin).Length() < 1 )
-				TaskComplete();
-			else
-			{
-				//if ( !MoveToEnemy( ACT_WALK, 2 ) )
-				//	TaskFail();
-
-				//This gets the real enemy location, which may or may not be a good idea. It can seem  like cheating if done way too often to constantly just know where you are.
-				//But that's todo.
-				//BOOL test = FRefreshRouteChaseEnemySmart();
-				BOOL test = FRefreshRouteChaseEnemySmart();
-				
-				if(!test){
-					//easyForcePrintLine("!!! %s:%d YOU HAVE ALREADY FAILED.", this->getClassname(), this->monsterID);
-					TaskFail();
-				};
-			}
-			break;
+	{
+		if(m_hEnemy == NULL){
+			//what??
+			TaskFail();
+			return;
 		}
+
+		//if ( (m_hEnemy->pev->origin - pev->origin).Length() < 1 )
+		if ( (m_vecEnemyLKP - pev->origin).Length() < 1 ){
+			TaskComplete();
+		}else{
+			//if ( !MoveToEnemy( ACT_WALK, 2 ) )
+			//	TaskFail();
+
+			//This gets the real enemy location, which may or may not be a good idea. It can seem  like cheating if done way too often to constantly just know where you are.
+			//But that's todo.
+			BOOL test = FRefreshRouteChaseEnemySmart();
+				
+			if(!test){
+				//easyForcePrintLine("!!! %s:%d YOU HAVE ALREADY FAILED.", this->getClassname(), this->monsterID);
+				TaskFail();
+			};
+		}
+		break;
+	}
 	//MODDD - new, clone of TASK_MOVE_TO_TARGET_RANGE but for a point (m_vecMoveGoal) instead.
 	case TASK_MOVE_TO_POINT_RANGE:
 	{

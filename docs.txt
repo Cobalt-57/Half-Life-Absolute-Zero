@@ -2164,24 +2164,27 @@ playerBulletHitEffectForceServer (0) - BOOL. force whether effects related to th
 *Note: This is NOT TE_GUNSHOT, which is still always serverside and unrelated to this. Can look into playing TE_GUNSHOT clientside too if interested.
 
 forceAllowServersideTextureSounds (0) - MODEVAR. Whether to force texturehit sounds to play for the server.  No difference in singleplayer as serverside texturehit sounds are allowed.
-~NOTICE: if "muteBulletHitSounds" is 1, this has no effect.
+~If "muteBulletHitSounds" is 1, this has no effect.
+~Take heed of other CVars, such as playerBulletHitEffectForceServer.  If it is 0, texture sounds can play even when this CVar is 0, but if playerBulletHitEffectForceServer is 1, forceAllowServersideTextureSounds must also be 1 for them to work.  But a forceAllowServersideTextureSounds of 2 is the same as 1 but also mutes clientside texturehit sounds, requiring playerBulletHitEffectForceServer to be 1 to hear them. This does NOT apply to crowbar texturehit sounds, which are never clientside in any case.
+~Required for texture hit sounds from the crowbar anytime, excluding the generic metallic one.
 0: off, no difference from retail. Multiplayer typically turns off serverside texturehit sounds.
 1: on. Does not affect whether texture sounds continue to play clientside or not.
 2: on, and mutes all clientside texturehit sounds.
+
+multiplayerCrowbarHitSoundMode (1) - MODEVAR. Only in multiplayer (maxplayers over 1, probably, requires restart if changed ingame). How to handle the volume of the crowbar hit sound (multiplayerCrowbarHitSoundMode).
+~NOTE: loses to "muteCrowbarSounds" if the hitsound is mute or "muteBulletHitSounds" if on.
+~Works regardless of forceAllowServersideTextureSounds for the crowbar hit sound only, which is independent of texturehit noises. Having volume influenced by the texture hit is for mode #1 below.
+0: force crowbar hit sound off always.
+1: leave the crowbar hit volume up to the texture hit.
+   ~Closest to single-player retail behavior if hitsounds were allowed in multiplayer (forceAllowServersideTextureSounds of 1), but still matches the volume the crowbar is told to use as if there were one regardless.
+2: force crowbar hit sound volume to 0.6, common default for a lot of texture hit sounds anyways.
+3: (retail) force crowbar hit sound volume to 1.0, max possible.
+
 
 playerWeaponSpreadMode (0) - MODEVAR. If non-zero, forces weapons whose spread is altered in multiplayer (shotgun and mp5) to always use either the singleplayer or multiplayer spread regardless of being in actual singleplayer or multiplayer.
 0 - no effect; default behavior per game.
 1 - forces singleplayer behavior: spread radius is circular.
 2 - forces multiplayer behavior: spread radius of the shotgun is less wide and taller, supposedly for being more likely to hit other fast-moving players. The mp5's spread radius is greater overall in multiplayer.
-
-
-multiplayerCrowbarHitSoundMode (1) - MODEVAR. Only in multiplayer (maxplayers over 1, probably, requires restart if changed ingame). How to handle the volume of the crowbar hit sound (multiplayerCrowbarHitSoundMode).
-~NOTE: loses to "muteCrowbarSounds" if it is on.
-0: force crowbar hit sound off always.
-1: leave the crowbar hit volume up to the texture hit.
-2: force crowbar hit sound volume to 0.6, common default for a lot of texture hit sounds anyways.
-3: (retail) force crowbar hit sound volume to 1.0, max possible.
-
 
 
 

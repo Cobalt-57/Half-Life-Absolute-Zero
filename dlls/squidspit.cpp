@@ -582,6 +582,10 @@ float CSquidSpit::massInfluence(void){
 	return 0.03f;
 }//END OF massInfluence
 
+int CSquidSpit::GetProjectileType(void){
+	return PROJECTILE_ORGANIC_DUMB;
+}
+
 
 
 

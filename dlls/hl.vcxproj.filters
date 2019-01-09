@@ -392,6 +392,12 @@
     <ClCompile Include="hornet_kingpin.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="kingpin_ball.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="archer_ball.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="activity.h">
@@ -626,6 +632,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="hornet_kingpin.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="archer_ball.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="kingpin_ball.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

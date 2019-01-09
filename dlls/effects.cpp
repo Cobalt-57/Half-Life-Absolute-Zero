@@ -1337,13 +1337,26 @@ void CSprite::ExpandThink( void )
 
 
 
+//MODDD new. Same as below but sets the scaleSpeed and fadeSpeed to finish in the set amount of time instead.
+void CSprite::AnimationScaleFadeIn_TimeTarget(float arg_startScale, float arg_targetScale, float arg_targetOpacity, float arg_duration ){
+
+	//Given our arg_duration, what should the scaleSpeed and fadeSpeed be to end at that "arg_duration" (or rather, current time plus duration) ?
+	//(imply a start opacity of 0)
+
+	const float arg_scaleDelta = (arg_targetScale - arg_startScale);
+	const float arg_opacityDelta = (arg_targetOpacity - 0);
+
+	AnimationScaleFadeIn( arg_scaleDelta / arg_duration, arg_opacityDelta / arg_duration, arg_startScale, arg_targetScale, arg_targetOpacity);
+
+
+}//END OF AnimationScaleFadeIn_TimeTarget
+
 
 //MODDD - copy of Expand that makes the sprite start invisible and fade into existance instead.
 //Can begin smaller than the target scale to grow to fit it, or begin larger than the target scale to shrink into it.
 //In either case, the sprite starts invisible (or near invisible) and gets more opacity as it grows/shrinks each frame
 //to fit the target scale.
-void CSprite::AnimationScaleFadeIn( float scaleSpeed, float fadeSpeed, float arg_startScale, float arg_targetScale, float arg_targetOpacity )
-{
+void CSprite::AnimationScaleFadeIn( float scaleSpeed, float fadeSpeed, float arg_startScale, float arg_targetScale, float arg_targetOpacity ){
 
 	//Given.
 	SetTransparency( kRenderTransAdd, 255, 255, 255, 0, kRenderFxNoDissipation );
@@ -1365,8 +1378,7 @@ void CSprite::AnimationScaleFadeIn( float scaleSpeed, float fadeSpeed, float arg
 }//END OF AnimationScaleFadeIn
 
 
-void CSprite::AnimationScaleFadeInThink( void )
-{
+void CSprite::AnimationScaleFadeInThink( void ){
 	const float frametime = gpGlobals->time - m_lastTime;
 
 	

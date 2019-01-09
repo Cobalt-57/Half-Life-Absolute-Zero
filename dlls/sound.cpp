@@ -1833,8 +1833,12 @@ float TEXTURETYPE_PlaySound(TraceResult *ptr,  Vector vecSrc, Vector vecEnd, int
 	}
 
 	//MODDD - if CVar forceAllowServersideTextureSounds is 1, deny this early termination.
-	if (EASY_CVAR_GET(forceAllowServersideTextureSounds) != 1 && !g_pGameRules->PlayTextureSounds() )
-		return 0.0;
+	//MODDD - different approach altogheter.  Sometimes we still rely on the "fvolbar" returned regardless
+	//        of whether we mean to play a sound or not.  So handle these at the end instead.
+	//if (EASY_CVAR_GET(forceAllowServersideTextureSounds) < 1 && !g_pGameRules->PlayTextureSounds() )
+	//	return 0.0;
+
+
 
 	CBaseEntity *pEntity = CBaseEntity::Instance(ptr->pHit);
 
@@ -1990,11 +1994,14 @@ float TEXTURETYPE_PlaySound(TraceResult *ptr,  Vector vecSrc, Vector vecEnd, int
 			}
 		}
 	}
-
-	if(cnt > 0){
-		// play material hit sound
-		UTIL_EmitAmbientSound(ENT(0), ptr->vecEndPos, rgsz[RANDOM_LONG(0,cnt-1)], fvol, fattn, 0, 96 + RANDOM_LONG(0,0xf));
-		//EMIT_SOUND_DYN( ENT(m_pPlayer->pev), CHAN_WEAPON, rgsz[RANDOM_LONG(0,cnt-1)], fvol, ATTN_NORM, 0, 96 + RANDOM_LONG(0,0xf));
+	
+	//MODDD - down here, actually play the sound if we want to.
+	if (EASY_CVAR_GET(forceAllowServersideTextureSounds) >= 1 || g_pGameRules->PlayTextureSounds() ){
+		if(cnt > 0){
+			// play material hit sound
+			UTIL_EmitAmbientSound(ENT(0), ptr->vecEndPos, rgsz[RANDOM_LONG(0,cnt-1)], fvol, fattn, 0, 96 + RANDOM_LONG(0,0xf));
+			//EMIT_SOUND_DYN( ENT(m_pPlayer->pev), CHAN_WEAPON, rgsz[RANDOM_LONG(0,cnt-1)], fvol, ATTN_NORM, 0, 96 + RANDOM_LONG(0,0xf));
+		}
 	}
 	
 
