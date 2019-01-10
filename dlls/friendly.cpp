@@ -449,7 +449,7 @@ void CFriendly::Precache( void )
 
 	PRECACHE_MODEL("models/friendly.mdl");
 
-	m_iVomitBallSpriteLocal = PRECACHE_MODEL( "sprites/hotglow_green.spr" );
+	PRECACHE_MODEL( "sprites/hotglow_green.spr" );
 
 
 

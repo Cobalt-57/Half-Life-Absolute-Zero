@@ -447,4 +447,18 @@ int CCrossbowBolt::GetProjectileType(void){
 }
 
 
+Vector CCrossbowBolt::GetVelocityLogical(void){
+	return m_velocity;
+}
+//Likewise, if something else wants to change our velocity, and we pay more attention to something other than pev->velocty,
+//we need to apply the change to that instead.  Or both, leaving that up to the thing implementing this.
+void CCrossbowBolt::SetVelocityLogical(const Vector& arg_newVelocity){
+	pev->velocity = arg_newVelocity;
+	m_velocity = arg_newVelocity;
+}
+
+
+
+
+
 

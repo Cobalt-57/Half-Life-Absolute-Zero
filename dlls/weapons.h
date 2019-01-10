@@ -1593,6 +1593,9 @@ public:
 	float massInfluence(void);
 	int GetProjectileType(void);
 
+	Vector GetVelocityLogical(void);
+	void SetVelocityLogical(const Vector& arg_newVelocity);
+
 
 	int m_iTrail;
 	Vector recentVelocity;

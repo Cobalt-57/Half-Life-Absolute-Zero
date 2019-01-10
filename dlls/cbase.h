@@ -88,20 +88,22 @@ CBaseEntity
 //MODDD - new set of constants.  Sometimes we need to tell different types of projectiles apart from one another.
 //safe default for all entities.  Override "GetProjectileType" to change per entity class.
 #define PROJECTILE_NONE 0
+//Not really intended to be thrown or go flying to a target.  Not quite the remote charges (satchel), but includes tripmines.
+#define PROJECTILE_DEPLOYABLE 1
 //Just the crossbow's bolt.
-#define PROJECTILE_BOLT 1
+#define PROJECTILE_BOLT 2
 //mp5 grenades, hand grenades. Moderate weighted non-propelled grenandes.
-#define PROJECTILE_GRENADE 2
+#define PROJECTILE_GRENADE 3
 //projectile with a strong sense of direction, propelled, following or not.
-#define PROJECTILE_ROCKET 3
+#define PROJECTILE_ROCKET 4
 //balls of electricity from controllers, archers, kingpins.
-#define PROJECTILE_ENERGYBALL 4
+#define PROJECTILE_ENERGYBALL 5
 //organic projectiles that are usually big green and toxic like bullsquid spit.
-#define PROJECTILE_ORGANIC_DUMB 5
+#define PROJECTILE_ORGANIC_DUMB 6
 //living things that act like projectiles but can't do damage (chumtoads)
-#define PROJECTILE_ORGANIC_HARMLESS 6
+#define PROJECTILE_ORGANIC_HARMLESS 7
 //living things that act like damaging projectiles on impact, with at least minimal AI to separate it from ORGANIC_DUMB.
-#define PROJECTILE_ORGANIC_HOSTILE 7
+#define PROJECTILE_ORGANIC_HOSTILE 8
 
 
 
@@ -265,6 +267,8 @@ public:
 	virtual float massInfluence(void);
 	virtual int GetProjectileType(void);
 
+	virtual Vector GetVelocityLogical(void);
+	virtual void SetVelocityLogical(const Vector& arg_newVelocity);
 
 	BOOL alreadySaved;
 	int wasAttached;

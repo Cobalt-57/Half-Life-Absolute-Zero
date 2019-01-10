@@ -189,8 +189,6 @@ public:
 
 	LinkedListTemp shieldSapList;
 	
-	int m_iVomitBallSpriteLocal;
-	
 	BOOL m_fPissedAtPlayer;
 	BOOL m_fPissedAtPlayerAlly;
 	BOOL m_fPissedAtHumanMilitary;

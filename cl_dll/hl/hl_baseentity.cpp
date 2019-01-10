@@ -93,6 +93,9 @@ BOOL CBaseEntity::blocksImpact(void){return FALSE;}
 float CBaseEntity::massInfluence(void){return 0;}
 int CBaseEntity::GetProjectileType(void){return 0;}
 
+Vector CBaseEntity::GetVelocityLogical(void){return Vector(); }   //blank vector?  most unorthodox.
+void CBaseEntity::SetVelocityLogical(const Vector& arg_newVelocity){}
+
 
 //Yes, player has this too.
 BOOL CBasePlayer::blocksImpact(void){return FALSE;}

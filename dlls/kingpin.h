@@ -102,6 +102,7 @@ public:
 	CSprite* m_pReflectEffect[KINGPIN_MAX_REFLECTEFFECT];
 	float m_flReflectEffectApplyTime[KINGPIN_MAX_REFLECTEFFECT];
 	float m_flReflectEffectExpireTime[KINGPIN_MAX_REFLECTEFFECT];
+	float m_flReflectEffect_EndDelayFactor[KINGPIN_MAX_REFLECTEFFECT];
 	int m_iReflectEffect;  //soft max.
 
 
@@ -291,7 +292,7 @@ public:
 	int getHullIndexForNodes(void);
 
 
-	void attemptReflectProjectileStart(CBaseEntity* arg_toReflect);
+	void attemptReflectProjectileStart(CBaseEntity* arg_toReflect, float arg_delayFactor);
 
 
 };//END OF class CKingpin

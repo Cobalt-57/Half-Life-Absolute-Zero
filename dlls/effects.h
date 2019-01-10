@@ -60,10 +60,15 @@ public:
 
 	void Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value );
 	void Animate( float frames );
-	void Expand( float scaleSpeed, float fadeSpeed );
 	
 	//MODDD - new
-	void AnimationScaleFadeIn_TimeTarget(float arg_startScale, float arg_targetScale, float arg_targetOpacity, float arg_timeTarget );
+	void Expand_TimeTarget( float arg_targetScale, float arg_duration );
+	
+	void Expand( float scaleSpeed, float fadeSpeed );
+	
+
+	//MODDD - new
+	void AnimationScaleFadeIn_TimeTarget(float arg_startScale, float arg_targetScale, float arg_targetOpacity, float arg_duration );
 	void AnimationScaleFadeIn( float scaleSpeed, float fadeSpeed, float arg_startScale, float arg_targetScale, float arg_targetOpacity );
 
 

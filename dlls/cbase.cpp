@@ -1298,4 +1298,16 @@ int CBaseEntity::GetProjectileType(void){
 	return PROJECTILE_NONE;
 }
 
+//If something else needs and idea of what direction / speed we're moving in and we pay more attention to some other
+//variable more closely instead of pev->velocity (the engine-tied one), we need to say what that is.
+//Defaults to pev->velocity.
+Vector CBaseEntity::GetVelocityLogical(void){
+	return pev->velocity;
+}
+//Likewise, if something else wants to change our velocity, and we pay more attention to something other than pev->velocty,
+//we need to apply the change to that instead.  Or both, leaving that up to the thing implementing this.
+void CBaseEntity::SetVelocityLogical(const Vector& arg_newVelocity){
+	pev->velocity = arg_newVelocity;
+}
+
 

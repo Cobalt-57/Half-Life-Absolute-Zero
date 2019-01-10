@@ -1304,10 +1304,24 @@ void CSprite::AnimateUntilDead( void )
 	}
 }
 
+//MODDD
+void CSprite::Expand_TimeTarget( float arg_targetScale, float arg_duration ){
+	const float arg_scaleDelta = (arg_targetScale - pev->scale);
+	const float arg_opacityDelta = (0 - pev->renderamt);
+
+	
+	Expand( arg_scaleDelta / arg_duration, arg_opacityDelta / arg_duration);
+}//END OF Expand_TimeTarget
+	
+
 void CSprite::Expand( float scaleSpeed, float fadeSpeed )
 {
-	pev->speed = scaleSpeed;
-	pev->health = fadeSpeed;
+	//why absolute value?  Because we're already going to bring this in the right direction in every think frame.
+	//Keep it absolute here, always positive.
+	pev->speed = abs(scaleSpeed);
+
+	pev->health = abs(fadeSpeed);
+
 	SetThink( &CSprite::ExpandThink );
 
 	pev->nextthink	= gpGlobals->time;
@@ -1361,8 +1375,10 @@ void CSprite::AnimationScaleFadeIn( float scaleSpeed, float fadeSpeed, float arg
 	//Given.
 	SetTransparency( kRenderTransAdd, 255, 255, 255, 0, kRenderFxNoDissipation );
 
-	pev->speed = scaleSpeed;
-	pev->health = fadeSpeed;
+	//why absolute value?  Because we're already going to bring this in the right direction in every think frame.
+	//Keep it absolute here, always positive.
+	pev->speed = abs(scaleSpeed);
+	pev->health = abs(fadeSpeed);
 
 	//reuse variables... ahoy!
 	pev->fuser1 = arg_targetScale;

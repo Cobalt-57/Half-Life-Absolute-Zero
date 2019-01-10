@@ -42,17 +42,7 @@ enum tripmine_e {
 
 
 
-
-
-
-#ifndef CLIENT_DLL
-	extern float global_tripmineAnimWaitsForFinish;
-	#define tripmineAnimWaitsForFinish global_tripmineAnimWaitsForFinish
-#else
-	extern float global2_tripmineAnimWaitsForFinish;
-	#define tripmineAnimWaitsForFinish global2_tripmineAnimWaitsForFinish
-
-#endif
+EASY_CVAR_EXTERN(tripmineAnimWaitsForFinish)
 
 
 
@@ -88,6 +78,10 @@ class CTripmineGrenade : public CGrenade
 
 	void MakeBeam( void );
 	void KillBeam( void );
+	
+	float massInfluence(void);
+	int GetProjectileType(void);
+
 
 	float		m_flPowerUp;
 	Vector		m_vecDir;
@@ -305,6 +299,22 @@ void CTripmineGrenade :: KillBeam( void )
 		m_pBeam = NULL;
 	}
 }
+
+
+float CTripmineGrenade::massInfluence(void){
+	return 0.20f;
+}//END OF massInfluence
+int CTripmineGrenade::GetProjectileType(void){
+	return PROJECTILE_DEPLOYABLE;
+}
+
+
+
+
+
+
+
+
 
 void CTripmineGrenade :: Activate( void ){
 	CGrenade::Activate();
@@ -680,7 +690,7 @@ void CTripmine::ItemPreFrame( void ){
 	CBasePlayerWeapon::ItemPreFrame();
 
 
-	if(tripmineAnimWaitsForFinish == 1){
+	if(EASY_CVAR_GET(tripmineAnimWaitsForFinish) == 1){
 		m_fireState = 1;
 	}else{
 		m_fireState = 0;

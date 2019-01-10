@@ -599,6 +599,10 @@ void CWorld :: Precache( void )
 #if 1
 	CVAR_SET_STRING("sv_gravity", "800"); // 67ft/sec
 	CVAR_SET_STRING("sv_stepsize", "18");
+
+	//MODDD - another default.  Why wasn't this always this way?? This puts the camera behind you in thirdperson instead of... akwardly off to looking at the player model from the side.
+	CVAR_SET_STRING("cam_idealyaw", "0");
+
 #else
 	CVAR_SET_STRING("sv_gravity", "384"); // 32ft/sec
 	CVAR_SET_STRING("sv_stepsize", "24");

@@ -69,6 +69,21 @@ unsigned short model_explosivestuff;
 
 short g_sGaussBallSprite = 0;
 short g_sBallVomitSprite = 0;
+short g_sBallForceFieldSprite = 0;
+
+
+/*
+//get the balls.
+//do you even do anything here anymore?
+extern unsigned short g_sCustomBalls;
+extern unsigned short g_quakeExplosionEffect;
+extern unsigned short g_decalGunshotCustomEvent;
+extern short g_sGaussBallSprite;
+extern short g_sBallVomitSprite;
+extern short g_sBallForceFieldSprite;
+*/
+
+
 
 
 
@@ -2297,12 +2312,6 @@ void UTIL_GunshotDecalTraceForceDefault(TraceResult *pTrace, int decalNumber){
 }
 
 
-extern short g_sGaussBallSprite;
-extern short g_sBallVomitSprite;
-//get the balls.
-extern unsigned short g_sCustomBalls;
-extern unsigned short g_quakeExplosionEffect;
-extern unsigned short g_decalGunshotCustomEvent;
 
 
 
@@ -6390,12 +6399,14 @@ void ExtraWorldPrecache(){
 
 
 
-//NOTE: postprocessor commands seem to accept just one condition at a time, don't try "&&", other conditions will be ignored.
-//However, "#if" already incorporates a part of "#ifdef": if the constant has not been defined, "0" is seen instead.
-//But, a constant can still be defined as 0 and pass #ifdef.
+// NOTE: postprocessor commands seem to accept just one condition at a time, don't try "&&", other conditions will be ignored.
+// However, "#if" already incorporates a part of "#ifdef": if the constant has not been defined, "0" is seen instead.
+// But, a constant can still be defined as 0 and pass #ifdef.
 
 
-
+// ALSO, this method is still recalled regardless of any CVArs like "precacheAll" or "soundSentenceSave".
+// Those CVars are still checked for whether to precache some things on any level start regarldess of monsters spawned at
+// startup or skip some sounds in case the "soundSentenceSave" is on.
 void precacheAll(void){
 	//easyPrintLine("LANGUAGE: %d", g_Language);
 
@@ -6422,7 +6433,8 @@ void precacheAll(void){
 
 	g_sGaussBallSprite = PRECACHE_MODEL ("sprites/hotglow.spr");
 	g_sBallVomitSprite = PRECACHE_MODEL ("sprites/hotglow_green.spr");
-
+	g_sBallForceFieldSprite = PRECACHE_MODEL ("sprites/hotglow_ff.spr");
+	
 
 	//reset.
 	globalPSEUDO_canApplyGermanCensorship = 0;
