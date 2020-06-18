@@ -9,7 +9,7 @@
 #include "soundent.h"
 #include "game.h"
 
-#include "custom_debug.h"
+#include "util_debugdraw.h"
 
 #include "squidspit.h"
 #include "weapons.h"
@@ -1012,7 +1012,7 @@ void CArcher::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, float 
 	
 
 
-		float velMag = flStep * global_STUSpeedMulti;
+		float velMag = flStep * EASY_CVAR_GET(STUSpeedMulti);
 
 		float timeAdjust = (pev->framerate * EASY_CVAR_GET(animationFramerateMulti) * flInterval);
 		float distOneFrame = velMag * pev->framerate * EASY_CVAR_GET(animationFramerateMulti) * flInterval;
@@ -1291,7 +1291,7 @@ Schedule_t* CArcher::GetSchedule ( void )
 				return GetScheduleOfType ( SCHED_WAKE_ANGRY );
 			}
 			//MODDD - other condition.  If "noFlinchOnHard" is on and the skill is hard, don't flinch from getting hit.
-			else if (HasConditions(bits_COND_LIGHT_DAMAGE) && !HasMemory( bits_MEMORY_FLINCHED) && !(global_noFlinchOnHard==1 && g_iSkillLevel==SKILL_HARD)  )
+			else if (HasConditions(bits_COND_LIGHT_DAMAGE) && !HasMemory( bits_MEMORY_FLINCHED) && !(EASY_CVAR_GET(noFlinchOnHard)==1 && g_iSkillLevel==SKILL_HARD)  )
 			{
 				return GetScheduleOfType( SCHED_SMALL_FLINCH );
 			}
@@ -1807,7 +1807,7 @@ void CArcher::RunTask( Task_t *pTask ){
 
 		case TASK_ARCHER_WAIT_FOR_MOVEMENT_STRICT:{
 			/*
-			if(global_movementIsCompletePrintout == 1){
+			if(EASY_CVAR_GET(movementIsCompletePrintout) == 1){
 				easyPrintLine("%s:%d: IS MOVEMENT COMPLETE?: %d", getClassname(), monsterID, MovementIsComplete());
 				easyPrintLine("MOVEGOAL: %d", this->m_movementGoal);
 
@@ -2530,7 +2530,7 @@ void CArcher::checkTraceLine(const Vector& vecSuggestedDir, const float& travelM
 				//...
 			}
 
-			Vector vecMoveRepel = (tr.vecPlaneNormal*toMove*global_STUrepelMulti)/1;
+			Vector vecMoveRepel = (tr.vecPlaneNormal*toMove*EASY_CVAR_GET(STUrepelMulti))/1;
 			
 			//pev->origin = pev->origin + vecMoveParallel;
 			////UTIL_MoveToOrigin ( ENT(pev), pev->origin + -toMove*vecRelativeEnd + vecMoveParallel , travelMag, MOVE_STRAFE );
@@ -2581,7 +2581,7 @@ void CArcher::checkTraceLine(const Vector& vecSuggestedDir, const float& travelM
 		}//END OF if(tr.flFraction < 1.0)
 	}//END OF if(!tempCheckTraceLineBlock)
 	
-	if(global_drawDebugPathfinding2 == 1){
+	if(EASY_CVAR_GET(drawDebugPathfinding2) == 1){
 		UTIL_drawLineFrame(vecStart, vecStart + vecRelativeEndScale, 16, 0, 255, 0);
 	}
 
@@ -2636,7 +2636,7 @@ void CArcher::checkTraceLineTest(const Vector& vecSuggestedDir, const float& tra
 				//...
 			}
 
-			Vector vecMoveRepel = (tr.vecPlaneNormal*toMove*global_STUrepelMulti)/1;
+			Vector vecMoveRepel = (tr.vecPlaneNormal*toMove*EASY_CVAR_GET(STUrepelMulti))/1;
 			
 			//pev->origin = pev->origin + vecMoveParallel;
 			////UTIL_MoveToOrigin ( ENT(pev), pev->origin + -toMove*vecRelativeEnd + vecMoveParallel , travelMag, MOVE_STRAFE );
@@ -2693,7 +2693,7 @@ void CArcher::checkTraceLineTest(const Vector& vecSuggestedDir, const float& tra
 		}//END OF if(tr.flFraction < 1.0)
 	}//END OF if(!tempCheckTraceLineBlock)
 	
-	if(global_drawDebugPathfinding2 == 1){
+	if(EASY_CVAR_GET(drawDebugPathfinding2) == 1){
 		UTIL_drawLineFrame(vecStart, vecStart + vecRelativeEndScale, 16, 0, 255, 0);
 	}
 
@@ -2709,7 +2709,9 @@ void CArcher::checkTraceLineTest(const Vector& vecSuggestedDir, const float& tra
 
 void CArcher::checkFloor(const Vector& vecSuggestedDir, const float& travelMag, const float& flInterval){
 
+	// THIS METHOD BE DEAD YO.
 	return;
+
 	/*
 	if(turnThatOff){
 		//we're not doing the checks in this case.
@@ -2717,7 +2719,7 @@ void CArcher::checkFloor(const Vector& vecSuggestedDir, const float& travelMag, 
 	}
 	*/
 	//UTIL_drawBoxFrame(pev->absmin, pev->absmax, 16, 0, 0, 255);
-	if(global_drawDebugPathfinding2 == 1){
+	if(EASY_CVAR_GET(drawDebugPathfinding2) == 1){
 		UTIL_drawBoxFrame(pev->origin + pev->mins, pev->origin + pev->maxs, 16, 0, 0, 255);
 	}
 	
@@ -2760,10 +2762,10 @@ void CArcher::checkFloor(const Vector& vecSuggestedDir, const float& travelMag, 
 	int checkDistD = 38;
 	*/
 
-	int checkDist = global_STUcheckDistH;
-	int checkDistV = global_STUcheckDistV;
+	int checkDist = EASY_CVAR_GET(STUcheckDistH);
+	int checkDistV = EASY_CVAR_GET(STUcheckDistV);
 	
-	int checkDistD = global_STUcheckDistD;
+	int checkDistD = EASY_CVAR_GET(STUcheckDistD);
 
 
 	//float Vector push;

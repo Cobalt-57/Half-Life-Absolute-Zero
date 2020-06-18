@@ -62,33 +62,38 @@ SC_HEAR2 scientist/whatissound
 
 
 
-
-//SCIENTIST: say a line from fear's or NOOO when player dies while follo
+//MODDD - TODO!!!
+//SCIENTIST: say a line from fear's or NOOO when player dies while following!
 
 
 
 
 
 //MODDD
-extern float global_wildHeads;
+EASY_CVAR_EXTERN(wildHeads)
 
-extern float global_germanCensorship;
+EASY_CVAR_EXTERN(germanCensorship)
 
-extern float global_scientistHealNPCDebug;
-extern float global_scientistHealNPC;
-extern float global_thatWasntPunch;
+EASY_CVAR_EXTERN(scientistHealNPCDebug)
+EASY_CVAR_EXTERN(scientistHealNPC)
+EASY_CVAR_EXTERN(thatWasntPunch)
 
-extern float global_scientistHealNPCFract;
-extern float global_scientistHealCooldown;
+EASY_CVAR_EXTERN(scientistHealNPCFract)
+EASY_CVAR_EXTERN(scientistHealCooldown)
 
-extern float global_monsterSpawnPrintout;
+EASY_CVAR_EXTERN(monsterSpawnPrintout)
 extern BOOL globalPSEUDO_iCanHazMemez;
 
 //was this model found in the client's folder too?
 extern BOOL globalPSEUDO_germanModel_scientistFound;
 
-extern float global_scientistBravery;
+EASY_CVAR_EXTERN(scientistBravery)
 
+
+
+
+
+#define		NUM_SCIENTIST_HEADS		3
 
 
 
@@ -97,8 +102,6 @@ extern void scientistHeadFilter( CBaseMonster& somePerson, int arg_numberOfModel
 
 
 
-
-#define		NUM_SCIENTIST_HEADS		3
 
 
 //MODDD - there is a rather suble problem with this setup.
@@ -113,6 +116,7 @@ extern void scientistHeadFilter( CBaseMonster& somePerson, int arg_numberOfModel
 //HEAD_LUTHER
 //HEAD_SLICK
 //See the issue?  If you want to remove anything BUT the last one, simply cutting the last one won't be completely effective.
+
 
 //So, better idea:  handle the offset (if not using the alpha model that has 3 head models).  Otherwise, this is not necessary:
 //So if there are any immediate issues, try adjusting this first.
@@ -163,7 +167,7 @@ enum
 
 
 
-extern float global_pissedNPCs;
+EASY_CVAR_EXTERN(pissedNPCs)
 
 //=======================================================
 // Scientist
@@ -321,6 +325,7 @@ public:
 	BOOL violentDeathAllowed(void);
 	BOOL violentDeathClear(void);
 	int violentDeathPriority(void);
+	BOOL canPredictActRepeat(void);
 
 	void initiateAss(void);
 	void myAssHungers(void);
@@ -621,7 +626,7 @@ Schedule_t	slFaceTargetScared[] =
 Task_t	tlHeal[] =
 {
 	{ TASK_SET_FAIL_SCHEDULE,	(float)SCHED_TARGET_CHASE },	// If you fail, catch up with that guy! (change this to put syringe away and then chase)
-	{ TASK_MOVE_TO_TARGET_RANGE,(float)50		},	// Move within 60 of target ent (client)
+	{ TASK_MOVE_TO_TARGET_RANGE,(float)56		},	// Move within 60 of target ent (client)
 	{ TASK_FOLLOW_SUCCESSFUL, (float)0		},
 	{ TASK_FACE_IDEAL,			(float)0		},
 	{ TASK_SAY_HEAL,			(float)0		},
@@ -867,7 +872,7 @@ void CScientist::DeclineFollowingProvoked(CBaseEntity* pCaller){
 	//Barney won't say anything, he's too busy shooting you.
 	//...or will he? MUHAHAHA.
 	
-	if(global_pissedNPCs != 1 || !globalPSEUDO_iCanHazMemez){
+	if(EASY_CVAR_GET(pissedNPCs) != 1 || !globalPSEUDO_iCanHazMemez){
 		PlaySentence( "SC_SCREAM_TRU", 4, VOL_NORM, ATTN_NORM );  //OH NO YOU FOUND ME.
 	}else{
 		PlaySentence( "BA_POKE_D", 8, VOL_NORM, ATTN_NORM );
@@ -887,7 +892,7 @@ void CScientist::DeclineFollowingProvoked(CBaseEntity* pCaller){
 }
 void CScientist::SayProvoked(void){
 	
-	if(global_pissedNPCs != 1 || !globalPSEUDO_iCanHazMemez){
+	if(EASY_CVAR_GET(pissedNPCs) != 1 || !globalPSEUDO_iCanHazMemez){
 
 		switch(RANDOM_LONG(0, 4)){
 			case 0:
@@ -927,7 +932,7 @@ void CScientist::SayProvoked(void){
 
 }
 void CScientist::SaySuspicious(void){
-	if(global_pissedNPCs != 1 || !globalPSEUDO_iCanHazMemez){
+	if(EASY_CVAR_GET(pissedNPCs) != 1 || !globalPSEUDO_iCanHazMemez){
 	
 		switch(RANDOM_LONG(0, 7)){
 			case 0:
@@ -1149,7 +1154,7 @@ void CScientist::SayNearCautious(void){
 void CScientist::DeclineFollowing( void )
 {
 	//MODDD
-	if(global_pissedNPCs < 1){
+	if(EASY_CVAR_GET(pissedNPCs) < 1){
 		Talk( 10 );
 		m_hTalkTarget = m_hEnemy;
 		PlaySentence( "SC_POK", 2, VOL_NORM, ATTN_NORM );
@@ -1185,7 +1190,7 @@ void CScientist :: Scream( void )
 Activity CScientist::GetStoppedActivity( void )
 {
 	//MODDD - if following, don't do this.
-	if(!m_hTargetEnt){
+	if(m_hTargetEnt==NULL){
 		if ( m_hEnemy != NULL )
 			return ACT_EXCITED;
 
@@ -1296,7 +1301,7 @@ void CScientist :: StartTask( Task_t *pTask )
 			Scream();
 		}
 
-		if(global_scientistBravery > 0){
+		if(EASY_CVAR_GET(scientistBravery) > 0){
 
 			decidedToFight = FALSE;
 			decidedToRun = FALSE;
@@ -1446,6 +1451,21 @@ void CScientist :: StartTask( Task_t *pTask )
 			}
 		}
 		break;
+
+	case TASK_MELEE_ATTACK2_NOTURN:
+	case TASK_MELEE_ATTACK2:
+	{
+		//MODDD - overriding what the base schedule does.
+		// All the commented stuff is now not.
+		m_Activity = ACT_RESET;  //force me to re-get this!
+		m_fSequenceFinished = FALSE;
+		pev->frame = 0;
+
+		m_IdealActivity = ACT_MELEE_ATTACK2;
+		this->signalActivityUpdate = TRUE;
+		break;
+	}
+
 
 	default:
 		CTalkMonster::StartTask( pTask );
@@ -1697,7 +1717,7 @@ void CScientist::setModel(void){
 }
 void CScientist::setModel(const char* m){
 
-	//easyPrintLine("NO!!!!!!!!! PLEASE!!!!!!!!!!!!!!!!!!!!!!!!!! %d", (int)global_scientistModel);
+	//easyPrintLine("NO!!!!!!!!! PLEASE!!!!!!!!!!!!!!!!!!!!!!!!!! %d", (int)EASY_CVAR_GET(scientistModel));
 	//easyPrintLine("Huh?? %.2f", CVAR_GET_FLOAT("scientistModel"));
 
 	//let this handle model management.
@@ -1782,7 +1802,7 @@ void CScientist :: Spawn( void )
 	CTalkMonster::Spawn();
 
 
-	//MODDD - all model calls replaced with a call to "setModelCustom" to let "global_scientistModel" act as a selector.
+	//MODDD - all model calls replaced with a call to "setModelCustom" to let "EASY_CVAR_GET(scientistModel)" act as a selector.
 	setModel(); //"models/scientist.mdl"  //argument unused for monsters with German versions. 
 	//!setModelCustom();
 	
@@ -1833,18 +1853,18 @@ void CScientist :: Spawn( void )
 	
 	pev->skin = 0; //default.
 
-	//if( (pev->spawnflags & SF_MONSTER_TALKMONSTER_BLOODY) && global_germanCensorship != 1 && global_scientistModel < 2){
-	if( (pev->spawnflags & SF_MONSTER_TALKMONSTER_BLOODY) && global_germanCensorship != 1){
+	//if( (pev->spawnflags & SF_MONSTER_TALKMONSTER_BLOODY) && EASY_CVAR_GET(germanCensorship) != 1 && EASY_CVAR_GET(scientistModel) < 2){
+	if( (pev->spawnflags & SF_MONSTER_TALKMONSTER_BLOODY) && EASY_CVAR_GET(germanCensorship) != 1){
 		pev->skin = 1;
 		
-		if(global_monsterSpawnPrintout == 1){
+		if(EASY_CVAR_GET(monsterSpawnPrintout) == 1){
 			easyPrintLine("SCIHEAD: BLOODY CORPSE FLAG UNDERSTOOD!!!");
 		}
 
 		//if this spawn flag is set, start with the bloody skin.
 	}
 
-	if(global_monsterSpawnPrintout == 1){
+	if(EASY_CVAR_GET(monsterSpawnPrintout) == 1){
 		easyPrintLine("SCIHEAD: FINAL BODY: %d SKIN: %d", pev->body, pev->skin);
 		easyPrintLine("SCIHEAD: COUNTPOST: %d", getNumberOfBodyParts( ) );
 	}
@@ -2482,7 +2502,7 @@ Schedule_t *CScientist :: GetSchedule ( void )
 	case MONSTERSTATE_IDLE:
 
 		//Scream if the party is going hard.
-		if(global_thatWasntPunch){
+		if(EASY_CVAR_GET(thatWasntPunch)){
 			if ( RANDOM_FLOAT( 0, 1 ) < 0.4 ){
 			//PlaySentence( "SC_SCREAM_TRU", 2, VOL_NORM, ATTN_NORM );
 			SENTENCEG_PlayRndSz( edict(), "SC_SCREAM_TRU", VOL_NORM, ATTN_IDLE, 0, GetVoicePitch() );
@@ -2528,7 +2548,7 @@ Schedule_t *CScientist :: GetSchedule ( void )
 
 
 		//TASK_FACE_TARGET
-		if(healNPCCheckDelay < gpGlobals->time && m_hTargetEnt == NULL && global_scientistHealNPC != 0 && m_healTime <= gpGlobals->time){
+		if(healNPCCheckDelay < gpGlobals->time && m_hTargetEnt == NULL && EASY_CVAR_GET(scientistHealNPC) != 0 && m_healTime <= gpGlobals->time){
 			//before even doing any checks, require the heal timer to not be in place (delay between healing again, a minute as of writing)
 			leastDistanceYet = 999999;  //large, so that the first distance at all is the "best".
 
@@ -2580,7 +2600,7 @@ Schedule_t *CScientist :: GetSchedule ( void )
 		// Behavior for following the player... OR tracking down an NPC to heal them.
 		if ( m_hTargetEnt != NULL && (IsFollowing() || healNPCChosen == TRUE) )
 		{
-			if(global_scientistHealNPCDebug == 1){
+			if(EASY_CVAR_GET(scientistHealNPCDebug) == 1){
 				/*
 				if(m_hTargetEnt == NULL){
 					easyPrintLine("SCI: TARGET ENT: NULL");
@@ -2760,7 +2780,7 @@ BOOL CScientist::CanHeal( CBaseMonster* arg_monsterTry ){
 	}
 
 	//NPCs can have up to 70% of their health to be eligible for healing, since they're weaker.
-	if ( (m_healTime > gpGlobals->time) || (arg_monsterTry == NULL) || (arg_monsterTry->pev->health > (arg_monsterTry->pev->max_health * global_scientistHealNPCFract) ) && ( !(arg_monsterTry->m_bitsDamageType & DMG_TIMEBASED || arg_monsterTry->m_bitsDamageTypeMod & DMG_TIMEBASEDMOD))  )
+	if ( (m_healTime > gpGlobals->time) || (arg_monsterTry == NULL) || (arg_monsterTry->pev->health > (arg_monsterTry->pev->max_health * EASY_CVAR_GET(scientistHealNPCFract)) ) && ( !(arg_monsterTry->m_bitsDamageType & DMG_TIMEBASED || arg_monsterTry->m_bitsDamageTypeMod & DMG_TIMEBASEDMOD))  )
 		return FALSE;
 
 	return TRUE;
@@ -2799,7 +2819,7 @@ BOOL CScientist::CanHeal( void )
 	
 	float percentage = 0.5;
 	if(healNPCChosen){
-		percentage = global_scientistHealNPCFract;
+		percentage = EASY_CVAR_GET(scientistHealNPCFract);
 	}
 
 
@@ -2851,7 +2871,7 @@ void CScientist::Heal( void )
 	
 	float percentage = 0.5;
 	if(healNPCChosen){
-		percentage = global_scientistHealNPCFract;
+		percentage = EASY_CVAR_GET(scientistHealNPCFract);
 	}
 	//MODDD - added this check.  Now, healing does not add health if over 50% health (before, could abuse the timed-damage-heal-trigger by taking timed damage over and over again to get enough healing to reach max health, when this was not possible before.
 	//Note that if the player isn't healing for timed damage, this check is ignored (safe to assume that is just the result of multiple scientists healing at the same time, legal in the base game)
@@ -2861,7 +2881,7 @@ void CScientist::Heal( void )
 	
 	
 	// Don't heal again for 1 minute
-	m_healTime = gpGlobals->time + global_scientistHealCooldown;
+	m_healTime = gpGlobals->time + EASY_CVAR_GET(scientistHealCooldown);
 	
 
 
@@ -2957,7 +2977,7 @@ void CScientist::MonsterThink(void){
 	*/
 
 
-	if(global_scientistHealNPCDebug == 1){
+	if(EASY_CVAR_GET(scientistHealNPCDebug) == 1){
 
 
 		if(m_healTime > gpGlobals->time){
@@ -3203,7 +3223,7 @@ void CDeadScientist :: Spawn( )
 	PRECACHE_MODEL("models/scientist.mdl");
 
 
-	if(global_monsterSpawnPrintout == 1){
+	if(EASY_CVAR_GET(monsterSpawnPrintout) == 1){
 	easyPrintLine("MY <dead scientist> BODYH??? %d %d", spawnedDynamically, pev->body);
 	}
 
@@ -3262,7 +3282,7 @@ void CDeadScientist :: Spawn( )
 
 	//MOVED TO "setModelCustom" for the dead scientist.
 	/*
-	if(global_germanCensorship != 1 && global_scientistModel > 0){
+	if(EASY_CVAR_GET(germanCensorship) != 1 && EASY_CVAR_GET(scientistModel) > 0){
 		//MODDD - uncommented out, used to be commented out.
 		//pev->skin += 2; // use bloody skin -- UNDONE: Turn this back on when we have a bloody skin again!
 		pev->skin = 2;
@@ -3276,8 +3296,8 @@ void CDeadScientist :: Spawn( )
 
 
 	pev->skin = 0; //default
-	//if(global_germanCensorship != 1 && global_scientistModel < 2){
-	if(global_germanCensorship != 1){
+	//if(EASY_CVAR_GET(germanCensorship) != 1 && EASY_CVAR_GET(scientistModel) < 2){
+	if(EASY_CVAR_GET(germanCensorship) != 1){
 		//MODDD - uncommented out, used to be commented out.
 		//pev->skin += 2; // use bloody skin -- UNDONE: Turn this back on when we have a bloody skin again!
 		pev->skin = 2;
@@ -3557,7 +3577,7 @@ void CSittingScientist :: SittingThink( void )
 		ResetSequenceInfo( );
 		pev->frame = 0;
 
-		if(global_wildHeads != 1){
+		if(EASY_CVAR_GET(wildHeads) != 1){
 			SetBoneController( 0, 0 );
 		}
 
@@ -3629,7 +3649,7 @@ void CSittingScientist :: SittingThink( void )
 
 		ResetSequenceInfo( );
 		pev->frame = 0;
-		if(global_wildHeads != 1){
+		if(EASY_CVAR_GET(wildHeads) != 1){
 			SetBoneController( 0, m_headTurn );
 		}
 	}
@@ -3870,8 +3890,9 @@ int CScientist::LookupActivityHard(int activity){
 	switch(activity){
 		case ACT_MELEE_ATTACK2:{
 			//here comes the train... the PAIN TRAIN.
-			m_flFramerateSuggestion = 1.3;
-			this->animEventQueuePush(6.7f / 30.0f, 0);
+			m_flFramerateSuggestion = 1.24;
+			animEventQueuePush(6.7f / 30.0f, 0);
+			animFrameCutoffSuggestion = 240;
 			return LookupSequence("punch");
 		break;}
 		case ACT_IDLE:{
@@ -3971,6 +3992,14 @@ BOOL CScientist::violentDeathClear(void){
 int CScientist::violentDeathPriority(void){
 	return 3;
 }
+
+
+// TEST. This is TRUE for most monsters.
+BOOL CScientist::canPredictActRepeat(void) {
+	return FALSE;
+}
+
+
 
 
 

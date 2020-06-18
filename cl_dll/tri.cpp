@@ -17,12 +17,10 @@
 #include "cl_entity.h"
 #include "triangleapi.h"
 
-#define DLLEXPORT __declspec( dllexport )
-
 extern "C"
 {
-	void DLLEXPORT HUD_DrawNormalTriangles( void );
-	void DLLEXPORT HUD_DrawTransparentTriangles( void );
+	void DLLEXPORT_2 HUD_DrawNormalTriangles( void );
+	void DLLEXPORT_2 HUD_DrawTransparentTriangles( void );
 };
 
 
@@ -39,9 +37,9 @@ extern "C"
 
 
 //EASY_CVAR_EXTERN_CLIENT_MASS
-extern float global2_fogNear;
-extern float global2_fogFar;
-extern float global2_fogTest;
+EASY_CVAR_EXTERN(fogNear)
+EASY_CVAR_EXTERN(fogFar)
+EASY_CVAR_EXTERN(fogTest)
 
 
 
@@ -58,16 +56,16 @@ void RenderFog ( float currentTime )
 	//bool bFog = g_iWaterLevel < 2 && g_fStartDist > 0 && g_fEndDist > 0;
 	
 
-	float fogTestVar = global2_fogTest;
+	float fogTestVar = EASY_CVAR_GET(fogTest);
 
 
 	//easyPrintLine("CURRENTTIMEZ %.2f %,2f", currentTime, nextFogColorChange);
 
 	if(fogTestVar == 1){
 		
-			fogColor[0] = 0.2f;
-			fogColor[1] = 0.8f;
-			fogColor[2] = 0.2f;
+		fogColor[0] = 0.2f;
+		fogColor[1] = 0.8f;
+		fogColor[2] = 0.2f;
 	}else if(fogTestVar == 2){
 
 		BOOL canChangecolor = FALSE;
@@ -102,8 +100,8 @@ void RenderFog ( float currentTime )
 		//glFogf(GL_FOG_DENSITY, 0.0025);
 		glFogi(GL_FOG_MODE, GL_LINEAR);
 		glFogfv(GL_FOG_COLOR, g_fFogColor );
-		glFogf(GL_FOG_START, global2_fogNear);
-		glFogf(GL_FOG_END, global2_fogFar);
+		glFogf(GL_FOG_START, EASY_CVAR_GET(fogNear));
+		glFogf(GL_FOG_END, EASY_CVAR_GET(fogFar));
 		glHint(GL_FOG_HINT, GL_NICEST);
 
 		
@@ -201,7 +199,7 @@ HUD_DrawNormalTriangles
 Non-transparent triangles-- add them here
 =================
 */
-void DLLEXPORT HUD_DrawNormalTriangles( void )
+void DLLEXPORT_2 HUD_DrawNormalTriangles( void )
 {
 
 	gHUD.m_Spectator.DrawOverview();
@@ -218,7 +216,7 @@ HUD_DrawTransparentTriangles
 Render any triangles with transparent rendermode needs here
 =================
 */
-void DLLEXPORT HUD_DrawTransparentTriangles( void )
+void DLLEXPORT_2 HUD_DrawTransparentTriangles( void )
 {
 
 #if defined( TEST_IT )

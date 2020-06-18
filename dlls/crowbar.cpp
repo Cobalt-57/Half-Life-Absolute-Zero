@@ -13,53 +13,32 @@
 *
 ****/
 
-
-
-
 #include "extdll.h"
+#include "crowbar.h"
 #include "util.h"
 #include "cbase.h"
 #include "basemonster.h"
-#include "weapons.h"
+
 #include "nodes.h"
 #include "player.h"
 #include "gamerules.h"
 
-#include "custom_debug.h"
+#include "util_debugdraw.h"
 
 
 //MODDD NOTE - the crowbar doesn't seem to make any TextureHit call clientside, only serverside.
 //             Not necessarily an issue but just pointing that out.
 
 
-
-EASY_CVAR_EXTERN(testVar)
+//EASY_CVAR_EXTERN(testVar)
 EASY_CVAR_EXTERN(multiplayerCrowbarHitSoundMode)
 EASY_CVAR_EXTERN(muteCrowbarSounds)
 
 
-
-#define	CROWBAR_BODYHIT_VOLUME 128
-#define	CROWBAR_WALLHIT_VOLUME 512
+//MODDD - some things moved to the new crowbar.h.
 
 LINK_ENTITY_TO_CLASS( weapon_crowbar, CCrowbar );
 
-
-
-enum gauss_e {
-	CROWBAR_IDLE = 0,
-	CROWBAR_DRAW,
-	CROWBAR_HOLSTER,
-	CROWBAR_ATTACK1HIT,
-	CROWBAR_ATTACK1MISS,
-	CROWBAR_ATTACK2MISS,
-	CROWBAR_ATTACK2HIT,
-	CROWBAR_ATTACK3MISS,
-	CROWBAR_ATTACK3HIT,
-	//MODDD - two extras present in the model, may as well make available.
-	CROWBAR_IDLE2,
-	CROWBAR_IDLE3
-};
 
 
 void CCrowbar::Spawn( )
@@ -106,10 +85,8 @@ int CCrowbar::GetItemInfo(ItemInfo *p)
 }
 
 
-
 BOOL CCrowbar::Deploy( )
 {
-
 	return DefaultDeploy( "models/v_crowbar.mdl", "models/p_crowbar.mdl", CROWBAR_DRAW, "crowbar", 0, 0, (13.0/24.0), -1 );
 }
 
@@ -137,7 +114,6 @@ BOOL FindHullIntersection( const Vector &vecSrc, TraceResult &tr, float *mins, f
 	Vector		vecEnd;
 
 	distance = 1e6f;
-
 
 
 	vecHullEnd = vecSrc + ((vecHullEnd - vecSrc)*2);
@@ -190,7 +166,6 @@ void CCrowbar::PrimaryAttack()
 	}
 }
 
-
 void CCrowbar::Smack( )
 {
 	DecalGunshot( &m_trHit, BULLET_PLAYER_CROWBAR );
@@ -204,17 +179,8 @@ void CCrowbar::SwingAgain( void )
 
 
 
-
-
-
-
-
-
-
-
 #ifndef CLIENT_DLL
-
-
+// MODDD - clone created just for putting some printouts around.  This is otherwise useless.
 Vector FireBulletsPlayerEh ( ULONG cShots, Vector vecSrc, Vector vecDirShooting, Vector vecSpread, float flDistance, int iBulletType, int iTracerFreq, int iDamage, entvars_t *pevAttacker, int shared_rand )
 {
 	static int tracerCount;
@@ -222,7 +188,6 @@ Vector FireBulletsPlayerEh ( ULONG cShots, Vector vecSrc, Vector vecDirShooting,
 	Vector vecRight = gpGlobals->v_right;
 	Vector vecUp = gpGlobals->v_up;
 	float x, y, z;
-
 
 	entvars_t* otherPev = pevAttacker;
 
@@ -252,8 +217,6 @@ Vector FireBulletsPlayerEh ( ULONG cShots, Vector vecSrc, Vector vecDirShooting,
 		//easyPrintLine("flFraction?", tr.flFraction); 
 		// do damage, paint decals
 
-
-
 		//easyPrintLine("IS IT NULL????? %d", (CBaseEntity::Instance(tr.pHit)  == NULL) );
 		if(CBaseEntity::Instance(tr.pHit)  != NULL){
 			CBaseEntity *pEntity = CBaseEntity::Instance(tr.pHit);
@@ -262,19 +225,14 @@ Vector FireBulletsPlayerEh ( ULONG cShots, Vector vecSrc, Vector vecDirShooting,
 			//easyPrintLine("NAME::: %s", STRING(pEntity->pev->classname) );
 		}
 
-
-
 		if (tr.flFraction != 1.0)
 		{
 			CBaseEntity *pEntity = CBaseEntity::Instance(tr.pHit);
-
 
 			pEntity->TraceAttack(pevAttacker, iDamage, vecDir, &tr, DMG_CLUB | ((iDamage > 16) ? DMG_ALWAYSGIB : DMG_NEVERGIB) );
 				
 				TEXTURETYPE_PlaySound(&tr, vecSrc, vecEnd, iBulletType);
 				DecalGunshot( &tr, iBulletType );
-
-
 
 			/*
 			//easyPrintLine("PLAYER BULLET TYPE?! %d", iBulletType);
@@ -309,8 +267,6 @@ Vector FireBulletsPlayerEh ( ULONG cShots, Vector vecSrc, Vector vecDirShooting,
 				break;
 				
 			case BULLET_NONE: // FIX
-
-
 				pEntity->TraceAttack(pevAttacker, 50, vecDir, &tr, DMG_CLUB);
 				TEXTURETYPE_PlaySound(&tr, vecSrc, vecEnd, iBulletType);
 				// only decal glass
@@ -318,7 +274,6 @@ Vector FireBulletsPlayerEh ( ULONG cShots, Vector vecSrc, Vector vecDirShooting,
 				{
 					UTIL_DecalTrace( &tr,    25   + RANDOM_LONG(0,2) ); // "25" was "DECAL_GLASSBREAK1"
 				}
-
 				break;
 			}
 			
@@ -332,7 +287,7 @@ Vector FireBulletsPlayerEh ( ULONG cShots, Vector vecSrc, Vector vecDirShooting,
 				//if ( FNullEnt(tr.pHit))
 				{
 					//IF REVERTING TO THIS, try to use global_muteRicochetSound instead!
-					if(CVAR_GET_FLOAT("muteRicochetSound") != 2){
+					if(EASY_CVAR_GET(muteRicochetSound) != 2){
 						MESSAGE_BEGIN( MSG_PAS, SVC_TEMPENTITY, tr.vecEndPos );
 							WRITE_BYTE( TE_GUNSHOT );
 							WRITE_COORD( tr.vecEndPos.x );
@@ -346,12 +301,9 @@ Vector FireBulletsPlayerEh ( ULONG cShots, Vector vecSrc, Vector vecDirShooting,
 			*/
 		}//END OF if (tr.flFraction != 1.0)
 
-		
 		//easyPrintLine("NULL?? %d", FNullEnt(tr.pHit) );
 
 		//COME BACK
-			
-
 
 		// make bullet trails
 		UTIL_BubbleTrail( vecSrc, tr.vecEndPos, (flDistance * tr.flFraction) / 64.0 );
@@ -364,24 +316,12 @@ Vector FireBulletsPlayerEh ( ULONG cShots, Vector vecSrc, Vector vecDirShooting,
 #endif
 
 
-
-
-
-
-
-
-
-
-
-
-
 int CCrowbar::Swing( int fFirst )
 {
 #ifndef CLIENT_DLL
 	//if muteCrowbarSounds is 0 or 1, we didn't hute hit sounds.
 	const BOOL canPlayHitSound = (EASY_CVAR_GET(muteCrowbarSounds) != 2 && EASY_CVAR_GET(muteCrowbarSounds) != 3);
 #endif
-
 
 	BOOL specialMiss = FALSE;
 	int fDidHit = FALSE;
@@ -400,13 +340,9 @@ int CCrowbar::Swing( int fFirst )
 	//m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 1.0;
 
 
-
-	
 	
 #ifndef CLIENT_DLL
-
 	//easyForcePrintLine("-------------------------------------------------");
-
 
 
 	//easyForcePrintLine("HERE HE GO A fl:%.2f ss:%d io:%d fas:%d hit:%s", tr.flFraction, tr.fStartSolid, tr.fInOpen, tr.fAllSolid, (tr.pHit!=NULL)?FClassname(CBaseEntity::Instance(tr.pHit)):"NULL");
@@ -420,9 +356,7 @@ int CCrowbar::Swing( int fFirst )
 			// This is and approximation of the "best" intersection
 			
 			//easyForcePrintLine("HERE HE GO B1 fl:%.2f ss:%d io:%d fas:%d hit:%s", tr.flFraction, tr.fStartSolid, tr.fInOpen, tr.fAllSolid, (tr.pHit!=NULL)?FClassname(CBaseEntity::Instance(tr.pHit)):"NULL");
-	
-			
-			
+
 			////DebugLine_ClearAll
 			//::DebugLine_Setup(0, Vector(tr.vecEndPos) + Vector(7, 0, 0), Vector(tr.vecEndPos) + Vector(-7, 0, 0), 255, 0, 0 );
 			//::DebugLine_Setup(1, Vector(tr.vecEndPos) + Vector(0, -7, 0), Vector(tr.vecEndPos) + Vector(0, 7, 0), 255, 0, 0 );
@@ -473,10 +407,6 @@ int CCrowbar::Swing( int fFirst )
 	
 				//specialMiss = TRUE;
 
-
-
-
-
 	//( int flags, const edict_t *pInvoker, unsigned short eventindex, float delay, float *origin, float *angles, float fparam1, float fparam2, int iparam1, int iparam2, int bparam1, int bparam2 );
 	//swingMissChoice
 
@@ -496,12 +426,8 @@ int CCrowbar::Swing( int fFirst )
 	//MODDD - special way to miss.
 	if ( tr.flFraction >= 1.0 || specialMiss )
 	{
-
-		
-
 		if (fFirst)
 		{
-
 			/*
 			#if CLIENT_DLL == 0
 			swingMissChoice = (m_iSwingMiss++) % 3;
@@ -543,17 +469,11 @@ int CCrowbar::Swing( int fFirst )
 				//easyPrintLine("CLIENTT");
 			#endif
 			
-
 		}
-
-		
-
 	}
 	else
 	{
-
 		//return TRUE;
-
 
 		//int choicetemp2 = ((m_iSwing++) %3);
 		//easyPrintLine("bee %d", choicetemp2);
@@ -579,9 +499,6 @@ int CCrowbar::Swing( int fFirst )
 		#else
 			//easyPrintLine("CLIENTT");
 		#endif
-
-
-
 
 		// player "shoot" animation
 		m_pPlayer->SetAnimation( PLAYER_ATTACK1 );
@@ -668,8 +585,6 @@ int CCrowbar::Swing( int fFirst )
 				else{
 					flVol = 0.1;
 				}
-
-
 			}else{
 				float fvolbar = 0;
 				//doens't have any sort of Classify() section or inorganic? Make the usual crowbar metal-hitting sound.
@@ -788,10 +703,7 @@ int CCrowbar::Swing( int fFirst )
 					//But the same sound (cbar_hit1 or 2.wav) is used always, so it's fine now.
 
 					fvolbar = 0.6;
-				
 				}
-
-
 				//fvolbar = 1;
 
 				// also play crowbar strike
@@ -806,7 +718,6 @@ int CCrowbar::Swing( int fFirst )
 				}
 
 			}//END OF canPlayHitSound check
-
 
 			/*
 			//MODDD - new.  Also serverside, make the particle effect when hitting a non-monster:
@@ -828,10 +739,6 @@ int CCrowbar::Swing( int fFirst )
 		}//END OF if(fHitWorld)
 
 
-
-
-
-
 		//??? INVESTIGATE W/ PRINTOUTS
 		/*
 		if(!(pEntity || fHitWorld)){
@@ -842,9 +749,7 @@ int CCrowbar::Swing( int fFirst )
 		//MODDD - moved to the above if-then.
 		//m_pPlayer->m_iWeaponVolume = flVol * CROWBAR_WALLHIT_VOLUME;
 
-
 #endif
-
 		//MODDD
 		if(m_pPlayer->cheat_minimumfiredelayMem == 0){
 			m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 0.25;
@@ -852,16 +757,12 @@ int CCrowbar::Swing( int fFirst )
 			m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + m_pPlayer->cheat_minimumfiredelaycustomMem;
 		}
 
-		
-		
 		SetThink( &CCrowbar::Smack );
 		pev->nextthink = UTIL_WeaponTimeBase() + 0.2;
 
 	}
 	return fDidHit;
 }
-
-
 
 //MODDD - added.
 void CCrowbar::WeaponIdle( void )
@@ -894,7 +795,6 @@ void CCrowbar::WeaponIdle( void )
 	}
 
 	SendWeaponAnim( iAnim );
-
 	//MODDD - why was this random?
 	//m_flTimeWeaponIdle = UTIL_SharedRandomFloat( m_pPlayer->random_seed, 10, 15 ); // how long till we do this again.
 }

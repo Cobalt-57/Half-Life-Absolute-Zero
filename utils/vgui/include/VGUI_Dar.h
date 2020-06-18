@@ -8,7 +8,12 @@
 #ifndef VGUI_DAR_H
 #define VGUI_DAR_H
 
-#include<stdlib.h>
+
+
+#include "externalLibInclude.h"
+//#include<stdlib.h>
+
+
 #include<string.h>
 #include<VGUI.h>
 

@@ -1,7 +1,12 @@
 
 
-//gets the "protoVersion" var, placed there for convenience.
+
+#ifndef VERSION_AID_H
+#define VERSION_AID_H
+
+
 #include "version.h"
+
 
 
 
@@ -18,7 +23,7 @@ const char* determineVisualStudioVersion(void);
 
 
 
-//write the constants from "version.h" to the "protoVersion" CVar.
+//write the constants from "version.h" to whatever buffer for display.
 void writeVersionInfo(char* aryChr, int maxLength){
 
 	
@@ -34,11 +39,11 @@ void writeVersionInfo(char* aryChr, int maxLength){
 #endif
 
 
-#ifndef protoModVS
+#ifndef MODINFO_VS
 	//determine like so
 	const char* addon2 = determineVisualStudioVersion();
 #else
-	const char* addon2 = protoModVS;
+	const char* addon2 = MODINFO_VS;
 #endif
 
 
@@ -47,7 +52,7 @@ void writeVersionInfo(char* aryChr, int maxLength){
 	int addonOff = 0;
 	for(int i = 0; i < maxLength - 1;i++){
 		if(mode == 0){
-			if(protoModVersion[i] == '\0'){
+			if(MODINFO_Version[i] == '\0'){
 				//end found!
 				mode = 1;
 				readFrom = 0;
@@ -56,7 +61,7 @@ void writeVersionInfo(char* aryChr, int maxLength){
 				//i -= 1;   //can overwrite this empty place.
 
 			}else{
-				aryChr[i] = protoModVersion[i];
+				aryChr[i] = MODINFO_Version[i];
 			}
 		}else if(mode == 1){
 			//begin writing the extra.
@@ -99,13 +104,13 @@ void writeDateInfo(char* aryChr, int maxLength){
 	aryChr[0] = '\0';   //safety.
 
 
-#ifndef protoModDate
+#ifndef MODINFO_Date
 	char aryChrDATE[128];
 	const char* toWrite = aryChrDATE;
 	//const char* toWrite = getDate();
 	getDate(aryChrDATE);
 #else
-	const char* toWrite = protoModDate;
+	const char* toWrite = MODINFO_Date;
 #endif
 
 	
@@ -149,33 +154,80 @@ void getDate(char* aryChr){
 
 //THANK YOU,
 //http://stackoverflow.com/questions/70013/how-to-detect-if-im-compiling-code-with-visual-studio-2008
+//UPDATE:
+//https://docs.microsoft.com/en-us/cpp/preprocessor/predefined-macros?view=vs-2019
+
 const char* determineVisualStudioVersion(void){
 
-#ifndef _MSC_VER
-	return "UNKNOWN-A";
-#elif _MSC_VER == 1100
-	return "vs5";
-#elif _MSC_VER == 1200
-	return "vs6";
-#elif _MSC_VER == 1300
-	return "vs7";
-#elif _MSC_VER == 1310
-	return "vs7.1";
-#elif _MSC_VER == 1400
-	return "vs8";
-#elif _MSC_VER == 1500
-	return "vs9";
-#elif _MSC_VER == 1600
-	return "vs10";
-#elif _MSC_VER == 1700
-	return "vs11";
-#elif _MSC_VER == 1800
-	return "vs12";
-#elif _MSC_VER == 1900
-	return "vs14";
+#ifdef _MSC_VER
+	#if _MSC_VER == 1100
+		return "vs5.0";
+	#elif _MSC_VER == 1200
+		return "vs6.0";
+	#elif _MSC_VER == 1300
+		return "vs7.0";
+	#elif _MSC_VER == 1310
+		return "vs7.1";
+	#elif _MSC_VER == 1400
+		return "vs8.0";
+	#elif _MSC_VER == 1500
+		return "vs9.0";
+	#elif _MSC_VER == 1600
+		return "vs10.0";
+	#elif _MSC_VER == 1700
+		return "vs11.0";
+	#elif _MSC_VER == 1800
+		return "vs12.0";
+	#elif _MSC_VER == 1900
+		return "vs14.0";
+	#elif _MSC_VER == 1910
+		return "vs15.0";
+	#elif _MSC_VER == 1911
+		return "vs15.3";
+	#elif _MSC_VER == 1912
+		return "vs15.5";
+	#elif _MSC_VER == 1913
+		return "vs15.6";
+	#elif _MSC_VER == 1914
+		return "vs15.7";
+	#elif _MSC_VER == 1915
+		return "vs15.8";
+	#elif _MSC_VER == 1916
+		return "vs15.9";
+	#elif _MSC_VER == 1920
+		return "vs16.0"
+	#elif _MSC_VER == 1921
+		return "vs16.1";
+	#elif _MSC_VER == 1922
+		return "vs16.2";
+	#elif _MSC_VER == 1923
+		return "vs16.3";
+	#elif _MSC_VER == 1924
+		return "vs16.4";
+	#elif _MSC_VER == 1925
+		return "vs16.5";
+	#elif _MSC_VER == 1926
+		return "vs16.6";
+	#else
+		// Just an unknown VS version in particular?
+		return "UNKNOWN-MSC_VER_" + _MSC_VER;
+	#endif
 #else
-	return "UNKNOWN-B";
+	//_MSC_VER not defined?
+
+	#ifdef _WIN32
+		// ok, we're not windows.
+		return "UNKNOWN-NOT_WINDOWS";
+	#else
+		// windows, but still no MSC_VER ?
+	    // What environment is this?
+		return "UNKNOWN-NO_MSC_VER";
+	#endif
 #endif
 
-}
+}//END OF determineVisualStudioVersion
 
+
+
+
+#endif //VERSION_AID_H

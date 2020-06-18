@@ -17,6 +17,11 @@
 #include "player.h"
 #include "gamerules.h"
 
+
+#ifndef PICKUPWALKER_H
+#define PICKUPWALKER_H
+
+
 //extern CGraph WorldGraph;
 extern int gEvilImpulse101;
 
@@ -72,6 +77,7 @@ public:
 	virtual int Classify ( void ) { return CLASS_NONE; };
 
 	virtual BOOL isOrganic(void);
+	virtual BOOL bypassAllowMonstersSpawnCheck(void);
 	
 	void EXPORT PickupWalkerTouch( CBaseEntity *pOther );
 	void EXPORT PickupWalkerThink( void );
@@ -182,8 +188,4 @@ const char *CSqueakPickupWalker::pIdleSounds[] =
 };
 
 
-
-
-
-
-
+#endif //PICKUPWALKER_H

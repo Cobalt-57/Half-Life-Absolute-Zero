@@ -29,10 +29,10 @@ DECLARE_MESSAGE(m_Battery, Battery)
 
 
 //MODDD - externs
-extern float global2_hud_version;
-extern float global2_forceDrawBatteryNumber;
-extern float global2_hud_batterydraw;
-extern float global2_hud_weaponselecthideslower;
+EASY_CVAR_EXTERN(hud_version)
+EASY_CVAR_EXTERN(forceDrawBatteryNumber)
+EASY_CVAR_EXTERN(hud_batterydraw)
+EASY_CVAR_EXTERN(hud_weaponselecthideslower)
 
 int CHudBattery::Init(void)
 {
@@ -113,7 +113,7 @@ int CHudBattery::Draw(float flTime)
 
 
 	//MODDD - only draw if the weapon select screen is not on.
-	if( (!gHUD.canDrawBottomStats && global2_hud_weaponselecthideslower == 1) ){
+	if( (!gHUD.canDrawBottomStats && EASY_CVAR_GET(hud_weaponselecthideslower) == 1) ){
 		return 1;
 	}
 
@@ -165,7 +165,7 @@ int CHudBattery::Draw(float flTime)
 
 	
 
-	if(global2_hud_version == 0){
+	if(EASY_CVAR_GET(hud_version) == 0){
 
 		//MODDD - here to use the health colors.
 		gHUD.m_Health.deriveColorFromHealth(r, g, b, a);
@@ -189,7 +189,7 @@ int CHudBattery::Draw(float flTime)
 
 
 		//MODDD - for debugging the battery's real value with a bit more accuracy than "about 1/3".
-		if(global2_forceDrawBatteryNumber == 1){
+		if(EASY_CVAR_GET(forceDrawBatteryNumber) == 1){
 			y = ScreenHeight - ((int)(BatteryHeight*4)) + 3 - 28;
 			x = (gHUD.GetSpriteRect(gHUD.m_HUD_number_0+10).right - gHUD.GetSpriteRect(gHUD.m_HUD_number_0+10).left)/2 + 5;
 			gHUD.DrawHudNumber(x, y, DHN_3DIGITS | DHN_DRAWZERO, m_iBat, r, g, b, 0, 1);
@@ -252,13 +252,13 @@ int CHudBattery::Draw(float flTime)
 		x += 5;
 		y += 5;
 
-		if(global2_hud_batterydraw == 0){
+		if(EASY_CVAR_GET(hud_batterydraw) == 0){
 			//across.
 			gHUD.drawPartialFromLeft(m_SpriteHandle_t2, m_prc2, ((float)m_iBat / (float)100 ), x, y - iOffset , r, g, b);
-		}else if(global2_hud_batterydraw == 1){
+		}else if(EASY_CVAR_GET(hud_batterydraw) == 1){
 			//vertically.
 			gHUD.drawPartialFromBottom(m_SpriteHandle_t2, m_prc2, ((float)m_iBat / (float)100 ), x, y - iOffset , r, g, b);
-		}else if(global2_hud_batterydraw == 2){
+		}else if(EASY_CVAR_GET(hud_batterydraw) == 2){
 			gHUD.drawPartialFromRight(m_SpriteHandle_t2, m_prc2, ((float)m_iBat / (float)100 ), x, y - iOffset , r, g, b);
 		}
 		
@@ -285,7 +285,7 @@ int CHudBattery::Draw(float flTime)
 		
 
 		//MODDD - for debugging the battery's real value with a bit more accuracy than "about 1/3".
-		if(global2_forceDrawBatteryNumber == 1){
+		if(EASY_CVAR_GET(forceDrawBatteryNumber) == 1){
 
 			//gHUD.m_Health.deriveColorFromHealth(r, g, b, a);
 			gHUD.getGenericOrangeColor(r, g, b);
@@ -339,7 +339,7 @@ int CHudBattery::Draw(float flTime)
 		y += 9;
 		//(float)(100-(min(100,m_iBat))) * 0.01
 
-		if(global2_hud_batterydraw == 0){
+		if(EASY_CVAR_GET(hud_batterydraw) == 0){
 			//across.
 			gHUD.drawPartialFromLeft(m_SpriteHandle_t3, m_prc3, ((float)m_iBat / (float)100 ), x, y, r, g, b);
 		}else{

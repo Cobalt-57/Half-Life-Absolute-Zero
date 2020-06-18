@@ -359,13 +359,7 @@
     <ClCompile Include="client_message.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="util_entity.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="decals.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="custom_debug.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="basemonster.cpp">
@@ -396,6 +390,18 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="archer_ball.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\game_shared\NEW\util_entity.cpp">
+      <Filter>Source Files\Shared</Filter>
+    </ClCompile>
+    <ClCompile Include="util_debugdraw.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="func_door_health.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\pm_shared\pm_printout.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -583,12 +589,6 @@
     <ClInclude Include="client_message.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="util_entity.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="custom_debug.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="basebutton.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -638,6 +638,24 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="kingpin_ball.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\game_shared\NEW\util_entity.h">
+      <Filter>Header Files\Shared</Filter>
+    </ClInclude>
+    <ClInclude Include="util_debugdraw.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="func_door_health.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="egon.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="gauss.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\pm_shared\pm_printout.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

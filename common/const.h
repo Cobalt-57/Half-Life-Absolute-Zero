@@ -14,11 +14,9 @@
 ****/
 
 
-
-
-
 //A cheap way to include custom CVars throughout all files in the entire project.
 #include "cvar_custom.h"
+
 
 
 
@@ -30,8 +28,7 @@
 // Most came from server.h
 
 
-
-
+//MODDD - Some extra math stuff because hey, why not.
 #define CONST_PI 3.141592654f
 #define CONST_180_RAD CONST_PI
 #define CONST_2PI 6.283185307f
@@ -39,62 +36,17 @@
 #define CONST_DEG_TO_RAD_CONV 0.017453293
 #define CONST_RAD_TO_DEG_CONV 57.295779506
 
+
+//MODDD
+// for pre-release player ladder logic. Needs to be here to reach pm_shared.h.
 #define LADDER_CYCLE_BASE (0.3833 * 10000)
 
-
-
-
-#define FLAG_JUMPED	8192	//2^13. was 128?
+//MODDD - also seen by pm_shared.c.
+#define FLAG_JUMPED	8192	//2^13.
 #define FLAG_RESET_RECEIVED 16384 //2^14.
 
-#define REMOVE_ORIGINAL_NAMES 0
-#define EXTRA_NAMES 2
-//MODE: 2 = exhaustive; give all alts
-//		1 = just one alt (no "monster_", shorter script name)
-//		0 = no extra names.
-
-//How many seconds worth of air does the air tank have?  Coordinate with the GUI (clientside, ammo.cpp)
-#define PLAYER_AIRTANK_TIME_MAX 120
-#define PLAYER_LONGJUMPCHARGE_MAX 100
-#define PLAYER_LONGJUMP_PICKUPADD 25
-
-#define DEFAULT_SPARK_BALLS 6
 
 
-//GERMAN GIBS
-//~as seen here:
-//m_iGermanGibModelIndex =PRECACHE_MODEL ("models/germanygibs.mdl");
-//pGib->Spawn( "models/germangibs.mdl" );
-//~there is a slight variation in name: germanygibs vs. germangibs.  If this is just a mistake from Valve, we'll just go with either.
-//UPDATE: We're sticking to the name "g_hgibs.mdl" to be more consistent with other naming.
-#define GERMAN_GIB_PATH "models/g_hgibs.mdl"
-
-
-
-/*
-//NOT WORKING, DISREGARD.
-//Here is a place for global variables (to the server and client reliably)
-#ifndef superGlobalConstants
-#define superGlobalConstants
-
-float global_sparkBallAmmountMulti = -1;
-
-#endif
-*/
-
-
-//*************************************************************************************************
-//*************************************************************************************************
-//*************************************************************************************************
-
-
-//SOUND FLAGS HERE!  already in util.h, not repeated here.
-/*
-#define SND_SPAWNING		(1<<8)		// duplicated in protocol.h we're spawing, used in some cases for ambients 
-#define SND_STOP			(1<<5)		// duplicated in protocol.h stop sound
-#define SND_CHANGE_VOL		(1<<6)		// duplicated in protocol.h change sound vol
-#define SND_CHANGE_PITCH	(1<<7)		// duplicated in protocol.h change sound pitch
-*/
 
 
 // edict->flags

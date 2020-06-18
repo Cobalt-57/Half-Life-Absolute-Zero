@@ -49,6 +49,7 @@ QUESTIONABLE:
 -cl_dll/tf_defs.h was completely missing from the compile.
 -cl_dll/parsemsg.h was under the "Source" folder and not "Header"? Changed.
 -new file dlls/util_entity.cpp added to the client compile. These methods used to be inline and thus fully included in the client before (used to all in a .h file, now implementations moved to the .cpp file), not dummied out, and so should be present in the client as well.
+-cl_dll/in_defs.h deleted.  Tiny, and the PITCH, etc. constants may as well be shared (util_shared.h).
 
 ---Various files across cl_dll and dlls moved to "not_compiled" subdirectories. These files are never included or involved in the compile, consider deleting if everything in them is redundant, irrelevant or has no meaningful insights to early development.
  

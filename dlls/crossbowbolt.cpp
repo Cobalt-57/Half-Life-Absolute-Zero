@@ -1,11 +1,5 @@
 
-
-
-
-
 //NOTICE - this file is not included by the client. Assume serverside.
-
-
 
 
 #include "extdll.h"
@@ -60,12 +54,51 @@ CCrossbowBolt *CCrossbowBolt::BoltCreate(const Vector& arg_velocity, float arg_s
 
 
 
+
+
+TYPEDESCRIPTION	CCrossbowBolt::m_SaveData[] = 
+{
+	DEFINE_FIELD( CCrossbowBolt, recentVelocity, FIELD_VECTOR ),
+	DEFINE_FIELD( CCrossbowBolt, m_velocity, FIELD_VECTOR ),
+	DEFINE_FIELD( CCrossbowBolt, m_speed, FIELD_FLOAT ),
+	DEFINE_FIELD( CCrossbowBolt, noDamage, FIELD_BOOLEAN ),
+	DEFINE_FIELD( CCrossbowBolt, hitSomething, FIELD_BOOLEAN ),
+	
+};
+// Commented out, need custom save/restore's below.  Maybe?
+//IMPLEMENT_SAVERESTORE( CCrossbowBolt, CBaseEntity );
+
+
+//Typically want to do things after the iWriteFieldsResult or iReadFieldsResult. For writing it may not matter,
+//but reading may require parent class vars to already be loaded if they are depended on.
+//Also beware of depending on this same class's vars during loading, depending on vars not yet loaded is bad.
+int CCrossbowBolt::Save( CSave &save )
+{
+	if ( !CBaseEntity::Save(save) )
+		return 0;
+	int iWriteFieldsResult = save.WriteFields( "CCrossbowBolt", this, m_SaveData, ARRAYSIZE(m_SaveData) );
+
+	return iWriteFieldsResult;
+}
+int CCrossbowBolt::Restore( CRestore &restore )
+{
+	if ( !CBaseEntity::Restore(restore) )
+		return 0;
+	int iReadFieldsResult = restore.ReadFields( "CCrossbowBolt", this, m_SaveData, ARRAYSIZE(m_SaveData) );
+
+	return iReadFieldsResult;
+}
+
+
+
 void CCrossbowBolt::Spawn(){
 	Spawn(TRUE, FALSE);
 }
 
 void CCrossbowBolt::Spawn(BOOL useTracer, BOOL arg_noDamage)
 {
+	hitSomething = FALSE;
+
 	noDamage = arg_noDamage;
 
 	Precache( );
@@ -148,30 +181,37 @@ void CCrossbowBolt::BoltTouch( CBaseEntity *pOther )
 	//MODDD - is that safe?
 	recentVelocity = pev->velocity;
 
+	//why yes, I believe I did.
+	hitSomething = TRUE;
 
 
-	float* cvarToUse = NULL;
+	float crossbowMode = -1;
 
 	if( pev->owner != NULL){
 		const char* ownerClassName = STRING(pev->owner->v.classname);
 		if( !strcmp(ownerClassName, "player")){
-			cvarToUse = &EASY_CVAR_GET(playerCrossbowMode);
+			crossbowMode = EASY_CVAR_GET(playerCrossbowMode);
 		}else if(!strcmp(ownerClassName, "monster_human_assassin")){
-			cvarToUse = &EASY_CVAR_GET(hassassinCrossbowMode);
+			crossbowMode = EASY_CVAR_GET(hassassinCrossbowMode);
 		}
 	}
 	
 	//MODDD - filter w/ new CVar.
 
-	if(cvarToUse != NULL){
-		if((*cvarToUse)!=2 && ((*cvarToUse)==1 || !WEAPON_DEFAULT_MULTIPLAYER_CHECK) ){
-			//singleplayer mode? nothing special.
+	// mode 2 forces multiplayer, mode 1 forces single player, 0 (or anything else) leaves it
+	// up to the game.
 
-		}else{
-			goingToExplode = TRUE;
-			//plain bolts explode in multiplayer mode.
-		}
+	// if the mode is 2, or the mode is 0 AND multiplayer is on, we will explode.
+	if (crossbowMode == 2 || (crossbowMode == 0 && IsMultiplayer())) {
+		//plain bolts explode in multiplayer mode.
+		goingToExplode = TRUE;
 	}
+	else{
+		// singleplayer mode? nothing special.
+		// Things with a crossbow not tracked by either CVar also won't explode this way ever.
+		// Because exploding crossbows out of nowhere in the future would be unpleasant.
+	}
+	
 
 	
 	SetTouch( NULL );
@@ -191,13 +231,19 @@ void CCrossbowBolt::BoltTouch( CBaseEntity *pOther )
 
 			// UNDONE: this needs to call TraceAttack instead
 			ClearMultiDamage( );
-			//MODDD - added DMG_POISON.
-			gMultiDamage.type = DMG_BULLET | DMG_POISON;
 
 			if(goingToExplode){
-				//explosions gib. Look like it.
-				gMultiDamage.type |= DMG_BLAST | DMG_ALWAYSGIB;
+				// explosions gib. Look like it.
+				// ...eh, nevermind.  These are small explosions. Gib just if we deserve it as usual
+				// (overkill factor).  If you change your mind, add back DMG_ALWAYSGIB.
+				// Also, no poison for explosive arrows. C'mon, that's just ridiculous.
+				gMultiDamage.type = DMG_BLAST;
 			}else{
+				// May do lots of damage, but no gibbing. Does not make sense for ordinary
+				// piercing arrows.  Also does poison.
+				// MODDD TODO - make crossbow poison weaker than most?  It's already pretty devastating
+				// even without the poison.  Would need a new damage type (for the 2nd dmg bitmask
+				// probably).  BLEGH.
 				gMultiDamage.type = DMG_BULLET | DMG_NEVERGIB | DMG_POISON;
 			}
 
@@ -276,7 +322,7 @@ void CCrossbowBolt::BoltTouch( CBaseEntity *pOther )
 
 		if (UTIL_PointContents(pev->origin) != CONTENTS_WATER)
 		{
-			UTIL_Sparks2( pev->origin, DEFAULT_SPARK_BALLS, global_sparksPlayerCrossbowMulti );
+			UTIL_Sparks2( pev->origin, DEFAULT_SPARK_BALLS, EASY_CVAR_GET(sparksPlayerCrossbowMulti) );
 		}
 	}
 
@@ -448,7 +494,13 @@ int CCrossbowBolt::GetProjectileType(void){
 
 
 Vector CCrossbowBolt::GetVelocityLogical(void){
-	return m_velocity;
+	if(!hitSomething){
+		//moving, probably?
+		return m_velocity;
+	}else{
+		//not moving.
+		return Vector(0, 0, 0);
+	}
 }
 //Likewise, if something else wants to change our velocity, and we pay more attention to something other than pev->velocty,
 //we need to apply the change to that instead.  Or both, leaving that up to the thing implementing this.

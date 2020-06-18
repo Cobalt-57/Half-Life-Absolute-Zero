@@ -28,12 +28,20 @@
 #include "r_efx.h"
 #include "event_api.h"
 #include "event_args.h"
-#include "in_defs.h"
 
 #include <string.h>
 
 #include "r_studioint.h"
 #include "com_model.h"
+
+//MODDD - new include.
+// See the note at the top of ev_hldm.h about several removals in here (now in dlls/<specific weapon.h files>
+// to avoid redundancy).
+#include "crowbar.h"
+#include "gauss.h"
+#include "egon.h"
+#include "chumtoadweapon.h"
+
 
 //MODDD - new include.  THESE WERE NEVER ON, deemed unnecessary.
 //#include "hud_iface.h"
@@ -51,8 +59,122 @@
 //should be acceptable.
 
 
-
 extern engine_studio_api_t IEngineStudio;
+
+
+
+EASY_CVAR_EXTERN(strobeDurationMin)
+EASY_CVAR_EXTERN(strobeDurationMax)
+EASY_CVAR_EXTERN(strobeRadiusMin)
+EASY_CVAR_EXTERN(strobeRadiusMax)
+EASY_CVAR_EXTERN(strobeSpawnDistHori)
+EASY_CVAR_EXTERN(strobeSpawnDistVertMin)
+EASY_CVAR_EXTERN(strobeSpawnDistVertMax)
+	
+EASY_CVAR_EXTERN(strobeMultiColor)
+
+EASY_CVAR_EXTERN(ravelaserlength)
+
+	
+
+	
+EASY_CVAR_EXTERN(raveLaserSpawnDistHoriMin)
+EASY_CVAR_EXTERN(raveLaserSpawnDistHoriMax)
+EASY_CVAR_EXTERN(raveLaserSpawnDistHoriMin)
+EASY_CVAR_EXTERN(raveLaserSpawnDistHoriMax)
+EASY_CVAR_EXTERN(raveLaserSpawnDistVertMin)
+EASY_CVAR_EXTERN(raveLaserSpawnDistVertMax)
+EASY_CVAR_EXTERN(raveLaserSpawnDistVertMin)
+EASY_CVAR_EXTERN(raveLaserSpawnDistVertMax)
+
+
+EASY_CVAR_EXTERN(raveLaserDurationMin)
+EASY_CVAR_EXTERN(raveLaserDurationMax)
+EASY_CVAR_EXTERN(raveLaserThicknessMin)
+EASY_CVAR_EXTERN(raveLaserThicknessMax)
+
+EASY_CVAR_EXTERN(raveLaserNoiseMin)
+EASY_CVAR_EXTERN(raveLaserNoiseMax)
+
+
+EASY_CVAR_EXTERN(raveLaserBrightnessMin)
+EASY_CVAR_EXTERN(raveLaserBrightnessMax)
+	
+EASY_CVAR_EXTERN(raveLaserFrameRateMin)
+EASY_CVAR_EXTERN(raveLaserFrameRateMax)
+	
+	
+EASY_CVAR_EXTERN(raveLaserMultiColor)
+
+
+EASY_CVAR_EXTERN(raveLaserEnabled)
+EASY_CVAR_EXTERN(raveLaserLength)
+
+EASY_CVAR_EXTERN(raveLaserSpawnFreq)
+
+EASY_CVAR_EXTERN(muteRicochetSound)
+
+EASY_CVAR_EXTERN(muteBulletHitSounds)
+
+EASY_CVAR_EXTERN(rocketTrailAlphaInterval)
+EASY_CVAR_EXTERN(rocketTrailAlphaScale)
+
+
+EASY_CVAR_EXTERN(gauss_mode)
+EASY_CVAR_EXTERN(gauss_primaryonly)
+EASY_CVAR_EXTERN(gauss_reflectdealsdamage)
+EASY_CVAR_EXTERN(gauss_chargeanimdelay)
+EASY_CVAR_EXTERN(gauss_chargeworkdelay)
+EASY_CVAR_EXTERN(gauss_secondarychargetimereq)
+EASY_CVAR_EXTERN(gauss_primaryreflects)
+EASY_CVAR_EXTERN(gauss_primarypierces)
+EASY_CVAR_EXTERN(gauss_secondaryreflects)
+EASY_CVAR_EXTERN(gauss_secondarypierces)
+EASY_CVAR_EXTERN(gauss_primarypunchthrough)
+EASY_CVAR_EXTERN(gauss_secondarypunchthrough)
+
+EASY_CVAR_EXTERN(playerWeaponSpreadMode)
+EASY_CVAR_EXTERN(playerBulletHitEffectForceServer)
+
+EASY_CVAR_EXTERN(mutePlayerWeaponFire)
+EASY_CVAR_EXTERN(crossbowFirePlaysReloadSound)
+
+EASY_CVAR_EXTERN(textureHitSoundPrintouts)
+
+EASY_CVAR_EXTERN(playerWeaponTracerMode)
+
+EASY_CVAR_EXTERN(decalTracerExclusivity)
+
+EASY_CVAR_EXTERN(egonEffectsMode)
+
+EASY_CVAR_EXTERN(myRocketsAreBarney)
+
+EASY_CVAR_EXTERN(muteCrowbarSounds)
+
+EASY_CVAR_EXTERN(forceAllowServersideTextureSounds)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 //MODDD - is it safe to assume every integer of this tracerCount array is going to start at 0?  And not garbage memory?
 //        I assume it has one index per type of weapon to store the number of bullets
@@ -107,97 +229,6 @@ void updateCVarRefsClient(){
 }
 */
 
-
-
-extern float global2_strobeDurationMin;
-extern float global2_strobeDurationMax;
-extern float global2_strobeRadiusMin;
-extern float global2_strobeRadiusMax;
-extern float global2_strobeSpawnDistHori;
-extern float global2_strobeSpawnDistVertMin;
-extern float global2_strobeSpawnDistVertMax;
-	
-extern float global2_strobeMultiColor;
-
-extern float global2_ravelaserlength;
-
-	
-
-	
-extern float global2_raveLaserSpawnDistHoriMin;
-extern float global2_raveLaserSpawnDistHoriMax;
-extern float global2_raveLaserSpawnDistHoriMin;
-extern float global2_raveLaserSpawnDistHoriMax;
-extern float global2_raveLaserSpawnDistVertMin;
-extern float global2_raveLaserSpawnDistVertMax;
-extern float global2_raveLaserSpawnDistVertMin;
-extern float global2_raveLaserSpawnDistVertMax;
-
-
-extern float global2_raveLaserDurationMin;
-extern float global2_raveLaserDurationMax;
-extern float global2_raveLaserThicknessMin;
-extern float global2_raveLaserThicknessMax;
-
-extern float global2_raveLaserNoiseMin;
-extern float global2_raveLaserNoiseMax;
-
-
-extern float global2_raveLaserBrightnessMin;
-extern float global2_raveLaserBrightnessMax;
-	
-extern float global2_raveLaserFrameRateMin;
-extern float global2_raveLaserFrameRateMax;
-	
-	
-extern float global2_raveLaserMultiColor;
-
-
-extern float global2_raveLaserEnabled;
-extern float global2_raveLaserLength;
-
-extern float global2_raveLaserSpawnFreq;
-
-extern float global2_muteRicochetSound;
-
-EASY_CVAR_EXTERN(muteBulletHitSounds)
-
-extern float global2_rocketTrailAlphaInterval;
-extern float global2_rocketTrailAlphaScale;
-
-
-EASY_CVAR_EXTERN(gauss_mode)
-EASY_CVAR_EXTERN(gauss_primaryonly)
-EASY_CVAR_EXTERN(gauss_reflectdealsdamage)
-EASY_CVAR_EXTERN(gauss_chargeanimdelay)
-EASY_CVAR_EXTERN(gauss_chargeworkdelay)
-EASY_CVAR_EXTERN(gauss_secondarychargetimereq)
-EASY_CVAR_EXTERN(gauss_primaryreflects)
-EASY_CVAR_EXTERN(gauss_primarypierces)
-EASY_CVAR_EXTERN(gauss_secondaryreflects)
-EASY_CVAR_EXTERN(gauss_secondarypierces)
-EASY_CVAR_EXTERN(gauss_primarypunchthrough)
-EASY_CVAR_EXTERN(gauss_secondarypunchthrough)
-
-EASY_CVAR_EXTERN(playerWeaponSpreadMode)
-EASY_CVAR_EXTERN(playerBulletHitEffectForceServer)
-
-EASY_CVAR_EXTERN(mutePlayerWeaponFire)
-EASY_CVAR_EXTERN(crossbowFirePlaysReloadSound)
-
-EASY_CVAR_EXTERN(textureHitSoundPrintouts)
-
-EASY_CVAR_EXTERN(playerWeaponTracerMode)
-
-EASY_CVAR_EXTERN(decalTracerExclusivity)
-
-EASY_CVAR_EXTERN(egonEffectsMode)
-
-EASY_CVAR_EXTERN(myRocketsAreBarney)
-
-EASY_CVAR_EXTERN(muteCrowbarSounds)
-
-EASY_CVAR_EXTERN(forceAllowServersideTextureSounds)
 
 
 
@@ -389,7 +420,7 @@ void EV_HLDM_GunshotDecalTrace( pmtrace_t *pTrace, char *decalName )
 	//gEngfuncs.pEfxAPI->R_BulletImpactParticles( pTrace->endpos );
 
 	
-	if(global2_muteRicochetSound < 1 ){
+	if(EASY_CVAR_GET(muteRicochetSound) < 1 ){
 
 		//redundant with TE_GUNSHOT now used instead. It automatically plays a ricochet sound.
 		/*
@@ -656,11 +687,6 @@ void EV_HLDM_FireBullets( int idx, float *forward, float *right, float *up, int 
 //======================
 void EV_FireGlock1( event_args_t *args )
 {
-
-	//float silencerOn = CVAR_GET_FLOAT("glockSilencerOn");
-
-	
-
 	int idx;
 	vec3_t origin;
 	vec3_t angles;
@@ -685,7 +711,6 @@ void EV_FireGlock1( event_args_t *args )
 
 	shell = gEngfuncs.pEventAPI->EV_FindModelIndex ("models/shell.mdl");// brass shell
 
-
 	int silencerOn = 0;
 	if(InAttack == 0 || InAttack == 1){
 		silencerOn = 0;
@@ -693,10 +718,8 @@ void EV_FireGlock1( event_args_t *args )
 		silencerOn = 1;
 	}
 
-
 	if ( EV_IsLocal( idx ) )
 	{
-
 		//MODDD - silencer has no flash. This is the flash of light, not the sprite which is controlled by the animation itslef.
 		//It is blocked seprately by a separate flag for renderfx that makes it from server to clientside, called NOMUZZLEFLASH.
 		//By default the sprite is allowed but must specifically be blocked for the silencer instead, actively done in entity.cpp.
@@ -760,13 +783,10 @@ void EV_FireGlock1( event_args_t *args )
 		gEngfuncs.GetLocalPlayer()->baseline.frame = 126;
 		gEngfuncs.GetLocalPlayer()->baseline.framerate = -1;
 		*/
-
 }
 
 void EV_FireGlock2( event_args_t *args )
 {
-
-	
 	int idx;
 	vec3_t origin;
 	vec3_t angles;
@@ -795,7 +815,6 @@ void EV_FireGlock2( event_args_t *args )
 	}
 
 
-
 	AngleVectors( angles, forward, right, up );
 
 	shell = gEngfuncs.pEventAPI->EV_FindModelIndex ("models/shell.mdl");// brass shell
@@ -821,13 +840,11 @@ void EV_FireGlock2( event_args_t *args )
 		V_PunchAxis( 0, -2.0 );
 	}
 
-	
 	EV_GetDefaultShellInfo( args, origin, velocity, ShellVelocity, ShellOrigin, forward, right, up, 20, -12, 4 );
 	
 	//MODDD - why were these commented?
 	EV_EjectBrass ( ShellOrigin, ShellVelocity, angles[ YAW ], shell, TE_BOUNCE_SHELL ); 
 	
-
 	if(EASY_CVAR_GET(mutePlayerWeaponFire) != 1 ){
 		if(!silencerOn){
 			gEngfuncs.pEventAPI->EV_PlaySound( idx, origin, CHAN_WEAPON, "weapons/pl_gun3.wav", gEngfuncs.pfnRandomFloat(0.92, 1.0), ATTN_NORM, 0, 98 + gEngfuncs.pfnRandomLong( 0, 3 ) );
@@ -851,9 +868,6 @@ void EV_FireGlock2( event_args_t *args )
 	VectorCopy( forward, vecAiming );
 
 	EV_HLDM_FireBullets( idx, forward, right, up, 1, vecSrc, vecAiming, 8192, BULLET_PLAYER_9MM, 0, &tracerCount[idx-1], args->fparam1, args->fparam2 );
-	
-	
-
 }
 //======================
 //	   GLOCK END
@@ -913,7 +927,7 @@ void EV_FireShotGunDouble( event_args_t *args )
 	//0 = no effect (pick based on single or multiplayer as usual)
 	//1 = standard circle (single player)
 	//2 = wider, less tall (multiplayer)
-	if(EASY_CVAR_GET(playerWeaponSpreadMode)!=2 && (EASY_CVAR_GET(playerWeaponSpreadMode)==1 || !WEAPON_DEFAULT_MULTIPLAYER_CHECK) )
+	if(EASY_CVAR_GET(playerWeaponSpreadMode)!=2 && (EASY_CVAR_GET(playerWeaponSpreadMode)==1 || !IsMultiplayer()) )
 	{
 		//easyForcePrintLine("FLAG C-SINGLEPLAYER");
 		//single player circle
@@ -972,7 +986,7 @@ void EV_FireShotGunSingle( event_args_t *args )
 	VectorCopy( forward, vecAiming );
 
 	//MODDD - same, see above for the ShotGunSingle
-	if(EASY_CVAR_GET(playerWeaponSpreadMode)!=2 && (EASY_CVAR_GET(playerWeaponSpreadMode)==1 || !WEAPON_DEFAULT_MULTIPLAYER_CHECK) )
+	if(EASY_CVAR_GET(playerWeaponSpreadMode)!=2 && (EASY_CVAR_GET(playerWeaponSpreadMode)==1 || !IsMultiplayer()) )
 	{
 		EV_HLDM_FireBullets( idx, forward, right, up, 6, vecSrc, vecAiming, 2048, BULLET_PLAYER_BUCKSHOT, 0, &tracerCount[idx-1], 0.08716, 0.08716 );
 	}
@@ -1131,7 +1145,7 @@ void EV_FirePython( event_args_t *args )
 		gEngfuncs.pEventAPI->EV_WeaponAnimation( PYTHON_FIRE1, pythonModel );
 
 		//Nah, just disable all punches when the minimumfiredelay cheat is on (see view.cpp).
-		//if(CVAR_GET_FLOAT("cheat_minimumfiredelay") == 0 ){
+		//if(EASY_CVAR_GET(cheat_minimumfiredelay) == 0 ){
 			V_PunchAxis( 0, -10.0 );
 		//}else{
 		//	V_PunchAxis( 0, 0 );
@@ -1169,7 +1183,7 @@ void EV_FirePython( event_args_t *args )
 //======================
 //	   GAUSS START 
 //======================
-#define SND_CHANGE_PITCH	(1<<7)		// duplicated in protocol.h change sound pitch
+//MODDD - redefine of SND_CHANGE_PITCH removed, SND_'s are now in util_shared.h.
 
 void EV_SpinGauss( event_args_t *args )
 {
@@ -1798,17 +1812,17 @@ void generateFreakyLight(const Vector& arg_origin){
 	float spawnDistVertMax = 75;
 	int multiColor = TRUE;
 	*/
-	float durationMin = global2_strobeDurationMin;
-	float durationMax = global2_strobeDurationMax;
-	float radiusMin = global2_strobeRadiusMin;
-	float radiusMax = global2_strobeRadiusMax;
-	float spawnDistHori = global2_strobeSpawnDistHori;
-	float spawnDistVertMin = global2_strobeSpawnDistVertMin;
-	float spawnDistVertMax = global2_strobeSpawnDistVertMax;
+	float durationMin = EASY_CVAR_GET(strobeDurationMin);
+	float durationMax = EASY_CVAR_GET(strobeDurationMax);
+	float radiusMin = EASY_CVAR_GET(strobeRadiusMin);
+	float radiusMax = EASY_CVAR_GET(strobeRadiusMax);
+	float spawnDistHori = EASY_CVAR_GET(strobeSpawnDistHori);
+	float spawnDistVertMin = EASY_CVAR_GET(strobeSpawnDistVertMin);
+	float spawnDistVertMax = EASY_CVAR_GET(strobeSpawnDistVertMax);
 	
 
 	int multiColor;
-	if(global2_strobeMultiColor == 1){
+	if(EASY_CVAR_GET(strobeMultiColor) == 1){
 		multiColor = TRUE;
 	}else{
 		multiColor = FALSE;
@@ -1889,7 +1903,7 @@ void generateFreakyLaser(const Vector& arg_origin){
 	float randOrigin2[3];
 
 	//range??
-	float mag = randomValue(global2_raveLaserLength, global2_raveLaserLength);
+	float mag = randomValue(EASY_CVAR_GET(raveLaserLength), EASY_CVAR_GET(raveLaserLength));
 
 	float fltDeg = randomValue(0, CONST_2PI);
 	if(fltDeg >= CONST_2PI){
@@ -1911,10 +1925,10 @@ void generateFreakyLaser(const Vector& arg_origin){
 	float x2 = cos(fltDeg) * mag;
 	float y2 = sin(fltDeg) * mag;
 
-	float randomShiftX = randomAbsoluteValue(global2_raveLaserSpawnDistHoriMin, global2_raveLaserSpawnDistHoriMax);
-	float randomShiftY = randomAbsoluteValue(global2_raveLaserSpawnDistHoriMin, global2_raveLaserSpawnDistHoriMax);
-	float randomShiftZ = randomAbsoluteValue(global2_raveLaserSpawnDistVertMin, global2_raveLaserSpawnDistVertMax);
-	float randomShiftZ2 = randomAbsoluteValue(global2_raveLaserSpawnDistVertMin, global2_raveLaserSpawnDistVertMax);
+	float randomShiftX = randomAbsoluteValue(EASY_CVAR_GET(raveLaserSpawnDistHoriMin), EASY_CVAR_GET(raveLaserSpawnDistHoriMax));
+	float randomShiftY = randomAbsoluteValue(EASY_CVAR_GET(raveLaserSpawnDistHoriMin), EASY_CVAR_GET(raveLaserSpawnDistHoriMax));
+	float randomShiftZ = randomAbsoluteValue(EASY_CVAR_GET(raveLaserSpawnDistVertMin), EASY_CVAR_GET(raveLaserSpawnDistVertMax));
+	float randomShiftZ2 = randomAbsoluteValue(EASY_CVAR_GET(raveLaserSpawnDistVertMin), EASY_CVAR_GET(raveLaserSpawnDistVertMax));
 
 	randOrigin1[0] = origin[0] + x + randomShiftX;
 	randOrigin1[1] = origin[1] + y + randomShiftY;
@@ -1926,14 +1940,14 @@ void generateFreakyLaser(const Vector& arg_origin){
 	randOrigin2[2] = origin[2] + randomShiftZ2;
 
 
-	float randLife = gEngfuncs.pfnRandomFloat(global2_raveLaserDurationMin, global2_raveLaserDurationMax);
-	float randWidth = gEngfuncs.pfnRandomFloat(global2_raveLaserThicknessMin, global2_raveLaserThicknessMax);
+	float randLife = gEngfuncs.pfnRandomFloat(EASY_CVAR_GET(raveLaserDurationMin), EASY_CVAR_GET(raveLaserDurationMax));
+	float randWidth = gEngfuncs.pfnRandomFloat(EASY_CVAR_GET(raveLaserThicknessMin), EASY_CVAR_GET(raveLaserThicknessMax));
 
-	float randAmp = gEngfuncs.pfnRandomFloat(global2_raveLaserNoiseMin, global2_raveLaserNoiseMax);
+	float randAmp = gEngfuncs.pfnRandomFloat(EASY_CVAR_GET(raveLaserNoiseMin), EASY_CVAR_GET(raveLaserNoiseMax));
 
-	float randBrightness = gEngfuncs.pfnRandomFloat(global2_raveLaserBrightnessMin * 255, global2_raveLaserBrightnessMax * 255);
+	float randBrightness = gEngfuncs.pfnRandomFloat(EASY_CVAR_GET(raveLaserBrightnessMin) * 255, EASY_CVAR_GET(raveLaserBrightnessMax) * 255);
 	//INTERPRET FROM 0 - 1, like  0.8 - 1.0!
-	float frameRate = gEngfuncs.pfnRandomFloat(global2_raveLaserFrameRateMin, global2_raveLaserFrameRateMax);
+	float frameRate = gEngfuncs.pfnRandomFloat(EASY_CVAR_GET(raveLaserFrameRateMin), EASY_CVAR_GET(raveLaserFrameRateMax));
 	
 	float speed = 1;
 	float startFrame = 0;
@@ -1942,7 +1956,7 @@ void generateFreakyLaser(const Vector& arg_origin){
 	
 	int colorReceive[3];
 	
-	if(global2_raveLaserMultiColor != 0){
+	if(EASY_CVAR_GET(raveLaserMultiColor) != 0){
 		generateColor(colorReceive);
 	}else{
 		//always solid white.
@@ -1994,13 +2008,13 @@ void EV_FreakyLight( event_args_t* args){
 
 	generateFreakyLight( (float*)&args->origin );
 
-	if(global2_raveLaserEnabled == 1){
+	if(EASY_CVAR_GET(raveLaserEnabled) == 1){
 		
 		//if there is a decimal in raveLaserSpawnFreq, guarantee spawning of the first whole number lasers (like in 2.4, spawn 2 lasers).
 		//Treat the 0.4 decimal as a "40%" chance of producing another laser.  Rounds out nice and evenly when it happens a lot.
-		int toGen = (int)global2_raveLaserSpawnFreq;   //truncate.
+		int toGen = (int)EASY_CVAR_GET(raveLaserSpawnFreq);   //truncate.
 		//roundoff?
-		float roundoff = ((int)(global2_raveLaserSpawnFreq * 10) % 10 ) / 10.0f;
+		float roundoff = ((int)(EASY_CVAR_GET(raveLaserSpawnFreq) * 10) % 10 ) / 10.0f;
 		if(roundoff != 0 && gEngfuncs.pfnRandomLong(0, 1) <= roundoff){
 			//extra.
 			toGen++;
@@ -2008,7 +2022,7 @@ void EV_FreakyLight( event_args_t* args){
 		for(i = 0; i < toGen; i++){
 			generateFreakyLaser( (float*)&args->origin );
 		}
-	}//END OF if(global2_raveLaserEnabled == 1)
+	}//END OF if(EASY_CVAR_GET(raveLaserEnabled) == 1)
 
 }
 
@@ -2096,9 +2110,6 @@ void shrapnelHitCallback( struct tempent_s *ent, struct pmtrace_s *ptr ){
 	dl->color.g = 120;
 	dl->color.b = 0;
 
-	
-	
-	
 }
 
 void createShrapnel(int* sprite, Vector* loc, int testArg, float testArg2, float testArg3){
@@ -2241,27 +2252,18 @@ void EV_QuakeExplosionEffect( event_args_t* args){
 	
 	return;
 	
-
-
 }
 
 
 
-//extern float global_sparkBallAmmountMulti;
+
+
+//EASY_CVAR_EXTERN_DEBUGONLY???(sparkBallAmmountMulti)
 //float global_sparkBallAmmountMulti = 1;
 //No, use it to influence the parameter.
 
 void EV_ShowBalls( event_args_t *args )
 {
-
-	/*
-	if(CVAR_GET_FLOAT("sparkMod")){
-
-	}
-	*/
-
-
-	
 
 	int ballsToSpawn = args->iparam1;
 	
@@ -2289,7 +2291,6 @@ void EV_ShowBalls( event_args_t *args )
 	vec3_t origin;
 	//vec3_origin
 	VectorCopy( args->origin, origin );
-
 
 
 	
@@ -2338,7 +2339,6 @@ void EV_ShowBalls( event_args_t *args )
 	//							255, 200 );
 
 	//int type, float * start, float * end, int modelIndex, int count, float life, float size, float amplitude, int renderamt, float speed 
-
 
 }
 
@@ -2462,18 +2462,6 @@ void EV_HLDM_DecalGunshotCustomEvent( event_args_t *args )
 //	   CROWBAR START
 //======================
 
-enum crowbar_e {
-	CROWBAR_IDLE = 0,
-	CROWBAR_DRAW,
-	CROWBAR_HOLSTER,
-	CROWBAR_ATTACK1HIT,
-	CROWBAR_ATTACK1MISS,
-	CROWBAR_ATTACK2MISS,
-	CROWBAR_ATTACK2HIT,
-	CROWBAR_ATTACK3MISS,
-	CROWBAR_ATTACK3HIT
-};
-
 int g_iSwing;
 
 //Only predict the miss sounds, hit sounds are still played 
@@ -2553,6 +2541,7 @@ void EV_BoltCallback ( struct tempent_s *ent, float frametime, float currenttime
 	ent->entity.angles = ent->entity.baseline.vuser2;
 }
 
+
 void EV_FireCrossbow2( event_args_t *args )
 {
 	vec3_t vecSrc, vecEnd;
@@ -2623,8 +2612,12 @@ void EV_FireCrossbow2( event_args_t *args )
 			gEngfuncs.pEventAPI->EV_PlaySound( 0, tr.endpos, CHAN_BODY, "weapons/xbow_hit1.wav", gEngfuncs.pfnRandomFloat(0.95, 1.0), ATTN_NORM, 0, PITCH_NORM );
 		
 			//Not underwater, do some sparks...
-			if ( gEngfuncs.PM_PointContents( tr.endpos, NULL ) != CONTENTS_WATER)
-				 gEngfuncs.pEfxAPI->R_SparkShower( tr.endpos );
+			if (gEngfuncs.PM_PointContents(tr.endpos, NULL) != CONTENTS_WATER) {
+				//MODDD - new method.
+				///	 gEngfuncs.pEfxAPI->R_SparkShower( tr.endpos );
+				UTIL_Sparks(tr.endpos);
+			}
+
 
 			vec3_t vBoltAngles;
 			int iModelIndex = gEngfuncs.pEventAPI->EV_FindModelIndex( "models/crossbow_bolt.mdl" );
@@ -2734,34 +2727,10 @@ void EV_FireRpg( event_args_t *args )
 //======================
 //	    EGON END 
 //======================
-enum egon_e {
-	EGON_IDLE1 = 0,
-	EGON_FIDGET1,
-	EGON_ALTFIREON,
-	EGON_ALTFIRECYCLE,
-	EGON_ALTFIREOFF,
-	EGON_FIRE1,
-	EGON_FIRE2,
-	EGON_FIRE3,
-	EGON_FIRE4,
-	EGON_DRAW,
-	EGON_HOLSTER
-};
 
 int g_fireAnims1[] = { EGON_FIRE1, EGON_FIRE2, EGON_FIRE3, EGON_FIRE4 };
 int g_fireAnims2[] = { EGON_ALTFIRECYCLE };
 
-enum EGON_FIRESTATE { FIRE_OFF, FIRE_CHARGE };
-enum EGON_FIREMODE { FIRE_NARROW, FIRE_WIDE};
-
-#define	EGON_PRIMARY_VOLUME		450
-#define EGON_BEAM_SPRITE		"sprites/xbeam1.spr"
-#define EGON_FLARE_SPRITE		"sprites/XSpark1.spr"
-#define EGON_SOUND_OFF			"weapons/egon_off1.wav"
-#define EGON_SOUND_RUN			"weapons/egon_run3.wav"
-#define EGON_SOUND_STARTUP		"weapons/egon_windup2.wav"
-
-#define ARRAYSIZE(p)		(sizeof(p)/sizeof(p[0]))
 
 BEAM *pBeam;
 BEAM *pBeam2;
@@ -3057,10 +3026,6 @@ enum squeak_e {
 	SQUEAK_THROW
 };
 
-#define VEC_HULL_MIN		Vector(-16, -16, -36)
-#define VEC_DUCK_HULL_MIN	Vector(-16, -16, -18 )
-
-
 
 void EV_SnarkFire( event_args_t *args )
 {
@@ -3106,20 +3071,6 @@ void EV_SnarkFire( event_args_t *args )
 //======================
 //	   CHUMTOAD START
 //=====================
-enum chumtoadweapon_e {  //key: frames, FPS
-	CHUMTOADWEAPON_IDLE1 = 0, //31, 16
-	CHUMTOADWEAPON_FIDGETLICK, //31, 16
-	CHUMTOADWEAPON_FIDGETCROAK, //51, 16
-	CHUMTOADWEAPON_DOWN, //21, 16
-	CHUMTOADWEAPON_UP, //36, 30
-	CHUMTOADWEAPON_THROW, //36, 24
-
-};
-
-
-#define VEC_HULL_MIN		Vector(-16, -16, -36)
-#define VEC_DUCK_HULL_MIN	Vector(-16, -16, -18 )
-
 
 
 void EV_ChumToadFire( event_args_t *args )
@@ -3596,9 +3547,9 @@ void EV_imitation7_think ( struct tempent_s *ent, float frametime, float current
 	int eckz = gEngfuncs.pEventAPI->EV_FindModelIndex( "sprites/explode1.spr" );
 
 	//not sure if "life" is necessary, seems to expire at the end of the last frame without any looping and/or cycle tags.  (framerate is 10, I assume,  10 frames per second:  9 frames, so  9 / 10 = 0.9 seconds to finish the anim.
-	TEMPENTITY* eh = gEngfuncs.pEfxAPI->R_TempSprite( ent->entity.origin, vec3_origin, global2_rocketTrailAlphaScale, eckz, kRenderGlow, kRenderFxNoDissipation, 250.0 / 255.0, 0.91f, FTENT_SPRANIMATE );
+	TEMPENTITY* eh = gEngfuncs.pEfxAPI->R_TempSprite( ent->entity.origin, vec3_origin, EASY_CVAR_GET(rocketTrailAlphaScale), eckz, kRenderGlow, kRenderFxNoDissipation, 250.0 / 255.0, 0.91f, FTENT_SPRANIMATE );
 	//eh->fadeSpeed = 3.3f;  ???
-	//eh->entity.curstate.scale = global2_rocketTrailAlphaScale;
+	//eh->entity.curstate.scale = EASY_CVAR_GET(rocketTrailAlphaScale);
 	*/
 
 
@@ -3934,11 +3885,11 @@ void EV_rocketAlphaTrailThink ( struct tempent_s *ent, float frametime, float cu
 	int eckz = gEngfuncs.pEventAPI->EV_FindModelIndex( "sprites/explode1.spr" );
 
 	//not sure if "life" is necessary, seems to expire at the end of the last frame without any looping and/or cycle tags.  (framerate is 10, I assume,  10 frames per second:  9 frames, so  9 / 10 = 0.9 seconds to finish the anim.
-	TEMPENTITY* eh = gEngfuncs.pEfxAPI->R_TempSprite( ent->entity.origin, vec3_origin, global2_rocketTrailAlphaScale, eckz, kRenderGlow, kRenderFxNoDissipation, 250.0 / 255.0, 0.91f, FTENT_SPRANIMATE );
+	TEMPENTITY* eh = gEngfuncs.pEfxAPI->R_TempSprite( ent->entity.origin, vec3_origin, EASY_CVAR_GET(rocketTrailAlphaScale), eckz, kRenderGlow, kRenderFxNoDissipation, 250.0 / 255.0, 0.91f, FTENT_SPRANIMATE );
 	//eh->fadeSpeed = 3.3f;  ???
-	//eh->entity.curstate.scale = global2_rocketTrailAlphaScale;
+	//eh->entity.curstate.scale = EASY_CVAR_GET(rocketTrailAlphaScale);
 
-	ent->entity.baseline.fuser1 = gEngfuncs.GetClientTime() + global2_rocketTrailAlphaInterval;
+	ent->entity.baseline.fuser1 = gEngfuncs.GetClientTime() + EASY_CVAR_GET(rocketTrailAlphaInterval);
 }
 
 
@@ -3980,7 +3931,7 @@ void EV_rocketAlphaTrail (event_args_t *args)
 	   
 	   pTrailSpawner->die = gEngfuncs.GetClientTime() + 10; // Just in case
 
-	   pTrailSpawner->entity.baseline.fuser1 = gEngfuncs.GetClientTime() + global2_rocketTrailAlphaInterval; // Don't try to die till 500ms ahead
+	   pTrailSpawner->entity.baseline.fuser1 = gEngfuncs.GetClientTime() + EASY_CVAR_GET(rocketTrailAlphaInterval); // Don't try to die till 500ms ahead
 	}
 
 }
@@ -4037,7 +3988,7 @@ void EV_Mirror( event_args_t *args )
 
 	if (bNew)
 	{
-		if (gHUD.numMirrors >= 32) easyPrintLine("ERROR: Can't register mirror, maximum 32 allowed!\n");
+		if (gHUD.numMirrors >= 32) easyForcePrintLine("ERROR: Can't register mirror, maximum 32 allowed!\n");
 
 		else
          		{

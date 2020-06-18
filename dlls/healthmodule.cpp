@@ -26,6 +26,7 @@ HealthModule::HealthModule(void){
 
 	turnOffDelay = -1;
 	rechargeDelay = -1;
+	waitingForRecharge = FALSE;
 }//END OF HealthModule constructor
 
 
@@ -66,6 +67,7 @@ TYPEDESCRIPTION HealthModule::m_SaveData[] ={
 	
 	DEFINE_FIELD( HealthModule, turnOffDelay, FIELD_TIME),
 	DEFINE_FIELD( HealthModule, rechargeDelay, FIELD_TIME),
+	DEFINE_FIELD(HealthModule, waitingForRecharge, FIELD_BOOLEAN),
 };
 
 int HealthModule::Save( CSave &save ){
@@ -121,6 +123,8 @@ void HealthModule::CustomThink(void){
 	if(rechargeDelay != -1 && gpGlobals->time >= rechargeDelay){
 		ChargeRestored();
 		turnOffDelay = -1;
+		rechargeDelay = -1;
+		waitingForRecharge = FALSE;
 	}
 
 }//END OF CustomThink
@@ -128,13 +132,9 @@ void HealthModule::CustomThink(void){
 
 
 void HealthModule::Spawn(){
-	
 	//NOTICE - I don't call my own Precache method! The class hosting this HealthModule instance must call it.
 
 	m_iJuice = gSkillData.healthchargerCapacity;
-
-	
-
 }//END OF Spawn
 
 
@@ -157,7 +157,6 @@ void HealthModule::turnThinkOff(void){
 }
 
 
-
 void HealthModule::Use( CBaseEntity* pActivator, CBaseEntity* pCaller, USE_TYPE useType, float value ){
 
 	// Make sure that we have a caller
@@ -176,14 +175,9 @@ void HealthModule::Use( CBaseEntity* pActivator, CBaseEntity* pCaller, USE_TYPE 
 		firstUseSinceEnd = FALSE;  //don't allow this now.
 	}
 
-
-
-
-
 	//GetClassPtr((CBasePlayer *)pev) ;    not needed here, not working with a PEV, but the "entity" itself.
 	//since pPlayer is a child along the line ( a child of CBaseEntity), a direct cast should be okay.
 	CBasePlayer* pPlayer = (CBasePlayer*) (pActivator);
-
 
 	//easyPrintLine("HEALING??? %d, %d, %d", pPlayer->m_rgbTimeBasedDamage[itbd_Bleeding], (pPlayer->m_bitsDamageTypeMod & DMG_BLEEDING), pPlayer->m_bitsDamageTypeMod);
 	
@@ -233,7 +227,6 @@ void HealthModule::Use( CBaseEntity* pActivator, CBaseEntity* pCaller, USE_TYPE 
 	parentEntity_event->I_HealthModule_SetThink_UseEnd();
 	*/
 	//ALTERNATE WAY?
-	//turnOffDelay = gpGlobals->time + 0.25;
 	turnOffDelay = gpGlobals->time + 0.25;
 
 
@@ -264,6 +257,7 @@ void HealthModule::Use( CBaseEntity* pActivator, CBaseEntity* pCaller, USE_TYPE 
 	// charge the player
 	if ( pActivator->TakeHealth( 1, DMG_GENERIC ) )
 	{
+		m_iJuice--;
 
 		//actual charge use? Tell the parent entity.
 		if(firstUseSinceEnd){
@@ -273,11 +267,7 @@ void HealthModule::Use( CBaseEntity* pActivator, CBaseEntity* pCaller, USE_TYPE 
 		}else{
 			parentEntity_event->I_HealthModule_UseContinuous(pActivator, pCaller, useType, value);
 		}
-
-
-		m_iJuice--;
 	}
-
 	// govern the rate of charge
 	m_flNextCharge = gpGlobals->time + 0.1;
 
@@ -322,18 +312,19 @@ void HealthModule::UseEnd(void){
 	m_iOn = 0;
 
 	//MODDD NOTE - waitasecond. Isn't setting m_iReactivate by KeyValue pointless if this just goes ahead and fetches it from the GameRules??
-	if ((!m_iJuice) &&  ( ( m_iReactivate = g_pGameRules->FlHealthChargerRechargeTime() ) > 0) )
+	if ((!m_iJuice) && ( ( m_iReactivate = g_pGameRules->FlHealthChargerRechargeTime() ) > 0) )
+	//if ((!m_iJuice) && ((m_iReactivate = 10) > 0))
 	{
 		/*
 		parentEntity_entity->pev->nextthink = parentEntity_entity->pev->ltime + m_iReactivate;
 		//SetThink(&CWallHealth::Recharge);
-		parentEntity_event->I_HealthModule_SetThink_ChargeRestored();
 		*/
-
 		
-		//ALTERNATE WAY?
-		rechargeDelay = gpGlobals->time + (float)m_iReactivate;
-
+		// can't have already been set.
+		if (!waitingForRecharge) {
+			rechargeDelay = gpGlobals->time + (float)m_iReactivate;
+			waitingForRecharge = TRUE;
+		}
 	}
 	else{
 		turnThinkOff();
@@ -348,8 +339,5 @@ void HealthModule::stopSounds(void){
 }//END OF stopSounds
 
 
-
-	
-	
 
 

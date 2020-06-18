@@ -35,7 +35,7 @@ int	g_runfuncs = 0;
 struct local_state_s *g_finalstate = NULL;
 
 
-EASY_CVAR_EXTERN(viewModelPrintouts)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(viewModelPrintouts)
 
 
 /*
@@ -111,8 +111,6 @@ void HUD_SendWeaponAnim( int iAnim, int body, int force )
 		doReverse = TRUE;
 	}
 
-
-
 	//MODDD - just to make sure there isn't a flicker.
 
 	if(force == 2){
@@ -120,8 +118,6 @@ void HUD_SendWeaponAnim( int iAnim, int body, int force )
 			gEngfuncs.GetViewModel()->curstate.body = body;
 		}
 	}
-
-
 
 	//!!!
 
@@ -134,10 +130,9 @@ void HUD_SendWeaponAnim( int iAnim, int body, int force )
 		gEngfuncs.GetViewModel()->curstate.renderfx &= ~ANIMATEBACKWARDS;
 	}
 	*/
-	
-	if(EASY_CVAR_GET(viewModelPrintouts)==1)easyForcePrintLine("!!!!pfnWeaponAnim: a:%d rev?:%d", iAnim, doReverse);
-	gEngfuncs.pfnWeaponAnim( iAnim, body);
 
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(viewModelPrintouts)==1)easyForcePrintLine("!!!!pfnWeaponAnim: a:%d rev?:%d", iAnim, doReverse);
+	gEngfuncs.pfnWeaponAnim( iAnim, body);
 
 	//MODDD - just to make sure there isn't a flicker.
 	if(force == 2){
@@ -145,9 +140,6 @@ void HUD_SendWeaponAnim( int iAnim, int body, int force )
 			gEngfuncs.GetViewModel()->curstate.body = body;
 		}
 	}
-
-
-
 
 
 }

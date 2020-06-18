@@ -176,8 +176,13 @@ public:
 	virtual void	playPissed();
 	virtual void	playInterPissed();
 
-	void			TalkInit( void );				
-	CBaseEntity		*FindNearestFriend(BOOL fPlayer);
+	void			TalkInit( void );
+
+	//MODDD - method now returns CBaseMonster instead.
+	// Not sure why it didn't always, entities that don't inherit from CBaseMonster
+	// (IsMonster check) are completely disregarded anyway.
+	CBaseMonster* FindNearestFriend(BOOL fPlayer);
+
 	float			TargetDistance( void );
 	void			StopTalking( void ) { SentenceStop(); }
 	
@@ -301,6 +306,8 @@ public:
 	BOOL FNearCautiousSpeak(void);
 	BOOL FNearPassiveSpeak(void);
 
+	//MODDD - NEW, from CBaseMonster.
+	virtual void ForgetEnemy(void);
 	
 	GENERATE_TRACEATTACK_PROTOTYPE_VIRTUAL
 	GENERATE_TAKEDAMAGE_PROTOTYPE_VIRTUAL

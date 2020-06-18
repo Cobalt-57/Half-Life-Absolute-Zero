@@ -135,23 +135,23 @@ extern Schedule_t	slSlaveAttack1[];
 
 
 
-extern float global_islaveReviveFriendMode;
-extern float global_islaveReviveFriendChance;
-extern float global_islaveReviveFriendRange;
-extern float global_islaveReviveSelfMinDelay;
-extern float global_islaveReviveSelfMaxDelay;
-extern float global_islaveReviveSelfChance;
+EASY_CVAR_EXTERN(islaveReviveFriendMode)
+EASY_CVAR_EXTERN(islaveReviveFriendChance)
+EASY_CVAR_EXTERN(islaveReviveFriendRange)
+EASY_CVAR_EXTERN(islaveReviveSelfMinDelay)
+EASY_CVAR_EXTERN(islaveReviveSelfMaxDelay)
+EASY_CVAR_EXTERN(islaveReviveSelfChance)
 
-extern float global_noFlinchOnHard;
-
-
-
-extern float global_thatWasntPunch;
+EASY_CVAR_EXTERN(noFlinchOnHard)
 
 
 
-extern float global_soundAttenuationAll;
-//NOTICE: all cases of "ATTN_NORM" replaced with "global_soundAttenuationAll" for testing.
+EASY_CVAR_EXTERN(thatWasntPunch)
+
+
+
+EASY_CVAR_EXTERN(soundAttenuationAll)
+//NOTICE: all cases of "ATTN_NORM" replaced with "EASY_CVAR_GET(soundAttenuationAll)" for testing.
 
 
 //TASK_ISLAVE_SET_REVIVE_SEQUENCE
@@ -212,15 +212,12 @@ public:
 	CISlave* findISlaveToRevive(BOOL requireLineTrace, float argStartMaxDist);
 
 	//MODDD - new.
-	void SetObjectCollisionBox( void )
-	{
+	void SetObjectCollisionBox( void ){
 		if(pev->deadflag != DEAD_NO){
 			pev->absmin = pev->origin + Vector(-78, -78, 0);
 			pev->absmax = pev->origin + Vector(78, 78, 72);
 		}else{
-
 			CBaseMonster::SetObjectCollisionBox();
-
 		}
 	}
 
@@ -273,6 +270,7 @@ public:
 
 	void onDelete(void);
 
+	void ForgetEnemy(void);
 
 
 
@@ -507,7 +505,7 @@ void CISlave::MonsterThink(void){
 
 
 
-	if(global_thatWasntPunch == 1 && this->m_fSequenceFinished){
+	if(EASY_CVAR_GET(thatWasntPunch) == 1 && this->m_fSequenceFinished){
 
 		switch(RANDOM_LONG(0, 60)){
 
@@ -731,7 +729,7 @@ BOOL CISlave::isProvoked(void){
 int CISlave::IRelationship( CBaseEntity *pTarget )
 {
 	
-	if(global_thatWasntPunch == 1){
+	if(EASY_CVAR_GET(thatWasntPunch) == 1){
 		return R_NO;
 	}
 
@@ -775,7 +773,7 @@ void CISlave :: AlertSound( void )
 {
 	if ( m_hEnemy != NULL )
 	{
-		SENTENCEG_PlayRndSz(ENT(pev), "SLV_ALERT", min(0.85 * global_soundVolumeAll, 1), global_soundAttenuationAll, 0, m_voicePitch);
+		SENTENCEG_PlayRndSz(ENT(pev), "SLV_ALERT", min(0.85 * EASY_CVAR_GET(soundVolumeAll), 1), EASY_CVAR_GET(soundAttenuationAll), 0, m_voicePitch);
 
 		CallForHelp( "monster_alien_slave", 512, m_hEnemy, m_vecEnemyLKP );
 	}
@@ -788,7 +786,7 @@ void CISlave :: IdleSound( void )
 {
 	if (RANDOM_LONG( 0, 2 ) == 0)
 	{
-		SENTENCEG_PlayRndSz(ENT(pev), "SLV_IDLE", min(0.85 * global_soundVolumeAll, 1), global_soundAttenuationAll, 0, m_voicePitch);
+		SENTENCEG_PlayRndSz(ENT(pev), "SLV_IDLE", min(0.85 * EASY_CVAR_GET(soundVolumeAll), 1), EASY_CVAR_GET(soundAttenuationAll), 0, m_voicePitch);
 	}
 
 #if 0
@@ -812,7 +810,7 @@ void CISlave :: IdleSound( void )
 		WRITE_BYTE( 0 );		// decay * 0.1
 	MESSAGE_END( );
 
-	EMIT_SOUND_FILTERED( ENT(pev), CHAN_WEAPON, "debris/zap1.wav", min(1 * global_soundVolumeAll, 1), global_soundAttenuationAll, 0, 100 );
+	EMIT_SOUND_FILTERED( ENT(pev), CHAN_WEAPON, "debris/zap1.wav", min(1 * EASY_CVAR_GET(soundVolumeAll), 1), EASY_CVAR_GET(soundAttenuationAll), 0, 100 );
 #endif
 }
 
@@ -823,7 +821,7 @@ void CISlave :: PainSound( void )
 {
 	if (RANDOM_LONG( 0, 2 ) == 0)
 	{
-		EMIT_SOUND_FILTERED ( ENT(pev), CHAN_WEAPON, pPainSounds[ RANDOM_LONG(0,ARRAYSIZE(pPainSounds)-1) ], min(1 * global_soundVolumeAll, 1), global_soundAttenuationAll, 0, m_voicePitch );
+		EMIT_SOUND_FILTERED ( ENT(pev), CHAN_WEAPON, pPainSounds[ RANDOM_LONG(0,ARRAYSIZE(pPainSounds)-1) ], min(1 * EASY_CVAR_GET(soundVolumeAll), 1), EASY_CVAR_GET(soundAttenuationAll), 0, m_voicePitch );
 	}
 }
 
@@ -833,7 +831,7 @@ void CISlave :: PainSound( void )
 
 void CISlave :: DeathSound( void )
 {
-	EMIT_SOUND_FILTERED ( ENT(pev), CHAN_WEAPON, pDeathSounds[ RANDOM_LONG(0,ARRAYSIZE(pDeathSounds)-1) ], min(1 * global_soundVolumeAll, 1), global_soundAttenuationAll, 0, m_voicePitch );
+	EMIT_SOUND_FILTERED ( ENT(pev), CHAN_WEAPON, pDeathSounds[ RANDOM_LONG(0,ARRAYSIZE(pDeathSounds)-1) ], min(1 * EASY_CVAR_GET(soundVolumeAll), 1), EASY_CVAR_GET(soundAttenuationAll), 0, m_voicePitch );
 }
 
 
@@ -862,11 +860,11 @@ void CISlave::onDeathAnimationEnd(void){
 	//If I plan on fading though, ignore all this and just let me fade out. No chance of self-revive to avoid spam.
 
 	if(!this->ShouldFadeOnDeath()){
-		BOOL canRevive = (global_islaveReviveSelfChance > 0 && RANDOM_FLOAT(0, 1) <= global_islaveReviveSelfChance );
+		BOOL canRevive = (EASY_CVAR_GET(islaveReviveSelfChance) > 0 && RANDOM_FLOAT(0, 1) <= EASY_CVAR_GET(islaveReviveSelfChance) );
 
 		if(canRevive){
 
-			selfReviveTime = gpGlobals->time + RANDOM_LONG(global_islaveReviveSelfMinDelay, global_islaveReviveSelfMaxDelay);
+			selfReviveTime = gpGlobals->time + RANDOM_LONG(EASY_CVAR_GET(islaveReviveSelfMinDelay), EASY_CVAR_GET(islaveReviveSelfMaxDelay) );
 
 			//note that we omitt the think unlink if we plan on reviving.  Need something to count the time left until a self-revive.
 		}else{
@@ -960,7 +958,7 @@ void CISlave :: SetYawSpeed ( void )
 void CISlave :: HandleAnimEvent( MonsterEvent_t *pEvent )
 {
 
-	if(global_thatWasntPunch == 1){
+	if(EASY_CVAR_GET(thatWasntPunch) == 1){
 		return;
 	}
 
@@ -980,12 +978,12 @@ void CISlave :: HandleAnimEvent( MonsterEvent_t *pEvent )
 					pHurt->pev->punchangle.x = 5;
 				}
 				// Play a random attack hit sound
-				EMIT_SOUND_FILTERED ( ENT(pev), CHAN_WEAPON, pAttackHitSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackHitSounds)-1) ], min(1 * global_soundVolumeAll, 1), global_soundAttenuationAll, 0, m_voicePitch );
+				EMIT_SOUND_FILTERED ( ENT(pev), CHAN_WEAPON, pAttackHitSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackHitSounds)-1) ], min(1 * EASY_CVAR_GET(soundVolumeAll), 1), EASY_CVAR_GET(soundAttenuationAll), 0, m_voicePitch );
 			}
 			else
 			{
 				// Play a random attack miss sound
-				EMIT_SOUND_FILTERED ( ENT(pev), CHAN_WEAPON, pAttackMissSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackMissSounds)-1) ], min(1 * global_soundVolumeAll, 1), global_soundAttenuationAll, 0, m_voicePitch );
+				EMIT_SOUND_FILTERED ( ENT(pev), CHAN_WEAPON, pAttackMissSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackMissSounds)-1) ], min(1 * EASY_CVAR_GET(soundVolumeAll), 1), EASY_CVAR_GET(soundAttenuationAll), 0, m_voicePitch );
 			}
 		}
 		break;
@@ -1001,11 +999,11 @@ void CISlave :: HandleAnimEvent( MonsterEvent_t *pEvent )
 					pHurt->pev->punchangle.z = -18;
 					pHurt->pev->punchangle.x = 5;
 				}
-				EMIT_SOUND_FILTERED ( ENT(pev), CHAN_WEAPON, pAttackHitSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackHitSounds)-1) ], min(1 * global_soundVolumeAll, 1), global_soundAttenuationAll, 0, m_voicePitch );
+				EMIT_SOUND_FILTERED ( ENT(pev), CHAN_WEAPON, pAttackHitSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackHitSounds)-1) ], min(1 * EASY_CVAR_GET(soundVolumeAll), 1), EASY_CVAR_GET(soundAttenuationAll), 0, m_voicePitch );
 			}
 			else
 			{
-				EMIT_SOUND_FILTERED ( ENT(pev), CHAN_WEAPON, pAttackMissSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackMissSounds)-1) ], min(1 * global_soundVolumeAll, 1), global_soundAttenuationAll, 0, m_voicePitch );
+				EMIT_SOUND_FILTERED ( ENT(pev), CHAN_WEAPON, pAttackMissSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackMissSounds)-1) ], min(1 * EASY_CVAR_GET(soundVolumeAll), 1), EASY_CVAR_GET(soundAttenuationAll), 0, m_voicePitch );
 			}
 		}
 		break;
@@ -1048,7 +1046,7 @@ void CISlave :: HandleAnimEvent( MonsterEvent_t *pEvent )
 			}
 
 			//MODDD - NOTE - PERIOD SOUND.  Played constantly.
-			EMIT_SOUND_FILTERED( ENT(pev), CHAN_WEAPON, "debris/zap4.wav", min(1 * global_soundVolumeAll, 1), global_soundAttenuationAll, 0, 100 + m_iBeams * 10 );
+			EMIT_SOUND_FILTERED( ENT(pev), CHAN_WEAPON, "debris/zap4.wav", min(1 * EASY_CVAR_GET(soundVolumeAll), 1), EASY_CVAR_GET(soundAttenuationAll), 0, 100 + m_iBeams * 10 );
 			pev->skin = m_iBeams / 2;
 		}
 		break;
@@ -1075,7 +1073,7 @@ void CISlave :: HandleAnimEvent( MonsterEvent_t *pEvent )
 					WackBeam( -1, pNew );
 					WackBeam( 1, pNew );
 					UTIL_Remove( m_hDead );
-					EMIT_SOUND_FILTERED( ENT(pev), CHAN_WEAPON, "hassault/hw_shoot1.wav", min(1 * global_soundVolumeAll, 1), global_soundAttenuationAll, 0, RANDOM_LONG( 130, 160 ) );
+					EMIT_SOUND_FILTERED( ENT(pev), CHAN_WEAPON, "hassault/hw_shoot1.wav", min(1 * EASY_CVAR_GET(soundVolumeAll), 1), EASY_CVAR_GET(soundAttenuationAll), 0, RANDOM_LONG( 130, 160 ) );
 					*/
 
 
@@ -1088,7 +1086,7 @@ void CISlave :: HandleAnimEvent( MonsterEvent_t *pEvent )
 						tempIslave->riseFromTheGrave();
 						WackBeam( -1, tempIslave );
 						WackBeam( 1, tempIslave );
-						EMIT_SOUND_FILTERED( ENT(pev), CHAN_WEAPON, "hassault/hw_shoot1.wav", min(1 * global_soundVolumeAll, 1), global_soundAttenuationAll, 0, RANDOM_LONG( 130, 160 ) );
+						EMIT_SOUND_FILTERED( ENT(pev), CHAN_WEAPON, "hassault/hw_shoot1.wav", min(1 * EASY_CVAR_GET(soundVolumeAll), 1), EASY_CVAR_GET(soundAttenuationAll), 0, RANDOM_LONG( 130, 160 ) );
 							
 						//...what is this supposed to do?
 						//pNew->pev->spawnflags |= 1;
@@ -1126,7 +1124,7 @@ void CISlave :: HandleAnimEvent( MonsterEvent_t *pEvent )
 			ZapBeam( -1 );
 			ZapBeam( 1 );
 
-			EMIT_SOUND_FILTERED( ENT(pev), CHAN_WEAPON, "hassault/hw_shoot1.wav", min(1 * global_soundVolumeAll, 1), global_soundAttenuationAll, 0, RANDOM_LONG( 130, 160 ) );
+			EMIT_SOUND_FILTERED( ENT(pev), CHAN_WEAPON, "hassault/hw_shoot1.wav", min(1 * EASY_CVAR_GET(soundVolumeAll), 1), EASY_CVAR_GET(soundAttenuationAll), 0, RANDOM_LONG( 130, 160 ) );
 			// STOP_SOUND( ENT(pev), CHAN_WEAPON, "debris/zap4.wav" );
 			ApplyMultiDamage(pev, pev);
 
@@ -1185,12 +1183,12 @@ BOOL CISlave :: CheckRangeAttack2 ( float flDot, float flDist )
 	//MODDD - AHHHHHH.  HOW DID I MISS THIS?!  disabled.
 	//return FALSE;
 
-	if(global_islaveReviveFriendMode == 0 || global_islaveReviveFriendMode == 2){
+	if(EASY_CVAR_GET(islaveReviveFriendMode) == 0 || EASY_CVAR_GET(islaveReviveFriendMode) == 2){
 		//try by for a chance.
 		
 		//the chance won't happen here, it will occur in GetSchedule (when looking for something new to do) so that it doesn't happen 20 times every second.
 		/*
-		BOOL canReviveFriend = (global_islaveReviveFriendChance > 0 && RANDOM_FLOAT(0, 1) <= global_islaveReviveFriendChance);
+		BOOL canReviveFriend = (EASY_CVAR_GET(islaveReviveFriendChance) > 0 && RANDOM_FLOAT(0, 1) <= EASY_CVAR_GET(islaveReviveFriendChance));
 		if(!canReviveFriend){
 			return FALSE;
 		}
@@ -1228,7 +1226,7 @@ CISlave* CISlave::findISlaveToRevive(BOOL requireLineTrace, float argStartMaxDis
 
 
 	/*
-			while ((pEntityScan = UTIL_FindEntityInSphere( pEntityScan, pev->origin, global_islaveReviveFriendRange )) != NULL)
+			while ((pEntityScan = UTIL_FindEntityInSphere( pEntityScan, pev->origin, EASY_CVAR_GET(islaveReviveFriendRange) )) != NULL)
 			{
 				testMon = pEntityScan->MyMonsterPointer();
 				//if(testMon != NULL && testMon->pev != this->pev && ( FClassnameIs(testMon->pev, "monster_scientist") || FClassnameIs(testMon->pev, "monster_barney")  ) ){
@@ -1374,7 +1372,7 @@ void CISlave :: StartTask ( Task_t *pTask )
 
 		
 
-		if(canReviveFriend && !reviveTargetChosen && global_islaveReviveFriendMode == 0 || global_islaveReviveFriendMode == 2){
+		if(canReviveFriend && !reviveTargetChosen && EASY_CVAR_GET(islaveReviveFriendMode) == 0 || EASY_CVAR_GET(islaveReviveFriendMode) == 2){
 
 			CBaseEntity *pEntity = NULL;
 			float flDist; 
@@ -2197,13 +2195,13 @@ Schedule_t *CISlave :: GetSchedule( void )
 		}
 
 
-		//if(global_islaveCanRevive == 1){ 
+		//if(EASY_CVAR_GET(islaveCanRevive) == 1){ 
 		//canReviveFriend = (RANDOM_LONG(0, 4) == 0);
 		//canReviveFriend = TRUE;
 		//}
 		canReviveFriend = FALSE;
 		if(!reviveTargetChosen){
-			canReviveFriend = (global_islaveReviveFriendChance > 0 && RANDOM_FLOAT(0, 1) <= global_islaveReviveFriendChance);
+			canReviveFriend = (EASY_CVAR_GET(islaveReviveFriendChance) > 0 && RANDOM_FLOAT(0, 1) <= EASY_CVAR_GET(islaveReviveFriendChance) );
 		}
 
 		//
@@ -2214,9 +2212,9 @@ Schedule_t *CISlave :: GetSchedule( void )
 
 
 
-		if(global_islaveReviveFriendMode == 1 || global_islaveReviveFriendMode == 2 && canReviveFriend && !reviveTargetChosen){
+		if(EASY_CVAR_GET(islaveReviveFriendMode) == 1 || EASY_CVAR_GET(islaveReviveFriendMode) == 2 && canReviveFriend && !reviveTargetChosen){
 
-			bestChoiceYet = findISlaveToRevive(FALSE, global_islaveReviveFriendRange);
+			bestChoiceYet = findISlaveToRevive(FALSE, EASY_CVAR_GET(islaveReviveFriendRange) );
 			m_hTargetEnt = m_hDead;
 
 			if(reviveTargetChosen && bestChoiceYet->okayToRevive() ){
@@ -2309,7 +2307,7 @@ Schedule_t *CISlave :: GetSchedule( void )
 			return GetScheduleOfType(SCHED_BIG_FLINCH);
 		}
 		//MODDD - other condition.  If "noFlinchOnHard" is on and the skill is hard, don't flinch from getting hit.
-		else if (HasConditions(bits_COND_LIGHT_DAMAGE) && !HasMemory( bits_MEMORY_FLINCHED) && !(global_noFlinchOnHard==1 && g_iSkillLevel==SKILL_HARD)  )
+		else if (HasConditions(bits_COND_LIGHT_DAMAGE) && !HasMemory( bits_MEMORY_FLINCHED) && !(EASY_CVAR_GET(noFlinchOnHard)==1 && g_iSkillLevel==SKILL_HARD)  )
 		{
 			return GetScheduleOfType( SCHED_SMALL_FLINCH );
 		}
@@ -2543,7 +2541,7 @@ void CISlave :: ZapBeam( int side )
 		//MODDD - don't do damage differently to different hitboxes.
 		pEntity->TraceAttack( pev, gSkillData.slaveDmgZap, vecAim, &tr, DMG_SHOCK, DMG_HITBOX_EQUAL );
 	}
-	UTIL_EmitAmbientSound( ENT(pev), tr.vecEndPos, "weapons/electro4.wav", min(0.5 * global_soundVolumeAll, 1), global_soundAttenuationAll, 0, RANDOM_LONG( 140, 160 ) );
+	UTIL_EmitAmbientSound( ENT(pev), tr.vecEndPos, "weapons/electro4.wav", min(0.5 * EASY_CVAR_GET(soundVolumeAll), 1), EASY_CVAR_GET(soundAttenuationAll), 0, RANDOM_LONG( 140, 160 ) );
 }
 
 
@@ -2583,7 +2581,12 @@ void CISlave::onDelete(void){
 }//END OF onDelete
 
 
+void CISlave::ForgetEnemy(void) {
+	// need to do anything special on being told to forget my enemy?
+	// As of yet this only happens by a console command like "chillout", so this
+	// isn't too important.
 
+}//END OF ForgetEnemy
 
 
 

@@ -5,8 +5,11 @@
 // $NoKeywords: $
 //=============================================================================
 
+
+#include "externalLibInclude.h"
+//#include <stdlib.h>
+
 #include <string.h>
-#include <stdlib.h>
 #include "interface.h"
 
 #ifndef _WIN32  // LINUX

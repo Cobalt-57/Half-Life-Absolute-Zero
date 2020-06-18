@@ -22,6 +22,22 @@
 #include "basetoggle.h"
 
 
+
+// little debug feature.  Force "func_door_rotating" to "func_door_health"
+// for test maps that still haven't used the new func_door_health name.
+// Use 0 for intended behavior otherwise (func_door_health must be used for wallhealth doors now).
+#define FORCE_ROTDOOR_TO_HEALTHDOOR 0
+
+
+
+
+
+
+
+
+
+
+
 // doors
 //MODDD - this spawnflag is... completely unused. 0? How can that be included or excluded by anything?
 //        The constant isn't used at least. Just weird.
@@ -48,10 +64,23 @@
 
 
 //MODDD - new
-#define SF_DOOR_HEAL				1024
-//#define SF_DOOR_HEAL				(1 << 13)  //or 8192.
+// DOOR_HEAL SPAWNFLAGS DISABLED.  Using a new class for heal doors instead (func_door_health).
+// Too confusing to find a spawnflag guaranteed to be unused, a lot in the maps we have
+// seem to be garbage and unspecified by as-is script, so who knows what they meant if
+// they weren't garbage.
+// (that is, if we designate SF_DOOR_HEAL to be 1024, some door in a map may very well
+// have that flag but clearly work incorrectly treated as a heal door.
+// Changing the flag to 2048 may only cause it to have issues with a different door
+// that happens to have that flag instead and also work incorrectly treated as a heal door.
+//#define SF_DOOR_HEAL				(1 << 10)  // 1024
+//#define SF_DOOR_HEAL				(1 << 13)  // 8192.
 
 #define SF_DOOR_SILENT				0x80000000
+
+
+
+#define noiseMoving noise1
+#define noiseArrived noise2
 
 
 
@@ -124,6 +153,56 @@ public:
 };
 
 
+
+
+
+
+class CRotDoor : public CBaseDoor
+{
+public:
+	float angularMoveDoneTime;
+	float doorCloseDelay;
+
+
+	static TYPEDESCRIPTION m_SaveData[];
+	virtual int Save(CSave& save);
+	virtual int Restore(CRestore& restore);
+
+	CRotDoor(void);
+	//BOOL usesSoundSentenceSave(void);
+
+	//MODDD - new override in case of something special the health wall door healer needs.
+	virtual void AngularMove(Vector vecDestAngle, float flSpeed);
+
+	virtual void OnDoorGoUp(void);
+	virtual void OnDoorHitTop(void);
+	virtual void OnDoorGoDown(void);
+	virtual void OnDoorHitBottom(void);
+
+	void ReportGeneric(void);
+
+
+
+	//Moved to HealthModule. This is completely internal to healing logic.
+	//void EXPORT Off(void);
+
+
+	void KeyValue(KeyValueData* pkvd);
+
+	//MODDD - new.
+	void Activate();
+	virtual void Spawn(void);
+	void Precache(void);
+	virtual void Use(CBaseEntity* pActivator, CBaseEntity* pCaller, USE_TYPE useType, float value);
+
+	virtual void SetToggleState(int state);
+
+	virtual int	ObjectCaps(void) {
+		//just the default behavior.
+		return (CBaseDoor::ObjectCaps());
+	}//END OF ObjectCaps
+
+};
 
 
 

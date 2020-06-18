@@ -38,8 +38,8 @@ extern int gmsgRadiationP;
 extern int gmsgUpdateAirTankAirTime;
 
 //MODDD
-extern float global_wpn_glocksilencer;
-extern float global_canTakeLongJump;
+EASY_CVAR_EXTERN(wpn_glocksilencer)
+EASY_CVAR_EXTERN(canTakeLongJump)
 
 
 
@@ -201,12 +201,22 @@ class CItemSuit : public CItem
 		if ( pPlayer->pev->weapons & (1<<WEAPON_SUIT) )
 			return FALSE;
 
-		if ( pev->spawnflags & SF_SUIT_SHORTLOGON )
-			EMIT_SOUND_SUIT(pPlayer->edict(), "!HEV_A0");		// short version of suit logon,
-		else
-			EMIT_SOUND_SUIT(pPlayer->edict(), "!HEV_AAx");	// long version of suit logon
 
-		pPlayer->pev->weapons |= (1<<WEAPON_SUIT);
+		//MODDD - moved above the FVOX calls so that 'lacking the suit' for those few moments doesn't
+		// block getting the FVOX messgaes.
+		pPlayer->pev->weapons |= (1 << WEAPON_SUIT);
+
+		//MODDDD - use the new "player->SetSuitUpdate" system!
+		if (pev->spawnflags & SF_SUIT_SHORTLOGON) {
+			//EMIT_SOUND_SUIT(pPlayer->edict(), "!HEV_A0");		// short version of suit logon,
+			pPlayer->SetSuitUpdate("!HEV_A0", FALSE, SUIT_NEXT_IN_30MIN);
+		}else {
+			//EMIT_SOUND_SUIT(pPlayer->edict(), "!HEV_AAx");	// long version of suit logon
+			pPlayer->SetSuitUpdate("!HEV_AAx", FALSE, SUIT_NEXT_IN_30MIN);
+		}
+
+
+
 		return TRUE;
 	}
 };
@@ -252,8 +262,6 @@ class CItemBattery : public CItem
 			MESSAGE_END();
 
 
-
-
 			//MODDD - removed.
 			/*
 			pct = (int)( (float)(pPlayer->pev->armorvalue * 100.0) * (1.0/MAX_NORMAL_BATTERY) + 0.5);
@@ -264,7 +272,6 @@ class CItemBattery : public CItem
 			sprintf( szcharge,"!HEV_%1dP", pct );
 			*/
 			
-
 
 			//eh, probably not that important.   REMOVED.
 			/*
@@ -287,12 +294,11 @@ class CItemBattery : public CItem
 			////EMIT_SOUND_SUIT(ENT(pev), szcharge);
 			//pPlayer->SetSuitUpdate(szcharge, FALSE, SUIT_NEXT_IN_30SEC);
 
-
 			//put a delay?   rely on "pPlayer->suitCanPlay("HEV_...", FALSE)" if so.
 			//////pPlayer->SetSuitUpdate("!HEV_BNOTICE", FALSE, SUIT_REPEAT_OK, 0.7f);
 			
 
-			
+			// NOTICE - a sentence of 5000 is a special code to do the flexible power readout sentence.
 			pPlayer->SetSuitUpdateNumber(5000, SUIT_REPEAT_OK, -1, TRUE);
 
 			/*
@@ -306,13 +312,9 @@ class CItemBattery : public CItem
 			}
 			*/
 
-
-
 			//??
 			//////pPlayer->SetSuitUpdate("!HEV_BPERCENT", FALSE, SUIT_REPEAT_OK, 0.8f);		 
 			
-
-
 			return TRUE;		
 		}
 		return FALSE;
@@ -560,17 +562,31 @@ class CItemLongJump : public CItem
 	}
 	BOOL MyTouch( CBasePlayer *pPlayer )
 	{
-
-		
-
 		//MODDD - the player probably always has "m_fLongJump" on now.  Use another var for measuring whether to
 		//pick up the long jump a first time or not (just to satisfy the Hazard course).
 		//Note that "canTakeLongJumpMem" being 2 means it can be picked up any time, even if picked up before (to restore all long jump charge).
 		
 		//if ( pPlayer->m_fLongJump )
-		if(pPlayer->m_fLongJump && !(global_canTakeLongJump == 2) && (global_canTakeLongJump == 0 || (global_canTakeLongJump == 1 && pPlayer->hasLongJumpItem) ) )
-		{
-			return FALSE;
+		//if(pPlayer->m_fLongJump && !(EASY_CVAR_GET(canTakeLongJump) == 2) && (EASY_CVAR_GET(canTakeLongJump) == 0 || (EASY_CVAR_GET(canTakeLongJump) == 1 && pPlayer->hasLongJumpItem) ) )
+		float canTakeLongJumpVal = EASY_CVAR_GET(canTakeLongJump);
+
+		if (pPlayer->m_fLongJump) {
+			// If the player has the longjump module (although having ever picked up "item_longjump"
+			// is recorded by "hasLongJumpItem" instead now), check the canTakeLongJump CVar for
+			// when to disallow picking up item_l
+			if (canTakeLongJumpVal == 0) {
+				// nope.  "m_fLongJump" being on is all it takes to be denied.
+				return FALSE;
+			}
+			else if (canTakeLongJumpVal == 1) {
+				// Can only get item_longjump once.
+				if (pPlayer->hasLongJumpItem) {
+					return FALSE;
+				}
+			}
+			else if (canTakeLongJumpVal == 2 || canTakeLongJumpVal == 3) {
+				//proceed.
+			}
 		}
 
 		//can't pick up regardless if longJumpCharge is full.
@@ -592,7 +608,7 @@ class CItemLongJump : public CItem
 			//the "m_fLongJump" var and another memory one, in order to change the longJumpCharge from -1 to 0 and
 			//then make the client (GUI) update.
 			//pPlayer->longJumpCharge = 0;
-			//pPlayer->longJumpChargeNeedsUpdate = true;
+			//pPlayer->longJumpChargeNeedsUpdate = TRUE;
 
 			//Not from that alone anymore, "slj" is turned on when we also have enough charge to make a long jump, and the successive
 			//delay has been satisfied.
@@ -606,7 +622,12 @@ class CItemLongJump : public CItem
 				WRITE_STRING( STRING(pev->classname) );
 			MESSAGE_END();
 
-			EMIT_SOUND_SUIT( pPlayer->edict(), "!HEV_A1" );	// Play the longjump sound UNDONE: Kelly? correct sound?
+
+			//MODDD - we have a better way to make the call compatible with the new (improved?) queue system.
+			//EMIT_SOUND_SUIT( pPlayer->edict(), "!HEV_A1" );	// Play the longjump sound UNDONE: Kelly? correct sound?
+			//pPlayer->SetSuitUpdate("!HEV_LJC_PICKUP", FALSE, SUIT_NEXT_IN_1MIN*2);
+			pPlayer->SetSuitUpdate("!HEV_A1", FALSE, SUIT_NEXT_IN_1MIN * 2);
+
 			return TRUE;		
 		}
 		return FALSE;
@@ -636,6 +657,26 @@ class CItemLongJumpCharge : public CItem
 	{
 		if ( ( pPlayer->pev->weapons & (1<<WEAPON_SUIT) && pPlayer->m_fLongJump && pPlayer->longJumpCharge < PLAYER_LONGJUMPCHARGE_MAX ) )
 		{
+
+			float canTakeLongJumpVal = EASY_CVAR_GET(canTakeLongJump);
+			// hm...
+			if (canTakeLongJumpVal == 0) {
+				// Take longjumpcharges whenever.  Picking up item_longjump is impossible.
+				// Only m_fLongJump is required.
+			}
+			else if (canTakeLongJumpVal == 1 || canTakeLongJumpVal == 2) {
+				// Must have come across item_longjump before.  Otherwise, no go.
+				if (!pPlayer->hasLongJumpItem) {
+					return FALSE;
+				}
+			}
+			else {
+				//Take longjumpcharges whenever.
+			}
+
+
+
+
 			
 			//MODDD - play this.
 			EMIT_SOUND( pPlayer->edict(), CHAN_ITEM, "items/gunpickup2.wav", 1, ATTN_NORM );
@@ -645,20 +686,18 @@ class CItemLongJumpCharge : public CItem
 			pPlayer->longJumpCharge += PLAYER_LONGJUMP_PICKUPADD;
 			pPlayer->longJumpCharge = min(pPlayer->longJumpCharge, PLAYER_LONGJUMPCHARGE_MAX);
 			
-			pPlayer->longJumpChargeNeedsUpdate = true;
+			pPlayer->longJumpChargeNeedsUpdate = TRUE;
 			
 
 			MESSAGE_BEGIN( MSG_ONE, gmsgItemPickup, NULL, pPlayer->pev );
 				WRITE_STRING( STRING(pev->classname) );
 			MESSAGE_END();
 
-			//EMIT_SOUND_SUIT( pPlayer->edict(), "!HEV_A1" );	// Play the longjump sound UNDONE: Kelly? correct sound?
 			EMIT_SOUND( pPlayer->edict(), CHAN_ITEM, "items/gunpickup2.wav", 1, ATTN_NORM );
 
-			pPlayer->SetSuitUpdate("!HEV_LJC_PICKUP", FALSE, SUIT_NEXT_IN_1MIN);
-		
+			pPlayer->SetSuitUpdate("!HEV_LJC_PICKUP", FALSE, SUIT_NEXT_IN_1MIN*2 );
 			
-			return TRUE;		
+			return TRUE;
 		}
 		return FALSE;
 	}
@@ -699,7 +738,7 @@ class CItemGlockSilencer : public CItem
 			MESSAGE_END();
 			*/
 
-			if(global_wpn_glocksilencer == 1){
+			if(EASY_CVAR_GET(wpn_glocksilencer) == 1){
 				pPlayer->SetSuitUpdate("!HEV_SILENCER", FALSE, SUIT_NEXT_IN_30MIN);
 			}
 			pPlayer->hasGlockSilencer = 1;

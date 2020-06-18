@@ -56,7 +56,7 @@
 //MODDD - never included before.?
 #include "defaultai.h"
 
-#include "custom_debug.h"
+#include "util_debugdraw.h"
 
 
 
@@ -88,32 +88,31 @@ extern DLL_GLOBAL	short	g_sModelIndexLaserDot;// holds the index for the laser b
 extern CGraph WorldGraph;// the world node graph
 
 //MODDD - added
-extern float global_germanCensorship;
-extern float global_seeMonsterHealth;
-extern float global_applyLKPPathFixToAll;
-extern float global_crazyMonsterPrintouts;
-extern float global_monsterSpawnPrintout;
-extern float global_timedDamageAffectsMonsters;
+EASY_CVAR_EXTERN(germanCensorship)
+EASY_CVAR_EXTERN(seeMonsterHealth)
+EASY_CVAR_EXTERN(applyLKPPathFixToAll)
+EASY_CVAR_EXTERN(crazyMonsterPrintouts)
+EASY_CVAR_EXTERN(monsterSpawnPrintout)
+EASY_CVAR_EXTERN(timedDamageAffectsMonsters)
 
-extern float global_STUextraTriangH;
-extern float global_STUextraTriangV;
+EASY_CVAR_EXTERN(STUextraTriangH)
+EASY_CVAR_EXTERN(STUextraTriangV)
 
-extern float global_timedDamageEndlessOnHard;
+EASY_CVAR_EXTERN(timedDamageEndlessOnHard)
 
 extern float globalPSEUDO_canApplyGermanCensorship;
-extern float global_allowGermanModels;
+EASY_CVAR_EXTERN(allowGermanModels)
 
-extern float global_forceAllowMonsterSpawning;
-extern float global_cineAllowSequenceOverwrite;
+EASY_CVAR_EXTERN(cineAllowSequenceOverwrite)
 
 
-extern float global_pathfindPrintout;
-extern float global_pathfindFidgetFailTime;
-extern float global_pathfindTopRampFixDistance;
-extern float global_pathfindTopRampFixDraw;
+EASY_CVAR_EXTERN(pathfindPrintout)
+EASY_CVAR_EXTERN(pathfindFidgetFailTime)
+EASY_CVAR_EXTERN(pathfindTopRampFixDistance)
+EASY_CVAR_EXTERN(pathfindTopRampFixDraw)
 
-extern float global_pathfindLooseMapNodes;
-extern float global_pathfindRampFix;
+EASY_CVAR_EXTERN(pathfindLooseMapNodes)
+EASY_CVAR_EXTERN(pathfindRampFix)
 
 
 
@@ -142,7 +141,7 @@ EASY_CVAR_EXTERN(flyerKilledFallingLoop)
 EASY_CVAR_EXTERN(barnacleGrabNoInterpolation)
 
 
-EASY_CVAR_EXTERN(testVar)
+//EASY_CVAR_EXTERN(testVar)
 
 
 
@@ -1189,7 +1188,7 @@ void CBaseMonster :: Look ( float flDistance )
 				
 				if ( IRelationship( pSightEnt ) != R_NO && FInViewCone( pSightEnt ) && !FBitSet( pSightEnt->pev->flags, FL_NOTARGET ) && FVisible( pSightEnt ) )
 				{
-					if(global_crazyMonsterPrintouts){
+					if(EASY_CVAR_GET(crazyMonsterPrintouts)){
 						easyPrintLine("FLAGGER 64 1");
 					}
 					if ( pSightEnt->IsPlayer() )
@@ -1215,13 +1214,13 @@ void CBaseMonster :: Look ( float flDistance )
 						// if we see a client, remember that (mostly for scripted AI)
 						iSighted |= bits_COND_SEE_CLIENT;
 					}
-					if(global_crazyMonsterPrintouts){
+					if(EASY_CVAR_GET(crazyMonsterPrintouts)){
 						easyPrintLine("FLAGGER 64 2");
 					}
 					pSightEnt->m_pLink = m_pLink;
 					m_pLink = pSightEnt;
 					
-					if(global_crazyMonsterPrintouts){
+					if(EASY_CVAR_GET(crazyMonsterPrintouts)){
 						easyPrintLine("FLAGGER 64 3::? (%d) %s %s", (pSightEnt == m_hEnemy), FClassname(pSightEnt), FClassname(m_hEnemy)  );
 					}
 
@@ -1411,7 +1410,7 @@ CSound* CBaseMonster :: PBestScent ( void )
 
 
 //MODDD - by default, most monsters will do the usual "takeDamage" script's reaction to investigating the source of damage.
-//Note that even this method getting called requires "global_bulletholeAlertRange" to be above 0 (the distance the bullet-hit sound triggers enemies by calling this)
+//Note that even this method getting called requires "EASY_CVAR_GET(bulletholeAlertRange)" to be above 0 (the distance the bullet-hit sound triggers enemies by calling this)
 void CBaseMonster::heardBulletHit(entvars_t* pevShooter){
 
 	//I heard it.
@@ -1747,7 +1746,7 @@ void CBaseMonster::CheckTimeBasedDamage(void)
 
 				
 				//if(CVAR_skillMem == 3 && timedDamageEndlessOnHardMem == 1){
-				if(g_iSkillLevel == 3 && global_timedDamageEndlessOnHard == 1){
+				if(g_iSkillLevel == 3 && EASY_CVAR_GET(timedDamageEndlessOnHard) == 1){
 					//Hard mode is on, and "timedDamageEndlessOnHard" is on...
 					//Do NOT decrement non-curable durations.
 					//However, still decrement only ONCE on curables to satisfy the one-second-passing rule for canisters to work.
@@ -1849,7 +1848,7 @@ void CBaseMonster::MonsterThinkPreMOD(void){
 
 	/*
 
-	if(global_seeMonsterHealth == 1 && pev->max_health >= 1){
+	if(EASY_CVAR_GET(seeMonsterHealth) == 1 && pev->max_health >= 1){
 		//topCenter
 		Vector topCenter = Vector(this->pev->origin.x + (pev->maxs.x + pev->mins.x)/2, this->pev->origin.y + (pev->maxs.y + pev->mins.y)/2, this->pev->origin.z + (pev->maxs.z) - 4 );
 		int r;
@@ -1961,7 +1960,7 @@ void CBaseMonster :: MonsterThink ( void )
 	int clrB = 0;
 
 
-	if(global_pathfindTopRampFixDraw==1 && debugVectorsSet){
+	if(EASY_CVAR_GET(pathfindTopRampFixDraw)==1 && debugVectorsSet){
 		
 		if(debugVectorMode == 0){
 
@@ -2016,7 +2015,7 @@ void CBaseMonster :: MonsterThink ( void )
 	
 
 	//hey WELL.
-	if(global_timedDamageAffectsMonsters == 1){
+	if(EASY_CVAR_GET(timedDamageAffectsMonsters) == 1){
 		CheckTimeBasedDamage();
 	}
 	
@@ -2218,13 +2217,13 @@ void CBaseMonster::setModel(const char* m){
 
 
 		//NOTICE: not sure what to do if  "getGermanModelRequirement()"  fails.  Crash?  Invisible model?    For now, just relying on retail's version.
-		if(global_germanCensorship == 0 || global_allowGermanModels != 1 || globalPSEUDO_canApplyGermanCensorship == 0 || getGermanModelRequirement() == FALSE){
+		if(EASY_CVAR_GET(germanCensorship) == 0 || EASY_CVAR_GET(allowGermanModels) != 1 || globalPSEUDO_canApplyGermanCensorship == 0 || getGermanModelRequirement() == FALSE){
 			//but we're using the german model...
 			//if(usingGermanModel){
 				SET_MODEL(ENT(pev), normalModelPath);
 			//}
 			//if german censorship is on
-		}else if(global_germanCensorship == 1 && global_allowGermanModels == 1 && globalPSEUDO_canApplyGermanCensorship == 1){
+		}else if(EASY_CVAR_GET(germanCensorship) == 1 && EASY_CVAR_GET(allowGermanModels) == 1 && globalPSEUDO_canApplyGermanCensorship == 1){
 			//but we're not using the german model (and have one)
 			//if(hasGermanModel && !usingGermanModel){
 			//if(hasGermanModel){   //REDUNDANT.
@@ -2948,7 +2947,7 @@ int CBaseMonster :: CheckEnemy ( CBaseEntity *pEnemy )
 	iUpdatedLKP = FALSE;
 	ClearConditions ( bits_COND_ENEMY_FACING_ME );
 	
-	if(global_crazyMonsterPrintouts == 1){
+	if(EASY_CVAR_GET(crazyMonsterPrintouts) == 1){
 	easyPrintLine("CanAttack1? %d", HasConditions(bits_COND_CAN_MELEE_ATTACK1));
 	}
 	if ( !FVisible( pEnemy ) )
@@ -2960,7 +2959,7 @@ int CBaseMonster :: CheckEnemy ( CBaseEntity *pEnemy )
 		ClearConditions( bits_COND_ENEMY_OCCLUDED );
 	}
 	
-	if(global_crazyMonsterPrintouts == 1){
+	if(EASY_CVAR_GET(crazyMonsterPrintouts) == 1){
 	easyPrintLine("CanAttack2? %d", HasConditions(bits_COND_CAN_MELEE_ATTACK1));
 	}
 	
@@ -2990,7 +2989,7 @@ int CBaseMonster :: CheckEnemy ( CBaseEntity *pEnemy )
 	flDistToEnemy = ( vecEnemyPos - pev->origin ).Length();
 	vecEnemyPos.z += pEnemy->pev->size.z * 0.5;
 	// distance to enemy's head
-	if(global_crazyMonsterPrintouts == 1){
+	if(EASY_CVAR_GET(crazyMonsterPrintouts) == 1){
 	easyPrintLine("CanAttack3? %d", HasConditions(bits_COND_CAN_MELEE_ATTACK1));
 	}
 	float flDistToEnemy2 = (vecEnemyPos - pev->origin).Length();
@@ -3005,7 +3004,7 @@ int CBaseMonster :: CheckEnemy ( CBaseEntity *pEnemy )
 			flDistToEnemy = flDistToEnemy2;
 	}
 	
-	if(global_crazyMonsterPrintouts == 1){
+	if(EASY_CVAR_GET(crazyMonsterPrintouts) == 1){
 	easyPrintLine("CanAttack4? %d", HasConditions(bits_COND_CAN_MELEE_ATTACK1));
 	}
 
@@ -3058,7 +3057,7 @@ int CBaseMonster :: CheckEnemy ( CBaseEntity *pEnemy )
 		
 	}
 	
-	if(global_crazyMonsterPrintouts == 1){
+	if(EASY_CVAR_GET(crazyMonsterPrintouts) == 1){
 	easyPrintLine("CanAttack5? %d", HasConditions(bits_COND_CAN_MELEE_ATTACK1));
 	}
 	if ( flDistToEnemy >= m_flDistTooFar )
@@ -3069,12 +3068,12 @@ int CBaseMonster :: CheckEnemy ( CBaseEntity *pEnemy )
 	else
 		ClearConditions( bits_COND_ENEMY_TOOFAR );
 
-	if(global_crazyMonsterPrintouts == 1){
+	if(EASY_CVAR_GET(crazyMonsterPrintouts) == 1){
 	easyPrintLine("Can I Check Attacks? %d", FCanCheckAttacks());
 	}
 
 
-	if(global_crazyMonsterPrintouts == 1)easyForcePrintLine("ALRIGHT HOTSHOT %d %d", HasConditions(bits_COND_SEE_ENEMY), !HasConditions( bits_COND_ENEMY_TOOFAR ) );
+	if(EASY_CVAR_GET(crazyMonsterPrintouts) == 1)easyForcePrintLine("ALRIGHT HOTSHOT %d %d", HasConditions(bits_COND_SEE_ENEMY), !HasConditions( bits_COND_ENEMY_TOOFAR ) );
 	
 	if ( FCanCheckAttacks() )	
 	{
@@ -3111,7 +3110,7 @@ int CBaseMonster :: CheckEnemy ( CBaseEntity *pEnemy )
 		}
 	}
 	
-	if(global_crazyMonsterPrintouts == 1){
+	if(EASY_CVAR_GET(crazyMonsterPrintouts) == 1){
 	easyPrintLine("CanAttack6 %d", HasConditions(bits_COND_CAN_MELEE_ATTACK1));
 	}
 
@@ -3653,7 +3652,7 @@ BOOL CBaseMonster::getHasPathFindingMod(){
 #define	LOCAL_STEP_SIZE_MOD 10
 
 //MODDD - ref
-extern float global_drawDebugPathfinding;
+EASY_CVAR_EXTERN(drawDebugPathfinding)
 
 
 
@@ -4208,7 +4207,7 @@ BOOL CBaseMonster :: BuildRoute ( const Vector &vecGoal, int iMoveFlag, CBaseEnt
 	debugFailColor = FALSE;
 
 
-	if(global_pathfindRampFix == 1){
+	if(EASY_CVAR_GET(pathfindRampFix) == 1){
 	//if( !localMovePass ){
 		//still a shot...?
 		
@@ -4841,7 +4840,7 @@ void CBaseMonster :: Move ( float flInterval )
 	}
 
 
-	if(global_crazyMonsterPrintouts == 1){
+	if(EASY_CVAR_GET(crazyMonsterPrintouts) == 1){
 		if(pTargetEnt == NULL){
 			easyPrintLine("I AM OBNOXIOUS: NULL : %d", m_Route[ m_iRouteIndex ].iType);
 		}else{
@@ -4849,7 +4848,7 @@ void CBaseMonster :: Move ( float flInterval )
 		}
 	}
 
-	if( global_applyLKPPathFixToAll == 1 || hasSeeEnemyFix() && !(m_Route[ m_iRouteIndex].iType & bits_MF_TO_ENEMY) && HasConditions(bits_COND_SEE_ENEMY) ){
+	if( EASY_CVAR_GET(applyLKPPathFixToAll) == 1 || hasSeeEnemyFix() && !(m_Route[ m_iRouteIndex].iType & bits_MF_TO_ENEMY) && HasConditions(bits_COND_SEE_ENEMY) ){
 		//this is a fix to make the enemy re-route in case of seeing the enemy while taking a path not necessarily to the enemy (such as, on its way to a last known location).
 		this->MovementComplete();
 		return;
@@ -4872,7 +4871,7 @@ void CBaseMonster :: Move ( float flInterval )
 	//If using a RAMPFIX or NODE type of node, use "CheckLocalMoveHull" instead. It's a bit less strict.
 
 	int useHullCheckMask = bits_MF_RAMPFIX;
-	if(global_pathfindLooseMapNodes == 1){
+	if(EASY_CVAR_GET(pathfindLooseMapNodes) == 1){
 		useHullCheckMask |= bits_MF_TO_NODE;
 	}
 	
@@ -4986,7 +4985,7 @@ void CBaseMonster :: Move ( float flInterval )
 //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-						if ( (gpGlobals->time - m_flMoveWaitFinished) < global_pathfindFidgetFailTime )
+						if ( (gpGlobals->time - m_flMoveWaitFinished) < EASY_CVAR_GET(pathfindFidgetFailTime) )
 							Remember( bits_MEMORY_MOVE_FAILED );
 
 						m_flMoveWaitFinished = gpGlobals->time + 0.1;
@@ -5195,9 +5194,6 @@ void CBaseMonster :: Move ( float flInterval )
 
 
 
-
-//EASY_CVAR_EXTERN(testVar)
-
 //MODDD - now accepts the time eslapsed during this frame (flInterval) to see how far we could potentially move this frame. This is a better measure as to whether we are close enough
 //        to the node than whether we are just less than 8 units of distance away. If this monster were too fast for whatever reason, this monster would go back / forth forever
 //        without ever satisfying the " < 8" distance requirement. Base it off of the potential distance traveled in this frame and it can't fail.
@@ -5375,9 +5371,29 @@ void CBaseMonster::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, f
 //=========================================================
 void CBaseMonster :: MonsterInit ( void )
 {
-	if (!g_pGameRules->FAllowMonsters() && global_forceAllowMonsterSpawning != 1)
+
+	//MODDD - extra check.
+	const char* classname_test = STRING(pev->classname);
+	if (classname_test == NULL || strlen(classname_test)==0) {
+		easyForcePrintLine("WARNING! Monster without a classname spawned?");
+	}
+
+	
+	//MODDD - "&& EASY_CVAR_GET(forceAllowMonsterSpawning) != 1" CVar removed.
+	// Redundant with "mp_allowmonsters".
+	// Also, added an exception to this rule for certain monsters.
+	// The new 'pickup walker' monsters should not be forbidden by this setting.
+	if (!g_pGameRules->FAllowMonsters() && !this->bypassAllowMonstersSpawnCheck() )
 	{
-		pev->flags |= FL_KILLME;		// Post this because some monster code modifies class data after calling this function
+		easyForcePrintLine("WARNING! Request to spawn \"%s\" denied, \'mp_allowmonsters\' is off.", this->getClassname());
+
+		//MODDD - "FL_KILLME" flag-add replaced with UTIL_Remove call, does a bit more.
+		// Calls "onDelete" that way too.
+		//pev->flags |= FL_KILLME;		// Post this because some monster code modifies class data after calling this function
+
+		UTIL_Remove(this);
+
+		//MODDD - commented out as-is.
 //		REMOVE_ENTITY(ENT(pev));
 		return;
 	}
@@ -5428,7 +5444,7 @@ void CBaseMonster :: MonsterInit ( void )
 	//MODDD - flag for mirror recognition.
 	pev->renderfx |= ISNPC;
 
-	if(global_monsterSpawnPrintout == 1){
+	if(EASY_CVAR_GET(monsterSpawnPrintout) == 1){
 		easyPrintLine("I SPAWNED::: %s flags:%d", STRING(pev->classname), pev->spawnflags);
 	}
 
@@ -5491,7 +5507,7 @@ void CBaseMonster :: StartMonster ( void )
 	if ( !isMovetypeFlying() && !FBitSet( pev->spawnflags, SF_MONSTER_FALL_TO_GROUND ) )
 	{
 
-		if(global_crazyMonsterPrintouts)easyForcePrintLine("YOU amazing piece of work");
+		if(EASY_CVAR_GET(crazyMonsterPrintouts))easyForcePrintLine("YOU amazing piece of work");
 
 		pev->origin.z += 1;
 		DROP_TO_FLOOR ( ENT(pev) );
@@ -6916,8 +6932,8 @@ BOOL CBaseMonster :: FCheckAITrigger ( void )
 //=========================================================	
 int CBaseMonster :: CanPlaySequence( BOOL fDisregardMonsterState, int interruptLevel )
 {
-	//MODDD - it is possible for "global_cineAllowSequenceOverwrite" to block "m_pCine" already being occupied to stop this from having influence.
-	if ( (m_pCine && global_cineAllowSequenceOverwrite != 1) || !IsAlive() || m_MonsterState == MONSTERSTATE_PRONE )
+	//MODDD - it is possible for "EASY_CVAR_GET(cineAllowSequenceOverwrite)" to block "m_pCine" already being occupied to stop this from having influence.
+	if ( (m_pCine && EASY_CVAR_GET(cineAllowSequenceOverwrite) != 1) || !IsAlive() || m_MonsterState == MONSTERSTATE_PRONE )
 	{
 		// monster is already running a scripted sequence or dead!
 		return FALSE;
@@ -7418,7 +7434,7 @@ void CBaseMonster::DeathAnimationStart(){
 	signalActivityUpdate = TRUE;
 
 
-	//easyPrintLine("ARE YOU SOME KIND OF insecure person??? %.2f %d", global_thoroughHitBoxUpdates, pev->deadflag );
+	//easyPrintLine("ARE YOU SOME KIND OF insecure person??? %.2f %d", EASY_CVAR_GET(thoroughHitBoxUpdates), pev->deadflag );
 	//MODDD
 	if(EASY_CVAR_GET(thoroughHitBoxUpdates) == 1){
 		//update the collision box now,
@@ -7504,6 +7520,13 @@ void CBaseMonster::Activate( void ){
 	*/
 	
 	//setModelCustom();
+
+
+
+	//MODDD - hold up. If below does effectively nothing with what's commented out (time of writing, er... typing), why bother?
+	// Stop early.
+	return;
+
 
 	if(m_pCine == NULL && !FStringNull(pev->targetname) ){
 
@@ -7669,10 +7692,12 @@ void CBaseMonster::OnTakeDamageSetConditions(entvars_t *pevInflictor, entvars_t 
 	}
 
 
+/*
 	if(EASY_CVAR_GET(testVar) == 10){
 		//any damage causes me now.
 		SetConditions(bits_COND_HEAVY_DAMAGE);
 	}
+*/
 
 	//easyForcePrintLine("%s:%d OnTkDmgSetCond raw:%.2f fract:%.2f", getClassname(), monsterID, flDamage, (flDamage / pev->max_health));
 
@@ -7684,7 +7709,21 @@ void CBaseMonster::OnTakeDamageSetConditions(entvars_t *pevInflictor, entvars_t 
 
 
 
+void CBaseMonster::ForgetEnemy(void) {
 
+	m_afMemory &= ~(bits_MEMORY_SUSPICIOUS | bits_MEMORY_PROVOKED);
+
+	if (m_hEnemy != NULL) {
+		m_hEnemy = NULL;
+		m_hTargetEnt = NULL;
+		if (this->m_MonsterState == MONSTERSTATE_COMBAT) {
+			// doesn't make sense to be in COMBAT without an enemy.
+			this->m_MonsterState = MONSTERSTATE_ALERT;
+		}
+		TaskFail();
+	}
+
+}//END OF ForgetEnemy
 
 //by default, does nothing. Used for the Kingpin to let a monster remove itself from the Kingpin's command list of entities it powered up and can order to attack its enemy.
 void CBaseMonster::removeFromPoweredUpCommandList(CBaseMonster* argToRemove){
@@ -7709,6 +7748,8 @@ void CBaseMonster::forceNewEnemy(CBaseEntity* argIssuing, CBaseEntity* argNewEne
 //dummied by default
 void CBaseMonster::setPoweredUpOff(void){}
 void CBaseMonster::setPoweredUpOn(CBaseMonster* argPoweredUpCauseEnt, float argHowLong ){}
+// Not to be confused with "ForgetEnemy" further above.
+// This is for forgetting an enemy assigned by some other entity.
 void CBaseMonster::forgetForcedEnemy(CBaseMonster* argIssuing, BOOL argPassive){};
 
 
@@ -7822,7 +7863,7 @@ void CBaseMonster::startReanimation(){
 	pev->renderfx |= ISNPC;
 
 
-	//if(global_monsterSpawnPrintout == 1){
+	//if(EASY_CVAR_GET(monsterSpawnPrintout) == 1){
 	//	easyPrintLine("I SPAWNED::: %s flags:%d", STRING(pev->classname), pev->spawnflags);
 	//}
 
@@ -7995,16 +8036,16 @@ void CBaseMonster::cheapKilledFlyer(void){
 }//END OF cheapKilledFlyer
 
 
-//When killed, how do we handle the "Touch" callback method from the engine?
-//Default says to set it to NULL. Override this for different behavior.
-//i.e., flyers / hover-ers can tell this to interrupt a falling cycler animation on colliding with anything (the ground?).
-//In that case, default behavior of turning touch off would leave you scratching your head as to why it ignores everything after killed.
-//HOWEVER the new slDieFallLoop schedule include setting Touch to KilledFinishTouch which works for all monsters.  This method (OnKilledSetTouch) may no longer be necessary.
+// When killed, how do we handle the "Touch" callback method from the engine?
+// Default says to set it to NULL. Override this for different behavior.
+// i.e., flyers / hover-ers can tell this to interrupt a falling cycler animation on colliding with anything (the ground?).
+// In that case, default behavior of turning touch off would leave you scratching your head as to why it ignores everything after killed.
+// HOWEVER the new slDieFallLoop schedule include setting Touch to KilledFinishTouch which works for all monsters.  This method (OnKilledSetTouch) may no longer be necessary.
 void CBaseMonster::OnKilledSetTouch(void){
 	SetTouch(NULL);
 }
 
-//I need to finish the looping death animation with the "OnKilledSetTouch" one.
+// I need to finish the looping death animation with the "OnKilledSetTouch" one.
 void CBaseMonster::KilledFinishTouch( CBaseEntity *pOther ){
 	if(pOther == NULL){
 		return; //??????
@@ -8012,8 +8053,8 @@ void CBaseMonster::KilledFinishTouch( CBaseEntity *pOther ){
 	
 	//hitGroundDead = TRUE;
 	
-	//old was "slDieLoop".
-	//Do we even need the schedule + task check?  Touch anything, complete my task.
+	// old was "slDieLoop".
+	// Do we even need the schedule + task check?  Touch anything, complete my task.
 	//if(m_pSchedule == slDieFallLoop && this->getTaskNumber() == TASK_DIE_LOOP){
 		TaskComplete();
 		SetTouch(NULL); //don't need to do this again.
@@ -8023,15 +8064,15 @@ void CBaseMonster::KilledFinishTouch( CBaseEntity *pOther ){
 
 
 
-//Makes the most sense for flyers to have looping falling animations at deaths in air.
-//By default, -1 means none.
-//This is called for by the 
+// Makes the most sense for flyers to have looping falling animations at deaths in air.
+// By default, -1 means none.
+// This is called for by the 
 int CBaseMonster::getLoopingDeathSequence(void){
 	return -1;
 }
 
 
-//Depending on the value of CVar flyerKilledFallingLoop, pick the schedule that uses the looping animation or don't.
+// Depending on the value of CVar flyerKilledFallingLoop, pick the schedule that uses the looping animation or don't.
 Schedule_t* CBaseMonster::flyerDeathSchedule(void){
 	
 	
@@ -8059,8 +8100,8 @@ Schedule_t* CBaseMonster::flyerDeathSchedule(void){
 	return slDie;
 }
 
-//Can this monster automatically turn to face a node better in ::Move above?
-//Turn off for things that may play with direction faced (like strafing hgrunts while they are expected to strafe)
+// Can this monster automatically turn to face a node better in ::Move above?
+// Turn off for things that may play with direction faced (like strafing hgrunts while they are expected to strafe)
 BOOL CBaseMonster::getMovementCanAutoTurn(void){
 	//without a reason not to, defaults to yes all the time.
 	return TRUE;
@@ -8068,7 +8109,7 @@ BOOL CBaseMonster::getMovementCanAutoTurn(void){
 
 
 
-//If there is an enemy, set the m_vecEnemyLKP to the enemy's current position
+// If there is an enemy, set the m_vecEnemyLKP to the enemy's current position
 void CBaseMonster::updateEnemyLKP(void){
 	if(m_hEnemy != NULL){
 		m_vecEnemyLKP = m_hEnemy->pev->origin;
@@ -8080,8 +8121,8 @@ void CBaseMonster::setEnemyLKP(const Vector& argNewVector){
 	investigatingAltLKP = FALSE; //this is the real deal.
 }//END OF setEnemyLKP
 
-//Push this new vector to m_vecEnemyLKP.
-//Save the old enemy LKP to another var to back up to when done with that.
+// Push this new vector to m_vecEnemyLKP.
+// Save the old enemy LKP to another var to back up to when done with that.
 void CBaseMonster::setEnemyLKP_Investigate(const Vector& argToInvestigate){
 	m_vecEnemyLKP_Real = m_vecEnemyLKP;
 	m_vecEnemyLKP = argToInvestigate;
@@ -8094,9 +8135,9 @@ void CBaseMonster::setEnemyLKP_Investigate(const Vector& argToInvestigate){
 
 
 
-
-//Moved to the base monster for usefullness.  Probably needs to be overridden per monster.
-//More of a special utility per monster, bound not to really be salvagable on its own here.
+//MODDD
+// Moved to the base monster for usefullness.  Probably needs to be overridden per monster.
+// More of a special utility per monster, bound not to really be salvagable on its own here.
 CBaseEntity* CBaseMonster::getNearestDeadBody(const Vector& arg_searchOrigin, const float arg_maxDist){
 
 	CBaseEntity* pEntityScan = NULL;
@@ -8140,32 +8181,40 @@ CBaseEntity* CBaseMonster::getNearestDeadBody(const Vector& arg_searchOrigin, co
 
 }//END OF getNearestDeadBody
 
-//Whether to do the usual "Look" method for checking for new or existing enemies.
-//Needed by archers to be able to call "Look" despite the player never going underwater (causes the PVS check to pass at least once to start combat).
+// Whether to do the usual "Look" method for checking for new or existing enemies.
+// Needed by archers to be able to call "Look" despite the player never going underwater (causes the PVS check to pass at least once to start combat).
 BOOL CBaseMonster::noncombat_Look_ignores_PVS_check(void){
 	return FALSE;
 }//END OF noncombat_Look_ignores_PVS_check
 
+// Implement for monsters that should spawn regardless of the "mp_allowmonsters" CVar.
+// Pickup walkers are a clear example since they're needed for some weapons intended
+// by the map.
+BOOL CBaseMonster::bypassAllowMonstersSpawnCheck(void){
+	return FALSE;
+}//END OF bypassAllowMonstersSpawnCheck
 
-//It is up to an individual monster with a violent death sequence, regardless of whether it's mapped to activity ACT_DIEVIOLENT or not, to
-//override this and say "TRUE", along with providing its own rule for a clear distance check.  That is, if whatevre distance forwards/backwards
-//(typically backwards) is safe.  But it varries from monster to monster's sequence, just have to make it so the sequence can't clip through anything
-//and look really weird.
-//It is also OK if the sequence for violent death is not tied to ACT_DIEVIOLENT in the model. Then pick it for ACT_DIEVIOLENT in the custom animation system instead.
+
+
+// It is up to an individual monster with a violent death sequence, regardless of whether it's mapped to activity ACT_DIEVIOLENT or not, to
+// override this and say "TRUE", along with providing its own rule for a clear distance check.  That is, if whatevre distance forwards/backwards
+// (typically backwards) is safe.  But it varries from monster to monster's sequence, just have to make it so the sequence can't clip through anything
+// and look really weird.
+// It is also OK if the sequence for violent death is not tied to ACT_DIEVIOLENT in the model. Then pick it for ACT_DIEVIOLENT in the custom animation system instead.
 BOOL CBaseMonster::violentDeathAllowed(void){
 	return FALSE;
 }//END OF hasViolentDeathSequence
 
-//Default case should work fine for most monsters.
-//Only allow a violent death animation if the last hit solidly did this much damage.
-//Could do checks on m_LastHitGroup too (see method GetDeathActivity of combat.cpp)
+// Default case should work fine for most monsters.
+// Only allow a violent death animation if the last hit solidly did this much damage.
+// Could do checks on m_LastHitGroup too (see method GetDeathActivity of combat.cpp)
 BOOL CBaseMonster::violentDeathDamageRequirement(void){
 	return (lastDamageReceived >= 20);
 }
 
-//This method MUST be overridden to do line traces forwards / backwards to see if there is enough space in whatever direction to play the animation
-//to avoid clipping through things.  If this is unnecessary, leave this as it is.  But "hasViolentDeathSequence" must  be overridden to return TRUE;
-//above regardless.
+// This method MUST be overridden to do line traces forwards / backwards to see if there is enough space in whatever direction to play the animation
+// to avoid clipping through things.  If this is unnecessary, leave this as it is.  But "hasViolentDeathSequence" must  be overridden to return TRUE;
+// above regardless.
 BOOL CBaseMonster::violentDeathClear(void){
 	return TRUE;
 }//END OF violentDeathClear
@@ -8183,8 +8232,8 @@ int CBaseMonster::violentDeathPriority(void){
 }//END OF violentDeathPriority
 
 
-//a utility for checking to see if behind a monster by up to "argDistance" is completely unobstructed and is of the same ground level as this entity.
-//That way a violent death anim can't work when there's a cliff backwards. Does not know to fall as the model's movement is just part of the animation.
+// a utility for checking to see if behind a monster by up to "argDistance" is completely unobstructed and is of the same ground level as this entity.
+// That way a violent death anim can't work when there's a cliff backwards. Does not know to fall as the model's movement is just part of the animation.
 BOOL CBaseMonster::violentDeathClear_BackwardsCheck(float argDistance){
 	TraceResult tr;
 	Vector vecStart;

@@ -83,8 +83,15 @@ public:
 	void EXPORT AutoSearchThink(void);
 	void EXPORT TurretDeath(void);
 
-	virtual void EXPORT SpinDownCall(void) { m_iSpin = 0; }
-	virtual void EXPORT SpinUpCall(void) { m_iSpin = 1; }
+	//MODDD - IMPORTANT NOTE.    These were the only "virtual EXPORT's" as of retail.
+	//  I... have no idea why they're even EXPORTs, they're never tied to any engine events
+	// events like 'think' or 'touch'.
+	// Removing the 'virtual', see if this has any side-effects!
+	//virtual void EXPORT SpinDownCall(void) { m_iSpin = 0; }
+	//virtual void EXPORT SpinUpCall(void) { m_iSpin = 1; }
+	void EXPORT SpinDownCall(void) { m_iSpin = 0; }
+	void EXPORT SpinUpCall(void) { m_iSpin = 1; }
+	
 
 	// void SpinDown(void);
 	// float EXPORT SpinDownCall( void ) { return SpinDown(); }

@@ -35,12 +35,13 @@
 LINK_ENTITY_TO_CLASS( info_target, CPointEntity );
 
 //MODDD - extern
-extern float global_germanCensorship;
-extern float global_sparksBeamMulti;
+EASY_CVAR_EXTERN(germanCensorship)
+EASY_CVAR_EXTERN(sparksBeamMulti)
+EASY_CVAR_EXTERN(mirrorsDoNotReflectPlayer)
+
 extern float globalPSEUDO_canApplyGermanCensorship;
 
 extern float globalPSEUDO_cameraMode;
-extern float global_mirrorsDoNotReflectPlayer;
 
 
 class CBubbling : public CBaseEntity
@@ -389,11 +390,11 @@ void CBeam::DoSparks( const Vector &start, const Vector &end )
 		if ( pev->spawnflags & SF_BEAM_SPARKSTART )
 		{
 			//MODDD HERE AND DOWN TOO
-			UTIL_Sparks2( start, ballsToSpawn, global_sparksBeamMulti );
+			UTIL_Sparks2( start, ballsToSpawn, EASY_CVAR_GET(sparksBeamMulti) );
 		}
 		if ( pev->spawnflags & SF_BEAM_SPARKEND )
 		{
-			UTIL_Sparks2( end, ballsToSpawn, global_sparksBeamMulti );
+			UTIL_Sparks2( end, ballsToSpawn, EASY_CVAR_GET(sparksBeamMulti) );
 		}
 	}
 }
@@ -1316,6 +1317,12 @@ void CSprite::Expand_TimeTarget( float arg_targetScale, float arg_duration ){
 
 void CSprite::Expand( float scaleSpeed, float fadeSpeed )
 {
+
+	//MODDD - isn't this a good idea...?  If it's needed for the effect to work why not do it here?
+	//        If this is bad sometimes keep leaving it up to the caller to "SetTransparency" right I guess.
+	SetTransparency( kRenderTransAdd, 255, 255, 255, 0, kRenderFxNoDissipation );
+
+
 	//why absolute value?  Because we're already going to bring this in the right direction in every think frame.
 	//Keep it absolute here, always positive.
 	pev->speed = abs(scaleSpeed);
@@ -2614,7 +2621,7 @@ void CEnvMirror :: Spawn( void )
 
 		BOOL allowPlayerMarker;
 
-		if(globalPSEUDO_cameraMode == 0 && global_mirrorsDoNotReflectPlayer != 1){
+		if(globalPSEUDO_cameraMode == 0 && EASY_CVAR_GET(mirrorsDoNotReflectPlayer) != 1){
 			allowPlayerMarker = TRUE;
 		}else{
 			allowPlayerMarker = FALSE;

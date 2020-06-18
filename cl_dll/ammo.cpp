@@ -57,16 +57,16 @@ DECLARE_MESSAGE( m_Ammo, HasGlockSil )
 
 //MODDD - YO
 extern int global2PSEUDO_playerHasGlockSilencer;
-extern float global2_hud_version;
-extern float global2_canShowWeaponSelectAtDeath;
+EASY_CVAR_EXTERN(hud_version)
+EASY_CVAR_EXTERN(canShowWeaponSelectAtDeath)
 
 
 
 
 
-extern float global2_useAlphaCrosshair;
-extern float global2_allowAlphaCrosshairWithoutGuns;
-extern float global2_alphaCrosshairBlockedOnFrozen;
+EASY_CVAR_EXTERN(useAlphaCrosshair)
+EASY_CVAR_EXTERN(allowAlphaCrosshairWithoutGuns)
+EASY_CVAR_EXTERN(alphaCrosshairBlockedOnFrozen)
 
 
 
@@ -279,7 +279,8 @@ WEAPON* WeaponsResource :: GetNextActivePos( int iSlot, int iSlotPos )
 	if ( iSlotPos >= MAX_WEAPON_POSITIONS || iSlot >= MAX_WEAPON_SLOTS )
 		return NULL;
 
-	//MODDD - what? Just making referecnes to gWR more specific to the gHUD.m_Ammo.gWR WeaponsResource instance. Which... should be this one, right? Why not just drop  gWR entirely? oh well.
+	//MODDD - what? Just making referecnes to gWR more specific to the gHUD.m_Ammo.gWR WeaponsResource instance.
+	// Which should be this one, right? Why not just drop  gWR entirely? oh well.
 	WEAPON *p = gHUD.m_Ammo.gWR.rgSlots[ iSlot ][ iSlotPos+1 ];
 	
 	if ( !p || !gHUD.m_Ammo.gWR.HasAmmo(p) )
@@ -443,6 +444,9 @@ int CHudAmmo::VidInit(void)
 	m_antidoteindex = gHUD.GetSpriteIndex("antidote");
 	m_adrenalineindex = gHUD.GetSpriteIndex("adrenaline");
 	m_radiationindex = gHUD.GetSpriteIndex("radiation");
+	m_antidote_emptyindex = gHUD.GetSpriteIndex("antidote_empty");
+	m_adrenaline_emptyindex = gHUD.GetSpriteIndex("adrenaline_empty");
+	m_radiation_emptyindex = gHUD.GetSpriteIndex("radiation_empty");
 
 
 	m_longjump_empty = gHUD.GetSpriteIndex("longjump_empty");
@@ -487,11 +491,6 @@ int CHudAmmo::VidInit(void)
 
 
 
-
-
-
-
-
 //
 // Think:
 //  Used for selection of weapon menu item.
@@ -499,10 +498,9 @@ int CHudAmmo::VidInit(void)
 void CHudAmmo::Think(void)
 {
 
-
 	//MODDD - still okay to do weapon selection during death, IF the option is on.
 	//if ( gHUD.m_fPlayerDead )
-	if(global2_canShowWeaponSelectAtDeath == 0 && gHUD.m_fPlayerDead)
+	if(EASY_CVAR_GET(canShowWeaponSelectAtDeath) == 0 && gHUD.m_fPlayerDead)
 		return;
 
 	if ( gHUD.m_iWeaponBits != gWR.iOldWeaponBits )
@@ -607,7 +605,7 @@ void WeaponsResource :: SelectSlot( int iSlot, int fAdvance, int iDirection )
 
 	//MODDD
 	//if ( gHUD.m_fPlayerDead || gHUD.m_iHideHUDDisplay & ( HIDEHUD_WEAPONS | HIDEHUD_ALL ) )
-	if ( (global2_canShowWeaponSelectAtDeath == 0 && gHUD.m_fPlayerDead)  || gHUD.m_iHideHUDDisplay & ( HIDEHUD_WEAPONS | HIDEHUD_ALL ) )
+	if ( (EASY_CVAR_GET(canShowWeaponSelectAtDeath) == 0 && gHUD.m_fPlayerDead)  || gHUD.m_iHideHUDDisplay & ( HIDEHUD_WEAPONS | HIDEHUD_ALL ) )
 		return;
 
 	if (!(gHUD.m_iWeaponBits & (1<<(WEAPON_SUIT)) ))
@@ -882,7 +880,7 @@ int CHudAmmo::MsgFunc_CurWeapon(const char *pszName, int iSize, void *pbuf )
 	
 	
 
-	//gHUD.testVar->string = pWeapon->szName;
+	//gHUD.testVar->value_string = pWeapon->szName;
 
 	//Nah, support for this CVar cut for now.
 	/*
@@ -917,7 +915,7 @@ int CHudAmmo::MsgFunc_CurWeapon(const char *pszName, int iSize, void *pbuf )
 
 	//Use "updateCrosshair" instead, which takes some CVars into account.
 	/*
-	if ( gHUD.m_iFOV >= 90 )
+	if ( gHUD.m_iPlayerFOV >= 90 )
 	{ // normal crosshairs
 		if (fOnTarget && m_pWeapon->hAutoaim)
 			SetCrosshairFiltered(m_pWeapon->hAutoaim, m_pWeapon->rcAutoaim, 255, 255, 255);
@@ -934,13 +932,8 @@ int CHudAmmo::MsgFunc_CurWeapon(const char *pszName, int iSize, void *pbuf )
 	}
 	*/
 	updateCrosshair();
-
-
-
-		
+	
 	//ALPHA CROSSHAIR SCRIPT MOVED!
-
-		
 	
 	//MODDD- this is forcing the alpha crosshair.
 	m_fFade = 200.0f; //!!!
@@ -1104,13 +1097,13 @@ void CHudAmmo::updateCrosshair(void){
 
 	}else{
 
-		if(global2_useAlphaCrosshair == TRUE && global2_allowAlphaCrosshairWithoutGuns == TRUE ){
+		if(EASY_CVAR_GET(useAlphaCrosshair) == TRUE && EASY_CVAR_GET(allowAlphaCrosshairWithoutGuns) == TRUE ){
 			allowCrosshairUpdate = TRUE;
 		}
 	}
 
 	
-	if(global2_alphaCrosshairBlockedOnFrozen==TRUE && gHUD.frozenMem == TRUE){
+	if(EASY_CVAR_GET(alphaCrosshairBlockedOnFrozen)==TRUE && gHUD.frozenMem == TRUE){
 		allowCrosshairUpdate = FALSE;
 	}
 
@@ -1128,7 +1121,9 @@ void CHudAmmo::updateCrosshair(void){
 		if(m_pWeapon){
 
 			//MODDD TODO - uh, is this crude "90" check okay?  if we never go back to retail crosshairs probably won't matter.
-			if ( gHUD.m_iFOV >= 90 )
+			// Got it!
+			//if ( gHUD.m_iPlayerFOV >= 90 )
+			if(gHUD.m_iPlayerFOV >= gHUD.getPlayerBaseFOV() )
 			{ // normal crosshairs
 				if (recentOnTarget && m_pWeapon->hAutoaim)
 					SetCrosshairFiltered(m_pWeapon->hAutoaim, m_pWeapon->rcAutoaim, 255, 255, 255);
@@ -1157,8 +1152,8 @@ void CHudAmmo::updateCrosshair(void){
 
 
 	
-	gHUD.useAlphaCrosshairMem = global2_useAlphaCrosshair;
-	gHUD.allowAlphaCrosshairWithoutGunsMem = global2_allowAlphaCrosshairWithoutGuns;
+	gHUD.useAlphaCrosshairMem = EASY_CVAR_GET(useAlphaCrosshair);
+	gHUD.allowAlphaCrosshairWithoutGunsMem = EASY_CVAR_GET(allowAlphaCrosshairWithoutGuns);
 
 
 }
@@ -1194,8 +1189,6 @@ int CHudAmmo::MsgFunc_UpdFrz(const char *pszName, int iSize, void *pbuf){
 
 
 
-
-//JUKEBOX!   Just send a "stop" request.
 int CHudAmmo::MsgFunc_HasGlockSil(const char *pszName, int iSize, void *pbuf){
 	
 	BEGIN_READ( pbuf, iSize );
@@ -1205,9 +1198,6 @@ int CHudAmmo::MsgFunc_HasGlockSil(const char *pszName, int iSize, void *pbuf){
 
 	return 1;
 }
-
-
-
 
 
 
@@ -1232,7 +1222,7 @@ void CHudAmmo::SlotInput( int iSlot )
 
 		gWR.SelectSlot(iSlot, FALSE, 1);
 	}else{
-		if(global2_canShowWeaponSelectAtDeath == 1 ){
+		if(EASY_CVAR_GET(canShowWeaponSelectAtDeath) == 1 ){
 			if ( gViewPort && gViewPort->SlotInput( iSlot ) ){
 				return;
 			}
@@ -1251,7 +1241,7 @@ void CHudAmmo::SlotInput( int iSlot )
 	//gWR.SelectSlot(iSlot, FALSE, 1);
 
 	/*
-	if(global2_canShowWeaponSelectAtDeath == 1 || !gHUD.m_fPlayerDead){
+	if(EASY_CVAR_GET(canShowWeaponSelectAtDeath) == 1 || !gHUD.m_fPlayerDead){
 		// Let the Viewport use it first, for menus
 		if ( gViewPort && gViewPort->SlotInput( iSlot ) ){
 			return;
@@ -1333,7 +1323,7 @@ void CHudAmmo::UserCmd_NextWeapon(void)
 
 
 	//if ( gHUD.m_fPlayerDead || (gHUD.m_iHideHUDDisplay & (HIDEHUD_WEAPONS | HIDEHUD_ALL)) )
-	if ( (global2_canShowWeaponSelectAtDeath == 0 && gHUD.m_fPlayerDead) || (gHUD.m_iHideHUDDisplay & (HIDEHUD_WEAPONS | HIDEHUD_ALL)) )
+	if ( (EASY_CVAR_GET(canShowWeaponSelectAtDeath) == 0 && gHUD.m_fPlayerDead) || (gHUD.m_iHideHUDDisplay & (HIDEHUD_WEAPONS | HIDEHUD_ALL)) )
 		return;
 
 	if ( !gWR.gpActiveSel || gWR.gpActiveSel == (WEAPON*)1 )
@@ -1363,7 +1353,7 @@ void CHudAmmo::UserCmd_NextWeapon(void)
 					gWR.gpActiveSel = wsp;
 
 					//MODDD - if this CVar is on, play the weapon-select sound on mousewheeling through.
-					if(global2_weaponSelectSoundPlayOnMousewheel == 1){
+					if(EASY_CVAR_GET(weaponSelectSoundPlayOnMousewheel) == 1){
 						gHUD.playWeaponSelectMoveSound();
 						
 					}
@@ -1387,7 +1377,7 @@ void CHudAmmo::UserCmd_NextWeapon(void)
 void CHudAmmo::UserCmd_PrevWeapon(void)
 {
 	/*
-	if(global2_canShowWeaponSelectAtDeath == 1 || !gHUD.m_fPlayerDead){
+	if(EASY_CVAR_GET(canShowWeaponSelectAtDeath) == 1 || !gHUD.m_fPlayerDead){
 
 	}else{
 		return;
@@ -1395,7 +1385,7 @@ void CHudAmmo::UserCmd_PrevWeapon(void)
 	*/
 
 	//if ( gHUD.m_fPlayerDead || (gHUD.m_iHideHUDDisplay & (HIDEHUD_WEAPONS | HIDEHUD_ALL)) )
-	if ( (global2_canShowWeaponSelectAtDeath == 0 && gHUD.m_fPlayerDead) || (gHUD.m_iHideHUDDisplay & (HIDEHUD_WEAPONS | HIDEHUD_ALL)) )
+	if ( (EASY_CVAR_GET(canShowWeaponSelectAtDeath) == 0 && gHUD.m_fPlayerDead) || (gHUD.m_iHideHUDDisplay & (HIDEHUD_WEAPONS | HIDEHUD_ALL)) )
 		return;
 
 	if ( !gWR.gpActiveSel || gWR.gpActiveSel == (WEAPON*)1 )
@@ -1422,7 +1412,7 @@ void CHudAmmo::UserCmd_PrevWeapon(void)
 					gWR.gpActiveSel = wsp;
 
 					//MODDD - if this CVar is on, play the weapon-select sound on mousewheeling through.
-					if(global2_weaponSelectSoundPlayOnMousewheel == 1){
+					if(EASY_CVAR_GET(weaponSelectSoundPlayOnMousewheel) == 1){
 						gHUD.playWeaponSelectMoveSound();
 					}
 
@@ -1456,8 +1446,6 @@ void CHudAmmo::UserCmd_PrevWeapon(void)
 
 int CHudAmmo::Draw(float flTime)
 {
-
-
 
 	//easyPrintLine("DERP??? hide: %d viewf: %d inter: %d lastcam: %d", gHUD.m_iHideHUDDisplay, gHUD.viewFlags, gHUD.m_iIntermission, gHUD.m_iLastCameraMode);
 
@@ -1533,10 +1521,10 @@ int CHudAmmo::Draw(float flTime)
 	BOOL forceShowZero = FALSE;
 
 	//if dead, and cannot show the weapon select screen, don't bother drawing ammo.
-	//Can depend on "global2_hud_version" too, I think the E3 (yellow) may just never draw the ammo at death or something.
+	//Can depend on "hud_version" too, I think the E3 (yellow) may just never draw the ammo at death or something.
 	if(gHUD.m_fPlayerDead){
 		
-		if(global2_canShowWeaponSelectAtDeath == 1){
+		if(EASY_CVAR_GET(canShowWeaponSelectAtDeath) == 1){
 			//If the weapon select screen can be shown, just show 0 for ammo.
 			forceShowZero = TRUE;
 		}else{
@@ -1560,7 +1548,7 @@ int CHudAmmo::Draw(float flTime)
 
 	//if the weapon select is on, don't draw anything else... except the side-GUI (# of antidotes? adrenaline syringes? radiation syringes?)
 	//if(!gHUD.canDrawBottomStats){
-	if(  gHUD.canDrawSidebar() ){
+	if( gHUD.canDrawSidebar() ){
 		
 		//each is the same size.
 		int inventoryIconWidth = gHUD.GetSpriteRect(m_antidoteindex).right - gHUD.GetSpriteRect(m_antidoteindex).left;
@@ -1621,9 +1609,15 @@ int CHudAmmo::Draw(float flTime)
 		x = ScreenWidth - inventoryIconWidth - 20;
 		y = ScreenHeight - (inventoryIconHeight*4+(8*3)) - 73;
 
-		SPR_Set(gHUD.GetSprite(m_radiationindex), r, g, b );
-		SPR_DrawAdditive( 0,  x, y, &gHUD.GetSpriteRect(m_radiationindex));
-		
+		if (m_radiations > 0) {
+			SPR_Set(gHUD.GetSprite(m_radiationindex), r, g, b);
+			SPR_DrawAdditive(0, x, y, &gHUD.GetSpriteRect(m_radiationindex));
+		}
+		else {
+			SPR_Set(gHUD.GetSprite(m_radiation_emptyindex), r, g, b);
+			SPR_DrawAdditive(0, x, y, &gHUD.GetSpriteRect(m_radiation_emptyindex));
+		}
+
 		x += 4;
 		y += 38;
 
@@ -1637,9 +1631,14 @@ int CHudAmmo::Draw(float flTime)
 		x = ScreenWidth - inventoryIconWidth - 20;
 		y = ScreenHeight - (inventoryIconHeight*3+(8*2)) - 73;
 
-		SPR_Set(gHUD.GetSprite(m_antidoteindex), r, g, b );
-		SPR_DrawAdditive( 0,  x, y, &gHUD.GetSpriteRect(m_antidoteindex));
-		
+		if (m_antidotes > 0) {
+			SPR_Set(gHUD.GetSprite(m_antidoteindex), r, g, b);
+			SPR_DrawAdditive(0, x, y, &gHUD.GetSpriteRect(m_antidoteindex));
+		}
+		else {
+			SPR_Set(gHUD.GetSprite(m_antidote_emptyindex), r, g, b);
+			SPR_DrawAdditive(0, x, y, &gHUD.GetSpriteRect(m_antidote_emptyindex));
+		}
 		x += 4;
 		y += 38;
 
@@ -1653,9 +1652,15 @@ int CHudAmmo::Draw(float flTime)
 		x = ScreenWidth - inventoryIconWidth - 20;
 		y = ScreenHeight - (inventoryIconHeight*2+(8*1)) - 73;
 
-		SPR_Set(gHUD.GetSprite(m_adrenalineindex), r, g, b );
-		SPR_DrawAdditive( 0,  x, y, &gHUD.GetSpriteRect(m_adrenalineindex));
-		
+		if (m_adrenalines > 0) {
+			SPR_Set(gHUD.GetSprite(m_adrenalineindex), r, g, b);
+			SPR_DrawAdditive(0, x, y, &gHUD.GetSpriteRect(m_adrenalineindex));
+		}
+		else {
+			SPR_Set(gHUD.GetSprite(m_adrenaline_emptyindex), r, g, b);
+			SPR_DrawAdditive(0, x, y, &gHUD.GetSpriteRect(m_adrenaline_emptyindex));
+		}
+
 		x += 4;
 		y += 38;
 
@@ -1664,27 +1669,13 @@ int CHudAmmo::Draw(float flTime)
 		//////////////////////////////////////////////////////////////////////
 
 
-		
-
-	}
-
-
-
-
-
-
-
-
-
-
-
+	}//END OF gHUD.canDrawSidebar()
 
 
 
 	if (!m_pWeapon)
 		return 0;
 	///////////////////////////////////////////////////////////////
-
 
 
 
@@ -1717,19 +1708,12 @@ int CHudAmmo::Draw(float flTime)
 
 
 
+	//easyForcePrintLine("WHO AREREEEEE YOU %d :: %.2f", gHUD.canDrawBottomStats, EASY_CVAR_GET(hud_weaponselecthideslower));
 
-
-
-
-
-
-	//easyForcePrintLine("WHO AREREEEEE YOU %d :: %.2f", gHUD.canDrawBottomStats, global2_hud_weaponselecthideslower);
-
-	if(!gHUD.canDrawBottomStats && global2_hud_weaponselecthideslower == 1){
+	if(!gHUD.canDrawBottomStats && EASY_CVAR_GET(hud_weaponselecthideslower) == 1){
 		//only block the bottom GUI (health, armor) if this CVar says to.
 		return 1;
 	}
-
 
 
 	// Draw ammo pickup history
@@ -1740,19 +1724,12 @@ int CHudAmmo::Draw(float flTime)
 
 
 	
-
-
-	
 	//I will assume this is what cuts off the crowbar's attempt at drawing ammo.
 	//MODDD - don't do this check anymore. We even already check for iAmmoType being < 0. Want to draw extra zeros
 	//        possibly in place of all blank ammo counters too.
 	// SPR_Draw Ammo
 	//if ((pw->iAmmoType < 0) && (pw->iAmmo2Type < 0))
 	//	return 0;
-
-
-
-
 
 
 
@@ -1778,15 +1755,10 @@ int CHudAmmo::Draw(float flTime)
 
 
 
-
-
-
 	//MODDD - this is how we check to see if the currently equipped weapon is the rpg:
 	if(checkEqualStrings(m_pWeapon->szName, "weapon_rpg", 10)){
 		isRPG = TRUE;
 	}
-
-
 
 	//In either HUD there are three possible places to draw numbers. Those places will be determined by HUD version.
 	//These are not necessarly named after whether they are for "primary" ammo (mp5 bullets) or "secondary" ammo (mp5 grenades).
@@ -1813,8 +1785,7 @@ int CHudAmmo::Draw(float flTime)
 	}
 
 
-
-	if(global2_hud_version == 0){
+	if(EASY_CVAR_GET(hud_version) == 0){
 		int iNumberHeight = gHUD.GetSpriteRect(gHUD.m_HUD_number_0).bottom - gHUD.GetSpriteRect(gHUD.m_HUD_number_0).top;
 		//y = (ScreenHeight - gHUD.m_iFontHeight*2.75);
 		y = (ScreenHeight - (iNumberHeight*2.5) );
@@ -1882,10 +1853,28 @@ int CHudAmmo::Draw(float flTime)
 		x += iBarWidth;
 
 
+
+		/*
+		easyForcePrintLine("I AM A GAYest FISH!!! %d", gHUD.m_HUD_number_0);
+		//!!! FUCK
+		///////////////////////////////////////////////////////////////////////////
+		SPR_Set(gHUD.GetSprite(gHUD.m_HUD_number_0 + 2), r, g, b);
+		SPR_DrawAdditive(0, 260, 66, &gHUD.GetSpriteRect(gHUD.m_HUD_number_0 + 4));
+
+		//GetSprite(myFontIDZero + k), r, g, b, 0, x, y, & GetSpriteRect(myFontIDZero + k), canDrawBrokenTrans
+
+		gHUD.DrawHudNumber(320, 66, 0 | DHN_3DIGITS, 44, r, g, b, 0, 1);
+		///////////////////////////////////////////////////////////////////////////
+		*/
+
+
+
+
+
 		if(ammoDrawSecondary_draw){
 			//IMPORTANT!!! This depends on the existing X being set. So it will still be in the primary ammo's spot if that is not drawn.
 			//outdated, now handled ok.
-			x = gHUD.DrawHudNumber(x, y, iFlags | DHN_3DIGITS, ammoDrawSecondary, r, g, b, 0, 1);	
+			x = gHUD.DrawHudNumber(x, y, iFlags | DHN_3DIGITS, ammoDrawSecondary, r, g, b, 0, 1);
 		}
 
 		if(ammoDrawTertiary_draw){
@@ -1895,7 +1884,7 @@ int CHudAmmo::Draw(float flTime)
 		}
 
 
-	}//END OF if(global2_hud_version == 0)
+	}//END OF if(EASY_CVAR_GET(hud_version) == 0)
 	else{
 
 
@@ -2018,7 +2007,7 @@ void DrawAmmoBar(WEAPON *p, int x, int y, int width, int height)
 {
 	//MODDD - removed.
 	
-	if(global2_hud_drawammobar == 1){
+	if(EASY_CVAR_GET(hud_drawammobar) == 1){
 		//proceed to draw.
 	}else{
 		//No.
@@ -2074,7 +2063,7 @@ int CHudAmmo::DrawWList(float flTime)
 	int r,g,b,x,y,a,i;
 
 	//MODDD - added.  Force the selected weapon null if the player is dead and cannot see the weapon menu.
-	if(gHUD.m_fPlayerDead && global2_canShowWeaponSelectAtDeath == 0){
+	if(gHUD.m_fPlayerDead && EASY_CVAR_GET(canShowWeaponSelectAtDeath) == 0){
 		gWR.gpLastSel = gWR.gpActiveSel;
 		gWR.gpActiveSel = NULL;
 		//can't select a weapon in this state.

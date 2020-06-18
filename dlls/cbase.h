@@ -13,6 +13,9 @@
 *
 ****/
 
+// MODDD NOTICE - this file, too, is included both client/serverside.
+
+
 
 //MODDD - WHY NOT???
 #ifndef CBASE_H
@@ -155,10 +158,10 @@ typedef void (CBaseEntity::*USEPTR)( CBaseEntity *pActivator, CBaseEntity *pCall
 
 
 // For CLASSIFY
-#define	CLASS_NONE				0
+#define CLASS_NONE				0
 #define CLASS_MACHINE			1
 #define CLASS_PLAYER			2
-#define	CLASS_HUMAN_PASSIVE		3
+#define CLASS_HUMAN_PASSIVE		3
 #define CLASS_HUMAN_MILITARY	4
 #define CLASS_ALIEN_MILITARY	5
 #define CLASS_ALIEN_PASSIVE		6
@@ -169,7 +172,7 @@ typedef void (CBaseEntity::*USEPTR)( CBaseEntity *pActivator, CBaseEntity *pCall
 #define CLASS_PLAYER_ALLY		11
 #define CLASS_PLAYER_BIOWEAPON	12 // hornets and snarks.launched by players
 #define CLASS_ALIEN_BIOWEAPON	13 // hornets and snarks.launched by the alien menace
-#define	CLASS_BARNACLE			99 // special because no one pays attention to it, and it eats a wide cross-section of creatures.
+#define CLASS_BARNACLE			99 // special because no one pays attention to it, and it eats a wide cross-section of creatures.
 
 
 
@@ -190,7 +193,7 @@ typedef void (CBaseEntity::*USEPTR)( CBaseEntity *pActivator, CBaseEntity *pCall
 
 #define R_AL	-2 // (ALLY) pals. Good alternative to R_NO when applicable.
 #define R_FR	-1// (FEAR)will run
-#define	R_NO	0// (NO RELATIONSHIP) disregard
+#define R_NO	0// (NO RELATIONSHIP) disregard
 #define R_DL	1// (DISLIKE) will attack
 #define R_HT	2// (HATE)will attack this character instead of any visible DISLIKEd characters
 #define R_NM	3// (NEMESIS)  A monster Will ALWAYS attack its nemsis, no matter what
@@ -199,7 +202,7 @@ typedef void (CBaseEntity::*USEPTR)( CBaseEntity *pActivator, CBaseEntity *pCall
 #define R_BA    4//
 
 
-#define	SF_NORESPAWN	( 1 << 30 )// !!!set this bit on guns and stuff that should never respawn.
+#define SF_NORESPAWN	( 1 << 30 )// !!!set this bit on guns and stuff that should never respawn.
 
 
 
@@ -269,6 +272,8 @@ public:
 
 	virtual Vector GetVelocityLogical(void);
 	virtual void SetVelocityLogical(const Vector& arg_newVelocity);
+
+	virtual void OnDeflected(CBaseEntity* arg_entDeflector);
 
 	BOOL alreadySaved;
 	int wasAttached;
@@ -362,7 +367,7 @@ public:
 
 	//MODDD - new
 	CBaseEntity(void);
-	//static void precacheAll();
+	//static void method_precacheAll();
 
 
 	//Even though the relationship may disallow it, I can be caught by the barnacle anyways (if true).
@@ -866,16 +871,16 @@ public:
 //        use in telling whether a monster could say, "Duck" or "Jump" for use in dodging or pathfinding
 
 // people gib if their health is <= this at the time of death
-#define	GIB_HEALTH_VALUE	-30
+#define GIB_HEALTH_VALUE	-30
 
-#define	ROUTE_SIZE			8 // how many waypoints a monster can store at one time
+#define ROUTE_SIZE			8 // how many waypoints a monster can store at one time
 #define MAX_OLD_ENEMIES		4 // how many old enemies to remember
 
-#define	bits_CAP_DUCK			( 1 << 0 )// crouch
-#define	bits_CAP_JUMP			( 1 << 1 )// jump/leap
+#define bits_CAP_DUCK			( 1 << 0 )// crouch
+#define bits_CAP_JUMP			( 1 << 1 )// jump/leap
 #define bits_CAP_STRAFE			( 1 << 2 )// strafe ( walk/run sideways)
 #define bits_CAP_SQUAD			( 1 << 3 )// can form squads
-#define	bits_CAP_SWIM			( 1 << 4 )// proficiently navigate in water
+#define bits_CAP_SWIM			( 1 << 4 )// proficiently navigate in water
 #define bits_CAP_CLIMB			( 1 << 5 )// climb ladders/ropes
 #define bits_CAP_USE			( 1 << 6 )// open doors/push buttons/pull levers
 #define bits_CAP_HEAR			( 1 << 7 )// can hear forced sounds
@@ -896,144 +901,21 @@ public:
 
 // instant damage
 
-
-#define DMG_GENERIC			0			// generic damage was done
-#define DMG_CRUSH			(1 << 0)	// crushed by falling or moving object
-#define DMG_BULLET			(1 << 1)	// shot
-#define DMG_SLASH			(1 << 2)	// cut, clawed, stabbed
-#define DMG_BURN			(1 << 3)	// heat burned
-#define DMG_FREEZE			(1 << 4)	// frozen
-#define DMG_FALL			(1 << 5)	// fell too far
-#define DMG_BLAST			(1 << 6)	// explosive blast damage
-#define DMG_CLUB			(1 << 7)	// crowbar, punch, headbutt
-#define DMG_SHOCK			(1 << 8)	// electric shock
-#define DMG_SONIC			(1 << 9)	// sound pulse shockwave
-#define DMG_ENERGYBEAM		(1 << 10)	// laser or other high energy beam 
-
-//MODDD - note: Why the Hell is  1 << 11   missing?
-
-#define DMG_NEVERGIB		(1 << 12)	// with this bit OR'd in, no damage type will be able to gib victims upon death
-#define DMG_ALWAYSGIB		(1 << 13)	// with this bit OR'd in, any damage type can be made to gib victims upon death.
-#define DMG_DROWN			(1 << 14)	// Drowning
-// time-based damage
-//NOTE:  I believe this is just a way of saying, 1's for all timed damage (included), 0's for all else.
-//       Any actual continual time damage is indicated by the 2nd damage bit (bitsDamageTypeMod) having DMG_TIMEDEFFECT or DMG_TIMEDEFFECTIGNORE.
-//       This just shows the timed damages of the first bitmask as initial strikes.
-//       Any continual damage still uses the 2nd bitmask for the aforementioned choices regardless.
-#define DMG_TIMEBASED		(~(0x3fff))	// mask for time-based damage
-
-#define DMG_PARALYZE		(1 << 15)	// slows affected creature down
-#define DMG_NERVEGAS		(1 << 16)	// nerve toxins, very bad
-#define DMG_POISON			(1 << 17)	// blood poisioning
-#define DMG_RADIATION		(1 << 18)	// radiation exposure
-#define DMG_DROWNRECOVER	(1 << 19)	// drowning recovery
-#define DMG_ACID			(1 << 20)	// toxic chemicals or acid burns
-#define DMG_SLOWBURN		(1 << 21)	// in an oven
-#define DMG_SLOWFREEZE		(1 << 22)	// in a subzero freezer
-#define DMG_MORTAR			(1 << 23)	// Hit by air raid (done to distinguish grenade from mortar)
-
-
-//MODDD - new.  Careful not to overflow this integer, these powers of 2 are getting high!
-//Would have started with "24", but 24 - 31 may be placeholders for Team Fortress damage types, 
-//according to health.h.
-//NOTICE: beyond "31" in 1 << 31  is not valid.  Using a 2nd bitmask when referring to these values...
-
-//#define DMG_TIMEDEFFECT			(1 << 32)	// timed damage that must be differentiated from "generic".
-//#define DMG_BLEEDING			(1 << 33)   // bleeding, usually inflicted from strong melee attacks.  Medkits cure it.
-
-#define DMG_TIMEDEFFECT			(1 << 0)	// timed damage that must be differentiated from "generic".  This is non-initial strike damage.
-//Do not confuse with the mask "DMG_TIMEBASED", which is unique and not inclusive of any other damage types.
-#define DMG_BLEEDING			(1 << 1)   // bleeding, usually inflicted from strong melee attacks.  Medkits cure it.
-#define DMG_TIMEDEFFECTIGNORE	(1 << 2)   //same as TIMEDEFFECT, but made to ignore armor (regardless of the cvar).
-#define DMG_BARNACLEBITE		(1 << 3)   //not timed.  Just sent by the barnacle's execution bite to NPCs to mark not to ignore (if they would).
-#define DMG_GAUSS				(1 << 4)   //coming from the player's gauss weapon. Some things (apache) are now immune to it.  ...or not? that got canceled.
-#define DMG_HITBOX_EQUAL		(1 << 5)   //signal that this type of damage can't be increased by hitting particular hitboxes.
-                                           //It is still completely up to any given monster's TraceAttack / TakeDamage to implement this
-										   //(check for the presence of DMG_HITBOX_EQUAL in bitsDamageTypeMod and deny enhancing damage
-										   // per headshots, etc. accordingly).
-										   //For instance, for lightning attacks, different amounts of damage for body, leg, arm, or headshots don't make sense.
-										   //It's possible damage from NPC's just shouldn't even do this kind of damage anyways.
-
-
-//Which types of damage in the new mask are secondary?
-//When other types are added, add them like   (DMG_BLEEDING | NEW | ALSONEW | ...)
-#define DMG_TIMEBASEDMOD		(DMG_BLEEDING)
-
-
-
-// these are the damage types that are allowed to gib corpses
-#define DMG_GIB_CORPSE		( DMG_CRUSH | DMG_FALL | DMG_BLAST | DMG_SONIC | DMG_CLUB )
-
-// these are the damage types that have client hud art
-//MODDD - needed edit for bleeding damage!
-
-#define DMG_SHOWNHUD		(DMG_POISON | DMG_ACID | DMG_FREEZE | DMG_SLOWFREEZE | DMG_DROWN | DMG_BURN | DMG_SLOWBURN | DMG_NERVEGAS | DMG_RADIATION | DMG_SHOCK)
-
-//NOTICE: "DMG_TIMEDEFFECT" is just for non-initial strike damage, and is not what triggers the signs.  It is too inspecific.
-//It is not a mask, but a way to tell apart timed damage from generic damage when needed (the "ignore armor" cvar).
-#define DMG_SHOWNHUDMOD		(DMG_BLEEDING);
-
-
-//MODDD - new bitmasks for "curables".  That is, conditions that can be cured by some item.
-//The significance of this list is playing on hard difficulty with the "timedDamageEndlessOnHard" 
-//CVar on.  This way, only CURABLES (by some item) last forever, and non-curables don't (that
-//would be far too cruel).
-//Perhaps "DMG_ACID" should appear ingame and be cured by the antidote or something? unsure.
-//UNUSED, this mechanism wasn't needed actually.  Or wasn't particularly helpful; would have led to 
-//taking the "long" way.
-#define DMG_CURABLE			(DMG_NERVEGAS | DMG_POISON | DMG_RADIATION)
-#define DMG_CURABLEMOD		(DMG_BLEEDING)
-
-//MODDD - any damages
-#define DMG_ARMORBLOCKEXCEPTION		(0) //empty.
-//Actually, doesn't involve "bleeding".  That is the initial strike.  It will leave "DMG_TIMEDEFFECTIGNORE", so it works.
-#define DMG_ARMORBLOCKEXCEPTIONMOD	(DMG_TIMEDEFFECTIGNORE)
-
-
-
-
-// NOTE: tweak these values based on gameplay feedback:
-//(MODDD - that comment is not mine.)
-
-
-//MODDD - changed back to a previous setup that makes more sense, since antidotes are present.
-//See player.cpp for that one.  Search "REVERTED TO OLD TIMED DAMAGE".
-/*
-#define PARALYZE_DURATION	2		// number of 2 second intervals to take damage
-#define PARALYZE_DAMAGE		1.0		// damage to take each 2 second interval
-
-#define NERVEGAS_DURATION	2
-#define NERVEGAS_DAMAGE		5.0
-
-#define POISON_DURATION		5
-#define POISON_DAMAGE		2.0
-
-#define RADIATION_DURATION	2
-#define RADIATION_DAMAGE	1.0
-
-#define ACID_DURATION		2
-#define ACID_DAMAGE			5.0
-
-#define SLOWBURN_DURATION	2
-#define SLOWBURN_DAMAGE		1.0
-
-#define SLOWFREEZE_DURATION	2
-#define SLOWFREEZE_DAMAGE	1.0
-*/
-
+//MODDD - damage types (DMG_...) moved to util_shared.h.  Merged with some other redundant stuff in some
+// clientside files.
 
 //MODDD - NOTE - Pay little attention to these.  They're just arbitrary, for helping an iterator method
 //see which damage type is which.  For instance, "itbd_Poison" and "DMG_POISON" further below have no link,
 //but "itbd_Poison" is useless outside of Player.cpp (and monsters.cpp since they take timeddamage too now)
 //while "DMG_POISON" is referred to both by attackers and player.cpp.
-#define	itbd_Paralyze		0		
-#define	itbd_NerveGas		1
-#define	itbd_Poison			2
-#define	itbd_Radiation		3
-#define	itbd_DrownRecover	4
-#define	itbd_Acid			5
-#define	itbd_SlowBurn		6
-#define	itbd_SlowFreeze		7
+#define itbd_Paralyze		0		
+#define itbd_NerveGas		1
+#define itbd_Poison			2
+#define itbd_Radiation		3
+#define itbd_DrownRecover	4
+#define itbd_Acid			5
+#define itbd_SlowBurn		6
+#define itbd_SlowFreeze		7
 //MODDD - addition.
 #define itbd_Bleeding		8
 //MODDD - size is now 9. 
@@ -1134,7 +1016,7 @@ public:
 // Weapons 
 //
 
-#define	BAD_WEAPON 0x00007FFF
+#define BAD_WEAPON 0x00007FFF
 
 //
 // Converts a entvars_t * to a class pointer

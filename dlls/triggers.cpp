@@ -61,8 +61,7 @@ EASY_CVAR_EXTERN(blockMultiTrigger)
 EASY_CVAR_EXTERN(blockMusicTrigger)
 EASY_CVAR_EXTERN(blockTeleportTrigger)
 EASY_CVAR_EXTERN(blockHurtTrigger)
-
-extern float global_animationKilledBoundsRemoval;
+EASY_CVAR_EXTERN(animationKilledBoundsRemoval)
 
 
 //MODDD - referred to throughout and restored.
@@ -757,10 +756,10 @@ void PlayCDTrack( int iTrack )
 	}
 	else
 	{
-		char string [ 64 ];
+		char arychr_buffer [ 64 ];
 
-		sprintf( string, "cd play %3d\n", iTrack );
-		CLIENT_COMMAND ( pClient, string);
+		sprintf( arychr_buffer, "cd play %3d\n", iTrack );
+		CLIENT_COMMAND ( pClient, arychr_buffer);
 	}
 }
 
@@ -1166,7 +1165,7 @@ void CBaseTrigger :: HurtTouch ( CBaseEntity *pOther )
 
 	
 	//MODDD - can block the trigger too. Only players from using it.
-	if(global_blockHurtTrigger == 1 && (pOther != NULL && pOther->IsPlayer()) ){
+	if(EASY_CVAR_GET(blockHurtTrigger) == 1 && (pOther != NULL && pOther->IsPlayer()) ){
 		return;
 	}
 
@@ -1426,7 +1425,7 @@ void CBaseTrigger :: ActivateMultiTrigger( CBaseEntity *pActivator )
 {
 
 	//MODDD - can block the multi trigger too. Only players from using it.
-	if(global_blockMultiTrigger == 1 && (pActivator != NULL && pActivator->IsPlayer()) ){
+	if(EASY_CVAR_GET(blockMultiTrigger) == 1 && (pActivator != NULL && pActivator->IsPlayer()) ){
 		return;
 	}
 
@@ -1747,7 +1746,7 @@ edict_t *CChangeLevel :: FindLandmark( const char *pLandmarkName )
 //=========================================================
 void CChangeLevel :: UseChangeLevel ( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
 {
-	if(global_blockChangeLevelTrigger == 1){
+	if(EASY_CVAR_GET(blockChangeLevelTrigger) == 1){
 		easyForcePrintLine("***NOTICE: blocked a changeLevel request to map %s to its location %s.", st_szNextMap, st_szNextSpot);
 		return;
 	}
@@ -1821,7 +1820,7 @@ void CChangeLevel :: ChangeLevelNow( CBaseEntity *pActivator )
 void CChangeLevel :: TouchChangeLevel( CBaseEntity *pOther )
 {
 	//MODDD - can block a changelevel now!
-	if(global_blockChangeLevelTrigger == 1){
+	if(EASY_CVAR_GET(blockChangeLevelTrigger) == 1){
 		return;
 	}
 
@@ -1910,13 +1909,9 @@ int CChangeLevel::ChangeList( LEVELLIST *pLevelList, int maxList )
 
 	count = 0;
 
-
-
-
 	edict_t		*pEdicttt;
 	CBaseEntity *pEntityyy;
 
-	
 	//ENGINE_SET_PVS(Vector(2639.43, -743.85, -251.64));
 	
 
@@ -2197,12 +2192,14 @@ void CLadder :: Precache( void )
 	// Do all of this in here because we need to 'convert' old saved games
 	pev->solid = SOLID_NOT;
 	pev->skin = CONTENTS_LADDER;
+	
 	if ( EASY_CVAR_GET(showtriggers) == 0 )
 	{
 		pev->rendermode = kRenderTransTexture;
 		pev->renderamt = 0;
 	}
 	pev->effects &= ~EF_NODRAW;
+	
 }
 
 
@@ -2308,7 +2305,7 @@ void CBaseTrigger :: TeleportTouch( CBaseEntity *pOther )
 
 	
 	//MODDD - can block the trigger too. Only players from using it.
-	if(global_blockTeleportTrigger == 1 && (pOther != NULL && pOther->IsPlayer()) ){
+	if(EASY_CVAR_GET(blockTeleportTrigger) == 1 && (pOther != NULL && pOther->IsPlayer()) ){
 		return;
 	}
 
@@ -2408,7 +2405,7 @@ void CTriggerSave::Spawn( void )
 void CTriggerSave::SaveTouch( CBaseEntity *pOther )
 {
 	//MODDD - block autosaves with this.
-	if(global_blockAutosaveTrigger == 1){
+	if(EASY_CVAR_GET(blockAutosaveTrigger) == 1){
 		return;
 	}
 

@@ -131,48 +131,54 @@ void CHalfLifeMultiplay::RefreshSkillData( void )
 
 // override some values for multiplay.
 
-	// suitcharger
-	gSkillData.suitchargerCapacity = 30;
+	//MODDD - support for ignoring these.
+	if (EASY_CVAR_GET(ignoreMultiplayerSkillOverride) == 0) {
 
-	// Crowbar whack
-	gSkillData.plrDmgCrowbar = 25;
+		// suitcharger
+		gSkillData.suitchargerCapacity = 30;
 
-	// Glock Round
-	gSkillData.plrDmg9MM = 12;
+		// Crowbar whack
+		gSkillData.plrDmgCrowbar = 25;
 
-	// 357 Round
-	gSkillData.plrDmg357 = 40;
+		// Glock Round
+		gSkillData.plrDmg9MM = 12;
 
-	// MP5 Round
-	gSkillData.plrDmgMP5 = 12;
+		// 357 Round
+		gSkillData.plrDmg357 = 40;
 
-	// M203 grenade
-	gSkillData.plrDmgM203Grenade = 100;
+		// MP5 Round
+		gSkillData.plrDmgMP5 = 12;
 
-	// Shotgun buckshot
-	gSkillData.plrDmgBuckshot = 20;// fewer pellets in deathmatch
+		// M203 grenade
+		gSkillData.plrDmgM203Grenade = 100;
 
-	// Crossbow
-	gSkillData.plrDmgCrossbowClient = 20;
+		// Shotgun buckshot
+		gSkillData.plrDmgBuckshot = 20;// fewer pellets in deathmatch
 
-	// RPG
-	gSkillData.plrDmgRPG = 120;
+		// Crossbow
+		gSkillData.plrDmgCrossbowClient = 20;
 
-	// Egon
-	gSkillData.plrDmgEgonWide = 20;
-	gSkillData.plrDmgEgonNarrow = 10;
+		// RPG
+		gSkillData.plrDmgRPG = 120;
 
-	// Hand Grendade
-	gSkillData.plrDmgHandGrenade = 100;
+		// Egon
+		gSkillData.plrDmgEgonWide = 20;
+		gSkillData.plrDmgEgonNarrow = 10;
 
-	// Satchel Charge
-	gSkillData.plrDmgSatchel = 120;
+		// Hand Grendade
+		gSkillData.plrDmgHandGrenade = 100;
 
-	// Tripmine
-	gSkillData.plrDmgTripmine = 150;
+		// Satchel Charge
+		gSkillData.plrDmgSatchel = 120;
 
-	// hornet
-	gSkillData.plrDmgHornet = 10;
+		// Tripmine
+		gSkillData.plrDmgTripmine = 150;
+
+		// hornet
+		gSkillData.plrDmgHornet = 10;
+
+
+	}//END OF ignoreMultiplayerSkillOverride check
 }
 
 // longest the intermission can last, in seconds
@@ -414,7 +420,7 @@ void CHalfLifeMultiplay :: UpdateGameMode( CBasePlayer *pPlayer )
 void CHalfLifeMultiplay :: InitHUD( CBasePlayer *pl )
 {
 	// notify other clients of player joining the game
-	UTIL_ClientPrintAll( HUD_PRINTNOTIFY, UTIL_VarArgs( "%s has joined the game\n", 
+	ClientPrintAll( HUD_PRINTNOTIFY, UTIL_VarArgs( "%s has joined the game\n", 
 		( pl->pev->netname && STRING(pl->pev->netname)[0] != 0 ) ? STRING(pl->pev->netname) : "unconnected" ) );
 
 	// team match?
@@ -539,6 +545,11 @@ BOOL CHalfLifeMultiplay::FPlayerCanTakeDamage( CBasePlayer *pPlayer, CBaseEntity
 //=========================================================
 void CHalfLifeMultiplay :: PlayerThink( CBasePlayer *pPlayer )
 {
+	//MODDD - NOTE.  ...what is this?  Why for multiplayer only?
+	// Don't really get what this is trying to do any differently compared to
+	// single player behavior.  Single player's rules PlayerThink is empty.
+	// Disable clicking to force respawn, maybe..?  What a crude way to
+	// accomplish that if so.
 	if ( g_fGameOver )
 	{
 		// check for button presses
@@ -565,15 +576,21 @@ void CHalfLifeMultiplay :: PlayerSpawn( CBasePlayer *pPlayer )
 
 	while ( pWeaponEntity = UTIL_FindEntityByClassname( pWeaponEntity, "game_player_equip" ))
 	{
+		//MODDD - don't spam FVOX with these, surround with "globalflag_muteDeploySound" sets.
+		globalflag_muteDeploySound = TRUE;
 		pWeaponEntity->Touch( pPlayer );
+		globalflag_muteDeploySound = FALSE;
 		addDefault = FALSE;
 	}
 
 	if ( addDefault )
 	{
+		//MODDD - don't spam FVOX with these.
+		globalflag_muteDeploySound = TRUE;
 		pPlayer->GiveNamedItem( "weapon_crowbar" );
 		pPlayer->GiveNamedItem( "weapon_9mmhandgun" );
 		pPlayer->GiveAmmo( 68, "9mm", _9MM_MAX_CARRY );// 4 full reloads
+		globalflag_muteDeploySound = FALSE;
 	}
 }
 
@@ -678,6 +695,12 @@ void CHalfLifeMultiplay :: PlayerKilled( CBasePlayer *pVictim, entvars_t *pKille
 //=========================================================
 void CHalfLifeMultiplay::DeathNotice( CBasePlayer *pVictim, entvars_t *pKiller, entvars_t *pevInflictor )
 {
+
+	//MODDD - don't let gibbing/killing in console while dead cause problems.
+	if (pKiller == NULL) {
+		pKiller = pVictim->pev;
+	}
+
 	// Work out what killed the player, and send a message to all clients about it
 	CBaseEntity *Killer = CBaseEntity::Instance( pKiller );
 
@@ -871,7 +894,7 @@ void CHalfLifeMultiplay::DeathNotice( CBasePlayer *pVictim, entvars_t *pKiller, 
 		strcat ( szText, " died mysteriously.\n" );
 	}
 
-	UTIL_ClientPrintAll( szText );
+	ClientPrintAll( szText );
 */
 }
 

@@ -117,9 +117,6 @@ void CPickupWalker::Spawn( void )
 
 
 
-
-
-
 //based off of GetSchedule for CBaseMonster in schedule.cpp.
 Schedule_t* CPickupWalker::GetSchedule ( void )
 {
@@ -258,7 +255,7 @@ Schedule_t* CPickupWalker::GetSchedule ( void )
 
 			}
 			//MODDD - other condition.  If "noFlinchOnHard" is on and the skill is hard, don't flinch from getting hit.
-			else if (HasConditions(bits_COND_LIGHT_DAMAGE) && !HasMemory( bits_MEMORY_FLINCHED) && !(global_noFlinchOnHard==1 && g_iSkillLevel==SKILL_HARD)  )
+			else if (HasConditions(bits_COND_LIGHT_DAMAGE) && !HasMemory( bits_MEMORY_FLINCHED) && !(EASY_CVAR_GET(noFlinchOnHard)==1 && g_iSkillLevel==SKILL_HARD)  )
 			{
 				//For the chumtoad, this  has a chance of playing dead?
 				return GetScheduleOfType( SCHED_SMALL_FLINCH );
@@ -491,6 +488,15 @@ BOOL CPickupWalker::isOrganic(){
 	//probably unnecessary. But just in case, these are typically non-robotic at least.
 	return TRUE;
 };
+
+
+// All pickup walkers can spawn regardless of mp_allowmonsters.
+BOOL CPickupWalker::bypassAllowMonstersSpawnCheck(void) {
+	return TRUE;
+}//END OF bypassAllowMonstersSpawnCheck
+
+
+
 
 void CPickupWalker::PickupWalkerTouch( CBaseEntity *pOther )
 {

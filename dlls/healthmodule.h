@@ -5,6 +5,7 @@
 
 //MODDD - new. Purely parent-less data class for storing info and behavior about healing to ease reuse between CWallHealth and
 //        certain CRotDoor's using this.
+//        So yes, not even of CBaseEntity.  Some events like 'Save' / 'Restore' must be called by some parent entity that handles those.
 
 
 
@@ -13,15 +14,20 @@
 //C does multi-inheritence, not sure if there's any possible difference for that if this is more of an "Interface" like in Java than a parent class.
 class I_HealthModule_Parent{
 public:
-	virtual void I_HealthModule_ChargeEmpty(void){};
-	virtual void I_HealthModule_ChargeRestored(void){};
-	virtual void I_HealthModule_UseStart(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value){};
-	virtual void I_HealthModule_UseContinuous(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value){};
-	virtual void I_HealthModule_UseEnd(void){};
-	virtual void I_HealthModule_SetThink_UseEnd(void){};
-	virtual void I_HealthModule_SetThink_ChargeRestored(void){};
+	//MODDD - NOTICE!  If the  " = 0;"  (pure virtual) breaks VS6 compatability,
+	// just replace " = 0;"  with "{};".
+	// Or make a preprocessor constant somewhere that checks for visual studio version
+	// and uses the right way for that version.
+	virtual void I_HealthModule_ChargeEmpty(void) = 0;
+	virtual void I_HealthModule_ChargeRestored(void) = 0;
+	virtual void I_HealthModule_UseStart(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value) = 0;
+	virtual void I_HealthModule_UseContinuous(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value) = 0;
+	virtual void I_HealthModule_UseEnd(void) = 0;
+
+	//virtual void I_HealthModule_SetThink_UseEnd(void) = 0;
+	//virtual void I_HealthModule_SetThink_ChargeRestored(void) = 0;
 	
-	virtual void I_HealthModule_SetThink_Custom(void){};
+	virtual void I_HealthModule_SetThink_Custom(void) = 0;
 
 };
 
@@ -32,6 +38,7 @@ public:
 	//NEW
 	float rechargeDelay;
 	float turnOffDelay;
+	BOOL waitingForRecharge;
 
 
 	BOOL establishedParentYet;

@@ -43,12 +43,12 @@ int gmsgWeapPickup = 0;
 enginefuncs_t g_engfuncs;
 globalvars_t  *gpGlobals;
 
-ItemInfo CBasePlayerItem::ItemInfoArray[MAX_WEAPONS];
+//MODDD - removed here, since this (and CBasePlayerItem::AmmoInfoArray) are in util_shared.cpp now instead.
+//ItemInfo CBasePlayerItem::ItemInfoArray[MAX_WEAPONS];
 
 
 
 //MODDD - is that okay?  Just putting these new method-stubs here since the EMIT_SOUND_DYN was found here as-is.
-//...Th
 void EMIT_SOUND_FILTERED(edict_t *entity, int channel, const char *sample, float volume, float attenuation){}
 void EMIT_SOUND_FILTERED(edict_t *entity, int channel, const char *sample, float volume, float attenuation, BOOL useSoundSentenceSave){}
 void EMIT_SOUND_FILTERED(edict_t *entity, int channel, const char *sample, float volume, float attenuation, int flags, int pitch){}
@@ -96,6 +96,8 @@ int CBaseEntity::GetProjectileType(void){return 0;}
 Vector CBaseEntity::GetVelocityLogical(void){return Vector(); }   //blank vector?  most unorthodox.
 void CBaseEntity::SetVelocityLogical(const Vector& arg_newVelocity){}
 
+void CBaseEntity::OnDeflected(CBaseEntity* arg_entDeflector){};
+
 
 //Yes, player has this too.
 BOOL CBasePlayer::blocksImpact(void){return FALSE;}
@@ -109,6 +111,9 @@ BOOL CBaseEntity::isOrganic(void){return FALSE;}
 int CBaseEntity::getHullIndexForNodes(void) const{return 0;}
 void CBaseEntity::onDelete(void){}
 
+
+void CBasePlayer::OnFirstAppearance(void){};
+
 void CBaseEntity::Spawn(void){}
 //MODDD
 BOOL CBaseEntity::usesSoundSentenceSave(void){return FALSE;}
@@ -120,6 +125,7 @@ void CBaseMonster::Spawn(void){}
 
 CBaseEntity* CBaseMonster::getNearestDeadBody(const Vector& arg_searchOrigin, const float arg_maxDist){return NULL;}
 BOOL CBaseMonster::noncombat_Look_ignores_PVS_check(void){return FALSE;}
+BOOL CBaseMonster::bypassAllowMonstersSpawnCheck(void) { return FALSE; }
 
 BOOL CBaseMonster::violentDeathAllowed(void){return FALSE;}
 BOOL CBaseMonster::violentDeathDamageRequirement(void){return FALSE;}
@@ -265,7 +271,7 @@ BOOL UTIL_IsValidEntity( edict_t *pent ) { return TRUE; }
 void UTIL_SetOrigin( entvars_t *, const Vector &org ) { }
 BOOL UTIL_GetNextBestWeapon( CBasePlayer *pPlayer, CBasePlayerItem *pCurrentWeapon ) { return TRUE; }
 void UTIL_LogPrintf(char *,...) { }
-void UTIL_ClientPrintAll( int,char const *,char const *,char const *,char const *,char const *) { }
+void ClientPrintAll( int,char const *,char const *,char const *,char const *,char const *) { }
 void ClientPrint( entvars_t *client, int msg_dest, const char *msg_name, const char *param1, const char *param2, const char *param3, const char *param4 ) { }
 
 // CBaseToggle Stubs
@@ -749,6 +755,9 @@ float CBaseMonster::getBarnacleForwardOffset(void){return 0;}
 //NOTICE: "1", 100%, is the default.
 float CBaseMonster::getBarnacleAnimationFactor(void){return 0;}
 
+
+void CBaseMonster::ForgetEnemy(void) {}
+
 void CBaseMonster::removeFromPoweredUpCommandList(CBaseMonster* argToRemove){}
 void CBaseMonster::forceNewEnemy(CBaseEntity* argIssuing, CBaseEntity* argNewEnemy, BOOL argPassive){}
 
@@ -815,6 +824,12 @@ int CBasePlayer :: TakeHealth( float flHealth, int bitsDamageType ) { return 0; 
 
 GENERATE_TRACEATTACK_IMPLEMENTATION_DUMMY_CLIENT(CBasePlayer)
 GENERATE_TAKEDAMAGE_IMPLEMENTATION_DUMMY_CLIENT(CBasePlayer)
+
+GENERATE_DEADTAKEDAMAGE_IMPLEMENTATION_DUMMY_CLIENT(CBasePlayer)
+GENERATE_GIBMONSTER_IMPLEMENTATION_DUMMY_CLIENT(CBasePlayer)
+
+
+
 
 void CBasePlayer::PackDeadPlayerItems( void ) { }
 void CBasePlayer::RemoveAllItems( BOOL removeSuit ) { }
@@ -897,7 +912,10 @@ int DamageDecal( CBaseEntity *pEntity, int bitsDamageType, int bitsDamageTypeMod
 
 void DecalGunshot( TraceResult *pTrace, int iBulletType ) { }
 void EjectBrass ( const Vector &vecOrigin, const Vector &vecVelocity, float rotation, int model, int soundtype ) { }
-void AddAmmoNameToAmmoRegistry( const char *szAmmoname ) { }
+
+//MODDD - removed here.  Now included server and clientside, no need to dummy it out here.
+//void AddAmmoNameToAmmoRegistry( const char *szAmmoname ) { }
+
 int CBasePlayerItem::Restore( class CRestore & ) { return 1; }
 int CBasePlayerItem::Save( class CSave & ) { return 1; }
 int CBasePlayerWeapon::Restore( class CRestore & ) { return 1; }
@@ -944,11 +962,24 @@ void CBasePlayerAmmo :: DefaultTouch( CBaseEntity *pOther ) { }
 int CBasePlayerWeapon::ExtractAmmo( CBasePlayerWeapon *pWeapon ) { return 0; }
 int CBasePlayerWeapon::ExtractClipAmmo( CBasePlayerWeapon *pWeapon ) { return 0; }	
 void CBasePlayerWeapon::RetireWeapon( void ) { }
+
+
 //MODDD - new
-
-
 CBaseEntity* CBasePlayerWeapon::pickupWalkerReplaceCheck(void){return 0;}
 const char* CBasePlayerWeapon::GetPickupWalkerName(void){return 0;}
+//MODDD - new event, called alongside a reload actually changing the ammo counts.
+void CBasePlayerWeapon::OnReloadApply(void) {};
+
+// Aha - don't dummy me!  I'm still important clientside, weapons
+// refer to me and expect something better than worthless.
+float CBasePlayerWeapon::getPlayerBaseFOV(void) {
+	//FOV info is stored in the gHUD instance.
+	return gHUD.getPlayerBaseFOV();
+}//END OF getPlayerBaseFOV
+
+
+
+
 
 //MODDD - edited.
 //void CSoundEnt::InsertSound ( int iType, const Vector &vecOrigin, int iVolume, float flDuration ) {}

@@ -25,7 +25,7 @@
 #include "gamerules.h"
 
 //MODDD
-extern float global_sparksComputerHitMulti;
+EASY_CVAR_EXTERN(sparksComputerHitMulti)
 EASY_CVAR_EXTERN(muteBulletHitSounds)
 
 EASY_CVAR_EXTERN(announcerIsAJerk)
@@ -1489,7 +1489,7 @@ void SENTENCEG_Init()
 
 
 
-		easyPrintLine("Sentences: found sentence title: %s ID:%d", pString, gcallsentences);
+		//easyPrintLine("Sentences: found sentence title: %s ID:%d", pString, gcallsentences);
 		if ( strlen( pString ) >= CBSENTENCENAME_MAX ){
 			//ALERT( at_warning, "Sentence %s longer than %d letters\n", pString, CBSENTENCENAME_MAX-1 );
 			easyPrintLine("Sentences: WARNING: Sentence %s longer than %d letters.", pString, CBSENTENCENAME_MAX-1 );
@@ -1981,7 +1981,7 @@ float TEXTURETYPE_PlaySound(TraceResult *ptr,  Vector vecSrc, Vector vecEnd, int
 
 			//MODDD!
 			//UTIL_Sparks( ptr->vecEndPos );
-			UTIL_Sparks2( ptr->vecEndPos, DEFAULT_SPARK_BALLS, global_sparksComputerHitMulti );
+			UTIL_Sparks2( ptr->vecEndPos, DEFAULT_SPARK_BALLS, EASY_CVAR_GET(sparksComputerHitMulti) );
 
 
 			float flVolume = RANDOM_FLOAT ( 0.7 , 1.0 );//random volume range

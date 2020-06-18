@@ -9,22 +9,14 @@
 #define EV_HLDMH
 
 #include "../common/pmtrace.h"
+#include "util_shared.h"
 
-
-// bullet types
-typedef	enum
-{
-	BULLET_NONE = 0,
-	BULLET_PLAYER_9MM, // glock
-	BULLET_PLAYER_MP5, // mp5
-	BULLET_PLAYER_357, // python
-	BULLET_PLAYER_BUCKSHOT, // shotgun
-	BULLET_PLAYER_CROWBAR, // crowbar swipe
-
-	BULLET_MONSTER_9MM,
-	BULLET_MONSTER_MP5,
-	BULLET_MONSTER_12MM,
-} Bullet;
+//MODDD - 'bullet types' enum moved to util_shared.
+// ALSO - several things already seen in weapon script files (like some macros and enums for sequences)
+// moved to their respective new dlls/<specific weapon>.h files to avoid redundancy, since a lot of this was
+// already in their own dlls/<specific weapon>.cpp files.
+// Including those files as needed in ev_hldm.cpp or hl/hl_weapons.cpp will get the same effect as before
+// without requiring duplicates like it used to be.
 
 enum glock_e {
 	GLOCK_IDLE1 = 0,
@@ -73,21 +65,6 @@ enum python_e {
 	PYTHON_DRAW,
 	PYTHON_IDLE2,
 	PYTHON_IDLE3
-};
-
-#define	GAUSS_PRIMARY_CHARGE_VOLUME	256// how loud gauss is while charging
-#define GAUSS_PRIMARY_FIRE_VOLUME	450// how loud gauss is when discharged
-
-enum gauss_e {
-	GAUSS_IDLE = 0,
-	GAUSS_IDLE2,
-	GAUSS_FIDGET,
-	GAUSS_SPINUP,
-	GAUSS_SPIN,
-	GAUSS_FIRE,
-	GAUSS_FIRE2,
-	GAUSS_HOLSTER,
-	GAUSS_DRAW
 };
 
 

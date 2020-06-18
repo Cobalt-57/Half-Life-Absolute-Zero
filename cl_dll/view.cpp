@@ -16,7 +16,6 @@
 #include "entity_state.h"
 #include "cl_entity.h"
 #include "ref_params.h"
-#include "in_defs.h" // PITCH YAW ROLL
 #include "pm_movevars.h"
 #include "pm_shared.h"
 #include "pm_defs.h"
@@ -33,27 +32,30 @@ extern globalvars_t  *gpGlobals;
 //EASY_CVAR_EXTERN_CLIENT_MASS
 
 
-extern float global2_cheat_minimumfiredelay;
+EASY_CVAR_EXTERN(cheat_minimumfiredelay)
 
-extern float global2_myCameraSucks;
-
-
-extern float global2_cameraPosFixedX;
-extern float global2_cameraPosFixedY;
-extern float global2_cameraPosFixedZ;
-
-extern float global2_cameraRotFixedX;
-extern float global2_cameraRotFixedY;
-extern float global2_cameraRotFixedZ;
+EASY_CVAR_EXTERN(myCameraSucks)
 
 
-extern float global2_cameraPosOffX;
-extern float global2_cameraPosOffY;
-extern float global2_cameraPosOffZ;
+EASY_CVAR_EXTERN(cameraPosFixedX)
+EASY_CVAR_EXTERN(cameraPosFixedY)
+EASY_CVAR_EXTERN(cameraPosFixedZ)
 
-extern float global2_cameraRotOffX;
-extern float global2_cameraRotOffY;
-extern float global2_cameraRotOffZ;
+EASY_CVAR_EXTERN(cameraRotFixedX)
+EASY_CVAR_EXTERN(cameraRotFixedY)
+EASY_CVAR_EXTERN(cameraRotFixedZ)
+
+
+EASY_CVAR_EXTERN(cameraPosOffX)
+EASY_CVAR_EXTERN(cameraPosOffY)
+EASY_CVAR_EXTERN(cameraPosOffZ)
+
+EASY_CVAR_EXTERN(cameraRotOffX)
+EASY_CVAR_EXTERN(cameraRotOffY)
+EASY_CVAR_EXTERN(cameraRotOffZ)
+
+EASY_CVAR_EXTERN(playerBarnacleVictimViewOffset)
+EASY_CVAR_EXTERN(cl_viewpunch)
 
 
 extern void command_updateCameraPerspectiveF(void);
@@ -63,10 +65,6 @@ extern float global2PSEUDO_IGNOREcameraMode;
 
 extern float global2PSEUDO_grabbedByBarancle;
 
-extern float global2_playerBarnacleVictimViewOffset;
-
-EASY_CVAR_EXTERN(cl_viewpunch)
-		
 
 
 		
@@ -92,7 +90,7 @@ extern "C"
 	int CL_IsThirdPerson( void );
 	void CL_CameraOffset( float *ofs );
 
-	void DLLEXPORT V_CalcRefdef( struct ref_params_s *pparams );
+	void DLLEXPORT_2 V_CalcRefdef( struct ref_params_s *pparams );
 
 	void PM_ParticleLine( float *start, float *end, int pcolor, float life, float vert);
 	int		PM_GetVisEntInfo( int ent );
@@ -548,7 +546,7 @@ void V_CalcNormalRefdef ( struct ref_params_s *pparams )
 	
 
 	
-	if(global2_myCameraSucks == 1){
+	if(EASY_CVAR_GET(myCameraSucks) == 1){
 		return;
 	}
 	cl_entity_t		*ent, *view;
@@ -796,7 +794,7 @@ void V_CalcNormalRefdef ( struct ref_params_s *pparams )
 	//MODDD - only use the punch if the "minimumfiredelay" cheat is off.  This way, rapid fire doesn't
 	//distort the real damage-point.
 	// Also we have another CVar just for stopping viewpunch.  Sometimes we don't need that distraction.
-	if( global2_cheat_minimumfiredelay != 1 && EASY_CVAR_GET(cl_viewpunch) != 0  ){
+	if( EASY_CVAR_GET(cheat_minimumfiredelay) != 1 && EASY_CVAR_GET(cl_viewpunch) != 0  ){
 		VectorAdd ( pparams->viewangles, (float *)&ev_punchangle, pparams->viewangles);
 	}else{
 
@@ -929,43 +927,43 @@ void V_CalcNormalRefdef ( struct ref_params_s *pparams )
 	}
 
 
-	if(global2_myCameraSucks == 2 || global2_myCameraSucks == 4){
+	if(EASY_CVAR_GET(myCameraSucks) == 2 || EASY_CVAR_GET(myCameraSucks) == 4){
 		//let's rely on the CVars for the camera's position.
 
-		if(global2_cameraPosFixedX == -1){
-			pparams->vieworg[0] = ent->origin[0] + global2_cameraPosOffX;
+		if(EASY_CVAR_GET(cameraPosFixedX) == -1){
+			pparams->vieworg[0] = ent->origin[0] + EASY_CVAR_GET(cameraPosOffX);
 		}else{
-			pparams->vieworg[0] = global2_cameraPosFixedX;
+			pparams->vieworg[0] = EASY_CVAR_GET(cameraPosFixedX);
 		}
-		if(global2_cameraPosFixedY == -1){
-			pparams->vieworg[1] = ent->origin[1] + global2_cameraPosOffY;
+		if(EASY_CVAR_GET(cameraPosFixedY) == -1){
+			pparams->vieworg[1] = ent->origin[1] + EASY_CVAR_GET(cameraPosOffY);
 		}else{
-			pparams->vieworg[1] = global2_cameraPosFixedY;
+			pparams->vieworg[1] = EASY_CVAR_GET(cameraPosFixedY);
 		}
-		if(global2_cameraPosFixedZ == -1){
-			pparams->vieworg[2] = ent->origin[2] + global2_cameraPosOffZ;
+		if(EASY_CVAR_GET(cameraPosFixedZ) == -1){
+			pparams->vieworg[2] = ent->origin[2] + EASY_CVAR_GET(cameraPosOffZ);
 		}else{
-			pparams->vieworg[2] = global2_cameraPosFixedZ;
+			pparams->vieworg[2] = EASY_CVAR_GET(cameraPosFixedZ);
 		}
-		if(global2_cameraRotFixedX == -1){
-			pparams->viewangles[0] = ent->angles[0] + global2_cameraRotOffX;
+		if(EASY_CVAR_GET(cameraRotFixedX) == -1){
+			pparams->viewangles[0] = ent->angles[0] + EASY_CVAR_GET(cameraRotOffX);
 		}else{
-			pparams->viewangles[0] = global2_cameraRotFixedX;
+			pparams->viewangles[0] = EASY_CVAR_GET(cameraRotFixedX);
 		}
-		if(global2_cameraRotFixedY == -1){
-			pparams->viewangles[1] = ent->angles[1] + global2_cameraRotOffY;
+		if(EASY_CVAR_GET(cameraRotFixedY) == -1){
+			pparams->viewangles[1] = ent->angles[1] + EASY_CVAR_GET(cameraRotOffY);
 		}else{
-			pparams->viewangles[1] = global2_cameraRotFixedY;
+			pparams->viewangles[1] = EASY_CVAR_GET(cameraRotFixedY);
 		}
-		if(global2_cameraRotFixedZ == -1){
-			pparams->viewangles[2] = ent->angles[2] + global2_cameraRotOffZ;
+		if(EASY_CVAR_GET(cameraRotFixedZ) == -1){
+			pparams->viewangles[2] = ent->angles[2] + EASY_CVAR_GET(cameraRotOffZ);
 		}else{
-			pparams->viewangles[2] = global2_cameraRotFixedZ;
+			pparams->viewangles[2] = EASY_CVAR_GET(cameraRotFixedZ);
 		}
 	}
 	
 	/*
-	if(global2_myCameraSucks == 2){
+	if(EASY_CVAR_GET(myCameraSucks) == 2){
 		//Top-down time!
 		//up / down?
 		pparams->viewangles[0] = 90;
@@ -975,7 +973,7 @@ void V_CalcNormalRefdef ( struct ref_params_s *pparams )
 		pparams->viewangles[2] = 0;
 		pparams->vieworg[2] = ent->origin[2] + 260;
 	}
-	if(CVAR_GET_FLOAT("global2_myCameraSucks") == 3){
+	if(EASY_CVAR_GET(myCameraSucks) == 3){
 		//Top-down time, but rotate so that the top of the screen is where the player is facing.
 		//up / down?
 		pparams->viewangles[0] = 90;
@@ -986,7 +984,7 @@ void V_CalcNormalRefdef ( struct ref_params_s *pparams )
 		//easyPrintLine("PRINTOUT SON! %.2f %.2f %.2f", pparams->viewangles[0], pparams->viewangles[1], pparams->viewangles[2]);
 		pparams->vieworg[2] = ent->origin[2] + 260;
 	}
-	if(CVAR_GET_FLOAT("global2_myCameraSucks") == 4){
+	if(EASY_CVAR_GET(myCameraSucks) == 4){
 		//Top-down time, but rotate so that the top of the screen is where the player is facing.
 		//up / down?
 		pparams->viewangles[0] = 90;
@@ -999,7 +997,7 @@ void V_CalcNormalRefdef ( struct ref_params_s *pparams )
 	}
 	*/
 
-	if(global2_myCameraSucks == 3 || global2_myCameraSucks == 4){
+	if(EASY_CVAR_GET(myCameraSucks) == 3 || EASY_CVAR_GET(myCameraSucks) == 4){
 		easyPrintLine("PRINTOUT SON! %.2f %.2f %.2f", pparams->viewangles[0], pparams->viewangles[1], pparams->viewangles[2]);
 	}
 	
@@ -1010,12 +1008,12 @@ void V_CalcNormalRefdef ( struct ref_params_s *pparams )
 	
 	if(global2PSEUDO_grabbedByBarancle){
 		//CAMERA LOCATION
-		pparams->vieworg[0] += global2_playerBarnacleVictimViewOffset*cos( pparams->viewangles[1] * degreesToRadsMulti);
-		pparams->vieworg[1] += global2_playerBarnacleVictimViewOffset*sin( pparams->viewangles[1] * degreesToRadsMulti);
+		pparams->vieworg[0] += EASY_CVAR_GET(playerBarnacleVictimViewOffset)*cos( pparams->viewangles[1] * degreesToRadsMulti);
+		pparams->vieworg[1] += EASY_CVAR_GET(playerBarnacleVictimViewOffset)*sin( pparams->viewangles[1] * degreesToRadsMulti);
 	
 		//FIRST PERSON MODEL LOCATION
-		view->origin[0] += global2_playerBarnacleVictimViewOffset*cos( pparams->viewangles[1] * degreesToRadsMulti);
-		view->origin[1] += global2_playerBarnacleVictimViewOffset*sin( pparams->viewangles[1] * degreesToRadsMulti);
+		view->origin[0] += EASY_CVAR_GET(playerBarnacleVictimViewOffset)*cos( pparams->viewangles[1] * degreesToRadsMulti);
+		view->origin[1] += EASY_CVAR_GET(playerBarnacleVictimViewOffset)*sin( pparams->viewangles[1] * degreesToRadsMulti);
 	}
 
 
@@ -1485,7 +1483,8 @@ void V_GetChasePos(int target, float * cl_angles, float * origin, float * angles
 
 		VectorCopy ( ent->origin, origin);
 		
-		origin[2]+= 28; // DEFAULT_VIEWHEIGHT - some offset
+		//MODDD - actual constant used, why not.
+		origin[2]+= DEFAULT_VIEWHEIGHT; // DEFAULT_VIEWHEIGHT - some offset
 
 		V_GetChaseOrigin( angles, origin, cl_chasedist->value, origin );
 	}
@@ -1526,11 +1525,11 @@ void V_GetInEyePos(int target, float * origin, float * angles )
 		origin[2]+= -8 ; // PM_DEAD_VIEWHEIGHT
 	}
 	else if (ent->curstate.usehull == 1 )
-		origin[2]+= 12; // VEC_DUCK_VIEW;
+		origin[2]+= VEC_DUCK_VIEW_Z; //MODDD - constant used, why not.
 	else
 		// exacty eye position can't be caluculated since it depends on
 		// client values like cl_bobcycle, this offset matches the default values
-		origin[2]+= 28; // DEFAULT_VIEWHEIGHT
+		origin[2]+= DEFAULT_VIEWHEIGHT; //MODDD - constant used, why not.
 }
 
 void V_GetMapFreePosition( float * cl_angles, float * origin, float * angles )
@@ -1818,7 +1817,7 @@ void V_CalcSpectatorRefdef ( struct ref_params_s * pparams )
 
 
 
-void DLLEXPORT V_CalcRefdef( struct ref_params_s *pparams )
+void DLLEXPORT_2 V_CalcRefdef( struct ref_params_s *pparams )
 {
 	// intermission / finale rendering
 	if ( pparams->intermission )

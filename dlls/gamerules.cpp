@@ -410,7 +410,11 @@ void CGameRules::RefreshSkillData ( void )
 CGameRules *InstallGameRules( void )
 {
 	SERVER_COMMAND( "exec game.cfg\n" );
-	SERVER_EXECUTE( );
+	
+	//MODDD - name changed, conflicted with a windows API call in
+	// VS6.
+	GOLDSRC_SERVER_EXECUTE( );
+
 
 	if ( !gpGlobals->deathmatch )
 	{

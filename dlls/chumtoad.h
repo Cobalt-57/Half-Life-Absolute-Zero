@@ -86,6 +86,8 @@ class CChumToad : public CBaseMonster{
     CChumToad(void);
 
 
+	int ObjectCaps(void) { return CBaseMonster::ObjectCaps() | FCAP_IMPULSE_USE; }
+
 	void HandleEventQueueEvent(int arg_eventID);
 
 	void SetYawSpeed(void);
@@ -147,6 +149,12 @@ class CChumToad : public CBaseMonster{
 
 	float massInfluence(void);
 	int GetProjectileType(void);
+	
+	Vector GetVelocityLogical(void);
+	void SetVelocityLogical(const Vector& arg_newVelocity);
+
+	void OnDeflected(CBaseEntity* arg_entDeflector);
+
 
 	void OnTakeDamageSetConditions(entvars_t *pevInflictor, entvars_t *pevAttacker, float flDamage, int bitsDamageType, int bitsDamageTypeMod);
 	
@@ -197,6 +205,8 @@ class CChumToad : public CBaseMonster{
 
 	
 	void EXPORT ChumToadTouch ( CBaseEntity *pOther );
+	void EXPORT PickupUse(CBaseEntity* pActivator, CBaseEntity* pCaller, USE_TYPE useType, float value);
+
 	void SetActivity ( Activity NewActivity );
 
 
@@ -207,6 +217,7 @@ class CChumToad : public CBaseMonster{
 	void RunTask ( Task_t *pTask );
 	
 	float HearingSensitivity();
+	BOOL bypassAllowMonstersSpawnCheck(void);
 
 
 

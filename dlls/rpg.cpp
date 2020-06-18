@@ -15,8 +15,17 @@
 
 
 
+
+
+
 //MODDDD TODO - 
 /*
+  0. Rockets check to see if there is any entity with classname "laser_spot" at all.
+     In multiplayer, does that mean rockets will arbitrarily pick one laser spot to follow if both are
+	 a straight-line away? There isn't a distance check for which is closer or which player created
+	 a particular laser_spot (for only following my player's laser_spot).
+
+
   1. FIRING UNDERWATER IS STILL POSSIBLE (since retail).  Should it stay this way?
 
 
@@ -60,12 +69,11 @@
 
 //extern:
 extern unsigned short g_sTrailRA;
-extern float global_cl_rockettrail;
-extern float global_rocketSkipIgnite;
+EASY_CVAR_EXTERN(cl_rockettrail)
+EASY_CVAR_EXTERN(rocketSkipIgnite)
 
 EASY_CVAR_EXTERN(myRocketsAreBarney)
 
-	
 
 //MODDD - don't ask.
 void saySomethingBarneyRocket(CBaseEntity* entRef);
@@ -161,11 +169,27 @@ LINK_ENTITY_TO_CLASS( rpg_rocket, CRpgRocket );
 CRpgRocket::CRpgRocket(void){
 
 	//don't touch vecMoveDirectionMemory, it gets set when the entity's spawned.
-
+	
 	ignited = FALSE;
 	alreadyDeleted = FALSE;
+	forceDumb = FALSE;
+
 }//END OF CRpgRocket constructor
 
+// NOTICE - CRpgRocket is already sitting in a completely serverside 'ifdef' check.
+TYPEDESCRIPTION	CRpgRocket::m_SaveData[] =
+{
+	DEFINE_FIELD(CRpgRocket, m_flIgniteTime, FIELD_TIME),
+	DEFINE_FIELD(CRpgRocket, m_pLauncher, FIELD_CLASSPTR),
+	//MODDD - new
+	DEFINE_FIELD(CRpgRocket, alreadyDeleted, FIELD_BOOLEAN),
+	DEFINE_FIELD(CRpgRocket, ignited, FIELD_BOOLEAN),
+	DEFINE_FIELD(CRpgRocket, vecMoveDirectionMemory, FIELD_VECTOR),
+	DEFINE_FIELD(CRpgRocket, forceDumb, FIELD_BOOLEAN),
+
+
+};
+IMPLEMENT_SAVERESTORE(CRpgRocket, CGrenade);
 
 //=========================================================
 //=========================================================
@@ -355,7 +379,7 @@ void CRpgRocket :: Spawn( void )
 	SetTouch( &CGrenade::ExplodeTouch );
 
 
-	if(global_rocketSkipIgnite != 1){
+	if(EASY_CVAR_GET(rocketSkipIgnite) != 1){
 
 		if(EASY_CVAR_GET(myRocketsAreBarney) != 1){
 			pev->angles.x -= 30;
@@ -454,6 +478,27 @@ int CRpgRocket::GetProjectileType(void){
 }
 
 
+
+Vector CRpgRocket::GetVelocityLogical(void){
+
+	//probably fine?
+	return pev->velocity;
+}
+//Likewise, if something else wants to change our velocity, and we pay more attention to something other than pev->velocty,
+//we need to apply the change to that instead.  Or both, leaving that up to the thing implementing this.
+void CRpgRocket::SetVelocityLogical(const Vector& arg_newVelocity){
+	pev->velocity = arg_newVelocity;
+	vecMoveDirectionMemory = arg_newVelocity;
+}
+
+void CRpgRocket::OnDeflected(CBaseEntity* arg_entDeflector){
+	//Tell me to stop following behavior.
+	forceDumb = TRUE;
+}
+
+
+
+
 //=========================================================
 //=========================================================
 void CRpgRocket :: Precache( void )
@@ -481,7 +526,7 @@ void CRpgRocket :: IgniteThink( void  )
 
 	pev->movetype = MOVETYPE_FLY;
 	
-	if(global_cl_rockettrail == 0 || global_cl_rockettrail == 2){
+	if(EASY_CVAR_GET(cl_rockettrail) == 0 || EASY_CVAR_GET(cl_rockettrail) == 2){
 		pev->effects |= EF_LIGHT;
 	}
 	ignited = TRUE;
@@ -495,7 +540,7 @@ void CRpgRocket :: IgniteThink( void  )
 
 
 
-	if(global_cl_rockettrail == 0){
+	if(EASY_CVAR_GET(cl_rockettrail) == 0){
 		//EASY_CVAR_GET(myRocketsAreBarney) == 1
 
 		//MODDD - can we make the end of the trail disappear right at the moment of impact so it doesn't teleport to the explosion's inevitable offset away from the hit surface?
@@ -516,7 +561,7 @@ void CRpgRocket :: IgniteThink( void  )
 
 		MESSAGE_END();  // move PHS/PVS data sending into here (SEND_ALL, SEND_PVS, SEND_PHS)
 
-	}else if(global_cl_rockettrail == 1){
+	}else if(EASY_CVAR_GET(cl_rockettrail) == 1){
 
 		//g_sTrailRA
 		PLAYBACK_EVENT_FULL (FEV_GLOBAL, this->edict(), g_sTrailRA, 0.0, 
@@ -553,25 +598,32 @@ void CRpgRocket :: FollowThink( void  )
 	flMax = 4096;
 	
 	// Examine all entities within a reasonable radius
-	while ((pOther = UTIL_FindEntityByClassname( pOther, "laser_spot" )) != NULL)
-	{
-		UTIL_TraceLine ( pev->origin, pOther->pev->origin, dont_ignore_monsters, ENT(pev), &tr );
-		// ALERT( at_console, "%f\n", tr.flFraction );
-		if (tr.flFraction >= 0.90)
+
+	//MODDD - new. Enforce this check first.
+	if(forceDumb == FALSE){
+
+		while ((pOther = UTIL_FindEntityByClassname( pOther, "laser_spot" )) != NULL)
 		{
-			vecDir = pOther->pev->origin - pev->origin;
-			flDist = vecDir.Length( );
-			vecDir = vecDir.Normalize( );
-			flDot = DotProduct( gpGlobals->v_forward, vecDir );
-			if ((flDot > 0) && (flDist * (1 - flDot) < flMax))
+			UTIL_TraceLine ( pev->origin, pOther->pev->origin, dont_ignore_monsters, ENT(pev), &tr );
+			// ALERT( at_console, "%f\n", tr.flFraction );
+			if (tr.flFraction >= 0.90)
 			{
-				flMax = flDist * (1 - flDot);
-				//MODDD - ye.
-				//vecTarget = vecDir;
-				vecMoveDirectionMemory = vecDir;
+				vecDir = pOther->pev->origin - pev->origin;
+				flDist = vecDir.Length( );
+				vecDir = vecDir.Normalize( );
+				flDot = DotProduct( gpGlobals->v_forward, vecDir );
+				if ((flDot > 0) && (flDist * (1 - flDot) < flMax))
+				{
+					flMax = flDist * (1 - flDot);
+					//MODDD - ye.
+					//vecTarget = vecDir;
+					vecMoveDirectionMemory = vecDir;
+				}
 			}
 		}
-	}
+
+	}//END OF forceDumb check
+
 
 	//MODDD - actually this is fine.  buuuuut
 	//pev->angles = UTIL_VecToAngles( vecTarget );
@@ -626,7 +678,7 @@ void CRpgRocket :: FollowThink( void  )
 		//if (pev->effects & EF_LIGHT)
 		if(ignited)
 		{
-			if(global_cl_rockettrail == 0){
+			if(EASY_CVAR_GET(cl_rockettrail) == 0){
 				pev->effects = 0;
 			}
 			ignited = FALSE;
@@ -647,7 +699,36 @@ void CRpgRocket :: FollowThink( void  )
 
 	pev->nextthink = gpGlobals->time + 0.1;
 }
+#endif //END OF MASSIVE not CLIENT_DLL CHECK.  Which is all of CRpgRocket.
+
+
+
+
+
+
+
+
+
+
+//..... no RPG constructor.  what.
+CRpg::CRpg(void) {
+
+
+
+}//END OF CRpg constructor
+
+
+
+// Save/restore for serverside only!
+#ifndef CLIENT_DLL
+TYPEDESCRIPTION	CRpg::m_SaveData[] =
+{
+	DEFINE_FIELD(CRpg, m_fSpotActive, FIELD_INTEGER),
+	DEFINE_FIELD(CRpg, m_cActiveRockets, FIELD_INTEGER),
+};
+IMPLEMENT_SAVERESTORE(CRpg, CBasePlayerWeapon);
 #endif
+
 
 
 

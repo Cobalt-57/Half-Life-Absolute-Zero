@@ -55,17 +55,17 @@ __declspec(naked) void DropShadows(void)
 
 
 //MODDD - extern
-extern float global2_chromeEffect;
-extern float global2_mirrorsReflectOnlyNPCs;
-extern float global2_mirrorsDoNotReflectPlayer;
-extern float global2_r_shadows;
+EASY_CVAR_EXTERN(chromeEffect)
+EASY_CVAR_EXTERN(mirrorsReflectOnlyNPCs)
+EASY_CVAR_EXTERN(mirrorsDoNotReflectPlayer)
+EASY_CVAR_EXTERN(r_shadows)
+EASY_CVAR_EXTERN(cl_server_interpolation)
+EASY_CVAR_EXTERN(drawViewModel)
+EASY_CVAR_EXTERN(r_glowshell_debug)
 
 extern float global2PSEUDO_IGNOREcameraMode;
-EASY_CVAR_EXTERN(drawViewModel);
 
-extern float global2_cl_server_interpolation;
 
-EASY_CVAR_EXTERN(r_glowshell_debug)
 
 
 
@@ -1410,8 +1410,8 @@ void CStudioModelRenderer::StudioSetupBones ( byte isReflection )
 
 
 
-				//if(global2_chromeEffect != 1 || !(m_pCurrentEntity->curstate.renderfx & ISVIEWMODEL) ){
-				if(global2_chromeEffect != 1){
+				//if(EASY_CVAR_GET(chromeEffect) != 1 || !(m_pCurrentEntity->curstate.renderfx & ISVIEWMODEL) ){
+				if(EASY_CVAR_GET(chromeEffect) != 1){
 					// MatrixCopy should be faster...
 					//ConcatTransforms ((*m_protationmatrix), bonematrix, (*m_plighttransform)[i]);
 					MatrixCopy( (*m_pbonetransform)[i], (*m_plighttransform)[i] );
@@ -1484,8 +1484,8 @@ void CStudioModelRenderer::StudioSetupBones ( byte isReflection )
 				}
 				*/
 
-				//if(global2_chromeEffect != 1 || !(m_pCurrentEntity->curstate.renderfx & ISVIEWMODEL) ){
-				if(global2_chromeEffect != 1){
+				//if(EASY_CVAR_GET(chromeEffect) != 1 || !(m_pCurrentEntity->curstate.renderfx & ISVIEWMODEL) ){
+				if(EASY_CVAR_GET(chromeEffect) != 1){
 
 					/*
 					//no, let it fall through from the previous time (likely StudioSetUpTransform)
@@ -1741,8 +1741,8 @@ int CStudioModelRenderer::StudioDrawModel( int flags )
 	
 
 
-	//easyPrintLineDummy("OH no MY friend %.2f %.2f", global2PSEUDO_IGNOREcameraMode, global2_mirrorsDoNotReflectPlayer);
-	if(  global2PSEUDO_IGNOREcameraMode == 0 && global2_mirrorsDoNotReflectPlayer != 1)
+	//easyPrintLineDummy("OH no MY friend %.2f %.2f", global2PSEUDO_IGNOREcameraMode, EASY_CVAR_GET(mirrorsDoNotReflectPlayer));
+	if(  global2PSEUDO_IGNOREcameraMode == 0 && EASY_CVAR_GET(mirrorsDoNotReflectPlayer) != 1)
 	{
 		if (!b_PlayerMarkerParsed)
 		{
@@ -2147,7 +2147,7 @@ int CStudioModelRenderer::StudioDrawModel( int flags )
 	
 
 	int canReflect = TRUE;
-	if(global2_mirrorsReflectOnlyNPCs == 1 && !(m_pCurrentEntity->curstate.renderfx & ISNPC) && !(m_pCurrentEntity->curstate.renderfx & ISPLAYER)  ){
+	if(EASY_CVAR_GET(mirrorsReflectOnlyNPCs) == 1 && !(m_pCurrentEntity->curstate.renderfx & ISNPC) && !(m_pCurrentEntity->curstate.renderfx & ISPLAYER)  ){
 		//if this CVar is on and this entity is not an npc, skip drawing to mirror.
 		canReflect = FALSE;
 	}
@@ -2546,10 +2546,10 @@ int CStudioModelRenderer::StudioDrawPlayer( int flags, entity_state_t *pplayer )
 
 
 	
-	//if(m_pCurrentEntity->curstate.renderfx & ISPLAYER)easyPrintLineDummy("MY friendAA %.2f %.2f", global2PSEUDO_IGNOREcameraMode, global2_mirrorsDoNotReflectPlayer);
+	//if(m_pCurrentEntity->curstate.renderfx & ISPLAYER)easyPrintLineDummy("MY friendAA %.2f %.2f", global2PSEUDO_IGNOREcameraMode, EASY_CVAR_GET(mirrorsDoNotReflectPlayer));
 
 	//in third person and we're told not to reflect the player? Don't do that then.
-	if( (m_pCurrentEntity->curstate.renderfx & ISPLAYER) && global2PSEUDO_IGNOREcameraMode == 1 && global2_mirrorsDoNotReflectPlayer == 1) {
+	if( (m_pCurrentEntity->curstate.renderfx & ISPLAYER) && global2PSEUDO_IGNOREcameraMode == 1 && EASY_CVAR_GET(mirrorsDoNotReflectPlayer) == 1) {
 		//easyPrintLine("STATUS: %d %d", (int)CVAR_GET_FLOAT("IGNOREcameraMode"), (int)CVAR_GET_FLOAT("mirrorsDoNotReflectPlayer"));
 		canReflect = FALSE;
 	}
@@ -3151,7 +3151,7 @@ void CStudioModelRenderer::StudioRenderFinal_Hardware( void )
 			GL_StudioDrawShadow_Old = (void(*)(void))(((unsigned int)IEngineStudio.GL_StudioDrawShadow) + 32);
 
 			//MODDD TODO - we also have a viewmodel check too, but regardless.
-			if (global2_r_shadows == 1 && gEngfuncs.GetViewModel() != m_pCurrentEntity) // FIX : Avoid view model
+			if (EASY_CVAR_GET(r_shadows) == 1 && gEngfuncs.GetViewModel() != m_pCurrentEntity) // FIX : Avoid view model
 			{
 				//DropShadows();
 				

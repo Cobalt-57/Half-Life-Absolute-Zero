@@ -15,8 +15,6 @@
 #include "player.h"
 #include "soundent.h"
 #include "gamerules.h"
-//
-#include "basemonster.h"
 
 
 
@@ -52,6 +50,11 @@ class CChumToadWeapon : public CBasePlayerWeapon{
 
 	//MODDD
 	CChumToadWeapon(void);
+
+	// No need for save/restore stuff it seems?
+	// If ever supported do checks for 'ifndef CLIENT_DLL', since those are serverside only
+	// for all player weapons.
+
 	BOOL usesSoundSentenceSave(void);
 
 
@@ -60,10 +63,9 @@ class CChumToadWeapon : public CBasePlayerWeapon{
 
 
 
-
 	void EXPORT FallThinkCustom ( void );
 	const char* GetPickupWalkerName(void);
-	void Spawn( void );
+	virtual void Spawn( void );
 	//void AttachToPlayer ( CBasePlayer *pPlayer );
 	void FallInit( void );
 	void EXPORT ItemRotate ( void );
@@ -105,7 +107,6 @@ private:
 	static int numberOfEyeSkins;
 
 };//END OF CChumToadWeapon
-
 
 
 #endif //END OF #ifdef CHUMTOADWEAPON_H

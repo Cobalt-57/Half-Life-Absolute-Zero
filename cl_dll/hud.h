@@ -50,6 +50,11 @@
 //CHudAmmo moved to ammo.h.
 
 
+
+
+extern float globalPSEUDO_autoDeterminedFOV;
+
+
 //
 //-----------------------------------------------------
 //
@@ -530,7 +535,12 @@ public:
 	Vector	m_vecAngles;
 	int		m_iKeyBits;
 	int		m_iHideHUDDisplay;
-	int		m_iFOV;
+
+	//MODDD - was "m_iFOV", renamed to "m_iPlayerFOV".
+	// To differentiate it from the player class's (dlls/player.h) own "m_iFOV", which can also occur
+	// since player.h is shared.
+	int		m_iPlayerFOV;
+
 	int		m_Teamplay;
 	int		m_iRes;
 	cvar_t  *m_pCvarStealMouse;
@@ -600,8 +610,6 @@ public:
 
 	//MODDD - temp method
 	//void tempGetHudMainRef(CHudBase* tempRef);
-	cvar_t* toggleLogo;
-	cvar_t* showBrokenHUDAlpha;
 	//cvar_t* testVar;
 
 	//moved to const system.
@@ -627,13 +635,6 @@ private:
 
 	struct cvar_s *default_fov;
 
-	//MODDD - new
-	//struct cvar_s *auto_adjust_zoomfov;
-	//struct cvar_s *auto_adjust_fov_aspect;
-	//struct cvar_s *python_zoomfov;
-	//struct cvar_s *crossbow_zoomfov;
-	//struct cvar_s *revolverLaserScope;
-	//struct cvar_s *aspectratio_determined_fov;
 	//struct cvar_s *cvarHUD_letswatchamovie;
 
 public:
@@ -754,6 +755,21 @@ public:
 	void AddHudElem(CHudBase *p);
 
 	float GetSensitivity();
+
+	//MODDD - ALSO, complementary method to go along player.h's "getBaseFOV", using our raw
+	// access to the player's CVars instead of the player's serverside info.
+	inline float getPlayerBaseFOV(void) {
+		if (EASY_CVAR_GET(auto_adjust_fov) == 0) {
+			// don't use the auto one then.
+			return EASY_CVAR_GET(default_fov);
+		}
+		else {
+			// use the one related to screensize.
+			return globalPSEUDO_autoDeterminedFOV;
+		}
+	}//END OF getBaseFOV
+
+
 
 };
 

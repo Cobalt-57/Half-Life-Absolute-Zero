@@ -1,5 +1,10 @@
 
 
+
+#include "externalLibInclude.h"
+//#include <stdio.h>
+
+
 #include "custom_message.h" //what. how were we fine without this.
 #include "hud.h"
 #include "cl_util.h"
@@ -7,7 +12,6 @@
 //#include "pm_shared.h"
 
 #include <string.h>
-#include <stdio.h>
 
 /*
 #include "STDIO.H"
@@ -43,10 +47,11 @@ extern int stored_m_fJustThrown;
 
 
 
-
+EASY_CVAR_EXTERN(canShowWeaponSelectAtDeath)
 
 extern float global2PSEUDO_grabbedByBarancle;
-extern float global2_canShowWeaponSelectAtDeath;
+
+
 
 EASY_CVAR_EXTERN_HASH_ARRAY
 
@@ -60,10 +65,12 @@ DECLARE_MESSAGE( m_CustomMessage, JBoxReq )
 DECLARE_MESSAGE( m_CustomMessage, JBoxOff )
 DECLARE_MESSAGE( m_CustomMessage, AutoMus )
 DECLARE_MESSAGE( m_CustomMessage, CliTest)
+DECLARE_MESSAGE( m_CustomMessage, FirstAppr)
+DECLARE_MESSAGE( m_CustomMessage, ResetCVars)
 DECLARE_MESSAGE( m_CustomMessage, UpdClientC )
 DECLARE_MESSAGE( m_CustomMessage, RstClientC )
 DECLARE_MESSAGE( m_CustomMessage, PntClientC )
-DECLARE_MESSAGE( m_CustomMessage, RetrieveFOV )
+//DECLARE_MESSAGE( m_CustomMessage, RetrieveFOV )
 DECLARE_MESSAGE( m_CustomMessage, UpdBnclStat )
 DECLARE_MESSAGE( m_CustomMessage, UpdPlyA)
 DECLARE_MESSAGE( m_CustomMessage, MUnpause)
@@ -90,10 +97,12 @@ int CCustomMessage::Init(void){
 	HOOK_MESSAGE(JBoxOff);
 	HOOK_MESSAGE(AutoMus);
 	HOOK_MESSAGE(CliTest);
+	HOOK_MESSAGE(FirstAppr);
+	HOOK_MESSAGE(ResetCVars);
 	HOOK_MESSAGE(UpdClientC);
 	HOOK_MESSAGE(RstClientC);
 	HOOK_MESSAGE(PntClientC);
-	HOOK_MESSAGE(RetrieveFOV);
+	//HOOK_MESSAGE(RetrieveFOV);
 	HOOK_MESSAGE(UpdBnclStat);
 	//HOOK_MESSAGE(UpdateCam);
 	HOOK_MESSAGE(UpdPlyA);
@@ -205,16 +214,44 @@ int CCustomMessage::MsgFunc_CliTest(const char *pszName, int iSize, void *pbuf){
 
 
 
+int CCustomMessage::MsgFunc_FirstAppr(const char* pszName, int iSize, void* pbuf) {
+	// Keep vars the server gets from the client in-check!
+	lateCVarInit();
 
+	return 1;
+}//END OF MsgFunc_ResetCVars
 
+// Called by the server resetting client CVars for a particular player.  Well, do it!
+int CCustomMessage::MsgFunc_ResetCVars(const char* pszName, int iSize, void* pbuf){
+	EASY_CVAR_SET(hud_logo, 0);
+	EASY_CVAR_SET(cl_fvox, 1);
+	
+	return 1;
+}//END OF MsgFunc_ResetCVars
 
 
 
 int CCustomMessage::MsgFunc_UpdClientC(const char *pszName, int iSize, void *pbuf){
 #ifdef _DEBUG
-
 //nothing to do here. This should never be called, this feature is unused for Debug mode.
 //It already treats everything as ordinary CVars.
+//CHANGE.  Even CVars have to be broadcasted from the server to the client for multipalyer to work right for
+// players that join a game (as opposed to single-player or a player running the non-dedicated server).
+// Point is, non-server running players don't get access to server-registered CVars, so they need to receive
+// up-to-date values of them anytime they're changed for access (being cached clientside) for stuff that needs
+// access to the same CVars clientside read-only, like almost any CVar involved with weapons, animations, submodels
+// (wpn_allowGlockSilencer or whatever), etc.
+
+	BEGIN_READ(pbuf, iSize);
+
+	int argID = READ_SHORT();
+	int argPRE = READ_SHORT();
+	float arg = ((float)(argPRE)) / 100.0f;
+
+	//????????????????
+
+	*(aryCVarHash[argID]) = arg;
+	easyForcePrintLine("CVAR DEBUG: Client: found ID %d. Set CVar %s to %.2f", argID, aryCVarHashName[argID], arg);
 
 #else
 	//Need to update hidden CVars meant to be broadcasted to clients. Receive the new value(s) here.
@@ -228,11 +265,11 @@ int CCustomMessage::MsgFunc_UpdClientC(const char *pszName, int iSize, void *pbu
 	//????????????????
 
 
-	//if(global2_hiddenMemPrintout == 1)easyForcePrintLine("CVAR DEBUG: Client: Received ID %d, newval %.2f", argID, arg);
+	//if(EASY_CVAR_GET(hiddenMemPrintout) == 1)easyForcePrintLine("CVAR DEBUG: Client: Received ID %d, newval %.2f", argID, arg);
 
 
 	*(aryCVarHash[argID]) = arg;
-	if(global2_hiddenMemPrintout==1)easyForcePrintLine("CVAR DEBUG: Client: found ID %d. Set CVar %s to %.2f", argID, aryCVarHashName[argID], arg);
+	if(EASY_CVAR_GET(hiddenMemPrintout)==1)easyForcePrintLine("CVAR DEBUG: Client: found ID %d. Set CVar %s to %.2f", argID, aryCVarHashName[argID], arg);
 	
 
 	//Save. Is this ok?
@@ -304,6 +341,7 @@ int CCustomMessage::MsgFunc_PntClientC(const char *pszName, int iSize, void *pbu
 
 
 
+/*
 int CCustomMessage::MsgFunc_RetrieveFOV(const char *pszName, int iSize, void *pbuf){
 	//BEGIN_READ( pbuf, iSize );
 	//???
@@ -311,6 +349,7 @@ int CCustomMessage::MsgFunc_RetrieveFOV(const char *pszName, int iSize, void *pb
 
 	return 1;
 }
+*/
 
 int CCustomMessage::MsgFunc_UpdBnclStat(const char *pszName, int iSize, void *pbuf){
 	BEGIN_READ( pbuf, iSize );
@@ -335,7 +374,7 @@ int CCustomMessage::MsgFunc_UpdPlyA(const char *pszName, int iSize, void *pbuf){
 
 
 	//if dead, and cannot show weapon select... force it off just in case.
-	if(gHUD.m_fPlayerDead && global2_canShowWeaponSelectAtDeath == 0){
+	if(gHUD.m_fPlayerDead && EASY_CVAR_GET(canShowWeaponSelectAtDeath) == 0){
 		gHUD.m_Ammo.gWR.gpLastSel = gHUD.m_Ammo.gWR.gpActiveSel;
 		gHUD.m_Ammo.gWR.gpActiveSel = NULL;
 	}
@@ -386,12 +425,6 @@ int CCustomMessage::MsgFunc_UpdJT(const char *pszName, int iSize, void *pbuf){
 
 
 
-
-
-
-
-extern int playingMov;
-extern float movieStartTime;
 
 int CCustomMessage::MsgFunc_YMG(const char *pszName, int iSize, void *pbuf){
 	//BEGIN_READ( pbuf, iSize );

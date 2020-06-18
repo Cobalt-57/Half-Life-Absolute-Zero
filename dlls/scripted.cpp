@@ -40,7 +40,7 @@
 #include "defaultai.h"
 
 //MODDD
-extern float global_cineChangelevelFix;
+EASY_CVAR_EXTERN(cineChangelevelFix)
 
 
 
@@ -176,8 +176,6 @@ void CCineMonster :: Spawn( void )
 		m_interruptable = FALSE;
 	else
 		m_interruptable = TRUE;
-
-
 
 }
 
@@ -843,7 +841,7 @@ void CCineMonster :: Activate( void )
 			//FStrEq( STRING(m_iszEntity), "airlockwalkersci" ) &&
 			
 			//wasAttached
-			if(  wasAttached >= TRUE && (global_cineChangelevelFix == 2 || global_cineChangelevelFix == 3)    ){
+			if(  wasAttached >= TRUE && (EASY_CVAR_GET(cineChangelevelFix) == 2 || EASY_CVAR_GET(cineChangelevelFix) == 3)    ){
 				
 				
 				pTarget->m_pCine = this;
@@ -854,7 +852,8 @@ void CCineMonster :: Activate( void )
 
 				if(this->m_fMoveTo > 0){
 					//pTarget->SetState(MONSTERSTATE_SCRIPT);
-					pTarget->m_hTargetEnt = this;    //I WILL DESTROY YOUR VERY WILL TO LIIIIIIIIIIIIIIVE
+					pTarget->m_hTargetEnt = this;
+					//I WILL DESTROY YOUR VERY WILL TO LIIIIIIIIIIIIIIVE
 				}
 
 				//remove this now, in case it was "HARD" (2;  1 is forgettable).
@@ -1201,12 +1200,13 @@ BOOL CScriptedSentence :: AcceptableSpeaker( CBaseMonster *pMonster )
 			if ( pMonster->m_hTargetEnt == NULL || !FClassnameIs(pMonster->m_hTargetEnt->pev, "player") )
 				return FALSE;
 		}
-		BOOL override;
+		//MODDD - same name as a keyword is a no-no!
+		BOOL tempvar_override;
 		if ( pev->spawnflags & SF_SENTENCE_INTERRUPT )
-			override = TRUE;
+			tempvar_override = TRUE;
 		else
-			override = FALSE;
-		if ( pMonster->CanPlaySentence( override ) )
+			tempvar_override = FALSE;
+		if ( pMonster->CanPlaySentence( tempvar_override ) )
 			return TRUE;
 	}
 	return FALSE;

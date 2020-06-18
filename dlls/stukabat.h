@@ -39,36 +39,6 @@
 //this->stukaPrint.tookDamage.sendToPrintQueue("TOOK DMG");
 
 
-/*
-//#define PRINTQUEUE_STUKA_SEND(QUEUE, ...) stukaPrint.##QUEUE.sendToPrintQueue(__VA_ARGS__);
-void PRINTQUEUE_STUKA_SEND(PrintQueue, format, ...){
-	va_list		argptr;
-	static char		string[1024];
-	
-	va_start (argptr, format);
-	vsprintf (string, format,argptr);
-	va_end (argptr);
-
-	return string;	
-
-
-}
-*/
-
-
-
-/*
-va_list		argptr;
-static char	string[1024];
-	
-va_start (argptr, szFmt);
-vsprintf (string, szFmt,argptr);
-
-g_engfuncs.pfnServerPrint( UTIL_VarArgs( "%s\n", UTIL_VarArgsVA(szFmt, argptr ) )  );
-
-va_end (argptr);
-
-*/
 
 class StukaPrintQueueManager{
 public:

@@ -35,7 +35,9 @@ typedef float vec_t;
 typedef int (*pfnUserMsgHook)(const char *pszName, int iSize, void *pbuf);
 
 #include "vector_shared.h"  //MODDD - used to be util_vector.h. Now the shared version.
-#define EXPORT	_declspec( dllexport )
+
+//MODDD - Removed. Another case where the EXPORT define is completely ineffective, removed or derived to garbage.
+//#define EXPORT	_declspec( dllexport )
 
 #include "../engine/cdll_int.h"
 #include "../dlls/cdll_dll.h"

@@ -44,8 +44,8 @@
 
 
 //MODDD - extern
-extern float global_sparksEnvMulti;
-extern float global_sparksButtonMulti;
+EASY_CVAR_EXTERN(sparksEnvMulti)
+EASY_CVAR_EXTERN(sparksButtonMulti)
 
 
 class CEnvGlobal : public CPointEntity
@@ -608,7 +608,7 @@ void DoSpark(entvars_t *pev, const Vector &location, float arg_sparksMod )
 }
 //MODDD - below.
 void DoSpark(entvars_t *pev, const Vector &location){
-	DoSpark(pev, location, global_sparksEnvMulti);
+	DoSpark(pev, location, EASY_CVAR_GET(sparksEnvMulti));
 }
 
 
@@ -619,7 +619,7 @@ void CBaseButton::ButtonSpark ( void )
 	pev->nextthink = gpGlobals->time + ( 0.1 + RANDOM_FLOAT ( 0, 1.5 ) );// spark again at random interval
 
 	//DoSpark( pev, pev->mins );
-	DoSpark( pev, pev->mins, global_sparksButtonMulti );
+	DoSpark( pev, pev->mins, EASY_CVAR_GET(sparksButtonMulti) );
 }
 
 
@@ -1317,9 +1317,9 @@ void EXPORT CEnvSpark::SparkThink(void)
 
 	if(pev->spawnflags & SF_ENVSPARK_REDUCEDSPARKS){
 		//an extra 1/2 to the multi already.
-		DoSpark( pev, pev->origin, global_sparksEnvMulti * 0.5 );
+		DoSpark( pev, pev->origin, EASY_CVAR_GET(sparksEnvMulti) * 0.5 );
 	}else{
-		DoSpark( pev, pev->origin, global_sparksEnvMulti );
+		DoSpark( pev, pev->origin, EASY_CVAR_GET(sparksEnvMulti) );
 	}
 
 	

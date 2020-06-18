@@ -90,11 +90,14 @@ int gmsgCliTest = 0;
 
 int gmsgUnpause = 0;
 
+int gmsgOnFirstAppearance = 0;
+int gmsgClientResetModCVars = 0;
+
 int gmsgUpdateClientCVar = 0;
 int gmsgResetClientCVar = 0;
 int gmsgPrintClientCVar = 0;
 
-int gmsgRetrieveFOV = 0;
+//int gmsgRetrieveFOV = 0;
 
 
 int gmsgTimeWeaponIdleUpdate = 0;
@@ -207,14 +210,23 @@ void LinkUserMessages( void )
 
 	gmsgUnpause = REG_USER_MSG("MUnpause", 0);
 
+	gmsgOnFirstAppearance = REG_USER_MSG("FirstAppr", 0);
+	gmsgClientResetModCVars = REG_USER_MSG("ResetCVars", 0);
+
 	gmsgUpdateClientCVar = REG_USER_MSG("UpdClientC", 4);
 	gmsgResetClientCVar = REG_USER_MSG("RstClientC", 0);
 	gmsgPrintClientCVar = REG_USER_MSG("PntClientC", 2);
 
-	gmsgRetrieveFOV = REG_USER_MSG("RetrieveFOV", 0);
+	//gmsgRetrieveFOV = REG_USER_MSG("RetrieveFOV", 0);
 
 	gmsgTimeWeaponIdleUpdate = REG_USER_MSG("UpdTWI", 2);
 	gmsgJustThrownUpdate = REG_USER_MSG("UpdJT", 1);
+
+
+
+
+
+
 
 	gmsgYMG = REG_USER_MSG("YMG", 0);
 	gmsgYMG_Stop = REG_USER_MSG("YMG_S", 0);

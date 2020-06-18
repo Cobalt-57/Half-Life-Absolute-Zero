@@ -41,7 +41,7 @@
 
 #include "trains.h"
 
-#include "custom_debug.h"
+#include "util_debugdraw.h"
 #include "nodes.h"
 #include "lights.h"
 
@@ -97,27 +97,24 @@ extern int giPrecacheGrunt;
 
 
 
-
-
-float global_soundSentenceSave = -1;  //This is linked to the CVar.
 int global_useSentenceSave = 0;   //This is for script only, used to make mass-recognizing lots of sound precache calls --> sentances easier.
-float global_pissedNPCs = -1;
-float global_cl_explosion = -1;
+
+
+
+EASY_CVAR_EXTERN(soundSentenceSave)
+EASY_CVAR_EXTERN(pissedNPCs)
+
+
+
+//MODDD - keep track of "sv_cheats".
+cvar_t* cvar_sv_cheats = 0;
+
 
 
 EASY_CVAR_DECLARATION_SERVER_MASS
 
+
 float forceWorldLightOffMem = -1;
-cvar_t* cvar_soundSentenceSave = NULL;
-cvar_t* cvar_pissedNPCs = NULL;
-cvar_t* cvar_cl_explosion = NULL;
-
-
-
-
-
-
-
 
 
 
@@ -127,11 +124,7 @@ cvar_t* cvar_cl_explosion = NULL;
 BOOL globalPSEUDO_queueClientSendoff = FALSE;
 
 
-
-
-
 float globalPSEUDO_cameraMode = -1;
-float globalPSEUDO_aspectratio_determined_fov = -1;
 
 float globalPSEUDO_forceFirstPersonIdleDelay = 1;
 
@@ -158,61 +151,63 @@ BOOL globalPSEUDO_germanModel_hassaultFound = FALSE;
 
 extern unsigned short g_sFreakyLight;
 
-//extern float global_flashLightSpawnInterval;
-extern float global_flashLightDurationMin;
-extern float global_flashLightDurationMax;
-extern float global_flashLightRadiusMin;
-extern float global_flashLightRadiusMax;
-extern float global_flashLightSpawnDistHori;
-extern float global_flashLightSpawnDistVertMin;
-extern float global_flashLightSpawnDistVertMax;
-extern float global_flashLightMultiColor;
+//EASY_CVAR_EXTERN(flashLightSpawnInterval)
+EASY_CVAR_EXTERN(flashLightDurationMin)
+EASY_CVAR_EXTERN(flashLightDurationMax)
+EASY_CVAR_EXTERN(flashLightRadiusMin)
+EASY_CVAR_EXTERN(flashLightRadiusMax)
+EASY_CVAR_EXTERN(flashLightSpawnDistHori)
+EASY_CVAR_EXTERN(flashLightSpawnDistVertMin)
+EASY_CVAR_EXTERN(flashLightSpawnDistVertMax)
+EASY_CVAR_EXTERN(flashLightMultiColor)
 
-extern float global_germanCensorship;
+EASY_CVAR_EXTERN(germanCensorship)
 
-extern float global_sparksEnvMulti;
+EASY_CVAR_EXTERN(sparksEnvMulti)
 
-extern float global_shrapRand;
-extern float global_shrapRandHeightExtra;
-extern float global_shrapMode;
-extern float global_explosionShrapnelMulti;
-extern float global_cl_explosion;
-extern float global_sparksExplosionMulti;
+EASY_CVAR_EXTERN(shrapRand)
+EASY_CVAR_EXTERN(shrapRandHeightExtra)
+EASY_CVAR_EXTERN(shrapMode)
+EASY_CVAR_EXTERN(explosionShrapnelMulti)
+EASY_CVAR_EXTERN(cl_explosion)
+EASY_CVAR_EXTERN(sparksExplosionMulti)
 
-extern float global_muteRicochetSound;
-extern float global_fleshhitmakessound;
+EASY_CVAR_EXTERN(muteRicochetSound)
+EASY_CVAR_EXTERN(fleshhitmakessound)
 
-extern float global_quakeExplosionSound;
+EASY_CVAR_EXTERN(quakeExplosionSound)
 
-extern float global_meleeDrawBloodModeA;
-extern float global_meleeDrawBloodModeB;
-extern float global_meleeDrawBloodModeBFix;
+EASY_CVAR_EXTERN(meleeDrawBloodModeA)
+EASY_CVAR_EXTERN(meleeDrawBloodModeB)
+EASY_CVAR_EXTERN(meleeDrawBloodModeBFix)
 
-extern float global_meleeDrawBloodModeAOffset;
-extern float global_meleeDrawBloodModeBOffset;
+EASY_CVAR_EXTERN(meleeDrawBloodModeAOffset)
+EASY_CVAR_EXTERN(meleeDrawBloodModeBOffset)
 
-extern float global_sparksAllMulti;
-
-
+EASY_CVAR_EXTERN(sparksAllMulti)
 
 
-extern float global_hgruntPrintout;
-extern float global_panthereyePrintout;
-extern float global_squadmonsterPrintout;
-extern float global_hassaultPrintout;
-extern float global_gargantuaPrintout;
-extern float global_barnaclePrintout;
-extern float global_houndeyePrintout;
 
-extern float global_canDropInSinglePlayer;
 
-extern float global_useAlphaSparks;
-extern float global_weaponSelectUsesReloadSounds;
+EASY_CVAR_EXTERN(hgruntPrintout)
+EASY_CVAR_EXTERN(panthereyePrintout)
+EASY_CVAR_EXTERN(squadmonsterPrintout)
+EASY_CVAR_EXTERN(hassaultPrintout)
+EASY_CVAR_EXTERN(gargantuaPrintout)
+EASY_CVAR_EXTERN(barnaclePrintout)
+EASY_CVAR_EXTERN(houndeyePrintout)
 
-extern float global_cl_bullsquidspit;
-extern float global_cl_hornetspiral;
+EASY_CVAR_EXTERN(canDropInSinglePlayer)
 
-extern float global_mutePlayerPainSounds;
+EASY_CVAR_EXTERN(useAlphaSparks)
+EASY_CVAR_EXTERN(weaponSelectUsesReloadSounds)
+
+EASY_CVAR_EXTERN(cl_bullsquidspit)
+EASY_CVAR_EXTERN(cl_hornetspiral)
+//extern cvar_t* CVAR_cl_hornetspiral;
+
+
+EASY_CVAR_EXTERN(mutePlayerPainSounds)
 EASY_CVAR_EXTERN(playerBulletHitEffectForceServer)
 EASY_CVAR_EXTERN(playerWeaponSpreadMode)
 
@@ -589,7 +584,7 @@ DBG_AssertFunction(
 	if (szMessage != NULL)
 		sprintf(szOut, "ASSERT FAILED:\n %s \n(%s@%d)\n%s", szExpr, szFile, szLine, szMessage);
 	else
-		sprintf(szOut, "ASSE6RT FAILED:\n %s \n(%s@%d)", szExpr, szFile, szLine);
+		sprintf(szOut, "ASSERT FAILED:\n %s \n(%s@%d)", szExpr, szFile, szLine);
 	ALERT(at_console, szOut);
 	}
 #endif	// DEBUG
@@ -1153,34 +1148,14 @@ int kbwTrace(const char *fmt, ...)
 
 
 //MODDD - note - printout info moved to "util_printout.cpp" for serverside for now.
+// Hey past-me.  REMEMBER TO NAME THE SHIT YOU MOVED YOU FUCKING CUNTSTAIN, THANK YOU.
+// I WILL ELECTROCUTE YOUR GODDAMN DICK AND SHARPEN IT TO FORM A POINT WHICH SHALL DIVE
+// STRAIGHT INTO YOUR FUCKING EYES.  SCREAMING WILL NOT STOP ME.
+// BITCH.
+// ...so yea, UTIL_ClientPrint methods were moved there.
+// And now UTIL_SayText ones because fuck you.
 
 
-
-
-
-
-
-
-
-extern int gmsgTextMsg, gmsgSayText;
-void UTIL_SayText( const char *pText, CBaseEntity *pEntity )
-{
-	if ( !pEntity->IsNetClient() )
-		return;
-
-	MESSAGE_BEGIN( MSG_ONE, gmsgSayText, NULL, pEntity->edict() );
-		WRITE_BYTE( pEntity->entindex() );
-		WRITE_STRING( pText );
-	MESSAGE_END();
-}
-
-void UTIL_SayTextAll( const char *pText, CBaseEntity *pEntity )
-{
-	MESSAGE_BEGIN( MSG_ALL, gmsgSayText, NULL );
-		WRITE_BYTE( pEntity->entindex() );
-		WRITE_STRING( pText );
-	MESSAGE_END();
-}
 
 
 char *UTIL_dtos1( int d )
@@ -1389,7 +1364,7 @@ meleeDrawBloodModeB - Mode variable, for drawing blood when "checkTraceHullAttac
 	
 	if(checkTraceHullAttackUsed){
 		//check for meleeDrawBloodModeA
-		switch((int)global_meleeDrawBloodModeA){
+		switch((int)EASY_CVAR_GET(meleeDrawBloodModeA) ){
 			case 0:
 				//no draw.
 				return;
@@ -1405,13 +1380,13 @@ meleeDrawBloodModeB - Mode variable, for drawing blood when "checkTraceHullAttac
 
 				//arg_entDest->DrawAlphaBlood(arg_fltDamage, *arg_suggestedTraceHullVecEndPos);
 				vecFromToDir = (vecEnd - vecStart).Normalize();
-				arg_entDest->DrawAlphaBloodSlash(arg_fltDamage, *arg_suggestedTraceHullVecEndPos - (vecFromToDir * global_meleeDrawBloodModeAOffset), vecFromToDir, extraBlood );
+				arg_entDest->DrawAlphaBloodSlash(arg_fltDamage, *arg_suggestedTraceHullVecEndPos - (vecFromToDir * EASY_CVAR_GET(meleeDrawBloodModeAOffset) ), vecFromToDir, extraBlood );
 
 
 				if(arg_entDest->IsPlayer()){
 					//easyPrintLine("BUT WHATT  %s", STRING(arg_entDest->pev->classname) );
 					CBasePlayer* playa = static_cast<CBasePlayer*>(arg_entDest);
-					playa->debugDrawVect = *arg_suggestedTraceHullVecEndPos - (vecFromToDir * global_meleeDrawBloodModeAOffset);
+					playa->debugDrawVect = *arg_suggestedTraceHullVecEndPos - (vecFromToDir * EASY_CVAR_GET(meleeDrawBloodModeAOffset) );
 					playa->debugDrawVect2 = *arg_suggestedTraceHullStart;
 					playa->debugDrawVect3 = *arg_suggestedTraceHullEnd;
 					playa->debugDrawVect4 = Vector(0,0,0);
@@ -1481,7 +1456,7 @@ meleeDrawBloodModeB - Mode variable, for drawing blood when "checkTraceHullAttac
 
 	}else{
 		//check for meleeDrawBloodModeB
-		switch((int)global_meleeDrawBloodModeB){
+		switch((int)EASY_CVAR_GET(meleeDrawBloodModeB)){
 			case 0:
 				//no draw.
 				return;
@@ -1490,7 +1465,7 @@ meleeDrawBloodModeB - Mode variable, for drawing blood when "checkTraceHullAttac
 				//No checkTraceHull?  Let's do it.  Use its endpos.
 				
 
-				if(global_meleeDrawBloodModeBFix != 1){
+				if(EASY_CVAR_GET(meleeDrawBloodModeBFix) != 1){
 					vecStart = vecCenterOfSrc;
 				}else{
 					vecStart = vecCenterOfSrc - gpGlobals->v_forward * ((arg_entSrc->pev->size.x / 2) + 1);
@@ -1503,12 +1478,12 @@ meleeDrawBloodModeB - Mode variable, for drawing blood when "checkTraceHullAttac
 				if ( tr.pHit ){
 					
 					vecFromToDir = (vecEnd - vecStart).Normalize();
-					arg_entDest->DrawAlphaBloodSlash(arg_fltDamage, tr.vecEndPos - (vecFromToDir * global_meleeDrawBloodModeBOffset), vecFromToDir, extraBlood );
+					arg_entDest->DrawAlphaBloodSlash(arg_fltDamage, tr.vecEndPos - (vecFromToDir * EASY_CVAR_GET(meleeDrawBloodModeBOffset)), vecFromToDir, extraBlood );
 
 					if(arg_entDest->IsPlayer()){
 						//easyPrintLine("BUT WHAT %.2f  %s", tr.flFraction, STRING(tr.pHit->v.classname) );
 						CBasePlayer* playa = static_cast<CBasePlayer*>(arg_entDest);
-						playa->debugDrawVect = tr.vecEndPos - (vecFromToDir * global_meleeDrawBloodModeBOffset);
+						playa->debugDrawVect = tr.vecEndPos - (vecFromToDir * EASY_CVAR_GET(meleeDrawBloodModeBOffset) );
 						playa->debugDrawVect2 = vecStart;
 						playa->debugDrawVect3 = vecEnd;
 						playa->debugDrawVect4 = Vector(0,0,0);
@@ -1584,9 +1559,9 @@ meleeDrawBloodModeB - Mode variable, for drawing blood when "checkTraceHullAttac
 		vecFromToDir = (vecEnd - vecStart).Normalize();
 		//easyPrintLine("TRACE HULL ATTACK USED?: %d", checkTraceHullAttackUsed);
 		if(checkTraceHullAttackUsed){
-			arg_entDest->DrawAlphaBloodSlash(arg_fltDamage, tr.vecEndPos - (vecFromToDir * global_meleeDrawBloodModeAOffset), vecFromToDir, extraBlood );
+			arg_entDest->DrawAlphaBloodSlash(arg_fltDamage, tr.vecEndPos - (vecFromToDir * EASY_CVAR_GET(meleeDrawBloodModeAOffset) ), vecFromToDir, extraBlood );
 		}else{
-			arg_entDest->DrawAlphaBloodSlash(arg_fltDamage, tr.vecEndPos - (vecFromToDir * global_meleeDrawBloodModeBOffset), vecFromToDir, extraBlood );
+			arg_entDest->DrawAlphaBloodSlash(arg_fltDamage, tr.vecEndPos - (vecFromToDir * EASY_CVAR_GET(meleeDrawBloodModeBOffset) ), vecFromToDir, extraBlood );
 		}
 
 	}
@@ -1596,9 +1571,9 @@ meleeDrawBloodModeB - Mode variable, for drawing blood when "checkTraceHullAttac
 		CBasePlayer* playa = static_cast<CBasePlayer*>(arg_entDest);
 		
 		if(checkTraceHullAttackUsed){
-			playa->debugDrawVect = tr.vecEndPos - (vecFromToDir * global_meleeDrawBloodModeAOffset);
+			playa->debugDrawVect = tr.vecEndPos - (vecFromToDir * EASY_CVAR_GET(meleeDrawBloodModeAOffset));
 		}else{
-			playa->debugDrawVect = tr.vecEndPos - (vecFromToDir * global_meleeDrawBloodModeBOffset);
+			playa->debugDrawVect = tr.vecEndPos - (vecFromToDir * EASY_CVAR_GET(meleeDrawBloodModeBOffset));
 		}
 		
 		playa->debugDrawVect2 = vecStart;
@@ -1609,7 +1584,7 @@ meleeDrawBloodModeB - Mode variable, for drawing blood when "checkTraceHullAttac
 
 
 
-}
+}//END OF UTIL_fromToBlood
 
 
 
@@ -1888,14 +1863,14 @@ int UTIL_IsMasterTriggered(string_t sMaster, CBaseEntity *pActivator)
 BOOL UTIL_ShouldShowBlood( int color )
 {
 
-	//global_germanCensorship != 1 &&
+	//EASY_CVAR_GET(germanCensorship) != 1 &&
 	//if (&& color != DONT_BLEED )
 	//{
 
 		if(color == DONT_BLEED){
 			//don't try, clearly a signal not to.
 			return FALSE;
-		}else if (color == BLOOD_COLOR_RED && global_germanCensorship != 1 )
+		}else if (color == BLOOD_COLOR_RED && EASY_CVAR_GET(germanCensorship) != 1 )
 		{
 			if ( CVAR_GET_FLOAT("violence_hblood") != 0 )
 				return TRUE;
@@ -1904,7 +1879,7 @@ BOOL UTIL_ShouldShowBlood( int color )
 			//oil from robots? never censored.
 			return TRUE;
 		}
-		else if(global_germanCensorship != 1) //even alien blood is restricted by germanCensorship, but not gibs? Keep it this way?
+		else if(EASY_CVAR_GET(germanCensorship) != 1) //even alien blood is restricted by germanCensorship, but not gibs? Keep it this way?
 		{
 			if ( CVAR_GET_FLOAT("violence_ablood") != 0 )
 				return TRUE;
@@ -1927,7 +1902,7 @@ void UTIL_BloodStream( const Vector &origin, const Vector &direction, int color,
 	//MODDD - g_Language  is linked to a non-existent CVar.  Use this instead.
 	//if ( g_Language == LANGUAGE_GERMAN && color == BLOOD_COLOR_RED )
 	/*
-	if(global_germanCensorship == 1 && color==BLOOD_COLOR_RED){
+	if(EASY_CVAR_GET(germanCensorship) == 1 && color==BLOOD_COLOR_RED){
 		color = 0;
 	}
 	*/
@@ -1959,7 +1934,7 @@ void UTIL_BloodDrips( const Vector &origin, const Vector &direction, int color, 
 	//if ( g_Language == LANGUAGE_GERMAN && color == BLOOD_COLOR_RED )
 	
 	//MODDD - handle this per model instead.
-	//if(global_germanCensorship == 1 && global_allowGermanModels == 1 && color == BLOOD_COLOR_RED)
+	//if(EASY_CVAR_GET(germanCensorship) == 1 && EASY_CVAR_GET(allowGermanModels) == 1 && color == BLOOD_COLOR_RED)
 	//	color = 0;
 
 	if ( g_pGameRules->IsMultiplayer() )
@@ -2279,8 +2254,6 @@ void UTIL_GunshotDecalTrace( TraceResult *pTrace, int decalNumber )
 	*/
 
 
-
-
 	//easyForcePrintLine("UTIL_GunshotDecalTrace?");
 
 	UTIL_DecalTrace(pTrace, decalNumber);
@@ -2302,7 +2275,6 @@ void UTIL_GunshotDecalTrace( TraceResult *pTrace, int decalNumber )
 	*/
 
 	//
-
 }
 
 
@@ -2313,11 +2285,7 @@ void UTIL_GunshotDecalTraceForceDefault(TraceResult *pTrace, int decalNumber){
 
 
 
-
-
 Vector UTIL_GetProjectileVelocityExtra(Vector& playerVelocity, float velocityMode)  {
-
-	
 	//easyPrintLine("UTIL_GetProjectileVelocityExtra %.2f", velocityMode);
 	if(velocityMode == 0){
 		return Vector(0, 0, 0);
@@ -2326,180 +2294,10 @@ Vector UTIL_GetProjectileVelocityExtra(Vector& playerVelocity, float velocityMod
 	}else{
 		return playerVelocity * velocityMode;
 	}
-
 }
 
 
-
-
-
-
-/*
-//MODDD - can now accept a "ballsToSpawn" var, generally for spawning less to prevent crashes if a CVar is set.
-void UTIL_Sparks2( const Vector &position){
-	//but, imply "DEFAULT_SPARK_BALLS" if unspecified.  (See const.h)
-	UTIL_Sparks2( position, DEFAULT_SPARK_BALLS, 1 );
-
-}
-
-void UTIL_Sparks2( const Vector &position, int arg_ballsToSpawn ){
-	UTIL_Sparks2(position, arg_ballsToSpawn, 1);
-
-}
-*/
-
-void UTIL_Sparks2( const Vector &position, int arg_ballsToSpawn, float arg_extraSparkMulti )
-{
-	
-
-	if(global_useAlphaSparks == 0){
-		//use retail then.
-		MESSAGE_BEGIN( MSG_PVS, SVC_TEMPENTITY, position );
-			WRITE_BYTE( TE_SPARKS );
-			WRITE_COORD( position.x );
-			WRITE_COORD( position.y );
-			WRITE_COORD( position.z );
-		MESSAGE_END();
-		return;
-	}//END OF if
-
-	//PLAYBACK_EVENT_FULL (FEV_GLOBAL, pGib->edict(), g_sTrail, 0.0, 
-	//	(float *)&pGib->pev->origin, (float *)&pGib->pev->angles, 0.7, 0.0, pGib->entindex(), ROCKET_TRAIL, 0, 0);
-	
-
-	int ballsToSpawn;
-
-	float multToUse = arg_extraSparkMulti * global_sparksAllMulti;
-	
-	/*
-	float multToUse = arg_extraSparkMulti;
-	if(arg_extraSparkMulti == -1){
-		//fall back to global.
-		easyPrintLine("!!!!!!!!! SPARK CREATION UNSOURCED 1!!!!!!!!!");
-		multToUse = global_sparkBallAmmountMulti;
-	}
-	*/
-
-	if(multToUse != 1){
-		//multiplying by 1 is useless, so don't if it is.
-		ballsToSpawn =  (int) ((float)arg_ballsToSpawn * multToUse);
-	}else{
-		ballsToSpawn = arg_ballsToSpawn;
-	}
-
-
-	//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-	PLAYBACK_EVENT_FULL (FEV_GLOBAL, NULL, g_sCustomBalls, 0.0, (float *)&position, (float *)&Vector(0,0,0), 0.0, 0.0, ballsToSpawn, 0, FALSE, FALSE);
-	//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-	//( int flags, const edict_t *pInvoker, unsigned short eventindex, float delay, float *origin, float *angles, float fparam1, float fparam2, int iparam1, int iparam2, int bparam1, int bparam2 );
-
-
-
-
-
-	
-	/*
-	MESSAGE_BEGIN( MSG_PVS, SVC_TEMPENTITY, position );
-		WRITE_BYTE( TE_SPRAY );
-		WRITE_COORD( position.x );
-		WRITE_COORD( position.y );
-		WRITE_COORD( position.z );
-
-		WRITE_COORD( 0 );
-		WRITE_COORD( 0 );
-		WRITE_COORD( 0 );
-
-		WRITE_BYTE(g_sGaussBallSprite);
-
-		WRITE_BYTE(8);
-		WRITE_BYTE(10);
-		WRITE_BYTE(1);
-		WRITE_BYTE(1);
-
-
-	MESSAGE_END();
-	*/
-			
-	// coord, coord, coord (position)
-	// coord, coord, coord (direction)
-	// short (modelindex)
-	// byte (count)
-	// byte (speed)
-	// byte (noise)
-	// byte (rendermode)
-
-
-
-	
-
-
-	//gEngfuncs.pEfxAPI->R_Sprite_Trail( TE_SPRITETRAIL, tr.endpos, fwd, m_iBalls, 8, 0.6, gEngfuncs.pfnRandomFloat( 10, 20 ) / 100.0, 100,
-	//							255, 200 );
-
-
-	//int type, float * start, float * end, int modelIndex, int count, float life, float size, float amplitude, int renderamt, float speed 
-
-	//#define TE_SPRITETRAIL		15		// line of moving glow sprites with gravity, fadeout, and collisions
-// coord, coord, coord (start) 
-// coord, coord, coord (end) 
-// short (sprite index)
-// byte (count)
-// byte (life in 0.1's) 
-// byte (scale in 0.1's) 
-// byte (velocity along vector in 10's)
-// byte (randomness of velocity in 10's)
-
-	//client: gEngfuncs.pfnRandomFloat( 10, 20 );
-	//server: g_engfuncs.pfnRandomFloat( 10, 20 );
-	//*not all commands are this squeakly clean from one to the other.  (make that uh, virtually none that are useful).
-
-
-	/*
-	byte rando = (byte)((g_engfuncs.pfnRandomFloat( 10, 20 ) / 100) * 10) ;
-
-	MESSAGE_BEGIN( MSG_PVS, SVC_TEMPENTITY, position );
-		WRITE_BYTE( TE_SPRITETRAIL );
-		WRITE_COORD( position.x );
-		WRITE_COORD( position.y );
-		WRITE_COORD( position.z );
-
-		WRITE_COORD( position.x );
-		WRITE_COORD( position.y );
-		WRITE_COORD( position.z );
-
-		WRITE_SHORT(g_sGaussBallSprite);
-		WRITE_BYTE(8);
-		WRITE_BYTE( rando );
-
-		WRITE_BYTE(10);
-		WRITE_BYTE(10);
-
-
-
-	MESSAGE_END();
-
-	*/
-
-}
-
-
-
-
-void UTIL_Sparks( const Vector &position )
-{
-	//This starting method from the SDK in particular should no longer be called, having been replaced
-	//by UTIL_Sparks2 (all calls to UTIL_Sparks in this project refer to UTIL_Sparks2 instead).
-
-	//If this is somehow called again, please say so.
-	//easyPrintLine("!!!!!!!!! SPARK CREATION UNSOURCED 2!!!!!!!!!");
-	UTIL_Sparks2(position, DEFAULT_SPARK_BALLS, global_sparksEnvMulti);
-
-
-}//END OF Util_Sparks(...)
-
-
-
-
+// MODDD - UTIL_Sparks and UTIL_Sparks2 moved to util_shared.cpp.
 
 
 void interpretSoundAsSentence(char* interpretationFINAL, const char* pszName){
@@ -2736,8 +2534,8 @@ void UTIL_PlaySound(edict_t* entity, int channel, const char *pszName, float vol
 
 	//CBaseEntity* pEntity = (CBaseEntity*)(CBaseEntity::Instance(entity));
 
-	//easyPrintLine("ATTEMPT FILTERED SOUND: %s %d %d", pszName, pEntity->usesSoundSentenceSave(), useSoundSentenceSave);
-	if(global_soundSentenceSave == 1 && (useSoundSentenceSave)){
+	easyPrintLine("ATTEMPT FILTERED SOUND: %s %d", pszName, useSoundSentenceSave);
+	if(EASY_CVAR_GET(soundSentenceSave) == 1 && (useSoundSentenceSave)){
 
 		char interpretationFINAL[50];
 		if(pszName[0] != '!'){
@@ -2831,6 +2629,7 @@ void EMIT_SOUND_DYN(edict_t *entity, int channel, const char *sample, float volu
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // play a specific sentence over the HEV suit speaker - just pass player entity, and !sentencename
+// MODDD - lower the attenuation to not play for other players!
 void EMIT_SOUND_SUIT(edict_t *entity, const char *sample)
 {
 	float fvol;
@@ -2842,8 +2641,11 @@ void EMIT_SOUND_SUIT(edict_t *entity, const char *sample)
 	if (RANDOM_LONG(0,1))
 		pitch = RANDOM_LONG(0,6) + 98;
 
-	if (fvol > 0.05)
-		EMIT_SOUND_DYN(entity, CHAN_STATIC, sample, fvol, ATTN_NORM, 0, pitch);
+	//MODDD -changed min volume from 0.05 to 0.02.
+	if (fvol > 0.02) {
+		//EMIT_SOUND_DYN(entity, CHAN_STATIC, sample, fvol, ATTN_NORM, 0, pitch);
+		EMIT_SOUND_DYN(entity, CHAN_STATIC, sample, fvol, 4.0f, 0, pitch);
+	}
 }
 
 //MODDD - new.  Similar to EMIT_SOUND_SUIT, but have the SND_STOP to stop the sound / sentence.
@@ -2852,7 +2654,6 @@ void STOP_SOUND_SUIT(edict_t *entity, const char *sample)
 	float fvol;
 	int pitch = PITCH_NORM;
 	
-	//MODDD TODO - move to the better global CVar system??
 	fvol = CVAR_GET_FLOAT("suitvolume");
 
 	if (RANDOM_LONG(0,1))
@@ -2945,7 +2746,7 @@ void UTIL_EmitAmbientSound_Filtered( edict_t *entity, const Vector &vecOrigin, c
 	//CBaseEntity* pEntity = (CBaseEntity*)(CBaseEntity::Instance(entity));
 
 	//easyPrintLine("UTIL_EmitAmbientSound ATTEMPT FILTERED SOUND: %s %d %d", pszName, pMonster->usesSoundSentenceSave(), useSoundSentenceSave);
-	if(global_soundSentenceSave == 1 && (useSoundSentenceSave)){
+	if(EASY_CVAR_GET(soundSentenceSave) == 1 && (useSoundSentenceSave)){
 
 		char interpretationFINAL[50];
 		if(samp[0] != '!'){
@@ -3004,7 +2805,7 @@ void UTIL_playFleshHitSound(entvars_t* pev){
 
 void UTIL_playFleshHitSound(edict_t* pev){
 
-	if(global_fleshhitmakessound == 1 ){
+	if(EASY_CVAR_GET(fleshhitmakessound) == 1 ){
 		switch( RANDOM_LONG(0, 1)){
 		case 0:
 			EMIT_SOUND_DYN(ENT(pev), CHAN_WEAPON, "weapons/bullet_hit1.wav", 0.8f, ATTN_NORM, 0, PITCH_NORM);
@@ -3025,6 +2826,8 @@ void UTIL_PRECACHESOUND(char* path){
 	//scientist/sci_dragoff.wav
 	//easyPrintLine("PRECACHE: %s", path);
 
+	//easyForcePrintLine("UTIL_PRECACHESOUND call 1  %s : %.1f %d", path, global_useSentenceSave, !global_useSentenceSave);
+
 	if(!global_useSentenceSave){
 		//if the "useSentenceSave" variable isn't turned on (to help make affecting mass precaches more managable), don't let this be skipped.
 		UTIL_PRECACHESOUND(path, TRUE);
@@ -3040,7 +2843,8 @@ void UTIL_PRECACHESOUND(char* path, BOOL dontSkipSave){
 
 	//To be clear, this just means... if the soundSentenceSave CVar is off, we have to precache this sound unconditionally.
 	//Otherwise, ordinarilly skip the precache, but if "dontSkipSave" is on, we still have to precache the sound. Some things defy the soundSentenceSave and play without sentences anyways.
-	if(global_soundSentenceSave == 0 || dontSkipSave){
+	//easyForcePrintLine("UTIL_PRECACHESOUND call 2  %.1f %d", EASY_CVAR_GET(soundSentenceSave), dontSkipSave);
+	if(EASY_CVAR_GET(soundSentenceSave) == 0 || dontSkipSave){
 		PRECACHE_SOUND_REAL(path);
 	}
 
@@ -3174,7 +2978,7 @@ void UTIL_Explosion(entvars_t* pev, const Vector &location, float offsetx, float
 
 
 
-	if(global_cl_explosion == 0){
+	if(EASY_CVAR_GET(cl_explosion) == 0){
 		MESSAGE_BEGIN( MSG_PAS, SVC_TEMPENTITY, location );
 			WRITE_BYTE( TE_EXPLOSION );		// This makes a dynamic light and the explosion sprites/sound
 			WRITE_COORD( location.x );	// Send to PAS because of the sound
@@ -3192,7 +2996,7 @@ void UTIL_Explosion(entvars_t* pev, const Vector &location, float offsetx, float
 		//(float *)&altLocation, (float *)&Vector(0,0,0), 0.0, 0.0, 0, 0, FALSE, FALSE);
 		
 		PLAYBACK_EVENT_FULL (FEV_GLOBAL, NULL, g_quakeExplosionEffect, 0.0, 
-		(float *)&altLocation, (float *)&Vector(0,0,0), global_shrapRand, global_shrapRandHeightExtra, (int)global_shrapMode, (int)(global_explosionShrapnelMulti * 14 * shrapMod), FALSE, FALSE);
+		(float *)&altLocation, (float *)&Vector(0,0,0), EASY_CVAR_GET(shrapRand), EASY_CVAR_GET(shrapRandHeightExtra), (int)EASY_CVAR_GET(shrapMode), (int)(EASY_CVAR_GET(explosionShrapnelMulti) * 14 * shrapMod), FALSE, FALSE);
 
 
 		//MODDD TODO - these play the sound at the exploding entity's location, not necesarily at the sent origin.
@@ -3201,7 +3005,7 @@ void UTIL_Explosion(entvars_t* pev, const Vector &location, float offsetx, float
 		//    UTIL_EmitAmbientSound(ENT(0), ptr->vecEndPos, rgsz[RANDOM_LONG(0,cnt-1)], fvol, fattn, 0, 96 + RANDOM_LONG(0,0xf));
 		//    //EMIT_SOUND_DYN( ENT(m_pPlayer->pev), CHAN_WEAPON, rgsz[RANDOM_LONG(0,cnt-1)], fvol, ATTN_NORM, 0, 96 + RANDOM_LONG(0,0xf));
 		//...2nd line commented out, or rough equivalent of the first Ambient version to give a more specific location.
-		if(global_quakeExplosionSound == 1){
+		if(EASY_CVAR_GET(quakeExplosionSound) == 1){
 			if(pev != NULL){
 				//UTIL_PlaySound(ENT(pev), CHAN_WEAPON, "!old_explode0", 0.7, ATTN_NORM);
 				
@@ -3219,8 +3023,8 @@ void UTIL_Explosion(entvars_t* pev, const Vector &location, float offsetx, float
 				}
 				
 			}
-		}//END OF if(global_cl_explosion > 0)
-		else if(global_quakeExplosionSound == 2){
+		}//END OF if(EASY_CVAR_GET(cl_explosion) > 0)
+		else if(EASY_CVAR_GET(quakeExplosionSound) == 2){
 			if(pev != NULL){
 				//UTIL_PlaySound(ENT(pev), CHAN_WEAPON, "!old_explode0", 0.7, ATTN_NORM);
 				
@@ -3243,7 +3047,7 @@ void UTIL_Explosion(entvars_t* pev, const Vector &location, float offsetx, float
 
 
 
-	}//END OF else OF if(global_cl_explosion != 1)
+	}//END OF else OF if(EASY_CVAR_GET(cl_explosion) != 1)
 
 
 
@@ -3281,7 +3085,7 @@ void UTIL_Smoke(const Vector& location, short sprite, float scale, int framerate
 void UTIL_Smoke(const Vector& location, float offsetx, float offsety, float offsetz, short sprite, float scale, int framerate){
 
 
-	if(global_cl_explosion != 1){
+	if(EASY_CVAR_GET(cl_explosion) != 1){
 
 		MESSAGE_BEGIN( MSG_PVS, SVC_TEMPENTITY, location );
 			WRITE_BYTE( TE_SMOKE );
@@ -3302,14 +3106,14 @@ void UTIL_Smoke(const Vector& location, float offsetx, float offsety, float offs
 BOOL UTIL_getExplosionsHaveSparks(){
 	//Deprecated way.
 	/*
-	float explosionsHaveSparksVar = CVAR_GET_FLOAT("explosionsHaveSparks");
+	float explosionsHaveSparksVar = EASY_CVAR_GET(explosionsHaveSparks);
 	//only alloy explosions if not using the quake explosion, and the "explosionsHaveSparks" var is 1 or 2.
-	return  (CVAR_GET_FLOAT("cl_explosion") != 1 && (explosionsHaveSparksVar == 1 || explosionsHaveSparksVar == 2) ) ;
+	return  (EASY_CVAR_GET(cl_explosion) != 1 && (explosionsHaveSparksVar == 1 || explosionsHaveSparksVar == 2) ) ;
 	*/
-	//return  (global_cl_explosion != 1 && (global_explosionShrapnelMulti > 0) ) ;
+	//return  (EASY_CVAR_GET(cl_explosion) != 1 && (EASY_CVAR_GET(explosionShrapnelMulti) > 0) ) ;
 
 	//For an explosion to satisfy the condition of generating sparks, the "cl_explosion" var must be off (retail explosions only) and the sparks multiple (of 6) must be above 0.
-	return  (global_cl_explosion != 1 && global_sparksExplosionMulti > 0 && global_sparksAllMulti > 0) ;
+	return  (EASY_CVAR_GET(cl_explosion) != 1 && EASY_CVAR_GET(sparksExplosionMulti) > 0 && EASY_CVAR_GET(sparksAllMulti) > 0) ;
 	
 	
 }
@@ -3326,7 +3130,7 @@ BOOL UTIL_getExplosionsHaveSparks(){
 //Note that this is most commonly used for the armor ricochet effect (hgrunt helmet non-fatal hits, agrunt plated armor).
 void UTIL_Ricochet( const Vector &position, float scale )
 {
-	if(global_muteRicochetSound < 2){
+	if(EASY_CVAR_GET(muteRicochetSound) < 2){
 		MESSAGE_BEGIN( MSG_PVS, SVC_TEMPENTITY, position );
 			WRITE_BYTE( TE_ARMOR_RICOCHET );
 			WRITE_COORD( position.x );
@@ -3709,14 +3513,14 @@ void UTIL_PrecacheOther( const char *szClassname )
 void UTIL_LogPrintf( char *fmt, ... )
 {
 	va_list			argptr;
-	static char		string[1024];
+	static char arychr_buffer[1024];
 	
 	va_start ( argptr, fmt );
-	vsprintf ( string, fmt, argptr );
+	vsprintf ( arychr_buffer, fmt, argptr );
 	va_end   ( argptr );
 
 	// Print to server console
-	ALERT( at_logged, "%s", string );
+	ALERT( at_logged, "%s", arychr_buffer );
 }
 
 //=========================================================
@@ -4639,16 +4443,17 @@ int CRestore::BufferSkipZString( void )
 	return len;
 }
 
-int	CRestore::BufferCheckZString( const char *string )
+//MODDD - changed paramter name "string" to "par_string"
+int	CRestore::BufferCheckZString( const char *par_string )
 {
 	if ( !m_pdata )
 		return 0;
 
 	int maxLen = m_pdata->bufferSize - m_pdata->size;
-	int len = strlen( string );
+	int len = strlen( par_string );
 	if ( len <= maxLen )
 	{
-		if ( !strncmp( string, m_pdata->pCurrentData, len ) )
+		if ( !strncmp( par_string, m_pdata->pCurrentData, len ) )
 			return 1;
 	}
 	return 0;
@@ -5416,7 +5221,9 @@ void turnWorldLightsOn(){
 	// 63 testing
 	LIGHT_STYLE(63, "a");
 
-	global_forceWorldLightOff = 0;
+	//"hope that gets the point across"
+	//global_forceWorldLightOff = 0;
+	EASY_CVAR_SET_DEBUGONLY(forceWorldLightOff, 0);
 
 	/*
 	LIGHT_STYLE(0, "jklmnopqrstuvwxyzyxwvutsrqponmlkj");
@@ -5529,7 +5336,9 @@ void turnWorldLightsOff(){
 
 
 
-	global_forceWorldLightOff = 1;
+	//"hope that gets the point across"
+	//global_forceWorldLightOff = 1;
+	EASY_CVAR_SET_DEBUGONLY(forceWorldLightOff, 1);
 
 }
 
@@ -5573,45 +5382,11 @@ void updateCVarRefs(entvars_t *pev){
 
 
 
-	if(cvar_pissedNPCs == NULL){
-		cvar_pissedNPCs = CVAR_GET_POINTER("pissedNPCs");
-	}
-
-	if(cvar_soundSentenceSave == NULL){
-		cvar_soundSentenceSave = CVAR_GET_POINTER("soundSentenceSave");
-	}
-
-
-
-
-
-
-
-
-	
-
-
-
-
-	if(cvar_cl_explosion == NULL){
-		cvar_cl_explosion = CVAR_GET_POINTER("cl_explosion");
-	}
-	
-
-
-	if(cvar_soundSentenceSave->value != global_soundSentenceSave){
-		global_soundSentenceSave = cvar_soundSentenceSave->value;
-	}
-
-
-
-
-
-	if(global_forceWorldLightOff != forceWorldLightOffMem){
+	if(EASY_CVAR_GET(forceWorldLightOff) != forceWorldLightOffMem){
 		//easyPrintLine("WHAT THE light %.2f %.2f", cvar_forceWorldLightOff->value, global_forceWorldLightOff);
-		forceWorldLightOffMem = global_forceWorldLightOff;
+		forceWorldLightOffMem = EASY_CVAR_GET(forceWorldLightOff);
 
-		if(global_forceWorldLightOff == 1){
+		if(EASY_CVAR_GET(forceWorldLightOff) == 1){
 			turnWorldLightsOff();
 		}else{
 			//turn on is instant and not updated.
@@ -5629,13 +5404,13 @@ void updateCVarRefs(entvars_t *pev){
 	*/
 
 
-	if(globalPSEUDO_gaussmodeMem != global_gaussmode){
+	if(globalPSEUDO_gaussmodeMem != EASY_CVAR_GET(gaussmode)){
 
 
 
-		if(global_gaussmode == 0){
+		if(EASY_CVAR_GET(gaussmode) == 0){
 			//easyForcePrintLine("***Gauss Mode: CUSTOM***");
-		}if(global_gaussmode == 1){
+		}if(EASY_CVAR_GET(gaussmode) == 1){
 			easyForcePrintLine("***Gauss Mode: RETAIL***");
 			EASY_CVAR_SET(gauss_primaryonly, 0);
 			EASY_CVAR_SET(gauss_reflectdealsdamage, 1);
@@ -5649,7 +5424,7 @@ void updateCVarRefs(entvars_t *pev){
 			EASY_CVAR_SET(gauss_primarypunchthrough, 0);
 			EASY_CVAR_SET(gauss_secondarypunchthrough, 1);
 
-		}else if(global_gaussmode == 2){
+		}else if(EASY_CVAR_GET(gaussmode) == 2){
 			easyForcePrintLine("***Gauss Mode: QUAKE***");
 			EASY_CVAR_SET(gauss_primaryonly, 1);
 			EASY_CVAR_SET(gauss_reflectdealsdamage, 1);
@@ -5670,8 +5445,11 @@ void updateCVarRefs(entvars_t *pev){
 
 		
 		//force back to 0. All that mattered is we know what the intention was.
-		global_gaussmode = 0;
-		globalPSEUDO_gaussmodeMem = global_gaussmode;
+		//"hope that gets the point across"
+		//...uh.  What was the point of this if it's set to 0 by EASY_CVAR_SET further below.
+		//global_gaussmode = 0;
+
+		globalPSEUDO_gaussmodeMem = 0;
 		EASY_CVAR_SET(gaussMode, 0);
 
 
@@ -5680,21 +5458,21 @@ void updateCVarRefs(entvars_t *pev){
 
 
 
-	if(globalPSEUDO_germanCensorshipMem != global_germanCensorship || globalPSEUDO_allowGermanModelsMem != global_allowGermanModels){
+	if(globalPSEUDO_germanCensorshipMem != EASY_CVAR_GET(germanCensorship) || globalPSEUDO_allowGermanModelsMem != EASY_CVAR_GET(allowGermanModels)){
 
-		globalPSEUDO_allowGermanModelsMem = global_allowGermanModels;
+		globalPSEUDO_allowGermanModelsMem = EASY_CVAR_GET(allowGermanModels);
 
 
-		//easyForcePrintLine("ARE YOU amazin %.2f %.2f %.2f", globalPSEUDO_canApplyGermanCensorship, global_germanCensorship, global_allowGermanModels);
+		//easyForcePrintLine("ARE YOU amazin %.2f %.2f %.2f", globalPSEUDO_canApplyGermanCensorship, EASY_CVAR_GET(germanCensorship), EASY_CVAR_GET(allowGermanModels));
 
-		if(globalPSEUDO_canApplyGermanCensorship != 1 && (globalPSEUDO_germanCensorshipMem != -1 && global_germanCensorship == 1) && global_allowGermanModels == 1){
-		//if(globalPSEUDO_canApplyGermanCensorship != 1 && global_germanCensorship == 1 && global_allowGermanModels == 1){
-			//note: "global_germanCensorship" being -1 means this is the first time it has been set.  Trust this is not the doing of the user.
+		if(globalPSEUDO_canApplyGermanCensorship != 1 && (globalPSEUDO_germanCensorshipMem != -1 && EASY_CVAR_GET(germanCensorship) == 1) && EASY_CVAR_GET(allowGermanModels) == 1){
+		//if(globalPSEUDO_canApplyGermanCensorship != 1 && EASY_CVAR_GET(germanCensorship) == 1 && EASY_CVAR_GET(allowGermanModels) == 1){
+			//note: "EASY_CVAR_GET(germanCensorship)" being -1 means this is the first time it has been set.  Trust this is not the doing of the user.
 			easyForcePrintLine("***Change map, restart, or load to update models.  Must have german models.");
 			//  ...CVars are \"germanCensorship\" & \"allowGermanModels\"***"
 		}
 
-		globalPSEUDO_germanCensorshipMem = global_germanCensorship;
+		globalPSEUDO_germanCensorshipMem = EASY_CVAR_GET(germanCensorship);
 
 		//this will probably need updating too, as the scientist model is also affected by German censorship.
 		//if(arg_suggestedOrigin != NULL){
@@ -5712,33 +5490,33 @@ void updateCVarRefs(entvars_t *pev){
 	}//END OF german CVars update check
 
 
-	if(global_cl_bullsquidspit != globalPSEUDO_cl_bullsquidspit){
-		globalPSEUDO_cl_bullsquidspit = global_cl_bullsquidspit;
+	if(EASY_CVAR_GET(cl_bullsquidspit) != globalPSEUDO_cl_bullsquidspit){
+		globalPSEUDO_cl_bullsquidspit = EASY_CVAR_GET(cl_bullsquidspit);
 
 		//commit some changes...
-		if(global_cl_bullsquidspit == 0){
+		if(EASY_CVAR_GET(cl_bullsquidspit) == 0){
 			EASY_CVAR_SET_DEBUGONLY(bullsquidSpitUseAlphaModel, 0);
 			EASY_CVAR_SET_DEBUGONLY(bullsquidSpitUseAlphaEffect, 0);
 			saveHiddenCVars();
-		}else if(global_cl_bullsquidspit == 1){
+		}else if(EASY_CVAR_GET(cl_bullsquidspit) == 1){
 			EASY_CVAR_SET_DEBUGONLY(bullsquidSpitUseAlphaModel, 1);
 			EASY_CVAR_SET_DEBUGONLY(bullsquidSpitUseAlphaEffect, 1);
 			saveHiddenCVars();
 		}
 	}
 
-	if(global_cl_hornetspiral != globalPSEUDO_cl_hornetspiral){
-		//easyForcePrintLine("hornetcvartest: what2 ", global_cl_hornetspiral, globalPSEUDO_cl_hornetspiral);
-		globalPSEUDO_cl_hornetspiral = global_cl_hornetspiral;
+	if(EASY_CVAR_GET(cl_hornetspiral) != globalPSEUDO_cl_hornetspiral){
+		//easyForcePrintLine("hornetcvartest: what2 ", EASY_CVAR_GET(cl_hornetspiral), globalPSEUDO_cl_hornetspiral);
+		globalPSEUDO_cl_hornetspiral = EASY_CVAR_GET(cl_hornetspiral);
 		
 		//commit some changes...
-		if(global_cl_hornetspiral == 0){
+		if(EASY_CVAR_GET(cl_hornetspiral) == 0){
 			EASY_CVAR_SET_DEBUGONLY(hornetSpiral, 0);
 			EASY_CVAR_SET_DEBUGONLY(hornetSpeedMulti, 1);
 			EASY_CVAR_SET_DEBUGONLY(hornetSpeedDartMulti, 2);
 			EASY_CVAR_SET_DEBUGONLY(agruntHornetRandomness, 0.1);
 			saveHiddenCVars();
-		}else if(global_cl_hornetspiral == 1){
+		}else if(EASY_CVAR_GET(cl_hornetspiral) == 1){
 			EASY_CVAR_SET_DEBUGONLY(hornetSpiral, 1);
 			EASY_CVAR_SET_DEBUGONLY(hornetSpeedMulti, 0.6);
 			EASY_CVAR_SET_DEBUGONLY(hornetSpeedDartMulti, 2.3);
@@ -5748,15 +5526,15 @@ void updateCVarRefs(entvars_t *pev){
 	}
 
 	
-	if(global_cl_hornettrail != globalPSEUDO_cl_hornettrail){
-		globalPSEUDO_cl_hornettrail = global_cl_hornettrail;
+	if(EASY_CVAR_GET(cl_hornettrail) != globalPSEUDO_cl_hornettrail){
+		globalPSEUDO_cl_hornettrail = EASY_CVAR_GET(cl_hornettrail);
 		
 		//commit some changes...
-		if(global_cl_hornettrail == 0){
+		if(EASY_CVAR_GET(cl_hornettrail) == 0){
 			EASY_CVAR_SET_DEBUGONLY(hornetTrail, 0);
 			EASY_CVAR_SET_DEBUGONLY(hornetZoomPuff, 1);
 			saveHiddenCVars();
-		}else if(global_cl_hornettrail == 1){
+		}else if(EASY_CVAR_GET(cl_hornettrail) == 1){
 			EASY_CVAR_SET_DEBUGONLY(hornetTrail, 1);
 			EASY_CVAR_SET_DEBUGONLY(hornetZoomPuff, 0);
 			saveHiddenCVars();
@@ -5765,23 +5543,35 @@ void updateCVarRefs(entvars_t *pev){
 	
 
 
-	if(cvar_pissedNPCs->value != global_pissedNPCs){
-		global_pissedNPCs = cvar_pissedNPCs->value;
-	}
-
-
-
-	if(cvar_cl_explosion->value != global_cl_explosion){
-		global_cl_explosion = cvar_cl_explosion->value;
-	}
-	
-
-
 	//if(pev != NULL){
 		//these are to be sent to the player.
 		//~Initial time calls with null pev (start of game).  This is ok.
+		
 		EASY_CVAR_UPDATE_SERVER_MASS
+
+		/*
+		int tempo = EASY_CVAR_GET(wpn_glocksilencer);
+		int otherTempo = CVAR_GET_FLOAT("wpn_glocksilencer");
+		//int gaytemp = CVAR_GET_FLOAT(#CVarName)
+
+		if (tempo != 3) {
+			int xxx = 4;
+		}
+
+
+		if (EASY_CVAR_GET(wpn_glocksilencer) != global_wpn_glocksilencer) {
+			global_wpn_glocksilencer = EASY_CVAR_GET(wpn_glocksilencer);
+			MESSAGE_BEGIN( MSG_ALL, gmsgUpdateClientCVar, NULL);
+				WRITE_SHORT(wpn_glocksilencer_ID);
+				WRITE_SHORT( global_wpn_glocksilencer *100);
+			MESSAGE_END();
+		}
+		*/
 	//}
+
+
+		   //EASY_CVAR_UPDATE_SERVER_CLIENTSENDOFF_BROADCAST(wpn_glocksilencer, wpn_glocksilencer_ID)
+
 
 	globalPSEUDO_queueClientSendoff = FALSE;
 
@@ -5902,6 +5692,11 @@ void UTIL_PrecacheOtherWeapon( const char *szClassname )
 		memset( &II, 0, sizeof II );
 		if ( ((CBasePlayerItem*)pEntity)->GetItemInfo( &II ) )
 		{
+			//TAGGG - CRITICAL CRITICAL CRITICAL.
+			// This shit right here?  This is what actually sets something in
+			// ItemInfoArray.  Any other mentions of "GetItemInfo" are often forgotten,
+			// so changes to some stat on a whim (like glock max ammo on seeing a change
+			// in CVar "glockOldReloadLogic") can change ItemInfoArray right there.
 			CBasePlayerItem::ItemInfoArray[II.iId] = II;
 
 			if ( II.pszAmmo1 && *II.pszAmmo1 )
@@ -6068,7 +5863,7 @@ void W_Precache(void)
 void ClientPrecache( void )
 {
 
-	BOOL precacheAllVar = (CVAR_GET_FLOAT("precacheAll") >= 1);
+	BOOL precacheAllVar = (EASY_CVAR_GET(precacheAll) >= 1);
 
 	//just to be clear. Should be this way by default.
 	global_useSentenceSave = FALSE;
@@ -6404,16 +6199,22 @@ void ExtraWorldPrecache(){
 // But, a constant can still be defined as 0 and pass #ifdef.
 
 
-// ALSO, this method is still recalled regardless of any CVArs like "precacheAll" or "soundSentenceSave".
+// ALSO, this method is still called regardless of any CVArs like "precacheAll" or "soundSentenceSave".
 // Those CVars are still checked for whether to precache some things on any level start regarldess of monsters spawned at
 // startup or skip some sounds in case the "soundSentenceSave" is on.
-void precacheAll(void){
+// And renamed with "method_" to bedifferentiated from the CVar of the same name floating around
+// as a macro now.
+void method_precacheAll(void){
 	//easyPrintLine("LANGUAGE: %d", g_Language);
 
 	
 	PRECACHE_SOUND("meme/ymg.wav", TRUE);
 
 
+	easyForcePrintLine("method_precacheAll::: %.1f %.1f", EASY_CVAR_GET(precacheAll), EASY_CVAR_GET(soundSentenceSave));
+
+	PRECACHE_SOUND("items/clipinsert1.wav");
+	PRECACHE_SOUND("items/cliprelease1.wav");
 
 	
 	//Never hurts to be safe.  Any precache calls throughout this method are deliberate, don't try to skip with the soundsentencesave system.
@@ -6424,11 +6225,11 @@ void precacheAll(void){
 	ClientPrecache();
 	ExtraWorldPrecache();
 
-
+	
 	//A call to the "soundSentenceSave" CVar has been moved to game.cpp.
 	
-	BOOL soundSentenceSaveVar = (global_soundSentenceSave >= 1);
-	BOOL precacheAllVar = (CVAR_GET_FLOAT("precacheAll") >= 1);
+	BOOL soundSentenceSaveVar = (EASY_CVAR_GET(soundSentenceSave) >= 1);
+	BOOL precacheAllVar = (EASY_CVAR_GET(precacheAll) >= 1);
 
 
 	g_sGaussBallSprite = PRECACHE_MODEL ("sprites/hotglow.spr");
@@ -6447,17 +6248,24 @@ void precacheAll(void){
 
 
 	
-	if(global_germanCensorship == -1){
-		global_germanCensorship = EASY_CVAR_GET(germanCensorship);
-		global_allowGermanModels = EASY_CVAR_GET(allowGermanModels);
+	if(EASY_CVAR_GET(germanCensorship) == -1){
+		//global_germanCensorship = EASY_CVAR_GET(germanCensorship);
+
+		//"gets the point across"
+		//global_allowGermanModels = EASY_CVAR_GET(allowGermanModels);
+		// wait.  whut.  set it to 'itself'... why.
+		// Perhaps to guarantee it is the same as the PSEUDO version as to not trigger
+		// some change the user didn't call for.
+		EASY_CVAR_SET(allowGermanModels, EASY_CVAR_GET(allowGermanModels))
+
 	}
 
 
 	//!!!!tryLoadGermanGibs  !!!!!
 
 
-	//easyForcePrintLine("ARE YOU flaming %.2f %.2f", global_germanCensorship, global_allowGermanModels);
-	if(global_germanCensorship == 1 && global_allowGermanModels == 1){
+	//easyForcePrintLine("ARE YOU flaming %.2f %.2f", EASY_CVAR_GET(germanCensorship), EASY_CVAR_GET(allowGermanModels));
+	if(EASY_CVAR_GET(germanCensorship) == 1 && EASY_CVAR_GET(allowGermanModels) == 1){
 		
 		if( !(globalPSEUDO_germanModel_hgibFound = verifyModelExists(GERMAN_GIB_PATH)) ){
 			easyForcePrintLine("***NOTICE: model \"%s\" missing.  Gibs will not spawn.***", GERMAN_GIB_PATH);
@@ -6493,36 +6301,36 @@ void precacheAll(void){
 	
 
 
-	if(global_sentryCanGib == 3 || global_miniturretCanGib == 3 || global_turretCanGib == 3){
+	if(EASY_CVAR_GET(sentryCanGib) == 3 || EASY_CVAR_GET(miniturretCanGib) == 3 || EASY_CVAR_GET(turretCanGib) == 3){
 		PRECACHE_MODEL((char*)aryGibInfo[GIB_EXTRAMETAL_1_ID].modelPath);
 	}
-	if(global_sentryCanGib == 4 || global_miniturretCanGib == 4 || global_turretCanGib == 4){
+	if(EASY_CVAR_GET(sentryCanGib) == 4 || EASY_CVAR_GET(miniturretCanGib) == 4 || EASY_CVAR_GET(turretCanGib) == 4){
 		PRECACHE_MODEL((char*)aryGibInfo[GIB_EXTRAMETAL_2_ID].modelPath);
 	}
-	if(global_sentryCanGib == 5 || global_miniturretCanGib == 5 || global_turretCanGib == 5){
+	if(EASY_CVAR_GET(sentryCanGib) == 5 || EASY_CVAR_GET(miniturretCanGib) == 5 || EASY_CVAR_GET(turretCanGib) == 5){
 		PRECACHE_MODEL((char*)aryGibInfo[GIB_EXTRAMETAL_3_ID].modelPath);
 	}
-	if(global_sentryCanGib == 6 || global_miniturretCanGib == 6 || global_turretCanGib == 6){
+	if(EASY_CVAR_GET(sentryCanGib) == 6 || EASY_CVAR_GET(miniturretCanGib) == 6 || EASY_CVAR_GET(turretCanGib) == 6){
 		PRECACHE_MODEL((char*)aryGibInfo[GIB_EXTRAMETAL_4_ID].modelPath);
 	}
-	if(global_sentryCanGib == 7 || global_miniturretCanGib == 7 || global_turretCanGib == 7){
+	if(EASY_CVAR_GET(sentryCanGib) == 7 || EASY_CVAR_GET(miniturretCanGib) == 7 || EASY_CVAR_GET(turretCanGib) == 7){
 		PRECACHE_MODEL((char*)aryGibInfo[GIB_EXTRAMETAL_5_ID].modelPath);
 	}
-	if(global_sentryCanGib == 8 || global_miniturretCanGib == 8 || global_turretCanGib == 8){
+	if(EASY_CVAR_GET(sentryCanGib) == 8 || EASY_CVAR_GET(miniturretCanGib) == 8 || EASY_CVAR_GET(turretCanGib) == 8){
 		PRECACHE_MODEL((char*)aryGibInfo[GIB_EXTRAMETAL_6_ID].modelPath);
 	}
 		
 
 
-	globalPSEUDO_allowGermanModelsMem = global_allowGermanModels;
-	//globalPSEUDO_germanCensorshipMem = global_germanCensorship;
+	globalPSEUDO_allowGermanModelsMem = EASY_CVAR_GET(allowGermanModels);
+	//globalPSEUDO_germanCensorshipMem = EASY_CVAR_GET(germanCensorship);
 
 
 
 	//Actually these are so likely to be called, just precache them unconditionally.
 	/*
 	if(!soundSentenceSaveVar){
-		if(global_weaponSelectUsesReloadSounds != 1){
+		if(EASY_CVAR_GET(weaponSelectUsesReloadSounds) != 1){
 			//normal.
 		}else{
 			PRECACHE_SOUND("weapons/reload1.wav");
@@ -6561,7 +6369,6 @@ void precacheAll(void){
 
 
 
-
 	if(precacheAllVar){
 		//counts for this.
 		giPrecacheGrunt = 1;
@@ -6571,7 +6378,7 @@ void precacheAll(void){
 		//      it can still be called by a section in monsters.cpp that receives sound-calls from the map.  Seems to happen on any map with a gargantua spawned?
 		PRECACHE_SOUND("garg/gar_attack1.wav", TRUE);
 
-
+		
 		//Only do this if precacheAllVar is on and soundSentenceSave is off.
 		//precacheAllVar being off suggests each entity will precache this stuff as it occurs in the map for the first time.
 		//soundSentenceSaveVar being on suggests the soundSentenceSave system is avoiding hte need for precacheing these things to begin with.
@@ -6579,9 +6386,6 @@ void precacheAll(void){
 		//  translation between plain file name and the sentence name).
 		if(!soundSentenceSaveVar){
 			//NOTICE - bodysplat sound already precached in ClientPrecache to be guaranteed to get precached, it may be played normally even with the soundsentencesave on.
-
-			
-
 
 
 			
@@ -7287,7 +7091,7 @@ void precacheAll(void){
 
 
 	}//END OF if(precacheAllVar)
-	else if(global_canDropInSinglePlayer == 1){
+	else if(EASY_CVAR_GET(canDropInSinglePlayer) == 1){
 		//If the player can drop in SinglePlayer, precache this in anticipation of that.
 		//If "precacheAll" was already run, it already covered this (hence this happening in "else")
 		PRECACHE_MODEL("models/w_weaponbox.mdl");
@@ -7480,14 +7284,14 @@ void UTIL_deriveColorFromMonsterHealth(const float& curHealth, const float& maxH
 
 void attemptSendBulletSound(const Vector& bulletHitLoc, entvars_t* pevShooter){
 
-	if(global_bulletholeAlertRange > 0 ){
+	if(EASY_CVAR_GET(bulletholeAlertRange) > 0 ){
 		CBaseEntity* pEntityScan = NULL;
 		//easyPrintLine("HOOOOO %s %s %d", STRING(pev->classname), STRING(pevAttacker->classname), (this->pev == pevAttacker));
 				
 		//why above the range?  In case something has good enough hearing (above 1) to pick this sound up anyways.  Up to a multiple of 1.5 supported.
 		float extraCheck = 1.5;
 
-		while ( (pEntityScan = UTIL_FindEntityInSphere( pEntityScan, bulletHitLoc, global_bulletholeAlertRange*extraCheck ) ) != NULL)
+		while ( (pEntityScan = UTIL_FindEntityInSphere( pEntityScan, bulletHitLoc, EASY_CVAR_GET(bulletholeAlertRange)*extraCheck ) ) != NULL)
 		{
 
 			//MySquadMonsterPointer ????
@@ -7496,7 +7300,7 @@ void attemptSendBulletSound(const Vector& bulletHitLoc, entvars_t* pevShooter){
 					
 			//"testMon->pev->renderfx & ISNPC" is a cheap way of making sure this is an NPC.  Anything that beings with "monsterInit" will have this render flag.
 			//Also, "m_MonsterState == MONSTERSTATE_SCRIPT" would mean this is a cinematic monster.  Ignore.
-			if(testMon != NULL && testMon->pev != pevShooter && (testMon->pev->renderfx & ISNPC) && (testMon->m_MonsterState != MONSTERSTATE_SCRIPT && testMon->m_pCine == NULL)  && (global_bulletholeAlertStukaOnly != 1 || FClassnameIs(testMon->pev, "monster_stukabat") )  ){
+			if(testMon != NULL && testMon->pev != pevShooter && (testMon->pev->renderfx & ISNPC) && (testMon->m_MonsterState != MONSTERSTATE_SCRIPT && testMon->m_pCine == NULL)  && (EASY_CVAR_GET(bulletholeAlertStukaOnly) != 1 || FClassnameIs(testMon->pev, "monster_stukabat") )  ){
 
 				float hearing = testMon->HearingSensitivity();
 				float trueDist = (testMon->pev->origin - bulletHitLoc).Length();
@@ -7505,15 +7309,15 @@ void attemptSendBulletSound(const Vector& bulletHitLoc, entvars_t* pevShooter){
 					adjustedDist = trueDist / hearing;
 				}
 
-						
-				if(adjustedDist <= global_bulletholeAlertRange){
-					if(global_bulletHoleAlertPrintout == 1){
+				
+				if(adjustedDist <= EASY_CVAR_GET(bulletholeAlertRange)){
+					if(EASY_CVAR_GET(bulletHoleAlertPrintout) == 1){
 						easyPrintLine("I HEARD BULLETHIT!: %s truedist: %.2f adjusteddist: %.2f HS: %.2f", STRING(testMon->pev->classname), trueDist, adjustedDist, hearing);
 					}
 					testMon->heardBulletHit(pevShooter);
 							
 				}else{
-					if(global_bulletHoleAlertPrintout == 1){
+					if(EASY_CVAR_GET(bulletHoleAlertPrintout) == 1){
 						easyPrintLine("Hearing sensitivity not good enough!: %s truedist: %.2f adjusteddist: %.2f HS: %.2f", STRING(testMon->pev->classname), trueDist, adjustedDist, hearing);
 					}
 				}
@@ -7523,7 +7327,7 @@ void attemptSendBulletSound(const Vector& bulletHitLoc, entvars_t* pevShooter){
 			}//END OF if(testMon != NULL)
 
 		}//END OF while(another entity so far from the bullet hole to be triggered)
-	}//END OF global_bulletholeAlertRange above 0 check
+	}//END OF EASY_CVAR_GET(bulletholeAlertRange) above 0 check
 
 
 }
@@ -7614,7 +7418,7 @@ CBaseEntity *FindEntityForward( CBasePlayer* pMe )
 
 
 	
-	if(global_drawDebugPathfinding2 == 1){::DebugLine_ClearAll();}
+	if(EASY_CVAR_GET(drawDebugPathfinding2) == 1){::DebugLine_ClearAll();}
 	
 
 
@@ -7636,7 +7440,7 @@ CBaseEntity *FindEntityForward( CBasePlayer* pMe )
 
 		
 		fracto = tr.flFraction;
-		if(global_drawDebugPathfinding2 == 1){::DebugLine_Setup(0, vecStart, vecEnd, fracto);}
+		if(EASY_CVAR_GET(drawDebugPathfinding2) == 1){::DebugLine_Setup(0, vecStart, vecEnd, fracto);}
 
 		return pHit;
 
@@ -7664,7 +7468,7 @@ CBaseEntity *FindEntityForward( CBasePlayer* pMe )
 		}//END OF while(...)
 		//Find something?
 		if(bestYet != NULL){
-			if(global_drawDebugPathfinding2 == 1){::DebugLine_Setup(0, vecStart, vecEnd, fracto);}
+			if(EASY_CVAR_GET(drawDebugPathfinding2) == 1){::DebugLine_Setup(0, vecStart, vecEnd, fracto);}
 			return bestYet;
 		}
 	}else{
@@ -7681,7 +7485,7 @@ CBaseEntity *FindEntityForward( CBasePlayer* pMe )
 	*/
 
 	
-	if(global_drawDebugPathfinding2 == 1){::DebugLine_Setup(0, vecStart, vecEnd, fracto);}
+	if(EASY_CVAR_GET(drawDebugPathfinding2) == 1){::DebugLine_Setup(0, vecStart, vecEnd, fracto);}
 	return NULL;
 }
 
@@ -7733,7 +7537,8 @@ void UTIL_ServerMassCVarReset(entvars_t* pev){
 
 
 
-
+/*
+// UNUSED, see notes in util.h about this.  Mainly use EASY_CVAR_PRINTIF_PRE with a CVar name instead.
 void EASY_CVAR_PRINTIF(float geh, const char *szFmt, ... )
 {
 	if(geh == 1){
@@ -7750,13 +7555,14 @@ void EASY_CVAR_PRINTIF(float geh, const char *szFmt, ... )
 		
 	}
 }
-
+// Unused?  I forget what this was trying to do.
 void EASY_CVAR_PRINTIF_VECTOR(float geh, const char *szFmt, ... )
 {
 	if(geh == 1){
 		//blank.
 	}
 }
+*/
 
 void PRINTQUEUE_STUKA_SEND(PrintQueue& toPrint, const char* src, ...){
 	if(toPrint.latestPlace < 5){
@@ -7773,7 +7579,7 @@ void PRINTQUEUE_STUKA_SEND(PrintQueue& toPrint, const char* src, ...){
 }
 
 BOOL getGermanModelsAllowed(void){
-	if(global_germanCensorship == 1 && global_allowGermanModels == 1 && globalPSEUDO_canApplyGermanCensorship == 1){
+	if(EASY_CVAR_GET(germanCensorship) == 1 && EASY_CVAR_GET(allowGermanModels) == 1 && globalPSEUDO_canApplyGermanCensorship == 1){
 		return TRUE;
 	}else{
 		return FALSE;
@@ -7978,31 +7784,28 @@ void matrices_pivotizeColumn(int rowNumber, int columnNumber){
 	int matrix2columns = matrices_constCols;
 		
 	for(int y = 0; y < matrices_expRows; y++){
-			
+		int x = 0;
+
 		if(y == rowNumber){
 			//skip.
 		}else{
 			//zero it out.
-
+			
 			float multiple = -matrices_var[y][columnNumber];
 			//System.out.println("MULTI IS " + multiple + "from " + y + " " + columnNumber);
 				
-			for(int x = 0; x < matrices_varCols; x++){
+			for(x = 0; x < matrices_varCols; x++){
 				//addMultipleOf(matrices_var, matrix2, x, rowNumber, x, y);
 				matrices_var[y][x] += (multiple * matrices_var[rowNumber][x]);
 			}
 				
-			for(int x = 0; x < matrix2columns; x++){
+			for(x = 0; x < matrix2columns; x++){
 				//addMultipleOf(matrix1, matrix2, x, rowNumber, x, y);
 				matrices_const[y][x] += (multiple * matrices_const[rowNumber][x]);
 			}
-				
-				
-				
-			//
-				
-				
-				
+			
+			
+			
 		}//END OF else OF if(y == rowNumber)
 			
 	}//END OF for(int y = 0...)
@@ -8049,14 +7852,15 @@ void pivotizeColumnBottom(float[][] matrix1, float[][] matrix2, int rowNumber, i
 	
 	
 void matrices_divideRow(int rowNumb, float divideBy){
-		
+	
+	int x = 0;
 	int matrix2columns = matrices_constCols;
 		
 	if(divideBy != 0){
-		for(int x = 0; x < matrices_varCols; x++){
+		for(x = 0; x < matrices_varCols; x++){
 			matrices_var[rowNumb][x] /= divideBy;
 		}
-		for(int x = 0; x < matrix2columns; x++){
+		for(x = 0; x < matrix2columns; x++){
 			matrices_const[rowNumb][x] /= divideBy;
 		}
 		//constcolumn[rowNumb] /= divideBy;
@@ -8066,20 +7870,20 @@ void matrices_divideRow(int rowNumb, float divideBy){
 	
 	
 void matrices_swapRows(int row1, int row2){
-		
+	int x;
 	int matrix2columns = matrices_constCols;
 
 	//System.out.println("WHAT " + row1 + " " + row2);
 	if(row1 != row2){
 		
-		for(int x = 0; x < matrices_varCols; x++){
+		for(x = 0; x < matrices_varCols; x++){
 			float tempElement = matrices_var[row1][x]; 
 			matrices_var[row1][x] = matrices_var[row2][x];
 			matrices_var[row2][x] = tempElement;
 				
 		}
 			
-		for(int x = 0; x < matrix2columns; x++){
+		for(x = 0; x < matrix2columns; x++){
 			float tempElement = matrices_const[row1][x]; 
 			matrices_const[row1][x] = matrices_const[row2][x];
 			matrices_const[row2][x] = tempElement;
@@ -8221,8 +8025,16 @@ void OnMapLoadPreStart(){
 
 
 
+
 //MODDD - new event, called by CWorld's precache method (first thing precached since starting a map or calling changelevel, transition or not).
 void OnMapLoadStart(){
+	easyForcePrintLine("!!!!!! OnMapLoadStart !!!");
+
+
+
+
+
+
 	
 	DebugLine_ClearAll();
 

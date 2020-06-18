@@ -159,6 +159,21 @@ char* ConvertCRtoNL( char *str )
 // the next (optional) one to four strings are parameters for that string (which can also be message names if they begin with '#')
 int CHudTextMessage::MsgFunc_TextMsg( const char *pszName, int iSize, void *pbuf )
 {
+	//MODDD -  ALRIGHTY.  Since yall motherfuckers are allergic to explaining shit.
+	// First off, the decision to make szBuf a multi-dimensional array was really weird.
+	// It ends up being 6 strings, each 128 characters in size.
+	// Strings "sstr#" are made from 1 to 4, each come from loading one of the four optional
+	// parameters sent (or NULL if it gets to a point where a paramter wasn't sent, like
+	// sstr3 trying to do READ_STRING even though the user only gave 2 parameters).
+	// Then each sstr# is set to refer to the szBuf[#] string as a temporary place for holding
+	// that parameter after any possible parsing from starting with a number sign, if it did, like
+	// "#map_value_6" I guess.
+	// The last char pointer, "psz", refers to the 5th string in szBuf,  szBuf[5], since
+	// szBuf[1 to 4] were used for the parameters (sstr1 to 4).
+	// Then sprintf puts the four sstr# strings into psz (that is, szBuf[5]) and what is in that 
+	// szBuf[5] is what is printed out.
+
+
 	BEGIN_READ( pbuf, iSize );
 
 	int msg_dest = READ_BYTE();
@@ -184,6 +199,8 @@ int CHudTextMessage::MsgFunc_TextMsg( const char *pszName, int iSize, void *pbuf
 
 	if ( gViewPort && gViewPort->AllowedToPrintText() == FALSE )
 		return 1;
+
+
 
 	switch ( msg_dest )
 	{

@@ -83,6 +83,11 @@ public:
 	
 	float massInfluence(void);
 	int GetProjectileType(void);
+	
+	Vector GetVelocityLogical(void);
+	void SetVelocityLogical(const Vector& arg_newVelocity);
+
+	void OnDeflected(CBaseEntity* arg_entDeflector);
 
 	
 	GENERATE_GIBMONSTER_PROTOTYPE
@@ -295,6 +300,21 @@ float CSqueakGrenade::massInfluence(void){
 int CSqueakGrenade::GetProjectileType(void){
 	return PROJECTILE_ORGANIC_HOSTILE;
 }
+
+
+
+Vector CSqueakGrenade::GetVelocityLogical(void){
+	return pev->velocity;
+}
+
+void CSqueakGrenade::SetVelocityLogical(const Vector& arg_newVelocity){
+	pev->velocity = arg_newVelocity;
+}
+
+void CSqueakGrenade::OnDeflected(CBaseEntity* arg_entDeflector){
+	m_hOwner = arg_entDeflector;
+}
+
 
 
 
@@ -516,7 +536,6 @@ void CSqueakGrenade::SuperBounceTouch( CBaseEntity *pOther )
 
 	m_flNextBounceSoundTime = gpGlobals->time + 0.5;// half second.
 }
-
 #endif
 
 LINK_ENTITY_TO_CLASS( weapon_snark, CSqueak );
@@ -527,37 +546,12 @@ LINK_ENTITY_TO_CLASS( weapon_snark, CSqueak );
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 //CSQueak, the player weapon
-
-
-
-
-
 int CSqueak::numberOfEyeSkins = -1;
-
 
 
 CSqueak::CSqueak(){
 
-	
 	//"weaponetired"?
 	m_fInAttack = FALSE;
 
@@ -571,18 +565,15 @@ void CSqueak::customAttachToPlayer(CBasePlayer *pPlayer ){
 
 
 
-
 const char* CSqueak::GetPickupWalkerName(void){
 	return "monster_snarkpickupwalker";
 }
 
 void CSqueak::Spawn( )
 {
-
 	if(pickupWalkerReplaceCheck()){
 		return;
 	}
-
 
 	Precache( );
 	m_iId = WEAPON_SNARK;
@@ -629,6 +620,10 @@ void CSqueak::setModel(const char* m){
 	CBasePlayerWeapon::setModel(m);
 
 	/*
+	//MODDD - IMPORTANT NOTE.
+	// doing blinks here doesn't do much.  See hl_weapons.cpp where "numberOfEyeSkins" is used.
+	// The counts are hardcoded there, unsure if "getNumberOfSkins" over there would work.
+	
 	if(numberOfEyeSkins == -1){
 		//never loaded numberOfSkins? Do so.
 		numberOfEyeSkins = getNumberOfSkins();
@@ -802,11 +797,10 @@ void CSqueak::SecondaryAttack( void )
 
 
 
-
-
-
 void CSqueak::ItemPostFrame(){
 	
+	//MODDD - nope.
+	/*
 	if ( ( pev->skin == 0 ) && RANDOM_LONG(0,127) == 0 )
 	{// start blinking!
 
@@ -818,6 +812,7 @@ void CSqueak::ItemPostFrame(){
 	{// already blinking
 		pev->skin--;
 	}
+	*/
 
 	CBasePlayerWeapon::ItemPostFrame();
 
@@ -856,13 +851,8 @@ void CSqueak::WeaponIdle( void )
 	}
 
 
-
 	if ( m_flTimeWeaponIdle > UTIL_WeaponTimeBase() )
 		return;
-
-
-	
-
 
 
 
@@ -908,8 +898,36 @@ void CSqueak::WeaponIdle( void )
 	SendWeaponAnim( iAnim );
 }
 
-#endif
 
 
+//////////////////////////////////////////////////////////////////////////////////////
+// Same as spawning by "weapon_snark", but gives the same effect as the 
+// SF_PICKUP_NOREPLACE spawnflag.
+// It doesn't add the spawnflag, just having a classname that ends in "_noreplace" is enough.
+class CSqueak_NoReplace : public CSqueak
+{
+public:
+	//MODDD
+	CSqueak_NoReplace();
 
+	void Spawn(void);
+};
+
+CSqueak_NoReplace::CSqueak_NoReplace(){
+
+}//END OF constructor
+
+LINK_ENTITY_TO_CLASS(weapon_snark_noreplace, CSqueak_NoReplace);
+
+
+void CSqueak_NoReplace::Spawn(void) {
+	CSqueak::Spawn();
+
+	//after that call, may as well lose the "_noreplace" bit.
+	pev->classname = MAKE_STRING("weapon_snark");
+}
+//////////////////////////////////////////////////////////////////////////////////////
+
+
+#endif //END OF OEM_BUILD and HLDEMO_BUILD checks
 

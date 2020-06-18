@@ -62,13 +62,9 @@ public:
 LINK_ENTITY_TO_CLASS( monster_satchel, CSatchelCharge );
 
 
-CSatchel::CSatchel(){
 
-	//NOTE: this used to be a custom var named "weaponRetired", but it does not seem to sync too well b/w the server & client.
-	//Now reusing an existing sync'd var.
-	m_fInAttack = FALSE;
 
-}
+
 
 
 //=========================================================
@@ -204,6 +200,29 @@ int CSatchelCharge::GetProjectileType(void){
 
 
 
+
+
+
+
+
+
+CSatchel::CSatchel() {
+
+	//NOTE: this used to be a custom var named "weaponRetired", but it does not seem to sync too well b/w the server & client.
+	//Now reusing an existing sync'd var.
+	m_fInAttack = FALSE;
+
+}
+
+
+// Save/restore for serverside only!
+#ifndef CLIENT_DLL
+TYPEDESCRIPTION	CSatchel::m_SaveData[] =
+{
+	DEFINE_FIELD(CSatchel, m_chargeReady, FIELD_INTEGER),
+};
+IMPLEMENT_SAVERESTORE(CSatchel, CBasePlayerWeapon);
+#endif
 
 
 

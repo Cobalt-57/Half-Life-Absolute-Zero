@@ -34,11 +34,13 @@ public:
 	int MsgFunc_CliTest(const char *pszName, int iSize, void *pbuf);
 	
 	
+	int MsgFunc_FirstAppr(const char* pszName, int iSize, void* pbuf);
+	int MsgFunc_ResetCVars(const char* pszName, int iSize, void* pbuf);
 	
 	int MsgFunc_UpdClientC(const char *pszName, int iSize, void *pbuf);
 	int MsgFunc_RstClientC(const char *pszName, int iSize, void *pbuf);
 	int MsgFunc_PntClientC(const char *pszName, int iSize, void *pbuf);
-	int MsgFunc_RetrieveFOV(const char *pszName, int iSize, void *pbuf);
+	//int MsgFunc_RetrieveFOV(const char *pszName, int iSize, void *pbuf);
 	int MsgFunc_UpdBnclStat(const char *pszName,  int iSize, void *pbuf );
 	int MsgFunc_UpdPlyA(const char *pszName,  int iSize, void *pbuf );
 	

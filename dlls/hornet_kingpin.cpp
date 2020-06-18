@@ -231,5 +231,27 @@ void CHornetKingpin::SmartDieTouch(CBaseEntity* pOther )
 
 
 
+Vector CHornetKingpin::GetVelocityLogical(void){
+	//probably fine?
+	return pev->velocity;
+}
+//Likewise, if something else wants to change our velocity, and we pay more attention to something other than pev->velocty,
+//we need to apply the change to that instead.  Or both, leaving that up to the thing implementing this.
+void CHornetKingpin::SetVelocityLogical(const Vector& arg_newVelocity){
+	pev->velocity = arg_newVelocity;
+	// never use TrackTouch? we never call vecFlightDirTrue.
+	//vecFlightDirTrue = arg_newVelocity;
+}
+
+void CHornetKingpin::OnDeflected(CBaseEntity* arg_entDeflector){
+
+	//Tell me to stop following behavior.  The die time reset for quick fire is okay too once.
+	if(!reflectedAlready){
+		reflectedAlready = TRUE;
+		this->StartDart();
+	}
+}
+
+
 
 

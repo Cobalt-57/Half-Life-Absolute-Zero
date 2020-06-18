@@ -7,12 +7,6 @@
 
 
 
-
-
-
-
-
-
 //MODDD - moved from monsters.h. This area is made for preprocessor script generator methods like this.
 #define CUSTOM_SCHEDULES\
 		virtual Schedule_t *ScheduleFromName( const char *pName );\
@@ -34,29 +28,27 @@
 
 
 
-
-
-
-
-//Not sure why something like this wasn't done before. This melds better with the more complex conditions placed on some multiplayer checks.
-//This section was repeated throughout a lot of weapon script, may as well be one constant that differs between clientside and serverside.
-//Just call "WEAPON_DEFAULT_MULTIPLAYER_CHECK" for the right method.
 #ifdef CLIENT_DLL
-	#define WEAPON_DEFAULT_MULTIPLAYER_CHECK (bIsMultiplayer())
-
-
+// OLD WAY
 /*
 	inline float CVAR_GET_FLOAT( const char *x ) {	return gEngfuncs.pfnGetCvarFloat( (char*)x ); }
 	inline char* CVAR_GET_STRING( const char *x ) {	return gEngfuncs.pfnGetCvarString( (char*)x ); }
 	inline struct cvar_s *CVAR_CREATE( const char *cv, const char *val, const int flags ) {	return gEngfuncs.pfnRegisterVariable( (char*)cv, (char*)val, flags ); }
 */
-#define CVAR_GET_FLOAT (*gEngfuncs.pfnGetCvarFloat)
-#define CVAR_GET_STRING (*gEngfuncs.pfnGetCvarString)
-#define CVAR_CREATE (*gEngfuncs.pfnRegisterVariable)
 
+
+	// Also, note that clientside CVAR_CREATE takes a few parameters ( char *szName, char *szValue, int flags ) to work, and returns
+	// a pointer to the 'struct cvar_s' (or cvar_t).
+	#define CVAR_CREATE (*gEngfuncs.pfnRegisterVariable)
+
+
+	#define CVAR_GET_FLOAT (*gEngfuncs.pfnGetCvarFloat)
+	#define CVAR_GET_STRING (*gEngfuncs.pfnGetCvarString)
+	
 
 	/*
-	//Some of the serverside enginecallback.h's defines for reference. CVAR_SET_STRING wasn't done clientside because...?
+	// Some of the serverside enginecallback.h's defines for reference.
+	// there isn't an equivalent engine call clientside of serverside's CVAR_SET_STRING because...?
 	#define CVAR_GET_FLOAT	(*g_engfuncs.pfnCVarGetFloat)
 	#define CVAR_GET_STRING	(*g_engfuncs.pfnCVarGetString)
 	#define CVAR_SET_FLOAT	(*g_engfuncs.pfnCVarSetFloat)
@@ -65,22 +57,19 @@
 	*/
 
 	#define CVAR_SET_FLOAT	(*gEngfuncs.Cvar_SetValue)
+	
+	#define CVAR_GET_POINTER (*gEngfuncs.pfnGetCvarPointer)
 
 
 
 #else
-	#define WEAPON_DEFAULT_MULTIPLAYER_CHECK (g_pGameRules->IsMultiplayer())
-
-
-
+	// Making "CVAR_CREATE" A synonym for serverside's CVAR_REGISTER, it's that way clientside so why not be able
+	// to use the same name for both.
+	// Also, on serverside, CVAR_CREATE takes a cvar_t* that's been filled out ahead of time as a parameter.
+	// It does not return a reference to that.  If "CVAR_GET_POINTER" returns a reference to the exact same cvar_t, that
+	// would be interesting.
 	#define CVAR_REGISTER	(*g_engfuncs.pfnCVarRegister)
-
-	//MODDD NOTE - Also be aware of thsese from cl_util.h (clientside):
-	/*
-	CVAR_GET_FLOAT( const char *x )
-	CVAR_GET_STRING( const char *x )
-	CVAR_CREATE( const char *cv, const char *val, const int flags )
-	*/
+	#define CVAR_CREATE	(*g_engfuncs.pfnCVarRegister)
 
 	#define CVAR_GET_FLOAT	(*g_engfuncs.pfnCVarGetFloat)
 	#define CVAR_GET_STRING	(*g_engfuncs.pfnCVarGetString)

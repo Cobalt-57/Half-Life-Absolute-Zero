@@ -42,7 +42,6 @@
 #include "usercmd.h"
 #include "const.h"
 #include "camera.h"
-#include "in_defs.h"
 #include "parsemsg.h"
 #include "pm_shared.h"
 #include "../engine/keydefs.h"

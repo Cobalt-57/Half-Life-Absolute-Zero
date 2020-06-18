@@ -185,7 +185,7 @@ int CWallHealth::Restore( CRestore &restore )
 		return 0;
 
 	//Establish that I'm the parent entity again.
-	healthModuleInstance.setupRestore(static_cast <CBaseEntity*>(this), static_cast <I_HealthModule_Parent*>(this));
+	healthModuleInstance.setupRestore(static_cast<CBaseEntity*>(this), static_cast<I_HealthModule_Parent*>(this));
 
 	//int iReadFieldsResult = restore.ReadFields( "CWallHealth", this, m_SaveData, ARRAYSIZE(m_SaveData) );
 
@@ -221,12 +221,12 @@ void CWallHealth::I_HealthModule_UseEnd(void){
 
 }
 
-void CWallHealth::I_HealthModule_SetThink_UseEnd(void){
-	SetThink( static_cast <void (CBaseEntity::*)(void)>(&CWallHealth::UseEnd) );
-}
-void CWallHealth::I_HealthModule_SetThink_ChargeRestored(void){
-	SetThink( static_cast <void (CBaseEntity::*)(void)>(&CWallHealth::ChargeRestored) );
-}
+//void CWallHealth::I_HealthModule_SetThink_UseEnd(void){
+//	SetThink( static_cast <void (CBaseEntity::*)(void)>(&CWallHealth::UseEnd) );
+//}
+//void CWallHealth::I_HealthModule_SetThink_ChargeRestored(void){
+//	SetThink( static_cast <void (CBaseEntity::*)(void)>(&CWallHealth::ChargeRestored) );
+//}
 
 void CWallHealth::I_HealthModule_SetThink_Custom(void){
 	SetThink( static_cast <void (CBaseEntity::*)(void)>(&CWallHealth::CustomThink) );
@@ -249,7 +249,7 @@ void CWallHealth::ReportGeneric(void){
 }//END OF ReportGeneric
 
 
-
+/*
 void CWallHealth::UseEnd(void){
 	healthModuleInstance.UseEnd();
 }
@@ -257,7 +257,7 @@ void CWallHealth::UseEnd(void){
 void CWallHealth::ChargeRestored(void){
 	healthModuleInstance.ChargeRestored();
 }
-
+*/
 
 
 

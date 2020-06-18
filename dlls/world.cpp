@@ -48,7 +48,7 @@ extern void turnWorldLightsOn();
 extern void turnWorldLightsOff();
 extern void resetModCVars(CBasePlayer* arg_plyRef, BOOL isEmergency);
 
-extern float global_germanCensorship;
+EASY_CVAR_EXTERN(germanCensorship)
 
 extern DLL_DECALLIST gDecals[];
 
@@ -147,7 +147,7 @@ void CDecal :: StaticDecal( void )
 
 //DOOMMARINE23 If we're in censorship mode, replace all dynamic blood placed by the level designer with censored versions.
 //WELCOME TO IF/ELSE HELL
-		if (global_germanCensorship)
+		if (EASY_CVAR_GET(germanCensorship))
 		{	
 			if ((int)pev->skin >= 230 && (int)pev->skin <= 237)	//Dynamic Human Blood {blood1 through {blood 8
 				{
@@ -582,6 +582,7 @@ void CWorld :: Precache( void )
 {
 	//MODDD - old place for startup.
 	
+	easyForcePrintLine("CWORLD::PRECACHE!!!");
 	
 
 	//uh, whut??
@@ -656,7 +657,7 @@ void CWorld :: Precache( void )
 	//ClientPrecache();
 	
 	//MODDD - call this method so that ones usually non-native (not included) to a map can be spawned by the player ("give") without crashing the game.
-	precacheAll();
+	method_precacheAll();
 	///////////////////////////////////////////////////////////////////////////////////////////////////
 	///////////////////////////////////////////////////////////////////////////////////////////////////
 	///////////////////////////////////////////////////////////////////////////////////////////////////

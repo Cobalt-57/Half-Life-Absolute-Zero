@@ -30,13 +30,20 @@
 
 
 
-#ifndef TRUE
-#define TRUE 1
-#define FALSE 0
-#endif
+// don't mind these.
+extern int playingMov;
+extern float movieStartTime;
+
+
+
+
 
 //MODDD- accessible anywhere.?
-extern void updateClientCVarRefs();
+extern void lateCVarInit(void);
+extern void updateClientCVarRefs(void);
+
+extern void updateAutoFOV(void);
+
 
 // Macros to hook function calls into the HUD object
 #define HOOK_MESSAGE(x) gEngfuncs.pfnHookUserMsg(#x, __MsgFunc_##x );
@@ -102,6 +109,7 @@ extern void updateClientCVarRefs();
 
 
 
+
 //global index of the crosshair index.  Load this early on.
 extern int alphaCrossHairIndex;
 
@@ -122,31 +130,33 @@ inline 	int						TextMessageDrawChar( int x, int y, int number, int r, int g, in
 	return gEngfuncs.pfnDrawCharacter( x, y, number, r, g, b ); 
 }
 
-inline int DrawConsoleString( int x, int y, const char *string )
+
+//MODDD - look all below, any mentions of "string" changed to "par_string".
+inline int DrawConsoleString( int x, int y, const char *par_string )
 {
-	return gEngfuncs.pfnDrawConsoleString( x, y, (char*) string );
+	return gEngfuncs.pfnDrawConsoleString( x, y, (char*) par_string );
 }
 
-inline void GetConsoleStringSize( const char *string, int *width, int *height )
+inline void GetConsoleStringSize( const char *par_string, int *width, int *height )
 {
-	gEngfuncs.pfnDrawConsoleStringLen( string, width, height );
+	gEngfuncs.pfnDrawConsoleStringLen( par_string, width, height );
 }
 
-inline int ConsoleStringLen( const char *string )
+inline int ConsoleStringLen( const char *par_string )
 {
 	int _width, _height;
-	GetConsoleStringSize( string, &_width, &_height );
+	GetConsoleStringSize( par_string, &_width, &_height );
 	return _width;
 }
 
-inline void ConsolePrint( const char *string )
+inline void ConsolePrint( const char *par_string )
 {
-	gEngfuncs.pfnConsolePrint( string );
+	gEngfuncs.pfnConsolePrint( par_string );
 }
 
-inline void CenterPrint( const char *string )
+inline void CenterPrint( const char *par_string )
 {
-	gEngfuncs.pfnCenterPrint( string );
+	gEngfuncs.pfnCenterPrint( par_string );
 }
 
 // returns the players name of entity no.
@@ -210,8 +220,8 @@ extern void drawString(int arg_x, int arg_y, const char* arg_str, const float& r
 extern void drawCrazyShit(float flTime);
 
 
-extern void createSendString(char* arg_dest, const char* arg_label, int arg_arg);
-extern void sendAutoFOV(void);
+//extern void createSendString(char* arg_dest, const char* arg_label, int arg_arg);
+//extern void sendAutoFOV(void);
 
 
 extern void testForHelpFile(void);

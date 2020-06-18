@@ -13,6 +13,11 @@
 *
 ****/
 
+
+#include "externalLibInclude.h"
+//#include <stdlib.h> // atoi
+
+
 #include <assert.h>
 #include "mathlib.h"
 #include "const.h"
@@ -24,8 +29,20 @@
 #include <stdio.h>  // NULL
 #include <math.h>   // sqrt
 #include <string.h> // strcpy
-#include <stdlib.h> // atoi
 #include <ctype.h>  // isspace
+
+//MODDD - new file.
+#include "pm_printout.h"
+
+
+
+
+// easyPrint methods are now available for C!
+
+
+
+
+
 
 #ifdef CLIENT_DLL
 	// Spectator Mode
@@ -71,7 +88,10 @@ typedef struct hull_s
 #define TIME_TO_DUCK	0.4
 #define VEC_DUCK_HULL_MIN	-18
 #define VEC_DUCK_HULL_MAX	18
-#define VEC_DUCK_VIEW		12
+
+//MODDD - renamed to VEC_DUCK_VIEW_Z to avoid a conflict.
+#define VEC_DUCK_VIEW_Z		12
+
 #define PM_DEAD_VIEWHEIGHT	-8
 
 //MODDD - edit
@@ -165,6 +185,7 @@ static char grgszTextureName[CTEXTURESMAX][CBTEXTURENAMEMAX];
 static char grgchTextureType[CTEXTURESMAX];
 
 int g_onladder = 0;
+
 
 
 
@@ -1131,9 +1152,16 @@ void PM_WalkMove ()
 	
 
 
-
-
-
+	/*
+	// more printout tests
+#ifdef CLIENT_DLL
+	pmove->Con_Printf( "CL: Con_Printf : %i %d %g %s end\n", 12, 12, 12.5f, "test");
+	pmove->Con_DPrintf("CL: Con_DPrintf: %i %d %g %s end\n", 12, 12, 12.5f, "test");
+#else
+	pmove->Con_Printf( "SV: Con_Printf : %i %d %g %s end\n", 12, 12, 12.5f, "test");
+	pmove->Con_DPrintf("SV: Con_DPrintf: %i %d %g %s end\n", 12, 12, 12.5f, "test");
+#endif
+	*/
 
 
 
@@ -1196,10 +1224,6 @@ void PM_WalkMove ()
 
 	//return;
 
-
-
-
-
 	oldonground = pmove->onground;
 
 // first try just moving to the destination	
@@ -1218,16 +1242,10 @@ void PM_WalkMove ()
 	//BUUUUUUt... what if we want to smoothly move down an incline/stairs instead?  Can we detect that too?
 	if (traceInclineDetection_Forward.fraction == 1)
 	{
-
 		//MODDD - new block!
 		////////////////////////////////////////////////////////////////////////////////
 
-
-
-		
 		////////////////////////////////////////////////////////////////////////////////
-
-
 
 		VectorCopy (traceInclineDetection_Forward.endpos, pmove->origin);
 		return;
@@ -1242,21 +1260,10 @@ void PM_WalkMove ()
 
 
 
-
-
-
-
-
-
-
-
-
 	// Try sliding forward both on ground and up 16 pixels
 	//  take the move that goes farthest
 	VectorCopy (pmove->origin, original);       // Save out original pos &
 	VectorCopy (pmove->velocity, originalvel);  //  velocity.
-
-
 
 
 	// Slide move
@@ -2238,7 +2245,7 @@ void PM_Duck( void )
 					 ( pmove->onground == -1 ) )
 				{
 					pmove->usehull = 1;
-					pmove->view_ofs[2] = VEC_DUCK_VIEW;
+					pmove->view_ofs[2] = VEC_DUCK_VIEW_Z;
 					pmove->flags |= FL_DUCKING;
 					pmove->bInDuck = false;
 
@@ -2262,7 +2269,7 @@ void PM_Duck( void )
 
 					// Calc parametric time
 					duckFraction = PM_SplineFraction( time, (1.0/TIME_TO_DUCK) );
-					pmove->view_ofs[2] = ((VEC_DUCK_VIEW - fMore ) * duckFraction) + (VEC_VIEW * (1-duckFraction));
+					pmove->view_ofs[2] = ((VEC_DUCK_VIEW_Z - fMore ) * duckFraction) + (VEC_VIEW * (1-duckFraction));
 				}
 			}
 		}
@@ -3536,9 +3543,6 @@ void PM_PlayerMove ( qboolean server )
 	pmove->server = server;                
 
 	
-
-
-
 	// Adjust speeds etc.
 	PM_CheckParamters();
 
@@ -4017,7 +4021,6 @@ void CUSTOM_setPhysicsKey(const char* physString, const char* keyToChange, const
 
 
 
-
 void PM_Move ( struct playermove_s *ppmove, int server )
 {
 
@@ -4038,7 +4041,6 @@ void PM_Move ( struct playermove_s *ppmove, int server )
 	
 	if( !strcmp(pmove->PM_Info_ValueForKey( pmove->physinfo, "res" ), "1")){
 		pmove->flFallVelocity = 0;
-
 
 		/*
 		if(pmove->server){

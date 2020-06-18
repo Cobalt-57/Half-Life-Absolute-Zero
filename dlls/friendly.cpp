@@ -11,10 +11,10 @@
 #include "player.h"
 
 
-EASY_CVAR_EXTERN(friendlyPianoOtherVolume)
+EASY_CVAR_EXTERN_DEBUGONLY(friendlyPianoOtherVolume)
 
-extern float global_noFlinchOnHard;
-extern float global_friendlyPrintout;
+EASY_CVAR_EXTERN_DEBUGONLY(noFlinchOnHard)
+EASY_CVAR_EXTERN_DEBUGONLY(friendlyPrintout)
 
 
 
@@ -661,7 +661,7 @@ Schedule_t* CFriendly::GetSchedule ( void )
 				return GetScheduleOfType ( SCHED_WAKE_ANGRY );
 			}
 			//MODDD - other condition.  If "noFlinchOnHard" is on and the skill is hard, don't flinch from getting hit.
-			else if (HasConditions(bits_COND_LIGHT_DAMAGE) && !HasMemory( bits_MEMORY_FLINCHED) && !(global_noFlinchOnHard==1 && g_iSkillLevel==SKILL_HARD)  )
+			else if (HasConditions(bits_COND_LIGHT_DAMAGE) && !HasMemory( bits_MEMORY_FLINCHED) && !(EASY_CVAR_GET(noFlinchOnHard)==1 && g_iSkillLevel==SKILL_HARD)  )
 			{
 				return GetScheduleOfType( SCHED_SMALL_FLINCH );
 			}
@@ -1577,7 +1577,7 @@ void CFriendly::MonsterThink( void ){
 
 void CFriendly::stopHorrorSound(void){
 	//STOP_SOUND_FILTERED( edict(), CHAN_VOICE, "friendly/friendly_horror.wav" );
-	if(m_hEnemy && m_hEnemy->IsPlayer())STOP_SOUND_FILTERED( m_hEnemy->edict(), CHAN_STATIC, "friendly/friendly_horror.wav" );
+	if(m_hEnemy!=NULL && m_hEnemy->IsPlayer())STOP_SOUND_FILTERED( m_hEnemy->edict(), CHAN_STATIC, "friendly/friendly_horror.wav" );
 }
 
 
@@ -1696,7 +1696,7 @@ GENERATE_KILLED_IMPLEMENTATION(CFriendly){
 		horrorSelected = FALSE;
 		horrorPlayTime = -1;
 
-		if(m_hEnemy && m_hEnemy->IsPlayer()){
+		if(m_hEnemy != NULL && m_hEnemy->IsPlayer()){
 			CBasePlayer* tempPlayer = static_cast<CBasePlayer*>(CBaseEntity::Instance(m_hEnemy.Get() ));
 
 			//if the player's closest mr. friendly was me, disassociate me with the player since I'm about to be deleted.
@@ -1859,8 +1859,6 @@ int CFriendly::tryActivitySubstitute(int activity){
 void CFriendly::HandleEventQueueEvent(int arg_eventID){
 	
 
-	EASY_CVAR_EXTERN(testVar);
-
 	switch(arg_eventID){
 	case 0:{
 		//close range melee
@@ -1888,7 +1886,9 @@ void CFriendly::HandleEventQueueEvent(int arg_eventID){
 	case 1:{
 		//"double whip" (long range) melee, 1st attack
 		
-		CBaseEntity *pHurt = CheckTraceHullAttack( Vector(0, 0, EASY_CVAR_GET(testVar) ), 137, gSkillData.zombieDmgBothSlash, DMG_SLASH );
+		//TAGGG - CRITICAL.   The third coord of that first vector is supposed to be 0, right??
+		// Same for the 'CheckTraceHullAttack' further below.
+		CBaseEntity *pHurt = CheckTraceHullAttack( Vector(0, 0, 0 ), 137, gSkillData.zombieDmgBothSlash, DMG_SLASH );
 		if ( pHurt )
 		{
 			if ( (pHurt->pev->flags & (FL_MONSTER|FL_CLIENT)) && !pHurt->blocksImpact())
@@ -1909,7 +1909,7 @@ void CFriendly::HandleEventQueueEvent(int arg_eventID){
 	}
 	case 2:{
 		//"double whip" 2nd attack
-		CBaseEntity *pHurt = CheckTraceHullAttack( Vector(0, 0, EASY_CVAR_GET(testVar) ), 120, gSkillData.zombieDmgBothSlash, DMG_SLASH );
+		CBaseEntity *pHurt = CheckTraceHullAttack( Vector(0, 0, 0 ), 120, gSkillData.zombieDmgBothSlash, DMG_SLASH );
 		if ( pHurt )
 		{
 			if ( (pHurt->pev->flags & (FL_MONSTER|FL_CLIENT)) && !pHurt->blocksImpact() )

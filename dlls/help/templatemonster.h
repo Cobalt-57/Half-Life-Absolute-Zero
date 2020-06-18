@@ -1,6 +1,6 @@
 //******************************************************************************************************************
 // ***TEMPLATE MONSTER***
-// clone this and edit to make custom monsters.
+// clone this (and the corresponding .cpp file) and edit to make custom monsters.
 // Comment out some things if unused, like save info (.cpp-wise too) and the CUSTOM_SCHEDULES in .h and DEFINE_CUSTOM_SCHEDULES, IMPLEMENT_CUSTOM_SCHEDULES in .cpp***
 //******************************************************************************************************************
 
@@ -20,6 +20,46 @@
 #define TEMPLATEMONSTER_H
 
 
+
+// Some other methods that might be needed sometimes,
+/*
+    virtual int		ObjectCaps(void) { return FCAP_ACROSS_TRANSITION; }
+OTHER EXAMPLE:
+    int ObjectCaps( void ) { return CParentClass::ObjectCaps() | FCAP_IMPULSE_USE; }
+
+Also,
+    virtual void	Activate(void) {}
+/////////////////////////////////////////////////////////////////////////////////
+
+// Called at the end of "Restore" as its reached in CBaseMonster on loadinga game.
+// Anything in PostRestore runs after the rest has been loaded, needed for certain init
+// that depends on the rest of the vars being loaded first.
+void PostRestore(void);
+void KeyValue( KeyValueData *pkvd );
+
+...
+
+void CInfoBM::KeyValue( KeyValueData* pkvd )
+{
+	// and "atoi" for ints instead.
+	if (FStrEq(pkvd->szKeyName, "someFloatKey"))
+	{
+		someFloatVar = atof(pkvd->szValue);
+		pkvd->fHandled = TRUE;
+	}
+	else if (FStrEq(pkvd->szKeyName, "someStringKey"))
+	{
+		someStringVar = ALLOC_STRING(pkvd->szValue);
+		pkvd->fHandled = TRUE;
+	}
+	else
+		CPointEntity::KeyValue( pkvd );
+}
+
+
+*/
+
+
 class CTemplateMonster : public CBaseMonster{
 public:
 
@@ -32,7 +72,8 @@ public:
 	static const char* pAttackMissSounds[];
 
 	/*
-	//save info
+	// save info.  Probably going to want this, but leave commented out if the m_SaveData list
+	// turns out empty.
 	//////////////////////////////////////////////////////////////////////////////////
 	static TYPEDESCRIPTION m_SaveData[];
 	int Save( CSave &save ); 
@@ -101,8 +142,8 @@ public:
 	
 	void ReportAIState( void );
 
-	//NOTICE - make these the "_VIRTUAL" versions if this monster could possibly have child classes made.
-	//         Such as, the CTalkMonster having child classes CBarney and CScientist.
+	// NOTICE - make these the "_VIRTUAL" versions if this monster could possibly have child classes made.
+	//          Such as, the CTalkMonster having child classes CBarney and CScientist.
 	GENERATE_TRACEATTACK_PROTOTYPE
 	GENERATE_TAKEDAMAGE_PROTOTYPE
 
@@ -114,7 +155,7 @@ public:
 
 	GENERATE_GIBMONSTERGIB_PROTOTYPE
 
-	//uncomment and implement these if needed. The defaults are good for most cases.
+	// uncomment and implement these if needed. The defaults are good for most cases.
 	//GENERATE_GIBMONSTERSOUND_PROTOTYPE
 	//GENERATE_GIBMONSTEREND_PROTOTYPE
 
@@ -141,13 +182,5 @@ public:
 
 
 
-
-
-
 #endif //END OF #ifdef TEMPLATEMONSTER_H
-
-
-
-
-
 

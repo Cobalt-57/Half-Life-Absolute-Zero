@@ -584,7 +584,9 @@ void CRope::RK4Integrate( const float flDeltaTime, CRopeSample** ppSampleSource,
 
 		for( size_t uiIndex = 0; uiIndex < m_uiNumSamples; ++uiIndex, ++pTemp1, ++pTemp2 )
 		{
-			struct RopeSampleData& const data = ppSampleSource[ uiIndex ]->GetData();
+			//TAGGG - changed the order of the & and const.
+			// VS6 complained about the order.
+			struct RopeSampleData const& data = ppSampleSource[ uiIndex ]->GetData();
 
 			pTemp2->mForce = data.mMassReciprocal * data.mForce * flDeltas[ 0 ];
 
@@ -627,7 +629,8 @@ void CRope::RK4Integrate( const float flDeltaTime, CRopeSample** ppSampleSource,
 
 		for( size_t uiIndex = 0; uiIndex < m_uiNumSamples; ++uiIndex, ++pTemp1, ++pTemp2 )
 		{
-			struct RopeSampleData& const data = ppSampleSource[ uiIndex ]->GetData();
+			//TAGGG - VS6 complained about the order of "&" and const.
+			struct RopeSampleData const& data = ppSampleSource[ uiIndex ]->GetData();
 
 			pTemp2->mForce = data.mMassReciprocal * pTemp1->mForce * flDeltas[ 3 ];
 

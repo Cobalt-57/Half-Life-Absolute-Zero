@@ -2,7 +2,7 @@
 
 
 #include "extdll.h"
-#include "custom_debug.h"
+#include "util_debugdraw.h"
 
 #include "util.h"
 
@@ -58,17 +58,19 @@ void DebugLine_ClearLine(int argID){
 
 
 void DebugLine_ClearAll(){
+	int i;
 	nextDebugLineID = 0;
 	nextDebugPathTrackDrawID = 0;
-	for(int i = 0; i < DEBUG_LINES_MAX; i++){
+	for(i = 0; i < DEBUG_LINES_MAX; i++){
 		aryDebugLines[i].l1.canDraw = FALSE;
 		aryDebugLines[i].l2.canDraw = FALSE;
 	}
-	for(int i = 0; i < DEBUG_PATHTRACK_DRAW_MAX; i++){
+	for(i = 0; i < DEBUG_PATHTRACK_DRAW_MAX; i++){
 		aryDebugLines_pathTrack[i].canDraw = FALSE;
 	}
 }
 void DebugLine_RenderAll(){
+	int i = 0;
 	//return;
 	/*
 	float fracto = abs(cos(gpGlobals->time/3));
@@ -76,12 +78,12 @@ void DebugLine_RenderAll(){
 	DebugLine_Setup(2, Vector(66.78, 805.35, 36.36), Vector(66.78, 805.35, 36.36) + Vector(-40, 200, 40), fracto );
 	
 	*/
-
-	for(int i = 0; i < DEBUG_PATHTRACK_DRAW_MAX; i++){
+	
+	for(i = 0; i < DEBUG_PATHTRACK_DRAW_MAX; i++){
 		aryDebugLines_pathTrack[i].checkDrawLines();
 	}
 	
-	for(int i = 0; i < DEBUG_LINES_MAX; i++){
+	for(i = 0; i < DEBUG_LINES_MAX; i++){
 		aryDebugLines[i].checkDrawLines();
 	}
 }//END OF DebugLine_RenderAll

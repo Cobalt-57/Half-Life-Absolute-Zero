@@ -143,12 +143,16 @@ typedef struct cl_enginefuncs_s
 	// text message system
 	client_textmessage_t		*( *pfnTextMessageGet )		( const char *pName );
 	int							( *pfnDrawCharacter )		( int x, int y, int number, int r, int g, int b );
-	int							( *pfnDrawConsoleString )	( int x, int y, char *string );
+	
+	//MODDD - mentions of "string" changed to "par_string"!  Can't really hurt anything,
+	// as the connection to DLL's only cares about parameter order and type.
+	// Paranoia about the C++ compiler mixing up this 'string' name with the built-in 'string' type.
+	int							( *pfnDrawConsoleString )	( int x, int y, char *par_string );
 	void						( *pfnDrawSetTextColor )	( float r, float g, float b );
-	void						( *pfnDrawConsoleStringLen )(  const char *string, int *length, int *height );
+	void						( *pfnDrawConsoleStringLen )(  const char *par_string, int *length, int *height );
 
-	void						( *pfnConsolePrint )		( const char *string );
-	void						( *pfnCenterPrint )			( const char *string );
+	void						( *pfnConsolePrint )		( const char *par_string );
+	void						( *pfnCenterPrint )			( const char *par_string );
 
 
 // Added for user input processing

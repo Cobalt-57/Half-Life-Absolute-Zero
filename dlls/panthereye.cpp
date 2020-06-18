@@ -24,7 +24,7 @@
 
 #include "panthereye.h"
 
-#include "custom_debug.h"
+#include "util_debugdraw.h"
 
 
 extern DLL_GLOBAL int		g_iSkillLevel;
@@ -32,16 +32,15 @@ extern DLL_GLOBAL int		g_iSkillLevel;
 
 #define newPathDelayDuration 0.5;
 
-extern float global_noFlinchOnHard;
-extern float global_panthereyeHasCloakingAbility;
-extern float global_panthereyeJumpDotTol;
 
-extern float global_panthereyePrintout;
+EASY_CVAR_EXTERN(noFlinchOnHard)
+EASY_CVAR_EXTERN(panthereyeHasCloakingAbility)
+EASY_CVAR_EXTERN(panthereyeJumpDotTol)
+EASY_CVAR_EXTERN(panthereyePrintout)
+
 EASY_CVAR_EXTERN(animationFramerateMulti)
-
 EASY_CVAR_EXTERN(drawDebugPathfinding2)
-
-EASY_CVAR_EXTERN(testVar)
+//EASY_CVAR_EXTERN(testVar)
 
 
 float CPantherEye::HearingSensitivity(void){
@@ -1169,11 +1168,11 @@ void CPantherEye::MonsterThink ( void )
 		//RIPPED FROM hassassin.
 
 		//m_Activity == ACT_RUN || m_Activity == ACT_WALK 
-		if (global_panthereyeHasCloakingAbility <= 0 || m_hEnemy == NULL || pev->deadflag != DEAD_NO || !(pev->flags & FL_ONGROUND) || sneakMode == -1 || (m_hEnemy->pev->origin - pev->origin).Length() < 170 )
+		if (EASY_CVAR_GET(panthereyeHasCloakingAbility) <= 0 || m_hEnemy == NULL || pev->deadflag != DEAD_NO || !(pev->flags & FL_ONGROUND) || sneakMode == -1 || (m_hEnemy->pev->origin - pev->origin).Length() < 170 )
 			m_iTargetRanderamt = 255;
 		else{
 			//m_iTargetRanderamt = 20;
-			m_iTargetRanderamt = min(global_panthereyeHasCloakingAbility, 1) * 255;
+			m_iTargetRanderamt = min(EASY_CVAR_GET(panthereyeHasCloakingAbility), 1) * 255;
 		}
 		if (pev->renderamt > m_iTargetRanderamt)
 		{
@@ -1409,7 +1408,7 @@ Schedule_t *CPantherEye::GetSchedule ( void )
 				return GetScheduleOfType(SCHED_BIG_FLINCH);
 			}
 			//MODDD - other condition.  If "noFlinchOnHard" is on and the skill is hard, don't flinch from getting hit.
-			else if (HasConditions(bits_COND_LIGHT_DAMAGE) && !HasMemory( bits_MEMORY_FLINCHED) && !(global_noFlinchOnHard==1 && g_iSkillLevel==SKILL_HARD)  )
+			else if (HasConditions(bits_COND_LIGHT_DAMAGE) && !HasMemory( bits_MEMORY_FLINCHED) && !(EASY_CVAR_GET(noFlinchOnHard)==1 && g_iSkillLevel==SKILL_HARD)  )
 			{
 				return GetScheduleOfType( SCHED_SMALL_FLINCH );
 			}
@@ -1910,7 +1909,7 @@ void CPantherEye::RunTask ( Task_t *pTask ){
 					}else{
 						//this close?  Just attack already.
 						//EASY_CVAR_PRINTIF_PRE(panthereyePrintout, easyPrintLine("WELL DDDD %d", UTIL_IsFacingAway(m_hEnemy->pev, pev->origin, 0.3) )); 
-						if(UTIL_IsFacingAway(m_hEnemy->pev, pev->origin, global_panthereyeJumpDotTol) ){
+						if(UTIL_IsFacingAway(m_hEnemy->pev, pev->origin, EASY_CVAR_GET(panthereyeJumpDotTol)) ){
 							//can jump...?
 							if(distanceFromEnemy < 360 * 20){
 
@@ -2325,10 +2324,12 @@ void CPantherEye::OnTakeDamageSetConditions(entvars_t *pevInflictor, entvars_t *
 	}
 
 
+/*
 	if(EASY_CVAR_GET(testVar) == 10){
 		//any damage causes me now.
 		SetConditions(bits_COND_HEAVY_DAMAGE);
 	}
+	*/
 
 	easyForcePrintLine("%s:%d OnTkDmgSetCond raw:%.2f fract:%.2f", getClassname(), monsterID, flDamage, (flDamage / pev->max_health));
 

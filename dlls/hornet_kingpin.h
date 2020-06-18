@@ -30,6 +30,10 @@ class CHornetKingpin : public CHornet{
 	void EXPORT SpeedMissileDartContinuous(void);
 	
 	void EXPORT SmartDieTouch(CBaseEntity* pOther );
+	
+	Vector GetVelocityLogical(void);
+	void SetVelocityLogical(const Vector& arg_newVelocity);
+	void OnDeflected(CBaseEntity* arg_entDeflector);
 
 	//MODDD - new.
 	float expireTime;

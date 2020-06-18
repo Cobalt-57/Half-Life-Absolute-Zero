@@ -135,6 +135,19 @@ typedef struct
 //=========================================================
 // CGraph 
 //=========================================================
+
+
+// MODDD.
+// The only other place CACHE_SIZE is defined, common\com_model.h, never sees that 
+// value used.  Since CACHE_SIZE is only referred to in nodes.h & .cpp, it is safe
+// to assume the one from com_model.h is completely ignored anyway.
+// It is strange that the com_model.h one defines CACHE_SIZE as 32 instead.
+// In case there was some significance to that one, leaving that one and keeping this 
+// one, but still renamed because it is specific to CGraph here in nodes.h.
+// INn short, CACHE_SIZE has been moved here and renamed.
+#define GRAPH_CACHE_SIZE 128
+#define NUM_RANGES 256
+
 #define	GRAPH_VERSION	(int)16// !!!increment this whever graph/node/link classes change, to obsolesce older disk files.
 class CGraph
 {
@@ -163,8 +176,11 @@ public:
 	// search each range. After the search is exhausted, we know we have the closest
 	// node.
 	//
-#define CACHE_SIZE 128
-#define NUM_RANGES 256
+	
+	
+//MODDD - renamed CACHE_SIZE to avoid (possible?) conflict, also moved to the top of 
+// the file for neatness.  NUM_RANGES also moved to the top, because really... here.
+
 	DIST_INFO *m_di;	// This is m_cNodes long, but the entries don't correspond to CNode entries.
 	int m_RangeStart[3][NUM_RANGES];
 	int m_RangeEnd[3][NUM_RANGES];
@@ -174,7 +190,7 @@ public:
 	int m_minBoxX, m_minBoxY, m_minBoxZ, m_maxBoxX, m_maxBoxY, m_maxBoxZ;
 	int m_CheckedCounter;
 	float m_RegionMin[3], m_RegionMax[3]; // The range of nodes.
-	CACHE_ENTRY m_Cache[CACHE_SIZE];
+	CACHE_ENTRY m_Cache[GRAPH_CACHE_SIZE];
 
 
 	int m_HashPrimes[16];

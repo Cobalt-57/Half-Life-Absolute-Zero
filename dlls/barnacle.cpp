@@ -52,10 +52,10 @@ extern DLL_GLOBAL int			g_iSkillLevel;
 extern BOOL globalPSEUDO_germanModel_hgibFound;
 
 extern float cheat_barnacleEatsEverything;
-extern float global_drawBarnacleDebug;
-extern float global_barnacleCanGib;
-extern float global_barnaclePrintout;
-extern float global_barnacleTongueRetractDelay;
+EASY_CVAR_EXTERN(drawBarnacleDebug)
+EASY_CVAR_EXTERN(barnacleCanGib)
+EASY_CVAR_EXTERN(barnaclePrintout)
+EASY_CVAR_EXTERN(barnacleTongueRetractDelay)
 
 EASY_CVAR_EXTERN(germanCensorship)
 EASY_CVAR_EXTERN(allowGermanModels)
@@ -573,240 +573,234 @@ void CBarnacle :: BarnacleThink ( void )
 
 		
 
-			//hm, time for this...
-			//MODDD - implement.
-			//g_iSkillLevel
+		//hm, time for this...
+		//MODDD - implement.
+		//g_iSkillLevel
 
-			//SKILL_EASY;
-			//SKILL_MEDIUM;
-			//SKILL_HARD;
-
-
-
-			
-			float flLengthMinimal = 5;
-
-			float lungeSpeedMultiplier = 1.0f;
-
-			
-			BOOL lickTouchPossible = FALSE;
-			BOOL lickTouchVertical = FALSE;
-			BOOL triggered = FALSE ;
+		//SKILL_EASY;
+		//SKILL_MEDIUM;
+		//SKILL_HARD;
 
 
 
-			
-			if(g_iSkillLevel == SKILL_MEDIUM){
-				lungeSpeedMultiplier = 0.9f;
-			}else if(g_iSkillLevel == SKILL_HARD){
-				lungeSpeedMultiplier = 1.25f;
-			}
+		
+		float flLengthMinimal = 5;
 
-			
+		float lungeSpeedMultiplier = 1.0f;
 
-
-
-
-			if(g_iSkillLevel > SKILL_EASY){
-
-				smallerTest = FALSE;
-				pTouchEnt = TongueTouchEnt( &flLength, &flLengthMinimal );
-
-				triggered = ((pTouchEnt!=NULL) || ( retractDelay != -1 && global_barnacleTongueRetractDelay > 0 && retractDelay > gpGlobals->time ) );
-
-				if(pTouchEnt != NULL){
-					if(global_barnacleTongueRetractDelay > 0){
-						retractedPreviously = FALSE;
-						retractDelay = gpGlobals->time + global_barnacleTongueRetractDelay;
-					}
-				}
+		
+		BOOL lickTouchPossible = FALSE;
+		BOOL lickTouchVertical = FALSE;
+		BOOL triggered = FALSE ;
 
 
 
-				//if(!triggered && retractedPreviously == FALSE){
-				if(retractedPreviously == FALSE && retractDelay != -1 && retractDelay <= gpGlobals->time){
-					retractedPreviously = TRUE;
-					loweredPreviously = FALSE;
-					retractDelay = -1;
+		
+		if(g_iSkillLevel == SKILL_MEDIUM){
+			lungeSpeedMultiplier = 0.9f;
+		}else if(g_iSkillLevel == SKILL_HARD){
+			lungeSpeedMultiplier = 1.25f;
+		}
 
-					pev->framerate = -getTentacleSuddenAnimFrameRate();
-					this->SetSequenceByName("attack1");
-
-				}
+		
 
 
 
 
-				//EASY_CVAR_PRINTIF_PRE(barnaclePrintout, easyPrintLine("BARN1: %d", (pTouchEnt != NULL)));
-			
-				if(pTouchEnt != NULL){
+		if(g_iSkillLevel > SKILL_EASY){
 
-					
-					//something is close enough to trigger lowering.  But are we close enough go grab something yet?
-					smallerTest = TRUE;
-					CBaseEntity* testTouch = TongueTouchEnt( &flLength, &flLengthMinimal );
+			smallerTest = FALSE;
+			pTouchEnt = TongueTouchEnt( &flLength, &flLengthMinimal );
 
-					if(testTouch != NULL){
-						lickTouchPossible = TRUE;
-						pTouchEnt = testTouch;
-					}else{
-						pTouchEnt = NULL;   //can't grab, not close enough.
-					
-						if(loweredPreviously == FALSE){
-							loweredPreviously = TRUE;
-							retractedPreviously = FALSE;
+			triggered = ((pTouchEnt!=NULL) || ( retractDelay != -1 && EASY_CVAR_GET(barnacleTongueRetractDelay) > 0 && retractDelay > gpGlobals->time ) );
 
-							pev->framerate = getTentacleSuddenAnimFrameRate();
-							this->SetSequenceByName("attack1");
-
-						}
-
-
-					}
-					//EASY_CVAR_PRINTIF_PRE(barnaclePrintout, easyPrintLine("BARN2: %d", (pTouchEnt != NULL)));
-				}else{
-					//nothing triggering lowering?
-					loweredPreviously = FALSE;
-				}
-
-
-
-
-
-			}else{
-				//if easy...
-				triggered = TRUE;
-				//you're always triggered.  PATRIARCHYYYYY
-				
-				smallerTest = TRUE;
-				pTouchEnt = TongueTouchEnt( &flLength );
-				//EASY_CVAR_PRINTIF_PRE(barnaclePrintout, easyPrintLine("EDDDDD %d", (pTouchEnt==NULL) ));
-				lickTouchPossible = TRUE;   //just pass these along...
-				lickTouchVertical = TRUE;
-
-			}
-
-			//Moved from either bracket above's (that is, 1 for NORMAL / HARD, 1 for EASY)
 			if(pTouchEnt != NULL){
-				//float startPosition = (pev->origin.z - pTouchEnt->EyePosition().z);
-				//lickTouchVertical = (-m_flAltitude+startPosition <=  (pTouchEnt->pev->origin.z - pTouchEnt->pev->mins.z) );
-				float startPosition = (pev->origin.z + pev->mins.z);  
-				lickTouchVertical = ( (pTouchEnt->pev->origin.z + pTouchEnt->pev->maxs.z) < startPosition) && (-m_flAltitude+startPosition <=  (pTouchEnt->EyePosition().z) );  //or ent's origin + maxs.z?  up to you.
-			}
-			if(pTouchEnt != NULL){
-				EASY_CVAR_PRINTIF_PRE(barnaclePrintout, easyPrintLine("BARNTOUCHPOSS: %d BARNTOUCHVER %d TONGUE-EXT: %d TAR: %.2f TAREY: %.2f MYZ: %.2f MYZA: %.2f MYZAA: %.2f", lickTouchPossible, lickTouchVertical, m_fTongueExtended, pTouchEnt->pev->origin.z, pTouchEnt->EyePosition().z, pev->origin.z, (pev->origin.z + pev->mins.z), (pev->origin.z+pev->mins.z-m_flAltitude) ));
-			}
-
-
-
-
-			//if ( pTouchEnt != NULL && m_fTongueExtended && lickTouchPossible )
-			if( pTouchEnt != NULL && m_fTongueExtended && lickTouchPossible && lickTouchVertical) {
-				
-				// tongue is fully extended, and is touching someone.
-				if ( pTouchEnt->FBecomeProne() )
-				{
-					EMIT_SOUND_FILTERED( ENT(pev), CHAN_WEAPON, "barnacle/bcl_alert2.wav", 1, ATTN_NORM );	
-
-					SetSequenceByName ( "attack1" );
-					m_flTongueAdj = -20;
-
-					m_hEnemy = pTouchEnt;
-
-					pTouchEnt->pev->movetype = MOVETYPE_FLY;
-					pTouchEnt->pev->velocity = g_vecZero;
-					pTouchEnt->pev->basevelocity = g_vecZero;
-					pTouchEnt->pev->origin.x = pev->origin.x;
-					pTouchEnt->pev->origin.y = pev->origin.y;
-
-					m_fLiftingPrey = TRUE;// indicate that we should be lifting prey.
-					m_flKillVictimTime = -1;// set this to a bogus time while the victim is lifted.
-
-					m_flAltitude = (pev->origin.z - pTouchEnt->EyePosition().z);
-
-					//MODDD - ready to re-do these things in case this touched thing is released.
+				if(EASY_CVAR_GET(barnacleTongueRetractDelay) > 0){
 					retractedPreviously = FALSE;
-					loweredPreviously = FALSE;
-
+					retractDelay = gpGlobals->time + EASY_CVAR_GET(barnacleTongueRetractDelay);
 				}
 			}
+
+
+
+			//if(!triggered && retractedPreviously == FALSE){
+			if(retractedPreviously == FALSE && retractDelay != -1 && retractDelay <= gpGlobals->time){
+				retractedPreviously = TRUE;
+				loweredPreviously = FALSE;
+				retractDelay = -1;
+
+				pev->framerate = -getTentacleSuddenAnimFrameRate();
+				this->SetSequenceByName("attack1");
+
+			}
+
+
+
+
+			//EASY_CVAR_PRINTIF_PRE(barnaclePrintout, easyPrintLine("BARN1: %d", (pTouchEnt != NULL)));
+		
+			if(pTouchEnt != NULL){
+
+				
+				//something is close enough to trigger lowering.  But are we close enough go grab something yet?
+				smallerTest = TRUE;
+				CBaseEntity* testTouch = TongueTouchEnt( &flLength, &flLengthMinimal );
+
+				if(testTouch != NULL){
+					lickTouchPossible = TRUE;
+					pTouchEnt = testTouch;
+				}else{
+					pTouchEnt = NULL;   //can't grab, not close enough.
+				
+					if(loweredPreviously == FALSE){
+						loweredPreviously = TRUE;
+						retractedPreviously = FALSE;
+
+						pev->framerate = getTentacleSuddenAnimFrameRate();
+						this->SetSequenceByName("attack1");
+
+					}
+
+
+				}
+				//EASY_CVAR_PRINTIF_PRE(barnaclePrintout, easyPrintLine("BARN2: %d", (pTouchEnt != NULL)));
+			}else{
+				//nothing triggering lowering?
+				loweredPreviously = FALSE;
+			}
+
+
+
+
+
+		}else{
+			//if easy...
+			triggered = TRUE;
+			//you're always triggered.  PATRIARCHYYYYY
+			
+			smallerTest = TRUE;
+			pTouchEnt = TongueTouchEnt( &flLength );
+			//EASY_CVAR_PRINTIF_PRE(barnaclePrintout, easyPrintLine("EDDDDD %d", (pTouchEnt==NULL) ));
+			lickTouchPossible = TRUE;   //just pass these along...
+			lickTouchVertical = TRUE;
+
+		}
+
+		//Moved from either bracket above's (that is, 1 for NORMAL / HARD, 1 for EASY)
+		if(pTouchEnt != NULL){
+			//float startPosition = (pev->origin.z - pTouchEnt->EyePosition().z);
+			//lickTouchVertical = (-m_flAltitude+startPosition <=  (pTouchEnt->pev->origin.z - pTouchEnt->pev->mins.z) );
+			float startPosition = (pev->origin.z + pev->mins.z);  
+			lickTouchVertical = ( (pTouchEnt->pev->origin.z + pTouchEnt->pev->maxs.z) < startPosition) && (-m_flAltitude+startPosition <=  (pTouchEnt->EyePosition().z) );  //or ent's origin + maxs.z?  up to you.
+		}
+		if(pTouchEnt != NULL){
+			EASY_CVAR_PRINTIF_PRE(barnaclePrintout, easyPrintLine("BARNTOUCHPOSS: %d BARNTOUCHVER %d TONGUE-EXT: %d TAR: %.2f TAREY: %.2f MYZ: %.2f MYZA: %.2f MYZAA: %.2f", lickTouchPossible, lickTouchVertical, m_fTongueExtended, pTouchEnt->pev->origin.z, pTouchEnt->EyePosition().z, pev->origin.z, (pev->origin.z + pev->mins.z), (pev->origin.z+pev->mins.z-m_flAltitude) ));
+		}
+
+
+
+
+		//if ( pTouchEnt != NULL && m_fTongueExtended && lickTouchPossible )
+		if( pTouchEnt != NULL && m_fTongueExtended && lickTouchPossible && lickTouchVertical) {
+			
+			// tongue is fully extended, and is touching someone.
+			if ( pTouchEnt->FBecomeProne() )
+			{
+				EMIT_SOUND_FILTERED( ENT(pev), CHAN_WEAPON, "barnacle/bcl_alert2.wav", 1, ATTN_NORM );	
+
+				SetSequenceByName ( "attack1" );
+				m_flTongueAdj = -20;
+
+				m_hEnemy = pTouchEnt;
+
+				pTouchEnt->pev->movetype = MOVETYPE_FLY;
+				pTouchEnt->pev->velocity = g_vecZero;
+				pTouchEnt->pev->basevelocity = g_vecZero;
+				pTouchEnt->pev->origin.x = pev->origin.x;
+				pTouchEnt->pev->origin.y = pev->origin.y;
+
+				m_fLiftingPrey = TRUE;// indicate that we should be lifting prey.
+				m_flKillVictimTime = -1;// set this to a bogus time while the victim is lifted.
+
+				m_flAltitude = (pev->origin.z - pTouchEnt->EyePosition().z);
+
+				//MODDD - ready to re-do these things in case this touched thing is released.
+				retractedPreviously = FALSE;
+				loweredPreviously = FALSE;
+
+			}
+		}
+		else
+		{
+
+			float lengthChoice;
+			float alterAltSpeed;
+
+			if(!triggered ){
+				lengthChoice = flLengthMinimal;
+				alterAltSpeed = BARNACLE_LUNGE_SPEED * lungeSpeedMultiplier;
+			}else{
+				
+				lengthChoice = flLength;
+				alterAltSpeed = BARNACLE_LUNGE_SPEED * lungeSpeedMultiplier * 0.6;
+			}
+
+			if(g_iSkillLevel == SKILL_EASY){
+				alterAltSpeed = BARNACLE_PULL_SPEED;
+			}
+
+
+
+
+			//lickTouchPossible: if the tongue were extended fully, could I touch it?
+			//lickTouchVertical: am I able to lick it, given how far down I am right now?
+
+
+			EASY_CVAR_PRINTIF_PRE(barnaclePrintout, easyPrintLine("IM BARNACLE#%d, AND MY ALT IS %.2f DESIRED %.2f MAX: %.2f okay? %d", monsterID, m_flAltitude, lengthChoice, flLength, m_fTongueExtended));
+
+			// calculate a new length for the tongue to be clear of anything else that moves under it. 
+			if ( m_flAltitude < lengthChoice )
+			{
+				// if tongue is higher than is should be, lower it kind of slowly.
+				m_flAltitude += alterAltSpeed;//BARNACLE_LUNGE_SPEED * lungeSpeedMultiplier;
+				m_fTongueExtended = FALSE;
+
+				if(m_flAltitude > lengthChoice){
+					m_flAltitude = lengthChoice;
+					m_fTongueExtended = TRUE;
+				}
+			}else if( m_flAltitude > lengthChoice )
+			{
+				// if tongue is above...
+				m_flAltitude -= alterAltSpeed;
+				m_fTongueExtended = TRUE;
+				if(m_flAltitude < lengthChoice){
+					m_flAltitude = lengthChoice;
+					m_fTongueExtended = TRUE;
+				}
+			}else{
+				//equal?  then this is ok!
+				m_fTongueExtended = TRUE;
+			}
+
+
+
+			/*
 			else
 			{
-
-				float lengthChoice;
-				float alterAltSpeed;
-
-				if(!triggered ){
-					lengthChoice = flLengthMinimal;
-					alterAltSpeed = BARNACLE_LUNGE_SPEED * lungeSpeedMultiplier;
-				}else{
-					
-					lengthChoice = flLength;
-					alterAltSpeed = BARNACLE_LUNGE_SPEED * lungeSpeedMultiplier * 0.6;
-				}
-
-				if(g_iSkillLevel == SKILL_EASY){
-					alterAltSpeed = BARNACLE_PULL_SPEED;
-				}
-
-
-
-
-				//lickTouchPossible: if the tongue were extended fully, could I touch it?
-				//lickTouchVertical: am I able to lick it, given how far down I am right now?
-
-
-				EASY_CVAR_PRINTIF_PRE(barnaclePrintout, easyPrintLine("IM BARNACLE#%d, AND MY ALT IS %.2f DESIRED %.2f MAX: %.2f okay? %d", monsterID, m_flAltitude, lengthChoice, flLength, m_fTongueExtended));
-
-				// calculate a new length for the tongue to be clear of anything else that moves under it. 
-				if ( m_flAltitude < lengthChoice )
-				{
-					// if tongue is higher than is should be, lower it kind of slowly.
-					m_flAltitude += alterAltSpeed;//BARNACLE_LUNGE_SPEED * lungeSpeedMultiplier;
-					m_fTongueExtended = FALSE;
-
-					if(m_flAltitude > lengthChoice){
-						m_flAltitude = lengthChoice;
-						m_fTongueExtended = TRUE;
-					}
-				}else if( m_flAltitude > lengthChoice )
-				{
-					// if tongue is above...
-					m_flAltitude -= alterAltSpeed;
-					m_fTongueExtended = TRUE;
-					if(m_flAltitude < lengthChoice){
-						m_flAltitude = lengthChoice;
-						m_fTongueExtended = TRUE;
-					}
-				}else{
-					//equal?  then this is ok!
-					m_fTongueExtended = TRUE;
-				}
-
-
-
-				/*
-				else
-				{
-					m_flAltitude = flLengthMinimal;
-					m_fTongueExtended = TRUE;
-				}
-				*/
-
-
-				//EASY_CVAR_PRINTIF_PRE(barnaclePrintout, easyPrintLine("AM IIIIII %d", m_fTongueExtended));
-
-
+				m_flAltitude = flLengthMinimal;
+				m_fTongueExtended = TRUE;
 			}
+			*/
 
 
+			//EASY_CVAR_PRINTIF_PRE(barnaclePrintout, easyPrintLine("AM IIIIII %d", m_fTongueExtended));
 
 
-
-
-
-
-	}
+		}
+		
+		
+	}// END OF m_hEnemy != NULL check
 
 	// ALERT( at_console, "tounge %f\n", m_flAltitude + m_flTongueAdj );
 	SetBoneController( 0, -(m_flAltitude + m_flTongueAdj) );
@@ -821,7 +815,7 @@ GENERATE_GIBMONSTER_IMPLEMENTATION(CBarnacle){
 
 
 
-	return GENERATE_GIBMONSTER_PARENT_CALL(CBaseMonster);
+	GENERATE_GIBMONSTER_PARENT_CALL(CBaseMonster);
 }//END OF GibMonster
 
 
@@ -886,7 +880,7 @@ GENERATE_KILLED_IMPLEMENTATION(CBarnacle)
 	CBaseMonster *pVictim;
 
 	//MODDD - barnacle corpse is now immortal (like in retail) ONLY if this CVar is off.
-	if(global_barnacleCanGib == 0){
+	if(EASY_CVAR_GET(barnacleCanGib) == 0){
 		pev->solid = SOLID_NOT;
 		pev->takedamage = DAMAGE_NO;
 	}
@@ -939,7 +933,7 @@ GENERATE_KILLED_IMPLEMENTATION(CBarnacle)
 
 	//MODDD - any references to CallGibMonster replaced with GibMonster. No need for that separation.
 
-	if(global_barnacleCanGib == 1){
+	if(EASY_CVAR_GET(barnacleCanGib) == 1){
 		//if ( HasMemory( bits_MEMORY_KILLED ) )
 		{
 			
@@ -952,7 +946,7 @@ GENERATE_KILLED_IMPLEMENTATION(CBarnacle)
 				return;  //also return, since this means the death anim has already been triggered.
 			}
 		}
-	}else if(global_barnacleCanGib == 2){
+	}else if(EASY_CVAR_GET(barnacleCanGib) == 2){
 		//harder to gib, but still may be.
 
 		if(pev->deadflag == DEAD_NO){
@@ -1123,7 +1117,7 @@ CBaseEntity *CBarnacle :: TongueTouchEnt ( float *pflLength, float *pflLengthMin
 	mins.z -= length;
 
 
-	if(global_drawBarnacleDebug == 1){
+	if(EASY_CVAR_GET(drawBarnacleDebug) == 1){
 		if(smallerTest){
 			UTIL_drawBoxFrame(mins, maxs, 3, 255, 255, 0);
 		}else{

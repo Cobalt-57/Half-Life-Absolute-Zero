@@ -33,7 +33,11 @@
 #include "weapons.h"
 
 //MODDD
+#include "crowbar.h"
+#include "gauss.h"
+#include "egon.h"
 #include "chumtoadweapon.h"
+
 
 
 
@@ -98,7 +102,7 @@ CChumToadWeapon g_ChumToadWeapon;
 
 
 //MODDD - handy?
-extern float global2_testVar;
+//EASY_CVAR_EXTERN(testVar)
 
 
 
@@ -106,10 +110,13 @@ EASY_CVAR_EXTERN(firstPersonIdleDelayMin)
 EASY_CVAR_EXTERN(firstPersonIdleDelayMax)
 
 
-EASY_CVAR_EXTERN(viewModelPrintouts)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(viewModelPrintouts)
 EASY_CVAR_EXTERN(viewModelSyncFixPrintouts)
 
 EASY_CVAR_EXTERN(holsterAnims)
+EASY_CVAR_EXTERN(wpn_glocksilencer)
+
+
 
 
 
@@ -130,6 +137,10 @@ extern int stored_m_fJustThrown;
 
 
 
+
+//MODDD - NOTE - ???
+// Don't really understand giving g_engfuncs methods here as this is all clientside.
+// AlertMessage is pretty generic at least.  Leaving it here as-is.
 /*
 ======================
 AlertMessage
@@ -182,15 +193,58 @@ void HUD_PrepEntity( CBaseEntity *pEntity, CBasePlayer *pWeaponOwner )
 	if ( pWeaponOwner )
 	{
 		ItemInfo info;
-		
-		((CBasePlayerWeapon *)pEntity)->m_pPlayer = pWeaponOwner;
-		
-		((CBasePlayerWeapon *)pEntity)->GetItemInfo( &info );
 
+		//MODDD - why not start with a cast anyway?
+		CBasePlayerWeapon* tempWeaponRef = (CBasePlayerWeapon*)pEntity;
+		
 		//easyForcePrintLine("HELP HUD_PrepEntity!!! %s %d %s", pEntity->getClassname(), info.iId, info.pszAmmo1);
-		g_pWpns[ info.iId ] = (CBasePlayerWeapon *)pEntity;
-	}
-}
+
+		//MODDD - unsure why lots of places do this to their ItemInfo instances, but may as well here too.
+		memset(&info, 0, sizeof info);
+
+		tempWeaponRef->m_pPlayer = pWeaponOwner;
+		
+		//MODDD - added a bit to fill CBasePlayerItem::ItemInfoArray with the
+		// "ItemInfo" instance ("info" here), similar to UTIL_PrecacheOtherWeapon 
+		// of dlls/util.cpp
+		if (tempWeaponRef->GetItemInfo(&info)) {
+			CBasePlayerItem::ItemInfoArray[info.iId] = info;
+			// This line used to be here, but wasn't bounded by the new "if(...)" check above.
+			// Seems fitting, otherwise even 'info.iId' is garbage data anyway.
+			g_pWpns[info.iId] = tempWeaponRef;
+
+
+
+			if (info.pszAmmo1 && *info.pszAmmo1)
+			{
+				AddAmmoNameToAmmoRegistry(info.pszAmmo1);
+			}
+
+			if (info.pszAmmo2 && *info.pszAmmo2)
+			{
+				AddAmmoNameToAmmoRegistry(info.pszAmmo2);
+			}
+
+
+		}//END OF GetItemInfo pass check
+
+		
+	}//END OF pWeaponOwner check
+}//END OF HUD_PrepEntity
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /*
 =====================
@@ -242,15 +296,16 @@ BOOL CBasePlayerWeapon :: DefaultReload( int iClipSize, int iAnim, float fDelay,
 			return FALSE;
 
 		int j = min(iClipSize - m_iClip, m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType]);	
-
-		if (j == 0)
+		//MODDD - is this edit ok?  To help with things that mess with the max-count like the glock with old reload logic.
+		//if (j == 0)
+		if (j <= 0)
 			return FALSE;
 	}else{
 		if (m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] <= 0)
 			m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] = 1;
 
-		int j = min(iClipSize - m_iClip, m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType]);	
-		if (j == 0)
+		int j = min(iClipSize - m_iClip, m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType]);
+		if (j <= 0)
 			m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] = 1;
 
 		return TRUE;
@@ -285,6 +340,8 @@ BOOL CBasePlayerWeapon :: CanDeploy( void )
 {
 	//easyPrintLine("MESSAGE4");
 	BOOL bHasAmmo = 0;
+
+	easyForcePrintLine("CLIENT DEPLOY: And just what is my ammo name sonny? %s", pszAmmo1());
 
 	if ( !pszAmmo1() )
 	{
@@ -466,7 +523,7 @@ void CBasePlayerWeapon::SendWeaponAnim( int iAnim, int skiplocal, int body )
 
 	this->m_fireState &= ~128;
 	//gEngfuncs.GetViewModel()->curstate.renderfx &= ~ANIMATEBACKWARDS;
-	if(EASY_CVAR_GET(viewModelPrintouts)==1)easyForcePrintLine("SendWeaponAnim %d", iAnim);
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(viewModelPrintouts)==1)easyForcePrintLine("SendWeaponAnim %d", iAnim);
 	
 	//MODDD - seems to make sense?  undo if this is more problematic.
 	/*
@@ -476,7 +533,6 @@ void CBasePlayerWeapon::SendWeaponAnim( int iAnim, int skiplocal, int body )
 	*/
 
 	m_pPlayer->pev->weaponanim = iAnim;
-	
 	HUD_SendWeaponAnim( iAnim, body, 0 );
 }
 
@@ -485,7 +541,7 @@ void CBasePlayerWeapon::SendWeaponAnimReverse( int iAnim, int skiplocal, int bod
 {
 	this->m_fireState |= 128;
 	//gEngfuncs.GetViewModel()->curstate.renderfx |= ANIMATEBACKWARDS;
-	if(EASY_CVAR_GET(viewModelPrintouts)==1)easyForcePrintLine("SendWeaponAnimReverse %d", iAnim);
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(viewModelPrintouts)==1)easyForcePrintLine("SendWeaponAnimReverse %d", iAnim);
 	
 	//MODDD - seems to make sense?  undo if this is more problematic.
 	/*
@@ -497,8 +553,6 @@ void CBasePlayerWeapon::SendWeaponAnimReverse( int iAnim, int skiplocal, int bod
 	iAnim |= 128;
 
 	m_pPlayer->pev->weaponanim = iAnim;
-	
-
 	HUD_SendWeaponAnim( iAnim, body, 0 );
 }
 
@@ -508,11 +562,9 @@ void CBasePlayerWeapon::SendWeaponAnimBypass( int iAnim, int body )
 {
 	this->m_fireState &= ~128;
 	//gEngfuncs.GetViewModel()->curstate.renderfx &= ~ANIMATEBACKWARDS;
-	if(EASY_CVAR_GET(viewModelPrintouts)==1)easyForcePrintLine("SendWeaponAnimBypass %d", iAnim);
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(viewModelPrintouts)==1)easyForcePrintLine("SendWeaponAnimBypass %d", iAnim);
 	
-
 	m_pPlayer->pev->weaponanim = iAnim;
-	
 	HUD_SendWeaponAnim( iAnim, body, 2 );
 }
 
@@ -520,7 +572,7 @@ void CBasePlayerWeapon::SendWeaponAnimBypassReverse( int iAnim, int body )
 {
 	this->m_fireState |= 128;
 	//gEngfuncs.GetViewModel()->curstate.renderfx |= ANIMATEBACKWARDS;
-	if(EASY_CVAR_GET(viewModelPrintouts)==1)easyForcePrintLine("SendWeaponAnimBypassReverse %d", iAnim);
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(viewModelPrintouts)==1)easyForcePrintLine("SendWeaponAnimBypassReverse %d", iAnim);
 
 	
 	iAnim |= 128;
@@ -536,7 +588,7 @@ void CBasePlayerWeapon::SendWeaponAnimClientOnly( int iAnim, int body )
 {
 	this->m_fireState &= ~128;
 	//gEngfuncs.GetViewModel()->curstate.renderfx &= ~ANIMATEBACKWARDS;
-	if(EASY_CVAR_GET(viewModelPrintouts)==1)easyForcePrintLine("SendWeaponAnimClientOnly %d", iAnim);
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(viewModelPrintouts)==1)easyForcePrintLine("SendWeaponAnimClientOnly %d", iAnim);
 	
 
 	m_pPlayer->pev->weaponanim = iAnim;
@@ -549,7 +601,7 @@ void CBasePlayerWeapon::SendWeaponAnimClientOnlyReverse( int iAnim, int body )
 {
 	this->m_fireState |= 128;
 	//gEngfuncs.GetViewModel()->curstate.renderfx |= ANIMATEBACKWARDS;
-	if(EASY_CVAR_GET(viewModelPrintouts)==1)easyForcePrintLine("SendWeaponAnimClientOnlyReverse %d", iAnim);
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(viewModelPrintouts)==1)easyForcePrintLine("SendWeaponAnimClientOnlyReverse %d", iAnim);
 
 	
 	iAnim |= 128;
@@ -674,37 +726,19 @@ BOOL CGlock::getExtraBullet(void){
 
 
 //MODDD - also new.
+// WE'RE ONLY INCLUDED CLIENTSIDE DAMMIT.
+// Check dlls/weapons.cpp for the serverside equivalent.  Only server-exclusive file of weapons-specific files, funny enough.
 float CBasePlayerWeapon::randomIdleAnimationDelay(void){
-	
-#ifndef CLIENT_DLL
-	//server!
-	if(global_firstPersonIdleDelayMin > 0 && global_firstPersonIdleDelayMax > 0){
+	if(EASY_CVAR_GET(firstPersonIdleDelayMin) > 0 && EASY_CVAR_GET(firstPersonIdleDelayMax) > 0){
 		//let's go.
-		//float rand = RANDOM_FLOAT(global_firstPersonIdleDelayMin, global_firstPersonIdleDelayMax);
-		float rand = UTIL_SharedRandomFloat(m_pPlayer->random_seed, global_firstPersonIdleDelayMin, global_firstPersonIdleDelayMax);
-		//easyPrintLine("OK client server %.2f", rand);
-		return rand;
-	}else{
-		return 0;
-	}
-#else
-	if(global2_firstPersonIdleDelayMin > 0 && global2_firstPersonIdleDelayMax > 0){
-		//let's go.
-		float rand = UTIL_SharedRandomFloat(m_pPlayer->random_seed, global2_firstPersonIdleDelayMin, global2_firstPersonIdleDelayMax);
+		float rand = UTIL_SharedRandomFloat(m_pPlayer->random_seed, EASY_CVAR_GET(firstPersonIdleDelayMin), EASY_CVAR_GET(firstPersonIdleDelayMax));
 		//easyPrintLine("OK client client %.2f", rand);
 		return rand;
 	}else{
 		return 0;
 	}
-#endif
+}//END OF randomIdleAnimationDelay
 
-}
-
-
-
-
-
-extern float global2_wpn_glocksilencer;
 
 
 
@@ -792,12 +826,14 @@ void CBasePlayerWeapon::ItemPostFrame( )
 {
 
 	//little much even for you.
-	//if(EASY_CVAR_GET(viewModelPrintouts)==1)easyForcePrintLine("ItemPostFrame: b:%d npa:%.2f", m_pPlayer->pev->button & IN_ATTACK, m_flNextPrimaryAttack);
+	//if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(viewModelPrintouts)==1)easyForcePrintLine("ItemPostFrame: b:%d npa:%.2f", m_pPlayer->pev->button & IN_ATTACK, m_flNextPrimaryAttack);
 
 
 
 	//easyForcePrintLine("I EAT things %.2f %d %.2f", gpGlobals->time, m_pPlayer->pev->button & IN_ATTACK, m_flNextPrimaryAttack);
 
+	BOOL secondaryHeld = ((m_pPlayer->pev->button & IN_ATTACK2) && m_flNextSecondaryAttack <= 0.0);
+	BOOL primaryHeld = ((m_pPlayer->pev->button & IN_ATTACK) && m_flNextPrimaryAttack <= 0.0);
 
 
 	//NOTICE - the player would usually check "m_flNextAttack" and not even call ItemPostFrame in the first place if it weren't 0.
@@ -810,6 +846,8 @@ void CBasePlayerWeapon::ItemPostFrame( )
 
 	if ((m_fInReload) && (m_pPlayer->m_flNextAttack <= 0.0))
 	{
+//MODDD - NOTE.  Oh dear, a note left as-is.  Or don't fix what ain't broken?
+// I don't know what ingame issue this is referring to.
 #if 0 // FIXME, need ammo on client to make this work right
 		// complete the reload. 
 		int j = min( iMaxClip() - m_iClip, m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType]);	
@@ -820,10 +858,52 @@ void CBasePlayerWeapon::ItemPostFrame( )
 #else	
 		m_iClip += 10;
 #endif
+		//MODDD - new event!
+		this->OnReloadApply();
+
 		m_fInReload = FALSE;
 	}
 
-	if ((m_pPlayer->pev->button & IN_ATTACK2) && (m_flNextSecondaryAttack <= 0.0))
+
+
+
+	//BOOL canDoNormalPressBehavior = TRUE;
+	BOOL canCallBoth = TRUE;
+	BOOL canCallPrimaryNot = TRUE;
+	BOOL canCallPrimary = TRUE;
+	BOOL canCallSecondaryNot = TRUE;
+	BOOL canCallSecondary = TRUE;
+	BOOL canCallNeither = TRUE;
+
+
+	if (canCallNeither && !secondaryHeld && !primaryHeld) {
+		NeitherHeld();
+	}
+
+	if (canCallBoth && secondaryHeld && primaryHeld) {
+		BothHeld();
+		//canCallBoth = TRUE;
+		canCallPrimaryNot = FALSE;
+		canCallPrimary = FALSE;
+		canCallSecondaryNot = FALSE;
+		canCallSecondary = FALSE;
+		canCallNeither = FALSE;
+
+		primaryHeld = FALSE;
+	}
+
+	//easyPrintLine("NOT HELDD!!! %d %d %.2f", canCallPrimaryNot, primaryHeld, gpGlobals->time);
+	if (canCallPrimaryNot && !primaryHeld) {
+		PrimaryNotHeld();
+	}
+	if (canCallSecondaryNot && !secondaryHeld) {
+		SecondaryNotHeld();
+	}
+
+
+	//MODDD
+	//if ((m_pPlayer->pev->button & IN_ATTACK2) && (m_flNextSecondaryAttack <= 0.0))
+	if (canCallSecondary && secondaryHeld)
 	{
 		if ( pszAmmo2() && !m_pPlayer->m_rgAmmo[SecondaryAmmoIndex()] )
 		{
@@ -831,18 +911,25 @@ void CBasePlayerWeapon::ItemPostFrame( )
 		}
 
 		SecondaryAttack();
-		m_pPlayer->pev->button &= ~IN_ATTACK2;
+
+
+		//MODDD NOTE - ?????
+		// Removal.  See notes in this same place in dlls/weapons.cpp.
+		//m_pPlayer->pev->button &= ~IN_ATTACK2;
 	}
-	else if ((m_pPlayer->pev->button & IN_ATTACK) && (m_flNextPrimaryAttack <= 0.0))
+	//MODDD
+	//else if ((m_pPlayer->pev->button & IN_ATTACK) && (m_flNextPrimaryAttack <= 0.0))
+	else if (canCallPrimary && primaryHeld)
 	{
 		if ( (m_iClip == 0 && pszAmmo1()) || (iMaxClip() == -1 && !m_pPlayer->m_rgAmmo[PrimaryAmmoIndex()] ) )
 		{
 			m_fFireOnEmpty = TRUE;
 		}
-		
-		if(EASY_CVAR_GET(viewModelPrintouts)==1)easyForcePrintLine("Postframe PrimaryAttack!");
+
+		if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(viewModelPrintouts)==1)easyForcePrintLine("Postframe PrimaryAttack!");
 		PrimaryAttack();
-		if(EASY_CVAR_GET(viewModelPrintouts)==1)easyForcePrintLine("My new npa: %.2f", m_flNextPrimaryAttack);
+		if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(viewModelPrintouts)==1)easyForcePrintLine("My new npa: %.2f", m_flNextPrimaryAttack);
+
 	}
 	else if ( m_pPlayer->pev->button & IN_RELOAD && iMaxClip() != WEAPON_NOCLIP && !m_fInReload ) 
 	{
@@ -880,7 +967,7 @@ void CBasePlayerWeapon::ItemPostFrame( )
 //	//GetViewModel();
 //
 //	
-//	//easyPrintLine("just a test, should work...", global2_wpn_glocksilencer);
+//	//easyPrintLine("just a test, should work...", EASY_CVAR_GET(wpn_glocksilencer));
 //
 //
 //
@@ -1504,31 +1591,6 @@ Set up weapons, player and functions needed to run weapons code client-side.
 
 
 
-//doesn't seem to work.  Alas, we cannot have nice things.
-/*
-void command_sneaky(){
-	//gEngfuncs.GetLocalPlayer()
-	easyPrintLine("CALLED!");
-
-	BOOL madeSneaky = (! (player.pev->flags & FL_NOTARGET) );
-
-
-	if(madeSneaky){
-		player.pev->flags |= FL_NOTARGET;
-		easyPrintLine("Sneaky on!");
-	}else{
-		player.pev->flags &= ~FL_NOTARGET;
-	}
-
-	player.m_fNoPlayerSound = madeSneaky;
-
-	//clientdata_s
-	//gEngfuncs.GetLocalPlayer()->curstate
-
-}
-*/
-
-
 //Note - does nothing if already initialized from an earlier call.
 void HUD_InitClientWeapons( void )
 {
@@ -1564,6 +1626,17 @@ void HUD_InitClientWeapons( void )
 	g_engfuncs.pfnRandomFloat		= gEngfuncs.pfnRandomFloat;
 	g_engfuncs.pfnRandomLong		= gEngfuncs.pfnRandomLong;
 
+
+
+	//MODDD - mimicking dlls/util.cpp's W_Precache.  Start with giAmmoIndex at 0
+	// before calling all the HUD_PrepEntity's.
+	// And whatever the memsets were doing.
+	memset(CBasePlayerItem::ItemInfoArray, 0, sizeof(CBasePlayerItem::ItemInfoArray));
+	memset(CBasePlayerItem::AmmoInfoArray, 0, sizeof(CBasePlayerItem::AmmoInfoArray));
+	giAmmoIndex = 0;
+	////////////////////////////////////////////////////////////////////////////////
+
+
 	// Allocate a slot for the local player
 	HUD_PrepEntity( &player		, NULL );
 
@@ -1587,10 +1660,6 @@ void HUD_InitClientWeapons( void )
 
 	HUD_PrepEntity( &g_ChumToadWeapon	, &player );
 
-	
-
-
-		//gEngfuncs.pfnAddCommand( "sneaky", command_sneaky );
 	
 
 }
@@ -1833,14 +1902,17 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
 	for ( i = 0; i < 32; i++ )
 	{
 		pCurrent = g_pWpns[ i ];
+
+
+
+
+
 		if ( !pCurrent )
 		{
 			continue;
 		}
 
 		pfrom = &from->weapondata[ i ];
-
-
 
 
 
@@ -1853,95 +1925,6 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
 		if(pCurrent->m_iId == WEAPON_SHOTGUN){
 			//easyForcePrintLine("UPDATE A: %.2f -> %.2f", pCurrent->m_flNextPrimaryAttack, pfrom->m_flNextPrimaryAttack);
 		}
-
-
-
-
-
-
-
-
-		/*
-B pTo = pCurrent
-C pTo = ...
-A pCurrent... = pFrom...
-		*/
-
-		/*Notice these printouts:
-Good Trial 1:
-CL: Whut: b:1 npa:0.00
-CL: UPDATE B: 0.00 -> 0.00
-CL: UPDATE C: 0.00 -> -0.01
-CL: UPDATE A: 0.00 -> -0.00
-CL: Whut: b:1 npa:-0.00
-CL: Postframe PrimaryAttack!
-CL: SHOTGUN: PRIMARY FIRE AT 208.28
-CL: OK, next attack relative time:0.90
-CL: My new npa: 0.90
-CL: UPDATE B: -0.00 -> 0.90
-CL: UPDATE C: 0.90 -> 0.88
-SV: Postframe PrimaryAttack!
-SV: SHOTGUN: PRIMARY FIRE AT 208.30
-SV: OK, next attack relative time:0.90
-CL: UPDATE A: 0.90 -> 0.88
-CL: Whut: b:1 npa:0.88
-CL: UPDATE B: 0.88 -> 0.88
-CL: UPDATE C: 0.88 -> 0.87
-CL: UPDATE A: 0.88 -> 0.87
-
-Good Trial 2:
-CL: Whut: b:1 npa:0.00
-CL: UPDATE B: 0.00 -> 0.00
-CL: UPDATE C: 0.00 -> -0.01
-CL: UPDATE A: 0.00 -> -0.00
-CL: Whut: b:1 npa:-0.00
-CL: Postframe PrimaryAttack!
-CL: SHOTGUN: PRIMARY FIRE AT 209.23
-CL: OK, next attack relative time:0.90
-CL: My new npa: 0.90
-CL: UPDATE B: -0.00 -> 0.90
-CL: UPDATE C: 0.90 -> 0.88
-SV: Postframe PrimaryAttack!
-SV: SHOTGUN: PRIMARY FIRE AT 209.25
-SV: OK, next attack relative time:0.90
-CL: UPDATE A: 0.90 -> 0.88
-CL: Whut: b:1 npa:0.88
-CL: UPDATE B: 0.88 -> 0.88
-CL: UPDATE C: 0.88 -> 0.87
-CL: UPDATE A: 0.88 -> 0.87
-
-Bad Trial:
-CL: Whut: b:1 npa:0.02
-CL: UPDATE B: 0.02 -> 0.02
-CL: UPDATE C: 0.02 -> 0.00
-CL: UPDATE A: 0.02 -> 0.00
-CL: Whut: b:1 npa:0.00
-CL: Postframe PrimaryAttack!
-CL: SHOTGUN: PRIMARY FIRE AT 210.16
-CL: OK, next attack relative time:0.90
-CL: My new npa: 0.90
-CL: UPDATE B: 0.00 -> 0.90
-CL: UPDATE C: 0.90 -> 0.88
-CL: UPDATE A: 0.90 -> -0.00
-CL: Whut: b:1 npa:-0.00
-CL: Postframe PrimaryAttack!
-CL: SHOTGUN: PRIMARY FIRE AT 210.18
-CL: OK, next attack relative time:0.90
-CL: My new npa: 0.90
-CL: UPDATE B: -0.00 -> 0.90
-CL: UPDATE C: 0.90 -> 0.88
-SV: Postframe PrimaryAttack!
-SV: SHOTGUN: PRIMARY FIRE AT 210.20
-SV: OK, next attack relative time:0.90
-CL: UPDATE A: 0.90 -> 0.88
-CL: Whut: b:1 npa:0.88
-CL: UPDATE B: 0.88 -> 0.88
-CL: UPDATE C: 0.88 -> 0.87
-CL: UPDATE A: 0.88 -> 0.87
-
-
-		*/
-
 
 
 		//Little filter...
@@ -2053,6 +2036,10 @@ CL: UPDATE A: 0.88 -> 0.87
 	player.m_afButtonReleased = buttonsChanged & (~cmd->buttons);
 
 	// Set player variables that weapons code might check/alter
+	// TAGGG - CRITICAL CRITICAL CRITICAL!!!  Kinda important methinks.
+	// Although this looks to be for receiving button info from the server to the client?
+	// Seems a bit backwards, but all this prediction mumbo jumbo can be weird.
+	// input.cpp's own "->button" transfer is probably more forward to understand.
 	player.pev->button = cmd->buttons;
 
 	player.pev->velocity = from->client.velocity;
@@ -2085,14 +2072,14 @@ CL: UPDATE A: 0.88 -> 0.87
 
 	if(from->client.weaponanim & 128){
 
-		if(global2_testVar==1){
+		if(EASY_CVAR_GET(testVar)==1){
 			easyPrintLine("BACKWARDS!!!! %d : %d", from->client.weaponanim & ~128, from->client.weaponanim);
 		}
 
 		from->client.weaponanim &= ~128;
 		gEngfuncs.GetViewModel()->curstate.renderfx |= ANIMATEBACKWARDS;
 	}else{
-		if(global2_testVar==1){
+		if(EASY_CVAR_GET(testVar)==1){
 			easyPrintLine("NOOOOOT BACKWARDS!!!! %d", from->client.weaponanim);
 		}
 		gEngfuncs.GetViewModel()->curstate.renderfx &= ~ANIMATEBACKWARDS;
@@ -2391,8 +2378,20 @@ CL: UPDATE A: 0.88 -> 0.87
 
 
 	//easyForcePrintLine("WHAT THE FUCK c:%d f:%d t:%d pw:%d pr:%d", HUD_GetWeaponAnim(), from->client.weaponanim, to->client.weaponanim, pWeapon->m_pPlayer->pev->weaponanim, pWeapon->pev->sequence);
+	
 
-	if ( g_runfuncs && (  HUD_GetWeaponAnim() != to->client.weaponanim ) )
+	int tempthingy = to->client.weaponanim;
+	if (to->client.weaponanim == ANIM_NO_UPDATE){
+		int xxx = 4;
+	}
+	if (to->client.weaponanim == 9) {
+		int xxx = 4;
+	}
+
+	//MODDD - added check for "254".  That's a special code for, "the serverside anim request got cleared".
+	// This probably happened from becoming irrelevant and we don't want to make the client play an
+	// irrelevant animation, like putting on/taking off the glock silencer twice.
+	if ( g_runfuncs && (to->client.weaponanim != ANIM_NO_UPDATE && HUD_GetWeaponAnim() != to->client.weaponanim ) )
 	{
 		int body = 2;
 
@@ -2424,7 +2423,7 @@ CL: UPDATE A: 0.88 -> 0.87
 		if ( pWeapon == &g_Python && bIsMultiplayer() )
 			 body = 1;
 		*/
-		if(EASY_CVAR_GET(viewModelPrintouts)==1)easyForcePrintLine("Client: Received anim from server. Existing anim: %d New: %d", HUD_GetWeaponAnim(), to->client.weaponanim);
+		if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(viewModelPrintouts)==1)easyForcePrintLine("Client: Received anim from server. Existing anim: %d New: %d", HUD_GetWeaponAnim(), to->client.weaponanim);
 
 		//MODDD
 		if ( pWeapon == &g_Glock){
@@ -2711,10 +2710,7 @@ CL: UPDATE A: 0.88 -> 0.87
 	
 
 
-
-
-
-}
+}//END OF HUD_WeaponsPostThink
 
 
 
@@ -2740,12 +2736,17 @@ void _DLLEXPORT HUD_PostRunCmd( struct local_state_s *from, struct local_state_s
 	gpGlobals->time = time;
 	
 
+
+
+	/*
+	//MODDD - should we keep doing this??
 	if(gpGlobals->time - previousTime == 0){
 		//If no time has passed since the last client-reported time, assume we're paused. Don't try any logic.
 		//easyForcePrintLine("HUD_PostRunCmd: paused. time:%.2f", gpGlobals->time);
 		return;
 	}
 	previousTime = gpGlobals->time;
+	*/
 	
 
 
@@ -2764,8 +2765,6 @@ void _DLLEXPORT HUD_PostRunCmd( struct local_state_s *from, struct local_state_s
 		}
 		
 	//}
-
-
 
 #if defined( CLIENT_WEAPONS )
 

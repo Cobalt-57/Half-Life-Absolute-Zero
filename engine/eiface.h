@@ -33,12 +33,6 @@
 // This is conveniently done for them in extdll.h
 //
 
-#ifdef _WIN32
-#define DLLEXPORT __stdcall
-#else
-#define DLLEXPORT /* */
-#endif
-
 typedef enum
 	{
 	at_notice,
@@ -382,10 +376,13 @@ typedef struct
 	short			flags;
 } TYPEDESCRIPTION;
 
+//MODDD - REMOVED. No need for this now, already present in the new util_shared.h.
+/*
 #ifdef ARRAYSIZE
 #undef ARRAYSIZE
 #endif
 #define ARRAYSIZE(p)		(sizeof(p)/sizeof(p[0]))
+*/
 
 typedef struct 
 {

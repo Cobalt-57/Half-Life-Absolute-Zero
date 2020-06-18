@@ -20,17 +20,9 @@
 // Global header file for extension DLLs
 //
 
-
-//MODDD - what is the point of "DEBUG" as opposed to Visual Studio's default "_DEBUG" ???
-//Not even used.  Oh well, no harm leaving it in.  (actually used sometimes, like for AI fail sparks.)
-//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// Allow "DEBUG" in addition to default "_DEBUG"
-#ifdef _DEBUG
-#define DEBUG 1
-#endif
-//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-
+//MODDD - simple way to get this across serverside at least.
+#include "version.h"
+#include "externalLibInclude.h"
 
 
 // Silence certain warnings
@@ -69,10 +61,19 @@ typedef int BOOL;
 
 #endif //_WIN32
 
+
+
+#include "externalLibInclude.h"
+//#include "stdio.h"
+//#include "stdlib.h"
 // Misc C-runtime library headers
-#include "stdio.h"
-#include "stdlib.h"
-#include "math.h"
+//#include "math.h"
+
+
+
+
+
+
 
 // Header file containing definition of globalvars_t and entvars_t
 typedef int	func_t;					//

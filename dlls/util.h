@@ -33,8 +33,6 @@
 #include "saverestore.h"
 
 
-//#include "custom_debug.h"
-
 
 extern globalvars_t				*gpGlobals;
 
@@ -65,10 +63,10 @@ extern int giPrecacheGrunt;
 
 
 //MODDD - referred to in here, yes.
-extern float global_soundAttenuationAll;
-extern float global_soundAttenuationStuka;
-extern float global_soundVolumeAll;
-extern float global_soundVolumeStuka;
+EASY_CVAR_EXTERN(soundAttenuationAll)
+EASY_CVAR_EXTERN(soundAttenuationStuka)
+EASY_CVAR_EXTERN(soundVolumeAll)
+EASY_CVAR_EXTERN(soundVolumeStuka)
 
 //Why wasn't this externed everywhere before? I'm asking you, past me. I'm not insane, I swear.
 extern int global_useSentenceSave;
@@ -179,12 +177,7 @@ extern DLL_GLOBAL int			g_Language;
 
 #define SPEAKER_START_SILENT			1	// wait for trigger 'on' to start announcements
 
-
-//SOUND FLAGS HERE!
-#define SND_SPAWNING		(1<<8)		// duplicated in protocol.h we're spawing, used in some cases for ambients 
-#define SND_STOP			(1<<5)		// duplicated in protocol.h stop sound
-#define SND_CHANGE_VOL		(1<<6)		// duplicated in protocol.h change sound vol
-#define SND_CHANGE_PITCH	(1<<7)		// duplicated in protocol.h change sound pitch
+//MODDD - sound flags moved to util_shared.h.
 
 #define	LFO_SQUARE			1
 #define LFO_TRIANGLE		2
@@ -213,17 +206,7 @@ extern DLL_GLOBAL int			g_Language;
 #define PUSH_BLOCK_ONLY_X	1
 #define PUSH_BLOCK_ONLY_Y	2
 
-#define VEC_HULL_MIN		Vector(-16, -16, -36)
-#define VEC_HULL_MAX		Vector( 16,  16,  36)
-#define VEC_HUMAN_HULL_MIN	Vector( -16, -16, 0 )
-#define VEC_HUMAN_HULL_MAX	Vector( 16, 16, 72 )
-#define VEC_HUMAN_HULL_DUCK	Vector( 16, 16, 36 )
-
-#define VEC_VIEW			Vector( 0, 0, 28 )
-
-#define VEC_DUCK_HULL_MIN	Vector(-16, -16, -18 )
-#define VEC_DUCK_HULL_MAX	Vector( 16,  16,  18)
-#define VEC_DUCK_VIEW		Vector( 0, 0, 12 )
+//MODDD - "VEC_" macros moved to util_shared.h.
 
 #define SVC_TEMPENTITY		23
 #define SVC_INTERMISSION	30
@@ -489,14 +472,6 @@ extern void			UTIL_GunshotDecalTrace( TraceResult *pTrace, int decalNumber );
 //MODDD
 extern void			UTIL_GunshotDecalTraceForceDefault( TraceResult *pTrace, int decalNumber );
 
-extern void			UTIL_Sparks( const Vector &position );
-//MODDD - additional versions.
-//extern void			UTIL_Sparks( const Vector &position, int arg_ballsToSpawn );
-//extern void UTIL_Sparks2( const Vector &position );
-//extern void UTIL_Sparks2( const Vector &position, int arg_ballsToSpawn );
-extern void UTIL_Sparks2( const Vector &position, int arg_ballsToSpawn, float arg_extraSparkMulti );
-
-
 
 
 
@@ -571,11 +546,11 @@ void EMIT_SOUND_DYN(edict_t *entity, int channel, const char *sample, float volu
 
 //NOTE: involve "global_soundAttenuationAll" instead of ATTN_NORM
 #define EMIT_SOUND_ARRAY_FILTERED( chan, array ) \
-	EMIT_SOUND_FILTERED ( ENT(pev), chan , array [ RANDOM_LONG(0,ARRAYSIZE( array )-1) ], global_soundVolumeAll, global_soundAttenuationAll, 0, RANDOM_LONG(95,105) ); 
+	EMIT_SOUND_FILTERED ( ENT(pev), chan , array [ RANDOM_LONG(0,ARRAYSIZE( array )-1) ], EASY_CVAR_GET(soundVolumeAll), EASY_CVAR_GET(soundAttenuationAll), 0, RANDOM_LONG(95,105) ); 
 
 
 #define EMIT_SOUND_ARRAY_STUKA_FILTERED( chan, array ) \
-	EMIT_SOUND_FILTERED ( ENT(pev), chan , array [ RANDOM_LONG(0,ARRAYSIZE( array )-1) ], global_soundVolumeStuka, global_soundAttenuationStuka, 0, RANDOM_LONG(m_voicePitch - 5,m_voicePitch + 5) ); 
+	EMIT_SOUND_FILTERED ( ENT(pev), chan , array [ RANDOM_LONG(0,ARRAYSIZE( array )-1) ], EASY_CVAR_GET(soundVolumeStuka), EASY_CVAR_GET(soundAttenuationStuka), 0, RANDOM_LONG(m_voicePitch - 5,m_voicePitch + 5) ); 
 
 
 
@@ -801,44 +776,11 @@ extern Vector UTIL_projectionComponentPreserveMag(const Vector& u, const Vector&
 
 
 
-
-
-
-
-	
-extern void easyPrintLineHgrunt(const char *format, ...);
-extern void easyPrintLinePanthereye(const char *format, ...);
-extern void easyPrintLineSquadmonster(const char *format, ...);
-extern void easyPrintLineHassault(const char *format, ...);
-extern void easyPrintLineGargantua(const char *format, ...);
-extern void easyprintlineBarnacle(const char *format, ...);
-extern void easyPrintLineHoundeye(const char *format, ...);
-
-
-
 ////////////////////////////////////////////////////////////////////
-
-//TEMP!
-extern void easyPrintLineGroup1(const char *format, ...);
-extern void easyPrintLineGroup2(const char *format, ...);
-extern void easyPrintLineGroup3(const char *format, ...);
-extern void easyPrintLineGroup4(const char *format, ...);
-
-
-/*
-#define easyPrintLineGroup1(...) DUMMY
-#define easyPrintLineGroup2(...) DUMMY
-#define easyPrintLineGroup3(...) DUMMY
-#define easyPrintLineGroup4(...) DUMMY
-*/
-
-
 
 
 
 extern void			UTIL_Remove( CBaseEntity *pEntity );
-
-
 
 
 //MODDD
@@ -867,22 +809,10 @@ extern void			UTIL_PrecacheOther( const char *szClassname );
 
 
 
-
-
-
-
-
-
 class CBasePlayerItem;
 class CBasePlayer;
 extern BOOL UTIL_GetNextBestWeapon( CBasePlayer *pPlayer, CBasePlayerItem *pCurrentWeapon );
 
-
-
-
-// prints a message to the HUD say (chat)
-extern void			UTIL_SayText( const char *pText, CBaseEntity *pEntity );
-extern void			UTIL_SayTextAll( const char *pText, CBaseEntity *pEntity );
 
 
 typedef struct hudtextparms_s
@@ -1059,7 +989,7 @@ public:
 		strncpyTerminate(&displayName[0], arg_name, nameLength);
 	}
 
-	inline void easyPrint(char *format, ...){
+	inline void printOut(char *format, ...){
 		va_list argptr;
 		va_start(argptr, format);
 		char* tempResult = UTIL_VarArgsVA(format, argptr );;
@@ -1132,7 +1062,7 @@ extern void PRINTQUEUE_STUKA_SEND(PrintQueue& toPrint, const char* src, ...);
 
 
 
-extern void precacheAll(void);
+extern void method_precacheAll(void);
 
 extern BOOL UTIL_IsFacing( entvars_t *pevTest, const Vector &vecLookAtTest );
 extern BOOL UTIL_IsFacing( entvars_t *pevTest, const Vector &vecLookAtTest, const float& arg_tolerance );
@@ -1170,9 +1100,12 @@ extern void UTIL_ServerMassCVarReset(entvars_t* pev);
 
 
 
-
-extern void EASY_CVAR_PRINTIF(float geh, const char *szFmt, ... );
-extern void EASY_CVAR_PRINTIF_VECTOR(float geh, const char *szFmt, ... );
+// UNUSED, use the "EASY_CVAR_PRINTF_PRE" defined in game_shared/NEW/cvar_custom.h instead.
+// It requires the first parameter to be a CVAR, which is what this was meant to be a shortcut for 
+// to begin with.
+//extern void EASY_CVAR_PRINTIF(float geh, const char *szFmt, ... );
+// what was this one even trying to do?
+//extern void EASY_CVAR_PRINTIF_VECTOR(float geh, const char *szFmt, ... );
 
 extern BOOL getGermanModelsAllowed(void);
 

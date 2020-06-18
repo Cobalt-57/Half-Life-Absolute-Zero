@@ -22,7 +22,6 @@ extern "C"
 #include "usercmd.h"
 #include "const.h"
 #include "camera.h"
-#include "in_defs.h"
 #include "view.h"
 #include <string.h>
 #include <ctype.h>
@@ -32,10 +31,10 @@ extern "C"
 
 extern "C" 
 {
-	struct kbutton_s DLLEXPORT *KB_Find( const char *name );
-	void DLLEXPORT CL_CreateMove ( float frametime, struct usercmd_s *cmd, int active );
-	void DLLEXPORT HUD_Shutdown( void );
-	int DLLEXPORT HUD_Key_Event( int eventcode, int keynum, const char *pszCurrentBinding );
+	struct kbutton_s DLLEXPORT_2 *KB_Find( const char *name );
+	void DLLEXPORT_2 CL_CreateMove ( float frametime, struct usercmd_s *cmd, int active );
+	void DLLEXPORT_2 HUD_Shutdown( void );
+	int DLLEXPORT_2 HUD_Key_Event( int eventcode, int keynum, const char *pszCurrentBinding );
 }
 
 extern int g_iAlive;
@@ -135,7 +134,7 @@ typedef struct kblist_s
 kblist_t *g_kbkeys = NULL;
 
 
-extern float global2_iHaveAscended;
+EASY_CVAR_EXTERN(iHaveAscended)
 
 
 /*
@@ -223,7 +222,7 @@ KB_Find
 Allows the engine to get a kbutton_t directly ( so it can check +mlook state, etc ) for saving out to .cfg files
 ============
 */
-struct kbutton_s DLLEXPORT *KB_Find( const char *name )
+struct kbutton_s DLLEXPORT_2 *KB_Find( const char *name )
 {
 	kblist_t *p;
 	p = g_kbkeys;
@@ -380,7 +379,7 @@ HUD_Key_Event
 Return 1 to allow engine to process the key, otherwise, act on it as needed
 ============
 */
-int DLLEXPORT HUD_Key_Event( int down, int keynum, const char *pszCurrentBinding )
+int DLLEXPORT_2 HUD_Key_Event( int down, int keynum, const char *pszCurrentBinding )
 {
 	if (gViewPort)
 		return gViewPort->KeyInput(down, keynum, pszCurrentBinding);
@@ -666,7 +665,7 @@ if active == 1 then we are 1) not playing back demos ( where our commands are ig
 2 ) we have finished signing on to server
 ================
 */
-void DLLEXPORT CL_CreateMove ( float frametime, struct usercmd_s *cmd, int active )
+void DLLEXPORT_2 CL_CreateMove ( float frametime, struct usercmd_s *cmd, int active )
 {	
 	float spd;
 	vec3_t viewangles;
@@ -687,7 +686,7 @@ void DLLEXPORT CL_CreateMove ( float frametime, struct usercmd_s *cmd, int activ
 		//MODDD - ???
 		//gEngfuncs.SetViewAngles( (float *)viewangles );
 
-		if(global2_iHaveAscended != 1){
+		if(EASY_CVAR_GET(iHaveAscended) != 1){
 			gEngfuncs.SetViewAngles( (float *)viewangles );
 		}else{
 			gEngfuncs.SetViewAngles( (float *)Vector(gEngfuncs.pfnRandomFloat(-50, 50), gEngfuncs.pfnRandomFloat(0, 360), gEngfuncs.pfnRandomFloat(-150, 150)  )  );
@@ -750,6 +749,8 @@ void DLLEXPORT CL_CreateMove ( float frametime, struct usercmd_s *cmd, int activ
 	//
 	// set button and flag bits
 	//
+	//TAGGG - CRITICAL CRITICAL CRITICAL.  This is likely what sends
+	// the info to fill pev->buttons for the player on the server!
 	cmd->buttons = CL_ButtonBits( 1 );
 
 	// If they're in a modal dialog, ignore the attack button.
@@ -796,6 +797,12 @@ int	CL_IsDead( void )
 	return ( gHUD.m_Health.m_iHealth <= 0 ) ? 1 : 0;
 }
 
+
+
+
+//MODDD - for a printout test below.
+//int prevAttackState = -1;
+
 /*
 ============
 CL_ButtonBits
@@ -807,6 +814,20 @@ Set bResetState to 1 to clear old state info
 int CL_ButtonBits( int bResetState )
 {
 	int bits = 0;
+
+
+	/*
+	if (in_attack.state != prevAttackState) {
+		easyForcePrint("What? %d : ", in_attack.state);
+		printIntAsBinary((unsigned int)in_attack.state, 8u);
+		easyForcePrint(" well? %d", ((in_attack.state & 3) != 0));
+		easyForcePrintLine();
+		// 1 or 2???
+		prevAttackState = in_attack.state;
+	}
+	//bResetState = FALSE;
+	*/
+	
 
 	if ( in_attack.state & 3 )
 	{
@@ -1038,7 +1059,7 @@ void ShutdownInput (void)
 	KB_Shutdown();
 }
 
-void DLLEXPORT HUD_Shutdown( void )
+void DLLEXPORT_2 HUD_Shutdown( void )
 {
 	ShutdownInput();
 }

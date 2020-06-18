@@ -23,6 +23,20 @@
 
 #include "effects.h"
 
+#include "util_shared.h"
+
+
+//MODDD - to get the gHUD instance for getting an accurate FOV reading clientside, player data is garbage there.
+#ifdef CLIENT_DLL
+#include "hud.h"
+#endif
+
+
+
+
+
+
+
 class CBasePlayer;
 extern int gmsgWeapPickup;
 
@@ -175,7 +189,6 @@ public:
 // the maximum amount of ammo each weapon's clip can hold
 #define WEAPON_NOCLIP			-1
 
-//#define CROWBAR_MAX_CLIP		WEAPON_NOCLIP
 #define GLOCK_MAX_CLIP			13
 #define PYTHON_MAX_CLIP			6
 #define MP5_MAX_CLIP			30
@@ -226,20 +239,7 @@ public:
 #define AMMO_URANIUMBOX_GIVE	20
 #define AMMO_SNARKBOX_GIVE		5
 
-// bullet types
-typedef	enum
-{
-	BULLET_NONE = 0,
-	BULLET_PLAYER_9MM, // glock
-	BULLET_PLAYER_MP5, // mp5
-	BULLET_PLAYER_357, // python
-	BULLET_PLAYER_BUCKSHOT, // shotgun
-	BULLET_PLAYER_CROWBAR, // crowbar swipe
-
-	BULLET_MONSTER_9MM,
-	BULLET_MONSTER_MP5,
-	BULLET_MONSTER_12MM,
-} Bullet;
+// MODDD - 'bullet types' enum moved to util_shared.
 
 
 #define ITEM_FLAG_SELECTONEMPTY		1
@@ -377,7 +377,7 @@ public:
 
 	//MODDD - constructor.
 	CBasePlayerWeapon();
-	//MODDD - new var.  Like "pev->buttons" from the player, but acconuts for whether firing with the weapon is allowed at the moment (can't be done in weapons themselves, only in weapons.cpp)
+	//MODDD - new var.  Like "pev->button" from the player, but accounts for whether firing with the weapon is allowed at the moment (can't be done in weapons themselves, only in weapons.cpp)
 	int buttonFiltered;
 	//MODDD - new.
 	
@@ -443,14 +443,6 @@ public:
 	virtual void SendWeaponAnimServerOnlyReverse(int iAnim, int body = 0);
 
 
-
-
-
-	
-	//MODDD
-	virtual const char* GetPickupWalkerName(void);
-
-
 	virtual BOOL CanDeploy( void );
 	virtual BOOL IsUseable( void );
 
@@ -463,16 +455,10 @@ public:
 	
 	void DefaultHolster(int iAnim, int skiplocal = 0, int body = 0, float holsterAnimTime = 1.0);
 
-
-
 	int DefaultReload( int iClipSize, int iAnim, float fDelay, int body = 0 );
-
-
-
 
 	//MODDD - new.
 	virtual void ItemPostFrameThink(void);
-
 
 	//MODDD - added so that "hl_weapons.cpp" in clientside may override it.  But it will have to be called over there to do anything.
 	virtual void ItemPreFrame( void );
@@ -507,7 +493,17 @@ public:
 	void PrintState( void );
 	
 	//MODDD - new
+	virtual const char* GetPickupWalkerName(void);
 	virtual CBaseEntity* pickupWalkerReplaceCheck();
+	//MODDD - new event, called alongside a reload actually changing the ammo counts.
+	virtual void OnReloadApply(void);
+
+	//MODDD - new general event for easy compatability with a commonly wanted feature (getting the player's
+	// actual FOV choice given a possible influencing CVar).
+	// Wanted to make this inline with 'ifdef's for CLIENT_DLL and not, but the player has to be defined at this point.
+	// So see implementations in cl_dll/hl/hl_baseentity.cpp and dlls/weapons.cpp.
+	float getPlayerBaseFOV(void);
+
 
 	virtual CBasePlayerItem *GetWeaponPtr( void ) { return (CBasePlayerItem *)this; };
 
@@ -672,7 +668,6 @@ public:
 	BOOL scheduleGlockDeletion;
 	BOOL includesGlockSilencer;
 	//BOOL playerHasGlockYet;
-	BOOL rememberOneLessRound;
 
 	BOOL weaponCanHaveExtraCheck(CBasePlayer* pPlayer);
 	BOOL weaponPlayPickupSoundException( CBasePlayer* pPlayer);
@@ -681,7 +676,10 @@ public:
 	void setExtraBulletFalse(void);
 	void setExtraBulletTrue(void);
 	BOOL getExtraBullet(void);
-
+	void setFiredSinceReloadFalse(void);
+	void setFiredSinceReloadTrue(void);
+	BOOL getFiredSinceReload(void);
+	
 
 
 //MODDD - this is necessary for  saving and loading, apparently.
@@ -726,6 +724,9 @@ public:
 	void Reload( void );
 	void WeaponIdle( void );
 
+	//MODDD - NEW, event.
+	void OnReloadApply(void);
+
 	virtual BOOL UseDecrement( void )
 	{ 
 #if defined( CLIENT_WEAPONS )
@@ -766,47 +767,7 @@ private:
 };
 
 
-
-class CCrowbar : public CBasePlayerWeapon
-{
-public:
-	void Spawn( void );
-	void Precache( void );
-	int iItemSlot( void ) { return 1; }
-	void EXPORT SwingAgain( void );
-	void EXPORT Smack( void );
-	int GetItemInfo(ItemInfo *p);
-
-	void PrimaryAttack( void );
-	int Swing( int fFirst );
-	BOOL Deploy( void );
-	void Holster( int skiplocal = 0 );
-	int m_iSwing;
-
-	//MODDD
-	int m_iSwingMiss;
-
-	TraceResult m_trHit;
-
-	//MODDD - added.
-	void WeaponIdle( void );
-
-	virtual BOOL UseDecrement( void )
-	{ 
-#if defined( CLIENT_WEAPONS )
-		return TRUE;
-#else
-		return FALSE;
-#endif
-	}
-private:
-	unsigned short m_usCrowbar;
-};
-
-
-
-
-
+//MODDD - class CCrowbar moved to crowbar.h.
 
 
 class CLaserSpotPython : public CBaseEntity
@@ -1043,6 +1004,8 @@ public:
 class CRpg : public CBasePlayerWeapon
 {
 public:
+	//MODDD - constructor.
+	CRpg(void);
 
 #ifndef CLIENT_DLL
 	int		Save( CSave &save );
@@ -1114,6 +1077,10 @@ public:
 	float massInfluence(void);
 	int GetProjectileType(void);
 
+	Vector GetVelocityLogical(void);
+	void SetVelocityLogical(const Vector& arg_newVelocity);
+	void OnDeflected(CBaseEntity* arg_entDeflector);
+
 
 	static CRpgRocket *CreateRpgRocket( Vector vecOrigin, Vector vecAngles, CBaseEntity *pOwner, CRpg *pLauncher );
 	static CRpgRocket *CreateRpgRocket( Vector vecOrigin, Vector vecAngles, Vector arg_vecMoveDirection, CBaseEntity *pOwner, CRpg *pLauncher );
@@ -1124,210 +1091,18 @@ public:
 
 	BOOL ignited;
 
+	
+
+	//MODDD - new
 	Vector vecMoveDirectionMemory;
-
-	//MODDD - new
 	BOOL alreadyDeleted;
+	BOOL forceDumb;
 
 };
 
-class CGauss : public CBasePlayerWeapon
-{
-public:
 
-	int ohShitSon;
-	int ohFuckSonny;
-	
-	//MOTHERappreciater HOW DO YOU NOT HAVE THIS
-	CGauss(void);
+//MODDD - class CGauss moved to the new gauss.h
 
-#ifndef CLIENT_DLL
-	int		Save( CSave &save );
-	int		Restore( CRestore &restore );
-	static	TYPEDESCRIPTION m_SaveData[];
-#endif
-
-	void Spawn( void );
-	void Precache( void );
-	int iItemSlot( void ) { return 4; }
-	int GetItemInfo(ItemInfo *p);
-
-	//MODDD
-	void customAttachToPlayer(CBasePlayer *pPlayer );
-
-	int AddToPlayer( CBasePlayer *pPlayer );
-
-	BOOL Deploy( void );
-	void Holster( int skiplocal = 0  );
-
-
-	//MODDD - new.
-	void ItemPreFrame( void );
-	void ItemPostFrame(void);
-
-	void PrimaryAttack( void );
-	void SecondaryAttack( void );
-
-
-	//MODDD - new
-	void chargeGauss(void);
-	float getNextAmmoBurnDelay(void);
-	void determineNextAmmoBurnAndUse(void);
-	void chargeWork(void);
-	void postChargeAnimCheck(void);
-	void attemptFirePrimary(void);
-
-	float getAmmoChargeInterval(void);
-
-	void WeaponIdle( void );
-	
-	//MODDD - new
-	void StartFireDecision( void);
-
-	void StartFire( void );
-	void Fire( Vector vecOrigSrc, Vector vecDirShooting, float flDamage );
-	float GetFullChargeTime( void );
-	int m_iBalls;
-	int m_iGlow;
-	int m_iBeam;
-	int m_iSoundState; // don't save this
-
-	// was this weapon just fired primary or secondary?
-	// we need to know so we can pick the right set of effects. 
-	BOOL m_fPrimaryFire;
-
-	virtual BOOL UseDecrement( void )
-	{ 
-#if defined( CLIENT_WEAPONS )
-		return TRUE;
-#else
-		return FALSE;
-#endif
-	}
-
-private:
-	unsigned short m_usGaussFire;
-	unsigned short m_usGaussSpin;
-};
-
-
-class CEgon : public CBasePlayerWeapon
-{
-public:
-#ifndef CLIENT_DLL
-	int		Save( CSave &save );
-	int		Restore( CRestore &restore );
-	static	TYPEDESCRIPTION m_SaveData[];
-#endif
-
-	CEgon::CEgon();
-	
-	int dummy;
-
-	BOOL canStartSecondary;
-	BOOL secondarySwitched;
-	BOOL holdingPrimary;
-	BOOL holdingSecondary;
-
-	//BOOL waitForAnimReset;
-	int queueAnim;
-
-	BOOL legalHoldSecondary;
-	BOOL startedSecondaryHoldAttempt;
-	float animationTime;
-	float holdingSecondaryCurrent;
-	float holdingSecondaryTarget0;
-	float holdingSecondaryTarget1;
-	float holdingSecondaryTarget2;
-
-	
-	//MODDD - also new.
-	float timeSinceDeployed;
-
-	BOOL toggledYet;
-	BOOL altFireOn;
-	int animationSequence;
-
-
-
-	float oldTime;
-	float currentTime;
-
-	float timeDelta;
-
-	int lastSentAnim;
-
-	//MODDD - ??
-	void ItemPostFrame( void );
-	void ItemPreFrame( void );
-	void PrimaryNotHeld( void );
-	void SecondaryNotHeld( void );
-	void NeitherHeld( void );
-	void BothHeld( void );
-	BOOL effectsExist;
-	
-	void Spawn( void );
-	void Precache( void );
-	int iItemSlot( void ) { return 4; }
-	int GetItemInfo(ItemInfo *p);
-
-	//MODDD
-	void customAttachToPlayer(CBasePlayer *pPlayer );
-
-	int AddToPlayer( CBasePlayer *pPlayer );
-
-	BOOL Deploy( void );
-	void Holster( int skiplocal = 0 );
-
-	void UpdateEffect( const Vector &startPoint, const Vector &endPoint, float timeBlend );
-
-	void CreateEffect ( void );
-	void DestroyEffect ( void );
-
-	void EndAttack( void );
-	void Attack( void );
-	void PrimaryAttack( void );
-	//MODDD -added
-	void SecondaryAttack( void );
-
-	void WeaponIdle( void );
-
-	float m_flAmmoUseTime;// since we use < 1 point of ammo per update, we subtract ammo on a timer.
-
-	float GetPulseInterval( void );
-	float GetDischargeInterval( void );
-
-	void Fire( const Vector &vecOrigSrc, const Vector &vecDir );
-
-	BOOL HasAmmo( void );
-
-	void UseAmmo( int count );
-	
-	enum EGON_FIREMODE { FIRE_NARROW, FIRE_WIDE};
-
-	CBeam				*m_pBeam;
-	CBeam				*m_pNoise;
-	CSprite				*m_pSprite;
-
-	virtual BOOL UseDecrement( void )
-	{ 
-#if defined( CLIENT_WEAPONS )
-		return TRUE;
-#else
-		return FALSE;
-#endif
-	}
-
-	unsigned short m_usEgonStop;
-
-private:
-	float				m_shootTime;
-	EGON_FIREMODE		m_fireMode;
-	float				m_shakeTime;
-	BOOL				m_deployed;
-
-	unsigned short m_usEgonFire;
-};
 
 class CHgun : public CBasePlayerWeapon
 {
@@ -1505,7 +1280,7 @@ public:
 	BOOL m_fInAttack;
 
 	const char* GetPickupWalkerName(void);
-	void Spawn( void );
+	virtual void Spawn( void );
 	void Precache( void );
 	void setModel(void);
 	void setModel(const char* m);
@@ -1548,27 +1323,13 @@ private:
 
 
 
-
-
-
-
-
-
-
-
-
-//WARNING: SERVER ONLY! NOTICE THAT!!!
+// TODO - move these to "crossbowbolt.h", a serverside only file.
 #ifndef CLIENT_DLL
-
-
 #define BOLT_AIR_VELOCITY	2000
 #define BOLT_WATER_VELOCITY	1000
 
 //MODDD
-extern float global_sparksPlayerCrossbowMulti;
-
-
-
+EASY_CVAR_EXTERN(sparksPlayerCrossbowMulti)
 
 // UNDONE: Save/restore this?  Don't forget to set classname and LINK_ENTITY_TO_CLASS()
 // 
@@ -1581,6 +1342,10 @@ class CCrossbowBolt : public CBaseEntity
 	//MODDD - a ... defined constructor defaults to private, but the auto-generated one didn't? I got nothing.
 public:
 	CCrossbowBolt(void);
+
+	static TYPEDESCRIPTION m_SaveData[];
+	int Save( CSave &save ); 
+	int Restore( CRestore &restore );
 
 	void Spawn( void );
 	void Spawn( BOOL useTracer, BOOL arg_noDamage );
@@ -1603,6 +1368,7 @@ public:
 	float m_speed;  //why is this set separately? isn't it redundant being supplied this and a velocity, which is kinda both a direction and speed in one? who knows.
 	float realNextThink;
 	BOOL noDamage;
+	BOOL hitSomething;
 
 	static CCrossbowBolt *BoltCreate(const Vector& arg_velocity, float arg_speed );
 	static CCrossbowBolt *BoltCreate(const Vector& arg_velocity, float arg_speed, BOOL useTracer, BOOL arg_noDamage );
@@ -1613,33 +1379,6 @@ public:
 
 #endif
 //MODDDD - NOTE: all the above was server-side only.  Easy to miss this...
-
-
-
-
-extern int giAmmoIndex;
-
-//MODDD NEW - prototype so that other places can call this method too.
-extern void AddAmmoNameToAmmoRegistry( const char *szAmmoname );
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

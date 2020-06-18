@@ -19,11 +19,101 @@
 
 
 //MODDD - new.
-#include "../versionAid.h"
+//#include "../versionAid.h"
+
+
+
+
+
+
+
+
+
+
+EASY_CVAR_CREATE_SERVER_SETUP_MASS
 
 //MODDD - extern
 extern BOOL globalPSEUDO_iCanHazMemez;
-extern float global_hiddenMemPrintout;
+EASY_CVAR_EXTERN(hiddenMemPrintout)
+EASY_CVAR_EXTERN(emergencyFix)
+EASY_CVAR_EXTERN(soundSentenceSave)
+
+extern cvar_t* cvar_sv_cheats;
+
+
+extern void resetModCVars(CBasePlayer* arg_plyRef, BOOL isEmergency);
+extern void updateCVarRefs(entvars_t* pev);
+
+
+
+
+
+
+
+
+
+
+
+//MODDD - NEW!  Version-related CVars, used to be named "protoVersionS" and "protoDateS".
+//...actually replaced by a console command now, disregard this.
+//cvar_t	sv_mod_version	= {"sv_mod_version", "0", FCVAR_SERVER | FCVAR_UNLOGGED | FCVAR_SPONLY };
+//cvar_t	sv_mod_date	= {"sv_mod_date", "0", FCVAR_SERVER | FCVAR_UNLOGGED | FCVAR_SPONLY };
+
+cvar_t* global_test_cvar_ref = NULL;
+
+cvar_t	test_cvar	= {"test_cvar", "6", 0 };
+//FCVAR_SERVER | FCVAR_SPONLY
+
+//MODDD - CVAR TEST
+void test_cvar_create(){
+	// note - CVAR_CREATE and CVAR_REGISTER are the exact same call.
+	CVAR_CREATE(&test_cvar);
+
+	//ALSO, serverside CVars implicitly get the FCVAR_EXTDLL flag.
+	// clientside CVars (registered in cl_dll/hud.cpp typically) get the FCVAR_CLIENTDLL flag.
+	// I know, go figure.  But it's good for this to be spelled out somewhere.
+	// AHEM.  *COUGH*.   *COUGH*.
+
+	// GENERAL RULE OF THUMB WITH CVARS:
+	// I think getting the '->value' of a pointer to a CVar from any earlier point is OK.
+	// Setting the value, like  "...->value = 36.2f",  is not.   Use engine calls to do this.
+	// Any desynch between what ->value, engine calls for reading CVars, or the ingame console
+	// (not intended to work for serverside CVars for connected players not running the server)
+	// would be bad.  Although "->value"'s being unable to be trusted wouldn't be that terrible.
+
+	
+	
+
+	// This test has been done.  Looks like the pointer returned from CVAR_GET_POINTER
+	// is not the same as the one supplied to CVAR_CREATE, for a request of the same name.
+	// I'm guessing CVAR_CREATE generates a copy from the supplied cvar_t and then returns
+	// some part of memory where it's actually updated in real-time from changes to the CVar.
+	// ...then what's the point of supplying the cvar_t struct anyway instead of just a bunch
+	// of separate parameters like clientside does?  WHO KNOWS.
+	/*
+	cvar_t* test_cvar_tempRef = CVAR_GET_POINTER("test_cvar");
+	
+	if(test_cvar_tempRef == &test_cvar){
+		easyForcePrintLine("test_cvar re-get test: IT MATCHES!");
+	}else{
+		easyForcePrintLine("test_cvar re-get test: Nope, well what the fuck.");
+	}
+	*/
+
+
+	//global_test_cvar_ref = CVAR_GET_POINTER("test_cvar");
+
+}//END OF test_cvar_create
+	
+	
+
+
+
+
+
+
+
+
 
 
 
@@ -602,16 +692,7 @@ cvar_t	glockSilencerOn = {"glocksilenceron","0"};
 */
 
 
-
-EASY_CVAR_CREATE_SERVER_SETUP_MASS
-
-
-
-
-
-
 // END Cvars 
-
 
 
 
@@ -620,23 +701,6 @@ EASY_CVAR_CREATE_SERVER_SETUP_MASS
 //EASY_CVAR_CREATE_SERVER_SETUP_A(testveyy)
 
 
-
-
-
-
-
-
-
-
-
-
-extern float global_emergencyFix;
-extern float global_soundSentenceSave;
-
-extern void resetModCVars(CBasePlayer* arg_plyRef, BOOL isEmergency);
-
-extern void updateCVarRefs(entvars_t *pev);
-	
 extern int gmsgUpdateClientCVar;
 
 
@@ -652,7 +716,15 @@ extern int gmsgUpdateClientCVar;
 void GameDLLInit( void )
 {
 
+	easyForcePrintLine("!!!!!! GameDLLInit");
 
+
+	//MODDD - new
+	//if(sv_cheatsRefClient == 0){
+		cvar_sv_cheats = CVAR_GET_POINTER( "sv_cheats" );
+	//}
+
+/*
 	//get the game's version from  version.h...
 	
 	char aryChr[128];
@@ -660,35 +732,68 @@ void GameDLLInit( void )
 	writeVersionInfo(aryChr, 128);
 	writeDateInfo(aryChrD, 128);
 
-	CVAR_SET_STRING("protoVersionS", aryChr);
-	CVAR_SET_STRING("protoDateS", aryChrD);
+	//CVAR_SET_STRING("sl_mod_version", aryChr);
+	//CVAR_SET_STRING("sl_mod_date", aryChrD);
+	
+	
+	//...actually replaced by a console command now, disregard this.
+	sv_mod_version->value_string = aryChr;
+	sv_mod_date->value_string = aryChrD;
+	CVAR_CREATE(&sv_mod_version);
+	CVAR_CREATE(&sv_mod_date);
+*/
+
+	
+	
+	//MODDD - CRITICAL. Moved from player.cpp
+	easyForcePrintLine("LINKING USER MESSAGES...");
+	// Make sure any necessary user messages have been registered
+	LinkUserMessages();
+
+
+
+
+	EASY_CVAR_CREATE_SERVER_MASS
+
 
 
 	determineHiddenMemPath();
-	
+
 	globalPSEUDO_iCanHazMemez = checkSubDirectoryExistence("sound\\memez");
-	if(global_hiddenMemPrintout == 1){
-		easyForcePrintLine("MEMEZ FOUND??: %d", (globalPSEUDO_iCanHazMemez == 1) );
+	if (EASY_CVAR_GET(hiddenMemPrintout) == 1) {
+		easyForcePrintLine("MEMEZ FOUND??: %d", (globalPSEUDO_iCanHazMemez == 1));
 	}
 
 	loadHiddenCVars();
 
 
 	updateCVarRefs(NULL);
-	
+
 
 	//MODDD - Deemed best place for initializing CVars (first update, necessary for spawn-script so that it may see CVars in their intended form).
 
-	
-	if(global_soundSentenceSave == -1){
-		global_soundSentenceSave = (int)CVAR_GET_FLOAT("soundSentenceSave");
+	//TODO - make me a EASY_CVAR define.
+	// why are we setting this to itself again?  Probably unnecessary later.
+	if (EASY_CVAR_GET(soundSentenceSave) == -1) {
+
+		//global_soundSentenceSave = (int)EASY_CVAR_GET(soundSentenceSave);
+		EASY_CVAR_SET_DEBUGONLY(soundSentenceSave, EASY_CVAR_GET(soundSentenceSave));
+
 	}
 	//MODDD -.
-	if(global_emergencyFix == 1){
+	if (EASY_CVAR_GET(emergencyFix) == 1) {
 		//MODDD - TODO - is it a good idea to EASY_CVAR_SET_DEBUGONLY this??
-		global_emergencyFix = 0;
+		//global_emergencyFix = 0;
+		//"gets the point across"
+		EASY_CVAR_SET_DEBUGONLY(emergencyFix, 0);
 		resetModCVars(NULL, TRUE);
 	}
+
+
+
+
+
+
 
 
 
@@ -710,16 +815,8 @@ void GameDLLInit( void )
 	//CVAR_REGISTER(&giveLookVert);
 	//and here.
 
-
-	/*
-	char	*name;
-	char	*string;
-	int		flags;
-	float	value;
-	struct cvar_s *next;
 	
-	*/
-
+	test_cvar_create();
 	
 
 
@@ -730,12 +827,7 @@ void GameDLLInit( void )
 	///tempVar.name = "testvarrr";
 	//tempVar.string = "18";
 	//CVAR_REGISTER(&tempVar);
-	
-	
 	//EASY_CVAR_CREATE_SERVER_A(testveyy)
-
-
-	//EASY_CVAR_CREATE_SERVER_MASS
 
 
 

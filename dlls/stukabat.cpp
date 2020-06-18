@@ -13,24 +13,24 @@
 
 EASY_CVAR_EXTERN(animationFramerateMulti)
 
-extern float global_drawDebugPathfinding2;
-extern float global_stukaAdvancedCombat;
+EASY_CVAR_EXTERN(drawDebugPathfinding2)
+EASY_CVAR_EXTERN(stukaAdvancedCombat)
 
-extern float global_STUSpeedMulti;
-extern float global_STUExplodeTest;
-extern float global_STUYawSpeedMulti;
-extern float global_STUDetection;
+EASY_CVAR_EXTERN(STUSpeedMulti)
+EASY_CVAR_EXTERN(STUExplodeTest)
+EASY_CVAR_EXTERN(STUYawSpeedMulti)
+EASY_CVAR_EXTERN(STUDetection)
 
-extern float global_shutupstuka;
+EASY_CVAR_EXTERN(shutupstuka)
 
-extern float global_STUrepelMulti;
-extern float global_STUcheckDistH;
-extern float global_STUcheckDistV;
-extern float global_STUcheckDistD;
+EASY_CVAR_EXTERN(STUrepelMulti)
+EASY_CVAR_EXTERN(STUcheckDistH)
+EASY_CVAR_EXTERN(STUcheckDistV)
+EASY_CVAR_EXTERN(STUcheckDistD)
 
-extern float global_stukaPrintout;
+EASY_CVAR_EXTERN(stukaPrintout)
 
-extern float global_stukaInflictsBleeding;
+EASY_CVAR_EXTERN(stukaInflictsBleeding)
 
 
 //Stuka Bat's implementation.  Separate for organization.
@@ -286,7 +286,7 @@ GENERATE_GIBMONSTER_IMPLEMENTATION_ROUTETOPARENT(CStukaBat, CSquadMonster)
 
 void CStukaBat :: PainSound( void )
 {
-	if(global_shutupstuka != 1){
+	if(EASY_CVAR_GET(shutupstuka) != 1){
 		//NOTE: lifted from "Controller".  Is a 1/3 chance of pain okay?
 		if (RANDOM_LONG(0,5) < 2)
 			EMIT_SOUND_ARRAY_STUKA_FILTERED( CHAN_VOICE, pPainSounds ); 
@@ -457,28 +457,28 @@ void CStukaBat :: AlertSound( void )
 	}
 
 	
-	if(global_shutupstuka != 1){
+	if(EASY_CVAR_GET(shutupstuka) != 1){
 	EMIT_SOUND_ARRAY_STUKA_FILTERED( CHAN_VOICE, pAlertSounds );
 	}
 }
 
 void CStukaBat :: IdleSound( void )
 {
-	if(global_shutupstuka != 1){
+	if(EASY_CVAR_GET(shutupstuka) != 1){
 	EMIT_SOUND_ARRAY_STUKA_FILTERED( CHAN_VOICE, pIdleSounds ); 
 	}
 }
 
 void CStukaBat :: AttackSound( void )
 {
-	if(global_shutupstuka != 1){
+	if(EASY_CVAR_GET(shutupstuka) != 1){
 	EMIT_SOUND_ARRAY_STUKA_FILTERED( CHAN_VOICE, pAttackSounds ); 
 	}
 }
 
 void CStukaBat :: DeathSound( void )
 {
-	if(global_shutupstuka != 1){
+	if(EASY_CVAR_GET(shutupstuka) != 1){
 	EMIT_SOUND_ARRAY_STUKA_FILTERED( CHAN_VOICE, pDeathSounds ); 
 	}
 }
@@ -676,7 +676,7 @@ int CStukaBat::IRelationship( CBaseEntity *pTarget )
 
 
 		if(!snappedToCeiling || wakeUp == TRUE){
-			switch( (int) global_STUDetection){
+			switch( (int) EASY_CVAR_GET(STUDetection) ){
 			case 0:
 				//good enough, something serious needs to provoke me.
 				return R_NO;
@@ -1741,7 +1741,7 @@ EHANDLE* CStukaBat::getEnemy(){
 
 void CStukaBat::updateMoveAnim(){
 
-	if(global_stukaAdvancedCombat == 1 && onGround == FALSE){
+	if(EASY_CVAR_GET(stukaAdvancedCombat) == 1 && onGround == FALSE){
 		//pass.
 	}else{
 		return;  //Do not affect.
@@ -2029,7 +2029,7 @@ void CStukaBat :: RunTask ( Task_t *pTask )
 			*/
 
 
-			if(global_stukaAdvancedCombat == 1){
+			if(EASY_CVAR_GET(stukaAdvancedCombat) == 1){
 				updateMoveAnim();
 
 			}else{
@@ -2180,7 +2180,7 @@ void CStukaBat :: RunTask ( Task_t *pTask )
 				}else{
 					attackIndex = 0;
 
-					if(global_stukaAdvancedCombat == 1){
+					if(EASY_CVAR_GET(stukaAdvancedCombat) == 1){
 						m_flGroundSpeed = 330;
 						if(maxDiveTime == -1){
 						maxDiveTime = gpGlobals->time + 2;
@@ -2275,7 +2275,7 @@ void CStukaBat :: RunTask ( Task_t *pTask )
 					if(m_hEnemy == NULL)return;
 
 					if(dist3d  <= 72 || (dist3d <= 114 && dist2d <= 55)  ){
-						m_hEnemy->TakeDamage( pev, pev, gSkillData.stukaBatDmgClaw, DMG_SLASH, ((global_stukaInflictsBleeding>0)&&(RANDOM_FLOAT(0,1)<=global_stukaInflictsBleeding))?DMG_BLEEDING:0 );   //USED TO HAVE DMG_BLEEDING, test....
+						m_hEnemy->TakeDamage( pev, pev, gSkillData.stukaBatDmgClaw, DMG_SLASH, ((EASY_CVAR_GET(stukaInflictsBleeding)>0)&&(RANDOM_FLOAT(0,1)<=EASY_CVAR_GET(stukaInflictsBleeding)))?DMG_BLEEDING:0 );   //USED TO HAVE DMG_BLEEDING, test....
 
 						//BEWARE: TakeDamage does NOT draw blood particles.  Do it manually too.
 						//DrawAlphaBlood(flDamage, ptr );
@@ -2351,14 +2351,14 @@ void CStukaBat :: RunTask ( Task_t *pTask )
 	break;
 	case TASK_GET_PATH_TO_ENEMY_LKP:
 	
-		if(global_stukaAdvancedCombat == TRUE){
+		if(EASY_CVAR_GET(stukaAdvancedCombat) == TRUE){
 			updateMoveAnim();
 		}
 	
 	break;
 	case TASK_GET_PATH_TO_ENEMY:
 	
-		if(global_stukaAdvancedCombat == TRUE){
+		if(EASY_CVAR_GET(stukaAdvancedCombat) == TRUE){
 			updateMoveAnim();
 		}
 		//this is a dummy for now.
@@ -2367,7 +2367,7 @@ void CStukaBat :: RunTask ( Task_t *pTask )
 	break;
 	case TASK_GET_PATH_TO_SPOT:
 	
-		if(global_stukaAdvancedCombat == TRUE){
+		if(EASY_CVAR_GET(stukaAdvancedCombat) == TRUE){
 			updateMoveAnim();
 		}
 	
@@ -3928,12 +3928,12 @@ void CStukaBat::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, floa
 	//easyPrintLineGroup2("TIMEVAR %.2f :: %.2f", pev->framerate, flInterval);
 
 	float flTotal = 0;
-	float flStepTimefactored = m_flGroundSpeed*global_STUSpeedMulti * pev->framerate * EASY_CVAR_GET(animationFramerateMulti) * flInterval;
+	float flStepTimefactored = m_flGroundSpeed*EASY_CVAR_GET(STUSpeedMulti) * pev->framerate * EASY_CVAR_GET(animationFramerateMulti) * flInterval;
 	float flStep = m_flGroundSpeed * 1 * 1;
 	
 
 
-	float velMag = flStep * global_STUSpeedMulti;
+	float velMag = flStep * EASY_CVAR_GET(STUSpeedMulti);
 
 	float timeAdjust = (pev->framerate * EASY_CVAR_GET(animationFramerateMulti) * flInterval);
 	float distOneFrame = velMag * pev->framerate * EASY_CVAR_GET(animationFramerateMulti) * flInterval;
@@ -3995,7 +3995,7 @@ void CStukaBat::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, floa
 
 
 
-	if(global_drawDebugPathfinding2 == 1){
+	if(EASY_CVAR_GET(drawDebugPathfinding2) == 1){
 		//if( ((int)gpGlobals->time) % 2 == 1){
 		UTIL_drawLineFrame(pev->origin, pev->origin + vecSuggestedDir * velMag * 5, 48, 0, 255, 255);
 		//}else{
@@ -4240,12 +4240,12 @@ void CStukaBat::MonsterThink(){
 	
 		//EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyPrintLine("STET %d %d, %.2f %.2f", HasConditions( bits_COND_HEAR_SOUND ), m_MonsterState, gpGlobals->time, m_flWaitFinished));
 
-		//global_STUDetection
+		// STUDetection
 		//0: never care.  Wait until a loud noise / getting hit by an attack provokes me.
 		//1: reduced sight when not provoked and not hanging.
 		//2: normal sight all the time except for when starting off hanging.
 
-		switch( (int) global_STUDetection){
+		switch( (int) EASY_CVAR_GET(STUDetection) ){
 		case 0:
 			if( m_afMemory & bits_MEMORY_PROVOKED){
 				m_flFieldOfView		= VIEW_FIELD_FULL;
@@ -4294,7 +4294,7 @@ void CStukaBat::MonsterThink(){
 	}//END OF dead check
 
 
-	if(global_stukaPrintout == 1){
+	if(EASY_CVAR_GET(stukaPrintout) == 1){
 		stukaPrint.printOutAll();
 	}
 
@@ -4311,7 +4311,7 @@ float CStukaBat::HearingSensitivity(){
 		return 0.58f;
 	}else if( !(m_afMemory & bits_MEMORY_PROVOKED)){
 		//not provoked?  Hearing ability depends on stuka detection.
-		switch((int)global_STUDetection){
+		switch((int)EASY_CVAR_GET(STUDetection) ){
 		case 0:
 			return 0.65f;
 		break;
@@ -4325,7 +4325,7 @@ float CStukaBat::HearingSensitivity(){
 		default:
 			return 1.5f;
 		break;
-		}//END OF switch(global_STUDetection)
+		}//END OF switch(EASY_CVAR_GET(STUDetection))
 	}else{
 		//provoked?  We hear well.
 		return 1.5f;
@@ -4388,7 +4388,7 @@ void CStukaBat::checkTraceLine(const Vector& vecSuggestedDir, const float& trave
 				//...
 			}
 
-			Vector vecMoveRepel = (tr.vecPlaneNormal*toMove*global_STUrepelMulti)/1;
+			Vector vecMoveRepel = (tr.vecPlaneNormal*toMove*EASY_CVAR_GET(STUrepelMulti) )/1;
 			
 			//pev->origin = pev->origin + vecMoveParallel;
 			////UTIL_MoveToOrigin ( ENT(pev), pev->origin + -toMove*vecRelativeEnd + vecMoveParallel , travelMag, MOVE_STRAFE );
@@ -4426,7 +4426,7 @@ void CStukaBat::checkTraceLine(const Vector& vecSuggestedDir, const float& trave
 
 
 
-			//pev->origin = pev->origin + tr.vecPlaneNormal*toMove*global_repelMulti;
+			//pev->origin = pev->origin + tr.vecPlaneNormal*toMove*EASY_CVAR_GET(repelMulti);
 			//easyPrintLineGroup2("MOOO %s: SPEED: %.2f", STRING(tr.pHit->v.classname), travelMag );
 			EASY_CVAR_PRINTIF_PRE(stukaPrintout, UTIL_printLineVector("VECCCC", tr.vecPlaneNormal ) );
 
@@ -4439,7 +4439,7 @@ void CStukaBat::checkTraceLine(const Vector& vecSuggestedDir, const float& trave
 		}//END OF if(tr.flFraction < 1.0)
 	}//END OF if(!tempCheckTraceLineBlock)
 	
-	if(global_drawDebugPathfinding2 == 1){
+	if(EASY_CVAR_GET(drawDebugPathfinding2) == 1){
 		UTIL_drawLineFrame(vecStart, vecStart + vecRelativeEndScale, 16, 0, 255, 0);
 	}
 
@@ -4494,7 +4494,7 @@ void CStukaBat::checkTraceLineTest(const Vector& vecSuggestedDir, const float& t
 				//...
 			}
 
-			Vector vecMoveRepel = (tr.vecPlaneNormal*toMove*global_STUrepelMulti)/1;
+			Vector vecMoveRepel = (tr.vecPlaneNormal*toMove*EASY_CVAR_GET(STUrepelMulti))/1;
 			
 			//pev->origin = pev->origin + vecMoveParallel;
 			////UTIL_MoveToOrigin ( ENT(pev), pev->origin + -toMove*vecRelativeEnd + vecMoveParallel , travelMag, MOVE_STRAFE );
@@ -4538,7 +4538,7 @@ void CStukaBat::checkTraceLineTest(const Vector& vecSuggestedDir, const float& t
 			//easyForcePrintLine("BUT YOU MOVE????? %.2f ", vecTotalAdjust.Length());
 			::UTIL_drawLineFrame(pev->origin, pev->origin + vecTotalAdjust,40, 255, 0, 0);
 
-			//pev->origin = pev->origin + tr.vecPlaneNormal*toMove*global_repelMulti;
+			//pev->origin = pev->origin + tr.vecPlaneNormal*toMove*EASY_CVAR_GET(repelMulti);
 			//easyPrintLineGroup2("MOOO %s: SPEED: %.2f", STRING(tr.pHit->v.classname), travelMag );
 			EASY_CVAR_PRINTIF_PRE(stukaPrintout, UTIL_printLineVector("VECCCC", tr.vecPlaneNormal ) );
 
@@ -4551,7 +4551,7 @@ void CStukaBat::checkTraceLineTest(const Vector& vecSuggestedDir, const float& t
 		}//END OF if(tr.flFraction < 1.0)
 	}//END OF if(!tempCheckTraceLineBlock)
 	
-	if(global_drawDebugPathfinding2 == 1){
+	if(EASY_CVAR_GET(drawDebugPathfinding2) == 1){
 		UTIL_drawLineFrame(vecStart, vecStart + vecRelativeEndScale, 16, 0, 255, 0);
 	}
 
@@ -4582,7 +4582,7 @@ void CStukaBat::checkFloor(const Vector& vecSuggestedDir, const float& travelMag
 		return;
 	}
 	//UTIL_drawBoxFrame(pev->absmin, pev->absmax, 16, 0, 0, 255);
-	if(global_drawDebugPathfinding2 == 1){
+	if(EASY_CVAR_GET(drawDebugPathfinding2) == 1){
 		UTIL_drawBoxFrame(pev->origin + pev->mins, pev->origin + pev->maxs, 16, 0, 0, 255);
 	}
 	
@@ -4625,10 +4625,10 @@ void CStukaBat::checkFloor(const Vector& vecSuggestedDir, const float& travelMag
 	int checkDistD = 38;
 	*/
 
-	int checkDist = global_STUcheckDistH;
-	int checkDistV = global_STUcheckDistV;
+	int checkDist = EASY_CVAR_GET(STUcheckDistH);
+	int checkDistV = EASY_CVAR_GET(STUcheckDistV);
 	
-	int checkDistD = global_STUcheckDistD;
+	int checkDistD = EASY_CVAR_GET(STUcheckDistD);
 
 
 	//float Vector push;

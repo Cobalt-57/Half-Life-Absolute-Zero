@@ -4,16 +4,20 @@
 //Some essential things needed practically everywhere serverside - even enginecallback.h - moved from util.h (mostly) and cbase.h to here.
 //Things that can't be repeated or depend on other things themselves (like enginecallback.h) have been implemented in util_entity.cpp instead of inlined.
 
+// Although enginecallback.h was in the dlls folder, this file is in "game_shared" as cl_dll calls for
+// player weapon files heavily rely on this too.
+// Player weapons really should be in some game_shared/weapons folder anyway but that isn't too important.
+
+
+
 #ifndef UTIL_ENTITY_H
 #define UTIL_ENTITY_H
-
 
 //needed for some things in the newly included section below.
 #include "windows.h"
 
 //let this be available everywhere serverside.
 #include "util_preprocessor.h"
-
 
 
 //MODDD - most of this comes from the top of util.h. These are mostly some methods needed for working with
@@ -42,6 +46,7 @@ typedef struct _SelAmmo
 
 
 // Keeps clutter down a bit, when declaring external entity/global method prototypes
+//MODDD - NOTE.  Would if these were ever used anyway
 #define DECLARE_GLOBAL_METHOD(MethodName)  extern void DLLEXPORT MethodName( void )
 #define GLOBAL_METHOD(funcname)					void DLLEXPORT funcname(void)
 

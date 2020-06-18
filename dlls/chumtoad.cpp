@@ -1,7 +1,7 @@
 
 #include "chumtoad.h"
 
-#include "custom_debug.h"
+#include "util_debugdraw.h"
 
 //This is the proper way to make something fall to the ground. Also set pev->groundentity to NULL.
 //ClearBits( pList[i]->pev->flags, FL_ONGROUND );
@@ -31,9 +31,9 @@
 
 
 
-extern float global_noFlinchOnHard;
-extern float global_chumtoadPrintout;
-extern float global_chumtoadPlayDeadFoolChance;
+EASY_CVAR_EXTERN_DEBUGONLY(noFlinchOnHard)
+EASY_CVAR_EXTERN_DEBUGONLY(chumtoadPrintout)
+EASY_CVAR_EXTERN_DEBUGONLY(chumtoadPlayDeadFoolChance)
 
 
 
@@ -918,7 +918,9 @@ void CChumToad::Spawn( void )
 	
 	
 	MonsterInit();
-	
+
+	// MUST happen after MonsterInit to override the default use choice, "MonsterUse".
+	SetUse(&CChumToad::PickupUse);
 
 	if(pev->spawnflags & SF_MONSTER_THROWN){
 		pev->spawnflags |= SF_MONSTER_FALL_TO_GROUND;  //thrown never snaps to the ground.
@@ -997,10 +999,6 @@ void CChumToad::ChumToadTouch( CBaseEntity *pOther ){
 		//to "know" to fall. Yep.
 
 
-
-
-
-
 		//TODO - routine checks again.
 		CBaseEntity* entityBelow = getEntityBelow();
 
@@ -1009,12 +1007,95 @@ void CChumToad::ChumToadTouch( CBaseEntity *pOther ){
 			m_hEntitySittingOn = entityBelow;
 		}
 
-
-
-
 	}//END OF if(!(pev->flags & FL_ONGROUND))
 
 }//END OF ChumToadTouch
+
+
+
+/*
+void retroGive(CBasePlayer* argPlayer, const char* pszName)
+{
+	edict_t* pent;
+
+	int istr = MAKE_STRING(pszName);
+
+	pent = CREATE_NAMED_ENTITY(istr);
+	if (FNullEnt(pent))
+	{
+		ALERT(at_console, "NULL Ent in GiveNamedItem!\n");
+		return;
+	}
+	VARS(pent)->origin = argPlayer->pev->origin;
+	pent->v.spawnflags |= (SF_NORESPAWN | SF_PICKUP_NOREPLACE);
+
+	DispatchSpawn(pent);
+	DispatchTouch(pent, ENT(argPlayer->pev));
+}
+*/
+
+// Based off of dlls/weapons.cpp's "DefaultTouch", but for the player calling "use" on me instead.
+void CChumToad::PickupUse(CBaseEntity* pActivator, CBaseEntity* pCaller, USE_TYPE useType, float value) {
+	// if it's not a player, ignore
+	if (!pCaller->IsPlayer())
+		return;
+
+	CBasePlayer* pPlayer = (CBasePlayer*)pCaller;
+
+	// No, you can't pick up dead frogs you sick fuck
+	if (!IsAlive()) {
+		return;
+	}
+
+	// Can we even hold this chumtoad?
+	if (!g_pGameRules->CanHaveAmmo(pPlayer, "chum toads", CHUMTOAD_MAX_CARRY))
+	{
+		// game rules say I can't have any more of this ammo type.
+		return;
+	}
+
+
+	
+	//pPlayer->GiveNamedItem("weapon_chumtoad");
+	edict_t* thing = pPlayer->GiveNamedItem("weapon_chumtoad", SF_PICKUP_NOREPLACE, pPlayer->pev->origin);
+	CBasePlayerWeapon* generatedRef = static_cast<CBasePlayerWeapon*>(CBaseEntity::Instance(thing));
+	//generatedRef->setModel("");
+	generatedRef->pev->effects = EF_NODRAW;
+	generatedRef->pev->solid = SOLID_NOT;
+	generatedRef->m_iDefaultAmmo = 1;
+
+	//Because this is the default, sending to the origin, call "DispatchTouch" too.
+	if (thing != NULL) {
+		DispatchTouch(thing, ENT(pPlayer->pev));
+		UTIL_Remove(this);
+	}
+	//CBaseEntity* generated = CBaseEntity::Create(pickupNameTest, pev->origin, pev->angles);
+	
+
+	//retroGive(pPlayer, "weapon_chumtoad");
+
+
+
+
+
+	/*
+	int giveResult = pCaller->GiveAmmo(1, "Chum Toads", CHUMTOAD_MAX_CARRY);
+	if (giveResult == -1) {
+		//assume I got rejected, no need to do anything.
+	}
+	else {
+		//Accepted?  Remove me.
+		UTIL_Remove(this);
+	}
+	*/
+	
+}//END OF PickupUse
+
+
+
+
+
+
 	
 void CChumToad::SetActivity ( Activity NewActivity )
 {
@@ -1319,7 +1400,7 @@ Schedule_t *CChumToad::GetSchedule ( void )
 			else if (HasConditions(bits_COND_LIGHT_DAMAGE)  )
 			{
 				//CHANGE. We're running away whether or not we're due for a flinch animation yet.
-				if(!HasMemory( bits_MEMORY_FLINCHED) && !(global_noFlinchOnHard==1 && g_iSkillLevel==SKILL_HARD)){
+				if(!HasMemory( bits_MEMORY_FLINCHED) && !(EASY_CVAR_GET(noFlinchOnHard)==1 && g_iSkillLevel==SKILL_HARD)){
 					
 					//For the chumtoad, this  has a chance of playing dead?
 					//...which will be handled separately by TakeDamage as usual.
@@ -1804,7 +1885,7 @@ void CChumToad :: StartTask ( Task_t *pTask )
 
 			//***IMPORTANT***
 			//determine the chance of actually fooling anyone who gets close.
-			this->playDeadSuccessful = (RANDOM_FLOAT(0, 1) < global_chumtoadPlayDeadFoolChance);
+			this->playDeadSuccessful = (RANDOM_FLOAT(0, 1) < EASY_CVAR_GET(chumtoadPlayDeadFoolChance) );
 			
 			EASY_CVAR_PRINTIF_PRE(chumtoadPrintout, easyPrintLine("PLAYDEAD SUCCESS? %d", playDeadSuccessful) );
 			
@@ -2115,6 +2196,11 @@ float CChumToad::HearingSensitivity(){
 	return 1.8f;
 }
 
+
+// Players throw me.  I better show up.
+BOOL CChumToad::bypassAllowMonstersSpawnCheck(void) {
+	return TRUE;
+}//END OF bypassAllowMonstersSpawnCheck
 
 
 
@@ -3018,6 +3104,18 @@ int CChumToad::GetProjectileType(void){
 	return PROJECTILE_ORGANIC_HARMLESS;
 }
 
+Vector CChumToad::GetVelocityLogical(void){
+	return pev->velocity;
+}
+
+void CChumToad::SetVelocityLogical(const Vector& arg_newVelocity){
+	pev->velocity = arg_newVelocity;
+}
+
+void CChumToad::OnDeflected(CBaseEntity* arg_entDeflector){
+	m_hOwner = arg_entDeflector;
+}
+
 
 
 
@@ -3051,16 +3149,21 @@ void CChumToad::OnTakeDamageSetConditions(entvars_t *pevInflictor, entvars_t *pe
 		forgetBigFlinchTime = gpGlobals->time + 3;
 	}
 
+/*
 	if(EASY_CVAR_GET(testVar) == 10){
 		//any damage causes me now.
 		SetConditions(bits_COND_HEAVY_DAMAGE);
 	}
+	*/
+	
 }//END OF OnTakeDamageSetConditions
 
 
 int CChumToad::getHullIndexForNodes(void){
     return NODE_SMALL_HULL;  //safe?
 }
+
+
 
 
 

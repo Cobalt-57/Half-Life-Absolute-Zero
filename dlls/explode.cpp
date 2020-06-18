@@ -29,8 +29,8 @@
 #include "explode.h"
 
 //MODDD
-extern float global_sparksExplosionMulti;
-extern float global_cl_explosion;
+EASY_CVAR_EXTERN(sparksExplosionMulti)
+EASY_CVAR_EXTERN(cl_explosion)
 
 // Spark Shower
 class CShower : public CBaseEntity
@@ -70,22 +70,22 @@ void CShower::Think( void )
 	
 	//MODDD - below has been OUTCLASSED BY "ExplosionShrapnelMulti"
 	/*
-	//float explosionsHaveSparksVar = CVAR_GET_FLOAT("explosionsHaveSparks");
+	//float explosionsHaveSparksVar = EASY_CVAR_GET(explosionsHaveSparks);
 	//MODDD - imply the spark shower came from an explosion.
 	//If this CVar is 1, no change.
 	//If it is 2, we want less sparks.  Specify "1" instead of relying on the default of 6.
 	if(explosionsHaveSparksVar == 0){
 		//nothing.
 	}else if(explosionsHaveSparksVar == 1){
-		UTIL_Sparks2( pev->origin, DEFAULT_SPARK_BALLS, global_sparksExplosionMulti );
+		UTIL_Sparks2( pev->origin, DEFAULT_SPARK_BALLS, EASY_CVAR_GET(sparksExplosionMulti) );
 	}
 	else if(explosionsHaveSparksVar == 2){
-		UTIL_Sparks2( pev->origin, 1, global_sparksExplosionMulti );
+		UTIL_Sparks2( pev->origin, 1, EASY_CVAR_GET(sparksExplosionMulti) );
 	}
 	*/
 
 
-	UTIL_Sparks2( pev->origin, DEFAULT_SPARK_BALLS, global_sparksExplosionMulti );
+	UTIL_Sparks2( pev->origin, DEFAULT_SPARK_BALLS, EASY_CVAR_GET(sparksExplosionMulti) );
 	
 
 
@@ -260,10 +260,11 @@ void CEnvExplosion::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE
 	
 }
 
+
 void CEnvExplosion::Smoke( void )
 {
 
-	if(global_cl_explosion == 1){
+	if(EASY_CVAR_GET(cl_explosion) == 1){
 		//does not smoke.
 		UTIL_Remove( this );
 		return;

@@ -8,29 +8,29 @@
 
 
 
-extern float global_bullsquidSpitTrajTimeMin;
-extern float global_bullsquidSpitTrajTimeMax;
-extern float global_bullsquidSpitTrajDistMin;
-extern float global_bullsquidSpitTrajDistMax;
+EASY_CVAR_EXTERN(bullsquidSpitTrajTimeMin)
+EASY_CVAR_EXTERN(bullsquidSpitTrajTimeMax)
+EASY_CVAR_EXTERN(bullsquidSpitTrajDistMin)
+EASY_CVAR_EXTERN(bullsquidSpitTrajDistMax)
 
-extern float global_bullsquidSpitGravityMulti;
+EASY_CVAR_EXTERN(bullsquidSpitGravityMulti)
 
-extern float global_cl_bullsquidspitarc;
-extern float global_bullsquidSpitUseAlphaModel;
-extern float global_bullsquidSpitUseAlphaEffect;
+EASY_CVAR_EXTERN(cl_bullsquidspitarc)
+EASY_CVAR_EXTERN(bullsquidSpitUseAlphaModel)
+EASY_CVAR_EXTERN(bullsquidSpitUseAlphaEffect)
 
-extern float global_bullsquidSpitEffectSpread;
+EASY_CVAR_EXTERN(bullsquidSpitEffectSpread)
 
-extern float global_bullsquidSpitEffectMin;
-extern float global_bullsquidSpitEffectMax;
-extern float global_bullsquidSpitEffectHitMin;
-extern float global_bullsquidSpitEffectHitMax;
-extern float global_bullsquidSpitEffectSpawn;
-extern float global_bullsquidSpitEffectHitSpawn;
+EASY_CVAR_EXTERN(bullsquidSpitEffectMin)
+EASY_CVAR_EXTERN(bullsquidSpitEffectMax)
+EASY_CVAR_EXTERN(bullsquidSpitEffectHitMin)
+EASY_CVAR_EXTERN(bullsquidSpitEffectHitMax)
+EASY_CVAR_EXTERN(bullsquidSpitEffectSpawn)
+EASY_CVAR_EXTERN(bullsquidSpitEffectHitSpawn)
 
 
-extern float global_bullsquidSpitAlphaScale;
-extern float global_bullsquidSpitSpriteScale;
+EASY_CVAR_EXTERN(bullsquidSpitAlphaScale)
+EASY_CVAR_EXTERN(bullsquidSpitSpriteScale)
 
 
 
@@ -73,9 +73,13 @@ BOOL CSquidSpit::usesSoundSentenceSave(void){
 
 
 Vector getParticleDir(const Vector& vecVelDir){
+	
+	//CACHED
+	float effectSpread = EASY_CVAR_GET(bullsquidSpitEffectSpread);
+	
 	Vector vecVelDir2D = Vector(
-		vecVelDir.x + RANDOM_FLOAT(-global_bullsquidSpitEffectSpread, global_bullsquidSpitEffectSpread),
-		vecVelDir.y + RANDOM_FLOAT(-global_bullsquidSpitEffectSpread, global_bullsquidSpitEffectSpread),
+		vecVelDir.x + RANDOM_FLOAT(-effectSpread, effectSpread),
+		vecVelDir.y + RANDOM_FLOAT(-effectSpread, effectSpread),
 		0).Normalize();
 
 
@@ -95,7 +99,7 @@ void CSquidSpit:: Spawn( void )
 
 	
 	//MODDD - how's this?
-	if(global_bullsquidSpitUseAlphaModel == 1){
+	if(EASY_CVAR_GET(bullsquidSpitUseAlphaModel) == 1){
 		SET_MODEL(ENT(pev), "models/spit.mdl");
 	}else{
 		SET_MODEL(ENT(pev), "sprites/bigspit.spr");
@@ -130,7 +134,7 @@ void CSquidSpit::precacheStatic(void){
 void CSquidSpit::Animate( void )
 {
 
-	if(global_bullsquidSpitUseAlphaModel == 1){
+	if(EASY_CVAR_GET(bullsquidSpitUseAlphaModel) == 1){
 		
 		StudioFrameAdvance( );
 		pev->angles = UTIL_velocityToAngles(pev->velocity);
@@ -192,7 +196,7 @@ void CSquidSpit::Shoot( entvars_t *pevOwner, Vector vecStart, Vector vecDirectio
 
 	//MODDD NOTICE TODO - should this go below with the first "... == 1" check for the CVar?
 	//This means the non-alpha (retail) version of the spit effect will happen regardless of the arc mode. That may be wanted though.
-	if(global_bullsquidSpitUseAlphaEffect == 0){
+	if(EASY_CVAR_GET(bullsquidSpitUseAlphaEffect) == 0){
 		//no alpha effect? retail will just do this.
 		//MODDD - use the blood particles instead.
 		// spew the spittle temporary ents.
@@ -230,16 +234,16 @@ void CSquidSpit::Shoot( entvars_t *pevOwner, Vector vecStart, Vector vecDirectio
 
 
 	
-	if(global_bullsquidSpitUseAlphaModel == 1){
-		pSpit->pev->scale = global_bullsquidSpitAlphaScale;
+	if(EASY_CVAR_GET(bullsquidSpitUseAlphaModel) == 1){
+		pSpit->pev->scale = EASY_CVAR_GET(bullsquidSpitAlphaScale);
 		//SCALE DOES NOT WORK WITH MODELS. OH WELL.
 	}else{
-		pSpit->pev->scale = global_bullsquidSpitSpriteScale;
+		pSpit->pev->scale = EASY_CVAR_GET(bullsquidSpitSpriteScale);
 	}
 	
 
 
-	if(global_cl_bullsquidspitarc == 1){
+	if(EASY_CVAR_GET(cl_bullsquidspitarc) == 1){
 		//MODDD - new again.
 		pSpit->pev->movetype = MOVETYPE_TOSS;
 		pSpit->pev->solid = SOLID_BBOX;
@@ -248,19 +252,22 @@ void CSquidSpit::Shoot( entvars_t *pevOwner, Vector vecStart, Vector vecDirectio
 		
 
 		//alpha spit effect will only happen for an arc value of 0 then. This might be intentional.
-		if(global_bullsquidSpitUseAlphaEffect == 1){
+		if(EASY_CVAR_GET(bullsquidSpitUseAlphaEffect) == 1){
 			//Vector velocityFinalDir = vecVelocity.Normalize();
 			//float spitSpeed = vecVelocity.Length() * 0.6;
 			
 			//Vector vecVelocityNorm = Vector(vecVelocity.x, vecVelocity.y, vecVelocity.z * 2).Normalize();
 			Vector vecVelocityNorm = vecVelocity.Normalize();
 
-			for(i = 0; i < global_bullsquidSpitEffectSpawn; i++){
-
+			for(i = 0; i < EASY_CVAR_GET(bullsquidSpitEffectSpawn); i++){
+				
 				
 				Vector particleDir = getParticleDir(vecVelocityNorm);
-				//UTIL_BloodStream(vecStart, (velocityFinalDir + Vector(RANDOM_FLOAT(-global_bullsquidSpitEffectSpread, global_bullsquidSpitEffectSpread), RANDOM_FLOAT(-global_bullsquidSpitEffectSpread, global_bullsquidSpitEffectSpread), RANDOM_FLOAT(-global_bullsquidSpitEffectSpread, global_bullsquidSpitEffectSpread) ) ) * spitSpeed  , BLOOD_COLOR_YELLOW, RANDOM_LONG((long)global_bullsquidSpitEffectMin, (long)global_bullsquidSpitEffectMax));
-				UTIL_BloodStream(vecStart, particleDir, BLOOD_COLOR_YELLOW, RANDOM_LONG((long)global_bullsquidSpitEffectMin, (long)global_bullsquidSpitEffectMax));
+				
+				//float effectSpread = EASY_CVAR_GET(bullsquidSpitEffectSpread);
+				//UTIL_BloodStream(vecStart, (velocityFinalDir + Vector(RANDOM_FLOAT(-effectSpread, effectSpread), RANDOM_FLOAT(-effectSpread, effectSpread), RANDOM_FLOAT(-effectSpread, effectSpread) ) ) * spitSpeed  , BLOOD_COLOR_YELLOW, RANDOM_LONG((long)EASY_CVAR_GET(bullsquidSpitEffectMin), (long)EASY_CVAR_GETbullsquidSpitEffectMax)));
+				
+				UTIL_BloodStream(vecStart, particleDir, BLOOD_COLOR_YELLOW, RANDOM_LONG((long)EASY_CVAR_GET(bullsquidSpitEffectMin), (long)EASY_CVAR_GET(bullsquidSpitEffectMax) ));
 			}
 		}
 
@@ -367,15 +374,15 @@ void CSquidSpit::Shoot( entvars_t *pevOwner, Vector vecStart, Vector vecDirectio
 	bullsquidSpitTrajDistMax
 	*/
 
-	float timeMin = global_bullsquidSpitTrajTimeMin;
-	float timeMax = global_bullsquidSpitTrajTimeMax;
-	float distMin = global_bullsquidSpitTrajDistMin;
-	float distMax = global_bullsquidSpitTrajDistMax;
+	float timeMin = EASY_CVAR_GET(bullsquidSpitTrajTimeMin);
+	float timeMax = EASY_CVAR_GET(bullsquidSpitTrajTimeMax);
+	float distMin = EASY_CVAR_GET(bullsquidSpitTrajDistMin);
+	float distMax = EASY_CVAR_GET(bullsquidSpitTrajDistMax);
 
 	float timeDelta = timeMax - timeMin;
 	float distDelta = distMax - distMin;
 	
-	pSpit->pev->gravity = global_bullsquidSpitGravityMulti;
+	pSpit->pev->gravity = EASY_CVAR_GET(bullsquidSpitGravityMulti);
 
 	//easyForcePrintLine("MAH GRAV: %.2f", this->pev->gravity);
 
@@ -453,7 +460,7 @@ void CSquidSpit::Shoot( entvars_t *pevOwner, Vector vecStart, Vector vecDirectio
 
 	pSpit->pev->velocity = velocityFinal;
 	
-	if(global_bullsquidSpitUseAlphaModel == 1){
+	if(EASY_CVAR_GET(bullsquidSpitUseAlphaModel) == 1){
 		//yes, right now.
 		pSpit->pev->angles = UTIL_velocityToAngles(pSpit->pev->velocity);
 	}
@@ -463,9 +470,9 @@ void CSquidSpit::Shoot( entvars_t *pevOwner, Vector vecStart, Vector vecDirectio
 	//UTIL_BloodStream(vecSpitOffset, vecSpitDir, BloodColor(), RANDOM_LONG(40, 70));
 	//UTIL_BloodStream(vecSpitOffset, vecSpitDir, BloodColor(), RANDOM_LONG(40, 70));
 	
-	//global_bullsquidSpitUseAlphaEffect
+	//EASY_CVAR_GET(bullsquidSpitUseAlphaEffect)
 	
-	if(global_bullsquidSpitUseAlphaEffect == 1){
+	if(EASY_CVAR_GET(bullsquidSpitUseAlphaEffect) == 1){
 		
 		//velocityFinal.z = velocityFinal.z * 2.6;
 		//Vector velocityFinalDir = velocityFinal.Normalize();
@@ -477,16 +484,18 @@ void CSquidSpit::Shoot( entvars_t *pevOwner, Vector vecStart, Vector vecDirectio
 		
 		Vector vecVelocityNorm = velocityFinal.Normalize();
 
-		for(i = 0; i < global_bullsquidSpitEffectSpawn; i++){
-			//UTIL_BloodStream(vecStart, (velocityFinalDir + Vector(RANDOM_FLOAT(-global_bullsquidSpitEffectSpread, global_bullsquidSpitEffectSpread), RANDOM_FLOAT(-global_bullsquidSpitEffectSpread, global_bullsquidSpitEffectSpread), RANDOM_FLOAT(-global_bullsquidSpitEffectSpread, global_bullsquidSpitEffectSpread) ) ) * spitSpeed  , BLOOD_COLOR_YELLOW, RANDOM_LONG(7, 15));
+		for(i = 0; i < EASY_CVAR_GET(bullsquidSpitEffectSpawn); i++){
+			
+			//float effectSpread = EASY_CVAR_GET(bullsquidSpitEffectSpread);
+			//UTIL_BloodStream(vecStart, (velocityFinalDir + Vector(RANDOM_FLOAT(-effectSpread, effectSpread), RANDOM_FLOAT(-effectSpread, effectSpread), RANDOM_FLOAT(-effectSpread, effectSpread) ) ) * spitSpeed  , BLOOD_COLOR_YELLOW, RANDOM_LONG(7, 15));
 			//UTIL_BloodStream(vecStart, UTIL_RandomBloodVector()  , BLOOD_COLOR_YELLOW, RANDOM_LONG(38, 46));
 
-			//extern float global_testVar;
+			//extern float EASY_CVAR_GET(testVar);
 			
 			Vector particleDir = getParticleDir(vecVelocityNorm);
 
-			//UTIL_BloodStream(vecStart, (velocityFinalDir + Vector(RANDOM_FLOAT(-global_bullsquidSpitEffectSpread, global_bullsquidSpitEffectSpread), RANDOM_FLOAT(-global_bullsquidSpitEffectSpread, global_bullsquidSpitEffectSpread), RANDOM_FLOAT(-global_bullsquidSpitEffectSpread, global_bullsquidSpitEffectSpread) ) ).Normalize(), BLOOD_COLOR_YELLOW, RANDOM_LONG((long)global_bullsquidSpitEffectMin, (long)global_bullsquidSpitEffectMax));
-			UTIL_BloodStream(vecStart, particleDir, BLOOD_COLOR_YELLOW, RANDOM_LONG((long)global_bullsquidSpitEffectMin, (long)global_bullsquidSpitEffectMax));
+			//UTIL_BloodStream(vecStart, (velocityFinalDir + Vector(RANDOM_FLOAT(-effectSpread, effectSpread), RANDOM_FLOAT(-effectSpread, effectSpread), RANDOM_FLOAT(-effectSpread, effectSpread) ) ).Normalize(), BLOOD_COLOR_YELLOW, RANDOM_LONG((long)EASY_CVAR_GET(bullsquidSpitEffectMin), (long)EASY_CVAR_GET(bullsquidSpitEffectMax)));
+			UTIL_BloodStream(vecStart, particleDir, BLOOD_COLOR_YELLOW, RANDOM_LONG((long)EASY_CVAR_GET(bullsquidSpitEffectMin), (long)EASY_CVAR_GET(bullsquidSpitEffectMax) ));
 			
 		}
 	}
@@ -524,7 +533,7 @@ void CSquidSpit :: Touch ( CBaseEntity *pOther )
 		UTIL_DecalTrace(&tr, DECAL_SPIT1 + RANDOM_LONG(0,1));
 
 
-		if(global_bullsquidSpitUseAlphaEffect == 0){
+		if(EASY_CVAR_GET(bullsquidSpitUseAlphaEffect) == 0){
 			// make some flecks
 			MESSAGE_BEGIN( MSG_PVS, SVC_TEMPENTITY, tr.vecEndPos );
 				WRITE_BYTE( TE_SPRITE_SPRAY );
@@ -540,7 +549,7 @@ void CSquidSpit :: Touch ( CBaseEntity *pOther )
 				WRITE_BYTE ( 80 );			// noise ( client will divide by 100 )
 			MESSAGE_END();
 
-		}else if(global_bullsquidSpitUseAlphaEffect == 1){
+		}else if(EASY_CVAR_GET(bullsquidSpitUseAlphaEffect) == 1){
 
 			Vector velocityFinalDir = pev->velocity.Normalize();
 			float spitSpeed = pev->velocity.Length() * 0.36;
@@ -552,10 +561,12 @@ void CSquidSpit :: Touch ( CBaseEntity *pOther )
 
 
 
-			for(i = 0; i < global_bullsquidSpitEffectHitSpawn; i++){
+			for(i = 0; i < EASY_CVAR_GET(bullsquidSpitEffectHitSpawn); i++){
 				Vector particleDir = getParticleDir(velocityFlyOffNorm);
-				//UTIL_BloodStream(tr.vecEndPos, (velocityFlyOffNorm + Vector(RANDOM_FLOAT(-global_bullsquidSpitEffectSpread, global_bullsquidSpitEffectSpread), RANDOM_FLOAT(-global_bullsquidSpitEffectSpread, global_bullsquidSpitEffectSpread), RANDOM_FLOAT(-global_bullsquidSpitEffectSpread, global_bullsquidSpitEffectSpread) ) ) * spitSpeed  , BLOOD_COLOR_YELLOW, RANDOM_LONG((long)global_bullsquidSpitEffectHitMin, (long)global_bullsquidSpitEffectHitMax));
-				UTIL_BloodStream(tr.vecEndPos, particleDir, BLOOD_COLOR_YELLOW, RANDOM_LONG((long)global_bullsquidSpitEffectHitMin, (long)global_bullsquidSpitEffectHitMax));
+				
+				//float effectSpread = EASY_CVAR_GET(bullsquidSpitEffectSpread);
+				//UTIL_BloodStream(tr.vecEndPos, (velocityFlyOffNorm + Vector(RANDOM_FLOAT(-effectSpread, effectSpread), RANDOM_FLOAT(-effectSpread, effectSpread), RANDOM_FLOAT(-effectSpread, effectSpread) ) ) * spitSpeed  , BLOOD_COLOR_YELLOW, RANDOM_LONG((long)EASY_CVAR_GET(bullsquidSpitEffectHitMin), (long)EASY_CVAR_GET(bullsquidSpitEffectHitMax)));
+				UTIL_BloodStream(tr.vecEndPos, particleDir, BLOOD_COLOR_YELLOW, RANDOM_LONG((long)EASY_CVAR_GET(bullsquidSpitEffectHitMin), (long)EASY_CVAR_GET(bullsquidSpitEffectHitMax)));
 			}
 
 		}

@@ -28,7 +28,11 @@ public:
 	void SparkSoundCache( void );
 
 	void EXPORT ButtonShot( void );
-	virtual void EXPORT ButtonTouch( CBaseEntity *pOther );
+	
+	//MODDD - CRITICAL.  Did... did I make this virtual?
+	// I have no idea why if so, it's just making console warnings/errors.
+	void EXPORT ButtonTouch( CBaseEntity *pOther );
+	
 	void EXPORT ButtonSpark ( void );
 	void EXPORT TriggerAndWait( void );
 	void EXPORT ButtonReturn( void );

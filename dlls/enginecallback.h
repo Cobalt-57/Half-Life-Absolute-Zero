@@ -49,7 +49,7 @@ extern enginefuncs_t g_engfuncs;
 /*
 void UTIL_PRECACHESOUND(char* path){
 
-	if(global_soundSentenceSave == 0){
+	if(EASY_CVAR_GET(soundSentenceSave) == 0){
 		PRECACHE_SOUND(path);
 	}
 
@@ -96,7 +96,10 @@ extern void UTIL_PRECACHESOUND(char* path, BOOL skipSave);
 #define TRACE_HULL		(*g_engfuncs.pfnTraceHull)
 #define GET_AIM_VECTOR	(*g_engfuncs.pfnGetAimVector)
 #define SERVER_COMMAND	(*g_engfuncs.pfnServerCommand)
-#define SERVER_EXECUTE	(*g_engfuncs.pfnServerExecute)
+
+//MODDD - renamed, conflict with some windows call.
+#define GOLDSRC_SERVER_EXECUTE	(*g_engfuncs.pfnServerExecute)
+
 #define CLIENT_COMMAND	(*g_engfuncs.pfnClientCommand)
 #define PARTICLE_EFFECT	(*g_engfuncs.pfnParticleEffect)
 #define LIGHT_STYLE		(*g_engfuncs.pfnLightStyle)
@@ -205,79 +208,6 @@ inline void MESSAGE_BEGIN( int msg_dest, int msg_type, const float *pOrigin = NU
 #define WRITE_STRING	(*g_engfuncs.pfnWriteString)
 #define WRITE_ENTITY	(*g_engfuncs.pfnWriteEntity)
 
-
-
-
-/*
-TEST - see standard requests for CVars.
-
-#include <stdio.h>
-#include <stdarg.h>
-
-//#include "util_printout.h"
-inline char* UTIL_VarArgsVAENGINE( const char *format, va_list argptr )
-{
-	//va_list		argptr;
-	static char		string[1024];
-	
-	//va_start (argptr, format);
-	vsprintf (string, format,argptr);
-	//va_end (argptr);
-
-	return string;	
-}
-inline char* UTIL_VarArgsENGINE( char *format, ... )
-{
-	va_list		argptr;
-	static char		string[1024];
-	
-	va_start (argptr, format);
-	vsprintf (string, format,argptr);
-	va_end (argptr);
-
-	return string;	
-}
-inline void easyForcePrintLineENGINE(const char *format, ...){
-
-	va_list argptr;
-	va_start(argptr, format);
-	g_engfuncs.pfnServerPrint( UTIL_VarArgsENGINE( "%s\n", UTIL_VarArgsVAENGINE(format, argptr ) )  );
-	va_end(argptr);
-
-}
-
-
-
-inline float CVAR_GET_FLOAT(const char* CVarName)
-	{
-	easyForcePrintLineENGINE("CVAR_GET_FLOAT: %s", CVarName);
-	return g_engfuncs.pfnCVarGetFloat(CVarName);
-	}
-
-inline const char* CVAR_GET_STRING(const char* CVarName)
-	{
-	easyForcePrintLineENGINE("CVAR_GET_STRING: %s", CVarName);
-	return g_engfuncs.pfnCVarGetString(CVarName);
-	}
-
-inline void CVAR_SET_FLOAT(const char* CVarName, const float CVarValue)
-	{
-	easyForcePrintLineENGINE("CVAR_SET_FLOAT: %s", CVarName);
-	g_engfuncs.pfnCVarSetFloat(CVarName, CVarValue);
-	}
-
-inline void CVAR_SET_STRING(const char* CVarName, const char* CVarValue)
-	{
-	easyForcePrintLineENGINE("CVAR_SET_STRING: %s", CVarName);
-	g_engfuncs.pfnCVarSetString(CVarName, CVarValue);
-	}
-	
-inline cvar_t* CVAR_GET_POINTER(const char* CVarName)
-	{
-	easyForcePrintLineENGINE("CVAR_GET_POINTER: %s", CVarName);
-	return g_engfuncs.pfnCVarGetPointer(CVarName);
-	}
-*/
 
 inline void *GET_PRIVATE( edict_t *pent )
 {

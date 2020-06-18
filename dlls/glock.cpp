@@ -50,47 +50,24 @@ LINK_ENTITY_TO_CLASS( weapon_9mmhandgunsilencer, CGlock );
 
 
 
-EASY_CVAR_EXTERN(glockOldReloadLogic)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(glockOldReloadLogic)
 EASY_CVAR_EXTERN(glockUseLastBulletAnim)
-EASY_CVAR_EXTERN(wpn_glocksilencer)
-EASY_CVAR_EXTERN(testVar)
-
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST(wpn_glocksilencer)
+//EASY_CVAR_EXTERN(testVar)
 
 
 #ifndef CLIENT_DLL
 
-
-//if NOT the client!!!  SERVER!
-
 #else
-
 	extern int global2PSEUDO_playerHasGlockSilencer;
-
 #endif
-
-
-
-
-
-
-
-
 
 
 
 
 //in case this is ever still needed from outside this class...
 float CGlock::getUsingGlockOldReloadLogic(void){
-	
-	/*
-	#ifndef CLIENT_DLL
-	//Server!
-	return global_glockOldReloadLogic;
-	#else
-	return global2_glockOldReloadLogic;
-	#endif
-	*/
-	return EASY_CVAR_GET(glockOldReloadLogic);
+	return EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(glockOldReloadLogic);
 }
 
 
@@ -109,12 +86,26 @@ BOOL CGlock::getExtraBullet(void){
 }
 
 
+void CGlock::setFiredSinceReloadFalse(void) {
+	m_chargeReady &= ~64;
+}
+void CGlock::setFiredSinceReloadTrue(void) {
+	m_chargeReady |= 64;
+}
+BOOL CGlock::getFiredSinceReload(void) {
+	// FEATURE CANCELED.
+	return TRUE;
+	//return (m_chargeReady & 64) != 0;
+}
+
+
+
 CGlock::CGlock(){
-
-
 	everSent = 0;
 
+	//only for when using the old reload logic (if not, this is always implied!)
 	setExtraBulletFalse();
+	setFiredSinceReloadFalse();
 
 
 	//"m_chargeReady" is better than using the custom var "rememberOneLessRound" because the Sync Gods are not offended by m_chargeReady.
@@ -124,8 +115,6 @@ CGlock::CGlock(){
 	//-1000 = TRUE
 	//-2000 = FALSE
 
-	//only for when using the old reload logic (if not, this is always implied!)
-	rememberOneLessRound = FALSE;
 
 
 	//NEW VARS:
@@ -185,20 +174,39 @@ CGlock::CGlock(){
 
 	//???
 	//m_fireState = 1;
+}//END OF CGlock constructor
 
 
-}
+
+// Save/restore for serverside only!
+#ifndef CLIENT_DLL
+//MODDD - m_fInAttack tells whether the glock silencer is not available (0), or available but off (1) or on (2).
+	//Saved on the weapon, as this var syncs better than one on the player (m_pPlayer->glockSilencerOnVar).
+TYPEDESCRIPTION	CGlock::m_SaveData[] =
+{
+	DEFINE_FIELD(CGlock, m_fInAttack, FIELD_INTEGER),
+	DEFINE_FIELD(CGlock, includesGlockSilencer, FIELD_BOOLEAN),
+
+};
+IMPLEMENT_SAVERESTORE(CGlock, CBasePlayerWeapon);
+#endif
+
+
+
+
+
+
 
 void CGlock::customAttachToPlayer(CBasePlayer *pPlayer ){
 
 	//CBasePlayerWeapon::customAttachToPlayer(pPlayer);
 	//not necessary, empty in the CBasePlayerWeapon class.  (this was already called by 
 	//"AttachToPlayer").
-	m_pPlayer->SetSuitUpdate("!HEV_PISTOL", FALSE, SUIT_REPEAT_OK, 4.4f);
+	m_pPlayer->SetSuitUpdate("!HEV_PISTOL", FALSE, SUIT_NEXT_IN_30MIN, 4.4f);
 
 	if(m_pPlayer->recentlyGrantedGlockSilencer == TRUE){
 		m_pPlayer->recentlyGrantedGlockSilencer = FALSE;
-		if(EASY_CVAR_GET(wpn_glocksilencer) == 1){
+		if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST(wpn_glocksilencer) == 1){
 			m_pPlayer->SetSuitUpdate("!HEV_SILENCER", FALSE, SUIT_NEXT_IN_30MIN);
 		}
 	}
@@ -214,16 +222,13 @@ int CGlock::ExtractAmmo( CBasePlayerWeapon *pWeapon )
 
 	if ( pszAmmo1() != NULL )
 	{
-
-
 		int adjustedMaxClip = 0;
-		if(EASY_CVAR_GET(glockOldReloadLogic) == 1){
+		if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(glockOldReloadLogic) == 1){
 			//round in firing chamber.
 			adjustedMaxClip = GLOCK_DEFAULT_GIVE;
 		}else{
 			adjustedMaxClip = GLOCK_DEFAULT_GIVE - 1;
 		}
-
 
 		//MODDD!!!
 		//iReturn = pWeapon->AddPrimaryAmmo( m_iDefaultAmmo, (char *)pszAmmo1(), iMaxClip(), iMaxAmmo1() );
@@ -256,7 +261,7 @@ int CGlock::ExtractAmmo( CBasePlayerWeapon *pWeapon )
 			pWeapon->m_pPlayer->recentlyGrantedGlockSilencer = TRUE;
 		}else{
 			//if so, play this now.
-			if(EASY_CVAR_GET(wpn_glocksilencer) == 1){
+			if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST(wpn_glocksilencer) == 1){
 				pWeapon->m_pPlayer->SetSuitUpdate("!HEV_SILENCER", FALSE, SUIT_NEXT_IN_30MIN);
 			}
 		}
@@ -264,18 +269,12 @@ int CGlock::ExtractAmmo( CBasePlayerWeapon *pWeapon )
 		//let the player know if this is new.   ...nah, do it in the same place the weapon-pickup notice is issued.
 		//pWeapon->m_pPlayer->SetSuitUpdate("!HEV_SILENCER", FALSE, SUIT_NEXT_IN_30MIN);
 			
-
-
 		if(iReturn == 0){
 			//just to say something happened (remove this).  Return value does nothing to ammo, only determines whether to delete this item (used) or not (untouched).
 			iReturn = 1;
 		}
 
-
-
 		//Received the silencer!
-
-
 	}
 
 	return iReturn;
@@ -338,7 +337,7 @@ void CGlock::Spawn( )
 	}
 
 
-	if(EASY_CVAR_GET(glockOldReloadLogic) == 1){
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(glockOldReloadLogic) == 1){
 		//round in firing chamber.
 		m_iDefaultAmmo = GLOCK_DEFAULT_GIVE;
 	}else{
@@ -380,7 +379,7 @@ int CGlock::GetItemInfo(ItemInfo *p)
 	p->pszAmmo2 = NULL;
 	p->iMaxAmmo2 = -1;
 
-
+	
 	//    emp part
 	//old  X   O
 	//cur  X   X
@@ -388,14 +387,26 @@ int CGlock::GetItemInfo(ItemInfo *p)
 	//== 0 || == 1
 	//MODDD - intercepted!?
 	//easyPrintLine("SUPAMAN THAT %d %d", usingGlockOldReloadLogic==1, m_chargeReady);
-	if(EASY_CVAR_GET(glockOldReloadLogic) == 0 || ( getExtraBullet() ) ) {
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(glockOldReloadLogic) == 0 || ( getExtraBullet() ) || !getFiredSinceReload()   ) {
 		p->iMaxClip = GLOCK_MAX_CLIP - 1;
 		//pl->m_rgAmmo[gun->m_iPrimaryAmmoType]
 	}else{
 		p->iMaxClip = GLOCK_MAX_CLIP;
 		//pl->m_rgAmmo[gun->m_iPrimaryAmmoType]
 	}
+
+	//MODDD
+	// w-.. what possessed me to make this direct of an edit.
+	// Is it necessary?  It might be?
+	// Yes, it is.  Only precaching in util.cpp sets the actual ItemInfoArray spots
+	// with what comes from "GetItemInfo".  So this has to be forced in case of a change since then.
+	// Thank you 'past me' for saying fucking nothing here!
 	ItemInfoArray[ m_iId ].iMaxClip = p->iMaxClip;
+
+
+	float poop = EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(glockOldReloadLogic);
+
+
 	
 	//p->iMaxClip = GLOCK_MAX_CLIP - 1;
 
@@ -436,14 +447,11 @@ BOOL CGlock::Deploy( )
 	return DefaultDeploy( "models/v_9mmhandgun.mdl", "models/p_9mmhandgun.mdl", GLOCK_DRAW, "onehanded", /*UseDecrement() ? 1 : 0*/ 0, (m_fireState& ~128), (16.0f/20.0f), -1 );
 }
 
-
-
 void CGlock::Holster( int skiplocal /* = 0 */ ){
 	
 	//not animating backwards, if we were.
 	//m_fireState &= ~128;
 
-	
 	/*
 	if(m_pPlayer->glockSilencerOnVar == 1){
 		m_fireState = 1;
@@ -458,8 +466,6 @@ void CGlock::Holster( int skiplocal /* = 0 */ ){
 	//m_fireState = (0 | 128);
 
 
-
-	
 		//if(m_fInAttack == 1){
 		//	m_fireState = 0;
 		//}else if(m_fInAttack == 2){
@@ -490,8 +496,6 @@ void CGlock::Holster( int skiplocal /* = 0 */ ){
 
 	}
 
-
-
 	//???
 	/*
 	m_fInAttack = 1;
@@ -511,8 +515,6 @@ void CGlock::Holster( int skiplocal /* = 0 */ ){
 	//m_fInAttack = 1;
 			//SendWeaponAnim( -1, 1, m_fireState );
 
-
-
 	DefaultHolster(GLOCK_HOLSTER, skiplocal, (m_fireState& ~128), (16.0f/20.0f) );
 	//CBasePlayerWeapon::Holster();
 
@@ -521,7 +523,6 @@ void CGlock::Holster( int skiplocal /* = 0 */ ){
 //MODDD - everybody do the swap.
 void CGlock::ItemPreFrame(){
 	CBasePlayerWeapon::ItemPreFrame();
-	
 }
 
 
@@ -542,17 +543,14 @@ BOOL CanAttackG( float attack_time, float curtime, BOOL isPredicted )
 }
 
 
-
 //MODDD - everybody do the swap.
 void CGlock::ItemPostFrame(){
-
 	//int animationIndex = -1;
 
 	oldTime = currentTime;
 	currentTime = gpGlobals->time;
 	timeDelta = currentTime - oldTime;
 	//!!!!! Delta? Isn't that what "gpGlobals->frametime" is for?
-
 
 
 	if(oldTime == -1 || timeDelta > 2){
@@ -564,8 +562,8 @@ void CGlock::ItemPostFrame(){
 	timeSinceDeployed += timeDelta;
 
 
-	BOOL holdingPrimary = m_pPlayer->pev->button & IN_ATTACK;
-	BOOL holdingSecondary = m_pPlayer->pev->button & IN_ATTACK2;
+	const BOOL holdingPrimary = m_pPlayer->pev->button & IN_ATTACK;
+	const BOOL holdingSecondary = m_pPlayer->pev->button & IN_ATTACK2;
 
 	if(holdingPrimary){
 		holdingSecondaryCurrent = 0;
@@ -575,33 +573,19 @@ void CGlock::ItemPostFrame(){
 	//if(m_pPlayer->allowGlockSecondarySilencerMem == 1){
 	//if(CVAR_GET_FLOAT("allowGlockSecondarySilencer") == 1){
 
-
 	int determiner = 0;
 	
 	//!!!MY VAR NOW!  .. no changed.
 	int playerHasGlockYet = 0;
 
 
-	
-	determiner = EASY_CVAR_GET(wpn_glocksilencer);
+	determiner = EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST(wpn_glocksilencer);
 
 #ifndef CLIENT_DLL
-	//if NOT the client!!!  SERVER!
-	//determiner = global_wpn_glocksilencer;
-
 	playerHasGlockYet = m_pPlayer->hasGlockSilencer;
-
-	//easyPrintLine("glock: rrr %.2f %.2f", m_pPlayer->allowGlockSecondarySilencerMem,  );
-		
 #else
-	
-	//determiner = global2_wpn_glocksilencer;
-	//easyPrintLine("glock: eee %.2f ", m_pPlayer->allowGlockSecondarySilencerMem );
-	
 	playerHasGlockYet = global2PSEUDO_playerHasGlockSilencer;
-
 #endif
-
 
 	if( (determiner == 1 && playerHasGlockYet == 1) || (determiner == 2)){
 		//silencer available, and...
@@ -686,19 +670,19 @@ void CGlock::ItemPostFrame(){
 
 
 
-
-
-		
+		// LET IT BE KNOWN.  THIS IS WHAT DOES THE GLOCK SILENCER ATTACH/REMOVE ANIMATIONS.
+		// BECAUSE SAYING THAT IS FUCKING HARD I GUESS.
+		// GOD I FUCKING LOVE MYSELF.
 		if(m_flReleaseThrow == -1 && legalHoldSecondary){
 			if(m_fInAttack == 2){
 				//backwards!
-
 				//easyForcePrintLine("ILL do depraved things! backwards.");
 				SendWeaponAnimReverse( GLOCK_ADD_SILENCER, 1, (m_fireState& ~128) );
 			}else{ // == 1
 				//easyForcePrintLine("ILL do depraved things! forwards.");
 				SendWeaponAnim( GLOCK_ADD_SILENCER, 1, (m_fireState& ~128) );
 			}
+			//SendWeaponAnimBypass(ANIM_NO_UPDATE, m_fireState & ~128);
 		}
 
 		
@@ -716,7 +700,6 @@ void CGlock::ItemPostFrame(){
 				if(!legalHoldSecondary){
 					m_flReleaseThrow = -1;
 				}
-
 
 			}else if(m_flReleaseThrow == -1){
 				m_flStartThrow = -1;
@@ -738,7 +721,6 @@ void CGlock::ItemPostFrame(){
 				animationTime += timeDelta;
 				m_fireState = 1;
 
-
 				if(animationTime > holdingSecondaryTarget1){
 					m_flReleaseThrow = 2;
 					//m_pPlayer->glockSilencerOnVar = 1;
@@ -749,10 +731,7 @@ void CGlock::ItemPostFrame(){
 					
 					//MODDD - soundsentencesave
 					EMIT_SOUND_FILTERED(ENT(m_pPlayer->pev), CHAN_ITEM, "weapons/glockSilencerOn.wav", RANDOM_FLOAT(1, 1), ATTN_IDLE, 0, 98 + RANDOM_LONG(0,4), TRUE);
-
 				}
-
-
 			}else if(m_flReleaseThrow == 2){
 				m_flStartThrow = GLOCK_ADD_SILENCER;
 				animationTime += timeDelta;
@@ -767,20 +746,33 @@ void CGlock::ItemPostFrame(){
 					//idletime = 0;
 					m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + randomIdleAnimationDelay();
 
+					//m_pPlayer->pev->weaponanim = ANIM_NO_UPDATE;
+					
+					// HOLLLLLLY SHIT.
+					// I HAVE NO CLUE WHY THIS IS NEEDED AT THE END OF THE SILENCER TAKE ON/OFF ANIMATIONS,
+					// BUT HOLY FUCK IT SURE IS.
+					// OTHERWISE THE ANIMATION WILL OFTEN PLAY AGAIN AFTER IT HAS HAPPENED ONCE ON THE CLIENT'S
+					// END, IT IT PISSES ME OFF SO GODDAM MUCH.  FUCKING BULLSHIT KILLED 2, MAYBE 3 MOTHERFUCKING DAYS.
+					// FUCK PISS SHIT DICK THUNDERCUNTS.
+					// I AM THOGAR, RIPPER OF THROATS AND VIOLATOR OF YOUR FUCKING VACANT EYEHOLES.
+					// BITCH.
+					SendWeaponAnimBypass(ANIM_NO_UPDATE, m_fireState & ~128);
+
 					CBasePlayerWeapon::ItemPostFrame();
 
 					//MODDD - ok to remove this???
 					//pev->body = m_fireState;
+
+
 					//SendWeaponAnim( (int)m_flStartThrow, 1, m_fireState );
+
 					//m_flTimeWeaponIdle = 0; //?
-							
+					
 
 					return;
-
 				}
 			}
-
-
+			
 		}else if(m_fInAttack == 2){
 
 
@@ -865,6 +857,9 @@ void CGlock::ItemPostFrame(){
 					//idletime = 0;
 					m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + randomIdleAnimationDelay();
 
+					//m_pPlayer->pev->weaponanim = ANIM_NO_UPDATE;
+
+					SendWeaponAnimBypass(ANIM_NO_UPDATE, m_fireState & ~128);
 
 					CBasePlayerWeapon::ItemPostFrame();
 
@@ -874,9 +869,7 @@ void CGlock::ItemPostFrame(){
 					//???????????????????????????????????
 					//m_flTimeWeaponIdle = 0; //?
 
-
 					return;
-
 				}
 			}
 		}
@@ -900,7 +893,6 @@ void CGlock::ItemPostFrame(){
 		m_flReleaseThrow = -1;
 		m_flStartThrow = -1;
 		animationTime = 0;
-
 	}
 
 
@@ -942,9 +934,6 @@ void CGlock::ItemPostFrame(){
 			//MODDD NOTE - is the "& ~128" bit okay? Just checking.
 
 
-
-
-
 			//SendWeaponAnim( (int)m_flStartThrow, 1, (m_fireState& ~128) );
 
 			/*
@@ -959,35 +948,26 @@ void CGlock::ItemPostFrame(){
 				SendWeaponAnim( (int)m_flStartThrow, 1, (m_fireState& ~128) );
 			}
 			*/
-
-			
 		}
 		everSent = 1;
-
 	}else{
 		//SendWeaponAnim( GLOCK_IDLE1, 1 );
 	}
 
-	
 }
 
 
 //MODDD - Secondary fire removed altogether.  Can only apply the silencer when right-clicking.
 void CGlock::SecondaryAttack( void )
 {
-
-
-	//no silencer available?  we're just doing this then..
-	if(EASY_CVAR_GET(wpn_glocksilencer) == 0){
+	//no silencer available?  we're doing retail's rapid-fire then.
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST(wpn_glocksilencer) == 0){
 		if(m_pPlayer->cheat_minimumfiredelayMem == 0){
 			GlockFire( 0.1, 0.2, FALSE );
 		}else{
 			GlockFire( 0.1, m_pPlayer->cheat_minimumfiredelaycustomMem, FALSE );
 		}
 	}
-
-
-	
 }
 
 void CGlock::PrimaryAttack( void )
@@ -1007,8 +987,8 @@ void CGlock::PrimaryAttack( void )
 	}else{
 		GlockFire( 0.01, m_pPlayer->cheat_minimumfiredelaycustomMem, TRUE );
 	}
-	
 }
+
 
 void CGlock::GlockFire( float flSpread , float flCycleTime, BOOL fUseAutoAim )
 {
@@ -1039,7 +1019,6 @@ void CGlock::GlockFire( float flSpread , float flCycleTime, BOOL fUseAutoAim )
 	}
 
 
-
 	int flags;
 
 #if defined( CLIENT_WEAPONS )
@@ -1048,7 +1027,6 @@ void CGlock::GlockFire( float flSpread , float flCycleTime, BOOL fUseAutoAim )
 	flags = 0;
 #endif
 
-	
 	//MODDD - Better: use this instead.
 	//if (pev->body == 1)
 	if(m_fInAttack == 2)
@@ -1061,7 +1039,6 @@ void CGlock::GlockFire( float flSpread , float flCycleTime, BOOL fUseAutoAim )
 		m_pPlayer->m_iWeaponFlash = 0;
 		//m_pPlayer->pev->effects |= 256;    not advisable.  Makes the player invisible and shows a bright light around where the player is?
 		//m_pPlayer->pev->renderfx |= 128;  //No side-effects from what I can tell, going with this.
-
 
 		//m_pPlayer->pev->deadf
 
@@ -1100,7 +1077,10 @@ void CGlock::GlockFire( float flSpread , float flCycleTime, BOOL fUseAutoAim )
 
 	//MODDD - the "shoot_empty" anim condition also requires "glockUseLastBulletAnim" to be true.
 	PLAYBACK_EVENT_FULL( flags, m_pPlayer->edict(), fUseAutoAim ? m_usFireGlock1 : m_usFireGlock2, 0.0, (float *)&g_vecZero, (float *)&g_vecZero, vecDir.x, vecDir.y, m_fInAttack, 0, ( m_iClip == 0 && EASY_CVAR_GET(glockUseLastBulletAnim) == 1 ) ? 1 : 0, 0 );
-	
+
+	// well gee, we fired, didn't we?
+	setFiredSinceReloadTrue();
+
 	//MODDD - schedule idle for the end of the firing animation (only one possibility for animation time; no determination ahead of time needed)
 	m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + (15.0 / 25.0) + randomIdleAnimationDelay();
 
@@ -1123,21 +1103,17 @@ void CGlock::Reload( void )
 
 	if ( m_pPlayer->ammo_9mm <= 0 )
 		 return;
-
+	
 	int iResult;
 	if (m_iClip == 0){
 		//MODDD - used to refer to "17" for what is now "GLOCK_MAX_CLIP".  This syncs it better, should
 		//the constant change again.
-		//MODDD - ALSO.  Max is actually one above the usual (without a round in the firing chamber).
-		rememberOneLessRound = TRUE;
-		setExtraBulletTrue();
 
 		iResult = DefaultReload( GLOCK_MAX_CLIP - 1, GLOCK_RELOAD, (37.0/18.0) );
+		//MODDD - ALSO.  Max is actually one above the usual (without a round in the firing chamber).
+		setExtraBulletTrue();
 	}else{
-		//MODDD - CVar.
-		rememberOneLessRound = FALSE;
-
-		if(EASY_CVAR_GET(glockOldReloadLogic) == 1){
+		if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(glockOldReloadLogic) == 1 && getFiredSinceReload() ){
 			//one extra round for reloading on not completely empty.
 			iResult = DefaultReload( GLOCK_MAX_CLIP, GLOCK_RELOAD_NOT_EMPTY, (37.0/18.0) );
 		}else{
@@ -1146,6 +1122,17 @@ void CGlock::Reload( void )
 		setExtraBulletFalse();
 	}
 	//easyPrintLine("MAGGOTS %d %d", m_iClip, rememberOneLessRound);
+
+
+	/*
+	if (m_iClip == 0) {
+		setExtraBulletTrue();
+	}
+	else {
+		setExtraBulletFalse();
+	}
+	*/
+
 
 	//MODDD - No.
 	/*
@@ -1227,11 +1214,27 @@ void CGlock::WeaponIdle( void )
 		
 		forceBlockLooping();
 		
+
+
+
+		//m_pPlayer->pev->weaponanim = ANIM_NO_UPDATE;
+		//iAnim = ANIM_NO_UPDATE;
+
 		//don't render backwards unless told to do so.
 		//m_fireState &= ~128;
 		SendWeaponAnim( iAnim, 1, m_fireState &~128 );
 	}
 }
+
+
+
+//MODDD - NEW, event.
+void CGlock::OnReloadApply(void) {
+
+	setFiredSinceReloadFalse();
+
+}//END OF OnReloadApply
+
 
 
 void CGlock::SendWeaponAnim(int iAnim, int skiplocal, int body){
@@ -1276,7 +1279,7 @@ class CGlockAmmo : public CBasePlayerAmmo
 
 
 		/*
-		if(EASY_CVAR_GET(glockOldReloadLogic) == 1){
+		if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(glockOldReloadLogic) == 1){
 			//with old reload logic, a clip is the + 1.
 			ammoChoice = AMMO_GLOCKCLIP_GIVE;
 		}else{
@@ -1306,10 +1309,6 @@ class CGlockAmmo : public CBasePlayerAmmo
 };
 LINK_ENTITY_TO_CLASS( ammo_glockclip, CGlockAmmo );
 LINK_ENTITY_TO_CLASS( ammo_9mmclip, CGlockAmmo );
-
-
-
-
 
 
 

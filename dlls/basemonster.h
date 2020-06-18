@@ -512,7 +512,8 @@ public:
 	virtual CBaseEntity* getNearestDeadBody(const Vector& arg_searchOrigin, const float arg_maxDist);
 
 	virtual BOOL noncombat_Look_ignores_PVS_check(void);
-	
+	virtual BOOL bypassAllowMonstersSpawnCheck(void);
+
 	virtual BOOL violentDeathAllowed(void);
 	virtual BOOL violentDeathDamageRequirement(void);
 	virtual BOOL violentDeathClear(void);
@@ -1157,6 +1158,7 @@ public:
 
 	CBaseEntity* DropItem ( char *pszItemName, const Vector &vecPos, const Vector &vecAng );// drop an item.
 
+	virtual void ForgetEnemy(void);
 
 	//MODDD - new.
 	virtual void removeFromPoweredUpCommandList(CBaseMonster* argToRemove);

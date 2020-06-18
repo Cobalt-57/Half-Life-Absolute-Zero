@@ -23,39 +23,24 @@
 #if !defined( OEM_BUILD ) && !defined( HLDEMO_BUILD )
 
 #include "extdll.h"
+#include "egon.h"
 #include "util.h"
 #include "cbase.h"
 #include "player.h"
 #include "basemonster.h"
-#include "weapons.h"
+
 #include "nodes.h"
 #include "effects.h"
 #include "customentity.h"
 #include "gamerules.h"
 
-#define	EGON_PRIMARY_VOLUME		450
-#define EGON_BEAM_SPRITE		"sprites/xbeam1.spr"
-#define EGON_FLARE_SPRITE		"sprites/XSpark1.spr"
-#define EGON_SOUND_OFF			"weapons/egon_off1.wav"
-#define EGON_SOUND_RUN			"weapons/egon_run3.wav"
-#define EGON_SOUND_STARTUP		"weapons/egon_windup2.wav"
+
+//MODDD - several things moved to the new egon.h for commonly including client/serverside
+// (less redundancy in ev_hldm.cpp)
 
 #define EGON_SWITCH_NARROW_TIME			0.75			// Time it takes to switch fire modes
 #define EGON_SWITCH_WIDE_TIME			1.5
 
-enum egon_e {
-	EGON_IDLE1 = 0,
-	EGON_FIDGET1,
-	EGON_ALTFIREON,
-	EGON_ALTFIRECYCLE,
-	EGON_ALTFIREOFF,
-	EGON_FIRE1,
-	EGON_FIRE2,
-	EGON_FIRE3,
-	EGON_FIRE4,
-	EGON_DRAW,
-	EGON_HOLSTER
-};
 
 LINK_ENTITY_TO_CLASS( weapon_egon, CEgon );
 
@@ -503,7 +488,48 @@ CEgon::CEgon(){
 	effectsExist = FALSE;
 
 	//m_flReleaseThrow = FALSE;
+}//END OF CEgon constructor
+
+
+
+// Save/restore for serverside only!
+#ifndef CLIENT_DLL
+TYPEDESCRIPTION	CEgon::m_SaveData[] =
+{
+	//	DEFINE_FIELD( CEgon, m_pBeam, FIELD_CLASSPTR ),
+	//	DEFINE_FIELD( CEgon, m_pNoise, FIELD_CLASSPTR ),
+	//	DEFINE_FIELD( CEgon, m_pSprite, FIELD_CLASSPTR ),
+	DEFINE_FIELD(CEgon, m_shootTime, FIELD_TIME),
+	DEFINE_FIELD(CEgon, m_fireState, FIELD_INTEGER),
+	DEFINE_FIELD(CEgon, m_fireMode, FIELD_INTEGER),
+	DEFINE_FIELD(CEgon, m_shakeTime, FIELD_TIME),
+	DEFINE_FIELD(CEgon, m_flAmmoUseTime, FIELD_TIME),
+};
+// custom implementations instead, see below.
+//IMPLEMENT_SAVERESTORE( CEgon, CBasePlayerWeapon );
+
+int CEgon::Save(CSave& save){
+	if (!CBasePlayerWeapon::Save(save))
+		return 0;
+	return save.WriteFields("CEgon", this, m_SaveData, ARRAYSIZE(m_SaveData));
 }
+int CEgon::Restore(CRestore& restore){
+
+
+	if (!CBasePlayerWeapon::Restore(restore))
+		return 0;
+
+	//if(m_pPlayer != NULL){
+		//m_pPlayer->TabulateAmmo();
+	//}
+
+	int result = restore.ReadFields("CEgon", this, m_SaveData, ARRAYSIZE(m_SaveData));
+	m_flReleaseThrow = -4;
+	return result;
+}
+#endif
+
+
 
 
 void CEgon::PrimaryAttack( void )

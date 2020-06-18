@@ -51,6 +51,8 @@
 
 #define ZISCALE ((float)0x8000)
 
+//MODDD NOTE - no clue why this is even here, never referred to in the rest of the script.
+// There is dlls/nodes.h's CACHE_SIZE, but it is only intended for node.h/.cpp (renamed since).
 #define CACHE_SIZE  32      // used to align key data structures
 
 typedef enum

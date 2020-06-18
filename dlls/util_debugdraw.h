@@ -1,8 +1,18 @@
 
 
 
-#ifndef CUSTOM_DEBUG_H
-#define CUSTOM_DEBUG_H
+// New file to contain script related to drawing debug lines in a more organized way.
+// That is, specifing coords for a line to be drawn at (DebugLine_Setup, etc.) so that
+// a line can be continually drawn at those coords from then on for easy viewing later.
+// Has more control than the TE_LINE (or whatever it was) call that draws dotted lines
+// for some fixed interval.  These can be immediately replaced when needed to avoid 
+// irrelevant/outdated spam.
+
+
+
+
+#ifndef UTIL_DEBUGDRAW_H
+#define UTIL_DEBUGDRAW_H
 
 
 #include "util_shared.h"  //includes util_printout.h
@@ -100,7 +110,7 @@ extern void DebugLine_ColorBool(int argID, BOOL argPass);
 
 
 
-#endif //END OF CUSTOM_DEBUG_H
+#endif //END OF UTIL_DEBUGDRAW_H
 
 
 

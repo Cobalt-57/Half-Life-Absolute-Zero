@@ -33,14 +33,14 @@
 
 #include "soundent.h"
 
-#include "custom_debug.h"
+#include "util_debugdraw.h"
 
 #include "defaultai.h"
 #include "scripted.h"
 
 //MODDD - extern
-extern float global_zombieBulletResistance;
-extern float global_zombieBulletPushback;
+EASY_CVAR_EXTERN_DEBUGONLY(zombieBulletResistance);
+EASY_CVAR_EXTERN_DEBUGONLY(zombieBulletPushback);
 extern DLL_GLOBAL int		g_iSkillLevel;
 
 
@@ -64,7 +64,6 @@ extern DLL_GLOBAL int		g_iSkillLevel;
 //what sequence is used for crouching over a corpse?
 //a full enum of all sequences is possible but... laziness.
 #define ZOMBIE_EATBODY 29
-
 
 
 
@@ -501,7 +500,7 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CZombie)
 {
 	
 
-	if (this->m_MonsterState != MONSTERSTATE_SCRIPT && pev->movetype != MOVETYPE_FLY && pev->deadflag == DEAD_NO && ((global_zombieBulletPushback != 0 && bitsDamageType & DMG_BULLET)) ){ //|| bitsDamageType == DMG_BULLET) ){
+	if (this->m_MonsterState != MONSTERSTATE_SCRIPT && pev->movetype != MOVETYPE_FLY && pev->deadflag == DEAD_NO && ((EASY_CVAR_GET(zombieBulletPushback) != 0 && bitsDamageType & DMG_BULLET)) ){ //|| bitsDamageType == DMG_BULLET) ){
 		
 		
 		//Vector vecDir = pev->origin - (pevInflictor->absmin + pevInflictor->absmax) * 0.5;
@@ -529,7 +528,7 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CZombie)
 		}
 
 
-		//float flForce = DamageForce( flDamage ) * global_zombieBulletPushback;
+		//float flForce = DamageForce( flDamage ) * EASY_CVAR_GET(zombieBulletPushback);
 		//pev->velocity = pev->velocity + vecDir * flForce;
 
 	}//END OF bullet pushback check
@@ -539,12 +538,12 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CZombie)
 
 	//MODDD - (comment below found as-is)
 	// Take 30% damage from bullets
-	if ( (global_zombieBulletResistance == 1 && bitsDamageType & DMG_BULLET)) //|| bitsDamageType == DMG_BULLET )
+	if ( (EASY_CVAR_GET(zombieBulletResistance) == 1 && bitsDamageType & DMG_BULLET)) //|| bitsDamageType == DMG_BULLET )
 	{
 		//flDamage *= 0.3;
 		
 		//old way.
-		//flDamage *= (1 - global_zombieBulletResistance);
+		//flDamage *= (1 - EASY_CVAR_GET(zombieBulletResistance));
 
 		//Now, use a skill-related value (difficulty).
 		//easyPrintLine("ZBULLET: TOOK %.2f\%, RESISTED %.2f\%", (100-gSkillData.zombieBulletResistance)/100.0f, (gSkillData.zombieBulletResistance)/100.0f );
@@ -687,11 +686,15 @@ CZombie::CZombie(){
 
 }
 
+
+
+
 //=========================================================
 // Spawn
 //=========================================================
 void CZombie :: Spawn()
 {
+
 	Precache( );
 
 	pev->classname = MAKE_STRING("monster_zombie");
@@ -781,17 +784,28 @@ int CZombie::IgnoreConditions ( void )
 
 
 
-
-
 void CZombie::MonsterThink(){
 
+	/*
+	// Debug feature for serverside printouts.
+	// Place a zombie and watch printouts only go to the server console (or player running the server if non-deicated).
+	// Uh. Yay.
 	
+	static float tempTime = 0;
+
+	if (tempTime == 0 || gpGlobals->time >= tempTime) {
+		tempTime = gpGlobals->time + 2;
+		easyForcePrint("AIM here SON %.2f %s\n", 4.27f, "abcdefg");
+		easyForcePrintServer("BIM here SON %.2f %s\n", 4.27f, "abcdefg");
+		ClientPrintAll(HUD_PRINTCONSOLE, "aw yea man %s %s end\n", "12.6", "text");
+	}
 
 	if(lookForCorpseTime != -1 && gpGlobals->time >= lookForCorpseTime){
 		//if we're done looking for a corpse, drop the last copy.
 		lookForCorpseTime = -1;
 		m_hEnemy_CopyRef = NULL;
 	}
+	*/
 
 
 	if(m_hEnemy != NULL){

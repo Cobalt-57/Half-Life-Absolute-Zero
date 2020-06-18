@@ -20,6 +20,24 @@
 
 */
 
+// MODDD - HUGE NOTE HERE!
+// The inner machinations of the drive behind Half-Life's devepers remain an enigma.
+// Anyway, looks like all specific player weapons (mp5.cpp, crossbow.cpp, etc.) were included server AND clientside.
+// weapons.h is also shared.
+// HOWEVER.  weapons.cpp is only included serverside, NOT clientside.
+// A lot of its methods seem to be implemented separately in cl_dll/hl/hl_weapons.cpp, alongside some other things.
+
+// The point of this is, don't do 'ifdef CLIENT_DLL' checks in here, they are pointless.  They either always pass
+// or never pass, because there's only one reading of weapons.cpp:  serverside.
+// Make separate copies for clientside elsewhere over in cl_dll/hl/hl_weapons.cpp, probaly.
+// Dummy out anything actually needed by weapons clientside (like FOV requests) at your own peril!
+
+
+
+
+
+
+
 #include "extdll.h"
 #include "util.h"
 #include "cbase.h"
@@ -47,8 +65,8 @@ DLL_GLOBAL	short	g_sModelIndexBubbles;// holds the index for the bubbles model
 DLL_GLOBAL	short	g_sModelIndexBloodDrop;// holds the sprite index for the initial blood
 DLL_GLOBAL	short	g_sModelIndexBloodSpray;// holds the sprite index for splattered blood
 
-ItemInfo CBasePlayerItem::ItemInfoArray[MAX_WEAPONS];
-AmmoInfo CBasePlayerItem::AmmoInfoArray[MAX_AMMO_SLOTS];
+//MODDD - CBasePlayerItem::ItemInfoArray and CBasePlayerItem::AmmoInfoArray implementations moved
+// to util_shared.cpp.
 
 extern int gmsgCurWeapon;
 
@@ -67,28 +85,11 @@ EASY_CVAR_EXTERN(firstPersonIdleDelayMin)
 EASY_CVAR_EXTERN(firstPersonIdleDelayMax)
 
 
-EASY_CVAR_EXTERN(viewModelPrintouts)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(viewModelPrintouts)
 
 
 
-//=========================================================
-// MaxAmmoCarry - pass in a name and this function will tell
-// you the maximum amount of that type of ammunition that a 
-// player can carry.
-//=========================================================
-int MaxAmmoCarry( int iszName )
-{
-	for ( int i = 0;  i < MAX_WEAPONS; i++ )
-	{
-		if ( CBasePlayerItem::ItemInfoArray[i].pszAmmo1 && !strcmp( STRING(iszName), CBasePlayerItem::ItemInfoArray[i].pszAmmo1 ) )
-			return CBasePlayerItem::ItemInfoArray[i].iMaxAmmo1;
-		if ( CBasePlayerItem::ItemInfoArray[i].pszAmmo2 && !strcmp( STRING(iszName), CBasePlayerItem::ItemInfoArray[i].pszAmmo2 ) )
-			return CBasePlayerItem::ItemInfoArray[i].iMaxAmmo2;
-	}
-
-	ALERT( at_console, "MaxAmmoCarry() doesn't recognize '%s'!\n", STRING( iszName ) );
-	return -1;
-}
+//MODDD - MaxAmmoCarry also moved to util_shared.cpp.
 
 	
 /*
@@ -278,33 +279,11 @@ void ExplodeModel( const Vector &vecOrigin, float speed, int model, int count )
 #endif
 
 
-int giAmmoIndex = 0;
+// MODDD - moved to game_shared/NEW/util_shared.cpp.
+//int giAmmoIndex = 0;
 
-// Precaches the ammo and queues the ammo info for sending to clients
-void AddAmmoNameToAmmoRegistry( const char *szAmmoname )
-{
-	// make sure it's not already in the registry
-	for ( int i = 0; i < MAX_AMMO_SLOTS; i++ )
-	{
-		if ( !CBasePlayerItem::AmmoInfoArray[i].pszName)
-			continue;
-
-		if ( stricmp( CBasePlayerItem::AmmoInfoArray[i].pszName, szAmmoname ) == 0 )
-			return; // ammo already in registry, just quite
-	}
-
-
-	giAmmoIndex++;
-	ASSERT( giAmmoIndex < MAX_AMMO_SLOTS );
-	if ( giAmmoIndex >= MAX_AMMO_SLOTS )
-		giAmmoIndex = 0;
-
-	CBasePlayerItem::AmmoInfoArray[giAmmoIndex].pszName = szAmmoname;
-	CBasePlayerItem::AmmoInfoArray[giAmmoIndex].iId = giAmmoIndex;   // yes, this info is redundant
-}
-
-
-
+// MODDD - AddAmmoNameToAmmoRegistry moved to game_shared/NEW/util_shared.cpp for access
+// between client and serverside.  May as well be able to do both in both places.
 
  
 
@@ -518,8 +497,6 @@ void CBasePlayerItem::DefaultTouchRemoveThink( CBaseEntity *pOther){
 
 void CBasePlayerItem::DefaultTouch( CBaseEntity *pOther )
 {
-
-	
 	//easyForcePrintLine("OH NO YOU RRR SONNY");
 
 	// if it's not a player, ignore
@@ -567,10 +544,7 @@ void CBasePlayerItem::DefaultTouch( CBaseEntity *pOther )
 
 BOOL CanAttack( float attack_time, float curtime, BOOL isPredicted )
 {
-
-	//REMOVED.  This is unenjoyable for most weapons.
-	//MODDD - cheat intervention.
-	//if(CVAR_GET_FLOAT("cheat_minimumfiredelay") == 0){
+	
 		
 #if defined( CLIENT_WEAPONS )
 	if ( !isPredicted )
@@ -631,40 +605,22 @@ CBasePlayerWeapon::CBasePlayerWeapon(){
 
 //MODDD
 float CBasePlayerWeapon::randomIdleAnimationDelay(void){
-	
-#ifndef CLIENT_DLL
-	//server!
 	if( EASY_CVAR_GET(firstPersonIdleDelayMin) > 0 && EASY_CVAR_GET(firstPersonIdleDelayMax) > 0){
 		//let's go.
-		//float rand = RANDOM_FLOAT(global_firstPersonIdleDelayMin, global_firstPersonIdleDelayMax);
-		float rand = UTIL_SharedRandomFloat(m_pPlayer->random_seed, global_firstPersonIdleDelayMin, global_firstPersonIdleDelayMax);
+		//float rand = RANDOM_FLOAT(EASY_CVAR_GET(firstPersonIdleDelayMin), EASY_CVAR_GET(firstPersonIdleDelayMax));
+		float rand = UTIL_SharedRandomFloat(m_pPlayer->random_seed, EASY_CVAR_GET(firstPersonIdleDelayMin), EASY_CVAR_GET(firstPersonIdleDelayMax) );
 		//easyPrintLine("OK server server %.2f", rand);
 		return rand;
 	}else{
 		return 0;
 	}
-#else
-	if(global2_firstPersonIdleDelayMin > 0 && global2_firstPersonIdleDelayMax > 0){
-		//let's go.
-		float rand = UTIL_SharedRandomFloat(m_pPlayer->random_seed, global2_firstPersonIdleDelayMin, global2_firstPersonIdleDelayMax);
-		//easyPrintLine("OK server client %.2f", rand);
-		return rand;
-	}else{
-		return 0;
-	}
-#endif
-
-}
+}//END OF randomIdleAnimationDelay
 
 
 
 
 //MODDD - new.
 void CBasePlayerWeapon::ItemPostFrameThink(){
-
-
-	
-
 
 
 	/*
@@ -788,20 +744,12 @@ void CBasePlayerWeapon::ItemPostFrame( void )
 
 		m_pPlayer->TabulateAmmo();
 
+		//MODDD - new event!
+		this->OnReloadApply();
+
 		m_fInReload = FALSE;
 	}
 	
-
-
-
-
-
-
-
-
-
-
-
 
 
 	//BOOL canDoNormalPressBehavior = TRUE;
@@ -892,7 +840,6 @@ void CBasePlayerWeapon::ItemPostFrame( void )
 		canCallNeither = FALSE;
 
 		primaryHeld = FALSE;
-
 	}
 
 	
@@ -900,7 +847,6 @@ void CBasePlayerWeapon::ItemPostFrame( void )
 	if(canCallPrimaryNot && !primaryHeld){
 		PrimaryNotHeld();
 	}
-
 	if(canCallSecondaryNot && !secondaryHeld){
 		SecondaryNotHeld();
 	}
@@ -924,8 +870,18 @@ void CBasePlayerWeapon::ItemPostFrame( void )
 
 		m_pPlayer->TabulateAmmo();
 		SecondaryAttack();
-		m_pPlayer->pev->button &= ~IN_ATTACK2;
-		
+
+		//MODDD NOTE - ?????
+		// Why remove IN_ATTACK2 from the bitmask?  Seems to have no effect,
+		// holding right-click with the mp5 still fires AR grenades continuously.
+		// Nowhere else removes IN_... flags manually.  weeeeeeiiiiiirrrrrrddd.
+		// ***This seems to screw with m_pPlayer->m_afButtonPressed working right (records a button
+		// press being this very frame), so disabling this one!  Don't know what they were thinking here.
+		// Really, think about it.  Every frame just resets pev->button to IN_ATTACK2 as it is held down,
+		// so this doesn't stop continual fire. It just tricks the game into thinking every single frame
+		// is a completley new press.  Which.... makes m_afButtonPressed and Released useless.
+		// IN_ATTACK (primary) lacked this line as seen below, and did not have this issue. Case closed.
+		//m_pPlayer->pev->button &= ~IN_ATTACK2;
 	}
 	else if (canCallPrimary && primaryHeld )
 	{
@@ -949,18 +905,17 @@ void CBasePlayerWeapon::ItemPostFrame( void )
 		}
 
 		if(EASY_CVAR_GET(cheat_infiniteammo) == 1){
-
 			//MODDD - this was a nasty bug.
 			//(crash by going through the glass-door near the end of the laser room, where you get the 1st crowbar to beat it with & walk through WHILE cheat_infiniteammo is on, solved by this)
 			if(PrimaryAmmoIndex() != -1 && m_pPlayer->m_rgAmmo[PrimaryAmmoIndex()] < 1){
 				m_pPlayer->m_rgAmmo[PrimaryAmmoIndex()] = 1;
 			}
-
 		}
 
 		m_pPlayer->TabulateAmmo();
-		if(EASY_CVAR_GET(viewModelPrintouts)==1)easyForcePrintLine("Postframe PrimaryAttack!");
+		if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(viewModelPrintouts)==1)easyForcePrintLine("Postframe PrimaryAttack!");
 		PrimaryAttack();
+
 	}
 	else if ( m_pPlayer->pev->button & IN_RELOAD && iMaxClip() != WEAPON_NOCLIP && !m_fInReload ) 
 	{
@@ -1058,7 +1013,6 @@ void CBasePlayerItem::Holster( int skiplocal /* = 0 */ )
 	m_pPlayer->m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 5;
 
 
-
 }
 
 
@@ -1066,7 +1020,6 @@ void CBasePlayerItem::Holster( int skiplocal /* = 0 */ )
 void CBasePlayerItem::AttachToPlayer ( CBasePlayer *pPlayer )
 {
 	//easyForcePrintLine("OH NO YOU ATTACHED SONNY");
-
 
 	pev->movetype = MOVETYPE_FOLLOW;
 	pev->solid = SOLID_NOT;
@@ -1187,16 +1140,23 @@ void CBasePlayerWeapon::SendWeaponAnim( int iAnim, int skiplocal, int body )
 	else
 		skiplocal = 0;
 
+	//So much as this action can trigger a sendoff apparently.
 	m_pPlayer->pev->weaponanim = iAnim;
 
 #if defined( CLIENT_WEAPONS )
 	if ( skiplocal && ENGINE_CANSKIP( m_pPlayer->edict() ) ){
-		if(EASY_CVAR_GET(viewModelPrintouts)==1)easyForcePrintLine("SendWeaponAnim: %d BLOCKED BY ClientSkip.", iAnim);
-		//return;
+		if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(viewModelPrintouts)==1)easyForcePrintLine("SendWeaponAnim: %d BLOCKED BY ClientSkip.", iAnim);
+		// WARNING!!! Restored clientskip, seems we may have expected this to stop things at an earlier point.
+		return;
 	}
 #endif
 
-	if(EASY_CVAR_GET(viewModelPrintouts)==1)easyForcePrintLine("SendWeaponAnim: %d", iAnim);
+	// OH SHIT OH SHIT IS THAT A GOOD IDEA AT ALL MAN.
+	// Moved below the CLIENTSKIP above.
+	//m_pPlayer->pev->weaponanim = iAnim;
+
+
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(viewModelPrintouts)==1)easyForcePrintLine("SendWeaponAnim: %d", iAnim);
 
 	this->m_fireState &= ~128;
 
@@ -1228,12 +1188,17 @@ void CBasePlayerWeapon::SendWeaponAnimReverse( int iAnim, int skiplocal, int bod
 
 #if defined( CLIENT_WEAPONS )
 	if ( skiplocal && ENGINE_CANSKIP( m_pPlayer->edict() ) ){
-		if(EASY_CVAR_GET(viewModelPrintouts)==1)easyForcePrintLine("SendWeaponAnimReverse: %d BLOCKED BY ClientSkip.", iAnim);
+		if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(viewModelPrintouts)==1)easyForcePrintLine("SendWeaponAnimReverse: %d BLOCKED BY ClientSkip.", iAnim);
 		return;
 	}
 #endif
+
+	// OH SHIT OH SHIT IS THAT A GOOD IDEA AT ALL MAN.
+	// Moved below the CLIENTSKIP above.
+	//m_pPlayer->pev->weaponanim = iAnim;
+
 	
-	if(EASY_CVAR_GET(viewModelPrintouts)==1)easyForcePrintLine("SendWeaponAnimReverse: %d", iAnim);
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(viewModelPrintouts)==1)easyForcePrintLine("SendWeaponAnimReverse: %d", iAnim);
 	
 
 	MESSAGE_BEGIN( MSG_ONE, SVC_WEAPONANIM, NULL, m_pPlayer->pev );
@@ -1249,7 +1214,7 @@ void CBasePlayerWeapon::SendWeaponAnimReverse( int iAnim, int skiplocal, int bod
 //MODDD
 void CBasePlayerWeapon::SendWeaponAnimBypass( int iAnim, int body )
 {
-	if(EASY_CVAR_GET(viewModelPrintouts)==1)easyForcePrintLine("SendWeaponAnimBypass: %d", iAnim);
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(viewModelPrintouts)==1)easyForcePrintLine("SendWeaponAnimBypass: %d", iAnim);
 	this->m_fireState &= ~128;
 	
 	m_pPlayer->pev->weaponanim = iAnim;
@@ -1262,7 +1227,7 @@ void CBasePlayerWeapon::SendWeaponAnimBypass( int iAnim, int body )
 //MODDD
 void CBasePlayerWeapon::SendWeaponAnimBypassReverse( int iAnim, int body )
 {
-	if(EASY_CVAR_GET(viewModelPrintouts)==1)easyForcePrintLine("SendWeaponAnimBypassReverse: %d", iAnim);
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(viewModelPrintouts)==1)easyForcePrintLine("SendWeaponAnimBypassReverse: %d", iAnim);
 	this->m_fireState |= 128;
 
 	iAnim |= 128;
@@ -1293,7 +1258,7 @@ void CBasePlayerWeapon::SendWeaponAnimClientOnlyReverse( int iAnim, int body )
 //MODDD
 void CBasePlayerWeapon::SendWeaponAnimServerOnly( int iAnim, int body )
 {
-	if(EASY_CVAR_GET(viewModelPrintouts)==1)easyForcePrintLine("SendWeaponAnimServerOnly: %d raw:%d", iAnim, iAnim);
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(viewModelPrintouts)==1)easyForcePrintLine("SendWeaponAnimServerOnly: %d raw:%d", iAnim, iAnim);
 	this->m_fireState &= ~128;
 	
 	m_pPlayer->pev->weaponanim = iAnim;
@@ -1307,7 +1272,7 @@ void CBasePlayerWeapon::SendWeaponAnimServerOnly( int iAnim, int body )
 //MODDD
 void CBasePlayerWeapon::SendWeaponAnimServerOnlyReverse( int iAnim, int body )
 {
-	if(EASY_CVAR_GET(viewModelPrintouts)==1)easyForcePrintLine("SendWeaponAnimServerOnlyReverse: %d raw: %d", iAnim, iAnim | 128);
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(viewModelPrintouts)==1)easyForcePrintLine("SendWeaponAnimServerOnlyReverse: %d raw: %d", iAnim, iAnim | 128);
 	this->m_fireState |= 128;
 	
 	iAnim |= 128;
@@ -1439,6 +1404,7 @@ BOOL CBasePlayerWeapon :: CanDeploy( void )
 {
 	BOOL bHasAmmo = 0;
 
+	//MODDD - TODO. Replace with a reference to a better method for ya ma.
 	if ( !pszAmmo1() )
 	{
 		// this weapon doesn't use ammo, can always deploy.
@@ -1557,14 +1523,16 @@ BOOL CBasePlayerWeapon :: DefaultReload( int iClipSize, int iAnim, float fDelay,
 
 		int j = min(iClipSize - m_iClip, m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType]);	
 
-		if (j == 0)
+		//MODDD - is this edit ok?  To help with things that mess with the max-count like the glock with old reload logic.
+		//if (j == 0)
+		if(j <= 0)
 			return FALSE;
 	}else{
 		if (m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] <= 0)
 			m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] = 1;
 
-		int j = min(iClipSize - m_iClip, m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType]);	
-		if (j == 0)
+		int j = min(iClipSize - m_iClip, m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType]);
+		if (j <= 0)
 			m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] = 1;
 
 		return TRUE;
@@ -2125,13 +2093,20 @@ const char* CBasePlayerWeapon::GetPickupWalkerName(void){
 	return "\0";
 }
 
-//Returns whether the check passed (replacing this entity) or failed (not replacing it).
+// Returns whether the check passed (replacing this entity) or failed (not replacing it).
 CBaseEntity* CBasePlayerWeapon::pickupWalkerReplaceCheck(void){
 	
 	const char* pickupNameTest = GetPickupWalkerName();
 
-	if( !isStringEmpty(pickupNameTest) && !(pev->spawnflags & SF_PICKUP_NOREPLACE) ){
-		//lacking the NOREPLACE flag? replace with my spawnnable.
+	// No need to make it lowercase, classnames already can be trusted to be.
+	//char tempClassname[127];
+	//strcpy(&tempClassname[0], this->getClassname());
+	//lowercase(tempClassname);
+
+	if( !isStringEmpty(pickupNameTest) &&
+		!(pev->spawnflags & SF_PICKUP_NOREPLACE) &&
+		!stringEndsWith(this->getClassname(), "_noreplace")){
+		// lacking the NOREPLACE flag? replace with my spawnnable.
 
 		//char pickupWalkerName[128];
 		//sprintf(pickupWalkerName, "monster_%spickupwalker", baseclassname);
@@ -2147,136 +2122,22 @@ CBaseEntity* CBasePlayerWeapon::pickupWalkerReplaceCheck(void){
 	return NULL;
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//MODDD - m_fInAttack tells whether the glock silencer is not available (0), or available but off (1) or on (2).
-//Saved on the weapon, as this var syncs better than one on the player (m_pPlayer->glockSilencerOnVar).
-TYPEDESCRIPTION	CGlock::m_SaveData[] = 
-{
-	DEFINE_FIELD( CGlock, m_fInAttack, FIELD_INTEGER ),
-	DEFINE_FIELD( CGlock, includesGlockSilencer, FIELD_BOOLEAN ),
-
-
-	
-
-};
-IMPLEMENT_SAVERESTORE( CGlock, CBasePlayerWeapon );
-
-
-TYPEDESCRIPTION	CRpg::m_SaveData[] = 
-{
-	DEFINE_FIELD( CRpg, m_fSpotActive, FIELD_INTEGER ),
-	DEFINE_FIELD( CRpg, m_cActiveRockets, FIELD_INTEGER ),
-};
-IMPLEMENT_SAVERESTORE( CRpg, CBasePlayerWeapon );
-
-TYPEDESCRIPTION	CRpgRocket::m_SaveData[] = 
-{
-	DEFINE_FIELD( CRpgRocket, m_flIgniteTime, FIELD_TIME ),
-	DEFINE_FIELD( CRpgRocket, m_pLauncher, FIELD_CLASSPTR ),
-	//MODDD - new
-	DEFINE_FIELD( CRpgRocket, alreadyDeleted, FIELD_BOOLEAN ),
-	DEFINE_FIELD( CRpgRocket, ignited, FIELD_BOOLEAN ),
-	DEFINE_FIELD( CRpgRocket, vecMoveDirectionMemory, FIELD_VECTOR ),
-
-	
-};
-IMPLEMENT_SAVERESTORE( CRpgRocket, CGrenade );
-
-TYPEDESCRIPTION	CShotgun::m_SaveData[] = 
-{
-	DEFINE_FIELD( CShotgun, m_flNextReload, FIELD_TIME ),
-	DEFINE_FIELD( CShotgun, m_fInSpecialReload, FIELD_INTEGER ),
-	DEFINE_FIELD( CShotgun, m_flNextReload, FIELD_TIME ),
-	// DEFINE_FIELD( CShotgun, m_iShell, FIELD_INTEGER ),
-	DEFINE_FIELD( CShotgun, m_flPumpTime, FIELD_TIME ),
-};
-IMPLEMENT_SAVERESTORE( CShotgun, CBasePlayerWeapon );
-
-TYPEDESCRIPTION	CGauss::m_SaveData[] = 
-{
-	DEFINE_FIELD( CGauss, m_fInAttack, FIELD_INTEGER ),
-//	DEFINE_FIELD( CGauss, m_flStartCharge, FIELD_TIME ),
-//	DEFINE_FIELD( CGauss, m_flPlayAftershock, FIELD_TIME ),
-//	DEFINE_FIELD( CGauss, m_flNextAmmoBurn, FIELD_TIME ),
-	DEFINE_FIELD( CGauss, m_fPrimaryFire, FIELD_BOOLEAN ),
-};
-IMPLEMENT_SAVERESTORE( CGauss, CBasePlayerWeapon );
-
-TYPEDESCRIPTION	CEgon::m_SaveData[] = 
-{
-//	DEFINE_FIELD( CEgon, m_pBeam, FIELD_CLASSPTR ),
-//	DEFINE_FIELD( CEgon, m_pNoise, FIELD_CLASSPTR ),
-//	DEFINE_FIELD( CEgon, m_pSprite, FIELD_CLASSPTR ),
-	DEFINE_FIELD( CEgon, m_shootTime, FIELD_TIME ),
-	DEFINE_FIELD( CEgon, m_fireState, FIELD_INTEGER ),
-	DEFINE_FIELD( CEgon, m_fireMode, FIELD_INTEGER ),
-	DEFINE_FIELD( CEgon, m_shakeTime, FIELD_TIME ),
-	DEFINE_FIELD( CEgon, m_flAmmoUseTime, FIELD_TIME ),
-};
-//IMPLEMENT_SAVERESTORE( CEgon, CBasePlayerWeapon );
-
-
-
-int CEgon::Save( CSave &save )
-{
-	if ( !CBasePlayerWeapon::Save(save) )
-		return 0;
-	return save.WriteFields( "CEgon", this, m_SaveData, ARRAYSIZE(m_SaveData) );
-}
-int CEgon::Restore( CRestore &restore )
-{
-
-
-	if ( !CBasePlayerWeapon::Restore(restore) )
-		return 0;
-
-	//if(m_pPlayer != NULL){
-		//m_pPlayer->TabulateAmmo();
-	//}
-
-	int result = restore.ReadFields( "CEgon", this, m_SaveData, ARRAYSIZE(m_SaveData) );
-	m_flReleaseThrow = -4;
-	return result;
+// blank by default, re-define for weapons that need to do something the moment
+// a reload animation finishes and ammo is taken from the ammo pool to the clip.
+void CBasePlayerWeapon::OnReloadApply(void) {
 
 }
 
 
+// REMEMBER, weapons.cpp is only included serverside!
+float CBasePlayerWeapon::getPlayerBaseFOV(void){
+	//FOV info is stored in the player.
+	return m_pPlayer->getBaseFOV();
+}//END OF getPlayerBaseFOV
 
 
 
 
-
-
-
-
-TYPEDESCRIPTION	CSatchel::m_SaveData[] = 
-{
-	DEFINE_FIELD( CSatchel, m_chargeReady, FIELD_INTEGER ),
-};
-IMPLEMENT_SAVERESTORE( CSatchel, CBasePlayerWeapon );
-
-
-
-
-
-
-
-
-
-
-
+//MODDD - NOTE.  SaveData for weapons moved to their own files, surrounded by 'ifndef CLIENT_DLL',
+// since this file (weapons.cpp) has always been serverside only, and specific weapons files like glock.cpp are
+// shared (need to specify being for only either side).

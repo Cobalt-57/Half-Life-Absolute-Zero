@@ -1,4 +1,4 @@
-	/***
+/***
 *
 *	Copyright (c) 1996-2002, Valve LLC. All rights reserved.
 *	
@@ -36,7 +36,7 @@
 #include "game.h"
 #include "hltv.h"
 
-#include "custom_debug.h"
+#include "util_debugdraw.h"
 
 // #define DUCKFIX
 
@@ -72,80 +72,81 @@ extern CGraph	WorldGraph;
 #define	FLASH_DRAIN_TIME	 1.2 //100 units/3 minutes
 #define	FLASH_CHARGE_TIME	 0.2 // 100 units/20 seconds  (seconds per unit)
 
+
+
+
+
+
+
+
 //MODDD
 extern float cheat_barnacleEatsEverything;
 
-extern float global_myStrobe;
+EASY_CVAR_EXTERN(myStrobe)
 extern unsigned short g_sFreakyLight;
 
-extern float global_raveEffectSpawnInterval;
-extern float global_germanCensorship;
+EASY_CVAR_EXTERN(raveEffectSpawnInterval)
+EASY_CVAR_EXTERN(germanCensorship)
 
-extern float global_mutePlayerPainSounds;
-extern float global_geigerChannel;
+EASY_CVAR_EXTERN(mutePlayerPainSounds)
+EASY_CVAR_EXTERN(geigerChannel)
 
-extern float global_drawDebugBloodTrace;
-
-extern float global_python_zoomfov;
-extern float global_crossbow_zoomfov;
-extern float global_canApplyDefaultFOV;
-extern float global_auto_adjust_fov_aspect;
-extern float global_auto_adjust_zoomfov;
-
-extern float global_autoSneaky;
-extern float global_infiniteLongJumpCharge;
-extern float global_cheat_infiniteclip;
-extern float global_cheat_infiniteammo;
-extern float global_cheat_minimumfiredelay;
-extern float global_cheat_minimumfiredelaycustom;
-extern float global_cheat_nogaussrecoil;
-extern float global_gaussRecoilSendsUpInSP;
-extern float global_cheat_touchNeverExplodes;
-
-extern float global_endlessFlashlightBattery;
-
-extern float global_normalSpeedMulti;
-extern float global_noclipSpeedMulti;
-extern float global_jumpForceMulti;
-
-extern float global_timedDamageEndlessOnHard;
+EASY_CVAR_EXTERN(drawDebugBloodTrace)
 
 
-extern float global_drawNodeAll;
-extern float global_drawNodeSpecial;
-extern float global_drawNodeConnections;
-extern float global_drawNodeAlternateTime;
-extern float global_nodeSearchStartVerticalOffset;
+EASY_CVAR_EXTERN(autoSneaky)
+EASY_CVAR_EXTERN(infiniteLongJumpCharge)
+EASY_CVAR_EXTERN(cheat_infiniteclip)
+EASY_CVAR_EXTERN(cheat_infiniteammo)
+EASY_CVAR_EXTERN(cheat_minimumfiredelay)
+EASY_CVAR_EXTERN(cheat_minimumfiredelaycustom)
+EASY_CVAR_EXTERN(cheat_nogaussrecoil)
+EASY_CVAR_EXTERN(gaussRecoilSendsUpInSP)
+EASY_CVAR_EXTERN(cheat_touchNeverExplodes)
+
+EASY_CVAR_EXTERN(endlessFlashlightBattery)
+
+EASY_CVAR_EXTERN(normalSpeedMulti)
+EASY_CVAR_EXTERN(noclipSpeedMulti)
+EASY_CVAR_EXTERN(jumpForceMulti)
+
+EASY_CVAR_EXTERN(timedDamageEndlessOnHard)
+
+
+EASY_CVAR_EXTERN(drawNodeAll)
+EASY_CVAR_EXTERN(drawNodeSpecial)
+EASY_CVAR_EXTERN(drawNodeConnections)
+EASY_CVAR_EXTERN(drawNodeAlternateTime)
+EASY_CVAR_EXTERN(nodeSearchStartVerticalOffset)
 
 extern float globalPSEUDO_forceFirstPersonIdleDelay;
 
-extern float global_timedDamageDeathRemoveMode;
+EASY_CVAR_EXTERN(timedDamageDeathRemoveMode)
 
 extern float globalPSEUDO_cameraMode;
-extern float globalPSEUDO_aspectratio_determined_fov;
 
-extern float global_mirrorsDoNotReflectPlayer;
+EASY_CVAR_EXTERN(mirrorsDoNotReflectPlayer)
 
-extern float global_barnacleCanGib;
+EASY_CVAR_EXTERN(barnacleCanGib)
 
-extern float global_canDropInSinglePlayer;
-extern float global_timedDamageIgnoresArmor;
-extern float global_itemBatteryPrerequisite;
-
+EASY_CVAR_EXTERN(canDropInSinglePlayer)
+EASY_CVAR_EXTERN(timedDamageIgnoresArmor)
+EASY_CVAR_EXTERN(itemBatteryPrerequisite)
 
 
 
 
-extern float global_timedDamageDisableViewPunch;
-extern float global_batteryDrainsAtDeath;
-extern float global_batteryDrainsAtAdrenalineMode;
-//extern float global_canTakeLongJump;
-extern float global_printOutCommonTimables;
-extern float global_playerBrightLight;
-extern float global_disablePainPunchAutomatic;
-extern float global_timedDamageReviveRemoveMode;
 
-extern float global_playerExtraPainSoundsMode;
+EASY_CVAR_EXTERN(timedDamageDisableViewPunch)
+EASY_CVAR_EXTERN(batteryDrainsAtDeath)
+EASY_CVAR_EXTERN(batteryDrainsAtAdrenalineMode)
+//EASY_CVAR_EXTERN(canTakeLongJump)
+EASY_CVAR_EXTERN(printOutCommonTimables)
+EASY_CVAR_EXTERN(playerBrightLight)
+EASY_CVAR_EXTERN(disablePainPunchAutomatic)
+EASY_CVAR_EXTERN(timedDamageReviveRemoveMode)
+
+EASY_CVAR_EXTERN(playerExtraPainSoundsMode)
 
 
 
@@ -153,18 +154,18 @@ extern float global_playerExtraPainSoundsMode;
 ///////////////////////////////////////////////////////////////////////////////////
 
 
-extern float global_weaponPickupPlaysAnyReloadSounds;
+EASY_CVAR_EXTERN(weaponPickupPlaysAnyReloadSounds)
 
 
-extern float global_playerReviveInvincibilityTime;
-extern float global_playerReviveBuddhaMode;
-extern float global_playerReviveTimeBlocksTimedDamage;
+EASY_CVAR_EXTERN(playerReviveInvincibilityTime)
+EASY_CVAR_EXTERN(playerReviveBuddhaMode)
+EASY_CVAR_EXTERN(playerReviveTimeBlocksTimedDamage)
 
-extern float global_drawDebugCine;
+EASY_CVAR_EXTERN(drawDebugCine)
 
-extern float global_wpn_glocksilencer;
+EASY_CVAR_EXTERN(wpn_glocksilencer)
 
-extern float global_painFlashIgnoreArmor;
+EASY_CVAR_EXTERN(painFlashIgnoreArmor)
 
 EASY_CVAR_EXTERN(nothingHurts)
 EASY_CVAR_EXTERN(RadiusDamageDrawDebug)
@@ -186,7 +187,10 @@ EASY_CVAR_EXTERN(minimumRespawnDelay)
 
 EASY_CVAR_EXTERN(monsterToPlayerHitgroupSpecial)
 
+EASY_CVAR_EXTERN(precacheAll)
 
+
+extern cvar_t* cvar_sv_cheats;
 
 ///////////////////////////////////////////////////////////////////////////////////
 
@@ -366,7 +370,7 @@ void CBasePlayer :: PainSound( void )
 	float	flRndSound;//sound randomizer
 
 	//disallow making noise if this CVar is on.
-	if(EASY_CVAR_GET(hideDamage) >= 1 || global_mutePlayerPainSounds == 1 || global_playerExtraPainSoundsMode == 2){
+	if(EASY_CVAR_GET(hideDamage) >= 1 || EASY_CVAR_GET(mutePlayerPainSounds) == 1 || EASY_CVAR_GET(playerExtraPainSoundsMode) == 2){
 		//playerExtraPainSoundsMode of 2 suggets that we don't want to use the default PainSound method at all.
 		return;
 	}
@@ -387,7 +391,7 @@ void CBasePlayer :: PainChance( void )
 {
 
 	//disallow making noise if this CVar is on.
-	if(EASY_CVAR_GET(hideDamage) >= 1 || global_mutePlayerPainSounds == 1){
+	if(EASY_CVAR_GET(hideDamage) >= 1 || EASY_CVAR_GET(mutePlayerPainSounds) == 1){
 		return;
 	}
 
@@ -616,8 +620,16 @@ GENERATE_TRACEATTACK_IMPLEMENTATION(CBasePlayer)
 
 		if(pevAttacker != NULL){
 			CBaseEntity* entTest = CBaseEntity::Instance(pevAttacker);
-			if(entTest->IsPlayer()){
-				isAttackerPlayer = TRUE;
+
+			if (entTest == NULL) {
+				//What????
+				easyForcePrintLine("who is this living contradiction??? %s", STRING(pevAttacker->classname));
+				int xxx = 46;
+
+			}else{
+				if (entTest->IsPlayer()) {
+					isAttackerPlayer = TRUE;
+				}
 			}
 		}else{
 			//all we can assume. leave FALSE.
@@ -731,18 +743,15 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBasePlayer)
 {
 	//easyPrintLine("PLAYER TAKEDAMAGE FLAGS: %d, %d", bitsDamageType, bitsDamageTypeMod);
 	
-
-
-	
 	if(reviveSafetyTime != -1){
 		
 		if(reviveSafetyTime >= gpGlobals->time){
-			if(global_playerReviveBuddhaMode == 1){
+			if(EASY_CVAR_GET(playerReviveBuddhaMode) == 1){
 				buddhaMode = TRUE;
 			}else{
 				blockDamage = TRUE;
 			}
-			if(global_playerReviveTimeBlocksTimedDamage == 1){
+			if(EASY_CVAR_GET(playerReviveTimeBlocksTimedDamage) == 1){
 				blockTimedDamage = TRUE;
 			}
 		}else{
@@ -752,7 +761,6 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBasePlayer)
 		}
 
 	}
-
 
 	//MODDD - don't make these noises if waiting for a revive.
 	//If dead, don't play.
@@ -764,22 +772,22 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBasePlayer)
 		BOOL pass = FALSE;
 
 		//no chance at passing if hit sounds are muted.
-		if(global_mutePlayerPainSounds != 1){
+		if(EASY_CVAR_GET(mutePlayerPainSounds) != 1){
 
-			if(global_playerExtraPainSoundsMode == 0){
+			if(EASY_CVAR_GET(playerExtraPainSoundsMode) == 0){
 				//no extra pain sounds.
 				
-			}/*else if(global_playerExtraPainSoundsMode == 1){
+			}/*else if(EASY_CVAR_GET(playerExtraPainSoundsMode) == 1){
 				if(bitsDamageType & (DMG_FALL) ){
 					pass = TRUE;
 				}
 				
 			}*/
-			else if(global_playerExtraPainSoundsMode == 1 || global_playerExtraPainSoundsMode == 2 ){
+			else if(EASY_CVAR_GET(playerExtraPainSoundsMode) == 1 || EASY_CVAR_GET(playerExtraPainSoundsMode) == 2 ){
 				pass = TRUE;
 			}
 		
-		}//END OF if(global_mutePlayerPainSounds != 1))
+		}//END OF if(EASY_CVAR_GET(mutePlayerPainSounds) != 1))
 
 		if(pass){
 			//AMD889 ADDED THIS, is it the old landing stuff?
@@ -836,7 +844,6 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBasePlayer)
 	
 	//easyPrintLine("B4 DMG : %.2f", flDamage);
 	
-	
 	//flDamage = 2;   //force all to 2?
 	
 	//easyPrintLine("DAMAGE PRE DETAILS %d %.8f", fTookDamage, flDamage);
@@ -848,7 +855,7 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBasePlayer)
 
 	if (pev->armorvalue && !(bitsDamageType & (DMG_FALL | DMG_DROWN)) && 
 		!(bitsDamage & DMG_ARMORBLOCKEXCEPTION || bitsDamageMod & DMG_ARMORBLOCKEXCEPTIONMOD ) &&
-		(  !(bitsDamageMod & DMG_TIMEDEFFECTIGNORE)   &&   (global_timedDamageIgnoresArmor == 0 || !(bitsDamageMod & (DMG_TIMEDEFFECT) ) ))
+		(  !(bitsDamageMod & DMG_TIMEDEFFECTIGNORE)   &&   (EASY_CVAR_GET(timedDamageIgnoresArmor) == 0 || !(bitsDamageMod & (DMG_TIMEDEFFECT) ) ))
 		
 	)// armor doesn't protect against fall or drown damage!  ... or "DMG_TIMEDEFFECTIGNORE".
 	{
@@ -887,17 +894,6 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBasePlayer)
 
 	fTookDamage = GENERATE_TAKEDAMAGE_PARENT_CALL(CBaseMonster);
 	
-
-
-
-
-
-
-
-
-
-
-
 
 	//easyPrintLine("AR DMG : %.2f", flDamage);
 
@@ -952,14 +948,13 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBasePlayer)
 	// let the suit give player the diagnosis
 
 	// UNDONE: add sounds for types of damage sustained (ie: burn, shock, slash )
-
 	// UNDONE: still need to record damage and heal messages for the following types
+	// MODDD - I READ YA LOUND N' CLEAR, ASSHOLE!
 
 		// DMG_BURN	
 		// DMG_FREEZE
 		// DMG_BLAST
 		// DMG_SHOCK
-
 
 	//This seems redundant with the base monster class... ?  It does this now.
 
@@ -969,21 +964,13 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBasePlayer)
 	m_bitsDamageTypeMod |= bitsDamageMod;
 	*/
 
-
-
 	m_bitsHUDDamage = -1;  // make sure the damage bits get resent
 	m_bitsModHUDDamage = -1;
-
-	
-
 
 	if(EASY_CVAR_GET(hideDamage) >= 1){
 		//If so, skip the rest of this method.  It's only about making fvox chatter on taking damage.
 		return fTookDamage;
 	}
-
-
-
 
 	//MODDD - NOTE
 	//freeze damage is checked here instead, since "fTookDamage" isn't called for freeze damage.
@@ -1001,9 +988,8 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBasePlayer)
 	//including "bitsDamageMod".  It has its own mask for its timed damages.
 	
 
-
-	//if "global_playerReviveTimeBlocksTimedDamage" is 2, we're blocking notifications about new timed damage as well.
-	BOOL blockTimedDamageUpdates = (blockTimedDamage && global_playerReviveTimeBlocksTimedDamage == 2);
+	//if "EASY_CVAR_GET(playerReviveTimeBlocksTimedDamage)" is 2, we're blocking notifications about new timed damage as well.
+	BOOL blockTimedDamageUpdates = (blockTimedDamage && EASY_CVAR_GET(playerReviveTimeBlocksTimedDamage) == 2);
 
 	//...These are just statuses & removals of non-timed damage for handling them.  No issue to still just report these.  (in regards to revive-invincibility-post-delay)
 	while (fTookDamage && (!ftrivial || (bitsDamage & (DMG_BURN | DMG_SHOCK) || bitsDamage & DMG_TIMEBASED) || (bitsDamageMod & DMG_TIMEBASEDMOD)  ) && ffound && bitsDamage)
@@ -1019,8 +1005,6 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBasePlayer)
 			ffound = TRUE;
 		}
 		
-
-
 		if (bitsDamage & DMG_CLUB)
 		{
 			if(!blockTimedDamageUpdates){
@@ -1030,8 +1014,6 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBasePlayer)
 			bitsDamage &= ~DMG_CLUB;
 			ffound = TRUE;
 		}
-
-
 
 		if (bitsDamage & (DMG_FALL | DMG_CRUSH))
 		{
@@ -1160,8 +1142,8 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBasePlayer)
 	//MODDD - if "timedDamageDisableViewPunch" is on, timed damage will not throw the view off for a moment.
 	//... not this "!(bitsDamageType & DMG_TIMEBASED || bitsDamageTypeMod & DMG_TIMEBASEDMOD)", because that is for starting timed damage.
 	//That is okay anyways.  The continued effects (DMG_TIMEDEFFECT) are what this CVar is concerned with.
-	if(global_disablePainPunchAutomatic != 1){
-		if(global_timedDamageDisableViewPunch == 0 || !(bitsDamageTypeMod & (DMG_TIMEDEFFECT | DMG_TIMEDEFFECTIGNORE) )   ){
+	if(EASY_CVAR_GET(disablePainPunchAutomatic) != 1){
+		if(EASY_CVAR_GET(timedDamageDisableViewPunch) == 0 || !(bitsDamageTypeMod & (DMG_TIMEDEFFECT | DMG_TIMEDEFFECTIGNORE) )   ){
 			pev->punchangle.x = -2;
 		}
 	}
@@ -1209,7 +1191,7 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBasePlayer)
 
 		//easyPrintLine("RANDO STATUS %d %d %d    %d ", bitsDamageTypeMod, DMG_TIMEBASEDMOD, bitsDamageTypeMod & DMG_TIMEBASEDMOD,    bitsDamageType & DMG_TIMEBASED  );
 	
-		if(global_printOutCommonTimables == 1){
+		if(EASY_CVAR_GET(printOutCommonTimables) == 1){
 			easyPrintLine("RAD TIME: %d  BLEED TIME %d  POISON TIME %d ", m_rgbTimeBasedDamage[itbd_Radiation], m_rgbTimeBasedDamage[itbd_Bleeding], m_rgbTimeBasedDamage[itbd_Poison]);
 		}
 
@@ -1232,12 +1214,30 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBasePlayer)
 
 
 
-
-
-
-
 	return fTookDamage;
+}//END OF takeDamage
+
+
+
+GENERATE_DEADTAKEDAMAGE_IMPLEMENTATION(CBasePlayer) {
+
+	return GENERATE_DEADTAKEDAMAGE_PARENT_CALL(CBaseMonster);
 }
+
+
+//Parameters: integer named fGibSpawnsDecal
+GENERATE_GIBMONSTER_IMPLEMENTATION(CBasePlayer){
+
+	GENERATE_GIBMONSTER_PARENT_CALL(CBaseMonster);
+}
+
+
+
+
+
+
+
+
 
 //=========================================================
 // PackDeadPlayerItems - call this when a player dies to
@@ -1278,9 +1278,17 @@ void CBasePlayer::PackDeadPlayerItems( void )
 	{
 		// nothing to pack. Remove the weapons and return. Don't call create on the box!
 		//MODDD - schedule for respawn instead of clearing items here.
-		scheduleRemoveAllItems = TRUE;
-		scheduleRemoveAllItemsIncludeSuit = TRUE;
-		//RemoveAllItems( TRUE );
+		// 
+		// And don't check for recoveryIndex just yet, that's not reliable at this point.
+		// How about, at revive time, the player decides whether to do wipe weapons or not
+		// (coming from a revive or not).  Dropping weapons will remove inventory-versions of the
+		// weapons as they are dropped.  That way, anything not dropped will stay at revive.
+		// Total respawns (no adrenaline involved) call for losing everything unconditionally though.
+		//if (recoveryIndex == 3) {
+			scheduleRemoveAllItems = TRUE;
+			scheduleRemoveAllItemsIncludeSuit = TRUE;
+			//RemoveAllItems( TRUE );
+		//}
 		return;
 	}
 
@@ -1368,6 +1376,10 @@ void CBasePlayer::PackDeadPlayerItems( void )
 	while ( iPackAmmo[ iPA ] != -1 )
 	{
 		pWeaponBox->PackAmmo( MAKE_STRING( CBasePlayerItem::AmmoInfoArray[ iPackAmmo[ iPA ] ].pszName ), m_rgAmmo[ iPackAmmo[ iPA ] ] );
+
+		//MODDD - ditto, see below.
+		m_rgAmmo[iPackAmmo[iPA]] = 0;
+
 		iPA++;
 	}
 
@@ -1376,6 +1388,11 @@ void CBasePlayer::PackDeadPlayerItems( void )
 	{
 		// weapon unhooked from the player. Pack it into der box.
 		pWeaponBox->PackWeapon( rgpPackWeapons[ iPW ] );
+
+		//MODDD - remove this item from pev->weapons individually, in case we don't get to setting pev->weapons to 0.
+		// Respawning through revives (adrenaline) does not wipe pev->weapons.
+		// So this must be done as to not leave the HUD thinking we still have weapons we really don't.
+		pev->weapons &= ~(1 << rgpPackWeapons[iPW]->m_iId);// take item off hud
 
 		iPW++;
 	}
@@ -1511,7 +1528,7 @@ GENERATE_KILLED_IMPLEMENTATION(CBasePlayer)
 		CFriendly* tempMrFriendly = static_cast<CFriendly*>(pEntity);
 
 		//targeting this player?
-		if(tempMrFriendly->m_hEnemy && tempMrFriendly && tempMrFriendly->m_hEnemy == this){
+		if(tempMrFriendly->m_hEnemy!=NULL && tempMrFriendly && tempMrFriendly->m_hEnemy == this){
 			tempMrFriendly->horrorSelected = FALSE;
 			tempMrFriendly->stopHorrorSound();
 		}
@@ -1645,7 +1662,7 @@ GENERATE_KILLED_IMPLEMENTATION(CBasePlayer)
 	//For now, if the player has adrenaline and hasn't been gibbed, tell "DeathSound" this.
 	if( !recentlyGibbed && m_rgItems[ITEM_ADRENALINE] > 0){
 
-		if(global_batteryDrainsAtAdrenalineMode == 1){
+		if(EASY_CVAR_GET(batteryDrainsAtAdrenalineMode) == 1){
 			pev->armorvalue = 0;
 			m_iClientBattery = pev->armorvalue;
 			MESSAGE_BEGIN( MSG_ONE, gmsgBattery, NULL, pev );
@@ -1654,18 +1671,18 @@ GENERATE_KILLED_IMPLEMENTATION(CBasePlayer)
 		}
 
 		//also, this CVar.
-		if(global_timedDamageReviveRemoveMode == 1){
+		if(EASY_CVAR_GET(timedDamageReviveRemoveMode) == 1){
 			attemptResetTimedDamage(TRUE);
 		}
 
 		DeathSound(TRUE);
 	}else{
 
-		if(global_timedDamageDeathRemoveMode > 0){
+		if(EASY_CVAR_GET(timedDamageDeathRemoveMode) > 0){
 			attemptResetTimedDamage(TRUE);
 		}
 
-		if(global_batteryDrainsAtDeath == 1){
+		if(EASY_CVAR_GET(batteryDrainsAtDeath) == 1){
 			pev->armorvalue = 0;
 			m_iClientBattery = pev->armorvalue;
 			MESSAGE_BEGIN( MSG_ONE, gmsgBattery, NULL, pev );
@@ -1890,11 +1907,6 @@ void CBasePlayer::TabulateAmmo()
 }
 
 
-
-
-
-
-
 void CBasePlayer::DebugCall1(){
 	debugPoint1 = pev->origin;
 	debugPoint1.z += 2;
@@ -1964,13 +1976,13 @@ CBasePlayer::CBasePlayer(void){
 	//We want a lot of the exact same things for CBasePlayer creation and resetting between map transitions.
 	_commonReset();
 
+
+	queueFirstAppearanceMessageSend = FALSE;
 	
 	iWasFrozenToday = FALSE;
 	m_fLongJumpMemory = FALSE;
 
 	//oldWaterMoveTime = -1;
-
-
 
 
 	
@@ -2005,8 +2017,8 @@ CBasePlayer::CBasePlayer(void){
 	grabbedByBarnacle = FALSE;
 	grabbedByBarnacleMem = FALSE;
 
-	queueTotalFOVUpdate = TRUE;
-	queueZoomFOVUpdate = FALSE;
+	//queueTotalFOVUpdate = TRUE;
+	//queueZoomFOVUpdate = FALSE;
 
 	//forceNoWeaponLoop = TRUE;
 
@@ -2061,6 +2073,11 @@ CBasePlayer::CBasePlayer(void){
 	rawDamageSustained = 0;
 
 
+	// lazy defaults, get from the client soon at startup.
+	default_fov = 90;
+	auto_adjust_fov = 0;
+	auto_determined_fov = 90;
+
 
 }//END OF CBasePlayer constructor
 
@@ -2095,11 +2112,14 @@ void CBasePlayer::WaterMove()
 	//MODDD - all new to keep track of how much time passed between this call and the last one.
 	float timeDelta;
 
+	
 	if(oldWaterMoveTime != -1){
 		timeDelta = gpGlobals->time - oldWaterMoveTime;
 	}else{
 		timeDelta = 0;
 	}
+	//timeDelta = gpGlobals->frametime;
+
 	oldWaterMoveTime = gpGlobals->time;
 
 	//easyPrint("timedelta: %.12f\n", timeDelta);
@@ -2109,7 +2129,7 @@ void CBasePlayer::WaterMove()
 
 	//MODDD
 	//If not in the water, OR is in the water, but has air left in the air tank... (also requires at least one battery charge, if that cvar is on)
-	if (pev->waterlevel != 3 || (pev->waterlevel == 3 && airTankAirTime > 0 && (global_itemBatteryPrerequisite == 0 || pev->armorvalue > 0 ) ) )
+	if (pev->waterlevel != 3 || (pev->waterlevel == 3 && airTankAirTime > 0 && (EASY_CVAR_GET(itemBatteryPrerequisite) == 0 || pev->armorvalue > 0 ) ) )
 	{
 		//MODDD
 		//If underwater, use some air (implied we have some from the above if-statement's second condition)
@@ -2338,25 +2358,22 @@ void CBasePlayer::PlayerDeathThink(void)
 	// 3: dead; can NOT revive, schedule respawn or let the player click-out.
 
 
-	//MODDD - adrenaline "injection" - no pun intended.
+	//MODDD - adrenaline script "injection" - no pun intended.
 	//When "dead", and there is at least 1 Adrenaline, use it and respawn in-place in a few seconds.
 	if( recoveryIndex == -1){
-
 		if( !recentlyGibbed && this->m_rgItems[ITEM_ADRENALINE] > 0){
 			recoveryIndex = 0;
 			recoveryIndexMem = 0;
 			recoveryDelay = gpGlobals->time + 6;
 			recoveryDelayMin = gpGlobals->time + 0.4f;
 
-			if(global_timedDamageReviveRemoveMode == 2){
+			if(EASY_CVAR_GET(timedDamageReviveRemoveMode) == 2){
 				attemptResetTimedDamage(TRUE);
 			}
-
 		}else{
 			recoveryIndex = 3;
 			recoveryIndexMem = 3;
 		}
-
 	}
 
 	if(recoveryIndex == 0){
@@ -2365,9 +2382,6 @@ void CBasePlayer::PlayerDeathThink(void)
 		//search "iGib" for more details on gibbing here (and in basemonster.h).
 		if( !recentlyGibbed && this->m_rgItems[ITEM_ADRENALINE] > 0){
 
-			
-
-
 			//note that, if the player is not on the ground BUT otherwise meets conditions to recover,
 			//the respawn will still be stalled until the player hits the ground (where the timer starts and
 			//the player revives).
@@ -2375,11 +2389,9 @@ void CBasePlayer::PlayerDeathThink(void)
 			if ( (FBitSet(pev->flags, FL_ONGROUND) && gpGlobals->time >= recoveryDelayMin ) || gpGlobals->time >= recoveryDelay){
 				//can recover.
 
-				/*
-				*/
 				if(!adrenalineQueued){
 					adrenalineQueued = TRUE;
-					SetSuitUpdateEventFVoxCutoff("!HEV_ADR_USE", FALSE, SUIT_REPEAT_OK, 0.41 - 0.07, &CBasePlayer::consumeAdrenaline, 0.41 - 0.07 + 0.55);
+					SetSuitUpdateEventFVoxCutoff("!HEV_ADR_USE", FALSE, SUIT_REPEAT_OK, SUITUPDATETIME, TRUE, 0.41 - 0.07, &CBasePlayer::consumeAdrenaline, 0.41 - 0.07 + 0.55);
 				}
 				//if(revived){
 					//If revived, send the signal to reset falling velocity.
@@ -2405,8 +2417,8 @@ void CBasePlayer::PlayerDeathThink(void)
 		GetClassPtr( (CBasePlayer *)pev)->Spawn( TRUE );
 
 		//invincibility delay?
-		if(global_playerReviveInvincibilityTime > 0){
-			reviveSafetyTime = gpGlobals->time + global_playerReviveInvincibilityTime;
+		if(EASY_CVAR_GET(playerReviveInvincibilityTime) > 0){
+			reviveSafetyTime = gpGlobals->time + EASY_CVAR_GET(playerReviveInvincibilityTime);
 		}
 		return;
 
@@ -2518,7 +2530,7 @@ void CBasePlayer::PlayerDeathThink(void)
 
 	//ALERT(at_console, "Respawn\n");
 
-	if(scheduleRemoveAllItems = TRUE){
+	if(scheduleRemoveAllItems == TRUE){
 		RemoveAllItems(scheduleRemoveAllItemsIncludeSuit);
 
 		scheduleRemoveAllItemsIncludeSuit = FALSE;
@@ -2599,7 +2611,8 @@ void CBasePlayer::StartObserver( Vector vecPosition, Vector vecViewAngle )
 // 
 // PlayerUse - handles USE keypress
 //
-#define	PLAYER_SEARCH_RADIUS	(float)64
+//#define	PLAYER_SEARCH_RADIUS	(float)64
+#define PLAYER_SEARCH_RADIUS 72
 
 void CBasePlayer::PlayerUse ( void )
 {
@@ -2646,13 +2659,22 @@ void CBasePlayer::PlayerUse ( void )
 	CBaseEntity *pObject = NULL;
 	CBaseEntity *pClosest = NULL;
 	Vector		vecLOS;
-	float flMaxDot = VIEW_FIELD_NARROW;
+	
+	//MODDD - VIEW_FIELD_NARROW is 0.7  (+- 45 degrees).
+	//float flMaxDot = VIEW_FIELD_NARROW;
+	//float flMaxDot = (float)0.94;
+	//float flMaxDot = (float)0.905;
+	float flMaxDot = (float)0.78;
+	
 	float flDot;
 
 	UTIL_MakeVectors ( pev->v_angle );// so we know which way we are facing
 
 	Vector closestLOS;
 	
+
+	// We want the object we pick to the the one we are looking the most directly at.
+	// After all, why would the user be looking it?
 
 	//MODDD - slight adjustment. Go forwards a bit to search instead... UNDONE.
 	while ((pObject = UTIL_FindEntityInSphere( pObject, pev->origin, PLAYER_SEARCH_RADIUS )) != NULL)
@@ -2674,7 +2696,95 @@ void CBasePlayer::PlayerUse ( void )
 			
 			Vector vecLOSNorm = vecLOS.Normalize();
 
-			flDot = DotProduct (vecLOSNorm , gpGlobals->v_forward);
+			//MODDD - original dotproduct line:
+			//flDot = DotProduct (vecLOSNorm , gpGlobals->v_forward);
+
+			//MODDD - use the 2D dot product instead.
+			// ...no, some part of the Z component still matters.
+			// Could do something complicated with a 2D dot product check and a check with the
+			// Z component, sounds simple but the issue is when looking straightup (0, 0, 1).
+			// The 2D "0, 0" multiplied by anything is still 0, so that a 'good' 2D dotproduct
+			// from that is impossible.  Perhaps giving the Z component more value as the 
+			// floor-wise direction length gets closer to 0 would work.
+			// Anyway, for now, just multiply the Z component by 0.5 of both vectors and
+			// re-normalize.  Or maybe we don't need to renormalize?
+			// Messes with the math behind a dotproduct if you don't normalize, but 
+			// keep in mind, (0,0,1) is still a bit odd.  Half is (0,0,0.5), and normalizing
+			// that gets the same (0,0,1) back (0 for X and Y components can't be influenced).
+			// Anything close to looking up to begin with, like (0, 0.01, 0.99) (rough),
+			// will just be looking further away from the top while the (0,0,1) stays the same.
+			// But leaving as halved Z components, so (0,0,0.5) and (0,0.01,0.495).
+			// Although it's still strange that the most the dot product between two
+			// straight verticals, (0,0,1) with (0,0,1), = (0,0,0.5) with (0,0,0.5),
+			// is 0*0 + 0*0 + 0.5*0.5 = 0.25.
+			// It may seem like it makes sense to multiply this by 4 to make it 1 (so that similarity
+			// still brings it close to 1), this just undoes the Z-halving of each, making that
+			// pointless.
+
+			Vector2D vecLOS2D = vecLOSNorm.Make2D();
+			Vector2D vecForward2D = gpGlobals->v_forward.Make2D();
+			// CHECK.  Lines going straight up/down (0,0,+-1) will cause
+			// the X and Y of the resulting 2D vector be 0 just fine actually.
+			// Made a mistake, they were "NaN" because the divide lines below
+			// were dividing by that "0" length.  FUCK.
+
+
+			float vecLOS2D_prevLength = vecLOS2D.Length();
+			float vecForward2D_prevLength = vecForward2D.Length();
+
+			// Make each vector normalized.
+			// This remembers their 2D lengths before normalizing this way.
+			if (vecLOS2D_prevLength != 0) {
+				vecLOS2D = vecLOS2D / vecLOS2D_prevLength;
+			}
+			if (vecForward2D_prevLength != 0) {
+				vecForward2D = vecForward2D / vecForward2D_prevLength;
+			}
+
+			// How about the average of the 2D prevLengths?
+			float weight2D = (vecLOS2D_prevLength + vecForward2D_prevLength) / 2;
+			// There are two coords to multiply this by in 2D.
+			// Multiplying both by the solid "weight2D" would throw off the balance,
+			// this way, it all still adds up to the same number.
+			//float weight2D_each = (1 - weight2D) / 2 + weight2D;
+			//float weight2D_each = (1 + weight2D )/2;
+			//float weight2D_each = (1 + pow(weight2D, 2) )/2;
+			float weight2D_each = pow((1 + weight2D )/2, 2);
+			// weightZ, is whatever didn't go to weight2D.
+			float weightZ = 1 - weight2D;
+			//float weightZ = 1 - pow(weight2D, 2);
+			//float weightZ = pow(1 - weight2D, 2);
+
+			// Now... commence.
+			//x*x + y*y + z*z = 1
+
+			// 1*1 + 1*1 + 1*1 = 3
+			// 1*1 + 1*1 + 1*1*0.5 = 2.5
+			// 1*1*0.5 + 1*1*0.5 +1*1 = 2
+			// 1*1*0.75 + 1*1*0.75 + 1*1 = .2.5
+
+			//1*1 + 1*1 + 1*0.3 = 2.3
+			//1*1*0.3 + 1*1*0.3 + 1 = 1.6
+			//1*1*0.65 + 1*1*0.65 + 1 = 2.3
+
+			//1*1 + 1*1 + 1*0.8 = 2.8
+			//1*1*0.8 + 1*1*0.8 + 1 = 2.6
+			//1*1*0.9 + 1*1*0.9 + 1 = 2.8
+
+			flDot = vecLOS2D.x * vecForward2D.x * weight2D_each +
+				vecLOS2D.y * vecForward2D.y * weight2D_each +
+				vecLOSNorm.z * gpGlobals->v_forward.z * weightZ;
+
+			
+			if (EASY_CVAR_GET(playerUseDrawDebug)) {
+				// the normal way, for comparison.
+				float flDotAlt = DotProduct (vecLOSNorm , gpGlobals->v_forward);
+
+				// For a spectacular error, use the first version.
+				//easyForcePrintLine("playeruse: DOTPROD TO OBJ? %s: %.2f", flDot, pObject->getClassname());
+				easyForcePrintLine("playeruse: DOTPROD TO OBJ? %s: %.2f oldway: %.2f", pObject->getClassname(), flDot, flDotAlt);
+			}
+
 			if (flDot > flMaxDot )
 			{// only if the item is in front of the user
 				pClosest = pObject;
@@ -2705,7 +2815,9 @@ void CBasePlayer::PlayerUse ( void )
 	// Found an object
 	if (pObject )
 	{
-
+		if (EASY_CVAR_GET(playerUseDrawDebug) == 1) {
+			easyForcePrintLine("playeruse: WHAT IS OBJECT I PICK?? %s", pObject->getClassname());
+		}
 		//!!!!!!!!!!
 		//!!!UNDONE: traceline here to prevent USEing buttons through walls		
 		edict_t		*pentIgnore;
@@ -2740,6 +2852,8 @@ void CBasePlayer::PlayerUse ( void )
 	
 		//easyForcePrintLine("?????????????????????????????????");
 
+
+		// Do we have an unobstructed line to the thing we want to "use"?
 		UTIL_TraceLine( vecSrc, vecDest, dont_ignore_monsters, pentIgnore, &tr );
 		//tr.vecEndPos();
 
@@ -2775,11 +2889,17 @@ void CBasePlayer::PlayerUse ( void )
 			if(hitEntity->pev == pObject->pev || distToPointHit<=5 || distToPointHit*(1 - (tr.flFraction)) <= 10 ){
 				//the trace-hit entity matches the entity selected to "use" on? this is valid.
 				flUseSuccess = TRUE;
+				if (EASY_CVAR_GET(playerUseDrawDebug) == 1) {
+					easyForcePrintLine("playeruse: That was easy. %s", pObject->getClassname());
+				}
 			}else{
 
 				if(::FClassnameIs(hitEntity->pev, "worldspawn")  ){
 					//possible exception. See if this is the case.
 					if(tr.flFraction>=1.0){
+						if (EASY_CVAR_GET(playerUseDrawDebug)) {
+							easyForcePrintLine("playeruse: weird flag A (success) %s", pObject->getClassname());
+						}
 						//missed touching anything? just count it.
 						flUseSuccess = TRUE;
 					}else{
@@ -2805,24 +2925,38 @@ void CBasePlayer::PlayerUse ( void )
 							CBaseEntity* hitEntity2 = CBaseEntity::Instance(tr2.pHit);
 							if(hitEntity2->pev == pObject->pev || distToPointHit2<=5 || distToPointHit2*(1 - (tr2.flFraction)) <= 10){
 								//it's good!
+								if (EASY_CVAR_GET(playerUseDrawDebug)) {
+									easyForcePrintLine("playeruse: weird flag B (success) %s", pObject->getClassname());
+								}
 								flUseSuccess = TRUE;
-								
 							}else{
+								if (EASY_CVAR_GET(playerUseDrawDebug)) {
+									easyForcePrintLine("playeruse: weird flag C (fail) %s", pObject->getClassname());
+								}
 								flUseSuccess = FALSE;
 							}
 						}else{
+							if (EASY_CVAR_GET(playerUseDrawDebug)) {
+								easyForcePrintLine("playeruse: weird flag D (success) %s", pObject->getClassname());
+							}
 							flUseSuccess = TRUE;
 						}
 
 					}//END OF inner center test
 				}else{
 					//mismatch? not ok.
+					if (EASY_CVAR_GET(playerUseDrawDebug)) {
+						easyForcePrintLine("playeruse: weird flag E (fail) %s", pObject->getClassname());
+					}
 					flUseSuccess = FALSE;
 				}
 			}
 			
 
 		}else{
+			if (EASY_CVAR_GET(playerUseDrawDebug)) {
+				easyForcePrintLine("playeruse: weird flag F (success) %s", pObject->getClassname());
+			}
 			//hit nothing? Just assume it worked.
 			flUseSuccess = TRUE;
 		}
@@ -2837,7 +2971,7 @@ void CBasePlayer::PlayerUse ( void )
 		tempplayer->GiveNamedItem( CMD_ARGV(1),  attemptInterpretSpawnFlag(CMD_ARGV(2)),
 									tr.vecEndPos.x,
 									tr.vecEndPos.y,
-									tr.vecEndPos.z + global_offsetgivelookvertical,
+									tr.vecEndPos.z + EASY_CVAR_GET(offsetgivelookvertical),
 									TRUE, &tr);
 		*/
 	}else{
@@ -2955,7 +3089,7 @@ void CBasePlayer::Jump()
 	}
 #else
 	//easyPrint("yes anim? %.2f\n", (lastDuckVelocityLength)  );
-	if (m_fLongJump && longJump_waitForRelease && lastDuckVelocityLength > 7 && (global_itemBatteryPrerequisite || pev->armorvalue > 0 ))
+	if (m_fLongJump && longJump_waitForRelease && lastDuckVelocityLength > 7 && (EASY_CVAR_GET(itemBatteryPrerequisite) || pev->armorvalue > 0 ))
 	{
 		SetAnimation( PLAYER_SUPERJUMP );
 	}
@@ -3180,28 +3314,28 @@ void CBasePlayer::UpdateStatusBar()
 void CBasePlayer::PreThink(void)
 {
 	/*
-	if(normalSpeedMultiMem != global_normalSpeedMulti){
-		normalSpeedMultiMem = global_normalSpeedMulti;
+	if(normalSpeedMultiMem != EASY_CVAR_GET(normalSpeedMulti)){
+		normalSpeedMultiMem = EASY_CVAR_GET(normalSpeedMulti);
 		//keep this CVar in sync with pm_shared...
 		if(normalSpeedMultiMem != 0){
 
 
 
 			char buffer[13];
-			tryFloatToStringBuffer(buffer, global_normalSpeedMulti);
+			tryFloatToStringBuffer(buffer, EASY_CVAR_GET(normalSpeedMulti));
 
 			g_engfuncs.pfnSetPhysicsKeyValue( edict(), "nsm", buffer );
 		}else{
 			g_engfuncs.pfnSetPhysicsKeyValue( edict(), "nsm", "0" );
 		}
 	}
-	if(jumpForceMultiMem != global_jumpForceMulti){
-		jumpForceMultiMem = global_jumpForceMulti;
+	if(jumpForceMultiMem != EASY_CVAR_GET(jumpForceMulti)){
+		jumpForceMultiMem = EASY_CVAR_GET(jumpForceMulti);
 		//keep this CVar in sync with pm_shared...
 		if(jumpForceMultiMem != 0){
 
 			char buffer[13];
-			tryFloatToStringBuffer(buffer, global_jumpForceMulti);
+			tryFloatToStringBuffer(buffer, EASY_CVAR_GET(jumpForceMulti));
 			
 			g_engfuncs.pfnSetPhysicsKeyValue( edict(), "jfm", buffer );
 		}else{
@@ -3212,8 +3346,8 @@ void CBasePlayer::PreThink(void)
 	//return;
 
 
-	if(global_testVar == -1)
-		return;
+	//if(EASY_CVAR_GET(testVar) == -1)
+	//	return;
 	
 
 	//MODDD - this is required for some things to modify velocity, such as touch methods forcing the player off something's back.
@@ -3243,9 +3377,9 @@ void CBasePlayer::PreThink(void)
 
 
 	/*
-	extern float global_testVar;
-	if(global_testVar == 2){
-		global_testVar = 1;
+	EASY_CVAR_EXTERN(testVar)
+	if(EASY_CVAR_GET(testVar) == 2){
+		EASY_CVAR_SET_DEBUGONLY(testVar, 1);
 		UTIL_printLineVector("MIN", pev->mins);
 		UTIL_printLineVector("MAX", pev->maxs);
 
@@ -3298,7 +3432,7 @@ void CBasePlayer::PreThink(void)
 		    //}
 
 
-			if(tempMrFriendly->m_hEnemy && tempMrFriendly->m_hEnemy->IsPlayer() == FALSE){
+			if(tempMrFriendly->m_hEnemy!=NULL && tempMrFriendly->m_hEnemy->IsPlayer() == FALSE){
 				tempMrFriendly->horrorSelected = FALSE;  //If targeting a non-player, this must be off.
 				tempMrFriendly->stopHorrorSound();
 			}
@@ -3312,7 +3446,7 @@ void CBasePlayer::PreThink(void)
 				tempMrFriendly->horrorSelected = FALSE;
 			}
 
-			if( thisDist < closestDistanceYet && tempMrFriendly->m_hEnemy && tempMrFriendly->m_hEnemy == this && (tempMrFriendly->m_pSchedule != ::slSmallFlinch  ) ){
+			if( thisDist < closestDistanceYet && tempMrFriendly->m_hEnemy!=NULL && tempMrFriendly->m_hEnemy == this && (tempMrFriendly->m_pSchedule != ::slSmallFlinch  ) ){
 				tempMrFriendly->horrorSelected = FALSE;  //off for this player unless it is the closest.
 				//tempMrFriendly->stopHorrorSound(); careful, this may be the closest one. we are unsure. don't interrupt the sound yet.
 				closestFriendly = tempMrFriendly;
@@ -3338,7 +3472,7 @@ void CBasePlayer::PreThink(void)
 
 
 
-	if(closestFriendlyMemEHANDLE && (pev->deadflag == DEAD_NO) && EASY_CVAR_GET(friendlyPianoFollowVolume) > 0 ){
+	if(closestFriendlyMemEHANDLE!=NULL && (pev->deadflag == DEAD_NO) && EASY_CVAR_GET(friendlyPianoFollowVolume) > 0 ){
 
 		if(horrorPlayTimePreDelay != -1 && horrorPlayTimePreDelay < gpGlobals->time){
 			horrorPlayTimePreDelay = -1;
@@ -3392,7 +3526,7 @@ void CBasePlayer::PreThink(void)
 
 	//MODDD
 
-	if(global_drawDebugBloodTrace == 1){
+	if(EASY_CVAR_GET(drawDebugBloodTrace) == 1){
 		UTIL_drawLineFrameBoxAround(debugDrawVect, 9, 30, 255, 0, 0);
 		//UTIL_drawLineFrameBoxAround(debugDrawVectB, 9, 30, 255, 255, 255);
 		
@@ -3406,71 +3540,71 @@ void CBasePlayer::PreThink(void)
 
 	
 	
-	extern float global_testVar;
-	if(global_testVar == 666){
-	
-		//~started off from "UTIL_EntitiesInBox"
-		edict_t		*pEdict = g_engfuncs.pfnPEntityOfEntIndex( 1 );
-		CBaseEntity *pEntity;
-		if (pEdict){
-
-			for ( int i = 1; i < gpGlobals->maxEntities; i++, pEdict++ )
-			{
-				if ( pEdict->free )	// Not in use
-					continue;
 
 
-				CBaseEntity* thisEnt = CBaseEntity::Instance(pEdict);
+	// TAGGG - CRITICAL.
+	// If this feature is desired again, just make it a proper client-method (for debug only)
+	// and let that message the server to do this.
+	//if(EASY_CVAR_GET(testVar) == 666){
+	//
+	//	//~started off from "UTIL_EntitiesInBox"
+	//	edict_t		*pEdict = g_engfuncs.pfnPEntityOfEntIndex( 1 );
+	//	CBaseEntity *pEntity;
+	//	if (pEdict){
+
+	//		for ( int i = 1; i < gpGlobals->maxEntities; i++, pEdict++ )
+	//		{
+	//			if ( pEdict->free )	// Not in use
+	//				continue;
 
 
-				/*
-				if(thisEnt != NULL){
-					CBaseMonster* monsterTest = thisEnt->GetMonsterPointer();
-					if(monsterTest != NULL){
-						easyPrint("MONSTER: %s:%d", monsterTest->getClassname(), monsterTest->monsterID);
-						//continue;
-
-						if(monsterTest->m_hTargetEnt != NULL){
-							CBaseMonster* monsterTestTargetTest = monsterTest->m_hTargetEnt->GetMonsterPointer();
-							easyPrint(" TARGET: %s:%d", monsterTest->m_hTargetEnt->getClassname(), monsterTestTargetTest!=NULL?monsterTestTargetTest->monsterID:-1  );
-						}else{
-							easyPrint(" TARGET: none");
-						}
-
-						if(monsterTest->m_hEnemy != NULL){
-							CBaseMonster* monsterTestEnemyTest = monsterTest->m_hEnemy->GetMonsterPointer();
-							easyPrint(" ENEMY: %s:%d", monsterTest->m_hEnemy->getClassname(), monsterTestEnemyTest!=NULL?monsterTestEnemyTest->monsterID:-1  );
-						}else{
-							easyPrint(" ENEMY: none");
-						}
-						easyPrint("\n");
-
-					}else{
-						easyPrintLine("ENTITY: %s", thisEnt->getClassname() );
-					}
-				}
-				*/
-
-				if(thisEnt != NULL){
-					CBaseMonster* monsterTest = thisEnt->GetMonsterPointer();
-					if(monsterTest != NULL){
-						if(monsterTest->m_hEnemy != NULL && FClassnameIs(monsterTest->m_hEnemy->pev, "monster_zombie")){
-							CBaseMonster* monsterTestEnemy = monsterTest->m_hEnemy->GetMonsterPointer();
-							if(monsterTestEnemy != NULL){
-								easyPrintLine("Monster: %s:%d Target:%s:%d", monsterTest->getClassname(), monsterTest->monsterID, monsterTestEnemy->getClassname(), monsterTestEnemy->monsterID);
-							}
-						}
-					}
-				}
+	//			CBaseEntity* thisEnt = CBaseEntity::Instance(pEdict);
 
 
+	//			/*
+	//			if(thisEnt != NULL){
+	//				CBaseMonster* monsterTest = thisEnt->GetMonsterPointer();
+	//				if(monsterTest != NULL){
+	//					easyPrint("MONSTER: %s:%d", monsterTest->getClassname(), monsterTest->monsterID);
+	//					//continue;
 
+	//					if(monsterTest->m_hTargetEnt != NULL){
+	//						CBaseMonster* monsterTestTargetTest = monsterTest->m_hTargetEnt->GetMonsterPointer();
+	//						easyPrint(" TARGET: %s:%d", monsterTest->m_hTargetEnt->getClassname(), monsterTestTargetTest!=NULL?monsterTestTargetTest->monsterID:-1  );
+	//					}else{
+	//						easyPrint(" TARGET: none");
+	//					}
 
+	//					if(monsterTest->m_hEnemy != NULL){
+	//						CBaseMonster* monsterTestEnemyTest = monsterTest->m_hEnemy->GetMonsterPointer();
+	//						easyPrint(" ENEMY: %s:%d", monsterTest->m_hEnemy->getClassname(), monsterTestEnemyTest!=NULL?monsterTestEnemyTest->monsterID:-1  );
+	//					}else{
+	//						easyPrint(" ENEMY: none");
+	//					}
+	//					easyPrint("\n");
 
-			}//END OF for(int i...)
-		}//END OF if(pEdict)
-		EASY_CVAR_SET_DEBUGONLY(testVar, 0);
-	}
+	//				}else{
+	//					easyPrintLine("ENTITY: %s", thisEnt->getClassname() );
+	//				}
+	//			}
+	//			*/
+
+	//			if(thisEnt != NULL){
+	//				CBaseMonster* monsterTest = thisEnt->GetMonsterPointer();
+	//				if(monsterTest != NULL){
+	//					if(monsterTest->m_hEnemy != NULL && FClassnameIs(monsterTest->m_hEnemy->pev, "monster_zombie")){
+	//						CBaseMonster* monsterTestEnemy = monsterTest->m_hEnemy->GetMonsterPointer();
+	//						if(monsterTestEnemy != NULL){
+	//							easyPrintLine("Monster: %s:%d Target:%s:%d", monsterTest->getClassname(), monsterTest->monsterID, monsterTestEnemy->getClassname(), monsterTestEnemy->monsterID);
+	//						}
+	//					}
+	//				}
+	//			}
+
+	//		}//END OF for(int i...)
+	//	}//END OF if(pEdict)
+	//	EASY_CVAR_SET_DEBUGONLY(testVar, 0);
+	//}//END OF special check
 
 
 
@@ -3478,26 +3612,26 @@ void CBasePlayer::PreThink(void)
 
 
 	int specialNode = -1;
-	if(global_drawNodeAlternateTime > 0){
+	if(EASY_CVAR_GET(drawNodeAlternateTime) > 0){
 		if(gpGlobals->time > 3 && gpGlobals->time > nextSpecialNodeAlternateTime){
 			//easyPrintLine("IM A DURR %d", nextSpecialNode);
 			nextSpecialNode++;
 			if(nextSpecialNode >= WorldGraph.m_cNodes){
 				nextSpecialNode = 0;
 			}
-			nextSpecialNodeAlternateTime = gpGlobals->time + global_drawNodeAlternateTime;
+			nextSpecialNodeAlternateTime = gpGlobals->time + EASY_CVAR_GET(drawNodeAlternateTime);
 			easyForcePrintLine("SPECIAL NODE: %d", nextSpecialNode);
 		}
 		specialNode = nextSpecialNode;
 	}else{
 		nextSpecialNode = -1;
-		if(global_drawNodeSpecial >= 0 && global_drawNodeSpecial < WorldGraph.m_cNodes){
-			specialNode = (int)global_drawNodeSpecial;
+		if(EASY_CVAR_GET(drawNodeSpecial) >= 0 && EASY_CVAR_GET(drawNodeSpecial) < WorldGraph.m_cNodes){
+			specialNode = (int)EASY_CVAR_GET(drawNodeSpecial);
 		}
 	}
 
 
-	if(global_drawNodeAll >= 1 || global_drawNodeConnections >= 2){
+	if(EASY_CVAR_GET(drawNodeAll) >= 1 || EASY_CVAR_GET(drawNodeConnections) >= 2){
 		
 	
 		//easyPrintLine("NODEZ: %d", WorldGraph.m_cNodes);
@@ -3511,36 +3645,36 @@ void CBasePlayer::PreThink(void)
 
 				float nodeDist = (WorldGraph.m_pNodes[i].m_vecOrigin - this->pev->origin).Length();
 
-				if(global_drawNodeAll == 1){
+				if(EASY_CVAR_GET(drawNodeAll) == 1){
 					UTIL_drawLineFrame(thisNode.m_vecOrigin.x, thisNode.m_vecOrigin.y, thisNode.m_vecOrigin.z + 20, thisNode.m_vecOrigin.x, thisNode.m_vecOrigin.y, thisNode.m_vecOrigin.z - 20, 9, 255, 0, 0);
-					if(global_drawNodeConnections == 2){
+					if(EASY_CVAR_GET(drawNodeConnections) == 2){
 						//special node connections!
 						WorldGraph.ShowNodeConnectionsFrame(i);
 					}
-				}else if(global_drawNodeAll >= 10){
-					if( nodeDist < global_drawNodeAll){
+				}else if(EASY_CVAR_GET(drawNodeAll) >= 10){
+					if( nodeDist < EASY_CVAR_GET(drawNodeAll) ){
 						UTIL_drawLineFrame(thisNode.m_vecOrigin.x, thisNode.m_vecOrigin.y, thisNode.m_vecOrigin.z + 20, thisNode.m_vecOrigin.x, thisNode.m_vecOrigin.y, thisNode.m_vecOrigin.z - 20, 9, 255, 0, 0);
-						if(global_drawNodeConnections == 2){
+						if(EASY_CVAR_GET(drawNodeConnections) == 2){
 							//special node connections!
 							WorldGraph.ShowNodeConnectionsFrame(i);
 						}
 					};
 				}
 				/*
-				if(global_drawNodeConnections == 2){
+				if(EASY_CVAR_GET(drawNodeConnections) == 2){
 					//special node connections!
 					WorldGraph.ShowNodeConnectionsFrame(i);
-				}else if(global_drawNodeConnections >= 10){
+				}else if(EASY_CVAR_GET(drawNodeConnections) >= 10){
 					//require the node itself to be close enough to the player first, to limit drawing.
 					
-					if( nodeDist < global_drawNodeConnections){
+					if( nodeDist < EASY_CVAR_GET(drawNodeConnections)){
 						WorldGraph.ShowNodeConnectionsFrame(i);
 					};
 				}
 				*/
 			}else{
 				UTIL_drawLineFrame(thisNode.m_vecOrigin.x, thisNode.m_vecOrigin.y, thisNode.m_vecOrigin.z + 20, thisNode.m_vecOrigin.x, thisNode.m_vecOrigin.y, thisNode.m_vecOrigin.z - 20, 9, 255, 255, 255);
-				if(global_drawNodeConnections >= 1){
+				if(EASY_CVAR_GET(drawNodeConnections) >= 1){
 					//special node connections!
 					WorldGraph.ShowNodeConnectionsFrame(specialNode);
 				}
@@ -3556,7 +3690,7 @@ void CBasePlayer::PreThink(void)
 			CNode thisNode = WorldGraph.m_pNodes[specialNode];
 			//still a special node to draw at least.
 			UTIL_drawLineFrame(thisNode.m_vecOrigin.x, thisNode.m_vecOrigin.y, thisNode.m_vecOrigin.z + 15, thisNode.m_vecOrigin.x, thisNode.m_vecOrigin.y, thisNode.m_vecOrigin.z - 15, 7, 255, 255, 255);
-			if(global_drawNodeConnections >= 1){
+			if(EASY_CVAR_GET(drawNodeConnections) >= 1){
 				//special node connections!
 				WorldGraph.ShowNodeConnectionsFrame(specialNode);
 			}
@@ -3566,11 +3700,11 @@ void CBasePlayer::PreThink(void)
 
 	//NOTE::: it appears that the end of retail ends the game by making the client's "pev->flags" add "FL_FROZEN".
 	//easyPrintLine("MY DETAILZ %d %d %d %d %s", pev->deadflag, pev->effects, pev->flags, pev->renderfx, m_pActiveItem!=NULL?STRING(m_pActiveItem->pev->classname):"NULL");
-		
+	
 
 
 	//bla bla bla, draw scene stuff.
-	if(global_drawDebugCine == 1)
+	if(EASY_CVAR_GET(drawDebugCine) == 1)
 	{
 		edict_t		*pEdicttt;
 		CBaseEntity *pEntityyy;
@@ -3607,18 +3741,17 @@ void CBasePlayer::PreThink(void)
 	}//END OF draw cine's check
 
 
-
-
-
-
-
-	
 	
 
 	int buttonsChanged = (m_afButtonLast ^ pev->button);	// These buttons have changed this frame
 	
 	// Debounced button codes for pressed/released
 	// UNDONE: Do we need auto-repeat?
+	// MODDD NOTE - oh look, a way of telling whether a key's been pressed for the first time in a frame.
+	//  Not used by anything at all in retail for weapons (IN_ATTACK and 2) beeeeeecccccaaaaauuuuussssseee???
+	//  That crossbow "full second delay before rezooming because we can't tell if the user made a fresh click
+	//  this frame" sure seems like a fat load of bullshit now doesn't it.
+	// Anyway, this is also done in cl_dll/hl_weapons.cpp (clientside), so these can be trusted there too.
 	m_afButtonPressed =  buttonsChanged & pev->button;		// The changed ones still down are "pressed"
 	m_afButtonReleased = buttonsChanged & (~pev->button);	// The ones not down are "released"
 
@@ -3927,19 +4060,44 @@ void CBasePlayer::PreThink(void)
 	
 	float timeDelta;
 
-
 	if(oldThinkTime != -1){
 		timeDelta = gpGlobals->time - oldThinkTime;
 	}else{
 		timeDelta = 0;
 	}
+	//timeDelta = gpGlobals->frametime;
+
 	oldThinkTime = gpGlobals->time;
 
 	
 	if(m_fLongJump){
 
 
-		if((global_itemBatteryPrerequisite == 0 || pev->armorvalue > 0 )){
+
+#if LONGJUMPUSESDELAY == 0
+		// continual re-charge for infinigeLongJumpCharge choices of 2 and 3.
+		if (longJumpCharge < PLAYER_LONGJUMPCHARGE_MAX) {
+			if (EASY_CVAR_GET(infiniteLongJumpCharge) == 2) {
+				// every 2 minutes, one additional longjump
+				longJumpCharge += timeDelta * (25.0f/120.0f);
+			}
+			else if (EASY_CVAR_GET(infiniteLongJumpCharge) == 3) {
+				// every 30 seconds, one additional longjump
+				longJumpCharge += timeDelta * (25.0f/30.0f);
+			}
+
+			if (longJumpCharge > PLAYER_LONGJUMPCHARGE_MAX) {
+				longJumpCharge = PLAYER_LONGJUMPCHARGE_MAX;
+			}
+		}//END OF longJumpCharge check
+#endif
+
+
+
+
+
+
+		if((EASY_CVAR_GET(itemBatteryPrerequisite) == 0 || pev->armorvalue > 0 )){
 
 #if LONGJUMPUSESDELAY == 1
 
@@ -3989,7 +4147,7 @@ void CBasePlayer::PreThink(void)
 		}
 
 
-		if ((longJumpDelay <= 0 && (infiniteLongJumpChargeMem == 1 || longJumpCharge >= LONGJUMP_CHARGEUSE) && pev->button & IN_DUCK) &&
+		if ((longJumpDelay <= 0 && (EASY_CVAR_GET(infiniteLongJumpCharge) == 1 || longJumpCharge >= LONGJUMP_CHARGEUSE) && pev->button & IN_DUCK) &&
 			( pev->flDuckTime >= 0 ) &&
 			//pev->velocity.Length() > 0 &&
 			//!pev->button & IN_JUMP &&
@@ -4023,15 +4181,18 @@ void CBasePlayer::PreThink(void)
 				if(pev->oldbuttons & IN_JUMP && lastDuckVelocityLength > 7 ){
 					//easyPrint("pev->velocity? %.3f\n", lastDuckVelocityLength);
 
-					if(infiniteLongJumpChargeMem != 1){
+					if(EASY_CVAR_GET(infiniteLongJumpCharge) != 1){
 						longJumpCharge -= LONGJUMP_CHARGEUSE;
 					}
 
 					longJumpDelay = PLAYER_LONGJUMP_DELAY;
 					longJumpChargeNeedsUpdate = TRUE;
 					
-					//that is, if the charge has run out BUT "infiniteLongJumpChargeMem" is 1, don't play this message (spammy)
-					if(longJumpCharge == 0 && infiniteLongJumpChargeMem != 1){
+					// that is, if the charge has run out BUT "infiniteLongJumpCharge" is 1, don't play this message (spammy)
+					// And if regeneration is on, that's covered too.  Point of the message is to let the player know
+					// long-jumping after this one isn't immediately possible (having 4 charge left with 25 required
+					// may not be 0 charge left, but should clearly still play this message or else it virtually never will)
+					if(longJumpCharge < LONGJUMP_CHARGEUSE && EASY_CVAR_GET(infiniteLongJumpCharge) != 1){
 						//play the out of ammo message.
 						SetSuitUpdate("!HEV_LJDEPLETED", FALSE, 0);
 					}
@@ -4044,25 +4205,13 @@ void CBasePlayer::PreThink(void)
 				g_engfuncs.pfnSetPhysicsKeyValue( edict(), "slj", "0" );
 				
 			}
-
-
 		}
-
-
-
-		
 
 #endif
 
-		}//END OF if((global_itemBatteryPrerequisite == 0 || pev->armorvalue > 0 ))
-
-
+		}//END OF if((EASY_CVAR_GET(itemBatteryPrerequisite) == 0 || pev->armorvalue > 0 ))
 
 	}//END OF if(m_fLongJump)
-
-
-
-
 
 
 
@@ -4081,8 +4230,6 @@ void CBasePlayer::PreThink(void)
 		Duck();
 
 	
-
-
 	/*
 	if ( m_fLongJump &&
 		(pev->button & IN_DUCK) &&
@@ -4409,7 +4556,7 @@ void CBasePlayer::CheckTimeBasedDamage()
 
 					//6m_rgItems[ITEM_ADRENALINE]
 
-					if (!antidoteQueued && m_rgItems[ITEM_ANTIDOTE] && (global_itemBatteryPrerequisite == 0 || pev->armorvalue > 0 )  )
+					if (!antidoteQueued && m_rgItems[ITEM_ANTIDOTE] && (EASY_CVAR_GET(itemBatteryPrerequisite) == 0 || pev->armorvalue > 0 )  )
 					{
 						antidoteQueued = TRUE;
 						//not yet!  Wait for the hissing sound.
@@ -4419,7 +4566,9 @@ void CBasePlayer::CheckTimeBasedDamage()
 						//MODDD - this used to refer to "HEV_HEAL4".  "HEV_HEAL5" refers to an antidote,
 						//HEAL4, re-used below for the radiation item (power canister / syringe), refers to "anti-toxins".
 						//SetSuitUpdateFVoxlessFriendlyEvent("!HEV_ANT_USE", FALSE, SUIT_REPEAT_OK, -1, -2, consumeAntidote);
-						SetSuitUpdateEventFVoxCutoff("!HEV_ANT_USE", FALSE, SUIT_REPEAT_OK, 1.36, &CBasePlayer::consumeAntidote, 1.36 + 0.55);
+
+
+						SetSuitUpdateEventFVoxCutoff("!HEV_ANT_USE", FALSE, SUIT_REPEAT_OK, SUITUPDATETIME, TRUE, 1.36, &CBasePlayer::consumeAntidote, 1.36 + 0.55);
 					}
 				}
 				
@@ -4427,7 +4576,7 @@ void CBasePlayer::CheckTimeBasedDamage()
 				if (((i == itbd_Radiation) && (m_rgbTimeBasedDamage[i] < radiationDuration))  )
 				{
 
-					if (!radiationQueued && m_rgItems[ITEM_RADIATION] && (global_itemBatteryPrerequisite == 0 || pev->armorvalue > 0 ))
+					if (!radiationQueued && m_rgItems[ITEM_RADIATION] && (EASY_CVAR_GET(itemBatteryPrerequisite) == 0 || pev->armorvalue > 0 ))
 					{
 						radiationQueued = TRUE;
 
@@ -4435,7 +4584,7 @@ void CBasePlayer::CheckTimeBasedDamage()
 						//m_rgItems[ITEM_RADIATION]--;
 						//SetSuitUpdate("!HEV_RAD_USE", FALSE, SUIT_REPEAT_OK);
 
-						SetSuitUpdateEventFVoxCutoff("!HEV_RAD_USE", FALSE, SUIT_REPEAT_OK, 1.28, &CBasePlayer::consumeRadiation, 1.28 + 0.55);
+						SetSuitUpdateEventFVoxCutoff("!HEV_RAD_USE", FALSE, SUIT_REPEAT_OK, SUITUPDATETIME, TRUE, 1.28, &CBasePlayer::consumeRadiation, 1.28 + 0.55);
 					}
 					//MODDD - TODO - have damage types + use a radiation syringe / power canister.
 
@@ -4443,7 +4592,7 @@ void CBasePlayer::CheckTimeBasedDamage()
 				}
 
 
-				if(g_iSkillLevel == 3 && global_timedDamageEndlessOnHard == 1){
+				if(g_iSkillLevel == 3 && EASY_CVAR_GET(timedDamageEndlessOnHard) == 1){
 					//Hard mode is on, and "timedDamageEndlessOnHard" is on...
 					//Do NOT decrement non-curable durations.
 					//However, still decrement only ONCE on curables to satisfy the one-second-passing rule for canisters to work.
@@ -4568,7 +4717,7 @@ Things powered by the battery
 #define GEIGERDELAY 0.25
 
 int CBasePlayer::getGeigerChannel(){
-	return global_geigerChannel;
+	return EASY_CVAR_GET(geigerChannel);
 }
 
 
@@ -4790,14 +4939,9 @@ void CBasePlayer :: UpdateGeigerCounter( void )
 			//PlaySound(sz, flvol);
 			
 		}
-		
 	}
-
-
-	
 	//easyForcePrintLine("DO I BUCKO %d", usesSoundSentenceSave() );
-
-}
+}//END OF UpdateGeigerCounter
 
 /*
 ================
@@ -4806,27 +4950,6 @@ CheckSuitUpdate
 Play suit update if it's time
 ================
 */
-
-//#define SUITSOUNDFILTER(SND) EMIT_SOUND_SUIT(ENT(pev), SND);
-inline
-void CBasePlayer::suitSoundFilter(const char* snd){
-
-	char dest[127];
-	dest[0] = '!';
-
-	strcpy( &dest[1], snd);
-
-	EMIT_SOUND_SUIT( ENT(pev), snd);
-
-	//strcpy
-	//strncpy
-
-
-}
-
-
-#define SUITUPDATETIME	3.5
-#define SUITFIRSTUPDATETIME 0.1
 
 void CBasePlayer::CheckSuitUpdate()
 {
@@ -4841,11 +4964,18 @@ void CBasePlayer::CheckSuitUpdate()
 	// if in range of radiation source, ping geiger counter
 	UpdateGeigerCounter();
 
+
+	//MODDD - NOTE: MULTIPLAYER FVOX BLOCKER
+	// UNWISE TO STOP THIS CRUDELY!!!  Some FVOX messages carry delays for using injectables and need this logic to run to ever be seen and called,
+	// even if the FVOX voice never plays.
+	/*
 	if ( g_pGameRules->IsMultiplayer() )
 	{
 		// don't bother updating HEV voice in multiplayer.
 		return;
 	}
+	*/
+
 
 	if ( gpGlobals->time >= m_flSuitUpdate && m_flSuitUpdate > 0)
 	{
@@ -5112,7 +5242,7 @@ void CBasePlayer::CheckSuitUpdate()
 						}else if(determiner >= 40 && determiner < 50){
 							EMIT_SOUND_SUIT(ENT(pev), "!HEV_numb40");
 							obligedCustomSentence = isentence - 40;
-							timeToSay = 0.85f;
+							timeToSay = 0.88f;
 						}else if(determiner >= 50 && determiner < 60){
 							EMIT_SOUND_SUIT(ENT(pev), "!HEV_numb50");
 							obligedCustomSentence = isentence - 50;
@@ -5209,8 +5339,6 @@ void CBasePlayer::CheckSuitUpdate()
 
 
 
-
-
 BOOL CBasePlayer::SetSuitUpdatePRE(){
 	return SetSuitUpdatePRE(FALSE);
 }//END OF SetSuitUpdatePRE(...)
@@ -5223,23 +5351,26 @@ BOOL CBasePlayer::SetSuitUpdatePRE(BOOL fvoxException ){
 
 	if ( !(pev->weapons & (1<<WEAPON_SUIT))  )
 		return FALSE;
-	
+
+	//MODDD - NOTE: MULTIPLAYER FVOX BLOCKER
+	// Check here disabled, merged into the "fvoxOn" check below.
+	/*
 	if ( g_pGameRules->IsMultiplayer() )
 	{
 		// due to static channel design, etc. We don't play HEV sounds in multiplayer right now.
 		return FALSE;
 	}
+	*/
 
 	//MODDD - also don't play if FVOX is no longer "enabled" and this is NOT the notification to turn it on / off (exceptions).
 	//if(fvoxOn == 0 && !(name == "!HEV_V0" || name == "!HEV_V1")  ){
-	if(fvoxOn == 0 && !fvoxException){
+	// removed the multiplayer check!    g_pGameRules->IsMultiplayer() ||
+	if( ( fvoxOn == 0 || globalflag_muteDeploySound==TRUE) && !fvoxException){
 		return FALSE;
 	}
 
-
 	//made it here? sounds ok.
 	return TRUE;
-
 }//END OF SetSuitUpdatePRE(...)
 
 //MODDD - assume this is not an exception to the "fvoxOn" setting (whether to play FVox sounds or not)
@@ -5254,22 +5385,25 @@ BOOL CBasePlayer::SetSuitUpdatePRE(char *name, int fgroup, int& isentence, BOOL 
 	int i;
 	//int isentence;
 	
-	
 	// Ignore suit updates if no suit
 
 	if ( !(pev->weapons & (1<<WEAPON_SUIT))  )
 		return FALSE;
 	
+	//MODDD - NOTE: MULTIPLAYER FVOX BLOCKER
+	// Check here disabled, merged into the "fvoxOn" check below.
+	/*
 	if ( g_pGameRules->IsMultiplayer() )
 	{
 		// due to static channel design, etc. We don't play HEV sounds in multiplayer right now.
 		return FALSE;
 	}
-
+	*/
 
 	//MODDD - also don't play if FVOX is no longer "enabled" and this is NOT the notification to turn it on / off (exceptions).
 	//if(fvoxOn == 0 && !(name == "!HEV_V0" || name == "!HEV_V1")  ){
-	if(fvoxOn == 0 && !fvoxException){
+	// removed the multiplayer check!    g_pGameRules->IsMultiplayer() ||
+	if( (fvoxOn == 0 || globalflag_muteDeploySound == TRUE) && !fvoxException){
 		return FALSE;
 	}
 
@@ -5323,7 +5457,6 @@ BOOL CBasePlayer::SetSuitUpdateEventPOST(int iempty, int isentence, float fNoRep
 BOOL CBasePlayer::SetSuitUpdateEventFVoxCutoffPOST(int iempty, int isentence, float fNoRepeatTime, float playDuration, BOOL canPlay, float eventDelay, void (CBasePlayer::*eventMethod)(), float fvoxCutoff ){
 
 	
-
 	if (fNoRepeatTime)
 	{
 		if (iempty < 0)
@@ -5358,7 +5491,6 @@ BOOL CBasePlayer::SetSuitUpdateEventFVoxCutoffPOST(int iempty, int isentence, fl
 	m_iSuitPlayNext++;
 
 
-
 	if (m_iSuitPlayNext == CSUITPLAYLIST)
 		m_iSuitPlayNext = 0;
 
@@ -5372,7 +5504,6 @@ BOOL CBasePlayer::SetSuitUpdateEventFVoxCutoffPOST(int iempty, int isentence, fl
 			//m_flSuitUpdate = gpGlobals->time + SUITUPDATETIME; 
 		}
 	}
-
 
 	return TRUE;
 }//END OF SetSuitUpdateEventFVoxCutoffPOST(...)
@@ -5406,7 +5537,7 @@ BOOL CBasePlayer::SetSuitUpdateNoRepeatSweep(int& iempty, int isentence){
 			{
 			// this sentence or group is already in 
 			// the norepeat list
-
+				
 				if (m_rgflSuitNoRepeatTime[i] < gpGlobals->time){
 					// norepeat time has expired, clear it out
 					m_rgiSuitNoRepeat[i] = 0;
@@ -5429,7 +5560,6 @@ BOOL CBasePlayer::SetSuitUpdateNoRepeatSweep(int& iempty, int isentence){
 	}
 
 	return canPlay;
-
 }//END OF SetSuitUpdateNoRepeatSweep(...)
 
 BOOL CBasePlayer::SetSuitUpdateCheckNoRepeatApply(int& iempty, int isentence){
@@ -5520,7 +5650,7 @@ BOOL CBasePlayer::SetSuitUpdateCheckNoRepeat(int& iempty, int isentence){
 
 void CBasePlayer::SetSuitUpdateNumber(int number, float fNoRepeatTime, int noRepeatID, BOOL arg_getBatteryValueRealTime)
 {
-	return SetSuitUpdateNumber(number, fNoRepeatTime, noRepeatID, arg_getBatteryValueRealTime, FALSE);
+	SetSuitUpdateNumber(number, fNoRepeatTime, noRepeatID, arg_getBatteryValueRealTime, FALSE);
 }
 
 //MODDD - new var, "playDuration".  Defaults to "SUITUPDATETIME", 3.5 seconds, 
@@ -5529,22 +5659,18 @@ void CBasePlayer::SetSuitUpdateNumber(int number, float fNoRepeatTime, int noRep
 //void CBasePlayer::SetSuitUpdateNumber(int number, float fNoRepeatTime, int noRepeatID, BOOL arg_getBatteryValueRealTime)
 void CBasePlayer::SetSuitUpdateNumber(int number, float fNoRepeatTime, int noRepeatID, BOOL arg_getBatteryValueRealTime, BOOL fvoxException)
 {
-	SetSuitUpdatePRE(fvoxException);
-
+	BOOL passPRE = SetSuitUpdatePRE(fvoxException);
+	// wait... why were we missing this checka while back?  I don't get that.
+	if(!passPRE)return;  
 	
 	//That is, get the battery's current value the moment the number reading speech is loaded (if TRUE).
 	getBatteryValueRealTime = arg_getBatteryValueRealTime;
 	
-
 	//This just sets this sound up for playing, and doesn't add it to the conventional no-repeat list.
 	SetSuitUpdatePOST(0, 10000 + number, 0, 0, TRUE);
-
-
+	
 }
 ///m_rgSuitPlayListDuration
-
-
-
 
 
 
@@ -5557,7 +5683,6 @@ void CBasePlayer::SetSuitUpdateNumber(int number, float fNoRepeatTime, int noRep
 //The point is to stop sounds with the same purpose ("bleeding has stopped", "feeling better", etc.) from playing soon
 //after one plays simply because they are not the exact same sound from 10 seconds ago. Those with the same purpose
 //should also be blocked to not be spammy in case of a lot of potential messages.
-
 
 void CBasePlayer::forceRepeatBlock(char *name, int fgroup, float fNoRepeatTime){
 	forceRepeatBlock(name, fgroup, fNoRepeatTime, FALSE);
@@ -5720,7 +5845,10 @@ void CBasePlayer::SetSuitUpdateEventFVoxCutoff(char *name, int fgroup, float fNo
 	int iempty = -1;
 	int isentence;
 	
-	BOOL passPRE = SetSuitUpdatePRE(name, fgroup, isentence, fvoxException||(fvoxOffCutoff!=-1) );
+
+	// NOTE - in place of what is now "fvoxException",  used to be "fvoxException||(fvoxOffCutoff!=-1)".
+	// Removed the other part (-1 check), because I don't like implied exceptions like this.  Just say it's meant to be one in the first place/call, dangit.
+	BOOL passPRE = SetSuitUpdatePRE(name, fgroup, isentence, fvoxException );
 	//Must pass the PRE check to move on with this request.
 	if(!passPRE) return;
 
@@ -5885,10 +6013,8 @@ void CBasePlayer :: UpdatePlayerSound ( void )
 
 void CBasePlayer::PostThink()
 {
-	if(global_testVar == -1)return;
+	//if(EASY_CVAR_GET(testVar) == -1)return;
 	int filterediuser4 = pev->iuser4 & ~(FLAG_JUMPED | FLAG_RESET_RECEIVED);
-
-
 
 
 	
@@ -5900,13 +6026,31 @@ void CBasePlayer::PostThink()
 	//easyPrintLine("MY VIEW ANGLES: %.2f, %.2f, %.2f", pev->angles.x, pev->angles.y, pev->angles.z);
 
 
+	if (queueFirstAppearanceMessageSend) {
+		queueFirstAppearanceMessageSend = FALSE;
+		MESSAGE_BEGIN(MSG_ONE, gmsgOnFirstAppearance, NULL, pev);
+		MESSAGE_END();
+
+
+		//MESSAGE_BEGIN(MSG_ALL, gmsgUpdateClientCVar, NULL);
+		MESSAGE_BEGIN(MSG_ONE, gmsgUpdateClientCVar, NULL, pev);
+			WRITE_SHORT(wpn_glocksilencer_ID);
+			WRITE_SHORT(EASY_CVAR_GET(wpn_glocksilencer) * 100);
+		MESSAGE_END();
+		MESSAGE_BEGIN(MSG_ONE, gmsgUpdateClientCVar, NULL, pev);
+			WRITE_SHORT(viewModelPrintouts_ID);
+			WRITE_SHORT(EASY_CVAR_GET(viewModelPrintouts) * 100);
+		MESSAGE_END();
+	}//END OF queueFirstAppearanceMessageSend check
+
+
 	
-	if(global_myStrobe == 1){
+	if(EASY_CVAR_GET(myStrobe) == 1){
 		if(nextMadEffect <= gpGlobals->time){
 			//send effect!
 			UTIL_generateFreakyLight(pev->origin);
 
-			nextMadEffect = gpGlobals->time + global_raveEffectSpawnInterval;
+			nextMadEffect = gpGlobals->time + EASY_CVAR_GET(raveEffectSpawnInterval);
 		}
 	}
 
@@ -6379,12 +6523,14 @@ void CBasePlayer::grantAllItems(){
 			}
 		}
 		*/
-		this->hasGlockSilencer = 1;
+		this->hasGlockSilencer = TRUE;
 
 
-		//Eliminate HEV chatter from all these new weapons (since the new HEV messages 
-		//play upon receiving a weapon now)
-		SetSuitUpdate(NULL, FALSE, 0);
+		// Eliminate HEV chatter from all these new weapons (since the new HEV messages 
+		// play upon receiving a weapon now)
+		// ACTUALLY no longer necessary, if granted while globalflag_muteDeploySound is on, they also won't
+		// add FVox messages.
+		//SetSuitUpdate(NULL, FALSE, 0);
 
 }
 
@@ -6458,7 +6604,7 @@ void CBasePlayer::commonReset(void){
 	//negative 2 means, don't prompt the user about this change.
 	fvoxEnabledMem = -2;
 
-	//or should this always just be forced to "global_barnacleCanGib" to stop a re-do each time?  Might not be necessary so much.
+	//or should this always just be forced to "EASY_CVAR_GET(barnacleCanGib)" to stop a re-do each time?  Might not be necessary so much.
 	barnacleCanGibMem = -1;
 
 
@@ -6531,7 +6677,7 @@ void CBasePlayer::commonReset(void){
 	
 
 	//re-acquire pointers.
-	the_default_fov = 0;
+	//the_default_fov = 0;
 
 
 	//MODDD - added
@@ -6549,8 +6695,8 @@ void CBasePlayer::commonReset(void){
 
 
 
-	
-	canApplyDefaultFOVMem = 0;  //assume "no".  Will be contradicted if necessary.
+	//canApplyDefaultFOV REMOVAL
+	//canApplyDefaultFOVMem = 0;  //assume "no".  Will be contradicted if necessary.
 	
 	//MODDD
 	oldWaterMoveTime = -1;
@@ -6564,13 +6710,6 @@ void CBasePlayer::commonReset(void){
 	airTankAirTimeNeedsUpdate = TRUE;
 	
 
-	pythonZoomFOV = -1;
-	crossbowZoomFOV = -1;
-	auto_adjust_zoomfovMem = -1;  //force update.
-	the_default_fovmem = -1;
-	auto_adjust_fov_aspectmem = -1;
-
-
 
 	cheat_infiniteclipMem = -1;
 	cheat_infiniteammoMem = -1;
@@ -6583,15 +6722,12 @@ void CBasePlayer::commonReset(void){
 	gaussRecoilSendsUpInSPMem = -1;
 
 
-
 	
 
 	cl_ladderMem = -1;
 
 
-	
 
-	infiniteLongJumpChargeMem = -1;
 	//MODDD
 	//only spawn does this below, actually.  proceed?
 	m_fLongJumpMemory = m_fLongJump;
@@ -6643,16 +6779,8 @@ void CBasePlayer::commonReset(void){
 
 
 
-
-
-
-
-
-
 void CBasePlayer::autoSneakyCheck(void){
-
-
-	float autoSneakyValue = global_autoSneaky;
+	float autoSneakyValue = EASY_CVAR_GET(autoSneaky);
 
 	if(autoSneakyValue == 1){
 		turnOnSneaky();
@@ -6662,53 +6790,59 @@ void CBasePlayer::autoSneakyCheck(void){
 }
 
 void CBasePlayer::turnOnSneaky(void){
-		
 	//g_engfuncs.pfnClientCmd("impulse 105");
 	pev->flags |= FL_NOTARGET;
 	m_fNoPlayerSound = TRUE;
-	
 }
 
 void CBasePlayer::turnOffSneaky(void){
-	
 	pev->flags &= (~FL_NOTARGET);
 	m_fNoPlayerSound = FALSE;
-	
 }
+
+
+
+// MODDD - you better believe it.
+// Called to signify the 'first appearance' of this player in a given game.
+// Called by Client.cpp's "ClientPutInServer" (also calls Spawn for the first time),
+// OR called by the "Restore" method here on loading a game.
+// This only needs to run once on starting/joining a server/game to load the server's broadcasted CVars into
+// the connected client's cache.
+// Because lacking FCVAR_REPLICATED is a bitch.
+void CBasePlayer::OnFirstAppearance(void) {
+
+	easyPrintLineClient(this->edict(), "OnFirstAppearance AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
+
+	// Can't send messages this early, becaaaaaaaaause???
+	queueFirstAppearanceMessageSend = TRUE;
+
+}//END OF OnFirstAppearance
 
 
 
 //MODDD - new.  Without args, assume we're not reviving from adrenaline.
 void CBasePlayer::Spawn( void ){
-
 	Spawn(FALSE);
-
 }
-
 
 //The hideDamage CVar makes the player unaffected by punches.
 //It is still up to individual cases to check for this "blocksImpact" feature of any entity and know not to do the camera punch + movement force if it is on.
 BOOL CBasePlayer::blocksImpact(void){
-
 	if(EASY_CVAR_GET(hideDamage) <= 0){
 		return FALSE;
 	}else{
 		return TRUE;
 	}
-
 }//END OF blocksImpact
 
-void CBasePlayer::Spawn( BOOL revived )
-{
+void CBasePlayer::Spawn( BOOL revived ){
 	recognizablyDead = FALSE;
-
-
-
+	
 	/*
 	//pev->friction		= 1.0;  //multiplayer requires this to be set to move. Why? dunno
 	
 	pev->takedamage		= DAMAGE_AIM;
-	//pev->solid			= (int)global_testVar;
+	//pev->solid			= (int)EASY_CVAR_GET(testVar);
 	//pev->movetype		= MOVETYPE_STEP;  //FORCED!!!
 	pev->solid			= SOLID_SLIDEBOX;
 	pev->movetype		= MOVETYPE_BOUNCE;
@@ -6719,10 +6853,7 @@ void CBasePlayer::Spawn( BOOL revived )
 	SET_MODEL(ENT(pev), "models/player.mdl");
 	g_ulModelIndexPlayer = pev->modelindex;
 	return;
-
 	*/
-
-
 
 	//just in case.
 	pev->rendermode = kRenderNormal;
@@ -6733,9 +6864,7 @@ void CBasePlayer::Spawn( BOOL revived )
 	m_pQueuedActiveItem = NULL;
 	m_fCustomHolsterWaitTime = -1;
 
-
 	//pev->rendermode = kRenderTransTexture;
-
 
 
 	friendlyCheckTime = 0; //can check.
@@ -6756,9 +6885,8 @@ void CBasePlayer::Spawn( BOOL revived )
 
 	//PRECACHE_MODEL("models/player/gman/Gman.mdl");
 
-	pev->classname		= MAKE_STRING("player");
+	pev->classname = MAKE_STRING("player");
 	if(!revived){
-
 		if(!alreadySpawned){
 			//MODDD - line moved here.
 			//~...actually, save-restore already defaults this to false.  No need to here.
@@ -6766,11 +6894,12 @@ void CBasePlayer::Spawn( BOOL revived )
 
 		}
 		
-
 		drowning = FALSE;
 
 		//FVOX messages play when this is true.
-		fvoxOn = TRUE;
+		// ...and why set it here though?
+		//fvoxOn = TRUE;
+
 		
 		foundRadiation = FALSE;
 
@@ -6788,15 +6917,11 @@ void CBasePlayer::Spawn( BOOL revived )
 		//MODDD
 		m_bitsDamageTypeMod = 0;
 		
-		
 	}else{
-
-
-
 		//m_bitsDamageType = 0;
 		//m_bitsDamageTypeMod = 0;
 
-		if(global_batteryDrainsAtAdrenalineMode == 3){
+		if(EASY_CVAR_GET(batteryDrainsAtAdrenalineMode) == 3){
 			pev->armorvalue		= 0;
 		}
 
@@ -6810,27 +6935,21 @@ void CBasePlayer::Spawn( BOOL revived )
 		pev->health = 30;
 
 		//damages reset here if the CVar is right:
-		if(global_timedDamageReviveRemoveMode == 3){
+		if(EASY_CVAR_GET(timedDamageReviveRemoveMode) == 3){
 			attemptResetTimedDamage(TRUE);
 		}
-
-	}
+	}//END OF if(!revived)
 
 	
-
 	pev->takedamage		= DAMAGE_AIM;
 
 	//hm, experiment?
 	pev->solid			= SOLID_SLIDEBOX;
-
-
 	pev->movetype		= MOVETYPE_BOUNCE;
-
 
 	//MODDD - unreliable with health mods above.
 	//pev->max_health		= pev->health;
 	pev->max_health = 100;
-
 
 	pev->flags		   &= FL_PROXY;	// keep proxy flag sey by engine
 	pev->flags		   |= FL_CLIENT;
@@ -6879,20 +6998,41 @@ void CBasePlayer::Spawn( BOOL revived )
 
 
 
+	// may as well turn these off, either way.  It would have been done by now if it was going to be done.
+	// hm... apply it now actually.  Adrenaline revives, remember?
+	// Wait.  No, on adrenaline revives we do want to keep weapons not dropped.
+	// How about, if reviving, we don't follow this.
+	// We'll trust on reviving that anything dropped was also removed from the player as to avoid duplicates.
 
-	//may as well turn these off, either way.  It would have been done by now if it was going to be done.
+	if (revived) {
+		// in case we dropped anything, update the clientside weapon list.
+		// wait no, this isn't helpful anymore?
+		//m_fKnownItem = FALSE;
+	}
+	else {
+		if (scheduleRemoveAllItems) {
+			RemoveAllItems(scheduleRemoveAllItemsIncludeSuit);
+		}
+	}
+
 	scheduleRemoveAllItemsIncludeSuit = FALSE;
 	scheduleRemoveAllItems = FALSE;
+	// We may still need to send an update for parts of the HUD that are now not synced right.
+	//UpdateClientData();
+	//ForceClientDllUpdate();
+	// ???
+	//
+	//MESSAGE_BEGIN(MSG_ONE, gmsgClearWeapon, NULL, pev);
+	//MESSAGE_END();
+
+
+
 
 	recoveryIndex = -1;
 	recoveryDelay = -1;
 	recoveryDelayMin = -1;
 
-
-
-
 	
-
 	pev->fov = m_iFOV				= 0;// init field of view.
 	m_iClientFOV		= -1; // make sure fov reset is sent
 
@@ -6918,7 +7058,6 @@ void CBasePlayer::Spawn( BOOL revived )
 	g_pGameRules->SetDefaultPlayerTeam( this );
 
 
-	
 	if(!revived){
 		//get the spawn spot.
 		g_pGameRules->GetPlayerSpawnSpot( this );
@@ -6956,10 +7095,14 @@ void CBasePlayer::Spawn( BOOL revived )
 	Precache();
 	m_HackedGunPos		= Vector( 0, 32, 0 );
 
+
+	/*
+	//MODDD - REMOVED.  This could never go anywhere, no other mentions of m_iPlayerSound.
 	if ( m_iPlayerSound == SOUNDLIST_EMPTY )
 	{
 		ALERT ( at_console, "Couldn't alloc player sound slot!\n" );
 	}
+	*/
 
 
 	if(!revived){
@@ -6981,6 +7124,7 @@ void CBasePlayer::Spawn( BOOL revived )
 		}
 		*/
 	}
+
 	
 	//deploy the active weapon, since the HUD was cleared.
 	if (m_pActiveItem)
@@ -6990,8 +7134,7 @@ void CBasePlayer::Spawn( BOOL revived )
 	}
 
 
-
-	//MODDD - only do this on a true spawn, not a revive.
+	//MODDD - only reset ammo on a true spawn, not a revive.
 	if(!revived){
 		// reset all ammo values to 0
 		for ( int i = 0; i < MAX_AMMO_SLOTS; i++ )
@@ -7000,7 +7143,7 @@ void CBasePlayer::Spawn( BOOL revived )
 			m_rgAmmoLast[i] = 0;  // client ammo values also have to be reset  (the death hud clear messages does on the client side)
 		}
 	}else{
-		
+		// I think this just forces all ammo valus to be updated clientside?
 		for ( int i = 0; i < MAX_AMMO_SLOTS; i++ )
 		{
 			m_rgAmmoLast[i] = 0;  // client ammo values also have to be reset  (the death hud clear messages does on the client side)
@@ -7015,11 +7158,14 @@ void CBasePlayer::Spawn( BOOL revived )
 	commonReset();
 
 	
-
 	//TabulateAmmo();
 	//SendAmmoUpdate();
 
-	g_pGameRules->PlayerSpawn( this );
+	//MODDD - only call "rules->PlayerSpawn" on non-revives.  Seems the only purpose of this call is to grant the player starting weapons at spawn
+	// in multiplayer.  Weird to start with a new glock/crowbar after getting up from adrenaline.
+	if (!revived) {
+		g_pGameRules->PlayerSpawn(this);
+	}
 
 	//Force a client re-update at revive!
 
@@ -7033,9 +7179,7 @@ void CBasePlayer::Spawn( BOOL revived )
 	//}
 	alreadySpawned = TRUE;
 
-		
 }//END OF Spawn
-
 
 
 
@@ -7093,11 +7237,15 @@ void CBasePlayer :: Precache( void )
 
 	m_iTrain = TRAIN_NEW;
 
-
-	easyPrintLine("LINKING USER MESSAGES...");
-
+	
+	//MODDD - CRITICAL.
+	// Why are user messages linked in the player precache method?  Why not as early as possible in the game DLL init (game.cpp) like server-registered
+	// CVars are?
+	/*
+	easyForcePrintLine("LINKING USER MESSAGES...");
 	// Make sure any necessary user messages have been registered
 	LinkUserMessages();
+	*/
 
 	m_iUpdateTime = 5;  // won't update for 1/2 a second
 
@@ -7133,7 +7281,8 @@ void CBasePlayer::RenewItems(void)
 
 int CBasePlayer::Restore( CRestore &restore )
 {
-
+	// Coming from a save file?  Not spawned the normal way so we need to bring this up.
+	OnFirstAppearance();
 
 	friendlyCheckTime = 0;  //can check again.
 
@@ -7291,6 +7440,9 @@ void CBasePlayer::SelectItem(const char *pstr)
 	
 			while (pItem)
 			{
+				const char* thaNam = STRING(pItem->pev->classname);
+
+
 				if (FClassnameIs(pItem->pev, pstr))
 					break;
 				pItem = pItem->m_pNext;
@@ -7549,7 +7701,7 @@ void CBloodSplat::Spray ( void )
 	//MODDD - can't spray blood in german censorship mode.  If the player is a robot, spray oil maybe?
 	//MODDD TODO: oil?
 	//if ( g_Language != LANGUAGE_GERMAN )
-	if(global_germanCensorship != 1)
+	if(EASY_CVAR_GET(germanCensorship) != 1)
 	{
 		UTIL_MakeVectors(pev->angles);
 		UTIL_TraceLine ( pev->origin, pev->origin + gpGlobals->v_forward * 128, ignore_monsters, pev->owner, & tr);
@@ -7627,7 +7779,7 @@ edict_t* CBasePlayer::GiveNamedItem( const char *pszName, int pszSpawnFlags  )
 	//Case exceptions.  Some names DO use caps, unfortunately, so this does the correction to the guaranteed all-lowercased text to get the right entity text.
 	
 	//If we didn't precache everything, the air tank isn't either.
-	if(CVAR_GET_FLOAT("precacheAll") == 0){
+	if(EASY_CVAR_GET(precacheAll) == 0){
 		
 		if(FStrEq(resultpre, "item_airtank")){
 			//just do the effect.  This will stop a possible precache error, since "give" implies we didn't need to see the model.
@@ -7653,7 +7805,7 @@ edict_t* CBasePlayer::GiveNamedItem( const char *pszName, int pszSpawnFlags  )
 			return NULL;
 		}
 
-	}//END OF if(CVAR_GET_FLOAT("precacheAll") == 0)
+	}//END OF if(EASY_CVAR_GET(precacheAll) == 0)
 
 
 	edict_t* thing = GiveNamedItem(pszName, pszSpawnFlags, pev->origin);
@@ -7909,10 +8061,11 @@ edict_t* CBasePlayer::GiveNamedItem( const char *pszName, int pszSpawnFlags, con
 		const char* pickupWalkerNameTest = tempWeap->GetPickupWalkerName();
 		if(::isStringEmpty(pickupWalkerNameTest)){
 			//no walker? nothing unusual.
-		}else{
-			//there is a walker! Just skip to spawning that instead.
+			// OHHH OKAY.  JUST GONNA IGNORE THAT FLAG HUH.  THINK YOUR SLICK HUH BUTTHOLE.
+		}else if( !(temptest->pev->spawnflags & SF_PICKUP_NOREPLACE) ){
+			// there is a walker! Just skip to spawning that instead.
 			CBaseEntity* newWalker = tempWeap->pickupWalkerReplaceCheck();
-			
+			// Unless there is any other intervention like ending in "_noReplace".
 			if(newWalker != NULL){
 				//send the walker instead.
 				::UTIL_Remove(temptest);
@@ -8108,61 +8261,22 @@ void CBasePlayer::ImpulseCommands( )
 	pev->impulse = 0;
 }
 
-//MODDD - keep track of "sv_cheats".  Moved to player.h.
-//cvar_t* sv_cheatsRef = 0;
 
-BOOL doneCheatYet = FALSE;
 //=========================================================
 //=========================================================
 void CBasePlayer::CheatImpulseCommands( int iImpulse )
 {
-	/*
-	if(!doneCheatYet){
-	//MODDD - PLEASE just give me stuff.
-		GiveNamedItem( "item_battery" );
-		GiveNamedItem( "weapon_crowbar" );
-		GiveNamedItem( "weapon_9mmhandgun" );
-		GiveNamedItem( "ammo_9mmclip" );
-		GiveNamedItem( "weapon_shotgun" );
-		GiveNamedItem( "ammo_buckshot" );
-		GiveNamedItem( "weapon_9mmAR" );
-		GiveNamedItem( "ammo_9mmAR" );
-		GiveNamedItem( "ammo_ARgrenades" );
-		GiveNamedItem( "weapon_handgrenade" );
-		GiveNamedItem( "weapon_tripmine" );
-
-		GiveNamedItem( "weapon_357" );
-		GiveNamedItem( "ammo_357" );
-		GiveNamedItem( "weapon_crossbow" );
-		GiveNamedItem( "ammo_crossbow" );
-		GiveNamedItem( "weapon_egon" );
-		GiveNamedItem( "weapon_gauss" );
-		GiveNamedItem( "ammo_gaussclip" );
-		GiveNamedItem( "weapon_rpg" );
-		GiveNamedItem( "ammo_rpgclip" );
-		GiveNamedItem( "weapon_satchel" );
-		GiveNamedItem( "weapon_snark" );
-		GiveNamedItem( "weapon_hornetgun" );
-		doneCheatYet = TRUE;
-	}
-
-	*/
-
-
-
-
-
 
 #if !defined( HLDEMO_BUILD )
 
-	
-	if(sv_cheatsRef == 0){
-		sv_cheatsRef = CVAR_GET_POINTER( "sv_cheats" );
+	//necessary...?  maybe not.
+	if(cvar_sv_cheats == 0){
+		cvar_sv_cheats = CVAR_GET_POINTER( "sv_cheats" );
 	}
 	
 	//MODDD - update "g_flWeaponCheat" to what sv_cheats is.
-	if(sv_cheatsRef != 0){
-		if(sv_cheatsRef->value == 1){
+	if(cvar_sv_cheats != 0){
+		if(cvar_sv_cheats->value == 1){
 			g_flWeaponCheat = 1;
 		}else{
 			g_flWeaponCheat = 0;
@@ -8582,7 +8696,7 @@ Called every frame by the player PreThink
 */
 void CBasePlayer::ItemPreFrame()
 {
-	if(global_testVar == -1)return;
+	//if(EASY_CVAR_GET(testVar) == -1)return;
 
 
 	//Even though ItemPostFrame() turns this off faster, it turns it off too fast. At least one full frame must run
@@ -8845,14 +8959,12 @@ void CBasePlayer :: UpdateClientData( void )
 
 
 
-	if(the_default_fov == 0){
+	/*
+	if(the_default_fov == NULL){
 		the_default_fov = CVAR_GET_POINTER( "default_fov" );
-		fvoxEnabled = CVAR_GET_POINTER("cl_fvox");
-		//cl_fvoxMem = CVAR_GET_POINTER("IGNOREfvoxEnabledMem");
-		cl_ladder = CVAR_GET_POINTER("cl_ladder");
 		//g_engfuncs.pfnSetPhysicsKeyValue( edict(), "slj", "0" );
 	}
-
+	*/
 	//easyPrintLine("??????? %d", gpGlobals->maxEntities);
 	
 
@@ -8898,37 +9010,38 @@ void CBasePlayer :: UpdateClientData( void )
 	}
 
 	
-	if(noclipSpeedMultiMem != global_noclipSpeedMulti){
-		noclipSpeedMultiMem = global_noclipSpeedMulti;
+	if(noclipSpeedMultiMem != EASY_CVAR_GET(noclipSpeedMulti)){
+		noclipSpeedMultiMem = EASY_CVAR_GET(noclipSpeedMulti);
 		
 		if(noclipSpeedMultiMem != 0){
 
 			char buffer[13];
-			tryFloatToStringBuffer(buffer, global_noclipSpeedMulti);
+			tryFloatToStringBuffer(buffer, EASY_CVAR_GET(noclipSpeedMulti) );
 
 			g_engfuncs.pfnSetPhysicsKeyValue( edict(), "ncm", buffer );
 		}else{
 			g_engfuncs.pfnSetPhysicsKeyValue( edict(), "ncm", "0" );
 		}
 	}
-	if(normalSpeedMultiMem != global_normalSpeedMulti){
-		normalSpeedMultiMem = global_normalSpeedMulti;
+	
+	if(normalSpeedMultiMem != EASY_CVAR_GET(normalSpeedMulti) ){
+		normalSpeedMultiMem = EASY_CVAR_GET(normalSpeedMulti);
 		//keep this CVar in sync with pm_shared...
 		if(normalSpeedMultiMem != 0){
 			char buffer[13];
-			tryFloatToStringBuffer(buffer, global_normalSpeedMulti);
+			tryFloatToStringBuffer(buffer, EASY_CVAR_GET(normalSpeedMulti) );
 			g_engfuncs.pfnSetPhysicsKeyValue( edict(), "nsm", buffer );
 		}else{
 			g_engfuncs.pfnSetPhysicsKeyValue( edict(), "nsm", "0" );
 		}
 	}
-	if(jumpForceMultiMem != global_jumpForceMulti){
-		jumpForceMultiMem = global_jumpForceMulti;
+	if(jumpForceMultiMem != EASY_CVAR_GET(jumpForceMulti) ){
+		jumpForceMultiMem = EASY_CVAR_GET(jumpForceMulti);
 		//keep this CVar in sync with pm_shared...
 		if(jumpForceMultiMem != 0){
 
 			char buffer[13];
-			tryFloatToStringBuffer(buffer, global_jumpForceMulti);
+			tryFloatToStringBuffer(buffer, EASY_CVAR_GET(jumpForceMulti) );
 			
 			g_engfuncs.pfnSetPhysicsKeyValue( edict(), "jfm", buffer );
 		}else{
@@ -8965,18 +9078,6 @@ void CBasePlayer :: UpdateClientData( void )
 	
 
 
-
-
-
-
-
-	if(infiniteLongJumpChargeMem != global_infiniteLongJumpCharge){
-		infiniteLongJumpChargeMem = global_infiniteLongJumpCharge;
-
-	}
-
-
-
 	if(clearWeaponFlag == -1){
 		MESSAGE_BEGIN( MSG_ONE, gmsgClearWeapon, NULL, pev );
 			//WRITE_SHORT( (int)useAlphaCrosshair->value);
@@ -8984,17 +9085,17 @@ void CBasePlayer :: UpdateClientData( void )
 		clearWeaponFlag = 1;
 	}
 
-	if(autoSneakyMem != global_autoSneaky){
-		autoSneakyMem = global_autoSneaky;
+	if(autoSneakyMem != EASY_CVAR_GET(autoSneaky) ){
+		autoSneakyMem = EASY_CVAR_GET(autoSneaky) ;
 		autoSneakyCheck();
 	}
 
 
 
 
-	if(cameraModeMem != globalPSEUDO_cameraMode || mirrorsDoNotReflectPlayerMem != global_mirrorsDoNotReflectPlayer){
+	if(cameraModeMem != globalPSEUDO_cameraMode || mirrorsDoNotReflectPlayerMem != EASY_CVAR_GET(mirrorsDoNotReflectPlayer) ){
 		cameraModeMem = globalPSEUDO_cameraMode;
-		mirrorsDoNotReflectPlayerMem = global_mirrorsDoNotReflectPlayer;
+		mirrorsDoNotReflectPlayerMem = EASY_CVAR_GET(mirrorsDoNotReflectPlayer);
 
 		BOOL allowPlayerMarker = FALSE;
 		CBaseEntity *pEntityTemp = NULL;
@@ -9044,7 +9145,7 @@ void CBasePlayer :: UpdateClientData( void )
 
 
 
-	if(global_barnacleCanGib != barnacleCanGibMem){
+	if(EASY_CVAR_GET(barnacleCanGib) != barnacleCanGibMem){
 
 
 		/*
@@ -9054,11 +9155,11 @@ void CBasePlayer :: UpdateClientData( void )
 				int numbAttempt = tryStringToInt(arg1ref);
 				//MODDD NOTE:  is this being a global var ok, or should it be put on the local player?  oh well.
 
-				if(global_barnacleCanGib == numbAttempt){
+				if(EASY_CVAR_GET(barnacleCanGib) == numbAttempt){
 					//already matches?  Don't do anything.
 					return;
 				}
-				global_barnacleCanGib = numbAttempt;
+				EASY_CVAR_GET(barnacleCanGib) = numbAttempt;
 			}catch(int err){
 				return;
 			}
@@ -9066,7 +9167,7 @@ void CBasePlayer :: UpdateClientData( void )
 			return;
 		}
 		*/
-		barnacleCanGibMem = global_barnacleCanGib;
+		barnacleCanGibMem = EASY_CVAR_GET(barnacleCanGib);
 	
 		//MODDD - section
 		////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -9084,7 +9185,7 @@ void CBasePlayer :: UpdateClientData( void )
 				
 				}else{
 
-					if(global_barnacleCanGib == 0){
+					if(EASY_CVAR_GET(barnacleCanGib) == 0){
 						pEntityTemp->pev->takedamage = DAMAGE_NO;
 						pEntityTemp->pev->solid = SOLID_NOT;
 					}else{
@@ -9120,9 +9221,9 @@ void CBasePlayer :: UpdateClientData( void )
 		MESSAGE_END();
 	}
 
-	if(playerBrightLightMem != global_playerBrightLight){
-		playerBrightLightMem = global_playerBrightLight;
-		if(global_playerBrightLight == 1){
+	if(playerBrightLightMem != EASY_CVAR_GET(playerBrightLight) ){
+		playerBrightLightMem = EASY_CVAR_GET(playerBrightLight);
+		if(EASY_CVAR_GET(playerBrightLight) == 1){
 			pev->effects |= EF_BRIGHTLIGHT;
 		}else{
 			pev->effects &= ~EF_BRIGHTLIGHT;
@@ -9130,8 +9231,8 @@ void CBasePlayer :: UpdateClientData( void )
 
 	}
 
-	if(cl_ladderMem != cl_ladder->value){
-		cl_ladderMem = cl_ladder->value;
+	if(cl_ladderMem != EASY_CVAR_GET(cl_ladder)){
+		cl_ladderMem = EASY_CVAR_GET(cl_ladder);
 
 		//thanks,
 		//http://stackoverflow.com/questions/9655202/how-to-convert-integer-to-string-in-c
@@ -9156,37 +9257,35 @@ void CBasePlayer :: UpdateClientData( void )
 	
 
 
-
-	if(fvoxEnabledMem == -2 && fvoxEnabled != NULL){
-
+	/*
+	if(fvoxEnabledMem == -2){
 		//initial set:  bring the loaded value to there, no updates.
-		fvoxOn = (int)(fvoxEnabled->value == 1);
-		fvoxEnabledMem = fvoxEnabled->value;
+		fvoxOn = (int)( EASY_CVAR_GET(cl_fvox) == 1);
+		fvoxEnabledMem = fvoxOn;
 
 		//CVAR_SET_FLOAT("cl_fvox", fvoxOn);
 	}
+	*/
 
+	//if(EASY_CVAR_GET(cl_fvox) != fvoxEnabledMem && fvoxEnabledMem != -2){
+	if(fvoxOn != fvoxEnabledMem){
+		//fvoxOn = (int)(EASY_CVAR_GET(cl_fvox) == 1);
 
-	if(fvoxEnabled->value != fvoxEnabledMem && fvoxEnabledMem != -2){
-		
-		fvoxOn = (int)(fvoxEnabled->value == 1);
-		fvoxEnabledMem = fvoxEnabled->value;
-
-		if(fvoxEnabledMem == 1){
-			//just turned it on.
-			SetSuitUpdateFVoxException("!HEV_V0", FALSE, SUIT_REPEAT_OK);
-		}else{
-			//just turned it off.  Clear other queud messages.
-			SetSuitUpdate(NULL, FALSE ,0);
-			SetSuitUpdateFVoxException("!HEV_V1", FALSE, SUIT_REPEAT_OK);
+		// fvoxEnabledMem of -2 means, don't make a message about it.
+		if (fvoxEnabledMem != -2) {
+			if (fvoxOn == 1) {
+				//just turned it on.
+				SetSuitUpdateFVoxException("!HEV_V0", FALSE, SUIT_REPEAT_OK);
+			}
+			else {
+				//just turned it off.  Clear other queud messages.
+				SetSuitUpdate(NULL, FALSE, 0);
+				SetSuitUpdateFVoxException("!HEV_V1", FALSE, SUIT_REPEAT_OK);
+			}
 		}
 
+		fvoxEnabledMem = fvoxOn;
 	}
-
-
-
-	
-
 
 
 
@@ -9220,137 +9319,163 @@ void CBasePlayer :: UpdateClientData( void )
 	//NOTE: we cool?
 	//(the_default_fov->value == -1 && globalPSEUDO_aspectratio_determined_fov != -1) ||
 
-	if(globalPSEUDO_aspectratio_determined_fov == -1){
-		//prepare...
-		queueTotalFOVUpdate = TRUE;
-	}
+
+
+	// EAT PENIS
+	//if(globalPSEUDO_aspectratio_determined_fov == -1){
+	//	//prepare...
+	//	queueTotalFOVUpdate = TRUE;
+	//}
+	//
+	////easyForcePrintLine("ARE YOU THAT KINDA amazingly STUPID: %.2f %d", globalPSEUDO_aspectratio_determined_fov, queueTotalFOVUpdate);
+	//if (the_default_fov != NULL && globalPSEUDO_aspectratio_determined_fov != -1 &&
+	//	(
+	//		queueTotalFOVUpdate == TRUE ||
+	//		( 
+	//			EASY_CVAR_GET(auto_adjust_fov) != auto_adjust_fovmem ||
+	//			(EASY_CVAR_GET(auto_adjust_fov) == 1) || //&& (pythonZoomFOV != EASY_CVAR_GET(python_zoomfov) ) || (crossbowZoomFOV != EASY_CVAR_GET(crossbow_zoomfov) ) ) ||
+	//			the_default_fov->value != the_default_fovmem ||
+	//			m_iFOV != m_iClientFOV //||
+	//			//auto_adjust_zoomfovMem != EASY_CVAR_GET(auto_adjust_zoomfov) //||
+	//			//canApplyDefaultFOV REMOVAL
+	//			//canApplyDefaultFOVMem != EASY_CVAR_GET(canApplyDefaultFOV)
+	//		)
+	//	)
+	//)
+	//{
+
+	//	queueTotalFOVUpdate = FALSE;
+
+	//	/*
+	//	int fovToUse = m_iFOV;
+	//	//|| m_iFOV == (int)python_zoomfov->value || m_iFOV == (int)crossbow_zoomfov->value
+	//	if(m_iFOV == 0 || m_iFOV == (int)pythonZoomFOV || m_iFOV == (int)crossbowZoomFOV  ){
+	//		fovToUse = (int)the_default_fov->value;
+	//	}
+	//	*/
+
+	//	int fovToUse = (int)the_default_fov->value;
+
+	//	//canApplyDefaultFOV REMOVAL
+	//	//canApplyDefaultFOVMem = (int) EASY_CVAR_GET(canApplyDefaultFOV);
+	//	the_default_fovmem = (int)the_default_fov->value;
+	//	
+	//	//easyPrintLine("VALUe1 %.2f %d: ", the_default_fov->value, fovToUse);
+	//	//easyPrintLine("ASPECT AID... %.2f %d", aspectratio_determined_fov->value, (int)aspectratio_determined_fov->value);
+
+	//	//if "auto_adjust_fov" was changed, do a re-check.
+	//	//canApplyDefaultFOV REMOVAL
+	//	//also the FALSE is where "EASY_CVAR_GET(canApplyDefaultFOV) == 1" used to be.
+	//	if( (EASY_CVAR_GET(auto_adjust_fov) != auto_adjust_fovmem || FALSE) && EASY_CVAR_GET(auto_adjust_fov) == 1 ){
+	//		int newDefaultFOV = (int)globalPSEUDO_aspectratio_determined_fov;
+	//		
+	//		//NOTE - fov can be made invisible by just sending off by the usual MESSAGE procedure.
+	//		CVAR_SET_FLOAT("default_fov", (float)newDefaultFOV);
+	//		the_default_fovmem = newDefaultFOV;
+
+
+	//		//CALL CONSTANT METHODS!!???
+
+	//		//canApplyDefaultFOV REMOVAL
+	//		//EASY_CVAR_SET_DEBUGONLY(canApplyDefaultFOV, 0)
+
+	//		//CVAR_SET_FLOAT("canApplyDefaultFOV", 0);
+	//		//canApplyDefaultFOV REMOVAL
+	//		//canApplyDefaultFOVMem = 0;
+
+	//		
+	//		//wait, wasn't this done right above?
+	//		//the_default_fov->value = (float)newDefaultFOV;
+	//		//the_default_fovmem = newDefaultFOV;
+
+	//		fovToUse = newDefaultFOV;
+	//		m_iFOV = newDefaultFOV;
+	//	}
+
+	//	auto_adjust_fovmem = (int)EASY_CVAR_GET(auto_adjust_fov);
+
+	//	
+	//	//easyPrintLine("VALUe2 %.2f %d: ", the_default_fov->value, fovToUse);
+
+
+	//	MESSAGE_BEGIN( MSG_ONE, gmsgSetFOV, NULL, pev );
+	//		WRITE_BYTE( m_iFOV );
+	//	MESSAGE_END();
+	//	//I think this should update "m_iClientFOV".
+
+	//	//auto_adjust_zoomfovMem = EASY_CVAR_GET(auto_adjust_zoomfov);
+
+	//	//easyPrintLine("FOV STATS?! (%.2f), (%d)", auto_adjust_zoomfov->value,  auto_adjust_zoomfovMem);
+	//	//easyPrintLine("VALUe3 %.2f %d: ", the_default_fov->value, fovToUse);
+
+	//	
+	//		//easyPrintLine("PYTHOS: %.2f ::: <- ::: %.2f : %.2f : %.2f", EASY_CVAR_GET(python_zoomfov), aspectratio_determined_fov->value, EASY_CVAR_GET(auto_adjust_zoomfov), EASY_CVAR_GET(auto_adjust_fov) );
+	//		
+	//		
+	//		
+	//		python_zoomfov = fovToUse * 0.4444f;
+	//		crossbow_zoomfov = fovToUse * 0.2222f;
+
+	//		queueZoomFOVUpdate = FALSE;
+
+
+	//	//if(EASY_CVAR_GET(auto_adjust_zoomfov) == 1){
+
+	//		//CVAR_SET_FLOAT("python_zoomfov", (float)((int)(fovToUse * 0.4444f) ));
+	//		//CVAR_SET_FLOAT("crossbow_zoomfov", (float)((int)(fovToUse * 0.2222f) ));
+
+
+	//		// MODDD - MAJOR!!! Make me per player, asshole!
+	//		//EASY_CVAR_SET_DEBUGONLY(python_zoomfov, (float)((int)(fovToUse * 0.4444f) ) );
+	//		//EASY_CVAR_SET_DEBUGONLY(crossbow_zoomfov, (float)((int)(fovToUse * 0.2222f) ) );
+
+
+	//		
+	//		//TODO:  this keeps updating on just zooming in / out... why though?
+	//		//easyForcePrintLine("GAHHHHH %d %.2f %.2f", fovToUse, EASY_CVAR_GET(python_zoomfov), EASY_CVAR_GET(crossbow_zoomfov) );
+
+
+
+	//		//python_zoomfov->value = (int)(fovToUse * 0.4444f);
+	//		//crossbow_zoomfov->value = (int)(fovToUse * 0.2222f);
+
+	//		//easyPrintLine("Did it update?!? (%.2f), %d, %0.2f, %d", crossbow_zoomfov->value, fovToUse, fovToUse * 0.2222f, (int)(fovToUse * 0.2222f));
+	//	//}
+	//	
+	//	//easyPrintLine("VALUe4 %.2f %d: ", the_default_fov->value, fovToUse);
+	//	//easyPrintLine("VALUe5 %.2f: ", CVAR_GET_FLOAT("default_fov") );
+
+
+	//	// cache FOV change at end of function, so weapon updates can see that FOV has changed
+
+
+
+	//}//END OF super massive FOV checker.
 
 
 
 
-	//easyForcePrintLine("ARE YOU THAT KINDA amazingly STUPID: %.2f %d", globalPSEUDO_aspectratio_determined_fov, queueTotalFOVUpdate);
-	if ( globalPSEUDO_aspectratio_determined_fov != -1 && (queueTotalFOVUpdate == TRUE || ( 
-		
-		global_auto_adjust_fov_aspect != auto_adjust_fov_aspectmem ||
-		(global_auto_adjust_fov_aspect == 1 && (pythonZoomFOV != global_python_zoomfov) || (crossbowZoomFOV != global_crossbow_zoomfov) ) ||
-		the_default_fov->value != the_default_fovmem ||
-		m_iFOV != m_iClientFOV ||
-		auto_adjust_zoomfovMem != global_auto_adjust_zoomfov||
-		canApplyDefaultFOVMem != global_canApplyDefaultFOV)
-		))
-	{
-
-		queueTotalFOVUpdate = FALSE;
-
-		/*
-		int fovToUse = m_iFOV;
-		//|| m_iFOV == (int)python_zoomfov->value || m_iFOV == (int)crossbow_zoomfov->value
-		if(m_iFOV == 0 || m_iFOV == (int)pythonZoomFOV || m_iFOV == (int)crossbowZoomFOV  ){
-			fovToUse = (int)the_default_fov->value;
-		}
-		*/
-
-		int fovToUse = (int)the_default_fov->value;
-
-		canApplyDefaultFOVMem = (int) global_canApplyDefaultFOV;
-		the_default_fovmem = (int)the_default_fov->value;
-		
-		//easyPrintLine("VALUe1 %.2f %d: ", the_default_fov->value, fovToUse);
-		//easyPrintLine("ASPECT AID... %.2f %d", aspectratio_determined_fov->value, (int)aspectratio_determined_fov->value);
-
-		//if "auto_adjust_fov_aspect" was changed, do a re-check.
-		if( (global_auto_adjust_fov_aspect != auto_adjust_fov_aspectmem || global_canApplyDefaultFOV == 1) && global_auto_adjust_fov_aspect == 1 ){
-			int newDefaultFOV = (int)globalPSEUDO_aspectratio_determined_fov;
-			
-			//NOTE - fov can be made invible by just sending off by the usual MESSAGE procedure.
-			CVAR_SET_FLOAT("default_fov", (float)newDefaultFOV);
-			the_default_fovmem = newDefaultFOV;
-
-
-			//CALL CONSTANT METHODS!!???
-
-			EASY_CVAR_SET_DEBUGONLY(canApplyDefaultFOV, 0)
-			//CVAR_SET_FLOAT("canApplyDefaultFOV", 0);
-			canApplyDefaultFOVMem = 0;
-
-			
-			//wait, wasn't this done right above?
-			//the_default_fov->value = (float)newDefaultFOV;
-			//the_default_fovmem = newDefaultFOV;
-
-			fovToUse = newDefaultFOV;
-			m_iFOV = newDefaultFOV;
-		}
-
-		auto_adjust_fov_aspectmem = (int)global_auto_adjust_fov_aspect;
-
-		
-		//easyPrintLine("VALUe2 %.2f %d: ", the_default_fov->value, fovToUse);
-
-
-		MESSAGE_BEGIN( MSG_ONE, gmsgSetFOV, NULL, pev );
-			WRITE_BYTE( m_iFOV );
-		MESSAGE_END();
-		//I think this should update "m_iClientFOV".
-
-		auto_adjust_zoomfovMem = global_auto_adjust_zoomfov;
-
-		//easyPrintLine("FOV STATS?! (%.2f), (%d)", auto_adjust_zoomfov->value,  auto_adjust_zoomfovMem);
-		//easyPrintLine("VALUe3 %.2f %d: ", the_default_fov->value, fovToUse);
-
-		
-			//easyPrintLine("PYTHOS: %.2f ::: <- ::: %.2f : %.2f : %.2f", global_python_zoomfov, aspectratio_determined_fov->value, global_auto_adjust_zoomfov, global_auto_adjust_fov_aspect);
-			
-			
-			
-
-		if(global_auto_adjust_zoomfov == 1){
-
-			//CVAR_SET_FLOAT("python_zoomfov", (float)((int)(fovToUse * 0.4444f) ));
-			//CVAR_SET_FLOAT("crossbow_zoomfov", (float)((int)(fovToUse * 0.2222f) ));
-
-
-			
-			EASY_CVAR_SET_DEBUGONLY(python_zoomfov, (float)((int)(fovToUse * 0.4444f) ) );
-			EASY_CVAR_SET_DEBUGONLY(crossbow_zoomfov, (float)((int)(fovToUse * 0.2222f) ) );
-			queueZoomFOVUpdate = FALSE;
-
-			
-			//TODO:  this keeps updating on just zooming in / out... why though?
-			//easyForcePrintLine("GAHHHHH %d %.2f %.2f", fovToUse, global_python_zoomfov, global_crossbow_zoomfov);
 
 
 
-			//python_zoomfov->value = (int)(fovToUse * 0.4444f);
-			//crossbow_zoomfov->value = (int)(fovToUse * 0.2222f);
-
-			//easyPrintLine("Did it update?!? (%.2f), %d, %0.2f, %d", crossbow_zoomfov->value, fovToUse, fovToUse * 0.2222f, (int)(fovToUse * 0.2222f));
-		}
-		
-		//easyPrintLine("VALUe4 %.2f %d: ", the_default_fov->value, fovToUse);
-		//easyPrintLine("VALUe5 %.2f: ", CVAR_GET_FLOAT("default_fov") );
-
-
-		// cache FOV change at end of function, so weapon updates can see that FOV has changed
 
 
 
-	}//END OF super massive FOV checker.
 
 
-	
-	if( pythonZoomFOV != global_python_zoomfov){
-		pythonZoomFOV = global_python_zoomfov;
+	/*
+	if( pythonZoomFOV != EASY_CVAR_GET(python_zoomfov) ){
+		pythonZoomFOV = EASY_CVAR_GET(python_zoomfov);
 		//queueZoomFOVUpdate = TRUE;
 	}
-	if( crossbowZoomFOV != global_crossbow_zoomfov){
+	if( crossbowZoomFOV != EASY_CVAR_GET(crossbow_zoomfov)){
 		//easyPrintLine("Crossbow val? %.2f", crossbow_zoomfov->value );
-		crossbowZoomFOV = global_crossbow_zoomfov;
+		crossbowZoomFOV = EASY_CVAR_GET(crossbow_zoomfov);
 		//queueZoomFOVUpdate = TRUE;
 	}
-
+	*/
 	
-	//easyForcePrintLine("disregard you 666 %.2f %.2f", global_python_zoomfov, global_crossbow_zoomfov);
+	//easyForcePrintLine("disregard you 666 %.2f %.2f", EASY_CVAR_GET(python_zoomfov), EASY_CVAR_GET(crossbow_zoomfov) );
 
 	/*
 	if(queueZoomFOVUpdate && globalPSEUDO_aspectratio_determined_fov != -1){
@@ -9426,23 +9551,23 @@ void CBasePlayer :: UpdateClientData( void )
 	//MODDD - update cheat vars.
 	
 
-	if(cheat_infiniteclipMem != global_cheat_infiniteclip){
-		cheat_infiniteclipMem = global_cheat_infiniteclip;
+	if(cheat_infiniteclipMem != EASY_CVAR_GET(cheat_infiniteclip) ){
+		cheat_infiniteclipMem = EASY_CVAR_GET(cheat_infiniteclip);
 	}
-	if(cheat_infiniteammoMem != global_cheat_infiniteammo){
-		cheat_infiniteammoMem = global_cheat_infiniteammo;
+	if(cheat_infiniteammoMem != EASY_CVAR_GET(cheat_infiniteammo)){
+		cheat_infiniteammoMem = EASY_CVAR_GET(cheat_infiniteammo);
 	}
-	if(cheat_minimumfiredelayMem != global_cheat_minimumfiredelay){
-		cheat_minimumfiredelayMem = global_cheat_minimumfiredelay;
+	if(cheat_minimumfiredelayMem != EASY_CVAR_GET(cheat_minimumfiredelay)){
+		cheat_minimumfiredelayMem = EASY_CVAR_GET(cheat_minimumfiredelay);
 	}
-	if(cheat_minimumfiredelaycustomMem != global_cheat_minimumfiredelaycustom){
-		cheat_minimumfiredelaycustomMem = global_cheat_minimumfiredelaycustom;
+	if(cheat_minimumfiredelaycustomMem != EASY_CVAR_GET(cheat_minimumfiredelaycustom)){
+		cheat_minimumfiredelaycustomMem = EASY_CVAR_GET(cheat_minimumfiredelaycustom);
 	}
-	if(cheat_nogaussrecoilMem != global_cheat_nogaussrecoil){
-		cheat_nogaussrecoilMem = global_cheat_nogaussrecoil;
+	if(cheat_nogaussrecoilMem != EASY_CVAR_GET(cheat_nogaussrecoil)){
+		cheat_nogaussrecoilMem = EASY_CVAR_GET(cheat_nogaussrecoil);
 	}
-	if(gaussRecoilSendsUpInSPMem != global_gaussRecoilSendsUpInSP){
-		gaussRecoilSendsUpInSPMem = global_gaussRecoilSendsUpInSP;
+	if(gaussRecoilSendsUpInSPMem != EASY_CVAR_GET(gaussRecoilSendsUpInSP)){
+		gaussRecoilSendsUpInSPMem = EASY_CVAR_GET(gaussRecoilSendsUpInSP);
 	}
 
 	
@@ -9555,27 +9680,22 @@ void CBasePlayer :: UpdateClientData( void )
 	}
 
 
-	float hasGlockSilencerTEST = ( !(global_wpn_glocksilencer==0) && (hasGlockSilencer || global_wpn_glocksilencer==2 ));
+	int hasGlockSilencerTEST = ( !(EASY_CVAR_GET(wpn_glocksilencer)==0) && (hasGlockSilencer || EASY_CVAR_GET(wpn_glocksilencer)==2 ));
 	//easyForcePrintLine("disregardIN WHAT %d");
 	if ( hasGlockSilencerTEST != hasGlockSilencerMem)
 	{
+		// let the client know we have the silencer for drawing purposes.
+		// And some viewmodel logic.
 		hasGlockSilencerMem = hasGlockSilencerTEST;
-
 		MESSAGE_BEGIN( MSG_ONE, gmsgHasGlockSilencer, NULL, pev );
-			WRITE_SHORT( (int)hasGlockSilencerTEST);
+			WRITE_SHORT( hasGlockSilencerTEST);
 		MESSAGE_END();
-
-		//UpdClientC
-		
-
 	}
-
-
 
 	/*
 	//NOPE.  SEND BOTH NOW!
 	float* damageToRead;
-	if(global_painFlashIgnoreArmor == 1){
+	if(EASY_CVAR_GET(painFlashIgnoreArmor) == 1){
 		//ignores armor damage reduction; what enemies intended to deal since last sendoff.
 		damageToRead = &rawDamageSustained;
 	}else{
@@ -9583,7 +9703,6 @@ void CBasePlayer :: UpdateClientData( void )
 		damageToRead = &pev->dmg_take;
 	}
 	*/
-
 
 	//MODDD
 	//if (pev->dmg_take || pev->dmg_save || m_bitsHUDDamage != m_bitsDamageType)
@@ -9643,7 +9762,7 @@ void CBasePlayer :: UpdateClientData( void )
 	{
 
 		//This only appleis if the endlessFlashlightBattery CVar is 0 (off).
-		if(global_endlessFlashlightBattery == 0){
+		if(EASY_CVAR_GET(endlessFlashlightBattery) == 0){
 			if (FlashlightIsOn())
 			{
 				if (m_iFlashBattery)
@@ -10102,7 +10221,7 @@ void CBasePlayer::DropPlayerItem ( char *pszItemName )
 {
 	//MODDD - new cvar.
 	//if ( !g_pGameRules->IsMultiplayer() || (weaponstay.value > 0) )
-	if ( global_canDropInSinglePlayer == 0 && (!g_pGameRules->IsMultiplayer() || (weaponstay.value > 0)) )
+	if ( EASY_CVAR_GET(canDropInSinglePlayer) == 0 && (!g_pGameRules->IsMultiplayer() || (weaponstay.value > 0)) )
 	{
 		// no dropping in single player.
 		return;
@@ -10388,7 +10507,7 @@ void CBasePlayer::consumeAdrenaline(){
 	//m_rgItems[ITEM_ADRENALINE] --;
 	//SetSuitUpdate("!HEV_ADR_USE", FALSE, SUIT_REPEAT_OK);
 
-	if(global_batteryDrainsAtAdrenalineMode == 2){
+	if(EASY_CVAR_GET(batteryDrainsAtAdrenalineMode) == 2){
 		//MODDD - discharge battery.
 		pev->armorvalue = 0;
 		m_iClientBattery = pev->armorvalue;

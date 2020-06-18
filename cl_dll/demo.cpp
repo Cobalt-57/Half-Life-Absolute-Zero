@@ -18,8 +18,6 @@
 #include "demo_api.h"
 #include <memory.h>
 
-#define DLLEXPORT __declspec( dllexport )
-
 int g_demosniper = 0;
 int g_demosniperdamage = 0;
 float g_demosniperorg[3];
@@ -30,7 +28,7 @@ float g_demozoom;
 
 extern "C" 
 {
-	void DLLEXPORT Demo_ReadBuffer( int size, unsigned char *buffer );
+	void DLLEXPORT_2 Demo_ReadBuffer( int size, unsigned char *buffer );
 }
 
 /*
@@ -60,7 +58,7 @@ Demo_ReadBuffer
 Engine wants us to parse some data from the demo stream
 =====================
 */
-void DLLEXPORT Demo_ReadBuffer( int size, unsigned char *buffer )
+void DLLEXPORT_2 Demo_ReadBuffer( int size, unsigned char *buffer )
 {
 	int type;
 	int i = 0;

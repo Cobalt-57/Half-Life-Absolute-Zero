@@ -200,7 +200,7 @@ void CMP5::PrimaryAttack()
 
 	//MODDD NOTE - for whatever reason the outcomes were swapped. That is, the condition was "NOT in multiplayer", yet passing picked the "optimized muliplayer" one and vice versa.
 	//Changed.
-	if(EASY_CVAR_GET(playerWeaponSpreadMode)!=2 && (EASY_CVAR_GET(playerWeaponSpreadMode)==1 || !WEAPON_DEFAULT_MULTIPLAYER_CHECK) )
+	if(EASY_CVAR_GET(playerWeaponSpreadMode)!=2 && (EASY_CVAR_GET(playerWeaponSpreadMode)==1 || !IsMultiplayer()) )
 	{
 		// single player spread
 		vecDir = m_pPlayer->FireBulletsPlayer( 1, vecSrc, vecAiming, VECTOR_CONE_3DEGREES, 8192, BULLET_PLAYER_MP5, 2, 0, m_pPlayer->pev, m_pPlayer->random_seed );

@@ -12,40 +12,57 @@
 *   without written permission from Valve LLC.
 *
 ****/
+
 //
-// util.cpp
+// cl_util.cpp
 //
 // implementation of class-less helper functions
 //
 
-#include "STDIO.H"
-#include "STDLIB.H"
-#include "MATH.H"
+#include "externalLibInclude.h"
+//#include "STDIO.H"
+//#include "STDLIB.H"
+//#include "MATH.H"
+
 
 #include "hud.h"
 #include "cl_util.h"
 #include <string.h>
 
+
 #ifndef M_PI
 #define M_PI		3.14159265358979323846	// matches value in gcc v2 math.h
 #endif
+
+// don't mind these.
+int playingMov = FALSE;
+float movieStartTime = -1;
+
+
+
+
 
 vec3_t vec3_origin( 0, 0, 0 );
 
 
 
 //MODDD - IMPORTANT!
+float globalPSEUDO_autoDeterminedFOV = -1;
+float globalPSEUDO_ScreenWidth = -1;
+float globalPSEUDO_ScreenHeight = -1;
 
 int global2PSEUDO_playerHasGlockSilencer = -1;
 float global2PSEUDO_IGNOREcameraMode = -1;
 
-float global2PSEUDO_determinedFOV = -1;
+//float global2PSEUDO_determinedFOV = -1;
 float global2PSEUDO_grabbedByBarancle = 0;
 
+// If cl_fvox has ever been changed, we have to let the server-version of the player know about
+// this up-to-date preference.
+float global2PSEUDO_cl_fvox = -1;
 
-
-//redundant, CVar constants defined right below.
-//extern float global2_enableModPrintouts;
+float global2PSEUDO_default_fov = -1;
+float global2PSEUDO_auto_adjust_fov = -1;
 
 
 //is this accessible everywhere?
@@ -53,21 +70,127 @@ EASY_CVAR_DECLARATION_CLIENT_MASS
 
 
 
-cvar_t* cvar2_cl_server_interpolation = NULL;
-float global2_cl_server_interpolation = -1;
 
-void updateClientCVarRefs(){
+// Easy place for any other CVar init stuff after loading hidden vars (if applicble).
+// Called from cl_dll/cdll_int.cpp
+// ACTUALLY no. Now called from a custom message sent when the player's "OnFirstAppearance" is called form joining
+// a server or loading a game.  This keeps the info in sync at startup since possibly falling out of sync between games.
+void lateCVarInit(void){
+	
+	// force an update now for safety.
+	// The second "1" is a signal to not play any message alongside the set, like on starting a map/joining a server.
+	global2PSEUDO_cl_fvox = EASY_CVAR_GET(cl_fvox);
+	if (global2PSEUDO_cl_fvox == 0) {
+		easyClientCommand("_cl_fvox 0 1");
+	}else {
+		easyClientCommand("_cl_fvox 1 1");
+	}
+	
+	
+
+//	char aryChrToSend[128];//	const char* szFmt = "%s %d";
+//	sprintf(arg_dest, szFmt, arg_label, arg_arg);
+
+	global2PSEUDO_default_fov = EASY_CVAR_GET(default_fov);
+	//gEngfuncs.pfnClientCmd("_default_fov %f", global2PSEUDO_default_fov);
+	easyClientCommand("_default_fov %f", global2PSEUDO_default_fov);
+
+
+	global2PSEUDO_auto_adjust_fov = EASY_CVAR_GET(auto_adjust_fov);
+	easyClientCommand("_auto_adjust_fov %f", global2PSEUDO_auto_adjust_fov);
+	
+	updateAutoFOV();  //do we even need to do this here?
+	easyClientCommand("_auto_determined_fov %f", globalPSEUDO_autoDeterminedFOV);
+	
+	
+}//END OF lateCVarInit
+
+
+void updateClientCVarRefs(void){
 
 	EASY_CVAR_UPDATE_CLIENT_MASS
 
-	if(cvar2_cl_server_interpolation != NULL && cvar2_cl_server_interpolation->value != global2_cl_server_interpolation){\
-		global2_cl_server_interpolation = cvar2_cl_server_interpolation->value;\
-	}
+	//nope, this is what EASY_CVAR should be doing.  Or something better.
+	//if(cvar2_cl_server_interpolation != NULL && cvar2_cl_server_interpolation->value != global2_cl_server_interpolation){\
+	//	global2_cl_server_interpolation = cvar2_cl_server_interpolation->value;\
+	//}
 
 	
 	//just keeping this in sync...   NO, see hud_redraw for where this is updated. that works too.
 	//global2PSEUDO_IGNOREcameraMode = gHUD.CVar_cameraModeMem;
-}
+
+	if (EASY_CVAR_GET(cl_fvox) != global2PSEUDO_cl_fvox) {
+		global2PSEUDO_cl_fvox = EASY_CVAR_GET(cl_fvox);
+		if (global2PSEUDO_cl_fvox == 0) {
+			easyClientCommand("_cl_fvox 0");
+		}else{
+			easyClientCommand("_cl_fvox 1");
+		}
+	}
+	
+	
+	if(EASY_CVAR_GET(default_fov) != global2PSEUDO_default_fov){
+		global2PSEUDO_default_fov = EASY_CVAR_GET(default_fov);
+		easyClientCommand("_default_fov %f", global2PSEUDO_default_fov);
+		// this changes the globalPSEUDO_autoDeterminedFOV
+		updateAutoFOV();
+		easyClientCommand("_auto_determined_fov %f", globalPSEUDO_autoDeterminedFOV);
+	}
+	
+	if(EASY_CVAR_GET(auto_adjust_fov) != global2PSEUDO_auto_adjust_fov){
+		global2PSEUDO_auto_adjust_fov = EASY_CVAR_GET(auto_adjust_fov);
+		easyClientCommand("_auto_adjust_fov %f", global2PSEUDO_auto_adjust_fov);;
+	}
+	
+	if(globalPSEUDO_ScreenWidth != ScreenWidth || globalPSEUDO_ScreenHeight != globalPSEUDO_ScreenHeight){
+		updateAutoFOV();
+		easyClientCommand("_auto_determined_fov %f", globalPSEUDO_autoDeterminedFOV);
+	}
+	
+
+
+
+}//END OF updateClientCVarRefs
+
+
+void updateAutoFOV(void){
+	
+	// keep track of these, no need to update until they change again.
+	globalPSEUDO_ScreenWidth = ScreenWidth;
+	globalPSEUDO_ScreenHeight = ScreenHeight;
+	
+	//MODDD - determine the FOV, given the screen size available at this point (by a ratio of width/height, plugged
+	//        into a linear function).
+	//cvar_t* aspectratio_determined_fov = CVAR_GET("aspectratio_determined_fov");
+	//aspectratio_determined_fov->value = (int) (  ((float)ScreenWidth / (float)ScreenHeight) * 45 + 30   );
+	//new formula.  ratio of 1.333 still yeilds FOV of 90, but ratio of 1.777 yields FOV of 105 instead of 110.
+	
+
+	float defaultFOV_value = CVAR_GET_FLOAT( "default_fov" );
+
+	if(defaultFOV_value < 1){
+		//CVar not assigned yet?  Just assume it was 90.
+		defaultFOV_value = 90;
+	}else{
+		//ok, just use whatever it is then.
+	}
+	
+	//Now see how the screen size would influence this choice.
+	globalPSEUDO_autoDeterminedFOV = ( (defaultFOV_value/90) * (  ((float)ScreenWidth / (float)ScreenHeight) * 33.75f + 45   ));
+	
+	
+	
+	//aspectratio_determined_fov->value = determinedFOV;
+	//gEngfuncs.Cvar_SetValue("aspectratio_determined_fov", determinedFOV );
+	//send it off!
+	
+	//global2PSEUDO_determinedFOV = determinedFOV;
+	
+	
+	//easyPrintLine("HHHHHHHHHHHHHHHHHHHHHH %d %d, %.2f", ScreenWidth, ScreenHeight, (float)determinedFOV);
+
+}//END OF updateAutoFOV
+
 
 
 
@@ -177,9 +300,6 @@ SpriteHandle_t LoadSprite(const char *pszName)
 
 
 
-
-
-
 void SetCrosshairFiltered( SpriteHandle_t hspr, wrect_t rc, int r, int g, int b ){
 
 	SetCrosshairFiltered(hspr, rc, r, g, b, 0);
@@ -192,7 +312,7 @@ void SetCrosshairFiltered( SpriteHandle_t hspr, wrect_t rc, int r, int g, int b,
 	//MODDD - player crosshair is always this instead.
 	
 
-	if(global2_useAlphaCrosshair == 1 && forceException == 0){
+	if(EASY_CVAR_GET(useAlphaCrosshair) == 1 && forceException == 0){
 		//if we don't know 
 		//easyPrint("YAYY\n");
 
@@ -209,9 +329,6 @@ void SetCrosshairFiltered( SpriteHandle_t hspr, wrect_t rc, int r, int g, int b,
 	
 
 }
-
-
-
 
 
 
@@ -287,8 +404,6 @@ void generateColor(int* ary){
 
 
 
-
-
 //fill an array of 3 values ("ary", assumed) with decimals from 0 to 1.
 //~Colors of the brightest intensity only allowed.
 void generateColorDec(float* ary){
@@ -358,15 +473,6 @@ void generateColorDec(float* ary){
 	ary[deltaColor] = 1 * ( changeType - 1)/-2 + (changeType) * progress;
 
 }
-	
-
-
-
-
-
-
-
-	
 
 
 
@@ -460,14 +566,8 @@ float getTimePeriodAndBack(const float& arg_time, const float& arg_period, const
 		float finalResult = interpretedTimeFactor * range + arg_extentMin;
 
 		return finalResult;
-
-
-		
 	}
-
-	
 }
-
 
 inline
 float getTimePeriodAndBackSmooth(const float& arg_time, const float& arg_period, const float& arg_extentMin, const float& arg_extentMax){
@@ -540,21 +640,6 @@ float getTimePeriodAndBackSmooth(const float& arg_time, const float& arg_period,
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 void drawStringFabulous(int arg_x, int arg_y, const char* arg_str){
 	int i = 0;
 	int currentOffX = 0;
@@ -601,17 +686,11 @@ void drawStringFabulousVert(int arg_x, int arg_y, const char* arg_str){
 	}//END
 }
 
-
-
 void drawString(int arg_x, int arg_y, const char* arg_str, const float& r, const float& g, const float& b){
 
-	
 	gEngfuncs.pfnDrawSetTextColor(r, g, b);
 	gEngfuncs.pfnDrawConsoleString( arg_x, arg_y, (char*) arg_str );
-	
 }
-
-
 
 
 int firstCrazyShit = TRUE;
@@ -623,20 +702,16 @@ float nextTimeeeee = -1;
 
 
 
-
 void drawCrazyShit(float flTime)
 {
 	
-
-	
-		if(firstCrazyShit){
-			firstCrazyShit = FALSE;
-			for(int i = 0; i < 44; i++){
-				crazyRandomShitX[i] = randomValueInt(0, ScreenWidth);
-				crazyRandomShitY[i] = randomValueInt(0, ScreenHeight);
-			}
+	if(firstCrazyShit){
+		firstCrazyShit = FALSE;
+		for(int i = 0; i < 44; i++){
+			crazyRandomShitX[i] = randomValueInt(0, ScreenWidth);
+			crazyRandomShitY[i] = randomValueInt(0, ScreenHeight);
 		}
-
+	}
 
 	int randomFudgeX = 0;
 	int randomFudgeY = 0;
@@ -674,14 +749,10 @@ void drawCrazyShit(float flTime)
 	drawStringFabulous( ScreenWidth - 210, ScreenHeight - 125, "8===========D" );
 	drawStringFabulous( ScreenWidth - 210, ScreenHeight - 140, "8===========D" );
 
-
 	//depend on time.
 
 	//float timeFactor = (modulusFloat(flTime, 3.6f) / 3.6f);
 	//int xVal = (int) (timeFactor * (ScreenWidth *1.5) - ScreenWidth*0.5 ) ;
-
-
-
 
 	//int xVal = (int) (getTimePeriod(flTime, 5.6f, -ScreenWidth, ScreenWidth) );
 
@@ -693,19 +764,12 @@ void drawCrazyShit(float flTime)
 	drawString( xVal, 60 + yValXXX * 1, (char*) "OH SHIT!!!", 0.5, 0.9, 0.4 );
 	
 
-
 	int xVal2 = (int) (getTimePeriod(flTime, 2.8f, -ScreenWidth, 0) );
 	int yVal = (int) (getTimePeriod(flTime, 2.8f, -ScreenHeight, 0) );
-	
-	
-
-
 	
 	randomFudgeX = randomValueInt(-2, 2);
 	randomFudgeY = randomValueInt(-2, 2);
 	drawStringFabulous( xVal + 40 + randomFudgeX, ScreenHeight - 250 + randomFudgeY, "8===========D" );
-
-
 
 	randomFudgeX = randomValueInt(-1, 1);
 	randomFudgeY = randomValueInt(-1, 1);
@@ -742,7 +806,6 @@ void drawCrazyShit(float flTime)
 			}
 		}
 
-
 		int choice = randomValueInt(33, 126);
 		char strTemp[2];
 		strTemp[0] = (char) choice;
@@ -750,12 +813,6 @@ void drawCrazyShit(float flTime)
 		drawStringFabulous(crazyRandomShitX[i], crazyRandomShitY[i], strTemp);
 
 	}
-
-
-
-
-
-
 
 	drawStringFabulous(30, 80, "FABULOUS");
 
@@ -774,31 +831,15 @@ void drawCrazyShit(float flTime)
 	
 	drawStringFabulous( -80 + xVal3 + randomFudgeX, -20 + yVal2*0.5 + randomFudgeY, "BITCHES" );
 	
-
-
-
-
-
-	
 	drawStringFabulous(ScreenWidth - 360 + randomFudgeX + cos(flTime * 3) * 80, 190 + randomFudgeY + cos(flTime * 8) * 40, "MOTHERFUCKERS GONNA FUCK");
 
-
-
-	
-	
 	drawStringFabulous(ScreenWidth/2 - 400 + randomFudgeX + cos(flTime * 1.2f) * 480, ScreenHeight + sin(flTime * 1.2f) * 160, "I\'M LITTLE TEAPOT SUCK MY DICK");
 
-
-	
 	int xVal4 = (int) (getTimePeriod(flTime, 14.1f, -80, ScreenWidth + 80) );
 	drawString(xVal4, sin(flTime * 0.7)*400 + ScreenHeight/2, "DICKS", 1, 1, 0);
 
-
-
 	int xVal5 = (int) (getTimePeriod(flTime, 12.0f, -80, ScreenWidth + 80) );
 	drawString(xVal5, sin(flTime * 1.2)*70 + ScreenHeight - 300, "BITCHES DIG MY SINE WAVE", 1, 0, 1);
-
-
 
 	float rad = 0;
 #define Q_PI 3.141529
@@ -830,26 +871,13 @@ void drawCrazyShit(float flTime)
 	drawString( ScreenWidth/2 + 18, ScreenHeight/2- 24-18, "WE GOT MATH", 0.35, 0.53, 0.91 );
 	drawString( ScreenWidth/2 + 39, ScreenHeight/2- 24, "N\' SHIT", 0.35, 0.53, 0.91 );
 
-
-
-
-
-
 }//END OF drawCrazyShit
 
 
 
 
-
-
-
-
-
-
-	/*
+/*
 void createSendString(char* arg_dest, int arg_maxLength, const char* arg_base, int arg_arg){
-
-
 	for(int i = 0; i < arg_maxLength - 1; i++){
 		if(arg_base[i] == '\0'){
 			//done.  Finish up.
@@ -863,37 +891,27 @@ void createSendString(char* arg_dest, int arg_maxLength, const char* arg_base, i
 		}
 	}
 	aryChrToSend[arg_maxLength - 1] = '\0';
-
-
-
 }
 */
 
 
-
-
-
-void createSendString(char* arg_dest, const char* arg_label, int arg_arg){
-	const char* szFmt = "%s %d";
-	sprintf(arg_dest, szFmt, arg_label, arg_arg);
-}
-
+// hmmmmm.     NO.
+//void createSendString(char* arg_dest, const char* arg_label, int arg_arg){
+//	const char* szFmt = "%s %d";
+//	sprintf(arg_dest, szFmt, arg_label, arg_arg);
+//}
+/*
 void sendAutoFOV(void){
-
 	//JUST DO IT!
-
-	
 	//gEngfuncs.Cvar_SetValue("default_fov", global2PSEUDO_determinedFOV );
-
 	
 	char aryChrToSend[128];
 	createSendString(aryChrToSend, "sendautofov", global2PSEUDO_determinedFOV);
 	//easyForcePrintLine("RIGHT BACK ATCHA %s", aryChrToSend);
 	gEngfuncs.pfnClientCmd(aryChrToSend);
 	
-
-
 }
+*/
 
 
 
@@ -934,7 +952,7 @@ void testForHelpFile(void){
 	//the "hl.exe" in here is unhelpful, cut it (substring, cut off from the last slash onwards)
 	//UTIL_substring(globalPSEUDO_halflifePath, 0, recentSlashPos + 1);
 	global2PSEUDO_halflifePath[recentSlashPos + 1] = '\0';  //termination... same effect.
-
+	
 	
 
 	const char* gameName; //this will not end in a slash.
@@ -953,7 +971,11 @@ void testForHelpFile(void){
 	if(checkSubFileExistence("helpme.txt")){
 		//huh, is this a good idea?
 		//easyForcePrintLine("CLIENTSIDE: I DID FIND YOUR FILE!!");
-		global2_hiddenMemPrintout = 1;
+		
+		//"gets the point across"
+		//global2_hiddenMemPrintout = 1;
+		EASY_CVAR_SET_DEBUGONLY(hiddenMemPrintout, 1);
+
 		//easyForcePrintLine("QQQQEEEEEEEYUYYERYERYERYERY");
 	}else{
 		//easyForcePrintLine("CLIENTSIDE: I did not find your file and am sad.");

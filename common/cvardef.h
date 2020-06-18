@@ -28,7 +28,11 @@
 typedef struct cvar_s
 {
 	char	*name;
-	char	*string;
+	
+	// TAGGG - this used to be called just "string".
+	// Changing to "value_string" as "string" can be misinterpreted as the C++ 'string' type
+	char	*value_string;
+	
 	int		flags;
 	float	value;
 	struct cvar_s *next;

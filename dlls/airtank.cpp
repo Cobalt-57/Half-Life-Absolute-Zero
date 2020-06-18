@@ -124,9 +124,10 @@ void CAirtank::TankTouch( CBaseEntity *pOther )
 	//"airTankAirTime".  If air time isn't at the max, set it to the max and remove the tank we found from the
 	//game.
 	//////////////////////////////////////////////////////////////////////
-
-	CBasePlayer * pPlayer = dynamic_cast<CBasePlayer*>(pOther);
-
+	
+	//CBasePlayer * pPlayer = dynamic_cast<CBasePlayer*>(pOther);
+	CBasePlayer * pPlayer = static_cast<CBasePlayer*>(pOther);
+	
 	if(pPlayer->airTankAirTime < PLAYER_AIRTANK_TIME_MAX){
 		//no sound.
 		//pPlayer->SetSuitUpdate("!HEV_DET4", FALSE, SUIT_NEXT_IN_1MIN);

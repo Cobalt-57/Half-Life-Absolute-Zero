@@ -31,7 +31,7 @@
 //MODDD - why not???
 #include	"animation.h"
 
-extern float global_germanCensorship;
+EASY_CVAR_EXTERN(germanCensorship)
 
 extern BOOL globalPSEUDO_germanModel_barneyFound;
 
@@ -87,16 +87,16 @@ enum
 
 
 
-extern float global_monsterSpawnPrintout;
+EASY_CVAR_EXTERN(monsterSpawnPrintout)
 
-extern float global_pissedNPCs;
-extern float global_barneyPrintouts;
-extern float global_glockOldReloadLogicBarney;
-extern float global_barneyDroppedGlockAmmoCap;
+EASY_CVAR_EXTERN(pissedNPCs)
+EASY_CVAR_EXTERN(barneyPrintouts)
+EASY_CVAR_EXTERN(glockOldReloadLogicBarney)
+EASY_CVAR_EXTERN(barneyDroppedGlockAmmoCap)
 extern BOOL globalPSEUDO_iCanHazMemez;
 
-extern float global_barneyUnholsterTime;
-extern float global_barneyUnholsterAnimChoice;
+EASY_CVAR_EXTERN(barneyUnholsterTime)
+EASY_CVAR_EXTERN(barneyUnholsterAnimChoice)
 
 
 
@@ -254,7 +254,7 @@ void CBarney::DeclineFollowingProvoked(CBaseEntity* pCaller){
 	//Barney won't say anything, he's too busy shooting you.
 	//...or will he? MUHAHAHA.
 	
-	if(global_pissedNPCs != 1 || !globalPSEUDO_iCanHazMemez){
+	if(EASY_CVAR_GET(pissedNPCs) != 1 || !globalPSEUDO_iCanHazMemez){
 		PlaySentence( "BA_PISSED", 3, VOL_NORM, ATTN_NORM );
 	}else{
 		PlaySentence( "BA_POKE_D", 8, VOL_NORM, ATTN_NORM );
@@ -265,14 +265,14 @@ void CBarney::DeclineFollowingProvoked(CBaseEntity* pCaller){
 }
 void CBarney::SayProvoked(void){
 	
-	if(global_pissedNPCs != 1 || !globalPSEUDO_iCanHazMemez){
+	if(EASY_CVAR_GET(pissedNPCs) != 1 || !globalPSEUDO_iCanHazMemez){
 		PlaySentence( "BA_MAD", 4, VOL_NORM, ATTN_NORM );
 	}else{
 		PlaySentence( "BA_POKE_D", 8, VOL_NORM, ATTN_NORM );
 	}
 }
 void CBarney::SaySuspicious(void){
-	if(global_pissedNPCs != 1 || !globalPSEUDO_iCanHazMemez){
+	if(EASY_CVAR_GET(pissedNPCs) != 1 || !globalPSEUDO_iCanHazMemez){
 		PlaySentence( "BA_SHOT", 4, VOL_NORM, ATTN_NORM );
 	}else{
 		PlaySentence( "BA_POKE_C", 6, VOL_NORM, ATTN_NORM );
@@ -317,7 +317,7 @@ void CBarney::OnNearCautious(void){
 		ChangeSchedule(slBarneyEnemyDraw);
 	}
 	
-	unholsterTimer = gpGlobals->time + global_barneyUnholsterTime;
+	unholsterTimer = gpGlobals->time + EASY_CVAR_GET(barneyUnholsterTime);
 
 }//END OF onNearCautious
 
@@ -771,7 +771,7 @@ void CBarney :: RunTask( Task_t *pTask )
 	}
 
 
-	//easyPrintLine("HOW ARE YOU THIS WEIRD %.2f", gpGlobals->time);
+	//easyForcePrintLine("HOW ARE YOU THIS WEIRD %.2f", gpGlobals->time);
 
 
 
@@ -782,8 +782,8 @@ void CBarney :: RunTask( Task_t *pTask )
 	if(lastSecond != (int)gpGlobals->time && ((int)gpGlobals->time) % 10 == 0){
 		lastSecond = (int)gpGlobals->time;
 		//UTIL_printoutVector(pev->origin);
-		easyPrintLine("GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG");
-		//easyPrintLine("baaa %.2f %.2f %.2f, %.2f %.2f %.2f", pev->mins.x, pev->mins.y, pev->mins.z, pev->maxs.x, pev->maxs.y, pev->maxs.z );
+		easyForcePrintLine("GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG");
+		//easyForcePrintLine("baaa %.2f %.2f %.2f, %.2f %.2f %.2f", pev->mins.x, pev->mins.y, pev->mins.z, pev->maxs.x, pev->maxs.y, pev->maxs.z );
 
 
 			
@@ -804,12 +804,12 @@ void CBarney :: RunTask( Task_t *pTask )
 	/*
 	if(gpGlobals->time > 20 && gpGlobals->time < 21){
 		//UTIL_printoutVector(pev->origin);
-		easyPrintLine("GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG");
-		easyPrintLine("GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG");
-		easyPrintLine("GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG");
-		easyPrintLine("GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG");
-		easyPrintLine("GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG");
-		easyPrintLine("hahaha what barneh %.2f %.2f %.2f, %.2f %.2f %.2f", pev->mins.x, pev->mins.y, pev->mins.z, pev->maxs.x, pev->maxs.y, pev->maxs.z );
+		easyForcePrintLine("GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG");
+		easyForcePrintLine("GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG");
+		easyForcePrintLine("GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG");
+		easyForcePrintLine("GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG");
+		easyForcePrintLine("GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG");
+		easyForcePrintLine("hahaha what barneh %.2f %.2f %.2f, %.2f %.2f %.2f", pev->mins.x, pev->mins.y, pev->mins.z, pev->maxs.x, pev->maxs.y, pev->maxs.z );
 		UTIL_drawBox(pev->origin + pev->mins, pev->origin + pev->maxs);
 	}
 	//uh, shouldn't this bit go in front of the box-draw, so that the box-draw is a portrayal of the most recent resize?
@@ -895,16 +895,145 @@ void CBarney :: AlertSound( void )
 		//if ( FOkToSpeak() )
 		if ( FOkToSpeakAllowCombat(CBarney::g_barneyAlertTalkWaitTime) )
 		{
-			//easyPrintLine("BARNEYS ALERT RAN!");
+			//easyForcePrintLine("BARNEYS ALERT RAN!");
 
 			//MODDD - this doesn't appear to work.  It expects a single sentence named exactly "BA_ATTACK", I think, not, say, picking "BA_ATTACK0", "1", "2", ...
 			//PlaySentence( "BA_ATTACK", RANDOM_FLOAT(2.8, 3.2), VOL_NORM, ATTN_IDLE );
 			
-			if(global_pissedNPCs != 1 || !globalPSEUDO_iCanHazMemez){
-				SENTENCEG_PlayRndSz( ENT(pev), "BA_ATTACK", VOL_NORM, ATTN_NORM, 0, m_voicePitch);
+			if(EASY_CVAR_GET(pissedNPCs) != 1 || !globalPSEUDO_iCanHazMemez){
+				
+				// MODDD - little intervention.
+				// Some lines for some foes don't make sense like 
+				// "Aim for the head if you can find it" against robotic or human foes.
+				int enemyClassify = m_hEnemy->Classify();
+				long randoRange;
+				if (enemyClassify == CLASS_PLAYER) {
+					// if the enemy is the player, any line can be said except the
+					// "open fire, Gordon!" one.  That doesn't make a whole lot of sense now.
+					
+					switch (RANDOM_LONG(0, 3)) {
+						case 0:
+							PlaySentence("BA_PISSED", 3, VOL_NORM, ATTN_NORM);
+						break;
+						case 1:
+							PlaySentenceSingular("BA_ATTACK1", 4, VOL_NORM, ATTN_NORM);
+						break;
+						case 2:
+							PlaySentenceSingular("BA_ATTACK2", 4, VOL_NORM, ATTN_NORM);
+						break;
+						case 3:
+							PlaySentenceSingular("BA_ATTACK6", 4, VOL_NORM, ATTN_NORM);
+						break;
+					}
+				}else if(
+					enemyClassify == CLASS_ALIEN_MILITARY ||
+					enemyClassify == CLASS_ALIEN_PASSIVE ||
+					enemyClassify == CLASS_ALIEN_MONSTER
+					) {
+					//MODDD - you can say any line (Retail behavior).
+					//SENTENCEG_PlayRndSz(ENT(pev), "BA_ATTACK", VOL_NORM, ATTN_NORM, 0, m_voicePitch);
+					// ...nevermind.  Want to exclude the "open fire gordon" if we hate the player.
+					// And "Freeze!" doesn't make sense for animal-like aliens.
+					// Although this section will be the less animal-like ones, so it works.
+
+					randoRange = 6;
+					if (HasMemory(bits_COND_PROVOKED)) {
+						// We dare not speak his name of we're pissed off at him.
+						randoRange -= 1;
+					}
+
+					switch (RANDOM_LONG(0, randoRange)) {
+					case 0:
+						PlaySentenceSingular("BA_ATTACK1", 4, VOL_NORM, ATTN_NORM);
+						break;
+					case 1:
+						PlaySentenceSingular("BA_ATTACK2", 4, VOL_NORM, ATTN_NORM);
+						break;
+					case 2:
+						PlaySentenceSingular("BA_ATTACK3", 4, VOL_NORM, ATTN_NORM);
+						break;
+					case 3:
+						PlaySentenceSingular("BA_ATTACK4", 4, VOL_NORM, ATTN_NORM);
+						break;
+					case 4:
+						PlaySentenceSingular("BA_ATTACK5", 4, VOL_NORM, ATTN_NORM);
+						break;
+					case 5:
+						PlaySentenceSingular("BA_ATTACK6", 4, VOL_NORM, ATTN_NORM);
+						break;
+					case 6:
+						PlaySentenceSingular("BA_ATTACK0", 4, VOL_NORM, ATTN_NORM);
+						break;
+					}
+
+				}
+				else if (
+					enemyClassify == CLASS_ALIEN_PREY ||
+					enemyClassify == CLASS_ALIEN_PREDATOR ||
+					enemyClassify == CLASS_BARNACLE ||
+					enemyClassify == CLASS_ALIEN_BIOWEAPON ||
+					enemyClassify == CLASS_PLAYER_BIOWEAPON
+					) {
+
+					randoRange = 5;
+					if (HasMemory(bits_COND_PROVOKED)) {
+						// We dare not speak his name of we're pissed off at him.
+						randoRange -= 1;
+					}
+
+					switch (RANDOM_LONG(0, randoRange)) {
+					case 0:
+						PlaySentenceSingular("BA_ATTACK1", 4, VOL_NORM, ATTN_NORM);
+						break;
+					case 1:
+						PlaySentenceSingular("BA_ATTACK2", 4, VOL_NORM, ATTN_NORM);
+						break;
+					case 2:
+						PlaySentenceSingular("BA_ATTACK3", 4, VOL_NORM, ATTN_NORM);
+						break;
+					case 3:
+						PlaySentenceSingular("BA_ATTACK4", 4, VOL_NORM, ATTN_NORM);
+						break;
+					case 4:
+						PlaySentenceSingular("BA_ATTACK5", 4, VOL_NORM, ATTN_NORM);
+						break;
+					case 5:
+						PlaySentenceSingular("BA_ATTACK0", 4, VOL_NORM, ATTN_NORM);
+						break;
+					}
+
+				}else {
+					// human or robotic?
+
+					randoRange = 3;
+					if (HasMemory(bits_COND_PROVOKED)) {
+						// We dare not speak his name of we're pissed off at him.
+						randoRange -= 1;
+					}
+
+					switch (RANDOM_LONG(0, randoRange)) {
+					case 0:
+						PlaySentenceSingular("BA_ATTACK1", 4, VOL_NORM, ATTN_NORM);
+						break;
+					case 1:
+						PlaySentenceSingular("BA_ATTACK2", 4, VOL_NORM, ATTN_NORM);
+						break;
+					case 2:
+						PlaySentenceSingular("BA_ATTACK6", 4, VOL_NORM, ATTN_NORM);
+						break;
+					case 3:
+						PlaySentenceSingular("BA_ATTACK0", 4, VOL_NORM, ATTN_NORM);
+						break;
+					}
+				}
+
+
+				
+
 			}else{
 				SENTENCEG_PlayRndSz( ENT(pev), "BA_POKE_A", VOL_NORM, ATTN_NORM, 0, m_voicePitch);
 			}
+
 			//minimum delay of 5 seconds.
 			CBarney::g_barneyAlertTalkWaitTime = gpGlobals->time + 5;
 			//Also make all NPCs wait a bit to let this "battle cry" finish.
@@ -1069,7 +1198,7 @@ void CBarney :: MonsterThink(void){
 	
 	if(reloadSoundTime != -1 && gpGlobals->time >= reloadSoundTime){
 
-		if(global_glockOldReloadLogicBarney == 0 || m_cAmmoLoaded == 0 ){
+		if(EASY_CVAR_GET(glockOldReloadLogicBarney) == 0 || m_cAmmoLoaded == 0 ){
 			m_cAmmoLoaded = BARNEY_WEAPON_CLIP_SIZE - 1;
 		}else{
 			m_cAmmoLoaded = BARNEY_WEAPON_CLIP_SIZE;
@@ -1088,17 +1217,17 @@ void CBarney :: MonsterThink(void){
 
 
 	
-	if(global_barneyPrintouts == 1){
+	if(EASY_CVAR_GET(barneyPrintouts) == 1){
 		if(m_hEnemy != NULL && m_hTargetEnt != NULL){
-			easyPrintLine("I AM A BARNEY AND MY ENEMY IS %s TARG: %s", STRING(m_hEnemy->pev->classname), STRING(m_hTargetEnt->pev->classname) );
+			easyForcePrintLine("I AM A BARNEY AND MY ENEMY IS %s TARG: %s", STRING(m_hEnemy->pev->classname), STRING(m_hTargetEnt->pev->classname) );
 		}else if(m_hEnemy != NULL){
-			easyPrintLine("I AM A BARNEY AND MY ENEMY IS %s", STRING(m_hEnemy->pev->classname) );
+			easyForcePrintLine("I AM A BARNEY AND MY ENEMY IS %s", STRING(m_hEnemy->pev->classname) );
 	
 		}else if(m_hTargetEnt != NULL){
-			easyPrintLine("I AM A BARNEY AND MY TARG IS: %s", STRING(m_hTargetEnt->pev->classname) );
+			easyForcePrintLine("I AM A BARNEY AND MY TARG IS: %s", STRING(m_hTargetEnt->pev->classname) );
 	
 		}else{
-			easyPrintLine("I AM A BARNEY AND I SUCK");
+			easyForcePrintLine("I AM A BARNEY AND I SUCK");
 	
 		}
 	}
@@ -1218,8 +1347,8 @@ CBarney::CBarney(void){
 void CBarney :: Spawn()
 {
 
-	if(global_monsterSpawnPrintout){
-		easyPrintLine("IM BARNEY, MY SPAWN FLAG BE : %d", pev->spawnflags);
+	if(EASY_CVAR_GET(monsterSpawnPrintout)){
+		easyForcePrintLine("IM BARNEY, MY SPAWN FLAG BE : %d", pev->spawnflags);
 	}
 
 	Precache( );
@@ -1252,7 +1381,7 @@ void CBarney :: Spawn()
 
 	
 
-	if(global_glockOldReloadLogicBarney == 0 ){
+	if(EASY_CVAR_GET(glockOldReloadLogicBarney) == 0 ){
 		//not using old reload logic?  Barney just has 12 rounds.
 		m_cAmmoLoaded = BARNEY_WEAPON_CLIP_SIZE - 1;
 	}else{
@@ -1503,12 +1632,12 @@ GENERATE_KILLED_IMPLEMENTATION(CBarney)
 			if(g != NULL){
 				//use this if you have to.
 				//CGlock::getUsingGlockOldReloadLogic()
-				if(global_barneyDroppedGlockAmmoCap == -2){
+				if(EASY_CVAR_GET(barneyDroppedGlockAmmoCap) == -2){
 					g->m_iDefaultAmmo = BARNEY_WEAPON_CLIP_SIZE;
-				}else if(global_barneyDroppedGlockAmmoCap == -1){
+				}else if(EASY_CVAR_GET(barneyDroppedGlockAmmoCap) == -1){
 					g->m_iDefaultAmmo = BARNEY_WEAPON_CLIP_SIZE - 1;
 				}else{
-					g->m_iDefaultAmmo = min((int)global_barneyDroppedGlockAmmoCap, m_cAmmoLoaded);
+					g->m_iDefaultAmmo = min((int)EASY_CVAR_GET(barneyDroppedGlockAmmoCap), m_cAmmoLoaded);
 				}
 			}
 		}//END OF if(pGun != NULL)
@@ -1540,8 +1669,8 @@ Schedule_t* CBarney :: GetScheduleOfType ( int Type )
 	case SCHED_ARM_WEAPON:
 		if ( m_hEnemy != NULL )
 		{
-			if(global_barneyUnholsterTime != -1){
-				unholsterTimer = gpGlobals->time + global_barneyUnholsterTime;
+			if(EASY_CVAR_GET(barneyUnholsterTime) != -1){
+				unholsterTimer = gpGlobals->time + EASY_CVAR_GET(barneyUnholsterTime);
 			}
 			// face enemy, then draw.
 			return slBarneyEnemyDraw;
@@ -1723,10 +1852,10 @@ Schedule_t *CBarney :: GetSchedule ( void )
 
 
 	canUnholster=FALSE;
-	if(global_barneyUnholsterTime != -1 && m_fGunDrawn){
+	if(EASY_CVAR_GET(barneyUnholsterTime) != -1 && m_fGunDrawn){
 		if( (HasConditions( bits_COND_HEAR_SOUND ) || HasConditions(bits_COND_SEE_ENEMY) || HasConditions(bits_COND_NEW_ENEMY)) ){
 			//set the timer...  keep it up.
-			unholsterTimer = gpGlobals->time + global_barneyUnholsterTime;
+			unholsterTimer = gpGlobals->time + EASY_CVAR_GET(barneyUnholsterTime);
 		}
 		//been too long since hearing anything or seeing any hostiles?  unholster when convenient.
 		if(unholsterTimer != -1 && gpGlobals->time >= unholsterTimer){
@@ -1751,21 +1880,82 @@ Schedule_t *CBarney :: GetSchedule ( void )
 
 
 
-		if(global_pissedNPCs == 0  || !globalPSEUDO_iCanHazMemez){
+		if(EASY_CVAR_GET(pissedNPCs) == 0  || !globalPSEUDO_iCanHazMemez){
+			
+			//MODDD - intervention again.
+			// Who says "That'll look great in my trophie room" after killing people?
+			// Madman.
+			//MODDD - oh shit, todo.  Right, the enemy's dead...
+			// would've had to remember the Classify of the recently removed enemy.
 			PlaySentence( "BA_KILL", 4, VOL_NORM, ATTN_NORM );
 
-			if(global_barneyUnholsterTime != -1 && unholsterTimer != -1){
+
+
+			/*
+			int enemyClassify = m_hEnemy->Classify();
+			//long randoRange;
+			if (enemyClassify == CLASS_PLAYER) {
+				
+				switch (RANDOM_LONG(0, 2)) {
+				case 0:
+					PlaySentence("BA_KILL3", 3, VOL_NORM, ATTN_NORM);
+					break;
+				case 1:
+					PlaySentenceSingular("BA_KILL4", 4, VOL_NORM, ATTN_NORM);
+					break;
+				case 2:
+					PlaySentenceSingular("BA_KILL6", 4, VOL_NORM, ATTN_NORM);
+					break;
+				}
+			}
+			else if (
+				enemyClassify == CLASS_ALIEN_MILITARY ||
+				enemyClassify == CLASS_ALIEN_PASSIVE ||
+				enemyClassify == CLASS_ALIEN_MONSTER
+				) {
+				// smarter aliens? all good.
+				PlaySentence("BA_KILL", 4, VOL_NORM, ATTN_NORM);
+			}
+			else if (
+				enemyClassify == CLASS_ALIEN_PREY ||
+				enemyClassify == CLASS_ALIEN_PREDATOR ||
+				enemyClassify == CLASS_BARNACLE ||
+				enemyClassify == CLASS_ALIEN_BIOWEAPON ||
+				enemyClassify == CLASS_PLAYER_BIOWEAPON
+				) {
+				// animal aliens? all good.
+				PlaySentence("BA_KILL", 4, VOL_NORM, ATTN_NORM);
+			}
+			else {
+				// human or robotic?
+
+				switch (RANDOM_LONG(0, 2)) {
+				case 0:
+					PlaySentence("BA_KILL3", 3, VOL_NORM, ATTN_NORM);
+					break;
+				case 1:
+					PlaySentenceSingular("BA_KILL4", 4, VOL_NORM, ATTN_NORM);
+					break;
+				case 2:
+					PlaySentenceSingular("BA_KILL6", 4, VOL_NORM, ATTN_NORM);
+					break;
+				}
+			}//END OF enemy classify check
+			*/
+
+
+			if(EASY_CVAR_GET(barneyUnholsterTime) != -1 && unholsterTimer != -1){
 				//MODDD - go ahead and add some randomness to the unholster timer... can't hurt.
 				unholsterTimer += RANDOM_FLOAT(0, 3);
 			}
 
-		}else if(global_pissedNPCs == 1){
+		}else if(EASY_CVAR_GET(pissedNPCs) == 1){
 			if(RANDOM_FLOAT(0, 24) == 0){
 				womboCombo();
 			}else{
 				PlaySentence( "BA_POKE_B", 6, VOL_NORM, ATTN_NORM );
 			}
-		}else if(global_pissedNPCs == 2){
+		}else if(EASY_CVAR_GET(pissedNPCs) == 2){
 			//guaranteed wombo combo... maybe.
 			womboCombo();
 		}
@@ -1825,7 +2015,7 @@ Schedule_t *CBarney :: GetSchedule ( void )
 		}
 
 		//MODDD
-		//easyPrintLine("AMMO: %d   %d", m_cAmmoLoaded, (BARNEY_WEAPON_CLIP_SIZE/2) );
+		//easyForcePrintLine("AMMO: %d   %d", m_cAmmoLoaded, (BARNEY_WEAPON_CLIP_SIZE/2) );
 		
 		if ( m_cAmmoLoaded < BARNEY_WEAPON_CLIP_SIZE / 2 )
 		{
@@ -1900,7 +2090,7 @@ MONSTERSTATE CBarney :: GetIdealState ( void )
 void CBarney::DeclineFollowing( void )
 {
 	//MODDD
-	if(global_pissedNPCs < 1){
+	if(EASY_CVAR_GET(pissedNPCs) < 1){
 		PlaySentence( "BA_POK", 2, VOL_NORM, ATTN_NORM );
 	}else{
 		playPissed();
@@ -2118,7 +2308,7 @@ int CBarney::LookupActivityHard(int activity){
 			//m_flFramerateSuggestion = 1.3;
 			//this->animEventQueuePush(6.7f / 30.0f, 0);
 
-			if(global_barneyUnholsterAnimChoice == 0){
+			if(EASY_CVAR_GET(barneyUnholsterAnimChoice) == 0){
 				//reverse draw.
 				//m_flFramerateSuggestion = -0.62;
 				this->animFrameStartSuggestion = 254;
@@ -2128,7 +2318,7 @@ int CBarney::LookupActivityHard(int activity){
 				m_flFramerateSuggestion = -0.61;
 				//pev->framerate = -1;
 				return LookupSequence("draw");
-			}else if(global_barneyUnholsterAnimChoice == 1){
+			}else if(EASY_CVAR_GET(barneyUnholsterAnimChoice) == 1){
 				//just the disarm animation.
 				return LookupSequence("disarm");
 			}else{
@@ -2205,11 +2395,11 @@ int CBarney::tryActivitySubstitute(int activity){
 	//no need for default, just falls back to the normal activity lookup.
 	switch(activity){
 		case ACT_DISARM:
-			if(global_barneyUnholsterAnimChoice == 0){
+			if(EASY_CVAR_GET(barneyUnholsterAnimChoice) == 0){
 				//reverse draw.
 				//m_flFramerateSuggestion = -1;
 				return LookupSequence("draw");
-			}else if(global_barneyUnholsterAnimChoice == 1){
+			}else if(EASY_CVAR_GET(barneyUnholsterAnimChoice) == 1){
 				//just the disarm animation.
 				return LookupSequence("disarm");
 			}else{

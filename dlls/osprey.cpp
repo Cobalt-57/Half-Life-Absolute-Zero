@@ -26,8 +26,14 @@
 #include "squadmonster.h"
 
 //MODDD -
-extern float global_cl_explosion;
+EASY_CVAR_EXTERN(cl_explosion)
+EASY_CVAR_EXTERN(sparksOspreyHitMulti)
+EASY_CVAR_EXTERN(ospreyIgnoresGruntCount)
 
+
+// oh look, a struct that's used... absolutely... nowhere.
+// ????????????????????????????????
+/*
 typedef struct 
 {
 	int isValid;
@@ -35,6 +41,7 @@ typedef struct
 	Vector	vecOrigin;
 	Vector  vecAngles;
 } t_ospreygrunt;
+*/
 
 
 
@@ -43,8 +50,6 @@ typedef struct
 
 #define MAX_CARRY	24
 
-extern float global_sparksOspreyHitMulti;
-extern float global_ospreyIgnoresGruntCount;
 
 
 class COsprey : public CBaseMonster
@@ -267,7 +272,7 @@ void COsprey :: FindAllThink( void )
 
 	
 	//MODDD - involving this cvar.
-	if (global_ospreyIgnoresGruntCount != 1 && m_iUnits == 0)
+	if (EASY_CVAR_GET(ospreyIgnoresGruntCount) != 1 && m_iUnits == 0)
 	{
 		ALERT( at_console, "osprey error: no grunts to resupply\n");
 		UTIL_Remove( this );
@@ -757,7 +762,7 @@ void COsprey :: DyingThink( void )
 		*/
 		
 		//MODDD - check for this var.
-		if(global_cl_explosion != 1){
+		if(EASY_CVAR_GET(cl_explosion) != 1){
 			// gibs
 			MESSAGE_BEGIN( MSG_PVS, SVC_TEMPENTITY, vecSpot );
 				WRITE_BYTE( TE_SPRITE );
@@ -781,7 +786,7 @@ void COsprey :: DyingThink( void )
 				WRITE_BYTE( 6  ); // framerate
 			MESSAGE_END();
 			*/
-		}//END OF if(global_cl_explosion != 1)
+		}//END OF if(EASY_CVAR_GET(cl_explosion) != 1)
 		else{
 			UTIL_Explosion(pev, vecSpot, 0, 0, 256, m_iExplode, 120, 12, 0, vecSpot, 0.4);
 		}
@@ -931,7 +936,7 @@ GENERATE_TRACEATTACK_IMPLEMENTATION(COsprey)
 	else
 	{
 		//UTIL_Sparks
-		UTIL_Sparks2( ptr->vecEndPos, DEFAULT_SPARK_BALLS, global_sparksOspreyHitMulti );
+		UTIL_Sparks2( ptr->vecEndPos, DEFAULT_SPARK_BALLS, EASY_CVAR_GET(sparksOspreyHitMulti) );
 	}
 }
 

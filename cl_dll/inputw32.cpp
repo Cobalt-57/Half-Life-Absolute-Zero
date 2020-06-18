@@ -16,7 +16,6 @@
 #include "usercmd.h"
 #include "const.h"
 #include "camera.h"
-#include "in_defs.h"
 #include "../engine/keydefs.h"
 #include "view.h"
 #include "windows.h"
@@ -28,11 +27,11 @@ int	g_iVisibleMouse = 0;
 
 extern "C" 
 {
-	void DLLEXPORT IN_ActivateMouse( void );
-	void DLLEXPORT IN_DeactivateMouse( void );
-	void DLLEXPORT IN_MouseEvent (int mstate);
-	void DLLEXPORT IN_Accumulate (void);
-	void DLLEXPORT IN_ClearStates (void);
+	void DLLEXPORT_2 IN_ActivateMouse( void );
+	void DLLEXPORT_2 IN_DeactivateMouse( void );
+	void DLLEXPORT_2 IN_MouseEvent (int mstate);
+	void DLLEXPORT_2 IN_Accumulate (void);
+	void DLLEXPORT_2 IN_ClearStates (void);
 }
 
 extern cl_enginefunc_t gEngfuncs;
@@ -166,7 +165,7 @@ void Force_CenterView_f (void)
 IN_ActivateMouse
 ===========
 */
-void DLLEXPORT IN_ActivateMouse (void)
+void DLLEXPORT_2 IN_ActivateMouse (void)
 {
 	if (mouseinitialized)
 	{
@@ -181,7 +180,7 @@ void DLLEXPORT IN_ActivateMouse (void)
 IN_DeactivateMouse
 ===========
 */
-void DLLEXPORT IN_DeactivateMouse (void)
+void DLLEXPORT_2 IN_DeactivateMouse (void)
 {
 	if (mouseinitialized)
 	{
@@ -266,7 +265,7 @@ void IN_ResetMouse( void )
 IN_MouseEvent
 ===========
 */
-void DLLEXPORT IN_MouseEvent (int mstate)
+void DLLEXPORT_2 IN_MouseEvent (int mstate)
 {
 	int		i;
 
@@ -399,7 +398,7 @@ void IN_MouseMove ( float frametime, usercmd_t *cmd)
 IN_Accumulate
 ===========
 */
-void DLLEXPORT IN_Accumulate (void)
+void DLLEXPORT_2 IN_Accumulate (void)
 {
 	//only accumulate mouse if we are not moving the camera with the mouse
 	if ( !iMouseInUse && !g_iVisibleMouse )
@@ -423,7 +422,7 @@ void DLLEXPORT IN_Accumulate (void)
 IN_ClearStates
 ===================
 */
-void DLLEXPORT IN_ClearStates (void)
+void DLLEXPORT_2 IN_ClearStates (void)
 {
 	if ( !mouseactive )
 		return;
@@ -559,10 +558,10 @@ void Joy_AdvancedUpdate_f (void)
 	}
 	else
 	{
-		if ( strcmp ( joy_name->string, "joystick") != 0 )
+		if ( strcmp ( joy_name->value_string, "joystick") != 0 )
 		{
 			// notify user of advanced controller
-			gEngfuncs.Con_Printf ("\n%s configured\n\n", joy_name->string);
+			gEngfuncs.Con_Printf ("\n%s configured\n\n", joy_name->value_string);
 		}
 
 		// advanced initialization here

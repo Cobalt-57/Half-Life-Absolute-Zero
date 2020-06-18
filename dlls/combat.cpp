@@ -42,7 +42,13 @@
 #include "scripted.h"
 
 
-#include "custom_debug.h"
+#include "util_debugdraw.h"
+
+
+EASY_CVAR_EXTERN(cheat_iwantguts)
+
+extern float globalPSEUDO_canApplyGermanCensorship;
+extern BOOL globalPSEUDO_germanModel_hgibFound;
 
 
 
@@ -53,13 +59,6 @@ extern DLL_GLOBAL int			g_iSkillLevel;
 extern Vector VecBModelOrigin( entvars_t* pevBModel );
 //extern entvars_t *g_pevLastInflictor;
 
-
-
-
-extern float global_cheat_iwantguts;
-
-extern float globalPSEUDO_canApplyGermanCensorship;
-extern BOOL globalPSEUDO_germanModel_hgibFound;
 
 
 
@@ -79,14 +78,14 @@ float cheat_barnacleEatsEverything = 0;
 
 
 
-extern float global_germanCensorship;
-extern float global_muteRicochetSound;
-extern float global_bulletholeAlertRange;
-extern float global_nothingHurts;
+EASY_CVAR_EXTERN(germanCensorship)
+EASY_CVAR_EXTERN(muteRicochetSound)
+EASY_CVAR_EXTERN(bulletholeAlertRange)
+EASY_CVAR_EXTERN(nothingHurts)
 
-extern float global_timedDamageAffectsMonsters;
-extern float global_bulletHoleAlertPrintout;
-extern float global_bulletholeAlertStukaOnly;
+EASY_CVAR_EXTERN(timedDamageAffectsMonsters)
+EASY_CVAR_EXTERN(bulletHoleAlertPrintout)
+EASY_CVAR_EXTERN(bulletholeAlertStukaOnly)
 
 EASY_CVAR_EXTERN(playerBulletHitEffectForceServer)
 
@@ -254,19 +253,6 @@ void EstablishGutLoverGib(CGib* pGib, entvars_t* pevVictim, const Vector gibSpaw
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
 // HACKHACK -- The gib velocity equations don't work
 void CGib :: LimitVelocity( void )
 {
@@ -287,7 +273,7 @@ void CGib :: SpawnStickyGibs( entvars_t *pevVictim, Vector vecOrigin, int cGibs,
 	int i;
 
 	//if ( g_Language == LANGUAGE_GERMAN )
-	if(global_germanCensorship == 1)
+	if(EASY_CVAR_GET(germanCensorship) == 1)
 	{
 		// no sticky gibs in germany right now!
 		//MODDD TODO - above comment found as-is.  Can re-enable and just use german gibs instead.
@@ -322,10 +308,8 @@ void CGib :: SpawnStickyGibs( entvars_t *pevVictim, Vector vecOrigin, int cGibs,
 			pGib->pev->origin.z = vecOrigin.z;
 
 
-
-
 			edict_t		*pentPlayer;
-			if ( global_cheat_iwantguts && ((pentPlayer = FIND_CLIENT_IN_PVS( pGib->edict() )) != NULL)  )
+			if ( EASY_CVAR_GET(cheat_iwantguts) && ((pentPlayer = FIND_CLIENT_IN_PVS( pGib->edict() )) != NULL)  )
 			{
 				// 5% chance head will be thrown at player's face.
 				entvars_t	*pevPlayer;
@@ -376,9 +360,8 @@ void CGib :: SpawnStickyGibs( entvars_t *pevVictim, Vector vecOrigin, int cGibs,
 				pGib->pev->velocity = pGib->pev->velocity * 900;
 			}
 
-
 			/*
-			if ( global_cheat_iwantguts )
+			if ( EASY_CVAR_GET(cheat_iwantguts) )
 			{
 				edict_t		*pentPlayer = FIND_CLIENT_IN_PVS( pGib->edict() );
 				if(pentPlayer != NULL){
@@ -395,18 +378,6 @@ void CGib :: SpawnStickyGibs( entvars_t *pevVictim, Vector vecOrigin, int cGibs,
 			*/
 
 
-
-
-
-
-
-
-
-
-
-
-
-
 			pGib->pev->avelocity.x = RANDOM_FLOAT ( 250, 400 );
 			pGib->pev->avelocity.y = RANDOM_FLOAT ( 250, 400 );
 
@@ -415,7 +386,7 @@ void CGib :: SpawnStickyGibs( entvars_t *pevVictim, Vector vecOrigin, int cGibs,
 		
 			
 			//DONT THROW OFF THE EMPEROR'S GROVE
-			if(global_cheat_iwantguts < 1){
+			if(EASY_CVAR_GET(cheat_iwantguts) < 1){
 				if ( pevVictim->health > -50)
 				{
 					pGib->pev->velocity = pGib->pev->velocity * 0.7;
@@ -470,10 +441,10 @@ void CGib::SpawnHeadGib( entvars_t *pevVictim, const Vector gibSpawnOrigin, BOOL
 
 	
 	//if ( g_Language == LANGUAGE_GERMAN )
-	if( global_germanCensorship == FALSE ){
+	if( EASY_CVAR_GET(germanCensorship) == FALSE ){
 		pGib->Spawn( "models/hgibs.mdl", spawnDecals );// throw one head
 		pGib->pev->body = 0;
-	}else if(getGermanModelsAllowed() && globalPSEUDO_germanModel_hgibFound){  //if(global_tryLoadGermanGibs == 1){
+	}else if(getGermanModelsAllowed() && globalPSEUDO_germanModel_hgibFound){  //if(EASY_CVAR_GET(tryLoadGermanGibs) == 1){
 		//Just do this.
 		pGib->Spawn( aryGibInfo[GIB_GERMAN_ID].modelPath, spawnDecals);
 		pGib->pev->body = RANDOM_LONG( aryGibInfo[GIB_GERMAN_ID].bodyMin, aryGibInfo[GIB_GERMAN_ID].bodyMax  );
@@ -489,13 +460,13 @@ void CGib::SpawnHeadGib( entvars_t *pevVictim, const Vector gibSpawnOrigin, BOOL
 		
 		edict_t		*pentPlayer = FIND_CLIENT_IN_PVS( pGib->edict() );
 		
-		if ( (RANDOM_LONG ( 0, 100 ) <= 5 || (global_cheat_iwantguts >= 1 ) ) && pentPlayer )
+		if ( (RANDOM_LONG ( 0, 100 ) <= 5 || (EASY_CVAR_GET(cheat_iwantguts) >= 1 ) ) && pentPlayer )
 		{
 				// 5% chance head will be thrown at player's face.
 				entvars_t	*pevPlayer;
 				pevPlayer = VARS( pentPlayer );
 				
-			if(global_cheat_iwantguts == 0){
+			if(EASY_CVAR_GET(cheat_iwantguts) == 0){
 				//ordinary.
 				pGib->pev->velocity = ( ( pevPlayer->origin + pevPlayer->view_ofs ) - pGib->pev->origin ).Normalize() * 300;
 				pGib->pev->velocity.z += 100;
@@ -519,7 +490,7 @@ void CGib::SpawnHeadGib( entvars_t *pevVictim, const Vector gibSpawnOrigin, BOOL
 	
 
 		//DONT THROW OFF THE EMPEROR'S GROVE
-		if(global_cheat_iwantguts < 1){
+		if(EASY_CVAR_GET(cheat_iwantguts) < 1){
 			if ( pevVictim->health > -50)
 			{
 				pGib->pev->velocity = pGib->pev->velocity * 0.7;
@@ -553,7 +524,7 @@ void CGib::SpawnRandomGibs(entvars_t* pevVictim, int cGibs, int argSpawnGibID, B
 	
 	/*
 		//if ( g_Language == LANGUAGE_GERMAN )
-		if(global_germanCensorship == FALSE  ){
+		if(EASY_CVAR_GET(germanCensorship) == FALSE  ){
 			if ( human )
 			{
 				// human pieces
@@ -566,7 +537,7 @@ void CGib::SpawnRandomGibs(entvars_t* pevVictim, int cGibs, int argSpawnGibID, B
 				pGib->Spawn( "models/agibs.mdl", spawnDecals );
 				pGib->pev->body = RANDOM_LONG(0,ALIEN_GIB_COUNT-1);
 			}
-		}else if( getGermanModelsAllowed() && globalPSEUDO_germanModel_hgibFound){   //if(global_tryLoadGermanGibs == 1){
+		}else if( getGermanModelsAllowed() && globalPSEUDO_germanModel_hgibFound){   //if(EASY_CVAR_GET(tryLoadGermanGibs) == 1){
 			//german censorship replaces human gibs with gears.
 			if ( human )
 			{
@@ -623,7 +594,7 @@ void CGib::SpawnRandomGibs(entvars_t* pevVictim, int cGibs, int argSpawnGibID, B
 	/*
 
 	//if ( g_Language == LANGUAGE_GERMAN )
-	if(global_germanCensorship == FALSE  ){
+	if(EASY_CVAR_GET(germanCensorship) == FALSE  ){
 		if ( human )
 		{
 			// human pieces
@@ -634,7 +605,7 @@ void CGib::SpawnRandomGibs(entvars_t* pevVictim, int cGibs, int argSpawnGibID, B
 			// aliens
 			SpawnRandomGibs(pevVictim, cGibs, human, spawnDecals, aryGibInfo[GIB_ALIEN_ID]);// start at one to avoid throwing random amounts of skulls (0th gib)
 		}
-	}else{   //if(global_tryLoadGermanGibs == 1){
+	}else{   //if(EASY_CVAR_GET(tryLoadGermanGibs) == 1){
 		//german censorship replaces human gibs with gears.
 		if ( human)
 		{
@@ -717,7 +688,7 @@ void CGib::SpawnRandomGibs(entvars_t* pevVictim, int cGibs, const char* argGibPa
 			
 
 			edict_t		*pentPlayer;
-			if ( global_cheat_iwantguts && ((pentPlayer = FIND_CLIENT_IN_PVS( pGib->edict() )) != NULL)  )
+			if ( EASY_CVAR_GET(cheat_iwantguts) && ((pentPlayer = FIND_CLIENT_IN_PVS( pGib->edict() )) != NULL)  )
 			{
 				// 5% chance head will be thrown at player's face.
 				entvars_t	*pevPlayer;
@@ -771,7 +742,7 @@ void CGib::SpawnRandomGibs(entvars_t* pevVictim, int cGibs, const char* argGibPa
 
 			
 			//DONT THROW OFF THE EMPEROR'S GROVE
-			if(global_cheat_iwantguts < 1){
+			if(EASY_CVAR_GET(cheat_iwantguts) < 1){
 				if ( pevVictim->health > -50)
 				{
 					pGib->pev->velocity = pGib->pev->velocity * 0.7;
@@ -941,12 +912,12 @@ GENERATE_GIBMONSTERGIB_IMPLEMENTATION(CBaseMonster){
 	{
 		
 		//Old check... mostly.
-		//if ( global_germanCensorship == 1 || CVAR_GET_FLOAT("violence_hgibs") != 0 )	// Only the player will ever get here   ...Why was this comment here as-is? only the player? what?
+		//if ( EASY_CVAR_GET(germanCensorship) == 1 || CVAR_GET_FLOAT("violence_hgibs") != 0 )	// Only the player will ever get here   ...Why was this comment here as-is? only the player? what?
 		
 		
 		//MODDD - Little intervention here when spawning human gibs. Check to see if german censorship is on.
 
-		if(global_germanCensorship==0){
+		if(EASY_CVAR_GET(germanCensorship)==0){
 			//turned off? usual behavior, only require violence_hgibs to be off.
 			if(CVAR_GET_FLOAT("violence_hgibs") != 0){
 				BOOL spawnHeadBlock = this->DetermineGibHeadBlock();
@@ -984,7 +955,7 @@ GENERATE_GIBMONSTERGIB_IMPLEMENTATION(CBaseMonster){
 	else if ( HasAlienGibs() )
 	{
 		//NOTE: using real alien gibs.  If "agibs" are banned, then don't show.
-		//if ( global_germanCensorship == 1 || CVAR_GET_FLOAT("violence_agibs") != 0 )	// Should never get here, but someone might call it directly
+		//if ( EASY_CVAR_GET(germanCensorship) == 1 || CVAR_GET_FLOAT("violence_agibs") != 0 )	// Should never get here, but someone might call it directly
 
 		//MODDD - no involvement from germancensorship, keep to using violence_agibs.
 		if(CVAR_GET_FLOAT("violence_agibs") != 0)
@@ -1346,7 +1317,7 @@ void CBaseMonster::BecomeDead( void )
 BOOL CBaseMonster::ShouldGibMonster( int iGib )
 {
 
-	if(global_cheat_iwantguts >= 1){
+	if(EASY_CVAR_GET(cheat_iwantguts) >= 1){
 		//VIOLENCE!  BLOOD AND GUTS!!!
 		return TRUE;
 	}
@@ -1577,7 +1548,7 @@ void CGib :: BounceGibTouch ( CBaseEntity *pOther )
 	else
 	{
 		//if ( g_Language != LANGUAGE_GERMAN && m_cBloodDecals > 0 && m_bloodColor != DONT_BLEED )
-		if( (global_germanCensorship != 1 || m_bloodColor == BLOOD_COLOR_BLACK) && m_cBloodDecals > 0 && m_bloodColor != DONT_BLEED )
+		if( (EASY_CVAR_GET(germanCensorship) != 1 || m_bloodColor == BLOOD_COLOR_BLACK) && m_cBloodDecals > 0 && m_bloodColor != DONT_BLEED )
 		{
 			vecSpot = pev->origin + Vector ( 0 , 0 , 8 );//move up a bit, and trace down.
 			UTIL_TraceLine ( vecSpot, vecSpot + Vector ( 0, 0, -24 ),  ignore_monsters, ENT(pev), & tr);
@@ -2685,7 +2656,7 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBaseMonster){
 	//easyForcePrintLine("TakeDamage. %s:%d health:%.2f gib damge bits: %d %d", this->getClassname(), monsterID, pev->health, (bitsDamageType&DMG_NEVERGIB), (bitsDamageType&DMG_ALWAYSGIB) );
 	
 
-	if(global_nothingHurts == 0 || (global_nothingHurts == 2 && Instance(pevAttacker)->IsPlayer() ) ){
+	if(EASY_CVAR_GET(nothingHurts) == 0 || (EASY_CVAR_GET(nothingHurts) == 2 && Instance(pevAttacker)->IsPlayer() ) ){
 		// do the damage
 
 		if(this->blockDamage == TRUE){
@@ -2932,7 +2903,7 @@ void CBaseMonster::Think(void)
 
 	//THE GODS HAVE FORBIDDEN THOU FROM DOING THIS.  FEEL THY WRATH IN THE FORM OF RANDOM, DIGUSTING, HARD-TO-TRACE CRASHES.
 	//
-	//if(global_timedDamageAffectsMonsters == 1){
+	//if(EASY_CVAR_GET(timedDamageAffectsMonsters) == 1){
 	//	CheckTimeBasedDamage();
 	//}
 	//
@@ -3684,7 +3655,7 @@ void CBaseEntity::FireBullets(ULONG cShots, Vector vecSrc, Vector vecDirShooting
 				//if ( FNullEnt(tr.pHit))
 				{
 
-					if(global_muteRicochetSound < 1){
+					if(EASY_CVAR_GET(muteRicochetSound) < 1){
 						MESSAGE_BEGIN( MSG_PAS, SVC_TEMPENTITY, tr.vecEndPos );
 							WRITE_BYTE( TE_GUNSHOT );
 							WRITE_COORD( tr.vecEndPos.x );
@@ -3925,11 +3896,11 @@ Vector CBaseEntity::FireBulletsPlayer ( ULONG cShots, Vector vecSrc, Vector vecD
 				//easyPrintLine("WHAT IS THE THING I HIT %s", STRING(pEntity->pev->classname) );
 
 			}else{
-
+				
 				//if ( FNullEnt(tr.pHit))
 				{
 					
-					if(global_muteRicochetSound < 1){
+					if(EASY_CVAR_GET(muteRicochetSound) < 1){
 						MESSAGE_BEGIN( MSG_PAS, SVC_TEMPENTITY, tr.vecEndPos );
 							WRITE_BYTE( TE_GUNSHOT );
 							WRITE_COORD( tr.vecEndPos.x );

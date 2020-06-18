@@ -26,7 +26,9 @@
 #include "saverestore.h"
 #include "soundent.h"
 
-extern float global_crazyMonsterPrintouts;
+
+EASY_CVAR_EXTERN(crazyMonsterPrintouts)
+
 
 //=========================================================
 // SetState
@@ -44,7 +46,7 @@ void CBaseMonster :: SetState ( MONSTERSTATE State )
 	//MODDD - force the state to stay "PRONE" if caught by a barnacle!
 	
 	if(barnacleLocked == TRUE){
-		//easyPrintLine("LOCKED: %d", State);
+		//easyForcePrintLine("LOCKED: %d", State);
 
 		switch( State )
 		{
@@ -125,8 +127,8 @@ void CBaseMonster :: RunAI ( void )
 		// UPDATE: We now let COMBAT state monsters think and act fully outside of player PVS. This allows the player to leave 
 		// an area where monsters are fighting, and the fight will continue.
 		
-		if(global_crazyMonsterPrintouts){
-			easyPrintLine("%s: Can I look and listen?! (%d || %d) %.2f", this->getClassname(), !FNullEnt( FIND_CLIENT_IN_PVS( edict() ) ),  ( m_MonsterState == MONSTERSTATE_COMBAT ), m_flDistLook );
+		if(EASY_CVAR_GET(crazyMonsterPrintouts)){
+			easyForcePrintLine("%s: Can I look and listen?! (%d || %d) %.2f", this->getClassname(), !FNullEnt( FIND_CLIENT_IN_PVS( edict() ) ),  ( m_MonsterState == MONSTERSTATE_COMBAT ), m_flDistLook );
 		}
 
 		//MODDD - some monsters may need to check for enemies and ignore the PVS check.
@@ -161,15 +163,15 @@ void CBaseMonster :: RunAI ( void )
 	
 	PrescheduleThink();
 
-	if(global_crazyMonsterPrintouts == 1){
-		easyPrintLine("SHUUUT1 %d", HasConditions(bits_COND_CAN_MELEE_ATTACK1));
+	if(EASY_CVAR_GET(crazyMonsterPrintouts) == 1){
+		easyForcePrintLine("SHUUUT1 %d", HasConditions(bits_COND_CAN_MELEE_ATTACK1));
 	}
 	
 	//     : )
 	MaintainSchedule();
 
-	if(global_crazyMonsterPrintouts == 1){
-		easyPrintLine("SHUUUT2 %d", HasConditions(bits_COND_CAN_MELEE_ATTACK1));
+	if(EASY_CVAR_GET(crazyMonsterPrintouts) == 1){
+		easyForcePrintLine("SHUUUT2 %d", HasConditions(bits_COND_CAN_MELEE_ATTACK1));
 	}
 
 	// if the monster didn't use these conditions during the above call to MaintainSchedule() or CheckAITrigger()
@@ -180,12 +182,12 @@ void CBaseMonster :: RunAI ( void )
 
 
 	
-	if(global_crazyMonsterPrintouts == 1){
-		easyPrintLine("SHUUUT3 %d", HasConditions(bits_COND_CAN_MELEE_ATTACK1));
+	if(EASY_CVAR_GET(crazyMonsterPrintouts) == 1){
+		easyForcePrintLine("SHUUUT3 %d", HasConditions(bits_COND_CAN_MELEE_ATTACK1));
 	}
 	
-	if(global_crazyMonsterPrintouts == 1){
-		easyPrintLine("IM SO flamin\' amazing %d", HasConditions(bits_COND_CAN_MELEE_ATTACK1));
+	if(EASY_CVAR_GET(crazyMonsterPrintouts) == 1){
+		easyForcePrintLine("IM SO flamin\' amazing %d", HasConditions(bits_COND_CAN_MELEE_ATTACK1));
 	}
 }
 

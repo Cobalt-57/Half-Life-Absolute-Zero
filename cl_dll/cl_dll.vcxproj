@@ -12,18 +12,19 @@
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{04D4239A-A9B9-48AA-AF65-F558F8AE2B88}</ProjectGuid>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseOfMfc>false</UseOfMfc>
-    <PlatformToolset>v100</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseOfMfc>false</UseOfMfc>
     <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v100</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -49,8 +50,8 @@
     <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">AllRules.ruleset</CodeAnalysisRuleSet>
     <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" />
     <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" />
-    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IncludePath)</IncludePath>
-    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.\..\game_shared\NEW;game_shared\NEW;$(IncludePath)</IncludePath>
+    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">.\..\game_shared\NEW;game_shared\NEW;..\;$(IncludePath)</IncludePath>
+    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.\..\game_shared\NEW;game_shared\NEW;..\;$(IncludePath)</IncludePath>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">.\$(configuration)\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">.\$(configuration)\</IntDir>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">client</TargetName>
@@ -107,7 +108,8 @@
       <OutputFile>.\$(configuration)/cl_dll.bsc</OutputFile>
     </Bscmake>
     <PostBuildEvent>
-      <Command>copy ".\$(configuration)\client.dll" "C:\Program Files (x86)\Valve\Half-Life NGHLv3\AbsoluteZero\cl_dlls\client.dll"</Command>
+      <Command>copy ".\$(configuration)\client.dll" "C:\Program Files (x86)\Valve\Half-Life NGHLv3\AbsoluteZero\cl_dlls\client.dll"
+copy ".\$(configuration)\client.pdb" "C:\Program Files (x86)\Valve\Half-Life NGHLv3\AbsoluteZero\cl_dlls\client.pdb"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -143,6 +145,7 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <DisableSpecificWarnings>4482;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <BrowseInformationFile>.\$(configuration)/</BrowseInformationFile>
+      <BrowseInformation>true</BrowseInformation>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -162,21 +165,24 @@
       <ImportLibrary>.\$(configuration)/client.lib</ImportLibrary>
       <TargetMachine>MachineX86</TargetMachine>
       <ProfileGuidedDatabase>.\$(configuration)/client.pgd</ProfileGuidedDatabase>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <OutputFile>.\$(configuration)/cl_dll.bsc</OutputFile>
     </Bscmake>
     <PostBuildEvent>
-      <Command>copy ".\$(configuration)\client.dll" "C:\Program Files (x86)\Valve\Half-Life NGHLv3\AbsoluteZero\cl_dlls\client.dll"</Command>
+      <Command>copy ".\$(configuration)\client.dll" "C:\Program Files (x86)\Valve\Half-Life NGHLv3\AbsoluteZero\cl_dlls\client.dll"
+copy ".\$(configuration)\client.pdb" "C:\Program Files (x86)\Valve\Half-Life NGHLv3\AbsoluteZero\cl_dlls\client.pdb"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\dlls\chumtoadweapon.cpp" />
     <ClCompile Include="..\dlls\glock.cpp" />
-    <ClCompile Include="..\dlls\util_entity.cpp" />
+    <ClCompile Include="..\game_shared\NEW\util_entity.cpp" />
     <ClCompile Include="..\game_shared\NEW\util_printout.cpp" />
     <ClCompile Include="..\game_shared\NEW\util_shared.cpp" />
+    <ClCompile Include="..\pm_shared\pm_printout.c" />
     <ClCompile Include="ammo.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -406,7 +412,7 @@
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
-    <ClCompile Include="util.cpp">
+    <ClCompile Include="cl_util.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -660,9 +666,11 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\game_shared\NEW\util_entity.h" />
     <ClInclude Include="..\game_shared\NEW\util_printout.h" />
     <ClInclude Include="..\game_shared\NEW\util_shared.h" />
     <ClInclude Include="..\game_shared\NEW\vector_shared.h" />
+    <ClInclude Include="..\pm_shared\pm_printout.h" />
     <ClInclude Include="cl_util.h" />
     <ClInclude Include="custom_message.h" />
     <ClInclude Include="glInclude.h" />
@@ -682,7 +690,6 @@
     <ClInclude Include="hud_servers.h" />
     <ClInclude Include="hud_servers_priv.h" />
     <ClInclude Include="hud_spectator.h" />
-    <ClInclude Include="in_defs.h" />
     <ClInclude Include="..\common\itrackeruser.h" />
     <ClInclude Include="kbutton.h" />
     <ClInclude Include="..\pm_shared\pm_debug.h" />

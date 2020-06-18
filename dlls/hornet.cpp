@@ -41,28 +41,28 @@ int iHornetPuff;
 extern unsigned short g_sTrail;
 extern unsigned short g_sTrailRA;
 
-extern float global_trailTypeTest;
+EASY_CVAR_EXTERN(trailTypeTest)
 
 
 
-extern float global_hornetTrail;
-extern float global_hornetTrailSolidColor;
+EASY_CVAR_EXTERN(hornetTrail)
+EASY_CVAR_EXTERN(hornetTrailSolidColor)
 
-extern float global_hornetDeathModEasy;
-extern float global_hornetDeathModMedium;
-extern float global_hornetDeathModHard;
+EASY_CVAR_EXTERN(hornetDeathModEasy)
+EASY_CVAR_EXTERN(hornetDeathModMedium)
+EASY_CVAR_EXTERN(hornetDeathModHard)
 
-extern float global_hornetZoomPuff;
-extern float global_hornetSpiral;
-extern float global_hornetSpeedMulti;
-extern float global_hornetSpeedDartMulti;
+EASY_CVAR_EXTERN(hornetZoomPuff)
+EASY_CVAR_EXTERN(hornetSpiral)
+EASY_CVAR_EXTERN(hornetSpeedMulti)
+EASY_CVAR_EXTERN(hornetSpeedDartMulti)
 
-extern float global_agruntHornetRandomness;
+EASY_CVAR_EXTERN(agruntHornetRandomness)
 
 
-extern float global_agruntHornetRandomness;
-extern float global_hornetSpiralPeriod;
-extern float global_hornetSpiralAmplitude;
+EASY_CVAR_EXTERN(agruntHornetRandomness)
+EASY_CVAR_EXTERN(hornetSpiralPeriod)
+EASY_CVAR_EXTERN(hornetSpiralAmplitude)
 
 
 
@@ -72,13 +72,15 @@ CHornet::CHornet(void){
 
 
 	hornetTouchedAnything = FALSE;
-	hornetPseudoNextThink = -1;
+	hornetPseudoNextThink = 0;
 
 	vecFlightDirTrue = Vector(0,0,0);
-	vecFlightDirAlttt = Vector(0,0,0);
-	vecFlightDirMem = Vector(0,0,0);
+	//vecFlightDirAlttt = Vector(0,0,0);
+	//vecFlightDirMem = Vector(0,0,0);
 
 	spiralStartTime = 0;
+
+	reflectedAlready = FALSE;
 
 }
 
@@ -96,6 +98,11 @@ TYPEDESCRIPTION	CHornet::m_SaveData[] =
 	DEFINE_FIELD( CHornet, m_iHornetType, FIELD_INTEGER ),
 	DEFINE_FIELD( CHornet, m_flFlySpeed, FIELD_FLOAT ),
 
+	//MODDD - new
+	DEFINE_FIELD( CHornet, spiralStartTime, FIELD_TIME ),
+	DEFINE_FIELD( CHornet, hornetTouchedAnything, FIELD_BOOLEAN ),
+	DEFINE_FIELD( CHornet, vecFlightDirTrue, FIELD_VECTOR ),
+
 };
 
 IMPLEMENT_SAVERESTORE( CHornet, CBaseMonster );
@@ -107,7 +114,7 @@ IMPLEMENT_SAVERESTORE( CHornet, CBaseMonster );
 
 
 BOOL CHornet::useSpiral(void){
-	if(global_hornetSpiral == 1 || (global_hornetSpiral == 2 && g_iSkillLevel == SKILL_HARD) ){
+	if(EASY_CVAR_GET(hornetSpiral) == 1 || (EASY_CVAR_GET(hornetSpiral) == 2 && g_iSkillLevel == SKILL_HARD) ){
 		return TRUE;
 	}else{
 		return FALSE;
@@ -118,16 +125,16 @@ BOOL CHornet::useSpiral(void){
 float CHornet::getDifficultyMod(void){
 	switch(g_iSkillLevel){
 	case SKILL_EASY:
-		return global_hornetDeathModEasy;
+		return EASY_CVAR_GET(hornetDeathModEasy);
 	break;
 	case SKILL_MEDIUM:
-		return global_hornetDeathModMedium;
+		return EASY_CVAR_GET(hornetDeathModMedium);
 	break;
 	case SKILL_HARD:
-		return global_hornetDeathModHard;
+		return EASY_CVAR_GET(hornetDeathModHard);
 	break;
 	default:  //???
-		return global_hornetDeathModEasy;
+		return EASY_CVAR_GET(hornetDeathModEasy);
 	break;
 	};
 }
@@ -212,12 +219,12 @@ void CHornet :: Spawn( void )
 	if ( RANDOM_LONG ( 1, 5 ) <= 2 )
 	{
 		m_iHornetType = HORNET_TYPE_RED;
-		m_flFlySpeed = HORNET_RED_SPEED * global_hornetSpeedMulti;
+		m_flFlySpeed = HORNET_RED_SPEED * EASY_CVAR_GET(hornetSpeedMulti);
 	}
 	else
 	{
 		m_iHornetType = HORNET_TYPE_ORANGE;
-		m_flFlySpeed = HORNET_ORANGE_SPEED * global_hornetSpeedMulti;
+		m_flFlySpeed = HORNET_ORANGE_SPEED * EASY_CVAR_GET(hornetSpeedMulti);
 	}
 
 
@@ -321,7 +328,7 @@ void CHornet :: StartTrack ( void )
 		pev->nextthink = gpGlobals->time + 0.1;
 	}else{
 		spiralStartTime = gpGlobals->time;
-		vecFlightDirMem = pev->velocity.Normalize();
+		//vecFlightDirMem = pev->velocity.Normalize();
 		hornetPseudoNextThink = gpGlobals->time + 0.1;
 		pev->nextthink = gpGlobals->time;
 	}
@@ -333,11 +340,12 @@ void CHornet :: StartTrack ( void )
 void CHornet :: StartDart ( void )
 {
 	IgniteTrail();
-
+	
 	SetTouch( &CHornet::DartTouch );
 
 	SetThink( &CBaseEntity::SUB_Remove );
 	pev->nextthink = gpGlobals->time + 4;
+
 }
 
 
@@ -378,7 +386,7 @@ old colors
 
 
 	//MODDD - quake dot trail?
-	//easyForcePrintLine("YOU STUPID lover %d %d", (int)global_trailTypeTest, (int)global_hornetTrail);
+	//easyForcePrintLine("YOU STUPID lover %d %d", (int)EASY_CVAR_GET(trailTypeTest), (int)EASY_CVAR_GET(hornetTrail) );
 
 
 	/*
@@ -388,17 +396,17 @@ old colors
 
 	}else */
 	
-	if(global_trailTypeTest == -3){
+	if(EASY_CVAR_GET(trailTypeTest) == -3){
 		//SPECIAL: test the immitation7.
 		PLAYBACK_EVENT_FULL (FEV_GLOBAL, this->edict(), g_sImitation7, 0.0, (float *)&this->pev->origin, (float *)&this->pev->angles, 0.7, 0.0, this->entindex(), 0, 0, 0);
-	}else if(global_trailTypeTest == -2){
+	}else if(EASY_CVAR_GET(trailTypeTest) == -2){
 		//This was just for a test.  Enable (along with some other things in place), and this should make mp5 grenades fly with a trail of grey dots.
 		PLAYBACK_EVENT_FULL (FEV_GLOBAL, this->edict(), g_sTrailRA, 0.0, (float *)&this->pev->origin, (float *)&this->pev->angles, 0.7, 0.0, this->entindex(), 0, 0, 0);
-	}else if(global_trailTypeTest > -1){
+	}else if(EASY_CVAR_GET(trailTypeTest) > -1){
 		//This was just for a test.  Enable (along with some other things in place), and this should make mp5 grenades fly with a trail of grey dots.
-		//PLAYBACK_EVENT_FULL (FEV_GLOBAL, this->edict(), g_sTrail, 0.0, (float *)&this->pev->origin, (float *)&this->pev->angles, 0.7, 0.0, this->entindex(), (int)global_trailTypeTest, 0, 0);
-		PLAYBACK_EVENT_FULL (FEV_GLOBAL, this->edict(), g_sTrailEngineChoice, 0.0, (float *)&this->pev->origin, (float *)&this->pev->angles, 0.7, 0.0, this->entindex(), (int)global_trailTypeTest, 0, 0);
-	}else if(global_hornetTrail == 1 || global_hornetTrail == 2){
+		//PLAYBACK_EVENT_FULL (FEV_GLOBAL, this->edict(), g_sTrail, 0.0, (float *)&this->pev->origin, (float *)&this->pev->angles, 0.7, 0.0, this->entindex(), (int)EASY_CVAR_GET(trailTypeTest), 0, 0);
+		PLAYBACK_EVENT_FULL (FEV_GLOBAL, this->edict(), g_sTrailEngineChoice, 0.0, (float *)&this->pev->origin, (float *)&this->pev->angles, 0.7, 0.0, this->entindex(), (int)EASY_CVAR_GET(trailTypeTest), 0, 0);
+	}else if(EASY_CVAR_GET(hornetTrail) == 1 || EASY_CVAR_GET(hornetTrail) == 2){
 
 		//NOTE: particle type is "6", 3rd to last parameter here.
 		PLAYBACK_EVENT_FULL (FEV_GLOBAL, this->edict(), g_sTrail, 0.0, (float *)&this->pev->origin, (float *)&this->pev->angles, 0.7, 0.0, this->entindex(), 6, 0, 0);
@@ -406,13 +414,13 @@ old colors
 	
 	
 
-	//Don't do this unless global_trailTypeTest is -1. Any trailTypeTest'ing likely doesn't want to be bothered by transparent line trail graphics.
-	if( global_trailTypeTest == -1 && (global_hornetTrail == 0 || global_hornetTrail == 2) ){
+	//Don't do this unless EASY_CVAR_GET(trailTypeTest) is -1. Any trailTypeTest'ing likely doesn't want to be bothered by transparent line trail graphics.
+	if( EASY_CVAR_GET(trailTypeTest) == -1 && (EASY_CVAR_GET(hornetTrail) == 0 || EASY_CVAR_GET(hornetTrail) == 2) ){
 
 
 	int clrChoice1[3];
 	int clrChoice2[3];
-	switch( (int)global_hornetTrailSolidColor ){
+	switch( (int)EASY_CVAR_GET(hornetTrailSolidColor) ){
 	case 0:
 		//retail
 		clrChoice1[0] = 179;
@@ -482,8 +490,8 @@ old colors
 	MESSAGE_END();
 
 
-	}//END OF if(global_hornetTrail is 0 or 2)
-	//NOTE: global_hornetTrail of 3 (or anything else really too) means no trail.
+	}//END OF if(EASY_CVAR_GET(hornetTrail) is 0 or 2)
+	//NOTE: EASY_CVAR_GET(hornetTrail) of 3 (or anything else really too) means no trail.
 
 
 }
@@ -506,7 +514,7 @@ void CHornet :: TrackTarget ( void )
 
 	if(useSpiral() == FALSE){
 		//normal.
-		vecFlightDirAlttt = Vector(0,0,0);
+		//vecFlightDirAlttt = Vector(0,0,0);
 
 	}else{
 
@@ -587,7 +595,7 @@ void CHornet :: TrackTarget ( void )
 		// measure how far the turn is, the wider the turn, the slow we'll go this time.
 		flDelta = DotProduct ( vecFlightDir, vecDirToEnemy );
 	
-		vecFlightDirMem = vecFlightDir;
+		//vecFlightDirMem = vecFlightDir;
 
 	}
 
@@ -628,18 +636,19 @@ void CHornet :: TrackTarget ( void )
 	
 
 
-	if ( (global_agruntHornetRandomness > 0) && (pev->owner && (pev->owner->v.flags & FL_MONSTER)) )
+	if ( (EASY_CVAR_GET(agruntHornetRandomness) > 0) && (pev->owner && (pev->owner->v.flags & FL_MONSTER)) )
 	{
+		//SWEET GOD JUST CACHE THIS.
+		float theRandomness = EASY_CVAR_GET(agruntHornetRandomness);
 		// random pattern only applies to hornets fired by monsters, not players. 
 
 		//pev->velocity.x += RANDOM_FLOAT ( -0.10, 0.10 );// scramble the flight dir a bit.
 		//pev->velocity.y += RANDOM_FLOAT ( -0.10, 0.10 );
 		//pev->velocity.z += RANDOM_FLOAT ( -0.10, 0.10 );
-		vecFlightDirTrue.x += RANDOM_FLOAT ( -global_agruntHornetRandomness, global_agruntHornetRandomness );// scramble the flight dir a bit.
-		vecFlightDirTrue.y += RANDOM_FLOAT ( -global_agruntHornetRandomness, global_agruntHornetRandomness );
-		vecFlightDirTrue.z += RANDOM_FLOAT ( -global_agruntHornetRandomness, global_agruntHornetRandomness );
-
-
+		vecFlightDirTrue.x += RANDOM_FLOAT ( -theRandomness, theRandomness );// scramble the flight dir a bit.
+		vecFlightDirTrue.y += RANDOM_FLOAT ( -theRandomness, theRandomness );
+		vecFlightDirTrue.z += RANDOM_FLOAT ( -theRandomness, theRandomness );
+		
 	}
 
 
@@ -687,7 +696,7 @@ void CHornet :: TrackTarget ( void )
 		if ( flDelta >= 0.4 && ( pev->origin - m_vecEnemyLKP ).Length() <= 300 )
 		{
 
-			if(global_hornetZoomPuff == 1){
+			if(EASY_CVAR_GET(hornetZoomPuff) == 1){
 				MESSAGE_BEGIN( MSG_PVS, SVC_TEMPENTITY, pev->origin );
 					WRITE_BYTE( TE_SPRITE );
 					WRITE_COORD( pev->origin.x);	// pos
@@ -707,8 +716,8 @@ void CHornet :: TrackTarget ( void )
 			case 2:	EMIT_SOUND_FILTERED( ENT(pev), CHAN_VOICE, "hornet/ag_buzz3.wav", HORNET_BUZZ_VOLUME, ATTN_NORM);	break;
 			}
 			
-			//pev->velocity = pev->velocity * global_hornetSpeedDartMulti;
-			vecFlightDirTrue = vecFlightDirTrue * global_hornetSpeedDartMulti;
+			//pev->velocity = pev->velocity * EASY_CVAR_GET(hornetSpeedDartMulti);
+			vecFlightDirTrue = vecFlightDirTrue * EASY_CVAR_GET(hornetSpeedDartMulti);
 			
 			pev->nextthink = gpGlobals->time + 1.0;
 			// don't attack again
@@ -731,12 +740,12 @@ void CHornet :: TrackTarget ( void )
 		
 		//can we just push the velocity ?
 		
-		float timeVal = spiralStartTime-gpGlobals->time;
+		float timeVal = spiralStartTime - gpGlobals->time;
 
-		float xShift = cos(timeVal / global_hornetSpiralPeriod);
-		float yShift = sin(timeVal / global_hornetSpiralPeriod);
+		float xShift = cos(timeVal / EASY_CVAR_GET(hornetSpiralPeriod) );
+		float yShift = sin(timeVal / EASY_CVAR_GET(hornetSpiralPeriod) );
 
-		float len = global_hornetSpiralAmplitude;
+		float len = EASY_CVAR_GET(hornetSpiralAmplitude);
 		
 
 		//get vector perpendicular to vecFlightDir ...
@@ -781,7 +790,7 @@ void CHornet :: TrackTarget ( void )
 
 		
 
-		vecFlightDirAlttt = xShift*len*crossProto*1 + yShift*len*crossProto2*1;
+		Vector vecFlightDirAlttt = xShift*len*crossProto*1 + yShift*len*crossProto2*1;
 		
 		pev->velocity = vecFlightDirTrue  +vecFlightDirAlttt;
 		
@@ -1159,5 +1168,43 @@ int CHornet::GetProjectileType(void){
 	return PROJECTILE_ORGANIC_HOSTILE;
 }
 
+
+
+
+
+
+Vector CHornet::GetVelocityLogical(void){
+	//probably fine?
+	//return pev->velocity;
+
+	//this might work better during spirals, but otherwise perfectly anyways too?
+	//return vecFlightDirTrue;
+
+	//Check our think method, that's better.
+	if(m_pfnThink == &CHornet::SUB_Remove){
+		//it's dumb.
+		return pev->velocity;
+	}else if(m_pfnThink == &CHornet::TrackTarget){
+		//better for spiraling or not. Set by that think method so we trust it.
+		return vecFlightDirTrue;
+	}
+	//???
+	return pev->velocity;
+}
+//Likewise, if something else wants to change our velocity, and we pay more attention to something other than pev->velocty,
+//we need to apply the change to that instead.  Or both, leaving that up to the thing implementing this.
+void CHornet::SetVelocityLogical(const Vector& arg_newVelocity){
+	pev->velocity = arg_newVelocity;
+	vecFlightDirTrue = arg_newVelocity;
+}
+
+void CHornet::OnDeflected(CBaseEntity* arg_entDeflector){
+
+	//Tell me to stop following behavior.  The die time reset for quick fire is okay too once.
+	if(!reflectedAlready){
+		reflectedAlready = TRUE;
+		this->StartDart();
+	}
+}
 
 

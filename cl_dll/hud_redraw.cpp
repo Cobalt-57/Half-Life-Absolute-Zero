@@ -40,10 +40,13 @@ extern cvar_t *sensitivity;
 
 //MODDD - nice
 //EASY_CVAR_EXTERN_CLIENT_MASS
-extern float global2_thatWasntGrass;
+EASY_CVAR_EXTERN(thatWasntGrass)
+EASY_CVAR_EXTERN(useAlphaCrosshair)
+EASY_CVAR_EXTERN(allowAlphaCrosshairWithoutGuns)
+EASY_CVAR_EXTERN(imAllFuckedUp)
+EASY_CVAR_EXTERN(hud_logo)
 
-extern float global2_useAlphaCrosshair;
-extern float global2_allowAlphaCrosshairWithoutGuns;
+
 extern float global2PSEUDO_IGNOREcameraMode;
 
 
@@ -67,6 +70,27 @@ extern "C"
 // Think
 void CHud::Think(void)
 {
+	/*
+	// Debug feature for testing different printout methods.
+	// Still must be ingame, and calls to "CHud::Think" are blocked when the console or menu (Esc) is open.
+	static float nextPrintTime = 0;
+
+	if (nextPrintTime == 0 || gHUD.recentTime >= nextPrintTime) {
+		nextPrintTime = gHUD.recentTime + 2;
+		if (EASY_CVAR_GET(canShowWeaponSelectAtDeath) == 0) {
+			gEngfuncs.pfnConsolePrint("Atest print\n");
+		}
+		else if (EASY_CVAR_GET(canShowWeaponSelectAtDeath) == 1) {
+			gEngfuncs.Con_Printf("Btest print %i %d %f %s end\n", 4, 4, 4.2f, "X");
+		}
+		else if (EASY_CVAR_GET(canShowWeaponSelectAtDeath) == 2) {
+			gEngfuncs.Con_DPrintf("Ctest print %i %d %f %s end\n", 4, 4, 4.2f, "X");
+		}
+	}
+	*/
+
+
+
 	int newfov;
 	HUDLIST *pList = m_pHudList;
 
@@ -77,20 +101,35 @@ void CHud::Think(void)
 		pList = pList->pNext;
 	}
 
+	//easyForcePrintLine("IMA lovely person FOV STUFF::: %f %i %f", HUD_GetFOV(), m_iPlayerFOV, gHUD.getPlayerBaseFOV());
+
+	// MODDD - NOTE.  I have no clue why this one place uses "HUD_GetFOV" instead of the standard
+	// "m_iPlayerFOV" (used to be named m_iFOV).
+	// Looks like HUD_GetFOV is just a buffer method for letting demo recording/playback affect 
+	// what's returned if necessary.  And its own "g_lastFOV" comes straight from what the client
+	// must've recently been using from other edits anyway.
+	// Just switching out references to "default_fov" or "default_fov->value"...
+	// Think I kindof get it now.  That "g_lastFOV" stays 0 when the FOV is forced to be set to 0,
+	// so that it's a call to pick the default_fov value itself (like 90).  But that set (to 90)
+	// doesn't affect the original "0" signal received, for future frames.
 	newfov = HUD_GetFOV();
 	if ( newfov == 0 )
 	{
-		m_iFOV = default_fov->value;
+		//MODDD
+		//m_iPlayerFOV = default_fov->value;
+		m_iPlayerFOV = gHUD.getPlayerBaseFOV();
 	}
 	else
 	{
-		m_iFOV = newfov;
+		m_iPlayerFOV = newfov;
 	}
 
 	// the clients fov is actually set in the client data update section of the hud
 
 	// Set a new sensitivity
-	if ( m_iFOV == default_fov->value )
+	//MODDD
+	//if (m_iPlayerFOV == default_fov->value )
+	if (m_iPlayerFOV == gHUD.getPlayerBaseFOV())
 	{  
 		// reset to saved sensitivity
 		m_flMouseSensitivity = 0;
@@ -98,23 +137,29 @@ void CHud::Think(void)
 	else
 	{  
 		// set a new sensitivity that is proportional to the change from the FOV default
-		m_flMouseSensitivity = sensitivity->value * ((float)newfov / (float)default_fov->value) * CVAR_GET_FLOAT("zoom_sensitivity_ratio");
+		//MODDD
+		//m_flMouseSensitivity = sensitivity->value * ((float)newfov / (float)default_fov->value) * CVAR_GET_FLOAT("zoom_sensitivity_ratio");
+		m_flMouseSensitivity = sensitivity->value * ((float)newfov / (float)gHUD.getPlayerBaseFOV()) * CVAR_GET_FLOAT("zoom_sensitivity_ratio");
 	}
 
 	// think about default fov
-	if ( m_iFOV == 0 )
+	if (m_iPlayerFOV == 0 )
 	{  // only let players adjust up in fov,  and only if they are not overriden by something else
-		m_iFOV = max( default_fov->value, 90 );  
+		//MODDD... wait, this is a little confusing.  So ignoring default_fov choices below 90 was the intention?
+		// don't really know what side to change here, mmm...
+		//m_iPlayerFOV = max( default_fov->value, 90 );
+		//m_iPlayerFOV = max(default_fov->value, gHUD.getPlayerBaseFOV());
+		m_iPlayerFOV = max(gHUD.getPlayerBaseFOV(), 90);
 	}
 	
 
-	if(global2_thatWasntGrass == 1){
-		//gHUD.m_iFOV =getTimePeriodAndBackSmooth(recentTime, 0.7f, 87, 110);
-		gHUD.m_iFOV =getTimePeriodAndBackSmooth(recentTime, 0.23f, 0.23f, 94, 110);
+	if(EASY_CVAR_GET(thatWasntGrass) == 1){
+		//gHUD.m_iPlayerFOV = getTimePeriodAndBackSmooth(recentTime, 0.7f, 87, 110);
+		gHUD.m_iPlayerFOV = getTimePeriodAndBackSmooth(recentTime, 0.23f, 0.23f, 94, 110);
 	}
 	
-	//global2_useAlphaCrosshair == TRUE && global2_allowAlphaCrosshairWithoutGuns
-	if(global2_useAlphaCrosshair != gHUD.useAlphaCrosshairMem && global2_allowAlphaCrosshairWithoutGuns != gHUD.allowAlphaCrosshairWithoutGunsMem){
+	//EASY_CVAR_GET(useAlphaCrosshair) == TRUE && EASY_CVAR_GET(allowAlphaCrosshairWithoutGuns)
+	if(EASY_CVAR_GET(useAlphaCrosshair) != gHUD.useAlphaCrosshairMem && EASY_CVAR_GET(allowAlphaCrosshairWithoutGuns) != gHUD.allowAlphaCrosshairWithoutGunsMem){
 		//includes updates to the MEM vars.
 		gHUD.m_Ammo.updateCrosshair();
 	}
@@ -136,19 +181,16 @@ void CHud::Think(void)
 
 	}//END OF camera perspective (first or third person) check.
 
-
-
-
-	
-}
+}//END OF Think
 
 
 
 
-extern float global2_imAllFuckedUp;
 
-int playingMov = FALSE;
-float movieStartTime = -1;
+
+extern int playingMov;
+extern float movieStartTime;
+
 
 // Redraw
 // step through the local data,  placing the appropriate graphics & text as appropriate
@@ -157,8 +199,8 @@ int CHud :: Redraw( float flTime, int intermission )
 {
 	//easyForcePrintLine("CLIENT GUI: Redraw: %.2f %d", flTime, intermission);
 
-	if(global2_imAllFuckedUp == 1){
-	drawCrazyShit(flTime);
+	if(EASY_CVAR_GET(imAllFuckedUp) == 1){
+		drawCrazyShit(flTime);
 	}
 
 
@@ -233,9 +275,9 @@ int CHud :: Redraw( float flTime, int intermission )
 	//MODDD - this was already here.  Left in the game... very interesting.
 	// are we in demo mode? do we need to draw the logo in the top corner?
 	
-	//MODDD - new if-then to use the "toggleLogo" cvar instead:
+	//MODDD - new if-then to use the "hud_logo" cvar instead:
 	//if (m_iLogo)
-	if(toggleLogo->value == 1)
+	if(EASY_CVAR_GET(hud_logo) == 1)
 	{
 		int x, y, i;
 
@@ -330,11 +372,6 @@ int CHud :: Redraw( float flTime, int intermission )
 	if(playingMov == TRUE){
 		
 		if(movieStartTime != -1){
-
-
-
-
-
 			
 			int x, y, i;
 			int widthFits = (int) ceil((float)ScreenWidth / CUSTOMVID_WIDTH);
@@ -358,9 +395,6 @@ int CHud :: Redraw( float flTime, int intermission )
 				
 			}else{
 
-
-
-
 				for(v_i_h = 0; v_i_h < heightFits; v_i_h++){
 					for(v_i_w = 0; v_i_w < widthFits; v_i_w++){
 					
@@ -369,11 +403,7 @@ int CHud :: Redraw( float flTime, int intermission )
 						y = v_i_h * CUSTOMVID_HEIGHT;
 
 						//while(TRUE){
-
-
 							//easyForcePrintLine("FLAG_1");
-
-		
 							//easyForcePrintLine("FLAG_2");
 
 							///x = SPR_Width(m_hsprGNFOS, 0);
@@ -382,14 +412,9 @@ int CHud :: Redraw( float flTime, int intermission )
 							//y = 0;
 				
 							//easyForcePrintLine("FLAG_3");
-
-			
 							//easyPrintLine("FRAME # %d", i);
 				
 							//easyForcePrintLine("FLAG_4");
-						
-						
-				
 							//easyForcePrintLine("FLAG_5");
 
 							SPR_Draw(i, x, y, NULL);
@@ -403,10 +428,6 @@ int CHud :: Redraw( float flTime, int intermission )
 		}
 	}//END OF playingMov check
 	
-
-
-
-
 
 
 

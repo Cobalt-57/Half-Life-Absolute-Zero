@@ -45,16 +45,7 @@ class CHornet : public CBaseMonster
 public:
 	CHornet(void);
 
-	float hornetPseudoNextThink;
-	float spiralStartTime;
 
-
-
-	//MODDD
-	BOOL hornetTouchedAnything;
-	Vector vecFlightDirAlttt;
-	Vector vecFlightDirTrue;
-	Vector vecFlightDirMem;
 	static float getDifficultyMod(void);
 	static BOOL useSpiral(void);
 
@@ -85,6 +76,23 @@ public:
 	
 	float massInfluence(void);
 	int GetProjectileType(void);
+	
+	Vector GetVelocityLogical(void);
+	void SetVelocityLogical(const Vector& arg_newVelocity);
+	void OnDeflected(CBaseEntity* arg_entDeflector);
+
+	//MODDD
+	////////////////////////////////////////////////
+	float hornetPseudoNextThink;
+	float spiralStartTime;
+
+	BOOL hornetTouchedAnything;
+	//Vector vecFlightDirAlttt;
+	Vector vecFlightDirTrue;
+	//Vector vecFlightDirMem;
+	BOOL reflectedAlready;
+	///////////////////////////////////////////////
+
 
 	float			m_flStopAttack;
 	int				m_iHornetType;

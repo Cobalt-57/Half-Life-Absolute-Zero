@@ -48,7 +48,7 @@ EASY_CVAR_EXTERN(cheat_minimumfiredelay)
 
 EASY_CVAR_EXTERN(playerWeaponSpreadMode)
 
-EASY_CVAR_EXTERN(viewModelPrintouts)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(viewModelPrintouts)
 		
 		
 
@@ -60,6 +60,21 @@ CShotgun::CShotgun(){
 	m_chargeReady = 0;
 
 }
+
+
+// Save/restore for serverside only!
+#ifndef CLIENT_DLL
+TYPEDESCRIPTION	CShotgun::m_SaveData[] =
+{
+	DEFINE_FIELD(CShotgun, m_flNextReload, FIELD_TIME),
+	DEFINE_FIELD(CShotgun, m_fInSpecialReload, FIELD_INTEGER),
+	DEFINE_FIELD(CShotgun, m_flNextReload, FIELD_TIME),
+	// DEFINE_FIELD( CShotgun, m_iShell, FIELD_INTEGER ),
+	DEFINE_FIELD(CShotgun, m_flPumpTime, FIELD_TIME),
+};
+IMPLEMENT_SAVERESTORE(CShotgun, CBasePlayerWeapon);
+#endif
+
 
 void CShotgun::Spawn( )
 {
@@ -229,26 +244,16 @@ void CShotgun::ItemPreFrame(){
 		}
 	}
 
-
-
-
 }
 
 
 void CShotgun::ItemPostFrame( void )
 {
-		
-
-
-
-
+	
 	if(this->m_flNextPrimaryAttack <= UTIL_WeaponTimeBase() ){
 		//HACK - turn off reverse now.
 		//this->m_fireState &= ~128;  //nope.
 	}
-
-
-
 
 	
 	if ( m_flPumpTime && m_flPumpTime < gpGlobals->time )
@@ -257,36 +262,25 @@ void CShotgun::ItemPostFrame( void )
 		EMIT_SOUND_DYN(ENT(m_pPlayer->pev), CHAN_ITEM, "weapons/scock1.wav", 1, ATTN_NORM, 0, 95 + RANDOM_LONG(0,0x1f));
 		m_flPumpTime = 0;
 
-		
 		if(m_iClip == 1){
 			pev->iuser1 |= SHOTGUN_BIT5; //signify we've put one bullet in.
 		}else if(m_iClip > 1){
 			pev->iuser1 |= SHOTGUN_BIT6; //two bullets availabe at the time of pump, two bullets ready for double-fire.
 		}
-
 	}
-
-
-
-
-
-
 
 
 	CBasePlayerWeapon::ItemPostFrame();
 	
-	
 	if(pev->iuser1 & SHOTGUN_BIT7){
-		if(EASY_CVAR_GET(viewModelPrintouts)==1)easyForcePrintLine("I SAW THE WHOLE THING");
+		if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(viewModelPrintouts)==1)easyForcePrintLine("I SAW THE WHOLE THING");
 		pev->iuser1 &= ~SHOTGUN_BIT7;
 		//SendWeaponAnimServerOnlyReverse( SHOTGUN_START_RELOAD );
 		//CBasePlayerWeapon::SendWeaponAnimServerOnlyReverse(SHOTGUN_START_RELOAD, 1, 0);
 
 		SendWeaponAnimServerOnlyReverse( (int)SHOTGUN_START_RELOAD, 0 );
 
-		
 		//m_fireState |= 128;
-
 	}
 }
 
@@ -349,8 +343,8 @@ void CShotgun::PrimaryAttack()
 
 
 	
-	//if (  EASY_CVAR_GET(playerWeaponSpreadMode)!=1 && (EASY_CVAR_GET(playerWeaponSpreadMode)==2 || WEAPON_DEFAULT_MULTIPLAYER_CHECK )  )
-	if(EASY_CVAR_GET(playerWeaponSpreadMode)!=2 && (EASY_CVAR_GET(playerWeaponSpreadMode)==1 || !WEAPON_DEFAULT_MULTIPLAYER_CHECK) )
+	//if (  EASY_CVAR_GET(playerWeaponSpreadMode)!=1 && (EASY_CVAR_GET(playerWeaponSpreadMode)==2 || IsMultiplayer() )  )
+	if(EASY_CVAR_GET(playerWeaponSpreadMode)!=2 && (EASY_CVAR_GET(playerWeaponSpreadMode)==1 || !IsMultiplayer()) )
 	{
 		// regular old, untouched spread. 
 		vecDir = m_pPlayer->FireBulletsPlayer( 6, vecSrc, vecAiming, VECTOR_CONE_10DEGREES, 2048, BULLET_PLAYER_BUCKSHOT, 0, 0, m_pPlayer->pev, m_pPlayer->random_seed );
@@ -360,7 +354,7 @@ void CShotgun::PrimaryAttack()
 		vecDir = m_pPlayer->FireBulletsPlayer( 4, vecSrc, vecAiming, VECTOR_CONE_DM_SHOTGUN, 2048, BULLET_PLAYER_BUCKSHOT, 0, 0, m_pPlayer->pev, m_pPlayer->random_seed );
 	}
 
-	if(EASY_CVAR_GET(viewModelPrintouts)==1)easyForcePrintLine("SHOTGUN: PRIMARY FIRE AT %.2f", gpGlobals->time);
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(viewModelPrintouts)==1)easyForcePrintLine("SHOTGUN: PRIMARY FIRE AT %.2f", gpGlobals->time);
 	
 
 	//is this necessary here?
@@ -398,7 +392,7 @@ void CShotgun::PrimaryAttack()
 
 
 	
-	if(EASY_CVAR_GET(viewModelPrintouts)==1)easyForcePrintLine("OK, next attack relative time:%.2f", m_flNextPrimaryAttack);
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(viewModelPrintouts)==1)easyForcePrintLine("OK, next attack relative time:%.2f", m_flNextPrimaryAttack);
 
 	/*
 	if (m_iClip != 0)
@@ -467,7 +461,7 @@ void CShotgun::SecondaryAttack( void )
 	Vector vecDir;
 	
 
-	if(EASY_CVAR_GET(playerWeaponSpreadMode)!=2 && (EASY_CVAR_GET(playerWeaponSpreadMode)==1 || !WEAPON_DEFAULT_MULTIPLAYER_CHECK) )
+	if(EASY_CVAR_GET(playerWeaponSpreadMode)!=2 && (EASY_CVAR_GET(playerWeaponSpreadMode)==1 || !IsMultiplayer()) )
 	{
 		//easyForcePrintLine("FLAG S-SINGLEPLAYER");
 		// untouched default single player
@@ -480,7 +474,7 @@ void CShotgun::SecondaryAttack( void )
 		vecDir = m_pPlayer->FireBulletsPlayer( 8, vecSrc, vecAiming, VECTOR_CONE_DM_DOUBLESHOTGUN, 2048, BULLET_PLAYER_BUCKSHOT, 0, 0, m_pPlayer->pev, m_pPlayer->random_seed );
 	}
 
-	if(EASY_CVAR_GET(viewModelPrintouts)==1)easyForcePrintLine("SHOTGUN: SECONDARY FIRE AT %.2f", gpGlobals->time);
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(viewModelPrintouts)==1)easyForcePrintLine("SHOTGUN: SECONDARY FIRE AT %.2f", gpGlobals->time);
 
 
 	
@@ -723,7 +717,7 @@ void CShotgun::reloadFinishPump(){
 
 		
 
-		if(EASY_CVAR_GET(viewModelPrintouts)==1)easyForcePrintLine("ILL hahaha");
+		if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(viewModelPrintouts)==1)easyForcePrintLine("ILL hahaha");
 		pev->iuser1 |= SHOTGUN_BIT7;
 
 

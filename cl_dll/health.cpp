@@ -18,9 +18,10 @@
 // implementation of CHudHealth class
 //
 
-#include "STDIO.H"
-#include "STDLIB.H"
-#include "MATH.H"
+#include "externalLibInclude.h"
+//#include "STDIO.H"
+//#include "STDLIB.H"
+//#include "MATH.H"
 
 #include "hud.h"
 #include "cl_util.h"
@@ -37,12 +38,6 @@ EASY_CVAR_EXTERN(timedDamage_brightnessFloor)
 EASY_CVAR_EXTERN(timedDamage_flashSpeed)
 EASY_CVAR_EXTERN(timedDamage_debug)
 
-		
-		
-
-
-
-
 
 DECLARE_MESSAGE(m_Health, Health )
 DECLARE_MESSAGE(m_Health, Damage )
@@ -55,8 +50,65 @@ DECLARE_MESSAGE(m_Health, HUDItemFsh )
 
 
 
+EASY_CVAR_EXTERN(painArrowColorMode)
+EASY_CVAR_EXTERN(painFlashColorMode)
+EASY_CVAR_EXTERN(drownDrawPainMode)
+EASY_CVAR_EXTERN(allowPainDrawWithoutSuit)
+EASY_CVAR_EXTERN(hud_version)
+EASY_CVAR_EXTERN(preE3ShowsDamageIcons)
+EASY_CVAR_EXTERN(E3ShowsDamageIcons)
+EASY_CVAR_EXTERN(skipTFDamageTextures)
+
+EASY_CVAR_EXTERN(timedDamageDeathRemoveMode)
+
+EASY_CVAR_EXTERN(hud_weaponselecthideslower)
 
 
+EASY_CVAR_EXTERN(painFlashDmgMin)
+EASY_CVAR_EXTERN(painFlashDmgExMult)
+EASY_CVAR_EXTERN(painFlashCumulativeMinDrowning)
+EASY_CVAR_EXTERN(painFlashCumulativeMax)
+EASY_CVAR_EXTERN(painFlashDrawOpacityMax)
+EASY_CVAR_EXTERN(painArrowDrawOpacityMin)
+EASY_CVAR_EXTERN(painArrowDrawOpacityMax)
+EASY_CVAR_EXTERN(painFlashFadeMult)
+EASY_CVAR_EXTERN(painArrowFadeMult)
+EASY_CVAR_EXTERN(painFlashDirTolerance)
+
+
+EASY_CVAR_EXTERN(painArrowCumulativeAppearMin)
+EASY_CVAR_EXTERN(painArrowCumulativeDmgJump)
+EASY_CVAR_EXTERN(painFlashPrintouts)
+
+EASY_CVAR_EXTERN(painFlashIgnoreArmor)
+
+EASY_CVAR_EXTERN(itemFlashCumulativeJump)
+EASY_CVAR_EXTERN(itemFlashDrawOpacityMax)
+EASY_CVAR_EXTERN(itemFlashDrawOpacityMin)
+EASY_CVAR_EXTERN(itemFlashFadeMult)
+
+
+
+EASY_CVAR_EXTERN(healthcolor_fullRedMin)
+EASY_CVAR_EXTERN(healthcolor_brightness)
+EASY_CVAR_EXTERN(healthcolor_yellowMark)
+
+EASY_CVAR_EXTERN(hideDamage)
+
+EASY_CVAR_EXTERN(timedDamage_extraBrightness)
+
+
+
+
+
+
+//MODDD - new vars for the new fade system.
+float cumulativeFade = 0;
+//float fadeIncrement = 0.45;
+float fAttackFrontMem = 0;
+float fAttackRearMem = 0;
+float fAttackRightMem = 0;
+float fAttackLeftMem = 0;
 
 
 //MODDD - changed to refer to the whitened version (more flexible w/ different colors)
@@ -89,70 +141,10 @@ int giDmgFlags[NUM_DMG_TYPES] =
 
 
 
-//MODDD - externs
-
-extern float global2_painArrowColorMode;
-extern float global2_painFlashColorMode;
-extern float global2_drownDrawPainMode;
-extern float global2_allowPainDrawWithoutSuit;
-extern float global2_hud_version;
-extern float global2_preE3ShowsDamageIcons;
-extern float global2_E3ShowsDamageIcons;
-extern float global2_skipTFDamageTextures;
-
-extern float global2_timedDamageDeathRemoveMode;
-
-extern float global2_hud_weaponselecthideslower;
-
-
-extern float global2_painFlashDmgMin;
-extern float global2_painFlashDmgExMult;
-extern float global2_painFlashCumulativeMinDrowning;
-extern float global2_painFlashCumulativeMax;
-extern float global2_painFlashDrawOpacityMax;
-extern float global2_painArrowDrawOpacityMin;
-extern float global2_painArrowDrawOpacityMax;
-extern float global2_painFlashFadeMult;
-extern float global2_painArrowFadeMult;
-extern float global2_painFlashDirTolerance;
-
-
-extern float global2_painArrowCumulativeAppearMin;
-extern float global2_painArrowCumulativeDmgJump;
-extern float global2_painFlashPrintouts;
-
-extern float global2_painFlashIgnoreArmor;
-
-extern float global2_itemFlashCumulativeJump;
-extern float global2_itemFlashDrawOpacityMax;
-extern float global2_itemFlashDrawOpacityMin;
-extern float global2_itemFlashFadeMult;
 
 
 
 
-
-EASY_CVAR_EXTERN(healthcolor_fullRedMin)
-EASY_CVAR_EXTERN(healthcolor_brightness)
-EASY_CVAR_EXTERN(healthcolor_yellowMark)
-
-EASY_CVAR_EXTERN(hideDamage)
-
-EASY_CVAR_EXTERN(timedDamage_extraBrightness)
-
-
-
-
-
-
-
-//MODDD - new vars for the new fade system.
-float cumulativeFade = 0;
-//float fadeIncrement = 0.45;
-float fAttackFrontMem = 0;
-float fAttackRearMem = 0;
-float fAttackRightMem = 0;
-float fAttackLeftMem = 0;
 
 
 
@@ -305,16 +297,16 @@ int CHudHealth:: MsgFunc_Damage(const char *pszName,  int iSize, void *pbuf )
 
 	if(bitsDamage & DMG_DROWN){
 		//if this is "drown" damage, get how to draw pain differnetly (default is nothing at all)
-		if(global2_drownDrawPainMode == 2){
+		if(EASY_CVAR_GET(drownDrawPainMode) == 2){
 			//just do this.
 			cumulativeFadeDrown = 1.0f;
 			//return 1;
-		}else if(global2_drownDrawPainMode == 3){
+		}else if(EASY_CVAR_GET(drownDrawPainMode) == 3){
 			//m_fAttackFront = m_fAttackRear = m_fAttackRight = m_fAttackLeft = 1;
 			//MODDD TODO - ditto.
 
 			
-			const float damageFlashModTotal = damageTaken + rawDamageTaken * global2_painFlashIgnoreArmor;
+			const float damageFlashModTotal = damageTaken + rawDamageTaken * EASY_CVAR_GET(painFlashIgnoreArmor);
 
 			m_fAttackFront = m_fAttackRear = m_fAttackRight = m_fAttackLeft = 0.25;
 			setUniformDamage(damageFlashModTotal);
@@ -326,10 +318,10 @@ int CHudHealth:: MsgFunc_Damage(const char *pszName,  int iSize, void *pbuf )
 	//...is "armor" unused?  It comes from "pev->dmg_save". Does it have any purpose than to
 	//trigger a damage draw on any "takeDamage" event, even if the damage is 0?
 
-	if(global2_painFlashPrintouts == 1)easyForcePrintLine("RAW DAMAGE %d %d", armor, damageTaken);
+	if(EASY_CVAR_GET(painFlashPrintouts) == 1)easyForcePrintLine("RAW DAMAGE %d %d", armor, damageTaken);
 	// Actually took damage
 	//if ( damageTaken > 0 || armor > 0 )
-	if ( damageTaken > 0 || (global2_painFlashIgnoreArmor > 0 && rawDamageTaken > 0) || armor > 0 )
+	if ( damageTaken > 0 || (EASY_CVAR_GET(painFlashIgnoreArmor) > 0 && rawDamageTaken > 0) || armor > 0 )
 		CalcDamageDirection(vecFrom, damageTaken, rawDamageTaken);
 
 
@@ -361,7 +353,7 @@ int CHudHealth:: MsgFunc_HUDItemFsh(const char *pszName,  int iSize, void *pbuf 
 		itemFlashColorStartG = 255;
 		itemFlashColorStartB = 0;
 		itemFlashGiven = 1;
-		itemFlashCumulative = global2_itemFlashCumulativeJump;
+		itemFlashCumulative = EASY_CVAR_GET(itemFlashCumulativeJump);
 
 	}else if(determiner == 1){
 		//radiation. green. (lime; bright?)
@@ -369,7 +361,7 @@ int CHudHealth:: MsgFunc_HUDItemFsh(const char *pszName,  int iSize, void *pbuf 
 		itemFlashColorStartG = 255;
 		itemFlashColorStartB = 0;
 		itemFlashGiven = 1;
-		itemFlashCumulative = global2_itemFlashCumulativeJump;
+		itemFlashCumulative = EASY_CVAR_GET(itemFlashCumulativeJump);
 
 	}else if(determiner == 2){
 		//adrenaline. orange (red?)
@@ -377,7 +369,7 @@ int CHudHealth:: MsgFunc_HUDItemFsh(const char *pszName,  int iSize, void *pbuf 
 		itemFlashColorStartG = 127;
 		itemFlashColorStartB = 0;
 		itemFlashGiven = 1;
-		itemFlashCumulative = global2_itemFlashCumulativeJump;
+		itemFlashCumulative = EASY_CVAR_GET(itemFlashCumulativeJump);
 
 	}
 
@@ -440,11 +432,9 @@ int CHudHealth::Draw(float flTime)
 
 
 
-
-	
 	//MODDD - only draw this if the weapon select screen is not on.
 	//if(gHUD.canDrawBottomStats){
-	if( !(!gHUD.canDrawBottomStats && global2_hud_weaponselecthideslower == 1)  ){
+	if( !(!gHUD.canDrawBottomStats && EASY_CVAR_GET(hud_weaponselecthideslower) == 1)  ){
 
 		int HealthWidth;
 
@@ -489,13 +479,13 @@ int CHudHealth::Draw(float flTime)
 			//Use Box Numbers instead (m_HUD_number_0 + 10 gets boxed number 0).
 			//HealthWidth = gHUD.GetSpriteRect(gHUD.m_HUD_number_0).right - gHUD.GetSpriteRect(gHUD.m_HUD_number_0).left;
 			HealthWidth = gHUD.GetSpriteRect(gHUD.m_HUD_number_0+10).right - gHUD.GetSpriteRect(gHUD.m_HUD_number_0+10).left;
-		
-		
+			
+			
 			//MODDD - new height var.
 			int HealthHeight = gHUD.GetSpriteRect(gHUD.m_HUD_number_0+10).bottom - gHUD.GetSpriteRect(gHUD.m_HUD_number_0+10).top;
 
 
-			if(global2_hud_version == 0){
+			if(EASY_CVAR_GET(hud_version) == 0){
 
 				if( EASY_CVAR_GET(timedDamage_debug) <= 0 || EASY_CVAR_GET(timedDamage_debug) == 1 || EASY_CVAR_GET(timedDamage_debug) == 3 || EASY_CVAR_GET(timedDamage_debug) == 4 || EASY_CVAR_GET(timedDamage_debug) == 6){
 					//MODDD - say "true" for "useBoxedNumbers".  Also, set x to HealthWidth / 2 (commented out above) and set y properly.
@@ -506,17 +496,13 @@ int CHudHealth::Draw(float flTime)
 					//If not dead, draw normally.
 					x = gHUD.DrawHudNumber(x, y, DHN_3DIGITS | DHN_DRAWZERO, m_iHealth, r, g, b, 1, 1);
 
-
 					x += HealthWidth/2;
 				}else if(EASY_CVAR_GET(timedDamage_debug) == 2 || EASY_CVAR_GET(timedDamage_debug) == 5){
 					drawTimedDamageIcon(0, giDmgWidth/8, ScreenHeight - giDmgHeight * 2 + giDmgHeight*1.5, r, g, b);
 				}
 
-
-
 			}else{
 
-			
 				//(41, 544)
 				//DHN_3DIGITS | DHN_DRAWZERO
 				x = 16 + 19 - 24 - 1;
@@ -579,7 +565,7 @@ void CHudHealth::CalcDamageDirection(vec3_t vecFrom, int damageAmount, int rawDa
 	side = DotProduct (vecFrom, forward);
 
 
-	const float damageFlashModTotal = damageAmount + rawDamageAmount * global2_painFlashIgnoreArmor;
+	const float damageFlashModTotal = damageAmount + rawDamageAmount * EASY_CVAR_GET(painFlashIgnoreArmor);
 
 
 	if (flDistToTarget <= 50)
@@ -593,7 +579,7 @@ void CHudHealth::CalcDamageDirection(vec3_t vecFrom, int damageAmount, int rawDa
 	else 
 	{
 
-		const float dirStrictness = 1 - global2_painFlashDirTolerance;
+		const float dirStrictness = 1 - EASY_CVAR_GET(painFlashDirTolerance);
 
 		if (side > 0)
 		{
@@ -647,7 +633,7 @@ void CHudHealth::getPainColorMode(int mode, int& r, int& g, int& b){
 		break;
 		case 1: 
 		//note that "1" is reserved for saying, fetch modes 2, 3, or 4 based on the current GUI setup (Pre-E3 or E3).
-			if(global2_hud_version == 0){
+			if(EASY_CVAR_GET(hud_version) == 0){
 				getPainColorMode(4, r, g, b);	
 			}else{
 				getPainColorMode(2, r, g, b);
@@ -691,13 +677,13 @@ int CHudHealth::DrawItemFlash(float flTime){
 	b = itemFlashColorStartB;
 	a = 255;
 
-	const float fFade = gHUD.m_flTimeDelta * global2_itemFlashFadeMult;
+	const float fFade = gHUD.m_flTimeDelta * EASY_CVAR_GET(itemFlashFadeMult);
 	
 	
 	//if(itemFlashCumulative > 0.00){
 		//maxAttackFade += 0.2;
 		//GetPainColor(r,g,b);
-		//getPainColorMode((int)global2_painFlashColorMode, r, g, b);
+		//getPainColorMode((int)EASY_CVAR_GET(painFlashColorMode), r, g, b);
 		
 		
 		//Clip cumulativeFade to 1.00, as you can't shade anymore intensely than 255, opaque.
@@ -705,11 +691,11 @@ int CHudHealth::DrawItemFlash(float flTime){
 		
 		
 		//PENDING (???)
-		//if(global2_itemFlashColorMode > 0){
+		//if(EASY_CVAR_GET(itemFlashColorMode) > 0){
 			//draw it.
 
 			//WAS 1.0 on the right!!
-			shade = a * max(min( itemFlashCumulative * global2_itemFlashDrawOpacityMax, global2_itemFlashDrawOpacityMax ), global2_itemFlashDrawOpacityMin);
+			shade = a * max(min( itemFlashCumulative * EASY_CVAR_GET(itemFlashDrawOpacityMax), EASY_CVAR_GET(itemFlashDrawOpacityMax) ), EASY_CVAR_GET(itemFlashDrawOpacityMin));
 			//!!!!!
 
 			//shade = a * 1;
@@ -719,7 +705,7 @@ int CHudHealth::DrawItemFlash(float flTime){
 
 	//}
 
-	//global2_painArrowDrawOpacityMax
+	//EASY_CVAR_GET(painArrowDrawOpacityMax)
 	
 
 	//reduce the cumulative fade by "fFade", time.
@@ -749,7 +735,7 @@ int CHudHealth::DrawPain(float flTime)
 	}
 
 	
-	if ( global2_allowPainDrawWithoutSuit == 0 && !(gHUD.m_iWeaponBits & (1<<(WEAPON_SUIT)) ) )
+	if ( EASY_CVAR_GET(allowPainDrawWithoutSuit) == 0 && !(gHUD.m_iWeaponBits & (1<<(WEAPON_SUIT)) ) )
 		return 1;
 
 
@@ -768,9 +754,9 @@ int CHudHealth::DrawPain(float flTime)
 
 	//MODDD - changing the multiple on the Delta changes the rate of fade change.
 	//float fFade = gHUD.m_flTimeDelta * 2;
-	const float fFade = gHUD.m_flTimeDelta * global2_painFlashFadeMult;
+	const float fFade = gHUD.m_flTimeDelta * EASY_CVAR_GET(painFlashFadeMult);
 
-	const float fFadeARROW = gHUD.m_flTimeDelta * global2_painArrowFadeMult;
+	const float fFadeARROW = gHUD.m_flTimeDelta * EASY_CVAR_GET(painArrowFadeMult);
 
 	
 
@@ -788,10 +774,10 @@ int CHudHealth::DrawPain(float flTime)
 	//ALSO: on drowning, the pain effect may get a minimum above 0 (constant red).
 	float cumulativeFadeMinimum = 0;
 
-	if(global2_drownDrawPainMode == 1 && drowning){
-		cumulativeFadeMinimum = global2_painFlashCumulativeMinDrowning;		
+	if(EASY_CVAR_GET(drownDrawPainMode) == 1 && drowning){
+		cumulativeFadeMinimum = EASY_CVAR_GET(painFlashCumulativeMinDrowning);		
 	}
-	//easyForcePrintLine("OH naw %.2f %d %.2f", global2_drownDrawPainMode, drowning, global2_painFlashCumulativeMinDrowning);
+	//easyForcePrintLine("OH naw %.2f %d %.2f", EASY_CVAR_GET(drownDrawPainMode), drowning, EASY_CVAR_GET(painFlashCumulativeMinDrowning));
 
 
 	
@@ -800,18 +786,18 @@ int CHudHealth::DrawPain(float flTime)
 	
 	//if(gHUD.recentDamageBitmask & DMG_DROWN){
 	if(drowning){
-		if(global2_drownDrawPainMode == 2){
+		if(EASY_CVAR_GET(drownDrawPainMode) == 2){
 			//allowFlash = 0;
 
 			if(cumulativeFadeDrown > 0.00){
 				//maxAttackFade += 0.2;
 				//GetPainColor(r,g,b);
-				getPainColorMode((int)global2_painFlashColorMode, r, g, b);
+				getPainColorMode((int)EASY_CVAR_GET(painFlashColorMode), r, g, b);
 		
 				//Clip cumulativeFade to 1.00, as you can't shade anymore intensely than 255, opaque.
 				//(as opaque as the engine will allow, it seems)
 		
-				if(global2_painFlashColorMode > 0 ){
+				if(EASY_CVAR_GET(painFlashColorMode) > 0 ){
 					//draw it.
 					shade = a * min( cumulativeFadeDrown, 1.00 );
 					//shade = a * 1;
@@ -835,37 +821,37 @@ int CHudHealth::DrawPain(float flTime)
 	
 	
 	if(m_fAttackFront > 0){
-		const float fadeContributionARROW = m_fAttackFront * global2_painArrowCumulativeDmgJump;
+		const float fadeContributionARROW = m_fAttackFront * EASY_CVAR_GET(painArrowCumulativeDmgJump);
 		fAttackFrontMem = fadeContributionARROW;
-		const float fadeContribution = global2_painFlashDmgMin + m_fAttackFront * m_fAttackFrontDamage * (global2_painFlashDmgExMult);
+		const float fadeContribution = EASY_CVAR_GET(painFlashDmgMin) + m_fAttackFront * m_fAttackFrontDamage * (EASY_CVAR_GET(painFlashDmgExMult));
 		//const float fadeContributionARROW = ...
 		cumulativeFade += fadeContribution;
-		if(global2_painFlashPrintouts == 1)easyForcePrintLine("OW front: raw:%.2f dam:%.2f result:%.2f resultA:%.2f", m_fAttackRight, m_fAttackRightDamage, fadeContribution, fadeContributionARROW);
+		if(EASY_CVAR_GET(painFlashPrintouts) == 1)easyForcePrintLine("OW front: raw:%.2f dam:%.2f result:%.2f resultA:%.2f", m_fAttackRight, m_fAttackRightDamage, fadeContribution, fadeContributionARROW);
 		m_fAttackFront = 0;
 	}
 	if(m_fAttackRear > 0){
-		const float fadeContributionARROW = m_fAttackRear * global2_painArrowCumulativeDmgJump;
+		const float fadeContributionARROW = m_fAttackRear * EASY_CVAR_GET(painArrowCumulativeDmgJump);
 		fAttackRearMem = fadeContributionARROW;
-		const float fadeContribution = global2_painFlashDmgMin + m_fAttackRear * m_fAttackRearDamage * (global2_painFlashDmgExMult);
+		const float fadeContribution = EASY_CVAR_GET(painFlashDmgMin) + m_fAttackRear * m_fAttackRearDamage * EASY_CVAR_GET(painFlashDmgExMult);
 		cumulativeFade += fadeContribution;
-		if(global2_painFlashPrintouts == 1)easyForcePrintLine("OW rear raw:%.2f dam:%.2f result:%.2f resultA:%.2f", m_fAttackRight, m_fAttackRightDamage, fadeContribution, fadeContributionARROW);
+		if(EASY_CVAR_GET(painFlashPrintouts) == 1)easyForcePrintLine("OW rear raw:%.2f dam:%.2f result:%.2f resultA:%.2f", m_fAttackRight, m_fAttackRightDamage, fadeContribution, fadeContributionARROW);
 		m_fAttackRear = 0;
 	}
 	if(m_fAttackLeft > 0){
-		const float fadeContributionARROW = m_fAttackLeft * global2_painArrowCumulativeDmgJump;
+		const float fadeContributionARROW = m_fAttackLeft * EASY_CVAR_GET(painArrowCumulativeDmgJump);
 		fAttackLeftMem = fadeContributionARROW;
-		const float fadeContribution = global2_painFlashDmgMin + m_fAttackLeft * m_fAttackLeftDamage * (global2_painFlashDmgExMult);
+		const float fadeContribution = EASY_CVAR_GET(painFlashDmgMin) + m_fAttackLeft * m_fAttackLeftDamage * (EASY_CVAR_GET(painFlashDmgExMult));
 		cumulativeFade += fadeContribution;
-		if(global2_painFlashPrintouts == 1)easyForcePrintLine("OW left raw:%.2f dam:%.2f result:%.2f resultA:%.2f", m_fAttackRight, m_fAttackRightDamage, fadeContribution, fadeContributionARROW);
+		if(EASY_CVAR_GET(painFlashPrintouts) == 1)easyForcePrintLine("OW left raw:%.2f dam:%.2f result:%.2f resultA:%.2f", m_fAttackRight, m_fAttackRightDamage, fadeContribution, fadeContributionARROW);
 		m_fAttackLeft = 0;
 		
 	}
 	if(m_fAttackRight > 0){
-		const float fadeContributionARROW = m_fAttackRight * global2_painArrowCumulativeDmgJump;
+		const float fadeContributionARROW = m_fAttackRight * EASY_CVAR_GET(painArrowCumulativeDmgJump);
 		fAttackRightMem = fadeContributionARROW;
-		const float fadeContribution = global2_painFlashDmgMin + m_fAttackRight * m_fAttackRightDamage * (global2_painFlashDmgExMult);
+		const float fadeContribution = EASY_CVAR_GET(painFlashDmgMin) + m_fAttackRight * m_fAttackRightDamage * (EASY_CVAR_GET(painFlashDmgExMult));
 		cumulativeFade += fadeContribution;
-		if(global2_painFlashPrintouts == 1)easyForcePrintLine("OW right dir:%.2f dam:%.2f result:%.2f resultA:%.2f", m_fAttackRight, m_fAttackRightDamage, fadeContribution, fadeContributionARROW);
+		if(EASY_CVAR_GET(painFlashPrintouts) == 1)easyForcePrintLine("OW right dir:%.2f dam:%.2f result:%.2f resultA:%.2f", m_fAttackRight, m_fAttackRightDamage, fadeContribution, fadeContributionARROW);
 		m_fAttackRight = 0;
 		
 	}
@@ -878,7 +864,7 @@ int CHudHealth::DrawPain(float flTime)
 
 
 	//was 1.2 on the right!!!
-	cumulativeFade = min(cumulativeFade, global2_painFlashCumulativeMax);
+	cumulativeFade = min(cumulativeFade, EASY_CVAR_GET(painFlashCumulativeMax));
 	//!!!!!
 
 
@@ -888,18 +874,18 @@ int CHudHealth::DrawPain(float flTime)
 	if(cumulativeFade > 0.00){
 		//maxAttackFade += 0.2;
 		//GetPainColor(r,g,b);
-		getPainColorMode((int)global2_painFlashColorMode, r, g, b);
+		getPainColorMode((int)EASY_CVAR_GET(painFlashColorMode), r, g, b);
 		
 		
 		//Clip cumulativeFade to 1.00, as you can't shade anymore intensely than 255, opaque.
 		//(as opaque as the engine will allow, it seems)
 		
 		
-		if(global2_painFlashColorMode > 0 && allowFlash == 1){
+		if(EASY_CVAR_GET(painFlashColorMode) > 0 && allowFlash == 1){
 			//draw it.
 
 			//WAS 1.0 on the right!!
-			shade = a * min( cumulativeFade * global2_painFlashDrawOpacityMax, global2_painFlashDrawOpacityMax );
+			shade = a * min( cumulativeFade * EASY_CVAR_GET(painFlashDrawOpacityMax), EASY_CVAR_GET(painFlashDrawOpacityMax) );
 			//!!!!!
 
 			//shade = a * 1;
@@ -909,7 +895,7 @@ int CHudHealth::DrawPain(float flTime)
 
 	}
 
-	//global2_painArrowDrawOpacityMax
+	//EASY_CVAR_GET(painArrowDrawOpacityMax)
 	
 
 	//reduce the cumulative fade by "fFade", time.
@@ -926,14 +912,14 @@ int CHudHealth::DrawPain(float flTime)
 
 
 	
-	if(global2_painArrowColorMode > 0 && allowArrows == 1){
+	if(EASY_CVAR_GET(painArrowColorMode) > 0 && allowArrows == 1){
 	
-		if (fAttackFrontMem > global2_painArrowCumulativeAppearMin)
+		if (fAttackFrontMem > EASY_CVAR_GET(painArrowCumulativeAppearMin))
 		{
 			//GetPainColor(r,g,b);
-			getPainColorMode((int)global2_painArrowColorMode, r, g, b);
+			getPainColorMode((int)EASY_CVAR_GET(painArrowColorMode), r, g, b);
 			
-			shade = a * min(max( fAttackFrontMem*global2_painArrowDrawOpacityMax, global2_painArrowDrawOpacityMin ), global2_painArrowDrawOpacityMax) ;
+			shade = a * min(max( fAttackFrontMem*EASY_CVAR_GET(painArrowDrawOpacityMax), EASY_CVAR_GET(painArrowDrawOpacityMin) ), EASY_CVAR_GET(painArrowDrawOpacityMax)) ;
 			ScaleColors(r, g, b, shade);
 			SPR_Set(m_SpriteHandle_t, r, g, b );
 
@@ -944,12 +930,12 @@ int CHudHealth::DrawPain(float flTime)
 		} else
 			fAttackFrontMem = 0;
 
-		if (fAttackRightMem > global2_painArrowCumulativeAppearMin)
+		if (fAttackRightMem > EASY_CVAR_GET(painArrowCumulativeAppearMin))
 		{
 			//GetPainColor(r,g,b);
-			getPainColorMode((int)global2_painArrowColorMode, r, g, b);
+			getPainColorMode((int)EASY_CVAR_GET(painArrowColorMode), r, g, b);
 			
-			shade = a * min(max( fAttackRightMem*global2_painArrowDrawOpacityMax, global2_painArrowDrawOpacityMin ), global2_painArrowDrawOpacityMax) ;
+			shade = a * min(max( fAttackRightMem*EASY_CVAR_GET(painArrowDrawOpacityMax), EASY_CVAR_GET(painArrowDrawOpacityMin) ), EASY_CVAR_GET(painArrowDrawOpacityMax)) ;
 			ScaleColors(r, g, b, shade);
 			SPR_Set(m_SpriteHandle_t, r, g, b );
 
@@ -960,12 +946,12 @@ int CHudHealth::DrawPain(float flTime)
 		} else
 			fAttackRightMem = 0;
 
-		if (fAttackRearMem > global2_painArrowCumulativeAppearMin)
+		if (fAttackRearMem > EASY_CVAR_GET(painArrowCumulativeAppearMin))
 		{
 			//GetPainColor(r,g,b);
-			getPainColorMode((int)global2_painArrowColorMode, r, g, b);
+			getPainColorMode((int)EASY_CVAR_GET(painArrowColorMode), r, g, b);
 			
-			shade = a * min(max( fAttackRearMem*global2_painArrowDrawOpacityMax, global2_painArrowDrawOpacityMin ), global2_painArrowDrawOpacityMax) ;
+			shade = a * min(max( fAttackRearMem*EASY_CVAR_GET(painArrowDrawOpacityMax), EASY_CVAR_GET(painArrowDrawOpacityMin) ), EASY_CVAR_GET(painArrowDrawOpacityMax));
 			ScaleColors(r, g, b, shade);
 			SPR_Set(m_SpriteHandle_t, r, g, b );
 
@@ -976,12 +962,12 @@ int CHudHealth::DrawPain(float flTime)
 		} else
 			fAttackRearMem = 0;
 
-		if (fAttackLeftMem > global2_painArrowCumulativeAppearMin)
+		if (fAttackLeftMem > EASY_CVAR_GET(painArrowCumulativeAppearMin))
 		{
 			//GetPainColor(r,g,b);
-			getPainColorMode((int)global2_painArrowColorMode, r, g, b);
+			getPainColorMode((int)EASY_CVAR_GET(painArrowColorMode), r, g, b);
 			
-			shade = a * min(max( fAttackLeftMem*global2_painArrowDrawOpacityMax, global2_painArrowDrawOpacityMin ), global2_painArrowDrawOpacityMax) ;
+			shade = a * min(max( fAttackLeftMem*EASY_CVAR_GET(painArrowDrawOpacityMax), EASY_CVAR_GET(painArrowDrawOpacityMin) ), EASY_CVAR_GET(painArrowDrawOpacityMax)) ;
 			ScaleColors(r, g, b, shade);
 			SPR_Set(m_SpriteHandle_t, r, g, b );
 
@@ -1012,7 +998,7 @@ int CHudHealth::DrawPain(float flTime)
 //MODDD - method added so that any changes to health-related colors across the program are consistent.
 void CHudHealth::deriveColorFromHealth(int &r, int &g, int &b, int &a){
 	
-	if(global2_hud_version == 0){
+	if(EASY_CVAR_GET(hud_version) == 0){
 		//NOTICE: not involving the "a" value (for scaling colors) in Pre E3.
 		
 		//How bright can all of the color components (r, g, b) potentially be?  (0 - 255)
@@ -1072,7 +1058,7 @@ void CHudHealth::deriveColorFromHealth(int &r, int &g, int &b, int &a){
 void CHudHealth::deriveColorFromHealth(int &r, int &g, int &b){
 	
 	
-	if(global2_hud_version == 0){
+	if(EASY_CVAR_GET(hud_version) == 0){
 		//NOTICE: not involving the "a" value (for scaling colors) in Pre E3.
 		
 		const float fullRedMin = EASY_CVAR_GET(healthcolor_fullRedMin);
@@ -1153,7 +1139,7 @@ int CHudHealth::DrawDamage(float flTime)
 
 
 	//MODDD
-	if(gHUD.m_fPlayerDead && global2_timedDamageDeathRemoveMode == 1){
+	if(gHUD.m_fPlayerDead && EASY_CVAR_GET(timedDamageDeathRemoveMode) == 1){
 		//do not render anymore.
 		return 1;
 	}
@@ -1177,11 +1163,11 @@ int CHudHealth::DrawDamage(float flTime)
 	//MODDD - removed.
 	
 
-	if( (global2_hud_version == 1 && global2_E3ShowsDamageIcons == 1) || (global2_hud_version == 0 && global2_preE3ShowsDamageIcons == 1)  ){
+	if( (EASY_CVAR_GET(hud_version) == 1 && EASY_CVAR_GET(E3ShowsDamageIcons) == 1) || (EASY_CVAR_GET(hud_version) == 0 && EASY_CVAR_GET(preE3ShowsDamageIcons) == 1)  ){
 
 		int extraYOffset = 0;
 
-		if(global2_hud_version == 0){
+		if(EASY_CVAR_GET(hud_version) == 0){
 			extraYOffset = -41;
 		}
 
@@ -1398,15 +1384,15 @@ void CHudHealth::drawTimedDamageIcon(int arg_index, int arg_draw_x, int arg_draw
 	DAMAGE_IMAGE *pdmg;
 
 
-	//if not loading the TF2 textures, it will throw the image-index offset off.   Adjust as necessary.
-	if(global2_skipTFDamageTextures == 1){
+	//if not loading the TF textures, it will throw the image-index offset off.   Adjust as necessary.
+	if(EASY_CVAR_GET(skipTFDamageTextures) == 1){
 		if(i > 7){
 			imaoffset = -4;
 		}
 	}
 	int extraYOffset = 0;
 
-	if(global2_hud_version == 0){
+	if(EASY_CVAR_GET(hud_version) == 0){
 		extraYOffset = -41;
 	}
 	pdmg = &m_dmg[i];

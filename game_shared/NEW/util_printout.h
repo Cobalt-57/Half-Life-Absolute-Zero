@@ -1,5 +1,4 @@
 
-
 //MODDD - new.
 
 
@@ -28,6 +27,8 @@
 #include "enginecallback.h"
 //extern enginefuncs_t g_engfuncs;
 
+class CBaseEntity;
+
 #endif
 
 
@@ -51,63 +52,174 @@ extern char* UTIL_VarArgsVA_Custom( const char *szFmt, const char* szPrefix, con
 
 
 
-//
 
-extern void easyPrint(const char *szFmt, ... );
-extern void easyForcePrint(const char *szFmt, ...);
-extern void easyPrintLine(const char *szFmt, ...);
-extern void easyForcePrintLine(const char *szFmt, ...);
-extern void easyPrintLine();
-extern void easyForcePrintLine();
 
+// INTERESTING NOTE.  C++ requires "##" to concatenate literals to macro parameters.
+// "in English please?"
+// it's why "string"##s1##"otherstring" works but "string"s1"otherstring" doesn't.
+// Both approaches work fine in C though, no idea.
+
+
+
+
+// ALSO,  VS6  C++ doesn't appear to even support the "..." macro required for
+// doing this all in the preprocessor to work.  OH WELL.
+// ACTUALLY.  Not doing this.  Breaks a surprising number of other places for various
+// reasons.  Not worth it.
+
+//#ifdef IS_VS6
+	extern void easyPrint(char* szFmt, ...);
+	extern void easyForcePrint(char* szFmt, ...);
+	extern void easyPrintStarter(void);
+	extern void easyForcePrintStarter(void);
+	extern void easyPrintLine(char* szFmt, ...);
+	extern void easyForcePrintLine(char* szFmt, ...);
+	extern void easyPrintLine(void);
+	extern void easyForcePrintLine(void);
+//#else
+/*
+	// yay, we can do it the easy way.
+	#ifdef CLIENT_DLL
+		#define easyPrint_starter if(EASY_CVAR_GET(enableModPrintouts)!=0){gEngfuncs.Con_Printf("CL");}
+		#define easyPrint(s1, ...) if(EASY_CVAR_GET(enableModPrintouts)!=0){gEngfuncs.Con_Printf(s1, ##__VA_ARGS__);}
+		#define easyPrintLine(s1, ...) if(EASY_CVAR_GET(enableModPrintouts)!=0){gEngfuncs.Con_Printf("CL: "##s1##"\n", ##__VA_ARGS__);}
+		#define easyForcePrint_starter gEngfuncs.Con_Printf("CL");
+		#define easyForcePrint(s1, ...) gEngfuncs.Con_Printf(s1, ##__VA_ARGS__);
+		#define easyForcePrintLine(s1, ...) gEngfuncs.Con_Printf("CL: "##s1##"\n", ##__VA_ARGS__);
+	#else
+		#define easyPrint_starter if(EASY_CVAR_GET(enableModPrintouts)!=0){g_engfuncs.pfnAlertMessage(ALERT_TYPE::at_console, "SV");}
+		#define easyPrint(s1, ...) if(EASY_CVAR_GET(enableModPrintouts)!=0){g_engfuncs.pfnAlertMessage(ALERT_TYPE::at_console, s1, ##__VA_ARGS__);}
+		#define easyPrintLine(s1, ...) if(EASY_CVAR_GET(enableModPrintouts)!=0){g_engfuncs.pfnAlertMessage(ALERT_TYPE::at_console, "SV: "##s1##"\n", ##__VA_ARGS__);}
+		#define easyForcePrint_starter g_engfuncs.pfnAlertMessage(ALERT_TYPE::at_console, "SV");
+		#define easyForcePrint(s1, ...) g_engfuncs.pfnAlertMessage(ALERT_TYPE::at_console, s1, ##__VA_ARGS__);
+		#define easyForcePrintLine(s1, ...) g_engfuncs.pfnAlertMessage(ALERT_TYPE::at_console, "SV: " ## s1 ## "\n", ##__VA_ARGS__);
+	#endif
+*/
+//#endif
+
+
+
+extern void printIntAsBinary(unsigned int arg, unsigned int binaryDigits);
+extern void printLineIntAsBinary(unsigned int arg, unsigned int binaryDigits);
+#ifdef CLIENT_DLL
+
+#else
+extern void printIntAsBinaryClient(edict_t* pEntity, unsigned int arg, unsigned int binaryDigits);
+extern void printLineIntAsBinaryClient(edict_t* pEntity, unsigned int arg, unsigned int binaryDigits);
+#endif
 
 extern void UTIL_printLineVector(const Vector& theVector);
 extern void UTIL_printLineVector(const float vX, const float vY, const float vZ);
-extern void UTIL_printLineVector(const char* printLabel, const Vector& theVector);
-extern void UTIL_printLineVector(const char* printLabel, const float vX, const float vY, const float vZ);
+extern void UTIL_printLineVector(char* printLabel, const Vector& theVector);
+extern void UTIL_printLineVector(char* printLabel, const float vX, const float vY, const float vZ);
 extern void UTIL_printVector(const Vector& theVector);
 extern void UTIL_printVector(const float vX, const float vY, const float vZ);
-extern void UTIL_printVector(const char* printLabel, const Vector& theVector);
-extern void UTIL_printVector(const char* printLabel, const float vX, const float vY, const float vZ);
+extern void UTIL_printVector(char* printLabel, const Vector& theVector);
+extern void UTIL_printVector(char* printLabel, const float vX, const float vY, const float vZ);
 
-extern void easyPrintLineDummy(const char *szFmt, ...);
+#ifdef CLIENT_DLL
+
+#else
+extern void UTIL_printLineVectorClient(edict_t* pEntity, const Vector& theVector);
+extern void UTIL_printLineVectorClient(edict_t* pEntity, const float vX, const float vY, const float vZ);
+extern void UTIL_printLineVectorClient(edict_t* pEntity, char* printLabel, const Vector& theVector);
+extern void UTIL_printLineVectorClient(edict_t* pEntity, char* printLabel, const float vX, const float vY, const float vZ);
+extern void UTIL_printVectorClient(edict_t* pEntity, const Vector& theVector);
+extern void UTIL_printVectorClient(edict_t* pEntity, const float vX, const float vY, const float vZ);
+extern void UTIL_printVectorClient(edict_t* pEntity, char* printLabel, const Vector& theVector);
+extern void UTIL_printVectorClient(edict_t* pEntity, char* printLabel, const float vX, const float vY, const float vZ);
+#endif
+
+extern void easyPrintLineDummy(char *szFmt, ...);
 
 
 
 
 #ifdef CLIENT_DLL
-
-
-
+	
+	// Message from the client to the server.
+	extern void easyClientCommand(char* szFmt, ...);
+	// Not sure the difference?  Maybe some other server place that doesn't send the current client calling for the message,
+	// as this is still called from clientside.  Few examples of the engine call inside this in the as-is script.
+	extern void easyServerCommand(char* szFmt, ...);
+	
 
 #else
+	// Few printout methods exclusive to serverside moved here for sanity.
 
-// prints a message to each client. Can be filtered by the built-in strings from titles.txt.
-extern void			UTIL_ClientPrintAll( int msg_dest, const char *msg_name, const char *param1 = NULL, const char *param2 = NULL, const char *param3 = NULL, const char *param4 = NULL );
-inline void			UTIL_CenterPrintAll( const char *msg_name, const char *param1 = NULL, const char *param2 = NULL, const char *param3 = NULL, const char *param4 = NULL ) 
-{
-	UTIL_ClientPrintAll( HUD_PRINTCENTER, msg_name, param1, param2, param3, param4 );
-}
-// prints messages through the HUD
-extern void ClientPrint( entvars_t *client, int msg_dest, const char *msg_name, const char *param1 = NULL, const char *param2 = NULL, const char *param3 = NULL, const char *param4 = NULL );
-
-
-
-extern void easyPrintClient(edict_t* pEdict, const char *szFmt, ... );
-extern void easyForcePrintClient(edict_t* pEdict, const char *szFmt, ... );
-extern void easyPrintLineClient(edict_t* pEdict, const char *szFmt, ... );
-extern void easyForcePrintLineClient(edict_t* pEdict, const char *szFmt, ... );
+	// prints a message to each client. Can be filtered by the built-in strings from titles.txt.
+	extern void ClientPrintAll( int msg_dest, const char *msg_name, const char *param1 = NULL, const char *param2 = NULL, const char *param3 = NULL, const char *param4 = NULL );
+	inline void CenterPrintAll( const char *msg_name, const char *param1 = NULL, const char *param2 = NULL, const char *param3 = NULL, const char *param4 = NULL ) 
+	{
+		ClientPrintAll( HUD_PRINTCENTER, msg_name, param1, param2, param3, param4 );
+	}
+	// prints messages through the HUD
+	extern void ClientPrint( entvars_t *client, int msg_dest, const char *msg_name, const char *param1 = NULL, const char *param2 = NULL, const char *param3 = NULL, const char *param4 = NULL );
 
 
-#endif
+	// prints a message to the HUD say (chat)
+	extern void			UTIL_SayText(const char* pText, CBaseEntity* pEntity);
+	extern void			UTIL_SayTextAll(const char* pText, CBaseEntity* pEntity);
+	
 
 
+	//#ifdef IS_VS6
+		extern void easyPrintClient(edict_t* pEdict, const char* szFmt, ...);
+		extern void easyForcePrintClient(edict_t* pEdict, const char* szFmt, ...);
+		extern void easyPrintStarterClient(edict_t* pEdict);
+		extern void easyForcePrintStarterClient(edict_t* pEdict);
+		extern void easyPrintLineClient(edict_t* pEdict, const char* szFmt, ...);
+		extern void easyForcePrintLineClient(edict_t* pEdict, const char* szFmt, ...);
+		extern void easyPrintLineClient(edict_t* pEdict);
+		extern void easyForcePrintLineClient(edict_t* pEdict);
+
+		extern void easyPrintServer(const char* szFmt, ...);
+		extern void easyForcePrintServer(const char* szFmt, ...);
+		extern void easyPrintStarterServer(void);
+		extern void easyForcePrintStarterServer(void);
+		extern void easyPrintLineServer(const char* szFmt, ...);
+		extern void easyForcePrintLineServer(const char* szFmt, ...);
+		extern void easyPrintLineServer(void);
+		extern void easyForcePrintLineServer(void);
+
+		extern void easyClientCommand(edict_t* pEdict, char* szFmt, ...);
+		extern void easyServerCommand(char* szFmt, ...);
+
+	//#else
+		/*
+		#define easyPrintClient_starter(arg_destEdict) if(EASY_CVAR_GET(enableModPrintouts)!=0){g_engfuncs.pfnClientPrintf(arg_destEdict, "SV");}
+		#define easyPrintClient(arg_destEdict, s1, ...) if(EASY_CVAR_GET(enableModPrintouts)!=0){g_engfuncs.pfnClientPrintf(arg_destEdict, s1, ##__VA_ARGS__);}
+		#define easyPrintLineClient(arg_destEdict, s1, ...) if(EASY_CVAR_GET(enableModPrintouts)!=0){g_engfuncs.pfnClientPrintf(arg_destEdict, "SV: "##s1##"\n", ##__VA_ARGS__);}
+		#define easyForcePrintClient_starter(arg_destEdict) g_engfuncs.pfnClientPrintf(arg_destEdict, "SV");
+		#define easyForcePrintClient(arg_destEdict, s1, ...) g_engfuncs.pfnClientPrintf(arg_destEdict, s1, ##__VA_ARGS__);
+		#define easyForcePrintLineClient(arg_destEdict, s1, ...) g_engfuncs.pfnClientPrintf(arg_destEdict, "SV: "##s1##"\n", ##__VA_ARGS__);
+		
+		#define easyPrintServer_starter(arg_destEdict) if(EASY_CVAR_GET(enableModPrintouts)!=0){g_engfuncs.pfnServerPrint("SV");}
+		#define easyPrintServer(arg_destEdict, s1, ...) if(EASY_CVAR_GET(enableModPrintouts)!=0){g_engfuncs.pfnServerPrint(s1, ##__VA_ARGS__);}
+		#define easyPrintLineServer(arg_destEdict, s1, ...) if(EASY_CVAR_GET(enableModPrintouts)!=0){g_engfuncs.pfnServerPrint("SV: "##s1##"\n", ##__VA_ARGS__);}
+		#define easyForcePrintServer_starter(arg_destEdict) g_engfuncs.pfnServerPrint("SV");
+		#define easyForcePrintServer(arg_destEdict, s1, ...) g_engfuncs.pfnServerPrint(s1, ##__VA_ARGS__);
+		#define easyForcePrintLineServer(arg_destEdict, s1, ...) g_engfuncs.pfnServerPrint("SV: "##s1##"\n", ##__VA_ARGS__);
+		*/
+	//#endif
 
 
+	// Why have separate 'pfnAlertMessage' and 'pfnServerPrint'  engine methods that both
+	// go to the server (or first player if making a server in-game, that is, non-dedicated)?
+	// AGGG.   Absolutely mind-boggling.
+	// Going to just implement a "Broadcast" that does something like ClientPrintAll, since the 
+	// four parameters that don't need to be used there (for interpreting by titles.txt and must
+	// be strings) are just tedious compared to every other printout method.
+	// Say hello to easyPrintBroadcast.
 
 
+	//TEMP!
+	extern void easyPrintLineGroup1(char* format, ...);
+	extern void easyPrintLineGroup2(char* format, ...);
+	extern void easyPrintLineGroup3(char* format, ...);
+	extern void easyPrintLineGroup4(char* format, ...);
 
-
+#endif //END OF main CL_DLL/Server check
 
 
 

@@ -9,23 +9,26 @@
 #include "hornet_kingpin.h"
 
 
-#include "custom_debug.h"
+#include "util_debugdraw.h"
 
 
-extern float global_animationKilledBoundsRemoval;
-extern float global_thoroughHitBoxUpdates;
+EASY_CVAR_EXTERN(animationKilledBoundsRemoval)
+EASY_CVAR_EXTERN(thoroughHitBoxUpdates)
 
-extern float global_noFlinchOnHard;
+EASY_CVAR_EXTERN(noFlinchOnHard)
 
 EASY_CVAR_EXTERN(houndeye_attack_canGib)
 EASY_CVAR_EXTERN(kingpinDebug)
-EASY_CVAR_EXTERN(testVar)
+//EASY_CVAR_EXTERN(testVar)
 
 
 
 //???
 extern short g_sBallForceFieldSprite;
 
+
+//TODO - incorporate the idea of a minimum amount of time the graphic appears.
+//If not be a constant 0.3 seconds itself.  Go on/off in that amount of time frozen in whatever place was picked to reflect the projectile at.
 
 
 //TODO - slightly slower mage loop anim for charging the electirc laser?
@@ -1049,7 +1052,7 @@ void CKingpin::Spawn( void )
 
 
 	//MODDD - CVar me?
-	//m_voicePitch = randomValueInt((int)global_hassaultVoicePitchMin, (int)global_hassaultVoicePitchMax);
+	//m_voicePitch = randomValueInt((int)EASY_CVAR_GET(hassaultVoicePitchMin), (int)EASY_CVAR_GET(hassaultVoicePitchMax) );
 
 	m_voicePitch = randomValueInt(66, 76);
 
@@ -1194,7 +1197,7 @@ Schedule_t* CKingpin::GetSchedule ( void )
 				return GetScheduleOfType ( SCHED_WAKE_ANGRY );
 			}
 			//MODDD - other condition.  If "noFlinchOnHard" is on and the skill is hard, don't flinch from getting hit.
-			else if (HasConditions(bits_COND_LIGHT_DAMAGE) && !HasMemory( bits_MEMORY_FLINCHED) && !(global_noFlinchOnHard==1 && g_iSkillLevel==SKILL_HARD)  )
+			else if (HasConditions(bits_COND_LIGHT_DAMAGE) && !HasMemory( bits_MEMORY_FLINCHED) && !(EASY_CVAR_GET(noFlinchOnHard)==1 && g_iSkillLevel==SKILL_HARD)  )
 			{
 				return GetScheduleOfType( SCHED_SMALL_FLINCH );
 			}
@@ -2412,6 +2415,11 @@ void CKingpin::MonsterThink( void ){
 		while ((pEntityScan = UTIL_FindEntityInSphere( pEntityScan, pev->origin, 700 )) != NULL){
 
 			if(!(pEntityScan->pev->flags & FL_KILLME)){
+
+				if(FClassnameIs(pEntityScan->pev, "bolt")){
+					int x = 666;
+				}
+				
 				//If this is not scheduled for deletion
 				float rangeFactor;
 				float reflectDelayFactor;
@@ -2430,7 +2438,7 @@ void CKingpin::MonsterThink( void ){
 				}else{
 					float filteredIncomingSpeed = min(incomingSpeed, 2000);  //cap me at 2000 for safety.
 					//climbs up to 2000.
-					reflectDelayFactor = (1.0 - (((filteredIncomingSpeed - 800) / 1200) * 0.8) );
+					reflectDelayFactor = (1.0 - (((filteredIncomingSpeed - 800) / 1200) * 0.93) );
 					rangeFactor = 0.65 + ((filteredIncomingSpeed - 800) / 1200) * 0.35;
 				}
 				
@@ -2471,6 +2479,8 @@ void CKingpin::MonsterThink( void ){
 				if(otherProjType > PROJECTILE_NONE && incomingSpeed > 0.1f && distanceToEnt < (rangeFactor * 700) ){
 					//also, is it actually coming towards me? This should also avoid trying to re-reflect projectiles already reflected
 					//but still in reflection range for a little bit.
+					const char* entityName = pEntityScan->getClassname();
+
 
 					const float zSpeed = incomingVelocity.z;
 					const float distanceZ = abs( (pev->origin.z - pEntityScan->pev->origin.z ) );
@@ -2485,11 +2495,13 @@ void CKingpin::MonsterThink( void ){
 					//OR it's headed close enough to towards me.
 
 					if(
+						//If the projectile is close enough to moving towards this kingpin,
 						closenessToApproach > 0.4f ||
-						(distance2D < (600*rangeFactor) && zSpeed < -80 && distanceZ < 500*rangeFactor)
+						//or it's bouncing and too close to landing to me...
+						(( pev->movetype == MOVETYPE_TOSS || pev->movetype == MOVETYPE_BOUNCE) &&  (distance2D < (600*rangeFactor) && zSpeed < -80 && distanceZ < 500*rangeFactor) )
 
 					){
-						attemptReflectProjectileStart(pEntityScan, rangeFactor);
+						attemptReflectProjectileStart(pEntityScan, reflectDelayFactor);
 					}
 
 				}//END OF "is projectile" check and moving check
@@ -2718,7 +2730,10 @@ GENERATE_DEADTAKEDAMAGE_IMPLEMENTATION(CKingpin){
 //Parameters: integer named fGibSpawnsDecal
 GENERATE_GIBMONSTER_IMPLEMENTATION(CKingpin)
 {
-
+	
+	// it's just a good idea
+	// Moved this to "OnDelete" for completeness.
+	//stopElectricBarrageLoopSound();
 
 	GENERATE_GIBMONSTER_PARENT_CALL(CBaseMonster);
 }
@@ -2729,7 +2744,7 @@ GENERATE_GIBMONSTER_IMPLEMENTATION(CKingpin)
 
 //if dead and a poweredup monster's directedEnemyIssuer is THIS, forget its directedEnemy. !!!
 GENERATE_KILLED_IMPLEMENTATION(CKingpin){
-
+	
 	BOOL firstCall = FALSE;
 	if(firstTimeKilled){
 		firstCall = TRUE;
@@ -2758,7 +2773,9 @@ GENERATE_KILLED_IMPLEMENTATION(CKingpin){
 	ClearBeams();
 	ClearReflectEffects();
 	removeChargeEffect();
-
+	//it's just a good idea
+	stopElectricBarrageLoopSound();
+	
 	
 
 }//END OF Killed
@@ -2767,6 +2784,8 @@ GENERATE_KILLED_IMPLEMENTATION(CKingpin){
 void CKingpin::onDelete(void){
 	ClearBeams();
 	removeChargeEffect();
+
+	stopElectricBarrageLoopSound();
 }
 
 
@@ -3303,13 +3322,13 @@ void CKingpin::forceEnemyOnPoweredUpMonsters(CBaseEntity* monsterToForce, BOOL a
 void CKingpin::playPsionicLaunchSound(){
 	switch(RANDOM_LONG(0, 2)){
 	case 0:
-		EMIT_SOUND_FILTERED(ENT(pev), CHAN_WEAPON, "houndeye/he_blast1.wav", global_soundVolumeAll, global_soundAttenuationAll*0.5, 0, 80 + RANDOM_LONG(0, 5));
+		EMIT_SOUND_FILTERED(ENT(pev), CHAN_WEAPON, "houndeye/he_blast1.wav", EASY_CVAR_GET(soundVolumeAll), EASY_CVAR_GET(soundAttenuationAll)*0.5, 0, 80 + RANDOM_LONG(0, 5));
 	break;
 	case 1:
-		EMIT_SOUND_FILTERED(ENT(pev), CHAN_WEAPON, "houndeye/he_blast2.wav", global_soundVolumeAll, global_soundAttenuationAll*0.5, 0, 80 + RANDOM_LONG(0, 5));
+		EMIT_SOUND_FILTERED(ENT(pev), CHAN_WEAPON, "houndeye/he_blast2.wav", EASY_CVAR_GET(soundVolumeAll), EASY_CVAR_GET(soundAttenuationAll)*0.5, 0, 80 + RANDOM_LONG(0, 5));
 	break;
 	case 2:
-		EMIT_SOUND_FILTERED(ENT(pev), CHAN_WEAPON, "houndeye/he_blast3.wav", global_soundVolumeAll, global_soundAttenuationAll*0.5, 0, 80 + RANDOM_LONG(0, 5));
+		EMIT_SOUND_FILTERED(ENT(pev), CHAN_WEAPON, "houndeye/he_blast3.wav", EASY_CVAR_GET(soundVolumeAll), EASY_CVAR_GET(soundAttenuationAll)*0.5, 0, 80 + RANDOM_LONG(0, 5));
 	break;
 	}
 }//END OF playPsionicLaunchSound()
@@ -3669,37 +3688,70 @@ void CKingpin::UpdateReflectEffects(void){
 	for(i = 0; i < KINGPIN_MAX_REFLECTEFFECT; i++){
 		if(m_pReflectEffect[i] != NULL){
 			//has this been surpassed?
-			if(m_flReflectEffectApplyTime[i] != -1 && gpGlobals->time >= m_flReflectEffectApplyTime[i]){
-				m_flReflectEffectApplyTime[i] = -1;
 
-				//Reflect the entity there sucka!
-				//TODO OH SHIT
-				if(m_pEntityToReflect[i] != NULL){
-					//still valid? reflect!
-					const Vector entityCurrentVelocity = m_pEntityToReflect[i]->GetVelocityLogical();
-					Vector flatVelocity = Vector(entityCurrentVelocity.x, entityCurrentVelocity.y, 0);
 
-					//m_pEntityToReflect[i]->pev->velocity = flatVelocity * -1 + Vector(0, 0, 100);
-					m_pEntityToReflect[i]->SetVelocityLogical(flatVelocity * -1 + Vector(0, 0, 160));
-					
-					if(m_pEntityToReflect[i]->pev->movetype == MOVETYPE_FLY){
-						//I will fall.
-						m_pEntityToReflect[i]->pev->movetype = MOVETYPE_TOSS;
-					}else if(m_pEntityToReflect[i]->pev->movetype == MOVETYPE_BOUNCEMISSILE){
-						m_pEntityToReflect[i]->pev->movetype = MOVETYPE_BOUNCE;
+
+
+
+
+
+
+			if(m_flReflectEffectApplyTime[i] != -1){
+
+
+
+				//Is this a good idea??
+				if(gpGlobals->time <= m_flReflectEffectApplyTime[i] && m_pEntityToReflect[i] != NULL){
+					Vector anticipatedProjectileOrigin;
+					const float timeUntilApply = (m_flReflectEffectApplyTime[i] - gpGlobals->time);
+
+					anticipatedProjectileOrigin = m_pEntityToReflect[i]->pev->origin + m_pEntityToReflect[i]->GetVelocityLogical() * (timeUntilApply);
+
+					if(m_pEntityToReflect[i]->pev->movetype == MOVETYPE_TOSS || m_pEntityToReflect[i]->pev->movetype == MOVETYPE_BOUNCE ){
+						//anticipate the effect of gravity.
+						int gravityFactor = 0;
+						if(m_pEntityToReflect[i]->pev->gravity == 0){
+							gravityFactor = 1; //implied?
+						}
+						anticipatedProjectileOrigin = anticipatedProjectileOrigin + Vector(0, 0, gravityFactor * g_psv_gravity->value * timeUntilApply);
 					}
+
+
 				}
 
+				if(gpGlobals->time >= m_flReflectEffectApplyTime[i]){
+					m_flReflectEffectApplyTime[i] = -1;
+
+					//Reflect the entity there sucka!
+					//TODO OH SHIT
+					if(m_pEntityToReflect[i] != NULL){
+						//still valid? reflect!
+						const Vector entityCurrentVelocity = m_pEntityToReflect[i]->GetVelocityLogical();
+						Vector flatVelocity = Vector(entityCurrentVelocity.x, entityCurrentVelocity.y, 0);
+
+						//m_pEntityToReflect[i]->pev->velocity = flatVelocity * -1 + Vector(0, 0, 100);
+						m_pEntityToReflect[i]->SetVelocityLogical(flatVelocity * -1 + Vector(0, 0, 160));
+					
+						if(m_pEntityToReflect[i]->pev->movetype == MOVETYPE_FLY){
+							//I will fall.
+							m_pEntityToReflect[i]->pev->movetype = MOVETYPE_TOSS;
+						}else if(m_pEntityToReflect[i]->pev->movetype == MOVETYPE_BOUNCEMISSILE){
+							m_pEntityToReflect[i]->pev->movetype = MOVETYPE_BOUNCE;
+						}
+					}
 
 
-				//OH YAH
-				//Expand_TargetTime ??
-				//m_pReflectEffect[i]->Expand(0.1, (255 / 0.3f));
-				m_pReflectEffect[i]->Expand_TimeTarget(1.4, 0.3 * m_flReflectEffect_EndDelayFactor[i]);
 
-				//YES, we have to do this now.  Either that or give it a callback method to tell us when it runs out of opacity and decides to delete itself.
-				//Because it won't tell us when it does, leaving us with a pointer to fucked up deleted memory, the worst kind.
-				m_pReflectEffect[i] = NULL;
+					//OH YAH
+					//Expand_TargetTime ??
+					//m_pReflectEffect[i]->Expand(0.1, (255 / 0.3f));
+					m_pReflectEffect[i]->Expand_TimeTarget(1.4, 0.3 * m_flReflectEffect_EndDelayFactor[i]);
+
+					//YES, we have to do this now.  Either that or give it a callback method to tell us when it runs out of opacity and decides to delete itself.
+					//Because it won't tell us when it does, leaving us with a pointer to fucked up deleted memory, the worst kind.
+					m_pReflectEffect[i] = NULL;
+
+				}//END OF time passed m_flReflectEffectApplyTime check
 				
 			}//END OF ReflectEffecTApplyTime check
 
@@ -4709,10 +4761,31 @@ void CKingpin::attemptReflectProjectileStart(CBaseEntity* arg_toReflect, float a
 		//also stop.  No slots available.
 		return;
 	}
+
+	//Going through with this?  Let the projectile know it's getting deflected. Or reflected. Whatever.
+	//Stop hornets and rockets from being persistent.
+	arg_toReflect->OnDeflected(this);
+
+	//Make me the owner to avoid touching me.  Is this ok?
+	//Things that have a separate owner instance/member variable (m_hOwner usually, like Snarks) need to handle
+	//that themselves in their own "OnDeflected" versions.
+	arg_toReflect->pev->owner = this->edict();
+
+
 	
 	//TODO - check.  If this is MOVETYPE_TOSS or MOVETYPE_MISSLEBOUNCE, see if we can anticipate the pull from gravity too in 0.3 seconds.
 	//proabably not a huge difference anyways.
-	anticipatedProjectileOrigin = arg_toReflect->pev->origin + arg_toReflect->pev->velocity * (0.3 * arg_delayFactor);
+	anticipatedProjectileOrigin = arg_toReflect->pev->origin + arg_toReflect->GetVelocityLogical() * (0.3 * arg_delayFactor);
+
+	if(arg_toReflect->pev->movetype == MOVETYPE_TOSS || arg_toReflect->pev->movetype == MOVETYPE_BOUNCE ){
+		//anticipate the effect of gravity.
+		int gravityFactor = 0;
+		if(arg_toReflect->pev->gravity == 0){
+			gravityFactor = 1; //implied?
+		}
+		anticipatedProjectileOrigin = anticipatedProjectileOrigin + Vector(0, 0, gravityFactor * g_psv_gravity->value * 0.3f * arg_delayFactor);
+	}
+
 
 	m_pReflectEffect[emptyReflectHandleID] = CSprite::SpriteCreate( "sprites/hotglow_ff.spr", anticipatedProjectileOrigin, TRUE );
 
@@ -4721,14 +4794,15 @@ void CKingpin::attemptReflectProjectileStart(CBaseEntity* arg_toReflect, float a
 	if(m_pReflectEffect[emptyReflectHandleID]){
 		m_pReflectEffect[emptyReflectHandleID]->AnimationScaleFadeIn_TimeTarget(1.1, 0.8f, 170, 0.3 * arg_delayFactor);
 
-		m_flReflectEffect_EndDelayFactor[emptyReflectHandleID] = arg_delayFactor;  //remember me!
+		//was arg_delayFactor.
+		m_flReflectEffect_EndDelayFactor[emptyReflectHandleID] = 1.0f;  //actually always take the same amount of time to end.  We need to see it.
 
 		//Good, now set this slot up to reflect this entity soon with an effect.
 		m_pEntityToReflect[emptyReflectHandleID] = arg_toReflect;
 
 		m_flReflectEffectApplyTime[emptyReflectHandleID] = gpGlobals->time + 0.3 * arg_delayFactor;
 		//m_flReflectEffectExpireTime[emptyReflectHandleID] = gpGlobals->time + 0.6 * arg_delayFactor;
-		m_flReflectEffectExpireTime[emptyReflectHandleID] = m_flReflectEffectApplyTime[emptyReflectHandleID] + 0.3 * arg_delayFactor;
+		m_flReflectEffectExpireTime[emptyReflectHandleID] = m_flReflectEffectApplyTime[emptyReflectHandleID] + 0.3 * 1.0f; //* arg_delayFactor;
 		
 	}//END OF ReflectEffect creation check
 	else{

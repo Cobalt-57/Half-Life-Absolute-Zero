@@ -55,10 +55,12 @@ public:
 	void I_HealthModule_ChargeRestored(void);
 	void I_HealthModule_UseStart(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value);
 	void I_HealthModule_UseContinuous(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value);
+	
 	void I_HealthModule_UseEnd(void);
 	
-	void I_HealthModule_SetThink_UseEnd(void);
-	void I_HealthModule_SetThink_ChargeRestored(void);
+	//void I_HealthModule_SetThink_UseEnd(void);
+	//void I_HealthModule_SetThink_ChargeRestored(void);
+
 	void I_HealthModule_SetThink_Custom(void);
 
 	void EXPORT CustomThink(void);
@@ -70,8 +72,8 @@ public:
 
 	//Moved to HealthModule. This is completely internal to healing logic.
 	//void EXPORT Recharge(void);
-	void EXPORT UseEnd(void);
-	void EXPORT ChargeRestored(void);
+	//void EXPORT UseEnd(void);
+	//void EXPORT ChargeRestored(void);
 	
 	void KeyValue( KeyValueData *pkvd );
 

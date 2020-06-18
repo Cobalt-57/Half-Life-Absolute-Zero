@@ -3,15 +3,15 @@ ABSOLUTE ZERO DOCUMENTATION
 Ingame: To see what map you're on, go in console, type "status".  Look at "Map  :"...
 
 
-Thanks IGN, see this:
-thirdperson
-cam_idealyaw 0 (or 1?)
+Do this to fix the 'thirdperson camera-is-to-the-side' issue.
+  thirdperson
+  cam_idealyaw 0 (or 1?)
 
 ============================================================================================================================================
 ============================================================================================================================================
 ============================================================================================================================================
 ---IMPORTANT VISUAL STUDIO NOTE:
-The project can now automatically copy the DLL's to your Half-Life mod folder (AbsoluteZero?) and run the game on compile for convenience.
+The project can now automatically copy the DLL's to your Half-Life mod folder (AbsoluteZero) and run the game afer building both projects.
 In Visual Studio, there are four places that need to point to your installed game directory.
 1. In the solution explorer (open with the "View" tab at the top of visual studio, "Solution Explorer" if the window is missing)...
    Right-click the "cl_dll" project and pick "Properties".
@@ -24,9 +24,11 @@ In Visual Studio, there are four places that need to point to your installed gam
 3. Repeat step 1. for the "hl" project in the solution explorer.
 4. Repeat step 2. for the "hl" project (properties probably still open). Of course with "/dll/az.dll" at the end of this path instead.
    
-If this is set up right, compiling the project (with no errors) should automatically start the game with the up to date DLLs placed in.
-Make sure by deleting your DLL's manually in your game mod folder ("cl_dlls/client.dll" and "dll/az.dll") and compiling. Check the version with, in console:
-"protoDateC" and S, and "protoVersionC" and S.  Autocomplete should help.
+Intended for visual studio 2010 through 2019, although only 2010 and 2019 were tested.   Can compile in Visual Studio 6 too but this project is not updated as often.  Even so, an effort to keep script compatible with VS6 has been made.  Adjustments for future versions uncertain, but should be contained to the "externalLibInclude.h" file in the project's root for neatness and easy comparisons between visual studio versions.
+
+Building the solution should copy the client.dll and  hl.dll (renamed to az.dll) files to the game folder's cl_dlls and dlls.  If something prevents the .dll's from being copied over (such as compiling while the .dll's under teh game folder are already in use from runnnig the game), you must manually copy over the DLL's later or trigger a recompile of both the client and server projects to attempt a re-send (try putting a character in dlls/glock.cpp, backspace, save, build solution).
+
+To check the version and build date of the mod, type "mod_version_client" or "mod_version_server". However, the _server variant requires a game to be running (loads the server .dll; only the client .dll is loaded at all times).
 
 The project's version.h file lets you change the reported "version" (a letter typically) to prove the up-to-date DLLs made it over too.
 
@@ -42,15 +44,13 @@ DEBUG FEATURE. In debug or release builds, if you're having startup trouble, or 
 
 
 
-
-
 HELPFUL: every entity (CBaseEntity or descendent) has a "edict()" instance method.
          "ENT( yourEntityOrDescendent )" is also helpful.
 
 ATTENTION: Looks like the "UTIL_EmitAmbientSound" can also play sentences.
 
 Also, setting a monster's "pev->nextthink" to 0 may sound like a neat way to make it play instantly (after all, we're certianly past 0 at any point of time after start), but this actually disables the think method so that it cannot be called.
-To set a monster's think method to be called instantly, just set pev->nextthink to 0.1 or gpGlobals->time.
+To set a monster's think method to be called instantly, just set pev->nextthink to 0.1 (a tiny amount of time that's clearly been passed since the start of a game) or gpGlobals->time.
 
 MONSTER THINK LOGIC:
 For monster think logic, the core is "MonsterThink()" as seen in monsters.cpp. It calls RunAI() which can be seen in monsterstate.cpp. RunAI then calls FCheckAITrigger() (see if something about this monster satisfies a map condition, such as the agrunts dying in one map to signify spawning more and opening a door), PrescheduleThink() (has no logic in the base monster class, to be used or not in child classes), and then MaintainSchedule() (general logic to continue this schedule task by task or pick a new one).
@@ -135,6 +135,121 @@ The point is, be sure to check if the hit entity "pHit" is worldspawn first, and
 CINEMATICS - monsters may have a linked "scripted_sequence" object, called the "CCineMonster" class in C++ code (really) in the form of a "m_pCine" instance variable. Monsters in the MONSTERSTATE_SCRIPT state can check their associated "m_pCine" for other information like whether it is interruptible or not (spawnflag 32, 5th power of 2, AKA "SF_SCRIPT_NOINTERRUPT" in C++ code).
 			 
 			 
+
+
+
+"#pragma once".  Should this be used in more files under the "#ifndef X_H",  "#define X_H"  bits in .h files?
+
+
+<half life folder>/AbsoluteZero (or valve)/resource/gameui_english.txt:   string links?
+
+
+PRINTOUT METHOD INFO:
+//////////////////////////////////////////////////////////////////
+Some printout methods are influenced by the 'developer' CVAR.
+At 1 or above, I think all printout methods work (unless script explicilty checks for the 'developer' value
+differently, such as 'only do this for developer == 2').
+Any mentions of "developer 1" should also work for "developer 2".
+At a value of 0, some printout methods won't show anything.
+Keep in mind our own "enableModPrintouts" must be 1 for calls made with "easyPrint" to work.
+"easyForcePrint" calls ignore that check and work anyways, since calling for some client commands with an
+invisible response would just be confusing.
+
+Here's a list of printout methods that show up (plus) or don't (minus) with a developer value of 0.
+Also shows what color choice is used (between BrightControlText and ControlText, see below)
+
+CLIENTSIDE:
+   +, CT  gEngfuncs.pfnConsolePrint(par_string)
+   +, CT  gEngfuncs.Con_Printf(...)
+   -, BCT gEngfuncs.Con_DPrintf(...)
+
+SERVERSIDE:
+   -, CT  g_engfuncs.pfnAlertMessage(ALERT_TYPE::at_console, szFmt, ... )
+   -, BCT g_engfuncs.pfnClientPrintf(pEdict, PRINT_TYPE::print_console, szMsg)
+   +, CT  g_engfuncs.pfnServerPrint(szMsg)
+
+-CONSOLE TEXT COLOR
+For the colors seen in console text, go to "<half life folder>/AbsoluteZero/resource/TrackerScheme.res".
+If it's not there, the base one in the "Valve" game folder is being used instead.
+Most console text from printouts use either BrightControlText or ControlText in that file.
+'BrightControlText' is darker in my case, go figure.
+Making any generalization about which is used is hard.  Any "BrightControlText"-using text is blocked by
+"developer 0", but pfnAlertMessage uses "ControlText" and is also blocked by "developer 0".
+
+With "developer 1", the most recent printout in the "ControlText" color shows up at the top of
+the screen as yellow text for a few seconds.  Not present in "developer 0".
+
+Printouts don't appear to be affected by compiling for Debug or Release (engine-wise).
+However, prefixes can indicate the source of the printout in Debug mode, or Release mode if 
+the "FORCE_PRINTOUT_PREFIX" macro is set to 1 (see version.h).
+They are "CL" for printouts meant for 
+
+Anyway, "pfnClientPrintf" not working with "developer 0" poses a bit of a problem.
+Seems weird to have to use "ClientPrint" instead with a limit of 4 parameters just to get around that if
+we really needed to get client-specific printouts from the server (like in responses through
+dlls/client.cpp) with "developer 0".
+
+Unsure of the difference between pfnConsolePrint and Con_Printf.  Looks like it's best to just use
+Con_Printf for console printouts, pfnConsolePrint can support makinga message a "notification" instead
+if the first character is set to a value of 1 (not "1", but the literal 1 as a ASCII value).
+
+Also seen in the method list above, some printout methods support giving a number of variable arguments
+to fill the given format string:
+    "my message here %d %s", 17, "good job"
+...Others only accept a single string, so a temporary char array with the formatted string must be sent
+instead.  Don't have to worry about this if you use "easyPrint" methods, see "util_printout.h/.cpp".
+Most commonly wanted ways to print are supported and all easyPrint methods allow variable parameters,
+no temp char array required.
+
+
+INTERESTING LOCATIONS :
+//////////////////////////////////////////////////////////////////
+g_engfuncs and gpGlobals are defined in:
+    client: cl_dll/hl/hl_baseentity.cpp
+    server: dlls/h_export.cpp
+
+gEngfuncs is defined in:
+    cl_dll/cdll_int.cpp
+
+g_engfunc's class (enginefuncs_t) is in engine/eiface.h.
+gEngfuncs's class (cl_enginefunc_t) is in engine/cdll_int.h.
+
+g_engfunc is typically used serverside, but can show up in some shared files too for clientside.
+ Client-only files typically don't involve g_engfunc.
+gEngfuncs looks to be clientside only.
+
+Also, cl_dll/hl/hl_weapons.cpp does some odd things in the "HUD_InitClientWeapons" method, between g_engfuncs and
+gEngfuncs.
+That... actually might be because of g_engfunc showing up in client & serverside.  Clientside is the unusual one,
+so it does some special hookups there to dummy out some things unneeded (like precaches) that still show up client/
+serverside in the specific weapon files.
+So it's better to think of g_engfuncs as available clientside too when absolutely necessary, but more as a
+placeholder with minimal support.  It's primarily serverside.
+
+Anyway, a few other points.  Is the following method for g_engfuncs:
+	void		(*pfnEngineFprintf)			(FILE *pfile, char *szFmt, ...);
+...viable for clientside too?  Could be nice to use this to write the hiddenMem files instead of the standard
+C/C++ way, best  to use the engine-supported methods instead whenever possible.  Maybe.  Unless it that has some
+hideous side-effect.
+
+And why isn't "gpGlobals" available for HUD logic too?  Have to use "gHud.recentTime" to get the current time
+if it isn't supplied by the current method being provided with it by the base think/update/draw etc. method that
+called the specific screen's one.  Seems that as gpGlobals works fine for shared stuff, it should work fine for
+all clientside.  The type of gpGlobals (globalvars_t) is in engine\progdefs.h, which is included by dlls/extdll.h
+most of the time.  Just something to keep in mind.
+
+/////////////////////////////////////////////////////////////////
+
+
+
+cl_himodels is... something?  I think it only affects the player model (one seen by other players in multiplayer or 3rd person)
+
+
+
+
+
+
+
 			 
 			 
 			 
@@ -273,7 +388,6 @@ wpn_glocksilencer - number, MODEVAR, 0, 1, 2.  Regardless, now right-clicking do
  
 hud_logo - number, boolean.  If on, shows a logo similar (possibly identical) to that shown in some alpha / e3 (not sure) demos.  This feature was present in the game files all along, but I could not find a way to turn it on.  Connected logo visibility to the cvar.
 hud_brokentrans - number, boolean.  Meant to emulate the broken transparency effect seen in some alphas / e3's (the faded-black appearing in front of most rendered GUI text and graphics, likely in front because it makes the numbers themselves darker than the primary colors present in retail otherwise).  Unfortunately, the closer to black a color becomes, the more transparent (up to invisible) it becomes, so the best I could get was a faded light-gray.
-testVar - unused, but a string.  Planned on use for receiving the output of simple tests, more viable methods discovered.
 
 
 hideFP, hideAll, hideMyShit - sets drawViewModel to 0 and drawHUD to -1 (crosshair block too). Effectively hides all drawn graphics, good for screenshots.
@@ -415,13 +529,11 @@ E3UsesFailColors - BOOL.  Same as above but for E3: shade empty weapons red.
 
 hud_batterydraw - BOOL.  when on, the battery's fill-line is drawn somewhere between the top and bottom (horizontally).  If 0, the fill-line is drawn somewhere between the left & right (vertically).
 
-canShowWeaponSelectAtDeath - BOOL.  Preserves an archaic bug from some builds.  When on, weapon select and some other pieces of GUI will continue to be available in weapon select (has no functionality though).
+canShowWeaponSelectAtDeath - BOOL.  Preserves an old bug from some builds.  When on, weapon select and some other pieces of GUI will continue to be available in weapon select (has no functionality though).
 
 endlessFlashlightBattery - BOOL.  Probably seems like common sense (the flash light now lacks an energy meter), but it does start out as 1.
 
 forceDrawBatteryNumber - BOOL.  If on, a number is drawn in the current GUI (E3 or pre-E3)'s style above the battery, portraying its value (remaining battery).  For debugging; more accurate than "uh, 1/3" or "almost empty?".
-
-canapplyDefaultFOV - BOOL.  Generally not useful, but change to "1" to force the screen to update the default FOV with the screensize.  Since the screen can't size without a restart, it is not too useful.
 
 timedDamageIgnoresArmor - BOOL.  If on, all timed damage will ignore the player's armor, dealing damage to health and flashing the screen (some does not when armor is not ignored).
 timedDamageEndlessOnHard - BOOL.  If on and "skill" is set to 3 (hard difficulty), curable damages never decrease.  (technically, they never decrease beyond ONE step, so that some common canister logic still works).  Still endless.
@@ -451,7 +563,7 @@ disablePauseSinglePlayer (0) - BOOL. If 1, pausing in single player immediately 
 itemBatteryPrerequisite - BOOL.  If on, canisters (except adrenaline) and long jump require at least one battery charge (suit / HEV battery, armor battery, same idea) to function at all.  No charge is removed, it is just required.
 
 skipTFDamageTextures - BOOL.  If on, some damage-indicator texture indexes are skipped so that the new one may be seen in the expected place.  I do not expect this to change, but the CVAR is here if these slots should NOT be skipped.
-~better explanation:  There are some cases where sprites are expected to be loaded in a particular order and aren't really referred to by name.  The most common example of this would be numbers, like "m_HUD_number_0".  Where are the rest of "m_HUD_number_#"?  Implied by taking "m_HUD_number_0" and adding 1 to get "m_HUD_number_1" and so on.  Look at "<half life dir>/protoHLGS/sprites/hud.txt", the list of all loaded sprites.  Many entries are the same as their names across client-side variables (in this case, search "number_0", removing "m_HUD").  The next numbers are loaded one-after-the-other, so this is why this system works.  If number_0's index is 48, one could just acquire this index and then add to it go reasonably get the other numbers then.
+~better explanation:  There are some cases where sprites are expected to be loaded in a particular order and aren't really referred to by name.  The most common example of this would be numbers, like "m_HUD_number_0".  Where are the rest of "m_HUD_number_#"?  Implied by taking "m_HUD_number_0" and adding 1 to get "m_HUD_number_1" and so on.  Look at "<half life dir>/AbsoluteZero/sprites/hud.txt", the list of all loaded sprites.  Many entries are the same as their names across client-side variables (in this case, search "number_0", removing "m_HUD").  The next numbers are loaded one-after-the-other, so this is why this system works.  If number_0's index is 48, one could just acquire this index and then add to it go reasonably get the other numbers then.
 ~So what does this mean for damage indicators?  They happen to be loaded in a similar way.  "dmg_bio" is like the "zero": it is the first.  However, by script logic, it seems to be entirely skipped, as it seems to just refer to that anthrax icon like "poison" does.  Anyways, that is unimportant: consider "dmg_poison" the "zero" point.  So the statuses are loaded one-by-one, and the timed damage the player can receive are also stored in this same order.  So, it is a similar process: get my damage type (like #3), add that as an offset to "dmg_poison"'s index, get the right sprite.
 ~So what's the problem?  Search in "health.h" for "//tf defines".  These are some icons that are not loaded in hud.txt (damage indicator icons end with the shock, then, before I added the bleeding icon, some numbers start).  So, if ever anticipating the TF2 damage icons, one must factor in these missing indexes that have NOTHING in them if they are just skipped.  This is what the CVar is for:  should an index go beyond dmg_shock, the image offset will be lowered by 5 so that, after skipping the TF damages (game logic can still sift through them), upon reaching "dmg_bleed", it picks up the right image and not, say, dmg_poison + 12 (where it would be if the TF damage indicators were there), but dmg_poison + 8: dmg_bleed.
 
@@ -474,34 +586,43 @@ timedDamageReviveRemoveMode - 0, 1, 2, 3.  0 does nothing. 1 removes timed damag
 timedDamageDeathRemoveMode - 0, 1, 2.  0 does nothing.  1 remvoes timed damage immediately at death.  2 remvoes timed damage at death (but less strictly; they will still flash for a little while).
 
 
-r_shadows - restored variable from previous builds.  Turn shadows on.  Seems to be workin in pre-steampipe release, not steampipe.
+r_shadows - restored variable from previous builds.  Turn shadows on.  Seems to be workin in pre-steampipe release, crashes in steampipe.
 
-default_fov - not BOOL.  probably already in the game (kinda fuzzy on this).  Controls the Field-of-vision of the First-person view (unsure of 3rd) when NOT zoomed in the crossbow or python (new).
-~Note that being too small makes vision unhelpful (far too zoomed; see too little; the slightest mouse movement causes a wild change), and being too great crunches & exaggerates vision approaching the center.
+default_fov (90) - float (int?).  Already in the game as-is (not built into the engine, but defined clientside in as-is script).  Controls the Field-of-vision.
+~Also affects zooms with the crossbow and python (revolver) now.  For instance, since the crossbow's zoom FOV was 20 (2/9th of default_fov's default value of 90), a default_fov of 110 would make the crossbow's zoom about 24 instead.
+~Too small makes vision unhelpful (far too zoomed), and being too great crunches & exaggerates vision approaching the center.
 ~Good values seem to be 90 for the 4:3 ratio of screen width/height (640x480, 800x600), while 105 is good for widescreen's 16:9.
-~This can be assigned automatically by "auto_adjust_fov_aspect", see below.
+~This can be assigned automatically by "auto_adjust_fov", see below.  If it is on, it is best to leave default_fov at 90.
 
-auto_adjust_fov_aspect - BOOL.  When 1,the "default_fov" is assigned a value derived from a linear formula to best scale the FOV for varying screen width / height ratios.  A wider screen needs a greater FOV to get the most out of it.
-~Note that it is only applied at startup, or when toggling it back to "1" from off, so that user-forced values take precedence.  (At restart, if auto_adjust_fov_aspect remains on, the FOV will return to the generated default).
-
-auto_adjust_zoomfov - BOOL.  If 1, the python and crossbow zoom CVars are set automatically as multiples of the starting FOV.  Should be turned off before making changes to either zooms manually.
-python_zoomfov - not BOOL.  FOV to use when zooming with the python.  Depends on "default_fov" if "auto_adjust_zoomfov" is 1, but can be a user-given value too.
-crossbow_zoomfov - not BOOL.  ditto, for the crossbow.
+auto_adjust_fov - BOOL.  When 1, the actual FOV used is assigned a value scaled to the screen width / height ratio.  A wider screen boosts the FOV given, a more narrow screen reduces it.
+~It is best to leave "default_fov" at 90 (or change it back to that) while this CVar is on.  Any other default_fov choice will influence the automatic result reasonably (higher default_fov makes any automatic fov greater, etc.).
+~FORMULA FOR AUTOMATIC FOV:  ( (default_fov/90) * (  (ScreenWidth / ScreenHeight) * 33.75 + 45   ))
 
 revolverLaserScope - BOOL.  When on, even in singleplayer, the revolver always has the scope (part of the model) and a laser that shows on zoom.
 
-canTakeLongJump - 0, 1, 2.  If 0, can never pick up the long-jump item if m_fLongJump is on (generally always now).  if 1, can pick up the longjump ONCE if missing some long-jump charge.  If 2, can pick up as long as there is less long jump charge than the max.
-~The "item_longjump" now refills all longjump charge when touched (and is allowed to be), as opposed to "item_longjumpcharge" (looks identical, but not subject to any restrictions on pickup other than the user not having max'd out charge, only restores one long-jumpi charge, or 1/4 of the meter).
+canTakeLongJump - MODEVAR.  Controls when the player can pick up item_longjump and item_longjumpcharge.
+~Mainly, should picking up item_longjump again if the player already has be allowed?
+~Pickup is always denied if the current longjump charge meter is full, similar to ammo.
+~item_longjump grants max charge and is sometimes a prerequisite for picking up item_longjumpcharge (see below).
+~item_longjumpcharge restores 1/4 the charge meter and can be picked up any number of times (once allowed to be).
+~Note that anytime m_fLongJump is on and there is enougn longjump charge (the meter), longjumping is always possible.
+0: Can not pick up item_longjump if m_fLongJump is on (currently always; hasLongJumpItem is now turned on by ever picking up item_longjump).
+   ~In short, this forbids ever picking up item_longjump.
+   item_longjumpcharge can be picked up always, however, or else it would be impossible to.
+1: Can not pick up item_longjump if hasLongJumpItem is turned on.
+   item_longjumpcharge requires item_longjump to have been found (hasLongJumpItem on).
+2: No restrictions, can pick up item_longjump multiple times.
+   item_longjumpcharge still requires item_longjump first.
+3: Same as 2, but item_longjumpcharge also has no restriction.  Makes item_longjump & charge mutually exclusive.
+
 
 printOutCommonTimables - shows the most wanted timed-damage values of this player in printout when on.
 ~Note that printouts only occur when there is any timed damage (triggering the printout), reduces console spam.
 
 cl_fvox - CVar related to whether the player's FVOX system is on or off (on by default).  A control can be mapped to this CVAR to toggle it, I imagine, so it feels like an ingame control.
 
-forceAllowMonsterSpawning - BOOL (off by default).  When on, spawning NPCs is allowed anywhere, even in multiplayer.  Unsure if this syncs well with all players, would be neat if it did already.
-~NOTICE: This CVar was created before I became aware of "mp_allowmonsters", which effectively does the exact same thing for multi-player games (ignored in single-player; always read as "true" in there).
-~Regardless, this CVar will stay.  It now stays between exiting / running the game so that you don't have to adjust mp_allowmonsters each time.  Just know that both "forceAllowMonsterSpawning" AND "mp_allowmonsters" must BOTH be turned off (0) to truly disable spawning in-game.
-~If necessary, I can make it discern between the player trying to spawn anything by "give" commands and the level trying to spawn something (does not now).
+forceAllowMonsterSpawning - REMOVED.  Redundant with the existing "mp_allowmonsters", should just edit server config to make that persistent between game runs anyway.  Lets monsters be spawned in multiplayer.
+~If a CVar for disabling the player's ability to spawn things (give commands), that could be done.  But why are you playing with cheats on anyway?
 
 ~NOTE: on the subject of multiplayer variables, the ambiguously named "weaponstay" means respawnable weapons respawn instantly on being picked up, I think (not whether the player keeps weapons between a respawn).
 
@@ -723,7 +844,11 @@ egonHitCloud - boolean.  If 1, a blue cloud appears where the egon strikes (disp
 
 allowPainDrawWithoutSuit - boolean.  If 1, pain arrows (big, wide arrows that can occur in the four cardinal directions at the center of the screen to indicate the direction of recent damage) can be rendered without a suit too.
 
-infiniteLongJumpCharge - boolean.  If 1, player longjumps do not consume "long jump charge", and the long jump charge is always at least one.
+infiniteLongJumpCharge - MODE VAR.
+0: no effect.  Long jumps require charges and do not regenerate.
+1: Long jumps do not require a charge.
+2: Charges required, but regenerate every 2 minutes.
+3: Charges required, but regenerate every 30 seconds.
 
 noFlinchOnHard - boolean.  If 1, enemies tend not to flinch from sudden damage (this gives a window of time for hitting enemies some more).  Defaults to on.
 
@@ -732,10 +857,6 @@ noFlinchOnHard - boolean.  If 1, enemies tend not to flinch from sudden damage (
 
 
 
-
-
-protoModVersion - a CVar that is not really meant to be changed (does not save on restart).  Shows the current version of ProtoHLGS (ensures you are using the latest build for reporting current bugs)
-protoModDate - same, shows the date of the build (also set manually by the builder, not automatic)
 
 thoroughHitBoxUpdates - boolean. if 1, hit-box (AKA collisionBounds) are updated at the start of enemy death animations (always seems to occur after it is finished regardless of this CVar).
 
@@ -1895,6 +2016,7 @@ apacheInfluence - make "m_flNextRocket" = 9999999 on apaches at death, if turned
 
 
 playerUseDrawDebug (0) - BOOLEAN. When on, the line traces used to detect if anything separates the player from the selected object for the USE action will be drawn. If successful, the line will be bright green and should make it from the player to the object uninterrupted. If red, it was broken along the way and failed. This check wasn't done in the base game. An alternate line-trace may be done in case the first failed which may pass and still allow the use.
+Also gives some printouts about the use, such as the dotproducts between the player's look angle and the direction towards nearby objects that were tested.  The best dotproduct with the view angle and the dir towards an object (call it a similarity rating) is picked if the line to it is indeed unobstructed (check not required in retail HL)
 
 playerChumtoadThrowDrawDebug (0) - BOOLEAN. When on, line-traces done to check if the player is too close to a wall when spawning a chumtoad are drawn. If any one line gets interrupted, a chumtoad is not spawned and the player's chumtoad count remains unchanged. Use this to see if some invisible map geometry is blocking the player from spawning chumtoads in places that look unobstructed, printouts may help see its classname.
 
@@ -2189,17 +2311,6 @@ playerWeaponSpreadMode (0) - MODEVAR. If non-zero, forces weapons whose spread i
 
 
 
-
-
-valve/resource/gameui_english.txt:   string links?
-
-valve/resource/TrackerScheme.res:   fonts.  "Xirod"?
-~NOTE:  "ControlText"  is for the server-text in console.
-~"BrightControlText",  oddly enough dimmer actually,  is client-text in console.
-
-
-
-
 ****************************************************************************************************************************
 ****************************************************************************************************************************
 ****************************************************************************************************************************
@@ -2237,7 +2348,7 @@ OTHER FLAGS (general):
 
 
 UNRESOLVED EXTERNAL COMPILATION ERRORS NOTE
-...also, I feel that, for any future scripters, a good note is that a REALLY confusing error is when the compiler complains about an "unresolved external symbol" (IE, telling it to expect a method by name / preliminary details, like what args to accept, but never defining it), despite doing EXACTLY that.       It is often because of script that compiles both server-side AND client-side,  so the server-side was the one likely handled, but the client-side WASN'T, even if the client-side is completely unused (usually the case).   So do what the dev's did: in hl_baseentity.cpp,   a ton of the same events are just dummied (same identification stuff, do nothing).    This kind of thing is VERY frustrating to find out for the first time..
+...also, I feel that, for any future scripters, a good note is that a REALLY confusing error is when the compiler complains about an "unresolved external symbol" (IE, telling it to expect a method by name / preliminary details, like what args to accept, but never defining it), despite doing EXACTLY that.       It is often because of script that compiles both server-side AND client-side (some .h file),  so the server-side's implementations were likely handled (.cpp file included), but the client-side WASN'T (.cpp file excluded), even if the client-side is completely unused (usually the case).   So do what the dev's did: in hl_baseentity.cpp,   a ton of the same events are just dummied (same identification stuff, do nothing).    This kind of thing is VERY frustrating to find out for the first time..
 ~Note that this should only happen in script that is run by both the client and server (usually, only the server needs to do anything), so only methods called in script run client / serverside need to be dummied client-side.  If unsure, just try to dummy anyways and see if it complains about not seeing it.  You may need to separate the prototyping (class stuff) from the implementations (what methods do) to inherit from serverside .h files to get the needed prototypes in scope (getting implementations multiple times causes tons of errors!).
 
 
@@ -2391,7 +2502,7 @@ To do this (one way that's worked)...
 2. That number var needs to be used to store this event as an ID (handled by the engine).  Events are linked b/w the server and client by files, but it seems fine if the file is completely empty.
 ~Goto client.cpp's "ClientPrecache" method.  At the bottom, you should see "MODDD - LINK EVENTS TO FILES, SERVERSIDE".  Insert a line like this:
 	g_EVENTNAME = PRECACHE_EVENT( 1, events/EVENTNAME.sc);
-~I haven't tested with a missing file, so you should go to the mod folder (...Valve/Half-Life/ProtoHLGS as of this time), to the "events" folder, and adding "EVENTNAME.sc" as a file.   Just make a new text document, rename it to "EVENTNAME", and make its extension ".sc".  Enable common file extensions (in Windows, under folder options) on your system if this new text document is missing its standard ".txt" to be changed.
+~I haven't tested with a missing file, so you should go to the mod folder (<half-life dir>/AbsoluteZero), to the "events" folder, and adding "EVENTNAME.sc" as a file.   Just make a new text document, rename it to "EVENTNAME", and make its extension ".sc".  Enable common file extensions (in Windows, under folder options) on your system if this new text document is missing its standard ".txt" to be changed.
 3. Still in client.cpp, there is one more step here.  Near the top, after any #include lines (just a preference, mostly), notice "MODDD - including event ID's".  Make a line like this:
 	extern unsigned short g_EVENTNAME;
 ~This tells the compiler to expect a top-level var of this name and type to be present by the time compilation reaches this file.  This is needed to ensure you are editing the exact same var.  Otherwise, edits done in this file (precaching the event to link / use it) would never translate over to any other files.  Missing it altogether would make the compiler give up on "unknown symbol g_EVENTNAME".
@@ -2410,13 +2521,13 @@ To do this (one way that's worked)...
 ~They can be used by the event for logic.  For instance, the alpha-sparks effect uses the first integer (3rd argument here) to denote the number of particles to spawn.  This way, two separate events need not be created for such a trivial difference in logic.
 ~If unused, just skip them and use 0-like values.  Straight 0's would have been okay, but this makes it more clear what's what (don't send floats in places where whole #'s are expected, unless you want to lose the decimal to truncation, bool's don't fare well with values other than 0 or 1 without a firm grasp of boolean logic, etc.)
 OKAY.  So the server can now find our event and call it.   But what will the client do?  It doesn't know how to understand the event!  So, load it from there too, and define what to do when this event is called!
-6. goto "hl_events.cpp".  Scroll down a bit to see several events prototyp'd as "void EV_something( ...) ".  Look near the bottom for the customs that have been added already.
+6. goto "hl_events.cpp".  Scroll down a bit to see several events prototype'd as "void EV_something( ...) ".  Look near the bottom for the customs that have been added already.
 ~Add a line like this (but take note of the end bracket "}" there.  Place this line BEFORE that, make new lines if you have to):
 	void EV_EVENTNAME (struct event_args_s *args);
 ~Also, note that this name does NOT need to match up with the server-side one exactly.  Events are linked b/w the server/client by the file, not by having the same name as their client / server counterparts (but you can still do this).
 7. Still in "hl_events.cpp",  goto the bottom.  Also before that "}", insert this line:
 	gEngfuncs.pfnHookEvent( "events/EVENTNAME.sc",				EV_EVENTNAME );
-~of course, the file part (EVENTNAME.sc) does have to match your named, empty file in the "protoHLGS/events" folder.  The right-hand part must match the name of the event declared above.
+~of course, the file part (EVENTNAME.sc) does have to match your named, empty file in the "AbsoluteZero/events" folder.  The right-hand part must match the name of the event declared above.
 
 
 8.  Getting close.  Goto "ev_hldm.cpp".  Scroll down a bit below like before and, again, notice the other custom events.  Add a line like this (again, regard the "}", before that):
@@ -2541,9 +2652,6 @@ CBaseEntity* someEntity = CBaseEntity::Instance(someEdict);
 ALSO: consider using "postItemFrameThink" instead of "postItemFrame" (same for "preItemFrame") to have more control.  The ordinary "postItemFrame" seems to not get called if the player has recently fired (waiting for the delay made from "m_flFireDelay to pass).  "postItemFrameThink", however, happens regardless of that (again, same for pre).
 
 
-client-side (the "cl_dll" folder) has "cl_util.h" and "util.cpp", while
-server-side (the "dll" folder) has "util.h" and "util.cpp".     They are prototype / implementation pairs.
-
 
 Need to add a command tied by console (IE, call a method by typing something in console, no varaibles, by "pfnAddCommand")?   If it happens to be server-side (to get access to things client-side, the only place to do "pfnAddCommand", can't get to), consider making a method client-side anyways that does this:
 gEngfuncs.pfnClientCmd("IGNOREmyCVar 1");
@@ -2618,21 +2726,15 @@ Damage types from halflife.fgd (see Half-Life model SDK)
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-you edit "sentences.txt" in your HL installation's mod folder (like ProtoHLGS for us), its under the folder "sound".  You add sounds like this, one per line:
+sentences.txt is in <half-life dir>/AbsoluteZero/sound.  You add sounds like this, one per line:
 
 name folder/wavfilenoext wavfilenoext wavfilenoext...
 
-so you just give the folder once, slash, one file, then subsequently only refer to files.  Can not refer to another path, only in the same path, so any sounds for one sentence have to be in the same folder, I believe.  There are options like pitch adjustment, start / end offsets, like   wavfilenoext(s20 e80 p50).  s20 = start 20% in, e80 = end 80% in, p50 = half normal pitch,  unsure what "t" does but it is an option.  Careful about too many sounds as only so many are allowed to be read before it gives up reading sentences.
-oh yea, so some random sentence name won't be picked up by the existing game though.  You could hijack an existing sentence-list, like "HG_TAUNT#" (there's a section of sentences numbered like that), so you can append whatever you want to add it to the pool or erase them and start with your own.  Backups advised.
-
-
-
-
+so you just give the folder once, slash, one file, then subsequently only refer to files.  Can not refer to another path, only in the same path, so any sounds for one sentence have to be in the same folder, I believe.  There are options like pitch adjustment, start / end offsets, like   wavfilenoext(s20 e80 p50).  s20 = start 20% in, e80 = end 80% in, p50 = half normal pitch,  unsure what "t" does but it is an option, could be speed without affecting pitch, but glitches at extreme values.  Careful about too many sounds in one sentence as some may be skipped toward the end.
 
 
 ~The "entities" console command, present since retail, is certainly something.  Maybe that's useful?
 ~Seems to print out the positions of everything that exists in-level.
-
 
 
 
@@ -2649,9 +2751,6 @@ spawnobject(choices) : "Spawn On Break" : 0 =
 		25: "item_longjumpcharge"
 	]
 (I'm using actual spawnable names, in design of the FGD, these can be anything more appealing, but what is what matches by number)
-
-
-
 
 
 

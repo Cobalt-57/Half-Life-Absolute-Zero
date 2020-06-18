@@ -145,9 +145,9 @@ int CHudOverview::Draw(float flTime)
 			gEngfuncs.pTriAPI->RenderMode( kRenderNormal );
 
 			// draw the players name and health underneath
-			char string[256];
-			sprintf(string, "%s (%i%%)", g_PlayerInfoList[i].name, pl->curstate.health);
-			DrawConsoleString(x, y + (1.1 * scale), string);
+			char arychr_buffer[256];
+			sprintf(arychr_buffer, "%s (%i%%)", g_PlayerInfoList[i].name, pl->curstate.health);
+			DrawConsoleString(x, y + (1.1 * scale), arychr_buffer);
 		}
 	}
 

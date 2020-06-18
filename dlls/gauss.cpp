@@ -19,10 +19,11 @@
 #if !defined( OEM_BUILD ) && !defined( HLDEMO_BUILD )
 
 #include "extdll.h"
+#include "gauss.h"
 #include "util.h"
 #include "cbase.h"
 #include "basemonster.h"
-#include "weapons.h"
+
 #include "nodes.h"
 #include "player.h"
 #include "soundent.h"
@@ -30,20 +31,7 @@
 #include "gamerules.h"
 
 
-#define	GAUSS_PRIMARY_CHARGE_VOLUME	256// how loud gauss is while charging
-#define GAUSS_PRIMARY_FIRE_VOLUME	450// how loud gauss is when discharged
-
-enum gauss_e {
-	GAUSS_IDLE = 0,
-	GAUSS_IDLE2,
-	GAUSS_FIDGET,
-	GAUSS_SPINUP,
-	GAUSS_SPIN,
-	GAUSS_FIRE,
-	GAUSS_FIRE2,
-	GAUSS_HOLSTER,
-	GAUSS_DRAW
-};
+// Bunch of stuff moved to gauss.h for including things needed by here and ev_hldm.
 
 
 
@@ -95,7 +83,24 @@ CGauss::CGauss(void){
 	this->ohShitSon = -666.6667;
 	ohFuckSonny = -1;
 
-}
+}//END OF CGauss constructor
+
+
+
+
+
+// Save/restore for serverside only!
+#ifndef CLIENT_DLL
+TYPEDESCRIPTION	CGauss::m_SaveData[] =
+{
+	DEFINE_FIELD(CGauss, m_fInAttack, FIELD_INTEGER),
+	//	DEFINE_FIELD( CGauss, m_flStartCharge, FIELD_TIME ),
+	//	DEFINE_FIELD( CGauss, m_flPlayAftershock, FIELD_TIME ),
+	//	DEFINE_FIELD( CGauss, m_flNextAmmoBurn, FIELD_TIME ),
+	DEFINE_FIELD(CGauss, m_fPrimaryFire, FIELD_BOOLEAN),
+};
+IMPLEMENT_SAVERESTORE(CGauss, CBasePlayerWeapon);
+#endif
 
 
 
@@ -1211,7 +1216,7 @@ void CGauss::Fire( Vector vecOrigSrc, Vector vecDir, float flDamage )
 //Depending on multiplayer or singleplayer, return the appropriate CVar for this.
 float CGauss::getAmmoChargeInterval(void){
 	
-	if(WEAPON_DEFAULT_MULTIPLAYER_CHECK)
+	if(IsMultiplayer())
 	{
 		return EASY_CVAR_GET(gauss_chargeInterval_MP);
 	}

@@ -26,6 +26,7 @@
 #include <stdio.h>
 
 
+EASY_CVAR_EXTERN(canShowWeaponSelectAtDeath)
 
 
 
@@ -37,7 +38,6 @@ DECLARE_MESSAGE(m_Flash, Flashlight)
 
 
 
-extern float global2_canShowWeaponSelectAtDeath;
 
 
 
@@ -124,7 +124,7 @@ int CHudFlashlight::Draw(float flTime)
 
 
 	if(gHUD.m_fPlayerDead){
-		if(global2_canShowWeaponSelectAtDeath == 1){
+		if(EASY_CVAR_GET(canShowWeaponSelectAtDeath) == 1){
 			//If the weapon select sidebar can be shown, we're good.
 		}else{
 			//otherwise, don't draw anything here.

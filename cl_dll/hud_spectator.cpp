@@ -66,7 +66,7 @@ void SpectatorMode(void)
 void SpectatorSpray(void)
 {
 	vec3_t forward;
-	char string[128];
+	char arychr_buffer[128];
 
 	if ( !gEngfuncs.IsSpectateOnly() )
 		return;
@@ -77,9 +77,9 @@ void SpectatorSpray(void)
 	pmtrace_t * trace = gEngfuncs.PM_TraceLine( v_origin, forward, PM_TRACELINE_PHYSENTSONLY, 2, -1 );
 	if ( trace->fraction != 1.0 )
 	{
-		sprintf(string, "drc_spray %.2f %.2f %.2f %i", 
+		sprintf(arychr_buffer, "drc_spray %.2f %.2f %.2f %i", 
 			trace->endpos[0], trace->endpos[1], trace->endpos[2], trace->ent );
-		gEngfuncs.pfnServerCmd(string);
+		gEngfuncs.pfnServerCmd(arychr_buffer);
 	}
 
 }
@@ -385,7 +385,7 @@ int CHudSpectator::Draw(float flTime)
 {
 	int lx;
 
-	char string[256];
+	char arychr_buffer[256];
 	float * color;
 
 	// draw only in spectator mode
@@ -447,12 +447,12 @@ int CHudSpectator::Draw(float flTime)
 		color = GetClientColor( i+1 );
 
 		// draw the players name and health underneath
-		sprintf(string, "%s", g_PlayerInfoList[i+1].name );
+		sprintf(arychr_buffer, "%s", g_PlayerInfoList[i+1].name );
 		
-		lx = strlen(string)*3; // 3 is avg. character length :)
+		lx = strlen(arychr_buffer)*3; // 3 is avg. character length :)
 
 		gEngfuncs.pfnDrawSetTextColor( color[0], color[1], color[2] );
-		DrawConsoleString( m_vPlayerPos[i][0]-lx,m_vPlayerPos[i][1], string);
+		DrawConsoleString( m_vPlayerPos[i][0]-lx,m_vPlayerPos[i][1], arychr_buffer);
 		
 	}
 
@@ -463,7 +463,7 @@ int CHudSpectator::Draw(float flTime)
 void CHudSpectator::DirectorMessage( int iSize, void *pbuf )
 {
 	float	value;
-	char *	string;
+	char *	tempvar_string;
 
 	BEGIN_READ( pbuf, iSize );
 
@@ -559,11 +559,11 @@ void CHudSpectator::DirectorMessage( int iSize, void *pbuf )
 							break;
 
 		case DRC_CMD_SOUND :
-							string = READ_STRING();
+							tempvar_string = READ_STRING();
 							value =  READ_FLOAT();
 							
-							// gEngfuncs.Con_Printf("DRC_CMD_FX_SOUND: %s %.2f\n", string, value );
-							gEngfuncs.pEventAPI->EV_PlaySound(0, v_origin, CHAN_BODY, string, value, ATTN_NORM, 0, PITCH_NORM );
+							// gEngfuncs.Con_Printf("DRC_CMD_FX_SOUND: %s %.2f\n", tempvar_string, value );
+							gEngfuncs.pEventAPI->EV_PlaySound(0, v_origin, CHAN_BODY, tempvar_string, value, ATTN_NORM, 0, PITCH_NORM );
 							
 							break;
 
@@ -872,10 +872,10 @@ void CHudSpectator::SetModes(int iNewMainMode, int iNewInsetMode)
 			SetCrosshairFiltered( 0, m_crosshairRect, 0, 0, 0 );
 		} 
 
-		char string[128];
-		sprintf(string, "#Spec_Mode%d", g_iUser1 );
-		sprintf(string, "%c%s", HUD_PRINTCENTER, CHudTextMessage::BufferedLocaliseTextString( string ));
-		gHUD.m_TextMessage.MsgFunc_TextMsg(NULL, strlen(string)+1, string );
+		char arychr_buffer[128];
+		sprintf(arychr_buffer, "#Spec_Mode%d", g_iUser1 );
+		sprintf(arychr_buffer, "%c%s", HUD_PRINTCENTER, CHudTextMessage::BufferedLocaliseTextString( arychr_buffer ));
+		gHUD.m_TextMessage.MsgFunc_TextMsg(NULL, strlen(arychr_buffer)+1, arychr_buffer );
 	}
 
 	gViewPort->UpdateSpectatorPanel();
@@ -1619,6 +1619,8 @@ void CHudSpectator::InitHUDData()
 	g_iUser2 = 0; // fake not target until first camera command
 
 	// reset HUD FOV
-	gHUD.m_iFOV =  CVAR_GET_FLOAT("default_fov");
+	//MODDD - might prefer the version flexible with the screen size ratio instead
+	//gHUD.m_iFOV = CVAR_GET_FLOAT("default_fov");
+	gHUD.m_iPlayerFOV = gHUD.getPlayerBaseFOV();
 }
 

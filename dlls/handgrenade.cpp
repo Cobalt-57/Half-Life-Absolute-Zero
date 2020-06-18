@@ -37,6 +37,7 @@ enum handgrenade_e {
 LINK_ENTITY_TO_CLASS( weapon_handgrenade, CHandGrenade );
 
 //MODDD - extern
+EASY_CVAR_EXTERN(cheat_minimumfiredelay)
 EASY_CVAR_EXTERN(handGrenadePickupYieldsOne);
 
 
@@ -127,7 +128,7 @@ void CHandGrenade::Spawn( )
 	//source: http://www.ascii-art.de/ascii/s/skull.txt
 
 	
-	//if(CVAR_GET_FLOAT("handGrenadePickupYieldsOne") == 1){
+	//if(EASY_CVAR_GET(handGrenadePickupYieldsOne) == 1){
 
 	//Apparently, this method can be called before the player is present (and, even if so, hasn't made this pick-upable part of the inventory yet).
 	//So, just make "m_iDefaultAmmo" a non-zero value and determine what to give in an overridden "ExtractAmmo" method.
@@ -277,7 +278,7 @@ void CHandGrenade::ItemPreFrame(){
 
 
 	//if(m_pPlayer->cheat_minimumfiredelayMem == 1){
-	if(CVAR_GET_FLOAT("cheat_minimumfiredelay") == 1){
+	if(EASY_CVAR_GET(cheat_minimumfiredelay) == 1){
 		//cheating.
 		m_fireState = -500;
 	}else{

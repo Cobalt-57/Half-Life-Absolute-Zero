@@ -3,11 +3,11 @@
 
 #include "chumtoadweapon.h"
 
-#include "custom_debug.h"
+#include "util_debugdraw.h"
 
 
 
-EASY_CVAR_EXTERN(testVar);
+//EASY_CVAR_EXTERN(testVar);
 EASY_CVAR_EXTERN(playerChumtoadThrowDrawDebug)
 EASY_CVAR_EXTERN(chumtoadInheritsPlayerVelocity)
 
@@ -16,7 +16,6 @@ int CChumToadWeapon::numberOfEyeSkins = -1;
 
 
 CChumToadWeapon::CChumToadWeapon(void){
-	
 	//nevermind, probably already precached in whole by the player, no assistance needed.
 	//soundSentenceSavePreference = TRUE;
 
@@ -28,7 +27,6 @@ CChumToadWeapon::CChumToadWeapon(void){
 	
 	//"weaponetired"?
 	m_fInAttack = FALSE;
-
 }
 BOOL CChumToadWeapon::usesSoundSentenceSave(void){
 	return FALSE;
@@ -264,6 +262,10 @@ void CChumToadWeapon::setModel(const char* m){
 	CBasePlayerWeapon::setModel(m);
 	
 	/*
+	//MODDD - IMPORTANT NOTE.
+	// doing blinks here doesn't do much.  See hl_weapons.cpp where "numberOfEyeSkins" is used.
+	// The counts are hardcoded there, unsure if "getNumberOfSkins" over there would work.
+
 	if(numberOfEyeSkins == -1){
 		//never loaded numberOfSkins? Do so.
 		numberOfEyeSkins = getNumberOfSkins();
@@ -590,7 +592,8 @@ BOOL CChumToadWeapon::checkThrowValid(Vector trace_origin, float* minFractionSto
 		//MODDD NOTE - watch the required and thorw distance above (gpGlobals->forward * #) and flFraction! If it is too small, chumtoads can be thrown "through" walls, like map walls, and clip through. Looks weird and the toad leaves this universe.
 		
 
-		if ( (tracesSolid == FALSE && tracesStartSolid == FALSE && minFraction >= 1.0) || EASY_CVAR_GET(testVar) == 2)
+		// ... || EASY_CVAR_GET(testVar) == 2
+		if ( (tracesSolid == FALSE && tracesStartSolid == FALSE && minFraction >= 1.0))
 		//if ( tr.fAllSolid == 0 && tr.fStartSolid == 0 && tr.flFraction >= 1.0)
 		{
 			if(minFractionStore != NULL){ *minFractionStore = minFraction; }  //on success, the caller wants to know the minimum fraction seen, if a place to put it is provided.
@@ -756,6 +759,8 @@ float CChumToadWeapon::randomIdleAnimationDelay(){
 
 void CChumToadWeapon::ItemPostFrame(){
 	
+	//MODDD - nope.
+	/*
 	if ( ( pev->skin == 0 ) && RANDOM_LONG(0,127) == 0 )
 	{// start blinking!
 
@@ -767,7 +772,7 @@ void CChumToadWeapon::ItemPostFrame(){
 	{// already blinking
 		pev->skin--;
 	}
-
+	*/
 
 
 
@@ -931,29 +936,33 @@ void CChumToadWeapon::WeaponIdle( void )
 
 
 
+//////////////////////////////////////////////////////////////////////////////////////
+// Same as spawning by "weapon_chumtoad", but gives the same effect as the 
+// SF_PICKUP_NOREPLACE spawnflag.
+// It doesn't add the spawnflag, just having a classname that ends in "_noreplace" is enough.
+class CChumToadWeapon_NoReplace : public CChumToadWeapon
+{
+public:
+	//MODDD
+	CChumToadWeapon_NoReplace();
+
+	void Spawn(void);
+};
+
+CChumToadWeapon_NoReplace::CChumToadWeapon_NoReplace() {
+
+}//END OF constructor
+
+LINK_ENTITY_TO_CLASS(weapon_chumtoad_noreplace, CChumToadWeapon_NoReplace);
 
 
+void CChumToadWeapon_NoReplace::Spawn(void) {
+	CChumToadWeapon::Spawn();
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+	// after that call, may as well lose the "_noreplace" bit.
+	pev->classname = MAKE_STRING("weapon_chumtoad");
+}
+//////////////////////////////////////////////////////////////////////////////////////
 
 
 

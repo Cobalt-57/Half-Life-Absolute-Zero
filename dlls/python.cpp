@@ -27,6 +27,7 @@
 #include "gamerules.h"
 
 
+
 enum python_e {
 	PYTHON_IDLE1 = 0,
 	PYTHON_FIDGET,
@@ -49,12 +50,10 @@ EASY_CVAR_EXTERN(revolverLaserScope)
 //MODDD - constructor.
 
 CPython::CPython(){
-
 	m_fInAttack = 0;
 
 	//the laser spot isn't blocked (is blocked after firing).
 	m_fireState = 1;
-
 
 }
 
@@ -286,9 +285,10 @@ void CPython::Holster( int skiplocal /* = 0 */ )
 
 	m_fInReload = FALSE;// cancel any reload in progress.
 
-	if ( m_fInZoom )
+	if (m_pPlayer->pev->fov != 0)
 	{
-		SecondaryAttack();
+		m_fInZoom = FALSE;
+		m_pPlayer->pev->fov = m_pPlayer->m_iFOV = 0;  // 0 means reset to default fov
 	}
 
 
@@ -300,21 +300,29 @@ void CPython::Holster( int skiplocal /* = 0 */ )
 	DefaultHolster(PYTHON_HOLSTER, skiplocal, m_fInAttack, (16.0f/30.0f));
 }
 
+
 void CPython::SecondaryAttack( void )
 {
+
+//MODDD - why was the python zoom even ever dependent on single/multiplayer to begin with?
+// Really, just don't use the zoom if you don't want it.  Why...
+// I'm not even CVaring this shit.  Fuck this.
+/*
 #ifdef CLIENT_DLL
-
-	//MODDD - I am guessing this line doesn't really help much.  Feel free to change if it doesm atter.
-	//if ( !bIsMultiplayer() )
+	if ( !bIsMultiplayer() )
 #else
-	//MODDD - zoom?
-	//if ( !g_pGameRules->IsMultiplayer() )
+	if ( !g_pGameRules->IsMultiplayer() )
 #endif
-	//MODDD
-	//{
-	//	return;
-	//}
+	{
+		return;
+	}
+*/
+	if (!(m_pPlayer->m_afButtonPressed & IN_ATTACK2)) {
+		//MODDD
+		return;
+	}
 
+	const int zoomedFOV = (int)roundf(getPlayerBaseFOV() * 0.4444f);
 
 	if ( m_pPlayer->pev->fov != 0 )
 	{
@@ -325,8 +333,8 @@ void CPython::SecondaryAttack( void )
 		m_pPlayer->pev->fov = m_pPlayer->m_iFOV = 0;  // 0 means reset to default fov
 
 	}
-	//MODDD - used to be 40 only.
-	else if ( m_pPlayer->pev->fov != (int)m_pPlayer->pythonZoomFOV )
+	//MODDD - used to be 40.
+	else if ( m_pPlayer->pev->fov != zoomedFOV)
 	{
 		//"m_fireState == 1" means the block isn't on.
 		if(m_fireState == 1 && EASY_CVAR_GET(revolverLaserScope) == 1){
@@ -335,7 +343,7 @@ void CPython::SecondaryAttack( void )
 			m_fSpotActive = FALSE;
 		}
 		m_fInZoom = TRUE;
-		m_pPlayer->pev->fov = m_pPlayer->m_iFOV = (int)m_pPlayer->pythonZoomFOV;
+		m_pPlayer->pev->fov = m_pPlayer->m_iFOV = zoomedFOV;
 
 
 		//if the spot is on and the python can attack, force the idle anim
@@ -353,7 +361,8 @@ void CPython::SecondaryAttack( void )
 
 	//MODDD
 	//if(m_pPlayer->cheat_minimumfiredelayMem == 0){
-		m_flNextSecondaryAttack = 0.5;
+	// NOPE NOT EVEN YOU.
+	//	m_flNextSecondaryAttack = 0.5;
 	//}else{
 	//	m_flNextSecondaryAttack = m_pPlayer->cheat_minimumfiredelaycustomMem;
 	//}
@@ -386,18 +395,22 @@ void CPython::PrimaryAttack()
 	if (m_pPlayer->pev->waterlevel == 3)
 	{
 		PlayEmptySound( );
-		m_flNextPrimaryAttack = 0.15;
+		//MODDD - why so often anyway?
+		//m_flNextPrimaryAttack = 0.15;
+		m_flNextPrimaryAttack = 0.6;
 		return;
 	}
 
 	if (m_iClip <= 0)
 	{
-		if (!m_fFireOnEmpty)
-			Reload( );
+		if (!m_fFireOnEmpty) {
+			Reload();
+		}
 		else
 		{
 			EMIT_SOUND(ENT(m_pPlayer->pev), CHAN_WEAPON, "weapons/357_cock1.wav", 0.8, ATTN_NORM);
-			m_flNextPrimaryAttack = 0.15;
+			//m_flNextPrimaryAttack = 0.15;
+			m_flNextPrimaryAttack = 0.6;
 		}
 
 		return;
@@ -604,7 +617,7 @@ void CPython::updateModel(){
 	//The revolverLaserScope CVar is still checked for enabling / disabling the laser pointer that shows up on zooming in.
 	/*
 	if(EASY_CVAR_GET(revolverLaserScope) == 0){
-		m_fInAttack = WEAPON_DEFAULT_MULTIPLAYER_CHECK;
+		m_fInAttack = IsMultiplayer();
 	}else{
 		m_fInAttack = 1;
 	}

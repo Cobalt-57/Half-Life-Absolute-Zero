@@ -65,31 +65,31 @@ int g_fGruntQuestion;				// true if an idle grunt asked a question. Cleared when
 
 extern DLL_GLOBAL int		g_iSkillLevel;
 
-extern float global_noFlinchOnHard;
-extern float global_hgruntSpeedMulti;
-extern float global_hgruntForceStrafeFireAnim;
-extern float global_hgruntLockRunAndGunTime;
-extern float global_germanCensorship;
+EASY_CVAR_EXTERN(noFlinchOnHard)
+EASY_CVAR_EXTERN(hgruntSpeedMulti)
+EASY_CVAR_EXTERN(hgruntForceStrafeFireAnim)
+EASY_CVAR_EXTERN(hgruntLockRunAndGunTime)
+EASY_CVAR_EXTERN(germanCensorship)
 
-extern float global_hgruntAllowStrafeFire;
-extern float global_hgruntTinyClip;
-extern float global_hgruntStrafeAlwaysHasAmmo;
-extern float global_hgruntRunAndGunDistance;
+EASY_CVAR_EXTERN(hgruntAllowStrafeFire)
+EASY_CVAR_EXTERN(hgruntTinyClip)
+EASY_CVAR_EXTERN(hgruntStrafeAlwaysHasAmmo)
+EASY_CVAR_EXTERN(hgruntRunAndGunDistance)
 
-extern float global_thatWasntPunch;
+EASY_CVAR_EXTERN(thatWasntPunch)
 
-extern float global_hgruntPrintout;
+EASY_CVAR_EXTERN(hgruntPrintout)
 
-extern float global_hgruntRunAndGunDotMin;
+EASY_CVAR_EXTERN(hgruntRunAndGunDotMin)
 
-extern float global_testVar;
-extern float global_hgruntLockStrafeTime;
+//EASY_CVAR_EXTERN(testVar)
+EASY_CVAR_EXTERN(hgruntLockStrafeTime)
 
-extern float global_hgruntMovementDeltaCheck;
+EASY_CVAR_EXTERN(hgruntMovementDeltaCheck)
 
 
-extern float global_hgruntStrafeAnimSpeedMulti;
-extern float global_hgruntRunAndGunAnimSpeedMulti;
+EASY_CVAR_EXTERN(hgruntStrafeAnimSpeedMulti)
+EASY_CVAR_EXTERN(hgruntRunAndGunAnimSpeedMulti)
 
 extern BOOL globalPSEUDO_germanModel_hgruntFound;
 
@@ -474,7 +474,7 @@ public:
 	/*
 	void Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value ) 
 	{ 
-		easyPrintLine("WELL IS HE????? %d %s", m_pfnUse == NULL, pCaller!=NULL?pCaller->getClassname():"blankcaller?");
+		easyForcePrintLine("WELL IS HE????? %d %s", m_pfnUse == NULL, pCaller!=NULL?pCaller->getClassname():"blankcaller?");
 		if (m_pfnUse) 
 			(this->*m_pfnUse)( pActivator, pCaller, useType, value );
 	}
@@ -565,8 +565,8 @@ const char *CHGrunt::pAttackHitSounds[] =
 void CHGrunt :: partyUse( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
 {
 
-	//easyPrintLine("????? %d %d %d", global_thatWasntPunch, pCaller, pCaller!=NULL?pCaller->IsPlayer():-1 );
-	if ( global_thatWasntPunch == 1 && pCaller != NULL && pCaller->IsPlayer() )
+	//easyForcePrintLine("????? %d %d %d", EASY_CVAR_GET(thatWasntPunch), pCaller, pCaller!=NULL?pCaller->IsPlayer():-1 );
+	if ( EASY_CVAR_GET(thatWasntPunch) == 1 && pCaller != NULL && pCaller->IsPlayer() )
 	{
 		//sentence.
 		int choice = RANDOM_LONG(0, 4);
@@ -596,7 +596,7 @@ void CHGrunt :: partyUse( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYP
 
 int CHGrunt::getClipSize(void){
 
-	if(global_hgruntTinyClip != 1){
+	if(EASY_CVAR_GET(hgruntTinyClip) != 1){
 		return GRUNT_CLIP_SIZE;
 	}else{
 		return 3;
@@ -694,7 +694,7 @@ void CHGrunt :: SpeakSentence( void )
 int CHGrunt::IRelationship ( CBaseEntity *pTarget )
 {
 
-	if(global_thatWasntPunch == 1){
+	if(EASY_CVAR_GET(thatWasntPunch) == 1){
 		//I just don't give a damn man
 		return R_NO;
 	}
@@ -1292,9 +1292,9 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CHGrunt)
 	}//END OF blast damage and act_cower (ducking for cover) check.
 
 
-	//EASY_CVAR_PRINTIF_PRE(hgruntPrintout, easyPrintLine("WHUT %d :: ACT ideal:%d, cur:%d.", this->m_movementGoal, m_IdealActivity, m_movementActivity));
+	//EASY_CVAR_PRINTIF_PRE(hgruntPrintout, easyForcePrintLine("WHUT %d :: ACT ideal:%d, cur:%d.", this->m_movementGoal, m_IdealActivity, m_movementActivity));
 
-	//EASY_CVAR_PRINTIF_PRE(hgruntPrintout, easyPrintLine("PASSSSS???? %d %d %d", pev->deadflag == DEAD_NO, m_pSchedule != slhgruntStrafeToLocation, (m_IdealActivity != m_movementActivity || this->m_movementGoal == MOVEGOAL_NONE)) );
+	//EASY_CVAR_PRINTIF_PRE(hgruntPrintout, easyForcePrintLine("PASSSSS???? %d %d %d", pev->deadflag == DEAD_NO, m_pSchedule != slhgruntStrafeToLocation, (m_IdealActivity != m_movementActivity || this->m_movementGoal == MOVEGOAL_NONE)) );
 
 
 
@@ -1368,7 +1368,7 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CHGrunt)
 			int decision = 0;
 			//0 is failed, 1 is left, 2 is right.
 
-			//EASY_CVAR_PRINTIF_PRE(hgruntPrintout, easyPrintLine("BEST COVER!!! %.2f %.2f", bestCoverLeftDist, bestCoverRightDist) );
+			//EASY_CVAR_PRINTIF_PRE(hgruntPrintout, easyForcePrintLine("BEST COVER!!! %.2f %.2f", bestCoverLeftDist, bestCoverRightDist) );
 
 			if(bestCoverLeftDist == -1 && bestCoverRightDist == -1){
 				//no cover.  Fail.
@@ -1389,7 +1389,7 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CHGrunt)
 				decision = 2;
 			}else{
 				//that just ain't right
-				EASY_CVAR_PRINTIF_PRE(hgruntPrintout, easyPrintLine("HGRUNT:::  OMG  WTF  BBQ" ) );
+				EASY_CVAR_PRINTIF_PRE(hgruntPrintout, easyForcePrintLine("HGRUNT:::  OMG  WTF  BBQ" ) );
 			}
 
 
@@ -1450,13 +1450,13 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CHGrunt)
 				tempPlayer->debugDrawVectRecentGive1 = pev->origin + Vector(0, 0, 10);
 				tempPlayer->debugDrawVectRecentGive2 = m_vecMoveGoal + Vector(0, 0, 10);
 
-				//EASY_CVAR_PRINTIF_PRE(hgruntPrintout, easyPrintLine("OW!!!@@@@@@@@@@@@@@@@@@@@@@ %.2f %d", lengthGoneWith, pathOkay) );
+				//EASY_CVAR_PRINTIF_PRE(hgruntPrintout, easyForcePrintLine("OW!!!@@@@@@@@@@@@@@@@@@@@@@ %.2f %d", lengthGoneWith, pathOkay) );
 
 
 			}//END OF if(m_hEnemy->IsPlayer())
 
 
-			//EASY_CVAR_PRINTIF_PRE(hgruntPrintout, easyPrintLine("TESETTT %d %.2f %.2f %.2f", decision, bestCoverLeftDist, bestCoverRightDist, (m_vecMoveGoal - pev->origin).Length()) );
+			//EASY_CVAR_PRINTIF_PRE(hgruntPrintout, easyForcePrintLine("TESETTT %d %.2f %.2f %.2f", decision, bestCoverLeftDist, bestCoverRightDist, (m_vecMoveGoal - pev->origin).Length()) );
 
 
 			if(pathOkay){
@@ -1595,7 +1595,7 @@ float CHGrunt::findCoverInDirection(const Vector& arg_vecStart, const float& arg
 				bestCoverDistance = bestCoverDistanceUp;
 				if(arg_vecDirFeedback != NULL){*arg_vecDirFeedback = vecDegUp;}
 			}else{
-				EASY_CVAR_PRINTIF_PRE(hgruntPrintout, easyPrintLine("POTATOES!!!!!!! POTATOES!!!!!!!!!!!!!"));
+				EASY_CVAR_PRINTIF_PRE(hgruntPrintout, easyForcePrintLine("POTATOES!!!!!!! POTATOES!!!!!!!!!!!!!"));
 			}
 
 		}//END OF if(canTryAlternateDegrees)
@@ -1618,7 +1618,7 @@ float CHGrunt::findCoverInDirection(const Vector& arg_vecStart, const float& arg
 
 
 void CHGrunt::tempStrafeTouch(CBaseEntity *pOther){
-	EASY_CVAR_PRINTIF_PRE(hgruntPrintout, easyPrintLine("HGRUNT: tempStrafeTouch TOUCHED %s", pOther != NULL ? STRING(pOther->pev->classname) : "NULL"));
+	EASY_CVAR_PRINTIF_PRE(hgruntPrintout, easyForcePrintLine("HGRUNT: tempStrafeTouch TOUCHED %s", pOther != NULL ? STRING(pOther->pev->classname) : "NULL"));
 	this->SetTouch(NULL);
 	TaskFail();
 }
@@ -1975,7 +1975,7 @@ void CHGrunt :: Shotgun ( void )
 
 BOOL CHGrunt::outOfAmmoStrafeFireBlock(void){
 
-	if(global_hgruntStrafeAlwaysHasAmmo == 1){
+	if(EASY_CVAR_GET(hgruntStrafeAlwaysHasAmmo) == 1){
 		//can't block.
 		return FALSE;
 	}
@@ -2003,11 +2003,11 @@ BOOL CHGrunt::hgruntAllowStrafe(void){
 BOOL CHGrunt::hgruntAllowStrafeFire(void){
 
 	//CVAR:
-	//global_hgruntAllowStrafeFire
+	//EASY_CVAR_GET(hgruntAllowStrafeFire)
 
 	/*
-	if(global_hgruntAllowStrafeFire != -1){
-		global_hgruntAllowStrafeFire == 1;
+	if(EASY_CVAR_GET(hgruntAllowStrafeFire) != -1){
+		EASY_CVAR_GET(hgruntAllowStrafeFire) == 1;
 	}
 	*/
 
@@ -2035,10 +2035,10 @@ BOOL CHGrunt::canDoOpportunisticStrafe(void){
 BOOL CHGrunt::getIsStrafeLocked(void){
 
 	//CVAR:
-	//global_hgruntLockStrafe
+	//EASY_CVAR_GET(hgruntLockStrafe)
 
 	//that schedule locks the strafe.
-	if(m_pSchedule == slhgruntStrafeToLocation || (global_hgruntLockStrafeTime != 0 && (global_hgruntLockStrafeTime <= 0 || ( strafeFailTime != -1 && gpGlobals->time <= strafeFailTime  ) )  ) ){
+	if(m_pSchedule == slhgruntStrafeToLocation || (EASY_CVAR_GET(hgruntLockStrafeTime) != 0 && (EASY_CVAR_GET(hgruntLockStrafeTime) <= 0 || ( strafeFailTime != -1 && gpGlobals->time <= strafeFailTime  ) )  ) ){
 		return TRUE;
 	}else{
 		return FALSE;
@@ -2052,11 +2052,10 @@ void CHGrunt :: MonsterThink ( void ){
 
 
 	/*
-	EASY_CVAR_PRINTIF(global_hgruntPrintout, "yay %d", test2() );
-	EASY_CVAR_PRINTIF_PRE(hgruntPrintout, easyPrintLine( "yey %d", test()) ) ;
+	EASY_CVAR_PRINTIF_PRE(hgruntPrintout, easyForcePrintLine( "yey %d", test()) ) ;
 	*/
 
-	//EASY_CVAR_PRINTIF_PRE(hgruntPrintout, easyPrintLine("HGRUNT REPORT: %s : %d ROUTEINDEX: %d", getScheduleName(), getTaskNumber(), m_iRouteIndex);
+	//EASY_CVAR_PRINTIF_PRE(hgruntPrintout, easyForcePrintLine("HGRUNT REPORT: %s : %d ROUTEINDEX: %d", getScheduleName(), getTaskNumber(), m_iRouteIndex);
 
 
 	//Tried this, surprisingly unaffected by the player flashlight. Probably by any dynamic light sources (not constant from the map).
@@ -2076,7 +2075,7 @@ void CHGrunt :: MonsterThink ( void ){
 	*/
 
 
-		if(global_thatWasntPunch == 1 && this->m_fSequenceFinished){
+		if(EASY_CVAR_GET(thatWasntPunch) == 1 && this->m_fSequenceFinished){
 
 			switch(RANDOM_LONG(0, 32)){
 			case 0:this->SetSequenceByName("converse1");break;
@@ -2173,17 +2172,17 @@ void CHGrunt :: MonsterThink ( void ){
 		float distanceToEnemy2D = (pev->origin - m_hEnemy->pev->origin).Length2D();
 		float dotProductStraight = DotProduct ( vecDirToPointNorm, vecTowardEnemyNorm);
 
-		BOOL isFacingEnemy = UTIL_IsFacing(this->pev, m_hEnemy->pev->origin, 1-global_hgruntRunAndGunDotMin);
+		BOOL isFacingEnemy = UTIL_IsFacing(this->pev, m_hEnemy->pev->origin, 1-EASY_CVAR_GET(hgruntRunAndGunDotMin));
 		
-		//easyForcePrintLine("COND CHECK::: %d && (%.2f > %.2f),,, isFacing? %d", HasConditions(bits_COND_SEE_ENEMY), dotProductStraight, global_hgruntRunAndGunDotMin, isFacingEnemy);
+		//easyForcePrintLine("COND CHECK::: %d && (%.2f > %.2f),,, isFacing? %d", HasConditions(bits_COND_SEE_ENEMY), dotProductStraight, EASY_CVAR_GET(hgruntRunAndGunDotMin), isFacingEnemy);
 
 		//if(UTIL_IsFacing(this->pev, m_hEnemy->pev->origin, 0.1  ) ){
 		if(this->m_pSchedule != slhgruntStrafeToLocation &&
-			(global_hgruntRunAndGunDistance != -1) && 
+			(EASY_CVAR_GET(hgruntRunAndGunDistance) != -1) && 
 			m_movementActivity == ACT_RUN &&
-			distanceToEnemy2D > global_hgruntRunAndGunDistance &&
+			distanceToEnemy2D > EASY_CVAR_GET(hgruntRunAndGunDistance) &&
 			HasConditions(bits_COND_SEE_ENEMY) &&
-			dotProductStraight > global_hgruntRunAndGunDotMin
+			dotProductStraight > EASY_CVAR_GET(hgruntRunAndGunDotMin)
 
 			//???
 
@@ -2198,7 +2197,7 @@ void CHGrunt :: MonsterThink ( void ){
 			strafeMode = -1;
 			runAndGun = TRUE;
 
-			runAndGunFailTime = gpGlobals->time + global_hgruntLockRunAndGunTime;
+			runAndGunFailTime = gpGlobals->time + EASY_CVAR_GET(hgruntLockRunAndGunTime);
 
 
 			//running and gunning gets priority... for now.
@@ -2212,23 +2211,26 @@ void CHGrunt :: MonsterThink ( void ){
 				runAndGun = FALSE;
 			}
 
-			if(global_testVar == 1){
-				easyPrintLine("***hgrunt-%d: NO RUN&GUN:  actIsRun:%d, cvar_run&gundist:%.2f, cvar_run&gundot: %.2f, distance2d:%.2f, dotprod:%.2f",
+			/*
+			if(EASY_CVAR_GET(testVar) == 1){
+				easyForcePrintLine("***hgrunt-%d: NO RUN&GUN:  actIsRun:%d, cvar_run&gundist:%.2f, cvar_run&gundot: %.2f, distance2d:%.2f, dotprod:%.2f",
 				monsterID,
 				m_movementActivity == ACT_RUN,
-				global_hgruntRunAndGunDistance,
-				global_hgruntRunAndGunDotMin,
+				EASY_CVAR_GET(hgruntRunAndGunDistance),
+				EASY_CVAR_GET(hgruntRunAndGunDotMin),
 				distanceToEnemy2D,
 				dotProductStraight
 				);
 			}
+			*/
 		}
+		
 
 
 		
 		/*
 		if(runAndGun){
-			if(dotProductStraight > global_hgruntRunAndGunDotMin && HasConditions(bits_COND_SEE_ENEMY) ){
+			if(dotProductStraight > EASY_CVAR_GET(hgruntRunAndGunDotMin) && HasConditions(bits_COND_SEE_ENEMY) ){
 				//just reusing this var.
 				hgruntMoveAndShootDotProductPass = TRUE;
 			}else{
@@ -2299,14 +2301,14 @@ void CHGrunt :: MonsterThink ( void ){
 
 
 			/*
-			if(global_testVar == 24){
-				//(global_hgruntRunAndGunDistance != -1) &&  m_movementActivity == ACT_RUN && distanceToEnemy2D > global_hgruntRunAndGunDistance && dotProductStraight > global_hgruntRunAndGunDotMin
+			if(EASY_CVAR_GET(testVar) == 24){
+				//(EASY_CVAR_GET(hgruntRunAndGunDistance) != -1) &&  m_movementActivity == ACT_RUN && distanceToEnemy2D > EASY_CVAR_GET(hgruntRunAndGunDistance) && dotProductStraight > EASY_CVAR_GET(hgruntRunAndGunDotMin)
 
-				EASY_CVAR_PRINTIF_PRE(hgruntPrintout, easyPrintLine("***HGRUNT PRINTOUT24::: movementact:%d, canDoOppStrafe:%d, cvar_ragdis:%.2f, cvar_ragdot:%.2f, distance2D:%.2f, dotproductstr:%.2f, dotproductnorm:%.2f ",
+				EASY_CVAR_PRINTIF_PRE(hgruntPrintout, easyForcePrintLine("***HGRUNT PRINTOUT24::: movementact:%d, canDoOppStrafe:%d, cvar_ragdis:%.2f, cvar_ragdot:%.2f, distance2D:%.2f, dotproductstr:%.2f, dotproductnorm:%.2f ",
 					canDoOpportunisticStrafe(),
 					m_movementActivity,
-					global_hgruntRunAndGunDistance,
-					global_hgruntRunAndGunDotMin,
+					EASY_CVAR_GET(hgruntRunAndGunDistance),
+					EASY_CVAR_GET(hgruntRunAndGunDotMin),
 					distanceToEnemy2D,
 					dotProductStraight,
 					dotProduct));
@@ -2324,7 +2326,7 @@ void CHGrunt :: MonsterThink ( void ){
 				if( (this->m_pSchedule != slhgruntStrafeToLocation && !canDoOpportunisticStrafe()) || distanceToEnemy2D < 80 || (dotProduct <= dotProductCutoff && dotProduct >= -dotProductCutoff) ){
 				
 					strafeCanFire = FALSE;
-					//easyPrintLine("CAN I please STOP %.2f %.2f", gpGlobals->time, strafeFailTime);
+					//easyForcePrintLine("CAN I please STOP %.2f %.2f", gpGlobals->time, strafeFailTime);
 
 					if(getIsStrafeLocked() != TRUE ){
 						m_movementActivity = ACT_RUN;
@@ -2341,7 +2343,7 @@ void CHGrunt :: MonsterThink ( void ){
 				}else if ( dotProduct > 0.9 )
 				{
 
-					strafeFailTime = gpGlobals->time + global_hgruntLockStrafeTime;
+					strafeFailTime = gpGlobals->time + EASY_CVAR_GET(hgruntLockStrafeTime);
 
 
 					mayStrafeFire = TRUE;
@@ -2365,7 +2367,7 @@ void CHGrunt :: MonsterThink ( void ){
 
 					mayStrafeFire = TRUE;
 				
-					strafeFailTime = gpGlobals->time + global_hgruntLockStrafeTime;
+					strafeFailTime = gpGlobals->time + EASY_CVAR_GET(hgruntLockStrafeTime);
 
 					// strafe left
 					//m_IdealActivity = ACT_STRAFE_LEFT;
@@ -2387,9 +2389,9 @@ void CHGrunt :: MonsterThink ( void ){
 
 
 					//WHUT
-					EASY_CVAR_PRINTIF_PRE(hgruntPrintout, easyPrintLine("HGRUNT: potatoes.  ???" ));
+					EASY_CVAR_PRINTIF_PRE(hgruntPrintout, easyForcePrintLine("HGRUNT: potatoes.  ???" ));
 				}
-				//EASY_CVAR_PRINTIF_PRE(hgruntPrintout, easyPrintLine("IDEAL STR: %d : %d %d", strafeCanFire, strafeMode, idealStrafeMode) );
+				//EASY_CVAR_PRINTIF_PRE(hgruntPrintout, easyForcePrintLine("IDEAL STR: %d : %d %d", strafeCanFire, strafeMode, idealStrafeMode) );
 
 				//strafin'?  cool.
 
@@ -2416,9 +2418,9 @@ void CHGrunt :: MonsterThink ( void ){
 		else{
 
 			/*
-			if(global_testVar == 24){
+			if(EASY_CVAR_GET(testVar) == 24){
 
-				EASY_CVAR_PRINTIF_PRE(hgruntPrintout, easyPrintLine("***!hgrunt NOSTRAFEFORYOU??? schedCheck:%d, skillLevelPass:%d, movegoalpass: %d", m_pSchedule != slhgruntStrafeToLocation, g_iSkillLevel >= 2, m_movementGoal == MOVEGOAL_ENEMY || m_movementGoal == MOVEGOAL_TARGETENT));
+				EASY_CVAR_PRINTIF_PRE(hgruntPrintout, easyForcePrintLine("***!hgrunt NOSTRAFEFORYOU??? schedCheck:%d, skillLevelPass:%d, movegoalpass: %d", m_pSchedule != slhgruntStrafeToLocation, g_iSkillLevel >= 2, m_movementGoal == MOVEGOAL_ENEMY || m_movementGoal == MOVEGOAL_TARGETENT));
 			}
 			*/
 
@@ -2438,8 +2440,9 @@ void CHGrunt :: MonsterThink ( void ){
 		}
 		*/
 
-		if(global_testVar == 1){
-			easyPrintLine("***!hgrunt-%d: INVALID PRE??? hasEnemy:%d, actPass:%d, idealAct:%d, moveAct:%d",
+		/*
+		if(EASY_CVAR_GET(testVar) == 1){
+			easyForcePrintLine("***!hgrunt-%d: INVALID PRE??? hasEnemy:%d, actPass:%d, idealAct:%d, moveAct:%d",
 				monsterID,
 				m_hEnemy!=NULL,
 				( (this->m_IdealActivity == m_movementActivity) && this->m_movementActivity == ACT_RUN || this->m_movementActivity == ACT_STRAFE_LEFT || this->m_movementActivity == ACT_STRAFE_RIGHT ),
@@ -2447,8 +2450,9 @@ void CHGrunt :: MonsterThink ( void ){
 				m_movementActivity
 				);
 
-			//EASY_CVAR_PRINTIF_PRE(hgruntPrintout, easyPrintLine("***!hgrunt INVALID MOVE??? allowStr:%d, movgoalCheck:%d, schedCheck:%d, m_hEnemyNotnull:%d, idealact:%d, movementact:%d, actpass?:%d", hgruntAllowStrafe(), (m_movementGoal == MOVEGOAL_ENEMY || m_movementGoal == MOVEGOAL_TARGETENT), this->m_pSchedule == slhgruntStrafeToLocation, !noStrafeForYou, (m_hEnemy!=NULL), this->m_IdealActivity, m_movementActivity, (this->m_IdealActivity == m_movementActivity) && this->m_movementActivity == ACT_RUN || this->m_movementActivity == ACT_STRAFE_LEFT || this->m_movementActivity == ACT_STRAFE_RIGHT ));
+			//EASY_CVAR_PRINTIF_PRE(hgruntPrintout, easyForcePrintLine("***!hgrunt INVALID MOVE??? allowStr:%d, movgoalCheck:%d, schedCheck:%d, m_hEnemyNotnull:%d, idealact:%d, movementact:%d, actpass?:%d", hgruntAllowStrafe(), (m_movementGoal == MOVEGOAL_ENEMY || m_movementGoal == MOVEGOAL_TARGETENT), this->m_pSchedule == slhgruntStrafeToLocation, !noStrafeForYou, (m_hEnemy!=NULL), this->m_IdealActivity, m_movementActivity, (this->m_IdealActivity == m_movementActivity) && this->m_movementActivity == ACT_RUN || this->m_movementActivity == ACT_STRAFE_LEFT || this->m_movementActivity == ACT_STRAFE_RIGHT ));
 		}
+		*/
 	}
 	CBaseMonster::MonsterThink();
 }
@@ -2485,7 +2489,7 @@ void CHGrunt::HandleEventQueueEvent(int arg_eventID){
 void CHGrunt :: HandleAnimEvent( MonsterEvent_t *pEvent )
 {
 
-	if(global_thatWasntPunch == 1){
+	if(EASY_CVAR_GET(thatWasntPunch) == 1){
 		return;
 	}
 
@@ -2563,7 +2567,7 @@ void CHGrunt :: HandleAnimEvent( MonsterEvent_t *pEvent )
 
 
 
-	//EASY_CVAR_PRINTIF_PRE(hgruntPrintout, easyPrintLine("HGRUNT: HANDLEANIMEVENT: %d", pEvent->event) );
+	//EASY_CVAR_PRINTIF_PRE(hgruntPrintout, easyForcePrintLine("HGRUNT: HANDLEANIMEVENT: %d", pEvent->event) );
 
 	switch( pEvent->event )
 	{
@@ -3083,7 +3087,7 @@ void CHGrunt :: StartTask ( Task_t *pTask )
 	}
 	
 	//return;
-	EASY_CVAR_PRINTIF_PRE(hgruntPrintout, easyPrintLine("HGRUNT STARTTASK eeee %s %d", getScheduleName(), getTaskNumber()));
+	EASY_CVAR_PRINTIF_PRE(hgruntPrintout, easyForcePrintLine("HGRUNT STARTTASK eeee %s %d", getScheduleName(), getTaskNumber()));
 
 	//NOTICE - the method TaskBegin in basemonster.h, called by schedule.cpp's routinely called "MaintainSchedule" right before starting a task (StartTask here),
 	//         already sets m_iTaskSatus to TASKSTATUS_RUNNING.
@@ -3184,7 +3188,7 @@ void CHGrunt::moveAnimUpdate(void){
 void CHGrunt::updateStrafeStatus(void){
 
 
-	EASY_CVAR_PRINTIF_PRE(hgruntPrintout, easyPrintLine("STATUS:::??? %d %d %d", friendlyFireStrafeBlock, !strafeCanFire, hgruntAllowStrafeFire() == FALSE));
+	EASY_CVAR_PRINTIF_PRE(hgruntPrintout, easyForcePrintLine("STATUS:::??? %d %d %d", friendlyFireStrafeBlock, !strafeCanFire, hgruntAllowStrafeFire() == FALSE));
 
 	//on getting a strafe anim, check for NoFriendlyFire.
 	if ( friendlyFireStrafeBlock || !strafeCanFire || hgruntAllowStrafeFire() == FALSE ){
@@ -3213,7 +3217,7 @@ void CHGrunt::updateStrafeStatus(void){
 
 
 
-	if(global_hgruntForceStrafeFireAnim == 1){
+	if(EASY_CVAR_GET(hgruntForceStrafeFireAnim) == 1){
 		if(idealStrafeMode == 0){
 			idealStrafeMode = 1;
 			//strafeMode = 1;
@@ -3231,7 +3235,7 @@ void CHGrunt::updateStrafeStatus(void){
 
 void CHGrunt::onAnimationLoop(void){
 
-	EASY_CVAR_PRINTIF_PRE(hgruntPrintout, easyPrintLine("I have looped: %d ", m_IdealActivity == m_movementActivity && (m_movementActivity == ACT_STRAFE_LEFT || m_movementActivity == ACT_STRAFE_RIGHT)));
+	EASY_CVAR_PRINTIF_PRE(hgruntPrintout, easyForcePrintLine("I have looped: %d ", m_IdealActivity == m_movementActivity && (m_movementActivity == ACT_STRAFE_LEFT || m_movementActivity == ACT_STRAFE_RIGHT)));
 
 	//check: should we change animation?
 	if(pev->deadflag == DEAD_NO && m_IdealActivity == m_movementActivity ){
@@ -3242,13 +3246,13 @@ void CHGrunt::onAnimationLoop(void){
 
 
 			updateStrafeStatus();
-			//EASY_CVAR_PRINTIF_PRE(hgruntPrintout, easyPrintLine("HOW THE quack %d %d", strafeMode, idealStrafeMode ));
+			//EASY_CVAR_PRINTIF_PRE(hgruntPrintout, easyForcePrintLine("HOW THE quack %d %d", strafeMode, idealStrafeMode ));
 			if(strafeMode == -1 || strafeMode != idealStrafeMode){
 
 				strafeMode = idealStrafeMode;
 
 
-				//EASY_CVAR_PRINTIF_PRE(hgruntPrintout, easyPrintLine("ANIMATION CHANGE!!!! A" ));
+				//EASY_CVAR_PRINTIF_PRE(hgruntPrintout, easyForcePrintLine("ANIMATION CHANGE!!!! A" ));
 				int iSequence = LookupActivityHard (m_IdealActivity);
 				ResetSequenceInfo( );
 				SetYawSpeed();
@@ -3272,7 +3276,7 @@ void CHGrunt::onAnimationLoop(void){
 		else if(m_movementActivity == ACT_RUN){
 			//update the run anim?
 
-			//EASY_CVAR_PRINTIF_PRE(hgruntPrintout, easyPrintLine("SOOOOOOO??? %d    %d", runAndGunSequenceID, runAndGun));
+			//EASY_CVAR_PRINTIF_PRE(hgruntPrintout, easyForcePrintLine("SOOOOOOO??? %d    %d", runAndGunSequenceID, runAndGun));
 			if(runAndGun && pev->sequence != runAndGunSequenceID || (!runAndGun && pev->sequence == runAndGunSequenceID) ){
 				int iSequence = LookupActivityHard (m_IdealActivity);
 
@@ -3310,7 +3314,7 @@ int CHGrunt::LookupActivityHard(int activity){
 	//....nah.
 	//strafeMode = idealStrafeMode;
 
-	//EASY_CVAR_PRINTIF_PRE(hgruntPrintout, easyPrintLine("WWWHHHHHYYYYYY %d", activity));
+	//EASY_CVAR_PRINTIF_PRE(hgruntPrintout, easyForcePrintLine("WWWHHHHHYYYYYY %d", activity));
 	BOOL tempFriendlyFire;
 
 
@@ -3360,33 +3364,33 @@ int CHGrunt::LookupActivityHard(int activity){
 
 
 			//return CBaseAnimating::LookupActivity(ACT_RUN);
-			//EASY_CVAR_PRINTIF_PRE(hgruntPrintout, easyPrintLine("GAHHH %d", strafeMode));
+			//EASY_CVAR_PRINTIF_PRE(hgruntPrintout, easyForcePrintLine("GAHHH %d", strafeMode));
 			switch(strafeMode){
 				case 0:
 					//return LookupSequence("straferight");
-					m_flFramerateSuggestion = global_hgruntStrafeAnimSpeedMulti;
+					m_flFramerateSuggestion = EASY_CVAR_GET(hgruntStrafeAnimSpeedMulti);
 					return LookupSequence("straferight");
 				break;
 				case 1:
 					//this->animEventQueuePush(3.0f / 30.0f, 0);
 					//this->animEventQueuePush(7.5f / 30.0f, 1);
 					//this->animEventQueuePush(11.0f / 30.0f, 2);
-					m_flFramerateSuggestion = global_hgruntStrafeAnimSpeedMulti;
+					m_flFramerateSuggestion = EASY_CVAR_GET(hgruntStrafeAnimSpeedMulti);
 					return LookupSequence("straferight_fire");
 				break;
 				case 2:
 					//return LookupSequence("strafeleft");
-					m_flFramerateSuggestion = global_hgruntStrafeAnimSpeedMulti;
+					m_flFramerateSuggestion = EASY_CVAR_GET(hgruntStrafeAnimSpeedMulti);
 					return LookupSequence("strafeleft");
 				break;
 				case 3:
 					//this->animEventQueuePush(7.0f / 30.0f, 0);
-					m_flFramerateSuggestion = global_hgruntStrafeAnimSpeedMulti;
+					m_flFramerateSuggestion = EASY_CVAR_GET(hgruntStrafeAnimSpeedMulti);
 					return LookupSequence("strafeleft_fire");
 				break;
 				default:
 					//???
-					EASY_CVAR_PRINTIF_PRE(hgruntPrintout, easyPrintLine("HGRUNT SEVERE ERROR B: Strafe failed to fetch anim!"));
+					EASY_CVAR_PRINTIF_PRE(hgruntPrintout, easyForcePrintLine("HGRUNT SEVERE ERROR B: Strafe failed to fetch anim!"));
 					return CBaseAnimating::LookupActivity(activity);
 				break;
 			}//END OF switch(strafeMode)
@@ -3422,7 +3426,7 @@ int CHGrunt::LookupActivityHard(int activity){
 					this->animEventQueuePush(11.0f / 30.0f, 1);
 					*/
 
-					m_flFramerateSuggestion = global_hgruntRunAndGunAnimSpeedMulti;
+					m_flFramerateSuggestion = EASY_CVAR_GET(hgruntRunAndGunAnimSpeedMulti);
 					return LookupSequence("runandgun");
 				}
 			}
@@ -3470,7 +3474,7 @@ int CHGrunt::tryActivitySubstitute(int activity){
 				break;
 				default:
 					//???
-					EASY_CVAR_PRINTIF_PRE(hgruntPrintout, easyPrintLine("HGRUNT SEVERE ERROR A: Strafe failed to fetch anim!"));
+					EASY_CVAR_PRINTIF_PRE(hgruntPrintout, easyForcePrintLine("HGRUNT SEVERE ERROR A: Strafe failed to fetch anim!"));
 					return CBaseAnimating::LookupActivity(activity);
 				break;
 			}
@@ -3618,7 +3622,7 @@ void CHGrunt :: RunTask ( Task_t *pTask )
 		
 
 
-		if(global_hgruntMovementDeltaCheck == 1){
+		if(EASY_CVAR_GET(hgruntMovementDeltaCheck) == 1){
 			if(nextPositionCheckTime == -1){
 				nextPositionCheckTime = gpGlobals->time + 1.0f;
 			}else{
@@ -3626,8 +3630,8 @@ void CHGrunt :: RunTask ( Task_t *pTask )
 				if(gpGlobals->time > nextPositionCheckTime){
 
 					float delta = (vecPrevOrigin - pev->origin).Length() ;
-					EASY_CVAR_PRINTIF_PRE(hgruntPrintout, easyPrintLine("DELTA IS?? %.2f", delta));
-					if(delta > 1){ //|| global_hgruntSpeedMulti <= 0.3f){
+					EASY_CVAR_PRINTIF_PRE(hgruntPrintout, easyForcePrintLine("DELTA IS?? %.2f", delta));
+					if(delta > 1){ //|| EASY_CVAR_GET(hgruntSpeedMulti) <= 0.3f){
 						//pass.  Just keep going.
 						nextPositionCheckTime = gpGlobals->time + 1.0f;
 					}else{
@@ -3638,7 +3642,7 @@ void CHGrunt :: RunTask ( Task_t *pTask )
 					}
 				}
 			}
-		}//END OF global_hgruntMovementDeltaCheck ...
+		}//END OF EASY_CVAR_GET(hgruntMovementDeltaCheck) ...
 
 
 		vecPrevOrigin = pev->origin;
@@ -3680,16 +3684,16 @@ void CHGrunt::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, float 
 		m_IdealActivity = m_movementActivity;
 
 
-	EASY_CVAR_PRINTIF_PRE(hgruntPrintout, easyPrintLine( "MONSTERID: %d MY GROUNDSPEED IS %.2f", this->monsterID, m_flGroundSpeed));
+	EASY_CVAR_PRINTIF_PRE(hgruntPrintout, easyForcePrintLine( "MONSTERID: %d MY GROUNDSPEED IS %.2f", this->monsterID, m_flGroundSpeed));
 	
 
 
 
 
-	float flTotal = m_flGroundSpeed * pev->framerate * EASY_CVAR_GET(animationFramerateMulti) * flInterval * global_hgruntSpeedMulti;
+	float flTotal = m_flGroundSpeed * pev->framerate * EASY_CVAR_GET(animationFramerateMulti) * flInterval * EASY_CVAR_GET(hgruntSpeedMulti);
 	float flStep;
 
-	//EASY_CVAR_PRINTIF_PRE(hgruntPrintout, easyPrintLine("WHAT IS THIS junk??? %.2f %.2f %.2f %.2f %d", m_flGroundSpeed, pev->framerate, flInterval, global_hgruntSpeedMulti, strafeMode));
+	//EASY_CVAR_PRINTIF_PRE(hgruntPrintout, easyForcePrintLine("WHAT IS THIS junk??? %.2f %.2f %.2f %.2f %d", m_flGroundSpeed, pev->framerate, flInterval, EASY_CVAR_GET(hgruntSpeedMulti), strafeMode));
 
 	while (flTotal > 0.001)
 	{
@@ -4674,7 +4678,7 @@ void CHGrunt :: SetActivity ( Activity NewActivity )
 		}
 
 
-		//EASY_CVAR_PRINTIF_PRE(hgruntPrintout, easyPrintLine("ANIMATION CHANGE!!!! D"));
+		//EASY_CVAR_PRINTIF_PRE(hgruntPrintout, easyForcePrintLine("ANIMATION CHANGE!!!! D"));
 		pev->sequence		= iSequence;	// Set to the reset anim (if it's there)
 		ResetSequenceInfo( );
 		SetYawSpeed();
@@ -4865,7 +4869,7 @@ Schedule_t *CHGrunt :: GetSchedule( void )
 					return GetScheduleOfType( SCHED_TAKE_COVER_FROM_ENEMY );
 				}
 				//MODDD - condition required before flinching (or rather, specifically forbidden).
-				else if(!(global_noFlinchOnHard==1 && g_iSkillLevel==SKILL_HARD))
+				else if(!(EASY_CVAR_GET(noFlinchOnHard)==1 && g_iSkillLevel==SKILL_HARD))
 				{
 					return GetScheduleOfType( SCHED_SMALL_FLINCH );
 				}
@@ -4980,7 +4984,7 @@ Schedule_t *CHGrunt :: GetSchedule( void )
 	// no special cases here, call the base class
 	Schedule_t* sched = CSquadMonster::GetSchedule();
 
-	//EASY_CVAR_PRINTIF_PRE(hgruntPrintout, easyPrintLine("HGRUNT: SCHED OUTSOURCED eeee!!! %s", sched ));
+	//EASY_CVAR_PRINTIF_PRE(hgruntPrintout, easyForcePrintLine("HGRUNT: SCHED OUTSOURCED eeee!!! %s", sched ));
 
 	return sched;
 }
@@ -4991,7 +4995,7 @@ Schedule_t* CHGrunt :: GetScheduleOfType ( int Type )
 {
 
 
-	easyForcePrintLine("HGRUNT%d GetSchedOfType: %d", monsterID, Type);
+	EASY_CVAR_PRINTIF_PRE(hgruntPrintout, easyForcePrintLine("HGRUNT%d GetSchedOfType: %d", monsterID, Type));
 
 	if(monsterID == 1){
 		int x = 4;
@@ -5000,10 +5004,10 @@ Schedule_t* CHGrunt :: GetScheduleOfType ( int Type )
 	//MODDD - new schedule?  Forget the touch method.
 	this->SetTouch(NULL);
 
-	//EASY_CVAR_PRINTIF_PRE(hgruntPrintout, easyPrintLine("HGRUNT%d GetScheduleOfType %d", monsterID, Type ));
+	//EASY_CVAR_PRINTIF_PRE(hgruntPrintout, easyForcePrintLine("HGRUNT%d GetScheduleOfType %d", monsterID, Type ));
 
 	//MODDD - Maybe another time!
-	//EASY_CVAR_PRINTIF_PRE(hgruntPrintout, easyPrintLine("GRUNT SCHED %d", Type));
+	//EASY_CVAR_PRINTIF_PRE(hgruntPrintout, easyForcePrintLine("GRUNT SCHED %d", Type));
 	switch	( Type )
 	{
 	case SCHED_TAKE_COVER_FROM_ENEMY:
@@ -5329,7 +5333,6 @@ void CDeadHGrunt::KeyValue( KeyValueData *pkvd )
 #endif
 
 
-
 //=========================================================
 // ********** DeadHGrunt SPAWN **********
 //=========================================================
@@ -5519,7 +5522,7 @@ void CHGrunt::checkHeadGore(int iGib ){
 
 	if(m_LastHitGroup == HITGROUP_HEAD || m_LastHitGroup == 11){
 		//Took enough damage on last trace-hit?
-		if(missingHeadPossible && global_germanCensorship != 1 && GetBodygroup(1) != 1){
+		if(missingHeadPossible && EASY_CVAR_GET(germanCensorship) != 1 && GetBodygroup(1) != 1){
 			//missing head!... if german censorship isn't on.
 			//that is, heads --> Headless
 			SetBodygroup( 1, 1 );

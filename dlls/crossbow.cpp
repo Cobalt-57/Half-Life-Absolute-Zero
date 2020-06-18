@@ -27,19 +27,13 @@
 #include "gamerules.h"
 
 
-
 EASY_CVAR_EXTERN(playerCrossbowMode)
 EASY_CVAR_EXTERN(crossbowInheritsPlayerVelocity)
 EASY_CVAR_EXTERN(crossbowReloadSoundDelay)
 
 
-
-
-
-//NOTICE: class CCrossbowBolt has been moved to weapons.h.
-
-
-
+// MODDD - NOTICE: class CCrossbowBolt has been moved to weapons.h.
+// It was completely serverside anyway.
 
 
 
@@ -62,21 +56,12 @@ LINK_ENTITY_TO_CLASS( weapon_crossbow, CCrossbow );
 
 
 
-
-
-
-
-
-
-
 //MODDD - new.
 CCrossbow::CCrossbow(){
 
 	crossbowReloadSoundTimer = -1;
 
 }//END OF constructor
-
-
 
 
 void CCrossbow::Spawn( )
@@ -167,9 +152,10 @@ void CCrossbow::Holster( int skiplocal /* = 0 */ )
 	//MODDD - canceled?
 	crossbowReloadSoundTimer = -1;
 
-	if ( m_fInZoom )
+	if (m_pPlayer->pev->fov != 0)
 	{
-		SecondaryAttack( );
+		m_fInZoom = FALSE;
+		m_pPlayer->pev->fov = m_pPlayer->m_iFOV = 0;  // 0 means reset to default fov
 	}
 
 	/*
@@ -200,9 +186,9 @@ void CCrossbow::PrimaryAttack( void )
 
 	if(m_fInZoom){
 		//If zoomed in, do a check for which mode to use.
-		if(EASY_CVAR_GET(playerCrossbowMode)!=2 && (EASY_CVAR_GET(playerCrossbowMode)==1 || !WEAPON_DEFAULT_MULTIPLAYER_CHECK) )
+		if(EASY_CVAR_GET(playerCrossbowMode)!=2 && (EASY_CVAR_GET(playerCrossbowMode)==1 || !IsMultiplayer()) )
 		{
-			//single player? no difference, fall to the usual DireBolt below.
+			//single player? no difference, fall to the usual FireBolt below.
 
 		}else{
 			//Multiplayer? Do this instead.
@@ -217,6 +203,9 @@ void CCrossbow::PrimaryAttack( void )
 // this function only gets called in multiplayer
 void CCrossbow::FireSniperBolt()
 {
+
+	
+
 	//MODDD
 	if(m_pPlayer->cheat_minimumfiredelayMem == 0){
 		m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 0.75;
@@ -246,6 +235,12 @@ void CCrossbow::FireSniperBolt()
 	flags = 0;
 #endif
 
+	// HEY, COMMENT TIME!
+	// So this playback method is interesting. m_usCrossbow2 puts the arrow right at the destination in an
+	// instant, since sniper arrows work with a line-trace instead of a traveling arrow projectile
+	// (just like bullets).
+	// And it even works for other players: they see the bolt at the same place still.
+	// So generating our own instant projectile at the destination serverside is redundant.
 	PLAYBACK_EVENT_FULL( flags, m_pPlayer->edict(), m_usCrossbow2, 0.0, (float *)&g_vecZero, (float *)&g_vecZero, 0, 0, m_iClip, m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType], 0, 0 );
 
 	// player "shoot" animation
@@ -259,14 +254,12 @@ void CCrossbow::FireSniperBolt()
 	UTIL_TraceLine(vecSrc, vecSrc + vecDir * 8192, dont_ignore_monsters, m_pPlayer->edict(), &tr);
 
 
-
-
+	// Commented out!  See the "HEY, COMMENT TIME!" note above.
+	/*
 #ifndef CLIENT_DLL
-
 	//MODDD - no NULL check? Are you daft man?
 	if(tr.pHit != NULL){
 
-		
 		CBaseEntity* tempEnt = CBaseEntity::Instance(tr.pHit);
 		Vector arrowVelocity;
 		
@@ -274,16 +267,14 @@ void CCrossbow::FireSniperBolt()
 		//if ( FClassnameIs( pOther->pev, "worldspawn" ) )
 		//if(pOther->IsWorldOrAffiliated() && pOther->pev->movetype == MOVETYPE_NONE)
 		//...why do some static map things use MOVETYPE_PUSH? foget this.
-		/*
-		if(tempEnt->IsWorld()){
-			//make a crossbow bolt stick out of this.
-			CCrossbowBolt *pBolt = CCrossbowBolt::BoltCreate();
-			pBolt->pev->origin = tr.vecEndPos;
-			pBolt->pev->angles = anglesAim;
-			pBolt->pev->owner = m_pPlayer->edict();
-			pBolt->m_velocity = Vector(0,0,0);
-		}
-		*/
+		//if(tempEnt->IsWorld()){
+		//	//make a crossbow bolt stick out of this.
+		//	CCrossbowBolt *pBolt = CCrossbowBolt::BoltCreate();
+		//	pBolt->pev->origin = tr.vecEndPos;
+		//	pBolt->pev->angles = anglesAim;
+		//	pBolt->pev->owner = m_pPlayer->edict();
+		//	pBolt->m_velocity = Vector(0,0,0);
+		//}
 
 		if ( tr.pHit->v.takedamage )
 		{
@@ -300,17 +291,12 @@ void CCrossbow::FireSniperBolt()
 		CCrossbowBolt *pBolt = CCrossbowBolt::BoltCreate(arrowVelocity, 0, FALSE, TRUE);
 		pBolt->pev->origin = tr.vecEndPos;
 
-
+		//no need to set pBolt->hitSomething, "BoltTouch" already does this.
 		pBolt->BoltTouch(tempEnt);
-		
-
 	}//END OF pHit null check
-
 #endif
-
-
-
-}
+	*/
+}//END OF FireSniperBolt
 
 void CCrossbow::FireBolt()
 {
@@ -404,13 +390,13 @@ void CCrossbow::FireBolt()
 		m_pPlayer->SetSuitUpdate("!HEV_AMO0", FALSE, 0);
 
 	//MODDD
+	// also removed the NextSecondaryAttack sets.  What's the point of affecting when we can zoom again?
 	if(m_pPlayer->cheat_minimumfiredelayMem == 0){
 		m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 0.75;
-
-		m_flNextSecondaryAttack = UTIL_WeaponTimeBase() + 0.75;
+		//m_flNextSecondaryAttack = UTIL_WeaponTimeBase() + 0.75;
 	}else{
 		m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + m_pPlayer->cheat_minimumfiredelaycustomMem;
-		m_flNextSecondaryAttack = UTIL_WeaponTimeBase() + m_pPlayer->cheat_minimumfiredelaycustomMem;
+		//m_flNextSecondaryAttack = UTIL_WeaponTimeBase() + m_pPlayer->cheat_minimumfiredelaycustomMem;
 	}
 
 	
@@ -426,30 +412,49 @@ void CCrossbow::FireBolt()
 
 void CCrossbow::SecondaryAttack()
 {
+
+	// This is what checks for a key being pressed for the first frame since a previous release (or first time ever).
+	// This does not count continually holding it down after.
+	// SO FUCKING GREAT RETAIL NEVER ONCE TOOK ADVANTAGE OF THIS, HUH.
+	if(!(m_pPlayer->m_afButtonPressed & IN_ATTACK2)){
+		//MODDD
+		// If we're not the first frame, don't do it!  Stops holding down the key from continuously
+		// zooming in and out.  This would happen stupidly rapidly now that the 1 second forced
+		// delay has been lifted.  Be responsive dammit!
+		return;
+	}
 	
-	//easyPrintLine("CROSSBOW STATS: %.2g %.2g", m_pPlayer->pev->fov, m_pPlayer->crossbowZoomFOV);
-	
+	// Clientside must get the FOV value from the gHUD instance instead, the player info is only useful
+	// serverside.
+	// Strangely, even in retail "m_pPlayer->pev->fov" and "m_pPlayer->m_iFOV" were changed on zoom for both
+	// client and serverside, even though it would've been useless clientside. 
+	// On clientside, only HUD-related logic handles FOV.  No idea.
+	// Still making sure the thing checked is correct (zoomedFOV), since retail did compare against a constant
+	// (which would be correct for client/serverside, so this should be too)
+	// Our new "getPlayerBaseFOV", in CBaseWeapon, gets the intended default/automatic FOV from client/server
+	// correctly.
+	const int zoomedFOV = (int)roundf(getPlayerBaseFOV() * 0.2222f);
+
 	if ( m_pPlayer->pev->fov != 0 )
 	{
 		m_pPlayer->pev->fov = m_pPlayer->m_iFOV = 0; // 0 means reset to default fov
 		m_fInZoom = 0;
 	}
 	//MODDD - used to be only 20.
-	else if ( m_pPlayer->pev->fov != (int)m_pPlayer->crossbowZoomFOV )
+	else if ( m_pPlayer->pev->fov != zoomedFOV)
 	{
-		m_pPlayer->pev->fov = m_pPlayer->m_iFOV = (int)m_pPlayer->crossbowZoomFOV;
+		m_pPlayer->pev->fov = m_pPlayer->m_iFOV = zoomedFOV;
 		m_fInZoom = 1;
 	}
 	
 	pev->nextthink = UTIL_WeaponTimeBase() + 0.1;
 
-	
 	//if(m_pPlayer->cheat_minimumfiredelayMem == 0){
-		m_flNextSecondaryAttack = UTIL_WeaponTimeBase() + 1.0;
+	//MODDD - NOPE! Not even you now.  Outclassed.
+	//	m_flNextSecondaryAttack = UTIL_WeaponTimeBase() + 1.0;
 	//}else{
 	//	m_flNextSecondaryAttack = UTIL_WeaponTimeBase() + m_pPlayer->cheat_minimumfiredelaycustomMem;
 	//}
-
 
 }
 
@@ -505,7 +510,10 @@ void CCrossbow::Reload( void )
 
 	if ( m_pPlayer->pev->fov != 0 )
 	{
-		SecondaryAttack();
+		//MODDD - really... just set the FOV dammit.
+		//SecondaryAttack();
+		m_fInZoom = FALSE;
+		m_pPlayer->pev->fov = m_pPlayer->m_iFOV = 0;  // 0 means reset to default fov
 	}
 
 	if ( DefaultReload( 5, CROSSBOW_RELOAD, 4.5 ) )

@@ -30,13 +30,23 @@
 #endif
 
 
+
+
+#include "externalLibInclude.h"
+
+// NOTE - section used to be in the "#ifdef CLIENT_DLL" section below.
+// Misc C-runtime library headers
+//#include "STDIO.H"
+//#include "STDLIB.H"
+//#include "MATH.H"
+////////////////////////////////////////
+
+
+
+
 //client only
 #ifdef CLIENT_DLL
 
-// Misc C-runtime library headers
-#include "STDIO.H"
-#include "STDLIB.H"
-#include "MATH.H"
 
 // Header file containing definition of globalvars_t and entvars_t
 typedef int	func_t;					//

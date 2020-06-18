@@ -32,9 +32,10 @@ extern DLL_GLOBAL Vector		g_vecAttackDir;
 extern DLL_GLOBAL int			g_iSkillLevel;
 
 //MODDD 
-extern float global_cl_explosion;
+EASY_CVAR_EXTERN(cl_explosion)
+EASY_CVAR_EXTERN(soundSentenceSave)
+
 extern short g_sGaussBallSprite;
-extern float global_soundSentenceSave;
 
 EASY_CVAR_EXTERN(weaponPickupPlaysAnyReloadSounds);
 
@@ -577,10 +578,10 @@ BOOL CBaseEntity::isOrganic(void){
 	return FALSE;
 }
 
-//Override me if specifying a different hull is necessary.
-//For things that don't fit evenly into certain sizes as seen in nodes.cpp's HullIndex method,
-//a NODE_HUMAN_HULL may be implied. Even something larger than the largest or smaller than the smallest gets this
-//assumption. It is not very good, so just say what an entity prefers here.
+// Override me if specifying a different hull is necessary.
+// For things that don't fit evenly into certain sizes as seen in nodes.cpp's HullIndex method,
+// a NODE_HUMAN_HULL may be implied. Even something larger than the largest or smaller than the
+// smallest gets this assumption. It is not very good, so just say what an entity prefers here.
 int CBaseEntity::getHullIndexForNodes(void) const{
 	return NODE_DEFAULT_HULL;
 }//END OF getHullIndexForNodes
@@ -588,7 +589,9 @@ int CBaseEntity::getHullIndexForNodes(void) const{
 
 
 
-//MODDD - when an entity is forcibly deleted (currently, only by the player doing entRemove), run this method to see if anything needs to be done right before cleanup (like stopping a looping sound).
+//MODDD - when an entity is forcibly deleted (currently, only by the player doing entRemove),
+// run this method to see if anything needs to be done right before cleanup (like stopping a
+// looping sound).
 void CBaseEntity::onDelete(void){
 
 }
@@ -1308,6 +1311,14 @@ Vector CBaseEntity::GetVelocityLogical(void){
 //we need to apply the change to that instead.  Or both, leaving that up to the thing implementing this.
 void CBaseEntity::SetVelocityLogical(const Vector& arg_newVelocity){
 	pev->velocity = arg_newVelocity;
+}
+
+//If I'm deflected (or reflected? whichever term is more fitting) by the kingpin, let this entity know.
+//Applies to projectiles only (RPG rockets, mp5 grenades, hand grenades, even hornets, snarks, etc.)
+//By default, no behavior but for things that don't typically move just by some other variable (like pev->velocity),
+//like a RPG rocket's tendancy to seek out "laser_spot"'s, need to set some flag to tell it not to do that here.
+void CBaseEntity::OnDeflected(CBaseEntity* arg_entDeflector){
+
 }
 
 

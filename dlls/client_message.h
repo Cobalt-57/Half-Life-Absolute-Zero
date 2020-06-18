@@ -17,11 +17,15 @@ extern int gmsgAutoMus;
 extern int gmsgCliTest;
 
 extern int gmsgUnpause;
+
+extern int gmsgOnFirstAppearance;
+extern int gmsgClientResetModCVars;
+
 extern int gmsgUpdateClientCVar;
 extern int gmsgResetClientCVar;
 extern int gmsgPrintClientCVar;
 
-extern int gmsgRetrieveFOV;
+//extern int gmsgRetrieveFOV;
 
 extern int gmsgShake;
 extern int gmsgFade;

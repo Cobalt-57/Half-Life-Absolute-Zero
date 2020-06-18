@@ -38,7 +38,7 @@ enum SS_INTERRUPT
 };
 
 //MODDD
-extern float global_cineChangelevelFix;
+EASY_CVAR_EXTERN(cineChangelevelFix)
 
 // when a monster finishes an AI scripted sequence, we can choose
 // a schedule to place them in. These defines are the aliases to
@@ -67,11 +67,11 @@ public:
 		//return CBaseMonster::ObjectCaps() | FCAP_FORCE_TRANSITION;
 		//return (CBaseMonster :: ObjectCaps()|FCAP_ACROSS_TRANSITION ); 
 		
-		if(global_cineChangelevelFix == 1 || global_cineChangelevelFix == 3){
-			//return (CBaseMonster :: ObjectCaps() ); 
-			return (CBaseMonster :: ObjectCaps()|FCAP_ACROSS_TRANSITION ); 
+		if(EASY_CVAR_GET(cineChangelevelFix) == 1 || EASY_CVAR_GET(cineChangelevelFix) == 3){
+			//return (CBaseMonster::ObjectCaps() ); 
+			return (CBaseMonster::ObjectCaps()|FCAP_ACROSS_TRANSITION ); 
 		}else{
-			return (CBaseMonster :: ObjectCaps() & ~FCAP_ACROSS_TRANSITION);
+			return (CBaseMonster::ObjectCaps() & ~FCAP_ACROSS_TRANSITION);
 		}
 	
 	}

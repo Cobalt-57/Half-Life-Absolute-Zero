@@ -38,7 +38,7 @@
 
 
 //MODDD
-extern float global_bullsquidRangeDisabled;
+EASY_CVAR_EXTERN(bullsquidRangeDisabled)
 
 
 
@@ -1144,7 +1144,7 @@ Schedule_t* CBullsquid :: GetScheduleOfType ( int Type )
 
 	case SCHED_BULLSQUID_TRY_RANGE_ATTACK_1:
 		//This is a filter.   Is it legal to do a RANGE_ATTACK   here  ?
-		if(global_bullsquidRangeDisabled != 1){
+		if(EASY_CVAR_GET(bullsquidRangeDisabled) != 1){
 			//easyForcePrintLine("????????  %.2f %.2f   %d", gpGlobals->time, m_flNextSpitTime,  HasConditions(bits_COND_SEE_ENEMY));
 			
 			if(gpGlobals->time >= m_flNextSpitTime && this->HasConditions(bits_COND_SEE_ENEMY) ){
@@ -1167,7 +1167,7 @@ Schedule_t* CBullsquid :: GetScheduleOfType ( int Type )
 		
 		//
 
-		if(global_bullsquidRangeDisabled != 1){
+		if(EASY_CVAR_GET(bullsquidRangeDisabled) != 1){
 			//easyForcePrintLine("????????  %.2f %.2f   %d", gpGlobals->time, m_flNextSpitTime,  HasConditions(bits_COND_SEE_ENEMY));
 			
 			

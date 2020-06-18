@@ -28,7 +28,7 @@
 #include "decals.h"
 
 //never, really now??!
-#include "custom_debug.h"
+#include "util_debugdraw.h"
 
 //===================grenade
 
@@ -38,11 +38,11 @@
 extern unsigned short g_sTrail;
 extern unsigned short g_sTrailRA;
 
-extern float global_cl_explosion;
-extern float global_explosionDebrisSoundVolume;
-extern float global_cheat_touchNeverExplodes;
+EASY_CVAR_EXTERN(cl_explosion)
+EASY_CVAR_EXTERN(explosionDebrisSoundVolume)
+EASY_CVAR_EXTERN(cheat_touchNeverExplodes)
 
-extern float global_trailTypeTest;
+EASY_CVAR_EXTERN(trailTypeTest)
 
 
 LINK_ENTITY_TO_CLASS( grenade, CGrenade );
@@ -304,10 +304,10 @@ void CGrenade::Explode( TraceResult *pTrace, int bitsDamageType, int bitsDamageT
 	//randDebrisSound = 1;
 	//easyPrintLine("DEBRIS SOUND: %d", randDebrisSound);
 
-	if(global_explosionDebrisSoundVolume > 0){
+	if(EASY_CVAR_GET(explosionDebrisSoundVolume) > 0){
 		int randDebrisSound = RANDOM_LONG(0, 2);
 
-		float debrisVolumeChoice = clamp(global_explosionDebrisSoundVolume, 0, 1);
+		float debrisVolumeChoice = clamp(EASY_CVAR_GET(explosionDebrisSoundVolume), 0, 1);
 
 		switch ( randDebrisSound )
 		{
@@ -342,7 +342,7 @@ void CGrenade::Explode( TraceResult *pTrace, int bitsDamageType, int bitsDamageT
 void CGrenade::Smoke( void )
 {
 	//MODDD - smoke removed.  "return" terminates this method early.
-	if(global_cl_explosion == 1){
+	if(EASY_CVAR_GET(cl_explosion) == 1){
 		//does not smoke.
 		UTIL_Remove( this );
 		return;
@@ -418,7 +418,7 @@ void CGrenade::Detonate( void )
 // 
 void CGrenade::ExplodeTouch( CBaseEntity *pOther )
 {
-	if(global_cheat_touchNeverExplodes != 1){
+	if(EASY_CVAR_GET(cheat_touchNeverExplodes) != 1){
 
 		TraceResult tr;
 		Vector		vecSpot;// trace starts here!
@@ -439,7 +439,7 @@ void CGrenade::ExplodeTouch( CBaseEntity *pOther )
 		Explode( &tr, DMG_BLAST );
 		
 		
-		//easyPrintLine("global_cheat_touchNeverExplodes what??");
+		//easyPrintLine("cheat_touchNeverExplodes what??");
 
 	}//END OF CVar check...
 	
@@ -662,11 +662,11 @@ CGrenade *CGrenade::ShootContact( entvars_t *pevOwner, Vector vecStart, Vector v
 	
 
 
-	if(global_trailTypeTest > -1){
+	if(EASY_CVAR_GET(trailTypeTest) > -1){
 		//This was just for a test.  Enable (along with some other things in place), and this should make mp5 grenades fly with a trail of grey dots.
 		PLAYBACK_EVENT_FULL (FEV_GLOBAL, pGrenade->edict(), g_sTrail, 0.0, 
-		(float *)&pGrenade->pev->origin, (float *)&pGrenade->pev->angles, 0.7, 0.0, pGrenade->entindex(), (int)global_trailTypeTest, 0, 0);
-	}else if(global_trailTypeTest == -2){
+		(float *)&pGrenade->pev->origin, (float *)&pGrenade->pev->angles, 0.7, 0.0, pGrenade->entindex(), (int)EASY_CVAR_GET(trailTypeTest), 0, 0);
+	}else if(EASY_CVAR_GET(trailTypeTest) == -2){
 		PLAYBACK_EVENT_FULL (FEV_GLOBAL, pGrenade->edict(), g_sTrailRA, 0.0, 
 		(float *)&pGrenade->pev->origin, (float *)&pGrenade->pev->angles, 0.7, 0.0, pGrenade->entindex(), 0, 0, 0);
 	

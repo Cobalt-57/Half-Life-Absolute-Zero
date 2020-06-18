@@ -92,14 +92,14 @@ LINK_ENTITY_TO_CLASS( info_node_air, CNodeEnt );
 
 
 //EXTERN
-extern float global_testVar;
-extern float global_nodeSearchStartVerticalOffset;
-extern float global_ignoreIsolatedNodes;
-extern float global_hideNodeGraphRebuildNotice;
+//EASY_CVAR_EXTERN(testVar)
+EASY_CVAR_EXTERN(nodeSearchStartVerticalOffset)
+EASY_CVAR_EXTERN(ignoreIsolatedNodes)
+EASY_CVAR_EXTERN(hideNodeGraphRebuildNotice)
 
-extern float global_nodeConnectionBreakableCheck;
+EASY_CVAR_EXTERN(nodeConnectionBreakableCheck)
 
-extern float global_nodeDetailPrintout;
+EASY_CVAR_EXTERN(nodeDetailPrintout)
 
 /*
 //MODDD - constructor for CLink
@@ -363,7 +363,7 @@ int	CGraph :: HandleLinkEnt ( int iNode, entvars_t *pevLinkEnt, int afCapMask, N
 		//return TRUE;
 		//return FALSE;
 
-		return (global_nodeConnectionBreakableCheck == 1 || global_nodeConnectionBreakableCheck == 3);
+		return (EASY_CVAR_GET(nodeConnectionBreakableCheck) == 1 || EASY_CVAR_GET(nodeConnectionBreakableCheck) == 3);
 	}
 	else
 	{
@@ -690,7 +690,7 @@ int CGraph::NextNodeInRoute( int iCurrentNode, int iDest, int iHull, int iCap )
 			if (nCount <= ch)
 			{
 				//MODDD - checks first.
-				if(global_nodeConnectionBreakableCheck <= 1 || pathBetweenClear(iCurrentNode, iDest)){
+				if(EASY_CVAR_GET(nodeConnectionBreakableCheck) <= 1 || pathBetweenClear(iCurrentNode, iDest)){
 					iNext = iDest;
 				}//...
 
@@ -722,7 +722,7 @@ int CGraph::NextNodeInRoute( int iCurrentNode, int iDest, int iHull, int iCap )
 
 
 				//MODDD - intervention again..
-				if(global_nodeConnectionBreakableCheck <= 1 || pathBetweenClear(iCurrentNode, iNext)){
+				if(EASY_CVAR_GET(nodeConnectionBreakableCheck) <= 1 || pathBetweenClear(iCurrentNode, iNext)){
 					//is this valid?  if so, proceed.  
 
 				}//END OF new if...
@@ -1072,7 +1072,7 @@ void CGraph :: CheckNode(Vector vecOrigin, int iNode)
 	float flDist = ( vecOrigin - m_pNodes[ iNode ].m_vecOriginPeek ).Length();
 
 	//MODDD - is this node dead?  If so, it can go <enjoy the warm embrace of> a porcupine.
-	if(global_ignoreIsolatedNodes && m_pNodes[iNode].m_cNumLinks < 1){
+	if(EASY_CVAR_GET(ignoreIsolatedNodes) && m_pNodes[iNode].m_cNumLinks < 1){
 		//BAM!  Class dismissed for you.
 		return;
 	}
@@ -1084,7 +1084,7 @@ void CGraph :: CheckNode(Vector vecOrigin, int iNode)
 		// make sure that vecOrigin can trace to this node!
 		//MODDD - involving nodeSearchStartVerticalOFfset now.
 		//UTIL_TraceLine ( vecOrigin, m_pNodes[ iNode ].m_vecOriginPeek, ignore_monsters, 0, &tr );
-		UTIL_TraceLine ( vecOrigin + Vector(0,0,global_nodeSearchStartVerticalOffset), m_pNodes[ iNode ].m_vecOriginPeek, ignore_monsters, 0, &tr );
+		UTIL_TraceLine ( vecOrigin + Vector(0,0,EASY_CVAR_GET(nodeSearchStartVerticalOffset) ), m_pNodes[ iNode ].m_vecOriginPeek, ignore_monsters, 0, &tr );
 		
 
 		if ( tr.flFraction == 1.0 )
@@ -1138,7 +1138,9 @@ int	CGraph :: FindNearestNode ( const Vector &vecOrigin,  int afNodeTypes )
 
 	// Check with the cache
 	//
-	ULONG iHash = (CACHE_SIZE-1) & Hash((void *)(const float *)vecOrigin, sizeof(vecOrigin));
+	// MODDD - renamed CACHE_SIZE, as seen in nodes.h.
+	// Also to ensure the CACHE_SIZE actually meant for m_Cache is used.
+	ULONG iHash = (GRAPH_CACHE_SIZE-1) & Hash((void *)(const float *)vecOrigin, sizeof(vecOrigin));
 
 	//MODDD - extra check.  allowed to return a -1 node? really?
 	//...then again, memory is memory. If it failed before, it won't change. guess this is ok.
@@ -1570,7 +1572,7 @@ int CGraph :: LinkVisibleNodes ( CLink *pLinkPool, FILE *file, int *piBadNode )
 				if ( tr.pHit == pTraceEnt && !FClassnameIs( tr.pHit, "worldspawn" ) )
 				{
 
-					if(global_nodeDetailPrintout == 1){
+					if(EASY_CVAR_GET(nodeDetailPrintout) == 1){
 						easyForcePrintLine("OOOOOHOOOOOOOOOOOOOOOOOOO: %s", STRING(tr.pHit->v.classname) );
 					}
 
@@ -1603,7 +1605,9 @@ int CGraph :: LinkVisibleNodes ( CLink *pLinkPool, FILE *file, int *piBadNode )
 					fprintf ( file, "  Entity on connection: %s, name: %s  Model: %s", STRING( VARS( pTraceEnt )->classname ), STRING ( VARS( pTraceEnt )->targetname ), STRING ( VARS(tr.pHit)->model ) );
 				}
 				
-				fprintf ( file, "\n", j );
+				//MODDD - minor mistake.
+				//fprintf ( file, "\n", j );
+				fprintf(file, "\n");
 			}
 
 			pLinkPool [ cTotalLinks ].m_iDestNode = j;
@@ -1818,8 +1822,8 @@ void CTestHull :: Spawn( entvars_t *pevMasterNode )
 void CTestHull::DropDelay ( void )
 {
 	//MODDD - can hide this text.
-	if(global_hideNodeGraphRebuildNotice != 1){
-		UTIL_CenterPrintAll( "Node Graph out of Date. Rebuilding..." );
+	if(EASY_CVAR_GET(hideNodeGraphRebuildNotice) != 1){
+		CenterPrintAll( "Node Graph out of Date. Rebuilding..." );
 	}
 
 	UTIL_SetOrigin ( VARS(pev), WorldGraph.m_pNodes[ 0 ].m_vecOrigin );
@@ -2806,6 +2810,8 @@ int CGraph :: FLoadGraph ( char *szMapName )
 	}
 	else
 	{
+		int i;
+
 		// Read the graph version number
 		//
 		length -= sizeof(int);
@@ -2898,7 +2904,7 @@ int CGraph :: FLoadGraph ( char *szMapName )
 			goto NoMemory;
 		}
 		m_CheckedCounter = 0;
-		for (int i = 0; i < m_cNodes; i++)
+		for (i = 0; i < m_cNodes; i++)
 		{
 			m_di[i].m_CheckedEvent = 0;
 		}
@@ -2933,7 +2939,7 @@ int CGraph :: FLoadGraph ( char *szMapName )
 		m_fGraphPointersSet = FALSE;
 
 		//MODDD - one more thing.  Is any of the nodes created an AIR node?
-		for(int i = 0; i < m_cNodes; i++){
+		for(i = 0; i < m_cNodes; i++){
 			//CWorldGraph
 			//WorldGraph.m_pNodes
 			if(m_pNodes[i].m_afNodeInfo & bits_NODE_AIR){

@@ -12,15 +12,22 @@
 *   without written permission from Valve LLC.
 *
 ****/
-#include <stdio.h>
-#include <stdlib.h>
+
+#include "externalLibInclude.h"
+//#include <stdio.h>
+//#include <stdlib.h>
+
+
 #include <string.h>
 
 #include "../common/nowin.h"
 
+//MODDD - defined elsewhere just fine.
+/*
 typedef int BOOL;
 #define TRUE	 1	
 #define FALSE	0
+*/
 
 // hack into header files that we can ship
 typedef int qboolean;
@@ -260,26 +267,26 @@ void SequencePrecache( void *pmodel, const char *pSequenceName )
 char* UTIL_VarArgsANIMATION( char *format, ... )
 {
 	va_list		argptr;
-	static char		string[1024];
+	static char arychr_buffer[1024];
 	
 	va_start (argptr, format);
-	vsprintf (string, format,argptr);
+	vsprintf (arychr_buffer, format,argptr);
 	va_end (argptr);
 
-	return string;	
+	return arychr_buffer;	
 }
 //This is essentially "UTIL_VarArgs" that accepts a "va_list" argument instead.  How it is applied involes the sender (wherever the call to this
 //method is made) having responsibility for having "va_start" before calling this method, and "va_end" afterwards.
 char* UTIL_VarArgsVAANIMATION( const char *format, va_list argptr )
 {
 	//va_list		argptr;
-	static char		string[1024];
+	static char arychr_buffer[1024];
 	
 	//va_start (argptr, format);
-	vsprintf (string, format,argptr);
+	vsprintf (arychr_buffer, format,argptr);
 	//va_end (argptr);
 
-	return string;	
+	return arychr_buffer;	
 }
 
 inline void easyPrintLineANIMATION(const char *format, ...){

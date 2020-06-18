@@ -110,7 +110,9 @@ private:
 	void	BufferReadBytes( char *pOutput, int size );
 	void	BufferSkipBytes( int bytes );
 	int		BufferSkipZString( void );
-	int		BufferCheckZString( const char *string );
+	
+	//MODDD - changed "string" to "par_string"
+	int		BufferCheckZString( const char *par_string );
 
 	void	BufferReadHeader( HEADER *pheader );
 

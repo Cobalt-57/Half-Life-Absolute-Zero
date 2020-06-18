@@ -16,10 +16,12 @@
 //  hud_update.cpp
 //
 
+#include "externalLibInclude.h"
+//#include <stdlib.h>
+
 #include <math.h>
 #include "hud.h"
 #include "cl_util.h"
-#include <stdlib.h>
 #include <memory.h>
 
 int CL_ButtonBits( int );
@@ -62,7 +64,7 @@ int CHud::UpdateClientData(client_data_t *cdata, float time)
 
 	Think();
 
-	cdata->fov = m_iFOV;
+	cdata->fov = m_iPlayerFOV;
 	
 	v_idlescale = m_iConcussionEffect;
 

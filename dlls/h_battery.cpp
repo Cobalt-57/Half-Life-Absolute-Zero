@@ -30,6 +30,18 @@
 #include "skill.h"
 #include "gamerules.h"
 
+//MODDD - need it now
+#include "player.h"
+
+
+
+//MODDD - NOTE.  The battery is actually in items.cpp.  This file only has the wall charger.
+// Go figure.
+
+
+
+
+
 class CRecharge : public CBaseToggle
 {
 public:
@@ -56,6 +68,11 @@ public:
 	int		m_iJuice;
 	int		m_iOn;			// 0 = off, 1 = startup, 2 = going
 	float   m_flSoundTime;
+
+	//MODDD - NEW.  Record the player that most recently used me.
+	EHANDLE m_hRecentUser;
+
+
 };
 
 TYPEDESCRIPTION CRecharge::m_SaveData[] =
@@ -80,6 +97,8 @@ void CRecharge::KeyValue( KeyValueData *pkvd )
 				FStrEq(pkvd->szKeyName, "value2") ||
 				FStrEq(pkvd->szKeyName, "value3"))
 	{
+		//MODDD - NOTE. I can only assume saying "fHandled = TRUE" and nothing else means, 
+		// 'no damns were given'.
 		pkvd->fHandled = TRUE;
 	}
 	else if (FStrEq(pkvd->szKeyName, "dmdelay"))
@@ -142,6 +161,21 @@ void CRecharge::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE use
 	// if there is no juice left, turn it off
 	if (m_iJuice <= 0)
 	{
+
+		if (m_iOn) {
+			//not anymore soon.
+			//MODDD - let FVox do something.
+			//if (pActivator->IsPlayer()) {
+			if (pActivator != NULL && pActivator->IsPlayer()) {
+				CBasePlayer* thePlayer = static_cast<CBasePlayer*>(pActivator);
+				m_hRecentUser = NULL;
+				//pPlayer->SetSuitUpdate("!HEV_BTY_DING", FALSE, SUIT_NEXT_IN_30SEC, 0.6);
+				// NOTICE - a sentence of 5000 is a special code to do the flexible power readout sentence.
+				thePlayer->SetSuitUpdateNumber(5000, SUIT_REPEAT_OK, -1, TRUE);
+			}//END OF IsPlayer check
+		}//END OF isOn check
+
+
 		pev->frame = 1;			
 		Off();
 	}
@@ -156,6 +190,8 @@ void CRecharge::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE use
 		}
 		return;
 	}
+
+	m_hRecentUser = pActivator;
 
 	pev->nextthink = pev->ltime + 0.25;
 	SetThink(&CRecharge::Off);
@@ -219,10 +255,25 @@ void CRecharge::Off(void)
 
 	m_iOn = 0;
 
-	if ((!m_iJuice) &&  ( ( m_iReactivate = g_pGameRules->FlHEVChargerRechargeTime() ) > 0) )
+	//MODDD - let FVox do something.
+	//if (pActivator->IsPlayer()) {
+	if(m_iJuice > 0 && m_hRecentUser != NULL && m_hRecentUser->IsPlayer()){
+		CBasePlayer* thePlayer = static_cast<CBasePlayer*>(m_hRecentUser.GetEntity() );
+		m_hRecentUser = NULL;
+		//pPlayer->SetSuitUpdate("!HEV_BTY_DING", FALSE, SUIT_NEXT_IN_30SEC, 0.6);
+		// NOTICE - a sentence of 5000 is a special code to do the flexible power readout sentence.
+		thePlayer->SetSuitUpdateNumber(5000, SUIT_REPEAT_OK, -1, TRUE);
+	}//END OF IsPlayer check
+
+
+	if ((!m_iJuice) && ( ( m_iReactivate = g_pGameRules->FlHEVChargerRechargeTime() ) > 0) )
 	{
-		pev->nextthink = pev->ltime + m_iReactivate;
-		SetThink(&CRecharge::Recharge);
+		// MODDD - added check for m_pfnThink. If we aren't already on our way to recharging, do so.
+		// Otherwise, this was resetting the recharge time just from using an empty wall charger. LAME.
+		if (m_pfnThink != &CRecharge::Recharge) {
+			pev->nextthink = pev->ltime + m_iReactivate;
+			SetThink(&CRecharge::Recharge);
+		}
 	}
 	else
 		SetThink( &CBaseEntity::SUB_DoNothing );

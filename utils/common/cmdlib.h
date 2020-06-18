@@ -13,13 +13,18 @@
 #ifndef __CMDLIB__
 #define __CMDLIB__
 
-#include <stdio.h>
+
+#include "externalLibInclude.h"
+//#include <stdio.h>
+//#include <string.h>
+//#include <stdlib.h>
+
+
+
 #include <string.h>
-#include <stdlib.h>
 #include <errno.h>
 #include <ctype.h>
 #include <time.h>
-#include <stdarg.h>
 
 #ifdef __cplusplus
 extern "C"

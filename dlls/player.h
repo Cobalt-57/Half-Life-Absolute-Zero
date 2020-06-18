@@ -31,8 +31,6 @@
 
 
 
-EASY_CVAR_EXTERN(testVar);
-
 
 //MODDD - new const
 //Player always has long jump.  Forces "m_flongjump" to true whenever possible, generally from loading a game or spawning.
@@ -105,6 +103,13 @@ EASY_CVAR_EXTERN(testVar);
 
 #define CSUITNOREPEAT		32
 
+//MODDD - MOVED HERE, was in player.cpp deeper in the file.
+#define SUITUPDATETIME	3.5
+#define SUITFIRSTUPDATETIME 0.1
+
+
+
+
 #define	SOUND_FLASHLIGHT_ON		"items/flashlight1.wav"
 #define	SOUND_FLASHLIGHT_OFF	"items/flashlight1.wav"
 
@@ -139,6 +144,9 @@ class CBasePlayer : public CBaseMonster
 public:
 
 
+	//MODDD - new, but a lot of these are.
+
+	BOOL queueFirstAppearanceMessageSend;
 	float superDuperDelay;
 	
 	float m_fCustomHolsterWaitTime;
@@ -169,7 +177,9 @@ public:
 	
 	int					random_seed;    // See that is shared between client & server for shared weapons code
 
-	int					m_iPlayerSound;// the index of the sound list slot reserved for this player
+	//MODDD - REMOVED.  Never referred to anywhere else, clearly this got hastily cut or never really developed anyfurther.
+	//int					m_iPlayerSound;// the index of the sound list slot reserved for this player
+
 	int					m_iTargetVolume;// ideal sound volume. 
 	int					m_iWeaponVolume;// how loud the player's weapon is right now.
 	int					m_iExtraSoundTypes;// additional classification for this weapon's sound
@@ -365,6 +375,8 @@ public:
 
 	BOOL blocksImpact(void);
 
+	virtual void OnFirstAppearance(void);
+
 	//MODDD - new.  Accept a new parameter (optional: assuming "false" if not given)
 	virtual void Spawn(BOOL revived);
 	virtual void Spawn( void );
@@ -394,7 +406,9 @@ public:
 	//MODDD
 	GENERATE_TRACEATTACK_PROTOTYPE_VIRTUAL
 	GENERATE_TAKEDAMAGE_PROTOTYPE_VIRTUAL
-	
+
+	GENERATE_DEADTAKEDAMAGE_PROTOTYPE
+	GENERATE_GIBMONSTER_PROTOTYPE
 	
 	void FadeMonster(void);
 
@@ -668,9 +682,7 @@ public:
 	void SetCustomDecalFrames( int nFrames );
 	int GetCustomDecalFrames( void );
 
-	void CBasePlayer::TabulateAmmo( void );
-
-
+	void TabulateAmmo( void );
 
 
 
@@ -753,11 +765,18 @@ public:
 	void turnOnSneaky(void);
 	void turnOffSneaky(void);
 
-	BOOL queueTotalFOVUpdate;
-	BOOL queueZoomFOVUpdate;
+	//BOOL queueTotalFOVUpdate;
+	//BOOL queueZoomFOVUpdate;
 	BOOL alreadySpawned;
 
-	cvar_t* sv_cheatsRef;
+	//float python_zoomfov;
+	//float crossbow_zoomfov;
+
+	float default_fov;
+	float auto_adjust_fov;
+	float auto_determined_fov;
+
+
 	//Measuring the amount of time the player can breathe underwater with an air tank.
 	BOOL airTankAirTimeNeedsUpdate;
 	float airTankAirTime;
@@ -774,13 +793,6 @@ public:
 
 	//MODD
 	float nextMadEffect;
-
-	//MODDD - remember the setting to see if it has changed in a particular frame.
-	int auto_adjust_zoomfovMem;
-	float pythonZoomFOV;
-	float crossbowZoomFOV;
-	int auto_adjust_fov_aspectmem;
-	int the_default_fovmem;
 	int deadflagmem;
 
 	BOOL recentlyGrantedGlockSilencer;
@@ -810,34 +822,7 @@ public:
 	BOOL recentlyGibbedMem;
 
 
-	cvar_t* the_default_fov;
-	/*
-	cvar_t* auto_adjust_fov_aspect;
-	cvar_t* auto_adjust_zoomfov;
-	cvar_t* python_zoomfov;
-	cvar_t* crossbow_zoomfov;
-	cvar_t* canApplyDefaultFOV;
-	*/
-
-	/*
-	cvar_t* cheat_infiniteclip;
-	cvar_t* cheat_infiniteammo;
-	cvar_t* cheat_minimumfiredelay;
-	cvar_t* cheat_minimumfiredelaycustom;
-	cvar_t* cheat_nogaussrecoil;
-	cvar_t* gaussRecoilSendsUpInSP;
-	*/
-
-
-
-	float canApplyDefaultFOVMem;
-
-
-
-
 	float skillMem;
-
-
 
 	cvar_t* timedDamageReviveRemoveMode;
 
@@ -889,8 +874,6 @@ public:
 
 	float barnacleCanGibMem;
 
-	cvar_t* fvoxEnabled;
-	cvar_t* cl_fvoxMem;
 
 	float fvoxEnabledMem;
 
@@ -914,9 +897,6 @@ public:
 	BOOL alreadyDroppedItemsAtDeath;
 	BOOL sentCarcassScent;
 
-	//MODDD - utility.
-	void suitSoundFilter(const char* snd);
-
 	//MODDD
 	float myRef_barnacleEatsEverything;
 	int drowning;  //actually a BOOL, but the client doesn't know what bools are.  Probably wouldn't hurt anyways.
@@ -925,13 +905,8 @@ public:
 
 	float playerBrightLightMem;
 	
-	cvar_t* cl_ladder;
 	float cl_ladderMem;
 
-
-
-	cvar_t* mp5GrenadeInheritsPlayerVelocity;
-	float mp5GrenadeInheritsPlayerVelocityMem;
 
 	float cameraModeMem;
 
@@ -947,9 +922,6 @@ public:
 	
 	//cvar_t* autoSneaky;
 	float autoSneakyMem;
-	
-	//cvar_t* infiniteLongJumpCharge;
-	float infiniteLongJumpChargeMem;
 	
 
 	int framesUntilPushStops;
@@ -973,6 +945,22 @@ public:
 
 	float minimumRespawnDelay;
 
+
+	//MODDD - NEW.  Also inline now, very simple method and consistent for client/serverside.
+	// HOWEVER, this is only for easily compiling in both places.
+	// Clientside should use gHUD.getPlayerBaseFOV intead, as these places are not updated clientside.
+	// In CBaseWeapon and child classes (just about anything), just use CBaseWeapon's own "getPlayerBaseFOV"
+	// instead. It redirects to the right place between client/serverside for you.
+	inline float getBaseFOV(void) {
+		if (auto_adjust_fov == 0) {
+			// don't use the auto one then.
+			return default_fov;
+		}
+		else {
+			// use the one related to screensize.
+			return auto_determined_fov;
+		}
+	}//END OF getBaseFOV
 
 
 };

@@ -271,7 +271,6 @@ void CBaseAnimating::checkEndOfAnimation(void){
 
 
 
-
 	//General things for passing cutoff in either direction.
 	if(passedCutoff)
 	{
@@ -289,8 +288,6 @@ void CBaseAnimating::checkEndOfAnimation(void){
 		}
 
 
-
-
 		if(m_fSequenceLoops){
 			//all events active again!
 			for(int i = 0; i < animEventQueueMax; i++){
@@ -299,8 +296,6 @@ void CBaseAnimating::checkEndOfAnimation(void){
 			//for anything this may concern.
 			onAnimationLoop();
 		}
-
-
 
 
 		/*
@@ -376,19 +371,13 @@ void CBaseAnimating::checkEndOfAnimation(void){
 		//	m_fSequenceFinished = TRUE;	// just in case it wasn't caught in GetEvents
 		//}
 
-		
-
-
 	}//END OF passedCutoff check.
 
 
 
-	
-
 	//if(FClassnameIs(pev, "monster_human_grunt")){
 	//	easyForcePrintLine("SEQUENCE IS FINISHED? %d", m_fSequenceFinished);
 	//}
-
 
 
 	
@@ -1131,22 +1120,22 @@ void CBaseAnimating :: DispatchAnimEvents ( float flInterval )
 void CBaseAnimating::showHitboxInfoAll ( )
 {
 	void *pmodel = GET_MODEL_PTR( ENT(pev) );
-	return ::showHitboxInfoAll( pmodel, pev );
+	::showHitboxInfoAll( pmodel, pev );
 }
 void CBaseAnimating::showHitboxInfoOfBone (int argBone)
 {
 	void *pmodel = GET_MODEL_PTR( ENT(pev) );
-	return ::showHitboxInfoOfBone( pmodel, pev, argBone );
+	::showHitboxInfoOfBone( pmodel, pev, argBone );
 }
 void CBaseAnimating::showHitboxInfoOfGroup (int argGroup)
 {
 	void *pmodel = GET_MODEL_PTR( ENT(pev) );
-	return ::showHitboxInfoOfGroup( pmodel, pev, argGroup );
+	::showHitboxInfoOfGroup( pmodel, pev, argGroup );
 }
 void CBaseAnimating::showHitboxInfoNumber (int argID)
 {
 	void *pmodel = GET_MODEL_PTR( ENT(pev) );
-	return ::showHitboxInfoNumber( pmodel, pev, argID );
+	::showHitboxInfoNumber( pmodel, pev, argID );
 }
 
 
@@ -1190,22 +1179,22 @@ void CBaseAnimating::showHitboxInfoNumber (int argID)
 void CBaseAnimating::getHitboxInfoAll (mstudiobbox_t* argHitboxBuffer, int& argHitboxCount  )
 {
 	void *pmodel = GET_MODEL_PTR( ENT(pev) );
-	return ::getHitboxInfoAll( pmodel, pev, argHitboxBuffer, argHitboxCount );
+	::getHitboxInfoAll( pmodel, pev, argHitboxBuffer, argHitboxCount );
 }
 void CBaseAnimating::getHitboxInfoOfBone (mstudiobbox_t* argHitboxBuffer, int& argHitboxCount, int argBone)
 {
 	void *pmodel = GET_MODEL_PTR( ENT(pev) );
-	return ::getHitboxInfoOfBone( pmodel, pev, argHitboxBuffer, argHitboxCount, argBone );
+	::getHitboxInfoOfBone( pmodel, pev, argHitboxBuffer, argHitboxCount, argBone );
 }
 void CBaseAnimating::getHitboxInfoOfGroup (mstudiobbox_t* argHitboxBuffer, int& argHitboxCount, int argGroup)
 {
 	void *pmodel = GET_MODEL_PTR( ENT(pev) );
-	return ::getHitboxInfoOfGroup( pmodel, pev, argHitboxBuffer, argHitboxCount, argGroup );
+	::getHitboxInfoOfGroup( pmodel, pev, argHitboxBuffer, argHitboxCount, argGroup );
 }
 void CBaseAnimating::getHitboxInfoNumber (mstudiobbox_t*& argHitbox, int argID)
 {
 	void *pmodel = GET_MODEL_PTR( ENT(pev) );
-	return ::getHitboxInfoNumber( pmodel, pev, argHitbox, argID );
+	::getHitboxInfoNumber( pmodel, pev, argHitbox, argID );
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -1213,7 +1202,7 @@ void CBaseAnimating::getHitboxInfoNumber (mstudiobbox_t*& argHitbox, int argID)
 void CBaseAnimating::getHitboxCount (int& argCount)
 {
 	void *pmodel = GET_MODEL_PTR( ENT(pev) );
-	return ::getHitboxCount( pmodel, pev, argCount );
+	::getHitboxCount( pmodel, pev, argCount );
 }
 
 

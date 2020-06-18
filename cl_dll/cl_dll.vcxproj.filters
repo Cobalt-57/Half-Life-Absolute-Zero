@@ -135,9 +135,6 @@
     <ClCompile Include="tri.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="util.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\game_shared\vgui_checkbutton2.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -273,10 +270,16 @@
     <ClCompile Include="..\dlls\glock.cpp">
       <Filter>Source Files\hl</Filter>
     </ClCompile>
-    <ClCompile Include="..\dlls\util_entity.cpp">
+    <ClCompile Include="custom_message.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\game_shared\NEW\util_entity.cpp">
       <Filter>Source Files\Shared</Filter>
     </ClCompile>
-    <ClCompile Include="custom_message.cpp">
+    <ClCompile Include="cl_util.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\pm_shared\pm_printout.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -324,9 +327,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="hud_spectator.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="in_defs.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\common\itrackeruser.h">
@@ -423,6 +423,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="custom_message.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\game_shared\NEW\util_entity.h">
+      <Filter>Header Files\Shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\pm_shared\pm_printout.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

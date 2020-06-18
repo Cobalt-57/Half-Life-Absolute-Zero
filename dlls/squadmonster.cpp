@@ -25,11 +25,13 @@
 #include "squadmonster.h"
 #include "plane.h"
 
-extern float global_monsterSpawnPrintout;
-extern float global_altSquadRulesRuntime;
-extern float global_squadmonsterPrintout;
 
-extern float global_leaderlessSquadAllowed;
+EASY_CVAR_EXTERN(monsterSpawnPrintout)
+EASY_CVAR_EXTERN(altSquadRulesRuntime)
+EASY_CVAR_EXTERN(squadmonsterPrintout)
+
+EASY_CVAR_EXTERN(leaderlessSquadAllowed)
+
 
 //=========================================================
 // Save/Restore
@@ -386,7 +388,7 @@ void CSquadMonster :: SquadJoin ( int searchRadius, int maxMembers ){
 			BOOL canPrintOut = FALSE;
 			if( pRecruit && pRecruit->InSquad() && !pRecruit->isForceHated(this) && pRecruit->Classify() == iMyClass && pRecruit != this && pRecruit->m_afCapability & bits_CAP_SQUAD && pRecruit->SquadCount() < maxMembers )   {
 				canPrintOut = TRUE;
-				EASY_CVAR_PRINTIF(global_squadmonsterPrintout, "ATTEMPT JOIN, HAS NETNAME...");
+				EASY_CVAR_PRINTIF_PRE(squadmonsterPrintout, easyForcePrintLine("ATTEMPT JOIN, HAS NETNAME..."));
 			}
 
 
@@ -398,12 +400,12 @@ void CSquadMonster :: SquadJoin ( int searchRadius, int maxMembers ){
 					// minimum protection here against user error.in worldcraft. 
 					if (!pRecruit->MySquadLeader()->SquadAdd( this )){
 						if(canPrintOut){
-							EASY_CVAR_PRINTIF(global_squadmonsterPrintout, "FAIL 1");
+							EASY_CVAR_PRINTIF_PRE(squadmonsterPrintout, easyForcePrintLine("FAIL 1"));
 						}
 						//break;
 					}else{
 						if(canPrintOut){
-							EASY_CVAR_PRINTIF(global_squadmonsterPrintout, "JOINED!! %d", SquadCount() );
+							EASY_CVAR_PRINTIF_PRE(squadmonsterPrintout, easyForcePrintLine("JOINED!! %d", SquadCount()) );
 						}
 						break;
 					}
@@ -411,7 +413,7 @@ void CSquadMonster :: SquadJoin ( int searchRadius, int maxMembers ){
 					//squadCount++;
 				}else{
 					if(canPrintOut){
-						EASY_CVAR_PRINTIF(global_squadmonsterPrintout, "FAIL 2");
+						EASY_CVAR_PRINTIF_PRE(squadmonsterPrintout, easyForcePrintLine("FAIL 2"));
 					}
 					
 				}
@@ -438,7 +440,7 @@ void CSquadMonster :: SquadJoin ( int searchRadius, int maxMembers ){
 			//m_afCapability		= bits_CAP_SQUAD
 			if(pRecruit && pRecruit != this && ((iMyClass != CLASS_ALIEN_MONSTER) || FStrEq(STRING(pev->classname), STRING(pRecruit->pev->classname)) && pRecruit->m_afCapability & bits_CAP_SQUAD && pRecruit->SquadCount() < maxMembers   )    ){
 				canPrintOut = TRUE;
-				EASY_CVAR_PRINTIF(global_squadmonsterPrintout, "ATTEMPT JOIN, NO NETNAME: (%d && %d  && %d && (%d || %d) && %d ::: %s, %s : hated? %d  ) ", pRecruit->InSquad(), pRecruit->Classify() == iMyClass, pRecruit->SquadCount() < maxMembers, (iMyClass != CLASS_ALIEN_MONSTER), FStrEq(STRING(pev->classname), STRING(pRecruit->pev->classname)),  FStringNull( pRecruit->pev->netname ), STRING(pev->classname), STRING(pRecruit->pev->classname), pRecruit->isForceHated(this) );
+				EASY_CVAR_PRINTIF_PRE(squadmonsterPrintout, easyForcePrintLine("ATTEMPT JOIN, NO NETNAME: (%d && %d  && %d && (%d || %d) && %d ::: %s, %s : hated? %d  ) ", pRecruit->InSquad(), pRecruit->Classify() == iMyClass, pRecruit->SquadCount() < maxMembers, (iMyClass != CLASS_ALIEN_MONSTER), FStrEq(STRING(pev->classname), STRING(pRecruit->pev->classname)),  FStringNull( pRecruit->pev->netname ), STRING(pev->classname), STRING(pRecruit->pev->classname), pRecruit->isForceHated(this)) );
 			}
 			
 			if ( pRecruit && pRecruit != this && pRecruit->IsAlive() && !pRecruit->m_pCine && pRecruit->m_afCapability & bits_CAP_SQUAD && pRecruit->SquadCount() < maxMembers )
@@ -453,10 +455,10 @@ void CSquadMonster :: SquadJoin ( int searchRadius, int maxMembers ){
 					if ( tr.flFraction == 1.0 )
 					{
 						if (!pRecruit->MySquadLeader()->SquadAdd( this )){
-							EASY_CVAR_PRINTIF(global_squadmonsterPrintout, "FAILED JOIN 1");
+							EASY_CVAR_PRINTIF_PRE(squadmonsterPrintout, easyForcePrintLine("FAILED JOIN 1"));
 							
 						}else{
-							EASY_CVAR_PRINTIF(global_squadmonsterPrintout, "JOINED!! %d", SquadCount() );
+							EASY_CVAR_PRINTIF_PRE(squadmonsterPrintout, easyForcePrintLine("JOINED!! %d", SquadCount()) );
 							break;
 						}
 
@@ -465,7 +467,7 @@ void CSquadMonster :: SquadJoin ( int searchRadius, int maxMembers ){
 				}
 			}else{
 				if(canPrintOut){
-					EASY_CVAR_PRINTIF(global_squadmonsterPrintout, "FAILED JOIN 2");
+					EASY_CVAR_PRINTIF_PRE(squadmonsterPrintout, easyForcePrintLine("FAILED JOIN 2"));
 				}
 			}
 		}
@@ -600,7 +602,7 @@ int CSquadMonster :: SquadRecruit( int searchRadius, int maxMembers )
 			BOOL canPrint = FALSE;
 			if(pRecruit && !pRecruit->InSquad() && pRecruit->Classify() == iMyClass && pRecruit != this){
 				canPrint = TRUE;
-				EASY_CVAR_PRINTIF(global_squadmonsterPrintout, "RECRUIT 1...");
+				EASY_CVAR_PRINTIF_PRE(squadmonsterPrintout, "RECRUIT 1...");
 			}
 
 			if ( pRecruit )
@@ -610,12 +612,12 @@ int CSquadMonster :: SquadRecruit( int searchRadius, int maxMembers )
 					// minimum protection here against user error.in worldcraft. 
 					if (!SquadAdd( pRecruit )){
 						if(canPrint){
-							EASY_CVAR_PRINTIF(global_squadmonsterPrintout, "FAIL 1");
+							EASY_CVAR_PRINTIF_PRE(squadmonsterPrintout, "FAIL 1");
 						}
 						break;
 					}
 					if(canPrint){
-						EASY_CVAR_PRINTIF(global_squadmonsterPrintout, "Success?");
+						EASY_CVAR_PRINTIF_PRE(squadmonsterPrintout, "Success?");
 					}
 					squadCount++;
 				}
@@ -638,7 +640,7 @@ int CSquadMonster :: SquadRecruit( int searchRadius, int maxMembers )
 				    FStringNull( pRecruit->pev->netname ) ){
 
 				canPrint = TRUE;
-				EASY_CVAR_PRINTIF(global_squadmonsterPrintout, "RECRUIT 2...");
+				EASY_CVAR_PRINTIF_PRE(squadmonsterPrintout, "RECRUIT 2...");
 			}
 
 
@@ -652,7 +654,7 @@ int CSquadMonster :: SquadRecruit( int searchRadius, int maxMembers )
 				{
 
 					if(canPrint){
-						EASY_CVAR_PRINTIF(global_squadmonsterPrintout, "attempt recruit 2: %s %d %d %d", STRING(pRecruit->pev->classname), pRecruit->InSquad(), pRecruit->SquadCount(), (pRecruit->MySquadLeader() == pRecruit) );
+						EASY_CVAR_PRINTIF_PRE(squadmonsterPrintout, "attempt recruit 2: %s %d %d %d", STRING(pRecruit->pev->classname), pRecruit->InSquad(), pRecruit->SquadCount(), (pRecruit->MySquadLeader() == pRecruit) );
 					}
 
 					TraceResult tr;
@@ -661,24 +663,24 @@ int CSquadMonster :: SquadRecruit( int searchRadius, int maxMembers )
 					{
 						if (!SquadAdd( pRecruit )){
 							if(canPrint){
-								EASY_CVAR_PRINTIF(global_squadmonsterPrintout, "FAIL 1");
+								EASY_CVAR_PRINTIF_PRE(squadmonsterPrintout, "FAIL 1");
 							}
 							break;
 						}
 
 						if(canPrint){
-							EASY_CVAR_PRINTIF(global_squadmonsterPrintout, "Success?");
+							EASY_CVAR_PRINTIF_PRE(squadmonsterPrintout, "Success?");
 						}
 
 						squadCount++;
 					}else{
 						if(canPrint){
-							EASY_CVAR_PRINTIF(global_squadmonsterPrintout, "FAIL 2");
+							EASY_CVAR_PRINTIF_PRE(squadmonsterPrintout, "FAIL 2");
 						}
 					}
 				}else{
 					if(canPrint){
-						EASY_CVAR_PRINTIF(global_squadmonsterPrintout, "FAIL 3");
+						EASY_CVAR_PRINTIF_PRE(squadmonsterPrintout, "FAIL 3");
 					}
 				}
 			}
@@ -861,7 +863,7 @@ BOOL CSquadMonster::checkLeaderlessSquadByNetname(void){
 void CSquadMonster :: StartMonster( void )
 {
 	//
-	//EASY_CVAR_PRINTIF(global_squadmonsterPrintout, "START MONSTER?!");
+	//EASY_CVAR_PRINTIF_PRE(squadmonsterPrintout, easyForcePrintLine("START MONSTER?!"));
 	//
 	//pev->spawnflags &= ~ SF_SQUADMONSTER_LEADER;
 
@@ -875,7 +877,7 @@ void CSquadMonster :: StartMonster( void )
 		{
 
 			BOOL possibleExceptionToRule = FALSE;
-			if(global_leaderlessSquadAllowed == 1 && !this->alreadyDoneNetnameLeaderCheck){
+			if(EASY_CVAR_GET(leaderlessSquadAllowed) == 1 && !this->alreadyDoneNetnameLeaderCheck){
 				alreadyDoneNetnameLeaderCheck = TRUE;
 				//or will have soon...
 
@@ -885,7 +887,7 @@ void CSquadMonster :: StartMonster( void )
 
 			//MODDD - do a check.   See if any member has the "SF_SQUADMONSTER_LEADER" flag set.
 
-			//global_leaderlessSquadAllowed == 0
+			//EASY_CVAR_GET(leaderlessSquadAllowed) == 0
 
 
 			// if I have a groupname, I can only recruit if I'm flagged as leader
@@ -900,7 +902,7 @@ void CSquadMonster :: StartMonster( void )
 		//if(FClassnameIs(pev, "monster_human_assault")){
 		if(skipSquadStartup){
 			//it appears this is completely unnecessaray, but oh well.  (being assigned to a squad right at creation already disables this whole startup block)
-			EASY_CVAR_PRINTIF(global_squadmonsterPrintout, "STARTUP SKIPPED!");
+			EASY_CVAR_PRINTIF_PRE(squadmonsterPrintout, easyForcePrintLine("STARTUP SKIPPED!"));
 			return;
 		}
 
@@ -914,12 +916,12 @@ void CSquadMonster :: StartMonster( void )
 
 		
 		
-		//easyForcePrintLine("ARE YOU bros SERIOUS RIGHT NOW %.2f %d %d", global_altSquadRulesRuntime, FStringNull(pev->netname), iSquadSize);
+		//easyForcePrintLine("ARE YOU bros SERIOUS RIGHT NOW %.2f %d %d", EASY_CVAR_GET(altSquadRulesRuntime), FStringNull(pev->netname), iSquadSize);
 		//If "altSquadRule" is something (1 or 2), and is either 2 OR, if 1, also spawned in real-time (not coming from the map), try joining a squad.
-		if( global_altSquadRulesRuntime > 0 && (global_altSquadRulesRuntime == 2 || FStringNull( pev->netname ) ) ){
+		if( EASY_CVAR_GET(altSquadRulesRuntime) > 0 && (EASY_CVAR_GET(altSquadRulesRuntime) == 2 || FStringNull( pev->netname ) ) ){
 			if(iSquadSize == 1){
 				
-				if(global_monsterSpawnPrintout == 1){
+				if(EASY_CVAR_GET(monsterSpawnPrintout) == 1){
 				easyForcePrintLine("ITS MONDAY my acquaintance!  Get myself a squad... %s:%d", this->getClassname(), this->monsterID);
 				}
 				//found no other unassigned members to start a squad with.  Try joining instead?
@@ -947,8 +949,8 @@ void CSquadMonster :: StartMonster( void )
 
 		
 		//
-		if(global_monsterSpawnPrintout == 1){
-		EASY_CVAR_PRINTIF(global_squadmonsterPrintout, "STARTMONSTER for SQUADMONSTER CALLED: info? %s %d %d", STRING(pev->classname), this->SquadCount(), testLeader != NULL);
+		if(EASY_CVAR_GET(monsterSpawnPrintout) == 1){
+		EASY_CVAR_PRINTIF_PRE(squadmonsterPrintout, easyForcePrintLine("STARTMONSTER for SQUADMONSTER CALLED: info? %s %d %d", STRING(pev->classname), this->SquadCount(), testLeader != NULL));
 		}
 		
 		
@@ -965,11 +967,11 @@ void CSquadMonster :: StartMonster( void )
 				if (testLeader->m_hSquadMember[i] != NULL){
 					CSquadMonster *pMember = testLeader->MySquadMember(i);
 					if (pMember){
-						EASY_CVAR_PRINTIF(global_squadmonsterPrintout, "CHECKING %d; %s", i, STRING(pMember->pev->classname) );
+						EASY_CVAR_PRINTIF_PRE(squadmonsterPrintout, easyForcePrintLine("CHECKING %d; %s", i, STRING(pMember->pev->classname)) );
 
 						if(pMember->disableLeaderChange == TRUE){
 							//For now, if any member has this variable set, do NOT allow any chance of the change.
-							//EASY_CVAR_PRINTIF(global_squadmonsterPrintout, "Leader checking blocked!");
+							//EASY_CVAR_PRINTIF_PRE(squadmonsterPrintout, easyForcePrintLine("Leader checking blocked!"));
 							//forbidLeaderChange = TRUE;
 							//...nah, just mean "THIS" hgrunt can't be the leader.
 							continue;
@@ -1013,7 +1015,7 @@ void CSquadMonster :: StartMonster( void )
 
 			if(!forbidLeaderChange){
 
-			EASY_CVAR_PRINTIF(global_squadmonsterPrintout, "SELECTED LEADER: %d", selectedLeader == NULL);
+			EASY_CVAR_PRINTIF_PRE(squadmonsterPrintout, easyForcePrintLine("SELECTED LEADER: %d", selectedLeader == NULL));
 			if(selectedLeader != NULL){
 				//make this "hassault" that was found the leader.
 
@@ -1155,11 +1157,11 @@ void CSquadMonster :: StartMonster( void )
 					CSquadMonster *pMember = testLeader->MySquadMember(i);
 					if (pMember)
 					{
-						EASY_CVAR_PRINTIF(global_squadmonsterPrintout, "EDITED THAT MEMBER: %d", i);
+						EASY_CVAR_PRINTIF_PRE(squadmonsterPrintout, easyForcePrintLine("EDITED THAT MEMBER: %d", i));
 						pMember->m_hSquadLeader = pReplacementSquadRef;
 						pReplacementSquadRef->m_hSquadMember[i] = pMember;
 					}else{
-						EASY_CVAR_PRINTIF(global_squadmonsterPrintout, "NO SQUAD MEMBER???? %d", i);
+						EASY_CVAR_PRINTIF_PRE(squadmonsterPrintout, easyForcePrintLine("NO SQUAD MEMBER???? %d", i));
 					}
 					testLeader->m_hSquadMember[i] = NULL;
 
@@ -1172,11 +1174,11 @@ void CSquadMonster :: StartMonster( void )
 			testLeader->m_hSquadLeader = NULL;
 
 
-			EASY_CVAR_PRINTIF(global_squadmonsterPrintout, "CONVERTED::::");
+			EASY_CVAR_PRINTIF_PRE(squadmonsterPrintout, easyForcePrintLine("CONVERTED::::"));
 			for (int i2 = 0; i2 < MAX_SQUAD_MEMBERS-1; i2++)
 			{	CSquadMonster *pMember = testLeader->MySquadMember(i2);
 				if (pMember){
-					EASY_CVAR_PRINTIF(global_squadmonsterPrintout, "wat i: %d insq: %d count: %d leadernotnull: %d ", i2, pMember->MySquadMonsterPointer()->InSquad(), pMember->MySquadMonsterPointer()->SquadCount(), (pMember->MySquadMonsterPointer()->MySquadLeader() != NULL) );
+					EASY_CVAR_PRINTIF_PRE(squadmonsterPrintout, easyForcePrintLine("wat i: %d insq: %d count: %d leadernotnull: %d ", i2, pMember->MySquadMonsterPointer()->InSquad(), pMember->MySquadMonsterPointer()->SquadCount(), (pMember->MySquadMonsterPointer()->MySquadLeader() != NULL)));
 
 				}
 			}

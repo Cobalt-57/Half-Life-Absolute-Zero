@@ -10,15 +10,20 @@
 
 // wad2lib.c
 
-#include <stdio.h>
+
+#include "externalLibInclude.h"
+
+//#include <stdio.h>
+//#include <stdlib.h>
+//#include <stdarg.h>
+
+
 #include <string.h>
-#include <stdlib.h>
 #include <errno.h>
 #include <ctype.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 //#include <sys/file.h>
-#include <stdarg.h>
 
 #ifdef NeXT
 #include <libc.h>

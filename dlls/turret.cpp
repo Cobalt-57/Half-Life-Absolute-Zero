@@ -59,10 +59,7 @@ extern Vector VecBModelOrigin( entvars_t* pevBModel );
 #define TURRET_MACHINE_VOLUME	0.5
 
 //MODDD
-extern float global_sparksTurretDeathMulti;
-
-
-
+EASY_CVAR_EXTERN(sparksTurretDeathMulti)
 EASY_CVAR_EXTERN(turretCanGib)
 EASY_CVAR_EXTERN(miniturretCanGib)
 EASY_CVAR_EXTERN(sentryCanGib)
@@ -1019,7 +1016,7 @@ void CBaseTurret ::	TurretDeath( void )
 			vecSrc = vecSrc + Vector( 0, 0, RANDOM_FLOAT( pev->absmin.z, pev->origin.z ) );
 
 		//UTIL_Sparks( vecSrc );
-		UTIL_Sparks2( vecSrc, DEFAULT_SPARK_BALLS, global_sparksTurretDeathMulti );
+		UTIL_Sparks2( vecSrc, DEFAULT_SPARK_BALLS, EASY_CVAR_GET(sparksTurretDeathMulti) );
 
 	}
 
@@ -1655,7 +1652,7 @@ void CSentry ::	SentryDeath( void )
 	if (pev->dmgtime + RANDOM_FLOAT( 0, 8 ) > gpGlobals->time)
 	{
 		//UTIL_Sparks(...)
-		UTIL_Sparks2( vecSrc, DEFAULT_SPARK_BALLS, global_sparksTurretDeathMulti );
+		UTIL_Sparks2( vecSrc, DEFAULT_SPARK_BALLS, EASY_CVAR_GET(sparksTurretDeathMulti) );
 	}
 
 	if (m_fSequenceFinished && pev->dmgtime + 5 < gpGlobals->time)

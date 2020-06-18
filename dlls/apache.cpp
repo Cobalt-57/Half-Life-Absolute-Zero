@@ -41,13 +41,13 @@ extern unsigned short g_sTrailRA;
 
 
 
-extern float global_cl_explosion;
-extern float global_apacheForceCinBounds;
-extern float global_apacheBottomBoundAdj;
-extern float global_apacheInfluence;
+EASY_CVAR_EXTERN(cl_explosion)
+EASY_CVAR_EXTERN(apacheForceCinBounds)
+EASY_CVAR_EXTERN(apacheBottomBoundAdj)
+EASY_CVAR_EXTERN(apacheInfluence)
 
 
-extern float global_cl_rockettrail;
+EASY_CVAR_EXTERN(cl_rockettrail)
 
 
 
@@ -188,10 +188,11 @@ void CApache :: Spawn( void )
 
 
 	//MODDD - a flag can now influence the collision-bounds.
-	if(!(pev->spawnflags & SF_MONSTER_APACHE_CINBOUNDS) && !global_apacheForceCinBounds == 1  ){
+	if(!(pev->spawnflags & SF_MONSTER_APACHE_CINBOUNDS) && EASY_CVAR_GET(apacheForceCinBounds) != 1  ){
 		UTIL_SetSize( pev, Vector( -32, -32, -64 ), Vector( 32, 32, 0 ) );
 	}else{
-		UTIL_SetSize( pev, Vector( -64.0, -64.0, -162.0+global_apacheBottomBoundAdj), Vector( 64, 64, 6) );
+		// has the spawnflag, OR apacheForceCinBounds is on?
+		UTIL_SetSize( pev, Vector( -64.0, -64.0, -162.0+EASY_CVAR_GET(apacheBottomBoundAdj)), Vector( 64, 64, 6) );
 	}
 
 	
@@ -329,7 +330,7 @@ void CApache :: DyingThink( void )
 
 	//easyPrintLine("APACHE DYING %.2f %.2f", m_flNextRocket, gpGlobals->time);
 
-	float tempVal = global_apacheInfluence == 1;
+	float tempVal = EASY_CVAR_GET(apacheInfluence) == 1;
 	if(tempVal == 1){
 		m_flNextRocket = 9999999;
 	}else if(tempVal == 2){
@@ -405,7 +406,7 @@ void CApache :: DyingThink( void )
 		*/
 
 		//MODDD - only do if the quake explosion is off.
-		if(global_cl_explosion != 1){
+		if(EASY_CVAR_GET(cl_explosion) != 1){
 		// fireball
 			MESSAGE_BEGIN( MSG_PVS, SVC_TEMPENTITY, vecSpot );
 				WRITE_BYTE( TE_SPRITE );
@@ -1172,7 +1173,7 @@ void CApacheHVR :: IgniteThink( void  )
 	// pev->movetype = MOVETYPE_TOSS;
 
 	// pev->movetype = MOVETYPE_FLY;
-	if(global_cl_rockettrail == 0){
+	if(EASY_CVAR_GET(cl_rockettrail) == 0){
 		pev->effects |= EF_LIGHT;
 	}
 	//no need to remember this here like the player's RPG rocket does.
@@ -1182,7 +1183,7 @@ void CApacheHVR :: IgniteThink( void  )
 	EMIT_SOUND( ENT(pev), CHAN_VOICE, "weapons/rocket1.wav", 1, 0.5 );
 
 
-	if(global_cl_rockettrail == 0){
+	if(EASY_CVAR_GET(cl_rockettrail) == 0){
 
 		// rocket trail
 		MESSAGE_BEGIN( MSG_BROADCAST, SVC_TEMPENTITY );

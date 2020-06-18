@@ -26,18 +26,18 @@
 
 
 //MODDD
-extern float global_peopleStrobe;
-extern float global_wildHeads;
-extern float global_raveEffectSpawnInterval;
-extern float global_pissedNPCs;
-extern float global_thatWasntPunch;
-extern float global_NPCsTalkMore;
-extern float global_barneyPrintouts;
+EASY_CVAR_EXTERN(peopleStrobe)
+EASY_CVAR_EXTERN(wildHeads)
+EASY_CVAR_EXTERN(raveEffectSpawnInterval)
+EASY_CVAR_EXTERN(pissedNPCs)
+EASY_CVAR_EXTERN(thatWasntPunch)
+EASY_CVAR_EXTERN(NPCsTalkMore)
+EASY_CVAR_EXTERN(barneyPrintouts)
+EASY_CVAR_EXTERN(playerFollowerMax)
 extern BOOL globalPSEUDO_iCanHazMemez;
 
 extern unsigned short g_sFreakyLight;
 
-EASY_CVAR_EXTERN(playerFollowerMax)
 
 
 //=========================================================
@@ -678,7 +678,7 @@ void CTalkMonster :: StartTask( Task_t *pTask )
 
 	case TASK_TLK_STOPSHOOTING:
 		// tell player to stop shooting
-		if(global_pissedNPCs < 1  || !globalPSEUDO_iCanHazMemez){
+		if(EASY_CVAR_GET(pissedNPCs) < 1  || !globalPSEUDO_iCanHazMemez){
 			PlaySentence( m_szGrp[TLK_NOSHOOT], RANDOM_FLOAT(2.8, 3.2), VOL_NORM, ATTN_NORM );
 		}else{
 			PlaySentence( "BA_POKE_C", 7, VOL_NORM, ATTN_NORM );
@@ -715,7 +715,7 @@ void CTalkMonster :: StartTask( Task_t *pTask )
 			StopFollowing( FALSE, FALSE );
 
 			//MODDD
-			if(global_pissedNPCs < 1){
+			if(EASY_CVAR_GET(pissedNPCs) < 1){
 				PlaySentence( m_szGrp[TLK_STOP], RANDOM_FLOAT(2, 2.5), VOL_NORM, ATTN_NORM );
 			}else{
 				playInterPissed();
@@ -965,7 +965,7 @@ void CTalkMonster :: RunTask( Task_t *pTask )
 		}
 		else
 		{
-			if(global_wildHeads != 1){
+			if(EASY_CVAR_GET(wildHeads) != 1){
 				SetBoneController( 0, 0 );
 			}
 		}
@@ -1192,10 +1192,17 @@ void CTalkMonster :: TalkInit( void )
 // Scan for nearest, visible friend. If fPlayer is true, look for
 // nearest player
 //=========================================================
-CBaseEntity *CTalkMonster :: FindNearestFriend(BOOL fPlayer)
+//MODDD - returns a CBaseMonster instead of a CBaseEntity.
+CBaseMonster*CTalkMonster :: FindNearestFriend(BOOL fPlayer)
 {
 	CBaseEntity *pFriend = NULL;
+
 	CBaseEntity *pNearest = NULL;
+	
+	//MODDD - a pointer to pNearest but as a Monster pointer (since it must be to get anywhere
+	// near being returned).
+	CBaseMonster* pNearestMonsterRef = NULL;
+
 	float range = 10000000.0;
 	TraceResult tr;
 	Vector vecStart = pev->origin;
@@ -1251,19 +1258,23 @@ CBaseEntity *CTalkMonster :: FindNearestFriend(BOOL fPlayer)
 					if ((vecStart - vecCheck).Length() < TALKRANGE_MIN)
 					{
 						pNearest = pFriend;
+						//MODDD - if this one is picked, use that "pMonster" pointer I got earlier.
+						pNearestMonsterRef = pMonster;
+
 						range = (vecStart - vecCheck).Length();
 					}
 				}
 			}
 		}
 	}
-	return pNearest;
+	//MODDD - yes, that one.
+	return pNearestMonsterRef;
 }
 
 int CTalkMonster :: GetVoicePitch( void )
 {
 	//MODDD - check for "pissedNPCs".  If activated, do NOT allow pitch adjustments (only pitch of 100, play the original sound unmodded)
-	if(global_pissedNPCs < 1 ){
+	if(EASY_CVAR_GET(pissedNPCs) < 1 ){
 		//normal.
 		return m_voicePitch + RANDOM_LONG(0,3);
 	}else{
@@ -1309,7 +1320,7 @@ void CTalkMonster :: IdleRespond( void )
 	int pitch = GetVoicePitch();
 	
 	// play response
-	if(global_pissedNPCs < 1){
+	if(EASY_CVAR_GET(pissedNPCs) < 1){
 		PlaySentence( m_szGrp[TLK_ANSWER], RANDOM_FLOAT(2.8, 3.2), VOL_NORM, ATTN_IDLE );
 	}else{
 		playInterPissed();
@@ -1358,7 +1369,7 @@ int CTalkMonster :: FOkToSpeakAllowCombat( float waitTime )
 	// if in the grip of a barnacle, don't speak
 	if ( m_MonsterState == MONSTERSTATE_PRONE || m_IdealMonsterState == MONSTERSTATE_PRONE )
 	{
-		if(global_barneyPrintouts==1){
+		if(EASY_CVAR_GET(barneyPrintouts)==1){
 		easyPrintLine("BARNEY ALERT FAIL 1");
 		}
 		return FALSE;
@@ -1367,7 +1378,7 @@ int CTalkMonster :: FOkToSpeakAllowCombat( float waitTime )
 	// if not alive, certainly don't speak
 	if ( pev->deadflag != DEAD_NO )
 	{
-		if(global_barneyPrintouts==1){
+		if(EASY_CVAR_GET(barneyPrintouts)==1){
 		easyPrintLine("BARNEY ALERT FAIL 2");
 		}
 		return FALSE;
@@ -1377,21 +1388,21 @@ int CTalkMonster :: FOkToSpeakAllowCombat( float waitTime )
 	//MODDD - now uses a custom wait time.
 	//if (gpGlobals->time <= CTalkMonster::g_talkWaitTime){
 	if (gpGlobals->time <= waitTime){
-		if(global_barneyPrintouts==1){
+		if(EASY_CVAR_GET(barneyPrintouts)==1){
 		easyPrintLine("BARNEY ALERT FAIL 3 %.2f, %.2f, %.2f", gpGlobals->time, waitTime, waitTime - gpGlobals->time);
 		}
 		return FALSE;
 	}
 
 	if ( pev->spawnflags & SF_MONSTER_GAG ){
-		if(global_barneyPrintouts==1){
+		if(EASY_CVAR_GET(barneyPrintouts)==1){
 		easyPrintLine("BARNEY ALERT FAIL 4");
 		}
 		return FALSE;
 	}
 
 	if ( m_MonsterState == MONSTERSTATE_PRONE ){
-		if(global_barneyPrintouts==1){
+		if(EASY_CVAR_GET(barneyPrintouts)==1){
 		easyPrintLine("BARNEY ALERT FAIL 5");
 		}
 		return FALSE;
@@ -1399,7 +1410,7 @@ int CTalkMonster :: FOkToSpeakAllowCombat( float waitTime )
 
 	// if player is not in pvs, don't speak
 	if (!IsAlive() || FNullEnt(FIND_CLIENT_IN_PVS(edict()))){
-		if(global_barneyPrintouts==1){
+		if(EASY_CVAR_GET(barneyPrintouts)==1){
 		easyPrintLine("BARNEY ALERT FAIL 6");
 		}
 		return FALSE;
@@ -1429,7 +1440,7 @@ int CTalkMonster :: FIdleStare( void )
 		return FALSE;
 
 	//MODDD
-	if(global_pissedNPCs < 1){
+	if(EASY_CVAR_GET(pissedNPCs) < 1){
 		PlaySentence( m_szGrp[TLK_STARE], RANDOM_FLOAT(5, 7.5), VOL_NORM, ATTN_IDLE );
 	}else{
 		playPissed();
@@ -1464,7 +1475,7 @@ int CTalkMonster :: FIdleHello( void )
 			{
 				m_hTalkTarget = pPlayer;
 
-				if(global_pissedNPCs < 1){
+				if(EASY_CVAR_GET(pissedNPCs) < 1){
 					if (FBitSet(pev->spawnflags, SF_MONSTER_PREDISASTER))
 						PlaySentence( m_szGrp[TLK_PHELLO], RANDOM_FLOAT(3, 3.5), VOL_NORM,  ATTN_IDLE );
 					else
@@ -1495,7 +1506,7 @@ void CTalkMonster :: IdleHeadTurn( Vector &vecFriend )
 		if (yaw < -180) yaw += 360;
 
 		// turn towards vector
-		if(global_wildHeads != 1){
+		if(EASY_CVAR_GET(wildHeads) != 1){
 			SetBoneController( 0, yaw );
 		}
 	}
@@ -1587,7 +1598,7 @@ int CTalkMonster :: FIdleSpeak ( void )
 
 	if (pFriend && !(pFriend->IsMoving()) && (RANDOM_LONG(0,99) < 75))
 	{
-		if(global_pissedNPCs < 1){
+		if(EASY_CVAR_GET(pissedNPCs) < 1){
 			PlaySentence( szQuestionGroup, duration, VOL_NORM, ATTN_IDLE );
 			//SENTENCEG_PlayRndSz( ENT(pev), szQuestionGroup, 1.0, ATTN_IDLE, 0, pitch );
 		}else{
@@ -1615,7 +1626,7 @@ int CTalkMonster :: FIdleSpeak ( void )
 		{
 			m_hTalkTarget = pFriend;
 			
-			if(global_pissedNPCs < 1){
+			if(EASY_CVAR_GET(pissedNPCs) < 1){
 				PlaySentence( szIdleGroup, duration, VOL_NORM, ATTN_IDLE );
 			}else{
 				playInterPissed();
@@ -1676,6 +1687,17 @@ BOOL CTalkMonster::FNearPassiveSpeak(void){
 }
 
 
+//MODDD - NEW. Give extra details for things related to the player(s) we're pissed off at.
+void CTalkMonster::ForgetEnemy(void) {
+
+	//Forgiveness.
+	m_flPlayerDamage = 0;
+	forgiveSuspiciousTime = -1;
+	forgiveSomePlayerDamageTime = -1;
+
+	CBaseMonster::ForgetEnemy();
+
+}//END OF ForgetEnemy
 
 
 
@@ -1882,13 +1904,11 @@ GENERATE_TRACEATTACK_IMPLEMENTATION(CTalkMonster)
 
 GENERATE_TAKEDAMAGE_IMPLEMENTATION(CTalkMonster)
 {
-
 	int ret = GENERATE_TAKEDAMAGE_PARENT_CALL(CBaseMonster);
 	if ( !IsAlive() ){
 		//End early - no sense in response logic if we're unable to do anything.
 		return ret;
 	}
-
 
 	
 	if(m_MonsterState == MONSTERSTATE_SCRIPT && (m_pCine && !m_pCine->CanInterrupt() ) ){
@@ -1897,18 +1917,19 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CTalkMonster)
 	}
 	
 
-
-
-
 	//MODDD - this is what used to be all there was to a generic CTalkMonster's TakeDamage method.
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// make sure friends talk about it if player hurts talkmonsters...
 	// if player damaged this entity, have other friends talk about it
 	if (pevAttacker && m_MonsterState != MONSTERSTATE_PRONE && FBitSet(pevAttacker->flags, FL_CLIENT))
 	{
-		CBaseEntity *pFriend = FindNearestFriend(FALSE);
+		//MODDD - FindNearestFriend now returns a CBaseMonster instead, can take advantage of that
+		// conveniently when needed.
+		CBaseMonster *pFriend = FindNearestFriend(FALSE);
 
-		if (pFriend && pFriend->IsAlive())
+		//MODDD - if the friend found is already provoked, they're probably busy attacking the
+		// player.  They're past the point of "Hey stop that".
+		if (pFriend && pFriend->IsAlive() && !pFriend->HasMemory(bits_MEMORY_PROVOKED) )
 		{
 			// only if not dead or dying!
 			CTalkMonster *pTalkMonster = (CTalkMonster *)pFriend;
@@ -1942,7 +1963,7 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CTalkMonster)
 			// If the player was facing directly at me, or I'm already suspicious, get mad
 			//MODDD - extra provoking condition - taken too much cumulative damage from the player.
 			if ( flDamage > 32 ||   //too much damage at one time? Pissed.
-				 m_flPlayerDamage > 50 ||  //too much damage over a long time? Pissed.
+				 m_flPlayerDamage > 16 ||  //too much damage over a long time? Pissed.
 				(m_afMemory & bits_MEMORY_SUSPICIOUS && m_flPlayerDamage > 8) || //two shots too soon + a little damage? Pissed.
 				UTIL_IsFacing( pevAttacker, pev->origin ) && m_flPlayerDamage > 4 //Facing me when he did it with a lower damage tolerance? Pissed.
 				) 
@@ -1951,6 +1972,13 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CTalkMonster)
 				// Alright, now I'm pissed!
 				Remember( bits_MEMORY_PROVOKED );
 				StopFollowing( TRUE );
+
+				//MODDD - now, pissing off a talker makes friends pissed too.
+				// Player would probably kill the attacking talker and trigger
+				// AlertFriends from that one dying anyway.
+				AlertFriends();
+				LimitFollowers(CBaseEntity::Instance(pevAttacker), 0);
+
 				//No more forgiveness.
 				forgiveSuspiciousTime = -1;
 				forgiveSomePlayerDamageTime = -1;
@@ -1972,15 +2000,22 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CTalkMonster)
 			//Do the same check as above but be more tolerant because it's in the heat of combat.
 			//SaySuspicious();
 			if ( flDamage > 50 ||   //too much damage at one time? Pissed. Wait, how do you survive this?
-				 m_flPlayerDamage > 50 ||  //too much damage over a long time? Pissed.
-				(m_afMemory & bits_MEMORY_SUSPICIOUS && m_flPlayerDamage > 8) || //two shots too soon + a little damage? Pissed.
-				UTIL_IsFacing( pevAttacker, pev->origin ) && m_flPlayerDamage > 4 //Facing me when he did it with a lower damage tolerance? Pissed.
+				 m_flPlayerDamage > 24 ||  //too much damage over a long time? Pissed.
+				(m_afMemory & bits_MEMORY_SUSPICIOUS && m_flPlayerDamage > 10) || //two shots too soon + a little damage? Pissed.
+				UTIL_IsFacing( pevAttacker, pev->origin ) && m_flPlayerDamage > 5 //Facing me when he did it with a lower damage tolerance? Pissed.
 				) 
 			{
 				this->SayProvoked();
 				// Alright, now I'm pissed!
 				Remember( bits_MEMORY_PROVOKED );
 				StopFollowing( TRUE );
+
+				//MODDD - now, pissing off a talker makes friends pissed too.
+				// Player would probably kill the attacking talker and trigger
+				// AlertFriends from that one dying anyway.
+				AlertFriends();
+				LimitFollowers(CBaseEntity::Instance(pevAttacker), 0);
+
 				//No more forgiveness.
 				forgiveSuspiciousTime = -1;
 				forgiveSomePlayerDamageTime = -1;
@@ -1990,9 +2025,8 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CTalkMonster)
 				// Hey, be careful with that
 				this->SaySuspicious();
 				Remember( bits_MEMORY_SUSPICIOUS );
-				//After almost a minute of being suspicious, forget about it.
-				//Can't afford to hold a grudge in these times.
-				forgiveSuspiciousTime = gpGlobals->time + 50;
+				// Times shortened.  Damage in the middle of combat is more excusable.
+				forgiveSuspiciousTime = gpGlobals->time + 25;
 				forgiveSomePlayerDamageTime = gpGlobals->time + 5;
 			}
 		}
@@ -2051,7 +2085,7 @@ Schedule_t* CTalkMonster :: GetScheduleOfType ( int Type )
 
 
 		//MODDD
-		if(global_NPCsTalkMore != 1 ){
+		if(EASY_CVAR_GET(NPCsTalkMore) != 1 ){
 			passCondition = (RANDOM_LONG(0,99) < 2);
 		}else{
 			passCondition = TRUE;
@@ -2260,19 +2294,19 @@ CTalkMonster::CTalkMonster(void){
 void CTalkMonster::MonsterThink(void){
 
 
-	if(global_peopleStrobe == 1){
+	if(EASY_CVAR_GET(peopleStrobe) == 1){
 		if(nextMadEffect <= gpGlobals->time){
 			//send effect!
 			UTIL_generateFreakyLight(pev->origin);
 
-			nextMadEffect = gpGlobals->time + global_raveEffectSpawnInterval;
+			nextMadEffect = gpGlobals->time + EASY_CVAR_GET(raveEffectSpawnInterval);
 		}
 	}
 
 
 
 
-	if(global_wildHeads == 1){
+	if(EASY_CVAR_GET(wildHeads) == 1){
 		
 		//easyPrintLine("GGGG %.2f", madYaw);
 
@@ -2330,7 +2364,7 @@ void CTalkMonster::MonsterThink(void){
 		//spawn effects every so often?
 
 
-	}//END OF if(global_wildHeads)
+	}//END OF if(EASY_CVAR_GET(wildHeads))
 
 
 	if(this->m_pSchedule == NULL){
@@ -2343,7 +2377,7 @@ void CTalkMonster::MonsterThink(void){
 	//sitting scientist should not attempt this.  either doesn't work or just... weirder than usual.
 	if(canGoRavingMad && !FClassnameIs(pev, "monster_sitting_scientist") ){
 
-		if(global_thatWasntPunch == 1){
+		if(EASY_CVAR_GET(thatWasntPunch) == 1){
 			//pev->angles[0] 
 			//UTIL_printLineVector("STUFFFFF", pev->angles);
 
@@ -2527,7 +2561,7 @@ void CTalkMonster::StopFollowing( BOOL clearSchedule, BOOL playUnuseSentence )
 		{
 			//MODDD
 			if(playUnuseSentence == TRUE){
-				if(global_pissedNPCs < 1){
+				if(EASY_CVAR_GET(pissedNPCs) < 1){
 					PlaySentence( m_szGrp[TLK_UNUSE], RANDOM_FLOAT(2.8, 3.2), VOL_NORM, ATTN_IDLE );
 				}else{
 					playPissed();
@@ -2564,7 +2598,7 @@ void CTalkMonster::StartFollowing( CBaseEntity *pLeader )
 
 	m_hTargetEnt = pLeader;
 	//MODDD
-	if(global_pissedNPCs < 1){
+	if(EASY_CVAR_GET(pissedNPCs) < 1){
 		PlaySentence( m_szGrp[TLK_USE], RANDOM_FLOAT(2.8, 3.2), VOL_NORM, ATTN_IDLE );
 	}else{
 		playPissed();
@@ -2577,7 +2611,7 @@ void CTalkMonster::StartFollowing( CBaseEntity *pLeader )
 //MODDD - new
 void CTalkMonster::playPissed(){
 	
-	if(global_pissedNPCs == 2){
+	if(EASY_CVAR_GET(pissedNPCs) == 2){
 		PlaySentence("!testsentence", RANDOM_FLOAT(2.8, 3.2), VOL_NORM, ATTN_IDLE );
 		return;
 	}
@@ -2616,14 +2650,12 @@ void CTalkMonster::playPissed(){
 
 
 void CTalkMonster::playInterPissed(){
-
 	
-	if(global_pissedNPCs == 2){
+	if(EASY_CVAR_GET(pissedNPCs) == 2){
 		PlaySentence("!testsentence", RANDOM_FLOAT(2.8, 3.2), VOL_NORM, ATTN_IDLE );
 		return;
-
 	}
-
+	
 	int madInterSentencesMax = getMadInterSentencesMax();
 	if(madInterSentencesMax > 0 && madInterSentencesLocation != NULL){
 		long someRand = RANDOM_LONG(0, madInterSentencesMax-1);
@@ -2657,17 +2689,11 @@ BOOL CTalkMonster::CanFollow( void )
 
 void CTalkMonster :: FollowerUse( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
 {
-
 	// Don't allow use during a scripted_sentence
 	if ( m_useTime > gpGlobals->time )
 		return;
 
-
-	
 	//easyPrintLine("TALK DEBUG 1???");
-
-
-
 
 
 	if ( pCaller != NULL && pCaller->IsPlayer() )
@@ -2681,8 +2707,6 @@ void CTalkMonster :: FollowerUse( CBaseEntity *pActivator, CBaseEntity *pCaller,
 		}
 		else if ( CanFollow() )
 		{
-
-
 			//easyPrintLine("TALK DEBUG 3b???");
 			//why minus 1? Because this is BEFORE letting the new NPC follow the player. So at a max value of "1", it's actually treated as a real max of 2.
 			//Why? because before letting a new NPC follow the player, if one is following, the count is still 1. Then we add the new follower without doing the check again.
@@ -2700,7 +2724,6 @@ void CTalkMonster :: FollowerUse( CBaseEntity *pActivator, CBaseEntity *pCaller,
 				SetBits(m_bitsSaid, bit_saidHelloPlayer);	// Don't say hi after you've started following
 			}
 
-			
 		}
 		else
 		{

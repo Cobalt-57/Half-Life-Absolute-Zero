@@ -20,8 +20,6 @@
 #include "pmtrace.h"	
 #include "pm_shared.h"
 
-#define DLLEXPORT __declspec( dllexport )
-
 void Game_AddObjects( void );
 
 extern vec3_t v_origin;
@@ -29,28 +27,29 @@ extern vec3_t v_origin;
 int g_iAlive = 1;
 
 //MODDD - externs.
-extern float global2_cl_muzzleflash;
-extern float global2_event5011Allowed;
-extern float global2_event5021Allowed;
-extern float global2_event5031Allowed;
-extern float global2_event5002Allowed;
-extern float global2_event5004Allowed;
-extern float global2_eventsAreFabulous;
+EASY_CVAR_EXTERN(cl_muzzleflash)
+EASY_CVAR_EXTERN(event5011Allowed)
+EASY_CVAR_EXTERN(event5021Allowed)
+EASY_CVAR_EXTERN(event5031Allowed)
+EASY_CVAR_EXTERN(event5002Allowed)
+EASY_CVAR_EXTERN(event5004Allowed)
+EASY_CVAR_EXTERN(eventsAreFabulous)
 
-extern float global2_testVar;
-extern float global2_trailTypeTest;
+//EASY_CVAR_EXTERN(testVar)
+EASY_CVAR_EXTERN(trailTypeTest)
+EASY_CVAR_EXTERN(muteTempEntityGroundHitSound)
 
 
 extern "C" 
 {
-	int DLLEXPORT HUD_AddEntity( int type, struct cl_entity_s *ent, const char *modelname );
-	void DLLEXPORT HUD_CreateEntities( void );
-	void DLLEXPORT HUD_StudioEvent( const struct mstudioevent_s *event, const struct cl_entity_s *entity );
-	void DLLEXPORT HUD_TxferLocalOverrides( struct entity_state_s *state, const struct clientdata_s *client );
-	void DLLEXPORT HUD_ProcessPlayerState( struct entity_state_s *dst, const struct entity_state_s *src );
-	void DLLEXPORT HUD_TxferPredictionData ( struct entity_state_s *ps, const struct entity_state_s *pps, struct clientdata_s *pcd, const struct clientdata_s *ppcd, struct weapon_data_s *wd, const struct weapon_data_s *pwd );
-	void DLLEXPORT HUD_TempEntUpdate( double frametime, double client_time, double cl_gravity, struct tempent_s **ppTempEntFree, struct tempent_s **ppTempEntActive, int ( *Callback_AddVisibleEntity )( struct cl_entity_s *pEntity ), void ( *Callback_TempEntPlaySound )( struct tempent_s *pTemp, float damp ) );
-	struct cl_entity_s DLLEXPORT *HUD_GetUserEntity( int index );
+	int DLLEXPORT_2 HUD_AddEntity( int type, struct cl_entity_s *ent, const char *modelname );
+	void DLLEXPORT_2 HUD_CreateEntities( void );
+	void DLLEXPORT_2 HUD_StudioEvent( const struct mstudioevent_s *event, const struct cl_entity_s *entity );
+	void DLLEXPORT_2 HUD_TxferLocalOverrides( struct entity_state_s *state, const struct clientdata_s *client );
+	void DLLEXPORT_2 HUD_ProcessPlayerState( struct entity_state_s *dst, const struct entity_state_s *src );
+	void DLLEXPORT_2 HUD_TxferPredictionData ( struct entity_state_s *ps, const struct entity_state_s *pps, struct clientdata_s *pcd, const struct clientdata_s *ppcd, struct weapon_data_s *wd, const struct weapon_data_s *pwd );
+	void DLLEXPORT_2 HUD_TempEntUpdate( double frametime, double client_time, double cl_gravity, struct tempent_s **ppTempEntFree, struct tempent_s **ppTempEntActive, int ( *Callback_AddVisibleEntity )( struct cl_entity_s *pEntity ), void ( *Callback_TempEntPlaySound )( struct tempent_s *pTemp, float damp ) );
+	struct cl_entity_s DLLEXPORT_2 *HUD_GetUserEntity( int index );
 }
 
 /*
@@ -60,9 +59,7 @@ HUD_AddEntity
 ========================
 */
 
-extern float global2_muteTempEntityGroundHitSound;
-
-int DLLEXPORT HUD_AddEntity( int type, struct cl_entity_s *ent, const char *modelname )
+int DLLEXPORT_2 HUD_AddEntity( int type, struct cl_entity_s *ent, const char *modelname )
 {
 	switch ( type )
 	{
@@ -101,7 +98,7 @@ playerstate update in entity_state_t.  In order for these overrides to eventuall
 structure, we need to copy them into the state structure at this point.
 =========================
 */
-void DLLEXPORT HUD_TxferLocalOverrides( struct entity_state_s *state, const struct clientdata_s *client )
+void DLLEXPORT_2 HUD_TxferLocalOverrides( struct entity_state_s *state, const struct clientdata_s *client )
 {
 	VectorCopy( client->origin, state->origin );
 
@@ -124,7 +121,7 @@ We have received entity_state_t for this player over the network.  We need to co
 playerstate structure
 =========================
 */
-void DLLEXPORT HUD_ProcessPlayerState( struct entity_state_s *dst, const struct entity_state_s *src )
+void DLLEXPORT_2 HUD_ProcessPlayerState( struct entity_state_s *dst, const struct entity_state_s *src )
 {
 	// Copy in network data
 	VectorCopy( src->origin, dst->origin );
@@ -191,7 +188,7 @@ Because we can predict an arbitrary number of frames before the server responds 
  update is occupying.
 =========================
 */
-void DLLEXPORT HUD_TxferPredictionData ( struct entity_state_s *ps, const struct entity_state_s *pps, struct clientdata_s *pcd, const struct clientdata_s *ppcd, struct weapon_data_s *wd, const struct weapon_data_s *pwd )
+void DLLEXPORT_2 HUD_TxferPredictionData ( struct entity_state_s *ps, const struct entity_state_s *pps, struct clientdata_s *pcd, const struct clientdata_s *ppcd, struct weapon_data_s *wd, const struct weapon_data_s *pwd )
 {
 	ps->oldbuttons				= pps->oldbuttons;
 	ps->flFallVelocity			= pps->flFallVelocity;
@@ -372,7 +369,7 @@ void Particles( void )
 
 		if ( color )
 		{
-			sscanf( color->string, "%i %i %i", &r, &g, &b );
+			sscanf( color->value_string, "%i %i %i", &r, &g, &b );
 		}
 		else
 		{
@@ -528,7 +525,7 @@ HUD_CreateEntities
 Gives us a chance to add additional entities to the render this frame
 =========================
 */
-void DLLEXPORT HUD_CreateEntities( void )
+void DLLEXPORT_2 HUD_CreateEntities( void )
 {
 	// e.g., create a persistent cl_entity_t somewhere.
 	// Load an appropriate model into it ( gEngfuncs.CL_LoadModel )
@@ -567,9 +564,9 @@ The entity's studio model description indicated an event was
 fired during this frame, handle the event by it's tag ( e.g., muzzleflash, sound )
 =========================
 */
-void DLLEXPORT HUD_StudioEvent( const struct mstudioevent_s *event, const struct cl_entity_s *entity )
+void DLLEXPORT_2 HUD_StudioEvent( const struct mstudioevent_s *event, const struct cl_entity_s *entity )
 {
-
+	
 	//"player" boolean variable?
 
 	//baseline
@@ -592,7 +589,7 @@ void DLLEXPORT HUD_StudioEvent( const struct mstudioevent_s *event, const struct
 	
 	//easyPrintLine("What? %d", entity->curstate.iuser1 );
 
-	if(global2_eventsAreFabulous == 1){
+	if(EASY_CVAR_GET(eventsAreFabulous) == 1){
 		gEngfuncs.pEfxAPI->R_SparkEffect( (float *)&entity->attachment[0], 25, -100, 100 );
 		gEngfuncs.pEfxAPI->R_SparkEffect( (float *)&entity->attachment[0], 25, -100, 100 );
 		gEngfuncs.pEfxAPI->R_SparkEffect( (float *)&entity->attachment[0], 25, -100, 100 );
@@ -622,7 +619,7 @@ void DLLEXPORT HUD_StudioEvent( const struct mstudioevent_s *event, const struct
 	
 	if(event->event == 5001 || event->event == 5011 || event->event == 5021 || event->event == 5031){
 		//can skip muzzleflash events, check.
-		if(global2_cl_muzzleflash != 1 && (global2_cl_muzzleflash == 0 || ((entity->curstate.renderfx & ISVIEWMODEL) == ISVIEWMODEL ) || ((entity->curstate.renderfx & ISPLAYER) )     )  ){
+		if(EASY_CVAR_GET(cl_muzzleflash) != 1 && (EASY_CVAR_GET(cl_muzzleflash) == 0 || ((entity->curstate.renderfx & ISVIEWMODEL) == ISVIEWMODEL ) || ((entity->curstate.renderfx & ISPLAYER) )     )  ){
 			//easyForcePrintLine("I AM not good.");
 			return;
 		}
@@ -634,6 +631,10 @@ void DLLEXPORT HUD_StudioEvent( const struct mstudioevent_s *event, const struct
 		}
 
 	}
+	
+	
+	easyForcePrintLine("HUD_StudioEvent::: event? %d", event->event);
+
 
 
 	switch( event->event )
@@ -641,7 +642,7 @@ void DLLEXPORT HUD_StudioEvent( const struct mstudioevent_s *event, const struct
 	case 5001:
 
 		
-		//if(global2_event5001Allowed == 0 || (entity->curstate.renderfx & ISVIEWMODEL && global2_cl_muzzleflash == 0) ){
+		//if(EASY_CVAR_GET(event5001Allowed) == 0 || (entity->curstate.renderfx & ISVIEWMODEL && EASY_CVAR_GET(cl_muzzleflash) == 0) ){
 		
 
 
@@ -663,7 +664,7 @@ void DLLEXPORT HUD_StudioEvent( const struct mstudioevent_s *event, const struct
 		break;
 	case 5011:
 		
-		if(global2_event5011Allowed == 0){
+		if(EASY_CVAR_GET(event5011Allowed) == 0){
 			return;
 		}
 
@@ -678,19 +679,19 @@ void DLLEXPORT HUD_StudioEvent( const struct mstudioevent_s *event, const struct
 
 
 
-		if(global2_event5021Allowed == 0){
+		if(EASY_CVAR_GET(event5021Allowed) == 0){
 			return;
 		}
 		gEngfuncs.pEfxAPI->R_MuzzleFlash( (float *)&entity->attachment[2], atoi( event->options) );
 		break;
 	case 5031:
-		if(global2_event5031Allowed == 0){
+		if(EASY_CVAR_GET(event5031Allowed) == 0){
 			return;
 		}
 		gEngfuncs.pEfxAPI->R_MuzzleFlash( (float *)&entity->attachment[3], atoi( event->options) );
 		break;
 	case 5002:
-		if(global2_event5002Allowed == 0){
+		if(EASY_CVAR_GET(event5002Allowed) == 0){
 			return;
 		}
 		gEngfuncs.pEfxAPI->R_SparkEffect( (float *)&entity->attachment[0], atoi( event->options), -100, 100 );
@@ -698,7 +699,8 @@ void DLLEXPORT HUD_StudioEvent( const struct mstudioevent_s *event, const struct
 	// Client side sound
 	
 	case 5004:
-		if(global2_event5004Allowed == 0){
+		//easyForcePrintLine("HUD_StudioEvent, 5004 extra info: %s : can?%.1f", (char*)event->options, EASY_CVAR_GET(event5004Allowed));
+		if(EASY_CVAR_GET(event5004Allowed) == 0){
 			return;
 		}
 		gEngfuncs.pfnPlaySoundByNameAtLocation( (char *)event->options, 1.0, (float *)&entity->attachment[0] );
@@ -716,7 +718,7 @@ CL_UpdateTEnts
 Simulation and cleanup of temporary entities
 =================
 */
-void DLLEXPORT HUD_TempEntUpdate (
+void DLLEXPORT_2 HUD_TempEntUpdate (
 	double frametime,   // Simulation time
 	double client_time, // Absolute time on client
 	double cl_gravity,  // True gravity on client
@@ -1021,7 +1023,7 @@ void DLLEXPORT HUD_TempEntUpdate (
 					if (pTemp->hitSound)
 					{
 						//easyPrintLine("WHAT IS HITSOUND %d", pTemp->hitSound);
-						if(global2_muteTempEntityGroundHitSound != 1){
+						if(EASY_CVAR_GET(muteTempEntityGroundHitSound) != 1){
 							Callback_TempEntPlaySound(pTemp, damp);
 						}
 					}
@@ -1080,12 +1082,12 @@ void DLLEXPORT HUD_TempEntUpdate (
 
 
 
-			if(global2_trailTypeTest != -1){
-				//we will use "global_trailTypeTest" as the trail type.
+			if(EASY_CVAR_GET(trailTypeTest) != -1){
+				//we will use "trailTypeTest" as the trail type.
 				//if ( (pTemp->flags & FTENT_SMOKETRAIL) )
 				{
 					//DEFAULT IS 1!!!
-				//	gEngfuncs.pEfxAPI->R_RocketTrail (pTemp->entity.prevstate.origin, pTemp->entity.origin, (int)global2_trailTypeTest );
+				//	gEngfuncs.pEfxAPI->R_RocketTrail (pTemp->entity.prevstate.origin, pTemp->entity.origin, (int)EASY_CVAR_GET(trailTypeTest) );
 				}
 
 			}else{
@@ -1102,7 +1104,7 @@ void DLLEXPORT HUD_TempEntUpdate (
 				/*
 				if ( (pTemp->flags & FTENT_TESTTRAIL) )
 				{
-					gEngfuncs.pEfxAPI->R_RocketTrail (pTemp->entity.prevstate.origin, pTemp->entity.origin, (int)global2_testVar);
+					gEngfuncs.pEfxAPI->R_RocketTrail (pTemp->entity.prevstate.origin, pTemp->entity.origin, (int)EASY_CVAR_GET(testVar));
 				}
 				*/
 			}
@@ -1159,7 +1161,7 @@ If you specify negative numbers for beam start and end point entities, then
 Indices must start at 1, not zero.
 =================
 */
-cl_entity_t DLLEXPORT *HUD_GetUserEntity( int index )
+cl_entity_t DLLEXPORT_2 *HUD_GetUserEntity( int index )
 {
 #if defined( BEAM_TEST )
 	// None by default, you would return a valic pointer if you create a client side

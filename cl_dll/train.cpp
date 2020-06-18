@@ -27,7 +27,7 @@
 DECLARE_MESSAGE(m_Train, Train )
 
 //MODDD - externs
-extern float global2_hud_version;
+EASY_CVAR_EXTERN(hud_version)
 
 
 int CHudTrain::Init(void)
@@ -71,7 +71,7 @@ int CHudTrain::Draw(float fTime)
 		//88, 48from bottom
 
 
-		if(global2_hud_version == 0){
+		if(EASY_CVAR_GET(hud_version) == 0){
 
 			// This should show up to the right and part way up the armor number
 			y = ScreenHeight - SPR_Height(m_SpriteHandle_t,0) - gHUD.m_iFontHeight;

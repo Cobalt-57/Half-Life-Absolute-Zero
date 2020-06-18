@@ -113,6 +113,9 @@ private:
 	int m_antidoteindex;
 	int m_adrenalineindex;
 	int m_radiationindex;
+	int m_antidote_emptyindex;
+	int m_adrenaline_emptyindex;
+	int m_radiation_emptyindex;
 	//MODDD - new to refer to the number of each power canister the player has
 	int m_antidotes;
 	int m_adrenalines;

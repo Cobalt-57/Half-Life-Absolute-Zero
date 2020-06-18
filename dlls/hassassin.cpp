@@ -136,12 +136,8 @@ EASY_CVAR_EXTERN(hassassinCrossbowReloadSoundDelay)
 
 
 
-extern float global_thatWasntPunch;
-
-
-EASY_CVAR_EXTERN(hassassinCrossbowDebug);
-
-
+EASY_CVAR_EXTERN(thatWasntPunch)
+EASY_CVAR_EXTERN(hassassinCrossbowDebug)
 
 
 
@@ -850,7 +846,7 @@ void CHAssassin::MonsterThink(){
 
 	//easyForcePrintLine("AMMO??? %d", m_cAmmoLoaded);
 
-	if(global_thatWasntPunch == 1 && this->m_fSequenceFinished){
+	if(EASY_CVAR_GET(thatWasntPunch) == 1 && this->m_fSequenceFinished){
 
 			switch(RANDOM_LONG(0, 20)){
 			case 0:SetSequenceByName("idle2");break;
@@ -885,7 +881,7 @@ void CHAssassin::MonsterThink(){
 
 int CHAssassin::IRelationship ( CBaseEntity *pTarget )
 {
-	if(global_thatWasntPunch == 1){
+	if(EASY_CVAR_GET(thatWasntPunch) == 1){
 		//I just don't give a damn man
 		return R_NO;
 	}
@@ -1071,7 +1067,7 @@ void CHAssassin :: HandleAnimEvent( MonsterEvent_t *pEvent )
 {
 	//easyForcePrintLine("WHAT THE heck IS THiS stuff event:%d seq:%d fr:%.2f", pEvent->event, pev->sequence, pev->frame);
 
-	if(global_thatWasntPunch == 1){
+	if(EASY_CVAR_GET(thatWasntPunch) == 1){
 		//Best not to.
 		return;
 	}
@@ -1407,7 +1403,7 @@ void CHAssassin :: RunAI( void )
 	// always visible is not on hard
 
 	//MODDD - also, this cheat CVar being on means we're definitely visible.
-	if (global_thatWasntPunch == 1 || (g_iSkillLevel != SKILL_HARD || m_hEnemy == NULL || pev->deadflag != DEAD_NO || m_Activity == ACT_RUN || m_Activity == ACT_WALK || !(pev->flags & FL_ONGROUND) )  )
+	if (EASY_CVAR_GET(thatWasntPunch) == 1 || (g_iSkillLevel != SKILL_HARD || m_hEnemy == NULL || pev->deadflag != DEAD_NO || m_Activity == ACT_RUN || m_Activity == ACT_WALK || !(pev->flags & FL_ONGROUND) )  )
 		m_iTargetRanderamt = 255;
 	else
 		m_iTargetRanderamt = 20;

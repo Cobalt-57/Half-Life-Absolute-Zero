@@ -120,7 +120,7 @@ void EV_GetGunPosition( event_args_t *args, float *pos, float *origin )
 		}
 		else if ( args->ducking == 1 )
 		{
-			view_ofs[2] = VEC_DUCK_VIEW;
+			view_ofs[2] = VEC_DUCK_VIEW_Z;
 		}
 	}
 
@@ -170,7 +170,7 @@ void EV_GetDefaultShellInfo( event_args_t *args, float *origin, float *velocity,
 		}
 		else if ( args->ducking == 1 )
 		{
-			view_ofs[2] = VEC_DUCK_VIEW;
+			view_ofs[2] = VEC_DUCK_VIEW_Z;
 		}
 	}
 

@@ -12,6 +12,12 @@
 *   without written permission from Valve LLC.
 *
 ****/
+
+
+//MODDD - much later edit.
+// All auto's edited to what they resolve to instead.  That wasn't VS6 friendly.
+
+
 #include "extdll.h"
 #include "util.h"
 #include "cbase.h"
@@ -75,7 +81,7 @@ void CRopeSegment::Touch( CBaseEntity* pOther )
 {
 	if( pOther->IsPlayer() )
 	{
-		auto pPlayer = static_cast<CBasePlayer*>( pOther );
+		CBasePlayer* pPlayer = static_cast<CBasePlayer*>( pOther );
 
 		//Electrified wires deal damage. - Solokiller
 		if( m_bCauseDamage )
@@ -87,7 +93,7 @@ void CRopeSegment::Touch( CBaseEntity* pOther )
 		{
 			if( m_bCanBeGrabbed )
 			{
-				auto& data = m_pSample->GetData();
+				RopeSampleData& data = m_pSample->GetData();
 
 				pOther->SetAbsOrigin( data.mPosition );
 
@@ -113,7 +119,7 @@ void CRopeSegment::Touch( CBaseEntity* pOther )
 			else
 			{
 				//This segment cannot be grabbed, so grab the highest one if possible. - Solokiller
-				auto pRope = m_pSample->GetMasterRope();
+				CRope* pRope = m_pSample->GetMasterRope();
 
 				CRopeSegment* pSegment;
 

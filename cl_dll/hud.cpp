@@ -20,18 +20,6 @@
 
 
 
-//MODDD - This controls whether cheat CVars can be modified directly in multiplayer.
-#define CHEATS_ALLOWED_IN_MULTI_PLAYER 1
-
-#if CHEATS_ALLOWED_IN_MULTI_PLAYER == 1
-//If not, "PROTECTION_PLACE" is empty, contributing nothing to the CVar flags.
-#define PROTECTION_PLACE 
-#else
-//If so, the flag "FCVAR_PROTECTED" is added.
-#define PROTECTION_PLACE | FCVAR_PROTECTED
-#endif
-
-
 
 #include "hud.h"
 #include "cl_util.h"
@@ -51,17 +39,39 @@
 
 
 //MODDD - externs
-extern float global2_hud_version;
-extern float global2_preE3UsesFailColors;
-extern float global2_E3UsesFailColors;
-extern float global2_weaponSelectUsesReloadSounds;
+EASY_CVAR_EXTERN(hud_version)
+EASY_CVAR_EXTERN(preE3UsesFailColors)
+EASY_CVAR_EXTERN(E3UsesFailColors)
+EASY_CVAR_EXTERN(weaponSelectUsesReloadSounds)
 
-extern float global2PSEUDO_determinedFOV;
+EASY_CVAR_EXTERN(hud_drawsidebarmode)
 
-extern float global2_hud_drawsidebarmode;
+EASY_CVAR_EXTERN(cl_server_interpolation)
+EASY_CVAR_EXTERN(hud_brokentrans)
 
-extern cvar_t* cvar2_cl_server_interpolation;
-extern float global2_cl_server_interpolation;
+extern float globalPSEUDO_autoDeterminedFOV;
+
+
+//MODDD - This controls whether cheat CVars can be modified directly in multiplayer.
+#define CHEATS_ALLOWED_IN_MULTI_PLAYER 1
+
+#if CHEATS_ALLOWED_IN_MULTI_PLAYER == 1
+//If not, "PROTECTION_PLACE" is empty, contributing nothing to the CVar flags.
+#define PROTECTION_PLACE 
+#else
+//If so, the flag "FCVAR_PROTECTED" is added.
+#define PROTECTION_PLACE | FCVAR_PROTECTED
+#endif
+
+
+
+EASY_CVAR_EXTERN_MASS
+
+
+
+
+
+
 
 
 class CHLVoiceStatusHelper : public IVoiceStatusHelper
@@ -139,6 +149,11 @@ cvar_t *cl_viewrollspeed;
 */
 
 void ShutdownInput (void);
+
+
+
+//MODDD - NOTE.   ... What even are these?? double-underscores in front?  what?  why?
+// Dummied out stuff?  okay.
 
 //DECLARE_MESSAGE(m_Logo, Logo)
 int __MsgFunc_Logo(const char *pszName, int iSize, void *pbuf)
@@ -345,8 +360,8 @@ void CHud::drawPartialFromBottom(const SpriteHandle_t & arg_sprite, const wrect_
 	if (rc.bottom > rc.top)
 	{
 
-		//gHUD.drawAdditiveFilter( 0, x, y - iOffset + (rc.top - m_prc2->top), &rc);
-		gHUD.drawAdditiveFilter( arg_sprite, r, g, b, 0, x, y + (rc.top - arg_rect->top), &rc, canDrawBrokenTrans);
+		//drawAdditiveFilter( 0, x, y - iOffset + (rc.top - m_prc2->top), &rc);
+		drawAdditiveFilter( arg_sprite, r, g, b, 0, x, y + (rc.top - arg_rect->top), &rc, canDrawBrokenTrans);
 		
 	}
 
@@ -365,8 +380,8 @@ void CHud::drawPartialFromLeft(const SpriteHandle_t & arg_sprite, const wrect_t*
 	rc.right += (int)ceil(widthDiff * (arg_portion + -1));
 
 	if (rc.right > rc.left){
-		//gHUD.drawAdditiveFilter( 0, x, y - iOffset + (rc.top - m_prc2->top), &rc);
-		gHUD.drawAdditiveFilter( arg_sprite, r, g, b, 0, x, y, &rc, canDrawBrokenTrans);
+		//drawAdditiveFilter( 0, x, y - iOffset + (rc.top - m_prc2->top), &rc);
+		drawAdditiveFilter( arg_sprite, r, g, b, 0, x, y, &rc, canDrawBrokenTrans);
 	}
 }
 
@@ -388,7 +403,7 @@ void CHud::drawPartialFromRight(const SpriteHandle_t & arg_sprite, const wrect_t
 	draw_x += widthDiff * (-arg_portion + 1);
 
 	if (rc.right > rc.left){
-		gHUD.drawAdditiveFilter( arg_sprite, r, g, b, 0, draw_x, y, &rc, canDrawBrokenTrans);
+		drawAdditiveFilter( arg_sprite, r, g, b, 0, draw_x, y, &rc, canDrawBrokenTrans);
 	}
 	
 	//alternate?
@@ -411,7 +426,7 @@ void CHud::drawPartialFromRight(const SpriteHandle_t & arg_sprite, const wrect_t
 
 
 int CHud::canDrawSidebar(void){
-	if ( (global2_hud_drawsidebarmode == 2) || ( (!gHUD.canDrawBottomStats && global2_hud_drawsidebarmode == 0) || (gHUD.canDrawBottomStats && global2_hud_drawsidebarmode == 1) ) ){
+	if ( (EASY_CVAR_GET(hud_drawsidebarmode) == 2) || ( (!canDrawBottomStats && EASY_CVAR_GET(hud_drawsidebarmode) == 0) || (canDrawBottomStats && EASY_CVAR_GET(hud_drawsidebarmode) == 1) ) ){
 		return TRUE;
 	}else{
 		return FALSE;
@@ -426,7 +441,7 @@ void CHud::drawAdditiveFilter(int sprite, const int& r, const int& g, const int&
 	drawAdditiveFilter(sprite, r, g, b, huh, x, y, rect, 0);
 }
 
-//MODDD - new method.  Does the same thing as "drawAdditive", except this factors in "showBrokenHUDAlpha".
+//MODDD - new method.  Does the same thing as "drawAdditive", except this factors in "hud_brokentrans".
 //If it is true (1), draw some faded gray on top of the image's rect.
 void CHud::drawAdditiveFilter(int sprite, const int& r, const int& g, const int& b, int huh, int x, int y, wrect_t* rect, const int& canDrawBrokenTrans){
 	
@@ -437,7 +452,7 @@ void CHud::drawAdditiveFilter(int sprite, const int& r, const int& g, const int&
 
 
 	/*
-	if(hud_version->value == 0 && showBrokenHUDAlpha->value == 1 && canDrawBrokenTrans == 1){
+	if(hud_version->value == 0 && EASY_CVAR_GET(hud_brokentrans) == 1 && canDrawBrokenTrans == 1){
 		//FillRGBA(0, 0, 35, 35, 88, 8, 8, 185);
 		int times = 25;
 		while(times > 0){
@@ -490,7 +505,7 @@ void CHud::attemptDrawBrokenTransLightAndWhite(int arg_startx, int arg_starty, w
 
 void CHud::attemptDrawBrokenTrans(int arg_startx, int arg_starty, int arg_width, int arg_height){
 	
-	if(global2_hud_version == 0 && showBrokenHUDAlpha->value > 0 && m_HUD_brokentransparency >= 0 ){
+	if(EASY_CVAR_GET(hud_version) == 0 && EASY_CVAR_GET(hud_brokentrans) > 0 && m_HUD_brokentransparency >= 0 ){
 		
 		//CUT - adjustable isn't working.
 		float opaqueness = 1.0;
@@ -531,7 +546,7 @@ void CHud::attemptDrawBrokenTrans(int arg_startx, int arg_starty, int arg_width,
 
 void CHud::attemptDrawBrokenTransLight(int arg_startx, int arg_starty, int arg_width, int arg_height){
 	
-	if(global2_hud_version == 0 && showBrokenHUDAlpha->value > 0 && m_HUD_brokentransparency0 >= 0){
+	if(EASY_CVAR_GET(hud_version) == 0 && EASY_CVAR_GET(hud_brokentrans) > 0 && m_HUD_brokentransparency0 >= 0){
 		float opaqueness = 1.0;
 		
 		wrect_t tempwrectThis = wrect_t();
@@ -568,7 +583,7 @@ void CHud::attemptDrawBrokenTransLight(int arg_startx, int arg_starty, int arg_w
 
 void CHud::attemptDrawBrokenTransWhite(int arg_startx, int arg_starty, int arg_width, int arg_height){
 	
-	if(global2_hud_version == 0 && showBrokenHUDAlpha->value > 0 && m_HUD_brokentransparencyw >= 0){
+	if(EASY_CVAR_GET(hud_version) == 0 && EASY_CVAR_GET(hud_brokentrans) > 0 && m_HUD_brokentransparencyw >= 0){
 		float opaqueness = 0.04;
 		
 
@@ -604,7 +619,7 @@ void CHud::attemptDrawBrokenTransWhite(int arg_startx, int arg_starty, int arg_w
 
 void CHud::attemptDrawBrokenTransLightAndWhite(int arg_startx, int arg_starty, int arg_width, int arg_height){
 	
-	if(global2_hud_version == 0 && showBrokenHUDAlpha->value > 0 && m_HUD_brokentransparencyw >= 0){
+	if(EASY_CVAR_GET(hud_version) == 0 && EASY_CVAR_GET(hud_brokentrans) > 0 && m_HUD_brokentransparencyw >= 0){
 		float opaqueness = 0.04;
 		
 
@@ -653,7 +668,7 @@ void CHud::attemptDrawBrokenTransLightAndWhite(int arg_startx, int arg_starty, i
 //MODDD - new.
 void CHud::playWeaponSelectMoveSound(){
 
-	if(global2_weaponSelectUsesReloadSounds != 1){
+	if(EASY_CVAR_GET(weaponSelectUsesReloadSounds) != 1){
 		PlaySound("common/wpn_moveselect.wav", 1);
 	}else{
 
@@ -689,6 +704,32 @@ void command_showBoundsAll(){
 }
 
 
+
+// OLD VERSION, doesn't seem to work.
+/*
+void command_sneaky(){
+	//gEngfuncs.GetLocalPlayer()
+	easyPrintLine("CALLED!");
+
+	BOOL madeSneaky = (! (player.pev->flags & FL_NOTARGET) );
+
+
+	if(madeSneaky){
+		player.pev->flags |= FL_NOTARGET;
+		easyPrintLine("Sneaky on!");
+	}else{
+		player.pev->flags &= ~FL_NOTARGET;
+	}
+
+	player.m_fNoPlayerSound = madeSneaky;
+
+	//clientdata_s
+	//gEngfuncs.GetLocalPlayer()->curstate
+
+}
+*/
+
+
 void command_sneaky(){
 	//gEngfuncs.GetLocalPlayer()
 
@@ -709,7 +750,161 @@ void command_sneaky(){
 	//  mp3 play sound/media/Half-Life11.mp3
 	//~sometime?
 
+}//END OF command_sneaky
+
+
+void method_mod_version_client(){
+	char aryChr[128];
+	char aryChrD[128];
+	writeVersionInfo(aryChr, 128);
+	writeDateInfo(aryChrD, 128);
+
+	easyForcePrintLine("AZ client.dll  Version: %s  Date: %s", aryChr, aryChrD);
+}//END OF method_mod_version_client
+
+
+void method_mod_version_server() {
+
+	//cl_entity_s* tempRef = gEngfuncs.GetLocalPlayer();
+	//easyForcePrintLine("null? %d", (tempRef == NULL));
+	// Trying to get "GetLocalPlayer" while the server is not running
+	// returns a pointer with address "0x00000bb8" consistently, verify
+	// this though.
+	// "0x16750bd8" is a more typical result if it is working correctly.
+	// So being below 0x00100000 is a good way to see if this is invalid
+	// memory I assume.
+
+	// ...or just use gEngfuncs.GetMaxClients().  It's 0 when not in a game.  OK!
+	  
+	/*
+		int hay1 = gEngfuncs.GetMaxClients();
+		easyForcePrintLine("maxCli? %d", hay1);
+
+	*/
+
+	// printout tests.
+	/*
+	float testNum = 120.2345678;
+	float testNum2 = 120.456;
+	float testNum3 = 120.12;
+	easyForcePrintLine("? %.2f %2.f %2.2f %f  %.2g %2.g %2.2g %g", testNum, testNum, testNum, testNum, testNum, testNum, testNum, testNum);
+	easyForcePrintLine("? %.2f %2.f %2.2f %f  %.2g %2.g %2.2g %g", testNum2, testNum2, testNum2, testNum2, testNum2, testNum2, testNum2, testNum2);
+	easyForcePrintLine("? %.2f %2.f %2.2f %f  %.2g %2.g %2.2g %g", testNum3, testNum3, testNum3, testNum3, testNum3, testNum3, testNum3, testNum3);
+
+	CL: ? 120.23 120 120.23 120.234566  1.2e+02 1e+02 1.2e+02 120.235
+	CL: ? 120.46 120 120.46 120.456001  1.2e+02 1e+02 1.2e+02 120.456
+	CL: ? 120.12 120 120.12 120.120003  1.2e+02 1e+02 1.2e+02 120.12
+	*/
+	//easyForcePrintLine("what??  %g %g %g %g %g %g %g %g %g %g", 1.0f, 1.1f, 1.11f, 1.111f, 1.1111f, 9.0f, 9.9f, 9.99f, 9.999f, 9.9999f);
+	//CL: what ? ? 1 1.1 1.11 1.111 1.1111 9 9.9 9.99 9.999 9.999
+
+	/*
+	float testNum = 120.2345678;
+	float testNum2 = 120.456;
+	float testNum3 = 120.12;
+	easyForcePrintLine("what??  %.0g %0.g %2.0g %0.2g %0.0g", 0.77777777f, 0.77777777f, 0.77777777f, 0.77777777f, 0.77777777f);
+	easyForcePrintLine("what??  %.0g %0.g %2.0g %0.2g %0.0g", testNum, testNum, testNum, testNum, testNum);
+	easyForcePrintLine("what??  %.0g %0.g %2.0g %0.2g %0.0g", testNum2, testNum2, testNum2, testNum2, testNum2);
+	easyForcePrintLine("what??  %.0g %0.g %2.0g %0.2g %0.0g", testNum3, testNum3, testNum3, testNum3, testNum3);
+	//CL: what ? ? 1 1.1 1.11 1.111 1.1111 9 9.9 9.99 9.999 9.999
+	what ? ? 0.8 0.8 0.8 0.78 0.8
+	what ? ? 1e+02 1e+02 1e+02 1.2e+02 1e+02
+	what ? ? 1e+02 1e+02 1e+02 1.2e+02 1e+02
+	what ? ? 1e+02 1e+02 1e+02 1.2e+02 1e+02
+	//...ok, that sucked.
+	*/
+
+
+	//if (tempRef != NULL) {
+	//if( (int)tempRef >= 0x00100000){
+	if(gEngfuncs.GetMaxClients() > 0){
+		gEngfuncs.pfnClientCmd("_mod_version_server");
+	}else {
+		// Not in a game?  Whoops, let the client know why this call wouldn't work
+		easyForcePrintLine("***Must be ingame/server for this call to work!");
+	}
+	
+}//END OF method_mod_version_client
+
+
+
+
+
+
+
+cvar_t* global_test_cvar_ref = NULL; 
+
+
+void command_test_cvar_client_get_direct();
+void command_test_cvar_client_get_struct();
+void command_test_cvar_reset();
+
+
+
+void command_test_cvar_all() {
+	command_test_cvar_client_get_direct();
+	command_test_cvar_client_get_struct();
+
+	gEngfuncs.pfnClientCmd("tcs_get_direct");
+	gEngfuncs.pfnClientCmd("tcs_get_struct");
 }
+
+
+void command_test_cvar_init_link() {
+	global_test_cvar_ref = CVAR_GET_POINTER("test_cvar");
+	easyForcePrintLine("***client cvar ref established, probably.  Found? %d", (global_test_cvar_ref!=NULL) );
+	
+	gEngfuncs.pfnClientCmd("tcs_init_link");
+}
+void command_test_cvar_reset() {
+
+	global_test_cvar_ref = CVAR_GET_POINTER("test_cvar");
+	if (global_test_cvar_ref != NULL) {
+		global_test_cvar_ref->value = 6;
+	}
+	CVAR_SET_FLOAT("test_cvar", 6);
+	easyForcePrintLine("***client cvar reset.");
+
+	gEngfuncs.pfnClientCmd("tcs_reset");
+}
+void command_test_cvar_client_set_direct(){
+	CVAR_SET_FLOAT("test_cvar", 13.0f);
+	easyForcePrintLine("***Set to 13 success, probably.");
+}
+void command_test_cvar_client_set_struct(){
+	//cvar_t* tempRef = CVAR_GET_POINTER("test_cvar");
+	cvar_t* tempRef = global_test_cvar_ref;
+	if(tempRef != NULL){
+		tempRef->value = 13.0f;
+		easyForcePrintLine("***Set to 13 success, probably.");
+	}else{
+		easyForcePrintLine("***ERROR: test_cvar struct call did not work.");
+	}
+}
+void command_test_cvar_client_get_direct(){
+	float tempVal = CVAR_GET_FLOAT("test_cvar");
+	easyForcePrintLine("***Value: %.2g", tempVal);
+}
+void command_test_cvar_client_get_struct(){
+	//cvar_t* tempRef = CVAR_GET_POINTER("test_cvar");
+	cvar_t* tempRef = global_test_cvar_ref;
+	if(tempRef != NULL){
+		char binaryBuffer[33];
+		convertIntToBinary(binaryBuffer, tempRef->flags, 32);
+		easyForcePrintLine("***Value: %.2g, flags: %s", tempRef->value, binaryBuffer);
+	}else{
+		easyForcePrintLine("***ERROR: test_cvar struct call did not work.");
+	}
+}
+
+
+
+
+
+
+
+
+
 
 
 
@@ -721,14 +916,32 @@ void command_updateCameraPerspectiveT(void){
 }
 
 
+
+// ohhh yeah, this lets a generally serverside command be seen in autocomplete in console.
+// That is, it's a way of getting around being unable to use "pfnAddCommand" serverside.
+// You do it clientside, then tell the server the same thing and the server reads it in
+// dlls/client.cpp.
+// These in particular are alternate "god" and "noclip" commands, since we can't really
+// make the engine allow them in multiplayer and/or even after turning sv_cheats on
+// (without restarting the map that is, but these don't care about map restarts).
 void command_god2(void){
 	gEngfuncs.pfnClientCmd("god2");
 }
 void command_noclip2(void){
 	gEngfuncs.pfnClientCmd("noclip2");
 }
+// And to make the fvox toggle show up in auto-complete too, but the server needs to know
+// this was called for that player, apparently.
 void command_fvoxtoggle(void){
-	gEngfuncs.pfnClientCmd("fvoxtoggle");
+
+	if (EASY_CVAR_GET(cl_fvox) == 0) {
+		EASY_CVAR_SET(cl_fvox, 1);
+	}
+	else {
+		EASY_CVAR_SET(cl_fvox, 0);
+	}
+
+	//gEngfuncs.pfnClientCmd("fvoxtoggle");
 }
 
 
@@ -737,6 +950,9 @@ void command_fvoxtoggle(void){
 
 
 // This is called every time the DLL is loaded
+// MODDD - NOTE. 
+// See cl_dll/cdll_int.cpp for the HUD_Init call that leads here, although there isn't anything
+// special there.
 void CHud :: Init( void )
 {
 	
@@ -758,31 +974,35 @@ void CHud :: Init( void )
 	HOOK_COMMAND( "togglebrowser", ToggleServerBrowser );
 
 
+	HOOK_MESSAGE( ValClass );
+	HOOK_MESSAGE( TeamNames );
+	HOOK_MESSAGE( Feign );
+	HOOK_MESSAGE( Detpack );
+	HOOK_MESSAGE( MOTD );
+	HOOK_MESSAGE( BuildSt );
+	HOOK_MESSAGE( RandomPC );
+	HOOK_MESSAGE( ServerName );
+	HOOK_MESSAGE( ScoreInfo );
+	HOOK_MESSAGE( TeamScore );
+	HOOK_MESSAGE( TeamInfo );
+
+	HOOK_MESSAGE( Spectator );
+	HOOK_MESSAGE( AllowSpec );
+
+	// VGUI Menus
+	HOOK_MESSAGE( VGUIMenu );
+
+
+
 
 	//MODDDDMIRROR - this block.
 	viewEntityIndex = 0; // trigger_viewset stuff
 	viewFlags = 0;
 	m_iLogo = 0;
-	m_iFOV = 0;
+	m_iPlayerFOV = 0;
 	numMirrors = 0;
 	//m_iHUDColor = 0x00FFA000; //255,160,0 -- LRC
 
-
-
-
-
-
-	//MODDD - associate this text in console with toggling the logo on and off ("1" or "0" afterwards):
-	toggleLogo = gEngfuncs.pfnRegisterVariable ( "hud_logo", "0", FCVAR_CLIENTDLL | FCVAR_ARCHIVE );
-	showBrokenHUDAlpha = gEngfuncs.pfnRegisterVariable ( "hud_brokentrans", "0", FCVAR_CLIENTDLL | FCVAR_ARCHIVE );
-	
-	
-	CVAR_CREATE("cl_fvox", "1", FCVAR_CLIENTDLL | FCVAR_ARCHIVE);
-	CVAR_CREATE("cl_ladder", "1", FCVAR_CLIENTDLL | FCVAR_ARCHIVE);
-	CVAR_CREATE("cl_explosion", "0", FCVAR_CLIENTDLL | FCVAR_ARCHIVE);
-	
-	CVAR_CREATE("pissedNPCs", "0", FCVAR_ARCHIVE);
-	//MODDD - can drop in single player.  Usually off for whatever reason.
 
 	
 	//always start at what fvoxEnabled was.
@@ -814,16 +1034,9 @@ void CHud :: Init( void )
 	gEngfuncs.pfnAddCommand( "noclip_friendly", command_noclip2 );
 	gEngfuncs.pfnAddCommand( "god_friendly", command_god2 );
 
-	gEngfuncs.pfnAddCommand( "cl_fvoxtoggle", command_fvoxtoggle );
+	gEngfuncs.pfnAddCommand("fvoxtoggle", command_fvoxtoggle);
 
 
-
-
-
-
-
-	
-	
 	//weaponSelectSoundPlayOnMousewheel = gEngfuncs.pfnRegisterVariable("weaponSelectSoundPlayOnMousewheel", "1", FCVAR_CLIENTDLL | FCVAR_ARCHIVE);
 	//timedDamageDeathRemoveMode = CVAR_CREATE("timedDamageDeathRemoveMode", "1", FCVAR_CLIENTDLL | FCVAR_ARCHIVE);
 	//weaponSelectUsesReloadSounds = CVAR_CREATE("weaponSelectUsesReloadSounds", "0", FCVAR_ARCHIVE);
@@ -832,121 +1045,106 @@ void CHud :: Init( void )
 	//CVar_cameraMode = CVAR_CREATE("IGNOREcameraMode", "0", FCVAR_CLIENTDLL);
 	//CVar_cameraModeMem = 0;
 
-	CVAR_CREATE("precacheAll", "1", FCVAR_ARCHIVE);
-	CVAR_CREATE("soundSentenceSave", "1", FCVAR_ARCHIVE | FCVAR_CLIENTDLL);
 	//Apply the method for referring to sounds by sentences.txt instead of precaching them to save precache space.
 	
-
-
-
+	
 
 	//cvarHUD_letswatchamovie = CVAR_CREATE( "letswatchamovie", "0", FCVAR_CLIENTDLL );
 
 	gEngfuncs.pfnAddCommand( "sneaky", command_sneaky );
 	//Toggles both "impulse 105" (no player noise) and "notarget".
 
+	gEngfuncs.pfnAddCommand("mod_version_client", method_mod_version_client);
+	gEngfuncs.pfnAddCommand("mod_version_server", method_mod_version_server);
+	
 
 
+	//MODDD - CVAR TEST
+	//CVAR_CREATE("test_cvar", "6", 0);
+	// FCVAR_CLIENTDLL | FCVAR_ARCHIVE
+
+
+	gEngfuncs.pfnAddCommand("tc_init", command_test_cvar_init_link);
+
+	gEngfuncs.pfnAddCommand("tc_reset", command_test_cvar_reset);
+
+	//global_test_cvar_ref = CVAR_GET_POINTER("test_cvar");
+	
+
+	gEngfuncs.pfnAddCommand( "tcc_set_direct", command_test_cvar_client_set_direct );
+	gEngfuncs.pfnAddCommand( "tcc_set_struct", command_test_cvar_client_set_struct );
+	gEngfuncs.pfnAddCommand( "tcc_get_direct", command_test_cvar_client_get_direct );
+	gEngfuncs.pfnAddCommand( "tcc_get_struct", command_test_cvar_client_get_struct );
+	///////////////////////////////////////////////
+	gEngfuncs.pfnAddCommand("tc_all", command_test_cvar_all);
+
+
+
+	/*
 	char aryChr[128];
 	char aryChrD[128];
 	writeVersionInfo(aryChr, 128);
 	writeDateInfo(aryChrD, 128);
 
-
-	CVAR_CREATE("protoVersionC", aryChr, FCVAR_CLIENTDLL);
-	CVAR_CREATE("protoDateC", aryChrD, FCVAR_CLIENTDLL);
+	//NOTE - SPECIAL.  Not using the EasyCVAR system, these are for getting info about the game.
+	//...actually getting replaced by commands, makes more sense as read-only values anyway.
+	CVAR_CREATE("cl_mod_version", aryChr, FCVAR_CLIENTDLL);
+	CVAR_CREATE("cl_mod_date", aryChrD, FCVAR_CLIENTDLL);
+	*/
 
 	//to be written to by the server dll (default name: hl.dll) at game start.
-	CVAR_CREATE("protoVersionS", "Start the game!", 0);
-	CVAR_CREATE("protoDateS", "Start the game!", 0);
+	//NO, register on the server now (dlls/game.cpp)!
+	//CVAR_CREATE("sv_mod_version", "Start the game!", 0);
+	//CVAR_CREATE("sv_mod_date", "Start the game!", 0);
 	
 	
 	EASY_CVAR_CREATE_CLIENT_MASS
-
-
-	
-
-
-
-
-
-
-
 
 
 	//CVAR_CREATE("barnacleEatsAnything", "0", FCVAR_ARCHIVE | FCVAR_PROTECTED | FCVAR_UNLOGGED | FCVAR_PRINTABLEONLY);
 	//CVAR_CREATE("barnacleEatsBarnacles", "0", FCVAR_ARCHIVE);
 	
 	
-	HOOK_MESSAGE( ValClass );
-	HOOK_MESSAGE( TeamNames );
-	HOOK_MESSAGE( Feign );
-	HOOK_MESSAGE( Detpack );
-	HOOK_MESSAGE( MOTD );
-	HOOK_MESSAGE( BuildSt );
-	HOOK_MESSAGE( RandomPC );
-	HOOK_MESSAGE( ServerName );
-	HOOK_MESSAGE( ScoreInfo );
-	HOOK_MESSAGE( TeamScore );
-	HOOK_MESSAGE( TeamInfo );
-
-	HOOK_MESSAGE( Spectator );
-	HOOK_MESSAGE( AllowSpec );
-
-	// VGUI Menus
-	HOOK_MESSAGE( VGUIMenu );
-
-
+	
+	
+	// These... are a confusing case as I don't remember anything about them, other than the note further above
+	// about thees CVars coming from a different version of the SDK.  Best not to touch.
 	cl_viewrollangle = CVAR_CREATE("cl_viewrollangle", "0.65", FCVAR_CLIENTDLL | FCVAR_ARCHIVE);
 	cl_viewrollspeed = CVAR_CREATE("cl_viewrollspeed", "300", FCVAR_CLIENTDLL | FCVAR_ARCHIVE);
 
-
+	// Same for these...?  No idea what business Team Fortress CVars have in HL but okay.
 	CVAR_CREATE( "hud_classautokill", "1", FCVAR_ARCHIVE | FCVAR_USERINFO );		// controls whether or not to suicide immediately on TF class switch
 	CVAR_CREATE( "hud_takesshots", "0", FCVAR_ARCHIVE );		// controls whether or not to automatically take screenshots at the end of a round
 	
 
-
-
-
-
 	m_iLogo = 0;
-	m_iFOV = 0;
+	m_iPlayerFOV = 0;
+
 
 	CVAR_CREATE( "zoom_sensitivity_ratio", "1.2", 0 );
-
-	
-	cvar2_cl_server_interpolation = CVAR_CREATE( "cl_server_interpolation", "1", FCVAR_CLIENTDLL | FCVAR_ARCHIVE );
-
-
-
-
-
-
 	//MODDD - changed how this works.  Remembers since last time, and the default is different.
 	//default_fov = CVAR_CREATE( "default_fov", "90", 0 );
 	//In the base game, the default_fov always starts out at 90.
-	default_fov = CVAR_CREATE( "default_fov", "105", FCVAR_CLIENTDLL | FCVAR_ARCHIVE );
+	// Also leaving this outside the EASY_CVAR system!
+	default_fov = CVAR_CREATE( "default_fov", "90", FCVAR_ARCHIVE );
+	m_pCvarStealMouse = CVAR_CREATE( "hud_capturemouse", "1", FCVAR_ARCHIVE );
+	m_pCvarDraw = CVAR_CREATE( "hud_draw", "1", FCVAR_ARCHIVE );
+	cl_lw = gEngfuncs.pfnGetCvarPointer( "cl_lw" );
+	
 	
 
 	//aspectratio_determined_fov = CVAR_CREATE("aspectratio_determined_fov", "0", 0);
-
 	
-
-
-
-
 	/*
 	//Do NOT remember the "old" value.  Always begins as empty!
 	CVAR_CREATE("canApplyDefaultFOV", "0", FCVAR_CLIENTDLL);
-	auto_adjust_fov_aspect = CVAR_CREATE("auto_adjust_fov_aspect", "1", FCVAR_CLIENTDLL | FCVAR_ARCHIVE);
+	auto_adjust_fov = CVAR_CREATE("auto_adjust_fov", "1", FCVAR_CLIENTDLL | FCVAR_ARCHIVE);
 	
 	//MODDD - new FOV vars for zooming.
 	auto_adjust_zoomfov = CVAR_CREATE( "auto_adjust_zoomfov", "1", FCVAR_CLIENTDLL | FCVAR_ARCHIVE );
 	pythzon_oomfov = CVAR_CREATE( "python_zoomfov", "48", FCVAR_CLIENTDLL | FCVAR_ARCHIVE );
 	crossbow_zoomfov = CVAR_CREATE( "crossbow_zoomfov", "24", FCVAR_CLIENTDLL | FCVAR_ARCHIVE );
 	*/
-
-
 	
 	//Not necessary, updated by player really early if needed.
 	/*
@@ -954,39 +1152,9 @@ void CHud :: Init( void )
 		python_zoomfov->value = auto_adjust_zoomfov->value * 0.4444f;
 		crossbow_zoomfov->value = auto_adjust_zoomfov->value * 0.2222f;
 	}
-	*/	
+	*/
 
 	
-	
-	
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-	m_pCvarStealMouse = CVAR_CREATE( "hud_capturemouse", "1", FCVAR_ARCHIVE );
-	m_pCvarDraw = CVAR_CREATE( "hud_draw", "1", FCVAR_ARCHIVE );
-	cl_lw = gEngfuncs.pfnGetCvarPointer( "cl_lw" );
 
 	m_pSpriteList = NULL;
 
@@ -1030,7 +1198,6 @@ void CHud :: Init( void )
 	MsgFunc_ResetHUD(0, 0, NULL );
 
 
-	
 }
 
 // CHud destructor
@@ -1059,11 +1226,9 @@ CHud :: ~CHud()
 
 
 
-
-
 void CHud::getGenericGUIColor(int &r, int &g, int &b){
 	
-	if(global2_hud_version == 0){
+	if(EASY_CVAR_GET(hud_version) == 0){
 		getGenericGreenColor(r, g, b);
 	}else{
 		getGenericOrangeColor(r, g, b);
@@ -1074,9 +1239,9 @@ void CHud::getGenericGUIColor(int &r, int &g, int &b){
 
 void CHud::getGenericEmptyColor(int &r, int &g, int &b){
 
-	if(global2_hud_version == 0){
+	if(EASY_CVAR_GET(hud_version) == 0){
 
-		if(global2_preE3UsesFailColors == 1){
+		if(EASY_CVAR_GET(preE3UsesFailColors) == 1){
 			getGenericRedColor(r,g,b);
 		}else{
 			getGenericGreenColor(r, g, b);
@@ -1084,7 +1249,7 @@ void CHud::getGenericEmptyColor(int &r, int &g, int &b){
 
 	}else{
 
-		if(global2_E3UsesFailColors == 1){
+		if(EASY_CVAR_GET(E3UsesFailColors) == 1){
 			getGenericRedColor(r,g,b);
 		}else{
 			getGenericOrangeColor(r, g, b);
@@ -1118,9 +1283,6 @@ void CHud::getGenericGreenColor(int &r, int &g, int &b){
 
 
 
-
-
-
 // GetSpriteIndex()
 // searches through the sprite list loaded from hud.txt for a name matching SpriteName
 // returns an index into the gHUD.m_rgSpriteHandle_ts[] array
@@ -1130,7 +1292,7 @@ int CHud :: GetSpriteIndex( const char *SpriteName )
 
 	//MODDD - printouts.
 	//easyPrint( "SPRITE COUNT IS %d\n", m_iSpriteCount );
-	//UTIL_ClientPrintAll( HUD_PRINTNOTIFY, numstr);
+	//ClientPrintAll( HUD_PRINTNOTIFY, numstr);
 
 	
 	// look through the loaded sprite name list for SpriteName
@@ -1155,30 +1317,15 @@ void CHud :: VidInit( void )
 
 	//gEngfuncs.pfnGetCvarPointer( "cl_lw" );???
 
-	//MODDD - determine the FOV, given the screen size available at this point (by a ratio of width/height, plugged
-	//        into a linear function).
-	//cvar_t* aspectratio_determined_fov = CVAR_GET("aspectratio_determined_fov");
-	//aspectratio_determined_fov->value = (int) (  ((float)ScreenWidth / (float)ScreenHeight) * 45 + 30   );
-	//new formula.  ratio of 1.333 still yeilds FOV of 90, but ratio of 1.777 yields FOV of 105 instead of 110.
-	
 
-
-	int determinedFOV = (int) (  ((float)ScreenWidth / (float)ScreenHeight) * 33.75f + 45   );
-	//aspectratio_determined_fov->value = determinedFOV;
-	//gEngfuncs.Cvar_SetValue("aspectratio_determined_fov", determinedFOV );
-	//send it off!
-	
-	global2PSEUDO_determinedFOV = determinedFOV;
-	
-	
-	//easyPrintLine("HHHHHHHHHHHHHHHHHHHHHH %d %d, %.2f", ScreenWidth, ScreenHeight, (float)determinedFOV);
+	updateAutoFOV();
 
 
 	//MODDDDMIRROR - this block.  Also here too (?)
 	viewEntityIndex = 0; // trigger_viewset stuff
 	viewFlags = 0;
 	m_iLogo = 0;
-	m_iFOV = 0;
+	m_iPlayerFOV = 0;
 	numMirrors = 0;
 	//m_iHUDColor = 0x00FFA000; //255,160,0 -- LRC
 
@@ -1186,8 +1333,12 @@ void CHud :: VidInit( void )
 
 	//m_hsprGNFOS = 0;
 
-	//Why does loading it here avoid crashes sometimes? Who knows.
-	m_hsprGNFOS = SPR_Load("sprites/ymg.spr");
+
+
+	if(playingMov == TRUE){
+		//Why does loading it here avoid crashes sometimes? Who knows.
+		m_hsprGNFOS = SPR_Load("sprites/ymg.spr");
+	}
 
 
 
@@ -1368,7 +1519,7 @@ void CHud :: VidInit( void )
 
 
 	if(m_HUD_brokentransparency >= 0){
-		m_prc_brokentransparency = &gHUD.GetSpriteRect( m_HUD_brokentransparency );
+		m_prc_brokentransparency = &GetSpriteRect( m_HUD_brokentransparency );
 		brokenTransWidth = m_prc_brokentransparency->right - m_prc_brokentransparency->left;
 		brokenTransHeight = m_prc_brokentransparency->bottom - m_prc_brokentransparency->top;
 
@@ -1507,13 +1658,17 @@ float HUD_GetFOV( void )
 
 
 //MODDD - just note
-//NOTE: while "hud_redraw" constantly forces m_iFOV to default_fov, let it be known that this method is perhaps almost entirely pointless.
+//NOTE: while "hud_redraw" constantly forces m_iPlayerFOV to default_fov, let it be known that this method is perhaps almost entirely pointless.
 int CHud::MsgFunc_SetFOV(const char *pszName,  int iSize, void *pbuf)
 {
 	BEGIN_READ( pbuf, iSize );
 
 	int newfov = READ_BYTE();
-	int def_fov = CVAR_GET_FLOAT( "default_fov" );
+
+	//MODDD - you know the drill.
+	//int def_fov = CVAR_GET_FLOAT( "default_fov" );
+	int def_fov = getPlayerBaseFOV();
+	
 
 	//Weapon prediction already takes care of changing the fog. ( g_lastFOV ).
 	if ( cl_lw && cl_lw->value )
@@ -1523,17 +1678,17 @@ int CHud::MsgFunc_SetFOV(const char *pszName,  int iSize, void *pbuf)
 
 	if ( newfov == 0 )
 	{
-		m_iFOV = def_fov;
+		m_iPlayerFOV = def_fov;
 	}
 	else
 	{
-		m_iFOV = newfov;
+		m_iPlayerFOV = newfov;
 	}
 
 	// the clients fov is actually set in the client data update section of the hud
 
 	// Set a new sensitivity
-	if ( m_iFOV == def_fov )
+	if ( m_iPlayerFOV == def_fov )
 	{  
 		// reset to saved sensitivity
 		m_flMouseSensitivity = 0;
