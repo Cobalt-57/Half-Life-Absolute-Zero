@@ -19,7 +19,7 @@
 // implementation of class-less helper functions
 //
 
-#include "externalLibInclude.h"
+#include "external_lib_include.h"
 //#include "STDIO.H"
 //#include "STDLIB.H"
 //#include "MATH.H"
@@ -30,9 +30,15 @@
 #include <string.h>
 
 
-#ifndef M_PI
-#define M_PI		3.14159265358979323846	// matches value in gcc v2 math.h
-#endif
+
+
+cvar_t* cl_lw = NULL;
+cvar_t* cl_viewrollangle;
+cvar_t* cl_viewrollspeed;
+
+// from hud.cpp
+float g_lastFOV = 0.0;
+
 
 // don't mind these.
 int playingMov = FALSE;
@@ -41,8 +47,9 @@ float movieStartTime = -1;
 
 
 
-
-vec3_t vec3_origin( 0, 0, 0 );
+//MODDD - no need!  Including common/mathlib.h, associated pm_shared/pm_math.c has vec3_origina already.
+// 
+//vec3_t vec3_origin( 0, 0, 0 );
 
 
 
@@ -195,92 +202,20 @@ void updateAutoFOV(void){
 
 
 
+//MODDD - what was the point of this??
+// If we rely on the OS to give this method, fine.  Doing this without ever defining it
+// in the project's code just seems wonky.
+//double sqrt(double x);
+
+//MODDD - vector-math-related methods moved to common/vector.cpp.
 
 
 
-double sqrt(double x);
 
-float Length(const float *v)
-{
-	int		i;
-	float	length;
-	
-	length = 0;
-	for (i=0 ; i< 3 ; i++)
-		length += v[i]*v[i];
-	length = sqrt (length);		// FIXME
 
-	return length;
-}
 
-void VectorAngles( const float *forward, float *angles )
-{
-	float	tmp, yaw, pitch;
-	
-	if (forward[1] == 0 && forward[0] == 0)
-	{
-		yaw = 0;
-		if (forward[2] > 0)
-			pitch = 90;
-		else
-			pitch = 270;
-	}
-	else
-	{
-		yaw = (atan2(forward[1], forward[0]) * 180 / M_PI);
-		if (yaw < 0)
-			yaw += 360;
 
-		tmp = sqrt (forward[0]*forward[0] + forward[1]*forward[1]);
-		pitch = (atan2(forward[2], tmp) * 180 / M_PI);
-		if (pitch < 0)
-			pitch += 360;
-	}
-	
-	angles[0] = pitch;
-	angles[1] = yaw;
-	angles[2] = 0;
-}
 
-float VectorNormalize (float *v)
-{
-	float	length, ilength;
-
-	length = v[0]*v[0] + v[1]*v[1] + v[2]*v[2];
-	length = sqrt (length);		// FIXME
-
-	if (length)
-	{
-		ilength = 1/length;
-		v[0] *= ilength;
-		v[1] *= ilength;
-		v[2] *= ilength;
-	}
-		
-	return length;
-
-}
-
-void VectorInverse ( float *v )
-{
-	v[0] = -v[0];
-	v[1] = -v[1];
-	v[2] = -v[2];
-}
-
-void VectorScale (const float *in, float scale, float *out)
-{
-	out[0] = in[0]*scale;
-	out[1] = in[1]*scale;
-	out[2] = in[2]*scale;
-}
-
-void VectorMA (const float *veca, float scale, const float *vecb, float *vecc)
-{
-	vecc[0] = veca[0] + scale*vecb[0];
-	vecc[1] = veca[1] + scale*vecb[1];
-	vecc[2] = veca[2] + scale*vecb[2];
-}
 
 SpriteHandle_t LoadSprite(const char *pszName)
 {
@@ -327,7 +262,6 @@ void SetCrosshairFiltered( SpriteHandle_t hspr, wrect_t rc, int r, int g, int b,
 		SetCrosshair(hspr, rc, r, g, b);
 	}
 	
-
 }
 
 
@@ -687,10 +621,18 @@ void drawStringFabulousVert(int arg_x, int arg_y, const char* arg_str){
 }
 
 void drawString(int arg_x, int arg_y, const char* arg_str, const float& r, const float& g, const float& b){
-
 	gEngfuncs.pfnDrawSetTextColor(r, g, b);
 	gEngfuncs.pfnDrawConsoleString( arg_x, arg_y, (char*) arg_str );
 }
+
+
+
+
+
+
+
+
+
 
 
 int firstCrazyShit = TRUE;
@@ -842,8 +784,7 @@ void drawCrazyShit(float flTime)
 	drawString(xVal5, sin(flTime * 1.2)*70 + ScreenHeight - 300, "BITCHES DIG MY SINE WAVE", 1, 0, 1);
 
 	float rad = 0;
-#define Q_PI 3.141529
-
+	
 	//int originX = ScreenWidth - 220;
 	//int originY = 170;
 
@@ -856,7 +797,7 @@ void drawCrazyShit(float flTime)
 	int originY = ScreenHeight / 2 - 8;
 
 
-	for(rad = 0; rad < Q_PI * 2; rad += (Q_PI / 48)){
+	for(rad = 0; rad < M_PI * 2; rad += (M_PI / 48)){
 		int tempx = (int) (cos(rad) * anotherPeriod + originX);
 		int tempy = (int) (sin(rad) * anotherPeriod + originY);
 
@@ -872,60 +813,6 @@ void drawCrazyShit(float flTime)
 	drawString( ScreenWidth/2 + 39, ScreenHeight/2- 24, "N\' SHIT", 0.35, 0.53, 0.91 );
 
 }//END OF drawCrazyShit
-
-
-
-
-/*
-void createSendString(char* arg_dest, int arg_maxLength, const char* arg_base, int arg_arg){
-	for(int i = 0; i < arg_maxLength - 1; i++){
-		if(arg_base[i] == '\0'){
-			//done.  Finish up.
-
-			arg_dest[i] = ' ';  //this loc will be a space instead.
-			arg_dest[i + 1] = arg_arg;  //this loc will be a space instead.
-
-			break;
-		}else{
-			arg_dest[i] = arg_base[i];
-		}
-	}
-	aryChrToSend[arg_maxLength - 1] = '\0';
-}
-*/
-
-
-// hmmmmm.     NO.
-//void createSendString(char* arg_dest, const char* arg_label, int arg_arg){
-//	const char* szFmt = "%s %d";
-//	sprintf(arg_dest, szFmt, arg_label, arg_arg);
-//}
-/*
-void sendAutoFOV(void){
-	//JUST DO IT!
-	//gEngfuncs.Cvar_SetValue("default_fov", global2PSEUDO_determinedFOV );
-	
-	char aryChrToSend[128];
-	createSendString(aryChrToSend, "sendautofov", global2PSEUDO_determinedFOV);
-	//easyForcePrintLine("RIGHT BACK ATCHA %s", aryChrToSend);
-	gEngfuncs.pfnClientCmd(aryChrToSend);
-	
-}
-*/
-
-
-
-/*
-//probably unnecessary with shared getting extdll's windows.h #include and some other nearby things.
-#include <iostream>
-#include <fstream>
-#include <string>
-using namespace std;
-
-//for some file methods.
-#include "windows.h"
-*/
-
 
 
 

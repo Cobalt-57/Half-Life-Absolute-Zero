@@ -28,10 +28,10 @@ typedef struct
 	int     line;
 } script_t;
 
-#define	MAX_INCLUDES	8
+#define MAX_INCLUDES	8
 script_t	scriptstack[MAX_INCLUDES];
 script_t	*script;
-int			scriptline;
+int		scriptline;
 
 char    token[MAXTOKEN];
 qboolean endofscript;

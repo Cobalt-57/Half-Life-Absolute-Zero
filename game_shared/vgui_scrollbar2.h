@@ -43,7 +43,7 @@ public:
 	virtual Button* getButton(int index);
 	virtual void    setSlider(Slider2 *slider);
 	virtual Slider2 *getSlider();
-	virtual void 	doButtonPressed(int buttonIndex);
+	virtual void	doButtonPressed(int buttonIndex);
 	virtual void    setButtonPressedScrollValue(int value);
 	virtual void    validate();
 public: //bullshit public 

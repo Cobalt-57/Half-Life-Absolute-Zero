@@ -21,31 +21,32 @@ This file contains "stubs" of class member implementations so that we can predic
  add in the functionality you need.
 ==========================
 */
-#include	"extdll.h"
-#include	"util.h"
-#include	"cbase.h"
-#include	"player.h"
-#include	"weapons.h"
-#include	"nodes.h"
-#include	"soundent.h"
-#include	"skill.h"
+#include "extdll.h"
+#include "util.h"
+#include "cbase.h"
+#include "player.h"
+#include "weapons.h"
+#include "nodes.h"
+#include "soundent.h"
+#include "skill.h"
 
 //MODDD - new
 #include "chumtoadweapon.h"
 
 
 
-
-
 // Globals used by game logic
-const Vector g_vecZero = Vector( 0, 0, 0 );
+//MODDD - g_vecZero moved to util_shared.h/.cpp.
+
 int gmsgWeapPickup = 0;
 enginefuncs_t g_engfuncs;
-globalvars_t  *gpGlobals;
+
+//MODDD - used to be an important point here.
+//globalvars_t  *gpGlobals;
+
 
 //MODDD - removed here, since this (and CBasePlayerItem::AmmoInfoArray) are in util_shared.cpp now instead.
 //ItemInfo CBasePlayerItem::ItemInfoArray[MAX_WEAPONS];
-
 
 
 //MODDD - is that okay?  Just putting these new method-stubs here since the EMIT_SOUND_DYN was found here as-is.
@@ -109,6 +110,12 @@ BOOL CBaseEntity::isMovetypeFlying(void) const{return FALSE;}
 BOOL CBaseEntity::isSizeGiant(void){return FALSE;}
 BOOL CBaseEntity::isOrganic(void){return FALSE;}
 int CBaseEntity::getHullIndexForNodes(void) const{return 0;}
+
+//MODDD - moved from CBaseAnimating, serverside territority, to CBaseEntity, shared, so
+// these have to be dummied now.
+int CBaseEntity::getNumberOfBodyParts(void){return 0;}
+int CBaseEntity::getNumberOfSkins(void){return 0;}
+
 void CBaseEntity::onDelete(void){}
 
 
@@ -204,14 +211,15 @@ void CBaseEntity::SetObjectCollisionBox( void ) { }
 void CBaseEntity::setModel(void){}
 void CBaseEntity::setModel(const char* m){}
 
-int	CBaseEntity :: Intersects( CBaseEntity *pOther ) { return 0; }
+int CBaseEntity :: Intersects( CBaseEntity *pOther ) { return 0; }
 void CBaseEntity :: MakeDormant( void ) { }
 int CBaseEntity :: IsDormant( void ) { return 0; }
 BOOL CBaseEntity :: IsInWorld( void ) { return TRUE; }
 int CBaseEntity::ShouldToggle( USE_TYPE useType, BOOL currentState ) { return 0; }
-int	CBaseEntity :: DamageDecal( int bitsDamageType ) { return -1; }
-int	CBaseEntity :: DamageDecal( int bitsDamageType, int bitsDamageTypeMod ) { return -1; }
+int CBaseEntity :: DamageDecal( int bitsDamageType ) { return -1; }
+int CBaseEntity :: DamageDecal( int bitsDamageType, int bitsDamageTypeMod ) { return -1; }
 
+edict_t* CBaseEntity::overyLongComplicatedProcessForCreatingAnEntity(const char* entityName){ return NULL; }
 CBaseEntity* CBaseEntity::CreateManual( const char *szName, const Vector &vecOrigin, const Vector &vecAngles, edict_t *pentOwner ) { return NULL; }
 CBaseEntity* CBaseEntity::Create( const char *szName, const Vector &vecOrigin, const Vector &vecAngles, edict_t *pentOwner ) { return NULL; }
 CBaseEntity* CBaseEntity::Create( const char *szName, const Vector &vecOrigin, const Vector &vecAngles, int setSpawnflags, edict_t *pentOwner ) { return NULL; }
@@ -222,7 +230,6 @@ void CBaseEntity::SUB_Remove( void ) { }
 //MODDDMIRROR
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void CBaseEntity::SetNextThink( float delay, BOOL correctSpeed ) { }//LRC
-void CBaseEntity::AbsoluteNextThink( float time, BOOL correctSpeed ) { }//LRC
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void CBaseEntity::playAmmoPickupSound(){}
@@ -272,7 +279,7 @@ void UTIL_SetOrigin( entvars_t *, const Vector &org ) { }
 BOOL UTIL_GetNextBestWeapon( CBasePlayer *pPlayer, CBasePlayerItem *pCurrentWeapon ) { return TRUE; }
 void UTIL_LogPrintf(char *,...) { }
 void ClientPrintAll( int,char const *,char const *,char const *,char const *,char const *) { }
-void ClientPrint( entvars_t *client, int msg_dest, const char *msg_name, const char *param1, const char *param2, const char *param3, const char *param4 ) { }
+void ClientPrint( entvars_t *pClient, int msg_dest, const char *msg_name, const char *param1, const char *param2, const char *param3, const char *param4 ) { }
 
 // CBaseToggle Stubs
 int CBaseToggle::Restore( class CRestore & ) { return 1; }
@@ -541,9 +548,9 @@ BOOL CBaseEntity::SeeThroughWaterLine(void){return FALSE;}
 
 
 void CBaseMonster :: MakeIdealYaw( Vector vecTarget ) { }
-float	CBaseMonster::FlYawDiff ( void ) { return 0.0; }
+float CBaseMonster::FlYawDiff ( void ) { return 0.0; }
 float CBaseMonster::ChangeYaw ( int yawSpeed ) { return 0; }
-float	CBaseMonster::VecToYaw ( Vector vecDir ) { return 0.0; }
+float CBaseMonster::VecToYaw ( Vector vecDir ) { return 0.0; }
 
 //MODDD - constructor
 CBaseAnimating::CBaseAnimating(void){}
@@ -623,6 +630,9 @@ int CBaseMonster :: FindHintNode ( void ) { return NO_NODE; }
 void CBaseMonster::ReportAIState( void ) { }
 void CBaseMonster :: KeyValue( KeyValueData *pkvd ) { }
 BOOL CBaseMonster :: FCheckAITrigger ( void ) { return FALSE; }
+BOOL CBaseMonster::NoFriendlyFire(void) { return FALSE; }
+
+
 int CBaseMonster :: CanPlaySequence( BOOL fDisregardMonsterState, int interruptLevel ) { return FALSE; }
 BOOL CBaseMonster :: FindLateralCover ( const Vector &vecThreat, const Vector &vecViewOffset ) { return FALSE; }
 Vector CBaseMonster :: ShootAtEnemy( const Vector &shootOrigin ) { return g_vecZero; }
@@ -905,11 +915,10 @@ void CBasePlayer::AddPointsToTeam( int score, BOOL bAllowNegativeScore ) { }
 void ClearMultiDamage(void) { }
 void ApplyMultiDamage(entvars_t *pevInflictor, entvars_t *pevAttacker ) { }
 void AddMultiDamage( entvars_t *pevInflictor, CBaseEntity *pEntity, float flDamage, int bitsDamageType) { }
-void SpawnBlood(Vector vecSpot, int bloodColor, float flDamage) { }
 
+void SpawnBlood(Vector vecSpot, int bloodColor, float flDamage) { }
 int DamageDecal( CBaseEntity *pEntity, int bitsDamageType ) { return 0; }
 int DamageDecal( CBaseEntity *pEntity, int bitsDamageType, int bitsDamageTypeMod ) { return 0; }
-
 void DecalGunshot( TraceResult *pTrace, int iBulletType ) { }
 void EjectBrass ( const Vector &vecOrigin, const Vector &vecVelocity, float rotation, int model, int soundtype ) { }
 
@@ -1018,12 +1027,6 @@ void CChumToadWeapon::WeaponIdle( void ) { }
 
 //int CChumToadWeapon::UseDecrement( void ){return FALSE; }
 */
-
-
-
-
-//int getNumberOfSkins(void *pmodel, entvars_t *pev){return -1; }
-int CBaseEntity::getNumberOfSkins(void){return -1;}  //CAREFUL!!
 
 
 

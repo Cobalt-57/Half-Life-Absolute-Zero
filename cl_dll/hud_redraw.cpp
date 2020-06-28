@@ -722,7 +722,7 @@ int CHud :: DrawHudNumber( int x, int y, int iFlags, int iNumber, const int& r, 
 		//This is the tiny font.  Only numbers 1 through 5 are written / could be ripped for it.
 		//I assume "0" just means don't draw, and the syringes have a max of 5 for each type.
 		k = iNumber;
-		if(k >= 1 && k <= 5){
+		if(k >= 1 && k <= 6){
 			//on drawing, apply an offset of - 1 (since the starting ID is for #1, not #0).
 			drawAdditiveFilter(GetSprite(myFontIDZero + k - 1), r, g, b, 0, x, y, &GetSpriteRect(myFontIDZero + k - 1), canDrawBrokenTrans);
 			x += iWidth;

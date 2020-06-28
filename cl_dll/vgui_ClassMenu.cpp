@@ -256,7 +256,7 @@ void CClassMenuPanel::Update()
 	if (!g_iTeamNumber)
 		return;
 
-	int	 iYPos = CLASSMENU_TOPLEFT_BUTTON_Y;
+	int  iYPos = CLASSMENU_TOPLEFT_BUTTON_Y;
 
 	// Cycle through the rest of the buttons
 	for (int i = 0; i <= PC_RANDOM; i++)

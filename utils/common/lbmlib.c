@@ -10,8 +10,10 @@
 
 // lbmlib.c
 
-#include <WINDOWS.H>
-#include <STDIO.H>
+//MODDD - AAHHHH go ahead.
+#include "external_lib_include.h"
+//#include <WINDOWS.H>
+//#include <STDIO.H>
 
 #include "cmdlib.h"
 #include "lbmlib.h"

@@ -16,19 +16,21 @@
 // cl_util.h
 //
 
-
-
-//MODDD - WHY NOT???
 #ifndef CL_UTIL_H
 #define CL_UTIL_H
 
 
-
 #include "cvardef.h"
+
 #include "util_shared.h"  //includes util_printout.h
 
 
 
+extern cvar_t* cl_lw;
+extern cvar_t* cl_viewrollangle;
+extern cvar_t* cl_viewrollspeed;
+
+extern float g_lastFOV;
 
 // don't mind these.
 extern int playingMov;
@@ -53,6 +55,18 @@ extern void updateAutoFOV(void);
 							return gHUD.##y.MsgFunc_##x(pszName, iSize, pbuf ); \
 							}
 
+//MODDD - NEW.  Similar to above, but for the base gHUD instance itself, no sub-class members.
+#define DECLARE_MESSAGE_HUD(x) int __MsgFunc_##x(const char *pszName, int iSize, void *pbuf) \
+							{ \
+							return gHUD.MsgFunc_##x(pszName, iSize, pbuf ); \
+							}
+							
+//MODDD - for messages defined without the base gHUD instance nor a gHUD sub-class member.
+// Put a bunch of PROTOTYPE_MESSAGE near the top of the file, HOOK_MESSAGE them somewhere
+// in the middle in some 'init' method, and IMPLEMENT_MESSAGE below that.  Or wherever really.
+#define PROTOTYPE_MESSAGE(x) int __MsgFunc_##x(const char *pszName, int iSize, void *pbuf);
+#define IMPLEMENT_MESSAGE(x) int __MsgFunc_##x(const char *pszName, int iSize, void *pbuf)
+
 
 #define HOOK_COMMAND(x, y) gEngfuncs.pfnAddCommand( x, __CmdFunc_##y );
 #define DECLARE_COMMAND(y, x) void __CmdFunc_##x( void ) \
@@ -61,10 +75,6 @@ extern void updateAutoFOV(void);
 							}
 
 //CVar defines moved to util_shared.
-
-
-
-
 
 
 
@@ -108,6 +118,8 @@ extern void updateAutoFOV(void);
 #define AngleVectors (*gEngfuncs.pfnAngleVectors)
 
 
+// returns the players name of entity no.
+#define GetPlayerInfo (*gEngfuncs.pfnGetPlayerInfo)
 
 
 //global index of the crosshair index.  Load this early on.
@@ -125,7 +137,7 @@ inline int SPR_Height( SpriteHandle_t x, int f )	{ return gEngfuncs.pfnSPR_Heigh
 inline int SPR_Width( SpriteHandle_t x, int f )	{ return gEngfuncs.pfnSPR_Width(x, f); }
 
 inline 	client_textmessage_t	*TextMessageGet( const char *pName ) { return gEngfuncs.pfnTextMessageGet( pName ); }
-inline 	int						TextMessageDrawChar( int x, int y, int number, int r, int g, int b ) 
+inline 	int					TextMessageDrawChar( int x, int y, int number, int r, int g, int b ) 
 { 
 	return gEngfuncs.pfnDrawCharacter( x, y, number, r, g, b ); 
 }
@@ -159,32 +171,31 @@ inline void CenterPrint( const char *par_string )
 	gEngfuncs.pfnCenterPrint( par_string );
 }
 
-// returns the players name of entity no.
-#define GetPlayerInfo (*gEngfuncs.pfnGetPlayerInfo)
-
 // sound functions
 inline void PlaySound( char *szSound, float vol ) { gEngfuncs.pfnPlaySoundByName( szSound, vol ); }
 inline void PlaySound( int iSound, float vol ) { gEngfuncs.pfnPlaySoundByIndex( iSound, vol ); }
 
 void ScaleColors( int &r, int &g, int &b, int a );
 
-#define DotProduct(x,y) ((x)[0]*(y)[0]+(x)[1]*(y)[1]+(x)[2]*(y)[2])
-#define VectorSubtract(a,b,c) {(c)[0]=(a)[0]-(b)[0];(c)[1]=(a)[1]-(b)[1];(c)[2]=(a)[2]-(b)[2];}
-#define VectorAdd(a,b,c) {(c)[0]=(a)[0]+(b)[0];(c)[1]=(a)[1]+(b)[1];(c)[2]=(a)[2]+(b)[2];}
-#define VectorCopy(a,b) {(b)[0]=(a)[0];(b)[1]=(a)[1];(b)[2]=(a)[2];}
-inline void VectorClear(float *a) { a[0]=0.0;a[1]=0.0;a[2]=0.0;}
-float Length(const float *v);
-void VectorMA (const float *veca, float scale, const float *vecb, float *vecc);
-void VectorScale (const float *in, float scale, float *out);
-float VectorNormalize (float *v);
-void VectorInverse ( float *v );
+
+
+//MODDD -
+//MODDD - Moved to common/vector.h
+//inline void VectorClear(float* a) { a[0] = 0.0; a[1] = 0.0; a[2] = 0.0; }
+
+/*
+// and wait.. these are all defined in pm_shared/pm_math.c slightly differently too?
+float Length(const float* v);
+void VectorAngles(const float* forward, float* angles);
+float VectorNormalize(float* v);
+void VectorMA(const float* veca, float scale, const float* vecb, float* vecc);
+void VectorScale(const float* in, float scale, float* out);
+void VectorInverse(float* v);
+*/
 
 extern vec3_t vec3_origin;
 
-// disable 'possible loss of data converting float to int' warning message
-#pragma warning( disable: 4244 )
-// disable 'truncation from 'const double' to 'float' warning message
-#pragma warning( disable: 4305 )
+
 
 inline void UnpackRGB(int &r, int &g, int &b, unsigned long ulRGB)\
 {\
@@ -220,17 +231,14 @@ extern void drawString(int arg_x, int arg_y, const char* arg_str, const float& r
 extern void drawCrazyShit(float flTime);
 
 
-//extern void createSendString(char* arg_dest, const char* arg_label, int arg_arg);
-//extern void sendAutoFOV(void);
-
-
 extern void testForHelpFile(void);
 
 extern void resetModCVarsClientOnly(void);
 
 
 //MODDD - used to be prototyped (externed?) in weapons.h serverside for whatever reason (weapons.h is still included clientside... huh)
-extern bool bIsMultiplayer(void);
+// And removed, made obsolete by IsMutliplayer in util_shared.h/.cpp
+//extern bool bIsMultiplayer(void);
 
 
 #endif //END OF CL_UTIL_H

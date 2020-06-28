@@ -32,7 +32,7 @@ public:
 	vgui::Label			*m_pLabel;
 	vgui::Label			*m_pBackground;
 	vgui::ImagePanel	*m_pIcon;		// Voice icon next to player name.
-	int					m_clientindex;	// Client index of the speaker. -1 if this label isn't being used.
+	int				m_clientindex;	// Client index of the speaker. -1 if this label isn't being used.
 };
 
 
@@ -43,13 +43,13 @@ public:
 	virtual					~IVoiceStatusHelper()	{}
 
 	// Get RGB color for voice status text about this player.
-	virtual void			GetPlayerTextColor(int entindex, int color[3]) = 0;
+	virtual void		GetPlayerTextColor(int entindex, int color[3]) = 0;
 
 	// Force it to update the cursor state.
-	virtual void			UpdateCursorState() = 0;
+	virtual void		UpdateCursorState() = 0;
 
 	// Return the height above the bottom that the voice ack icons should be drawn at.
-	virtual int				GetAckIconHeight() = 0;
+	virtual int			GetAckIconHeight() = 0;
 
 	// Return true if the voice manager is allowed to show speaker labels
 	// (mods usually return false when the scoreboard is up).
@@ -95,33 +95,33 @@ public:
 public:
 	
 	// Call from HUD_Frame each frame.
-	void	Frame(double frametime);
+	void Frame(double frametime);
 
 	// Called when a player starts or stops talking.
 	// entindex is -1 to represent the local client talking (before the data comes back from the server). 
 	// When the server acknowledges that the local client is talking, then entindex will be gEngfuncs.GetLocalPlayer().
 	// entindex is -2 to represent the local client's voice being acked by the server.
-	void	UpdateSpeakerStatus(int entindex, qboolean bTalking);
+	void UpdateSpeakerStatus(int entindex, qboolean bTalking);
 
 	// sets the correct image in the label for the player
-	void	UpdateSpeakerImage(vgui::Label *pLabel, int iPlayer);
+	void UpdateSpeakerImage(vgui::Label *pLabel, int iPlayer);
 
 	// Call from the HUD_CreateEntities function so it can add sprites above player heads.
-	void	CreateEntities();
+	void CreateEntities();
 
 	// Called when the server registers a change to who this client can hear.
-	void	HandleVoiceMaskMsg(int iSize, void *pbuf);
+	void HandleVoiceMaskMsg(int iSize, void *pbuf);
 
 	// The server sends this message initially to tell the client to send their state.
-	void	HandleReqStateMsg(int iSize, void *pbuf);
+	void HandleReqStateMsg(int iSize, void *pbuf);
 
 
 // Squelch mode functions.
 public:
 
 	// When you enter squelch mode, pass in 
-	void	StartSquelchMode();
-	void	StopSquelchMode();
+	void StartSquelchMode();
+	void StopSquelchMode();
 	bool	IsInSquelchMode();
 
 	// returns true if the target client has been banned
@@ -132,7 +132,7 @@ public:
 	bool    IsPlayerAudible(int iPlayerIndex);
 
 	// blocks the target client from being heard
-	void	SetPlayerBlockedState(int iPlayerIndex, bool blocked);
+	void SetPlayerBlockedState(int iPlayerIndex, bool blocked);
 
 public:
 
@@ -141,22 +141,22 @@ public:
 													// entindex can be -1 if you want a currently-unused voice label.
 	CVoiceLabel*	GetFreeVoiceLabel();			// Get an unused voice label. Returns NULL if none.
 
-	void			RepositionLabels();
+	void		RepositionLabels();
 
-	void			FreeBitmaps();
+	void		FreeBitmaps();
 
-	void			UpdateServerState(bool bForce);
+	void		UpdateServerState(bool bForce);
 
 	// Update the button artwork to reflect the client's current state.
-	void			UpdateBanButton(int iClient);
+	void		UpdateBanButton(int iClient);
 
 
 public:
 
 	enum			{MAX_VOICE_SPEAKERS=7};
 
-	float			m_LastUpdateServerState;		// Last time we called this function.
-	int				m_bServerModEnable;				// What we've sent to the server about our "voice_modenable" cvar.
+	float		m_LastUpdateServerState;		// Last time we called this function.
+	int			m_bServerModEnable;				// What we've sent to the server about our "voice_modenable" cvar.
 
 	vgui::Panel		**m_pParentPanel;
 	CPlayerBitVec	m_VoicePlayers;		// Who is currently talking. Indexed by client index.
@@ -179,7 +179,7 @@ public:
 
 	
 	// Scoreboard icons.
-	double			m_BlinkTimer;			// Blink scoreboard icons..
+	double		m_BlinkTimer;			// Blink scoreboard icons..
 	vgui::BitmapTGA	*m_pScoreboardNeverSpoken;
 	vgui::BitmapTGA	*m_pScoreboardNotSpeaking;
 	vgui::BitmapTGA	*m_pScoreboardSpeaking;
@@ -193,7 +193,7 @@ public:
 	bool				m_bInSquelchMode;
 	
 	SpriteHandle_t				m_VoiceHeadModel;		// Voice head model (goes above players who are speaking).
-	float				m_VoiceHeadModelHeight;	// Height above their head to place the model.
+	float			m_VoiceHeadModelHeight;	// Height above their head to place the model.
 
 	vgui::Image			*m_pSpeakerLabelIcon;	// Icon next to speaker labels.
 

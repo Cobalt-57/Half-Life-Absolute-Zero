@@ -17,13 +17,12 @@
 //
 
 
-
-
 //MODDD - WHY NOT???
 #ifndef UTIL_H
 #define UTIL_H
 
 #include "util_shared.h"  //includes util_printout.h
+#include "util_entity.h"
 #include "client_message.h" //for access to gmsg IDs and the LinkUserMessages method.
 
 #include "activity.h"
@@ -32,11 +31,8 @@
 //MODDD - needed to have "CGlobalState" available to prototypes here.
 #include "saverestore.h"
 
-
-
-extern globalvars_t				*gpGlobals;
-
-
+//MODDD - important point before.
+//extern globalvars_t *gpGlobals;
 
 
 extern unsigned short g_sTrailEngineChoice;
@@ -51,15 +47,7 @@ extern unsigned short g_sFreakyLight;
 extern unsigned short g_sFriendlyVomit;
 extern unsigned short g_sFloaterExplode;
 
-
-
 extern int giPrecacheGrunt;
-
-
-
-
-
-
 
 
 //MODDD - referred to in here, yes.
@@ -71,22 +59,12 @@ EASY_CVAR_EXTERN(soundVolumeStuka)
 //Why wasn't this externed everywhere before? I'm asking you, past me. I'm not insane, I swear.
 extern int global_useSentenceSave;
 
-
-
 extern float previousFrameTime;
 extern BOOL gamePaused;
-
 extern BOOL loadedGame;
 
 
-
-
-// Use this instead of ALLOC_STRING on constant strings
-#define STRING(offset)		(const char *)(gpGlobals->pStringBase + (int)offset)
-#define MAKE_STRING(str)	((int)str - (int)STRING(0))
-
-
-
+class CBaseEntity;
 
 
 
@@ -116,26 +94,8 @@ inline edict_t *FIND_ENTITY_BY_TARGET(edict_t *entStart, const char *pszName)
 #define WRITEKEY_VECTOR(pf, szKeyName, flX, flY, flZ)							\
 		ENGINE_FPRINTF(pf, "\"%s\" \"%f %f %f\"\n", szKeyName, flX, flY, flZ)
 
-// Keeps clutter down a bit, when using a float as a bit-vector
-#define SetBits(flBitVector, bits)		((flBitVector) = (int)(flBitVector) | (bits))
-#define ClearBits(flBitVector, bits)	((flBitVector) = (int)(flBitVector) & ~(bits))
-#define FBitSet(flBitVector, bit)		((int)(flBitVector) & (bit))
-
-// Makes these more explicit, and easier to find
-#define FILE_GLOBAL static
-#define DLL_GLOBAL
-
-// Until we figure out why "const" gives the compiler problems, we'll just have to use
-// this bogus "empty" define to mark things as constant.
-#define CONSTANT
-
-// In case this ever changes
-#define M_PI			3.14159265358979323846
-
-
-
-
-
+// MODDD - several macros and macro methods (SetBits, ClearBits, FBitSet, FILE_GLOBAL,
+// DLL_GLOBAL, CONSTANT, M_PI) moved to util_shared.h.
 
 
 //
@@ -151,7 +111,6 @@ void DBG_AssertFunction(BOOL fExpr, const char* szExpr, const char* szFile, int 
 #endif	// !DEBUG
 
 
-extern DLL_GLOBAL const Vector g_vecZero;
 
 //
 // Constants that were used only by QC (maybe not used at all now)
@@ -165,7 +124,7 @@ extern DLL_GLOBAL const Vector g_vecZero;
 
 //MODDD - NOTICE: left for reasons of compatability paranoia.  If only the script depends on this, it can be canned though.
 //                See globals.cpp for more info.
-extern DLL_GLOBAL int			g_Language;
+extern DLL_GLOBAL int g_Language;
 
 #define AMBIENT_SOUND_STATIC			0	// medium radius attenuation
 #define AMBIENT_SOUND_EVERYWHERE		1
@@ -179,7 +138,7 @@ extern DLL_GLOBAL int			g_Language;
 
 //MODDD - sound flags moved to util_shared.h.
 
-#define	LFO_SQUARE			1
+#define LFO_SQUARE			1
 #define LFO_TRIANGLE		2
 #define LFO_RANDOM			3
 
@@ -190,13 +149,12 @@ extern DLL_GLOBAL int			g_Language;
 #define SF_BRUSH_ROTATE_Z_AXIS		4
 #define SF_BRUSH_ROTATE_X_AXIS		8
 #define SF_PENDULUM_AUTO_RETURN		16
-#define	SF_PENDULUM_PASSABLE		32
+#define SF_PENDULUM_PASSABLE		32
 
 
 //MODDD - NEW
 //momentary_rot_button
-#define	SF_MOMENTARY_ROTATING_REQUIREMASTERTRIGGER		32
-
+#define SF_MOMENTARY_ROTATING_REQUIREMASTERTRIGGER		32
 
 
 #define SF_BRUSH_ROTATE_SMALLRADIUS	128
@@ -213,18 +171,18 @@ extern DLL_GLOBAL int			g_Language;
 #define SVC_CDTRACK			32
 #define SVC_WEAPONANIM		35
 #define SVC_ROOMTYPE		37
-#define	SVC_DIRECTOR		51
+#define SVC_DIRECTOR		51
 
 
 
 // triggers
-#define	SF_TRIGGER_ALLOWMONSTERS	1// monsters allowed to fire this trigger
-#define	SF_TRIGGER_NOCLIENTS		2// players not allowed to fire this trigger
+#define SF_TRIGGER_ALLOWMONSTERS	1// monsters allowed to fire this trigger
+#define SF_TRIGGER_NOCLIENTS		2// players not allowed to fire this trigger
 #define SF_TRIGGER_PUSHABLES		4// only pushables can fire this trigger
 
 // func breakable
 #define SF_BREAK_TRIGGER_ONLY	1// may only be broken by trigger
-#define	SF_BREAK_TOUCH			2// can be 'crashed through' by running player (plate glass)
+#define SF_BREAK_TOUCH			2// can be 'crashed through' by running player (plate glass)
 #define SF_BREAK_PRESSURE		4// can be broken by a player standing on it
 #define SF_BREAK_CROWBAR		256// instant break if hit with crowbar
 
@@ -262,27 +220,11 @@ extern DLL_GLOBAL int			g_Language;
 
 
 
+//!!!!!!!!!!!!!!!!!!!!!
+// entity-related typedefs and constant methods like ENT have been moved to util_entity.h.
 
 
-
-
-
-
-
-
-//!!!!!!!!!!!!!!
-//entity-related typedefs and constant methods like ENT have been moved to "enginecallback.h", also serverside.
-
-
-//-----------
-
-
-
-// Testing strings for nullity
-#define iStringNull 0
 inline BOOL FStringNull(int iString)			{ return iString == iStringNull; }
-
-
 
 
 
@@ -290,26 +232,21 @@ inline BOOL FStringNull(int iString)			{ return iString == iStringNull; }
 
 // Dot products for view cone checking
 #define VIEW_FIELD_FULL		(float)-1.0 // +-180 degrees
-#define	VIEW_FIELD_WIDE		(float)-0.7 // +-135 degrees 0.1 // +-85 degrees, used for full FOV checks 
-#define	VIEW_FIELD_NARROW	(float)0.7 // +-45 degrees, more narrow check used to set up ranged attacks
-#define	VIEW_FIELD_ULTRA_NARROW	(float)0.9 // +-25 degrees, more narrow check used to set up ranged attacks
-
-
-
-
+#define VIEW_FIELD_WIDE		(float)-0.7 // +-135 degrees 0.1 // +-85 degrees, used for full FOV checks 
+#define VIEW_FIELD_NARROW	(float)0.7 // +-45 degrees, more narrow check used to set up ranged attacks
+#define VIEW_FIELD_ULTRA_NARROW	(float)0.9 // +-25 degrees, more narrow check used to set up ranged attacks
 
 
 // All monsters need this data
-#define		DONT_BLEED			-1
-#define		BLOOD_COLOR_RED		(BYTE)70 //(BYTE)247
-#define		BLOOD_COLOR_YELLOW	(BYTE)195
-#define		BLOOD_COLOR_GREEN	BLOOD_COLOR_YELLOW
-#define		BLOOD_COLOR_BLACK	(BYTE)0 //black like oil
+#define 	DONT_BLEED			-1
+#define 	BLOOD_COLOR_RED		(BYTE)70 //(BYTE)247
+#define 	BLOOD_COLOR_YELLOW	(BYTE)195
+#define 	BLOOD_COLOR_GREEN	BLOOD_COLOR_YELLOW
+#define 	BLOOD_COLOR_BLACK	(BYTE)0 //black like oil
 
 
 typedef enum 
 {
-
 	MONSTERSTATE_NONE = 0,
 	MONSTERSTATE_IDLE,
 	MONSTERSTATE_COMBAT,
@@ -321,7 +258,6 @@ typedef enum
 	MONSTERSTATE_DEAD
 
 } MONSTERSTATE;
-
 
 
 // Things that toggle (buttons/triggers/doors) need this
@@ -347,21 +283,14 @@ inline BOOL FClassnameIs(entvars_t* pev, const char* szClassname)
 
 
 
-
-
-
-
-
-class CBaseEntity;
-
 // Misc. Prototypes
-extern void			UTIL_SetSize			(entvars_t* pev, const Vector &vecMin, const Vector &vecMax);
+extern void		UTIL_SetSize			(entvars_t* pev, const Vector &vecMin, const Vector &vecMax);
 
 //MODDD - new
 extern void UTIL_SetSizeAlt( entvars_t* pev, const Vector &vecMin, const Vector &vecMax);
 
 
-extern float		UTIL_VecToYaw			(const Vector &vec);
+extern float	UTIL_VecToYaw			(const Vector &vec);
 
 
 //MODDD - new
@@ -373,8 +302,8 @@ extern Vector		UTIL_YawToVec			(const float &yaw);
 
 
 extern Vector		UTIL_VecToAngles		(const Vector &vec);
-extern float		UTIL_AngleMod			(float a);
-extern float		UTIL_AngleDiff			( float destAngle, float srcAngle );
+extern float	UTIL_AngleMod			(float a);
+extern float	UTIL_AngleDiff			( float destAngle, float srcAngle );
 
 extern CBaseEntity	*UTIL_FindEntityInSphere(CBaseEntity *pStartEntity, const Vector &vecCenter, float flRadius);
 extern CBaseEntity	*UTIL_FindEntityByString(CBaseEntity *pStartEntity, const char *szKeyword, const char *szValue );
@@ -388,17 +317,17 @@ extern CBaseEntity	*UTIL_FindEntityGeneric(const char *szName, Vector &vecSrc, f
 extern CBaseEntity	*UTIL_PlayerByIndex( int playerIndex );
 
 #define UTIL_EntitiesInPVS(pent)			(*g_engfuncs.pfnEntitiesInPVS)(pent)
-extern void			UTIL_MakeVectors		(const Vector &vecAngles);
+extern void		UTIL_MakeVectors		(const Vector &vecAngles);
 
 // Pass in an array of pointers and an array size, it fills the array and returns the number inserted
-extern int			UTIL_MonstersInSphere( CBaseEntity **pList, int listMax, const Vector &center, float radius );
-extern int			UTIL_EntitiesInBox( CBaseEntity **pList, int listMax, const Vector &mins, const Vector &maxs, int flagMask );
+extern int		UTIL_MonstersInSphere( CBaseEntity **pList, int listMax, const Vector &center, float radius );
+extern int		UTIL_EntitiesInBox( CBaseEntity **pList, int listMax, const Vector &mins, const Vector &maxs, int flagMask );
 
 //MODD - new version
-extern int			UTIL_NonDeadEntitiesInBox( CBaseEntity **pList, int listMax, const Vector &mins, const Vector &maxs, int flagMask );
+extern int		UTIL_NonDeadEntitiesInBox( CBaseEntity **pList, int listMax, const Vector &mins, const Vector &maxs, int flagMask );
 
 //no longer necessary.
-//extern int			UTIL_EntitiesInBoxAlsoBarnacles( CBaseEntity **pList, int listMax, const Vector &mins, const Vector &maxs, int flagMask );
+//extern int		UTIL_EntitiesInBoxAlsoBarnacles( CBaseEntity **pList, int listMax, const Vector &mins, const Vector &maxs, int flagMask );
 
 
 inline void UTIL_MakeVectorsPrivate( const Vector &vecAngles, float *p_vForward, float *p_vRight, float *p_vUp )
@@ -423,33 +352,32 @@ inline void UTIL_MakeAimVectorsPrivate( const Vector &vecAngles, float *p_vForwa
 
 
 
+extern void		UTIL_MakeAimVectors		( const Vector &vecAngles ); // like MakeVectors, but assumes pitch isn't inverted
+extern void		UTIL_MakeInvVectors		( const Vector &vec, globalvars_t *pgv );
 
-extern void			UTIL_MakeAimVectors		( const Vector &vecAngles ); // like MakeVectors, but assumes pitch isn't inverted
-extern void			UTIL_MakeInvVectors		( const Vector &vec, globalvars_t *pgv );
-
-extern void			UTIL_SetOrigin			( entvars_t* pev, const Vector &vecOrigin );
+extern void		UTIL_SetOrigin			( entvars_t* pev, const Vector &vecOrigin );
 //MODDD - Spirit of HL had this...  why doesn't it have both though anyways?  (Missing the "entvars_t*" version that comes with Half-Life as-is, like above)
 extern void UTIL_SetOrigin		( CBaseEntity* pEntity, const Vector &vecOrigin );
 
 
 
 
-extern void			UTIL_ParticleEffect		( const Vector &vecOrigin, const Vector &vecDirection, ULONG ulColor, ULONG ulCount );
-extern void			UTIL_ScreenShake		( const Vector &center, float amplitude, float frequency, float duration, float radius );
-extern void			UTIL_ScreenShakeAll		( const Vector &center, float amplitude, float frequency, float duration );
-extern void			UTIL_ShowMessage		( const char *pString, CBaseEntity *pPlayer );
-extern void			UTIL_ShowMessageAll		( const char *pString );
-extern void			UTIL_ScreenFadeAll		( const Vector &color, float fadeTime, float holdTime, int alpha, int flags );
-extern void			UTIL_ScreenFade			( CBaseEntity *pEntity, const Vector &color, float fadeTime, float fadeHold, int alpha, int flags );
+extern void		UTIL_ParticleEffect		( const Vector &vecOrigin, const Vector &vecDirection, ULONG ulColor, ULONG ulCount );
+extern void		UTIL_ScreenShake		( const Vector &center, float amplitude, float frequency, float duration, float radius );
+extern void		UTIL_ScreenShakeAll		( const Vector &center, float amplitude, float frequency, float duration );
+extern void		UTIL_ShowMessage		( const char *pString, CBaseEntity *pPlayer );
+extern void		UTIL_ShowMessageAll		( const char *pString );
+extern void		UTIL_ScreenFadeAll		( const Vector &color, float fadeTime, float holdTime, int alpha, int flags );
+extern void		UTIL_ScreenFade			( CBaseEntity *pEntity, const Vector &color, float fadeTime, float fadeHold, int alpha, int flags );
 
 typedef enum { ignore_monsters=1, dont_ignore_monsters=0, missile=2 } IGNORE_MONSTERS;
 typedef enum { ignore_glass=1, dont_ignore_glass=0 } IGNORE_GLASS;
-extern void			UTIL_TraceLine			(const Vector &vecStart, const Vector &vecEnd, IGNORE_MONSTERS igmon, edict_t *pentIgnore, TraceResult *ptr);
-extern void			UTIL_TraceLine			(const Vector &vecStart, const Vector &vecEnd, IGNORE_MONSTERS igmon, IGNORE_GLASS ignoreGlass, edict_t *pentIgnore, TraceResult *ptr);
+extern void		UTIL_TraceLine			(const Vector &vecStart, const Vector &vecEnd, IGNORE_MONSTERS igmon, edict_t *pentIgnore, TraceResult *ptr);
+extern void		UTIL_TraceLine			(const Vector &vecStart, const Vector &vecEnd, IGNORE_MONSTERS igmon, IGNORE_GLASS ignoreGlass, edict_t *pentIgnore, TraceResult *ptr);
 typedef enum { point_hull=0, human_hull=1, large_hull=2, head_hull=3 };
-extern void			UTIL_TraceHull			(const Vector &vecStart, const Vector &vecEnd, IGNORE_MONSTERS igmon, int hullNumber, edict_t *pentIgnore, TraceResult *ptr);
+extern void		UTIL_TraceHull			(const Vector &vecStart, const Vector &vecEnd, IGNORE_MONSTERS igmon, int hullNumber, edict_t *pentIgnore, TraceResult *ptr);
 extern TraceResult	UTIL_GetGlobalTrace		(void);
-extern void			UTIL_TraceModel			(const Vector &vecStart, const Vector &vecEnd, int hullNumber, edict_t *pentModel, TraceResult *ptr);
+extern void		UTIL_TraceModel			(const Vector &vecStart, const Vector &vecEnd, int hullNumber, edict_t *pentModel, TraceResult *ptr);
 
 //MODDD
 extern void UTIL_fromToBlood(CBaseEntity* arg_entSrc, CBaseEntity* arg_entDest, const float& arg_fltDamage);
@@ -457,43 +385,43 @@ extern void UTIL_fromToBlood(CBaseEntity* arg_entSrc, CBaseEntity* arg_entDest, 
 extern void UTIL_fromToBlood(CBaseEntity* arg_entSrc, CBaseEntity* arg_entDest, const float& arg_fltDamage, const float &arg_fltdistanceHint, Vector* arg_suggestedTraceHullVecEndPos, Vector* arg_suggestedTraceHullStart, Vector* arg_suggestedTraceHullEnd);
 
 extern Vector		UTIL_GetAimVector		(edict_t* pent, float flSpeed);
-extern int			UTIL_PointContents		(const Vector &vec);
+extern int		UTIL_PointContents		(const Vector &vec);
 
-extern int			UTIL_IsMasterTriggered	(string_t sMaster, CBaseEntity *pActivator);
-extern void			UTIL_BloodStream( const Vector &origin, const Vector &direction, int color, int amount );
-extern void			UTIL_BloodDrips( const Vector &origin, const Vector &direction, int color, int amount );
+extern int		UTIL_IsMasterTriggered	(string_t sMaster, CBaseEntity *pActivator);
+extern void		UTIL_BloodStream( const Vector &origin, const Vector &direction, int color, int amount );
+extern void		UTIL_BloodDrips( const Vector &origin, const Vector &direction, int color, int amount );
 extern Vector		UTIL_RandomBloodVector( void );
 extern BOOL			UTIL_ShouldShowBlood( int bloodColor );
-extern void			UTIL_BloodDecalTrace( TraceResult *pTrace, int bloodColor );
-extern void			UTIL_DecalTrace( TraceResult *pTrace, int decalNumber );
-extern void			UTIL_PlayerDecalTrace( TraceResult *pTrace, int playernum, int decalNumber, BOOL bIsCustom );
-extern void			UTIL_GunshotDecalTrace( TraceResult *pTrace, int decalNumber );
+extern void		UTIL_BloodDecalTrace( TraceResult *pTrace, int bloodColor );
+extern void		UTIL_DecalTrace( TraceResult *pTrace, int decalNumber );
+extern void		UTIL_PlayerDecalTrace( TraceResult *pTrace, int playernum, int decalNumber, BOOL bIsCustom );
+extern void		UTIL_GunshotDecalTrace( TraceResult *pTrace, int decalNumber );
 
 //MODDD
-extern void			UTIL_GunshotDecalTraceForceDefault( TraceResult *pTrace, int decalNumber );
+extern void		UTIL_GunshotDecalTraceForceDefault( TraceResult *pTrace, int decalNumber );
 
 
 
 
 //MODDD - new
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-extern Vector		UTIL_GetProjectileVelocityExtra(Vector& playerVelocity, float velocityMode);
-extern void			UTIL_Explosion(const Vector &location, short sprite, float size, int framerate, int flag);
-extern void			UTIL_Explosion(const Vector &location, float offsetx, float offsety, float offsetz, short sprite, float size, int framerate, int flag);
-extern void			UTIL_Explosion(const Vector &location, short sprite, float size, int framerate, int flag, const Vector& altLocation);
+extern Vector		UTIL_GetProjectileVelocityExtra(const Vector& playerVelocity, float velocityMode);
+extern void		UTIL_Explosion(const Vector &location, short sprite, float size, int framerate, int flag);
+extern void		UTIL_Explosion(const Vector &location, float offsetx, float offsety, float offsetz, short sprite, float size, int framerate, int flag);
+extern void		UTIL_Explosion(const Vector &location, short sprite, float size, int framerate, int flag, const Vector& altLocation);
 
-extern void			UTIL_Explosion(entvars_t* pev, const Vector &location, short sprite, float size, int framerate, int flag);
-extern void			UTIL_Explosion(entvars_t* pev, const Vector &location, float offsetx, float offsety, float offsetz, short sprite, float size, int framerate, int flag);
-extern void			UTIL_Explosion(entvars_t* pev, const Vector &location, float offsetx, float offsety, float offsetz, short sprite, float size, int framerate, int flag, float shrapMod);
-extern void			UTIL_Explosion(entvars_t* pev, const Vector &location, short sprite, float size, int framerate, int flag, const Vector& altLocation);
-extern void			UTIL_Explosion(entvars_t* pev, const Vector &location, short sprite, float size, int framerate, int flag, const Vector& altLocation, float shrapMode);
+extern void		UTIL_Explosion(entvars_t* pev, const Vector &location, short sprite, float size, int framerate, int flag);
+extern void		UTIL_Explosion(entvars_t* pev, const Vector &location, float offsetx, float offsety, float offsetz, short sprite, float size, int framerate, int flag);
+extern void		UTIL_Explosion(entvars_t* pev, const Vector &location, float offsetx, float offsety, float offsetz, short sprite, float size, int framerate, int flag, float shrapMod);
+extern void		UTIL_Explosion(entvars_t* pev, const Vector &location, short sprite, float size, int framerate, int flag, const Vector& altLocation);
+extern void		UTIL_Explosion(entvars_t* pev, const Vector &location, short sprite, float size, int framerate, int flag, const Vector& altLocation, float shrapMode);
 
-extern void			UTIL_Explosion(const Vector &location, float offsetx, float offsety, float offsetz, short sprite, float size, int framerate, int flag, const Vector& altLocation);
-extern void			UTIL_Explosion(entvars_t* pev, const Vector &location, float offsetx, float offsety, float offsetz, short sprite, float size, int framerate, int flag, const Vector& altLocation);
-extern void			UTIL_Explosion(entvars_t* pev, const Vector &location, float offsetx, float offsety, float offsetz, short sprite, float size, int framerate, int flag, const Vector& altLocation, float shrapMod);
+extern void		UTIL_Explosion(const Vector &location, float offsetx, float offsety, float offsetz, short sprite, float size, int framerate, int flag, const Vector& altLocation);
+extern void		UTIL_Explosion(entvars_t* pev, const Vector &location, float offsetx, float offsety, float offsetz, short sprite, float size, int framerate, int flag, const Vector& altLocation);
+extern void		UTIL_Explosion(entvars_t* pev, const Vector &location, float offsetx, float offsety, float offsetz, short sprite, float size, int framerate, int flag, const Vector& altLocation, float shrapMod);
 
-extern void			UTIL_Smoke(const Vector& location, short sprite, float scale, int framerate);
-extern void			UTIL_Smoke(const Vector& location, float offsetx, float offsety, float offsetz, short sprite, float scale, int framerate);
+extern void		UTIL_Smoke(const Vector& location, short sprite, float scale, int framerate);
+extern void		UTIL_Smoke(const Vector& location, float offsetx, float offsety, float offsetz, short sprite, float scale, int framerate);
 extern BOOL			UTIL_getExplosionsHaveSparks();
 
 
@@ -720,17 +648,6 @@ extern void UTIL_TE_BeamPoints_Box(float x1, float y1, float z1, float x2, float
 
 
 
-
-
-
-
-
-
-
-
-
-
-
 extern Vector UTIL_rotateShift(const Vector& src, const Vector& forward );
 extern Vector UTIL_rotateShift(const Vector& src, const float forwardX, const float forwardY, const float forwardZ );
 extern Vector UTIL_rotateShift(const float srcX, const float srcY, const float srcZ, const Vector& forward);
@@ -738,18 +655,12 @@ extern Vector UTIL_rotateShift(const float srcX, const float srcY, const float s
 
 
 
-
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-
-
-
-
-extern void			UTIL_Ricochet( const Vector &position, float scale );
-extern void			UTIL_StringToVector( float *pVector, const char *pString );
-extern void			UTIL_StringToIntArray( int *pVector, int count, const char *pString );
+extern void		UTIL_Ricochet( const Vector &position, float scale );
+extern void		UTIL_StringToVector( float *pVector, const char *pString );
+extern void		UTIL_StringToIntArray( int *pVector, int count, const char *pString );
 
 
 //simple version for just one number.
@@ -758,15 +669,9 @@ extern float clamp(float argTest, float argMin, float argMax);
 //MODDD - version that skips normalization offered.
 extern Vector		UTIL_ClampVectorToBox( const Vector &input, const Vector &clampSize );
 extern Vector		UTIL_ClampVectorToBoxNonNormalized( const Vector &input, const Vector &clampSize );
-extern float		UTIL_Approach( float target, float value, float speed );
-extern float		UTIL_ApproachAngle( float target, float value, float speed );
-extern float		UTIL_AngleDistance( float next, float cur );
-
-
-
-
-//extern void UTIL_playFleshHitSound(entvars_t* pev);
-//extern void UTIL_playFleshHitSound(edict_t* pev);
+extern float	UTIL_Approach( float target, float value, float speed );
+extern float	UTIL_ApproachAngle( float target, float value, float speed );
+extern float	UTIL_AngleDistance( float next, float cur );
 
 
 extern Vector UTIL_Intersect( Vector vecSrc, Vector vecDst, Vector vecMove, float flSpeed );
@@ -774,14 +679,9 @@ extern Vector UTIL_Intersect( Vector vecSrc, Vector vecDst, Vector vecMove, floa
 extern Vector UTIL_projectionComponent(const Vector& u, const Vector& n);
 extern Vector UTIL_projectionComponentPreserveMag(const Vector& u, const Vector& n);
 
-
-
 ////////////////////////////////////////////////////////////////////
 
-
-
-extern void			UTIL_Remove( CBaseEntity *pEntity );
-
+extern void		UTIL_Remove( CBaseEntity *pEntity );
 
 //MODDD
 extern BOOL			UTIL_IsDeadEntity( CBaseEntity* ent);
@@ -795,17 +695,15 @@ extern BOOL			UTIL_IsValidEntity( edict_t *pent );
 extern BOOL			UTIL_TeamsMatch( const char *pTeamName1, const char *pTeamName2 );
 
 // Use for ease-in, ease-out style interpolation (accel/decel)
-extern float		UTIL_SplineFraction( float value, float scale );
+extern float	UTIL_SplineFraction( float value, float scale );
 
 // Search for water transition along a vertical line
-extern float		UTIL_WaterLevel( const Vector &position, float minz, float maxz );
-extern void			UTIL_Bubbles( Vector mins, Vector maxs, int count );
-extern void			UTIL_BubbleTrail( Vector from, Vector to, int count );
+extern float	UTIL_WaterLevel( const Vector &position, float minz, float maxz );
+extern void		UTIL_Bubbles( Vector mins, Vector maxs, int count );
+extern void		UTIL_BubbleTrail( Vector from, Vector to, int count );
 
 // allows precacheing of other entities
-extern void			UTIL_PrecacheOther( const char *szClassname );
-
-
+extern void		UTIL_PrecacheOther( const char *szClassname );
 
 
 
@@ -814,24 +712,23 @@ class CBasePlayer;
 extern BOOL UTIL_GetNextBestWeapon( CBasePlayer *pPlayer, CBasePlayerItem *pCurrentWeapon );
 
 
-
 typedef struct hudtextparms_s
 {
-	float		x;
-	float		y;
-	int			effect;
-	byte		r1, g1, b1, a1;
-	byte		r2, g2, b2, a2;
-	float		fadeinTime;
-	float		fadeoutTime;
-	float		holdTime;
-	float		fxTime;
-	int			channel;
+	float	x;
+	float	y;
+	int		effect;
+	byte	r1, g1, b1, a1;
+	byte	r2, g2, b2, a2;
+	float	fadeinTime;
+	float	fadeoutTime;
+	float	holdTime;
+	float	fxTime;
+	int		channel;
 } hudtextparms_t;
 
 // prints as transparent 'title' to the HUD
-extern void			UTIL_HudMessageAll( const hudtextparms_t &textparms, const char *pMessage );
-extern void			UTIL_HudMessage( CBaseEntity *pEntity, const hudtextparms_t &textparms, const char *pMessage );
+extern void		UTIL_HudMessageAll( const hudtextparms_t &textparms, const char *pMessage );
+extern void		UTIL_HudMessage( CBaseEntity *pEntity, const hudtextparms_t &textparms, const char *pMessage );
 
 // for handy use with ClientPrint params
 extern char *UTIL_dtos1( int d );
@@ -840,7 +737,7 @@ extern char *UTIL_dtos3( int d );
 extern char *UTIL_dtos4( int d );
 
 // Writes message to console with timestamp and FragLog header.
-extern void			UTIL_LogPrintf( char *fmt, ... );
+extern void		UTIL_LogPrintf( char *fmt, ... );
 
 // Sorta like FInViewCone, but for nonmonsters. 
 extern float UTIL_DotPoints ( const Vector &vecSrc, const Vector &vecCheck, const Vector &vecDir );
@@ -851,11 +748,6 @@ extern void UTIL_StripToken( const char *pKey, char *pDest );// for redundant ke
 extern void SetMovedir(entvars_t* pev);
 extern Vector VecBModelOrigin( entvars_t* pevBModel );
 extern int BuildChangeList( LEVELLIST *pLevelList, int maxList );
-
-
-
-
-
 
 
 
@@ -890,17 +782,9 @@ void SENTENCEG_PlaySingular(edict_t* entity, int arg_channel, const char *pszSen
 
 
 
-
-
-
-
 void TEXTURETYPE_Init();
 char TEXTURETYPE_Find(char *name);
 float TEXTURETYPE_PlaySound(TraceResult *ptr,  Vector vecSrc, Vector vecEnd, int iBulletType);
-
-
-
-
 
 
 
@@ -942,24 +826,10 @@ extern void UTIL_generateFreakyLight( const Vector& arg_origin);
 
 
 
-
-
-
-
-
 //PrintQueue related:
 
 extern Vector UTIL_getFloor(const Vector &vecStart, const float& distDown, IGNORE_MONSTERS igmon, edict_t *pentIgnore );
 extern BOOL isErrorVector(const Vector& vec);
-
-
-
-
-
-
-
-
-
 
 
 
@@ -975,6 +845,8 @@ extern BOOL isErrorVector(const Vector& vec);
 
 // "+ 2" for boundary room (commans, stoppers, etc.)
 #define PRINTQUEUE_TOTALEXPECTED PRINTQUEUE_STRINGS * (PRINTQUEUE_STRINGSIZE + 5)
+
+//MODDD - keep it real yo!
 
 class PrintQueue{
 public:
@@ -1011,16 +883,6 @@ public:
 			//PROBLEM! TOO MANY IN QUEUE!
 		}
 	}
-	
-	
-
-
-
-
-
-
-
-
 
 	void receivePrintQueue(char* dest, int* positionOverhead){
 		//next place to start writing characters to.
@@ -1049,15 +911,12 @@ public:
 		//reset.  Overwrite or ignore others.
 		latestPlace = 0;
 	}
-
-
 };
 
 //alternate way now.
 extern void PRINTQUEUE_STUKA_SEND(PrintQueue& toPrint, const char* src, ...);
 
-
-#endif //END
+#endif //END OF CLIENT_DLL Check (lack of)
 
 
 
@@ -1068,8 +927,6 @@ extern BOOL UTIL_IsFacing( entvars_t *pevTest, const Vector &vecLookAtTest );
 extern BOOL UTIL_IsFacing( entvars_t *pevTest, const Vector &vecLookAtTest, const float& arg_tolerance );
 extern BOOL UTIL_IsFacingAway( entvars_t *pevTest, const Vector &vecLookAtTest );
 extern BOOL UTIL_IsFacingAway( entvars_t *pevTest, const Vector &vecLookAtTest, const float& arg_tolerance );
-
-
 
 
 
@@ -1087,8 +944,6 @@ extern CBaseEntity *FindEntityForward( CBasePlayer *pMe );
 
 
 
-
-
 extern float timeDelayFilter(float arg_delay);
 extern Vector getRotatedVectorAboutZAxis(const Vector& arg_vec, const float& arg_deg);
 
@@ -1096,30 +951,11 @@ extern void UTIL_ServerMassCVarReset(entvars_t* pev);
 
 
 
-
-
-
-
-// UNUSED, use the "EASY_CVAR_PRINTF_PRE" defined in game_shared/NEW/cvar_custom.h instead.
-// It requires the first parameter to be a CVAR, which is what this was meant to be a shortcut for 
-// to begin with.
-//extern void EASY_CVAR_PRINTIF(float geh, const char *szFmt, ... );
-// what was this one even trying to do?
-//extern void EASY_CVAR_PRINTIF_VECTOR(float geh, const char *szFmt, ... );
-
 extern BOOL getGermanModelsAllowed(void);
-
-
 extern BOOL verifyModelExists(char* path);
 
-
-
-
 extern int attemptInterpretSpawnFlag(const char* pszSpawnFlags);
-
-
 extern int UTIL_BloodColorRedFilter(BOOL robotReplacementModelExists);
-
 
 ///////////////////////////////////////////////////////////////////////////
 //MODDD - thanks to Spirit of Half-Life 1.9!
@@ -1143,17 +979,7 @@ extern char* GetStringForState( STATE state );
 ///////////////////////////////////////////////////////////////////////////
 
 
-
-
 Vector projectionOntoPlane(Vector arg_vectOnto, Vector arg_planeNormal);
-extern void matrices_setup(int arg_cols, int arg_rows);
-extern void matrices_sendRow(float arg_1, float arg_2, float arg_c);
-extern void matrices_getResults(float* arg_result_t, float* arg_result_s);
-extern void matrices_printOut();
-extern void matrices_rowReduce();
-extern void matrices_pivotizeColumn(int rowNumber, int columnNumber);
-extern void matrices_divideRow(int rowNumb, float divideBy);
-extern void matrices_swapRows(int row1, int row2);
 
 
 extern CBaseEntity* UTIL_CreateNamedEntity(const char* arg_entityName);
@@ -1168,18 +994,10 @@ extern void UTIL_playMetalGibSound(entvars_t* pevSoundSource);
 
 
 
-
-
-
-
-
 extern void updateCVarRefs(entvars_t *pev);
 
 extern void turnWorldLightsOn();
 extern void turnWorldLightsOff();
-
-
-
 
 extern void OnBeforeChangeLevelTransition(void);
 extern void OnMapLoadPreStart(void);
@@ -1192,11 +1010,43 @@ extern void RestoreDynamicIDs(CGlobalState* argGS);
 
 extern BOOL GermanModelOrganicLogic(void);
 
+//MODDD - moved prototypes from basemonster.h
+/////////////////////////////////////////
+//MODDD - this variation doesn't even have an implementation?
+//BOOL FBoxVisible ( entvars_t *pevLooker, entvars_t *pevTarget );
+BOOL FBoxVisible ( entvars_t *pevLooker, entvars_t *pevTarget, Vector &vecTargetOrigin, float flSize = 0.0 );
+
+Vector VecCheckToss ( entvars_t *pev, const Vector &vecSpot1, Vector vecSpot2, float flGravityAdj = 1.0 );
+Vector VecCheckThrow ( entvars_t *pev, const Vector &vecSpot1, Vector vecSpot2, float flSpeed, float flGravityAdj = 1.0 );
+/////////////////////////////////////////
 
 
+//MODDD - moved from weapons.h
+extern void SpawnBlood(Vector vecSpot, int bloodColor, float flDamage);
+//MODDD - extra damage bitmask support.
+extern int DamageDecal( CBaseEntity *pEntity, int bitsDamageType );
+extern int DamageDecal( CBaseEntity *pEntity, int bitsDamageType, int bitsDamageTypeMod );
+
+extern void DecalGunshot( TraceResult *pTrace, int iBulletType );
+
+extern void EjectBrass (const Vector &vecOrigin, const Vector &vecVelocity, float rotation, int model, int soundtype );
+//MODDD - the implementation got canned, so why wasn't this too?
+//extern void ExplodeModel( const Vector &vecOrigin, float speed, int model, int count );
 
 
-
+//MODDD - these versions moved from basemonster.h. They are inspecific
+// to the monster called on and don't need to be for monsters only.
+// Implementations in combat.cpp.
+//NOTICE: any RadiusDamage methods that don't provide flRadius have been renamed to
+// "RadiusDamageAutoRadius" to avoid some call ambiguity (the parameters you supply could
+// go to unintended places if say, more than one overload accepts the same amount of numbers
+// but gives them a different purpose... The compiler may make a bad decision)
+extern void RadiusDamageTest( Vector vecSrc, entvars_t *pevInflictor, entvars_t *pevAttacker, float flDamage, float flRadius, int iClassIgnore, int bitsDamageType, int bitsDamageTypeMod );
+extern void RadiusDamageAutoRadius(Vector vecSrc, entvars_t *pevInflictor, entvars_t *pevAttacker, float flDamage, int iClassIgnore, int bitsDamageType );
+extern void RadiusDamageAutoRadius(Vector vecSrc, entvars_t *pevInflictor, entvars_t *pevAttacker, float flDamage, int iClassIgnore, int bitsDamageType, int bitsDamageTypeMod  );
+//MODDD - added bitsDamageTypeMod versions.
+extern void RadiusDamage( Vector vecSrc, entvars_t *pevInflictor, entvars_t *pevAttacker, float flDamage, float flRadius, int iClassIgnore, int bitsDamageType );
+extern void RadiusDamage( Vector vecSrc, entvars_t *pevInflictor, entvars_t *pevAttacker, float flDamage, float flRadius, int iClassIgnore, int bitsDamageType, int bitsDamageTypeMod );
 
 
 
@@ -1221,13 +1071,7 @@ typedef struct GibInfo_s{
 
 } GibInfo_t;
 
-
 extern GibInfo_t aryGibInfo[];
-
-
-
-
-
 
 
 

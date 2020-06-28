@@ -26,13 +26,13 @@
 #include "basemonster.h"
 #include "soundent.h"
 #include "decals.h"
-#include "animation.h"
+#include "util_model.h"
 #include "weapons.h"
 #include "func_break.h"
 
 //MODDD - okay?
 #include "squadmonster.h"
-#include	"game.h"
+#include "game.h"
 
 //MODDD - necessary anymore?
 #include "player.h"
@@ -40,10 +40,7 @@
 //MODDD - needed for a spawnflag. OR scripted spawnflags could be moved to cbase.h to be available everywhere if needed, they are uniquely named anyways to avoid conflicts.
 //        (in name, not necessarily in the bit occupied)
 #include "scripted.h"
-
-
 #include "util_debugdraw.h"
-
 
 EASY_CVAR_EXTERN(cheat_iwantguts)
 
@@ -51,29 +48,16 @@ extern float globalPSEUDO_canApplyGermanCensorship;
 extern BOOL globalPSEUDO_germanModel_hgibFound;
 
 
-
-
 extern DLL_GLOBAL Vector		g_vecAttackDir;
-extern DLL_GLOBAL int			g_iSkillLevel;
+extern DLL_GLOBAL int		g_iSkillLevel;
 
-extern Vector VecBModelOrigin( entvars_t* pevBModel );
 //extern entvars_t *g_pevLastInflictor;
-
-
 
 
 extern GibInfo_t aryGibInfo[];
 
-
-
-
-
 //MODDD - hidden cheat.  Not a CVar, so that it can't be seen by console's autocomplete
 float cheat_barnacleEatsEverything = 0;
-
-
-
-
 
 
 
@@ -1085,7 +1069,7 @@ Activity CBaseMonster :: GetDeathActivity ( void )
 	Activity	deathActivity;
 	//BOOL		fTriedDirection;
 	BOOL		fCanTryDirection = FALSE; //MODDD - new.
-	float		flDot;
+	float	flDot;
 	TraceResult	tr;
 	Vector		vecSrc;
 	int violentDeathPriorityValue;
@@ -1231,7 +1215,7 @@ Activity CBaseMonster :: GetSmallFlinchActivity ( void )
 {
 	Activity	flinchActivity;
 	BOOL		fTriedDirection;
-	float		flDot;
+	float	flDot;
 
 	fTriedDirection = FALSE;
 	UTIL_MakeVectors ( pev->angles );
@@ -1364,7 +1348,7 @@ GENERATE_KILLED_IMPLEMENTATION(CBaseMonster)
 	*/
 
 
-	unsigned int	cCount = 0;
+	unsigned int cCount = 0;
 	BOOL			fDone = FALSE;
 
 
@@ -1817,7 +1801,7 @@ BOOL CBaseMonster :: FInViewCone ( CBaseEntity *pEntity )
 	//return FALSE;
 
 	Vector2D	vec2LOS;
-	float	flDot;
+	float flDot;
 
 	UTIL_MakeVectors ( pev->angles );
 	
@@ -1848,7 +1832,7 @@ BOOL CBaseMonster :: FInViewCone ( Vector *pOrigin )
 
 
 	Vector2D	vec2LOS;
-	float		flDot;
+	float	flDot;
 
 	UTIL_MakeVectors ( pev->angles );
 	
@@ -2539,18 +2523,11 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBaseMonster){
 	//TEMP
 	//bitsDamageType |= DMG_POISON;
 
-	//
-	//if(compareStrings(STRING(this->pev->classname), "monster_human_grunt" )  ){
-	//	easyPrintLine("IM HIT YO: %s ::: %d %d", STRING(this->pev->classname), bitsDamageType, bitsDamageTypeMod);
-	//}
-	//
-
-	float	flTake;
+	float flTake;
 	Vector	vecDir;
 
 	if (!pev->takedamage)
 		return 0;
-
 
 	////virtual BOOL	IsAlive( void ) { return (pev->deadflag != DEAD_DEAD); } inv:  == DEAD_DEAD
 	//virtual BOOL	IsAlive( void ) { return (pev->deadflag == DEAD_NO); }       inv:  != DEAD_NO
@@ -2574,8 +2551,6 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBaseMonster){
 			}
 		}
 		*/
-
-
 
 		//timed damages NOT allowed for corpses.
 		bitsDamageType &= ~ DMG_TIMEBASED;
@@ -3037,7 +3012,7 @@ void RadiusDamageTest( Vector vecSrc, entvars_t *pevInflictor, entvars_t *pevAtt
 
 	CBaseEntity *pEntity = NULL;
 	TraceResult	tr;
-	float		flAdjustedDamage, falloff;
+	float	flAdjustedDamage, falloff;
 	Vector		vecSpot;
 
 	if ( flRadius )
@@ -3285,7 +3260,7 @@ void RadiusDamage( Vector vecSrc, entvars_t *pevInflictor, entvars_t *pevAttacke
 
 	CBaseEntity *pEntity = NULL;
 	TraceResult	tr;
-	float		flAdjustedDamage, falloff;
+	float	flAdjustedDamage, falloff;
 	Vector		vecSpot;
 
 	if ( flRadius )

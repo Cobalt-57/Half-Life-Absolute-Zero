@@ -46,7 +46,7 @@ private:
 	int m_iNumSchemes;
 
 	// Resolution we were initted at.
-	int		m_xRes;
+	int	m_xRes;
 
 	CScheme *getSafeScheme( SchemeHandle_t schemeHandle );
 };

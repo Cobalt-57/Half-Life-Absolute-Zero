@@ -30,11 +30,11 @@ class TweakScroller
 {
 public:
 						TweakScroller();
-	void				Init(Panel *pParent, char *pText, int yPos);
+	void			Init(Panel *pParent, char *pText, int yPos);
 
 	// Get/set value. Values are 0-1.
-	float				GetValue();
-	void				SetValue(float val);
+	float			GetValue();
+	void			SetValue(float val);
 
 public:	
 	Label				m_Label;
@@ -53,26 +53,26 @@ public:
 
 // CMenuPanel overrides.
 public:
-	virtual void		Open();
-	virtual void		Close();
+	virtual void	Open();
+	virtual void	Close();
 
 
 // ICheckButton2Handler overrides.
 public:
 
-	virtual void		StateChanged(CCheckButton2 *pButton);
+	virtual void	StateChanged(CCheckButton2 *pButton);
 
 
 
 // Panel overrides.
 public:
-	virtual void		paintBackground();
+	virtual void	paintBackground();
 
 
 private:
 
-	int					m_DlgWidth;
-	int					m_DlgHeight;
+	int				m_DlgWidth;
+	int				m_DlgHeight;
 
 	Label				m_Label;		
 	
@@ -111,7 +111,7 @@ CMenuPanel* GetVoiceTweakDlg()
 class CVoiceTweakOKButton : public ActionSignal
 {
 public:
-	virtual void	actionPerformed(Panel *pPanel)
+	virtual void actionPerformed(Panel *pPanel)
 	{
 		gViewPort->HideVGUIMenu();
 	}

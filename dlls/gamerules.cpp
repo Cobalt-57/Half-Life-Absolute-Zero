@@ -16,15 +16,15 @@
 // GameRules.cpp
 //=========================================================
 
-#include	"extdll.h"
-#include	"util.h"
-#include	"cbase.h"
-#include	"player.h"
-#include	"weapons.h"
-#include	"gamerules.h"
-#include	"teamplay_gamerules.h"
-#include	"skill.h"
-#include	"game.h"
+#include "extdll.h"
+#include "util.h"
+#include "cbase.h"
+#include "player.h"
+#include "weapons.h"
+#include "gamerules.h"
+#include "teamplay_gamerules.h"
+#include "skill.h"
+#include "game.h"
 
 extern edict_t *EntSelectSpawnPoint( CBaseEntity *pPlayer );
 
@@ -151,7 +151,7 @@ BOOL CGameRules::CanHavePlayerItem( CBasePlayer *pPlayer, const char* arg_classn
 //=========================================================
 void CGameRules::RefreshSkillData ( void )
 {
-	int	iSkill;
+	int iSkill;
 
 	iSkill = (int)CVAR_GET_FLOAT("skill");
 	g_iSkillLevel = iSkill;

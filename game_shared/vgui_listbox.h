@@ -35,37 +35,37 @@ public:
 					CListBox();
 					~CListBox();
 
-	void			Init();
-	void			Term();
+	void		Init();
+	void		Term();
 
 	// Add an item to the listbox. This automatically sets the item's parent to the listbox 
 	// and resizes the item's width to fit within the listbox.
-	void			AddItem(Panel *pPanel);
+	void		AddItem(Panel *pPanel);
 
 	// Get the number of items currently in the listbox.
-	int				GetNumItems();
+	int			GetNumItems();
 
 	// Get the width that listbox items will be set to (this changes if you resize the listbox).
-	int				GetItemWidth();
+	int			GetItemWidth();
 
 	// Get/set the scrollbar position (position says which element is at the top of the listbox).
-	int				GetScrollPos();
-	void			SetScrollPos(int pos);
+	int			GetScrollPos();
+	void		SetScrollPos(int pos);
 
 	// sets the last item the listbox should scroll to
 	// scroll to GetNumItems() if not set
-	void			SetScrollRange(int maxScroll);
+	void		SetScrollRange(int maxScroll);
 
 	// returns the maximum value the scrollbar can scroll to
-	int				GetScrollMax();
+	int			GetScrollMax();
 
 // vgui overrides.
 public:
 	
-	virtual void	setPos(int x, int y);
-	virtual void	setSize(int wide,int tall);
-	virtual void	setPixelScroll(int value);
-	virtual void	paintBackground();
+	virtual void setPos(int x, int y);
+	virtual void setSize(int wide,int tall);
+	virtual void setPixelScroll(int value);
+	virtual void paintBackground();
 
 
 protected:
@@ -91,7 +91,7 @@ protected:
 
 protected:
 	
-	void			InternalLayout();
+	void		InternalLayout();
 
 
 protected: 
@@ -101,12 +101,12 @@ protected:
 
 	Panel			m_ItemsPanel;
 
-	int				m_ItemOffset;	// where we're scrolled to
+	int			m_ItemOffset;	// where we're scrolled to
 	Slider2			m_Slider;
 	ScrollBar2		m_ScrollBar;
 	ListBoxSignal	m_Signal;
 
-	int				m_iScrollMax;
+	int			m_iScrollMax;
 };
 
 }

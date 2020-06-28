@@ -26,25 +26,25 @@
 
 typedef struct event_args_s
 {
-	int		flags;
+	int	flags;
 
 	// Transmitted
-	int		entindex;
+	int	entindex;
 
-	float	origin[3];
-	float	angles[3];
-	float	velocity[3];
+	float origin[3];
+	float angles[3];
+	float velocity[3];
 
-	int		ducking;
+	int	ducking;
 
-	float	fparam1;
-	float	fparam2;
+	float fparam1;
+	float fparam2;
 
-	int		iparam1;
-	int		iparam2;
+	int	iparam1;
+	int	iparam2;
 
-	int		bparam1;
-	int		bparam2;
+	int	bparam1;
+	int	bparam2;
 } event_args_t;
 
 #endif

@@ -18,7 +18,6 @@
 
 
 
-
 #include "cbase.h"
 
 #include "basetoggle.h"
@@ -30,22 +29,20 @@
 #include "skill.h"
 
 
-
-
 #define DEFAULT_FORGET_SMALL_FLINCH_TIME 12
 #define DEFAULT_FORGET_BIG_FLINCH_TIME 6
 
 
 // CHECKLOCALMOVE result types 
-#define	LOCALMOVE_INVALID					0 // move is not possible
+#define LOCALMOVE_INVALID					0 // move is not possible
 #define LOCALMOVE_INVALID_DONT_TRIANGULATE	1 // move is not possible, don't try to triangulate
 #define LOCALMOVE_VALID						2 // move is possible
 
 // Hit Group standards
-#define	HITGROUP_GENERIC	0
-#define	HITGROUP_HEAD		1
-#define	HITGROUP_CHEST		2
-#define	HITGROUP_STOMACH	3
+#define HITGROUP_GENERIC	0
+#define HITGROUP_HEAD		1
+#define HITGROUP_CHEST		2
+#define HITGROUP_STOMACH	3
 #define HITGROUP_LEFTARM	4	
 #define HITGROUP_RIGHTARM	5
 #define HITGROUP_LEFTLEG	6
@@ -53,13 +50,22 @@
 
 
 // Monster Spawnflags
-#define	SF_MONSTER_WAIT_TILL_SEEN		1// spawnflag that makes monsters wait until player can see them before attacking.
-#define	SF_MONSTER_GAG					2 // no idle noises from this monster
+#define SF_MONSTER_WAIT_TILL_SEEN		1// spawnflag that makes monsters wait until player can see them before attacking.
+#define SF_MONSTER_GAG					2 // no idle noises from this monster
 #define SF_MONSTER_HITMONSTERCLIP		4
 
 
 //FLAG OVERVIEW:
+// ALSO, a comment from the as-is script suggests flags at or above 256 (2^8) are 'taken by the engine'.
+//     spawn flags 256 and above are already taken by the engine
+// ...do with that what you will.  Spawnflag 2^10 looked mostly unused from my testing at least.
+// I don't even know if that warning applies to completely new entities placed by the mapper or what flags
+// could even get implicitly turned on by the map program or however that works, really don't know.
+// There is still keyvalue stuff of course, somehow I keep forgetting about that.
 
+// Anyway, a list of flags for seeing what's available for giving to custom entities 
+// (like letting stukabats have a preference for starting hanging.  Pick a spawnflag bit that's already for
+//  something else in the class heirarchy and you get behavior you don't want also turned on/off by that)
 //2^0 = 1:	NO, waitTillSeen
 //2^1 = 2:	NO, gag
 //2^2 = 4:  NO, HITMONSTERCLIP.
@@ -67,7 +73,9 @@
 //2^4 = 16:	NO, PRISONER
 //2^5 = 32: NO, squadleader (for non-squad monsters, perhaps open, but also used by turrets)
 //2^6 = 64: CAREFUL, BEST NOT
-//2^7, 8, 9:	NO
+//2^7 = 128: NO
+//2^8 = 256: NO, PREDISASTER.  Although what non-talker would use this anyway.
+//2^9 = 512: NO, FADECORPSE
 //2^10 = 1024: OPEN!
 //2^11 = 2048: possibly no.
 //beyond?  test to be certain...   some readings, if in the "int" range of 2^0 - 2^31 (inclusive), are still cut high-wards (that is, just plain not sent / transferred to here for seeing)
@@ -77,12 +85,7 @@
 
 
 
-
-
-
-
-//MODDD - "8" is now for a possible unique entity-only flag.  OR, this is specialty 2.0:
-//										8
+//MODDD - "8" is now for a possible unique entity-only flag.
 #define SF_MONSTER_APACHE_CINBOUNDS		1024
 //whether the stuka has a strong preference for the ground (off) or the ceiling (on), snapping to its preferred type if close enough.  Will hover in place if not close enough to either.
 #define SF_MONSTER_STUKA_ONGROUND		8
@@ -101,10 +104,11 @@
 
 
 
-//ALSO: it appears this is consistently set for entities spawned by the player (or anything spawned outside of map-start, maybe?).  Marking, not sure why it wasn't before.
+//ALSO: it appears this is consistently set for entities spawned by the player (or anything spawned outside of map-start, maybe?). 
+// Marking, not sure why it wasn't before.
 #define SF_MONSTER_DYNAMICSPAWN			(1<<30)
 //NOTICE!!!!!! THIS PLACE,  (1<<30), IS SHARED BY AN EXISTING FLAG IN cbase.h:
-//#define	SF_NORESPAWN	( 1 << 30 )// !!!set this bit on guns and stuff that should never respawn.
+//#define SF_NORESPAWN	( 1 << 30 )// !!!set this bit on guns and stuff that should never respawn.
 
 
 //NOTE: the spot "32" (2^5) can be occupied by squadmonsters to mean "squadleader" (see "SF_SQUADMONSTER_LEADER" of "squadmonster.cpp").
@@ -114,12 +118,16 @@
 #define SF_MONSTER_PRISONER				16 // monster won't attack anyone, no one will attacke him.
 //										32
 //										64
-#define	SF_MONSTER_WAIT_FOR_SCRIPT		128 //spawnflag that makes monsters wait to check for attacking until the script is done or they've been attacked
+#define SF_MONSTER_WAIT_FOR_SCRIPT		128 //spawnflag that makes monsters wait to check for attacking until the script is done or they've been attacked
 #define SF_MONSTER_PREDISASTER			256	//this is a predisaster scientist or barney. Influences how they speak.
 #define SF_MONSTER_FADECORPSE			512 // Fade out corpse after death
-#define SF_MONSTER_FALL_TO_GROUND		0x80000000    //This flag does the opposite of what it says. It's presence STOPS a monster from snapping to the ground at creation. WHat?
-                                                      //A more accurate name would be "SF_MONSTER_DONT_SNAP_TO_GROUND". By default they do (snap to ground).
-													  //^AKA, 31st power of 2 (1<<31)
+
+//MODDD - NOTE. This flag does the opposite of what it says. It's presence STOPS a monster from snapping to the ground at creation.
+// Lacking the flag snaps a monster to the ground.    What?
+//A more accurate name would be "SF_MONSTER_DONT_SNAP_TO_GROUND". By default they do (snap to ground).
+//Also this is (1<<31).
+#define SF_MONSTER_FALL_TO_GROUND		0x80000000    
+                                                      
 
 // specialty spawnflags
 #define SF_MONSTER_TURRET_AUTOACTIVATE	32
@@ -129,28 +137,37 @@
 
 
 // MoveToOrigin stuff
-#define		MOVE_START_TURN_DIST	64 // when this far away from moveGoal, start turning to face next goal
-#define		MOVE_STUCK_DIST			32 // if a monster can't step this far, it is stuck.
+#define 	MOVE_START_TURN_DIST	64 // when this far away from moveGoal, start turning to face next goal
+#define 	MOVE_STUCK_DIST			32 // if a monster can't step this far, it is stuck.
 
 
 // MoveToOrigin stuff
-#define		MOVE_NORMAL				0// normal move in the direction monster is facing
-#define		MOVE_STRAFE				1// moves in direction specified, no matter which way monster is facing
+#define 	MOVE_NORMAL				0// normal move in the direction monster is facing
+#define 	MOVE_STRAFE				1// moves in direction specified, no matter which way monster is facing
 
-// spawn flags 256 and above are already taken by the engine
+
+
 extern void UTIL_MoveToOrigin( edict_t* pent, const Vector &vecGoal, float flDist, int iMoveType ); 
 
-Vector VecCheckToss ( entvars_t *pev, const Vector &vecSpot1, Vector vecSpot2, float flGravityAdj = 1.0 );
-Vector VecCheckThrow ( entvars_t *pev, const Vector &vecSpot1, Vector vecSpot2, float flSpeed, float flGravityAdj = 1.0 );
+
+//MODDD - prototypes for h_ai.cpp methods (FBoxVisible, VecCheckToss, VecCheckThrow) moved to util.h.
+// Implementations too (util.cpp) since that file got deleted.
 extern DLL_GLOBAL Vector		g_vecAttackDir;
 extern DLL_GLOBAL CONSTANT float g_flMeleeRange;
 extern DLL_GLOBAL CONSTANT float g_flMediumRange;
 extern DLL_GLOBAL CONSTANT float g_flLongRange;
-extern void EjectBrass (const Vector &vecOrigin, const Vector &vecVelocity, float rotation, int model, int soundtype );
-extern void ExplodeModel( const Vector &vecOrigin, float speed, int model, int count );
 
-BOOL FBoxVisible ( entvars_t *pevLooker, entvars_t *pevTarget );
-BOOL FBoxVisible ( entvars_t *pevLooker, entvars_t *pevTarget, Vector &vecTargetOrigin, float flSize = 0.0 );
+//MODDD - moved here from the since deleted h_ai.cpp.  Not sure why it wasn't always here with the others.
+// Never referred to anywhere?  What's the point.
+//DLL_GLOBAL BOOL g_fDrawLines = FALSE;
+
+
+//MODDD
+// These were in h_ai.cpp too?  Not some .h file included in some places?
+// Not even referred to anywhere.  GOODBYE.
+//#define 	NUM_LATERAL_CHECKS		13  // how many checks are made on each side of a monster looking for lateral cover
+//#define 	NUM_LATERAL_LOS_CHECKS		6  // how many checks are made on each side of a monster looking for lateral cover
+
 
 
 
@@ -259,7 +276,7 @@ enum
 class CBaseMonster : public CBaseToggle
 {
 private:
-		int					m_afConditions;
+		int				m_afConditions;
 
 		//MODDD - new, for the m_afConditionsFrame instead. This var is similar to m_afConditions but retains conditions throughout one frame of gamelogic.
 		//        That is, schedule changes don't reset this. But the starting "RunTask" call in monsterstate.cpp "MaintainSchedule" resets this.
@@ -417,57 +434,57 @@ public:
 
 
 
-		float				m_flFieldOfView;// width of monster's field of view ( dot product )
-		float				m_flWaitFinished;// if we're told to wait, this is the time that the wait will be over.
-		float				m_flMoveWaitFinished;
+		float			m_flFieldOfView;// width of monster's field of view ( dot product )
+		float			m_flWaitFinished;// if we're told to wait, this is the time that the wait will be over.
+		float			m_flMoveWaitFinished;
 
 		Activity			m_Activity;// what the monster is doing (animation)
 		Activity			m_IdealActivity;// monster should switch to this activity
 		
-		int					m_LastHitGroup; // the last body region that took damage
+		int				m_LastHitGroup; // the last body region that took damage
 		
 		MONSTERSTATE		m_MonsterState;// monster's current state
 		MONSTERSTATE		m_IdealMonsterState;// monster should change to this state
 	
-		int					m_iTaskStatus;
+		int				m_iTaskStatus;
 		Schedule_t			*m_pSchedule;
-		int					m_iScheduleIndex;
+		int				m_iScheduleIndex;
 
 		WayPoint_t			m_Route[ ROUTE_SIZE ];	// Positions of movement
-		int					m_movementGoal;			// Goal that defines route
-		int					m_iRouteIndex;			// index into m_Route[]
-		float				m_moveWaitTime;			// How long I should wait for something to move
+		int				m_movementGoal;			// Goal that defines route
+		int				m_iRouteIndex;			// index into m_Route[]
+		float			m_moveWaitTime;			// How long I should wait for something to move
 
 		Vector				m_vecMoveGoal; // kept around for node graph moves, so we know our ultimate goal
 		Activity			m_movementActivity;	// When moving, set this activity
 
-		int					m_iAudibleList; // first index of a linked list of sounds that the monster can hear.
-		int					m_afSoundTypes;
+		int				m_iAudibleList; // first index of a linked list of sounds that the monster can hear.
+		int				m_afSoundTypes;
 
 		Vector				m_vecLastPosition;// monster sometimes wants to return to where it started after an operation.
 
-		int					m_iHintNode; // this is the hint node that the monster is moving towards or performing active idle on.
+		int				m_iHintNode; // this is the hint node that the monster is moving towards or performing active idle on.
 
-		int					m_afMemory;
+		int				m_afMemory;
 
-		int					m_iMaxHealth;// keeps track of monster's maximum health value (for re-healing, etc)
+		int				m_iMaxHealth;// keeps track of monster's maximum health value (for re-healing, etc)
 
 	Vector				m_vecEnemyLKP;// last known position of enemy. (enemy's origin)
 
-	int					m_cAmmoLoaded;		// how much ammo is in the weapon (used to trigger reload anim sequences)
+	int				m_cAmmoLoaded;		// how much ammo is in the weapon (used to trigger reload anim sequences)
 
-	int					m_afCapability;// tells us what a monster can/can't do.
+	int				m_afCapability;// tells us what a monster can/can't do.
 
-	float				m_flNextAttack;		// cannot attack again until this time
+	float			m_flNextAttack;		// cannot attack again until this time
 
-	int					m_bitsDamageType;	// what types of damage has monster (player) taken
+	int				m_bitsDamageType;	// what types of damage has monster (player) taken
 	//MODDD - complimentary.
-	int					m_bitsDamageTypeMod;
+	int				m_bitsDamageTypeMod;
 
 	//MODDD - new.
 	////////////////////////////////////////////////////////////////////////////////////////////
 	BOOL				m_rgbTimeBasedFirstFrame[CDMG_TIMEBASED];
-	float				m_tbdPrev;				// Time-based damage timer
+	float			m_tbdPrev;				// Time-based damage timer
 
 	//MODDD - new
 	BOOL hardSetFailSchedule;
@@ -572,8 +589,8 @@ public:
 
 
 
-	//int		Save( CSave &save );
-	//int		Restore( CRestore &restore );
+	//int	Save( CSave &save );
+	//int	Restore( CRestore &restore );
 	//static	TYPEDESCRIPTION m_SaveData[];
 
 	
@@ -673,18 +690,18 @@ public:
 
 	BYTE				m_rgbTimeBasedDamage[CDMG_TIMEBASED];
 
-	int					m_lastDamageAmount;// how much damage did monster (player) last take
+	int				m_lastDamageAmount;// how much damage did monster (player) last take
 											// time based damage counters, decr. 1 per 2 seconds
-	int					m_bloodColor;		// color of blood particless
+	int				m_bloodColor;		// color of blood particless
 
-	int					m_failSchedule;				// Schedule type to choose if current schedule fails
+	int				m_failSchedule;				// Schedule type to choose if current schedule fails
 
-	float				m_flHungryTime;// set this is a future time to stop the monster from eating for a while. 
+	float			m_flHungryTime;// set this is a future time to stop the monster from eating for a while. 
 
-	float				m_flDistTooFar;	// if enemy farther away than this, bits_COND_ENEMY_TOOFAR set in CheckEnemy
-	float				m_flDistLook;	// distance monster sees (Default 2048)
+	float			m_flDistTooFar;	// if enemy farther away than this, bits_COND_ENEMY_TOOFAR set in CheckEnemy
+	float			m_flDistLook;	// distance monster sees (Default 2048)
 
-	int					m_iTriggerCondition;// for scripted AI, this is the condition that will cause the activation of the monster's TriggerTarget
+	int				m_iTriggerCondition;// for scripted AI, this is the condition that will cause the activation of the monster's TriggerTarget
 	string_t			m_iszTriggerTarget;// name of target that should be fired. 
 
 	Vector				m_HackedGunPos;	// HACK until we can query end of gun
@@ -693,8 +710,8 @@ public:
 	SCRIPTSTATE			m_scriptState;		// internal cinematic state
 	CCineMonster		*m_pCine;
 
-	virtual int		Save( CSave &save ); 
-	virtual int		Restore( CRestore &restore );
+	virtual int	Save( CSave &save ); 
+	virtual int	Restore( CRestore &restore );
 
 	//MODDD - new
 	void PostRestore(void);
@@ -709,7 +726,7 @@ public:
 
 // overrideable Monster member functions
 	
-	virtual int	 BloodColor( void ) { return m_bloodColor; }
+	virtual int  BloodColor( void ) { return m_bloodColor; }
 
 	virtual CBaseMonster *MyMonsterPointer( void ) { return this; }
 	virtual void Look ( float flDistance );// basic sight function for monsters
@@ -961,11 +978,11 @@ public:
 	
 
 	//MODDD - any calls to set / clear conditions now also apply to m_afConditionsFrame. It is reset per frame instead of per schedule change.
-	inline void	SetConditions( int iConditions ) {
+	inline void SetConditions( int iConditions ) {
 		m_afConditions |= iConditions;
 		m_afConditionsFrame |= iConditions;
 	}
-	inline void	ClearConditions( int iConditions ) {
+	inline void ClearConditions( int iConditions ) {
 		m_afConditions &= ~iConditions;
 		m_afConditionsFrame &= ~iConditions;
 	}
@@ -996,7 +1013,7 @@ public:
 	BOOL MoveToEnemy( Activity movementAct, float waitTime );
 
 	// Returns the time when the door will be open
-	float	OpenDoorAndWait( entvars_t *pevDoor );
+	float OpenDoorAndWait( entvars_t *pevDoor );
 
 	virtual void testMethod(void);
 
@@ -1035,7 +1052,10 @@ public:
 	BOOL FacingIdeal(float argDegreeTolerance);
 
 	BOOL FCheckAITrigger( void );// checks and, if necessary, fires the monster's trigger target. 
-	BOOL NoFriendlyFire( void );
+
+	//MODDD - why not virtual ?!
+	// And no base method in basemonster.cpp?  Are you freakin' kidding me here.
+	virtual BOOL NoFriendlyFire( void );
 
 	BOOL BBoxFlat( void );
 
@@ -1079,8 +1099,8 @@ public:
 	BOOL		 ShouldGibMonster( int iGib );
 	
 	//MODDD - removed. Merged with GibMonster
-	//void		 CallGibMonster( void );
-	//void		 CallGibMonster( BOOL gibsSpawnDecals );
+	//void	 CallGibMonster( void );
+	//void	 CallGibMonster( BOOL gibsSpawnDecals );
 
 
 	//MODDD
@@ -1089,7 +1109,7 @@ public:
 
 	virtual BOOL	HasHumanGibs( void );
 	virtual BOOL	HasAlienGibs( void );
-	virtual void	FadeMonster( void );	// Called instead of GibMonster() when gibs are disabled
+	virtual void FadeMonster( void );	// Called instead of GibMonster() when gibs are disabled
 	                                        //MODDD - little out of date comment above. Actually GibMonster is called in anticipation of possibly gibbing a monster.
 	                                        //        GibMonster will call FadeMonster if the monster is to be deleted without spawning any gibs.
 
@@ -1131,7 +1151,7 @@ public:
 	void RadiusDamageAutoRadius(Vector vecSrc, entvars_t *pevInflictor, entvars_t *pevAttacker, float flDamage, int iClassIgnore, int bitsDamageType, int bitsDamageTypeMod  );
 	
 	
-	virtual int		IsMoving( void ) { return m_movementGoal != MOVEGOAL_NONE; }
+	virtual int	IsMoving( void ) { return m_movementGoal != MOVEGOAL_NONE; }
 
 	void RouteClear( void );
 	void RouteNew( void );
@@ -1143,8 +1163,8 @@ public:
 	
 	virtual void StopFollowing( BOOL clearSchedule ) {}
 
-	inline void	Remember( int iMemory ) { m_afMemory |= iMemory; }
-	inline void	Forget( int iMemory ) { m_afMemory &= ~iMemory; }
+	inline void Remember( int iMemory ) { m_afMemory |= iMemory; }
+	inline void Forget( int iMemory ) { m_afMemory &= ~iMemory; }
 	inline BOOL HasMemory( int iMemory ) { if ( m_afMemory & iMemory ) return TRUE; return FALSE; }
 	inline BOOL HasAllMemories( int iMemory ) { if ( (m_afMemory & iMemory) == iMemory ) return TRUE; return FALSE; }
 

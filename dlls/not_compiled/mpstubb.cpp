@@ -14,16 +14,16 @@
 ****/
 
 
-#include	"extdll.h"
-#include	"util.h"
-#include	"cbase.h"
+#include "extdll.h"
+#include "util.h"
+#include "cbase.h"
 #include "basemonster.h"
-#include	"soundent.h"
-#include	"nodes.h"
-#include	"talkmonster.h"
+#include "soundent.h"
+#include "nodes.h"
+#include "talkmonster.h"
 
 
-float	CTalkMonster::g_talkWaitTime = 0;		// time delay until it's ok to speak: used so that two NPCs don't talk at once
+float CTalkMonster::g_talkWaitTime = 0;		// time delay until it's ok to speak: used so that two NPCs don't talk at once
 
 /*********************************************************/
 
@@ -35,15 +35,15 @@ int CGraph :: AllocNodes ( void ) { return FALSE; }
 int CGraph :: CheckNODFile ( char *szMapName ) { return FALSE; }
 int CGraph :: FSetGraphPointers ( void ) { return 0; }
 void CGraph :: ShowNodeConnections ( int iNode ) { }
-int	CGraph :: FindNearestNode ( const Vector &vecOrigin,  int afNodeTypes ) { return 0; }
+int CGraph :: FindNearestNode ( const Vector &vecOrigin,  int afNodeTypes ) { return 0; }
 
 
 /*********************************************************/
 
 
-void	CBaseMonster :: ReportAIState( void ) { }
-float 	CBaseMonster :: ChangeYaw ( int speed ) { return 0; }
-void	CBaseMonster :: MakeIdealYaw( Vector vecTarget ) { }
+void CBaseMonster :: ReportAIState( void ) { }
+float	CBaseMonster :: ChangeYaw ( int speed ) { return 0; }
+void CBaseMonster :: MakeIdealYaw( Vector vecTarget ) { }
 
 
 void CBaseMonster::CorpseFallThink( void )
@@ -94,7 +94,7 @@ BOOL	CBaseMonster :: FCheckAITrigger ( void )
 	return FALSE; 
 }
 
-void	CBaseMonster :: KeyValue( KeyValueData *pkvd ) 
+void CBaseMonster :: KeyValue( KeyValueData *pkvd ) 
 {  
 	CBaseToggle::KeyValue( pkvd ); 
 }
@@ -138,7 +138,7 @@ int CBaseMonster::IRelationship ( CBaseEntity *pTarget )
 //MODDD - why am I bothering with this? iDistance to flDistance again.
 void CBaseMonster :: Look ( float flDistance )
 {
-	int	iSighted = 0;
+	int iSighted = 0;
 
 	// DON'T let visibility information from last frame sit around!
 	ClearConditions(bits_COND_SEE_HATE | bits_COND_SEE_DISLIKE | bits_COND_SEE_ENEMY | bits_COND_SEE_FEAR | bits_COND_SEE_NEMESIS | bits_COND_SEE_CLIENT);
@@ -220,9 +220,9 @@ CBaseEntity *CBaseMonster :: BestVisibleEnemy ( void )
 {
 	CBaseEntity	*pReturn;
 	CBaseEntity	*pNextEnt;
-	int			iNearest;
-	int			iDist;
-	int			iBestRelationship;
+	int		iNearest;
+	int		iDist;
+	int		iBestRelationship;
 
 	iNearest = 8192;// so first visible entity will become the closest.
 	pNextEnt = m_pLink;

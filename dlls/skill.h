@@ -208,7 +208,7 @@ struct skilldata_t
 extern	DLL_GLOBAL	skilldata_t	gSkillData;
 float GetSkillCvar( char *pName );
 
-extern DLL_GLOBAL int		g_iSkillLevel;
+extern DLL_GLOBAL int	g_iSkillLevel;
 
 #define SKILL_EASY		1
 #define SKILL_MEDIUM	2

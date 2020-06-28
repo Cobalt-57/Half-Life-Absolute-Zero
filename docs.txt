@@ -7,6 +7,16 @@ Do this to fix the 'thirdperson camera-is-to-the-side' issue.
   thirdperson
   cam_idealyaw 0 (or 1?)
 
+  
+PostRestore method
+!!! CRITICAL!!!   This method is not guaranteed to always be called for all entities.
+Must either use the default IMPLEMENT_SAVERESTORE, or copy its ::Restore method at least
+and get the part that calls "PostRestore"  (any copies from a while ago will be missing
+that part).
+
+
+
+
 ============================================================================================================================================
 ============================================================================================================================================
 ============================================================================================================================================
@@ -37,7 +47,8 @@ The project's version.h file lets you change the reported "version" (a letter ty
 ============================================================================================================================================
 ============================================================================================================================================
 
-DEBUG FEATURE. In debug or release builds, if you're having startup trouble, or think CVars aren't getting applied clientside, make a file called "helpme.txt", can remain empty, in your game folder (something like AbsoluteZero, some folder within .../Half-Life/). The presence of this file alone turns on some printouts that may help figure things out. Note that some other printouts still require the "enableModPrintouts" CVar to be 1.
+DEBUG FEATURE. In debug or release builds, if you're having startup trouble, or think CVars aren't getting applied clientside, make a file called "helpme.txt", can remain empty, in your mod folder (<Half Life folder>/AbsoluteZero).
+The presence of this file alone turns on some printouts that may help figure things out. Note that some other printouts still require the "developer" CVar to be at least 1.
 
 
 
@@ -87,14 +98,14 @@ Also for the CL_DLL solution, made the "cl_dll" directory a default include. no 
 
 Looks like the as-is was using the "C/C++/Additional Include Directories" feature, not the "VC++ Directories/Include Directories" like I thought.
 
-There is now a more viable printout method available.
+There is now a more viable printout method available: easyPrint and easyPrintLine.
 In most clientside or serverside spots alike, use "easyPrint" or "easyPrintLine" (includes a newline at the end without being told).  Treat this like "printf" in C.
 Example:   easyPrintLine("some constant text: %d, %.2f, %s", 4, 7.2, "othertext")
 Result:    some constant text: 4, 7.20, othertext   (carriage return here)
 
-***Further note: this "easyPrintLine" requires "enableModPrintouts" to be on, which may not typically be the case for most users. For messages that must make it like describing a recent command, use "easyForcePrintLine" instead.
-
-
+***Further note: easyPrint & easyPrintLine require the "developer" CVar to be at least 1 to show up.
+                 easyForcePrint & easyForcePrintLine bypass this requirement, they are better for responses to client commands
+                 that the user needs to see a response to regardless.
 
 
 A few sounds:
@@ -145,13 +156,12 @@ CINEMATICS - monsters may have a linked "scripted_sequence" object, called the "
 
 
 PRINTOUT METHOD INFO:
-//////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////
 Some printout methods are influenced by the 'developer' CVAR.
 At 1 or above, I think all printout methods work (unless script explicilty checks for the 'developer' value
 differently, such as 'only do this for developer == 2').
 Any mentions of "developer 1" should also work for "developer 2".
 At a value of 0, some printout methods won't show anything.
-Keep in mind our own "enableModPrintouts" must be 1 for calls made with "easyPrint" to work.
 "easyForcePrint" calls ignore that check and work anyways, since calling for some client commands with an
 invisible response would just be confusing.
 
@@ -167,6 +177,11 @@ SERVERSIDE:
    -, CT  g_engfuncs.pfnAlertMessage(ALERT_TYPE::at_console, szFmt, ... )
    -, BCT g_engfuncs.pfnClientPrintf(pEdict, PRINT_TYPE::print_console, szMsg)
    +, CT  g_engfuncs.pfnServerPrint(szMsg)
+   
+There is also something unused, serverside's "pfnEngineFprintf", defined like so in dlls/eiface.h:
+	void		(*pfnEngineFprintf)			(FILE *pfile, char *szFmt, ...);
+...but it looks to be for writing files.  Even though that can be done in plain C/C++ without using this 
+call?  No idea.
 
 -CONSOLE TEXT COLOR
 For the colors seen in console text, go to "<half life folder>/AbsoluteZero/resource/TrackerScheme.res".
@@ -201,9 +216,26 @@ instead.  Don't have to worry about this if you use "easyPrint" methods, see "ut
 Most commonly wanted ways to print are supported and all easyPrint methods allow variable parameters,
 no temp char array required.
 
+There are some printout methods for the client in the codebase as-is but they're just re-directs
+to engine methods above (also in cl_dll/cl_util.h):
+  ConsolePrint
+
+
+...or drawing text on screen:
+  TextMessageDrawChar
+  DrawConsoleString
+  GetConsoleStringSize
+  ConsoleStringLen
+  CenterPrint
+  
+
+/////////////////////////////////////////////////////////////////////////////////////////
+
+
+
 
 INTERESTING LOCATIONS :
-//////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////
 g_engfuncs and gpGlobals are defined in:
     client: cl_dll/hl/hl_baseentity.cpp
     server: dlls/h_export.cpp
@@ -238,22 +270,120 @@ called the specific screen's one.  Seems that as gpGlobals works fine for shared
 all clientside.  The type of gpGlobals (globalvars_t) is in engine\progdefs.h, which is included by dlls/extdll.h
 most of the time.  Just something to keep in mind.
 
-/////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////
 
 
 
 cl_himodels is... something?  I think it only affects the player model (one seen by other players in multiplayer or 3rd person)
 
 
+***
+All references to HLDEMO_BUILD and OEM_BUILD in the codebase removed.  It doesn't make sense
+to preserve these after making so many additions to the code-base.  Who's to say what feature 
+would've been present under either/both/either constants.
+It's inconsistent to, say, have a build lack the apache and hgun to mimick a certain point of
+time, but have the chumtoad, kingpin, hassault, stukabat, panthereye, floater, holster anims,
+etc.
+
+
+/////////////////////////////////////////////////////////////////////////////////////////
+TRACE METHODS:
+There are quite a few serverside trace-related methods.
+Most trace methods are for sending a line or shape through 3D space to see what, if anything, gets hit along the way.
+Most are checks to see what entity is hit first, but some are hella gayt.
+
+Actual forms in engine/eiface.h:
+	void		(*pfnTraceLine)				(const float *v1, const float *v2, int fNoMonsters, edict_t *pentToSkip, TraceResult *ptr);
+	void		(*pfnTraceToss)				(edict_t* pent, edict_t* pentToIgnore, TraceResult *ptr);
+	int			(*pfnTraceMonsterHull)		(edict_t *pEdict, const float *v1, const float *v2, int fNoMonsters, edict_t *pentToSkip, TraceResult *ptr);
+	void		(*pfnTraceHull)				(const float *v1, const float *v2, int fNoMonsters, int hullNumber, edict_t *pentToSkip, TraceResult *ptr);
+	void		(*pfnTraceModel)			(const float *v1, const float *v2, int hullNumber, edict_t *pent, TraceResult *ptr);
+	const char *(*pfnTraceTexture)			(edict_t *pTextureEntity, const float *v1, const float *v2 );
+	void		(*pfnTraceSphere)			(const float *v1, const float *v2, int fNoMonsters, float radius, edict_t *pentToSkip, TraceResult *ptr);
+
+Macros for calling these too, if they exist, from dlls/enginecallback.h:
+	#define TRACE_LINE		(*g_engfuncs.pfnTraceLine)
+	#define TRACE_TOSS		(*g_engfuncs.pfnTraceToss)
+	#define TRACE_MONSTER_HULL		(*g_engfuncs.pfnTraceMonsterHull)
+	#define TRACE_HULL		(*g_engfuncs.pfnTraceHull)
+	(none)					pfnTraceModel
+	(none)					pfnTraceSphere
+	#define TRACE_TEXTURE				(*g_engfuncs.pfnTraceTexture)
+
+There is also this from engine/cdll_int.h:
+There is also something wpm_shared/pm_defs.h ?
+	struct pmtrace_s			*( *PM_TraceLine )			( float *start, float *end, int flags, int usehull, int ignore_pe );
+
+
+See what all the trace methods do if curious.  Some are rarely used, if ever.
+
+In the as-is codebase (not counting additions in the mod since then; good way to see intended usage)...
+--------------------------------------
+  TRACE_LINE is called by UTIL_TraceLine, which is called in many many places.
+  TRACE_TOSS is never called.
+  TRACE_MONSTER_HULL was used once by the ichthyosaur once.
+  TRACE_HULL is called by UTIL_TraceHull (dlls/util.cpp), which is called in various places, mostly
+      by melee attacks to find something vaguely in front of the attacker to hit.
+  pfnTraceModel is called by UTIL_TraceModel (dlls/util.cpp), which is called by maprules.cpp once.
+  pfnTraceSphere is never called.
+  TRACE_TEXTURE is called in dlls/player.cpp and sound.cpp to see what type of material/texture from
+      the map is closest to a given point for telling what sound to play.
+    *Clientside looks to have this equivalent, EV_TraceTexture, in common/event_api.h,
+	    const char *( *EV_TraceTexture ) ( int ground, float *vstart, float *vend );
+    *called like so:
+	    pTextureName = (char *)gEngfuncs.pEventAPI->EV_TraceTexture( ptr->ent, vecSrc, vecEnd )
+--------------------------------------
+  
+(engine/cdll_int.h doesn't have much trace-related but there's a bunch of engine hookups nonetheless) 
+
+/////////////////////////////////////////////////////////////////////////////////////////
 
 
 
 
 
-			 
-			 
-			 
-			 
+
+
+
+
+math_lib.h
+/////////////////////////////////////////////////////////////////////////////////////////
+So... noticed something weird.  We have two files with the same name in the codebase (as found of course):
+
+common/mathlib.h
+utils/common/mathlib.h
+
+...what?
+From what I can tell, the root's 'common' folder is part of the include path (it is a folder searched for
+any requests for single filenames, such as in:
+    #include "mathlib.h"
+Even though the user didn't specify it is in the common folder, that is one of the places checked and
+so common/mathlib.h is still returned.
+
+utils/common/mathlib.h must be referred to specifically in that way to be used instead.
+
+Looks like the only place that calls for utils/common/mathlib.h is dlls/util_model.h
+(used to be animating.h).
+The rest use only "mathlib.h", implying the common/mathlib.h one.  Half of the files that include this are
+in pm_shared.
+
+This leads me to believe common/mathlib.h has better compatability with the C language, as pm_shared files
+are for C.  And utils/common/mathlib.h is for C++ (util_modle.cpp clearly).
+
+Not really going to touch these either way, just thought I'd mention this.
+/////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+
+
+
+
+
+
+
+
 			 
 NEW MAP KEYVALUES FOR NODES
 
@@ -562,10 +692,7 @@ disablePauseSinglePlayer (0) - BOOL. If 1, pausing in single player immediately 
 
 itemBatteryPrerequisite - BOOL.  If on, canisters (except adrenaline) and long jump require at least one battery charge (suit / HEV battery, armor battery, same idea) to function at all.  No charge is removed, it is just required.
 
-skipTFDamageTextures - BOOL.  If on, some damage-indicator texture indexes are skipped so that the new one may be seen in the expected place.  I do not expect this to change, but the CVAR is here if these slots should NOT be skipped.
-~better explanation:  There are some cases where sprites are expected to be loaded in a particular order and aren't really referred to by name.  The most common example of this would be numbers, like "m_HUD_number_0".  Where are the rest of "m_HUD_number_#"?  Implied by taking "m_HUD_number_0" and adding 1 to get "m_HUD_number_1" and so on.  Look at "<half life dir>/AbsoluteZero/sprites/hud.txt", the list of all loaded sprites.  Many entries are the same as their names across client-side variables (in this case, search "number_0", removing "m_HUD").  The next numbers are loaded one-after-the-other, so this is why this system works.  If number_0's index is 48, one could just acquire this index and then add to it go reasonably get the other numbers then.
-~So what does this mean for damage indicators?  They happen to be loaded in a similar way.  "dmg_bio" is like the "zero": it is the first.  However, by script logic, it seems to be entirely skipped, as it seems to just refer to that anthrax icon like "poison" does.  Anyways, that is unimportant: consider "dmg_poison" the "zero" point.  So the statuses are loaded one-by-one, and the timed damage the player can receive are also stored in this same order.  So, it is a similar process: get my damage type (like #3), add that as an offset to "dmg_poison"'s index, get the right sprite.
-~So what's the problem?  Search in "health.h" for "//tf defines".  These are some icons that are not loaded in hud.txt (damage indicator icons end with the shock, then, before I added the bleeding icon, some numbers start).  So, if ever anticipating the TF2 damage icons, one must factor in these missing indexes that have NOTHING in them if they are just skipped.  This is what the CVar is for:  should an index go beyond dmg_shock, the image offset will be lowered by 5 so that, after skipping the TF damages (game logic can still sift through them), upon reaching "dmg_bleed", it picks up the right image and not, say, dmg_poison + 12 (where it would be if the TF damage indicators were there), but dmg_poison + 8: dmg_bleed.
+***skipTFDamageTextures removed.  Always assumed the TF damage icons will not be present in the files to throw off offsets.
 
 playerExtraPainSoundsMode (2) - MODEVAR. Only applies if mutePlayerPainSound is off.
 0 - no change. Only "PainSound" works.
@@ -2168,7 +2295,7 @@ reportAI - if targeted at a monster or descendents, prints out a lot of informat
 ~Can also give a number instead to get the same information out of a monster of a particular ID. Such as:
   reportAI 14
 will try to find a monster with a MonsterID of 14 and print out its stats.
-MonsterID is assigned by spawn order and does not reset to fill in gaps created by deleted monsters.
+MonsterID is assigned by spawn order.  Gaps created by deleted monsters are not filled by further spawns.
 
 report - if target at any entity, returns some general information and possibly information specific to that type of entity.
 ~calls reportAI when used on monsters or monster descendents. Does not take MonsterID as only monsters have those.
@@ -2308,8 +2435,13 @@ playerWeaponSpreadMode (0) - MODEVAR. If non-zero, forces weapons whose spread i
 1 - forces singleplayer behavior: spread radius is circular.
 2 - forces multiplayer behavior: spread radius of the shotgun is less wide and taller, supposedly for being more likely to hit other fast-moving players. The mp5's spread radius is greater overall in multiplayer.
 
+hud_swapFirstTwoBuckets (0) - BOOLEAN.
+0: no effect (retail).
+1: weapons between slots 1 and 2 will be swapped:  2nd slot gets melee, 1st slot gets handguns.  Matches some pre-release builds.
 
-
+ignoreMultiplayerSkillOverride (1) - BOOLEAN.
+0: no effect (retail).  In multiplayer, weapons will use hard-coded choices for player weapons and some item values.
+1: In multiplayer, weapons will use the same skill.cfg values that singleplayer does.
 
 ****************************************************************************************************************************
 ****************************************************************************************************************************

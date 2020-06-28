@@ -16,57 +16,7 @@
 // moved to their respective new dlls/<specific weapon>.h files to avoid redundancy, since a lot of this was
 // already in their own dlls/<specific weapon>.cpp files.
 // Including those files as needed in ev_hldm.cpp or hl/hl_weapons.cpp will get the same effect as before
-// without requiring duplicates like it used to be.
-
-enum glock_e {
-	GLOCK_IDLE1 = 0,
-	GLOCK_IDLE2,
-	GLOCK_IDLE3,
-	GLOCK_SHOOT,
-	GLOCK_SHOOT_EMPTY,
-	GLOCK_RELOAD,
-	GLOCK_RELOAD_NOT_EMPTY,
-	GLOCK_DRAW,
-	GLOCK_HOLSTER,
-	GLOCK_ADD_SILENCER
-};
-
-enum shotgun_e {
-	SHOTGUN_IDLE = 0,
-	SHOTGUN_FIRE,
-	SHOTGUN_FIRE2,
-	SHOTGUN_RELOAD,
-	SHOTGUN_PUMP,
-	SHOTGUN_START_RELOAD,
-	SHOTGUN_DRAW,
-	SHOTGUN_HOLSTER,
-	SHOTGUN_IDLE4,
-	SHOTGUN_IDLE_DEEP
-};
-
-enum mp5_e
-{
-	MP5_LONGIDLE = 0,
-	MP5_IDLE1,
-	MP5_LAUNCH,
-	MP5_RELOAD,
-	MP5_DEPLOY,
-	MP5_FIRE1,
-	MP5_FIRE2,
-	MP5_FIRE3,
-};
-
-enum python_e {
-	PYTHON_IDLE1 = 0,
-	PYTHON_FIDGET,
-	PYTHON_FIRE1,
-	PYTHON_RELOAD,
-	PYTHON_HOLSTER,
-	PYTHON_DRAW,
-	PYTHON_IDLE2,
-	PYTHON_IDLE3
-};
-
+// without requiring duplicates here and in the .cpp's.
 
 
 //MODDD - other EV_... method prototypes / externs moved to here instead.  Now hl_events.cpp just has to include this to get all those too.
@@ -118,10 +68,6 @@ void EV_FloaterExplode(struct event_args_s* args);
 
 
 }//END OF extern "C"
-
-
-
-
 
 
 

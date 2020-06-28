@@ -27,7 +27,9 @@
 
 // Holds engine functionality callbacks
 enginefuncs_t g_engfuncs;
-globalvars_t  *gpGlobals;
+
+//MODDD - used to be an important point.
+//globalvars_t* gpGlobals;
 
 
 #ifdef _WIN32
@@ -47,7 +49,10 @@ BOOL WINAPI DllMain(
 	return TRUE;
 }
 
-void DLLEXPORT GiveFnptrsToDll(	enginefuncs_t* pengfuncsFromEngine, globalvars_t *pGlobals )
+//MODDD - renamed the "DLLEXPORT" to "DLL_CALL_CONV".
+// Oh the confusion using the exact same name for different derivations in
+// macros can cause.
+void DLL_CALL_CONV GiveFnptrsToDll(	enginefuncs_t* pengfuncsFromEngine, globalvars_t *pGlobals )
 {
 	memcpy(&g_engfuncs, pengfuncsFromEngine, sizeof(enginefuncs_t));
 	gpGlobals = pGlobals;

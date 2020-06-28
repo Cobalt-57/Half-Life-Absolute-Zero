@@ -42,7 +42,7 @@ typedef enum
 
 typedef struct
 {
-	int				size;
+	int			size;
 } _resourceinfo_t;
 
 typedef struct resourceinfo_s
@@ -93,9 +93,9 @@ typedef struct customization_s
 #define FCUST_WIPEDATA		( 1<<1 )
 #define FCUST_IGNOREINIT	( 1<<2 )
 
-void		COM_ClearCustomizationList( struct customization_s *pHead, qboolean bCleanDecals);
+void	COM_ClearCustomizationList( struct customization_s *pHead, qboolean bCleanDecals);
 qboolean	COM_CreateCustomization( struct customization_s *pListHead, struct resource_s *pResource, int playernumber, int flags, 
 				struct customization_s **pCustomization, int *nLumps ); 
-int			COM_SizeofResourceList ( struct resource_s *pList, struct resourceinfo_s *ri );
+int		COM_SizeofResourceList ( struct resource_s *pList, struct resourceinfo_s *ri );
 
 #endif // CUSTOM_H

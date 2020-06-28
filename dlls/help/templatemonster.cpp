@@ -1,20 +1,31 @@
 
-
+// Includes.
 #include "templatemonster.h"
-
-// Includes. What files or CVars are necessary?
 #include "schedule.h"
 #include "activity.h"
-#include "animation.h"
-
+#include "util_model.h"
 #include "defaultai.h"
 #include "soundent.h"
 #include "game.h"
 #include "decals.h"
 
 
-
 EASY_CVAR_EXTERN(noFlinchOnHard)
+
+
+
+#if REMOVE_ORIGINAL_NAMES != 1
+	LINK_ENTITY_TO_CLASS( monster_templatemonster, CTemplateMonster );
+#endif
+
+#if EXTRA_NAMES > 0
+	LINK_ENTITY_TO_CLASS( templatemonster, CTemplateMonster );
+	
+	#if EXTRA_NAMES == 2
+		// NOTICE - example extra name! There may be multiple or no extra names too.
+		// LINK_ENTITY_TO_CLASS( tempmonster, CTemplateMonster );
+	#endif
+#endif
 
 
 
@@ -47,6 +58,41 @@ enum{
 };
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+
+//schedule details here......
+
+Task_t	tlTemplateMonsterXXX[] =
+{
+	{ TASK_TEMPLATEMONSTER_XXX,			0				},
+	{ TASK_TEMPLATEMONSTER_YYY,			0				},
+	{ TASK_TEMPLATEMONSTER_ZZZ,			0				},
+};
+
+Schedule_t	slTemplateMonsterXXX[] =
+{
+	{
+		tlTemplateMonsterXXX,
+		ARRAYSIZE ( tlTemplateMonsterXXX ),
+		bits_COND_XXX | bits_COND_YYY | bits_COND_ZZZ,
+		bits_SOUND_XXX | bits_SOUND_YYY | bits_SOUND_ZZZ,
+		"templateMonsterXXX"
+	},
+};
+
+// repeat for tl / sl TemplateMonsterYYY and tl / sl TemplateMonsterZZZ.
+
+
+DEFINE_CUSTOM_SCHEDULES( CTemplateMonster ){
+	slTemplateMonsterXXX,
+	slTemplateMonsterYYY,
+	slTemplateMonsterZZZ,
+
+};
+IMPLEMENT_CUSTOM_SCHEDULES( CTemplateMonster, CBaseMonster );
 
 
 
@@ -87,6 +133,14 @@ const char* CTemplateMonster::pAttackMissSounds[] =
 };
 
 
+
+
+
+
+CTemplateMonster::CTemplateMonster(void){
+
+
+}//END OF CTemplateMonster constructor
 
 
 
@@ -136,65 +190,6 @@ int CTemplateMonster::Restore( CRestore &restore )
 */
 
 
-
-
-#if REMOVE_ORIGINAL_NAMES != 1
-	LINK_ENTITY_TO_CLASS( monster_templatemonster, CTemplateMonster );
-#endif
-
-#if EXTRA_NAMES > 0
-	LINK_ENTITY_TO_CLASS( templatemonster, CTemplateMonster );
-	
-	#if EXTRA_NAMES == 2
-		// NOTICE - example extra name! There may be multiple or no extra names too.
-		// LINK_ENTITY_TO_CLASS( tempmonster, CTemplateMonster );
-	#endif
-	
-#endif
-
-
-
-CTemplateMonster::CTemplateMonster(void){
-
-
-}//END OF CTemplateMonster constructor
-
-
-
-
-//schedule details here......
-
-Task_t	tlTemplateMonsterXXX[] =
-{
-	{ TASK_TEMPLATEMONSTER_XXX,			0				},
-	{ TASK_TEMPLATEMONSTER_YYY,			0				},
-	{ TASK_TEMPLATEMONSTER_ZZZ,			0				},
-};
-
-Schedule_t	slTemplateMonsterXXX[] =
-{
-	{
-		tlTemplateMonsterXXX,
-		ARRAYSIZE ( tlTemplateMonsterXXX ),
-		bits_COND_XXX | bits_COND_YYY | bits_COND_ZZZ,
-		bits_SOUND_XXX | bits_SOUND_YYY | bits_SOUND_ZZZ,
-		"templateMonsterXXX"
-	},
-};
-
-// repeat for tl / sl TemplateMonsterYYY and tl / sl TemplateMonsterZZZ.
-
-
-
-
-
-DEFINE_CUSTOM_SCHEDULES( CTemplateMonster ){
-	slTemplateMonsterXXX,
-	slTemplateMonsterYYY,
-	slTemplateMonsterZZZ,
-
-};
-IMPLEMENT_CUSTOM_SCHEDULES( CTemplateMonster, CBaseMonster );
 
 	
 	
@@ -649,7 +644,7 @@ void CTemplateMonster::PrescheduleThink (){
 
 
 
-int	CTemplateMonster::Classify(){
+int CTemplateMonster::Classify(){
 	return CLASS_ALIEN_MONSTER;
 }
 BOOL CTemplateMonster::isOrganic(){
@@ -818,12 +813,15 @@ GENERATE_KILLED_IMPLEMENTATION(CTemplateMonster){
 	GENERATE_KILLED_PARENT_CALL(CBaseMonster);
 }//END OF Killed
 
+
 // When this monster is about to be removed from the game (FL_KILLME is set in pev->flags, or REMOVE_ENTITY is about to be used),
 // make sure any looping sounds (automatic for short-duration sounds for whatever reason) are told to stop, or else they will go
 // on forever. How things are removed by not fitting into map transitions is not understood as well. It is probaby up to the
 // engine depending on whether or not something is marked a certain way by method "ChangeList" of triggers.cpp.
 // I think looping sounds are reset on initiating transitions, so that shouldn't be an issue at least.
 void CTemplateMonster::onDelete(void){
+	//STOP_SOUND_FILTERED(ENT(pev), CHAN_X, "templatemonster/templatemonster_loopingsound.wav");
+	//...
 
 }//END OF onDelete
 

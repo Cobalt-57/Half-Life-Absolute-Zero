@@ -25,8 +25,6 @@ extern int gmsgUpdateClientCVar;
 extern int gmsgResetClientCVar;
 extern int gmsgPrintClientCVar;
 
-//extern int gmsgRetrieveFOV;
-
 extern int gmsgShake;
 extern int gmsgFade;
 extern int gmsgSelAmmo;
@@ -89,6 +87,8 @@ extern int gmsgTeamNames;
 
 extern int gmsgStatusText;
 extern int gmsgStatusValue;
+
+extern int gmsgPrintClient;
 
 extern int gmsgTimeWeaponIdleUpdate;
 extern int gmsgJustThrownUpdate;

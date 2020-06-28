@@ -268,7 +268,7 @@ double I_FloatTime (void)
 // more precise, less portable
 	struct timeval tp;
 	struct timezone tzp;
-	static int		secbase;
+	static int	secbase;
 
 	gettimeofday(&tp, &tzp);
 	
@@ -313,7 +313,7 @@ FileTime
 returns -1 if not present
 ============
 */
-int	FileTime (char *path)
+int FileTime (char *path)
 {
 	struct	stat	buf;
 	
@@ -334,8 +334,8 @@ COM_Parse
 */
 char *COM_Parse (char *data)
 {
-	int		c;
-	int		len;
+	int	c;
+	int	len;
 	
 	len = 0;
 	com_token[0] = 0;
@@ -408,7 +408,7 @@ skipwhite:
 
 int Q_strncasecmp (char *s1, char *s2, int n)
 {
-	int		c1, c2;
+	int	c1, c2;
 	
 	while (1)
 	{
@@ -504,8 +504,8 @@ filelength
 */
 int filelength (FILE *f)
 {
-	int		pos;
-	int		end;
+	int	pos;
+	int	end;
 
 	pos = ftell (f);
 	fseek (f, 0, SEEK_END);
@@ -765,7 +765,7 @@ int ParseNum (char *str)
 */
 
 #ifdef _SGI_SOURCE
-#define	__BIG_ENDIAN__
+#define __BIG_ENDIAN__
 #endif
 
 #ifdef __BIG_ENDIAN__
@@ -804,7 +804,7 @@ int    BigLong (int l)
 }
 
 
-float	LittleFloat (float l)
+float LittleFloat (float l)
 {
 	union {byte b[4]; float f;} in, out;
 	
@@ -817,7 +817,7 @@ float	LittleFloat (float l)
 	return out.f;
 }
 
-float	BigFloat (float l)
+float BigFloat (float l)
 {
 	return l;
 }
@@ -859,7 +859,7 @@ int    LittleLong (int l)
 	return l;
 }
 
-float	BigFloat (float l)
+float BigFloat (float l)
 {
 	union {byte b[4]; float f;} in, out;
 	
@@ -872,7 +872,7 @@ float	BigFloat (float l)
 	return out.f;
 }
 
-float	LittleFloat (float l)
+float LittleFloat (float l)
 {
 	return l;
 }
@@ -950,7 +950,7 @@ unsigned short CRC_Value(unsigned short crcvalue)
 CreatePath
 ============
 */
-void	CreatePath (char *path)
+void CreatePath (char *path)
 {
 	char	*ofs, c;
 	
@@ -976,8 +976,8 @@ QCopyFile
 */
 void QCopyFile (char *from, char *to)
 {
-	void	*buffer;
-	int		length;
+	void *buffer;
+	int	length;
 
 	length = LoadFile (from, &buffer);
 	CreatePath (to);

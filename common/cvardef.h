@@ -15,9 +15,9 @@
 #ifndef CVARDEF_H
 #define CVARDEF_H
 
-#define	FCVAR_ARCHIVE		(1<<0)	// set to cause it to be saved to vars.rc
-#define	FCVAR_USERINFO		(1<<1)	// changes the client's info string
-#define	FCVAR_SERVER		(1<<2)	// notifies players when changed
+#define FCVAR_ARCHIVE		(1<<0)	// set to cause it to be saved to vars.rc
+#define FCVAR_USERINFO		(1<<1)	// changes the client's info string
+#define FCVAR_SERVER		(1<<2)	// notifies players when changed
 #define FCVAR_EXTDLL		(1<<3)	// defined by external DLL
 #define FCVAR_CLIENTDLL     (1<<4)  // defined by the client dll
 #define FCVAR_PROTECTED     (1<<5)  // It's a server cvar, but we don't send the data since it's a password, etc.  Sends 1 if it's not bland/zero, 0 otherwise as value
@@ -33,8 +33,8 @@ typedef struct cvar_s
 	// Changing to "value_string" as "string" can be misinterpreted as the C++ 'string' type
 	char	*value_string;
 	
-	int		flags;
-	float	value;
+	int	flags;
+	float value;
 	struct cvar_s *next;
 } cvar_t;
 #endif

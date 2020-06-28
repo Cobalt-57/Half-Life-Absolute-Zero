@@ -1008,7 +1008,7 @@ enum
 #define CTF_SCORE1   	5
 #define CTF_SCORE2   	6
 
-//.float	hook_out;
+//.float hook_out;
 
 /*==================================================*/
 /* Camera defines	 								*/
@@ -1028,7 +1028,7 @@ float already_chosen_map;
 
 // grappling hook variables
 .entity	hook;	
-.float	on_hook;
+.float on_hook;
 .float  fire_held_down;// flag - TRUE if player is still holding down the
                        // fire button after throwing a hook.
 */
@@ -1192,8 +1192,8 @@ extern Vector  rgbcolors[5];		 // RGB colors for each of the 4 teams
 extern team_color_t teamcolors[5][PC_LASTCLASS]; // Colors for each of the 4 teams
 
 extern int   teamscores[5];		// Goal Score of each team
-extern int	 g_iOrderedTeams[5]; // Teams ordered into order of winners->losers
-extern int	 teamfrags[5];		// Total Frags for each team
+extern int  g_iOrderedTeams[5]; // Teams ordered into order of winners->losers
+extern int  teamfrags[5];		// Total Frags for each team
 extern int   teamlives[5];		// Number of lives each team's players have
 extern int   teammaxplayers[5];	// Max number of players allowed in each team
 extern float teamadvantage[5];	// only used if the teamplay equalisation bits are set
@@ -1246,7 +1246,7 @@ extern float g_fNextPrematchAlert;
 
 typedef struct
 {
-	int			ip;
+	int		ip;
 	edict_t	*pEdict;
 } ip_storage_t;
 
@@ -1317,13 +1317,13 @@ extern cvar_t	allow_spectators;
 class CTFFlame : public CBaseMonster
 {
 public:
-	void	Spawn( void );
-	void	Precache( void );
-	void	EXPORT FlameThink( void );
+	void Spawn( void );
+	void Precache( void );
+	void EXPORT FlameThink( void );
 	static  CTFFlame *FlameSpawn( CBaseEntity *pOwner, CBaseEntity *pTarget );
-	void	FlameDestroy( void );
+	void FlameDestroy( void );
 
-	float	m_flNextDamageTime;
+	float m_flNextDamageTime;
 };
 
 /*==========================================================================*/
@@ -1331,39 +1331,39 @@ public:
 class CTFGoal : public CBaseAnimating
 {
 public:
-	void	Spawn( void );
-	void	StartGoal( void );
-	void	EXPORT PlaceGoal( void );
-	void	Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value );
-	int		Classify ( void ) { return	CLASS_TFGOAL; }
+	void Spawn( void );
+	void StartGoal( void );
+	void EXPORT PlaceGoal( void );
+	void Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value );
+	int	Classify ( void ) { return	CLASS_TFGOAL; }
 
-	void	SetObjectCollisionBox( void );
+	void SetObjectCollisionBox( void );
 };
  
 class CTFGoalItem : public CTFGoal
 {
 public:
-	void	Spawn( void );
-	void	StartItem( void );
-	void	EXPORT PlaceItem( void );
-	int		Classify ( void ) { return	CLASS_TFGOAL_ITEM; }
+	void Spawn( void );
+	void StartItem( void );
+	void EXPORT PlaceItem( void );
+	int	Classify ( void ) { return	CLASS_TFGOAL_ITEM; }
 
-	float	m_flDroppedAt;
+	float m_flDroppedAt;
 };
 
 class CTFTimerGoal : public CTFGoal
 {
 public:
-	void	Spawn( void );
-	int		Classify ( void ) { return	CLASS_TFGOAL_TIMER; }
+	void Spawn( void );
+	int	Classify ( void ) { return	CLASS_TFGOAL_TIMER; }
 };
 
 class CTFSpawn : public CBaseEntity
 {
 public:
-	void	Spawn( void );
-	void	Activate( void );
-	int		Classify ( void ) { return	CLASS_TFSPAWN; }
+	void Spawn( void );
+	void Activate( void );
+	int	Classify ( void ) { return	CLASS_TFSPAWN; }
 	BOOL	CheckTeam( int iTeamNo );
 
 	EHANDLE m_pTeamCheck;
@@ -1372,15 +1372,15 @@ public:
 class CTFDetect : public CBaseEntity
 {
 public:
-	void	Spawn( void );
-	int		Classify ( void ) { return	CLASS_TFGOAL; }
+	void Spawn( void );
+	int	Classify ( void ) { return	CLASS_TFGOAL; }
 };
 
 class CTelefragDeath : public CBaseEntity
 {
 public:
-	void		Spawn( void );
-	void		EXPORT	DeathTouch( CBaseEntity *pOther );
+	void	Spawn( void );
+	void	EXPORT	DeathTouch( CBaseEntity *pOther );
 };
 
 class CTeamCheck : public CBaseDelay

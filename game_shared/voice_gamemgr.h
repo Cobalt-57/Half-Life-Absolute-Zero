@@ -40,16 +40,16 @@ public:
 		int maxClients
 		);
 
-	void				SetHelper(IVoiceGameMgrHelper *pHelper);
+	void			SetHelper(IVoiceGameMgrHelper *pHelper);
 
 	// Updates which players can hear which other players.
 	// If gameplay mode is DM, then only players within the PVS can hear each other.
 	// If gameplay mode is teamplay, then only players on the same team can hear each other.
 	// Player masks are always applied.
-	void				Update(double frametime);
+	void			Update(double frametime);
 
 	// Called when a new client connects (unsquelches its entity for everyone).
-	void				ClientConnected(struct edict_s *pEdict);
+	void			ClientConnected(struct edict_s *pEdict);
 
 	// Called on ClientCommand. Checks for the squelch and unsquelch commands.
 	// Returns true if it handled the command.
@@ -63,16 +63,16 @@ public:
 private:
 
 	// Force it to update the client masks.
-	void				UpdateMasks();
+	void			UpdateMasks();
 
 
 private:
-	int					m_msgPlayerVoiceMask;
-	int					m_msgRequestState;
+	int				m_msgPlayerVoiceMask;
+	int				m_msgRequestState;
 
 	IVoiceGameMgrHelper	*m_pHelper;
-	int					m_nMaxPlayers;
-	double				m_UpdateInterval;						// How long since the last update.
+	int				m_nMaxPlayers;
+	double			m_UpdateInterval;						// How long since the last update.
 };
 
 

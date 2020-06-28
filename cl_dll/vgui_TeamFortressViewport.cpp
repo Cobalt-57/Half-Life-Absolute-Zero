@@ -278,8 +278,8 @@ CommandButton *CCommandMenu::FindButtonWithSubmenu( CCommandMenu *pSubMenu )
 // Recalculate the visible buttons
 bool CCommandMenu::RecalculateVisibles( int iYOffset, bool bHideAll )
 {
-	int		i, iCurrentY = 0;
-	int		iVisibleButtons = 0;
+	int	i, iCurrentY = 0;
+	int	iVisibleButtons = 0;
 
 	// Cycle through all the buttons in this menu, and see which will be visible
 	for (i = 0; i < m_iButtons; i++)
@@ -692,7 +692,7 @@ try
 			static const int cCommandLength = 128;
 			char cCommand[cCommandLength] = "";
 			char szMap[MAX_MAPNAME] = "";
-			int	 iPlayerClass = 0;
+			int  iPlayerClass = 0;
 			int  iCustom = false;
 			int  iTeamOnly = -1;
 			int  iToggle = 0;
@@ -2018,6 +2018,9 @@ void CDragNDropHandler::mouseReleased(MouseCode code,Panel* panel)
 // Number Key Input
 bool TeamFortressViewport::SlotInput( int iSlot )
 {
+	//MODDD - what.  "TeamFortressViewport".
+	//   Uh.  okay.
+
 	// If there's a menu up, give it the input
 	if ( m_pCurrentMenu )
 		return m_pCurrentMenu->SlotInput( iSlot );
@@ -2026,7 +2029,7 @@ bool TeamFortressViewport::SlotInput( int iSlot )
 }
 
 // Direct Key Input
-int	TeamFortressViewport::KeyInput( int down, int keynum, const char *pszCurrentBinding )
+int TeamFortressViewport::KeyInput( int down, int keynum, const char *pszCurrentBinding )
 {
 	// Enter gets out of Spectator Mode by bringing up the Team Menu
 	if (m_iUser1 && gEngfuncs.Con_IsVisible() == false )

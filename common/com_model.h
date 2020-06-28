@@ -25,10 +25,19 @@
 #pragma once
 #endif
 
+//MODDD - moved here from deeper in the file.
+#include "custom.h"
+#define MAX_INFO_STRING         256
+#define MAX_SCOREBOARDNAME      32
+
+
+
 #define STUDIO_RENDER 1
 #define STUDIO_EVENTS 2
 
-#define MAX_CLIENTS         32
+//MODDD - may as well be in const.h just once.  Duplicated at least two other places otherwise.
+//#define MAX_CLIENTS         32
+
 #define MAX_EDICTS          900
 
 #define MAX_MODEL_NAME      64
@@ -54,6 +63,8 @@
 //MODDD NOTE - no clue why this is even here, never referred to in the rest of the script.
 // There is dlls/nodes.h's CACHE_SIZE, but it is only intended for node.h/.cpp (renamed since).
 #define CACHE_SIZE  32      // used to align key data structures
+
+
 
 typedef enum
 {
@@ -479,7 +490,8 @@ typedef struct model_s
 
 } model_t;
 
-typedef vec_t vec4_t[4];
+//MODDD - why was vec4_t defined here??  merged with common/vector.h
+//typedef vec_t vec4_t[4];
 
 typedef struct alight_s
 {
@@ -497,10 +509,7 @@ typedef struct auxvert_s
 //
 // ------------------  Player Model Animation Info ----------------
 //
-#include "custom.h"
 
-#define MAX_INFO_STRING         256
-#define MAX_SCOREBOARDNAME      32
 typedef struct player_info_s
 {
     // User id on server

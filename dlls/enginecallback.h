@@ -16,15 +16,10 @@
 #define ENGINECALLBACK_H
 #pragma once
 
+// is this a good idea?
+#include "external_lib_include.h"
 
-
-
-
-//needed for some things in the newly included section below.
-//#include "windows.h"
-//#include "activity.h"
-//#include "enginecallback.h"
-
+#include "eiface.h"
 
 #include "event_flags.h"
 #include "util_entity.h"
@@ -33,13 +28,17 @@
 extern enginefuncs_t g_engfuncs;
 
 
-
 // The actual engine callbacks
 #define GETPLAYERUSERID (*g_engfuncs.pfnGetPlayerUserId)
 #define PRECACHE_MODEL	(*g_engfuncs.pfnPrecacheModel)
 
-//MODDD - precache intervention. Sound precaches go through the soundsentencesave system, which means, if that CVAr is on,
-//        some sounds may not get precached to save on a precache limit shared by several other things.
+
+
+//MODDD - precache intervention. Sound precaches go through the soundsentencesave system, which means,
+// if that CVar is on, some sounds may not get precached to save on a precache limit shared by several
+// other things.
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //ORIGINAL:
 //#define PRECACHE_SOUND	(*g_engfuncs.pfnPrecacheSound)
@@ -62,6 +61,8 @@ extern void UTIL_PRECACHESOUND(char* path, BOOL skipSave);
 #define PRECACHE_SOUND_REAL	(*g_engfuncs.pfnPrecacheSound)
 
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -118,17 +119,15 @@ extern void UTIL_PRECACHESOUND(char* path, BOOL skipSave);
 
 
 
-
-
-
-
-
 #define ALERT			(*g_engfuncs.pfnAlertMessage)
 #define ENGINE_FPRINTF	(*g_engfuncs.pfnEngineFprintf)
 #define ALLOC_PRIVATE	(*g_engfuncs.pfnPvAllocEntPrivateData)
 
 #define FREE_PRIVATE	(*g_engfuncs.pfnFreeEntPrivateData)
+
+//MODDD - this was found commented out as-is.  So 'pfnSzFromIndex' went completely unused
 //#define STRING			(*g_engfuncs.pfnSzFromIndex)
+
 #define ALLOC_STRING	(*g_engfuncs.pfnAllocString)
 #define FIND_ENTITY_BY_STRING	(*g_engfuncs.pfnFindEntityByString)
 #define GETENTITYILLUM	(*g_engfuncs.pfnGetEntityIllum)
@@ -167,36 +166,33 @@ extern void UTIL_PRECACHESOUND(char* path, BOOL skipSave);
 #define DELTA_SET				( *g_engfuncs.pfnDeltaSetField )
 #define DELTA_UNSET				( *g_engfuncs.pfnDeltaUnsetField )
 #define DELTA_ADDENCODER		( *g_engfuncs.pfnDeltaAddEncoder )
-#define ENGINE_CURRENT_PLAYER   ( *g_engfuncs.pfnGetCurrentPlayer )
 
-#define	ENGINE_CANSKIP			( *g_engfuncs.pfnCanSkipPlayer )
+#define ENGINE_CURRENT_PLAYER   ( *g_engfuncs.pfnGetCurrentPlayer )
+#define ENGINE_CANSKIP			( *g_engfuncs.pfnCanSkipPlayer )
 
 #define DELTA_FINDFIELD			( *g_engfuncs.pfnDeltaFindField )
 #define DELTA_SETBYINDEX		( *g_engfuncs.pfnDeltaSetFieldByIndex )
 #define DELTA_UNSETBYINDEX		( *g_engfuncs.pfnDeltaUnsetFieldByIndex )
 
 #define ENGINE_GETPHYSINFO		( *g_engfuncs.pfnGetPhysicsInfoString )
-
 #define ENGINE_SETGROUPMASK		( *g_engfuncs.pfnSetGroupMask )
-
 #define ENGINE_INSTANCE_BASELINE ( *g_engfuncs.pfnCreateInstancedBaseline )
-
 #define ENGINE_FORCE_UNMODIFIED	( *g_engfuncs.pfnForceUnmodified )
-
 #define PLAYER_CNX_STATS		( *g_engfuncs.pfnGetPlayerStats )
 
 
 
-
-
-//This was in util.h back when some entity-related script like the ENT(...) method was defined there. It's been moved here, so this can come too.
-inline void MESSAGE_BEGIN( int msg_dest, int msg_type, const float *pOrigin, entvars_t *ent ) {
+// from util.h
+inline void MESSAGE_BEGIN(int msg_dest, int msg_type, const float* pOrigin, entvars_t* ent) {
 	(*g_engfuncs.pfnMessageBegin)(msg_dest, msg_type, pOrigin, ENT(ent));
 }
-//This and below were in enginecallback.h
-inline void MESSAGE_BEGIN( int msg_dest, int msg_type, const float *pOrigin = NULL, edict_t *ed = NULL ) {
+// from enginecallback.h
+inline void MESSAGE_BEGIN(int msg_dest, int msg_type, const float* pOrigin = NULL, edict_t* ed = NULL) {
 	(*g_engfuncs.pfnMessageBegin)(msg_dest, msg_type, pOrigin, ed);
 }
+
+
+// below was in enginecallback.h
 
 #define MESSAGE_END		(*g_engfuncs.pfnMessageEnd)
 #define WRITE_BYTE		(*g_engfuncs.pfnWriteByte)
@@ -219,15 +215,6 @@ inline void *GET_PRIVATE( edict_t *pent )
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-
-
-
-
-
-
-
 
 
 

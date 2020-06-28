@@ -15,9 +15,9 @@
 //=========================================================
 // skill.cpp - code for skill level concerns
 //=========================================================
-#include	"extdll.h"
-#include	"util.h"
-#include	"skill.h"
+#include "extdll.h"
+#include "util.h"
+#include "skill.h"
 
 
 skilldata_t	gSkillData;
@@ -29,8 +29,8 @@ skilldata_t	gSkillData;
 //=========================================================
 float GetSkillCvar( char *pName )
 {
-	int		iCount;
-	float	flValue;
+	int	iCount;
+	float flValue;
 	char	szBuffer[ 64 ];
 	
 	iCount = sprintf( szBuffer, "%s%d",pName, gSkillData.iSkillLevel );

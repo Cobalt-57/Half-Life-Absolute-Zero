@@ -17,9 +17,9 @@
 //=========================================================
 
 #ifndef	SCHEDULE_H
-#define	SCHEDULE_H
+#define SCHEDULE_H
 
-#define	TASKSTATUS_NEW				0			// Just started
+#define TASKSTATUS_NEW				0			// Just started
 #define TASKSTATUS_RUNNING			1			// Running task & movement
 #define TASKSTATUS_RUNNING_MOVEMENT	2			// Just running movement
 #define TASKSTATUS_RUNNING_TASK		3			// Just running task
@@ -285,20 +285,20 @@ enum
 struct Task_t
 {
 
-	int		iTask;
-	float	flData;
+	int	iTask;
+	float flData;
 };
 
 struct Schedule_t
 {
 
 	Task_t	*pTasklist;
-	int		cTasks;	 
-	int		iInterruptMask;// a bit mask of conditions that can interrupt this schedule 
+	int	cTasks;	 
+	int	iInterruptMask;// a bit mask of conditions that can interrupt this schedule 
 	
 	// a more specific mask that indicates which TYPES of sounds will interrupt the schedule in the 
 	// event that the schedule is broken by COND_HEAR_SOUND
-	int		iSoundMask;
+	int	iSoundMask;
 	const	char *pName;
 };
 
@@ -307,7 +307,7 @@ struct Schedule_t
 struct WayPoint_t
 {
 	Vector	vecLocation;
-	int		iType;
+	int	iType;
 };
 
 // these MoveFlag values are assigned to a WayPoint's TYPE in order to demonstrate the 
@@ -340,7 +340,7 @@ struct WayPoint_t
 // these bits represent conditions that may befall the monster, of which some are allowed 
 // to interrupt certain schedules. 
 #define bits_COND_NO_AMMO_LOADED		( 1 << 0 ) // weapon needs to be reloaded!
-#define	bits_COND_SEE_HATE				( 1 << 1 ) // see something that you hate
+#define bits_COND_SEE_HATE				( 1 << 1 ) // see something that you hate
 #define bits_COND_SEE_FEAR				( 1 << 2 ) // see something that you are afraid of
 #define bits_COND_SEE_DISLIKE			( 1 << 3 ) // see something that you dislike
 #define bits_COND_SEE_ENEMY				( 1 << 4 ) // target entity is in full view.

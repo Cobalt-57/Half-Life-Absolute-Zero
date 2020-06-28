@@ -1,7 +1,7 @@
 
 
 
-#include "externalLibInclude.h"
+#include "external_lib_include.h"
 //#include <stdio.h>
 
 
@@ -10,6 +10,11 @@
 #include "cl_util.h"
 #include "parsemsg.h"
 //#include "pm_shared.h"
+#include "r_efx.h"
+
+//MODDD - why was this even defined here?  It's already in common/com_model.h.
+// Moved to util_shared.h if anywhere even uses this.
+//#define MAX_CLIENTS 32
 
 #include <string.h>
 
@@ -23,8 +28,30 @@
 //#include "vgui_TeamFortressViewport.h"
 
 
+extern float global2PSEUDO_grabbedByBarancle;
+
+// exists in inputw32.cpp.
+extern cvar_t* sensitivity;
 
 
+
+EASY_CVAR_EXTERN_HASH_ARRAY
+
+EASY_CVAR_EXTERN_MASS
+
+
+
+//EASY_CVAR_EXTERN(canShowWeaponSelectAtDeath)
+extern BEAM *pBeam;
+extern BEAM *pBeam2;
+
+
+
+
+
+//MODDD NOTE - kinda.. odd to have to do this, but yea. There is no
+// 'in_camera.h', yet we need a method from it.
+extern void CAM_ToFirstPerson(void);
 
 
 
@@ -37,62 +64,55 @@ int stored_m_fJustThrown = 0;
 
 
 
-
-extern int flag_apply_m_flTimeWeaponIdle;
-extern float stored_m_flTimeWeaponIdle;
-extern int flag_apply_m_fJustThrown;
-extern int stored_m_fJustThrown;
-
-
-
-
-
-EASY_CVAR_EXTERN(canShowWeaponSelectAtDeath)
-
-extern float global2PSEUDO_grabbedByBarancle;
+//MODDD - from hud.cpp, at least what they replace was there.
+DECLARE_MESSAGE_HUD(Logo)
+DECLARE_MESSAGE_HUD(ResetHUD)
+DECLARE_MESSAGE_HUD(InitHUD)
+DECLARE_MESSAGE_HUD(ViewMode)
+DECLARE_MESSAGE_HUD(SetFOV)
+DECLARE_MESSAGE_HUD(Concuss)
+DECLARE_MESSAGE_HUD(GameMode)
 
 
 
-EASY_CVAR_EXTERN_HASH_ARRAY
-
-EASY_CVAR_EXTERN_MASS
-
-
-
-
-//JUKEBOX!
-DECLARE_MESSAGE( m_CustomMessage, JBoxReq )
-DECLARE_MESSAGE( m_CustomMessage, JBoxOff )
-DECLARE_MESSAGE( m_CustomMessage, AutoMus )
-DECLARE_MESSAGE( m_CustomMessage, CliTest)
-DECLARE_MESSAGE( m_CustomMessage, FirstAppr)
-DECLARE_MESSAGE( m_CustomMessage, ResetCVars)
-DECLARE_MESSAGE( m_CustomMessage, UpdClientC )
-DECLARE_MESSAGE( m_CustomMessage, RstClientC )
-DECLARE_MESSAGE( m_CustomMessage, PntClientC )
-//DECLARE_MESSAGE( m_CustomMessage, RetrieveFOV )
-DECLARE_MESSAGE( m_CustomMessage, UpdBnclStat )
-DECLARE_MESSAGE( m_CustomMessage, UpdPlyA)
-DECLARE_MESSAGE( m_CustomMessage, MUnpause)
-DECLARE_MESSAGE( m_CustomMessage, UpdTWI)
-DECLARE_MESSAGE( m_CustomMessage, UpdJT)
-DECLARE_MESSAGE( m_CustomMessage, YMG)
-DECLARE_MESSAGE( m_CustomMessage, YMG_S)
+// gHUD-less methods use this form instead.
+PROTOTYPE_MESSAGE(PrintCl);
+PROTOTYPE_MESSAGE(JBoxReq);
+PROTOTYPE_MESSAGE(JBoxOff);
+PROTOTYPE_MESSAGE(AutoMus);
+PROTOTYPE_MESSAGE(CliTest);
+PROTOTYPE_MESSAGE(FirstAppr);
+PROTOTYPE_MESSAGE(ResetCVars);
+PROTOTYPE_MESSAGE(UpdClientC);
+PROTOTYPE_MESSAGE(RstClientC);
+PROTOTYPE_MESSAGE(PntClientC);
+PROTOTYPE_MESSAGE(UpdBnclStat);
+//PROTOTYPE_MESSAGE(UpdateCam);
+PROTOTYPE_MESSAGE(UpdPlyA);
+PROTOTYPE_MESSAGE(MUnpause);
+PROTOTYPE_MESSAGE(UpdTWI);
+PROTOTYPE_MESSAGE(UpdJT);
+PROTOTYPE_MESSAGE(YMG);
+PROTOTYPE_MESSAGE(YMG_S);
 
 
 
 
 
-CCustomMessage::CCustomMessage(void){
-
-}
-
-
-int CCustomMessage::Init(void){
+void Init_CustomMessage(void){
 	
-	gHUD.AddHudElem(this);
+	//MODDD - from hud.cpp
+	HOOK_MESSAGE( Logo );
+	HOOK_MESSAGE( ResetHUD );
+	HOOK_MESSAGE( GameMode );
+	HOOK_MESSAGE( InitHUD );
+	HOOK_MESSAGE( ViewMode );
+	HOOK_MESSAGE( SetFOV );
+	HOOK_MESSAGE( Concuss );
+
 	
 	//JUKEBOX!
+	HOOK_MESSAGE(PrintCl);
 	HOOK_MESSAGE(JBoxReq);
 	HOOK_MESSAGE(JBoxOff);
 	HOOK_MESSAGE(AutoMus);
@@ -102,7 +122,6 @@ int CCustomMessage::Init(void){
 	HOOK_MESSAGE(UpdClientC);
 	HOOK_MESSAGE(RstClientC);
 	HOOK_MESSAGE(PntClientC);
-	//HOOK_MESSAGE(RetrieveFOV);
 	HOOK_MESSAGE(UpdBnclStat);
 	//HOOK_MESSAGE(UpdateCam);
 	HOOK_MESSAGE(UpdPlyA);
@@ -113,87 +132,214 @@ int CCustomMessage::Init(void){
 	HOOK_MESSAGE(YMG_S);
 	
 
-	Reset();
-
-	return 1;
 }//END OF Init
 
-void CCustomMessage::Reset(void){
 
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+//MODDD - methods moved from the since-deleted hud_msg.cpp.
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+//MODDD - MsgFunc_Logo and MsgFunc_SetFOV moved from hud.cpp.
+
+int CHud::MsgFunc_Logo(const char *pszName,  int iSize, void *pbuf)
+{
+	BEGIN_READ( pbuf, iSize );
+
+	// update Train data
+	m_iLogo = READ_BYTE();
+
+	return 1;
+}
+
+//MODDD - just note
+//NOTE: while "hud_redraw" constantly forces m_iPlayerFOV to default_fov, let it be known that this method is perhaps almost entirely pointless.
+int CHud::MsgFunc_SetFOV(const char *pszName,  int iSize, void *pbuf)
+{
+	BEGIN_READ( pbuf, iSize );
+
+	int newfov = READ_BYTE();
+
+	//MODDD - you know the drill.
+	//int def_fov = CVAR_GET_FLOAT( "default_fov" );
+	int def_fov = getPlayerBaseFOV();
 	
-	//m_iFlags |= HUD_ACTIVE; //!!!
 
-}
+	//Weapon prediction already takes care of changing the fog. ( g_lastFOV ).
+	if ( cl_lw && cl_lw->value )
+		return 1;
 
+	g_lastFOV = newfov;
 
-int CCustomMessage::VidInit(void){
+	if ( newfov == 0 )
+	{
+		m_iPlayerFOV = def_fov;
+	}
+	else
+	{
+		m_iPlayerFOV = newfov;
+	}
 
-	//???
+	// the clients fov is actually set in the client data update section of the hud
+
+	// Set a new sensitivity
+	if ( m_iPlayerFOV == def_fov )
+	{  
+		// reset to saved sensitivity
+		m_flMouseSensitivity = 0;
+	}
+	else
+	{  
+		// set a new sensitivity that is proportional to the change from the FOV default
+		if(def_fov != 0){
+			m_flMouseSensitivity = sensitivity->value * ((float)newfov / (float)def_fov) * CVAR_GET_FLOAT("zoom_sensitivity_ratio");
+		}else{
+			m_flMouseSensitivity = 0; //safety??
+		}
+	}
 
 	return 1;
 }
 
 
+int CHud::MsgFunc_ResetHUD(const char *pszName, int iSize, void *pbuf )
+{
+	//MODDD - this entire method used to be dummied.  Any reason why?
+	//!!!
+	
+	ASSERT( iSize == 0 );
 
+	// clear all hud data
+	HUDLIST *pList = m_pHudList;
 
+	while ( pList )
+	{
+		if ( pList->p )
+			pList->p->Reset();
+		pList = pList->pNext;
+	}
 
-int CCustomMessage::Draw(float flTime){
+	// reset sensitivity
+	m_flMouseSensitivity = 0;
 
+	// reset concussion effect
+	m_iConcussionEffect = 0;
+	
+	return 1;
+}
 
+int CHud::MsgFunc_ViewMode( const char *pszName, int iSize, void *pbuf )
+{
+	CAM_ToFirstPerson();
+	return 1;
+}
+
+int CHud::MsgFunc_InitHUD( const char *pszName, int iSize, void *pbuf )
+{
+	//MODDDMIRROR
+	numMirrors = 0;
+	
+	// prepare all hud data
+	HUDLIST *pList = m_pHudList;
+	
+	while (pList)
+	{
+		if ( pList->p )
+			pList->p->InitHUDData();
+		pList = pList->pNext;
+	}
+	
+	//Probably not a good place to put this.
+	pBeam = pBeam2 = NULL;
+	return 1;
+}
+
+int CHud::MsgFunc_GameMode(const char *pszName, int iSize, void *pbuf )
+{
+	BEGIN_READ( pbuf, iSize );
+	m_Teamplay = READ_BYTE();
 
 	return 1;
 }
 
-
-
-void CCustomMessage::Think(void){
-
-
-
-
-}
-
-
-
-
-
-
-
-
-
-
-
-
-//JUKEBOX!
-int CCustomMessage::MsgFunc_JBoxReq(const char *pszName, int iSize, void *pbuf){
-
+//MODDD - MsgFunc_Damage removed.  This is likely stuck in an earlier phase of development,
+// differnet intentions.
+// Makes sense that it could not work at the HOOK_MESSAGE step (absent in hud.cpp unlike all
+// other messages here), the message's name must be unique (globally) and this collides with
+// the "MsgFunc_Damage" one in health.cpp.
+/*
+int CHud::MsgFunc_Damage(const char *pszName, int iSize, void *pbuf )
+{
+	int	armor, blood;
+	Vector	from;
+	int	i;
+	float count;
 	
 	BEGIN_READ( pbuf, iSize );
+	armor = READ_BYTE();
+	blood = READ_BYTE();
+
+	for (i=0 ; i<3 ; i++)
+		from[i] = READ_COORD();
+
+	count = (blood * 0.5) + (armor * 0.5);
+
+	if (count < 10)
+		count = 10;
+
+	// TODO: kick viewangles,  show damage visually
+
+	return 1;
+}
+*/
+
+
+int CHud::MsgFunc_Concuss( const char *pszName, int iSize, void *pbuf )
+{
+	BEGIN_READ( pbuf, iSize );
+	m_iConcussionEffect = READ_BYTE();
+	if (m_iConcussionEffect)
+		this->m_StatusIcons.EnableIcon("dmg_concuss",255,160,0);
+	else
+		this->m_StatusIcons.DisableIcon("dmg_concuss");
+	return 1;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+IMPLEMENT_MESSAGE(PrintCl) {
+	BEGIN_READ(pbuf, iSize);
+	char* formattedString = READ_STRING();
+	// print the string in console.   That's it.
+	gEngfuncs.Con_Printf(formattedString);
+	return 1;
+}
+
+//JUKEBOX!
+IMPLEMENT_MESSAGE(JBoxReq){
+	BEGIN_READ( pbuf, iSize );
 	char* strReceive = READ_STRING();
-
 	//Do the jukebox!
-
-	//updateCrosshair((int)CVAR_GET_FLOAT("useAlphaCrosshair"), x);
 	//CLIENT_COMMAND(tempEd, "mp3 play media/Half-Life11.mp3");
-	
 	//gEngfuncs.pfnClientCmd("mp3 play media/Half-Life11.mp3");
 	gEngfuncs.pfnClientCmd(strReceive);
 	//use strReceive in there next!
-
-
 	return 1;
 }
 
-
 //JUKEBOX!   Just send a "stop" request.
-int CCustomMessage::MsgFunc_JBoxOff(const char *pszName, int iSize, void *pbuf){
+IMPLEMENT_MESSAGE(JBoxOff){
 	gEngfuncs.pfnClientCmd("mp3 stop");
 	return 1;
 }
 
-
 extern BOOL hasAutoMus;
-int CCustomMessage::MsgFunc_AutoMus(const char *pszName, int iSize, void *pbuf){
+IMPLEMENT_MESSAGE(AutoMus){
 	if(hasAutoMus == FALSE){return 1;}  //don't even bother.
 
 	//BEGIN_READ( pbuf, iSize );
@@ -201,9 +347,8 @@ int CCustomMessage::MsgFunc_AutoMus(const char *pszName, int iSize, void *pbuf){
 	gEngfuncs.pfnClientCmd("mp3 play media/AutoMus.mp3");
 	return 1;
 }
-//
 
-int CCustomMessage::MsgFunc_CliTest(const char *pszName, int iSize, void *pbuf){
+IMPLEMENT_MESSAGE(CliTest){
 	gEngfuncs.pfnClientCmd("mp3 pause media/AutoMus.mp3");
 	return 1;
 }
@@ -212,9 +357,7 @@ int CCustomMessage::MsgFunc_CliTest(const char *pszName, int iSize, void *pbuf){
 
 
 
-
-
-int CCustomMessage::MsgFunc_FirstAppr(const char* pszName, int iSize, void* pbuf) {
+IMPLEMENT_MESSAGE(FirstAppr){
 	// Keep vars the server gets from the client in-check!
 	lateCVarInit();
 
@@ -222,7 +365,7 @@ int CCustomMessage::MsgFunc_FirstAppr(const char* pszName, int iSize, void* pbuf
 }//END OF MsgFunc_ResetCVars
 
 // Called by the server resetting client CVars for a particular player.  Well, do it!
-int CCustomMessage::MsgFunc_ResetCVars(const char* pszName, int iSize, void* pbuf){
+IMPLEMENT_MESSAGE(ResetCVars){
 	EASY_CVAR_SET(hud_logo, 0);
 	EASY_CVAR_SET(cl_fvox, 1);
 	
@@ -231,7 +374,7 @@ int CCustomMessage::MsgFunc_ResetCVars(const char* pszName, int iSize, void* pbu
 
 
 
-int CCustomMessage::MsgFunc_UpdClientC(const char *pszName, int iSize, void *pbuf){
+IMPLEMENT_MESSAGE(UpdClientC){
 #ifdef _DEBUG
 //nothing to do here. This should never be called, this feature is unused for Debug mode.
 //It already treats everything as ordinary CVars.
@@ -293,27 +436,19 @@ int CCustomMessage::MsgFunc_UpdClientC(const char *pszName, int iSize, void *pbu
 
 
 
-
-
-int CCustomMessage::MsgFunc_RstClientC(const char *pszName, int iSize, void *pbuf){
+IMPLEMENT_MESSAGE(RstClientC){
 #ifdef _DEBUG
-
 //nothing to do here. This should never be called, this feature is unused for Debug mode.
 //It already treats everything as ordinary CVars.
 
 #else
-	
 	resetModCVarsClientOnly();
-
-
 #endif
 	return 1;
 }//END OF MsgFunc_RstClientC
 
 
-
-
-int CCustomMessage::MsgFunc_PntClientC(const char *pszName, int iSize, void *pbuf){
+IMPLEMENT_MESSAGE(PntClientC){
 #ifdef _DEBUG
 
 //nothing to do here. This should never be called, this feature is unused for Debug mode.
@@ -335,23 +470,7 @@ int CCustomMessage::MsgFunc_PntClientC(const char *pszName, int iSize, void *pbu
 
 
 
-
-
-
-
-
-
-/*
-int CCustomMessage::MsgFunc_RetrieveFOV(const char *pszName, int iSize, void *pbuf){
-	//BEGIN_READ( pbuf, iSize );
-	//???
-	sendAutoFOV();
-
-	return 1;
-}
-*/
-
-int CCustomMessage::MsgFunc_UpdBnclStat(const char *pszName, int iSize, void *pbuf){
+IMPLEMENT_MESSAGE(UpdBnclStat){
 	BEGIN_READ( pbuf, iSize );
 	int arg = READ_SHORT();
 
@@ -363,7 +482,7 @@ int CCustomMessage::MsgFunc_UpdBnclStat(const char *pszName, int iSize, void *pb
 
 
 //MODDD - new way of updating player status (dead or alive).
-int CCustomMessage::MsgFunc_UpdPlyA(const char *pszName, int iSize, void *pbuf){
+IMPLEMENT_MESSAGE(UpdPlyA){
 
 	BEGIN_READ( pbuf, iSize );
 	int x = READ_SHORT();
@@ -383,7 +502,7 @@ int CCustomMessage::MsgFunc_UpdPlyA(const char *pszName, int iSize, void *pbuf){
 	return 1;
 }
 
-int CCustomMessage::MsgFunc_MUnpause(const char *pszName, int iSize, void *pbuf){
+IMPLEMENT_MESSAGE(MUnpause){
 	//BEGIN_READ( pbuf, iSize );
 	//???
 	
@@ -394,7 +513,7 @@ int CCustomMessage::MsgFunc_MUnpause(const char *pszName, int iSize, void *pbuf)
 	return 1;
 }
 
-int CCustomMessage::MsgFunc_UpdTWI(const char *pszName, int iSize, void *pbuf){
+IMPLEMENT_MESSAGE(UpdTWI){
 	
 	BEGIN_READ( pbuf, iSize );
 	int x = READ_SHORT();
@@ -409,7 +528,7 @@ int CCustomMessage::MsgFunc_UpdTWI(const char *pszName, int iSize, void *pbuf){
 }
 
 
-int CCustomMessage::MsgFunc_UpdJT(const char *pszName, int iSize, void *pbuf){
+IMPLEMENT_MESSAGE(UpdJT){
 	
 	BEGIN_READ( pbuf, iSize );
 	int x = READ_BYTE();
@@ -426,7 +545,7 @@ int CCustomMessage::MsgFunc_UpdJT(const char *pszName, int iSize, void *pbuf){
 
 
 
-int CCustomMessage::MsgFunc_YMG(const char *pszName, int iSize, void *pbuf){
+IMPLEMENT_MESSAGE(YMG){
 	//BEGIN_READ( pbuf, iSize );
 	//???
 
@@ -437,7 +556,7 @@ int CCustomMessage::MsgFunc_YMG(const char *pszName, int iSize, void *pbuf){
 	return 1;
 }
 
-int CCustomMessage::MsgFunc_YMG_S(const char *pszName, int iSize, void *pbuf){
+IMPLEMENT_MESSAGE(YMG_S){
 	//BEGIN_READ( pbuf, iSize );
 	//???
 

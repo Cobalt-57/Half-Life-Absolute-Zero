@@ -15,42 +15,48 @@
     <Filter Include="Source Files\Shared">
       <UniqueIdentifier>{d49fe2ba-3c55-4131-85e8-48c9d9abf30e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\common">
+      <UniqueIdentifier>{483365eb-62b1-4c4e-a45c-1d6d09b692f2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\_root">
+      <UniqueIdentifier>{f657d12e-018f-4268-9e8a-c876760a67d5}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="aflock.cpp">
+    <ClCompile Include="entity\aflock.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="agrunt.cpp">
+    <ClCompile Include="entity\agrunt.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="airtank.cpp">
+    <ClCompile Include="entity\airtank.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="animating.cpp">
+    <ClCompile Include="entity\animating.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="animation.cpp">
+    <ClCompile Include="util_model.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="apache.cpp">
+    <ClCompile Include="entity\apache.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="barnacle.cpp">
+    <ClCompile Include="entity\barnacle.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="barney.cpp">
+    <ClCompile Include="entity\barney.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="bigmomma.cpp">
+    <ClCompile Include="entity\bigmomma.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="bmodels.cpp">
+    <ClCompile Include="entity\bmodels.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="bullsquid.cpp">
+    <ClCompile Include="entity\bullsquid.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="buttons.cpp">
+    <ClCompile Include="entity\buttons.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="cbase.cpp">
@@ -62,37 +68,37 @@
     <ClCompile Include="combat.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="controller.cpp">
+    <ClCompile Include="entity\controller.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="crossbow.cpp">
+    <ClCompile Include="weapon\crossbow.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="crowbar.cpp">
+    <ClCompile Include="weapon\crowbar.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="defaultai.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="doors.cpp">
+    <ClCompile Include="entity\doors.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="effects.cpp">
+    <ClCompile Include="entity\effects.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="egon.cpp">
+    <ClCompile Include="weapon\egon.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="explode.cpp">
+    <ClCompile Include="entity\explode.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="flyingmonster.cpp">
+    <ClCompile Include="entity\flyingmonster.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="func_break.cpp">
+    <ClCompile Include="entity\func_break.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="func_tank.cpp">
+    <ClCompile Include="entity\func_tank.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="game.cpp">
@@ -101,115 +107,112 @@
     <ClCompile Include="gamerules.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="gargantua.cpp">
+    <ClCompile Include="entity\gargantua.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="gauss.cpp">
+    <ClCompile Include="weapon\gauss.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="genericmonster.cpp">
+    <ClCompile Include="entity\genericmonster.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ggrenade.cpp">
+    <ClCompile Include="entity\ggrenade.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="globals.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="gman.cpp">
+    <ClCompile Include="entity\gman.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="h_ai.cpp">
+    <ClCompile Include="entity\h_battery.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="h_battery.cpp">
+    <ClCompile Include="entity\h_cine.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="h_cine.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="h_cycler.cpp">
+    <ClCompile Include="entity\h_cycler.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="h_export.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="handgrenade.cpp">
+    <ClCompile Include="weapon\handgrenade.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="hassassin.cpp">
+    <ClCompile Include="entity\hassassin.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="headcrab.cpp">
+    <ClCompile Include="entity\headcrab.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="healthkit.cpp">
+    <ClCompile Include="entity\healthkit.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="hgrunt.cpp">
+    <ClCompile Include="entity\hgrunt.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="hornet.cpp">
+    <ClCompile Include="entity\hornet.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="hornetgun.cpp">
+    <ClCompile Include="weapon\hornetgun.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="houndeye.cpp">
+    <ClCompile Include="entity\houndeye.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ichthyosaur.cpp">
+    <ClCompile Include="entity\ichthyosaur.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="islave.cpp">
+    <ClCompile Include="entity\islave.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="items.cpp">
+    <ClCompile Include="entity\items.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="leech.cpp">
+    <ClCompile Include="entity\leech.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="lights.cpp">
+    <ClCompile Include="entity\lights.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="maprules.cpp">
+    <ClCompile Include="entity\maprules.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="monstermaker.cpp">
+    <ClCompile Include="entity\monstermaker.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="monsterstate.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="mortar.cpp">
+    <ClCompile Include="entity\mortar.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="mp5.cpp">
+    <ClCompile Include="weapon\mp5.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="multiplay_gamerules.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="nihilanth.cpp">
+    <ClCompile Include="entity\nihilanth.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="nodes.cpp">
+    <ClCompile Include="entity\nodes.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="osprey.cpp">
+    <ClCompile Include="entity\osprey.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="pathcorner.cpp">
+    <ClCompile Include="entity\pathcorner.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="plane.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="plats.cpp">
+    <ClCompile Include="entity\plats.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="player.cpp">
+    <ClCompile Include="entity\player.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\pm_shared\pm_debug.c">
@@ -221,31 +224,31 @@
     <ClCompile Include="..\pm_shared\pm_shared.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="python.cpp">
+    <ClCompile Include="weapon\python.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="rat.cpp">
+    <ClCompile Include="entity\rat.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="roach.cpp">
+    <ClCompile Include="entity\roach.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="rpg.cpp">
+    <ClCompile Include="weapon\rpg.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="satchel.cpp">
+    <ClCompile Include="weapon\satchel.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="schedule.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="scientist.cpp">
+    <ClCompile Include="entity\scientist.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="scripted.cpp">
+    <ClCompile Include="entity\scripted.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="shotgun.cpp">
+    <ClCompile Include="weapon\shotgun.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="singleplay_gamerules.cpp">
@@ -254,40 +257,37 @@
     <ClCompile Include="skill.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="sound.cpp">
+    <ClCompile Include="entity\sound.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="soundent.cpp">
+    <ClCompile Include="entity\soundent.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="spectator.cpp">
+    <ClCompile Include="entity\spectator.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="squadmonster.cpp">
+    <ClCompile Include="entity\squadmonster.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="squeakgrenade.cpp">
+    <ClCompile Include="entity\subs.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="subs.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="talkmonster.cpp">
+    <ClCompile Include="entity\talkmonster.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="teamplay_gamerules.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="tentacle.cpp">
+    <ClCompile Include="entity\tentacle.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="triggers.cpp">
+    <ClCompile Include="entity\triggers.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="tripmine.cpp">
+    <ClCompile Include="weapon\tripmine.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="turret.cpp">
+    <ClCompile Include="entity\turret.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="util.cpp">
@@ -299,61 +299,49 @@
     <ClCompile Include="weapons.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="world.cpp">
+    <ClCompile Include="entity\world.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="xen.cpp">
+    <ClCompile Include="entity\xen.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="zombie.cpp">
+    <ClCompile Include="entity\zombie.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="hassault.cpp">
+    <ClCompile Include="entity\hassault.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="panthereye.cpp">
+    <ClCompile Include="entity\panthereye.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="stukabat.cpp">
+    <ClCompile Include="entity\stukabat.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="chumtoad.cpp">
+    <ClCompile Include="entity\chumtoad.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="chumtoadweapon.cpp">
+    <ClCompile Include="weapon\chumtoadweapon.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="crossbowbolt.cpp">
+    <ClCompile Include="entity\crossbowbolt.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="pickupwalker.cpp">
+    <ClCompile Include="entity\pickupwalker.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="friendly.cpp">
+    <ClCompile Include="entity\friendly.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="rope\CElectrifiedWire.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="rope\CRope.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="rope\CRopeSample.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="rope\CRopeSegment.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\game_shared\NEW\util_printout.cpp">
+    <ClCompile Include="..\game_shared\util\util_printout.cpp">
       <Filter>Source Files\Shared</Filter>
     </ClCompile>
-    <ClCompile Include="kingpin.cpp">
+    <ClCompile Include="entity\kingpin.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\game_shared\NEW\util_shared.cpp">
+    <ClCompile Include="..\game_shared\util\util_shared.cpp">
       <Filter>Source Files\Shared</Filter>
     </ClCompile>
-    <ClCompile Include="glock.cpp">
+    <ClCompile Include="weapon\glock.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="client_message.cpp">
@@ -365,43 +353,55 @@
     <ClCompile Include="basemonster.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="floater.cpp">
+    <ClCompile Include="entity\floater.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="controller_head_ball.cpp">
+    <ClCompile Include="entity\controller_head_ball.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="controller_zap_ball.cpp">
+    <ClCompile Include="entity\controller_zap_ball.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="squidspit.cpp">
+    <ClCompile Include="entity\squidspit.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="archer.cpp">
+    <ClCompile Include="entity\archer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="healthmodule.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="hornet_kingpin.cpp">
+    <ClCompile Include="entity\hornet_kingpin.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="kingpin_ball.cpp">
+    <ClCompile Include="entity\kingpin_ball.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="archer_ball.cpp">
+    <ClCompile Include="entity\archer_ball.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\game_shared\NEW\util_entity.cpp">
+    <ClCompile Include="..\game_shared\util\util_entity.cpp">
       <Filter>Source Files\Shared</Filter>
     </ClCompile>
     <ClCompile Include="util_debugdraw.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="func_door_health.cpp">
+    <ClCompile Include="entity\func_door_health.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\pm_shared\pm_printout.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\game_shared\util\util_version.cpp">
+      <Filter>Source Files\Shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\vector.cpp">
+      <Filter>Source Files\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\external_lib_include.cpp">
+      <Filter>Source Files\_root</Filter>
+    </ClCompile>
+    <ClCompile Include="weapon\squeak.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -412,7 +412,7 @@
     <ClInclude Include="activitymap.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="animation.h">
+    <ClInclude Include="util_model.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="basemonster.h">
@@ -433,10 +433,10 @@
     <ClInclude Include="defaultai.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="doors.h">
+    <ClInclude Include="entity\doors.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="effects.h">
+    <ClInclude Include="entity\effects.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\engine\eiface.h">
@@ -445,37 +445,37 @@
     <ClInclude Include="enginecallback.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="explode.h">
+    <ClInclude Include="entity\explode.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="extdll.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="flyingmonster.h">
+    <ClInclude Include="entity\flyingmonster.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="func_break.h">
+    <ClInclude Include="entity\func_break.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="gamerules.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="hornet.h">
+    <ClInclude Include="entity\hornet.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="items.h">
+    <ClInclude Include="entity\items.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="monsterevent.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="nodes.h">
+    <ClInclude Include="entity\nodes.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="plane.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="player.h">
+    <ClInclude Include="entity\player.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\pm_shared\pm_debug.h">
@@ -502,7 +502,7 @@
     <ClInclude Include="schedule.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="scripted.h">
+    <ClInclude Include="entity\scripted.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="scriptevent.h">
@@ -511,22 +511,22 @@
     <ClInclude Include="skill.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="soundent.h">
+    <ClInclude Include="entity\soundent.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="spectator.h">
+    <ClInclude Include="entity\spectator.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="squadmonster.h">
+    <ClInclude Include="entity\squadmonster.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="talkmonster.h">
+    <ClInclude Include="entity\talkmonster.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="teamplay_gamerules.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="trains.h">
+    <ClInclude Include="entity\trains.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="util.h">
@@ -535,128 +535,116 @@
     <ClInclude Include="weapons.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="hassault.h">
+    <ClInclude Include="entity\hassault.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="panthereye.h">
+    <ClInclude Include="entity\panthereye.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="chumtoad.h">
+    <ClInclude Include="entity\chumtoad.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="chumtoadweapon.h">
+    <ClInclude Include="weapon\chumtoadweapon.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\game_shared\NEW\vector_shared.h">
+    <ClInclude Include="entity\pickupwalker.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="entity\friendly.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\game_shared\util\util_printout.h">
       <Filter>Header Files\Shared</Filter>
     </ClInclude>
-    <ClInclude Include="pickupwalker.h">
+    <ClInclude Include="entity\kingpin.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="friendly.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="rope\CRopeSegment.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="rope\CRopeSample.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="rope\CRope.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="rope\CElectrifiedWire.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\game_shared\NEW\util_printout.h">
+    <ClInclude Include="..\game_shared\util\util_shared.h">
       <Filter>Header Files\Shared</Filter>
     </ClInclude>
-    <ClInclude Include="kingpin.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\game_shared\NEW\util_shared.h">
-      <Filter>Header Files\Shared</Filter>
-    </ClInclude>
-    <ClInclude Include="stukabat.h">
+    <ClInclude Include="entity\stukabat.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="game.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="maprules.h">
+    <ClInclude Include="entity\maprules.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="client_message.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="basebutton.h">
+    <ClInclude Include="entity\basebutton.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="basetoggle.h">
+    <ClInclude Include="entity\basetoggle.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="animating.h">
+    <ClInclude Include="entity\animating.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="turret.h">
+    <ClInclude Include="entity\turret.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="barnacle.h">
+    <ClInclude Include="entity\barnacle.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="plats.h">
+    <ClInclude Include="entity\plats.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="floater.h">
+    <ClInclude Include="entity\floater.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="controller_head_ball.h">
+    <ClInclude Include="entity\controller_head_ball.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="controller_zap_ball.h">
+    <ClInclude Include="entity\controller_zap_ball.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="squidspit.h">
+    <ClInclude Include="entity\squidspit.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="archer.h">
+    <ClInclude Include="entity\archer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="healthkit.h">
+    <ClInclude Include="entity\healthkit.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="healthmodule.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="lights.h">
+    <ClInclude Include="entity\lights.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="hornet_kingpin.h">
+    <ClInclude Include="entity\hornet_kingpin.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="archer_ball.h">
+    <ClInclude Include="entity\archer_ball.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="kingpin_ball.h">
+    <ClInclude Include="entity\kingpin_ball.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\game_shared\NEW\util_entity.h">
+    <ClInclude Include="..\game_shared\util\util_entity.h">
       <Filter>Header Files\Shared</Filter>
     </ClInclude>
     <ClInclude Include="util_debugdraw.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="func_door_health.h">
+    <ClInclude Include="entity\func_door_health.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="egon.h">
+    <ClInclude Include="weapon\egon.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="gauss.h">
+    <ClInclude Include="weapon\gauss.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\pm_shared\pm_printout.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\game_shared\util\util_version.h">
+      <Filter>Header Files\Shared</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

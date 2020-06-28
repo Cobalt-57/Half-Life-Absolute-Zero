@@ -34,7 +34,7 @@ protected:
 	int   _bgColor[3];
 	int   _fgColor[3];
 	char* _grid; //[_gridSize[0]*_gridSize[1]*7] ch,br,bg,bb,fr,fg,fb
-	int	  _gridSize[2];
+	int   _gridSize[2];
 };
 
 }

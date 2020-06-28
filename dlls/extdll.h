@@ -12,88 +12,38 @@
 *   without written permission from Valve LLC.
 *
 ****/
+
+// MODDD NOTE -
+// A lot of things from this file have been moved to util_shared.h/.cpp.
+// Windows-specific things moved to 'external_lib_include.h'.
+// Now, this file is more of a redirect for several other includes instead,
+// most commonly serverside or clientside using shared weapon script.
+
 #ifndef EXTDLL_H
 #define EXTDLL_H
-
-
 //
 // Global header file for extension DLLs
 //
 
 //MODDD - simple way to get this across serverside at least.
-#include "version.h"
-#include "externalLibInclude.h"
+#include "build_settings.h"
+#include "external_lib_include.h"
 
+// MODDD - big OS-check section moved to external_lib_include.h
 
-// Silence certain warnings
-#pragma warning(disable : 4244)		// int or float down-conversion
-#pragma warning(disable : 4305)		// int or float data truncation
-#pragma warning(disable : 4201)		// nameless struct/union
-#pragma warning(disable : 4514)		// unreferenced inline function removed
-#pragma warning(disable : 4100)		// unreferenced formal parameter
-
-// Prevent tons of unused windows definitions
-#ifdef _WIN32
-#define WIN32_LEAN_AND_MEAN
-#define NOWINRES
-#define NOSERVICE
-#define NOMCX
-#define NOIME
-#include "windows.h"
-#else // _WIN32
-#define FALSE 0
-#define TRUE (!FALSE)
-typedef unsigned long ULONG;
-typedef unsigned char BYTE;
-typedef int BOOL;
-#define MAX_PATH PATH_MAX
-#include <limits.h>
-#include <stdarg.h>
-
-//MODDD - moved to util_shared.cpp, mostly.
-//#ifndef min
-//#define min(a,b)  (((a) < (b)) ? (a) : (b))
-//#endif
-//#ifndef max
-//#define max(a,b)  (((a) > (b)) ? (a) : (b))
-#define _vsnprintf(a,b,c,d) vsnprintf(a,b,c,d)
-//#endif
-
-#endif //_WIN32
-
-
-
-#include "externalLibInclude.h"
+// MODDD - the "external_lib_include.h" include above handles this.
 //#include "stdio.h"
 //#include "stdlib.h"
 // Misc C-runtime library headers
 //#include "math.h"
 
-
-
-
-
-
-
-// Header file containing definition of globalvars_t and entvars_t
-typedef int	func_t;					//
-typedef int	string_t;				// from engine's pr_comp.h;
-typedef float vec_t;				// needed before including progdefs.h
-
-// Vector class
-#include "vector_shared.h"  //MODDD - used to be vector.h. Now the shared version.
-
-// Defining it as a (bogus) struct helps enforce type-checking
-#define vec3_t Vector
-
 // Shared engine/DLL constants
-#include "const.h"
+#include "const.h"   //includes "common/vector.h" too!
 #include "progdefs.h"
 #include "edict.h"
 
 // Shared header describing protocol between engine and DLLs
 #include "eiface.h"
-
 // Shared header between the client DLL and the game DLLs
 #include "cdll_dll.h"
 

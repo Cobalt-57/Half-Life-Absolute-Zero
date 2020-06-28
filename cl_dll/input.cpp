@@ -31,19 +31,20 @@ extern "C"
 
 extern "C" 
 {
-	struct kbutton_s DLLEXPORT_2 *KB_Find( const char *name );
-	void DLLEXPORT_2 CL_CreateMove ( float frametime, struct usercmd_s *cmd, int active );
-	void DLLEXPORT_2 HUD_Shutdown( void );
-	int DLLEXPORT_2 HUD_Key_Event( int eventcode, int keynum, const char *pszCurrentBinding );
+	struct kbutton_s DLLEXPORT *KB_Find( const char *name );
+	void DLLEXPORT CL_CreateMove ( float frametime, struct usercmd_s *cmd, int active );
+	void DLLEXPORT HUD_Shutdown( void );
+	int DLLEXPORT HUD_Key_Event( int eventcode, int keynum, const char *pszCurrentBinding );
 }
 
 extern int g_iAlive;
 
-extern int g_weaponselect;
 extern cl_enginefunc_t gEngfuncs;
 
 // Defined in pm_math.c
-extern "C" float anglemod( float a );
+//MODDD
+// ...wait, no need for this anymore.  We're including common/mathlib.h clientside now
+//extern "C" float anglemod( float a );
 
 void IN_Init (void);
 void IN_Move ( float frametime, usercmd_t *cmd);
@@ -52,11 +53,18 @@ void V_Init( void );
 void VectorAngles( const float *forward, float *angles );
 int CL_ButtonBits( int );
 
+
 // xxx need client dll function to get and clear impuse
 extern cvar_t *in_joystick;
 
-int	in_impulse	= 0;
-int	in_cancel	= 0;
+
+
+
+//MODDD - now stored here instead!
+int g_weaponselect = 0;
+
+int in_impulse	= 0;
+int in_cancel	= 0;
 
 cvar_t	*m_pitch;
 cvar_t	*m_yaw;
@@ -76,6 +84,7 @@ cvar_t	*cl_yawspeed;
 cvar_t	*cl_pitchspeed;
 cvar_t	*cl_anglespeedkey;
 cvar_t	*cl_vsmoothing;
+
 /*
 ===============================================================================
 
@@ -222,7 +231,7 @@ KB_Find
 Allows the engine to get a kbutton_t directly ( so it can check +mlook state, etc ) for saving out to .cfg files
 ============
 */
-struct kbutton_s DLLEXPORT_2 *KB_Find( const char *name )
+struct kbutton_s DLLEXPORT *KB_Find( const char *name )
 {
 	kblist_t *p;
 	p = g_kbkeys;
@@ -306,7 +315,7 @@ KeyDown
 */
 void KeyDown (kbutton_t *b)
 {
-	int		k;
+	int	k;
 	char	*c;
 
 	c = gEngfuncs.Cmd_Argv(1);
@@ -340,7 +349,7 @@ KeyUp
 */
 void KeyUp (kbutton_t *b)
 {
-	int		k;
+	int	k;
 	char	*c;
 	
 	c = gEngfuncs.Cmd_Argv(1);
@@ -379,7 +388,7 @@ HUD_Key_Event
 Return 1 to allow engine to process the key, otherwise, act on it as needed
 ============
 */
-int DLLEXPORT_2 HUD_Key_Event( int down, int keynum, const char *pszCurrentBinding )
+int DLLEXPORT HUD_Key_Event( int down, int keynum, const char *pszCurrentBinding )
 {
 	if (gViewPort)
 		return gViewPort->KeyInput(down, keynum, pszCurrentBinding);
@@ -558,8 +567,8 @@ Returns 0.25 if a key was pressed and released during the frame,
 */
 float CL_KeyState (kbutton_t *key)
 {
-	float		val = 0.0;
-	int			impulsedown, impulseup, down;
+	float	val = 0.0;
+	int		impulsedown, impulseup, down;
 	
 	impulsedown = key->state & 2;
 	impulseup	= key->state & 4;
@@ -611,8 +620,8 @@ Moves the local angle positions
 */
 void CL_AdjustAngles ( float frametime, float *viewangles )
 {
-	float	speed;
-	float	up, down;
+	float speed;
+	float up, down;
 	
 	if (in_speed.state & 1)
 	{
@@ -665,7 +674,7 @@ if active == 1 then we are 1) not playing back demos ( where our commands are ig
 2 ) we have finished signing on to server
 ================
 */
-void DLLEXPORT_2 CL_CreateMove ( float frametime, struct usercmd_s *cmd, int active )
+void DLLEXPORT CL_CreateMove ( float frametime, struct usercmd_s *cmd, int active )
 {	
 	float spd;
 	vec3_t viewangles;
@@ -775,12 +784,12 @@ void DLLEXPORT_2 CL_CreateMove ( float frametime, struct usercmd_s *cmd, int act
 
 	if ( g_iAlive )
 	{
-		VectorCopy( viewangles, cmd->viewangles );
-		VectorCopy( viewangles, oldangles );
+		VectorCopy_f( viewangles, cmd->viewangles );
+		VectorCopy_f( viewangles, oldangles );
 	}
 	else
 	{
-		VectorCopy( oldangles, cmd->viewangles );
+		VectorCopy_f( oldangles, cmd->viewangles );
 	}
 
 }
@@ -792,7 +801,7 @@ CL_IsDead
 Returns 1 if health is <= 0
 ============
 */
-int	CL_IsDead( void )
+int CL_IsDead( void )
 {
 	return ( gHUD.m_Health.m_iHealth <= 0 ) ? 1 : 0;
 }
@@ -1059,7 +1068,7 @@ void ShutdownInput (void)
 	KB_Shutdown();
 }
 
-void DLLEXPORT_2 HUD_Shutdown( void )
+void DLLEXPORT HUD_Shutdown( void )
 {
 	ShutdownInput();
 }

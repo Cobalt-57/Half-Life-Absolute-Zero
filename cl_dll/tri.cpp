@@ -12,38 +12,33 @@
 
 // Triangle rendering apis are in gEngfuncs.pTriAPI
 
+#include "external_lib_include.h"
 #include "const.h"
 #include "entity_state.h"
 #include "cl_entity.h"
 #include "triangleapi.h"
 
-extern "C"
-{
-	void DLLEXPORT_2 HUD_DrawNormalTriangles( void );
-	void DLLEXPORT_2 HUD_DrawTransparentTriangles( void );
-};
-
-
-
-
-
-
-
-#include "windows.h"
+//MODDD - yea.
+//#include "windows.h"
 #include "glInclude.h"
 
-// Triangle rendering apis are in gEngfuncs.pTriAPI
-
-
-
-//EASY_CVAR_EXTERN_CLIENT_MASS
 EASY_CVAR_EXTERN(fogNear)
 EASY_CVAR_EXTERN(fogFar)
 EASY_CVAR_EXTERN(fogTest)
 
+//EASY_CVAR_EXTERN_CLIENT_MASS
 
 
 
+extern "C"
+{
+	void DLLEXPORT HUD_DrawNormalTriangles( void );
+	void DLLEXPORT HUD_DrawTransparentTriangles( void );
+};
+
+
+
+// Triangle rendering apis are in gEngfuncs.pTriAPI
 
 
 float fogColor[3];
@@ -54,10 +49,7 @@ void RenderFog ( float currentTime )
 {
 	//float g_fFogColor[4] = { FogColor.x, FogColor.y, FogColor.z, 1.0 };
 	//bool bFog = g_iWaterLevel < 2 && g_fStartDist > 0 && g_fEndDist > 0;
-	
-
 	float fogTestVar = EASY_CVAR_GET(fogTest);
-
 
 	//easyPrintLine("CURRENTTIMEZ %.2f %,2f", currentTime, nextFogColorChange);
 
@@ -90,8 +82,6 @@ void RenderFog ( float currentTime )
 	}
 
 
-
-
 	float g_fFogColor[4] = { fogColor[0], fogColor[1], fogColor[2], 1.0 };
 
 	if (TRUE)
@@ -103,9 +93,6 @@ void RenderFog ( float currentTime )
 		glFogf(GL_FOG_START, EASY_CVAR_GET(fogNear));
 		glFogf(GL_FOG_END, EASY_CVAR_GET(fogFar));
 		glHint(GL_FOG_HINT, GL_NICEST);
-
-		
-
 	}
 	
 	/*
@@ -115,14 +102,11 @@ void RenderFog ( float currentTime )
 	glClearColor(0.8f, 0.8f, 1.0f, 1.0f);
 	*/
 
-	
 
 }
 void RenderFog(){
 	RenderFog(-1);
 }
-
-
 
 
 
@@ -199,7 +183,7 @@ HUD_DrawNormalTriangles
 Non-transparent triangles-- add them here
 =================
 */
-void DLLEXPORT_2 HUD_DrawNormalTriangles( void )
+void DLLEXPORT HUD_DrawNormalTriangles( void )
 {
 
 	gHUD.m_Spectator.DrawOverview();
@@ -216,7 +200,7 @@ HUD_DrawTransparentTriangles
 Render any triangles with transparent rendermode needs here
 =================
 */
-void DLLEXPORT_2 HUD_DrawTransparentTriangles( void )
+void DLLEXPORT HUD_DrawTransparentTriangles( void )
 {
 
 #if defined( TEST_IT )

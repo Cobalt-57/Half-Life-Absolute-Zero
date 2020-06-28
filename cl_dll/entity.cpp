@@ -20,12 +20,6 @@
 #include "pmtrace.h"	
 #include "pm_shared.h"
 
-void Game_AddObjects( void );
-
-extern vec3_t v_origin;
-
-int g_iAlive = 1;
-
 //MODDD - externs.
 EASY_CVAR_EXTERN(cl_muzzleflash)
 EASY_CVAR_EXTERN(event5011Allowed)
@@ -40,16 +34,28 @@ EASY_CVAR_EXTERN(trailTypeTest)
 EASY_CVAR_EXTERN(muteTempEntityGroundHitSound)
 
 
+
+
+extern vec3_t v_origin;
+
+void Game_AddObjects( void );
+
+
+int g_iAlive = 1;
+
+
+
+
 extern "C" 
 {
-	int DLLEXPORT_2 HUD_AddEntity( int type, struct cl_entity_s *ent, const char *modelname );
-	void DLLEXPORT_2 HUD_CreateEntities( void );
-	void DLLEXPORT_2 HUD_StudioEvent( const struct mstudioevent_s *event, const struct cl_entity_s *entity );
-	void DLLEXPORT_2 HUD_TxferLocalOverrides( struct entity_state_s *state, const struct clientdata_s *client );
-	void DLLEXPORT_2 HUD_ProcessPlayerState( struct entity_state_s *dst, const struct entity_state_s *src );
-	void DLLEXPORT_2 HUD_TxferPredictionData ( struct entity_state_s *ps, const struct entity_state_s *pps, struct clientdata_s *pcd, const struct clientdata_s *ppcd, struct weapon_data_s *wd, const struct weapon_data_s *pwd );
-	void DLLEXPORT_2 HUD_TempEntUpdate( double frametime, double client_time, double cl_gravity, struct tempent_s **ppTempEntFree, struct tempent_s **ppTempEntActive, int ( *Callback_AddVisibleEntity )( struct cl_entity_s *pEntity ), void ( *Callback_TempEntPlaySound )( struct tempent_s *pTemp, float damp ) );
-	struct cl_entity_s DLLEXPORT_2 *HUD_GetUserEntity( int index );
+	int DLLEXPORT HUD_AddEntity( int type, struct cl_entity_s *ent, const char *modelname );
+	void DLLEXPORT HUD_CreateEntities( void );
+	void DLLEXPORT HUD_StudioEvent( const struct mstudioevent_s *event, const struct cl_entity_s *entity );
+	void DLLEXPORT HUD_TxferLocalOverrides( struct entity_state_s *state, const struct clientdata_s *pClient );
+	void DLLEXPORT HUD_ProcessPlayerState( struct entity_state_s *dst, const struct entity_state_s *src );
+	void DLLEXPORT HUD_TxferPredictionData ( struct entity_state_s *ps, const struct entity_state_s *pps, struct clientdata_s *pcd, const struct clientdata_s *ppcd, struct weapon_data_s *wd, const struct weapon_data_s *pwd );
+	void DLLEXPORT HUD_TempEntUpdate( double frametime, double client_time, double cl_gravity, struct tempent_s **ppTempEntFree, struct tempent_s **ppTempEntActive, int ( *Callback_AddVisibleEntity )( struct cl_entity_s *pEntity ), void ( *Callback_TempEntPlaySound )( struct tempent_s *pTemp, float damp ) );
+	struct cl_entity_s DLLEXPORT *HUD_GetUserEntity( int index );
 }
 
 /*
@@ -59,7 +65,7 @@ HUD_AddEntity
 ========================
 */
 
-int DLLEXPORT_2 HUD_AddEntity( int type, struct cl_entity_s *ent, const char *modelname )
+int DLLEXPORT HUD_AddEntity( int type, struct cl_entity_s *ent, const char *modelname )
 {
 	switch ( type )
 	{
@@ -98,19 +104,19 @@ playerstate update in entity_state_t.  In order for these overrides to eventuall
 structure, we need to copy them into the state structure at this point.
 =========================
 */
-void DLLEXPORT_2 HUD_TxferLocalOverrides( struct entity_state_s *state, const struct clientdata_s *client )
+void DLLEXPORT HUD_TxferLocalOverrides( struct entity_state_s *state, const struct clientdata_s *pClient )
 {
-	VectorCopy( client->origin, state->origin );
+	VectorCopy_f( pClient->origin, state->origin );
 
 	// Spectator
-	state->iuser1 = client->iuser1;
-	state->iuser2 = client->iuser2;
+	state->iuser1 = pClient->iuser1;
+	state->iuser2 = pClient->iuser2;
 
 	// Duck prevention
-	state->iuser3 = client->iuser3;
+	state->iuser3 = pClient->iuser3;
 
 	// Fire prevention
-	state->iuser4 = client->iuser4;
+	state->iuser4 = pClient->iuser4;
 }
 
 /*
@@ -121,13 +127,13 @@ We have received entity_state_t for this player over the network.  We need to co
 playerstate structure
 =========================
 */
-void DLLEXPORT_2 HUD_ProcessPlayerState( struct entity_state_s *dst, const struct entity_state_s *src )
+void DLLEXPORT HUD_ProcessPlayerState( struct entity_state_s *dst, const struct entity_state_s *src )
 {
 	// Copy in network data
-	VectorCopy( src->origin, dst->origin );
-	VectorCopy( src->angles, dst->angles );
+	VectorCopy_f( src->origin, dst->origin );
+	VectorCopy_f( src->angles, dst->angles );
 
-	VectorCopy( src->velocity, dst->velocity );
+	VectorCopy_f( src->velocity, dst->velocity );
 
 	dst->frame					= src->frame;
 	dst->modelindex				= src->modelindex;
@@ -153,7 +159,7 @@ void DLLEXPORT_2 HUD_ProcessPlayerState( struct entity_state_s *dst, const struc
 	memcpy( &dst->controller[0], &src->controller[0], 4 * sizeof( byte ) );
 	memcpy( &dst->blending[0], &src->blending[0], 2 * sizeof( byte ) );
 
-	VectorCopy( src->basevelocity, dst->basevelocity );
+	VectorCopy_f( src->basevelocity, dst->basevelocity );
 
 	dst->friction				= src->friction;
 	dst->gravity				= src->gravity;
@@ -188,7 +194,7 @@ Because we can predict an arbitrary number of frames before the server responds 
  update is occupying.
 =========================
 */
-void DLLEXPORT_2 HUD_TxferPredictionData ( struct entity_state_s *ps, const struct entity_state_s *pps, struct clientdata_s *pcd, const struct clientdata_s *ppcd, struct weapon_data_s *wd, const struct weapon_data_s *pwd )
+void DLLEXPORT HUD_TxferPredictionData ( struct entity_state_s *ps, const struct entity_state_s *pps, struct clientdata_s *pcd, const struct clientdata_s *ppcd, struct weapon_data_s *wd, const struct weapon_data_s *pwd )
 {
 	ps->oldbuttons				= pps->oldbuttons;
 	ps->flFallVelocity			= pps->flFallVelocity;
@@ -235,10 +241,10 @@ void DLLEXPORT_2 HUD_TxferPredictionData ( struct entity_state_s *ps, const stru
 	pcd->fuser2					= ppcd->fuser2;
 	pcd->fuser3					= ppcd->fuser3;
 
-	VectorCopy( ppcd->vuser1, pcd->vuser1 );
-	VectorCopy( ppcd->vuser2, pcd->vuser2 );
-	VectorCopy( ppcd->vuser3, pcd->vuser3 );
-	VectorCopy( ppcd->vuser4, pcd->vuser4 );
+	VectorCopy_f( ppcd->vuser1, pcd->vuser1 );
+	VectorCopy_f( ppcd->vuser2, pcd->vuser2 );
+	VectorCopy_f( ppcd->vuser3, pcd->vuser3 );
+	VectorCopy_f( ppcd->vuser4, pcd->vuser4 );
 
 	memcpy( wd, pwd, 32 * sizeof( weapon_data_t ) );
 }
@@ -525,7 +531,7 @@ HUD_CreateEntities
 Gives us a chance to add additional entities to the render this frame
 =========================
 */
-void DLLEXPORT_2 HUD_CreateEntities( void )
+void DLLEXPORT HUD_CreateEntities( void )
 {
 	// e.g., create a persistent cl_entity_t somewhere.
 	// Load an appropriate model into it ( gEngfuncs.CL_LoadModel )
@@ -564,7 +570,7 @@ The entity's studio model description indicated an event was
 fired during this frame, handle the event by it's tag ( e.g., muzzleflash, sound )
 =========================
 */
-void DLLEXPORT_2 HUD_StudioEvent( const struct mstudioevent_s *event, const struct cl_entity_s *entity )
+void DLLEXPORT HUD_StudioEvent( const struct mstudioevent_s *event, const struct cl_entity_s *entity )
 {
 	
 	//"player" boolean variable?
@@ -718,19 +724,19 @@ CL_UpdateTEnts
 Simulation and cleanup of temporary entities
 =================
 */
-void DLLEXPORT_2 HUD_TempEntUpdate (
+void DLLEXPORT HUD_TempEntUpdate (
 	double frametime,   // Simulation time
 	double client_time, // Absolute time on client
 	double cl_gravity,  // True gravity on client
 	TEMPENTITY **ppTempEntFree,   // List of freed temporary ents
 	TEMPENTITY **ppTempEntActive, // List 
-	int		( *Callback_AddVisibleEntity )( cl_entity_t *pEntity ),
-	void	( *Callback_TempEntPlaySound )( TEMPENTITY *pTemp, float damp ) )
+	int	( *Callback_AddVisibleEntity )( cl_entity_t *pEntity ),
+	void ( *Callback_TempEntPlaySound )( TEMPENTITY *pTemp, float damp ) )
 {
 	static int gTempEntFrame = 0;
-	int			i;
+	int		i;
 	TEMPENTITY	*pTemp, *pnext, *pprev;
-	float		freq, gravity, gravitySlow, life, fastFreq;
+	float	freq, gravity, gravitySlow, life, fastFreq;
 
 	// Nothing to simulate
 	if ( !*ppTempEntActive )		
@@ -816,7 +822,7 @@ void DLLEXPORT_2 HUD_TempEntUpdate (
 		{
 			pprev = pTemp;
 			
-			VectorCopy( pTemp->entity.origin, pTemp->entity.prevstate.origin );
+			VectorCopy_f( pTemp->entity.origin, pTemp->entity.prevstate.origin );
 
 			//easyPrintLine("WHAT IS LIFE %.2f", life);
 			//easyPrintLine("WHAT IS FDSPD %.2f", pTemp->fadeSpeed);
@@ -855,7 +861,7 @@ void DLLEXPORT_2 HUD_TempEntUpdate (
 
 				pClient = gEngfuncs.GetEntityByIndex( pTemp->clientIndex );
 
-				VectorAdd( pClient->origin, pTemp->tentOffset, pTemp->entity.origin );
+				VectorAdd_f( pClient->origin, pTemp->tentOffset, pTemp->entity.origin );
 			}
 			else if ( pTemp->flags & FTENT_SINEWAVE )
 			{
@@ -921,13 +927,13 @@ void DLLEXPORT_2 HUD_TempEntUpdate (
 				pTemp->entity.angles[1] += pTemp->entity.baseline.angles[1] * frametime;
 				pTemp->entity.angles[2] += pTemp->entity.baseline.angles[2] * frametime;
 
-				VectorCopy( pTemp->entity.angles, pTemp->entity.latched.prevangles );
+				VectorCopy_f( pTemp->entity.angles, pTemp->entity.latched.prevangles );
 			}
 
 			if ( pTemp->flags & (FTENT_COLLIDEALL | FTENT_COLLIDEWORLD) )
 			{
 				vec3_t	traceNormal;
-				float	traceFraction = 1;
+				float traceFraction = 1;
 
 				if ( pTemp->flags & FTENT_COLLIDEALL )
 				{
@@ -946,7 +952,7 @@ void DLLEXPORT_2 HUD_TempEntUpdate (
 						if ( !pmtrace.ent || ( pe->info != pTemp->clientIndex ) )
 						{
 							traceFraction = pmtrace.fraction;
-							VectorCopy( pmtrace.plane.normal, traceNormal );
+							VectorCopy_f( pmtrace.plane.normal, traceNormal );
 
 							if ( pTemp->hitcallback )
 							{
@@ -966,7 +972,7 @@ void DLLEXPORT_2 HUD_TempEntUpdate (
 					if ( pmtrace.fraction != 1 )
 					{
 						traceFraction = pmtrace.fraction;
-						VectorCopy( pmtrace.plane.normal, traceNormal );
+						VectorCopy_f( pmtrace.plane.normal, traceNormal );
 
 						if ( pTemp->flags & FTENT_SPARKSHOWER )
 						{
@@ -1061,7 +1067,7 @@ void DLLEXPORT_2 HUD_TempEntUpdate (
 			{
 				/*
 				dlight_t *dl = gEngfuncs.pEfxAPI->CL_AllocDlight (0);
-				VectorCopy (pTemp->entity.origin, dl->origin);
+				VectorCopy_f (pTemp->entity.origin, dl->origin);
 				dl->radius = 60;
 				dl->color.r = 255;
 				dl->color.g = 120;
@@ -1070,7 +1076,7 @@ void DLLEXPORT_2 HUD_TempEntUpdate (
 				*/
 
 				dlight_t *dl = gEngfuncs.pEfxAPI->CL_AllocDlight (0);
-				VectorCopy (pTemp->entity.origin, dl->origin);
+				VectorCopy_f (pTemp->entity.origin, dl->origin);
 				dl->radius = 60;
 				dl->color.r = 255;
 				dl->color.g = 120;
@@ -1161,7 +1167,7 @@ If you specify negative numbers for beam start and end point entities, then
 Indices must start at 1, not zero.
 =================
 */
-cl_entity_t DLLEXPORT_2 *HUD_GetUserEntity( int index )
+cl_entity_t DLLEXPORT *HUD_GetUserEntity( int index )
 {
 #if defined( BEAM_TEST )
 	// None by default, you would return a valic pointer if you create a client side

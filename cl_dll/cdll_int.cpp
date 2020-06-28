@@ -43,6 +43,12 @@ cl_enginefunc_t gEngfuncs;
 CHud gHUD;
 TeamFortressViewport *gViewPort = NULL;
 
+BOOL hasAutoMus = FALSE;
+float globalPSEUDO_drawHUDMem = -1;
+
+
+
+
 void InitInput (void);
 void EV_HookEvents( void );
 void IN_Commands( void );
@@ -56,20 +62,20 @@ Called when the DLL is first loaded.
 */
 extern "C" 
 {
-int		DLLEXPORT_2 Initialize( cl_enginefunc_t *pEnginefuncs, int iVersion );
-int		DLLEXPORT_2 HUD_VidInit( void );
-void	DLLEXPORT_2 HUD_Init( void );
-int		DLLEXPORT_2 HUD_Redraw( float flTime, int intermission );
-int		DLLEXPORT_2 HUD_UpdateClientData( client_data_t *cdata, float flTime );
-void	DLLEXPORT_2 HUD_Reset ( void );
-void	DLLEXPORT_2 HUD_PlayerMove( struct playermove_s *ppmove, int server );
-void	DLLEXPORT_2 HUD_PlayerMoveInit( struct playermove_s *ppmove );
-char	DLLEXPORT_2 HUD_PlayerMoveTexture( char *name );
-int		DLLEXPORT_2 HUD_ConnectionlessPacket( const struct netadr_s *net_from, const char *args, char *response_buffer, int *response_buffer_size );
-int		DLLEXPORT_2 HUD_GetHullBounds( int hullnumber, float *mins, float *maxs );
-void	DLLEXPORT_2 HUD_Frame( double time );
-void	DLLEXPORT_2 HUD_VoiceStatus(int entindex, qboolean bTalking);
-void	DLLEXPORT_2 HUD_DirectorMessage( int iSize, void *pbuf );
+int	DLLEXPORT Initialize( cl_enginefunc_t *pEnginefuncs, int iVersion );
+int	DLLEXPORT HUD_VidInit( void );
+void DLLEXPORT HUD_Init( void );
+int	DLLEXPORT HUD_Redraw( float flTime, int intermission );
+int	DLLEXPORT HUD_UpdateClientData( client_data_t *cdata, float flTime );
+void DLLEXPORT HUD_Reset ( void );
+void DLLEXPORT HUD_PlayerMove( struct playermove_s *ppmove, int server );
+void DLLEXPORT HUD_PlayerMoveInit( struct playermove_s *ppmove );
+char DLLEXPORT HUD_PlayerMoveTexture( char *name );
+int	DLLEXPORT HUD_ConnectionlessPacket( const struct netadr_s *net_from, const char *args, char *response_buffer, int *response_buffer_size );
+int	DLLEXPORT HUD_GetHullBounds( int hullnumber, float *mins, float *maxs );
+void DLLEXPORT HUD_Frame( double time );
+void DLLEXPORT HUD_VoiceStatus(int entindex, qboolean bTalking);
+void DLLEXPORT HUD_DirectorMessage( int iSize, void *pbuf );
 }
 
 /*
@@ -79,7 +85,7 @@ HUD_GetHullBounds
   Engine calls this to enumerate player collision hulls, for prediction.  Return 0 if the hullnumber doesn't exist.
 ================================
 */
-int DLLEXPORT_2 HUD_GetHullBounds( int hullnumber, float *mins, float *maxs )
+int DLLEXPORT HUD_GetHullBounds( int hullnumber, float *mins, float *maxs )
 {
 	int iret = 0;
 
@@ -113,7 +119,7 @@ HUD_ConnectionlessPacket
   size of the response_buffer, so you must zero it out if you choose not to respond.
 ================================
 */
-int	DLLEXPORT_2 HUD_ConnectionlessPacket( const struct netadr_s *net_from, const char *args, char *response_buffer, int *response_buffer_size )
+int DLLEXPORT HUD_ConnectionlessPacket( const struct netadr_s *net_from, const char *args, char *response_buffer, int *response_buffer_size )
 {
 	// Parse stuff from args
 	int max_buffer_size = *response_buffer_size;
@@ -127,22 +133,22 @@ int	DLLEXPORT_2 HUD_ConnectionlessPacket( const struct netadr_s *net_from, const
 	return 0;
 }
 
-void DLLEXPORT_2 HUD_PlayerMoveInit( struct playermove_s *ppmove )
+void DLLEXPORT HUD_PlayerMoveInit( struct playermove_s *ppmove )
 {
 	PM_Init( ppmove );
 }
 
-char DLLEXPORT_2 HUD_PlayerMoveTexture( char *name )
+char DLLEXPORT HUD_PlayerMoveTexture( char *name )
 {
 	return PM_FindTextureType( name );
 }
 
-void DLLEXPORT_2 HUD_PlayerMove( struct playermove_s *ppmove, int server )
+void DLLEXPORT HUD_PlayerMove( struct playermove_s *ppmove, int server )
 {
 	PM_Move( ppmove, server );
 }
 
-int DLLEXPORT_2 Initialize( cl_enginefunc_t *pEnginefuncs, int iVersion )
+int DLLEXPORT Initialize( cl_enginefunc_t *pEnginefuncs, int iVersion )
 {
 	gEngfuncs = *pEnginefuncs;
 
@@ -167,7 +173,7 @@ so the HUD can reinitialize itself.
 ==========================
 */
 
-int DLLEXPORT_2 HUD_VidInit( void )
+int DLLEXPORT HUD_VidInit( void )
 {
 	gHUD.VidInit();
 
@@ -189,14 +195,10 @@ the hud variables.
 EASY_CVAR_EXTERN_MASS
 EASY_CVAR_DECLARE_HASH_ARRAY
 
-BOOL hasAutoMus = FALSE;
-
-void DLLEXPORT_2 HUD_Init( void )
+void DLLEXPORT HUD_Init( void )
 {
 
 	EASY_CVAR_HASH_MASS
-
-
 
 	determineHiddenMemPath();
 	
@@ -227,9 +229,7 @@ redraw the HUD.
 
 
 
-float globalPSEUDO_drawHUDMem = -1;
-
-int DLLEXPORT_2 HUD_Redraw( float time, int intermission )
+int DLLEXPORT HUD_Redraw( float time, int intermission )
 {
 
 
@@ -269,7 +269,7 @@ returns 1 if anything has been changed, 0 otherwise.
 
 
 
-int DLLEXPORT_2 HUD_UpdateClientData(client_data_t *pcldata, float flTime )
+int DLLEXPORT HUD_UpdateClientData(client_data_t *pcldata, float flTime )
 {
 	IN_Commands();
 
@@ -285,7 +285,7 @@ Called at start and end of demos to restore to "non"HUD state.
 ==========================
 */
 
-void DLLEXPORT_2 HUD_Reset( void )
+void DLLEXPORT HUD_Reset( void )
 {
 	gHUD.VidInit();
 }
@@ -298,7 +298,7 @@ Called by engine every frame that client .dll is loaded
 ==========================
 */
 
-void DLLEXPORT_2 HUD_Frame( double time )
+void DLLEXPORT HUD_Frame( double time )
 {
 	ServersThink( time );
 
@@ -314,7 +314,7 @@ Called when a player starts or stops talking.
 ==========================
 */
 
-void DLLEXPORT_2 HUD_VoiceStatus(int entindex, qboolean bTalking)
+void DLLEXPORT HUD_VoiceStatus(int entindex, qboolean bTalking)
 {
 	GetClientVoiceMgr()->UpdateSpeakerStatus(entindex, bTalking);
 }
@@ -327,7 +327,7 @@ Called when a director event message was received
 ==========================
 */
 
-void DLLEXPORT_2 HUD_DirectorMessage( int iSize, void *pbuf )
+void DLLEXPORT HUD_DirectorMessage( int iSize, void *pbuf )
 {
 	 gHUD.m_Spectator.DirectorMessage( iSize, pbuf );
 }

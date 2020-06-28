@@ -23,9 +23,6 @@
 
 #include <string.h>
 
-#pragma warning(disable : 4244)
-#pragma warning(disable : 4305)
-
 extern playermove_t *pmove;
 
 // Expand debugging BBOX particle hulls by this many units.
@@ -60,15 +57,15 @@ void PM_ShowClipBox( void )
 	//  trail at the intersection point.
 	PM_ViewEntity();
 
-	VectorCopy( pmove->origin, org );
+	VectorCopy_f( pmove->origin, org );
 
 	if ( pmove->server )
 	{
-		VectorAdd( org, offset, org );
+		VectorAdd_f( org, offset, org );
 	}
 	else
 	{
-		VectorSubtract( org, offset, org );
+		VectorSubtract_f( org, offset, org );
 	}
 
 	// Show our BBOX in particles.
@@ -106,7 +103,7 @@ void PM_ParticleLine(vec3_t start, vec3_t end, int pcolor, float life, float ver
 	int i;
 	// Determine distance;
 
-	VectorSubtract(end, start, diff);
+	VectorSubtract_f(end, start, diff);
 	
 	len = VectorNormalize(diff);
 
@@ -160,7 +157,7 @@ void PM_DrawPhysEntBBox(int num, int pcolor, float life)
 
 	if (pe->model)
 	{
-		VectorCopy(pe->origin, org);
+		VectorCopy_f(pe->origin, org);
 
 		pmove->PM_GetModelBounds( pe->model, modelmins, modelmaxs );
 		for (j = 0; j < 8; j++)
@@ -169,7 +166,7 @@ void PM_DrawPhysEntBBox(int num, int pcolor, float life)
 			tmp[1] = (j & 2) ? modelmins[1] - gap : modelmaxs[1] + gap;
 			tmp[2] = (j & 4) ? modelmins[2] - gap : modelmaxs[2] + gap;
 
-			VectorCopy(tmp, p[j]);
+			VectorCopy_f(tmp, p[j]);
 		}
 
 		// If the bbox should be rotated, do that
@@ -180,16 +177,17 @@ void PM_DrawPhysEntBBox(int num, int pcolor, float life)
 			AngleVectorsTranspose(pe->angles, forward, right, up);
 			for (j = 0; j < 8; j++)
 			{
-				VectorCopy(p[j], tmp);
-				p[j][0] = DotProduct  ( tmp, forward );
-				p[j][1] = DotProduct ( tmp, right );
-				p[j][2] = DotProduct  ( tmp, up );
+				VectorCopy_f(p[j], tmp);
+				
+				p[j][0] = DotProduct_f ( tmp, forward );
+				p[j][1] = DotProduct_f ( tmp, right );
+				p[j][2] = DotProduct_f ( tmp, up );
 			}
 		}
 
 		// Offset by entity origin, if any.
 		for (j = 0; j < 8; j++)
-			VectorAdd(p[j], org, p[j]);
+			VectorAdd_f(p[j], org, p[j]);
 
 		for (j = 0; j < 6; j++)
 		{
@@ -209,8 +207,8 @@ void PM_DrawPhysEntBBox(int num, int pcolor, float life)
 			tmp[1] = (j & 2) ? pe->mins[1] : pe->maxs[1];
 			tmp[2] = (j & 4) ? pe->mins[2] : pe->maxs[2];
 
-			VectorAdd(tmp, pe->origin, tmp);
-			VectorCopy(tmp, p[j]);
+			VectorAdd_f(tmp, pe->origin, tmp);
+			VectorCopy_f(tmp, p[j]);
 		}
 
 		for (j = 0; j < 6; j++)
@@ -246,8 +244,8 @@ void PM_DrawBBox(vec3_t mins, vec3_t maxs, vec3_t origin, int pcolor, float life
 		tmp[1] = (j & 2) ? mins[1] - gap : maxs[1] + gap ;
 		tmp[2] = (j & 4) ? mins[2] - gap : maxs[2] + gap ;
 
-		VectorAdd(tmp, origin, tmp);
-		VectorCopy(tmp, p[j]);
+		VectorAdd_f(tmp, origin, tmp);
+		VectorCopy_f(tmp, p[j]);
 	}
 
 	for (j = 0; j < 6; j++)
@@ -292,7 +290,7 @@ void PM_ViewEntity( void )
 
 	AngleVectors (pmove->angles, forward, right, up);  // Determine movement angles
 
-	VectorCopy( pmove->origin, origin);
+	VectorCopy_f( pmove->origin, origin);
 
 	fup = 0.5*( pmove->player_mins[pmove->usehull][2] + pmove->player_maxs[pmove->usehull][2] );
 	fup += pmove->view_ofs[2];

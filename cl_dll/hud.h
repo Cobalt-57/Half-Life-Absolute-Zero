@@ -21,9 +21,6 @@
 //
 
 
-
-
-
 #ifndef HUD_H
 #define HUD_H
 
@@ -33,7 +30,7 @@
 
 #include "hudbase.h"
 
-//MODDD - perhaps, to know what these child classes are?
+//MODDD
 #include "custom_message.h"
 #include "ammo.h"
 #include "health.h"
@@ -45,15 +42,35 @@
 #include "..\game_shared\voice_status.h"
 #include "hud_spectator.h"
 
+extern float globalPSEUDO_autoDeterminedFOV;
+
+
+class CHud;
+class TeamFortressViewport;
+struct extra_player_info_t;
+struct team_info_t;
+
+
+extern CHud gHUD;
+extern TeamFortressViewport* gViewPort;
+
+extern int g_iPlayerClass;
+extern int g_iTeamNumber;
+extern int g_iUser1;
+extern int g_iUser2;
+extern int g_iUser3;
+
+
+extern hud_player_info_t	g_PlayerInfoList[MAX_PLAYERS + 1];	   // player info from the engine
+extern extra_player_info_t  g_PlayerExtraInfo[MAX_PLAYERS + 1];   // additional player info sent directly to the client dll
+extern team_info_t			g_TeamInfo[MAX_TEAMS + 1];
+extern int				g_IsSpectator[MAX_PLAYERS + 1];
+
+
+
 
 
 //CHudAmmo moved to ammo.h.
-
-
-
-
-extern float globalPSEUDO_autoDeterminedFOV;
-
 
 //
 //-----------------------------------------------------
@@ -81,7 +98,7 @@ private:
 };
 
 
-//MODDD - why? Why like this, why here?
+//MODDD - why? Why here?
 //#include "health.h"
 
 
@@ -235,11 +252,6 @@ struct team_info_t
 	int teamnumber;
 };
 
-extern hud_player_info_t	g_PlayerInfoList[MAX_PLAYERS+1];	   // player info from the engine
-extern extra_player_info_t  g_PlayerExtraInfo[MAX_PLAYERS+1];   // additional player info sent directly to the client dll
-extern team_info_t			g_TeamInfo[MAX_TEAMS+1];
-extern int					g_IsSpectator[MAX_PLAYERS+1];
-
 
 //
 //-----------------------------------------------------
@@ -322,9 +334,9 @@ private:
 	//MODDD - new
 	wrect_t *m_prc3;
 
-	int	  m_iBat;	
+	int   m_iBat;	
 	float m_fFade;
-	int	  m_iHeight;		// width of the battery innards
+	int   m_iHeight;		// width of the battery innards
 	//MODDD - new sprite indexes
 	int m_HUD_battery_empty;
 	int m_HUD_battery_full;
@@ -355,10 +367,10 @@ private:
 	wrect_t *m_prc2;
 	wrect_t *m_prcBeam;
 	float m_flBat;	
-	int	  m_iBat;	
-	int	  m_fOn;
+	int   m_iBat;	
+	int   m_fOn;
 	float m_fFade;
-	int	  m_iWidth;		// width of the battery innards
+	int   m_iWidth;		// width of the battery innards
 
 	//MODDD - new indexes
 	int alphaFlashLightOnIndex;
@@ -373,9 +385,9 @@ const int maxHUDMessages = 16;
 struct message_parms_t
 {
 	client_textmessage_t	*pMessage;
-	float	time;
+	float time;
 	int x, y;
-	int	totalWidth, totalHeight;
+	int totalWidth, totalHeight;
 	int width;
 	int lines;
 	int lineLength;
@@ -415,7 +427,7 @@ public:
 	int MsgFunc_GameTitle(const char *pszName, int iSize, void *pbuf);
 
 	float FadeBlend( float fadein, float fadeout, float hold, float localTime );
-	int	XPosition( float x, int width, int lineWidth );
+	int XPosition( float x, int width, int lineWidth );
 	int YPosition( float y, int height );
 
 	void MessageAdd( const char *pName, float time );
@@ -427,9 +439,9 @@ public:
 
 private:
 	client_textmessage_t		*m_pMessages[maxHUDMessages];
-	float						m_startTime[maxHUDMessages];
+	float					m_startTime[maxHUDMessages];
 	message_parms_t				m_parms;
-	float						m_gameTitleTime;
+	float					m_gameTitleTime;
 	client_textmessage_t		*m_pGameTitle;
 
 	int m_HUD_title_life;
@@ -507,12 +519,12 @@ private:
 	//MODDD - OH MY
 	SpriteHandle_t				m_hsprGNFOS;
 
-	int							m_iLogo;
+	int						m_iLogo;
 	client_sprite_t				*m_pSpriteList;
-	int							m_iSpriteCount;
-	int							m_iSpriteCountAllRes;
-	float						m_flMouseSensitivity;
-	int							m_iConcussionEffect; 
+	int						m_iSpriteCount;
+	int						m_iSpriteCountAllRes;
+	float					m_flMouseSensitivity;
+	int						m_iConcussionEffect; 
 
 public:
 
@@ -533,27 +545,33 @@ public:
 	double m_flTimeDelta; // the difference between flTime and fOldTime
 	Vector	m_vecOrigin;
 	Vector	m_vecAngles;
-	int		m_iKeyBits;
-	int		m_iHideHUDDisplay;
+	int	m_iKeyBits;
+	int	m_iHideHUDDisplay;
 
 	//MODDD - was "m_iFOV", renamed to "m_iPlayerFOV".
 	// To differentiate it from the player class's (dlls/player.h) own "m_iFOV", which can also occur
 	// since player.h is shared.
-	int		m_iPlayerFOV;
+	int	m_iPlayerFOV;
 
-	int		m_Teamplay;
-	int		m_iRes;
+	int	m_Teamplay;
+	int	m_iRes;
 	cvar_t  *m_pCvarStealMouse;
 	cvar_t	*m_pCvarDraw;
 
 	//MODDDMIRROR
 	////////////////////////////////////////////////////////////////////////////////////////////////////////
 	Vector	m_vecSkyPos; //LRC
-	int		m_iSkyMode;  //LRC
-	int		m_iSkyScale;	//AJH Allows parallax for the sky. 0 means no parallax, i.e infinitly large & far away.
-	int		m_iCameraMode;//G-Cont. clipping thirdperson camera
+	int	m_iSkyMode;  //LRC
+	int	m_iSkyScale;	//AJH Allows parallax for the sky. 0 means no parallax, i.e infinitly large & far away.
+	int	m_iCameraMode;//G-Cont. clipping thirdperson camera
 	int m_iLastCameraMode;//save last mode
-	////////////////////////////////////////////////////////////////////////////////////////////////////////
+	
+	int viewEntityIndex; // for trigger_viewset
+	int viewFlags;
+	struct cl_mirror_s Mirrors[MIRROR_MAX]; //Limit - 32 mirrors!   CHANGE - now "MIRROR_MAX", a macro.
+	int numMirrors;
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+
 
 
 	int m_iFontHeight;
@@ -651,9 +669,6 @@ public:
 	
 	int GetSpriteIndex( const char *SpriteName );	// gets a sprite index, for use in the m_rgSpriteHandle_ts[] array
 
-	//MODDD - new.
-	CCustomMessage m_CustomMessage;
-
 	CHudAmmo		m_Ammo;
 	CHudHealth		m_Health;
 	CHudSpectator		m_Spectator;
@@ -683,22 +698,17 @@ public:
 	~CHud();			// destructor, frees allocated memory
 
 	// user messages
-	int _cdecl MsgFunc_Damage(const char *pszName, int iSize, void *pbuf );
+	//MODDD - removed.  See notes in hud_msg.cpp.  In short, unhooked/ignored message.
+	//int _cdecl MsgFunc_Damage(const char *pszName, int iSize, void *pbuf );
+
+	// ALSO, these implementations since moved to custom_message.cpp instead.
 	int _cdecl MsgFunc_GameMode(const char *pszName, int iSize, void *pbuf );
 	int _cdecl MsgFunc_Logo(const char *pszName,  int iSize, void *pbuf);
 	int _cdecl MsgFunc_ResetHUD(const char *pszName,  int iSize, void *pbuf);
-	void _cdecl MsgFunc_InitHUD( const char *pszName, int iSize, void *pbuf );
-	void _cdecl MsgFunc_ViewMode( const char *pszName, int iSize, void *pbuf );
+	int _cdecl MsgFunc_InitHUD( const char *pszName, int iSize, void *pbuf );
+	int _cdecl MsgFunc_ViewMode( const char *pszName, int iSize, void *pbuf );
 	int _cdecl MsgFunc_SetFOV(const char *pszName,  int iSize, void *pbuf);
 	int  _cdecl MsgFunc_Concuss( const char *pszName, int iSize, void *pbuf );
-
-
-	int viewEntityIndex; // for trigger_viewset
-	int viewFlags;
-	struct cl_mirror_s Mirrors[32]; //Limit - 32 mirrors!
-	int numMirrors;
-
-	/////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 	//MODDD - new place for utility methods across the GUI:
@@ -717,8 +727,8 @@ public:
 	// Screen information
 	SCREENINFO	m_scrinfo;
 
-	int	m_iWeaponBits;
-	int	m_fPlayerDead;
+	int m_iWeaponBits;
+	int m_fPlayerDead;
 	int m_iIntermission;
 
 	// sprite indexes
@@ -769,27 +779,12 @@ public:
 		}
 	}//END OF getBaseFOV
 
-
-
 };
 
 
 
+
 #endif //END OF HUD_H
-
-
-
-
-class TeamFortressViewport;
-
-extern CHud gHUD;
-extern TeamFortressViewport *gViewPort;
-
-extern int g_iPlayerClass;
-extern int g_iTeamNumber;
-extern int g_iUser1;
-extern int g_iUser2;
-extern int g_iUser3;
 
 
 

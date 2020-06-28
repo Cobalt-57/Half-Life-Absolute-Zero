@@ -41,7 +41,7 @@ struct event_info_s
 	event_args_t args;
 
 // CLIENT ONLY	
-	int	  flags;			// Reliable or not, etc.
+	int   flags;			// Reliable or not, etc.
 
 };
 
@@ -60,8 +60,8 @@ struct event_state_s
 #include "edict.h"
 #endif
 
-#define	STRUCT_FROM_LINK(l,t,m) ((t *)((byte *)l - (int)&(((t *)0)->m)))
-#define	EDICT_FROM_AREA(l) STRUCT_FROM_LINK(l,edict_t,area)
+#define STRUCT_FROM_LINK(l,t,m) ((t *)((byte *)l - (int)&(((t *)0)->m)))
+#define EDICT_FROM_AREA(l) STRUCT_FROM_LINK(l,edict_t,area)
 
 //============================================================================
 
@@ -71,11 +71,11 @@ extern	globalvars_t	gGlobalVariables;
 //============================================================================
 
 edict_t		*ED_Alloc (void);
-void		ED_Free (edict_t *ed);
-void		ED_LoadFromFile (char *data);
+void	ED_Free (edict_t *ed);
+void	ED_LoadFromFile (char *data);
 
 edict_t		*EDICT_NUM(int n);
-int			NUM_FOR_EDICT(const edict_t *e);
+int		NUM_FOR_EDICT(const edict_t *e);
 
 #define PROG_TO_EDICT(e) ((edict_t *)((byte *)sv.edicts + e))
 

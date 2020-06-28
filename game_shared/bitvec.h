@@ -20,12 +20,12 @@ class CBitVecAccessor
 public:
 				CBitVecAccessor(unsigned long *pDWords, int iBit);
 
-	void		operator=(int val);
+	void	operator=(int val);
 				operator unsigned long();
 
 private:
 	unsigned long	*m_pDWords;
-	int				m_iBit;
+	int			m_iBit;
 };
 	
 
@@ -39,7 +39,7 @@ public:
 					CBitVec();
 
 	// Set all values to the specified value (0 or 1..)
-	void			Init(int val = 0);
+	void		Init(int val = 0);
 
 	// Access the bits like an array.
 	CBitVecAccessor	operator[](int i);
@@ -50,11 +50,11 @@ public:
 	bool			operator!=(CBitVec<NUM_BITS> const &other);
 
 	// Get underlying dword representations of the bits.
-	int				GetNumDWords();
+	int			GetNumDWords();
 	unsigned long	GetDWord(int i);
-	void			SetDWord(int i, unsigned long val);
+	void		SetDWord(int i, unsigned long val);
 
-	int				GetNumBits();
+	int			GetNumBits();
 
 private:
 

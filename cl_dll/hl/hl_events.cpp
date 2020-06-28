@@ -71,7 +71,6 @@ void Game_HookEvents( void )
 	gEngfuncs.pfnHookEvent( "events/mirror.sc", 				EV_Mirror );
 
 	//MODDD
-	
 	gEngfuncs.pfnHookEvent( "events/trail_enginechoice.sc",		EV_Trail_EngineChoice );
 	gEngfuncs.pfnHookEvent( "events/imitation7.sc",				EV_imitation7 );
 	gEngfuncs.pfnHookEvent( "events/trail.sc",					EV_Trail );

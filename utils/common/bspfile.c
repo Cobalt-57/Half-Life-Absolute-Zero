@@ -15,67 +15,67 @@
 
 //=============================================================================
 
-int			nummodels;
+int		nummodels;
 dmodel_t	dmodels[MAX_MAP_MODELS];
-int			dmodels_checksum;
+int		dmodels_checksum;
 
-int			visdatasize;
-byte		dvisdata[MAX_MAP_VISIBILITY];
-int			dvisdata_checksum;
+int		visdatasize;
+byte	dvisdata[MAX_MAP_VISIBILITY];
+int		dvisdata_checksum;
 
-int			lightdatasize;
-byte		dlightdata[MAX_MAP_LIGHTING];
-int			dlightdata_checksum;
+int		lightdatasize;
+byte	dlightdata[MAX_MAP_LIGHTING];
+int		dlightdata_checksum;
 
-int			texdatasize;
-byte		dtexdata[MAX_MAP_MIPTEX]; // (dmiptexlump_t)
-int			dtexdata_checksum;
+int		texdatasize;
+byte	dtexdata[MAX_MAP_MIPTEX]; // (dmiptexlump_t)
+int		dtexdata_checksum;
 
-int			entdatasize;
+int		entdatasize;
 char		dentdata[MAX_MAP_ENTSTRING];
-int			dentdata_checksum;
+int		dentdata_checksum;
 
-int			numleafs;
+int		numleafs;
 dleaf_t		dleafs[MAX_MAP_LEAFS];
-int			dleafs_checksum;
+int		dleafs_checksum;
 
-int			numplanes;
+int		numplanes;
 dplane_t	dplanes[MAX_MAP_PLANES];
-int			dplanes_checksum;
+int		dplanes_checksum;
 
-int			numvertexes;
+int		numvertexes;
 dvertex_t	dvertexes[MAX_MAP_VERTS];
-int			dvertexes_checksum;
+int		dvertexes_checksum;
 
-int			numnodes;
+int		numnodes;
 dnode_t		dnodes[MAX_MAP_NODES];
-int			dnodes_checksum;
+int		dnodes_checksum;
 
-int			numtexinfo;
+int		numtexinfo;
 texinfo_t	texinfo[MAX_MAP_TEXINFO];
-int			texinfo_checksum;
+int		texinfo_checksum;
 
-int			numfaces;
+int		numfaces;
 dface_t		dfaces[MAX_MAP_FACES];
-int			dfaces_checksum;
+int		dfaces_checksum;
 
-int			numclipnodes;
+int		numclipnodes;
 dclipnode_t	dclipnodes[MAX_MAP_CLIPNODES];
-int			dclipnodes_checksum;
+int		dclipnodes_checksum;
 
-int			numedges;
+int		numedges;
 dedge_t		dedges[MAX_MAP_EDGES];
-int			dedges_checksum;
+int		dedges_checksum;
 
-int			nummarksurfaces;
+int		nummarksurfaces;
 unsigned short		dmarksurfaces[MAX_MAP_MARKSURFACES];
-int			dmarksurfaces_checksum;
+int		dmarksurfaces_checksum;
 
-int			numsurfedges;
-int			dsurfedges[MAX_MAP_SURFEDGES];
-int			dsurfedges_checksum;
+int		numsurfedges;
+int		dsurfedges[MAX_MAP_SURFEDGES];
+int		dsurfedges_checksum;
 
-int			num_entities;
+int		num_entities;
 entity_t	entities[MAX_MAP_ENTITIES];
 
 /*
@@ -86,7 +86,7 @@ FastChecksum
 
 int FastChecksum(void *buffer, int bytes)
 {
-	int	checksum = 0;
+	int checksum = 0;
 
 	while( bytes-- )  
 		checksum = _rotl(checksum, 4) ^ *((char *)buffer)++;
@@ -101,10 +101,10 @@ CompressVis
 */
 int CompressVis (byte *vis, byte *dest)
 {
-	int		j;
-	int		rep;
-	int		visrow;
-	byte	*dest_p;
+	int	j;
+	int	rep;
+	int	visrow;
+	byte *dest_p;
 	
 	dest_p = dest;
 	visrow = (numleafs + 7)>>3;
@@ -136,9 +136,9 @@ DecompressVis
 */
 void DecompressVis (byte *in, byte *decompressed)
 {
-	int		c;
-	byte	*out;
-	int		row;
+	int	c;
+	byte *out;
+	int	row;
 
 	row = (numleafs+7)>>3;	
 	out = decompressed;
@@ -172,7 +172,7 @@ Byte swaps all data in a bsp file.
 */
 void SwapBSPFile (qboolean todisk)
 {
-	int				i, j, c;
+	int			i, j, c;
 	dmodel_t		*d;
 	dmiptexlump_t	*mtl;
 
@@ -327,7 +327,7 @@ dheader_t	*header;
 
 int CopyLump (int lump, void *dest, int size)
 {
-	int		length, ofs;
+	int	length, ofs;
 
 	length = header->lumps[lump].filelen;
 	ofs = header->lumps[lump].fileofs;
@@ -345,9 +345,9 @@ int CopyLump (int lump, void *dest, int size)
 LoadBSPFile
 =============
 */
-void	LoadBSPFile (char *filename)
+void LoadBSPFile (char *filename)
 {
-	int			i;
+	int		i;
 	
 //
 // load the file header
@@ -426,7 +426,7 @@ WriteBSPFile
 Swaps the bsp file in place, so it should not be referenced again
 =============
 */
-void	WriteBSPFile (char *filename)
+void WriteBSPFile (char *filename)
 {		
 	header = &outheader;
 	memset (header, 0, sizeof(dheader_t));
@@ -467,7 +467,7 @@ void	WriteBSPFile (char *filename)
 
 ArrayUsage( char *szItem, int items, int maxitems, int itemsize )
 {
-	float	percentage = maxitems ? items * 100.0 / maxitems : 0.0;
+	float percentage = maxitems ? items * 100.0 / maxitems : 0.0;
 
     printf("%-12s  %7i/%-7i  %7i/%-7i  (%4.1f%%)", 
 		   szItem, items, maxitems, items * itemsize, maxitems * itemsize, percentage );
@@ -484,7 +484,7 @@ ArrayUsage( char *szItem, int items, int maxitems, int itemsize )
 
 GlobUsage( char *szItem, int itemstorage, int maxstorage )
 {
-	float	percentage = maxstorage ? itemstorage * 100.0 / maxstorage : 0.0;
+	float percentage = maxstorage ? itemstorage * 100.0 / maxstorage : 0.0;
     printf("%-12s     [variable]    %7i/%-7i  (%4.1f%%)", 
 		   szItem, itemstorage, maxstorage, percentage );
 	if ( percentage > 80.0 )
@@ -507,8 +507,8 @@ Dumps info about current file
 */
 void PrintBSPFileSizes (void)
 {
-	int	numtextures = texdatasize ? ((dmiptexlump_t*)dtexdata)->nummiptex : 0;
-	int	totalmemory = 0;
+	int numtextures = texdatasize ? ((dmiptexlump_t*)dtexdata)->nummiptex : 0;
+	int totalmemory = 0;
 
 	printf("\n");
 	printf("Object names  Objects/Maxobjs  Memory / Maxmem  Fullness\n" );
@@ -625,7 +625,7 @@ void UnparseEntities (void)
 	char	*buf, *end;
 	epair_t	*ep;
 	char	line[2048];
-	int		i;
+	int	i;
 	
 	buf = dentdata;
 	end = buf;
@@ -657,7 +657,7 @@ void UnparseEntities (void)
 
 
 
-void 	SetKeyValue (entity_t *ent, char *key, char *value)
+void	SetKeyValue (entity_t *ent, char *key, char *value)
 {
 	epair_t	*ep;
 	
@@ -693,10 +693,10 @@ vec_t	FloatForKey (entity_t *ent, char *key)
 	return atof(k);
 }
 
-void 	GetVectorForKey (entity_t *ent, char *key, vec3_t vec)
+void	GetVectorForKey (entity_t *ent, char *key, vec3_t vec)
 {
 	char	*k;
-	double	v1, v2, v3;
+	double v1, v2, v3;
 
 	k = ValueForKey (ent, key);
 // scanf into doubles, then assign, so it is vec_t size independent

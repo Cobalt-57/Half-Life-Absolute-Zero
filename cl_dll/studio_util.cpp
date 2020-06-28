@@ -20,8 +20,8 @@ AngleMatrix
 */
 void AngleMatrix (const float *angles, float (*matrix)[4] )
 {
-	float		angle;
-	float		sr, sp, sy, cr, cp, cy;
+	float	angle;
+	float	sr, sp, sy, cr, cp, cy;
 	
 	angle = angles[YAW] * (M_PI*2 / 360);
 	sy = sin(angle);
@@ -56,7 +56,7 @@ VectorCompare
 */
 int VectorCompare (const float *v1, const float *v2)
 {
-	int		i;
+	int	i;
 	
 	for (i=0 ; i<3 ; i++)
 		if (v1[i] != v2[i])
@@ -86,9 +86,9 @@ VectorTransform
 */
 void VectorTransform (const float *in1, float in2[3][4], float *out)
 {
-	out[0] = DotProduct(in1, in2[0]) + in2[0][3];
-	out[1] = DotProduct(in1, in2[1]) + in2[1][3];
-	out[2] = DotProduct(in1, in2[2]) + in2[2][3];
+	out[0] = DotProduct_f(in1, in2[0]) + in2[0][3];
+	out[1] = DotProduct_f(in1, in2[1]) + in2[1][3];
+	out[2] = DotProduct_f(in1, in2[2]) + in2[2][3];
 }
 
 /*
@@ -135,8 +135,8 @@ AngleQuaternion
 */
 void AngleQuaternion( float *angles, vec4_t quaternion )
 {
-	float		angle;
-	float		sr, sp, sy, cr, cp, cy;
+	float	angle;
+	float	sr, sp, sy, cr, cp, cy;
 
 	// FIXME: rescale the inputs to 1/2 angle
 	angle = angles[2] * 0.5;
@@ -164,7 +164,7 @@ QuaternionSlerp
 void QuaternionSlerp( vec4_t p, vec4_t q, float t, vec4_t qt )
 {
 	int i;
-	float	omega, cosom, sinom, sclp, sclq;
+	float omega, cosom, sinom, sclp, sclq;
 
 	// decide if one of the quaternions is backwards
 	float a = 0;

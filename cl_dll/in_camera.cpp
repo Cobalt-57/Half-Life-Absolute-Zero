@@ -5,6 +5,7 @@
 // $NoKeywords: $
 //=============================================================================
 
+#include "external_lib_include.h"
 #include "hud.h"
 #include "cl_util.h"
 #include "camera.h"
@@ -14,15 +15,16 @@
 #include "const.h"
 #include "camera.h"
 
-#include "windows.h"
+//MODDD - nope, we have external_lib_include.h now
+//#include "windows.h"
 
 float CL_KeyState (kbutton_t *key);
 
 extern "C" 
 {
-	void DLLEXPORT_2 CAM_Think( void );
-	int DLLEXPORT_2 CL_IsThirdPerson( void );
-	void DLLEXPORT_2 CL_CameraOffset( float *ofs );
+	void DLLEXPORT CAM_Think( void );
+	int DLLEXPORT CL_IsThirdPerson( void );
+	void DLLEXPORT CL_CameraOffset( float *ofs );
 }
 
 extern cl_enginefunc_t gEngfuncs;
@@ -34,11 +36,15 @@ extern cl_enginefunc_t gEngfuncs;
 #define CAM_ANGLE_SPEED 2.5
 #define CAM_MIN_DIST 30.0
 #define CAM_ANGLE_MOVE .5
+
+//MODDD - unused.
+/*
 #define MAX_ANGLE_DIFF 10.0
 #define PITCH_MAX 90.0
 #define PITCH_MIN 0
 #define YAW_MAX  135.0
 #define YAW_MIN	 -135.0
+*/
 
 enum ECAM_Command
 {
@@ -134,18 +140,18 @@ float MoveToward( float cur, float goal, float maxspeed )
 typedef struct
 {
 	vec3_t		boxmins, boxmaxs;// enclose the test object along entire move
-	float		*mins, *maxs;	// size of the moving object
+	float	*mins, *maxs;	// size of the moving object
 	vec3_t		mins2, maxs2;	// size when clipping against mosnters
-	float		*start, *end;
+	float	*start, *end;
 	trace_t		trace;
-	int			type;
+	int		type;
 	edict_t		*passedict;
 	qboolean	monsterclip;
 } moveclip_t;
 
 extern trace_t SV_ClipMoveToEntity (edict_t *ent, vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end);
 
-void DLLEXPORT_2 CAM_Think( void )
+void DLLEXPORT CAM_Think( void )
 {
 	vec3_t origin;
 	vec3_t ext, pnt, camForward, camRight, camUp;
@@ -360,7 +366,7 @@ void DLLEXPORT_2 CAM_Think( void )
 	}
 
 	// Move towards ideal
-	VectorCopy( cam_ofs, camAngles );
+	VectorCopy_f( cam_ofs, camAngles );
 
 	gEngfuncs.GetViewAngles( (float *)viewangles );
 
@@ -429,7 +435,7 @@ void CAM_ToThirdPerson(void)
 	vec3_t viewangles;
 
 #if !defined( _DEBUG )
-	if ( gEngfuncs.GetMaxClients() > 1 )
+	if ( IsMultiplayer() )
 	{
 		// no thirdperson in multiplayer.
 		return;
@@ -611,12 +617,12 @@ void CAM_EndDistance(void)
    iMouseInUse=0;
 }
 
-int DLLEXPORT_2 CL_IsThirdPerson( void )
+int DLLEXPORT CL_IsThirdPerson( void )
 {
 	return (cam_thirdperson ? 1 : 0) || (g_iUser1 && (g_iUser2 == gEngfuncs.GetLocalPlayer()->index) );
 }
 
-void DLLEXPORT_2 CL_CameraOffset( float *ofs )
+void DLLEXPORT CL_CameraOffset( float *ofs )
 {
-	VectorCopy( cam_ofs, ofs );
+	VectorCopy_f( cam_ofs, ofs );
 }

@@ -14,7 +14,7 @@
 ****/
 
 #ifndef	ACTIVITY_H
-#define	ACTIVITY_H
+#define ACTIVITY_H
 
 
 typedef enum {
@@ -99,7 +99,7 @@ typedef enum {
 
 
 typedef struct {
-	int	type;
+	int type;
 	char *name;
 } activity_map_t;
 

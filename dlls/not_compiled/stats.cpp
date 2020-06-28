@@ -68,13 +68,13 @@ void UpdateStatsFile( float dataTime, char *pMapname, float health, float ammo, 
 
 typedef struct
 {
-	int		lastAmmo;
-	float	lastHealth;
-	float	lastOutputTime; // NOTE: These times are in "game" time -- a running total of elapsed time since the game started
-	float	nextOutputTime;
-	float	dataTime;
-	float	gameTime;
-	float	lastGameTime;
+	int	lastAmmo;
+	float lastHealth;
+	float lastOutputTime; // NOTE: These times are in "game" time -- a running total of elapsed time since the game started
+	float nextOutputTime;
+	float dataTime;
+	float gameTime;
+	float lastGameTime;
 } TESTSTATS;
 
 TESTSTATS gStats = {0,0,0,0,0,0,0};

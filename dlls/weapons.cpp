@@ -33,11 +33,6 @@
 // Dummy out anything actually needed by weapons clientside (like FOV requests) at your own peril!
 
 
-
-
-
-
-
 #include "extdll.h"
 #include "util.h"
 #include "cbase.h"
@@ -170,119 +165,18 @@ void AddMultiDamage( entvars_t *pevInflictor, CBaseEntity *pEntity, float flDama
 }
 
 
+//MODDD - several methods that seem more fitting for util.h moved there:
+// SpawnBlood
+// DamageDecal
+// DecalGunshot
+// EjectBrass
+// ExplodeModel
 
 
-/*
-================
-SpawnBlood
-================
-*/
-void SpawnBlood(Vector vecSpot, int bloodColor, float flDamage)
-{
-	UTIL_BloodDrips( vecSpot, g_vecAttackDir, bloodColor, (int)flDamage );
-}
-
-
-int DamageDecal( CBaseEntity *pEntity, int bitsDamageType )
-{
-	return ::DamageDecal(pEntity, bitsDamageType, 0);
-}
-int DamageDecal( CBaseEntity *pEntity, int bitsDamageType, int bitsDamageTypeMod )
-{
-	if ( !pEntity )
-		return (DECAL_GUNSHOT1 + RANDOM_LONG(0,4));
-	
-	return pEntity->DamageDecal( bitsDamageType, bitsDamageTypeMod );
-}
-
-void DecalGunshot( TraceResult *pTrace, int iBulletType )
-{
-	// Is the entity valid
-	if ( !UTIL_IsValidEntity( pTrace->pHit ) )
-		return;
-
-	if ( VARS(pTrace->pHit)->solid == SOLID_BSP || VARS(pTrace->pHit)->movetype == MOVETYPE_PUSHSTEP )
-	{
-		CBaseEntity *pEntity = NULL;
-		// Decal the wall with a gunshot
-		if ( !FNullEnt(pTrace->pHit) )
-			pEntity = CBaseEntity::Instance(pTrace->pHit);
-
-		switch( iBulletType )
-		{
-		case BULLET_PLAYER_9MM:
-		case BULLET_MONSTER_9MM:
-		case BULLET_PLAYER_MP5:
-		case BULLET_MONSTER_MP5:
-		case BULLET_PLAYER_BUCKSHOT:
-		case BULLET_PLAYER_357:
-		default:
-			// smoke and decal
-			UTIL_GunshotDecalTrace( pTrace, DamageDecal( pEntity, DMG_BULLET ) );
-			break;
-		case BULLET_MONSTER_12MM:
-			// smoke and decal
-			UTIL_GunshotDecalTrace( pTrace, DamageDecal( pEntity, DMG_BULLET ) );
-			break;
-		case BULLET_PLAYER_CROWBAR:
-			// wall decal
-			UTIL_DecalTrace( pTrace, DamageDecal( pEntity, DMG_CLUB ) );
-			break;
-		}
-
-		//MODDD
-		UTIL_GunshotDecalTraceForceDefault( pTrace, DamageDecal( pEntity, DMG_BULLET ) );
-
-	}
-}
-
-
-
-//
-// EjectBrass - tosses a brass shell from passed origin at passed velocity
-//
-void EjectBrass ( const Vector &vecOrigin, const Vector &vecVelocity, float rotation, int model, int soundtype )
-{
-	// FIX: when the player shoots, their gun isn't in the same position as it is on the model other players see.
-
-	MESSAGE_BEGIN( MSG_PVS, SVC_TEMPENTITY, vecOrigin );
-		WRITE_BYTE( TE_MODEL);
-		WRITE_COORD( vecOrigin.x);
-		WRITE_COORD( vecOrigin.y);
-		WRITE_COORD( vecOrigin.z);
-		WRITE_COORD( vecVelocity.x);
-		WRITE_COORD( vecVelocity.y);
-		WRITE_COORD( vecVelocity.z);
-		WRITE_ANGLE( rotation );
-		WRITE_SHORT( model );
-		WRITE_BYTE ( soundtype);
-		WRITE_BYTE ( 25 );// 2.5 seconds
-	MESSAGE_END();
-}
-
-
-#if 0
-// UNDONE: This is no longer used?
-void ExplodeModel( const Vector &vecOrigin, float speed, int model, int count )
-{
-	MESSAGE_BEGIN( MSG_PVS, SVC_TEMPENTITY, vecOrigin );
-		WRITE_BYTE ( TE_EXPLODEMODEL );
-		WRITE_COORD( vecOrigin.x );
-		WRITE_COORD( vecOrigin.y );
-		WRITE_COORD( vecOrigin.z );
-		WRITE_COORD( speed );
-		WRITE_SHORT( model );
-		WRITE_SHORT( count );
-		WRITE_BYTE ( 15 );// 1.5 seconds
-	MESSAGE_END();
-}
-#endif
-
-
-// MODDD - moved to game_shared/NEW/util_shared.cpp.
+// MODDD - moved to util_shared.cpp.
 //int giAmmoIndex = 0;
 
-// MODDD - AddAmmoNameToAmmoRegistry moved to game_shared/NEW/util_shared.cpp for access
+// MODDD - AddAmmoNameToAmmoRegistry moved to util_shared.cpp for access
 // between client and serverside.  May as well be able to do both in both places.
 
  
@@ -518,7 +412,6 @@ void CBasePlayerItem::DefaultTouch( CBaseEntity *pOther )
 		//easyForcePrintLine("MOVE ON SONNY");
 	}
 	
-
 	//easyForcePrintLine("WELLA??? %d", (this->m_pfnThink == &CBasePlayerWeapon::FallThink) );
 	//easyForcePrintLine("WELLB??? %d", (this->m_pfnThink == NULL) );
 	//easyForcePrintLine("WELLC??? %d", (this->m_pfnThink == &CBaseEntity::SUB_Remove) );
@@ -530,14 +423,11 @@ void CBasePlayerItem::DefaultTouch( CBaseEntity *pOther )
 		AttachToPlayer( pPlayer );
 
 		playGunPickupSound(pPlayer->pev);
-
 	}
 	
-
 	//easyForcePrintLine("DELLA??? %d", (this->m_pfnThink == &CBasePlayerWeapon::FallThink) );
 	//easyForcePrintLine("DELLB??? %d", (this->m_pfnThink == NULL) );
 	//easyForcePrintLine("DELLC??? %d", (this->m_pfnThink == &CBaseEntity::SUB_Remove) );
-
 
 	SUB_UseTargets( pOther, USE_TOGGLE, 0 ); // UNDONE: when should this happen?
 }
@@ -564,7 +454,6 @@ BOOL CanAttack( float attack_time, float curtime, BOOL isPredicted )
 	//	//with cheats, can always attack.
 	//	return TRUE;
 	//}
-
 }
 
 
@@ -584,7 +473,6 @@ void CBasePlayerWeapon::forceBlockLooping(void){
 void CBasePlayerWeapon::stopBlockLooping(void){
 	m_chargeReady &= ~64;
 }
-
 
 
 
@@ -622,7 +510,6 @@ float CBasePlayerWeapon::randomIdleAnimationDelay(void){
 //MODDD - new.
 void CBasePlayerWeapon::ItemPostFrameThink(){
 
-
 	/*
 	//MODDD - should be a good place to check for deplying the next weapon.
 	if(m_pActiveItem && m_bHolstering && gpGlobals->time >= m_flNextAttack){
@@ -643,11 +530,6 @@ void CBasePlayerWeapon::ItemPostFrameThink(){
 
 		m_pPlayer->m_fCustomHolsterWaitTime = -1;
 	}
-
-
-
-
-
 
 	CBasePlayerItem::ItemPostFrameThink();
 }//END OF ItemPostFrameThink
@@ -1688,7 +1570,7 @@ void CBasePlayerAmmo :: DefaultTouch( CBaseEntity *pOther )
 //MODDD - NOTE - this method occurs for picked-up weapons (instead of ammo) ONLY!
 int CBasePlayerWeapon::ExtractAmmo( CBasePlayerWeapon *pWeapon )
 {
-	int			iReturn;
+	int		iReturn;
 
 	if ( pszAmmo1() != NULL )
 	{
@@ -1712,7 +1594,7 @@ int CBasePlayerWeapon::ExtractAmmo( CBasePlayerWeapon *pWeapon )
 //=========================================================
 int CBasePlayerWeapon::ExtractClipAmmo( CBasePlayerWeapon *pWeapon )
 {
-	int			iAmmo;
+	int		iAmmo;
 
 	if ( m_iClip == WEAPON_NOCLIP )
 	{
@@ -1827,10 +1709,6 @@ void CWeaponBox::Kill( void )
 //=========================================================
 void CWeaponBox::Touch( CBaseEntity *pOther )
 {
-	
-	//easyForcePrintLine("OH NO YOU AREE SONNY");
-
-
 	if ( !(pev->flags & FL_ONGROUND ) )
 	{
 		return;

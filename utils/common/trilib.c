@@ -20,8 +20,8 @@
 // on disk representation of a face
 
 
-#define	FLOAT_START	99999.0
-#define	FLOAT_END	-FLOAT_START
+#define FLOAT_START	99999.0
+#define FLOAT_END	-FLOAT_START
 #define MAGIC       123322
 
 //#define NOISY 1
@@ -46,7 +46,7 @@ typedef struct {
 
 void ByteSwapTri (tf_triangle *tri)
 {
-	int		i;
+	int	i;
 	
 	for (i=0 ; i<sizeof(tf_triangle)/4 ; i++)
 	{
@@ -62,9 +62,9 @@ void LoadTriangleList (char *filename, triangle_t **pptri, int *numtriangles)
 	int         i, count, magic;
 	tf_triangle	tri;
 	triangle_t	*ptri;
-	int			iLevel;
-	int			exitpattern;
-	float		t;
+	int		iLevel;
+	int		exitpattern;
+	float	t;
 
 
 	t = -FLOAT_START;
@@ -152,13 +152,13 @@ void LoadTriangleList (char *filename, triangle_t **pptri, int *numtriangles)
 // read the triangles
 //		
 		for (i = 0; i < count; ++i) {
-			int		j;
+			int	j;
 
 			fread( &tri, sizeof(tf_triangle), 1, input );
 			ByteSwapTri (&tri);
 			for (j=0 ; j<3 ; j++)
 			{
-				int		k;
+				int	k;
 
 				for (k=0 ; k<3 ; k++)
 				{

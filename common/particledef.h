@@ -42,13 +42,13 @@ typedef struct particle_s
 // drivers never touch the following fields
 	struct particle_s	*next;
 	vec3_t		vel;
-	float		ramp;
-	float		die;
+	float	ramp;
+	float	die;
 	ptype_t		type;
-	void		(*deathfunc)( struct particle_s *particle );
+	void	(*deathfunc)( struct particle_s *particle );
 
 	// for pt_clientcusttom, we'll call this function each frame
-	void		(*callback)( struct particle_s *particle, float frametime );
+	void	(*callback)( struct particle_s *particle, float frametime );
 	
 	// For deathfunc, etc.
 	unsigned char context;

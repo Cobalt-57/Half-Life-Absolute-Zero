@@ -36,7 +36,7 @@ class VGUIAPI Font
  protected:
   char*			_name;
   BaseFontPlat*	_plat;
-  int			_id;
+  int		_id;
  friend class Surface;
  };
 

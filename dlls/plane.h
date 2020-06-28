@@ -36,7 +36,7 @@ public:
 	BOOL PointInFront ( const Vector &vecPoint );
 
 	Vector	m_vecNormal;
-	float	m_flDist;
+	float m_flDist;
 	BOOL	m_fInitialized;
 };
 

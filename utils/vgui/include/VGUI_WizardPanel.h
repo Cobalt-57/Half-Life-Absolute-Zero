@@ -92,7 +92,7 @@ public:
 		virtual void        setFinishedButtonText(const char* text);
 		virtual void        setCancelButtonText(const char* text);
 
-		virtual void		setWantedFocus(Panel* panel);
+		virtual void	setWantedFocus(Panel* panel);
 		virtual Panel*		getWantedFocus();
 
 		virtual void        addSwitchingToBackPageSignal(ActionSignal* s);

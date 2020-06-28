@@ -169,7 +169,7 @@ void CTeamMenuPanel::Initialize( void )
 //-----------------------------------------------------------------------------
 void CTeamMenuPanel::Update( void )
 {
-	int	 iYPos = TEAMMENU_TOPLEFT_BUTTON_Y;
+	int  iYPos = TEAMMENU_TOPLEFT_BUTTON_Y;
 
 	// Set the team buttons
 	for (int i = 1; i <= 4; i++)

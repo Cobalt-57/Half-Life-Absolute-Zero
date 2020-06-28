@@ -71,7 +71,7 @@ class ServerBrowserTablePanel : public TablePanel
 {
 private:
 	Label				*m_pLabel;
-	int					m_nMouseOverRow;
+	int				m_nMouseOverRow;
 
 public:
 	

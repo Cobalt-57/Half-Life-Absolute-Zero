@@ -48,7 +48,7 @@ typedef struct
 	unsigned short 	duration;		// FIXED 4.12 seconds duration
 	unsigned short 	holdTime;		// FIXED 4.12 seconds duration until reset (fade & hold)
 	short			fadeFlags;		// flags
-	byte			r, g, b, a;		// fade to color ( max alpha )
+	byte		r, g, b, a;		// fade to color ( max alpha )
 } ScreenFade;
 
 #endif		// SHAKE_H

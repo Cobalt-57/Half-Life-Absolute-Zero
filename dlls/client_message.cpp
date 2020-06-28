@@ -1,5 +1,6 @@
 
 
+#include "ignore_warning_list.h"
 #include "extdll.h"
 #include "client_message.h"
 
@@ -83,6 +84,8 @@ int gmsgTeamNames = 0;
 int gmsgStatusText = 0;
 int gmsgStatusValue = 0; 
 
+int gmsgPrintClient = 0;
+
 int gmsgJukeboxRequest = 0;
 int gmsgJukeboxOff = 0;
 int gmsgAutoMus = 0;
@@ -96,9 +99,6 @@ int gmsgClientResetModCVars = 0;
 int gmsgUpdateClientCVar = 0;
 int gmsgResetClientCVar = 0;
 int gmsgPrintClientCVar = 0;
-
-//int gmsgRetrieveFOV = 0;
-
 
 int gmsgTimeWeaponIdleUpdate = 0;
 int gmsgJustThrownUpdate = 0;
@@ -123,10 +123,6 @@ void LinkUserMessages( void )
 	{
 		return;
 	}
-
-
-	
-
 
 
 	gmsgSelAmmo = REG_USER_MSG("SelAmmo", sizeof(SelAmmo));
@@ -201,8 +197,9 @@ void LinkUserMessages( void )
 	gmsgStatusText = REG_USER_MSG("StatusText", -1);
 	gmsgStatusValue = REG_USER_MSG("StatusValue", 3); 
 
+	gmsgPrintClient = REG_USER_MSG("PrintCl", -1);
 	
-	//MODDD EXPERIMENTAL.  Is that okay?     Is the -1 size okay?
+	//MODDD EXPERIMENTAL.  Is the -1 size okay?
 	gmsgJukeboxRequest = REG_USER_MSG("JBoxReq", -1);
 	gmsgJukeboxOff = REG_USER_MSG("JBoxOff", 0);
 	gmsgAutoMus = REG_USER_MSG("AutoMus", 0);
@@ -217,13 +214,8 @@ void LinkUserMessages( void )
 	gmsgResetClientCVar = REG_USER_MSG("RstClientC", 0);
 	gmsgPrintClientCVar = REG_USER_MSG("PntClientC", 2);
 
-	//gmsgRetrieveFOV = REG_USER_MSG("RetrieveFOV", 0);
-
 	gmsgTimeWeaponIdleUpdate = REG_USER_MSG("UpdTWI", 2);
 	gmsgJustThrownUpdate = REG_USER_MSG("UpdJT", 1);
-
-
-
 
 
 

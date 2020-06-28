@@ -1,34 +1,34 @@
 //******************************************************************************************************************
 // ***TEMPLATE MONSTER***
 // clone this (and the corresponding .cpp file) and edit to make custom monsters.
-// Comment out some things if unused, like save info (.cpp-wise too) and the CUSTOM_SCHEDULES in .h and DEFINE_CUSTOM_SCHEDULES, IMPLEMENT_CUSTOM_SCHEDULES in .cpp***
+// Comment out some things if unused, like save info (.cpp-wise too) and the
+// CUSTOM_SCHEDULES in .h and DEFINE_CUSTOM_SCHEDULES, IMPLEMENT_CUSTOM_SCHEDULES
+// in .cpp***
 //******************************************************************************************************************
 
 //=========================================================
-// DISPLAY NAME (spawn_name) (split into .h & .cpp for prototype & implementation details accordingly)
+// DISPLAY NAME (spawn_name)
 //=========================================================
 
 
+////////////////////////////////////////////////////////////////////////////////////////
+#ifndef TEMPLATEMONSTER_H
+#define TEMPLATEMONSTER_H
 
 #include "extdll.h"
 #include "util.h"
 #include "cbase.h"
 #include "basemonster.h"
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#ifndef TEMPLATEMONSTER_H
-#define TEMPLATEMONSTER_H
-
-
 
 // Some other methods that might be needed sometimes,
 /*
-    virtual int		ObjectCaps(void) { return FCAP_ACROSS_TRANSITION; }
+    virtual int	ObjectCaps(void) { return FCAP_ACROSS_TRANSITION; }
 OTHER EXAMPLE:
     int ObjectCaps( void ) { return CParentClass::ObjectCaps() | FCAP_IMPULSE_USE; }
 
 Also,
-    virtual void	Activate(void) {}
+    virtual void Activate(void) {}
 /////////////////////////////////////////////////////////////////////////////////
 
 // Called at the end of "Restore" as its reached in CBaseMonster on loadinga game.
@@ -55,8 +55,6 @@ void CInfoBM::KeyValue( KeyValueData* pkvd )
 	else
 		CPointEntity::KeyValue( pkvd );
 }
-
-
 */
 
 
@@ -71,17 +69,17 @@ public:
 	static const char* pAttackHitSounds[];
 	static const char* pAttackMissSounds[];
 
+	CTemplateMonster(void);
+	
 	/*
-	// save info.  Probably going to want this, but leave commented out if the m_SaveData list
-	// turns out empty.
+	// save info.  Probably going to want this, but leave commented out if the
+	// m_SaveData list turns out empty.
 	//////////////////////////////////////////////////////////////////////////////////
 	static TYPEDESCRIPTION m_SaveData[];
 	int Save( CSave &save ); 
 	int Restore( CRestore &restore );
 	//////////////////////////////////////////////////////////////////////////////////
 	*/
-
-	CTemplateMonster(void);
 
 	CUSTOM_SCHEDULES;
 

@@ -32,12 +32,14 @@ DLL_GLOBAL ULONG		g_ulFrameCount;
 DLL_GLOBAL ULONG		g_ulModelIndexEyes;
 DLL_GLOBAL ULONG		g_ulModelIndexPlayer;
 DLL_GLOBAL Vector		g_vecAttackDir;
-DLL_GLOBAL int			g_iSkillLevel;
-DLL_GLOBAL int			gDisplayTitle;
+DLL_GLOBAL int		g_iSkillLevel;
+DLL_GLOBAL int		gDisplayTitle;
 DLL_GLOBAL BOOL			g_fGameOver;
-DLL_GLOBAL const Vector	g_vecZero = Vector(0,0,0);
+
+//MODDD - now in util_shared.cpp.
+//DLL_GLOBAL const Vector	g_vecZero = Vector(0,0,0);
 
 //MODDD - NOTICE: g_Language is linked to the non-existent CVar "sv_language".  Disregard this.
 //Looks like the only point was to remove gore / use alternate models for humans when g_Language (sv_language) is German.
 //Using the new CVar "germanCensorship" instead, just 0 or 1 (off or on).
-DLL_GLOBAL int			g_Language;
+DLL_GLOBAL int		g_Language;

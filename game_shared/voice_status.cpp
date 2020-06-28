@@ -389,7 +389,7 @@ void CVoiceStatus::CreateEntities()
 		pEnt->origin[0] = pEnt->origin[1] = 0;
 		pEnt->origin[2] = 45;
 
-		VectorAdd(pEnt->origin, pClient->origin, pEnt->origin);
+		VectorAdd_f(pEnt->origin, pClient->origin, pEnt->origin);
 
 		// Tell the engine.
 		gEngfuncs.CL_CreateVisibleEntity(ET_NORMAL, pEnt);

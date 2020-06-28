@@ -8,6 +8,7 @@
 // in_win.c -- windows 95 mouse and joystick code
 // 02/21/97 JCB Added extended DirectInput code to support external controllers.
 
+#include "external_lib_include.h"
 #include "hud.h"
 #include "cl_util.h"
 #include "camera.h"
@@ -18,20 +19,21 @@
 #include "camera.h"
 #include "../engine/keydefs.h"
 #include "view.h"
-#include "windows.h"
+//MODDD - NOPE.  We have external_lib_include.h now.
+//#include "windows.h"
 
 #define MOUSE_BUTTON_COUNT 5
 
 // Set this to 1 to show mouse cursor.  Experimental
-int	g_iVisibleMouse = 0;
+int g_iVisibleMouse = 0;
 
 extern "C" 
 {
-	void DLLEXPORT_2 IN_ActivateMouse( void );
-	void DLLEXPORT_2 IN_DeactivateMouse( void );
-	void DLLEXPORT_2 IN_MouseEvent (int mstate);
-	void DLLEXPORT_2 IN_Accumulate (void);
-	void DLLEXPORT_2 IN_ClearStates (void);
+	void DLLEXPORT IN_ActivateMouse( void );
+	void DLLEXPORT IN_DeactivateMouse( void );
+	void DLLEXPORT IN_MouseEvent (int mstate);
+	void DLLEXPORT IN_Accumulate (void);
+	void DLLEXPORT IN_ClearStates (void);
 }
 
 extern cl_enginefunc_t gEngfuncs;
@@ -62,23 +64,23 @@ extern cvar_t *cl_movespeedkey;
 cvar_t		*m_filter;
 cvar_t		*sensitivity;
 
-int			mouse_buttons;
-int			mouse_oldbuttonstate;
+int		mouse_buttons;
+int		mouse_oldbuttonstate;
 POINT		current_pos;
-int			mouse_x, mouse_y, old_mouse_x, old_mouse_y, mx_accum, my_accum;
+int		mouse_x, mouse_y, old_mouse_x, old_mouse_y, mx_accum, my_accum;
 
-static int	restore_spi;
-static int	originalmouseparms[3], newmouseparms[3] = {0, 0, 1};
-static int	mouseactive;
-int			mouseinitialized;
-static int	mouseparmsvalid;
-static int	mouseshowtoggle = 1;
+static int restore_spi;
+static int originalmouseparms[3], newmouseparms[3] = {0, 0, 1};
+static int mouseactive;
+int		mouseinitialized;
+static int mouseparmsvalid;
+static int mouseshowtoggle = 1;
 
 // joystick defines and variables
 // where should defines be moved?
 #define JOY_ABSOLUTE_AXIS	0x00000000		// control like a joystick
 #define JOY_RELATIVE_AXIS	0x00000010		// control like a mouse, spinner, trackball
-#define	JOY_MAX_AXES		6				// X, Y, Z, R, U, V
+#define JOY_MAX_AXES		6				// X, Y, Z, R, U, V
 #define JOY_AXIS_X			0
 #define JOY_AXIS_Y			1
 #define JOY_AXIS_Z			2
@@ -134,10 +136,10 @@ cvar_t	*joy_yawsensitivity;
 cvar_t	*joy_wwhack1;
 cvar_t	*joy_wwhack2;
 
-int			joy_avail, joy_advancedinit, joy_haspov;
+int		joy_avail, joy_advancedinit, joy_haspov;
 DWORD		joy_oldbuttonstate, joy_oldpovstate;
 
-int			joy_id;
+int		joy_id;
 DWORD		joy_flags;
 DWORD		joy_numbuttons;
 
@@ -165,7 +167,7 @@ void Force_CenterView_f (void)
 IN_ActivateMouse
 ===========
 */
-void DLLEXPORT_2 IN_ActivateMouse (void)
+void DLLEXPORT IN_ActivateMouse (void)
 {
 	if (mouseinitialized)
 	{
@@ -180,7 +182,7 @@ void DLLEXPORT_2 IN_ActivateMouse (void)
 IN_DeactivateMouse
 ===========
 */
-void DLLEXPORT_2 IN_DeactivateMouse (void)
+void DLLEXPORT IN_DeactivateMouse (void)
 {
 	if (mouseinitialized)
 	{
@@ -265,9 +267,9 @@ void IN_ResetMouse( void )
 IN_MouseEvent
 ===========
 */
-void DLLEXPORT_2 IN_MouseEvent (int mstate)
+void DLLEXPORT IN_MouseEvent (int mstate)
 {
-	int		i;
+	int	i;
 
 	if ( iMouseInUse || g_iVisibleMouse )
 		return;
@@ -298,7 +300,7 @@ IN_MouseMove
 */
 void IN_MouseMove ( float frametime, usercmd_t *cmd)
 {
-	int		mx, my;
+	int	mx, my;
 	vec3_t viewangles;
 
 	gEngfuncs.GetViewAngles( (float *)viewangles );
@@ -398,7 +400,7 @@ void IN_MouseMove ( float frametime, usercmd_t *cmd)
 IN_Accumulate
 ===========
 */
-void DLLEXPORT_2 IN_Accumulate (void)
+void DLLEXPORT IN_Accumulate (void)
 {
 	//only accumulate mouse if we are not moving the camera with the mouse
 	if ( !iMouseInUse && !g_iVisibleMouse )
@@ -422,7 +424,7 @@ void DLLEXPORT_2 IN_Accumulate (void)
 IN_ClearStates
 ===================
 */
-void DLLEXPORT_2 IN_ClearStates (void)
+void DLLEXPORT IN_ClearStates (void)
 {
 	if ( !mouseactive )
 		return;
@@ -439,7 +441,7 @@ IN_StartupJoystick
 */  
 void IN_StartupJoystick (void) 
 { 
-	int			numdevs;
+	int		numdevs;
 	JOYCAPS		jc;
 	MMRESULT	mmr;
  
@@ -536,7 +538,7 @@ void Joy_AdvancedUpdate_f (void)
 
 	// called once by IN_ReadJoystick and by user whenever an update is needed
 	// cvars are now available
-	int	i;
+	int i;
 	DWORD dwTemp;
 
 	// initialize all the maps
@@ -605,7 +607,7 @@ IN_Commands
 */
 void IN_Commands (void)
 {
-	int		i, key_index;
+	int	i, key_index;
 	DWORD	buttonstate, povstate;
 
 	if (!joy_avail)
@@ -710,9 +712,9 @@ IN_JoyMove
 */
 void IN_JoyMove ( float frametime, usercmd_t *cmd )
 {
-	float	speed, aspeed;
-	float	fAxisValue, fTemp;
-	int		i;
+	float speed, aspeed;
+	float fAxisValue, fTemp;
+	int	i;
 	vec3_t viewangles;
 
 	gEngfuncs.GetViewAngles( (float *)viewangles );

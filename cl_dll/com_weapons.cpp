@@ -27,7 +27,7 @@
 // g_runfuncs is true if this is the first time we've "predicated" a particular movement/firing
 //  command.  If it is 1, then we should play events/sounds etc., otherwise, we just will be
 //  updating state info, but not firing events
-int	g_runfuncs = 0;
+int g_runfuncs = 0;
 
 // During our weapon prediction processing, we'll need to reference some data that is part of
 //  the final state passed into the postthink functionality.  We'll set this pointer and then
@@ -322,8 +322,8 @@ stub functions for such things as precaching.  So we don't have to modify weapon
  is compiled into both game and client .dlls.
 ======================
 */
-int				stub_PrecacheModel		( char* s ) { return 0; }
-int				stub_PrecacheSound		( char* s ) { return 0; }
+int			stub_PrecacheModel		( char* s ) { return 0; }
+int			stub_PrecacheSound		( char* s ) { return 0; }
 unsigned short	stub_PrecacheEvent		( int type, const char *s ) { return 0; }
 const char		*stub_NameForFunction	( unsigned long function ) { return "func"; }
-void			stub_SetModel			( edict_t *e, const char *m ) {}
+void		stub_SetModel			( edict_t *e, const char *m ) {}

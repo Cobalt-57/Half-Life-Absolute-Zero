@@ -11,7 +11,7 @@
 // wad2lib.c
 
 
-#include "externalLibInclude.h"
+#include "external_lib_include.h"
 
 //#include <stdio.h>
 //#include <stdlib.h>
@@ -41,7 +41,7 @@
 
 
 lumpinfo_t		*lumpinfo;		// location of each lump on disk
-int				numlumps;
+int			numlumps;
 
 wadinfo_t		header;
 FILE			*wadhandle;
@@ -56,7 +56,7 @@ void W_OpenWad (char *filename)
 {
 	lumpinfo_t		*lump_p;
 	unsigned		i;
-	int				length;
+	int			length;
 	
 //
 // open the file and add to directory
@@ -95,7 +95,7 @@ void W_OpenWad (char *filename)
 
 void CleanupName (char *in, char *out)
 {
-	int		i;
+	int	i;
 	
 	for (i=0 ; i<sizeof( ((lumpinfo_t *)0)->name ) ; i++ )
 	{
@@ -117,11 +117,11 @@ W_CheckNumForName
 Returns -1 if name not found
 ====================
 */
-int	W_CheckNumForName (char *name)
+int W_CheckNumForName (char *name)
 {
 	char	cleanname[16];
-	int		v1,v2, v3, v4;
-	int		i;
+	int	v1,v2, v3, v4;
+	int	i;
 	lumpinfo_t	*lump_p;
 	
 	CleanupName (name, cleanname);
@@ -156,9 +156,9 @@ W_GetNumForName
 Calls W_CheckNumForName, but bombs out if not found
 ====================
 */
-int	W_GetNumForName (char *name)
+int W_GetNumForName (char *name)
 {
-	int	i;
+	int i;
 
 	i = W_CheckNumForName (name);
 	if (i != -1)
@@ -210,9 +210,9 @@ void W_ReadLumpNum (int lump, void *dest)
 W_LoadLumpNum
 ====================
 */
-void	*W_LoadLumpNum (int lump)
+void *W_LoadLumpNum (int lump)
 {
-	void	*buf;
+	void *buf;
 	
 	if ((unsigned)lump >= numlumps)
 		Error ("W_CacheLumpNum: %i >= numlumps",lump);
@@ -229,7 +229,7 @@ void	*W_LoadLumpNum (int lump)
 W_LoadLumpName
 ====================
 */
-void	*W_LoadLumpName (char *name)
+void *W_LoadLumpName (char *name)
 {
 	return W_LoadLumpNum (W_GetNumForName(name));
 }
@@ -246,10 +246,10 @@ void	*W_LoadLumpName (char *name)
 FILE		*outwad;
 
 lumpinfo_t	outinfo[4096];
-int			outlumps;
+int		outlumps;
 
 short	(*wadshort) (short l);
-int		(*wadlong) (int l);
+int	(*wadlong) (int l);
 
 /*
 ===============
@@ -284,10 +284,10 @@ AddLump
 ===============
 */
 
-void	AddLump (char *name, void *buffer, int length, int type, int compress)
+void AddLump (char *name, void *buffer, int length, int type, int compress)
 {
 	lumpinfo_t	*info;
-	int			ofs;
+	int		ofs;
 	
 	info = &outinfo[outlumps];
 	outlumps++;
@@ -318,7 +318,7 @@ WriteWad
 void WriteWad (int wad3)
 {
 	wadinfo_t	header;
-	int			ofs;
+	int		ofs;
 	
 // write the lumpingo
 	ofs = ftell(outwad);

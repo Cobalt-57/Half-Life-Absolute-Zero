@@ -29,30 +29,30 @@ typedef struct efrag_s
 
 typedef struct
 {
-	byte					mouthopen;		// 0 = mouth closed, 255 = mouth agape
-	byte					sndcount;		// counter for running average
-	int						sndavg;			// running average
+	byte				mouthopen;		// 0 = mouth closed, 255 = mouth agape
+	byte				sndcount;		// counter for running average
+	int					sndavg;			// running average
 } mouth_t;
 
 typedef struct
 {
-	float					prevanimtime;  
-	float					sequencetime;
-	byte					prevseqblending[2];
+	float				prevanimtime;  
+	float				sequencetime;
+	byte				prevseqblending[2];
 	vec3_t					prevorigin;
 	vec3_t					prevangles;
 
-	int						prevsequence;
-	float					prevframe;
+	int					prevsequence;
+	float				prevframe;
 
-	byte					prevcontroller[4];
-	byte					prevblending[2];
+	byte				prevcontroller[4];
+	byte				prevblending[2];
 } latchedvars_t;
 
 typedef struct
 {
 	// Time stamp for this movement
-	float					animtime;
+	float				animtime;
 
 	vec3_t					origin;
 	vec3_t					angles;
@@ -74,7 +74,7 @@ typedef struct cl_entity_s cl_entity_t;
 
 struct cl_entity_s
 {
-	int						index;      // Index into cl_entities ( should match actual slot, but not necessarily )
+	int					index;      // Index into cl_entities ( should match actual slot, but not necessarily )
 
 	qboolean				player;     // True if this entity is a "player"
 	
@@ -82,7 +82,7 @@ struct cl_entity_s
 	entity_state_t			prevstate;  // The state information from the penultimate message received from the server
 	entity_state_t			curstate;   // The state information from the last message received from server
 
-	int						current_position;  // Last received history update index
+	int					current_position;  // Last received history update index
 	position_history_t		ph[ HISTORY_MAX ];   // History of position and angle updates for this player
 
 	mouth_t					mouth;			// For synchronizing mouth movements.
@@ -91,7 +91,7 @@ struct cl_entity_s
 
 	// Information based on interplocation, extrapolation, prediction, or just copied from last msg received.
 	//
-	float					lastmove;
+	float				lastmove;
 
 	// Actual render position and angles
 	vec3_t					origin;
@@ -101,14 +101,14 @@ struct cl_entity_s
 	vec3_t					attachment[4];
 
 	// Other entity local information
-	int						trivial_accept;
+	int					trivial_accept;
 
 	struct model_s			*model;			// cl.model_precache[ curstate.modelindes ];  all visible entities have a model
 	struct efrag_s			*efrag;			// linked list of efrags
 	struct mnode_s			*topnode;		// for bmodels, first world node that splits bmodel, or NULL if not split
 
-	float					syncbase;		// for client-side animations -- used by obsolete alias animation system, remove?
-	int						visframe;		// last frame this entity was found in an active leaf
+	float				syncbase;		// for client-side animations -- used by obsolete alias animation system, remove?
+	int					visframe;		// last frame this entity was found in an active leaf
 	colorVec				cvFloorColor;
 };
 

@@ -22,6 +22,14 @@
 #define CBASE_H
 
 
+// what.  dude, this is cbase.h.
+//#include "cbase.h"
+// Better believe we'll need this though.
+#include "util_entity.h"
+
+// Also, look below for an overload of FNullEnt that used to be in player.cpp.
+// Moved below CBaseEntity's class definition so it can be used mostly anywhere else now too.
+
 
 /*
 
@@ -37,21 +45,21 @@ CBaseEntity
 				CBaseGroup
 */
 
-#define		MAX_PATH_SIZE	10 // max number of nodes available for a path.
+#define 	MAX_PATH_SIZE	10 // max number of nodes available for a path.
 
 // These are caps bits to indicate what an object's capabilities (currently used for save/restore and level transitions)
-#define		FCAP_CUSTOMSAVE				0x00000001
-#define		FCAP_ACROSS_TRANSITION		0x00000002		// should transfer between transitions
-#define		FCAP_MUST_SPAWN				0x00000004		// Spawn after restore
-#define		FCAP_DONT_SAVE				0x80000000		// Don't save this
-#define		FCAP_IMPULSE_USE			0x00000008		// can be used by the player
-#define		FCAP_CONTINUOUS_USE			0x00000010		// can be used by the player
-#define		FCAP_ONOFF_USE				0x00000020		// can be used by the player
-#define		FCAP_DIRECTIONAL_USE		0x00000040		// Player sends +/- 1 when using (currently only tracktrains)
-#define		FCAP_MASTER					0x00000080		// Can be used to "master" other entities (like multisource)
+#define 	FCAP_CUSTOMSAVE				0x00000001
+#define 	FCAP_ACROSS_TRANSITION		0x00000002		// should transfer between transitions
+#define 	FCAP_MUST_SPAWN				0x00000004		// Spawn after restore
+#define 	FCAP_DONT_SAVE				0x80000000		// Don't save this
+#define 	FCAP_IMPULSE_USE			0x00000008		// can be used by the player
+#define 	FCAP_CONTINUOUS_USE			0x00000010		// can be used by the player
+#define 	FCAP_ONOFF_USE				0x00000020		// can be used by the player
+#define 	FCAP_DIRECTIONAL_USE		0x00000040		// Player sends +/- 1 when using (currently only tracktrains)
+#define 	FCAP_MASTER					0x00000080		// Can be used to "master" other entities (like multisource)
 
 // UNDONE: This will ignore transition volumes (trigger_transition), but not the PVS!!!
-#define		FCAP_FORCE_TRANSITION		0x00000080		// ALWAYS goes across transitions
+#define 	FCAP_FORCE_TRANSITION		0x00000080		// ALWAYS goes across transitions
 
 
 
@@ -64,7 +72,7 @@ CBaseEntity
 
 
 #include "util.h"
-#include "vector_shared.h"
+#include "vector.h"
 
 
 
@@ -74,13 +82,13 @@ CBaseEntity
 //              NODE_POINT_DEFAULT says we're leaving up what NODE HULL this is to retail behavior, the checks in 
 //              NODE_POINT_HULL is to say, pretend like our entity has no size. Just allow if there is a node connection at all.
 //              For debugging route problems to see if the issue is caused by a hull being too big even if a path was found.
-#define		NODE_DEFAULT_HULL		-2
-#define		NODE_POINT_HULL			-1
+#define 	NODE_DEFAULT_HULL		-2
+#define 	NODE_POINT_HULL			-1
 
-#define		NODE_SMALL_HULL			0
-#define		NODE_HUMAN_HULL			1
-#define		NODE_LARGE_HULL			2
-#define		NODE_FLY_HULL			3
+#define 	NODE_SMALL_HULL			0
+#define 	NODE_HUMAN_HULL			1
+#define 	NODE_LARGE_HULL			2
+#define 	NODE_FLY_HULL			3
 
 
 
@@ -113,16 +121,7 @@ CBaseEntity
 
 
 
-
-
-
-// C functions for external declarations that call the appropriate C++ methods
-
-#ifdef _WIN32
-#define EXPORT	_declspec( dllexport )
-#else
-#define EXPORT	/* */
-#endif
+//MODDD - moved defines for 'EXPORT' to util_shared.h.
 
 extern "C" EXPORT int GetEntityAPI( DLL_FUNCTIONS *pFunctionTable, int interfaceVersion );
 extern "C" EXPORT int GetEntityAPI2( DLL_FUNCTIONS *pFunctionTable, int *interfaceVersion );
@@ -135,7 +134,7 @@ extern void DispatchThink( edict_t *pent );
 extern void DispatchBlocked( edict_t *pentBlocked, edict_t *pentOther );
 extern void DispatchSave( edict_t *pent, SAVERESTOREDATA *pSaveData );
 extern int  DispatchRestore( edict_t *pent, SAVERESTOREDATA *pSaveData, int globalEntity );
-extern void	DispatchObjectCollsionBox( edict_t *pent );
+extern void DispatchObjectCollsionBox( edict_t *pent );
 extern void SaveWriteFields( SAVERESTOREDATA *pSaveData, const char *pname, void *pBaseData, TYPEDESCRIPTION *pFields, int fieldCount );
 extern void SaveReadFields( SAVERESTOREDATA *pSaveData, const char *pname, void *pBaseData, TYPEDESCRIPTION *pFields, int fieldCount );
 extern void SaveGlobalState( SAVERESTOREDATA *pSaveData );
@@ -229,12 +228,17 @@ class EHANDLE
 {
 private:
 	edict_t *m_pent;
-	int		m_serialnumber;
+	int	m_serialnumber;
 public:
 	edict_t *Get( void );
 	edict_t *Set( edict_t *pent );
 
-	operator int ();
+	//MODDD NOTE - this type used to be int, it is now BOOL to more
+	// clearly convey the point.
+	// See the implementation for this auto-cast, "Get() != NULL".
+	// This isn't some ID, it is just a yes/no answer, a BOOL.
+	// Often invokedy by EHANDLE's sent to FNullEnt.
+	operator BOOL ();
 
 	operator CBaseEntity *();
 
@@ -287,31 +291,8 @@ public:
 	CBaseEntity			*m_pLink;// used for temporary link-list operations. 
 
 
-	//MODDDMIRROR
-	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	CBaseEntity			*m_pMoveWith; // LRC- the entity I move with.
-	int					m_MoveWith;	//LRC- Name of that entity
-	CBaseEntity			*m_pChildMoveWith;	//LRC- one of the entities that's moving with me.
-	CBaseEntity			*m_pSiblingMoveWith; //LRC- another entity that's Moving With the same ent as me. (linked list.)
-	Vector				m_vecMoveWithOffset; // LRC- Position I should be in relative to m_pMoveWith->pev->origin.
-	Vector				m_vecRotWithOffset; // LRC- Angles I should be facing relative to m_pMoveWith->pev->angles.
-	CBaseEntity			*m_pAssistLink; // LRC- link to the next entity which needs to be Assisted before physics are applied.
-	Vector				m_vecPostAssistVel; // LRC
-	Vector				m_vecPostAssistAVel; // LRC
-	float				m_fNextThink; // LRC - for SetNextThink and SetPhysThink. Marks the time when a think will be performed - not necessarily the same as pev->nextthink!
-	float				m_fPevNextThink; // LRC - always set equal to pev->nextthink, so that we can tell when the latter gets changed by the @#$^¬! engine.
-	int					m_iLFlags; // LRC- a new set of flags. (pev->spawnflags and pev->flags are full...)
-	virtual void		DesiredAction( void ) {}; // LRC - for postponing stuff until PostThink time, not as a think.
-	int					m_iStyle; // LRC - almost anything can have a lightstyle these days...
 
-	Vector				m_vecSpawnOffset; // LRC- To fix things which (for example) MoveWith a door which Starts Open.
-	BOOL				m_activated;	// LRC- moved here from func_train. Signifies that an entity has already been
-										// activated. (and hence doesn't need reactivating.)
 
-	//AJH Entities can now have custom names and kill techniques for deathnotices
-	//E.g instead of "Player1 killed Player2 with train" you can have "Player1 decapitated Player2 with a large table saw!)
-	string_t			killname;	//AJH custom 'deathnotice' name
-	string_t			killmethod;	//AJH custom kill techniques
 
 	//MODDD - new instance var.
 	BOOL usingCustomSequence;
@@ -323,18 +304,22 @@ public:
 	BOOL recognizablyDead;
 
 
+	// New var to send printouts related to animation.
+	// Turn on for an entity by looking at it ingame and typing "crazyprintout"
+	BOOL crazyPrintout;
 
+
+
+	//MODDDMIRROR - snippets needed for the mirror from Spirit of HL 1.9.
+	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	
 	//LRC - decent mechanisms for setting think times!
 	// this should have been done a long time ago, but MoveWith finally forced me.
-	virtual void		SetNextThink( float delay ) { SetNextThink(delay, FALSE); }
-	virtual void		SetNextThink( float delay, BOOL correctSpeed );
-	virtual void		AbsoluteNextThink( float time ) { AbsoluteNextThink(time, FALSE); }
-	virtual void		AbsoluteNextThink( float time, BOOL correctSpeed );
-	void				SetEternalThink( );
-	
-
+	virtual void	SetNextThink( float delay ) { SetNextThink(delay, FALSE); }
+	virtual void	SetNextThink( float delay, BOOL correctSpeed );
 
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	
 	
 
 	virtual BOOL isMovetypeFlying(void) const;
@@ -343,13 +328,8 @@ public:
 	virtual BOOL isSizeGiant(void);
 	virtual BOOL isOrganic(void);
 	virtual int getHullIndexForNodes(void) const;
-
-	//MODDD - moved here from delay.
 	int getNumberOfBodyParts(void);
 	int getNumberOfSkins(void);
-
-	//New var to send printouts related to animation.  Call me on something that appears frozen.
-	BOOL crazyPrintout;
 
 
 	//MODDD
@@ -361,9 +341,9 @@ public:
 	
 	// initialization functions
 	//MODDD - changed for a test.
-	//virtual void	Spawn( void ) { return; }
-	virtual void	Spawn( void );
-	virtual void	Precache( void ) { return; }
+	//virtual void Spawn( void ) { return; }
+	virtual void Spawn( void );
+	virtual void Precache( void ) { return; }
 
 	//MODDD - new
 	CBaseEntity(void);
@@ -384,7 +364,7 @@ public:
 	
 	//MODDD
 	BOOL spawnedDynamically;
-	BOOL firstSpawnCall;
+	// Might want to know if the player sent along spawnflags in a 'give' command.
 	BOOL flagForced;
 	
 	//is this the first time calling Killed? important sometimes.
@@ -416,13 +396,23 @@ public:
 
 
 
-	virtual void	KeyValue( KeyValueData* pkvd) { pkvd->fHandled = FALSE; }
-	virtual int		Save( CSave &save );
-	virtual int		Restore( CRestore &restore );
+	virtual void KeyValue( KeyValueData* pkvd) { pkvd->fHandled = FALSE; }
+	virtual int	Save( CSave &save );
+	virtual int	Restore( CRestore &restore );
 
+	//MODDD - so this isn't virtual?
+	// Here's how the call to some child class's "Restore" goes:
+	//     CSomeCreature::Restore -> CBaseMonster::Restore
+	//       CBaseMonster::Restore -> CBaseEntity::Restore
+	//         CBaseEntity::Restore -> CBaseEntity::PostRestore
+	//         CBaseMonster::PostRestore
+	//       CSomeCreature::PostRestore
+	// ...it works exactly as it does when PostRestore is non-virtual.  But if it were
+	// virtual, each PostRestore call would go to the deepest version possible
+	// (CSomeCreature's PostRestore, which,)
+	// even if it goes up the heirarchy of PostRestore's, would still mean each of 
+	// those travels happens 3 times in this case.
 	void PostRestore(void);
-
-
 
 
 	virtual void playMetallicHitSound(int arg_channel, float arg_volume);
@@ -433,11 +423,11 @@ public:
 	BOOL IsWorldOrAffiliated(void);  //NOT virtual. Never needs to be special.
 	virtual BOOL IsBreakable(void);
 
-	virtual int		ObjectCaps( void ) { return FCAP_ACROSS_TRANSITION; }
-	virtual void	Activate( void ) {}
+	virtual int	ObjectCaps( void ) { return FCAP_ACROSS_TRANSITION; }
+	virtual void Activate( void ) {}
 	
 	// Setup the object->object collision box (pev->mins / pev->maxs is the object->world collision box)
-	virtual void	SetObjectCollisionBox( void );
+	virtual void SetObjectCollisionBox( void );
 
 
 	//Method to call without a string. Can be used to check the German model system for monsters (substitute a different one if censorship is on)
@@ -487,34 +477,34 @@ public:
 	GENERATE_TAKEDAMAGE_PROTOTYPE_VIRTUAL
 	
 
-	virtual int		TakeHealth( float flHealth, int bitsDamageType );
+	virtual int	TakeHealth( float flHealth, int bitsDamageType );
 
 	GENERATE_KILLED_PROTOTYPE_VIRTUAL
-	//virtual void	Killed( entvars_t *pevAttacker, int iGib );
+	//virtual void Killed( entvars_t *pevAttacker, int iGib );
 
-	virtual int		BloodColor( void ) { return DONT_BLEED; }
+	virtual int	BloodColor( void ) { return DONT_BLEED; }
 	//MODDD - TraceBleed supports the extra damage bitmask.
-	virtual void	TraceBleed( float flDamage, Vector vecDir, TraceResult *ptr, int bitsDamageType );
-	virtual void	TraceBleed( float flDamage, Vector vecDir, TraceResult *ptr, int bitsDamageType, int bitsDamageTypeMod );
+	virtual void TraceBleed( float flDamage, Vector vecDir, TraceResult *ptr, int bitsDamageType );
+	virtual void TraceBleed( float flDamage, Vector vecDir, TraceResult *ptr, int bitsDamageType, int bitsDamageTypeMod );
 	virtual BOOL    IsTriggered( CBaseEntity *pActivator ) {return TRUE;}
 	virtual CBaseMonster *MyMonsterPointer( void ) { return NULL;}
 	virtual CSquadMonster *MySquadMonsterPointer( void ) { return NULL;}
-	virtual	int		GetToggleState( void ) { return TS_AT_TOP; }
-	virtual void	AddPoints( int score, BOOL bAllowNegativeScore ) {}
-	virtual void	AddPointsToTeam( int score, BOOL bAllowNegativeScore ) {}
+	virtual	int	GetToggleState( void ) { return TS_AT_TOP; }
+	virtual void AddPoints( int score, BOOL bAllowNegativeScore ) {}
+	virtual void AddPointsToTeam( int score, BOOL bAllowNegativeScore ) {}
 	virtual BOOL	AddPlayerItem( CBasePlayerItem *pItem ) { return 0; }
 	virtual BOOL	RemovePlayerItem( CBasePlayerItem *pItem ) { return 0; }
-	virtual int 	GiveAmmo( int iAmount, char *szName, int iMax ) { return -1; };
-	virtual float	GetDelay( void ) { return 0; }
-	virtual int		IsMoving( void ) { return pev->velocity != g_vecZero; }
-	virtual void	OverrideReset( void ) {}
+	virtual int	GiveAmmo( int iAmount, char *szName, int iMax ) { return -1; };
+	virtual float GetDelay( void ) { return 0; }
+	virtual int	IsMoving( void ) { return pev->velocity != g_vecZero; }
+	virtual void OverrideReset( void ) {}
 
 	//supports the extra damage bitmask for some reason.
-	virtual int		DamageDecal( int bitsDamageType );
-	virtual int		DamageDecal( int bitsDamageType, int bitsDamageTypeMod );
+	virtual int	DamageDecal( int bitsDamageType );
+	virtual int	DamageDecal( int bitsDamageType, int bitsDamageTypeMod );
 
 	// This is ONLY used by the node graph to test movement through a door
-	virtual void	SetToggleState( int state ) {}
+	virtual void SetToggleState( int state ) {}
 	virtual void    StartSneaking( void ) {}
 	virtual void    StopSneaking( void ) {}
 	virtual BOOL	OnControls( entvars_t *pev ) { return FALSE; }
@@ -540,7 +530,7 @@ public:
 	virtual const char *TeamID( void ) { return ""; }
 
 
-//	virtual void	SetActivator( CBaseEntity *pActivator ) {}
+//	virtual void SetActivator( CBaseEntity *pActivator ) {}
 	virtual CBaseEntity *GetNextTarget( void );
 	
 	// fundamental callbacks
@@ -551,7 +541,6 @@ public:
 
 	virtual void Think( void ) { if (m_pfnThink) (this->*m_pfnThink)(); };
 	
-
 
 
 	virtual void Touch( CBaseEntity *pOther ) { if (m_pfnTouch) (this->*m_pfnTouch)( pOther ); };
@@ -585,22 +574,22 @@ public:
 	void EXPORT SUB_StartFadeOut ( void );
 	void EXPORT SUB_FadeOut ( void );
 	void EXPORT SUB_CallUseToggle( void ) { this->Use( this, this, USE_TOGGLE, 0 ); }
-	int			ShouldToggle( USE_TYPE useType, BOOL currentState );
+	int		ShouldToggle( USE_TYPE useType, BOOL currentState );
 
 
 	//MODDD - new.
 	BOOL CheckTracer(const Vector& vecSrc, const Vector& vecEnd, const Vector& vecDirForward, const Vector& vecDirRight, int iBulletType, int iTracerFreq, int* p_tracerCount);
 
-	void		FireBullets( ULONG	cShots, Vector  vecSrc, Vector	vecDirShooting,	Vector	vecSpread, float flDistance, int iBulletType, int iTracerFreq = 4, int iDamage = 0, entvars_t *pevAttacker = NULL  );
+	void	FireBullets( ULONG	cShots, Vector  vecSrc, Vector	vecDirShooting,	Vector	vecSpread, float flDistance, int iBulletType, int iTracerFreq = 4, int iDamage = 0, entvars_t *pevAttacker = NULL  );
 	Vector		FireBulletsPlayer( ULONG	cShots, Vector  vecSrc, Vector	vecDirShooting,	Vector	vecSpread, float flDistance, int iBulletType, int iTracerFreq = 4, int iDamage = 0, entvars_t *pevAttacker = NULL, int shared_rand = 0 );
 
 	virtual CBaseEntity *Respawn( void ) { return NULL; }
 
 	void SUB_UseTargets( CBaseEntity *pActivator, USE_TYPE useType, float value );
 	// Do the bounding boxes of these two intersect?
-	int		Intersects( CBaseEntity *pOther );
-	void	MakeDormant( void );
-	int		IsDormant( void );
+	int	Intersects( CBaseEntity *pOther );
+	void MakeDormant( void );
+	int	IsDormant( void );
 	BOOL    IsLockedByMaster( void ) { return FALSE; }
 
 	static CBaseEntity *Instance( edict_t *pent )
@@ -687,6 +676,7 @@ public:
 	virtual	void UpdateOwner( void ) { return; };
 
 	//
+	static edict_t* overyLongComplicatedProcessForCreatingAnEntity(const char* entityName);
 	static CBaseEntity* CreateManual( const char *szName, const Vector &vecOrigin, const Vector &vecAngles, edict_t *pentOwner = NULL );
 	static CBaseEntity* Create( const char *szName, const Vector &vecOrigin, const Vector &vecAngles, edict_t *pentOwner = NULL );
 	static CBaseEntity* Create( const char *szName, const Vector &vecOrigin, const Vector &vecAngles, int setSpawnFlags, edict_t *pentOwner = NULL );
@@ -694,7 +684,7 @@ public:
 	virtual BOOL FBecomeProne( void ) {return FALSE;};
 	edict_t *edict() { return ENT( pev ); };
 	EOFFSET eoffset( ) { return OFFSET( pev ); };
-	int	  entindex( ) { return ENTINDEX( edict() ); };
+	int   entindex( ) { return ENTINDEX( edict() ); };
 
 	virtual Vector Center( ) { return (pev->absmax + pev->absmin) * 0.5; }; // center point of entity
 	virtual Vector EyePosition( ) { return pev->origin + pev->view_ofs; };			// position of eyes
@@ -754,6 +744,25 @@ public:
 
 
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+//MODDD - that overload from player.cpp
+inline BOOL FNullEnt(CBaseEntity* ent) { return (ent == NULL) || FNullEnt(ent->edict()); }
+
+//MODDD - that new overload to resolve ambiguity.
+// This is what happened when FNullEnt was given a EHANDLE before the CBaseEntity*-taking
+// and this direct EHANDLE-taking overload were made available:  the BOOL interpetation was 
+// used, auto-casting the EHANDLE as a BOOL to fit that FNullEnt overload.
+// And that calls for "Get() != NULL", so may as well cut out the middleman (cast)
+// and skip to that.  Also the check in the EHANDLE one was for "<some int == 0>", 
+// since being NULL actually returns TRUE and otherwise FALSE (invert the '!= NULL' part).
+inline BOOL FNullEnt(EHANDLE someHandle) { return (someHandle.Get() == NULL); }
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+
+
 // Ugly technique to override base member functions
 // Normally it's illegal to cast a pointer to a member function of a derived class to a pointer to a 
 // member function of a base class.  static_cast is a sleezy way around that problem.
@@ -780,8 +789,8 @@ class CPointEntity : public CBaseEntity
 public:
 	//MODDD
 	CPointEntity();
-	void	Spawn( void );
-	virtual int	ObjectCaps( void ) { return CBaseEntity :: ObjectCaps() & ~FCAP_ACROSS_TRANSITION; }
+	void Spawn( void );
+	virtual int ObjectCaps( void ) { return CBaseEntity :: ObjectCaps() & ~FCAP_ACROSS_TRANSITION; }
 private:
 };
 
@@ -793,11 +802,11 @@ typedef struct locksounds			// sounds that doors and buttons make when locked/un
 	string_t	sUnlockedSound;		// sound a door makes when it's unlocked
 	string_t	sUnlockedSentence;	// sentence group played when door is unlocked
 
-	int		iLockedSentence;		// which sentence in sentence group to play next
-	int		iUnlockedSentence;		// which sentence in sentence group to play next
+	int	iLockedSentence;		// which sentence in sentence group to play next
+	int	iUnlockedSentence;		// which sentence in sentence group to play next
 
-	float	flwaitSound;			// time delay between playing consecutive 'locked/unlocked' sounds
-	float	flwaitSentence;			// time delay between playing consecutive sentences
+	float flwaitSound;			// time delay between playing consecutive 'locked/unlocked' sounds
+	float flwaitSentence;			// time delay between playing consecutive sentences
 	BYTE	bEOFLocked;				// true if hit end of list of locked sentences
 	BYTE	bEOFUnlocked;			// true if hit end of list of unlocked sentences
 } locksound_t;
@@ -820,18 +829,18 @@ public:
 	virtual BOOL IsWorldAffiliated(void);
 
 	void Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value );
-	int	ObjectCaps( void ) { return (CPointEntity::ObjectCaps() | FCAP_MASTER); }
+	int ObjectCaps( void ) { return (CPointEntity::ObjectCaps() | FCAP_MASTER); }
 	BOOL IsTriggered( CBaseEntity *pActivator );
 	void EXPORT Register( void );
-	virtual int		Save( CSave &save );
-	virtual int		Restore( CRestore &restore );
+	virtual int	Save( CSave &save );
+	virtual int	Restore( CRestore &restore );
 
 	static	TYPEDESCRIPTION m_SaveData[];
 
 	EHANDLE		m_rgEntities[MS_MAX_TARGETS];
-	int			m_rgTriggered[MS_MAX_TARGETS];
+	int		m_rgTriggered[MS_MAX_TARGETS];
 
-	int			m_iTotal;
+	int		m_iTotal;
 	string_t	m_globalstate;
 };
 
@@ -842,12 +851,12 @@ public:
 class CBaseDelay : public CBaseEntity
 {
 public:
-	float		m_flDelay;
-	int			m_iszKillTarget;
+	float	m_flDelay;
+	int		m_iszKillTarget;
 
-	virtual void	KeyValue( KeyValueData* pkvd);
-	virtual int		Save( CSave &save );
-	virtual int		Restore( CRestore &restore );
+	virtual void KeyValue( KeyValueData* pkvd);
+	virtual int	Save( CSave &save );
+	virtual int	Restore( CRestore &restore );
 
 	//MODDD - new
 	void PostRestore(void);
@@ -962,9 +971,9 @@ public:
 	void EXPORT BounceGibTouch ( CBaseEntity *pOther );
 	void EXPORT StickyGibTouch ( CBaseEntity *pOther );
 	void EXPORT WaitTillLand( void );
-	void		LimitVelocity( void );
+	void	LimitVelocity( void );
 
-	virtual int	ObjectCaps( void ) { return (CBaseEntity :: ObjectCaps() & ~FCAP_ACROSS_TRANSITION) | FCAP_DONT_SAVE; }
+	virtual int ObjectCaps( void ) { return (CBaseEntity :: ObjectCaps() & ~FCAP_ACROSS_TRANSITION) | FCAP_DONT_SAVE; }
 
 	
 	static void SpawnHeadGib( entvars_t *pevVictim );
@@ -992,10 +1001,10 @@ public:
 	
 
 
-	int		m_bloodColor;
-	int		m_cBloodDecals;
-	int		m_material;
-	float	m_lifeTime;
+	int	m_bloodColor;
+	int	m_cBloodDecals;
+	int	m_material;
+	float m_lifeTime;
 
 
 

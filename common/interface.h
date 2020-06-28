@@ -115,7 +115,7 @@ typedef struct HInterfaceModule_t* HINTERFACEMODULE;
 
 // Use these to load and unload a module.
 extern HINTERFACEMODULE		Sys_LoadModule(const char *pModuleName);
-extern void					Sys_FreeModule(HINTERFACEMODULE hModule);
+extern void				Sys_FreeModule(HINTERFACEMODULE hModule);
 
 // Use these to get the factory function from either a loaded module or the current module.
 extern CreateInterfaceFn	Sys_GetFactory( HINTERFACEMODULE hModule );

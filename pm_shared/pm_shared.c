@@ -13,117 +13,55 @@
 *
 ****/
 
-
-#include "externalLibInclude.h"
-//#include <stdlib.h> // atoi
+// easyPrint methods are now available for C!
 
 
+#include "pm_shared.h"
+
+#include "external_lib_include.h"
 #include <assert.h>
 #include "mathlib.h"
 #include "const.h"
 #include "usercmd.h"
 #include "pm_defs.h"
-#include "pm_shared.h"
 #include "pm_movevars.h"
 #include "pm_debug.h"
+
+//MODDD - NO YA DONT.  To external_lib_include.h
+/*
 #include <stdio.h>  // NULL
 #include <math.h>   // sqrt
 #include <string.h> // strcpy
+#include <stdlib.h> // atoi
 #include <ctype.h>  // isspace
+*/
 
 //MODDD - new file.
 #include "pm_printout.h"
+// MODDD NOTE - we have a perfectly good source of several macro constants
+// and yet still, it wasn't included?
+#include "pm_materials.h"
 
 
 
-
-// easyPrint methods are now available for C!
-
-
+//MODDD - debug constant.  set to "1" (yes) to print out information during a fall concerning how far the player fell.
+#define DEBUG_PRINTFALL 0
 
 
-
-
-#ifdef CLIENT_DLL
-	// Spectator Mode
-	int		iJumpSpectator;
-	float	vJumpOrigin[3];
-	float	vJumpAngles[3];
-#endif
-
-static int pm_shared_initialized = 0;
-
-#pragma warning( disable : 4305 )
-
-typedef enum {mod_brush, mod_sprite, mod_alias, mod_studio} modtype_t;
-
-playermove_t *pmove = NULL;
-
-typedef struct
-{
-	int			planenum;
-	short		children[2];	// negative numbers are contents
-} dclipnode_t;
-
-typedef struct mplane_s
-{
-	vec3_t	normal;			// surface normal
-	float	dist;			// closest appoach to origin
-	byte	type;			// for texture axis selection and fast side tests
-	byte	signbits;		// signx + signy<<1 + signz<<1
-	byte	pad[2];
-} mplane_t;
-
-typedef struct hull_s
-{
-	dclipnode_t	*clipnodes;
-	mplane_t	*planes;
-	int			firstclipnode;
-	int			lastclipnode;
-	vec3_t		clip_mins;
-	vec3_t		clip_maxs;
-} hull_t;
 
 // Ducking time
 #define TIME_TO_DUCK	0.4
-#define VEC_DUCK_HULL_MIN	-18
-#define VEC_DUCK_HULL_MAX	18
 
-//MODDD - renamed to VEC_DUCK_VIEW_Z to avoid a conflict.
-#define VEC_DUCK_VIEW_Z		12
+#define PM_CHECKSTUCK_MINTIME 0.05  // Don't check again too quickly.
+// Only allow bunny jumping up to 1.7x server / player maxspeed setting
+#define BUNNYJUMP_MAX_SPEED_FACTOR 1.7f
 
-#define PM_DEAD_VIEWHEIGHT	-8
-
-//MODDD - edit
-//#define MAX_CLIMB_SPEED	200
-//130?
-#define MAX_CLIMB_SPEED 110
-#define MAX_CLIMB_SPEEDPRE 200    //old speed for being forced off a ladder sometimes?
-
-
-
+#define WJ_HEIGHT 8
 
 #define STUCK_MOVEUP 1
 #define STUCK_MOVEDOWN -1
-#define VEC_HULL_MIN		-36
-#define VEC_HULL_MAX		36
-#define VEC_VIEW			28
-#define	STOP_EPSILON	0.1
+#define STOP_EPSILON	0.1
 
-#define CTEXTURESMAX		512			// max number of textures loaded
-#define CBTEXTURENAMEMAX	13			// only load first n chars of name
-
-#define CHAR_TEX_CONCRETE	'C'			// texture types
-#define CHAR_TEX_METAL		'M'
-#define CHAR_TEX_DIRT		'D'
-#define CHAR_TEX_VENT		'V'
-#define CHAR_TEX_GRATE		'G'
-#define CHAR_TEX_TILE		'T'
-#define CHAR_TEX_SLOSH		'S'
-#define CHAR_TEX_WOOD		'W'
-#define CHAR_TEX_COMPUTER	'P'
-#define CHAR_TEX_GLASS		'Y'
-#define CHAR_TEX_FLESH		'F'
 
 #define STEP_CONCRETE	0		// default step sound
 #define STEP_METAL		1		// metal floor
@@ -135,46 +73,36 @@ typedef struct hull_s
 #define STEP_WADE		7		// wading in liquid
 #define STEP_LADDER		8		// climbing ladder
 
-#define PLAYER_FATAL_FALL_SPEED		1024// approx 60 feet
-#define PLAYER_MAX_SAFE_FALL_SPEED	580// approx 20 feet
-#define DAMAGE_FOR_FALL_SPEED		(float) 100 / ( PLAYER_FATAL_FALL_SPEED - PLAYER_MAX_SAFE_FALL_SPEED )// damage per unit per second.
-#define PLAYER_MIN_BOUNCE_SPEED		200
 
-//MODDDREMOVE
-//#define PLAYER_FALL_PUNCH_THRESHHOLD (float)350 // won't punch player's screen/make scrape noise unless player falling at least this fast.
-//~was modded to "100" at some point before.
-#define PLAYER_FALL_PUNCH_THRESHHOLD (float)100
+typedef struct
+{
+	int		planenum;
+	short		children[2];	// negative numbers are contents
+} dclipnode_t;
 
-#define PLAYER_FALL_PUNCH_TINY_THRESHHOLD (float)0.6f //MODDD : unused.
+typedef struct mplane_s
+{
+	vec3_t	normal;			// surface normal
+	float dist;			// closest appoach to origin
+	byte type;			// for texture axis selection and fast side tests
+	byte signbits;		// signx + signy<<1 + signz<<1
+	byte pad[2];
+} mplane_t;
+
+typedef struct hull_s
+{
+	dclipnode_t	*clipnodes;
+	mplane_t	*planes;
+	int		firstclipnode;
+	int		lastclipnode;
+	vec3_t		clip_mins;
+	vec3_t		clip_maxs;
+} hull_t;
+
+typedef enum { mod_brush, mod_sprite, mod_alias, mod_studio } modtype_t;
 
 
-#define PLAYER_LONGJUMP_SPEED 350 // how fast we longjump
-
-//MODDD - debug constant.  set to "1" (yes) to print out information during a fall concerning how far the player fell.
-#define DEBUG_PRINTFALL 0
-
-
-// double to float warning
-#pragma warning(disable : 4244)
-#define max(a, b)  (((a) > (b)) ? (a) : (b))
-#define min(a, b)  (((a) < (b)) ? (a) : (b))
-// up / down
-#define	PITCH	0
-// left / right
-#define	YAW		1
-// fall over
-#define	ROLL	2 
-
-#define MAX_CLIENTS 32
-
-#define	CONTENTS_CURRENT_0		-9
-#define	CONTENTS_CURRENT_90		-10
-#define	CONTENTS_CURRENT_180	-11
-#define	CONTENTS_CURRENT_270	-12
-#define	CONTENTS_CURRENT_UP		-13
-#define	CONTENTS_CURRENT_DOWN	-14
-
-#define CONTENTS_TRANSLUCENT	-15
+static int pm_shared_initialized = 0;
 
 static vec3_t rgv3tStuckTable[54];
 static int rgStuckLast[MAX_CLIENTS][2];
@@ -184,13 +112,22 @@ static int gcTextures = 0;
 static char grgszTextureName[CTEXTURESMAX][CBTEXTURENAMEMAX];	
 static char grgchTextureType[CTEXTURESMAX];
 
+playermove_t* pmove = NULL;
 int g_onladder = 0;
+
+#ifdef CLIENT_DLL
+// Spectator Mode
+int	iJumpSpectator;
+float vJumpOrigin[3];
+float vJumpAngles[3];
+#endif
 
 
 
 
 
 //MODDD - utility function.
+// Usefullness outside of this file really unknown though.
 float getSafeSqureRoot(float fltInput){
 	float toReturn;
 	if(fltInput < 0){
@@ -200,6 +137,7 @@ float getSafeSqureRoot(float fltInput){
 	}
 	return toReturn;
 }
+
 
 
 void PM_SwapTextures( int i, int j )
@@ -372,21 +310,15 @@ void PM_PlayStepSound( int step, float fvol )
 		pmove->Con_DPrintf("C444 %d\n", playerLadderMovement);
 	}
 	*/
-
-
-
-
 	
 	irand = pmove->RandomLong(0,1) + ( pmove->iStepLeft * 2 );
 
 	
-
-
 	// FIXME mp_footsteps needs to be a movevar
 	if ( pmove->multiplayer && !pmove->movevars->footsteps )
 		return;
 
-	VectorCopy( pmove->velocity, hvel );
+	VectorCopy_f( pmove->velocity, hvel );
 	hvel[2] = 0.0;
 
 	if ( pmove->multiplayer && ( !g_onladder && Length( hvel ) <= 220 ) )
@@ -542,8 +474,8 @@ void PM_CatagorizeTextureType( void )
 	vec3_t start, end;
 	const char *pTextureName;
 
-	VectorCopy( pmove->origin, start );
-	VectorCopy( pmove->origin, end );
+	VectorCopy_f( pmove->origin, start );
+	VectorCopy_f( pmove->origin, end );
 
 	// Straight down
 	end[2] -= 64;
@@ -573,7 +505,7 @@ void PM_CatagorizeTextureType( void )
 
 void PM_UpdateStepSound( void )
 {
-	int	fWalking;
+	int fWalking;
 	float fvol;
 	vec3_t knee;
 	vec3_t feet;
@@ -583,7 +515,7 @@ void PM_UpdateStepSound( void )
 	float velrun;
 	float velwalk;
 	float flduck;
-	int	fLadder;
+	int fLadder;
 	int step;
 
 	if ( pmove->flTimeStepSound > 0 )
@@ -622,9 +554,9 @@ void PM_UpdateStepSound( void )
 	{
 		fWalking = speed < velrun;		
 
-		VectorCopy( pmove->origin, center );
-		VectorCopy( pmove->origin, knee );
-		VectorCopy( pmove->origin, feet );
+		VectorCopy_f( pmove->origin, center );
+		VectorCopy_f( pmove->origin, knee );
+		VectorCopy_f( pmove->origin, feet );
 
 		height = pmove->player_maxs[ pmove->usehull ][ 2 ] - pmove->player_mins[ pmove->usehull ][ 2 ];
 
@@ -728,7 +660,7 @@ qboolean PM_AddToTouched(pmtrace_t tr, vec3_t impactvelocity)
 	if (i != pmove->numtouch)  // Already in list.
 		return false;
 
-	VectorCopy( impactvelocity, tr.deltavelocity );
+	VectorCopy_f( impactvelocity, tr.deltavelocity );
 
 	if (pmove->numtouch >= MAX_PHYSENTS)
 		pmove->Con_DPrintf("Too many entities were touched!\n");
@@ -746,7 +678,7 @@ See if the player has a bogus velocity value.
 */
 void PM_CheckVelocity ()
 {
-	int		i;
+	int	i;
 
 //
 // bound velocity
@@ -791,10 +723,10 @@ returns the blocked flags:
 */
 int PM_ClipVelocity (vec3_t in, vec3_t normal, vec3_t out, float overbounce)
 {
-	float	backoff;
-	float	change;
+	float backoff;
+	float change;
 	float angle;
-	int		i, blocked;
+	int	i, blocked;
 	
 	angle = normal[ 2 ];
 
@@ -806,7 +738,7 @@ int PM_ClipVelocity (vec3_t in, vec3_t normal, vec3_t out, float overbounce)
 	
 	// Determine how far along plane to slide based on incoming direction.
 	// Scale by overbounce factor.
-	backoff = DotProduct (in, normal) * overbounce;
+	backoff = DotProduct_f (in, normal) * overbounce;
 
 	for (i=0 ; i<3 ; i++)
 	{
@@ -823,7 +755,7 @@ int PM_ClipVelocity (vec3_t in, vec3_t normal, vec3_t out, float overbounce)
 
 void PM_AddCorrectGravity ()
 {
-	float	ent_gravity;
+	float ent_gravity;
 
 	if ( pmove->waterjumptime )
 		return;
@@ -845,7 +777,7 @@ void PM_AddCorrectGravity ()
 
 void PM_FixupGravityVelocity ()
 {
-	float	ent_gravity;
+	float ent_gravity;
 
 	if ( pmove->waterjumptime )
 		return;
@@ -870,25 +802,25 @@ The basic solid body movement clip that slides along multiple planes
 */
 int PM_FlyMove (void)
 {
-	int			bumpcount, numbumps;
+	int		bumpcount, numbumps;
 	vec3_t		dir;
-	float		d;
-	int			numplanes;
+	float	d;
+	int		numplanes;
 	vec3_t		planes[MAX_CLIP_PLANES];
 	vec3_t		primal_velocity, original_velocity;
 	vec3_t      new_velocity;
-	int			i, j;
+	int		i, j;
 	pmtrace_t	trace;
 	vec3_t		end;
-	float		time_left, allFraction;
-	int			blocked;
+	float	time_left, allFraction;
+	int		blocked;
 		
 	numbumps  = 4;           // Bump up to four times
 	
 	blocked   = 0;           // Assume not blocked
 	numplanes = 0;           //  and not sliding along any planes
-	VectorCopy (pmove->velocity, original_velocity);  // Store original velocity
-	VectorCopy (pmove->velocity, primal_velocity);
+	VectorCopy_f (pmove->velocity, original_velocity);  // Store original velocity
+	VectorCopy_f (pmove->velocity, primal_velocity);
 	
 	allFraction = 0;
 	time_left = pmove->frametime;   // Total time for this movement operation.
@@ -912,7 +844,7 @@ int PM_FlyMove (void)
 		//  are blocked by floor and wall.
 		if (trace.allsolid)
 		{	// entity is trapped in another solid
-			VectorCopy (vec3_origin, pmove->velocity);
+			VectorCopy_f (vec3_origin, pmove->velocity);
 			//Con_DPrintf("Trapped 4\n");
 			return 4;
 		}
@@ -922,8 +854,8 @@ int PM_FlyMove (void)
 		//  zero the plane counter.
 		if (trace.fraction > 0)
 		{	// actually covered some distance
-			VectorCopy (trace.endpos, pmove->origin);
-			VectorCopy (pmove->velocity, original_velocity);
+			VectorCopy_f (trace.endpos, pmove->origin);
+			VectorCopy_f (pmove->velocity, original_velocity);
 			numplanes = 0;
 		}
 
@@ -962,14 +894,14 @@ int PM_FlyMove (void)
 		if (numplanes >= MAX_CLIP_PLANES)
 		{	// this shouldn't really happen
 			//  Stop our movement if so.
-			VectorCopy (vec3_origin, pmove->velocity);
+			VectorCopy_f (vec3_origin, pmove->velocity);
 			//Con_DPrintf("Too many planes 4\n");
 
 			break;
 		}
 
 		// Set up next clipping plane
-		VectorCopy (trace.plane.normal, planes[numplanes]);
+		VectorCopy_f (trace.plane.normal, planes[numplanes]);
 		numplanes++;
 //
 
@@ -983,14 +915,14 @@ int PM_FlyMove (void)
 				if ( planes[i][2] > 0.7  )
 				{// floor or slope
 					PM_ClipVelocity( original_velocity, planes[i], new_velocity, 1 );
-					VectorCopy( new_velocity, original_velocity );
+					VectorCopy_f( new_velocity, original_velocity );
 				}
 				else															
 					PM_ClipVelocity( original_velocity, planes[i], new_velocity, 1.0 + pmove->movevars->bounce * (1-pmove->friction) );
 			}
 
-			VectorCopy( new_velocity, pmove->velocity );
-			VectorCopy( new_velocity, original_velocity );
+			VectorCopy_f( new_velocity, pmove->velocity );
+			VectorCopy_f( new_velocity, original_velocity );
 		}
 		else
 		{
@@ -1005,7 +937,7 @@ int PM_FlyMove (void)
 					if (j != i)
 					{
 						// Are we now moving against this plane?
-						if (DotProduct (pmove->velocity, planes[j]) < 0)
+						if (DotProduct_f (pmove->velocity, planes[j]) < 0)
 							break;	// not ok
 					}
 				if (j == numplanes)  // Didn't have to clip, so we're ok
@@ -1023,13 +955,13 @@ int PM_FlyMove (void)
 				if (numplanes != 2)
 				{
 					//Con_Printf ("clip velocity, numplanes == %i\n",numplanes);
-					VectorCopy (vec3_origin, pmove->velocity);
+					VectorCopy_f (vec3_origin, pmove->velocity);
 					//Con_DPrintf("Trapped 4\n");
 
 					break;
 				}
 				CrossProduct (planes[0], planes[1], dir);
-				d = DotProduct (dir, pmove->velocity);
+				d = DotProduct_f (dir, pmove->velocity);
 				VectorScale (dir, d, pmove->velocity );
 			}
 
@@ -1037,10 +969,10 @@ int PM_FlyMove (void)
 	// if original velocity is against the original velocity, stop dead
 	// to avoid tiny occilations in sloping corners
 	//
-			if (DotProduct (pmove->velocity, primal_velocity) <= 0)
+			if (DotProduct_f (pmove->velocity, primal_velocity) <= 0)
 			{
 				//Con_DPrintf("Back\n");
-				VectorCopy (vec3_origin, pmove->velocity);
+				VectorCopy_f (vec3_origin, pmove->velocity);
 				break;
 			}
 		}
@@ -1048,7 +980,7 @@ int PM_FlyMove (void)
 
 	if ( allFraction == 0 )
 	{
-		VectorCopy (vec3_origin, pmove->velocity);
+		VectorCopy_f (vec3_origin, pmove->velocity);
 		//Con_DPrintf( "Don't stick\n" );
 	}
 
@@ -1062,8 +994,8 @@ PM_Accelerate
 */
 void PM_Accelerate (vec3_t wishdir, float wishspeed, float accel)
 {
-	int			i;
-	float		addspeed, accelspeed, currentspeed;
+	int		i;
+	float	addspeed, accelspeed, currentspeed;
 
 	// Dead player's don't accelerate
 	if (pmove->dead)
@@ -1074,7 +1006,7 @@ void PM_Accelerate (vec3_t wishdir, float wishspeed, float accel)
 		return;
 
 	// See if we are changing direction a bit
-	currentspeed = DotProduct (pmove->velocity, wishdir);
+	currentspeed = DotProduct_f (pmove->velocity, wishdir);
 
 	// Reduce wishspeed by the amount of veer.
 	addspeed = wishspeed - currentspeed;
@@ -1111,15 +1043,15 @@ Only used by players.  Moves along the ground when player is a MOVETYPE_WALK.
 */
 void PM_WalkMove ()
 {
-	int			clip;
-	int			oldonground;
+	int		clip;
+	int		oldonground;
 	int i;
 
 	vec3_t		wishvel;
 	float       spd;
-	float		fmove, smove;
+	float	fmove, smove;
 	vec3_t		wishdir;
-	float		wishspeed;
+	float	wishspeed;
 
 	vec3_t dest, start;
 	vec3_t original, originalvel;
@@ -1184,7 +1116,7 @@ void PM_WalkMove ()
 
 	wishvel[2] = 0;             // Zero out z part of velocity
 
-	VectorCopy (wishvel, wishdir);   // Determine maginitude of speed of move
+	VectorCopy_f (wishvel, wishdir);   // Determine maginitude of speed of move
 	wishspeed = VectorNormalize(wishdir);
 
 //
@@ -1208,13 +1140,13 @@ void PM_WalkMove ()
 	pmove->velocity[2] = 0;
 
 	// Add in any base velocity to the current velocity.
-	VectorAdd (pmove->velocity, pmove->basevelocity, pmove->velocity );
+	VectorAdd_f (pmove->velocity, pmove->basevelocity, pmove->velocity );
 
 	spd = Length( pmove->velocity );
 
 	if (spd < 1.0f)
 	{
-		VectorClear( pmove->velocity );
+		VectorClear_f( pmove->velocity );
 		return;
 	}
 
@@ -1233,7 +1165,7 @@ void PM_WalkMove ()
 
 
 	// first try moving directly to the next spot
-	VectorCopy (dest, start);
+	VectorCopy_f (dest, start);
 	traceInclineDetection_Forward = pmove->PM_PlayerTrace (pmove->origin, dest, PM_NORMAL, -1 );
 	// If we made it all the way, then copy trace end
 	//  as new player position.
@@ -1247,7 +1179,7 @@ void PM_WalkMove ()
 
 		////////////////////////////////////////////////////////////////////////////////
 
-		VectorCopy (traceInclineDetection_Forward.endpos, pmove->origin);
+		VectorCopy_f (traceInclineDetection_Forward.endpos, pmove->origin);
 		return;
 	}
 
@@ -1262,24 +1194,24 @@ void PM_WalkMove ()
 
 	// Try sliding forward both on ground and up 16 pixels
 	//  take the move that goes farthest
-	VectorCopy (pmove->origin, original);       // Save out original pos &
-	VectorCopy (pmove->velocity, originalvel);  //  velocity.
+	VectorCopy_f (pmove->origin, original);       // Save out original pos &
+	VectorCopy_f (pmove->velocity, originalvel);  //  velocity.
 
 
 	// Slide move
 	clip = PM_FlyMove ();
 
 	// Copy the results out
-	VectorCopy (pmove->origin  , down);
-	VectorCopy (pmove->velocity, downvel);
+	VectorCopy_f (pmove->origin  , down);
+	VectorCopy_f (pmove->velocity, downvel);
 
 	// Reset original values.
-	VectorCopy (original, pmove->origin);
+	VectorCopy_f (original, pmove->origin);
 
-	VectorCopy (originalvel, pmove->velocity);
+	VectorCopy_f (originalvel, pmove->velocity);
 
 	// Start out up one stair height
-	VectorCopy (pmove->origin, dest);
+	VectorCopy_f (pmove->origin, dest);
 	dest[2] += pmove->movevars->stepsize;
 	
 	traceInclineDetection_Forward = pmove->PM_PlayerTrace (pmove->origin, dest, PM_NORMAL, -1 );
@@ -1288,7 +1220,7 @@ void PM_WalkMove ()
 	//  run another move try.
 	if (!traceInclineDetection_Forward.startsolid && !traceInclineDetection_Forward.allsolid)
 	{
-		VectorCopy (traceInclineDetection_Forward.endpos, pmove->origin);
+		VectorCopy_f (traceInclineDetection_Forward.endpos, pmove->origin);
 	}
 
 // slide move the rest of the way.
@@ -1296,7 +1228,7 @@ void PM_WalkMove ()
 
 // Now try going back down from the end point
 //  press down the stepheight
-	VectorCopy (pmove->origin, dest);
+	VectorCopy_f (pmove->origin, dest);
 	dest[2] -= pmove->movevars->stepsize;
 	
 	traceInclineDetection_Forward = pmove->PM_PlayerTrace (pmove->origin, dest, PM_NORMAL, -1 );
@@ -1316,12 +1248,12 @@ void PM_WalkMove ()
 	//MODDD NOTE - this might be what places us exactly at the ramp.
 	if (!traceInclineDetection_Forward.startsolid && !traceInclineDetection_Forward.allsolid)
 	{
-		VectorCopy (traceInclineDetection_Forward.endpos, pmove->origin);
+		VectorCopy_f (traceInclineDetection_Forward.endpos, pmove->origin);
 	}
 	// Copy this origion to up.
 	//MODDD NOTE - pmove->up being set below might be to help move up the incline more next frame? unsure.
 	//             Could be just to affect the updist calculation below too.
-	VectorCopy (pmove->origin, pmove->up);
+	VectorCopy_f (pmove->origin, pmove->up);
 
 	// decide which one went farther
 	downdist = (down[0] - original[0])*(down[0] - original[0])
@@ -1335,8 +1267,8 @@ void PM_WalkMove ()
 	{
 usedown:
 		//MODDD NOTE - I get picked for running into walls.  Or by the "usedown" skip above.
-		VectorCopy (down   , pmove->origin);
-		VectorCopy (downvel, pmove->velocity);
+		VectorCopy_f (down   , pmove->origin);
+		VectorCopy_f (downvel, pmove->velocity);
 	} else{ // copy z value from slide move
 
 		//MODDD NOTE - I get picked for moving into ramps to slide up them instead.
@@ -1347,8 +1279,8 @@ usedown:
 
 	/*
 	usedown:
-	VectorCopy (down   , pmove->origin);
-	VectorCopy (downvel, pmove->velocity);
+	VectorCopy_f (down   , pmove->origin);
+	VectorCopy_f (downvel, pmove->velocity);
 
 	pmove->velocity[2] = downvel[2];
 	*/
@@ -1364,10 +1296,10 @@ Handles both ground friction and water friction
 */
 void PM_Friction (void)
 {
-	float	*vel;
-	float	speed, newspeed, control;
-	float	friction;
-	float	drop;
+	float *vel;
+	float speed, newspeed, control;
+	float friction;
+	float drop;
 	vec3_t newvel;
 	
 	// If we are in water jump cycle, don't apply friction
@@ -1436,13 +1368,13 @@ void PM_Friction (void)
 	newvel[1] = vel[1] * newspeed;
 	newvel[2] = vel[2] * newspeed;
 
-	VectorCopy( newvel, pmove->velocity );
+	VectorCopy_f( newvel, pmove->velocity );
 }
 
 void PM_AirAccelerate (vec3_t wishdir, float wishspeed, float accel)
 {
-	int			i;
-	float		addspeed, accelspeed, currentspeed, wishspd = wishspeed;
+	int		i;
+	float	addspeed, accelspeed, currentspeed, wishspd = wishspeed;
 		
 	if (pmove->dead)
 		return;
@@ -1455,7 +1387,7 @@ void PM_AirAccelerate (vec3_t wishdir, float wishspeed, float accel)
 	if (wishspd > 30)
 		wishspd = 30;
 	// Determine veer amount
-	currentspeed = DotProduct (pmove->velocity, wishdir);
+	currentspeed = DotProduct_f (pmove->velocity, wishdir);
 	// See how much to add
 	addspeed = wishspd - currentspeed;
 	// If not adding any, done.
@@ -1483,9 +1415,9 @@ PM_WaterMove
 */
 void PM_WaterMove (void)
 {
-	int		i;
+	int	i;
 	vec3_t	wishvel;
-	float	wishspeed;
+	float wishspeed;
 	vec3_t	wishdir;
 	vec3_t	start, dest;
 	vec3_t  temp;
@@ -1512,7 +1444,7 @@ void PM_WaterMove (void)
 		wishvel[2] += pmove->cmd.upmove;
 
 	// Copy it over and determine speed
-	VectorCopy (wishvel, wishdir);
+	VectorCopy_f (wishvel, wishdir);
 	wishspeed = VectorNormalize(wishdir);
 
 	// Cap speed.
@@ -1525,9 +1457,9 @@ void PM_WaterMove (void)
 	// Slow us down a bit.
 	wishspeed *= 0.8;
 
-	VectorAdd (pmove->velocity, pmove->basevelocity, pmove->velocity);
+	VectorAdd_f (pmove->velocity, pmove->basevelocity, pmove->velocity);
 // Water friction
-	VectorCopy(pmove->velocity, temp);
+	VectorCopy_f(pmove->velocity, temp);
 	speed = VectorNormalize(temp);
 	if (speed)
 	{
@@ -1564,12 +1496,12 @@ void PM_WaterMove (void)
 // Now move
 // assume it is a stair or a slope, so press down from stepheight above
 	VectorMA (pmove->origin, pmove->frametime, pmove->velocity, dest);
-	VectorCopy (dest, start);
+	VectorCopy_f (dest, start);
 	start[2] += pmove->movevars->stepsize + 1;
 	trace = pmove->PM_PlayerTrace (start, dest, PM_NORMAL, -1 );
 	if (!trace.startsolid && !trace.allsolid)	// FIXME: check steep slope?
 	{	// walked up the step, so just keep result and exit
-		VectorCopy (trace.endpos, pmove->origin);
+		VectorCopy_f (trace.endpos, pmove->origin);
 		return;
 	}
 	
@@ -1586,11 +1518,11 @@ PM_AirMove
 */
 void PM_AirMove (void)
 {
-	int			i;
+	int		i;
 	vec3_t		wishvel;
-	float		fmove, smove;
+	float	fmove, smove;
 	vec3_t		wishdir;
-	float		wishspeed;
+	float	wishspeed;
 	float normalSpeedMult = 1;
 	// Copy movement amounts
 	fmove = pmove->cmd.forwardmove;
@@ -1618,7 +1550,7 @@ void PM_AirMove (void)
 	wishvel[2] = 0;             
 
 	 // Determine maginitude of speed of move
-	VectorCopy (wishvel, wishdir);  
+	VectorCopy_f (wishvel, wishdir);  
 	wishspeed = VectorNormalize(wishdir);
 
 	// Clamp to server defined max speed
@@ -1632,7 +1564,7 @@ void PM_AirMove (void)
 	PM_AirAccelerate (wishdir, wishspeed, pmove->movevars->airaccelerate);
 
 	// Add in any base velocity to the current velocity.
-	VectorAdd (pmove->velocity, pmove->basevelocity, pmove->velocity );
+	VectorAdd_f (pmove->velocity, pmove->basevelocity, pmove->velocity );
 
 	PM_FlyMove ();
 }
@@ -1653,10 +1585,10 @@ Sets pmove->waterlevel and pmove->watertype values.
 qboolean PM_CheckWater ()
 {
 	vec3_t	point;
-	int		cont;
-	int		truecont;
+	int	cont;
+	int	truecont;
 	float     height;
-	float		heightover2;
+	float	heightover2;
 
 
 	// Pick a spot just above the players feet.
@@ -1808,7 +1740,7 @@ void PM_CatagorizePosition (physent_t *pLadder)
 			//Solution?  Check to see if the player is on a ladder.  If so, don't do this!
 			//if (pmove->waterlevel < 2 && !tr.startsolid && !tr.allsolid)
 			if (pmove->waterlevel < 2 && !tr.startsolid && !tr.allsolid && pLadder != NULL)
-				VectorCopy (tr.endpos, pmove->origin);
+				VectorCopy_f (tr.endpos, pmove->origin);
 		}
 		
 		// Standing on an entity other than the world
@@ -1833,7 +1765,7 @@ int PM_GetRandomStuckOffsets(int nIndex, int server, vec3_t offset)
 	int idx;
 	idx = rgStuckLast[nIndex][server]++;
 
-	VectorCopy(rgv3tStuckTable[idx % 54], offset);
+	VectorCopy_f(rgv3tStuckTable[idx % 54], offset);
 
 	return (idx % 54);
 }
@@ -1852,7 +1784,6 @@ try nudging slightly on all axis to
 allow for the cut precision of the net coordinates
 =================
 */
-#define PM_CHECKSTUCK_MINTIME 0.05  // Don't check again too quickly.
 
 int PM_CheckStuck (void)
 {
@@ -1860,8 +1791,8 @@ int PM_CheckStuck (void)
 	vec3_t  offset;
 	vec3_t  test;
 	int     hitent;
-	int		idx;
-	float	fTime;
+	int	idx;
+	float fTime;
 	int i;
 	pmtrace_t traceresult;
 
@@ -1875,7 +1806,7 @@ int PM_CheckStuck (void)
 		return 0;
 	}
 
-	VectorCopy (pmove->origin, base);
+	VectorCopy_f (pmove->origin, base);
 
 	// 
 	// Deal with precision error in network.
@@ -1892,12 +1823,12 @@ int PM_CheckStuck (void)
 			{
 				i = PM_GetRandomStuckOffsets(pmove->player_index, pmove->server, offset);
 
-				VectorAdd(base, offset, test);
+				VectorAdd_f(base, offset, test);
 				if (pmove->PM_TestPlayerPosition (test, &traceresult ) == -1)
 				{
 					PM_ResetStuckOffsets( pmove->player_index, pmove->server );
 		
-					VectorCopy ( test, pmove->origin );
+					VectorCopy_f ( test, pmove->origin );
 					return 0;
 				}
 				nReps++;
@@ -1925,7 +1856,7 @@ int PM_CheckStuck (void)
 
 	i = PM_GetRandomStuckOffsets(pmove->player_index, pmove->server, offset);
 
-	VectorAdd(base, offset, test);
+	VectorAdd_f(base, offset, test);
 	if ( ( hitent = pmove->PM_TestPlayerPosition ( test, NULL ) ) == -1 )
 	{
 		//Con_DPrintf("Nudged\n");
@@ -1933,7 +1864,7 @@ int PM_CheckStuck (void)
 		PM_ResetStuckOffsets( pmove->player_index, pmove->server );
 
 		if (i >= 27)
-			VectorCopy ( test, pmove->origin );
+			VectorCopy_f ( test, pmove->origin );
 
 		return 0;
 	}
@@ -1954,14 +1885,14 @@ int PM_CheckStuck (void)
 			{
 				for ( y = -xyminmax; y <= xyminmax; y += xystep )
 				{
-					VectorCopy( base, test );
+					VectorCopy_f( base, test );
 					test[0] += x;
 					test[1] += y;
 					test[2] += z;
 
 					if ( pmove->PM_TestPlayerPosition ( test, NULL ) == -1 )
 					{
-						VectorCopy( test, pmove->origin );
+						VectorCopy_f( test, pmove->origin );
 						return 0;
 					}
 				}
@@ -1969,7 +1900,7 @@ int PM_CheckStuck (void)
 		}
 	}
 
-	//VectorCopy (base, pmove->origin);
+	//VectorCopy_f (base, pmove->origin);
 
 	return 1;
 }
@@ -1981,14 +1912,14 @@ PM_SpectatorMove
 */
 void PM_SpectatorMove (void)
 {
-	float	speed, drop, friction, control, newspeed;
+	float speed, drop, friction, control, newspeed;
 	//float   accel;
-	float	currentspeed, addspeed, accelspeed;
-	int			i;
+	float currentspeed, addspeed, accelspeed;
+	int		i;
 	vec3_t		wishvel;
-	float		fmove, smove;
+	float	fmove, smove;
 	vec3_t		wishdir;
-	float		wishspeed;
+	float	wishspeed;
 	// this routine keeps track of the spectators psoition
 	// there a two different main move types : track player or moce freely (OBS_ROAMING)
 	// doesn't need excate track position, only to generate PVS, so just copy
@@ -2001,9 +1932,9 @@ void PM_SpectatorMove (void)
 		// jump only in roaming mode
 		if ( iJumpSpectator )
 		{
-			VectorCopy( vJumpOrigin, pmove->origin );
-			VectorCopy( vJumpAngles, pmove->angles );
-			VectorCopy( vec3_origin, pmove->velocity );
+			VectorCopy_f( vJumpOrigin, pmove->origin );
+			VectorCopy_f( vJumpAngles, pmove->angles );
+			VectorCopy_f( vec3_origin, pmove->velocity );
 			iJumpSpectator	= 0;
 			return;
 		}
@@ -2013,7 +1944,8 @@ void PM_SpectatorMove (void)
 		speed = Length (pmove->velocity);
 		if (speed < 1)
 		{
-			VectorCopy (vec3_origin, pmove->velocity)
+			//MODDD - missing a semicolon?  Evidence of using the '_f' version.
+			VectorCopy_f(vec3_origin, pmove->velocity);
 		}
 		else
 		{
@@ -2045,7 +1977,7 @@ void PM_SpectatorMove (void)
 		}
 		wishvel[2] += pmove->cmd.upmove;
 
-		VectorCopy (wishvel, wishdir);
+		VectorCopy_f (wishvel, wishdir);
 		wishspeed = VectorNormalize(wishdir);
 
 		//
@@ -2057,7 +1989,7 @@ void PM_SpectatorMove (void)
 			wishspeed = pmove->movevars->spectatormaxspeed;
 		}
 
-		currentspeed = DotProduct(pmove->velocity, wishdir);
+		currentspeed = DotProduct_f(pmove->velocity, wishdir);
 		addspeed = wishspeed - currentspeed;
 		if (addspeed <= 0)
 			return;
@@ -2093,11 +2025,11 @@ void PM_SpectatorMove (void)
 			return;
 
 		// use targets position as own origin for PVS
-		VectorCopy( pmove->physents[target].angles, pmove->angles );
-		VectorCopy( pmove->physents[target].origin, pmove->origin );
+		VectorCopy_f( pmove->physents[target].angles, pmove->angles );
+		VectorCopy_f( pmove->physents[target].origin, pmove->origin );
 
 		// no velocity
-		VectorCopy( vec3_origin, pmove->velocity );
+		VectorCopy_f( vec3_origin, pmove->velocity );
 	}
 }
 
@@ -2130,7 +2062,7 @@ void PM_FixPlayerCrouchStuck( int direction )
 	if (hitent == -1 )
 		return;
 	
-	VectorCopy( pmove->origin, test );	
+	VectorCopy_f( pmove->origin, test );	
 	for ( i = 0; i < 36; i++ )
 	{
 		pmove->origin[2] += direction;
@@ -2139,7 +2071,7 @@ void PM_FixPlayerCrouchStuck( int direction )
 			return;
 	}
 
-	VectorCopy( test, pmove->origin ); // Failed
+	VectorCopy_f( test, pmove->origin ); // Failed
 }
 
 void PM_UnDuck( void )
@@ -2148,7 +2080,7 @@ void PM_UnDuck( void )
 	pmtrace_t trace;
 	vec3_t newOrigin;
 
-	VectorCopy( pmove->origin, newOrigin );
+	VectorCopy_f( pmove->origin, newOrigin );
 
 	if ( pmove->onground != -1 )
 	{
@@ -2176,10 +2108,10 @@ void PM_UnDuck( void )
 
 		pmove->flags &= ~FL_DUCKING;
 		pmove->bInDuck  = false;
-		pmove->view_ofs[2] = VEC_VIEW;
+		pmove->view_ofs[2] = VEC_VIEW_Z;
 		pmove->flDuckTime = 0;
 		
-		VectorCopy( newOrigin, pmove->origin );
+		VectorCopy_f( newOrigin, pmove->origin );
 
 		// Recatagorize position since ducking can change origin
 		PM_CatagorizePositionBASIC();
@@ -2265,11 +2197,11 @@ void PM_Duck( void )
 				}
 				else
 				{
-					float fMore = (VEC_DUCK_HULL_MIN - VEC_HULL_MIN);
+					float fMore = (VEC_DUCK_HULL_MIN_Z - VEC_HULL_MIN_Z);
 
 					// Calc parametric time
 					duckFraction = PM_SplineFraction( time, (1.0/TIME_TO_DUCK) );
-					pmove->view_ofs[2] = ((VEC_DUCK_VIEW_Z - fMore ) * duckFraction) + (VEC_VIEW * (1-duckFraction));
+					pmove->view_ofs[2] = ((VEC_DUCK_VIEW_Z - fMore ) * duckFraction) + (VEC_VIEW_Z * (1-duckFraction));
 				}
 			}
 		}
@@ -2306,14 +2238,14 @@ void PM_LadderMove( physent_t *pLadder )
 
 	pmove->PM_GetModelBounds( pLadder->model, modelmins, modelmaxs );
 
-	VectorAdd( modelmins, modelmaxs, ladderCenter );
+	VectorAdd_f( modelmins, modelmaxs, ladderCenter );
 	VectorScale( ladderCenter, 0.5, ladderCenter );
 
 	pmove->movetype = MOVETYPE_FLY;
 
 	// On ladder, convert movement to be relative to the ladder
 	
-	VectorCopy( pmove->origin, floor );
+	VectorCopy_f( pmove->origin, floor );
 	floor[2] += pmove->player_mins[pmove->usehull][2] - 1;
 
 
@@ -2444,20 +2376,20 @@ void PM_LadderMove( physent_t *pLadder )
 				// Perpendicular in the ladder plane
 	//					Vector perp = CrossProduct( Vector(0,0,1), trace.vecPlaneNormal );
 	//					perp = perp.Normalize();
-				VectorClear( tmp );
+				VectorClear_f( tmp );
 				tmp[2] = 1;
 				CrossProduct( tmp, trace.plane.normal, perp );
 				VectorNormalize( perp );
 				
 
 				// decompose velocity into ladder plane
-				normal = DotProduct( velocity, trace.plane.normal );
+				normal = DotProduct_f( velocity, trace.plane.normal );
 				// This is the velocity into the face of the ladder
 				VectorScale( trace.plane.normal, normal, cross );
 
 
 				// This is the player's additional velocity
-				VectorSubtract( velocity, cross, lateral );
+				VectorSubtract_f( velocity, cross, lateral );
 
 				// This turns the velocity into the face of the ladder into velocity that
 				// is roughly vertically perpendicular to the face of the ladder.
@@ -2489,13 +2421,13 @@ void PM_LadderMove( physent_t *pLadder )
 				/*
 				VectorScale( vpn, forward, velocity );
 				VectorMA( velocity, right, v_right, velocity );
-				VectorClear( tmp );
+				VectorClear_f( tmp );
 				tmp[2] = 1;
 				CrossProduct( tmp, trace.plane.normal, perp );
 				VectorNormalize( perp );
-				normal = DotProduct( velocity, trace.plane.normal );
+				normal = DotProduct_f( velocity, trace.plane.normal );
 				VectorScale( trace.plane.normal, normal, cross );
-				VectorSubtract( velocity, cross, lateral );
+				VectorSubtract_f( velocity, cross, lateral );
 				CrossProduct( trace.plane.normal, perp, tmp );
 				VectorMA( lateral, -normal, tmp, pmove->velocity );
 				*/
@@ -2527,22 +2459,15 @@ void PM_LadderMove( physent_t *pLadder )
 				}
 				
 
-
-
-
-
-
 				//NOTE::: this was found commented out!
 				//pev->velocity = lateral - (CrossProduct( trace.vecPlaneNormal, perp ) * normal);
 			}
 			else
 			{
-				VectorClear( pmove->velocity );
+				VectorClear_f( pmove->velocity );
 			}
 		}
 
-
-		
 
 		//HOW ABOUT NO
 		/*
@@ -2557,7 +2482,6 @@ void PM_LadderMove( physent_t *pLadder )
 		}
 		*/
 
-
 		if(pmove->iuser4 & FLAG_JUMPED){
 			filterediuser4 |= FLAG_JUMPED;
 		}
@@ -2569,10 +2493,10 @@ void PM_LadderMove( physent_t *pLadder )
 
 physent_t *PM_Ladder( void )
 {
-	int			i;
+	int		i;
 	physent_t	*pe;
 	hull_t		*hull;
-	int			num;
+	int		num;
 	vec3_t		test;
 
 	for ( i = 0; i < pmove->nummoveent; i++ )
@@ -2586,7 +2510,7 @@ physent_t *PM_Ladder( void )
 			num = hull->firstclipnode;
 
 			// Offset the test point appropriately for this hull.
-			VectorSubtract ( pmove->origin, test, test);
+			VectorSubtract_f ( pmove->origin, test, test);
 
 			// Test the player's hull for intersection with this model
 			if ( pmove->PM_HullPointContents (hull, num, test) == CONTENTS_EMPTY)
@@ -2631,7 +2555,7 @@ PM_AddGravity
 */
 void PM_AddGravity ()
 {
-	float	ent_gravity;
+	float ent_gravity;
 
 	if (pmove->gravity)
 		ent_gravity = pmove->gravity;
@@ -2656,11 +2580,11 @@ pmtrace_t PM_PushEntity (vec3_t push)
 	pmtrace_t	trace;
 	vec3_t	end;
 		
-	VectorAdd (pmove->origin, push, end);
+	VectorAdd_f (pmove->origin, push, end);
 
 	trace = pmove->PM_PlayerTrace (pmove->origin, end, PM_NORMAL, -1 );
 	
-	VectorCopy (trace.endpos, pmove->origin);
+	VectorCopy_f (trace.endpos, pmove->origin);
 
 	// So we can run impact function afterwards.
 	if (trace.fraction < 1.0 &&
@@ -2683,7 +2607,7 @@ void PM_Physics_Toss()
 {
 	pmtrace_t trace;
 	vec3_t	move;
-	float	backoff;
+	float backoff;
 
 	PM_CheckWater();
 
@@ -2709,11 +2633,11 @@ void PM_Physics_Toss()
 // move origin
 	// Base velocity is not properly accounted for since this entity will move again after the bounce without
 	// taking it into account
-	VectorAdd (pmove->velocity, pmove->basevelocity, pmove->velocity);
+	VectorAdd_f (pmove->velocity, pmove->basevelocity, pmove->velocity);
 	
 	PM_CheckVelocity();
 	VectorScale (pmove->velocity, pmove->frametime, move);
-	VectorSubtract (pmove->velocity, pmove->basevelocity, pmove->velocity);
+	VectorSubtract_f (pmove->velocity, pmove->basevelocity, pmove->velocity);
 
 	trace = PM_PushEntity (move);	// Should this clear basevelocity
 
@@ -2723,7 +2647,7 @@ void PM_Physics_Toss()
 	{	
 		// entity is trapped in another solid
 		pmove->onground = trace.ent;
-		VectorCopy (vec3_origin, pmove->velocity);
+		VectorCopy_f (vec3_origin, pmove->velocity);
 		return;
 	}
 	
@@ -2749,7 +2673,7 @@ void PM_Physics_Toss()
 		float vel;
 		vec3_t base;
 
-		VectorClear( base );
+		VectorClear_f( base );
 		if (pmove->velocity[2] < pmove->movevars->gravity * pmove->frametime)
 		{
 			// we're rolling on the ground, add static friction.
@@ -2757,21 +2681,22 @@ void PM_Physics_Toss()
 			pmove->velocity[2] = 0;
 		}
 
-		vel = DotProduct( pmove->velocity, pmove->velocity );
+		vel = DotProduct_f( pmove->velocity, pmove->velocity );
 
 		// Con_DPrintf("%f %f: %.0f %.0f %.0f\n", vel, trace.fraction, ent->velocity[0], ent->velocity[1], ent->velocity[2] );
 
 		if (vel < (30 * 30) || (pmove->movetype != MOVETYPE_BOUNCE && pmove->movetype != MOVETYPE_BOUNCEMISSILE))
 		{
 			pmove->onground = trace.ent;
-			VectorCopy (vec3_origin, pmove->velocity);
+			VectorCopy_f (vec3_origin, pmove->velocity);
 		}
 		else
 		{
 			VectorScale (pmove->velocity, (1.0 - trace.fraction) * pmove->frametime * 0.9, move);
 			trace = PM_PushEntity (move);
 		}
-		VectorSubtract( pmove->velocity, base, pmove->velocity )
+		//MODDD - missing a semicolon?  Evidence of using the '_f' version.
+		VectorSubtract_f(pmove->velocity, base, pmove->velocity);
 	}
 	
 // check for in water
@@ -2786,10 +2711,10 @@ PM_NoClip
 */
 void PM_NoClip()
 {
-	int			i;
+	int		i;
 	vec3_t		wishvel;
-	float		fmove, smove;
-//	float		currentspeed, addspeed, accelspeed;
+	float	fmove, smove;
+//	float	currentspeed, addspeed, accelspeed;
 
 
 	//qboolean superNoclipSpeed;
@@ -2837,12 +2762,9 @@ void PM_NoClip()
 	
 	// Zero out the velocity so that we don't accumulate a huge downward velocity from
 	//  gravity, etc.
-	VectorClear( pmove->velocity );
+	VectorClear_f( pmove->velocity );
 
 }
-
-// Only allow bunny jumping up to 1.7x server / player maxspeed setting
-#define BUNNYJUMP_MAX_SPEED_FACTOR 1.7f
 
 //-----------------------------------------------------------------------------
 // Purpose: Corrects bunny jumping ( where player initiates a bunny jump before other
@@ -3091,7 +3013,7 @@ void PM_Jump (void)
 PM_CheckWaterJump
 =============
 */
-#define WJ_HEIGHT 8
+
 void PM_CheckWaterJump (void)
 {
 	vec3_t	vecStart, vecEnd;
@@ -3099,7 +3021,7 @@ void PM_CheckWaterJump (void)
 	vec3_t	flatvelocity;
 	float curspeed;
 	pmtrace_t tr;
-	int		savehull;
+	int	savehull;
 	//MODDD
 	float jumpForceMulti;
 
@@ -3134,10 +3056,10 @@ void PM_CheckWaterJump (void)
 	VectorNormalize (flatforward);
 
 	// Are we backing into water from steps or something?  If so, don't pop forward
-	if ( curspeed != 0.0 && ( DotProduct( flatvelocity, flatforward ) < 0.0 ) )
+	if ( curspeed != 0.0 && ( DotProduct_f( flatvelocity, flatforward ) < 0.0 ) )
 		return;
 
-	VectorCopy( pmove->origin, vecStart );
+	VectorCopy_f( pmove->origin, vecStart );
 	vecStart[2] += WJ_HEIGHT;
 
 	VectorMA ( vecStart, 24, flatforward, vecEnd );
@@ -3255,14 +3177,10 @@ void PM_CheckFalling( void )
 #endif
 			//FALLFROMJUMP ?
 			if( !(pmove->iuser4 & FLAG_JUMPED)){
-
 					//UNSURE.  is this okay?
 					pmove->punchangle[ 0 ] = pmove->flFallVelocity * 0.009;	// punch z axis  ... no, that is the x axis.  leftover comment?
 					//fvol = 0;
-
 			}
-
-		
 		}
 		//NOTE: eh, what?
 		else if ( pmove->flFallVelocity < PLAYER_MIN_BOUNCE_SPEED )
@@ -3273,9 +3191,6 @@ void PM_CheckFalling( void )
 			fvol = 0;
 		}
 		
-
-
-
 
 		if ( fvol > 0.0 )
 		{
@@ -3307,7 +3222,6 @@ void PM_CheckFalling( void )
 			pmove->PM_PlaySound( CHAN_BODY, "player/pl_jumpland2.wav", 1, ATTN_NORM, 0, PITCH_NORM );
 		}
 
-		
 		//MODDD
 		//if(pmove->flFallVelocity != 0){
 			//pmove->oldbuttons &= ~FALLFROMJUMP;
@@ -3316,13 +3230,9 @@ void PM_CheckFalling( void )
 	}
 
 	if ( pmove->onground != -1 ) 
-	{	
-
-
+	{
 		pmove->flFallVelocity = 0;
-
 	}
-
 
 }
 
@@ -3371,7 +3281,7 @@ float PM_CalcRoll (vec3_t angles, vec3_t velocity, float rollangle, float rollsp
     
 	AngleVectors (angles, forward, right, up);
     
-	side = DotProduct (velocity, right);
+	side = DotProduct_f (velocity, right);
     
 	sign = side < 0 ? -1 : 1;
     
@@ -3399,7 +3309,7 @@ PM_DropPunchAngle
 */
 void PM_DropPunchAngle ( vec3_t punchangle )
 {
-	float	len;
+	float len;
 	
 	len = VectorNormalize ( punchangle );
 	len -= (10.0 + len * 0.5) * pmove->frametime;
@@ -3456,10 +3366,10 @@ void PM_CheckParamters( void )
 	// Take angles from command.
 	if ( !pmove->dead )
 	{
-		VectorCopy ( pmove->cmd.viewangles, v_angle );  
+		VectorCopy_f ( pmove->cmd.viewangles, v_angle );  
 
 		//MODDD - REMOVED.  Deemed unnecessary.  view.cpp already does this just fine.  COME HERE IF THERE ARE ANY BUGS THAT RESULT FROM THIS.
-		//VectorAdd( v_angle, pmove->punchangle, v_angle );
+		//VectorAdd_f( v_angle, pmove->punchangle, v_angle );
 
 		/*
 		if(pmove->server){
@@ -3476,7 +3386,7 @@ void PM_CheckParamters( void )
 	}
 	else
 	{
-		VectorCopy( pmove->oldangles, pmove->angles );
+		VectorCopy_f( pmove->oldangles, pmove->angles );
 	}
 
 	// Set dead player view_offset
@@ -3700,9 +3610,9 @@ void PM_PlayerMove ( qboolean server )
 		}
 		
 		// Perform the move accounting for any base velocity.
-		VectorAdd (pmove->velocity, pmove->basevelocity, pmove->velocity);
+		VectorAdd_f (pmove->velocity, pmove->basevelocity, pmove->velocity);
 		PM_FlyMove ();
-		VectorSubtract (pmove->velocity, pmove->basevelocity, pmove->velocity);
+		VectorSubtract_f (pmove->velocity, pmove->basevelocity, pmove->velocity);
 		break;
 
 	case MOVETYPE_WALK:
@@ -3750,7 +3660,7 @@ void PM_PlayerMove ( qboolean server )
 			// Perform regular water movement
 			PM_WaterMove();
 			
-			VectorSubtract (pmove->velocity, pmove->basevelocity, pmove->velocity);
+			VectorSubtract_f (pmove->velocity, pmove->basevelocity, pmove->velocity);
 
 			// Get a final position
 			PM_CatagorizePosition(pLadder);
@@ -3799,7 +3709,7 @@ void PM_PlayerMove ( qboolean server )
 			// Now pull the base velocity back out.
 			// Base velocity is set if you are on a moving object, like
 			//  a conveyor (or maybe another monster?)
-			VectorSubtract (pmove->velocity, pmove->basevelocity, pmove->velocity );
+			VectorSubtract_f (pmove->velocity, pmove->basevelocity, pmove->velocity );
 				
 			// Make sure velocity is valid.
 			PM_CheckVelocity();

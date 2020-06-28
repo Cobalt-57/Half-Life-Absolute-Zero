@@ -12,11 +12,11 @@
 #define NO_THREAD_NAMES
 #include "threads.h"
 
-#define	MAX_THREADS	64
+#define MAX_THREADS	64
 
-int		dispatch;
-int		workcount;
-int		oldf;
+int	dispatch;
+int	workcount;
+int	oldf;
 qboolean		pacifier;
 
 qboolean	threaded;
@@ -27,10 +27,10 @@ GetThreadWork
 
 =============
 */
-int	GetThreadWork (void)
+int GetThreadWork (void)
 {
-	int	r;
-	int	f;
+	int r;
+	int f;
 
 	ThreadLock ();
 
@@ -60,7 +60,7 @@ void (*workfunction) (int);
 
 void ThreadWorkerFunction (int threadnum)
 {
-	int		work;
+	int	work;
 
 	while (1)
 	{
@@ -87,11 +87,12 @@ WIN32
 */
 #ifdef WIN32
 
-#define	USED
+#define USED
 
-#include <windows.h>
+//MODDD - no need for this!  OS-related includes are handled globally now.
+//#include <windows.h>
 
-int		numthreads = -1;
+int	numthreads = -1;
 CRITICAL_SECTION		crit;
 static int enter;
 
@@ -138,10 +139,10 @@ RunThreadsOn
 */
 void RunThreadsOn (int workcnt, qboolean showpacifier, void(*func)(int))
 {
-	int		threadid[MAX_THREADS];
+	int	threadid[MAX_THREADS];
 	HANDLE	threadhandle[MAX_THREADS];
-	int		i;
-	int		start, end;
+	int	i;
+	int	start, end;
 
 	start = I_FloatTime ();
 	dispatch = 0;
@@ -186,9 +187,9 @@ OSF1
 */
 
 #ifdef __osf__
-#define	USED
+#define USED
 
-int		numthreads = 4;
+int	numthreads = 4;
 
 void ThreadSetDefault (void)
 {
@@ -220,12 +221,12 @@ RunThreadsOn
 */
 void RunThreadsOn (int workcnt, qboolean showpacifier, void(*func)(int))
 {
-	int		i;
+	int	i;
 	pthread_t	work_threads[MAX_THREADS];
 	pthread_addr_t	status;
 	pthread_attr_t	attrib;
 	pthread_mutexattr_t	mattrib;
-	int		start, end;
+	int	start, end;
 
 	start = I_FloatTime ();
 	dispatch = 0;
@@ -286,7 +287,7 @@ void RunThreadsOn (int workcnt, qboolean showpacifier, void(*func)(int))
 
 #ifndef USED
 
-int		numthreads = 1;
+int	numthreads = 1;
 
 void ThreadSetDefault (void)
 {
@@ -308,8 +309,8 @@ RunThreadsOn
 */
 void RunThreadsOn (int workcnt, qboolean showpacifier, void(*func)(int))
 {
-	int		i;
-	int		start, end;
+	int	i;
+	int	start, end;
 
 	dispatch = 0;
 	workcount = workcnt;

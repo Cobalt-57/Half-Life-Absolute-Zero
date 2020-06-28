@@ -1,4 +1,16 @@
 
+***PENDING DELETE:, almost empty files.
+cl_dll/hud_iface.h
+cl_dll/cl_dll.h
+cl_dll/cdll_dll.h
+
+dlls/extdll.h
+
+
+
+
+
+
 1) dlls/AI_BaseNPC_Schedule.cpp removed (clone of dlls/schedule.cpp)
 The file "AI_BaseNPC_Schedule.cpp" was deemed a clone of "schedule.cpp" in the starting SDK as is.  It has been removed.
 Unlike schedule.cpp, AI_BaseNPC_Schedule.cpp was aslo not in the Project's build-order (Visual Studio's solution explorer shows a list of any files involved in compiling.  schedule.cpp was present in the "hl" build path's "Source folder", while AI_BaseNPC_Schedule.cpp, which was nowhere to be found.
@@ -28,7 +40,7 @@ Again, as of now, these files are completely excluded. No problems noticed from 
 5) dlls/tempmonster.cpp has been deleted. It is made obsolete by the more complete monster template at dlls/help/templpatemonster.h & .cpp.
 -also, tempmonster.cpp has been removed from the serverside compile. Why was it part of that to begin with?
 
-6) cl_dll/util_vector.h and dlls/vector.h have been deleted and replaced with game_shared/NEW/vector_shared.h to remove redundancy. References to either updated.
+6) cl_dll/util_vector.h and dlls/vector.h have been deleted and merged into common/vector.h to remove redundancy. References to either updated.
 
 7) dlls/monsters.h deleted, most of its contents were moved to basemonster.h. The CGib class is now in cbase.h, and the CUSTOM_SCHEDULES, DEFINE_CUSTOM_SCHEDULES, and IMPLEMENT_CUSTOM_SCHEDULES preprocessor methods were moved to util_preprocessor.h.
 ~Also, Monsters.cpp has now been renamed to basemonster.cpp, which did not exist before.
@@ -50,6 +62,10 @@ QUESTIONABLE:
 -cl_dll/parsemsg.h was under the "Source" folder and not "Header"? Changed.
 -new file dlls/util_entity.cpp added to the client compile. These methods used to be inline and thus fully included in the client before (used to all in a .h file, now implementations moved to the .cpp file), not dummied out, and so should be present in the client as well.
 -cl_dll/in_defs.h deleted.  Tiny, and the PITCH, etc. constants may as well be shared (util_shared.h).
+-dlls/h_ai.cpp removed.  Not many methods and most global variables inside were ignored, methods moved to util.h/cpp
+-cl_dll/hud_msg.cpp deleted.  The new 'custom_message.h/.cpp' files may as well absorb it at this point.
+-common/nowin.h removed.  It only included 'unistd.h' and this is handled by external_lib_include.h now.
+
 
 ---Various files across cl_dll and dlls moved to "not_compiled" subdirectories. These files are never included or involved in the compile, consider deleting if everything in them is redundant, irrelevant or has no meaningful insights to early development.
  

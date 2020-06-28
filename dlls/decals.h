@@ -70,7 +70,7 @@ enum decal_e
 typedef struct 
 {
 	char	*name;
-	int		index;
+	int	index;
 } DLL_DECALLIST;
 
 

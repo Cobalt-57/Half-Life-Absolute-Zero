@@ -8,62 +8,64 @@
 *
 ****/
 
+//MODDD - IMPORTANT NOTE!
+// This file is no longer included by the cl_dll or dlls projects.
+// Instead see common/mathlib.h.
+// The file "pm_shared/pm_math.c" is incuded by the compile, but utils/common/mathlib.c is not.
+
+
+
 #ifndef __MATHLIB__
 #define __MATHLIB__
 
 // mathlib.h
 
 #include <math.h>
+//MODDD - new include. Leave any vector-related defines/typedefs to this file instead.
+//#include "vector.h"  //common/vector.h
+// nah, go all-out.  const it is.  it has M_PI and Q_PI now.
+#include "const.h"
+
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#ifdef DOUBLEVEC_T
-typedef double vec_t;
-#else
-typedef float vec_t;
-#endif
-typedef vec_t vec3_t[3];	// x,y,z
-typedef vec_t vec4_t[4];	// x,y,z,w
+//MODDD - vector-related defines moved to common/vector.h
 
-#define	SIDE_FRONT		0
-#define	SIDE_ON			2
-#define	SIDE_BACK		1
-#define	SIDE_CROSS		-2
-
-#define	Q_PI	3.14159265358979323846
+#define SIDE_FRONT		0
+#define SIDE_ON			2
+#define SIDE_BACK		1
+#define SIDE_CROSS		-2
 
 extern vec3_t vec3_origin;
 
 // Use this definition globally
-#define	ON_EPSILON		0.01
-#define	EQUAL_EPSILON	0.001
+#define ON_EPSILON		0.01
+#define EQUAL_EPSILON	0.001
 
-int VectorCompare (vec3_t v1, vec3_t v2);
 
-#define DotProduct(x,y) ((x)[0]*(y)[0]+(x)[1]*(y)[1]+(x)[2]*(y)[2])
-#define VectorFill(a,b) { (a)[0]=(b); (a)[1]=(b); (a)[2]=(b);}
-#define VectorAvg(a) ( ( (a)[0] + (a)[1] + (a)[2] ) / 3 )
-#define VectorSubtract(a,b,c) {(c)[0]=(a)[0]-(b)[0];(c)[1]=(a)[1]-(b)[1];(c)[2]=(a)[2]-(b)[2];}
-#define VectorAdd(a,b,c) {(c)[0]=(a)[0]+(b)[0];(c)[1]=(a)[1]+(b)[1];(c)[2]=(a)[2]+(b)[2];}
-#define VectorCopy(a,b) {(b)[0]=(a)[0];(b)[1]=(a)[1];(b)[2]=(a)[2];}
-#define VectorScale(a,b,c) {(c)[0]=(b)*(a)[0];(c)[1]=(b)*(a)[1];(c)[2]=(b)*(a)[2];}
-
-vec_t Q_rint (vec_t in);
+//MODDD - many vector-related defines removed.  These below were never even called.
+// See more notes in common/mathlib.h (not utils/...).
+/*
 vec_t _DotProduct (vec3_t v1, vec3_t v2);
 void _VectorSubtract (vec3_t va, vec3_t vb, vec3_t out);
 void _VectorAdd (vec3_t va, vec3_t vb, vec3_t out);
 void _VectorCopy (vec3_t in, vec3_t out);
 void _VectorScale (vec3_t v, vec_t scale, vec3_t out);
+*/
 
+
+int VectorCompare (vec3_t v1, vec3_t v2);
 double VectorLength(vec3_t v);
-
 void VectorMA (vec3_t va, double scale, vec3_t vb, vec3_t vc);
-
 void CrossProduct (vec3_t v1, vec3_t v2, vec3_t cross);
 vec_t VectorNormalize (vec3_t v);
 void VectorInverse (vec3_t v);
+
+
+
+vec_t Q_rint(vec_t in);
 
 void ClearBounds (vec3_t mins, vec3_t maxs);
 void AddPointToBounds (vec3_t v, vec3_t mins, vec3_t maxs);

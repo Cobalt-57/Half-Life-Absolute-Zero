@@ -30,7 +30,7 @@ class VGUIAPI Frame : public Panel
   virtual Panel* getClient();
   virtual void   setTitle(const char* title);
   virtual void   getTitle(char* buf,int bufLen);
-  virtual void	 setMoveable(bool state);
+  virtual void  setMoveable(bool state);
   virtual void   setSizeable(bool state);
   virtual bool   isMoveable();
   virtual bool   isSizeable();

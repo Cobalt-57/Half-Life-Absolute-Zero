@@ -16,7 +16,7 @@
 //  hud_update.cpp
 //
 
-#include "externalLibInclude.h"
+#include "external_lib_include.h"
 //#include <stdlib.h>
 
 #include <math.h>

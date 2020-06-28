@@ -1,6 +1,7 @@
 /.vs
 /ipch
 /src_dll.sdf
+/src_dll.suo
 /cl_dll/Debug
 /cl_dll/Release
 /dlls/Debug

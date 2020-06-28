@@ -14,23 +14,23 @@
 ****/
 // pm_math.c -- math primitives
 
+#include "external_lib_include.h"
 #include "mathlib.h"
 #include "const.h"
-#include <math.h>
+//MODDD - see external_lib_include.h
+//#include <math.h>
 
-// up / down
-#define	PITCH	0
-// left / right
-#define	YAW		1
-// fall over
-#define	ROLL	2 
-
-#pragma warning(disable : 4244)
 
 vec3_t vec3_origin = {0,0,0};
+//MODDD NOTE - or this was as ween in cl_util.cpp?  If vec3_t isn't thought of as a
+// vector class then above might make more sense anyway.
+//vec3_t vec3_origin( 0, 0, 0 );
+
+
+
 int nanmask = 255<<23;
 
-float	anglemod(float a)
+float anglemod(float a)
 {
 	a = (360.0/65536) * ((int)(a*(65536/360.0)) & 65535);
 	return a;
@@ -38,8 +38,8 @@ float	anglemod(float a)
 
 void AngleVectors (const vec3_t angles, vec3_t forward, vec3_t right, vec3_t up)
 {
-	float		angle;
-	float		sr, sp, sy, cr, cp, cy;
+	float	angle;
+	float	sr, sp, sy, cr, cp, cy;
 	
 	angle = angles[YAW] * (M_PI*2 / 360);
 	sy = sin(angle);
@@ -73,8 +73,8 @@ void AngleVectors (const vec3_t angles, vec3_t forward, vec3_t right, vec3_t up)
 
 void AngleVectorsTranspose (const vec3_t angles, vec3_t forward, vec3_t right, vec3_t up)
 {
-	float		angle;
-	float		sr, sp, sy, cr, cp, cy;
+	float	angle;
+	float	sr, sp, sy, cr, cp, cy;
 	
 	angle = angles[YAW] * (M_PI*2 / 360);
 	sy = sin(angle);
@@ -109,8 +109,8 @@ void AngleVectorsTranspose (const vec3_t angles, vec3_t forward, vec3_t right, v
 
 void AngleMatrix (const vec3_t angles, float (*matrix)[4] )
 {
-	float		angle;
-	float		sr, sp, sy, cr, cp, cy;
+	float	angle;
+	float	sr, sp, sy, cr, cp, cy;
 	
 	angle = angles[YAW] * (M_PI*2 / 360);
 	sy = sin(angle);
@@ -139,8 +139,8 @@ void AngleMatrix (const vec3_t angles, float (*matrix)[4] )
 
 void AngleIMatrix (const vec3_t angles, float matrix[3][4] )
 {
-	float		angle;
-	float		sr, sp, sy, cr, cp, cy;
+	float	angle;
+	float	sr, sp, sy, cr, cp, cy;
 	
 	angle = angles[YAW] * (M_PI*2 / 360);
 	sy = sin(angle);
@@ -167,7 +167,10 @@ void AngleIMatrix (const vec3_t angles, float matrix[3][4] )
 	matrix[2][3] = 0.0;
 }
 
-void NormalizeAngles( float *angles )
+//MODDD - wait.  Why is this using "float* " for type when all others use vec3_t ?
+// CHANGED.
+//MODDD - TEST66
+void NormalizeAngles(vec3_t angles )
 {
 	int i;
 	// Normalize angles
@@ -193,7 +196,8 @@ FIXME:  Use Quaternions to avoid discontinuities
 Frac is 0.0 to 1.0 ( i.e., should probably be clamped, but doesn't have to be )
 ===================
 */
-void InterpolateAngles( float *start, float *end, float *output, float frac )
+//MODDD - TEST66
+void InterpolateAngles(vec3_t start, vec3_t end, vec3_t output, float frac )
 {
 	int i;
 	float ang1, ang2;
@@ -230,6 +234,7 @@ AngleBetweenVectors
 
 ===================
 */
+//MODDD - TEST66... oh wait, already was vec3_t here.  Go figure.
 float AngleBetweenVectors( const vec3_t v1, const vec3_t v2 )
 {
 	float angle;
@@ -239,7 +244,7 @@ float AngleBetweenVectors( const vec3_t v1, const vec3_t v2 )
 	if ( !l1 || !l2 )
 		return 0.0f;
 
-	angle = acos( DotProduct( v1, v2 ) ) / (l1*l2);
+	angle = acos( DotProduct_f( v1, v2 ) ) / (l1*l2);
 	angle = ( angle  * 180.0f ) / M_PI;
 
 	return angle;
@@ -248,15 +253,15 @@ float AngleBetweenVectors( const vec3_t v1, const vec3_t v2 )
 
 void VectorTransform (const vec3_t in1, float in2[3][4], vec3_t out)
 {
-	out[0] = DotProduct(in1, in2[0]) + in2[0][3];
-	out[1] = DotProduct(in1, in2[1]) + in2[1][3];
-	out[2] = DotProduct(in1, in2[2]) + in2[2][3];
+	out[0] = DotProduct_f(in1, in2[0]) + in2[0][3];
+	out[1] = DotProduct_f(in1, in2[1]) + in2[1][3];
+	out[2] = DotProduct_f(in1, in2[2]) + in2[2][3];
 }
 
 
 int VectorCompare (const vec3_t v1, const vec3_t v2)
 {
-	int		i;
+	int	i;
 	
 	for (i=0 ; i<3 ; i++)
 		if (v1[i] != v2[i])
@@ -273,6 +278,7 @@ void VectorMA (const vec3_t veca, float scale, const vec3_t vecb, vec3_t vecc)
 }
 
 
+/*
 vec_t _DotProduct (vec3_t v1, vec3_t v2)
 {
 	return v1[0]*v2[0] + v1[1]*v2[1] + v1[2]*v2[2];
@@ -298,6 +304,7 @@ void _VectorCopy (vec3_t in, vec3_t out)
 	out[1] = in[1];
 	out[2] = in[2];
 }
+*/
 
 void CrossProduct (const vec3_t v1, const vec3_t v2, vec3_t cross)
 {
@@ -306,12 +313,15 @@ void CrossProduct (const vec3_t v1, const vec3_t v2, vec3_t cross)
 	cross[2] = v1[0]*v2[1] - v1[1]*v2[0];
 }
 
-double sqrt(double x);
+//MODDD - what was the point of this??
+// If we rely on the OS to give this method, fine.  Doing this without ever defining it
+// in the project's code just seems wonky.
+//double sqrt(double x);
 
 float Length(const vec3_t v)
 {
-	int		i;
-	float	length = 0.0f;
+	int	i;
+	float length = 0.0f;
 		
 	for (i=0 ; i< 3 ; i++)
 		length += v[i]*v[i];
@@ -323,13 +333,13 @@ float Length(const vec3_t v)
 float Distance(const vec3_t v1, const vec3_t v2)
 {
 	vec3_t d;
-	VectorSubtract(v2,v1,d);
+	VectorSubtract_f(v2,v1,d);
 	return Length(d);
 }
 
 float VectorNormalize (vec3_t v)
 {
-	float	length, ilength;
+	float length, ilength;
 
 	length = v[0]*v[0] + v[1]*v[1] + v[2]*v[2];
 	length = sqrt (length);		// FIXME
@@ -394,7 +404,7 @@ void VectorMatrix( vec3_t forward, vec3_t right, vec3_t up)
 
 void VectorAngles( const vec3_t forward, vec3_t angles )
 {
-	float	tmp, yaw, pitch;
+	float tmp, yaw, pitch;
 	
 	if (forward[1] == 0 && forward[0] == 0)
 	{

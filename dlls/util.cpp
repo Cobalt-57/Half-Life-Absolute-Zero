@@ -30,26 +30,88 @@
 #include "player.h"
 #include "weapons.h"
 #include "gamerules.h"
-
-
-
+#include "game.h"
 
 #include "turret.h" //to call the turret class's static model references for a possible re-precache at a map/level change.
 #include "barnacle.h" //to reset its static standard gib var.
 #include "squidspit.h" //precache its model in a way that stores its index to a static integer. Like retail did.
 
-
 #include "trains.h"
-
 #include "util_debugdraw.h"
 #include "nodes.h"
 #include "lights.h"
 
 
+//EASY_CVAR_EXTERN(flashLightSpawnInterval)
+EASY_CVAR_EXTERN(flashLightDurationMin)
+EASY_CVAR_EXTERN(flashLightDurationMax)
+EASY_CVAR_EXTERN(flashLightRadiusMin)
+EASY_CVAR_EXTERN(flashLightRadiusMax)
+EASY_CVAR_EXTERN(flashLightSpawnDistHori)
+EASY_CVAR_EXTERN(flashLightSpawnDistVertMin)
+EASY_CVAR_EXTERN(flashLightSpawnDistVertMax)
+EASY_CVAR_EXTERN(flashLightMultiColor)
+
+EASY_CVAR_EXTERN(germanCensorship)
+
+EASY_CVAR_EXTERN(sparksEnvMulti)
+EASY_CVAR_EXTERN(shrapRand)
+EASY_CVAR_EXTERN(shrapRandHeightExtra)
+EASY_CVAR_EXTERN(shrapMode)
+EASY_CVAR_EXTERN(explosionShrapnelMulti)
+EASY_CVAR_EXTERN(cl_explosion)
+EASY_CVAR_EXTERN(sparksExplosionMulti)
+
+EASY_CVAR_EXTERN(muteRicochetSound)
+EASY_CVAR_EXTERN(fleshhitmakessound)
+EASY_CVAR_EXTERN(quakeExplosionSound)
+
+EASY_CVAR_EXTERN(meleeDrawBloodModeA)
+EASY_CVAR_EXTERN(meleeDrawBloodModeB)
+EASY_CVAR_EXTERN(meleeDrawBloodModeBFix)
+EASY_CVAR_EXTERN(meleeDrawBloodModeAOffset)
+EASY_CVAR_EXTERN(meleeDrawBloodModeBOffset)
+
+EASY_CVAR_EXTERN(sparksAllMulti)
+
+EASY_CVAR_EXTERN(hgruntPrintout)
+EASY_CVAR_EXTERN(panthereyePrintout)
+EASY_CVAR_EXTERN(squadmonsterPrintout)
+EASY_CVAR_EXTERN(hassaultPrintout)
+EASY_CVAR_EXTERN(gargantuaPrintout)
+EASY_CVAR_EXTERN(barnaclePrintout)
+EASY_CVAR_EXTERN(houndeyePrintout)
+
+EASY_CVAR_EXTERN(canDropInSinglePlayer)
+EASY_CVAR_EXTERN(useAlphaSparks)
+EASY_CVAR_EXTERN(weaponSelectUsesReloadSounds)
+EASY_CVAR_EXTERN(cl_bullsquidspit)
+EASY_CVAR_EXTERN(cl_hornetspiral)
+EASY_CVAR_EXTERN(mutePlayerPainSounds)
+EASY_CVAR_EXTERN(playerBulletHitEffectForceServer)
+EASY_CVAR_EXTERN(playerWeaponSpreadMode)
+EASY_CVAR_EXTERN(sentryCanGib)
+EASY_CVAR_EXTERN(miniturretCanGib)
+EASY_CVAR_EXTERN(turretCanGib)
+EASY_CVAR_EXTERN(soundSentenceSave)
+EASY_CVAR_EXTERN(pissedNPCs)
 
 
+//extern int giPrecacheGrunt;
+extern DLL_GLOBAL short g_sModelIndexBubbles;// holds the index for the bubbles model
+extern DLL_GLOBAL int g_iSkillLevel;
+extern DLL_GLOBAL short g_sModelIndexLaser;// holds the index for the laser beam
 
 
+#define HUMAN_GIB_COUNT			6
+#define ALIEN_GIB_COUNT			4
+#define GERMAN_GIB_COUNT		11
+
+#define ENTVARS_COUNT		(sizeof(gEntvarsDescription)/sizeof(gEntvarsDescription[0]))
+
+#define SWAP(a,b,temp)	((temp)=(a),(a)=(b),(b)=(temp))
+
+EASY_CVAR_DECLARATION_SERVER_MASS
 
 
 //MODDD - event ID's.
@@ -71,61 +133,18 @@ short g_sGaussBallSprite = 0;
 short g_sBallVomitSprite = 0;
 short g_sBallForceFieldSprite = 0;
 
-
-/*
-//get the balls.
-//do you even do anything here anymore?
-extern unsigned short g_sCustomBalls;
-extern unsigned short g_quakeExplosionEffect;
-extern unsigned short g_decalGunshotCustomEvent;
-extern short g_sGaussBallSprite;
-extern short g_sBallVomitSprite;
-extern short g_sBallForceFieldSprite;
-*/
-
-
-
-
-
-
-
-
-
-extern int giPrecacheGrunt;
-
-
-
-
-
 int global_useSentenceSave = 0;   //This is for script only, used to make mass-recognizing lots of sound precache calls --> sentances easier.
-
-
-
-EASY_CVAR_EXTERN(soundSentenceSave)
-EASY_CVAR_EXTERN(pissedNPCs)
-
 
 
 //MODDD - keep track of "sv_cheats".
 cvar_t* cvar_sv_cheats = 0;
 
-
-
-EASY_CVAR_DECLARATION_SERVER_MASS
-
-
 float forceWorldLightOffMem = -1;
-
-
-
-
 
 //VITAL!!!
 BOOL globalPSEUDO_queueClientSendoff = FALSE;
 
-
 float globalPSEUDO_cameraMode = -1;
-
 float globalPSEUDO_forceFirstPersonIdleDelay = 1;
 
 float globalPSEUDO_canApplyGermanCensorship = 0;
@@ -137,88 +156,28 @@ float globalPSEUDO_cl_bullsquidspit = -1;
 float globalPSEUDO_cl_hornetspiral = -1;
 float globalPSEUDO_cl_hornettrail = -1;
 
-
 BOOL globalPSEUDO_germanModel_hgibFound = FALSE;
 BOOL globalPSEUDO_germanModel_scientistFound = FALSE;
 BOOL globalPSEUDO_germanModel_barneyFound = FALSE;
 BOOL globalPSEUDO_germanModel_hgruntFound = FALSE;
 BOOL globalPSEUDO_germanModel_hassaultFound = FALSE;
 
+//MODDD - moved from player.
+int giPrecacheGrunt = 0;
 
+BOOL loadedGame = FALSE;
 
-//MODDD - EXTERN!
+//float previousFrameTime;
+BOOL gamePaused = FALSE;
 
+cvar_t* cvar_skill = NULL;
+//HEY, already have something like this: g_iSkillLevel!!!
+//float global_skill = -1;
 
-extern unsigned short g_sFreakyLight;
+BOOL queueSkillUpdate = FALSE;
 
-//EASY_CVAR_EXTERN(flashLightSpawnInterval)
-EASY_CVAR_EXTERN(flashLightDurationMin)
-EASY_CVAR_EXTERN(flashLightDurationMax)
-EASY_CVAR_EXTERN(flashLightRadiusMin)
-EASY_CVAR_EXTERN(flashLightRadiusMax)
-EASY_CVAR_EXTERN(flashLightSpawnDistHori)
-EASY_CVAR_EXTERN(flashLightSpawnDistVertMin)
-EASY_CVAR_EXTERN(flashLightSpawnDistVertMax)
-EASY_CVAR_EXTERN(flashLightMultiColor)
+BOOL queueYMG_stopSend = FALSE;
 
-EASY_CVAR_EXTERN(germanCensorship)
-
-EASY_CVAR_EXTERN(sparksEnvMulti)
-
-EASY_CVAR_EXTERN(shrapRand)
-EASY_CVAR_EXTERN(shrapRandHeightExtra)
-EASY_CVAR_EXTERN(shrapMode)
-EASY_CVAR_EXTERN(explosionShrapnelMulti)
-EASY_CVAR_EXTERN(cl_explosion)
-EASY_CVAR_EXTERN(sparksExplosionMulti)
-
-EASY_CVAR_EXTERN(muteRicochetSound)
-EASY_CVAR_EXTERN(fleshhitmakessound)
-
-EASY_CVAR_EXTERN(quakeExplosionSound)
-
-EASY_CVAR_EXTERN(meleeDrawBloodModeA)
-EASY_CVAR_EXTERN(meleeDrawBloodModeB)
-EASY_CVAR_EXTERN(meleeDrawBloodModeBFix)
-
-EASY_CVAR_EXTERN(meleeDrawBloodModeAOffset)
-EASY_CVAR_EXTERN(meleeDrawBloodModeBOffset)
-
-EASY_CVAR_EXTERN(sparksAllMulti)
-
-
-
-
-EASY_CVAR_EXTERN(hgruntPrintout)
-EASY_CVAR_EXTERN(panthereyePrintout)
-EASY_CVAR_EXTERN(squadmonsterPrintout)
-EASY_CVAR_EXTERN(hassaultPrintout)
-EASY_CVAR_EXTERN(gargantuaPrintout)
-EASY_CVAR_EXTERN(barnaclePrintout)
-EASY_CVAR_EXTERN(houndeyePrintout)
-
-EASY_CVAR_EXTERN(canDropInSinglePlayer)
-
-EASY_CVAR_EXTERN(useAlphaSparks)
-EASY_CVAR_EXTERN(weaponSelectUsesReloadSounds)
-
-EASY_CVAR_EXTERN(cl_bullsquidspit)
-EASY_CVAR_EXTERN(cl_hornetspiral)
-//extern cvar_t* CVAR_cl_hornetspiral;
-
-
-EASY_CVAR_EXTERN(mutePlayerPainSounds)
-EASY_CVAR_EXTERN(playerBulletHitEffectForceServer)
-EASY_CVAR_EXTERN(playerWeaponSpreadMode)
-
-EASY_CVAR_EXTERN(sentryCanGib)
-EASY_CVAR_EXTERN(miniturretCanGib)
-EASY_CVAR_EXTERN(turretCanGib)
-
-
-#define	HUMAN_GIB_COUNT			6
-#define ALIEN_GIB_COUNT			4
-#define GERMAN_GIB_COUNT		11
 
 
 /*
@@ -238,35 +197,6 @@ GibInfo_t aryGibInfo[] = {
 	{"models/metalgibs.mdl", 1, 5, BLOOD_COLOR_BLACK},
 	{"models/shrapnel.mdl", 0, 2, BLOOD_COLOR_BLACK},
 };
-
-
-extern DLL_GLOBAL int		g_iSkillLevel;
-
-extern DLL_GLOBAL	short	g_sModelIndexLaser;// holds the index for the laser beam
-
-
-
-
-
-
-//MODDD - moved from player.
-int giPrecacheGrunt = 0;
-
-
-BOOL loadedGame = FALSE;
-
-//float previousFrameTime;
-BOOL gamePaused = FALSE;
-
-
-cvar_t* cvar_skill = NULL;
-//HEY, already have something like this: g_iSkillLevel!!!
-//float global_skill = -1;
-
-BOOL queueSkillUpdate = FALSE;
-
-
-
 
 
 
@@ -307,12 +237,6 @@ void U_Srand( unsigned int seed )
 
 
 
-
-
-
-
-
-
 float UTIL_WeaponTimeBase( void )
 {
 #if defined( CLIENT_WEAPONS )
@@ -321,14 +245,6 @@ float UTIL_WeaponTimeBase( void )
 	return gpGlobals->time;
 #endif
 }
-
-
-
-
-
-
-
-
 
 
 /*
@@ -564,10 +480,6 @@ TYPEDESCRIPTION	gEntvarsDescription[] =
 	DEFINE_ENTITY_FIELD( radsuit_finished, FIELD_TIME ),
 };
 
-#define ENTVARS_COUNT		(sizeof(gEntvarsDescription)/sizeof(gEntvarsDescription[0]))
-
-
-
 
 #ifdef	DEBUG
 	void
@@ -575,7 +487,7 @@ DBG_AssertFunction(
 	BOOL		fExpr,
 	const char*	szExpr,
 	const char*	szFile,
-	int			szLine,
+	int		szLine,
 	const char*	szMessage)
 	{
 	if (fExpr)
@@ -595,7 +507,7 @@ BOOL UTIL_GetNextBestWeapon( CBasePlayer *pPlayer, CBasePlayerItem *pCurrentWeap
 }
 
 // ripped this out of the engine
-float	UTIL_AngleMod(float a)
+float UTIL_AngleMod(float a)
 {
 	if (a < 0)
 	{
@@ -646,8 +558,6 @@ void UTIL_MoveToOrigin( edict_t *pent, const Vector &vecGoal, float flDist, int 
 
 
 
-
-
 //MODDD - this is a version of "UTIL_EntitiesInBox" that can also find barnacles.
 //They are ignored by the tag search because they lack any.  So, this just does an extra check fo "monster_barnacle" particularly.
 //UPDATE - barnacles are ignored because they lacked FL_MONSTER, which has been given back.
@@ -664,7 +574,7 @@ int UTIL_EntitiesInBox( CBaseEntity **pList, int listMax, const Vector &mins, co
 {
 	edict_t		*pEdict = g_engfuncs.pfnPEntityOfEntIndex( 1 );
 	CBaseEntity *pEntity;
-	int			count;
+	int		count;
 
 	count = 0;
 
@@ -707,7 +617,7 @@ int UTIL_NonDeadEntitiesInBox( CBaseEntity **pList, int listMax, const Vector &m
 {
 	edict_t		*pEdict = g_engfuncs.pfnPEntityOfEntIndex( 1 );
 	CBaseEntity *pEntity;
-	int			count;
+	int		count;
 
 	count = 0;
 
@@ -751,14 +661,12 @@ int UTIL_NonDeadEntitiesInBox( CBaseEntity **pList, int listMax, const Vector &m
 
 
 
-
-
 int UTIL_MonstersInSphere( CBaseEntity **pList, int listMax, const Vector &center, float radius )
 {
 	edict_t		*pEdict = g_engfuncs.pfnPEntityOfEntIndex( 1 );
 	CBaseEntity *pEntity;
-	int			count;
-	float		distance, delta;
+	int		count;
+	float	distance, delta;
 
 	count = 0;
 	float radiusSquared = radius * radius;
@@ -918,8 +826,6 @@ void UTIL_MakeAimVectors( const Vector &vecAngles )
 }
 
 
-#define SWAP(a,b,temp)	((temp)=(a),(a)=(b),(b)=(temp))
-
 void UTIL_MakeInvVectors( const Vector &vec, globalvars_t *pgv )
 {
 	MAKE_VECTORS(vec);
@@ -968,8 +874,8 @@ static short FixedSigned16( float value, float scale )
 // UNDONE: Affect user controls?
 void UTIL_ScreenShake( const Vector &center, float amplitude, float frequency, float duration, float radius )
 {
-	int			i;
-	float		localAmplitude;
+	int		i;
+	float	localAmplitude;
 	ScreenShake	shake;
 
 	shake.duration = FixedUnsigned16( duration, 1<<12 );		// 4.12 fixed
@@ -1017,7 +923,6 @@ void UTIL_ScreenShake( const Vector &center, float amplitude, float frequency, f
 }
 
 
-
 void UTIL_ScreenShakeAll( const Vector &center, float amplitude, float frequency, float duration )
 {
 	UTIL_ScreenShake( center, amplitude, frequency, duration, 0 );
@@ -1057,7 +962,7 @@ void UTIL_ScreenFadeWrite( const ScreenFade &fade, CBaseEntity *pEntity )
 
 void UTIL_ScreenFadeAll( const Vector &color, float fadeTime, float fadeHold, int alpha, int flags )
 {
-	int			i;
+	int		i;
 	ScreenFade	fade;
 
 
@@ -1127,7 +1032,7 @@ void UTIL_HudMessage( CBaseEntity *pEntity, const hudtextparms_t &textparms, con
 
 void UTIL_HudMessageAll( const hudtextparms_t &textparms, const char *pMessage )
 {
-	int			i;
+	int		i;
 
 	for ( i = 1; i <= gpGlobals->maxClients; i++ )
 	{
@@ -1136,14 +1041,6 @@ void UTIL_HudMessageAll( const hudtextparms_t &textparms, const char *pMessage )
 			UTIL_HudMessage( pPlayer, textparms, pMessage );
 	}
 }
-
-int kbwTrace(const char *fmt, ...)
-{
-    va_list args;
-    va_start(args, fmt);
-    return printf(fmt, args);
-}
-
 
 
 
@@ -1154,7 +1051,6 @@ int kbwTrace(const char *fmt, ...)
 // BITCH.
 // ...so yea, UTIL_ClientPrint methods were moved there.
 // And now UTIL_SayText ones because fuck you.
-
 
 
 
@@ -1199,7 +1095,7 @@ void UTIL_ShowMessage( const char *pString, CBaseEntity *pEntity )
 
 void UTIL_ShowMessageAll( const char *pString )
 {
-	int		i;
+	int	i;
 
 	// loop through all players
 
@@ -1212,7 +1108,7 @@ void UTIL_ShowMessageAll( const char *pString )
 }
 
 
-//void		(*pfnTraceLine)				(const float *v1, const float *v2, int fNoMonsters, edict_t *pentToSkip, TraceResult *ptr);
+//void	(*pfnTraceLine)				(const float *v1, const float *v2, int fNoMonsters, edict_t *pentToSkip, TraceResult *ptr);
 
 // Overloaded to add IGNORE_GLASS
 void UTIL_TraceLine( const Vector &vecStart, const Vector &vecEnd, IGNORE_MONSTERS igmon, IGNORE_GLASS ignoreGlass, edict_t *pentIgnore, TraceResult *ptr )
@@ -1234,15 +1130,10 @@ void UTIL_TraceHull( const Vector &vecStart, const Vector &vecEnd, IGNORE_MONSTE
 
 
 
+// *** some other rarely-used, if ever,  TRACE_ methods are described in docs.txt too
 
-
-
-//
-//#define TRACE_MONSTER_HULL		(*g_engfuncs.pfnTraceMonsterHull)
-//#define TRACE_HULL		(*g_engfuncs.pfnTraceHull)
-
-//MODDDD NOTE - never used. at all. Does this work? And why does it want a hullNumber like TraceHull then? It takes a model by "edict_t *pentModel".
-//Perhaps that is just a poorly named "pentIgnore", to be ignored by this trace? No clue.
+//MODDDD NOTE - Does this work? And why does it want a hullNumber like TraceHull then? It takes a model by "edict_t *pentModel".
+// Perhaps that is just a poorly named "pentIgnore", to be ignored by this trace? No clue.
 void UTIL_TraceModel( const Vector &vecStart, const Vector &vecEnd, int hullNumber, edict_t *pentModel, TraceResult *ptr )
 {
 	g_engfuncs.pfnTraceModel( vecStart, vecEnd, hullNumber, pentModel, ptr );
@@ -1266,10 +1157,6 @@ TraceResult UTIL_GetGlobalTrace( )
 }
 
 	
-
-
-
-
 
 
 
@@ -1546,8 +1433,6 @@ meleeDrawBloodModeB - Mode variable, for drawing blood when "checkTraceHullAttac
 	vecEnd = vecStart + (gpGlobals->v_forward * arg_fltdistanceHint );
 	*/
 
-
-	
 	
 	UTIL_TraceLine(vecStart, vecEnd, dont_ignore_monsters, ENT(arg_entSrc->pev)/*pentIgnore*/, &tr);
 	if(tr.flFraction != 1.0){
@@ -1566,7 +1451,6 @@ meleeDrawBloodModeB - Mode variable, for drawing blood when "checkTraceHullAttac
 
 	}
 
-
 	if(arg_entDest->IsPlayer()){
 		CBasePlayer* playa = static_cast<CBasePlayer*>(arg_entDest);
 		
@@ -1581,12 +1465,7 @@ meleeDrawBloodModeB - Mode variable, for drawing blood when "checkTraceHullAttac
 		playa->debugDrawVect4 = vecStart2;
 		playa->debugDrawVect5 = vecEnd2;
 	}
-
-
-
 }//END OF UTIL_fromToBlood
-
-
 
 
 
@@ -1594,19 +1473,15 @@ meleeDrawBloodModeB - Mode variable, for drawing blood when "checkTraceHullAttac
 void UTIL_SetSizeAlt( entvars_t* pev, const Vector &vecMin, const Vector &vecMax){
 	int i = 0;
 
-
 	//((float *)pev->absmin)[i] = ((float *)pev->origin)[i] - vecMin;
 	//((float *)pev->absmax)[i] = ((float *)pev->origin)[i] + vecMax;
-
 
 	pev->mins = vecMin;
 	pev->maxs = vecMax;
 
-	
 	pev->absmin = pev->origin + vecMin;
 	pev->absmax = pev->origin + vecMax;
 	
-
 	pev->absmin.x -= 1;
 	pev->absmin.y -= 1;
 	pev->absmin.z -= 1;
@@ -1616,18 +1491,15 @@ void UTIL_SetSizeAlt( entvars_t* pev, const Vector &vecMin, const Vector &vecMax
 }
 
 
-
 void UTIL_SetSize( entvars_t *pev, const Vector &vecMin, const Vector &vecMax )
 {
 	SET_SIZE( ENT(pev), vecMin, vecMax );
 }
-	
-	
+
 float UTIL_VecToYaw( const Vector &vec )
 {
 	return VEC_TO_YAW(vec);
 }
-
 
 //same as above, but comes already in radians.
 float UTIL_VecToYawRadians( const Vector &vecAng )
@@ -1642,7 +1514,6 @@ Vector UTIL_VecGetForward2D( const Vector &vecAng )
 	//return a vector made of this yaw.
 	return Vector(cos(yawInRads), sin(yawInRads), 0);
 }
-
 
 //NOTICE: player's up&down angle is actually inverted (negative).  Handle that, somehow?  Maybe just before sending off the view angle here, if you do that?
 Vector UTIL_VecGetForward( const Vector &vecAng )
@@ -1668,14 +1539,12 @@ Vector UTIL_VecGetForward( const Vector &vecAng )
 }
 
 Vector UTIL_velocityToAngles( const Vector &vecVel){
-
 	//nothing happens to angles.z.
 
 	//just want "direction" information about the velocity only.
 	Vector vecVelDir = vecVel.Normalize();
 	Vector vecVelDir2D = Vector(vecVelDir.x, vecVelDir.y, 0).Normalize();
 
-	
 	//angle X component is pitch: how far looking up or down?   Based on Z component of velocity.
 	float xComp = asin(vecVelDir.z) * (180.0f / M_PI);  //get as degrees... yes, really.
 	
@@ -1714,7 +1583,6 @@ Vector UTIL_velocityToAngles( const Vector &vecVel){
 		}
 	}
 
-	
 	if(yComp < 0){
 		yComp += 360;
 	}
@@ -1723,12 +1591,8 @@ Vector UTIL_velocityToAngles( const Vector &vecVel){
 	}
 
 	//easyForcePrintLine("VELDIR BE %.2f %.2f %.2f YOUR ANGLES BE %.2f %.2f %.2f", vecVelDir.x, vecVelDir.y, vecVelDir.z, xComp, yComp, 0);
-
-
 	return Vector(xComp, yComp, 0);
-
-
-}
+}//END OF UTIL_velocityToAngles
 
 
 //MODDD - new
@@ -1937,7 +1801,7 @@ void UTIL_BloodDrips( const Vector &origin, const Vector &direction, int color, 
 	//if(EASY_CVAR_GET(germanCensorship) == 1 && EASY_CVAR_GET(allowGermanModels) == 1 && color == BLOOD_COLOR_RED)
 	//	color = 0;
 
-	if ( g_pGameRules->IsMultiplayer() )
+	if ( IsMultiplayer() )
 	{
 		// scale up blood effect in multiplayer for better visibility
 		amount *= 2;
@@ -2045,148 +1909,6 @@ void UTIL_DecalTrace( TraceResult *pTrace, int decalNumber )
 			WRITE_SHORT( entityIndex );
 	MESSAGE_END();
 	
-	
-	
-
-/*
-#define TE_EXPLOSION2		12		// Quake1 colormaped (base palette) particle explosion with sound
-// coord coord coord (position) 
-// byte (starting color)
-// byte (num colors)
-
-#define TE_BSPDECAL			13		// Decal from the .BSP file 
-// coord, coord, coord (x,y,z), decal position (center of texture in world)
-// short (texture index of precached decal texture name)
-// short (entity index)
-// [optional - only included if previous short is non-zero (not the world)] short (index of model of above entity)
-*/
-
-
-//#define TE_DECAL					// Decal applied to a brush entity (not the world)
-// coord, coord, coord (x,y,z), decal position (center of texture in world)
-// byte (texture index of precached decal texture name)
-// short (entity index)
-
-//#define TE_WORLDDECAL				// Decal applied to the world brush
-// coord, coord, coord (x,y,z), decal position (center of texture in world)
-// byte (texture index of precached decal texture name)
-
-
-//#define TE_PLAYERDECAL
-// byte (playerindex)
-// coord, coord, coord (position)
-// short (entity???)
-// byte (decal number???)
-// [optional] short (model index???)
-	
-	
-	/*
-	easyForcePrintLine("WHAT THE HELL ARE YOU STARIN AT %d tracehitentity:%d", index, ENTINDEX(pTrace->pHit));
-	
-	MESSAGE_BEGIN( MSG_BROADCAST, SVC_TEMPENTITY );
-		WRITE_BYTE( TE_PLAYERDECAL );
-		WRITE_BYTE ( 1 ); //player ID. Hardcoded to 1 for testing.
-		WRITE_COORD( pTrace->vecEndPos.x );
-		WRITE_COORD( pTrace->vecEndPos.y );
-		WRITE_COORD( pTrace->vecEndPos.z );
-		WRITE_SHORT( ENTINDEX(pTrace->pHit));
-		WRITE_BYTE( decalNumber );//index
-		//WRITE_SHORT( (int)VARS(pTrace->pHit)->modelindex ); //????
-	MESSAGE_END();
-	*/
-
-
-
-	//TE_PLAYERDECAL original.
-	/*
-	MESSAGE_BEGIN( MSG_BROADCAST, SVC_TEMPENTITY );
-		WRITE_BYTE( TE_PLAYERDECAL );
-		WRITE_BYTE ( playernum );
-		WRITE_COORD( pTrace->vecEndPos.x );
-		WRITE_COORD( pTrace->vecEndPos.y );
-		WRITE_COORD( pTrace->vecEndPos.z );
-		WRITE_SHORT( (short)ENTINDEX(pTrace->pHit) );
-		WRITE_BYTE( index );
-	MESSAGE_END();
-	*/
-
-
-	/*
-	MESSAGE_BEGIN( MSG_BROADCAST, SVC_TEMPENTITY);
-		WRITE_BYTE( TE_BSPDECAL );
-		WRITE_COORD( pev->origin.x );
-		WRITE_COORD( pev->origin.y );
-		WRITE_COORD( pev->origin.z );
-		WRITE_SHORT( (int)pev->skin );
-		entityIndex = (short)ENTINDEX(trace.pHit);
-		WRITE_SHORT( entityIndex );
-		if ( entityIndex )
-			WRITE_SHORT( (int)VARS(trace.pHit)->modelindex );
-	MESSAGE_END();
-	*/
-
-
-
-
-	/*
-	int index;
-	
-	if (!bIsCustom)
-	{
-		if ( decalNumber < 0 )
-			return;
-
-		index = gDecals[ decalNumber ].index;
-		if ( index < 0 )
-			return;
-	}
-	else
-		index = decalNumber;
-
-	if (pTrace->flFraction == 1.0)
-		return;
-		*/
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-	
-	/*
-	MESSAGE_BEGIN( MSG_PVS, SVC_TEMPENTITY, origin );
-		WRITE_BYTE( TE_BLOODSTREAM );
-		WRITE_COORD( origin.x );
-		WRITE_COORD( origin.y );
-		WRITE_COORD( origin.z );
-		WRITE_COORD( direction.x );
-		WRITE_COORD( direction.y );
-		WRITE_COORD( direction.z );
-		WRITE_BYTE( color );
-		WRITE_BYTE( min( amount, 255 ) );
-	MESSAGE_END();
-	MESSAGE_BEGIN( MSG_PVS, SVC_TEMPENTITY, origin );
-		WRITE_BYTE( TE_BLOODSPRITE );
-		WRITE_COORD( origin.x);								// pos
-		WRITE_COORD( origin.y);
-		WRITE_COORD( origin.z);
-		WRITE_SHORT( g_sModelIndexBloodSpray );				// initial sprite model
-		WRITE_SHORT( g_sModelIndexBloodDrop );				// droplet sprite models
-		WRITE_BYTE( color );								// color index into host_basepal
-		WRITE_BYTE( min( max( 3, amount / 10 ), 16 ) );		// size
-	MESSAGE_END();
-	*/
-
-
-
 }
 
 /*
@@ -2284,8 +2006,7 @@ void UTIL_GunshotDecalTraceForceDefault(TraceResult *pTrace, int decalNumber){
 }
 
 
-
-Vector UTIL_GetProjectileVelocityExtra(Vector& playerVelocity, float velocityMode)  {
+Vector UTIL_GetProjectileVelocityExtra(const Vector& playerVelocity, float velocityMode)  {
 	//easyPrintLine("UTIL_GetProjectileVelocityExtra %.2f", velocityMode);
 	if(velocityMode == 0){
 		return Vector(0, 0, 0);
@@ -2306,159 +2027,142 @@ void interpretSoundAsSentence(char* interpretationFINAL, const char* pszName){
 
 	interpretationFINAL[0] = '!';
 
+	int finalOutputOffset = 1;
+
+	BOOL reading = TRUE;
+	int readIndex = 0;
+	int writeIndex = 0;
+
+	int currentLength = 0;
+
+	BOOL success = FALSE;
+
+	BOOL foundSlash = FALSE;
+	char* writeTo = interpretation1;
 
 
-		int finalOutputOffset = 1;
+	int endOutputIndex = -1;
 
-		BOOL reading = TRUE;
-		int readIndex = 0;
-		int writeIndex = 0;
+	while(reading){
 
-		int currentLength = 0;
+		char thisChar = pszName[readIndex];
 
-		BOOL success = FALSE;
+		switch(thisChar){
+		case '/':
+			if(!foundSlash){
+				foundSlash = TRUE;
 
-		BOOL foundSlash = FALSE;
-		char* writeTo = interpretation1;
+				//4
+				//easyPrintLine("SECT 1 : %d", currentLength);
+				if(currentLength <= 15){
+					strncpy( &interpretationFINAL[finalOutputOffset], &writeTo[0], currentLength );
+					interpretationFINAL[finalOutputOffset + currentLength] = '_';
+			
+					interpretationFINAL[finalOutputOffset + currentLength+1] = '\0';
 
+					//!abc_def
 
-		int endOutputIndex = -1;
-
-		while(reading){
-
-			char thisChar = pszName[readIndex];
-
-			switch(thisChar){
-			case '/':
-				if(!foundSlash){
-					foundSlash = TRUE;
-
-					//4
-					//easyPrintLine("SECT 1 : %d", currentLength);
-					if(currentLength <= 15){
-						strncpy( &interpretationFINAL[finalOutputOffset], &writeTo[0], currentLength );
-						interpretationFINAL[finalOutputOffset + currentLength] = '_';
-				
-						interpretationFINAL[finalOutputOffset + currentLength+1] = '\0';
-
-						//!abc_def
-
-						//writeTo = interpretation2;
-						writeIndex = 0;
-						finalOutputOffset = finalOutputOffset + currentLength + 1;
-						//easyPrintLine("??? %s %s %d %d", interpretation1, interpretationFINAL, finalOutputOffset, currentLength);
-						currentLength = 0;
-				
-					}else{
-
-						easyForcePrintLine("ERROR CODE 32589321");
-						break;
-
-						strncpy( &interpretationFINAL[finalOutputOffset], &writeTo[0], 2 );
-						strncpy( &interpretationFINAL[finalOutputOffset+2], &writeTo[currentLength-2], 2 );
-
-						/*
-						interpretationFINAL[finalOutputOffset + 0] = writeTo[0];
-						interpretationFINAL[finalOutputOffset + 1] = writeTo[1];
-						interpretationFINAL[finalOutputOffset + 2] = writeTo[currentLength-2];
-						interpretationFINAL[finalOutputOffset + 3] = writeTo[currentLength-1];
-						*/
-						interpretationFINAL[finalOutputOffset + 4] = '_';
-
-						//writeTo = interpretation2;
-						writeIndex = 0;
-						currentLength = 0;
-						finalOutputOffset = finalOutputOffset + 5;
-
-					}
-
+					//writeTo = interpretation2;
+					writeIndex = 0;
+					finalOutputOffset = finalOutputOffset + currentLength + 1;
+					//easyPrintLine("??? %s %s %d %d", interpretation1, interpretationFINAL, finalOutputOffset, currentLength);
+					currentLength = 0;
+			
 				}else{
-					easyForcePrintLine("!!!ERROR: SECOND SLASH IN SOUND SAMPLE: %s", pszName);
+
+					easyForcePrintLine("ERROR CODE 32589321");
 					break;
+
+					strncpy( &interpretationFINAL[finalOutputOffset], &writeTo[0], 2 );
+					strncpy( &interpretationFINAL[finalOutputOffset+2], &writeTo[currentLength-2], 2 );
+
+					/*
+					interpretationFINAL[finalOutputOffset + 0] = writeTo[0];
+					interpretationFINAL[finalOutputOffset + 1] = writeTo[1];
+					interpretationFINAL[finalOutputOffset + 2] = writeTo[currentLength-2];
+					interpretationFINAL[finalOutputOffset + 3] = writeTo[currentLength-1];
+					*/
+					interpretationFINAL[finalOutputOffset + 4] = '_';
+
+					//writeTo = interpretation2;
+					writeIndex = 0;
+					currentLength = 0;
+					finalOutputOffset = finalOutputOffset + 5;
+
 				}
 
-			break;
-			case '\0':
-			case '.':
-				success = TRUE;
-				if(writeIndex < 20){
-					writeTo[writeIndex] = '\0';
-				}
+			}else{
+				easyForcePrintLine("!!!ERROR: SECOND SLASH IN SOUND SAMPLE: %s", pszName);
+				break;
+			}
 
-				endOutputIndex = readIndex - 1;
-				reading = FALSE;
+		break;
+		case '\0':
+		case '.':
+			success = TRUE;
+			if(writeIndex < 20){
+				writeTo[writeIndex] = '\0';
+			}
 
-			break;
-			case '_':
-				//skip.
-				writeTo[writeIndex] = thisChar;
-				writeIndex++;
-				currentLength += 1;
-				//...nah, go ahead and include, we have space now.
+			endOutputIndex = readIndex - 1;
+			reading = FALSE;
 
-			break;
-			default:
-				writeTo[writeIndex] = thisChar;
-				writeIndex++;
-				currentLength += 1;
+		break;
+		case '_':
+			//skip.
+			writeTo[writeIndex] = thisChar;
+			writeIndex++;
+			currentLength += 1;
+			//...nah, go ahead and include, we have space now.
 
-			break;
-			}//END OF switch(thisChar)
+		break;
+		default:
+			writeTo[writeIndex] = thisChar;
+			writeIndex++;
+			currentLength += 1;
 
-		
-			readIndex += 1;
-
-
-		}//END OF while(reading)
-
-
-		if(!success){
-			easyForcePrintLine("ERROR CODE: GENERIC45");
-		}
-
-
-		//11? 10?
-		if(currentLength <= 30){
-			//easyPrintLine("wat??? %d", finalOutputOffset);
-			strncpy( &interpretationFINAL[finalOutputOffset], &writeTo[0], currentLength );
-			interpretationFINAL[finalOutputOffset + currentLength] = '\0';
-		
-			//abcdefghijklmnop
-		}else{
-
-		
-			easyForcePrintLine("ERROR CODE 5474572");
-			return;
-
-			//easyPrintLine("wat??! %d %d %d", finalOutputOffset + currentLength, finalOutputOffset, currentLength);
-			strncpy( &interpretationFINAL[finalOutputOffset], &writeTo[0], 6 );
-
-			strncpy( &interpretationFINAL[finalOutputOffset+6], &writeTo[currentLength-5], 5 );
-		
-			//easyPrintLine("LAST? %d", finalOutputOffset + 11);
-			interpretationFINAL[finalOutputOffset + 11] = '\0';
-
-		}
+		break;
+		}//END OF switch(thisChar)
 
 	
-		//easyPrintLine("OFFSET? %d srcSTART? %d FILENAMELENGTH? %d", offset, srcStart, fileNameLength);
-		//easyPrintLine("STRING1: %s", interpretation1);
-		////easyPrintLine("STRING2: %s", interpretation2);
-		//easyPrintLine("STRINGF: %s", interpretationFINAL);
+		readIndex += 1;
 
 
+	}//END OF while(reading)
 
+
+	if(!success){
+		easyForcePrintLine("ERROR CODE: GENERIC45");
+	}
+
+	//11? 10?
+	if(currentLength <= 30){
+		//easyPrintLine("wat??? %d", finalOutputOffset);
+		strncpy( &interpretationFINAL[finalOutputOffset], &writeTo[0], currentLength );
+		interpretationFINAL[finalOutputOffset + currentLength] = '\0';
+	
+		//abcdefghijklmnop
+	}else{
+
+	
+		easyForcePrintLine("ERROR CODE 5474572");
+		return;
+
+		//easyPrintLine("wat??! %d %d %d", finalOutputOffset + currentLength, finalOutputOffset, currentLength);
+		strncpy( &interpretationFINAL[finalOutputOffset], &writeTo[0], 6 );
+
+		strncpy( &interpretationFINAL[finalOutputOffset+6], &writeTo[currentLength-5], 5 );
+	
+		//easyPrintLine("LAST? %d", finalOutputOffset + 11);
+		interpretationFINAL[finalOutputOffset + 11] = '\0';
+
+	}
+
+	//easyPrintLine("OFFSET? %d srcSTART? %d FILENAMELENGTH? %d", offset, srcStart, fileNameLength);
+	//easyPrintLine("STRING1: %s", interpretation1);
+	////easyPrintLine("STRING2: %s", interpretation2);
+	//easyPrintLine("STRINGF: %s", interpretationFINAL);
 }
-
-
-
-
-
-
-
-
-
-
 
 
 //MODDDSOUNDSAVE - name edited. Used to be EMIT_SOUND and EMIT_SOUND_DYN directly, now has some filtering.
@@ -2511,12 +2215,10 @@ void UTIL_PlaySound(edict_t* entity, int channel, const char *pszName, float vol
 }
 
 
-
 void UTIL_PlaySound(edict_t* entity, int channel, const char *pszName, float volume, float attenuation, int flags, int pitch, BOOL useSoundSentenceSave )
 {
 	if ( !pszName )
 		return;
-
 /*
 	if(stringStartsWith(pszName, "player/") ){
 		useSoundSentenceSave = TRUE;
@@ -2524,15 +2226,6 @@ void UTIL_PlaySound(edict_t* entity, int channel, const char *pszName, float vol
 */
 
 	//easyPrintLine("PLAYING SOUND %s", pszName);
-
-
-/*
-	CBasePlayer* playerRef = GetClassPtr((CBasePlayer *)pev);
-	CBasePlayer *pl = (CBasePlayer*) CBasePlayer::Instance( pev );
-*/
-
-
-	//CBaseEntity* pEntity = (CBaseEntity*)(CBaseEntity::Instance(entity));
 
 	easyPrintLine("ATTEMPT FILTERED SOUND: %s %d", pszName, useSoundSentenceSave);
 	if(EASY_CVAR_GET(soundSentenceSave) == 1 && (useSoundSentenceSave)){
@@ -2567,11 +2260,6 @@ void UTIL_PlaySound(edict_t* entity, int channel, const char *pszName, float vol
 
 
 
-
-
-
-
-
 void EMIT_SOUND_DYN(edict_t *entity, int channel, const char *sample, float volume, float attenuation, int flags, int pitch)
 {
 
@@ -2598,10 +2286,8 @@ void EMIT_SOUND_DYN(edict_t *entity, int channel, const char *sample, float volu
 
 	}
 	*/
-
 	
 	//easyPrintLine("EMITTED SOUND SON %s %s", STRING(CBaseEntity::Instance(entity)->pev->classname), sample  );
-	
 	
 	if (sample && *sample == '!')
 	{
@@ -2699,17 +2385,6 @@ void EMIT_GROUPNAME_SUIT(edict_t *entity, const char *groupname)
 
 
 
-
-
-
-
-
-
-
-
-
-
-
 //MODDD NOTE
 //Note that "EMIT_SOUND_FILTER" is really a call in sound.cpp that entities/monsters call that ends up going over here to util.cpp to's UTIL_PlaySound, which
 //tells whether to do the sound-sentence-save effect (search for the sentence in sentences.txt instead of straight on the filesystem to save on precaches).
@@ -2780,21 +2455,7 @@ void UTIL_EmitAmbientSound( edict_t *entity, const Vector &vecOrigin, const char
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
 //void UTIL_PlaySound(
-
 
 /*
 //MODDD - don't do it like this anymore.
@@ -2815,9 +2476,6 @@ void UTIL_playFleshHitSound(edict_t* pev){
 		break;
 		}
 	}
-
-
-
 }
 */
 
@@ -2847,7 +2505,6 @@ void UTIL_PRECACHESOUND(char* path, BOOL dontSkipSave){
 	if(EASY_CVAR_GET(soundSentenceSave) == 0 || dontSkipSave){
 		PRECACHE_SOUND_REAL(path);
 	}
-
 }
 
 
@@ -2861,9 +2518,6 @@ void UTIL_PRECACHESOUND_ARRAY(const char** a, int aSize){
 void UTIL_PRECACHESOUND_ARRAY(const char** a, int aSize, BOOL dontSkipSave){
 	for (int i = 0; i < aSize; i++ ) PRECACHE_SOUND( (char *) a[i], dontSkipSave); 
 }
-
-
-
 
 
 
@@ -2903,7 +2557,6 @@ void UTIL_Explosion(entvars_t* pev, const Vector &location, short sprite, float 
 void UTIL_Explosion(entvars_t* pev, const Vector &location, short sprite, float size, int framerate, int flag, const Vector& altLocation, float shrapMod){
 	UTIL_Explosion(pev, location, 0.0f, 0.0f, 0.0f, sprite, size, framerate, flag, altLocation, shrapMod);
 }
-
 
 
 
@@ -2965,7 +2618,6 @@ void UTIL_Explosion(entvars_t* pev, const Vector &location, float offsetx, float
 	// 63 testing
 	LIGHT_STYLE(63, "mmnnmmnnnmmnn");
 	*/
-
 
 
 
@@ -3050,9 +2702,7 @@ void UTIL_Explosion(entvars_t* pev, const Vector &location, float offsetx, float
 	}//END OF else OF if(EASY_CVAR_GET(cl_explosion) != 1)
 
 
-
 	/*
-
 	RETAIL EXPLOSION UNABRIDGED for comparison.
 	MESSAGE_BEGIN( MSG_PAS, SVC_TEMPENTITY, pev->origin );
 		WRITE_BYTE( TE_EXPLOSION );		// This makes a dynamic light and the explosion sprites/sound
@@ -3115,14 +2765,7 @@ BOOL UTIL_getExplosionsHaveSparks(){
 	//For an explosion to satisfy the condition of generating sparks, the "cl_explosion" var must be off (retail explosions only) and the sparks multiple (of 6) must be above 0.
 	return  (EASY_CVAR_GET(cl_explosion) != 1 && EASY_CVAR_GET(sparksExplosionMulti) > 0 && EASY_CVAR_GET(sparksAllMulti) > 0) ;
 	
-	
 }
-
-
-
-
-
-
 
 
 
@@ -3162,7 +2805,7 @@ BOOL UTIL_TeamsMatch( const char *pTeamName1, const char *pTeamName2 )
 void UTIL_StringToVector( float *pVector, const char *pString )
 {
 	char *pstr, *pfront, tempString[128];
-	int	j;
+	int j;
 
 	strcpy( tempString, pString );
 	pstr = pfront = tempString;
@@ -3193,7 +2836,7 @@ void UTIL_StringToVector( float *pVector, const char *pString )
 void UTIL_StringToIntArray( int *pVector, int count, const char *pString )
 {
 	char *pstr, *pfront, tempString[128];
-	int	j;
+	int j;
 
 	strcpy( tempString, pString );
 	pstr = pfront = tempString;
@@ -3215,7 +2858,6 @@ void UTIL_StringToIntArray( int *pVector, int count, const char *pString )
 		pVector[j] = 0;
 	}
 }
-
 
 
 float clamp(float argTest, float argMin, float argMax){
@@ -3258,7 +2900,6 @@ Vector UTIL_ClampVectorToBoxNonNormalized( const Vector &input, const Vector &cl
 
 	return sourceVector;
 }
-
 
 
 //MODDD - the as-is version can be fooled into picking a water level below oneself if the floor is closer than the top of the
@@ -3327,8 +2968,6 @@ float UTIL_WaterLevel( const Vector &position, float minz, float maxz )
 	return midUp.z;
 }
 
-
-extern DLL_GLOBAL	short	g_sModelIndexBubbles;// holds the index for the bubbles model
 
 void UTIL_Bubbles( Vector mins, Vector maxs, int count )
 {
@@ -3554,6 +3193,40 @@ void UTIL_StripToken( const char *pKey, char *pDest )
 }
 
 
+
+
+//MODDD - SetMovedir and VecBModelOrigin moved here from subs.cpp and bmodels.cpp.
+/*
+QuakeEd only writes a single float for angles (bad idea), so up and down are
+just constant angles.
+*/
+void SetMovedir( entvars_t *pev )
+{
+	if (pev->angles == Vector(0, -1, 0))
+	{
+		pev->movedir = Vector(0, 0, 1);
+	}
+	else if (pev->angles == Vector(0, -2, 0))
+	{
+		pev->movedir = Vector(0, 0, -1);
+	}
+	else
+	{
+		UTIL_MakeVectors(pev->angles);
+		pev->movedir = gpGlobals->v_forward;
+	}
+	
+	pev->angles = g_vecZero;
+}
+
+Vector VecBModelOrigin( entvars_t* pevBModel )
+{
+	return pevBModel->absmin + ( pevBModel->size * 0.5 );
+}
+
+
+
+
 // --------------------------------------------------------------
 //
 // CSave
@@ -3599,7 +3272,7 @@ CSaveRestoreBuffer :: ~CSaveRestoreBuffer( void )
 {
 }
 
-int	CSaveRestoreBuffer :: EntityIndex( CBaseEntity *pEntity )
+int CSaveRestoreBuffer :: EntityIndex( CBaseEntity *pEntity )
 {
 	if ( pEntity == NULL )
 		return -1;
@@ -3607,20 +3280,20 @@ int	CSaveRestoreBuffer :: EntityIndex( CBaseEntity *pEntity )
 }
 
 
-int	CSaveRestoreBuffer :: EntityIndex( entvars_t *pevLookup )
+int CSaveRestoreBuffer :: EntityIndex( entvars_t *pevLookup )
 {
 	if ( pevLookup == NULL )
 		return -1;
 	return EntityIndex( ENT( pevLookup ) );
 }
 
-int	CSaveRestoreBuffer :: EntityIndex( EOFFSET eoLookup )
+int CSaveRestoreBuffer :: EntityIndex( EOFFSET eoLookup )
 {
 	return EntityIndex( ENT( eoLookup ) );
 }
 
 
-int	CSaveRestoreBuffer :: EntityIndex( edict_t *pentLookup )
+int CSaveRestoreBuffer :: EntityIndex( edict_t *pentLookup )
 {
 	if ( !m_pdata || pentLookup == NULL )
 		return -1;
@@ -3656,7 +3329,7 @@ edict_t *CSaveRestoreBuffer :: EntityFromIndex( int entityIndex )
 }
 
 
-int	CSaveRestoreBuffer :: EntityFlagsSet( int entityIndex, int flags )
+int CSaveRestoreBuffer :: EntityFlagsSet( int entityIndex, int flags )
 {
 	if ( !m_pdata || entityIndex < 0 )
 		return 0;
@@ -3705,7 +3378,7 @@ unsigned _rotr ( unsigned val, int shift)
 
 unsigned int CSaveRestoreBuffer :: HashString( const char *pszToken )
 {
-	unsigned int	hash = 0;
+	unsigned int hash = 0;
 
 	while ( *pszToken )
 		hash = _rotr( hash, 4 ) ^ *pszToken++;
@@ -3735,7 +3408,7 @@ unsigned short CSaveRestoreBuffer :: TokenHash( const char *pszToken )
 		}
 #endif
 
-		int	index = hash + i;
+		int index = hash + i;
 		if ( index >= m_pdata->tokenCount )
 			index -= m_pdata->tokenCount;
 
@@ -3779,7 +3452,8 @@ void CSave :: WriteFloat( const char *pname, const float *data, int count )
 void CSave :: WriteTime( const char *pname, const float *data, int count )
 {
 	int i;
-	Vector tmp, input;
+	//MODDD - what devs?   Why 'Vector tmp;'?
+	//And 'Vector input;' was completely unused too.  Whoops.
 
 	BufferHeader( pname, sizeof(float) * count );
 	for ( i = 0; i < count; i++ )
@@ -3866,7 +3540,8 @@ void CSave :: WritePositionVector( const char *pname, const Vector &value )
 void CSave :: WritePositionVector( const char *pname, const float *value, int count )
 {
 	int i;
-	Vector tmp, input;
+	//MODDD - what devs?   Why 'Vector tmp;'?
+	//And 'Vector input;' was completely unused too.  Whoops.
 
 	BufferHeader( pname, sizeof(float) * 3 * count );
 	for ( i = 0; i < count; i++ )
@@ -3953,9 +3628,9 @@ int CSave :: WriteEntVars( const char *pname, entvars_t *pev )
 
 int CSave :: WriteFields( const char *pname, void *pBaseData, TYPEDESCRIPTION *pFields, int fieldCount )
 {
-	int				i, j, actualCount, emptyCount;
+	int			i, j, actualCount, emptyCount;
 	TYPEDESCRIPTION	*pTest;
-	int				entityArray[MAX_ENTITYARRAY];
+	int			entityArray[MAX_ENTITYARRAY];
 
 	// Precalculate the number of empty fields
 	emptyCount = 0;
@@ -4116,7 +3791,6 @@ void CSave :: BufferData( const char *pdata, int size )
 }
 
 
-
 // --------------------------------------------------------------
 //
 // CRestore
@@ -4127,7 +3801,7 @@ int CRestore::ReadField( void *pBaseData, TYPEDESCRIPTION *pFields, int fieldCou
 {
 	int i, j, stringCount, fieldNumber, entityIndex;
 	TYPEDESCRIPTION *pTest;
-	float	time, timeData;
+	float time, timeData;
 	Vector	position;
 	edict_t	*pent;
 	char	*pString;
@@ -4298,7 +3972,7 @@ int CRestore::ReadEntVars( const char *pname, entvars_t *pev )
 int CRestore::ReadFields( const char *pname, void *pBaseData, TYPEDESCRIPTION *pFields, int fieldCount )
 {
 	unsigned short	i, token;
-	int		lastField, fileCount;
+	int	lastField, fileCount;
 	HEADER	header;
 
 	i = ReadShort();
@@ -4357,7 +4031,7 @@ short	CRestore::ReadShort( void )
 	return tmp;
 }
 
-int	CRestore::ReadInt( void )
+int CRestore::ReadInt( void )
 {
 	int tmp = 0;
 
@@ -4424,7 +4098,7 @@ void CRestore::BufferSkipBytes( int bytes )
 int CRestore::BufferSkipZString( void )
 {
 	char *pszSearch;
-	int	 len;
+	int  len;
 
 	if ( !m_pdata )
 		return 0;
@@ -4444,7 +4118,7 @@ int CRestore::BufferSkipZString( void )
 }
 
 //MODDD - changed paramter name "string" to "par_string"
-int	CRestore::BufferCheckZString( const char *par_string )
+int CRestore::BufferCheckZString( const char *par_string )
 {
 	if ( !m_pdata )
 		return 0;
@@ -4463,6 +4137,8 @@ int	CRestore::BufferCheckZString( const char *par_string )
 
 
 //MODDDMIRROR
+// ...nothing even ever calls these, what.
+///////////////////////////////////////////////////////////////////////////////////////////////
 Vector UTIL_GetMirrorOrigin(CBaseEntity *pMirror, Vector pos)
 {
 	Vector result = pos;
@@ -4506,15 +4182,18 @@ Vector UTIL_MirrorVector( Vector angles )
 {
 	Vector result = angles;
 	edict_t *pFind; 
-          int numMirrors = 0;
+    int numMirrors = 0;
 	
 	pFind = FIND_ENTITY_BY_CLASSNAME( NULL, "env_mirror" );
           
 	while ( !FNullEnt( pFind ) )
 	{
 		CBaseEntity *pMirror = CBaseEntity::Instance( pFind );
-                    
-		if(numMirrors > 32) break;
+        
+		if(numMirrors > MIRROR_MAX){
+			easyForcePrintLine("WARNING! Max numer of env_mirror entities \"%d\" exceeded!", MIRROR_MAX);
+			break;
+		}
 		if ( pMirror )
 		{
 			numMirrors++;
@@ -4530,7 +4209,7 @@ Vector UTIL_MirrorPos ( Vector endpos )
 {
 	Vector mirpos(0, 0, 0);
 	edict_t *pFind; 
-          int numMirrors = 0;
+    int numMirrors = 0;
 	
 	pFind = FIND_ENTITY_BY_CLASSNAME( NULL, "env_mirror" );
 
@@ -4538,7 +4217,10 @@ Vector UTIL_MirrorPos ( Vector endpos )
 	{
 		CBaseEntity *pMirror = CBaseEntity::Instance( pFind );
                     
-                    if(numMirrors > 32) break;
+        if(numMirrors > MIRROR_MAX){
+			easyForcePrintLine("WARNING! Max numer of env_mirror entities \"%d\" exceeded!", MIRROR_MAX);
+			break;
+		}
 		if ( pMirror )
 		{
 			numMirrors++;
@@ -4555,11 +4237,7 @@ Vector UTIL_MirrorPos ( Vector endpos )
 	}
 	return mirpos;
 }
-
-
-
-
-
+///////////////////////////////////////////////////////////////////////////////////////////////
 
 
 
@@ -4569,8 +4247,6 @@ void UTIL_TE_ShowLine(const Vector& vec1, const Vector& vec2){
 
 
 void UTIL_TE_ShowLine(float x1, float y1, float z1, float x2, float y2, float z2){
-
-
 	MESSAGE_BEGIN( MSG_BROADCAST, SVC_TEMPENTITY );
 		WRITE_BYTE( TE_SHOWLINE);
 
@@ -4586,8 +4262,6 @@ void UTIL_TE_ShowLine(float x1, float y1, float z1, float x2, float y2, float z2
 
 
 
-
-
 void UTIL_drawRect(const Vector& vec1, const Vector& vec2){
 	UTIL_drawRect(vec1.x, vec1.y, vec1.z, vec2.x, vec2.y, vec2.z);
 }
@@ -4599,8 +4273,6 @@ void UTIL_drawRect(float x1, float y1, float z1, float x2, float y2, float z2){
 	UTIL_TE_ShowLine(x1, y1, z2, x1, y1, z1);
 	
 }
-
-
 
 
 
@@ -4632,18 +4304,6 @@ void UTIL_drawBox(float x1, float y1, float z1, float x2, float y2, float z2){
 	UTIL_TE_ShowLine(x1, y2, z2, x2, y2, z2);
 
 }//END OF UTIL_drawBox
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -4680,8 +4340,6 @@ void UTIL_drawPointFrame(float point_x, float point_y, float point_z, int width,
 
 
 
-
-
 void UTIL_drawRectFrame(const Vector& vec1, const Vector& vec2, int width, int r, int g, int b){
 	UTIL_drawRectFrame(vec1.x, vec1.y, vec1.z, vec2.x, vec2.y, vec2.z, width, r, g, b);
 }
@@ -4697,8 +4355,6 @@ void UTIL_drawRectFrame(float x1, float y1, float z1, float x2, float y2, float 
 void UTIL_drawBoxFrame(const Vector& vec1, const Vector& vec2, int width, int r, int g, int b){
 	UTIL_drawBoxFrame(vec1.x, vec1.y, vec1.z, vec2.x, vec2.y, vec2.z, width, r, g, b);
 }
-
-
 	
 
 void UTIL_drawBoxFrame(float x1, float y1, float z1, float x2, float y2, float z2, int width, int r, int g, int b){
@@ -4727,7 +4383,6 @@ void UTIL_drawBoxFrame(float x1, float y1, float z1, float x2, float y2, float z
 
 
 
-
 //draw a box centered around a point for emphasis, and a 3D cross through the point itself.
 
 void UTIL_drawLineFrameBoxAround(const Vector& vec1, int width, int boxSize, int r, int g, int b){
@@ -4745,12 +4400,7 @@ void UTIL_drawLineFrameBoxAround(float x1, float y1, float z1, int width, int bo
 	UTIL_drawLineFrame(x1, y1-halfwidth, z1, x1, y1+halfwidth, z1, width, r, g, b);
 	UTIL_drawLineFrame(x1, y1, z1-halfwidth, x1, y1, z1+halfwidth, width, r, g, b);
 	*/
-
-	
 }
-
-
-
 
 
 
@@ -4773,17 +4423,12 @@ void UTIL_drawLineFrameBoxAround2(float x1, float y1, float z1, int width, int b
 	UTIL_drawLineFrame(x1, y1, z1-halfwidth, x1, y1, z1+halfwidth, width, r, g, b);
 
 
-	
 	UTIL_drawLineFrame(x1-halfwidth, y1-halfwidth, z1, x1+halfwidth, y1-halfwidth, z1, width, r, g, b);
 	UTIL_drawLineFrame(x1-halfwidth, y1+halfwidth, z1, x1+halfwidth, y1+halfwidth, z1, width, r, g, b);
 
 	UTIL_drawLineFrame(x1-halfwidth, y1-halfwidth, z1, x1-halfwidth, y1+halfwidth, z1, width, r, g, b);
 	UTIL_drawLineFrame(x1+halfwidth, y1-halfwidth, z1, x1+halfwidth, y1+halfwidth, z1, width, r, g, b);
-
 }
-
-
-
 
 
 
@@ -4832,20 +4477,6 @@ void UTIL_drawLineFrameBoxAround3(float x1, float y1, float z1, int width, int b
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 void UTIL_TE_BeamPoints(const Vector& vec1, const Vector& vec2, int frameStart, int frameRate, int life, int width, int noise, int r, int g, int b, int brightness, int speed ){
 	UTIL_TE_BeamPoints(vec1.x, vec1.y, vec1.z, vec2.x, vec2.y, vec2.z, frameStart, frameRate, life, width, noise, r, g, b, brightness, speed);
 }
@@ -4879,8 +4510,6 @@ void UTIL_TE_BeamPoints(float x1, float y1, float z1, float x2, float y2, float 
 
 
 
-
-
 void UTIL_TE_BeamPoints_Rect(const Vector& vec1, const Vector& vec2, int frameStart, int frameRate, int life, int width, int noise, int r, int g, int b, int brightness, int speed){
 	UTIL_TE_BeamPoints_Rect(vec1.x, vec1.y, vec1.z, vec2.x, vec2.y, vec2.z, frameStart, frameRate, life, width, noise, r, g, b, brightness, speed);
 }
@@ -4892,9 +4521,6 @@ void UTIL_TE_BeamPoints_Rect(float x1, float y1, float z1, float x2, float y2, f
 	UTIL_TE_BeamPoints(x1, y1, z2, x1, y1, z1, frameStart, frameRate, life, width, noise, r, g, b, brightness, speed);
 	
 }
-
-
-
 
 
 
@@ -4925,19 +4551,6 @@ void UTIL_TE_BeamPoints_Box(float x1, float y1, float z1, float x2, float y2, fl
 	UTIL_TE_BeamPoints(x1, y2, z2, x2, y2, z2, frameStart, frameRate, life, width, noise, r, g, b, brightness, speed);
 
 }//END OF UTIL_TE_BeamPoints_Box
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -4981,8 +4594,6 @@ Vector UTIL_rotateShift(const float srcX, const float srcY, const float srcZ, co
 
 
 
-
-
 Vector UTIL_Intersect( Vector vecSrc, Vector vecDst, Vector vecMove, float flSpeed )
 {
 	Vector vecTo = vecDst - vecSrc;
@@ -5023,8 +4634,6 @@ Vector UTIL_Intersect( Vector vecSrc, Vector vecDst, Vector vecMove, float flSpe
 
 
 
-
-
 Vector UTIL_projectionComponent(const Vector& u, const Vector& n){
 
 	//const Vector& vecNorm = tr.vecPlaneNormal;
@@ -5051,21 +4660,12 @@ Vector UTIL_projectionComponentPreserveMag(const Vector& u, const Vector& n){
 }
 
 
-
-
 void UTIL_generateFreakyLight( const Vector& arg_origin){
 
 	PLAYBACK_EVENT_FULL (FEV_GLOBAL, NULL, g_sFreakyLight, 0.0, 
 	(float *)&arg_origin, (float *)&Vector(0,0,0), 0.0, 0.0, 0, 0, FALSE, FALSE);
 	
 }
-
-
-
-
-
-
-
 
 
 
@@ -5076,15 +4676,7 @@ void UTIL_generateFreakyLight( const Vector& arg_origin){
 //////////////////////////////////////////////////////////////////////////////////
 
 
-
-
-
-
 Vector UTIL_getFloor(const Vector &vecStart, const float& distDown, IGNORE_MONSTERS igmon, edict_t *pentIgnore ){
-
-	
-
-
 
 	TraceResult tr;
 	
@@ -5103,8 +4695,6 @@ Vector UTIL_getFloor(const Vector &vecStart, const float& distDown, IGNORE_MONST
 */
 
 
-
-
 	if(tr.flFraction >= 1.0){
 		//did not hit...  just return the start?
 		//return vecStart;
@@ -5117,7 +4707,6 @@ Vector UTIL_getFloor(const Vector &vecStart, const float& distDown, IGNORE_MONST
 
 }
 
-
 BOOL isErrorVector(const Vector& vec){
 	if(vec.x == -999999 && vec.y == -999999 && vec.z == -999999){
 		//what are the odds? not that great.  error bector.
@@ -5127,16 +4716,11 @@ BOOL isErrorVector(const Vector& vec){
 	}
 }
 
-
-
 //////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////
 // PRINT QUEUE HELP end.
 //////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////
-
-
-
 
 
 
@@ -5242,7 +4826,6 @@ void turnWorldLightsOn(){
 	LIGHT_STYLE(63, "jklmnopqrstuvwxyzyxwvutsrqponmlkj");
 	*/
 
-
 }
 
 
@@ -5344,13 +4927,8 @@ void turnWorldLightsOff(){
 
 
 
-
-
-
 //const Vector* arg_suggestedOrigin
 void updateCVarRefs(entvars_t *pev){
-
-
 
 	if(cvar_skill == NULL){
 		cvar_skill = CVAR_GET_POINTER("skill");
@@ -5552,7 +5130,7 @@ void updateCVarRefs(entvars_t *pev){
 		/*
 		int tempo = EASY_CVAR_GET(wpn_glocksilencer);
 		int otherTempo = CVAR_GET_FLOAT("wpn_glocksilencer");
-		//int gaytemp = CVAR_GET_FLOAT(#CVarName)
+		//int yaytemp = CVAR_GET_FLOAT(#CVarName)
 
 		if (tempo != 3) {
 			int xxx = 4;
@@ -5575,14 +5153,11 @@ void updateCVarRefs(entvars_t *pev){
 
 	globalPSEUDO_queueClientSendoff = FALSE;
 
-
-}
-
+}//END OF updateCVarRefs
 
 
 
 BOOL verifyModelExists(char* path){
-
 	if(checkSubFileExistence(path) || checkValveSubFileExistence(path) ){
 		//no issue.
 		//easyForcePrintLine("I, %s, EXIST!", path);
@@ -5592,9 +5167,7 @@ BOOL verifyModelExists(char* path){
 		//easyForcePrintLine("SHIT. %s sucks", path);
 		return FALSE;
 	}
-
 }
-
 
 
 int attemptInterpretSpawnFlag(const char* pszSpawnFlags){
@@ -5631,7 +5204,6 @@ int attemptInterpretSpawnFlag(const char* pszSpawnFlags){
 }//END OF attemptInterpretSpawnFlag
 
 
-
 //This is called by human monsters looking for the RED blood color instead of a direct call for RED blood.
 //This lets german censorship give black blood (oil) in anticipation of the robot model replacement.
 int UTIL_BloodColorRedFilter(BOOL robotReplacementModelExists){
@@ -5646,15 +5218,6 @@ int UTIL_BloodColorRedFilter(BOOL robotReplacementModelExists){
 }//END OF UTIL_BloodColorRedFilter
 
 
-	
-	
-
-
-
-
-
-
-
 
 //OTHER MAJOR PRECAHCE METHODS:
 //World.cpp's W_Precache
@@ -5663,10 +5226,6 @@ int UTIL_BloodColorRedFilter(BOOL robotReplacementModelExists){
 
 
 //extern void W_Precache(void);
-
-
-
-
 
 
 
@@ -5687,34 +5246,12 @@ void UTIL_PrecacheOtherWeapon( const char *szClassname )
 
 	if (pEntity)
 	{
-		ItemInfo II;
-		pEntity->Precache( );
-		memset( &II, 0, sizeof II );
-		if ( ((CBasePlayerItem*)pEntity)->GetItemInfo( &II ) )
-		{
-			//TAGGG - CRITICAL CRITICAL CRITICAL.
-			// This shit right here?  This is what actually sets something in
-			// ItemInfoArray.  Any other mentions of "GetItemInfo" are often forgotten,
-			// so changes to some stat on a whim (like glock max ammo on seeing a change
-			// in CVar "glockOldReloadLogic") can change ItemInfoArray right there.
-			CBasePlayerItem::ItemInfoArray[II.iId] = II;
-
-			if ( II.pszAmmo1 && *II.pszAmmo1 )
-			{
-				AddAmmoNameToAmmoRegistry( II.pszAmmo1 );
-			}
-
-			if ( II.pszAmmo2 && *II.pszAmmo2 )
-			{
-				AddAmmoNameToAmmoRegistry( II.pszAmmo2 );
-			}
-
-			memset( &II, 0, sizeof II );
-		}
+		pEntity->Precache();
+		RegisterWeapon( (CBasePlayerWeapon*)pEntity, NULL);
 	}
 
 	REMOVE_ENTITY(pent);
-}
+}//END OF UTIL_PrecacheOtherWeapon
 
 
 // called by worldspawn
@@ -5725,8 +5262,6 @@ void W_Precache(void)
 	giAmmoIndex = 0;
 
 	// custom items...
-
-
 	
 	/*
 	//NOTICE - these are already precached by the weapon_satchel, which is called here for precaching all the assets of.
@@ -5766,34 +5301,24 @@ void W_Precache(void)
 	UTIL_PrecacheOther( "ammo_9mmAR" );
 	UTIL_PrecacheOther( "ammo_ARgrenades" );
 
-#if !defined( OEM_BUILD ) && !defined( HLDEMO_BUILD )
 	// python
 	UTIL_PrecacheOtherWeapon( "weapon_357" );
 	UTIL_PrecacheOther( "ammo_357" );
-#endif
 	
-#if !defined( OEM_BUILD ) && !defined( HLDEMO_BUILD )
 	// gauss
 	UTIL_PrecacheOtherWeapon( "weapon_gauss" );
 	UTIL_PrecacheOther( "ammo_gaussclip" );
-#endif
 
-#if !defined( OEM_BUILD ) && !defined( HLDEMO_BUILD )
 	// rpg
 	UTIL_PrecacheOtherWeapon( "weapon_rpg" );
 	UTIL_PrecacheOther( "ammo_rpgclip" );
-#endif
 
-#if !defined( OEM_BUILD ) && !defined( HLDEMO_BUILD )
 	// crossbow
 	UTIL_PrecacheOtherWeapon( "weapon_crossbow" );
 	UTIL_PrecacheOther( "ammo_crossbow" );
-#endif
 
-#if !defined( OEM_BUILD ) && !defined( HLDEMO_BUILD )
 	// egon
 	UTIL_PrecacheOtherWeapon( "weapon_egon" );
-#endif
 
 	// tripmine
 	UTIL_PrecacheOtherWeapon( "weapon_tripmine" );
@@ -5801,34 +5326,25 @@ void W_Precache(void)
 	//MODDD NOTE - Wondering about weapons/mine_charge ?  It's covered by weapon_tripmine. So it is guaranteed to be available for the gargantua too.
 
 
-#if !defined( OEM_BUILD ) && !defined( HLDEMO_BUILD )
 	// satchel charge
 	UTIL_PrecacheOtherWeapon( "weapon_satchel" );
-#endif
 
 	// hand grenade
 	UTIL_PrecacheOtherWeapon("weapon_handgrenade");
 
-#if !defined( OEM_BUILD ) && !defined( HLDEMO_BUILD )
 	// squeak grenade
 	UTIL_PrecacheOtherWeapon( "weapon_snark" );
 	//MODDD IMPORTANT - make sure to call "UTIL_PrecacheOtherWeapon" on guns! This registrers their ammo too.
 	//MODDD - chumtoad
 	UTIL_PrecacheOtherWeapon( "weapon_chumtoad" );
-#endif
 
-#if !defined( OEM_BUILD ) && !defined( HLDEMO_BUILD )
 	// hornetgun
 	UTIL_PrecacheOtherWeapon( "weapon_hornetgun" );
-#endif
 
-
-#if !defined( OEM_BUILD ) && !defined( HLDEMO_BUILD )
 	if ( g_pGameRules->IsDeathmatch() )
 	{
 		UTIL_PrecacheOther( "weaponbox" );// container for dropped deathmatch weapons
 	}
-#endif
 
 	g_sModelIndexFireball = PRECACHE_MODEL ("sprites/zerogxplode.spr");// fireball
 	g_sModelIndexWExplosion = PRECACHE_MODEL ("sprites/WXplo1.spr");// underwater fireball
@@ -5857,8 +5373,9 @@ void W_Precache(void)
 	PRECACHE_SOUND ("weapons/bullet_hit2.wav");	// hit by bullet
 	
 	PRECACHE_SOUND ("items/weapondrop1.wav");// weapon falls to the ground
+	
+}//END OF W_Precache
 
-}
 
 void ClientPrecache( void )
 {
@@ -5886,8 +5403,6 @@ void ClientPrecache( void )
 	                    precached?   has sentence?
 	NON-SENTENCESAVE:     YES            NO
 	    SENTENCESAVE:      NO           YES
-
-
 	*/
 
 
@@ -6112,12 +5627,6 @@ void ClientPrecache( void )
 	
 	
 	
-	
-	
-	
-	
-	
-	
 	//explosion sounds don't use the soundsentencesave.
 	PRECACHE_SOUND("old/explode0.wav");
 	PRECACHE_SOUND("old/explode1.wav");
@@ -6126,25 +5635,13 @@ void ClientPrecache( void )
 	PRECACHE_SOUND("weapons/explode4.wav");
 	PRECACHE_SOUND("weapons/explode5.wav");
 
-	
-	
-	
-	
 
 	//eh?
 	global_useSentenceSave = FALSE;
 
 
 
-
-
-
-
-
 	PRECACHE_MODEL("models/w_silencer.mdl");
-
-
-
 
 
 	//if "precacheAllVar" is on, don't precache the grunt here. Already done by precacheAll.
@@ -6167,7 +5664,6 @@ void ClientPrecache( void )
 	g_sFloaterExplode = PRECACHE_EVENT( 1, "events/floaterexplode.sc");
 	
 
-		
 	model_explosivestuff = PRECACHE_MODEL( "models/shrapnel.mdl" );
 
 }//END OF ClientPrecache()
@@ -6207,7 +5703,6 @@ void ExtraWorldPrecache(){
 void method_precacheAll(void){
 	//easyPrintLine("LANGUAGE: %d", g_Language);
 
-	
 	PRECACHE_SOUND("meme/ymg.wav", TRUE);
 
 
@@ -6247,7 +5742,6 @@ void method_precacheAll(void){
 	globalPSEUDO_germanModel_hassaultFound = FALSE;
 
 
-	
 	if(EASY_CVAR_GET(germanCensorship) == -1){
 		//global_germanCensorship = EASY_CVAR_GET(germanCensorship);
 
@@ -6260,9 +5754,7 @@ void method_precacheAll(void){
 
 	}
 
-
 	//!!!!tryLoadGermanGibs  !!!!!
-
 
 	//easyForcePrintLine("ARE YOU flaming %.2f %.2f", EASY_CVAR_GET(germanCensorship), EASY_CVAR_GET(allowGermanModels));
 	if(EASY_CVAR_GET(germanCensorship) == 1 && EASY_CVAR_GET(allowGermanModels) == 1){
@@ -6283,9 +5775,6 @@ void method_precacheAll(void){
 			easyForcePrintLine("***NOTICE: model \"%s\" missing.  HAssault model maintained.***", "models/g_hassault.mdl");
 		}
 
-		
-
-
 
 		//PRECACHE_MODEL( GERMAN_GIB_PATH );
 		//PRECACHE_MODEL("models/g_scientist.mdl");
@@ -6298,8 +5787,6 @@ void method_precacheAll(void){
 		
 	}
 	
-	
-
 
 	if(EASY_CVAR_GET(sentryCanGib) == 3 || EASY_CVAR_GET(miniturretCanGib) == 3 || EASY_CVAR_GET(turretCanGib) == 3){
 		PRECACHE_MODEL((char*)aryGibInfo[GIB_EXTRAMETAL_1_ID].modelPath);
@@ -6321,10 +5808,8 @@ void method_precacheAll(void){
 	}
 		
 
-
 	globalPSEUDO_allowGermanModelsMem = EASY_CVAR_GET(allowGermanModels);
 	//globalPSEUDO_germanCensorshipMem = EASY_CVAR_GET(germanCensorship);
-
 
 
 	//Actually these are so likely to be called, just precache them unconditionally.
@@ -6340,8 +5825,6 @@ void method_precacheAll(void){
 	}//END OF if(!soundSentenceSaveVar)
 	*/
 	
-
-
 
 
 	global_useSentenceSave = TRUE;
@@ -6360,19 +5843,14 @@ void method_precacheAll(void){
 
 
 
-
-
 	//MODDD - precache unconditionally now. Never call these through sentences.
 	PRECACHE_SOUND("common/bodydrop3.wav", TRUE);
 	PRECACHE_SOUND("common/bodydrop4.wav", TRUE);
 
 
-
-
 	if(precacheAllVar){
 		//counts for this.
 		giPrecacheGrunt = 1;
-
 
 		//NOTE: although this sound occurs in gargantua.cpp (and is referred to for the sound-sentence-save trick to work),
 		//      it can still be called by a section in monsters.cpp that receives sound-calls from the map.  Seems to happen on any map with a gargantua spawned?
@@ -6388,7 +5866,6 @@ void method_precacheAll(void){
 			//NOTICE - bodysplat sound already precached in ClientPrecache to be guaranteed to get precached, it may be played normally even with the soundsentencesave on.
 
 
-			
 			PRECACHE_SOUND("weapons/mortarhit.wav", FALSE);
 
 			/*
@@ -6402,7 +5879,6 @@ void method_precacheAll(void){
 			PRECACHE_SOUND("squeek/sqk_hunt3.wav");
 			PRECACHE_SOUND("squeek/sqk_deploy1.wav");
 			*/
-
 
 			//NOTICE - not worth making the precache standard attack miss / hit sound methods static.  All their sounds are already included in here.
 			//CBaseMonster::precacheStandardMeleeAttackMissSounds();
@@ -6521,9 +5997,6 @@ void method_precacheAll(void){
 			PRECACHE_SOUND("turret/tu_spindown.wav");
 			PRECACHE_SOUND("turret/tu_search.wav");
 			PRECACHE_SOUND("turret/tu_alert.wav");
-
-
-			
 
 
 			PRECACHE_SOUND("zombie/zo_attack1.wav");
@@ -6739,11 +6212,7 @@ void method_precacheAll(void){
 			PRECACHE_SOUND("hgrunt/gr_reload1.wav");
 
 
-
 			PRECACHE_SOUND("scientist/scream25.wav");
-
-
-
 			
 			PRECACHE_SOUND("hassault/hw_spin.wav");	
 			PRECACHE_SOUND("hassault/hw_spinup.wav");	
@@ -6784,8 +6253,6 @@ void method_precacheAll(void){
 			//chew sounds done above.
 			PRECACHE_SOUND("barnacle/bcl_tongue1.wav");
 
-
-
 			//snapbug
 
 			//archer
@@ -6804,13 +6271,7 @@ void method_precacheAll(void){
 			PRECACHE_SOUND("debris/beamstart10.wav");
 			PRECACHE_SOUND("debris/beamstart11.wav");
 			
-
-
 			
-			
-
-
-
 			//floater
 
 			//flyer?
@@ -6842,8 +6303,6 @@ void method_precacheAll(void){
 			PRECACHE_SOUND("doors/doorstop7.wav");
 			PRECACHE_SOUND("doors/doorstop8.wav");
 
-
-	
 			PRECACHE_SOUND("doors/doormove1.wav");
 			PRECACHE_SOUND("doors/doormove2.wav");
 			PRECACHE_SOUND("doors/doormove3.wav");
@@ -6855,7 +6314,6 @@ void method_precacheAll(void){
 			PRECACHE_SOUND("doors/doormove9.wav");
 			PRECACHE_SOUND("doors/doormove10.wav");
 
-	
 			PRECACHE_SOUND("ambience/drips.wav");
 			PRECACHE_SOUND("ambience/labmoan.wav");
 			PRECACHE_SOUND("ambience/mechwhine.wav");
@@ -6863,13 +6321,9 @@ void method_precacheAll(void){
 			PRECACHE_SOUND("ambience/wind2.wav");
 	
 			PRECACHE_SOUND("holo/tr_holo_nicejob.wav");
-
-	
 			PRECACHE_SOUND("debris/flesh6.wav");
 
 			*/
-
-
 
 		}//END OF if(!soundSentenceSaveVar)
 
@@ -6883,15 +6337,9 @@ void method_precacheAll(void){
 
 	//is that really necessary?
 	PRECACHE_MODEL( "models/can.mdl" );
-
-
 	PRECACHE_MODEL("sprites/laserdot.spr");
 
-
-
-
 	PRECACHE_MODEL("models/stukabat.mdl");
-
 
 	PRECACHE_MODEL("models/garg.mdl");
 	PRECACHE_MODEL("sprites/gargeye1.spr");
@@ -6904,16 +6352,8 @@ void method_precacheAll(void){
 	PRECACHE_MODEL("sprites/lgtning.spr");
 	
 	PRECACHE_MODEL("models/roach.mdl");
-
-
-
-
 	PRECACHE_MODEL("models/scientist.mdl");
-
-	
-	
 	PRECACHE_MODEL("models/barney.mdl");
-
 
 	PRECACHE_MODEL("models/boid.mdl");
 	PRECACHE_MODEL("models/osprey.mdl");
@@ -6933,17 +6373,10 @@ void method_precacheAll(void){
 	PRECACHE_MODEL("sprites/flare3.spr");
 	PRECACHE_MODEL("models/turret.mdl");
 	PRECACHE_MODEL("models/miniturret.mdl");
-
-
-
-	
-
 	PRECACHE_MODEL("models/zombie.mdl");
-
 	PRECACHE_MODEL("models/sentry.mdl");
-
 	PRECACHE_MODEL("models/controller.mdl");
-
+	
 	PRECACHE_MODEL("sprites/xspark4.spr");
 	PRECACHE_MODEL("sprites/xspark1.spr");
 	PRECACHE_MODEL("models/nihilanth.mdl");
@@ -6955,12 +6388,10 @@ void method_precacheAll(void){
 	PRECACHE_MODEL("sprites/muzzleflash3.spr");
 
 	PRECACHE_MODEL("models/tentacle2.mdl");
-
 	PRECACHE_MODEL("models/leech.mdl");
 
 	PRECACHE_MODEL("models/bigrat.mdl");
 	PRECACHE_MODEL("models/houndeye.mdl");
-
 
 	PRECACHE_MODEL("sprites/shockwave.spr");
 	PRECACHE_MODEL("models/hassassin.mdl");
@@ -6969,9 +6400,6 @@ void method_precacheAll(void){
 	PRECACHE_MODEL("sprites/mommaspit.spr");//spitprojectile.
 	PRECACHE_MODEL("sprites/mommaspout.spr");//clientsidespittle.
 	PRECACHE_MODEL("sprites/mommablob.spr");
-
-
-
 
 	PRECACHE_MODEL("models/bullsquid.mdl");
 
@@ -6984,14 +6412,8 @@ void method_precacheAll(void){
 	CSquidSpit::precacheStatic();
 	//PRECACHE_MODEL("sprites/tinyspit.spr");//clientside spittle.
 
-	
-
-
-
 	PRECACHE_MODEL("models/baby_headcrab.mdl");
 	PRECACHE_MODEL("models/headcrab.mdl");
-	
-
 	
 	PRECACHE_MODEL("models/agrunt.mdl");
 	PRECACHE_MODEL("sprites/muz4.spr");
@@ -7002,15 +6424,12 @@ void method_precacheAll(void){
 	
 	PRECACHE_MODEL("sprites/poison.spr");
 
-	
-	
 	PRECACHE_MODEL("models/shell.mdl");//brassshell
 	PRECACHE_MODEL("models/shotgunshell.mdl");
 	PRECACHE_MODEL("models/floater.mdl");
 	PRECACHE_MODEL("models/w_medkit.mdl");
 	PRECACHE_MODEL ("models/w_battery.mdl");
 
-	
 	PRECACHE_MODEL ("models/w_antidote.mdl");
 	PRECACHE_MODEL ("models/w_suit.mdl");
 
@@ -7037,8 +6456,6 @@ void method_precacheAll(void){
 	PRECACHE_MODEL("models/chumtoad.mdl");
 	PRECACHE_MODEL("models/v_chub.mdl");
 
-
-	
 	PRECACHE_MODEL ("models/w_357ammobox.mdl");
 	PRECACHE_MODEL ("models/w_9mmclip.mdl");
 	PRECACHE_MODEL ("models/w_shotbox.mdl");
@@ -7049,7 +6466,6 @@ void method_precacheAll(void){
 
 	PRECACHE_MODEL("models/grenade.mdl");	// grenade
     
-
 
 	PRECACHE_EVENT( 1, "events/mp5.sc" );
 	PRECACHE_EVENT( 1, "events/mp52.sc" );
@@ -7071,25 +6487,14 @@ void method_precacheAll(void){
 
 
 	//MODDD - keep up.
-	//friendly
-	//snapbug
-	//archer
-	//kingpin
-	//floater
-	//flyer?
+	// snapbug
 	PRECACHE_MODEL("models/friendly.mdl");
 	PRECACHE_MODEL("models/snapbug.mdl");
 	PRECACHE_MODEL("models/archer.mdl");
 	PRECACHE_MODEL("models/kingpin.mdl");
 	PRECACHE_MODEL("models/floater.mdl");
 	PRECACHE_MODEL("models/aflock.mdl");
-
-
-
-
-
-
-
+	
 	}//END OF if(precacheAllVar)
 	else if(EASY_CVAR_GET(canDropInSinglePlayer) == 1){
 		//If the player can drop in SinglePlayer, precache this in anticipation of that.
@@ -7097,14 +6502,7 @@ void method_precacheAll(void){
 		PRECACHE_MODEL("models/w_weaponbox.mdl");
 	}
 
-
-}
-
-
-
-
-
-
+}//END OF method_precacheAll
 
 
 
@@ -7161,9 +6559,6 @@ BOOL UTIL_IsFacing( entvars_t *pevTest, const Vector &vecLookAtTest, const float
 
 
 
-
-
-
 BOOL UTIL_IsFacingAway( entvars_t *pevTest, const Vector &vecLookAtTest )
 {
 	return UTIL_IsFacingAway(pevTest, vecLookAtTest, 0.04);  // -1 + 0.04 = -0.96, +/- 15 degrees or so
@@ -7187,8 +6582,7 @@ BOOL UTIL_IsFacingAway( entvars_t *pevTest, const Vector &vecLookAtTest, const f
 	angle.x = 0;
 	UTIL_MakeVectorsPrivate( angle, forward, NULL, NULL );
 	
-
-	easyForcePrintLine("HOW FAR HE BE FACIN AWAY %.2f TOL: %.2f", DotProduct( forward, vecDir ), (-1 + arg_tolerance) );
+	easyPrintLine("HOW FAR FACIN AWAY %.2f TOL: %.2f", DotProduct( forward, vecDir ), (-1 + arg_tolerance) );
 
 	if ( DotProduct( forward, vecDir ) <= (-1 + arg_tolerance) )
 	{
@@ -7196,13 +6590,6 @@ BOOL UTIL_IsFacingAway( entvars_t *pevTest, const Vector &vecLookAtTest, const f
 	}
 	return FALSE;
 }
-
-
-
-
-
-
-
 
 
 //MODDD - utility random invert.  Good tool for a random that is so far from 0, but can be positive or negative from it.
@@ -7253,7 +6640,6 @@ float randomValue(const float& arg_fltMin, const float& arg_fltMax){
 void UTIL_deriveColorFromMonsterHealth(const float& curHealth, const float& maxHealth, int& r, int& g, int& b){
 	//nothing too special.
 	
-
 	const int brightness = 250;
 
 	//At what point is the GUI going from green to yellow? Measure of health (0 - 100)
@@ -7278,8 +6664,6 @@ void UTIL_deriveColorFromMonsterHealth(const float& curHealth, const float& maxH
 	}
 
 }
-
-
 
 
 void attemptSendBulletSound(const Vector& bulletHitLoc, entvars_t* pevShooter){
@@ -7322,17 +6706,11 @@ void attemptSendBulletSound(const Vector& bulletHitLoc, entvars_t* pevShooter){
 					}
 				}
 
-				
-
 			}//END OF if(testMon != NULL)
 
 		}//END OF while(another entity so far from the bullet hole to be triggered)
 	}//END OF EASY_CVAR_GET(bulletholeAlertRange) above 0 check
-
-
 }
-
-
 
 
 //MODDD - moved here from player.cpp.   Replaced by the slight mod below.
@@ -7368,7 +6746,6 @@ CBaseEntity *FindEntityForward( CBasePlayer* pMe )
 	//UTIL_MakeVectors(pMe->pev->v_angle + pMe->pev->punchangle);
 
 
-
 	const float SEARCH_DIST = 2048; //2048;
 
 	UTIL_MakeVectors(pMe->pev->v_angle + pMe->pev->punchangle);
@@ -7378,20 +6755,9 @@ CBaseEntity *FindEntityForward( CBasePlayer* pMe )
 	UTIL_TraceLine(vecStart, vecEnd, dont_ignore_monsters, pMe->edict(), &tr );
 	
 
-
-
-
-
-
-
-
-
-
-
 	/*
 	pMe->debugDrawVect2 = pMe->pev->origin + pMe->pev->view_ofs + gpGlobals->v_forward * 5;
 	pMe->debugDrawVect3 = pMe->pev->origin + pMe->pev->view_ofs + gpGlobals->v_forward * 360;
-
 
 	
 	Vector angleToUse;
@@ -7413,23 +6779,13 @@ CBaseEntity *FindEntityForward( CBasePlayer* pMe )
 	pMe->debugDrawVectRecentGive2 = pMe->pev->origin + pMe->pev->view_ofs + gpGlobals->v_forward * 360;
 	*/
 
-
-
-
-
 	
 	if(EASY_CVAR_GET(drawDebugPathfinding2) == 1){::DebugLine_ClearAll();}
 	
 
-
 	//float fullLength = 5 + 2048;
 	BOOL success = FALSE;
 	float fracto = 1.0;
-
-
-
-
-
 
 
 	if ( tr.flFraction != 1.0 && !FNullEnt( tr.pHit) )
@@ -7437,8 +6793,6 @@ CBaseEntity *FindEntityForward( CBasePlayer* pMe )
 		CBaseEntity *pHit = CBaseEntity::Instance( tr.pHit );
 
 
-
-		
 		fracto = tr.flFraction;
 		if(EASY_CVAR_GET(drawDebugPathfinding2) == 1){::DebugLine_Setup(0, vecStart, vecEnd, fracto);}
 
@@ -7484,11 +6838,9 @@ CBaseEntity *FindEntityForward( CBasePlayer* pMe )
 	}
 	*/
 
-	
 	if(EASY_CVAR_GET(drawDebugPathfinding2) == 1){::DebugLine_Setup(0, vecStart, vecEnd, fracto);}
 	return NULL;
 }
-
 
 
 //if -1 or 0, return as-is.  If anything else, take as "arg_delay - gpGlobals->time", looking like a count-down.
@@ -7524,9 +6876,7 @@ Vector getRotatedVectorAboutZAxis(const Vector& arg_vec, const float& arg_deg){
 	vecReturn.z = DotProduct(arg_vec, rotMatrix[2]);
 
 	return vecReturn;
-
 }
-
 
 
 void UTIL_ServerMassCVarReset(entvars_t* pev){
@@ -7535,34 +6885,6 @@ void UTIL_ServerMassCVarReset(entvars_t* pev){
 	EASY_CVAR_RESET_MASS_CLIENT_SIGNAL
 }
 
-
-
-/*
-// UNUSED, see notes in util.h about this.  Mainly use EASY_CVAR_PRINTIF_PRE with a CVar name instead.
-void EASY_CVAR_PRINTIF(float geh, const char *szFmt, ... )
-{
-	if(geh == 1){
-		va_list		argptr;
-		static char	string[1024];
-	
-		va_start (argptr, szFmt);
-		vsprintf (string, szFmt,argptr);
-
-		g_engfuncs.pfnServerPrint( UTIL_VarArgs( "%s\n", UTIL_VarArgsVA(szFmt, argptr ) )  );
-
-		va_end (argptr);
-
-		
-	}
-}
-// Unused?  I forget what this was trying to do.
-void EASY_CVAR_PRINTIF_VECTOR(float geh, const char *szFmt, ... )
-{
-	if(geh == 1){
-		//blank.
-	}
-}
-*/
 
 void PRINTQUEUE_STUKA_SEND(PrintQueue& toPrint, const char* src, ...){
 	if(toPrint.latestPlace < 5){
@@ -7587,14 +6909,8 @@ BOOL getGermanModelsAllowed(void){
 }
 
 
-
-
-
-
-
-
 ///////////////////////////////////////////////////////////////////////////
-//MODDD - thanks to Spirit of Half-Life 1.9!
+//MODDD - Spirit of Half-Life 1.9
 ///////////////////////////////////////////////////////////////////////////
 
 char* GetStringForState( STATE state )
@@ -7619,294 +6935,14 @@ char* GetStringForState( STATE state )
 Vector projectionOntoPlane(Vector arg_vectOnto, Vector arg_planeNormal){
 	
 	return arg_vectOnto - ( ( ::DotProduct(arg_vectOnto, arg_planeNormal) / ::pow(arg_planeNormal.Length(), 2) ) * arg_planeNormal );
-
 }//END OF projectionOntoPlane
 
 
-
-int matrices_varCols;
-int matrices_expRows;
-int matrices_constCols;
-
-int matrices_currentRowIndex;
-
-float matrices_var[32][32];
-float matrices_const[32][32];
-
-void matrices_setup(int arg_cols, int arg_rows){
-	matrices_varCols = arg_cols;
-	matrices_constCols = 1;
-	matrices_expRows = arg_rows;
-
-	matrices_currentRowIndex = 0;
-}
-
-
-void matrices_sendRow(float arg_1, float arg_2, float arg_c){
 	
-	matrices_var[matrices_currentRowIndex][0] = arg_1;
-	matrices_var[matrices_currentRowIndex][1] = arg_2;
-	matrices_const[matrices_currentRowIndex][0] = arg_c;
-
-	matrices_currentRowIndex++;
-}
-
-
-void matrices_getResults(float* arg_result_t, float* arg_result_s){
-
-	matrices_rowReduce();
-	//work with what we got.
-
-	//see if it is in reduced row echolon form. We sure hope it is.
-
-	if(matrices_var[0][0] == 1 && matrices_var[1][1] == 1){
-		//ok
-		*arg_result_t = matrices_const[0][0];
-		*arg_result_s = matrices_const[1][0];
-
-	}else{
-		//HORRIBLE FAILURE.?? 
-		//throw exception?
-
-	}
-
-
-}//END OF matrices_getResults(...)
-
-
-void matrices_printOut(){
-	//nothin yet
-
-
-}
-
-
-
-//[rows][cols]
-//matrix1[0].length = matrices_varCols
-//matrix1.length = matrices_expRows
-//matrix1 = matrices_var;
-//matrix2 = matrices_const;
-
-void matrices_rowReduce(){
-		
-	int matrix2columns = matrices_constCols;
-		
-	int lasty = -1;
-		
-	for(int x = 0; x < matrices_varCols; x++){
-			
-		for(int y = lasty + 1, starty = lasty + 1; y < matrices_expRows; y++){
-				
-			//System.out.println("TESTA " + y + " " + x + " : " + matrix1[y][x] );
-			if(matrices_var[y][x] != 0){
-				//System.out.println("MY PIVOTIZER IS AT " + y + " " + x + "  WHICH BE " + matrices_var[y][x]);
-				matrices_printOut();
-				//System.out.println("---------");
-					
-				matrices_divideRow(y, matrices_var[y][x] );
-					
-				matrices_pivotizeColumn(y, x);
-				matrices_swapRows(y, starty);
-					
-				//lasty = y;
-				lasty = starty;
-				break;
-			}
-			//break;
-				
-		}
-			
-	}
-		
-		
-}//END OF matrices_rowReduce()
-
-
-
-
-
-	
-/*
-void printOut(float[][] matrix1){
-		
-
-	for(int y = 0; y < matrices_expRows; y++){
-			
-		for(int x = 0; x < matrices_varCols; x++){
-			System.out.print(matrix1[y][x] + " ");
-				
-		}
-			
-			
-			
-		System.out.println();
-			
-	}
-		
-}
-	
-	
-void printOut(float[][] matrix1, float[][] matrix2){
-		
-
-	for(int y = 0; y < matrices_expRows; y++){
-			
-		for(int x = 0; x < matrices_varCols; x++){
-			System.out.print(matrix1[y][x] + " ");
-				
-		}
-		System.out.print("| ");
-			
-		if(matrix2.length != 0 && matrix2[0].length != 0){
-			for(int x = 0; x < matrix2[0].length; x++){
-				System.out.print(matrix2[y][x] + " ");
-					
-			}
-		}
-			
-			
-			
-		System.out.println();
-			
-	}
-		
-}
-*/
-	
-	
-	
-	
-	
-void matrices_pivotizeColumn(int rowNumber, int columnNumber){
-		
-		
-	int matrix2columns = matrices_constCols;
-		
-	for(int y = 0; y < matrices_expRows; y++){
-		int x = 0;
-
-		if(y == rowNumber){
-			//skip.
-		}else{
-			//zero it out.
-			
-			float multiple = -matrices_var[y][columnNumber];
-			//System.out.println("MULTI IS " + multiple + "from " + y + " " + columnNumber);
-				
-			for(x = 0; x < matrices_varCols; x++){
-				//addMultipleOf(matrices_var, matrix2, x, rowNumber, x, y);
-				matrices_var[y][x] += (multiple * matrices_var[rowNumber][x]);
-			}
-				
-			for(x = 0; x < matrix2columns; x++){
-				//addMultipleOf(matrix1, matrix2, x, rowNumber, x, y);
-				matrices_const[y][x] += (multiple * matrices_const[rowNumber][x]);
-			}
-			
-			
-			
-		}//END OF else OF if(y == rowNumber)
-			
-	}//END OF for(int y = 0...)
-		
-}
-	
-	
-/*
-void pivotizeColumnBottom(float[][] matrix1, float[][] matrix2, int rowNumber, int columnNumber){
-		
-	int matrix2columns = 0;
-		
-	if(matrix2.length != 0 && matrix2[0].length != 0){
-		matrix2columns = matrix2[0].length;
-	}
-		
-		
-	for(int y = rowNumber; y < matrices_expRows; y++){
-			
-		if(y == rowNumber){
-			//skip.
-		}else{
-			//zero it out.
-
-			float multiple = -matrix1[y][columnNumber];
-			//System.out.println("MULTI IS " + multiple + "from " + y + " " + columnNumber);
-				
-			for(int x = 0; x < matrices_varCols; x++){
-				//addMultipleOf(matrix1, matrix2, x, rowNumber, x, y);
-				matrix1[y][x] += (multiple * matrix1[rowNumber][x]);
-			}
-				
-			for(int x = 0; x < matrix2columns; x++){
-				//addMultipleOf(matrix1, matrix2, x, rowNumber, x, y);
-				matrix2[y][x] += (multiple * matrix2[rowNumber][x]);
-			}
-				
-		}//END OF else OF if(y == rowNumber)
-			
-	}//END OF for(int y = 0...)
-		
-}
-*/
-	
-	
-void matrices_divideRow(int rowNumb, float divideBy){
-	
-	int x = 0;
-	int matrix2columns = matrices_constCols;
-		
-	if(divideBy != 0){
-		for(x = 0; x < matrices_varCols; x++){
-			matrices_var[rowNumb][x] /= divideBy;
-		}
-		for(x = 0; x < matrix2columns; x++){
-			matrices_const[rowNumb][x] /= divideBy;
-		}
-		//constcolumn[rowNumb] /= divideBy;
-	}
-		
-}
-	
-	
-void matrices_swapRows(int row1, int row2){
-	int x;
-	int matrix2columns = matrices_constCols;
-
-	//System.out.println("WHAT " + row1 + " " + row2);
-	if(row1 != row2){
-		
-		for(x = 0; x < matrices_varCols; x++){
-			float tempElement = matrices_var[row1][x]; 
-			matrices_var[row1][x] = matrices_var[row2][x];
-			matrices_var[row2][x] = tempElement;
-				
-		}
-			
-		for(x = 0; x < matrix2columns; x++){
-			float tempElement = matrices_const[row1][x]; 
-			matrices_const[row1][x] = matrices_const[row2][x];
-			matrices_const[row2][x] = tempElement;
-				
-		}
-			
-		/*
-		float tempElement = constcolumn[row1];
-		constcolumn[row1] = constcolumn[row2];
-		constcolumn[row2] = tempElement;
-	*/
-	}
-		
-}
-	
-	
-
 CBaseEntity* UTIL_CreateNamedEntity(const char* arg_entityName){
 	edict_t* pent = CREATE_NAMED_ENTITY( MAKE_STRING( arg_entityName) );
 	return CBaseEntity::Instance( pent );
 }
-
-
 
 BOOL entityHidden(CBaseEntity* test){
 	if(test==NULL)return FALSE;
@@ -7918,34 +6954,7 @@ BOOL entityHidden(edict_t* test){
 }
 
 
-
-
-
-//NOTE: not necessary, see "FStrEq" in util.h.
-/*
-BOOL compareStrings(const char* string1, const char* string2){
-	//const char* string1 = STRING(this->pev->classname);
-	//const char* string2 = "monster_human_grunt";
-	BOOL same = TRUE;
-	for(int i = 0; i < 19; i++){
-		//end early? not the same.
-		if(string1[i] == '\0' || string2[i] == '\0'){
-			same = FALSE;
-			break;
-		}
-		if(string1[i] != string2[i]){
-			same = FALSE;
-			break;
-		}
-	}
-	return same;
-}
-*/
-
-
-
 void UTIL_playOrganicGibSound(entvars_t* pevSoundSource){
-
 	switch(RANDOM_LONG(0, 3)){
 	case 0:
 	case 1:
@@ -7958,15 +6967,10 @@ void UTIL_playOrganicGibSound(entvars_t* pevSoundSource){
 		EMIT_SOUND_FILTERED(ENT(pevSoundSource), CHAN_WEAPON, "debris/bustflesh2.wav", 1, ATTN_NORM, TRUE);
 	break;
 	}//END OF switch
-
-
-
-
 }//END OF Util_playOrganicGibsound
 
 
 void UTIL_playMetalGibSound(entvars_t* pevSoundSource){
-
 	switch(RANDOM_LONG(0, 4)){
 	case 0:
 		EMIT_SOUND_FILTERED(ENT(pevSoundSource), CHAN_WEAPON, "debris/bustmetal1.wav", 1, ATTN_NORM, TRUE);
@@ -7984,18 +6988,7 @@ void UTIL_playMetalGibSound(entvars_t* pevSoundSource){
 		EMIT_SOUND_FILTERED(ENT(pevSoundSource), CHAN_WEAPON, "debris/metal5.wav", 1, ATTN_NORM, TRUE);
 	break;
 	}//END OF switch
-
 }//END OF UTIL_playMetalGibSound
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -8010,9 +7003,6 @@ void OnBeforeChangeLevelTransition(){
 }
 
 
-
-
-
 //MODDD - another new event, even earlier than OnMapLoadStart.  Called by Engine-called method "ResetGlobalState".
 //Possibly as early as it gets, even earlier than a Map instance being made. The Map (CWorld constructor being called) happens after this.
 //More importantly, not only is this called before ANY spawn/precache methods, but also before even any KeyValue reads, otherwise thought
@@ -8024,27 +7014,17 @@ void OnMapLoadPreStart(){
 }
 
 
-
-
 //MODDD - new event, called by CWorld's precache method (first thing precached since starting a map or calling changelevel, transition or not).
 void OnMapLoadStart(){
 	easyForcePrintLine("!!!!!! OnMapLoadStart !!!");
 
-
-
-
-
-
-	
 	DebugLine_ClearAll();
-
 
 	if(!loadedGame){
 		//If we loaded a game or came from a transition, these values have already been loaded from save data or are cumulative with
 		//soon-to-be new entities for this map, possibly. Don't overwrite them with 0's.
 		ResetDynamicStaticIDs();
 	}
-
 
 	//Reset these gibmodel references to re-get them when these turrets are precached again.
 	CTurret::gibModelRef = NULL;
@@ -8060,10 +7040,7 @@ void OnMapLoadStart(){
 
 
 
-extern BOOL queueYMG_stopSend;
-
 void OnMapLoadEnd(){
-
 	//Going around changing the map? Need this to reset.
 	DebugLine_drawTime = -1;
 	queueYMG_stopSend = TRUE;
@@ -8075,9 +7052,7 @@ void OnMapLoadEnd(){
 		worldRef->getCustomMapSettingsFromGlobal();
 	}
 	
-
 }//END OF OnMapLoadEnd
-
 
 
 const char* TOGGLE_STATE_STR[] = {"TS_AT_TOP", "TS_AT_BOTTOM", "TS_GOING_UP", "TS_GOING_DOWN"  };
@@ -8092,15 +7067,13 @@ const char* TOGGLE_STATE_STR_Safe(int argIndex){
 
 
 
-//Only the physical IDs themselves need to be reset in the case of starting a new map as opposed to loading one from a save file.
-//New map loads
+// Only the physical IDs themselves need to be reset in the case of starting a new map as opposed to loading one from a save file.
 void ResetDynamicStaticIDs(){
 	CBaseMonster::monsterIDLatest = 0;
 	CFuncTrackChange::FuncTrackChangeIDLatest = 0;
 	CPathTrack::PathTrackIDLatest = 0;
 
 }
-
 
 void SaveDynamicIDs(CGlobalState* argGS){
 	argGS->m_i_monsterIDLatest = CBaseMonster::monsterIDLatest;
@@ -8116,7 +7089,7 @@ void RestoreDynamicIDs(CGlobalState* argGS){
 	CFuncTrackChange::FuncTrackChangeIDLatest = argGS->m_i_FuncTrackChangeIDLatest;
 	CPathTrack::PathTrackIDLatest = argGS->m_i_PathTrackIDLatest;
 	
-	//Make sure these are not overwritten by World's precache calling OnMapLoadStart.
+	// Make sure these are not overwritten by World's precache calling OnMapLoadStart.
 	loadedGame = TRUE;
 
 }//END OF RestoreGlobalState
@@ -8124,14 +7097,288 @@ void RestoreDynamicIDs(CGlobalState* argGS){
 
 
 BOOL GermanModelOrganicLogic(){
-	//Do german models still have the behavior of their organic originals, like being attractive to scavenger enemies
-	//when dead?
-	//Can make this a CVar later.
+	// Do german models still have the behavior of their organic originals, like being attractive to scavenger enemies
+	// when dead?
+	// Can make this a CVar later.
 	return TRUE;
 }
 
 
 
+//=========================================================
+// FBoxVisible - a more accurate ( and slower ) version
+// of FVisible. 
+//
+// !!!UNDONE - make this CBaseMonster?
+//=========================================================
+BOOL FBoxVisible ( entvars_t *pevLooker, entvars_t *pevTarget, Vector &vecTargetOrigin, float flSize )
+{
+	// don't look through water
+	if ((pevLooker->waterlevel != 3 && pevTarget->waterlevel == 3) 
+		|| (pevLooker->waterlevel == 3 && pevTarget->waterlevel == 0))
+		return FALSE;
+
+	TraceResult tr;
+	Vector	vecLookerOrigin = pevLooker->origin + pevLooker->view_ofs;//look through the monster's 'eyes'
+	for (int i = 0; i < 5; i++)
+	{
+		Vector vecTarget = pevTarget->origin;
+		vecTarget.x += RANDOM_FLOAT( pevTarget->mins.x + flSize, pevTarget->maxs.x - flSize);
+		vecTarget.y += RANDOM_FLOAT( pevTarget->mins.y + flSize, pevTarget->maxs.y - flSize);
+		vecTarget.z += RANDOM_FLOAT( pevTarget->mins.z + flSize, pevTarget->maxs.z - flSize);
+
+		UTIL_TraceLine(vecLookerOrigin, vecTarget, ignore_monsters, ignore_glass, ENT(pevLooker)/*pentIgnore*/, &tr);
+		
+		if (tr.flFraction == 1.0)
+		{
+			vecTargetOrigin = vecTarget;
+			return TRUE;// line of sight is valid.
+		}
+	}
+	return FALSE;// Line of sight is not established
+}
+
+//
+// VecCheckToss - returns the velocity at which an object should be lobbed from vecspot1 to land near vecspot2.
+// returns g_vecZero if toss is not feasible.
+// 
+Vector VecCheckToss ( entvars_t *pev, const Vector &vecSpot1, Vector vecSpot2, float flGravityAdj )
+{
+	TraceResult		tr;
+	Vector			vecMidPoint;// halfway point between Spot1 and Spot2
+	Vector			vecApex;// highest point 
+	Vector			vecScale;
+	Vector			vecGrenadeVel;
+	Vector			vecTemp;
+	float		flGravity = g_psv_gravity->value * flGravityAdj;
+
+	if (vecSpot2.z - vecSpot1.z > 500)
+	{
+		// to high, fail
+		return g_vecZero;
+	}
+
+	UTIL_MakeVectors (pev->angles);
+
+	// toss a little bit to the left or right, not right down on the enemy's bean (head). 
+	vecSpot2 = vecSpot2 + gpGlobals->v_right * ( RANDOM_FLOAT(-8,8) + RANDOM_FLOAT(-16,16) );
+	vecSpot2 = vecSpot2 + gpGlobals->v_forward * ( RANDOM_FLOAT(-8,8) + RANDOM_FLOAT(-16,16) );
+	
+	// calculate the midpoint and apex of the 'triangle'
+	// UNDONE: normalize any Z position differences between spot1 and spot2 so that triangle is always RIGHT
+
+	// How much time does it take to get there?
+
+	// get a rough idea of how high it can be thrown
+	vecMidPoint = vecSpot1 + (vecSpot2 - vecSpot1) * 0.5;
+	UTIL_TraceLine(vecMidPoint, vecMidPoint + Vector(0,0,500), ignore_monsters, ENT(pev), &tr);
+	vecMidPoint = tr.vecEndPos;
+	// (subtract 15 so the grenade doesn't hit the ceiling)
+	vecMidPoint.z -= 15;
+
+	if (vecMidPoint.z < vecSpot1.z || vecMidPoint.z < vecSpot2.z)
+	{
+		// to not enough space, fail
+		return g_vecZero;
+	}
+
+	// How high should the grenade travel to reach the apex
+	float distance1 = (vecMidPoint.z - vecSpot1.z);
+	float distance2 = (vecMidPoint.z - vecSpot2.z);
+
+	// How long will it take for the grenade to travel this distance
+	float time1 = sqrt( distance1 / (0.5 * flGravity) );
+	float time2 = sqrt( distance2 / (0.5 * flGravity) );
+
+	if (time1 < 0.1)
+	{
+		// too close
+		return g_vecZero;
+	}
+
+	// how hard to throw sideways to get there in time.
+	vecGrenadeVel = (vecSpot2 - vecSpot1) / (time1 + time2);
+	// how hard upwards to reach the apex at the right time.
+	vecGrenadeVel.z = flGravity * time1;
+
+	// find the apex
+	vecApex  = vecSpot1 + vecGrenadeVel * time1;
+	vecApex.z = vecMidPoint.z;
+
+	UTIL_TraceLine(vecSpot1, vecApex, dont_ignore_monsters, ENT(pev), &tr);
+	if (tr.flFraction != 1.0)
+	{
+		// fail!
+		return g_vecZero;
+	}
+
+	// UNDONE: either ignore monsters or change it to not care if we hit our enemy
+	UTIL_TraceLine(vecSpot2, vecApex, ignore_monsters, ENT(pev), &tr); 
+	if (tr.flFraction != 1.0)
+	{
+		// fail!
+		return g_vecZero;
+	}
+	
+	return vecGrenadeVel;
+}
+
+
+//
+// VecCheckThrow - returns the velocity vector at which an object should be thrown from vecspot1 to hit vecspot2.
+// returns g_vecZero if throw is not feasible.
+// 
+Vector VecCheckThrow ( entvars_t *pev, const Vector &vecSpot1, Vector vecSpot2, float flSpeed, float flGravityAdj )
+{
+	float		flGravity = g_psv_gravity->value * flGravityAdj;
+
+	Vector vecGrenadeVel = (vecSpot2 - vecSpot1);
+
+	// throw at a constant time
+	float time = vecGrenadeVel.Length( ) / flSpeed;
+	vecGrenadeVel = vecGrenadeVel * (1.0 / time);
+
+	// adjust upward toss to compensate for gravity loss
+	vecGrenadeVel.z += flGravity * time * 0.5;
+
+	Vector vecApex = vecSpot1 + (vecSpot2 - vecSpot1) * 0.5;
+	vecApex.z += 0.5 * flGravity * (time * 0.5) * (time * 0.5);
+	
+	TraceResult tr;
+	UTIL_TraceLine(vecSpot1, vecApex, dont_ignore_monsters, ENT(pev), &tr);
+	if (tr.flFraction != 1.0)
+	{
+		// fail!
+		return g_vecZero;
+	}
+
+	UTIL_TraceLine(vecSpot2, vecApex, ignore_monsters, ENT(pev), &tr);
+	if (tr.flFraction != 1.0)
+	{
+		// fail!
+		return g_vecZero;
+	}
+
+	return vecGrenadeVel;
+}
+
+
+
+//***MOVED FROM A FEW OTHER PLACES***
+/////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////
+/*
+================
+SpawnBlood
+================
+*/
+void SpawnBlood(Vector vecSpot, int bloodColor, float flDamage)
+{
+	UTIL_BloodDrips( vecSpot, g_vecAttackDir, bloodColor, (int)flDamage );
+}
+
+
+int DamageDecal( CBaseEntity *pEntity, int bitsDamageType )
+{
+	return ::DamageDecal(pEntity, bitsDamageType, 0);
+}
+int DamageDecal( CBaseEntity *pEntity, int bitsDamageType, int bitsDamageTypeMod )
+{
+	if ( !pEntity )
+		return (DECAL_GUNSHOT1 + RANDOM_LONG(0,4));
+	
+	return pEntity->DamageDecal( bitsDamageType, bitsDamageTypeMod );
+}
+
+void DecalGunshot( TraceResult *pTrace, int iBulletType )
+{
+	// Is the entity valid
+	if ( !UTIL_IsValidEntity( pTrace->pHit ) )
+		return;
+
+	if ( VARS(pTrace->pHit)->solid == SOLID_BSP || VARS(pTrace->pHit)->movetype == MOVETYPE_PUSHSTEP )
+	{
+		CBaseEntity *pEntity = NULL;
+		// Decal the wall with a gunshot
+		if ( !FNullEnt(pTrace->pHit) )
+			pEntity = CBaseEntity::Instance(pTrace->pHit);
+
+		switch( iBulletType )
+		{
+		case BULLET_PLAYER_9MM:
+		case BULLET_MONSTER_9MM:
+		case BULLET_PLAYER_MP5:
+		case BULLET_MONSTER_MP5:
+		case BULLET_PLAYER_BUCKSHOT:
+		case BULLET_PLAYER_357:
+		default:
+			// smoke and decal
+			UTIL_GunshotDecalTrace( pTrace, DamageDecal( pEntity, DMG_BULLET ) );
+			break;
+		case BULLET_MONSTER_12MM:
+			// smoke and decal
+			UTIL_GunshotDecalTrace( pTrace, DamageDecal( pEntity, DMG_BULLET ) );
+			break;
+		case BULLET_PLAYER_CROWBAR:
+			// wall decal
+			UTIL_DecalTrace( pTrace, DamageDecal( pEntity, DMG_CLUB ) );
+			break;
+		}
+
+		//MODDD
+		UTIL_GunshotDecalTraceForceDefault( pTrace, DamageDecal( pEntity, DMG_BULLET ) );
+
+	}
+}
+
+
+//
+// EjectBrass - tosses a brass shell from passed origin at passed velocity
+//
+void EjectBrass ( const Vector &vecOrigin, const Vector &vecVelocity, float rotation, int model, int soundtype )
+{
+	// FIX: when the player shoots, their gun isn't in the same position as it is on the model other players see.
+
+	MESSAGE_BEGIN( MSG_PVS, SVC_TEMPENTITY, vecOrigin );
+		WRITE_BYTE( TE_MODEL);
+		WRITE_COORD( vecOrigin.x);
+		WRITE_COORD( vecOrigin.y);
+		WRITE_COORD( vecOrigin.z);
+		WRITE_COORD( vecVelocity.x);
+		WRITE_COORD( vecVelocity.y);
+		WRITE_COORD( vecVelocity.z);
+		WRITE_ANGLE( rotation );
+		WRITE_SHORT( model );
+		WRITE_BYTE ( soundtype);
+		WRITE_BYTE ( 25 );// 2.5 seconds
+	MESSAGE_END();
+}
+
+
+//MODDD - found this way, not part of compiles.
+/*
+// UNDONE: This is no longer used?
+void ExplodeModel( const Vector &vecOrigin, float speed, int model, int count )
+{
+	MESSAGE_BEGIN( MSG_PVS, SVC_TEMPENTITY, vecOrigin );
+		WRITE_BYTE ( TE_EXPLODEMODEL );
+		WRITE_COORD( vecOrigin.x );
+		WRITE_COORD( vecOrigin.y );
+		WRITE_COORD( vecOrigin.z );
+		WRITE_COORD( speed );
+		WRITE_SHORT( model );
+		WRITE_SHORT( count );
+		WRITE_BYTE ( 15 );// 1.5 seconds
+	MESSAGE_END();
+}
+*/
+
+/////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////
+
+//bleh.
 
 
 

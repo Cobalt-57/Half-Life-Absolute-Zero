@@ -31,7 +31,7 @@
 #define DRC_CMD_SOUND				7	// plays a particular sound
 #define DRC_CMD_STATUS				8	// status info about broadcast
 #define DRC_CMD_BANNER				9	// banner file name for HLTV gui
-#define	DRC_CMD_FADE				10	// send screen fade command
+#define DRC_CMD_FADE				10	// send screen fade command
 #define DRC_CMD_SHAKE				11	// send screen shake command
 #define DRC_CMD_STUFFTEXT			12	// like the normal svc_stufftext but as director command
 

@@ -15,8 +15,20 @@
 //
 //  parsemsg.cpp
 //
+
+//MODDD - no includes?  Wow.   Let's include util_shared.h at least.
+#include "util_shared.h"
+
+
+
+
 typedef unsigned char byte;
-#define true 1
+
+//MODDD - defining only 'true'?  That do be mighty strange, slugga.
+// ehh. what's the point of this.  Just use the TRUE constant most other places do,
+// which is also 1.
+// Renamed all lowercase 'true's to all-caps in this file.
+//#define true 1
 
 static byte *gpBuf;
 static int giSize;
@@ -38,7 +50,7 @@ int READ_CHAR( void )
 	
 	if (giRead + 1 > giSize)
 	{
-		giBadRead = true;
+		giBadRead = TRUE;
 		return -1;
 	}
 		
@@ -54,7 +66,7 @@ int READ_BYTE( void )
 	
 	if (giRead+1 > giSize)
 	{
-		giBadRead = true;
+		giBadRead = TRUE;
 		return -1;
 	}
 		
@@ -70,7 +82,7 @@ int READ_SHORT( void )
 	
 	if (giRead+2 > giSize)
 	{
-		giBadRead = true;
+		giBadRead = TRUE;
 		return -1;
 	}
 		
@@ -93,7 +105,7 @@ int READ_LONG( void )
 	
 	if (giRead+4 > giSize)
 	{
-		giBadRead = true;
+		giBadRead = TRUE;
 		return -1;
 	}
 		

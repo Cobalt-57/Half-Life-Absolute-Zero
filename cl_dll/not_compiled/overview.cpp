@@ -21,7 +21,6 @@
 #include "com_model.h"
 #include "studio_util.h"
 
-#pragma warning(disable: 4244)
 
 //-----------------------------------------------------------------------------
 // Purpose: 

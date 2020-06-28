@@ -50,7 +50,7 @@ extern	bmhd_t	bmhd;						// will be in native byte order
 
 
 void LoadLBM (char *filename, byte **picture, byte **palette);
-int	LoadBMP (const char* szFile, byte** ppbBits, byte** ppbPalette);
+int LoadBMP (const char* szFile, byte** ppbBits, byte** ppbPalette);
 void WriteLBMfile (char *filename, byte *data, int width, int height
 	, byte *palette);
 int WriteBMPfile (char *szFile, byte *pbBits, int width, int height, byte *pbPalette);

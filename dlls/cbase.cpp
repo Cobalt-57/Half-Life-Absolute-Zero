@@ -12,14 +12,17 @@
 *   without written permission from Valve LLC.
 *
 ****/
-#include	"extdll.h"
-#include	"util.h"
-#include	"cbase.h"
-#include	"saverestore.h"
-#include	"client.h"
-#include	"decals.h"
-#include	"gamerules.h"
-#include	"game.h"
+#include "extdll.h"
+#include "util.h"
+#include "cbase.h"
+#include "saverestore.h"
+#include "client.h"
+#include "decals.h"
+#include "gamerules.h"
+#include "game.h"
+//MODDD - needed for getNumberOfSkins and getNumberOfBodyParts.
+#include "util_model.h"
+
 
 void EntvarsKeyvalue( entvars_t *pev, KeyValueData *pkvd );
 
@@ -27,17 +30,16 @@ extern "C" void PM_Move ( struct playermove_s *ppmove, int server );
 extern "C" void PM_Init ( struct playermove_s *ppmove  );
 extern "C" char PM_FindTextureType( char *name );
 
-extern Vector VecBModelOrigin( entvars_t* pevBModel );
 extern DLL_GLOBAL Vector		g_vecAttackDir;
-extern DLL_GLOBAL int			g_iSkillLevel;
+extern DLL_GLOBAL int		g_iSkillLevel;
 
 //MODDD 
 EASY_CVAR_EXTERN(cl_explosion)
 EASY_CVAR_EXTERN(soundSentenceSave)
+EASY_CVAR_EXTERN(weaponPickupPlaysAnyReloadSounds);
 
 extern short g_sGaussBallSprite;
 
-EASY_CVAR_EXTERN(weaponPickupPlaysAnyReloadSounds);
 
 
 static DLL_FUNCTIONS gFunctionTable = 
@@ -138,9 +140,30 @@ int GetEntityAPI2( DLL_FUNCTIONS *pFunctionTable, int *interfaceVersion )
 #endif
 
 
+
+
+//mother<love>er.
+//#include "basemonster.h"
+
 int DispatchSpawn( edict_t *pent )
 {
 	CBaseEntity *pEntity = (CBaseEntity *)GET_PRIVATE(pent);
+
+	/*
+	//!!! DEBUG
+	if (FClassnameIs(pEntity->edict(), "monster_scientist")) {
+		easyForcePrintLine("hey YOU SCIENTIST MAN %d", pEntity->GetMonsterPointer()->monsterID);
+	}
+	else {
+		if (pEntity->GetMonsterPointer() != NULL) {
+			easyForcePrintLine("WHAT THE NAME BE %s : %d", pEntity->getClassname(), pEntity->GetMonsterPointer()->monsterID);
+		}
+		else {
+			easyForcePrintLine("WHAT THE NAME BE %s : gay", pEntity->getClassname());
+		}
+	}
+	*/
+
 
 	if (pEntity)
 	{
@@ -149,6 +172,10 @@ int DispatchSpawn( edict_t *pent )
 		pEntity->pev->absmax = pEntity->pev->origin + Vector(1,1,1);
 		//easyPrintLine("SOME stuff SPAWNED %d", pEntity->pev->spawnflags);
 		pEntity->Spawn();
+
+		//MODDD - if this entity was dynamically spawned, it no longer needs to be told that it was.
+		// Don't want revives changing the head on your scientist, now do we.
+		pEntity->spawnedDynamically = FALSE;
 
 		// Try to get the pointer again, in case the spawn function deleted the entity.
 		// UNDONE: Spawn() should really return a code to ask that the entity be deleted, but
@@ -493,7 +520,7 @@ CBaseEntity * EHANDLE :: operator = (CBaseEntity *pEntity)
 	return pEntity;
 }
 
-EHANDLE :: operator int ()
+EHANDLE :: operator BOOL ()
 {
 	return Get() != NULL;
 }
@@ -533,11 +560,6 @@ CBaseEntity::CBaseEntity(void){
 
 	//assume not spawned dynamically (by "give" commands in-game, not at a map / boundary's first load)
 	spawnedDynamically = FALSE;
-
-
-	//THIS IS LOOSELY IMPLEMENTED. It is up to somewhere else calling spawn() on this, where it expects it not to be the first spawn call,
-	//to turn this off to FALSE before calling. This isn't to be saved.  Could be if absolutely necessary though.
-	firstSpawnCall = TRUE;
 
 	//barnacleVictimException = FALSE; ???
 
@@ -586,6 +608,16 @@ int CBaseEntity::getHullIndexForNodes(void) const{
 	return NODE_DEFAULT_HULL;
 }//END OF getHullIndexForNodes
 
+
+int CBaseEntity :: getNumberOfBodyParts(void){
+	int siz = ::getNumberOfBodyParts( GET_MODEL_PTR( ENT(pev) ), pev );
+	return siz;
+}
+
+int CBaseEntity :: getNumberOfSkins(void){
+	int siz = ::getNumberOfSkins( GET_MODEL_PTR( ENT(pev) ), pev );
+	return siz;
+}
 
 
 
@@ -670,82 +702,20 @@ void CBaseEntity::ForceSpawnFlag(int arg_spawnFlag){
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-//LRC
-// PUSH entities won't have their velocity applied unless they're thinking.
-// make them do so for the foreseeable future.
-void CBaseEntity :: SetEternalThink( void )
-{
-	if (pev->movetype == MOVETYPE_PUSH)
-	{
-		// record m_fPevNextThink as well, because we want to be able to
-		// tell when the bloody engine CHANGES IT!
-//		pev->nextthink = 1E9;
-		pev->nextthink = pev->ltime + 1E6;
-		m_fPevNextThink = pev->nextthink;
-	}
-
-	CBaseEntity *pChild;
-	for (pChild = m_pChildMoveWith; pChild != NULL; pChild = pChild->m_pSiblingMoveWith)
-		pChild->SetEternalThink( );
-}
-
-
-
-
 //LRC - for getting round the engine's preconceptions.
 // MoveWith entities have to be able to think independently of moving.
 // This is how we do so.
+//MODDD - simplified greatly!  References to vars never relied on elsewhere / paths never possible
+// to be reached with the rest of that mod missing removed.
 void CBaseEntity :: SetNextThink( float delay, BOOL correctSpeed )
 {
-	// now monsters use this method, too.
-	if (m_pMoveWith || m_pChildMoveWith || pev->flags & FL_MONSTER)
+	if (pev->movetype == MOVETYPE_PUSH)
 	{
-		// use the Assist system, so that thinking doesn't mess up movement.
-		if (pev->movetype == MOVETYPE_PUSH)
-			m_fNextThink = pev->ltime + delay;
-		else
-			m_fNextThink = gpGlobals->time + delay;
-		SetEternalThink( );
-		//UTIL_MarkForAssist( this, correctSpeed ); ???
-
-//		ALERT(at_console, "SetAssistedThink for %s: %f\n", STRING(pev->targetname), m_fNextThink);
+		pev->nextthink = pev->ltime + delay;
 	}
 	else
 	{
-		// set nextthink as normal.
-		if (pev->movetype == MOVETYPE_PUSH)
-		{
-			pev->nextthink = pev->ltime + delay;
-		}
-		else
-		{
-			pev->nextthink = gpGlobals->time + delay;
-		}
-
-		m_fPevNextThink = m_fNextThink = pev->nextthink;
-
-//		if (pev->classname) ALERT(at_console, "SetNormThink for %s: %f\n", STRING(pev->targetname), m_fNextThink);
-	}
-}
-
-
-
-//LRC
-void CBaseEntity :: AbsoluteNextThink( float time, BOOL correctSpeed )
-{
-	if (m_pMoveWith || m_pChildMoveWith)
-	{
-		// use the Assist system, so that thinking doesn't mess up movement.
-		m_fNextThink = time;
-		SetEternalThink( );
-		
-		//UTIL_MarkForAssist( this, correctSpeed ); ???
-	}
-	else
-	{
-		// set nextthink as normal.
-		pev->nextthink = time;
-		m_fPevNextThink = m_fNextThink = pev->nextthink;
+		pev->nextthink = gpGlobals->time + delay;
 	}
 }
 
@@ -976,8 +946,8 @@ void SetObjectCollisionBox( entvars_t *pev )
 	if ( (pev->solid == SOLID_BSP) && 
 		 (pev->angles.x || pev->angles.y|| pev->angles.z) )
 	{	// expand for rotation
-		float		max, v;
-		int			i;
+		float	max, v;
+		int		i;
 
 		max = 0;
 		for (i=0 ; i<3 ; i++)
@@ -1090,7 +1060,7 @@ SCHEDULE_TYPE CBaseEntity::getHeardBaitSoundSchedule(){
 
 
 
-int	CBaseEntity :: Intersects( CBaseEntity *pOther )
+int CBaseEntity :: Intersects( CBaseEntity *pOther )
 {
 	if ( pOther->pev->absmin.x > pev->absmax.x ||
 		 pOther->pev->absmin.y > pev->absmax.y ||
@@ -1154,12 +1124,12 @@ int CBaseEntity::ShouldToggle( USE_TYPE useType, BOOL currentState )
 }
 
 
-int	CBaseEntity :: DamageDecal( int bitsDamageType)
+int CBaseEntity :: DamageDecal( int bitsDamageType)
 {
 	return CBaseEntity::DamageDecal(bitsDamageType, 0);
 }
 
-int	CBaseEntity :: DamageDecal( int bitsDamageType, int bitsDamageTypeMod )
+int CBaseEntity :: DamageDecal( int bitsDamageType, int bitsDamageTypeMod )
 {
 	if ( pev->rendermode == kRenderTransAlpha )
 		return -1;
@@ -1173,6 +1143,56 @@ int	CBaseEntity :: DamageDecal( int bitsDamageType, int bitsDamageTypeMod )
 
 
 
+
+//MODDD - from player.cpp, however an entity was made in its give methods.
+// Preserving the intent in case it mattered compared to the usual "CBaseEntity::Create" way 
+// below.
+edict_t* CBaseEntity::overyLongComplicatedProcessForCreatingAnEntity(const char* entityName){
+	/*
+	//originally:
+	int iszItem = ALLOC_STRING( entityName );	// Make a copy of the classname
+	const char* pszNameFinal = STRING(iszItem);
+		
+	int istr = MAKE_STRING(pszNameFinal);
+	edict_t* spent = CREATE_NAMED_ENTITY(istr);
+	
+	return spent;
+	
+	*/
+	
+	// wait.. I don't get it.  Why can't we just do this?  'pszName' was another const char*.
+	// Although there is a mention above that "ALLOC_STRING" / "MAKE_STRING" are for making a copy of a string.
+	// Ah well, just trust the way it was knew what it was doing.
+	// ALTHOUGH, what about this way of making an entity?
+	//    CGrenade *pGrenade = GetClassPtr( (CGrenade *)NULL );
+	// Then there's
+	//    CBaseEntity::Create( "monster_chumtoad", toadSpawnPoint, Vector(0, m_pPlayer->pev->v_angle.y, 0), SF_MONSTER_THROWN, m_pPlayer->edict() );
+	// CBaseEntity's "Create" ends up calling CREATE_NAMED_ENTITY too though,
+	// 	    pent = CREATE_NAMED_ENTITY( MAKE_STRING( szName ));
+	// check for #define CREATE_NAMED_ENTITY.
+	// Oh hey, look at that.  Comment from cbase.cpp right above "CBaseEntity::Create":
+    //     NOTE: szName must be a pointer to constant memory, e.g. "monster_class" because the entity
+    //     will keep a pointer to it after this call.
+	// ...oops. So that alloc_string/string stuff might make sense after all.  ALLOC_STRING goes to an engine call so, whatever.
+	// But why, anything done there should be handled by C++ just fine.  Whatever, they kept to the engine whatever they did.
+	
+	
+	//int istr = MAKE_STRING(pszName);
+	//pent = CREATE_NAMED_ENTITY(istr);
+	
+	return CREATE_NAMED_ENTITY( MAKE_STRING( STRING( ALLOC_STRING( entityName ) ) )   );
+}//END OF overyLongComplicatedProcessForCreatingAnEntity
+
+
+
+
+//MODDD - CreateManual is a new Create method, more similar to the as-is 'Create' method from
+// the as-is codebase, only it does not call "DispatchSpawn" for you.
+// It is best to use CreateManual instead to specify other things for the entity before calling
+// DispatchSpawn, if needed.  (but don't forget to call DispatchSpawn on it)
+// The "Create" method now calls CreateManual and DispatchSpawn to match the original behavior.
+// Giving another parameter, "setSpawnFlags", lets the spawned entity act as though the map
+// spawned it with certain spawnflags.
 CBaseEntity * CBaseEntity::CreateManual( const char *szName, const Vector &vecOrigin, const Vector &vecAngles, edict_t *pentOwner ){
 	edict_t	*pent;
 	CBaseEntity *pEntity;
@@ -1191,9 +1211,10 @@ CBaseEntity * CBaseEntity::CreateManual( const char *szName, const Vector &vecOr
 	return pEntity;
 }
 
-// NOTE: szName must be a pointer to constant memory, e.g. "monster_class" because the entity
-// will keep a pointer to it after this call.
-//Also, szName is NOW const (constant)
+//MODDD - comment below found as-is in the codebase:
+  // NOTE: szName must be a pointer to constant memory, e.g. "monster_class" because the entity
+  // will keep a pointer to it after this call.
+//...Also, szName is now const (constant)
 CBaseEntity * CBaseEntity::Create( const char *szName, const Vector &vecOrigin, const Vector &vecAngles, int setSpawnflags, edict_t *pentOwner ){
 	CBaseEntity* pEntity = CBaseEntity::CreateManual(szName, vecOrigin, vecAngles, pentOwner);
 	if(!pEntity)return NULL;
@@ -1213,8 +1234,6 @@ CBaseEntity * CBaseEntity::Create( const char *szName, const Vector &vecOrigin, 
 }
 
 
-
-
 //Whether a monster can see monsters through the water line.
 //That is, whether submerged monsters can see monsters above the water, and vice versa (whichever this monster is).
 //Not whether other monsters can see this one itself past the waterline necessarily.
@@ -1222,11 +1241,6 @@ CBaseEntity * CBaseEntity::Create( const char *szName, const Vector &vecOrigin, 
 BOOL CBaseEntity::SeeThroughWaterLine(void){
 	return FALSE;
 }//END OF SeeThroughWaterLine
-
-
-
-
-
 
 void CBaseEntity::ReportGeneric(){
 	//To be determined further by each entity class and its own specific variables. But this general info is ok.
@@ -1236,9 +1250,6 @@ void CBaseEntity::ReportGeneric(){
 	easyForcePrintLine("nextthink:%.2f ltime:%.2f currenttime:%.2f", pev->nextthink, pev->ltime, gpGlobals->time);
 
 	
-
-
-
 	easyForcePrint("Spawnflags: ");
 	printLineIntAsBinary((unsigned int)pev->spawnflags, 32u);
 
@@ -1246,25 +1257,19 @@ void CBaseEntity::ReportGeneric(){
 	easyForcePrintLine("Flags:%d renderfx:%d rendermode:%d renderamt:%.2f gamestate:%d solid:%d movetype:%d", pev->flags, pev->renderfx, pev->rendermode, pev->renderamt, pev->gamestate, pev->solid, pev->movetype);
 	easyForcePrintLine("ThinkACTIVE:%d curtime:%.2f nextthink:%.2f ltime:%.2f", (m_pfnThink!=NULL), gpGlobals->time, pev->nextthink, pev->ltime);
 
-
 }//END OF ReportGeneric
-
 
 Vector CBaseEntity::GetAbsVelocity(){
 	return pev->velocity;
 }
 
-
-
 Vector CBaseEntity::GetAbsOrigin(){
 	return pev->origin;
 }
 void CBaseEntity::SetAbsOrigin(const Vector& arg_newOrigin){
-	
 	//pev->origin = arg_newOrigin;
 	//or?
 	UTIL_SetOrigin (pev, arg_newOrigin);
-
 }
 
 
@@ -1272,11 +1277,9 @@ Vector CBaseEntity::GetAbsAngles(){
 	return pev->angles;
 }
 void CBaseEntity::SetAbsAngles(const Vector& arg_newAngles){
-	
 	pev->angles = arg_newAngles;
 	//or?
 	//UTIL_SetAngles (pev, arg_newOrigin);
-
 }
 
 

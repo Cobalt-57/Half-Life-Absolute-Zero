@@ -8,7 +8,8 @@
 // studio_model.cpp
 // routines for setting up to draw 3DStudio models
 
-
+#include "external_lib_include.h"
+//MODDD - you know the drill
 //#include "windows.h"
 
 #include "hud.h"
@@ -154,8 +155,8 @@ void CStudioModelRenderer::StudioCalcBoneAdj( float dadt, float *adj, const byte
 
 void CStudioModelRenderer::StudioCalcBoneAdj ( float dadt, float *adj, const byte *pcontroller1, const byte *pcontroller2, byte mouthopen, byte IsReflection )
 {
-	int					i, j;
-	float				value;
+	int				i, j;
+	float			value;
 	mstudiobonecontroller_t *pbonecontroller;
 	
 	pbonecontroller = (mstudiobonecontroller_t *)((byte *)m_pStudioHeader + m_pStudioHeader->bonecontrollerindex);
@@ -233,7 +234,7 @@ StudioCalcBoneQuaterion
 */
 void CStudioModelRenderer::StudioCalcBoneQuaterion( int frame, float s, mstudiobone_t *pbone, mstudioanim_t *panim, float *adj, float *q )
 {
-	int					j, k;
+	int				j, k;
 	vec4_t				q1, q2;
 	vec3_t				angle1, angle2;
 	mstudioanimvalue_t	*panimvalue;
@@ -319,7 +320,7 @@ StudioCalcBonePosition
 */
 void CStudioModelRenderer::StudioCalcBonePosition( int frame, float s, mstudiobone_t *pbone, mstudioanim_t *panim, float *adj, float *pos )
 {
-	int					j, k;
+	int				j, k;
 	mstudioanimvalue_t	*panimvalue;
 
 	for (j = 0; j < 3; j++)
@@ -387,9 +388,9 @@ StudioSlerpBones
 */
 void CStudioModelRenderer::StudioSlerpBones( vec4_t q1[], float pos1[][3], vec4_t q2[], float pos2[][3], float s )
 {
-	int			i;
+	int		i;
 	vec4_t		q3;
-	float		s1;
+	float	s1;
 
 	if (s < 0) s = 0;
 	else if (s > 1.0) s = 1.0;
@@ -483,7 +484,7 @@ void CStudioModelRenderer::StudioSetUpTransform (int trivial_accept)
 {
 
 
-	int				i;
+	int			i;
 	vec3_t			angles;
 	vec3_t			modelpos;
 
@@ -495,7 +496,7 @@ void CStudioModelRenderer::StudioSetUpTransform (int trivial_accept)
 	//for (i = 0; i < 3; i++)
 	//	modelpos[i] = m_pCurrentEntity->origin[i];
 
-	VectorCopy( m_pCurrentEntity->origin, modelpos );
+	VectorCopy_f( m_pCurrentEntity->origin, modelpos );
 
 // TODO: should really be stored with the entity instead of being reconstructed
 // TODO: should use a look-up table
@@ -513,8 +514,8 @@ void CStudioModelRenderer::StudioSetUpTransform (int trivial_accept)
 	if (m_pCurrentEntity->curstate.movetype == MOVETYPE_STEP) 
 	{
 
-		float			f = 0;
-		float			d;
+		float		f = 0;
+		float		d;
 
 		// don't do it if the goalstarttime hasn't updated in a while.
 
@@ -573,7 +574,7 @@ void CStudioModelRenderer::StudioSetUpTransform (int trivial_accept)
 	}
 	else if ( m_pCurrentEntity->curstate.movetype != MOVETYPE_NONE ) 
 	{
-		VectorCopy( m_pCurrentEntity->angles, angles );
+		VectorCopy_f( m_pCurrentEntity->angles, angles );
 	}
 
 	//Con_DPrintf("%.0f %0.f %0.f\n", modelpos[0], modelpos[1], modelpos[2] );
@@ -597,10 +598,10 @@ void CStudioModelRenderer::StudioSetUpTransform (int trivial_accept)
 	{
 		static float viewmatrix[3][4];
 
-		VectorCopy (m_vRight, viewmatrix[0]);
-		VectorCopy (m_vUp, viewmatrix[1]);
+		VectorCopy_f (m_vRight, viewmatrix[0]);
+		VectorCopy_f (m_vUp, viewmatrix[1]);
 		VectorInverse (viewmatrix[1]);
-		VectorCopy (m_vNormal, viewmatrix[2]);
+		VectorCopy_f (m_vNormal, viewmatrix[2]);
 
 
 		
@@ -755,10 +756,10 @@ void CStudioModelRenderer::StudioSetUpTransform (int trivial_accept)
 			/*
 			static float viewmatrix[3][4];
 
-		VectorCopy (m_vRight, viewmatrix[0]);
-		VectorCopy (m_vUp, viewmatrix[1]);
+		VectorCopy_f (m_vRight, viewmatrix[0]);
+		VectorCopy_f (m_vUp, viewmatrix[1]);
 		VectorInverse (viewmatrix[1]);
-		VectorCopy (m_vNormal, viewmatrix[2]);
+		VectorCopy_f (m_vNormal, viewmatrix[2]);
 		*/
 
 		
@@ -818,13 +819,13 @@ void CStudioModelRenderer::StudioCalcRotations ( float pos[][3], vec4_t *q, mstu
 
 void CStudioModelRenderer::StudioCalcRotations ( float pos[][3], vec4_t *q, mstudioseqdesc_t *pseqdesc, mstudioanim_t *panim, float f, byte isReflection )
 {
-	int					i;
-	int					frame;
+	int				i;
+	int				frame;
 	mstudiobone_t		*pbone;
 
-	float				s;
-	float				adj[MAXSTUDIOCONTROLLERS];
-	float				dadt;
+	float			s;
+	float			adj[MAXSTUDIOCONTROLLERS];
+	float			dadt;
 
 	if (f > pseqdesc->numframes - 1)
 	{
@@ -992,7 +993,7 @@ float CStudioModelRenderer::StudioEstimateFrame( mstudioseqdesc_t *pseqdesc )
 {
 
 
-	double				dfdt, f;
+	double			dfdt, f;
 
 
 	//return 0;
@@ -1202,22 +1203,22 @@ void CStudioModelRenderer::StudioSetupBones ( byte isReflection )
 	}
 
 
-	int					i;
-	double				f;
+	int				i;
+	double			f;
 
 	mstudiobone_t		*pbones;
 	mstudioseqdesc_t	*pseqdesc;
 	mstudioanim_t		*panim;
 
-	static float		pos[MAXSTUDIOBONES][3];
+	static float	pos[MAXSTUDIOBONES][3];
 	static vec4_t		q[MAXSTUDIOBONES];
-	float				bonematrix[3][4];
+	float			bonematrix[3][4];
 
-	static float		pos2[MAXSTUDIOBONES][3];
+	static float	pos2[MAXSTUDIOBONES][3];
 	static vec4_t		q2[MAXSTUDIOBONES];
-	static float		pos3[MAXSTUDIOBONES][3];
+	static float	pos3[MAXSTUDIOBONES][3];
 	static vec4_t		q3[MAXSTUDIOBONES];
-	static float		pos4[MAXSTUDIOBONES][3];
+	static float	pos4[MAXSTUDIOBONES][3];
 	static vec4_t		q4[MAXSTUDIOBONES];
 
 
@@ -1283,8 +1284,8 @@ void CStudioModelRenderer::StudioSetupBones ( byte isReflection )
 
 	if (pseqdesc->numblends > 1)
 	{
-		float				s;
-		float				dadt;
+		float			s;
+		float			dadt;
 
 		panim += m_pStudioHeader->numbones;
 		StudioCalcRotations( pos2, q2, pseqdesc, panim, f, isReflection );
@@ -1316,9 +1317,9 @@ void CStudioModelRenderer::StudioSetupBones ( byte isReflection )
 		( m_pCurrentEntity->latched.prevsequence < m_pStudioHeader->numseq ))
 	{
 		// blend from last sequence
-		static float		pos1b[MAXSTUDIOBONES][3];
+		static float	pos1b[MAXSTUDIOBONES][3];
 		static vec4_t		q1b[MAXSTUDIOBONES];
-		float				s;
+		float			s;
 
 		pseqdesc = (mstudioseqdesc_t *)((byte *)m_pStudioHeader + m_pStudioHeader->seqindex) + m_pCurrentEntity->latched.prevsequence;
 		panim = StudioGetAnim( m_pRenderModel, pseqdesc );
@@ -1393,22 +1394,15 @@ void CStudioModelRenderer::StudioSetupBones ( byte isReflection )
 
 		if (pbones[i].parent == -1) 
 		{
-
-
 			//????
 			//ConcatTransforms (viewmatrix, (*m_protationmatrix), (*m_paliastransform));
 			
 			//MODDDMIRROR NOTE: this line seems pretty important!
 			if ( IEngineStudio.IsHardware() )
 			{
-
-			
-
 				//TODO: make a flag that checks for only the view model (1st person).
 
 				ConcatTransforms ((*m_protationmatrix), bonematrix, (*m_pbonetransform)[i]);
-
-
 
 				//if(EASY_CVAR_GET(chromeEffect) != 1 || !(m_pCurrentEntity->curstate.renderfx & ISVIEWMODEL) ){
 				if(EASY_CVAR_GET(chromeEffect) != 1){
@@ -1416,7 +1410,6 @@ void CStudioModelRenderer::StudioSetupBones ( byte isReflection )
 					//ConcatTransforms ((*m_protationmatrix), bonematrix, (*m_plighttransform)[i]);
 					MatrixCopy( (*m_pbonetransform)[i], (*m_plighttransform)[i] );
 					
-
 					MatrixCopy( (*m_pbonetransform)[i], (m_plighttransformMOD)[i] );
 					//??????????
 					//ConcatTransforms ((*m_protationmatrix), bonematrix, (*m_plighttransform)[i]);
@@ -1424,7 +1417,7 @@ void CStudioModelRenderer::StudioSetupBones ( byte isReflection )
 				}else{
 					
 
-					float	(m_protationmatrixClone)[ 3 ][ 4 ];
+					float (m_protationmatrixClone)[ 3 ][ 4 ];
 
 					/*
 					//no, let it fall through from the previous time (likely StudioSetUpTransform)
@@ -1501,7 +1494,7 @@ void CStudioModelRenderer::StudioSetupBones ( byte isReflection )
 				}else{
 					
 					
-					float	(m_protationmatrixClone)[ 3 ][ 4 ];
+					float (m_protationmatrixClone)[ 3 ][ 4 ];
 
 					/*
 					//no, let it fall through from the previous time (likely StudioSetUpTransform)
@@ -1562,7 +1555,7 @@ StudioSaveBones
 */
 void CStudioModelRenderer::StudioSaveBones( void )
 {
-	int		i;
+	int	i;
 
 	mstudiobone_t		*pbones;
 	pbones = (mstudiobone_t *)((byte *)m_pStudioHeader + m_pStudioHeader->boneindex);
@@ -1592,16 +1585,16 @@ void CStudioModelRenderer::StudioMergeBones ( model_t *m_pSubModel){
 
 void CStudioModelRenderer::StudioMergeBones ( model_t *m_pSubModel, byte isReflection )
 {
-	int					i, j;
-	double				f;
-	int					do_hunt = true;
+	int				i, j;
+	double			f;
+	int				do_hunt = true;
 
 	mstudiobone_t		*pbones;
 	mstudioseqdesc_t	*pseqdesc;
 	mstudioanim_t		*panim;
 
-	static float		pos[MAXSTUDIOBONES][3];
-	float				bonematrix[3][4];
+	static float	pos[MAXSTUDIOBONES][3];
+	float			bonematrix[3][4];
 	static vec4_t		q[MAXSTUDIOBONES];
 
 	if (m_pCurrentEntity->curstate.sequence >=  m_pStudioHeader->numseq) 
@@ -1703,43 +1696,25 @@ StudioDrawModel
 #include "triangleapi.h"
 int CStudioModelRenderer::StudioDrawModel( int flags )
 {
-	 
-
-
 	//easyPrintLine("FLAGZ %d", (flags & 128));
 	alight_t lighting;
 	vec3_t dir;
 
-
-
-
-
-
-
-
-
-	
 	IEngineStudio.GetTimes( &m_nFrameCount, &m_clTime, &m_clOldTime );
 
-	
 	//MODDDMIRROR - makes the player show up in first person (for mirror reflections), wtf?
 	if (m_nCachedFrameCount != m_nFrameCount)
 	{
 		b_PlayerMarkerParsed = false;
 		m_nCachedFrameCount = m_nFrameCount;
 	}
-
-
-
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 
 	//if (!strcmp(m_pCurrentEntity->model->name,"models/null.mdl"))
 	//if(  (m_pCurrentEntity->curstate.renderfx & RENDERFX_PRIMARY_BITS) == kRenderFxHologram)
 
 	//(m_pCurrentEntity->curstate.renderfx & ISPLAYER)   no, to determine whether to make the first-person reflection, we don't need the actual player on hand.
 	
-
 
 	//easyPrintLineDummy("OH no MY friend %.2f %.2f", global2PSEUDO_IGNOREcameraMode, EASY_CVAR_GET(mirrorsDoNotReflectPlayer));
 	if(  global2PSEUDO_IGNOREcameraMode == 0 && EASY_CVAR_GET(mirrorsDoNotReflectPlayer) != 1)
@@ -1756,12 +1731,9 @@ int CStudioModelRenderer::StudioDrawModel( int flags )
 			// draw as though it were a player
 			flags |= 2048;
 
-			
 			//cl_entity_t* tempMem = m_pCurrentEntity;
 
 			m_pCurrentEntity = player;
-
-
 
 			StudioDrawPlayer( flags, shinyplr );
 
@@ -1772,28 +1744,15 @@ int CStudioModelRenderer::StudioDrawModel( int flags )
 		}
 		//return 1;
 	}
-
-
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
 	
 	m_pCurrentEntity = IEngineStudio.GetCurrentEntity();
 	
 
-
-
-
-
-
-
-	
 	if( (m_pCurrentEntity->curstate.renderfx & ISVIEWMODEL) == ISVIEWMODEL){
 		easyPrintLineDummy("FLAG1. s:%d b:%d", m_pCurrentEntity->curstate.sequence, m_pCurrentEntity->curstate.iuser1 );
 	}
 
-
-	
 	
 	if(EASY_CVAR_GET(cl_server_interpolation) != 0){
 		//not off, typical setting.
@@ -1810,13 +1769,6 @@ int CStudioModelRenderer::StudioDrawModel( int flags )
 	}
 
 
-
-
-
-
-
-	
-
 	/*
 	if(m_pCurrentEntity->curstate.iuser1 == 66){
 		easyPrintLineDummy("OH niiiii MY MAN %d", m_pCurrentEntity->curstate.iuser1);
@@ -1830,7 +1782,6 @@ int CStudioModelRenderer::StudioDrawModel( int flags )
 		return 0;
 	}
 
-
 	//MODDD - if this is the model, the user turned it off for some reason. Don't draw.
 	if(EASY_CVAR_GET(drawViewModel) <= 0 && (m_pCurrentEntity->curstate.renderfx & ISVIEWMODEL)==ISVIEWMODEL ){
 		return 0;
@@ -1841,34 +1792,10 @@ int CStudioModelRenderer::StudioDrawModel( int flags )
 	IEngineStudio.GetAliasScale( &m_fSoftwareXScale, &m_fSoftwareYScale );
 
 
-	
-	
 	if( (m_pCurrentEntity->curstate.renderfx & ISVIEWMODEL) == ISVIEWMODEL){
 		easyPrintLineDummy("FLAG2. s:%d b:%d", m_pCurrentEntity->curstate.sequence, m_pCurrentEntity->curstate.iuser1 );
 	}
 	
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 	//m_pCurrentEntity->curstate.renderfx
 
@@ -1881,6 +1808,7 @@ int CStudioModelRenderer::StudioDrawModel( int flags )
 		//m_pCurrentEntity->angles[2] += 1;
 	}
 
+
 	/*
 	easyPrintLineDummy("MY FLAGS?! %d RENDERFX: %d BITS: %d%d%d%d%d", flags, m_pCurrentEntity->curstate.renderfx,
 		(m_pCurrentEntity->curstate.renderfx&1)!=0,
@@ -1890,7 +1818,6 @@ int CStudioModelRenderer::StudioDrawModel( int flags )
 		(m_pCurrentEntity->curstate.renderfx&16)!=0
 	);
 	*/
-
 
 	//if(flags & 128){
 		//m_vRenderOrigin[0] += 66;
@@ -1905,15 +1832,11 @@ int CStudioModelRenderer::StudioDrawModel( int flags )
 		*/
 	//}
 
-
-
 	//MODDD - old location of 1st-person drawing logic.
 
-	
 	if( (m_pCurrentEntity->curstate.renderfx & ISVIEWMODEL) == ISVIEWMODEL){
 		easyPrintLineDummy("FLAG3. s:%d b:%d", m_pCurrentEntity->curstate.sequence, m_pCurrentEntity->curstate.iuser1 );
 	}
-
 	
 	//MODDD - only check against the primary bits.
 	if ((m_pCurrentEntity->curstate.renderfx & RENDERFX_PRIMARY_BITS)  == kRenderFxDeadPlayer)
@@ -1923,6 +1846,8 @@ int CStudioModelRenderer::StudioDrawModel( int flags )
 		int result;
 		int save_interp;
 
+		//MODDD NOTE - so "renderamt" records what number'd player this is?
+		// oooo-kay.   var re-use can be weird.
 		if (m_pCurrentEntity->curstate.renderamt <= 0 || m_pCurrentEntity->curstate.renderamt > gEngfuncs.GetMaxClients() )
 			return 0;
 
@@ -1935,8 +1860,8 @@ int CStudioModelRenderer::StudioDrawModel( int flags )
 		deadplayer.gaitsequence = 0;
 
 		deadplayer.movetype = MOVETYPE_NONE;
-		VectorCopy( m_pCurrentEntity->curstate.angles, deadplayer.angles );
-		VectorCopy( m_pCurrentEntity->curstate.origin, deadplayer.origin );
+		VectorCopy_f( m_pCurrentEntity->curstate.angles, deadplayer.angles );
+		VectorCopy_f( m_pCurrentEntity->curstate.origin, deadplayer.origin );
 
 		save_interp = m_fDoInterp;
 		m_fDoInterp = 0;
@@ -2001,33 +1926,36 @@ int CStudioModelRenderer::StudioDrawModel( int flags )
 
 		if (!IEngineStudio.StudioCheckBBox ())
 		{
-         		 	vec3_t delta;
-         			float dist;
-					if( (m_pCurrentEntity->curstate.renderfx & ISVIEWMODEL) == ISVIEWMODEL){
-						easyPrintLineDummy("FLAG5b. s:%d b:%d", m_pCurrentEntity->curstate.sequence, m_pCurrentEntity->curstate.iuser1 );
-					}
-         			VectorSubtract(gHUD.Mirrors[mirror_id].origin,m_pCurrentEntity->origin,delta);
-         			dist = Length(delta);
-					if( (m_pCurrentEntity->curstate.renderfx & ISVIEWMODEL) == ISVIEWMODEL){
-						easyPrintLineDummy("FLAG5c. s:%d b:%d", m_pCurrentEntity->curstate.sequence, m_pCurrentEntity->curstate.iuser1 );
-					}
-			if ((gHUD.numMirrors<0) || (gHUD.Mirrors[mirror_id].radius < dist)) return 0;
-        }
-		
-			(*m_pModelsDrawn)++;
-			(*m_pStudioModelCount)++; // render data cache cookie
+			vec3_t delta;
+			float dist;
 			if( (m_pCurrentEntity->curstate.renderfx & ISVIEWMODEL) == ISVIEWMODEL){
-				easyPrintLineDummy("FLAG5d. s:%d b:%d", m_pCurrentEntity->curstate.sequence, m_pCurrentEntity->curstate.iuser1 );
+				easyPrintLineDummy("FLAG5b. s:%d b:%d", m_pCurrentEntity->curstate.sequence, m_pCurrentEntity->curstate.iuser1 );
 			}
+			VectorSubtract_f(gHUD.Mirrors[mirror_id].origin,m_pCurrentEntity->origin,delta);
+			dist = Length(delta);
+			if( (m_pCurrentEntity->curstate.renderfx & ISVIEWMODEL) == ISVIEWMODEL){
+				easyPrintLineDummy("FLAG5c. s:%d b:%d", m_pCurrentEntity->curstate.sequence, m_pCurrentEntity->curstate.iuser1 );
+			}
+			
+			if ((gHUD.numMirrors<0) || (gHUD.Mirrors[mirror_id].radius < dist)){
+				return 0;
+			}
+        }//END OF !StudioCheckBBox check
+		
+		(*m_pModelsDrawn)++;
+		(*m_pStudioModelCount)++; // render data cache cookie
+		if( (m_pCurrentEntity->curstate.renderfx & ISVIEWMODEL) == ISVIEWMODEL){
+			easyPrintLineDummy("FLAG5d. s:%d b:%d", m_pCurrentEntity->curstate.sequence, m_pCurrentEntity->curstate.iuser1 );
+		}
 
-			if (m_pStudioHeader->numbodyparts == 0)
-				return 1;
+		if (m_pStudioHeader->numbodyparts == 0)
+			return 1;
 		/////////////////////////////////////////////////////////////////////////////////////////////
 
 		//Now, restore the sequence!
 		m_pCurrentEntity->curstate.sequence = oldSeq;
 
-	}
+	}//END OF STUDIO_RENDER check
 	
 	if( (m_pCurrentEntity->curstate.renderfx & ISVIEWMODEL) == ISVIEWMODEL){
 		easyPrintLineDummy("FLAG6. s:%d b:%d", m_pCurrentEntity->curstate.sequence, m_pCurrentEntity->curstate.iuser1 );
@@ -2053,16 +1981,12 @@ int CStudioModelRenderer::StudioDrawModel( int flags )
 	//to tell it to behave differently with interpolation turned off. Oh well.
 		
 
-
-
 	if (flags & STUDIO_EVENTS)
 	{
-		
 		if(m_pCurrentEntity->curstate.renderfx & ISNPC){
 			easyPrintLineDummy("OHSHIT");
 		}
 
-		
 		//Setting the framerate to 0 before doing attachments can fool StudioClientEvents into thinking no time passed?
 		//Bizarre, see if this is needed to convey frozen parts of things with STOPINTR on.
 		//m_pCurrentEntity->curstate.framerate = 0;
@@ -2074,8 +1998,6 @@ int CStudioModelRenderer::StudioDrawModel( int flags )
 		StudioCalcAttachments( );
 		//m_pCurrentEntity->curstate.framerate = oldFramerate;
 
-
-
 		IEngineStudio.StudioClientEvents( );
 		// copy attachments into global entity array
 		if ( m_pCurrentEntity->index > 0 )
@@ -2084,19 +2006,14 @@ int CStudioModelRenderer::StudioDrawModel( int flags )
 
 			memcpy( ent->attachment, m_pCurrentEntity->attachment, sizeof( vec3_t ) * 4 );
 		}
-
-		
-
 	}
 
-	
 	if( (m_pCurrentEntity->curstate.renderfx & ISVIEWMODEL) == ISVIEWMODEL){
 		easyPrintLineDummy("FLAG8. s:%d b:%d", m_pCurrentEntity->curstate.sequence, m_pCurrentEntity->curstate.iuser1 );
 	}
 	
 	if (flags & STUDIO_RENDER)
 	{
-
 		//DISABLE BLOCK FOR silhouette MODE!
 		//////////////////////////////////////////////////////////////////////
 		
@@ -2110,9 +2027,6 @@ int CStudioModelRenderer::StudioDrawModel( int flags )
 
 		//////////////////////////////////////////////////////////////////////
 
-
-
-
 		// get remap colors
 		m_nTopColor = m_pCurrentEntity->curstate.colormap & 0xFF;
 		m_nBottomColor = (m_pCurrentEntity->curstate.colormap & 0xFF00) >> 8;
@@ -2122,7 +2036,6 @@ int CStudioModelRenderer::StudioDrawModel( int flags )
 		StudioRenderModel( );
 		
 	}
-	
 	
 	if( (m_pCurrentEntity->curstate.renderfx & ISVIEWMODEL) == ISVIEWMODEL){
 		easyPrintLineDummy("FLAG9. s:%d b:%d", m_pCurrentEntity->curstate.sequence, m_pCurrentEntity->curstate.iuser1 );
@@ -2136,8 +2049,6 @@ int CStudioModelRenderer::StudioDrawModel( int flags )
 	float rgb[3] = {1, 1, 1};
 	gEngfuncs.pTriAPI->Fog(rgb, 0, 99, 1);
 	*/
-	
-
 
 	//MODDDMIRROR - addition
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2145,15 +2056,11 @@ int CStudioModelRenderer::StudioDrawModel( int flags )
           //G-Cont. you may choose any check - any nice works ;)
 	//if ((gHUD.numMirrors>0 && !(m_pCurrentEntity->model->name[7]=='v' && m_pCurrentEntity->model->name[8]=='_')))
 	
-
 	int canReflect = TRUE;
 	if(EASY_CVAR_GET(mirrorsReflectOnlyNPCs) == 1 && !(m_pCurrentEntity->curstate.renderfx & ISNPC) && !(m_pCurrentEntity->curstate.renderfx & ISPLAYER)  ){
 		//if this CVar is on and this entity is not an npc, skip drawing to mirror.
 		canReflect = FALSE;
 	}
-	
-	
-	
 	
 	if( (m_pCurrentEntity->curstate.renderfx & ISVIEWMODEL) == ISVIEWMODEL){
 		easyPrintLineDummy("FLAG10. s:%d b:%d", m_pCurrentEntity->curstate.sequence, m_pCurrentEntity->curstate.iuser1 );
@@ -2165,33 +2072,30 @@ int CStudioModelRenderer::StudioDrawModel( int flags )
 
 	if ((canReflect && gHUD.numMirrors>0 && (gEngfuncs.GetViewModel() != m_pCurrentEntity)))
 	{
-		for (int ic=0; ic < gHUD.numMirrors; ic++)
+		for (int ic = 0; ic < gHUD.numMirrors; ic++)
 		{
 			//Parsing mirror
-		      	if (!gHUD.Mirrors[ic].enabled)
+		    if (!gHUD.Mirrors[ic].enabled)
 			{
 				continue;
 			}
 
-				
-				/*
-				m_pRenderModel = m_pCurrentEntity->model;
-	m_pStudioHeader = (studiohdr_t *)IEngineStudio.Mod_Extradata (m_pRenderModel);
-	IEngineStudio.StudioSetHeader( m_pStudioHeader );
-	IEngineStudio.SetRenderModel( m_pRenderModel );
-	*/
-	
+			/*
+			m_pRenderModel = m_pCurrentEntity->model;
+			m_pStudioHeader = (studiohdr_t *)IEngineStudio.Mod_Extradata (m_pRenderModel);
+			IEngineStudio.StudioSetHeader( m_pStudioHeader );
+			IEngineStudio.SetRenderModel( m_pRenderModel );
+			*/
 
 			vec3_t delta;
 			float dist;
-			VectorSubtract(gHUD.Mirrors[ic].origin,m_pCurrentEntity->origin,delta);
+			VectorSubtract_f(gHUD.Mirrors[ic].origin,m_pCurrentEntity->origin,delta);
 			dist = Length(delta);
 
 			if (gHUD.Mirrors[ic].radius < dist)
 			{
 				continue;
 			}
-			
 			
 			StudioSetUpTransform( 1024 + ic  ); //HELP ME
 			//THIS USED TO GO BEFORE!!!
@@ -2200,8 +2104,6 @@ int CStudioModelRenderer::StudioDrawModel( int flags )
 			//NOTE: used to be "TRI_FRONT"?
 			gEngfuncs.pTriAPI->CullFace( TRI_NONE ); 
 
-
-			
 			if (flags & STUDIO_RENDER)
 			{
 				// see if the bounding box lets us trivially reject, also sets
@@ -2210,7 +2112,6 @@ int CStudioModelRenderer::StudioDrawModel( int flags )
 					//return 0;
 					continue;
 				}
-
 				(*m_pModelsDrawn)++;
 				(*m_pStudioModelCount)++; // render data cache cookie
 
@@ -2220,7 +2121,6 @@ int CStudioModelRenderer::StudioDrawModel( int flags )
 					continue;
 				}
 			}
-			
 			
 			if (m_pCurrentEntity->curstate.movetype == MOVETYPE_FOLLOW)
 			{
@@ -2272,8 +2172,6 @@ int CStudioModelRenderer::StudioDrawModel( int flags )
 		//gEngfuncs.pTriAPI->CullFace( TRI_FRONT );
 			gEngfuncs.pTriAPI->CullFace( TRI_NONE );
 
-
-			
 		}
 
 	}//END OF mirror check.
@@ -2284,7 +2182,6 @@ int CStudioModelRenderer::StudioDrawModel( int flags )
 		StudioDrawModel(flags | 128);
 	}
 	*/
-	
 	
 	if( (m_pCurrentEntity->curstate.renderfx & ISVIEWMODEL) == ISVIEWMODEL){
 		easyPrintLineDummy("FLAG11. s:%d b:%d", m_pCurrentEntity->curstate.sequence, m_pCurrentEntity->curstate.iuser1 );
@@ -2316,12 +2213,11 @@ void CStudioModelRenderer::StudioEstimateGait( entity_state_t *pplayer )
 		return;
 	}
 
-	// VectorAdd( pplayer->velocity, pplayer->prediction_error, est_velocity );
+	// VectorAdd_f( pplayer->velocity, pplayer->prediction_error, est_velocity );
 	if ( m_fGaitEstimation )
 	{
-
-		VectorSubtract( m_pCurrentEntity->origin, m_pPlayerInfo->prevgaitorigin, est_velocity );
-		VectorCopy( m_pCurrentEntity->origin, m_pPlayerInfo->prevgaitorigin );
+		VectorSubtract_f( m_pCurrentEntity->origin, m_pPlayerInfo->prevgaitorigin, est_velocity );
+		VectorCopy_f( m_pCurrentEntity->origin, m_pPlayerInfo->prevgaitorigin );
 		m_flGaitMovement = Length( est_velocity );
 		if (dt <= 0 || m_flGaitMovement / dt < 5)
 		{
@@ -2332,7 +2228,7 @@ void CStudioModelRenderer::StudioEstimateGait( entity_state_t *pplayer )
 	}
 	else
 	{
-		VectorCopy( pplayer->velocity, est_velocity );
+		VectorCopy_f( pplayer->velocity, est_velocity );
 		m_flGaitMovement = Length( est_velocity ) * dt;
 	}
 
@@ -2391,7 +2287,6 @@ void CStudioModelRenderer::StudioProcessGait( entity_state_t *pplayer )
 			if(m_pCurrentEntity->curstate.sequence & 64){
 				m_pCurrentEntity->curstate.sequence &= ~64;
 			}
-
 		}
 
 	}
@@ -2401,10 +2296,6 @@ void CStudioModelRenderer::StudioProcessGait( entity_state_t *pplayer )
 		easyPrintLineDummy("BULLSHIT 2");
 		m_pCurrentEntity->curstate.sequence = 0;
 	}
-
-
-
-
 
 
 
@@ -2496,8 +2387,6 @@ StudioDrawPlayer
 */
 int CStudioModelRenderer::StudioDrawPlayer( int flags, entity_state_t *pplayer )
 {
-
-
 	alight_t lighting;
 	vec3_t dir;
 
@@ -2531,21 +2420,14 @@ int CStudioModelRenderer::StudioDrawPlayer( int flags, entity_state_t *pplayer )
 	IEngineStudio.SetRenderModel( m_pRenderModel );
 
 
-
 	//MODDDMIRROR
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-
-
-	
 	//MODDD
-
 	int canReflect = TRUE;
 	//(CVAR_GET_FLOAT("mirrorsDoNotReflectPlayer") == 1) &&
 	//if(  (m_pCurrentEntity->curstate.renderfx & NOREFLECT) ){
 
-
-	
 	//if(m_pCurrentEntity->curstate.renderfx & ISPLAYER)easyPrintLineDummy("MY friendAA %.2f %.2f", global2PSEUDO_IGNOREcameraMode, EASY_CVAR_GET(mirrorsDoNotReflectPlayer));
 
 	//in third person and we're told not to reflect the player? Don't do that then.
@@ -2553,30 +2435,6 @@ int CStudioModelRenderer::StudioDrawPlayer( int flags, entity_state_t *pplayer )
 		//easyPrintLine("STATUS: %d %d", (int)CVAR_GET_FLOAT("IGNOREcameraMode"), (int)CVAR_GET_FLOAT("mirrorsDoNotReflectPlayer"));
 		canReflect = FALSE;
 	}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 	
 	
@@ -2594,7 +2452,7 @@ int CStudioModelRenderer::StudioDrawPlayer( int flags, entity_state_t *pplayer )
 		vec3_t orig_angles;
 		m_pPlayerInfo = IEngineStudio.PlayerInfo( m_nPlayerIndex );
 
-		VectorCopy( m_pCurrentEntity->angles, orig_angles );
+		VectorCopy_f( m_pCurrentEntity->angles, orig_angles );
 	
 		StudioProcessGait( pplayer );
 
@@ -2602,7 +2460,7 @@ int CStudioModelRenderer::StudioDrawPlayer( int flags, entity_state_t *pplayer )
 		m_pPlayerInfo = NULL;
 
 		StudioSetUpTransform( 0 );
-		VectorCopy( orig_angles, m_pCurrentEntity->angles );
+		VectorCopy_f( orig_angles, m_pCurrentEntity->angles );
 	}
 	else
 	{
@@ -2663,7 +2521,7 @@ int CStudioModelRenderer::StudioDrawPlayer( int flags, entity_state_t *pplayer )
 			m_pCurrentEntity->curstate.body = 255;
 		}
 
-		if (!(m_pCvarDeveloper->value == 0 && gEngfuncs.GetMaxClients() == 1 ) && ( m_pRenderModel == m_pCurrentEntity->model ) )
+		if (!(m_pCvarDeveloper->value == 0 && !IsMultiplayer() ) && ( m_pRenderModel == m_pCurrentEntity->model ) )
 		{
 			m_pCurrentEntity->curstate.body = 1; // force helmet
 		}
@@ -2724,32 +2582,17 @@ int CStudioModelRenderer::StudioDrawPlayer( int flags, entity_state_t *pplayer )
 		}
 	}
 	
-
-
 	}//MODDDMIRROR
 
 
 
-
-
-
-
-
-
-
-
-
-
-	
 	if (canReflect && gHUD.numMirrors>0)
 	{
 		//StudioSetUpTransform( 0 );//G-cont. transform must be first!
 		//MODDD - transform this way to avoid the culling issue (done in StudioDrawModel too)
 		
-
-		for (int ic=0;ic < gHUD.numMirrors;ic++)
+		for (int ic = 0; ic < gHUD.numMirrors; ic++)
 		{
-
 			m_pStudioHeader = (studiohdr_t *)IEngineStudio.Mod_Extradata (m_pRenderModel);
 			IEngineStudio.StudioSetHeader( m_pStudioHeader );
 			IEngineStudio.SetRenderModel( m_pRenderModel );
@@ -2764,7 +2607,7 @@ int CStudioModelRenderer::StudioDrawPlayer( int flags, entity_state_t *pplayer )
 
 			vec3_t delta;
 			float dist;
-			VectorSubtract(gHUD.Mirrors[ic].origin,m_pCurrentEntity->origin,delta);
+			VectorSubtract_f(gHUD.Mirrors[ic].origin,m_pCurrentEntity->origin,delta);
 			dist = Length(delta);
 
 			if (gHUD.Mirrors[ic].radius < dist)
@@ -2778,19 +2621,19 @@ int CStudioModelRenderer::StudioDrawPlayer( int flags, entity_state_t *pplayer )
  
 			if (pplayer->gaitsequence)
 			{
-	         			vec3_t orig_angles;
+	         	vec3_t orig_angles;
 				m_pPlayerInfo = IEngineStudio.PlayerInfo( m_nPlayerIndex );
 
-				VectorCopy( m_pCurrentEntity->angles, orig_angles );
+				VectorCopy_f( m_pCurrentEntity->angles, orig_angles );
 				StudioProcessGait( pplayer );
 
 				m_pPlayerInfo->gaitsequence = pplayer->gaitsequence;
 				m_pPlayerInfo = NULL;
 
 				//StudioSetUpTransform( 0 );
-	          		VectorCopy( orig_angles, m_pCurrentEntity->angles );
+	          	VectorCopy_f( orig_angles, m_pCurrentEntity->angles );
 			}
-         			else //player in jump (or duck)
+         	else //player in jump (or duck)
 			{
 				m_pCurrentEntity->curstate.controller[0] = 127;
 				m_pCurrentEntity->curstate.controller[1] = 127;
@@ -2806,28 +2649,22 @@ int CStudioModelRenderer::StudioDrawPlayer( int flags, entity_state_t *pplayer )
 
 				//StudioSetUpTransform( 0 );
 			}
-          		if (flags & STUDIO_RENDER)
+          	if (flags & STUDIO_RENDER)
 			{
-
-
 				// see if the bounding box lets us trivially reject, also sets
 				if (!IEngineStudio.StudioCheckBBox ()){
-					
 					//return 0;
 					//MODDD - just try the next mirror.
 					continue;
-					
 				}
 
 				(*m_pModelsDrawn)++;
 				(*m_pStudioModelCount)++; // render data cache cookie
 
 				if (m_pStudioHeader->numbodyparts == 0){
-					
 					//return 1;
 					//MODDD - just try the next mirror.
 					continue;
-		         	
 				}
 			}
 
@@ -2862,12 +2699,12 @@ int CStudioModelRenderer::StudioDrawPlayer( int flags, entity_state_t *pplayer )
 					m_pCurrentEntity->curstate.body = 255;
 				}
 
-				if (!(m_pCvarDeveloper->value == 0 && gEngfuncs.GetMaxClients() == 1 ) && ( m_pRenderModel == m_pCurrentEntity->model ) )
+				if (!(m_pCvarDeveloper->value == 0 && !IsMultiplayer() ) && ( m_pRenderModel == m_pCurrentEntity->model ) )
 				{
 					m_pCurrentEntity->curstate.body = 1; // force helmet
 				}
 
-	         			lighting.plightvec = dir;
+	         	lighting.plightvec = dir;
 				IEngineStudio.StudioDynamicLight(m_pCurrentEntity, &lighting );
 
 				IEngineStudio.StudioEntityLight( &lighting );
@@ -2914,13 +2751,7 @@ int CStudioModelRenderer::StudioDrawPlayer( int flags, entity_state_t *pplayer )
 
 		gEngfuncs.pTriAPI->CullFace( TRI_FRONT );
 	}
-
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-
-
-	
 
 	return 1;
 }
@@ -2955,8 +2786,6 @@ void CStudioModelRenderer::StudioCalcAttachments( void )
 		VectorTransform( pattachment[i].org, (m_plighttransformMOD)[pattachment[i].bone],  m_pCurrentEntity->attachment[i] );
 	}
 }
-
-
 
 
 
@@ -3019,20 +2848,15 @@ void CStudioModelRenderer::StudioRenderModel( void )
 		m_pCurrentEntity->curstate.renderfx = kRenderFxGlowShell;
 		//m_pCurrentEntity->curstate.renderfx = kRenderFxGlowShell | secondaryBitsMem;
 
-
-
 		StudioRenderFinal( );
-		
 		
 		if ( (EASY_CVAR_GET(r_glowshell_debug) == 1 || EASY_CVAR_GET(r_glowshell_debug) == 2) || !IEngineStudio.IsHardware() )
 		{
 			gEngfuncs.pTriAPI->RenderMode( kRenderNormal );
 		}
 
-
 		//MODDD - new. probably doesn't matter, but safety.
 		IEngineStudio.SetForceFaceFlags( 0 );
-
 	}
 	else
 	{
@@ -3040,11 +2864,8 @@ void CStudioModelRenderer::StudioRenderModel( void )
 		StudioRenderFinal( );
 	}
 
-
-
 	//MODDD - now restore the secondary bits.
 	m_pCurrentEntity->curstate.renderfx = m_pCurrentEntity->curstate.renderfx | secondaryBitsMem;
-
 }
 
 /*
@@ -3121,8 +2942,6 @@ void CStudioModelRenderer::StudioRenderFinal_Hardware( void )
 	{
 		for (i=0 ; i < m_pStudioHeader->numbodyparts ; i++)
 		{
-
-			
 			IEngineStudio.StudioSetupModel( i, (void **)&m_pBodyPart, (void **)&m_pSubModel );
 			
 			if (m_fDoInterp)
@@ -3135,7 +2954,6 @@ void CStudioModelRenderer::StudioRenderFinal_Hardware( void )
 			IEngineStudio.GL_SetRenderMode( rendermode );
 			IEngineStudio.StudioDrawPoints();
 			
-			
 			//MODDD - VERY FREAKIN' IMPORTANT.  Below has... side effects if not careful.  With the glow effect being on.  Who knows.
 			//But DONT Skimp out on calling IEngineStudio.GL_StudioDrawShadow regardless (which seems to be completely unrelated to the Old shadows).
 			//If this is not called, the glow render effect (agrunts powered up by a kingpin) will cause all kinds of other bad order rendering issues.
@@ -3146,8 +2964,8 @@ void CStudioModelRenderer::StudioRenderFinal_Hardware( void )
 				IEngineStudio.GL_StudioDrawShadow();
 			}
 			
-
 			//////////////////////////////////////////////////////////////////////////////////////////////////
+			//MODDD - why "+ 32"?  Who comes up with this?  The world may never know.
 			GL_StudioDrawShadow_Old = (void(*)(void))(((unsigned int)IEngineStudio.GL_StudioDrawShadow) + 32);
 
 			//MODDD TODO - we also have a viewmodel check too, but regardless.
@@ -3161,9 +2979,6 @@ void CStudioModelRenderer::StudioRenderFinal_Hardware( void )
 			}
 			//////////////////////////////////////////////////////////////////////////////////////////////////
 			
-
-
-
 		}
 	}
 
@@ -3193,6 +3008,5 @@ void CStudioModelRenderer::StudioRenderFinal(void)
 	{
 		StudioRenderFinal_Software();
 	}
-	
 }
 

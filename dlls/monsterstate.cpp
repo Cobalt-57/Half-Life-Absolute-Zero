@@ -22,7 +22,7 @@
 #include "cbase.h"
 #include "nodes.h"
 #include "basemonster.h"
-#include "animation.h"
+#include "util_model.h"
 #include "saverestore.h"
 #include "soundent.h"
 
@@ -197,7 +197,7 @@ void CBaseMonster :: RunAI ( void )
 //=========================================================
 MONSTERSTATE CBaseMonster :: GetIdealState ( void )
 {
-	int	iConditions;
+	int iConditions;
 
 	iConditions = IScheduleFlags();
 	

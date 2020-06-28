@@ -6,17 +6,13 @@
 //=============================================================================
 
 
-#include "externalLibInclude.h"
+#include "external_lib_include.h"
 //#include <stdlib.h>
 
 #include <string.h>
 #include "interface.h"
 
-#ifndef _WIN32  // LINUX
-#include <dlfcn.h>
-#include <unistd.h> // getcwd
-#include <stdio.h> // sprintf
-#endif
+//MODDD - '#ifndef _WIN32' chunk moved to external_lib_include.
 
 
 // ------------------------------------------------------------------------------------ //
@@ -61,11 +57,6 @@ EXPORT_FUNCTION IBaseInterface *CreateInterface( const char *pName, int *pReturn
 	return NULL;	
 }
 
-
-#ifdef _WIN32
-#define WIN32_LEAN_AND_MEAN
-#include "windows.h"
-#endif
 
 
 #ifdef _WIN32

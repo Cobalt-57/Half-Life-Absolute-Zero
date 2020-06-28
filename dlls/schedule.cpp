@@ -20,7 +20,7 @@
 #include "util.h"
 #include "cbase.h"
 #include "basemonster.h"
-#include "animation.h"
+#include "util_model.h"
 #include "scripted.h"
 #include "nodes.h"
 #include "defaultai.h"
@@ -397,7 +397,7 @@ BOOL CBaseMonster :: FScheduleValid ( void )
 void CBaseMonster :: MaintainSchedule ( void )
 {
 	Schedule_t	*pNewSchedule;
-	int			i;
+	int		i;
 	
 	/*
 		if(m_iTaskStatus == TASKSTATUS_RUNNING){

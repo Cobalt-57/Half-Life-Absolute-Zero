@@ -35,26 +35,26 @@ typedef struct beam_s BEAM;
 struct beam_s
 {
 	BEAM		*next;
-	int			type;
-	int			flags;
+	int		type;
+	int		flags;
 	vec3_t		source;
 	vec3_t		target;
 	vec3_t		delta;
-	float		t;		// 0 .. 1 over lifetime of beam
-	float		freq;
-	float		die;
-	float		width;
-	float		amplitude;
-	float		r, g, b;
-	float		brightness;
-	float		speed;
-	float		frameRate;
-	float		frame;
-	int			segments;
-	int			startEntity;
-	int			endEntity;
-	int			modelIndex;
-	int			frameCount;
+	float	t;		// 0 .. 1 over lifetime of beam
+	float	freq;
+	float	die;
+	float	width;
+	float	amplitude;
+	float	r, g, b;
+	float	brightness;
+	float	speed;
+	float	frameRate;
+	float	frame;
+	int		segments;
+	int		startEntity;
+	int		endEntity;
+	int		modelIndex;
+	int		frameCount;
 	struct model_s		*pFollowModel;
 	struct particle_s	*particles;
 };

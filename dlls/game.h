@@ -19,7 +19,14 @@
 extern void GameDLLInit( void );
 
 
+//MODDD - and these 4 as-is CVars weren't externed too, beeeecccccaaaaauuuusssseee?
 extern cvar_t	displaysoundlist;
+extern cvar_t	fragsleft;
+extern cvar_t	timeleft;
+extern cvar_t	mp_chattime;
+
+
+
 
 // multiplayer server rules
 extern cvar_t	teamplay;

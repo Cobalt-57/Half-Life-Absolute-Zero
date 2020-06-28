@@ -12,18 +12,17 @@
 *   without written permission from Valve LLC.
 *
 ****/
+
 #include "extdll.h"
 #include "eiface.h"
+
+
 #include "util.h"
 #include "game.h"
 
 
 //MODDD - new.
-//#include "../versionAid.h"
-
-
-
-
+#include "util_version.h"
 
 
 
@@ -43,13 +42,6 @@ extern cvar_t* cvar_sv_cheats;
 
 extern void resetModCVars(CBasePlayer* arg_plyRef, BOOL isEmergency);
 extern void updateCVarRefs(entvars_t* pev);
-
-
-
-
-
-
-
 
 
 
@@ -82,7 +74,6 @@ void test_cvar_create(){
 	// would be bad.  Although "->value"'s being unable to be trusted wouldn't be that terrible.
 
 	
-	
 
 	// This test has been done.  Looks like the pointer returned from CVAR_GET_POINTER
 	// is not the same as the one supplied to CVAR_CREATE, for a request of the same name.
@@ -100,21 +91,11 @@ void test_cvar_create(){
 	}
 	*/
 
-
 	//global_test_cvar_ref = CVAR_GET_POINTER("test_cvar");
 
 }//END OF test_cvar_create
 	
 	
-
-
-
-
-
-
-
-
-
 
 
 cvar_t	displaysoundlist = {"displaysoundlist","0"};

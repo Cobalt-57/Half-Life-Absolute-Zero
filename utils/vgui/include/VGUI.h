@@ -77,12 +77,17 @@
 //		then App can come along later and fire all the signals
 //TODO: Change all method naming to starting with a capital letter.
 
+//MODDD - NOTE.  This is the exact same criteria for defining DLLEXPORT in 
+// the since-added file util_shared.h, except that this one sets it to blank
+// if this isn't Windows.  Strange..?
 #ifdef _WIN32
 # define VGUIAPI __declspec( dllexport )
 #else
 # define VGUIAPI
 #endif
 
+//MODDD NOTE - what.  Why only for this?  Whatever, this is a sensitive file, just keep it.
+// common/const.h can still get it though.
 #define null 0L
 
 typedef unsigned char  uchar;

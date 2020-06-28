@@ -133,7 +133,7 @@ public:
 class CommandLabel : public Label
 {
 private:
-	int		m_iState;
+	int	m_iState;
 
 public:
 	CommandLabel(const char* text,int x,int y,int wide,int tall) : Label(text,x,y,wide,tall)
@@ -159,7 +159,7 @@ public:
 class CommandButton : public Button
 {
 private:
-	int		m_iPlayerClass;
+	int	m_iPlayerClass;
 	bool	m_bFlat;
 
 	// Submenus under this button
@@ -358,15 +358,15 @@ class CCommandMenu : public Panel
 {
 private:
 	CCommandMenu *m_pParentMenu;
-	int			  m_iXOffset;
-	int			  m_iYOffset;
+	int		  m_iXOffset;
+	int		  m_iYOffset;
 
 	// Buttons in this menu
 	CommandButton *m_aButtons[ MAX_BUTTONS ];
-	int			  m_iButtons;
+	int		  m_iButtons;
 
 	// opens menu from top to bottom (0 = default), or from bottom to top (1)?
-	int				m_iDirection; 
+	int			m_iDirection; 
 public:
 	CCommandMenu( CCommandMenu *pParentMenu, int x,int y,int wide,int tall ) : Panel(x,y,wide,tall)
 	{
@@ -386,21 +386,21 @@ public:
 		m_iDirection = direction;
 	}
 
-	float		m_flButtonSizeY;
-	int			m_iSpectCmdMenu;
-	void		AddButton( CommandButton *pButton );
+	float	m_flButtonSizeY;
+	int		m_iSpectCmdMenu;
+	void	AddButton( CommandButton *pButton );
 	bool		RecalculateVisibles( int iNewYPos, bool bHideAll );
-	void		RecalculatePositions( int iYOffset );
-	void		MakeVisible( CCommandMenu *pChildMenu );
+	void	RecalculatePositions( int iYOffset );
+	void	MakeVisible( CCommandMenu *pChildMenu );
 
 	CCommandMenu *GetParentMenu() { return m_pParentMenu; };
-	int			GetXOffset() { return m_iXOffset; };
-	int			GetYOffset() { return m_iYOffset; };
-	int			GetDirection() { return m_iDirection; };
-	int			GetNumButtons() { return m_iButtons; };
+	int		GetXOffset() { return m_iXOffset; };
+	int		GetYOffset() { return m_iYOffset; };
+	int		GetDirection() { return m_iDirection; };
+	int		GetNumButtons() { return m_iButtons; };
 	CommandButton *FindButtonWithSubmenu( CCommandMenu *pSubMenu );
 
-	void		ClearButtonsOfArmedState( void );
+	void	ClearButtonsOfArmedState( void );
 
 
 	bool		KeyInput( int keyNum );
@@ -415,32 +415,32 @@ private:
 	vgui::Cursor* _cursorNone;
 	vgui::Cursor* _cursorArrow;
 
-	int			 m_iInitialized;
+	int		 m_iInitialized;
 
 	CCommandMenu *m_pCommandMenus[ MAX_MENUS ];
 	CCommandMenu *m_pCurrentCommandMenu;
-	float		 m_flMenuOpenTime;
-	float		 m_flScoreBoardLastUpdated;
-	float		 m_flSpectatorPanelLastUpdated;
-	int			 m_iNumMenus;
-	int			 m_iCurrentTeamNumber;
-	int			 m_iCurrentPlayerClass;
-	int			 m_iUser1;
-	int			 m_iUser2;
-	int			 m_iUser3;
+	float	 m_flMenuOpenTime;
+	float	 m_flScoreBoardLastUpdated;
+	float	 m_flSpectatorPanelLastUpdated;
+	int		 m_iNumMenus;
+	int		 m_iCurrentTeamNumber;
+	int		 m_iCurrentPlayerClass;
+	int		 m_iUser1;
+	int		 m_iUser2;
+	int		 m_iUser3;
 
 	// VGUI Menus
-	void		 CreateTeamMenu( void );
+	void	 CreateTeamMenu( void );
 	CMenuPanel*	 ShowTeamMenu( void );
-	void		 CreateClassMenu( void );
+	void	 CreateClassMenu( void );
 	CMenuPanel*	 ShowClassMenu( void );
-	void		 CreateSpectatorMenu( void );
+	void	 CreateSpectatorMenu( void );
 	
 	// Scheme handler
 	CSchemeManager m_SchemeManager;
 
 	// MOTD
-	int		m_iGotAllMOTD;
+	int	m_iGotAllMOTD;
 	char	m_szMOTD[ MAX_MOTD_LENGTH ];
 
 	//  Command Menu Team buttons
@@ -452,15 +452,15 @@ private:
 	// Server Browser
 	ServerBrowser *m_pServerBrowser;
 
-	int					m_iAllowSpectators;
+	int				m_iAllowSpectators;
 
 	// Data for specific sections of the Command Menu
-	int			m_iValidClasses[5];
-	int			m_iIsFeigning;
-	int			m_iIsSettingDetpack;
-	int			m_iNumberOfTeams;
-	int			m_iBuildState;
-	int			m_iRandomPC;
+	int		m_iValidClasses[5];
+	int		m_iIsFeigning;
+	int		m_iIsSettingDetpack;
+	int		m_iNumberOfTeams;
+	int		m_iBuildState;
+	int		m_iRandomPC;
 	char		m_sTeamNames[5][MAX_TEAMNAME_SIZE];
 
 	// Localisation strings
@@ -471,9 +471,9 @@ public:
 	TeamFortressViewport(int x,int y,int wide,int tall);
 	void Initialize( void );
 
-	int		CreateCommandMenu( char * menuFile, int direction, int yOffset, bool flatDesign, float flButtonSizeX, float flButtonSizeY, int xOffset );
-	void	CreateScoreBoard( void );
-	void	CreateServerBrowser( void );
+	int	CreateCommandMenu( char * menuFile, int direction, int yOffset, bool flatDesign, float flButtonSizeX, float flButtonSizeY, int xOffset );
+	void CreateScoreBoard( void );
+	void CreateServerBrowser( void );
 	CommandButton * CreateCustomButton( char *pButtonText, char * pButtonName, int  iYOffset );
 	CCommandMenu *	CreateDisguiseSubmenu( CommandButton *pButton, CCommandMenu *pParentMenu, const char *commandText, int iYOffset, int iXOffset = 0 );
 
@@ -483,7 +483,7 @@ public:
 	void UpdateHighlights( void );
 	void UpdateSpectatorPanel( void );
 
-	int	 KeyInput( int down, int keynum, const char *pszCurrentBinding );
+	int  KeyInput( int down, int keynum, const char *pszCurrentBinding );
 	void InputPlayerSpecial( void );
 	void GetAllPlayersInfo( void );
 	void DeathMsg( int killer, int victim );
@@ -550,9 +550,9 @@ public:
 	// VGUI Menus
 	CMenuPanel		*m_pCurrentMenu;
 	CTeamMenuPanel	*m_pTeamMenu;
-	int						m_StandardMenu;	// indexs in m_pCommandMenus
-	int						m_SpectatorOptionsMenu;
-	int						m_SpectatorCameraMenu;
+	int					m_StandardMenu;	// indexs in m_pCommandMenus
+	int					m_SpectatorOptionsMenu;
+	int					m_SpectatorCameraMenu;
 	CClassMenuPanel	*m_pClassMenu;
 	ScorePanel		*m_pScoreBoard;
 	SpectatorPanel *		m_pSpectatorPanel;
@@ -567,7 +567,7 @@ class CMenuHandler_StringCommand : public ActionSignal
 {
 protected:
 	char	m_pszCommand[MAX_COMMAND_SIZE];
-	int		m_iCloseVGUIMenu;
+	int	m_iCloseVGUIMenu;
 public:
 	CMenuHandler_StringCommand( char *pszCommand )
 	{
@@ -712,7 +712,7 @@ public:
 class CMenuHandler_TextWindow : public ActionSignal
 {
 private:
-	int	m_iState;
+	int m_iState;
 public:
 	CMenuHandler_TextWindow( int iState )
 	{
@@ -761,8 +761,8 @@ class CDragNDropHandler : public InputSignal
 private:
 	DragNDropPanel*	m_pPanel;
 	bool			m_bDragging;
-	int				m_iaDragOrgPos[2];
-	int				m_iaDragStart[2];
+	int			m_iaDragOrgPos[2];
+	int			m_iaDragStart[2];
 
 public:
 	CDragNDropHandler(DragNDropPanel* pPanel)
@@ -788,7 +788,7 @@ public:
 class CHandler_MenuButtonOver : public InputSignal
 {
 private:
-	int			m_iButton;
+	int		m_iButton;
 	CMenuPanel	*m_pMenuPanel;
 public:
 	CHandler_MenuButtonOver( CMenuPanel *pPanel, int iButton )
@@ -870,7 +870,7 @@ public:
 class ClassButton : public CommandButton
 {
 protected:
-	int	m_iPlayerClass;
+	int m_iPlayerClass;
 
 public:
 	ClassButton( int iClass, const char* text,int x,int y,int wide,int tall, bool bNoHighlight ) : CommandButton( text,x,y,wide,tall, bNoHighlight)
@@ -884,7 +884,7 @@ public:
 class TeamButton : public CommandButton
 {
 private:
-	int	m_iTeamNumber;
+	int m_iTeamNumber;
 public:
 	TeamButton( int iTeam, const char* text,int x,int y,int wide,int tall ) : CommandButton( text,x,y,wide,tall)
 	{
@@ -912,7 +912,7 @@ public:
 class FeignButton : public CommandButton
 {
 private:
-	int	m_iFeignState;
+	int m_iFeignState;
 public:
 	FeignButton( int iState, const char* text,int x,int y,int wide,int tall ) : CommandButton( text,x,y,wide,tall)
 	{
@@ -949,10 +949,10 @@ public:
 	}
 };
 
-#define		DISGUISE_TEAM1		(1<<0)
-#define		DISGUISE_TEAM2		(1<<1)
-#define		DISGUISE_TEAM3		(1<<2)
-#define		DISGUISE_TEAM4		(1<<3)
+#define 	DISGUISE_TEAM1		(1<<0)
+#define 	DISGUISE_TEAM2		(1<<1)
+#define 	DISGUISE_TEAM3		(1<<2)
+#define 	DISGUISE_TEAM4		(1<<3)
 
 class DisguiseButton : public CommandButton
 {
@@ -987,7 +987,7 @@ public:
 class DetpackButton : public CommandButton
 {
 private:
-	int	m_iDetpackState;
+	int m_iDetpackState;
 public:
 	DetpackButton( int iState, const char* text,int x,int y,int wide,int tall ) : CommandButton( text,x,y,wide,tall)
 	{
@@ -1016,7 +1016,7 @@ extern int iBuildingCosts[];
 class BuildButton : public CommandButton
 {
 private:
-	int	m_iBuildState;
+	int m_iBuildState;
 	int m_iBuildData;
 
 public:
@@ -1443,7 +1443,7 @@ public:
 class CTransparentPanel : public Panel
 {
 private:
-	int	m_iTransparency;
+	int m_iTransparency;
 public:
 	CTransparentPanel(int iTrans, int x,int y,int wide,int tall) : Panel(x,y,wide,tall)
 	{
@@ -1467,10 +1467,10 @@ class CMenuPanel : public CTransparentPanel
 {
 private:
 	CMenuPanel *m_pNextMenu;
-	int			m_iMenuID;
-	int			m_iRemoveMe;
-	int			m_iIsActive;
-	float		m_flOpenTime;
+	int		m_iMenuID;
+	int		m_iRemoveMe;
+	int		m_iIsActive;
+	float	m_flOpenTime;
 public:
 	CMenuPanel(int iRemoveMe, int x,int y,int wide,int tall) : CTransparentPanel(100, x,y,wide,tall)
 	{
@@ -1528,11 +1528,11 @@ public:
 		// This MenuPanel has now been deleted. Don't append code here.
 	}
 
-	int			ShouldBeRemoved() { return m_iRemoveMe; };
+	int		ShouldBeRemoved() { return m_iRemoveMe; };
 	CMenuPanel* GetNextMenu() { return m_pNextMenu; };
-	int			GetMenuID() { return m_iMenuID; };
-	int			IsActive() { return m_iIsActive; };
-	float		GetOpenTime() { return m_flOpenTime; };
+	int		GetMenuID() { return m_iMenuID; };
+	int		IsActive() { return m_iIsActive; };
+	float	GetOpenTime() { return m_flOpenTime; };
 
 	// Numeric input
 	virtual bool SlotInput( int iSlot ) { return false; };
@@ -1585,7 +1585,7 @@ private:
 
 	CImageLabel			*m_pClassImages[MAX_TEAMS][PC_LASTCLASS];
 
-	int					m_iCurrentInfo;
+	int				m_iCurrentInfo;
 
 	enum { STRLENMAX_PLAYERSONTEAM = 128 };
 	char m_sPlayersOnTeamString[STRLENMAX_PLAYERSONTEAM];
@@ -1619,7 +1619,7 @@ public:
 	CommandButton		*m_pCancelButton;
 	CommandButton		*m_pSpectateButton;
 
-	int					m_iCurrentInfo;
+	int				m_iCurrentInfo;
 
 public:
 	CTeamMenuPanel(int iTrans, int iRemoveMe, int x,int y,int wide,int tall);

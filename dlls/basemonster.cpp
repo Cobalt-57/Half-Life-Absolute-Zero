@@ -20,13 +20,37 @@
 
 */
 
-
-
 //MODDD TODO MAJOR - in BestVisibleEnemy, could distance be a scalable priotity alongside relationship, instead of relationship being
 //                   100% overpowering?
 //                   for instance, a monster 3 miles away that's a nemesis that is sighted would draw more attention
-//                   than a big hulking agrunt that's 2 feet away slashing at me that's a "hated" would.
+//                   than a big hulking agrunt that's 2 feet away slashing at me that's "hated" would.
 //                   It's a bizarre picture.  At least in theory that's how it would work out, but see if it's such a problem it needs fixing.
+
+
+#include "extdll.h"
+
+#include "basemonster.h"  //MODDD - is this addition necessary?
+#include "util.h"	
+#include "nodes.h"
+#include "util_model.h"
+#include "saverestore.h"
+#include "weapons.h"
+#include "scripted.h"
+#include "squadmonster.h"
+#include "decals.h"
+#include "soundent.h"
+#include "gamerules.h"
+//MODDD - never included before.?
+#include "defaultai.h"
+
+#include "util_debugdraw.h"
+//MODDD - why not?
+#include "game.h"
+	
+
+//MODDD - unused, now factors in the monster's current expected distance to cover this frame (groundspeed & frame time) 
+//        for a better tolerance instead.  Still a hard minimum of 8 to pass just in case it would otherwise be too small.
+//#define MONSTER_CUT_CORNER_DIST		8 // 8 means the monster's bounding box is contained without the box of the node in WC
 
 
 
@@ -35,53 +59,9 @@
 
 
 
-#include "extdll.h"
-
-#include "basemonster.h"  //MODDD - is this addition necessary?
-
-
-#include "util.h"
-
-	
-#include "nodes.h"
-#include "animation.h"
-#include "saverestore.h"
-#include "weapons.h"
-#include "scripted.h"
-#include "squadmonster.h"
-#include "decals.h"
-#include "soundent.h"
-#include "gamerules.h"
-
-//MODDD - never included before.?
-#include "defaultai.h"
-
-#include "util_debugdraw.h"
-
-
-
-//MODDD - unused, now factors in the monster's current expected distance to cover this frame (groundspeed & frame time) 
-//        for a better tolerance instead.  Still a hard minimum of 8 to pass just in case it would otherwise be too small.
-//#define MONSTER_CUT_CORNER_DIST		8 // 8 means the monster's bounding box is contained without the box of the node in WC
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-Vector VecBModelOrigin( entvars_t* pevBModel );
-
-extern DLL_GLOBAL	BOOL	g_fDrawLines;
+//extern DLL_GLOBAL	BOOL	g_fDrawLines;
 extern DLL_GLOBAL	short	g_sModelIndexLaser;// holds the index for the laser beam
 extern DLL_GLOBAL	short	g_sModelIndexLaserDot;// holds the index for the laser beam dot
 
@@ -99,54 +79,31 @@ EASY_CVAR_EXTERN(STUextraTriangH)
 EASY_CVAR_EXTERN(STUextraTriangV)
 
 EASY_CVAR_EXTERN(timedDamageEndlessOnHard)
-
 extern float globalPSEUDO_canApplyGermanCensorship;
 EASY_CVAR_EXTERN(allowGermanModels)
-
 EASY_CVAR_EXTERN(cineAllowSequenceOverwrite)
-
-
 EASY_CVAR_EXTERN(pathfindPrintout)
 EASY_CVAR_EXTERN(pathfindFidgetFailTime)
 EASY_CVAR_EXTERN(pathfindTopRampFixDistance)
 EASY_CVAR_EXTERN(pathfindTopRampFixDraw)
-
 EASY_CVAR_EXTERN(pathfindLooseMapNodes)
 EASY_CVAR_EXTERN(pathfindRampFix)
-
-
-
-//TODO
 EASY_CVAR_EXTERN(pathfindNodeToleranceMulti)
 EASY_CVAR_EXTERN(pathfindSnapToNode)
-
 EASY_CVAR_EXTERN(animationFramerateMulti)
 EASY_CVAR_EXTERN(peaceOut)
 EASY_CVAR_EXTERN(monsterAIForceFindDistance)
-
 EASY_CVAR_EXTERN(movementIsCompletePrintout)
 EASY_CVAR_EXTERN(animationPrintouts)
-
 EASY_CVAR_EXTERN(pathfindEdgeCheck)
-
 EASY_CVAR_EXTERN(thoroughHitBoxUpdates)
 EASY_CVAR_EXTERN(animationKilledBoundsRemoval)
-
 EASY_CVAR_EXTERN(drawDebugEnemyLKP)
-
 EASY_CVAR_EXTERN(pathfindLargeBoundFix)
-
 EASY_CVAR_EXTERN(flyerKilledFallingLoop)
-
 EASY_CVAR_EXTERN(barnacleGrabNoInterpolation)
 
-
 //EASY_CVAR_EXTERN(testVar)
-
-
-
-
-
 
 
 
@@ -194,7 +151,7 @@ TYPEDESCRIPTION	CBaseMonster::m_SaveData[] =
 	DEFINE_FIELD( CBaseMonster, m_vecMoveGoal, FIELD_POSITION_VECTOR ),
 	DEFINE_FIELD( CBaseMonster, m_movementActivity, FIELD_INTEGER ),
 
-	//		int					m_iAudibleList; // first index of a linked list of sounds that the monster can hear.
+	//		int				m_iAudibleList; // first index of a linked list of sounds that the monster can hear.
 //	DEFINE_FIELD( CBaseMonster, m_afSoundTypes, FIELD_INTEGER ),
 	DEFINE_FIELD( CBaseMonster, m_vecLastPosition, FIELD_POSITION_VECTOR ),
 	DEFINE_FIELD( CBaseMonster, m_iHintNode, FIELD_INTEGER ),
@@ -278,9 +235,7 @@ const char* CBaseMonster::pStandardAttackMissSounds[] =
 
 
 
-
-
-
+int CBaseMonster::monsterIDLatest = 0;
 
 
 //MODDD - ?
@@ -348,13 +303,8 @@ BOOL CBaseMonster::NoFriendlyFireImp(const Vector& startVec, const Vector& endVe
 		return FALSE;
 	}
 	//m_checkAttackTime = gpGlobals->time + 1.5;
+}//END OF NoFriendlyFireImp
 
-
-}
-
-
-
-int CBaseMonster::monsterIDLatest = 0;
 
 //MODDD - new
 CBaseMonster::CBaseMonster(){
@@ -592,7 +542,7 @@ void CBaseMonster::setAnimationSmart(const char* arg_animName){
 //modeled moreso after "setSequenceByName".
 void CBaseMonster::setAnimationSmart(const char* arg_animName, float arg_frameRate){
 
-	int	iSequence;
+	int iSequence;
 
 	iSequence = LookupSequence ( arg_animName );
 
@@ -643,7 +593,7 @@ void CBaseMonster::setAnimationSmartAndStop(const char* arg_animName){
 //modeled moreso after "setSequenceByName".
 void CBaseMonster::setAnimationSmartAndStop(const char* arg_animName, float arg_frameRate){
 
-	int	iSequence;
+	int iSequence;
 
 	iSequence = LookupSequence ( arg_animName );
 
@@ -655,7 +605,7 @@ void CBaseMonster::setAnimationSmartAndStop(const char* arg_animName, float arg_
 //modeled moreso after "setSequenceByName"... also stops MOVEMENT, that is (if it wasn't already?)
 void CBaseMonster::setAnimationSmartAndStop(int arg_animIndex, float arg_frameRate){
 
-	int	iSequence = arg_animIndex;
+	int iSequence = arg_animIndex;
 
 	// Set to the desired anim, or default anim if the desired is not present
 	if ( iSequence > ACTIVITY_NOT_AVAILABLE )
@@ -897,9 +847,9 @@ SCHEDULE_TYPE CBaseMonster::getHeardBaitSoundSchedule(){
 //=========================================================
 void CBaseMonster :: Listen ( void )
 {
-	int		iSound;
-	int		iMySounds;
-	float	hearingSensitivity;
+	int	iSound;
+	int	iMySounds;
+	float hearingSensitivity;
 	CSound	*pCurrentSound;
 
 
@@ -1062,7 +1012,7 @@ BOOL CBaseMonster :: FValidateHintType ( short sHint )
 //MODDD - why was a distance (the parameter here) an int?  why not a decimal?
 void CBaseMonster :: Look ( float flDistance )
 {
-	int	iSighted = 0;
+	int iSighted = 0;
 
 	// DON'T let visibility information from last frame sit around!
 	ClearConditions(bits_COND_SEE_HATE | bits_COND_SEE_DISLIKE | bits_COND_SEE_ENEMY | bits_COND_SEE_FEAR | bits_COND_SEE_NEMESIS | bits_COND_SEE_CLIENT);
@@ -1306,7 +1256,7 @@ int CBaseMonster :: ISoundMask ( void )
 CSound* CBaseMonster :: PBestSound ( void )
 {	
 	int iThisSound; 
-	int	iBestSound = -1;
+	int iBestSound = -1;
 	float flBestDist = 8192;// so first nearby sound will become best so far.
 	float flDist;
 	CSound *pSound;
@@ -1358,7 +1308,7 @@ CSound* CBaseMonster :: PBestSound ( void )
 CSound* CBaseMonster :: PBestScent ( void )
 {	
 	int iThisScent; 
-	int	iBestScent = -1;
+	int iBestScent = -1;
 	float flBestDist = 8192;// so first nearby smell will become best so far.
 	float flDist;
 	CSound *pSound;
@@ -1535,6 +1485,11 @@ int CBaseMonster::convert_itbd_to_damage(int i){
 
 		return (DMG_PARALYZE << i);
 	}else{
+		// start at 8 = DMG_BLEEDING.
+		//return (DMG_PARALYZE << (i - 8));
+		// ...actually no, unless all future timed damages are placed so they occur
+		// one-after-the-other like for 'i <= 7' above.
+		// Only one yet so hard to say.
 		switch(i){
 		case 8:
 			return DMG_BLEEDING;
@@ -1545,19 +1500,13 @@ int CBaseMonster::convert_itbd_to_damage(int i){
 	easyPrintLine("ERROR: failed to convert timed damage itbd #%d to damage type!", i);
 	//throw error! problem!
 	return -1;
-
-}
-
-
-
+}//END OF convert_itbd_to_damage
 
 
 
 //MODDD - checkpoint.
 void CBaseMonster::CheckTimeBasedDamage(void) 
 {
-
-
 	int i;
 	BYTE bDuration = 0;
 
@@ -1580,15 +1529,6 @@ void CBaseMonster::CheckTimeBasedDamage(void)
 		return;
 
 	m_tbdPrev = gpGlobals->time;
-
-	//
-	//
-	//if(compareStrings(STRING(this->pev->classname), "monster_human_grunt" )  ){
-	//	easyPrintLine("dmg staytus: %s ::: %d %d", STRING(this->pev->classname), this->m_bitsDamageType, m_bitsDamageTypeMod);
-	//	easyPrintLine("TIME?! %.2f, %.2f, %.2f", gpGlobals->time, m_tbdPrev, gpGlobals->time - m_tbdPrev);
-	//}
-	//
-
 	
 	//m_tbdPrev = gpGlobals->time;
 
@@ -2425,7 +2365,7 @@ BOOL CBaseMonster::FRefreshRouteChaseEnemySmart(void){
 BOOL CBaseMonster :: FRefreshRoute ( void )
 {
 	CBaseEntity	*pPathCorner;
-	int			i;
+	int		i;
 	BOOL		returnCode;
 
 	RouteNew();
@@ -2577,7 +2517,7 @@ BOOL CBaseMonster::MoveToNode( Activity movementAct, float waitTime, const Vecto
 
 void CBaseMonster::DrawRoute( entvars_t *pev, WayPoint_t *m_Route, int m_iRouteIndex, int r, int g, int b )
 {
-	int			i;
+	int		i;
 
 	if ( m_Route[m_iRouteIndex].iType == 0 )
 	{
@@ -2665,7 +2605,7 @@ int ShouldSimplify( int routeType )
 void CBaseMonster :: RouteSimplify( CBaseEntity *pTargetEnt )
 {
 	// BUGBUG: this doesn't work 100% yet
-	int			i, count, outCount;
+	int		i, count, outCount;
 	Vector		vecStart;
 	WayPoint_t	outRoute[ ROUTE_SIZE * 2 ];	// Any points except the ends can turn into 2 points in the simplified route
 
@@ -2854,7 +2794,7 @@ BOOL CBaseMonster :: CheckMeleeAttack2 ( float flDot, float flDist )
 void CBaseMonster :: CheckAttacks ( CBaseEntity *pTarget, float flDist )
 {
 	Vector2D	vec2LOS;
-	float		flDot;
+	float	flDot;
 
 	UTIL_MakeVectors ( pev->angles );
 
@@ -2941,8 +2881,8 @@ BOOL CBaseMonster :: FCanCheckAttacks ( void )
 //=========================================================
 int CBaseMonster :: CheckEnemy ( CBaseEntity *pEnemy )
 {
-	float	flDistToEnemy;
-	int		iUpdatedLKP;// set this to TRUE if you update the EnemyLKP in this function.
+	float flDistToEnemy;
+	int	iUpdatedLKP;// set this to TRUE if you update the EnemyLKP in this function.
 
 	iUpdatedLKP = FALSE;
 	ClearConditions ( bits_COND_ENEMY_FACING_ME );
@@ -2988,10 +2928,12 @@ int CBaseMonster :: CheckEnemy ( CBaseEntity *pEnemy )
 	// distance to enemy's origin
 	flDistToEnemy = ( vecEnemyPos - pev->origin ).Length();
 	vecEnemyPos.z += pEnemy->pev->size.z * 0.5;
+
 	// distance to enemy's head
 	if(EASY_CVAR_GET(crazyMonsterPrintouts) == 1){
-	easyPrintLine("CanAttack3? %d", HasConditions(bits_COND_CAN_MELEE_ATTACK1));
+		easyPrintLine("CanAttack3? %d", HasConditions(bits_COND_CAN_MELEE_ATTACK1));
 	}
+
 	float flDistToEnemy2 = (vecEnemyPos - pev->origin).Length();
 	if (flDistToEnemy2 < flDistToEnemy)
 		flDistToEnemy = flDistToEnemy2;
@@ -2999,13 +2941,13 @@ int CBaseMonster :: CheckEnemy ( CBaseEntity *pEnemy )
 	{
 		// distance to enemy's feet
 		vecEnemyPos.z -= pEnemy->pev->size.z;
-		float flDistToEnemy2 = (vecEnemyPos - pev->origin).Length();
+		flDistToEnemy2 = (vecEnemyPos - pev->origin).Length();
 		if (flDistToEnemy2 < flDistToEnemy)
 			flDistToEnemy = flDistToEnemy2;
 	}
 	
 	if(EASY_CVAR_GET(crazyMonsterPrintouts) == 1){
-	easyPrintLine("CanAttack4? %d", HasConditions(bits_COND_CAN_MELEE_ATTACK1));
+		easyPrintLine("CanAttack4? %d", HasConditions(bits_COND_CAN_MELEE_ATTACK1));
 	}
 
 	if ( HasConditions( bits_COND_SEE_ENEMY ) )
@@ -3221,7 +3163,7 @@ void CBaseMonster::PushEnemy( CBaseEntity *pEnemy, Vector &vecLastKnownPos )
 
 		
 		//first a check. Is this enemy already in the list?
-		for(int i = 0; i < m_intOldEnemyNextIndex; i++){
+		for(i = 0; i < m_intOldEnemyNextIndex; i++){
 			if(m_hOldEnemy[i] == pEnemy){
 				//Already in the list. Do not add.
 				return;
@@ -3414,7 +3356,7 @@ void CBaseMonster :: SetActivity ( Activity NewActivity )
 	}
 
 
-	int	iSequence;
+	int iSequence;
 
 	//nah...
 	//easyPrintLine("SMOOTH AS DER %d %d %d", HasConditions(bits_COND_CAN_MELEE_ATTACK1), m_Activity, m_IdealActivity );
@@ -3540,7 +3482,7 @@ void CBaseMonster::SetSequenceByIndex(int iSequence, BOOL safeReset)
 }//END OF SetSequenceByNumber()
 void CBaseMonster::SetSequenceByName(char* szSequence, BOOL safeReset)
 {
-	int	iSequence;
+	int iSequence;
 	iSequence = LookupSequence ( szSequence );
 	SetSequenceByIndex(iSequence, safeReset);
 }
@@ -3648,8 +3590,8 @@ BOOL CBaseMonster::getHasPathFindingMod(){
 // DON"T USE SETORIGIN! 
 //=========================================================
 //MODDD - SHUN!    was 16
-#define	LOCAL_STEP_SIZE	16
-#define	LOCAL_STEP_SIZE_MOD 10
+#define LOCAL_STEP_SIZE	16
+#define LOCAL_STEP_SIZE_MOD 10
 
 //MODDD - ref
 EASY_CVAR_EXTERN(drawDebugPathfinding)
@@ -3716,14 +3658,14 @@ int CBaseMonster::CheckLocalMoveHull(const Vector &vecStart, const Vector &vecEn
 // !!!PERFORMANCE - should we try to load balance this?
 // DON"T USE SETORIGIN! 
 //=========================================================
-#define	LOCAL_STEP_SIZE	16
+#define LOCAL_STEP_SIZE	16
 int CBaseMonster :: CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, CBaseEntity *pTarget, float *pflDist )
 {
 	Vector	vecStartPos;// record monster's position before trying the move
-	float	flYaw;
-	float	flDist;
-	float	flStep, stepSize;
-	int		iReturn;
+	float flYaw;
+	float flDist;
+	float flStep, stepSize;
+	int	iReturn;
 #if defined(USE_MOVEMENT_BOUND_FIX) || defined(USE_MOVEMENT_BOUND_FIX_ALT)
 	Vector oldMins;
 	Vector oldMaxs;
@@ -4100,9 +4042,9 @@ int CBaseMonster :: RouteClassify( int iMoveFlag )
 
 BOOL CBaseMonster :: BuildRoute ( const Vector &vecGoal, int iMoveFlag, CBaseEntity *pTarget )
 {
-	float	flDist;
+	float flDist;
 	Vector	vecApex;
-	int		iLocalMove;
+	int	iLocalMove;
 
 
 	RouteNew();
@@ -4515,7 +4457,7 @@ BOOL CBaseMonster :: BuildRoute ( const Vector &vecGoal, int iMoveFlag, CBaseEnt
 //=========================================================
 void CBaseMonster :: InsertWaypoint ( Vector vecLocation, int afMoveFlags )
 {
-	int			i, type;
+	int		i, type;
 
 	
 	// we have to save some Index and Type information from the real
@@ -4560,8 +4502,8 @@ BOOL CBaseMonster :: FTriangulate ( const Vector &vecStart , const Vector &vecEn
 	Vector		vecTop;// the spot we'll try to triangulate to on the top
 	Vector		vecBottom;// the spot we'll try to triangulate to on the bottom
 	Vector		vecFarSide;// the spot that we'll move to after hitting the triangulated point, before moving on to our normal goal.
-	int			i;
-	float		sizeX, sizeZ;
+	int		i;
+	float	sizeX, sizeZ;
 
 	// If the hull width is less than 24, use 24 because CheckLocalMove uses a min of
 	// 24.
@@ -4744,9 +4686,9 @@ void CBaseMonster :: Move ( float flInterval )
 
 
 
-	float		flWaypointDist;
-	float		flCheckDist;
-	float		flDist;// how far the lookahead check got before hitting an object.
+	float	flWaypointDist;
+	float	flCheckDist;
+	float	flDist;// how far the lookahead check got before hitting an object.
 	Vector		vecDir;
 	Vector		vecApex;
 	CBaseEntity	*pTargetEnt;
@@ -5628,7 +5570,6 @@ void CBaseMonster::TaskFail(void)
 		int x = 4;
 	}
 
-
 	//if(FClassnameIs(this->pev, "monster_scientist")){
 	if(monsterID == 4){
 		//break point!
@@ -5940,10 +5881,10 @@ CBaseEntity *CBaseMonster :: BestVisibleEnemy ( void )
 	CBaseEntity	*pNextEnt;
 
 	//MODDD - ...why did these used to be integers?  any length is a decimal.
-	float			flNearest;
-	float			flDist;
+	float		flNearest;
+	float		flDist;
 
-	int			iBestRelationship;
+	int		iBestRelationship;
 
 	//MODDD - new. Also keep track of all feared enemeis separately.
 	CBaseEntity* pFearReturn;
@@ -6125,9 +6066,9 @@ void CBaseMonster :: MakeIdealYaw( Vector vecTarget )
 //
 // Positive result is left turn, negative is right turn
 //=========================================================
-float	CBaseMonster::FlYawDiff ( void )
+float CBaseMonster::FlYawDiff ( void )
 {
-	float	flCurrentYaw;
+	float flCurrentYaw;
 
 	flCurrentYaw = UTIL_AngleMod( pev->angles.y );
 
@@ -6146,7 +6087,7 @@ float	CBaseMonster::FlYawDiff ( void )
 //=========================================================
 float CBaseMonster::ChangeYaw ( int yawSpeed )
 {
-	float		ideal, current, move, speed;
+	float	ideal, current, move, speed;
 
 	current = UTIL_AngleMod( pev->angles.y );
 	ideal = pev->ideal_yaw;
@@ -6199,7 +6140,7 @@ float CBaseMonster::ChangeYaw ( int yawSpeed )
 // VecToYaw - turns a directional vector into a yaw value
 // that points down that vector.
 //=========================================================
-float	CBaseMonster::VecToYaw ( Vector vecDir )
+float CBaseMonster::VecToYaw ( Vector vecDir )
 {
 	if (vecDir.x == 0 && vecDir.y == 0 && vecDir.z == 0)
 		return pev->angles.y;
@@ -6221,7 +6162,7 @@ float	CBaseMonster::VecToYaw ( Vector vecDir )
 void CBaseMonster :: SetEyePosition ( void )
 {
 	Vector  vecEyePosition;
-	void	*pmodel = GET_MODEL_PTR( ENT(pev) );
+	void *pmodel = GET_MODEL_PTR( ENT(pev) );
 
 	GetEyePosition( pmodel, vecEyePosition );
 
@@ -6964,7 +6905,7 @@ int CBaseMonster :: CanPlaySequence( BOOL fDisregardMonsterState, int interruptL
 // directly to the left or right of the caller that will
 // conceal them from view of pSightEnt
 //=========================================================
-#define	COVER_CHECKS	5// how many checks are made
+#define COVER_CHECKS	5// how many checks are made
 #define COVER_DELTA		48// distance between checks
 
 BOOL CBaseMonster :: FindLateralCover ( const Vector &vecThreat, const Vector &vecViewOffset )
@@ -6975,7 +6916,7 @@ BOOL CBaseMonster :: FindLateralCover ( const Vector &vecThreat, const Vector &v
 	Vector	vecLeftTest;
 	Vector	vecRightTest;
 	Vector	vecStepRight;
-	int		i;
+	int	i;
 
 	UTIL_MakeVectors ( pev->angles );
 	vecStepRight = gpGlobals->v_right * COVER_DELTA;
@@ -7191,6 +7132,17 @@ void CBaseMonster :: MonsterInitDead( void )
 	pev->nextthink = gpGlobals->time + 0.5;
 }
 
+//MODDD - more of a placeholder, see "NoFriendlyFireImp" for more complexity.
+// As to how this was never at least minimally stubbed as-is, no clue.
+BOOL CBaseMonster::NoFriendlyFire(void) {
+	// Usually for squadmonsters.  Otherwise assume we can fire.
+	return TRUE;
+}
+
+
+
+
+
 //=========================================================
 // BBoxIsFlat - check to see if the monster's bounding box
 // is lying flat on a surface (traces from all four corners
@@ -7200,9 +7152,9 @@ BOOL CBaseMonster :: BBoxFlat ( void )
 {
 	TraceResult	tr;
 	Vector		vecPoint;
-	float		flXSize, flYSize;
-	float		flLength;
-	float		flLength2;
+	float	flXSize, flYSize;
+	float	flLength;
+	float	flLength2;
 
 	flXSize = pev->size.x / 2;
 	flYSize = pev->size.y / 2;
@@ -7584,7 +7536,6 @@ void CBaseMonster::Spawn( ){
 	//MonsterInit is a better place that's often called by most monster Spawn scripts. Beware of those that don't even do that.
 
 	recognizablyDead = FALSE;
-	firstSpawnCall = FALSE;
 	CBaseToggle::Spawn();
 
 	//setModelCustom();
@@ -8378,8 +8329,6 @@ BOOL CBaseMonster::traceResultObstructionValidForAttack(const TraceResult& arg_t
 }//END OF traceResultObstructionValidForAttack
 
 
-
-
 //default, override if necessary.
 float CBaseMonster::getDistTooFar(void){
 	return 1024.0;
@@ -8388,7 +8337,5 @@ float CBaseMonster::getDistTooFar(void){
 float CBaseMonster::getDistLook(void){
 	return 2048.0;
 }
-
-
 
 

@@ -13,19 +13,277 @@
 *
 ****/
 
+// Constants shared by the engine and dlls
+// This header file included by engine files and DLL files.
+// Most came from server.h
 
-//A cheap way to include custom CVars throughout all files in the entire project.
-#include "cvar_custom.h"
-
+//MODDD NOTE - const.h is included in so many places, client/serverside, and even
+// the C lang (pm_shared files are in that), putting any #includes here ensures the
+// files are included nearly everywhere.
 
 
 
 #ifndef CONST_H
 #define CONST_H
-//
-// Constants shared by the engine and dlls
-// This header file included by engine files and DLL files.
-// Most came from server.h
+
+#include "external_lib_include.h"
+// A cheap way to include custom CVars throughout all files in the entire project.
+#include "cvar_custom.h"
+// And vectors, so common they even show up in this very file.
+// This will also include "mathlib.h", if it makes sense to
+// (always for serverside, only for the C Lang for clientside, as there are already
+//  C++ versions in common/vector.cpp.  The C versions don't support method overloading).
+// actually never mind the client/server restriction, just not being C++ is enough.
+#include "vector.h"
+
+
+
+
+
+
+
+
+// !!! BUNCHA DEFINES.  Why not go everywhere, at least primarily stuff that doesn't seem
+// Half-Life specific (DLLEXPORT, etc.)
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+// from utils/vgui/include/VGUI.h.
+// Why only that file?
+#define null 0L
+
+
+// C functions for external declarations that call the appropriate C++ methods
+//NOTE - looks Like it derives something similar to DLLEXPORT, but notice that
+// "declspec" begins with one underscore instead of two.  Just keep it this way.
+
+// "EXPORT" has to go before methods of entities tied to the engine
+// as events, such as Think, Touch, and Use  (methods ever intended to be set
+// to those, like 'setTouch(&thatMethod);', etc.
+// I don't expect any new usage of DLLEXPORT though.
+#ifdef _WIN32
+#define EXPORT _declspec( dllexport )
+#else
+#define EXPORT /* */
+#endif
+
+
+// Not sure why DLLEXPORT was re-defined in so many files:
+//  This was defined the same in the following files (and removed from since):
+//  cl_dll/cdll_int.cpp
+//  cl_dll/demo.cpp
+//  cl_dll/entity.cpp
+//  cl_dll/GameStudioModelRenderer.cpp
+//  cl_dll/in_defs.h
+//  cl_dll/tri.cpp
+// These files rely on that same definition anyway:
+//  cl_dll/input.cpp
+//  cl_dll/inputw32.cpp
+//  cl_dll/in_camera.cpp
+//  cl_dll/view.cpp
+
+// The version used in those files has been moved here.
+// Every single mention of this is for prototypes in 'extern "c"' space.
+// Implementations of those don't do 'extern "c"' that but still get the DLLEXPORT tag.
+// There was another define that derived the exact same result called "_DLLEXPORT".
+// Yes, that similar in name.  No idea.
+#define DLLEXPORT __declspec( dllexport )
+
+// HOWEVER, engine/eiface.h had this instead:
+#ifdef _WIN32
+#define DLL_CALL_CONV __stdcall
+#else
+#define DLL_CALL_CONV
+#endif
+
+
+
+
+
+// ARRAYSIZE macro now won't happen if already defined, such as by Windows.
+// If overriding those turns out to be necssary, forget these 'ifndef' checks.
+#ifndef ARRAYSIZE
+// Was in ev_hldm.cpp... strangely enough.
+#define ARRAYSIZE(p) (sizeof(p)/sizeof(p[0]))
+#endif
+
+
+
+// Makes these more explicit, and easier to find
+#define FILE_GLOBAL static
+#define DLL_GLOBAL
+
+// Until we figure out why "const" gives the compiler problems, we'll just have to use
+// this bogus "empty" define to mark things as constant.
+#define CONSTANT
+
+
+
+// undefing min, max, and fabs is a terrible idea apparently.
+//#undef min
+//#undef max
+//#undef fabs
+//#undef ARRAYSIZE
+
+
+// No idea why this used to be included along the "#define max" above, even in the same
+// '#ifndef' check. Weird.
+
+#define _vsnprintf(a,b,c,d) vsnprintf(a,b,c,d)
+
+
+
+
+// some stuff from util.cpp
+// Testing strings for nullity
+#define iStringNull 0
+// Use this instead of ALLOC_STRING on constant strings
+#define STRING(offset)		(const char *)(gpGlobals->pStringBase + (int)offset)
+#define MAKE_STRING(str)	((int)str - (int)STRING(0))
+
+
+
+
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+
+
+
+
+// PM-SHARED RELATED.  May as well go here in common space to go absolutely everywhere.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// Forget everything you know about TRUE and FALSE.
+// Also, no idea why dlls/extdll.h tried to do "define TRUE (!FALSE)".  What?
+// It would have to be the exact same 1 as anywhere else since FALSE was defined 0,
+// and (!0) must be 1.
+//#undef TRUE
+//#undef FALSE
+#define TRUE 1
+#define FALSE 0
+
+
+#define MAX_CLIENTS 32
+
+
+//MODDD - edit
+//#define MAX_CLIMB_SPEED	200
+//130?
+#define MAX_CLIMB_SPEED 110  // fastest vertical climbing speed possible
+#define MAX_CLIMB_SPEEDPRE 200    //old speed for being forced off a ladder sometimes?
+
+
+// uhh..  why not?
+#define M_PI 3.14159265358979323846
+#define Q_PI 3.14159265358979323846
+
+
+#define PLAYER_FATAL_FALL_SPEED		1024// approx 60 feet
+#define PLAYER_MAX_SAFE_FALL_SPEED	580// approx 20 feet
+#define DAMAGE_FOR_FALL_SPEED		(float) 100 / ( PLAYER_FATAL_FALL_SPEED - PLAYER_MAX_SAFE_FALL_SPEED )// damage per unit per second.
+#define PLAYER_MIN_BOUNCE_SPEED		200
+
+
+#define PLAYER_FALL_PUNCH_THRESHHOLD (float)350 // won't punch player's screen/make scrape noise unless player falling at least this fast.
+
+#define PLAYER_FALL_PUNCH_TINY_THRESHHOLD (float)0.6f //MODDD : unused.
+
+#define PLAYER_LONGJUMP_SPEED 350 // how fast we longjump
+
+
+
+//MODDD - from clientside's cl_util.h.
+// ...what a journey. Now it's everywhere.
+// Also surrounded by 'ifndef''s.  If some system library defines these, just use that.
+#ifndef max
+#define max(a, b)  (((a) > (b)) ? (a) : (b))
+#endif
+#ifndef min
+#define min(a, b)  (((a) < (b)) ? (a) : (b))
+#endif
+#ifndef fabs
+// NOTE - supplied by base libaries too now in modern VS, but doesn't seem to hurt here.
+#define fabs(x)    ((x) > 0 ? (x) : 0 - (x))
+#endif
+
+
+#define PM_DEAD_VIEWHEIGHT	-8
+
+#define VEC_VIEW			Vector( 0, 0, 28 )
+#define VEC_VIEW_Z			28
+
+
+#define VEC_HULL_MIN		Vector(-16, -16, -36)
+#define VEC_HULL_MIN_Z		-36
+#define VEC_HULL_MAX		Vector( 16,  16,  36)
+#define VEC_HULL_MAX_Z		36
+
+#define VEC_HUMAN_HULL_MIN	Vector( -16, -16, 0 )
+#define VEC_HUMAN_HULL_MAX	Vector( 16, 16, 72 )
+#define VEC_HUMAN_HULL_DUCK	Vector( 16, 16, 36 )
+
+#define VEC_DUCK_HULL_MIN	Vector(-16, -16, -18 )
+#define VEC_DUCK_HULL_MIN_Z	-18
+#define VEC_DUCK_HULL_MAX	Vector( 16,  16,  18)
+#define VEC_DUCK_HULL_MAX_Z	18
+
+#define VEC_DUCK_VIEW		Vector( 0, 0, 12 )
+#define VEC_DUCK_VIEW_Z		12
+
+// defaults for clientinfo messages
+#define VEC_DUCK_VIEW_Z 12
+
+
+// up / down
+#define PITCH	0
+// left / right
+#define YAW		1
+// fall over
+#define ROLL	2 
+
+// (sound.cpp)
+#define CTEXTURESMAX		512			// max number of textures loade
+
+
+// See common/vector.h for re-defines of DotProduct, VectorSubtract, VectorAdd, and VectorCopy
+// compared to the common/mathlib.h and utils/common/matlih.b files.
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+// some pretty danged important things.
+typedef int BOOL;
+typedef int func_t;
+typedef int string_t;
+
+typedef unsigned char byte;
+typedef unsigned short word;
+#define _DEF_BYTE_
+
+typedef float vec_t;
+
+// careful, 'qboolean' shows up in C files mostly, and
+// this came from util_model.cpp (C++).
+//WAIT STOP.  Already handled further down in this file.
+#ifdef __cplusplus
+//typedef int qboolean;
+#endif
+
+
 
 
 //MODDD - Some extra math stuff because hey, why not.
@@ -50,18 +308,18 @@
 
 
 // edict->flags
-#define	FL_FLY					(1<<0)	// Changes the SV_Movestep() behavior to not need to be on ground
-#define	FL_SWIM					(1<<1)	// Changes the SV_Movestep() behavior to not need to be on ground (but stay in water)
-#define	FL_CONVEYOR				(1<<2)
-#define	FL_CLIENT				(1<<3)
-#define	FL_INWATER				(1<<4)
-#define	FL_MONSTER				(1<<5)
-#define	FL_GODMODE				(1<<6)
-#define	FL_NOTARGET				(1<<7)
-#define	FL_SKIPLOCALHOST		(1<<8)	// Don't send entity to local host, it's predicting this entity itself
-#define	FL_ONGROUND				(1<<9)	// At rest / on the ground
-#define	FL_PARTIALGROUND		(1<<10)	// not all corners are valid
-#define	FL_WATERJUMP			(1<<11)	// player jumping out of water
+#define FL_FLY					(1<<0)	// Changes the SV_Movestep() behavior to not need to be on ground
+#define FL_SWIM					(1<<1)	// Changes the SV_Movestep() behavior to not need to be on ground (but stay in water)
+#define FL_CONVEYOR				(1<<2)
+#define FL_CLIENT				(1<<3)
+#define FL_INWATER				(1<<4)
+#define FL_MONSTER				(1<<5)
+#define FL_GODMODE				(1<<6)
+#define FL_NOTARGET				(1<<7)
+#define FL_SKIPLOCALHOST		(1<<8)	// Don't send entity to local host, it's predicting this entity itself
+#define FL_ONGROUND				(1<<9)	// At rest / on the ground
+#define FL_PARTIALGROUND		(1<<10)	// not all corners are valid
+#define FL_WATERJUMP			(1<<11)	// player jumping out of water
 #define FL_FROZEN				(1<<12) // Player is frozen for 3rd person camera
 #define FL_FAKECLIENT			(1<<13)	// JAC: fake client, simulated server side; don't send network messages to them
 #define FL_DUCKING				(1<<14)	// Player flag -- Player is fully crouched
@@ -70,7 +328,7 @@
 
 // UNDONE: Do we need these?
 #define FL_IMMUNE_WATER			(1<<17)
-#define	FL_IMMUNE_SLIME			(1<<18)
+#define FL_IMMUNE_SLIME			(1<<18)
 #define FL_IMMUNE_LAVA			(1<<19)
 
 #define FL_PROXY				(1<<20)	// This is a spectator proxy
@@ -90,57 +348,57 @@
 
 
 // walkmove modes
-#define	WALKMOVE_NORMAL		0 // normal walkmove
+#define WALKMOVE_NORMAL		0 // normal walkmove
 #define WALKMOVE_WORLDONLY	1 // doesn't hit ANY entities, no matter what the solid type
 #define WALKMOVE_CHECKONLY	2 // move, but don't touch triggers
 
 // edict->movetype values
-#define	MOVETYPE_NONE			0		// never moves
-//#define	MOVETYPE_ANGLENOCLIP	1
-//#define	MOVETYPE_ANGLECLIP		2
-#define	MOVETYPE_WALK			3		// Player only - moving on the ground
+#define MOVETYPE_NONE			0		// never moves
+//#define MOVETYPE_ANGLENOCLIP	1
+//#define MOVETYPE_ANGLECLIP		2
+#define MOVETYPE_WALK			3		// Player only - moving on the ground
 
 //MODDD REALLY IMPORTANT NOTE - ARE WE REALLY NOT GONNA MENTION THIS DEVS?!
 // This move flag locks the monster to the ground. That isn't too surprising though.
 // The surprising thing is, this also interpolates monster movement so that they don't snap to the 0.1 second increments that it would usually be limited 
 // to due to MonsterThink's limit of 0.1 seconds. MOVETYPE_TOSS can also move against the ground, but it has this issue.
-#define	MOVETYPE_STEP			4		// gravity, special edge handling -- monsters use this
+#define MOVETYPE_STEP			4		// gravity, special edge handling -- monsters use this
 
-#define	MOVETYPE_FLY			5		// No gravity, but still collides with stuff
-#define	MOVETYPE_TOSS			6		// gravity/collisions
-#define	MOVETYPE_PUSH			7		// no clip to world, push and crush
-#define	MOVETYPE_NOCLIP			8		// No gravity, no collisions, still do velocity/avelocity
-#define	MOVETYPE_FLYMISSILE		9		// extra size to monsters
-#define	MOVETYPE_BOUNCE			10		// Just like Toss, but reflect velocity when contacting surfaces
+#define MOVETYPE_FLY			5		// No gravity, but still collides with stuff
+#define MOVETYPE_TOSS			6		// gravity/collisions
+#define MOVETYPE_PUSH			7		// no clip to world, push and crush
+#define MOVETYPE_NOCLIP			8		// No gravity, no collisions, still do velocity/avelocity
+#define MOVETYPE_FLYMISSILE		9		// extra size to monsters
+#define MOVETYPE_BOUNCE			10		// Just like Toss, but reflect velocity when contacting surfaces
 #define MOVETYPE_BOUNCEMISSILE	11		// bounce w/o gravity
 #define MOVETYPE_FOLLOW			12		// track movement of aiment
-#define	MOVETYPE_PUSHSTEP		13		// BSP model that needs physics/world collisions (uses nearest hull for world collision)
+#define MOVETYPE_PUSHSTEP		13		// BSP model that needs physics/world collisions (uses nearest hull for world collision)
 
 // edict->solid values
 // NOTE: Some movetypes will cause collisions independent of SOLID_NOT/SOLID_TRIGGER when the entity moves
 // SOLID only effects OTHER entities colliding with this one when they move - UGH!
-#define	SOLID_NOT				0		// no interaction with other objects
-#define	SOLID_TRIGGER			1		// touch on edge, but not blocking
-#define	SOLID_BBOX				2		// touch on edge, block
-#define	SOLID_SLIDEBOX			3		// touch on edge, but not an onground
-#define	SOLID_BSP				4		// bsp clip, touch on edge, block
+#define SOLID_NOT				0		// no interaction with other objects
+#define SOLID_TRIGGER			1		// touch on edge, but not blocking
+#define SOLID_BBOX				2		// touch on edge, block
+#define SOLID_SLIDEBOX			3		// touch on edge, but not an onground
+#define SOLID_BSP				4		// bsp clip, touch on edge, block
 
 // edict->deadflag values
-#define	DEAD_NO					0 // alive
-#define	DEAD_DYING				1 // playing death animation or still falling off of a ledge waiting to hit ground
-#define	DEAD_DEAD				2 // dead. lying still.
+#define DEAD_NO					0 // alive
+#define DEAD_DYING				1 // playing death animation or still falling off of a ledge waiting to hit ground
+#define DEAD_DEAD				2 // dead. lying still.
 #define DEAD_RESPAWNABLE		3
 #define DEAD_DISCARDBODY		4
 
-#define	DAMAGE_NO				0
-#define	DAMAGE_YES				1
-#define	DAMAGE_AIM				2
+#define DAMAGE_NO				0
+#define DAMAGE_YES				1
+#define DAMAGE_AIM				2
 
 // entity effects
-#define	EF_BRIGHTFIELD			1	// swirling cloud of particles
-#define	EF_MUZZLEFLASH 			2	// single frame ELIGHT on entity attachment 0
-#define	EF_BRIGHTLIGHT 			4	// DLIGHT centered at entity origin
-#define	EF_DIMLIGHT 			8	// player flashlight
+#define EF_BRIGHTFIELD			1	// swirling cloud of particles
+#define EF_MUZZLEFLASH 			2	// single frame ELIGHT on entity attachment 0
+#define EF_BRIGHTLIGHT 			4	// DLIGHT centered at entity origin
+#define EF_DIMLIGHT 			8	// player flashlight
 #define EF_INVLIGHT				16	// get lighting from ceiling
 #define EF_NOINTERP				32	// don't interpolate the next frame
 #define EF_LIGHT				64	// rocket flare glow sprite
@@ -153,7 +411,7 @@
 //
 // temp entity events
 //
-#define	TE_BEAMPOINTS		0		// beam effect between two points
+#define TE_BEAMPOINTS		0		// beam effect between two points
 // coord coord coord (start position) 
 // coord coord coord (end position) 
 // short (sprite index) 
@@ -166,7 +424,7 @@
 // byte (brightness)
 // byte (scroll speed in 0.1's)
 
-#define	TE_BEAMENTPOINT		1		// beam effect between point and entity
+#define TE_BEAMENTPOINT		1		// beam effect between point and entity
 // short (start entity) 
 // coord coord coord (end position) 
 // short (sprite index) 
@@ -179,10 +437,10 @@
 // byte (brightness)
 // byte (scroll speed in 0.1's)
 
-#define	TE_GUNSHOT			2		// particle effect plus ricochet sound
+#define TE_GUNSHOT			2		// particle effect plus ricochet sound
 // coord coord coord (position) 
 
-#define	TE_EXPLOSION		3		// additive sprite, 2 dynamic lights, flickering particles, explosion sound, move vertically 8 pps
+#define TE_EXPLOSION		3		// additive sprite, 2 dynamic lights, flickering particles, explosion sound, move vertically 8 pps
 // coord coord coord (position) 
 // short (sprite index)
 // byte (scale in 0.1's)
@@ -197,20 +455,20 @@
 #define TE_EXPLFLAG_NOPARTICLES	8	// do not draw particles
 
 
-#define	TE_TAREXPLOSION		4		// Quake1 "tarbaby" explosion with sound
+#define TE_TAREXPLOSION		4		// Quake1 "tarbaby" explosion with sound
 // coord coord coord (position) 
 
-#define	TE_SMOKE			5		// alphablend sprite, move vertically 30 pps
+#define TE_SMOKE			5		// alphablend sprite, move vertically 30 pps
 // coord coord coord (position) 
 // short (sprite index)
 // byte (scale in 0.1's)
 // byte (framerate)
 
-#define	TE_TRACER			6		// tracer effect from point to point
+#define TE_TRACER			6		// tracer effect from point to point
 // coord, coord, coord (start) 
 // coord, coord, coord (end)
 
-#define	TE_LIGHTNING		7		// TE_BEAMPOINTS with simplified parameters
+#define TE_LIGHTNING		7		// TE_BEAMPOINTS with simplified parameters
 // coord, coord, coord (start) 
 // coord, coord, coord (end) 
 // byte (life in 0.1's) 
@@ -218,7 +476,7 @@
 // byte (amplitude in 0.01's)
 // short (sprite model index)
 
-#define	TE_BEAMENTS			8		
+#define TE_BEAMENTS			8		
 // short (start entity) 
 // short (end entity) 
 // short (sprite index) 
@@ -231,13 +489,13 @@
 // byte (brightness)
 // byte (scroll speed in 0.1's)
 
-#define	TE_SPARKS			9		// 8 random tracers with gravity, ricochet sprite
+#define TE_SPARKS			9		// 8 random tracers with gravity, ricochet sprite
 // coord coord coord (position) 
 
-#define	TE_LAVASPLASH		10		// Quake1 lava splash
+#define TE_LAVASPLASH		10		// Quake1 lava splash
 // coord coord coord (position) 
 
-#define	TE_TELEPORT			11		// Quake1 teleport splash
+#define TE_TELEPORT			11		// Quake1 teleport splash
 // coord coord coord (position) 
 
 #define TE_EXPLOSION2		12		// Quake1 colormaped (base palette) particle explosion with sound
@@ -404,13 +662,13 @@
 // short (sprite index) 
 // short (flags) 
 
-#define	TE_BLOODSTREAM		101		// particle spray
+#define TE_BLOODSTREAM		101		// particle spray
 // coord coord coord (start position)
 // coord coord coord (spray vector)
 // byte (color)
 // byte (speed)
 
-#define	TE_SHOWLINE			102		// line of particles every 5 units, dies in 30 seconds
+#define TE_SHOWLINE			102		// line of particles every 5 units, dies in 30 seconds
 // coord coord coord (start position)
 // coord coord coord (end position)
 
@@ -599,45 +857,51 @@
 
 
 
-#define	MSG_BROADCAST		0		// unreliable to all
-#define	MSG_ONE				1		// reliable to one (msg_entity)
-#define	MSG_ALL				2		// reliable to all
-#define	MSG_INIT			3		// write to the init string
+#define MSG_BROADCAST		0		// unreliable to all
+#define MSG_ONE				1		// reliable to one (msg_entity)
+#define MSG_ALL				2		// reliable to all
+#define MSG_INIT			3		// write to the init string
 #define MSG_PVS				4		// Ents in PVS of org
 #define MSG_PAS				5		// Ents in PAS of org
 #define MSG_PVS_R			6		// Reliable to PVS
 #define MSG_PAS_R			7		// Reliable to PAS
 #define MSG_ONE_UNRELIABLE	8		// Send to one client, but don't put in reliable stream, put in unreliable datagram ( could be dropped )
-#define	MSG_SPEC			9		// Sends to all spectator proxies
+#define MSG_SPEC			9		// Sends to all spectator proxies
 
 // contents of a spot in the world
-#define	CONTENTS_EMPTY		-1
-#define	CONTENTS_SOLID		-2
-#define	CONTENTS_WATER		-3
-#define	CONTENTS_SLIME		-4
-#define	CONTENTS_LAVA		-5
-#define	CONTENTS_SKY		-6
-/* These additional contents constants are defined in bspfile.h
-#define	CONTENTS_ORIGIN		-7		// removed at csg time
-#define	CONTENTS_CLIP		-8		// changed to contents_solid
-#define	CONTENTS_CURRENT_0		-9
-#define	CONTENTS_CURRENT_90		-10
-#define	CONTENTS_CURRENT_180	-11
-#define	CONTENTS_CURRENT_270	-12
-#define	CONTENTS_CURRENT_UP		-13
-#define	CONTENTS_CURRENT_DOWN	-14
+#define CONTENTS_EMPTY		-1
+#define CONTENTS_SOLID		-2
+#define CONTENTS_WATER		-3
+#define CONTENTS_SLIME		-4
+#define CONTENTS_LAVA		-5
+#define CONTENTS_SKY		-6
 
+// These additional contents constants are defined in bspfile.h
+// MODDD - uncommented out.  All here now to show up in pm_shared.c without needing
+// its own re-defines.
+// Even weirder when you consider that sveral macro constants were defined
+// both here and in bspfile.h anyway.
+#define CONTENTS_ORIGIN		-7		// removed at csg time
+#define CONTENTS_CLIP		-8		// changed to contents_solid
+#define CONTENTS_CURRENT_0		-9
+#define CONTENTS_CURRENT_90		-10
+#define CONTENTS_CURRENT_180	-11
+#define CONTENTS_CURRENT_270	-12
+#define CONTENTS_CURRENT_UP		-13
+#define CONTENTS_CURRENT_DOWN	-14
 #define CONTENTS_TRANSLUCENT	-15
-*/
-#define	CONTENTS_LADDER		-16
 
-#define	CONTENT_FLYFIELD			-17
-#define	CONTENT_GRAVITY_FLYFIELD	-18
-#define	CONTENT_FOG					-19
+
+
+#define CONTENTS_LADDER		-16
+
+#define CONTENT_FLYFIELD			-17
+#define CONTENT_GRAVITY_FLYFIELD	-18
+#define CONTENT_FOG					-19
 
 #define CONTENT_EMPTY	-1
 #define CONTENT_SOLID	-2
-#define	CONTENT_WATER	-3
+#define CONTENT_WATER	-3
 #define CONTENT_SLIME	-4
 #define CONTENT_LAVA	-5
 #define CONTENT_SKY		-6
@@ -645,9 +909,9 @@
 // channels
 #define CHAN_AUTO			0
 #define CHAN_WEAPON			1
-#define	CHAN_VOICE			2
+#define CHAN_VOICE			2
 #define CHAN_ITEM			3
-#define	CHAN_BODY			4
+#define CHAN_BODY			4
 #define CHAN_STREAM			5			// allocate stream channel from the static or dynamic area
 #define CHAN_STATIC			6			// allocate channel from the static area 
 #define CHAN_NETWORKVOICE_BASE	7		// voice data coming across the network
@@ -657,12 +921,12 @@
 //MODDD - for reference, 4 seems acceptable too.  Not sure how much higher is unacceptable (crashes).
 // attenuation values
 #define ATTN_NONE		0
-#define	ATTN_NORM		(float)0.8
+#define ATTN_NORM		(float)0.8
 #define ATTN_IDLE		(float)2
 #define ATTN_STATIC		(float)1.25 
 
 // pitch values
-#define	PITCH_NORM		100			// non-pitch shifted
+#define PITCH_NORM		100			// non-pitch shifted
 #define PITCH_LOW		95			// other values are possible - 0-255, where 255 is very high
 #define PITCH_HIGH		120
 
@@ -671,10 +935,10 @@
 #define VOL_NORM		1.0
 
 // plats
-#define	PLAT_LOW_TRIGGER	1
+#define PLAT_LOW_TRIGGER	1
 
 // Trains
-#define	SF_TRAIN_WAIT_RETRIGGER	1
+#define SF_TRAIN_WAIT_RETRIGGER	1
 #define SF_TRAIN_START_ON		4		// Train is initially moving
 #define SF_TRAIN_PASSABLE		8		// Train is not solid -- used to make water trains
 
@@ -707,12 +971,12 @@
 // Colliding temp entity sounds
 
 #define BOUNCE_GLASS	BREAK_GLASS
-#define	BOUNCE_METAL	BREAK_METAL
+#define BOUNCE_METAL	BREAK_METAL
 #define BOUNCE_FLESH	BREAK_FLESH
 #define BOUNCE_WOOD		BREAK_WOOD
 #define BOUNCE_SHRAP	0x10
 #define BOUNCE_SHELL	0x20
-#define	BOUNCE_CONCRETE BREAK_CONCRETE
+#define BOUNCE_CONCRETE BREAK_CONCRETE
 #define BOUNCE_SHOTSHELL 0x80
 
 // Temp entity bounce sound types
@@ -843,18 +1107,13 @@ enum
 
 
 
-typedef int	func_t;
-typedef int	string_t;
 
-typedef unsigned char 		byte;
-typedef unsigned short 		word;
-#define _DEF_BYTE_
 
 #undef true
 #undef false
 
 #ifndef __cplusplus
-typedef enum {false, true}	qboolean;
+typedef enum {false, true} qboolean;
 #else 
 typedef int qboolean;
 #endif
@@ -891,7 +1150,7 @@ typedef struct edict_s edict_t;
 typedef struct
 {
 	vec3_t	normal;
-	float	dist;
+	float dist;
 } plane_t;
 
 typedef struct
@@ -899,11 +1158,11 @@ typedef struct
 	qboolean	allsolid;	// if true, plane is not valid
 	qboolean	startsolid;	// if true, the initial point was in a solid area
 	qboolean	inopen, inwater;
-	float	fraction;		// time completed, 1.0 = didn't hit anything
+	float fraction;		// time completed, 1.0 = didn't hit anything
 	vec3_t	endpos;			// final position
 	plane_t	plane;			// surface normal at impact
 	edict_t	*ent;			// entity the surface is on
-	int		hitgroup;		// 0 == generic, non zero is specific body part
+	int	hitgroup;		// 0 == generic, non zero is specific body part
 } trace_t;
 
 #endif

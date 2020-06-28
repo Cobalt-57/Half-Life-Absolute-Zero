@@ -235,7 +235,7 @@ private:
 	class HitTestPanel : public Panel
 	{
 	public:
-		virtual void	internalMousePressed(MouseCode code);
+		virtual void internalMousePressed(MouseCode code);
 	};
 
 
@@ -254,7 +254,7 @@ private:
 	CGrid			m_HeaderGrid;
 	CLabelHeader	m_HeaderLabels[NUM_COLUMNS];			// Labels above the 
 	CLabelHeader	*m_pCurrentHighlightLabel;
-	int				m_iHighlightRow;
+	int			m_iHighlightRow;
 	
 	vgui::CListBox	m_PlayerList;
 	CGrid			m_PlayerGrids[NUM_ROWS];				// The grid with player and team info. 
@@ -266,16 +266,16 @@ private:
 
 public:
 	
-	int				m_iNumTeams;
-	int				m_iPlayerNum;
-	int				m_iShowscoresHeld;
+	int			m_iNumTeams;
+	int			m_iPlayerNum;
+	int			m_iShowscoresHeld;
 
-	int				m_iRows;
-	int				m_iSortedRows[NUM_ROWS];
-	int				m_iIsATeam[NUM_ROWS];
+	int			m_iRows;
+	int			m_iSortedRows[NUM_ROWS];
+	int			m_iIsATeam[NUM_ROWS];
 	bool			m_bHasBeenSorted[MAX_PLAYERS];
-	int				m_iLastKilledBy;
-	int				m_fLastKillTime;
+	int			m_iLastKilledBy;
+	int			m_fLastKillTime;
 
 
 public:

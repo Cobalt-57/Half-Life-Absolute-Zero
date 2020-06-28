@@ -15,27 +15,27 @@
 //
 // teamplay_gamerules.cpp
 //
-#include	"extdll.h"
-#include	"util.h"
-#include	"cbase.h"
-#include	"player.h"
-#include	"weapons.h"
-#include	"gamerules.h"
+#include "extdll.h"
+#include "util.h"
+#include "cbase.h"
+#include "player.h"
+#include "weapons.h"
+#include "gamerules.h"
  
-#include	"skill.h"
-#include	"game.h"
-#include	"items.h"
-#include	"voice_gamemgr.h"
-#include	"hltv.h"
+#include "skill.h"
+#include "game.h"
+#include "items.h"
+#include "voice_gamemgr.h"
+#include "hltv.h"
 
-extern DLL_GLOBAL CGameRules	*g_pGameRules;
-extern DLL_GLOBAL BOOL	g_fGameOver;
-extern int gmsgDeathMsg;	// client dll messages
-extern int gmsgScoreInfo;
-extern int gmsgMOTD;
-extern int gmsgServerName;
+//MODDD - bah just have all of them
+#include "client_message.h"
+//MODDD - needed to access the global DeactivateSatchels method
+#include "satchel.h"
 
-extern int g_teamplay;
+
+extern DLL_GLOBAL CGameRules *g_pGameRules;
+extern DLL_GLOBAL BOOL g_fGameOver;
 
 #define ITEM_RESPAWN_TIME	30
 #define WEAPON_RESPAWN_TIME	20
@@ -43,7 +43,8 @@ extern int g_teamplay;
 
 float g_flIntermissionStartTime = 0;
 
-CVoiceGameMgr	g_VoiceGameMgr;
+CVoiceGameMgr g_VoiceGameMgr;
+
 
 class CMultiplayGameMgrHelper : public IVoiceGameMgrHelper
 {
@@ -183,10 +184,6 @@ void CHalfLifeMultiplay::RefreshSkillData( void )
 
 // longest the intermission can last, in seconds
 #define MAX_INTERMISSION_TIME		120
-
-extern cvar_t timeleft, fragsleft;
-
-extern cvar_t mp_chattime;
 
 //=========================================================
 //=========================================================
@@ -407,8 +404,6 @@ BOOL CHalfLifeMultiplay :: ClientConnected( edict_t *pEntity, const char *pszNam
 	return TRUE;
 }
 
-extern int gmsgSayText;
-extern int gmsgGameMode;
 
 void CHalfLifeMultiplay :: UpdateGameMode( CBasePlayer *pPlayer )
 {
@@ -682,12 +677,10 @@ void CHalfLifeMultiplay :: PlayerKilled( CBasePlayer *pVictim, entvars_t *pKille
 		// let the killer paint another decal as soon as he'd like.
 		PK->m_flNextDecalTime = gpGlobals->time;
 	}
-#ifndef HLDEMO_BUILD
 	if ( pVictim->HasNamedPlayerItem("weapon_satchel") )
 	{
 		DeactivateSatchels( pVictim );
 	}
-#endif
 }
 
 //=========================================================
@@ -1116,7 +1109,7 @@ int CHalfLifeMultiplay::DeadPlayerAmmo( CBasePlayer *pPlayer )
 edict_t *CHalfLifeMultiplay::GetPlayerSpawnSpot( CBasePlayer *pPlayer )
 {
 	edict_t *pentSpawnSpot = CGameRules::GetPlayerSpawnSpot( pPlayer );	
-	if ( IsMultiplayer() && pentSpawnSpot->v.target )
+	if ( this->IsMultiplayer() && pentSpawnSpot->v.target )
 	{
 		FireTargets( STRING(pentSpawnSpot->v.target), pPlayer, pPlayer, USE_TOGGLE, 0 );
 	}
@@ -1467,7 +1460,7 @@ Determine the current # of active players on the server for map cycling logic
 */
 int CountPlayers( void )
 {
-	int	num = 0;
+	int num = 0;
 
 	for ( int i = 1; i <= gpGlobals->maxClients; i++ )
 	{
@@ -1556,7 +1549,7 @@ void CHalfLifeMultiplay :: ChangeLevel( void )
 	int minplayers = 0, maxplayers = 0;
 	strcpy( szFirstMapInList, "hldm1" );  // the absolute default level is hldm1
 
-	int	curplayers;
+	int curplayers;
 	BOOL do_cycle = TRUE;
 
 	// find the map to change to
@@ -1674,7 +1667,7 @@ void CHalfLifeMultiplay :: ChangeLevel( void )
 #define MAX_MOTD_CHUNK	  60
 #define MAX_MOTD_LENGTH   1536 // (MAX_MOTD_CHUNK * 4)
 
-void CHalfLifeMultiplay :: SendMOTDToClient( edict_t *client )
+void CHalfLifeMultiplay :: SendMOTDToClient( edict_t *pClient )
 {
 	// read from the MOTD.txt file
 	int length, char_count = 0;
@@ -1682,7 +1675,7 @@ void CHalfLifeMultiplay :: SendMOTDToClient( edict_t *client )
 	char *aFileList = pFileList = (char*)LOAD_FILE_FOR_ME( (char *)CVAR_GET_STRING( "motdfile" ), &length );
 
 	// send the server name
-	MESSAGE_BEGIN( MSG_ONE, gmsgServerName, NULL, client );
+	MESSAGE_BEGIN( MSG_ONE, gmsgServerName, NULL, pClient );
 		WRITE_STRING( CVAR_GET_STRING("hostname") );
 	MESSAGE_END();
 
@@ -1709,7 +1702,7 @@ void CHalfLifeMultiplay :: SendMOTDToClient( edict_t *client )
 		else
 			*pFileList = 0;
 
-		MESSAGE_BEGIN( MSG_ONE, gmsgMOTD, NULL, client );
+		MESSAGE_BEGIN( MSG_ONE, gmsgMOTD, NULL, pClient );
 			WRITE_BYTE( *pFileList ? FALSE : TRUE );	// FALSE means there is still more message to come
 			WRITE_STRING( chunk );
 		MESSAGE_END();

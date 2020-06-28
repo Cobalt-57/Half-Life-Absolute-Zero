@@ -14,7 +14,7 @@
 #include <string.h>
 #include <winsock.h>
 
-static int	context_id;
+static int context_id;
 
 // Default master server address in case we can't read any from woncomm.lst file
 #define VALVE_MASTER_ADDRESS "half-life.east.won.net"
@@ -160,7 +160,7 @@ void CHudServers::ServerResponse( struct net_response_s *response )
 	char *szresponse;
 	request_t *p;
 	server_t *browser;
-	int	len;
+	int len;
 	char sz[ 32 ];
 
 	// Remove from active list
@@ -288,7 +288,7 @@ CompareServers
 Return 1 if p1 is "less than" p2, 0 otherwise
 ===================
 */
-int	CHudServers::CompareServers( server_t *p1, server_t *p2 )
+int CHudServers::CompareServers( server_t *p1, server_t *p2 )
 {
 	const char *n1, *n2;
 
@@ -455,7 +455,7 @@ ServerListSize
 # of servers in active query and in pending to be queried lists
 ==================
 */
-int	CHudServers::ServerListSize( void )
+int CHudServers::ServerListSize( void )
 {
 	int c = 0;
 	request_t *p;
@@ -746,17 +746,17 @@ Loads the master server addresses from file and into the passed in array
 */
 int CHudServers::LoadMasterAddresses( int maxservers, int *count, netadr_t *padr )
 {
-	int			i;
+	int		i;
 	char		szMaster[ 256 ];
 	char		szMasterFile[256];
 	char		*pbuffer = NULL;
 	char		*pstart = NULL ;
 	netadr_t	adr;
 	char		szAdr[64];
-	int			nPort;
-	int			nCount = 0;
+	int		nPort;
+	int		nCount = 0;
 	bool		bIgnore;
-	int			nDefaultPort;
+	int		nDefaultPort;
 
 	// Assume default master and master file
 	strcpy( szMaster, VALVE_MASTER_ADDRESS );    // IP:PORT string
@@ -883,7 +883,7 @@ void CHudServers::RequestList( void )
 	m_nDone			= 0;
 	m_dStarted		= m_fElapsed;
 
-	int	count = 0;
+	int count = 0;
 	netadr_t adr;
 
 	if ( !LoadMasterAddresses( 1, &count, &adr ) )
@@ -1083,7 +1083,7 @@ ServersGetCount
 
 ===================
 */
-int	ServersGetCount( void )
+int ServersGetCount( void )
 {
 	if ( g_pServers )
 	{
@@ -1092,7 +1092,7 @@ int	ServersGetCount( void )
 	return 0;
 }
 
-int	ServersIsQuerying( void )
+int ServersIsQuerying( void )
 {
 	if ( g_pServers )
 	{

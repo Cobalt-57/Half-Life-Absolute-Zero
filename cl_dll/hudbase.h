@@ -30,7 +30,6 @@
 #define COLOR_PRE_E3_BRIGHTNESS 125
 
 
-
 #define DHN_DRAWZERO 1
 #define DHN_2DIGITS  2
 #define DHN_3DIGITS  4
@@ -38,16 +37,20 @@
 #define DHN_DRAWPLACE  8
 #define DHN_EMPTYDIGITSUNFADED 16
 
-
 #define MIN_ALPHA	 100	
 
-#define		HUDELEM_ACTIVE	1
+#define HUDELEM_ACTIVE	1
 
+#define HUD_ACTIVE	1
+#define HUD_INTERMISSION 2
+
+#define MAX_PLAYER_NAME_LENGTH		32
+
+#define MAX_MOTD_LENGTH				1536
 
 typedef struct {
 	int x, y;
 } POSITION;
-
 
 
 enum 
@@ -64,12 +67,6 @@ typedef struct {
 typedef struct cvar_s cvar_t;
 
 
-#define HUD_ACTIVE	1
-#define HUD_INTERMISSION 2
-
-#define MAX_PLAYER_NAME_LENGTH		32
-
-#define	MAX_MOTD_LENGTH				1536
 
 //
 //-----------------------------------------------------
@@ -80,7 +77,7 @@ class CHudBase
 public:
 	POSITION  m_pos;
 	int   m_type;
-	int	  m_iFlags; // active, moving, 
+	int   m_iFlags; // active, moving, 
 	virtual		~CHudBase() {}
 	virtual int Init( void ) {return 0;}
 	virtual int VidInit( void ) {return 0;}

@@ -45,17 +45,17 @@ typedef struct
 
 	vec3_t		realangles;
 
-	float		animtime;
-	float		frame;
-	int			sequence;
-	int			gaitsequence;
-	float		framerate;
+	float	animtime;
+	float	frame;
+	int		sequence;
+	int		gaitsequence;
+	float	framerate;
 
-	int			m_fSequenceLoops;
-	int			m_fSequenceFinished;
+	int		m_fSequenceLoops;
+	int		m_fSequenceFinished;
 
-	byte		controller[ 4 ];
-	byte		blending[ 2 ];
+	byte	controller[ 4 ];
+	byte	blending[ 2 ];
 
 	latchedvars_t	lv;
 } client_anim_state_t;
@@ -87,22 +87,22 @@ StudioSetupBones
 */
 void CGameStudioModelRenderer::StudioSetupBones ( void )
 {
-	int					i;
-	double				f;
+	int				i;
+	double			f;
 
 	mstudiobone_t		*pbones;
 	mstudioseqdesc_t	*pseqdesc;
 	mstudioanim_t		*panim;
 
-	static float		pos[MAXSTUDIOBONES][3];
+	static float	pos[MAXSTUDIOBONES][3];
 	static vec4_t		q[MAXSTUDIOBONES];
-	float				bonematrix[3][4];
+	float			bonematrix[3][4];
 
-	static float		pos2[MAXSTUDIOBONES][3];
+	static float	pos2[MAXSTUDIOBONES][3];
 	static vec4_t		q2[MAXSTUDIOBONES];
-	static float		pos3[MAXSTUDIOBONES][3];
+	static float	pos3[MAXSTUDIOBONES][3];
 	static vec4_t		q3[MAXSTUDIOBONES];
-	static float		pos4[MAXSTUDIOBONES][3];
+	static float	pos4[MAXSTUDIOBONES][3];
 	static vec4_t		q4[MAXSTUDIOBONES];
 
 	// Use default bone setup for nonplayers
@@ -132,7 +132,7 @@ void CGameStudioModelRenderer::StudioSetupBones ( void )
 	// This game knows how to do three way blending
 	if ( pseqdesc->numblends == 3 )
 	{
-		float				s;
+		float			s;
 
 		// Get left anim
 		panim = StudioGetAnim( m_pRenderModel, pseqdesc );
@@ -183,9 +183,9 @@ void CGameStudioModelRenderer::StudioSetupBones ( void )
 		( m_pCurrentEntity->latched.prevsequence < m_pStudioHeader->numseq ))
 	{
 		// blend from last sequence
-		static float		pos1b[MAXSTUDIOBONES][3];
+		static float	pos1b[MAXSTUDIOBONES][3];
 		static vec4_t		q1b[MAXSTUDIOBONES];
-		float				s;
+		float			s;
 
 		// Blending value into last sequence
 		unsigned char prevseqblending = m_pCurrentEntity->latched.prevseqblending[ 0 ];
@@ -196,7 +196,7 @@ void CGameStudioModelRenderer::StudioSetupBones ( void )
 		// Know how to do three way blends
 		if ( pseqdesc->numblends == 3 )
 		{
-			float				s;
+			float			s;
 
 			// Get left animation
 			panim = StudioGetAnim( m_pRenderModel, pseqdesc );
@@ -972,7 +972,6 @@ HUD_GetStudioModelInterface
 Export this function for the engine to use the studio renderer class to render objects.
 ====================
 */
-#define DLLEXPORT __declspec( dllexport )
 extern "C" int DLLEXPORT HUD_GetStudioModelInterface( int version, struct r_studio_interface_s **ppinterface, struct engine_studio_api_s *pstudio )
 {
 	if ( version != STUDIO_INTERFACE_VERSION )

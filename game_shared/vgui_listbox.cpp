@@ -194,7 +194,7 @@ void CListBox::SetScrollRange(int maxScroll)
 	InternalLayout();
 }
 
-int	CListBox::GetScrollMax()
+int CListBox::GetScrollMax()
 {
 	if (m_iScrollMax < 0)
 	{

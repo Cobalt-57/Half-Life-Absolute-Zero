@@ -12,6 +12,7 @@
 *   without written permission from Valve LLC.
 *
 ****/
+
 #include "hud.h"
 #include "cl_util.h"
 #include "const.h"
@@ -37,10 +38,21 @@
 //MODDD - new include.
 // See the note at the top of ev_hldm.h about several removals in here (now in dlls/<specific weapon.h files>
 // to avoid redundancy).
-#include "crowbar.h"
-#include "gauss.h"
-#include "egon.h"
 #include "chumtoadweapon.h"
+#include "crossbow.h"
+#include "crowbar.h"
+#include "egon.h"
+#include "gauss.h"
+#include "glock.h"
+#include "handgrenade.h"
+#include "hornetgun.h"
+#include "mp5.h"
+#include "python.h"
+#include "rpg.h"
+#include "satchel.h"
+#include "shotgun.h"
+#include "squeak.h"
+#include "tripmine.h"
 
 
 //MODDD - new include.  THESE WERE NEVER ON, deemed unnecessary.
@@ -48,20 +60,9 @@
 //#include "extdll.h"
 //#include "util.h"  <-- includes  """ #include "enginecallback.h" """
 
-
-//Why does this include mess so much stuff up? Whatever, I just need a PI constant.
-#define M_PI		3.14159265358979323846
-//#include "mathlib.h"
-
-
 //ALSO UNNECESSARY, actually. just use "gEngfuncs".
 //#include "enginecallback.h"
 //should be acceptable.
-
-
-extern engine_studio_api_t IEngineStudio;
-
-
 
 EASY_CVAR_EXTERN(strobeDurationMin)
 EASY_CVAR_EXTERN(strobeDurationMax)
@@ -70,14 +71,10 @@ EASY_CVAR_EXTERN(strobeRadiusMax)
 EASY_CVAR_EXTERN(strobeSpawnDistHori)
 EASY_CVAR_EXTERN(strobeSpawnDistVertMin)
 EASY_CVAR_EXTERN(strobeSpawnDistVertMax)
-	
 EASY_CVAR_EXTERN(strobeMultiColor)
 
 EASY_CVAR_EXTERN(ravelaserlength)
 
-	
-
-	
 EASY_CVAR_EXTERN(raveLaserSpawnDistHoriMin)
 EASY_CVAR_EXTERN(raveLaserSpawnDistHoriMax)
 EASY_CVAR_EXTERN(raveLaserSpawnDistHoriMin)
@@ -86,39 +83,25 @@ EASY_CVAR_EXTERN(raveLaserSpawnDistVertMin)
 EASY_CVAR_EXTERN(raveLaserSpawnDistVertMax)
 EASY_CVAR_EXTERN(raveLaserSpawnDistVertMin)
 EASY_CVAR_EXTERN(raveLaserSpawnDistVertMax)
-
 
 EASY_CVAR_EXTERN(raveLaserDurationMin)
 EASY_CVAR_EXTERN(raveLaserDurationMax)
 EASY_CVAR_EXTERN(raveLaserThicknessMin)
 EASY_CVAR_EXTERN(raveLaserThicknessMax)
-
 EASY_CVAR_EXTERN(raveLaserNoiseMin)
 EASY_CVAR_EXTERN(raveLaserNoiseMax)
-
-
 EASY_CVAR_EXTERN(raveLaserBrightnessMin)
 EASY_CVAR_EXTERN(raveLaserBrightnessMax)
-	
 EASY_CVAR_EXTERN(raveLaserFrameRateMin)
 EASY_CVAR_EXTERN(raveLaserFrameRateMax)
-	
-	
 EASY_CVAR_EXTERN(raveLaserMultiColor)
-
-
 EASY_CVAR_EXTERN(raveLaserEnabled)
 EASY_CVAR_EXTERN(raveLaserLength)
-
 EASY_CVAR_EXTERN(raveLaserSpawnFreq)
-
 EASY_CVAR_EXTERN(muteRicochetSound)
-
 EASY_CVAR_EXTERN(muteBulletHitSounds)
-
 EASY_CVAR_EXTERN(rocketTrailAlphaInterval)
 EASY_CVAR_EXTERN(rocketTrailAlphaScale)
-
 
 EASY_CVAR_EXTERN(gauss_mode)
 EASY_CVAR_EXTERN(gauss_primaryonly)
@@ -135,43 +118,22 @@ EASY_CVAR_EXTERN(gauss_secondarypunchthrough)
 
 EASY_CVAR_EXTERN(playerWeaponSpreadMode)
 EASY_CVAR_EXTERN(playerBulletHitEffectForceServer)
-
 EASY_CVAR_EXTERN(mutePlayerWeaponFire)
 EASY_CVAR_EXTERN(crossbowFirePlaysReloadSound)
-
 EASY_CVAR_EXTERN(textureHitSoundPrintouts)
-
 EASY_CVAR_EXTERN(playerWeaponTracerMode)
-
 EASY_CVAR_EXTERN(decalTracerExclusivity)
-
 EASY_CVAR_EXTERN(egonEffectsMode)
-
 EASY_CVAR_EXTERN(myRocketsAreBarney)
-
 EASY_CVAR_EXTERN(muteCrowbarSounds)
 
 EASY_CVAR_EXTERN(forceAllowServersideTextureSounds)
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+extern engine_studio_api_t IEngineStudio;
+extern float g_flApplyVel;
+extern cvar_t *cl_lw;
 
 
 
@@ -186,40 +148,17 @@ static int tracerCount[ 32 ];
 extern "C" char PM_FindTextureType( char *name );
 
 void V_PunchAxis( int axis, float punch );
-void VectorAngles( const float *forward, float *angles );
 
-extern cvar_t *cl_lw;
 
 
 //MODDD - event method EV_... prototypes / externs moved to ev_hldm.h
-
-
-#define VECTOR_CONE_1DEGREES Vector( 0.00873, 0.00873, 0.00873 )
-#define VECTOR_CONE_2DEGREES Vector( 0.01745, 0.01745, 0.01745 )
-#define VECTOR_CONE_3DEGREES Vector( 0.02618, 0.02618, 0.02618 )
-#define VECTOR_CONE_4DEGREES Vector( 0.03490, 0.03490, 0.03490 )
-#define VECTOR_CONE_5DEGREES Vector( 0.04362, 0.04362, 0.04362 )
-#define VECTOR_CONE_6DEGREES Vector( 0.05234, 0.05234, 0.05234 )
-#define VECTOR_CONE_7DEGREES Vector( 0.06105, 0.06105, 0.06105 )	
-#define VECTOR_CONE_8DEGREES Vector( 0.06976, 0.06976, 0.06976 )
-#define VECTOR_CONE_9DEGREES Vector( 0.07846, 0.07846, 0.07846 )
-#define VECTOR_CONE_10DEGREES Vector( 0.08716, 0.08716, 0.08716 )
-#define VECTOR_CONE_15DEGREES Vector( 0.13053, 0.13053, 0.13053 )
-#define VECTOR_CONE_20DEGREES Vector( 0.17365, 0.17365, 0.17365 )
-
-
-
+//MODDD - VECTOR_CONE_... macros moved to util_shared.h
 
 //MODDD - extern the client CVars here.
 //EASY_CVAR_EXTERN_CLIENT_MASS
 
-
-
-
 /*
-
 EASY_CVAR_DECLARATION_CLIENT_MASS
-
 
 //similar to how serverside's "updateCVarRefs" of combat.cpp, but this is just for the rave lights.
 void updateCVarRefsClient(){
@@ -228,9 +167,6 @@ void updateCVarRefsClient(){
 
 }
 */
-
-
-
 
 
 // play a strike sound based on the texture that was hit by the attack traceline.  VecSrc/VecEnd are the
@@ -503,7 +439,7 @@ BOOL EV_HLDM_CheckTracer( int idx, float *vecSrc, float *end, float *forward, fl
 		}
 		else
 		{
-			VectorCopy( vecSrc, vecTracerSrc );
+			VectorCopy_f( vecSrc, vecTracerSrc );
 		}
 		
 		if ( iTracerFreq != 1 )		// guns that always trace also always decal
@@ -700,9 +636,9 @@ void EV_FireGlock1( event_args_t *args )
 	vec3_t up, right, forward;
 	
 	idx = args->entindex;
-	VectorCopy( args->origin, origin );
-	VectorCopy( args->angles, angles );
-	VectorCopy( args->velocity, velocity );
+	VectorCopy_f( args->origin, origin );
+	VectorCopy_f( args->angles, angles );
+	VectorCopy_f( args->velocity, velocity );
 
 	int InAttack = args->iparam1;
 
@@ -769,7 +705,7 @@ void EV_FireGlock1( event_args_t *args )
 
 	EV_GetGunPosition( args, vecSrc, origin );
 	
-	VectorCopy( forward, vecAiming );
+	VectorCopy_f( forward, vecAiming );
 	
 	//MODDD - why was this missing "&tracerCount[idx-1]"?  Most other weapons had this even for tracer frequencies of 0.
 	//        Forcing a different frequency (or 1 for every single shot) causes a crash because that was null.
@@ -800,9 +736,9 @@ void EV_FireGlock2( event_args_t *args )
 	vec3_t up, right, forward;
 
 	idx = args->entindex;
-	VectorCopy( args->origin, origin );
-	VectorCopy( args->angles, angles );
-	VectorCopy( args->velocity, velocity );
+	VectorCopy_f( args->origin, origin );
+	VectorCopy_f( args->angles, angles );
+	VectorCopy_f( args->velocity, velocity );
 
 	int InAttack = args->iparam1;
 
@@ -865,7 +801,7 @@ void EV_FireGlock2( event_args_t *args )
 
 	EV_GetGunPosition( args, vecSrc, origin );
 	
-	VectorCopy( forward, vecAiming );
+	VectorCopy_f( forward, vecAiming );
 
 	EV_HLDM_FireBullets( idx, forward, right, up, 1, vecSrc, vecAiming, 8192, BULLET_PLAYER_9MM, 0, &tracerCount[idx-1], args->fparam1, args->fparam2 );
 }
@@ -893,9 +829,9 @@ void EV_FireShotGunDouble( event_args_t *args )
 	float flSpread = 0.01;
 
 	idx = args->entindex;
-	VectorCopy( args->origin, origin );
-	VectorCopy( args->angles, angles );
-	VectorCopy( args->velocity, velocity );
+	VectorCopy_f( args->origin, origin );
+	VectorCopy_f( args->angles, angles );
+	VectorCopy_f( args->velocity, velocity );
 
 	AngleVectors( angles, forward, right, up );
 
@@ -921,7 +857,7 @@ void EV_FireShotGunDouble( event_args_t *args )
 	}
 
 	EV_GetGunPosition( args, vecSrc, origin );
-	VectorCopy( forward, vecAiming );
+	VectorCopy_f( forward, vecAiming );
 
 	//playerWeaponSpreadMode.
 	//0 = no effect (pick based on single or multiplayer as usual)
@@ -957,9 +893,9 @@ void EV_FireShotGunSingle( event_args_t *args )
 	float flSpread = 0.01;
 
 	idx = args->entindex;
-	VectorCopy( args->origin, origin );
-	VectorCopy( args->angles, angles );
-	VectorCopy( args->velocity, velocity );
+	VectorCopy_f( args->origin, origin );
+	VectorCopy_f( args->angles, angles );
+	VectorCopy_f( args->velocity, velocity );
 
 	AngleVectors( angles, forward, right, up );
 
@@ -983,7 +919,7 @@ void EV_FireShotGunSingle( event_args_t *args )
 	}
 
 	EV_GetGunPosition( args, vecSrc, origin );
-	VectorCopy( forward, vecAiming );
+	VectorCopy_f( forward, vecAiming );
 
 	//MODDD - same, see above for the ShotGunSingle
 	if(EASY_CVAR_GET(playerWeaponSpreadMode)!=2 && (EASY_CVAR_GET(playerWeaponSpreadMode)==1 || !IsMultiplayer()) )
@@ -1018,9 +954,9 @@ void EV_FireMP5( event_args_t *args )
 	float flSpread = 0.01;
 
 	idx = args->entindex;
-	VectorCopy( args->origin, origin );
-	VectorCopy( args->angles, angles );
-	VectorCopy( args->velocity, velocity );
+	VectorCopy_f( args->origin, origin );
+	VectorCopy_f( args->angles, angles );
+	VectorCopy_f( args->velocity, velocity );
 
 	AngleVectors( angles, forward, right, up );
 
@@ -1058,7 +994,7 @@ void EV_FireMP5( event_args_t *args )
 	}
 
 	EV_GetGunPosition( args, vecSrc, origin );
-	VectorCopy( forward, vecAiming );
+	VectorCopy_f( forward, vecAiming );
 
 	//MODDD NOTE - in either case, spread is identical because it comes from what the client provided us with (args->fparam1 and args->fparam2 here).
 	//             Not going to bother checking the CVar here then, whatever was decided for this bullet already has been by those params.
@@ -1080,7 +1016,7 @@ void EV_FireMP52( event_args_t *args )
 	vec3_t origin;
 	
 	idx = args->entindex;
-	VectorCopy( args->origin, origin );
+	VectorCopy_f( args->origin, origin );
 
 	if ( EV_IsLocal( idx ) )
 	{
@@ -1123,9 +1059,9 @@ void EV_FirePython( event_args_t *args )
 	int pythonModel = args->iparam1;
 
 	idx = args->entindex;
-	VectorCopy( args->origin, origin );
-	VectorCopy( args->angles, angles );
-	VectorCopy( args->velocity, velocity );
+	VectorCopy_f( args->origin, origin );
+	VectorCopy_f( args->angles, angles );
+	VectorCopy_f( args->velocity, velocity );
 
 	AngleVectors( angles, forward, right, up );
 
@@ -1169,7 +1105,7 @@ void EV_FirePython( event_args_t *args )
 
 	EV_GetGunPosition( args, vecSrc, origin );
 	
-	VectorCopy( forward, vecAiming );
+	VectorCopy_f( forward, vecAiming );
 
 	//MODDD - why was this missing "&tracerCount[idx-1]"?  Most other weapons had this even for tracer frequencies of 0.
 	//        Forcing a different frequency (or 1 for every single shot) causes a crash because that was null.
@@ -1196,9 +1132,9 @@ void EV_SpinGauss( event_args_t *args )
 	int pitch;
 
 	idx = args->entindex;
-	VectorCopy( args->origin, origin );
-	VectorCopy( args->angles, angles );
-	VectorCopy( args->velocity, velocity );
+	VectorCopy_f( args->origin, origin );
+	VectorCopy_f( args->angles, angles );
+	VectorCopy_f( args->velocity, velocity );
 
 	pitch = args->iparam1;
 
@@ -1221,7 +1157,6 @@ void EV_StopPreviousGauss( int idx )
 	gEngfuncs.pEventAPI->EV_StopSound( idx, CHAN_WEAPON, "ambience/pulsemachine.wav" );
 }
 
-extern float g_flApplyVel;
 
 
 void EV_FireGauss( event_args_t *args )
@@ -1240,18 +1175,18 @@ void EV_FireGauss( event_args_t *args )
 	edict_t		*pentIgnore;
 	pmtrace_t tr, beam_tr;
 	float flMaxFrac = 1.0;
-	int	nTotal = 0;
+	int nTotal = 0;
 	int fHasPunched = 0;
 	int fFirstBeam = 1;
-	int	nMaxHits = 10;
+	int nMaxHits = 10;
 	physent_t *pEntity;
 	int m_iBeam, m_iGlow, m_iBalls;
 	vec3_t up, right, forward;
 
 	idx = args->entindex;
-	VectorCopy( args->origin, origin );
-	VectorCopy( args->angles, angles );
-	VectorCopy( args->velocity, velocity );
+	VectorCopy_f( args->origin, origin );
+	VectorCopy_f( args->angles, angles );
+	VectorCopy_f( args->velocity, velocity );
 
 	if ( args->bparam2 )
 	{
@@ -1379,7 +1314,7 @@ void EV_FireGauss( event_args_t *args )
 
 				flMaxFrac = flMaxFrac - tr.fraction;
 				
-				VectorCopy( r, forward );
+				VectorCopy_f( r, forward );
 
 				VectorMA( tr.endpos, 8.0, forward, vecSrc );
 				VectorMA( vecSrc, 8192.0, forward, vecDest );
@@ -1387,7 +1322,7 @@ void EV_FireGauss( event_args_t *args )
 				gEngfuncs.pEfxAPI->R_TempSprite( tr.endpos, vec3_origin, 0.2, m_iGlow, kRenderGlow, kRenderFxNoDissipation, flDamage * n / 255.0, flDamage * n * 0.5 * 0.1, FTENT_FADEOUT );
 
 				vec3_t fwd;
-				VectorAdd( tr.endpos, tr.plane.normal, fwd );
+				VectorAdd_f( tr.endpos, tr.plane.normal, fwd );
 
 				gEngfuncs.pEfxAPI->R_Sprite_Trail( TE_SPRITETRAIL, tr.endpos, fwd, m_iBalls, 3, 0.1, gEngfuncs.pfnRandomFloat( 10, 20 ) / 100.0, 100,
 									255, 100 );
@@ -1447,7 +1382,7 @@ void EV_FireGauss( event_args_t *args )
 
 						gEngfuncs.pEventAPI->EV_PlayerTrace( beam_tr.endpos, tr.endpos, PM_STUDIO_BOX, -1, &beam_tr );
 
-						VectorSubtract( beam_tr.endpos, tr.endpos, delta );
+						VectorSubtract_f( beam_tr.endpos, tr.endpos, delta );
 						
 						n = Length( delta );
 
@@ -1460,7 +1395,7 @@ void EV_FireGauss( event_args_t *args )
 							// absorption balls
 							{
 								vec3_t fwd;
-								VectorSubtract( tr.endpos, forward, fwd );
+								VectorSubtract_f( tr.endpos, forward, fwd );
 								gEngfuncs.pEfxAPI->R_Sprite_Trail( TE_SPRITETRAIL, tr.endpos, fwd, m_iBalls, 3, 0.1, gEngfuncs.pfnRandomFloat( 10, 20 ) / 100.0, 100,
 									255, 100 );
 							}
@@ -1475,12 +1410,12 @@ void EV_FireGauss( event_args_t *args )
 							// balls
 							{
 								vec3_t fwd;
-								VectorSubtract( beam_tr.endpos, forward, fwd );
+								VectorSubtract_f( beam_tr.endpos, forward, fwd );
 								gEngfuncs.pEfxAPI->R_Sprite_Trail( TE_SPRITETRAIL, beam_tr.endpos, fwd, m_iBalls, (int)(flDamage * 0.3), 0.1, gEngfuncs.pfnRandomFloat( 10, 20 ) / 100.0, 200,
 									255, 40 );
 							}
 							
-							VectorAdd( beam_tr.endpos, forward, vecSrc );
+							VectorAdd_f( beam_tr.endpos, forward, vecSrc );
 						}
 					}
 					else
@@ -1500,7 +1435,7 @@ void EV_FireGauss( event_args_t *args )
 			
 						{
 							vec3_t fwd;
-							VectorAdd( tr.endpos, tr.plane.normal, fwd );
+							VectorAdd_f( tr.endpos, tr.plane.normal, fwd );
 							gEngfuncs.pEfxAPI->R_Sprite_Trail( TE_SPRITETRAIL, tr.endpos, fwd, m_iBalls, 8, 0.6, gEngfuncs.pfnRandomFloat( 10, 20 ) / 100.0, 100,
 								255, 200 );
 						}
@@ -1524,7 +1459,7 @@ void EV_FireGauss( event_args_t *args )
 
 
 
-			VectorAdd( tr.endpos, forward, vecSrc );
+			VectorAdd_f( tr.endpos, forward, vecSrc );
 		}
 	}//END OF while(...)
 }
@@ -2044,8 +1979,8 @@ void EV_FriendlyVomit( event_args_t* args){
 	vec3_t origin;
 	vec3_t ang;
 	//vec3_origin
-	VectorCopy( args->origin, origin );
-	VectorCopy( args->angles, ang);
+	VectorCopy_f( args->origin, origin );
+	VectorCopy_f( args->angles, ang);
 
 	int ballsToSpawn = args->iparam1;
 	
@@ -2070,8 +2005,8 @@ void EV_FloaterExplode( event_args_t* args){
 	vec3_t origin;
 	vec3_t ang;
 	//vec3_origin
-	VectorCopy( args->origin, origin );
-	VectorCopy( args->angles, ang);
+	VectorCopy_f( args->origin, origin );
+	VectorCopy_f( args->angles, ang);
 
 	int ballsToSpawn = 8;
 	
@@ -2098,7 +2033,7 @@ void shrapnelHitCallback( struct tempent_s *ent, struct pmtrace_s *ptr ){
 
 	
 	dlight_t *dl = gEngfuncs.pEfxAPI->CL_AllocDlight (0);
-	VectorCopy ( ent->entity.origin, dl->origin );
+	VectorCopy_f ( ent->entity.origin, dl->origin );
 
 	dl->dark = false;
 	//time of "0.01" or "0.001"?
@@ -2212,7 +2147,7 @@ void EV_QuakeExplosionEffect( event_args_t* args){
 	//gEngfuncs.pEfxAPI->R_Explosion( args->origin, m_iBalls, 0.3, 15, TE_EXPLFLAG_NONE );
 	
 
-	//void		( *R_BreakModel )				( float *pos, float *size, float *dir, float random, float life, int count, int modelIndex, char flags );
+	//void	( *R_BreakModel )				( float *pos, float *size, float *dir, float random, float life, int count, int modelIndex, char flags );
 	//!!!!!!!!!!!!!!!!!!!!!!!!!
 
 
@@ -2231,7 +2166,7 @@ void EV_QuakeExplosionEffect( event_args_t* args){
 	
 
 		dlight_t *dl = gEngfuncs.pEfxAPI->CL_AllocDlight ( 0 );
-		VectorCopy ( args->origin, dl->origin );
+		VectorCopy_f ( args->origin, dl->origin );
 
 		dl->radius = 130;
 		dl->dark = false;
@@ -2290,12 +2225,12 @@ void EV_ShowBalls( event_args_t *args )
 
 	vec3_t origin;
 	//vec3_origin
-	VectorCopy( args->origin, origin );
+	VectorCopy_f( args->origin, origin );
 
 
 	
 	//vec3_t fwd;
-	//VectorAdd( tr.endpos, tr.plane.normal, fwd );
+	//VectorAdd_f( tr.endpos, tr.plane.normal, fwd );
 
 
 	//gEngfuncs.pEfxAPI->R_Sprite_Trail( TE_SPRITETRAIL, tr.endpos, fwd, m_iBalls, 8, 0.6, gEngfuncs.pfnRandomFloat( 10, 20 ) / 100.0, 100,
@@ -2309,7 +2244,7 @@ void EV_ShowBalls( event_args_t *args )
 	//...( float *pos, float speed, float life, int count, int modelIndex );
 	//gEngfuncs.pEfxAPI->R_TempSphereModel(origin, 20, 30, 8, m_iBalls);
 
-	//void		( *R_Sprite_Spray )				( float * pos, float * dir, int modelIndex, int count, int speed, int iRand );
+	//void	( *R_Sprite_Spray )				( float * pos, float * dir, int modelIndex, int count, int speed, int iRand );
 	
 
 	//try render modes 3 & 5?
@@ -2380,13 +2315,13 @@ void EV_ShowBallsPowerup( event_args_t *args )
 
 	vec3_t origin;
 	//vec3_origin
-	VectorCopy( args->origin, origin );
+	VectorCopy_f( args->origin, origin );
 
 
 
 	
 	//vec3_t fwd;
-	//VectorAdd( tr.endpos, tr.plane.normal, fwd );
+	//VectorAdd_f( tr.endpos, tr.plane.normal, fwd );
 
 
 	//gEngfuncs.pEfxAPI->R_Sprite_Trail( TE_SPRITETRAIL, tr.endpos, fwd, m_iBalls, 8, 0.6, gEngfuncs.pfnRandomFloat( 10, 20 ) / 100.0, 100,
@@ -2400,7 +2335,7 @@ void EV_ShowBallsPowerup( event_args_t *args )
 	//...( float *pos, float speed, float life, int count, int modelIndex );
 	//gEngfuncs.pEfxAPI->R_TempSphereModel(origin, 20, 30, 8, m_iBalls);
 
-	//void		( *R_Sprite_Spray )				( float * pos, float * dir, int modelIndex, int count, int speed, int iRand );
+	//void	( *R_Sprite_Spray )				( float * pos, float * dir, int modelIndex, int count, int speed, int iRand );
 	
 
 	//try render modes 3 & 5?
@@ -2438,7 +2373,7 @@ void EV_HLDM_DecalGunshotCustomEvent( event_args_t *args )
 {
 	vec3_t origin;
 	//vec3_origin
-	VectorCopy( args->origin, origin );
+	VectorCopy_f( args->origin, origin );
 
 	//EV_HLDM_FireBullets( idx, forward, right, up, 1, vecSrc, vecAiming, 8192, BULLET_PLAYER_9MM, 0, 0, args->fparam1, args->fparam2 );
 	//void EV_HLDM_FireBullets( int idx, float *forward, float *right, float *up, int cShots, float *vecSrc, float *vecDirShooting, float flDistance, int iBulletType, int iTracerFreq, int *tracerCount, float flSpreadX, float flSpreadY )
@@ -2474,7 +2409,7 @@ void EV_Crowbar( event_args_t *args )
 	vec3_t velocity;
 
 	idx = args->entindex;
-	VectorCopy( args->origin, origin );
+	VectorCopy_f( args->origin, origin );
 	
 	//Play Swing sound
 	//MODDD - if the canPlayHitSound CVar permits.
@@ -2515,20 +2450,6 @@ void EV_Crowbar( event_args_t *args )
 //======================
 //	  CROSSBOW START
 //======================
-enum crossbow_e {
-	CROSSBOW_IDLE1 = 0,	// full
-	CROSSBOW_IDLE2,		// empty
-	CROSSBOW_FIDGET1,	// full
-	CROSSBOW_FIDGET2,	// empty
-	CROSSBOW_FIRE1,		// full
-	CROSSBOW_FIRE2,		// reload
-	CROSSBOW_FIRE3,		// empty
-	CROSSBOW_RELOAD,	// from empty
-	CROSSBOW_DRAW1,		// full
-	CROSSBOW_DRAW2,		// empty
-	CROSSBOW_HOLSTER1,	// full
-	CROSSBOW_HOLSTER2,	// empty
-};
 
 //=====================
 // EV_BoltCallback
@@ -2554,10 +2475,10 @@ void EV_FireCrossbow2( event_args_t *args )
 	vec3_t velocity;
 
 	idx = args->entindex;
-	VectorCopy( args->origin, origin );
-	VectorCopy( args->angles, angles );
+	VectorCopy_f( args->origin, origin );
+	VectorCopy_f( args->angles, angles );
 
-	VectorCopy( args->velocity, velocity );
+	VectorCopy_f( args->velocity, velocity );
 	
 	AngleVectors( angles, forward, right, up );
 
@@ -2649,7 +2570,7 @@ void EV_FireCrossbow( event_args_t *args )
 	vec3_t origin;
 
 	idx = args->entindex;
-	VectorCopy( args->origin, origin );
+	VectorCopy_f( args->origin, origin );
 	
 	
 	if(EASY_CVAR_GET(mutePlayerWeaponFire) != 1 ){
@@ -2678,26 +2599,13 @@ void EV_FireCrossbow( event_args_t *args )
 //======================
 //	    RPG START 
 //======================
-enum rpg_e {
-	RPG_IDLE = 0,
-	RPG_FIDGET,
-	RPG_RELOAD,		// to reload
-	RPG_FIRE2,		// to empty
-	RPG_HOLSTER1,	// loaded
-	RPG_DRAW1,		// loaded
-	RPG_HOLSTER2,	// unloaded
-	RPG_DRAW_UL,	// unloaded
-	RPG_IDLE_UL,	// unloaded idle
-	RPG_FIDGET_UL,	// unloaded fidget
-};
-
 void EV_FireRpg( event_args_t *args )
 {
 	int idx;
 	vec3_t origin;
 
 	idx = args->entindex;
-	VectorCopy( args->origin, origin );
+	VectorCopy_f( args->origin, origin );
 	
 	
 	if(EASY_CVAR_GET(mutePlayerWeaponFire) != 1 ){
@@ -2742,7 +2650,7 @@ void EV_EgonFire( event_args_t *args )
 	vec3_t origin;
 
 	idx = args->entindex;
-	VectorCopy( args->origin, origin );
+	VectorCopy_f( args->origin, origin );
 	iFireState = args->iparam1;
 	iFireMode = args->iparam2;
 	
@@ -2815,7 +2723,7 @@ void EV_EgonFire( event_args_t *args )
 			//easyPrintLine("EGONEVENT2 %d", pl != 0 );
 			if ( pl )
 			{
-				VectorCopy( gHUD.m_vecAngles, angles );
+				VectorCopy_f( gHUD.m_vecAngles, angles );
 			
 				AngleVectors( angles, forward, right, up );
 
@@ -2880,7 +2788,7 @@ void EV_EgonStop( event_args_t *args )
 	vec3_t origin;
 
 	idx = args->entindex;
-	VectorCopy ( args->origin, origin );
+	VectorCopy_f ( args->origin, origin );
 
 	gEngfuncs.pEventAPI->EV_StopSound( idx, CHAN_STATIC, EGON_SOUND_RUN );
 	
@@ -2910,14 +2818,6 @@ void EV_EgonStop( event_args_t *args )
 //======================
 //	   HORNET START
 //======================
-enum hgun_e {
-	HGUN_IDLE1 = 0,
-	HGUN_FIDGETSWAY,
-	HGUN_FIDGETSHAKE,
-	HGUN_DOWN,
-	HGUN_UP,
-	HGUN_SHOOT
-};
 
 void EV_HornetGunFire( event_args_t *args )
 {
@@ -2925,8 +2825,8 @@ void EV_HornetGunFire( event_args_t *args )
 	vec3_t origin, angles, vecSrc, forward, right, up;
 
 	idx = args->entindex;
-	VectorCopy( args->origin, origin );
-	VectorCopy( args->angles, angles );
+	VectorCopy_f( args->origin, origin );
+	VectorCopy_f( args->angles, angles );
 	iFireMode = args->iparam1;
 
 	//Only play the weapon anims if I shot it.
@@ -2955,17 +2855,7 @@ void EV_HornetGunFire( event_args_t *args )
 //======================
 //	   TRIPMINE START
 //======================
-enum tripmine_e {
-	TRIPMINE_IDLE1 = 0,
-	TRIPMINE_IDLE2,
-	TRIPMINE_ARM1,
-	TRIPMINE_ARM2,
-	TRIPMINE_FIDGET,
-	TRIPMINE_HOLSTER,
-	TRIPMINE_DRAW,
-	TRIPMINE_WORLD,
-	TRIPMINE_GROUND,
-};
+
 
 //We only check if it's possible to put a trip mine
 //and if it is, then we play the animation. Server still places it.
@@ -2976,8 +2866,8 @@ void EV_TripmineFire( event_args_t *args )
 	pmtrace_t tr;
 
 	idx = args->entindex;
-	VectorCopy( args->origin, vecSrc );
-	VectorCopy( args->angles, angles );
+	VectorCopy_f( args->origin, vecSrc );
+	VectorCopy_f( args->angles, angles );
 
 	AngleVectors ( angles, forward, NULL, NULL );
 		
@@ -3017,15 +2907,6 @@ void EV_TripmineFire( event_args_t *args )
 //======================
 //	   SQUEAK START
 //======================
-enum squeak_e {
-	SQUEAK_IDLE1 = 0,
-	SQUEAK_FIDGETFIT,
-	SQUEAK_FIDGETNIP,
-	SQUEAK_DOWN,
-	SQUEAK_UP,
-	SQUEAK_THROW
-};
-
 
 void EV_SnarkFire( event_args_t *args )
 {
@@ -3034,8 +2915,8 @@ void EV_SnarkFire( event_args_t *args )
 	pmtrace_t tr;
 
 	idx = args->entindex;
-	VectorCopy( args->origin, vecSrc );
-	VectorCopy( args->angles, angles );
+	VectorCopy_f( args->origin, vecSrc );
+	VectorCopy_f( args->angles, angles );
 
 	AngleVectors ( angles, forward, NULL, NULL );
 		
@@ -3080,8 +2961,8 @@ void EV_ChumToadFire( event_args_t *args )
 	pmtrace_t tr;
 
 	idx = args->entindex;
-	VectorCopy( args->origin, vecSrc );
-	VectorCopy( args->angles, angles );
+	VectorCopy_f( args->origin, vecSrc );
+	VectorCopy_f( args->angles, angles );
 
 	AngleVectors ( angles, forward, NULL, NULL );
 		
@@ -3130,7 +3011,7 @@ void EV_TrainPitchAdjust( event_args_t *args )
 
 	idx = args->entindex;
 	
-	VectorCopy( args->origin, origin );
+	VectorCopy_f( args->origin, origin );
 
 	us_params = (unsigned short)args->iparam1;
 	stop	  = args->bparam1;
@@ -3530,7 +3411,7 @@ void EV_imitation7_think ( struct tempent_s *ent, float frametime, float current
 
 	}else{
 		ent->entity.baseline.fuser2 = -1;  //not dying now.
-    	VectorCopy ( ent->entity.origin, ent->entity.attachment[0] );
+    	VectorCopy_f ( ent->entity.origin, ent->entity.attachment[0] );
 	}
 
 
@@ -3538,7 +3419,7 @@ void EV_imitation7_think ( struct tempent_s *ent, float frametime, float current
 	//gEngfuncs.pEfxAPI->R_TempSprite( tr.endpos, vec3_origin, 0.2, m_iGlow, kRenderGlow, kRenderFxNoDissipation, flDamage * n / 255.0, flDamage * n * 0.5 * 0.1, FTENT_FADEOUT );
 
 				//vec3_t fwd;
-				//VectorAdd( tr.endpos, tr.plane.normal, fwd );
+				//VectorAdd_f( tr.endpos, tr.plane.normal, fwd );
 
 				//gEngfuncs.pEfxAPI->R_Sprite_Trail( TE_SPRITETRAIL, tr.endpos, fwd, m_iBalls, 3, 0.1, gEngfuncs.pfnRandomFloat( 10, 20 ) / 100.0, 100,
 				//					255, 100 );
@@ -3560,11 +3441,11 @@ void EV_imitation7_think ( struct tempent_s *ent, float frametime, float current
 	//I... guess this is velocity.
 	vec3_t velo = ent->entity.origin - ent->entity.prevstate.origin;
 
-	VectorCopy( ent->entity.origin, vecSrc );
+	VectorCopy_f( ent->entity.origin, vecSrc );
 	
 	/*
-	//VectorCopy( ent->entity.angles, angles );  //or "ent->entity.baseline.angles" ?
-	VectorCopy( ent->entity.baseline.angles, angles );
+	//VectorCopy_f( ent->entity.angles, angles );  //or "ent->entity.baseline.angles" ?
+	VectorCopy_f( ent->entity.baseline.angles, angles );
 	AngleVectors ( angles, forward, right, up );
 	*/
 
@@ -3637,7 +3518,7 @@ void EV_RocketTrailCallback ( struct tempent_s *ent, float frametime, float curr
 	if ( ent->entity.origin == ent->entity.attachment[0] )
 		ent->die = gEngfuncs.GetClientTime();
 	else
-    	VectorCopy ( ent->entity.origin, ent->entity.attachment[0] );
+    	VectorCopy_f ( ent->entity.origin, ent->entity.attachment[0] );
 	*/
 
 	
@@ -3654,7 +3535,7 @@ void EV_RocketTrailCallback ( struct tempent_s *ent, float frametime, float curr
 
 	}else{
 		ent->entity.baseline.fuser2 = -1;  //not dying now.
-    	VectorCopy ( ent->entity.origin, ent->entity.attachment[0] );
+    	VectorCopy_f ( ent->entity.origin, ent->entity.attachment[0] );
 	}
 
 
@@ -3670,7 +3551,7 @@ void EV_RocketTrailCallback ( struct tempent_s *ent, float frametime, float curr
 	if ( ent->entity.baseline.sequence == 70 )
 	{
 		dlight_t *dl = gEngfuncs.pEfxAPI->CL_AllocDlight ( 0 );
-		VectorCopy ( ent->entity.origin, dl->origin );
+		VectorCopy_f ( ent->entity.origin, dl->origin );
 
 		dl->radius = 160;
 		dl->dark = true;
@@ -3690,11 +3571,10 @@ void EV_RocketTrailCallback ( struct tempent_s *ent, float frametime, float curr
 
 
 
+// trail stuff.
+
 #define GRENADE_TRAIL 1
 #define ROCKET_TRAIL 2
-
-
-
 
 void EV_Trail_EngineChoice_Think ( struct tempent_s *ent, float frametime, float currenttime ){
 
@@ -3714,7 +3594,7 @@ void EV_Trail_EngineChoice_Think ( struct tempent_s *ent, float frametime, float
 
 	}else{
 		ent->entity.baseline.fuser2 = -1;  //not dying now.
-    	VectorCopy ( ent->entity.origin, ent->entity.attachment[0] );
+    	VectorCopy_f ( ent->entity.origin, ent->entity.attachment[0] );
 	}
 	
 
@@ -3870,14 +3750,14 @@ void EV_rocketAlphaTrailThink ( struct tempent_s *ent, float frametime, float cu
 
 	}else{
 		ent->entity.baseline.fuser2 = -1;  //not dying now.
-    	VectorCopy ( ent->entity.origin, ent->entity.attachment[0] );
+    	VectorCopy_f ( ent->entity.origin, ent->entity.attachment[0] );
 	}
 
 
 	//gEngfuncs.pEfxAPI->R_TempSprite( tr.endpos, vec3_origin, 0.2, m_iGlow, kRenderGlow, kRenderFxNoDissipation, flDamage * n / 255.0, flDamage * n * 0.5 * 0.1, FTENT_FADEOUT );
 
 				//vec3_t fwd;
-				//VectorAdd( tr.endpos, tr.plane.normal, fwd );
+				//VectorAdd_f( tr.endpos, tr.plane.normal, fwd );
 
 				//gEngfuncs.pEfxAPI->R_Sprite_Trail( TE_SPRITETRAIL, tr.endpos, fwd, m_iBalls, 3, 0.1, gEngfuncs.pfnRandomFloat( 10, 20 ) / 100.0, 100,
 				//					255, 100 );
@@ -3960,27 +3840,171 @@ void EV_rocketAlphaTrail (event_args_t *args)
 //======================
 void EV_Mirror( event_args_t *args ) 
 {
-	vec3_t org;
-	bool bNew = true;
-
-	VectorCopy(args->origin,org);
+	//MODDD - iterator declared at the top now because VS6 be wack, yo.
+	// (declarations inside for-loops collide with declarations elsewhere.)
+	int ic;
+	vec3_t org_target;
+	
+	//BOOL bNew = TRUE;
+	//MODDD - using this instead.  Idea is if it gets set while looking through existing mirrors,
+	// force the stats from this call into that one.
+	// Remaining -1 means a new mirror element has to be used for the stats.
+	int mirrorTargetIndex = -1;
+	
+	
+	VectorCopy_f(args->origin,org_target);
 	float dist = (float)args->iparam1;
 	int type = args->iparam2;
 	int bEnabled = args->bparam1;
 
 	//we have mirror
-	if (gHUD.numMirrors)
+	//...thanks.  
+	
+	// See if the coords we're given are already taken by an existing mirror.
+	// If no existing mirror with matching coords is found, bNew remains TRUE.
+	
+	// I... really don't get this.
+	// Say EV_Mirror is called 4 times to create 4 different mirrors, say "m" is gHUD.Mirrors:
+	// m[0].enabled = TRUE (A)
+	// m[1].enabled = TRUE (B)
+	// m[2].enabled = TRUE (C)
+	// m[3].enabled = TRUE (D)
+	// m[4].enabled = FALSE
+	// ...
+	// And so, numMirrors is 4 (indices 0 to 3 valid for checks).
+	
+	// Then, say we send a call for the mirror at [1] and disable it.
+	// m[0].enabled = TRUE
+	// m[1].enabled = FALSE
+	// m[2].enabled = TRUE
+	// m[3].enabled = TRUE
+	// m[4].enabled = FALSE
+	// by the as-is logic, this also reduces numMirrors by 1. It is now 3 (indices 0 to 2 are valid).
+	
+	// See the problem?  m[3] is still enabled, but not one of the indices checked by most other for-loops
+	// (which go from 0 to numMirrors-1 ).
+	// When numMirrors is reduced by 1 and nothing else, it is assumed the last valid index is no longer
+	// wanted, but that just isn't the case.
+	
+	// ANOTHER ISSUE, maybe.   On finding an existing mirror, what if any other part of its member vars
+	// (type and radius) changed?  On finding an existing mirror, the script that sends the new type and
+	// dist (for radius) above never runs.  Just seems odd to me.
+	
+	// If the point is to forget about disabled mirrors (to stop enabling/disabling mirrors from reaching)
+	// the max mirror count pointlessly fast),
+	// all mirrors above the currently disabled mirror should be copied to the previous one.
+	// In the above example,
+	
+	// m[0].enabled = TRUE (A)
+	// m[1].enabled = FALSE (B)
+	// m[2].enabled = TRUE (C)
+	// m[3].enabled = TRUE (D)
+	// m[4].enabled = FALSE
+	
+	//...becomes
+	
+	// m[0].enabled = TRUE (A)
+	// m[1].enabled = TRUE (C)
+	// m[2].enabled = TRUE (D)
+	// m[3].enabled = TRUE
+	// m[4].enabled = FALSE
+	
+	//...that is, disabling [1], labeled (B), pushes all mirrors after to cover that index.
+	// [3] is now safe to ignore, as it's an old copy of (D) that can be overwritten the next
+	// time a new mirror is needed (we don't care about memory not referred to or safe for 
+	// writing to).
+	
+	// IF I made a colossal <doink> up on understanding the original further below, let me know, thanks.
+	// Maybe I'm paranoid and none of this was necessary.
+	
+	// In any case...
+	// Few edits to make all the stats sent over be copied over (otherwise why would they be sent),
+	// and numMirrors is not affected by changing the 'enabled' status of existing mirrors.
+	// Also, a compromise for the "running out of mirrors" idea.  If the max mirror count is reached, 
+	// we'll go to the earliest mirror whose 'enabled' is false and overwrite that index.  If any are
+	// not enabled, otherwise admit failure (no disabled spaces to use).
+	
+	
+	
+	if (gHUD.numMirrors > 0)
 	{
-		for (int ic=0;ic<32;ic++)
+		for (ic = 0; ic < MIRROR_MAX; ic++)
 		{
-			if (gHUD.Mirrors[ic].origin[0] == org[0] && gHUD.Mirrors[ic].origin[1] == org[1] && gHUD.Mirrors[ic].origin[2] == org[2])
+			if (gHUD.Mirrors[ic].origin[0] == org_target[0] && gHUD.Mirrors[ic].origin[1] == org_target[1] && gHUD.Mirrors[ic].origin[2] == org_target[2])
 			{
-				if (bEnabled && !gHUD.Mirrors[ic].enabled ) gHUD.numMirrors++;
+				/*
+				//MODDD - disabling.  Check all mirrors ever recorded still even on disabling one.
+				// Because disabling one says nothing about mirrors after its index.
+				if (bEnabled && !gHUD.Mirrors[ic].enabled ){
+					gHUD.numMirrors++;
+				}else if (!bEnabled && gHUD.Mirrors[ic].enabled ){
+					gHUD.numMirrors--;
+				}
+				*/
+	
+				//MODDD - why not take all besides just 'bEnabled'?
+				mirrorTargetIndex = ic;
+				break;
+			}
+		}	
+	}
 
-		         		else if (!bEnabled && gHUD.Mirrors[ic].enabled ) gHUD.numMirrors--;
+	// MODDD NOTE - only happens on not finding an existing mirror (matching origin) to use earlier.
+	// Also, if the mirrorTargetIndex was set earlier, that means we found an existing mirror to use
+	// already (skip trying to find a new element).
+	if (mirrorTargetIndex == -1)
+	{
+		//MODDD - seciton reworked a bit, compare with the original further down.
+		if (gHUD.numMirrors < MIRROR_MAX){
+			// easy, we have an unused mirror to take: the one at numMirrors.
+			// And bump up numMirrors.
+			mirrorTargetIndex = gHUD.numMirrors;
+			gHUD.numMirrors++;
+		}
+		else{
+			// Find the first disabled mirror to replace then.
+			for (ic = 0; ic < MIRROR_MAX; ic++)
+			{
+				if( !gHUD.Mirrors[ic].enabled ){
+					// woopee, use this one.
+					mirrorTargetIndex = ic;
+					break;
+				}
+			}
+		}
+	}//END OF mirrorTargetIndex check
+	
+	if(mirrorTargetIndex != -1){
+		VectorCopy_f(org_target, gHUD.Mirrors[mirrorTargetIndex].origin);
+		gHUD.Mirrors[mirrorTargetIndex].type = type;
+		gHUD.Mirrors[mirrorTargetIndex].enabled = bEnabled;
+		gHUD.Mirrors[mirrorTargetIndex].radius = dist;
+	}else{
+		// Couldn't find an existing mirror or a place for a disabled one to overwrite?
+		// Admit failure.
+		easyForcePrintLine("ERROR: Can't register mirror, maximum %d allowed and no disabled mirrors found to replace!", MIRROR_MAX);
+	}
+	
+	
+	
+	//MODDD - original version here.
+	/*
+	BOOL bNew = TRUE;
+	
+	if (gHUD.numMirrors > 0)
+	{
+		for (ic = 0; ic < MIRROR_MAX; ic++)
+		{
+			if (gHUD.Mirrors[ic].origin[0] == org_target[0] && gHUD.Mirrors[ic].origin[1] == org_target[1] && gHUD.Mirrors[ic].origin[2] == org_target[2])
+			{
+				if (bEnabled && !gHUD.Mirrors[ic].enabled ){
+					gHUD.numMirrors++;
+				}else if (!bEnabled && gHUD.Mirrors[ic].enabled ){
+					gHUD.numMirrors--;
+				}
 
-		         		gHUD.Mirrors[ic].enabled = bEnabled;
-				bNew = false;
+				gHUD.Mirrors[ic].enabled = bEnabled;
+				bNew = FALSE;
 				break;
 			}
 		}	
@@ -3988,19 +4012,19 @@ void EV_Mirror( event_args_t *args )
 
 	if (bNew)
 	{
-		if (gHUD.numMirrors >= 32) easyForcePrintLine("ERROR: Can't register mirror, maximum 32 allowed!\n");
-
-		else
-         		{
-			VectorCopy(org,gHUD.Mirrors[gHUD.numMirrors].origin);
-	         		gHUD.Mirrors[gHUD.numMirrors].type = type;
-	        		gHUD.Mirrors[gHUD.numMirrors].enabled = bEnabled;
-	        		gHUD.Mirrors[gHUD.numMirrors].radius = dist;
-	        		gHUD.numMirrors++;
+		if (gHUD.numMirrors >= MIRROR_MAX){
+			easyForcePrintLine("ERROR: Can't register mirror, maximum %d allowed!", MIRROR_MAX);
+		}
+		else{
+			VectorCopy_f(org_target, gHUD.Mirrors[gHUD.numMirrors].origin);
+	        gHUD.Mirrors[gHUD.numMirrors].type = type;
+	        gHUD.Mirrors[gHUD.numMirrors].enabled = bEnabled;
+	        gHUD.Mirrors[gHUD.numMirrors].radius = dist;
+	        gHUD.numMirrors++;
 		}
 	}
+	*/
 }
-
 //======================
 //	   MIRROR END
 //======================

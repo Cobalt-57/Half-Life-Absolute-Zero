@@ -10,21 +10,21 @@
 #ifdef _WIN32
 #pragma once
 #endif
-#define	MAX_ENT_LEAFS	48
+#define MAX_ENT_LEAFS	48
 
 #include "progdefs.h"
 
 struct edict_s
 {
 	qboolean	free;
-	int			serialnumber;
+	int		serialnumber;
 	link_t		area;				// linked to a division node or leaf
 	
-	int			headnode;			// -1 to use normal leaf check
-	int			num_leafs;
+	int		headnode;			// -1 to use normal leaf check
+	int		num_leafs;
 	short		leafnums[MAX_ENT_LEAFS];
 
-	float		freetime;			// sv.time when the object was freed
+	float	freetime;			// sv.time when the object was freed
 
 	void*		pvPrivateData;		// Alloced and freed by engine, used by DLLs
 

@@ -19,27 +19,18 @@
     <Filter Include="Source Files\Shared">
       <UniqueIdentifier>{58d0f215-3130-4cef-adfd-6e0bfa0e3b32}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\common">
+      <UniqueIdentifier>{bdbff4ae-99ff-4736-b646-045d128ef6b0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\_root">
+      <UniqueIdentifier>{4e992f95-d16e-4055-83ec-9230cd5fa010}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="ammo.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="ammo_secondary.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="ammohistory.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="battery.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="cdll_int.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="com_weapons.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="death.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="demo.cpp">
@@ -54,22 +45,10 @@
     <ClCompile Include="events.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="flashlight.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="GameStudioModelRenderer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="geiger.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="health.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="hud.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="hud_msg.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="hud_redraw.cpp">
@@ -78,7 +57,7 @@
     <ClCompile Include="hud_servers.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="hud_spectator.cpp">
+    <ClCompile Include="hud\hud_spectator.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="hud_update.cpp">
@@ -93,12 +72,6 @@
     <ClCompile Include="inputw32.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="menu.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="message.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="parsemsg.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -111,25 +84,10 @@
     <ClCompile Include="..\pm_shared\pm_shared.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="saytext.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="status_icons.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="statusbar.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="studio_util.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="StudioModelRenderer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="text_message.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="train.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="tri.cpp">
@@ -189,22 +147,7 @@
     <ClCompile Include="view.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\dlls\crossbow.cpp">
-      <Filter>Source Files\hl</Filter>
-    </ClCompile>
-    <ClCompile Include="..\dlls\crowbar.cpp">
-      <Filter>Source Files\hl</Filter>
-    </ClCompile>
-    <ClCompile Include="..\dlls\egon.cpp">
-      <Filter>Source Files\hl</Filter>
-    </ClCompile>
     <ClCompile Include="ev_hldm.cpp">
-      <Filter>Source Files\hl</Filter>
-    </ClCompile>
-    <ClCompile Include="..\dlls\gauss.cpp">
-      <Filter>Source Files\hl</Filter>
-    </ClCompile>
-    <ClCompile Include="..\dlls\handgrenade.cpp">
       <Filter>Source Files\hl</Filter>
     </ClCompile>
     <ClCompile Include="hl\hl_baseentity.cpp">
@@ -219,31 +162,7 @@
     <ClCompile Include="hl\hl_weapons.cpp">
       <Filter>Source Files\hl</Filter>
     </ClCompile>
-    <ClCompile Include="..\dlls\hornetgun.cpp">
-      <Filter>Source Files\hl</Filter>
-    </ClCompile>
     <ClCompile Include="..\common\interface.cpp">
-      <Filter>Source Files\hl</Filter>
-    </ClCompile>
-    <ClCompile Include="..\dlls\mp5.cpp">
-      <Filter>Source Files\hl</Filter>
-    </ClCompile>
-    <ClCompile Include="..\dlls\python.cpp">
-      <Filter>Source Files\hl</Filter>
-    </ClCompile>
-    <ClCompile Include="..\dlls\rpg.cpp">
-      <Filter>Source Files\hl</Filter>
-    </ClCompile>
-    <ClCompile Include="..\dlls\satchel.cpp">
-      <Filter>Source Files\hl</Filter>
-    </ClCompile>
-    <ClCompile Include="..\dlls\shotgun.cpp">
-      <Filter>Source Files\hl</Filter>
-    </ClCompile>
-    <ClCompile Include="..\dlls\squeakgrenade.cpp">
-      <Filter>Source Files\hl</Filter>
-    </ClCompile>
-    <ClCompile Include="..\dlls\tripmine.cpp">
       <Filter>Source Files\hl</Filter>
     </ClCompile>
     <ClCompile Include="..\game_shared\vgui_scrollbar2.cpp">
@@ -258,22 +177,16 @@
     <ClCompile Include="..\game_shared\voice_status.cpp">
       <Filter>Source Files\hl</Filter>
     </ClCompile>
-    <ClCompile Include="..\dlls\chumtoadweapon.cpp">
-      <Filter>Source Files\hl</Filter>
-    </ClCompile>
-    <ClCompile Include="..\game_shared\NEW\util_printout.cpp">
+    <ClCompile Include="..\game_shared\util\util_printout.cpp">
       <Filter>Source Files\Shared</Filter>
     </ClCompile>
-    <ClCompile Include="..\game_shared\NEW\util_shared.cpp">
+    <ClCompile Include="..\game_shared\util\util_shared.cpp">
       <Filter>Source Files\Shared</Filter>
-    </ClCompile>
-    <ClCompile Include="..\dlls\glock.cpp">
-      <Filter>Source Files\hl</Filter>
     </ClCompile>
     <ClCompile Include="custom_message.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\game_shared\NEW\util_entity.cpp">
+    <ClCompile Include="..\game_shared\util\util_entity.cpp">
       <Filter>Source Files\Shared</Filter>
     </ClCompile>
     <ClCompile Include="cl_util.cpp">
@@ -282,14 +195,110 @@
     <ClCompile Include="..\pm_shared\pm_printout.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\game_shared\util\util_version.cpp">
+      <Filter>Source Files\Shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\dlls\weapon\chumtoadweapon.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\dlls\weapon\glock.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="hud\ammo.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="hud\ammo_secondary.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="hud\ammohistory.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="hud\battery.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="hud\death.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="hud\flashlight.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="hud\geiger.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="hud\health.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="hud\menu.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="hud\message.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="hud\saytext.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="hud\status_icons.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="hud\statusbar.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="hud\text_message.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="hud\train.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\dlls\weapon\crossbow.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\dlls\weapon\crowbar.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\dlls\weapon\egon.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\dlls\weapon\gauss.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\dlls\weapon\handgrenade.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\dlls\weapon\hornetgun.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\dlls\weapon\mp5.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\dlls\weapon\python.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\dlls\weapon\rpg.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\dlls\weapon\satchel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\dlls\weapon\shotgun.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\dlls\weapon\tripmine.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\vector.cpp">
+      <Filter>Source Files\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\external_lib_include.cpp">
+      <Filter>Source Files\_root</Filter>
+    </ClCompile>
+    <ClCompile Include="weapons_resource.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\dlls\weapon\squeak.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="ammo.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ammohistory.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="camera.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -311,9 +320,6 @@
     <ClInclude Include="GameStudioModelRenderer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="health.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="hud.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -326,7 +332,7 @@
     <ClInclude Include="hud_servers_priv.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="hud_spectator.h">
+    <ClInclude Include="hud\hud_spectator.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\common\itrackeruser.h">
@@ -401,13 +407,10 @@
     <ClInclude Include="glInclude.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\game_shared\NEW\vector_shared.h">
+    <ClInclude Include="..\game_shared\util\util_printout.h">
       <Filter>Header Files\Shared</Filter>
     </ClInclude>
-    <ClInclude Include="..\game_shared\NEW\util_printout.h">
-      <Filter>Header Files\Shared</Filter>
-    </ClInclude>
-    <ClInclude Include="..\game_shared\NEW\util_shared.h">
+    <ClInclude Include="..\game_shared\util\util_shared.h">
       <Filter>Header Files\Shared</Filter>
     </ClInclude>
     <ClInclude Include="cl_util.h">
@@ -425,10 +428,22 @@
     <ClInclude Include="custom_message.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\game_shared\NEW\util_entity.h">
+    <ClInclude Include="..\game_shared\util\util_entity.h">
       <Filter>Header Files\Shared</Filter>
     </ClInclude>
     <ClInclude Include="..\pm_shared\pm_printout.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\game_shared\util\util_version.h">
+      <Filter>Header Files\Shared</Filter>
+    </ClInclude>
+    <ClInclude Include="hud\ammo.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="hud\ammohistory.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="hud\health.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

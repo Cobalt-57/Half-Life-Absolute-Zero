@@ -10,10 +10,6 @@
 
 // mathlib.c -- math primitives
 
-#pragma warning( disable : 4244 )
-#pragma warning( disable : 4237 )
-#pragma warning( disable : 4305 )
-
 #include "cmdlib.h"
 #include "mathlib.h"
 
@@ -22,8 +18,8 @@ vec3_t vec3_origin = {0,0,0};
 
 double VectorLength(vec3_t v)
 {
-	int		i;
-	double	length;
+	int	i;
+	double length;
 	
 	length = 0;
 	for (i=0 ; i< 3 ; i++)
@@ -36,18 +32,13 @@ double VectorLength(vec3_t v)
 
 int VectorCompare (vec3_t v1, vec3_t v2)
 {
-	int		i;
+	int	i;
 	
 	for (i=0 ; i<3 ; i++)
 		if (fabs(v1[i]-v2[i]) > EQUAL_EPSILON)
 			return false;
 			
 	return true;
-}
-
-vec_t Q_rint (vec_t in)
-{
-	return floor (in + 0.5);
 }
 
 void VectorMA (vec3_t va, double scale, vec3_t vb, vec3_t vc)
@@ -64,6 +55,8 @@ void CrossProduct (vec3_t v1, vec3_t v2, vec3_t cross)
 	cross[2] = v1[0]*v2[1] - v1[1]*v2[0];
 }
 
+
+/*
 vec_t _DotProduct (vec3_t v1, vec3_t v2)
 {
 	return v1[0]*v2[0] + v1[1]*v2[1] + v1[2]*v2[2];
@@ -96,11 +89,13 @@ void _VectorScale (vec3_t v, vec_t scale, vec3_t out)
 	out[1] = v[1] * scale;
 	out[2] = v[2] * scale;
 }
+*/
+
 
 vec_t VectorNormalize (vec3_t v)
 {
-	int		i;
-	double	length;
+	int	i;
+	double length;
 
 if ( fabs(v[1] - 0.000215956) < 0.0001)
 i=1;
@@ -118,12 +113,20 @@ i=1;
 	return length;
 }
 
+
+
 void VectorInverse (vec3_t v)
 {
 	v[0] = -v[0];
 	v[1] = -v[1];
 	v[2] = -v[2];
 }
+
+vec_t Q_rint(vec_t in)
+{
+	return floor(in + 0.5);
+}
+
 
 void ClearBounds (vec3_t mins, vec3_t maxs)
 {
@@ -133,7 +136,7 @@ void ClearBounds (vec3_t mins, vec3_t maxs)
 
 void AddPointToBounds (vec3_t v, vec3_t mins, vec3_t maxs)
 {
-	int		i;
+	int	i;
 	vec_t	val;
 
 	for (i=0 ; i<3 ; i++)
@@ -148,8 +151,8 @@ void AddPointToBounds (vec3_t v, vec3_t mins, vec3_t maxs)
 
 void AngleMatrix (const vec3_t angles, float (*matrix)[4] )
 {
-	float		angle;
-	float		sr, sp, sy, cr, cp, cy;
+	float	angle;
+	float	sr, sp, sy, cr, cp, cy;
 	
 	angle = angles[2] * (Q_PI*2 / 360);
 	sy = sin(angle);
@@ -178,8 +181,8 @@ void AngleMatrix (const vec3_t angles, float (*matrix)[4] )
 
 void AngleIMatrix (const vec3_t angles, float matrix[3][4] )
 {
-	float		angle;
-	float		sr, sp, sy, cr, cp, cy;
+	float	angle;
+	float	sr, sp, sy, cr, cp, cy;
 	
 	angle = angles[2] * (Q_PI*2 / 360);
 	sy = sin(angle);
@@ -238,9 +241,9 @@ void R_ConcatTransforms (const float in1[3][4], const float in2[3][4], float out
 
 void VectorRotate (const vec3_t in1, const float in2[3][4], vec3_t out)
 {
-	out[0] = DotProduct(in1, in2[0]);
-	out[1] = DotProduct(in1, in2[1]);
-	out[2] = DotProduct(in1, in2[2]);
+	out[0] = DotProduct_f(in1, in2[0]);
+	out[1] = DotProduct_f(in1, in2[1]);
+	out[2] = DotProduct_f(in1, in2[2]);
 }
 
 
@@ -255,17 +258,17 @@ void VectorIRotate (const vec3_t in1, const float in2[3][4], vec3_t out)
 
 void VectorTransform (const vec3_t in1, const float in2[3][4], vec3_t out)
 {
-	out[0] = DotProduct(in1, in2[0]) + in2[0][3];
-	out[1] = DotProduct(in1, in2[1]) +	in2[1][3];
-	out[2] = DotProduct(in1, in2[2]) +	in2[2][3];
+	out[0] = DotProduct_f(in1, in2[0]) + in2[0][3];
+	out[1] = DotProduct_f(in1, in2[1]) +	in2[1][3];
+	out[2] = DotProduct_f(in1, in2[2]) +	in2[2][3];
 }
 
 
 
 void AngleQuaternion( const vec3_t angles, vec4_t quaternion )
 {
-	float		angle;
-	float		sr, sp, sy, cr, cp, cy;
+	float	angle;
+	float	sr, sp, sy, cr, cp, cy;
 
 	// FIXME: rescale the inputs to 1/2 angle
 	angle = angles[2] * 0.5;

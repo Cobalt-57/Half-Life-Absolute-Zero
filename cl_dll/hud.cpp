@@ -35,8 +35,7 @@
 #include "vgui_scorepanel.h"
 
 //MODDD - new.
-#include "../versionAid.h"
-
+#include "util_version.h"
 
 //MODDD - externs
 EASY_CVAR_EXTERN(hud_version)
@@ -52,22 +51,16 @@ EASY_CVAR_EXTERN(hud_brokentrans)
 extern float globalPSEUDO_autoDeterminedFOV;
 
 
-//MODDD - This controls whether cheat CVars can be modified directly in multiplayer.
-#define CHEATS_ALLOWED_IN_MULTI_PLAYER 1
 
-#if CHEATS_ALLOWED_IN_MULTI_PLAYER == 1
-//If not, "PROTECTION_PLACE" is empty, contributing nothing to the CVar flags.
-#define PROTECTION_PLACE 
-#else
-//If so, the flag "FCVAR_PROTECTED" is added.
-#define PROTECTION_PLACE | FCVAR_PROTECTED
-#endif
+//NEWSDK: these cvars are Absent from the new SDK.
+/*
+cvar_t *cl_viewrollangle;
+cvar_t *cl_viewrollspeed;
+*/
 
 
 
 EASY_CVAR_EXTERN_MASS
-
-
 
 
 
@@ -103,7 +96,7 @@ public:
 		gViewPort->UpdateCursorState();
 	}
 
-	virtual int	GetAckIconHeight()
+	virtual int GetAckIconHeight()
 	{
 		return ScreenHeight - gHUD.m_iFontHeight*3 - 6;
 	}
@@ -127,74 +120,32 @@ CHud::CHud() : m_iSpriteCount(0), m_pHudList(NULL), m_fPlayerDead(FALSE), recent
 	
 	useAlphaCrosshairMem = -1;
 	allowAlphaCrosshairWithoutGunsMem = -1;
-
-	
 }
 
 
 
-extern client_sprite_t *GetSpriteList(client_sprite_t *pList, const char *psz, int iRes, int iCount);
-
-extern cvar_t *sensitivity;
-cvar_t *cl_lw = NULL;
-
-
-cvar_t *cl_viewrollangle;
-cvar_t *cl_viewrollspeed;
-
-//NEWSDK: these cvars are Absent from the new SDK.
-/*
-cvar_t *cl_viewrollangle;
-cvar_t *cl_viewrollspeed;
-*/
-
-void ShutdownInput (void);
-
-
-
 //MODDD - NOTE.   ... What even are these?? double-underscores in front?  what?  why?
-// Dummied out stuff?  okay.
+// Oh, I see why now.  These are stand-ins for the DECLARE_MESSAGE calls.
+// Because these don't belong to any particular gHUD instance, like m_Ammo.
+// Likely wasn't deemed worth the effort to even make some instances like m_Logo, so
+// the deves skipped needing an instance like this (m_Logo does not exist like that
+// call wants).
 
+// Note that other __MsgFunc and __CmdFunc calls throughout this file cannot be 
+// replaced by the same DECLARE_MESSAGE_HUD macro.
+// Could use a new macro that generate calls to "gViewPort->MsgFunc_##X" instead.
+
+// Anyway, below has been replaced by these macro calls.
+// macro calls moved to custom_message.cpp.
+
+/*
 //DECLARE_MESSAGE(m_Logo, Logo)
 int __MsgFunc_Logo(const char *pszName, int iSize, void *pbuf)
 {
 	return gHUD.MsgFunc_Logo(pszName, iSize, pbuf );
 }
-
-//DECLARE_MESSAGE(m_Logo, Logo)
-int __MsgFunc_ResetHUD(const char *pszName, int iSize, void *pbuf)
-{
-	return gHUD.MsgFunc_ResetHUD(pszName, iSize, pbuf );
-}
-
-int __MsgFunc_InitHUD(const char *pszName, int iSize, void *pbuf)
-{
-	gHUD.MsgFunc_InitHUD( pszName, iSize, pbuf );
-	return 1;
-}
-
-int __MsgFunc_ViewMode(const char *pszName, int iSize, void *pbuf)
-{
-	gHUD.MsgFunc_ViewMode( pszName, iSize, pbuf );
-	return 1;
-}
-
-int __MsgFunc_SetFOV(const char *pszName, int iSize, void *pbuf)
-{
-	return gHUD.MsgFunc_SetFOV( pszName, iSize, pbuf );
-}
-
-int __MsgFunc_Concuss(const char *pszName, int iSize, void *pbuf)
-{
-	return gHUD.MsgFunc_Concuss( pszName, iSize, pbuf );
-}
-
-int __MsgFunc_GameMode(const char *pszName, int iSize, void *pbuf )
-{
-	return gHUD.MsgFunc_GameMode( pszName, iSize, pbuf );
-}
-
-
+*/
+//...  (rest removed)
 
 
 // TFFree Command Menu
@@ -782,39 +733,6 @@ void method_mod_version_server() {
 
 	*/
 
-	// printout tests.
-	/*
-	float testNum = 120.2345678;
-	float testNum2 = 120.456;
-	float testNum3 = 120.12;
-	easyForcePrintLine("? %.2f %2.f %2.2f %f  %.2g %2.g %2.2g %g", testNum, testNum, testNum, testNum, testNum, testNum, testNum, testNum);
-	easyForcePrintLine("? %.2f %2.f %2.2f %f  %.2g %2.g %2.2g %g", testNum2, testNum2, testNum2, testNum2, testNum2, testNum2, testNum2, testNum2);
-	easyForcePrintLine("? %.2f %2.f %2.2f %f  %.2g %2.g %2.2g %g", testNum3, testNum3, testNum3, testNum3, testNum3, testNum3, testNum3, testNum3);
-
-	CL: ? 120.23 120 120.23 120.234566  1.2e+02 1e+02 1.2e+02 120.235
-	CL: ? 120.46 120 120.46 120.456001  1.2e+02 1e+02 1.2e+02 120.456
-	CL: ? 120.12 120 120.12 120.120003  1.2e+02 1e+02 1.2e+02 120.12
-	*/
-	//easyForcePrintLine("what??  %g %g %g %g %g %g %g %g %g %g", 1.0f, 1.1f, 1.11f, 1.111f, 1.1111f, 9.0f, 9.9f, 9.99f, 9.999f, 9.9999f);
-	//CL: what ? ? 1 1.1 1.11 1.111 1.1111 9 9.9 9.99 9.999 9.999
-
-	/*
-	float testNum = 120.2345678;
-	float testNum2 = 120.456;
-	float testNum3 = 120.12;
-	easyForcePrintLine("what??  %.0g %0.g %2.0g %0.2g %0.0g", 0.77777777f, 0.77777777f, 0.77777777f, 0.77777777f, 0.77777777f);
-	easyForcePrintLine("what??  %.0g %0.g %2.0g %0.2g %0.0g", testNum, testNum, testNum, testNum, testNum);
-	easyForcePrintLine("what??  %.0g %0.g %2.0g %0.2g %0.0g", testNum2, testNum2, testNum2, testNum2, testNum2);
-	easyForcePrintLine("what??  %.0g %0.g %2.0g %0.2g %0.0g", testNum3, testNum3, testNum3, testNum3, testNum3);
-	//CL: what ? ? 1 1.1 1.11 1.111 1.1111 9 9.9 9.99 9.999 9.999
-	what ? ? 0.8 0.8 0.8 0.78 0.8
-	what ? ? 1e+02 1e+02 1e+02 1.2e+02 1e+02
-	what ? ? 1e+02 1e+02 1e+02 1.2e+02 1e+02
-	what ? ? 1e+02 1e+02 1e+02 1.2e+02 1e+02
-	//...ok, that sucked.
-	*/
-
-
 	//if (tempRef != NULL) {
 	//if( (int)tempRef >= 0x00100000){
 	if(gEngfuncs.GetMaxClients() > 0){
@@ -825,10 +743,6 @@ void method_mod_version_server() {
 	}
 	
 }//END OF method_mod_version_client
-
-
-
-
 
 
 
@@ -900,14 +814,6 @@ void command_test_cvar_client_get_struct(){
 
 
 
-
-
-
-
-
-
-
-
 void command_updateCameraPerspectiveF(void){
 	gEngfuncs.pfnClientCmd("cameraper_f");
 }
@@ -946,25 +852,14 @@ void command_fvoxtoggle(void){
 
 
 
-
-
-
 // This is called every time the DLL is loaded
 // MODDD - NOTE. 
 // See cl_dll/cdll_int.cpp for the HUD_Init call that leads here, although there isn't anything
 // special there.
 void CHud :: Init( void )
 {
-	
-
-	HOOK_MESSAGE( Logo );
-	HOOK_MESSAGE( ResetHUD );
-	HOOK_MESSAGE( GameMode );
-	HOOK_MESSAGE( InitHUD );
-	HOOK_MESSAGE( ViewMode );
-	HOOK_MESSAGE( SetFOV );
-	HOOK_MESSAGE( Concuss );
-
+	//MODDD - HOOK_MESSAGE calls for hud_msg.cpp methods moved
+	// to custom_message.cpp, along with the methods themselves.
 	
 	// TFFree CommandMenu
 	HOOK_COMMAND( "+commandmenu", OpenCommandMenu );
@@ -993,8 +888,6 @@ void CHud :: Init( void )
 	HOOK_MESSAGE( VGUIMenu );
 
 
-
-
 	//MODDDDMIRROR - this block.
 	viewEntityIndex = 0; // trigger_viewset stuff
 	viewFlags = 0;
@@ -1002,7 +895,6 @@ void CHud :: Init( void )
 	m_iPlayerFOV = 0;
 	numMirrors = 0;
 	//m_iHUDColor = 0x00FFA000; //255,160,0 -- LRC
-
 
 	
 	//always start at what fvoxEnabled was.
@@ -1174,7 +1066,6 @@ void CHud :: Init( void )
 	// In case we get messages before the first update -- time will be valid
 	m_flTime = 1.0;
 
-	m_CustomMessage.Init();
 	m_Ammo.Init();
 	m_Health.Init();
 	m_SayText.Init();
@@ -1532,7 +1423,9 @@ void CHud :: VidInit( void )
 
 	m_iFontHeight = m_rgrcRects[m_HUD_number_0].bottom - m_rgrcRects[m_HUD_number_0].top;
 
-	m_CustomMessage.VidInit();
+//MODDD - just do it
+	Init_CustomMessage();
+	
 	m_Ammo.VidInit();
 	m_Health.VidInit();
 	m_Spectator.VidInit();
@@ -1551,17 +1444,8 @@ void CHud :: VidInit( void )
 	GetClientVoiceMgr()->VidInit();
 }
 
-int CHud::MsgFunc_Logo(const char *pszName,  int iSize, void *pbuf)
-{
-	BEGIN_READ( pbuf, iSize );
+//MODDD - MsgFunc_Logo moved to hud_msg.cpp for consistency.
 
-	// update Train data
-	m_iLogo = READ_BYTE();
-
-	return 1;
-}
-
-float g_lastFOV = 0.0;
 
 /*
 ============
@@ -1657,54 +1541,8 @@ float HUD_GetFOV( void )
 
 
 
-//MODDD - just note
-//NOTE: while "hud_redraw" constantly forces m_iPlayerFOV to default_fov, let it be known that this method is perhaps almost entirely pointless.
-int CHud::MsgFunc_SetFOV(const char *pszName,  int iSize, void *pbuf)
-{
-	BEGIN_READ( pbuf, iSize );
+//MODDD - MsgFunc_SetFOV moved to hud_msg.cpp for consistency.
 
-	int newfov = READ_BYTE();
-
-	//MODDD - you know the drill.
-	//int def_fov = CVAR_GET_FLOAT( "default_fov" );
-	int def_fov = getPlayerBaseFOV();
-	
-
-	//Weapon prediction already takes care of changing the fog. ( g_lastFOV ).
-	if ( cl_lw && cl_lw->value )
-		return 1;
-
-	g_lastFOV = newfov;
-
-	if ( newfov == 0 )
-	{
-		m_iPlayerFOV = def_fov;
-	}
-	else
-	{
-		m_iPlayerFOV = newfov;
-	}
-
-	// the clients fov is actually set in the client data update section of the hud
-
-	// Set a new sensitivity
-	if ( m_iPlayerFOV == def_fov )
-	{  
-		// reset to saved sensitivity
-		m_flMouseSensitivity = 0;
-	}
-	else
-	{  
-		// set a new sensitivity that is proportional to the change from the FOV default
-		if(def_fov != 0){
-			m_flMouseSensitivity = sensitivity->value * ((float)newfov / (float)def_fov) * CVAR_GET_FLOAT("zoom_sensitivity_ratio");
-		}else{
-			m_flMouseSensitivity = 0; //safety??
-		}
-	}
-
-	return 1;
-}
 
 
 void CHud::AddHudElem(CHudBase *phudelem)

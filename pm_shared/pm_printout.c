@@ -1,6 +1,6 @@
 
-#include "externalLibInclude.h"
-#include "version.h"
+#include "external_lib_include.h"
+#include "build_settings.h"
 
 #include <assert.h>
 #include "mathlib.h"
