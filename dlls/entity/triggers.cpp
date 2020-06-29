@@ -2050,7 +2050,6 @@ int CChangeLevel::ChangeList( LEVELLIST *pLevelList, int maxList )
 								monsterTest->DeathAnimationStart();
 								monsterTest->DeathAnimationEnd();
 
-
 							}
 
 							if ( entityCount > MAX_ENTITY )

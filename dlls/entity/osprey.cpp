@@ -936,7 +936,7 @@ GENERATE_TRACEATTACK_IMPLEMENTATION(COsprey)
 	else
 	{
 		//UTIL_Sparks
-		UTIL_Sparks2( ptr->vecEndPos, DEFAULT_SPARK_BALLS, EASY_CVAR_GET(sparksOspreyHitMulti) );
+		UTIL_Sparks( ptr->vecEndPos, DEFAULT_SPARK_BALLS, EASY_CVAR_GET(sparksOspreyHitMulti) );
 	}
 }
 

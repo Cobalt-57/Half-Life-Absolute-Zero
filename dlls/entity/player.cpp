@@ -397,6 +397,10 @@ TYPEDESCRIPTION	CBasePlayer::m_playerSaveData[] =
 	
 	DEFINE_FIELD( CBasePlayer, m_fNoPlayerSound, FIELD_INTEGER ), // NOTE: added back in.  No issue.
 	
+	//MODDD - m_flNextAttack saved in CBasePlayer now.  Removed from CBaseMonster due to being
+	// unused there and by most (if not all) subclasses.
+	DEFINE_FIELD( CBasePlayer, m_flNextAttack, FIELD_TIME ),
+
 	DEFINE_FIELD( CBasePlayer, hasGlockSilencer, FIELD_INTEGER ),
 	
 	//DEFINE_FIELD( CBasePlayer, m_fDeadTime, FIELD_FLOAT ), // only used in multiplayer games
@@ -1293,10 +1297,14 @@ GENERATE_DEADTAKEDAMAGE_IMPLEMENTATION(CBasePlayer) {
 
 //Parameters: integer named fGibSpawnsDecal
 GENERATE_GIBMONSTER_IMPLEMENTATION(CBasePlayer){
+	
+	// shouldn't we force any suit sounds to stop playing in such a case too?
+	EMIT_SOUND(ENT(pev), CHAN_STATIC, "common/null.wav", 1, ATTN_NORM);
+	// I think the base GibMonster already handles CHAN_VOICE.
+	//EMIT_SOUND(ENT(pev), CHAN_VOICE, "common/null.wav", 1, ATTN_NORM);
 
 	GENERATE_GIBMONSTER_PARENT_CALL(CBaseMonster);
 }
-
 
 
 
@@ -1748,6 +1756,23 @@ GENERATE_KILLED_IMPLEMENTATION(CBasePlayer)
 }
 
 
+
+void CBasePlayer::onDelete(void) {
+
+	// shouldn't we force any suit sounds to stop playing in such a case too?
+	EMIT_SOUND(ENT(pev), CHAN_STATIC, "common/null.wav", 1, ATTN_NORM);
+	EMIT_SOUND(ENT(pev), CHAN_VOICE, "common/null.wav", 1, ATTN_NORM);
+	
+
+	// wait.  player deleted.
+	// what.
+}
+
+
+
+
+
+
 // Set the activity based on an event or current state
 void CBasePlayer::SetAnimation( PLAYER_ANIM playerAnim )
 {
@@ -2057,8 +2082,6 @@ CBasePlayer::CBasePlayer(void){
 	nextSpecialNode = -1;
 	nextSpecialNodeAlternateTime = -1;
 
-	skillMem = -1;
-
 
 	recentlyGrantedGlockSilencer = FALSE;
 	recentlySaidBattery = -1;  //do not save, meant to relate to what was recently said in-game yet.
@@ -2327,10 +2350,6 @@ void CBasePlayer::PlayerDeathThink(void)
 	//MODDD NOTE - This area blocks turning the DEAD_DEAD flag on until the player death anim has finished or taken too long.
 	if (pev->modelindex && (!m_fSequenceFinished) && (pev->deadflag == DEAD_DYING))
 	{
-		if(pev->frame >= (255*0.4)){
-			this->recognizablyDead = TRUE;
-		}
-	
 		StudioFrameAdvance( );
 
 		m_iRespawnFrames++;				// Note, these aren't necessarily real "frames", so behavior is dependent on # of client movement commands
@@ -3909,57 +3928,6 @@ void CBasePlayer::PreThink(void)
 //CHANGE: new constants that revolve around difficulty are used for DURATION instead.
 
 //NOTICE: damage & duration constants moved to CBaseMonster!
-
-
-
-void CBasePlayer::updateTimedDamageDurations(int difficultyIndex){
-
-	//forcing some defaults here.
-	if(difficultyIndex == -1){
-		difficultyIndex = 2;
-		//skillMem = -1;  //force update ASAP.
-		//no, just make the skillMem the right version...
-		skillMem = difficultyIndex;
-
-		//about to update again anyways, so, return now?
-		//NAH   return;
-	}
-
-	//switch((int)(CVAR_skillMem) ){
-	switch(difficultyIndex){
-	case 1://easy
-		CBaseMonster::paralyzeDuration = PARALYZE_DURATION_EASY;
-		CBaseMonster::nervegasDuration = NERVEGAS_DURATION_EASY;
-		CBaseMonster::poisonDuration = POISON_DURATION_EASY;
-		CBaseMonster::radiationDuration = RADIATION_DURATION_EASY;
-		CBaseMonster::acidDuration = ACID_DURATION_EASY;
-		CBaseMonster::slowburnDuration = SLOWBURN_DURATION_EASY;
-		CBaseMonster::slowfreezeDuration = SLOWFREEZE_DURATION_EASY;
-		CBaseMonster::bleedingDuration = BLEEDING_DURATION_EASY;
-	break;
-	case 2://medium
-		CBaseMonster::paralyzeDuration = PARALYZE_DURATION_MEDIUM;
-		CBaseMonster::nervegasDuration = NERVEGAS_DURATION_MEDIUM;
-		CBaseMonster::poisonDuration = POISON_DURATION_MEDIUM;
-		CBaseMonster::radiationDuration = RADIATION_DURATION_MEDIUM;
-		CBaseMonster::acidDuration = ACID_DURATION_MEDIUM;
-		CBaseMonster::slowburnDuration = SLOWBURN_DURATION_MEDIUM;
-		CBaseMonster::slowfreezeDuration = SLOWFREEZE_DURATION_MEDIUM;
-		CBaseMonster::bleedingDuration = BLEEDING_DURATION_MEDIUM;
-	break;
-	case 3://hard
-		CBaseMonster::paralyzeDuration = PARALYZE_DURATION_HARD;
-		CBaseMonster::nervegasDuration = NERVEGAS_DURATION_HARD;
-		CBaseMonster::poisonDuration = POISON_DURATION_HARD;
-		CBaseMonster::radiationDuration = RADIATION_DURATION_HARD;
-		CBaseMonster::acidDuration = ACID_DURATION_HARD;
-		CBaseMonster::slowburnDuration = SLOWBURN_DURATION_HARD;
-		CBaseMonster::slowfreezeDuration = SLOWFREEZE_DURATION_HARD;
-		CBaseMonster::bleedingDuration = BLEEDING_DURATION_HARD;
-	break;
-	}
-	
-}
 
 
 
@@ -6054,14 +6022,9 @@ void CBasePlayer::commonReset(void){
 	//It doesn't need to be in use for long, and most messages interrupted aren't really that important.
 	obligedCustomSentence = 0;
 
-	updateTimedDamageDurations(-1);
-
-
 	if (PLAYER_ALWAYSHASLONGJUMP){
 		m_fLongJump = TRUE;
 	}
-
-
 	
 	//MODDD
 	deadflagmem = -1;
@@ -6225,7 +6188,6 @@ BOOL CBasePlayer::blocksImpact(void){
 }//END OF blocksImpact
 
 void CBasePlayer::Spawn( BOOL revived ){
-	recognizablyDead = FALSE;
 	
 	/*
 	//pev->friction		= 1.0;  //multiplayer requires this to be set to move. Why? dunno
@@ -6264,8 +6226,6 @@ void CBasePlayer::Spawn( BOOL revived ){
 	//haven't died yet...
 	alreadyDroppedItemsAtDeath = FALSE;
 	sentCarcassScent = FALSE;
-
-	updateTimedDamageDurations(-1);
 
 	//the air-tank air sound may play at contact with water.
 	airTankWaitingStart = TRUE;
@@ -8476,22 +8436,7 @@ void CBasePlayer :: UpdateClientData( void )
 
 		fvoxEnabledMem = fvoxOn;
 	}
-
-
-
-	if(skillMem != g_iSkillLevel){
-		skillMem = g_iSkillLevel;
-		
-		/*
-		//We'll let util.cpp do this instead...
-		g_iSkillLevel = (int)CVAR_skillMem;
-		g_pGameRules->RefreshSkillData();
-		*/
-		
-		updateTimedDamageDurations((int)g_iSkillLevel);
-	}
-	//easyPrintLine("DIFFICULTY: %d", g_iSkillLevel);
-
+	
 
 	// HACKHACK -- send the message to display the game title
 	if (gDisplayTitle)

@@ -2711,9 +2711,9 @@ GENERATE_GIBMONSTER_IMPLEMENTATION(CKingpin)
 //if dead and a poweredup monster's directedEnemyIssuer is THIS, forget its directedEnemy. !!!
 GENERATE_KILLED_IMPLEMENTATION(CKingpin){
 	
-	BOOL firstCall = FALSE;
-	if(firstTimeKilled){
-		firstCall = TRUE;
+	//BOOL firstCall = FALSE;
+	if(!HasMemory( bits_MEMORY_KILLED )){
+		//firstCall = TRUE;
 		//no need to re-do this check again.
 		deTargetMyCommandedMonsters();
 	}

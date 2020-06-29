@@ -280,6 +280,10 @@ public:
 	CBeam *m_pBeam[ISLAVE_MAX_BEAMS];
 
 	int m_iBeams;
+
+	//MODDD - well would ya look at that.
+	// Actually used by something other than CBasePlayer.
+	// No idea why CBaseMonster used to have this, never touched it there.
 	float m_flNextAttack;
 
 	int m_voicePitch;

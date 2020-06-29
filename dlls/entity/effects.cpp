@@ -390,11 +390,11 @@ void CBeam::DoSparks( const Vector &start, const Vector &end )
 		if ( pev->spawnflags & SF_BEAM_SPARKSTART )
 		{
 			//MODDD HERE AND DOWN TOO
-			UTIL_Sparks2( start, ballsToSpawn, EASY_CVAR_GET(sparksBeamMulti) );
+			UTIL_Sparks( start, ballsToSpawn, EASY_CVAR_GET(sparksBeamMulti) );
 		}
 		if ( pev->spawnflags & SF_BEAM_SPARKEND )
 		{
-			UTIL_Sparks2( end, ballsToSpawn, EASY_CVAR_GET(sparksBeamMulti) );
+			UTIL_Sparks( end, ballsToSpawn, EASY_CVAR_GET(sparksBeamMulti) );
 		}
 	}
 }

@@ -1009,6 +1009,14 @@ void CHud :: Init( void )
 	CVAR_CREATE( "hud_takesshots", "0", FCVAR_ARCHIVE );		// controls whether or not to automatically take screenshots at the end of a round
 	
 
+
+
+
+	//TEST!!!
+	CVAR_CREATE("pooptest", "0", FCVAR_ARCHIVE | FCVAR_SERVER);		// controls whether or not to automatically take screenshots at the end of a round
+
+
+
 	m_iLogo = 0;
 	m_iPlayerFOV = 0;
 

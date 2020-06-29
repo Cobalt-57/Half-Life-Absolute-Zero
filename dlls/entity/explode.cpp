@@ -77,15 +77,15 @@ void CShower::Think( void )
 	if(explosionsHaveSparksVar == 0){
 		//nothing.
 	}else if(explosionsHaveSparksVar == 1){
-		UTIL_Sparks2( pev->origin, DEFAULT_SPARK_BALLS, EASY_CVAR_GET(sparksExplosionMulti) );
+		UTIL_Sparks( pev->origin, DEFAULT_SPARK_BALLS, EASY_CVAR_GET(sparksExplosionMulti) );
 	}
 	else if(explosionsHaveSparksVar == 2){
-		UTIL_Sparks2( pev->origin, 1, EASY_CVAR_GET(sparksExplosionMulti) );
+		UTIL_Sparks( pev->origin, 1, EASY_CVAR_GET(sparksExplosionMulti) );
 	}
 	*/
 
 
-	UTIL_Sparks2( pev->origin, DEFAULT_SPARK_BALLS, EASY_CVAR_GET(sparksExplosionMulti) );
+	UTIL_Sparks( pev->origin, DEFAULT_SPARK_BALLS, EASY_CVAR_GET(sparksExplosionMulti) );
 	
 
 

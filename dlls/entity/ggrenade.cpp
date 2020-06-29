@@ -58,12 +58,14 @@ EASY_CVAR_EXTERN(handGrenadesUseOldBounceSound)
 	
 GENERATE_TRACEATTACK_IMPLEMENTATION(CGrenade)
 {
-	GENERATE_TRACEATTACK_PARENT_CALL(CBaseMonster);
+	//MODDD - class update, was CBaseMonster.
+	GENERATE_TRACEATTACK_PARENT_CALL(CBaseAnimating);
 }
 
 GENERATE_TAKEDAMAGE_IMPLEMENTATION(CGrenade)
 {
-	return GENERATE_TAKEDAMAGE_PARENT_CALL(CBaseMonster);
+	//MODDD - class update, was CBaseMonster.
+	return GENERATE_TAKEDAMAGE_PARENT_CALL(CBaseAnimating);
 }
 
 
@@ -471,7 +473,7 @@ void CGrenade::BounceTouch( CBaseEntity *pOther )
 		return;
 
 	// only do damage if we're moving fairly fast
-	if (m_flNextAttack < gpGlobals->time && pev->velocity.Length() > 100)
+	if (m_flBounceDamageCooldown < gpGlobals->time && pev->velocity.Length() > 100)
 	{
 		entvars_t *pevOwner = VARS( pev->owner );
 		if (pevOwner)
@@ -481,7 +483,7 @@ void CGrenade::BounceTouch( CBaseEntity *pOther )
 			pOther->TraceAttack(pevOwner, 1, gpGlobals->v_forward, &tr, DMG_CLUB ); 
 			ApplyMultiDamage( pev, pevOwner);
 		}
-		m_flNextAttack = gpGlobals->time + 1.0; // debounce
+		m_flBounceDamageCooldown = gpGlobals->time + 1.0; // debounce
 	}
 
 	Vector vecTestVelocity;

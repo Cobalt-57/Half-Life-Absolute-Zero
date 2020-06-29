@@ -30,16 +30,6 @@
 #include "gamerules.h"
 
 
-int iHornetTrail;
-int iHornetPuff;
-
-
-
-
-
-#define ROCKET_TRAIL 2
-extern unsigned short g_sTrail;
-extern unsigned short g_sTrailRA;
 
 EASY_CVAR_EXTERN(trailTypeTest)
 
@@ -64,6 +54,17 @@ EASY_CVAR_EXTERN(agruntHornetRandomness)
 EASY_CVAR_EXTERN(hornetSpiralPeriod)
 EASY_CVAR_EXTERN(hornetSpiralAmplitude)
 
+
+
+#define ROCKET_TRAIL 2
+
+
+int iHornetTrail;
+int iHornetPuff;
+
+
+extern unsigned short g_sTrail;
+extern unsigned short g_sTrailRA;
 
 
 
@@ -171,7 +172,6 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CHornet)
 	return test;
 
 }
-
 
 
 
@@ -889,13 +889,6 @@ void CHornet::DieTouch ( CBaseEntity *pOther )
 
 
 
-
-
-
-
-
-
-
 GENERATE_DEADTAKEDAMAGE_IMPLEMENTATION(CHornet){
 	
 	switch ( (int) getDifficultyMod()){
@@ -976,14 +969,8 @@ GENERATE_DEADTAKEDAMAGE_IMPLEMENTATION(CHornet){
 	}
 	
 	return 1;
-
 }
 	
-
-
-
-
-
 
 
 
@@ -1000,20 +987,15 @@ GENERATE_DEADTAKEDAMAGE_IMPLEMENTATION(CHornet){
 //MODDD - new
 GENERATE_KILLED_IMPLEMENTATION(CHornet){
 	
-
-	
-			//pev->deadflag = DEAD_DEAD;
-			//return;
+	//pev->deadflag = DEAD_DEAD;
+	//return;
 
 	int hornetDeathMode = (int) getDifficultyMod();
+	BOOL canGib = TRUE;
 
 	UTIL_SetSize(pev, Vector(0,0,0), Vector(0,0,0));
 	pev->solid = SOLID_NOT;
 	
-
-	BOOL canGib = TRUE;
-
-
 
 	switch ( hornetDeathMode ){
 		case 0:
@@ -1046,8 +1028,6 @@ GENERATE_KILLED_IMPLEMENTATION(CHornet){
 			//pev->velocity = Vector(0,0,0);
 
 
-
-
 		break;
 		case 4:
 			//FORCE GIB... remove me.   eh, leave it to the method.
@@ -1056,8 +1036,6 @@ GENERATE_KILLED_IMPLEMENTATION(CHornet){
 		break;
 
 	}//MODD - end of switch.
-
-
 
 
 	
@@ -1083,17 +1061,10 @@ GENERATE_KILLED_IMPLEMENTATION(CHornet){
 	}
 
 
-
-
-
-
 	//NOTICE: natural "killed"'s  "BecomeDead" method will set the movetype to "toss" to make this fall.
 	
-
-
 	unsigned int cCount = 0;
 	BOOL			fDone = FALSE;
-
 
 	//MODDD - if stuck to a barnacle, not anymore.
 	barnacleLocked = FALSE;
@@ -1169,10 +1140,6 @@ int CHornet::GetProjectileType(void){
 }
 
 
-
-
-
-
 Vector CHornet::GetVelocityLogical(void){
 	//probably fine?
 	//return pev->velocity;
@@ -1206,5 +1173,4 @@ void CHornet::OnDeflected(CBaseEntity* arg_entDeflector){
 		this->StartDart();
 	}
 }
-
 

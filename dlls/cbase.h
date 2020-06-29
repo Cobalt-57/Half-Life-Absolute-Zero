@@ -297,13 +297,6 @@ public:
 	//MODDD - new instance var.
 	BOOL usingCustomSequence;
 	
-	//Stores whether the AI can recognize that this enemy is dead yet, by default around halfway into a death animation.
-	//Kinda doesn't make sense they keep firing at something that's clearly sprawled out on the ground just because the death animation stayed there for a little.
-	//Note that this will only be used by Monsters in TASK_DIE to denote when the AI should, for all intents and purposes, consider this as DEAD_DEAD and pick a new enemy.
-	//This should not replace be trusted for checking already DEAD_DEAD things which can be set that way without going through TASK_DIE.
-	BOOL recognizablyDead;
-
-
 	// New var to send printouts related to animation.
 	// Turn on for an entity by looking at it ingame and typing "crazyprintout"
 	BOOL crazyPrintout;
@@ -367,9 +360,6 @@ public:
 	// Might want to know if the player sent along spawnflags in a 'give' command.
 	BOOL flagForced;
 	
-	//is this the first time calling Killed? important sometimes.
-	BOOL firstTimeKilled;
-
 	Activity timeOfDeath_activity;
 	int timeOfDeath_sequence;
 
@@ -514,11 +504,10 @@ public:
 	//MODDD - why does IsAlive check for above 0 health?  The deadflag is always properly adjusted if it goes under 0.
 	//virtual BOOL	IsAlive( void ) { return (pev->deadflag == DEAD_NO) && pev->health > 0; }
 	virtual BOOL IsAlive(void){return (pev->deadflag == DEAD_NO); }
-	//MODDD NEW - alternate version for special cases. Also factors in "recognizablyDead": change enemies after this one's gone far enough in the death anim.
-	//            Does this mean any case where health is below 0 but still alive are ignored by AI? Not that this should ever happen.
-	//            BLAH this is CBaseEntity, not CBaseMonster. Forget that, this precision really isn't helpful here.
-	//virtual BOOL IsAlive_FromAI( CBaseMonster* whoWantsToKnow ) { return (pev->deadflag == DEAD_NO || (pev->deadflag == DEAD_DYING && !recognizablyDead ) ) && pev->health > 0; }
-	virtual BOOL IsAlive_FromAI( CBaseMonster* whoWantsToKnow ) { return (pev->deadflag == DEAD_NO || (pev->deadflag == DEAD_DYING && !recognizablyDead ) ); }
+	
+	//MODD - NEW.  Might want some things (chumtoads) to have the ability to fool other monsters into thinking they are dead and be ignored from 'getEnemy' searches.
+	// Also counts as dead a little ways into the DEAD_DYING animation.
+	virtual BOOL IsAlive_FromAI( CBaseMonster* whoWantsToKnow ) { return (pev->deadflag == DEAD_NO || (pev->deadflag == DEAD_DYING && pev->frame < (255*0.3) ) ); }
 
 
 	virtual BOOL	IsBSPModel( void ) { return pev->solid == SOLID_BSP || pev->movetype == MOVETYPE_PUSHSTEP; }

@@ -33,7 +33,8 @@ float GetSkillCvar( char *pName )
 	float flValue;
 	char	szBuffer[ 64 ];
 	
-	iCount = sprintf( szBuffer, "%s%d",pName, gSkillData.iSkillLevel );
+	//MODDD - 'gSkillData.iSkillLevel' replaced with 'g_iSkillLevel
+	iCount = sprintf( szBuffer, "%s%d",pName, g_iSkillLevel );
 
 	flValue = CVAR_GET_FLOAT ( szBuffer );
 

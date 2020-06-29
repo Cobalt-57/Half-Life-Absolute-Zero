@@ -792,8 +792,6 @@ void CBaseMonster::ReportGeneric(){}
 //void CBaseMonster::broadThink(){}
 
 
-//MODDD
-void CBasePlayer::updateTimedDamageDurations(int difficultyIndex){}
 /*
 void CBasePlayer::Think(void){}
 void CBasePlayer::MonsterThink(void){}

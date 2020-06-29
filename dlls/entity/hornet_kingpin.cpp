@@ -17,7 +17,6 @@
 
 CHornetKingpin::CHornetKingpin(void){
 
-
 }//END OF CHornetKingpin constructor
 
 LINK_ENTITY_TO_CLASS( hornet_kingpin, CHornetKingpin );
@@ -40,14 +39,11 @@ IMPLEMENT_SAVERESTORE( CHornetKingpin, CHornet );
 
 
 
-
-
 void CHornetKingpin :: Spawn( void ){
 	CHornet::Spawn();
 	//do what the parent does.
 	
 	pev->movetype	= MOVETYPE_BOUNCEMISSILE;
-
 
 	pev->classname = MAKE_STRING("hornet_kingpin");
 	
@@ -56,7 +52,6 @@ void CHornetKingpin :: Spawn( void ){
 
 	//safe default.
 	m_hEnemy = NULL;
-
 
 
 	//but change the starting think to this to tie into the rest of our own logic instead.
@@ -73,9 +68,7 @@ void CHornetKingpin :: Precache( void ){
 }//END OF Precache
 
 
-
 void CHornetKingpin::setup(CBaseEntity* arg_targetEnt, const Vector& arg_targetOffset){
-	
 	//NOTICE - the sent arg_targetEnt can NOT be null or we have no way of getting a target!
 
 
@@ -98,11 +91,7 @@ void CHornetKingpin::setup(const Vector& arg_vecTarget, const Vector& arg_target
 
 
 
-
-
 void CHornetKingpin::StartSpeedMissile(void){
-	
-	
 	//SetThink( &CBaseEntity::SUB_Remove );
 	SetThink( &CHornetKingpin::SpeedMissileDartStart );
 
@@ -167,14 +156,9 @@ void CHornetKingpin::SpeedMissileDartContinuous(void){
 	//}
 
 
-
 	pev->angles = UTIL_VecToAngles( pev->velocity );
 	//pev->angles.z = 0;
 	//pev->angles.x = 0;
-
-
-
-
 
 	
 	//SetThink( &CHornet::SpeedMissileDartContinuous );
@@ -189,18 +173,12 @@ void CHornetKingpin::SpeedMissileDartContinuous(void){
 }
 
 
-
-
-
-
 //Similar to CHornet's DieTouch, but ignores touches with other hornets.  At least other kingpin_hornet's.
 void CHornetKingpin::SmartDieTouch(CBaseEntity* pOther )
 {
-
 	//only collide IF the other thing is NOT a hornet_kingpin.
 	//if(pOther && !FClassnameIs(pOther->pev, "hornet_kingpin") ){
 	if(pOther){
-
 		const char* otherClassname = pOther->getClassname();
 	
 		//MODDD TODO - should it turn off sounds for "pother->IsWorldOrAffiliated"?
@@ -225,9 +203,7 @@ void CHornetKingpin::SmartDieTouch(CBaseEntity* pOther )
 
 	}//END OF other hornet_kingpin check
 	
-
 }//END OF SmartDieTouch
-
 
 
 
@@ -251,7 +227,4 @@ void CHornetKingpin::OnDeflected(CBaseEntity* arg_entDeflector){
 		this->StartDart();
 	}
 }
-
-
-
 

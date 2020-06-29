@@ -279,9 +279,9 @@ typedef float vec_t;
 // careful, 'qboolean' shows up in C files mostly, and
 // this came from util_model.cpp (C++).
 //WAIT STOP.  Already handled further down in this file.
-#ifdef __cplusplus
+//#ifdef __cplusplus
 //typedef int qboolean;
-#endif
+//#endif
 
 
 

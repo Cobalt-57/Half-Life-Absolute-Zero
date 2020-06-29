@@ -286,6 +286,10 @@ time, but have the chumtoad, kingpin, hassault, stukabat, panthereye, floater, h
 etc.
 
 
+
+
+
+
 /////////////////////////////////////////////////////////////////////////////////////////
 TRACE METHODS:
 There are quite a few serverside trace-related methods.
@@ -336,6 +340,15 @@ In the as-is codebase (not counting additions in the mod since then; good way to
   
 (engine/cdll_int.h doesn't have much trace-related but there's a bunch of engine hookups nonetheless) 
 
+And don't forget about common/event_api.h:
+	int	( *EV_IndexFromTrace) ( struct pmtrace_s *pTrace );
+	void ( *EV_SetTraceHull ) ( int hull );
+	void ( *EV_PlayerTrace ) ( float *start, float *end, int traceFlags, int ignore_pe, struct pmtrace_s *tr );
+	const char *( *EV_TraceTexture ) ( int ground, float *vstart, float *vend );
+
+...and random, but whateven calls "EV_SetSolidPlayers"? What could that possibly do.
+   Looks like it finishes adding in the bounds of other players so that clientside effects
+   can work off that?   okay..?
 /////////////////////////////////////////////////////////////////////////////////////////
 
 

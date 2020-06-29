@@ -162,7 +162,8 @@ TYPEDESCRIPTION	CBaseMonster::m_SaveData[] =
 	DEFINE_FIELD( CBaseMonster, m_cAmmoLoaded, FIELD_INTEGER ),
 	DEFINE_FIELD( CBaseMonster, m_afCapability, FIELD_INTEGER ),
 
-	DEFINE_FIELD( CBaseMonster, m_flNextAttack, FIELD_TIME ),
+	//MODDD - removed.
+	//DEFINE_FIELD( CBaseMonster, m_flNextAttack, FIELD_TIME ),
 	DEFINE_FIELD( CBaseMonster, m_bitsDamageType, FIELD_INTEGER ),
 	DEFINE_ARRAY( CBaseMonster, m_rgbTimeBasedDamage, FIELD_CHARACTER, CDMG_TIMEBASED ),
 	DEFINE_FIELD( CBaseMonster, m_bloodColor, FIELD_INTEGER ),
@@ -313,8 +314,6 @@ CBaseMonster::CBaseMonster(){
 	timeOfDeath_activity = ACT_RESET;
 	timeOfDeath_sequence = 0;
 
-	firstTimeKilled = TRUE;
-
 	lastDamageReceived = 0;
 	
 	forgetSmallFlinchTime = -1;
@@ -374,8 +373,6 @@ CBaseMonster::CBaseMonster(){
 	
 	fApplyTempVelocity = FALSE;
 	//velocityApplyTemp;
-
-	recognizablyDead = FALSE; //default
 
 }
 
@@ -1452,14 +1449,14 @@ void CBaseMonster::wanderAway(const Vector& toWalkAwayFrom){
 
 
 
-	float CBaseMonster::paralyzeDuration = 0;
-	float CBaseMonster::nervegasDuration = 0;
-	float CBaseMonster::poisonDuration = 0;
-	float CBaseMonster::radiationDuration = 0;
-	float CBaseMonster::acidDuration = 0;
-	float CBaseMonster::slowburnDuration = 0;
-	float CBaseMonster::slowfreezeDuration = 0;
-	float CBaseMonster::bleedingDuration = 0;
+float CBaseMonster::paralyzeDuration = 0;
+float CBaseMonster::nervegasDuration = 0;
+float CBaseMonster::poisonDuration = 0;
+float CBaseMonster::radiationDuration = 0;
+float CBaseMonster::acidDuration = 0;
+float CBaseMonster::slowburnDuration = 0;
+float CBaseMonster::slowfreezeDuration = 0;
+float CBaseMonster::bleedingDuration = 0;
 
 
 
@@ -5325,8 +5322,11 @@ void CBaseMonster :: MonsterInit ( void )
 	// Redundant with "mp_allowmonsters".
 	// Also, added an exception to this rule for certain monsters.
 	// The new 'pickup walker' monsters should not be forbidden by this setting.
-	if (!g_pGameRules->FAllowMonsters() && !this->bypassAllowMonstersSpawnCheck() )
-	{
+
+
+	//if(CVAR_GET_FLOAT("pooptest") == 0){
+	if (!g_pGameRules->FAllowMonsters() && !this->bypassAllowMonstersSpawnCheck() ){
+
 		easyForcePrintLine("WARNING! Request to spawn \"%s\" denied, \'mp_allowmonsters\' is off.", this->getClassname());
 
 		//MODDD - "FL_KILLME" flag-add replaced with UTIL_Remove call, does a bit more.
@@ -7535,7 +7535,6 @@ void CBaseMonster::Spawn( ){
 	//careful, not everything calls the parent spawn method, even if it should.
 	//MonsterInit is a better place that's often called by most monster Spawn scripts. Beware of those that don't even do that.
 
-	recognizablyDead = FALSE;
 	CBaseToggle::Spawn();
 
 	//setModelCustom();
@@ -7711,14 +7710,8 @@ void CBaseMonster::forgetForcedEnemy(CBaseMonster* argIssuing, BOOL argPassive){
 void CBaseMonster::startReanimation(){
 	int i;
 	
-
-
 	pev->deadflag = DEAD_NO;
 
-	firstTimeKilled = TRUE;  //another Killed call will be the first as far as I'm concerned.
-	
-	recognizablyDead = FALSE;
-	
 	//!!!
 	deadSetActivityBlock = FALSE;
 	

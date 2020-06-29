@@ -24,7 +24,9 @@
 struct skilldata_t
 {
 
-	int iSkillLevel; // game skill level
+	//MODDD - removed.  What does this offer that g_iSkillLevel below  doesn't?
+	// Any mentions of this replaced with that.
+	//int iSkillLevel; // game skill level
 
 // Monster Health & Damage
 	float agruntHealth;

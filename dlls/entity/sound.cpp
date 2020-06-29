@@ -1968,7 +1968,7 @@ float TEXTURETYPE_PlaySound(TraceResult *ptr,  Vector vecSrc, Vector vecEnd, int
 
 			//MODDD!
 			//UTIL_Sparks( ptr->vecEndPos );
-			UTIL_Sparks2( ptr->vecEndPos, DEFAULT_SPARK_BALLS, EASY_CVAR_GET(sparksComputerHitMulti) );
+			UTIL_Sparks( ptr->vecEndPos, DEFAULT_SPARK_BALLS, EASY_CVAR_GET(sparksComputerHitMulti) );
 
 
 			float flVolume = RANDOM_FLOAT ( 0.7 , 1.0 );//random volume range

@@ -1466,8 +1466,8 @@ GENERATE_KILLED_IMPLEMENTATION(CFloater)
 	//return;
 	
 
-	if(firstTimeKilled){
-
+	// Not killed before?    (yes, really).
+	if(!HasMemory( bits_MEMORY_KILLED )){
 		//Only reset the velocity if this is the first Killed call (since we stop following).
 		//Any further resets will look like gravity suddenly stops with each shot (Killed call again).
 		pev->velocity = Vector(0, 0, 0);

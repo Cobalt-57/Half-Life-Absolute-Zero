@@ -35,42 +35,33 @@
 //MODDD - important
 //EASY_CVAR_EXTERN_CLIENT_MASS
 
-
 EASY_CVAR_EXTERN(cheat_minimumfiredelay)
-
 EASY_CVAR_EXTERN(myCameraSucks)
-
-
 EASY_CVAR_EXTERN(cameraPosFixedX)
 EASY_CVAR_EXTERN(cameraPosFixedY)
 EASY_CVAR_EXTERN(cameraPosFixedZ)
-
 EASY_CVAR_EXTERN(cameraRotFixedX)
 EASY_CVAR_EXTERN(cameraRotFixedY)
 EASY_CVAR_EXTERN(cameraRotFixedZ)
-
-
 EASY_CVAR_EXTERN(cameraPosOffX)
 EASY_CVAR_EXTERN(cameraPosOffY)
 EASY_CVAR_EXTERN(cameraPosOffZ)
-
 EASY_CVAR_EXTERN(cameraRotOffX)
 EASY_CVAR_EXTERN(cameraRotOffY)
 EASY_CVAR_EXTERN(cameraRotOffZ)
-
 EASY_CVAR_EXTERN(playerBarnacleVictimViewOffset)
 EASY_CVAR_EXTERN(cl_viewpunch)
 
 
-extern void command_updateCameraPerspectiveF(void);
-extern void command_updateCameraPerspectiveT(void);
 extern float global2PSEUDO_IGNOREcameraMode;
-
-
 extern float global2PSEUDO_grabbedByBarancle;
 
-#define	CAM_MODE_RELAX		1
-#define CAM_MODE_FOCUS		2
+extern void command_updateCameraPerspectiveF(void);
+extern void command_updateCameraPerspectiveT(void);
+
+
+#define CAM_MODE_RELAX 1
+#define CAM_MODE_FOCUS 2
 
 #define ORIGIN_BACKUP 64
 #define ORIGIN_MASK ( ORIGIN_BACKUP - 1 )

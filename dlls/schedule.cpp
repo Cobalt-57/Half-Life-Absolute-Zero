@@ -376,7 +376,7 @@ BOOL CBaseMonster :: FScheduleValid ( void )
 
 			//MODDD
 			//UTIL_Sparks( tmp );
-			UTIL_Sparks2( tmp, DEFAULT_SPARK_BALLS, EASY_CVAR_GET(sparksAIFailMulti) );
+			UTIL_Sparks( tmp, DEFAULT_SPARK_BALLS, EASY_CVAR_GET(sparksAIFailMulti) );
 		}
 #endif // DEBUG
 
@@ -1270,14 +1270,7 @@ void CBaseMonster :: RunTask ( Task_t *pTask )
 	case TASK_DIE:
 	{
 
-		if(pev->frame >= (255*0.4)){
-			//40% of the way there? Anything should be able to tell we're dead to stop marking this as an enemy / focus on something else.
-			//MODDD TODO - make this adjustable per death anim per monster? Sounds tricky and unworthwhile most of the time, but the option could exist.
-			//This is just used so the AI can know to drop this enemy a little early (they sure look dead) and move on in the heat of combat.
-			recognizablyDead = TRUE;
-		}
-
-		//Is the end 255 or 256?! DAMN.
+		//Is the end 255 or 256?!
 		if ( m_fSequenceFinished && pev->frame >= 255 )
 		{
 

@@ -122,6 +122,12 @@ cvar_t	allowmonsters={"mp_allowmonsters","0", FCVAR_SERVER };
 
 cvar_t  mp_chattime = {"mp_chattime","10", FCVAR_SERVER };
 
+
+
+//TEST
+cvar_t  pooptest = { "pooptest", "0", FCVAR_SERVER | FCVAR_ARCHIVE };
+
+
 // Engine Cvars
 cvar_t 	*g_psv_gravity = NULL;
 cvar_t	*g_psv_aim = NULL;
@@ -838,6 +844,16 @@ void GameDLLInit( void )
 	CVAR_REGISTER (&allowmonsters);
 
 	CVAR_REGISTER (&mp_chattime);
+
+
+
+	if(IS_DEDICATED_SERVER){
+		CVAR_REGISTER(&pooptest);
+	}
+
+
+
+
 
 // REGISTER CVARS FOR SKILL LEVEL STUFF
 	// Agrunt

@@ -563,11 +563,6 @@ CBaseEntity::CBaseEntity(void){
 
 	//barnacleVictimException = FALSE; ???
 
-	
-	recognizablyDead = FALSE; //golly gee, doubt it.
-
-	firstTimeKilled = TRUE;
-
 }
 
 //OLD: soundSentenceSavePreference
@@ -752,10 +747,6 @@ TYPEDESCRIPTION	CBaseEntity::m_SaveData[] =
 	DEFINE_FIELD( CBaseEntity, m_pfnUse, FIELD_FUNCTION ),
 	DEFINE_FIELD( CBaseEntity, m_pfnBlocked, FIELD_FUNCTION ),
 	
-	//MODDD
-	DEFINE_FIELD( CBaseEntity, recognizablyDead, FIELD_BOOLEAN ),
-
-	//
 };
 
 

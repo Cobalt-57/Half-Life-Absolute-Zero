@@ -140,6 +140,7 @@ int global_useSentenceSave = 0;   //This is for script only, used to make mass-r
 cvar_t* cvar_sv_cheats = 0;
 
 float forceWorldLightOffMem = -1;
+float cvar_skill_mem = -1;
 
 //VITAL!!!
 BOOL globalPSEUDO_queueClientSendoff = FALSE;
@@ -180,12 +181,12 @@ BOOL queueYMG_stopSend = FALSE;
 
 
 
-/*
-Array of gib models with some helpful info.
-This does not include gibs only used by func_breakable. 
-Looks like that file is able to automatically pick up on the available number of body values and use those.
-*/
-GibInfo_t aryGibInfo[] = {
+
+// Array of gib models with some helpful info.
+// This does not include gibs only used by func_breakable. 
+// Looks like that file is able to automatically pick up on the available number of body values and use those.
+// AND remember, keep 'aryGibInfo_MAX_SIZE' in synch if more entries are added.
+GibInfo_t aryGibInfo[aryGibInfo_MAX_SIZE] = {
 	{"", 0, 0, 0}, //the dummy
 	{"models/hgibs.mdl", 1, HUMAN_GIB_COUNT-1, BLOOD_COLOR_RED},
 	{"models/agibs.mdl", 0, ALIEN_GIB_COUNT-1, BLOOD_COLOR_YELLOW},  //or BLOOD_COLOR_GREEN ?  Need a check in gib spawning methods if that ever becomes important perhaps.
@@ -2018,7 +2019,7 @@ Vector UTIL_GetProjectileVelocityExtra(const Vector& playerVelocity, float veloc
 }
 
 
-// MODDD - UTIL_Sparks and UTIL_Sparks2 moved to util_shared.cpp.
+// MODDD - UTIL_Sparks moved to util_shared.cpp.
 
 
 void interpretSoundAsSentence(char* interpretationFINAL, const char* pszName){
@@ -4927,6 +4928,47 @@ void turnWorldLightsOff(){
 
 
 
+
+// Anytime the 'skill' CVAR is changed, update the durations for all the damage types to be used.
+void updateTimedDamageDurations(void) {
+
+	switch (g_iSkillLevel) {
+	case 1://easy
+		CBaseMonster::paralyzeDuration = PARALYZE_DURATION_EASY;
+		CBaseMonster::nervegasDuration = NERVEGAS_DURATION_EASY;
+		CBaseMonster::poisonDuration = POISON_DURATION_EASY;
+		CBaseMonster::radiationDuration = RADIATION_DURATION_EASY;
+		CBaseMonster::acidDuration = ACID_DURATION_EASY;
+		CBaseMonster::slowburnDuration = SLOWBURN_DURATION_EASY;
+		CBaseMonster::slowfreezeDuration = SLOWFREEZE_DURATION_EASY;
+		CBaseMonster::bleedingDuration = BLEEDING_DURATION_EASY;
+		break;
+	case 2://medium
+		CBaseMonster::paralyzeDuration = PARALYZE_DURATION_MEDIUM;
+		CBaseMonster::nervegasDuration = NERVEGAS_DURATION_MEDIUM;
+		CBaseMonster::poisonDuration = POISON_DURATION_MEDIUM;
+		CBaseMonster::radiationDuration = RADIATION_DURATION_MEDIUM;
+		CBaseMonster::acidDuration = ACID_DURATION_MEDIUM;
+		CBaseMonster::slowburnDuration = SLOWBURN_DURATION_MEDIUM;
+		CBaseMonster::slowfreezeDuration = SLOWFREEZE_DURATION_MEDIUM;
+		CBaseMonster::bleedingDuration = BLEEDING_DURATION_MEDIUM;
+		break;
+	case 3://hard
+		CBaseMonster::paralyzeDuration = PARALYZE_DURATION_HARD;
+		CBaseMonster::nervegasDuration = NERVEGAS_DURATION_HARD;
+		CBaseMonster::poisonDuration = POISON_DURATION_HARD;
+		CBaseMonster::radiationDuration = RADIATION_DURATION_HARD;
+		CBaseMonster::acidDuration = ACID_DURATION_HARD;
+		CBaseMonster::slowburnDuration = SLOWBURN_DURATION_HARD;
+		CBaseMonster::slowfreezeDuration = SLOWFREEZE_DURATION_HARD;
+		CBaseMonster::bleedingDuration = BLEEDING_DURATION_HARD;
+		break;
+	}
+}//END OF updateTimedDamageDurations
+
+
+
+
 //const Vector* arg_suggestedOrigin
 void updateCVarRefs(entvars_t *pev){
 
@@ -4934,30 +4976,14 @@ void updateCVarRefs(entvars_t *pev){
 		cvar_skill = CVAR_GET_POINTER("skill");
 	}
 
-	if(cvar_skill != NULL && cvar_skill->value != g_iSkillLevel){
-		g_iSkillLevel = cvar_skill->value;
-		//just like RefreshSkillData does... force the skill to 1 or 3 if it is out of bounds.
-		if(g_iSkillLevel > 3) g_iSkillLevel = 3;
-		if(g_iSkillLevel < 1) g_iSkillLevel = 1;
-
-		if(g_pGameRules != NULL){
-			//gets CVar "skill" on its own
-			g_pGameRules->RefreshSkillData();
-			queueSkillUpdate = FALSE;
-		}else{
-			//keep waiting until we can...
-			queueSkillUpdate = TRUE;
-		}
-		//"gSkillData.iSkillLevel" is set in there too.
+	if(cvar_skill != NULL && cvar_skill->value != cvar_skill_mem){
+		// update as soon as we can.
+		queueSkillUpdate = TRUE;
 	}
 
 	if(queueSkillUpdate == TRUE && g_pGameRules != NULL){
 		g_pGameRules->RefreshSkillData();
-		queueSkillUpdate = FALSE;
 	}
-
-
-
 
 
 	if(EASY_CVAR_GET(forceWorldLightOff) != forceWorldLightOffMem){
@@ -4970,7 +4996,6 @@ void updateCVarRefs(entvars_t *pev){
 			//turn on is instant and not updated.
 			turnWorldLightsOn();
 		}
-		
 	}
 
 	/*
@@ -4983,8 +5008,6 @@ void updateCVarRefs(entvars_t *pev){
 
 
 	if(globalPSEUDO_gaussmodeMem != EASY_CVAR_GET(gaussmode)){
-
-
 
 		if(EASY_CVAR_GET(gaussmode) == 0){
 			//easyForcePrintLine("***Gauss Mode: CUSTOM***");
@@ -5021,7 +5044,6 @@ void updateCVarRefs(entvars_t *pev){
 		}
 
 
-		
 		//force back to 0. All that mattered is we know what the intention was.
 		//"hope that gets the point across"
 		//...uh.  What was the point of this if it's set to 0 by EASY_CVAR_SET further below.
@@ -5029,8 +5051,6 @@ void updateCVarRefs(entvars_t *pev){
 
 		globalPSEUDO_gaussmodeMem = 0;
 		EASY_CVAR_SET(gaussMode, 0);
-
-
 	}//END OF if(globalPSEUDO_gaussmodeMem != global_gaussmode)
 
 
@@ -5039,7 +5059,6 @@ void updateCVarRefs(entvars_t *pev){
 	if(globalPSEUDO_germanCensorshipMem != EASY_CVAR_GET(germanCensorship) || globalPSEUDO_allowGermanModelsMem != EASY_CVAR_GET(allowGermanModels)){
 
 		globalPSEUDO_allowGermanModelsMem = EASY_CVAR_GET(allowGermanModels);
-
 
 		//easyForcePrintLine("ARE YOU amazin %.2f %.2f %.2f", globalPSEUDO_canApplyGermanCensorship, EASY_CVAR_GET(germanCensorship), EASY_CVAR_GET(allowGermanModels));
 
@@ -7035,6 +7054,10 @@ void OnMapLoadStart(){
 	
 	//Next time, will force these off in case there isn't a loaded game.
 	loadedGame = FALSE;
+
+	// is that okay?
+	// Nevermind.
+	//cvar_skill_mem = cvar_skill->value;
 
 }//END OF OnMapLoadStart
 

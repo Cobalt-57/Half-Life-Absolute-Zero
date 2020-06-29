@@ -913,17 +913,14 @@ GENERATE_KILLED_IMPLEMENTATION(CBarnacle)
 	//MODDD - any references to CallGibMonster replaced with GibMonster. No need for that separation.
 
 	if(EASY_CVAR_GET(barnacleCanGib) == 1){
-		//if ( HasMemory( bits_MEMORY_KILLED ) )
-		{
+	//if ( HasMemory( bits_MEMORY_KILLED ) ){
+		
+		if ( ShouldGibMonster( iGib ) ){
 			
-			
-			if ( ShouldGibMonster( iGib ) ){
-				
-				GENERATE_GIBMONSTER_CALL;
-				return;
-			}else if(barnacleDeathActivitySet == TRUE){
-				return;  //also return, since this means the death anim has already been triggered.
-			}
+			GENERATE_GIBMONSTER_CALL;
+			return;
+		}else if(barnacleDeathActivitySet == TRUE){
+			return;  //also return, since this means the death anim has already been triggered.
 		}
 	}else if(EASY_CVAR_GET(barnacleCanGib) == 2){
 		//harder to gib, but still may be.
@@ -931,7 +928,6 @@ GENERATE_KILLED_IMPLEMENTATION(CBarnacle)
 		if(pev->deadflag == DEAD_NO){
 			pev->health = 60;
 		}else{
-
 			if ( ShouldGibMonster( iGib ) ){
 				GENERATE_GIBMONSTER_CALL;
 			}

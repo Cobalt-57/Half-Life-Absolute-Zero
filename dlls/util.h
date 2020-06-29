@@ -34,6 +34,12 @@
 //MODDD - important point before.
 //extern globalvars_t *gpGlobals;
 
+//MODDD - referred to in here, yes.
+EASY_CVAR_EXTERN(soundAttenuationAll)
+EASY_CVAR_EXTERN(soundAttenuationStuka)
+EASY_CVAR_EXTERN(soundVolumeAll)
+EASY_CVAR_EXTERN(soundVolumeStuka)
+
 
 extern unsigned short g_sTrailEngineChoice;
 extern unsigned short g_sImitation7;
@@ -49,12 +55,14 @@ extern unsigned short g_sFloaterExplode;
 
 extern int giPrecacheGrunt;
 
+// Keep in synch with the array if more entries are added!
+#define aryGibInfo_MAX_SIZE 9
 
-//MODDD - referred to in here, yes.
-EASY_CVAR_EXTERN(soundAttenuationAll)
-EASY_CVAR_EXTERN(soundAttenuationStuka)
-EASY_CVAR_EXTERN(soundVolumeAll)
-EASY_CVAR_EXTERN(soundVolumeStuka)
+
+class CBaseEntity;
+
+// oh shit that actually worked
+typedef struct GibInfo_s GibInfo_t;
 
 //Why wasn't this externed everywhere before? I'm asking you, past me. I'm not insane, I swear.
 extern int global_useSentenceSave;
@@ -63,8 +71,10 @@ extern float previousFrameTime;
 extern BOOL gamePaused;
 extern BOOL loadedGame;
 
+extern GibInfo_t aryGibInfo[aryGibInfo_MAX_SIZE];
 
-class CBaseEntity;
+
+
 
 
 
@@ -244,7 +254,6 @@ inline BOOL FStringNull(int iString)			{ return iString == iStringNull; }
 #define 	BLOOD_COLOR_GREEN	BLOOD_COLOR_YELLOW
 #define 	BLOOD_COLOR_BLACK	(BYTE)0 //black like oil
 
-
 typedef enum 
 {
 	MONSTERSTATE_NONE = 0,
@@ -268,6 +277,34 @@ typedef enum
 	TS_GOING_UP,
 	TS_GOING_DOWN
 	} TOGGLE_STATE;
+
+
+
+
+///////////////////////////////////////////////////////////////////////////
+//MODDD - thanks to Spirit of Half-Life 1.9!
+///////////////////////////////////////////////////////////////////////////
+
+//LRC- the values used for the new "global states" mechanism.
+typedef enum
+{
+	STATE_OFF = 0,	// disabled, inactive, invisible, closed, or stateless. Or non-alert monster.
+	STATE_TURN_ON,  // door opening, env_fade fading in, etc.
+	STATE_ON,		// enabled, active, visisble, or open. Or alert monster.
+	STATE_TURN_OFF, // door closing, monster dying (?).
+	STATE_IN_USE,	// player is in control (train/tank/barney/scientist).
+					// In_Use isn't very useful, I'll probably remove it.
+} STATE;
+
+extern char* GetStringForState(STATE state);
+
+///////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////
+
+
+
+
 
 extern const char* TOGGLE_STATE_STR[];
 const char* TOGGLE_STATE_STR_Safe(int argIndex);
@@ -370,11 +407,9 @@ extern void		UTIL_ShowMessageAll		( const char *pString );
 extern void		UTIL_ScreenFadeAll		( const Vector &color, float fadeTime, float holdTime, int alpha, int flags );
 extern void		UTIL_ScreenFade			( CBaseEntity *pEntity, const Vector &color, float fadeTime, float fadeHold, int alpha, int flags );
 
-typedef enum { ignore_monsters=1, dont_ignore_monsters=0, missile=2 } IGNORE_MONSTERS;
-typedef enum { ignore_glass=1, dont_ignore_glass=0 } IGNORE_GLASS;
 extern void		UTIL_TraceLine			(const Vector &vecStart, const Vector &vecEnd, IGNORE_MONSTERS igmon, edict_t *pentIgnore, TraceResult *ptr);
 extern void		UTIL_TraceLine			(const Vector &vecStart, const Vector &vecEnd, IGNORE_MONSTERS igmon, IGNORE_GLASS ignoreGlass, edict_t *pentIgnore, TraceResult *ptr);
-typedef enum { point_hull=0, human_hull=1, large_hull=2, head_hull=3 };
+
 extern void		UTIL_TraceHull			(const Vector &vecStart, const Vector &vecEnd, IGNORE_MONSTERS igmon, int hullNumber, edict_t *pentIgnore, TraceResult *ptr);
 extern TraceResult	UTIL_GetGlobalTrace		(void);
 extern void		UTIL_TraceModel			(const Vector &vecStart, const Vector &vecEnd, int hullNumber, edict_t *pentModel, TraceResult *ptr);
@@ -957,28 +992,6 @@ extern BOOL verifyModelExists(char* path);
 extern int attemptInterpretSpawnFlag(const char* pszSpawnFlags);
 extern int UTIL_BloodColorRedFilter(BOOL robotReplacementModelExists);
 
-///////////////////////////////////////////////////////////////////////////
-//MODDD - thanks to Spirit of Half-Life 1.9!
-///////////////////////////////////////////////////////////////////////////
-
-//LRC- the values used for the new "global states" mechanism.
-typedef enum
-{
-	STATE_OFF = 0,	// disabled, inactive, invisible, closed, or stateless. Or non-alert monster.
-	STATE_TURN_ON,  // door opening, env_fade fading in, etc.
-	STATE_ON,		// enabled, active, visisble, or open. Or alert monster.
-	STATE_TURN_OFF, // door closing, monster dying (?).
-	STATE_IN_USE,	// player is in control (train/tank/barney/scientist).
-					// In_Use isn't very useful, I'll probably remove it.
-} STATE;
-
-extern char* GetStringForState( STATE state );
-
-///////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////
-
-
 Vector projectionOntoPlane(Vector arg_vectOnto, Vector arg_planeNormal);
 
 
@@ -992,8 +1005,7 @@ extern void UTIL_playOrganicGibSound(entvars_t* pevSoundSource);
 extern void UTIL_playMetalGibSound(entvars_t* pevSoundSource);
 
 
-
-
+extern void updateTimedDamageDurations(void);
 extern void updateCVarRefs(entvars_t *pev);
 
 extern void turnWorldLightsOn();
@@ -1071,7 +1083,6 @@ typedef struct GibInfo_s{
 
 } GibInfo_t;
 
-extern GibInfo_t aryGibInfo[];
 
 
 

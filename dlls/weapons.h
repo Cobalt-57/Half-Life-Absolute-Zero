@@ -282,13 +282,17 @@ extern MULTIDAMAGE gMultiDamage;
 
 
 
-
-
 // Contact Grenade / Timed grenade / Satchel Charge
-class CGrenade : public CBaseMonster
+// MODDD - parent class changed from CBaseMonster to CBaseAnimating.
+// That was.  A lot of completely unused logic just to get 'm_flNextAttack', which
+// CBaseMonster itself completely ignored.  And that got replaced by
+// m_flBounceDamageCooldown.
+// Keep in mind, this won't be saved as m_flNextAttack was in CBaseMonster, but
+// do we really care?  m_flBounceDamageCooldown is at most a forced delay for stopping
+// the grenade from doing high-speed contact damge too quickly in a short amount of time.
+class CGrenade : public CBaseAnimating
 {
 public:
-
 	//MODDD - added for compatibility.
 	//Actually, not necessary.
 	//void Activate( void );
@@ -342,6 +346,12 @@ public:
 
 
 	BOOL m_fRegisteredSound;// whether or not this grenade has issued its DANGER sound to the world sound list yet.
+
+	//MODDD - NEW.  Since we're no longer inheriting from CBaseMonster, we lack m_flNextAttack.
+	// Although it was just being used as a simple time variable without any behavior just from
+	// being part of CBaseMonster anyway, may as well be replaced with a more fitting name here.
+	float m_flBounceDamageCooldown;
+
 };
 
 

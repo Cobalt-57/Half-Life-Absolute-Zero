@@ -593,7 +593,7 @@ void DoSpark(entvars_t *pev, const Vector &location, float arg_sparksMod )
 	Vector tmp = location + pev->size * 0.5;
 	//MODDD - send a bool to make this susceptible to "sparksEnvMulti".
 	//UTIL_Sparks( tmp );
-	UTIL_Sparks2( tmp, DEFAULT_SPARK_BALLS, arg_sparksMod );
+	UTIL_Sparks( tmp, DEFAULT_SPARK_BALLS, arg_sparksMod );
 
 	float flVolume = RANDOM_FLOAT ( 0.25 , 0.75 ) * 0.4;//random volume range
 	switch ( (int)(RANDOM_FLOAT(0,1) * 6) )

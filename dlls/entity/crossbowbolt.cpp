@@ -323,7 +323,7 @@ void CCrossbowBolt::BoltTouch( CBaseEntity *pOther )
 
 		if (UTIL_PointContents(pev->origin) != CONTENTS_WATER)
 		{
-			UTIL_Sparks2( pev->origin, DEFAULT_SPARK_BALLS, EASY_CVAR_GET(sparksPlayerCrossbowMulti) );
+			UTIL_Sparks( pev->origin, DEFAULT_SPARK_BALLS, EASY_CVAR_GET(sparksPlayerCrossbowMulti) );
 		}
 	}
 

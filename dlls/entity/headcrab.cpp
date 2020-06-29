@@ -290,7 +290,9 @@ void CHeadCrab :: HandleAnimEvent( MonsterEvent_t *pEvent )
 				EMIT_SOUND_FILTERED( edict(), CHAN_VOICE, pAttackSounds[iSound], GetSoundVolue(), ATTN_IDLE, 0, GetVoicePitch() );
 
 			pev->velocity = vecJumpDir;
-			m_flNextAttack = gpGlobals->time + 2;
+			
+			//MODDD - oh look, the variable we nor CBaseMonster ever uses.  Goodbye.
+			//m_flNextAttack = gpGlobals->time + 2;
 		}
 		break;
 

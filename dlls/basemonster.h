@@ -137,13 +137,13 @@
 
 
 // MoveToOrigin stuff
-#define 	MOVE_START_TURN_DIST	64 // when this far away from moveGoal, start turning to face next goal
-#define 	MOVE_STUCK_DIST			32 // if a monster can't step this far, it is stuck.
+#define MOVE_START_TURN_DIST	64 // when this far away from moveGoal, start turning to face next goal
+#define MOVE_STUCK_DIST			32 // if a monster can't step this far, it is stuck.
 
 
 // MoveToOrigin stuff
-#define 	MOVE_NORMAL				0// normal move in the direction monster is facing
-#define 	MOVE_STRAFE				1// moves in direction specified, no matter which way monster is facing
+#define MOVE_NORMAL				0// normal move in the direction monster is facing
+#define MOVE_STRAFE				1// moves in direction specified, no matter which way monster is facing
 
 
 
@@ -238,10 +238,6 @@ enum
 
 
 
-
-
-
-
 //MODDD - new. How fast this creature floats to the top. Divided by two each time it reaches the top and floats down until it is
 //        slow enough to be deemed stationary and kill the think method like most monsters do.
 //        This avoids annoying water wade sounds while it rapidly moves between water levels.
@@ -253,22 +249,9 @@ enum
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 
 //
 // generic Monster
@@ -475,7 +458,12 @@ public:
 
 	int				m_afCapability;// tells us what a monster can/can't do.
 
-	float			m_flNextAttack;		// cannot attack again until this time
+	//MODDD NOTE - interestingly enough, CBaseMonster methods barely, if ever, involve 
+	// m_flNextAttack at all.  It's dormant in most monsters.  Odd.
+	// In fact, REMOVED.  Classes that ever needed this (mostly, if not only CBasePlayer)
+	// should just include it themselves.
+	// Even the ISlave defined m_flNextAttack itself.
+	//float			m_flNextAttack;		// cannot attack again until this time
 
 	int				m_bitsDamageType;	// what types of damage has monster (player) taken
 	//MODDD - complimentary.
@@ -661,8 +649,6 @@ public:
 
 
 
-	
-
 	static float paralyzeDuration;
 	static float nervegasDuration;
 	static float poisonDuration;
@@ -671,7 +657,6 @@ public:
 	static float slowburnDuration;
 	static float slowfreezeDuration;
 	static float bleedingDuration;
-
 
 
 	//CBaseMonster();
@@ -685,8 +670,6 @@ public:
 	
 
 	////////////////////////////////////////////////////////////////////////////////////////////
-
-	
 
 	BYTE				m_rgbTimeBasedDamage[CDMG_TIMEBASED];
 
@@ -710,13 +693,18 @@ public:
 	SCRIPTSTATE			m_scriptState;		// internal cinematic state
 	CCineMonster		*m_pCine;
 
+	BOOL deadSetActivityBlock;
+
+
+
+
 	virtual int	Save( CSave &save ); 
 	virtual int	Restore( CRestore &restore );
 
 	//MODDD - new
 	void PostRestore(void);
 	
-	static	TYPEDESCRIPTION m_SaveData[];
+	static TYPEDESCRIPTION m_SaveData[];
 
 	void KeyValue( KeyValueData *pkvd );
 
@@ -736,12 +724,15 @@ public:
 
 	//MODDD - changed, made more strict. Any problems with this or scripted ent's? Check Nihilanth.
 	//virtual BOOL	IsAlive( void ) { return (pev->deadflag != DEAD_DEAD); }
-	virtual BOOL	IsAlive( void ) { return (pev->deadflag == DEAD_NO); }
+	virtual BOOL IsAlive( void ) { return (pev->deadflag == DEAD_NO); }
 
-	//MODDD NEW - alternate version for special cases. See notes on this in cbase.h .
-	virtual BOOL	IsAlive_FromAI( CBaseMonster* whoWantsToKnow ) { return (pev->deadflag == DEAD_NO || (pev->deadflag == DEAD_DYING && !recognizablyDead ) ) && pev->health > 0; }
+	//MODD - NEW.  Might want some things (chumtoads) to have the ability to fool other monsters into thinking they are dead and be ignored from 'getEnemy' searches.
+	// Also counts as dead a little ways into the DEAD_DYING animation.
+	// Why does this have a check for 'pev->health > 0' ?    Removed!  I don't see the point.
+	//virtual BOOL IsAlive_FromAI( CBaseMonster* whoWantsToKnow ) { return (pev->deadflag == DEAD_NO || (pev->deadflag == DEAD_DYING && pev->frame < (255*0.3) ) ) && pev->health > 0; }
+	virtual BOOL IsAlive_FromAI( CBaseMonster* whoWantsToKnow ) { return (pev->deadflag == DEAD_NO || (pev->deadflag == DEAD_DYING && pev->frame < (255*0.3) ) ); }
 
-	virtual BOOL	ShouldFadeOnDeath( void );
+	virtual BOOL ShouldFadeOnDeath( void );
 
 // Basic Monster AI functions
 	virtual float ChangeYaw ( int speed );
@@ -813,7 +804,6 @@ public:
 	virtual BOOL CheckMeleeAttack2( float flDot, float flDist );
 
 
-	
 
 	BOOL FHaveSchedule( void );
 	BOOL FScheduleValid ( void );
@@ -847,10 +837,6 @@ public:
 	virtual MONSTERSTATE GetIdealState ( void );
 	
 
-
-
-	BOOL deadSetActivityBlock;
-
 	//MODDD 
 	int getTaskNumber(void);
 	const char* getScheduleName(void);
@@ -882,9 +868,6 @@ public:
 	void SetSequenceByNameForceLoops(char* szSequence, BOOL safeReset, BOOL forceLoops);
 	void SetSequenceByIndexForceLoops(int iSequence, float flFramerateMulti, BOOL safeReset, BOOL forceLoops);
 	void SetSequenceByNameForceLoops(char* szSequence, float flFramerateMulti, BOOL safeReset, BOOL forceLoops);
-
-
-
 
 
 
@@ -945,7 +928,6 @@ public:
 	void AdvanceRoute ( float distance, float flInterval );
 	virtual BOOL FTriangulate ( const Vector &vecStart , const Vector &vecEnd, float flDist, CBaseEntity *pTargetEnt, Vector *pApex );
 
-	
 	//MODDD - made virtual.
 	virtual void MakeIdealYaw( Vector vecTarget );
 
@@ -959,8 +941,6 @@ public:
 	//        But calling BuildNearestRoute without those things is possible too for pure retail behavior.
 	virtual BOOL BuildNearestRoute ( Vector vecThreat, Vector vecViewOffset, float flMinDist, float flMaxDist );
 	virtual BOOL BuildNearestRoute ( Vector vecThreat, Vector vecViewOffset, float flMinDist, float flMaxDist, int iMoveFlag, CBaseEntity* pTarget );
-
-
 
 
 

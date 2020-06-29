@@ -210,9 +210,57 @@ float EV_HLDM_PlayTextureSound( int idx, pmtrace_t *ptr, float *vecSrc, float *v
 	}
 	else if ( entity == 0 )
 	{
+
+
+
+
+		//MODDD - aw yea, from the fix I made for negentropy.  Tight as hell.
+		////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		pmtrace_t tr;
+		gEngfuncs.pEventAPI->EV_SetSolidPlayers(idx - 1);
+
+		gEngfuncs.pEventAPI->EV_SetTraceHull(HULL_TYPE::large_hull);
+		gEngfuncs.pEventAPI->EV_PlayerTrace(vecSrc, vecEnd, PM_STUDIO_BOX, -1, &tr);
+
+		vec3_t vecSrc_trace;
+		vec3_t vecEnd_trace;
+
+		if (tr.fraction == 1.0) {
+			//WTF.
+			return 0.0;
+		}
+		else {
+			vec3_t thaDirr;
+
+			VectorSubtract_f(vecEnd, vecSrc, thaDirr);
+			float theLen = VectorNormalize(thaDirr);
+
+			//vecSrc_trace = tr.endpos - thaDirr * 3;
+			//vecEnd_trace = tr.endpos + thaDirr * 3;
+
+			vec3_t negaDirr;
+			vec3_t posaDirr;
+			VectorScale(thaDirr, -3, negaDirr);
+			VectorScale(thaDirr, 3, posaDirr);
+
+			VectorAdd_f(tr.endpos, negaDirr, vecSrc_trace);
+			VectorAdd_f(tr.endpos, posaDirr, vecEnd_trace);
+
+		}
+
+		// get texture from entity or world (world is ent(0))4
+		pTextureName = (char*)gEngfuncs.pEventAPI->EV_TraceTexture(ptr->ent, vecSrc_trace, vecEnd_trace);
+		////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+		/*
+		//MODDD - OLD WAY!
 		// get texture from entity or world (world is ent(0))
 		pTextureName = (char *)gEngfuncs.pEventAPI->EV_TraceTexture( ptr->ent, vecSrc, vecEnd );
-		
+		*/
+
+
 		if ( pTextureName )
 		{
 			strcpy( texname, pTextureName );
@@ -408,7 +456,7 @@ void EV_HLDM_DecalGunshot( pmtrace_t *pTrace, int iBulletType )
 		case BULLET_PLAYER_357:
 		default:
 			// smoke and decal
-			//MODDD NTOE - this call is important.
+			//MODDD NOTE - this call is important.
 			EV_HLDM_GunshotDecalTrace( pTrace, EV_HLDM_DamageDecal( pe ) );
 			break;
 		}
@@ -526,7 +574,10 @@ void EV_HLDM_FireBullets( int idx, float *forward, float *right, float *up, int 
 		// Now add in all of the players.
 		gEngfuncs.pEventAPI->EV_SetSolidPlayers ( idx - 1 );	
 
-		gEngfuncs.pEventAPI->EV_SetTraceHull( 2 );
+		//MODDD - how about??
+		gEngfuncs.pEventAPI->EV_SetTraceHull(HULL_TYPE::large_hull);
+		//gEngfuncs.pEventAPI->EV_SetTraceHull(HULL_TYPE::point_hull);
+		
 		gEngfuncs.pEventAPI->EV_PlayerTrace( vecSrc, vecEnd, PM_STUDIO_BOX, -1, &tr );
 
 
@@ -584,7 +635,7 @@ void EV_HLDM_FireBullets( int idx, float *forward, float *right, float *up, int 
 				EV_HLDM_PlayTextureSound( idx, &tr, vecSrc, vecEnd, iBulletType );
 				EV_HLDM_DecalGunshot( &tr, iBulletType );
 			
-					break;
+				break;
 			case BULLET_PLAYER_MP5:		
 				
 				//MODDD NOTE - if this was a tracer don't do the usual gunshot and texturesound? what? Does this matter anymore now that the server can call for tracers
@@ -608,7 +659,6 @@ void EV_HLDM_FireBullets( int idx, float *forward, float *right, float *up, int 
 				EV_HLDM_DecalGunshot( &tr, iBulletType );
 				
 				break;
-
 			}
 		}
 
@@ -1235,7 +1285,7 @@ void EV_FireGauss( event_args_t *args )
 		// Now add in all of the players.
 		gEngfuncs.pEventAPI->EV_SetSolidPlayers ( idx - 1 );	
 
-		gEngfuncs.pEventAPI->EV_SetTraceHull( 2 );
+		gEngfuncs.pEventAPI->EV_SetTraceHull(HULL_TYPE::large_hull);
 		gEngfuncs.pEventAPI->EV_PlayerTrace( vecSrc, vecDest, PM_STUDIO_BOX, -1, &tr );
 
 		gEngfuncs.pEventAPI->EV_PopPMStates();
@@ -1370,7 +1420,7 @@ void EV_FireGauss( event_args_t *args )
 					// Now add in all of the players.
 					gEngfuncs.pEventAPI->EV_SetSolidPlayers ( idx - 1 );
 
-					gEngfuncs.pEventAPI->EV_SetTraceHull( 2 );
+					gEngfuncs.pEventAPI->EV_SetTraceHull(HULL_TYPE::large_hull);
 					gEngfuncs.pEventAPI->EV_PlayerTrace( start, vecDest, PM_STUDIO_BOX, -1, &beam_tr );
 
 					if ( !beam_tr.allsolid )
@@ -2508,7 +2558,7 @@ void EV_FireCrossbow2( event_args_t *args )
 
 	// Now add in all of the players.
 	gEngfuncs.pEventAPI->EV_SetSolidPlayers ( idx - 1 );	
-	gEngfuncs.pEventAPI->EV_SetTraceHull( 2 );
+	gEngfuncs.pEventAPI->EV_SetTraceHull(HULL_TYPE::large_hull );
 	gEngfuncs.pEventAPI->EV_PlayerTrace( vecSrc, vecEnd, PM_STUDIO_BOX, -1, &tr );
 	
 	//We hit something
@@ -2739,7 +2789,7 @@ void EV_EgonFire( event_args_t *args )
 				// Now add in all of the players.
 				gEngfuncs.pEventAPI->EV_SetSolidPlayers ( idx - 1 );	
 
-				gEngfuncs.pEventAPI->EV_SetTraceHull( 2 );
+				gEngfuncs.pEventAPI->EV_SetTraceHull(HULL_TYPE::large_hull);
 				gEngfuncs.pEventAPI->EV_PlayerTrace( vecSrc, vecEnd, PM_STUDIO_BOX, -1, &tr );
 
 				gEngfuncs.pEventAPI->EV_PopPMStates();
@@ -2884,7 +2934,7 @@ void EV_TripmineFire( event_args_t *args )
 
 	// Now add in all of the players.
 	gEngfuncs.pEventAPI->EV_SetSolidPlayers ( idx - 1 );	
-	gEngfuncs.pEventAPI->EV_SetTraceHull( 2 );
+	gEngfuncs.pEventAPI->EV_SetTraceHull(HULL_TYPE::large_hull);
 	gEngfuncs.pEventAPI->EV_PlayerTrace( vecSrc, vecSrc + forward * 128, PM_NORMAL, -1, &tr );
 
 	//Hit something solid
@@ -2931,7 +2981,7 @@ void EV_SnarkFire( event_args_t *args )
 
 	// Now add in all of the players.
 	gEngfuncs.pEventAPI->EV_SetSolidPlayers ( idx - 1 );	
-	gEngfuncs.pEventAPI->EV_SetTraceHull( 2 );
+	gEngfuncs.pEventAPI->EV_SetTraceHull(HULL_TYPE::large_hull);
 	gEngfuncs.pEventAPI->EV_PlayerTrace( vecSrc + forward * 20, vecSrc + forward * 64, PM_NORMAL, -1, &tr );
 
 	//Find space to drop the thing.
@@ -2977,7 +3027,7 @@ void EV_ChumToadFire( event_args_t *args )
 
 	// Now add in all of the players.
 	gEngfuncs.pEventAPI->EV_SetSolidPlayers ( idx - 1 );	
-	gEngfuncs.pEventAPI->EV_SetTraceHull( 2 );
+	gEngfuncs.pEventAPI->EV_SetTraceHull(HULL_TYPE::large_hull);
 	gEngfuncs.pEventAPI->EV_PlayerTrace( vecSrc + forward * 20, vecSrc + forward * 64, PM_NORMAL, -1, &tr );
 
 	//Find space to drop the thing.

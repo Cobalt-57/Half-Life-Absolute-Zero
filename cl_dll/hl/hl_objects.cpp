@@ -58,7 +58,7 @@ void UpdateBeams ( void )
 	// Now add in all of the players.
 	gEngfuncs.pEventAPI->EV_SetSolidPlayers ( idx - 1 );	
 
-	gEngfuncs.pEventAPI->EV_SetTraceHull( 2 );
+	gEngfuncs.pEventAPI->EV_SetTraceHull( HULL_TYPE::large_hull );
 	gEngfuncs.pEventAPI->EV_PlayerTrace( vecSrc, vecEnd, PM_STUDIO_BOX, -1, &tr );
 
 	gEngfuncs.pEventAPI->EV_PopPMStates();

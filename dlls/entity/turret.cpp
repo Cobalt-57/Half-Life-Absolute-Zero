@@ -1009,7 +1009,7 @@ void CBaseTurret ::	TurretDeath( void )
 			vecSrc = vecSrc + Vector( 0, 0, RANDOM_FLOAT( pev->absmin.z, pev->origin.z ) );
 
 		//UTIL_Sparks( vecSrc );
-		UTIL_Sparks2( vecSrc, DEFAULT_SPARK_BALLS, EASY_CVAR_GET(sparksTurretDeathMulti) );
+		UTIL_Sparks( vecSrc, DEFAULT_SPARK_BALLS, EASY_CVAR_GET(sparksTurretDeathMulti) );
 
 	}
 
@@ -1645,7 +1645,7 @@ void CSentry ::	SentryDeath( void )
 	if (pev->dmgtime + RANDOM_FLOAT( 0, 8 ) > gpGlobals->time)
 	{
 		//UTIL_Sparks(...)
-		UTIL_Sparks2( vecSrc, DEFAULT_SPARK_BALLS, EASY_CVAR_GET(sparksTurretDeathMulti) );
+		UTIL_Sparks( vecSrc, DEFAULT_SPARK_BALLS, EASY_CVAR_GET(sparksTurretDeathMulti) );
 	}
 
 	if (m_fSequenceFinished && pev->dmgtime + 5 < gpGlobals->time)

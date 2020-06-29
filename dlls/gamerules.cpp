@@ -33,6 +33,10 @@ extern DLL_GLOBAL BOOL	g_fGameOver;
 extern int gmsgDeathMsg;	// client dll messages
 extern int gmsgMOTD;
 
+// util.cpp
+extern float cvar_skill_mem;
+extern BOOL queueSkillUpdate;
+
 int g_teamplay = 0;
 
 //=========================================================
@@ -153,8 +157,13 @@ void CGameRules::RefreshSkillData ( void )
 {
 	int iSkill;
 
-	iSkill = (int)CVAR_GET_FLOAT("skill");
-	g_iSkillLevel = iSkill;
+
+	// set before the bound check below, don't want to keep re-calling RefreshSkillData
+	// just because some bad skill value (9, etc.) was used.
+	cvar_skill_mem = (int)CVAR_GET_FLOAT("skill");
+
+	iSkill = (int)cvar_skill_mem;
+	queueSkillUpdate = FALSE;
 
 	if ( iSkill < 1 )
 	{
@@ -165,7 +174,13 @@ void CGameRules::RefreshSkillData ( void )
 		iSkill = 3; 
 	}
 
-	gSkillData.iSkillLevel = iSkill;
+	//MODDD - and this wasn't below the iSkill bounds checking because...?
+	g_iSkillLevel = iSkill;
+	// use the new g_iSkill to pick the damage duration values to be used.
+	updateTimedDamageDurations();
+
+	//MODDD - removed.
+	//gSkillData.iSkillLevel = iSkill;
 
 	ALERT ( at_console, "\nGAME SKILL LEVEL:%d\n",iSkill );
 

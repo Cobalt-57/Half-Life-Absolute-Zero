@@ -46,7 +46,7 @@ EASY_CVAR_EXTERN_CLIENTONLY(cl_hornetspiral)
 
 
 #ifdef CLIENT_DLL
-	//from cl_dll/ev_hldm.cpp, needed for clientside UTIL_Sparks2 to call.
+	//from cl_dll/ev_hldm.cpp, needed for clientside UTIL_Sparks to call.
 
 	//extern cl_enginefunc_t gEngfuncs;
 #else
@@ -1438,31 +1438,31 @@ BOOL IsMultiplayer(void){
 
 void UTIL_Sparks(const Vector& position){
 	//This starting method from the SDK in particular should no longer be called, having been replaced
-	//by UTIL_Sparks2 (all calls to UTIL_Sparks in this project refer to UTIL_Sparks2 instead).
+	//by UTIL_Sparks (all calls to UTIL_Sparks in this project refer to UTIL_Sparks instead).
 
 	//If this is somehow called again, please say so.
 	//easyPrintLine("!!!!!!!!! SPARK CREATION UNSOURCED 2!!!!!!!!!");
-	UTIL_Sparks2(position, DEFAULT_SPARK_BALLS, EASY_CVAR_GET(sparksEnvMulti));
+	UTIL_Sparks(position, DEFAULT_SPARK_BALLS, EASY_CVAR_GET(sparksEnvMulti));
 
 }//END OF Util_Sparks(...)
 
 
 /*
 //MODDD - can now accept a "ballsToSpawn" var, generally for spawning less to prevent crashes if a CVar is set.
-void UTIL_Sparks2( const Vector &position){
+void UTIL_Sparks( const Vector &position){
 	//but, imply "DEFAULT_SPARK_BALLS" if unspecified.  (See const.h)
-	UTIL_Sparks2( position, DEFAULT_SPARK_BALLS, 1 );
+	UTIL_Sparks( position, DEFAULT_SPARK_BALLS, 1 );
 
 }
 
-void UTIL_Sparks2( const Vector &position, int arg_ballsToSpawn ){
-	UTIL_Sparks2(position, arg_ballsToSpawn, 1);
+void UTIL_Sparks( const Vector &position, int arg_ballsToSpawn ){
+	UTIL_Sparks(position, arg_ballsToSpawn, 1);
 
 }
 */
 
 
-void UTIL_Sparks2(const Vector& position, int arg_ballsToSpawn, float arg_extraSparkMulti){
+void UTIL_Sparks(const Vector& position, int arg_ballsToSpawn, float arg_extraSparkMulti){
 
 	if (EASY_CVAR_GET(useAlphaSparks) == 0) {
 		//use retail then.
@@ -1613,7 +1613,7 @@ void UTIL_Sparks2(const Vector& position, int arg_ballsToSpawn, float arg_extraS
 
 	*/
 
-}//END OF UTIL_Sparks2
+}//END OF UTIL_Sparks
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////

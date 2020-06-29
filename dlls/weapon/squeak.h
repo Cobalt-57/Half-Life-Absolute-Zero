@@ -106,7 +106,10 @@ public:
 
 
 #ifndef CLIENT_DLL
-class CSqueakGrenade : public CGrenade
+// Used to have a parent of "CGrenade", now CBaseMonster.
+// Turns out this offered no relied-on features that CBaseMonster didn't already have.
+// I got nothing on that one.
+class CSqueakGrenade : public CBaseMonster
 {
 
 	//MODDD - why no public?
@@ -125,7 +128,7 @@ public:
 
 	GENERATE_KILLED_PROTOTYPE
 
-		BOOL isOrganic(void);
+	BOOL isOrganic(void);
 
 	float massInfluence(void);
 	int GetProjectileType(void);
@@ -138,7 +141,7 @@ public:
 
 	GENERATE_GIBMONSTER_PROTOTYPE
 
-		virtual int	Save(CSave& save);
+	virtual int	Save(CSave& save);
 	virtual int	Restore(CRestore& restore);
 
 	static	TYPEDESCRIPTION m_SaveData[];
@@ -153,6 +156,11 @@ public:
 	Vector m_posPrev;
 	EHANDLE m_hOwner;
 	int  m_iMyClass;
+	//MODDD - NEW, since CBaseMonster lost m_flNextAttack.
+	// (not that this inherits from there anymore either).
+	// Not bothering with save/restore, as m_flNextAttack was saved, since this is such a 
+	// negligible amount of time to keep track of.
+	float m_flNextAttack;
 };
 #endif
 

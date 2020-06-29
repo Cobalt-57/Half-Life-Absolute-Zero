@@ -379,6 +379,15 @@ typedef	enum
 } Bullet;
 
 
+// And why were these only in dlls/util.h??
+// ev_hldm.cpp had a few places that require a 'hull' choice and had to use a literal number
+// instead.  UGH!!
+typedef enum { ignore_monsters = 1, dont_ignore_monsters = 0, missile = 2 } IGNORE_MONSTERS;
+typedef enum { ignore_glass = 1, dont_ignore_glass = 0 } IGNORE_GLASS;
+//MODDD - added the name "HULL_TYPE" to this.  why not.
+typedef enum { point_hull = 0, human_hull = 1, large_hull = 2, head_hull = 3 } HULL_TYPE;
+
+
 
 
 
@@ -485,12 +494,9 @@ extern BOOL IsMultiplayer(void);
 // Yes, these can now be called from server or clientside.
 // However, it is still almost always called serverside, as it used to be.
 // Calling this from clientside just cuts out the middleman, always ended up there anyway.
+// And changed up a bit, can be told how many glowballs to spawn.
 extern void UTIL_Sparks(const Vector& position);
-//MODDD - additional versions.
-//extern void UTIL_Sparks( const Vector &position, int arg_ballsToSpawn );
-//extern void UTIL_Sparks2( const Vector &position );
-//extern void UTIL_Sparks2( const Vector &position, int arg_ballsToSpawn );
-extern void UTIL_Sparks2(const Vector& position, int arg_ballsToSpawn, float arg_extraSparkMulti);
+extern void UTIL_Sparks(const Vector& position, int arg_ballsToSpawn, float arg_extraSparkMulti);
 
 
 

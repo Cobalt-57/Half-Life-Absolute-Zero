@@ -304,6 +304,11 @@ public:
 
 	char m_szTeamName[TEAM_NAME_LENGTH];
 
+	//MODDD - must be defined here, since this got removed from CBaseMonster.
+	// Didn't make sense to be there, CBaseMonster did absolutely nothing with it and
+	// only few subclasses (like CBasePlayer) ever did.
+	float m_flNextAttack;
+
 
 
 	//MODDD - some setter methods.
@@ -356,7 +361,9 @@ public:
 
 	
 	GENERATE_KILLED_PROTOTYPE_VIRTUAL
-	
+
+	void onDelete(void);
+
 	virtual Vector BodyTarget( const Vector &posSrc ) { return Center( ) + pev->view_ofs * RANDOM_FLOAT( 0.5, 1.1 ); };		// position to shoot at
 	
 	
@@ -779,7 +786,6 @@ public:
 	//NEW METHODS for organization.
 	void _commonReset(void);
 	void commonReset(void);
-	void updateTimedDamageDurations(int difficultyIndex);
 
 	//MODDD - created to differentiate between "m_fLongJump" (always on now) and having ever picked
 	//up the long jump item itself, if needed (mostly to satisfy the hazard course).

@@ -937,6 +937,19 @@ void CBasePlayer::SelectLastItem(void)
 	m_pActiveItem->Deploy( );
 }
 
+
+
+
+
+
+
+
+//MODDD NOTE.
+// And If wanted, remove these from hl_baseentity.cpp and implement them here.
+//GENERATE_DEADTAKEDAMAGE_IMPLEMENTATION_DUMMY_CLIENT(CBasePlayer)
+//GENERATE_GIBMONSTER_IMPLEMENTATION_DUMMY_CLIENT(CBasePlayer)
+
+
 /*
 =====================
 CBasePlayer::Killed
@@ -952,6 +965,15 @@ GENERATE_KILLED_IMPLEMENTATION(CBasePlayer)
 	g_irunninggausspred = false;
 
 }
+
+//MODD - NEW.
+void CBasePlayer::onDelete(void) {
+	// ???  anything we want to do here?
+}
+
+
+
+
 
 /*
 =====================

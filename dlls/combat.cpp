@@ -42,55 +42,45 @@
 #include "scripted.h"
 #include "util_debugdraw.h"
 
-EASY_CVAR_EXTERN(cheat_iwantguts)
-
-extern float globalPSEUDO_canApplyGermanCensorship;
-extern BOOL globalPSEUDO_germanModel_hgibFound;
-
-
-extern DLL_GLOBAL Vector		g_vecAttackDir;
-extern DLL_GLOBAL int		g_iSkillLevel;
-
-//extern entvars_t *g_pevLastInflictor;
-
-
-extern GibInfo_t aryGibInfo[];
-
-//MODDD - hidden cheat.  Not a CVar, so that it can't be seen by console's autocomplete
-float cheat_barnacleEatsEverything = 0;
-
-
-
-
 EASY_CVAR_EXTERN(germanCensorship)
 EASY_CVAR_EXTERN(muteRicochetSound)
 EASY_CVAR_EXTERN(bulletholeAlertRange)
 EASY_CVAR_EXTERN(nothingHurts)
-
 EASY_CVAR_EXTERN(timedDamageAffectsMonsters)
 EASY_CVAR_EXTERN(bulletHoleAlertPrintout)
 EASY_CVAR_EXTERN(bulletholeAlertStukaOnly)
-
 EASY_CVAR_EXTERN(playerBulletHitEffectForceServer)
-
 EASY_CVAR_EXTERN(baseEntityDamagePushNormalMulti)
 EASY_CVAR_EXTERN(baseEntityDamagePushVerticalBoost)
 EASY_CVAR_EXTERN(baseEntityDamagePushVerticalMulti)
 EASY_CVAR_EXTERN(baseEntityDamagePushVerticalMinimum)
-
 EASY_CVAR_EXTERN(RadiusDamageDrawDebug)
 EASY_CVAR_EXTERN(AlienRadiationImmunity)
-
 EASY_CVAR_EXTERN(germanRobotGibs)
 EASY_CVAR_EXTERN(germanRobotBleedsOil)
 EASY_CVAR_EXTERN(germanRobotDamageDecal)
 EASY_CVAR_EXTERN(germanRobotGibsDecal)
 EASY_CVAR_EXTERN(monsterFadeOutRate)
-
 EASY_CVAR_EXTERN(playerWeaponTracerMode)
 EASY_CVAR_EXTERN(monsterWeaponTracerMode)
-
 EASY_CVAR_EXTERN(decalTracerExclusivity)
+EASY_CVAR_EXTERN(cheat_iwantguts)
+
+
+
+extern float globalPSEUDO_canApplyGermanCensorship;
+extern BOOL globalPSEUDO_germanModel_hgibFound;
+
+
+extern DLL_GLOBAL Vector g_vecAttackDir;
+extern DLL_GLOBAL int g_iSkillLevel;
+
+//extern entvars_t *g_pevLastInflictor;
+
+
+//MODDD - hidden cheat.  Not a CVar, so that it can't be seen by console's autocomplete
+float cheat_barnacleEatsEverything = 0;
+
 
 
 
@@ -101,52 +91,14 @@ void EstablishGutLoverGib(CGib* pGib, entvars_t* pevVictim, entvars_t* pevPlayer
 void EstablishGutLoverGib(CGib* pGib, entvars_t* pevVictim, const Vector gibSpawnOrigin, entvars_t* pevPlayer, BOOL isHead);
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 void EstablishGutLoverGib(CGib* pGib, entvars_t* pevVictim, entvars_t* pevPlayer, BOOL isHead){
 	if(!pevVictim)return;
 	EstablishGutLoverGib(pGib, pevVictim, pevVictim->origin + pevVictim->view_ofs, pevPlayer, isHead);
 }
 
-
 void EstablishGutLoverGib(CGib* pGib, entvars_t* pevVictim, const Vector gibSpawnOrigin, entvars_t* pevPlayer, BOOL isHead){
-	
-
 	//can't do this without the victim.
 	if(!pevVictim)return;
-
 
 	if(isHead == TRUE){
 		pGib->pev->origin = gibSpawnOrigin;
@@ -159,15 +111,12 @@ void EstablishGutLoverGib(CGib* pGib, entvars_t* pevVictim, const Vector gibSpaw
 
 	}
 
-
 	Vector dest;
-
 	if(isHead == TRUE){
 		dest = pevPlayer->origin + pevPlayer->view_ofs + Vector(RANDOM_FLOAT(-5, 5), RANDOM_FLOAT(-5, 5), RANDOM_FLOAT(-5, 1));
 	}else{
 		dest = pevPlayer->origin + pevPlayer->view_ofs + Vector(RANDOM_FLOAT(-36, 36), RANDOM_FLOAT(-36, 36), RANDOM_FLOAT(-9, 2));
 	}
-
 
 	Vector distVector = ( dest ) - pGib->pev->origin;
 
@@ -200,13 +149,6 @@ void EstablishGutLoverGib(CGib* pGib, entvars_t* pevVictim, const Vector gibSpaw
 	}
 
 
-	//float velocityXComp = cos(ang) * velocity;
-	//float velocityYComp = sin(ang) * velocity;
-
-	//Vector velocityFloorwise = velocity * ;
-
-	//110 / 250
-
 	float timeToReachDest = distFloorwise / velocitySpeed;
 
 	//grav?   sv_grav?
@@ -233,10 +175,6 @@ void EstablishGutLoverGib(CGib* pGib, entvars_t* pevVictim, const Vector gibSpaw
 
 
 
-
-
-
-
 // HACKHACK -- The gib velocity equations don't work
 void CGib :: LimitVelocity( void )
 {
@@ -247,7 +185,6 @@ void CGib :: LimitVelocity( void )
 	if ( length > 1500.0 )
 		pev->velocity = pev->velocity.Normalize() * 1500;		// This should really be sv_maxvelocity * 0.75 or something
 }
-
 
 void CGib :: SpawnStickyGibs( entvars_t *pevVictim, Vector vecOrigin, int cGibs ){
 	CGib::SpawnStickyGibs(pevVictim, vecOrigin, cGibs, TRUE);
@@ -272,20 +209,7 @@ void CGib :: SpawnStickyGibs( entvars_t *pevVictim, Vector vecOrigin, int cGibs,
 		pGib->Spawn( "models/stickygib.mdl", spawnsDecal );
 		pGib->pev->body = RANDOM_LONG(0,2);
 
-		if ( pevVictim )
-		{
-			
-			/*
-			pGib->pev->origin.x = pevVictim->absmin.x + pevVictim->size.x * (RANDOM_FLOAT ( 0 , 1 ) );
-			pGib->pev->origin.y = pevVictim->absmin.y + pevVictim->size.y * (RANDOM_FLOAT ( 0 , 1 ) );
-			pGib->pev->origin.z = pevVictim->absmin.z + pevVictim->size.z * (RANDOM_FLOAT ( 0 , 1 ) );
-			*/
-
-			/*
-			pGib->pev->origin.x = pevVictim->absmin.x + pevVictim->size.x * (0.5 );
-			pGib->pev->origin.y = pevVictim->absmin.y + pevVictim->size.y * (0.5 );
-			pGib->pev->origin.z = pevVictim->absmin.z + pevVictim->size.z * (0.5 ) + 1;	// absmin.z is in the floor because the engine subtracts 1 to enlarge the box
-			*/
+		if ( pevVictim ){
 
 			pGib->pev->origin.x = vecOrigin.x;
 			pGib->pev->origin.y = vecOrigin.y;
@@ -298,34 +222,9 @@ void CGib :: SpawnStickyGibs( entvars_t *pevVictim, Vector vecOrigin, int cGibs,
 				// 5% chance head will be thrown at player's face.
 				entvars_t	*pevPlayer;
 				pevPlayer = VARS( pentPlayer );
-				/*
-				pGib->pev->velocity = ( ( pevPlayer->origin + pevPlayer->view_ofs ) - pGib->pev->origin ).Normalize() ;  //* 300
 				
-				// mix in some noise
-				pGib->pev->velocity.x += RANDOM_FLOAT ( -0.09, 0.09 );
-				pGib->pev->velocity.y += RANDOM_FLOAT ( -0.09, 0.09 );
-				pGib->pev->velocity.z += RANDOM_FLOAT ( -0.09, 0.09 );
-				
-				pGib->pev->velocity = pGib->pev->velocity * RANDOM_FLOAT ( 300, 320 );
-
-				//cheat the Z pos a bit..
-				//pGib->pev->origin.z = pevVictim->absmin.z + pevVictim->size.z * (RANDOM_FLOAT ( 0.4 , 0.8 ) ) + 1;
-				pGib->pev->origin.z += 20;
-
-				pGib->pev->velocity.z += 100;
-
-				//this overrides the usual "velocity" from above the new if-statement (cheat_iwantguts), to instead be towards the player camera.
-				*/
-
-
-
 				EstablishGutLoverGib(pGib, pevVictim, pevPlayer, FALSE);
-
-				//pGib->pev->solid = SOLID_BBOX;
-				//UTIL_SetSize ( pGib->pev, Vector( 0 , 0 , 0 ), Vector ( 0, 0, 0 ) );
-
-
-
+				
 			}else{
 				//how it usually goes.
 				pGib->pev->origin.x = vecOrigin.x + RANDOM_FLOAT( -3, 3 );
@@ -343,24 +242,6 @@ void CGib :: SpawnStickyGibs( entvars_t *pevVictim, Vector vecOrigin, int cGibs,
 
 				pGib->pev->velocity = pGib->pev->velocity * 900;
 			}
-
-			/*
-			if ( EASY_CVAR_GET(cheat_iwantguts) )
-			{
-				edict_t		*pentPlayer = FIND_CLIENT_IN_PVS( pGib->edict() );
-				if(pentPlayer != NULL){
-					// 5% chance head will be thrown at player's face.
-					entvars_t	*pevPlayer;
-
-					pevPlayer = VARS( pentPlayer );
-					pGib->pev->velocity = ( ( pevPlayer->origin + pevPlayer->view_ofs ) - pGib->pev->origin ).Normalize() * 300;
-					pGib->pev->velocity.z += 100;
-
-					//this overrides the usual "velocity" from above the new if-statement (cheat_iwantguts), to instead be towards the player camera.
-				}
-			}
-			*/
-
 
 			pGib->pev->avelocity.x = RANDOM_FLOAT ( 250, 400 );
 			pGib->pev->avelocity.y = RANDOM_FLOAT ( 250, 400 );
@@ -396,10 +277,6 @@ void CGib :: SpawnStickyGibs( entvars_t *pevVictim, Vector vecOrigin, int cGibs,
 }
 
 
-
-
-
-
 void CGib :: SpawnHeadGib( entvars_t *pevVictim )
 {
 	if(!pevVictim)return;
@@ -416,13 +293,10 @@ void CGib::SpawnHeadGib( entvars_t *pevVictim, const Vector gibSpawnOrigin )
 }
 void CGib::SpawnHeadGib( entvars_t *pevVictim, const Vector gibSpawnOrigin, BOOL spawnDecals )
 {
-
 	//MODDD - is this check ok?  Otherwise the spawned head gib doesn't get a location.
 	if(!pevVictim)return;
 
-
 	CGib *pGib = GetClassPtr( (CGib *)NULL );
-
 	
 	//if ( g_Language == LANGUAGE_GERMAN )
 	if( EASY_CVAR_GET(germanCensorship) == FALSE ){
@@ -465,15 +339,13 @@ void CGib::SpawnHeadGib( entvars_t *pevVictim, const Vector gibSpawnOrigin, BOOL
 			pGib->pev->velocity = Vector (RANDOM_FLOAT(-100,100), RANDOM_FLOAT(-100,100), RANDOM_FLOAT(200,300));
 		}
 
-
 		pGib->pev->avelocity.x = RANDOM_FLOAT ( 100, 200 );
 		pGib->pev->avelocity.y = RANDOM_FLOAT ( 100, 300 );
 
 		// copy owner's blood color
 		pGib->m_bloodColor = (CBaseEntity::Instance(pevVictim))->BloodColor();
 	
-
-		//DONT THROW OFF THE EMPEROR'S GROVE
+		// DONT THROW OFF THE EMPEROR'S GROVE
 		if(EASY_CVAR_GET(cheat_iwantguts) < 1){
 			if ( pevVictim->health > -50)
 			{
@@ -494,121 +366,20 @@ void CGib::SpawnHeadGib( entvars_t *pevVictim, const Vector gibSpawnOrigin, BOOL
 
 
 
-
-
-
 void CGib::SpawnRandomGibs(entvars_t* pevVictim, int cGibs, int argSpawnGibID){
 	//re-route to below to determine from the usual factors (violence CVar, is human, etc.)
 	CGib::SpawnRandomGibs(pevVictim, cGibs, argSpawnGibID, TRUE);
-
 }
 
 void CGib::SpawnRandomGibs(entvars_t* pevVictim, int cGibs, int argSpawnGibID, BOOL spawnDecals){
-	
-	
-	/*
-		//if ( g_Language == LANGUAGE_GERMAN )
-		if(EASY_CVAR_GET(germanCensorship) == FALSE  ){
-			if ( human )
-			{
-				// human pieces
-				pGib->Spawn( "models/hgibs.mdl", spawnDecals );
-				pGib->pev->body = RANDOM_LONG(1,HUMAN_GIB_COUNT-1);// start at one to avoid throwing random amounts of skulls (0th gib)
-			}
-			else
-			{
-				// aliens
-				pGib->Spawn( "models/agibs.mdl", spawnDecals );
-				pGib->pev->body = RANDOM_LONG(0,ALIEN_GIB_COUNT-1);
-			}
-		}else if( getGermanModelsAllowed() && globalPSEUDO_germanModel_hgibFound){   //if(EASY_CVAR_GET(tryLoadGermanGibs) == 1){
-			//german censorship replaces human gibs with gears.
-			if ( human )
-			{
-				//pGib->Spawn( "models/germangibs.mdl" );
-				pGib->Spawn( GERMAN_GIB_PATH, spawnDecals );
-				//pGib->pev->body = RANDOM_LONG(0,GERMAN_GIB_COUNT-1);
-				//NO, MORE FLEXIBLE (note that "getNumberOfBodyParts returns an inclusive maximum):
-				pGib->pev->body = RANDOM_LONG(0,pGib->getNumberOfBodyParts() );
-			}
-			else
-			{
-				// aliens
-				pGib->Spawn( "models/agibs.mdl", spawnDecals );
-				pGib->pev->body = RANDOM_LONG(0,ALIEN_GIB_COUNT-1);
-			}
-
-		}else{
-			//give up, no gib.
-			return;
-		}
-	*/
-
-
-
-	/*
-	if ( argSpawnGibID )
-	{
-		// human pieces
-		SpawnRandomGibs(pevVictim, cGibs, argSpawnGibID, spawnDecals, aryGibInfo[GIB_HUMAN_ID]);// start at one to avoid throwing random amounts of skulls (0th gib)
-	}
-	else
-	{
-		// aliens
-		SpawnRandomGibs(pevVictim, cGibs, argSpawnGibID, spawnDecals, aryGibInfo[GIB_ALIEN_ID]);// start at one to avoid throwing random amounts of skulls (0th gib)
-	}
-	*/
-
-
 	if(argSpawnGibID == GIB_DUMMY_ID){
 		//This is the dummy ID. Don't do anything, it is empty and signifies blocking a GIB call.
 		return;
 	}
 
-
 	//SpawnRandomGibs(pevVictim, cGibs, aryGibInfo[argSpawnGibID], spawnDecals);
 	const GibInfo_t& gibInfoChoice = aryGibInfo[argSpawnGibID];
 	CGib::SpawnRandomGibs(pevVictim, cGibs, gibInfoChoice.modelPath, gibInfoChoice.bodyMin, gibInfoChoice.bodyMax, spawnDecals, gibInfoChoice.bloodColor);
-
-
-
-
-
-
-	/*
-
-	//if ( g_Language == LANGUAGE_GERMAN )
-	if(EASY_CVAR_GET(germanCensorship) == FALSE  ){
-		if ( human )
-		{
-			// human pieces
-			SpawnRandomGibs(pevVictim, cGibs, human, spawnDecals, aryGibInfo[GIB_HUMAN_ID]);// start at one to avoid throwing random amounts of skulls (0th gib)
-		}
-		else
-		{
-			// aliens
-			SpawnRandomGibs(pevVictim, cGibs, human, spawnDecals, aryGibInfo[GIB_ALIEN_ID]);// start at one to avoid throwing random amounts of skulls (0th gib)
-		}
-	}else{   //if(EASY_CVAR_GET(tryLoadGermanGibs) == 1){
-		//german censorship replaces human gibs with gears.
-		if ( human)
-		{
-
-			if(getGermanModelsAllowed() && EASY_CVAR_GET(germanRobotGibs)==1 && globalPSEUDO_germanModel_hgibFound){
-				// gears instead, they are now robots.
-				SpawnRandomGibs(pevVictim, cGibs, human, spawnDecals, aryGibInfo[GIB_GERMAN_ID]);
-			}
-		}
-		else
-		{
-			// aliens
-			SpawnRandomGibs(pevVictim, cGibs, human, spawnDecals, aryGibInfo[GIB_ALIEN_ID]);
-		}
-
-	}
-	*/
-
-
 }//END OF SpawnRandomGibs
 
 void CGib::SpawnRandomGibs(entvars_t* pevVictim, int cGibs, int argSpawnGibID, BOOL spawnDecals, int argBloodColor){
@@ -646,11 +417,7 @@ void CGib::SpawnRandomGibs(entvars_t* pevVictim, int cGibs, const char* argGibPa
 }
 
 void CGib::SpawnRandomGibs(entvars_t* pevVictim, int cGibs, const char* argGibPath, int gibBodyMin, int gibBodyMax, BOOL spawnDecals, int argBloodColor){
-	
-
-
 	int cSplat;
-
 
 	for ( cSplat = 0 ; cSplat < cGibs ; cSplat++ )
 	{
@@ -660,10 +427,8 @@ void CGib::SpawnRandomGibs(entvars_t* pevVictim, int cGibs, const char* argGibPa
 		pGib->pev->body = RANDOM_LONG(gibBodyMin,gibBodyMax);// start at one to avoid throwing random amounts of skulls (0th gib)
 			
 
-
 		if ( pevVictim )
 		{
-
 			
 			pGib->pev->origin.x = pevVictim->absmin.x + pevVictim->size.x * (0.5 );
 			pGib->pev->origin.y = pevVictim->absmin.y + pevVictim->size.y * (0.5 );
@@ -749,21 +514,14 @@ void CGib::SpawnRandomGibs(entvars_t* pevVictim, int cGibs, const char* argGibPa
 }//END OF SpawnRandomGibs
 
 
-
 float CGib::massInfluence(void){
 	return 0.11f;
 }//END OF massInfluence
 
 
 
-
 GENERATE_TRACEATTACK_IMPLEMENTATION_DUMMY(CGib)
 GENERATE_TAKEDAMAGE_IMPLEMENTATION_DUMMY(CGib)
-
-
-
-
-
 
 
 
@@ -814,13 +572,6 @@ void CBaseMonster::FadeMonster( void )
 }
 
 
-//=========================================================
-// GibMonster - create some gore and get rid of a monster's
-// model.
-//=========================================================
-
-
-
 
 BOOL CBaseMonster::DetermineGibHeadBlock(void){
 	//by default, there isn't a case to block head generation. This does not guarantee a head gib is generated for all monsters.
@@ -831,16 +582,7 @@ BOOL CBaseMonster::DetermineGibHeadBlock(void){
 
 
 
-
-
-
-
-
 //MODDD - merging CallGibMonster and GibMonster into one GibMonster method. No need for these to be separate.
-
-
-
-
 
 
 //Same as "CallGibMonster", now GibMonster, but always just instantly deletes and does some things out of courtesy... if this even matters.
@@ -859,13 +601,17 @@ void CBaseMonster::cleanDelete(){
 
 
 
-
-//This is some basic script for monsters to gib. It assumes any monsters that fall under the HasHumanGibs() check will spawn blood red gibs,
-//classes fall under the HasAlienGibs() check will spawn yellow gibs.
-//This also checks for robot-replaced monsters in german censorship (still fall under the HasHumanGibs() check) and lets them spawn
-//metal, gear, etc. gibs if allowed instead.
-//In a particular monster, override GibMonster to give it its own specific gibbing behavior.
-//parameter: BOOL fGibSpawnsDecal
+//=========================================================
+// GibMonster - create some gore and get rid of a monster's
+// model.
+//=========================================================
+//MODDD - new description.
+// This is some basic script for monsters to gib. It assumes any monsters that fall under the HasHumanGibs() check will spawn blood red gibs,
+// classes fall under the HasAlienGibs() check will spawn yellow gibs.
+// This also checks for robot-replaced monsters in german censorship (still fall under the HasHumanGibs() check) and lets them spawn
+// metal, gear, etc. gibs if allowed instead.
+// In a particular monster, override GibMonster to give it its own specific gibbing behavior.
+// parameter: BOOL fGibSpawnsDecal
 GENERATE_GIBMONSTER_IMPLEMENTATION(CBaseMonster)
 {
 
@@ -877,13 +623,8 @@ GENERATE_GIBMONSTER_IMPLEMENTATION(CBaseMonster)
 }//END OF GibMonster
 
 
-
 //parameter: BOOL fGibSpawnsDecal
 GENERATE_GIBMONSTERGIB_IMPLEMENTATION(CBaseMonster){
-
-
-	
-
 	TraceResult	tr;
 	BOOL gibbed = FALSE;
 	
@@ -931,9 +672,6 @@ GENERATE_GIBMONSTERGIB_IMPLEMENTATION(CBaseMonster){
 				gibbed = TRUE;
 			}
 		}
-		
-
-
 
 	}
 	else if ( HasAlienGibs() )
@@ -974,8 +712,6 @@ GENERATE_GIBMONSTERGIB_IMPLEMENTATION(CBaseMonster){
 //parameter: BOOL fGibbed
 GENERATE_GIBMONSTERSOUND_IMPLEMENTATION(CBaseMonster){
 
-	
-	
 	//MODDD - only play this sound if organic. This excludes german robot replacements.
 	if( isOrganic() ){
 
@@ -991,26 +727,18 @@ GENERATE_GIBMONSTERSOUND_IMPLEMENTATION(CBaseMonster){
 		UTIL_playMetalGibSound(pev);
 	}
 
-
-
 }//END OF GibMonsterSound
+
+
 
 //parameter: BOOL fGibbed
 GENERATE_GIBMONSTEREND_IMPLEMENTATION(CBaseMonster){
-	
 
-	//Gee golly gee, ya think?
-	this->recognizablyDead = TRUE;
-
-
-	
 	pev->takedamage = DAMAGE_NO;
 	pev->solid = SOLID_NOT;// do something with the body. while monster blows up
 
-
 	if ( fGibbed )
 	{
-		
 		//MODDD MAJOR - new. Stop the voice channel when deleted.
 		EMIT_SOUND(ENT(pev), CHAN_VOICE, "common/null.wav", 1, ATTN_NORM);
 
@@ -1052,8 +780,6 @@ GENERATE_GIBMONSTEREND_IMPLEMENTATION(CBaseMonster){
 
 
 }//END OF GibMonsterEnd
-
-
 
 
 
@@ -1138,8 +864,6 @@ Activity CBaseMonster :: GetDeathActivity ( void )
 
 
 
-
-
 	if(fCanTryDirection){
 
 		
@@ -1202,10 +926,9 @@ Activity CBaseMonster :: GetDeathActivity ( void )
 		}//END OF flDot checks
 	}//END OF fCanTryDirection
 
-
-
 	return deathActivity;
 }//END OF GetDeathActivity
+
 
 //=========================================================
 // GetSmallFlinchActivity - determines the best type of flinch
@@ -1277,10 +1000,6 @@ Activity CBaseMonster::GetBigFlinchActivity(void){
 
 
 
-
-
-
-
 void CBaseMonster::BecomeDead( void )
 {
 	pev->takedamage = DAMAGE_YES;// don't let autoaim aim at corpses.
@@ -1316,8 +1035,6 @@ BOOL CBaseMonster::ShouldGibMonster( int iGib )
 
 
 
-
-
 //Ever wondered how the map knows a monster was killed for events / logic, such as unlocking doors or spawning other enemies in predetermined locations?
 //It's "FCheckAITrigger". It is called right before gibbing and every frame of logic in monsterstate.cpp, so that a death anim would trigger the condition too.
 
@@ -1347,10 +1064,8 @@ GENERATE_KILLED_IMPLEMENTATION(CBaseMonster)
 	}
 	*/
 
-
 	unsigned int cCount = 0;
-	BOOL			fDone = FALSE;
-
+	BOOL fDone = FALSE;
 
 	//MODDD - if stuck to a barnacle, not anymore.
 	barnacleLocked = FALSE;
@@ -1364,6 +1079,12 @@ GENERATE_KILLED_IMPLEMENTATION(CBaseMonster)
 		return;
 	}
 	Remember( bits_MEMORY_KILLED );
+	
+	//MODDD NOTE - beats me why we don't just set the pev->deadflag to DEAD_DYING
+	// right here. Although picking TASK_DIE soon calls "deathAnimationStart"
+	// which does that.
+	// Several of other simplier KILLED methods do the DEAD_DYING set then and there.
+	
 
 	// clear the deceased's sound channels.(may have been firing or reloading when killed)
 	EMIT_SOUND(ENT(pev), CHAN_WEAPON, "common/null.wav", 1, ATTN_NORM);
@@ -1410,7 +1131,10 @@ GENERATE_KILLED_IMPLEMENTATION(CBaseMonster)
 	}
 	
 	// don't let the status bar glitch for players.with <0 health.
-	if (pev->health < -99)
+	// MODDD NOTE - exactly what negative value of health is ever okay???
+	// Why < -99 and not just < 0?  Testing that out.
+	//if (pev->health < -99)
+	if(pev->health < 0)
 	{
 		pev->health = 0;
 	}
@@ -1424,11 +1148,7 @@ GENERATE_KILLED_IMPLEMENTATION(CBaseMonster)
 	
 	m_IdealMonsterState = MONSTERSTATE_DEAD;
 
-
-	firstTimeKilled = FALSE;  //certainly won't be anymore.
-
 }//END OF Killed
-
 
 
 
@@ -1585,7 +1305,6 @@ void CGib :: StickyGibTouch ( CBaseEntity *pOther )
 
 
 
-
 void CGib :: Spawn( const char *szGibModel )
 {
 	CGib::Spawn(szGibModel, TRUE);
@@ -1654,7 +1373,7 @@ CBaseEntity* CBaseMonster::CheckTraceHullAttack( const Vector vecStartOffset, fl
 CBaseEntity* CBaseMonster::CheckTraceHullAttack( const Vector vecStartOffset, float flDist, int iDamage, int iDmgType, TraceResult* out_traceResult ){
 	return CheckTraceHullAttack(vecStartOffset, flDist, iDamage, iDmgType, 0, out_traceResult);
 }
-CBaseEntity* CBaseMonster :: CheckTraceHullAttack( const Vector vecStartOffset, float flDist, int iDamage, int iDmgType, int iDmgTypeMod ){
+CBaseEntity* CBaseMonster::CheckTraceHullAttack( const Vector vecStartOffset, float flDist, int iDamage, int iDmgType, int iDmgTypeMod ){
 	return CheckTraceHullAttack(vecStartOffset, flDist, iDamage, iDmgType, iDmgTypeMod, NULL);
 }
 
@@ -1706,7 +1425,7 @@ CBaseEntity* CBaseMonster :: CheckTraceHullAttack( const Vector vecStartOffset, 
 			//TEXTURETYPE_PlaySound(&tr, vecStart, vecEnd, 0);
 		}
 
-		/*
+			/*
 			CBaseEntity* pPlayerEntityScan = NULL;
 			while( (pPlayerEntityScan = UTIL_FindEntityByClassname(pPlayerEntityScan, "player")) != NULL){
 				CBasePlayer* tempPlayer = static_cast<CBasePlayer*>(pPlayerEntityScan);
@@ -1739,11 +1458,6 @@ CBaseEntity* CBaseMonster :: CheckTraceHullAttack( const Vector vecStartOffset, 
 		
 	}
 
-
-
-
-
-
 	/*
 	if( tr.pHit){
 		easyForcePrintLine("DID WE DO IT?? %s %d", STRING(tr.pHit->v.classname), iDamage);
@@ -1751,8 +1465,6 @@ CBaseEntity* CBaseMonster :: CheckTraceHullAttack( const Vector vecStartOffset, 
 		easyForcePrintLine("DID WE DO IT?? none %d", iDamage);
 	}
 	*/
-
-
 
 	if ( thingHit )
 	{
@@ -1763,7 +1475,6 @@ CBaseEntity* CBaseMonster :: CheckTraceHullAttack( const Vector vecStartOffset, 
 		{
 			pEntity->TakeDamage( pev, pev, iDamage, iDmgType, iDmgTypeMod );
 
-
 			//MODDD - draw blood.
 			UTIL_fromToBlood(this, pEntity, (float)iDamage, flDist, &tr.vecEndPos, &vecStart, &vecEnd);
 
@@ -1772,7 +1483,6 @@ CBaseEntity* CBaseMonster :: CheckTraceHullAttack( const Vector vecStartOffset, 
 				UTIL_BloodStream(tr.pHit->, UTIL_RandomBloodVector(), BloodColor(), RANDOM_LONG(50, 100));
 			}
 			*/
-
 		}
 
 		if(out_traceResult != NULL){
@@ -1934,7 +1644,6 @@ BOOL CBaseEntity :: FVisible ( const Vector &vecTargetOrigin )
 
 
 
-
 //MODDD - now FVisible versions that can take a point to compare to another point or entity as well.
 //MODDD MAJOR NOTE - If we want to check the waterlevel of the origin itself, which may or may not be the same as
 //                   the waterlevel at the entity's eye point, we need to check that outside of this call before calling it
@@ -2006,20 +1715,6 @@ BOOL CBaseEntity :: FVisible (const Vector& vecLookerOrigin, const Vector &vecTa
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /*
 ================
 TraceAttack
@@ -2063,8 +1758,6 @@ GENERATE_TRACEATTACK_IMPLEMENTATION(CBaseEntity)
 
 
 
-
-
 //MODDD - CBaseEntity's TakeDamage and Killed moved to here.
 
 // inflict damage on this entity.  bitsDamageType indicates type of damage inflicted, ie: DMG_CRUSH
@@ -2097,9 +1790,6 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBaseEntity)
 // figure momentum add (don't let hurt brushes or other triggers move player)
 
 
-
-
-
 	//the "(pev->movetype == MOVETYPE_TOSS && pev->flags & FL_ONGROUND)" condition was added in case this monster is a tossable that is against the ground. If so it can also be pushed.
 	
 	if(EASY_CVAR_GET(baseEntityDamagePushNormalMulti) != 0 || EASY_CVAR_GET(baseEntityDamagePushVerticalBoost) != 0 || EASY_CVAR_GET(baseEntityDamagePushVerticalMulti) ){
@@ -2130,16 +1820,12 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBaseEntity)
 				//A push less than this in the Z coord is not allowed.
 				newVelocity.z = EASY_CVAR_GET(baseEntityDamagePushVerticalMinimum);
 			}
-
-
-			//
 			
 			//vector / oldlength = normal
 			//normal * newlength = right
 
 			//(vector / oldlength) * newlength = right ...
-			//
-
+			
 			//oldlength = sqrt(vector.x^2 + vector,y^2 + vector.z^2)
 			//oldlength = sqrt(dot prod(vector*vector)) ...
 
@@ -2158,17 +1844,13 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBaseEntity)
 				//pev->movetype = MOVETYPE_TOSS;
 			}
 
-
 			//maxed at 1000.
 			if (newVelocity.Length() > 1000.0) 
 				newVelocity = newVelocity * (1000.0 / newVelocity.Length());
 
 			pev->velocity = newVelocity; //and apply.
-
-			
 		}
 	}
-
 
 // do the damage
 	pev->health -= flDamage;
@@ -2180,8 +1862,6 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBaseEntity)
 
 	return 1;
 }
-
-
 
 
 
@@ -2206,25 +1886,14 @@ int CBaseEntity::TakeHealth( float flHealth, int bitsDamageType )
 
 
 
-
-
-
-
-
 //void CBaseEntity::Killed( entvars_t *pevAttacker, int iGib )
 GENERATE_KILLED_IMPLEMENTATION(CBaseEntity)
 {
-
 	pev->takedamage = DAMAGE_NO;
 	pev->deadflag = DEAD_DEAD;
 
-	//MODDD - do we need to?
-	firstTimeKilled = FALSE;
-
 	UTIL_Remove( this );
 }
-
-
 
 
 
@@ -2233,8 +1902,6 @@ void CBaseEntity::DrawAlphaBlood(float flDamage, const Vector& vecDrawLoc, int a
 	//MODDD - TODO: INVESTIGATE: RandomBloodVector() ?
 	UTIL_BloodStream(vecDrawLoc, UTIL_RandomBloodVector(), BloodColor(), amount);
 }
-
-
 
 void CBaseEntity::DrawAlphaBloodSlash(float flDamage, const Vector& vecDrawLoc, const Vector& vecTraceLine  ){
 	DrawAlphaBloodSlash(flDamage, vecDrawLoc, vecTraceLine, FALSE);
@@ -2261,11 +1928,8 @@ void CBaseEntity::DrawAlphaBloodSlash(float flDamage, const Vector& vecDrawLoc, 
 		
 	}
 
-	
 
 }
-
-
 
 
 
@@ -2278,145 +1942,24 @@ void CBaseEntity::DrawAlphaBlood(float flDamage, TraceResult *ptr ){
 
 void CBaseEntity::DrawAlphaBlood(float flDamage, const Vector& vecDrawLoc){
 
-	
-
-
-	//easyPrintLine("Death shot? %d", pev->health <= flDamage);
-	/*
-	if (pev->health <= flDamage)
-	{
-		//KILLING!
-		UTIL_BloodStream(vecDrawLoc, UTIL_RandomBloodVector(), BloodColor(), RANDOM_LONG(50, 100));
-		UTIL_BloodStream(vecDrawLoc, UTIL_RandomBloodVector(), BloodColor(), RANDOM_LONG(50, 100));
-		UTIL_BloodStream(vecDrawLoc, UTIL_RandomBloodVector(), BloodColor(), RANDOM_LONG(50, 100));
-
-	}else{
-		
-		UTIL_BloodStream(vecDrawLoc, UTIL_RandomBloodVector(), BloodColor(), RANDOM_LONG(50, 100));
-	}
-	*/
-	
-
-
 	int drawBloodVersionValue = 0;
 	int drawTripleBloodValue = 1;
 
-	if (pev->health <= flDamage)
-	{
-
+	if (pev->health <= flDamage){
 		UTIL_BloodStream(vecDrawLoc, UTIL_RandomBloodVector(), BloodColor(), RANDOM_LONG(40, 70));
 		UTIL_BloodStream(vecDrawLoc, UTIL_RandomBloodVector(), BloodColor(), RANDOM_LONG(40, 70));
 		UTIL_BloodStream(vecDrawLoc, UTIL_RandomBloodVector(), BloodColor(), RANDOM_LONG(40, 70));
 		
 	}
-	else
-	{
+	else{
 		UTIL_BloodStream(vecDrawLoc, UTIL_RandomBloodVector(), BloodColor(), RANDOM_LONG(4, 7));
 		UTIL_BloodStream(vecDrawLoc, UTIL_RandomBloodVector(), BloodColor(), RANDOM_LONG(4, 7));
 		UTIL_BloodStream(vecDrawLoc, UTIL_RandomBloodVector(), BloodColor(), RANDOM_LONG(4, 7));
 			
 	}
 
-
-
-
-
-
-
-
-
-
-
-
-	/*
-	float drawBloodVersionValue = CVAR_GET_FLOAT("drawBloodVersion");
-	float drawTripleBloodValue = CVAR_GET_FLOAT("drawTripleBlood");
-
-	//Old Blood FX - by Osiris / OsirisGodoftheDead / THE_YETI
-	if (pev->health <= flDamage)
-	{
-
-		if(drawBloodVersionValue == 0){
-			UTIL_BloodStream(vecDrawLoc, UTIL_RandomBloodVector(), BloodColor(), RANDOM_LONG(50, 100));
-			UTIL_BloodStream(vecDrawLoc, UTIL_RandomBloodVector(), BloodColor(), RANDOM_LONG(50, 100));
-			UTIL_BloodStream(vecDrawLoc, UTIL_RandomBloodVector(), BloodColor(), RANDOM_LONG(50, 100));
-			//UTIL_BloodDrips( pev->origin, UTIL_RandomBloodVector(), (BYTE)70, RANDOM_LONG(10, 50) );
-			
-		}else if(drawBloodVersionValue == 1){
-			UTIL_BloodDrips( vecDrawLoc, g_vecAttackDir, BloodColor(), (int)flDamage );
-			UTIL_BloodDrips( vecDrawLoc, g_vecAttackDir, BloodColor(), (int)flDamage );
-
-		}else if(drawBloodVersionValue == 2){
-			UTIL_BloodDrips( vecDrawLoc, UTIL_RandomBloodVector(), (BYTE)70, RANDOM_LONG(10, 50) );
-			UTIL_BloodDrips( pev->origin, UTIL_RandomBloodVector(), (BYTE)70, RANDOM_LONG(10, 50) );
-			
-		}else if(drawBloodVersionValue == 3){
-			SpawnBlood(vecDrawLoc, BloodColor(), flDamage);// a little surface blood.
-		}
-
-	}
-	else
-	{
-		//0 = the alpha version
-		//1 = weapons.cpp's version
-		//2 = unsure?
-
-		if(drawBloodVersionValue == 0){
-			//easyPrint("BV\n", 0 ) ;
-			UTIL_BloodStream(vecDrawLoc, UTIL_RandomBloodVector(), BloodColor(), RANDOM_LONG(3, 6));
-			//UTIL_BloodDrips(vecDrawLoc, UTIL_RandomBloodVector(), BloodColor(), RANDOM_LONG(3, 6));
-			
-			if(drawTripleBloodValue == 1){
-				UTIL_BloodStream(vecDrawLoc, UTIL_RandomBloodVector(), BloodColor(), RANDOM_LONG(3, 6));
-				//UTIL_BloodDrips(vecDrawLoc, UTIL_RandomBloodVector(), BloodColor(), RANDOM_LONG(3, 6));
-				UTIL_BloodStream(vecDrawLoc, UTIL_RandomBloodVector(), BloodColor(), RANDOM_LONG(3, 6));
-				//UTIL_BloodDrips(vecDrawLoc, UTIL_RandomBloodVector(), BloodColor(), RANDOM_LONG(3, 6));
-			}
-
-
-			//UTIL_BloodDrips( vecDrawLoc, g_vecAttackDir, BloodColor(), (int)flDamage );
-			//UTIL_BloodDrips( vecDrawLoc, g_vecAttackDir, BloodColor(), (int)flDamage );
-
-		}else if(drawBloodVersionValue == 1){
-			//easyPrint("BV\n ", 1 ) ;
-			UTIL_BloodDrips( vecDrawLoc, g_vecAttackDir, BloodColor(), (int)flDamage );
-			UTIL_BloodDrips( vecDrawLoc, g_vecAttackDir, BloodColor(), (int)flDamage );
-
-			if(drawTripleBloodValue == 1){
-				UTIL_BloodDrips( vecDrawLoc, g_vecAttackDir, BloodColor(), (int)flDamage );
-				UTIL_BloodDrips( vecDrawLoc, g_vecAttackDir, BloodColor(), (int)flDamage );
-				UTIL_BloodDrips( vecDrawLoc, g_vecAttackDir, BloodColor(), (int)flDamage );
-				UTIL_BloodDrips( vecDrawLoc, g_vecAttackDir, BloodColor(), (int)flDamage );
-			}
-
-
-		}else if(drawBloodVersionValue == 2){
-			//easyPrint("BV\n ", 2 ) ;
-			UTIL_BloodDrips( vecDrawLoc, UTIL_RandomBloodVector(), (BYTE)70, RANDOM_LONG(10, 50) );
-			UTIL_BloodDrips( pev->origin, UTIL_RandomBloodVector(), (BYTE)70, RANDOM_LONG(10, 50) );
-			
-			if(drawTripleBloodValue == 1){
-				UTIL_BloodDrips( vecDrawLoc, UTIL_RandomBloodVector(), (BYTE)70, RANDOM_LONG(10, 50) );
-				UTIL_BloodDrips( pev->origin, UTIL_RandomBloodVector(), (BYTE)70, RANDOM_LONG(10, 50) );
-				UTIL_BloodDrips( vecDrawLoc, UTIL_RandomBloodVector(), (BYTE)70, RANDOM_LONG(10, 50) );
-				UTIL_BloodDrips( pev->origin, UTIL_RandomBloodVector(), (BYTE)70, RANDOM_LONG(10, 50) );
-			}
-
-
-
-		}else if(drawBloodVersionValue == 3){
-			SpawnBlood(vecDrawLoc, BloodColor(), flDamage);// a little surface blood.
-		}
-
-	}
-	*/
-
-	//UTIL_BloodStream(vecDrawLoc, UTIL_RandomBloodVector(), BloodColor(), RANDOM_LONG(50, 100));
-			
 
 }
-
-
 
 
 
@@ -2799,7 +2342,6 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBaseMonster){
 			}//END OF timed damage check
 
 
-
 			// add pain to the conditions 
 			// !!!HACKHACK - fudged for now. Do we want to have a virtual function to determine what is light and 
 			// heavy damage per monster class?
@@ -2813,8 +2355,6 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBaseMonster){
 
 	return 1;
 }//END OF TakeDamage
-
-
 
 
 
@@ -2837,9 +2377,6 @@ int CBaseMonster :: TakeHealth (float flHealth, int bitsDamageType)
 }
 
 
-
-
-
 //NO.  See "monsters.cpp", this already exists.
 /*
 TYPEDESCRIPTION	CBaseMonster::m_SaveData[] = 
@@ -2854,19 +2391,14 @@ TYPEDESCRIPTION	CBaseMonster::m_SaveData[] =
 */
 
 
-
-
 /*
 void CBaseMonster::PreThink(void)
 {
-
-
 	CheckTimeBasedDamage();
-
 }
 */
 //MonsterThink...?  already used though (but the checkTimeBasedDamage call could be inserted into there instead).  "Think" here is fine I believe.
-//OH THIS OILY LITTLE man.  IT CAN SUCK OFF A THOUSAND SHOTGUNS AND BURN IN HELL.
+// Let's not do this though.
 /*
 void CBaseMonster::Think(void)
 {
@@ -2875,8 +2407,7 @@ void CBaseMonster::Think(void)
 
 	
 	////MODDD: REVERTMOD
-
-	//THE GODS HAVE FORBIDDEN THOU FROM DOING THIS.  FEEL THY WRATH IN THE FORM OF RANDOM, DIGUSTING, HARD-TO-TRACE CRASHES.
+	//uh.  this is bad it seems.
 	//
 	//if(EASY_CVAR_GET(timedDamageAffectsMonsters) == 1){
 	//	CheckTimeBasedDamage();
@@ -2885,17 +2416,6 @@ void CBaseMonster::Think(void)
 
 }
 */
-
-//THIS IS UNACCEPTABLE.  FOR SHAAAAAAAME.
-/*
-void CBaseMonster::CheckTimeBasedDamage(void){
-
-}
-*/
-
-//(can't tell why?  Welcome to the club.)
-
-
 
 
 void CBaseMonster::attemptResetTimedDamage(BOOL forceReset){
@@ -2911,10 +2431,6 @@ void CBaseMonster::attemptResetTimedDamage(BOOL forceReset){
 	}
 
 }
-
-
-
-
 
 
 
@@ -2973,7 +2489,6 @@ GENERATE_DEADTAKEDAMAGE_IMPLEMENTATION(CBaseMonster)
 	return 1;
 }
 
-
 float CBaseMonster :: DamageForce( float damage )
 { 
 	float force = damage * ((32 * 32 * 72.0) / (pev->size.x * pev->size.y * pev->size.z)) * 5;
@@ -2985,16 +2500,6 @@ float CBaseMonster :: DamageForce( float damage )
 
 	return force;
 }
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -3180,34 +2685,10 @@ void RadiusDamageTest( Vector vecSrc, entvars_t *pevInflictor, entvars_t *pevAtt
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 //
 // RadiusDamage - this entity is exploding, or otherwise needs to inflict damage upon entities within a certain range.
 // 
 // only damage ents that can clearly be seen by the explosion!
-
-
-
-
 
 
 
@@ -3393,19 +2874,6 @@ void RadiusDamage( Vector vecSrc, entvars_t *pevInflictor, entvars_t *pevAttacke
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
 //MODDD - new method to summarize tracer generating script and returning whether to block drawing a decal, based on whether a tracer was sent this time.
 //        Mirrors EV_HLDM_CheckTracer from clientside cl_dll/ev_hldm.cpp
 //        This script used to be sitting in FireBullets (for monsters other than the player) to fire bullets serverside, the only way they can.
@@ -3542,7 +3010,6 @@ void CBaseEntity::FireBullets(ULONG cShots, Vector vecSrc, Vector vecDirShooting
 		break;
 		}//END OF switch
 
-
 		//MODDD - squeaky clean, moved to a method.  Like how cl_dll/ev_hldm.cpp did it.
 		disableBulletHitDecal = CheckTracer(vecSrc, tr.vecEndPos, gpGlobals->v_forward, gpGlobals->v_right, iBulletType, iTracerFreq, &tracerCount);
 
@@ -3649,11 +3116,6 @@ void CBaseEntity::FireBullets(ULONG cShots, Vector vecSrc, Vector vecDirShooting
 	}
 	ApplyMultiDamage(pev, pevAttacker);
 }
-
-
-
-
-
 
 
 
@@ -3847,8 +3309,6 @@ Vector CBaseEntity::FireBulletsPlayer ( ULONG cShots, Vector vecSrc, Vector vecD
 			}
 
 
-
-
 			/*
 			if(iDamage == 0 &&
 				iBulletType != BULLET_NONE &&
@@ -3874,7 +3334,6 @@ Vector CBaseEntity::FireBulletsPlayer ( ULONG cShots, Vector vecSrc, Vector vecD
 				
 				//if ( FNullEnt(tr.pHit))
 				{
-					
 					if(EASY_CVAR_GET(muteRicochetSound) < 1){
 						MESSAGE_BEGIN( MSG_PAS, SVC_TEMPENTITY, tr.vecEndPos );
 							WRITE_BYTE( TE_GUNSHOT );
@@ -3883,8 +3342,6 @@ Vector CBaseEntity::FireBulletsPlayer ( ULONG cShots, Vector vecSrc, Vector vecD
 							WRITE_COORD( tr.vecEndPos.z );
 						MESSAGE_END();
 					}
-					
-					
 				}
 			}
 			

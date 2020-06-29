@@ -940,7 +940,7 @@ void DLLEXPORT HUD_TempEntUpdate (
 					pmtrace_t pmtrace;
 					physent_t *pe;
 				
-					gEngfuncs.pEventAPI->EV_SetTraceHull( 2 );
+					gEngfuncs.pEventAPI->EV_SetTraceHull( HULL_TYPE::large_hull );
 
 					gEngfuncs.pEventAPI->EV_PlayerTrace( pTemp->entity.prevstate.origin, pTemp->entity.origin, PM_STUDIO_BOX, -1, &pmtrace );
 
@@ -965,7 +965,7 @@ void DLLEXPORT HUD_TempEntUpdate (
 				{
 					pmtrace_t pmtrace;
 					
-					gEngfuncs.pEventAPI->EV_SetTraceHull( 2 );
+					gEngfuncs.pEventAPI->EV_SetTraceHull( HULL_TYPE::large_hull );
 
 					gEngfuncs.pEventAPI->EV_PlayerTrace( pTemp->entity.prevstate.origin, pTemp->entity.origin, PM_STUDIO_BOX | PM_WORLD_ONLY, -1, &pmtrace );					
 

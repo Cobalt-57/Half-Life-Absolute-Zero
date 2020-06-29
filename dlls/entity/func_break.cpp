@@ -599,7 +599,7 @@ GENERATE_TRACEATTACK_IMPLEMENTATION(CBreakable)
 			case matComputer:
 			{
 				//MODDD!
-				//UTIL_Sparks2( ptr->vecEndPos, DEFAULT_SPARK_BALLS, EASY_CVAR_GET(sparksComputerHitMulti) );
+				//UTIL_Sparks( ptr->vecEndPos, DEFAULT_SPARK_BALLS, EASY_CVAR_GET(sparksComputerHitMulti) );
 
 				float flVolume = RANDOM_FLOAT ( 0.7 , 1.0 );//random volume range
 				switch ( RANDOM_LONG(0,1) )

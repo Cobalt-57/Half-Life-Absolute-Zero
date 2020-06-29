@@ -64,7 +64,9 @@ TYPEDESCRIPTION	CSqueakGrenade::m_SaveData[] =
 	DEFINE_FIELD( CSqueakGrenade, m_hOwner, FIELD_EHANDLE ),
 };
 
-IMPLEMENT_SAVERESTORE( CSqueakGrenade, CGrenade );
+//MODDD - class change. was CGrenade.
+//IMPLEMENT_SAVERESTORE( CSqueakGrenade, CGrenade );
+IMPLEMENT_SAVERESTORE(CSqueakGrenade, CBaseMonster);
 
 #define SQUEEK_DETONATE_DELAY	15.0
 
@@ -167,7 +169,8 @@ void CSqueakGrenade::setModel(void){
 	CSqueakGrenade::setModel(NULL);
 }
 void CSqueakGrenade::setModel(const char* m){
-	CGrenade::setModel(m);
+	//MODDD - class change.  Was CGrenade.
+	CBaseMonster::setModel(m);
 
 	//no blinking expected here, too tiny & jumpy for that to really be worthwhile.
 
@@ -638,8 +641,7 @@ void CSqueak::Holster( int skiplocal /* = 0 */ )
 		DefaultHolster(SQUEAK_DOWN, skiplocal, 0, (21.0f/16.0f));
 	}
 	
-
-
+	
 	EMIT_SOUND(ENT(m_pPlayer->pev), CHAN_WEAPON, "common/null.wav", 1.0, ATTN_NORM);
 }
 
