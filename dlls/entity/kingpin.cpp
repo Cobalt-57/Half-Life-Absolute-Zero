@@ -39,7 +39,6 @@ extern short g_sBallForceFieldSprite;
 
 
 
-
 #if REMOVE_ORIGINAL_NAMES != 1
 	LINK_ENTITY_TO_CLASS( monster_kingpin, CKingpin );
 #endif
@@ -52,8 +51,6 @@ extern short g_sBallForceFieldSprite;
 	#endif
 	
 #endif
-
-
 
 
 
@@ -73,7 +70,6 @@ extern short g_sBallForceFieldSprite;
 
 
 
-
 //TODO MAJOR CONCERN - why don't ISLave beams (and thus Kingpin beams / sprites) seem to set SF_BEAM_TEMPORARY / SF_SPRITE_TEMPORARY for them?
 //                     And are there possible issues on linked beams / sprites getting deleted betwween level transitions from the default
 //                     ~FCAP_ACROSS_TRANSITION (lack of that capability)?  Should any links to beams / sprites thus be EDICT's instead of 
@@ -88,7 +84,6 @@ extern short g_sBallForceFieldSprite;
 
 #define CHARGE_POINT_UP 94
 #define CHARGE_POINT_FORWARD 48
-
 
 #define KINPIN_ELECTRIC_LASER_CHARGETIME 1.6f
 

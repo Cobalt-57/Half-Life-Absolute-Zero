@@ -24,12 +24,14 @@
 #include "soundent.h"
 #include "decals.h"
 
-#define 	ROACH_IDLE				0
-#define 	ROACH_BORED				1
-#define 	ROACH_SCARED_BY_ENT		2
-#define 	ROACH_SCARED_BY_LIGHT	3
-#define 	ROACH_SMELL_FOOD		4
-#define 	ROACH_EAT				5
+
+#define ROACH_IDLE				0
+#define ROACH_BORED				1
+#define ROACH_SCARED_BY_ENT		2
+#define ROACH_SCARED_BY_LIGHT	3
+#define ROACH_SMELL_FOOD		4
+#define ROACH_EAT				5
+
 
 //=========================================================
 // Monster's Anim Events Go Here

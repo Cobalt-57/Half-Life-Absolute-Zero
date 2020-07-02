@@ -54,6 +54,9 @@ struct skilldata_t
 	float gargantuaDmgStomp;
 
 	float hassassinHealth;
+	//MODDD - NEW.  Customizable damages like the player.
+	float hassassinDmgCrossbowClient;
+	float hassassinDmgCrossbowMonster;
 
 	float headcrabHealth;
 	float headcrabDmgBite;

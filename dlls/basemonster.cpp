@@ -68,7 +68,7 @@ extern DLL_GLOBAL	short	g_sModelIndexLaserDot;// holds the index for the laser b
 extern CGraph WorldGraph;// the world node graph
 
 //MODDD - added
-EASY_CVAR_EXTERN(germanCensorship)
+EASY_CVAR_EXTERN(sv_germancensorship)
 EASY_CVAR_EXTERN(seeMonsterHealth)
 EASY_CVAR_EXTERN(applyLKPPathFixToAll)
 EASY_CVAR_EXTERN(crazyMonsterPrintouts)
@@ -1945,6 +1945,7 @@ void CBaseMonster :: MonsterThink ( void )
 	
 
 	if(EASY_CVAR_GET(animationPrintouts) == 1 && monsterID >= -1)easyForcePrintLine("%s:%d Anim info A? frame:%.2f done:%d", getClassname(), monsterID, pev->frame, m_fSequenceFinished);
+	
 	RunAI();
 
 
@@ -2000,7 +2001,6 @@ void CBaseMonster :: MonsterThink ( void )
 		int iSequence;
 		
 		
-
 		//easyPrintLine("YOU THINK THIS IS A great GAME %d", m_fSequenceFinished);
 		
 		if ( m_fSequenceLoops )
@@ -2083,8 +2083,6 @@ void CBaseMonster :: MonsterThink ( void )
 	*/
 
 
-
-	
 	
 	if(EASY_CVAR_GET(peaceOut) == 1){
 
@@ -2099,7 +2097,6 @@ void CBaseMonster :: MonsterThink ( void )
 		}
 	}
 
-	
 	if(EASY_CVAR_GET(drawDebugEnemyLKP)){
 		//::DebugLine_Setup(2, m_vecEnemyLKP + Vector(0, 0, 8), m_vecEnemyLKP + Vector(0, 0, -8), 0, 0, 255);
 		//no... just draw it this frame only.
@@ -2109,10 +2106,6 @@ void CBaseMonster :: MonsterThink ( void )
 	//easyForcePrintLine("FRAMEB:%.2f seq:%d loop:%d fin:%d", this->pev->frame, pev->sequence, m_fSequenceLoops, m_fSequenceFinished);
 
 }//END OF monsterThink
-
-
-
-
 
 
 
@@ -2154,13 +2147,13 @@ void CBaseMonster::setModel(const char* m){
 
 
 		//NOTICE: not sure what to do if  "getGermanModelRequirement()"  fails.  Crash?  Invisible model?    For now, just relying on retail's version.
-		if(EASY_CVAR_GET(germanCensorship) == 0 || EASY_CVAR_GET(allowGermanModels) != 1 || globalPSEUDO_canApplyGermanCensorship == 0 || getGermanModelRequirement() == FALSE){
+		if(EASY_CVAR_GET(sv_germancensorship) == 0 || EASY_CVAR_GET(allowGermanModels) != 1 || globalPSEUDO_canApplyGermanCensorship == 0 || getGermanModelRequirement() == FALSE){
 			//but we're using the german model...
 			//if(usingGermanModel){
 				SET_MODEL(ENT(pev), normalModelPath);
 			//}
 			//if german censorship is on
-		}else if(EASY_CVAR_GET(germanCensorship) == 1 && EASY_CVAR_GET(allowGermanModels) == 1 && globalPSEUDO_canApplyGermanCensorship == 1){
+		}else if(EASY_CVAR_GET(sv_germancensorship) == 1 && EASY_CVAR_GET(allowGermanModels) == 1 && globalPSEUDO_canApplyGermanCensorship == 1){
 			//but we're not using the german model (and have one)
 			//if(hasGermanModel && !usingGermanModel){
 			//if(hasGermanModel){   //REDUNDANT.
@@ -2264,22 +2257,12 @@ BOOL CBaseMonster :: FRouteClear ( void )
 
 
 
-
-
-
-
 //MODDD - new. Clone of FRefreshRoute that better incorporates the method calls done in "CHASE_ENEMY"'s schedule.
 BOOL CBaseMonster::FRefreshRouteChaseEnemySmart(void){
-
-
 	//WHUT
 	//return FRefreshRoute();
 	
-
-
-
 	BOOL returnCode;
-
 	
 	/*	
 	if(m_hEnemy == NULL){
@@ -2308,10 +2291,8 @@ BOOL CBaseMonster::FRefreshRouteChaseEnemySmart(void){
 
 
 
-
 	//was this... missing?
 	RouteNew();
-
 
 
 	//Mainly just to keep track of where the enemy is since last calling for a new route.
@@ -2509,9 +2490,6 @@ BOOL CBaseMonster::MoveToNode( Activity movementAct, float waitTime, const Vecto
 
 
 
-
-
-
 void CBaseMonster::DrawRoute( entvars_t *pev, WayPoint_t *m_Route, int m_iRouteIndex, int r, int g, int b )
 {
 	int		i;
@@ -2579,7 +2557,6 @@ void CBaseMonster::DrawRoute( entvars_t *pev, WayPoint_t *m_Route, int m_iRouteI
 
 
 
-
 int ShouldSimplify( int routeType )
 {
 	routeType &= ~bits_MF_IS_GOAL;
@@ -2596,7 +2573,6 @@ int ShouldSimplify( int routeType )
 // unnecessary nodes & cutting corners.
 //
 //=========================================================
-
 
 
 void CBaseMonster :: RouteSimplify( CBaseEntity *pTargetEnt )
@@ -2724,7 +2700,6 @@ BOOL CBaseMonster :: FBecomeProne ( void )
 		pev->effects |= EF_NOINTERP;
 	}
 	
-
 
 	return TRUE;
 }
@@ -3605,10 +3580,8 @@ static const float stepChoiceArray[] = {LOCAL_STEP_SIZE, LOCAL_STEP_SIZE_MOD};
 
 int CBaseMonster::CheckLocalMoveHull(const Vector &vecStart, const Vector &vecEnd, CBaseEntity *pTarget, float *pflDist  )
 {
-
 	//MODDD - todo at some point. Is that really a good idea... always TRUE here??
 	return LOCALMOVE_VALID;
-
 
 	
 	TraceResult tr;
@@ -3636,7 +3609,6 @@ int CBaseMonster::CheckLocalMoveHull(const Vector &vecStart, const Vector &vecEn
 
 
 }
-
 
 
 
@@ -3699,10 +3671,6 @@ int CBaseMonster :: CheckLocalMove ( const Vector &vecStart, const Vector &vecEn
 		return FALSE;
 	}
 */
-
-	
-
-
 	
 #if defined(USE_MOVEMENT_BOUND_FIX)
 	if(needsMovementBoundFix()){
@@ -3716,11 +3684,6 @@ int CBaseMonster :: CheckLocalMove ( const Vector &vecStart, const Vector &vecEn
 		UTIL_SetSize( pev, VEC_HUMAN_HULL_MIN, VEC_HUMAN_HULL_MAX );
 	}
 #endif
-
-	
-
-
-
 
 	// this loop takes single steps to the goal.
 	for ( flStep = 0 ; flStep < flDist ; flStep += LOCAL_STEP_SIZE )
@@ -3780,9 +3743,6 @@ int CBaseMonster :: CheckLocalMove ( const Vector &vecStart, const Vector &vecEn
 			}
 
 #endif
-
-
-
 
 			if ( pflDist != NULL )
 			{
@@ -4106,20 +4066,15 @@ BOOL CBaseMonster :: BuildRoute ( const Vector &vecGoal, int iMoveFlag, CBaseEnt
 	}
 
 
-	
-
-
 
 	Vector vecDir = (vecGoal - pev->origin).Normalize();
 
 
-	
 	//TODO IN THE PATH FINDING:
 	//elevation check?  See if the goal (next node; m_Route[m_iRouteIndex].vecLocation) position is above my current position, or below.
 	// If the goal is  on the same level... can't really do the fix.
 	// If the goal is below me, it's the top-ramp fix.  (currently in)
 	// If the goal is above me, it's the bottom-ramp fix (not done)
-
 
 
 	
@@ -4141,7 +4096,6 @@ BOOL CBaseMonster :: BuildRoute ( const Vector &vecGoal, int iMoveFlag, CBaseEnt
 		
 
 
-
 	debugVectorsSet = FALSE;
 	debugFailColor = FALSE;
 
@@ -4151,12 +4105,10 @@ BOOL CBaseMonster :: BuildRoute ( const Vector &vecGoal, int iMoveFlag, CBaseEnt
 		//still a shot...?
 		
 		
-		
 		Vector rampTopPoint1;
 		Vector rampTopPoint2;
 
 		BOOL localMovePass = FALSE;
-
 
 
 
@@ -5324,7 +5276,7 @@ void CBaseMonster :: MonsterInit ( void )
 	// The new 'pickup walker' monsters should not be forbidden by this setting.
 
 
-	//if(CVAR_GET_FLOAT("pooptest") == 0){
+	//if(CVAR_GET_FLOAT("pregame_server_cvar") == 0){
 	if (!g_pGameRules->FAllowMonsters() && !this->bypassAllowMonstersSpawnCheck() ){
 
 		easyForcePrintLine("WARNING! Request to spawn \"%s\" denied, \'mp_allowmonsters\' is off.", this->getClassname());
@@ -7003,9 +6955,6 @@ Vector CBaseMonster :: ShootAtEnemyMod( const Vector &shootOrigin )
 
 
 
-
-
-
 //=========================================================
 // FacingIdeal - tells us if a monster is facing its ideal
 // yaw. Created this function because many spots in the 
@@ -7022,8 +6971,6 @@ BOOL CBaseMonster :: FacingIdeal( void )
 	//if ( flCurrentYaw == pev->ideal_yaw )
 	easyForcePrintLine("monsterID:%d WHAT?? diff:%.2f cur:%.2f ideal:%.2f", monsterID, FlYawDiff(), flCurrentYaw, pev->ideal_yaw);
 	*/
-
-
 
 
 	if ( fabs( FlYawDiff() ) <= 0.006 )//!!!BUGBUG - no magic numbers!!!
@@ -7141,8 +7088,6 @@ BOOL CBaseMonster::NoFriendlyFire(void) {
 
 
 
-
-
 //=========================================================
 // BBoxIsFlat - check to see if the monster's bounding box
 // is lying flat on a surface (traces from all four corners
@@ -7201,7 +7146,6 @@ BOOL CBaseMonster :: BBoxFlat ( void )
 }
 
 
-
 //MODDD - new version.  Can accept whether this should ignore the _SEE conditions and schedule interruptable by NEW_ENEMY checks.
 //        RUNTASK logic wanting to search for new enemies in the middle of a task shouldn't be ignored simply because those requirements aren't met.
 BOOL CBaseMonster::GetEnemy(void){
@@ -7222,12 +7166,10 @@ BOOL CBaseMonster :: GetEnemy (BOOL arg_forceWork )
 	}
 
 
-
 	//MODDD - if dead, can't do this.
 	if(!UTIL_IsAliveEntity(this)){
 		return FALSE;// monster has no enemy
 	}
-	
 
 	//MODDD - major. Adding FEAR as a condition here now.
 
@@ -7327,7 +7269,6 @@ CBaseEntity* CBaseMonster :: DropItem ( char *pszItemName, const Vector &vecPos,
 		ALERT ( at_console, "DropItem() - Didn't create!\n" );
 		return FALSE;
 	}
-
 }
 
 
@@ -7339,7 +7280,6 @@ BOOL CBaseMonster :: ShouldFadeOnDeath( void )
 
 	return FALSE;
 }
-
 
 
 void CBaseMonster::setPhysicalHitboxForDeath(void){
@@ -7364,8 +7304,6 @@ void CBaseMonster::setPhysicalHitboxForDeath(void){
 	}
 
 }
-
-
 
 
 
@@ -7474,7 +7412,6 @@ void CBaseMonster::Activate( void ){
 	//setModelCustom();
 
 
-
 	//MODDD - hold up. If below does effectively nothing with what's commented out (time of writing, er... typing), why bother?
 	// Stop early.
 	return;
@@ -7527,7 +7464,6 @@ void CBaseMonster::Activate( void ){
 		}//END OF pEdict check (first)
 
 	}//END OF verify I may want a cine object.
-
 }
 
 void CBaseMonster::Spawn( ){
@@ -7539,8 +7475,6 @@ void CBaseMonster::Spawn( ){
 
 	//setModelCustom();
 }
-
-
 
 
 //MODDD - use "usesAdvancedAnimSystem()" to determine whether to use LookupActivityHard for this or just the ordinary LookupActivity.
@@ -7603,10 +7537,6 @@ int CBaseMonster :: LookupActivityHeaviest(int activity )
 
 
 
-
-
-
-
 //MODDD - new method for determining whether to register a case of damage as worthy of LIGHT_DAMAGE or HEAVY_DAMAGE for the AI.
 //        Can result in interrupting the current schedule.
 //        This is expected to get called from CBaseMonster's TakeDamage method in combat.cpp. This method may be customized per monster,
@@ -7641,21 +7571,16 @@ void CBaseMonster::OnTakeDamageSetConditions(entvars_t *pevInflictor, entvars_t 
 		forgetBigFlinchTime = gpGlobals->time + DEFAULT_FORGET_BIG_FLINCH_TIME;
 	}
 
-
 /*
 	if(EASY_CVAR_GET(testVar) == 10){
 		//any damage causes me now.
 		SetConditions(bits_COND_HEAVY_DAMAGE);
 	}
 */
-
 	//easyForcePrintLine("%s:%d OnTkDmgSetCond raw:%.2f fract:%.2f", getClassname(), monsterID, flDamage, (flDamage / pev->max_health));
 
 
-
 }//END OF OnTakeDamageSetConditions
-
-
 
 
 
@@ -7704,7 +7629,6 @@ void CBaseMonster::forgetForcedEnemy(CBaseMonster* argIssuing, BOOL argPassive){
 
 
 
-
 //Go revert islave to its backup for "riseFromTheGrave", this is not so great for it anymore.
 //Maybe it's still ok? verify...
 void CBaseMonster::startReanimation(){
@@ -7728,8 +7652,7 @@ void CBaseMonster::startReanimation(){
 		m_hOldEnemy[i] = NULL;
 	}
 
-				
-				
+	
 	/*
 	//!!!
 
@@ -7760,10 +7683,6 @@ void CBaseMonster::startReanimation(){
 	//This should set the monster's health to "pev->max_health".
 	//And assume it calls "MonsterInit" again if it ever did before.
 	Spawn();
-
-
-
-
 
 
 
@@ -7820,20 +7739,9 @@ void CBaseMonster::startReanimation(){
 
 
 
-
-
 	EndOfRevive(oldSeq);
-	
-
-
-
-
-
-
 
 }//END OF startReanimation
-
-
 
 
 
@@ -7841,8 +7749,6 @@ void CBaseMonster::startReanimation(){
 //Override to let a monster determine how to revive the monster on its own, like pick a different animation.
 //Default behavior is to play the existing animation over again.
 void CBaseMonster::EndOfRevive(int preReviveSequence){
-
-	
 
 	m_IdealMonsterState	= MONSTERSTATE_ALERT;// Assume monster will be alert, having come back from the dead and all.
 	m_MonsterState = MONSTERSTATE_ALERT; //!!!
@@ -7899,9 +7805,6 @@ void CBaseMonster::ReportGeneric(){
 
 
 
-
-
-
 //MODDD - off for most.  Some new NPCs may use this (or old could be made to).
 BOOL CBaseMonster::hasSeeEnemyFix(void){
 	return FALSE;
@@ -7917,7 +7820,6 @@ void CBaseMonster::tempMethod(void){
 	//by default nothing. Use me for testing with client calls
 	//(point at this monster ingame, crosshairs, and type some command that calls this one's tempMethod)
 }//END OF tempMethod
-
 
 
 
@@ -8039,7 +7941,6 @@ Schedule_t* CBaseMonster::flyerDeathSchedule(void){
 	}//END OF flyerKilledFallingLoop check
 
 
-
 	//default
 	return slDie;
 }
@@ -8072,9 +7973,6 @@ void CBaseMonster::setEnemyLKP_Investigate(const Vector& argToInvestigate){
 	m_vecEnemyLKP = argToInvestigate;
 	investigatingAltLKP = TRUE;
 }
-
-
-
 
 
 
@@ -8195,13 +8093,6 @@ BOOL CBaseMonster::violentDeathClear_BackwardsCheck(float argDistance){
 	UTIL_TraceHull ( vecStart, vecEnd, dont_ignore_monsters, head_hull, edict(), &tr );
 	
 	
-
-
-
-
-
-
-
 	// Nothing in the way? it's good.
 	if ( tr.flFraction == 1.0 ){
 		//return TRUE;
@@ -8247,7 +8138,6 @@ BOOL CBaseMonster::canPredictActRepeat(void){
 
 
 
-
 //MODDD - came from hgrunt.cpp, used to be named Kick. Now callable by other monsters too.
 //        This is probably some old version of checking for entities in front before it was standardized to
 //        CheckTraceHullAttack.  But whatever, this could even indirectly call that too instead.
@@ -8275,7 +8165,6 @@ CBaseEntity* CBaseMonster:: HumanKick(float argCheckDistance ){
 
 	return NULL;
 }
-
 
 
 void CBaseMonster::precacheStandardMeleeAttackMissSounds(void){

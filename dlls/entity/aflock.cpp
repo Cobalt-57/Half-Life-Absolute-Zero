@@ -24,13 +24,13 @@
 #include "basemonster.h"
 #include "squadmonster.h"
 
-#define 	AFLOCK_MAX_RECRUIT_RADIUS	1024
-#define 	AFLOCK_FLY_SPEED			125
-#define 	AFLOCK_TURN_RATE			75
-#define 	AFLOCK_ACCELERATE			10
-#define 	AFLOCK_CHECK_DIST			192
-#define 	AFLOCK_TOO_CLOSE			100
-#define 	AFLOCK_TOO_FAR				256
+#define AFLOCK_MAX_RECRUIT_RADIUS	1024
+#define AFLOCK_FLY_SPEED			125
+#define AFLOCK_TURN_RATE			75
+#define AFLOCK_ACCELERATE			10
+#define AFLOCK_CHECK_DIST			192
+#define AFLOCK_TOO_CLOSE			100
+#define AFLOCK_TOO_FAR				256
 
 //=========================================================
 //=========================================================

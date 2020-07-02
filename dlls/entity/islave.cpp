@@ -16,6 +16,16 @@
 // Alien slave monster
 //=========================================================
 
+//MODDD TODO - should an islave force itself to attack even if it feels cowardly, IF it fails to find cover, or is exposed after finding cover at least once?
+
+//Also the light from a lightning charge stays on even if that schedule is interrupted since the light is made to stay on for a set amount of time since it is created.
+//That isn't too big of a deal though.
+
+//NOTICE: all cases of "ATTN_NORM" replaced with "EASY_CVAR_GET(soundAttenuationAll)" for testing.
+
+
+
+
 #include "extdll.h"
 #include "util.h"
 #include "cbase.h"
@@ -25,19 +35,42 @@
 #include "effects.h"
 #include "weapons.h"
 #include "soundent.h"
-
 //MODDD
 #include "defaultai.h"
 #include "nodes.h"
 
-extern DLL_GLOBAL int	g_iSkillLevel;
+
+
+EASY_CVAR_EXTERN(islaveReviveFriendMode)
+EASY_CVAR_EXTERN(islaveReviveFriendChance)
+EASY_CVAR_EXTERN(islaveReviveFriendRange)
+EASY_CVAR_EXTERN(islaveReviveSelfMinDelay)
+EASY_CVAR_EXTERN(islaveReviveSelfMaxDelay)
+EASY_CVAR_EXTERN(islaveReviveSelfChance)
+EASY_CVAR_EXTERN(noFlinchOnHard)
+EASY_CVAR_EXTERN(thatWasntPunch)
+EASY_CVAR_EXTERN(soundAttenuationAll)
 
 
 
-//MODDD TODO - should an islave force itself to attack even if it feels cowardly, IF it fails to find cover, or is exposed after finding cover at least once?
+//MODDD - anything above its real declaration need to know about it?
+extern Schedule_t slSlaveAttack1[];
+extern DLL_GLOBAL int g_iSkillLevel;
 
-//Also the light from a lightning charge stays on even if that schedule is interrupted since the light is made to stay on for a set amount of time since it is created.
-//That isn't too big of a deal though.
+
+
+//=========================================================
+// Monster's Anim Events Go Here
+//=========================================================
+#define ISLAVE_AE_CLAW		( 1 )
+#define ISLAVE_AE_CLAWRAKE	( 2 )
+#define ISLAVE_AE_ZAP_POWERUP	( 3 )
+#define ISLAVE_AE_ZAP_SHOOT		( 4 )
+#define ISLAVE_AE_ZAP_DONE		( 5 )
+
+#define ISLAVE_MAX_BEAMS	8
+
+
 
 
 
@@ -91,24 +124,8 @@ enum islave_sequence {  //key: frames, FPS
 	ISLAVE_DIEFORWARD_RES,  //40, 40
 
 
-
 };
 
-
-
-
-
-
-//=========================================================
-// Monster's Anim Events Go Here
-//=========================================================
-#define 	ISLAVE_AE_CLAW		( 1 )
-#define 	ISLAVE_AE_CLAWRAKE	( 2 )
-#define 	ISLAVE_AE_ZAP_POWERUP	( 3 )
-#define 	ISLAVE_AE_ZAP_SHOOT		( 4 )
-#define 	ISLAVE_AE_ZAP_DONE		( 5 )
-
-#define 	ISLAVE_MAX_BEAMS	8
 
 
 /*
@@ -127,34 +144,6 @@ enum
 };
 
 
-
-
-
-//MODDD - anything above its real declaration need to know about it?
-extern Schedule_t	slSlaveAttack1[];
-
-
-
-EASY_CVAR_EXTERN(islaveReviveFriendMode)
-EASY_CVAR_EXTERN(islaveReviveFriendChance)
-EASY_CVAR_EXTERN(islaveReviveFriendRange)
-EASY_CVAR_EXTERN(islaveReviveSelfMinDelay)
-EASY_CVAR_EXTERN(islaveReviveSelfMaxDelay)
-EASY_CVAR_EXTERN(islaveReviveSelfChance)
-
-EASY_CVAR_EXTERN(noFlinchOnHard)
-
-
-
-EASY_CVAR_EXTERN(thatWasntPunch)
-
-
-
-EASY_CVAR_EXTERN(soundAttenuationAll)
-//NOTICE: all cases of "ATTN_NORM" replaced with "EASY_CVAR_GET(soundAttenuationAll)" for testing.
-
-
-//TASK_ISLAVE_SET_REVIVE_SEQUENCE
 
 
 class CISlave : public CSquadMonster

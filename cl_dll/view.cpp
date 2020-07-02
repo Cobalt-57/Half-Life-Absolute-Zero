@@ -29,9 +29,6 @@
 #include "r_studioint.h"
 #include "com_model.h"
 
-//MODDD - important point before.
-//extern globalvars_t* gpGlobals;
-
 //MODDD - important
 //EASY_CVAR_EXTERN_CLIENT_MASS
 
@@ -53,18 +50,22 @@ EASY_CVAR_EXTERN(playerBarnacleVictimViewOffset)
 EASY_CVAR_EXTERN(cl_viewpunch)
 
 
-extern float global2PSEUDO_IGNOREcameraMode;
-extern float global2PSEUDO_grabbedByBarancle;
-
-extern void command_updateCameraPerspectiveF(void);
-extern void command_updateCameraPerspectiveT(void);
-
-
 #define CAM_MODE_RELAX 1
 #define CAM_MODE_FOCUS 2
 
 #define ORIGIN_BACKUP 64
 #define ORIGIN_MASK ( ORIGIN_BACKUP - 1 )
+
+
+//MODDD - important point before.
+//extern globalvars_t* gpGlobals;
+
+
+extern float global2PSEUDO_IGNOREcameraMode;
+extern float global2PSEUDO_grabbedByBarancle;
+
+extern void command_updateCameraPerspectiveF(void);
+extern void command_updateCameraPerspectiveT(void);
 
 
 typedef struct
@@ -81,16 +82,14 @@ typedef struct
 
 
 
-
-
 // Spectator Mode
 extern "C"
 {
-	float	vecNewViewAngles[3];
-	int		iHasNewViewAngles;
-	float	vecNewViewOrigin[3];
-	int		iHasNewViewOrigin;
-	int		iIsSpectator;
+	float vecNewViewAngles[3];
+	int iHasNewViewAngles;
+	float vecNewViewOrigin[3];
+	int iHasNewViewOrigin;
+	int iIsSpectator;
 }
 
 extern "C"
@@ -101,8 +100,8 @@ extern "C"
 	void DLLEXPORT V_CalcRefdef(struct ref_params_s* pparams);
 
 	void PM_ParticleLine(float* start, float* end, int pcolor, float life, float vert);
-	int		PM_GetVisEntInfo(int ent);
-	int		PM_GetPhysEntInfo(int ent);
+	int PM_GetVisEntInfo(int ent);
+	int PM_GetPhysEntInfo(int ent);
 
 
 	//MODDD - no need to prototype these, handled by common/vector.h for sanity.
@@ -113,18 +112,15 @@ extern "C"
 	float	AngleBetweenVectors(const float* v1, const float* v2);
 	*/
 
-	float	vJumpOrigin[3];
-	float	vJumpAngles[3];
+	float vJumpOrigin[3];
+	float vJumpAngles[3];
 }
 
 
 extern engine_studio_api_t IEngineStudio;
 
-
 extern cvar_t* cl_viewrollangle;
 extern cvar_t* cl_viewrollspeed;
-
-
 extern cvar_t* cl_forwardspeed;
 extern cvar_t* chase_active;
 extern cvar_t* scr_ofsx, * scr_ofsy, * scr_ofsz;
@@ -237,11 +233,11 @@ void V_InterpolateAngles( float *start, float *end, float *output, float frac )
 // Quakeworld bob code, this fixes jitters in the mutliplayer since the clock (pparams->time) isn't quite linear
 float V_CalcBob(struct ref_params_s* pparams)
 {
-	static	double	bobtime;
-	static float	bob;
-	float	cycle;
-	static float	lasttime;
-	vec3_t	vel;
+	static double bobtime;
+	static float bob;
+	float cycle;
+	static float lasttime;
+	vec3_t vel;
 
 
 	if (pparams->onground == -1 ||
@@ -287,10 +283,12 @@ Used by view and sv_user
 */
 float V_CalcRoll(vec3_t angles, vec3_t velocity, float rollangle, float rollspeed)
 {
-	float   sign;
-	float   side;
-	float   value;
-	vec3_t  forward, right, up;
+	float sign;
+	float side;
+	float value;
+	vec3_t forward;
+	vec3_t right;
+	vec3_t up;
 
 	AngleVectors(angles, forward, right, up);
 
@@ -354,7 +352,8 @@ mlook and mouse, or klook and keyboard, pitch drifting is constantly stopped.
 */
 void V_DriftPitch(struct ref_params_s* pparams)
 {
-	float		delta, move;
+	float delta;
+	float move;
 
 	if (gEngfuncs.IsNoClipping() || !pparams->onground || pparams->demoplayback || pparams->spectator)
 	{
@@ -492,7 +491,8 @@ V_CalcIntermissionRefdef
 */
 void V_CalcIntermissionRefdef(struct ref_params_s* pparams)
 {
-	cl_entity_t* ent, * view;
+	cl_entity_t* ent;
+	cl_entity_t *view;
 	float		old;
 
 	// ent is the player model ( visible when out of body )
@@ -553,7 +553,11 @@ void V_CalcNormalRefdef(struct ref_params_s* pparams)
 	static float oldz = 0;
 	static float lasttime;
 
-	vec3_t camAngles, camForward, camRight, camUp;
+	vec3_t camAngles;
+	vec3_t camForward;
+	vec3_t camRight;
+	vec3_t camUp;
+
 	cl_entity_t* pwater;
 
 	V_DriftPitch(pparams);
@@ -598,7 +602,6 @@ void V_CalcNormalRefdef(struct ref_params_s* pparams)
 	// -- this prevents drawing errors in GL due to waves
 
 	//VectorAdd_f( pparams->vieworg, pparams->viewheight, pparams->vieworg );
-
 
 
 	waterOffset = 0;
@@ -714,7 +717,6 @@ void V_CalcNormalRefdef(struct ref_params_s* pparams)
 	gEngfuncs.V_ApplyShake(view->origin, view->angles, 0.9);
 
 
-
 	for (i = 0; i < 3; i++)
 	{
 		view->origin[i] += bob * 0.4 * pparams->forward[i];
@@ -730,8 +732,6 @@ void V_CalcNormalRefdef(struct ref_params_s* pparams)
 	//MODDDREMOVE: ??? why was this here?
 	VectorCopy_f(view->angles, view->curstate.angles);
 	//OKAY.  Ask around, is that weapon-bob thing fixed by un-commenting this out?
-
-
 
 
 	// pushing the view origin down off of the same X/Z plane as the ent's origin will give the
@@ -757,7 +757,6 @@ void V_CalcNormalRefdef(struct ref_params_s* pparams)
 	{
 		view->origin[2] += 0.5;
 	}
-
 
 
 	//MODDD - ladder bob?
@@ -1004,8 +1003,6 @@ void V_CalcNormalRefdef(struct ref_params_s* pparams)
 	}
 
 
-
-
 	float degreesToRadsMulti = M_PI / 180.0f;
 
 	if (global2PSEUDO_grabbedByBarancle) {
@@ -1039,16 +1036,14 @@ void V_CalcNormalRefdef(struct ref_params_s* pparams)
 
 	v_origin = pparams->vieworg;
 
-
-
-
-
-
 }
 
 void V_SmoothInterpolateAngles(float* startAngle, float* endAngle, float* finalAngle, float degreesPerSec)
 {
-	float absd, frac, d, threshhold;
+	float absd;
+	float frac;
+	float d;
+	float threshhold;
 
 	NormalizeAngles(startAngle);
 	NormalizeAngles(endAngle);
@@ -1106,9 +1101,9 @@ void V_SmoothInterpolateAngles(float* startAngle, float* endAngle, float* finalA
 // Get the origin of the Observer based around the target's position and angles
 void V_GetChaseOrigin(float* angles, float* origin, float distance, float* returnvec)
 {
-	vec3_t	vecEnd;
-	vec3_t	forward;
-	vec3_t	vecStart;
+	vec3_t vecEnd;
+	vec3_t forward;
+	vec3_t vecStart;
 	pmtrace_t* trace;
 	int maxLoops = 8;
 
@@ -1384,9 +1379,6 @@ void V_GetDoubleTargetsCam(cl_entity_t* ent1, cl_entity_t* ent2, float* angle, f
 
 	/* take middle between two viewangles
 	InterpolateAngles( newAngle, tempVec, newAngle, 0.5f); */
-
-
-
 }
 
 void V_GetDirectedChasePosition(cl_entity_t* ent1, cl_entity_t* ent2, float* angle, float* origin)
@@ -1461,8 +1453,6 @@ void V_GetChasePos(int target, float* cl_angles, float* origin, float* angles)
 		return;
 	}
 
-
-
 	if (gHUD.m_Spectator.m_autoDirector->value)
 	{
 		if (g_iUser3)
@@ -1509,7 +1499,6 @@ void V_GetInEyePos(int target, float* origin, float* angles)
 		VectorCopy_f(vJumpOrigin, origin);
 		return;
 	};
-
 
 	cl_entity_t* ent = gEngfuncs.GetEntityByIndex(target);
 
@@ -1601,26 +1590,26 @@ void V_GetMapChasePosition(int target, float* cl_angles, float* origin, float* a
 
 int V_FindViewModelByWeaponModel(int weaponindex)
 {
-
 	static char* modelmap[][2] = {
 		{ "models/p_crossbow.mdl", "models/v_crossbow.mdl" },
-	{ "models/p_crowbar.mdl", "models/v_crowbar.mdl" },
-	{ "models/p_egon.mdl", "models/v_egon.mdl" },
-	{ "models/p_gauss.mdl", "models/v_gauss.mdl" },
-	{ "models/p_9mmhandgun.mdl", "models/v_9mmhandgun.mdl" },
-	{ "models/p_grenade.mdl", "models/v_grenade.mdl" },
-	{ "models/p_hgun.mdl", "models/v_hgun.mdl" },
-	{ "models/p_9mmAR.mdl", "models/v_9mmAR.mdl" },
-	{ "models/p_357.mdl", "models/v_357.mdl" },
-	{ "models/p_rpg.mdl", "models/v_rpg.mdl" },
-	{ "models/p_shotgun.mdl", "models/v_shotgun.mdl" },
-	{ "models/p_squeak.mdl", "models/v_squeak.mdl" },
-	{ "models/p_tripmine.mdl", "models/v_tripmine.mdl" },
-	{ "models/p_satchel_radio.mdl", "models/v_satchel_radio.mdl" },
-	{ "models/p_satchel.mdl", "models/v_satchel.mdl" },
-	//MODDD - new.  Note that the chumtoad does not yet have a "p_..." model.
-	{ "models/chumtoad.mdl", "models/v_chub.mdl" },
-	{ NULL, NULL } };
+		{ "models/p_crowbar.mdl", "models/v_crowbar.mdl" },
+		{ "models/p_egon.mdl", "models/v_egon.mdl" },
+		{ "models/p_gauss.mdl", "models/v_gauss.mdl" },
+		{ "models/p_9mmhandgun.mdl", "models/v_9mmhandgun.mdl" },
+		{ "models/p_grenade.mdl", "models/v_grenade.mdl" },
+		{ "models/p_hgun.mdl", "models/v_hgun.mdl" },
+		{ "models/p_9mmAR.mdl", "models/v_9mmAR.mdl" },
+		{ "models/p_357.mdl", "models/v_357.mdl" },
+		{ "models/p_rpg.mdl", "models/v_rpg.mdl" },
+		{ "models/p_shotgun.mdl", "models/v_shotgun.mdl" },
+		{ "models/p_squeak.mdl", "models/v_squeak.mdl" },
+		{ "models/p_tripmine.mdl", "models/v_tripmine.mdl" },
+		{ "models/p_satchel_radio.mdl", "models/v_satchel_radio.mdl" },
+		{ "models/p_satchel.mdl", "models/v_satchel.mdl" },
+		//MODDD - new.  Note that the chumtoad does not yet have a "p_..." model.
+		{ "models/chumtoad.mdl", "models/v_chub.mdl" },
+		{ NULL, NULL }
+	};
 
 	struct model_s* weaponModel = IEngineStudio.GetModelByIndex(weaponindex);
 
@@ -1921,11 +1910,6 @@ void CMD_FirstPerson(void)
 
 
 
-
-
-
-
-
 /*
 =============
 V_Init
@@ -1952,8 +1936,6 @@ void V_Init(void)
 	//nah, see in_camera.cpp where it is already done (methods seem ignored in here?)
 	//gEngfuncs.pfnAddCommand		( "thirdperson", CMD_ThirdPerson );	//G-Cont
 	//gEngfuncs.pfnAddCommand		( "firstperson", CMD_FirstPerson );	//G-Cont
-
-
 
 }
 

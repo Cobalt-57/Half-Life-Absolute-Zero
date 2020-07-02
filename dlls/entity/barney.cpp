@@ -31,7 +31,7 @@
 //MODDD - why not???
 #include "util_model.h"
 
-EASY_CVAR_EXTERN(germanCensorship)
+EASY_CVAR_EXTERN(sv_germancensorship)
 
 extern BOOL globalPSEUDO_germanModel_barneyFound;
 
@@ -68,11 +68,11 @@ extern Schedule_t slBarneyEnemyDraw[];
 // Monster's Anim Events Go Here
 //=========================================================
 // first flag is barney dying for scripted sequences?
-#define 	BARNEY_AE_DRAW		( 2 )
-#define 	BARNEY_AE_SHOOT		( 3 )
-#define 	BARNEY_AE_HOLSTER	( 4 )
+#define BARNEY_AE_DRAW		( 2 )
+#define BARNEY_AE_SHOOT		( 3 )
+#define BARNEY_AE_HOLSTER	( 4 )
 //MODDD 
-#define 	BARNEY_AE_RELOAD		( 5 )
+#define BARNEY_AE_RELOAD	( 5 )
 
 
 

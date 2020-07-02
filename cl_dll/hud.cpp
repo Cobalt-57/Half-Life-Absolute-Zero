@@ -923,8 +923,8 @@ void CHud :: Init( void )
 	gEngfuncs.pfnAddCommand( "nocli", command_noclip2 );
 	*/
 
-	gEngfuncs.pfnAddCommand( "noclip_friendly", command_noclip2 );
-	gEngfuncs.pfnAddCommand( "god_friendly", command_god2 );
+	gEngfuncs.pfnAddCommand( "noclipalt", command_noclip2 );
+	gEngfuncs.pfnAddCommand( "godalt", command_god2 );
 
 	gEngfuncs.pfnAddCommand("fvoxtoggle", command_fvoxtoggle);
 
@@ -955,7 +955,12 @@ void CHud :: Init( void )
 	//CVAR_CREATE("test_cvar", "6", 0);
 	// FCVAR_CLIENTDLL | FCVAR_ARCHIVE
 
-
+//MODDD - ctt is short for 'client trace test'.
+	CVAR_CREATE("ctt1", "0", 0);
+	CVAR_CREATE("ctt2", "2", 0);
+	CVAR_CREATE("ctt3", "0", 0);  //used to be 2, works better with 0 here!
+	CVAR_CREATE("ctt4", "0", 0);
+	
 	gEngfuncs.pfnAddCommand("tc_init", command_test_cvar_init_link);
 
 	gEngfuncs.pfnAddCommand("tc_reset", command_test_cvar_reset);
@@ -1013,7 +1018,7 @@ void CHud :: Init( void )
 
 
 	//TEST!!!
-	CVAR_CREATE("pooptest", "0", FCVAR_ARCHIVE | FCVAR_SERVER);		// controls whether or not to automatically take screenshots at the end of a round
+	CVAR_CREATE("pregame_server_cvar", "0", FCVAR_ARCHIVE | FCVAR_SERVER);		// controls whether or not to automatically take screenshots at the end of a round
 
 
 

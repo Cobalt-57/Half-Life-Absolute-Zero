@@ -42,7 +42,7 @@
 
 EASY_CVAR_EXTERN(myStrobe)
 EASY_CVAR_EXTERN(raveEffectSpawnInterval)
-EASY_CVAR_EXTERN(germanCensorship)
+EASY_CVAR_EXTERN(sv_germancensorship)
 EASY_CVAR_EXTERN(mutePlayerPainSounds)
 EASY_CVAR_EXTERN(geigerChannel)
 EASY_CVAR_EXTERN(drawDebugBloodTrace)
@@ -100,7 +100,7 @@ EASY_CVAR_EXTERN(ladderSpeedMulti)
 EASY_CVAR_EXTERN(friendlyPianoFollowVolume)
 EASY_CVAR_EXTERN(playerUseDrawDebug)
 EASY_CVAR_EXTERN(playerFadeOutRate)
-EASY_CVAR_EXTERN(holsterAnims)
+EASY_CVAR_EXTERN(cl_holster)
 EASY_CVAR_EXTERN(hideDamage)
 EASY_CVAR_EXTERN(minimumRespawnDelay)
 EASY_CVAR_EXTERN(monsterToPlayerHitgroupSpecial)
@@ -3935,10 +3935,9 @@ void CBasePlayer::PreThink(void)
 //~Overrides "CheckTimeBasedDamage" from monster.cpp.
 void CBasePlayer::CheckTimeBasedDamage() 
 {
+	static float gtbdPrev = 0.0;
 	int i;
 	BYTE bDuration = 0;
-
-	static float gtbdPrev = 0.0;
 
 
 	//MODDD - check other too!
@@ -3962,7 +3961,6 @@ void CBasePlayer::CheckTimeBasedDamage()
 			//use the new bitmask.
 			m_bitsDamageTypeRef = &m_bitsDamageTypeMod;
 		}
-
 
 		// make sure bit is set for damage type
 		//if (m_bitsDamageType & (DMG_PARALYZE << i))
@@ -4069,7 +4067,6 @@ void CBasePlayer::CheckTimeBasedDamage()
 			default:
 				bDuration = 0;
 			}
-
 
 			/*
 			MODDD - diagnositic.
@@ -6826,7 +6823,7 @@ void CBasePlayer::SelectItem(const char *pstr)
 			m_bHolstering = TRUE;
 		}
 
-		if(EASY_CVAR_GET(holsterAnims) == 1){
+		if(EASY_CVAR_GET(cl_holster) == 1){
 			//using holster anim? Tell the currently equipped item to change to this weapon when that is over.
 			m_pQueuedActiveItem = pItem;  //set this later instead, after the holster anim is done.
 		}else{
@@ -7025,7 +7022,7 @@ void CBloodSplat::Spray ( void )
 	//MODDD - can't spray blood in german censorship mode.  If the player is a robot, spray oil maybe?
 	//MODDD TODO: oil?
 	//if ( g_Language != LANGUAGE_GERMAN )
-	if(EASY_CVAR_GET(germanCensorship) != 1)
+	if(EASY_CVAR_GET(sv_germancensorship) != 1)
 	{
 		UTIL_MakeVectors(pev->angles);
 		UTIL_TraceLine ( pev->origin, pev->origin + gpGlobals->v_forward * 128, ignore_monsters, pev->owner, & tr);
@@ -7168,17 +7165,27 @@ edict_t* CBasePlayer::GiveNamedItem( const char *pszName, int pszSpawnFlags, con
 	pszNameFinal = &resultpre[0];
 	
 	//MODDD - pre-check.
-	if ( FNullEnt( pent ) && !stringStartsWith(resultpre, "monster_") )
-	{
+	if ( FNullEnt( pent ) ){
+		// didn't work?  Try with or without "monster_" in front, whichever was missing.
+		// Monsters are the most commonly wanted spawn after all.
+		
+		if(!stringStartsWith(resultpre, "monster_")){
+			// lack it?  Try with it.
+			// Put "monster_" in there first.
+			strncpy(&result[0], "monster_", 8);
+			// and the rest of the tried name after that.
+			strncpy( &result[8], &resultpre[0], 127-8 );
+			result[127] = '\0';
+
+		}else{
+			// have it already?  Try without it.
+			// Just put the tried name in, 8 characters in (cuts off "monster_").
+			strncpy( &result[0], &resultpre[8], 127-8 );
+			result[127] = '\0';
+		}
 		//try putting "monster_" in front?
 		
-		//char command[128];
-		// ok to do it that way, yes?
-		strncpy(&result[0], "monster_", 8);
-
-		strncpy( &result[8], &resultpre[0], 127-8 );
-		result[127] = '\0';
-
+		// try once more.
 		pent = overyLongComplicatedProcessForCreatingAnEntity(result);
 		pszNameFinal = &result[0];
 	}

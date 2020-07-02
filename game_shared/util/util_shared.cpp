@@ -1425,6 +1425,122 @@ void convertIntToBinary(char* buffer, unsigned int arg, unsigned int binaryDigit
 
 
 
+
+//MODDD - from dlls/util.cpp, but also copied to hud_spectator (as-is).
+// Despite a comment that says otherwise, it was identical to this method,
+// just with a few less comments & commented-out section.
+void UTIL_StringToVector( float *pVector, const char *pString )
+{
+	char *pstr, *pfront, tempString[128];
+	int j;
+
+	strcpy( tempString, pString );
+	pstr = pfront = tempString;
+
+	for ( j = 0; j < 3; j++ )			// lifted from pr_edict.c
+	{
+		pVector[j] = atof( pfront );
+
+		while ( *pstr && *pstr != ' ' )
+			pstr++;
+		if (!*pstr)
+			break;
+		pstr++;
+		pfront = pstr;
+	}
+	if (j < 2)
+	{
+		/*
+		ALERT( at_error, "Bad field in entity!! %s:%s == \"%s\"\n",
+			pkvd->szClassName, pkvd->szKeyName, pkvd->szValue );
+		*/
+		for (j = j+1;j < 3; j++)
+			pVector[j] = 0;
+	}
+}
+
+
+void UTIL_StringToIntArray( int *pVector, int count, const char *pString )
+{
+	char *pstr, *pfront, tempString[128];
+	int j;
+
+	strcpy( tempString, pString );
+	pstr = pfront = tempString;
+
+	for ( j = 0; j < count; j++ )			// lifted from pr_edict.c
+	{
+		pVector[j] = atoi( pfront );
+
+		while ( *pstr && *pstr != ' ' )
+			pstr++;
+		if (!*pstr)
+			break;
+		pstr++;
+		pfront = pstr;
+	}
+
+	for ( j++; j < count; j++ )
+	{
+		pVector[j] = 0;
+	}
+}
+
+
+float clamp(float argTest, float argMin, float argMax){
+	if(argTest < argMin) return argMin;
+	else if(argTest > argMax) return argMax;
+	else return argTest;
+}
+
+Vector UTIL_ClampVectorToBox( const Vector &input, const Vector &clampSize )
+{
+	Vector temp = UTIL_ClampVectorToBoxNonNormalized(input, clampSize);
+
+	return temp.Normalize();
+}
+
+Vector UTIL_ClampVectorToBoxNonNormalized( const Vector &input, const Vector &clampSize )
+{
+	Vector sourceVector = input;
+
+	if ( sourceVector.x > clampSize.x )
+		sourceVector.x -= clampSize.x;
+	else if ( sourceVector.x < -clampSize.x )
+		sourceVector.x += clampSize.x;
+	else
+		sourceVector.x = 0;
+
+	if ( sourceVector.y > clampSize.y )
+		sourceVector.y -= clampSize.y;
+	else if ( sourceVector.y < -clampSize.y )
+		sourceVector.y += clampSize.y;
+	else
+		sourceVector.y = 0;
+	
+	if ( sourceVector.z > clampSize.z )
+		sourceVector.z -= clampSize.z;
+	else if ( sourceVector.z < -clampSize.z )
+		sourceVector.z += clampSize.z;
+	else
+		sourceVector.z = 0;
+
+	return sourceVector;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 BOOL IsMultiplayer(void){
 #ifdef CLIENT_DLL
 	// bIsMultiplayer()

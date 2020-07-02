@@ -1,10 +1,6 @@
 
-
-
 #include "chumtoadweapon.h"
-
 #include "util_debugdraw.h"
-
 
 
 //EASY_CVAR_EXTERN(testVar);
@@ -273,7 +269,6 @@ void CChumToadWeapon::setModel(const char* m){
 
 int CChumToadWeapon::GetItemInfo(ItemInfo *p)
 {
-
 	p->pszName = STRING(pev->classname);
 	p->pszAmmo1 = "Chum Toads";
 	p->iMaxAmmo1 = CHUMTOAD_MAX_CARRY;
@@ -281,16 +276,14 @@ int CChumToadWeapon::GetItemInfo(ItemInfo *p)
 	p->iMaxAmmo2 = -1;
 	p->iMaxClip = WEAPON_NOCLIP;
 
-
-#if SPLIT_ALIEN_THROWABLES_INTO_NEW_SLOT != 1
+#if SPLIT_ALIEN_WEAPONS_INTO_NEW_SLOT != 1
 	p->iSlot = 4;
 	p->iPosition = 4;
 #else
 	// to the new slot you go!
 	p->iSlot = 5;
-	p->iPosition = 1;
+	p->iPosition = 2;
 #endif
-
 
 	p->iId = m_iId = WEAPON_CHUMTOAD;
 	p->iWeight = CHUMTOAD_WEIGHT;
@@ -300,17 +293,8 @@ int CChumToadWeapon::GetItemInfo(ItemInfo *p)
 }
 
 
-
 BOOL CChumToadWeapon::Deploy( )
 {
-
-
-
-
-
-
-
-	
 	if(!globalflag_muteDeploySound){
 		// play hunt sound
 		float flRndSound = RANDOM_FLOAT ( 0 , 1 );

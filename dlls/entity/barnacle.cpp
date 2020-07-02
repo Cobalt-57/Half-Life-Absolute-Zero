@@ -32,7 +32,7 @@ EASY_CVAR_EXTERN(barnacleCanGib)
 EASY_CVAR_EXTERN(barnaclePrintout)
 EASY_CVAR_EXTERN(barnacleTongueRetractDelay)
 
-EASY_CVAR_EXTERN(germanCensorship)
+EASY_CVAR_EXTERN(sv_germancensorship)
 EASY_CVAR_EXTERN(allowGermanModels)
 EASY_CVAR_EXTERN(germanRobotGibs)
 EASY_CVAR_EXTERN(germanRobotGibsDecal)
@@ -162,7 +162,7 @@ int CBarnacle::BarnacleGetStandardGibSpawnID(){
 		return GIB_DUMMY_ID;
 	}
 
-	if(EASY_CVAR_GET(germanCensorship) != 1){
+	if(EASY_CVAR_GET(sv_germancensorship) != 1){
 		//german censorship is off? this will depend on this CVar.
 		if(CVAR_GET_FLOAT("violence_hgibs") != 0){
 			return GIB_HUMAN_ID;
@@ -811,7 +811,7 @@ GENERATE_GIBMONSTERGIB_IMPLEMENTATION(CBarnacle){
 		BOOL canSpawnBlend = TRUE;
 
 		/*
-		if(EASY_CVAR_GET(germanCensorship) != 1){
+		if(EASY_CVAR_GET(sv_germancensorship) != 1){
 			//german censorship is off? this will depend on this CVar.
 			canSpawnBlend = (CVAR_GET_FLOAT("violence_hgibs") != 0);
 		}else{

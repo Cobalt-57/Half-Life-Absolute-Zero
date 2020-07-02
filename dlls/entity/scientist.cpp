@@ -16,6 +16,29 @@
 // human scientist (passive lab worker)
 //=========================================================
 
+
+//TODO... god even more.
+//Make it so taking damage from TIMED_DAMAGE or TIMED_DAMAGE_MOD (right bitmask) doesn't unfollow. doesn't make sense to, no direct enemy to scare them to cause this damage.
+
+//MODDD - TODO!!!
+//SCIENTIST: say a line from fear's or NOOO when player dies while following!
+
+
+
+//NOTICE - are these unused?
+/*
+SC_NOGO scientist/dontgothere
+
+SC_MONST0 scientist/seeheadcrab
+SC_MONST1 scientist/importantspecies
+
+SC_HEAR0 scientist/ihearsomething
+SC_HEAR1 scientist/didyouhear
+SC_HEAR2 scientist/whatissound
+*/
+
+
+
 #include "ignore_warning_list.h"
 #include "extdll.h"
 #include "util.h"
@@ -27,82 +50,37 @@
 #include "scripted.h"
 #include "util_model.h"
 #include "soundent.h"
-
 //MODDD - added, so that the player's "setSuitUpdate" may be called directly (edicts are too general
 //and don't have that, nor are they safely moddable to my knowledge, very DLL intensive in transfers).
 #include "player.h"
 
 
-
-//TODO... god even more.
-//Make it so taking damage from TIMED_DAMAGE or TIMED_DAMAGE_MOD (right bitmask) doesn't unfollow. doesn't make sense to, no direct enemy to scare them to cause this damage.
-
-
-
-
-
-
-
-//NOTICE - are these unused?
-
-/*
-SC_NOGO scientist/dontgothere
-
-SC_MONST0 scientist/seeheadcrab
-SC_MONST1 scientist/importantspecies
-
-SC_HEAR0 scientist/ihearsomething
-SC_HEAR1 scientist/didyouhear
-SC_HEAR2 scientist/whatissound
-
-
-*/
-
-
-
-
-
-
-//MODDD - TODO!!!
-//SCIENTIST: say a line from fear's or NOOO when player dies while following!
-
-
-
-
-
 //MODDD
 EASY_CVAR_EXTERN(wildHeads)
-
-EASY_CVAR_EXTERN(germanCensorship)
-
+EASY_CVAR_EXTERN(sv_germancensorship)
 EASY_CVAR_EXTERN(scientistHealNPCDebug)
 EASY_CVAR_EXTERN(scientistHealNPC)
 EASY_CVAR_EXTERN(thatWasntPunch)
-
 EASY_CVAR_EXTERN(scientistHealNPCFract)
 EASY_CVAR_EXTERN(scientistHealCooldown)
-
 EASY_CVAR_EXTERN(monsterSpawnPrintout)
 extern BOOL globalPSEUDO_iCanHazMemez;
-
 //was this model found in the client's folder too?
 extern BOOL globalPSEUDO_germanModel_scientistFound;
-
 EASY_CVAR_EXTERN(scientistBravery)
+EASY_CVAR_EXTERN(pissedNPCs)
 
 
 
 
+#define NUM_SCIENTIST_HEADS		3
 
-#define 	NUM_SCIENTIST_HEADS		3
-
-
-
-
-extern void scientistHeadFilter( CBaseMonster& somePerson, int arg_numberOfModelBodyParts, int* trueBody);
-
-
-
+//=========================================================
+// Monster's Anim Events Go Here
+//=========================================================
+#define SCIENTIST_AE_HEAL		( 1 )
+#define SCIENTIST_AE_NEEDLEON	( 2 )
+#define SCIENTIST_AE_NEEDLEOFF	( 3 )
 
 
 //MODDD - there is a rather suble problem with this setup.
@@ -118,19 +96,12 @@ extern void scientistHeadFilter( CBaseMonster& somePerson, int arg_numberOfModel
 //HEAD_SLICK
 //See the issue?  If you want to remove anything BUT the last one, simply cutting the last one won't be completely effective.
 
-
 //So, better idea:  handle the offset (if not using the alpha model that has 3 head models).  Otherwise, this is not necessary:
 //So if there are any immediate issues, try adjusting this first.
 #define headOffsetFix 0
 //NOTE: the alpa model can still treat "HEAD_SLICK" as the egon head if it sticks to being "2".  What is in a name, after all?
 
-#if headOffsetFix == 0
-	enum { HEAD_GLASSES = 0, HEAD_EINSTEIN = 1, HEAD_SLICK = 2 };
-	int scientistHeadsModelRef[] = {0, 1, 2};
-#else
-	enum { HEAD_GLASSES = 0, HEAD_EINSTEIN = 1, HEAD_SLICK = 3 };
-	int scientistHeadsModelRef[] = {0, 1, 3};
-#endif
+
 
 enum
 {
@@ -143,8 +114,6 @@ enum
 	SCHED_SCIENTIST_ANGRY_CHASE_ENEMY,
 	SCHED_SCIENTIST_ANGRY_CHASE_ENEMY_FAILED,
 };
-
-
 	
 enum
 {
@@ -159,16 +128,22 @@ enum
 	TASK_SCIENTIST_ANGRY_CHASE_ENEMY_FAILED
 };
 
-//=========================================================
-// Monster's Anim Events Go Here
-//=========================================================
-#define 	SCIENTIST_AE_HEAL		( 1 )
-#define 	SCIENTIST_AE_NEEDLEON	( 2 )
-#define 	SCIENTIST_AE_NEEDLEOFF	( 3 )
+
+
+extern void scientistHeadFilter( CBaseMonster& somePerson, int arg_numberOfModelBodyParts, int* trueBody);
+
+
+#if headOffsetFix == 0
+	enum { HEAD_GLASSES = 0, HEAD_EINSTEIN = 1, HEAD_SLICK = 2 };
+	int scientistHeadsModelRef[] = {0, 1, 2};
+#else
+	enum { HEAD_GLASSES = 0, HEAD_EINSTEIN = 1, HEAD_SLICK = 3 };
+	int scientistHeadsModelRef[] = {0, 1, 3};
+#endif
 
 
 
-EASY_CVAR_EXTERN(pissedNPCs)
+
 
 //=======================================================
 // Scientist
@@ -1609,37 +1584,23 @@ void CScientist :: SetYawSpeed ( void )
 //=========================================================
 void CScientist :: HandleAnimEvent( MonsterEvent_t *pEvent )
 {
-	//float const;
-	//MODDD - we want the total number of heads in the model, even including ones we skip (only matters for the headfix: have all 3 in mind for the shift)
-	//if(this->numberOfModelBodyParts == 2){
-		/*
-		#if headOffsetFix == 0
-			#define NUM_SCIENTIST_HEADS_MODEL NUM_SCIENTIST_HEADS
-		#else
-			#define NUM_SCIENTIST_HEADS_MODEL NUM_SCIENTIST_HEADS+1
-		#endif
-		*/
-	//}else{
-	//
-	//}
-
 	//MODDD - COUNTREMOVAL.  Count is not consistent across machines.  Scrapped.
+	// Wait.. really?  Let's try this again sometime.
 	//const int NUM_SCIENTIST_HEADS_MODEL = this->numberOfModelBodyParts+1;
 	const int NUM_SCIENTIST_HEADS_MODEL = 3;
 
 	int oldBody;
 
-	switch( pEvent->event )
-	{
+	switch( pEvent->event ){
 	case SCIENTIST_AE_HEAL:		// Heal my target (if within range)
-		{
+	{
 		Heal();
 		//re-pick a new TargetEnt.
 		forgetHealNPC();
 		break;
-		}
+	}
 	case SCIENTIST_AE_NEEDLEON:
-		{
+	{
 		oldBody = pev->body;
 		//easyPrintLine("OLD BODY1 %d %d", oldBody, pev->body);
 		if(NUM_SCIENTIST_HEADS_MODEL > 1){
@@ -1651,9 +1612,9 @@ void CScientist :: HandleAnimEvent( MonsterEvent_t *pEvent )
 
 		//easyPrintLine("NEW BODY1 %d", pev->body);
 		break;
-		}
+	}
 	case SCIENTIST_AE_NEEDLEOFF:
-		{
+	{
 		oldBody = pev->body;
 		//easyPrintLine("OLD BODY2 %d %d", oldBody, pev->body);
 		if(NUM_SCIENTIST_HEADS_MODEL > 1){
@@ -1664,11 +1625,12 @@ void CScientist :: HandleAnimEvent( MonsterEvent_t *pEvent )
 
 		//easyPrintLine("NEW BODY2 %d", pev->body);
 		break;
-		}
+	}
 	default:
 		CTalkMonster::HandleAnimEvent( pEvent );
-	}
+	}//END OF switch(event)
 }
+
 
 //MODDD - some common logic for CScientist and similar classes for determining the head to use at spawn.
 // Keeps out invalid choices for pev->body (head choice) or forces randomization if called for.
@@ -1819,8 +1781,8 @@ void CScientist :: Spawn( void )
 	
 	pev->skin = 0; //default.
 
-	//if( (pev->spawnflags & SF_MONSTER_TALKMONSTER_BLOODY) && EASY_CVAR_GET(germanCensorship) != 1 && EASY_CVAR_GET(scientistModel) < 2){
-	if( (pev->spawnflags & SF_MONSTER_TALKMONSTER_BLOODY) && EASY_CVAR_GET(germanCensorship) != 1){
+	//if( (pev->spawnflags & SF_MONSTER_TALKMONSTER_BLOODY) && EASY_CVAR_GET(sv_germancensorship) != 1 && EASY_CVAR_GET(scientistModel) < 2){
+	if( (pev->spawnflags & SF_MONSTER_TALKMONSTER_BLOODY) && EASY_CVAR_GET(sv_germancensorship) != 1){
 		pev->skin = 1;
 		
 		if(EASY_CVAR_GET(monsterSpawnPrintout) == 1){
@@ -3226,7 +3188,7 @@ void CDeadScientist :: Spawn( )
 
 	//MOVED TO "setModelCustom" for the dead scientist.
 	/*
-	if(EASY_CVAR_GET(germanCensorship) != 1 && EASY_CVAR_GET(scientistModel) > 0){
+	if(EASY_CVAR_GET(sv_germancensorship) != 1 && EASY_CVAR_GET(scientistModel) > 0){
 		//MODDD - uncommented out, used to be commented out.
 		//pev->skin += 2; // use bloody skin -- UNDONE: Turn this back on when we have a bloody skin again!
 		pev->skin = 2;
@@ -3240,8 +3202,8 @@ void CDeadScientist :: Spawn( )
 
 
 	pev->skin = 0; //default
-	//if(EASY_CVAR_GET(germanCensorship) != 1 && EASY_CVAR_GET(scientistModel) < 2){
-	if(EASY_CVAR_GET(germanCensorship) != 1){
+	//if(EASY_CVAR_GET(sv_germancensorship) != 1 && EASY_CVAR_GET(scientistModel) < 2){
+	if(EASY_CVAR_GET(sv_germancensorship) != 1){
 		//MODDD - uncommented out, used to be commented out.
 		//pev->skin += 2; // use bloody skin -- UNDONE: Turn this back on when we have a bloody skin again!
 		pev->skin = 2;

@@ -15,11 +15,8 @@
 #ifndef PLAYER_H
 #define PLAYER_H
 
-
-
 #include "pm_materials.h"
 #include "friendly.h"
-
 
 
 
@@ -50,21 +47,19 @@
 //
 // Player PHYSICS FLAGS bits
 //
-#define 	PFLAG_ONLADDER		( 1<<0 )
-#define 	PFLAG_ONSWING		( 1<<0 )
-#define 	PFLAG_ONTRAIN		( 1<<1 )
-#define 	PFLAG_ONBARNACLE	( 1<<2 )
-#define 	PFLAG_DUCKING		( 1<<3 )		// In the process of ducking, but totally squatted yet
-#define 	PFLAG_USING			( 1<<4 )		// Using a continuous entity
-#define 	PFLAG_OBSERVER		( 1<<5 )		// player is locked in stationary cam mode. Spectators can move, observers can't.
+#define PFLAG_ONLADDER		( 1<<0 )
+#define PFLAG_ONSWING		( 1<<0 )
+#define PFLAG_ONTRAIN		( 1<<1 )
+#define PFLAG_ONBARNACLE	( 1<<2 )
+#define PFLAG_DUCKING		( 1<<3 )		// In the process of ducking, but totally squatted yet
+#define PFLAG_USING			( 1<<4 )		// Using a continuous entity
+#define PFLAG_OBSERVER		( 1<<5 )		// player is locked in stationary cam mode. Spectators can move, observers can't.
 
 
 #define AUTOAIM_2DEGREES  0.0348994967025
 #define AUTOAIM_5DEGREES  0.08715574274766
 #define AUTOAIM_8DEGREES  0.1391731009601
 #define AUTOAIM_10DEGREES 0.1736481776669
-
-
 
 
 //
@@ -96,8 +91,6 @@
 #define SUITFIRSTUPDATETIME 0.1
 
 
-
-
 #define SOUND_FLASHLIGHT_ON		"items/flashlight1.wav"
 #define SOUND_FLASHLIGHT_OFF	"items/flashlight1.wav"
 
@@ -107,9 +100,6 @@
 #define SBAR_STRING_SIZE 128
 
 #define CHAT_INTERVAL 1.0f
-
-
-
 
 
 
@@ -135,6 +125,7 @@ enum sbar_data
 
 // MODDD - global method, moved from client.cpp
 extern void respawn(entvars_t *pev, BOOL fCopyCorpse);
+
 
 
 class CBasePlayer : public CBaseMonster

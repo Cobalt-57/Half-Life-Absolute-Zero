@@ -175,33 +175,8 @@ int CHudSpectator::Init()
 //-----------------------------------------------------------------------------
 // UTIL_StringToVector originally from ..\dlls\util.cpp, slightly changed
 //-----------------------------------------------------------------------------
-
-void UTIL_StringToVector( float * pVector, const char *pString )
-{
-	char *pstr, *pfront, tempString[128];
-	int j;
-
-	strcpy( tempString, pString );
-	pstr = pfront = tempString;
-	
-	for ( j = 0; j < 3; j++ )		
-	{
-		pVector[j] = atof( pfront );
-		
-		while ( *pstr && *pstr != ' ' )
-			pstr++;
-		if (!*pstr)
-			break;
-		pstr++;
-		pfront = pstr;
-	}
-
-	if (j < 2)
-	{
-		for (j = j+1;j < 3; j++)
-			pVector[j] = 0;
-	}
-}
+//MODDD - canned.  Not even slightly changed from that one, and moved t
+// util_shared.h/.cpp to be available here.
 
 int UTIL_FindEntityInMap(char * name, float * origin, float * angle)
 {

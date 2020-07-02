@@ -157,7 +157,17 @@ void CHalfLifeMultiplay::RefreshSkillData( void )
 		gSkillData.plrDmgBuckshot = 20;// fewer pellets in deathmatch
 
 		// Crossbow
+		// MODDD NOTE-  wait.   what.
+		// So let me see if I understand this right.
+		// There is in skill.cfg, a series of values.  sk_plr_xbow_bolt_client.
+		// For saying how much damage to do with the crossbow against other players.    Alright.
+		// In retail, it would only be used in singleplayer, where there are NO OTHER PLAYERS.
+		// In multiplayer, whatever was there, would be ignored and use this hardcoded "20" instead.
+		// Absolutely.  Baffling.
+		// And note that 'plrDmgCrossbowMonster' is not overridden.
+		// Which makes sense, monsters in multiplayer wasn't really focused on anyway.
 		gSkillData.plrDmgCrossbowClient = 20;
+		
 
 		// RPG
 		gSkillData.plrDmgRPG = 120;

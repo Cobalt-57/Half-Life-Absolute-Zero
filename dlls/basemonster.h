@@ -165,8 +165,8 @@ extern DLL_GLOBAL CONSTANT float g_flLongRange;
 //MODDD
 // These were in h_ai.cpp too?  Not some .h file included in some places?
 // Not even referred to anywhere.  GOODBYE.
-//#define 	NUM_LATERAL_CHECKS		13  // how many checks are made on each side of a monster looking for lateral cover
-//#define 	NUM_LATERAL_LOS_CHECKS		6  // how many checks are made on each side of a monster looking for lateral cover
+//#define NUM_LATERAL_CHECKS 13  // how many checks are made on each side of a monster looking for lateral cover
+//#define NUM_LATERAL_LOS_CHECKS 6  // how many checks are made on each side of a monster looking for lateral cover
 
 
 

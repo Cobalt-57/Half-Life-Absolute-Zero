@@ -52,7 +52,7 @@ EASY_CVAR_EXTERN(flashLightSpawnDistVertMin)
 EASY_CVAR_EXTERN(flashLightSpawnDistVertMax)
 EASY_CVAR_EXTERN(flashLightMultiColor)
 
-EASY_CVAR_EXTERN(germanCensorship)
+EASY_CVAR_EXTERN(sv_germancensorship)
 
 EASY_CVAR_EXTERN(sparksEnvMulti)
 EASY_CVAR_EXTERN(shrapRand)
@@ -107,9 +107,11 @@ extern DLL_GLOBAL short g_sModelIndexLaser;// holds the index for the laser beam
 #define ALIEN_GIB_COUNT			4
 #define GERMAN_GIB_COUNT		11
 
+
 #define ENTVARS_COUNT		(sizeof(gEntvarsDescription)/sizeof(gEntvarsDescription[0]))
 
 #define SWAP(a,b,temp)	((temp)=(a),(a)=(b),(b)=(temp))
+
 
 EASY_CVAR_DECLARATION_SERVER_MASS
 
@@ -1728,14 +1730,14 @@ int UTIL_IsMasterTriggered(string_t sMaster, CBaseEntity *pActivator)
 BOOL UTIL_ShouldShowBlood( int color )
 {
 
-	//EASY_CVAR_GET(germanCensorship) != 1 &&
+	//EASY_CVAR_GET(sv_germancensorship) != 1 &&
 	//if (&& color != DONT_BLEED )
 	//{
 
 		if(color == DONT_BLEED){
 			//don't try, clearly a signal not to.
 			return FALSE;
-		}else if (color == BLOOD_COLOR_RED && EASY_CVAR_GET(germanCensorship) != 1 )
+		}else if (color == BLOOD_COLOR_RED && EASY_CVAR_GET(sv_germancensorship) != 1 )
 		{
 			if ( CVAR_GET_FLOAT("violence_hblood") != 0 )
 				return TRUE;
@@ -1744,7 +1746,7 @@ BOOL UTIL_ShouldShowBlood( int color )
 			//oil from robots? never censored.
 			return TRUE;
 		}
-		else if(EASY_CVAR_GET(germanCensorship) != 1) //even alien blood is restricted by germanCensorship, but not gibs? Keep it this way?
+		else if(EASY_CVAR_GET(sv_germancensorship) != 1) //even alien blood is restricted by sv_germancensorship, but not gibs? Keep it this way?
 		{
 			if ( CVAR_GET_FLOAT("violence_ablood") != 0 )
 				return TRUE;
@@ -1767,7 +1769,7 @@ void UTIL_BloodStream( const Vector &origin, const Vector &direction, int color,
 	//MODDD - g_Language  is linked to a non-existent CVar.  Use this instead.
 	//if ( g_Language == LANGUAGE_GERMAN && color == BLOOD_COLOR_RED )
 	/*
-	if(EASY_CVAR_GET(germanCensorship) == 1 && color==BLOOD_COLOR_RED){
+	if(EASY_CVAR_GET(sv_germancensorship) == 1 && color==BLOOD_COLOR_RED){
 		color = 0;
 	}
 	*/
@@ -1799,7 +1801,7 @@ void UTIL_BloodDrips( const Vector &origin, const Vector &direction, int color, 
 	//if ( g_Language == LANGUAGE_GERMAN && color == BLOOD_COLOR_RED )
 	
 	//MODDD - handle this per model instead.
-	//if(EASY_CVAR_GET(germanCensorship) == 1 && EASY_CVAR_GET(allowGermanModels) == 1 && color == BLOOD_COLOR_RED)
+	//if(EASY_CVAR_GET(sv_germancensorship) == 1 && EASY_CVAR_GET(allowGermanModels) == 1 && color == BLOOD_COLOR_RED)
 	//	color = 0;
 
 	if ( IsMultiplayer() )
@@ -2803,104 +2805,8 @@ BOOL UTIL_TeamsMatch( const char *pTeamName1, const char *pTeamName2 )
 }
 
 
-void UTIL_StringToVector( float *pVector, const char *pString )
-{
-	char *pstr, *pfront, tempString[128];
-	int j;
 
-	strcpy( tempString, pString );
-	pstr = pfront = tempString;
-
-	for ( j = 0; j < 3; j++ )			// lifted from pr_edict.c
-	{
-		pVector[j] = atof( pfront );
-
-		while ( *pstr && *pstr != ' ' )
-			pstr++;
-		if (!*pstr)
-			break;
-		pstr++;
-		pfront = pstr;
-	}
-	if (j < 2)
-	{
-		/*
-		ALERT( at_error, "Bad field in entity!! %s:%s == \"%s\"\n",
-			pkvd->szClassName, pkvd->szKeyName, pkvd->szValue );
-		*/
-		for (j = j+1;j < 3; j++)
-			pVector[j] = 0;
-	}
-}
-
-
-void UTIL_StringToIntArray( int *pVector, int count, const char *pString )
-{
-	char *pstr, *pfront, tempString[128];
-	int j;
-
-	strcpy( tempString, pString );
-	pstr = pfront = tempString;
-
-	for ( j = 0; j < count; j++ )			// lifted from pr_edict.c
-	{
-		pVector[j] = atoi( pfront );
-
-		while ( *pstr && *pstr != ' ' )
-			pstr++;
-		if (!*pstr)
-			break;
-		pstr++;
-		pfront = pstr;
-	}
-
-	for ( j++; j < count; j++ )
-	{
-		pVector[j] = 0;
-	}
-}
-
-
-float clamp(float argTest, float argMin, float argMax){
-	if(argTest < argMin) return argMin;
-	else if(argTest > argMax) return argMax;
-	else return argTest;
-}
-
-Vector UTIL_ClampVectorToBox( const Vector &input, const Vector &clampSize )
-{
-	Vector temp = UTIL_ClampVectorToBoxNonNormalized(input, clampSize);
-
-	return temp.Normalize();
-}
-
-Vector UTIL_ClampVectorToBoxNonNormalized( const Vector &input, const Vector &clampSize )
-{
-	Vector sourceVector = input;
-
-	if ( sourceVector.x > clampSize.x )
-		sourceVector.x -= clampSize.x;
-	else if ( sourceVector.x < -clampSize.x )
-		sourceVector.x += clampSize.x;
-	else
-		sourceVector.x = 0;
-
-	if ( sourceVector.y > clampSize.y )
-		sourceVector.y -= clampSize.y;
-	else if ( sourceVector.y < -clampSize.y )
-		sourceVector.y += clampSize.y;
-	else
-		sourceVector.y = 0;
-	
-	if ( sourceVector.z > clampSize.z )
-		sourceVector.z -= clampSize.z;
-	else if ( sourceVector.z < -clampSize.z )
-		sourceVector.z += clampSize.z;
-	else
-		sourceVector.z = 0;
-
-	return sourceVector;
-}
+//MODDD - methods involving vectors moved to util_shared.h/.cpp.
 
 
 //MODDD - the as-is version can be fooled into picking a water level below oneself if the floor is closer than the top of the
@@ -5056,20 +4962,20 @@ void updateCVarRefs(entvars_t *pev){
 
 
 
-	if(globalPSEUDO_germanCensorshipMem != EASY_CVAR_GET(germanCensorship) || globalPSEUDO_allowGermanModelsMem != EASY_CVAR_GET(allowGermanModels)){
+	if(globalPSEUDO_germanCensorshipMem != EASY_CVAR_GET(sv_germancensorship) || globalPSEUDO_allowGermanModelsMem != EASY_CVAR_GET(allowGermanModels)){
 
 		globalPSEUDO_allowGermanModelsMem = EASY_CVAR_GET(allowGermanModels);
 
-		//easyForcePrintLine("ARE YOU amazin %.2f %.2f %.2f", globalPSEUDO_canApplyGermanCensorship, EASY_CVAR_GET(germanCensorship), EASY_CVAR_GET(allowGermanModels));
+		//easyForcePrintLine("ARE YOU amazin %.2f %.2f %.2f", globalPSEUDO_canApplyGermanCensorship, EASY_CVAR_GET(sv_germancensorship), EASY_CVAR_GET(allowGermanModels));
 
-		if(globalPSEUDO_canApplyGermanCensorship != 1 && (globalPSEUDO_germanCensorshipMem != -1 && EASY_CVAR_GET(germanCensorship) == 1) && EASY_CVAR_GET(allowGermanModels) == 1){
-		//if(globalPSEUDO_canApplyGermanCensorship != 1 && EASY_CVAR_GET(germanCensorship) == 1 && EASY_CVAR_GET(allowGermanModels) == 1){
-			//note: "EASY_CVAR_GET(germanCensorship)" being -1 means this is the first time it has been set.  Trust this is not the doing of the user.
+		if(globalPSEUDO_canApplyGermanCensorship != 1 && (globalPSEUDO_germanCensorshipMem != -1 && EASY_CVAR_GET(sv_germancensorship) == 1) && EASY_CVAR_GET(allowGermanModels) == 1){
+		//if(globalPSEUDO_canApplyGermanCensorship != 1 && EASY_CVAR_GET(sv_germancensorship) == 1 && EASY_CVAR_GET(allowGermanModels) == 1){
+			//note: "EASY_CVAR_GET(sv_germancensorship)" being -1 means this is the first time it has been set.  Trust this is not the doing of the user.
 			easyForcePrintLine("***Change map, restart, or load to update models.  Must have german models.");
-			//  ...CVars are \"germanCensorship\" & \"allowGermanModels\"***"
+			//  ...CVars are \"sv_germancensorship\" & \"allowGermanModels\"***"
 		}
 
-		globalPSEUDO_germanCensorshipMem = EASY_CVAR_GET(germanCensorship);
+		globalPSEUDO_germanCensorshipMem = EASY_CVAR_GET(sv_germancensorship);
 
 		//this will probably need updating too, as the scientist model is also affected by German censorship.
 		//if(arg_suggestedOrigin != NULL){
@@ -5761,8 +5667,8 @@ void method_precacheAll(void){
 	globalPSEUDO_germanModel_hassaultFound = FALSE;
 
 
-	if(EASY_CVAR_GET(germanCensorship) == -1){
-		//global_germanCensorship = EASY_CVAR_GET(germanCensorship);
+	if(EASY_CVAR_GET(sv_germancensorship) == -1){
+		//global_germanCensorship = EASY_CVAR_GET(sv_germancensorship);
 
 		//"gets the point across"
 		//global_allowGermanModels = EASY_CVAR_GET(allowGermanModels);
@@ -5775,8 +5681,8 @@ void method_precacheAll(void){
 
 	//!!!!tryLoadGermanGibs  !!!!!
 
-	//easyForcePrintLine("ARE YOU flaming %.2f %.2f", EASY_CVAR_GET(germanCensorship), EASY_CVAR_GET(allowGermanModels));
-	if(EASY_CVAR_GET(germanCensorship) == 1 && EASY_CVAR_GET(allowGermanModels) == 1){
+	//easyForcePrintLine("ARE YOU flaming %.2f %.2f", EASY_CVAR_GET(sv_germancensorship), EASY_CVAR_GET(allowGermanModels));
+	if(EASY_CVAR_GET(sv_germancensorship) == 1 && EASY_CVAR_GET(allowGermanModels) == 1){
 		
 		if( !(globalPSEUDO_germanModel_hgibFound = verifyModelExists(GERMAN_GIB_PATH)) ){
 			easyForcePrintLine("***NOTICE: model \"%s\" missing.  Gibs will not spawn.***", GERMAN_GIB_PATH);
@@ -5828,7 +5734,7 @@ void method_precacheAll(void){
 		
 
 	globalPSEUDO_allowGermanModelsMem = EASY_CVAR_GET(allowGermanModels);
-	//globalPSEUDO_germanCensorshipMem = EASY_CVAR_GET(germanCensorship);
+	//globalPSEUDO_germanCensorshipMem = EASY_CVAR_GET(sv_germancensorship);
 
 
 	//Actually these are so likely to be called, just precache them unconditionally.
@@ -6920,7 +6826,7 @@ void PRINTQUEUE_STUKA_SEND(PrintQueue& toPrint, const char* src, ...){
 }
 
 BOOL getGermanModelsAllowed(void){
-	if(EASY_CVAR_GET(germanCensorship) == 1 && EASY_CVAR_GET(allowGermanModels) == 1 && globalPSEUDO_canApplyGermanCensorship == 1){
+	if(EASY_CVAR_GET(sv_germancensorship) == 1 && EASY_CVAR_GET(allowGermanModels) == 1 && globalPSEUDO_canApplyGermanCensorship == 1){
 		return TRUE;
 	}else{
 		return FALSE;

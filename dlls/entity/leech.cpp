@@ -42,31 +42,31 @@
 #include "basemonster.h"
 
 
+// ???   should we try this?
+#define DEBUG_BEAMS 0
+
+#if DEBUG_BEAMS
+#include "effects.h"
+#endif
+
+
 
 
 // Animation events
 #define LEECH_AE_ATTACK		1
 #define LEECH_AE_FLOP		2
 
-
 // Movement constants
-
-#define 	LEECH_ACCELERATE		10
-#define 	LEECH_CHECK_DIST		45
-#define 	LEECH_SWIM_SPEED		50
-#define 	LEECH_SWIM_ACCEL		80
-#define 	LEECH_SWIM_DECEL		10
-#define 	LEECH_TURN_RATE			90
-#define 	LEECH_SIZEX				10
-#define 	LEECH_FRAMETIME			0.1
-
+#define LEECH_ACCELERATE		10
+#define LEECH_CHECK_DIST		45
+#define LEECH_SWIM_SPEED		50
+#define LEECH_SWIM_ACCEL		80
+#define LEECH_SWIM_DECEL		10
+#define LEECH_TURN_RATE			90
+#define LEECH_SIZEX				10
+#define LEECH_FRAMETIME			0.1
 
 
-#define DEBUG_BEAMS		0
-
-#if DEBUG_BEAMS
-#include "effects.h"
-#endif
 
 
 class CLeech : public CBaseMonster

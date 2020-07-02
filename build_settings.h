@@ -51,9 +51,8 @@
 	#define PROTECTION_FLAG | FCVAR_PROTECTED
 #endif
 
-// If on, alien throwables (snark, chumtoad) go into their own slot #6.
-// This reduces some of the clutter slot #5 has compared to the rest.
-#define SPLIT_ALIEN_THROWABLES_INTO_NEW_SLOT 1
+// If on, alien weapons (hornetgun, snark, chumtoad) go into their own slot #6.
+#define SPLIT_ALIEN_WEAPONS_INTO_NEW_SLOT 1
 
 
 

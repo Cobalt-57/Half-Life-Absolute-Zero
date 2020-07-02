@@ -45,7 +45,30 @@
 #include "game.h"
 #include "crossbowbolt.h"
 
-extern DLL_GLOBAL int  g_iSkillLevel;
+
+
+//#define HASSASSIN_CROSSBOW_RELOAD_APPLY_DELAY 1.1
+EASY_CVAR_EXTERN(hassassinCrossbowReloadSoundDelay)
+EASY_CVAR_EXTERN(thatWasntPunch)
+EASY_CVAR_EXTERN(hassassinCrossbowDebug)
+
+
+extern DLL_GLOBAL int g_iSkillLevel;
+
+#define HASSASSIN_CROSSBOW_RELOAD_ANIM "reload"
+#define bits_MEMORY_BADJUMP		(bits_MEMORY_CUSTOM1)
+
+//=========================================================
+// Monster's Anim Events Go Here
+//=========================================================
+#define ASSASSIN_AE_SHOOT1	1
+#define ASSASSIN_AE_TOSS1	2
+#define ASSASSIN_AE_JUMP	3
+
+
+
+
+
 
 
 
@@ -75,14 +98,7 @@ enum hAssassin_sequence {
 	HASSASSIN_LANDFROMJUMP, //26, 30
 	HASSASSIN_VICTORY_IDLE2, //61, 15
 
-
-
 };
-
-
-
-
-
 
 
 
@@ -116,27 +132,6 @@ enum
 };
 
 
-//=========================================================
-// Monster's Anim Events Go Here
-//=========================================================
-#define 	ASSASSIN_AE_SHOOT1	1
-#define 	ASSASSIN_AE_TOSS1	2
-#define 	ASSASSIN_AE_JUMP	3
-
-
-#define bits_MEMORY_BADJUMP		(bits_MEMORY_CUSTOM1)
-
-
-//#define HASSASSIN_CROSSBOW_RELOAD_APPLY_DELAY 1.1
-EASY_CVAR_EXTERN(hassassinCrossbowReloadSoundDelay)
-
-#define HASSASSIN_CROSSBOW_RELOAD_ANIM "reload"
-
-
-
-
-EASY_CVAR_EXTERN(thatWasntPunch)
-EASY_CVAR_EXTERN(hassassinCrossbowDebug)
 
 
 
@@ -1080,22 +1075,22 @@ void CHAssassin :: HandleAnimEvent( MonsterEvent_t *pEvent )
 	{
 	case ASSASSIN_AE_SHOOT1:
 		{
-
 			if(m_cAmmoLoaded > 0){
 				Shoot( );
 			}
-			
 			break;
 		}
 	case ASSASSIN_AE_TOSS1:
 		{
-			this->m_fSequenceLoops = FALSE;
+			if (pev->framerate > 0) {
+				this->m_fSequenceLoops = FALSE;
 
-			UTIL_MakeVectors( pev->angles );
-			CGrenade::ShootTimed( pev, pev->origin + gpGlobals->v_forward * 34 + Vector (0, 0, 32), m_vecTossVelocity, 2.0 );
+				UTIL_MakeVectors(pev->angles);
+				CGrenade::ShootTimed(pev, pev->origin + gpGlobals->v_forward * 34 + Vector(0, 0, 32), m_vecTossVelocity, 2.0);
 
-			m_flNextGrenadeCheck = gpGlobals->time + 6;// wait six seconds before even looking again to see if a grenade can be thrown.
-			m_fThrowGrenade = FALSE;
+				m_flNextGrenadeCheck = gpGlobals->time + 6;// wait six seconds before even looking again to see if a grenade can be thrown.
+				m_fThrowGrenade = FALSE;
+			}
 			// !!!LATER - when in a group, only try to throw grenade if ordered.
 			break;
 		}

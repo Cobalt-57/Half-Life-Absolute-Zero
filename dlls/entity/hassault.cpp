@@ -125,7 +125,7 @@ EASY_CVAR_EXTERN(hassaultMeleeAnimSpeedMulti)
 
 EASY_CVAR_EXTERN(hassaultMeleeAttackEnabled)
 
-EASY_CVAR_EXTERN(germanCensorship)
+EASY_CVAR_EXTERN(sv_germancensorship)
 extern BOOL globalPSEUDO_germanModel_hassaultFound;
 
 

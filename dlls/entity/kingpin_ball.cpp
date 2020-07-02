@@ -36,7 +36,7 @@ void CKingpinBall :: Spawn( void ){
 
 	pathfind_onRoute = FALSE;
 
-	if(WorldGraph.map_anyAirNodes){
+	if(map_anyAirNodes){
 		//Use a different type of think to mimic 
 		
 		if(m_hEnemy != NULL){

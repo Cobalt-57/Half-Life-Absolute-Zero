@@ -120,15 +120,15 @@ public:
 
 	void DoConnect( void )
 	{
-		const char *info;
+		const char *strInfo;
 		const char *address;
 		char sz[ 256 ];
 
-		info = ServersGetInfo( m_nMouseOverRow );
-		if ( !info )
+		strInfo = ServersGetInfo( m_nMouseOverRow );
+		if ( !strInfo)
 			return;
 
-		address = gEngfuncs.pNetAPI->ValueForKey( info, "address" );
+		address = gEngfuncs.pNetAPI->ValueForKey(strInfo, "address" );
 		//gEngfuncs.Con_Printf( "Connecting to %s\n", address );
 
 		sprintf( sz, "connect %s\n", address );
@@ -168,11 +168,12 @@ public:
 	
 	virtual Panel* getCellRenderer(int column,int row,bool columnSelected,bool rowSelected,bool cellSelected)
 	{
-		const char *info;
-		const char *val, *val2;
+		const char* strInfo;
+		const char* val;
+		const char* val2;
 		char sz[ 32 ];
 
-		info = ServersGetInfo( row );
+		strInfo = ServersGetInfo( row );
 
 		if ( row == m_nMouseOverRow )
 		{
@@ -186,13 +187,13 @@ public:
 		m_pLabel->setContentAlignment( vgui::Label::a_west );
 		m_pLabel->setFont( Scheme::sf_primary2 );
 
-		if ( info )
+		if (strInfo)
 		{
 			// Fill out with the correct data
 			switch ( column )
 			{
 			case 0:
-				val = gEngfuncs.pNetAPI->ValueForKey( info, "address" );
+				val = gEngfuncs.pNetAPI->ValueForKey(strInfo, "address" );
 				if ( val )
 				{
 					strncpy( sz, val, 31 );
@@ -202,7 +203,7 @@ public:
 				}
 				break;
 			case 1:
-				val = gEngfuncs.pNetAPI->ValueForKey( info, "hostname" );
+				val = gEngfuncs.pNetAPI->ValueForKey(strInfo, "hostname" );
 				if ( val )
 				{
 					strncpy( sz, val, 31 );
@@ -212,7 +213,7 @@ public:
 				}
 				break;
 			case 2:
-				val = gEngfuncs.pNetAPI->ValueForKey( info, "map" );
+				val = gEngfuncs.pNetAPI->ValueForKey(strInfo, "map" );
 				if ( val )
 				{
 					strncpy( sz, val, 31 );
@@ -222,8 +223,8 @@ public:
 				}
 				break;
 			case 3:
-				val = gEngfuncs.pNetAPI->ValueForKey( info, "current" );
-				val2 = gEngfuncs.pNetAPI->ValueForKey( info, "max" );
+				val = gEngfuncs.pNetAPI->ValueForKey(strInfo, "current" );
+				val2 = gEngfuncs.pNetAPI->ValueForKey(strInfo, "max" );
 				if ( val && val2 )
 				{
 					sprintf( sz, "%s/%s", val, val2 );
@@ -233,7 +234,7 @@ public:
 				}
 				break;
 			case 4:
-				val = gEngfuncs.pNetAPI->ValueForKey( info, "ping" );
+				val = gEngfuncs.pNetAPI->ValueForKey(strInfo, "ping" );
 				if ( val )
 				{
 					strncpy( sz, val, 31 );

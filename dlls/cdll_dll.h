@@ -40,7 +40,7 @@
 // And, pretty sure the terms 'bucket' and 'slot' are interchangable here.
 // If any weapon's 'iSlot' or 'iSlotPos' goes out of these limits, welcome to flava town.
 // Or... horrific untracable C/C++ crashes.  Yay.
-#if SPLIT_ALIEN_THROWABLES_INTO_NEW_SLOT != 1
+#if SPLIT_ALIEN_WEAPONS_INTO_NEW_SLOT != 1
 	#define MAX_WEAPON_SLOTS		5	// hud item selection slots
 #else
 	// Have an extra slot for the alien throwables to go to.

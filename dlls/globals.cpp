@@ -41,5 +41,5 @@ DLL_GLOBAL BOOL			g_fGameOver;
 
 //MODDD - NOTICE: g_Language is linked to the non-existent CVar "sv_language".  Disregard this.
 //Looks like the only point was to remove gore / use alternate models for humans when g_Language (sv_language) is German.
-//Using the new CVar "germanCensorship" instead, just 0 or 1 (off or on).
+//Using the new CVar "sv_germancensorship" instead, just 0 or 1 (off or on).
 DLL_GLOBAL int		g_Language;

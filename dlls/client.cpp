@@ -3693,7 +3693,7 @@ void ClientCommand( edict_t *pEntity )
 
 	}else if(FStrEq(pcmdRefinedRef, "isthereanyairnodes") || FStrEq(pcmdRefinedRef, "arethereanyairnodes") || FStrEq(pcmdRefinedRef, "airnodes") ){
 
-		if(WorldGraph.map_anyAirNodes == TRUE){
+		if(map_anyAirNodes == TRUE){
 			easyForcePrintLineClient(pEntity, "~yes, air nodes present.");
 		}else{
 			easyForcePrintLineClient(pEntity, "~no air nodes.");
@@ -3845,7 +3845,7 @@ void ClientCommand( edict_t *pEntity )
 	}else if(FStrEq(pcmdRefinedRef, "schedulenodeupdate")) {
 		
 		//the next map loaded will enforce regenerating the node graph regardless of coming from a file already or not.
-		WorldGraph.scheduleNodeUpdate = TRUE;
+		scheduleNodeUpdate = TRUE;
 		easyForcePrintLineClient(pEntity, "Scheduling node update. Start a map to rebuild nodes / skip node file.");
 
 	}else if(FStrEq(pcmdRefinedRef, "blockalltriggers") || FStrEq(pcmdRefinedRef, "unblockalltriggers")) {

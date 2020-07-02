@@ -125,7 +125,7 @@ cvar_t  mp_chattime = {"mp_chattime","10", FCVAR_SERVER };
 
 
 //TEST
-cvar_t  pooptest = { "pooptest", "0", FCVAR_SERVER | FCVAR_ARCHIVE };
+cvar_t  pregame_server_cvar = { "pregame_server_cvar", "0", FCVAR_SERVER | FCVAR_ARCHIVE };
 
 
 // Engine Cvars
@@ -215,6 +215,15 @@ cvar_t	sk_gargantua_dmg_stomp3	= {"sk_gargantua_dmg_stomp3","0"};
 cvar_t	sk_hassassin_health1 = {"sk_hassassin_health1","0"};
 cvar_t	sk_hassassin_health2 = {"sk_hassassin_health2","0"};
 cvar_t	sk_hassassin_health3 = {"sk_hassassin_health3","0"};
+
+//MODDD - crossbow CVars for the hassassin
+cvar_t	sk_hassassin_xbow_cl1 = {"sk_hassassin_xbow_cl1","0"};
+cvar_t	sk_hassassin_xbow_cl2 = {"sk_hassassin_xbow_cl2","0"};
+cvar_t	sk_hassassin_xbow_cl3 = {"sk_hassassin_xbow_cl3","0"};
+cvar_t	sk_hassassin_xbow_mo1 = {"sk_hassassin_xbow_mo1","0"};
+cvar_t	sk_hassassin_xbow_mo2 = {"sk_hassassin_xbow_mo2","0"};
+cvar_t	sk_hassassin_xbow_mo3 = {"sk_hassassin_xbow_mo3","0"};
+
 
 
 // Headcrab
@@ -847,8 +856,8 @@ void GameDLLInit( void )
 
 
 
-	if(IS_DEDICATED_SERVER){
-		CVAR_REGISTER(&pooptest);
+	if(IS_DEDICATED_SERVER()){
+		CVAR_REGISTER(&pregame_server_cvar);
 	}
 
 
@@ -937,6 +946,19 @@ void GameDLLInit( void )
 	CVAR_REGISTER ( &sk_hassassin_health1 );// {"sk_hassassin_health1","0"};
 	CVAR_REGISTER ( &sk_hassassin_health2 );// {"sk_hassassin_health2","0"};
 	CVAR_REGISTER ( &sk_hassassin_health3 );// {"sk_hassassin_health3","0"};
+	//MODDD - crossbow for the hassassin
+	CVAR_REGISTER ( &sk_hassassin_xbow_cl1 );
+	CVAR_REGISTER ( &sk_hassassin_xbow_cl2 );
+	CVAR_REGISTER ( &sk_hassassin_xbow_cl3 );
+	CVAR_REGISTER ( &sk_hassassin_xbow_mo1 );
+	CVAR_REGISTER ( &sk_hassassin_xbow_mo2 );
+	CVAR_REGISTER ( &sk_hassassin_xbow_mo3 );
+
+
+
+
+
+
 
 
 	// Headcrab

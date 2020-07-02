@@ -35,7 +35,7 @@
 LINK_ENTITY_TO_CLASS( info_target, CPointEntity );
 
 //MODDD - extern
-EASY_CVAR_EXTERN(germanCensorship)
+EASY_CVAR_EXTERN(sv_germancensorship)
 EASY_CVAR_EXTERN(sparksBeamMulti)
 EASY_CVAR_EXTERN(mirrorsDoNotReflectPlayer)
 

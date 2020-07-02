@@ -27,14 +27,26 @@
 #include "soundent.h"
 #include "game.h"
 
-extern CGraph WorldGraph;
+
+EASY_CVAR_EXTERN(houndeyeAttackMode)
+EASY_CVAR_EXTERN(houndeyePrintout)
+EASY_CVAR_EXTERN(houndeye_attack_canGib)
+
+EASY_CVAR_EXTERN(soundVolumeAll)
+EASY_CVAR_EXTERN(soundAttenuationAll)
+//MODDD - search for this ...    soundVolumeAll, soundAttenuationAll
+//MODDD - it used to be,   1, ATTN_NORM   I believe.
+
+
+
+
+
 
 // houndeye does 20 points of damage spread over a sphere 384 units in diameter, and each additional
 // squad member increases the BASE damage by 110%, per the spec.
 #define HOUNDEYE_MAX_SQUAD_SIZE			4
 #define HOUNDEYE_MAX_ATTACK_RADIUS		384
 #define HOUNDEYE_SQUAD_BONUS			(float)1.1
-
 
 //Changed to use instance var "numberOfEyeSkins" instead.
 //#define HOUNDEYE_EYE_FRAMES 4 // how many different switchable maps for the eye
@@ -43,10 +55,23 @@ extern CGraph WorldGraph;
 
 
 
-//MODDD
-EASY_CVAR_EXTERN(houndeyeAttackMode)
-EASY_CVAR_EXTERN(houndeyePrintout)
-EASY_CVAR_EXTERN(houndeye_attack_canGib)
+//=========================================================
+// Monster's Anim Events Go Here
+//=========================================================
+#define HOUND_AE_WARN			1
+#define HOUND_AE_STARTATTACK	2
+#define HOUND_AE_THUMP			3
+#define HOUND_AE_ANGERSOUND1	4
+#define HOUND_AE_ANGERSOUND2	5
+#define HOUND_AE_HOPBACK		6
+#define HOUND_AE_CLOSE_EYE		7
+
+
+
+extern CGraph WorldGraph;
+
+
+
 
 
 //=========================================================
@@ -75,24 +100,8 @@ enum
 	SCHED_HOUND_FAIL,
 };
 
-//=========================================================
-// Monster's Anim Events Go Here
-//=========================================================
-#define 	HOUND_AE_WARN			1
-#define 	HOUND_AE_STARTATTACK	2
-#define 	HOUND_AE_THUMP			3
-#define 	HOUND_AE_ANGERSOUND1	4
-#define 	HOUND_AE_ANGERSOUND2	5
-#define 	HOUND_AE_HOPBACK		6
-#define 	HOUND_AE_CLOSE_EYE		7
 
 
-//MODDD - eeerrrr
-EASY_CVAR_EXTERN(soundVolumeAll)
-EASY_CVAR_EXTERN(soundAttenuationAll)
-
-//MODDD - search for this ...    soundVolumeAll, soundAttenuationAll
-//MODDD - it used to be,   1, ATTN_NORM   I believe.
 
 
 

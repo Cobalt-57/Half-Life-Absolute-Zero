@@ -32,7 +32,7 @@ public:
 	void Spawn(BOOL useTracer, BOOL arg_noDamage);
 	void Precache(void);
 	int  Classify(void);
-	void EXPORT BubbleThink(void);
+	void EXPORT BoltThink(void);
 	void EXPORT BoltTouch(CBaseEntity* pOther);
 	void EXPORT ExplodeThink(void);
 

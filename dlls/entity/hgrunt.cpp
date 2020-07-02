@@ -50,46 +50,118 @@
 //MODDD - temporary for debugging.
 #include "player.h"
 
-
-
 EASY_CVAR_EXTERN(hgruntBrassEjectForwardOffset)
-
 EASY_CVAR_EXTERN(gruntsCanHaveMP5Grenade)
 EASY_CVAR_EXTERN(animationFramerateMulti)
-
-int g_fGruntQuestion;				// true if an idle grunt asked a question. Cleared when someone answers.
-
-extern DLL_GLOBAL int	g_iSkillLevel;
-
 EASY_CVAR_EXTERN(noFlinchOnHard)
 EASY_CVAR_EXTERN(hgruntSpeedMulti)
 EASY_CVAR_EXTERN(hgruntForceStrafeFireAnim)
 EASY_CVAR_EXTERN(hgruntLockRunAndGunTime)
-EASY_CVAR_EXTERN(germanCensorship)
-
+EASY_CVAR_EXTERN(sv_germancensorship)
 EASY_CVAR_EXTERN(hgruntAllowStrafeFire)
 EASY_CVAR_EXTERN(hgruntTinyClip)
 EASY_CVAR_EXTERN(hgruntStrafeAlwaysHasAmmo)
 EASY_CVAR_EXTERN(hgruntRunAndGunDistance)
-
 EASY_CVAR_EXTERN(thatWasntPunch)
-
 EASY_CVAR_EXTERN(hgruntPrintout)
 EASY_CVAR_EXTERN(hgruntRunAndGunDotMin)
-
 //EASY_CVAR_EXTERN(testVar)
 EASY_CVAR_EXTERN(hgruntLockStrafeTime)
 EASY_CVAR_EXTERN(hgruntMovementDeltaCheck)
 EASY_CVAR_EXTERN(hgruntStrafeAnimSpeedMulti)
 EASY_CVAR_EXTERN(hgruntRunAndGunAnimSpeedMulti)
-
 extern BOOL globalPSEUDO_germanModel_hgruntFound;
-
 EASY_CVAR_EXTERN(hgruntAllowGrenades)
 
 
 
+
+
+//=========================================================
+// monster-specific DEFINE's
+//=========================================================
+
+//MODDD - new constant.  Only use one head.
+#define FORCE_ONE_HEAD 1
+
+//MODDD - new constant.  Force spawning with MP5.
+#define FORCE_MP5 1
+
+//MODDD - changed for debugging.
+#define GRUNT_CLIP_SIZE					36 // how many bullets in a clip? - NOTE: 3 round burst sound, so keep as 3 * x!
+
+#define GRUNT_VOL						0.35		// volume of grunt sounds
+#define GRUNT_ATTN						ATTN_NORM	// attenutation of grunt sentences
+#define HGRUNT_LIMP_HEALTH				20
+//MODDD - as-is.  apparently unused.  ?
+#define HGRUNT_DMG_HEADSHOT				( DMG_BULLET | DMG_CLUB )	// damage types that can kill a grunt with a single headshot.
+
+//MODDD - now 1.
+//#define HGRUNT_NUM_HEADS				2 // how many grunt heads are there?
+#define HGRUNT_NUM_HEADS				1
+
+#define HGRUNT_MINIMUM_HEADSHOT_DAMAGE	15 // must do at least this much damage in one shot to head to score a headshot kill
+#define HGRUNT_SENTENCE_VOLUME			(float)0.35 // volume of grunt sentences
+
+#define HGRUNT_9MMAR				( 1 << 0)
+#define HGRUNT_HANDGRENADE			( 1 << 1)
+#define HGRUNT_GRENADELAUNCHER		( 1 << 2)
+#define HGRUNT_SHOTGUN				( 1 << 3)
+
+#define HEAD_GROUP					1
+#define HEAD_GRUNT					0
+#define HEAD_COMMANDER				1
+#define HEAD_SHOTGUN				2
+#define HEAD_M203					3
+
+/*
+//ORIGINAL
+#define GUN_GROUP					2
+#define GUN_MP5						0
+#define GUN_SHOTGUN					1
+#define GUN_NONE					2
+*/
+
+//ADVICE
+#define GUN_GROUP					2
+#define GUN_MP5						0
+#define GUN_SHOTGUN					0
+#define GUN_NONE					1
+
+/*
+//SUGGESTION? for me before the hgrunt model edit I guess
+#define GUN_GROUP					2
+#define GUN_MP5						0
+#define GUN_SHOTGUN					0
+#define GUN_NONE					2
+*/
+
+//=========================================================
+// monster-specific conditions
+//=========================================================
+#define bits_COND_GRUNT_NOFIRE	( bits_COND_SPECIAL1 )
+
+
+//=========================================================
+// Monster's Anim Events Go Here
+//=========================================================
+#define HGRUNT_AE_RELOAD		( 2 )
+#define HGRUNT_AE_KICK			( 3 )
+#define HGRUNT_AE_BURST1		( 4 )
+#define HGRUNT_AE_BURST2		( 5 )
+#define HGRUNT_AE_BURST3		( 6 )
+#define HGRUNT_AE_GREN_TOSS		( 7 )
+#define HGRUNT_AE_GREN_LAUNCH	( 8 )
+#define HGRUNT_AE_GREN_DROP		( 9 )
+#define HGRUNT_AE_CAUGHT_ENEMY	( 10) // grunt established sight with an enemy (player only) that had previously eluded the squad.
+#define HGRUNT_AE_DROP_GUN		( 11) // grunt (probably dead) is dropping his mp5.
+
+
+
+extern DLL_GLOBAL int	g_iSkillLevel;
 extern Schedule_t slGruntSweep[];
+
+int g_fGruntQuestion;				// true if an idle grunt asked a question. Cleared when someone answers.
 
 
 
@@ -145,83 +217,6 @@ enum hgrunt_sequence{  //key: frames, FPS
 };
 
 
-//=========================================================
-// monster-specific DEFINE's
-//=========================================================
-
-
-//MODDD - changed for debugging.
-#define GRUNT_CLIP_SIZE					36 // how many bullets in a clip? - NOTE: 3 round burst sound, so keep as 3 * x!
-
-
-#define GRUNT_VOL						0.35		// volume of grunt sounds
-#define GRUNT_ATTN						ATTN_NORM	// attenutation of grunt sentences
-#define HGRUNT_LIMP_HEALTH				20
-//MODDD - as-is.  apparently unused.  ?
-#define HGRUNT_DMG_HEADSHOT				( DMG_BULLET | DMG_CLUB )	// damage types that can kill a grunt with a single headshot.
-
-//MODDD - now 1.
-//#define HGRUNT_NUM_HEADS				2 // how many grunt heads are there?
-#define HGRUNT_NUM_HEADS				1
-
-
-#define HGRUNT_MINIMUM_HEADSHOT_DAMAGE	15 // must do at least this much damage in one shot to head to score a headshot kill
-#define HGRUNT_SENTENCE_VOLUME			(float)0.35 // volume of grunt sentences
-
-#define HGRUNT_9MMAR				( 1 << 0)
-#define HGRUNT_HANDGRENADE			( 1 << 1)
-#define HGRUNT_GRENADELAUNCHER		( 1 << 2)
-#define HGRUNT_SHOTGUN				( 1 << 3)
-
-#define HEAD_GROUP					1
-#define HEAD_GRUNT					0
-#define HEAD_COMMANDER				1
-#define HEAD_SHOTGUN				2
-#define HEAD_M203					3
-
-/*
-//ORIGINAL
-#define GUN_GROUP					2
-#define GUN_MP5						0
-#define GUN_SHOTGUN					1
-#define GUN_NONE					2
-*/
-
-//ADVICE
-#define GUN_GROUP					2
-#define GUN_MP5						0
-#define GUN_SHOTGUN					0
-#define GUN_NONE					1
-
-
-/*
-//SUGGESTION? for me before the hgrunt model edit I guess
-#define GUN_GROUP					2
-#define GUN_MP5						0
-#define GUN_SHOTGUN					0
-#define GUN_NONE					2
-*/
-
-
-//MODDD - new constant.  Only use one head.
-#define FORCE_ONE_HEAD 1
-
-//MODDD - new constant.  Force spawning with MP5.
-#define FORCE_MP5 1
-
-//=========================================================
-// Monster's Anim Events Go Here
-//=========================================================
-#define 	HGRUNT_AE_RELOAD		( 2 )
-#define 	HGRUNT_AE_KICK			( 3 )
-#define 	HGRUNT_AE_BURST1		( 4 )
-#define 	HGRUNT_AE_BURST2		( 5 )
-#define 	HGRUNT_AE_BURST3		( 6 )
-#define 	HGRUNT_AE_GREN_TOSS		( 7 )
-#define 	HGRUNT_AE_GREN_LAUNCH	( 8 )
-#define 	HGRUNT_AE_GREN_DROP		( 9 )
-#define 	HGRUNT_AE_CAUGHT_ENEMY	( 10) // grunt established sight with an enemy (player only) that had previously eluded the squad.
-#define 	HGRUNT_AE_DROP_GUN		( 11) // grunt (probably dead) is dropping his mp5.
 
 //=========================================================
 // monster-specific schedule types
@@ -254,10 +249,7 @@ enum
 	TASK_HGRUNT_STRAFEPATH,
 };
 
-//=========================================================
-// monster-specific conditions
-//=========================================================
-#define bits_COND_GRUNT_NOFIRE	( bits_COND_SPECIAL1 )
+
 
 class CHGrunt : public CSquadMonster
 {
@@ -312,7 +304,6 @@ public:
 	//3 = strafe right + fire.
 
 	void MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, float flInterval );
-	void MakeIdealYaw( Vector vecTarget );
 
 	//MODDD
 	static const char *pAttackHitSounds[];
@@ -327,6 +318,8 @@ public:
 	BOOL usesAdvancedAnimSystem(void);
 	int LookupActivityHard(int activity);
 	int tryActivitySubstitute(int activity);
+	void MakeIdealYaw( Vector vecTarget );
+	void startReanimation(void);
 
 	void moveAnimUpdate(void);
 	
@@ -2446,22 +2439,16 @@ void CHGrunt::HandleEventQueueEvent(int arg_eventID){
 //=========================================================
 void CHGrunt :: HandleAnimEvent( MonsterEvent_t *pEvent )
 {
-
 	if(EASY_CVAR_GET(thatWasntPunch) == 1){
 		return;
 	}
-
 	//pev->renderfx |= 128;
 	//return;
 
-
 	//easyForcePrintLine("ATTT THE %d", pEvent->event);
 	
-
-
 	//can flash if needed.
 	pev->renderfx &= ~NOMUZZLEFLASH;
-
 
 
 	if(pEvent->event >= 4 && pEvent->event <= 6){
@@ -2513,9 +2500,6 @@ void CHGrunt :: HandleAnimEvent( MonsterEvent_t *pEvent )
 	}
 
 
-	
-
-
 
 
 	//pev->renderfx |= NOMUZZLEFLASH;
@@ -2524,62 +2508,60 @@ void CHGrunt :: HandleAnimEvent( MonsterEvent_t *pEvent )
 	Vector	vecShootOrigin;
 
 
-
 	//EASY_CVAR_PRINTIF_PRE(hgruntPrintout, easyForcePrintLine("HGRUNT: HANDLEANIMEVENT: %d", pEvent->event) );
 
 	switch( pEvent->event )
 	{
 		case HGRUNT_AE_DROP_GUN:
 			{
-			Vector	vecGunPos;
-			Vector	vecGunAngles;
+			// if reversed, we're being revived.
+			if (pev->framerate > 0) {
+				Vector	vecGunPos;
+				Vector	vecGunAngles;
 
-			GetAttachment( 0, vecGunPos, vecGunAngles );
+				GetAttachment(0, vecGunPos, vecGunAngles);
 
-			// switch to body group with no gun.
-			SetBodygroup( GUN_GROUP, GUN_NONE );
+				// switch to body group with no gun.
+				SetBodygroup(GUN_GROUP, GUN_NONE);
+	#if FORCE_MP5 == 1
+				//From the else statement below (meaning, this grunt does not have a shot gun), it appears a grunt with no weapon
+				//will also drop mp5 ammo.  So, since it is not possible to have a shotgun (FORCE_MP5), always drop mp5 ammo.
 
+				DropItem( "weapon_9mmAR", vecGunPos, vecGunAngles );
 
-#if FORCE_MP5 == 1
+				if(EASY_CVAR_GET(gruntsCanHaveMP5Grenade) == 1){
+					if (FBitSet( pev->weapons, HGRUNT_GRENADELAUNCHER ))
+					{
+						DropItem( "ammo_ARgrenades", BodyTarget( pev->origin ), vecGunAngles );
+					}
+				}
 
-			//From the else statement below (meaning, this grunt does not have a shot gun), it appears a grunt with no weapon
-			//will also drop mp5 ammo.  So, since it is not possible to have a shotgun (FORCE_MP5), always drop mp5 ammo.
+	#else
 
-			DropItem( "weapon_9mmAR", vecGunPos, vecGunAngles );
-
-			if(EASY_CVAR_GET(gruntsCanHaveMP5Grenade) == 1){
+				// now spawn a gun.
+				if (FBitSet( pev->weapons, HGRUNT_SHOTGUN ))
+				{
+					 DropItem( "weapon_shotgun", vecGunPos, vecGunAngles );
+				}
+				else
+				{
+					 DropItem( "weapon_9mmAR", vecGunPos, vecGunAngles );
+				}
 				if (FBitSet( pev->weapons, HGRUNT_GRENADELAUNCHER ))
 				{
 					DropItem( "ammo_ARgrenades", BodyTarget( pev->origin ), vecGunAngles );
 				}
-			}
+	#endif
+			}//END OF pev->framerate check
 
-#else
-
-			// now spawn a gun.
-			if (FBitSet( pev->weapons, HGRUNT_SHOTGUN ))
-			{
-				 DropItem( "weapon_shotgun", vecGunPos, vecGunAngles );
-			}
-			else
-			{
-				 DropItem( "weapon_9mmAR", vecGunPos, vecGunAngles );
-			}
-			if (FBitSet( pev->weapons, HGRUNT_GRENADELAUNCHER ))
-			{
-				DropItem( "ammo_ARgrenades", BodyTarget( pev->origin ), vecGunAngles );
-			}
-#endif
-
-
-			}
-			break;
+		}
+		break;
 
 		case HGRUNT_AE_RELOAD:
 			EMIT_SOUND_FILTERED( ENT(pev), CHAN_WEAPON, "hgrunt/gr_reload1.wav", 1, ATTN_NORM );
 			m_cAmmoLoaded = getClipSize();
 			ClearConditions(bits_COND_NO_AMMO_LOADED);
-			break;
+		break;
 
 		case HGRUNT_AE_GREN_TOSS:
 		{
@@ -2727,7 +2709,7 @@ void CHGrunt :: HandleAnimEvent( MonsterEvent_t *pEvent )
 
 		default:
 			CSquadMonster::HandleAnimEvent( pEvent );
-			break;
+		break;
 	}
 }
 
@@ -2989,15 +2971,11 @@ void CHGrunt::StartMonster( void )
 
 
 
-
-
-
 //=========================================================
 // Spawn
 //=========================================================
 void CHGrunt :: Spawn()
 {
-
 	Precache( );
 
 	//MODDD - if this spawnflag is in place...
@@ -3031,13 +3009,9 @@ void CHGrunt :: Spawn()
 	//MODDD NOTE - this has no point. GetGunPosition was the only method that used this and it was already overridden as-is to use different coords.
 	m_HackedGunPos = Vector ( 0, 0, 55 );
 
-
 #if FORCE_MP5 == 1
-
-
 	//pev->weapons = HGRUNT_9MMAR | HGRUNT_GRENADELAUNCHER;
 	//pev->weapons = HGRUNT_9MMAR | HGRUNT_HANDGRENADE;
-
 
 	if(EASY_CVAR_GET(gruntsCanHaveMP5Grenade) == 1 ){
 		if(pev->weapons == 0 || pev->weapons == HGRUNT_SHOTGUN || pev->weapons == (HGRUNT_SHOTGUN | HGRUNT_HANDGRENADE) ){
@@ -3045,15 +3019,10 @@ void CHGrunt :: Spawn()
 			pev->weapons = HGRUNT_9MMAR | HGRUNT_HANDGRENADE;
 			//Notice that if it used to be the 9MMAR w/ grenade launcher, we don't mind, and we leave it.
 		}
-
-
-
 	}else{
 		//Always use the 9MMAR (mp5 weapon).
 		pev->weapons = HGRUNT_9MMAR | HGRUNT_HANDGRENADE;
 	}
-
-
 
 #else
 
@@ -3078,12 +3047,9 @@ void CHGrunt :: Spawn()
 
 
 #if FORCE_MP5 == 1
-
 	//mp5 is the default.  Leave as is to always have an mp5's clipsize (else statement)
-
 	m_cClipSize = getClipSize();
 	SetBodygroup( GUN_GROUP, GUN_MP5 );
-
 #else
 
 	if (FBitSet( pev->weapons, HGRUNT_SHOTGUN ))
@@ -3093,6 +3059,11 @@ void CHGrunt :: Spawn()
 	}
 	else
 	{
+		//MODDD - wait.. why not set the GUN_GROUP to GUN_MP5 then??
+		// Yes GUN_MP5 happens to be 0, just seems sloppy not to do this still.
+		// If the model changes and GUN_MP5 is any other number, the assumption that
+		// GUN_MP5 is the default from not setting anything goes out the window.
+		SetBodygroup(GUN_GROUP, GUN_MP5);
 		m_cClipSize		= GRUNT_CLIP_SIZE;
 	}
 #endif
@@ -3434,18 +3405,12 @@ void CHGrunt::onAnimationLoop(void){
 
 	//check: should we change animation?
 	if(pev->deadflag == DEAD_NO && m_IdealActivity == m_movementActivity ){
-
-
-
 		if( (m_movementActivity == ACT_STRAFE_LEFT || m_movementActivity == ACT_STRAFE_RIGHT)){
-
 
 			updateStrafeStatus();
 			//EASY_CVAR_PRINTIF_PRE(hgruntPrintout, easyForcePrintLine("HOW THE quack %d %d", strafeMode, idealStrafeMode ));
 			if(strafeMode == -1 || strafeMode != idealStrafeMode){
-
 				strafeMode = idealStrafeMode;
-
 
 				//EASY_CVAR_PRINTIF_PRE(hgruntPrintout, easyForcePrintLine("ANIMATION CHANGE!!!! A" ));
 				int iSequence = LookupActivityHard (m_IdealActivity);
@@ -3460,7 +3425,6 @@ void CHGrunt::onAnimationLoop(void){
 					{
 						pev->frame = 0;
 					}
-
 
 						//do so.
 				}
@@ -3511,9 +3475,6 @@ int CHGrunt::LookupActivityHard(int activity){
 
 	//EASY_CVAR_PRINTIF_PRE(hgruntPrintout, easyForcePrintLine("WWWHHHHHYYYYYY %d", activity));
 	BOOL tempFriendlyFire;
-
-
-
 	//easyForcePrintLine("LookupActivityHard: %d", activity);
 
 	switch(activity){
@@ -3546,17 +3507,11 @@ int CHGrunt::LookupActivityHard(int activity){
 				//get ideal!
 				strafeMode = idealStrafeMode;
 
-
-
 			}
-				//strafeMode = idealStrafeMode;
-
-
+			//strafeMode = idealStrafeMode;
 			//hgruntLock
-
 			//IS THAT OKAY?
 			strafeMode = idealStrafeMode;
-
 
 			//return CBaseAnimating::LookupActivity(ACT_RUN);
 			//EASY_CVAR_PRINTIF_PRE(hgruntPrintout, easyForcePrintLine("GAHHH %d", strafeMode));
@@ -3591,8 +3546,6 @@ int CHGrunt::LookupActivityHard(int activity){
 			}//END OF switch(strafeMode)
 
 		break;
-
-
 		case ACT_RUN:
 			//are we strafing?  If so, substitute!
 
@@ -3625,8 +3578,6 @@ int CHGrunt::LookupActivityHard(int activity){
 					return LookupSequence("runandgun");
 				}
 			}
-
-
 			return CBaseAnimating::LookupActivity(activity);
 		break;
 		case ACT_WALK:
@@ -3640,12 +3591,9 @@ int CHGrunt::LookupActivityHard(int activity){
 }//END OF LookupActivityHard
 
 
-
 int CHGrunt::tryActivitySubstitute(int activity){
 
 	switch(activity){
-
-
 		case ACT_STRAFE_LEFT:
 		case ACT_STRAFE_RIGHT:
 			//are we strafing?  If so, substitute!
@@ -3694,11 +3642,6 @@ int CHGrunt::tryActivitySubstitute(int activity){
 
 
 
-
-
-
-
-
 //=========================================================
 // MakeIdealYaw - gets a yaw value for the caller that would
 // face the supplied vector. Value is stuffed into the monster's
@@ -3708,25 +3651,15 @@ void CHGrunt :: MakeIdealYaw( Vector vecTarget )
 {
 	Vector	vecProjection;
 
-
-
 	//MODDD - this kind of immitation "Strafe" is too crude and causes issues with the AI sometimes, like fiddling-around near the end point of a path..
 	// strafing monster needs to face 90 degrees away from its goal
 
-
-
-
 	//UTIL_drawLineFrame(pev->origin + Vector(0, 0, 3), (vecTarget + Vector(0, 0, 3) ), 14, 255, 0, 255 );
-
 	Vector vecTargetRight = CrossProduct( (vecTarget - pev->origin).Normalize() , Vector(0, 0, 1)).Normalize();
-
-
-
 	Vector origin2DOnly = Vector(pev->origin.x, pev->origin.y, 0);
 
 	if ( m_IdealActivity == m_movementActivity && m_movementActivity == ACT_STRAFE_LEFT )
 	{
-
 		//UTIL_drawLineFrame(pev->origin + Vector(0, 0, 3), (pev->origin + vecTargetRight*25 + Vector(0, 0, 3) ), 14, 0, 255, 124 );
 		//SMELLS LIKE TEEN bee
 		pev->ideal_yaw = UTIL_VecToYaw(-vecTargetRight);
@@ -3735,7 +3668,6 @@ void CHGrunt :: MakeIdealYaw( Vector vecTarget )
 		vecProjection.x = -vecTarget.y;
 		vecProjection.y = vecTarget.x;
 		vecProjection.z = 0;
-
 
 		//UTIL_drawLineFrame(pev->origin, (vecProjection + Vector(0, 0, 3) ), 14, 0, 255, 124 );
 		pev->ideal_yaw = UTIL_VecToYaw( vecProjection - pev->origin );
@@ -3751,7 +3683,6 @@ void CHGrunt :: MakeIdealYaw( Vector vecTarget )
 		vecProjection.y = vecTarget.x;
 		vecProjection.z = 0;
 
-
 		//UTIL_drawLineFrame(pev->origin, (vecProjection + Vector(0, 0, 3) ), 14, 255, 0, 124 );
 		pev->ideal_yaw = UTIL_VecToYaw( vecProjection - pev->origin );
 	}
@@ -3761,16 +3692,24 @@ void CHGrunt :: MakeIdealYaw( Vector vecTarget )
 		vecProjection.y = vecTarget.y;
 		vecProjection.z = 0;
 
-
 		//UTIL_drawLineFrame(pev->origin, (vecProjection + Vector(0, 0, 3) ), 14, 255, 255, 255 );
 		pev->ideal_yaw = UTIL_VecToYaw ( vecTarget - pev->origin );
 	}
+}//END OF MakeIdealYaw
 
 
-}
 
 
 
+void CHGrunt::startReanimation(void) {
+	CBaseMonster::startReanimation();
+
+
+	//SetBodygroup(GUN_GROUP, GUN_MP5);
+
+
+
+}//END OF startReanimation
 
 
 
@@ -5667,7 +5606,7 @@ void CHGrunt::checkHeadGore(int iGib ){
 
 	if(m_LastHitGroup == HITGROUP_HEAD || m_LastHitGroup == 11){
 		//Took enough damage on last trace-hit?
-		if(missingHeadPossible && EASY_CVAR_GET(germanCensorship) != 1 && GetBodygroup(1) != 1){
+		if(missingHeadPossible && EASY_CVAR_GET(sv_germancensorship) != 1 && GetBodygroup(1) != 1){
 			//missing head!... if german censorship isn't on.
 			//that is, heads --> Headless
 			SetBodygroup( 1, 1 );

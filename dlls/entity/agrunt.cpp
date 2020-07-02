@@ -65,24 +65,24 @@ int iAgruntMuzzleFlash;
 //=========================================================
 // Monster's Anim Events Go Here
 //=========================================================
-#define 	AGRUNT_AE_HORNET1	( 1 )
-#define 	AGRUNT_AE_HORNET2	( 2 )
-#define 	AGRUNT_AE_HORNET3	( 3 )
-#define 	AGRUNT_AE_HORNET4	( 4 )
-#define 	AGRUNT_AE_HORNET5	( 5 )
+#define AGRUNT_AE_HORNET1	( 1 )
+#define AGRUNT_AE_HORNET2	( 2 )
+#define AGRUNT_AE_HORNET3	( 3 )
+#define AGRUNT_AE_HORNET4	( 4 )
+#define AGRUNT_AE_HORNET5	( 5 )
 // some events are set up in the QC file that aren't recognized by the code yet.
-#define 	AGRUNT_AE_PUNCH		( 6 )
-#define 	AGRUNT_AE_BITE		( 7 )
+#define AGRUNT_AE_PUNCH		( 6 )
+#define AGRUNT_AE_BITE		( 7 )
 
-#define 	AGRUNT_AE_LEFT_FOOT	 ( 10 )
-#define 	AGRUNT_AE_RIGHT_FOOT ( 11 )
+#define AGRUNT_AE_LEFT_FOOT	 ( 10 )
+#define AGRUNT_AE_RIGHT_FOOT ( 11 )
 
-#define 	AGRUNT_AE_LEFT_PUNCH ( 12 )
-#define 	AGRUNT_AE_RIGHT_PUNCH ( 13 )
+#define AGRUNT_AE_LEFT_PUNCH ( 12 )
+#define AGRUNT_AE_RIGHT_PUNCH ( 13 )
 
 
 
-#define 	AGRUNT_MELEE_DIST	100
+#define AGRUNT_MELEE_DIST	100
 
 class CAGrunt : public CSquadMonster
 {

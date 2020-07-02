@@ -217,6 +217,9 @@ void CGameRules::RefreshSkillData ( void )
 
 	// Hassassin
 	gSkillData.hassassinHealth = GetSkillCvar( "sk_hassassin_health");
+	//MODDD - NEW.  Given crossbow skill values like the player's.
+	gSkillData.hassassinDmgCrossbowClient = GetSkillCvar( "sk_hassassin_xbow_cl");
+	gSkillData.hassassinDmgCrossbowMonster = GetSkillCvar( "sk_hassassin_xbow_mo");
 
 	// Headcrab
 	gSkillData.headcrabHealth = GetSkillCvar( "sk_headcrab_health");

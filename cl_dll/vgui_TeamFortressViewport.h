@@ -949,10 +949,10 @@ public:
 	}
 };
 
-#define 	DISGUISE_TEAM1		(1<<0)
-#define 	DISGUISE_TEAM2		(1<<1)
-#define 	DISGUISE_TEAM3		(1<<2)
-#define 	DISGUISE_TEAM4		(1<<3)
+#define DISGUISE_TEAM1 (1<<0)
+#define DISGUISE_TEAM2 (1<<1)
+#define DISGUISE_TEAM3 (1<<2)
+#define DISGUISE_TEAM4 (1<<3)
 
 class DisguiseButton : public CommandButton
 {

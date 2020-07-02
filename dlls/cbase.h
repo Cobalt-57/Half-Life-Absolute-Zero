@@ -45,21 +45,21 @@ CBaseEntity
 				CBaseGroup
 */
 
-#define 	MAX_PATH_SIZE	10 // max number of nodes available for a path.
+#define MAX_PATH_SIZE 10 // max number of nodes available for a path.
 
 // These are caps bits to indicate what an object's capabilities (currently used for save/restore and level transitions)
-#define 	FCAP_CUSTOMSAVE				0x00000001
-#define 	FCAP_ACROSS_TRANSITION		0x00000002		// should transfer between transitions
-#define 	FCAP_MUST_SPAWN				0x00000004		// Spawn after restore
-#define 	FCAP_DONT_SAVE				0x80000000		// Don't save this
-#define 	FCAP_IMPULSE_USE			0x00000008		// can be used by the player
-#define 	FCAP_CONTINUOUS_USE			0x00000010		// can be used by the player
-#define 	FCAP_ONOFF_USE				0x00000020		// can be used by the player
-#define 	FCAP_DIRECTIONAL_USE		0x00000040		// Player sends +/- 1 when using (currently only tracktrains)
-#define 	FCAP_MASTER					0x00000080		// Can be used to "master" other entities (like multisource)
+#define FCAP_CUSTOMSAVE				0x00000001
+#define FCAP_ACROSS_TRANSITION		0x00000002		// should transfer between transitions
+#define FCAP_MUST_SPAWN				0x00000004		// Spawn after restore
+#define FCAP_DONT_SAVE				0x80000000		// Don't save this
+#define FCAP_IMPULSE_USE			0x00000008		// can be used by the player
+#define FCAP_CONTINUOUS_USE			0x00000010		// can be used by the player
+#define FCAP_ONOFF_USE				0x00000020		// can be used by the player
+#define FCAP_DIRECTIONAL_USE		0x00000040		// Player sends +/- 1 when using (currently only tracktrains)
+#define FCAP_MASTER					0x00000080		// Can be used to "master" other entities (like multisource)
 
 // UNDONE: This will ignore transition volumes (trigger_transition), but not the PVS!!!
-#define 	FCAP_FORCE_TRANSITION		0x00000080		// ALWAYS goes across transitions
+#define FCAP_FORCE_TRANSITION		0x00000080		// ALWAYS goes across transitions
 
 
 
@@ -82,13 +82,13 @@ CBaseEntity
 //              NODE_POINT_DEFAULT says we're leaving up what NODE HULL this is to retail behavior, the checks in 
 //              NODE_POINT_HULL is to say, pretend like our entity has no size. Just allow if there is a node connection at all.
 //              For debugging route problems to see if the issue is caused by a hull being too big even if a path was found.
-#define 	NODE_DEFAULT_HULL		-2
-#define 	NODE_POINT_HULL			-1
+#define NODE_DEFAULT_HULL		-2
+#define NODE_POINT_HULL			-1
 
-#define 	NODE_SMALL_HULL			0
-#define 	NODE_HUMAN_HULL			1
-#define 	NODE_LARGE_HULL			2
-#define 	NODE_FLY_HULL			3
+#define NODE_SMALL_HULL			0
+#define NODE_HUMAN_HULL			1
+#define NODE_LARGE_HULL			2
+#define NODE_FLY_HULL			3
 
 
 

@@ -581,13 +581,13 @@ int CSqueak::GetItemInfo(ItemInfo *p)
 	p->iMaxClip = WEAPON_NOCLIP;
 
 
-#if SPLIT_ALIEN_THROWABLES_INTO_NEW_SLOT != 1
+#if SPLIT_ALIEN_WEAPONS_INTO_NEW_SLOT != 1
 	p->iSlot = 4;
 	p->iPosition = 3;
 #else
 	// to the new slot you go!
 	p->iSlot = 5;
-	p->iPosition = 0;
+	p->iPosition = 1;
 #endif
 
 	p->iId = m_iId = WEAPON_SNARK;

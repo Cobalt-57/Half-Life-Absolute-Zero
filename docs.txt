@@ -1175,7 +1175,7 @@ panthereyeHasCloakingAbility (0) - DECIMAL (0 - 1).  When on (positive, non-zero
 
 
 hgruntHeadshotGore (1) - BOOL.  When on, a killing-headshot from a weapon dealing at least as much damage as the Python (revolver) will show the "missing head" - head.
-~Does not apply if "germanCensorship" is on.
+~Does not apply if "cl_germancensorshipship" is on.
 
 hgruntSpeedMulti (1) - Adjustable.  Multiple applied to HGrunt speed.  Best to test strafing.
 ~0 is stationary (will try to move, but can't), under 1 is slower, 1 is normal speed, over is faster.
@@ -1394,7 +1394,7 @@ bullsquidSpitAlphaScale (0.8) - DISABLED, NOT WORKING - the scale to apply to th
 ----------------------------------------------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------------------------------------
 
-holsterAnims (1) - whether the player plays holster animations for unloading the current weapon before picking the selected one on changing weapons.
+cl_holster (1) - whether the player plays holster animations for unloading the current weapon before picking the selected one on changing weapons.
 
 
 friendlyPianoFollowVolume (0.7) - ADJUSTABLE. Volume to play the Mr. Friendly's piano music while following the player. 0 mutes.
@@ -1743,7 +1743,7 @@ customLogoSprayMode (0) - MODEVAR. So far only two modes.
 1: Spray the animating lambda decal insetad of the player's custom spray decal (ignored). Does not appear to factor in the player's custom spray decal color. Defaults to a similar if not identical orange-yellow color.
 
 
-monsterFadeOutRate (100) - ADJUSTABLE. How much monster opacity decreases in one second when fading out, out of 255 (opaque, starting). Players fade when germanCensorship is on or gibs are banned for any other reason.
+monsterFadeOutRate (100) - ADJUSTABLE. How much monster opacity decreases in one second when fading out, out of 255 (opaque, starting). Players fade when cl_germancensorshipship is on or gibs are banned for any other reason.
 ~For instance, set to 100, it takes a little under 3 seconds to fade out since 100 times 3 is 300, out of 255.
 playerFadeOutRate (120) - ADJUSTABLE. How much player opacity decreases in one second when fading out. See monsterFadeOutRate.
 
@@ -1867,7 +1867,7 @@ stukaAdvancedCombat - boolean, defaults to 0.  If 1, the stuka will hover instea
 
 
 
-germanCensorship - when 1, all red blood is colored black-grey, all human-gibs are replaced with robotic ones, and most human models are replaced with robots.  Germany be wack yo.
+cl_germancensorshipship - when 1, all red blood is colored black-grey, all human-gibs are replaced with robotic ones, and most human models are replaced with robots.  Germany be wack yo.
 *NOT TO BE CONFUSED WITH THE "CONTENT LOCK" FEATURE UNDER title screen -> Options -> Lock tab
 *"Content Lock" appears to set the following four CVars to 0 or 1 dependong on whether it is off or on:
 violence_ablood - show alien blood.  Never draws if 0.
@@ -1877,9 +1877,9 @@ violence_hgibs - ditto for people.
 *Note that if the "Content Lock" is turned on (violence_blood's are 1), not even the black-grey German blood will  be rendered.
 *"Content Lock" appears to be checked at game startup, turning on / off all violence_ CVars.  Changing any violence_ manually will still affect the present game regardless of Content lock setting, but changes would be reverted at next startup.
 *existing script MAY try to refer to some CVar "sv_language", but the game claims this does not exist.
-This name is NOT being reused to avoid any chance of conflict (think of "germanCensorship" just being "1 = German, 0 = Anything else" as a replacement)
+This name is NOT being reused to avoid any chance of conflict (think of "cl_germancensorshipship" just being "1 = German, 0 = Anything else" as a replacement)
 
-allowGermanModels (1) - BOOL. When on, substitution German robot models will be used instead of human ones where they exist. Requires germanCensorship to be 1.
+allowGermanModels (1) - BOOL. When on, substitution German robot models will be used instead of human ones where they exist. Requires cl_germancensorshipship to be 1.
 
 germanRobotGibs (1) - BOOL. Whether robots can spawn gibs from g_hgibs.mdl when destroyed. If off, robots simply fade out just like they would if the robot replacement models weren't available (allowGermanModels is off).
 ~Requires "allowGermanModels" to be on for robot model replacements first.
@@ -1924,7 +1924,8 @@ revive, getup, risefromthegrave, suprisemotherfucker, alyxisnaked, myparentsaren
 god2 (also go) - same as "god".  Invulnerable to damage (battery is not).
 noclip2 (also nocli) - same as "noclip".  Collision free flying, use "NoclipSpeedMulti" to increase the speed of noclip.
 ~"god" and "noclip" immitations.  These commands seem built-in and insistent on engine restrictions at times, like requiring a new map for sv_cheats to take effect, or not working at all in multi-player regardless.
-~one-letter-off versions provided for priority in the middle of typing.
+~can also be used through "_god" or "godalt", same for noclip.
+
 
 gib, gibbed, explode, myheadasplode - gib the player on command.
 
@@ -2915,9 +2916,9 @@ CVar is also hidden and can't be changed until you are ingame (when loading is a
 can see printouts for saving though on editing any hidden CVar.
 
 For instance, ingame, in a release build, in console, try
-germanCensorship 1
+cl_germancensorshipship 1
 
-Then exit the game and restart.  It should remember "germanCensorship" being something other than the
+Then exit the game and restart.  It should remember "cl_germancensorshipship" being something other than the
 default of 0.
 
 Files are saved to ...<hl.exe's folder>\absZeroMem.txt

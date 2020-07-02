@@ -49,6 +49,9 @@
 #include "util_preprocessor.h"
 #include "util_printout.h"
 
+//#include "activity.h"
+//#include "enginecallback.h"
+
 
 // yay, don't need that.
 /*
@@ -58,7 +61,6 @@
 #include "cdll_dll.h"
 #endif
 */
-
 
 EASY_CVAR_EXTERN(hiddenMemPrintout)
 
@@ -77,16 +79,8 @@ EASY_CVAR_EXTERN(hiddenMemPrintout)
 
 
 
-#ifndef CLIENT_DLL
-//!!! Bunch of stuff mostly from util.h (serverside).
-// Keeping it only clientside as this just doesn't exist serverside.
-// ---
-// Keeps clutter down a bit, when using a float as a bit-vector
-#define SetBits(flBitVector, bits)		((flBitVector) = (int)(flBitVector) | (bits))
-#define ClearBits(flBitVector, bits)	((flBitVector) = (int)(flBitVector) & ~(bits))
-#define FBitSet(flBitVector, bit)		((int)(flBitVector) & (bit))
-#endif
-
+// defaults for clientinfo messages
+#define DEFAULT_VIEWHEIGHT 28
 
 
 
@@ -141,8 +135,17 @@ EASY_CVAR_EXTERN(hiddenMemPrintout)
 */
 
 
-// defaults for clientinfo messages
-#define DEFAULT_VIEWHEIGHT 28
+
+#ifndef CLIENT_DLL
+//!!! Bunch of stuff mostly from util.h (serverside).
+// Keeping it only clientside as this just doesn't exist serverside.
+// ---
+// Keeps clutter down a bit, when using a float as a bit-vector
+#define SetBits(flBitVector, bits)		((flBitVector) = (int)(flBitVector) | (bits))
+#define ClearBits(flBitVector, bits)	((flBitVector) = (int)(flBitVector) & ~(bits))
+#define FBitSet(flBitVector, bit)		((int)(flBitVector) & (bit))
+#endif
+
 
 
 
@@ -307,9 +310,6 @@ EASY_CVAR_EXTERN(hiddenMemPrintout)
 */
 
 
-
-
-
 //!!! Old file include place!!!   apparently they don't have to go here anymore
 
 /////////////////////////////////////////////////////////////////////////////////////////////
@@ -320,15 +320,14 @@ EASY_CVAR_EXTERN(hiddenMemPrintout)
 /////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////
 
-
 extern DLL_GLOBAL const Vector g_vecZero;
-
 extern int giAmmoIndex;
 extern BOOL globalflag_muteDeploySound;
 
+extern globalvars_t *gpGlobals;
+
 extern int Primes[NUMBER_OF_PRIMES];
 
-extern globalvars_t *gpGlobals;
 
 
 //GERMAN GIBS
@@ -338,7 +337,6 @@ extern globalvars_t *gpGlobals;
 //~there is a slight variation in name: germanygibs vs. germangibs.  If this is just a mistake from Valve, we'll just go with either.
 //UPDATE: We're sticking to the name "g_hgibs.mdl" to be more consistent with other naming.
 #define GERMAN_GIB_PATH "models/g_hgibs.mdl"
-
 
 
 // These are player-specific but still need to be included here to reach the HUD logic clientside.
@@ -354,9 +352,6 @@ extern globalvars_t *gpGlobals;
 #define DEFAULT_SPARK_BALLS 6
 
 
-
-//#include "activity.h"
-//#include "enginecallback.h"
 class CBaseEntity;
 class CBasePlayerWeapon;
 
@@ -392,15 +387,21 @@ typedef enum { point_hull = 0, human_hull = 1, large_hull = 2, head_hull = 3 } H
 
 
 
-
 extern int MaxAmmoCarry(int iszName);
 //MODDD NEW - prototype so that other places can call this method too.
 extern void AddAmmoNameToAmmoRegistry(const char* szAmmoname);
 extern void RegisterWeapon(CBasePlayerWeapon* pWeapon, CBasePlayerWeapon* pAryWeaponStore[]);
 
 
-//MODDD - have this.
+
+//MODDD - from util.h. Checking for equal strings is really not server-exclusive.
+inline BOOL FStrEq(const char*sz1, const char*sz2)
+	{ return (strcmp(sz1, sz2) == 0); }
+
+
+//MODDD - have this.  Although clientside shouldn't touch entities too much.
 extern const char* FClassname(CBaseEntity* derp);
+
 
 extern BOOL stringStartsWith(const char* source, const char* startswith);
 
@@ -418,22 +419,14 @@ extern const char* tryFloatToString(float arg_src);
 extern void tryFloatToStringBuffer(char* dest, float arg_src);
 
 
-
 extern void lowercase(char* src);
 extern void lowercase(char* src, int size);
-
-
-
-
-
 
 extern float roundToNearest(float num);
 
 
 extern void UTIL_substring(char* dest, const char* src, int startIndex, int endIndex);
-
 extern int UTIL_findCharFirstPos(const char* search, char toFind);
-
 extern void UTIL_appendTo(char* dest, const char* add, int appendStartLoc);
 
 extern void appendTo(char* dest, const char* add, int* refIndex);
@@ -462,16 +455,7 @@ extern BOOL stringEndsWith(const char* arg_src, const char* arg_endsWith);
 extern BOOL stringEndsWithIgnoreCase(const char* arg_src, const char* arg_endsWith);
 
 
-
-
-
-
-
 extern BOOL checkSubFileExistence(const char* arg_subdir);
-
-
-
-
 
 extern void determineHiddenMemPath(void);
 extern BOOL checkValveSubFileExistence(const char* arg_subdir);
@@ -481,8 +465,18 @@ extern void loadHiddenCVars(void);
 extern void saveHiddenCVars(void);
 
 
-
 extern void convertIntToBinary(char* buffer, unsigned int arg, unsigned int binaryDigits);
+
+
+
+extern void UTIL_StringToVector( float *pVector, const char *pString );
+extern void UTIL_StringToIntArray( int *pVector, int count, const char *pString );
+//simple version for just one number.
+extern float clamp(float argTest, float argMin, float argMax);
+//MODDD - version that skips normalization offered.
+extern Vector UTIL_ClampVectorToBox( const Vector &input, const Vector &clampSize );
+extern Vector UTIL_ClampVectorToBoxNonNormalized( const Vector &input, const Vector &clampSize );
+
 
 
 // Common method for determing whether the current game is multiplayer or not.
@@ -490,14 +484,12 @@ extern void convertIntToBinary(char* buffer, unsigned int arg, unsigned int bina
 // behaves like 'IsMultiplayer' of gamerules for serverside.
 extern BOOL IsMultiplayer(void);
 
-
 // Yes, these can now be called from server or clientside.
 // However, it is still almost always called serverside, as it used to be.
 // Calling this from clientside just cuts out the middleman, always ended up there anyway.
 // And changed up a bit, can be told how many glowballs to spawn.
 extern void UTIL_Sparks(const Vector& position);
 extern void UTIL_Sparks(const Vector& position, int arg_ballsToSpawn, float arg_extraSparkMulti);
-
 
 
 

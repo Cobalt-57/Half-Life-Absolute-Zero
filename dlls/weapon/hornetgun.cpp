@@ -105,10 +105,21 @@ int CHgun::GetItemInfo(ItemInfo *p)
 	p->pszAmmo2 = NULL;
 	p->iMaxAmmo2 = -1;
 	p->iMaxClip = WEAPON_NOCLIP;
+
+
+
+#if SPLIT_ALIEN_WEAPONS_INTO_NEW_SLOT != 1
 	p->iSlot = 3;
 	//MODDD - rpg moved out.
 	//p->iPosition = 3;
 	p->iPosition = 2;
+#else
+	// to the new slot you go!
+	p->iSlot = 5;
+	p->iPosition = 0;
+#endif
+
+
 
 	p->iId = m_iId = WEAPON_HORNETGUN;
 	p->iFlags = ITEM_FLAG_NOAUTOSWITCHEMPTY | ITEM_FLAG_NOAUTORELOAD;

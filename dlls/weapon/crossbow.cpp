@@ -186,10 +186,7 @@ void CCrossbow::PrimaryAttack( void )
 }
 
 // this function only gets called in multiplayer
-void CCrossbow::FireSniperBolt()
-{
-
-	
+void CCrossbow::FireSniperBolt(){
 
 	//MODDD
 	if(m_pPlayer->cheat_minimumfiredelayMem == 0){
@@ -200,7 +197,8 @@ void CCrossbow::FireSniperBolt()
 
 	if (m_iClip == 0)
 	{
-		PlayEmptySound( );
+		//MODDD - why play an empty sound?  This isn't a gun.
+		//PlayEmptySound( );
 		return;
 	}
 
@@ -226,6 +224,7 @@ void CCrossbow::FireSniperBolt()
 	// (just like bullets).
 	// And it even works for other players: they see the bolt at the same place still.
 	// So generating our own instant projectile at the destination serverside is redundant.
+	// But still need to do the trace here to deal the damage.  Whoops.
 	PLAYBACK_EVENT_FULL( flags, m_pPlayer->edict(), m_usCrossbow2, 0.0, (float *)&g_vecZero, (float *)&g_vecZero, 0, 0, m_iClip, m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType], 0, 0 );
 
 	// player "shoot" animation
@@ -239,12 +238,9 @@ void CCrossbow::FireSniperBolt()
 	UTIL_TraceLine(vecSrc, vecSrc + vecDir * 8192, dont_ignore_monsters, m_pPlayer->edict(), &tr);
 
 
-	// Commented out!  See the "HEY, COMMENT TIME!" note above.
-	/*
 #ifndef CLIENT_DLL
 	//MODDD - no NULL check? Are you daft man?
 	if(tr.pHit != NULL){
-
 		CBaseEntity* tempEnt = CBaseEntity::Instance(tr.pHit);
 		Vector arrowVelocity;
 		
@@ -266,21 +262,26 @@ void CCrossbow::FireSniperBolt()
 			ClearMultiDamage( );
 			CBaseEntity::Instance(tr.pHit)->TraceAttack(m_pPlayer->pev, 120, vecDir, &tr, DMG_BULLET | DMG_NEVERGIB ); 
 			ApplyMultiDamage( pev, m_pPlayer->pev );
+
+			attemptSendBulletSound(tr.vecEndPos, m_pPlayer->pev);
 		}
 		
-		//HACKY - set the velocity to let the arrow determine its own position as the Touch is called below.
-		//pBolt->pev->velocity = vecDir;
+		// HACKY - set the velocity to let the arrow determine its own position as the Touch is called below.
+		// pBolt->pev->velocity = vecDir;
 		arrowVelocity = vecDir;
-		
-		//Tell this bolt not to deal damage because we already dealt the damage before even creating this bolt.
-		CCrossbowBolt *pBolt = CCrossbowBolt::BoltCreate(arrowVelocity, 0, FALSE, TRUE);
-		pBolt->pev->origin = tr.vecEndPos;
+				
+		// Tell this bolt not to deal damage because we already dealt the damage before even creating this bolt.
+		// Nope!  Redundant with above now, already generate a crossbowbolt through the EV call.
+		//CCrossbowBolt *pBolt = CCrossbowBolt::BoltCreate(arrowVelocity, 0, FALSE, TRUE);
+		//pBolt->pev->origin = tr.vecEndPos;
 
-		//no need to set pBolt->hitSomething, "BoltTouch" already does this.
-		pBolt->BoltTouch(tempEnt);
+		////no need to set pBolt->hitSomething, "BoltTouch" already does this.
+		//pBolt->BoltTouch(tempEnt);
+		
+
 	}//END OF pHit null check
 #endif
-	*/
+
 }//END OF FireSniperBolt
 
 void CCrossbow::FireBolt()
@@ -289,7 +290,8 @@ void CCrossbow::FireBolt()
 
 	if (m_iClip == 0)
 	{
-		PlayEmptySound( );
+		//MODDD - why play an empty sound?  This isn't a gun.
+		//PlayEmptySound( );
 		return;
 	}
 
@@ -307,6 +309,9 @@ void CCrossbow::FireBolt()
 	flags = 0;
 #endif
 
+
+
+	//!!!
 	PLAYBACK_EVENT_FULL( flags, m_pPlayer->edict(), m_usCrossbow, 0.0, (float *)&g_vecZero, (float *)&g_vecZero, 0, 0, m_iClip, m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType], 0, 0 );
 
 	//MODDD - sync the idle delay with the lengths of the animations planned (as seen in ev_hldm for the crossbow's event)
@@ -363,7 +368,6 @@ void CCrossbow::FireBolt()
 	pBolt->pev->angles = anglesAim;
 	pBolt->pev->owner = m_pPlayer->edict();
 
-	
 	//MODDD NOTE - a slight angular Z movement (or roll)? Did they really expect people to notice a slight roll on a speeding cylindrical object?
 	pBolt->pev->avelocity.z = 10;
 

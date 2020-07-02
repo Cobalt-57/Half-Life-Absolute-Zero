@@ -42,7 +42,7 @@
 #include "scripted.h"
 #include "util_debugdraw.h"
 
-EASY_CVAR_EXTERN(germanCensorship)
+EASY_CVAR_EXTERN(sv_germancensorship)
 EASY_CVAR_EXTERN(muteRicochetSound)
 EASY_CVAR_EXTERN(bulletholeAlertRange)
 EASY_CVAR_EXTERN(nothingHurts)
@@ -194,7 +194,7 @@ void CGib :: SpawnStickyGibs( entvars_t *pevVictim, Vector vecOrigin, int cGibs,
 	int i;
 
 	//if ( g_Language == LANGUAGE_GERMAN )
-	if(EASY_CVAR_GET(germanCensorship) == 1)
+	if(EASY_CVAR_GET(sv_germancensorship) == 1)
 	{
 		// no sticky gibs in germany right now!
 		//MODDD TODO - above comment found as-is.  Can re-enable and just use german gibs instead.
@@ -299,7 +299,7 @@ void CGib::SpawnHeadGib( entvars_t *pevVictim, const Vector gibSpawnOrigin, BOOL
 	CGib *pGib = GetClassPtr( (CGib *)NULL );
 	
 	//if ( g_Language == LANGUAGE_GERMAN )
-	if( EASY_CVAR_GET(germanCensorship) == FALSE ){
+	if( EASY_CVAR_GET(sv_germancensorship) == FALSE ){
 		pGib->Spawn( "models/hgibs.mdl", spawnDecals );// throw one head
 		pGib->pev->body = 0;
 	}else if(getGermanModelsAllowed() && globalPSEUDO_germanModel_hgibFound){  //if(EASY_CVAR_GET(tryLoadGermanGibs) == 1){
@@ -637,12 +637,12 @@ GENERATE_GIBMONSTERGIB_IMPLEMENTATION(CBaseMonster){
 	{
 		
 		//Old check... mostly.
-		//if ( EASY_CVAR_GET(germanCensorship) == 1 || CVAR_GET_FLOAT("violence_hgibs") != 0 )	// Only the player will ever get here   ...Why was this comment here as-is? only the player? what?
+		//if ( EASY_CVAR_GET(sv_germancensorship) == 1 || CVAR_GET_FLOAT("violence_hgibs") != 0 )	// Only the player will ever get here   ...Why was this comment here as-is? only the player? what?
 		
 		
 		//MODDD - Little intervention here when spawning human gibs. Check to see if german censorship is on.
 
-		if(EASY_CVAR_GET(germanCensorship)==0){
+		if(EASY_CVAR_GET(sv_germancensorship)==0){
 			//turned off? usual behavior, only require violence_hgibs to be off.
 			if(CVAR_GET_FLOAT("violence_hgibs") != 0){
 				BOOL spawnHeadBlock = this->DetermineGibHeadBlock();
@@ -677,7 +677,7 @@ GENERATE_GIBMONSTERGIB_IMPLEMENTATION(CBaseMonster){
 	else if ( HasAlienGibs() )
 	{
 		//NOTE: using real alien gibs.  If "agibs" are banned, then don't show.
-		//if ( EASY_CVAR_GET(germanCensorship) == 1 || CVAR_GET_FLOAT("violence_agibs") != 0 )	// Should never get here, but someone might call it directly
+		//if ( EASY_CVAR_GET(sv_germancensorship) == 1 || CVAR_GET_FLOAT("violence_agibs") != 0 )	// Should never get here, but someone might call it directly
 
 		//MODDD - no involvement from germancensorship, keep to using violence_agibs.
 		if(CVAR_GET_FLOAT("violence_agibs") != 0)
@@ -1252,7 +1252,7 @@ void CGib :: BounceGibTouch ( CBaseEntity *pOther )
 	else
 	{
 		//if ( g_Language != LANGUAGE_GERMAN && m_cBloodDecals > 0 && m_bloodColor != DONT_BLEED )
-		if( (EASY_CVAR_GET(germanCensorship) != 1 || m_bloodColor == BLOOD_COLOR_BLACK) && m_cBloodDecals > 0 && m_bloodColor != DONT_BLEED )
+		if( (EASY_CVAR_GET(sv_germancensorship) != 1 || m_bloodColor == BLOOD_COLOR_BLACK) && m_cBloodDecals > 0 && m_bloodColor != DONT_BLEED )
 		{
 			vecSpot = pev->origin + Vector ( 0 , 0 , 8 );//move up a bit, and trace down.
 			UTIL_TraceLine ( vecSpot, vecSpot + Vector ( 0, 0, -24 ),  ignore_monsters, ENT(pev), & tr);

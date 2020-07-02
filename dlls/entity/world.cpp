@@ -48,7 +48,7 @@ extern void turnWorldLightsOn();
 extern void turnWorldLightsOff();
 extern void resetModCVars(CBasePlayer* arg_plyRef, BOOL isEmergency);
 
-EASY_CVAR_EXTERN(germanCensorship)
+EASY_CVAR_EXTERN(sv_germancensorship)
 
 extern DLL_DECALLIST gDecals[];
 
@@ -145,7 +145,7 @@ void CDecal :: StaticDecal( void )
 
 //DOOMMARINE23 If we're in censorship mode, replace all dynamic blood placed by the level designer with censored versions.
 //WELCOME TO IF/ELSE HELL
-		if (EASY_CVAR_GET(germanCensorship))
+		if (EASY_CVAR_GET(sv_germancensorship))
 		{	
 			if ((int)pev->skin >= 230 && (int)pev->skin <= 237)	//Dynamic Human Blood {blood1 through {blood 8
 				{
@@ -726,7 +726,7 @@ void CWorld :: Precache( void )
 	}
 
 	//Keep track of "scheduleNodeUpdate", because it's about to get reset by InitGraph below.
-	BOOL scheduleNodeUpdate_tempmem = WorldGraph.scheduleNodeUpdate;
+	BOOL scheduleNodeUpdate_tempmem = scheduleNodeUpdate;
 
 // init the WorldGraph.
 	WorldGraph.InitGraph();
@@ -980,9 +980,9 @@ void CWorld::WorldThink(void){
 void CWorld::applyLoadedCustomMapSettingsToGlobal(void){
 	
 	//Clearly these need to take effect.
-	WorldGraph.node_linktest_height = m_fl_node_linktest_height;
-	WorldGraph.node_hulltest_height = m_fl_node_hulltest_height;
-	WorldGraph.node_hulltest_heightswap = m_f_node_hulltest_heightswap;
+	node_linktest_height = m_fl_node_linktest_height;
+	node_hulltest_height = m_fl_node_hulltest_height;
+	node_hulltest_heightswap = m_f_node_hulltest_heightswap;
 
 }//END Of applyLoadedCustomMapSettingsToGlobal
 
@@ -990,7 +990,7 @@ void CWorld::applyLoadedCustomMapSettingsToGlobal(void){
 //MODDD - for hte other way around.  Settings set by nodes.cpp should be sent to here instead.
 void CWorld::getCustomMapSettingsFromGlobal(void){
 	
-	m_f_map_anyAirNodes = WorldGraph.map_anyAirNodes;
+	m_f_map_anyAirNodes = map_anyAirNodes;
 }
 
 

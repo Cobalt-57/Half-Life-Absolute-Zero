@@ -70,7 +70,8 @@ POINT		current_pos;
 int		mouse_x, mouse_y, old_mouse_x, old_mouse_y, mx_accum, my_accum;
 
 static int restore_spi;
-static int originalmouseparms[3], newmouseparms[3] = {0, 0, 1};
+static int originalmouseparms[3] = {0, 0, 1};
+static int newmouseparms[3] = {0, 0, 1};
 static int mouseactive;
 int		mouseinitialized;
 static int mouseparmsvalid;

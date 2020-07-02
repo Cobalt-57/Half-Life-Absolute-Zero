@@ -12,6 +12,7 @@
 #include "player.h"
 #include "gamerules.h"
 #include "soundent.h"
+#include "func_break.h"
 
 EASY_CVAR_EXTERN(playerCrossbowMode)
 EASY_CVAR_EXTERN(hassassinCrossbowMode)
@@ -138,10 +139,10 @@ void CCrossbowBolt::Spawn(BOOL useTracer, BOOL arg_noDamage)
 	UTIL_SetSize(pev, Vector(0, 0, 0), Vector(0, 0, 0));
 
 	SetTouch( &CCrossbowBolt::BoltTouch );
-	SetThink( &CCrossbowBolt::BubbleThink );
+	SetThink( &CCrossbowBolt::BoltThink );
 	
 
-	//MODDD NOTE - why is this " + 0.2" instead of " + 0.1" like most think methods and even BubbleThink's own think refresh?
+	//MODDD NOTE - why is this " + 0.2" instead of " + 0.1" like most think methods and even BoltThink's own think refresh?
 	//             The world may never know.
 	//pev->nextthink = gpGlobals->time + 0.2;
 	realNextThink = gpGlobals->time + 0.2f;
@@ -182,20 +183,43 @@ void CCrossbowBolt::BoltTouch( CBaseEntity *pOther )
 	//MODDD - is that safe?
 	recentVelocity = pev->velocity;
 
-	//why yes, I believe I did.
+	// why yes, I believe I did.
 	hitSomething = TRUE;
 
 
 	float crossbowMode = -1;
 
-	if( pev->owner != NULL){
-		const char* ownerClassName = STRING(pev->owner->v.classname);
-		if( !strcmp(ownerClassName, "player")){
-			crossbowMode = EASY_CVAR_GET(playerCrossbowMode);
-		}else if(!strcmp(ownerClassName, "monster_human_assassin")){
-			crossbowMode = EASY_CVAR_GET(hassassinCrossbowMode);
+	float damageToDeal = 0;
+
+	damageToDeal = gSkillData.plrDmgCrossbowClient;
+	damageToDeal = gSkillData.plrDmgCrossbowMonster;
+
+	//if( pev->owner != NULL){
+	const char* ownerClassName = STRING(pev->owner->v.classname);
+	if( !strcmp(ownerClassName, "player")){
+		crossbowMode = EASY_CVAR_GET(playerCrossbowMode);
+		if (pOther->IsPlayer()) {
+			// Player attacking a player.
+			damageToDeal = gSkillData.plrDmgCrossbowClient;
 		}
+		else {
+			// Player attacking anything else.
+			damageToDeal = gSkillData.plrDmgCrossbowMonster;
+		}
+			
+	}else if(!strcmp(ownerClassName, "monster_human_assassin")){
+		crossbowMode = EASY_CVAR_GET(hassassinCrossbowMode);
+		if (pOther->IsPlayer()) {
+			// hassassin attacking a player.
+			damageToDeal = gSkillData.hassassinDmgCrossbowClient;
+		}
+		else {
+			// hassassin attacking anything else.
+			damageToDeal = gSkillData.hassassinDmgCrossbowMonster;
+		}
+
 	}
+	//}
 	
 	//MODDD - filter w/ new CVar.
 
@@ -218,28 +242,27 @@ void CCrossbowBolt::BoltTouch( CBaseEntity *pOther )
 	SetTouch( NULL );
 	SetThink( NULL );
 
+	entvars_t* pevOwner;
+	pevOwner = VARS(pev->owner);
+
 	if (pOther->pev->takedamage)
 	{
-		TraceResult tr = UTIL_GetGlobalTrace( );
-		entvars_t	*pevOwner;
+		TraceResult tr = UTIL_GetGlobalTrace();
 
 
-
-		pevOwner = VARS( pev->owner );
-
-
-		if(!noDamage){
+		if (!noDamage) {
 
 			// UNDONE: this needs to call TraceAttack instead
-			ClearMultiDamage( );
+			ClearMultiDamage();
 
-			if(goingToExplode){
+			if (goingToExplode) {
 				// explosions gib. Look like it.
 				// ...eh, nevermind.  These are small explosions. Gib just if we deserve it as usual
 				// (overkill factor).  If you change your mind, add back DMG_ALWAYSGIB.
 				// Also, no poison for explosive arrows. C'mon, that's just ridiculous.
 				gMultiDamage.type = DMG_BLAST;
-			}else{
+			}
+			else {
 				// May do lots of damage, but no gibbing. Does not make sense for ordinary
 				// piercing arrows.  Also does poison.
 				// MODDD TODO - make crossbow poison weaker than most?  It's already pretty devastating
@@ -248,56 +271,69 @@ void CCrossbowBolt::BoltTouch( CBaseEntity *pOther )
 				gMultiDamage.type = DMG_BULLET | DMG_NEVERGIB | DMG_POISON;
 			}
 
-			if ( pOther->IsPlayer() )
-			{
-				//iBitsDamage = DMG_NEVERGIB;
-				//easyForcePrintLine("OW! 1A %s health:%.2f dmg:%.2f", pOther->getClassname(), pOther->pev->health, gSkillData.plrDmgCrossbowClient);
-				pOther->TraceAttack(pevOwner, gSkillData.plrDmgCrossbowClient, pev->velocity.Normalize(), &tr, gMultiDamage.type, gMultiDamage.typeMod ); 
-				//easyForcePrintLine("OW! 2A %s health:%.2f", pOther->getClassname(), pOther->pev->health);
-			}
-			else
-			{
-				//iBitsDamage = DMG_BULLET | DMG_NEVERGIB;
-				//easyForcePrintLine("OW! 1B %s health:%.2f dmg:%.2f", pOther->getClassname(), pOther->pev->health, gSkillData.plrDmgCrossbowMonster);
-				pOther->TraceAttack(pevOwner, gSkillData.plrDmgCrossbowMonster, pev->velocity.Normalize(), &tr, gMultiDamage.type, gMultiDamage.typeMod ); 
-				//easyForcePrintLine("OW! 2B %s health:%.2f", pOther->getClassname(), pOther->pev->health);
-			}
+
+			//TODO - explosion damage, based on monster-damage a bit maybe??
+			pOther->TraceAttack(pevOwner, damageToDeal, pev->velocity.Normalize(), &tr, gMultiDamage.type, gMultiDamage.typeMod);
+
 
 			//ClearMultiDamage();
 			//gMultiDamage.type = DMG_BULLET | DMG_NEVERGIB;
-		
+
 			//easyForcePrintLine("OW! 3 %s health:%.2f", pOther->getClassname(), pOther->pev->health);
 			//easyForcePrintLine("!!!CROSSBOWBOLT: ApplyMultiDamage CALL!!!");
-			ApplyMultiDamage( pev, pevOwner );
+			ApplyMultiDamage(pev, pevOwner);
 
 		}//END OF noDamage
 
-		
+
 		//easyForcePrintLine("OW! 4 %s health:%.2f", pOther->getClassname(), pOther->pev->health);
 
-
-		pev->velocity = Vector( 0, 0, 0 );
-		// play body "thwack" sound
-		switch( RANDOM_LONG(0,1) )
-		{
-		case 0:
-			EMIT_SOUND(ENT(pev), CHAN_BODY, "weapons/xbow_hitbod1.wav", 1, ATTN_NORM); break;
-		case 1:
-			EMIT_SOUND(ENT(pev), CHAN_BODY, "weapons/xbow_hitbod2.wav", 1, ATTN_NORM); break;
+		BOOL extraPasss = FALSE;
+		if (FClassnameIs(pOther->pev, "func_breakable")) {
+			CBreakable *tempBreak = static_cast<CBreakable*>(pOther);
+			if (tempBreak->m_Material == Materials::matWood || tempBreak->m_Material == Materials::matFlesh || tempBreak->m_Material == Materials::matLastMaterial) {
+				extraPasss = TRUE;
+			}
 		}
 
+
+
+		pev->velocity = Vector(0, 0, 0);
+		//MODDD - if it is organic.
+		if( (pOther->Classify() != CLASS_NONE && pOther->isOrganic() == TRUE) || extraPasss){
+			// play body "thwack" sound
+			switch (RANDOM_LONG(0, 1))
+			{
+			case 0:
+				EMIT_SOUND(ENT(pev), CHAN_BODY, "weapons/xbow_hitbod1.wav", 1, ATTN_NORM); break;
+			case 1:
+				EMIT_SOUND(ENT(pev), CHAN_BODY, "weapons/xbow_hitbod2.wav", 1, ATTN_NORM); break;
+			}
+		}
+		else {
+			// not organic?  Slightly modified xbow_hit.wav
+			EMIT_SOUND_DYN(ENT(pev), CHAN_BODY, "weapons/xbow_hit1.wav", RANDOM_FLOAT(0.98, 1.0), ATTN_NORM - 0.1, 0, 102 + RANDOM_LONG(0, 9));
+			if (UTIL_PointContents(pev->origin) != CONTENTS_WATER)
+			{
+				UTIL_Sparks(pev->origin, DEFAULT_SPARK_BALLS, EASY_CVAR_GET(sparksPlayerCrossbowMulti));
+			}
+		}//END OF pOther organic check
+
 		
+		// Does this crossbowbolt need to  be removed this instant?
+		// If it collided with an entity (must have to reach this point) and isn't going to explode (deleted soon later),
+		// go ahead.
 		if(!goingToExplode){
-			//single player? do this. But to myself, the crossbowbolt, to be clear. Multiplayer one's don't need to call this apparently.
 			Killed( pev, pev, GIB_NEVER );
 		}else{
-			//not for multiplayer.
 
 		}
 		
 	}
 	else
 	{
+		// Didn't hit something?  Probably going to stick out of a surface and stay for a little while.
+
 		EMIT_SOUND_DYN(ENT(pev), CHAN_BODY, "weapons/xbow_hit1.wav", RANDOM_FLOAT(0.95, 1.0), ATTN_NORM, 0, 98 + RANDOM_LONG(0,7));
 
 		SetThink( &CBaseEntity::SUB_Remove );
@@ -327,22 +363,23 @@ void CCrossbowBolt::BoltTouch( CBaseEntity *pOther )
 		}
 	}
 
+	attemptSendBulletSound(pev->origin, pevOwner);
+
+	// It's your time to shine!  Explode and remove self.
 	if(goingToExplode){
 		SetThink( &CCrossbowBolt::ExplodeThink );
 		pev->nextthink = gpGlobals->time + 0.1;
 	}
 	
-	
 	//easyForcePrintLine("OW! 5 %s health:%.2f", pOther->getClassname(), pOther->pev->health);
 }
 
 
-//this Think is picked for the bolt anytime, regardless of being in the water or not.
-//It only makes bubbles if it is underwater.
-void CCrossbowBolt::BubbleThink( void )
+
+
+// Makes bubbles if it is underwater.
+void CCrossbowBolt::BoltThink( void )
 {
-
-
 	//think every single frame of game logic, but only run the retail logic every 0.1 seconds for the same behavior there.
 	pev->nextthink = gpGlobals->time;
 	
@@ -371,7 +408,7 @@ void CCrossbowBolt::BubbleThink( void )
 	
 
 	
-}//END OF BubbleThink
+}//END OF BoltThink
 
 
 void CCrossbowBolt::ExplodeThink( void )

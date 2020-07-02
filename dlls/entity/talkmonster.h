@@ -39,6 +39,15 @@
 
 #define TLK_CFRIENDS		3
 
+
+// Clients can push talkmonsters out of their way
+#define bits_COND_CLIENT_PUSH		( bits_COND_SPECIAL1 )
+// Don't see a client right now.
+#define bits_COND_CLIENT_UNSEEN		( bits_COND_SPECIAL2 )
+
+
+
+
 typedef enum
 {
 	TLK_ANSWER = 0,
@@ -62,6 +71,8 @@ typedef enum
 
 	TLK_CGROUPS,					// MUST be last entry
 } TALKGROUPNAMES;
+
+
 
 
 enum
@@ -101,10 +112,9 @@ enum
 	TASK_TLK_SPEAK_PASSIVE,
 	
 
-
-
 	LAST_TALKMONSTER_TASK,			// MUST be last
 };
+
 
 
 
@@ -166,11 +176,6 @@ public:
 	float forgiveSomePlayerDamageTime;
 
 
-
-
-
-
-
 	
 	//MODDD - also new.
 	virtual void playPissed();
@@ -189,11 +194,6 @@ public:
 	// Base Monster functions
 	void		Precache( void );
 
-
-	
-
-
-
 	void		Touch(	CBaseEntity *pOther );
 
 	//wasn't virtual? WHY?!!!
@@ -202,7 +202,6 @@ public:
 	int			IRelationship ( CBaseEntity *pTarget );
 	virtual int	CanPlaySentence( BOOL fDisregardState );
 	
-
 	
 	virtual void PlaySentence( const char *pszSentence, float duration, float volume, float attenuation);
 	//MODDD - new version
@@ -317,7 +316,6 @@ public:
 	GENERATE_TAKEDAMAGE_PROTOTYPE_VIRTUAL
 
 
-
 	virtual int	Save( CSave &save );
 	virtual int	Restore( CRestore &restore );
 	static	TYPEDESCRIPTION m_SaveData[];
@@ -354,12 +352,6 @@ public:
 	virtual void initiateAss();
 
 };
-
-
-// Clients can push talkmonsters out of their way
-#define 	bits_COND_CLIENT_PUSH		( bits_COND_SPECIAL1 )
-// Don't see a client right now.
-#define 	bits_COND_CLIENT_UNSEEN		( bits_COND_SPECIAL2 )
 
 
 #endif		//TALKMONSTER_H

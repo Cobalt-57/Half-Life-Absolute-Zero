@@ -217,7 +217,8 @@ float EV_HLDM_PlayTextureSound( int idx, pmtrace_t *ptr, float *vecSrc, float *v
 		//MODDD - aw yea, from the fix I made for negentropy.  Tight as hell.
 		////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		pmtrace_t tr;
-		gEngfuncs.pEventAPI->EV_SetSolidPlayers(idx - 1);
+		// do we even need this again..?
+		//gEngfuncs.pEventAPI->EV_SetSolidPlayers(idx - 1);
 
 		gEngfuncs.pEventAPI->EV_SetTraceHull(HULL_TYPE::large_hull);
 		gEngfuncs.pEventAPI->EV_PlayerTrace(vecSrc, vecEnd, PM_STUDIO_BOX, -1, &tr);
@@ -463,7 +464,7 @@ void EV_HLDM_DecalGunshot( pmtrace_t *pTrace, int iBulletType )
 	}
 }
 
-BOOL EV_HLDM_CheckTracer( int idx, float *vecSrc, float *end, float *forward, float *right, int iBulletType, int iTracerFreq, int *tracerCount )
+BOOL EV_HLDM_CheckTracer( int idx, float *vecSrc, float *end, float *forward, float *right, int iBulletType, int iTracerFreq, int *tracerCountChoice )
 {
 	//MODDD - renamed the genericly named "tracer" to "disableBulletHitDecal".  It's up to whoever calls this method to act on it by not drawing a decal...
 	//        for some odd reason.
@@ -471,7 +472,7 @@ BOOL EV_HLDM_CheckTracer( int idx, float *vecSrc, float *end, float *forward, fl
 	int i;
 	qboolean player = idx >= 1 && idx <= gEngfuncs.GetMaxClients() ? true : false;
 
-	if ( iTracerFreq != 0 && ( (*tracerCount)++ % iTracerFreq) == 0 )
+	if ( iTracerFreq != 0 && ( (*tracerCountChoice)++ % iTracerFreq) == 0 )
 	{
 		vec3_t vecTracerSrc;
 
@@ -509,6 +510,14 @@ BOOL EV_HLDM_CheckTracer( int idx, float *vecSrc, float *end, float *forward, fl
 }
 
 
+
+
+
+extern "C" {
+	extern int PM_GetPhysEntInfo(int ent);
+}
+
+
 /*
 ================
 FireBullets
@@ -516,7 +525,7 @@ FireBullets
 Go to the trouble of combining multiple pellets into a single damage call.
 ================
 */
-void EV_HLDM_FireBullets( int idx, float *forward, float *right, float *up, int cShots, float *vecSrc, float *vecDirShooting, float flDistance, int iBulletType, int iTracerFreq, int *tracerCount, float flSpreadX, float flSpreadY )
+void EV_HLDM_FireBullets( int idx, float *forward, float *right, float *up, int cShots, float *vecSrc, float *vecDirShooting, float flDistance, int iBulletType, int iTracerFreq, int *tracerCountChoice, float flSpreadX, float flSpreadY )
 {
 	int i;
 	pmtrace_t tr;
@@ -526,6 +535,9 @@ void EV_HLDM_FireBullets( int idx, float *forward, float *right, float *up, int 
 	BOOL disableBulletHitDecal;
 
 
+	//MODDD!!! DEBUG.  Stop this later.
+	flDistance = 200;
+
 
 	//MODDD - TODO. create and enable here.
 	if(EASY_CVAR_GET(playerBulletHitEffectForceServer) == 1){
@@ -533,52 +545,112 @@ void EV_HLDM_FireBullets( int idx, float *forward, float *right, float *up, int 
 		return;
 	}
 
-	
 
 	
-	for ( iShot = 1; iShot <= cShots; iShot++ )	
+	for (iShot = 1; iShot <= cShots; iShot++)
 	{
-		vec3_t vecDir, vecEnd;
-			
+		vec3_t vecDir;
+		vec3_t vecEnd;
+
 		float x, y, z;
 		//We randomize for the Shotgun.
-		if ( iBulletType == BULLET_PLAYER_BUCKSHOT )
+		if (iBulletType == BULLET_PLAYER_BUCKSHOT)
 		{
 			do {
-				x = gEngfuncs.pfnRandomFloat(-0.5,0.5) + gEngfuncs.pfnRandomFloat(-0.5,0.5);
-				y = gEngfuncs.pfnRandomFloat(-0.5,0.5) + gEngfuncs.pfnRandomFloat(-0.5,0.5);
-				z = x*x+y*y;
+				x = gEngfuncs.pfnRandomFloat(-0.5, 0.5) + gEngfuncs.pfnRandomFloat(-0.5, 0.5);
+				y = gEngfuncs.pfnRandomFloat(-0.5, 0.5) + gEngfuncs.pfnRandomFloat(-0.5, 0.5);
+				z = x * x + y * y;
 			} while (z > 1);
 
-			for ( i = 0 ; i < 3; i++ )
+			for (i = 0; i < 3; i++)
 			{
-				vecDir[i] = vecDirShooting[i] + x * flSpreadX * right[ i ] + y * flSpreadY * up [ i ];
-				vecEnd[i] = vecSrc[ i ] + flDistance * vecDir[ i ];
+				vecDir[i] = vecDirShooting[i] + x * flSpreadX * right[i] + y * flSpreadY * up[i];
+				vecEnd[i] = vecSrc[i] + flDistance * vecDir[i];
 			}
 		}//But other guns already have their spread randomized in the synched spread.
 		else
 		{
 
-			for ( i = 0 ; i < 3; i++ )
+			for (i = 0; i < 3; i++)
 			{
-				vecDir[i] = vecDirShooting[i] + flSpreadX * right[ i ] + flSpreadY * up [ i ];
-				vecEnd[i] = vecSrc[ i ] + flDistance * vecDir[ i ];
+				vecDir[i] = vecDirShooting[i] + flSpreadX * right[i] + flSpreadY * up[i];
+				vecEnd[i] = vecSrc[i] + flDistance * vecDir[i];
 			}
 		}
 
-		gEngfuncs.pEventAPI->EV_SetUpPlayerPrediction( false, true );
-	
+		gEngfuncs.pEventAPI->EV_SetUpPlayerPrediction(false, true);
+
+
+
 		// Store off the old count
 		gEngfuncs.pEventAPI->EV_PushPMStates();
-	
-		// Now add in all of the players.
-		gEngfuncs.pEventAPI->EV_SetSolidPlayers ( idx - 1 );	
 
-		//MODDD - how about??
+
+
+		if (CVAR_GET_FLOAT("ctt4") == 0 || CVAR_GET_FLOAT("ctt4") == 2) {
+
+			// Now add in all of the players.
+			if (CVAR_GET_FLOAT("ctt1") == 0) {
+				gEngfuncs.pEventAPI->EV_SetSolidPlayers(idx - 1);
+			}
+			else if (CVAR_GET_FLOAT("ctt1") == 1) {
+				gEngfuncs.pEventAPI->EV_SetSolidPlayers(-1);
+			}
+
+			gEngfuncs.pEventAPI->EV_SetTraceHull((int)CVAR_GET_FLOAT("ctt2"));
+			gEngfuncs.pEventAPI->EV_PlayerTrace(vecSrc, vecEnd, (int)CVAR_GET_FLOAT("ctt3"), -1, &tr);
+
+			//typedef enum { point_hull = 0, human_hull = 1, large_hull = 2, head_hull = 3 } HULL_TYPE;
+			/*
+	#define PM_NORMAL			0x00000000
+	#define PM_STUDIO_IGNORE	0x00000001		// Skip studio models
+	#define PM_STUDIO_BOX		0x00000002		// Use boxes for non-complex studio models (even in traceline)
+	#define PM_GLASS_IGNORE		0x00000004		// Ignore entities with non-normal rendermode
+	#define PM_WORLD_ONLY		0x00000008		// Only trace against the world
+			*/
+
+			easyForcePrintLine("A So what did I hit? how far? %.2f", tr.fraction * flDistance);
+		}
+
+
+		if(CVAR_GET_FLOAT("ctt4") == 1 || CVAR_GET_FLOAT("ctt4") == 2) {
+			pmtrace_t* trace;
+			cl_entity_t* ent = NULL;
+
+			//tr = *(gEngfuncs.PM_TraceLine((float*)&vecSrc, (float*)&vecEnd, PM_TRACELINE_PHYSENTSONLY, HULL_TYPE::large_hull, -1));
+			trace = (gEngfuncs.PM_TraceLine((float*)&vecSrc, (float*)&vecEnd, PM_TRACELINE_PHYSENTSONLY, (int)CVAR_GET_FLOAT("ctt2"), -1));
+
+			//ent = gEngfuncs.GetEntityByIndex(PM_GetPhysEntInfo(trace->ent));
+
+			if (trace != NULL) {
+				if (trace->fraction != 1.0 && trace->ent != 0)
+				{
+					//int hitent = PM_GetPhysEntInfo(tr.ent);
+					//PM_ParticleLine((float*)&v_origin, (float*)&tr.endpos, 5, 1.0, 0.0);
+				}
+
+				//tr = *trace;
+				easyForcePrintLine("B So what did I hit? how far? %.2f", trace->fraction * flDistance);
+			}
+			else {
+				easyForcePrintLine("B So what did I hit? how far? OH NO");
+			}
+
+		}
+	
+
+
+		/*
+		gEngfuncs.pEventAPI->EV_SetSolidPlayers(idx - 1);
 		gEngfuncs.pEventAPI->EV_SetTraceHull(HULL_TYPE::large_hull);
-		//gEngfuncs.pEventAPI->EV_SetTraceHull(HULL_TYPE::point_hull);
-		
-		gEngfuncs.pEventAPI->EV_PlayerTrace( vecSrc, vecEnd, PM_STUDIO_BOX, -1, &tr );
+		gEngfuncs.pEventAPI->EV_PlayerTrace(vecSrc, vecEnd, PM_STUDIO_BOX, -1, &tr);
+		*/
+
+		/*
+		gEngfuncs.pEventAPI->EV_SetSolidPlayers (- 1 );
+		gEngfuncs.pEventAPI->EV_SetTraceHull(HULL_TYPE::point_hull);
+		gEngfuncs.pEventAPI->EV_PlayerTrace( vecSrc, vecEnd, PM_NORMAL, -1, &tr );
+		*/
 
 
 
@@ -620,7 +692,7 @@ void EV_HLDM_FireBullets( int idx, float *forward, float *right, float *up, int 
 		break;
 		}//END OF switch
 
-		disableBulletHitDecal = EV_HLDM_CheckTracer( idx, vecSrc, tr.endpos, forward, right, iBulletType, iTracerFreq, tracerCount );
+		disableBulletHitDecal = EV_HLDM_CheckTracer( idx, vecSrc, tr.endpos, forward, right, iBulletType, iTracerFreq, tracerCountChoice );
 
 
 
@@ -1426,7 +1498,8 @@ void EV_FireGauss( event_args_t *args )
 					if ( !beam_tr.allsolid )
 					{
 						vec3_t delta;
-						float n;
+						//MODDD - renamed from "n" to "m", avoids conflict with outter scope
+						float m;
 
 						// trace backwards to find exit point
 
@@ -1434,13 +1507,13 @@ void EV_FireGauss( event_args_t *args )
 
 						VectorSubtract_f( beam_tr.endpos, tr.endpos, delta );
 						
-						n = Length( delta );
+						m = Length( delta );
 
-						if (n < flDamage)
+						if (m < flDamage)
 						{
-							if (n == 0)
-								n = 1;
-							flDamage -= n;
+							if (m == 0)
+								m = 1;
+							flDamage -= m;
 
 							// absorption balls
 							{
@@ -2426,7 +2499,7 @@ void EV_HLDM_DecalGunshotCustomEvent( event_args_t *args )
 	VectorCopy_f( args->origin, origin );
 
 	//EV_HLDM_FireBullets( idx, forward, right, up, 1, vecSrc, vecAiming, 8192, BULLET_PLAYER_9MM, 0, 0, args->fparam1, args->fparam2 );
-	//void EV_HLDM_FireBullets( int idx, float *forward, float *right, float *up, int cShots, float *vecSrc, float *vecDirShooting, float flDistance, int iBulletType, int iTracerFreq, int *tracerCount, float flSpreadX, float flSpreadY )
+	//void EV_HLDM_FireBullets( int idx, float *forward, float *right, float *up, int cShots, float *vecSrc, float *vecDirShooting, float flDistance, int iBulletType, int iTracerFreq, int *tracerCountChoice, float flSpreadX, float flSpreadY )
 	
 	
 	
@@ -2765,7 +2838,15 @@ void EV_EgonFire( event_args_t *args )
 
 		if ( iStartup == 1 && EV_IsLocal( idx ) && !pBeam && !pBeam2 && cl_lw->value ) //Adrian: Added the cl_lw check for those lital people that hate weapon prediction.
 		{
-			vec3_t vecSrc, vecEnd, origin, angles, forward, right, up;
+			vec3_t vecSrc;
+			vec3_t vecEnd;
+			//MODDD - what.  why.
+			//vec3_t origin;
+			vec3_t angles;
+			vec3_t forward;
+			vec3_t right;
+			vec3_t up;
+
 			pmtrace_t tr;
 
 			cl_entity_t *pl = gEngfuncs.GetEntityByIndex( idx );

@@ -51,10 +51,7 @@ EASY_CVAR_EXTERN(forceAllowServersideTextureSounds)
 
 
 
-
-
 static char *memfgets( byte *pMemFile, int fileSize, int &filePos, char *pBuffer, int bufferSize );
-
 
 
 // ==================== GENERIC AMBIENT SOUND ======================================
@@ -1150,7 +1147,8 @@ int USENTENCEG_Pick(int isentenceg, char *szfound)
 		{
 			strcpy(szfound, "!");
 			strcat(szfound, szgroupname);
-			sprintf(sznum, "%d", ipick);
+			//MODDD - why not %u instead of %d ?
+			sprintf(sznum, "%u", ipick);
 			strcat(szfound, sznum);
 
 			//easyPrintLine("WO HO HO HO SENTENCE::: %s : count: %d choice: %d", szgroupname, count, ipick);

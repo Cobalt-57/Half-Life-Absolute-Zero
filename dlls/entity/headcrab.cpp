@@ -26,7 +26,7 @@
 //=========================================================
 // Monster's Anim Events Go Here
 //=========================================================
-#define 	HC_AE_JUMPATTACK	( 2 )
+#define HC_AE_JUMPATTACK	( 2 )
 
 Task_t	tlHCRangeAttack1[] =
 {

@@ -71,7 +71,7 @@ EASY_CVAR_EXTERN(firstPersonIdleDelayMin)
 EASY_CVAR_EXTERN(firstPersonIdleDelayMax)
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(viewModelPrintouts)
 EASY_CVAR_EXTERN(viewModelSyncFixPrintouts)
-EASY_CVAR_EXTERN(holsterAnims)
+EASY_CVAR_EXTERN(cl_holster)
 EASY_CVAR_EXTERN(wpn_glocksilencer)
 
 extern int flag_apply_m_flTimeWeaponIdle;
@@ -1777,7 +1777,7 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
 				}
 
 
-				if(EASY_CVAR_GET(holsterAnims) == 1){
+				if(EASY_CVAR_GET(cl_holster) == 1){
 					//using holster anim? Tell the currently equipped item to change to this weapon when that is over.
 					player.m_pQueuedActiveItem = pNew;  //set this later instead, after the holster anim is done.
 				}else{
