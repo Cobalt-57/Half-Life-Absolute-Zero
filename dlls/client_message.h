@@ -19,7 +19,6 @@ extern int gmsgCliTest;
 extern int gmsgUnpause;
 
 extern int gmsgOnFirstAppearance;
-extern int gmsgClientResetModCVars;
 
 extern int gmsgUpdateClientCVar;
 extern int gmsgResetClientCVar;

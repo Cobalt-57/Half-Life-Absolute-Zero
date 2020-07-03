@@ -82,7 +82,7 @@ PROTOTYPE_MESSAGE(JBoxOff);
 PROTOTYPE_MESSAGE(AutoMus);
 PROTOTYPE_MESSAGE(CliTest);
 PROTOTYPE_MESSAGE(FirstAppr);
-PROTOTYPE_MESSAGE(ResetCVars);
+
 PROTOTYPE_MESSAGE(UpdClientC);
 PROTOTYPE_MESSAGE(RstClientC);
 PROTOTYPE_MESSAGE(PntClientC);
@@ -118,7 +118,7 @@ void Init_CustomMessage(void){
 	HOOK_MESSAGE(AutoMus);
 	HOOK_MESSAGE(CliTest);
 	HOOK_MESSAGE(FirstAppr);
-	HOOK_MESSAGE(ResetCVars);
+	
 	HOOK_MESSAGE(UpdClientC);
 	HOOK_MESSAGE(RstClientC);
 	HOOK_MESSAGE(PntClientC);
@@ -362,15 +362,8 @@ IMPLEMENT_MESSAGE(FirstAppr){
 	lateCVarInit();
 
 	return 1;
-}//END OF MsgFunc_ResetCVars
+}//END OF MsgFunc_FirstAppr
 
-// Called by the server resetting client CVars for a particular player.  Well, do it!
-IMPLEMENT_MESSAGE(ResetCVars){
-	EASY_CVAR_SET(hud_logo, 0);
-	EASY_CVAR_SET(cl_fvox, 1);
-	
-	return 1;
-}//END OF MsgFunc_ResetCVars
 
 
 
@@ -437,13 +430,22 @@ IMPLEMENT_MESSAGE(UpdClientC){
 
 
 IMPLEMENT_MESSAGE(RstClientC){
+	// wait.  Shouldn't have to do this.
+	// Already handled by resetModCVarsClintOnly.
+	// Unfortunately that's not happening yet, see below.
+	// DEBUG mode needs this at least?
+	
 #ifdef _DEBUG
-//nothing to do here. This should never be called, this feature is unused for Debug mode.
-//It already treats everything as ordinary CVars.
 
+	EASY_CVAR_SET(hud_logo, DEFAULT_hud_logo);
+	EASY_CVAR_SET(cl_fvox, DEFAULT_cl_fvox);
+	EASY_CVAR_SET(cl_holster, DEFAULT_cl_holster);
+	EASY_CVAR_SET(cl_ladder, DEFAULT_cl_ladder);
+	
 #else
 	resetModCVarsClientOnly();
 #endif
+
 	return 1;
 }//END OF MsgFunc_RstClientC
 

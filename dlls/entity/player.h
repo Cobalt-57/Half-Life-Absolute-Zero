@@ -621,7 +621,8 @@ public:
 
 	void TabulateAmmo( void );
 
-
+	void set_fvoxEnabled(BOOL argNew, BOOL setSilent);
+	void set_cl_ladder_choice(float argNew);
 
 
 
@@ -784,7 +785,6 @@ public:
 
 
 
-
 	//MODDD - variables to record the currently selected duration for each damage type (based on difficulty).
 	//This is easy to get durations often at runtime with little extra processing.
 	//~Moved to CBASEMONSTER, made static.
@@ -811,10 +811,11 @@ public:
 	float barnacleCanGibMem;
 
 
-	float fvoxEnabledMem;
-
-	BOOL fvoxOn;
-
+	BOOL fvoxEnabled;
+	BOOL fHolsterAnimsEnabled;
+	float cl_ladder_choice;
+	
+	
 	float recentlySaidBattery;
 
 	//void Think(void);
@@ -841,9 +842,6 @@ public:
 
 	float playerBrightLightMem;
 	
-	float cl_ladderMem;
-
-
 	float cameraModeMem;
 
 

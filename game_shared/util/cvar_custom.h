@@ -243,15 +243,58 @@ Also, need to extern (all?) CVars in dlls/client.cpp.
 #define EASY_CVAR_SET_CLIENTONLY_DEBUGONLY(CVarName, valueV)\
 	CVAR_SET_FLOAT(#CVarName, valueV);
 
-#define EASY_CVAR_RESET_CLIENTONLY(CVarName)\
-	DUMMY
-#define EASY_CVAR_RESET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(CVarName)\
-	CVAR_SET_FLOAT(#CVarName, DEFAULT_##CVarName);
-#define EASY_CVAR_RESET_CLIENTONLY_DEBUGONLY(CVarName)\
-	CVAR_SET_FLOAT(#CVarName, DEFAULT_##CVarName);
 
 
 
+#ifdef CLIENT_DLL
+	#define EASY_CVAR_RESET_CLIENTONLY(CVarName)\
+		CVAR_SET_FLOAT(#CVarName, DEFAULT_##CVarName);
+	#define EASY_CVAR_RESET_CLIENTONLY_DEBUGONLY(CVarName)\
+		CVAR_SET_FLOAT(#CVarName, DEFAULT_##CVarName);
+		
+
+	#ifdef _DEBUG
+		#define EASY_CVAR_RESET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(CVarName)\
+			DUMMY
+	#else
+		#define EASY_CVAR_RESET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(CVarName)\
+			DUMMY
+	#endif
+
+		
+#else
+	// server!
+	#define EASY_CVAR_RESET_CLIENTONLY(CVarName)\
+		DUMMY
+	#define EASY_CVAR_RESET_CLIENTONLY_DEBUGONLY(CVarName)\
+		DUMMY
+		
+	
+	#ifdef _DEBUG
+		#define EASY_CVAR_RESET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(CVarName)\
+			CVAR_SET_FLOAT(#CVarName, DEFAULT_##CVarName);
+	#else
+		#define EASY_CVAR_RESET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(CVarName)\
+			global_##CVarName = DEFAULT_##CVarName
+	#endif
+		// Should this also force a message to the clients?
+		// Probably not, should already be handled soon by logic watching
+		// for CVar changes anyway.
+#endif
+	
+
+
+
+
+
+
+
+
+
+
+
+
+	
 
 /*
 #ifndef CLIENT_DLL

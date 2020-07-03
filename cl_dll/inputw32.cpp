@@ -229,6 +229,47 @@ void IN_StartupMouse (void)
 	mouse_buttons = MOUSE_BUTTON_COUNT;
 }
 
+
+
+//MODDD
+// read in the value for m_rawinputMem (argNew) and use it to build
+// the two 'mouseparms' arrays.
+void determineMouseParams(float argNew) {
+	if (globalPSEUDO_m_rawinputMem == 0) {
+		originalmouseparms[0] = 0;
+		originalmouseparms[1] = 0;
+		originalmouseparms[2] = 1;
+		newmouseparms[0] = 0;
+		newmouseparms[1] = 0;
+		newmouseparms[2] = 1;
+	}
+	else {
+		originalmouseparms[0] = 0;
+		originalmouseparms[1] = 0;
+		originalmouseparms[2] = 0;
+		newmouseparms[0] = 0;
+		newmouseparms[1] = 0;
+		newmouseparms[2] = 0;
+	}
+}
+//MODDD
+// Call IN_StartupMouse and SystemParametersInfo like 'IN_ActivateMouse' would have soon after startup,
+// or so I assume.
+void onUpdateRawInput(void) {
+	IN_StartupMouse();
+	restore_spi = SystemParametersInfo(SPI_SETMOUSE, 0, newmouseparms, 0);
+}
+
+
+
+
+
+
+
+
+
+
+
 /*
 ===========
 IN_Shutdown
@@ -944,6 +985,10 @@ void IN_Init (void)
 	gEngfuncs.pfnAddCommand ("force_centerview", Force_CenterView_f);
 	gEngfuncs.pfnAddCommand ("joyadvancedupdate", Joy_AdvancedUpdate_f);
 
+	//MODDD - NEW.  See what m_rawinput has to say
+	determineMouseParams(EASY_CVAR_GET(m_rawinput));
+
 	IN_StartupMouse ();
 	IN_StartupJoystick ();
 }
+

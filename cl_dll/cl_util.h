@@ -32,10 +32,15 @@ extern cvar_t* cl_viewrollspeed;
 
 extern float g_lastFOV;
 
+extern float globalPSEUDO_m_rawinputMem;
+
+
+
+
 // don't mind these.
 extern int playingMov;
 extern float movieStartTime;
-
+////////////////////////////////////////////////////////////////////
 
 
 
@@ -43,8 +48,8 @@ extern float movieStartTime;
 //MODDD- accessible anywhere.?
 extern void lateCVarInit(void);
 extern void updateClientCVarRefs(void);
-
 extern void updateAutoFOV(void);
+////////////////////////////////////////////////////////////////////
 
 
 // Macros to hook function calls into the HUD object

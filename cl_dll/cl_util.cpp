@@ -45,12 +45,19 @@ int playingMov = FALSE;
 float movieStartTime = -1;
 
 
+// from inputw32.cpp
+extern void determineMouseParams(float argNew);
+extern void onUpdateRawInput(void);
+
+
+
+
+
 
 
 //MODDD - no need!  Including common/mathlib.h, associated pm_shared/pm_math.c has vec3_origina already.
 // 
 //vec3_t vec3_origin( 0, 0, 0 );
-
 
 
 //MODDD - IMPORTANT!
@@ -67,6 +74,14 @@ float global2PSEUDO_grabbedByBarancle = 0;
 // If cl_fvox has ever been changed, we have to let the server-version of the player know about
 // this up-to-date preference.
 float global2PSEUDO_cl_fvox = -1;
+// Ditto.
+float global2PSEUDO_cl_holster = -1;
+float global2PSEUDO_cl_ladder = -1;
+float globalPSEUDO_m_rawinputMem = -1;
+
+
+
+
 
 float global2PSEUDO_default_fov = -1;
 float global2PSEUDO_auto_adjust_fov = -1;
@@ -74,8 +89,6 @@ float global2PSEUDO_auto_adjust_fov = -1;
 
 //is this accessible everywhere?
 EASY_CVAR_DECLARATION_CLIENT_MASS
-
-
 
 
 // Easy place for any other CVar init stuff after loading hidden vars (if applicble).
@@ -92,9 +105,26 @@ void lateCVarInit(void){
 	}else {
 		easyClientCommand("_cl_fvox 1 1");
 	}
-	
-	
 
+	global2PSEUDO_cl_holster = EASY_CVAR_GET(cl_holster);
+	if (global2PSEUDO_cl_holster == 0) {
+		easyClientCommand("_cl_holster 0");
+	}
+	else {
+		easyClientCommand("_cl_holster 1");
+	}
+
+	global2PSEUDO_cl_ladder = EASY_CVAR_GET(cl_ladder);
+	easyClientCommand("_cl_ladder %f", global2PSEUDO_cl_ladder);
+
+	// NOTE: m_rawinput does not need startup script here.
+	// It is already read by inputw32.cpp at startup as needed and acted on there.
+	// Can force the mem to refer to the current m_rawinput value to avoid re-updating though.
+	globalPSEUDO_m_rawinputMem = EASY_CVAR_GET(DEFAULT_m_rawinput);
+
+
+
+	
 //	char aryChrToSend[128];//	const char* szFmt = "%s %d";
 //	sprintf(arg_dest, szFmt, arg_label, arg_arg);
 
@@ -102,13 +132,11 @@ void lateCVarInit(void){
 	//gEngfuncs.pfnClientCmd("_default_fov %f", global2PSEUDO_default_fov);
 	easyClientCommand("_default_fov %f", global2PSEUDO_default_fov);
 
-
 	global2PSEUDO_auto_adjust_fov = EASY_CVAR_GET(auto_adjust_fov);
 	easyClientCommand("_auto_adjust_fov %f", global2PSEUDO_auto_adjust_fov);
 	
 	updateAutoFOV();  //do we even need to do this here?
 	easyClientCommand("_auto_determined_fov %f", globalPSEUDO_autoDeterminedFOV);
-	
 	
 }//END OF lateCVarInit
 
@@ -134,6 +162,32 @@ void updateClientCVarRefs(void){
 			easyClientCommand("_cl_fvox 1");
 		}
 	}
+	if (EASY_CVAR_GET(cl_holster) != global2PSEUDO_cl_holster) {
+		global2PSEUDO_cl_holster = EASY_CVAR_GET(cl_holster);
+		if (global2PSEUDO_cl_holster == 0) {
+			easyClientCommand("_cl_holster 0");
+		}
+		else {
+			easyClientCommand("_cl_holster 1");
+		}
+	}
+	if (EASY_CVAR_GET(cl_ladder) != global2PSEUDO_cl_ladder) {
+		global2PSEUDO_cl_ladder = EASY_CVAR_GET(cl_ladder);
+		easyClientCommand("_cl_ladder %f", global2PSEUDO_cl_ladder);
+	}
+	
+	if (EASY_CVAR_GET(m_rawinput) != globalPSEUDO_m_rawinputMem) {
+		globalPSEUDO_m_rawinputMem = EASY_CVAR_GET(m_rawinput);
+		// this CVar can modify originalmouseparms and newmouseparms, and apply immediately.
+		determineMouseParams(globalPSEUDO_m_rawinputMem);
+		onUpdateRawInput();
+	}
+
+
+
+
+
+
 	
 	
 	if(EASY_CVAR_GET(default_fov) != global2PSEUDO_default_fov){
@@ -146,7 +200,7 @@ void updateClientCVarRefs(void){
 	
 	if(EASY_CVAR_GET(auto_adjust_fov) != global2PSEUDO_auto_adjust_fov){
 		global2PSEUDO_auto_adjust_fov = EASY_CVAR_GET(auto_adjust_fov);
-		easyClientCommand("_auto_adjust_fov %f", global2PSEUDO_auto_adjust_fov);;
+		easyClientCommand("_auto_adjust_fov %f", global2PSEUDO_auto_adjust_fov);
 	}
 	
 	if(globalPSEUDO_ScreenWidth != ScreenWidth || globalPSEUDO_ScreenHeight != globalPSEUDO_ScreenHeight){
@@ -875,26 +929,11 @@ void testForHelpFile(void){
 
 
 
-
-
-
+// called by UTIL_ServerMassCVarReset in dlls/util.cpp
 void resetModCVarsClientOnly(){
-	
-
-
-	//UTIL_ServerMassCVarReset();
 	EASY_CVAR_RESET_MASS
-
-	//if applicable..
+	// if applicable
 	saveHiddenCVars();
-
-
-
 }
-
-
-
-
-
 
 

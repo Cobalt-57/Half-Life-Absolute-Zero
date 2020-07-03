@@ -308,7 +308,7 @@ void interpretAsHealth(edict_t* pEntity, CBaseEntity* arg_target, const char* ar
 	if(isStringEmpty(arg_arg1Ref)){
 		
 		//if no argument was provided, we're fetching the stats of this entity.
-		easyForcePrintLineClient(pEntity, "%s\'s health:%d %s\'s maxHealth:%d deadflag:%d IsAlive:%d", arg_targetName, (int)arg_target->pev->health, arg_targetName, (int)arg_target->pev->max_health, arg_target->pev->deadflag, arg_target->IsAlive() );
+		easyForcePrintLineClient(pEntity, "%s\'s health:%d maxHealth:%d deadflag:%d IsAlive:%d", arg_targetName, (int)arg_target->pev->health, (int)arg_target->pev->max_health, arg_target->pev->deadflag, arg_target->IsAlive() );
 	}else{
 		//set the entity's current health to the provided argument, if it is a whole number.
 		
@@ -351,6 +351,47 @@ void interpretAsHealth(edict_t* pEntity, CBaseEntity* arg_target, const char* ar
 	}
 	*/
 }
+
+
+
+
+
+
+// same case as above.
+void interpretAsBattery(edict_t* pEntity, CBaseEntity* arg_target, const char* arg_arg1Ref, const char* arg_targetName) {
+
+	if (isStringEmpty(arg_arg1Ref)) {
+		//if no argument was provided, we're fetching the stats of this entity.
+		easyForcePrintLineClient(pEntity, "%s\'s battery:%d, maxBattery:%d", arg_targetName, (int)arg_target->pev->armorvalue, (int)MAX_NORMAL_BATTERY);
+	}
+	else {
+		//set the entity's current battery to the provided argument, if it is a whole number.
+
+		if (checkMatchIgnoreCase(arg_arg1Ref, "full")) {
+			//"full" is a keyword for the arg that means, set to max battery.
+			arg_target->pev->armorvalue = MAX_NORMAL_BATTERY;
+		}
+		else if (checkMatchIgnoreCase(arg_arg1Ref, "empty") || checkMatchIgnoreCase(arg_arg1Ref, "none")) {
+			// 0
+			arg_target->pev->armorvalue = 0;
+		}
+		else {
+			try {
+				int numbAttempt = tryStringToInt(arg_arg1Ref);
+				arg_target->pev->armorvalue = (float)numbAttempt;
+				easyForcePrintLineClient(pEntity, "%s\'s battery set to %d.", arg_targetName, numbAttempt);
+			}
+			catch (int) {
+				easyForcePrintLineClient(pEntity, "Problem reading number.  (arg must be whole number)");
+			}
+		}
+	}
+}
+
+
+
+
+
 
 
 //MODDD - new.
@@ -427,9 +468,6 @@ void resetModCVars(CBasePlayer* arg_plyRef, BOOL isEmergency){
 	EASY_CVAR_SET(cl_explosion, 0);
 	EASY_CVAR_SET(pissedNPCs, 0);
 
-
-	MESSAGE_BEGIN(MSG_ONE, gmsgClientResetModCVars, NULL, pev);
-	MESSAGE_END();
 
 	UTIL_ServerMassCVarReset(pev);
 
@@ -1774,12 +1812,10 @@ void ClientCommand( edict_t *pEntity )
 	}else if( FStrEq(pcmdRefinedRef, "health") || FStrEq(pcmdRefinedRef, "gethealth") || FStrEq(pcmdRefinedRef, "sethealth")  ){
 		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *) pev);
 		const char* arg1ref = CMD_ARGV(1);
-		
 		if(g_flWeaponCheat == 0.0){
 			easyForcePrintLineClient(pEntity, "No health trickery for you, cheater!");
 			return;
 		}
-
 		//ambiguous as to whether this is what is in the crosshairs or the player itself.  Try to figure it out:
 		CBaseEntity* forwardEnt = FindEntityForward(tempplayer);
 
@@ -1788,11 +1824,8 @@ void ClientCommand( edict_t *pEntity )
 			interpretAsHealth(pEntity, tempplayer, arg1ref, "Client");
 		}else{
 			interpretAsHealth(pEntity, forwardEnt, arg1ref, STRING(forwardEnt->pev->classname) );
-		
 			//easyForcePrintLineClient(pEntity, "MODEL: %s", STRING(forwardEnt->pev->model));
 		}
-
-
 	}else if( FStrEq(pcmdRefinedRef, "setmyhealth") || FStrEq(pcmdRefinedRef, "setplayerhealth") || FStrEq(pcmdRefinedRef, "getmyhealth") || FStrEq(pcmdRefinedRef, "getplayerhealth") || FStrEq(pcmdRefinedRef, "myhealth") || FStrEq(pcmdRefinedRef, "playerhealth")  ){
 		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev);
 		const char* arg1ref = CMD_ARGV(1);
@@ -1818,6 +1851,50 @@ void ClientCommand( edict_t *pEntity )
 
 		if(forwardEnt != NULL){
 			interpretAsHealth(pEntity, forwardEnt, arg1ref, STRING(forwardEnt->pev->classname) );
+		}else{
+			easyForcePrintLineClient(pEntity, "ERROR: Could not find an entity / monster in crosshairs.");
+		}
+	}else if( FStrEq(pcmdRefinedRef, "battery") || FStrEq(pcmdRefinedRef, "getbattery") || FStrEq(pcmdRefinedRef, "setbattery")  ){
+		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *) pev);
+		const char* arg1ref = CMD_ARGV(1);
+		if(g_flWeaponCheat == 0.0){
+			easyForcePrintLineClient(pEntity, "No battery trickery for you, cheater!");
+			return;
+		}
+		//ambiguous as to whether this is what is in the crosshairs or the player itself.  Try to figure it out:
+		CBaseEntity* forwardEnt = FindEntityForward(tempplayer);
+
+		if (forwardEnt == NULL) {
+			//assume this is for the player.
+			interpretAsBattery(pEntity, tempplayer, arg1ref, "Client");
+		}
+		else {
+			interpretAsBattery(pEntity, forwardEnt, arg1ref, STRING(forwardEnt->pev->classname));
+		}
+
+	}else if( FStrEq(pcmdRefinedRef, "setmybattery") || FStrEq(pcmdRefinedRef, "setplayerbattery") || FStrEq(pcmdRefinedRef, "getmybattery") || FStrEq(pcmdRefinedRef, "getplayerbattery") || FStrEq(pcmdRefinedRef, "mybattery") || FStrEq(pcmdRefinedRef, "playerbattery")  ){
+		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev);
+		const char* arg1ref = CMD_ARGV(1);
+		//tryStringToInt
+		if(g_flWeaponCheat == 0.0){
+			easyForcePrintLineClient(pEntity, "No battery trickery for you, cheater!");
+			return;
+		}
+
+		interpretAsBattery(pEntity, (CBaseEntity*)tempplayer, arg1ref, "Client" );
+
+	}else if( FStrEq(pcmdRefinedRef, "setentbattery") || FStrEq(pcmdRefinedRef, "setmonsterbattery") ||  FStrEq(pcmdRefinedRef, "setentitybattery") || FStrEq(pcmdRefinedRef, "getentbattery") || FStrEq(pcmdRefinedRef, "getmonsterbattery") ||  FStrEq(pcmdRefinedRef, "getentitybattery") || FStrEq(pcmdRefinedRef, "monsterbattery") || FStrEq(pcmdRefinedRef, "entbattery") || FStrEq(pcmdRefinedRef, "entitybattery")  ){
+		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev);
+		const char* arg1ref = CMD_ARGV(1);
+		if(g_flWeaponCheat == 0.0){
+			easyForcePrintLineClient(pEntity, "No battery trickery for you, cheater!");
+			return;
+		}
+
+		CBaseEntity* forwardEnt = FindEntityForward(tempplayer);
+
+		if(forwardEnt != NULL){
+			interpretAsBattery(pEntity, forwardEnt, arg1ref, STRING(forwardEnt->pev->classname) );
 		}else{
 			easyForcePrintLineClient(pEntity, "ERROR: Could not find an entity / monster in crosshairs.");
 		}
@@ -2096,8 +2173,6 @@ void ClientCommand( edict_t *pEntity )
 				}
 			}
 		}//END OF arg check
-
-
 
 		if(forwardEnt == NULL){
 			//try looking nearby?
@@ -3842,311 +3917,6 @@ void ClientCommand( edict_t *pEntity )
 			easyForcePrintLineClient(pEntity, "ERROR: no nodes present or building in progress.");
 		}
 
-	}else if(FStrEq(pcmdRefinedRef, "schedulenodeupdate")) {
-		
-		//the next map loaded will enforce regenerating the node graph regardless of coming from a file already or not.
-		scheduleNodeUpdate = TRUE;
-		easyForcePrintLineClient(pEntity, "Scheduling node update. Start a map to rebuild nodes / skip node file.");
-
-	}else if(FStrEq(pcmdRefinedRef, "blockalltriggers") || FStrEq(pcmdRefinedRef, "unblockalltriggers")) {
-		
-		if(g_flWeaponCheat == 0.0){
-			easyForcePrintLineClient(pEntity, "Let\'s not toy with integral map features.");
-			return;
-		}
-
-
-		const char* arg1ref = CMD_ARGV(1);
-		int argValue;
-		float argValueAsFloat;
-
-		//what's our word choice?
-		int defaultValue = 0;
-		if(FStrEq(pcmdRefinedRef, "blockalltriggers")){
-			defaultValue = 1;
-		}
-		
-		if(!isStringEmpty(arg1ref)){
-			//get the monster with this ID.
-			try{
-				int numbAttempt = tryStringToInt(arg1ref);
-				//forwardEnt = getMonsterWithID(numbAttempt);
-				argValue = numbAttempt;
-				if( !(argValue == 0 || argValue == 1) ){
-					throw 1;
-				}
-			}catch(int){
-				easyForcePrintLineClient(pEntity, "Problem reading number.  (arg must be 0 or 1)");
-				return;
-			}
-
-			//proceed to interpret argValue.
-			if(defaultValue == 0){
-				//the word "unblock" was used? it means the opposite instead.
-				argValue = (argValue==1)?argValue=0:argValue=1;
-			}
-
-		}else{
-			//assume it is what was typed.
-			argValue = defaultValue;
-		}
-
-		argValueAsFloat = (float) argValue;
-		
-		EASY_CVAR_SET_DEBUGONLY(blockAutosaveTrigger, argValueAsFloat);
-		EASY_CVAR_SET_DEBUGONLY(blockChangeLevelTrigger, argValueAsFloat);
-		EASY_CVAR_SET_DEBUGONLY(blockMultiTrigger, argValueAsFloat);
-		EASY_CVAR_SET_DEBUGONLY(blockTeleportTrigger, argValueAsFloat);
-		EASY_CVAR_SET_DEBUGONLY(blockHurtTrigger, argValueAsFloat);
-		EASY_CVAR_SET_DEBUGONLY(blockMusicTrigger, argValueAsFloat);
-
-		if(argValue == 0){
-			easyForcePrintLineClient(pEntity, "All triggers unblocked.");
-		}else{
-			easyForcePrintLineClient(pEntity, "All triggers blocked.");
-		}
-
-
-	}else if(FStrEq(pcmdRefinedRef, "testangles") || FStrEq(pcmdRefinedRef, "angletest")) {
-		easyForcePrintLineClient(pEntity, "***MAke sure mode printouts are enabled.");
-
-		//test angles, like pev->angles.
-		//angles are
-		//x: pitch (orientation aimed up/down from facing straight horizontal across, think of from a side-view, 0 is straight horizontal, positive is tilted to look up, negative is tilted to look down),
-		//y: yaw (orientation looking in a direction against the floor, think of from a top-down view like a circle, with the typical north, east, south, west directions to go in).
-		//z: roll (think of it as adjacent to pitch. look at the model from the front instead, and turn it in a swivelling way (sideways).)
-		Vector angleTest = Vector(36, 90, 0);
-
-		Vector vecForward1;
-		Vector vecRight1;
-		Vector vecUp1;
-
-		Vector vecForward2;
-		Vector vecRight2;
-		Vector vecUp2;
-		
-		easyForcePrintClient(pEntity, "Private Plain Vectors:");
-		UTIL_MakeVectorsPrivate(angleTest, vecForward1, vecRight1, vecUp1);
-		UTIL_printVectorClient(pEntity, vecForward1);
-		UTIL_printVectorClient(pEntity, vecRight1);
-		UTIL_printVectorClient(pEntity, vecUp1);
-		easyForcePrintLineClient(pEntity);
-		
-		
-		easyForcePrintClient(pEntity, "Private Aim Vectors:");
-		UTIL_MakeAimVectorsPrivate(angleTest, vecForward2, vecRight2, vecUp2);
-		UTIL_printVectorClient(pEntity, vecForward2);
-		UTIL_printVectorClient(pEntity, vecRight2);
-		UTIL_printVectorClient(pEntity, vecUp2);
-		easyForcePrintLineClient(pEntity);
-
-
-		easyForcePrintClient(pEntity, "Global Plain Vectors:");
-		UTIL_MakeVectors(angleTest);
-		UTIL_printVectorClient(pEntity, gpGlobals->v_forward);
-		UTIL_printVectorClient(pEntity, gpGlobals->v_right);
-		UTIL_printVectorClient(pEntity, gpGlobals->v_up);
-		easyForcePrintLineClient(pEntity);
-
-		easyForcePrintClient(pEntity, "Global Aim Vectors:");
-		UTIL_MakeAimVectors(angleTest);
-		UTIL_printVectorClient(pEntity, gpGlobals->v_forward);
-		UTIL_printVectorClient(pEntity, gpGlobals->v_right);
-		UTIL_printVectorClient(pEntity, gpGlobals->v_up);
-		easyForcePrintLineClient(pEntity);
-
-		
-		
-	}else if ( FStrEq(pcmdRefinedRef, "debug1" ) ){
-		//YEAH
-		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev) ;
-		tempplayer->DebugCall1();
-	}
-	else if ( FStrEq(pcmdRefinedRef, "debug2" ) ){
-		//YEAH
-		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev) ;
-		tempplayer->DebugCall2();
-	}
-	else if ( FStrEq(pcmdRefinedRef, "debug3" ) ){
-		//YEAH
-		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev) ;
-		tempplayer->DebugCall3();
-	}else if(  FStrEq(pcmdRefinedRef, "getnormalvector") || FStrEq(pcmdRefinedRef, "getnormal") || FStrEq(pcmdRefinedRef, "normalvector") || FStrEq(pcmdRefinedRef, "normal")  ){
-
-		
-		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev) ;
-		
-
-
-		if ( tempplayer )
-		{
-			if(g_flWeaponCheat != 0.0){
-				edict_t		*pentIgnore;
-				TraceResult tr;
-
-				pentIgnore = tempplayer->edict();
-				UTIL_MakeVectors(pev->v_angle + pev->punchangle);
-
-				//a tiny bit in front for safety.
-				Vector vecSrc = pev->origin + pev->view_ofs + gpGlobals->v_forward * 5;
-				Vector vecDest = pev->origin + pev->view_ofs + gpGlobals->v_forward * 2048;
-
-				//nah, precision for while ducking not necessary.
-				/*
-				Vector playerEyePos = Vector(tempplayer->body;
-				if(pev->flags & FL_DUCKING){
-
-				}
-				*/
-
-
-				UTIL_TraceLine( vecSrc, vecDest, dont_ignore_monsters, pentIgnore, &tr );
-				//tr.vecEndPos();
-
-				if (!tr.fAllSolid  ){
-					if(tr.flFraction < 1.0){
-						CBaseEntity* pEntityHit = CBaseEntity::Instance(tr.pHit);
-
-						easyForcePrintLineClient(pEntity, "Name:%s HitLoc:(%.2f, %.2f, %.2f) Normal:(%.2f, %.2f, %.2f)",
-							(pEntityHit!=NULL?pEntityHit->getClassnameShort():"NULL"),
-							tr.vecEndPos.x,
-							tr.vecEndPos.y,
-							tr.vecEndPos.z,
-							tr.vecPlaneNormal.x,
-							tr.vecPlaneNormal.y,
-							tr.vecPlaneNormal.z
-						);
-					}else{
-						easyForcePrintLineClient(pEntity, "WARNING: trace failed; flFraction is 1.0 (did not hit anything).");
-					}
-
-				}//END OF line trace valid check
-				else{
-					easyForcePrintLineClient(pEntity, "WARNING: trace failed; AllSolid.");
-				}
-
-			}else{
-				easyForcePrintLineClient(pEntity, "Enable cheats to use getNormalVector.");
-			}
-		}//END OF player and cheat check
-
-	}else if( FStrEq(pcmdRefinedRef, "chillout" ) || FStrEq(pcmdRefinedRef, "chill" ) || FStrEq(pcmdRefinedRef, "relax" ) || FStrEq(pcmdRefinedRef, "relaxbuddy" ) || FStrEq(pcmdRefinedRef, "smokeweed" ) || FStrEq(pcmdRefinedRef, "fageddaboutit" ) || FStrEq(pcmdRefinedRef, "forgetaboutit" ) || FStrEq(pcmdRefinedRef, "thesearenothtedroidsyouarelookingfor" ) || FStrEq(pcmdRefinedRef, "jedimindtrick" ) ){
-		
-		if ( g_flWeaponCheat){
-			CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev);
-			CBaseEntity *pEntityTemp = NULL;
-
-			while ((pEntityTemp = UTIL_FindEntityInSphere( pEntityTemp, tempplayer->pev->origin, 1024*2 )) != NULL)
-			{
-				CBaseMonster* monsterTest = pEntityTemp->GetMonsterPointer();
-				if(monsterTest != NULL){
-					monsterTest->ForgetEnemy();
-				}
-			}//END OF while(things in area)
-		}
-		else{
-			easyForcePrintLineClient(pEntity, "Captain Retrospect says: You shouldn\'t have pissed them off.\n");
-		}
-	}else if( FStrEq(pcmdRefinedRef, "removeallmonsters" )  ){
-		
-		if ( g_flWeaponCheat){
-			edict_t		*pEdict = g_engfuncs.pfnPEntityOfEntIndex( 1 );
-			CBaseEntity *pTempEntity;
-			int		count;
-			float	distance, delta;
-			count = 0;
-			if ( !pEdict )
-				return;
-			for ( int i = 1; i < gpGlobals->maxEntities; i++, pEdict++ )
-			{
-				if ( pEdict->free )	// Not in use
-					continue;
-
-				//TEST WHY NO REMOV
-				if(FClassnameIs(pEdict, "monster_barnacle")){
-					int x = 66; //?
-				}
-
-				if ( !(pEdict->v.flags & (FL_CLIENT|FL_MONSTER)) )	// Not a client/monster ?
-					continue;
-
-				pTempEntity = CBaseEntity::Instance(pEdict);
-				if ( !pEntity )
-					continue;
-
-				CBaseMonster* tempMonster = pTempEntity->MyMonsterPointer();
-				if(tempMonster == NULL || FClassnameIs(tempMonster->pev, "player")){
-					continue;  //not players or non-monsters.
-				}
-
-
-
-				//MODDD - 
-				//if(/*tempMonster->monsterID == 4 ||*/ tempMonster->monsterID == 5 || tempMonster->monsterID == 6){
-				//	//remove all but those! TESTING
-				//	continue;
-				//}
-
-
-				easyForcePrintLineClient(pEntity, "*REMOVED %s", tempMonster->getClassname(), tempMonster->monsterID);
-				//made it here? Remove it.
-				//::UTIL_Remove(tempMonster);
-				//tempMonster->onDelete();   automatically called by SUB_REMOVE, don't manually call this.
-				tempMonster->SetThink(&CBaseEntity::SUB_Remove);
-				tempMonster->pev->nextthink = gpGlobals->time;
-			}//END OF list through all entities.
-
-		}
-		else{
-			easyForcePrintLineClient(pEntity, "Nope.");
-		}
-	}else if( FStrEq(pcmdRefinedRef, "removeallentities" )  ){
-		
-		easyForcePrintLineClient(pEntity, "Sorry, too dangerous with or without cheats. Bye.");
-		return;
-
-		if ( g_flWeaponCheat){
-			edict_t		*pEdict = g_engfuncs.pfnPEntityOfEntIndex( 1 );
-			CBaseEntity* pTempEntity;
-			int		count;
-			float	distance, delta;
-			count = 0;
-			if ( !pEdict )
-				return;
-			for ( int i = 1; i < gpGlobals->maxEntities; i++, pEdict++ )
-			{
-				if ( pEdict->free )	// Not in use
-					continue;
-
-				pTempEntity = CBaseEntity::Instance(pEdict);
-				if ( !pTempEntity )
-					continue;
-				
-				easyForcePrintLineClient(pEntity, "WHAT WERE YOU GONNA DELETE?? %s", pTempEntity->getClassname());
-
-				if(FClassnameIs(pTempEntity->pev, "worldspawn") || FClassnameIs(pTempEntity->pev, "player")){
-					continue;  //not the map (???) or players.
-				}
-
-				//made it here? Remove it.
-				////::UTIL_Remove(tempMonster);
-				//actually do it this way below instead.
-				//pTempEntity->onDelete();
-				//pTempEntity->SetThink(&CBaseEntity::SUB_Remove);
-				//pTempEntity->pev->nextthink = gpGlobals->time;
-
-			}//END OF list through all entities.
-
-		}
-		else{
-			easyForcePrintLineClient(pEntity, "Nope.");
-		}
-	}else if( FStrEq(pcmdRefinedRef, "test")){
-
-		
-		MESSAGE_BEGIN( MSG_ONE, gmsgCliTest, NULL, pev );
-		MESSAGE_END();
-
 	}else if ( FStrEq(pcmdRefinedRef, "fov" ) )
 	{
 		if ( g_flWeaponCheat && CMD_ARGC() > 1)
@@ -4202,10 +3972,314 @@ void ClientCommand( edict_t *pEntity )
 
 
 
-	
-		
 	// Thanks for the else-if chain limit, guys...
-	if (FStrEq(pcmdRefinedRef, "_mod_version_server")) {
+
+	if (FStrEq(pcmdRefinedRef, "schedulenodeupdate")) {
+
+		//the next map loaded will enforce regenerating the node graph regardless of coming from a file already or not.
+		scheduleNodeUpdate = TRUE;
+		easyForcePrintLineClient(pEntity, "Scheduling node update. Start a map to rebuild nodes / skip node file.");
+
+	}
+	else if (FStrEq(pcmdRefinedRef, "blockalltriggers") || FStrEq(pcmdRefinedRef, "unblockalltriggers")) {
+
+		if (g_flWeaponCheat == 0.0) {
+			easyForcePrintLineClient(pEntity, "Let\'s not toy with integral map features.");
+			return;
+		}
+
+
+		const char* arg1ref = CMD_ARGV(1);
+		int argValue;
+		float argValueAsFloat;
+
+		//what's our word choice?
+		int defaultValue = 0;
+		if (FStrEq(pcmdRefinedRef, "blockalltriggers")) {
+			defaultValue = 1;
+		}
+
+		if (!isStringEmpty(arg1ref)) {
+			//get the monster with this ID.
+			try {
+				int numbAttempt = tryStringToInt(arg1ref);
+				//forwardEnt = getMonsterWithID(numbAttempt);
+				argValue = numbAttempt;
+				if (!(argValue == 0 || argValue == 1)) {
+					throw 1;
+				}
+			}
+			catch (int) {
+				easyForcePrintLineClient(pEntity, "Problem reading number.  (arg must be 0 or 1)");
+				return;
+			}
+
+			//proceed to interpret argValue.
+			if (defaultValue == 0) {
+				//the word "unblock" was used? it means the opposite instead.
+				argValue = (argValue == 1) ? argValue = 0 : argValue = 1;
+			}
+
+		}
+		else {
+			//assume it is what was typed.
+			argValue = defaultValue;
+		}
+
+		argValueAsFloat = (float)argValue;
+
+		EASY_CVAR_SET_DEBUGONLY(blockAutosaveTrigger, argValueAsFloat);
+		EASY_CVAR_SET_DEBUGONLY(blockChangeLevelTrigger, argValueAsFloat);
+		EASY_CVAR_SET_DEBUGONLY(blockMultiTrigger, argValueAsFloat);
+		EASY_CVAR_SET_DEBUGONLY(blockTeleportTrigger, argValueAsFloat);
+		EASY_CVAR_SET_DEBUGONLY(blockHurtTrigger, argValueAsFloat);
+		EASY_CVAR_SET_DEBUGONLY(blockMusicTrigger, argValueAsFloat);
+
+		if (argValue == 0) {
+			easyForcePrintLineClient(pEntity, "All triggers unblocked.");
+		}
+		else {
+			easyForcePrintLineClient(pEntity, "All triggers blocked.");
+		}
+
+
+	}
+	else if (FStrEq(pcmdRefinedRef, "testangles") || FStrEq(pcmdRefinedRef, "angletest")) {
+		easyForcePrintLineClient(pEntity, "***MAke sure mode printouts are enabled.");
+
+		//test angles, like pev->angles.
+		//angles are
+		//x: pitch (orientation aimed up/down from facing straight horizontal across, think of from a side-view, 0 is straight horizontal, positive is tilted to look up, negative is tilted to look down),
+		//y: yaw (orientation looking in a direction against the floor, think of from a top-down view like a circle, with the typical north, east, south, west directions to go in).
+		//z: roll (think of it as adjacent to pitch. look at the model from the front instead, and turn it in a swivelling way (sideways).)
+		Vector angleTest = Vector(36, 90, 0);
+
+		Vector vecForward1;
+		Vector vecRight1;
+		Vector vecUp1;
+
+		Vector vecForward2;
+		Vector vecRight2;
+		Vector vecUp2;
+
+		easyForcePrintClient(pEntity, "Private Plain Vectors:");
+		UTIL_MakeVectorsPrivate(angleTest, vecForward1, vecRight1, vecUp1);
+		UTIL_printVectorClient(pEntity, vecForward1);
+		UTIL_printVectorClient(pEntity, vecRight1);
+		UTIL_printVectorClient(pEntity, vecUp1);
+		easyForcePrintLineClient(pEntity);
+
+
+		easyForcePrintClient(pEntity, "Private Aim Vectors:");
+		UTIL_MakeAimVectorsPrivate(angleTest, vecForward2, vecRight2, vecUp2);
+		UTIL_printVectorClient(pEntity, vecForward2);
+		UTIL_printVectorClient(pEntity, vecRight2);
+		UTIL_printVectorClient(pEntity, vecUp2);
+		easyForcePrintLineClient(pEntity);
+
+
+		easyForcePrintClient(pEntity, "Global Plain Vectors:");
+		UTIL_MakeVectors(angleTest);
+		UTIL_printVectorClient(pEntity, gpGlobals->v_forward);
+		UTIL_printVectorClient(pEntity, gpGlobals->v_right);
+		UTIL_printVectorClient(pEntity, gpGlobals->v_up);
+		easyForcePrintLineClient(pEntity);
+
+		easyForcePrintClient(pEntity, "Global Aim Vectors:");
+		UTIL_MakeAimVectors(angleTest);
+		UTIL_printVectorClient(pEntity, gpGlobals->v_forward);
+		UTIL_printVectorClient(pEntity, gpGlobals->v_right);
+		UTIL_printVectorClient(pEntity, gpGlobals->v_up);
+		easyForcePrintLineClient(pEntity);
+
+
+
+	}
+	else if (FStrEq(pcmdRefinedRef, "debug1")) {
+		//YEAH
+		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer*)pev);
+		tempplayer->DebugCall1();
+	}
+	else if (FStrEq(pcmdRefinedRef, "debug2")) {
+		//YEAH
+		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer*)pev);
+		tempplayer->DebugCall2();
+	}
+	else if (FStrEq(pcmdRefinedRef, "debug3")) {
+		//YEAH
+		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer*)pev);
+		tempplayer->DebugCall3();
+	}
+	else if (FStrEq(pcmdRefinedRef, "getnormalvector") || FStrEq(pcmdRefinedRef, "getnormal") || FStrEq(pcmdRefinedRef, "normalvector") || FStrEq(pcmdRefinedRef, "normal")) {
+		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer*)pev);
+		if (tempplayer)
+		{
+			if (g_flWeaponCheat != 0.0) {
+				edict_t* pentIgnore;
+				TraceResult tr;
+
+				pentIgnore = tempplayer->edict();
+				UTIL_MakeVectors(pev->v_angle + pev->punchangle);
+
+				//a tiny bit in front for safety.
+				Vector vecSrc = pev->origin + pev->view_ofs + gpGlobals->v_forward * 5;
+				Vector vecDest = pev->origin + pev->view_ofs + gpGlobals->v_forward * 2048;
+
+				//nah, precision for while ducking not necessary.
+				/*
+				Vector playerEyePos = Vector(tempplayer->body;
+				if(pev->flags & FL_DUCKING){
+
+				}
+				*/
+
+
+				UTIL_TraceLine(vecSrc, vecDest, dont_ignore_monsters, pentIgnore, &tr);
+				//tr.vecEndPos();
+
+				if (!tr.fAllSolid) {
+					if (tr.flFraction < 1.0) {
+						CBaseEntity* pEntityHit = CBaseEntity::Instance(tr.pHit);
+
+						easyForcePrintLineClient(pEntity, "Name:%s HitLoc:(%.2f, %.2f, %.2f) Normal:(%.2f, %.2f, %.2f)",
+							(pEntityHit != NULL ? pEntityHit->getClassnameShort() : "NULL"),
+							tr.vecEndPos.x,
+							tr.vecEndPos.y,
+							tr.vecEndPos.z,
+							tr.vecPlaneNormal.x,
+							tr.vecPlaneNormal.y,
+							tr.vecPlaneNormal.z
+						);
+					}
+					else {
+						easyForcePrintLineClient(pEntity, "WARNING: trace failed; flFraction is 1.0 (did not hit anything).");
+					}
+
+				}//END OF line trace valid check
+				else {
+					easyForcePrintLineClient(pEntity, "WARNING: trace failed; AllSolid.");
+				}
+
+			}
+			else {
+				easyForcePrintLineClient(pEntity, "Enable cheats to use getNormalVector.");
+			}
+		}//END OF player and cheat check
+
+	}
+	else if (FStrEq(pcmdRefinedRef, "chillout") || FStrEq(pcmdRefinedRef, "chill") || FStrEq(pcmdRefinedRef, "relax") || FStrEq(pcmdRefinedRef, "relaxbuddy") || FStrEq(pcmdRefinedRef, "smokeweed") || FStrEq(pcmdRefinedRef, "fageddaboutit") || FStrEq(pcmdRefinedRef, "forgetaboutit") || FStrEq(pcmdRefinedRef, "thesearenothtedroidsyouarelookingfor") || FStrEq(pcmdRefinedRef, "jedimindtrick")) {
+
+		if (g_flWeaponCheat) {
+			CBasePlayer* tempplayer = GetClassPtr((CBasePlayer*)pev);
+			CBaseEntity* pEntityTemp = NULL;
+
+			while ((pEntityTemp = UTIL_FindEntityInSphere(pEntityTemp, tempplayer->pev->origin, 1024 * 2)) != NULL)
+			{
+				CBaseMonster* monsterTest = pEntityTemp->GetMonsterPointer();
+				if (monsterTest != NULL) {
+					monsterTest->ForgetEnemy();
+				}
+			}//END OF while(things in area)
+		}
+		else {
+			easyForcePrintLineClient(pEntity, "Captain Retrospect says: You shouldn\'t have pissed them off.\n");
+		}
+	}
+	else if (FStrEq(pcmdRefinedRef, "removeallmonsters")) {
+
+		if (g_flWeaponCheat) {
+			edict_t* pEdict = g_engfuncs.pfnPEntityOfEntIndex(1);
+			CBaseEntity* pTempEntity;
+			int		count;
+			float	distance, delta;
+			count = 0;
+			if (!pEdict)
+				return;
+			for (int i = 1; i < gpGlobals->maxEntities; i++, pEdict++)
+			{
+				if (pEdict->free)	// Not in use
+					continue;
+
+				//TEST WHY NO REMOV
+				if (FClassnameIs(pEdict, "monster_barnacle")) {
+					int x = 66; //?
+				}
+
+				if (!(pEdict->v.flags & (FL_CLIENT | FL_MONSTER)))	// Not a client/monster ?
+					continue;
+
+				pTempEntity = CBaseEntity::Instance(pEdict);
+				if (!pEntity)
+					continue;
+
+				CBaseMonster* tempMonster = pTempEntity->MyMonsterPointer();
+				if (tempMonster == NULL || FClassnameIs(tempMonster->pev, "player")) {
+					continue;  //not players or non-monsters.
+				}
+				//MODDD - 
+				//if(/*tempMonster->monsterID == 4 ||*/ tempMonster->monsterID == 5 || tempMonster->monsterID == 6){
+				//	//remove all but those! TESTING
+				//	continue;
+				//}
+				easyForcePrintLineClient(pEntity, "*REMOVED %s", tempMonster->getClassname(), tempMonster->monsterID);
+				//made it here? Remove it.
+				//::UTIL_Remove(tempMonster);
+				//tempMonster->onDelete();   automatically called by SUB_REMOVE, don't manually call this.
+				tempMonster->SetThink(&CBaseEntity::SUB_Remove);
+				tempMonster->pev->nextthink = gpGlobals->time;
+			}//END OF list through all entities.
+
+		}
+		else {
+			easyForcePrintLineClient(pEntity, "Nope.");
+		}
+	}
+	else if (FStrEq(pcmdRefinedRef, "removeallentities")) {
+		easyForcePrintLineClient(pEntity, "Sorry, too dangerous with or without cheats. Bye.");
+		return;
+
+		if (g_flWeaponCheat) {
+			edict_t* pEdict = g_engfuncs.pfnPEntityOfEntIndex(1);
+			CBaseEntity* pTempEntity;
+			int		count;
+			float	distance, delta;
+			count = 0;
+			if (!pEdict)
+				return;
+			for (int i = 1; i < gpGlobals->maxEntities; i++, pEdict++)
+			{
+				if (pEdict->free)	// Not in use
+					continue;
+
+				pTempEntity = CBaseEntity::Instance(pEdict);
+				if (!pTempEntity)
+					continue;
+
+				easyForcePrintLineClient(pEntity, "WHAT WERE YOU GONNA DELETE?? %s", pTempEntity->getClassname());
+
+				if (FClassnameIs(pTempEntity->pev, "worldspawn") || FClassnameIs(pTempEntity->pev, "player")) {
+					continue;  //not the map (???) or players.
+				}
+
+				//made it here? Remove it.
+				////::UTIL_Remove(tempMonster);
+				//actually do it this way below instead.
+				//pTempEntity->onDelete();
+				//pTempEntity->SetThink(&CBaseEntity::SUB_Remove);
+				//pTempEntity->pev->nextthink = gpGlobals->time;
+
+			}//END OF list through all entities.
+
+		}
+		else {
+			easyForcePrintLineClient(pEntity, "Nope.");
+		}
+	}
+	else if (FStrEq(pcmdRefinedRef, "test")) {
+		MESSAGE_BEGIN(MSG_ONE, gmsgCliTest, NULL, pev);
+		MESSAGE_END();
+
+	}else if (FStrEq(pcmdRefinedRef, "_mod_version_server")) {
 		char aryChr[128];
 		char aryChrD[128];
 		writeVersionInfo(aryChr, 128);
@@ -4216,32 +4290,55 @@ void ClientCommand( edict_t *pEntity )
 		easyForcePrintLineClient(pEntity, "AZ az.dll  Version: %s  Date: %s", aryChr, aryChrD);
 	}
 	else if (FStrEq(pcmdRefinedRef, "_cl_fvox")) {
-
 		if (CMD_ARGC() <= 1) {
 			// doesn't make sense to do this if so.  And yes, "1" because that's the lowest possible for just the console
 			// command term itself.  First argument starts at CMD_ARGV(1).
 			return;
 		}
-
 		const char* arg1ref = CMD_ARGV(1);
+		CBasePlayer* tempRef = GetClassPtr((CBasePlayer*)pev);
 
+		BOOL setSilent = FALSE;
+		if (CMD_ARGC() == 3) {
+			// Also to make the player stop making noise.
+			const char* arg2ref = CMD_ARGV(2);
+			if (FStrEq(arg2ref, "1")) {
+				//tempRef->fvoxEnabledMem = tempRef->fvoxEnabled;
+				setSilent = TRUE;
+			}
+		}
+		if (FStrEq(arg1ref, "0")) {
+			tempRef->set_fvoxEnabled(FALSE, setSilent);
+		}
+		else {
+			tempRef->set_fvoxEnabled(TRUE, setSilent);
+		}
+
+	}
+	else if (FStrEq(pcmdRefinedRef, "_cl_holster")) {
+		if (CMD_ARGC() <= 1) {
+			// doesn't make sense to do this if so.  And yes, "1" because that's the lowest possible for just the console
+			// command term itself.  First argument starts at CMD_ARGV(1).
+			return;
+		}
+		const char* arg1ref = CMD_ARGV(1);
 		CBasePlayer* tempRef = GetClassPtr((CBasePlayer*)pev);
 
 		if (FStrEq(arg1ref, "0")) {
-			tempRef->fvoxOn = 0;
+			tempRef->fHolsterAnimsEnabled = FALSE;
 		}else {
-			tempRef->fvoxOn = 1;
+			tempRef->fHolsterAnimsEnabled = TRUE;
 		}
 
-		if (CMD_ARGC() == 3) {
-			// oh?  Also to make the player stop making noise.
-			const char* arg2ref = CMD_ARGV(2);
-			if (FStrEq(arg2ref, "1")) {
-				tempRef->fvoxEnabledMem = tempRef->fvoxOn;
-			}
+	}
+	else if (FStrEq(pcmdRefinedRef, "cl_ladder")) {
+		if (CMD_ARGC() <= 1) {
+			return;
 		}
-
-
+		const char* arg1ref = CMD_ARGV(1);
+		CBasePlayer* tempRef = GetClassPtr((CBasePlayer*)pev);
+		
+		tempRef->set_cl_ladder_choice(tryStringToFloat(arg1ref));
 	}
 	else if (FStrEq(pcmdRefinedRef, "_default_fov")) {
 		if (CMD_ARGC() <= 1) {
@@ -4330,24 +4427,23 @@ void ClientCommand( edict_t *pEntity )
 
 
 
-
 	
 	EASY_CVAR_HIDDEN_LIST
 
 
-		//NOTICE - so much as reaching here says that the hidden check didn't find anything. If it did, it would've
-		//terminated this method early and never reached here.
+	//NOTICE - so much as reaching here says that the hidden check didn't find anything. If it did, it would've
+	//terminated this method early and never reached here.
 
-		// tell the user they entered an unknown command
-		char command[128];
+	// tell the user they entered an unknown command
+	char command[128];
 
-		// check the length of the command (prevents crash)
-		// max total length is 192 ...and we're adding a string below ("Unknown command: %s\n")
-		strncpy( command, pcmd, 127 );
-		command[127] = '\0';
+	// check the length of the command (prevents crash)
+	// max total length is 192 ...and we're adding a string below ("Unknown command: %s\n")
+	strncpy( command, pcmd, 127 );
+	command[127] = '\0';
 
-		// tell the user they entered an unknown command
-		ClientPrint( &pEntity->v, HUD_PRINTCONSOLE, UTIL_VarArgs( "Unknown command: %s\n", command ) );
+	// tell the user they entered an unknown command
+	ClientPrint( &pEntity->v, HUD_PRINTCONSOLE, UTIL_VarArgs( "Unknown command: %s\n", command ) );
 
 
 	

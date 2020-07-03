@@ -896,35 +896,12 @@ void CHud :: Init( void )
 	numMirrors = 0;
 	//m_iHUDColor = 0x00FFA000; //255,160,0 -- LRC
 
-	
-	//always start at what fvoxEnabled was.
-	//CVAR_CREATE("IGNOREfvoxEnabledMem", CVAR_GET_STRING("cl_fvox") , FCVAR_CLIENTDLL);
-	//CVAR_CREATE("IGNOREbarnacleCanGib", "0", FCVAR_ARCHIVE);
-	
-	//CVAR_CREATE("IGNOREremoveFireFly", "0", FCVAR_CLIENTDLL);
-	//gEngfuncs.pfnAddCommand( "removeFireFly", command_removeFireFly );
-	
-	//CVAR_CREATE("IGNOREshowBounds", "0", FCVAR_CLIENTDLL);
-	//gEngfuncs.pfnAddCommand( "showBounds", command_showBounds );
-	//CVAR_CREATE("IGNOREshowBoundsAll", "0", FCVAR_CLIENTDLL);
-	//gEngfuncs.pfnAddCommand( "showBoundsAll", command_showBoundsAll );
-	
-	//MODDD
-	//CVAR_CREATE("IGNOREgod2", "0", FCVAR_CLIENTDLL);
-	//CVAR_CREATE("IGNOREnoclip2", "0", FCVAR_CLIENTDLL);
-	
-
-	/*
-	//mimmick built-in functions "god" and "noclip", so that the copies may be modified instead.
-	gEngfuncs.pfnAddCommand( "god2", command_god2 );
-	gEngfuncs.pfnAddCommand( "noclip2", command_noclip2 );
-	//shortened version too (for auto-complete, if that's in there?)
-	gEngfuncs.pfnAddCommand( "go", command_god2 );
-	gEngfuncs.pfnAddCommand( "nocli", command_noclip2 );
-	*/
 
 	gEngfuncs.pfnAddCommand( "noclipalt", command_noclip2 );
 	gEngfuncs.pfnAddCommand( "godalt", command_god2 );
+	gEngfuncs.pfnAddCommand( "_noclip", command_noclip2 );
+	gEngfuncs.pfnAddCommand( "_god", command_god2 );
+
 
 	gEngfuncs.pfnAddCommand("fvoxtoggle", command_fvoxtoggle);
 

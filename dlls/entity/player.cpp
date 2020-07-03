@@ -100,7 +100,8 @@ EASY_CVAR_EXTERN(ladderSpeedMulti)
 EASY_CVAR_EXTERN(friendlyPianoFollowVolume)
 EASY_CVAR_EXTERN(playerUseDrawDebug)
 EASY_CVAR_EXTERN(playerFadeOutRate)
-EASY_CVAR_EXTERN(cl_holster)
+//EASY_CVAR_EXTERN(cl_holster)
+//EASY_CVAR_EXTERN(cl_ladder)
 EASY_CVAR_EXTERN(hideDamage)
 EASY_CVAR_EXTERN(minimumRespawnDelay)
 EASY_CVAR_EXTERN(monsterToPlayerHitgroupSpecial)
@@ -384,9 +385,6 @@ TYPEDESCRIPTION	CBasePlayer::m_playerSaveData[] =
 	DEFINE_ARRAY(CBasePlayer, m_rgSuitPlayListDuration, FIELD_FLOAT, CSUITPLAYLIST),
 
 	DEFINE_FIELD(CBasePlayer, foundRadiation, FIELD_BOOLEAN),
-	
-	//MODDD - no longer saved.
-	//DEFINE_FIELD(CBasePlayer, fvoxOn, FIELD_BOOLEAN),
 	
 	DEFINE_FIELD(CBasePlayer, myRef_barnacleEatsEverything, FIELD_FLOAT),
 
@@ -1966,6 +1964,50 @@ void CBasePlayer::TabulateAmmo()
 	ammo_uranium = AmmoInventory( GetAmmoIndex( "uranium" ) );
 	ammo_hornets = AmmoInventory( GetAmmoIndex( "Hornets" ) );
 }
+
+
+
+void CBasePlayer::set_fvoxEnabled(BOOL argNew, BOOL setSilent) {
+	fvoxEnabled = argNew;
+
+	if (!setSilent) {
+		// let the player know the FVOX value has changed, but not if it's the first
+		// call joining a server.
+		if (fvoxEnabled == 1) {
+			//just turned it on.
+			SetSuitUpdateFVoxException("!HEV_V0", FALSE, SUIT_REPEAT_OK);
+		}
+		else {
+			//just turned it off.  Clear other queud messages.
+			SetSuitUpdate(NULL, FALSE, 0);
+			SetSuitUpdateFVoxException("!HEV_V1", FALSE, SUIT_REPEAT_OK);
+		}
+	}
+}
+void CBasePlayer::set_cl_ladder_choice(float argNew) {
+	cl_ladder_choice = argNew;
+
+	int filter = cl_ladder_choice;
+	if (filter < 0) {
+		filter = 0;
+	}
+	if (filter > 2) {
+		filter = 2;
+	}
+
+	// compatiblestring is just going to be cl_ladder_choice converted to a string (required by the physics key as a value).
+	char compatiblestring[2];
+	sprintf(compatiblestring, "%d", filter);
+	compatiblestring[1] = '\0';
+
+	g_engfuncs.pfnSetPhysicsKeyValue(edict(), "plm", compatiblestring);
+}
+
+
+
+
+
+
 
 
 void CBasePlayer::DebugCall1(){
@@ -3641,7 +3683,7 @@ void CBasePlayer::PreThink(void)
 	}//END OF currentSuitSoundEventTime check
 
 
-	if(!fvoxOn && currentSuitSoundFVoxCutoff != -1 && currentSuitSoundFVoxCutoff <= gpGlobals->time){
+	if(!fvoxEnabled && currentSuitSoundFVoxCutoff != -1 && currentSuitSoundFVoxCutoff <= gpGlobals->time){
 		//If waiting to cut off this sound...
 		currentSuitSoundFVoxCutoff = -1;
 
@@ -4468,7 +4510,7 @@ void CBasePlayer::CheckSuitUpdate()
 			}
 
 
-			if(!fvoxOn && m_rgSuitPlayListFVoxCutoff[isearch] != -1){
+			if(!fvoxEnabled && m_rgSuitPlayListFVoxCutoff[isearch] != -1){
 				currentSuitSoundFVoxCutoff = gpGlobals->time + m_rgSuitPlayListFVoxCutoff[isearch];
 				sentenceFVoxCutoffStop = isentence;
 			}else{
@@ -4771,7 +4813,7 @@ BOOL CBasePlayer::SetSuitUpdatePRE(BOOL fvoxException ){
 		return FALSE;
 
 	//MODDD - NOTE: MULTIPLAYER FVOX BLOCKER
-	// Check here disabled, merged into the "fvoxOn" check below.
+	// Check here disabled, merged into the "fvoxEnabled" check below.
 	/*
 	if ( IsMultiplayer() )
 	{
@@ -4781,9 +4823,9 @@ BOOL CBasePlayer::SetSuitUpdatePRE(BOOL fvoxException ){
 	*/
 
 	//MODDD - also don't play if FVOX is no longer "enabled" and this is NOT the notification to turn it on / off (exceptions).
-	//if(fvoxOn == 0 && !(name == "!HEV_V0" || name == "!HEV_V1")  ){
+	//if(fvoxEnabled == 0 && !(name == "!HEV_V0" || name == "!HEV_V1")  ){
 	// removed the multiplayer check!    IsMultiplayer() ||
-	if( ( fvoxOn == 0 || globalflag_muteDeploySound==TRUE) && !fvoxException){
+	if( ( fvoxEnabled == 0 || globalflag_muteDeploySound==TRUE) && !fvoxException){
 		return FALSE;
 	}
 
@@ -4791,7 +4833,7 @@ BOOL CBasePlayer::SetSuitUpdatePRE(BOOL fvoxException ){
 	return TRUE;
 }//END OF SetSuitUpdatePRE(...)
 
-//MODDD - assume this is not an exception to the "fvoxOn" setting (whether to play FVox sounds or not)
+//MODDD - assume this is not an exception to the "fvoxEnabled" setting (whether to play FVox sounds or not)
 BOOL CBasePlayer::SetSuitUpdatePRE(char *name, int fgroup, int& isentence ){
 	return SetSuitUpdatePRE(name, fgroup, isentence, FALSE);
 }
@@ -4809,7 +4851,7 @@ BOOL CBasePlayer::SetSuitUpdatePRE(char *name, int fgroup, int& isentence, BOOL 
 		return FALSE;
 	
 	//MODDD - NOTE: MULTIPLAYER FVOX BLOCKER
-	// Check here disabled, merged into the "fvoxOn" check below.
+	// Check here disabled, merged into the "fvoxEnabled" check below.
 	/*
 	if ( IsMultiplayer() )
 	{
@@ -4819,9 +4861,9 @@ BOOL CBasePlayer::SetSuitUpdatePRE(char *name, int fgroup, int& isentence, BOOL 
 	*/
 
 	//MODDD - also don't play if FVOX is no longer "enabled" and this is NOT the notification to turn it on / off (exceptions).
-	//if(fvoxOn == 0 && !(name == "!HEV_V0" || name == "!HEV_V1")  ){
+	//if(fvoxEnabled == 0 && !(name == "!HEV_V0" || name == "!HEV_V1")  ){
 	// removed the multiplayer check!    IsMultiplayer() ||
-	if( (fvoxOn == 0 || globalflag_muteDeploySound == TRUE) && !fvoxException){
+	if( (fvoxEnabled == 0 || globalflag_muteDeploySound == TRUE) && !fvoxException){
 		return FALSE;
 	}
 
@@ -5400,7 +5442,9 @@ void CBasePlayer::PostThink()
 
 		MESSAGE_BEGIN(MSG_ONE, gmsgOnFirstAppearance, NULL, pev);
 		MESSAGE_END();
-
+		
+		//!!! IMPORTANT  Any broadcast CVars sohuld show up here!!
+		// Let the client (per player) know of the defaults in its cache.
 
 		//MESSAGE_BEGIN(MSG_ALL, gmsgUpdateClientCVar, NULL);
 		MESSAGE_BEGIN(MSG_ONE, gmsgUpdateClientCVar, NULL, pev);
@@ -5547,7 +5591,7 @@ void CBasePlayer::PostThink()
 		//can't do this again until another frame passes that recognizes "filterediuser4" was below the threshold at some point before passing it again.
 		alreadyPassedLadderCheck = TRUE;
 
-		switch((int)cl_ladderMem){
+		switch((int)cl_ladder_choice){
 			case 0:
 				//don't do anything.
 			break;
@@ -5596,7 +5640,7 @@ void CBasePlayer::PostThink()
 		
 		
 		//#'s 1 and 2 will give the view punch.
-		if(cl_ladderMem == 1 || cl_ladderMem == 2){
+		if(cl_ladder_choice == 1 || cl_ladder_choice == 2){
 			if(altLadderStep){
 				pev->punchangle.z = 7;
 			}else{
@@ -5604,13 +5648,11 @@ void CBasePlayer::PostThink()
 			}
 		}
 		altLadderStep = !altLadderStep;  //alternates.
-		
 	}else{
 		if(filterediuser4 < LADDER_CYCLE_BASE*EASY_CVAR_GET(ladderCycleMulti)){
 			//reset!
 			alreadyPassedLadderCheck = FALSE;
 		}
-
 	}
 	
 	//pev->iuser4 = 47;
@@ -5965,10 +6007,15 @@ void CBasePlayer::_commonReset(void){
 void CBasePlayer::commonReset(void){
 	_commonReset();
 
-	//negative 2 means, don't prompt the user about this change.
-	fvoxEnabledMem = -2;
-
-	//or should this always just be forced to "EASY_CVAR_GET(barnacleCanGib)" to stop a re-do each time?  Might not be necessary so much.
+	// This will be changed soon after the player joins a server if their setting differs.
+	fvoxEnabled = 0;
+	// same.
+	fHolsterAnimsEnabled = 0;
+	cl_ladder_choice = 0;
+	
+	
+	
+	// or should this always just be forced to "EASY_CVAR_GET(barnacleCanGib)" to stop a re-do each time?  Might not be necessary so much.
 	barnacleCanGibMem = -1;
 
 	iWasFrozenToday = -1;
@@ -6071,11 +6118,6 @@ void CBasePlayer::commonReset(void){
 
 	cheat_nogaussrecoilMem = -1;
 	gaussRecoilSendsUpInSPMem = -1;
-
-
-	
-
-	cl_ladderMem = -1;
 
 
 
@@ -6244,7 +6286,7 @@ void CBasePlayer::Spawn( BOOL revived ){
 
 		//FVOX messages play when this is true.
 		// ...and why set it here though?
-		//fvoxOn = TRUE;
+		//fvoxEnabled = TRUE;
 
 		
 		foundRadiation = FALSE;
@@ -6822,8 +6864,9 @@ void CBasePlayer::SelectItem(const char *pstr)
 			m_pActiveItem->Holster( );
 			m_bHolstering = TRUE;
 		}
-
-		if(EASY_CVAR_GET(cl_holster) == 1){
+		
+		// cl_holster
+		if(fHolsterAnimsEnabled == TRUE){
 			//using holster anim? Tell the currently equipped item to change to this weapon when that is over.
 			m_pQueuedActiveItem = pItem;  //set this later instead, after the holster anim is done.
 		}else{
@@ -8398,53 +8441,9 @@ void CBasePlayer :: UpdateClientData( void )
 
 	}
 
-	if(cl_ladderMem != EASY_CVAR_GET(cl_ladder)){
-		cl_ladderMem = EASY_CVAR_GET(cl_ladder);
 
-		//thanks,
-		//http://stackoverflow.com/questions/9655202/how-to-convert-integer-to-string-in-c
-
-
-		int filter = cl_ladderMem;
-		if(filter < 0){
-			filter = 0;
-		}
-		if(filter > 2){
-			filter = 2;
-		}
-
-		//"compatiblestring" is just going to be "cl_ladderMem" converted to a string (required by the physics key as a value).
-		char compatiblestring[2];
-		sprintf(compatiblestring, "%d", filter);
-		compatiblestring[1] = '\0';
-
-		g_engfuncs.pfnSetPhysicsKeyValue( edict(), "plm", compatiblestring );
-		
-	}
 	
-
-
-	//if(EASY_CVAR_GET(cl_fvox) != fvoxEnabledMem && fvoxEnabledMem != -2){
-	if(fvoxOn != fvoxEnabledMem){
-		//fvoxOn = (int)(EASY_CVAR_GET(cl_fvox) == 1);
-
-		// fvoxEnabledMem of -2 means, don't make a message about it.
-		if (fvoxEnabledMem != -2) {
-			if (fvoxOn == 1) {
-				//just turned it on.
-				SetSuitUpdateFVoxException("!HEV_V0", FALSE, SUIT_REPEAT_OK);
-			}
-			else {
-				//just turned it off.  Clear other queud messages.
-				SetSuitUpdate(NULL, FALSE, 0);
-				SetSuitUpdateFVoxException("!HEV_V1", FALSE, SUIT_REPEAT_OK);
-			}
-		}
-
-		fvoxEnabledMem = fvoxOn;
-	}
 	
-
 	// HACKHACK -- send the message to display the game title
 	if (gDisplayTitle)
 	{

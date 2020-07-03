@@ -1394,7 +1394,7 @@ bullsquidSpitAlphaScale (0.8) - DISABLED, NOT WORKING - the scale to apply to th
 ----------------------------------------------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------------------------------------
 
-cl_holster (1) - whether the player plays holster animations for unloading the current weapon before picking the selected one on changing weapons.
+cl_holster (0) - whether the player plays holster animations for unloading the current weapon before picking the selected one on changing weapons.
 
 
 friendlyPianoFollowVolume (0.7) - ADJUSTABLE. Volume to play the Mr. Friendly's piano music while following the player. 0 mutes.
@@ -1779,9 +1779,16 @@ If 0, viewpunch is ignored.
 If 1, works as usual (retail).
 
 
+m_rawinput (0) - BOOL.  ???
+
+
+
+
 //
 //!!! LAST NORMAL CVAR!
 //
+
+
 
 
 
