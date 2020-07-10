@@ -28,6 +28,7 @@
 //MODDD - simple way to get this across serverside at least.
 #include "build_settings.h"
 #include "external_lib_include.h"
+#include "ignore_warning_list.h"
 
 // MODDD - big OS-check section moved to external_lib_include.h
 

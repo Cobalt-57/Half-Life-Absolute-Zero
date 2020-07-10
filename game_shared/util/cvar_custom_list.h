@@ -194,7 +194,6 @@
 #define timedDamage_flashSpeed_ID 175
 #define timedDamage_debug_ID 176
 #define myRocketsAreBarney_ID 177
-
 #define wpn_glocksilencer_ID 178
 
 
@@ -712,6 +711,7 @@
 #define DEFAULT_ignoreMultiplayerSkillOverride 1
 
 #define DEFAULT_m_rawinput 0
+#define DEFAULT_cl_earlyaccess 1
 
 
 
@@ -2813,6 +2813,7 @@
 	EASY_CVAR_DECLARATION_SERVER(hud_swapFirstTwoBuckets)\
 	EASY_CVAR_DECLARATION_SERVER(ignoreMultiplayerSkillOverride)\
 	EASY_CVAR_DECLARATION_SERVER(m_rawinput)\
+	EASY_CVAR_DECLARATION_SERVER(cl_earlyaccess)\
 	DUMMY
 
 
@@ -3313,6 +3314,7 @@
 	EASY_CVAR_DECLARATION_CLIENT(hud_swapFirstTwoBuckets)\
 	EASY_CVAR_DECLARATION_CLIENT(ignoreMultiplayerSkillOverride)\
 	EASY_CVAR_DECLARATION_CLIENT(m_rawinput)\
+	EASY_CVAR_DECLARATION_CLIENT(cl_earlyaccess)\
 	DUMMY
 
 #define EASY_CVAR_UPDATE_SERVER_MASS\
@@ -3812,6 +3814,7 @@
 	EASY_CVAR_UPDATE_SERVER(hud_swapFirstTwoBuckets)\
 	EASY_CVAR_UPDATE_SERVER(ignoreMultiplayerSkillOverride)\
 	EASY_CVAR_UPDATE_SERVER(m_rawinput)\
+	EASY_CVAR_UPDATE_SERVER(cl_earlyaccess)\
 	DUMMY
 
 #define EASY_CVAR_UPDATE_CLIENT_MASS\
@@ -4311,6 +4314,7 @@
 	EASY_CVAR_UPDATE_CLIENT(hud_swapFirstTwoBuckets)\
 	EASY_CVAR_UPDATE_CLIENT(ignoreMultiplayerSkillOverride)\
 	EASY_CVAR_UPDATE_CLIENT(m_rawinput)\
+	EASY_CVAR_UPDATE_CLIENT(cl_earlyaccess)\
 	DUMMY
 
 #define EASY_CVAR_CREATE_SERVER_SETUP_MASS\
@@ -4810,6 +4814,7 @@
 	EASY_CVAR_CREATE_SERVER_SETUP_A_CLIENTONLY(hud_swapFirstTwoBuckets)\
 	EASY_CVAR_CREATE_SERVER_SETUP_A_SERVERONLY(ignoreMultiplayerSkillOverride)\
 	EASY_CVAR_CREATE_SERVER_SETUP_A_CLIENTONLY(m_rawinput)\
+	EASY_CVAR_CREATE_SERVER_SETUP_A_CLIENTONLY(cl_earlyaccess)\
 	DUMMY
 
 #define EASY_CVAR_CREATE_SERVER_MASS\
@@ -5309,6 +5314,7 @@
 	EASY_CVAR_CREATE_SERVER_A_CLIENTONLY(hud_swapFirstTwoBuckets)\
 	EASY_CVAR_CREATE_SERVER_A_SERVERONLY(ignoreMultiplayerSkillOverride)\
 	EASY_CVAR_CREATE_SERVER_A_CLIENTONLY(m_rawinput)\
+	EASY_CVAR_CREATE_SERVER_A_CLIENTONLY(cl_earlyaccess)\
 	DUMMY
 
 
@@ -5809,6 +5815,7 @@
 	EASY_CVAR_CREATE_CLIENT_A_CLIENTONLY(hud_swapFirstTwoBuckets)\
 	EASY_CVAR_CREATE_CLIENT_A_SERVERONLY(ignoreMultiplayerSkillOverride)\
 	EASY_CVAR_CREATE_CLIENT_A_CLIENTONLY(m_rawinput)\
+	EASY_CVAR_CREATE_CLIENT_A_CLIENTONLY(cl_earlyaccess)\
 	DUMMY
 
 #define EASY_CVAR_RESET_MASS\
@@ -6307,6 +6314,7 @@
 	EASY_CVAR_RESET(hud_swapFirstTwoBuckets)\
 	EASY_CVAR_RESET(ignoreMultiplayerSkillOverride)\
 	EASY_CVAR_RESET_CLIENTONLY(m_rawinput)\
+	EASY_CVAR_RESET_CLIENTONLY(cl_earlyaccess)\
 	DUMMY
 
 #define EASY_CVAR_EXTERN_MASS\
@@ -6806,5 +6814,6 @@
 	EASY_CVAR_EXTERN(hud_swapFirstTwoBuckets)\
 	EASY_CVAR_EXTERN(ignoreMultiplayerSkillOverride)\
 	EASY_CVAR_EXTERN(m_rawinput)\
+	EASY_CVAR_EXTERN(cl_earlyaccess)\
 	DUMMY
 

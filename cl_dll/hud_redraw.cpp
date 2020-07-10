@@ -195,11 +195,11 @@ extern float movieStartTime;
 // Redraw
 // step through the local data,  placing the appropriate graphics & text as appropriate
 // returns 1 if they've changed, 0 otherwise
-int CHud :: Redraw( float flTime, int intermission )
+int CHud::Redraw(float flTime, int intermission)
 {
 	//easyForcePrintLine("CLIENT GUI: Redraw: %.2f %d", flTime, intermission);
 
-	if(EASY_CVAR_GET(imAllFuckedUp) == 1){
+	if (EASY_CVAR_GET(imAllFuckedUp) == 1) {
 		drawCrazyShit(flTime);
 	}
 
@@ -208,15 +208,15 @@ int CHud :: Redraw( float flTime, int intermission )
 	m_flTime = flTime;
 	m_flTimeDelta = (double)m_flTime - m_fOldTime;
 	static int m_flShotTime = 0;
-	
+
 	// Clock was reset, reset delta
-	if ( m_flTimeDelta < 0 )
+	if (m_flTimeDelta < 0)
 		m_flTimeDelta = 0;
 
 	// Bring up the scoreboard during intermission
 	if (gViewPort)
 	{
-		if ( m_iIntermission && !intermission )
+		if (m_iIntermission && !intermission)
 		{
 			// Have to do this here so the scoreboard goes away
 			m_iIntermission = intermission;
@@ -224,7 +224,7 @@ int CHud :: Redraw( float flTime, int intermission )
 			gViewPort->HideScoreBoard();
 			gViewPort->UpdateSpectatorPanel();
 		}
-		else if ( !m_iIntermission && intermission )
+		else if (!m_iIntermission && intermission)
 		{
 			m_iIntermission = intermission;
 			gViewPort->HideCommandMenu();
@@ -233,7 +233,7 @@ int CHud :: Redraw( float flTime, int intermission )
 			gViewPort->UpdateSpectatorPanel();
 
 			// Take a screenshot if the client's got the cvar set
-			if ( CVAR_GET_FLOAT( "hud_takesshots" ) != 0 )
+			if (CVAR_GET_FLOAT("hud_takesshots") != 0)
 				m_flShotTime = flTime + 1.0;	// Take a screenshot in a second
 		}
 	}
@@ -248,23 +248,23 @@ int CHud :: Redraw( float flTime, int intermission )
 
 	// if no redrawing is necessary
 	// return 0;
-	
-	if ( m_pCvarDraw->value )
+
+	if (m_pCvarDraw->value)
 	{
-		HUDLIST *pList = m_pHudList;
+		HUDLIST* pList = m_pHudList;
 
 		while (pList)
 		{
-			if ( !intermission )
+			if (!intermission)
 			{
-				if ( (pList->p->m_iFlags & HUD_ACTIVE) && !(m_iHideHUDDisplay & HIDEHUD_ALL) ){
+				if ((pList->p->m_iFlags & HUD_ACTIVE) && !(m_iHideHUDDisplay & HIDEHUD_ALL)) {
 					pList->p->Draw(flTime);
 				}
 			}
 			else
 			{  // it's an intermission,  so only draw hud elements that are set to draw during intermissions
-				if ( pList->p->m_iFlags & HUD_INTERMISSION ){
-					pList->p->Draw( flTime );
+				if (pList->p->m_iFlags & HUD_INTERMISSION) {
+					pList->p->Draw(flTime);
 				}
 			}
 
@@ -274,21 +274,21 @@ int CHud :: Redraw( float flTime, int intermission )
 
 	//MODDD - this was already here.  Left in the game... very interesting.
 	// are we in demo mode? do we need to draw the logo in the top corner?
-	
+
 	//MODDD - new if-then to use the "hud_logo" cvar instead:
 	//if (m_iLogo)
-	if(EASY_CVAR_GET(hud_logo) == 1)
+	if (EASY_CVAR_GET(hud_logo) == 1)
 	{
 		int x, y, i;
 
 		if (m_hsprLogo == 0)
 			m_hsprLogo = LoadSprite("sprites/%d_logo.spr");
 
-		SPR_Set(m_hsprLogo, 250, 250, 250 );
-		
+		SPR_Set(m_hsprLogo, 250, 250, 250);
+
 		x = SPR_Width(m_hsprLogo, 0);
 		x = ScreenWidth - x;
-		y = SPR_Height(m_hsprLogo, 0)/2;
+		y = SPR_Height(m_hsprLogo, 0) / 2;
 
 		// Draw the logo at 20 fps
 		int iFrame = (int)(flTime * 20) % MAX_LOGO_FRAMES;
@@ -299,27 +299,38 @@ int CHud :: Redraw( float flTime, int intermission )
 
 
 
-	
+	if (EASY_CVAR_GET(cl_earlyaccess)) {
+		int buildInfoY;
+		if (CVAR_GET_FLOAT("developer") >= 1) {
+			// shift things down a little more to not overlap with the recent console line
+			// printed along the top-left of the screen.
+			buildInfoY = 28;
+		}
+		else {
+			buildInfoY = 14;
+		}
 
-	// this gives the default color.
-	gEngfuncs.pfnDrawSetTextColor(1.00, 0.63, 0);
-	DrawConsoleString(16, 28, "Half-Life: Absolute Zero Development Build");
-	gEngfuncs.pfnDrawSetTextColor(1.00, 0.63, 0);
-	DrawConsoleString(16, 28+20, globalbuffer_cl_mod_display);
-	if (globalbuffer_sv_mod_display[0] != '\0') {
-		// go ahead
-		gEngfuncs.pfnDrawSetTextColor(1.00, 0.63, 0);
-		DrawConsoleString(16, 28+40, globalbuffer_sv_mod_display);
-	}
-	else {
-		// nothing from the server yet? Say so
-		gEngfuncs.pfnDrawSetTextColor(1.00, 0.63, 0);
-		DrawConsoleString(16, 28+40, "SV: wait...");
-	}
+		if (!gHUD.canDrawSidebar()) {
+			// this gives the default color.
+			gEngfuncs.pfnDrawSetTextColor(1.00, 0.63, 0);
+			DrawConsoleString(16, buildInfoY, "Half-Life: Absolute Zero Development Build");
+			gEngfuncs.pfnDrawSetTextColor(1.00, 0.63, 0);
+			DrawConsoleString(16, buildInfoY + 20, globalbuffer_cl_mod_display);
+			if (globalbuffer_sv_mod_display[0] != '\0') {
+				// go ahead
+				gEngfuncs.pfnDrawSetTextColor(1.00, 0.63, 0);
+				DrawConsoleString(16, buildInfoY + 40, globalbuffer_sv_mod_display);
+			}
+			else {
+				// nothing from the server yet? Say so
+				gEngfuncs.pfnDrawSetTextColor(1.00, 0.63, 0);
+				DrawConsoleString(16, buildInfoY + 40, "SV: wait...");
+			}
+		}
 
-	//gHUD.DrawHudString(16, 100, 500, "test text", 255, 0, 0);
+		//gHUD.DrawHudString(16, 100, 500, "test text", 255, 0, 0);
+	}//END OF cl_earlyaccess check
 
-	
 	
 	
 	

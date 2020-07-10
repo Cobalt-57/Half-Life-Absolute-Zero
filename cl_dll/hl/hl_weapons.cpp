@@ -302,8 +302,6 @@ BOOL CBasePlayerWeapon :: CanDeploy( void )
 	//easyPrintLine("MESSAGE4");
 	BOOL bHasAmmo = 0;
 
-	easyForcePrintLine("CLIENT DEPLOY: And just what is my ammo name sonny? %s", pszAmmo1());
-
 	if ( !pszAmmo1() )
 	{
 		// this weapon doesn't use ammo, can always deploy.

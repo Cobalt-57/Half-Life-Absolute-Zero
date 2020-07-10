@@ -616,7 +616,7 @@ void CBaseDoor::OnDoorGoUp(void) {
 	// emit door moving and stop sounds on CHAN_STATIC so that the multicast doesn't
 	// filter them out and leave a client stuck with looping door sounds!
 	if (!FBitSet(pev->spawnflags, SF_DOOR_SILENT)) {
-		easyForcePrintLine("CBaseDoor: I tried to make a noise, huh?  what was it? %s", STRING(pev->noiseMoving));
+		//easyPrintLine("CBaseDoor: I tried to make a noise, huh?  what was it? %s", STRING(pev->noiseMoving));
 		EMIT_SOUND(ENT(pev), CHAN_STATIC, (char*)STRING(pev->noiseMoving), 1, ATTN_NORM);
 	}
 
@@ -900,7 +900,7 @@ void CRotDoor::OnDoorGoUp(void) {
 	// emit door moving and stop sounds on CHAN_STATIC so that the multicast doesn't
 	// filter them out and leave a client stuck with looping door sounds!
 	if (!FBitSet(pev->spawnflags, SF_DOOR_SILENT)) {
-		easyForcePrintLine("CRotDoor: I tried to make a noise, huh?  what was it? %s", STRING(pev->noiseMoving));
+		//easyPrintLine("CRotDoor: I tried to make a noise, huh?  what was it? %s", STRING(pev->noiseMoving));
 		EMIT_SOUND(ENT(pev), CHAN_STATIC, (char*)STRING(pev->noiseMoving), 1, ATTN_NORM);
 	}
 
@@ -990,7 +990,7 @@ void CRotDoor::Activate(){
 void CRotDoor::Spawn(void)
 {
 
-	easyForcePrintLine("Hello I am CRotDoor, my spawnflags are %d", pev->spawnflags);
+	//easyPrintLine("Hello I am CRotDoor, my spawnflags are %d", pev->spawnflags);
 
 	Precache();
 
@@ -1043,7 +1043,7 @@ void CRotDoor::Spawn(void)
 
 void CRotDoor::Precache()
 {
-	easyForcePrintLine("CRotDoor: So what were my moveSnd and stopSnd values? %d %d", m_bMoveSnd, m_bStopSnd);
+	easyPrintLine("CRotDoor: So what were my moveSnd and stopSnd values? %d %d", m_bMoveSnd, m_bStopSnd);
 	
 		
 	CBaseDoor::Precache();  //likely had something in mind?
@@ -1300,12 +1300,12 @@ void CMomentaryDoor::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYP
 
 	
 	if(canStopSound){
-		easyForcePrintLine("CMomentaryDoor STOPSND %s", STRING(pev->noiseMoving));
+		easyPrintLine("CMomentaryDoor STOPSND %s", STRING(pev->noiseMoving));
 		STOP_SOUND(ENT(pev), CHAN_STATIC, (char*)STRING(pev->noiseMoving));
 		hasPreviousValue = FALSE;
 		previousValueDelta = 0;
 	}else if(canPlaySound){
-		easyForcePrintLine("CMomentaryDoor PLAYSND %s", STRING(pev->noiseMoving));
+		easyPrintLine("CMomentaryDoor PLAYSND %s", STRING(pev->noiseMoving));
 		//const char* debugNoiseMoving = STRING(pev->noiseMoving);
 		//STOP_SOUND(ENT(pev), CHAN_STATIC, (char*)STRING(pev->noiseMoving)); //1, ATTN_NORM);
 		STOP_SOUND(ENT(pev), CHAN_STATIC, (char*)STRING(pev->noiseMoving));

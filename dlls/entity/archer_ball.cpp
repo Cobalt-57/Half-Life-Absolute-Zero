@@ -15,13 +15,9 @@ CArcherBall::CArcherBall(void){
 
 
 void CArcherBall :: Spawn( void ){
-
 	CControllerHeadBall::Spawn();
 
-	
 	SetTouch( &CArcherBall::BounceTouch );
-
-
 }//END OF Spawn
 
 void CArcherBall :: Precache( void ){

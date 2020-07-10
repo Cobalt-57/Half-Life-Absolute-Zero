@@ -387,7 +387,7 @@ IMPLEMENT_MESSAGE(UpdClientC){
 	//????????????????
 
 	*(aryCVarHash[argID]) = arg;
-	easyForcePrintLine("CVAR DEBUG: Client: found ID %d. Set CVar %s to %.2f", argID, aryCVarHashName[argID], arg);
+	easyPrintLine("CVAR DEBUG: Client: found ID %d. Set CVar %s to %.2f", argID, aryCVarHashName[argID], arg);
 
 #else
 	//Need to update hidden CVars meant to be broadcasted to clients. Receive the new value(s) here.
@@ -401,11 +401,11 @@ IMPLEMENT_MESSAGE(UpdClientC){
 	//????????????????
 
 
-	//if(EASY_CVAR_GET(hiddenMemPrintout) == 1)easyForcePrintLine("CVAR DEBUG: Client: Received ID %d, newval %.2f", argID, arg);
+	//if(EASY_CVAR_GET(hiddenMemPrintout) == 1)easyPrintLine("CVAR DEBUG: Client: Received ID %d, newval %.2f", argID, arg);
 
 
 	*(aryCVarHash[argID]) = arg;
-	if(EASY_CVAR_GET(hiddenMemPrintout)==1)easyForcePrintLine("CVAR DEBUG: Client: found ID %d. Set CVar %s to %.2f", argID, aryCVarHashName[argID], arg);
+	if(EASY_CVAR_GET(hiddenMemPrintout)==1)easyPrintLine("CVAR DEBUG: Client: found ID %d. Set CVar %s to %.2f", argID, aryCVarHashName[argID], arg);
 	
 
 	//Save. Is this ok?

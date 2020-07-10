@@ -20,7 +20,6 @@
 
 
 
-
 #include "hud.h"
 #include "cl_util.h"
 #include <string.h>
@@ -290,7 +289,6 @@ int __MsgFunc_AllowSpec(const char *pszName, int iSize, void *pbuf)
 }
 
 
-
 /*
 //MODDD - temp method
 void tempGetHudMainRef2(CHudBase* tempRef){
@@ -337,8 +335,6 @@ void CHud::drawPartialFromLeft(const SpriteHandle_t & arg_sprite, const wrect_t*
 }
 
 
-
-
 void CHud::drawPartialFromRight(const SpriteHandle_t & arg_sprite, const wrect_t* arg_rect, const float arg_portion, const int & x, const int & y,  int & r, int & g, int & b){
 	drawPartialFromRight(arg_sprite, arg_rect, arg_portion, x, y, r, g, b, 0);
 }
@@ -374,10 +370,14 @@ void CHud::drawPartialFromRight(const SpriteHandle_t & arg_sprite, const wrect_t
 }
 
 
-
-
 int CHud::canDrawSidebar(void){
-	if ( (EASY_CVAR_GET(hud_drawsidebarmode) == 2) || ( (!canDrawBottomStats && EASY_CVAR_GET(hud_drawsidebarmode) == 0) || (canDrawBottomStats && EASY_CVAR_GET(hud_drawsidebarmode) == 1) ) ){
+	if (
+         (EASY_CVAR_GET(hud_drawsidebarmode) == 2) ||
+		   (
+            (!canDrawBottomStats && EASY_CVAR_GET(hud_drawsidebarmode) == 0) ||
+             (canDrawBottomStats && EASY_CVAR_GET(hud_drawsidebarmode) == 1)
+	       )
+	){
 		return TRUE;
 	}else{
 		return FALSE;
@@ -395,12 +395,9 @@ void CHud::drawAdditiveFilter(int sprite, const int& r, const int& g, const int&
 //MODDD - new method.  Does the same thing as "drawAdditive", except this factors in "hud_brokentrans".
 //If it is true (1), draw some faded gray on top of the image's rect.
 void CHud::drawAdditiveFilter(int sprite, const int& r, const int& g, const int& b, int huh, int x, int y, wrect_t* rect, const int& canDrawBrokenTrans){
-	
-
 	//SPR_Draw
 	//SPR_DrawAdditive
 	//SPR_DrawHoles
-
 
 	/*
 	if(hud_version->value == 0 && EASY_CVAR_GET(hud_brokentrans) == 1 && canDrawBrokenTrans == 1){
@@ -413,7 +410,6 @@ void CHud::drawAdditiveFilter(int sprite, const int& r, const int& g, const int&
 		}
 	}
 	*/
-
 	
 	if(canDrawBrokenTrans == 1){
 		//does CVar checks.
@@ -425,13 +421,11 @@ void CHud::drawAdditiveFilter(int sprite, const int& r, const int& g, const int&
 		//attemptDrawBrokenTransLight(x, y, rect);
 		//attemptDrawBrokenTransWhite(x, y, rect);
 	}
-	
 	//SPR_Set(GetSprite(myFontIDZero + k), r, g, b );
 	SPR_Set(sprite, r, g, b );
 	SPR_DrawAdditive(huh, x, y, rect);
 	
 }
-
 
 
 //inline
@@ -452,8 +446,6 @@ void CHud::attemptDrawBrokenTransLightAndWhite(int arg_startx, int arg_starty, w
 }
 
 
-
-
 void CHud::attemptDrawBrokenTrans(int arg_startx, int arg_starty, int arg_width, int arg_height){
 	
 	if(EASY_CVAR_GET(hud_version) == 0 && EASY_CVAR_GET(hud_brokentrans) > 0 && m_HUD_brokentransparency >= 0 ){
@@ -465,8 +457,6 @@ void CHud::attemptDrawBrokenTrans(int arg_startx, int arg_starty, int arg_width,
 		tempwrectThis.left = 0;
 		tempwrectThis.top = 0;
 
-
-				
 		for(int y = 0; y < arg_height; y+=brokenTransHeight){
 			for(int x = 0; x < arg_width; x+=brokenTransWidth){
 
@@ -491,8 +481,6 @@ void CHud::attemptDrawBrokenTrans(int arg_startx, int arg_starty, int arg_width,
 	}
 
 }
-
-
 
 
 void CHud::attemptDrawBrokenTransLight(int arg_startx, int arg_starty, int arg_width, int arg_height){
@@ -524,12 +512,8 @@ void CHud::attemptDrawBrokenTransLight(int arg_startx, int arg_starty, int arg_w
 				
 			}
 		}
-
-
 	}
-
 }
-
 
 
 void CHud::attemptDrawBrokenTransWhite(int arg_startx, int arg_starty, int arg_width, int arg_height){
@@ -607,11 +591,6 @@ void CHud::attemptDrawBrokenTransLightAndWhite(int arg_startx, int arg_starty, i
 	}
 
 }
-
-
-
-
-
 
 
 
@@ -1505,9 +1484,7 @@ float HUD_GetFOV( void )
 }
 
 
-
 //MODDD - MsgFunc_SetFOV moved to hud_msg.cpp for consistency.
-
 
 
 void CHud::AddHudElem(CHudBase *phudelem)

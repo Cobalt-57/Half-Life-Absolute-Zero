@@ -310,7 +310,7 @@ void CHandGrenade::PrimaryAttack()
 		// So check to see if the grenade should explode in the user's hands (held down too long)
 		// ...nope!  Pineapple grenades don't explode in your hands.  But still do instantly on being
 		// thrown after being held for too long. That wasn't an oversight this time, go figure.
-		
+		/*
 		if (m_flStartThrow && gpGlobals->time >= m_flStartThrow + 3) {
 			// Held down to long, explode at player origin!
 
@@ -326,7 +326,7 @@ void CHandGrenade::PrimaryAttack()
 			m_flTimeWeaponIdle = m_flNextSecondaryAttack = m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 0.5;// ensure that the animation can finish playing
 			return;
 		}
-		
+		*/
 
 		//easyForcePrintLine("ARE YOU hello %d, %d", m_flStartThrow, m_pPlayer->m_rgAmmo[ m_iPrimaryAmmoType ]);
 
