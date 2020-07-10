@@ -17,43 +17,35 @@
 ===== bmodels.cpp ========================================================
 
   spawn, think, and use functions for entities that use brush models
-
 */
 
 #include "extdll.h"
 #include "util.h"
 #include "cbase.h"
-
 #include "basetoggle.h"
-
 #include "doors.h"
 
-extern DLL_GLOBAL Vector		g_vecAttackDir;
+//MODDD - referred to throughout and restored.
+EASY_CVAR_EXTERN(showtriggers)
 
-#define SF_BRUSH_ACCDCC	16// brush should accelerate and decelerate when toggled
-#define SF_BRUSH_HURT		32// rotating brush that inflicts pain based on rotation speed
-#define SF_ROTATING_NOT_SOLID	64	// some special rotating objects are not solid.
+
+#define SF_BRUSH_ACCDCC 16// brush should accelerate and decelerate when toggled
+#define SF_BRUSH_HURT 32// rotating brush that inflicts pain based on rotation speed
+#define SF_ROTATING_NOT_SOLID 64	// some special rotating objects are not solid.
 
 // covering cheesy noise1, noise2, & noise3 fields so they make more sense (for rotating fans)
 #define noiseStart		noise1
 #define noiseStop		noise2
 #define noiseRunning	noise3
 
-#define SF_PENDULUM_SWING		2	// spawnflag that makes a pendulum a rope swing.
+#define SF_PENDULUM_SWING 2	// spawnflag that makes a pendulum a rope swing.
 //
 // BModelOrigin - calculates origin of a bmodel from absmin/size because all bmodel origins are 0 0 0
 //
 
-
-
-//MODDD - referred to throughout and restored.
-EASY_CVAR_EXTERN(showtriggers)
-
-
+extern DLL_GLOBAL Vector g_vecAttackDir;
 
 // MODDD - VecBModelOrigin moved to util.h/.cpp.
-
-
 
 // =================== FUNC_WALL ==============================================
 

@@ -2077,18 +2077,6 @@ void CSmoker::Spawn( void )
 void CSmoker::Think( void )
 {
 	// lots of smoke
-	//MODDD - pooplord
-	/*
-	MESSAGE_BEGIN( MSG_PVS, SVC_TEMPENTITY, pev->origin );
-		WRITE_BYTE( TE_SMOKE );
-		WRITE_COORD( pev->origin.x + RANDOM_FLOAT( -pev->dmg, pev->dmg ));
-		WRITE_COORD( pev->origin.y + RANDOM_FLOAT( -pev->dmg, pev->dmg ));
-		WRITE_COORD( pev->origin.z);
-		WRITE_SHORT( g_sModelIndexSmoke );
-		WRITE_BYTE( RANDOM_LONG(pev->scale, pev->scale * 1.1) );
-		WRITE_BYTE( RANDOM_LONG(8,14)  ); // framerate
-	MESSAGE_END();
-	*/
 	UTIL_Smoke(MSG_PVS, pev->origin, NULL, pev->origin, RANDOM_FLOAT( -pev->dmg, pev->dmg ), RANDOM_FLOAT( -pev->dmg, pev->dmg ), 0, g_sModelIndexSmoke, RANDOM_LONG(pev->scale, pev->scale * 1.1), RANDOM_LONG(8,14));
 
 	pev->health--;

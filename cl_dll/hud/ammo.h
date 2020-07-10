@@ -121,6 +121,9 @@ private:
 	//MODDD - other new things...
 	int m_airTankAirTime;
 	float m_longJumpCharge;
+	
+	float m_e_battery_empty;
+	float m_e_battery_full;
 
 	int m_longjump_empty;
 	int m_longjump_full;

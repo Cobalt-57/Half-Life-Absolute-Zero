@@ -16,6 +16,8 @@
 // hgrunt
 //=========================================================
 
+//MODDD - NOTE.  Is this comment accurate?  Other constants
+// say 2 is CHEST and 3 is STOMACH.  Maybe below is out of date.s
 //=========================================================
 // Hit groups!
 //=========================================================
@@ -74,24 +76,18 @@ extern BOOL globalPSEUDO_germanModel_hgruntFound;
 EASY_CVAR_EXTERN(hgruntAllowGrenades)
 
 
-
-
-
 //=========================================================
 // monster-specific DEFINE's
 //=========================================================
 
 //MODDD - new constant.  Only use one head.
 #define FORCE_ONE_HEAD 1
-
 //MODDD - new constant.  Force spawning with MP5.
 #define FORCE_MP5 1
 
-//MODDD - changed for debugging.
+
 #define GRUNT_CLIP_SIZE					36 // how many bullets in a clip? - NOTE: 3 round burst sound, so keep as 3 * x!
 
-#define GRUNT_VOL						0.35		// volume of grunt sounds
-#define GRUNT_ATTN						ATTN_NORM	// attenutation of grunt sentences
 #define HGRUNT_LIMP_HEALTH				20
 //MODDD - as-is.  apparently unused.  ?
 #define HGRUNT_DMG_HEADSHOT				( DMG_BULLET | DMG_CLUB )	// damage types that can kill a grunt with a single headshot.
@@ -101,40 +97,52 @@ EASY_CVAR_EXTERN(hgruntAllowGrenades)
 #define HGRUNT_NUM_HEADS				1
 
 #define HGRUNT_MINIMUM_HEADSHOT_DAMAGE	15 // must do at least this much damage in one shot to head to score a headshot kill
-#define HGRUNT_SENTENCE_VOLUME			(float)0.35 // volume of grunt sentences
 
+//MODDD - turned up a bit.  Was 0.35.
+#define HGRUNT_SENTENCE_VOLUME			(float)0.45 // volume of grunt sentences
+
+//MODDD - unused as-is macro, whoops.
+//#define GRUNT_VOL						0.35		// volume of grunt sounds
+#define GRUNT_ATTN						ATTN_NORM	// attenutation of grunt sentences
+
+
+// HGrunt weapon bits
 #define HGRUNT_9MMAR				( 1 << 0)
 #define HGRUNT_HANDGRENADE			( 1 << 1)
 #define HGRUNT_GRENADELAUNCHER		( 1 << 2)
 #define HGRUNT_SHOTGUN				( 1 << 3)
 
-#define HEAD_GROUP					1
+/*
+// ORIGINAL
+#define BODYGROUP_HEAD					1
 #define HEAD_GRUNT					0
 #define HEAD_COMMANDER				1
 #define HEAD_SHOTGUN				2
 #define HEAD_M203					3
+*/
+// NEW
+#define BODYGROUP_HEAD					1
+#define HEAD_GRUNT					0
+#define HEAD_GORE					1
+#define HEAD_NONE					2
 
 /*
-//ORIGINAL
-#define GUN_GROUP					2
+// ORIGINAL
+#define BODYGROUP_GUN					2
 #define GUN_MP5						0
 #define GUN_SHOTGUN					1
 #define GUN_NONE					2
 */
-
-//ADVICE
-#define GUN_GROUP					2
+// NEW (just redirect to any requests to spawn shotguns to MP%)
+#define BODYGROUP_GUN					2
 #define GUN_MP5						0
 #define GUN_SHOTGUN					0
 #define GUN_NONE					1
 
-/*
-//SUGGESTION? for me before the hgrunt model edit I guess
-#define GUN_GROUP					2
-#define GUN_MP5						0
-#define GUN_SHOTGUN					0
-#define GUN_NONE					2
-*/
+
+//MODDD - macro
+#define HITGROUP_HGRUNT_HELMET 11
+
 
 //=========================================================
 // monster-specific conditions
@@ -668,9 +676,8 @@ int CHGrunt::IRelationship ( CBaseEntity *pTarget )
 
 //NOTICE - the HGrunt needs to be able to force gibs to leave blood impact decals (or not) and still determine the "spawn head" logic in the same way.
 BOOL CHGrunt::DetermineGibHeadBlock(void){
-	//if bodygroup #1 is set to 1 (headless), spawnHeadBlock should be TRUE, to block spawning a head.
-	BOOL spawnHeadBlock = (GetBodygroup(1) == 1);
-	return spawnHeadBlock;
+	// if bodygroup #1 is set to 1 (headless), block spawning a head.
+	return (GetBodygroup(BODYGROUP_HEAD) == HEAD_GORE);
 }
 
 //=========================================================
@@ -681,15 +688,10 @@ GENERATE_GIBMONSTER_IMPLEMENTATION(CHGrunt)
 	Vector	vecGunPos;
 	Vector	vecGunAngles;
 
-	//MODDD - okay, Valve?  WHY use actual numbers if you have named constants?
-	//if ( GetBodygroup( 2 ) != 2 )     //(changed to what is clearly meant below)
-	if ( GetBodygroup( GUN_GROUP ) != GUN_NONE )
+	if ( GetBodygroup( BODYGROUP_GUN ) != GUN_NONE )
 	{// throw a gun if the grunt has one
 		GetAttachment( 0, vecGunPos, vecGunAngles );
 
-		//MODDD - force to none even here. Gibbing removes this model instantly, but if this model fades out instead, from
-		//german censorship refusing to gub, an hgrunt fading out while holding a gun that already dropped a gun will look strange.
-		SetBodygroup( GUN_GROUP, GUN_NONE );
 
 		CBaseEntity *pGun;
 
@@ -709,7 +711,12 @@ GENERATE_GIBMONSTER_IMPLEMENTATION(CHGrunt)
 
 		if ( pGun )
 		{
-			pGun->pev->velocity = Vector (RANDOM_FLOAT(-100,100), RANDOM_FLOAT(-100,100), RANDOM_FLOAT(200,300));
+			//MODDD - force to none even here. Normal gibbing removes this model instantly, but if this model fades out instead, from
+			// german censorship refusing to gib, an hgrunt fading out while holding a gun that already dropped a gun will look strange.
+			SetBodygroup(BODYGROUP_GUN, GUN_NONE);
+
+			// tone the velocity range down a bit, was -100 to 100.
+			pGun->pev->velocity = Vector (RANDOM_FLOAT(-60,60), RANDOM_FLOAT(-100,100), RANDOM_FLOAT(200,300));
 			pGun->pev->avelocity = Vector ( 0, RANDOM_FLOAT( 200, 400 ), 0 );
 		}
 
@@ -1063,8 +1070,8 @@ GENERATE_TRACEATTACK_IMPLEMENTATION(CHGrunt)
 {
 	//easyForcePrintLine("HGrunt:: TraceAttack says I took %.2f damage.", flDamage);
 
-
-	if(ptr->iHitgroup == 11 || ptr->iHitgroup == HITGROUP_HEAD && flDamage >= gSkillData.plrDmg357 && GetBodygroup(1) != 1){
+	
+	if(ptr->iHitgroup == HITGROUP_HGRUNT_HELMET || ptr->iHitgroup == HITGROUP_HEAD && flDamage >= gSkillData.plrDmg357 && GetBodygroup(BODYGROUP_HEAD) != HEAD_GORE){
 		//a python round (at least)?  Remember that...
 
 		missingHeadPossible = TRUE;
@@ -1076,12 +1083,10 @@ GENERATE_TRACEATTACK_IMPLEMENTATION(CHGrunt)
 
 
 	// check for helmet shot
-	if (ptr->iHitgroup == 11)
+	if (ptr->iHitgroup == HITGROUP_HGRUNT_HELMET)
 	{
 		// make sure we're wearing one
-		//MODDD - Dangit Valve!  Use those constants!  That wasn't so bad though.
-		//if (GetBodygroup( 1 ) == HEAD_GRUNT && (bitsDamageType & (DMG_BULLET | DMG_SLASH | DMG_BLAST | DMG_CLUB)))
-		if (GetBodygroup( HEAD_GROUP ) == HEAD_GRUNT && (bitsDamageType & (DMG_BULLET | DMG_SLASH | DMG_BLAST | DMG_CLUB)))
+		if (GetBodygroup( BODYGROUP_HEAD ) == HEAD_GRUNT && (bitsDamageType & (DMG_BULLET | DMG_SLASH | DMG_BLAST | DMG_CLUB)))
 		{
 			// absorb damage
 			flDamage -= 20;
@@ -2492,12 +2497,10 @@ void CHGrunt :: HandleAnimEvent( MonsterEvent_t *pEvent )
 
 
 
-
 	//pev->renderfx |= NOMUZZLEFLASH;
 
 	Vector	vecShootDir;
 	Vector	vecShootOrigin;
-
 
 	//EASY_CVAR_PRINTIF_PRE(hgruntPrintout, easyForcePrintLine("HGRUNT: HANDLEANIMEVENT: %d", pEvent->event) );
 
@@ -2509,16 +2512,21 @@ void CHGrunt :: HandleAnimEvent( MonsterEvent_t *pEvent )
 			if (pev->framerate > 0) {
 				Vector	vecGunPos;
 				Vector	vecGunAngles;
+				CBaseEntity* pGun;
 
 				GetAttachment(0, vecGunPos, vecGunAngles);
 
-				// switch to body group with no gun.
-				SetBodygroup(GUN_GROUP, GUN_NONE);
 	#if FORCE_MP5 == 1
-				//From the else statement below (meaning, this grunt does not have a shot gun), it appears a grunt with no weapon
-				//will also drop mp5 ammo.  So, since it is not possible to have a shotgun (FORCE_MP5), always drop mp5 ammo.
+				// From the else statement below (meaning, this grunt does not have a shot gun), it appears a grunt with no weapon
+				// will also drop mp5 ammo.  So, since it is not possible to have a shotgun (FORCE_MP5), always drop mp5 ammo.
 
-				DropItem( "weapon_9mmAR", vecGunPos, vecGunAngles );
+				pGun = DropItem( "weapon_9mmAR", vecGunPos, vecGunAngles );
+
+				if (pGun) {
+					// So that if the difficulty choice forbids dropping the gun, it doesn't
+					// mysteriously disappear from the universe for no apparent reason
+					SetBodygroup(BODYGROUP_GUN, GUN_NONE);
+				}
 
 				if(EASY_CVAR_GET(gruntsCanHaveMP5Grenade) == 1){
 					if (FBitSet( pev->weapons, HGRUNT_GRENADELAUNCHER ))
@@ -2526,9 +2534,7 @@ void CHGrunt :: HandleAnimEvent( MonsterEvent_t *pEvent )
 						DropItem( "ammo_ARgrenades", BodyTarget( pev->origin ), vecGunAngles );
 					}
 				}
-
 	#else
-
 				// now spawn a gun.
 				if (FBitSet( pev->weapons, HGRUNT_SHOTGUN ))
 				{
@@ -2544,7 +2550,6 @@ void CHGrunt :: HandleAnimEvent( MonsterEvent_t *pEvent )
 				}
 	#endif
 			}//END OF pev->framerate check
-
 		}
 		break;
 
@@ -3015,21 +3020,21 @@ void CHGrunt :: Spawn()
 #if FORCE_MP5 == 1
 	//mp5 is the default.  Leave as is to always have an mp5's clipsize (else statement)
 	m_cClipSize = getClipSize();
-	SetBodygroup( GUN_GROUP, GUN_MP5 );
+	SetBodygroup( BODYGROUP_GUN, GUN_MP5 );
 #else
 
 	if (FBitSet( pev->weapons, HGRUNT_SHOTGUN ))
 	{
-		SetBodygroup( GUN_GROUP, GUN_SHOTGUN );
+		SetBodygroup( BODYGROUP_GUN, GUN_SHOTGUN );
 		m_cClipSize		= 8;
 	}
 	else
 	{
-		//MODDD - wait.. why not set the GUN_GROUP to GUN_MP5 then??
+		//MODDD - wait.. why not set the BODYGROUP_GUN to GUN_MP5 then??
 		// Yes GUN_MP5 happens to be 0, just seems sloppy not to do this still.
 		// If the model changes and GUN_MP5 is any other number, the assumption that
 		// GUN_MP5 is the default from not setting anything goes out the window.
-		SetBodygroup(GUN_GROUP, GUN_MP5);
+		SetBodygroup(BODYGROUP_GUN, GUN_MP5);
 		m_cClipSize		= GRUNT_CLIP_SIZE;
 	}
 #endif
@@ -3047,9 +3052,9 @@ void CHGrunt :: Spawn()
 #if FORCE_ONE_HEAD == 1
 	//This seems to be the default "gas mask".
 
-	//SetBodygroup( HEAD_GROUP, HEAD_GRUNT );
+	//SetBodygroup( BODYGROUP_HEAD, HEAD_GRUNT );
 	//TEST....
-	SetBodygroup( HEAD_GROUP, HEAD_GRUNT );
+	SetBodygroup( BODYGROUP_HEAD, HEAD_GRUNT );
 
 
 	//easyPrint("SetBodygroup %d\n", HEAD_GRUNT);
@@ -3059,11 +3064,11 @@ void CHGrunt :: Spawn()
 	//pev->body = 0;
 
 #else
-	SetBodygroup( HEAD_GROUP, HEAD_M203 );
+	SetBodygroup( BODYGROUP_HEAD, HEAD_M203 );
 
 	if (FBitSet( pev->weapons, HGRUNT_SHOTGUN ))
 	{
-		SetBodygroup( HEAD_GROUP, HEAD_SHOTGUN);
+		SetBodygroup( BODYGROUP_HEAD, HEAD_SHOTGUN);
 	}
 	else if (FBitSet( pev->weapons, HGRUNT_GRENADELAUNCHER ))
 	{
@@ -3080,8 +3085,8 @@ void CHGrunt :: Spawn()
 	/*
 #if FORCE_MP5 == 1
 	//do it again.
-	SetBodygroup( HEAD_GROUP, HEAD_GRUNT );
-	SetBodygroup( GUN_GROUP, GUN_MP5 );
+	SetBodygroup( BODYGROUP_HEAD, HEAD_GRUNT );
+	SetBodygroup( BODYGROUP_GUN, GUN_MP5 );
 #endif
 	*/
 
@@ -3196,7 +3201,8 @@ void CHGrunt :: Precache()
 	//PRECACHE_SOUND("hgrunt/gr_idle2.wav");
 	//PRECACHE_SOUND("hgrunt/gr_idle3.wav");
 
-	PRECACHE_SOUND("hassault/hw_alert.wav");
+	// nah, canned.
+	//PRECACHE_SOUND("hassault/hw_alert.wav");
 
 	global_useSentenceSave = FALSE;
 	/////////////////////////////////////////////////////////////////////////////////////////////
@@ -3672,7 +3678,7 @@ void CHGrunt::startReanimation(void) {
 	CBaseMonster::startReanimation();
 
 
-	//SetBodygroup(GUN_GROUP, GUN_MP5);
+	//SetBodygroup(BODYGROUP_GUN, GUN_MP5);
 
 
 
@@ -3892,7 +3898,7 @@ void CHGrunt :: DeathSound ( void )
 
 
 
-	if(GetBodygroup(1) == 1){
+	if(GetBodygroup(BODYGROUP_HEAD) == HEAD_GORE){
 		//headless.
 		EMIT_SOUND_FILTERED( ENT(pev), CHAN_VOICE, "common/bodysplat.wav", 1, ATTN_IDLE, 0, 108, FALSE );
 
@@ -5427,32 +5433,32 @@ void CDeadHGrunt :: Spawn( void )
 #if FORCE_ONE_HEAD == 1
 	//easyPrint("!!!!!!!!!!! hgrunt CORPSE pev->body: %d\n", pev->body);
 
-	//NOTICE: all use "HEAD_GRUNT" now.
+	//NOTICE: all use "HEAD_GRUNT" now, only choice.  Besides headless variants.
 	switch( pev->body )
 		{
 		case 0: // Grunt with Gun
 			pev->body = 0;
 			pev->skin = 0;
-			SetBodygroup( HEAD_GROUP, HEAD_GRUNT );
-			SetBodygroup( GUN_GROUP, GUN_MP5 );
+			SetBodygroup( BODYGROUP_HEAD, HEAD_GRUNT );
+			SetBodygroup( BODYGROUP_GUN, GUN_MP5 );
 			break;
 		case 1: // Commander with Gun
 			pev->body = 0;
 			pev->skin = 0;
-			SetBodygroup( HEAD_GROUP, HEAD_GRUNT );
-			SetBodygroup( GUN_GROUP, GUN_MP5 );
+			SetBodygroup( BODYGROUP_HEAD, HEAD_GRUNT );
+			SetBodygroup( BODYGROUP_GUN, GUN_MP5 );
 			break;
 		case 2: // Grunt no Gun
 			pev->body = 0;
 			pev->skin = 0;
-			SetBodygroup( HEAD_GROUP, HEAD_GRUNT );
-			SetBodygroup( GUN_GROUP, GUN_NONE );
+			SetBodygroup( BODYGROUP_HEAD, HEAD_GRUNT );
+			SetBodygroup( BODYGROUP_GUN, GUN_NONE );
 			break;
 		case 3: // Commander no Gun
 			pev->body = 0;
 			pev->skin = 0;
-			SetBodygroup( HEAD_GROUP, HEAD_GRUNT );
-			SetBodygroup( GUN_GROUP, GUN_NONE );
+			SetBodygroup( BODYGROUP_HEAD, HEAD_GRUNT );
+			SetBodygroup( BODYGROUP_GUN, GUN_NONE );
 			break;
 		}
 
@@ -5463,26 +5469,26 @@ void CDeadHGrunt :: Spawn( void )
 		case 0: // Grunt with Gun
 			pev->body = 0;
 			pev->skin = 0;
-			SetBodygroup( HEAD_GROUP, HEAD_GRUNT );
-			SetBodygroup( GUN_GROUP, GUN_MP5 );
+			SetBodygroup( BODYGROUP_HEAD, HEAD_GRUNT );
+			SetBodygroup( BODYGROUP_GUN, GUN_MP5 );
 			break;
 		case 1: // Commander with Gun
 			pev->body = 0;
 			pev->skin = 0;
-			SetBodygroup( HEAD_GROUP, HEAD_COMMANDER );
-			SetBodygroup( GUN_GROUP, GUN_MP5 );
+			SetBodygroup( BODYGROUP_HEAD, HEAD_COMMANDER );
+			SetBodygroup( BODYGROUP_GUN, GUN_MP5 );
 			break;
 		case 2: // Grunt no Gun
 			pev->body = 0;
 			pev->skin = 0;
-			SetBodygroup( HEAD_GROUP, HEAD_GRUNT );
-			SetBodygroup( GUN_GROUP, GUN_NONE );
+			SetBodygroup( BODYGROUP_HEAD, HEAD_GRUNT );
+			SetBodygroup( BODYGROUP_GUN, GUN_NONE );
 			break;
 		case 3: // Commander no Gun
 			pev->body = 0;
 			pev->skin = 0;
-			SetBodygroup( HEAD_GROUP, HEAD_COMMANDER );
-			SetBodygroup( GUN_GROUP, GUN_NONE );
+			SetBodygroup( BODYGROUP_HEAD, HEAD_COMMANDER );
+			SetBodygroup( BODYGROUP_GUN, GUN_NONE );
 			break;
 		}
 #endif
@@ -5560,12 +5566,12 @@ void CHGrunt::checkHeadGore(int iGib ){
 	
 	BOOL gibsSpawnDecals = !(iGib == GIB_ALWAYS_NODECAL);
 
-	if(m_LastHitGroup == HITGROUP_HEAD || m_LastHitGroup == 11){
+	if(m_LastHitGroup == HITGROUP_HEAD || m_LastHitGroup == HITGROUP_HGRUNT_HELMET){
 		//Took enough damage on last trace-hit?
-		if(missingHeadPossible && EASY_CVAR_GET(sv_germancensorship) != 1 && GetBodygroup(1) != 1){
+		if(missingHeadPossible && EASY_CVAR_GET(sv_germancensorship) != 1 && GetBodygroup(BODYGROUP_HEAD) != HEAD_GORE){
 			//missing head!... if german censorship isn't on.
 			//that is, heads --> Headless
-			SetBodygroup( 1, 1 );
+			SetBodygroup( BODYGROUP_HEAD, HEAD_GORE );
 
 			//FOUNTAIN O BLOOD
 			UTIL_BloodStream(lastHeadHit, UTIL_RandomBloodVector(), BloodColor(), RANDOM_LONG(70, 80) );

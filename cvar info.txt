@@ -42,6 +42,22 @@ myRocketsAreBarney (0) - BOOL. Fire RPG rockets if you dare. May require a map r
 
 
 
+
+
+
+
+
+
+
+wpn_glocksilencer - number, MODEVAR, 0, 1, 2.  Regardless, now right-clicking does not rapid-fire (does nothing if "wpn_glocksilencer" is off).  If this CVar is on, right-clicking initiates the silencer-toggle animation (attach or detach).
+~wpn_glocksilencer can also be "2" to force silencer availability at all times (will be indifferent of having picked up a pick-up yet or not).
+ 
+hud_logo - number, boolean.  If on, shows a logo similar (possibly identical) to that shown in some alpha / e3 (not sure) demos.  This feature was present in the game files all along, but I could not find a way to turn it on.  Connected logo visibility to the cvar.
+
+hud_brokentrans - BOOL.  Meant to emulate the broken transparency effect seen in some alphas / e3's (the faded-black appearing in front of most rendered GUI text and graphics, likely in front because it makes the numbers themselves darker than the primary colors present in retail otherwise).  Unfortunately, the closer to black a color becomes, the more transparent (up to invisible) it becomes, so the best I could get was a faded light-gray.
+
+
+
 drawViewModel (1) - BOOL. When off, the player's view model will not be rendered. Does not include effects such as ejected brass.
 
 drawHUD (1) - BOOL + MODES. When off, the player HUD will not be rendered. Has some other modes. All listed. Note that this overrides a "crosshair" CVar of 1.
@@ -95,7 +111,7 @@ decalTracerExclusivity (0) - BOOLEAN. Determines whether to use retail's oddly s
 ~turn on (1) to keep it like retail had. No more specific modes or combinations unless requested.
 
 
-monsterToPlayerHitgroupSpecial (0) - BOOLEAN, but kindof MODEVAR.
+monsterToPlayerHitgroupSpecial (0) - MODEVAR.
 0: monsters can not do different amounts of damage to players based on what part of them is hit, like triple for headshots.
 1: retail. Monsters can do extra or reduced damage to players based on what part of them is hit just like other players can.
 2: semi. Monsters can do reduced damage if some part of skills.cfg says to for that part of a player (but as of retail skill.cfg, yet unchanged by the mod, nothing ever reduces damage, just maintains it).
@@ -107,15 +123,26 @@ monsterToPlayerHitgroupSpecial (0) - BOOLEAN, but kindof MODEVAR.
 
 gaussRecoilSendsUpInSP - when on, the gauss secondary fire can send the player upwards too, just like in multiplayer.
 
-hud_version - BOOL.  when 1, simulates the E3 GUI (yellow, somewhat close to release in functionality). when 0, looks like the more noticably different green pre-E3.  Note that both have many features in common, but pre-E3 lacks the bottom-left damage-status indicators.
-preE3UsesFailColors - BOOL.  When 1, and "hud_version" is 0 (pre-E3), the GUI's weaponselect will shade empty weapons as red instead of green.
+hud_version (2) - MODEVAR.  Pick the type of HUD used, based off one of the versions used for the game at some point of time.
+0: Pre-E3. Green-based.  Uses a special 'early' spriteset.  Battery is one of the squares in the right-hand side-bar visible while weapon-select is open.
+1: Pre-E3. Uses a different sprite-set. 
+2: Pre-E3. Same sprite-set as choice 1 but the battery is outside of the right-hand sidebar (next to health; visible at all times).
+3: E3.  Yellow-based, closer to retail.
+
+
+
+
+
+
+preE3UsesFailColors - BOOL.  When 1, and "hud_version" is under 3 (pre-E3), the GUI's weaponselect will shade empty weapons as red instead of green.
 E3UsesFailColors - BOOL.  Same as above but for E3: shade empty weapons red.
 
-hud_batterydraw - BOOL.  when on, the battery's fill-line is drawn somewhere between the top and bottom (horizontally).  If 0, the fill-line is drawn somewhere between the left & right (vertically).
+hud_batterydraw - BOOL.  Direction of the filled portion of the battery icon.  Only applicable for hud_version choices 2 and 3.
+~when 1, the battery's fill-line is drawn somewhere between the top and bottom (horizontally).  If 0, the fill-line is drawn somewhere between the left & right (vertically).
 
 canShowWeaponSelectAtDeath - BOOL.  Preserves an old bug from some builds.  When on, weapon select and some other pieces of GUI will continue to be available in weapon select (has no functionality though).
 
-endlessFlashlightBattery - BOOL.  Probably seems like common sense (the flash light now lacks an energy meter), but it does start out as 1.
+endlessFlashlightBattery (1) - BOOL.  Makes more sense since the flash light now lacks an energy meter.
 
 forceDrawBatteryNumber - BOOL.  If on, a number is drawn in the current GUI (E3 or pre-E3)'s style above the battery, portraying its value (remaining battery).  For debugging; more accurate than "uh, 1/3" or "almost empty?".
 
@@ -274,7 +301,7 @@ healthcolor_yellowMark - 0 to 100. Amount of health that changes the health colo
 
 
 
-drownDrawPainMode - partially finished mode var (0, 1, 2).  default is 1.
+painFlashDrownMode - partially finished mode var (0, 1, 2).  default is 1.
 0 = nothing extra while drowning.  (Default does NOT draw any sort of pain flash or arrows)
 1 = use the pain effect to fade the whole screen constantly while drowning.
 2 = draw flash each time drown damage is inflicted (each second).  Arrows can still show up for other sources of damage while underwater.
@@ -282,6 +309,10 @@ drownDrawPainMode - partially finished mode var (0, 1, 2).  default is 1.
 4 = CUT.  edit water fog color to be tinted red while drowning (NOT DONE, NO EFFECT YET, UNSURE IF EDITING FOG COLOR BY SCRIPT IS POSSIBLE).
 
 playerBrightLight - BOOL, defaults to 0.  If on, the player generates a lot of light for a fair distance.  Disables flash light while on.  Good for debugging in dark places.
+~INTERESTING: looks to be used on other players with the flashlight on as seen in a multiplayer game.
+ That is, if you're the player with the flashlight on, you see the light wherever the cursor is looking,
+ but to other players looking at your player model, there is just a large light centered on the player instead.
+ It is most likely this same effect.
 
 
 cl_ladder - mode var, (0, 1, 2) - Modes for player ladder movement / view-effect
@@ -387,8 +418,8 @@ if 1, grunts spawned in real-time (not by the map at startup, it seems) are affe
 if 2, same as 1, but also applies to map-spawned monsters.  (should not be necessary, as, when created via map, all monsters appear at the same time and so the "leader" recruits all those needed at once; others do not appear later and need to "join" individually)
 
 
-E3ShowsDamageIcons - on E3 GUI (hud_version = 1), toggles showing damage icons.
-preE3ShowsDamageIcons - ditto for pre-E3 GUI (hud_version = 0).
+E3ShowsDamageIcons - on E3 GUI (hud_version = 3), toggles showing damage icons.
+preE3ShowsDamageIcons - ditto for pre-E3 GUI (hud_version < 3).
 
 gargantuaCorpseDeath - mode var.
 0: resembles retail: explosions & transform effect at death. 
@@ -413,9 +444,19 @@ gargantuaBleeds - modevar:
 
 handGrenadePickupYieldsOne - boolean var.  If 1, grenade pickups give only one grenade instead of the usual five that retail does (more in-tune with the appearance, as the pickup looks like a single grenade, not a box of them).
 
-useAlphaCrosshair - boolean var (may require restart or choosing another weapon to take effect).  When on, the crosshair is replaced with the alpha font's letter "t" instead.  It is actually a graphic meant to resemble it.  When off, retail's behavior for handling crosshairs is used.
 
-allowAlphaCrosshairWithoutGuns - boolean var (experimental).  When off, the alpha crosshair (only applicable when that is turned on) should not show when the player has no weapons equipped.  It seems the devs never really checked for this circumstance much, so it is difficult to work with.  This takes effect on starting a map fresh from running Half-Life, but on starting or loading a map from another map with weapons, the crosshair will still show regardless of this CVar.
+useAlphaCrosshair - CANNED.  Try "crosshair" instead.
+
+crosshair (1) - MODEVAR. Built-in CVar repurposed a bit.
+0: no crosshair.
+1: alpha crosshair (alpha font's letter "t")
+2: retail crosshair.
+
+
+allowAlphaCrosshairWithoutGuns (0) - BOOL.
+Whether to draw the crosshair when the "crosshair" CVar is 1.
+Does not apply to retail crosshairs (crosshair of 2) since there is no specific weapon-less crosshair.
+
 
 egonEffectsMode (3) - modevar:
 0 = minimal.
@@ -427,7 +468,7 @@ egonEffectsMode (3) - modevar:
 egonHitCloud - boolean.  If 1, a blue cloud appears where the egon strikes (disperses when the user stops firing if it is secondary)
 
 
-allowPainDrawWithoutSuit - boolean.  If 1, pain arrows (big, wide arrows that can occur in the four cardinal directions at the center of the screen to indicate the direction of recent damage) can be rendered without a suit too.
+painFlashSuitless - boolean.  If 1, pain arrows & flash can be rendered without a suit too.
 
 infiniteLongJumpCharge - MODE VAR.
 0: no effect.  Long jumps require charges and do not regenerate.
@@ -886,13 +927,20 @@ kingpinDebug (0) - MODEVAR.  Affects what schedule is picked for the kingpin whe
 
 
 hud_drawAmmoBar (0) - BOOL.  When 1, draws the ammunition bar (fuller the more ammo there is; shows the remaining out of the most that could be stored).
-hud_weaponSelectHidesLower (1) - BOOL.  When 1, hides the lower GUI (health, armor) when selecting a weapon.
+
+hud_weaponSelectHidesLower (1) - MODEVAR.  Whether weapon select's right-hand sidebar hides the ammo clip / reserve numbers to the bottom-right corner of the screen.
+0: Hides ammo numbers only if the right sidebar obscures the ammo portion for any weapon.
+   In short, only shows ammo numbers while the right sidebar is open for hud_version = 2.
+1: Always hides ammo numbers if the weapon select (and thus right sidebar) is open.
+2: SPECIAL. Like choice 0, but for hud_versions other than 2, will shift the right-sidebar up to show the ammo numbers at the same time, if possible (resolution allows).
+
 
 hud_drawSidebarMode (0) - MODEVAR.
 0: only draw during weapon select.
 1: only draw when not in weapon select.
 2: always draw.
-
+NOTE: It is advisable to use "hud_weaponSelectHidesLower 2" with hud_drawSidebarMode choices other than 0 to still see ammo numbers unobscurred in typical usage.
+If the resolution is under around 550 pixels tall, you're fucked.
 
 
 
@@ -969,7 +1017,7 @@ Fine-tune the behavior of the pain flash. There are two things to keep in mind:
 painFlashDmgMin (0.3) - DECIMAL. Range of 0 to 1. Minimum amount added to the cumulative on any non-zero damage attack (armor may prevent small attacks from touching the health, see "painFlashArmorBlock")
 painFlashDmgExMult (0.08) - DECIMAL. Amount to multiply damage dealt by, which is added to the cumulative.
                             Example: A gargantua melee attack deals 10 damage, so with a default painFlashDmgExMult setting of 0.08, it ends up adding 0.8 to the cumulative.
-painFlashCumulativeMinDrowning (0.5) - DECIMAL. Range of 0 to 1. Requires "drownDrawPainMode" to be set to 1. When drowning, forces the cumulative (opacity) to this high.
+painFlashCumulativeMinDrowning (0.5) - DECIMAL. Range of 0 to 1. Requires "painFlashDrownMode" to be set to 1. When drowning, forces the cumulative (opacity) to this high.
 painFlashCumulativeMax (1.4) - DECIMAL. How high the cumulative can be. Affects the most time possible for the flash to stay its brightest without taking more damage.
 painFlashDrawOpacityMax (0.8) - DECIMAL. Range of 0 to 1. How high can the drawn opacity be. Can be used to reduce the intensity of the "maximum" opacity that a cumulative above 1 stays fixed at.
     Example: with a painFlashCumulativeMax of 1.4 and a painFlashDrawOpacityMax of 0.7, a cumulative between 0.7 and 1.4 will still provide an opacity of 0.7. Scales any increases in cumulative too (given a jump of 0.4, with a painFlashDrawOpacityMax of 0.5, the jump becomes 0.2 instead).
@@ -1165,6 +1213,10 @@ m_rawinput (0) - BOOL.  Related to interpreting mouse input.
 cl_earlyaccess (1) - If 1, displays info about the current build at the top-left corner of the screen.
 ~This can be seen with 'mod_version_client' and 'mod_version_server' in console. as well.
 
+
+cl_viewroll (1) - BOOL. If 1, other CVars cl_viewrollangle and cl_viewrollspeed may take effect to add roll (tilt) to the player view on sideways/strafing motions.
+
+drawDebugCrowbar (0) - BOOL.  If 1, shows lines that help understand how the crowbar finds a target to 'hit'.
 
 
 

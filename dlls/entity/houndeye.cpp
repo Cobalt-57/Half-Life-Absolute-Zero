@@ -39,6 +39,10 @@ EASY_CVAR_EXTERN(soundAttenuationAll)
 
 
 
+// How long after doing a "leaderlook", can I do a leaderlook again?
+// Includes the duration of the leaderlook anim since it begins on playing leaderlook.
+// Also, still a floaty randon range when after this amount the leaderlook will happen.
+#define LEADERLOOK_COOLDOWN_SETTING 14
 
 
 
@@ -73,7 +77,6 @@ extern CGraph WorldGraph;
 
 
 
-
 //=========================================================
 // monster-specific tasks
 //=========================================================
@@ -104,7 +107,6 @@ enum
 
 
 
-
 class CHoundeye : public CSquadMonster
 {
 public:
@@ -120,8 +122,7 @@ public:
 	Vector	m_vecPackCenter; // the center of the pack. The leader maintains this by averaging the origins of all pack members.
 
 	static int numberOfEyeSkins;
-	float leaderlookTimeMax;
-
+	float leaderLookCooldown;
 
 	CHoundeye();
 
@@ -147,6 +148,12 @@ public:
 	
 	GENERATE_TRACEATTACK_PROTOTYPE
 	GENERATE_TAKEDAMAGE_PROTOTYPE
+	GENERATE_KILLED_PROTOTYPE
+	void BecomeDead(void);
+	GENERATE_DEADTAKEDAMAGE_PROTOTYPE
+	void DeathAnimationStart(void);
+	void DeathAnimationEnd(void);
+	void startReanimation(void);
 
 	//MODDD - new
 	void SonicAttack( void );
@@ -171,9 +178,7 @@ public:
 			pev->absmin = pev->origin + Vector(-56, -56, 0);
 			pev->absmax = pev->origin + Vector(56, 56, 36);
 		}else{
-
 			CBaseMonster::SetObjectCollisionBox();
-
 		}
 	}
 
@@ -247,7 +252,8 @@ Task_t	tlLeaderLook1[] =
 	{ TASK_STOP_MOVING,			0				},
 	//{ TASK_SET_ACTIVITY,		(float)ACT_LEADERLOOK },
 	{ TASK_HOUND_LEADERLOOK,		0 },
-	{ TASK_WAIT,				(float)5		},// repick IDLESTAND every five seconds. gives us a chance to pick an active idle, fidget, etc.
+	// why a WAIT after leaderlook?  This is just time we can't turn to listen to a new sound.
+	//{ TASK_WAIT,				(float)5		},// repick IDLESTAND every five seconds. gives us a chance to pick an active idle, fidget, etc.
 };
 
 Schedule_t	slHoundLeaderLook[] =
@@ -259,16 +265,16 @@ Schedule_t	slHoundLeaderLook[] =
 
 		//MODDD - Why on Earth do most houndeye schedules lack this??
 		bits_COND_SEE_ENEMY |
-		//BOB SAGET'S LEFT NUT, WHY WAS THIS MISSING?!
+		// BOB SAGET'S LEFT NUT, WHY WAS THIS MISSING?!
 		bits_COND_NEW_ENEMY |
 
 		bits_COND_LIGHT_DAMAGE	|
 		bits_COND_HEAVY_DAMAGE	|
 		bits_COND_PROVOKED,
-		//likely already heard a sound to do the leaderlook, don't get interrupted in the middle of a leaderlook to do "leaderlook".
-		//bits_COND_HEAR_SOUND,
+		// likely already heard a sound to do the leaderlook, don't get interrupted in the middle of a leaderlook to do "leaderlook".
+		// bits_COND_HEAR_SOUND,
 
-		//sounds probably don't mean anything with bits_COND_HEAR_SOUND commented out.
+		// sounds probably don't mean anything with bits_COND_HEAR_SOUND commented out.
 		bits_SOUND_COMBAT		|// sound flags
 		bits_SOUND_WORLD		|
 		bits_SOUND_PLAYER		|
@@ -428,8 +434,6 @@ Task_t	tlHoundSpecialAttack1[] =
 {
 	{ TASK_STOP_MOVING,			0				},
 	{ TASK_FACE_IDEAL,			(float)0		},
-
-
 	{ TASK_SPECIAL_ATTACK1,		(float)0		},
 	//MODDD - removed?? - NEVERMIND, it is okay.
 	{ TASK_PLAY_SEQUENCE,		(float)ACT_IDLE_ANGRY },
@@ -445,7 +449,7 @@ Schedule_t	slHoundSpecialAttack1[] =
 		bits_COND_HEAVY_DAMAGE,
 		//MODDD - removed...  had no effect before at some point anyways?
 		//bits_COND_ENEMY_OCCLUDED,
-
+		
 		0,
 		"Hound Special Attack1"
 	},
@@ -556,12 +560,6 @@ IMPLEMENT_CUSTOM_SCHEDULES( CHoundeye, CSquadMonster );
 
 
 
-
-
-
-
-
-
 //=========================================================
 // Classify - indicates this monster's place in the
 // relationship table.
@@ -570,7 +568,6 @@ int CHoundeye :: Classify ( void )
 {
 	return	CLASS_ALIEN_MONSTER;
 }
-
 
 
 //=========================================================
@@ -819,8 +816,7 @@ CHoundeye::CHoundeye(){
 
 	firstSpecialAttackFrame = TRUE;
 	canResetSound = TRUE;
-
-	leaderlookTimeMax = -1;
+	leaderLookCooldown = -1;
 
 }
 
@@ -829,7 +825,6 @@ void CHoundeye::setModel(void){
 	CHoundeye::setModel(NULL);
 }
 void CHoundeye::setModel(const char* m){
-
 	CBaseMonster::setModel(m);
 
 	//After setting the model, can count the number of skins.
@@ -1463,9 +1458,13 @@ void CHoundeye :: StartTask ( Task_t *pTask )
 	case TASK_HOUND_LEADERLOOK:
 		{
 			//length is 121/30
-			leaderlookTimeMax = gpGlobals->time + (120.5f/30.0f);
+			// ??? why?
+			//leaderlookTimeMax = gpGlobals->time + (120.5f/30.0f);
 			//setAnimation("leaderlook", TRUE);
 			//???
+
+			// Dont' set leaderlook again too soon
+			leaderLookCooldown = gpGlobals->time + LEADERLOOK_COOLDOWN_SETTING;
 			this->SetSequenceByName("leaderlook");
 		}
 	default:
@@ -1670,8 +1669,6 @@ void CHoundeye :: RunTask ( Task_t *pTask )
 				pev->skin++;
 			}
 
-
-
 			break;
 		}
 	case TASK_HOUND_HOP_BACK:
@@ -1753,7 +1750,7 @@ void CHoundeye :: RunTask ( Task_t *pTask )
 	case TASK_HOUND_LEADERLOOK:
 
 		//EASY_CVAR_PRINTIF_PRE(houndeyePrintout, easyPrintLine( "LEADeRLOOK??????? sf:%d t:%.2f tm:%.2f", m_fSequenceFinished, gpGlobals->time, leaderlookTimeMax));
-		if ( m_fSequenceFinished || gpGlobals->time >= leaderlookTimeMax )
+		if ( m_fSequenceFinished )
 		{
 			//if this ends mark the sequence as over.
 			usingCustomSequence = FALSE;
@@ -1762,6 +1759,18 @@ void CHoundeye :: RunTask ( Task_t *pTask )
 
 
 	break;
+	case TASK_DIE:
+
+		if(pev->framerate > 0 && pev->frame > 170) {
+			// close further each frame then.
+			if (pev->skin < numberOfEyeSkins-1) {
+				pev->skin++;
+			}
+		}
+
+		CSquadMonster::RunTask(pTask);
+	break;
+
 	default:
 		{
 			CSquadMonster :: RunTask(pTask);
@@ -1780,6 +1789,46 @@ GENERATE_TRACEATTACK_IMPLEMENTATION(CHoundeye)
 GENERATE_TAKEDAMAGE_IMPLEMENTATION(CHoundeye)
 {
 	return GENERATE_TAKEDAMAGE_PARENT_CALL(CSquadMonster);
+}
+
+
+GENERATE_KILLED_IMPLEMENTATION(CHoundeye) {
+	// don't let random blinking logic work now.
+	// Start with the eye open.
+	// Near the end of TASK_DIE, it will close.
+	m_fDontBlink = TRUE;
+	pev->skin = 0;
+
+	GENERATE_KILLED_PARENT_CALL(CSquadMonster);
+}
+
+void CHoundeye::BecomeDead(void)
+{
+	CSquadMonster::BecomeDead();
+}
+
+GENERATE_DEADTAKEDAMAGE_IMPLEMENTATION(CHoundeye)
+{
+	return GENERATE_DEADTAKEDAMAGE_PARENT_CALL(CBaseMonster);
+}
+void CHoundeye::DeathAnimationStart() {
+	CSquadMonster::DeathAnimationStart();
+}
+void CHoundeye::DeathAnimationEnd(){
+
+	// In case for some strange reason we didn't close in time.
+	pev->skin = numberOfEyeSkins - 1;
+
+	CSquadMonster::DeathAnimationEnd();
+}
+
+
+void CHoundeye::startReanimation(void) {
+	// open.  don't blink during that time (Spawn being called again reset m_fDontBlink)
+	// ...nevermind, just allow blinking.  It opens the eye up just fine.
+	m_fDontBlink = FALSE;
+	//pev->skin = 0;
+	CSquadMonster::startReanimation();
 }
 
 
@@ -1908,7 +1957,9 @@ Schedule_t* CHoundeye :: GetScheduleOfType ( int Type )
 				return &slHoundSleep[ 0 ];
 			}else
 			//MODDD - insertion.  If I am the leader, may play "leaderLook" instead.
-			if ( InSquad() && IsLeader() && !m_fAsleep && RANDOM_LONG(0,1) < 1 )
+			// And chance reduced a tad since the leaderlook schedule no longer forces
+			// a wait of 5 seconds after.
+			if ( InSquad() && IsLeader() && !m_fAsleep && gpGlobals->time >= leaderLookCooldown && RANDOM_LONG(0,2) < 1 )
 			{
 				return &slHoundLeaderLook[ 0 ];
 			}
@@ -2091,10 +2142,11 @@ int CHoundeye::LookupActivityHard(int activity){
 	//no need for default, just falls back to the normal activity lookup.
 	switch(activity){
 		case ACT_IDLE:{
-			if(InSquad() && IsLeader() && !m_fAsleep){
+			if(InSquad() && IsLeader() && !m_fAsleep && gpGlobals->time >= leaderLookCooldown){
 				//random chance: 30%?
 				if(RANDOM_FLOAT(0, 1) <= 0.18){
 					//this->SetSequenceByName("leaderlook");
+					leaderLookCooldown = gpGlobals->time + LEADERLOOK_COOLDOWN_SETTING;
 					return LookupSequence("leaderlook");
 				}
 			}

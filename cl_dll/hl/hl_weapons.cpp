@@ -94,12 +94,12 @@ static int		num_ents = 0;
 
 
 // The entity we'll use to represent the local client
-static CBasePlayer	player;
+static CBasePlayer player;
 
 // Local version of game .dll global variables ( time, etc. )
-static globalvars_t	Globals; 
+static globalvars_t Globals; 
 
-static CBasePlayerWeapon *g_pWpns[ 32 ];
+static CBasePlayerWeapon* g_pWpns[ 32 ];
 
 float g_flApplyVel = 0.0;
 int   g_irunninggausspred = 0;
@@ -123,7 +123,6 @@ CTripmine g_Tripmine;
 CSqueak g_Snark;
 //MODDD - new
 CChumToadWeapon g_ChumToadWeapon;
-
 
 
 //clientside only variable.
@@ -205,8 +204,6 @@ void HUD_PrepEntity( CBaseEntity *pEntity, CBasePlayer *pWeaponOwner )
 
 
 
-
-
 /*
 =====================
 CBaseEntity :: Killed
@@ -272,8 +269,6 @@ BOOL CBasePlayerWeapon :: DefaultReload( int iClipSize, int iAnim, float fDelay,
 		return TRUE;
 	}
 
-
-	
 
 	m_pPlayer->m_flNextAttack = UTIL_WeaponTimeBase() + fDelay;
 
@@ -367,7 +362,6 @@ BOOL CBasePlayerWeapon :: DefaultDeploy( char *szViewModel, char *szWeaponModel,
 	//m_pPlayer->m_flNextAttack = 0.5;
 	m_pPlayer->m_flNextAttack = fireDelayTime;
 
-	
 	//m_flTimeWeaponIdle = 1.0;
 	m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + deployAnimTime; //used to be "1.0", now depends on optional parameter (defaults to "1.0");
 
@@ -377,14 +371,12 @@ BOOL CBasePlayerWeapon :: DefaultDeploy( char *szViewModel, char *szWeaponModel,
 //Not much difference between this and the server's one (weapons.cpp). Is that ok?
 void CBasePlayerWeapon::DefaultHolster( int iAnim, int skiplocal /* = 0 */, int body, float holsterAnimTime )
 {
-
 	//Do the same things a Holster() call would do since we're effecitvely replacing that.
 	m_fInReload = FALSE; // cancel any reload in progress.
 	reloadBlocker = FALSE;
 	g_irunninggausspred = false;
 
 	
-
 	//HACK - make this a little longer to stop the client from thinking it is done the moment this ends.
 	//       The notice to deploy the next weapon may come a little late.
 	m_pPlayer->m_flNextAttack = UTIL_WeaponTimeBase() + holsterAnimTime + 1;
@@ -398,10 +390,7 @@ void CBasePlayerWeapon::DefaultHolster( int iAnim, int skiplocal /* = 0 */, int 
 	SendWeaponAnim( iAnim );
 
 
-
 }//END OF DefaultHolster
-
-
 
 
 
@@ -455,7 +444,6 @@ void CBasePlayerWeapon::Holster( int skiplocal /* = 0 */ )
 	m_pPlayer->pev->viewmodel = 0; 
 
 
-
 	//For safety, set this to instantly change the weapon.
 	m_pPlayer->m_flNextAttack = 0;
 	
@@ -474,7 +462,6 @@ Animate weapon model
 */
 void CBasePlayerWeapon::SendWeaponAnim( int iAnim, int skiplocal, int body )
 {
-
 	this->m_fireState &= ~128;
 	//gEngfuncs.GetViewModel()->curstate.renderfx &= ~ANIMATEBACKWARDS;
 	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(viewModelPrintouts)==1)easyForcePrintLine("SendWeaponAnim %d", iAnim);

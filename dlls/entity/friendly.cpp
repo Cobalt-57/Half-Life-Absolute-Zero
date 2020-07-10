@@ -1327,9 +1327,9 @@ void CFriendly::CustomTouch( CBaseEntity *pOther ){
 
 void CFriendly::MonsterThink( void ){
 
-	//easyForcePrintLine("AM I A BLIND MOTHAhey %d", HasConditions(bits_COND_SEE_ENEMY));
+	//easyForcePrintLine("AM I A %d", HasConditions(bits_COND_SEE_ENEMY));
 
-	static int cumulativeShit = 0;
+	static int cumulativeThing = 0;
 
 	/*
 	//horrorSelected means, has the player picked me to make noise yet?
@@ -1374,13 +1374,10 @@ void CFriendly::MonsterThink( void ){
 	}
 	*/
 
-
-
 	BOOL okayForNormalThink = (!rapidVomitCheck || gpGlobals->time >= nextNormalThinkTime);
 
 	
 	if(pev->deadflag == DEAD_NO ){
-
 		if(
 		pev->frame >= (28.1f/47.0f)*255 && 
 		pev->frame <= (43.6f/47.0f)*255 &&
@@ -1393,8 +1390,6 @@ void CFriendly::MonsterThink( void ){
 				rapidVomitCheck_ScheduleFinish = FALSE;
 				nextNormalThinkTime = 0.01;  //do think logic this time, as it was scheduled this frame. We weren't in rapidVomitCheck mode before.
 			}
-
-
 
 			//copy of CheckTraceHullAttack for here.
 			//CBaseEntity *pHurt = CheckTraceHullAttack( 60, gSkillData.zombieDmgOneSlash, DMG_SLASH );
@@ -1434,15 +1429,10 @@ void CFriendly::MonsterThink( void ){
 
 
 					if(pEntity->pev->flags & (FL_MONSTER|FL_CLIENT)){
-
-						//easyForcePrintLine("EEWHAT A %.2f", pev->armorvalue);
-
-
 						//What is wrong with this? Who knows.
-						//
-
-						cumulativeShit++;
-						//easyForcePrintLine("TIMES LOOKED: %d", cumulativeShit);
+						
+						cumulativeThing++;
+						//easyForcePrintLine("TIMES LOOKED: %d", cumulativeThing);
 						if(g_iSkillLevel <= SKILL_EASY){
 							pEntity->pev->armorvalue = max(pEntity->pev->armorvalue - 3.6, 0);
 						}else if(g_iSkillLevel == SKILL_MEDIUM){
@@ -1451,28 +1441,17 @@ void CFriendly::MonsterThink( void ){
 							pEntity->pev->armorvalue = max(pEntity->pev->armorvalue - 5.9, 0);
 						}
 
-
 						//attemptAddToShieldSapList();
-
-						//easyForcePrintLine("EEWHAT B %.2f", pev->armorvalue);
-						
 						if(gpGlobals->time >= nextVomitHitSoundAllowed){
 							//delay required so it doesn't spam.
 							VomitHitSound( ENT( pEntity->pev ) );
 							nextVomitHitSoundAllowed = gpGlobals->time + 0.2;
-							
-							//easyForcePrintLine("I PLAY!");
 						}
-
-
 					}//END OF player check. Should we play another sound for the vomit hitting something else without touching shields?
 					else{
 
 						if(gpGlobals->time >= nextVomitHitSoundAllowed){
-							
-
 							//???
-
 						}
 					}
 				}//no damage requirement, whatever.
@@ -1495,8 +1474,6 @@ void CFriendly::MonsterThink( void ){
 			rapidVomitCheck_ScheduleFinish = TRUE;
 		}
 	}
-
-
 
 	if (okayForNormalThink) {
 
@@ -1528,8 +1505,6 @@ void CFriendly::MonsterThink( void ){
 			}
 		}
 
-
-
 		if(pev->deadflag == DEAD_NO ){
 
 			if(m_pSchedule == slFriendlySeekCorpse || m_pSchedule == slFriendlySeekPlayerCorpse){
@@ -1545,7 +1520,6 @@ void CFriendly::MonsterThink( void ){
 					TaskFail();
 				}
 			}
-
 
 			if(pev->sequence == ::FRIENDLY_VOMIT){
 
@@ -1605,7 +1579,7 @@ void CFriendly::MonsterThink( void ){
 		rapidVomitCheck = FALSE;
 		rapidVomitCheck_ScheduleFinish = FALSE;
 		pev->nextthink = nextNormalThinkTime;
-		cumulativeShit = 0;
+		cumulativeThing = 0;
 	}
 
 	if(rapidVomitCheck){
@@ -2214,7 +2188,7 @@ void CFriendly::ScheduleChange(){
 		rapidVomitCheck = FALSE;
 		rapidVomitCheck_ScheduleFinish = FALSE;
 		pev->nextthink = nextNormalThinkTime;
-		//cumulativeShit = 0;
+		//cumulativeThing = 0;
 	}
 
 

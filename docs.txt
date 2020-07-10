@@ -515,12 +515,6 @@ offsetgivelookvertical - number.  The vertical offset in spawning something with
 
 note that the above CVars only affect givedist & givelook respectively.
 
-wpn_glocksilencer - number, MODEVAR, 0, 1, 2.  Regardless, now right-clicking does not rapid-fire (does nothing if "wpn_glocksilencer" is off).  If this CVar is on, right-clicking initiates the silencer-toggle animation (attach or detach).
-~wpn_glocksilencer can also be "2" to force silencer availability at all times (will be indifferent of having picked up a pick-up yet or not).
- 
-hud_logo - number, boolean.  If on, shows a logo similar (possibly identical) to that shown in some alpha / e3 (not sure) demos.  This feature was present in the game files all along, but I could not find a way to turn it on.  Connected logo visibility to the cvar.
-hud_brokentrans - number, boolean.  Meant to emulate the broken transparency effect seen in some alphas / e3's (the faded-black appearing in front of most rendered GUI text and graphics, likely in front because it makes the numbers themselves darker than the primary colors present in retail otherwise).  Unfortunately, the closer to black a color becomes, the more transparent (up to invisible) it becomes, so the best I could get was a faded light-gray.
-
 
 hideFP, hideAll, hideMyShit - sets drawViewModel to 0 and drawHUD to -1 (crosshair block too). Effectively hides all drawn graphics, good for screenshots.
 
@@ -688,6 +682,9 @@ superman - sets normalSpeedMulti and jumpForceMulti to 3.  Sets noclipSpeedMulti
 normalman - sets normalSpeedMulti and jumpForceMulti to 1, noclipSpeedMulti to 2.5.
 
 revive, getup, risefromthegrave, suprisemotherfucker, alyxisnaked, myparentsarenthome - respawn the player in place, even without antidotes. If the player is not dead, aim at a dead monster (NPC) to revive it instead through playing its death animation backwards. Requires cheats.
+
+reviveall, thriller - like revive, but works for all ever once-living corpses on the map!
+~pre-placed dead map ones (monster_scientist_dead, etc.) lack the logic to revive
 
 god2 (also go) - same as "god".  Invulnerable to damage (battery is not).
 noclip2 (also nocli) - same as "noclip".  Collision free flying, use "NoclipSpeedMulti" to increase the speed of noclip.
@@ -1723,8 +1720,3 @@ HELPFUL BUILT-IN CVARS:
 
 r_drawentities (1) - int; can draw models differently to emphasize hitboxes with numbers other than 1.
  
- 
- 
-
-~Contact:   blue24ser@yahoo.com
-	    blue24 on steam.

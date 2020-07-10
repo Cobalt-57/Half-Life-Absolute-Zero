@@ -70,12 +70,7 @@ extern BOOL globalPSEUDO_germanModel_hassaultFound;
 
 
 
-
-
-
-
 #define HASSAULT_SENTENCE_VOLUME (float)0.46
-
 
 
 
@@ -96,8 +91,6 @@ extern BOOL globalPSEUDO_germanModel_hassaultFound;
 		LINK_ENTITY_TO_CLASS( monster_hassault, CHAssault );
 		LINK_ENTITY_TO_CLASS( hassault, CHAssault );
 	#endif
-	
-	//no extras.
 #endif
 
 
@@ -159,11 +152,10 @@ enum
 };
 
 
-
 Task_t	tlHAssaultFireOver[] =
 {
 	{ TASK_STOP_MOVING,			0				},
-	{ TASK_SET_SCHEDULE,			(float)SCHED_HASSAULT_RESIDUAL_FIRE	},
+	{ TASK_SET_SCHEDULE,		(float)SCHED_HASSAULT_RESIDUAL_FIRE	},
 	/*
 	{ TASK_SET_ACTIVITY,		(float)ACT_IDLE },
 	{ TASK_WAIT,				(float)0.2		},
@@ -182,14 +174,14 @@ Schedule_t	slHAssaultFireOver[] =
 	},
 };
 
-
-
 Task_t	tlHAssaultGenericFail[] =
 {
 	{ TASK_STOP_MOVING,			0				},
 	//{ TASK_SET_ACTIVITY,		(float)ACT_IDLE },
 	{ TASK_WAIT,				(float)0.2		},
 	{ TASK_WAIT_PVS,			(float)0		},
+	// is that a good idea?
+	{ TASK_SET_SCHEDULE,			(float)SCHED_TAKE_COVER_FROM_ORIGIN },
 };
 
 Schedule_t	slHAssaultGenericFail[] =
@@ -650,6 +642,15 @@ IMPLEMENT_CUSTOM_SCHEDULES( CHAssault, CSquadMonster );
 
 
 
+const char* CHAssault::pIdleSounds[] =
+{
+	"hgrunt/gr_radio1.wav",
+	"hgrunt/gr_radio2.wav",
+	"hgrunt/gr_radio3.wav",
+	"hgrunt/gr_radio4.wav",
+	"hgrunt/gr_radio5.wav",
+	"hgrunt/gr_radio6.wav",
+};
 
 const char *CHAssault::pAttackHitSounds[] = 
 {
@@ -687,10 +688,13 @@ const char *CHAssault::pIdleSounds[] =
 };
 */
 
+
+/*
 const char *CHAssault::pAlertSounds[] = 
 {
 	"hassault/hw_alert.wav",
 };
+*/
 
 const char *CHAssault::pPainSounds[] = 
 {
@@ -925,12 +929,16 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CHAssault)
 	// HACK HACK -- until we fix this.
 	//if ( IsAlive() )
 	//MODDD - only play pain sounds if completely alive (not in the dying animation either)
-	if(pev->deadflag == DEAD_NO){
-		PainSound();
+	
+	//return 1;
+	int eck = GENERATE_TAKEDAMAGE_PARENT_CALL(CSquadMonster);
+
+	if (HasConditions(bits_COND_HEAVY_DAMAGE)) {
+		int pitch = randomValueInt(m_voicePitch - 3, m_voicePitch + 5);
+		EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "hgrunt/gr_cover2.wav", 1.0, ATTN_NORM - 0.5, 0, pitch);
 	}
 
-	//return 1;
-	return GENERATE_TAKEDAMAGE_PARENT_CALL(CSquadMonster);
+	return eck;
 }
 
 void CHAssault :: PainSound( void )
@@ -953,7 +961,20 @@ void CHAssault :: AlertSound( void )
 	//int pitch = 95 + RANDOM_LONG(0,9);
 	int pitch = randomValueInt(m_voicePitch - 0, m_voicePitch + 7);
 
-	EMIT_SOUND_FILTERED ( ENT(pev), CHAN_VOICE, pAlertSounds[ RANDOM_LONG(0,ARRAYSIZE(pAlertSounds)-1) ], 1.0, ATTN_NORM-0.2, 0, pitch );
+	if (InSquad()) {
+		if (RANDOM_FLOAT(0, 1) <= 0.6) {
+			EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "hgrunt/gr_squadform.wav", 1.0, ATTN_NORM - 0.23, 0, pitch);
+		}
+		else {
+			//same as usual
+			SENTENCEG_PlayRndSz(ENT(pev), "HG_ALERT", 1, ATTN_NORM - 0.23, 0, pitch);
+			//EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, pAlertSounds[RANDOM_LONG(0, ARRAYSIZE(pAlertSounds) - 1)], 1.0, ATTN_NORM - 0.2, 0, pitch);
+		}
+	}
+	else {
+		SENTENCEG_PlayRndSz(ENT(pev), "HG_ALERT", 1, ATTN_NORM - 0.23, 0, pitch);
+		//EMIT_SOUND_FILTERED ( ENT(pev), CHAN_VOICE, pAlertSounds[ RANDOM_LONG(0,ARRAYSIZE(pAlertSounds)-1) ], 1.0, ATTN_NORM-0.2, 0, pitch );
+	}
 }
 
 void CHAssault :: IdleSound( void )
@@ -965,8 +986,11 @@ void CHAssault :: IdleSound( void )
 	//...if we add different direct sounds, can randomly choose between this and the HG_IDLE sentence.
 	//EMIT_SOUND_FILTERED ( ENT(pev), CHAN_VOICE, pIdleSounds[ RANDOM_LONG(0,ARRAYSIZE(pIdleSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
 
+	//mODDD - this instead??  depend on being in a squad? I don't know.
+	//SENTENCEG_PlayRndSz(ENT(pev), "HG_IDLE", HASSAULT_SENTENCE_VOLUME, ATTN_NORM, 0, pitch);
 	
-	SENTENCEG_PlayRndSz(ENT(pev), "HG_IDLE", HASSAULT_SENTENCE_VOLUME, ATTN_NORM, 0, pitch);
+	// also less attenuation, go further.
+	EMIT_SOUND_FILTERED(ENT(pev), CHAN_WEAPON, pIdleSounds[RANDOM_LONG(0, ARRAYSIZE(pIdleSounds) - 1)], 1.0, ATTN_NORM - 0.21, 0, 100 + RANDOM_LONG(-8, 8));
 
 }
 
@@ -1265,11 +1289,22 @@ void CHAssault :: Precache()
 	PRECACHE_SOUND("hgrunt/gr_die3.wav");
 
 
+	PRECACHE_SOUND("hgrunt/gr_squadform.wav");
+	PRECACHE_SOUND("hgrunt/gr_cover2.wav");
+	
+
+
+
 	//already covered in "pAttackMissSounds".  Check it.
 	//PRECACHE_SOUND("zombie/claw_miss2.wav");// because we use the basemonster SWIPE animation event
 
 	//zombie strike's precached by the hgrunt already.
 	//precacheStandardMeleeAttackMissSounds(); //MODDD - lazy lazy.
+
+
+	
+	for (i = 0; i < ARRAYSIZE(pIdleSounds); i++)
+		PRECACHE_SOUND((char*)pIdleSounds[i]);
 
 	for ( i = 0; i < ARRAYSIZE( pAttackHitSounds ); i++ )
 		PRECACHE_SOUND((char *)pAttackHitSounds[i]);
@@ -1286,8 +1321,8 @@ void CHAssault :: Precache()
 
 
 
-	for ( i = 0; i < ARRAYSIZE( pAlertSounds ); i++ )
-		PRECACHE_SOUND((char *)pAlertSounds[i]);
+	//for ( i = 0; i < ARRAYSIZE( pAlertSounds ); i++ )
+	//	PRECACHE_SOUND((char *)pAlertSounds[i]);
 
 	for ( i = 0; i < ARRAYSIZE( pPainSounds ); i++ )
 		PRECACHE_SOUND((char *)pPainSounds[i]);
@@ -1646,9 +1681,28 @@ void CHAssault::SetActivity(Activity NewActivity){
 		//return;
 	}
 
-	
+	int pitch = randomValueInt(m_voicePitch - 1, m_voicePitch + 6);
+
+	if (NewActivity == ACT_SIGNAL1 || NewActivity == ACT_SIGNAL3) {
+		//play the sound with it
+		EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "hgrunt/gr_squadform.wav", 1.0, ATTN_NORM - 0.23, 0, pitch);
+	}
+	else if (NewActivity == ACT_SIGNAL2) {   //flank_signal"
+		//require a 60% chance
+		if (RANDOM_FLOAT(0, 1) <= 0.6) {
+			EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "hgrunt/gr_squadform.wav", 1.0, ATTN_NORM - 0.23, 0, pitch);
+		}
+		else if(RANDOM_FLOAT(0, 1) <= 0.8) {
+			//same as usual
+			SENTENCEG_PlayRndSz(ENT(pev), "HG_ALERT", 1, ATTN_NORM - 0.23, 0, pitch);
+			//EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, pAlertSounds[RANDOM_LONG(0, ARRAYSIZE(pAlertSounds) - 1)], 1.0, ATTN_NORM - 0.2, 0, pitch);
+		}
+	}
+
 	EASY_CVAR_PRINTIF_PRE(hassaultPrintout, easyPrintLine( "HASS ACTIVITY: %d", NewActivity));
 	CSquadMonster::SetActivity(NewActivity);
+
+	int ass = 45;
 }
 
 
@@ -1665,7 +1719,6 @@ BOOL CHAssault :: FCanCheckAttacks ( void )
 	{
 		return TRUE;
 	}
-
 	return FALSE;
 }
 
@@ -1786,12 +1839,10 @@ BOOL CHAssault :: CheckRangeAttack1 ( float flDot, float flDist )
 		return FALSE;
 }
 
-
 BOOL CHAssault :: CheckRangeAttack2 ( float flDot, float flDist )
 {
 	return FALSE;
 }
-
 
 
 //ripped from HGrunt
@@ -1842,16 +1893,13 @@ BOOL CHAssault::CheckMeleeAttack1(float flDot, float flDist){
 }
 
 
-
 void CHAssault::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, float flInterval )
 {
 	if(firing){
 		return;
 	}
-
 	CSquadMonster::MoveExecute(pTargetEnt, vecDir, flInterval);
 }
-
 
 
 void CHAssault::ReportAIState( void )
@@ -1869,7 +1917,6 @@ void CHAssault::ReportAIState( void )
 // start task
 //=========================================================
 void CHAssault :: StartTask ( Task_t *pTask ){
-	
 	TraceResult tr;
 	Vector vecEnd;
 
@@ -1883,8 +1930,6 @@ void CHAssault :: StartTask ( Task_t *pTask ){
 	case TASK_MELEE_ATTACK1:
 		//MODDD SEE
 		meleeAttackTimeMax = gpGlobals->time + ((76.0f - 23.0f)/30.0f);
-
-
 		/*
 		if(m_IdealActivity == ACT_MELEE_ATTACK1){
 			//pev->frame = 0;
@@ -2021,7 +2066,6 @@ void CHAssault :: StartTask ( Task_t *pTask ){
 
 BOOL CHAssault :: FValidateCover ( const Vector &vecCoverLocation )
 {
-	/*
 	if ( !InSquad() )
 	{
 		return TRUE;
@@ -2032,9 +2076,9 @@ BOOL CHAssault :: FValidateCover ( const Vector &vecCoverLocation )
 		return FALSE;
 	}
 	return TRUE;
-	*/
+	
 	//far too badass for cover.
-	return FALSE;
+	//return FALSE;
 }
 
 
@@ -2621,13 +2665,13 @@ Schedule_t* CHAssault::GetSchedule(){
 						//if ( HasConditions ( bits_COND_CAN_RANGE_ATTACK1 ) )
 						if ( m_hEnemy != NULL && !HasConditions ( bits_COND_ENEMY_OCCLUDED ) && gpGlobals->time > signal2Cooldown )
 						{
-							//don't do this signal again too often.
+							// don't do this signal again too often.
 							signal2Cooldown = gpGlobals->time + 10;
 							return GetScheduleOfType ( SCHED_HASSAULT_SUPPRESS );
 						}
 						else
 						{
-							//just let the usual schedule play out.   SCHED_CHASE_ENEMY?
+							// just let the usual schedule play out.   SCHED_CHASE_ENEMY?
 							//return GetScheduleOfType ( SCHED_GRUNT_ESTABLISH_LINE_OF_FIRE );
 						}
 					}
@@ -2789,7 +2833,7 @@ Schedule_t* CHAssault::GetSchedule(){
 
 					// WAIT!  If you can see the enemy, why the hell aren't you looking?
 					// this space already implies we can see the enemy, just not looking directly at em' I guess.
-					if (!HasConditions(bits_COND_ENEMY_OCCLUDED) && !HasConditions(bits_COND_CAN_RANGE_ATTACK1) && (pev->origin - m_hEnemy->pev->origin).Length() < m_flDistTooFar){
+					if (!FacingIdeal() && !HasConditions(bits_COND_ENEMY_OCCLUDED) && !HasConditions(bits_COND_CAN_RANGE_ATTACK1) && (pev->origin - m_hEnemy->pev->origin).Length() < m_flDistTooFar){
 						// look at them!
 						return GetScheduleOfType(SCHED_COMBAT_FACE);
 					}else if(waittime == -1){
@@ -2991,11 +3035,9 @@ GENERATE_KILLED_IMPLEMENTATION(CHAssault){
 }
 
 
-
 Vector giveZ(const Vector2D& arg, const float& myZ){
 	return Vector(arg.x, arg.y, myZ);
 }
-
 
 
 void CHAssault :: MonsterThink ( void )
@@ -3172,8 +3214,6 @@ void CHAssault :: MonsterThink ( void )
 			//}
 		}
 	}//END OF ACT_IDLE check
-	
-
 
 	if(waittime != -1 && waittime <= gpGlobals->time){
 		waittime = -1;
@@ -3186,11 +3226,9 @@ void CHAssault :: MonsterThink ( void )
 		if(spinuptimeremain <= gpGlobals->time || m_pSchedule == slDie){
 				//we're bored.  Play unspin.   Know this means we can try to scout where the enemy is.
 				STOP_SOUND_FILTERED(ENT(pev), getIdleSpinChannel(), "hassault/hw_spin.wav");
-				
 				EMIT_SOUND_FILTERED( ENT(pev), getSpinUpDownChannel(), "hassault/hw_spindown.wav", 1, ATTN_NORM, 0, 100 );
 				spinuptimeremain = -1;
 				spinuptime = -1;
-
 				
 				//...apparently we are sticking to calling this ACT_WALK now.
 				if(m_IdealActivity == ACT_WALK){
@@ -3200,8 +3238,6 @@ void CHAssault :: MonsterThink ( void )
 						SetActivity(ACT_WALK); //keep it as ACT_WALK regardless or else we'll get hell pretty soon.
 					}
 				}
-
-
 		}else{
 			//if in the middle of spinning up, forget about the idle spinning.
 			if(spinuptimeIdleSoundDelay == -1 || spinuptimeIdleSoundDelay <= gpGlobals->time && EASY_CVAR_GET(hassaultFireSound) != 3){
@@ -3231,16 +3267,12 @@ void CHAssault :: MonsterThink ( void )
 							EMIT_SOUND_FILTERED(ENT(pev), getIdleSpinChannel(), "hassault/hw_spin.wav", 1, ATTN_NORM, 0, 100 );
 						}
 					}
-
 				}else if(EASY_CVAR_GET(hassaultIdleSpinSound) == 4){
 					if(chainFireSoundDelay <= gpGlobals->time){
 						EMIT_SOUND_FILTERED(ENT(pev), getIdleSpinChannel(), "hassault/hw_spin.wav", 1, ATTN_NORM, 0, 100 );
 					}
-					
 				}
-				
 			}
-
 		}
 	}else{
 		attemptStopIdleSpinSound(TRUE);
@@ -3249,14 +3281,10 @@ void CHAssault :: MonsterThink ( void )
 	if(spinuptimeremain <= gpGlobals->time){
 		//hw_gun4.wav?
 	}
-	
-
 
 	CSquadMonster::MonsterThink();
-
 	//easyForcePrintLine("HASSAULT%d seq:%d fra:%.2f", monsterID, pev->sequence, pev->frame);
 }
-
 
 
 int CHAssault :: SquadRecruit( int searchRadius, int maxMembers ){
@@ -3264,16 +3292,11 @@ int CHAssault :: SquadRecruit( int searchRadius, int maxMembers ){
 }
 
 
-
-
 BOOL CHAssault::usesAdvancedAnimSystem(void){
 	return TRUE;
 }
 
-
 int CHAssault::LookupActivityHard(int activity){
-	
-
 	pev->framerate = 1;
 	resetEventQueue();
 
@@ -3284,20 +3307,13 @@ int CHAssault::LookupActivityHard(int activity){
 	return LookupSequence("get_bug");
 	*/
 
-
 	EASY_CVAR_PRINTIF_PRE(hassaultPrintout, easyPrintLine( "SMOOTH AS %d %d %d", HasConditions(bits_COND_CAN_MELEE_ATTACK1), m_Activity, m_IdealActivity ));
-
 	int iRandChoice = 0;
 	int iRandWeightChoice = 0;
-	
 	char* animChoiceString = NULL;
 	int* weightsAbs = NULL;
-			
 	//pev->framerate = 1;
 	int maxRandWeight = 30;
-
-
-
 	int iSelectedActivity = activity;  //by default the same. Change to affect what animation is picked below.
 
 	//easyForcePrintLine("OH wow son!!! %d %.2f %.2f", m_IdealActivity, spinuptimeremain, gpGlobals->time);
@@ -3320,15 +3336,10 @@ int CHAssault::LookupActivityHard(int activity){
 	}
 	*/
 
-
-
 	BOOL stillSpinning = (spinuptimeremain != -1 && gpGlobals->time <= spinuptimeremain);
-	
 
 	//still spinning and unable to walk? Don't.
 	if(iSelectedActivity == ACT_WALK){
-
-
 		if(stillSpinning){
 			//Let the hassaultSpinMovement tell us which movement anim to use.
 			switch( (int)EASY_CVAR_GET(hassaultSpinMovement) ){
@@ -3352,9 +3363,7 @@ int CHAssault::LookupActivityHard(int activity){
 
 	//let's do m_IdealActivity??
 	switch(iSelectedActivity){
-
 		case ACT_IDLE:
-			
 			if(
 				//(waittime != -1 && waittime > gpGlobals->time) &&
 				(
@@ -3374,8 +3383,6 @@ int CHAssault::LookupActivityHard(int activity){
 		break;
 		
 		case ACT_RANGE_ATTACK1:
-			
-
 			if(previousAnimationActivity != ACT_RANGE_ATTACK1){
 				previousAnimationActivity = ACT_RANGE_ATTACK1;
 				//easyForcePrintLine("ILL lets not say that %d %.2f", previousAnimationActivity, gpGlobals->time);
@@ -3401,7 +3408,6 @@ int CHAssault::LookupActivityHard(int activity){
 		break;
 		case ACT_RUN:
 		{
-			
 			if(g_iSkillLevel <= SKILL_EASY){
 				m_flFramerateSuggestion = 0.75;
 			}else if(g_iSkillLevel == SKILL_MEDIUM){
@@ -3434,7 +3440,6 @@ int CHAssault::LookupActivityHard(int activity){
 			break;
 		}
 		case ACT_MELEE_ATTACK1:
-
 			EASY_CVAR_PRINTIF_PRE(hassaultPrintout, easyPrintLine( "YEEE"));
 
 	
@@ -3443,11 +3448,9 @@ int CHAssault::LookupActivityHard(int activity){
 			//?
 			pev->framerate = EASY_CVAR_GET(hassaultMeleeAnimSpeedMulti);
 
-
 			//pev->renderfx |= STOPINTR;
 			//pev->framerate = 1.2;
 			
-
 			/*
 			this->animFrameStartSuggestion = 2;
 			this->animFrameCutoffSuggestion = 230;  //these are out of 255. 255 is 100%, at the end.
@@ -3456,7 +3459,6 @@ int CHAssault::LookupActivityHard(int activity){
 			this->animationFPSSuggestion = 30;
 			//does this even do anything?
 			//this->animationFramesSuggestion = 76;
-
 
 			this->animEventQueuePush(5.0f / 30.0f, 0);
 			this->animEventQueuePush(12.0f / 30.0f, 0);
@@ -3494,14 +3496,12 @@ int CHAssault::LookupActivityHard(int activity){
 	}
 
 	previousAnimationActivity = iSelectedActivity;
-
 	//not handled by above?  try the real deal.
 	return CBaseAnimating::LookupActivity(iSelectedActivity);
 }
 
 
 int CHAssault::tryActivitySubstitute(int activity){
-
 	//no need for default, just falls back to the normal activity lookup.
 	switch(activity){
 		case ACT_RANGE_ATTACK1:
@@ -3536,24 +3536,18 @@ int CHAssault::tryActivitySubstitute(int activity){
 }
 
 
-
 BOOL CHAssault::canResetBlend0(void){
 	return TRUE;
 }
 
-
 //MODDD TODO - check. Does this get constntly called while the anim is frozen? May want to check this out.
 BOOL CHAssault::onResetBlend0(void){
-
-
 	/*
 	//easyForcePrintLine("HOW IT GO   %d", (m_hEnemy!=NULL));
 	if (m_hEnemy == NULL)
 	{
 		return FALSE;
 	}
-
-
 
 	//NOTICE: may be a good idea to do this first.  ShootAtEnemy may use the global forward vector generated by this.
 	UTIL_MakeVectors(pev->angles);
@@ -3574,7 +3568,5 @@ BOOL CHAssault::onResetBlend0(void){
 	AimAtEnemy(vecShootOrigin, vecShootDir);
 	
 	return TRUE;
-
-
 }
 

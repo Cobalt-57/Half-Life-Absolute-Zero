@@ -24,6 +24,7 @@
 // UNDONE: Don't flinch every time you get hit
 
 #include "extdll.h"
+#include "zombie.h"
 #include "util.h"
 #include "cbase.h"
 #include "basemonster.h"
@@ -37,7 +38,7 @@ EASY_CVAR_EXTERN_DEBUGONLY(zombieBulletResistance);
 EASY_CVAR_EXTERN_DEBUGONLY(zombieBulletPushback);
 
 
-extern DLL_GLOBAL int	g_iSkillLevel;
+extern DLL_GLOBAL int g_iSkillLevel;
 
 
 //=========================================================
@@ -47,7 +48,8 @@ extern DLL_GLOBAL int	g_iSkillLevel;
 #define ZOMBIE_AE_ATTACK_LEFT		0x02
 #define ZOMBIE_AE_ATTACK_BOTH		0x03
 
-#define ZOMBIE_FLINCH_DELAY			2		// at most one flinch every n secs
+//MODDD - upped a bit since we have pushback.    maybe.
+#define ZOMBIE_FLINCH_DELAY			3		// at most one flinch every n secs
 
 
 
@@ -62,120 +64,6 @@ extern DLL_GLOBAL int	g_iSkillLevel;
 #define ZOMBIE_EATBODY 29
 
 
-
-class CZombie : public CBaseMonster
-{
-public:
-
-	CZombie();
-	
-	//MODDD
-	CUSTOM_SCHEDULES;
-
-	void Spawn( void );
-	void Precache( void );
-	void SetYawSpeed( void );
-	int  Classify ( void );
-	void HandleAnimEvent( MonsterEvent_t *pEvent );
-	int IgnoreConditions ( void );
-
-	float m_flNextFlinch;
-
-	void PainSound( void );
-	void AlertSound( void );
-	void IdleSound( void );
-	void AttackSound( void );
-
-	//MODDD
-	void SetObjectCollisionBox( void )
-	{
-		if(pev->deadflag != DEAD_NO){
-			pev->absmin = pev->origin + Vector(-68, -68, 0);
-			pev->absmax = pev->origin + Vector(68, 68, 66);
-		}else{
-
-			CBaseMonster::SetObjectCollisionBox();
-
-		}
-	}
-
-
-
-	//MODDD - new new new.
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	void MonsterThink(void);
-	
-	Schedule_t* GetSchedule();
-	Schedule_t* GetScheduleOfType( int Type);
-
-	void StartTask(Task_t* pTask);
-	void RunTask(Task_t* pTask);
-	
-	
-	BOOL getMonsterBlockIdleAutoUpdate(void);
-	BOOL forceIdleFrameReset(void);
-	BOOL usesAdvancedAnimSystem(void);
-
-	void SetActivity ( Activity NewActivity );
-
-	int tryActivitySubstitute(int activity);
-	int LookupActivityHard(int activity);
-
-	void HandleEventQueueEvent(int arg_eventID);
-
-	int CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, CBaseEntity *pTarget, float *pflDist );// check validity of a straight move through space
-
-	int ISoundMask(void);
-	
-	void EXPORT ZombieTouch( CBaseEntity *pOther );
-	
-	CBaseEntity* getNearestDeadBody(Vector argSearchOrigin, float argMaxDist);
-	
-	void ScheduleChange(void);
-
-	void OnCineCleanup(CCineMonster* pOldCine);
-
-
-	Vector BodyTarget( const Vector &posSrc ) {
-		if(m_Activity == ACT_CROUCH || pev->sequence == ZOMBIE_EATBODY){
-			//we're lower, make other things aim lower.
-			//return Center( ) * 0.75 + EyePosition() * 0.25;
-			return Center( ) * 0.5 + EyePosition() * 0.15;
-		}else{
-			//what the base monster does.
-			return CBaseMonster::BodyTarget(posSrc);
-		}
-	};
-	Vector BodyTargetMod( const Vector &posSrc ) {
-		//redirect to our own BodyTarget method for convenience.
-		return CZombie::BodyTarget(posSrc);
-	};
-
-
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	
-	static const char *pAttackSounds[];
-	static const char *pIdleSounds[];
-	static const char *pAlertSounds[];
-	static const char *pPainSounds[];
-	static const char *pAttackHitSounds[];
-	static const char *pAttackMissSounds[];
-
-	// No range attacks
-	BOOL CheckRangeAttack1 ( float flDot, float flDist ) { return FALSE; }
-	BOOL CheckRangeAttack2 ( float flDot, float flDist ) { return FALSE; }
-
-	//MODDD
-	EHANDLE corpseToSeek;
-	EHANDLE m_hEnemy_CopyRef;
-	float lookForCorpseTime;
-	float nextCorpseCheckTime;
-	
-	GENERATE_TRACEATTACK_PROTOTYPE
-	GENERATE_TAKEDAMAGE_PROTOTYPE
-
-};
-
 #if REMOVE_ORIGINAL_NAMES != 1
 	LINK_ENTITY_TO_CLASS( monster_zombie, CZombie );
 #endif
@@ -189,10 +77,45 @@ public:
 
 
 
+const char *CZombie::pAttackHitSounds[] = 
+{
+	"zombie/claw_strike1.wav",
+	"zombie/claw_strike2.wav",
+	"zombie/claw_strike3.wav",
+};
 
+const char *CZombie::pAttackMissSounds[] = 
+{
+	"zombie/claw_miss1.wav",
+	"zombie/claw_miss2.wav",
+};
 
+const char *CZombie::pAttackSounds[] = 
+{
+	"zombie/zo_attack1.wav",
+	"zombie/zo_attack2.wav",
+};
 
+const char *CZombie::pIdleSounds[] = 
+{
+	"zombie/zo_idle1.wav",
+	"zombie/zo_idle2.wav",
+	"zombie/zo_idle3.wav",
+	"zombie/zo_idle4.wav",
+};
 
+const char *CZombie::pAlertSounds[] = 
+{
+	"zombie/zo_alert10.wav",
+	"zombie/zo_alert20.wav",
+	"zombie/zo_alert30.wav",
+};
+
+const char *CZombie::pPainSounds[] = 
+{
+	"zombie/zo_pain1.wav",
+	"zombie/zo_pain2.wav",
+};
 
 
 
@@ -208,8 +131,6 @@ enum{
 	SCHED_ZOMBIE_SEEK_CORPSE_QUICK_FAIL,
 };
 
-
-
 enum{
 	TASK_ZOMBIE_GET_PATH_TO_ENEMY_CORPSE = LAST_COMMON_TASK + 1,
 	TASK_ZOMBIE_MOVE_CLOSER_TO_CORPSE,
@@ -220,11 +141,6 @@ enum{
 	TASK_FORGET_CORPSE,
 	TASK_CHECK_GETUP_SEQUENCE,
 };
-
-
-
-		
-
 
 //cloned from slAGruntVictoryDance
 Task_t tlZombieMoveToCorpse[] =
@@ -260,7 +176,6 @@ Schedule_t slZombieMoveToCorpse[] =
 		"ZombieMoveToCorpse"
 	},
 };
-
 
 
 Task_t tlZombieVictoryDance[] =
@@ -301,9 +216,6 @@ Schedule_t slZombieVictoryDance[] =
 
 
 
-
-
-
 Task_t tlZombieVictoryDanceValid[] =
 {
 	//if this fails, wait longer than usual.
@@ -327,7 +239,6 @@ Schedule_t slZombieVictoryDanceValid[] =
 		"ZombieVictoryDanceValid"
 	},
 };
-
 
 
 Task_t	tlZombieSeekCorpseEarlyFail[] =
@@ -382,7 +293,6 @@ Schedule_t	slZombieSeekCorpseQuickFail[] =
 };
 
 
-
 DEFINE_CUSTOM_SCHEDULES( CZombie )
 {
 	slZombieMoveToCorpse,
@@ -395,68 +305,6 @@ DEFINE_CUSTOM_SCHEDULES( CZombie )
 IMPLEMENT_CUSTOM_SCHEDULES( CZombie, CBaseMonster );
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-const char *CZombie::pAttackHitSounds[] = 
-{
-	"zombie/claw_strike1.wav",
-	"zombie/claw_strike2.wav",
-	"zombie/claw_strike3.wav",
-};
-
-const char *CZombie::pAttackMissSounds[] = 
-{
-	"zombie/claw_miss1.wav",
-	"zombie/claw_miss2.wav",
-};
-
-const char *CZombie::pAttackSounds[] = 
-{
-	"zombie/zo_attack1.wav",
-	"zombie/zo_attack2.wav",
-};
-
-const char *CZombie::pIdleSounds[] = 
-{
-	"zombie/zo_idle1.wav",
-	"zombie/zo_idle2.wav",
-	"zombie/zo_idle3.wav",
-	"zombie/zo_idle4.wav",
-};
-
-const char *CZombie::pAlertSounds[] = 
-{
-	"zombie/zo_alert10.wav",
-	"zombie/zo_alert20.wav",
-	"zombie/zo_alert30.wav",
-};
-
-const char *CZombie::pPainSounds[] = 
-{
-	"zombie/zo_pain1.wav",
-	"zombie/zo_pain2.wav",
-};
 
 //=========================================================
 // Classify - indicates this monster's place in the 
@@ -487,71 +335,232 @@ void CZombie :: SetYawSpeed ( void )
 }
 
 
-
 GENERATE_TRACEATTACK_IMPLEMENTATION(CZombie)
 {
 	GENERATE_TRACEATTACK_PARENT_CALL(CBaseMonster);
 }
 GENERATE_TAKEDAMAGE_IMPLEMENTATION(CZombie)
 {
-	
+	// damagetype checks moved to TraceAttack to check each time damage is taken before it is all applied at once (calls TakeDamage here).
+	if(
+		flPushbackForceDamage > 0 &&
+		EASY_CVAR_GET(zombieBulletPushback) != 0 &&
+		m_MonsterState != MONSTERSTATE_SCRIPT &&
+		pev->movetype != MOVETYPE_FLY &&
+		IsAlive_FromAI(NULL)  //counts being into the DEAD_DYING deadflag somewhat
+	){
+		// ALSO - require the inflictor to be a monster.
+		// This disallows projectiles like crossbowbolts from counting as bullet damage (as the also use DMG_BULLET).
+		// Could always make some "IsProjectile" method for entities that anything but grenades/bolts return FALSE to.
+		CBaseEntity* pInflictor = CBaseEntity::Instance(pevInflictor);
+		if (pInflictor && pInflictor->GetMonsterPointer()!=NULL ) {
+			Vector vecDir = (Center() - pInflictor->Center()).Normalize();
 
-	if (this->m_MonsterState != MONSTERSTATE_SCRIPT && pev->movetype != MOVETYPE_FLY && pev->deadflag == DEAD_NO && ((EASY_CVAR_GET(zombieBulletPushback) != 0 && bitsDamageType & DMG_BULLET)) ){ //|| bitsDamageType == DMG_BULLET) ){
-		
-		
-		//Vector vecDir = pev->origin - (pevInflictor->absmin + pevInflictor->absmax) * 0.5;
-		//vecDir = vecDir.Normalize();
+			// some bonus to give smaller attacks more impact.
+			flPushbackForceDamage *= 1.27;
 
-		
-		CBaseEntity *pInflictor = CBaseEntity :: Instance( pevInflictor );
-		if (pInflictor){
-			Vector vecDir = ( pInflictor->Center() - Vector ( 0, 0, 10 ) - Center() ).Normalize();
-			vecDir = g_vecAttackDir = vecDir.Normalize();
 
-			//Actually check skill.cfg (sk_zombie_bulletpushback) for how intense the pushback is per difficulty.
-			pev->velocity = pev->velocity + vecDir * (-DamageForce( flDamage ) * gSkillData.zombieBulletPushback);
+			if (pev->deadflag == DEAD_NO) {
 
-			if(pev->flags & FL_ONGROUND){
-				::UTIL_SetOrigin(pev, Vector(pev->origin.x, pev->origin.y, pev->origin.z + 0.3));
+				if (flPushbackForceDamage <= 12) {
+					// no change needed.
+				}
+				else {
+					// Amounts over that much become decreasinlgly less
+					flPushbackForceDamage = 11 + pow(flPushbackForceDamage - 11, 0.84);
+				}
+			}else{
+				// And why is this force amplified so much otherwise while in DEAD_DYING?  No idea.
+				// Offset that with this.  And remember, the movetype is still MOVETYPE_STEP.
+				//    just.     weird.
+				flPushbackForceDamage *= 0.006;
+			}
+
+
+			// Actually check skill.cfg (sk_zombie_bulletpushback) for how intense the pushback is per difficulty.
+			pev->velocity = pev->velocity + vecDir * (DamageForce(flPushbackForceDamage) * gSkillData.zombieBulletPushback);
+
+			if (pev->flags & FL_ONGROUND) {
+				::UTIL_SetOrigin(pev, Vector(pev->origin.x, pev->origin.y, pev->origin.z + 0.4));
 				pev->flags &= ~FL_ONGROUND;  //is this ok?
-
-				//NOTE - this is required for effectively getting pushed beyon what looks kinda static and glitchy now.
-				//But it would be best to return the movetype to MOVETYPE_STEP on touching the ground again.
-				//Unknown if being permanently set to MOVETYPE_TOSS would be an issue.
+				pev->groundentity = NULL;
+				// NOTE - not worth setting the movetype to MOVETYPE_TOSS.  The change does not even arrive in time to stop
+				// the weird glitchy 'teleport' effect from bad interpolation in studioModelRenderer.cpp, which has been
+				// fixed separately anyway.  Even letting that script refer to MOVETYPE_TOSS as well as MOVETYPE_STEP does not
+				// give its benefits for TOSS strangely.  Point is, not in the air long enough to benefit from TOSS and we just
+				// lose the interpolation benefit (non-choppy movement between 0.1 second minimum think and client/server response
+				// times).
 				//pev->movetype = MOVETYPE_TOSS;
+			}
+		}
+	}//END OF bullet pushback check
+	
+	// applied, maybe. Wipe it.
+	flPushbackForceDamage = 0;
+
+	//MODDD - as-is script removed.  But why was it ever here?  CBaseMonster's TakeDamage already calls PainSound.
+	// CController also had this line.
+	// HACK HACK -- until we fix this.
+	//if ( IsAlive() )
+	//	PainSound();
+
+	return GENERATE_TAKEDAMAGE_PARENT_CALL(CBaseMonster);
+}
+
+
+//pev->deadflag == DEAD_DEAD
+
+
+//MODDD - NEW.
+// Let's reward head damage a little more.  It is the headcrab itself after all.
+// Mod of CBaseMonster::hitgroupDamage, so calling the parent is not necessary.
+float CZombie::hitgroupDamage(float flDamage, int bitsDamageType, int bitsDamageTypeMod, int iHitgroup) {
+
+	// Allow bullet damage, but not from the gauss (also has DMG_BULLET), to contribute.
+	// CHANGE, we're counting the gauss again.
+	//BOOL dmgIsPureBullet = (bitsDamageType & DMG_BULLET && !(bitsDamageTypeMod & DMG_GAUSS));
+	BOOL dmgIsPureBullet = (bitsDamageType & DMG_BULLET);
+	float finalDamage;
+
+	// ALSO - keep track of the damage dealt before adjusting for hitgroup.
+	// And ADD IT UP.  We'll assume it applies the next time TakeDamage is called,
+	// otherwise a full shotgun blast only does the pushback of one shell hitting. Not too exciting.
+
+	// flPushbackForceDamage is for determining how much damage will affect knockback.
+	if (dmgIsPureBullet) {
+		flPushbackForceDamage += flDamage;
+	}
+
+	if (!(bitsDamageTypeMod & DMG_HITBOX_EQUAL)) {
+		// And, have some damage penalties for any groups but the head, BUT not for melee.
+		// Melee is hard enough as it is.
+		if (bitsDamageType & (DMG_SLASH | DMG_CLUB)) {
+			// MELEE
+			switch (iHitgroup)
+			{
+			case HITGROUP_GENERIC:
+				finalDamage = flDamage;
+			break;
+			case HITGROUP_HEAD:
+				if (g_iSkillLevel == SKILL_HARD) {
+					// less help.
+					finalDamage = flDamage * gSkillData.monHead * 1.2;
+				}else {
+					finalDamage = flDamage * gSkillData.monHead * 1.3;
+				}
+			break;
+			case HITGROUP_CHEST:
+				finalDamage = flDamage * gSkillData.monChest * 1.00;
+			break;
+			case HITGROUP_STOMACH:
+				finalDamage = flDamage * gSkillData.monStomach * 1.00;
+			break;
+			case HITGROUP_LEFTARM:
+			case HITGROUP_RIGHTARM:
+				finalDamage = flDamage * gSkillData.monArm * 1.00;
+			break;
+			case HITGROUP_LEFTLEG:
+			case HITGROUP_RIGHTLEG:
+				finalDamage = flDamage * gSkillData.monLeg * 1.00;
+			break;
+			default:
+				finalDamage = flDamage;
+			break;
 			}
 
 		}
+		else {
+			// RANGED
+			switch (iHitgroup)
+			{
+			case HITGROUP_GENERIC:
+				finalDamage = flDamage;
+			break;
+			case HITGROUP_HEAD:
+				if (g_iSkillLevel == SKILL_HARD) {
+					// less help.
+					finalDamage = flDamage * gSkillData.monHead * 1.2;
+				}else {
+					finalDamage = flDamage * gSkillData.monHead * 1.3;
+				}
+			break;
+			case HITGROUP_CHEST:
+				finalDamage = flDamage * gSkillData.monChest * 0.95;
+			break;
+			case HITGROUP_STOMACH:
+				finalDamage = flDamage * gSkillData.monStomach * 0.95;
+			break;
+			case HITGROUP_LEFTARM:
+			case HITGROUP_RIGHTARM:
+				finalDamage = flDamage * gSkillData.monArm * 0.88;
+			break;
+			case HITGROUP_LEFTLEG:
+			case HITGROUP_RIGHTLEG:
+				finalDamage = flDamage * gSkillData.monLeg * 0.88;
+			break;
+			default:
+				finalDamage = flDamage;
+			break;
+			}
 
-
-		//float flForce = DamageForce( flDamage ) * EASY_CVAR_GET(zombieBulletPushback);
-		//pev->velocity = pev->velocity + vecDir * flForce;
-
-	}//END OF bullet pushback check
-
-
+		}// END OF bitsDamageType check
+	}//END OF bitsDamageTypeMod check
+	else {
+		// DMG_HITBOX_EQUAL?  No hitbox influence.
+		finalDamage = flDamage;
+	}
 
 
 	//MODDD - (comment below found as-is)
 	// Take 30% damage from bullets
-	if ( (EASY_CVAR_GET(zombieBulletResistance) == 1 && bitsDamageType & DMG_BULLET)) //|| bitsDamageType == DMG_BULLET )
+	if(EASY_CVAR_GET(zombieBulletResistance) == 1 && (dmgIsPureBullet))
 	{
 		//flDamage *= 0.3;
-		
-		//old way.
-		//flDamage *= (1 - EASY_CVAR_GET(zombieBulletResistance));
 
-		//Now, use a skill-related value (difficulty).
-		//easyPrintLine("ZBULLET: TOOK %.2f\%, RESISTED %.2f\%", (100-gSkillData.zombieBulletResistance)/100.0f, (gSkillData.zombieBulletResistance)/100.0f );
-		flDamage *= (100 - gSkillData.zombieBulletResistance)/100.0f ;
+		// Now, use a skill-related value (difficulty).
+		float damageMulti;
+		if(iHitgroup != HITGROUP_HEAD) {
+			// normal behavior
+			damageMulti = (100 - gSkillData.zombieBulletResistance) / 100.0f;
+		}
+		else {
+			// cut the reduction by 24%.  Unloading a full mp5 on the head, even in hard-mode and not killing the zombie,
+			// is pretty strange.
+			damageMulti = (100 - gSkillData.zombieBulletResistance * 0.76) / 100.0f;
+		}
 
-	}
+		finalDamage *= damageMulti;
+	}//END OF zombieBulletResistance check
 
-	// HACK HACK -- until we fix this.
-	if ( IsAlive() )
-		PainSound();
-	return GENERATE_TAKEDAMAGE_PARENT_CALL(CBaseMonster);
+
+	return finalDamage;
+}//hitgroupDamage
+
+
+
+GENERATE_KILLED_IMPLEMENTATION(CZombie) {
+
+	GENERATE_KILLED_PARENT_CALL(CBaseMonster);
+}//END OF Killed
+
+
+void CZombie::BecomeDead(void)
+{
+	pev->takedamage = DAMAGE_YES;// don't let autoaim aim at corpses.
+
+	// give the corpse half of the monster's original maximum health. 
+	pev->health = pev->max_health / 2;
+	pev->max_health = 5; // max_health now becomes a counter for how many blood decals the corpse can place.
+
+	// don't do the MOVETYPE_TOSS change.  Loses velocity from pushback.  Somehow.
+	//pev->movetype = MOVETYPE_TOSS;
 }
+
+
+
+
+
+
 
 void CZombie :: PainSound( void )
 {
@@ -674,11 +683,11 @@ void CZombie :: HandleAnimEvent( MonsterEvent_t *pEvent )
 
 
 CZombie::CZombie(){
-	
 	corpseToSeek = NULL;
 	m_hEnemy_CopyRef = NULL;
 	lookForCorpseTime = -1;
 	nextCorpseCheckTime = -1;
+	flPushbackForceDamage = 0;
 
 }
 
@@ -696,7 +705,11 @@ void CZombie :: Spawn()
 	UTIL_SetSize( pev, VEC_HUMAN_HULL_MIN, VEC_HUMAN_HULL_MAX );
 
 	pev->solid			= SOLID_SLIDEBOX;
+
+	// ?????????
 	pev->movetype		= MOVETYPE_STEP;
+	//pev->movetype = MOVETYPE_TOSS;
+
 	m_bloodColor		= BLOOD_COLOR_GREEN;
 	pev->health			= gSkillData.zombieHealth;
 	pev->view_ofs		= VEC_VIEW;// position of the eyes relative to monster's origin.
@@ -1061,7 +1074,8 @@ void CZombie::StartTask(Task_t* pTask){
 		
 		UTIL_TraceHull( vecStart, vecEnd, dont_ignore_monsters, head_hull, edict(), &tr );
 
-		DebugLine_Setup(6, vecStart, vecEnd, tr.flFraction);
+		// !!! ZOMBIE PATH DEBUG
+		//DebugLine_Setup(6, vecStart, vecEnd, tr.flFraction);
 
 
 		if(tr.flFraction < 1 && tr.pHit != NULL){
@@ -1181,7 +1195,6 @@ void CZombie::RunTask(Task_t* pTask){
 
 
 
-
 	switch( pTask->iTask ){
 	case TASK_CHECK_GETUP_SEQUENCE:{
 		//This task didn't finish instantly because we are waiting for the stand animation to finish (from crouching, eating, whichever)
@@ -1205,10 +1218,8 @@ void CZombie::RunTask(Task_t* pTask){
 				//::UTIL_SetSize(corpseToSeek->pev, Vector(0,0,0), Vector(0,0,0));
 				//}
 				
-				
-				DebugLine_Setup(7, pev->origin, m_Route[ m_iRouteIndex ].vecLocation, 1.0);
-
-				
+				// !!! ZOMBIE PATH DEBUG
+				//DebugLine_Setup(7, pev->origin, m_Route[ m_iRouteIndex ].vecLocation, 1.0);
 
 				//TODO. make this 30, see if touch works.  maybe even 25.
 				if(distToGoal < 11){///pTask->flData){
@@ -1261,8 +1272,6 @@ void CZombie::RunTask(Task_t* pTask){
 
 
 
-
-
 	
 BOOL CZombie::getMonsterBlockIdleAutoUpdate(void){
 	if(m_pSchedule != slZombieVictoryDance){
@@ -1285,8 +1294,6 @@ void CZombie::SetActivity( Activity NewActivity ){
 
 
 
-
-
 int CZombie::tryActivitySubstitute(int activity){
 	int i = 0;
 
@@ -1302,7 +1309,6 @@ int CZombie::tryActivitySubstitute(int activity){
 			return LookupSequence("eatbodystand");
 		break;
 	}//END OF switch
-
 
 	//not handled by above? Rely on the model's anim for this activity if there is one.
 	return CBaseAnimating::LookupActivity(activity);
@@ -1338,7 +1344,6 @@ int CZombie::LookupActivityHard(int activity){
 }//END OF LookupActivityHard
 
 
-
 //Handles custom events sent from "LookupActivityHard", which sends events as timed delays along with picking an animation in script.
 //So this handles script-provided events, not model ones.
 void CZombie::HandleEventQueueEvent(int arg_eventID){
@@ -1358,9 +1363,7 @@ void CZombie::HandleEventQueueEvent(int arg_eventID){
 	}
 	}//END OF switch
 
-
 }//END OF HandleEventQueueEvent
-
 
 
 int CZombie :: CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, CBaseEntity *pTarget, float *pflDist ){
@@ -1379,10 +1382,7 @@ int CZombie :: CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, CB
 
 
 
-
 //TODO - IIgnore too perhaps for some monsters?
-
-
 int CZombie :: ISoundMask ( void )
 {
 	return	bits_SOUND_WORLD	|
@@ -1395,8 +1395,6 @@ int CZombie :: ISoundMask ( void )
 			bits_SOUND_BAIT;
 }
 
-
-
 void CZombie::ZombieTouch( CBaseEntity *pOther ){
 
 	if(this->getTaskNumber() == TASK_WAIT_FOR_MOVEMENT_DUMB &&
@@ -1405,13 +1403,27 @@ void CZombie::ZombieTouch( CBaseEntity *pOther ){
 		pOther->edict() == corpseToSeek->edict()
 	)
 	{
-		//complete this task!
+		// complete this task!
 		TaskComplete();
 	}
 
+
+	/*
+	if (pOther->IsWorld() && pev->movetype == MOVETYPE_TOSS) {
+		TraceResult tr;
+		// is the ground below me now?
+		Vector vecStart = pev->origin + Vector(0, 0, 1);
+		Vector vecEnd = pev->origin + Vector(0, 0, -0.5);
+		UTIL_TraceLine(vecStart, vecEnd, dont_ignore_monsters, this->edict(), &tr);
+		if (tr.flFraction < 1.0) {
+			pev->movetype = MOVETYPE_STEP;  //returned to ground
+		}
+	}
+	*/
+
+
+
 }//END OF ZombieTouch
-
-
 
 
 
@@ -1458,14 +1470,12 @@ CBaseEntity* CZombie::getNearestDeadBody(Vector argSearchOrigin, float argMaxDis
 				return testMon;
 			}
 
-
 			thisDistance = (testMon->pev->origin - argSearchOrigin).Length();
 			
 			if(thisDistance < leastDistanceYet){
 				//WAIT, one more check. Look nearby for players.
 
 				//UTIL_TraceLine ( node.m_vecOrigin + vecViewOffset, vecLookersOffset, ignore_monsters, ignore_glass,  ENT(pev), &tr );
-				
 				bestChoiceYet = testMon;
 				leastDistanceYet = thisDistance;
 				
@@ -1474,9 +1484,7 @@ CBaseEntity* CZombie::getNearestDeadBody(Vector argSearchOrigin, float argMaxDis
 
 	}//END OF while loop through all entities in an area to see which are corpses.
 	return bestChoiceYet;
-
 }//END OF getNearestDeadBody
-
 
 
 //MODDD - this is the event that runs alongside a schedule about to be changed (re-picking a schedule).
@@ -1486,7 +1494,6 @@ void CZombie::ScheduleChange(void){
 	CBaseMonster::ScheduleChange();
 
 }//END OF ScheduleChange
-
 
 
 void CZombie::OnCineCleanup(CCineMonster* pOldCine){
@@ -1505,4 +1512,16 @@ void CZombie::OnCineCleanup(CCineMonster* pOldCine){
 
 }//END OF OnCineCleanup
 
+
+Vector CZombie::BodyTarget(const Vector& posSrc) {
+	if (m_Activity == ACT_CROUCH || pev->sequence == ZOMBIE_EATBODY) {
+		//we're lower, make other things aim lower.
+		//return Center( ) * 0.75 + EyePosition() * 0.25;
+		return Center() * 0.5 + EyePosition() * 0.15;
+	}
+	else {
+		//what the base monster does.
+		return CBaseMonster::BodyTarget(posSrc);
+	}
+};
 

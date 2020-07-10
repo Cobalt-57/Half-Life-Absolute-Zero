@@ -39,7 +39,6 @@ SC_HEAR2 scientist/whatissound
 
 
 
-#include "ignore_warning_list.h"
 #include "extdll.h"
 #include "util.h"
 #include "cbase.h"
@@ -53,6 +52,7 @@ SC_HEAR2 scientist/whatissound
 //MODDD - added, so that the player's "setSuitUpdate" may be called directly (edicts are too general
 //and don't have that, nor are they safely moddable to my knowledge, very DLL intensive in transfers).
 #include "player.h"
+#include "ignore_warning_list.h"
 
 
 //MODDD
@@ -202,6 +202,8 @@ public:
 	//MODDD
 	GENERATE_TRACEATTACK_PROTOTYPE
 	GENERATE_TAKEDAMAGE_PROTOTYPE
+
+	virtual void OnAlerted(BOOL alerterWasKilled);
 
 
 	virtual int FriendNumber( int arrayNumber );
@@ -743,7 +745,7 @@ Schedule_t	slScientistStartle[] =
 };
 
 
-Task_t	tlFear[] =
+Task_t	tlSciFear[] =
 {
 	{ TASK_STOP_MOVING,				(float)0					},
 	{ TASK_FACE_ENEMY,				(float)0					},
@@ -755,11 +757,11 @@ Task_t	tlFear[] =
 	{ TASK_PLAY_SEQUENCE,			(float)ACT_FEAR_DISPLAY		},
 };
 
-Schedule_t	slFear[] =
+Schedule_t	slSciFear[] =
 {
 	{
-		tlFear,
-		ARRAYSIZE ( tlFear ),
+		tlSciFear,
+		ARRAYSIZE ( tlSciFear ),
 		//MODDD - added some interrupt conditions.
 		//        Got it, you love gawking at the thing you're afraid of, but I think bullets and/or claws ought to make you hurry that up a bit.
 		bits_COND_NEW_ENEMY |
@@ -777,7 +779,7 @@ DEFINE_CUSTOM_SCHEDULES( CScientist )
 	slFollow,
 	slFaceTarget,
 	slIdleSciStand,
-	slFear,
+	slSciFear,
 	slScientistCover,
 	slScientistHide,
 	slScientistStartle,
@@ -797,8 +799,6 @@ IMPLEMENT_CUSTOM_SCHEDULES( CScientist, CTalkMonster );
 
 	
 void CScientist::DeclineFollowingProvoked(CBaseEntity* pCaller){
-	//Barney won't say anything, he's too busy shooting you.
-	//...or will he? MUHAHAHA.
 	
 	if(EASY_CVAR_GET(pissedNPCs) != 1 || !globalPSEUDO_iCanHazMemez){
 		PlaySentence( "SC_SCREAM_TRU", 4, VOL_NORM, ATTN_NORM );  //OH NO YOU FOUND ME.
@@ -1199,76 +1199,90 @@ void CScientist :: StartTask( Task_t *pTask )
 			decidedToFight = FALSE;
 			decidedToRun = FALSE;
 
-			//in panic-mode, we can't wuss out.
-			if(aggro >= 0||aggro==-0.5 || pTask->flData == 1){
+			if (m_hEnemy != NULL) {
 
-				aggro = 0;
+				//in panic-mode, we can't wuss out.
+				if (aggro >= 0 || aggro == -0.5 || pTask->flData == 1) {
 
-				float vertDiff = abs(m_hEnemy->pev->origin.z - pev->origin.z);
+					aggro = 0;
 
-				//elevation differences?  Nope, none of that.
-				if(m_hEnemy != NULL && (vertDiff < 120) ) {
-					dist = (m_hEnemy->pev->origin - this->pev->origin).Length();
+					float vertDiff = abs(m_hEnemy->pev->origin.z - pev->origin.z);
 
-					if(pTask->flData == 1){
-						//much easier to tick off now.
-						dist *= 0.5;
-					}
-					if(aggro==-0.5){
-						//tighten it instead..
-						dist *= 1.7;
-					}
-					//...
-					Vector tempEnBoundDelta = (m_hEnemy->pev->absmax - m_hEnemy->pev->absmin);
-					float tempEnSize = tempEnBoundDelta.x * tempEnBoundDelta.y * tempEnBoundDelta.z;
+					//elevation differences?  Nope, none of that.
+					if (m_hEnemy != NULL && (vertDiff < 120)) {
+						dist = (m_hEnemy->pev->origin - this->pev->origin).Length();
 
-					//tempEnSize   scale:   under 200... not so important.
-					
-					float fightOddsInfluence = 1.05;
-					float fearFactor = 0;
+						if (pTask->flData == 1) {
+							//much easier to tick off now.
+							dist *= 0.5;
+						}
+						if (aggro == -0.5) {
+							//tighten it instead..
+							dist *= 1.7;
+						}
+						//...
+						Vector tempEnBoundDelta = (m_hEnemy->pev->absmax - m_hEnemy->pev->absmin);
+						float tempEnSize = tempEnBoundDelta.x * tempEnBoundDelta.y * tempEnBoundDelta.z;
 
-					//size of agrunt: 73728.
+						//tempEnSize   scale:   under 200... not so important.
 
-					if(tempEnSize < 16000){  //headcrab size: 13824
-						//no change.
-						
-					}else if(tempEnSize <= 348160){  //size of agrunt: about 348160
-						//less likely to fight, the more out of our comfort zone this is.
+						float fightOddsInfluence = 1.05;
+						float fearFactor = 0;
 
-						fearFactor = ((tempEnSize - 16000) / (348160-16000));
-						dist *= (1 + fearFactor);
+						//size of agrunt: 73728.
 
-						fightOddsInfluence = (1 - fearFactor + 0.05f);
+						if (tempEnSize < 16000) {  //headcrab size: 13824
+							//no change.
 
-					}else{
-						//OH GOD ITS HUGE
-						dist *= 7;
-						fightOddsInfluence = 0.01f;
-					}
+						}
+						else if (tempEnSize <= 348160) {  //size of agrunt: about 348160
+						   //less likely to fight, the more out of our comfort zone this is.
 
-					//easyPrintLine("WHATS THE SIZE   %.2f %.2f %.2f %.2f", tempEnSize, dist, fearFactor, fightOddsInfluence);
-					//easyPrintLine("kk");
+							fearFactor = ((tempEnSize - 16000) / (348160 - 16000));
+							dist *= (1 + fearFactor);
 
-					if(dist < 85){
-						//fight!
-						decidedToFight = TRUE;
-					}else if(dist < 160){
-						if(aggro==-0.5){
-							decidedToFight = (RANDOM_FLOAT(0, 1) < 0.38 * fightOddsInfluence);
-						}else{
-							decidedToFight = (RANDOM_FLOAT(0, 1) < 0.7 * fightOddsInfluence);
+							fightOddsInfluence = (1 - fearFactor + 0.05f);
+
+						}
+						else {
+							//OH GOD ITS HUGE
+							dist *= 7;
+							fightOddsInfluence = 0.01f;
 						}
 
-						if(!decidedToFight && pTask->flData == 0){
-							//"pTask->flData" being 1 means running is not an option... sit and drool I guess.
-							decidedToRun = TRUE;
+						//easyPrintLine("WHATS THE SIZE   %.2f %.2f %.2f %.2f", tempEnSize, dist, fearFactor, fightOddsInfluence);
+						//easyPrintLine("kk");
+
+						if (dist < 85) {
+							//fight!
+							decidedToFight = TRUE;
+						}
+						else if (dist < 160) {
+							if (aggro == -0.5) {
+								decidedToFight = (RANDOM_FLOAT(0, 1) < 0.38 * fightOddsInfluence);
+							}
+							else {
+								decidedToFight = (RANDOM_FLOAT(0, 1) < 0.7 * fightOddsInfluence);
+							}
+
+							if (!decidedToFight && pTask->flData == 0) {
+								//"pTask->flData" being 1 means running is not an option... sit and drool I guess.
+								decidedToRun = TRUE;
+							}
 						}
 					}
 				}
-			}else if(aggro == -1){
-				decidedToRun = TRUE;
-				//FLEE!
+				else if (aggro == -1) {
+					decidedToRun = TRUE;
+					//FLEE!
+				}
+
 			}
+			else {
+				// has no enemy?  hm.
+				decidedToRun = TRUE;
+			}
+
 			//easyPrintLine("MY CHOICE?  aggro:%.2f pTask->flData:%.2f ::: decidedToFight:%d decidedToRun:%d", aggro, pTask->flData, decidedToFight, decidedToRun);
 
 
@@ -1774,6 +1788,71 @@ void CScientist :: Spawn( void )
 	SetUse( &CTalkMonster::FollowerUse );
 }
 
+
+
+/*
+// OLD - mouth-force debugging, see studiomodelrenderer.cpp for what does most of the work.
+void CScientist::Spawn(void)
+{
+	setModel();
+
+
+	UTIL_SetSize(pev, VEC_HUMAN_HULL_MIN, VEC_HUMAN_HULL_MAX);
+
+	pev->classname = MAKE_STRING("monster_scientist");
+
+	pev->solid = SOLID_SLIDEBOX;
+	pev->movetype = MOVETYPE_STEP;
+	m_bloodColor = BloodColorRedFilter();
+	pev->health = gSkillData.scientistHealth;
+	pev->view_ofs = Vector(0, 0, 50);// position of the eyes relative to monster's origin.
+	m_flFieldOfView = VIEW_FIELD_WIDE; // NOTE: we need a wide field of view so scientists will notice player and say hello
+	m_MonsterState = MONSTERSTATE_NONE;
+
+	SetUse(&CTalkMonster::FollowerUse);
+
+	m_voicePitch = 100;
+
+
+	m_szGrp[TLK_ANSWER] = "SC_ANSWER";
+	m_szGrp[TLK_QUESTION] = "SC_QUESTION";
+	m_szGrp[TLK_IDLE] = "SC_IDLE";
+	m_szGrp[TLK_STARE] = "SC_STARE";
+	m_szGrp[TLK_USE] = "SC_OK";
+	m_szGrp[TLK_UNUSE] = "SC_WAIT";
+	m_szGrp[TLK_STOP] = "SC_STOP";
+	m_szGrp[TLK_NOSHOOT] = "SC_SCARED";
+	m_szGrp[TLK_HELLO] = "SC_HELLO";
+
+	//SetThink(&CScientist::MonsterThink);
+	SetThink(&CScientist::PeePee);
+	pev->nextthink = gpGlobals->time + 0.1;
+}
+
+void CScientist::PeePee(void) {
+	SetThink(&CScientist::PeePee);
+	pev->nextthink = gpGlobals->time + 0.1;
+
+	//SetBoneController(0, 0);
+	//SetBoneController(1, 0);
+	///SetBoneController(2, 0);
+	///SetBoneController(3, 45);
+	//SetBoneController(4, 40);
+
+	//pev->controller[0] = 255;
+	//pev->controller[1] = 255;
+	//pev->controller[2] = 255;
+	pev->controller[3] = 255;
+	//pev->controller[4] = 255;
+	//pev->blending[1] = 255;
+}
+*/
+
+
+
+
+
+
 extern int global_useSentenceSave;
 //=========================================================
 // Precache - precaches all resources this monster needs
@@ -2009,6 +2088,21 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CScientist)
 }
 
 
+void CScientist::OnAlerted(BOOL alerterWasKilled) {
+	// change schedules this forcibly only the first time we get pissed.
+	BOOL alreadyPro = HasMemory(bits_MEMORY_PROVOKED);
+	if (!alreadyPro || m_MonsterState == MONSTERSTATE_IDLE || m_MonsterState == MONSTERSTATE_ALERT) {
+		if (!alerterWasKilled) {
+			ChangeSchedule(slSciFear);
+		}
+		else {
+			ChangeSchedule(slSciPanic);
+		}
+	}
+}
+
+
+
 //=========================================================
 // ISoundMask - returns a bit mask indicating which types
 // of sounds this monster regards. In the base class implementation,
@@ -2061,6 +2155,10 @@ GENERATE_KILLED_IMPLEMENTATION(CScientist)
 {
 	//test();
 	//easyPrintLine("YEAHHHH %d", numberOfModelBodyParts);
+
+	// turn on if the jaw on fresh-killed scientists is wanted?
+	//SetBoneController(4, 20);
+
 
 	if(explodeDelay != -2){
 		//not doing that? ok, normal behavior.
@@ -2238,7 +2336,7 @@ Schedule_t* CScientist :: GetScheduleOfType ( int Type )
 	case SCHED_FEAR:
 		{
 		aggro = 0;
-		return slFear;
+		return slSciFear;
 		break;
 		}
 	}
@@ -2458,6 +2556,8 @@ Schedule_t *CScientist :: GetSchedule ( void )
 			if ( pEnemy != NULL )
 				relationship = IRelationship( pEnemy );
 
+
+
 			// UNDONE: Model fear properly, fix R_FR and add multiple levels of fear
 			if ( relationship != R_DL && relationship != R_HT )
 			{
@@ -2473,7 +2573,7 @@ Schedule_t *CScientist :: GetSchedule ( void )
 					}
 
 					if(healNPCChosen == FALSE){
-					    //player only.
+					    // player only.
                         if ( HasConditions( bits_COND_CLIENT_PUSH ) )	// Player wants me to move
                             return GetScheduleOfType( SCHED_MOVE_AWAY_FOLLOW );
 					}
@@ -2509,7 +2609,7 @@ Schedule_t *CScientist :: GetSchedule ( void )
 		break;
 	case MONSTERSTATE_COMBAT:
 		if ( HasConditions( bits_COND_NEW_ENEMY ) )
-			return slFear;					// Point and scream!
+			return slSciFear;					// Point and scream!
 		if ( HasConditions( bits_COND_SEE_ENEMY ) )
 			return slScientistCover;		// Take Cover
 
@@ -2616,19 +2716,21 @@ BOOL CScientist::CanHeal( void )
 		return FALSE;
 	}
 
+	//MODDD - NEW REQUIREMENT.  Difficulty can disallow healing.
+	if (gSkillData.scientist_can_heal == 0) {
+		// nope.
+		return FALSE;
+	}
+
 	//HA!  THIS WOULD ACTUALLY BE really INTUITIVE.  CAN'T HAVE nice things.  FIND ME IN THE ALPS.
 	//CBaseEntity* entityAttempt = CBaseEntity::Instance(m_hTargetEnt);
 	CBaseEntity* entityAttempt = CBaseEntity::Instance(m_hTargetEnt->pev);
-
 	//CBaseEntity* entityAttempt = GetClassPtr((CBaseEntity *)pev);
-		
-
-
+	
 	CBaseMonster* monsterAttempt = NULL;
 	if(entityAttempt != NULL){
 		monsterAttempt = entityAttempt->MyMonsterPointer();
 	}
-
 
 	if(monsterAttempt == NULL){
 		//can only heal a "Monster".
@@ -2639,17 +2741,13 @@ BOOL CScientist::CanHeal( void )
 	//if ( (m_healTime > gpGlobals->time) || (m_hTargetEnt == NULL) || (m_hTargetEnt->pev->health > (m_hTargetEnt->pev->max_health * 0.5)) )
 	//	return FALSE;
 
-
-	
 	float percentage = 0.5;
 	if(healNPCChosen){
 		percentage = EASY_CVAR_GET(scientistHealNPCFract);
 	}
 
-
 	if ( (m_healTime > gpGlobals->time) || (m_hTargetEnt == NULL) || (m_hTargetEnt->pev->health > (m_hTargetEnt->pev->max_health * percentage) ) && ( !(monsterAttempt->m_bitsDamageType & DMG_TIMEBASED || monsterAttempt->m_bitsDamageTypeMod & DMG_TIMEBASEDMOD))  )
 		return FALSE;
-
 
 	return TRUE;
 }
@@ -2659,8 +2757,6 @@ void CScientist::Heal( void )
 	if ( !CanHeal() )
 		return;
 
-
-	
 	if(m_hTargetEnt == NULL){
 		return;
 	}
@@ -2668,8 +2764,6 @@ void CScientist::Heal( void )
 	Vector target = m_hTargetEnt->pev->origin - pev->origin;
 	if ( target.Length() > 100 )
 		return;
-
-
 
 	CBaseEntity* entityAttempt = CBaseEntity::Instance(m_hTargetEnt->pev);
 	CBaseMonster* monsterAttempt = NULL;
@@ -2703,13 +2797,11 @@ void CScientist::Heal( void )
 		m_hTargetEnt->TakeHealth( gSkillData.scientistHeal, DMG_GENERIC );
 	}
 	
-	
 	// Don't heal again for 1 minute
 	m_healTime = gpGlobals->time + EASY_CVAR_GET(scientistHealCooldown);
 	
+}//Heal
 
-
-}
 
 int CScientist::FriendNumber( int arrayNumber )
 {
@@ -2722,11 +2814,7 @@ int CScientist::FriendNumber( int arrayNumber )
 
 void CScientist::MonsterThink(void){
 
-
-
 	//easyForcePrintLine("imascientist id:%d act:%d ideal:%d seq:%d fr:%.2f lps:%d fin:%d lfin:%d", monsterID, m_Activity, m_IdealActivity, this->pev->sequence, pev->frame, m_fSequenceLoops, this->m_fSequenceFinished, this->m_fSequenceFinishedSinceLoop);
-
-
 	//easyForcePrintLine("AYY YO WHAT THE helk %.2f %.2f", gpGlobals->time, pev->dmgtime);
 	int tempTaskNumber = this->getTaskNumber();
 	if( 
@@ -2845,6 +2933,7 @@ void CScientist::MonsterThink(void){
 
 
 
+	/*
 	if(explodeDelay == -3){
 		//start the process.
 		myAssHungers();
@@ -2855,13 +2944,13 @@ void CScientist::MonsterThink(void){
 		//this->Killed(pev, pev, GIB_ALWAYS);
 		//return;
 	}
+	*/
 
 	CTalkMonster::MonsterThink();
 
-	
 
-	
 
+	/*
 	if(explodeDelay > -1 && gpGlobals->time >= explodeDelay){
 		pev->renderfx = kRenderFxImplode;
 		pev->rendercolor.x = 255;
@@ -2873,8 +2962,7 @@ void CScientist::MonsterThink(void){
 		explodeDelay = -2;
 		//return;
 	}
-
-
+	*/
 
 }//END OF MonsterThink
 
@@ -3131,6 +3219,13 @@ void CDeadScientist :: Spawn( )
 	}
 
 
+	// MODDD
+	// forces the mouth open for scientist, ignores mouth-values from speech (so long as none are trying to
+	// be played:  'mouthopen' in studiomodelrenderer being 0).
+	SetBoneController(4, 20);
+
+
+
 	//MODDD - emit a stench that eaters will pick up.
 	//MODDD TODO - IMPORTANT: will this be preserved between save / restores? Need to make sure.
 	
@@ -3167,7 +3262,6 @@ public:
 	
 	GENERATE_TRACEATTACK_PROTOTYPE
 	GENERATE_TAKEDAMAGE_PROTOTYPE
-
 
 
 	int FIdleSpeak ( void );
@@ -3808,8 +3902,8 @@ BOOL CScientist::canPredictActRepeat(void) {
 
 
 void CScientist::initiateAss(void){
-	//not directly... do this and start the method when the think method runs next.
-	//Yes this fucking joke requires some design decisions. What am I doing.
+	// not directly... do this and start the method when the think method runs next.
+	// Yes this fucking joke requires some design decisions. What am I doing.
 	explodeDelay = -3;
 }
 void CScientist::myAssHungers(void){

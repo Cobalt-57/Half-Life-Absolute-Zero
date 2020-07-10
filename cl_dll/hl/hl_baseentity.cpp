@@ -252,6 +252,8 @@ void UTIL_PRECACHESOUND(char* path){}
 
 GENERATE_TRACEATTACK_IMPLEMENTATION_DUMMY_CLIENT(CBaseEntity)
 GENERATE_TAKEDAMAGE_IMPLEMENTATION_DUMMY_CLIENT(CBaseEntity)
+float CBaseMonster::hitgroupDamage(float flDamage, int bitsDamageType, int bitsDamageTypeMod, int iHitgroup){return FALSE;}
+
 
 // CBaseDelay Stubs
 void CBaseDelay :: KeyValue( struct KeyValueData_s * ) { }
@@ -654,10 +656,6 @@ GENERATE_TRACEATTACK_IMPLEMENTATION_DUMMY_CLIENT(CBaseMonster)
 GENERATE_TAKEDAMAGE_IMPLEMENTATION_DUMMY_CLIENT(CBaseMonster)
 
 
-//MODDDD
-void CBaseMonster::MonsterThinkPreMOD(void){return;}
-
-
 Task_t* CBaseMonster::GetTask(void){return NULL;}
 int CBaseMonster::getTaskNumber(void){return -1;}
 const char* CBaseMonster::getScheduleName(void){return NULL;}
@@ -751,6 +749,8 @@ CBaseMonster::CBaseMonster(void){}
 BOOL CBaseMonster::usesSoundSentenceSave(void){return FALSE;}
 
 int CBaseMonster::convert_itbd_to_damage(int i){ return 0;}
+void CBaseMonster::parse_itbd(int i, BYTE& bDuration) {}
+void CBaseMonster::timedDamage_nonFirstFrame(int i, int* m_bitsDamageTypeRef) {}
 void CBaseMonster::CheckTimeBasedDamage(void){}
 //void CBaseMonster::Think(void){}
 
@@ -855,7 +855,11 @@ void CBasePlayer::Jump() { }
 void CBasePlayer::Duck( ) { }
 int  CBasePlayer::Classify ( void ) { return 0; }
 void CBasePlayer::PreThink(void) { }
-void CBasePlayer::CheckTimeBasedDamage()  { }
+
+
+void CBasePlayer::parse_itbd(int i, BYTE& bDuration) {};
+void CBasePlayer::timedDamage_nonFirstFrame(int i, int* m_bitsDamageTypeRef) {};
+
 void CBasePlayer :: UpdateGeigerCounter( void ) { }
 void CBasePlayer::CheckSuitUpdate() { }
 void CBasePlayer::SetSuitUpdate(char *name, int fgroup, float fNoRepeatTime) { }
@@ -1038,5 +1042,32 @@ void CChumToadWeapon::WeaponIdle( void ) { }
 
 
 
+
+// util_debugdraw.h methods, dummied.
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+class CPathTrack;
+
+void DebugLine_ClearLine(int argID) {}
+
+void DebugLine_ClearAll(void) {}
+void DebugLine_RenderAll(void) {}
+
+void DebugLine_Setup(Vector vecStart, Vector vecEnd, float fraction, int successR = 0, int successG = 255, int successB = 0, int failR = 255, int failG = 0, int failB = 0) {}
+void DebugLine_Setup(int argID, Vector vecStart, Vector vecEnd, float fraction, int successR = 0, int successG = 255, int successB = 0, int failR = 255, int failG = 0, int failB = 0) {}
+
+void DebugLine_Setup(Vector vecStart, Vector vecEnd, int r, int g, int b) {}
+void DebugLine_Setup(int argID, Vector vecStart, Vector vecEnd, int r, int g, int b) {}
+
+void DebugLine_SetupPoint(Vector vecPoint, int r, int g, int b) {}
+void DebugLine_SetupPoint(int argID, Vector vecPoint, int r, int g, int b) {}
+
+void DebugLine_SetupPathTrack(CPathTrack* argPathTrack) {}
+void DebugLine_SetupPathTrack(int argID, CPathTrack* argPathTrack) {}
+
+void DebugLine_Color(int argID, int r, int g, int b) {}
+void DebugLine_ColorSuccess(int argID) {}
+void DebugLine_ColorFail(int argID) {}
+void DebugLine_ColorBool(int argID, BOOL argPass) {}
+///////////////////////////////////////////////////////////////////////////////////////////////////////
 
 

@@ -20,6 +20,18 @@
 #ifndef SKILL_H
 #define SKILL_H
 
+#define SKILL_EASY		1
+#define SKILL_MEDIUM	2
+#define SKILL_HARD		3
+
+
+extern DLL_GLOBAL int g_iSkillLevel;
+
+float GetSkillCvar(char* pName);
+float GetSkillCvarSingular(char* pName);
+
+
+
 
 struct skilldata_t
 {
@@ -208,15 +220,64 @@ struct skilldata_t
 	float plrStomach;
 	float plrLeg;
 	float plrArm;
+
+
+	//MODDD - NEW BELOW!
+	//////////////////////////////////////////////////
+
+	// glock/mp5
+	float player_ammomax_9mm;
+	float player_ammomax_mp5_grenade;
+	float player_ammomax_revolver;
+	float player_ammomax_shotgun;
+	float player_ammomax_crossbow;
+	float player_ammomax_rpg;
+	// gauss/egon
+	float player_ammomax_uranium;
+	float player_ammomax_handgrenade;
+	float player_ammomax_satchel;
+	float player_ammomax_tripmine;
+	float player_ammomax_hornet;
+	float player_ammomax_snark;
+	float player_ammomax_chumtoad;
+
+
+
+	float player_revive_health;
+	float scientist_can_heal;
+	float npc_drop_weapon;
+
+
+
+	float tdmg_paralyze_duration;
+
+	float tdmg_nervegas_duration;
+	float tdmg_nervegas_damage;
+
+	float tdmg_poison_duration;
+	float tdmg_poison_damage;
+
+	float tdmg_radiation_duration;
+	float tdmg_radiation_damage;
+
+	float tdmg_acid_duration;
+	float tdmg_acid_damage;
+
+	float tdmg_slowburn_duration;
+	float tdmg_slowburn_damage;
+
+	float tdmg_slowfreeze_duration;
+	float tdmg_slowfreeze_damage;
+
+	float tdmg_bleeding_duration;
+	float tdmg_bleeding_damage;
+
+
+
 };
 
-extern	DLL_GLOBAL	skilldata_t	gSkillData;
-float GetSkillCvar( char *pName );
 
-extern DLL_GLOBAL int	g_iSkillLevel;
 
-#define SKILL_EASY		1
-#define SKILL_MEDIUM	2
-#define SKILL_HARD		3
+extern DLL_GLOBAL skilldata_t gSkillData;
 
 #endif //END OF #ifdef SKILL_H

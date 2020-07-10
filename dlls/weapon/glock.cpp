@@ -13,7 +13,6 @@
 *
 ****/
 
-
 #include "extdll.h"
 #include "glock.h"
 #include "util.h"
@@ -22,7 +21,6 @@
 #include "weapons.h"
 #include "nodes.h"
 #include "player.h"
-
 
 
 
@@ -177,7 +175,6 @@ IMPLEMENT_SAVERESTORE(CGlock, CBasePlayerWeapon);
 
 
 
-
 void CGlock::customAttachToPlayer(CBasePlayer *pPlayer ){
 
 	//CBasePlayerWeapon::customAttachToPlayer(pPlayer);
@@ -193,7 +190,6 @@ void CGlock::customAttachToPlayer(CBasePlayer *pPlayer ){
 	}
 
 }
-
 
 
 int CGlock::ExtractAmmo( CBasePlayerWeapon *pWeapon )
@@ -261,7 +257,6 @@ int CGlock::ExtractAmmo( CBasePlayerWeapon *pWeapon )
 }
 
 
-
 //MODDD
 BOOL CGlock::weaponCanHaveExtraCheck(CBasePlayer* pPlayer){
 	if(pPlayer->hasGlockSilencer == FALSE && this->includesGlockSilencer){
@@ -279,12 +274,8 @@ BOOL CGlock::weaponPlayPickupSoundException(CBasePlayer* pPlayer){
 }
 
 
-//weaponPlayPickupSoundException
-
-
 void CGlock::Spawn( )
 {
-
 	includesGlockSilencer = FALSE;
 
 	const char* classNameTest = STRING(pev->classname);
@@ -295,13 +286,10 @@ void CGlock::Spawn( )
 
 	}
 
-
-
 	pev->classname = MAKE_STRING("weapon_9mmhandgun"); // hack to allow for old names
 	Precache( );
 	m_iId = WEAPON_GLOCK;
 	
-
 	if(this->pev->spawnflags & SF_GLOCK_HAS_SILENCER){
 		//custom flag 8: gives silencer too.
 		includesGlockSilencer = TRUE;
@@ -325,7 +313,6 @@ void CGlock::Spawn( )
 	}
 
 	
-
 	FallInit();// get ready to fall down.
 }
 
@@ -359,7 +346,6 @@ int CGlock::GetItemInfo(ItemInfo *p)
 	p->pszAmmo2 = NULL;
 	p->iMaxAmmo2 = -1;
 
-	
 	//    emp part
 	//old  X   O
 	//cur  X   X

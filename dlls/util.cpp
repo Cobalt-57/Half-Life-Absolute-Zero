@@ -471,9 +471,9 @@ int UTIL_EntitiesInBoxAlsoBarnacles( CBaseEntity **pList, int listMax, const Vec
 
 int UTIL_EntitiesInBox( CBaseEntity **pList, int listMax, const Vector &mins, const Vector &maxs, int flagMask )
 {
-	edict_t		*pEdict = g_engfuncs.pfnPEntityOfEntIndex( 1 );
-	CBaseEntity *pEntity;
-	int		count;
+	edict_t* pEdict = g_engfuncs.pfnPEntityOfEntIndex( 1 );
+	CBaseEntity* pEntity;
+	int count;
 
 	count = 0;
 
@@ -514,9 +514,9 @@ int UTIL_EntitiesInBox( CBaseEntity **pList, int listMax, const Vector &mins, co
 
 int UTIL_NonDeadEntitiesInBox( CBaseEntity **pList, int listMax, const Vector &mins, const Vector &maxs, int flagMask )
 {
-	edict_t		*pEdict = g_engfuncs.pfnPEntityOfEntIndex( 1 );
-	CBaseEntity *pEntity;
-	int		count;
+	edict_t* pEdict = g_engfuncs.pfnPEntityOfEntIndex( 1 );
+	CBaseEntity* pEntity;
+	int count;
 
 	count = 0;
 
@@ -565,7 +565,8 @@ int UTIL_MonstersInSphere( CBaseEntity **pList, int listMax, const Vector &cente
 	edict_t		*pEdict = g_engfuncs.pfnPEntityOfEntIndex( 1 );
 	CBaseEntity *pEntity;
 	int		count;
-	float	distance, delta;
+	float distance;
+	float delta;
 
 	count = 0;
 	float radiusSquared = radius * radius;
@@ -942,14 +943,9 @@ void UTIL_HudMessageAll( const hudtextparms_t &textparms, const char *pMessage )
 }
 
 
-
-//MODDD - note - printout info moved to "util_printout.cpp" for serverside for now.
-// Hey past-me.  REMEMBER TO NAME THE SHIT YOU MOVED YOU FUCKING CUNTSTAIN, THANK YOU.
-// I WILL ELECTROCUTE YOUR GODDAMN DICK AND SHARPEN IT TO FORM A POINT WHICH SHALL DIVE
-// STRAIGHT INTO YOUR FUCKING EYES.  SCREAMING WILL NOT STOP ME.
-// BITCH.
-// ...so yea, UTIL_ClientPrint methods were moved there.
-// And now UTIL_SayText ones because fuck you.
+//MODDD
+// UTIL_ClientPrint methods moved to util_printout.h/.cpp for serverside
+// And now UTIL_SayText ones too.
 
 
 
@@ -2215,8 +2211,10 @@ void EMIT_SOUND_SUIT(edict_t *entity, const char *sample)
 	float fvol;
 	int pitch = PITCH_NORM;
 
-	//MODDD TODO - move to the better global CVar system??
-	fvol = CVAR_GET_FLOAT("suitvolume");
+	// Bizarre, setting the "HEV suit volume" slider in the Audio settings
+	// sets suitvolume to 2 (over 1), crashing the game just like in retail.
+	// Valid audio range is 0 to 1.
+	fvol = clamp(CVAR_GET_FLOAT("suitvolume")/2, 0, 1);
 
 	if (RANDOM_LONG(0,1))
 		pitch = RANDOM_LONG(0,6) + 98;
@@ -2234,7 +2232,7 @@ void STOP_SOUND_SUIT(edict_t *entity, const char *sample)
 	float fvol;
 	int pitch = PITCH_NORM;
 	
-	fvol = CVAR_GET_FLOAT("suitvolume");
+	fvol = clamp(CVAR_GET_FLOAT("suitvolume")/2, 0, 1);
 
 	if (RANDOM_LONG(0,1))
 		pitch = RANDOM_LONG(0,6) + 98;
@@ -2248,8 +2246,8 @@ void EMIT_GROUPID_SUIT(edict_t *entity, int isentenceg)
 {
 	float fvol;
 	int pitch = PITCH_NORM;
-
-	fvol = CVAR_GET_FLOAT("suitvolume");
+	
+	fvol = clamp(CVAR_GET_FLOAT("suitvolume")/2, 0, 1);
 	if (RANDOM_LONG(0,1))
 		pitch = RANDOM_LONG(0,6) + 98;
 
@@ -2262,8 +2260,8 @@ void EMIT_GROUPNAME_SUIT(edict_t *entity, const char *groupname)
 {
 	float fvol;
 	int pitch = PITCH_NORM;
-
-	fvol = CVAR_GET_FLOAT("suitvolume");
+	
+	fvol = clamp(CVAR_GET_FLOAT("suitvolume")/2, 0, 1);
 	if (RANDOM_LONG(0,1))
 		pitch = RANDOM_LONG(0,6) + 98;
 
@@ -4690,7 +4688,7 @@ void turnWorldLightsOff(){
 
 
 
-
+/*
 // Anytime the 'skill' CVAR is changed, update the durations for all the damage types to be used.
 void updateTimedDamageDurations(void) {
 
@@ -4727,7 +4725,7 @@ void updateTimedDamageDurations(void) {
 		break;
 	}
 }//END OF updateTimedDamageDurations
-
+*/
 
 
 
@@ -6330,9 +6328,10 @@ BOOL UTIL_IsFacing( entvars_t *pevTest, const Vector &vecLookAtTest, const float
 	//UTIL_drawLineFrame(pevTest->origin, pevTest->origin + (forward*66), 12, 0, 255, 0);
 	//easyPrintLine("DOTTTT %.2f", DotProduct( forward, vecDir ));
 	
+	float theProd = DotProduct(forward, vecDir);
 	// He's facing me, he meant it
 	//0.707 is +- 45 degrees.
-	if ( DotProduct( forward, vecDir ) >= (1 - arg_tolerance) )
+	if ( theProd >= (1 - arg_tolerance) )
 	{
 		return TRUE;
 	}

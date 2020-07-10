@@ -264,6 +264,10 @@ public:
 	void		TrySmellTalk( void );
 	CBaseEntity		*EnumFriends( CBaseEntity *pentPrevious, int listNumber, BOOL bTrace );
 	void		AlertFriends( void );
+	void		AlertFriends(BOOL wasKilled);
+
+	virtual void OnAlerted(BOOL alerterWasKilled);
+
 	void		ShutUpFriends( void );
 	BOOL			IsTalking( void );
 	void		Talk( float flDuration );	

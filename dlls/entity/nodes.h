@@ -33,13 +33,10 @@ extern BOOL map_anyAirNodes;
 
 
 
-
-
-
 // HERE HAVE A VERY IMPORANT NOTCE.
 // See "CGRAPH" down there?   Do.  Not.  Touch.  It.
 // I repat, .   Do.  Not .  Touch.  It.
-// it is one finick bastard that will forget huors of changes in a flash.
+// it is one finick bastard that will forget hours of changes in a flash.
 // issue is, it has a strict form at from loading form memory, so it needs
 // to know how much it is allowed to load.
 

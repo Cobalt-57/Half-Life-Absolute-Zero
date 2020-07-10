@@ -66,7 +66,9 @@ extern DLL_GLOBAL int g_iSkillLevel;
 #define ASSASSIN_AE_JUMP	3
 
 
-
+#define BODYGROUP_GUN 1
+#define GUN_CROSSBOW 0
+#define GUN_NONE 1
 
 
 
@@ -1172,7 +1174,7 @@ void CHAssassin :: Spawn()
 	//come loaded.
 	m_cAmmoLoaded = 1;
 	droppedWeapon = FALSE;
-	SetBodygroup(1, 0);  //holding the crossbow.
+	SetBodygroup(BODYGROUP_GUN, GUN_CROSSBOW);  //holding the crossbow.
 
 
 	SetTouch( &CHAssassin::HAssassinTouch );
@@ -1567,25 +1569,20 @@ GENERATE_GIBMONSTER_IMPLEMENTATION(CHAssassin)
 
 
 
-
 BOOL CHAssassin ::attemptDropWeapon(void){
-
-
-
 	Vector	vecGunPos;
 	Vector	vecGunAngles;
 
 	if(!droppedWeapon && (g_iSkillLevel==SKILL_EASY || g_iSkillLevel == SKILL_MEDIUM)  ){
 		GetAttachment( 0, vecGunPos, vecGunAngles );
 
-		SetBodygroup(1, 1);  //no longer holding it.
-
 		CBaseEntity *pGun;
 		pGun = DropItem( "weapon_crossbow", vecGunPos, vecGunAngles );
 
-
 		if ( pGun )
 		{
+			SetBodygroup(BODYGROUP_GUN, GUN_NONE);  //no longer holding it.
+			
 			pGun->pev->velocity = Vector (RANDOM_FLOAT(-100,100), RANDOM_FLOAT(-100,100), RANDOM_FLOAT(200,300));
 			pGun->pev->avelocity = Vector ( 0, RANDOM_FLOAT( 200, 400 ), 0 );
 			droppedWeapon = TRUE;
@@ -1594,15 +1591,11 @@ BOOL CHAssassin ::attemptDropWeapon(void){
 
 	}else{
 
-
 	}
 
 
-
 	return FALSE;
-
 }//END OF attemptDropWeapon(...)
-
 
 
 

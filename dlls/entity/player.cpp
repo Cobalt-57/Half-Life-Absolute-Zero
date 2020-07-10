@@ -740,14 +740,14 @@ GENERATE_TRACEATTACK_IMPLEMENTATION(CBasePlayer)
 			}
 
 			if(!isAttackerPlayer && EASY_CVAR_GET(monsterToPlayerHitgroupSpecial) == 2){
-				//Don't let the modifier picked exceed 100% for player-induced damage.
+				// Don't let the modifier picked exceed 100% for player-induced damage.
 				if(damageModifier > 1.0f){
 					damageModifier = 1.0f;
 				}
 			}
 
 			if(damageModifier != 1.0f){
-				//apply.
+				// apply.
 				flDamage *= damageModifier;
 			}
 
@@ -1220,7 +1220,7 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBasePlayer)
 			// give morphine shot if not given recently
 			SetSuitUpdate("!HEV_HEAL7", FALSE, SUIT_NEXT_IN_30MIN, 4.5f);	// morphine shot
 		}
-	
+		
 		if (fTookDamage && !ftrivial && fcritical && flHealthPrev < 75)
 		{
 
@@ -1234,7 +1234,6 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBasePlayer)
 			if (!RANDOM_LONG(0,3) && flHealthPrev < 50)
 				SetSuitUpdate("!HEV_DMG7", FALSE, SUIT_NEXT_IN_5MIN, 4.5f); //seek medical attention
 		}
-
 
 
 		// if we're taking time based damage, warn about its continuing effects
@@ -1258,22 +1257,18 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBasePlayer)
 		{
 			if (flHealthPrev < 50)
 			{
-				if (!RANDOM_LONG(0,3))
+				if (!RANDOM_LONG(0,3)){
 					SetSuitUpdate("!HEV_DMG7", FALSE, SUIT_NEXT_IN_5MIN); //seek medical attention
+				}
 			}
-			else
+			else{
 				SetSuitUpdate("!HEV_HLTH1", FALSE, SUIT_NEXT_IN_10MIN);	// health dropping
+			}
 		}
-
-
-	
 	}//END OF (if NOT during post-invincibility-delay)
-
-
 
 	return fTookDamage;
 }//END OF takeDamage
-
 
 
 GENERATE_DEADTAKEDAMAGE_IMPLEMENTATION(CBasePlayer) {
@@ -1289,6 +1284,16 @@ GENERATE_GIBMONSTER_IMPLEMENTATION(CBasePlayer){
 	EMIT_SOUND(ENT(pev), CHAN_STATIC, "common/null.wav", 1, ATTN_NORM);
 	// I think the base GibMonster already handles CHAN_VOICE.
 	//EMIT_SOUND(ENT(pev), CHAN_VOICE, "common/null.wav", 1, ATTN_NORM);
+
+	recentlyGibbed = TRUE;
+
+
+	// clear out the suit message cache so we don't keep chattering
+	SetSuitUpdate(NULL, FALSE, 0);
+
+	m_flSuitUpdate = gpGlobals->time;  //say the next line now!
+	// "critical failure"
+	SetSuitUpdate("!HEV_E2", FALSE, SUIT_REPEAT_OK, 4.2f);
 
 	GENERATE_GIBMONSTER_PARENT_CALL(CBaseMonster);
 }
@@ -1677,9 +1682,6 @@ GENERATE_KILLED_IMPLEMENTATION(CBasePlayer)
 		
 		//let's leave the EF_NODRAW up to GibMonster.
 		//pev->effects |= EF_NODRAW;
-
-		//MODDD - added.
-		recentlyGibbed = TRUE;
 
 		gibbedThisFrame = TRUE;
 
@@ -2961,8 +2963,10 @@ void CBasePlayer::PlayerUse ( void )
 
 		//if(EASY_CVAR_GET(playerUseDrawDebug))aryDebugLines[0].setSuccess(flUseSuccess);
 
-		//if successful, force it all green.
-		if(flUseSuccess){DebugLine_ColorSuccess(0);};
+		if (EASY_CVAR_GET(playerUseDrawDebug)) {
+			//if successful, force it all green.
+			if (flUseSuccess) { DebugLine_ColorSuccess(0); };
+		}
 
 		/*
 		tempplayer->GiveNamedItem( CMD_ARGV(1),  attemptInterpretSpawnFlag(CMD_ARGV(2)),
@@ -3916,262 +3920,96 @@ void CBasePlayer::PreThink(void)
 
 
 
-//MODDD
-// new constants that revolve around difficulty are used for duration instead.
+//MODDD - CheckTimeBasedDamage moved to basemonster.h/.cpp.
+// Instead, player.cpp will override certain parts of CheckTimeBasedDamage (below) to
+// do extra things or some things differently in key areas.  Otherwise, most logic
+// now applies to all monsters too.
 
-//NOTICE: damage & duration constants moved to CBaseMonster!
+void CBasePlayer::parse_itbd(int i, BYTE& bDuration) {
+	// In short, the point is to work with types unsupported by the base monster (itbd_DrownRecover)
+	// or override how existing ones work (bleeding).
 
-// ~Overrides "CheckTimeBasedDamage" from monster.cpp.
-// This is a clone since just a few additions are needed in specific places, and it isn't
-// worth splitting this into some 3 implementable parts as only CBasePlayer needs some new
-// behavior.
-void CBasePlayer::CheckTimeBasedDamage() 
-{
-	static float gtbdPrev = 0.0;
-	int i;
-	BYTE bDuration = 0;
+	int damageType = 0;
+	damageType = DMG_TIMEDEFFECT;
 
-	// no timed damage for 
-	if (pev->health <= 0 || pev->deadflag != DEAD_NO) {
-		return;
-	}
-
-	// only check for time based damage approx. every 2 seconds
-	if (abs(gpGlobals->time - m_tbdPrev) < 2.0)
-		return;
-
-	//MODDD - check other too!
-	//if (!(m_bitsDamageType & DMG_TIMEBASED))
-	if (!(m_bitsDamageType & DMG_TIMEBASED) && !(m_bitsDamageTypeMod & (DMG_TIMEBASEDMOD))  )
-		return;
-
-	m_tbdPrev = gpGlobals->time;
-
-
-	for (i = 0; i < CDMG_TIMEBASED; i++)
+	switch (i)
 	{
-		int* m_bitsDamageTypeRef = 0;
-		if(i <= 7){
-			//use the old bitmask.
-			m_bitsDamageTypeRef = &m_bitsDamageType;
-		}else{
-			//use the new bitmask.
-			m_bitsDamageTypeRef = &m_bitsDamageTypeMod;
-		}
-
-		int damageBit = convert_itbd_to_damage(i);
-
-		if (damageBit == -1) {
-			easyForcePrintLine("CRITICAL ERROR: MONSTER TIMED DAMAGE BOOBOO: %d", i);
-			return;
-		}
-
-		// make sure bit is set for damage type
-		//if (m_bitsDamageType & (DMG_PARALYZE << i))
-		if((*m_bitsDamageTypeRef) & (damageBit)  )
+	//NOTE - PLAYER ONLY.
+	case itbd_DrownRecover:
+		// NOTE: this hack is actually used to RESTORE health
+		// after the player has been drowning and finally takes a breath
+		if (m_idrowndmg > m_idrownrestored)
 		{
-			int damageType = 0;
-			/*
-			if(timedDamageIgnoresArmorMem == 1){
-				//timed damage ignores armor.
-				damageType = DMG_FALL;
-			}else{
-				//timed damage hits armor first.
-				damageType = DMG_GENERIC;
-			}
-			*/
-			// no, can't just do that.
+			int idif = min(m_idrowndmg - m_idrownrestored, 10);
 
-			// instead, a damgeType being "DMG_TIMEDEFFECT" means,
-			// it is generic, but use this for telling whether to
-			// apply the armor-bypass or not without the sideeffect of what-
-			// ever happens to DMG_FALL.
-			damageType = DMG_TIMEDEFFECT;
+			TakeHealth(idif, DMG_GENERIC);
+			m_idrownrestored += idif;
+		}
+		bDuration = 4;	// get up to 5*10 = 50 points back
+	break;
+	// Overwriting this one compltely to use UTIL_MakeVectors instead of UTIL_MakeAimVectors.
+	// Yes, the player uses MakeVectors and monsters use MakeAimVectors.   Go.   Figure.
+	case itbd_Bleeding:
+		// this will always ignore the armor (hence DMG_TIMEDEFFECT).
+		TakeDamage(pev, pev, BLEEDING_DAMAGE, 0, damageType | DMG_TIMEDEFFECTIGNORE);
 
+		UTIL_MakeVectors(pev->v_angle);
+		//pev->origin + pev->view_ofs
+		//BodyTargetMod(g_vecZero)
+		DrawAlphaBlood(BLEEDING_DAMAGE, pev->origin + pev->view_ofs + gpGlobals->v_forward * RANDOM_FLOAT(9, 13) + gpGlobals->v_right * RANDOM_FLOAT(-5, 5) + gpGlobals->v_up * RANDOM_FLOAT(4, 7));
 
-			switch (i)
-			{
-				//NOTE: should these ignore armor or not?  I feel like they kind of should.
-				//If so, make the damage type (DMG_GENERIC) become "DMG_FALL" instead (known to ignore armor).
-			case itbd_Paralyze:
-				// UNDONE - flag movement as half-speed
-				bDuration = paralyzeDuration;
-				//MODDD - see above.
-				//bDuration = PARALYZE_DURATION;
-				break;
-			case itbd_NerveGas:
-				//MODDD - comment undone.
-				TakeDamage(pev, pev, NERVEGAS_DAMAGE, 0, damageType);	
-				
-				bDuration = nervegasDuration;
-				//MODDD - see above.
-				//bDuration = NERVEGAS_DURATION;
-				break;
-			case itbd_Poison:
-				TakeDamage(pev, pev, POISON_DAMAGE, 0, damageType | DMG_TIMEDEFFECTIGNORE);
-				
-				bDuration = poisonDuration;
-				//MODDD - see above.
-				//bDuration = POISON_DURATION;
-				break;
-			case itbd_Radiation:
-				//MODDD - comment on "TakeDamage" undone.
-				TakeDamage(pev, pev, RADIATION_DAMAGE, 0, damageType | DMG_TIMEDEFFECTIGNORE);
-				
-				bDuration = radiationDuration;
-				//MODDD - see above.
-				//bDuration = RADIATION_DURATION;
-				break;
+		bDuration = gSkillData.tdmg_bleeding_duration;
+	break;
+	default:
+		// Unhandled?  Let the monster class handle it instead
+		CBaseMonster::parse_itbd(i, bDuration);
+	}
 
-			//NOTE - PLAYER ONLY.    oh.
-			case itbd_DrownRecover:
-				// NOTE: this hack is actually used to RESTORE health
-				// after the player has been drowning and finally takes a breath
-				if (m_idrowndmg > m_idrownrestored)
-				{
-					int idif = min(m_idrowndmg - m_idrownrestored, 10);
-
-					TakeHealth(idif, DMG_GENERIC);
-					m_idrownrestored += idif;
-				}
-				bDuration = 4;	// get up to 5*10 = 50 points back
-				break;
-
-			case itbd_Acid:
-				//MODDD - comment undone.
-				TakeDamage(pev, pev, ACID_DAMAGE, 0, damageType);
-				//MODDD - see above.
-				
-				bDuration = acidDuration;
-				//bDuration = ACID_DURATION;
-				break;
-			case itbd_SlowBurn:
-				//MODDD - comment undone.
-				TakeDamage(pev, pev, SLOWBURN_DAMAGE, 0, damageType);
-				//MODDD - see above.
-				
-				bDuration = slowburnDuration;
-				//bDuration = SLOWBURN_DURATION;
-				break;
-			case itbd_SlowFreeze:
-				//easyPrintLine("DO YOU EVER TAKE FREEZE DAMAGE?");
-				//this won't be called, as the map's called freeze effect never starts like this.
-				//MODDD - comment undone.
-				TakeDamage(pev, pev, SLOWFREEZE_DAMAGE, 0, damageType);
-				//MODDD - see above.
-				
-				bDuration = slowfreezeDuration;
-				//bDuration = SLOWFREEZE_DURATION;
-				break;
-				//MODDD - new.
-			case itbd_Bleeding:
-				// this will always ignore the armor (hence DMG_TIMEDEFFECT).
-				TakeDamage(pev, pev, BLEEDING_DAMAGE, 0, damageType | DMG_TIMEDEFFECTIGNORE);
-				
-				UTIL_MakeVectors(pev->v_angle);
-				//pev->origin + pev->view_ofs
-				//BodyTargetMod(g_vecZero)
-				DrawAlphaBlood(BLEEDING_DAMAGE, pev->origin + pev->view_ofs + gpGlobals->v_forward * RANDOM_FLOAT(9, 13) + gpGlobals->v_right * RANDOM_FLOAT(-5, 5) + gpGlobals->v_up * RANDOM_FLOAT(4, 7) );
-
-				bDuration = bleedingDuration;
-				break;
-			default:
-				bDuration = 0;
-			}
-
-			/*
-			MODDD - diagnositic.
-			if(i == itbd_Radiation){
-					easyPrintLine("timebaseddamage for rad? %d", m_rgbTimeBasedDamage[i]);
-			}
-			*/
-
-			if (m_rgbTimeBasedDamage[i] > 0)
-			{
-				// use up an antitoxin on poison or nervegas after a few seconds of damage
-				// MODDD - instead of referring to constants like "NERVEGASDURATION", it is referring to the
-				// variable "nervegasDuration", which is set according to difficulty.  Same for poison.
-				if (((i == itbd_NerveGas) && (m_rgbTimeBasedDamage[i] < nervegasDuration)) ||
-					((i == itbd_Poison)   && (m_rgbTimeBasedDamage[i] < poisonDuration)))
-				{
-					if (!antidoteQueued && m_rgItems[ITEM_ANTIDOTE] && (EASY_CVAR_GET(itemBatteryPrerequisite) == 0 || pev->armorvalue > 0 )  )
-					{
-						antidoteQueued = TRUE;
-						//not yet!  Wait for the hissing sound.
-						//m_rgbTimeBasedDamage[i] = 0;
-						//m_rgItems[ITEM_ANTIDOTE]--;
-
-						//MODDD - this used to refer to "HEV_HEAL4".  "HEV_HEAL5" refers to an antidote,
-						//HEAL4, re-used below for the radiation item (power canister / syringe), refers to "anti-toxins".
-						//SetSuitUpdateFVoxlessFriendlyEvent("!HEV_ANT_USE", FALSE, SUIT_REPEAT_OK, -1, -2, consumeAntidote);
-
-						SetSuitUpdateEventFVoxCutoff("!HEV_ANT_USE", FALSE, SUIT_REPEAT_OK, SUITUPDATETIME, TRUE, 1.36, &CBasePlayer::consumeAntidote, 1.36 + 0.55);
-					}
-				}
-				//MODDD - for the radiation instead.
-				if (((i == itbd_Radiation) && (m_rgbTimeBasedDamage[i] < radiationDuration))  )
-				{
-					if (!radiationQueued && m_rgItems[ITEM_RADIATION] && (EASY_CVAR_GET(itemBatteryPrerequisite) == 0 || pev->armorvalue > 0 ))
-					{
-						radiationQueued = TRUE;
-
-						//m_rgbTimeBasedDamage[i] = 0;
-						//m_rgItems[ITEM_RADIATION]--;
-						//SetSuitUpdate("!HEV_RAD_USE", FALSE, SUIT_REPEAT_OK);
-
-						SetSuitUpdateEventFVoxCutoff("!HEV_RAD_USE", FALSE, SUIT_REPEAT_OK, SUITUPDATETIME, TRUE, 1.28, &CBasePlayer::consumeRadiation, 1.28 + 0.55);
-					}
-				}
+}//END OF parse_itbd
 
 
-				if(g_iSkillLevel == 3 && EASY_CVAR_GET(timedDamageEndlessOnHard) == 1){
-					//Hard mode is on, and "timedDamageEndlessOnHard" is on...
-					//Do NOT decrement non-curable durations.
-					//However, still decrement only ONCE on curables to satisfy the one-second-passing rule for canisters to work.
-					if(!m_rgbTimeBasedFirstFrame[i] &&
-						(i == itbd_NerveGas || i == itbd_Poison || i ==  itbd_Radiation || i == itbd_Bleeding) ){
-						//DO NOTHING.  Only the appropriate cure can fix it.
-					}else if(m_rgbTimeBasedDamage[i] != 0){
-						m_rgbTimeBasedDamage[i]--;
-						m_rgbTimeBasedFirstFrame[i] = FALSE;
-					}
+void CBasePlayer::timedDamage_nonFirstFrame(int i, int* m_bitsDamageTypeRef) {
+	// use up an antitoxin on poison or nervegas after a few seconds of damage
+	// MODDD - instead of referring to constants like "NERVEGASDURATION", it is referring to the
+	// variable "nervegasDuration", which is set according to difficulty.  Same for poison.
+	if (((i == itbd_NerveGas) && (m_rgbTimeBasedDamage[i] < gSkillData.tdmg_nervegas_duration)) ||
+		((i == itbd_Poison) && (m_rgbTimeBasedDamage[i] < gSkillData.tdmg_poison_duration)))
+	{
+		if (!antidoteQueued && m_rgItems[ITEM_ANTIDOTE] && (EASY_CVAR_GET(itemBatteryPrerequisite) == 0 || pev->armorvalue > 0))
+		{
+			antidoteQueued = TRUE;
+			//not yet!  Wait for the hissing sound.
+			//m_rgbTimeBasedDamage[i] = 0;
+			//m_rgItems[ITEM_ANTIDOTE]--;
 
-				}else{
-					//work as normal.  Decrement durations.
-					if(m_rgbTimeBasedDamage[i] != 0){
-						m_rgbTimeBasedDamage[i]--;
-					}
-				}
+			//MODDD - this used to refer to "HEV_HEAL4".  "HEV_HEAL5" refers to an antidote,
+			//HEAL4, re-used below for the radiation item (power canister / syringe), refers to "anti-toxins".
+			//SetSuitUpdateFVoxlessFriendlyEvent("!HEV_ANT_USE", FALSE, SUIT_REPEAT_OK, -1, -2, consumeAntidote);
 
-				// decrement damage duration, detect when done.
-				//MODDD - change to how that works.
-				//if (!m_rgbTimeBasedDamage[i] || --m_rgbTimeBasedDamage[i] == 0)
-				if(!m_rgbTimeBasedDamage[i])
-				{
-					removeTimedDamage(i, m_bitsDamageTypeRef);
-				}
-
-			}
-			else{
-				// first time taking this damage type - init damage duration
-				//MODDD - probably a bit redundant, but ah well.
-				m_rgbTimeBasedFirstFrame[i] = TRUE;
-				m_rgbTimeBasedDamage[i] = bDuration;
-			}
+			SetSuitUpdateEventFVoxCutoff("!HEV_ANT_USE", FALSE, SUIT_REPEAT_OK, SUITUPDATETIME, TRUE, 1.36, &CBasePlayer::consumeAntidote, 1.36 + 0.55);
 		}
 	}
-}//END OF CheckTimeBasedDamage(...)
+	//MODDD - for the radiation instead.
+	if (((i == itbd_Radiation) && (m_rgbTimeBasedDamage[i] < gSkillData.tdmg_radiation_duration)))
+	{
+		if (!radiationQueued && m_rgItems[ITEM_RADIATION] && (EASY_CVAR_GET(itemBatteryPrerequisite) == 0 || pev->armorvalue > 0))
+		{
+			radiationQueued = TRUE;
+
+			//m_rgbTimeBasedDamage[i] = 0;
+			//m_rgItems[ITEM_RADIATION]--;
+			//SetSuitUpdate("!HEV_RAD_USE", FALSE, SUIT_REPEAT_OK);
+
+			SetSuitUpdateEventFVoxCutoff("!HEV_RAD_USE", FALSE, SUIT_REPEAT_OK, SUITUPDATETIME, TRUE, 1.28, &CBasePlayer::consumeRadiation, 1.28 + 0.55);
+		}
+	}
+
+	// and do the usual logic
+	CBaseMonster::timedDamage_nonFirstFrame(i, m_bitsDamageTypeRef);
+}
 
 
-void CBasePlayer::removeTimedDamage(int arg_type, int* m_bitsDamageTypeRef){
-	m_rgbTimeBasedDamage[arg_type] = 0;
-	//MODDD
-	m_rgbTimeBasedFirstFrame[arg_type] = TRUE;
-	//MODDD
-	// if we're done, clear damage bits
-	//m_bitsDamageType &= ~(DMG_PARALYZE << i);	
-	(*m_bitsDamageTypeRef) &= ~(convert_itbd_to_damage(arg_type));
-}//END OF removeTimedDamage(...)
+
 
 
 
@@ -6274,7 +6112,7 @@ void CBasePlayer::Spawn( BOOL revived ){
 		//pev->air_finished = gpGlobals->time + PLAYER_AIRTIME;
 
 		m_idrowndmg = 0;
-		pev->health = 30;
+		pev->health = gSkillData.player_revive_health;
 
 		//damages reset here if the CVar is right:
 		if(EASY_CVAR_GET(timedDamageReviveRemoveMode) == 3){
@@ -6305,7 +6143,7 @@ void CBasePlayer::Spawn( BOOL revived ){
 	pev->gravity		= 1.0;
 	m_bitsHUDDamage		= -1;
 	//MODDD
-	m_bitsModHUDDamage		= -1;
+	m_bitsModHUDDamage	= -1;
 
 
 	m_afPhysicsFlags	= 0;
@@ -7304,8 +7142,8 @@ edict_t* CBasePlayer::GiveNamedItem( const char *pszName, int pszSpawnFlags, con
 		//If the thing we called for can spawn a pickupWalker, just skip to doing that instead.
 		const char* pickupWalkerNameTest = tempWeap->GetPickupWalkerName();
 		if(::isStringEmpty(pickupWalkerNameTest)){
-			//no walker? nothing unusual.
-			// OHHH OKAY.  JUST GONNA IGNORE THAT FLAG HUH.  THINK YOUR SLICK HUH BUTTHOLE.
+			// no walker? nothing unusual.
+			// don't ignore this flag. though.
 		}else if( !(temptest->pev->spawnflags & SF_PICKUP_NOREPLACE) ){
 			// there is a walker! Just skip to spawning that instead.
 			CBaseEntity* newWalker = tempWeap->pickupWalkerReplaceCheck();
@@ -8287,7 +8125,7 @@ void CBasePlayer :: UpdateClientData( void )
 	}
 
 
-
+	//MODDDMIRROR.  Mostly disabled.  I think?
 	if(cameraModeMem != globalPSEUDO_cameraMode || mirrorsDoNotReflectPlayerMem != EASY_CVAR_GET(mirrorsDoNotReflectPlayer) ){
 		cameraModeMem = globalPSEUDO_cameraMode;
 		mirrorsDoNotReflectPlayerMem = EASY_CVAR_GET(mirrorsDoNotReflectPlayer);
@@ -8815,7 +8653,8 @@ void CBasePlayer :: EnableControl(BOOL fControl)
 //=========================================================
 Vector CBasePlayer :: GetAutoaimVector( float flDelta )
 {
-	if (g_iSkillLevel == SKILL_HARD)
+	//MODDD - NEW!  Also allow 'sv_aim' of 0 to stop this
+	if (g_psv_aim->value == 0 || g_iSkillLevel == SKILL_HARD)
 	{
 		UTIL_MakeVectors( pev->v_angle + pev->punchangle );
 		return gpGlobals->v_forward;
@@ -9607,8 +9446,6 @@ void CPlayerMarker :: Spawn( void )
 	this->pev->renderfx = kRenderFxDummy;
 
 	//MODDD
-	//pev->effects |= 128;
-
 	//pev->effects |= 128;
 }
 

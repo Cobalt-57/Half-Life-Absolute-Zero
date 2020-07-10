@@ -549,7 +549,7 @@ void CGauss::chargeWork(){
 				
 
 
-			easyForcePrintLine("OH FUCK MAN WORK CHARGIN STARTIN");
+			easyForcePrintLine("OH dear MAN WORK CHARGIN STARTIN");
 			m_pPlayer->m_flStartCharge = gpGlobals->time;
 			m_pPlayer->m_flAmmoStartCharge = UTIL_WeaponTimeBase() + GetFullChargeTime();
 		}
@@ -598,7 +598,7 @@ void CGauss::chargeWork(){
 			m_pPlayer->m_flNextAmmoBurn = UTIL_WeaponTimeBase() + getAmmoChargeInterval();   // + 0.1
 			
 	
-			easyForcePrintLine("OH FUCK MAN YOU DROP AMMO %d", m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType]);
+			easyForcePrintLine("OH dear MAN YOU DROP AMMO %d", m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType]);
 		}
 
 		if ( m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] <= 0 )

@@ -20,35 +20,35 @@
 // CHud handles the message, calculation, and drawing the HUD
 //
 
-
 #ifndef HUD_H
 #define HUD_H
 
-
 #include "wrect.h"
 #include "cl_dll.h"
-
 #include "hudbase.h"
-
 //MODDD
 #include "custom_message.h"
 #include "ammo.h"
 #include "health.h"
+#include "..\game_shared\voice_status.h"
+#include "hud_spectator.h"
+#include "pain.h"
 
 //MODDD - The CHudBase class and a lot of things assumed provided for CHudBase subclasses has been moved to hudbase.h.
 //
 //-----------------------------------------------------
 //
-#include "..\game_shared\voice_status.h"
-#include "hud_spectator.h"
 
 extern float globalPSEUDO_autoDeterminedFOV;
+
+#define FADE_TIME 100
 
 
 class CHud;
 class TeamFortressViewport;
 struct extra_player_info_t;
 struct team_info_t;
+
 
 
 extern CHud gHUD;
@@ -67,6 +67,18 @@ extern team_info_t			g_TeamInfo[MAX_TEAMS + 1];
 extern int				g_IsSpectator[MAX_PLAYERS + 1];
 
 
+
+
+//MODDD - mirror
+////////////////////////////////////////////////////////////////////////////////////////////
+typedef struct cl_mirror_s
+{
+	vec3_t origin;
+	int enabled;
+	float radius;
+	int type;
+} cl_mirror_t;
+////////////////////////////////////////////////////////////////////////////////////////////
 
 
 
@@ -100,9 +112,6 @@ private:
 
 //MODDD - why? Why here?
 //#include "health.h"
-
-
-#define FADE_TIME 100
 
 
 //
@@ -317,24 +326,13 @@ private:
 class CHudBattery: public CHudBase
 {
 public:
-	int Init( void );
-	int VidInit( void );
-	int Draw(float flTime);
-	int MsgFunc_Battery(const char *pszName,  int iSize, void *pbuf );
-
-
-private:
 	SpriteHandle_t m_SpriteHandle_t1;
 	SpriteHandle_t m_SpriteHandle_t2;
-	//MODDD - new.
-	SpriteHandle_t m_SpriteHandle_t3;
 
 	wrect_t *m_prc1;
 	wrect_t *m_prc2;
-	//MODDD - new
-	wrect_t *m_prc3;
 
-	int   m_iBat;	
+	int   m_iBat;
 	float m_fFade;
 	int   m_iHeight;		// width of the battery innards
 	//MODDD - new sprite indexes
@@ -342,6 +340,13 @@ private:
 	int m_HUD_battery_full;
 	//int alphaCrossHairIndex;
 	////////////////////////////////
+
+
+	int Init( void );
+	int VidInit( void );
+	int Draw(float flTime);
+	int MsgFunc_Battery(const char *pszName,  int iSize, void *pbuf );
+
 };
 
 
@@ -358,6 +363,7 @@ public:
 	int MsgFunc_Flashlight(const char *pszName,  int iSize, void *pbuf );
 	int MsgFunc_FlashBat(const char *pszName,  int iSize, void *pbuf );
 	
+	void drawFlashlightSidebarIcon(const int& x, const int& y);
 
 private:
 	SpriteHandle_t m_SpriteHandle_t1;
@@ -492,52 +498,38 @@ private:
 //
 
 
-//MODDD - mirror
-////////////////////////////////////////////////////////////////////////////////////////////
-//LRC - for the moment, skymode has only two settings
-#define SKY_OFF 0
-#define SKY_ON_DRAWING  2
-#define SKY_ON  1
-
-typedef struct cl_mirror_s
-{
-	vec3_t origin;
-	int enabled;
-	float radius;
-	int type;
-} cl_mirror_t;
-////////////////////////////////////////////////////////////////////////////////////////////
-
-
 //CHud plain
 class CHud
 {
 private:
-	HUDLIST						*m_pHudList;
-	SpriteHandle_t						m_hsprLogo;
+	HUDLIST					*m_pHudList;
+	SpriteHandle_t			m_hsprLogo;
 
 	//MODDD - OH MY
-	SpriteHandle_t				m_hsprGNFOS;
+	SpriteHandle_t			m_hsprGNFOS;
 
 	int						m_iLogo;
-	client_sprite_t				*m_pSpriteList;
+	client_sprite_t			*m_pSpriteList;
 	int						m_iSpriteCount;
 	int						m_iSpriteCountAllRes;
 	float					m_flMouseSensitivity;
 	int						m_iConcussionEffect; 
+	
+	// the memory for these arrays are allocated in the first call to CHud::VidInit(), when the hud.txt and associated sprites are loaded.
+	// freed in ~CHud()
+	SpriteHandle_t *m_rgSpriteHandle_ts;  /*[HUD_SPRITE_COUNT]*/    // the sprites loaded from hud.txt
+	wrect_t *m_rgrcRects;	/*[HUD_SPRITE_COUNT]*/
+	char *m_rgszSpriteNames; /*[HUD_SPRITE_COUNT][MAX_SPRITE_NAME_LENGTH]*/
+	struct cvar_s* default_fov;
 
 public:
-
-
-
 	//MODDD
 	int recentDamageBitmask;
 	//MODDD
 	float recentTime;
 	int frozenMem;
-	float useAlphaCrosshairMem;
+	float crosshairMem;
 	float allowAlphaCrosshairWithoutGunsMem;
-	
 	
 	SpriteHandle_t						m_hsprCursor;
 	float m_flTime;	   // the current client time
@@ -558,24 +550,82 @@ public:
 	cvar_t  *m_pCvarStealMouse;
 	cvar_t	*m_pCvarDraw;
 
+	int m_iFontWidth;
+	int m_iFontHeight;
+	int m_iFontWidthAlt;
+	int m_iFontHeightAlt;
+
+	CHudAmmo		m_Ammo;
+	CHudHealth		m_Health;
+	CHudSpectator	m_Spectator;
+	CHudGeiger		m_Geiger;
+	CHudBattery		m_Battery;
+	CHudTrain		m_Train;
+	CHudFlashlight	m_Flash;
+	CHudMessage		m_Message;
+	CHudStatusBar   m_StatusBar;
+	CHudDeathNotice m_DeathNotice;
+	CHudSayText		m_SayText;
+	CHudMenu		m_Menu;
+	CHudAmmoSecondary	m_AmmoSecondary;
+	CHudTextMessage m_TextMessage;
+	CHudStatusIcons m_StatusIcons;
+	//MODDD - new
+	CHudPain m_Pain;
+
+
+	// Screen information
+	SCREENINFO m_scrinfo;
+
+	float PESUDO_cameraModeMem;
+	//MODDD - when the weapon-select is on, bottom-most stats (health, battery, ammo) are not drawn.
+	bool canDrawBottomStats;
+
+	int m_iWeaponBits;
+	int m_fPlayerDead;
+	int m_iIntermission;
+
+	// sprite indexes
+	int m_HUD_number_0;
+
+	//MODDD - added
+	int m_HUD_number_0_health;
+	int m_HUD_number_1_tiny;
+
+	int m_HUD_e_number_0;
+	int m_HUD_e_number_0_health;
+
+	//MODDD - altgui
+	int m_HUD_number_0_E3R;
+	int m_HUD_battery_empty_E3;
+	int m_HUD_battery_full_E3;
+
+	int m_HUD_brokentransparency;
+	int brokenTransWidth;
+	int brokenTransHeight;
+	wrect_t* m_prc_brokentransparency;
+	int m_HUD_brokentransparency0;
+	int m_HUD_brokentransparencyw;
+	int m_glockSilencerWpnIcoActive;
+	int m_glockSilencerWpnIcoInactive;
+	int alphaCrossHairIndex;
+
 	//MODDDMIRROR
 	////////////////////////////////////////////////////////////////////////////////////////////////////////
-	Vector	m_vecSkyPos; //LRC
+	Vector m_vecSkyPos; //LRC
 	int	m_iSkyMode;  //LRC
-	int	m_iSkyScale;	//AJH Allows parallax for the sky. 0 means no parallax, i.e infinitly large & far away.
+	int	m_iSkyScale;  //AJH Allows parallax for the sky. 0 means no parallax, i.e infinitly large & far away.
 	int	m_iCameraMode;//G-Cont. clipping thirdperson camera
 	int m_iLastCameraMode;//save last mode
-	
+
 	int viewEntityIndex; // for trigger_viewset
 	int viewFlags;
-	struct cl_mirror_s Mirrors[MIRROR_MAX]; //Limit - 32 mirrors!   CHANGE - now "MIRROR_MAX", a macro.
+	cl_mirror_t Mirrors[MIRROR_MAX]; //Limit - 32 mirrors!   CHANGE - now "MIRROR_MAX", a macro.
 	int numMirrors;
 	/////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-
-	int m_iFontHeight;
 	
+
+
 	int canDrawSidebar(void);
 	
 	//MODDD - new filter for drawing images.
@@ -600,12 +650,7 @@ public:
 	void attemptDrawBrokenTransWhite(int arg_startx, int arg_starty, int arg_width, int arg_height);
 	void attemptDrawBrokenTransLightAndWhite(int arg_startx, int arg_starty, int arg_width, int arg_height);
 	
-
-
-	
-
 	void playWeaponSelectMoveSound();
-
 
 	int DrawHudNumber(int x, int y, int iFlags, int iNumber, const int& r, const int& g, const int& b );
 	//MODDD - additional argument for "DrawHudNumber" : "useBoxedNumber".
@@ -615,46 +660,11 @@ public:
 	int DrawHudString(int x, int y, int iMaxX, char *szString, int r, int g, int b );
 	int DrawHudStringReverse( int xpos, int ypos, int iMinX, char *szString, int r, int g, int b );
 	
-	
 	int DrawHUDNumber_widthOnly(int iFlags, int iNumber, int fontID);
-	
 	int DrawHudNumberString( int xpos, int ypos, int iMinX, int iNumber, int r, int g, int b );
 	int GetNumWidth(int iNumber, int iFlags);
 
-
-
-
 	
-
-	//MODDD - temp method
-	//void tempGetHudMainRef(CHudBase* tempRef);
-	//cvar_t* testVar;
-
-	//moved to const system.
-	//cvar_t* allowGlockSecondarySilencer;
-
-	//MODDD - ALTGUI - toggle using pre E3 GUI or the '97 - '98 build GUI.
-	
-	//cvar_t* hud_version;
-	
-
-	//cvar_t* CVar_cameraMode;
-	float PESUDO_cameraModeMem;
-
-	//MODDD - when the weapon-select is on, bottom-most stats (health, battery, ammo) are not drawn.
-	bool canDrawBottomStats;
-
-private:
-	// the memory for these arrays are allocated in the first call to CHud::VidInit(), when the hud.txt and associated sprites are loaded.
-	// freed in ~CHud()
-	SpriteHandle_t *m_rgSpriteHandle_ts;	/*[HUD_SPRITE_COUNT]*/			// the sprites loaded from hud.txt
-	wrect_t *m_rgrcRects;	/*[HUD_SPRITE_COUNT]*/
-	char *m_rgszSpriteNames; /*[HUD_SPRITE_COUNT][MAX_SPRITE_NAME_LENGTH]*/
-
-	struct cvar_s *default_fov;
-
-	//struct cvar_s *cvarHUD_letswatchamovie;
-
 public:
 	SpriteHandle_t GetSprite( int index ) 
 	{
@@ -669,22 +679,6 @@ public:
 	
 	int GetSpriteIndex( const char *SpriteName );	// gets a sprite index, for use in the m_rgSpriteHandle_ts[] array
 
-	CHudAmmo		m_Ammo;
-	CHudHealth		m_Health;
-	CHudSpectator		m_Spectator;
-	CHudGeiger		m_Geiger;
-	CHudBattery		m_Battery;
-	CHudTrain		m_Train;
-	CHudFlashlight	m_Flash;
-	CHudMessage		m_Message;
-	CHudStatusBar   m_StatusBar;
-	CHudDeathNotice m_DeathNotice;
-	CHudSayText		m_SayText;
-	CHudMenu		m_Menu;
-	CHudAmmoSecondary	m_AmmoSecondary;
-	CHudTextMessage m_TextMessage;
-	CHudStatusIcons m_StatusIcons;
-
 	void Init( void );
 	void VidInit( void );
 	void Think(void);
@@ -694,7 +688,6 @@ public:
 	//MODDD - constructor moved to implementation (hud.cpp).
 	//CHud() : m_iSpriteCount(0), m_pHudList(NULL) {}  
 	CHud();
-
 	~CHud();			// destructor, frees allocated memory
 
 	// user messages
@@ -708,62 +701,19 @@ public:
 	int _cdecl MsgFunc_InitHUD( const char *pszName, int iSize, void *pbuf );
 	int _cdecl MsgFunc_ViewMode( const char *pszName, int iSize, void *pbuf );
 	int _cdecl MsgFunc_SetFOV(const char *pszName,  int iSize, void *pbuf);
-	int  _cdecl MsgFunc_Concuss( const char *pszName, int iSize, void *pbuf );
-
+	int _cdecl MsgFunc_Concuss( const char *pszName, int iSize, void *pbuf );
+	//MODDD - from health.h
+	int _cdecl MsgFunc_Damage(const char* pszName, int iSize, void* pbuf);
+	int _cdecl MsgFunc_Drowning(const char* pszName, int iSize, void* pbuf);
 
 	//MODDD - new place for utility methods across the GUI:
-	
 	void getGenericGUIColor(int &r, int &g, int &b);
 	void getGenericEmptyColor(int &r, int &g, int &b);
 	void getGenericRedColor(int &r, int &g, int &b);
 	void getGenericOrangeColor(int &r, int &g, int &b);
 	void getGenericGreenColor(int &r, int &g, int &b);
 	
-	//MODDD - for debugging convenience.
-	void AlertMessage(char *szFmt, ... );
-
-
-
-	// Screen information
-	SCREENINFO	m_scrinfo;
-
-	int m_iWeaponBits;
-	int m_fPlayerDead;
-	int m_iIntermission;
-
-	// sprite indexes
-	int m_HUD_number_0;
-
-	//MODDD - added
-	int m_HUD_number_0_health;
-	int m_HUD_number_1_tiny;
-
-	//MODDD - altgui
-	int m_HUD_number_0_E3R;
-	int m_HUD_battery_empty_E3;
-	int m_HUD_battery_full_E3_glow;
-	int m_HUD_battery_full_E3_minimal;
-
-	int m_HUD_brokentransparency;
-	int brokenTransWidth;
-	int brokenTransHeight;
-	wrect_t* m_prc_brokentransparency;
-	/*
-	int m_HUD_brokentransparency1;
-	int m_HUD_brokentransparency2;
-	int m_HUD_brokentransparency3;
-	int m_HUD_brokentransparency4;
-	*/
-	int m_HUD_brokentransparency0;
-	int m_HUD_brokentransparencyw;
-	int m_glockSilencerWpnIcoActive;
-	int m_glockSilencerWpnIcoInactive;
-	
-	int alphaCrossHairIndex;
-
-
 	void AddHudElem(CHudBase *p);
-
 	float GetSensitivity();
 
 	//MODDD - ALSO, complementary method to go along player.h's "getBaseFOV", using our raw
@@ -780,7 +730,6 @@ public:
 	}//END OF getBaseFOV
 
 };
-
 
 
 

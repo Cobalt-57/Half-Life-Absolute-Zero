@@ -1010,10 +1010,15 @@ void CBaseMonster::BecomeDead( void )
 
 	// make the corpse fly away from the attack vector
 	pev->movetype = MOVETYPE_TOSS;
-	//pev->flags &= ~FL_ONGROUND;
-	//pev->origin.z += 2;
-	//pev->velocity = g_vecAttackDir * -1;
-	//pev->velocity = pev->velocity * RANDOM_FLOAT( 300, 400 );
+
+	//MODDD - restored, was found commented-out as-is. 
+	// Seemed to be a thing in the alphas anyway, corpses to be flung a bit.
+	pev->flags &= ~FL_ONGROUND;
+	pev->origin.z += 2;
+	pev->velocity = g_vecAttackDir * -1;
+	pev->velocity = pev->velocity * RANDOM_FLOAT( 300, 400 );
+	// also adding a line:
+	pev->groundentity = NULL;
 }
 
 
@@ -1048,8 +1053,6 @@ GENERATE_KILLED_IMPLEMENTATION(CBaseMonster)
 {
 	//m_pfnThink
 		//UTIL_Remove(this);
-
-	//return;
 
 	easyPrintLine("Killed: %s:%d. deadflag:%d. MY iGib WAS %d", getClassname(), monsterID, pev->deadflag, iGib);
 
@@ -1112,7 +1115,6 @@ GENERATE_KILLED_IMPLEMENTATION(CBaseMonster)
 	// ACTUALLY just make it the amount of damage dealth by the last attack.
 	// may feel a little better this way.
 	
-
 
 	if	( ShouldGibMonster( iGib ) )
 	{
@@ -1751,15 +1753,12 @@ GENERATE_TRACEATTACK_IMPLEMENTATION(CBaseEntity)
 			//By default, if a monster wants to play a bullet hit sound on me, allow it.
 			//if(useBulletHitSound)*useBulletHitSound=TRUE;
 			
-
 		}
 	}
 }
 
 
-
 //MODDD - CBaseEntity's TakeDamage and Killed moved to here.
-
 // inflict damage on this entity.  bitsDamageType indicates type of damage inflicted, ie: DMG_CRUSH
 GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBaseEntity)
 {
@@ -1925,12 +1924,9 @@ void CBaseEntity::DrawAlphaBloodSlash(float flDamage, const Vector& vecDrawLoc, 
 		}else{
 			UTIL_BloodStream(vecThisDrawLoc, UTIL_RandomBloodVector(), BloodColor(), RANDOM_LONG(36, 56));
 		}
-		
 	}
 
-
 }
-
 
 
 //MODDD - new
@@ -1941,22 +1937,31 @@ void CBaseEntity::DrawAlphaBlood(float flDamage, TraceResult *ptr ){
 
 
 void CBaseEntity::DrawAlphaBlood(float flDamage, const Vector& vecDrawLoc){
-
 	int drawBloodVersionValue = 0;
 	int drawTripleBloodValue = 1;
 
-	if (pev->health <= flDamage){
-		UTIL_BloodStream(vecDrawLoc, UTIL_RandomBloodVector(), BloodColor(), RANDOM_LONG(40, 70));
-		UTIL_BloodStream(vecDrawLoc, UTIL_RandomBloodVector(), BloodColor(), RANDOM_LONG(40, 70));
-		UTIL_BloodStream(vecDrawLoc, UTIL_RandomBloodVector(), BloodColor(), RANDOM_LONG(40, 70));
+	if (pev->deadflag != DEAD_NO){
+
+		if (pev->health <= flDamage) {
+			//killing blow?
+			UTIL_BloodStream(vecDrawLoc, UTIL_RandomBloodVector(), BloodColor(), RANDOM_LONG(50, 100));
+			UTIL_BloodStream(vecDrawLoc, UTIL_RandomBloodVector(), BloodColor(), RANDOM_LONG(50, 100));
+			UTIL_BloodStream(vecDrawLoc, UTIL_RandomBloodVector(), BloodColor(), RANDOM_LONG(50, 100));
+		}
+		else {
+			//normal
+			UTIL_BloodStream(vecDrawLoc, UTIL_RandomBloodVector(), BloodColor(), RANDOM_LONG(3, 6));
+			UTIL_BloodStream(vecDrawLoc, UTIL_RandomBloodVector(), BloodColor(), RANDOM_LONG(3, 6));
+			UTIL_BloodStream(vecDrawLoc, UTIL_RandomBloodVector(), BloodColor(), RANDOM_LONG(3, 6));
+		}
 	}
 	else{
-		UTIL_BloodStream(vecDrawLoc, UTIL_RandomBloodVector(), BloodColor(), RANDOM_LONG(4, 7));
-		UTIL_BloodStream(vecDrawLoc, UTIL_RandomBloodVector(), BloodColor(), RANDOM_LONG(4, 7));
-		UTIL_BloodStream(vecDrawLoc, UTIL_RandomBloodVector(), BloodColor(), RANDOM_LONG(4, 7));
+		// dead.
+		UTIL_BloodStream(vecDrawLoc, UTIL_RandomBloodVector(), BloodColor(), RANDOM_LONG(15, 30));
+		UTIL_BloodStream(vecDrawLoc, UTIL_RandomBloodVector(), BloodColor(), RANDOM_LONG(15, 30));
+		UTIL_BloodStream(vecDrawLoc, UTIL_RandomBloodVector(), BloodColor(), RANDOM_LONG(15, 30));
 			
 	}
-
 }
 
 
@@ -1969,34 +1974,11 @@ GENERATE_TRACEATTACK_IMPLEMENTATION(CBaseMonster)
 {
 	if ( pev->takedamage )
 	{
+		// Let logic in other places deal with this in the same frame
 		m_LastHitGroup = ptr->iHitgroup;
 
-		switch ( ptr->iHitgroup )
-		{
-		case HITGROUP_GENERIC:
-			break;
-		case HITGROUP_HEAD:
-			flDamage *= gSkillData.monHead;
-			break;
-		case HITGROUP_CHEST:
-			flDamage *= gSkillData.monChest;
-			break;
-		case HITGROUP_STOMACH:
-			flDamage *= gSkillData.monStomach;
-			break;
-		case HITGROUP_LEFTARM:
-		case HITGROUP_RIGHTARM:
-			flDamage *= gSkillData.monArm;
-			break;
-		case HITGROUP_LEFTLEG:
-		case HITGROUP_RIGHTLEG:
-			flDamage *= gSkillData.monLeg;
-			break;
-		default:
-			break;
-		}
-
-
+		// And, let monsters change up damage values per place if desired
+		flDamage = hitgroupDamage(flDamage, bitsDamageType, bitsDamageTypeMod, ptr->iHitgroup);
 
 		//MODDD - surrounded by parameter.  The gargantua has customized bleeding.
 		
@@ -2014,29 +1996,25 @@ GENERATE_TRACEATTACK_IMPLEMENTATION(CBaseMonster)
 		}
 		*/
 
-
 		//MODDD!!!
-		//SpawnBlood(ptr->vecEndPos, BloodColor(), flDamage);// a little surface blood.
+		// SpawnBlood(ptr->vecEndPos, BloodColor(), flDamage);// a little surface blood.
 		
-		//NOTE: "SpawnBlood" does the same thing as "UTIL_BloodStream".  Should've seen that sooner, eh, whoops.
-		//Apparently, "TraceBleed" draws the blood texture on a nearby surface (floor, wall)...
+		// NOTE: "SpawnBlood" does the same thing as "UTIL_BloodStream".  Should've seen that sooner, eh, whoops.
+		// Apparently, "TraceBleed" draws the blood texture on a nearby surface (floor, wall)...
 
-		//Can TraceBleed all the time with germancensorship off.
-		//With german censorship on, check germanRobotDamageDecal before drawing robot blood (oil). 
-		//If this monster has a german model replacement but this CVar is off, block the TraceBleed request.
-		//Note that "CanUseGermanModel" is always false when GermanCensorship is turned off.
-		//If TraceBleed is called with a monster with red blood (no german robot model provided), this will get denied anyways.
+		// Can TraceBleed all the time with germancensorship off.
+		// With german censorship on, check germanRobotDamageDecal before drawing robot blood (oil). 
+		// If this monster has a german model replacement but this CVar is off, block the TraceBleed request.
+		// Note that "CanUseGermanModel" is always false when GermanCensorship is turned off.
+		// If TraceBleed is called with a monster with red blood (no german robot model provided), this will get denied anyways.
 		if( !(this->CanUseGermanModel() && EASY_CVAR_GET(germanRobotDamageDecal)==0 ) ){
 			TraceBleed( flDamage, vecDir, ptr, bitsDamageType, bitsDamageTypeMod );
 		}
 
-		
 		AddMultiDamage( pevAttacker, this, flDamage, bitsDamageType, bitsDamageTypeMod );
-		
 	}//END OF pev->takedamage check
 
 }//END OF CBaseMonster's Traceattack implementation
-
 
 
 
@@ -2059,7 +2037,6 @@ GLOBALS ASSUMED SET:  g_iSkillLevel
 //MODDD - TODO. extra idea. Perhaps with a deadflag of DEAD_DYING,
 //        DeadTakeDamage should be called too? Just an idea.
 GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBaseMonster){
-
 	//TEMP
 	//bitsDamageType |= DMG_POISON;
 
@@ -2069,15 +2046,17 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBaseMonster){
 	if (!pev->takedamage)
 		return 0;
 
+	if (FClassnameIs(pev, "monster_human_assault")) {
+		int xxx = 235;
+	}
+
 	////virtual BOOL	IsAlive( void ) { return (pev->deadflag != DEAD_DEAD); } inv:  == DEAD_DEAD
 	//virtual BOOL	IsAlive( void ) { return (pev->deadflag == DEAD_NO); }       inv:  != DEAD_NO
 
 	//if(!IsAlive())
-
-	//Retail's way here. Only count as dead.
+	// Retail's way here. Only count as dead.
 	if(pev->deadflag == DEAD_DEAD)
 	{
-
 		/*
 		if ( m_MonsterState == MONSTERSTATE_SCRIPT && pev->spawnflag & SF_SCRIPT_NOINTERRUPT )
 		{
@@ -2095,7 +2074,6 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBaseMonster){
 		//timed damages NOT allowed for corpses.
 		bitsDamageType &= ~ DMG_TIMEBASED;
 		bitsDamageTypeMod &= ~ DMG_TIMEBASEDMOD;
-
 		return DeadTakeDamage( pevInflictor, pevAttacker, flDamage, bitsDamageType, bitsDamageTypeMod );
 	}
 
@@ -2127,6 +2105,7 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBaseMonster){
 
 
 	// grab the vector of the incoming attack. ( pretend that the inflictor is a little lower than it really is, so the body will tend to fly upward a bit).
+	//MODDD - important note!  Only the player is moved by "vecDir", otherwise that variable gets ignored
 	vecDir = Vector( 0, 0, 0 );
 	if (!FNullEnt( pevInflictor ))
 	{
@@ -2156,21 +2135,15 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBaseMonster){
 	}
 	
 	//if ( !FNullEnt(pevInflictor) && (pevAttacker->solid != SOLID_TRIGGER) )
-
-
-
 	// if this is a player, move him around!
 	if ( ( !FNullEnt( pevInflictor ) ) && (pev->movetype == MOVETYPE_WALK) && (!pevAttacker || pevAttacker->solid != SOLID_TRIGGER) )
 	{
 		pev->velocity = pev->velocity + vecDir * -DamageForce( flDamage );
 	}
 
-
-
 	//easyPrintLine("CBaseMonster:: name:%s:%d TOOK DAMAGE. health:%.2f Damage:%.2f Blast:%d Gib:: N:%d A:%d", getClassname(), monsterID, pev->health, flDamage, (bitsDamageType & DMG_BLAST), (bitsDamageType & DMG_NEVERGIB), (bitsDamageType & DMG_ALWAYSGIB) );
 	//easyForcePrintLine("TakeDamage. %s:%d health:%.2f gib damge bits: %d %d", this->getClassname(), monsterID, pev->health, (bitsDamageType&DMG_NEVERGIB), (bitsDamageType&DMG_ALWAYSGIB) );
 	
-
 	if(EASY_CVAR_GET(nothingHurts) == 0 || (EASY_CVAR_GET(nothingHurts) == 2 && Instance(pevAttacker)->IsPlayer() ) ){
 		// do the damage
 
@@ -2196,18 +2169,12 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBaseMonster){
 		return 0;
 	}
 
-
-
-	
 	if ( pev->health <= 0 )
 	{
 		//MODDD - removing this. We can send the inflictor to killed now.
 		//g_pevLastInflictor = pevInflictor;
 		
-
 		lastDamageReceived = flDamage;
-
-
 		attemptResetTimedDamage(TRUE);
 
 		float MYHEALTH = pev->health;
@@ -2232,16 +2199,12 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBaseMonster){
 	//MODDD - else, if not killed by this strike:
 	else{
 
-		
-
 		if(!IsPlayer()){
-
 			int myClassify = Classify();
 			for (int i = 0; i < CDMG_TIMEBASED; i++){
 				//MODDD
 				//if (bitsDamageType & (DMG_PARALYZE << i))
 
-				
 				if(
 					(i == itbd_Radiation && 
 					(myClassify == CLASS_MACHINE ||
@@ -2282,13 +2245,8 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBaseMonster){
 					m_rgbTimeBasedFirstFrame[i] = TRUE;
 				}
 
-
-
 			}//END OF for(int i = 0...)
-
-			
 		}//END OF not player check.
-
 	}
 
 	// react to the damage (get mad)
@@ -2297,8 +2255,6 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBaseMonster){
 		if ( pevAttacker->flags & (FL_MONSTER | FL_CLIENT) )
 		{// only if the attack was a monster or client!
 			
-
-
 			if( !(bitsDamageTypeMod & (DMG_TIMEDEFFECT|DMG_TIMEDEFFECTIGNORE)) ){
 				//MODDD - if this is continual damage (e.g. poison, radiation), don't allow the LKP to be updated! timed damage tells us nothing and shouldn't disturb anything.
 				BOOL updatedEnemyLKP = FALSE;  //turn on if we do.
@@ -2346,14 +2302,41 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBaseMonster){
 			// Default behavior for the base monster in OnTakeDamageSetConditions, plus not triggering schedule-interrupting conditions
 			// ("Took Damage Recently" or something) for timed damage, which just looks annoying. Why react to predictable damage?
 			OnTakeDamageSetConditions(pevInflictor, pevAttacker, flDamage, bitsDamageType, bitsDamageTypeMod);
-
 		}
 	}
 
 	return 1;
 }//END OF TakeDamage
 
-
+//MODDD - NEW.  Overridable part of TRACEATTACK that most monsters call.
+// Let monsters override to change how much damage different hitgroups do,
+// preferrably still involving the skill CVars (extra multipliers are fine).
+float CBaseMonster::hitgroupDamage(float flDamage, int bitsDamageType, int bitsDamageTypeMod, int iHitgroup) {
+	// ALSO, only allow changes if lacking DMG_HITBOX_EQUAL.  Explosions or inprecise attacks should use
+	// this damage type.  After all, a distant explosion doing headshot damage makes no sense.
+	if (!(bitsDamageTypeMod & DMG_HITBOX_EQUAL)) {
+		switch (iHitgroup)
+		{
+		case HITGROUP_GENERIC:
+			break;
+		case HITGROUP_HEAD:
+			return flDamage * gSkillData.monHead;
+		case HITGROUP_CHEST:
+			return flDamage * gSkillData.monChest;
+		case HITGROUP_STOMACH:
+			return flDamage * gSkillData.monStomach;
+		case HITGROUP_LEFTARM:
+		case HITGROUP_RIGHTARM:
+			return flDamage * gSkillData.monArm;
+		case HITGROUP_LEFTLEG:
+		case HITGROUP_RIGHTLEG:
+			return flDamage * gSkillData.monLeg;
+		default:
+			return flDamage;
+		}
+	}//END OF bitsDamageTypeMod check
+	return flDamage;
+}//hitgroupDamage
 
 
 
@@ -2430,7 +2413,6 @@ void CBaseMonster::attemptResetTimedDamage(BOOL forceReset){
 }
 
 
-
 //=========================================================
 // DeadTakeDamage - takedamage function called when a monster's
 // corpse is damaged.
@@ -2438,7 +2420,15 @@ void CBaseMonster::attemptResetTimedDamage(BOOL forceReset){
 //int CBaseMonster :: DeadTakeDamage( entvars_t *pevInflictor, entvars_t *pevAttacker, float flDamage, int bitsDamageType, int bitsDamageTypeMod )
 GENERATE_DEADTAKEDAMAGE_IMPLEMENTATION(CBaseMonster)
 {
-	Vector			vecDir;
+	Vector vecDir;
+
+	// oopsie, debug test
+	//DeathSound();
+
+	//MODDD - wait, what's with the comment below?
+	// Nothing is ever done with "vecDir", although this does set g_vecAttackDir.  weird.
+	// ...oh.  It's a leftover paste from CBaseMonster's TAKEDAMAGE, although only the player uses vecDir.
+	// And since the player never gets checked in DEADTAKEDAMAGE here... yea.
 
 	// grab the vector of the incoming attack. ( pretend that the inflictor is a little lower than it really is, so the body will tend to fly upward a bit).
 	vecDir = Vector( 0, 0, 0 );
@@ -2499,9 +2489,6 @@ float CBaseMonster :: DamageForce( float damage )
 }
 
 
-
-
-
 /*
 //...actually not anymore. Any calls to RadiusDamage, even from RadiusDamageAutoRadius, end up getting redirected to RadiusDamageTest if the RadiusDamageDrawDebug CVar is set.
 void CBaseMonster :: RadiusDamageAutoRadiusTest(entvars_t* pevInflictor, entvars_t*	pevAttacker, float flDamage, int iClassIgnore, int bitsDamageType )
@@ -2530,26 +2517,18 @@ void RadiusDamageTest( Vector vecSrc, entvars_t *pevInflictor, entvars_t *pevAtt
 		pevAttacker = pevInflictor;
 	
 
-
-
 	DebugLine_ClearAll();
-
 
 
 	easyForcePrintLine("RadiusDamageTest: Searching... intended damage:%.2f radius:%.2f", flDamage, flRadius);
 	// iterate on all entities in the vicinity.
 	while ((pEntity = UTIL_FindEntityInSphere( pEntity, vecSrc, flRadius )) != NULL)
 	{
-		
 		//easyForcePrintLine("RadiusDamage: Scanning... %s", pEntity->getClassname());
-
 		if ( pEntity->pev->takedamage != DAMAGE_NO )
 		{
-
 			easyForcePrintLine("RadiusDamageTest: Entity in range: %s", pEntity->getClassname());
 			//continue;
-
-
 
 			// UNDONE: this should check a damage mask, not an ignore
 			if ( iClassIgnore != CLASS_NONE && pEntity->Classify() == iClassIgnore )
@@ -2564,18 +2543,11 @@ void RadiusDamageTest( Vector vecSrc, entvars_t *pevInflictor, entvars_t *pevAtt
 				continue;
 
 
-
-
-
-
 			easyForcePrintLine("RadiusDamageTest: Calling BodyTarget.");
 
 			vecSpot = pEntity->BodyTarget( vecSrc );
 			
 			easyForcePrintLine("RadiusDamageTest: Source:(%.2f,%.2f,%.2f) Bodyspot:(%.2f,%.2f,%.2f)", vecSrc.x, vecSrc.y, vecSrc.z, vecSpot.x, vecSpot.y, vecSpot.z);
-
-
-
 
 
 			UTIL_TraceLine ( vecSrc, vecSpot, dont_ignore_monsters, ENT(pevInflictor), &tr );
@@ -2678,16 +2650,10 @@ void RadiusDamageTest( Vector vecSrc, entvars_t *pevInflictor, entvars_t *pevAtt
 
 
 
-
-
-
-
 //
 // RadiusDamage - this entity is exploding, or otherwise needs to inflict damage upon entities within a certain range.
 // 
 // only damage ents that can clearly be seen by the explosion!
-
-
 
 
 //From CBaseMonster to assume the position of the monster called on (pev->origin).
@@ -2699,8 +2665,6 @@ void CBaseMonster :: RadiusDamageAutoRadius(entvars_t* pevInflictor, entvars_t*	
 {
 	::RadiusDamage( pev->origin, pevInflictor, pevAttacker, flDamage, flDamage * 2.5, iClassIgnore, bitsDamageType, bitsDamageTypeMod );
 }
-
-
 
 //MODDD - these versions now don't belong to CBaseMonster. Why did they? They don't take anything from the monster they are called on.
 void RadiusDamageAutoRadius( Vector vecSrc, entvars_t *pevInflictor, entvars_t *pevAttacker, float flDamage, int iClassIgnore, int bitsDamageType )
@@ -2728,18 +2692,16 @@ void RadiusDamage( Vector vecSrc, entvars_t *pevInflictor, entvars_t *pevAttacke
 }
 void RadiusDamage( Vector vecSrc, entvars_t *pevInflictor, entvars_t *pevAttacker, float flDamage, float flRadius, int iClassIgnore, int bitsDamageType, int bitsDamageTypeMod )
 {
-	
 	if(EASY_CVAR_GET(RadiusDamageDrawDebug) == 1){
 		//pipe it to here instead
 		RadiusDamageTest(vecSrc, pevInflictor, pevAttacker, flDamage, flRadius, iClassIgnore, bitsDamageType, bitsDamageTypeMod);
 		return;
 	}
 
-
 	CBaseEntity *pEntity = NULL;
-	TraceResult	tr;
-	float	flAdjustedDamage, falloff;
-	Vector		vecSpot;
+	TraceResult tr;
+	float flAdjustedDamage, falloff;
+	Vector vecSpot;
 
 	if ( flRadius )
 		falloff = flDamage / flRadius;
@@ -2778,11 +2740,7 @@ void RadiusDamage( Vector vecSrc, entvars_t *pevInflictor, entvars_t *pevAttacke
 			UTIL_TraceLine ( vecSrc, vecSpot, dont_ignore_monsters, ENT(pevInflictor), &tr );
 
 
-			//what is origin yo. is it this yo.
-			//(-18.97,108.11,1.00)
-			
 			/*
-			
 			if(::FClassnameIs(pEntity->pev, "func_pushable")){
 				const char* myClassname = pEntity->getClassname();
 				Vector thisOrigin = pEntity->pev->origin;
@@ -2846,9 +2804,9 @@ void RadiusDamage( Vector vecSrc, entvars_t *pevInflictor, entvars_t *pevAttacke
 				if (tr.flFraction != 1.0)
 				{
 					ClearMultiDamage( );
-					//TODO - why do you put player blood at the blast center sometimes when the player & a baddie are hit at the same time???
-					//Fixed now... I think.
-					//And, marked not to do enhanced damage for hitting a particular sub hitbox (headshots?).  That can't be consistent.
+					// TODO - why do you put player blood at the blast center sometimes when the player & a baddie are hit at the same time???
+					// Fixed now... I think.
+					// And, marked not to do enhanced damage for hitting a particular sub hitbox (headshots?).  That can't be consistent.
 					pEntity->TraceAttack( pevInflictor, flAdjustedDamage, (tr.vecEndPos - vecSrc).Normalize( ), &tr, bitsDamageType, bitsDamageTypeMod | DMG_HITBOX_EQUAL );
 					ApplyMultiDamage( pevInflictor, pevAttacker );
 				}
@@ -2860,13 +2818,7 @@ void RadiusDamage( Vector vecSrc, entvars_t *pevInflictor, entvars_t *pevAttacke
 		}
 	}
 
-	//easyForcePrintLine("I FINISHED OKAY");
-
-}
-
-
-
-
+}//RadiusDamage
 
 
 

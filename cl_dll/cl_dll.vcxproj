@@ -284,6 +284,7 @@ copy ".\$(configuration)\client.pdb" "C:\Program Files (x86)\Valve\Half-Life NGH
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
+    <ClCompile Include="hud\pain.cpp" />
     <ClCompile Include="hud_redraw.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -679,6 +680,7 @@ copy ".\$(configuration)\client.pdb" "C:\Program Files (x86)\Valve\Half-Life NGH
     <ClInclude Include="hud\health.h" />
     <ClInclude Include="hud.h" />
     <ClInclude Include="hudbase.h" />
+    <ClInclude Include="hud\pain.h" />
     <ClInclude Include="hud_iface.h" />
     <ClInclude Include="hud_servers.h" />
     <ClInclude Include="hud_servers_priv.h" />

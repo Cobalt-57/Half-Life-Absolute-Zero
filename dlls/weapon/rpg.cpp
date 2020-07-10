@@ -113,27 +113,6 @@ void CLaserSpot::Spawn( void )
 	UTIL_SetOrigin( pev, pev->origin );
 };
 
-//=========================================================
-// Suspend- make the laser sight invisible. 
-//=========================================================
-void CLaserSpot::Suspend( float flSuspendTime )
-{
-	pev->effects |= EF_NODRAW;
-	
-	SetThink( &CLaserSpot::Revive );
-	pev->nextthink = gpGlobals->time + flSuspendTime;
-}
-
-//=========================================================
-// Revive - bring a suspended laser sight back.
-//=========================================================
-void CLaserSpot::Revive( void )
-{
-	pev->effects &= ~EF_NODRAW;
-
-	SetThink( NULL );
-}
-
 void CLaserSpot::Precache( void )
 {
 	PRECACHE_MODEL("sprites/laserdot.spr");
@@ -145,7 +124,7 @@ LINK_ENTITY_TO_CLASS( rpg_rocket, CRpgRocket );
 
 
 CRpgRocket::CRpgRocket(void){
-	//don't touch vecMoveDirectionMemory, it gets set when the entity's spawned.
+	// don't touch vecMoveDirectionMemory, it gets set when the entity's spawned.
 	ignited = FALSE;
 	alreadyDeleted = FALSE;
 	forceDumb = FALSE;
@@ -660,9 +639,11 @@ void CRpgRocket :: FollowThink( void  )
 
 
 
-//..... no RPG constructor.  what.
 CRpg::CRpg(void) {
 
+#ifndef CLIENT_DLL
+	forceHideSpotTime = -1;
+#endif
 
 }//END OF CRpg constructor
 
@@ -713,11 +694,23 @@ void CRpg::Reload( void )
 	}
 
 #ifndef CLIENT_DLL
-	if ( m_pSpot && m_fSpotActive )
+	if ( m_pSpot )
 	{
-		m_pSpot->Suspend( 2.1 );
-		m_flNextSecondaryAttack = UTIL_WeaponTimeBase() + 2.1;
+		// DIFFERENT METHOD!
+		// Setting forceHideSpotTime to enforce a delay for the 
+		// laserspot to stay off.  Will be deleted this frame like
+		// normal turn-offs.
+		//m_pSpot->Suspend( 2.1 );
+		
+		m_pSpot->Killed(NULL, GIB_NEVER);
+		m_pSpot = NULL;
+
+		// not necessary to enforce this delay.
+		//m_flNextSecondaryAttack = UTIL_WeaponTimeBase() + 2.1;
 	}
+
+	forceHideSpotTime = gpGlobals->time + 2.1;
+
 #endif
 
 	if ( m_iClip == 0 )
@@ -742,7 +735,7 @@ void CRpg::Spawn( )
 	m_iId = WEAPON_RPG;
 
 	SET_MODEL(ENT(pev), "models/w_rpg.mdl");
-	m_fSpotActive = 1;
+	m_fSpotActive = TRUE;
 
 	if ( IsMultiplayer() )
 	{
@@ -816,6 +809,10 @@ int CRpg::AddToPlayer( CBasePlayer *pPlayer )
 
 BOOL CRpg::Deploy( )
 {
+	// paranoia
+#ifndef CLIENT_DLL
+	forceHideSpotTime = -1;
+#endif
 
 	if ( m_iClip == 0 )
 	{
@@ -856,7 +853,6 @@ void CRpg::Holster( int skiplocal /* = 0 */ )
 	}
 #endif
 
-
 	//MODDD - also going to involve whether the RPG is loaded while holstered (HOLSTER1) or not (HOLSTER2).
 	//
 	if(m_iClip){
@@ -864,9 +860,12 @@ void CRpg::Holster( int skiplocal /* = 0 */ )
 	}else{
 		holsterAnimToSend = RPG_HOLSTER2;
 	}
+
+#ifndef CLIENT_DLL
+	forceHideSpotTime = -1;
+#endif
 	
 	DefaultHolster(holsterAnimToSend, skiplocal, 0, (16.0f/30.0f));
-
 
 }//END OF Holster
 
@@ -935,17 +934,48 @@ void CRpg::PrimaryAttack()
 
 void CRpg::SecondaryAttack()
 {
-	m_fSpotActive = ! m_fSpotActive;
+	//MODDD - moved to ItemPostFrameThink for more control.
+}
+
+
+
+
+
+//MODDD
+void CRpg::ItemPostFrameThink() {
+
+	//const BOOL holdingPrimary = m_pPlayer->pev->button & IN_ATTACK;
+	//const BOOL holdingSecondary = m_pPlayer->pev->button & IN_ATTACK2;
+
+	//MODDD - SecondaryAttack script moved here.
+	// This lets the lasersight be toggled on/off, even when it is forced
+	// off by reloading.
+	if ((m_pPlayer->m_afButtonPressed & IN_ATTACK2)) {
+		m_fSpotActive = !m_fSpotActive;
+
+		#ifndef CLIENT_DLL
+		if (!m_fSpotActive && m_pSpot)
+		{
+			m_pSpot->Killed(NULL, GIB_NORMAL);
+			m_pSpot = NULL;
+		}
+		#endif
+
+		//MODDD - no need for a forced delay, a hard mouse press is needed now.
+		//m_flNextSecondaryAttack = UTIL_WeaponTimeBase() + 0.2;
+	}//END OF IN_ATTACK2 check
+
 
 #ifndef CLIENT_DLL
-	if (!m_fSpotActive && m_pSpot)
-	{
-		m_pSpot->Killed( NULL, GIB_NORMAL );
-		m_pSpot = NULL;
+	if (forceHideSpotTime != -1 && gpGlobals->time >= forceHideSpotTime) {
+		// let it be shown again
+		forceHideSpotTime = -1;
 	}
 #endif
 
-	m_flNextSecondaryAttack = UTIL_WeaponTimeBase() + 0.2;
+
+
+	CBasePlayerWeapon::ItemPostFrameThink();
 }
 
 
@@ -1008,7 +1038,8 @@ void CRpg::UpdateSpot( void )
 {
 
 #ifndef CLIENT_DLL
-	if (m_fSpotActive)
+	//MODDD - only restore the spot if forceHideSpotTime is inactive.
+	if (forceHideSpotTime == -1 && m_fSpotActive)
 	{
 		if (!m_pSpot)
 		{

@@ -71,13 +71,12 @@ int CHudTrain::Draw(float fTime)
 		//88, 48from bottom
 
 
-		if(EASY_CVAR_GET(hud_version) == 0){
-
+		if(EASY_CVAR_GET(hud_version) < 3){
 			// This should show up to the right and part way up the armor number
 			y = ScreenHeight - SPR_Height(m_SpriteHandle_t,0) - gHUD.m_iFontHeight;
 			//x = ScreenWidth/3 + SPR_Width(m_SpriteHandle_t,0)/4;
 			//MODDD - closer to health.
-			int healthWidth = gHUD.GetSpriteRect(gHUD.m_HUD_number_0+10).right - gHUD.GetSpriteRect(gHUD.m_HUD_number_0+10).left;
+			int healthWidth = gHUD.m_iFontWidthAlt;
 			x = (healthWidth*4.5);
 
 		}else{

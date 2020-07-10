@@ -3,6 +3,11 @@
 // No sense getting ten thousand warnings on full re-builds, how about they actually mean something?
 
 
+#if (_MSC_VER <= 1200)
+    #define IS_VS6
+#endif
+
+
 
 
 //oh.   uh-oh.
@@ -24,11 +29,6 @@
 // a new one from utils/common/mathlib.c, a file that isn't compiled?
 // eh, why not.
 #pragma warning( disable : 4237 )
-
-
-
-
-
 
 
 

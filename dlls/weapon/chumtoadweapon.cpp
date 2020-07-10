@@ -44,14 +44,12 @@ LINK_ENTITY_TO_CLASS( weapon_chumtoad, CChumToadWeapon );
 
 
 
-
-
 //MODDD
 void CChumToadWeapon::customAttachToPlayer(CBasePlayer *pPlayer ){
         //MODDD TODO ?
 	//m_pPlayer->SetSuitUpdate("!HEV_SQUEEK", FALSE, SUIT_NEXT_IN_30SEC);
 	SetThink(NULL);
-        
+    
 }
 
 
@@ -158,16 +156,6 @@ void CChumToadWeapon::FallThinkCustom ( void )
 
 
 
-
-
-
-
-
-
-
-
-
-
 void CChumToadWeapon :: ItemRotate ( void )
 {
 	//easyForcePrintLine("hahaha");
@@ -185,34 +173,17 @@ void CChumToadWeapon :: ItemRotate ( void )
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 void CChumToadWeapon::Precache( void )
 {
 	
 	PRECACHE_MODEL("models/v_chub.mdl");
 	PRECACHE_MODEL("models/chumtoad.mdl");
 
-
 	////////////////////////////////////////////////////////////////////////////////////////////////
 	//nevermind this, see "precacheAll" in Util.cpp for more info.
 	//NOTE ABOUT WEAPONS NOT USING THIS!!! Player sounds are unconditionally always precached and do not use the sound-sentence save feature. W_Precache() should have these too then!
 	//global_useSentenceSave = TRUE;
 
-	
 	PRECACHE_MODEL("models/p_chumtoad.mdl");
 	/*
 	//MODDD TODO: model / sound precaches. ALSO ADD TO Util.cpp's PRECACHEALL METHOD!
@@ -220,8 +191,9 @@ void CChumToadWeapon::Precache( void )
 	PRECACHE_SOUND("squeek/sqk_hunt2.wav");
 	PRECACHE_SOUND("squeek/sqk_hunt3.wav");
 	*/
-	PRECACHE_SOUND("chumtoad/cht_throw1.wav");
-	PRECACHE_SOUND("chumtoad/cht_throw2.wav");
+	//PRECACHE_SOUND("chumtoad/cht_throw1.wav");
+	//PRECACHE_SOUND("chumtoad/cht_throw2.wav");
+	PRECACHE_SOUND("chumtoad/chub_draw.wav");
 	
 	PRECACHE_SOUND("chumtoad/cht_croak_short.wav");
 	PRECACHE_SOUND("chumtoad/cht_croak_medium.wav");
@@ -230,7 +202,6 @@ void CChumToadWeapon::Precache( void )
 	//just in case.
 	precacheGunPickupSound();
 	precacheAmmoPickupSound();
-
 	//global_useSentenceSave = FALSE;
 	////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -298,23 +269,19 @@ BOOL CChumToadWeapon::Deploy( )
 	if(!globalflag_muteDeploySound){
 		// play hunt sound
 		float flRndSound = RANDOM_FLOAT ( 0 , 1 );
-		//MODDD TODO: CHANGE SOUNDS!!!
+		//MODDD TODO: CHANGE SOUNDS!!!    Roger roger.
+		/*
 		if ( flRndSound <= 0.5 ){
 			EMIT_SOUND_DYN(ENT(m_pPlayer->pev), CHAN_WEAPON, "chumtoad/cht_throw1.wav", 1, ATTN_NORM, 0, 100);
 		}else{
 			EMIT_SOUND_DYN(ENT(m_pPlayer->pev), CHAN_WEAPON, "chumtoad/cht_throw2.wav", 1, ATTN_NORM, 0, 100);
 		}
+		*/
+		EMIT_SOUND_DYN(ENT(m_pPlayer->pev), CHAN_WEAPON, "chumtoad/chub_draw.wav", 1, ATTN_NORM, 0, 100);
 	}
 	
-
-
-
-
-
-
 	m_pPlayer->m_iWeaponVolume = QUIET_GUN_VOLUME;
 
-	
 	m_fInAttack = FALSE;
 	pev->fuser1 = -1;
 	waitingForChumtoadThrow = FALSE;
@@ -342,7 +309,6 @@ void CChumToadWeapon::Holster( int skiplocal /* = 0 */ )
 	pev->fuser1 = -1;
 	waitingForChumtoadThrow = FALSE;
 
-
 	if ( !m_pPlayer->m_rgAmmo[ m_iPrimaryAmmoType ] )
 	{
 		m_pPlayer->pev->weapons &= ~(1<<WEAPON_CHUMTOAD);
@@ -353,10 +319,8 @@ void CChumToadWeapon::Holster( int skiplocal /* = 0 */ )
 		//??? what?
 	}
 
-	
 	//SendWeaponAnim( CHUMTOADWEAPON_DOWN );
 	
-
 	EMIT_SOUND(ENT(m_pPlayer->pev), CHAN_WEAPON, "common/null.wav", 1.0, ATTN_NORM);
 }
 
@@ -368,219 +332,195 @@ void CChumToadWeapon::Holster( int skiplocal /* = 0 */ )
 //ALSO, if the 
 BOOL CChumToadWeapon::checkThrowValid(Vector trace_origin, float* minFractionStore){
 
+	UTIL_MakeVectors( m_pPlayer->pev->v_angle );
+	TraceResult tr;
+	
+	int flags;
+	#ifdef CLIENT_WEAPONS
+		flags = FEV_NOTHOST;
+	#else
+		flags = 0;
+	#endif
 
+
+
+
+	// find place to toss monster
+	//UTIL_TraceLine( trace_origin + gpGlobals->v_forward * 20, trace_origin + gpGlobals->v_forward * 100, dont_ignore_monsters, NULL, &tr );
 
 	
-		UTIL_MakeVectors( m_pPlayer->pev->v_angle );
-		TraceResult tr;
+	//typedef enum { point_hull=0, human_hull=1, large_hull=2, head_hull=3 };
+
+	//SIGH. Even for things that let this pass, the chumtoad can get stuck on walls. Wow.
+	//UTIL_TraceHull( trace_origin + gpGlobals->v_forward * 30, trace_origin + gpGlobals->v_forward * 100, dont_ignore_monsters, head_hull, m_pPlayer->edict(), &tr );
+
+	
+	TraceResult trLeft;
+	TraceResult trCenter;
+	TraceResult trRight;
+	TraceResult trUp;
+	TraceResult trDown;
+	
+	const float checkDistStart = 15;
+	const float checkAdj = 12;
+	const float checkDistEnd = 80;
+
+
+	Vector vecStartLeft = trace_origin + gpGlobals->v_forward * checkDistStart + -gpGlobals->v_right * checkAdj;
+	Vector vecStartCenter = trace_origin + gpGlobals->v_forward * checkDistStart;
+	Vector vecStartRight = trace_origin + gpGlobals->v_forward * checkDistStart + gpGlobals->v_right * checkAdj;
+	Vector vecEndLeft = trace_origin + gpGlobals->v_forward * checkDistEnd + -gpGlobals->v_right * checkAdj;
+	Vector vecEndCenter = trace_origin + gpGlobals->v_forward * checkDistEnd;
+	Vector vecEndRight = trace_origin + gpGlobals->v_forward * checkDistEnd + gpGlobals->v_right * checkAdj;
+	
+	Vector vecStartUp = trace_origin + gpGlobals->v_forward * checkDistStart + gpGlobals->v_up * checkAdj;
+	Vector vecStartDown = trace_origin + gpGlobals->v_forward * checkDistStart + -gpGlobals->v_up * checkAdj;
+	Vector vecEndUp = trace_origin + gpGlobals->v_forward * checkDistEnd + gpGlobals->v_up * checkAdj;
+	Vector vecEndDown = trace_origin + gpGlobals->v_forward * checkDistEnd + -gpGlobals->v_up * checkAdj;
+
+	UTIL_TraceLine( vecStartLeft, vecEndLeft, dont_ignore_monsters, this->m_pPlayer->edict(), &trLeft );
+	UTIL_TraceLine( vecStartCenter, vecEndCenter, dont_ignore_monsters, this->m_pPlayer->edict(), &trCenter );
+	UTIL_TraceLine( vecStartRight, vecEndRight, dont_ignore_monsters, this->m_pPlayer->edict(), &trRight );
+	UTIL_TraceLine( vecStartUp, vecEndUp, dont_ignore_monsters, this->m_pPlayer->edict(), &trUp );
+	UTIL_TraceLine( vecStartDown, vecEndDown, dont_ignore_monsters, this->m_pPlayer->edict(), &trDown );
+	
+	float minFraction;
+	trLeft.flFraction<trRight.flFraction?minFraction=trLeft.flFraction:minFraction=trRight.flFraction;
+	minFraction<trCenter.flFraction?minFraction=minFraction:minFraction=trCenter.flFraction;
+	minFraction<trUp.flFraction?minFraction=minFraction:minFraction=trUp.flFraction;
+	minFraction<trDown.flFraction?minFraction=minFraction:minFraction=trDown.flFraction;
+	BOOL tracesSolid;
+	BOOL tracesStartSolid;
+	tracesSolid = (trLeft.fAllSolid != 0 || trCenter.fAllSolid != 0 || trRight.fAllSolid != 0 || trUp.fAllSolid != 0 || trDown.fAllSolid != 0);
+	tracesStartSolid = (trLeft.fStartSolid != 0 || trCenter.fStartSolid != 0 || trRight.fStartSolid != 0 || trUp.fStartSolid != 0 || trDown.fStartSolid != 0);
+	
+
+
+
 		
-		
-		int flags;
-		#ifdef CLIENT_WEAPONS
-			flags = FEV_NOTHOST;
-		#else
-			flags = 0;
-		#endif
-
-
-
-
-		// find place to toss monster
-		//UTIL_TraceLine( trace_origin + gpGlobals->v_forward * 20, trace_origin + gpGlobals->v_forward * 100, dont_ignore_monsters, NULL, &tr );
-
-		
-		//typedef enum { point_hull=0, human_hull=1, large_hull=2, head_hull=3 };
-
-		//SIGH. Even for things that let this pass, the chumtoad can get stuck on walls. Wow.
-		//UTIL_TraceHull( trace_origin + gpGlobals->v_forward * 30, trace_origin + gpGlobals->v_forward * 100, dont_ignore_monsters, head_hull, m_pPlayer->edict(), &tr );
-
-		
-		TraceResult trLeft;
-		TraceResult trCenter;
-		TraceResult trRight;
-		TraceResult trUp;
-		TraceResult trDown;
-		
-		const float checkDistStart = 15;
-		const float checkAdj = 12;
-		const float checkDistEnd = 80;
-
-
-		Vector vecStartLeft = trace_origin + gpGlobals->v_forward * checkDistStart + -gpGlobals->v_right * checkAdj;
-		Vector vecStartCenter = trace_origin + gpGlobals->v_forward * checkDistStart;
-		Vector vecStartRight = trace_origin + gpGlobals->v_forward * checkDistStart + gpGlobals->v_right * checkAdj;
-		Vector vecEndLeft = trace_origin + gpGlobals->v_forward * checkDistEnd + -gpGlobals->v_right * checkAdj;
-		Vector vecEndCenter = trace_origin + gpGlobals->v_forward * checkDistEnd;
-		Vector vecEndRight = trace_origin + gpGlobals->v_forward * checkDistEnd + gpGlobals->v_right * checkAdj;
-		
-		Vector vecStartUp = trace_origin + gpGlobals->v_forward * checkDistStart + gpGlobals->v_up * checkAdj;
-		Vector vecStartDown = trace_origin + gpGlobals->v_forward * checkDistStart + -gpGlobals->v_up * checkAdj;
-		Vector vecEndUp = trace_origin + gpGlobals->v_forward * checkDistEnd + gpGlobals->v_up * checkAdj;
-		Vector vecEndDown = trace_origin + gpGlobals->v_forward * checkDistEnd + -gpGlobals->v_up * checkAdj;
-
-		UTIL_TraceLine( vecStartLeft, vecEndLeft, dont_ignore_monsters, this->m_pPlayer->edict(), &trLeft );
-		UTIL_TraceLine( vecStartCenter, vecEndCenter, dont_ignore_monsters, this->m_pPlayer->edict(), &trCenter );
-		UTIL_TraceLine( vecStartRight, vecEndRight, dont_ignore_monsters, this->m_pPlayer->edict(), &trRight );
-		UTIL_TraceLine( vecStartUp, vecEndUp, dont_ignore_monsters, this->m_pPlayer->edict(), &trUp );
-		UTIL_TraceLine( vecStartDown, vecEndDown, dont_ignore_monsters, this->m_pPlayer->edict(), &trDown );
-		
-		float minFraction;
-		trLeft.flFraction<trRight.flFraction?minFraction=trLeft.flFraction:minFraction=trRight.flFraction;
-		minFraction<trCenter.flFraction?minFraction=minFraction:minFraction=trCenter.flFraction;
-		minFraction<trUp.flFraction?minFraction=minFraction:minFraction=trUp.flFraction;
-		minFraction<trDown.flFraction?minFraction=minFraction:minFraction=trDown.flFraction;
-		BOOL tracesSolid;
-		BOOL tracesStartSolid;
-		tracesSolid = (trLeft.fAllSolid != 0 || trCenter.fAllSolid != 0 || trRight.fAllSolid != 0 || trUp.fAllSolid != 0 || trDown.fAllSolid != 0);
-		tracesStartSolid = (trLeft.fStartSolid != 0 || trCenter.fStartSolid != 0 || trRight.fStartSolid != 0 || trUp.fStartSolid != 0 || trDown.fStartSolid != 0);
-		
-
-
-
-			
 #ifndef CLIENT_DLL
-		if(EASY_CVAR_GET(playerChumtoadThrowDrawDebug)){
+	if(EASY_CVAR_GET(playerChumtoadThrowDrawDebug)){
 
-			easyForcePrintLine("flFraction: %.2f %.2f %.2f %.2f %.2f ::: %.2f", trLeft.flFraction, trCenter.flFraction, trRight.flFraction, trUp.flFraction, trDown.flFraction, minFraction);
-			easyForcePrintLine("fAllSolid: %d %d %d %d %d ::: %d", trLeft.fAllSolid, trCenter.fAllSolid, trRight.fAllSolid, trUp.fAllSolid, trDown.fAllSolid, tracesSolid);
-			easyForcePrintLine("fStartSolid:  %d %d %d %d %d ::: %d", trLeft.fStartSolid, trCenter.fStartSolid, trRight.fStartSolid, trUp.fStartSolid, trDown.fStartSolid, tracesStartSolid);
-			easyForcePrintLine("FINAL STATS: minfract:%.2f tracesSolid:%d tracesStartSolid:%d", minFraction, tracesSolid, tracesStartSolid);
-		
-
-			if(tracesSolid){
-				easyForcePrintLine("DANGER: TRACES ALLSOLID!");
-			}if(tracesStartSolid){
-				easyForcePrintLine("DANGER: TRACES fStartSolid!");
-			}
-
-			if(minFraction < 1.0){
-				easyForcePrintLine("DANGER: incomplete fraction somewhere, look.");
-			}
-
-			//MODDD - IMPORTANT LESSON! A fraction (flFraction) can still be 1.0 and have collided with something as close as possible! Unknown why it reports 1.0 then instead of 0 (for 0% of the way).
-			//Checking for "pHit being null" should work though.
-
-			/*
-			m_pPlayer->debugVect1Success = (trLeft.flFraction >= 1.0 && !trLeft.fStartSolid && !trLeft.fAllSolid);
-			m_pPlayer->debugVect2Success = (trCenter.flFraction >= 1.0 && !trCenter.fStartSolid && !trCenter.fAllSolid);
-			m_pPlayer->debugVect3Success = (trRight.flFraction >= 1.0 && !trRight.fStartSolid && !trRight.fAllSolid);
-			m_pPlayer->debugVect4Success = (trUp.flFraction >= 1.0 && !trUp.fStartSolid && !trUp.fAllSolid);
-			m_pPlayer->debugVect5Success = (trDown.flFraction >= 1.0 && !trDown.fStartSolid && !trDown.fAllSolid);
-			*/
-
-		
-			if(trLeft.pHit != NULL){easyForcePrintLine("trLeft HIT %s", STRING(trLeft.pHit->v.classname));}
-			if(trCenter.pHit != NULL){easyForcePrintLine("trCenter HIT %s", STRING(trCenter.pHit->v.classname));}
-			if(trRight.pHit != NULL){easyForcePrintLine("trRight HIT %s", STRING(trRight.pHit->v.classname));}
-			if(trUp.pHit != NULL){easyForcePrintLine("trUp HIT %s", STRING(trUp.pHit->v.classname));}
-			if(trDown.pHit != NULL){easyForcePrintLine("trDown HIT %s", STRING(trDown.pHit->v.classname));}
-		
-			DebugLine_ClearAll();
-
-			//HACKER SACKS.
-			if(trLeft.fStartSolid && !trLeft.fAllSolid)trLeft.flFraction = 0;
-			if(trCenter.fStartSolid && !trCenter.fAllSolid)trCenter.flFraction = 0;
-			if(trRight.fStartSolid && !trRight.fAllSolid)trRight.flFraction = 0;
-			if(trUp.fStartSolid && !trUp.fAllSolid)trUp.flFraction = 0;
-			if(trDown.fStartSolid && !trDown.fAllSolid)trDown.flFraction = 0;
-
-			DebugLine_Setup(0, vecStartLeft, vecEndLeft, trLeft.flFraction);
-			DebugLine_Setup(1, vecStartCenter, vecEndCenter, trCenter.flFraction);
-			DebugLine_Setup(2, vecStartRight, vecEndRight, trRight.flFraction);
-			DebugLine_Setup(3, vecStartUp, vecEndUp, trUp.flFraction);
-			DebugLine_Setup(4, vecStartDown, vecEndDown, trDown.flFraction);
-
-
-
-
-	
-			//wall: 4, 7     SOLID_BSP, MOVETYPE_PUSH
-			//grunt: 3, 4    SOLID_SLIDEBOX, MOVETYPE_STEP
-		
-
-
-			/*
-			easyForcePrintLine("WHAT DO YOU THINK? %.2f %d", trLeft.flFraction, trLeft.pHit!=NULL);
-
-			if(trLeft.pHit != NULL){
-				easyForcePrintLine("eee? %d %d", trLeft.pHit->v.solid, trLeft.pHit->v.movetype);
-				::UTIL_printLineVector("siz?", trLeft.pHit->v.size);
-
-				trLeft.pHit->v.solid = SOLID_BSP;
-				trLeft.pHit->v.movetype = MOVETYPE_PUSH;
-
-			}
-			*/
-
-
-
-	
-			easyForcePrintLine("--------------------------------------------------------------");
-
+		easyForcePrintLine("flFraction: %.2f %.2f %.2f %.2f %.2f ::: %.2f", trLeft.flFraction, trCenter.flFraction, trRight.flFraction, trUp.flFraction, trDown.flFraction, minFraction);
+		easyForcePrintLine("fAllSolid: %d %d %d %d %d ::: %d", trLeft.fAllSolid, trCenter.fAllSolid, trRight.fAllSolid, trUp.fAllSolid, trDown.fAllSolid, tracesSolid);
+		easyForcePrintLine("fStartSolid:  %d %d %d %d %d ::: %d", trLeft.fStartSolid, trCenter.fStartSolid, trRight.fStartSolid, trUp.fStartSolid, trDown.fStartSolid, tracesStartSolid);
+		easyForcePrintLine("FINAL STATS: minfract:%.2f tracesSolid:%d tracesStartSolid:%d", minFraction, tracesSolid, tracesStartSolid);
 	
 
-				/*
-			#ifndef CLIENT_DLL
-				UTIL_drawLine(vecStartLeft, vecEndLeft);
-				UTIL_drawLine(vecStartCenter, vecEndCenter);
-				UTIL_drawLine(vecStartRight, vecEndRight);
-				UTIL_drawLine(vecStartUp, vecEndUp);
-				UTIL_drawLine(vecStartDown, vecEndDown);
-			#endif
-				*/
+		if(tracesSolid){
+			easyForcePrintLine("DANGER: TRACES ALLSOLID!");
+		}if(tracesStartSolid){
+			easyForcePrintLine("DANGER: TRACES fStartSolid!");
+		}
 
+		if(minFraction < 1.0){
+			easyForcePrintLine("DANGER: incomplete fraction somewhere, look.");
+		}
 
+		//MODDD - IMPORTANT LESSON! A fraction (flFraction) can still be 1.0 and have collided with something as close as possible! Unknown why it reports 1.0 then instead of 0 (for 0% of the way).
+		//Checking for "pHit being null" should work though.
 
+		/*
+		m_pPlayer->debugVect1Success = (trLeft.flFraction >= 1.0 && !trLeft.fStartSolid && !trLeft.fAllSolid);
+		m_pPlayer->debugVect2Success = (trCenter.flFraction >= 1.0 && !trCenter.fStartSolid && !trCenter.fAllSolid);
+		m_pPlayer->debugVect3Success = (trRight.flFraction >= 1.0 && !trRight.fStartSolid && !trRight.fAllSolid);
+		m_pPlayer->debugVect4Success = (trUp.flFraction >= 1.0 && !trUp.fStartSolid && !trUp.fAllSolid);
+		m_pPlayer->debugVect5Success = (trDown.flFraction >= 1.0 && !trDown.fStartSolid && !trDown.fAllSolid);
+		*/
 
-		}//END OF DEBUG DRAW CHECK
-#endif
+	
+		if(trLeft.pHit != NULL){easyForcePrintLine("trLeft HIT %s", STRING(trLeft.pHit->v.classname));}
+		if(trCenter.pHit != NULL){easyForcePrintLine("trCenter HIT %s", STRING(trCenter.pHit->v.classname));}
+		if(trRight.pHit != NULL){easyForcePrintLine("trRight HIT %s", STRING(trRight.pHit->v.classname));}
+		if(trUp.pHit != NULL){easyForcePrintLine("trUp HIT %s", STRING(trUp.pHit->v.classname));}
+		if(trDown.pHit != NULL){easyForcePrintLine("trDown HIT %s", STRING(trDown.pHit->v.classname));}
+	
+		DebugLine_ClearAll();
 
+		//HACKER SACKS.
+		if(trLeft.fStartSolid && !trLeft.fAllSolid)trLeft.flFraction = 0;
+		if(trCenter.fStartSolid && !trCenter.fAllSolid)trCenter.flFraction = 0;
+		if(trRight.fStartSolid && !trRight.fAllSolid)trRight.flFraction = 0;
+		if(trUp.fStartSolid && !trUp.fAllSolid)trUp.flFraction = 0;
+		if(trDown.fStartSolid && !trDown.fAllSolid)trDown.flFraction = 0;
 
+		DebugLine_Setup(0, vecStartLeft, vecEndLeft, trLeft.flFraction);
+		DebugLine_Setup(1, vecStartCenter, vecEndCenter, trCenter.flFraction);
+		DebugLine_Setup(2, vecStartRight, vecEndRight, trRight.flFraction);
+		DebugLine_Setup(3, vecStartUp, vecEndUp, trUp.flFraction);
+		DebugLine_Setup(4, vecStartDown, vecEndDown, trDown.flFraction);
 
+		//wall: 4, 7     SOLID_BSP, MOVETYPE_PUSH
+		//grunt: 3, 4    SOLID_SLIDEBOX, MOVETYPE_STEP
+	
+		/*
+		easyForcePrintLine("WHAT DO YOU THINK? %.2f %d", trLeft.flFraction, trLeft.pHit!=NULL);
+
+		if(trLeft.pHit != NULL){
+			easyForcePrintLine("eee? %d %d", trLeft.pHit->v.solid, trLeft.pHit->v.movetype);
+			::UTIL_printLineVector("siz?", trLeft.pHit->v.size);
+
+			trLeft.pHit->v.solid = SOLID_BSP;
+			trLeft.pHit->v.movetype = MOVETYPE_PUSH;
+
+		}
+		*/
+
+		easyForcePrintLine("--------------------------------------------------------------");
 
 
 			/*
 		#ifndef CLIENT_DLL
-			Vector livingSizeMins = VEC_HUMAN_HULL_MIN + Vector(-45, -45, -8);
-			Vector livingSizeMaxs = VEC_HUMAN_HULL_MAX + Vector(45, 45, 30);
-			//UTIL_EntitiesInBox
-			CBaseEntity *ent = NULL;
-			CBaseEntity* theList[32];
-			int theListSoftMax = UTIL_EntitiesInBox( theList, 32, pev->origin + livingSizeMins, pev->origin + livingSizeMaxs, 0 );
-			for(int i = 0; i < theListSoftMax; i++){
-				ent = theList[i];
-				if ( !UTIL_IsDeadEntity(ent) && ent != this && ent->MyMonsterPointer() != NULL ){
-					//easyPrintLine("WHAT THE heck IS YOUR darn ID %d", ent->MyMonsterPointer()->monsterID);
-					//if(UTIL_IsAliveEntity(ent) && IRelationship(ent) <= R_NO ){
-						//maybe send some "scramble position" advisory to get off of me, if friendly?
-						//ent->needToMove = TRUE;
-					//}
-					//return FALSE;
-				}
-				easyForcePrintLine("FOUND %d: %s", i, ent->getClassname() );
-			}
+			UTIL_drawLine(vecStartLeft, vecEndLeft);
+			UTIL_drawLine(vecStartCenter, vecEndCenter);
+			UTIL_drawLine(vecStartRight, vecEndRight);
+			UTIL_drawLine(vecStartUp, vecEndUp);
+			UTIL_drawLine(vecStartDown, vecEndDown);
 		#endif
 			*/
 
+	}//END OF DEBUG DRAW CHECK
+#endif
 
-		//MODDD NOTE - watch the required and thorw distance above (gpGlobals->forward * #) and flFraction! If it is too small, chumtoads can be thrown "through" walls, like map walls, and clip through. Looks weird and the toad leaves this universe.
-		
 
-		// ... || EASY_CVAR_GET(testVar) == 2
-		if ( (tracesSolid == FALSE && tracesStartSolid == FALSE && minFraction >= 1.0))
-		//if ( tr.fAllSolid == 0 && tr.fStartSolid == 0 && tr.flFraction >= 1.0)
-		{
-			if(minFractionStore != NULL){ *minFractionStore = minFraction; }  //on success, the caller wants to know the minimum fraction seen, if a place to put it is provided.
-			return TRUE;
+
+		/*
+	#ifndef CLIENT_DLL
+		Vector livingSizeMins = VEC_HUMAN_HULL_MIN + Vector(-45, -45, -8);
+		Vector livingSizeMaxs = VEC_HUMAN_HULL_MAX + Vector(45, 45, 30);
+		//UTIL_EntitiesInBox
+		CBaseEntity *ent = NULL;
+		CBaseEntity* theList[32];
+		int theListSoftMax = UTIL_EntitiesInBox( theList, 32, pev->origin + livingSizeMins, pev->origin + livingSizeMaxs, 0 );
+		for(int i = 0; i < theListSoftMax; i++){
+			ent = theList[i];
+			if ( !UTIL_IsDeadEntity(ent) && ent != this && ent->MyMonsterPointer() != NULL ){
+				//easyPrintLine("WHAT THE heck IS YOUR darn ID %d", ent->MyMonsterPointer()->monsterID);
+				//if(UTIL_IsAliveEntity(ent) && IRelationship(ent) <= R_NO ){
+					//maybe send some "scramble position" advisory to get off of me, if friendly?
+					//ent->needToMove = TRUE;
+				//}
+				//return FALSE;
+			}
+			easyForcePrintLine("FOUND %d: %s", i, ent->getClassname() );
 		}
+	#endif
+		*/
 
-		return FALSE;
+
+	//MODDD NOTE - watch the required and thorw distance above (gpGlobals->forward * #) and flFraction! If it is too small, chumtoads can be thrown "through" walls, like map walls, and clip through. Looks weird and the toad leaves this universe.
+	
+
+	// ... || EASY_CVAR_GET(testVar) == 2
+	if ( (tracesSolid == FALSE && tracesStartSolid == FALSE && minFraction >= 1.0))
+	//if ( tr.fAllSolid == 0 && tr.fStartSolid == 0 && tr.flFraction >= 1.0)
+	{
+		if(minFractionStore != NULL){ *minFractionStore = minFraction; }  //on success, the caller wants to know the minimum fraction seen, if a place to put it is provided.
+		return TRUE;
+	}
+
+	return FALSE;
 }//END OF checkThrowValid
-
-
-
-
-
 
 
 //Spawns a chumtoad in front of the player with some velocity to go forwards.
@@ -593,7 +533,7 @@ void CChumToadWeapon::ThrowChumtoad(Vector vecSpawnPoint){
 	//only send YAW. angle.y.
 	
 	//MODDD TODO - throw sound (creature noise)?
-	EMIT_SOUND_DYN(ENT(pev), CHAN_VOICE, "chumtoad/cht_croak_short.wav", 1, ATTN_NORM, 0, 105);
+	EMIT_SOUND_DYN(ENT(pev), CHAN_VOICE, "chumtoad/cht_croak_short.wav", 1, ATTN_NORM, 0, RANDOM_LONG(98, 106));
 
 	m_pPlayer->m_iWeaponVolume = QUIET_GUN_VOLUME;
 
@@ -610,18 +550,11 @@ void CChumToadWeapon::ThrowChumtoad(Vector vecSpawnPoint){
 
 
 
-
 void CChumToadWeapon::PrimaryAttack()
 {
-
-
-	
 #ifndef CLIENT_DLL
-
-
 	if ( m_pPlayer->m_rgAmmo[ m_iPrimaryAmmoType ] )
 	{
-
 		Vector trace_origin;
 		// HACK HACK:  Ugly hacks to handle change in origin based on new physics code for players
 		// Move origin up if crouched and start trace a bit outside of body ( 20 units instead of 16 )
@@ -633,40 +566,18 @@ void CChumToadWeapon::PrimaryAttack()
 
 		float minFraction;
 		if(checkThrowValid(trace_origin, &minFraction)){
-			
 			//Come to think of it... what's the point of playing this event clientside? We can't guarantee it is in sync for things like say,
 			//a failed chumtoad throw because tracechecks with map geometry to determine a successful area for throwing or a block isn't possible clientside. Only server.
 			//Just send the anim the old-fashioned way.
 			//PLAYBACK_EVENT_FULL( flags, m_pPlayer->edict(), m_usChumToadFire, 0.0, (float *)&g_vecZero, (float *)&g_vecZero, 0.0, 0.0, 0, 0, 0, 0 );
 
-
 			forceBlockLooping();
 			//bypass??
-
 			SendWeaponAnim( CHUMTOADWEAPON_THROW | 0 );
-
-
 			// player "shoot" animation
 			m_pPlayer->SetAnimation( PLAYER_ATTACK1 );
 
-
-
-
 			//MODDD - old throw location, now throwing with a little delay...
-
-
-
-
-
-			//CHUMTOADWEAPON_THROW
-
-
-
-
-
-			
-
-
 			m_fJustThrown = 1;
 			sendJustThrown( ENT(m_pPlayer->pev), m_fJustThrown);
 
@@ -690,28 +601,16 @@ void CChumToadWeapon::PrimaryAttack()
 			//Keep the client in sync, send this.
 			sendTimeWeaponIdleUpdate( ENT(m_pPlayer->pev), m_flTimeWeaponIdle);
 
-
 			//server-only, but if it updates for the client, no problem. The only effect, a spawned chumtoad, is server-only anyways.
-			
-			
 			waitingForChumtoadThrow = TRUE;
-
 			//...not working for some reason.
-
 			//pev->fuser1 = 2;
 		}
 	}
 
 #endif
-	
-
-
 	//m_flTimeWeaponIdle = 666;
-
-
 }//END OF PrimaryAttack(...)
-
-
 
 
 
@@ -722,17 +621,11 @@ void CChumToadWeapon::SecondaryAttack( void )
 
 
 
-
-
-
-
-
 float CChumToadWeapon::randomIdleAnimationDelay(){
 	return 0; //no static delays for me.
 }
 
 void CChumToadWeapon::ItemPostFrame(){
-	
 	//MODDD - nope.
 	/*
 	if ( ( pev->skin == 0 ) && RANDOM_LONG(0,127) == 0 )
@@ -748,25 +641,15 @@ void CChumToadWeapon::ItemPostFrame(){
 	}
 	*/
 
-
-
-	
 	CBasePlayerWeapon::ItemPostFrame();
 
 
-
-
 #ifndef CLIENT_DLL
-
-
-
 	//easyForcePrintLine("WHAT? npa:%.2f: ctrd:%.2f wfct:%d", m_flNextPrimaryAttack, pev->fuser1, waitingForChumtoadThrow);
 	//if(m_flStartThrow != -1 && m_flStartThrow <= 0){
 	//if(m_flNextPrimaryAttack > 0 && chumtoadThrowReverseDelay != -1 && m_flNextPrimaryAttack <= chumtoadThrowReverseDelay){
 	if(pev->fuser1 <= 0 && waitingForChumtoadThrow){
 		//time expired? Throw chumtoad.
-
-		
 		Vector trace_origin;
 		// HACK HACK:  Ugly hacks to handle change in origin based on new physics code for players
 		// Move origin up if crouched and start trace a bit outside of body ( 20 units instead of 16 )
@@ -775,9 +658,7 @@ void CChumToadWeapon::ItemPostFrame(){
 		{
 			trace_origin = trace_origin - ( VEC_HULL_MIN - VEC_DUCK_HULL_MIN );
 		}
-
 		float minFraction;
-
 
 		if(this->checkThrowValid(trace_origin, &minFraction)){
 			Vector toadSpawnPoint = trace_origin + gpGlobals->v_forward * 100 * (minFraction - 0.36);
@@ -790,42 +671,26 @@ void CChumToadWeapon::ItemPostFrame(){
 		//m_flStartThrow = -1;
 		//chumtoadThrowReverseDelay = -1;  //don't throw again this time.
 		
-
 		waitingForChumtoadThrow = FALSE;
 		//pev->fuser1 = -1;
-		
 	}
 	
 #endif
-
-
-
-
-	
-
-	
 
 }//END OF ItemPostFrame
 
 
 
-
 void CChumToadWeapon::WeaponIdle( void )
 {
-
-
-
 	//return;
 	//forceBlockLooping();
 
-	
-	
 	//THis is actually reusing the "m_fInAttack" variable for telling when to make the chumtoad re-appear.
 	//...no? just do a literal check for whether the weapon model is null, hence retired and able to be brought back up.
 	//if(m_fInAttack == TRUE){
 	if(m_pPlayer->pev->viewmodel == iStringNull){
 		if ( m_pPlayer->m_rgAmmo[ m_iPrimaryAmmoType ] > 0 ){
-
 			//let's not.
 			globalflag_muteDeploySound = TRUE;
 	        Deploy();
@@ -836,21 +701,15 @@ void CChumToadWeapon::WeaponIdle( void )
 	}
 	
 	//is this redundant now??
-	
-
 	if ( m_flTimeWeaponIdle > UTIL_WeaponTimeBase() )
 		return;
 
-
-
-	
 	if (m_fJustThrown)
 	{
 		m_fJustThrown = 0;
 #ifndef CLIENT_DLL
 		sendJustThrown( ENT(m_pPlayer->pev), m_fJustThrown);
 #endif
-
 		if ( !m_pPlayer->m_rgAmmo[PrimaryAmmoIndex()] )
 		{
 			RetireWeapon();
@@ -865,8 +724,6 @@ void CChumToadWeapon::WeaponIdle( void )
 		return;
 	}
 	
-	
-
 	//Now that there isn't a static delay for living throwables, the odds of a unique idle anim have been slightly reduced.
 	//Old ones were:
 	//      if  flRand <= 0.75
@@ -898,10 +755,7 @@ void CChumToadWeapon::WeaponIdle( void )
 	//CHUMTOADWEAPON_IDLE1 = 0, //31, 16
 	//CHUMTOADWEAPON_FIDGETLICK, //31, 16
 	//CHUMTOADWEAPON_FIDGETCROAK, //51, 16
-
 }//END OF WeaponIdle(...)
-
-
 
 
 

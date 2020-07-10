@@ -1871,8 +1871,6 @@ float TEXTURETYPE_PlaySound(TraceResult *ptr,  Vector vecSrc, Vector vecEnd, int
 		}
 	}
 
-
-	cnt = 0;
 	
 	if(EASY_CVAR_GET(textureHitSoundPrintouts)==1)easyForcePrintLine("SND PLAY TEXTURE SOUND: %d, %c", (int)chTextureType, chTextureType);
 
@@ -1946,6 +1944,12 @@ float TEXTURETYPE_PlaySound(TraceResult *ptr,  Vector vecSrc, Vector vecEnd, int
 		fattn = 1.0;
 		cnt = 2;
 		break;
+	default:
+		//MODDD - no default case?  really guys?         really?
+		fvol = 0;
+		fvolbar = 0;
+		//fattn is already defaulted
+		cnt = 0;
 	}
 
 	// did we hit a breakable?

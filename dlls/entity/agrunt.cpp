@@ -25,14 +25,10 @@
 #include "weapons.h"
 #include "soundent.h"
 #include "hornet.h"
-
-
 //MODDD - new includes
 #include "activity.h"
 #include "util_model.h"
 #include "defaultai.h"
-
-
 
 EASY_CVAR_EXTERN_DEBUGONLY(noFlinchOnHard);
 EASY_CVAR_EXTERN_DEBUGONLY(thatWasntPunch);
@@ -40,27 +36,12 @@ EASY_CVAR_EXTERN_DEBUGONLY(agrunt_muzzleflash);
 
 extern unsigned short g_sCustomBallsPowerup;
 
-//EASY_CVAR_EXTERN(testVar)
-
-//=========================================================
-// monster-specific schedule types
-//=========================================================
-enum
-{
-	SCHED_AGRUNT_SUPPRESS = LAST_COMMON_SCHEDULE + 1,
-	SCHED_AGRUNT_THREAT_DISPLAY,
-};
-
-//=========================================================
-// monster-specific tasks
-//=========================================================
-enum 
-{
-	TASK_AGRUNT_SETUP_HIDE_ATTACK = LAST_COMMON_TASK + 1,
-	TASK_AGRUNT_GET_PATH_TO_ENEMY_CORPSE,
-};
 
 int iAgruntMuzzleFlash;
+
+
+
+#define AGRUNT_MELEE_DIST	100
 
 //=========================================================
 // Monster's Anim Events Go Here
@@ -73,16 +54,17 @@ int iAgruntMuzzleFlash;
 // some events are set up in the QC file that aren't recognized by the code yet.
 #define AGRUNT_AE_PUNCH		( 6 )
 #define AGRUNT_AE_BITE		( 7 )
-
 #define AGRUNT_AE_LEFT_FOOT	 ( 10 )
 #define AGRUNT_AE_RIGHT_FOOT ( 11 )
-
 #define AGRUNT_AE_LEFT_PUNCH ( 12 )
 #define AGRUNT_AE_RIGHT_PUNCH ( 13 )
 
 
+//MODDD - macro
+#define HITGROUP_AGRUNT_HELMET 10
 
-#define AGRUNT_MELEE_DIST	100
+
+
 
 class CAGrunt : public CSquadMonster
 {
@@ -102,7 +84,6 @@ public:
 	int  ISoundMask ( void );
 	void HandleAnimEvent( MonsterEvent_t *pEvent );
 	
-
 	GENERATE_KILLED_PROTOTYPE
 	
 	BOOL canResetBlend0(void);
@@ -111,7 +92,6 @@ public:
 	//MODDD
 	void SetObjectCollisionBox( void )
 	{
-
 		if(pev->deadflag != DEAD_NO){
 			pev->absmin = pev->origin + Vector(-98, -98, 0);
 			pev->absmax = pev->origin + Vector(98, 98, 80);
@@ -141,7 +121,6 @@ public:
 	
 	void forceNewEnemy(CBaseEntity* argIssuing, CBaseEntity* argNewEnemy, BOOL argPassive);
 	void forgetForcedEnemy(CBaseMonster* argIssuing, BOOL argPassive);
-
 	void ReportAIState(void);
 
 	int IRelationship( CBaseEntity *pTarget );
@@ -153,43 +132,25 @@ public:
 	virtual int	Restore( CRestore &restore );
 	static	TYPEDESCRIPTION m_SaveData[];
 	
-
-
-
 	//MODDD - some new methods.
 	void CAGrunt::setPoweredUpOff(void);
 	void CAGrunt::setPoweredUpOn(CBaseMonster* argPoweredUpCauseEnt, float argHowLong );
 
-
-
-
 	BOOL getMonsterBlockIdleAutoUpdate(void);
 	BOOL forceIdleFrameReset(void);
 	BOOL usesAdvancedAnimSystem(void);
-
-
-
 	int LookupActivityHard(int activity);
 	int tryActivitySubstitute(int activity);
-
 	void HandleEventQueueEvent(int arg_eventID);
 	//void HandleAnimEvent(MonsterEvent_t *pEvent );
 
 	void setChaseSpeed(void);
-	
 	void forceNewEnemy(CBaseMonster* argNewEnemy);
 	
 	Vector GetGunPosition( void );
 	Vector GetGunPositionAI(void);
-
 	void OnTakeDamageSetConditions(entvars_t *pevInflictor, entvars_t *pevAttacker, float flDamage, int bitsDamageType, int bitsDamageTypeMod);
-
-	
 	int getHullIndexForNodes(void);
-
-
-
-
 
 	static const char *pAttackHitSounds[];
 	static const char *pAttackMissSounds[];
@@ -201,9 +162,7 @@ public:
 
 	BOOL	m_fCanHornetAttack;
 	float m_flNextHornetAttackCheck;
-
 	float m_flNextPainTime;
-
 	// three hacky fields for speech stuff. These don't really need to be saved.
 	float m_flNextSpeakTime;
 	float m_flNextWordTime;
@@ -218,7 +177,6 @@ public:
 	
 	float forceNewEnemyCooldownTightTime;
 	float forceNewEnemyCooldownTime;
-	
 	EHANDLE directedEnemyIssuer;
 	float forgetPowerupCauseEntDirectedEnemyTime;
 
@@ -234,9 +192,7 @@ public:
 	#if EXTRA_NAMES == 2
 		LINK_ENTITY_TO_CLASS( alien_grunt, CAGrunt );
 	#endif
-
 #endif
-
 
 
 TYPEDESCRIPTION	CAGrunt::m_SaveData[] = 
@@ -320,1054 +276,31 @@ const char *CAGrunt::pAlertSounds[] =
 
 
 
-
-void CAGrunt::MonsterThink(void){
-
-
-	//return;  //DEAD AI!!!
-	
-	
-
-	if(EASY_CVAR_GET(thatWasntPunch) == 1 && this->m_fSequenceFinished){
-
-		switch(RANDOM_LONG(0, 33)){
-
-			case 0:
-				this->SetSequenceByName("land_hard");
-			break;
-			case 1:
-				this->SetSequenceByName("smashrail");
-			break;
-			case 2:
-				this->SetSequenceByName("bigopen");
-			break;
-			case 3:
-				this->SetSequenceByName("scare");
-			break;
-			case 4:
-				this->SetSequenceByName("scare");
-			break;
-			case 5:
-				this->SetSequenceByName("scare");
-			break;
-			case 6:
-				this->SetSequenceByName("float");
-			break;
-			case 7:
-				this->SetSequenceByName("float");
-			break;
-			case 8:
-				this->SetSequenceByName("longshoot");
-			break;
-			case 9:
-				this->SetSequenceByName("quickshoot");
-			break;
-			case 10:
-				this->SetSequenceByName("quickshoot");
-			break;
-			case 11:
-				this->SetSequenceByName("quickshoot");
-			break;
-			case 12:
-				this->SetSequenceByName("quickshoot");
-			break;
-			case 13:
-				this->SetSequenceByName("quickshoot");
-			break;
-			case 14:
-				this->SetSequenceByName("attack3");
-			break;
-			case 15:
-				this->SetSequenceByName("larmflinch");
-			break;
-			case 16:
-				this->SetSequenceByName("llegflinch");
-			break;
-			case 17:
-				this->SetSequenceByName("rarmflinch");
-			break;
-			case 18:
-				this->SetSequenceByName("rlegflinch");
-			break;
-			case 19:
-				this->SetSequenceByName("victorysquat");
-			break;
-			case 20:
-				this->SetSequenceByName("mattack3");
-			break;
-			case 21:
-				this->SetSequenceByName("mattack3");
-			break;
-			case 22:
-				this->SetSequenceByName("mattack2");
-			break;
-			case 23:
-				this->SetSequenceByName("bigflinch");
-			break;
-			case 24:
-				this->SetSequenceByName("smallflinch");
-			break;
-			case 25:
-				this->SetSequenceByName("smallflinch");
-			break;
-			case 26:
-				this->SetSequenceByName("smallflinch");
-			break;
-			case 27:
-				this->SetSequenceByName("smallflinch");
-			break;
-			case 28:
-				this->SetSequenceByName("smallflinch");
-			break;
-			case 29:
-				this->SetSequenceByName("smallflinch");
-			break;
-			case 30:
-				this->SetSequenceByName("turnl");
-			break;
-			case 31:
-				this->SetSequenceByName("turnl");
-			break;
-			case 32:
-				this->SetSequenceByName("turnr");
-			break;
-			case 33:
-				this->SetSequenceByName("turnr");
-			break;
-		}
-
-	}//END OF whatever the ...heck... that was
-
-	
-
-
-
-
-
-
-
-
-	if(m_fIsPoweredUp){
-		//random tick.
-
-		
-		if(forgetPowerupCauseEntDirectedEnemyTime != -1 && gpGlobals->time >= forgetPowerupCauseEntDirectedEnemyTime){
-			forgetPowerupCauseEntDirectedEnemyTime = -1;
-
-			powerupCauseEntDirectedEnemy = NULL;
-			directedEnemyIssuer = NULL;
-		}
-
-
-		
-		if(poweredUpTimeEnd >= gpGlobals->time){
-
-			/*
-			//not needed.
-			const Vector& position = this->pev->origin + Vector(0, 0, pev->size.z/2);
-			const int ballsToSpawn = 2;
-
-			if(nextPoweredUpParticleTime == -1 || gpGlobals->time >= nextPoweredUpParticleTime){
-				nextPoweredUpParticleTime = gpGlobals->time + RANDOM_FLOAT(0.38, 1.2);
-				PLAYBACK_EVENT_FULL (FEV_GLOBAL, NULL, g_sCustomBallsPowerup, 0.0, (float *)&position, (float *)&Vector(0,0,0), 0.0, 0.0, ballsToSpawn, 0, FALSE, FALSE);
-			}
-			*/
-
-		}//END OF still poweredup check
-		else{
-			//turn it off.
-			setPoweredUpOff();
-		}
-
-
-
-
-
-
-
-
-
-
-
-	}//END OF if poweredup check
-
-	
-
-
-
-	
-	CSquadMonster::MonsterThink();
-
-	
-	/*
-	//DEBUGGING
-	if(this->monsterID == 15){
-		pev->renderamt = 0;
-		pev->rendermode = kRenderNormal;
-		pev->renderfx = kRenderFxGlowShell;
-		pev->rendercolor.x = 255;
-		pev->rendercolor.y = 0;
-		pev->rendercolor.z = 255;
-	}
-	if(this->monsterID == 16){
-		pev->renderamt = 0;
-		pev->rendermode = kRenderNormal;
-		pev->renderfx = kRenderFxGlowShell;
-		pev->rendercolor.x = 100;
-		pev->rendercolor.y = 0;
-		pev->rendercolor.z = 255;
-	}
-	*/
-
-}
-
-
-void CAGrunt::setPoweredUpOff(void){
-
-	if(m_fIsPoweredUp == FALSE){
-		//already off. This is redundant.
-		return;
-	}
-
-
-	
-	pev->renderamt = 0;
-	pev->rendermode = kRenderNormal;
-	pev->renderfx = kRenderFxNone;
-	pev->rendercolor.x = 0;
-	pev->rendercolor.y = 0;
-	pev->rendercolor.z = 0;
-	
-
-	powerupCauseEntDirectedEnemy = NULL;
-	directedEnemyIssuer = NULL;
-
-	BOOL isAlive = (pev->deadflag == DEAD_NO) && !(m_IdealMonsterState == MONSTERSTATE_DEAD);
-
-	m_fIsPoweredUp = FALSE;
-	poweredUpTimeEnd = -1;
-
-	//"FNullEnt" ??
-	if(  poweredUpCauseEnt != NULL && poweredUpCauseEnt.Get() != NULL){
-		//you're not the boss of me!
-		poweredUpCauseEnt->GetMonsterPointer()->removeFromPoweredUpCommandList(this);
-
-		poweredUpCauseEnt = NULL;
-
-
-	}
-
-
-	if(!isAlive){
-		//do NOT attempt the rest of the checks if dead or dying! They involve adjusting the AI if this new behavior ought to change it.
-		return;
-	}
-
-
-	if(m_hEnemy != NULL){
-
-		/*
-		Vector vecEnemyPos = pEnemy->pev->origin;
-		// distance to enemy's origin
-		flDistToEnemy = ( vecEnemyPos - pev->origin ).Length();
-		vecEnemyPos.z += pEnemy->pev->size.z * 0.5;
-		// distance to enemy's head
-		float flDistToEnemy2 = (vecEnemyPos - pev->origin).Length();
-		if (flDistToEnemy2 < flDistToEnemy)
-			flDistToEnemy = flDistToEnemy2;
-		else
-		{
-			// distance to enemy's feet
-			vecEnemyPos.z -= pEnemy->pev->size.z;
-			float flDistToEnemy2 = (vecEnemyPos - pev->origin).Length();
-			if (flDistToEnemy2 < flDistToEnemy)
-				flDistToEnemy = flDistToEnemy2;
-		}
-
-		CheckAttacks(m_hEnemy, disttt);
-		*/
-
-
-		if ( m_hEnemy != NULL )
-		{
-			CheckEnemy( m_hEnemy );
-		}
-
-
-	}
-
-
-
-	/*
-	if( this->m_pSchedule == slChaseEnemy || this->m_pSchedule == slChaseEnemySmart && this->m_movementActivity == ACT_RUN && this->m_IdealActivity == this->m_movementActivity){
-		if(HasConditions(bits_COND_CAN_RANGE_ATTACK1 | bits_COND_CAN_RANGE_ATTACK2)){
-			//If we were pursuing the target to deliver a melee attack (and could have range attacked anyways), stop.
-			//TODO: change schedule to the appropriate range here? Or is the momentary brain freeze on picking a new schedule ok?
-			TaskFail();
-		}else{
-			//so keep running. Perhaps slow it down if needed?
-			setChaseSpeed();
-		}
-	}
-	*/
-
-
-}//END OF setPoweredUpOff()
-
-
-void CAGrunt::setPoweredUpOn(CBaseMonster* argPoweredUpCauseEnt, float argHowLong){
-	
-	BOOL isAlive = (pev->deadflag == DEAD_NO) && !(m_IdealMonsterState == MONSTERSTATE_DEAD);
-
-	if(!isAlive){
-		//disallowed for anything but alive and well.
-		return;
-	}
-	
-	
-	
-	pev->renderamt = 0;
-	pev->rendermode = kRenderNormal;
-	pev->renderfx = kRenderFxGlowShell;
-	pev->rendercolor.x = (int)(100*0.6);
-	pev->rendercolor.y = 0;
-	pev->rendercolor.z = (int)(255*0.6);
-	
-
-
-
-
-
-	if(m_fIsPoweredUp == FALSE){
-		//play the powerup sound?
-		EMIT_SOUND_FILTERED ( ENT(pev), CHAN_VOICE, "agrunt/ag_powerup.wav", 1.0, ATTN_NORM, 0, RANDOM_LONG(95, 105) );
-	}
-
-
-
-	m_fIsPoweredUp = TRUE;
-	poweredUpTimeEnd = gpGlobals->time + argHowLong;
-
-	//Decide: should we switch PoweredUpCauseEnt's ?
-	//This is the ent that we're obeying - if this ent commands all "its" poweredup ents to attack, are we one of those?
-	if(poweredUpCauseEnt == NULL || argPoweredUpCauseEnt==NULL || (poweredUpCauseEnt.Get() == argPoweredUpCauseEnt->edict() ) ){
-		//No poweredUpCauseEnt? Or the current poweredup ent sent this message again? He is mine/still mine. That was easy.
-		poweredUpCauseEnt = argPoweredUpCauseEnt;
-
-		if(poweredUpCauseEnt == NULL){
-			//receiving your first powerup ever / since losing the powerup resets the cooldown.
-			poweredUpCauseEntChangeCooldown = gpGlobals->time + 20;
-		}
-	}else{
-		//A competition? Compare the distances.
-		float distToOldCause = (poweredUpCauseEnt->pev->origin - this->pev->origin).Length();
-		float distToNewCause = (argPoweredUpCauseEnt->pev->origin - this->pev->origin).Length();
-
-
-		//Two possible reasons to change to the new leader. The cooldown time has passed and we're closer to the new leader than we are to the old,
-		//OR we're too far away from the old leader period.
-		if( (gpGlobals->time >= poweredUpCauseEntChangeCooldown && distToNewCause < distToOldCause)
-			|| (distToOldCause > 1600) ){
-			//if he is closer, I go to him instead.
-			poweredUpCauseEnt = argPoweredUpCauseEnt;
-			poweredUpCauseEntChangeCooldown = gpGlobals->time + 20;   //don't change again for a bit, for hte most part.
-		}else{
-			//no change - keep your old poweredUpCause.
-		}
-
-	}
-
-	
-	/*
-	if(this->m_pSchedule == slRangeAttack1 || this->m_pSchedule == slRangeAttack2){
-		//we're in a frenzy, <disregard> that <substance of inadequate value>!
-		TaskFail();
-	}else if(this->m_pSchedule == slChaseEnemy || this->m_pSchedule == slChaseEnemySmart && this->m_movementActivity == ACT_RUN && this->m_IdealActivity == this->m_movementActivity){
-		//speed up maybe?
-		setChaseSpeed();
-	}
-	*/
-
-}//END OF setPoweredUpOn
-
-
-
-
 //=========================================================
-// IRelationship - overridden because Human Grunts are 
-// Alien Grunt's nemesis.
+// monster-specific schedule types
 //=========================================================
-int CAGrunt::IRelationship ( CBaseEntity *pTarget )
+enum
 {
-
-	if(EASY_CVAR_GET(thatWasntPunch) == 1){
-		return R_NO;
-	}
-
-	BOOL canPrint = ::FClassnameIs(pTarget->pev, "player");
-
-	//MODDD - insertion for the powerUp (mainly enemy focus) logic
-	//////////////////////////////////////////////////////////////////////////////////////////////////
-	if(powerupCauseEntDirectedEnemy != NULL){
-
-		//if(canPrint)easyForcePrintLine("IRelationship monsterID%d: excuse me #1", monsterID);
-
-		//I only care about who I was told to attack.
-		
-		//MODDD TODO - the kingpin can keep a list of enemies that have recently dealt damage to itself, and if this "pTarget" being checked
-		//             is one of those (recent kingpin attacker), give it a high priority too?
-		if(pTarget == powerupCauseEntDirectedEnemy){
-			//Focus!
-			//if(canPrint)easyForcePrintLine("IRelationship monsterID%d: excuse me #2", monsterID);
-			return R_NM;
-		}else{
-			//don't care nearly as much. Maybe "R_NO" ?
-
-			int iTypicalRelationship = CSquadMonster::IRelationship(pTarget);
-
-			if(iTypicalRelationship >= R_DL){
-				//Hostile towards them to any extent? Treat it as "dislike" for now.
-				//if(canPrint)easyForcePrintLine("IRelationship monsterID%d: excuse me #3", monsterID);
-				return R_DL;
-			}else{
-				//otherwise, anything from friendly to neutral (R_NO = 0)? Just stay that way.
-				//if(canPrint)easyForcePrintLine("IRelationship monsterID%d: excuse me #4 (%d)", monsterID, iTypicalRelationship);
-				return iTypicalRelationship;
-			}
-
-		}
-	}
-	//////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-
-
-
-	if ( FClassnameIs( pTarget->pev, "monster_human_grunt" ) )
-	{
-		return R_NM;
-	}
-	
-	int iRelationship = CSquadMonster :: IRelationship( pTarget );
-	//if(canPrint)easyForcePrintLine("IRelationship monsterID%d: excuse me #5 (%d)", monsterID, iRelationship);
-	return iRelationship;
-}
+	SCHED_AGRUNT_SUPPRESS = LAST_COMMON_SCHEDULE + 1,
+	SCHED_AGRUNT_THREAT_DISPLAY,
+};
 
 //=========================================================
-// ISoundMask 
+// monster-specific tasks
 //=========================================================
-int CAGrunt :: ISoundMask ( void )
+enum
 {
-	return	bits_SOUND_WORLD	|
-			bits_SOUND_COMBAT	|
-			bits_SOUND_PLAYER	|
-			bits_SOUND_DANGER	|
-			//also attracted to bait.
-			bits_SOUND_BAIT
-			;
-}
+	TASK_AGRUNT_SETUP_HIDE_ATTACK = LAST_COMMON_TASK + 1,
+	TASK_AGRUNT_GET_PATH_TO_ENEMY_CORPSE,
+};
 
 
 
 
-GENERATE_TRACEATTACK_IMPLEMENTATION(CAGrunt)
-{
 
-	
-	//easyForcePrintLine("AGrunt:: TraceAttack says I took %.2f damage.", flDamage);
-
-	//easyForcePrintLine("agrunt: TraceAttack hitgroup:%d B:%d S:%d C:%d", ptr->iHitgroup, (bitsDamageType & (DMG_BULLET)), (bitsDamageType & (DMG_SLASH)), (bitsDamageType & (DMG_CLUB))   );
-	
-
-	//easyForcePrintLine("ILL %d %d", (ptr->iHitgroup), (bitsDamageType & (DMG_BULLET | DMG_SLASH | DMG_CLUB)) != 0 );
-	if ( ptr->iHitgroup == 10 && (bitsDamageType & (DMG_BULLET | DMG_SLASH | DMG_CLUB)))
-	{
-		// hit armor
-		if ( pev->dmgtime != gpGlobals->time || (RANDOM_LONG(0,10) < 1) )
-		{
-			UTIL_Ricochet( ptr->vecEndPos, RANDOM_FLOAT( 1, 2) );
-			pev->dmgtime = gpGlobals->time;
-		}
-
-		if ( RANDOM_LONG( 0, 1 ) == 0 )
-		{
-			Vector vecTracerDir = vecDir;
-
-			vecTracerDir.x += RANDOM_FLOAT( -0.3, 0.3 );
-			vecTracerDir.y += RANDOM_FLOAT( -0.3, 0.3 );
-			vecTracerDir.z += RANDOM_FLOAT( -0.3, 0.3 );
-
-			vecTracerDir = vecTracerDir * -512;
-
-			MESSAGE_BEGIN( MSG_PVS, SVC_TEMPENTITY, ptr->vecEndPos );
-			WRITE_BYTE( TE_TRACER );
-				WRITE_COORD( ptr->vecEndPos.x );
-				WRITE_COORD( ptr->vecEndPos.y );
-				WRITE_COORD( ptr->vecEndPos.z );
-
-				WRITE_COORD( vecTracerDir.x );
-				WRITE_COORD( vecTracerDir.y );
-				WRITE_COORD( vecTracerDir.z );
-			MESSAGE_END();
-		}
-
-		flDamage -= 20;
-		if (flDamage <= 0){
-			flDamage = 0.1;// don't hurt the monster much, but allow bits_COND_LIGHT_DAMAGE to be generated
-			if(useBulletHitSound){*useBulletHitSound=FALSE;} 
-			useBloodEffect = FALSE;  //don't now.
-		}
-	}
-	else
-	{
-		//MODDD
-		//SpawnBlood(ptr->vecEndPos, BloodColor(), flDamage);// a little surface blood.
-		DrawAlphaBlood(flDamage, ptr );
-
-		//if(useBulletHitSound && (pevAttacker != NULL && (pevAttacker->renderfx & (ISPLAYER | ISNPC))) ){
-			//UTIL_playFleshHitSound(pev);
-		//}
-		
-		TraceBleed( flDamage, vecDir, ptr, bitsDamageType, bitsDamageTypeMod );
-	}
-	
-	
-	//easyForcePrintLine("AGrunt:: TraceAttack ended with %.2f damage.", flDamage);
-
-	AddMultiDamage( pevAttacker, this, flDamage, bitsDamageType, bitsDamageTypeMod );
-}
-
-//=========================================================
-// StopTalking - won't speak again for 10-20 seconds.
-//=========================================================
-void CAGrunt::StopTalking( void )
-{
-	m_flNextWordTime = m_flNextSpeakTime = gpGlobals->time + 10 + RANDOM_LONG(0, 10);
-}
-
-//=========================================================
-// ShouldSpeak - Should this agrunt be talking?
-//=========================================================
-BOOL CAGrunt::ShouldSpeak( void )
-{
-	if ( m_flNextSpeakTime > gpGlobals->time )
-	{
-		// my time to talk is still in the future.
-		return FALSE;
-	}
-
-	if ( pev->spawnflags & SF_MONSTER_GAG )
-	{
-		if ( m_MonsterState != MONSTERSTATE_COMBAT )
-		{
-			// if gagged, don't talk outside of combat.
-			// if not going to talk because of this, put the talk time 
-			// into the future a bit, so we don't talk immediately after 
-			// going into combat
-			m_flNextSpeakTime = gpGlobals->time + 3;
-			return FALSE;
-		}
-	}
-
-	return TRUE;
-}
-
-//=========================================================
-// PrescheduleThink 
-//=========================================================
-void CAGrunt :: PrescheduleThink ( void )
-{
-	if ( ShouldSpeak() )
-	{
-		if ( m_flNextWordTime < gpGlobals->time )
-		{
-			int num = -1;
-
-			do
-			{
-				num = RANDOM_LONG(0,ARRAYSIZE(pIdleSounds)-1);
-			} while( num == m_iLastWord );
-
-			m_iLastWord = num;
-
-			// play a new sound
-			EMIT_SOUND_FILTERED ( ENT(pev), CHAN_VOICE, pIdleSounds[ num ], 1.0, ATTN_NORM );
-
-			// is this word our last?
-			if ( RANDOM_LONG( 1, 10 ) <= 1 )
-			{
-				// stop talking.
-				StopTalking();
-			}
-			else
-			{
-				m_flNextWordTime = gpGlobals->time + RANDOM_FLOAT( 0.5, 1 );
-			}
-		}
-	}
-}
-
-//=========================================================
-// DieSound
-//=========================================================
-void CAGrunt :: DeathSound ( void )
-{
-	StopTalking();
-
-	EMIT_SOUND_FILTERED ( ENT(pev), CHAN_VOICE, pDieSounds[RANDOM_LONG(0,ARRAYSIZE(pDieSounds)-1)], 1.0, ATTN_NORM );
-}
-
-//=========================================================
-// AlertSound
-//=========================================================
-void CAGrunt :: AlertSound ( void )
-{
-	StopTalking();
-
-	EMIT_SOUND_FILTERED ( ENT(pev), CHAN_VOICE, pAlertSounds[RANDOM_LONG(0,ARRAYSIZE(pAlertSounds)-1)], 1.0, ATTN_NORM );
-}
-
-//=========================================================
-// AttackSound
-//=========================================================
-void CAGrunt :: AttackSound ( void )
-{
-	StopTalking();
-
-	EMIT_SOUND_FILTERED ( ENT(pev), CHAN_VOICE, pAttackSounds[RANDOM_LONG(0,ARRAYSIZE(pAttackSounds)-1)], 1.0, ATTN_NORM );
-}
-
-//=========================================================
-// PainSound
-//=========================================================
-void CAGrunt :: PainSound ( void )
-{
-	if ( m_flNextPainTime > gpGlobals->time )
-	{
-		return;
-	}
-
-	m_flNextPainTime = gpGlobals->time + 0.6;
-
-	StopTalking();
-
-	EMIT_SOUND_FILTERED ( ENT(pev), CHAN_VOICE, pPainSounds[RANDOM_LONG(0,ARRAYSIZE(pPainSounds)-1)], 1.0, ATTN_NORM );
-}
-
-//=========================================================
-// Classify - indicates this monster's place in the 
-// relationship table.
-//=========================================================
-int CAGrunt :: Classify ( void )
-{
-	return	CLASS_ALIEN_MILITARY;
-}
-BOOL CAGrunt::isOrganic(void){
-	return TRUE;
-}
-
-//=========================================================
-// SetYawSpeed - allows each sequence to have a different
-// turn rate associated with it.
-//=========================================================
-void CAGrunt :: SetYawSpeed ( void )
-{
-	int ys;
-
-	switch ( m_Activity )
-	{
-		//MODDD - like grunts, turn a little faster while running or walking.
-	case ACT_RUN:
-		ys = 140;
-		break;
-	case ACT_WALK:
-		ys = 160;
-		break;
-
-	case ACT_TURN_LEFT:
-	case ACT_TURN_RIGHT:
-		ys = 110;
-		break;
-	default:
-		ys = 100;
-	}
-
-	pev->yaw_speed = ys;
-}
-
-//=========================================================
-// HandleAnimEvent - catches the monster-specific messages
-// that occur when tagged animation frames are played.
-//
-// Returns number of events handled, 0 if none.
-//=========================================================
-void CAGrunt :: HandleAnimEvent( MonsterEvent_t *pEvent )
-{
-
-	if(EASY_CVAR_GET(thatWasntPunch) == 1){
-		return;
-	}
-
-	switch( pEvent->event )
-	{
-	case AGRUNT_AE_HORNET1:
-	case AGRUNT_AE_HORNET2:
-	case AGRUNT_AE_HORNET3:
-	case AGRUNT_AE_HORNET4:
-	case AGRUNT_AE_HORNET5:
-		{
-			// m_vecEnemyLKP should be center of enemy body
-			Vector vecArmPos;
-			Vector vecDirToEnemy;
-			Vector vecDirToEnemyAI;
-			Vector angDir;
-			Vector angDirAI;
-
-			if (HasConditions( bits_COND_SEE_ENEMY))
-			{
-
-				//Careful - this doesn't factor in where they are aiming.
-				//The hgrunt uses this, but this is unnecessarily precise. Making the hornet's velocity based off of "vecDirToEnemy" instead of the Hornet's forward angles (likely does not factor in pitch... up / down angles unlike vecDirToEnemy).
-				//Vector vecShootOrigin = GetGunPosition();
-				//Vector vecShootDir = ShootAtEnemy( vecShootOrigin );
-
-				//MODDD - NAH. go ahead and use the precise version.
-				vecDirToEnemy = ( ( m_vecEnemyLKP ) - pev->origin );
-				angDir = UTIL_VecToAngles( vecDirToEnemy );
-				vecDirToEnemy = vecDirToEnemy.Normalize();
-				
-
-				/*
-				Vector vecShootOriginAI = GetGunPositionAI();
-				vecDirToEnemyAI = ShootAtEnemyMod(vecShootOriginAI());
-				angDirAI = UTIL_VecToAngles(vecDirToEnemyAI);
-
-				Vector vecShootOrigin = GetGunPosition();
-				vecDirToEnemy = ShootAtEnemyMod( vecShootOrigin );
-				angDir = UTIL_VecToAngles(vecDirToEnemy);
-				*/
-
-			}
-			else
-			{
-				//angDirAI = pev->angles;
-				angDir = pev->angles;
-				UTIL_MakeAimVectors( angDir );
-				vecDirToEnemy = gpGlobals->v_forward;
-			}
-
-			if(EASY_CVAR_GET(agrunt_muzzleflash) != 0){
-				pev->effects = EF_MUZZLEFLASH;
-			}
-
-			// make angles +-180
-			if (angDir.x > 180)
-			{
-				angDir.x = angDir.x - 360;
-			}
-
-			SetBlending( 0, angDir.x );
-
-
-			//MODDD - easier to recognize.
-			//GetAttachment( 0, vecArmPos, vecArmDir );
-			vecArmPos = GetGunPosition();
-
-			//MODDD - toned down from 32.
-			vecArmPos = vecArmPos + vecDirToEnemy * 20;
-
-
-			if(EASY_CVAR_GET(agrunt_muzzleflash) != 0){
-				MESSAGE_BEGIN( MSG_PVS, SVC_TEMPENTITY, vecArmPos );
-					WRITE_BYTE( TE_SPRITE );
-					WRITE_COORD( vecArmPos.x );	// pos
-					WRITE_COORD( vecArmPos.y );	
-					WRITE_COORD( vecArmPos.z );	
-					WRITE_SHORT( iAgruntMuzzleFlash );		// model
-					WRITE_BYTE( 6 );				// size * 10
-					WRITE_BYTE( 128 );			// brightness
-				MESSAGE_END();
-			}
-
-
-
-
-			CBaseEntity *pHornet = CBaseEntity::Create( "hornet", vecArmPos, UTIL_VecToAngles( vecDirToEnemy ), edict() );
-			UTIL_MakeVectors ( pHornet->pev->angles );
-			
-			//MODDD - change, explanation above.
-			//pHornet->pev->velocity = gpGlobals->v_forward * 300;
-
-			
-			if(m_fIsPoweredUp){
-				//MODDD - is the powerup hornet speedup + difficulty a good idea? They may have a harder time homing in on a target at higher speeds.
-				if(g_iSkillLevel < SKILL_HARD){
-					pHornet->pev->velocity = vecDirToEnemy * 350;
-				}else{
-					pHornet->pev->velocity = vecDirToEnemy * 400;
-				}
-			}else{
-				pHornet->pev->velocity = vecDirToEnemy * 300;
-			}
-			
-
-			
-			
-			
-			
-			switch ( RANDOM_LONG ( 0 , 2 ) )
-			{
-				case 0:	EMIT_SOUND_FILTERED ( ENT(pev), CHAN_WEAPON, "agrunt/ag_fire1.wav", 1.0, ATTN_NORM, 0, 100 );	break;
-				case 1:	EMIT_SOUND_FILTERED ( ENT(pev), CHAN_WEAPON, "agrunt/ag_fire2.wav", 1.0, ATTN_NORM, 0, 100 );	break;
-				case 2:	EMIT_SOUND_FILTERED ( ENT(pev), CHAN_WEAPON, "agrunt/ag_fire3.wav", 1.0, ATTN_NORM, 0, 100 );	break;
-			}
-
-			CBaseMonster *pHornetMonster = pHornet->MyMonsterPointer();
-
-			if ( pHornetMonster )
-			{
-				pHornetMonster->m_hEnemy = m_hEnemy;
-			}
-		}
-		break;
-
-
-	//MODDD NOTE - BEWARE. These aren't in the soundSentenceSave because the player already precaches them.
-	//             Just use EMIT_SOUND to avoid trying equivalent sentences that don't exist.
-	case AGRUNT_AE_LEFT_FOOT:
-		switch (RANDOM_LONG(0,1))
-		{
-		// left foot
-		case 0:	EMIT_SOUND_DYN ( ENT(pev), CHAN_BODY, "player/pl_ladder2.wav", 1, ATTN_NORM, 0, 70 );	break;
-		case 1:	EMIT_SOUND_DYN ( ENT(pev), CHAN_BODY, "player/pl_ladder4.wav", 1, ATTN_NORM, 0, 70 );	break;
-		}
-		break;
-	case AGRUNT_AE_RIGHT_FOOT:
-		// right foot
-		switch (RANDOM_LONG(0,1))
-		{
-		case 0:	EMIT_SOUND_DYN ( ENT(pev), CHAN_BODY, "player/pl_ladder1.wav", 1, ATTN_NORM, 0, 70 );	break;
-		case 1:	EMIT_SOUND_DYN ( ENT(pev), CHAN_BODY, "player/pl_ladder3.wav", 1, ATTN_NORM, 0 ,70);	break;
-		}
-		break;
-
-	case AGRUNT_AE_LEFT_PUNCH:
-		{
-			//MODDD - added bleeding.  All alien melee seems strong (big arms, large body structure).
-			CBaseEntity *pHurt = CheckTraceHullAttack( AGRUNT_MELEE_DIST, gSkillData.agruntDmgPunch, DMG_CLUB, DMG_BLEEDING );
-			
-			if ( pHurt )
-			{
-				if(!pHurt->blocksImpact()){
-					pHurt->pev->punchangle.y = -25;
-					pHurt->pev->punchangle.x = 8;
-					// OK to use gpGlobals without calling MakeVectors, cause CheckTraceHullAttack called it above.
-					if ( pHurt->IsPlayer() )
-					{
-						// this is a player. Knock him around.
-						pHurt->pev->velocity = pHurt->pev->velocity + gpGlobals->v_right * 250;
-					}
-				}
-
-				
-
-				EMIT_SOUND_FILTERED ( ENT(pev), CHAN_WEAPON, pAttackHitSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackHitSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
-
-				Vector vecArmPos;
-				
-				//MODDD - easier to recognize.
-				//GetAttachment( 0, vecArmPos, vecArmAng );
-				vecArmPos = GetGunPosition();
-
-				SpawnBlood(vecArmPos, pHurt->BloodColor(), 25);// a little surface blood.
-			}
-			else
-			{
-				// Play a random attack miss sound
-				EMIT_SOUND_FILTERED ( ENT(pev), CHAN_WEAPON, pAttackMissSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackMissSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
-			}
-		}
-		break;
-
-	case AGRUNT_AE_RIGHT_PUNCH:
-		{
-			//MODDD - added bleeding to all melee.
-			CBaseEntity *pHurt = CheckTraceHullAttack( AGRUNT_MELEE_DIST, gSkillData.agruntDmgPunch, DMG_CLUB, DMG_BLEEDING);
-
-			if ( pHurt )
-			{
-				
-				if(!pHurt->blocksImpact()){
-					pHurt->pev->punchangle.y = 25;
-					pHurt->pev->punchangle.x = 8;
-					// OK to use gpGlobals without calling MakeVectors, cause CheckTraceHullAttack called it above.
-					if ( pHurt->IsPlayer() )
-					{
-						// this is a player. Knock him around.
-						pHurt->pev->velocity = pHurt->pev->velocity + gpGlobals->v_right * -250;
-					}
-				}
-
-				EMIT_SOUND_FILTERED ( ENT(pev), CHAN_WEAPON, pAttackHitSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackHitSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
-
-				Vector vecArmPos;
-
-				//MODDD - easier to recognize.
-				//GetAttachment( 0, vecArmPos, vecArmAng );
-				vecArmPos = GetGunPosition();
-
-				SpawnBlood(vecArmPos, pHurt->BloodColor(), 25);// a little surface blood.
-			}
-			else
-			{
-				// Play a random attack miss sound
-				EMIT_SOUND_FILTERED ( ENT(pev), CHAN_WEAPON, pAttackMissSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackMissSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
-			}
-		}
-		break;
-
-	default:
-		CSquadMonster::HandleAnimEvent( pEvent );
-		break;
-	}
-}
-
-
-CAGrunt::CAGrunt(){
-	m_fIsPoweredUp = FALSE;
-	nextPoweredUpParticleTime = -1;
-	poweredUpTimeEnd = -1;
-	poweredUpCauseEnt = NULL;
-	poweredUpCauseEntChangeCooldown = -1;
-	powerupCauseEntDirectedEnemy = NULL;
-
-	forceNewEnemyCooldownTightTime = -1;
-	forceNewEnemyCooldownTime = -1;
-	
-	directedEnemyIssuer = NULL;
-	forgetPowerupCauseEntDirectedEnemyTime = -1;
-
-
-}
-
-//=========================================================
-// Spawn
-//=========================================================
-void CAGrunt :: Spawn()
-{
-	Precache( );
-
-	SET_MODEL(ENT(pev), "models/agrunt.mdl");
-	UTIL_SetSize(pev, Vector(-32, -32, 0), Vector(32, 32, 64));
-
-	pev->classname = MAKE_STRING("monster_alien_grunt");
-
-	pev->solid			= SOLID_SLIDEBOX;
-	pev->movetype		= MOVETYPE_STEP;
-	m_bloodColor		= BLOOD_COLOR_GREEN;
-	pev->effects		= 0;
-	pev->health			= gSkillData.agruntHealth;
-	m_flFieldOfView		= 0.2;// indicates the width of this monster's forward view cone ( as a dotproduct result )
-	m_MonsterState		= MONSTERSTATE_NONE;
-	m_afCapability		= 0;
-	m_afCapability		|= bits_CAP_SQUAD;
-
-
-	//MODDD NOTE - Bizarre, why even have a hackedGunPos? The "GetGunPosition" method was never called in the as-is script.
-	//             Going to use it in GetGunPositionAI.
-	m_HackedGunPos		= Vector( 24, 64, 48 );
-
-	m_flNextSpeakTime	= m_flNextWordTime = gpGlobals->time + RANDOM_LONG(10, 20);
-
-
-	MonsterInit();
-
-	
-
-
-}
-
-extern int global_useSentenceSave;
-
-//=========================================================
-// Precache - precaches all resources this monster needs
-//=========================================================
-void CAGrunt :: Precache()
-{
-	int i;
-
-	global_useSentenceSave = 1;
-
-	PRECACHE_MODEL("models/agrunt.mdl");
-
-	for ( i = 0; i < ARRAYSIZE( pAttackHitSounds ); i++ )
-		PRECACHE_SOUND((char *)pAttackHitSounds[i]);
-
-	for ( i = 0; i < ARRAYSIZE( pAttackMissSounds ); i++ )
-		PRECACHE_SOUND((char *)pAttackMissSounds[i]);
-
-	for ( i = 0; i < ARRAYSIZE( pIdleSounds ); i++ )
-		PRECACHE_SOUND((char *)pIdleSounds[i]);
-
-	for ( i = 0; i < ARRAYSIZE( pDieSounds ); i++ )
-		PRECACHE_SOUND((char *)pDieSounds[i]);
-
-	for ( i = 0; i < ARRAYSIZE( pPainSounds ); i++ )
-		PRECACHE_SOUND((char *)pPainSounds[i]);
-
-	for ( i = 0; i < ARRAYSIZE( pAttackSounds ); i++ )
-		PRECACHE_SOUND((char *)pAttackSounds[i]);
-
-	for ( i = 0; i < ARRAYSIZE( pAlertSounds ); i++ )
-		PRECACHE_SOUND((char *)pAlertSounds[i]);
-
-
-	PRECACHE_SOUND( "hassault/hw_shoot1.wav" );
-
-	PRECACHE_SOUND( "agrunt/ag_powerup.wav" );
-	
-
-
-	iAgruntMuzzleFlash = PRECACHE_MODEL( "sprites/muz4.spr" );
-
-	
-	global_useSentenceSave = 0;
-	global_useSentenceSave = 1;
-
-	UTIL_PrecacheOther( "hornet" );
-
-	global_useSentenceSave = 0;	
-
-}	
-
-
-
-
-BOOL CAGrunt::needsMovementBoundFix(void){
-	return TRUE;
-}
-
-
-
-
-
-
-
-
-
-
-
-	
 //=========================================================
 // AI Schedules Specific to this monster
 //=========================================================
-
-
-
-
-//...no, not necessary.
-//slAGruntPoweredUpPursue
-
 
 
 //=========================================================
@@ -1626,6 +559,937 @@ DEFINE_CUSTOM_SCHEDULES( CAGrunt )
 
 IMPLEMENT_CUSTOM_SCHEDULES( CAGrunt, CSquadMonster );
 
+
+
+
+
+
+
+
+
+void CAGrunt::MonsterThink(void){
+
+
+	if(EASY_CVAR_GET(thatWasntPunch) == 1 && this->m_fSequenceFinished){
+
+		switch(RANDOM_LONG(0, 33)){
+
+			case 0:
+				this->SetSequenceByName("land_hard");
+			break;
+			case 1:
+				this->SetSequenceByName("smashrail");
+			break;
+			case 2:
+				this->SetSequenceByName("bigopen");
+			break;
+			case 3:
+				this->SetSequenceByName("scare");
+			break;
+			case 4:
+				this->SetSequenceByName("scare");
+			break;
+			case 5:
+				this->SetSequenceByName("scare");
+			break;
+			case 6:
+				this->SetSequenceByName("float");
+			break;
+			case 7:
+				this->SetSequenceByName("float");
+			break;
+			case 8:
+				this->SetSequenceByName("longshoot");
+			break;
+			case 9:
+				this->SetSequenceByName("quickshoot");
+			break;
+			case 10:
+				this->SetSequenceByName("quickshoot");
+			break;
+			case 11:
+				this->SetSequenceByName("quickshoot");
+			break;
+			case 12:
+				this->SetSequenceByName("quickshoot");
+			break;
+			case 13:
+				this->SetSequenceByName("quickshoot");
+			break;
+			case 14:
+				this->SetSequenceByName("attack3");
+			break;
+			case 15:
+				this->SetSequenceByName("larmflinch");
+			break;
+			case 16:
+				this->SetSequenceByName("llegflinch");
+			break;
+			case 17:
+				this->SetSequenceByName("rarmflinch");
+			break;
+			case 18:
+				this->SetSequenceByName("rlegflinch");
+			break;
+			case 19:
+				this->SetSequenceByName("victorysquat");
+			break;
+			case 20:
+				this->SetSequenceByName("mattack3");
+			break;
+			case 21:
+				this->SetSequenceByName("mattack3");
+			break;
+			case 22:
+				this->SetSequenceByName("mattack2");
+			break;
+			case 23:
+				this->SetSequenceByName("bigflinch");
+			break;
+			case 24:
+				this->SetSequenceByName("smallflinch");
+			break;
+			case 25:
+				this->SetSequenceByName("smallflinch");
+			break;
+			case 26:
+				this->SetSequenceByName("smallflinch");
+			break;
+			case 27:
+				this->SetSequenceByName("smallflinch");
+			break;
+			case 28:
+				this->SetSequenceByName("smallflinch");
+			break;
+			case 29:
+				this->SetSequenceByName("smallflinch");
+			break;
+			case 30:
+				this->SetSequenceByName("turnl");
+			break;
+			case 31:
+				this->SetSequenceByName("turnl");
+			break;
+			case 32:
+				this->SetSequenceByName("turnr");
+			break;
+			case 33:
+				this->SetSequenceByName("turnr");
+			break;
+		}
+	}//END OF whatever the ...heck... that was
+
+	
+
+	if(m_fIsPoweredUp){
+		//random tick.
+		if(forgetPowerupCauseEntDirectedEnemyTime != -1 && gpGlobals->time >= forgetPowerupCauseEntDirectedEnemyTime){
+			forgetPowerupCauseEntDirectedEnemyTime = -1;
+
+			powerupCauseEntDirectedEnemy = NULL;
+			directedEnemyIssuer = NULL;
+		}
+
+		if(poweredUpTimeEnd >= gpGlobals->time){
+
+			/*
+			//not needed.
+			const Vector& position = this->pev->origin + Vector(0, 0, pev->size.z/2);
+			const int ballsToSpawn = 2;
+
+			if(nextPoweredUpParticleTime == -1 || gpGlobals->time >= nextPoweredUpParticleTime){
+				nextPoweredUpParticleTime = gpGlobals->time + RANDOM_FLOAT(0.38, 1.2);
+				PLAYBACK_EVENT_FULL (FEV_GLOBAL, NULL, g_sCustomBallsPowerup, 0.0, (float *)&position, (float *)&Vector(0,0,0), 0.0, 0.0, ballsToSpawn, 0, FALSE, FALSE);
+			}
+			*/
+		}//END OF still poweredup check
+		else{
+			//turn it off.
+			setPoweredUpOff();
+		}
+
+	}//END OF if poweredup check
+
+	CSquadMonster::MonsterThink();
+
+	/*
+	//DEBUGGING
+	if(this->monsterID == 15){
+		pev->renderamt = 0;
+		pev->rendermode = kRenderNormal;
+		pev->renderfx = kRenderFxGlowShell;
+		pev->rendercolor.x = 255;
+		pev->rendercolor.y = 0;
+		pev->rendercolor.z = 255;
+	}
+	if(this->monsterID == 16){
+		pev->renderamt = 0;
+		pev->rendermode = kRenderNormal;
+		pev->renderfx = kRenderFxGlowShell;
+		pev->rendercolor.x = 100;
+		pev->rendercolor.y = 0;
+		pev->rendercolor.z = 255;
+	}
+	*/
+
+}//MonsterThink
+
+
+void CAGrunt::setPoweredUpOff(void){
+
+	if(m_fIsPoweredUp == FALSE){
+		//already off. This is redundant.
+		return;
+	}
+
+	pev->renderamt = 0;
+	pev->rendermode = kRenderNormal;
+	pev->renderfx = kRenderFxNone;
+	pev->rendercolor.x = 0;
+	pev->rendercolor.y = 0;
+	pev->rendercolor.z = 0;
+	
+	powerupCauseEntDirectedEnemy = NULL;
+	directedEnemyIssuer = NULL;
+
+	BOOL isAlive = (pev->deadflag == DEAD_NO) && !(m_IdealMonsterState == MONSTERSTATE_DEAD);
+
+	m_fIsPoweredUp = FALSE;
+	poweredUpTimeEnd = -1;
+
+	//"FNullEnt" ??
+	if(  poweredUpCauseEnt != NULL && poweredUpCauseEnt.Get() != NULL){
+		//you're not the boss of me!
+		poweredUpCauseEnt->GetMonsterPointer()->removeFromPoweredUpCommandList(this);
+
+		poweredUpCauseEnt = NULL;
+	}
+
+	if(!isAlive){
+		//do NOT attempt the rest of the checks if dead or dying! They involve adjusting the AI if this new behavior ought to change it.
+		return;
+	}
+
+	if(m_hEnemy != NULL){
+
+		/*
+		Vector vecEnemyPos = pEnemy->pev->origin;
+		// distance to enemy's origin
+		flDistToEnemy = ( vecEnemyPos - pev->origin ).Length();
+		vecEnemyPos.z += pEnemy->pev->size.z * 0.5;
+		// distance to enemy's head
+		float flDistToEnemy2 = (vecEnemyPos - pev->origin).Length();
+		if (flDistToEnemy2 < flDistToEnemy)
+			flDistToEnemy = flDistToEnemy2;
+		else
+		{
+			// distance to enemy's feet
+			vecEnemyPos.z -= pEnemy->pev->size.z;
+			float flDistToEnemy2 = (vecEnemyPos - pev->origin).Length();
+			if (flDistToEnemy2 < flDistToEnemy)
+				flDistToEnemy = flDistToEnemy2;
+		}
+
+		CheckAttacks(m_hEnemy, disttt);
+		*/
+
+		if ( m_hEnemy != NULL )
+		{
+			CheckEnemy( m_hEnemy );
+		}
+	}
+
+
+	/*
+	if( this->m_pSchedule == slChaseEnemy || this->m_pSchedule == slChaseEnemySmart && this->m_movementActivity == ACT_RUN && this->m_IdealActivity == this->m_movementActivity){
+		if(HasConditions(bits_COND_CAN_RANGE_ATTACK1 | bits_COND_CAN_RANGE_ATTACK2)){
+			//If we were pursuing the target to deliver a melee attack (and could have range attacked anyways), stop.
+			//TODO: change schedule to the appropriate range here? Or is the momentary brain freeze on picking a new schedule ok?
+			TaskFail();
+		}else{
+			//so keep running. Perhaps slow it down if needed?
+			setChaseSpeed();
+		}
+	}
+	*/
+
+}//END OF setPoweredUpOff()
+
+
+void CAGrunt::setPoweredUpOn(CBaseMonster* argPoweredUpCauseEnt, float argHowLong){
+	
+	BOOL isAlive = (pev->deadflag == DEAD_NO) && !(m_IdealMonsterState == MONSTERSTATE_DEAD);
+
+	if(!isAlive){
+		//disallowed for anything but alive and well.
+		return;
+	}
+	
+	pev->renderamt = 0;
+	pev->rendermode = kRenderNormal;
+	pev->renderfx = kRenderFxGlowShell;
+	pev->rendercolor.x = (int)(100*0.6);
+	pev->rendercolor.y = 0;
+	pev->rendercolor.z = (int)(255*0.6);
+	
+	if(m_fIsPoweredUp == FALSE){
+		//play the powerup sound?
+		EMIT_SOUND_FILTERED ( ENT(pev), CHAN_VOICE, "agrunt/ag_powerup.wav", 1.0, ATTN_NORM, 0, RANDOM_LONG(95, 105) );
+	}
+
+	m_fIsPoweredUp = TRUE;
+	poweredUpTimeEnd = gpGlobals->time + argHowLong;
+
+	//Decide: should we switch PoweredUpCauseEnt's ?
+	//This is the ent that we're obeying - if this ent commands all "its" poweredup ents to attack, are we one of those?
+	if(poweredUpCauseEnt == NULL || argPoweredUpCauseEnt==NULL || (poweredUpCauseEnt.Get() == argPoweredUpCauseEnt->edict() ) ){
+		//No poweredUpCauseEnt? Or the current poweredup ent sent this message again? He is mine/still mine. That was easy.
+		poweredUpCauseEnt = argPoweredUpCauseEnt;
+
+		if(poweredUpCauseEnt == NULL){
+			//receiving your first powerup ever / since losing the powerup resets the cooldown.
+			poweredUpCauseEntChangeCooldown = gpGlobals->time + 20;
+		}
+	}else{
+		//A competition? Compare the distances.
+		float distToOldCause = (poweredUpCauseEnt->pev->origin - this->pev->origin).Length();
+		float distToNewCause = (argPoweredUpCauseEnt->pev->origin - this->pev->origin).Length();
+
+
+		//Two possible reasons to change to the new leader. The cooldown time has passed and we're closer to the new leader than we are to the old,
+		//OR we're too far away from the old leader period.
+		if( (gpGlobals->time >= poweredUpCauseEntChangeCooldown && distToNewCause < distToOldCause)
+			|| (distToOldCause > 1600) ){
+			//if he is closer, I go to him instead.
+			poweredUpCauseEnt = argPoweredUpCauseEnt;
+			poweredUpCauseEntChangeCooldown = gpGlobals->time + 20;   //don't change again for a bit, for hte most part.
+		}else{
+			//no change - keep your old poweredUpCause.
+		}
+	}
+
+	/*
+	if(this->m_pSchedule == slRangeAttack1 || this->m_pSchedule == slRangeAttack2){
+		//we're in a frenzy, <disregard> that <substance of inadequate value>!
+		TaskFail();
+	}else if(this->m_pSchedule == slChaseEnemy || this->m_pSchedule == slChaseEnemySmart && this->m_movementActivity == ACT_RUN && this->m_IdealActivity == this->m_movementActivity){
+		//speed up maybe?
+		setChaseSpeed();
+	}
+	*/
+
+}//END OF setPoweredUpOn
+
+
+//=========================================================
+// IRelationship - overridden because Human Grunts are 
+// Alien Grunt's nemesis.
+//=========================================================
+int CAGrunt::IRelationship ( CBaseEntity *pTarget )
+{
+
+	if(EASY_CVAR_GET(thatWasntPunch) == 1){
+		return R_NO;
+	}
+
+	BOOL canPrint = ::FClassnameIs(pTarget->pev, "player");
+
+	//MODDD - insertion for the powerUp (mainly enemy focus) logic
+	//////////////////////////////////////////////////////////////////////////////////////////////////
+	if(powerupCauseEntDirectedEnemy != NULL){
+
+		//if(canPrint)easyForcePrintLine("IRelationship monsterID%d: excuse me #1", monsterID);
+
+		//I only care about who I was told to attack.
+		
+		//MODDD TODO - the kingpin can keep a list of enemies that have recently dealt damage to itself, and if this "pTarget" being checked
+		//             is one of those (recent kingpin attacker), give it a high priority too?
+		if(pTarget == powerupCauseEntDirectedEnemy){
+			//Focus!
+			//if(canPrint)easyForcePrintLine("IRelationship monsterID%d: excuse me #2", monsterID);
+			return R_NM;
+		}else{
+			//don't care nearly as much. Maybe "R_NO" ?
+
+			int iTypicalRelationship = CSquadMonster::IRelationship(pTarget);
+
+			if(iTypicalRelationship >= R_DL){
+				//Hostile towards them to any extent? Treat it as "dislike" for now.
+				//if(canPrint)easyForcePrintLine("IRelationship monsterID%d: excuse me #3", monsterID);
+				return R_DL;
+			}else{
+				//otherwise, anything from friendly to neutral (R_NO = 0)? Just stay that way.
+				//if(canPrint)easyForcePrintLine("IRelationship monsterID%d: excuse me #4 (%d)", monsterID, iTypicalRelationship);
+				return iTypicalRelationship;
+			}
+
+		}
+	}
+	//////////////////////////////////////////////////////////////////////////////////////////////////
+
+	if ( FClassnameIs( pTarget->pev, "monster_human_grunt" ) )
+	{
+		return R_NM;
+	}
+	
+	int iRelationship = CSquadMonster :: IRelationship( pTarget );
+	//if(canPrint)easyForcePrintLine("IRelationship monsterID%d: excuse me #5 (%d)", monsterID, iRelationship);
+	return iRelationship;
+}
+
+//=========================================================
+// ISoundMask 
+//=========================================================
+int CAGrunt :: ISoundMask ( void )
+{
+	return	bits_SOUND_WORLD	|
+			bits_SOUND_COMBAT	|
+			bits_SOUND_PLAYER	|
+			bits_SOUND_DANGER	|
+			//also attracted to bait.
+			bits_SOUND_BAIT
+			;
+}
+
+
+GENERATE_TRACEATTACK_IMPLEMENTATION(CAGrunt)
+{
+	//easyForcePrintLine("AGrunt:: TraceAttack says I took %.2f damage.", flDamage);
+	//easyForcePrintLine("agrunt: TraceAttack hitgroup:%d B:%d S:%d C:%d", ptr->iHitgroup, (bitsDamageType & (DMG_BULLET)), (bitsDamageType & (DMG_SLASH)), (bitsDamageType & (DMG_CLUB))   );
+	//easyForcePrintLine("ILL %d %d", (ptr->iHitgroup), (bitsDamageType & (DMG_BULLET | DMG_SLASH | DMG_CLUB)) != 0 );
+	if ( ptr->iHitgroup == HITGROUP_AGRUNT_HELMET && (bitsDamageType & (DMG_BULLET | DMG_SLASH | DMG_CLUB)))
+	{
+		// hit armor
+		if ( pev->dmgtime != gpGlobals->time || (RANDOM_LONG(0,10) < 1) )
+		{
+			UTIL_Ricochet( ptr->vecEndPos, RANDOM_FLOAT( 1, 2) );
+			pev->dmgtime = gpGlobals->time;
+		}
+
+		if ( RANDOM_LONG( 0, 1 ) == 0 )
+		{
+			Vector vecTracerDir = vecDir;
+
+			vecTracerDir.x += RANDOM_FLOAT( -0.3, 0.3 );
+			vecTracerDir.y += RANDOM_FLOAT( -0.3, 0.3 );
+			vecTracerDir.z += RANDOM_FLOAT( -0.3, 0.3 );
+
+			vecTracerDir = vecTracerDir * -512;
+
+			MESSAGE_BEGIN( MSG_PVS, SVC_TEMPENTITY, ptr->vecEndPos );
+			WRITE_BYTE( TE_TRACER );
+				WRITE_COORD( ptr->vecEndPos.x );
+				WRITE_COORD( ptr->vecEndPos.y );
+				WRITE_COORD( ptr->vecEndPos.z );
+
+				WRITE_COORD( vecTracerDir.x );
+				WRITE_COORD( vecTracerDir.y );
+				WRITE_COORD( vecTracerDir.z );
+			MESSAGE_END();
+		}
+
+		flDamage -= 20;
+		if (flDamage <= 0){
+			flDamage = 0.1;// don't hurt the monster much, but allow bits_COND_LIGHT_DAMAGE to be generated
+			if(useBulletHitSound){*useBulletHitSound=FALSE;} 
+			useBloodEffect = FALSE;  //don't now.
+		}
+	}
+	else
+	{
+		//MODDD
+		//SpawnBlood(ptr->vecEndPos, BloodColor(), flDamage);// a little surface blood.
+		DrawAlphaBlood(flDamage, ptr );
+
+		//if(useBulletHitSound && (pevAttacker != NULL && (pevAttacker->renderfx & (ISPLAYER | ISNPC))) ){
+			//UTIL_playFleshHitSound(pev);
+		//}
+		
+		TraceBleed( flDamage, vecDir, ptr, bitsDamageType, bitsDamageTypeMod );
+	}
+	
+	//easyForcePrintLine("AGrunt:: TraceAttack ended with %.2f damage.", flDamage);
+	AddMultiDamage( pevAttacker, this, flDamage, bitsDamageType, bitsDamageTypeMod );
+}
+
+//=========================================================
+// StopTalking - won't speak again for 10-20 seconds.
+//=========================================================
+void CAGrunt::StopTalking( void )
+{
+	m_flNextWordTime = m_flNextSpeakTime = gpGlobals->time + 10 + RANDOM_LONG(0, 10);
+}
+
+//=========================================================
+// ShouldSpeak - Should this agrunt be talking?
+//=========================================================
+BOOL CAGrunt::ShouldSpeak( void )
+{
+	if ( m_flNextSpeakTime > gpGlobals->time )
+	{
+		// my time to talk is still in the future.
+		return FALSE;
+	}
+
+	if ( pev->spawnflags & SF_MONSTER_GAG )
+	{
+		if ( m_MonsterState != MONSTERSTATE_COMBAT )
+		{
+			// if gagged, don't talk outside of combat.
+			// if not going to talk because of this, put the talk time 
+			// into the future a bit, so we don't talk immediately after 
+			// going into combat
+			m_flNextSpeakTime = gpGlobals->time + 3;
+			return FALSE;
+		}
+	}
+
+	return TRUE;
+}
+
+//=========================================================
+// PrescheduleThink 
+//=========================================================
+void CAGrunt :: PrescheduleThink ( void )
+{
+	if ( ShouldSpeak() )
+	{
+		if ( m_flNextWordTime < gpGlobals->time )
+		{
+			int num = -1;
+
+			do
+			{
+				num = RANDOM_LONG(0,ARRAYSIZE(pIdleSounds)-1);
+			} while( num == m_iLastWord );
+
+			m_iLastWord = num;
+
+			// play a new sound
+			EMIT_SOUND_FILTERED ( ENT(pev), CHAN_VOICE, pIdleSounds[ num ], 1.0, ATTN_NORM );
+
+			// is this word our last?
+			if ( RANDOM_LONG( 1, 10 ) <= 1 )
+			{
+				// stop talking.
+				StopTalking();
+			}
+			else
+			{
+				m_flNextWordTime = gpGlobals->time + RANDOM_FLOAT( 0.5, 1 );
+			}
+		}
+	}
+}
+
+//=========================================================
+// DieSound
+//=========================================================
+void CAGrunt :: DeathSound ( void )
+{
+	StopTalking();
+
+	EMIT_SOUND_FILTERED ( ENT(pev), CHAN_VOICE, pDieSounds[RANDOM_LONG(0,ARRAYSIZE(pDieSounds)-1)], 1.0, ATTN_NORM );
+}
+
+//=========================================================
+// AlertSound
+//=========================================================
+void CAGrunt :: AlertSound ( void )
+{
+	StopTalking();
+	EMIT_SOUND_FILTERED ( ENT(pev), CHAN_VOICE, pAlertSounds[RANDOM_LONG(0,ARRAYSIZE(pAlertSounds)-1)], 1.0, ATTN_NORM );
+}
+
+//=========================================================
+// AttackSound
+//=========================================================
+void CAGrunt :: AttackSound ( void )
+{
+	StopTalking();
+	EMIT_SOUND_FILTERED ( ENT(pev), CHAN_VOICE, pAttackSounds[RANDOM_LONG(0,ARRAYSIZE(pAttackSounds)-1)], 1.0, ATTN_NORM );
+}
+
+//=========================================================
+// PainSound
+//=========================================================
+void CAGrunt :: PainSound ( void )
+{
+	if ( m_flNextPainTime > gpGlobals->time )
+	{
+		return;
+	}
+
+	m_flNextPainTime = gpGlobals->time + 0.6;
+
+	StopTalking();
+	EMIT_SOUND_FILTERED ( ENT(pev), CHAN_VOICE, pPainSounds[RANDOM_LONG(0,ARRAYSIZE(pPainSounds)-1)], 1.0, ATTN_NORM );
+}
+
+//=========================================================
+// Classify - indicates this monster's place in the 
+// relationship table.
+//=========================================================
+int CAGrunt :: Classify ( void )
+{
+	return	CLASS_ALIEN_MILITARY;
+}
+BOOL CAGrunt::isOrganic(void){
+	return TRUE;
+}
+
+//=========================================================
+// SetYawSpeed - allows each sequence to have a different
+// turn rate associated with it.
+//=========================================================
+void CAGrunt :: SetYawSpeed ( void )
+{
+	int ys;
+
+	switch ( m_Activity )
+	{
+		//MODDD - like grunts, turn a little faster while running or walking.
+	case ACT_RUN:
+		ys = 140;
+		break;
+	case ACT_WALK:
+		ys = 160;
+		break;
+
+	case ACT_TURN_LEFT:
+	case ACT_TURN_RIGHT:
+		ys = 110;
+		break;
+	default:
+		ys = 100;
+	}
+
+	pev->yaw_speed = ys;
+}
+
+//=========================================================
+// HandleAnimEvent - catches the monster-specific messages
+// that occur when tagged animation frames are played.
+//
+// Returns number of events handled, 0 if none.
+//=========================================================
+void CAGrunt :: HandleAnimEvent( MonsterEvent_t *pEvent )
+{
+
+	if(EASY_CVAR_GET(thatWasntPunch) == 1){
+		return;
+	}
+
+	switch( pEvent->event )
+	{
+	case AGRUNT_AE_HORNET1:
+	case AGRUNT_AE_HORNET2:
+	case AGRUNT_AE_HORNET3:
+	case AGRUNT_AE_HORNET4:
+	case AGRUNT_AE_HORNET5:
+		{
+			// m_vecEnemyLKP should be center of enemy body
+			Vector vecArmPos;
+			Vector vecDirToEnemy;
+			Vector vecDirToEnemyAI;
+			Vector angDir;
+			Vector angDirAI;
+
+			if (HasConditions( bits_COND_SEE_ENEMY))
+			{
+				//Careful - this doesn't factor in where they are aiming.
+				//The hgrunt uses this, but this is unnecessarily precise. Making the hornet's velocity based off of "vecDirToEnemy" instead of the Hornet's forward angles (likely does not factor in pitch... up / down angles unlike vecDirToEnemy).
+				//Vector vecShootOrigin = GetGunPosition();
+				//Vector vecShootDir = ShootAtEnemy( vecShootOrigin );
+
+				//MODDD - NAH. go ahead and use the precise version.
+				vecDirToEnemy = ( ( m_vecEnemyLKP ) - pev->origin );
+				angDir = UTIL_VecToAngles( vecDirToEnemy );
+				vecDirToEnemy = vecDirToEnemy.Normalize();
+				
+				/*
+				Vector vecShootOriginAI = GetGunPositionAI();
+				vecDirToEnemyAI = ShootAtEnemyMod(vecShootOriginAI());
+				angDirAI = UTIL_VecToAngles(vecDirToEnemyAI);
+
+				Vector vecShootOrigin = GetGunPosition();
+				vecDirToEnemy = ShootAtEnemyMod( vecShootOrigin );
+				angDir = UTIL_VecToAngles(vecDirToEnemy);
+				*/
+
+			}
+			else
+			{
+				//angDirAI = pev->angles;
+				angDir = pev->angles;
+				UTIL_MakeAimVectors( angDir );
+				vecDirToEnemy = gpGlobals->v_forward;
+			}
+
+			if(EASY_CVAR_GET(agrunt_muzzleflash) != 0){
+				pev->effects = EF_MUZZLEFLASH;
+			}
+
+			// make angles +-180
+			if (angDir.x > 180)
+			{
+				angDir.x = angDir.x - 360;
+			}
+
+			SetBlending( 0, angDir.x );
+
+
+			//MODDD - easier to recognize.
+			//GetAttachment( 0, vecArmPos, vecArmDir );
+			vecArmPos = GetGunPosition();
+
+			//MODDD - toned down from 32.
+			vecArmPos = vecArmPos + vecDirToEnemy * 20;
+
+
+			if(EASY_CVAR_GET(agrunt_muzzleflash) != 0){
+				MESSAGE_BEGIN( MSG_PVS, SVC_TEMPENTITY, vecArmPos );
+					WRITE_BYTE( TE_SPRITE );
+					WRITE_COORD( vecArmPos.x );	// pos
+					WRITE_COORD( vecArmPos.y );	
+					WRITE_COORD( vecArmPos.z );	
+					WRITE_SHORT( iAgruntMuzzleFlash );		// model
+					WRITE_BYTE( 6 );				// size * 10
+					WRITE_BYTE( 128 );			// brightness
+				MESSAGE_END();
+			}
+
+			CBaseEntity *pHornet = CBaseEntity::Create( "hornet", vecArmPos, UTIL_VecToAngles( vecDirToEnemy ), edict() );
+			UTIL_MakeVectors ( pHornet->pev->angles );
+			
+			//MODDD - change, explanation above.
+			//pHornet->pev->velocity = gpGlobals->v_forward * 300;
+
+			if(m_fIsPoweredUp){
+				//MODDD - is the powerup hornet speedup + difficulty a good idea? They may have a harder time homing in on a target at higher speeds.
+				if(g_iSkillLevel < SKILL_HARD){
+					pHornet->pev->velocity = vecDirToEnemy * 350;
+				}else{
+					pHornet->pev->velocity = vecDirToEnemy * 400;
+				}
+			}else{
+				pHornet->pev->velocity = vecDirToEnemy * 300;
+			}
+			
+			switch ( RANDOM_LONG ( 0 , 2 ) )
+			{
+				case 0:	EMIT_SOUND_FILTERED ( ENT(pev), CHAN_WEAPON, "agrunt/ag_fire1.wav", 1.0, ATTN_NORM, 0, 100 );	break;
+				case 1:	EMIT_SOUND_FILTERED ( ENT(pev), CHAN_WEAPON, "agrunt/ag_fire2.wav", 1.0, ATTN_NORM, 0, 100 );	break;
+				case 2:	EMIT_SOUND_FILTERED ( ENT(pev), CHAN_WEAPON, "agrunt/ag_fire3.wav", 1.0, ATTN_NORM, 0, 100 );	break;
+			}
+
+			CBaseMonster *pHornetMonster = pHornet->MyMonsterPointer();
+
+			if ( pHornetMonster )
+			{
+				pHornetMonster->m_hEnemy = m_hEnemy;
+			}
+		}
+		break;
+
+	//MODDD NOTE - BEWARE. These aren't in the soundSentenceSave because the player already precaches them.
+	//             Just use EMIT_SOUND to avoid trying equivalent sentences that don't exist.
+	case AGRUNT_AE_LEFT_FOOT:
+		switch (RANDOM_LONG(0,1))
+		{
+		// left foot
+		case 0:	EMIT_SOUND_DYN ( ENT(pev), CHAN_BODY, "player/pl_ladder2.wav", 1, ATTN_NORM, 0, 70 );	break;
+		case 1:	EMIT_SOUND_DYN ( ENT(pev), CHAN_BODY, "player/pl_ladder4.wav", 1, ATTN_NORM, 0, 70 );	break;
+		}
+		break;
+	case AGRUNT_AE_RIGHT_FOOT:
+		// right foot
+		switch (RANDOM_LONG(0,1))
+		{
+		case 0:	EMIT_SOUND_DYN ( ENT(pev), CHAN_BODY, "player/pl_ladder1.wav", 1, ATTN_NORM, 0, 70 );	break;
+		case 1:	EMIT_SOUND_DYN ( ENT(pev), CHAN_BODY, "player/pl_ladder3.wav", 1, ATTN_NORM, 0 ,70);	break;
+		}
+		break;
+
+	case AGRUNT_AE_LEFT_PUNCH:
+		{
+			//MODDD - added bleeding.  All alien melee seems strong (big arms, large body structure).
+			CBaseEntity *pHurt = CheckTraceHullAttack( AGRUNT_MELEE_DIST, gSkillData.agruntDmgPunch, DMG_CLUB, DMG_BLEEDING );
+			
+			if ( pHurt )
+			{
+				if(!pHurt->blocksImpact()){
+					pHurt->pev->punchangle.y = -25;
+					pHurt->pev->punchangle.x = 8;
+					// OK to use gpGlobals without calling MakeVectors, cause CheckTraceHullAttack called it above.
+					if ( pHurt->IsPlayer() )
+					{
+						// this is a player. Knock him around.
+						pHurt->pev->velocity = pHurt->pev->velocity + gpGlobals->v_right * 250;
+					}
+				}
+
+				EMIT_SOUND_FILTERED ( ENT(pev), CHAN_WEAPON, pAttackHitSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackHitSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
+
+				Vector vecArmPos;
+				
+				//MODDD - easier to recognize.
+				//GetAttachment( 0, vecArmPos, vecArmAng );
+				vecArmPos = GetGunPosition();
+				SpawnBlood(vecArmPos, pHurt->BloodColor(), 25);// a little surface blood.
+			}
+			else
+			{
+				// Play a random attack miss sound
+				EMIT_SOUND_FILTERED ( ENT(pev), CHAN_WEAPON, pAttackMissSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackMissSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
+			}
+		}
+		break;
+
+	case AGRUNT_AE_RIGHT_PUNCH:
+		{
+			//MODDD - added bleeding to all melee.
+			CBaseEntity *pHurt = CheckTraceHullAttack( AGRUNT_MELEE_DIST, gSkillData.agruntDmgPunch, DMG_CLUB, DMG_BLEEDING);
+
+			if ( pHurt )
+			{
+				
+				if(!pHurt->blocksImpact()){
+					pHurt->pev->punchangle.y = 25;
+					pHurt->pev->punchangle.x = 8;
+					// OK to use gpGlobals without calling MakeVectors, cause CheckTraceHullAttack called it above.
+					if ( pHurt->IsPlayer() )
+					{
+						// this is a player. Knock him around.
+						pHurt->pev->velocity = pHurt->pev->velocity + gpGlobals->v_right * -250;
+					}
+				}
+
+				EMIT_SOUND_FILTERED ( ENT(pev), CHAN_WEAPON, pAttackHitSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackHitSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
+
+				Vector vecArmPos;
+				//MODDD - easier to recognize.
+				//GetAttachment( 0, vecArmPos, vecArmAng );
+				vecArmPos = GetGunPosition();
+
+				SpawnBlood(vecArmPos, pHurt->BloodColor(), 25);// a little surface blood.
+			}
+			else
+			{
+				// Play a random attack miss sound
+				EMIT_SOUND_FILTERED ( ENT(pev), CHAN_WEAPON, pAttackMissSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackMissSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
+			}
+		}
+		break;
+
+	default:
+		CSquadMonster::HandleAnimEvent( pEvent );
+		break;
+	}
+}
+
+
+CAGrunt::CAGrunt(){
+	m_fIsPoweredUp = FALSE;
+	nextPoweredUpParticleTime = -1;
+	poweredUpTimeEnd = -1;
+	poweredUpCauseEnt = NULL;
+	poweredUpCauseEntChangeCooldown = -1;
+	powerupCauseEntDirectedEnemy = NULL;
+	forceNewEnemyCooldownTightTime = -1;
+	forceNewEnemyCooldownTime = -1;
+	directedEnemyIssuer = NULL;
+	forgetPowerupCauseEntDirectedEnemyTime = -1;
+
+}
+
+//=========================================================
+// Spawn
+//=========================================================
+void CAGrunt :: Spawn()
+{
+	Precache( );
+
+	SET_MODEL(ENT(pev), "models/agrunt.mdl");
+	UTIL_SetSize(pev, Vector(-32, -32, 0), Vector(32, 32, 64));
+
+	pev->classname = MAKE_STRING("monster_alien_grunt");
+
+	pev->solid			= SOLID_SLIDEBOX;
+	pev->movetype		= MOVETYPE_STEP;
+	m_bloodColor		= BLOOD_COLOR_GREEN;
+	pev->effects		= 0;
+	pev->health			= gSkillData.agruntHealth;
+	m_flFieldOfView		= 0.2;// indicates the width of this monster's forward view cone ( as a dotproduct result )
+	m_MonsterState		= MONSTERSTATE_NONE;
+	m_afCapability		= 0;
+	m_afCapability		|= bits_CAP_SQUAD;
+
+	//MODDD NOTE - Bizarre, why even have a hackedGunPos? The "GetGunPosition" method was never called in the as-is script.
+	//             Going to use it in GetGunPositionAI.
+	m_HackedGunPos		= Vector( 24, 64, 48 );
+
+	m_flNextSpeakTime	= m_flNextWordTime = gpGlobals->time + RANDOM_LONG(10, 20);
+
+	MonsterInit();
+}
+
+
+extern int global_useSentenceSave;
+//=========================================================
+// Precache - precaches all resources this monster needs
+//=========================================================
+void CAGrunt :: Precache()
+{
+	int i;
+
+	global_useSentenceSave = 1;
+
+	PRECACHE_MODEL("models/agrunt.mdl");
+
+	for ( i = 0; i < ARRAYSIZE( pAttackHitSounds ); i++ )
+		PRECACHE_SOUND((char *)pAttackHitSounds[i]);
+
+	for ( i = 0; i < ARRAYSIZE( pAttackMissSounds ); i++ )
+		PRECACHE_SOUND((char *)pAttackMissSounds[i]);
+
+	for ( i = 0; i < ARRAYSIZE( pIdleSounds ); i++ )
+		PRECACHE_SOUND((char *)pIdleSounds[i]);
+
+	for ( i = 0; i < ARRAYSIZE( pDieSounds ); i++ )
+		PRECACHE_SOUND((char *)pDieSounds[i]);
+
+	for ( i = 0; i < ARRAYSIZE( pPainSounds ); i++ )
+		PRECACHE_SOUND((char *)pPainSounds[i]);
+
+	for ( i = 0; i < ARRAYSIZE( pAttackSounds ); i++ )
+		PRECACHE_SOUND((char *)pAttackSounds[i]);
+
+	for ( i = 0; i < ARRAYSIZE( pAlertSounds ); i++ )
+		PRECACHE_SOUND((char *)pAlertSounds[i]);
+
+	PRECACHE_SOUND( "hassault/hw_shoot1.wav" );
+	PRECACHE_SOUND( "agrunt/ag_powerup.wav" );
+	
+	iAgruntMuzzleFlash = PRECACHE_MODEL( "sprites/muz4.spr" );
+
+	global_useSentenceSave = 0;
+	global_useSentenceSave = 1;
+
+	UTIL_PrecacheOther( "hornet" );
+
+	global_useSentenceSave = 0;	
+}	
+
+
+BOOL CAGrunt::needsMovementBoundFix(void){
+	return TRUE;
+}
+
+
+
+
+
 //=========================================================
 // FCanCheckAttacks - this is overridden for alien grunts
 // because they can use their smart weapons against unseen
@@ -1814,8 +1678,6 @@ void CAGrunt :: StartTask ( Task_t *pTask )
 
 
 
-
-
 void CAGrunt::RunTask( Task_t* pTask ){
 	
 	switch( pTask->iTask ){
@@ -1829,8 +1691,6 @@ void CAGrunt::RunTask( Task_t* pTask ){
 	}//END OF switch
 
 }//END OF RunTask
-
-
 
 
 
@@ -1855,15 +1715,12 @@ Schedule_t *CAGrunt :: GetSchedule ( void )
 		}
 
 
-
 		//MODDD - new.
 		SCHEDULE_TYPE baitSched = getHeardBaitSoundSchedule(pSound);
 
 		if(baitSched != SCHED_NONE){
 			return GetScheduleOfType ( baitSched );
 		}
-
-
 
 	}
 
@@ -1880,8 +1737,6 @@ Schedule_t *CAGrunt :: GetSchedule ( void )
 			}
 
 
-			
-			
 			//MODDD - heavy damage must flinch. The new standard for heavy damage (70% of max health) in one hit that is.
 			if(HasConditions(bits_COND_HEAVY_DAMAGE)){
 				return GetScheduleOfType(SCHED_BIG_FLINCH);
@@ -1994,18 +1849,13 @@ Schedule_t* CAGrunt :: GetScheduleOfType ( int Type )
 }
 
 
-
 GENERATE_KILLED_IMPLEMENTATION(CAGrunt){
-	
-
 	//easyForcePrintLine("CAGrunt: KILLED. iGib: %d", iGib);
 
 	//if applicable.  Moved to before killed. that is ok, yes?
 	setPoweredUpOff();
 
 	GENERATE_KILLED_PARENT_CALL(CSquadMonster);
-
-
 }
 
 
@@ -2015,9 +1865,6 @@ BOOL CAGrunt::canResetBlend0(void){
 
 BOOL CAGrunt::onResetBlend0(void){
 	//add something?
-	
-
-	
 	lookAtEnemy_pitch();
 	/*
 	//MODDD - REPLACED. This should do it fine.
@@ -2050,13 +1897,8 @@ BOOL CAGrunt::onResetBlend0(void){
 	SetBlending( 0, angDir.x );
 	*/
 
-
 	return TRUE;
 }
-
-
-
-
 
 	
 //changed these two??
@@ -2070,9 +1912,6 @@ BOOL CAGrunt::forceIdleFrameReset(void){
 BOOL CAGrunt::usesAdvancedAnimSystem(void){
 	return TRUE;
 }
-
-
-
 
 int CAGrunt::LookupActivityHard(int activity){
 	int i = 0;
@@ -2177,9 +2016,7 @@ void CAGrunt::HandleEventQueueEvent(int arg_eventID){
 }//END OF HandleEventQueueEvent(...)
 
 
-
 void CAGrunt::setChaseSpeed(void){
-
 	if(this->m_fIsPoweredUp){
 		//MODDD TODO - even higher for harder difficulties?
 		if(g_iSkillLevel < SKILL_HARD){
@@ -2194,7 +2031,6 @@ void CAGrunt::setChaseSpeed(void){
 
 	//apply immediately just in case.
 	pev->framerate = m_flFramerateSuggestion;
-
 }//END OF setChaseSpeed
 
 GENERATE_TAKEDAMAGE_IMPLEMENTATION(CAGrunt)
@@ -2211,8 +2047,6 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CAGrunt)
 		//nothing in particular needed? Can just pick a new enemy.
 	}
 
-
-	
 	if(pevAttacker != NULL){
 		CBaseEntity* testEnt = CBaseEntity::Instance(pevAttacker);
 		if(testEnt != NULL && testEnt != powerupCauseEntDirectedEnemy){
@@ -2221,19 +2055,14 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CAGrunt)
 		}
 	}
 
-
-
 	//easyForcePrintLine("AGrunt:: TOOK DAMAGE. Health:%.2f Damage:%.2f Blast:%d Gib:: N:%d A:%d", pev->health, flDamage, (bitsDamageType & DMG_BLAST), (bitsDamageType & DMG_NEVERGIB), (bitsDamageType & DMG_ALWAYSGIB) );
 
 	return GENERATE_TAKEDAMAGE_PARENT_CALL(CSquadMonster);
 }
 
 
-
 void CAGrunt::forceNewEnemy(CBaseEntity* argIssuing, CBaseEntity* argNewEnemy, BOOL argPassive){
-	
 	//easyForcePrintLine("AGRUNT ID%d: forceNewEnemy: issuing:%s newenemy:%s passive:%d", monsterID, FClassname(argIssuing), FClassname(argNewEnemy), argPassive);
-
 
 	if(!m_fIsPoweredUp){
 		//If not powered up, I ignore this call.
@@ -2244,7 +2073,6 @@ void CAGrunt::forceNewEnemy(CBaseEntity* argIssuing, CBaseEntity* argNewEnemy, B
 	if(m_IdealMonsterState == MONSTERSTATE_PRONE || forceNewEnemyCooldownTightTime != -1 && gpGlobals->time <= forceNewEnemyCooldownTightTime){
 		return;
 	}
-
 
 	forgetPowerupCauseEntDirectedEnemyTime = gpGlobals->time + 20;
 
@@ -2258,11 +2086,6 @@ void CAGrunt::forceNewEnemy(CBaseEntity* argIssuing, CBaseEntity* argNewEnemy, B
 	}
 
 	if(m_hEnemy != argNewEnemy){
-
-
-
-
-
 		//Another chance to deny.  If passive and my existing commanding kingpin is closer than the other one giving the order, deny this order.
 		if(argIssuing != NULL && poweredUpCauseEnt != NULL && argIssuing->edict() != poweredUpCauseEnt.Get() ){  //&& argIssuing->pev == &poweredUpCauseEnt.Get()->v){
 
@@ -2281,7 +2104,6 @@ void CAGrunt::forceNewEnemy(CBaseEntity* argIssuing, CBaseEntity* argNewEnemy, B
 		//new enemy. Reset the cooldown.
 		forceNewEnemyCooldownTightTime = gpGlobals->time + 1;
 		forceNewEnemyCooldownTime = gpGlobals->time + 10;
-
 
 		m_hEnemy = argNewEnemy;
 
@@ -2307,9 +2129,6 @@ void CAGrunt::forceNewEnemy(CBaseEntity* argIssuing, CBaseEntity* argNewEnemy, B
 			TaskFail();
 
 		}//END OF if(!argPassive)
-
-
-		
 	}//END OF my enemy - forced enemy mismatch check
 	else{
 		//if they DO match, and non-passive...
@@ -2320,68 +2139,52 @@ void CAGrunt::forceNewEnemy(CBaseEntity* argIssuing, CBaseEntity* argNewEnemy, B
 			if( !(this->m_pSchedule == slRangeAttack1 || this->m_pSchedule == slRangeAttack2 || this->m_pSchedule == slPrimaryMeleeAttack ||  this->m_pSchedule == slSecondaryMeleeAttack) &&
 				!( (this->m_pSchedule == slChaseEnemy || this->m_pSchedule == slChaseEnemySmart) && (this->m_movementActivity == ACT_RUN && this->m_IdealActivity == this->m_movementActivity) )
 			){
-				
 				SetState(MONSTERSTATE_COMBAT);
 
 				//You MUST be focused on the enemy right this moment!
 				//easyForcePrintLine("FUCK DONUTS 2");
 				//ChangeSchedule( GetSchedule() );
 				TaskFail();
-
-
 			}
 		}
 
 	}//END OF my enemy - forced enemy match check
 
-
-
 }//END OF forceNewEnemy
 
 
 void CAGrunt::forgetForcedEnemy(CBaseMonster* argIssuing, BOOL argPassive){
-
 	if(this->m_fIsPoweredUp && argIssuing != NULL && directedEnemyIssuer != NULL && argIssuing->edict() == directedEnemyIssuer.Get() ){
 		//If the one who issued this enemy in the first place is telling us to forget the directed enemy, obey only then.
 		directedEnemyIssuer = NULL;
 		powerupCauseEntDirectedEnemy = NULL;
 	}
-
-
 }//END OF forgetNewEnemy
 
 
 
-
-
 void CAGrunt::ReportAIState(void){
-
 	//call the parent, and add on to that.
 	CBaseMonster::ReportAIState();
 
 	easyForcePrintLine("CUSTOM: isPU:%d nextPUPartt:%.2f PUtEnd:%.2f PUCauseEnt:%s PUEntChangeCD:%.2f PUentDirEn:%s fneCDT:%.2f fneCD:%.2f direniss:%s fpcedet:%.2f curtime:%.2f",
-		
-		
-	m_fIsPoweredUp,
-	nextPoweredUpParticleTime,
-	poweredUpTimeEnd,
-	FClassname(poweredUpCauseEnt),
-	poweredUpCauseEntChangeCooldown,
-	FClassname(powerupCauseEntDirectedEnemy),
+		m_fIsPoweredUp,
+		nextPoweredUpParticleTime,
+		poweredUpTimeEnd,
+		FClassname(poweredUpCauseEnt),
+		poweredUpCauseEntChangeCooldown,
+		FClassname(powerupCauseEntDirectedEnemy),
 	
-	forceNewEnemyCooldownTightTime,
-	forceNewEnemyCooldownTime,
+		forceNewEnemyCooldownTightTime,
+		forceNewEnemyCooldownTime,
 	
-	FClassname(directedEnemyIssuer),
-	forgetPowerupCauseEntDirectedEnemyTime,
+		FClassname(directedEnemyIssuer),
+		forgetPowerupCauseEntDirectedEnemyTime,
 
-	gpGlobals->time
-		
-		);
+		gpGlobals->time
+	);
 	
 }//END OF ReportAIState()
-
-
 
 
 Vector CAGrunt::GetGunPosition(void){
@@ -2399,7 +2202,6 @@ Vector CAGrunt::GetGunPositionAI(void){
 	////Clone of GetGunPosition from monsters.cpp. The GetGunPositionAI method of CBaseMonster would have called Monster's GetGunPosition, but we've made ours more specific.
 	return CBaseMonster::GetGunPosition();
 	////CHANGED.  Just using the hacked position to determine this.
-
 
 	/*
 	Vector v_forward, v_right, v_up, angle;
@@ -2427,24 +2229,16 @@ Vector CAGrunt::GetGunPositionAI(void){
 
 
 
-
-
-
-
 //Copy, takes more to make this guy react.
 void CAGrunt::OnTakeDamageSetConditions(entvars_t *pevInflictor, entvars_t *pevAttacker, float flDamage, int bitsDamageType, int bitsDamageTypeMod){
 
 	//MODDD - intervention. Timed damage might not affect the AI since it could get needlessly distracting.
-
-	
-
 
 	if(bitsDamageTypeMod & (DMG_TIMEDEFFECT|DMG_TIMEDEFFECTIGNORE) ){
 		//If this is continual timed damage, don't register as any damage condition. Not worth possibly interrupting the AI.
 		return;
 	}
 
-	
 	//default case from CBaseMonster's TakeDamage.
 	//Also count being in a non-combat state to force looking in that direction.
 	//if ( flDamage > 0 )
@@ -2479,18 +2273,10 @@ void CAGrunt::OnTakeDamageSetConditions(entvars_t *pevInflictor, entvars_t *pevA
 
 	easyForcePrintLine("%s:%d OnTkDmgSetCond raw:%.2f fract:%.2f", getClassname(), monsterID, flDamage, (flDamage / pev->max_health));
 
-
 }//END OF OnTakeDamageSetConditions
 
 
 int CAGrunt::getHullIndexForNodes(void){
     return NODE_LARGE_HULL;  //safe?
 }
-
-
-
-
-
-
-
 

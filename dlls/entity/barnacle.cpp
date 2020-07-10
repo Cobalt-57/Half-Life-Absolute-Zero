@@ -31,12 +31,10 @@ EASY_CVAR_EXTERN(drawBarnacleDebug)
 EASY_CVAR_EXTERN(barnacleCanGib)
 EASY_CVAR_EXTERN(barnaclePrintout)
 EASY_CVAR_EXTERN(barnacleTongueRetractDelay)
-
 EASY_CVAR_EXTERN(sv_germancensorship)
 EASY_CVAR_EXTERN(allowGermanModels)
 EASY_CVAR_EXTERN(germanRobotGibs)
 EASY_CVAR_EXTERN(germanRobotGibsDecal)
-
 
 
 
@@ -87,7 +85,6 @@ CBarnacle::CBarnacle(){
 
 	smallerTest = FALSE;
 }
-
 
 	
 int CBarnacle::IRelationship( CBaseEntity *pTarget ){
@@ -639,19 +636,12 @@ void CBarnacle :: BarnacleThink ( void )
 						this->SetSequenceByName("attack1");
 
 					}
-
-
 				}
 				//EASY_CVAR_PRINTIF_PRE(barnaclePrintout, easyPrintLine("BARN2: %d", (pTouchEnt != NULL)));
 			}else{
 				//nothing triggering lowering?
 				loweredPreviously = FALSE;
 			}
-
-
-
-
-
 		}else{
 			//if easy...
 			triggered = TRUE;
@@ -675,9 +665,6 @@ void CBarnacle :: BarnacleThink ( void )
 		if(pTouchEnt != NULL){
 			EASY_CVAR_PRINTIF_PRE(barnaclePrintout, easyPrintLine("BARNTOUCHPOSS: %d BARNTOUCHVER %d TONGUE-EXT: %d TAR: %.2f TAREY: %.2f MYZ: %.2f MYZA: %.2f MYZAA: %.2f", lickTouchPossible, lickTouchVertical, m_fTongueExtended, pTouchEnt->pev->origin.z, pTouchEnt->EyePosition().z, pev->origin.z, (pev->origin.z + pev->mins.z), (pev->origin.z+pev->mins.z-m_flAltitude) ));
 		}
-
-
-
 
 		//if ( pTouchEnt != NULL && m_fTongueExtended && lickTouchPossible )
 		if( pTouchEnt != NULL && m_fTongueExtended && lickTouchPossible && lickTouchVertical) {
@@ -788,16 +775,11 @@ void CBarnacle :: BarnacleThink ( void )
 }//END OF BarnacleThink
 
 
-
-
 GENERATE_GIBMONSTER_IMPLEMENTATION(CBarnacle){
-
 
 
 	GENERATE_GIBMONSTER_PARENT_CALL(CBaseMonster);
 }//END OF GibMonster
-
-
 
 
 
@@ -809,23 +791,6 @@ GENERATE_GIBMONSTERGIB_IMPLEMENTATION(CBarnacle){
 	if(CVAR_GET_FLOAT("violence_agibs") != 0)
 	{
 		BOOL canSpawnBlend = TRUE;
-
-		/*
-		if(EASY_CVAR_GET(sv_germancensorship) != 1){
-			//german censorship is off? this will depend on this CVar.
-			canSpawnBlend = (CVAR_GET_FLOAT("violence_hgibs") != 0);
-		}else{
-			if(EASY_CVAR_GET(allowGermanModels)==1 && EASY_CVAR_GET(germanRobotGibs)==1 && ::globalPSEUDO_germanModel_hgibFound){
-				//If we allow robots and their gibs, passed.
-				canSpawnBlend = TRUE;
-				humanGibID = GIB_GERMAN_ID;
-			}else{
-				canSpawnBlend = FALSE;
-			}
-		}
-		*/
-
-
 
 		if(CBarnacle::s_iStandardGibID == GIB_DUMMY_ID){
 			//didn't work. Disallow the blend.
@@ -846,7 +811,6 @@ GENERATE_GIBMONSTERGIB_IMPLEMENTATION(CBarnacle){
 
 	return FALSE;
 }//END OF GibMonsterGib
-
 
 
 
@@ -897,18 +861,12 @@ GENERATE_KILLED_IMPLEMENTATION(CBarnacle)
 		UTIL_MoveToOrigin(ENT(pVictim->pev), vTowards, (vTowards.Length()), MOVE_STRAFE);
 		*/
 
-
-
-
-
-
 		//MODDD - doesn't that make sense?  pVictim is "null" when it is released (no victim now)?  Regardless, not doing it as I feel the devs may
 		//have a good reason for not.
 		//pVictim = NULL;
 	}
 
 //	CGib::SpawnRandomGibs( pev, 4, 1 );
-
 
 	//MODDD - any references to CallGibMonster replaced with GibMonster. No need for that separation.
 
@@ -935,7 +893,6 @@ GENERATE_KILLED_IMPLEMENTATION(CBarnacle)
 		}
 	}
 
-
 	switch ( RANDOM_LONG ( 0, 1 ) )
 	{
 	case 0:	EMIT_SOUND_FILTERED( ENT(pev), CHAN_WEAPON, "barnacle/bcl_die1.wav", 1, ATTN_NORM );	break;
@@ -956,13 +913,10 @@ GENERATE_KILLED_IMPLEMENTATION(CBarnacle)
 	SetThink ( &CBarnacle::WaitTillDead );
 }
 
-
 //=========================================================
 //=========================================================
 void CBarnacle :: WaitTillDead ( void )
 {
-
-
 	pev->nextthink = gpGlobals->time + 0.1;
 
 	float flInterval = StudioFrameAdvance( 0.1 );
@@ -982,7 +936,6 @@ void CBarnacle :: WaitTillDead ( void )
 
 	}
 }
-
 
 
 extern int global_useSentenceSave;
@@ -1006,9 +959,6 @@ void CBarnacle :: Precache()
 
 	}
 
-
-
-
 	PRECACHE_MODEL("models/barnacle.mdl");
 
 	global_useSentenceSave = TRUE;
@@ -1021,11 +971,6 @@ void CBarnacle :: Precache()
 	PRECACHE_SOUND("barnacle/bcl_die3.wav" );
 	global_useSentenceSave = FALSE;
 }	
-
-
-
-
-
 
 
 
@@ -1043,8 +988,6 @@ CBaseEntity *CBarnacle :: TongueTouchEnt ( float *pflLength )
 #define BARNACLE_CHECK_SPACING	8
 CBaseEntity *CBarnacle :: TongueTouchEnt ( float *pflLength, float *pflLengthMinimal )
 {
-
-
 	TraceResult	tr;
 	float	length;
 
@@ -1072,8 +1015,6 @@ CBaseEntity *CBarnacle :: TongueTouchEnt ( float *pflLength, float *pflLengthMin
 	//	return NULL;
 	//}
 
-
-
 	Vector delta = Vector( BARNACLE_CHECK_SPACING, BARNACLE_CHECK_SPACING, 0 );
 	
 	Vector mins;
@@ -1100,11 +1041,7 @@ CBaseEntity *CBarnacle :: TongueTouchEnt ( float *pflLength, float *pflLengthMin
 		}
 	}
 	
-
-
-
 	CBaseEntity *pList[10];
-
 
 	float CVarMem = cheat_barnacleEatsEverything;
 
@@ -1123,8 +1060,6 @@ CBaseEntity *CBarnacle :: TongueTouchEnt ( float *pflLength, float *pflLengthMin
 
 	count = UTIL_EntitiesInBox( pList, 10, mins, maxs, (FL_CLIENT|FL_MONSTER) );
 	
-
-
 
 	if ( count )
 	{
@@ -1160,8 +1095,6 @@ CBaseEntity *CBarnacle :: TongueTouchEnt ( float *pflLength, float *pflLengthMin
 					!pList[i]->GetMonsterPointer()->isSizeGiant()
 				);
 				
-
-
 				//bound size??
 				EASY_CVAR_PRINTIF_PRE(barnaclePrintout, easyPrintLine("lets not perhaps %.2f", temp.x * temp.y * temp.z));
 

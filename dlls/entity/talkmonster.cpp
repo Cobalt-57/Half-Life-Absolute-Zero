@@ -924,6 +924,30 @@ void CTalkMonster :: RunTask( Task_t *pTask )
 			}
 			break;
 		}
+	case TASK_WAIT: {
+		//MODDD - all of TASK_WAIT here for talkmonster is new!
+
+		if (IsFollowing()) {
+			// don't wait while following!
+			if (m_hTalkTarget == NULL || m_hTalkTarget->edict() == m_hTargetEnt->edict() ) {
+				// no "TalkTarget", or we're talking to the one we're following? Stop the wait!
+				TaskComplete();
+				return;
+			}else {
+				// proceed, nevermind
+			}
+		}
+		else {
+			// wait...  why wasn't this ever here in retail for TASK_WAIT ???
+			if (IsTalking() && m_hTalkTarget != NULL && !entityHidden(m_hTalkTarget))
+			{
+				// ALERT(at_console, "walking, talking\n");
+				IdleHeadTurn(m_hTalkTarget->pev->origin);
+			}
+		}
+
+		CBaseMonster::RunTask(pTask);
+	}break;
 	case TASK_WAIT_FOR_MOVEMENT:
 		if (IsTalking() && m_hTalkTarget != NULL && !entityHidden(m_hTalkTarget) )
 		{
@@ -935,7 +959,7 @@ void CTalkMonster :: RunTask( Task_t *pTask )
 			IdleHeadTurn( pev->origin );
 			// override so that during walk, a scientist may talk and greet player
 			FIdleHello();
-			if (RANDOM_LONG(0,m_nSpeak * 20) == 0)
+			if (RANDOM_LONG(0, m_nSpeak * 20) == 0)
 			{
 				FIdleSpeak();
 			}
@@ -944,16 +968,13 @@ void CTalkMonster :: RunTask( Task_t *pTask )
 		CBaseMonster::RunTask( pTask );
 		if (TaskIsComplete())
 			IdleHeadTurn( pev->origin );
-		break;
-
-
+	break;
 	//MODDD - new
 	case SCHED_TARGET_CHASE:
 		//A talkmonster must provide its own follow method. This point should not be reached in the TalkMonster class.
 		easyForcePrintLine("ERROR!!! This talkmonster, %s, did not provide its own SCHED_TARGET_CHASE method.", getClassname());
 
 	break;
-
 	default:
 		if (IsTalking() && m_hTalkTarget != NULL && !entityHidden(m_hTalkTarget) )
 		{
@@ -1011,7 +1032,7 @@ GENERATE_KILLED_IMPLEMENTATION(CTalkMonster)
 	// If a client killed me (unless I was already Barnacle'd), make everyone else mad/afraid of him
 	if ( (pevAttacker->flags & FL_CLIENT) && m_MonsterState != MONSTERSTATE_PRONE )
 	{
-		AlertFriends();
+		AlertFriends(TRUE);
 		LimitFollowers( CBaseEntity::Instance(pevAttacker), 0 );
 	}
 
@@ -1068,10 +1089,24 @@ CBaseEntity	*CTalkMonster::EnumFriends( CBaseEntity *pPrevious, int listNumber, 
 }
 
 
-void CTalkMonster::AlertFriends( void )
+//MODDD - new variant below, "wasKilled".
+// Perhaps things this is called on should behave more strongly if that is the case
+void CTalkMonster::AlertFriends(void) {
+	// assume wasKilled is false
+	AlertFriends(FALSE);
+}
+
+void CTalkMonster::AlertFriends( BOOL wasKilled )
 {
 	CBaseEntity *pFriend = NULL;
 	int i;
+
+
+	if (!wasKilled) {
+		// well gee, now I'm pissed too.
+		this->OnAlerted(FALSE);
+		Remember(bits_MEMORY_PROVOKED);
+	}
 
 	// for each friend in this bsp...
 	for ( i = 0; i < TLK_CFRIENDS; i++ )
@@ -1079,15 +1114,28 @@ void CTalkMonster::AlertFriends( void )
 		while (pFriend = EnumFriends( pFriend, i, TRUE ))
 		{
 			CBaseMonster *pMonster = pFriend->MyMonsterPointer();
+			// don't provoke a friend that's playing a death animation. They're a goner
 			if ( pMonster->IsAlive() )
 			{
-				// don't provoke a friend that's playing a death animation. They're a goner
+				if (pMonster->isTalkMonster()) {
+					CTalkMonster* temper = static_cast<CTalkMonster*>(pMonster);
+					temper->OnAlerted(wasKilled);
+				}
+
 				pMonster->m_afMemory |= bits_MEMORY_PROVOKED;
+				if (pMonster->m_IdealMonsterState == MONSTERSTATE_IDLE) {
+					pMonster->m_IdealMonsterState = MONSTERSTATE_ALERT;
+				}
+
 			}
 		}
 	}
 }
 
+// Implement per class
+void CTalkMonster::OnAlerted(BOOL alerterWasKilled) {
+
+}
 
 
 void CTalkMonster::ShutUpFriends( void )
@@ -1969,15 +2017,17 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CTalkMonster)
 				UTIL_IsFacing( pevAttacker, pev->origin ) && m_flPlayerDamage > 4 //Facing me when he did it with a lower damage tolerance? Pissed.
 				) 
 			{
-				this->SayProvoked();
-				// Alright, now I'm pissed!
-				Remember( bits_MEMORY_PROVOKED );
-				StopFollowing( TRUE );
 
 				//MODDD - now, pissing off a talker makes friends pissed too.
 				// Player would probably kill the attacking talker and trigger
 				// AlertFriends from that one dying anyway.
 				AlertFriends();
+
+				this->SayProvoked();
+				// Alright, now I'm pissed!
+				Remember( bits_MEMORY_PROVOKED );
+				StopFollowing( TRUE );
+
 				LimitFollowers(CBaseEntity::Instance(pevAttacker), 0);
 
 				//No more forgiveness.
@@ -2006,15 +2056,17 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CTalkMonster)
 				UTIL_IsFacing( pevAttacker, pev->origin ) && m_flPlayerDamage > 5 //Facing me when he did it with a lower damage tolerance? Pissed.
 				) 
 			{
-				this->SayProvoked();
-				// Alright, now I'm pissed!
-				Remember( bits_MEMORY_PROVOKED );
-				StopFollowing( TRUE );
 
 				//MODDD - now, pissing off a talker makes friends pissed too.
 				// Player would probably kill the attacking talker and trigger
 				// AlertFriends from that one dying anyway.
 				AlertFriends();
+
+				this->SayProvoked();
+				// Alright, now I'm pissed!
+				Remember( bits_MEMORY_PROVOKED );
+				StopFollowing( TRUE );
+
 				LimitFollowers(CBaseEntity::Instance(pevAttacker), 0);
 
 				//No more forgiveness.
@@ -2396,9 +2448,6 @@ void CTalkMonster::MonsterThink(void){
 
 
 
-
-
-
 	//OK. Let's have some halfway-normal think logic in here.
 
 	if(forgiveSomePlayerDamageTime != -1 && gpGlobals->time >= forgiveSomePlayerDamageTime){
@@ -2422,9 +2471,6 @@ void CTalkMonster::MonsterThink(void){
 			forgiveSuspiciousTime = -1;
 		}
 	}
-
-
-
 
 
 

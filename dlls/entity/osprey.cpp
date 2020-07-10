@@ -21,7 +21,6 @@
 #include "soundent.h"
 #include "effects.h"
 #include "customentity.h"
-
 //MODDD - for working with a needed specific.
 #include "squadmonster.h"
 
@@ -46,15 +45,49 @@ typedef struct
 
 
 #define SF_WAITFORTRIGGER	0x40
-
-
 #define MAX_CARRY	24
-
 
 
 class COsprey : public CBaseMonster
 {
 public:
+	CBaseEntity* m_pGoalEnt;
+	Vector m_vel1;
+	Vector m_vel2;
+	Vector m_pos1;
+	Vector m_pos2;
+	Vector m_ang1;
+	Vector m_ang2;
+	float m_startTime;
+	float m_dTime;
+
+	Vector m_velocity;
+
+	float m_flIdealtilt;
+	float m_flRotortilt;
+
+	float m_flRightHealth;
+	float m_flLeftHealth;
+
+	int m_iUnits;
+	EHANDLE m_hGrunt[MAX_CARRY];
+	Vector m_vecOrigin[MAX_CARRY];
+	EHANDLE m_hRepel[4];
+
+	int m_iSoundState;
+	int m_iSpriteTexture;
+
+	int m_iPitch;
+
+	int m_iExplode;
+	int m_iTailGibs;
+	int m_iBodyGibs;
+	int m_iEngineGibs;
+
+	int m_iDoLeftSmokePuff;
+	int m_iDoRightSmokePuff;
+
+
 	COsprey();
 
 	int	Save( CSave &save );
@@ -92,41 +125,6 @@ public:
 
 	void ShowDamage( void );
 
-	CBaseEntity *m_pGoalEnt;
-	Vector m_vel1;
-	Vector m_vel2;
-	Vector m_pos1;
-	Vector m_pos2;
-	Vector m_ang1;
-	Vector m_ang2;
-	float m_startTime;
-	float m_dTime;
-
-	Vector m_velocity;
-
-	float m_flIdealtilt;
-	float m_flRotortilt;
-
-	float m_flRightHealth;
-	float m_flLeftHealth;
-
-	int m_iUnits;
-	EHANDLE m_hGrunt[MAX_CARRY];
-	Vector m_vecOrigin[MAX_CARRY];
-	EHANDLE m_hRepel[4];
-
-	int m_iSoundState;
-	int m_iSpriteTexture;
-
-	int m_iPitch;
-
-	int m_iExplode;
-	int m_iTailGibs;
-	int m_iBodyGibs;
-	int m_iEngineGibs;
-
-	int m_iDoLeftSmokePuff;
-	int m_iDoRightSmokePuff;
 };
 
 
@@ -316,7 +314,6 @@ void COsprey :: DeployThink( void )
 }
 
 
-
 BOOL COsprey :: HasDead( )
 {
 	for (int i = 0; i < m_iUnits; i++)
@@ -360,8 +357,7 @@ CBaseMonster *COsprey :: MakeGrunt( Vector vecSrc )
 			//MODDD - not good enough.  We need to intervene before the "Spawn" method of the newly created HGrunt gets called.
 			//CBaseEntity *pEntity = Create( "monster_human_grunt", pev->origin, pev->angles );
 			//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-			//CBaseEntity *pEntity;
-			while(true)
+			while(TRUE)
 			{
 			//...based off of "Create" of cbase.cpp
 			edict_t	*pent;
@@ -387,20 +383,6 @@ CBaseMonster *COsprey :: MakeGrunt( Vector vecSrc )
 			}//END OF while(true) ... just to be skippable at any point.
 			//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
-			/*
-					//MODDD - forbid grunts generated this way from becoming "hassaults":
-					CSquadMonster* squadRef = (CSquadMonster*) pGrunt;
-					//MODDDD - GET YOUR ASS OVER HERE!
-					squadRef->disableLeaderChange = TRUE;
-			*/
-
-
-
-
-
-
-
 			pGrunt = pEntity->MyMonsterPointer( );
 			pGrunt->pev->movetype = MOVETYPE_FLY;
 			pGrunt->pev->velocity = Vector( 0, 0, RANDOM_FLOAT( -196, -128 ) );
@@ -416,9 +398,6 @@ CBaseMonster *COsprey :: MakeGrunt( Vector vecSrc )
 			// ALERT( at_console, "%d at %.0f %.0f %.0f\n", i, m_vecOrigin[i].x, m_vecOrigin[i].y, m_vecOrigin[i].z );  
 			pGrunt->m_vecLastPosition = m_vecOrigin[i];
 			m_hGrunt[i] = pGrunt;
-
-
-			
 
 			return pGrunt;
 		}
@@ -489,8 +468,6 @@ void COsprey::UpdateGoal( )
 
 void COsprey::FlyThink( void )
 {
-	
-
 	StudioFrameAdvance( );
 	pev->nextthink = gpGlobals->time + 0.1;
 	
@@ -608,7 +585,6 @@ void COsprey::HitTouch( CBaseEntity *pOther )
 }
 
 
-
 //MODDD NOTE: this was found commented out.
 /*
 int COsprey::TakeDamage( entvars_t *pevInflictor, entvars_t *pevAttacker, float flDamage, int bitsDamageType )
@@ -625,18 +601,6 @@ int COsprey::TakeDamage( entvars_t *pevInflictor, entvars_t *pevAttacker, float 
 	return 0;
 }
 */
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -693,11 +657,9 @@ void COsprey :: DyingThink( void )
 
 		Vector vecSpot = pev->origin + pev->velocity * 0.2;
 
-
 		//MODDD - use this filter instead.
 		UTIL_Explosion(MSG_PVS, vecSpot, NULL, pev, vecSpot, RANDOM_FLOAT( -150, 150 ), RANDOM_FLOAT( -150, 150 ), RANDOM_FLOAT( -150, -50 ),g_sModelIndexFireball, RANDOM_LONG(0,29) + 30, 12, TE_EXPLFLAG_NONE, 0.4);
 		UTIL_ExplosionSmoke(MSG_PVS, vecSpot, NULL, vecSpot, RANDOM_FLOAT( -150, 150 ), RANDOM_FLOAT( -150, 150 ), RANDOM_FLOAT( -150, -50 ), g_sModelIndexSmoke, 100, 10  );
-
 
 		vecSpot = pev->origin + (pev->mins + pev->maxs) * 0.5;
 		MESSAGE_BEGIN( MSG_PVS, SVC_TEMPENTITY, vecSpot );
@@ -746,7 +708,6 @@ void COsprey :: DyingThink( void )
 	}
 	else
 	{
-		
 		Vector vecSpot = pev->origin + (pev->mins + pev->maxs) * 0.5;
 
 		/*
@@ -761,47 +722,10 @@ void COsprey :: DyingThink( void )
 		MESSAGE_END();
 		*/
 		
-
-		//MODDD - section replaced by below.
-		/*
-		//MODDD - check for this var.
-		if(EASY_CVAR_GET(cl_explosion) != 1){
-			// gibs
-			MESSAGE_BEGIN( MSG_PVS, SVC_TEMPENTITY, vecSpot );
-				WRITE_BYTE( TE_SPRITE );
-				WRITE_COORD( vecSpot.x );
-				WRITE_COORD( vecSpot.y );
-				WRITE_COORD( vecSpot.z + 512 );
-				WRITE_SHORT( m_iExplode );
-				WRITE_BYTE( 250 ); // scale * 10
-				WRITE_BYTE( 255 ); // brightness
-			MESSAGE_END();
-
-
-			//NOTE: this was found commented out, seems similar to the apache one.
-			//
-			//MESSAGE_BEGIN( MSG_BROADCAST, SVC_TEMPENTITY );
-			//	WRITE_BYTE( TE_SMOKE );
-			//	WRITE_COORD( vecSpot.x );
-			//	WRITE_COORD( vecSpot.y );
-			//	WRITE_COORD( vecSpot.z + 300 );
-			//	WRITE_SHORT( g_sModelIndexSmoke );
-			//	WRITE_BYTE( 250 ); // scale * 10
-			//	WRITE_BYTE( 6  ); // framerate
-			//MESSAGE_END();
-			
-
-		}//END OF if(EASY_CVAR_GET(cl_explosion) != 1)
-		else{
-			UTIL_Explosion(pev, vecSpot, 0, 0, 256, m_iExplode, 120, 12, 0, vecSpot, 0.4);
-		}
-		*/
-
 		UTIL_SpriteOrQuakeExplosion(MSG_PVS, vecSpot, NULL, pev, vecSpot, 0, 0, 512, m_iExplode, 250, 255, vecSpot, 0.4);
 		// Was the smoke being commented out more of an accident?
 		// Going to add that back in like the apache does here.
 		UTIL_ExplosionSmoke(MSG_PVS, vecSpot, NULL, vecSpot, 0, 0, 512, g_sModelIndexSmoke, 250, 5);
-
 
 
 		// blast circle
@@ -900,9 +824,6 @@ void COsprey :: ShowDamage( void )
 
 
 
-
-
-
 GENERATE_TRACEATTACK_IMPLEMENTATION(COsprey)
 {
 	//return;
@@ -943,12 +864,8 @@ GENERATE_TRACEATTACK_IMPLEMENTATION(COsprey)
 }
 
 
-
-
-
 GENERATE_TAKEDAMAGE_IMPLEMENTATION(COsprey)
 {
 	return GENERATE_TAKEDAMAGE_PARENT_CALL(CBaseMonster);
 }
-
 

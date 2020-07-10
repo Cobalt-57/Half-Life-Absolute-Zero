@@ -19,9 +19,7 @@
 #include "extdll.h"
 #include "util.h"
 #include "cbase.h"
-
 #include "animating.h"
-
 #include "basemonster.h"
 #include "schedule.h"
 #include "nodes.h"
@@ -29,14 +27,11 @@
 #include "decals.h"
 #include "soundent.h"
 #include "game.h"
-
 #include "squidspit.h"
-
+#include "zombie.h"
 
 //MODDD
 EASY_CVAR_EXTERN(bullsquidRangeDisabled)
-
-
 
 
 #define SQUID_SPRINT_DIST	256 // how close the squid has to get before starting to sprint and refusing to swerve
@@ -56,12 +51,16 @@ EASY_CVAR_EXTERN(bullsquidRangeDisabled)
 
 
 
-
-
-
 class CBullsquid : public CBaseMonster
 {
 public:
+	BOOL m_fCanThreatDisplay;// this is so the squid only does the "I see a headcrab!" dance one time. 
+
+	float m_flLastHurtTime;// we keep track of this, because if something hurts a squid, it will forget about its love of headcrabs for a while.
+	float m_flNextSpitTime;// last time the bullsquid used the spit attack.
+
+
+
 	CBullsquid();
 
 	void Spawn( void );
@@ -99,16 +98,12 @@ public:
 	BOOL violentDeathClear(void);
 	int violentDeathPriority(void);
 
+	static TYPEDESCRIPTION m_SaveData[];
 	int Save( CSave &save ); 
 	int Restore( CRestore &restore );
 
 	CUSTOM_SCHEDULES;
-	static TYPEDESCRIPTION m_SaveData[];
 
-	BOOL m_fCanThreatDisplay;// this is so the squid only does the "I see a headcrab!" dance one time. 
-
-	float m_flLastHurtTime;// we keep track of this, because if something hurts a squid, it will forget about its love of headcrabs for a while.
-	float m_flNextSpitTime;// last time the bullsquid used the spit attack.
 };
 
 
@@ -140,8 +135,6 @@ IMPLEMENT_SAVERESTORE( CBullsquid, CBaseMonster );
 
 
 
-
-
 //=========================================================
 // monster-specific schedule types
 //=========================================================
@@ -163,11 +156,6 @@ enum
 {
 	TASK_SQUID_HOPTURN = LAST_COMMON_TASK + 1,
 };
-
-
-
-
-
 
 
 
@@ -202,6 +190,7 @@ Schedule_t	slSquidRangeAttack1[] =
 // Chase enemy schedule
 Task_t tlSquidChaseEnemy1[] = 
 {
+	{ TASK_SET_ACTIVITY, (float)ACT_IDLE },   //MODDD is this okay?
 	//NO
 	{ TASK_SET_FAIL_SCHEDULE,	(float)SCHED_BULLSQUID_TRY_RANGE_ATTACK_1	},// !!!OEM - this will stop nasty squid oscillation.
 	
@@ -395,8 +384,6 @@ IMPLEMENT_CUSTOM_SCHEDULES( CBullsquid, CBaseMonster );
 
 
 
-
-
 //=========================================================
 // IgnoreConditions 
 //=========================================================
@@ -487,6 +474,16 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBullsquid)
 //=========================================================
 BOOL CBullsquid :: CheckRangeAttack1 ( float flDot, float flDist )
 {
+
+	if (HasConditions(bits_COND_SEE_ENEMY) && !HasConditions(bits_COND_ENEMY_OCCLUDED)) {
+		// can attempt the rest.
+	}
+	else {
+		// no.
+		return FALSE;
+	}
+
+
 	if ( IsMoving() && flDist >= 512 )
 	{
 		// squid will far too far behind if he stops running to spit at this distance from the enemy.
@@ -751,10 +748,8 @@ void CBullsquid :: HandleAnimEvent( MonsterEvent_t *pEvent )
 
 			//MODDD - stuff moved to the shoot method.
 
-
 			//GENERATE GLORIOUS BLOOD INSTEAD!!!!
 			//...let the Shoot method handle this, it gets the direction nicely.
-
 
 			//MODDD - slow this down a ton for testing!
 			//CSquidSpit::Shoot( pev, vecSpitOffset, vecSpitDir * 900 );
@@ -785,14 +780,21 @@ void CBullsquid :: HandleAnimEvent( MonsterEvent_t *pEvent )
 
 		case BSQUID_AE_TAILWHIP:
 		{
-
 			CBaseEntity *pHurt = CheckTraceHullAttack( 70, gSkillData.bullsquidDmgWhip, DMG_CLUB | DMG_ALWAYSGIB, 0 );
-			if ( pHurt && !pHurt->blocksImpact() ) 
+			if ( pHurt  ) 
 			{
-				pHurt->pev->punchangle.z = -20;
-				pHurt->pev->punchangle.x = 20;
-				pHurt->pev->velocity = pHurt->pev->velocity + gpGlobals->v_right * 200;
-				pHurt->pev->velocity = pHurt->pev->velocity + gpGlobals->v_up * 100;
+				if (!pHurt->blocksImpact()) {
+					pHurt->pev->punchangle.z = -20;
+					pHurt->pev->punchangle.x = 20;
+					pHurt->pev->velocity = pHurt->pev->velocity + gpGlobals->v_right * 200;
+					pHurt->pev->velocity = pHurt->pev->velocity + gpGlobals->v_up * 100;
+				}
+				//MODDD - oooookay so, ARRAYSIZE doesn't like dealing with arrays from other classes I guess.  alrighty then. 
+				// Hardcoded max's it is here.
+				EMIT_SOUND_FILTERED(ENT(pev), CHAN_WEAPON, CZombie::pAttackHitSounds[RANDOM_LONG(0, 3 - 1)], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5, 5));
+			}
+			else {
+				EMIT_SOUND_FILTERED(ENT(pev), CHAN_WEAPON, CZombie::pAttackMissSounds[RANDOM_LONG(0, 2 - 1)], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5, 5));
 			}
 		}
 		break;
@@ -828,8 +830,6 @@ void CBullsquid :: HandleAnimEvent( MonsterEvent_t *pEvent )
 				
 				CBaseEntity *pHurt = CheckTraceHullAttack( 70, 0, 0 );
 				
-				
-
 				if ( pHurt )
 				{
 					// croonchy bite sound
@@ -844,10 +844,7 @@ void CBullsquid :: HandleAnimEvent( MonsterEvent_t *pEvent )
 						break;
 					}
 
-					
-
 					if(!pHurt->blocksImpact()){
-						
 						//pHurt->pev->punchangle.x = RANDOM_LONG(0,34) - 5;
 						//pHurt->pev->punchangle.z = RANDOM_LONG(0,49) - 25;
 						//pHurt->pev->punchangle.y = RANDOM_LONG(0,89) - 45;
@@ -908,8 +905,6 @@ void CBullsquid :: Spawn()
 	}
 	*/
 }
-
-
 
 extern int global_useSentenceSave;
 //=========================================================
@@ -1027,7 +1022,6 @@ void CBullsquid :: RunAI ( void )
 	}
 
 }
-
 
 //=========================================================
 // GetSchedule 
@@ -1154,7 +1148,11 @@ Schedule_t* CBullsquid :: GetScheduleOfType ( int Type )
 				m_flNextSpitTime = gpGlobals->time + (41.0 / 30.0 );
 				return &slSquidRangeAttack1[ 0 ];
 			}else{
-				return CBaseMonster :: GetScheduleOfType ( SCHED_ALERT_STAND );
+				//MODDD - changed from SCHED_ALERT_STAND.  Should no longer forget an enemy-
+				//return CBaseMonster :: GetScheduleOfType ( SCHED_COMBAT_STAND );
+
+				// wait.  Why not just chase.
+				return &slSquidChaseEnemy[0];
 			}
 		}else{
 			return &slSquidChaseEnemy[ 0 ];
@@ -1183,9 +1181,6 @@ Schedule_t* CBullsquid :: GetScheduleOfType ( int Type )
 		}else{
 			return &slSquidChaseEnemy[ 0 ];
 		}
-
-
-
 
 		break;
 	case SCHED_SQUID_HURTHOP:
@@ -1293,8 +1288,6 @@ void CBullsquid :: RunTask ( Task_t *pTask )
 		}
 	}
 
-
-
 	//easyPrintLine("WHAT THE beep IS YOUR PROBLEM %.2f", gpGlobals->time);
 	//			
 	//CBaseMonster::smartResize();
@@ -1349,8 +1342,6 @@ MONSTERSTATE CBullsquid :: GetIdealState ( void )
 	
 	return CBaseMonster::GetIdealState();
 }
-
-
 
 
 BOOL CBullsquid::violentDeathAllowed(void){

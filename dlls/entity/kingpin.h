@@ -50,7 +50,7 @@ public:
 	virtual int Save( CSave &save ); 
 	virtual int Restore( CRestore &restore );
 	//////////////////////////////////////////////////////////////////////////////////
-	
+	void PostRestore();
 
 
 	//nah, don't keep track of this.
@@ -107,6 +107,8 @@ public:
 
 	BOOL enemyNullTimeSet;
 
+	float nextNormalThinkTime;
+	BOOL quickThink;
 
 
 

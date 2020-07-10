@@ -20,7 +20,7 @@
 #include "skill.h"
 
 
-skilldata_t	gSkillData;
+skilldata_t gSkillData;
 
 
 //=========================================================
@@ -31,7 +31,7 @@ float GetSkillCvar( char *pName )
 {
 	int	iCount;
 	float flValue;
-	char	szBuffer[ 64 ];
+	char szBuffer[ 64 ];
 	
 	//MODDD - 'gSkillData.iSkillLevel' replaced with 'g_iSkillLevel
 	iCount = sprintf( szBuffer, "%s%d",pName, g_iSkillLevel );
@@ -46,3 +46,17 @@ float GetSkillCvar( char *pName )
 	return flValue;
 }
 
+// MODDD - NEW.
+// No difficulty number after expected.  Pretty plain.
+float GetSkillCvarSingular(char* pName)
+{
+	float flValue;
+	flValue = CVAR_GET_FLOAT(pName);
+
+	if (flValue <= 0)
+	{
+		ALERT(at_console, "\n\n** GetSkillCVar Got a zero for %s **\n\n", pName);
+	}
+
+	return flValue;
+}

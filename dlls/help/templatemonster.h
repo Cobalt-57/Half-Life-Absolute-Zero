@@ -149,6 +149,7 @@ public:
 	//          Such as, the CTalkMonster having child classes CBarney and CScientist.
 	GENERATE_TRACEATTACK_PROTOTYPE
 	GENERATE_TAKEDAMAGE_PROTOTYPE
+	float hitgroupDamage(float flDamage, int bitsDamageType, int bitsDamageTypeMod, int iHitgroup);
 
 	void OnTakeDamageSetConditions(entvars_t *pevInflictor, entvars_t *pevAttacker, float flDamage, int bitsDamageType, int bitsDamageTypeMod);
 

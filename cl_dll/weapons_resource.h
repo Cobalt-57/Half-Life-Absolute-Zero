@@ -82,7 +82,6 @@ public:
 		}
 	}
 
-
 	void LoadWeaponSprites(WEAPON* wp);
 	void LoadAllWeaponSprites(void);
 
@@ -102,12 +101,6 @@ public:
 
 	SpriteHandle_t* GetAmmoPicFromWeapon(int iAmmoId, wrect_t& rect);
 };
-
-
-//no, not done this way anymore. It is not a single instance inside the HUD's m_Ammo (CHudAmmo instance).
-//MODDD - NOTE.  You mean... it *is*, a single instance inside the HUD's m_Ammo?
-// Hence why this 'extern' won't work?                                                    what the fuck
-//extern WeaponsResource gWR;
 
 
 

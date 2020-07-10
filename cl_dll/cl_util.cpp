@@ -24,11 +24,9 @@
 //#include "STDLIB.H"
 //#include "MATH.H"
 
-
 #include "hud.h"
 #include "cl_util.h"
 #include <string.h>
-
 
 
 cvar_t* cl_lw = NULL;
@@ -37,7 +35,6 @@ cvar_t* cl_viewrollspeed;
 
 // from hud.cpp
 float g_lastFOV = 0.0;
-
 
 // don't mind these.
 int playingMov = FALSE;
@@ -250,10 +247,6 @@ void updateAutoFOV(void){
 
 
 
-
-
-
-
 SpriteHandle_t LoadSprite(const char *pszName)
 {
 	int i;
@@ -284,7 +277,7 @@ void SetCrosshairFiltered( SpriteHandle_t hspr, wrect_t rc, int r, int g, int b,
 	//MODDD - player crosshair is always this instead.
 	
 
-	if(EASY_CVAR_GET(useAlphaCrosshair) == 1 && forceException == 0){
+	if(CVAR_GET_FLOAT("crosshair") == 1 && forceException == 0){
 		//if we don't know 
 		//easyPrint("YAYY\n");
 

@@ -207,67 +207,50 @@
 
 
 
-#define PARALYZE_DURATION	30		// number of 2 second intervals to take damage
-#define PARALYZE_DAMAGE		0.0		// damage to take each 2 second interval
+// NOTE: tweak these values based on gameplay feedback:
+//(MODDD - that comment is not mine.)
 
-#define NERVEGAS_DURATION	16
+
+//MODD - old?
+/*
+#define PARALYZE_DURATION	2		// number of 2 second intervals to take damage
+#define PARALYZE_DAMAGE		1.0		// damage to take each 2 second interval
+
+#define NERVEGAS_DURATION	2
 #define NERVEGAS_DAMAGE		5.0
 
-#define POISON_DURATION		25
+#define POISON_DURATION		5
 #define POISON_DAMAGE		2.0
 
-#define RADIATION_DURATION	50
+#define RADIATION_DURATION	2
 #define RADIATION_DAMAGE	1.0
 
-#define ACID_DURATION		10
+#define ACID_DURATION		2
 #define ACID_DAMAGE			5.0
 
 #define SLOWBURN_DURATION	2
 #define SLOWBURN_DAMAGE		1.0
 
-#define SLOWFREEZE_DURATION	1.0
-#define SLOWFREEZE_DAMAGE	3.0
+#define SLOWFREEZE_DURATION	2
+#define SLOWFREEZE_DAMAGE	1.0
+*/
 
 
-#define PARALYZE_DURATION_EASY	21
-#define PARALYZE_DURATION_MEDIUM	30
-#define PARALYZE_DURATION_HARD	39
-#define PARALYZE_DAMAGE		0.0
+#define PARALYZE_DAMAGE		gSkillData.tdmg_paralyze_damage
 
-#define NERVEGAS_DURATION_EASY	12
-#define NERVEGAS_DURATION_MEDIUM	16
-#define NERVEGAS_DURATION_HARD	20
-#define NERVEGAS_DAMAGE		5.0
+#define NERVEGAS_DAMAGE		gSkillData.tdmg_nervegas_damage
 
-#define POISON_DURATION_EASY		18
-#define POISON_DURATION_MEDIUM		25
-#define POISON_DURATION_HARD		32
-#define POISON_DAMAGE		2.0
+#define POISON_DAMAGE		gSkillData.tdmg_poison_damage
 
-#define RADIATION_DURATION_EASY	35
-#define RADIATION_DURATION_MEDIUM	50
-#define RADIATION_DURATION_HARD	65
-#define RADIATION_DAMAGE	1.0
+#define RADIATION_DAMAGE	gSkillData.tdmg_radiation_damage
 
-#define ACID_DURATION_EASY		7
-#define ACID_DURATION_MEDIUM		10
-#define ACID_DURATION_HARD		13
-#define ACID_DAMAGE			5.0
+#define ACID_DAMAGE			gSkillData.tdmg_acid_damage
 
-#define SLOWBURN_DURATION_EASY	1
-#define SLOWBURN_DURATION_MEDIUM	2
-#define SLOWBURN_DURATION_HARD	3
-#define SLOWBURN_DAMAGE		1.0
+#define SLOWBURN_DAMAGE		gSkillData.tdmg_slowburn_damage
 
-#define SLOWFREEZE_DURATION_EASY	1.0
-#define SLOWFREEZE_DURATION_MEDIUM	1.0
-#define SLOWFREEZE_DURATION_HARD	2.0
-#define SLOWFREEZE_DAMAGE	3.0
+#define SLOWFREEZE_DAMAGE	gSkillData.tdmg_slowfreeze_damage
 
-#define BLEEDING_DURATION_EASY	11.0
-#define BLEEDING_DURATION_MEDIUM	15.0
-#define BLEEDING_DURATION_HARD	19.0
-#define BLEEDING_DAMAGE 1.0
+#define BLEEDING_DAMAGE		gSkillData.tdmg_bleeding_damage
 
 
 
@@ -348,7 +331,7 @@ public:
 	static const char *pStandardAttackHitSounds[];
 	static const char *pStandardAttackMissSounds[];
 
-
+/*
 	static float paralyzeDuration;
 	static float nervegasDuration;
 	static float poisonDuration;
@@ -357,6 +340,18 @@ public:
 	static float slowburnDuration;
 	static float slowfreezeDuration;
 	static float bleedingDuration;
+*/
+
+	/*
+	//static float paralyzeDamage;
+	static float nervegasDamage;
+	static float poisonDamage;
+	static float radiationDamage;
+	static float acidDamage;
+	static float slowburnDamage;
+	static float slowfreezeDamage;
+	static float bleedingDamage;
+	*/
 
 	static Schedule_t* m_scheduleList[];
 
@@ -649,6 +644,9 @@ public:
 
 
 	int convert_itbd_to_damage(int i);
+	void removeTimedDamage(int arg_type, int* m_bitsDamageTypeRef);
+	virtual void parse_itbd(int i, BYTE& bDuration);
+	virtual void timedDamage_nonFirstFrame(int i, int* m_bitsDamageTypeRef);
 	virtual void CheckTimeBasedDamage(void);
 	//void PreThink(void);
 	//virtual void Think(void);
@@ -705,16 +703,14 @@ public:
 // stuff written for new state machine
 //MODDD NOTE - ...The meaning of the above comment shall forever be lost to time.
 	virtual void MonsterThink( void );
-	virtual void MonsterThinkPreMOD( void );
 
 	virtual void heardBulletHit(entvars_t* pevShooter);
 	virtual void wanderAway(const Vector& toWalkAwayFrom);
 	
-
-	//MODDD - send through a filter first, it will redirect to "MonsterThink" after.  Think of it as an injection for testing.
-	//REVERTED!
+	// Used to call the virtual "MonsterThink" which monsters may implement
+	// for custom behavior.  Advisable to call the parent CBaseMonster
+	// MonsterThink though.
 	void EXPORT	CallMonsterThink( void ) { this->MonsterThink(); }
-	//void EXPORT	CallMonsterThink( void ) { this->MonsterThinkPreMOD(); }
 
 
 
@@ -1018,10 +1014,12 @@ public:
 	
 	
 	//MODDD CRITICAL
-	//NEVER BEEN VIRTUAL.  OH DEAR.
-	//LETS OPEN UP PANDAROA's BOX, SHALL WE???
+	// NEVER BEEN VIRTUAL.  OH DEAR.
+	// LETS OPEN UP PANDAROA's BOX, SHALL WE???
 	GENERATE_TRACEATTACK_PROTOTYPE_VIRTUAL
 	GENERATE_TAKEDAMAGE_PROTOTYPE_VIRTUAL
+	//MODDD - NEW. Overridable part of TRACEATTACK.
+	virtual float hitgroupDamage(float flDamage, int bitsDamageType, int bitsDamageTypeMod, int iHitgroup);
 
 
 

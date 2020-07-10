@@ -18,8 +18,6 @@
 // implementation of CHud class
 //
 
-
-
 #include "hud.h"
 #include "cl_util.h"
 #include <string.h>
@@ -28,12 +26,9 @@
 #include "hud_servers.h"
 #include "vgui_int.h"
 #include "vgui_TeamFortressViewport.h"
-
 #include "demo.h"
 #include "demo_api.h"
 #include "vgui_scorepanel.h"
-
-//MODDD - new.
 #include "util_version.h"
 
 //MODDD - externs
@@ -41,26 +36,21 @@ EASY_CVAR_EXTERN(hud_version)
 EASY_CVAR_EXTERN(preE3UsesFailColors)
 EASY_CVAR_EXTERN(E3UsesFailColors)
 EASY_CVAR_EXTERN(weaponSelectUsesReloadSounds)
-
 EASY_CVAR_EXTERN(hud_drawsidebarmode)
-
 EASY_CVAR_EXTERN(cl_server_interpolation)
 EASY_CVAR_EXTERN(hud_brokentrans)
 
 extern float globalPSEUDO_autoDeterminedFOV;
 
 
-
-//NEWSDK: these cvars are Absent from the new SDK.
+//NEWSDK: these cvars are Absent from the new SDK.  We'll keep them though.
 /*
 cvar_t *cl_viewrollangle;
 cvar_t *cl_viewrollspeed;
 */
 
 
-
 EASY_CVAR_EXTERN_MASS
-
 
 
 
@@ -117,8 +107,10 @@ CHud::CHud() : m_iSpriteCount(0), m_pHudList(NULL), m_fPlayerDead(FALSE), recent
 
 	alphaCrossHairIndex = -1;
 	
-	useAlphaCrosshairMem = -1;
+	crosshairMem = -1;
 	allowAlphaCrosshairWithoutGunsMem = -1;
+
+	numMirrors = 0;  //MODDDMIRROR.  Here too, why not.
 }
 
 
@@ -400,7 +392,7 @@ void CHud::drawAdditiveFilter(int sprite, const int& r, const int& g, const int&
 	//SPR_DrawHoles
 
 	/*
-	if(hud_version->value == 0 && EASY_CVAR_GET(hud_brokentrans) == 1 && canDrawBrokenTrans == 1){
+	if(hud_version->value < 3 && EASY_CVAR_GET(hud_brokentrans) == 1 && canDrawBrokenTrans == 1){
 		//FillRGBA(0, 0, 35, 35, 88, 8, 8, 185);
 		int times = 25;
 		while(times > 0){
@@ -448,7 +440,7 @@ void CHud::attemptDrawBrokenTransLightAndWhite(int arg_startx, int arg_starty, w
 
 void CHud::attemptDrawBrokenTrans(int arg_startx, int arg_starty, int arg_width, int arg_height){
 	
-	if(EASY_CVAR_GET(hud_version) == 0 && EASY_CVAR_GET(hud_brokentrans) > 0 && m_HUD_brokentransparency >= 0 ){
+	if(EASY_CVAR_GET(hud_version) < 3 && EASY_CVAR_GET(hud_brokentrans) > 0 && m_HUD_brokentransparency >= 0 ){
 		
 		//CUT - adjustable isn't working.
 		float opaqueness = 1.0;
@@ -485,7 +477,7 @@ void CHud::attemptDrawBrokenTrans(int arg_startx, int arg_starty, int arg_width,
 
 void CHud::attemptDrawBrokenTransLight(int arg_startx, int arg_starty, int arg_width, int arg_height){
 	
-	if(EASY_CVAR_GET(hud_version) == 0 && EASY_CVAR_GET(hud_brokentrans) > 0 && m_HUD_brokentransparency0 >= 0){
+	if(EASY_CVAR_GET(hud_version) < 3 && EASY_CVAR_GET(hud_brokentrans) > 0 && m_HUD_brokentransparency0 >= 0){
 		float opaqueness = 1.0;
 		
 		wrect_t tempwrectThis = wrect_t();
@@ -518,7 +510,7 @@ void CHud::attemptDrawBrokenTransLight(int arg_startx, int arg_starty, int arg_w
 
 void CHud::attemptDrawBrokenTransWhite(int arg_startx, int arg_starty, int arg_width, int arg_height){
 	
-	if(EASY_CVAR_GET(hud_version) == 0 && EASY_CVAR_GET(hud_brokentrans) > 0 && m_HUD_brokentransparencyw >= 0){
+	if(EASY_CVAR_GET(hud_version) < 3 && EASY_CVAR_GET(hud_brokentrans) > 0 && m_HUD_brokentransparencyw >= 0){
 		float opaqueness = 0.04;
 		
 
@@ -554,7 +546,7 @@ void CHud::attemptDrawBrokenTransWhite(int arg_startx, int arg_starty, int arg_w
 
 void CHud::attemptDrawBrokenTransLightAndWhite(int arg_startx, int arg_starty, int arg_width, int arg_height){
 	
-	if(EASY_CVAR_GET(hud_version) == 0 && EASY_CVAR_GET(hud_brokentrans) > 0 && m_HUD_brokentransparencyw >= 0){
+	if(EASY_CVAR_GET(hud_version) < 3 && EASY_CVAR_GET(hud_brokentrans) > 0 && m_HUD_brokentransparencyw >= 0){
 		float opaqueness = 0.04;
 		
 
@@ -580,8 +572,8 @@ void CHud::attemptDrawBrokenTransLightAndWhite(int arg_startx, int arg_starty, i
 				SPR_Set( GetSprite(this->m_HUD_brokentransparency0), 255 * opaqueness, 255 * opaqueness, 255 * opaqueness );
 				SPR_DrawHoles(0, arg_startx + x, arg_starty + y, &tempwrectThis);
 				
+				// NOTICE!  Very faint but this is transparent pure white.
 				opaqueness = 0.04;
-				//draw the whole thing here.
 				SPR_Set( GetSprite(this->m_HUD_brokentransparencyw), 255 * opaqueness, 255 * opaqueness, 255 * opaqueness );
 				SPR_DrawAdditive(0, arg_startx + x, arg_starty + y, &tempwrectThis);
 				
@@ -867,7 +859,7 @@ void CHud :: Init( void )
 	HOOK_MESSAGE( VGUIMenu );
 
 
-	//MODDDDMIRROR - this block.
+	//MODDDDMIRROR - this block.   ...wait, really?  Don't you mean just the 'numMirrors' bit/
 	viewEntityIndex = 0; // trigger_viewset stuff
 	viewFlags = 0;
 	m_iLogo = 0;
@@ -974,7 +966,19 @@ void CHud :: Init( void )
 
 	//TEST!!!
 	CVAR_CREATE("pregame_server_cvar", "0", FCVAR_ARCHIVE | FCVAR_SERVER);		// controls whether or not to automatically take screenshots at the end of a round
+	
+	
+	/*
+	CVAR_CREATE("_sv_aim", "0", FCVAR_ARCHIVE);
 
+	if (CVAR_GET_FLOAT("_sv_aim") == 0) {
+		//enforce a new default for sv_aim
+		CVAR_SET_FLOAT("sv_aim", 0);
+		CVAR_SET_FLOAT("_sv_aim", 1);
+	}else {
+
+	}
+	*/
 
 	m_iLogo = 0;
 	m_iPlayerFOV = 0;
@@ -1024,6 +1028,7 @@ void CHud :: Init( void )
 	m_AmmoSecondary.Init();
 	m_TextMessage.Init();
 	m_StatusIcons.Init();
+	m_Pain.Init();
 	GetClientVoiceMgr()->Init(&g_VoiceStatusHelper, (vgui::Panel**)&gViewPort);
 
 	m_Menu.Init();
@@ -1063,7 +1068,8 @@ CHud :: ~CHud()
 
 void CHud::getGenericGUIColor(int &r, int &g, int &b){
 	
-	if(EASY_CVAR_GET(hud_version) == 0){
+	if(EASY_CVAR_GET(hud_version) < 3){
+		// pre E3
 		getGenericGreenColor(r, g, b);
 	}else{
 		getGenericOrangeColor(r, g, b);
@@ -1074,8 +1080,9 @@ void CHud::getGenericGUIColor(int &r, int &g, int &b){
 
 void CHud::getGenericEmptyColor(int &r, int &g, int &b){
 
-	if(EASY_CVAR_GET(hud_version) == 0){
-
+	
+	if(EASY_CVAR_GET(hud_version) < 3){
+		// pre E3 (green-based; prototype)
 		if(EASY_CVAR_GET(preE3UsesFailColors) == 1){
 			getGenericRedColor(r,g,b);
 		}else{
@@ -1083,7 +1090,7 @@ void CHud::getGenericEmptyColor(int &r, int &g, int &b){
 		}
 
 	}else{
-
+		// E3 (yellow-based; closer to retail)
 		if(EASY_CVAR_GET(E3UsesFailColors) == 1){
 			getGenericRedColor(r,g,b);
 		}else{
@@ -1169,12 +1176,10 @@ void CHud :: VidInit( void )
 	//m_hsprGNFOS = 0;
 
 
-
 	if(playingMov == TRUE){
 		//Why does loading it here avoid crashes sometimes? Who knows.
 		m_hsprGNFOS = SPR_Load("sprites/ymg.spr");
 	}
-
 
 
 	// ----------
@@ -1319,12 +1324,18 @@ void CHud :: VidInit( void )
 	m_HUD_number_0_health = GetSpriteIndex( "number_0health" );
 	m_HUD_number_1_tiny = GetSpriteIndex( "number_1tiny" );
 
+	// for hud_version 0
+	m_HUD_e_number_0 = GetSpriteIndex("e_number_0");
+	m_HUD_e_number_0_health = GetSpriteIndex("e_number_0health");
+
+	
+
+
 	//MODDD - altgui
 	m_HUD_number_0_E3R = GetSpriteIndex("number_0_E3R");
+	
 	m_HUD_battery_empty_E3 = GetSpriteIndex("battery_empty_E3");
-
-	m_HUD_battery_full_E3_glow = GetSpriteIndex("battery_full_E3_glow");
-	m_HUD_battery_full_E3_minimal = GetSpriteIndex("battery_full_E3_minimal");
+	m_HUD_battery_full_E3 = GetSpriteIndex("battery_full_E3");
 
 
 	alphaCrossHairIndex = GetSpriteIndex( "alphacrosshair" );
@@ -1351,23 +1362,25 @@ void CHud :: VidInit( void )
 	m_glockSilencerWpnIcoInactive = GetSpriteIndex("glocksilinact");
 	
 
-
-
 	if(m_HUD_brokentransparency >= 0){
 		m_prc_brokentransparency = &GetSpriteRect( m_HUD_brokentransparency );
 		brokenTransWidth = m_prc_brokentransparency->right - m_prc_brokentransparency->left;
 		brokenTransHeight = m_prc_brokentransparency->bottom - m_prc_brokentransparency->top;
-
 	}
-
-
-
-
-
-
+	
+	// ammo number font sizes
+	m_iFontWidth = m_rgrcRects[m_HUD_number_0].right - m_rgrcRects[m_HUD_number_0].left;
 	m_iFontHeight = m_rgrcRects[m_HUD_number_0].bottom - m_rgrcRects[m_HUD_number_0].top;
+	// health number font sizes
+	m_iFontWidthAlt = m_rgrcRects[m_HUD_number_0_health].right - m_rgrcRects[m_HUD_number_0_health].left;
+	m_iFontHeightAlt = m_rgrcRects[m_HUD_number_0_health].bottom - m_rgrcRects[m_HUD_number_0_health].top;
+		
+	// (the above are same for the early HUD too (hud_version 0).
 
-//MODDD - just do it
+
+
+
+	//MODDD - just do it
 	Init_CustomMessage();
 	
 	m_Ammo.VidInit();
@@ -1385,6 +1398,7 @@ void CHud :: VidInit( void )
 	m_AmmoSecondary.VidInit();
 	m_TextMessage.VidInit();
 	m_StatusIcons.VidInit();
+	m_Pain.VidInit();
 	GetClientVoiceMgr()->VidInit();
 }
 

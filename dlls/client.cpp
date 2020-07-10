@@ -149,34 +149,6 @@ void debugNodeModeOff(void){
 }
 
 
-/*
-void DrawSetupPathTrack(CPathTrack* pathTrackTarget, int lineIDOffset){
-	
-	if(pathTrackTarget->pev->spawnflags & SF_PATH_DISABLED){
-		//color it red.
-		DebugLine_SetupPoint(lineIDOffset+3, pathTrackTarget->pev->origin, 255, 0, 0);
-	}else{
-		//color it green.
-		DebugLine_SetupPoint(lineIDOffset+3, pathTrackTarget->pev->origin, 0, 255, 0);
-	}
-
-	if(pathTrackTarget->m_pprevious != NULL){
-		//line to previous is yellow.
-		DebugLine_Setup(lineIDOffset+0, pathTrackTarget->pev->origin, pathTrackTarget->m_pprevious->pev->origin, 255, 255, 0);
-	}
-	if(pathTrackTarget->m_pnext != NULL){
-		//line to next is blue.
-		DebugLine_Setup(lineIDOffset+1, pathTrackTarget->pev->origin, pathTrackTarget->m_pnext->pev->origin, 0, 0, 255);
-	}
-	if(pathTrackTarget->m_paltpath != NULL){
-		//line to alternate is white. Rarely exists most likely.
-		DebugLine_Setup(lineIDOffset+2, pathTrackTarget->pev->origin, pathTrackTarget->m_paltpath->pev->origin, 255, 255, 255);
-	}
-
-}//END OF DrawSetupPathTrack
-*/
-
-
 
 BOOL attemptParseStringToInt(edict_t* pEntity, int* toStoreResult, const char* toRead, const char* errorMsg_badInput, const char* errorMsg_noInput){
 	
@@ -244,9 +216,6 @@ CBaseMonster* getMonsterWithID(int argSeekID){
 	//find monster ID of argSeekID.
 	edict_t		*pEdict = g_engfuncs.pfnPEntityOfEntIndex( 1 );
 	CBaseEntity *pEntity;
-	int		count;
-	float	distance, delta;
-	count = 0;
 	if ( !pEdict )
 		return NULL;
 	for ( int i = 1; i < gpGlobals->maxEntities; i++, pEdict++ )
@@ -271,11 +240,44 @@ CBaseMonster* getMonsterWithID(int argSeekID){
 			//break;  redundant, "return" already interrupts.
 		}
 
-	}//END OF list through all entities.
+	}//END OF through all entities.
 
 	//did not find it?
 	return NULL;
-}
+}//getMonsterWithID
+
+void reviveAllMonsters() {
+	edict_t* pEdict = g_engfuncs.pfnPEntityOfEntIndex(1);
+	CBaseEntity* pEntity;
+	if (!pEdict)
+		return;
+	for (int i = 1; i < gpGlobals->maxEntities; i++, pEdict++)
+	{
+		if (pEdict->free)	// Not in use
+			continue;
+		if (!(pEdict->v.flags & (FL_CLIENT | FL_MONSTER)))	// Not a client/monster ?
+			continue;
+
+		pEntity = CBaseEntity::Instance(pEdict);
+		if (!pEntity)
+			continue;
+
+		CBaseMonster* tempMonster = pEntity->MyMonsterPointer();
+		if (tempMonster == NULL || FClassnameIs(tempMonster->pev, "player")) {
+			continue;  //not players or non-monsters.
+		}
+
+		// try to revive.
+		if (tempMonster->pev->deadflag >= DEAD_DEAD) {
+			//ok
+			tempMonster->startReanimation();
+		}
+	}//END OF through all entities.
+
+
+
+
+}//reviveAllMonsters
 
 
 
@@ -549,30 +551,14 @@ void partyStart(CBasePlayer* playerRef){
 	if ( playerRef){
 		edict_t* tempEd = ENT(playerRef->pev);
 
-		//EMIT_SOUND(tempEd, CHAN_ITEM, "!partysong", 1, ATTN_NORM);
-
-
-		/*
-		int rando = RANDOM_LONG(0, 2);
-		if(rando == 0){
-			EMIT_SOUND(tempEd, CHAN_STREAM, "!partysong0", 1, ATTN_NORM);
-		}else if(rando == 0){
-			EMIT_SOUND(tempEd, CHAN_STREAM, "!partysong1", 1, ATTN_NORM);
-		}else if(rando == 2){
-			EMIT_SOUND(tempEd, CHAN_STREAM, "!partysong2", 1, ATTN_NORM);
-		}
-		*/
-
-		//Conversion to mp3's:
-
-		char* eh[] = {"cold_as_ice", "how_its_done", "smack_my", };
-		int choice = RANDOM_LONG(0, 2);
+		// pick some music.
+		char* eh[] = {"Half-Life01", "Half-Life02", "Half-Life12", "Half-Life16", "Half-Life17",   };
+		int choice = RANDOM_LONG(0, 4);
 
 		char* cmdStringSend = UTIL_VarArgs("mp3 play media/%s.mp3", eh[choice]);
 		//CLIENT_COMMAND(tempEd, cmdStringSend);
 
 		submitJukeboxRequest(tempEd, cmdStringSend);
-
 	}
 }
 
@@ -753,7 +739,7 @@ void ClientPutInServer( edict_t *pEntity )
 	pPlayer->OnFirstAppearance();
 
 
-	easyForcePrintLine("ClientPutInServer:: I PUT A PLAYER IN THE SERVER WITHOUT CRAHSING WOW");
+	easyPrintLine("ClientPutInServer:: Finished.");
 }
 
 
@@ -1083,11 +1069,13 @@ void ClientCommand( edict_t *pEntity )
 				return;
 			}
 
+			/*
 			if(tr.pHit != NULL){
 				easyForcePrintLineClient(pEntity, "HIT SOMETHING? %s", STRING(tr.pHit->v.classname) );
 			}else{
 				easyForcePrintLineClient(pEntity, "DID NOT HIT SOMETHING?");
 			}
+			*/
 
 			/*
 			easyForcePrintLineClient(pEntity, "YEEEE %.2f", tr.flFraction);
@@ -1156,7 +1144,7 @@ void ClientCommand( edict_t *pEntity )
 	}else if ( FStrEq(pcmdRefinedRef, "infiniteammo") ){
 		if ( g_flWeaponCheat != 0.0)
 		{
-		EASY_CVAR_SET_DEBUGONLY(cheat_infiniteammo, EASY_CVAR_GET(cheat_infiniteammo)==0?1:0 );
+			EASY_CVAR_SET_DEBUGONLY(cheat_infiniteammo, EASY_CVAR_GET(cheat_infiniteammo)==0?1:0 );
 		}
 	}else if (  FStrEq(pcmdRefinedRef, "minimumfiredelay") || FStrEq(pcmdRefinedRef, "minimumdelay") || FStrEq(pcmdRefinedRef, "firedelay") || FStrEq(pcmdRefinedRef, "dakkadakkadakka")|| FStrEq(pcmdRefinedRef, "dakka") ||FStrEq(pcmdRefinedRef, "dakadakadaka") || FStrEq(pcmdRefinedRef, "daka") || FStrEq(pcmdRefinedRef, "needsmoredaka") || FStrEq(pcmdRefinedRef, "needsmoardaka") || FStrEq(pcmdRefinedRef, "needsmoredakka") || FStrEq(pcmdRefinedRef, "needsmoardakka") || FStrEq(pcmdRefinedRef, "notenoughdaka") || FStrEq(pcmdRefinedRef, "notenoughdakka") || FStrEq(pcmdRefinedRef, "notenuffdaka") || FStrEq(pcmdRefinedRef, "notenuffdakka") || FStrEq(pcmdRefinedRef, "notenufdaka") || FStrEq(pcmdRefinedRef, "notenufdakka")   || FStrEq(pcmdRefinedRef, "neverenoughdaka") || FStrEq(pcmdRefinedRef, "neverenoughdakka") || FStrEq(pcmdRefinedRef, "neverenuffdaka") || FStrEq(pcmdRefinedRef, "neverenuffdakka") || FStrEq(pcmdRefinedRef, "neverenufdaka") || FStrEq(pcmdRefinedRef, "neverenufdakka")   || FStrEq(pcmdRefinedRef, "nevaenoughdaka") || FStrEq(pcmdRefinedRef, "nevaenoughdakka") || FStrEq(pcmdRefinedRef, "nevaenuffdaka") || FStrEq(pcmdRefinedRef, "nevaenuffdakka") || FStrEq(pcmdRefinedRef, "nevaenufdaka") || FStrEq(pcmdRefinedRef, "nevaenufdakka")          ){
 
@@ -1183,7 +1171,6 @@ void ClientCommand( edict_t *pEntity )
 		EASY_CVAR_SET_DEBUGONLY(jumpForceMulti, 1);
 		EASY_CVAR_SET_DEBUGONLY(ladderSpeedMulti, DEFAULT_ladderSpeedMulti);
 
-	
 	}else if ( FStrEq(pcmdRefinedRef, "disablecheats") || FStrEq(pcmdRefinedRef, "disablecheat") || FStrEq(pcmdRefinedRef, "nocheating") || FStrEq(pcmdRefinedRef, "nocheats") || FStrEq(pcmdRefinedRef, "nocheat") || FStrEq(pcmdRefinedRef, "cheatingisforpussies") || FStrEq(pcmdRefinedRef, "winnersdontdodrugs") ){
 
 		CBasePlayer* playerRef = GetClassPtr((CBasePlayer *)pev);
@@ -1200,7 +1187,6 @@ void ClientCommand( edict_t *pEntity )
 			cheat_barnacleEatsEverything = 2;
 			easyForcePrintLineBroadcast("CHEAT OFF: Barnacles returned to normal.");
 		}
-
 
 	}else if ( FStrEq(pcmdRefinedRef, "thealmightybarnacle") ){
 		if ( g_flWeaponCheat != 0.0)
@@ -1226,11 +1212,8 @@ void ClientCommand( edict_t *pEntity )
 		resetPlayerRPGRockets( GetClassPtr((CBasePlayer *)pev) );
 	}else if( FStrEq(pcmdRefinedRef, "fixcvar") || FStrEq(pcmdRefinedRef, "resetcvar") || FStrEq(pcmdRefinedRef, "fixcvars") || FStrEq(pcmdRefinedRef, "reestcvars") || FStrEq(pcmdRefinedRef, "unfuckup") || FStrEq(pcmdRefinedRef, "unfuckupcvar") || FStrEq(pcmdRefinedRef, "unfuckupcvars") || FStrEq(pcmdRefinedRef, "unfuck") || FStrEq(pcmdRefinedRef, "unfuckcvar") || FStrEq(pcmdRefinedRef, "unfuckcvars") ){
 		//reset the most annoying CVars.
-
 		CBasePlayer* playerRef = GetClassPtr((CBasePlayer *)pev);
-		
 		resetModCVars(playerRef, FALSE);
-
 
 	}else if ( FStrEq(pcmdRefinedRef, "fixstuka") || FStrEq(pcmdRefinedRef, "stukafix")  ){
 
@@ -1278,7 +1261,6 @@ void ClientCommand( edict_t *pEntity )
 		EASY_CVAR_SET_DEBUGONLY(thatWasntGrass, 0)
 		EASY_CVAR_SET_DEBUGONLY(thatWasntPunch, 0)
 
-		
 	}else if( FStrEq(pcmdRefinedRef, "resetSparks") || FStrEq(pcmdRefinedRef, "tooManySparks")   ){
 	
 		EASY_CVAR_SET_DEBUGONLY(sparksAllMulti, 1);
@@ -1348,15 +1330,12 @@ void ClientCommand( edict_t *pEntity )
 		EASY_CVAR_SET_DEBUGONLY(cameraRotOffY, 0)
 		EASY_CVAR_SET_DEBUGONLY(cameraRotOffZ, 0)
 
-
 	}else if ( FStrEq(pcmdRefinedRef, "fixprecache" ) || FStrEq(pcmdRefinedRef, "fixcache" ) || FStrEq(pcmdRefinedRef, "cachefix"   ) || FStrEq(pcmdRefinedRef, "precachefix")  ){
-		
 
 		EASY_CVAR_SET(precacheAll, 1);
 		EASY_CVAR_SET(soundSentenceSave, 1);
 
 		easyForcePrintLineClient(pEntity, "***precacheAll & soundSentenceSave activated.  Remember to restart if in-game, or close / re-launch if there has been any precache-related crash this session.***");
-
 
 	}else if ( FStrEq(pcmdRefinedRef, "drop" ) )
 	{
@@ -1625,7 +1604,7 @@ void ClientCommand( edict_t *pEntity )
 			submitJukeboxOff(tempEd);
 		}//END OF if(tempplayer)
 
-	}else if(FStrEq(pcmdRefinedRef, "coords") ){
+	}else if(FStrEq(pcmdRefinedRef, "origin") || FStrEq(pcmdRefinedRef, "coords")){
 		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev);
 		if(tempplayer){
 			CBaseEntity* pEntityForward = FindEntityForward( tempplayer);
@@ -1637,14 +1616,14 @@ void ClientCommand( edict_t *pEntity )
 			}
 		}
 		
-	}else if( FStrEq(pcmdRefinedRef, "mycoords") || FStrEq(pcmdRefinedRef, "playercoords") ){
+	}else if( FStrEq(pcmdRefinedRef, "myorigin") || FStrEq(pcmdRefinedRef, "playerorigin") || FStrEq(pcmdRefinedRef, "mycoords") || FStrEq(pcmdRefinedRef, "playercoords")){
 		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev) ;
 		
 		if(tempplayer){
 			interpretAsCoords(pEntity, tempplayer, "Client");
 		}
 
-	}else if( FStrEq(pcmdRefinedRef, "entcoords") || FStrEq(pcmdRefinedRef, "entitycoords") || FStrEq(pcmdRefinedRef, "monstercoords") ){
+	}else if(FStrEq(pcmdRefinedRef, "entorigin") || FStrEq(pcmdRefinedRef, "entityorigin") || FStrEq(pcmdRefinedRef, "monsterorigin") || FStrEq(pcmdRefinedRef, "entcoords") || FStrEq(pcmdRefinedRef, "entitycoords") || FStrEq(pcmdRefinedRef, "monstercoords") ){
 		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev) ;
 		
 		CBaseEntity* pEntityForward = FindEntityForward( tempplayer );
@@ -1720,7 +1699,7 @@ void ClientCommand( edict_t *pEntity )
 		submitJukeboxRequest(pev, tempCommandBuffer);
 
 
-	}else if( FStrEq(pcmdRefinedRef, "lazy") || FStrEq(pcmdRefinedRef, "lazyass") || FStrEq(pcmdRefinedRef, "wakeup") || FStrEq(pcmdRefinedRef, "wakethefuckup") || FStrEq(pcmdRefinedRef, "rise") || FStrEq(pcmdRefinedRef, "revive") || FStrEq(pcmdRefinedRef, "risefromthegrave") || FStrEq(pcmdRefinedRef, "getthefuckup") || FStrEq(pcmdRefinedRef, "suprisemotherfucker") || FStrEq(pcmdRefinedRef, "suprisemothafucka") || FStrEq(pcmdRefinedRef, "suprisemotherfucka") || FStrEq(pcmdRefinedRef, "suprisemothafucker") || FStrEq(pcmdRefinedRef, "getup") || FStrEq(pcmdRefinedRef, "titties") || FStrEq(pcmdRefinedRef, "tits") || FStrEq(pcmdRefinedRef, "tittys") || FStrEq(pcmdRefinedRef, "alyxisnaked") || FStrEq(pcmdRefinedRef, "alyxisnude") || FStrEq(pcmdRefinedRef, "younodie") || FStrEq(pcmdRefinedRef, "myparentsarenthome")   ){
+	}else if( FStrEq(pcmdRefinedRef, "lazy") || FStrEq(pcmdRefinedRef, "lazyass") || FStrEq(pcmdRefinedRef, "wakeup") || FStrEq(pcmdRefinedRef, "wakethefuckup") || FStrEq(pcmdRefinedRef, "rise") || FStrEq(pcmdRefinedRef, "revive") || FStrEq(pcmdRefinedRef, "risefromthegrave") || FStrEq(pcmdRefinedRef, "getthefuckup") || FStrEq(pcmdRefinedRef, "suprisemotherfucker") || FStrEq(pcmdRefinedRef, "suprisemothafucka") || FStrEq(pcmdRefinedRef, "suprisemotherfucka") || FStrEq(pcmdRefinedRef, "suprisemothafucker") || FStrEq(pcmdRefinedRef, "getup") || FStrEq(pcmdRefinedRef, "younodie") || FStrEq(pcmdRefinedRef, "myparentsarenthome")   ){
 		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev);
 
 		//First a check. Is the player dead? If so this is a self-revive.
@@ -1744,33 +1723,30 @@ void ClientCommand( edict_t *pEntity )
 				easyForcePrintLineClient(pEntity, "Necromancy is not your strongpoint.");
 				return;
 			}
-
 			CBaseEntity* forwardEnt = FindEntityForward(tempplayer);
-
 			if(forwardEnt != NULL){
 				CBaseMonster* tempMon;
 				tempMon = forwardEnt->GetMonsterPointer();
-
 				if(tempMon == NULL){
 					easyForcePrintLineClient(pEntity, "ERROR: Thing in crosshairs is not a monster: %s.", forwardEnt->getClassname());
 					return;
 				}
-
 				if(tempMon->pev->deadflag < DEAD_DEAD){
 					//dying or NO? Deny.
 					easyForcePrintLineClient(pEntity, "That isn\'t dead yet, genius.");
 					return;
 				}
-
 				tempMon->startReanimation();
-
 			}else{
 				easyForcePrintLineClient(pEntity, "ERROR: Could not find an entity / monster in crosshairs.");
 			}
 		}//END OF player dead check else.
 
-		
-	}else if( FStrEq(pcmdRefinedRef, "ent_remove") || FStrEq(pcmdRefinedRef, "remove") || FStrEq(pcmdRefinedRef, "removeent") || FStrEq(pcmdRefinedRef, "removeentity") || FStrEq(pcmdRefinedRef, "entremove") || FStrEq(pcmdRefinedRef, "entityremove") || FStrEq(pcmdRefinedRef, "kaplow") || FStrEq(pcmdRefinedRef, "ihateyou") || FStrEq(pcmdRefinedRef, "begone") || FStrEq(pcmdRefinedRef, "begonepeasant")  ){
+	}else if (FStrEq(pcmdRefinedRef, "reviveall") || FStrEq(pcmdRefinedRef, "necromancy") || FStrEq(pcmdRefinedRef, "thriller") || FStrEq(pcmdRefinedRef, "thisisthriller") || FStrEq(pcmdRefinedRef, "cuzthisisthriller") || FStrEq(pcmdRefinedRef, "causethisisthriller") ) {
+
+		reviveAllMonsters();
+
+	}else if( FStrEq(pcmdRefinedRef, "ent_remove") || FStrEq(pcmdRefinedRef, "remove") || FStrEq(pcmdRefinedRef, "removeent") || FStrEq(pcmdRefinedRef, "removeentity") || FStrEq(pcmdRefinedRef, "entremove") || FStrEq(pcmdRefinedRef, "entityremove") || FStrEq(pcmdRefinedRef, "kaplow") || FStrEq(pcmdRefinedRef, "ihateyou") || FStrEq(pcmdRefinedRef, "begone") || FStrEq(pcmdRefinedRef, "begonepeasant") || FStrEq(pcmdRefinedRef, "bye") || FStrEq(pcmdRefinedRef, "byebye")){
 		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev);
 
 		if(g_flWeaponCheat == 0.0){
@@ -2794,8 +2770,6 @@ void ClientCommand( edict_t *pEntity )
 			//easyForcePrintLineClient(pEntity, "FOUND ONE? %d ", pEntityTemp->pev->deadflag == DEAD_NO);
 			pEntityTemp->pev->effects &= ~(EF_BRIGHTFIELD);
 		}
-
-
 	
 	}else if(FStrEq(pcmdRefinedRef, "showboundsall")){
 		
@@ -4256,7 +4230,7 @@ void ClientCommand( edict_t *pEntity )
 			easyForcePrintLineClient(pEntity, "Nope.");
 		}
 	}
-	else if (FStrEq(pcmdRefinedRef, "testgay")) {
+	else if (FStrEq(pcmdRefinedRef, "testalt")) {
 		
 		const char* arg1ref = CMD_ARGV(1);
 
@@ -4911,7 +4885,7 @@ void StartFrame( void )
 	//playerCanThink1 = TRUE;
 	//playerCanThink2 = TRUE;
 
-	//if(EASY_CVAR_GET(testVar) == 1)easyForcePrintLine("WHAT THE hay %.2f %.2f", gpGlobals->time, DebugLine_drawTime);
+
 	if(gpGlobals->time >= DebugLine_drawTime){
 		//::debugLine_setup(1, 
 		//::debugLine_setupFract(0, 118, 759, 38, 118, 759, 600, abs(sin(gpGlobals->time*0.8)) );
@@ -5117,7 +5091,7 @@ we could also use the pas/ pvs that we set in SetupVisibility, if we wanted to. 
 */
 int AddToFullPack( struct entity_state_s *state, int e, edict_t *ent, edict_t *host, int hostflags, int player, unsigned char *pSet )
 {
-	int				i;
+	int i;
 
 	// don't send if flagged for NODRAW and it's not the host getting the message
 	if ( ( ent->v.effects == EF_NODRAW ) &&
@@ -5214,6 +5188,7 @@ int AddToFullPack( struct entity_state_s *state, int e, edict_t *ent, edict_t *h
 
 	// This non-player entity is being moved by the game .dll and not the physics simulation system
 	//  make sure that we interpolate it's position on the client if it moves
+	//MODDD - yet no mention of EFLAG_SLERP in cl_dll/StudioModelRenderer.cpp?  strange
 	if ( !player &&
 		 ent->v.animtime &&
 		 ent->v.velocity[ 0 ] == 0 && 
@@ -5266,6 +5241,24 @@ int AddToFullPack( struct entity_state_s *state, int e, edict_t *ent, edict_t *h
 			state->owner = owner;	
 		}
 	}
+
+	//MODDD - this... also appears to do effectively nothing.  Fantastic!
+	/*
+	state->iuser1 = ent->v.iuser1;
+	state->iuser1 = ent->v.iuser1;
+	state->iuser2 = ent->v.iuser2;
+	state->iuser3 = ent->v.iuser3;
+	state->fuser4 = ent->v.fuser4;
+	state->fuser2 = ent->v.fuser2;
+	state->fuser3 = ent->v.fuser3;
+	state->fuser4 = ent->v.fuser4;
+	state->vuser1 = ent->v.vuser1;
+	state->vuser2 = ent->v.vuser2;
+	state->vuser3 = ent->v.vuser3;
+	state->vuser4 = ent->v.vuser4;
+	*/
+
+
 
 	// HACK:  Somewhat...
 	// Class is overridden for non-players to signify a breakable glass object ( sort of a class? )

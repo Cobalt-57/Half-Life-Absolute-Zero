@@ -17,9 +17,7 @@
 ===== generic grenade.cpp ========================================================
 
 */
-
 // WARNING!  Like weapons.cpp, this too is not a shared file.  Beware!
-
 
 #include "extdll.h"
 #include "util.h"
@@ -45,18 +43,14 @@ EASY_CVAR_EXTERN(trailTypeTest)
 
 //MODDD
 #define ROCKET_TRAIL 2
+
 extern unsigned short g_sTrail;
 extern unsigned short g_sTrailRA;
-
 extern unsigned short g_quakeExplosionEffect;
 extern unsigned short model_explosivestuff;
 
 
-
-
 LINK_ENTITY_TO_CLASS(grenade, CGrenade);
-
-
 
 
 
@@ -71,7 +65,6 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CGrenade)
 	//MODDD - class update, was CBaseMonster.
 	return GENERATE_TAKEDAMAGE_PARENT_CALL(CBaseAnimating);
 }
-
 
 
 // Explode like a grenade without a dozen paramters.  Does not remove the "pDamageDealer" entity,
@@ -100,9 +93,6 @@ void SimpleStaticExplode(Vector rawExplodeOrigin, float rawDamage, CBaseEntity* 
 	StaticExplode(rawExplodeOrigin, rawDamage, pDamageDealer, entOwner, &tr, DMG_BLAST, 0, 1);
 }
 
-
-
-
 //
 // Grenade Explode
 //
@@ -116,7 +106,6 @@ void CGrenade::Explode( Vector vecSrc, Vector vecAim )
 	Explode( &tr, DMG_BLAST );
 }
 */
-
 
 // Assuming we have a pev->dmg to go off of.
 void CGrenade::Explode()
@@ -198,7 +187,6 @@ void StaticExplode(Vector rawExplodeOrigin, float rawDamage, CBaseEntity* pDamag
 		edictThingy = pDamageDealer->edict();
 	}
 
-
 	// Pull out of the wall a bit
 	if (pTrace->flFraction != 1.0)
 	{
@@ -210,8 +198,6 @@ void StaticExplode(Vector rawExplodeOrigin, float rawDamage, CBaseEntity* pDamag
 
 		//MODDD - actually used for placing the quake explosion effect, if it is called for instead.
 		explosionEffectStart = pTrace->vecEndPos + (pTrace->vecPlaneNormal * 5);
-
-
 
 		//MODDD -Check. Is there a straight line, unobstructed, from the surface to the explosionEffectStart?
 		Vector vecCheckStart;
@@ -235,18 +221,15 @@ void StaticExplode(Vector rawExplodeOrigin, float rawDamage, CBaseEntity* pDamag
 		}
 		//::DebugLine_Setup(7, vecCheckStart, explosionOrigin, trToEffectOrigin.flFraction);
 
-
 	}//END OF surface hit check (pTrace)
 
 	//is this change from pev->origin to explosionOrigin ok?
 	int iContents = UTIL_PointContents(explosionOrigin);
 	short spriteChosen;
-	if (iContents != CONTENTS_WATER)
-	{
+	if (iContents != CONTENTS_WATER){
 		spriteChosen = g_sModelIndexFireball;
 	}
-	else
-	{
+	else{
 		spriteChosen = g_sModelIndexWExplosion;
 	}
 
@@ -307,21 +290,8 @@ void StaticExplode(Vector rawExplodeOrigin, float rawDamage, CBaseEntity* pDamag
 }//END OF StaticExplode
 
 
-
-
-
 void CGrenade::Smoke( void )
 {
-	//MODDD - may need to still be around for players that have
-	// a different cl_explosion value.  Although this CVar is no
-	// longer serverside.
-	/*
-	if(EASY_CVAR_GET(cl_explosion) == 1){
-		//does not smoke.
-		UTIL_Remove( this );
-		return;
-	}
-	*/
 
 	if (UTIL_PointContents ( pev->origin ) == CONTENTS_WATER)
 	{
@@ -329,18 +299,6 @@ void CGrenade::Smoke( void )
 	}
 	else
 	{
-		/*
-		MESSAGE_BEGIN( MSG_PVS, SVC_TEMPENTITY, pev->origin );
-			WRITE_BYTE( TE_SMOKE );
-			WRITE_COORD( pev->origin.x );
-			WRITE_COORD( pev->origin.y );
-			WRITE_COORD( pev->origin.z );
-			WRITE_SHORT( g_sModelIndexSmoke );
-			WRITE_BYTE( (pev->dmg - 50) * 0.80 ); // scale * 10
-			WRITE_BYTE( 12  ); // framerate
-		MESSAGE_END();
-		*/
-		
 		UTIL_ExplosionSmoke(MSG_PVS, pev->origin, NULL, pev->origin, 0, 0, 0, g_sModelIndexSmoke,  (pev->dmg - 50) * 0.80, 12);
 	}
 	UTIL_Remove( this );
@@ -389,7 +347,6 @@ void CGrenade::Detonate( void )
 	Explode( &tr, DMG_BLAST );
 }
 
-
 //
 // Contact grenade, explode when it touches something
 // 
@@ -413,10 +370,7 @@ void CGrenade::ExplodeTouch( CBaseEntity *pOther )
 		
 
 		Explode( &tr, DMG_BLAST );
-		
-		
 		//easyPrintLine("cheat_touchNeverExplodes what??");
-
 	}//END OF CVar check...
 	
 }
@@ -631,7 +585,6 @@ CGrenade *CGrenade::ShootContact( entvars_t *pevOwner, Vector vecStart, Vector v
 	//For a reference.
 	//PLAYBACK_EVENT_FULL( flags, m_pPlayer->edict(), fUseAutoAim ? m_usFireGlock1 : m_usFireGlock2, 0.0, (float *)&g_vecZero, (float *)&g_vecZero, vecDir.x, vecDir.y, m_fInAttack, 0, ( m_iClip == 0 ) ? 1 : 0, 0 );
 	
-
 	if(EASY_CVAR_GET(trailTypeTest) > -1){
 		//This was just for a test.  Enable (along with some other things in place), and this should make mp5 grenades fly with a trail of grey dots.
 		PLAYBACK_EVENT_FULL (FEV_GLOBAL, pGrenade->edict(), g_sTrail, 0.0, 
@@ -676,7 +629,6 @@ CGrenade * CGrenade:: ShootTimed( entvars_t *pevOwner, Vector vecStart, Vector v
 
 	// Tumble through the air
 	// pGrenade->pev->avelocity.x = -400;
-
 	pGrenade->pev->gravity = 0.5;
 	pGrenade->pev->friction = 0.8;
 
@@ -692,7 +644,7 @@ CGrenade * CGrenade:: ShootTimed( entvars_t *pevOwner, Vector vecStart, Vector v
 
 
 float CGrenade::massInfluence(void){
-	return 0.18f;
+	return 0.12f;
 }
 
 

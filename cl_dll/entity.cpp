@@ -7,8 +7,7 @@
 
 // Client side entity management functions
 
-#include <memory.h>
-
+#include "external_lib_include.h"
 #include "hud.h"
 #include "cl_util.h"
 #include "const.h"
@@ -28,12 +27,8 @@ EASY_CVAR_EXTERN(event5031Allowed)
 EASY_CVAR_EXTERN(event5002Allowed)
 EASY_CVAR_EXTERN(event5004Allowed)
 EASY_CVAR_EXTERN(eventsAreFabulous)
-
-//EASY_CVAR_EXTERN(testVar)
 EASY_CVAR_EXTERN(trailTypeTest)
 EASY_CVAR_EXTERN(muteTempEntityGroundHitSound)
-
-
 
 
 extern vec3_t v_origin;
@@ -67,6 +62,11 @@ HUD_AddEntity
 
 int DLLEXPORT HUD_AddEntity( int type, struct cl_entity_s *ent, const char *modelname )
 {
+	//MODDD - TEST ME?
+	// Interesting, this does indeed have the ability to make entities received invisible
+	// (most likely skip rendering, physics / server logic still applies)
+	//return 0;
+
 	switch ( type )
 	{
 	case ET_NORMAL:
@@ -245,6 +245,18 @@ void DLLEXPORT HUD_TxferPredictionData ( struct entity_state_s *ps, const struct
 	VectorCopy_f( ppcd->vuser2, pcd->vuser2 );
 	VectorCopy_f( ppcd->vuser3, pcd->vuser3 );
 	VectorCopy_f( ppcd->vuser4, pcd->vuser4 );
+
+
+
+
+	//MODDD - and just why weren't these mentioned in any way???
+	// Doesn't seem helpful to even attempt to receive them, so goodbye
+	/*
+	pcd->iuser3 = ppcd->iuser3;
+	pcd->fuser1 = ppcd->fuser1;
+	pcd->fuser4 = ppcd->fuser4;
+	*/
+
 
 	memcpy( wd, pwd, 32 * sizeof( weapon_data_t ) );
 }

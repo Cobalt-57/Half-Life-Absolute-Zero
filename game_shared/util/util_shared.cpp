@@ -1796,7 +1796,7 @@ void UTIL_Sparks(const Vector& position, int arg_ballsToSpawn, float arg_extraSp
 	event_args_t tempArgSendoff;
 	memset(&tempArgSendoff, 0, sizeof tempArgSendoff);
 	// is this the same as setting to  {}, like 
-	//     poopyDick = {}
+	//     something = {}
 	// ?
 
 	tempArgSendoff.origin[0] = position.x;

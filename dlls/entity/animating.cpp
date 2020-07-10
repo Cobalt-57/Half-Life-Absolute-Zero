@@ -1067,6 +1067,12 @@ float CBaseAnimating :: SetBoneController ( int iController, float flValue )
 
 
 //MODDD
+// also, WARNING!!! This skips boundary checks for the controller (Besides being a valid
+// controller ID at all) and does not scale the given flValue to what the controller
+// expects in value.  That is, if the bone controller expects a value between 0 and 20,
+// and you give the call a value of 18, the bone will be set to purely that 18,
+// even though that's actually way smaller of an effect than you might have intended
+// (always out of 255!).
 float CBaseAnimating :: SetBoneControllerUnsafe ( int iController, float flValue )
 {
 	void *pmodel = GET_MODEL_PTR( ENT(pev) );

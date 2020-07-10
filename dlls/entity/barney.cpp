@@ -63,6 +63,8 @@ extern Schedule_t slBarneyEnemyDraw[];
 #define BARNEY_BODY_GUNDRAWN		1
 #define BARNEY_BODY_GUNGONE			2
 
+//MODDD - macro.
+#define HITGROUP_BARNEY_HELMET 10
 
 //=========================================================
 // Monster's Anim Events Go Here
@@ -168,6 +170,8 @@ public:
 	//MODDD
 	GENERATE_TRACEATTACK_PROTOTYPE
 	GENERATE_TAKEDAMAGE_PROTOTYPE
+
+	void OnAlerted(BOOL alerterWasKilled);
 	
 	GENERATE_KILLED_PROTOTYPE
 
@@ -1360,6 +1364,20 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBarney)
 	return GENERATE_TAKEDAMAGE_PARENT_CALL(CTalkMonster);
 }
 
+
+void CBarney::OnAlerted(BOOL alerterWasKilled) {
+	// change schedules this forcibly only the first time we get pissed.
+	if (!HasMemory(bits_MEMORY_PROVOKED) || m_MonsterState == MONSTERSTATE_IDLE || m_MonsterState == MONSTERSTATE_ALERT) {
+		if (!alerterWasKilled) {
+			ChangeSchedule(slBarneyEnemyDraw);
+		}
+		else {
+			ChangeSchedule(slBarneyEnemyDraw);
+		}
+	}
+}
+
+
 	
 
 void CBarney::PainSound(void){
@@ -1414,17 +1432,17 @@ GENERATE_TRACEATTACK_IMPLEMENTATION(CBarney)
 			flDamage = flDamage / 2;
 		}
 		break;
-	case 10:
+	case HITGROUP_BARNEY_HELMET:
 		if (bitsDamageType & (DMG_BULLET | DMG_SLASH | DMG_CLUB))
 		{
 			flDamage -= 20;
-			if (flDamage <= 0)
+			if (flDamage <= 0.01)
 			{
 				UTIL_Ricochet( ptr->vecEndPos, 1.0 );
 				flDamage = 0.01;
 			}
 		}
-		// always a head shot
+		// always a head shot for damage logic
 		ptr->iHitgroup = HITGROUP_HEAD;
 		break;
 	}
@@ -1433,6 +1451,11 @@ GENERATE_TRACEATTACK_IMPLEMENTATION(CBarney)
 }
 
 
+// NOTE - GibMonster is called by basemonster KILLED, so this happesn before
+// the monster decides to gib.  That is, no need for a separate check in a GibMonster
+// method to see if we need to drop a wepaon.
+// For others (hgrunts), the DropItem call is an an anim event, which is missed
+// if GibMonster gets called, thus the need for a check in GibMonster.
 GENERATE_KILLED_IMPLEMENTATION(CBarney)
 {
 	if ( pev->body < BARNEY_BODY_GUNGONE )
@@ -1440,15 +1463,16 @@ GENERATE_KILLED_IMPLEMENTATION(CBarney)
 		Vector vecGunPos;
 		Vector vecGunAngles;
 
-		pev->body = BARNEY_BODY_GUNGONE;
-
 		GetAttachment( 0, vecGunPos, vecGunAngles );
 		
-		CBaseEntity *pGun = DropItem( "weapon_9mmhandgun", vecGunPos, vecGunAngles );
+		CBaseEntity* pGun = DropItem( "weapon_9mmhandgun", vecGunPos, vecGunAngles );
 
 
 		//MODDD - the dropped weapon will always give the default ammount of ammo (assumes it's been fired & lost the first shot in the firing chamber.  For the not old firing method, the assumption of not + 1 still works.).
 		if(pGun != NULL){
+			pev->body = BARNEY_BODY_GUNGONE;
+
+			
 			CGlock* g = static_cast<CGlock*>(pGun);
 			if(g != NULL){
 				//use this if you have to.
@@ -1904,7 +1928,9 @@ void CDeadBarney :: Spawn( )
 	//MODDD - by request, spawned dead barny's lack guns.
 	pev->body = BARNEY_BODY_GUNGONE;
 
-
+	//MODDD - see scientist.cpp, this lets the mouth stay open.
+	// Hard to prove if it was meant to be this way for barnies too, but eh, why not.
+	SetBoneController(4, 15);
 	
 	if(isOrganicLogic()){
 		//MODDD - emit a stench that eaters will pick up.
@@ -2068,7 +2094,7 @@ int CBarney::tryActivitySubstitute(int activity){
 		break;
 		case ACT_VICTORY_DANCE:
 			// a small portion of the time, allow this stupid little dance.   why not.
-			if (RANDOM_FLOAT(0, 1) < 0.08) {
+			if (RANDOM_FLOAT(0, 1) < 0.04) {
 				return LookupSequence("hambone");
 			}
 		break;
@@ -2104,7 +2130,8 @@ BOOL CBarney::onResetBlend0(void){
 	//easyForcePrintLine("YOU BLASTARD %.2f", angDir.x);
 	//easyForcePrintLine("ANG:::: %.2f", angDir.x);
 	
-	easyForcePrintLine("THIS IS BARNEY:%d HOW DO YOU DO %.2f", this->monsterID, angDir.x);
+	
+	//easyPrintLine("THIS IS BARNEY:%d HOW DO YOU DO %.2f", this->monsterID, angDir.x);
 	SetBlending( 0, angDir.x );
 
 	return TRUE;

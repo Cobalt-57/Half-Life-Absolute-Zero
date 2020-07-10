@@ -18,10 +18,41 @@
 #include <math.h>
 #include "hud.h"
 #include "cl_util.h"
-
 #include "vgui_TeamFortressViewport.h"
 
+//MODDD - nice
+//EASY_CVAR_EXTERN_CLIENT_MASS
+EASY_CVAR_EXTERN(thatWasntGrass)
+EASY_CVAR_EXTERN(allowAlphaCrosshairWithoutGuns)
+EASY_CVAR_EXTERN(imAllFuckedUp)
+EASY_CVAR_EXTERN(hud_logo)
+
+
+
 #define MAX_LOGO_FRAMES 56
+
+
+extern int g_iVisibleMouse;
+extern cvar_t *sensitivity;
+extern float global2PSEUDO_IGNOREcameraMode;
+
+
+// Variables needed by the PainFlash method moved from health.cpp
+extern float cumulativeFadeDrown;
+extern float cumulativeFade;
+extern float fAttackFrontMem;
+extern float fAttackRearMem;
+extern float fAttackRightMem;
+extern float fAttackLeftMem;
+
+
+extern void command_updateCameraPerspectiveF(void);
+extern void command_updateCameraPerspectiveT(void);
+
+
+float HUD_GetFOV( void );
+
+
 
 int grgLogoFrame[MAX_LOGO_FRAMES] = 
 {
@@ -31,38 +62,12 @@ int grgLogoFrame[MAX_LOGO_FRAMES] =
 };
 
 
-extern int g_iVisibleMouse;
-
-float HUD_GetFOV( void );
-
-extern cvar_t *sensitivity;
-
-
-//MODDD - nice
-//EASY_CVAR_EXTERN_CLIENT_MASS
-EASY_CVAR_EXTERN(thatWasntGrass)
-EASY_CVAR_EXTERN(useAlphaCrosshair)
-EASY_CVAR_EXTERN(allowAlphaCrosshairWithoutGuns)
-EASY_CVAR_EXTERN(imAllFuckedUp)
-EASY_CVAR_EXTERN(hud_logo)
-
-
-extern float global2PSEUDO_IGNOREcameraMode;
-
-
-extern void command_updateCameraPerspectiveF(void);
-extern void command_updateCameraPerspectiveT(void);
-
-
 
 //MODDD
 extern "C" 
 {
 	int CL_IsThirdPerson( void );
 }
-
-
-
 
 
 
@@ -88,8 +93,6 @@ void CHud::Think(void)
 		}
 	}
 	*/
-
-
 
 	int newfov;
 	HUDLIST *pList = m_pHudList;
@@ -158,9 +161,11 @@ void CHud::Think(void)
 		gHUD.m_iPlayerFOV = getTimePeriodAndBackSmooth(recentTime, 0.23f, 0.23f, 94, 110);
 	}
 	
-	//EASY_CVAR_GET(useAlphaCrosshair) == TRUE && EASY_CVAR_GET(allowAlphaCrosshairWithoutGuns)
-	if(EASY_CVAR_GET(useAlphaCrosshair) != gHUD.useAlphaCrosshairMem && EASY_CVAR_GET(allowAlphaCrosshairWithoutGuns) != gHUD.allowAlphaCrosshairWithoutGunsMem){
-		//includes updates to the MEM vars.
+	if(
+		CVAR_GET_FLOAT("crosshair") != gHUD.crosshairMem ||
+		EASY_CVAR_GET(allowAlphaCrosshairWithoutGuns) != gHUD.allowAlphaCrosshairWithoutGunsMem
+	){
+		// includes updates to the MEM vars.
 		gHUD.m_Ammo.updateCrosshair();
 	}
 	
@@ -182,6 +187,13 @@ void CHud::Think(void)
 	}//END OF camera perspective (first or third person) check.
 
 }//END OF Think
+
+
+
+
+
+
+
 
 
 
@@ -249,6 +261,8 @@ int CHud::Redraw(float flTime, int intermission)
 	// if no redrawing is necessary
 	// return 0;
 
+
+	// hud_draw
 	if (m_pCvarDraw->value)
 	{
 		HUDLIST* pList = m_pHudList;
@@ -270,7 +284,16 @@ int CHud::Redraw(float flTime, int intermission)
 
 			pList = pList->pNext;
 		}
-	}
+	}//END OF hud_draw check
+	
+
+	//MODDD - must also make the gHUD.m_Health.DrawPain call, since m_Health isn't doing it on its own to give
+	// control up to here.
+	gHUD.m_Pain.DrawPain(flTime);
+
+
+
+
 
 	//MODDD - this was already here.  Left in the game... very interesting.
 	// are we in demo mode? do we need to draw the logo in the top corner?
@@ -310,6 +333,9 @@ int CHud::Redraw(float flTime, int intermission)
 			buildInfoY = 14;
 		}
 
+		
+		// using this condition instead of "gHUD.canDrawSidebar()" because that requires the suit.  This one doesn't and works fine.
+		// Point is not to draw the version notice at the same time as the weapon-select menu when open, too cluttered.
 		if (!gHUD.m_Ammo.gWR.gpActiveSel) {
 			// this gives the default color.
 			gEngfuncs.pfnDrawSetTextColor(1.00, 0.63, 0);
@@ -501,17 +527,23 @@ int CHud :: DrawHudStringReverse( int xpos, int ypos, int iMinX, char *szString,
 
 //How long would this number be if drawn?
 int CHud::DrawHUDNumber_widthOnly(int iFlags, int iNumber, int fontID){
-	//MODDD - now uses the new boxed number widths instead of the other if "useBoxedNumbers".
-	//"m_HUD_number_0+10" gets boxed number 0.
-	//int iWidth = GetSpriteRect(m_HUD_number_0).right - GetSpriteRect(m_HUD_number_0).left;
+	
 	int iWidth = 0;
 
 	int myFontIDZero = 0;
 
 	if(fontID == 0){
-		myFontIDZero = m_HUD_number_0;
+		if(EASY_CVAR_GET(hud_version) == 0){
+			myFontIDZero = m_HUD_e_number_0;
+		}else{
+			myFontIDZero = m_HUD_number_0;
+		}
 	}else if(fontID == 1){
-		myFontIDZero = m_HUD_number_0_health;
+		if(EASY_CVAR_GET(hud_version) == 0){
+			myFontIDZero = m_HUD_e_number_0_health;
+		}else{
+			myFontIDZero = m_HUD_number_0_health;
+		}
 	}else if(fontID == 2){
 		myFontIDZero = m_HUD_number_1_tiny;
 	}
@@ -571,18 +603,27 @@ int CHud :: DrawHudNumber( int x, int y, int iFlags, int iNumber, const int& r, 
 		drawAltTransValue = 1;
 	}
 
-	//MODDD - now uses the new boxed number widths instead of the other if "useBoxedNumbers".
-	//"m_HUD_number_0+10" gets boxed number 0.
-	//int iWidth = GetSpriteRect(m_HUD_number_0).right - GetSpriteRect(m_HUD_number_0).left;
 	int iWidth = 0;
 
 	int myFontIDZero = 0;
 
-	if(fontID == 0){
-		myFontIDZero = m_HUD_number_0;
-	}else if(fontID == 1){
-		myFontIDZero = m_HUD_number_0_health;
-	}else if(fontID == 2){
+	if (fontID == 0) {
+		if (EASY_CVAR_GET(hud_version) == 0) {
+			myFontIDZero = m_HUD_e_number_0;
+		}
+		else {
+			myFontIDZero = m_HUD_number_0;
+		}
+	}
+	else if (fontID == 1) {
+		if (EASY_CVAR_GET(hud_version) == 0) {
+			myFontIDZero = m_HUD_e_number_0_health;
+		}
+		else {
+			myFontIDZero = m_HUD_number_0_health;
+		}
+	}
+	else if(fontID == 2){
 		myFontIDZero = m_HUD_number_1_tiny;
 	}
 	//MODDD - altgui

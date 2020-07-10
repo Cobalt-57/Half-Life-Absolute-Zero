@@ -48,6 +48,9 @@ EASY_CVAR_EXTERN(cameraRotOffY)
 EASY_CVAR_EXTERN(cameraRotOffZ)
 EASY_CVAR_EXTERN(playerBarnacleVictimViewOffset)
 EASY_CVAR_EXTERN(cl_viewpunch)
+EASY_CVAR_EXTERN(cl_viewroll)
+
+
 
 
 #define CAM_MODE_RELAX 1
@@ -469,7 +472,9 @@ void V_CalcViewRoll(struct ref_params_s* pparams)
 	if (!viewentity)
 		return;
 
-	pparams->viewangles[ROLL] = V_CalcRoll(pparams->viewangles, pparams->simvel, cl_viewrollangle->value, cl_viewrollspeed->value) * 4;
+	if(EASY_CVAR_GET(cl_viewroll) != 0){
+		pparams->viewangles[ROLL] = V_CalcRoll(pparams->viewangles, pparams->simvel, cl_viewrollangle->value, cl_viewrollspeed->value) * 4;
+	}
 
 	//side = V_CalcRoll ( viewentity->angles, pparams->simvel, pparams->movevars->rollangle, pparams->movevars->rollspeed ); [REMOVED]
 

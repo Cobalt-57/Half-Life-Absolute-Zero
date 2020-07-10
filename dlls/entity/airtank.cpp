@@ -28,6 +28,8 @@ extern int gmsgUpdateAirTankAirTime;
 
 class CAirtank : public CGrenade
 {
+	int m_state;
+
 	void Spawn( void );
 	void Precache( void );
 	void EXPORT TankThink( void );
@@ -36,12 +38,11 @@ class CAirtank : public CGrenade
 	
 	GENERATE_KILLED_PROTOTYPE
 
+	static	TYPEDESCRIPTION m_SaveData[];
 	virtual int	Save( CSave &save ); 
 	virtual int	Restore( CRestore &restore );
 	
-	static	TYPEDESCRIPTION m_SaveData[];
 
-	int  m_state;
 };
 
 
@@ -76,9 +77,6 @@ void CAirtank :: Spawn( void )
 	//Or, a value of "100" will show the explosion.  No idea.
 	pev->dmg			= 50;
 	m_state				= 1;
-
-	
-
 }
 
 void CAirtank::Precache( void )
@@ -94,7 +92,6 @@ GENERATE_KILLED_IMPLEMENTATION(CAirtank)
 
 	// UNDONE: this should make a big bubble cloud, not an explosion
 
-	
 	//MODDD - the above comment was from valve.  Anyhow, the below seems to be the ONLY reference to this particular type of "Explode" method.
 	//Because it was used only this once, it looks like the devs did not notice these arguments getting ignored (see method, they are not used at all).
 	//By coincidence, similar values are used from the object though.
@@ -157,8 +154,6 @@ void CAirtank::TankTouch( CBaseEntity *pOther )
 	//////////////////////////////////////////////////////////////////////
 
 
-
-
 	//MODDD - original script.  Commented out.  Seems to be a "rechargable" tank instead, and implies that 
 	//the player finds it while underwater (adding 12 to "pOther->pev->air_finished" would only make sense
 	//then, when it isn't getting bombarded with resets while not in water for what time counts as running
@@ -186,5 +181,4 @@ void CAirtank::TankTouch( CBaseEntity *pOther )
 	SUB_UseTargets( this, USE_TOGGLE, 1 );
 
 	*/
-
 }

@@ -132,8 +132,10 @@ public:
 
 	static const char *pAttackSounds[];
 	//static const char *pIdleSounds[];
-	static const char *pAlertSounds[];
+	//static const char *pAlertSounds[];
 	static const char *pPainSounds[];
+	
+	static const char* pIdleSounds[];
 	static const char *pAttackHitSounds[];
 	static const char *pAttackMissSounds[];
 

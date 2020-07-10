@@ -18,33 +18,39 @@
 
 */
 
-//
+//MODDD - NOTE.  Comment from as-is codebase.  I see no OFFSET stuff so I guess that already 
+// happened.
 // TODO: 
 //		Take advantage of new monster fields like m_hEnemy and get rid of that OFFSET() stuff
 //		Revisit enemy validation stuff, maybe it's not necessary with the newest monster code
 //
 
 
-//MODDD TODO - make the classes here available in a turrets.h file so that the statics can be reset on map changes like the ServerActivate method happening? Before precaches occur?
+// MODDD TODO - make the classes here available in a turrets.h file so that the statics can be reset on map changes like the ServerActivate method happening? Before precaches occur?
 //CMiniTurret::gibModelRef;
 
-//Move some things from basemonster.h to monsters.h, if not everything? Or rename monsters.cpp / monsters.h to basemonster.cpp and keep it all in basemonster.h ?
+// Move some things from basemonster.h to monsters.h, if not everything? Or rename monsters.cpp / monsters.h to basemonster.cpp and keep it all in basemonster.h ?
 
-//Make the Mr. Friendly refernec in player.cpp less error prone!!!
-
-
-
-
-
+// Make the Mr. Friendly reference in player.cpp less error prone!!!
 
 #include "extdll.h"
 #include "turret.h"
-
 #include "util.h"
 #include "cbase.h"
 #include "basemonster.h"
 #include "weapons.h"
 #include "effects.h"
+
+//MODDD
+EASY_CVAR_EXTERN(sparksTurretDeathMulti)
+EASY_CVAR_EXTERN(turretCanGib)
+EASY_CVAR_EXTERN(miniturretCanGib)
+EASY_CVAR_EXTERN(sentryCanGib)
+EASY_CVAR_EXTERN(turretBleedsOil)
+EASY_CVAR_EXTERN(turretDamageDecal)
+EASY_CVAR_EXTERN(turretGibDecal)
+
+
 
 
 #define TURRET_SHOTS	2
@@ -57,15 +63,8 @@
 
 #define TURRET_GLOW_SPRITE "sprites/flare3.spr"
 
+#define HITGROUP_TURRET_ARMOR 10
 
-//MODDD
-EASY_CVAR_EXTERN(sparksTurretDeathMulti)
-EASY_CVAR_EXTERN(turretCanGib)
-EASY_CVAR_EXTERN(miniturretCanGib)
-EASY_CVAR_EXTERN(sentryCanGib)
-EASY_CVAR_EXTERN(turretBleedsOil)
-EASY_CVAR_EXTERN(turretDamageDecal)
-EASY_CVAR_EXTERN(turretGibDecal)
 
 
 
@@ -1023,9 +1022,10 @@ void CBaseTurret ::	TurretDeath( void )
 	}
 }
 
+
 GENERATE_TRACEATTACK_IMPLEMENTATION(CBaseTurret)
 {
-	if ( ptr->iHitgroup == 10 )
+	if ( ptr->iHitgroup == HITGROUP_TURRET_ARMOR )
 	{
 		// hit armor
 		if ( pev->dmgtime != gpGlobals->time || (RANDOM_LONG(0,10) < 1) )

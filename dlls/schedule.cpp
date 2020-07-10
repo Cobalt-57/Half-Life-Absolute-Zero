@@ -693,7 +693,7 @@ void CBaseMonster :: MaintainSchedule ( void )
 
 
 			if (m_iTaskStatus == TASKSTATUS_RUNNING) {
-				// sitll running?  Get out of this loop then, no point in going through more.
+				// still running?  Get out of this loop then, no point in going through more.
 				break;
 			}
 			else {
@@ -796,6 +796,12 @@ void CBaseMonster :: RunTask ( Task_t *pTask )
 		}
 	case TASK_FACE_ENEMY:
 		{
+			if (m_hEnemy == NULL) {
+				//oops.
+				TaskComplete();
+				return;
+			}
+
 			//if(monsterID == 1)easyForcePrintLine("HOO MANN sched:%s ang:%.2f ideal:%.2f", m_pSchedule->pName, UTIL_AngleMod( pev->angles.y ), pev->ideal_yaw );
 			MakeIdealYaw( m_vecEnemyLKP );
 			ChangeYaw( pev->yaw_speed );
@@ -2084,6 +2090,12 @@ void CBaseMonster :: StartTask ( Task_t *pTask )
 		break;
 	case TASK_FACE_ENEMY:
 		{
+			if (m_hEnemy == NULL) {
+				//oops.
+				TaskComplete();
+				return;
+			}
+
 			MakeIdealYaw ( m_vecEnemyLKP );
 
 			//MODDD - added, if we can complete early we can move on with thinking in the same frame
@@ -2163,9 +2175,6 @@ void CBaseMonster :: StartTask ( Task_t *pTask )
 		}
 	case TASK_FACE_BEST_SOUND:
 		{
-			//what????
-			//fuck
-
 			CSound *pSound;
 			pSound = PBestSound();
 
@@ -2936,9 +2945,9 @@ void CBaseMonster :: StartTask ( Task_t *pTask )
 		//It is implied this sort of thing happens at the start of death.
 		RouteClear();
 
-		//don't force re-getting an animation just yet.
-		//A new animation comes from a discrepency between m_Activity and m_IdealActivity, so forcing both stops regetting an animation.
-		//also BOB SAGGETS FUCKING ASS. GetDeathActivity doesn't work if the pev->deadflag isn't DEAD_NO.
+		// don't force re-getting an animation just yet.
+		// A new animation comes from a discrepency between m_Activity and m_IdealActivity, so forcing both stops regetting an animation.
+		// !!! also GetDeathActivity doesn't work if the pev->deadflag isn't DEAD_NO.
 		m_IdealActivity = GetDeathActivity();
 		m_Activity = m_IdealActivity;
 		

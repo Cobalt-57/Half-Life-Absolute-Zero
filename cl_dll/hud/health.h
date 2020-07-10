@@ -13,13 +13,10 @@
 *
 ****/
 
-
-
 #ifndef HEALTH_H
 #define HEALTH_H
 
 #include "hudbase.h"
-
 
 
 // !!! IMPORTANT!   Keep this in synch with the number of things in
@@ -63,7 +60,6 @@
 
 
 
-
 typedef struct
 {
 	float fExpire;
@@ -76,13 +72,28 @@ typedef struct
 //-----------------------------------------------------
 //
 
-//OK. HOW IN THE HELL DOES THIS KNOW WHAT "CHudBase" IS??? NO INCLUDES IN THIS FILE. I'M LOSING MY FECKIN' MIND OVER THIS.
-//Apparently this is only included by hud.h after it has declared the CHudBase class.  ...HACKY. but it works.
-//Nah, just include hudbase.h with only the essentials so we don't run into redinition issues. Now CHudHealth can be
-//included anywhere in hud.h instead, like at the top for neatness.
+// OK. HOW IN THE HELL DOES THIS KNOW WHAT "CHudBase" IS??? NO INCLUDES IN THIS FILE. I'M LOSING MY FECKIN' MIND OVER THIS.
+// Apparently this is only included by hud.h after it has declared the CHudBase class.  ...HACKY. but it works.
+// Nah, just include hudbase.h with only the essentials so we don't run into redinition issues. Now CHudHealth can be
+// included anywhere in hud.h instead, like at the top for neatness.
 class CHudHealth: public CHudBase
 {
+private:
+	DAMAGE_IMAGE m_dmg[DMGICO_NUM_DMG_TYPES];
+	int m_bitsDamage;
+	int m_bitsDamageMod;
+
+	int itemFlashGiven;
+	int itemFlashColorStartR;
+	int itemFlashColorStartG;
+	int itemFlashColorStartB;
+	float itemFlashCumulative;
+
 public:
+	int m_iHealth;
+	int m_HUD_dmg_icon_start;
+	int m_HUD_cross;
+	float m_fFade;
 
 	//MODDD - constructor given.
 	CHudHealth(void);
@@ -92,63 +103,28 @@ public:
 	virtual int Draw(float fTime);
 	virtual void Reset( void );
 	int MsgFunc_Health(const char *pszName,  int iSize, void *pbuf);
-	int MsgFunc_Damage(const char *pszName,  int iSize, void *pbuf);
-
-	//MODDD - new
-	int MsgFunc_Drowning(const char *pszName,  int iSize, void *pbuf);
 	int MsgFunc_HUDItemFsh(const char *pszName,  int iSize, void *pbuf);
 
 
-	int m_iHealth;
-	int m_HUD_dmg_icon_start;
-	int m_HUD_cross;
-	float m_fAttackFront, m_fAttackRear, m_fAttackLeft, m_fAttackRight;
-	float m_fAttackFrontDamage, m_fAttackRearDamage, m_fAttackLeftDamage, m_fAttackRightDamage;
 	void GetPainColor( int &r, int &g, int &b );
-	float m_fFade;
 
 	//MODDD - new
 	void deriveColorFromHealth(int &r, int &g, int &b, int &a);
 	void deriveColorFromHealth(int &r, int &g, int &b);
-	void getPainColorMode(int mode, int& r, int& g, int& b);
 	
-private:
-	SpriteHandle_t m_SpriteHandle_t;
-	SpriteHandle_t m_hDamage;
-	
-	DAMAGE_IMAGE m_dmg[DMGICO_NUM_DMG_TYPES];
-	int m_bitsDamage;
-	//MODDD - complimentary.
-	int m_bitsDamageMod;
-	int DrawPain(float fTime);
-	int DrawDamage(float fTime);
-	int DrawItemFlash(float flTime);
-
-	//MODDD - now accepts the damage done too.
-	void CalcDamageDirection(vec3_t vecFrom, int damageAmount, int rawDamageAmount);
-	
-	//MODDD - new
-	void setUniformDamage(float damageAmount);
-	
-	void drawTimedDamageIcon(int arg_index, const int& r, const int& g, const int& b);
-	void drawTimedDamageIcon(int arg_index, int arg_draw_x, int arg_draw_y, const int& r, const int& g, const int& b);
-
 
 	//MODDD
 	//void UpdateTiles(float fTime, long bits);
 	void UpdateTiles(float fTime, long bits, long bitsMod);
-	int drowning;  //bool not available?  just use "int".
 
-	int itemFlashGiven;
-	int itemFlashColorStartR;
-	int itemFlashColorStartG;
-	int itemFlashColorStartB;
-	float itemFlashCumulative;
-	
+private:
+	int DrawDamage(float fTime);
+	int DrawItemFlash(float flTime);
 
+	void drawTimedDamageIcon(int arg_index, const int& r, const int& g, const int& b);
+	void drawTimedDamageIcon(int arg_index, int arg_draw_x, int arg_draw_y, const int& r, const int& g, const int& b);
 
 };	
-
 
 
 #endif //END OF HEALTH_H

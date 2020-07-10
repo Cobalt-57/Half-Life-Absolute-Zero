@@ -509,7 +509,6 @@ void CHealthDoor::Activate() {
 
 void CHealthDoor::Spawn(void) {
 
-	//easyForcePrintLineClient(disPlayah, "poop");
 	//easyForcePrintLine("CHealthDoor:: WHAT ARE myyyy SPAWNFLAGS?! %d", pev->spawnflags);
 
 	//if ((pev->spawnflags & SF_DOOR_HEAL) && !healthModuleInstance.establishedParentYet) 

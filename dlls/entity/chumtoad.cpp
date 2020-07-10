@@ -1,8 +1,5 @@
 
 #include "chumtoad.h"
-#include "ignore_warning_list.h"
-
-#include "util_debugdraw.h"
 #include "weapons.h"
 #include "nodes.h"
 #include "player.h"
@@ -13,43 +10,38 @@
 #include "util_model.h"
 #include "defaultai.h"
 #include "game.h"
+#include "ignore_warning_list.h"
+#include "util_debugdraw.h"
 
 //????
 //#include "effects.h"
 
-
 #define CHUMTOAD_CROAK_ATTRACT_RANGE 500
-
-
 #define CHUMTOAD_NORMAL_FOV 0.3
 #define CHUMTOAD_PLAYDEAD_FOV VIEW_FIELD_FULL
 
 
 
-
-//This is the proper way to make something fall to the ground. Also set pev->groundentity to NULL.
-//ClearBits( pList[i]->pev->flags, FL_ONGROUND );
-//pList[i]->pev->groundentity = NULL;
-
-
+// This is the proper way to make something fall to the ground.
+//ClearBits( someEnt->pev->flags, FL_ONGROUND );
+//pev->groundentity = NULL
+//someEnt->pev->groundentity = NULL;
 
 
 //MODDD TODO SUPER DUPER ULTRA MEGA CRITICAL ok we get it jesus
 
-//Chumtoads. Have a "ACT_SWIM" sequence: "swim".  Awwwwwww shit.
+// Chumtoads. Have a "ACT_SWIM" sequence: "swim".  Awwwwwww shit.
 
-//I guess something simple would be for chumtoads thrown that detect a pev->waterlevel of 3 to float to the top and just stay there
-//while doing this activity.
+// I guess something simple would be for chumtoads thrown that detect a pev->waterlevel of 3 to float to the top and just stay there
+// while doing this activity.
 
-//The nodes definitely do not support movement between water and air/land. HOO boy, what were those dev's thinking.
+// The nodes definitely do not support movement between water and air/land. HOO boy, what were those dev's thinking.
 
-//Also, ACT_SWIM isn't even touched by the ichy.  The leech and player use it though, but no default behavior (CBaseMonster or nodes.cpp) uses it.
+// Also, ACT_SWIM isn't even touched by the ichy.  The leech and player use it though, but no default behavior (CBaseMonster or nodes.cpp) uses it.
 
-
-
-//ALSO a word about the flinches now supported:  They are not very likely to happen.
-//Small flinch is hard to trigger overall in any running away schedules (is there just one?), and
-//they're all still likely to be overshadowed by playing dead, which, if decided, gives flinching no chance of happening.
+// ALSO a word about the flinches now supported:  They are not very likely to happen.
+// Small flinch is hard to trigger overall in any running away schedules (is there just one?), and
+// they're all still likely to be overshadowed by playing dead, which, if decided, gives flinching no chance of happening.
 
 
 EASY_CVAR_EXTERN_DEBUGONLY(noFlinchOnHard)
@@ -57,12 +49,7 @@ EASY_CVAR_EXTERN_DEBUGONLY(chumtoadPrintout)
 EASY_CVAR_EXTERN_DEBUGONLY(chumtoadPlayDeadFoolChance)
 
 
-
-
 int CChumToad::numberOfEyeSkins = -1;
-
-
-
 
 
 enum chumtoad_e {  //key: frames, FPS
@@ -85,10 +72,6 @@ enum chumtoad_e {  //key: frames, FPS
 
 
 
-
-
-
-
 //custom tasks
 enum
 {
@@ -105,7 +88,6 @@ enum
 	TASK_TOAD_PLAYDEAD_IDLE,
 	TASK_TOAD_UNPLAYDEAD_URGENT,
 	TASK_TOAD_UNPLAYDEAD
-	
 
 };
 
@@ -131,12 +113,9 @@ enum
 	SCHED_TOAD_ALERT_STAND,
 };
 
-
-
 	//{ TASK_GET_PATH_TO_ENEMY,	(float)0		},
 	//{ TASK_RUN_PATH,			(float)0		},
 	//{ TASK_WAIT_FOR_MOVEMENT,	(float)0		},
-
 
 Task_t	tlInitWaitForDrop[] =
 {
@@ -160,7 +139,6 @@ Schedule_t	slInitWaitForDrop[] =
 	},
 };
 
-
 //this just skips to the LAND schedule instead.
 Task_t	tlWaitForDrop[] =
 {
@@ -183,9 +161,6 @@ Schedule_t	slWaitForDrop[] =
 		"slWaitForDrop"
 	},
 };
-
-
-
 
 Task_t	tlToadInitFallSlide[] =
 {
@@ -228,12 +203,6 @@ Schedule_t	slToadLand[] =
 };
 
 
-
-
-
-
-
-
 Task_t	tlMovePossible[] =
 {
 	{ TASK_STOP_MOVING,				0				},
@@ -242,8 +211,6 @@ Task_t	tlMovePossible[] =
 	{ TASK_WALK_PATH,				(float)0				},
 	{ TASK_TOAD_HOPPOSSIBLE,			0			},
 	{ TASK_WAIT_FOR_MOVEMENT_TIMED, 9},
-
-
 
 	//{ TASK_SET_ACTIVITY,			(float)ACT_IDLE	},
 	//{ TASK_WAIT_PVS,				0				},
@@ -263,13 +230,8 @@ Schedule_t	slMovePossible[] =
 };
 
 
-
-
 //NOTE:  STARTED AS A COPY OF slTakeCoverFromEnemy
 /////////////////////////////////////////////////////////////////////////////////////////////
-//DO ME!!!
-
-
 Task_t	tlToadRunAway[] =
 {
 	{ TASK_SET_FAIL_SCHEDULE,		(float)SCHED_TOAD_PLAY_DEAD},
@@ -299,11 +261,6 @@ Schedule_t	slToadRunAway[] =
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////
-
-
-
-
-
 
 Task_t	tlToadIdleWait[] =
 {
@@ -337,8 +294,6 @@ Schedule_t	slToadIdleWait[] =
 		"slToadIdleWait"
 	},
 };
-
-
 
 
 Task_t	tlToadPlayDead[] =
@@ -385,7 +340,6 @@ Schedule_t	slToadPlayDeadIdle[] =
 };
 
 
-
 Task_t	tlToadUnPlayDeadUrgent[] =
 {
 	{ TASK_STOP_MOVING,				0				},
@@ -409,8 +363,6 @@ Schedule_t	slToadUnPlayDeadUrgent[] =
 };
 
 
-
-
 Task_t	tlToadUnPlayDead[] =
 {
 	{ TASK_STOP_MOVING,				0				},
@@ -431,10 +383,6 @@ Schedule_t	slToadUnPlayDead[] =
 		"slToadUnPlayDead"
 	},
 };
-
-
-
-
 
 
 //=========================================================
@@ -494,7 +442,6 @@ Schedule_t	slToadAlertFace[] =
 	},
 };
 
-
 //=========================================================
 // AlertSmallFlinch Schedule - shot, but didn't see attacker,
 // flinch then face
@@ -522,8 +469,6 @@ Schedule_t	slToadAlertSmallFlinch[] =
 };
 
 
-
-
 Task_t	tlToadAlertBigFlinch[] =
 {
 	{ TASK_STOP_MOVING,				0						},
@@ -543,9 +488,6 @@ Schedule_t	slToadAlertBigFlinch[] =
 		"slToadAlertBigFlinch"
 	},
 };
-
-
-
 
 
 
@@ -589,9 +531,6 @@ Schedule_t	slToadAlertStand[] =
 
 
 
-
-
-
 DEFINE_CUSTOM_SCHEDULES( CChumToad )
 {
 	slInitWaitForDrop,
@@ -618,49 +557,32 @@ IMPLEMENT_CUSTOM_SCHEDULES( CChumToad, CBaseMonster );
 
 
 
-
-
 CChumToad::CChumToad(void){
-
 	testTimer = -1;
 	m_hEntitySittingOn = NULL;
-
 	playDeadSuccessful = FALSE;
-
 	playDeadSendoffTimer = -1;
-
 	//vecLastTryLength = -1;
 	//vecLastTrySuccess = FALSE;
-
-	
 	//initFall = TRUE;
 	//generalFall = TRUE;
-
 	//MODDD NOTE - is this ok in the constructor?
 	forceStopInitFallTimer = gpGlobals->time + 0.7;
-
 	landTimer = -1;
-
 	//save???
 	stopHopDelay = -1;
 	delayTimer = -1;
 	passiveCroakDelay = -1;
-
-	
 	toadPlayDeadTimer = -1;
 	toadPlayDeadAnimationTimer = -1;
 	playDeadForbiddenTimer = -1;
 	panicTimer = -1;
-
 	//necessary?
 	m_iMyClass = 0;
-
 	playerFriend = FALSE;
 	playerAllyFriend = FALSE;
 
-
 }//END OF CChumToad constructor
-
 
 
 TYPEDESCRIPTION	CChumToad::m_SaveData[] = 
@@ -682,7 +604,6 @@ TYPEDESCRIPTION	CChumToad::m_SaveData[] =
 };
 
 IMPLEMENT_SAVERESTORE( CChumToad, CBaseMonster );
-
 
 
 
@@ -734,7 +655,6 @@ BOOL CChumToad::getMonsterBlockIdleAutoUpdate(){
 
 
 
-
 extern int global_useSentenceSave;
 void CChumToad::Precache( void )
 {
@@ -742,9 +662,10 @@ void CChumToad::Precache( void )
 	//nevermind this, see "precacheAll" in util.cpp for more info.
 	//global_useSentenceSave = TRUE;
 	
-	//TODO: MORE SOUNDS!!!
-	PRECACHE_SOUND("chumtoad/cht_throw1.wav");
-	PRECACHE_SOUND("chumtoad/cht_throw2.wav");
+	
+	// wait what?  Why precache those?
+	//PRECACHE_SOUND("chumtoad/cht_throw1.wav");
+	//PRECACHE_SOUND("chumtoad/cht_throw2.wav");
 	
 	
 	PRECACHE_SOUND("chumtoad/cht_croak_short.wav");
@@ -817,9 +738,6 @@ void CChumToad::Spawn( void )
 	*/
 	
 	UTIL_SetSize(pev, Vector( -4, -4, 0), Vector(4, 4, 8));
-
-
-
 	//SetTouch( &CSqueakGrenade::SuperBounceTouch );
 
 	//NO MORE CUSTOM THINK.  USE  MonsterThink!!!
@@ -834,16 +752,12 @@ void CChumToad::Spawn( void )
 	pev->flags |= FL_MONSTER;
 	pev->takedamage		= DAMAGE_AIM;
 
-
 	pev->health = gSkillData.chumtoadHealth;
 	
-
 	//pev->gravity		= 0.5;
 	//pev->friction		= 0.5;
 	pev->gravity		= 0.2;
 	pev->friction		= 0.0;
-
-
 	pev->dmg = 0;  //I am harmless.
 	//pev->dmg = gSkillData.snarkDmgPop;
 
@@ -851,7 +765,6 @@ void CChumToad::Spawn( void )
 	
 	//SetBits(pev->spawnflags, SF_MONSTER_FALL_TO_GROUND);
 	//return;
-
 	if ( pev->owner )
 		m_hOwner = Instance( pev->owner );
 
@@ -860,27 +773,21 @@ void CChumToad::Spawn( void )
 		playerFriend = TRUE;
 		playerAllyFriend = TRUE;
 	}
-
 	//Don't use this system! It bad!
 	pev->owner = NULL;
 
 	//m_flNextBounceSoundTime = gpGlobals->time;// reset each time a snark is spawned.
-
 	//NOTICE: you need "ResetSequenceInfo( )" normally after setting   pev->sequence   manually like this.
 	
 	m_flFramerateSuggestion = 1;
 	
-
-
 	////Is forcing the sequence this early ok?
 	//pev->sequence = CHUMTOAD_IDLE1;
 	//ResetSequenceInfo( );
 	////...No. Apparently no.   
 
-
 	//until it's done falling?
 	
-
 	//pev->solid			= SOLID_SLIDEBOX;
 	//pev->movetype		= MOVETYPE_STEP;
 	m_bloodColor		= BLOOD_COLOR_GREEN;
@@ -905,19 +812,9 @@ void CChumToad::Spawn( void )
 	//...yes, oddly enough this flag must be set to NOT fall to the ground soon after MonsterInit (in the "StartMonster" method, called with a slight delay)
 
 
-
-
-
-
-
-
-
 	//This sets "pev->max_health" to the current value of "pev->health", making pev->health's value apply to both before calling MonsterInit().
 	
-	
 	//If not on the ground, and if falling to the ground (this spawnflag means the opposite of what it says...)
-	
-	
 	MonsterInit();
 
 	// MUST happen after MonsterInit to override the default use choice, "MonsterUse".
@@ -965,7 +862,6 @@ void CChumToad::Spawn( void )
 	
 }//END OF Spawn(...);
 
-
 #if REMOVE_ORIGINAL_NAMES != 1
 	LINK_ENTITY_TO_CLASS( monster_chumtoad, CChumToad );
 #endif
@@ -976,17 +872,10 @@ void CChumToad::Spawn( void )
 #endif
 
 
-
-
-
-
-
-
 void CChumToad::ChumToadTouch( CBaseEntity *pOther ){
 
 	//NEVERMIND
 	return;
-
 
 	if(
 		pOther != NULL &&
@@ -999,7 +888,6 @@ void CChumToad::ChumToadTouch( CBaseEntity *pOther ){
 		//If it is an entity (assume it can move), we need to do checks to see if the entity moves out from underneath us in the future
 		//to "know" to fall. Yep.
 
-
 		//TODO - routine checks again.
 		CBaseEntity* entityBelow = getEntityBelow();
 
@@ -1011,7 +899,6 @@ void CChumToad::ChumToadTouch( CBaseEntity *pOther ){
 	}//END OF if(!(pev->flags & FL_ONGROUND))
 
 }//END OF ChumToadTouch
-
 
 
 /*
@@ -1055,7 +942,6 @@ void CChumToad::PickupUse(CBaseEntity* pActivator, CBaseEntity* pCaller, USE_TYP
 		return;
 	}
 
-	
 	//pPlayer->GiveNamedItem("weapon_chumtoad");
 	edict_t* thing = pPlayer->GiveNamedItem("weapon_chumtoad", SF_PICKUP_NOREPLACE, pPlayer->pev->origin);
 	CBasePlayerWeapon* generatedRef = static_cast<CBasePlayerWeapon*>(CBaseEntity::Instance(thing));
@@ -1075,7 +961,6 @@ void CChumToad::PickupUse(CBaseEntity* pActivator, CBaseEntity* pCaller, USE_TYP
 	//retroGive(pPlayer, "weapon_chumtoad");
 
 
-
 	/*
 	int giveResult = pCaller->GiveAmmo(1, "Chum Toads", CHUMTOAD_MAX_CARRY);
 	if (giveResult == -1) {
@@ -1086,12 +971,9 @@ void CChumToad::PickupUse(CBaseEntity* pActivator, CBaseEntity* pCaller, USE_TYP
 		UTIL_Remove(this);
 	}
 	*/
-	
 }//END OF PickupUse
 
 
-
-	
 void CChumToad::SetActivity ( Activity NewActivity )
 {
 
@@ -1099,8 +981,6 @@ void CChumToad::SetActivity ( Activity NewActivity )
 	
 	CBaseMonster::SetActivity(NewActivity);
 }//END OF SetActivity(...)
-
-
 
 
 
@@ -1129,7 +1009,6 @@ void CChumToad :: AlertSound( void )
 }
 
 
-
 //MODDD - the method to check whether this monster can listen to this sound or not.
 BOOL canListenHandle_ChumToad_Bait(CBaseEntity* pOther){
 
@@ -1153,7 +1032,6 @@ BOOL canListenHandle_ChumToad_Bait(CBaseEntity* pOther){
 
 void CChumToad :: IdleSound( void )
 {
-
 	//can not be playing dead to make the IdleSound.
 	if(this->toadPlayDeadTimer == -1 || gpGlobals->time > this->toadPlayDeadTimer){
 		int pitch = 93 + RANDOM_LONG(0,8);
@@ -1179,9 +1057,6 @@ void CChumToad :: IdleSound( void )
 	}//END OF playing dead check
 
 }//END OF IdleSound()
-
-
-
 
 
 
@@ -2182,12 +2057,10 @@ void CChumToad::RunTask ( Task_t *pTask ){
 
 
 
-
 float CChumToad::HearingSensitivity(){
 	//good hearing.
 	return 1.8f;
 }
-
 
 // Players throw me.  I better show up.
 BOOL CChumToad::bypassAllowMonstersSpawnCheck(void) {
@@ -2196,25 +2069,15 @@ BOOL CChumToad::bypassAllowMonstersSpawnCheck(void) {
 
 
 
-
-
-
 void CChumToad::MonsterThink ( void )
 {
 	//DebugLine_ClearAll();
-		
-	
-		
-
 	
 	if(monsterID == 24){
 		int x = 34;
 	}
 
-
 	if(pev->deadflag == DEAD_NO){
-
-
 		//under any of these circumstances, the schedule handles this or does nothing and must stay that way.
 		if(this->m_pSchedule != slToadPlayDead && this->m_pSchedule != slToadPlayDeadIdle && pev->sequence != CHUMTOAD_PLAYDEAD_END){
 			//typical. Randomly blink.
@@ -2226,7 +2089,6 @@ void CChumToad::MonsterThink ( void )
 			{// already blinking
 				pev->skin--;
 			}
-
 
 		}else{	
 			//playing dead. Anything special?
@@ -2240,10 +2102,7 @@ void CChumToad::MonsterThink ( void )
 	}
 
 
-
-
 	//easyForcePrintLine("WHAT IN FLYING %.2f %.2f %.2f", pev->angles.x, pev->angles.y, pev->angles.z);
-
 
 	//---testTimer unused.
 	if(testTimer != -1 && testTimer <= gpGlobals->time){
@@ -2251,10 +2110,6 @@ void CChumToad::MonsterThink ( void )
 		//pev->origin = pev->origin + Vector(-60, 0, 0);
 		pev->origin = pev->origin + Vector(0, 0, 150);
 	}
-
-
-
-
 
 	/*
 	if(vecLastTryLength != -1){
@@ -2290,8 +2145,6 @@ void CChumToad::MonsterThink ( void )
 }//END OF MonsterThink(...)
 
 
-
-
 void CChumToad::firstLand(){
 	Land();
 }//END OF firstLand(...)
@@ -2310,8 +2163,6 @@ void CChumToad::Land(){
 	pev->movetype = MOVETYPE_STEP;
 	
 	pev->solid			= SOLID_SLIDEBOX;
-
-
 
 
 	// clatter if we have an owner (i.e., dropped by someone)
@@ -2355,20 +2206,15 @@ void CChumToad::forwardHop(){
 
 
 
-
 //MODD TODO - make the hop "move"!!!
 //m_flGroundSpeed
 //void CBaseMonster::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, float flInterval )
 //{
 
 void CChumToad::aimlessHop(){
-
 	//rotate in a random direction and hop?
 
-	
 	pev->angles.y = RANDOM_FLOAT(0, 359.99);
-
-
 	//hop1 details:   19, 60
 	int hops = RANDOM_LONG(1, 2);
 
@@ -2393,7 +2239,6 @@ void CChumToad::randomDelay(){
 		passiveCroakDelay = gpGlobals->time + RANDOM_FLOAT(2, delayAdd - 5);
 	}
 }//END OF randomDelay(...)
-
 
 
 
@@ -2718,17 +2563,10 @@ BOOL CChumToad::playDeadFooling(CBaseEntity* whoWantsToKnow){
 
 
 
-
-
-
 int CChumToad::LookupActivityHard(int activity){
-	
 	int i = 0;
-
 	m_flFieldOfView = CHUMTOAD_NORMAL_FOV;
-
 	m_flFramerateSuggestion = 1;
-
 	pev->framerate = 1;
 	//is this safe?
 
@@ -2737,7 +2575,6 @@ int CChumToad::LookupActivityHard(int activity){
 	//pev->frame = 6;
 	return LookupSequence("get_bug");
 	*/
-
 
 	int iRandChoice = 0;
 	int iRandWeightChoice = 0;
@@ -2836,20 +2673,15 @@ int CChumToad::LookupActivityHard(int activity){
 		break;
 
 	}
-	
 	//not handled by above?  try the real deal.
 	return CBaseAnimating::LookupActivity(activity);
 }
 
 
 int CChumToad::tryActivitySubstitute(int activity){
-
 	//no need for default, just falls back to the normal activity lookup.
 	switch(activity){
-
 		case ACT_IDLE:
-
-			
 			return CBaseAnimating::LookupActivity(activity);
 		break;
 		case ACT_WALK:
@@ -2885,18 +2717,11 @@ int CChumToad::tryActivitySubstitute(int activity){
 }
 
 
-
-
-
-
-
 GENERATE_DEADTAKEDAMAGE_IMPLEMENTATION(CChumToad){
 	
 	
 	return GENERATE_DEADTAKEDAMAGE_PARENT_CALL(CBaseMonster);
 }
-
-
 
 
 //parameters: BOOL fGibSpawnsDecal
@@ -2923,7 +2748,6 @@ GENERATE_GIBMONSTERGIB_IMPLEMENTATION(CChumToad){
 
 
 GENERATE_KILLED_IMPLEMENTATION(CChumToad){
-
 	//no longer "playing" dead.
 	toadPlayDeadTimer = -1;
 
@@ -3154,8 +2978,5 @@ void CChumToad::OnTakeDamageSetConditions(entvars_t *pevInflictor, entvars_t *pe
 int CChumToad::getHullIndexForNodes(void){
     return NODE_SMALL_HULL;  //safe?
 }
-
-
-
 
 

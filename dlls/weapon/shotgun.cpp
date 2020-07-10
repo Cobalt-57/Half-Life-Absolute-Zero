@@ -353,10 +353,12 @@ void CShotgun::PrimaryAttack()
 		// HEV suit - indicate out of ammo condition
 		m_pPlayer->SetSuitUpdate("!HEV_AMO0", FALSE, 0);
 
-	if (m_iClip != 0){
+
+	//MODDD - WRONG.   if we were out of ammo, execution wouldn't have even reached this point to begin with!
+	// this just causes the last visible reload pump of the shotgun (before auto-reloading) to make no noise.
+	//if (m_iClip != 0){
 		m_flPumpTime = gpGlobals->time + 0.5;
-		
-	}
+	//}
 
 
 	//MODDD
@@ -473,7 +475,9 @@ void CShotgun::SecondaryAttack( void )
 		// HEV suit - indicate out of ammo condition
 		m_pPlayer->SetSuitUpdate("!HEV_AMO0", FALSE, 0);
 
-	if (m_iClip != 0){
+	//MODDD - WRONG.   if we were out of ammo, execution wouldn't have even reached this point to begin with!
+	// this just causes the last visible reload pump of the shotgun (before auto-reloading) to make no noise.
+	//if (m_iClip != 0){
 		m_flPumpTime = gpGlobals->time + 0.95;
 
 		if(m_iClip == 1){
@@ -481,7 +485,7 @@ void CShotgun::SecondaryAttack( void )
 		}else{
 			pev->iuser1 |= SHOTGUN_BIT6; //two bullets availabe at the time of pump, two bullets ready for double-fire.
 		}
-	}
+	//}
 
 
 	//MODDD

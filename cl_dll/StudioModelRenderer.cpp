@@ -21,12 +21,6 @@
 #include "cl_entity.h"
 #include "dlight.h"
 #include "triangleapi.h"
-
-#include <stdio.h>
-#include <string.h>
-#include <memory.h>
-#include <math.h>
-
 #include "studio_util.h"
 #include "r_studioint.h"
 
@@ -54,7 +48,6 @@ __declspec(naked) void DropShadows(void)
 /////////////////////////////////////////////////////////
 
 
-
 //MODDD - extern
 EASY_CVAR_EXTERN(chromeEffect)
 EASY_CVAR_EXTERN(mirrorsReflectOnlyNPCs)
@@ -65,9 +58,6 @@ EASY_CVAR_EXTERN(drawViewModel)
 EASY_CVAR_EXTERN(r_glowshell_debug)
 
 extern float global2PSEUDO_IGNOREcameraMode;
-
-
-
 
 
 
@@ -127,7 +117,6 @@ CStudioModelRenderer::CStudioModelRenderer( void )
 }
 
 
-
 /*
 ====================
 ~CStudioModelRenderer
@@ -146,26 +135,23 @@ StudioCalcBoneAdj
 */
 
 
-
 void CStudioModelRenderer::StudioCalcBoneAdj( float dadt, float *adj, const byte *pcontroller1, const byte *pcontroller2, byte mouthopen )
 {
 	StudioCalcBoneAdj(dadt, adj, pcontroller1, pcontroller2, mouthopen, FALSE);
 }
 
-
 // Only for small adjustable parts of the model, like the angle of the head in yaw and pitch.
 void CStudioModelRenderer::StudioCalcBoneAdj ( float dadt, float *adj, const byte *pcontroller1, const byte *pcontroller2, byte mouthopen, byte IsReflection )
 {
-
-	int				i, j;
-	float			value;
+	int		i;
+	int		j;
+	float	value;
 	mstudiobonecontroller_t *pbonecontroller;
 	
 	pbonecontroller = (mstudiobonecontroller_t *)((byte *)m_pStudioHeader + m_pStudioHeader->bonecontrollerindex);
 
 	for (j = 0; j < m_pStudioHeader->numbonecontrollers; j++)
 	{
-
 		i = pbonecontroller[j].index;
 		if (i <= 3)
 		{
@@ -210,10 +196,65 @@ void CStudioModelRenderer::StudioCalcBoneAdj ( float dadt, float *adj, const byt
 		}
 		else
 		{
-			value = mouthopen / 64.0;
-			if (value > 1.0) value = 1.0;				
-			value = (1.0 - value) * pbonecontroller[j].start + value * pbonecontroller[j].end;
-			// Con_DPrintf("%d %f\n", mouthopen, value );
+			if (m_pCurrentEntity->curstate.eflags & 4) {
+				easyForcePrintLine("OH hey SON");
+			}
+
+			//MODDD - support for custom mouth-open values for scientist mouthes to be open on corpses.
+			// Yes, we aim for odd details like that.
+			// Anyway, little issue.  Mouths seem fixed to receiving hardcoded "mouthopen" values in this
+			// method for setting that controller, to look like the mouth is 'saying' the playing sound.
+			// Ordinarily, this leaves no room for specifying what mouth value we want serverside.
+			// Turns out, we can consistently just check to see if the current controller index
+			// (pcontroller1[j]) is non-zero, which implies we want to force the mouth value.
+			// Combined with an actual "mouthopen" value (mouth controller suggetsion) of 0, it is allowed.
+			///////////////////////////////////////////////////////////////////////////////////////////////////////////
+			while (TRUE) {
+				// for breakpoints
+				/*
+				int i1 = pbonecontroller[0].index;
+				int i2 = pbonecontroller[1].index;
+				int i3 = pbonecontroller[2].index;
+				int i4 = pbonecontroller[3].index;
+
+				byte b1 = pcontroller1[0];
+				byte b2 = pcontroller1[1];
+				byte b3 = pcontroller1[2];
+				byte b4 = pcontroller1[3];
+				*/
+
+				// PROCEDURAL LOOP - break to skip to the end, does not run more than once.
+
+				//if (m_pStudioHeader->numbonecontrollers < 4) {
+					// No need for all that, pcontroller1 represents the most recent controller choice anyway
+					// (pcontroller2 is the previous frame's one, both are available to help with interpolation,
+					// if I understand right)
+					//float valueTest = (pcontroller1[i] * dadt + pcontroller2[i] * (1.0 - dadt)) / 255.0;
+					//byte valueTest = pcontroller1[i];
+					byte valueTest = pcontroller1[j];
+					if (valueTest != 0 && mouthopen == 0) {
+						// Just ignore interp (cur/prev checks), this isn't expected to be forced differnetly
+						// very often.
+						//value = (pcontroller1[i] * dadt + pcontroller2[i] * (1.0 - dadt)) / 255.0;
+						value = (((float)valueTest) / 255.0f);
+						if (value < 0) value = 0;
+						if (value > 1.0) value = 1.0;
+						value = (1.0 - value) * pbonecontroller[j].start + value * pbonecontroller[j].end;
+
+						break;  //skip the rest
+					}
+				//}
+				///////////////////////////////////////////////////////////////////////////////////////////////////////////
+				
+				// Default mouth behavior, work with mouthopen (as something is being said)
+				value = mouthopen / 64.0;
+				if (value > 1.0) value = 1.0;
+				value = (1.0 - value) * pbonecontroller[j].start + value * pbonecontroller[j].end;
+				// Con_DPrintf("%d %f\n", mouthopen, value );
+				
+				break;  //end
+			}//END OF procedural loop
+
 		}
 		
 		switch(pbonecontroller[j].type & STUDIO_TYPES)
@@ -514,18 +555,16 @@ void CStudioModelRenderer::StudioSetUpTransform (int trivial_accept)
 	angles[PITCH] = m_pCurrentEntity->curstate.angles[PITCH];
 	angles[YAW] = m_pCurrentEntity->curstate.angles[YAW];
 
-
 	//MODDD - new.
 	float timeoVar;
 
 	//Con_DPrintf("Angles %4.2f prev %4.2f for %i\n", angles[PITCH], m_pCurrentEntity->index);
 	//Con_DPrintf("movetype %d %d\n", m_pCurrentEntity->movetype, m_pCurrentEntity->aiment );
-	if (m_pCurrentEntity->curstate.movetype == MOVETYPE_STEP) 
+	if (m_pCurrentEntity->curstate.movetype == MOVETYPE_STEP ) 
 	{
-
-		float		f = 0;
-		float		d;
-
+		
+		float f = 0;
+		float d;
 		// don't do it if the goalstarttime hasn't updated in a while.
 
 		// NOTE:  Because we need to interpolate multiplayer characters, the interpolation time limit
@@ -550,10 +589,37 @@ void CStudioModelRenderer::StudioSetUpTransform (int trivial_accept)
 
 		timeoVar = f;
 
-		for (i = 0; i < 3; i++)
+
+		if (f < -1) {
+			f = -1;
+		}
+		if (f > 1) {
+			f = 1;
+		}
+
+		/*
+		for (i = 0; i < 3; i++)a
 		{
 			modelpos[i] += (m_pCurrentEntity->origin[i] - m_pCurrentEntity->latched.prevorigin[i]) * f;
 		}
+		*/
+
+		vec3_t tempVecto;
+		for (i = 0; i < 3; i++)
+		{
+			tempVecto[i] = m_pCurrentEntity->origin[i] - m_pCurrentEntity->latched.prevorigin[i];
+		}
+
+		float len = tempVecto.Length();
+		//if (len > 24) {
+		//	// o no
+		//}
+		//else {
+			for (i = 0; i < 3; i++)
+			{
+				modelpos[i] += tempVecto[i] * f;
+			}
+		//}
 
 		// NOTE:  Because multiplayer lag can be relatively large, we don't want to cap
 		//  f at 1.5 anymore.
@@ -580,6 +646,7 @@ void CStudioModelRenderer::StudioSetUpTransform (int trivial_accept)
 			angles[i] += d * f;
 		}
 		//Con_DPrintf("%.3f \n", f );
+		
 	}
 	else if ( m_pCurrentEntity->curstate.movetype != MOVETYPE_NONE ) 
 	{
@@ -623,11 +690,6 @@ void CStudioModelRenderer::StudioSetUpTransform (int trivial_accept)
 	*/
 
 
-
-
-
-
-
 	if ( !IEngineStudio.IsHardware() )
 	{
 		static float viewmatrix[3][4];
@@ -637,8 +699,6 @@ void CStudioModelRenderer::StudioSetUpTransform (int trivial_accept)
 		VectorInverse (viewmatrix[1]);
 		VectorCopy_f (m_vNormal, viewmatrix[2]);
 
-
-		
 		if(trivial_accept >= 1024){
 			
 			(*m_protationmatrix)[0][3] = modelpos[0] - m_vRenderOrigin[0];
@@ -697,11 +757,8 @@ void CStudioModelRenderer::StudioSetUpTransform (int trivial_accept)
 			(*m_protationmatrix)[0][3] = modelpos[0];
 			(*m_protationmatrix)[1][3] = modelpos[1];
 			(*m_protationmatrix)[2][3] = modelpos[2];
-			
 		}
 
-		
-		
 
 		//!!!
 		trivial_accept = 0; //was going to be this anyways., as it was never used beforehand (in the retail copy, this was never non-zero at any point in the entire method, let alone here).
@@ -724,7 +781,6 @@ void CStudioModelRenderer::StudioSetUpTransform (int trivial_accept)
 
 			}
 		}
-
 
 	}
 	else{
@@ -772,16 +828,15 @@ void CStudioModelRenderer::StudioSetUpTransform (int trivial_accept)
 			
 		}else{
 			//no mirror 
-
 			
 			/*
 			static float viewmatrix[3][4];
 
-		VectorCopy_f (m_vRight, viewmatrix[0]);
-		VectorCopy_f (m_vUp, viewmatrix[1]);
-		VectorInverse (viewmatrix[1]);
-		VectorCopy_f (m_vNormal, viewmatrix[2]);
-		*/
+			VectorCopy_f (m_vRight, viewmatrix[0]);
+			VectorCopy_f (m_vUp, viewmatrix[1]);
+			VectorInverse (viewmatrix[1]);
+			VectorCopy_f (m_vNormal, viewmatrix[2]);
+			*/
 
 		
 			(*m_protationmatrix)[0][3] = modelpos[0];
@@ -789,25 +844,18 @@ void CStudioModelRenderer::StudioSetUpTransform (int trivial_accept)
 			(*m_protationmatrix)[2][3] = modelpos[2];
 
 			//ConcatTransforms (viewmatrix, (*m_protationmatrix), (*m_protationmatrix));
-			
 		}
-
 
 	}//ELSE.  is that okay?
 	
-
 	//MODDD NOTE - this seems to have no bearing on when software mode is being used, so I guess it is okay to happen regardless of either?
 			
-
-
 }
-
 
 
 /*
 ====================
 StudioEstimateInterpolant
-
 ====================
 */
 float CStudioModelRenderer::StudioEstimateInterpolant( void )
@@ -828,11 +876,8 @@ float CStudioModelRenderer::StudioEstimateInterpolant( void )
 /*
 ====================
 StudioCalcRotations
-
 ====================
 */
-
-
 void CStudioModelRenderer::StudioCalcRotations ( float pos[][3], vec4_t *q, mstudioseqdesc_t *pseqdesc, mstudioanim_t *panim, float f){
 	//assume not a reflection.
 	StudioCalcRotations(pos, q, pseqdesc, panim, f, FALSE);
@@ -1017,17 +1062,12 @@ StudioEstimateFrame
 */
 float CStudioModelRenderer::StudioEstimateFrame( mstudioseqdesc_t *pseqdesc )
 {
-
-
-	double			dfdt, f;
-
-
+	double dfdt;
+	double f;
 	//return 0;
 
-	//??/
-//StudioEstimateInterpolant
+	//??? StudioEstimateInterpolant
 
-	//!!
 	//MODDD NOTICE - should other places have this "renderfx & STOPINTR" check too.?
 	if ( m_fDoInterp && !(m_pCurrentEntity->curstate.renderfx & STOPINTR) )
 	{
@@ -1047,8 +1087,6 @@ float CStudioModelRenderer::StudioEstimateFrame( mstudioseqdesc_t *pseqdesc )
 	}
 
 
-
-
 	/*
 	if((m_pCurrentEntity->curstate.renderfx & ISNPC) && !( (m_pCurrentEntity->curstate.renderfx & ISVIEWMODEL) == ISVIEWMODEL)   ){
 		//Check these?
@@ -1066,11 +1104,8 @@ float CStudioModelRenderer::StudioEstimateFrame( mstudioseqdesc_t *pseqdesc )
 	*/
 
 
-
 	//dfdt = 0;
-
 	//if(!strcmp(m_pCurrentEntity->curstate->
-
 	
 	if (pseqdesc->numframes <= 1)
 	{
@@ -1084,7 +1119,6 @@ float CStudioModelRenderer::StudioEstimateFrame( mstudioseqdesc_t *pseqdesc )
 	f += dfdt;
 
 	//MODDD - viewmodel idle anims may be forced not to loop, to remain static until a new anim is called.
-
 	
 	
 	BOOL animateBackwards = ( (m_pCurrentEntity->curstate.renderfx & ISVIEWMODEL)==ISVIEWMODEL && (m_pCurrentEntity->curstate.iuser1 == 200)  );
@@ -1096,7 +1130,6 @@ float CStudioModelRenderer::StudioEstimateFrame( mstudioseqdesc_t *pseqdesc )
 		animateBackwards = TRUE;
 	}
 	*/
-	
 
 	if( (m_pCurrentEntity->curstate.renderfx & ISVIEWMODEL)==ISVIEWMODEL ){
 		//easyPrintLine("it is view model? %d ::: %d", m_pCurrentEntity->curstate.renderfx, m_pCurrentEntity->curstate.renderfx & FORCE_NOLOOP);
@@ -1129,7 +1162,6 @@ float CStudioModelRenderer::StudioEstimateFrame( mstudioseqdesc_t *pseqdesc )
 		//allowed range: 0-9, inclusive.
 
 		//inv: 9-0
-
 
 		//0: 9
 		//1: 8
@@ -1172,8 +1204,6 @@ float CStudioModelRenderer::StudioEstimateFrame( mstudioseqdesc_t *pseqdesc )
 
 		//f = pseqdesc->numframes - f - 1;
 	}
-	
-
 
 
 	/*
@@ -1183,22 +1213,14 @@ CLIENTFR: 160 14.00 15
 WEAPONIN: 9 9
 CLIENTFR: 160 14.
 */
-
-
-
 	//iAnim
-
 	//m_pCurrentEntity->curstate.
-
 
 	if((m_pCurrentEntity->curstate.renderfx & ISVIEWMODEL)==ISVIEWMODEL  ){
 		//easyPrintLine("CLIENT FRAME: %.2f %.2f %.2f :: %d %.2f", f, m_pCurrentEntity->curstate.frame, currentFrame, pseqdesc->numframes, dfdt );
 		//easyPrintLine("CLIENTFR: %d %.2f %d", m_pCurrentEntity->curstate.renderfx, f, pseqdesc->numframes);
 
-		//
 		easyPrintLineDummy("RENDER: id:%d ai:%d seq:%d f:%.2f n:%d BACKWARDS: %d", m_pCurrentEntity->index, pseqdesc->animindex, m_pCurrentEntity->curstate.sequence, f, pseqdesc->numframes, animateBackwards );
-	
-
 	}
 
 	return f;
@@ -1535,8 +1557,6 @@ void CStudioModelRenderer::StudioSetupBones ( byte isReflection )
 
 			}//END OF hardware / software rendering-mode check
 
-
-
 			//*(m_pbonetransform[i][0][1]) *= 1;
 			//*(m_pbonetransform[i][1][1]) *= -1;
 			//*(m_pbonetransform[i][2][1]) *= 1;
@@ -1712,12 +1732,6 @@ void CStudioModelRenderer::StudioMergeBones ( model_t *m_pSubModel, byte isRefle
 		}
 	}
 }
-
-
-
-
-
-
 
 
 
@@ -2012,21 +2026,6 @@ int CStudioModelRenderer::StudioDrawModel( int flags )
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 	/*
 	int ic = 0;
 
@@ -2106,18 +2105,6 @@ int CStudioModelRenderer::StudioDrawModel( int flags )
 	gEngfuncs.pTriAPI->CullFace( TRI_NONE );
 
 	*/
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

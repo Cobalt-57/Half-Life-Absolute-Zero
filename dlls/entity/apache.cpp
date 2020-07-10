@@ -15,8 +15,6 @@
 
 #pragma once
 
-
-
 #include "extdll.h"
 #include "util.h"
 #include "cbase.h"
@@ -25,39 +23,50 @@
 #include "nodes.h"
 #include "effects.h"
 
-extern DLL_GLOBAL int	g_iSkillLevel;
+EASY_CVAR_EXTERN(cl_explosion)
+EASY_CVAR_EXTERN(apacheForceCinBounds)
+EASY_CVAR_EXTERN(apacheBottomBoundAdj)
+EASY_CVAR_EXTERN(apacheInfluence)
+EASY_CVAR_EXTERN(cl_rockettrail)
+
 
 #define SF_WAITFORTRIGGER	(0x04 | 0x40) // UNDONE: Fix!     ...4 or 64, what?
 #define SF_NOWRECKAGE		0x08  //that is, 8.
 
 
-
-
-
-
-//MODDD
+extern DLL_GLOBAL int g_iSkillLevel;
 extern unsigned short g_sTrailRA;
-
-
-
-
-EASY_CVAR_EXTERN(cl_explosion)
-EASY_CVAR_EXTERN(apacheForceCinBounds)
-EASY_CVAR_EXTERN(apacheBottomBoundAdj)
-EASY_CVAR_EXTERN(apacheInfluence)
-
-
-EASY_CVAR_EXTERN(cl_rockettrail)
-
-
-
 
 
 
 class CApache : public CBaseMonster
 {
-	//MODDD - why no public?
 public:
+
+	int m_iRockets;
+	float m_flForce;
+	float m_flNextRocket;
+	Vector m_vecTarget;
+	Vector m_posTarget;
+	Vector m_vecDesired;
+	Vector m_posDesired;
+	Vector m_vecGoal;
+	Vector m_angGun;
+	float m_flLastSeen;
+	float m_flPrevSeen;
+
+	int m_iSoundState; // don't save this
+
+	int m_iSpriteTexture;
+	int m_iExplode;
+	int m_iBodyGibs;
+
+	float m_flGoalSpeed;
+
+	int m_iDoSmokePuff;
+	CBeam* m_pBeam;
+
+
 	CApache();
 
 	int	Save( CSave &save );
@@ -97,37 +106,9 @@ public:
 	BOOL FireGun( void );
 	
 
-
 	GENERATE_TRACEATTACK_PROTOTYPE
 	GENERATE_TAKEDAMAGE_PROTOTYPE
 
-
-	int m_iRockets;
-	float m_flForce;
-	float m_flNextRocket;
-
-	Vector m_vecTarget;
-	Vector m_posTarget;
-
-	Vector m_vecDesired;
-	Vector m_posDesired;
-
-	Vector m_vecGoal;
-
-	Vector m_angGun;
-	float m_flLastSeen;
-	float m_flPrevSeen;
-
-	int m_iSoundState; // don't save this
-
-	int m_iSpriteTexture;
-	int m_iExplode;
-	int m_iBodyGibs;
-
-	float m_flGoalSpeed;
-
-	int m_iDoSmokePuff;
-	CBeam *m_pBeam;
 };
 
 
@@ -138,9 +119,7 @@ public:
 #if EXTRA_NAMES > 0
 	LINK_ENTITY_TO_CLASS( apache, CApache );
 	LINK_ENTITY_TO_CLASS( helicopter, CApache );
-	
 	//no extras.
-
 #endif
 
 TYPEDESCRIPTION	CApache::m_SaveData[] = 
@@ -192,7 +171,6 @@ void CApache :: Spawn( void )
 
 	
 	UTIL_SetOrigin( pev, pev->origin );
-
 	
 	//MODDD - did... did this get changed? Why?
 	pev->flags |= FL_MONSTER;
@@ -221,10 +199,8 @@ void CApache :: Spawn( void )
 
 	m_iRockets = 10;
 	
-	
 	//MODDD
 	pev->renderfx |= ISMETALNPC;
-
 }
 
 
@@ -401,45 +377,10 @@ void CApache :: DyingThink( void )
 		*/
 
 
-
-		//MODDD - replacing this with a few lines below this ssection, see if that works.
-		/*
-		//MODDD - only do if the quake explosion is off.
-		if(EASY_CVAR_GET(cl_explosion) != 1){
-			// fireball
-			// oh.  it's.  a sprite.  not.  TE_EXPLOSION.
-			//            okay.
-			MESSAGE_BEGIN( MSG_PVS, SVC_TEMPENTITY, vecSpot );
-				WRITE_BYTE( TE_SPRITE );
-				WRITE_COORD( vecSpot.x );
-				WRITE_COORD( vecSpot.y );
-				WRITE_COORD( vecSpot.z + 256 );
-				WRITE_SHORT( m_iExplode );
-				WRITE_BYTE( 120 ); // scale * 10
-				WRITE_BYTE( 255 ); // brightness
-			MESSAGE_END();
-
-			// big smoke
-			MESSAGE_BEGIN( MSG_PVS, SVC_TEMPENTITY, vecSpot );
-				WRITE_BYTE( TE_SMOKE );
-				WRITE_COORD( vecSpot.x );
-				WRITE_COORD( vecSpot.y );
-				WRITE_COORD( vecSpot.z + 512 );
-				WRITE_SHORT( g_sModelIndexSmoke );
-				WRITE_BYTE( 250 ); // scale * 10
-				WRITE_BYTE( 5  ); // framerate
-			MESSAGE_END();
-		}
-		else{
-			UTIL_Explosion(pev, vecSpot, 0, 0, 256, m_iExplode, 120, 12, 0, vecSpot, 0.4);
-		}
-		*/
-		
 		UTIL_SpriteOrQuakeExplosion(MSG_PVS, vecSpot, NULL, pev, vecSpot, 0, 0, 256, m_iExplode, 120, 255, vecSpot, 0.4);
 		UTIL_ExplosionSmoke(MSG_PVS, vecSpot, NULL, vecSpot, 0, 0, 512, g_sModelIndexSmoke, 250, 5);
 
 
-		
 
 		// blast circle
 		MESSAGE_BEGIN( MSG_PVS, SVC_TEMPENTITY, pev->origin );
@@ -875,22 +816,7 @@ void CApache :: FireRocket( void )
 	case 4: break;
 	}
 
-	//MODDD - pooplord
-	/*
-	MESSAGE_BEGIN( MSG_PVS, SVC_TEMPENTITY, vecSrc );
-		WRITE_BYTE( TE_SMOKE );
-		WRITE_COORD( vecSrc.x );
-		WRITE_COORD( vecSrc.y );
-		WRITE_COORD( vecSrc.z );
-		WRITE_SHORT( g_sModelIndexSmoke );
-		WRITE_BYTE( 20 ); // scale * 10
-		WRITE_BYTE( 12 ); // framerate
-	MESSAGE_END();
-	*/
 	UTIL_Smoke(MSG_PVS, vecSrc, NULL, vecSrc, 0, 0, 0, g_sModelIndexSmoke, 20, 12);
-
-	
-	
 
 	CBaseEntity *pRocket = CBaseEntity::Create( "hvr_rocket", vecSrc, pev->angles, edict() );
 	if (pRocket)
@@ -990,18 +916,7 @@ void CApache :: ShowDamage( void )
 {
 	if (m_iDoSmokePuff > 0 || RANDOM_LONG(0,99) > pev->health)
 	{
-		//MODDD - pooplord
-		/*
-		MESSAGE_BEGIN( MSG_PVS, SVC_TEMPENTITY, pev->origin );
-			WRITE_BYTE( TE_SMOKE );
-			WRITE_COORD( pev->origin.x );
-			WRITE_COORD( pev->origin.y );
-			WRITE_COORD( pev->origin.z - 32 );
-			WRITE_SHORT( g_sModelIndexSmoke );
-			WRITE_BYTE( RANDOM_LONG(0,9) + 20 ); // scale * 10
-			WRITE_BYTE( 12 ); // framerate
-		MESSAGE_END();
-		*/
+		//MODDD
 		UTIL_Smoke(MSG_PVS, pev->origin, NULL, pev->origin, 0, 0, -32, g_sModelIndexSmoke, RANDOM_LONG(0,9) + 20, 12);
 
 	}
@@ -1016,13 +931,10 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CApache)
 	if (pevInflictor->owner == edict())
 		return 0;
 
-
-
 	//if(bitsDamageTypeMod & DMG_GAUSS){
 		//apaches now immune to gauss... nevermind.
 		//return 0;
 	//}
-
 
 	if (bitsDamageType & DMG_BLAST)
 	{
@@ -1041,10 +953,6 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CApache)
 	//MODDD - send the extra parameter.
 	return GENERATE_TAKEDAMAGE_PARENT_CALL(CBaseMonster);
 }
-
-
-
-
 
 
 
@@ -1071,8 +979,6 @@ GENERATE_TRACEATTACK_IMPLEMENTATION(CApache)
 		UTIL_Ricochet( ptr->vecEndPos, 2.0 );
 	}
 }
-
-
 
 
 
@@ -1116,7 +1022,6 @@ CApacheHVR::CApacheHVR(){
 }
 //NOTE: not doing the sound sentence save here.
 
-
 BOOL CApacheHVR::usesSoundSentenceSave(void){
 	return FALSE;
 }
@@ -1151,7 +1056,6 @@ void CApacheHVR :: Spawn( void )
 }
 
 
-
 //MODDD - new
 void CApacheHVR :: CustomHVRExplodeTouch ( CBaseEntity *pOther )
 {
@@ -1166,8 +1070,6 @@ void CApacheHVR :: CustomHVRExplodeTouch ( CBaseEntity *pOther )
 	STOP_SOUND( edict(), CHAN_VOICE, "weapons/rocket1.wav" );
 	ExplodeTouch( pOther );
 }
-
-
 
 
 extern int global_useSentenceSave;
@@ -1224,9 +1126,6 @@ void CApacheHVR :: IgniteThink( void  )
 	
 	}
 
-
-
-
 	// set to accelerate
 	SetThink( &CApacheHVR::AccelerateThink );
 	pev->nextthink = gpGlobals->time + 0.1;
@@ -1254,7 +1153,6 @@ void CApacheHVR :: AccelerateThink( void  )
 
 	pev->nextthink = gpGlobals->time + 0.1;
 }
-
 
 
 float CApacheHVR::massInfluence(void){

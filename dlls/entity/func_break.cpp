@@ -17,33 +17,13 @@
 ===== bmodels.cpp ========================================================
 
   spawn, think, and use functions for entities that use brush models
-
 */
-
-
-
-
-
-//MODDD TODO - it would be nice to at least see where the constant offset for a breakable / pushable's origin is in memory (some obscure pev-> thing probably),
-//             which seems to come just from giving it a wildcard model like "*27".  You read that right, no "models/whatever.mdl", no folders, only asterisk and number.
-//             That taps into the particular map for, custom model #27 I assume.
-//             And includes some constant offset to apply to the origin.  Doing a "report" on a breakable / pushable that's never been moved before
-//             always reports origin (0, 0, 0) or (0, 0, 1) which is clearly not the case.  Moving a pushable puts an offset on that further.
-//             And forcing a breakble / pushable with a wildcard model to spawn (and forcing its model) doesn't put it at where you tell it to go,
-//             because of this constant offset is still being applied.  But spawning near the map's REAL origin (do "setMyOrigin 0 0 0" to go there)
-//             will make the discrepency less, but check the original map location of wherever the wildcard was you just called for.
-
-//             ...in other words dynamically spawning breakables (like through console commands give/givedist/givelook) is stupidly overcomplicated.
-//             Ditch this idea like a sack of puke and run as far as you can, if not further.
-
-
-
-
-
-
-
-
-
+// Breakables look to have models specific to map by a code (like "*28").  The given map has something in mind for that.
+// Must mean some special offset for its origin too.  Origin starts at 0,0,0 or 0,0,1 for pushables that have never been moved,
+// even though that doesn't make much sense.  Nothing else does that, always an absolute origin.
+// Spawning a breakable with a wildcard model at (0,0,0) will thus be easier to manage / work with, probably put it back
+// where it was at the start of the map.
+// The absolute origin can be retrieved though, just use VecBModelOrigin(pev).  Same as Center().
 
 #include "extdll.h"
 #include "util.h"
@@ -52,18 +32,14 @@
 #include "func_break.h"
 #include "decals.h"
 #include "explode.h"
-
-//...really? never had to include this before?
 #include "player.h"
+#include "basemonster.h"
+#include "r_efx.h"
+#include "util_debugdraw.h"
 
-
-
-extern DLL_GLOBAL Vector		g_vecAttackDir;
-
-//MODDD
 EASY_CVAR_EXTERN(sparksComputerHitMulti)
-//EASY_CVAR_EXTERN(testVar)
 
+extern DLL_GLOBAL Vector g_vecAttackDir;
 
 // =================== FUNC_Breakable ==============================================
 
@@ -102,6 +78,66 @@ const char *CBreakable::pSpawnObjects[] =
 	"item_longjump",	// 25
 	"weapon_chumtoad",  //26
 };
+
+
+
+const char *CBreakable::pSoundsWood[] = 
+{
+	"debris/wood1.wav",
+	"debris/wood2.wav",
+	"debris/wood3.wav",
+};
+
+const char *CBreakable::pSoundsFlesh[] = 
+{
+	"debris/flesh1.wav",
+	"debris/flesh2.wav",
+	"debris/flesh3.wav",
+	"debris/flesh5.wav",
+	"debris/flesh6.wav",
+	"debris/flesh7.wav",
+};
+
+const char *CBreakable::pSoundsMetal[] = 
+{
+	"debris/metal1.wav",
+	"debris/metal2.wav",
+	"debris/metal3.wav",
+};
+
+const char *CBreakable::pSoundsConcrete[] = 
+{
+	"debris/concrete1.wav",
+	"debris/concrete2.wav",
+	"debris/concrete3.wav",
+};
+
+
+const char *CBreakable::pSoundsGlass[] = 
+{
+	"debris/glass1.wav",
+	"debris/glass2.wav",
+	"debris/glass3.wav",
+};
+
+//
+// func_breakable - bmodel that breaks into pieces after taking damage
+//
+LINK_ENTITY_TO_CLASS( func_breakable, CBreakable );
+
+
+TYPEDESCRIPTION CBreakable::m_SaveData[] =
+{
+	DEFINE_FIELD( CBreakable, m_Material, FIELD_INTEGER ),
+	DEFINE_FIELD( CBreakable, m_Explosion, FIELD_INTEGER ),
+// Don't need to save/restore these because we precache after restore
+//	DEFINE_FIELD( CBreakable, m_idShard, FIELD_INTEGER ),
+	DEFINE_FIELD( CBreakable, m_angle, FIELD_FLOAT ),
+	DEFINE_FIELD( CBreakable, m_iszGibModel, FIELD_STRING ),
+	DEFINE_FIELD( CBreakable, m_iszSpawnObject, FIELD_STRING ),
+	// Explosion magnitude is stored in pev->impulse
+};
+IMPLEMENT_SAVERESTORE( CBreakable, CBaseEntity );
 
 
 void CBreakable::KeyValue( KeyValueData* pkvd )
@@ -168,28 +204,6 @@ BOOL CBreakable::IsWorldAffiliated(){
 	return TRUE;
 }
 
-
-//
-// func_breakable - bmodel that breaks into pieces after taking damage
-//
-LINK_ENTITY_TO_CLASS( func_breakable, CBreakable );
-TYPEDESCRIPTION CBreakable::m_SaveData[] =
-{
-	DEFINE_FIELD( CBreakable, m_Material, FIELD_INTEGER ),
-	DEFINE_FIELD( CBreakable, m_Explosion, FIELD_INTEGER ),
-
-// Don't need to save/restore these because we precache after restore
-//	DEFINE_FIELD( CBreakable, m_idShard, FIELD_INTEGER ),
-
-	DEFINE_FIELD( CBreakable, m_angle, FIELD_FLOAT ),
-	DEFINE_FIELD( CBreakable, m_iszGibModel, FIELD_STRING ),
-	DEFINE_FIELD( CBreakable, m_iszSpawnObject, FIELD_STRING ),
-
-	// Explosion magnitude is stored in pev->impulse
-};
-
-IMPLEMENT_SAVERESTORE( CBreakable, CBaseEntity );
-
 void CBreakable::Spawn( void )
 {
     Precache( );
@@ -225,51 +239,8 @@ void CBreakable::Spawn( void )
 	//MODDD NOTE - does this FL_WORLDBRUSH have other useful properties for checks then?  Or to refer to / check in our own tracelines?
 	if ( !IsBreakable() && pev->rendermode != kRenderNormal )
 		pev->flags |= FL_WORLDBRUSH;
-
-
-
-
 }
 
-
-const char *CBreakable::pSoundsWood[] = 
-{
-	"debris/wood1.wav",
-	"debris/wood2.wav",
-	"debris/wood3.wav",
-};
-
-const char *CBreakable::pSoundsFlesh[] = 
-{
-	"debris/flesh1.wav",
-	"debris/flesh2.wav",
-	"debris/flesh3.wav",
-	"debris/flesh5.wav",
-	"debris/flesh6.wav",
-	"debris/flesh7.wav",
-};
-
-const char *CBreakable::pSoundsMetal[] = 
-{
-	"debris/metal1.wav",
-	"debris/metal2.wav",
-	"debris/metal3.wav",
-};
-
-const char *CBreakable::pSoundsConcrete[] = 
-{
-	"debris/concrete1.wav",
-	"debris/concrete2.wav",
-	"debris/concrete3.wav",
-};
-
-
-const char *CBreakable::pSoundsGlass[] = 
-{
-	"debris/glass1.wav",
-	"debris/glass2.wav",
-	"debris/glass3.wav",
-};
 
 const char **CBreakable::MaterialSoundList( Materials precacheMaterial, int &soundCount )
 {
@@ -302,8 +273,6 @@ const char **CBreakable::MaterialSoundList( Materials precacheMaterial, int &sou
 		pSoundList = pSoundsConcrete;
 		soundCount = ARRAYSIZE(pSoundsConcrete);
 		break;
-	
-	
 	case matCeilingTile:
 	case matNone:
 	default:
@@ -523,8 +492,6 @@ void CBreakable::ReportGeneric(){
 }//END OF ReportGeneric
 
 
-
-
 void CBreakable::BreakTouch( CBaseEntity *pOther )
 {
 	float flDamage;
@@ -567,9 +534,7 @@ void CBreakable::BreakTouch( CBaseEntity *pOther )
 		pev->nextthink = pev->ltime + m_flDelay;
 
 	}
-
 }
-
 
 //
 // Smash the our breakable object
@@ -587,7 +552,6 @@ void CBreakable::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE us
 		Die();
 	}
 }
-
 
 
 GENERATE_TRACEATTACK_IMPLEMENTATION(CBreakable)
@@ -619,8 +583,6 @@ GENERATE_TRACEATTACK_IMPLEMENTATION(CBreakable)
 
 	GENERATE_TRACEATTACK_PARENT_CALL(CBaseDelay);
 }
-
-
 
 
 //=========================================================
@@ -681,14 +643,8 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBreakable)
 }
 
 
-#include "r_efx.h"
-
-//MODDD
-#include "basemonster.h"
-
 void CBreakable::Die( void )
 {
-
 	Vector vecSpot;// shard origin
 	Vector vecVelocity;// shard velocity
 	CBaseEntity *pEntity = NULL;
@@ -809,7 +765,8 @@ void CBreakable::Die( void )
 
 
 	vecSpot = pev->origin + (pev->mins + pev->maxs) * 0.5;
-	Vector vecSpot2 = pev->maxs - pev->mins;
+	// ???????
+	//Vector vecSpot2 = pev->maxs - pev->mins;
 	//return;
 
 
@@ -868,12 +825,8 @@ void CBreakable::Die( void )
 	
 
 
-
-
 	////PLAYBACK_EVENT_FULL (FEV_GLOBAL, pGrenade->edict(), g_sTrail, 0.0, 
 	//(float *)&pGrenade->pev->origin, (float *)&pGrenade->pev->angles, 0.7, 0.0, pGrenade->entindex(), ROCKET_TRAIL, 0, 0);
-
-
 
 
 	float size = pev->size.x;
@@ -913,14 +866,11 @@ void CBreakable::Die( void )
 	if ( m_iszSpawnObject )
 		CBaseEntity::Create( (char *)STRING(m_iszSpawnObject), VecBModelOrigin(pev), pev->angles, edict() );
 
-
 	if ( Explodable() )
 	{
 		ExplosionCreate( Center(), pev->angles, edict(), ExplosionMagnitude(), TRUE );
 	}
 }
-
-
 
 
 //MODDD - NOTE - this was here, as-is in retail.  Just checking that the mat isn't matUnbreakableGlass
@@ -930,7 +880,6 @@ BOOL CBreakable :: IsBreakable( void )
 { 
 	return m_Material != matUnbreakableGlass;
 }
-
 
 //MODDD
 BOOL CBreakable::isBreakableOrchild(void){
@@ -960,13 +909,24 @@ int CBreakable :: DamageDecal( int bitsDamageType, int bitsDamageTypeMod )
 
 
 
-
-
-
-
 class CPushable : public CBreakable
 {
 public:
+
+	static	TYPEDESCRIPTION m_SaveData[];
+
+	static char* m_soundNames[3];
+
+	int	m_lastSound;	// no need to save/restore, just keeps the same sound from playing twice in a row
+	float m_maxSpeed;
+	float m_soundTime;
+	//MODDD - nevermind
+	//float m_spawnFriction;
+	float blockForceVelocityTime;
+
+
+
+	CPushable(void);
 
 	//MODDD
 	virtual BOOL IsBreakable(void);
@@ -979,7 +939,7 @@ public:
 	void Spawn ( void );
 	void Precache( void );
 	void Touch ( CBaseEntity *pOther );
-	void Move( CBaseEntity *pMover, int push );
+	void Move( CBaseEntity *pMover, int push, int useValue );
 	void KeyValue( KeyValueData *pkvd );
 	void Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value );
 	void EXPORT StopSound( void );
@@ -989,7 +949,9 @@ public:
 	//             depend on some offset given by the map, or maybe not.  But it could turn invisible too if there isn't
 	//             a model at that number ( "*27" for instance).  If a different models is suggested for that number,
 	//             it would suddenly change just by going to a new map.
-	virtual int ObjectCaps( void ) { return (CBaseEntity :: ObjectCaps() & ~FCAP_ACROSS_TRANSITION) | FCAP_CONTINUOUS_USE; }
+	//MODDD - ALSO, added the FCAP_ONOFF_USE cap.  On use being stopped, cancel velocity.
+	// No sense in a pushed obect still sliding, you just would've pushed it further if you wanted it there.
+	virtual int ObjectCaps( void ) { return (CBaseEntity :: ObjectCaps() & ~FCAP_ACROSS_TRANSITION) | FCAP_CONTINUOUS_USE | FCAP_ONOFF_USE; }
 	virtual int	Save( CSave &save );
 	virtual int	Restore( CRestore &restore );
 
@@ -1000,13 +962,12 @@ public:
 	GENERATE_TRACEATTACK_PROTOTYPE_VIRTUAL
 	GENERATE_TAKEDAMAGE_PROTOTYPE_VIRTUAL
 
-	static	TYPEDESCRIPTION m_SaveData[];
-
-	static char *m_soundNames[3];
-	int	m_lastSound;	// no need to save/restore, just keeps the same sound from playing twice in a row
-	float m_maxSpeed;
-	float m_soundTime;
 };
+
+CPushable::CPushable(void) {
+	blockForceVelocityTime = 0;
+}
+
 
 TYPEDESCRIPTION	CPushable::m_SaveData[] = 
 {
@@ -1044,7 +1005,16 @@ void CPushable :: Spawn( void )
 
 	m_maxSpeed = 400 - pev->friction;
 	SetBits( pev->flags, FL_FLOAT );
-	pev->friction = 0;
+	
+	//MODDD - nevermind, this looked useless.
+	/*
+	// Why so low?  Surely a small number can't hurt.
+	// Boxes need not behave like they're on ice after all.
+	//pev->friction = 0;
+	pev->friction = m_maxSpeed * 0.05;
+	// and remember what the friction here was.
+	m_spawnFriction = pev->friction;
+	*/
 	
 	pev->origin.z += 1;	// Pick up off of the floor
 	UTIL_SetOrigin( pev, pev->origin );
@@ -1053,9 +1023,7 @@ void CPushable :: Spawn( void )
 	pev->skin = ( pev->skin * (pev->maxs.x - pev->mins.x) * (pev->maxs.y - pev->mins.y) ) * 0.0005;
 	m_soundTime = 0;
 
-
 	//pev->spawnflags &= ~SF_PUSH_BREAKABLE;
-
 }
 
 
@@ -1095,7 +1063,6 @@ void CPushable :: KeyValue( KeyValueData *pkvd )
 			UTIL_SetSize(pev, VEC_HULL_MIN, VEC_HULL_MAX);
 			break;
 		}
-
 	}
 	else if ( FStrEq(pkvd->szKeyName, "buoyancy") )
 	{
@@ -1118,20 +1085,36 @@ void CPushable :: Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE u
 	}
 
 	if ( pActivator->pev->velocity != g_vecZero )
-		Move( pActivator, 0 );
+		Move( pActivator, 0, value);
 }
 
 
 void CPushable :: Touch( CBaseEntity *pOther )
 {
-	if ( FClassnameIs( pOther->pev, "worldspawn" ) )
-		return;
+	if (pOther->IsWorld()) return;
 
-	Move( pOther, 1 );
+	/*
+	// ALSO, push movements (not 'use') from any player is only allowed so often.
+	// NEVERMIND.  Capping the max speed works fine.
+	if (pOther->IsPlayer()) {
+		if (gpGlobals->time <= flNextPlayerPushAllowed) {
+			return;  //STOP
+		}
+		else {
+			// allowed this time
+			flNextPlayerPushAllowed = gpGlobals->time + 0.2;
+		}
+	}
+	*/
+	Move( pOther, 1, 1 );
 }
 
 
-void CPushable :: Move( CBaseEntity *pOther, int push )
+//MODDD - new parameter, "useValue".  Tell whether the use key is being
+// used continually (1) or released (0).
+// Only useful if 'push' is 0, since push = 1 means the use-key isn't
+// the one making this call.
+void CPushable :: Move( CBaseEntity *pOther, int push, int useValue )
 {
 	entvars_t*	pevToucher = pOther->pev;
 	int playerTouch = 0;
@@ -1143,22 +1126,16 @@ void CPushable :: Move( CBaseEntity *pOther, int push )
 	//BOOL allowVerticalPush = FALSE;
 	
 
-
-
 	float pushSpeedFactor = ((m_maxSpeed) / 400) + 0.1;
-
-
+	
 	if(pushSpeedFactor < 0.16)pushSpeedFactor = 0.16;  //no less than this allowed.
 	if(pushSpeedFactor > 1.0)pushSpeedFactor = 1.0;
 
 	
-
-
 	//MODDDN NOTE - the "VARS" part below effectly makes it,
 	//if(... &pevToucher->groundentity->v == pev){
 	//
 	//}
-
 
 	// Is entity standing on this pushable ?
 	if ( FBitSet(pevToucher->flags,FL_ONGROUND) && pevToucher->groundentity && VARS(pevToucher->groundentity) == pev )
@@ -1174,10 +1151,6 @@ void CPushable :: Move( CBaseEntity *pOther, int push )
 			//No, maintain retail behavior, it's fine I guess.
 			pev->velocity.z += pevToucher->velocity.z * 0.1;
 			
-
-
-
-
 		}else{
 			//waterlevel of 0? not underwater at all? don't proceed.
 			return;
@@ -1216,69 +1189,129 @@ void CPushable :: Move( CBaseEntity *pOther, int push )
 		factor = 0.25;
 
 
-
 	//will be needed soon.
 	maxSpeedTemp = MaxSpeed();
 
-	//factor = EASY_CVAR_GET(testVar);
-	
-
 	//Hold on. Are we trying to jump off? It's possible for a frame to be not marked as grounded with this entity as the groundentity, but still be touching.
 	//Check for that...
-
 	if(push && pOther->pev->absmin.z >= this->pev->absmax.z - 8){
 		return;
 	}
 
-
 	//apply friction?
 	factor = factor * pushSpeedFactor;
+	float timo = gpGlobals->time;
 
 	if(push){
-		//physical contact? rather plain.
+		// physical contact? rather plain.
 		if(playerTouch){
-			pev->velocity.x += pevToucher->velocity.x * 0.72;
-			pev->velocity.y += pevToucher->velocity.y * 0.72;
+			if (pOther->pev->button & IN_USE) {
+				// same thing?
+				//VecBModelOrigin(pev)
+				//vecSpot = pev->origin + (pev->mins + pev->maxs) * 0.5;
+				float toucherSpeed = pevToucher->velocity.Length2D();
+				Vector realOrigin = VecBModelOrigin(pev);
+
+				// old way:
+				//if (toucherSpeed < 20 && toucherSpeed > 0.04) {
+
+				// ALSO, if the player is pressing forward, and looking at me, the intent is clearly
+				// to move the box forward.  Don't get stuck on pushing while too close to a box in front.
+				// This happens because the box's velocity is tied to the player's velocity while 'use' is 
+				// pressed, yet the box blocks the player from changing velocity towards it at all when close
+				// enough.  So, detect if the player is trying to push forward on the box.  If so, give it a 
+				// jolt forward and disable the 'use' velocity clone for a very short time to let the box advance
+				// forward to be out of the way, then go back to copying player velocity while the player 
+				// moves forward.
+				// Yes... deluxe pushable logic, we really have everything.
+				if( (pOther->pev->button & IN_FORWARD && UTIL_IsFacing(pOther->pev, realOrigin, 0.707)) ){
+					
+					//::DebugLine_ClearAll();
+					//DebugLine_SetupPoint(0, realOrigin + Vector(0,0,12), 0, 255, 0);
+					//DebugLine_SetupPoint(1, pOther->pev->origin, 255, 0, 0);
+
+					Vector forceIntent = ::UTIL_YawToVec(pevToucher->angles.y) * toucherSpeed * 4.3;
+					pev->velocity.x += forceIntent.x; //* pushSpeedFactor;
+					pev->velocity.y += forceIntent.y; //* pushSpeedFactor;
+
+					blockForceVelocityTime = gpGlobals->time + 0.21;
+
+					// And let the pusher get back some lost velocity.
+					// If this even works.
+					if (toucherSpeed < 30) {
+						pOther->pev->velocity.x *= 2;
+						pOther->pev->velocity.y *= 2;
+					}
+					else {
+						pOther->pev->velocity.x *= 1.2;
+						pOther->pev->velocity.y *= 1.2;
+					}
+						
+				}
+				else {
+					// Not pressing forward and looking at me enough?  Normal contact push then.
+					pev->velocity.x += pevToucher->velocity.x * 0.72;
+					pev->velocity.y += pevToucher->velocity.y * 0.72;
+					pOther->pev->velocity.x *= 1.2;
+					pOther->pev->velocity.y *= 1.2;
+				}
+			}
+			else {
+				// normal way then.
+				pev->velocity.x += pevToucher->velocity.x * 0.72;
+				pev->velocity.y += pevToucher->velocity.y * 0.72;
+				//pev->velocity.x = pevToucher->velocity.x * 1.3;
+				//pev->velocity.y = pevToucher->velocity.y * 1.3;
+				pOther->pev->velocity.x *= 1.2;
+				pOther->pev->velocity.y *= 1.2;
+			}
 		}else{
-			//Not the player? Use its mass to influence how far it pushes me.
-			//This isn't specified for most monsters as monsters pushing this very often really isn't expected.
-			//But projectiles (arrows) or hornets could hit this and going flying looks kinda silly.
+			// Not the player? Use its mass to influence how far it pushes me.
+			// This isn't specified for most monsters as monsters pushing this very often really isn't expected.
+			// But projectiles (arrows) or hornets could hit this and going flying looks kinda silly.
 			pev->velocity.x += pevToucher->velocity.x * pOther->massInfluence() * pushSpeedFactor;
 			pev->velocity.y += pevToucher->velocity.y * pOther->massInfluence() * pushSpeedFactor;
 				
-			//the other object will slow down any frame it touches me.  IF it is not another pusable.
-			//And trains, they can look weird if thrown off.  This should really be a virtual method like massInfluence (pushSlowdown?) if much more needs it.
-			//Any other fixed moving things like this should probably be ignored for velocity changes by pushables.
+			// the other object will slow down any frame it touches me.  IF it is not another pusable.
+			// And trains, they can look weird if thrown off.  This should really be a virtual method like massInfluence (pushSlowdown?) if much more needs it.
+			// Any other fixed moving things like this should probably be ignored for velocity changes by pushables.
 			if(!FClassnameIs(pevToucher, "func_pushable") && !FClassnameIs(pevToucher, "func_train")){
 				pOther->pev->velocity.x *= 0.6;
 				pOther->pev->velocity.y *= 0.6;
 			}
 		}
-	}else{
-		//It is possible the player is against the box and needs to shove it a little further to start a real push than just staying stopped in front.
-		//Also don't apply factor or pushSpeedFactor. Those already slow the player down.
-		//Let the crate keep up with the player mostly
-		Vector forceIntent;
+	}else{ //ELSE OF push check
+		// USE-KEY DRAGGING.
+		if (gpGlobals->time >= blockForceVelocityTime) {
+			if (useValue != 0) {
+				// It is possible the player is against the box and needs to shove it a little further to start a real push than just staying stopped in front.
+				// Also don't apply factor or pushSpeedFactor. Those already slow the player down.
+				// Let the crate keep up with the player mostly
+				Vector forceIntent;
 
-		if(playerTouch){
-			float toucherSpeed = pevToucher->velocity.Length2D();
-			if(toucherSpeed < 6 && toucherSpeed > 1){
-				//The player probably wants the box to move in the direction they are facing. Go ahead and shove it with
-				//a little more force.
-				forceIntent = ::UTIL_YawToVec(pevToucher->angles.y) * 140;
-			}else{
-				//move as the player intended.
-				//There's probably a fancier way to blend into the player velocity instead but this works.
-				forceIntent = pevToucher->velocity;
+				if (playerTouch) {
+					// move as the player intended.
+					// There's probably a fancier way to blend into the player velocity instead but this works.
+					forceIntent = pevToucher->velocity;
+				}
+				else {
+					// wait.. only the player can do "use"? whatever.
+					forceIntent = pev->velocity + pevToucher->velocity * 0.8;
+				}
+
+				pev->velocity.x = forceIntent.x;
+				pev->velocity.y = forceIntent.y;
+				//pev->velocity.x += forceIntent.x * 0.6;
+				//pev->velocity.y += forceIntent.y * 0.6;
+				//pev->friction = 1;
 			}
-		}else{
-			//wait.. only the player can do "use"? whatever.
-			forceIntent = pev->velocity + pevToucher->velocity * 0.8;
+			else {
+				// Released? STOP... mostly.
+				pev->velocity.x = 0.3;
+				pev->velocity.y = 0.3;
+			}
 		}
-
-		pev->velocity.x = forceIntent.x;
-		pev->velocity.y = forceIntent.y;
-	}
+	}// END OF push check
 
 
 	//MODDD - original. was cumulative. Above matches player velocity instead.
@@ -1287,13 +1320,26 @@ void CPushable :: Move( CBaseEntity *pOther, int push )
 	pev->velocity.y += pevToucher->velocity.y * factor;
 	*/
 
-
 	length = sqrt( pev->velocity.x * pev->velocity.x + pev->velocity.y * pev->velocity.y );
-	
+
+	//MODD - now why do ya think we have a m_maxSpeed ???
+	// Cap it!
+	// WRRROOONNNNNNNG.
+	// Cap to a m_maxSpeed of 1?  You really want to do that?  No.
+	// Just force it 400, a good upper limit for player speed.
+	// (all cases of m_maxSpeed below replaced with 400)
+
+	float actualMax = 400 * pushSpeedFactor + 40;
+
+	if(length > actualMax){
+		pev->velocity = (pev->velocity / pev->velocity.Length()) * actualMax;
+		//pev->velocity = pev->velocity - pev->velocity * (pev->velocity.Length() - 400);
+		length = actualMax;
+	}
+
 
 	//easyForcePrintLine("PUSHVEL len:%.2f phys?%d pushervel:%.2f", length, push, pevToucher->velocity.Length2D());
 
-	
 	//if ( push && (length > maxSpeedTemp) )
 	//MODDD - always require the length check now!
 	//MODDD - actually remove the speed length check.  The new system doesn't need this, the box can only move as fast as the player.
@@ -1309,14 +1355,12 @@ void CPushable :: Move( CBaseEntity *pOther, int push )
 
 	if ( playerTouch )
 	{
-
 		//MODDD - tell the player to slow down based on my friction (to simulate difficulty moving this around... heavier / more friction slows the player down much more)
 		CBasePlayer* playerRef = static_cast<CBasePlayer*>( CBaseEntity::Instance(pevToucher) );
 		playerRef->pushSpeedMulti = pushSpeedFactor;
 		playerRef->framesUntilPushStops = 12;
 
 		//easyForcePrintLine("SPEED FACTO: %.2f", pushSpeedFactor);
-		
 		
 		
 		//CBasePlayer *pl = ( CBasePlayer *) CBasePlayer::Instance( pev );
@@ -1343,10 +1387,6 @@ void CPushable :: Move( CBaseEntity *pOther, int push )
 }
 
 
-
-
-
-
 #if 0
 void CPushable::StopSound( void )
 {
@@ -1357,9 +1397,7 @@ void CPushable::StopSound( void )
 #endif
 
 
-
 void CPushable::ReportGeneric(){
-
 	CBaseDelay::ReportGeneric();
 	easyForcePrintLine("My model: %s", STRING(pev->model));
 }

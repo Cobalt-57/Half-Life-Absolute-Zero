@@ -30,8 +30,8 @@ extern "C" void PM_Move ( struct playermove_s *ppmove, int server );
 extern "C" void PM_Init ( struct playermove_s *ppmove  );
 extern "C" char PM_FindTextureType( char *name );
 
-extern DLL_GLOBAL Vector		g_vecAttackDir;
-extern DLL_GLOBAL int		g_iSkillLevel;
+extern DLL_GLOBAL Vector g_vecAttackDir;
+extern DLL_GLOBAL int g_iSkillLevel;
 
 //MODDD 
 EASY_CVAR_EXTERN(cl_explosion)
@@ -159,7 +159,7 @@ int DispatchSpawn( edict_t *pent )
 			easyForcePrintLine("WHAT THE NAME BE %s : %d", pEntity->getClassname(), pEntity->GetMonsterPointer()->monsterID);
 		}
 		else {
-			easyForcePrintLine("WHAT THE NAME BE %s : gay", pEntity->getClassname());
+			easyForcePrintLine("WHAT THE NAME BE %s : no monster ID", pEntity->getClassname());
 		}
 	}
 	*/

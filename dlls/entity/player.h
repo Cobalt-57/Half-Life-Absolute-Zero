@@ -429,9 +429,6 @@ public:
 	//MODDD - new argument possibility, see player.cpp for more info.
 	void DeathSound ( BOOL plannedRevive);
 
-	//MODDD - new.  MOVED TO CBaseMonster.
-	//int convert_itbd_to_damage(int i);
-
 
 	int Classify ( void );
 	void SetAnimation( PLAYER_ANIM playerAnim );
@@ -581,25 +578,19 @@ public:
 	BOOL suitCanPlay(char *name, int fgroup, BOOL fvoxException);
 
 	
-	
 	void consumeAntidote(void);
 	void consumeRadiation(void);
 	void consumeAdrenaline(void);
 	
-	void removeTimedDamage(int arg_type, int* m_bitsDamageTypeRef);
-
-
-
-
-
-
 
 
 	//MODDD
 	int getGeigerChannel();
-
 	void UpdateGeigerCounter( void );
-	void CheckTimeBasedDamage( void );
+
+
+	virtual void parse_itbd(int i, BYTE& bDuration);
+	virtual void timedDamage_nonFirstFrame(int i, int* m_bitsDamageTypeRef);
 
 	BOOL FBecomeProne ( void );
 	void BarnacleVictimBitten ( entvars_t *pevBarnacle );
@@ -774,23 +765,7 @@ public:
 	//up the long jump item itself, if needed (mostly to satisfy the hazard course).
 	BOOL hasLongJumpItem;
 
-
-
-	//MODDD - variables to record the currently selected duration for each damage type (based on difficulty).
-	//This is easy to get durations often at runtime with little extra processing.
-	//~Moved to CBASEMONSTER, made static.
-	/*
-	float paralyzeDuration;
-	float nervegasDuration;
-	float poisonDuration;
-	float radiationDuration;
-	float acidDuration;
-	float slowburnDuration;
-	float slowfreezeDuration;
-	float bleedingDuration;
-	*/
-
-	//MOVED TO CBaseMonster
+	// MOVED TO CBaseMonster
 	//BOOL	m_rgbTimeBasedFirstFrame[CDMG_TIMEBASED];
 
 	int hasGlockSilencer;

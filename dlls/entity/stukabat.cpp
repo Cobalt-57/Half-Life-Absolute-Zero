@@ -862,9 +862,6 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CStukaBat)
 	// HACK HACK -- until we fix this.
 	//NOTE: perhaps " if(pev->deadFlag == DEAD_NO) " would be more precise?
 	//if ( IsAlive() )
-	if(pev->deadflag == DEAD_NO){
-		PainSound();
-	}
 	m_afMemory |= bits_MEMORY_PROVOKED;
 
 

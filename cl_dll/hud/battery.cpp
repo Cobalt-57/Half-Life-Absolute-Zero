@@ -104,8 +104,6 @@ int CHudBattery:: MsgFunc_Battery(const char *pszName,  int iSize, void *pbuf )
 
 int CHudBattery::Draw(float flTime)
 {
-
-
 	if(gHUD.frozenMem ){
 		//Don't draw while frozen.
 		return 0;
@@ -119,6 +117,16 @@ int CHudBattery::Draw(float flTime)
 
 	if ( gHUD.m_iHideHUDDisplay & HIDEHUD_HEALTH )
 		return 1;
+
+
+
+	if (EASY_CVAR_GET(hud_version) <= 1) {
+		// versions 0 and 1 do not draw the battery here, already handled in
+		// weapon sidebar
+		return 1;
+	}
+
+
 
 	int r, g, b, x, y, a;
 	wrect_t rc;
@@ -148,24 +156,21 @@ int CHudBattery::Draw(float flTime)
 		}
 
 		// Fade the health number back to dim
-
 		a = MIN_ALPHA +  (m_fFade/FADE_TIME) * 128;
-
 	}
-	else
+	else {
 		a = MIN_ALPHA;
+	}
+
 
 
 	//MODDD - Not sure what to do here.  Always make the alpha 255 or rely on pain colors?
 	//ScaleColors(r, g, b, a );
 
-	
-	
 	int iOffset = (m_prc1->bottom - m_prc1->top)/6;
 
-	
 
-	if(EASY_CVAR_GET(hud_version) == 0){
+	if(EASY_CVAR_GET(hud_version) < 3){
 
 		//MODDD - here to use the health colors.
 		gHUD.m_Health.deriveColorFromHealth(r, g, b, a);
@@ -178,26 +183,16 @@ int CHudBattery::Draw(float flTime)
 			ScaleColors(r, g, b, a);
 		}
 
-		//MODDD - new coords: put above the health instead of to the right
-		/*
-		y = ScreenHeight - gHUD.m_iFontHeight - gHUD.m_iFontHeight / 2;
-		x = ScreenWidth/5;
-		*/
-		//y = ScreenHeight - (gHUD.m_iFontHeight*2) - gHUD.m_iFontHeight / 2;
-		int HealthHeight = gHUD.GetSpriteRect(gHUD.m_HUD_number_0+10).bottom - gHUD.GetSpriteRect(gHUD.m_HUD_number_0+10).top;
+		//int HealthHeight = gHUD.m_iFontHeightAlt;
 		int BatteryHeight = gHUD.GetSpriteRect(m_HUD_battery_empty).bottom - gHUD.GetSpriteRect(m_HUD_battery_empty).top;
 
 
 		//MODDD - for debugging the battery's real value with a bit more accuracy than "about 1/3".
 		if(EASY_CVAR_GET(forceDrawBatteryNumber) == 1){
 			y = ScreenHeight - ((int)(BatteryHeight*4)) + 3 - 28;
-			x = (gHUD.GetSpriteRect(gHUD.m_HUD_number_0+10).right - gHUD.GetSpriteRect(gHUD.m_HUD_number_0+10).left)/2 + 5;
+			x = (gHUD.m_iFontWidthAlt)/2 + 5;
 			gHUD.DrawHudNumber(x, y, DHN_3DIGITS | DHN_DRAWZERO, m_iBat, r, g, b, 0, 1);
 		}
-
-
-
-
 
 		//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 		//BATTERY DRAWING COORDS HERE. The rest will be relative to these!!!
@@ -205,9 +200,7 @@ int CHudBattery::Draw(float flTime)
 		//y = ScreenHeight - ((int)(HealthHeight*1.5)) - ((int) BatteryHeight*1.5);
 		y = ScreenHeight - ((int)(BatteryHeight*4)) + 3 + 8;
 
-		x = (gHUD.GetSpriteRect(gHUD.m_HUD_number_0+10).right - gHUD.GetSpriteRect(gHUD.m_HUD_number_0+10).left)/2 - 1;
-
-
+		x = (gHUD.m_iFontWidthAlt)/2 - 1;
 
 
 
@@ -227,27 +220,22 @@ int CHudBattery::Draw(float flTime)
 
 		//ALWAYS update to be safe.
 		//if ( !m_SpriteHandle_t1 )
-			m_SpriteHandle_t1 = gHUD.GetSprite( m_HUD_battery_empty );
+		m_SpriteHandle_t1 = gHUD.GetSprite( m_HUD_battery_empty );
 		//if ( !m_SpriteHandle_t2 )
-			m_SpriteHandle_t2 = gHUD.GetSprite( m_HUD_battery_full );
+		m_SpriteHandle_t2 = gHUD.GetSprite( m_HUD_battery_full );
 
-			//MODDD - important to make sure..
-			m_prc1 = &gHUD.GetSpriteRect( m_HUD_battery_empty );
-			m_prc2 = &gHUD.GetSpriteRect( m_HUD_battery_full );
+		//MODDD - important to make sure..
+		m_prc1 = &gHUD.GetSpriteRect( m_HUD_battery_empty );
+		m_prc2 = &gHUD.GetSpriteRect( m_HUD_battery_full );
 
 
-			
 		int emptyBatteryX = x;
 		int emptyBatteryY = y - iOffset;
 
-
-		
 		gHUD.attemptDrawBrokenTrans(emptyBatteryX, emptyBatteryY, m_prc1->right-m_prc1->left+3, m_prc1->bottom-m_prc1->top);
-
 
 		//actually, no trans yet.  Do it after everything else...
 		gHUD.drawAdditiveFilter(m_SpriteHandle_t1, r, g, b, 0,  emptyBatteryX, emptyBatteryY, m_prc1, 0);
-
 
 		x += 5;
 		y += 5;
@@ -262,27 +250,11 @@ int CHudBattery::Draw(float flTime)
 			gHUD.drawPartialFromRight(m_SpriteHandle_t2, m_prc2, ((float)m_iBat / (float)100 ), x, y - iOffset , r, g, b);
 		}
 		
-
-
-		/*
-		if (rc.bottom > rc.top)
-		{
-			SPR_Set(m_SpriteHandle_t2, r, g, b );
-			gHUD.drawAdditiveFilter( 0, x, y - iOffset + (rc.top - m_prc2->top), &rc);
-		
-		}
-		*/
-
 	}else{
-
 		//a = 255;
-
-
 		gHUD.getGenericOrangeColor(r, g, b);
 
 		iOffset = 0;
-
-		
 
 		//MODDD - for debugging the battery's real value with a bit more accuracy than "about 1/3".
 		if(EASY_CVAR_GET(forceDrawBatteryNumber) == 1){
@@ -290,15 +262,10 @@ int CHudBattery::Draw(float flTime)
 			//gHUD.m_Health.deriveColorFromHealth(r, g, b, a);
 			gHUD.getGenericOrangeColor(r, g, b);
 			ScaleColors(r, g, b, a);
-
 			x = 123 - 5 - 24 + 5;
 			y = ScreenHeight - 52 - 5 + 11 - 29;
 			gHUD.DrawHudNumber(x, y, DHN_3DIGITS|DHN_DRAWPLACE|DHN_DRAWZERO|DHN_EMPTYDIGITSUNFADED, m_iBat, r, g, b, 4);
-			
-			
 		}
-
-
 
 		//MODDD - at death, fade.
 		if(gHUD.m_fPlayerDead){
@@ -306,34 +273,21 @@ int CHudBattery::Draw(float flTime)
 		}
 
 
-
-
-
 		x = 123 - 5 - 24;
 		y = ScreenHeight - 52 - 5 + 11;
 
-		
 		//ALWAYS update to be safe.
 		//if ( !m_SpriteHandle_t1 )
-			m_SpriteHandle_t1 = gHUD.GetSprite( gHUD.m_HUD_battery_empty_E3 );
+		m_SpriteHandle_t1 = gHUD.GetSprite( gHUD.m_HUD_battery_empty_E3 );
 		//if ( !m_SpriteHandle_t2 )
-			m_SpriteHandle_t2 = gHUD.GetSprite( gHUD.m_HUD_battery_full_E3_glow );
-			m_SpriteHandle_t3 = gHUD.GetSprite( gHUD.m_HUD_battery_full_E3_minimal );
+		m_SpriteHandle_t2 = gHUD.GetSprite( gHUD.m_HUD_battery_full_E3 );
 
-
-
-			//MODDD - important to make sure..
-			m_prc1 = &gHUD.GetSpriteRect( gHUD.m_HUD_battery_empty_E3 );
-			m_prc2 = &gHUD.GetSpriteRect( gHUD.m_HUD_battery_full_E3_glow );
-			m_prc3 = &gHUD.GetSpriteRect( gHUD.m_HUD_battery_full_E3_minimal );
-
+		//MODDD - important to make sure..
+		m_prc1 = &gHUD.GetSpriteRect( gHUD.m_HUD_battery_empty_E3 );
+		m_prc2 = &gHUD.GetSpriteRect( gHUD.m_HUD_battery_full_E3 );
 
 
 		gHUD.drawAdditiveFilter(m_SpriteHandle_t1, r, g, b, 0,  x, y - iOffset, m_prc1);
-
-
-		gHUD.drawAdditiveFilter(m_SpriteHandle_t2, r, g, b, 0,  x + 4, y + 4 - iOffset, m_prc2);
-
 
 		x += 9;
 		y += 9;
@@ -341,25 +295,14 @@ int CHudBattery::Draw(float flTime)
 
 		if(EASY_CVAR_GET(hud_batterydraw) == 0){
 			//across.
-			gHUD.drawPartialFromLeft(m_SpriteHandle_t3, m_prc3, ((float)m_iBat / (float)100 ), x, y, r, g, b);
+			gHUD.drawPartialFromLeft(m_SpriteHandle_t2, m_prc2, ((float)m_iBat / (float)100 ), x, y, r, g, b);
 		}else{
 			//vertically.
-			gHUD.drawPartialFromBottom(m_SpriteHandle_t3, m_prc3, ((float)m_iBat / (float)100 ), x, y, r, g, b);
+			gHUD.drawPartialFromBottom(m_SpriteHandle_t2, m_prc2, ((float)m_iBat / (float)100 ), x, y, r, g, b);
 		}
 
 
-
-		/*
-		if (rc.bottom > rc.top)
-		{
-			SPR_Set(m_SpriteHandle_t2, r, g, b );
-			gHUD.drawAdditiveFilter( 0, x, y - iOffset + (rc.top - m_prc2->top), &rc);
-		
-		}
-		*/
-
-	}
-
+	}//END OF hud_version CHECK
 
 	//alphaCrossHairIndex
 

@@ -913,7 +913,7 @@ extern BOOL entityHidden(edict_t* test);
 extern void UTIL_playOrganicGibSound(entvars_t* pevSoundSource);
 extern void UTIL_playMetalGibSound(entvars_t* pevSoundSource);
 
-extern void updateTimedDamageDurations(void);
+//extern void updateTimedDamageDurations(void);
 extern void updateCVarRefs(entvars_t *pev);
 
 extern void turnWorldLightsOn();

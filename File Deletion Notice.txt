@@ -13,8 +13,8 @@ dlls/extdll.h
 
 1) dlls/AI_BaseNPC_Schedule.cpp removed (clone of dlls/schedule.cpp)
 The file "AI_BaseNPC_Schedule.cpp" was deemed a clone of "schedule.cpp" in the starting SDK as is.  It has been removed.
-Unlike schedule.cpp, AI_BaseNPC_Schedule.cpp was aslo not in the Project's build-order (Visual Studio's solution explorer shows a list of any files involved in compiling.  schedule.cpp was present in the "hl" build path's "Source folder", while AI_BaseNPC_Schedule.cpp, which was nowhere to be found.
-Removing AI_BaseNPC_Schedule.cpp appears to have no consequences.  It was likely a backup of schedule.cpp, which was never beyond the state seen here (on SDK arrival).
+Unlike schedule.cpp, AI_BaseNPC_Schedule.cpp was also not in the Project's build-order.
+RemovedAI_BaseNPC_Schedule.cpp.  It was likely a backup of schedule.cpp even in the as-is SDK.
 
 
 2) dlls/glock.cpp removed (clone of dlls/wpn_shared/hl_wpn_glock.cpp). REPLACED NOW - SEE 2b BELOW!
@@ -44,7 +44,6 @@ Again, as of now, these files are completely excluded. No problems noticed from 
 
 7) dlls/monsters.h deleted, most of its contents were moved to basemonster.h. The CGib class is now in cbase.h, and the CUSTOM_SCHEDULES, DEFINE_CUSTOM_SCHEDULES, and IMPLEMENT_CUSTOM_SCHEDULES preprocessor methods were moved to util_preprocessor.h.
 ~Also, Monsters.cpp has now been renamed to basemonster.cpp, which did not exist before.
-
 
 
 

@@ -96,11 +96,14 @@
 #define CHUMTOAD_WEIGHT		5 
 
 
-// weapon clip/carry ammo capacities
-#define URANIUM_MAX_CARRY		100
 
-//MODD - was 150.
-#define _9MM_MAX_CARRY			120
+// weapon clip/carry ammo capacities
+
+//MODDD - CLEVER BASTARD.  Just redirect these to our
+// new skill CVar constants.
+/**
+#define URANIUM_MAX_CARRY		100
+#define _9MM_MAX_CARRY			120    // was 150
 #define _357_MAX_CARRY			36
 #define BUCKSHOT_MAX_CARRY		125
 #define BOLT_MAX_CARRY			50
@@ -111,8 +114,39 @@
 #define SNARK_MAX_CARRY			15
 #define HORNET_MAX_CARRY		8
 #define M203_GRENADE_MAX_CARRY	12
-//MODDD
 #define CHUMTOAD_MAX_CARRY		5
+*/
+
+#ifndef CLIENT_DLL
+#define URANIUM_MAX_CARRY		gSkillData.player_ammomax_uranium
+#define _9MM_MAX_CARRY			gSkillData.player_ammomax_9mm
+#define _357_MAX_CARRY			gSkillData.player_ammomax_revolver
+#define BUCKSHOT_MAX_CARRY		gSkillData.player_ammomax_shotgun
+#define BOLT_MAX_CARRY			gSkillData.player_ammomax_crossbow
+#define ROCKET_MAX_CARRY		gSkillData.player_ammomax_rpg
+#define HANDGRENADE_MAX_CARRY	gSkillData.player_ammomax_handgrenade
+#define SATCHEL_MAX_CARRY		gSkillData.player_ammomax_satchel
+#define TRIPMINE_MAX_CARRY		gSkillData.player_ammomax_tripmine
+#define SNARK_MAX_CARRY			gSkillData.player_ammomax_snark
+#define HORNET_MAX_CARRY		gSkillData.player_ammomax_hornet
+#define M203_GRENADE_MAX_CARRY	gSkillData.player_ammomax_mp5_grenade
+#define CHUMTOAD_MAX_CARRY		gSkillData.player_ammomax_chumtoad
+#else
+// methods dealing with these are dummied clientide anyway
+#define URANIUM_MAX_CARRY		0
+#define _9MM_MAX_CARRY			0
+#define _357_MAX_CARRY			0
+#define BUCKSHOT_MAX_CARRY		0
+#define BOLT_MAX_CARRY			0
+#define ROCKET_MAX_CARRY		0
+#define HANDGRENADE_MAX_CARRY	0
+#define SATCHEL_MAX_CARRY		0
+#define TRIPMINE_MAX_CARRY		0
+#define SNARK_MAX_CARRY			0
+#define HORNET_MAX_CARRY		0
+#define M203_GRENADE_MAX_CARRY	0
+#define CHUMTOAD_MAX_CARRY		0
+#endif
 
 
 
@@ -423,9 +457,10 @@ public:
 	virtual void ItemPreFrame( void )	{ return; }		// called each frame by the player PreThink
 	virtual void ItemPostFrame( void ) { return; }		// called each frame by the player PostThink
 	//MODDD - it appears the above two are actually not called when the player's "m_flNextAttack" var is on (delay before being able to fire again).
+	
 	//So, new methods that work regardless of that:
-	virtual void ItemPreFrameThink( void )	{ return; }		// called each frame by the player PreThink, even when "m_flNextAttak" is on.
-	virtual void ItemPostFrameThink( void ) { return; }		// called each frame by the player PostThink, even when "m_flNextAttak" is on.
+	virtual void ItemPreFrameThink( void )	{ return; }		// called each frame by the player PreThink, even when "m_flNextAttack" is on.
+	virtual void ItemPostFrameThink( void ) { return; }		// called each frame by the player PostThink, even when "m_flNextAttack" is on.
 	
 
 	virtual void Drop( void );

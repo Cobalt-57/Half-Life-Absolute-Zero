@@ -297,6 +297,9 @@
     <ClCompile Include="..\dlls\weapon\squeak.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="hud\pain.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="camera.h">
@@ -444,6 +447,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="hud\health.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="hud\pain.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -70,6 +70,9 @@ DECLARE_MESSAGE_HUD(ViewMode)
 DECLARE_MESSAGE_HUD(SetFOV)
 DECLARE_MESSAGE_HUD(Concuss)
 DECLARE_MESSAGE_HUD(GameMode)
+//MODDD - from health.cpp
+DECLARE_MESSAGE_HUD(Damage)
+DECLARE_MESSAGE_HUD(Drowning)
 
 
 
@@ -103,11 +106,13 @@ void Init_CustomMessage(void){
 	//MODDD - from hud.cpp
 	HOOK_MESSAGE( Logo );
 	HOOK_MESSAGE( ResetHUD );
-	HOOK_MESSAGE( GameMode );
 	HOOK_MESSAGE( InitHUD );
 	HOOK_MESSAGE( ViewMode );
 	HOOK_MESSAGE( SetFOV );
 	HOOK_MESSAGE( Concuss );
+	HOOK_MESSAGE( GameMode );
+	HOOK_MESSAGE(Damage);
+	HOOK_MESSAGE(Drowning);
 
 	
 	//JUKEBOX!
@@ -268,7 +273,7 @@ int CHud::MsgFunc_GameMode(const char *pszName, int iSize, void *pbuf )
 // differnet intentions.
 // Makes sense that it could not work at the HOOK_MESSAGE step (absent in hud.cpp unlike all
 // other messages here), the message's name must be unique (globally) and this collides with
-// the "MsgFunc_Damage" one in health.cpp.
+// the "MsgFunc_Damage" one in health.cpp (now moved to this same file interestingly enough).
 /*
 int CHud::MsgFunc_Damage(const char *pszName, int iSize, void *pbuf )
 {
@@ -306,6 +311,73 @@ int CHud::MsgFunc_Concuss( const char *pszName, int iSize, void *pbuf )
 		this->m_StatusIcons.DisableIcon("dmg_concuss");
 	return 1;
 }
+
+
+
+// Helpful for the new CPain gui too (script moved from health.cpp)
+int CHud::MsgFunc_Damage(const char* pszName, int iSize, void* pbuf)
+{
+	BEGIN_READ(pbuf, iSize);
+
+	int armor = READ_BYTE();	// armor
+	int damageTaken = READ_BYTE();	// health
+	int rawDamageTaken = READ_BYTE();	// MODDD NEW - raw damage, before armor reduction (what was intended)
+	long bitsDamage = READ_LONG(); // damage bits
+
+	//MODDD
+	long bitsDamageMod = READ_LONG(); // damage bits
+
+	vec3_t vecFrom;
+
+	for (int i = 0; i < 3; i++)
+		vecFrom[i] = READ_COORD();
+
+	int damageBlockedByArmor = rawDamageTaken - damageTaken;
+
+	//MODDD
+	//UpdateTiles(gHUD.m_flTime, bitsDamage);
+	gHUD.m_Health.UpdateTiles(gHUD.m_flTime, bitsDamage, bitsDamageMod);
+
+	gHUD.recentDamageBitmask = bitsDamage;
+
+	if (bitsDamage & DMG_DROWN) {
+		//if this is "drown" damage, get how to draw pain differnetly (default is nothing at all)
+		if (EASY_CVAR_GET(painFlashDrownMode) == 2) {
+			//just do this.
+			gHUD.m_Pain.cumulativeFadeDrown = 1.0f;
+			//return 1;
+		}
+		else if (EASY_CVAR_GET(painFlashDrownMode) == 3) {
+			//m_fAttackFront = m_fAttackRear = m_fAttackRight = m_fAttackLeft = 1;
+			//MODDD TODO - ditto.
+			const float damageFlashModTotal = damageTaken + damageBlockedByArmor * EASY_CVAR_GET(painFlashArmorBlock);
+
+			gHUD.m_Pain.m_fAttackFront = gHUD.m_Pain.m_fAttackRear = gHUD.m_Pain.m_fAttackRight = gHUD.m_Pain.m_fAttackLeft = 0.5;
+			gHUD.m_Pain.setUniformDamage(damageFlashModTotal);
+			return 1;
+		}
+	}
+
+	//...is "armor" unused?  It comes from "pev->dmg_save". Does it have any purpose than to
+	//trigger a damage draw on any "takeDamage" event, even if the damage is 0?
+
+	if (EASY_CVAR_GET(painFlashPrintouts) == 1)easyForcePrintLine("RAW DAMAGE %d %d", armor, damageTaken);
+	// Actually took damage
+	//if ( damageTaken > 0 || armor > 0 )
+	if (damageTaken > 0 || (EASY_CVAR_GET(painFlashArmorBlock) > 0 && damageBlockedByArmor > 0) || armor > 0)
+		gHUD.m_Pain.CalcDamageDirection(vecFrom, damageTaken, rawDamageTaken);
+
+	return 1;
+}
+
+int CHud::MsgFunc_Drowning(const char* pszName, int iSize, void* pbuf)
+{
+	BEGIN_READ(pbuf, iSize);
+	int x = READ_BYTE();
+	gHUD.m_Pain.playerIsDrowning = x;
+	return 1;
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -360,6 +432,10 @@ IMPLEMENT_MESSAGE(CliTest){
 IMPLEMENT_MESSAGE(FirstAppr){
 	// Keep vars the server gets from the client in-check!
 	lateCVarInit();
+
+	// Not turned on by the Health msg_func, so may as well be turned on by this user message.
+	// Turns out FirstAppr is also called after a transition finishes (map to map).
+	gHUD.m_Pain.m_iFlags |= HUD_ACTIVE;
 
 	return 1;
 }//END OF MsgFunc_FirstAppr

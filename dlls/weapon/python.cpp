@@ -125,13 +125,6 @@ void CLaserSpotPython::Precache( void )
 
 
 
-
-
-
-
-
-
-
 //MODDD - copied from Weapons.cpp.  Good for telling whether to draw the laser spot or not ("not" implies the user just fired the weapon
 //and is aiming away from the crosshair onscreen).
 BOOL CanAttackPython( float attack_time, float curtime, BOOL isPredicted )

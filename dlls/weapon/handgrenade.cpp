@@ -65,62 +65,6 @@ void CHandGrenade::Spawn( )
 #endif
 	*/
 	
-
-	/*
-                               ...----....
-                         ..-:"''         ''"-..
-                      .-'                      '-.
-                    .'              .     .       '.
-                  .'   .          .    .      .    .''.
-                .'  .    .       .   .   .     .   . ..:.
-              .' .   . .  .       .   .   ..  .   . ....::.
-             ..   .   .      .  .    .     .  ..  . ....:IA.
-            .:  .   .    .    .  .  .    .. .  .. .. ....:IA.
-           .: .   .   ..   .    .     . . .. . ... ....:.:VHA.
-           '..  .  .. .   .       .  . .. . .. . .....:.::IHHB.
-          .:. .  . .  . .   .  .  . . . ...:.:... .......:HIHMM.
-         .:.... .   . ."::"'.. .   .  . .:.:.:II;,. .. ..:IHIMMA
-         ':.:..  ..::IHHHHHI::. . .  ...:.::::.,,,. . ....VIMMHM
-        .:::I. .AHHHHHHHHHHAI::. .:...,:IIHHHHHHMMMHHL:. . VMMMM
-       .:.:V.:IVHHHHHHHMHMHHH::..:" .:HIHHHHHHHHHHHHHMHHA. .VMMM.
-       :..V.:IVHHHHHMMHHHHHHHB... . .:VPHHMHHHMMHHHHHHHHHAI.:VMMI
-       ::V..:VIHHHHHHMMMHHHHHH. .   .I":IIMHHMMHHHHHHHHHHHAPI:WMM
-       ::". .:.HHHHHHHHMMHHHHHI.  . .:..I:MHMMHHHHHHHHHMHV:':H:WM
-       :: . :.::IIHHHHHHMMHHHHV  .ABA.:.:IMHMHMMMHMHHHHV:'. .IHWW
-       '.  ..:..:.:IHHHHHMMHV" .AVMHMA.:.'VHMMMMHHHHHV:' .  :IHWV
-        :.  .:...:".:.:TPP"   .AVMMHMMA.:. "VMMHHHP.:... .. :IVAI
-       .:.   '... .:"'   .   ..HMMMHMMMA::. ."VHHI:::....  .:IHW'
-       ...  .  . ..:IIPPIH: ..HMMMI.MMMV:I:.  .:ILLH:.. ...:I:IM
-     : .   .'"' .:.V". .. .  :HMMM:IMMMI::I. ..:HHIIPPHI::'.P:HM.
-     :.  .  .  .. ..:.. .    :AMMM IMMMM..:...:IV":T::I::.".:IHIMA
-     'V:.. .. . .. .  .  .   'VMMV..VMMV :....:V:.:..:....::IHHHMH
-       "IHH:.II:.. .:. .  . . . " :HB"" . . ..PI:.::.:::..:IHHMMV"
-        :IP""HHII:.  .  .    . . .'V:. . . ..:IH:.:.::IHIHHMMMMM"
-        :V:. VIMA:I..  .     .  . .. . .  .:.I:I:..:IHHHHMMHHMMM
-        :"VI:.VWMA::. .:      .   .. .:. ..:.I::.:IVHHHMMMHMMMMI
-        :."VIIHHMMA:.  .   .   .:  .:.. . .:.II:I:AMMMMMMHMMMMMI
-        :..VIHIHMMMI...::.,:.,:!"I:!"I!"I!"V:AI:VAMMMMMMHMMMMMM'
-        ':.:HIHIMHHA:"!!"I.:AXXXVVXXXXXXXA:."HPHIMMMMHHMHMMMMMV
-          V:H:I:MA:W'I :AXXXIXII:IIIISSSSSSXXA.I.VMMMHMHMMMMMM
-            'I::IVA ASSSSXSSSSBBSBMBSSSSSSBBMMMBS.VVMMHIMM'"'
-             I:: VPAIMSSSSSSSSSBSSSMMBSSSBBMMMMXXI:MMHIMMI
-            .I::. "H:XIIXBBMMMMMMMMMMMMMMMMMBXIXXMMPHIIMM'
-            :::I.  ':XSSXXIIIIXSSBMBSSXXXIIIXXSMMAMI:.IMM
-            :::I:.  .VSSSSSISISISSSBII:ISSSSBMMB:MI:..:MM
-            ::.I:.  ':"SSSSSSSISISSXIIXSSSSBMMB:AHI:..MMM.
-            ::.I:. . ..:"BBSSSSSSSSSSSSBBBMMMB:AHHI::.HMMI
-            :..::.  . ..::":BBBBBSSBBBMMMB:MMMMHHII::IHHMI
-            ':.I:... ....:IHHHHHMMMMMMMMMMMMMMMHHIIIIHMMV"
-              "V:. ..:...:.IHHHMMMMMMMMMMMMMMMMHHHMHHMHP'
-                ':. .:::.:.::III::IHHHHMMMMMHMHMMHHHHM"
-                 "::....::.:::..:..::IIIIIHHHHMMMHHMV"
-                   "::.::.. .. .  ...:::IIHHMMMMHMV"
-                     "V::... . .I::IHHMMV"'
-                       '"VHVHHHAHHHHMMV:"'
-	*/
-	//source: http://www.ascii-art.de/ascii/s/skull.txt
-
-	
 	//if(EASY_CVAR_GET(handGrenadePickupYieldsOne) == 1)
 
 	// Apparently, this method can be called before the player is present (and, even if so, hasn't made this pick-upable part of the inventory yet).
@@ -301,10 +245,21 @@ void CHandGrenade::Holster( int skiplocal /* = 0 */ )
 
 void CHandGrenade::PrimaryAttack()
 {
+	EitherAttack();
+}//END OF PrimaryAttack
+
+void CHandGrenade::SecondaryAttack()
+{
+	EitherAttack();
+}
+
+// Regardless of what key is used, pull the pin all the same and start holding down.
+// What is released influences the thrown grenade path (typical throw or toss)
+void CHandGrenade::EitherAttack() {
 	m_fInAttack &= (~1);
 
 	//if the player is not cheating:
-	if(m_fireState != -500){
+	if (m_fireState != -500) {
 		//MODDD
 		// this method is called anytime primary fire is held down.
 		// So check to see if the grenade should explode in the user's hands (held down too long)
@@ -331,62 +286,54 @@ void CHandGrenade::PrimaryAttack()
 		//easyForcePrintLine("ARE YOU hello %d, %d", m_flStartThrow, m_pPlayer->m_rgAmmo[ m_iPrimaryAmmoType ]);
 
 		//"!m_flStartThrow"? Just say ==0 for fuck's sake.
-		if ( m_flStartThrow==0 && m_pPlayer->m_rgAmmo[ m_iPrimaryAmmoType ] > 0 )
+		if (m_flStartThrow == 0 && m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] > 0)
 		{
 			m_flStartThrow = gpGlobals->time;
 			m_flReleaseThrow = 0;
 
-			SendWeaponAnim( HANDGRENADE_PINPULL );
+			SendWeaponAnim(HANDGRENADE_PINPULL);
 			//MODDD NOTE: does this really warrant a " + randomIdleAnimationDelay()" ?
 			m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 0.5;
 		}
-	}else{
+	}
+	else {
 		// CHEATING.
 		m_flNextSecondaryAttack = m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + m_pPlayer->cheat_minimumfiredelaycustomMem;// ensure that the animation can finish playing
 
 		//m_flTimeWeaponIdle = m_flNextSecondaryAttack = m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 0.5;// ensure that the animation can finish playing
 
-
 		float flVel = 220 + 6 * 140;
-
 		Vector angThrow = m_pPlayer->pev->v_angle + m_pPlayer->pev->punchangle;
-		if ( angThrow.x < 0 )
-			angThrow.x = -10 + angThrow.x * ( ( 90 - 10 ) / 90.0 );
+		if (angThrow.x < 0)
+			angThrow.x = -10 + angThrow.x * ((90 - 10) / 90.0);
 		else
-			angThrow.x = -10 + angThrow.x * ( ( 90 + 10 ) / 90.0 );
+			angThrow.x = -10 + angThrow.x * ((90 + 10) / 90.0);
 
 		//MODDD NOOOOOOOOOOOOOOOOOOOOOOOO
 		//if ( flVel > 500 )
 		//	flVel = 500;
 
-		UTIL_MakeVectors( angThrow );
+		UTIL_MakeVectors(angThrow);
 		Vector vecSrc = m_pPlayer->pev->origin + m_pPlayer->pev->view_ofs + gpGlobals->v_forward * 16;
 		Vector vecThrow = gpGlobals->v_forward * flVel + m_pPlayer->pev->velocity;
 
-		CGrenade::ShootTimed( m_pPlayer->pev, vecSrc, vecThrow, gSkillData.plrDmgHandGrenade, 0.3f );
+		CGrenade::ShootTimed(m_pPlayer->pev, vecSrc, vecThrow, gSkillData.plrDmgHandGrenade, 0.3f);
 	}//END OF cheat check
-}//END OF PrimaryAttack
 
+}//eitherAttack
 
 
 void CHandGrenade::WeaponIdle( void )
 {
-	/*
-	//the retire-redeploy-on-ammo-check does not care if the idle delay is over yet or not.
-	if(m_fInAttack & 2 && m_pPlayer->m_rgAmmo[ m_iPrimaryAmmoType ] > 0){
+	const BOOL holdingPrimary = m_pPlayer->pev->button & IN_ATTACK;
+	const BOOL holdingSecondary = m_pPlayer->pev->button & IN_ATTACK2;
 
-		
-		DefaultDeploy( "models/v_grenade.mdl", "models/p_grenade.mdl", HANDGRENADE_DRAW, "crowbar" );
-		
-		//nah, defaultdeploy does this ok.
-		//m_flTimeWeaponIdle = UTIL_WeaponTimeBase();
 
-		//m_fInAttack &= (~1);
-		//it is okay to set wholly to 0.  Forget about the scheduled "just-show-deploy-anim" if the full call from retirement is used.
-		m_fInAttack = 0;
+	if (holdingPrimary && holdingSecondary) {
+		// don't allow holding both at the same time, ignore.
 		return;
 	}
-	*/
+
 	
 	//MODDD - is this okay for grenades?
 	if(m_pPlayer->pev->viewmodel == iStringNull){
@@ -400,6 +347,7 @@ void CHandGrenade::WeaponIdle( void )
 		}
 	}
 
+	// does... does m_flReleaseThrow even have a point???
 
 	if ( m_flReleaseThrow == 0 && m_flStartThrow )
 		 m_flReleaseThrow = UTIL_WeaponTimeBase();//gpGlobals->time;  //UTIL_WeaponTimeBase()????
@@ -421,55 +369,102 @@ void CHandGrenade::WeaponIdle( void )
 	//if m_fireState == -500, we are cheating.  No release-fire needed; it is instant.
 	if ( m_flStartThrow && m_fireState != -500)
 	{
-		Vector angThrow = m_pPlayer->pev->v_angle + m_pPlayer->pev->punchangle;
-
-		if ( angThrow.x < 0 )
-			angThrow.x = -10 + angThrow.x * ( ( 90 - 10 ) / 90.0 );
-		else
-			angThrow.x = -10 + angThrow.x * ( ( 90 + 10 ) / 90.0 );
-
 
 		float timeSinceThrow = gpGlobals->time - m_flStartThrow;
 
 		float timeUntilBoom = 3 - timeSinceThrow;
 		if (timeUntilBoom < 0) timeUntilBoom = 0;
 
-		//MODDD - flVel now depends on the time held down.
-		
-		//short, medium, long?
-		//NOTE: all anim times shortened (cut off from the end) due to there being time where the screen is just blank during the anim.
-		if(timeSinceThrow < 1){
-			SendWeaponAnim( HANDGRENADE_THROW1 );
-			//m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + (19.0/13.0);
-			m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + ((5.0 + 3.25)/13.0);
-			m_fInAttack |= 1;
-		}else if(timeSinceThrow < 2){
-			SendWeaponAnim( HANDGRENADE_THROW2 );
-			//m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + (19.0/20.0);
-			m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + ((7.0 + 5.0) /20.0);
-			m_fInAttack |= 1;
-		}else{ // timeSinceThrow < 3
-			SendWeaponAnim( HANDGRENADE_THROW3 );
-			//m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + (19.0/30.0);
-			m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + ((13.0 + 6.5) /30.0);
-			m_fInAttack |= 1;
+
+		BOOL primaryThrow;
+
+		if ((m_pPlayer->m_afButtonReleased & IN_ATTACK)) {
+			primaryThrow = TRUE;
+		}
+		else if ((m_pPlayer->m_afButtonReleased & IN_ATTACK2)) {
+			primaryThrow = FALSE;
+		}
+		else {
+			// ???
+			primaryThrow = TRUE;
 		}
 
-		//float flVel = ( 90 - angThrow.x ) * 4;
-		float flVel = 220 + timeSinceThrow * 140;
-		//MODDD NOOOOOOOOOOOOOOOOOOOOOOOO why??
-		//if ( flVel > 500 )
-		//	flVel = 500;
 
-		easyPrintLine("HAND GRENADE VELOCITY + THROW ANG: %.3f, %.3f", flVel, ((float) (( 90 - angThrow.x ) * 4))  );
 
-		UTIL_MakeVectors( angThrow );
+		if (primaryThrow) {
+			
+			Vector angThrow = m_pPlayer->pev->v_angle + m_pPlayer->pev->punchangle;
 
-		Vector vecSrc = m_pPlayer->pev->origin + m_pPlayer->pev->view_ofs + gpGlobals->v_forward * 16;
-		Vector vecThrow = gpGlobals->v_forward * flVel + m_pPlayer->pev->velocity;
+			if (angThrow.x < 0)
+				angThrow.x = -10 + angThrow.x * ((90 - 10) / 90.0);
+			else
+				angThrow.x = -10 + angThrow.x * ((90 + 10) / 90.0);
 
-		CGrenade::ShootTimed( m_pPlayer->pev, vecSrc, vecThrow, gSkillData.plrDmgHandGrenade, timeUntilBoom);
-		
+
+			//MODDD - flVel now depends on the time held down.
+
+			//short, medium, long?
+			//NOTE: all anim times shortened (cut off from the end) due to there being time where the screen is just blank during the anim.
+			if (timeSinceThrow < 1) {
+				SendWeaponAnim(HANDGRENADE_THROW1);
+				//m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + (19.0/13.0);
+				m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + ((5.0 + 3.25) / 13.0);
+				m_fInAttack |= 1;
+			}
+			else if (timeSinceThrow < 2) {
+				SendWeaponAnim(HANDGRENADE_THROW2);
+				//m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + (19.0/20.0);
+				m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + ((7.0 + 5.0) / 20.0);
+				m_fInAttack |= 1;
+			}
+			else { // timeSinceThrow < 3
+				SendWeaponAnim(HANDGRENADE_THROW3);
+				//m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + (19.0/30.0);
+				m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + ((13.0 + 6.5) / 30.0);
+				m_fInAttack |= 1;
+			}
+
+			//float flVel = ( 90 - angThrow.x ) * 4;
+			float flVel = 220 + timeSinceThrow * 140;
+
+			easyPrintLine("HAND GRENADE VELOCITY + THROW ANG: %.3f, %.3f", flVel, ((float)((90 - angThrow.x) * 4)));
+
+			UTIL_MakeVectors(angThrow);
+
+			Vector vecSrc = m_pPlayer->pev->origin + m_pPlayer->pev->view_ofs + gpGlobals->v_forward * 16;
+			Vector vecThrow = gpGlobals->v_forward * flVel + m_pPlayer->pev->velocity;
+
+			CGrenade::ShootTimed(m_pPlayer->pev, vecSrc, vecThrow, gSkillData.plrDmgHandGrenade, timeUntilBoom);
+		}else {
+			// Do the toss.
+			// In short, no mod on the angle thrown (generally a little lower then),
+			// and less impact from holding down on throw, slightly greater initial velocity.
+
+			Vector angThrow = m_pPlayer->pev->v_angle + m_pPlayer->pev->punchangle;
+			
+			// no mod to angThrow.
+
+			SendWeaponAnim(HANDGRENADE_THROW1);
+			m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + ((5.0 + 3.25) / 13.0);
+			m_fInAttack |= 1;
+
+			float flVel = 240 + timeSinceThrow * 60;
+
+			easyPrintLine("HAND GRENADE VELOCITY + THROW ANG: %.3f, %.3f", flVel, ((float)((90 - angThrow.x) * 4)));
+
+			UTIL_MakeVectors(angThrow);
+
+			Vector vecSrc = m_pPlayer->pev->origin + m_pPlayer->pev->view_ofs + gpGlobals->v_forward * 16;
+			Vector vecThrow = gpGlobals->v_forward * flVel + m_pPlayer->pev->velocity;
+
+			CGrenade::ShootTimed(m_pPlayer->pev, vecSrc, vecThrow, gSkillData.plrDmgHandGrenade, timeUntilBoom);
+
+		}//END OF primaryThrow check
+
+
+
+
+
 		//MODDD - section removed.   Odd, while testing, I could not trigger "THROW3" at all.
 		//time
 		/*
@@ -512,7 +507,10 @@ void CHandGrenade::WeaponIdle( void )
 
 		m_flReleaseThrow = 0;
 		m_flStartThrow = 0;
-		m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 0.5;
+		//m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 0.5;
+		m_flTimeWeaponIdle = m_flNextSecondaryAttack = m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 0.5;// ensure that the animation can finish playing
+
+
 		//MODDD - handle idle-delay above depending on the chosen anim's time.
 		//m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 0.5;
 

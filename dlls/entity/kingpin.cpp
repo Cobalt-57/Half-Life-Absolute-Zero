@@ -393,6 +393,10 @@ int CKingpin::Restore( CRestore &restore )
 }
 
 
+void CKingpin::PostRestore() {
+	if (nextNormalThinkTime == 0)nextNormalThinkTime = 0.01;
+	if (pev->nextthink == 0)pev->nextthink = 0.01;
+}
 
 
 CKingpin::CKingpin(void){
@@ -426,6 +430,9 @@ CKingpin::CKingpin(void){
 
 	//don't need to save this one.  Not much of an influence and re-picking up on it is no big deal.
 	enemyNullTimeSet = FALSE;
+
+	nextNormalThinkTime = -1;
+	quickThink = FALSE;
 			
 
 }//END OF CKingpin constructor
@@ -2262,7 +2269,7 @@ BOOL CKingpin::CheckRangeAttack1( float flDot, float flDist ){
 		seesEnemy = TRUE;
 
 	}//else if(this->chargeEffect != NULL){
-	//Removing the charge effect being present requirement.  The kingpin is one all-seeing bastard.
+	// Removing the charge effect being present requirement.  The kingpin is one all-seeing bastard.
 	else{
 		Vector vecStart;
 		Vector vecForward;
@@ -2352,182 +2359,194 @@ void CKingpin::CustomTouch( CBaseEntity *pOther ){
 void CKingpin::MonsterThink( void ){
 
 
+	BOOL okayForNormalThink = (!quickThink || gpGlobals->time >= nextNormalThinkTime);
+	
 
-	if(m_IdealMonsterState != MONSTERSTATE_DEAD){
-		CBaseEntity* pEntityScan = NULL;
+	if (okayForNormalThink) {
 
-		//if there is some sort of projectile headed towards me, we will try to reflect it.
-		while ((pEntityScan = UTIL_FindEntityInSphere( pEntityScan, pev->origin, 700 )) != NULL){
+		if (m_IdealMonsterState != MONSTERSTATE_DEAD) {
+			CBaseEntity* pEntityScan = NULL;
 
-			if(!(pEntityScan->pev->flags & FL_KILLME)){
+			//if there is some sort of projectile headed towards me, we will try to reflect it.
+			while ((pEntityScan = UTIL_FindEntityInSphere(pEntityScan, pev->origin, 700)) != NULL) {
 
-				if(FClassnameIs(pEntityScan->pev, "bolt")){
-					int x = 666;
-				}
-				
-				//If this is not scheduled for deletion
-				float rangeFactor;
-				float reflectDelayFactor;
+				if (!(pEntityScan->pev->flags & FL_KILLME)) {
 
-				const Vector incomingVelocity = pEntityScan->GetVelocityLogical();
-				const float incomingSpeed = incomingVelocity.Length();
-
-				const int otherProjType = pEntityScan->GetProjectileType();
-				
-				const float distanceToEnt = (pev->origin - pEntityScan->pev->origin).Length();
-
-				if(incomingSpeed < 800){
-					//standard is ok.
-					reflectDelayFactor = 1.0;
-					rangeFactor = 0.65;
-				}else{
-					float filteredIncomingSpeed = min(incomingSpeed, 2000);  //cap me at 2000 for safety.
-					//climbs up to 2000.
-					reflectDelayFactor = (1.0 - (((filteredIncomingSpeed - 800) / 1200) * 0.93) );
-					rangeFactor = 0.65 + ((filteredIncomingSpeed - 800) / 1200) * 0.35;
-				}
-				
-
-				/*
-				switch(otherProjType){
-				case PROJECTILE_NONE:
-					//can't work with that?
-					
-				break;
-				case PROJECTILE_BOLT:
-
-				break;
-				case PROJECTILE_GRENADE:
-
-				break;
-				case PROJECTILE_ROCKET:
-
-				break;
-				case PROJECTILE_ENERGYBALL:
-
-				break;
-				case PROJECTILE_ORGANIC_DUMB:
-
-				break;
-				case PROJECTILE_ORGANIC_HARMLESS:
-					
-				break;
-				case PROJECTILE_ORGANIC_HOSTILE:
-
-				break;
-				}//END OF switch
-				*/
-
-				//reflectDelayFactor
-				//rangeFactor
-				
-				if(otherProjType > PROJECTILE_NONE && incomingSpeed > 0.1f && distanceToEnt < (rangeFactor * 700) ){
-					//also, is it actually coming towards me? This should also avoid trying to re-reflect projectiles already reflected
-					//but still in reflection range for a little bit.
-					const char* entityName = pEntityScan->getClassname();
-
-
-					const float zSpeed = incomingVelocity.z;
-					const float distanceZ = abs( (pev->origin.z - pEntityScan->pev->origin.z ) );
-					const float distance2D = (pev->origin - pEntityScan->pev->origin).Length2D();
-
-					const Vector2D incomingDirection = incomingVelocity.Make2D().Normalize();
-					const Vector2D directionTowardsMe = (pev->origin - pEntityScan->pev->origin).Make2D().Normalize();
-					const float closenessToApproach = DotProduct(incomingDirection, directionTowardsMe);
-
-
-					//Two cases.  Either it's about to land near me regardless of the direction it's going (unlikely but possible),
-					//OR it's headed close enough to towards me.
-
-					if(
-						//If the projectile is close enough to moving towards this kingpin,
-						closenessToApproach > 0.4f ||
-						//or it's bouncing and too close to landing to me...
-						(( pev->movetype == MOVETYPE_TOSS || pev->movetype == MOVETYPE_BOUNCE) &&  (distance2D < (600*rangeFactor) && zSpeed < -80 && distanceZ < 500*rangeFactor) )
-
-					){
-						attemptReflectProjectileStart(pEntityScan, reflectDelayFactor);
+					if (FClassnameIs(pEntityScan->pev, "bolt")) {
+						int x = 666;
 					}
 
-				}//END OF "is projectile" check and moving check
+					//If this is not scheduled for deletion
+					float rangeFactor;
+					float reflectDelayFactor;
+
+					const Vector incomingVelocity = pEntityScan->GetVelocityLogical();
+					const float incomingSpeed = incomingVelocity.Length();
+
+					const int otherProjType = pEntityScan->GetProjectileType();
+
+					const float distanceToEnt = (pev->origin - pEntityScan->pev->origin).Length();
+
+					if (incomingSpeed < 800) {
+						//standard is ok.
+						reflectDelayFactor = 1.0;
+						rangeFactor = 0.65;
+					}
+					else {
+						float filteredIncomingSpeed = min(incomingSpeed, 2000);  //cap me at 2000 for safety.
+						//climbs up to 2000.
+						reflectDelayFactor = (1.0 - (((filteredIncomingSpeed - 800) / 1200) * 0.93));
+						rangeFactor = 0.65 + ((filteredIncomingSpeed - 800) / 1200) * 0.35;
+					}
 
 
-			}//END OF fl_killme check
-		}//END OF while loop through nearby entities
-	}//END OF dead check
+					/*
+					switch(otherProjType){
+					case PROJECTILE_NONE:
+						//can't work with that?
+
+					break;
+					case PROJECTILE_BOLT:
+
+					break;
+					case PROJECTILE_GRENADE:
+
+					break;
+					case PROJECTILE_ROCKET:
+
+					break;
+					case PROJECTILE_ENERGYBALL:
+
+					break;
+					case PROJECTILE_ORGANIC_DUMB:
+
+					break;
+					case PROJECTILE_ORGANIC_HARMLESS:
+
+					break;
+					case PROJECTILE_ORGANIC_HOSTILE:
+
+					break;
+					}//END OF switch
+					*/
+
+					//reflectDelayFactor
+					//rangeFactor
+
+					if (otherProjType > PROJECTILE_NONE&& incomingSpeed > 0.1f && distanceToEnt < (rangeFactor * 700)) {
+						//also, is it actually coming towards me? This should also avoid trying to re-reflect projectiles already reflected
+						//but still in reflection range for a little bit.
+						const char* entityName = pEntityScan->getClassname();
+
+
+						const float zSpeed = incomingVelocity.z;
+						const float distanceZ = abs((pev->origin.z - pEntityScan->pev->origin.z));
+						const float distance2D = (pev->origin - pEntityScan->pev->origin).Length2D();
+
+						const Vector2D incomingDirection = incomingVelocity.Make2D().Normalize();
+						const Vector2D directionTowardsMe = (pev->origin - pEntityScan->pev->origin).Make2D().Normalize();
+						const float closenessToApproach = DotProduct(incomingDirection, directionTowardsMe);
+
+
+						//Two cases.  Either it's about to land near me regardless of the direction it's going (unlikely but possible),
+						//OR it's headed close enough to towards me.
+
+						if (
+							//If the projectile is close enough to moving towards this kingpin,
+							closenessToApproach > 0.4f ||
+							//or it's bouncing and too close to landing to me...
+							((pev->movetype == MOVETYPE_TOSS || pev->movetype == MOVETYPE_BOUNCE) && (distance2D < (600 * rangeFactor) && zSpeed < -80 && distanceZ < 500 * rangeFactor))
+
+							) {
+							attemptReflectProjectileStart(pEntityScan, reflectDelayFactor);
+						}
+
+					}//END OF "is projectile" check and moving check
+
+
+				}//END OF fl_killme check
+			}//END OF while loop through nearby entities
+		}//END OF dead check
 
 
 
-	if(m_MonsterState == MONSTERSTATE_COMBAT){
-		//Periodically power up monstesr and make them target my enemy.
+		if (m_MonsterState == MONSTERSTATE_COMBAT) {
+			//Periodically power up monstesr and make them target my enemy.
 
-		if(powerUpNearbyMonstersCooldown == -1 || gpGlobals->time >= powerUpNearbyMonstersCooldown){
-			easyForcePrintLine("KINGPIN: I licked THE COUCH");
-			this->powerUpMonsters();
-			powerUpNearbyMonstersCooldown = gpGlobals->time + 8;
-		}
-
-
-		if(m_pSchedule == slCombatFaceNoStump || m_pSchedule == slCombatFace || m_pSchedule == slCombatLook){
-			//do a check.  Has enemyHiddenChaseTime been surpassed?
-			if(gpGlobals->time >= enemyHiddenChaseTime){
-				//just force it to stop from happening again too soon in any case.
-				//enemyHiddenChaseTime = gpGlobals->time + 40.0f;
-
-				//TaskFail();  //re-pick a following schedule most likely.
-				//or ChangeSchedule into that?  what is best.
+			if (powerUpNearbyMonstersCooldown == -1 || gpGlobals->time >= powerUpNearbyMonstersCooldown) {
+				easyForcePrintLine("KINGPIN: I licked THE COUCH");
+				this->powerUpMonsters();
+				powerUpNearbyMonstersCooldown = gpGlobals->time + 8;
 			}
-		}
 
-		if( 
-			//that is, if a monster recently damaged me, or our long-time cooldown is up....
-			(  recentInflictingMonster != NULL || (m_hEnemy != NULL && (forceEnemyOnPoweredUpMonstersCooldown == -1 || gpGlobals->time >= forceEnemyOnPoweredUpMonstersCooldown))  ) &&
 
-			//And the hard cooldown (to avoid spamming the logic) passes:
-			(forceEnemyOnPoweredUpMonstersHardCooldown == -1 || gpGlobals->time >= forceEnemyOnPoweredUpMonstersHardCooldown) )
-		{
+			if (m_pSchedule == slCombatFaceNoStump || m_pSchedule == slCombatFace || m_pSchedule == slCombatLook) {
+				//do a check.  Has enemyHiddenChaseTime been surpassed?
+				if (gpGlobals->time >= enemyHiddenChaseTime) {
+					//just force it to stop from happening again too soon in any case.
+					//enemyHiddenChaseTime = gpGlobals->time + 40.0f;
 
-			CBaseEntity* enemyToForce;
-			BOOL forceEnemyPassive;
+					//TaskFail();  //re-pick a following schedule most likely.
+					//or ChangeSchedule into that?  what is best.
+				}
+			}
 
-			if(recentInflictingMonster != NULL){
-				enemyToForce = recentInflictingMonster;
-				forceEnemyPassive = FALSE;
-			}else{
-				enemyToForce = m_hEnemy;
-				forceEnemyPassive = TRUE;
+			if (
+				//that is, if a monster recently damaged me, or our long-time cooldown is up....
+				(recentInflictingMonster != NULL || (m_hEnemy != NULL && (forceEnemyOnPoweredUpMonstersCooldown == -1 || gpGlobals->time >= forceEnemyOnPoweredUpMonstersCooldown))) &&
+
+				//And the hard cooldown (to avoid spamming the logic) passes:
+				(forceEnemyOnPoweredUpMonstersHardCooldown == -1 || gpGlobals->time >= forceEnemyOnPoweredUpMonstersHardCooldown))
+			{
+
+				CBaseEntity* enemyToForce;
+				BOOL forceEnemyPassive;
+
+				if (recentInflictingMonster != NULL) {
+					enemyToForce = recentInflictingMonster;
+					forceEnemyPassive = FALSE;
+				}
+				else {
+					enemyToForce = m_hEnemy;
+					forceEnemyPassive = TRUE;
+				}
+
+
+				this->forceEnemyOnPoweredUpMonsters(enemyToForce, forceEnemyPassive);
+
+				forceEnemyOnPoweredUpMonstersCooldown = gpGlobals->time + 15;
+				forceEnemyOnPoweredUpMonstersHardCooldown = gpGlobals->time + 2.5;
 			}
 
 
-			this->forceEnemyOnPoweredUpMonsters(enemyToForce, forceEnemyPassive);
+			if (forgetRecentInflictingMonsterCooldown != -1 && gpGlobals->time >= forgetRecentInflictingMonsterCooldown) {
+				recentInflictingMonster = NULL;
+				forgetRecentInflictingMonsterCooldown = -1;
+			}
 
-			forceEnemyOnPoweredUpMonstersCooldown = gpGlobals->time + 15;
-			forceEnemyOnPoweredUpMonstersHardCooldown = gpGlobals->time + 2.5;
+		}//END OF combat state check
+
+
+		CBaseMonster::MonsterThink();
+
+		//if(this->HasConditionsFrame(bits_COND_SEE_ENEMY) && !this->HasConditionsFrame(bits_COND_ENEMY_OCCLUDED) ){
+		if (this->HasConditionsFrame(bits_COND_SEE_ENEMY)) {
+			//can see the enemy? not occluded?  Then reset the hidden time.
+
+			enemyHiddenResponseTime = gpGlobals->time + 12.0f;
+			enemyHiddenChaseTime = gpGlobals->time + 40.0f;
 		}
 
+		UpdateBeams();
+		updateChargeEffect();
+		UpdateReflectEffects();
 
-		if(forgetRecentInflictingMonsterCooldown != -1 && gpGlobals->time >= forgetRecentInflictingMonsterCooldown){
-			recentInflictingMonster = NULL;
-			forgetRecentInflictingMonsterCooldown = -1;
-		}
-
-	}//END OF combat state check
+	}//END OF okayForNormalThink
 
 
-
-	CBaseMonster::MonsterThink();
-
-	//if(this->HasConditionsFrame(bits_COND_SEE_ENEMY) && !this->HasConditionsFrame(bits_COND_ENEMY_OCCLUDED) ){
-	if(this->HasConditionsFrame(bits_COND_SEE_ENEMY) ){
-		//can see the enemy? not occluded?  Then reset the hidden time.
-
-		enemyHiddenResponseTime = gpGlobals->time + 12.0f;
-		enemyHiddenChaseTime = gpGlobals->time + 40.0f;
+	if (quickThink) {
+		nextNormalThinkTime = gpGlobals->time + 0.1;
 	}
-
-	UpdateBeams();
-	updateChargeEffect();
-	UpdateReflectEffects();
 
 }//END OF MonsterThink(...)
 
@@ -2555,7 +2574,7 @@ void CKingpin::ReportAIState(void){
 
 
 GENERATE_TRACEATTACK_IMPLEMENTATION(CKingpin){
-	easyForcePrintLine("kingpin ID%d: I WAS JUST HIT AT HITBOX:%d", this->monsterID, ptr->iHitgroup);
+	easyPrintLine("kingpin ID%d: I WAS JUST HIT AT HITBOX:%d", this->monsterID, ptr->iHitgroup);
 
 	GENERATE_TRACEATTACK_PARENT_CALL(CBaseMonster);
 }
@@ -3644,8 +3663,8 @@ void CKingpin::UpdateReflectEffects(void){
 					//m_pReflectEffect[i]->Expand(0.1, (255 / 0.3f));
 					m_pReflectEffect[i]->Expand_TimeTarget(1.4, 0.3 * m_flReflectEffect_EndDelayFactor[i]);
 
-					//YES, we have to do this now.  Either that or give it a callback method to tell us when it runs out of opacity and decides to delete itself.
-					//Because it won't tell us when it does, leaving us with a pointer to fucked up deleted memory, the worst kind.
+					// YES, we have to do this now.  Either that or give it a callback method to tell us when it runs out of opacity and decides to delete itself.
+					// Because it won't tell us when it does, leaving us with a pointer to  deleted memory, the worst kind.
 					m_pReflectEffect[i] = NULL;
 
 				}//END OF time passed m_flReflectEffectApplyTime check
@@ -4316,7 +4335,7 @@ void CKingpin::administerShocker(void){
 		//above?
 	}
 
-	::DebugLine_SetupPoint(9, vecStartFloorwise + Vector(0, 0, enemyPoint.z), 255, 0, 0);
+	//::DebugLine_SetupPoint(9, vecStartFloorwise + Vector(0, 0, enemyPoint.z), 255, 0, 0);
 
 
 	vecTest = Vector(vecStartFloorwise.x, vecStartFloorwise.y, enemyPoint.z + 6);

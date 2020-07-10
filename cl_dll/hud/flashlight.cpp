@@ -113,6 +113,12 @@ int CHudFlashlight:: MsgFunc_Flashlight(const char *pszName,  int iSize, void *p
 
 int CHudFlashlight::Draw(float flTime)
 {
+
+
+	// !!! Moved to ammo.cpp for more control over the sidebar, best to have all
+	// the sidebar drawing in one place.
+
+	/*
 	if ( gHUD.m_iHideHUDDisplay & ( HIDEHUD_FLASHLIGHT | HIDEHUD_ALL ) )
 		return 1;
 
@@ -121,7 +127,6 @@ int CHudFlashlight::Draw(float flTime)
 
 	if (!(gHUD.m_iWeaponBits & (1<<(WEAPON_SUIT)) ))
 		return 1;
-
 
 	if(gHUD.m_fPlayerDead){
 		if(EASY_CVAR_GET(canShowWeaponSelectAtDeath) == 1){
@@ -135,91 +140,45 @@ int CHudFlashlight::Draw(float flTime)
 
 
 
+	//UnpackRGB(r,g,b, RGB_YELLOWISH);
+	//MODDD - everything disabled.  Er, replaced.
+	
+	// This means the weapon-select screen is up.  So draw the flash light.
+	if( gHUD.canDrawSidebar() ){
+		x = ScreenWidth - alphaFlashLightWidth - 20;
+		y = ScreenHeight - (alphaFlashLightHeight)-73;
+		drawFlashlightSidebarIcon(x, y);
+	}
+	*/
+	return 1;
+}
 
 
+//MODDD - to support calls from other places, like the sidebar-drawing script in ammo.cpp
+void CHudFlashlight::drawFlashlightSidebarIcon(const int& x, const int& y) {
 
-
+	int r, g, b, a;
 
 	if (m_fOn)
 		a = 225;
 	else
 		a = MIN_ALPHA;
 
-	//MODDD - old color scheme disabled.
-	/*
-	if (m_flBat < 0.20)
-		UnpackRGB(r,g,b, RGB_REDISH);
-	else
-		UnpackRGB(r,g,b, RGB_YELLOWISH);
-	*/
 	gHUD.getGenericGUIColor(r, g, b);
 
-	//UnpackRGB(r,g,b, RGB_YELLOWISH);
-	//MODDD - everything disabled.  Er, replaced.
-	
-	//This means the weapon-select screen is up.  So draw the flash light.
-	if( gHUD.canDrawSidebar() ){
-		
-		int alphaFlashLightWidth = gHUD.GetSpriteRect(alphaFlashLightOnIndex).right - gHUD.GetSpriteRect(alphaFlashLightOnIndex).left;
-		int alphaFlashLightHeight = gHUD.GetSpriteRect(alphaFlashLightOnIndex).bottom - gHUD.GetSpriteRect(alphaFlashLightOnIndex).top;
 
-		
-		x = ScreenWidth - alphaFlashLightWidth - 20;
-		y = ScreenHeight - (alphaFlashLightHeight) - 73;
+	int alphaFlashLightWidth = gHUD.GetSpriteRect(alphaFlashLightOnIndex).right - gHUD.GetSpriteRect(alphaFlashLightOnIndex).left;
+	int alphaFlashLightHeight = gHUD.GetSpriteRect(alphaFlashLightOnIndex).bottom - gHUD.GetSpriteRect(alphaFlashLightOnIndex).top;
 
-		if ( m_fOn ){
-			SPR_Set(gHUD.GetSprite(alphaFlashLightOnIndex), r, g, b );
-			SPR_DrawAdditive( 0,  x, y, &gHUD.GetSpriteRect(alphaFlashLightOnIndex));
-		}else{
-			SPR_Set(gHUD.GetSprite(alphaFlashLightOffIndex), r, g, b );
-			SPR_DrawAdditive( 0,  x, y, &gHUD.GetSpriteRect(alphaFlashLightOffIndex));
-		}
 
+	if (m_fOn) {
+		SPR_Set(gHUD.GetSprite(alphaFlashLightOnIndex), r, g, b);
+		SPR_DrawAdditive(0, x, y, &gHUD.GetSpriteRect(alphaFlashLightOnIndex));
 	}
-	/*
-	
-	ScaleColors(r, g, b, a);
-	//m_hBeam
-	int iFlashightHeight = m_prc1->bottom - m_prc1->top;
-
-	//MODDD - new coords?
-	//y = (m_prc1->bottom - m_prc2->top)/2;
-	//x = ScreenWidth - m_iWidth - m_iWidth/2 ;
-
-	y = (ScreenHeight - gHUD.m_iFontHeight*2.75 - (iFlashightHeight*1.5));
-	x = ScreenWidth - m_iWidth*2 ;
-	
-
-	// Draw the flashlight casing
-	SPR_Set(m_SpriteHandle_t1, r, g, b );
-	SPR_DrawAdditive( 0,  x, y, m_prc1);
-
-	if ( m_fOn )
-	{  // draw the flashlight beam
-		//MODDD
-		//x = ScreenWidth - m_iWidth/2;
-		x = ScreenWidth - m_iWidth ;
-
-		SPR_Set( m_hBeam, r, g, b );
-		SPR_DrawAdditive( 0, x, y, m_prcBeam );
+	else {
+		SPR_Set(gHUD.GetSprite(alphaFlashLightOffIndex), r, g, b);
+		SPR_DrawAdditive(0, x, y, &gHUD.GetSpriteRect(alphaFlashLightOffIndex));
 	}
 
-	// draw the flashlight energy level
-	//MODDD
-	//x = ScreenWidth - m_iWidth - m_iWidth/2 ;
-	x = ScreenWidth - m_iWidth*2 ;
+}//drawFlashlightSidebarIcon
 
-
-	int iOffset = m_iWidth * (1.0 - m_flBat);
-	if (iOffset < m_iWidth)
-	{
-		rc = *m_prc2;
-		rc.left += iOffset;
-
-		SPR_Set(m_SpriteHandle_t2, r, g, b );
-		SPR_DrawAdditive( 0, x + iOffset, y, &rc);
-	}
-	*/
-
-	return 1;
-}

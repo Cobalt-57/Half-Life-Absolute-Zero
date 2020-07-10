@@ -12,7 +12,6 @@
 #include "archer_ball.h"
 
 
-
 //TODO MAJOR-ER.  Huge problem with the controller head balls / same balls the archer uses.
 //                If lightning effects are created while the source of lightning is still underwater but the endpoint is above.
 //                FIXABLE maybe...
@@ -21,14 +20,10 @@
 //             probably not, and this is kinda easily fixable if so.
 
 
-
 EASY_CVAR_EXTERN(noFlinchOnHard)
 EASY_CVAR_EXTERN(animationFramerateMulti)
-
 EASY_CVAR_EXTERN(drawDebugPathfinding)
 EASY_CVAR_EXTERN(drawDebugPathfinding2)
-
-
 EASY_CVAR_EXTERN(STUrepelMulti)
 EASY_CVAR_EXTERN(STUcheckDistV)
 EASY_CVAR_EXTERN(STUcheckDistH)
@@ -36,11 +31,8 @@ EASY_CVAR_EXTERN(STUcheckDistD)
 EASY_CVAR_EXTERN(STUSpeedMulti)
 
 
-
 //I would prefer to be this far off of the waterlevel if I intend to touch the surface.
 #define DESIRED_WATERLEVEL_SURFACE_OFFSET -7
-
-
 
 
 
@@ -54,11 +46,7 @@ EASY_CVAR_EXTERN(STUSpeedMulti)
 	#if EXTRA_NAMES == 2
 		//none?
 	#endif
-	
 #endif
-
-
-
 
 
 /*
@@ -68,7 +56,6 @@ void CController::Stop( void )
 	m_IdealActivity = GetStoppedActivity(); 
 }
 */
-
 
 
 //TODO - archer needs to be able to do a check to see if the enemy is past the waterlevel.
@@ -129,16 +116,11 @@ enum{
 	TASK_ARCHER_SEEK_WATER_SURFACE_ATTACK_POINT,
 	TASK_ARCHER_SEEK_WATER_SUBMERGE,
 	TASK_ARCHER_SEEK_RETREAT_INTO_WATER,
-
 	TASK_ARCHER_SEEK_RANDOM_WANDER_POINT,
-	
 	TASK_ARCHER_WAIT_FOR_MOVEMENT_STRICT,
 
 
 };
-
-
-
 
 
 
@@ -225,7 +207,6 @@ void CBloater :: AttackSnd( void )
 */
 
 
-
 const char* CArcher::pDeathSounds[] = 
 {
 	"archer/archer_death.wav",
@@ -263,8 +244,6 @@ const char* CArcher::pAttackMissSounds[] =
 
 
 
-
-
 TYPEDESCRIPTION	CArcher::m_SaveData[] = 
 {
 	DEFINE_FIELD( CArcher, preSurfaceAttackLocation, FIELD_VECTOR ),
@@ -289,23 +268,15 @@ int CArcher::Restore( CRestore &restore )
 }
 
 
-
-
-
 CArcher::CArcher(void){
-
 	shootCooldown = 0;
-
 	m_flightSpeed = 0;
 	tempCheckTraceLineBlock = FALSE;
 	m_velocity = Vector(0,0,0);
-
 	lastVelocityChange = -1;
 	
 
-
 }//END OF CArcher constructor
-
 
 
 
@@ -336,7 +307,6 @@ Schedule_t	slArcherRangeAttack1[] =
 	},
 };
 
-
 //Really the ranged attack 1 surrounded by steps to ensure a random point at the water level's surface is picked that puts the enemy in a line of fire and is
 //reachable by the archer can be use to make an attack, followed by returning to the same point or maybe moving randomly a bit underwater too.
 Task_t	tlArcherSurfaceRangeAttack[] =
@@ -356,7 +326,6 @@ Task_t	tlArcherSurfaceRangeAttack[] =
 	//Cheat a little. If there's a direct line of sight to the enemy from right above at the water surface, use this to turn to face them.
 	{ TASK_ARCHER_GATE_UPDATE_LKP_AT_WATER_SURFACE_IF_UNOBSCURED,  (float)0},
 
-
 	//at this point, if there is a failure, know to retreat into the water. Like the enemy moving and no longer being able
 	//to be attacked from this point at the surface now that I've made it here or close.
 	{ TASK_SET_FAIL_SCHEDULE, (float)SCHED_ARCHER_RETREAT_INTO_WATER },
@@ -365,7 +334,6 @@ Task_t	tlArcherSurfaceRangeAttack[] =
 	//{ TASK_SET_ACTIVITY, (float)ACT_FLY},
 	{ TASK_RUN_PATH,  (float)0 },
 	{ TASK_ARCHER_WAIT_FOR_MOVEMENT_STRICT,  (float)0},
-
 
 	//now try the ranged attack.
 	{ TASK_FACE_IDEAL,			(float)0		},
@@ -377,7 +345,6 @@ Task_t	tlArcherSurfaceRangeAttack[] =
 	{ TASK_RUN_PATH,  (float)0 },
 	{ TASK_ARCHER_WAIT_FOR_MOVEMENT_STRICT,  (float)0},
 	
-
 	//return to the murky depths to plot your next sinister move.
 	{TASK_SET_SCHEDULE, (float)SCHED_ARCHER_RETREAT_INTO_WATER},
 
@@ -403,8 +370,6 @@ Schedule_t	slArcherSurfaceRangeAttack[] =
 };
 
 
-
-
 Task_t	tlArcherRetreatIntoWater[] =
 {
 	//now return to roughly around the old point. or just anywhere not at the surface to hide a bit.
@@ -427,9 +392,6 @@ Schedule_t	slArcherRetreatIntoWater[] =
 		"Archer Retreat Into Water"
 	},
 };
-
-
-
 
 
 Task_t	tlArcherSurfaceAttackPlanFail[] =
@@ -458,7 +420,6 @@ Schedule_t	slArcherSurfaceAttackPlanFail[] =
 	},
 };
 
-
 Task_t	tlArcherFailWait[] =
 {
 	//now return to roughly around the old point. or just anywhere not at the surface to hide a bit.
@@ -483,14 +444,7 @@ Schedule_t	slArcherFailWait[] =
 	},
 };
 
-
-
-
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-
-
 
 
 DEFINE_CUSTOM_SCHEDULES( CArcher )
@@ -503,15 +457,6 @@ DEFINE_CUSTOM_SCHEDULES( CArcher )
 
 };
 IMPLEMENT_CUSTOM_SCHEDULES( CArcher, CFlyingMonster );
-
-	
-
-
-
-
-
-
-
 
 
 	
@@ -542,29 +487,15 @@ void CArcher::AttackSound( void ){
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
 extern int global_useSentenceSave;
 void CArcher::Precache( void )
 {
 	PRECACHE_MODEL("models/archer.mdl");
 
-	
 	//sprite precache left to the SquidSpit file (separate).
 	CSquidSpit::precacheStatic();
 
 	global_useSentenceSave = TRUE;
-	
 	
 	//NOTICE - attempting to precace files that don't exist crashes the game.
 	/*
@@ -578,17 +509,13 @@ void CArcher::Precache( void )
 	PRECACHE_SOUND_ARRAY(pAttackMissSounds);
 	*/
 
-
-
 	global_useSentenceSave = FALSE;
 }//END OF Precache()
-
 
 
 void CArcher::Spawn( void )
 {
 	Precache( );
-
 
 	setModel("models/archer.mdl");
 	//UTIL_SetSize( pev, VEC_HUMAN_HULL_MIN, VEC_HUMAN_HULL_MAX );
@@ -600,16 +527,12 @@ void CArcher::Spawn( void )
 	pev->flags |= FL_SWIM;
 
 
-
-	
-	pev->solid			= SOLID_BBOX;  //not SOLID_SLIDEBOX
 	pev->movetype		= MOVETYPE_FLY;
 
-
+	//pev->solid			= SOLID_BBOX;  //not SOLID_SLIDEBOX
 	pev->solid			= SOLID_SLIDEBOX;  //SOLID_TRIGGER?  Difference?
 	//pev->movetype		= MOVETYPE_BOUNCEMISSILE;
 	
-
 
 	m_bloodColor		= BLOOD_COLOR_GREEN;
 	pev->effects		= 0;
@@ -624,37 +547,12 @@ void CArcher::Spawn( void )
 
 	MonsterInit();
 
-
 	m_flightSpeed = 400;
 
 	SetTouch(&CArcher::CustomTouch );
 	//SetTouch( NULL );
 
-
 }//END OF Spawn();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -672,8 +570,6 @@ void CArcher::Stop(){
 }
 
 
-
-	
 
 
 
@@ -775,8 +671,6 @@ int CArcher :: CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, CB
 
 	
 	
-
-	
 	if ( (tracesSolid == FALSE && tracesStartSolid == FALSE && minFraction >= 1.0)  ) //|| EASY_CVAR_GET(testVar) == 2)
 	//if ( tr.fAllSolid == 0 && tr.fStartSolid == 0 && tr.flFraction >= 1.0)
 	{
@@ -804,10 +698,6 @@ int CArcher :: CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, CB
 	//if(tracesStartSolid || minFraction < 1.0)
 
 	*/
-
-
-
-	
 
 
 	
@@ -846,10 +736,6 @@ int CArcher :: CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, CB
 	
 
 
-
-	
-
-	
 
 	if( EASY_CVAR_GET(drawDebugPathfinding) == 1){
 		switch(iReturn){
@@ -2047,9 +1933,6 @@ GENERATE_GIBMONSTERGIB_IMPLEMENTATION(CArcher)
 GENERATE_KILLED_IMPLEMENTATION(CArcher)
 {
 
-
-	
-
 	/*
 
 	BOOL firstCall = FALSE;
@@ -2073,8 +1956,6 @@ GENERATE_KILLED_IMPLEMENTATION(CArcher)
 	*/
 
 
-
-
 	//Copy of how the ichy does it to want to float to the top. Or part of it.
 	
 	//Is calling direct parent CFlyingMonster instead of CBaseMonster ok?
@@ -2087,11 +1968,6 @@ GENERATE_KILLED_IMPLEMENTATION(CArcher)
 	pev->movetype = MOVETYPE_FLY;
 
 
-
-
-
-
-
 	/*
 	//if you have the "FL_KILLME" flag, it means this is about to get deleted (gibbed). No point in doing any of this then.
 	if(firstCall && !(pev->flags & FL_KILLME) ){
@@ -2099,19 +1975,12 @@ GENERATE_KILLED_IMPLEMENTATION(CArcher)
 	}//END OF firstCall check
 	*/
 
-
-
 }//END OF Killed
-
-
-
-
 
 
 
 void CArcher::SetYawSpeed( void ){
 	int ys;
-	
 	ys = 120;
 	//ys = 200;
 
@@ -2124,11 +1993,8 @@ void CArcher::SetYawSpeed( void ){
 	break;
 	}
 
-
 	pev->yaw_speed = ys;
 }//END OF SetYawSpeed
-
-
 
 
 
@@ -2164,7 +2030,6 @@ void CArcher::SetActivity(Activity NewActivity ){
 	}
 
 }//END OF SetActivity
-
 
 
 
@@ -2213,7 +2078,6 @@ int CArcher::tryActivitySubstitute(int activity){
 }//END OF tryActivitySubstitute
 
 
-
 int CArcher::LookupActivityHard(int activity){
 	int i = 0;
 	m_flFramerateSuggestion = 1;
@@ -2225,7 +2089,6 @@ int CArcher::LookupActivityHard(int activity){
 	//Within an ACTIVITY, pick an animation like this (with whatever logic / random check first):
 	//    this->animEventQueuePush(10.0f / 30.0f, 3);  //Sets event #3 to happen at 1/3 of a second
 	//    return LookupSequence("die_backwards");      //will play animation die_backwards
-
 
 	
 	//no need for default, just falls back to the normal activity lookup.
@@ -2268,7 +2131,6 @@ int CArcher::LookupActivityHard(int activity){
 }//END OF LookupActivityHard
 
 
-
 //Handles custom events sent from "LookupActivityHard", which sends events as timed delays along with picking an animation in script.
 //So this handles script-provided events, not model ones.
 void CArcher::HandleEventQueueEvent(int arg_eventID){
@@ -2276,8 +2138,6 @@ void CArcher::HandleEventQueueEvent(int arg_eventID){
 	switch(arg_eventID){
 	case 0:
 	{
-
-
 		/*
 		//break;
 
@@ -2302,10 +2162,6 @@ void CArcher::HandleEventQueueEvent(int arg_eventID){
 		CSquidSpit::Shoot( this, vecSpitOffset, vecSpitDir, 900 );
 		*/
 
-
-
-
-		
 		if(m_hEnemy == NULL){
 			//stop?
 			TaskFail();
@@ -2365,13 +2221,6 @@ void CArcher::HandleEventQueueEvent(int arg_eventID){
 		//this->playPsionicLaunchSound();
 		//this->SetSequenceByIndex(KINGPIN_PSIONIC_LAUNCH);
 
-
-
-
-
-
-
-
 	break;
 	}
 	case 1:
@@ -2397,9 +2246,7 @@ void CArcher::HandleEventQueueEvent(int arg_eventID){
 					}
 				}
 			}
-
 		}
-		
 		
 		if ( pHurt )
 		{
@@ -2452,25 +2299,6 @@ void CArcher::HandleAnimEvent(MonsterEvent_t *pEvent ){
 	break;
 	}//END OF switch
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -2556,8 +2384,6 @@ void CArcher::checkTraceLine(const Vector& vecSuggestedDir, const float& travelM
 			UTIL_MoveToOrigin ( ENT(pev), pev->origin + vecTotalAdjustZ , vecTotalAdjustZ.Length(), MOVE_STRAFE );
 
 
-
-
 			//pev->origin = pev->origin + tr.vecPlaneNormal*toMove*global_repelMulti;
 			//easyPrintLineGroup2("MOOO %s: SPEED: %.2f", STRING(tr.pHit->v.classname), travelMag );
 			//EASY_CVAR_PRINTIF_PRE(stukaPrintout, UTIL_printLineVector("VECCCC", tr.vecPlaneNormal ) );
@@ -2576,8 +2402,6 @@ void CArcher::checkTraceLine(const Vector& vecSuggestedDir, const float& travelM
 	}
 
 }
-
-
 
 
 inline
@@ -2692,11 +2516,6 @@ void CArcher::checkTraceLineTest(const Vector& vecSuggestedDir, const float& tra
 
 
 
-
-
-
-
-
 void CArcher::checkFloor(const Vector& vecSuggestedDir, const float& travelMag, const float& flInterval){
 
 	// THIS METHOD BE DEAD YO.
@@ -2725,9 +2544,7 @@ void CArcher::checkFloor(const Vector& vecSuggestedDir, const float& travelMag, 
 	//x = left / right
 	//y = back / forward
 
-
 	float boundMultiple = 0.7f;
-
 	Vector vecTopRightForward = pev->origin + pev->maxs*boundMultiple;
 	
 	Vector vecTopLeftForward = pev->origin + Vector(minX, maxY, maxZ)*boundMultiple;
@@ -2796,7 +2613,6 @@ void CArcher::checkFloor(const Vector& vecSuggestedDir, const float& travelMag, 
 	}
 
 
-
 	BOOL onGround = FALSE;
 	if(!onGround){
 
@@ -2811,7 +2627,6 @@ void CArcher::checkFloor(const Vector& vecSuggestedDir, const float& travelMag, 
 				checkTraceLine(vecSuggestedDir, travelMag, flInterval, vecTopRightBackward, Vector(0, 0, 1), checkDistV);
 			}
 			
-
 			BOOL topLeftForwardCheck = FALSE;
 			BOOL topLeftBackwardCheck = FALSE;
 			BOOL topRightForwardCheck = FALSE;
@@ -2843,14 +2658,12 @@ void CArcher::checkFloor(const Vector& vecSuggestedDir, const float& travelMag, 
 			topLeftBackwardCheck = TRUE;
 
 
-			
 			tempCheckTraceLineBlock = FALSE; //is that okay?
 			if(topRightForwardCheck)checkTraceLine(vecSuggestedDir, travelMag, flInterval, vecTopRightForward, Vector(root3rec, root3rec, -root3rec), checkDistD);
 			if(topLeftForwardCheck)checkTraceLine(vecSuggestedDir, travelMag, flInterval, vecTopRightBackward, Vector(root3rec, -root3rec, -root3rec), checkDistD);
 			if(topRightBackwardCheck)checkTraceLine(vecSuggestedDir, travelMag, flInterval, vecTopLeftForward, Vector(-root3rec, root3rec, -root3rec), checkDistD);
 			if(topLeftBackwardCheck)checkTraceLine(vecSuggestedDir, travelMag, flInterval, vecTopLeftBackward, Vector(-root3rec, -root3rec, -root3rec), checkDistD);
 			
-
 
 			//easyForcePrintLine("AWWWWW SHIT %.2f %.2f", vecSuggestedDir.x, vecSuggestedDir.y);
 
@@ -2874,8 +2687,6 @@ void CArcher::checkFloor(const Vector& vecSuggestedDir, const float& travelMag, 
 
 
 
-
-
 			//just try bottom checks at least, even with no Z direction. Diagonals can be important.
 		}else if (vecSuggestedDir.z <= 0){
 		
@@ -2886,8 +2697,6 @@ void CArcher::checkFloor(const Vector& vecSuggestedDir, const float& travelMag, 
 				checkTraceLine(vecSuggestedDir, travelMag, flInterval, vecBottomLeftBackward, Vector(0, 0, -1), checkDistV);
 				checkTraceLine(vecSuggestedDir, travelMag, flInterval, vecBottomRightBackward, Vector(0, 0, -1), checkDistV);
 			}
-
-			
 
 			
 			BOOL bottomLeftForwardCheck = FALSE;
@@ -2949,9 +2758,7 @@ void CArcher::checkFloor(const Vector& vecSuggestedDir, const float& travelMag, 
 			//checkTraceLineTest(vecSuggestedDir, travelMag, flInterval, vecBottomRightBackward, Vector(root3rec, -root3rec, -root3rec), checkDistD, FALSE);
 			
 
-
 		}
-
 	}//END OF if(!onGround)
 
 
@@ -2994,7 +2801,6 @@ BOOL CArcher::noncombat_Look_ignores_PVS_check(void){
 
 
 
-
 //MODDD - mimick how the ichy does this.
 void CArcher::BecomeDead( void )
 {
@@ -3009,8 +2815,6 @@ void CArcher::BecomeDead( void )
 //TODO - implement the probe?  Ensure the monster stays underwater like the ichy does.
 Vector CArcher::DoVerticalProbe(float flInterval)
 {
-	
-
 	/*
 	float waterLevel = UTIL_WaterLevel(pev->origin, pev->origin.z - 512, pev->origin.z + 4096.0);
 
@@ -3089,7 +2893,6 @@ Vector CArcher::DoVerticalProbe(float flInterval)
 
 
 
-
 //See if I can find a point sufficiently below a body of water for wandering towards.
 //Nothing to do with the surface attack, but could come from failing to find a good position. It may be easier to find an attack position from a different place anyways.
 //But some attempt to be remotely near the enemy may be nice... not that this is always easy to judge as a good metric for what counts as a good attack point
@@ -3100,7 +2903,6 @@ BOOL CArcher::attemptBuildRandomWanderRoute(const float& argWaterLevel){
 	//perhaps we can pick a random point under the waterlevel to go to?  Even a nearby node at random?  hm.
 	int tries = 4;
 
-	
 
 	while(tries >= 0){
 		tries--;
@@ -3135,7 +2937,6 @@ BOOL CArcher::attemptBuildRandomWanderRoute(const float& argWaterLevel){
 }//END OF attemptBuildRandomWanderRoute
 
 
-
 //let's be safe here...  don't exclude the player being immediately out of view.
 BOOL CArcher::FCanCheckAttacks(void){
 
@@ -3155,8 +2956,5 @@ BOOL CArcher::FCanCheckAttacks(void){
 		return FALSE;
 	}
 }
-
-
-
 
 

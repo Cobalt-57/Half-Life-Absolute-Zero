@@ -739,6 +739,14 @@ GENERATE_TRACEATTACK_IMPLEMENTATION(CTemplateMonster){
 	GENERATE_TRACEATTACK_PARENT_CALL(CBaseMonster);
 }
 
+// Overridable part of TRACEATTACK that most monsters call. Can change how much damage different hitgroups do,
+// preferrably still involving the skill CVars (extra multipliers are fine).
+// Start with a copy from combat.cpp's hitgroupDamage.
+float CTemplateMonster::hitgroupDamage(float flDamage, int bitsDamageType, int bitsDamageTypeMod, int iHitgroup) {
+	
+	return CBaseMonster::hitgroupDamage(bitsDamageType, bitsDamageTypeMod, flDamage, iHitgroup);
+}//hitgroupDamage
+
 GENERATE_TAKEDAMAGE_IMPLEMENTATION(CTemplateMonster){
 
 
@@ -755,7 +763,6 @@ void CTemplateMonster::OnTakeDamageSetConditions(entvars_t *pevInflictor, entvar
 
 
 	CBaseMonster::OnTakeDamageSetConditions(pevInflictor, pevAttacker, flDamage, bitsDamageType, bitsDamageTypeMod);
-
 }//END OF OnTakeDamageSetConditions
 
 

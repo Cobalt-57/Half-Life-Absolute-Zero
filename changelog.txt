@@ -1,0 +1,51 @@
+
+Previously mentioned zombie pushback change was incomplete.  Headshot damage no longer deals extra pushback.  Pushback damage also has diminishing returns with increasingly high damage in one frame: weak sources of damage (glock, mp5) deal full pushback while close-range shotgun blasts are cut by 25%, fully-charged gauss shots by half.
+-ALSO, crossbow bolts no longer deal pushback, but still take bullet reduction percentages.
+-Future support for explosions to deal pushback, or for more monsters to support pushback possible.
+
+HUD battery no longer drawn on top of the pain flash effect.  Pain flash is now drawn after all typical UI draw calls to be safe.
+
+HIGH-FVOX-VOLUME SUIT CRASH
+Changing the "HEV suit volume" slider in Settings, Audio to over half produces a "suitvolume" (CVar) over 1.0, as the slider range is 0 to 2.  Values over 1 crash the game when FVOX sounds are made.  For now, any references to "suitvolume" are divided by 2 to still make use of the full slider.
+
+missing "640hud7mod.spr" crash on developer 2 fixed, bad reference to that in sprites/weapon_chumtoad.txt reverted.  Ammo icons are not even used.
+
+Slight improvements made to crowbar tracing used to find a target.  Most notably, better at detecting head-hits (mostly on a direct-hit) for extra damage and the approximate-hit detection is a little better in general up close.  Particles also no longer drawn close to the camera on certain circumstances.
+
+monster_scientist_dead and monster_barney_dead (although difficult to prove it was ever the case for the latter) now have mouth-graphics open as seen in some pre-release screenshots.  Does not apply to ingame killed NPC talkers, only these special pre-dead spawned ones.
+
+ALSO, talkers slightly more responsive.  On being warned by nearby friends, scientists jump to a flee schedule immediately and barnies unholster their guns, although these things likely happened soon after the player came into sight anyway.
+More importantly, NPC's should not wait to finish talking to a player while following and TASK_WAIT is forcing a delay.  No sense standing still during that time.
+
+Houndeyes close eyes near the end of killed animations.  Squadleader houndeyes will also be more responsive to sounds immediately after playing leaderlook in some cases (used to be an enforced 5 second delay of ignoring sounds to turn and face)
+
+SKILL.CFG:
+Player ammo reserves and timed damage info (duration / damage per tick) can now be specified in skill.cfg.   Player ammo reserves are not specified per skill, only once.
+
+Also skills to control whether NPCs drop weapons per difficulty, and whether scientists can heal per difficulty (not amount healed, this is already in the file)
+
+Corpses move a bit in the direction of the last attack endured when enemies die.
+
+hud_version changed.
+0: green; very early sprites, battery in right sidebar (while weapon select is open)
+1: newer sprite graphics for health/ammo, still battery in right sidebar.
+2: battery moved to near health, shown at all times.
+3: E3; closer to retail and yellow
+
+RPG lasersight can be toggled on/off while it is forced invisible (like while reloading the RPG).  Also checks for tapping the mouse button to register this, not holding it down.
+
+Hand grenades support grenade tossing.  Right-click to throw it a shorter, generally lower distance.  Holding both mouse buttons does not release the grenade.
+
+hud_weaponSelectHidesLower - NEW CVAR CHOICE.
+Use 2 to bump the right sidebar up (visible while weapon select is open typically)
+to let hud_versions other than 2 show the bottom-right ammo numbers too.
+
+Added generic hit/miss sounds to the bullsquid's tail-whip attack.  Seemed odd to make no noise if it misses, unlike most other melee.
+
+CVar "useAlphaCrosshair" removed.  Use the built-in "crosshair" to handle this instead.
+0: none
+1: alpha crosshair (console "t" letter)
+2: retail crosshair (varries per weapon)
+
+
+

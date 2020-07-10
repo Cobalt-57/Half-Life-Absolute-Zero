@@ -29,9 +29,8 @@
 
 // The point of this is, don't do 'ifdef CLIENT_DLL' checks in here, they are pointless.  They either always pass
 // or never pass, because there's only one reading of weapons.cpp:  serverside.
-// Make separate copies for clientside elsewhere over in cl_dll/hl/hl_weapons.cpp, probaly.
+// Make separate copies for clientside elsewhere over in cl_dll/hl/hl_weapons.cpp, probably.
 // Dummy out anything actually needed by weapons clientside (like FOV requests) at your own peril!
-
 
 #include "extdll.h"
 #include "util.h"
@@ -45,11 +44,14 @@
 #include "gamerules.h"
 #include "pickupwalker.h"
 
-extern CGraph	WorldGraph;
-extern int gEvilImpulse101;
+
+EASY_CVAR_EXTERN(cheat_infiniteammo)
+EASY_CVAR_EXTERN(cheat_infiniteclip)
+EASY_CVAR_EXTERN(firstPersonIdleDelayMin)
+EASY_CVAR_EXTERN(firstPersonIdleDelayMax)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(viewModelPrintouts)
 
 
-#define NOT_USED 255
 
 DLL_GLOBAL short g_sModelIndexLaser;// holds the index for the laser beam
 DLL_GLOBAL const char *g_pModelNameLaser = "sprites/laserbeam.spr";
@@ -57,39 +59,21 @@ DLL_GLOBAL short g_sModelIndexLaserDot;// holds the index for the laser beam dot
 DLL_GLOBAL short g_sModelIndexFireball;// holds the index for the fireball
 DLL_GLOBAL short g_sModelIndexSmoke;// holds the index for the smoke cloud
 DLL_GLOBAL short g_sModelIndexWExplosion;// holds the index for the underwater explosion
-
-//MODDD - moved g_sModelIndexBubbles to util_shared.cpp.
-
 DLL_GLOBAL short g_sModelIndexBloodDrop;// holds the sprite index for the initial blood
 DLL_GLOBAL short g_sModelIndexBloodSpray;// holds the sprite index for splattered blood
 
+#define TRACER_FREQ 4			// Tracers fire every fourth bullet
+#define NOT_USED 255
 
+extern int gmsgCurWeapon;
+MULTIDAMAGE gMultiDamage;
+extern CGraph WorldGraph;
+extern int gEvilImpulse101;
+//MODDD - moved g_sModelIndexBubbles to util_shared.cpp.
 
 //MODDD - CBasePlayerItem::ItemInfoArray and CBasePlayerItem::AmmoInfoArray implementations moved
 // to util_shared.cpp.
-
-extern int gmsgCurWeapon;
-
-MULTIDAMAGE gMultiDamage;
-
-#define TRACER_FREQ		4			// Tracers fire every fourth bullet
-
-
-EASY_CVAR_EXTERN(cheat_infiniteammo)
-EASY_CVAR_EXTERN(cheat_infiniteclip)
-//MODDD - EXTERN
-
-
-
-EASY_CVAR_EXTERN(firstPersonIdleDelayMin)
-EASY_CVAR_EXTERN(firstPersonIdleDelayMax)
-
-
-EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(viewModelPrintouts)
-
-
-
-//MODDD - MaxAmmoCarry also moved to util_shared.cpp.
+// MaxAmmoCarry also moved to util_shared.cpp.
 
 	
 /*
@@ -154,11 +138,10 @@ void AddMultiDamage( entvars_t *pevInflictor, CBaseEntity *pEntity, float flDama
 		//easyForcePrintLine("ADDMultiDamge?? WARNING: OUT OF SYNCH. Victim does not match gMultiDamage.pEntity:%s", gMultiDamage.pEntity!=NULL?STRING(gMultiDamage.pEntity->pev->classname):"NULL" );
 		//easyForcePrintLine("CALLING MULTIDAMAGEAPPLY: dmg:%.2f", gMultiDamage.amount);
 		ApplyMultiDamage(pevInflictor,pevInflictor); // UNDONE: wrong attacker!
-		gMultiDamage.pEntity	= pEntity;
-		gMultiDamage.amount		= 0;
+		gMultiDamage.pEntity = pEntity;
+		gMultiDamage.amount = 0;
 	}
 
-	
 	//MODDD - the below used to occur above the "pEntity" check above.
 	gMultiDamage.type |= bitsDamageType;
 	gMultiDamage.typeMod |= bitsDamageTypeMod;
@@ -168,7 +151,6 @@ void AddMultiDamage( entvars_t *pevInflictor, CBaseEntity *pEntity, float flDama
 	gMultiDamage.amount += flDamage;
 	//easyForcePrintLine("gMultiDamage: after damage addition dmg:%.2f", gMultiDamage.amount);
 }
-
 
 //MODDD - several methods that seem more fitting for util.h moved there:
 // SpawnBlood
@@ -180,12 +162,10 @@ void AddMultiDamage( entvars_t *pevInflictor, CBaseEntity *pEntity, float flDama
 
 // MODDD - moved to util_shared.cpp.
 //int giAmmoIndex = 0;
-
 // MODDD - AddAmmoNameToAmmoRegistry moved to util_shared.cpp for access
 // between client and serverside.  May as well be able to do both in both places.
 
  
-
 TYPEDESCRIPTION	CBasePlayerItem::m_SaveData[] = 
 {
 	DEFINE_FIELD( CBasePlayerItem, m_pPlayer, FIELD_CLASSPTR ),
@@ -231,9 +211,8 @@ int CBasePlayerWeapon::Restore( CRestore &restore )
 		return 0;
 	
 	int result = restore.ReadFields( "CBasePlayerWeapon", this, m_SaveData, ARRAYSIZE(m_SaveData) );
-	
 
-	//hm, not working out so great.
+	// not working out so great.
 	/*
 	//weapons want to do this.
 	if(m_pPlayer != NULL){
@@ -241,7 +220,6 @@ int CBasePlayerWeapon::Restore( CRestore &restore )
 		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + randomIdleAnimationDelay();
 	}
 	*/
-	
 
 	return result;
 }
@@ -442,9 +420,7 @@ void CBasePlayerItem::DefaultTouch( CBaseEntity *pOther )
 }
 
 BOOL CanAttack( float attack_time, float curtime, BOOL isPredicted )
-{
-	
-		
+{	
 #if defined( CLIENT_WEAPONS )
 	if ( !isPredicted )
 #else
@@ -551,9 +527,10 @@ void CBasePlayerWeapon::ItemPreFrame( void ){
 	//empty.
 }
 
+
+
 void CBasePlayerWeapon::ItemPostFrame( void )
 {
-
 	//easyPrintLine("DFFFF %.2f", m_pPlayer->glockSilencerOnVar);
 	//easyPrintLine("DFFFF %d", m_pPlayer->pev->button & EXTRA1);
 	//easyPrintLine("DFFFF %d", pev->body);
@@ -564,7 +541,8 @@ void CBasePlayerWeapon::ItemPostFrame( void )
 
 
 	if(primaryHeld && secondaryHeld){
-		easyForcePrintLine("YOU HOLD BOTH? YOU DISGUST ME");
+		// This little printout has overstayed its welcome.  Byebye!
+		//easyForcePrintLine("YOU HOLD BOTH? YOU DISGUST ME");
 		//m_flTimeWeaponIdle = -1;  ???
 		WeaponIdle();
 		return;   //block!

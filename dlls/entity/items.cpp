@@ -17,7 +17,6 @@
 ===== items.cpp ========================================================
 
   functions governing the selection/use of weapons for players
-
 */
 
 #include "extdll.h"
@@ -197,10 +196,8 @@ class CItemSuit : public CItem
 	}
 	BOOL MyTouch( CBasePlayer *pPlayer )
 	{
-
 		if ( pPlayer->pev->weapons & (1<<WEAPON_SUIT) )
 			return FALSE;
-
 
 		//MODDD - moved above the FVOX calls so that 'lacking the suit' for those few moments doesn't
 		// block getting the FVOX messgaes.
@@ -214,8 +211,6 @@ class CItemSuit : public CItem
 			//EMIT_SOUND_SUIT(pPlayer->edict(), "!HEV_AAx");	// long version of suit logon
 			pPlayer->SetSuitUpdate("!HEV_AAx", FALSE, SUIT_NEXT_IN_30MIN);
 		}
-
-
 
 		return TRUE;
 	}

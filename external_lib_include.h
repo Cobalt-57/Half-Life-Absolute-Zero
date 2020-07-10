@@ -52,16 +52,14 @@
 
 #endif
 
-
-
 #include <stdio.h>
 #include <math.h>
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
 #include <stdarg.h>
-//TODO - include <string.h> here?  Should be removed elsewhere then.
-// That's a lot of places.
+#include <memory.h>
+#include <time.h>
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -74,8 +72,8 @@
 	// can't use "override", just ignore it.  It's just describing something
 	// that should work with or without it anyway (a method with the same
 	// name/params as one in a parent class is implied overriding too).
-#define override
-#define IS_VS6
+	#define override
+	#define IS_VS6
 
 #elif (_MSC_VER < 1900)
 	// after VS6 but before VS14 (2015), no change needed.
@@ -202,7 +200,7 @@
 
 
 
-		
+// Just...  I give up Visual Studio.  Go be stupid with warnings.
 #include "ignore_warning_list.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

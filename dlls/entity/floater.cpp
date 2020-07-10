@@ -1,19 +1,14 @@
 
 #include "floater.h"
-
 #include "schedule.h"
 #include "activity.h"
 #include "util_model.h"
-
 #include "defaultai.h"
 #include "soundent.h"
 #include "game.h"
-
-#include "util_debugdraw.h"
-
 #include "squidspit.h"
 #include "weapons.h"
-
+#include "util_debugdraw.h"
 /*
 #include "extdll.h"
 #include "util.h"
@@ -21,7 +16,6 @@
 #include "basemonster.h"
 #include "schedule.h"
 */
-
 
 
 
@@ -37,42 +31,29 @@
 		LINK_ENTITY_TO_CLASS( bloater, CFloater );
 		LINK_ENTITY_TO_CLASS( monster_bloater, CFloater );
 	#endif
-	
 #endif
-
-
-
 
 
 //TODO - should I forbid underwater point choices in CheckLocalMove?  Like reverse of what the Archer does not (reject non-water vecEnd points)?
 //       it may effectively be in place naturally but chcek to be safe.  If this could ever come up.
-
 
 //TODO - replace my death explosion effect with some green particles like the friendly vomit kinda scattering
 //       and slowly falling maybe? make a more organic squishing sound if possible?
 //       DONE.  But should some other organic sound effect accompany this kind of "explosion"? the generic gibmonster crunch sound may be good enough.
 
 
-
-
 // would MOVETYPE_BOUNCEMISSILE help more?
-
 
 EASY_CVAR_EXTERN(noFlinchOnHard)
 EASY_CVAR_EXTERN(animationFramerateMulti)
-
 EASY_CVAR_EXTERN(drawDebugPathfinding)
 EASY_CVAR_EXTERN(drawDebugPathfinding2)
-
-
 EASY_CVAR_EXTERN(STUrepelMulti)
 EASY_CVAR_EXTERN(STUcheckDistV)
 EASY_CVAR_EXTERN(STUcheckDistH)
 EASY_CVAR_EXTERN(STUcheckDistD)
 EASY_CVAR_EXTERN(STUSpeedMulti)
-
 EASY_CVAR_EXTERN(floaterDummy)
-
 
 /*
 //TODO. spawn balls of death as ranaged attack.
@@ -86,10 +67,7 @@ void CController::Stop( void )
 */
 
 
-
-
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 //sequences in the model. Some sequences have the same display name and so should just be referenced by order
 //(numbered index).
 enum floater_sequence{  //key: frames, FPS
@@ -102,9 +80,7 @@ enum floater_sequence{  //key: frames, FPS
 	SEQ_FLOATER_FALL_DIE,
 	SEQ_FLOATER_FLINCH,
 
-
 };
-
 
 //custom schedules
 enum{
@@ -119,10 +95,6 @@ enum{
 	
 
 };
-
-
-
-
 
 
 
@@ -204,9 +176,7 @@ void CBloater :: AttackSnd( void )
 	}
 #endif
 }
-
 */
-
 
 
 const char* CFloater::pDeathSounds[] = 
@@ -243,13 +213,9 @@ const char* CFloater::pAttackMissSounds[] =
 };
 
 
-
 //...did not come with a melee anim. what.
 //Leftover from the old bloater.cpp file.
 //#define BLOATER_AE_ATTACK_MELEE1		0x01
-
-
-
 
 
 TYPEDESCRIPTION	CFloater::m_SaveData[] = 
@@ -276,15 +242,11 @@ int CFloater::Restore( CRestore &restore )
 }
 
 
-
-
 CFloater::CFloater(void){
 
 	explodedYet = FALSE;
 	explodeDelay = -1;
-
 	shootCooldown = 0;
-
 	m_flightSpeed = 0;
 	tempCheckTraceLineBlock = FALSE;
 	m_velocity = Vector(0,0,0);
@@ -292,8 +254,6 @@ CFloater::CFloater(void){
 	lastVelocityChange = -1;
 
 }//END OF CFloater constructor
-
-
 
 
 //Thank you bullsquid, you know what is up dog.
@@ -323,12 +283,7 @@ Schedule_t	slFloaterRangeAttack1[] =
 	},
 };
 
-
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-
-
 
 
 DEFINE_CUSTOM_SCHEDULES( CFloater )
@@ -339,16 +294,6 @@ DEFINE_CUSTOM_SCHEDULES( CFloater )
 
 };
 IMPLEMENT_CUSTOM_SCHEDULES( CFloater, CFlyingMonster );
-
-	
-
-
-
-
-
-
-
-
 
 	
 void CFloater::DeathSound( void ){
@@ -378,15 +323,6 @@ void CFloater::AttackSound( void ){
 
 
 
-
-
-
-
-
-
-
-
-
 extern int global_useSentenceSave;
 void CFloater::Precache( void )
 {
@@ -397,8 +333,6 @@ void CFloater::Precache( void )
 	CSquidSpit::precacheStatic();
 
 	global_useSentenceSave = TRUE;
-	
-	
 	//NOTICE - attempting to precace files that don't exist crashes the game.
 	/*
 	//PRECACHE_SOUND("floater/floater_XXX.wav");
@@ -410,12 +344,8 @@ void CFloater::Precache( void )
 	PRECACHE_SOUND_ARRAY(pAttackHitSounds);
 	PRECACHE_SOUND_ARRAY(pAttackMissSounds);
 	*/
-
-
-
 	global_useSentenceSave = FALSE;
 }//END OF Precache()
-
 
 
 void CFloater::Spawn( void )
@@ -424,8 +354,6 @@ void CFloater::Spawn( void )
 
 	//well you certainly aren't going to explode.
 	explodeDelay = -1;
-
-
 
 	setModel("models/floater.mdl");
 	//UTIL_SetSize( pev, VEC_HUMAN_HULL_MIN, VEC_HUMAN_HULL_MAX );
@@ -436,18 +364,11 @@ void CFloater::Spawn( void )
 	//SetBits(pev->flags, FL_FLY);
 	pev->flags |= FL_FLY;
 
-
-
-	
-	pev->solid			= SOLID_BBOX;  //not SOLID_SLIDEBOX
+	///pev->solid			= SOLID_BBOX;  //not SOLID_SLIDEBOX
 	//pev->movetype		= MOVETYPE_FLY;
-
-
 	pev->solid			= SOLID_SLIDEBOX;  //SOLID_TRIGGER?  Difference?
 	pev->movetype		= MOVETYPE_BOUNCEMISSILE;
 	
-
-
 	m_bloodColor		= BLOOD_COLOR_GREEN;
 	pev->effects		= 0;
 	//NOTE - you have to make this exist over in skill.h and handle some other setup (gamerules.cpp, and the CVar in game.cpp)!
@@ -456,46 +377,15 @@ void CFloater::Spawn( void )
 	pev->view_ofs		= VEC_VIEW;/// position of the eyes relative to monster's origin.
 	m_flFieldOfView		= VIEW_FIELD_WIDE;// indicates the width of this monster's forward view cone ( as a dotproduct result )
 	m_MonsterState		= MONSTERSTATE_NONE;
-
 	pev->yaw_speed		= 100;//bound to change often from "SetYawSpeed". Likely meaningless here but a default can't hurt.
 
 	MonsterInit();
 
-
 	m_flightSpeed = 400;
-
 	SetTouch(&CFloater::CustomTouch );
 	//SetTouch( NULL );
 
-
 }//END OF Spawn();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -509,9 +399,6 @@ void CFloater::Stop(){
 
 	CFlyingMonster::Stop();
 }
-
-	
-
 
 
 int CFloater :: CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, CBaseEntity *pTarget, float *pflDist )
@@ -530,14 +417,6 @@ int CFloater :: CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, C
 
 
 
-
-
-
-
-
-	
-
-
 	/*
 	//Vector goalDir = vecEnd - vecStart;
 
@@ -552,7 +431,6 @@ int CFloater :: CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, C
 	UTIL_MakeVectors( pev->angles );
 		
 
-	
 	TraceResult trTopLeft;
 	TraceResult trTopRight;
 	TraceResult trBottomLeft;
@@ -570,7 +448,6 @@ int CFloater :: CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, C
 	Vector vecStartAlt = vecStart + vecCenterRel + goal_direction * boundXSize*1.3;
 	Vector vecEndAlt = vecEnd + vecCenterRel + -goal_direction * boundXSize*1.3;
 	
-
 
 	DebugLine_SetupPoint(7, vecStartAlt, 255, 255, 255);
 
@@ -604,10 +481,6 @@ int CFloater :: CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, C
 	tracesSolid = (trTopLeft.fAllSolid != 0 || trTopRight.fAllSolid != 0 || trBottomLeft.fAllSolid != 0 || trBottomRight.fAllSolid != 0); //|| trCenter.fAllSolid != 0);
 	tracesStartSolid = (trTopLeft.fStartSolid != 0 || trTopRight.fStartSolid != 0 || trBottomLeft.fStartSolid != 0 || trBottomRight.fStartSolid != 0); //|| trCenter.fStartSolid != 0);
 
-	
-	
-
-	
 	if ( (tracesSolid == FALSE && tracesStartSolid == FALSE && minFraction >= 1.0)  ) //|| EASY_CVAR_GET(testVar) == 2)
 	//if ( tr.fAllSolid == 0 && tr.fStartSolid == 0 && tr.flFraction >= 1.0)
 	{
@@ -621,25 +494,14 @@ int CFloater :: CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, C
 
 	//return FALSE;
 
-
-
 	if (pflDist)
 	{
 		*pflDist = minFraction * (vecEnd - vecStart).Length();
 	}
 
 	iReturn = LOCALMOVE_VALID;
-	
-
-	
 	//if(tracesStartSolid || minFraction < 1.0)
-
 	*/
-
-
-
-	
-
 
 	
 	TraceResult tr;
@@ -658,12 +520,10 @@ int CFloater :: CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, C
 		*pflDist = ( (tr.vecEndPos ) - vecStartTrace ).Length();// get the distance.
 	}
 	
-
 	if(tr.fStartSolid){
 		//what??
 		return LOCALMOVE_VALID;
 	}
-
 
 	// ALERT( at_console, "check %d %d %f\n", tr.fStartSolid, tr.fAllSolid, tr.flFraction );
 	if (tr.fStartSolid || tr.flFraction < 1.0)
@@ -678,9 +538,6 @@ int CFloater :: CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, C
 	}
 	
 	
-
-	
-
 	if( EASY_CVAR_GET(drawDebugPathfinding) == 1){
 		switch(iReturn){
 			case LOCALMOVE_INVALID:
@@ -700,13 +557,8 @@ int CFloater :: CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, C
 			break;
 		}
 	}
-
-
-
 	return iReturn;
 }
-
-
 
 
 
@@ -719,7 +571,6 @@ void CFloater::Move( float flInterval )
 	//CFlyingMonster::Move( flInterval );
 	CBaseMonster::Move(flInterval);
 }
-
 
 BOOL CFloater::ShouldAdvanceRoute( float flWaypointDist, float flInterval )
 {
@@ -734,35 +585,22 @@ BOOL CFloater::ShouldAdvanceRoute( float flWaypointDist, float flInterval )
 }
 
 
-
-
-
 void CFloater::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, float flInterval )
 {
-
 	/*
 	if ( m_IdealActivity != m_movementActivity )
 		m_IdealActivity = m_movementActivity;
 
 	// ALERT( at_console, "move %.4f %.4f %.4f : %f\n", vecDir.x, vecDir.y, vecDir.z, flInterval );
-
 	// float flTotal = m_flGroundSpeed * pev->framerate * flInterval;
 	// UTIL_MoveToOrigin ( ENT(pev), m_Route[ m_iRouteIndex ].vecLocation, flTotal, MOVE_STRAFE );
 
 	//m_velocity = m_velocity * 0.8 + m_flGroundSpeed * vecDir * 0.2;
-	
 	//UTIL_MoveToOrigin ( ENT(pev), pev->origin + m_velocity, m_velocity.Length() * flInterval, MOVE_STRAFE );
 	m_flGroundSpeed = 124;
 	UTIL_MoveToOrigin ( ENT(pev), m_Route[ m_iRouteIndex ].vecLocation, (m_flGroundSpeed * flInterval), MOVE_STRAFE );
-	
-	
-
-
-	
 	*/
 
-
-	
 
 	/*
 	Vector vecSuggestedDir = (m_Route[m_iRouteIndex].vecLocation - pev->origin).Normalize();
@@ -794,9 +632,7 @@ void CFloater::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, float
 	float flStep = m_flGroundSpeed * 1 * 1;
 	
 	
-
 	float velMag = flStep * EASY_CVAR_GET(STUSpeedMulti);
-
 	float timeAdjust = (pev->framerate * EASY_CVAR_GET(animationFramerateMulti) * flInterval);
 	float distOneFrame = velMag * pev->framerate * EASY_CVAR_GET(animationFramerateMulti) * flInterval;
 	
@@ -811,17 +647,12 @@ void CFloater::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, float
 	}else{
 		_velocity = dirTowardsDest * distBetween/timeAdjust;
 	}
-
 	//UTIL_printLineVector("MOVEOUT", velMag);
 	//easyPrintLineGroup2("HELP %.8ff %.8f", velMag, flInterval);
-
 	//UTIL_drawLineFrame(pev->origin, dest, 64, 255, 0, 0);
 
-	
 	m_velocity = m_velocity * 0.8 + _velocity * 0.2;
-
 	//m_velocity = m_velocity * 0.8 + m_flGroundSpeed * vecDir * 0.2;
-
 	Vector flatVelocity = Vector(_velocity.x, _velocity.y, 0);
 	Vector vertVelocity = Vector(0, 0, _velocity.z);
 
@@ -829,21 +660,13 @@ void CFloater::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, float
 	pev->velocity = m_velocity;
 
 	Vector vecSuggestedDir = (m_Route[m_iRouteIndex].vecLocation - pev->origin).Normalize();
-
 	checkFloor(vecSuggestedDir, velMag, flInterval);
 
-
 	lastVelocityChange = gpGlobals->time;
-
-
-
-
 }//END OF MoveExecute
 
 
-
 /*
-
 void CFloater::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, float flInterval )
 {
 	//m_flGroundSpeed = 25;
@@ -889,9 +712,7 @@ void CFloater::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, float
 	else
 		CBaseMonster::MoveExecute( pTargetEnt, vecDir, flInterval );
 }
-
 */
-
 
 
 //If the model won't tell us, we have to make one.
@@ -899,7 +720,6 @@ void CFloater::SetEyePosition(void){
 	//CFlyingMonster::SetEyePosition();
 	pev->view_ofs = Vector(0, 0, 42 - 8);//VEC_VIEW;
 }//END OF SetEyePosition
-
 
 
 
@@ -1027,7 +847,6 @@ Schedule_t* CFloater::GetSchedule ( void )
 			}
 			else  
 			{
-
 				//easyPrintLine("I say, really now? %d %d", HasConditions(bits_COND_CAN_RANGE_ATTACK1), HasConditions(bits_COND_CAN_RANGE_ATTACK2) );
 
 				// we can see the enemy
@@ -1130,8 +949,6 @@ void CFloater::ScheduleChange(){
 	//ran out of tasks.
 	
 	
-	
-	
 	CFlyingMonster::ScheduleChange(); //Call the parent.
 
 }//END OF ScheduleChange
@@ -1140,8 +957,6 @@ void CFloater::ScheduleChange(){
 Schedule_t* CFloater::GetStumpedWaitSchedule(){
 	return CFlyingMonster::GetStumpedWaitSchedule();
 }//END OF GetStumpedWaitSchedule
-
-
 
 
 void CFloater::StartTask( Task_t *pTask ){
@@ -1175,7 +990,6 @@ void CFloater::RunTask( Task_t *pTask ){
 	switch( pTask->iTask ){
 		case TASK_RANGE_ATTACK1:{
 
-			
 			MakeIdealYaw ( m_vecEnemyLKP );
 			ChangeYaw ( pev->yaw_speed );
 
@@ -1203,9 +1017,7 @@ BOOL CFloater::CheckMeleeAttack2( float flDot, float flDist ){
 	return FALSE;
 }
 BOOL CFloater::CheckRangeAttack1( float flDot, float flDist ){
-
 	//DEBUG - why you no work!!!??
-
 	if(gpGlobals->time >= shootCooldown){
 		//past cooldown? allowed.
 	}else{
@@ -1213,13 +1025,11 @@ BOOL CFloater::CheckRangeAttack1( float flDot, float flDist ){
 		return FALSE;
 	}
 
-
 	//if ( flDot > 0.5 && flDist > 256 && flDist <= 2048 )
 	if ( flDot > 0.5 && flDist <= 1024 )
 	{
 		//actually there is one more check to do.  Is there a little wider of a straight line of sight available, not just barely peeking around a wall?
 		
-
 
 		//easyForcePrintLine("YAY?!");
 		return TRUE;
@@ -1227,10 +1037,10 @@ BOOL CFloater::CheckRangeAttack1( float flDot, float flDist ){
 	//easyForcePrintLine("NAY?!");
 	return FALSE;
 }
+
 BOOL CFloater::CheckRangeAttack2( float flDot, float flDist ){
 	return FALSE;
 }
-
 
 
 void CFloater::CustomTouch( CBaseEntity *pOther ){
@@ -1241,22 +1051,12 @@ void CFloater::CustomTouch( CBaseEntity *pOther ){
 }
 
 
-
-
-
-
-
-
-
 void CFloater::MonsterThink(){
-	
-
 	if(EASY_CVAR_GET(floaterDummy) == 1){
 		//no thought for you.
 		pev->nextthink = gpGlobals->time + 0.1;
 		return;
 	}
-
 
 	//easyForcePrintLine("IM GONNA %d %d", m_Activity, m_IdealActivity);
 	//easyForcePrintLine("MY EYES: %.2f %.2f %.2f", pev->view_ofs.x,pev->view_ofs.y,pev->view_ofs.z);
@@ -1272,7 +1072,6 @@ void CFloater::MonsterThink(){
 	}
 	*/
 
-	
 	BOOL isItMovin = this->IsMoving();
 
 	if(pev->deadflag == DEAD_NO && !isItMovin){
@@ -1288,13 +1087,11 @@ void CFloater::MonsterThink(){
 		}
 	}
 
-
 	if(explodeDelay != -1 && gpGlobals->time >= explodeDelay){
 		//If we're going to explode and time is up, well, explode.
 		GibMonster();
 		return;
 	}
-
 
 	CFlyingMonster::MonsterThink();
 }//END OF MonsterThink
@@ -1305,16 +1102,8 @@ void CFloater::MonsterThink(){
 void CFloater::PrescheduleThink (){
 
 
-
 	CFlyingMonster::PrescheduleThink();
 }//END OF PrescheduleThink
-
-
-
-
-
-
-
 
 
 
@@ -1339,12 +1128,8 @@ void CFloater::ReportAIState(){
 
 
 
-
-
 GENERATE_TRACEATTACK_IMPLEMENTATION(CFloater)
 {
-
-
 
 	GENERATE_TRACEATTACK_PARENT_CALL(CFlyingMonster);
 }
@@ -1355,10 +1140,8 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CFloater)
 	//CFlyingMonster already calls PainSound.
 	//PainSound();
 
-
 	return GENERATE_TAKEDAMAGE_PARENT_CALL(CFlyingMonster);
 }
-
 
 
 //NOTE - called by CFlyingMonster's TakeDamage method. If that isn't called, DeadTakeDamage won't get called naturally.
@@ -1366,11 +1149,8 @@ GENERATE_DEADTAKEDAMAGE_IMPLEMENTATION(CFloater)
 {
 
 
-
 	return GENERATE_DEADTAKEDAMAGE_PARENT_CALL(CFlyingMonster);
 }//END OF DeadTakeDamage
-
-
 
 
 //Parameters: integer named fGibSpawnsDecal
@@ -1384,8 +1164,6 @@ GENERATE_GIBMONSTER_IMPLEMENTATION(CFloater)
 }
 
 
-
-
 //Parameters: BOOL fGibSpawnsDecal
 //Returns: BOOL. Did this monster spawn gibs and is safe to stop drawing?
 // If this monster has a special way of spawning gibs or checking whether to spawn gibs, handle that here and remove the parent call.
@@ -1395,10 +1173,6 @@ GENERATE_GIBMONSTER_IMPLEMENTATION(CFloater)
 //Anything done here is meant to completely replace how the parent method gibs a monster in general. None of it is required.
 GENERATE_GIBMONSTERGIB_IMPLEMENTATION(CFloater)
 {
-	//BOOM.
-
-
-
 	//if( !(pev->solid == SOLID_NOT || (pev->flags & FL_KILLME) || m_pfnThink == &CBaseEntity::SUB_Remove)  ){
 	//Doesn't work in time, just do your own check!
 	if(!explodedYet){
@@ -1422,9 +1196,6 @@ GENERATE_GIBMONSTERGIB_IMPLEMENTATION(CFloater)
 		BOOL parentResult = GENERATE_GIBMONSTERGIB_PARENT_CALL(CFlyingMonster);
 
 
-		
-		
-
 		//do this actually.
 		PLAYBACK_EVENT_FULL (FEV_GLOBAL, this->edict(), g_sFloaterExplode, 0.0, (float *)&this->pev->origin, (float *)&this->pev->angles, 0.0, 0.0, this->entindex(), 0, 0, 0);
 
@@ -1446,10 +1217,6 @@ GENERATE_GIBMONSTERGIB_IMPLEMENTATION(CFloater)
 
 	}
 
-	
-	
-
-
 	//Calling the parent method is still okay in this case. Spawning gib pieces / censorship checks should still take place.
 	//return GENERATE_GIBMONSTERGIB_PARENT_CALL(CFlyingMonster);
 }
@@ -1457,15 +1224,11 @@ GENERATE_GIBMONSTERGIB_IMPLEMENTATION(CFloater)
 //The other related methods, GIBMONSTERSOUND and GIBMONSTEREND, are well suited to the majority of cases.
 
 
-
-
 GENERATE_KILLED_IMPLEMENTATION(CFloater)
 {
-	
 	//GENERATE_KILLED_PARENT_CALL(CBaseMonster);
 	//return;
 	
-
 	// Not killed before?    (yes, really).
 	if(!HasMemory( bits_MEMORY_KILLED )){
 		//Only reset the velocity if this is the first Killed call (since we stop following).
@@ -1483,31 +1246,20 @@ GENERATE_KILLED_IMPLEMENTATION(CFloater)
 
 	pev->movetype = MOVETYPE_TOSS;
 
-
-
 	/*
 	//if you have the "FL_KILLME" flag, it means this is about to get deleted (gibbed). No point in doing any of this then.
 	if(firstCall && !(pev->flags & FL_KILLME) ){
 		cheapKilledFlyer();
 	}//END OF firstCall check
 	*/
-
-
-
 }//END OF Killed
-
-
-
-
 
 
 
 void CFloater::SetYawSpeed( void ){
 	int ys;
-	
 	ys = 120;
 	//ys = 200;
-
 	//Switch on current activity m_Activity to determine yaw speed and set it?
 	
 	switch ( m_Activity )
@@ -1516,12 +1268,8 @@ void CFloater::SetYawSpeed( void ){
 		//ys = 100;
 	break;
 	}
-
-
 	pev->yaw_speed = ys;
 }//END OF SetYawSpeed
-
-
 
 
 
@@ -1542,7 +1290,6 @@ void CFloater::SetActivity(Activity NewActivity ){
 
 	if((NewActivity == ACT_IDLE || NewActivity == ACT_HOVER) &&
 		(m_Activity == ACT_IDLE || m_Activity == ACT_HOVER)){
-
 		m_Activity = ACT_HOVER;
 		m_IdealActivity = ACT_HOVER;
 		return;
@@ -1552,7 +1299,6 @@ void CFloater::SetActivity(Activity NewActivity ){
 	}
 
 }//END OF SetActivity
-
 
 
 
@@ -1589,11 +1335,9 @@ int CFloater::tryActivitySubstitute(int activity){
 		break;
 	}//END OF switch
 
-
 	//not handled by above? Rely on the model's anim for this activity if there is one.
 	return CBaseAnimating::LookupActivity(activity);
 }//END OF tryActivitySubstitute
-
 
 
 int CFloater::LookupActivityHard(int activity){
@@ -1607,7 +1351,6 @@ int CFloater::LookupActivityHard(int activity){
 	//Within an ACTIVITY, pick an animation like this (with whatever logic / random check first):
 	//    this->animEventQueuePush(10.0f / 30.0f, 3);  //Sets event #3 to happen at 1/3 of a second
 	//    return LookupSequence("die_backwards");      //will play animation die_backwards
-
 
 	
 	//no need for default, just falls back to the normal activity lookup.
@@ -1630,7 +1373,6 @@ int CFloater::LookupActivityHard(int activity){
 			
 			animEventQueuePush(5.0f / 30.0f, 0);
 			m_iForceLoops = FALSE;
-
 		break;
 		//Do these break anything?
 		case ACT_FLY:
@@ -1641,31 +1383,23 @@ int CFloater::LookupActivityHard(int activity){
 		break;
 	}//END OF switch
 	
-	
 	//not handled by above?  try the real deal.
 	return CBaseAnimating::LookupActivity(activity);
 }//END OF LookupActivityHard
 
 
-
 //Handles custom events sent from "LookupActivityHard", which sends events as timed delays along with picking an animation in script.
 //So this handles script-provided events, not model ones.
 void CFloater::HandleEventQueueEvent(int arg_eventID){
-
 	switch(arg_eventID){
 	case 0:
 	{
-
-		//break;
-
 		//fire a bullsquid projectile? not psychic like the kingpin.
 		Vector	vecSpitOffset;
 		Vector	vecSpitDir;
 
 		UTIL_MakeVectors ( pev->angles );
-
 		vecSpitOffset = ( pev->origin + gpGlobals->v_right * 0 + gpGlobals->v_forward * 18 + gpGlobals->v_up * 22 );		
-		
 		vecSpitDir = ( ( m_vecEnemyLKP +  ((m_hEnemy!=NULL)?(m_hEnemy->EyeOffset()):(Vector(0,0,5)))   ) - vecSpitOffset ).Normalize();
 		
 		vecSpitDir.x += RANDOM_FLOAT( -0.05, 0.05 );
@@ -1676,7 +1410,6 @@ void CFloater::HandleEventQueueEvent(int arg_eventID){
 		AttackSound();
 
 		CSquidSpit::Shoot( this, vecSpitOffset, vecSpitDir, 900 );
-
 	break;
 	}
 	case 1:
@@ -1686,7 +1419,6 @@ void CFloater::HandleEventQueueEvent(int arg_eventID){
 	break;
 	}
 	}//END OF switch
-
 
 }//END OF HandleEventQueueEvent
 
@@ -1714,28 +1446,6 @@ void CFloater::HandleAnimEvent(MonsterEvent_t *pEvent ){
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 //inline
 void CFloater::checkTraceLine(const Vector& vecSuggestedDir, const float& travelMag, const float& flInterval, const Vector& vecStart, const Vector& vecRelativeEnd, const int& moveDist){
 	checkTraceLine(vecSuggestedDir, travelMag, flInterval, vecStart, vecRelativeEnd, moveDist, TRUE);
@@ -1744,22 +1454,18 @@ void CFloater::checkTraceLine(const Vector& vecSuggestedDir, const float& travel
 //inline
 void CFloater::checkTraceLine(const Vector& vecSuggestedDir, const float& travelMag, const float& flInterval, const Vector& vecStart, const Vector& vecRelativeEnd, const int& moveDist, const BOOL canBlockFuture){
 	
-
 	//WELL WHAT THE whatIN what IS MOVIN YA.
 	//return;
 
 	TraceResult tr;
-
 	//    * moveDist ??
 	Vector vecRelativeEndScale = vecRelativeEnd * moveDist;
 
 	if(!tempCheckTraceLineBlock){
-
 		//Vector vecEnd = vecStart + Vector(0, 0, 38);
 		UTIL_TraceLine(vecStart, vecStart + vecRelativeEndScale, ignore_monsters, ENT(pev), &tr);
 		if(tr.flFraction < 1.0){
 			//hit something!
-
 			//Get projection
 			// = sugdir - proj. of sugdir onto the normal vector.
 
@@ -1788,7 +1494,6 @@ void CFloater::checkTraceLine(const Vector& vecSuggestedDir, const float& travel
 			//Vector vecTotalAdjust = vecMoveParallel + vecMoveRepel;
 			Vector vecTotalAdjust = vecMoveParallel*timeAdjust + vecMoveRepel;
 
-
 			//???    + -(toMove*1)*vecRelativeEnd
 			//pev->velocity = pev->velocity  + ((vecMoveParallel + vecMoveRepel)/timeAdjust);
 			
@@ -1815,9 +1520,6 @@ void CFloater::checkTraceLine(const Vector& vecSuggestedDir, const float& travel
 			UTIL_MoveToOrigin ( ENT(pev), pev->origin + vecTotalAdjustY , vecTotalAdjustY.Length(), MOVE_STRAFE );
 			UTIL_MoveToOrigin ( ENT(pev), pev->origin + vecTotalAdjustZ , vecTotalAdjustZ.Length(), MOVE_STRAFE );
 
-
-
-
 			//pev->origin = pev->origin + tr.vecPlaneNormal*toMove*EASY_CVAR_GET(repelMulti);
 			//easyPrintLineGroup2("MOOO %s: SPEED: %.2f", STRING(tr.pHit->v.classname), travelMag );
 			//EASY_CVAR_PRINTIF_PRE(stukaPrintout, UTIL_printLineVector("VECCCC", tr.vecPlaneNormal ) );
@@ -1834,10 +1536,7 @@ void CFloater::checkTraceLine(const Vector& vecSuggestedDir, const float& travel
 	if(EASY_CVAR_GET(drawDebugPathfinding2) == 1){
 		UTIL_drawLineFrame(vecStart, vecStart + vecRelativeEndScale, 16, 0, 255, 0);
 	}
-
 }
-
-
 
 
 inline
@@ -1847,8 +1546,6 @@ void CFloater::checkTraceLineTest(const Vector& vecSuggestedDir, const float& tr
 //Vector& const vecRelstar, ???   Vector& const reactionMove,
 inline
 void CFloater::checkTraceLineTest(const Vector& vecSuggestedDir, const float& travelMag, const float& flInterval, const Vector& vecStart, const Vector& vecRelativeEnd, const int& moveDist, const BOOL canBlockFuture){
-	
-	
 	//WELL WHAT THE whatIN what IS MOVIN YA.
 	//return;
 
@@ -1924,9 +1621,6 @@ void CFloater::checkTraceLineTest(const Vector& vecSuggestedDir, const float& tr
 			UTIL_MoveToOrigin ( ENT(pev), pev->origin + vecTotalAdjustY , vecTotalAdjustY.Length(), MOVE_STRAFE );
 			UTIL_MoveToOrigin ( ENT(pev), pev->origin + vecTotalAdjustZ , vecTotalAdjustZ.Length(), MOVE_STRAFE );
 
-
-
-
 			//easyForcePrintLine("BUT YOU MOVE????? %.2f ", vecTotalAdjust.Length());
 			::UTIL_drawLineFrame(pev->origin, pev->origin + vecTotalAdjust,40, 255, 0, 0);
 
@@ -1952,14 +1646,13 @@ void CFloater::checkTraceLineTest(const Vector& vecSuggestedDir, const float& tr
 
 
 
-
-
-
-
-
 void CFloater::checkFloor(const Vector& vecSuggestedDir, const float& travelMag, const float& flInterval){
 
+	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	// IMPORANT!  SKIPPER.
+
 	return;
+	/////////////////////////////////////////////////
 	/*
 	if(turnThatOff){
 		//we're not doing the checks in this case.
@@ -1970,7 +1663,6 @@ void CFloater::checkFloor(const Vector& vecSuggestedDir, const float& travelMag,
 	if(EASY_CVAR_GET(drawDebugPathfinding2) == 1){
 		UTIL_drawBoxFrame(pev->origin + pev->mins, pev->origin + pev->maxs, 16, 0, 0, 255);
 	}
-	
 	int maxX = pev->maxs.x;
 	int maxY = pev->maxs.y;
 	int maxZ = pev->maxs.z;
@@ -1983,17 +1675,12 @@ void CFloater::checkFloor(const Vector& vecSuggestedDir, const float& travelMag,
 	//x = left / right
 	//y = back / forward
 
-
 	float boundMultiple = 0.7f;
-
 	Vector vecTopRightForward = pev->origin + pev->maxs*boundMultiple;
-	
 	Vector vecTopLeftForward = pev->origin + Vector(minX, maxY, maxZ)*boundMultiple;
 	Vector vecTopRightBackward = pev->origin + Vector(maxX, minY, maxZ)*boundMultiple;
 	Vector vecTopLeftBackward = pev->origin + Vector(minX, minY, maxZ)*boundMultiple;
-
 	Vector vecBottomLeftBackward = pev->origin + pev->mins*boundMultiple;
-	
 	Vector vecBottomLeftForward = pev->origin + Vector(minX, maxY, minZ)*boundMultiple;
 	Vector vecBottomRightBackward = pev->origin + Vector(maxX, minY, minZ)*boundMultiple;
 	Vector vecBottomRightForward = pev->origin + Vector(maxX, maxY, minZ)*boundMultiple;
@@ -2012,7 +1699,6 @@ void CFloater::checkFloor(const Vector& vecSuggestedDir, const float& travelMag,
 
 	int checkDist = EASY_CVAR_GET(STUcheckDistH);
 	int checkDistV = EASY_CVAR_GET(STUcheckDistV);
-	
 	int checkDistD = EASY_CVAR_GET(STUcheckDistD);
 
 
@@ -2027,13 +1713,11 @@ void CFloater::checkFloor(const Vector& vecSuggestedDir, const float& travelMag,
 		checkTraceLine(vecSuggestedDir, travelMag, flInterval, vecBottomRightBackward, Vector(1, 0, 0), checkDist);
 		
 	}else if (vecSuggestedDir.x < -0.8){
-		
 		tempCheckTraceLineBlock = FALSE;
 		checkTraceLine(vecSuggestedDir, travelMag, flInterval, vecTopLeftForward, Vector(-1, 0, 0), checkDist);
 		checkTraceLine(vecSuggestedDir, travelMag, flInterval, vecTopLeftBackward, Vector(-1, 0, 0), checkDist);
 		checkTraceLine(vecSuggestedDir, travelMag, flInterval, vecBottomLeftForward, Vector(-1, 0, 0), checkDist);
 		checkTraceLine(vecSuggestedDir, travelMag, flInterval, vecBottomLeftBackward, Vector(-1, 0, 0), checkDist);
-		
 	}
 
 	if(vecSuggestedDir.y > 0.8){
@@ -2053,8 +1737,6 @@ void CFloater::checkFloor(const Vector& vecSuggestedDir, const float& travelMag,
 		checkTraceLine(vecSuggestedDir, travelMag, flInterval, vecBottomRightBackward, Vector(0, -1, 0), checkDist);
 	}
 
-
-
 	BOOL onGround = FALSE;
 	if(!onGround){
 
@@ -2069,7 +1751,6 @@ void CFloater::checkFloor(const Vector& vecSuggestedDir, const float& travelMag,
 				checkTraceLine(vecSuggestedDir, travelMag, flInterval, vecTopRightBackward, Vector(0, 0, 1), checkDistV);
 			}
 			
-
 			BOOL topLeftForwardCheck = FALSE;
 			BOOL topLeftBackwardCheck = FALSE;
 			BOOL topRightForwardCheck = FALSE;
@@ -2093,25 +1774,19 @@ void CFloater::checkFloor(const Vector& vecSuggestedDir, const float& travelMag,
 				topLeftBackwardCheck = TRUE;
 			}
 			
-
 			//TEST - ENABLE ALL
 			topRightForwardCheck = TRUE;
 			topLeftForwardCheck = TRUE;
 			topRightBackwardCheck = TRUE;
 			topLeftBackwardCheck = TRUE;
 
-
-			
 			tempCheckTraceLineBlock = FALSE; //is that okay?
 			if(topRightForwardCheck)checkTraceLine(vecSuggestedDir, travelMag, flInterval, vecTopRightForward, Vector(root3rec, root3rec, -root3rec), checkDistD);
 			if(topLeftForwardCheck)checkTraceLine(vecSuggestedDir, travelMag, flInterval, vecTopRightBackward, Vector(root3rec, -root3rec, -root3rec), checkDistD);
 			if(topRightBackwardCheck)checkTraceLine(vecSuggestedDir, travelMag, flInterval, vecTopLeftForward, Vector(-root3rec, root3rec, -root3rec), checkDistD);
 			if(topLeftBackwardCheck)checkTraceLine(vecSuggestedDir, travelMag, flInterval, vecTopLeftBackward, Vector(-root3rec, -root3rec, -root3rec), checkDistD);
 			
-
-
 			//easyForcePrintLine("AWWWWW SHIT %.2f %.2f", vecSuggestedDir.x, vecSuggestedDir.y);
-
 
 			/*
 			if(vecSuggestedDir.x > 0){
@@ -2130,11 +1805,7 @@ void CFloater::checkFloor(const Vector& vecSuggestedDir, const float& travelMag,
 			*/
 
 
-
-
-
-
-			//just try bottom checks at least, even with no Z direction. Diagonals can be important.
+			// just try bottom checks at least, even with no Z direction. Diagonals can be important.
 		}else if (vecSuggestedDir.z <= 0){
 		
 			if(vecSuggestedDir.z < -0.3){
@@ -2144,8 +1815,6 @@ void CFloater::checkFloor(const Vector& vecSuggestedDir, const float& travelMag,
 				checkTraceLine(vecSuggestedDir, travelMag, flInterval, vecBottomLeftBackward, Vector(0, 0, -1), checkDistV);
 				checkTraceLine(vecSuggestedDir, travelMag, flInterval, vecBottomRightBackward, Vector(0, 0, -1), checkDistV);
 			}
-
-			
 
 			
 			BOOL bottomLeftForwardCheck = FALSE;
@@ -2171,7 +1840,6 @@ void CFloater::checkFloor(const Vector& vecSuggestedDir, const float& travelMag,
 				bottomLeftBackwardCheck = TRUE;
 			}
 			
-
 			//TEST - ENABLE ALL
 			bottomRightForwardCheck = TRUE;
 			bottomLeftForwardCheck = TRUE;
@@ -2184,8 +1852,6 @@ void CFloater::checkFloor(const Vector& vecSuggestedDir, const float& travelMag,
 			if(bottomRightBackwardCheck)checkTraceLine(vecSuggestedDir, travelMag, flInterval, vecBottomLeftForward, Vector(-root3rec, root3rec, -root3rec), checkDistD);
 			if(bottomLeftBackwardCheck)checkTraceLine(vecSuggestedDir, travelMag, flInterval, vecBottomLeftBackward, Vector(-root3rec, -root3rec, -root3rec), checkDistD);
 			
-
-
 
 			/*
 			if(vecSuggestedDir.x > 0){
@@ -2203,18 +1869,11 @@ void CFloater::checkFloor(const Vector& vecSuggestedDir, const float& travelMag,
 			}
 			*/
 
-			
 			//checkTraceLineTest(vecSuggestedDir, travelMag, flInterval, vecBottomRightBackward, Vector(root3rec, -root3rec, -root3rec), checkDistD, FALSE);
-			
-
-
 		}
-
 	}//END OF if(!onGround)
 
-
 }//END OF checkFloor
-
 
 
 int CFloater::getLoopingDeathSequence(void){

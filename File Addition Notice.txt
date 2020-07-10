@@ -10,6 +10,8 @@ CLIENTSIDE (cl_dll)
 
 -weapons_resource.h & .cpp - holds the "WeaponsResource" class that used to be seen throughout ammohistory.h and ammo.cpp.  No clue.
 
+-hud/pain.h & .cpp - pain-related script from health.cpp moved here.
+
 *side-note: to make the "gpActiveSel" & "gpLastSel" available, as well as "gWR", the WeaponsResource instance, the gWR variable has been moved to the CHudAmmo class and the gpActiveSel & gpLastSel variables have been moved to the WeaponsResource class (ammohostiry.h), both from ammo.cpp to be accessible outside of ammo.cpp.
  That means throughout some parts of ammo.cpp, references had to be done through the closest known instance instead, which means no change for accessing gpActiveSel & gpLastSel from any WeaponsResource methods (already instances of the class), need "gWR." in front to access the gp vars from CHudAmmo methods (its own WeaponsResource instance), and need "gHUD.m_Ammo.gWR." in front to access gp vars from anywhere else. This gets them through the GUI instance, the ammo instance, and then the WeaponsResource instance. custom_message.cpp needed to be able to access the gp's this way.
 *Also, the CHudAmmo class has been moved from hud.h to ammo.h. A few includes could be reword to go at the top since they no longer rely on occuring at such a specific place with the right things included ahead of time by an outside context... what.

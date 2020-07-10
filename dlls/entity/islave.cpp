@@ -23,9 +23,6 @@
 
 //NOTICE: all cases of "ATTN_NORM" replaced with "EASY_CVAR_GET(soundAttenuationAll)" for testing.
 
-
-
-
 #include "extdll.h"
 #include "util.h"
 #include "cbase.h"
@@ -40,7 +37,6 @@
 #include "nodes.h"
 
 
-
 EASY_CVAR_EXTERN(islaveReviveFriendMode)
 EASY_CVAR_EXTERN(islaveReviveFriendChance)
 EASY_CVAR_EXTERN(islaveReviveFriendRange)
@@ -50,7 +46,6 @@ EASY_CVAR_EXTERN(islaveReviveSelfChance)
 EASY_CVAR_EXTERN(noFlinchOnHard)
 EASY_CVAR_EXTERN(thatWasntPunch)
 EASY_CVAR_EXTERN(soundAttenuationAll)
-
 
 
 //MODDD - anything above its real declaration need to know about it?
@@ -69,7 +64,6 @@ extern DLL_GLOBAL int g_iSkillLevel;
 #define ISLAVE_AE_ZAP_DONE		( 5 )
 
 #define ISLAVE_MAX_BEAMS	8
-
 
 
 
@@ -123,9 +117,7 @@ enum islave_sequence {  //key: frames, FPS
 	ISLAVE_DIEBACKWARD_RES,  //40, 20
 	ISLAVE_DIEFORWARD_RES,  //40, 40
 
-
 };
-
 
 
 /*
@@ -145,10 +137,27 @@ enum
 
 
 
-
 class CISlave : public CSquadMonster
 {
 public:
+	static const char* pAttackHitSounds[];
+	static const char* pAttackMissSounds[];
+	static const char* pPainSounds[];
+	static const char* pDeathSounds[];
+
+	int m_iBravery;
+
+	CBeam* m_pBeam[ISLAVE_MAX_BEAMS];
+
+	int m_iBeams;
+	//MODDD - well would ya look at that.
+	// Actually used by something other than CBasePlayer.
+	// No idea why CBaseMonster used to have this, never touched it there.
+	float m_flNextAttack;
+	int m_voicePitch;
+	EHANDLE m_hDead;
+
+
 	CISlave(void);
 	void MonsterThink(void);
 
@@ -243,9 +252,9 @@ public:
 	Schedule_t *GetScheduleOfType ( int Type );
 	CUSTOM_SCHEDULES;
 
+	static TYPEDESCRIPTION m_SaveData[];
 	int Save( CSave &save ); 
 	int Restore( CRestore &restore );
-	static TYPEDESCRIPTION m_SaveData[];
 
 	void ClearBeams( );
 	void ArmBeam( int side );
@@ -262,27 +271,6 @@ public:
 	void ForgetEnemy(void);
 
 
-
-
-	int m_iBravery;
-
-	CBeam *m_pBeam[ISLAVE_MAX_BEAMS];
-
-	int m_iBeams;
-
-	//MODDD - well would ya look at that.
-	// Actually used by something other than CBasePlayer.
-	// No idea why CBaseMonster used to have this, never touched it there.
-	float m_flNextAttack;
-
-	int m_voicePitch;
-
-	EHANDLE m_hDead;
-
-	static const char *pAttackHitSounds[];
-	static const char *pAttackMissSounds[];
-	static const char *pPainSounds[];
-	static const char *pDeathSounds[];
 };
 
 
@@ -311,9 +299,7 @@ public:
 	#endif
 
 	//no extras.
-
 #endif
-
 
 
 
@@ -335,7 +321,6 @@ TYPEDESCRIPTION	CISlave::m_SaveData[] =
 };
 
 IMPLEMENT_SAVERESTORE( CISlave, CSquadMonster );
-
 
 
 
@@ -368,28 +353,16 @@ const char *CISlave::pDeathSounds[] =
 
 
 
-
-
-
-
-
-
-
 Task_t	tlISlaveReviveFriend[] =
 {
-
 	//hm...?
 	//{ TASK_SET_FAIL_SCHEDULE,	(float)SCHED_TARGET_CHASE },// If you fail, follow normally
-	
-	
 	//case SCHED_TARGET_CHASE:
 	//return slFollow;
 
 	{ TASK_ISLAVE_GO_TO_TARGET,(float)110		},
 //	{ TASK_SET_SCHEDULE,		(float)SCHED_TARGET_FACE_SCARED },
-
 	{TASK_ISLAVE_SET_REVIVE_SEQUENCE, (float)0 }
-
 };
 
 Schedule_t	slISlaveReviveFriend[] =
@@ -405,7 +378,6 @@ Schedule_t	slISlaveReviveFriend[] =
 		"ISLaveReviveFriend"
 	},
 };
-
 
 
 Task_t	tlISlaveReviveSelf[] =
@@ -430,21 +402,10 @@ Schedule_t	slISlaveReviveSelf[] =
 
 
 
-
-
-
-
-
-
-
-
-
 		
 
 void CISlave::ReportAIState( void )
 {
-
-
 	easyPrintLine("MONSTER ID: %d HEALER ID: %d BEING REV?: %d REVIVINGOTHER?: %d REVIVING MONSTER ID: %d FRAMERATE: %.2f FRAME: %.2f DIST_TO_TARGET: %.2f, ACTM: %d, ACTI: %d, ACT: %d TIMs: %.2f %.2f",
 		monsterID,
 		(this->monsterTryingToReviveMeEHANDLE!=NULL) ? this->monsterTryingToReviveMe->monsterID : -1,
@@ -459,25 +420,16 @@ void CISlave::ReportAIState( void )
 		m_Activity,
 		gpGlobals->time,
 		reviveFriendAnimStartTime
-
-		);
-	//
-	
-	//pev->frame = 0;
-
+	);
 
 	CSquadMonster::ReportAIState();
-
 }
 
 
 
 void CISlave::MonsterThink(void){
-
-
 	//MODD - just force bravery to 100 at all times.  It seems to be barely implemented, and has serious consequences if it goes under 0 for whatever reason (reduces "bravery", making an islave always run away...).
 	m_iBravery = 100;
-
 
 	//or == -1?
 	if(pev->deadflag == DEAD_DEAD && selfReviveTime > 0){
@@ -495,7 +447,6 @@ void CISlave::MonsterThink(void){
 			}
 		}//END OF time check
 	}//END OF revive check
-
 
 
 	if(EASY_CVAR_GET(thatWasntPunch) == 1 && this->m_fSequenceFinished){
@@ -613,7 +564,6 @@ void CISlave::MonsterThink(void){
 			case 36:
 				this->SetSequenceByName("barnacle4");
 			break;
-
 			case 37:
 				this->SetSequenceByName("collar1");
 			break;
@@ -626,7 +576,6 @@ void CISlave::MonsterThink(void){
 			case 40:
 				this->SetSequenceByName("collar2");
 			break;
-
 			case 41:
 				this->SetSequenceByName("laflinch");
 			break;
@@ -651,7 +600,6 @@ void CISlave::MonsterThink(void){
 			case 48:
 				this->SetSequenceByName("rlflinch");
 			break;
-
 			case 49:
 				this->SetSequenceByName("flinch2");
 			break;
@@ -661,7 +609,6 @@ void CISlave::MonsterThink(void){
 			case 51:
 				this->SetSequenceByName("flinch2");
 			break;
-
 			case 52:
 				this->SetSequenceByName("zapattack1");
 			break;
@@ -671,7 +618,6 @@ void CISlave::MonsterThink(void){
 			case 54:
 				this->SetSequenceByName("attack1");
 			break;
-
 			case 55:
 				this->SetSequenceByName("jump");
 			break;
@@ -690,11 +636,8 @@ void CISlave::MonsterThink(void){
 			case 60:
 				this->SetSequenceByName("idle2");
 			break;
-
 		}
-
 	}
-
 
 	CBaseMonster::MonsterThink();
 }
@@ -843,7 +786,6 @@ int CISlave :: ISoundMask ( void)
 }
 
 
-
 //NOTICE: default behavior for "onDeathAnimationEnd" is to turn the think method off. So the check for whether this monster will be self-revived or not makes sense here.
 //A self reviving monster can't even check its own countdown timer for revival if its think method is turned off.
 void CISlave::onDeathAnimationEnd(void){
@@ -880,8 +822,6 @@ GENERATE_KILLED_IMPLEMENTATION(CISlave)
 	forgetReviveTarget();
 	beingRevived = 0;
 	selfReviveTime = -1;
-
-	
 
 	ClearBeams( );
 	GENERATE_KILLED_PARENT_CALL(CSquadMonster);
@@ -936,8 +876,6 @@ void CISlave :: SetYawSpeed ( void )
 		ys = 90;
 		break;
 	}
-
-
 
 	pev->yaw_speed = ys;
 }
@@ -1147,7 +1085,6 @@ BOOL CISlave :: CheckRangeAttack1 ( float flDot, float flDist )
 		return FALSE;
 	}
 
-
 	//MODDD NOTE - you guys couldn't be bothered to give this a custom range (flDist?) damn devs!
 	//Lucky coincidence 784 makes sense. The electric bolt phyisically only travels 1024 since the trace for it goes that far.
 	//Pasted it here anyways because hey, we might want tweaking sometime.
@@ -1166,11 +1103,13 @@ BOOL CISlave :: CheckRangeAttack1 ( float flDot, float flDist )
 //=========================================================
 BOOL CISlave :: CheckRangeAttack2 ( float flDot, float flDist )
 {
-	//NO.  We're not doing this as a separate attack, that actually makes a lot less sense.
+	// NO.  We're not doing this as a separate attack, that actually makes a lot less sense.
 	return FALSE;
-
-
-
+	/////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////
 
 
 	//MODDD - AHHHHHH.  HOW DID I MISS THIS?!  disabled.
@@ -1192,8 +1131,6 @@ BOOL CISlave :: CheckRangeAttack2 ( float flDot, float flDist )
 	}
 
 
-
-	
 	if (m_flNextAttack > gpGlobals->time)
 	{
 		return FALSE;
@@ -1212,10 +1149,7 @@ BOOL CISlave :: CheckRangeAttack2 ( float flDot, float flDist )
 }
 
 
-
 CISlave* CISlave::findISlaveToRevive(BOOL requireLineTrace, float argStartMaxDist){
-
-
 
 
 	/*
@@ -1256,10 +1190,7 @@ CISlave* CISlave::findISlaveToRevive(BOOL requireLineTrace, float argStartMaxDis
 					}
 				}
 			
-			
-			
 			}
-
 	*/
 
 	float flDist = argStartMaxDist;
@@ -1332,13 +1263,6 @@ CISlave* CISlave::findISlaveToRevive(BOOL requireLineTrace, float argStartMaxDis
 }//END OF findISlaveToRevive
 
 
-
-
-
-
-
-
-
 //=========================================================
 // StartTask
 //=========================================================
@@ -1352,7 +1276,6 @@ void CISlave :: StartTask ( Task_t *pTask )
 	CISlave* bestChoiceYet = NULL;
 
 
-	
 	switch(pTask->iTask){
 
 	case TASK_RANGE_ATTACK1:
@@ -1362,8 +1285,6 @@ void CISlave :: StartTask ( Task_t *pTask )
 		//MODDD - turn this off.  Not sure if forcing to 100 would be better.
 		//m_iBravery = 0;
 
-
-		
 
 		if(canReviveFriend && !reviveTargetChosen && EASY_CVAR_GET(islaveReviveFriendMode) == 0 || EASY_CVAR_GET(islaveReviveFriendMode) == 2){
 
@@ -1383,8 +1304,6 @@ void CISlave :: StartTask ( Task_t *pTask )
 
 			if(m_hDead != NULL)reviveTargetChosen = TRUE;
 			
-
-
 			if (reviveTargetChosen && m_hDead != NULL && bestChoiceYet->okayToRevive() ){
 				//return TRUE;
 				bestChoiceYet->monsterTryingToReviveMe = this;
@@ -1441,8 +1360,6 @@ void CISlave :: StartTask ( Task_t *pTask )
 	break;
 	case TASK_ISLAVE_SET_REVIVE_SELF_SEQUENCE:{
 		
-		
-
 		//0 = dieheadshot-RES
 		//1 = diesimple-RES
 		//2 = diebackward-RES
@@ -1472,10 +1389,6 @@ void CISlave :: StartTask ( Task_t *pTask )
 		//SetYawSpeed();
 		//pev->frame = 0;
 
-
-
-
-
 	break;}
 	case TASK_ISLAVE_SET_REVIVE_SEQUENCE:
 		//ok.
@@ -1494,7 +1407,6 @@ void CISlave :: StartTask ( Task_t *pTask )
 				SetYawSpeed();
 
 				//easyPrintLine("HELP!!!????");
-
 				//pev->frame = 0;
 
 				tempISlave->beingRevived = 1;
@@ -1510,8 +1422,6 @@ void CISlave :: StartTask ( Task_t *pTask )
 			TaskFail();
 			return;
 		}
-
-
 	break;
 	default:
 		CSquadMonster :: StartTask ( pTask );
@@ -1519,7 +1429,6 @@ void CISlave :: StartTask ( Task_t *pTask )
 	}//END OF switch(...)
 
 }
-
 
 
 
@@ -1542,11 +1451,8 @@ void CISlave::startReanimation(){
 	beingRevived = 2;
 
 	CSquadMonster::startReanimation();
-	
-
 }//END OF startReanimation
 void CISlave::EndOfRevive(int preReviveSequence){
-
 	/*
 	pev->sequence = -1; //force reset.
 	SetSequenceByIndex(preReviveSequence, -1, FALSE);
@@ -1554,25 +1460,15 @@ void CISlave::EndOfRevive(int preReviveSequence){
 	ChangeSchedule(slWaitForSequence );
 	*/
 
-
-	
 	m_IdealMonsterState	= MONSTERSTATE_ALERT;// Assume monster will be alert, having come back from the dead and all.
 	m_MonsterState = MONSTERSTATE_ALERT; //!!!
-
 	m_IdealActivity = ACT_IDLE;
 	m_Activity = ACT_IDLE; //!!! No sequence changing, force the activity to this now.
 
-	
 	//CBaseMonster::startReanimation();
 	ChangeSchedule(slISlaveReviveSelf );
 
 }//END OF EndOfRevive
-
-
-
-
-
-
 
 
 
@@ -1605,8 +1501,6 @@ void CISlave::forgetReviveTarget(void){
 		monsterTryingToReviveMe->forgetReviveTarget();
 	}
 
-
-	
 	if(reviveTargetChosen){
 		reviveTargetChosen = FALSE;
 
@@ -1639,27 +1533,19 @@ void CISlave::forgetReviveTarget(void){
 	}
 
 	m_hDead = NULL;
-
-
 }
 
 //is the area right above my corpse empty?  If so, there's space for me to stand on being revived.
 BOOL CISlave::okayToRevive(void){
-
 	CBaseEntity *ent = NULL;
 	Vector spot = pev->origin + (0, 0, 20);
 
-
 	CBaseEntity* theList[32];
 	
-	//maybe not yet...
+	// maybe not yet...
 	//UTIL_SetSize(pev, VEC_HUMAN_HULL_MIN, VEC_HUMAN_HULL_MAX);
 	Vector livingSizeMins = VEC_HUMAN_HULL_MIN + Vector(-12, -12, 0);
 	Vector livingSizeMaxs = VEC_HUMAN_HULL_MAX + Vector(12, 12, 60);
-
-
-
-	//UTIL_EntitiesInBox
 
 	int theListSoftMax = UTIL_EntitiesInBox( theList, 32, pev->origin + livingSizeMins, pev->origin + livingSizeMaxs, 0 );
 
@@ -1669,34 +1555,12 @@ BOOL CISlave::okayToRevive(void){
 		if ( !UTIL_IsDeadEntity(ent) && ent != this && ent->MyMonsterPointer() != NULL ){
 			//easyPrintLine("WHAT THE heck IS YOUR darn ID %d", ent->MyMonsterPointer()->monsterID);
 			if(UTIL_IsAliveEntity(ent) && IRelationship(ent) <= R_NO ){
-				//maybe send some "scramble position" advisory to get off of me, if friendly?
+				// maybe send some "scramble position" advisory to get off of me, if friendly?
 				//ent->needToMove = TRUE;
 			}
 			return FALSE;
 		}
 	}
-
-
-
-
-
-
-
-	/*
-	while ( (ent = UTIL_FindEntityInSphere( ent, spot, 128 )) != NULL )
-	{
-		if ( !UTIL_IsDeadEntity(ent) && ent != this ){
-
-			if(UTIL_IsAliveEntity(ent) && IRelationship(ent) <= R_NO ){
-				//maybe send some "scramble position" advisory to get off of me, if friendly?
-				//ent->needToMove = TRUE;
-			}
-
-			return FALSE;
-		}
-	}
-	*/
-	
 	//ok?
 	UTIL_SetSize(pev, VEC_HUMAN_HULL_MIN, VEC_HUMAN_HULL_MAX);
 	return TRUE;
@@ -1704,12 +1568,9 @@ BOOL CISlave::okayToRevive(void){
 }
 
 
-
 void CISlave :: RunTask( Task_t *pTask )
 {
 	//easyPrintLine("BOOM BOOM BOOM %s %d", getScheduleName(), getTaskNumber());
-	
-	
 	
 	if(m_pSchedule == slISlaveReviveFriend){
 		if(!finishingReviveFriendAnim && UTIL_IsValidEntity(m_hTargetEnt) == FALSE){
@@ -1732,11 +1593,6 @@ void CISlave :: RunTask( Task_t *pTask )
 		}
 
 	}
-
-
-
-	
-
 
 	float distance2D;
 
@@ -1813,7 +1669,6 @@ void CISlave :: RunTask( Task_t *pTask )
 			
 		}
 
-
 		if(m_fSequenceFinished){
 			finishingReviveFriendAnim = FALSE;
 			TaskComplete();
@@ -1835,9 +1690,6 @@ BOOL CISlave::getIsBarnacleVictimException(void){
 float CISlave::getBarnaclePulledTopOffset(void){
 	return 38;
 }
-
-
-
 
 
 
@@ -1902,7 +1754,6 @@ int CISlave::LookupActivityHard(int activity){
 		break;
 
 	}
-
 	
 	return CBaseAnimating::LookupActivity(activity);
 }
@@ -1930,19 +1781,9 @@ int CISlave::tryActivitySubstitute(int activity){
 }
 
 
-
 BOOL CISlave::usesAdvancedAnimSystem(void){
 	return TRUE;
 }
-
-
-
-
-
-
-
-
-
 
 
 CISlave::CISlave(void){
@@ -2047,17 +1888,15 @@ GENERATE_TRACEATTACK_IMPLEMENTATION(CISlave)
 	if (bitsDamageType & DMG_SHOCK)
 		return;
 
-
-
 	//???!!!
-	
 	switch(ptr->iHitgroup){
 		//either of these.
 		case HITGROUP_LEFTARM:
 		case HITGROUP_RIGHTARM:
 
 			if(m_pSchedule == slSlaveAttack1){
-				//interruptable by this?
+				// interruptable by this?
+				// Might be cleaner than straight "ChangeSchedule", unsure
 				m_failSchedule = SCHED_BIG_FLINCH;
 				TaskFail();
 
@@ -2069,7 +1908,6 @@ GENERATE_TRACEATTACK_IMPLEMENTATION(CISlave)
 		break;
 	}//END OF switch
 	
-
 
 	GENERATE_TRACEATTACK_PARENT_CALL(CSquadMonster);
 }//END OF TRACEATTACK
@@ -2116,8 +1954,6 @@ IMPLEMENT_CUSTOM_SCHEDULES( CISlave, CSquadMonster );
 
 
 
-
-
 void CISlave::ScheduleChange(void){
 	//OK?
 	ClearBeams();
@@ -2134,11 +1970,9 @@ Schedule_t *CISlave :: GetSchedule( void )
 {
 	ClearBeams( );
 
-
 	//MODDD - that okay?
 	forgetReviveTarget();
 	finishingReviveFriendAnim = FALSE;
-
 
 /*
 	if (pev->spawnflags)
@@ -2173,11 +2007,9 @@ Schedule_t *CISlave :: GetSchedule( void )
 	float thisDistance;
 
 
-
 	switch (m_MonsterState)
 	{
 	case MONSTERSTATE_COMBAT:
-
 
 		// dead enemy
 		//MODDD - woa, for a while this got pushed way below.  It's fine to go back up here right?
@@ -2187,7 +2019,6 @@ Schedule_t *CISlave :: GetSchedule( void )
 			return CBaseMonster :: GetSchedule();
 		}
 
-
 		//if(EASY_CVAR_GET(islaveCanRevive) == 1){ 
 		//canReviveFriend = (RANDOM_LONG(0, 4) == 0);
 		//canReviveFriend = TRUE;
@@ -2196,14 +2027,6 @@ Schedule_t *CISlave :: GetSchedule( void )
 		if(!reviveTargetChosen){
 			canReviveFriend = (EASY_CVAR_GET(islaveReviveFriendChance) > 0 && RANDOM_FLOAT(0, 1) <= EASY_CVAR_GET(islaveReviveFriendChance) );
 		}
-
-		//
-
-
-
-
-
-
 
 		if(EASY_CVAR_GET(islaveReviveFriendMode) == 1 || EASY_CVAR_GET(islaveReviveFriendMode) == 2 && canReviveFriend && !reviveTargetChosen){
 
@@ -2329,9 +2152,6 @@ Schedule_t *CISlave :: GetSchedule( void )
 		}
 		else  
 		{
-
-
-
 
 			// we can see the enemy
 			if ( HasConditions(bits_COND_CAN_RANGE_ATTACK1) )

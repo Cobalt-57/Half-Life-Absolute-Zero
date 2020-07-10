@@ -18,12 +18,10 @@
 // implementation of CHudAmmo class
 //
 
+#include "external_lib_include.h"
+
 #include "hud.h"
 #include "cl_util.h"
-#include <string.h>
-#include <time.h>
-#include <stdio.h>
-
 #include "parsemsg.h"
 
 DECLARE_MESSAGE(m_Geiger, Geiger )

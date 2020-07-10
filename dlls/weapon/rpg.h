@@ -30,6 +30,17 @@ enum rpg_e {
 class CRpg : public CBasePlayerWeapon
 {
 public:
+	CLaserSpot* m_pSpot;
+	int m_fSpotActive;
+	int m_cActiveRockets;// how many missiles in flight from this launcher right now?
+
+	unsigned short m_usRpg;
+
+#ifndef CLIENT_DLL
+	float forceHideSpotTime;
+#endif
+
+public:
 	//MODDD - constructor.
 	CRpg(void);
 
@@ -60,14 +71,11 @@ public:
 
 	void PrimaryAttack(void);
 	void SecondaryAttack(void);
+	void ItemPostFrameThink(void);
 	void WeaponIdle(void);
 
 	void UpdateSpot(void);
 	BOOL ShouldWeaponIdle(void) { return TRUE; };
-
-	CLaserSpot* m_pSpot;
-	int m_fSpotActive;
-	int m_cActiveRockets;// how many missiles in flight from this launcher right now?
 
 	virtual BOOL UseDecrement(void)
 	{
@@ -78,8 +86,6 @@ public:
 #endif
 	}
 
-private:
-	unsigned short m_usRpg;
 
 };
 
@@ -97,9 +103,6 @@ class CLaserSpot : public CBaseEntity
 	int ObjectCaps(void) { return FCAP_DONT_SAVE; }
 
 public:
-	void Suspend(float flSuspendTime);
-	void EXPORT Revive(void);
-
 	static CLaserSpot* CreateSpot(void);
 };
 

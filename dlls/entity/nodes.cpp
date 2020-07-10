@@ -17,7 +17,6 @@
 // nodes.cpp - AI node tree stuff.
 //=========================================================
 
-#include "ignore_warning_list.h"
 #include "extdll.h"
 #include "util.h"
 #include "cbase.h"
@@ -25,8 +24,8 @@
 #include "nodes.h"
 #include "util_model.h"
 #include "doors.h"
-
 #include "weapons.h" //MODDD - some externs there.
+#include "ignore_warning_list.h"
 
 EASY_CVAR_EXTERN(pathfindPrintout)
 EASY_CVAR_EXTERN(nodeSearchStartVerticalOffset)

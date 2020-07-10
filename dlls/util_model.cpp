@@ -727,6 +727,7 @@ void getHitboxCount(void *pmodel, entvars_t *pev, int& argCount){
 float SetController( void *pmodel, entvars_t *pev, int iController, float flValue )
 {
 	studiohdr_t *pstudiohdr;
+	int iControllerActual;
 	
 	pstudiohdr = (studiohdr_t *)pmodel;
 	if (! pstudiohdr)
@@ -734,19 +735,36 @@ float SetController( void *pmodel, entvars_t *pev, int iController, float flValu
 
 	mstudiobonecontroller_t	*pbonecontroller = (mstudiobonecontroller_t *)((byte *)pstudiohdr + pstudiohdr->bonecontrollerindex);
 
+
 	// find first controller that matches the index
 	int i;
-	for ( i = 0; i < pstudiohdr->numbonecontrollers; i++, pbonecontroller++)
+
+	for (i = 0; i <= pstudiohdr->numbonecontrollers; i++, pbonecontroller++)
 	{
-		if (pbonecontroller->index == iController)
+		if (pbonecontroller->index == iController) {
 			break;
+		}
 	}
-	if (i >= pstudiohdr->numbonecontrollers)
+	if (i >= pstudiohdr->numbonecontrollers) {
 		return flValue;
+	}
 
-	
+	//MODDD - NEW SECTION
+	// If the pbonecontroller picked has an index over numbonecontrollers, we likely
+	// picked the special controller number (4), which means to change the mouth
+	// controller instead (which is never actually at 4).
+	// Instead, just use this same 'i' index to determine that.
+	if (iController < pstudiohdr->numbonecontrollers) {
+		// no problem with the default way?
+		iControllerActual = i;
+	}else {
+		// stop at "i" instead, controller #4 does not actually exist!
+		iControllerActual = i;
+	}
+	////////////////////////////////////////
+
+
 	// wrap 0..360 if it's a rotational controller
-
 	if (pbonecontroller->type & (STUDIO_XR | STUDIO_YR | STUDIO_ZR))
 	{
 		// ugly hack, invert value if end < start
@@ -774,7 +792,9 @@ float SetController( void *pmodel, entvars_t *pev, int iController, float flValu
 
 	if (setting < 0) setting = 0;
 	if (setting > 255) setting = 255;
-	pev->controller[iController] = setting;
+
+	pev->controller[iControllerActual] = setting;
+	
 
 	return setting * (1.0 / 255.0) * (pbonecontroller->end - pbonecontroller->start) + pbonecontroller->start;
 }
@@ -784,6 +804,7 @@ float SetController( void *pmodel, entvars_t *pev, int iController, float flValu
 float SetControllerUnsafe( void *pmodel, entvars_t *pev, int iController, float flValue )
 {
 	studiohdr_t *pstudiohdr;
+	int iControllerActual;
 	
 	pstudiohdr = (studiohdr_t *)pmodel;
 	if (! pstudiohdr)
@@ -800,6 +821,23 @@ float SetControllerUnsafe( void *pmodel, entvars_t *pev, int iController, float 
 	}
 	if (i >= pstudiohdr->numbonecontrollers)
 		return flValue;
+
+
+	//MODDD - NEW SECTION
+	// If the pbonecontroller picked has an index over numbonecontrollers, we likely
+	// picked the special controller number (4), which means to change the mouth
+	// controller instead (which is never actually at 4).
+	// Instead, just use this same 'i' index to determine that.
+	if (iController < pstudiohdr->numbonecontrollers) {
+		// no problem with the default way?
+		iControllerActual = iController;
+	}
+	else {
+		// stop at "i" instead, controller #4 does not actually exist!
+		iControllerActual = i;
+	}
+	////////////////////////////////////////
+
 
 	// wrap 0..360 if it's a rotational controller
 
@@ -838,7 +876,7 @@ float SetControllerUnsafe( void *pmodel, entvars_t *pev, int iController, float 
 	if (setting > 255) setting = 255;
 	*/
 	//pev->controller[iController] = setting;
-	pev->controller[iController] = flValue;
+	pev->controller[iControllerActual] = (byte)flValue;
 
 	//return setting * (1.0 / 255.0) * (pbonecontroller->end - pbonecontroller->start) + pbonecontroller->start;
 	//??? why return something?

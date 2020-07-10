@@ -1236,7 +1236,6 @@ void EV_StopPreviousGauss( int idx )
 }
 
 
-
 void EV_FireGauss( event_args_t *args )
 {
 	int idx;
@@ -1295,9 +1294,6 @@ void EV_FireGauss( event_args_t *args )
 	if(EASY_CVAR_GET(mutePlayerWeaponFire) != 1 ){
 		gEngfuncs.pEventAPI->EV_PlaySound( idx, origin, CHAN_WEAPON, "weapons/gauss2.wav", 0.5 + flDamage * (1.0 / 400.0), ATTN_NORM, 0, 85 + gEngfuncs.pfnRandomLong( 0, 0x1f ) );
 	}
-
-	
-	
 
 	
 //NOTE: on any changes, sync me up with gauss.cpp (server-side)'s "Fire" method with a similar loop.
@@ -1547,936 +1543,6 @@ void EV_FireGauss( event_args_t *args )
 //======================
 
 
-void createBall(int* sprite, Vector* loc){
-
-
-
-	float randomStrength = 56;
-
-	/*
-	float randx = gEngfuncs.pfnRandomFloat(-randomStrength, randomStrength);
-	float randy = gEngfuncs.pfnRandomFloat(-randomStrength, randomStrength);
-	float randz = gEngfuncs.pfnRandomFloat(-randomStrength, randomStrength);
-	*/
-	float randx = gEngfuncs.pfnRandomFloat(0, randomStrength);
-	float randy = gEngfuncs.pfnRandomFloat(0, randomStrength);
-	float randz = gEngfuncs.pfnRandomFloat(35, randomStrength +80);
-
-	if(gEngfuncs.pfnRandomLong(0, 1) == 0){
-		randx *= -1;
-	}
-	if(gEngfuncs.pfnRandomLong(0, 1) == 0){
-		randy *= -1;
-	}
-	
-	if(gEngfuncs.pfnRandomLong(0, 1) == 0){
-		randz *= -1;
-	}
-	
-
-	
-	vec3_t rot = Vector(randx, randy, randz);
-
-	
-	TEMPENTITY* eh = gEngfuncs.pEfxAPI->R_TempSprite( *loc, rot, 0.12f, *sprite, kRenderGlow, kRenderFxNoDissipation, 250.0 / 255.0, 0.22f, FTENT_GRAVITY | FTENT_COLLIDEWORLD | FTENT_FADEOUT );
-	if (eh != NULL) {
-		eh->fadeSpeed = 3.3f;
-	}
-	//easyPrintLine("??? %.2f", eh->bounceFactor);
-
-}
-
-
-
-void createBallPowerup(int* sprite, Vector* loc) {
-
-
-
-	float randomStrength = 56;
-
-	/*
-	float randx = gEngfuncs.pfnRandomFloat(-randomStrength, randomStrength);
-	float randy = gEngfuncs.pfnRandomFloat(-randomStrength, randomStrength);
-	float randz = gEngfuncs.pfnRandomFloat(-randomStrength, randomStrength);
-	*/
-	float randx = gEngfuncs.pfnRandomFloat(0, randomStrength);
-	float randy = gEngfuncs.pfnRandomFloat(0, randomStrength);
-	float randz = gEngfuncs.pfnRandomFloat(35, randomStrength + 80);
-
-	if (gEngfuncs.pfnRandomLong(0, 1) == 0) {
-		randx *= -1;
-	}
-	if (gEngfuncs.pfnRandomLong(0, 1) == 0) {
-		randy *= -1;
-	}
-
-	if (gEngfuncs.pfnRandomLong(0, 1) == 0) {
-		randz *= -1;
-	}
-
-
-
-	vec3_t rot = Vector(randx, randy, randz);
-
-
-	//MODDD - color it red. how we dod that?
-	//life is 2nd from the last with the flags yo.
-	TEMPENTITY* eh = gEngfuncs.pEfxAPI->R_TempSprite(*loc, rot, 0.12f, *sprite, kRenderGlow, kRenderFxNoDissipation, 250.0 / 255.0, 1.22f, FTENT_SLOWGRAVITY | FTENT_COLLIDEWORLD | FTENT_FADEOUT);
-	if (eh != NULL) {
-		eh->fadeSpeed = 0.6f;
-	}
-	//eh->entity.baseline.gravity
-	//eh->entity.curstate.gravity
-	//eh->entity.prevstate.gravity
-	//???
-
-
-	//MODDD - remove "FTENT_GRAVITY" from above, yes or no?
-
-	//unnecessary yes?
-	//eh->flags |= (FTENT_SLOWGRAVITY);
-
-
-	//easyPrintLine("??? %.2f", eh->bounceFactor);
-
-}
-
-
-void createBallVomit(int* sprite, Vector* loc, Vector* dir){
-	float randomStrength = 80;
-
-	/*
-	float randx = gEngfuncs.pfnRandomFloat(-randomStrength, randomStrength);
-	float randy = gEngfuncs.pfnRandomFloat(-randomStrength, randomStrength);
-	float randz = gEngfuncs.pfnRandomFloat(-randomStrength, randomStrength);
-	*/
-	float randx = dir->x * 270 + gEngfuncs.pfnRandomFloat(-20, randomStrength);
-	float randy = dir->y * 270 + gEngfuncs.pfnRandomFloat(-20, randomStrength);
-	float randz = 50 + gEngfuncs.pfnRandomFloat(-40, randomStrength);
-
-	/*
-	if(gEngfuncs.pfnRandomLong(0, 1) == 0){
-		randx *= -1;
-	}
-	if(gEngfuncs.pfnRandomLong(0, 1) == 0){
-		randy *= -1;
-	}
-	
-	if(gEngfuncs.pfnRandomLong(0, 1) == 0){
-		randz *= -1;
-	}
-	*/
-
-	
-	vec3_t rot = Vector(randx, randy, randz);
-
-	TEMPENTITY* eh = gEngfuncs.pEfxAPI->R_TempSprite( *loc, rot, 0.26f, *sprite, kRenderGlow, kRenderFxNoDissipation, 250.0 / 255.0, 0.14f, FTENT_GRAVITY | FTENT_COLLIDEWORLD | FTENT_FADEOUT );
-	if(eh){
-		eh->fadeSpeed = 3.4f;
-	}else{
-		easyForcePrintLine("WHY YOU FAIL");
-	}
-	//easyPrintLine("??? %.2f", eh->bounceFactor);
-
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-void floaterGasCallback ( struct tempent_s *ent, float frametime, float currenttime )
-{
-	if ( currenttime < ent->entity.baseline.fuser1 )
-		return;
-
-	if(ent->entity.baseline.origin[2] > -3.8){
-		ent->entity.baseline.origin[2] += -0.8;
-	}else{
-		ent->entity.baseline.origin[2] = -3.8;
-	}
-
-	//TEST - real slow for now!
-	ent->entity.baseline.fuser1 = gEngfuncs.GetClientTime() + 0;
-}//END OF EV_imitation7_think
-
-
-void floaterBigGasCallback ( struct tempent_s *ent, float frametime, float currenttime )
-{
-	if ( currenttime < ent->entity.baseline.fuser1 )
-		return;
-
-	if(ent->entity.baseline.origin[2] > -3.4){
-		ent->entity.baseline.origin[2] += -0.5;
-	}else{
-		ent->entity.baseline.origin[2] = -3.4;
-	}
-
-	//TEST - real slow for now!
-	ent->entity.baseline.fuser1 = gEngfuncs.GetClientTime() + 0;
-}//END OF EV_imitation7_think
-
-
-
-void createBallFloaterGas(int* sprite, const Vector& loc){
-
-	float randomStrength = 14;
-
-	/*
-	float randx = gEngfuncs.pfnRandomFloat(-randomStrength, randomStrength);
-	float randy = gEngfuncs.pfnRandomFloat(-randomStrength, randomStrength);
-	float randz = gEngfuncs.pfnRandomFloat(-randomStrength, randomStrength);
-	*/
-	float randx = gEngfuncs.pfnRandomFloat(-randomStrength, randomStrength);
-	float randy = gEngfuncs.pfnRandomFloat(-randomStrength, randomStrength);
-	float randz = 80 + gEngfuncs.pfnRandomFloat(0, 30);
-
-	float randScale = gEngfuncs.pfnRandomFloat(0.88, 1.06);
-
-	/*
-	if(gEngfuncs.pfnRandomLong(0, 1) == 0){
-		randx *= -1;
-	}
-	if(gEngfuncs.pfnRandomLong(0, 1) == 0){
-		randy *= -1;
-	}
-	
-	if(gEngfuncs.pfnRandomLong(0, 1) == 0){
-		randz *= -1;
-	}
-	*/
-
-	
-	Vector locWhat = loc;
-	vec3_t rot = Vector(randx, randy, randz);
-
-	//FTENT_SLOWGRAVITY  ?
-	TEMPENTITY* eh = gEngfuncs.pEfxAPI->R_TempSprite( locWhat, rot, randScale, *sprite, kRenderGlow, kRenderFxNoDissipation, 160.0 / 255.0, 1.8f, FTENT_CLIENTCUSTOM | FTENT_COLLIDEWORLD | FTENT_FADEOUT );
-	if(eh){
-		eh->fadeSpeed = 0.07f;
-		eh->bounceFactor = 0;
-		eh->callback = &floaterGasCallback;
-		
-	}else{
-		easyForcePrintLine("WHY YOU FAIL");
-	}
-	//easyPrintLine("??? %.2f", eh->bounceFactor);
-
-}
-
-void createBigBallFloaterGas(int* sprite, const Vector& loc){
-
-	float randomStrength = 6;
-
-	float randx = gEngfuncs.pfnRandomFloat(-randomStrength, randomStrength);
-	float randy = gEngfuncs.pfnRandomFloat(-randomStrength, randomStrength);
-	float randz = 30 + gEngfuncs.pfnRandomFloat(0, 30);
-
-	float randScale = gEngfuncs.pfnRandomFloat(2.5, 2.9);
-
-	Vector locWhat = loc;
-	vec3_t rot = Vector(randx, randy, randz);
-
-	//FTENT_SLOWGRAVITY  ?
-	TEMPENTITY* eh = gEngfuncs.pEfxAPI->R_TempSprite( locWhat, rot, randScale, *sprite, kRenderGlow, kRenderFxNoDissipation, 100.0 / 255.0, 1.0f, FTENT_CLIENTCUSTOM | FTENT_COLLIDEWORLD | FTENT_FADEOUT );
-	if(eh){
-		eh->fadeSpeed = 0.06f;
-		eh->bounceFactor = 0;
-		eh->callback = &floaterBigGasCallback;
-		
-	}else{
-		easyForcePrintLine("WHY YOU FAIL");
-	}
-
-}
-
-
-
-
-
-
-
-
-void generateFreakyLight(const Vector& arg_origin){
-
-	//g_engfuncs.pfnCVarSetFloat
-
-	//g_engfuncs.
-
-
-	//clientside way:
-	//gEngfuncs.pfnGetCvarPointer
-	//NOTE: equivalent for serverside:
-	//g_engfuncs.pfnCVarGetPointer
-	
-
-
-
-	/*
-	float durationMin = 0.08;
-	float durationMax = 0.14;
-	float radiusMin = 280;
-	float radiusMax = 410;
-	float spawnDistHori = 180;
-	float spawnDistVertMin = 25;
-	float spawnDistVertMax = 75;
-	int multiColor = TRUE;
-	*/
-	float durationMin = EASY_CVAR_GET(strobeDurationMin);
-	float durationMax = EASY_CVAR_GET(strobeDurationMax);
-	float radiusMin = EASY_CVAR_GET(strobeRadiusMin);
-	float radiusMax = EASY_CVAR_GET(strobeRadiusMax);
-	float spawnDistHori = EASY_CVAR_GET(strobeSpawnDistHori);
-	float spawnDistVertMin = EASY_CVAR_GET(strobeSpawnDistVertMin);
-	float spawnDistVertMax = EASY_CVAR_GET(strobeSpawnDistVertMax);
-	
-
-	int multiColor;
-	if(EASY_CVAR_GET(strobeMultiColor) == 1){
-		multiColor = TRUE;
-	}else{
-		multiColor = FALSE;
-	}
-
-
-	
-	const Vector& origin = arg_origin;
-
-	float randx;
-	float randy;
-	float randz;
-
-	dlight_t *dl = gEngfuncs.pEfxAPI->CL_AllocDlight (0);
-	float temp;
-
-	randx = gEngfuncs.pfnRandomFloat(30, spawnDistHori);
-	if(gEngfuncs.pfnRandomLong(0, 1) == 0){
-		randx *= -1;
-	}
-	randy = gEngfuncs.pfnRandomFloat(30, spawnDistHori);
-	if(gEngfuncs.pfnRandomLong(0, 1) == 0){
-		randy *= -1;
-	}
-	randz = gEngfuncs.pfnRandomFloat(spawnDistVertMin, spawnDistVertMax);
-
-	randx += origin.x;
-	randy += origin.y;
-	randz += origin.z;
-
-	float randRad = gEngfuncs.pfnRandomFloat(radiusMin, radiusMax);
-	float randLife = gEngfuncs.pfnRandomFloat(durationMin, durationMax);
-
-	dl->origin.x = randx;
-	dl->origin.y = randy;
-	dl->origin.z = randz;
-
-
-	dl->dark = false;
-	dl->die = gEngfuncs.GetClientTime() + randLife;
-	
-
-	int colorReceive[3];
-	
-	if(multiColor == TRUE){
-		generateColor(colorReceive);
-	}else{
-		//always solid white.
-		colorReceive[0] = 255;
-		colorReceive[1] = 255;
-		colorReceive[2] = 255;
-	}
-
-
-
-	dl->radius = randRad;
-	dl->color.r = colorReceive[0];
-	dl->color.g = colorReceive[1];
-	dl->color.b = colorReceive[2];
-	
-}
-
-
-
-
-void generateFreakyLaser(const Vector& arg_origin){
-	//BEAM		*( *R_BeamPoints )				( float * start, float * end, int modelIndex, float life, float width, float amplitude, float brightness, float speed, int startFrame, float framerate, float r, float g, float b );
-	//BEAM		*( *R_BeamRing )				( int startEnt, int endEnt, int modelIndex, float life, float width, float amplitude, float brightness, float speed, int startFrame, float framerate, float r, float g, float b );
-	
-	const Vector& origin = arg_origin;
-
-	int m_iLaserSprite = 0;
-	
-	//might be wiser to do this in some "init" function clientside-wide instead?  Same for other "EV_FindModelIndex" calls?
-	m_iLaserSprite = gEngfuncs.pEventAPI->EV_FindModelIndex( "sprites/laserbeam.spr" );
-
-	float randOrigin1[3];
-	float randOrigin2[3];
-
-	//range??
-	float mag = randomValue(EASY_CVAR_GET(raveLaserLength), EASY_CVAR_GET(raveLaserLength));
-
-	float fltDeg = randomValue(0, CONST_2PI);
-	if(fltDeg >= CONST_2PI){
-		fltDeg -= CONST_2PI;
-	}
-	
-	float x = cos(fltDeg) * mag;
-	float y = sin(fltDeg) * mag;
-
-
-	fltDeg += CONST_180_RAD;
-
-	if(fltDeg >= CONST_2PI){
-		fltDeg -= CONST_2PI;
-	}
-
-	//float fltMag = sqrt( pow(x, 2) + pow(y, 2) + pow(z, 2) );
-
-	float x2 = cos(fltDeg) * mag;
-	float y2 = sin(fltDeg) * mag;
-
-	float randomShiftX = randomAbsoluteValue(EASY_CVAR_GET(raveLaserSpawnDistHoriMin), EASY_CVAR_GET(raveLaserSpawnDistHoriMax));
-	float randomShiftY = randomAbsoluteValue(EASY_CVAR_GET(raveLaserSpawnDistHoriMin), EASY_CVAR_GET(raveLaserSpawnDistHoriMax));
-	float randomShiftZ = randomAbsoluteValue(EASY_CVAR_GET(raveLaserSpawnDistVertMin), EASY_CVAR_GET(raveLaserSpawnDistVertMax));
-	float randomShiftZ2 = randomAbsoluteValue(EASY_CVAR_GET(raveLaserSpawnDistVertMin), EASY_CVAR_GET(raveLaserSpawnDistVertMax));
-
-	randOrigin1[0] = origin[0] + x + randomShiftX;
-	randOrigin1[1] = origin[1] + y + randomShiftY;
-	randOrigin1[2] = origin[2] + randomShiftZ;
-
-	randOrigin2[0] = origin[0] + -x + randomShiftX;
-	randOrigin2[1] = origin[1] + -y + randomShiftY;
-	//test with the same "randomShiftZ" once?
-	randOrigin2[2] = origin[2] + randomShiftZ2;
-
-
-	float randLife = gEngfuncs.pfnRandomFloat(EASY_CVAR_GET(raveLaserDurationMin), EASY_CVAR_GET(raveLaserDurationMax));
-	float randWidth = gEngfuncs.pfnRandomFloat(EASY_CVAR_GET(raveLaserThicknessMin), EASY_CVAR_GET(raveLaserThicknessMax));
-
-	float randAmp = gEngfuncs.pfnRandomFloat(EASY_CVAR_GET(raveLaserNoiseMin), EASY_CVAR_GET(raveLaserNoiseMax));
-
-	float randBrightness = gEngfuncs.pfnRandomFloat(EASY_CVAR_GET(raveLaserBrightnessMin) * 255, EASY_CVAR_GET(raveLaserBrightnessMax) * 255);
-	//INTERPRET FROM 0 - 1, like  0.8 - 1.0!
-	float frameRate = gEngfuncs.pfnRandomFloat(EASY_CVAR_GET(raveLaserFrameRateMin), EASY_CVAR_GET(raveLaserFrameRateMax));
-	
-	float speed = 1;
-	float startFrame = 0;
-
-
-	
-	int colorReceive[3];
-	
-	if(EASY_CVAR_GET(raveLaserMultiColor) != 0){
-		generateColor(colorReceive);
-	}else{
-		//always solid white.
-		colorReceive[0] = 255;
-		colorReceive[1] = 255;
-		colorReceive[2] = 255;
-	}
-
-
-
-
-	//(float*)Vector(randx1, randy1, randz1)
-	BEAM* someBeam = gEngfuncs.pEfxAPI->R_BeamPoints( randOrigin1, randOrigin2, m_iLaserSprite, randLife, randWidth, randAmp, randBrightness, speed, startFrame, frameRate, 0, 0, 0);
-
-	
-	//short someShort = gEngfuncs.pEfxAPI->R_LookupColor(colorReceive[0], colorReceive[1], colorReceive[2]);
-	//easyPrintLine("HOWWWWWWWW %d::: <-- %d %d %d", someShort, colorReceive[0], colorReceive[1], colorReceive[2]);
-	//what is this??
-
-	
-	//For unknown reasons, the color arguments, the 3 last args above, aren't working as expected.  Below seems to work though.  
-	//Just check to see whether the created beam is null or not (may fail to create on too many requests or... who knows why else).
-	//easyPrintLine("IS IT NULLLLL %d", (someBeam == NULL));
-	if(someBeam == NULL){
-
-	}else{
-		//divided by 65025.0f (this is 256^2).  Why?  Because anything above 1/256^2 distorts colors, making even (255, 12, 0) show up as bright yellow.
-		//Anything less than 1/256^2 is treated as getting closer to black, which makes it more transparent up to invisible at 0.
-		someBeam->r = colorReceive[0]/65025.0f;
-		someBeam->g = colorReceive[1]/65025.0f;
-		someBeam->b = colorReceive[2]/65025.0f;	
-	}
-
-
-}
-
-
-
-
-
-void EV_FreakyLight( event_args_t* args){
-	int i = 0;
-
-	//this is handled in method "UpdateClientData" of file "hud_update.cpp" instead.
-	//updateCVarRefsClient();
-
-	
-
-
-	generateFreakyLight( (float*)&args->origin );
-
-	if(EASY_CVAR_GET(raveLaserEnabled) == 1){
-		
-		//if there is a decimal in raveLaserSpawnFreq, guarantee spawning of the first whole number lasers (like in 2.4, spawn 2 lasers).
-		//Treat the 0.4 decimal as a "40%" chance of producing another laser.  Rounds out nice and evenly when it happens a lot.
-		int toGen = (int)EASY_CVAR_GET(raveLaserSpawnFreq);   //truncate.
-		//roundoff?
-		float roundoff = ((int)(EASY_CVAR_GET(raveLaserSpawnFreq) * 10) % 10 ) / 10.0f;
-		if(roundoff != 0 && gEngfuncs.pfnRandomLong(0, 1) <= roundoff){
-			//extra.
-			toGen++;
-		}
-		for(i = 0; i < toGen; i++){
-			generateFreakyLaser( (float*)&args->origin );
-		}
-	}//END OF if(EASY_CVAR_GET(raveLaserEnabled) == 1)
-
-}
-
-
-
-
-
-	
-void EV_FriendlyVomit( event_args_t* args){
-
-
-	
-	int duckyou = gEngfuncs.pEventAPI->EV_FindModelIndex( "sprites/hotglow.spr" );
-
-	int m_iHotglowGreen;
-	m_iHotglowGreen = gEngfuncs.pEventAPI->EV_FindModelIndex( "sprites/hotglow_green.spr" );
-	
-
-	vec3_t origin;
-	vec3_t ang;
-	//vec3_origin
-	VectorCopy_f( args->origin, origin );
-	VectorCopy_f( args->angles, ang);
-
-	int ballsToSpawn = args->iparam1;
-	
-	int balls = ballsToSpawn;
-	for(int i = 0; i < balls; i++){
-		createBallVomit(&m_iHotglowGreen, &origin, &ang);
-	}
-
-}//END OF EV_FriendlyVomit
-
-
-
-//MODDD - TODO. should behavior varry from being destroyed mid-fall or while on the ground?  such as gibbed midair or auto-exploded?
-void EV_FloaterExplode( event_args_t* args){
-
-	int duckyou = gEngfuncs.pEventAPI->EV_FindModelIndex( "sprites/hotglow.spr" );
-
-	int m_iHotglowGreen;
-	m_iHotglowGreen = gEngfuncs.pEventAPI->EV_FindModelIndex( "sprites/hotglow_green.spr" );
-	
-
-	vec3_t origin;
-	vec3_t ang;
-	//vec3_origin
-	VectorCopy_f( args->origin, origin );
-	VectorCopy_f( args->angles, ang);
-
-	int ballsToSpawn = 8;
-	
-	createBigBallFloaterGas(&m_iHotglowGreen, origin + Vector(0, 0, 20));
-
-
-	int balls = ballsToSpawn;
-	for(int i = 0; i < balls; i++){
-		createBallFloaterGas(&m_iHotglowGreen, origin + Vector(0, 0, 12) );
-	}
-
-}//END OF EV_FloaterExplode
-
-
-
-
-
-
-
-
-
-
-void shrapnelHitCallback( struct tempent_s *ent, struct pmtrace_s *ptr ){
-
-	
-	dlight_t *dl = gEngfuncs.pEfxAPI->CL_AllocDlight (0);
-	VectorCopy_f ( ent->entity.origin, dl->origin );
-
-	dl->dark = false;
-	//time of "0.01" or "0.001"?
-	//dl->die = gEngfuncs.GetClientTime() + 0.001; //Kill it right away
-	dl->die = gEngfuncs.GetClientTime() + 0.03; //Kill it right away
-	
-	dl->radius = 80;
-	dl->color.r = 255;
-	dl->color.g = 120;
-	dl->color.b = 0;
-
-}
-
-void createShrapnel(int* sprite, Vector* loc, int testArg, float testArg2, float testArg3){
-
-
-
-	float randomStrength = 190; //121;
-	float heightExtra = 140;
-
-	randomStrength = testArg2;
-	heightExtra = testArg3;
-
-
-	/*
-	float randx = gEngfuncs.pfnRandomFloat(-randomStrength, randomStrength);
-	float randy = gEngfuncs.pfnRandomFloat(-randomStrength, randomStrength);
-	float randz = gEngfuncs.pfnRandomFloat(-randomStrength, randomStrength);
-	*/
-	float randx = gEngfuncs.pfnRandomFloat(20, randomStrength);
-	float randy = gEngfuncs.pfnRandomFloat(20, randomStrength);
-	float randz = gEngfuncs.pfnRandomFloat(45, randomStrength + heightExtra);
-
-	if(gEngfuncs.pfnRandomLong(0, 1) == 0){
-		randx *= -1;
-	}
-	if(gEngfuncs.pfnRandomLong(0, 1) == 0){
-		randy *= -1;
-	}
-	
-	if(gEngfuncs.pfnRandomLong(0, 1) == 0){
-		randz *= -1;
-	}
-	
-
-	
-	vec3_t rot = Vector(randx, randy, randz);
-
-	
-
-	float lifeValue = gEngfuncs.pfnRandomFloat(2.25, 3.55);
-	
-	
-	int flags = 0;
-	if(testArg == 1){
-		//no flash on hit.
-		flags = BREAK_METAL | FTENT_SMOKETRAIL | FTENT_COLLIDEWORLD | FTENT_FADEOUT | FTENT_ROTATE;;
-	}else{
-		//flash on hit.
-		flags = BREAK_METAL | FTENT_SMOKETRAIL | FTENT_COLLIDEWORLD | FTENT_FADEOUT | FTENT_ROTATE | FTENT_FLASHONHIT;
-		//flags = BREAK_METAL | FTENT_SMOKETRAIL | FTENT_COLLIDEWORLD | FTENT_FADEOUT | FTENT_ROTATE | FTENT_FLICKER;
-	}
-	
-	TEMPENTITY* eh = gEngfuncs.pEfxAPI->R_TempSprite( *loc, rot, 2.5f, *sprite, kRenderNormal, kRenderFxNone, 255.0 / 255.0, lifeValue, flags);
-	if (eh != NULL) {
-		eh->fadeSpeed = 0.5f;
-	}
-
-
-	//gives this the metal hit sound effects.  I guess it is hardcoded what values of "hitSound" make what sounds, can't find the resulting sound calls for that anywhere.
-	//Closest is entity.cpp, where this is referred to but still not used directly.
-	//Calls a method that is pre-compiled in this line:
-	//    Callback_TempEntPlaySound(pTemp, damp);
-	//...assume it is what refers to this.
-
-
-	//eh->hitSound = 2;    hit sound disabled, actually.  Enabling this gives it the break metal sounds though.
-	eh->hitcallback = &shrapnelHitCallback;
-
-	//no "BREAK_METAL " here.
-	//eh->flags |= (FTENT_SLOWGRAVITY  | FTENT_SMOKETRAIL );
-
-
-	eh->entity.baseline.angles[0] = gEngfuncs.pfnRandomFloat(-256, 256);
-	eh->entity.baseline.angles[1] = gEngfuncs.pfnRandomFloat(-256, 256);
-	eh->entity.baseline.angles[2] = gEngfuncs.pfnRandomFloat(-256, 256);
-	
-
-	
-
-
-
-
-	//easyPrintLine("??? %.2f", eh->bounceFactor);
-	//default bounce factor is 1.0.
-
-}
-
-
-
-void EV_QuakeExplosionEffect( event_args_t* args){
-
-	
-	Vector origin = args->origin;
-	int shrapnel3D = gEngfuncs.pEventAPI->EV_FindModelIndex("models/shrapnel.mdl");
-	
-	//TEST IN SESSION!
-
-
-	//R_Explosion
-
-	////void( *R_Explosion )( float *pos, int model, float scale, float framerate, int flags );
-	//gEngfuncs.pEfxAPI->R_Explosion( args->origin, m_iBalls, 0.3, 15, TE_EXPLFLAG_NONE );
-	
-
-	//void	( *R_BreakModel )				( float *pos, float *size, float *dir, float random, float life, int count, int modelIndex, char flags );
-	//!!!!!!!!!!!!!!!!!!!!!!!!!
-
-
-	int testArg = args->iparam1;
-	
-	float testArg2 = args->fparam1;
-	float testArg3 = args->fparam2;
-
-	//int shrapz = 14;
-	int shrapz = args->iparam2;
-
-	if(testArg == 0){
-		//"FTENT_FLASHONHIT" doesn't seem to do anything for whatever reason.
-		gEngfuncs.pEfxAPI->R_BreakModel(args->origin, Vector(0,0,0), Vector(0,0,100), 130, 2.5, shrapz, shrapnel3D,  BREAK_METAL | FTENT_SMOKETRAIL); //BREAK_METAL | FTENT_GRAVITY | FTENT_COLLIDEWORLD  | FTENT_SMOKETRAIL );
-	}else{
-	
-
-		dlight_t *dl = gEngfuncs.pEfxAPI->CL_AllocDlight ( 0 );
-		VectorCopy_f ( args->origin, dl->origin );
-
-		dl->radius = 130;
-		dl->dark = false;
-		dl->die = gEngfuncs.GetClientTime() + 0.03; //Kill it right away
-													 
-		dl->color.r = 255;
-		dl->color.g = 255;
-		dl->color.b = 255;
-
-
-
-		
-		for(int i = 0; i < shrapz; i++){
-			createShrapnel(&shrapnel3D, &origin, testArg, testArg2, testArg3);
-		}
-	}
-	
-	
-	return;
-	
-}
-
-
-
-
-
-//EASY_CVAR_EXTERN_DEBUGONLY???(sparkBallAmmountMulti)
-//float global_sparkBallAmmountMulti = 1;
-//No, use it to influence the parameter.
-
-void EV_ShowBalls( event_args_t *args )
-{
-
-	int ballsToSpawn = args->iparam1;
-	
-	/*
-	if(global_sparkBallAmmountMulti != 1){
-		//multiplying by 1 is useless, so don't if it is.
-		ballsToSpawn =  (int) ((float)ballsToSpawn * global_sparkBallAmmountMulti);
-	}
-	*/
-	//...not working out, just trust this CVar affected "args->iparam1".
-	//Check for 0 balls, however.
-
-	if(ballsToSpawn == 0){
-		return;  //nothing to do here
-	}
-	
-	
-	//pmtrace_t tr;
-	int m_iBeam, m_iGlow, m_iBalls;
-	m_iBalls = m_iGlow = gEngfuncs.pEventAPI->EV_FindModelIndex( "sprites/hotglow.spr" );
-
-	
-
-
-	vec3_t origin;
-	//vec3_origin
-	VectorCopy_f( args->origin, origin );
-
-
-	
-	//vec3_t fwd;
-	//VectorAdd_f( tr.endpos, tr.plane.normal, fwd );
-
-
-	//gEngfuncs.pEfxAPI->R_Sprite_Trail( TE_SPRITETRAIL, tr.endpos, fwd, m_iBalls, 8, 0.6, gEngfuncs.pfnRandomFloat( 10, 20 ) / 100.0, 100,
-	//		255, 200 );
-
-	//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-	//gEngfuncs.pEfxAPI->R_Sprite_Trail( TE_SPRITETRAIL, origin, origin, m_iBalls, 8, 0.1f, gEngfuncs.pfnRandomFloat( 10, 20 ) / 100.0, 100,
-	//		255, 40 );
-	//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-	
-	//...( float *pos, float speed, float life, int count, int modelIndex );
-	//gEngfuncs.pEfxAPI->R_TempSphereModel(origin, 20, 30, 8, m_iBalls);
-
-	//void	( *R_Sprite_Spray )				( float * pos, float * dir, int modelIndex, int count, int speed, int iRand );
-	
-
-	//try render modes 3 & 5?
-	//gEngfuncs.pEfxAPI->R_Spray(origin, rot, m_iBalls, 8, 10, 3, 3);
-	//
-
-	int balls = ballsToSpawn;
-	for(int i = 0; i < balls; i++){
-		createBall(&m_iBalls, &origin);
-	}
-		
-		
-	//eh->die = 1;
-	//easyPrintLine("??? %.2f", eh->fadeSpeed);
-	
-	//eh->entity.dir = 7;
-	//eh->entity.curstate.velocity.y = 7;
-	//eh->entity.curstate.velocity.z = 7;
-	
-
-
-	//gEngfuncs.pEfxAPI->R_SparkShower( tr.endpos );
-
-	
-
-	//gEngfuncs.pEfxAPI->R_Sprite_Trail( TE_SPRITETRAIL, tr.endpos, fwd, m_iBalls, 8, 0.6, gEngfuncs.pfnRandomFloat( 10, 20 ) / 100.0, 100,
-	//							255, 200 );
-
-	//int type, float * start, float * end, int modelIndex, int count, float life, float size, float amplitude, int renderamt, float speed 
-
-}
-
-
-
-//copy to show that agrunts are powered up. Periodically emits, floats, and fades.
-void EV_ShowBallsPowerup( event_args_t *args )
-{
-
-	/*
-	if(CVAR_GET_FLOAT("sparkMod")){
-
-	}
-	*/
-
-
-	int ballsToSpawn = args->iparam1;
-	
-	/*
-	if(global_sparkBallAmmountMulti != 1){
-		//multiplying by 1 is useless, so don't if it is.
-		ballsToSpawn =  (int) ((float)ballsToSpawn * global_sparkBallAmmountMulti);
-	}
-	*/
-	//...not working out, just trust this CVar affected "args->iparam1".
-	//Check for 0 balls, however.
-
-	if(ballsToSpawn == 0){
-		return;  //nothing to do here
-	}
-	
-	
-	//pmtrace_t tr;
-	int m_iBeam, m_iGlow, m_iBalls;
-	m_iBalls = m_iGlow = gEngfuncs.pEventAPI->EV_FindModelIndex( "sprites/hotglow.spr" );
-
-	
-
-
-	vec3_t origin;
-	//vec3_origin
-	VectorCopy_f( args->origin, origin );
-
-
-
-	
-	//vec3_t fwd;
-	//VectorAdd_f( tr.endpos, tr.plane.normal, fwd );
-
-
-	//gEngfuncs.pEfxAPI->R_Sprite_Trail( TE_SPRITETRAIL, tr.endpos, fwd, m_iBalls, 8, 0.6, gEngfuncs.pfnRandomFloat( 10, 20 ) / 100.0, 100,
-	//		255, 200 );
-
-	//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-	//gEngfuncs.pEfxAPI->R_Sprite_Trail( TE_SPRITETRAIL, origin, origin, m_iBalls, 8, 0.1f, gEngfuncs.pfnRandomFloat( 10, 20 ) / 100.0, 100,
-	//		255, 40 );
-	//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-	
-	//...( float *pos, float speed, float life, int count, int modelIndex );
-	//gEngfuncs.pEfxAPI->R_TempSphereModel(origin, 20, 30, 8, m_iBalls);
-
-	//void	( *R_Sprite_Spray )				( float * pos, float * dir, int modelIndex, int count, int speed, int iRand );
-	
-
-	//try render modes 3 & 5?
-	//gEngfuncs.pEfxAPI->R_Spray(origin, rot, m_iBalls, 8, 10, 3, 3);
-	//
-
-	int balls = ballsToSpawn;
-	for(int i = 0; i < balls; i++){
-		createBallPowerup(&m_iBalls, &origin);
-	}
-		
-		
-	//eh->die = 1;
-	//easyPrintLine("??? %.2f", eh->fadeSpeed);
-	
-	//eh->entity.dir = 7;
-	//eh->entity.curstate.velocity.y = 7;
-	//eh->entity.curstate.velocity.z = 7;
-	
-
-
-	//gEngfuncs.pEfxAPI->R_SparkShower( tr.endpos );
-
-	
-
-	//gEngfuncs.pEfxAPI->R_Sprite_Trail( TE_SPRITETRAIL, tr.endpos, fwd, m_iBalls, 8, 0.6, gEngfuncs.pfnRandomFloat( 10, 20 ) / 100.0, 100,
-	//							255, 200 );
-
-	//int type, float * start, float * end, int modelIndex, int count, float life, float size, float amplitude, int renderamt, float speed 
-
-
-}
-
-void EV_HLDM_DecalGunshotCustomEvent( event_args_t *args )
-{
-	vec3_t origin;
-	//vec3_origin
-	VectorCopy_f( args->origin, origin );
-
-	//EV_HLDM_FireBullets( idx, forward, right, up, 1, vecSrc, vecAiming, 8192, BULLET_PLAYER_9MM, 0, 0, args->fparam1, args->fparam2 );
-	//void EV_HLDM_FireBullets( int idx, float *forward, float *right, float *up, int cShots, float *vecSrc, float *vecDirShooting, float flDistance, int iBulletType, int iTracerFreq, int *tracerCountChoice, float flSpreadX, float flSpreadY )
-	
-	
-	
-	//pmtrace_t tr;
-	//gEngfuncs.pEventAPI->EV_PlayerTrace( vecSrc, vecEnd, FILLIN_TRACEFLAGS_STUDIO_BOX, -1, &tr );
-
-	
-//	EV_HLDM_DecalGunshot( origin, BULLET_PLAYER_9MM );
-
-}
-
-
-
-
-
 
 //======================
 //	   CROWBAR START
@@ -2530,8 +1596,6 @@ void EV_Crowbar( event_args_t *args )
 //======================
 //	   CROWBAR END 
 //======================
-
-
 
 
 
@@ -3125,6 +2189,7 @@ void EV_ChumToadFire( event_args_t *args )
 
 
 
+
 void EV_TrainPitchAdjust( event_args_t *args )
 {
 	int idx;
@@ -3208,6 +2273,939 @@ void matrixMult(const Vector& m_1, const float m_2[3][3], Vector& v_out){
 
 
 
+
+
+
+
+
+void createBall(int* sprite, Vector* loc) {
+
+
+
+	float randomStrength = 56;
+
+	/*
+	float randx = gEngfuncs.pfnRandomFloat(-randomStrength, randomStrength);
+	float randy = gEngfuncs.pfnRandomFloat(-randomStrength, randomStrength);
+	float randz = gEngfuncs.pfnRandomFloat(-randomStrength, randomStrength);
+	*/
+	float randx = gEngfuncs.pfnRandomFloat(0, randomStrength);
+	float randy = gEngfuncs.pfnRandomFloat(0, randomStrength);
+	float randz = gEngfuncs.pfnRandomFloat(35, randomStrength + 80);
+
+	if (gEngfuncs.pfnRandomLong(0, 1) == 0) {
+		randx *= -1;
+	}
+	if (gEngfuncs.pfnRandomLong(0, 1) == 0) {
+		randy *= -1;
+	}
+
+	if (gEngfuncs.pfnRandomLong(0, 1) == 0) {
+		randz *= -1;
+	}
+
+
+
+	vec3_t rot = Vector(randx, randy, randz);
+
+
+	TEMPENTITY* eh = gEngfuncs.pEfxAPI->R_TempSprite(*loc, rot, 0.12f, *sprite, kRenderGlow, kRenderFxNoDissipation, 250.0 / 255.0, 0.22f, FTENT_GRAVITY | FTENT_COLLIDEWORLD | FTENT_FADEOUT);
+	if (eh != NULL) {
+		eh->fadeSpeed = 3.3f;
+	}
+	//easyPrintLine("??? %.2f", eh->bounceFactor);
+
+}
+
+
+
+void createBallPowerup(int* sprite, Vector* loc) {
+
+
+
+	float randomStrength = 56;
+
+	/*
+	float randx = gEngfuncs.pfnRandomFloat(-randomStrength, randomStrength);
+	float randy = gEngfuncs.pfnRandomFloat(-randomStrength, randomStrength);
+	float randz = gEngfuncs.pfnRandomFloat(-randomStrength, randomStrength);
+	*/
+	float randx = gEngfuncs.pfnRandomFloat(0, randomStrength);
+	float randy = gEngfuncs.pfnRandomFloat(0, randomStrength);
+	float randz = gEngfuncs.pfnRandomFloat(35, randomStrength + 80);
+
+	if (gEngfuncs.pfnRandomLong(0, 1) == 0) {
+		randx *= -1;
+	}
+	if (gEngfuncs.pfnRandomLong(0, 1) == 0) {
+		randy *= -1;
+	}
+
+	if (gEngfuncs.pfnRandomLong(0, 1) == 0) {
+		randz *= -1;
+	}
+
+
+
+	vec3_t rot = Vector(randx, randy, randz);
+
+
+	//MODDD - color it red. how we dod that?
+	//life is 2nd from the last with the flags yo.
+	TEMPENTITY* eh = gEngfuncs.pEfxAPI->R_TempSprite(*loc, rot, 0.12f, *sprite, kRenderGlow, kRenderFxNoDissipation, 250.0 / 255.0, 1.22f, FTENT_SLOWGRAVITY | FTENT_COLLIDEWORLD | FTENT_FADEOUT);
+	if (eh != NULL) {
+		eh->fadeSpeed = 0.6f;
+	}
+	//eh->entity.baseline.gravity
+	//eh->entity.curstate.gravity
+	//eh->entity.prevstate.gravity
+	//???
+
+
+	//MODDD - remove "FTENT_GRAVITY" from above, yes or no?
+
+	//unnecessary yes?
+	//eh->flags |= (FTENT_SLOWGRAVITY);
+
+
+	//easyPrintLine("??? %.2f", eh->bounceFactor);
+
+}
+
+
+void createBallVomit(int* sprite, Vector* loc, Vector* dir) {
+	float randomStrength = 80;
+
+	/*
+	float randx = gEngfuncs.pfnRandomFloat(-randomStrength, randomStrength);
+	float randy = gEngfuncs.pfnRandomFloat(-randomStrength, randomStrength);
+	float randz = gEngfuncs.pfnRandomFloat(-randomStrength, randomStrength);
+	*/
+	float randx = dir->x * 270 + gEngfuncs.pfnRandomFloat(-20, randomStrength);
+	float randy = dir->y * 270 + gEngfuncs.pfnRandomFloat(-20, randomStrength);
+	float randz = 50 + gEngfuncs.pfnRandomFloat(-40, randomStrength);
+
+	/*
+	if(gEngfuncs.pfnRandomLong(0, 1) == 0){
+		randx *= -1;
+	}
+	if(gEngfuncs.pfnRandomLong(0, 1) == 0){
+		randy *= -1;
+	}
+
+	if(gEngfuncs.pfnRandomLong(0, 1) == 0){
+		randz *= -1;
+	}
+	*/
+
+
+	vec3_t rot = Vector(randx, randy, randz);
+
+	TEMPENTITY* eh = gEngfuncs.pEfxAPI->R_TempSprite(*loc, rot, 0.26f, *sprite, kRenderGlow, kRenderFxNoDissipation, 250.0 / 255.0, 0.14f, FTENT_GRAVITY | FTENT_COLLIDEWORLD | FTENT_FADEOUT);
+	if (eh) {
+		eh->fadeSpeed = 3.4f;
+	}
+	else {
+		easyForcePrintLine("WHY YOU FAIL");
+	}
+	//easyPrintLine("??? %.2f", eh->bounceFactor);
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+void floaterGasCallback(struct tempent_s* ent, float frametime, float currenttime)
+{
+	if (currenttime < ent->entity.baseline.fuser1)
+		return;
+
+	if (ent->entity.baseline.origin[2] > -3.8) {
+		ent->entity.baseline.origin[2] += -0.8;
+	}
+	else {
+		ent->entity.baseline.origin[2] = -3.8;
+	}
+
+	//TEST - real slow for now!
+	ent->entity.baseline.fuser1 = gEngfuncs.GetClientTime() + 0;
+}//END OF EV_imitation7_think
+
+
+void floaterBigGasCallback(struct tempent_s* ent, float frametime, float currenttime)
+{
+	if (currenttime < ent->entity.baseline.fuser1)
+		return;
+
+	if (ent->entity.baseline.origin[2] > -3.4) {
+		ent->entity.baseline.origin[2] += -0.5;
+	}
+	else {
+		ent->entity.baseline.origin[2] = -3.4;
+	}
+
+	//TEST - real slow for now!
+	ent->entity.baseline.fuser1 = gEngfuncs.GetClientTime() + 0;
+}//END OF EV_imitation7_think
+
+
+
+void createBallFloaterGas(int* sprite, const Vector& loc) {
+
+	float randomStrength = 14;
+
+	/*
+	float randx = gEngfuncs.pfnRandomFloat(-randomStrength, randomStrength);
+	float randy = gEngfuncs.pfnRandomFloat(-randomStrength, randomStrength);
+	float randz = gEngfuncs.pfnRandomFloat(-randomStrength, randomStrength);
+	*/
+	float randx = gEngfuncs.pfnRandomFloat(-randomStrength, randomStrength);
+	float randy = gEngfuncs.pfnRandomFloat(-randomStrength, randomStrength);
+	float randz = 80 + gEngfuncs.pfnRandomFloat(0, 30);
+
+	float randScale = gEngfuncs.pfnRandomFloat(0.88, 1.06);
+
+	/*
+	if(gEngfuncs.pfnRandomLong(0, 1) == 0){
+		randx *= -1;
+	}
+	if(gEngfuncs.pfnRandomLong(0, 1) == 0){
+		randy *= -1;
+	}
+
+	if(gEngfuncs.pfnRandomLong(0, 1) == 0){
+		randz *= -1;
+	}
+	*/
+
+
+	Vector locWhat = loc;
+	vec3_t rot = Vector(randx, randy, randz);
+
+	//FTENT_SLOWGRAVITY  ?
+	TEMPENTITY* eh = gEngfuncs.pEfxAPI->R_TempSprite(locWhat, rot, randScale, *sprite, kRenderGlow, kRenderFxNoDissipation, 160.0 / 255.0, 1.8f, FTENT_CLIENTCUSTOM | FTENT_COLLIDEWORLD | FTENT_FADEOUT);
+	if (eh) {
+		eh->fadeSpeed = 0.07f;
+		eh->bounceFactor = 0;
+		eh->callback = &floaterGasCallback;
+
+	}
+	else {
+		easyForcePrintLine("WHY YOU FAIL");
+	}
+	//easyPrintLine("??? %.2f", eh->bounceFactor);
+
+}
+
+void createBigBallFloaterGas(int* sprite, const Vector& loc) {
+
+	float randomStrength = 6;
+
+	float randx = gEngfuncs.pfnRandomFloat(-randomStrength, randomStrength);
+	float randy = gEngfuncs.pfnRandomFloat(-randomStrength, randomStrength);
+	float randz = 30 + gEngfuncs.pfnRandomFloat(0, 30);
+
+	float randScale = gEngfuncs.pfnRandomFloat(2.5, 2.9);
+
+	Vector locWhat = loc;
+	vec3_t rot = Vector(randx, randy, randz);
+
+	//FTENT_SLOWGRAVITY  ?
+	TEMPENTITY* eh = gEngfuncs.pEfxAPI->R_TempSprite(locWhat, rot, randScale, *sprite, kRenderGlow, kRenderFxNoDissipation, 100.0 / 255.0, 1.0f, FTENT_CLIENTCUSTOM | FTENT_COLLIDEWORLD | FTENT_FADEOUT);
+	if (eh) {
+		eh->fadeSpeed = 0.06f;
+		eh->bounceFactor = 0;
+		eh->callback = &floaterBigGasCallback;
+
+	}
+	else {
+		easyForcePrintLine("WHY YOU FAIL");
+	}
+
+}
+
+
+
+
+
+
+
+
+void generateFreakyLight(const Vector& arg_origin) {
+
+	//g_engfuncs.pfnCVarSetFloat
+
+	//g_engfuncs.
+
+
+	//clientside way:
+	//gEngfuncs.pfnGetCvarPointer
+	//NOTE: equivalent for serverside:
+	//g_engfuncs.pfnCVarGetPointer
+
+
+
+
+	/*
+	float durationMin = 0.08;
+	float durationMax = 0.14;
+	float radiusMin = 280;
+	float radiusMax = 410;
+	float spawnDistHori = 180;
+	float spawnDistVertMin = 25;
+	float spawnDistVertMax = 75;
+	int multiColor = TRUE;
+	*/
+	float durationMin = EASY_CVAR_GET(strobeDurationMin);
+	float durationMax = EASY_CVAR_GET(strobeDurationMax);
+	float radiusMin = EASY_CVAR_GET(strobeRadiusMin);
+	float radiusMax = EASY_CVAR_GET(strobeRadiusMax);
+	float spawnDistHori = EASY_CVAR_GET(strobeSpawnDistHori);
+	float spawnDistVertMin = EASY_CVAR_GET(strobeSpawnDistVertMin);
+	float spawnDistVertMax = EASY_CVAR_GET(strobeSpawnDistVertMax);
+
+
+	int multiColor;
+	if (EASY_CVAR_GET(strobeMultiColor) == 1) {
+		multiColor = TRUE;
+	}
+	else {
+		multiColor = FALSE;
+	}
+
+
+
+	const Vector& origin = arg_origin;
+
+	float randx;
+	float randy;
+	float randz;
+
+	dlight_t* dl = gEngfuncs.pEfxAPI->CL_AllocDlight(0);
+	float temp;
+
+	randx = gEngfuncs.pfnRandomFloat(30, spawnDistHori);
+	if (gEngfuncs.pfnRandomLong(0, 1) == 0) {
+		randx *= -1;
+	}
+	randy = gEngfuncs.pfnRandomFloat(30, spawnDistHori);
+	if (gEngfuncs.pfnRandomLong(0, 1) == 0) {
+		randy *= -1;
+	}
+	randz = gEngfuncs.pfnRandomFloat(spawnDistVertMin, spawnDistVertMax);
+
+	randx += origin.x;
+	randy += origin.y;
+	randz += origin.z;
+
+	float randRad = gEngfuncs.pfnRandomFloat(radiusMin, radiusMax);
+	float randLife = gEngfuncs.pfnRandomFloat(durationMin, durationMax);
+
+	dl->origin.x = randx;
+	dl->origin.y = randy;
+	dl->origin.z = randz;
+
+
+	dl->dark = false;
+	dl->die = gEngfuncs.GetClientTime() + randLife;
+
+
+	int colorReceive[3];
+
+	if (multiColor == TRUE) {
+		generateColor(colorReceive);
+	}
+	else {
+		//always solid white.
+		colorReceive[0] = 255;
+		colorReceive[1] = 255;
+		colorReceive[2] = 255;
+	}
+
+
+
+	dl->radius = randRad;
+	dl->color.r = colorReceive[0];
+	dl->color.g = colorReceive[1];
+	dl->color.b = colorReceive[2];
+
+}
+
+
+
+
+void generateFreakyLaser(const Vector& arg_origin) {
+	//BEAM		*( *R_BeamPoints )				( float * start, float * end, int modelIndex, float life, float width, float amplitude, float brightness, float speed, int startFrame, float framerate, float r, float g, float b );
+	//BEAM		*( *R_BeamRing )				( int startEnt, int endEnt, int modelIndex, float life, float width, float amplitude, float brightness, float speed, int startFrame, float framerate, float r, float g, float b );
+
+	const Vector& origin = arg_origin;
+
+	int m_iLaserSprite = 0;
+
+	//might be wiser to do this in some "init" function clientside-wide instead?  Same for other "EV_FindModelIndex" calls?
+	m_iLaserSprite = gEngfuncs.pEventAPI->EV_FindModelIndex("sprites/laserbeam.spr");
+
+	float randOrigin1[3];
+	float randOrigin2[3];
+
+	//range??
+	float mag = randomValue(EASY_CVAR_GET(raveLaserLength), EASY_CVAR_GET(raveLaserLength));
+
+	float fltDeg = randomValue(0, CONST_2PI);
+	if (fltDeg >= CONST_2PI) {
+		fltDeg -= CONST_2PI;
+	}
+
+	float x = cos(fltDeg) * mag;
+	float y = sin(fltDeg) * mag;
+
+
+	fltDeg += CONST_180_RAD;
+
+	if (fltDeg >= CONST_2PI) {
+		fltDeg -= CONST_2PI;
+	}
+
+	//float fltMag = sqrt( pow(x, 2) + pow(y, 2) + pow(z, 2) );
+
+	float x2 = cos(fltDeg) * mag;
+	float y2 = sin(fltDeg) * mag;
+
+	float randomShiftX = randomAbsoluteValue(EASY_CVAR_GET(raveLaserSpawnDistHoriMin), EASY_CVAR_GET(raveLaserSpawnDistHoriMax));
+	float randomShiftY = randomAbsoluteValue(EASY_CVAR_GET(raveLaserSpawnDistHoriMin), EASY_CVAR_GET(raveLaserSpawnDistHoriMax));
+	float randomShiftZ = randomAbsoluteValue(EASY_CVAR_GET(raveLaserSpawnDistVertMin), EASY_CVAR_GET(raveLaserSpawnDistVertMax));
+	float randomShiftZ2 = randomAbsoluteValue(EASY_CVAR_GET(raveLaserSpawnDistVertMin), EASY_CVAR_GET(raveLaserSpawnDistVertMax));
+
+	randOrigin1[0] = origin[0] + x + randomShiftX;
+	randOrigin1[1] = origin[1] + y + randomShiftY;
+	randOrigin1[2] = origin[2] + randomShiftZ;
+
+	randOrigin2[0] = origin[0] + -x + randomShiftX;
+	randOrigin2[1] = origin[1] + -y + randomShiftY;
+	//test with the same "randomShiftZ" once?
+	randOrigin2[2] = origin[2] + randomShiftZ2;
+
+
+	float randLife = gEngfuncs.pfnRandomFloat(EASY_CVAR_GET(raveLaserDurationMin), EASY_CVAR_GET(raveLaserDurationMax));
+	float randWidth = gEngfuncs.pfnRandomFloat(EASY_CVAR_GET(raveLaserThicknessMin), EASY_CVAR_GET(raveLaserThicknessMax));
+
+	float randAmp = gEngfuncs.pfnRandomFloat(EASY_CVAR_GET(raveLaserNoiseMin), EASY_CVAR_GET(raveLaserNoiseMax));
+
+	float randBrightness = gEngfuncs.pfnRandomFloat(EASY_CVAR_GET(raveLaserBrightnessMin) * 255, EASY_CVAR_GET(raveLaserBrightnessMax) * 255);
+	//INTERPRET FROM 0 - 1, like  0.8 - 1.0!
+	float frameRate = gEngfuncs.pfnRandomFloat(EASY_CVAR_GET(raveLaserFrameRateMin), EASY_CVAR_GET(raveLaserFrameRateMax));
+
+	float speed = 1;
+	float startFrame = 0;
+
+
+
+	int colorReceive[3];
+
+	if (EASY_CVAR_GET(raveLaserMultiColor) != 0) {
+		generateColor(colorReceive);
+	}
+	else {
+		//always solid white.
+		colorReceive[0] = 255;
+		colorReceive[1] = 255;
+		colorReceive[2] = 255;
+	}
+
+
+
+
+	//(float*)Vector(randx1, randy1, randz1)
+	BEAM* someBeam = gEngfuncs.pEfxAPI->R_BeamPoints(randOrigin1, randOrigin2, m_iLaserSprite, randLife, randWidth, randAmp, randBrightness, speed, startFrame, frameRate, 0, 0, 0);
+
+
+	//short someShort = gEngfuncs.pEfxAPI->R_LookupColor(colorReceive[0], colorReceive[1], colorReceive[2]);
+	//easyPrintLine("HOWWWWWWWW %d::: <-- %d %d %d", someShort, colorReceive[0], colorReceive[1], colorReceive[2]);
+	//what is this??
+
+
+	//For unknown reasons, the color arguments, the 3 last args above, aren't working as expected.  Below seems to work though.  
+	//Just check to see whether the created beam is null or not (may fail to create on too many requests or... who knows why else).
+	//easyPrintLine("IS IT NULLLLL %d", (someBeam == NULL));
+	if (someBeam == NULL) {
+
+	}
+	else {
+		//divided by 65025.0f (this is 256^2).  Why?  Because anything above 1/256^2 distorts colors, making even (255, 12, 0) show up as bright yellow.
+		//Anything less than 1/256^2 is treated as getting closer to black, which makes it more transparent up to invisible at 0.
+		someBeam->r = colorReceive[0] / 65025.0f;
+		someBeam->g = colorReceive[1] / 65025.0f;
+		someBeam->b = colorReceive[2] / 65025.0f;
+	}
+
+
+}
+
+
+
+
+
+void EV_FreakyLight(event_args_t* args) {
+	int i = 0;
+
+	//this is handled in method "UpdateClientData" of file "hud_update.cpp" instead.
+	//updateCVarRefsClient();
+
+
+
+
+	generateFreakyLight((float*)&args->origin);
+
+	if (EASY_CVAR_GET(raveLaserEnabled) == 1) {
+
+		//if there is a decimal in raveLaserSpawnFreq, guarantee spawning of the first whole number lasers (like in 2.4, spawn 2 lasers).
+		//Treat the 0.4 decimal as a "40%" chance of producing another laser.  Rounds out nice and evenly when it happens a lot.
+		int toGen = (int)EASY_CVAR_GET(raveLaserSpawnFreq);   //truncate.
+		//roundoff?
+		float roundoff = ((int)(EASY_CVAR_GET(raveLaserSpawnFreq) * 10) % 10) / 10.0f;
+		if (roundoff != 0 && gEngfuncs.pfnRandomLong(0, 1) <= roundoff) {
+			//extra.
+			toGen++;
+		}
+		for (i = 0; i < toGen; i++) {
+			generateFreakyLaser((float*)&args->origin);
+		}
+	}//END OF if(EASY_CVAR_GET(raveLaserEnabled) == 1)
+
+}
+
+
+
+
+
+
+void EV_FriendlyVomit(event_args_t* args) {
+
+
+
+	int duckyou = gEngfuncs.pEventAPI->EV_FindModelIndex("sprites/hotglow.spr");
+
+	int m_iHotglowGreen;
+	m_iHotglowGreen = gEngfuncs.pEventAPI->EV_FindModelIndex("sprites/hotglow_green.spr");
+
+
+	vec3_t origin;
+	vec3_t ang;
+	//vec3_origin
+	VectorCopy_f(args->origin, origin);
+	VectorCopy_f(args->angles, ang);
+
+	int ballsToSpawn = args->iparam1;
+
+	int balls = ballsToSpawn;
+	for (int i = 0; i < balls; i++) {
+		createBallVomit(&m_iHotglowGreen, &origin, &ang);
+	}
+
+}//END OF EV_FriendlyVomit
+
+
+
+//MODDD - TODO. should behavior varry from being destroyed mid-fall or while on the ground?  such as gibbed midair or auto-exploded?
+void EV_FloaterExplode(event_args_t* args) {
+
+	int duckyou = gEngfuncs.pEventAPI->EV_FindModelIndex("sprites/hotglow.spr");
+
+	int m_iHotglowGreen;
+	m_iHotglowGreen = gEngfuncs.pEventAPI->EV_FindModelIndex("sprites/hotglow_green.spr");
+
+
+	vec3_t origin;
+	vec3_t ang;
+	//vec3_origin
+	VectorCopy_f(args->origin, origin);
+	VectorCopy_f(args->angles, ang);
+
+	int ballsToSpawn = 8;
+
+	createBigBallFloaterGas(&m_iHotglowGreen, origin + Vector(0, 0, 20));
+
+
+	int balls = ballsToSpawn;
+	for (int i = 0; i < balls; i++) {
+		createBallFloaterGas(&m_iHotglowGreen, origin + Vector(0, 0, 12));
+	}
+
+}//END OF EV_FloaterExplode
+
+
+
+
+
+
+
+
+
+
+void shrapnelHitCallback(struct tempent_s* ent, struct pmtrace_s* ptr) {
+
+
+	dlight_t* dl = gEngfuncs.pEfxAPI->CL_AllocDlight(0);
+	VectorCopy_f(ent->entity.origin, dl->origin);
+
+	dl->dark = false;
+	//time of "0.01" or "0.001"?
+	//dl->die = gEngfuncs.GetClientTime() + 0.001; //Kill it right away
+	dl->die = gEngfuncs.GetClientTime() + 0.03; //Kill it right away
+
+	dl->radius = 80;
+	dl->color.r = 255;
+	dl->color.g = 120;
+	dl->color.b = 0;
+
+}
+
+void createShrapnel(int* sprite, Vector* loc, int testArg, float testArg2, float testArg3) {
+
+
+
+	float randomStrength = 190; //121;
+	float heightExtra = 140;
+
+	randomStrength = testArg2;
+	heightExtra = testArg3;
+
+
+	/*
+	float randx = gEngfuncs.pfnRandomFloat(-randomStrength, randomStrength);
+	float randy = gEngfuncs.pfnRandomFloat(-randomStrength, randomStrength);
+	float randz = gEngfuncs.pfnRandomFloat(-randomStrength, randomStrength);
+	*/
+	float randx = gEngfuncs.pfnRandomFloat(20, randomStrength);
+	float randy = gEngfuncs.pfnRandomFloat(20, randomStrength);
+	float randz = gEngfuncs.pfnRandomFloat(45, randomStrength + heightExtra);
+
+	if (gEngfuncs.pfnRandomLong(0, 1) == 0) {
+		randx *= -1;
+	}
+	if (gEngfuncs.pfnRandomLong(0, 1) == 0) {
+		randy *= -1;
+	}
+
+	if (gEngfuncs.pfnRandomLong(0, 1) == 0) {
+		randz *= -1;
+	}
+
+
+
+	vec3_t rot = Vector(randx, randy, randz);
+
+
+
+	float lifeValue = gEngfuncs.pfnRandomFloat(2.25, 3.55);
+
+
+	int flags = 0;
+	if (testArg == 1) {
+		//no flash on hit.
+		flags = BREAK_METAL | FTENT_SMOKETRAIL | FTENT_COLLIDEWORLD | FTENT_FADEOUT | FTENT_ROTATE;;
+	}
+	else {
+		//flash on hit.
+		flags = BREAK_METAL | FTENT_SMOKETRAIL | FTENT_COLLIDEWORLD | FTENT_FADEOUT | FTENT_ROTATE | FTENT_FLASHONHIT;
+		//flags = BREAK_METAL | FTENT_SMOKETRAIL | FTENT_COLLIDEWORLD | FTENT_FADEOUT | FTENT_ROTATE | FTENT_FLICKER;
+	}
+
+	TEMPENTITY* eh = gEngfuncs.pEfxAPI->R_TempSprite(*loc, rot, 2.5f, *sprite, kRenderNormal, kRenderFxNone, 255.0 / 255.0, lifeValue, flags);
+	if (eh != NULL) {
+		eh->fadeSpeed = 0.5f;
+	}
+
+
+	//gives this the metal hit sound effects.  I guess it is hardcoded what values of "hitSound" make what sounds, can't find the resulting sound calls for that anywhere.
+	//Closest is entity.cpp, where this is referred to but still not used directly.
+	//Calls a method that is pre-compiled in this line:
+	//    Callback_TempEntPlaySound(pTemp, damp);
+	//...assume it is what refers to this.
+
+
+	//eh->hitSound = 2;    hit sound disabled, actually.  Enabling this gives it the break metal sounds though.
+	eh->hitcallback = &shrapnelHitCallback;
+
+	//no "BREAK_METAL " here.
+	//eh->flags |= (FTENT_SLOWGRAVITY  | FTENT_SMOKETRAIL );
+
+
+	eh->entity.baseline.angles[0] = gEngfuncs.pfnRandomFloat(-256, 256);
+	eh->entity.baseline.angles[1] = gEngfuncs.pfnRandomFloat(-256, 256);
+	eh->entity.baseline.angles[2] = gEngfuncs.pfnRandomFloat(-256, 256);
+
+
+
+
+
+
+
+	//easyPrintLine("??? %.2f", eh->bounceFactor);
+	//default bounce factor is 1.0.
+
+}
+
+
+
+void EV_QuakeExplosionEffect(event_args_t* args) {
+
+
+	Vector origin = args->origin;
+	int shrapnel3D = gEngfuncs.pEventAPI->EV_FindModelIndex("models/shrapnel.mdl");
+
+	//TEST IN SESSION!
+
+
+	//R_Explosion
+
+	////void( *R_Explosion )( float *pos, int model, float scale, float framerate, int flags );
+	//gEngfuncs.pEfxAPI->R_Explosion( args->origin, m_iBalls, 0.3, 15, TE_EXPLFLAG_NONE );
+
+
+	//void	( *R_BreakModel )				( float *pos, float *size, float *dir, float random, float life, int count, int modelIndex, char flags );
+	//!!!!!!!!!!!!!!!!!!!!!!!!!
+
+
+	int testArg = args->iparam1;
+
+	float testArg2 = args->fparam1;
+	float testArg3 = args->fparam2;
+
+	//int shrapz = 14;
+	int shrapz = args->iparam2;
+
+	if (testArg == 0) {
+		//"FTENT_FLASHONHIT" doesn't seem to do anything for whatever reason.
+		gEngfuncs.pEfxAPI->R_BreakModel(args->origin, Vector(0, 0, 0), Vector(0, 0, 100), 130, 2.5, shrapz, shrapnel3D, BREAK_METAL | FTENT_SMOKETRAIL); //BREAK_METAL | FTENT_GRAVITY | FTENT_COLLIDEWORLD  | FTENT_SMOKETRAIL );
+	}
+	else {
+
+
+		dlight_t* dl = gEngfuncs.pEfxAPI->CL_AllocDlight(0);
+		VectorCopy_f(args->origin, dl->origin);
+
+		dl->radius = 130;
+		dl->dark = false;
+		dl->die = gEngfuncs.GetClientTime() + 0.03; //Kill it right away
+
+		dl->color.r = 255;
+		dl->color.g = 255;
+		dl->color.b = 255;
+
+
+
+
+		for (int i = 0; i < shrapz; i++) {
+			createShrapnel(&shrapnel3D, &origin, testArg, testArg2, testArg3);
+		}
+	}
+
+
+	return;
+
+}
+
+
+
+
+
+//EASY_CVAR_EXTERN_DEBUGONLY???(sparkBallAmmountMulti)
+//float global_sparkBallAmmountMulti = 1;
+//No, use it to influence the parameter.
+
+void EV_ShowBalls(event_args_t* args)
+{
+
+	int ballsToSpawn = args->iparam1;
+
+	/*
+	if(global_sparkBallAmmountMulti != 1){
+		//multiplying by 1 is useless, so don't if it is.
+		ballsToSpawn =  (int) ((float)ballsToSpawn * global_sparkBallAmmountMulti);
+	}
+	*/
+	//...not working out, just trust this CVar affected "args->iparam1".
+	//Check for 0 balls, however.
+
+	if (ballsToSpawn == 0) {
+		return;  //nothing to do here
+	}
+
+
+	//pmtrace_t tr;
+	int m_iBeam, m_iGlow, m_iBalls;
+	m_iBalls = m_iGlow = gEngfuncs.pEventAPI->EV_FindModelIndex("sprites/hotglow.spr");
+
+
+	vec3_t origin;
+	//vec3_origin
+	VectorCopy_f(args->origin, origin);
+
+
+	//vec3_t fwd;
+	//VectorAdd_f( tr.endpos, tr.plane.normal, fwd );
+
+
+	//gEngfuncs.pEfxAPI->R_Sprite_Trail( TE_SPRITETRAIL, tr.endpos, fwd, m_iBalls, 8, 0.6, gEngfuncs.pfnRandomFloat( 10, 20 ) / 100.0, 100,
+	//		255, 200 );
+
+	//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	//gEngfuncs.pEfxAPI->R_Sprite_Trail( TE_SPRITETRAIL, origin, origin, m_iBalls, 8, 0.1f, gEngfuncs.pfnRandomFloat( 10, 20 ) / 100.0, 100,
+	//		255, 40 );
+	//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+	//...( float *pos, float speed, float life, int count, int modelIndex );
+	//gEngfuncs.pEfxAPI->R_TempSphereModel(origin, 20, 30, 8, m_iBalls);
+
+	//void	( *R_Sprite_Spray )				( float * pos, float * dir, int modelIndex, int count, int speed, int iRand );
+
+
+	//try render modes 3 & 5?
+	//gEngfuncs.pEfxAPI->R_Spray(origin, rot, m_iBalls, 8, 10, 3, 3);
+	//
+
+	int balls = ballsToSpawn;
+	for (int i = 0; i < balls; i++) {
+		createBall(&m_iBalls, &origin);
+	}
+
+	//eh->die = 1;
+	//easyPrintLine("??? %.2f", eh->fadeSpeed);
+
+	//eh->entity.dir = 7;
+	//eh->entity.curstate.velocity.y = 7;
+	//eh->entity.curstate.velocity.z = 7;
+
+	//gEngfuncs.pEfxAPI->R_SparkShower( tr.endpos );
+
+	//gEngfuncs.pEfxAPI->R_Sprite_Trail( TE_SPRITETRAIL, tr.endpos, fwd, m_iBalls, 8, 0.6, gEngfuncs.pfnRandomFloat( 10, 20 ) / 100.0, 100,
+	//							255, 200 );
+
+	//int type, float * start, float * end, int modelIndex, int count, float life, float size, float amplitude, int renderamt, float speed 
+}
+
+
+//copy to show that agrunts are powered up. Periodically emits, floats, and fades.
+void EV_ShowBallsPowerup(event_args_t* args)
+{
+	/*
+	if(CVAR_GET_FLOAT("sparkMod")){
+
+	}
+	*/
+
+	int ballsToSpawn = args->iparam1;
+
+	/*
+	if(global_sparkBallAmmountMulti != 1){
+		//multiplying by 1 is useless, so don't if it is.
+		ballsToSpawn =  (int) ((float)ballsToSpawn * global_sparkBallAmmountMulti);
+	}
+	*/
+	//...not working out, just trust this CVar affected "args->iparam1".
+	//Check for 0 balls, however.
+
+	if (ballsToSpawn == 0) {
+		return;  //nothing to do here
+	}
+
+
+	//pmtrace_t tr;
+	int m_iBeam, m_iGlow, m_iBalls;
+	m_iBalls = m_iGlow = gEngfuncs.pEventAPI->EV_FindModelIndex("sprites/hotglow.spr");
+
+
+	vec3_t origin;
+	//vec3_origin
+	VectorCopy_f(args->origin, origin);
+
+
+	//vec3_t fwd;
+	//VectorAdd_f( tr.endpos, tr.plane.normal, fwd );
+
+
+	//gEngfuncs.pEfxAPI->R_Sprite_Trail( TE_SPRITETRAIL, tr.endpos, fwd, m_iBalls, 8, 0.6, gEngfuncs.pfnRandomFloat( 10, 20 ) / 100.0, 100,
+	//		255, 200 );
+
+	//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	//gEngfuncs.pEfxAPI->R_Sprite_Trail( TE_SPRITETRAIL, origin, origin, m_iBalls, 8, 0.1f, gEngfuncs.pfnRandomFloat( 10, 20 ) / 100.0, 100,
+	//		255, 40 );
+	//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+	//...( float *pos, float speed, float life, int count, int modelIndex );
+	//gEngfuncs.pEfxAPI->R_TempSphereModel(origin, 20, 30, 8, m_iBalls);
+
+	//void	( *R_Sprite_Spray )				( float * pos, float * dir, int modelIndex, int count, int speed, int iRand );
+
+
+	//try render modes 3 & 5?
+	//gEngfuncs.pEfxAPI->R_Spray(origin, rot, m_iBalls, 8, 10, 3, 3);
+	//
+
+	int balls = ballsToSpawn;
+	for (int i = 0; i < balls; i++) {
+		createBallPowerup(&m_iBalls, &origin);
+	}
+
+	//eh->die = 1;
+	//easyPrintLine("??? %.2f", eh->fadeSpeed);
+
+	//eh->entity.dir = 7;
+	//eh->entity.curstate.velocity.y = 7;
+	//eh->entity.curstate.velocity.z = 7;
+
+	//gEngfuncs.pEfxAPI->R_SparkShower( tr.endpos );
+
+	//gEngfuncs.pEfxAPI->R_Sprite_Trail( TE_SPRITETRAIL, tr.endpos, fwd, m_iBalls, 8, 0.6, gEngfuncs.pfnRandomFloat( 10, 20 ) / 100.0, 100,
+	//							255, 200 );
+
+	//int type, float * start, float * end, int modelIndex, int count, float life, float size, float amplitude, int renderamt, float speed 
+}
+
+void EV_HLDM_DecalGunshotCustomEvent(event_args_t* args)
+{
+	vec3_t origin;
+	//vec3_origin
+	VectorCopy_f(args->origin, origin);
+
+	//EV_HLDM_FireBullets( idx, forward, right, up, 1, vecSrc, vecAiming, 8192, BULLET_PLAYER_9MM, 0, 0, args->fparam1, args->fparam2 );
+	//void EV_HLDM_FireBullets( int idx, float *forward, float *right, float *up, int cShots, float *vecSrc, float *vecDirShooting, float flDistance, int iBulletType, int iTracerFreq, int *tracerCountChoice, float flSpreadX, float flSpreadY )
+
+	//pmtrace_t tr;
+	//gEngfuncs.pEventAPI->EV_PlayerTrace( vecSrc, vecEnd, FILLIN_TRACEFLAGS_STUDIO_BOX, -1, &tr );
+
+
+//	EV_HLDM_DecalGunshot( origin, BULLET_PLAYER_9MM );
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 //If this is called, make sure a "log" folder exists under the same folder as hl.exe, NOT the mod folder (Absolute Zero)!
 void writeColorPickerChoices(void){
 	int r, g, b;
@@ -3244,14 +3242,6 @@ void writeColorPickerChoices(void){
 		fclose(myFile);
 	}
 }//END OF wirteColorPickerChoices
-
-
-
-
-
-
-
-
 
 
 
@@ -3337,11 +3327,6 @@ void TEST_ParticleCallback( struct particle_s *particle, float frametime )
 		particle->org[ i ] += particle->vel[ i ] * frametime;
 	}
 }
-
-
-
-
-
 
 
 
@@ -3601,18 +3586,6 @@ void EV_imitation7(event_args_t* args){
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
 //MODDD - new, testing some DMC - quake stuff.
 
 void EV_RocketTrailCallback ( struct tempent_s *ent, float frametime, float currenttime )
@@ -3645,10 +3618,6 @@ void EV_RocketTrailCallback ( struct tempent_s *ent, float frametime, float curr
 	}
 
 
-
-
-
-
 	//Not set up to re-think. Or is that automatic..?
 	//that is set ent->entity.baseline.fuser1 to some GetClientTime() + 0.03 or something.
 
@@ -3669,12 +3638,6 @@ void EV_RocketTrailCallback ( struct tempent_s *ent, float frametime, float curr
 	}
 	*/
 }
-
-
-
-
-
-
 
 
 // trail stuff.
@@ -3715,8 +3678,6 @@ void EV_Trail_EngineChoice_Think ( struct tempent_s *ent, float frametime, float
 	
 
 }//END OF EV_imitation7
-
-
 
 
 
@@ -3764,11 +3725,6 @@ void EV_Trail_EngineChoice( event_args_t *args){
 
 
 
-
-
-
-
-//
 
 //NOTE - I am  trail.sc
 //ALSO - yes, trailTypeTest may be sent to me as iParam2 but it clearly isn't having an influence here in that case.
@@ -3821,14 +3777,6 @@ void EV_Trail (event_args_t *args)
 
 
 }
-
-
-
-
-
-
-
-
 
 
 
@@ -3921,16 +3869,6 @@ void EV_rocketAlphaTrail (event_args_t *args)
 	}
 
 }
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -4097,7 +4035,6 @@ void EV_Mirror( event_args_t *args )
 		// Admit failure.
 		easyForcePrintLine("ERROR: Can't register mirror, maximum %d allowed and no disabled mirrors found to replace!", MIRROR_MAX);
 	}
-	
 	
 	
 	//MODDD - original version here.

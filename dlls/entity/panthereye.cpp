@@ -766,9 +766,6 @@ GENERATE_TRACEATTACK_IMPLEMENTATION(CPantherEye)
 GENERATE_TAKEDAMAGE_IMPLEMENTATION(CPantherEye)
 {
 
-	// HACK HACK -- until we fix this.
-	if ( IsAlive() )
-		PainSound();
 	return GENERATE_TAKEDAMAGE_PARENT_CALL(CBaseMonster);
 }
 

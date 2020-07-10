@@ -176,8 +176,10 @@ void CGameRules::RefreshSkillData ( void )
 
 	//MODDD - and this wasn't below the iSkill bounds checking because...?
 	g_iSkillLevel = iSkill;
+
 	// use the new g_iSkill to pick the damage duration values to be used.
-	updateTimedDamageDurations();
+	// NOPE!   Handled by other skill CVars now.
+	//updateTimedDamageDurations();
 
 	//MODDD - removed.
 	//gSkillData.iSkillLevel = iSkill;
@@ -419,6 +421,53 @@ void CGameRules::RefreshSkillData ( void )
 	gSkillData.plrStomach = GetSkillCvar( "sk_player_stomach" );
 	gSkillData.plrLeg = GetSkillCvar( "sk_player_leg" );
 	gSkillData.plrArm = GetSkillCvar( "sk_player_arm" );
+
+
+	//MODDD - NEW BELOW!
+	///////////////////////////////////////////////
+	gSkillData.player_ammomax_9mm = GetSkillCvarSingular("player_ammomax_9mm");
+	gSkillData.player_ammomax_mp5_grenade = GetSkillCvarSingular("player_ammomax_mp5_grenade");
+	gSkillData.player_ammomax_revolver = GetSkillCvarSingular("player_ammomax_revolver");
+	gSkillData.player_ammomax_shotgun = GetSkillCvarSingular("player_ammomax_shotgun");
+	gSkillData.player_ammomax_crossbow = GetSkillCvarSingular("player_ammomax_crossbow");
+	gSkillData.player_ammomax_rpg = GetSkillCvarSingular("player_ammomax_rpg");
+	gSkillData.player_ammomax_uranium = GetSkillCvarSingular("player_ammomax_uranium");
+	gSkillData.player_ammomax_handgrenade = GetSkillCvarSingular("player_ammomax_handgrenade");
+	gSkillData.player_ammomax_satchel = GetSkillCvarSingular("player_ammomax_satchel");
+	gSkillData.player_ammomax_tripmine = GetSkillCvarSingular("player_ammomax_tripmine");
+	gSkillData.player_ammomax_hornet = GetSkillCvarSingular("player_ammomax_hornet");
+	gSkillData.player_ammomax_snark = GetSkillCvarSingular("player_ammomax_snark");
+	gSkillData.player_ammomax_chumtoad = GetSkillCvarSingular("player_ammomax_chumtoad");
+
+
+	gSkillData.player_revive_health = GetSkillCvar("sk_player_revive_health");
+	gSkillData.scientist_can_heal = GetSkillCvar("sk_scientist_can_heal");
+	gSkillData.npc_drop_weapon = GetSkillCvar("sk_npc_drop_weapon");
+
+	gSkillData.tdmg_paralyze_duration = GetSkillCvar("tdmg_paralyze_duration");
+
+	gSkillData.tdmg_nervegas_duration = GetSkillCvar("tdmg_nervegas_duration");
+	gSkillData.tdmg_nervegas_damage = GetSkillCvar("tdmg_nervegas_damage");
+
+	gSkillData.tdmg_poison_duration = GetSkillCvar("tdmg_poison_duration");
+	gSkillData.tdmg_poison_damage = GetSkillCvar("tdmg_poison_damage");
+
+	gSkillData.tdmg_radiation_duration = GetSkillCvar("tdmg_radiation_duration");
+	gSkillData.tdmg_radiation_damage = GetSkillCvar("tdmg_radiation_damage");
+
+	gSkillData.tdmg_acid_duration = GetSkillCvar("tdmg_acid_duration");
+	gSkillData.tdmg_acid_damage = GetSkillCvar("tdmg_acid_damage");
+
+	gSkillData.tdmg_slowburn_duration = GetSkillCvar("tdmg_slowburn_duration");
+	gSkillData.tdmg_slowburn_damage = GetSkillCvar("tdmg_slowburn_damage");
+
+	gSkillData.tdmg_slowfreeze_duration = GetSkillCvar("tdmg_slowfreeze_duration");
+	gSkillData.tdmg_slowfreeze_damage = GetSkillCvar("tdmg_slowfreeze_damage");
+
+	gSkillData.tdmg_bleeding_duration = GetSkillCvar("tdmg_bleeding_duration");
+	gSkillData.tdmg_bleeding_damage = GetSkillCvar("tdmg_bleeding_damage");
+
+
 }
 
 //=========================================================

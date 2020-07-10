@@ -15,17 +15,9 @@
 
 #include "extdll.h"
 #include "eiface.h"
-
-
 #include "util.h"
 #include "game.h"
-
-
-//MODDD - new.
 #include "util_version.h"
-
-
-
 
 
 
@@ -451,19 +443,6 @@ cvar_t	sk_kingpin_health3 = {"sk_kingpin_health3","0"};
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
 cvar_t	sk_zombie_dmg_one_slash1 = {"sk_zombie_dmg_one_slash1","0"};
 cvar_t	sk_zombie_dmg_one_slash2 = {"sk_zombie_dmg_one_slash2","0"};
 cvar_t	sk_zombie_dmg_one_slash3 = {"sk_zombie_dmg_one_slash3","0"};
@@ -669,6 +648,94 @@ cvar_t	sk_player_arm3	= { "sk_player_arm3","1" };
 cvar_t	sk_player_leg1	= { "sk_player_leg1","1" };
 cvar_t	sk_player_leg2	= { "sk_player_leg2","1" };
 cvar_t	sk_player_leg3	= { "sk_player_leg3","1" };
+
+
+//MODDD - NEW BELOW!
+///////////////////////////////////////////////
+cvar_t	player_ammomax_9mm = { "player_ammomax_9mm", "1" };
+cvar_t	player_ammomax_mp5_grenade = { "player_ammomax_mp5_grenade", "1" };
+cvar_t	player_ammomax_revolver = { "player_ammomax_revolver", "1" };
+cvar_t	player_ammomax_shotgun = { "player_ammomax_shotgun", "1" };
+cvar_t	player_ammomax_crossbow = { "player_ammomax_crossbow", "1" };
+cvar_t	player_ammomax_rpg = { "player_ammomax_rpg", "1" };
+cvar_t	player_ammomax_uranium = { "player_ammomax_uranium", "1" };
+cvar_t	player_ammomax_handgrenade = { "player_ammomax_handgrenade", "1" };
+cvar_t	player_ammomax_satchel = { "player_ammomax_satchel", "1" };
+cvar_t	player_ammomax_tripmine = { "player_ammomax_tripmine", "1" };
+cvar_t	player_ammomax_hornet = { "player_ammomax_hornet", "1" };
+cvar_t	player_ammomax_snark = { "player_ammomax_snark", "1" };
+cvar_t	player_ammomax_chumtoad = { "player_ammomax_chumtoad", "1" };
+
+
+cvar_t	player_revive_health1 = {"sk_player_revive_health1", "1"};
+cvar_t	player_revive_health2 = {"sk_player_revive_health2", "1"};
+cvar_t	player_revive_health3 = {"sk_player_revive_health3", "1"};
+
+
+cvar_t	scientist_can_heal1 = { "sk_scientist_can_heal1", "1" };
+cvar_t	scientist_can_heal2 = { "sk_scientist_can_heal2", "1" };
+cvar_t	scientist_can_heal3 = { "sk_scientist_can_heal3", "1" };
+
+cvar_t	npc_drop_weapon1 = { "sk_npc_drop_weapon1", "1" };
+cvar_t	npc_drop_weapon2 = { "sk_npc_drop_weapon2", "1" };
+cvar_t	npc_drop_weapon3 = { "sk_npc_drop_weapon3", "1" };
+
+
+cvar_t	tdmg_paralyze_duration1 = { "tdmg_paralyze_duration1", "1" };
+cvar_t	tdmg_paralyze_duration2 = { "tdmg_paralyze_duration2", "1" };
+cvar_t	tdmg_paralyze_duration3 = { "tdmg_paralyze_duration3", "1" };
+
+cvar_t	tdmg_nervegas_duration1 = { "tdmg_nervegas_duration1", "1" };
+cvar_t	tdmg_nervegas_duration2 = { "tdmg_nervegas_duration2", "1" };
+cvar_t	tdmg_nervegas_duration3 = { "tdmg_nervegas_duration3", "1" };
+cvar_t	tdmg_nervegas_damage1 = { "tdmg_nervegas_damage1", "1" };
+cvar_t	tdmg_nervegas_damage2 = { "tdmg_nervegas_damage2", "1" };
+cvar_t	tdmg_nervegas_damage3 = { "tdmg_nervegas_damage3", "1" };
+
+cvar_t	tdmg_poison_duration1 = { "tdmg_poison_duration1", "1" };
+cvar_t	tdmg_poison_duration2 = { "tdmg_poison_duration2", "1" };
+cvar_t	tdmg_poison_duration3 = { "tdmg_poison_duration3", "1" };
+cvar_t	tdmg_poison_damage1 = { "tdmg_poison_damage1", "1" };
+cvar_t	tdmg_poison_damage2 = { "tdmg_poison_damage2", "1" };
+cvar_t	tdmg_poison_damage3 = { "tdmg_poison_damage3", "1" };
+
+cvar_t	tdmg_radiation_duration1 = { "tdmg_radiation_duration1", "1" };
+cvar_t	tdmg_radiation_duration2 = { "tdmg_radiation_duration2", "1" };
+cvar_t	tdmg_radiation_duration3 = { "tdmg_radiation_duration3", "1" };
+cvar_t	tdmg_radiation_damage1 = { "tdmg_radiation_damage1", "1" };
+cvar_t	tdmg_radiation_damage2 = { "tdmg_radiation_damage2", "1" };
+cvar_t	tdmg_radiation_damage3 = { "tdmg_radiation_damage3", "1" };
+
+cvar_t	tdmg_acid_duration1 = { "tdmg_acid_duration1", "1" };
+cvar_t	tdmg_acid_duration2 = { "tdmg_acid_duration2", "1" };
+cvar_t	tdmg_acid_duration3 = { "tdmg_acid_duration3", "1" };
+cvar_t	tdmg_acid_damage1 = { "tdmg_acid_damage1", "1" };
+cvar_t	tdmg_acid_damage2 = { "tdmg_acid_damage2", "1" };
+cvar_t	tdmg_acid_damage3 = { "tdmg_acid_damage3", "1" };
+
+cvar_t	tdmg_slowburn_duration1 = { "tdmg_slowburn_duration1", "1" };
+cvar_t	tdmg_slowburn_duration2 = { "tdmg_slowburn_duration2", "1" };
+cvar_t	tdmg_slowburn_duration3 = { "tdmg_slowburn_duration3", "1" };
+cvar_t	tdmg_slowburn_damage1 = { "tdmg_slowburn_damage1", "1" };
+cvar_t	tdmg_slowburn_damage2 = { "tdmg_slowburn_damage2", "1" };
+cvar_t	tdmg_slowburn_damage3 = { "tdmg_slowburn_damage3", "1" };
+
+cvar_t	tdmg_slowfreeze_duration1 = { "tdmg_slowfreeze_duration1", "1" };
+cvar_t	tdmg_slowfreeze_duration2 = { "tdmg_slowfreeze_duration2", "1" };
+cvar_t	tdmg_slowfreeze_duration3 = { "tdmg_slowfreeze_duration3", "1" };
+cvar_t	tdmg_slowfreeze_damage1 = { "tdmg_slowfreeze_damage1", "1" };
+cvar_t	tdmg_slowfreeze_damage2 = { "tdmg_slowfreeze_damage2", "1" };
+cvar_t	tdmg_slowfreeze_damage3 = { "tdmg_slowfreeze_damage3", "1" };
+
+cvar_t	tdmg_bleeding_duration1 = { "tdmg_bleeding_duration1", "1" };
+cvar_t	tdmg_bleeding_duration2 = { "tdmg_bleeding_duration2", "1" };
+cvar_t	tdmg_bleeding_duration3 = { "tdmg_bleeding_duration3", "1" };
+cvar_t	tdmg_bleeding_damage1 = { "tdmg_bleeding_damage1", "1" };
+cvar_t	tdmg_bleeding_damage2 = { "tdmg_bleeding_damage2", "1" };
+cvar_t	tdmg_bleeding_damage3 = { "tdmg_bleeding_damage3", "1" };
+
+
+
 
 
 //MODDD - all new below to "END Cvars".  These have been moved to hud.cpp.
@@ -1385,6 +1452,93 @@ void GameDLLInit( void )
 	CVAR_REGISTER ( &sk_player_leg1 );
 	CVAR_REGISTER ( &sk_player_leg2 );
 	CVAR_REGISTER ( &sk_player_leg3 );
+
+
+	//MODDD - NEW BELOW!
+	///////////////////////////////////////////////
+	CVAR_REGISTER(&player_ammomax_9mm);
+	CVAR_REGISTER(&player_ammomax_mp5_grenade);
+	CVAR_REGISTER(&player_ammomax_revolver);
+	CVAR_REGISTER(&player_ammomax_shotgun);
+	CVAR_REGISTER(&player_ammomax_crossbow);
+	CVAR_REGISTER(&player_ammomax_rpg);
+	CVAR_REGISTER(&player_ammomax_uranium);
+	CVAR_REGISTER(&player_ammomax_handgrenade);
+	CVAR_REGISTER(&player_ammomax_satchel);
+	CVAR_REGISTER(&player_ammomax_tripmine);
+	CVAR_REGISTER(&player_ammomax_hornet);
+	CVAR_REGISTER(&player_ammomax_snark);
+	CVAR_REGISTER(&player_ammomax_chumtoad);
+
+
+	CVAR_REGISTER(&player_revive_health1);
+	CVAR_REGISTER(&player_revive_health2);
+	CVAR_REGISTER(&player_revive_health3);
+
+	CVAR_REGISTER(&scientist_can_heal1);
+	CVAR_REGISTER(&scientist_can_heal2);
+	CVAR_REGISTER(&scientist_can_heal3);
+
+	CVAR_REGISTER(&npc_drop_weapon1);
+	CVAR_REGISTER(&npc_drop_weapon2);
+	CVAR_REGISTER(&npc_drop_weapon3);
+
+
+
+	CVAR_REGISTER(&tdmg_paralyze_duration1);
+	CVAR_REGISTER(&tdmg_paralyze_duration2);
+	CVAR_REGISTER(&tdmg_paralyze_duration3);
+
+	CVAR_REGISTER(&tdmg_nervegas_duration1);
+	CVAR_REGISTER(&tdmg_nervegas_duration2);
+	CVAR_REGISTER(&tdmg_nervegas_duration3);
+	CVAR_REGISTER(&tdmg_nervegas_damage1);
+	CVAR_REGISTER(&tdmg_nervegas_damage2);
+	CVAR_REGISTER(&tdmg_nervegas_damage3);
+
+	CVAR_REGISTER(&tdmg_poison_duration1);
+	CVAR_REGISTER(&tdmg_poison_duration2);
+	CVAR_REGISTER(&tdmg_poison_duration3);
+	CVAR_REGISTER(&tdmg_poison_damage1);
+	CVAR_REGISTER(&tdmg_poison_damage2);
+	CVAR_REGISTER(&tdmg_poison_damage3);
+
+	CVAR_REGISTER(&tdmg_radiation_duration1);
+	CVAR_REGISTER(&tdmg_radiation_duration2);
+	CVAR_REGISTER(&tdmg_radiation_duration3);
+	CVAR_REGISTER(&tdmg_radiation_damage1);
+	CVAR_REGISTER(&tdmg_radiation_damage2);
+	CVAR_REGISTER(&tdmg_radiation_damage3);
+
+	CVAR_REGISTER(&tdmg_acid_duration1);
+	CVAR_REGISTER(&tdmg_acid_duration2);
+	CVAR_REGISTER(&tdmg_acid_duration3);
+	CVAR_REGISTER(&tdmg_acid_damage1);
+	CVAR_REGISTER(&tdmg_acid_damage2);
+	CVAR_REGISTER(&tdmg_acid_damage3);
+
+	CVAR_REGISTER(&tdmg_slowburn_duration1);
+	CVAR_REGISTER(&tdmg_slowburn_duration2);
+	CVAR_REGISTER(&tdmg_slowburn_duration3);
+	CVAR_REGISTER(&tdmg_slowburn_damage1);
+	CVAR_REGISTER(&tdmg_slowburn_damage2);
+	CVAR_REGISTER(&tdmg_slowburn_damage3);
+
+	CVAR_REGISTER(&tdmg_slowfreeze_duration1);
+	CVAR_REGISTER(&tdmg_slowfreeze_duration2);
+	CVAR_REGISTER(&tdmg_slowfreeze_duration3);
+	CVAR_REGISTER(&tdmg_slowfreeze_damage1);
+	CVAR_REGISTER(&tdmg_slowfreeze_damage2);
+	CVAR_REGISTER(&tdmg_slowfreeze_damage3);
+
+	CVAR_REGISTER(&tdmg_bleeding_duration1);
+	CVAR_REGISTER(&tdmg_bleeding_duration2);
+	CVAR_REGISTER(&tdmg_bleeding_duration3);
+	CVAR_REGISTER(&tdmg_bleeding_damage1);
+	CVAR_REGISTER(&tdmg_bleeding_damage2);
+	CVAR_REGISTER(&tdmg_bleeding_damage3);
+
+
 // END REGISTER CVARS FOR SKILL LEVEL STUFF
 
 	SERVER_COMMAND( "exec skill.cfg\n" );

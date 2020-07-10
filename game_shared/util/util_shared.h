@@ -279,39 +279,6 @@ EASY_CVAR_EXTERN(hiddenMemPrintout)
 
 
 
-
-// NOTE: tweak these values based on gameplay feedback:
-//(MODDD - that comment is not mine.)
-
-
-//MODDD - changed back to a previous setup that makes more sense, since antidotes are present.
-//See player.cpp for that one.  Search "REVERTED TO OLD TIMED DAMAGE".
-/*
-#define PARALYZE_DURATION	2		// number of 2 second intervals to take damage
-#define PARALYZE_DAMAGE		1.0		// damage to take each 2 second interval
-
-#define NERVEGAS_DURATION	2
-#define NERVEGAS_DAMAGE		5.0
-
-#define POISON_DURATION		5
-#define POISON_DAMAGE		2.0
-
-#define RADIATION_DURATION	2
-#define RADIATION_DAMAGE	1.0
-
-#define ACID_DURATION		2
-#define ACID_DAMAGE			5.0
-
-#define SLOWBURN_DURATION	2
-#define SLOWBURN_DAMAGE		1.0
-
-#define SLOWFREEZE_DURATION	2
-#define SLOWFREEZE_DAMAGE	1.0
-*/
-
-
-//!!! Old file include place!!!   apparently they don't have to go here anymore
-
 /////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////

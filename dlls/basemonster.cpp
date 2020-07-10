@@ -100,8 +100,7 @@ extern CGraph WorldGraph;// the world node graph
 //extern Schedule_t* slAnimationSmart;
 
 
-
-
+/*
 float CBaseMonster::paralyzeDuration = 0;
 float CBaseMonster::nervegasDuration = 0;
 float CBaseMonster::poisonDuration = 0;
@@ -110,9 +109,16 @@ float CBaseMonster::acidDuration = 0;
 float CBaseMonster::slowburnDuration = 0;
 float CBaseMonster::slowfreezeDuration = 0;
 float CBaseMonster::bleedingDuration = 0;
-
-
-
+*/
+/*
+float CBaseMonster::nervegasDamage = 0;
+float CBaseMonster::poisonDamage = 0;
+float CBaseMonster::radiationDamage = 0;
+float CBaseMonster::acidDamage = 0;
+float CBaseMonster::slowburnDamage = 0;
+float CBaseMonster::slowfreezeDamage = 0;
+float CBaseMonster::bleedingDamage = 0;
+*/
 
 
 // Global Savedata for monster
@@ -868,6 +874,19 @@ void CBaseMonster :: Listen ( void )
 		
 	}
 
+
+
+
+	if (FClassnameIs(pev, "monster_human_assault")) {
+		//different.
+		int xxx = 45;
+	}
+
+
+
+
+
+
 	//1, 4
 	//2^0, 2^2
 
@@ -900,15 +919,11 @@ void CBaseMonster :: Listen ( void )
 
 		)
 		{
-				//easyForcePrintLine("%s:ID%d I HEARD IT.", this->getClassnameShort(), this->monsterID);
-
-
-
+			//easyForcePrintLine("%s:ID%d I HEARD IT.", this->getClassnameShort(), this->monsterID);
 
  			// the monster cares about this sound, and it's close enough to hear.
 			//g_pSoundEnt->m_SoundPool[ iSound ].m_iNextAudible = m_iAudibleList;
 			pCurrentSound->m_iNextAudible = m_iAudibleList;
-			
 			
 			if ( pCurrentSound->FIsSound() )
 			{
@@ -949,10 +964,10 @@ void CBaseMonster :: Listen ( void )
 //		iSound = g_pSoundEnt->m_SoundPool[ iSound ].m_iNext;
 		iSound = pCurrentSound->m_iNext;
 	}
+	if(FClassnameIs(pev, "monster_stukabat")){
 
 
 	
-	if(FClassnameIs(pev, "monster_stukabat")){
 		//easyPrintLine("HOLY der MOTHERderER %d %d",  HasConditions( bits_COND_HEAR_SOUND ),  HasConditions( bits_COND_SMELL_FOOD ) );
 	}	
 
@@ -1435,11 +1450,9 @@ void CBaseMonster::wanderAway(const Vector& toWalkAwayFrom){
 
 
 
-
 //Easy way to convert new damage types without adjusting existing constants.
 //That may be okay, but I'm not taking risks just yet.
 int CBaseMonster::convert_itbd_to_damage(int i){
-	
 	
 	if(i <= 7){
 		//The old way works fine for existing damage types.
@@ -1475,17 +1488,162 @@ int CBaseMonster::convert_itbd_to_damage(int i){
 }//END OF convert_itbd_to_damage
 
 
+void CBaseMonster::removeTimedDamage(int arg_type, int* m_bitsDamageTypeRef) {
+	m_rgbTimeBasedDamage[arg_type] = 0;
+	//MODDD
+	m_rgbTimeBasedFirstFrame[arg_type] = TRUE;
+	//MODDD
+	// if we're done, clear damage bits
+	//m_bitsDamageType &= ~(DMG_PARALYZE << i);	
+	(*m_bitsDamageTypeRef) &= ~(convert_itbd_to_damage(arg_type));
+}//END OF removeTimedDamage(...)
+
+
+void CBaseMonster::parse_itbd(int i, BYTE& bDuration) {
+	int damageType = 0;
+	//
+	//if(timedDamageIgnoresArmorMem == 1){
+	//	//timed damage ignores armor.
+	//	damageType = DMG_FALL;
+	//}else{
+	//	//timed damage hits armor first.
+	//	damageType = DMG_GENERIC;
+	//}
+	//
+	// no, can't just do that.
+
+	// instead, a damgeType being "DMG_TIMEDEFFECT" means,
+	// it is just generic, but use this for telling whether to
+	// apply the armor-bypass or not without the sideeffect of what-
+	// ever happens to DMG_FALL.
+	damageType = DMG_TIMEDEFFECT;
+
+
+	// NOTE: should these ignore armor or not?  I feel like they kind of should.
+	// If so, make the damage type (DMG_GENERIC) become "DMG_FALL" instead (known to ignore armor).
+	// ...this might have been handled since by the new dmg type DMG_TIMEDEFFECTIGNORE
+
+	switch (i)
+	{
+	case itbd_Paralyze:
+		// UNDONE - flag movement as half-speed
+		bDuration = gSkillData.tdmg_paralyze_duration;
+		break;
+	case itbd_NerveGas:
+		//MODDD - comment undone.
+		TakeDamage(pev, pev, NERVEGAS_DAMAGE, 0, damageType);
+
+		bDuration = gSkillData.tdmg_nervegas_duration;
+		break;
+	case itbd_Poison:
+		TakeDamage(pev, pev, POISON_DAMAGE, 0, damageType | DMG_TIMEDEFFECTIGNORE);
+
+		bDuration = gSkillData.tdmg_poison_duration;
+		break;
+	case itbd_Radiation:
+		//MODDD - comment on "TakeDamage" undone.
+		TakeDamage(pev, pev, RADIATION_DAMAGE, 0, damageType | DMG_TIMEDEFFECTIGNORE);
+
+		bDuration = gSkillData.tdmg_radiation_duration;
+		break;
+	case itbd_DrownRecover:
+		//
+		//// NOTE: this hack is actually used to RESTORE health
+		//// after the player has been drowning and finally takes a breath
+		//if (m_idrowndmg > m_idrownrestored)
+		//{
+		//	int idif = min(m_idrowndmg - m_idrownrestored, 10);
+
+		//	TakeHealth(idif, DMG_GENERIC);
+		//	m_idrownrestored += idif;
+		//}
+		//bDuration = 4;	// get up to 5*10 = 50 points back
+		break;
+	case itbd_Acid:
+		//MODDD - comment undone.
+		TakeDamage(pev, pev, ACID_DAMAGE, 0, damageType);
+		//MODDD - see above.
+
+		bDuration = gSkillData.tdmg_acid_duration;
+		break;
+	case itbd_SlowBurn:
+		//MODDD - comment undone.
+		TakeDamage(pev, pev, SLOWBURN_DAMAGE, 0, damageType);
+		//MODDD - see above.
+
+		bDuration = gSkillData.tdmg_slowburn_duration;
+		break;
+	case itbd_SlowFreeze:
+		//easyPrintLine("DO YOU EVER TAKE FREEZE DAMAGE?");
+		//this won't be called, as the map's called freeze effect never starts like this.
+		//MODDD - comment undone.
+		TakeDamage(pev, pev, SLOWFREEZE_DAMAGE, 0, damageType);
+		//MODDD - see above.
+
+		bDuration = gSkillData.tdmg_slowfreeze_duration;
+		break;
+	//MODDD - new.
+	case itbd_Bleeding:
+		// this will always ignore the armor (hence DMG_TIMEDEFFECT).
+		TakeDamage(pev, pev, BLEEDING_DAMAGE, 0, damageType | DMG_TIMEDEFFECTIGNORE);
+
+		UTIL_MakeAimVectors(pev->angles);
+		//pev->origin + pev->view_ofs
+		//BodyTargetMod(g_vecZero)
+		DrawAlphaBlood(BLEEDING_DAMAGE, BodyTargetMod(g_vecZero) + gpGlobals->v_forward * RANDOM_FLOAT(9, 13) + gpGlobals->v_right * RANDOM_FLOAT(-8, 8) + gpGlobals->v_up * RANDOM_FLOAT(-3, 5));
+
+		bDuration = gSkillData.tdmg_bleeding_duration;
+		break;
+	default:
+		bDuration = 0;
+	}
+
+}//END OF parse_itbd
+
+
+// If this is not the first frame we're taking this damage type,
+void CBaseMonster::timedDamage_nonFirstFrame(int i, int* m_bitsDamageTypeRef) {
+
+	if (g_iSkillLevel == 3 && EASY_CVAR_GET(timedDamageEndlessOnHard) == 1) {
+		//Hard mode is on, and "timedDamageEndlessOnHard" is on...
+		//Do NOT decrement non-curable durations.
+		//However, still decrement only ONCE on curables to satisfy the one-second-passing rule for canisters to work.
+		if (!m_rgbTimeBasedFirstFrame[i] &&
+			(i == itbd_NerveGas || i == itbd_Poison || i == itbd_Radiation || i == itbd_Bleeding)) {
+			//DO NOTHING.  Only the appropriate cure can fix it.
+		}
+		else if (m_rgbTimeBasedDamage[i] > 0) {
+			m_rgbTimeBasedDamage[i]--;
+		}
+
+	}
+	else {
+		//work as normal.  Decrement durations.
+		if (m_rgbTimeBasedDamage[i] > 0) {
+			m_rgbTimeBasedDamage[i]--;
+		}
+	}
+
+	// decrement damage duration, detect when done.
+	//MODDD - change to how that works.
+	//if (!m_rgbTimeBasedDamage[i] || --m_rgbTimeBasedDamage[i] == 0)
+	if (m_rgbTimeBasedDamage[i] <= 0)
+	{
+		removeTimedDamage(i, m_bitsDamageTypeRef);
+	}
+
+}
+
 
 //MODDD - checkpoint.
 void CBaseMonster::CheckTimeBasedDamage(void) 
 {
+	static float gtbdPrev = 0.0;
 	int i;
 	BYTE bDuration = 0;
 
-	static float gtbdPrev = 0.0;
-
-	//no timed damage for 
-	if( pev->health <= 0 || pev->deadflag != DEAD_NO){
+	// no timed damage for 
+	if (pev->health <= 0 || pev->deadflag != DEAD_NO) {
 		return;
 	}
 
@@ -1493,8 +1651,6 @@ void CBaseMonster::CheckTimeBasedDamage(void)
 	if (abs(gpGlobals->time - m_tbdPrev) < 2.0)
 		return;
 
-	//not usually here.
-	
 	//MODDD - check other too!
 	//if (!(m_bitsDamageType & DMG_TIMEBASED))
 	if (!(m_bitsDamageType & DMG_TIMEBASED) && !(m_bitsDamageTypeMod & (DMG_TIMEBASEDMOD))  )
@@ -1502,12 +1658,8 @@ void CBaseMonster::CheckTimeBasedDamage(void)
 
 	m_tbdPrev = gpGlobals->time;
 	
-	//m_tbdPrev = gpGlobals->time;
-
 	for (i = 0; i < CDMG_TIMEBASED; i++)
 	{
-
-		
 		int* m_bitsDamageTypeRef = 0;
 		if(i <= 7){
 			//use the old bitmask.
@@ -1515,188 +1667,26 @@ void CBaseMonster::CheckTimeBasedDamage(void)
 		}else{
 			//use the new bitmask.
 			m_bitsDamageTypeRef = &m_bitsDamageTypeMod;
-
-			//easyPrintLine("WELLLLL?! %d :: %d", m_bitsDamageTypeMod, convert_itbd_to_damage(i));
-			//continue;
 		}
-		
 
-		if(convert_itbd_to_damage(i) == -1){
-			easyPrintLine("CRITICAL ERROR: MONSTER TIMED DAMAGE BOOBOO: %d", i);
+		int damageBit = convert_itbd_to_damage(i);
+
+		if (damageBit == -1) {
+			easyForcePrintLine("CRITICAL ERROR: MONSTER TIMED DAMAGE BOOBOO: %d", i);
 			return;
 		}
 
-
 		// make sure bit is set for damage type
 		//if (m_bitsDamageType & (DMG_PARALYZE << i))
-		if((*m_bitsDamageTypeRef) & (convert_itbd_to_damage(i))  )
+		if ((*m_bitsDamageTypeRef) & (damageBit))
 		{
+			m_rgbTimeBasedFirstFrame[i] = FALSE;
 
-			
-			int damageType = 0;
+			parse_itbd(i, bDuration);
 
-			//
-			//if(timedDamageIgnoresArmorMem == 1){
-			//	//timed damage ignores armor.
-			//	damageType = DMG_FALL;
-			//}else{
-			//	//timed damage hits armor first.
-			//	damageType = DMG_GENERIC;
-			//}
-			//
-
-			//no, can't just do that.
-
-			//instead, a damgeType being "DMG_TIMEDEFFECT" means,
-			//it is just generic, but use this for telling whether to
-			//apply the armor-bypass or not without the sideeffect of what-
-			//ever happens to DMG_FALL.
-			damageType = DMG_TIMEDEFFECT;
-
-
-			switch (i)
+			if (m_rgbTimeBasedDamage[i] > 0)
 			{
-				//NOTE: should these ignore armor or not?  I feel like they kind of should.
-				//If so, make the damage type (DMG_GENERIC) become "DMG_FALL" instead (known to ignore armor).
-			case itbd_Paralyze:
-				// UNDONE - flag movement as half-speed
-				bDuration = paralyzeDuration;
-				//MODDD - see above.
-				//bDuration = PARALYZE_DURATION;
-				break;
-			case itbd_NerveGas:
-				//MODDD - comment undone.
-				TakeDamage(pev, pev, NERVEGAS_DAMAGE, 0, damageType);	
-				
-				bDuration = nervegasDuration;
-				//MODDD - see above.
-				//bDuration = NERVEGAS_DURATION;
-				break;
-			case itbd_Poison:
-				TakeDamage(pev, pev, POISON_DAMAGE, 0, damageType | DMG_TIMEDEFFECTIGNORE);
-				
-				bDuration = poisonDuration;
-				
-				//MODDD - see above.
-				//bDuration = POISON_DURATION;
-				break;
-			case itbd_Radiation:
-				//MODDD - comment on "TakeDamage" undone.
-				TakeDamage(pev, pev, RADIATION_DAMAGE, 0, damageType | DMG_TIMEDEFFECTIGNORE);
-				
-				bDuration = radiationDuration;
-				//MODDD - see above.
-				//bDuration = RADIATION_DURATION;
-				break;
-			case itbd_DrownRecover:
-				//
-				//// NOTE: this hack is actually used to RESTORE health
-				//// after the player has been drowning and finally takes a breath
-				//if (m_idrowndmg > m_idrownrestored)
-				//{
-				//	int idif = min(m_idrowndmg - m_idrownrestored, 10);
-
-				//	TakeHealth(idif, DMG_GENERIC);
-				//	m_idrownrestored += idif;
-				//}
-				//bDuration = 4;	// get up to 5*10 = 50 points back
-				//
-				break;
-			case itbd_Acid:
-				//MODDD - comment undone.
-				TakeDamage(pev, pev, ACID_DAMAGE, 0, damageType);
-				//MODDD - see above.
-				
-				bDuration = acidDuration;
-				//bDuration = ACID_DURATION;
-				break;
-			case itbd_SlowBurn:
-				//MODDD - comment undone.
-				TakeDamage(pev, pev, SLOWBURN_DAMAGE, 0, damageType);
-				//MODDD - see above.
-				
-				bDuration = slowburnDuration;
-				//bDuration = SLOWBURN_DURATION;
-				break;
-			case itbd_SlowFreeze:
-				//MODDD - comment undone.
-				TakeDamage(pev, pev, SLOWFREEZE_DAMAGE, 0, damageType);
-				//MODDD - see above.
-				
-				bDuration = slowfreezeDuration;
-				//bDuration = SLOWFREEZE_DURATION;
-				break;
-				//MODDD - new.
-			case itbd_Bleeding:
-				//this will always ignore the armor (hence DMG_TIMEDEFFECT).
-				TakeDamage(pev, pev, BLEEDING_DAMAGE, 0, damageType | DMG_TIMEDEFFECTIGNORE);
-				
-				UTIL_MakeAimVectors(pev->angles);
-				//pev->origin + pev->view_ofs
-				//BodyTargetMod(g_vecZero)
-				DrawAlphaBlood(BLEEDING_DAMAGE, BodyTargetMod(g_vecZero) + gpGlobals->v_forward * RANDOM_FLOAT(9, 13) + gpGlobals->v_right * RANDOM_FLOAT(-8, 8) + gpGlobals->v_up * RANDOM_FLOAT(-3, 5) );
-				
-				bDuration = bleedingDuration;
-				break;
-
-			default:
-				bDuration = 0;
-			}
-
-
-
-
-			//
-			//MODDD - diagnositic.
-			//if(i == itbd_Radiation){
-			//		easyPrintLine("timebaseddamage for rad? %d", m_rgbTimeBasedDamage[i]);
-			//}
-			//
-
-
-			if (m_rgbTimeBasedDamage[i])
-			{
-				// use up an antitoxin on poison or nervegas after a few seconds of damage
-				//MODDD - instead of referring to constants like "NERVEGASDURATION", it is referring to the
-				//variable "nervegasDuration", which is set according to difficulty.  Same for poison.
-				
-
-				
-				//if(CVAR_skillMem == 3 && timedDamageEndlessOnHardMem == 1){
-				if(g_iSkillLevel == 3 && EASY_CVAR_GET(timedDamageEndlessOnHard) == 1){
-					//Hard mode is on, and "timedDamageEndlessOnHard" is on...
-					//Do NOT decrement non-curable durations.
-					//However, still decrement only ONCE on curables to satisfy the one-second-passing rule for canisters to work.
-					if(!m_rgbTimeBasedFirstFrame[i] &&
-						(i == itbd_NerveGas || i == itbd_Poison || i ==  itbd_Radiation || i == itbd_Bleeding) ){
-						//DO NOTHING.  Only the appropriate cure can fix it.
-					}else if(m_rgbTimeBasedDamage[i] != 0){
-						m_rgbTimeBasedDamage[i]--;
-						m_rgbTimeBasedFirstFrame[i] = FALSE;
-					}
-
-				}else{
-					//work as normal.  Decrement durations.
-
-					if(m_rgbTimeBasedDamage[i] != 0){
-						m_rgbTimeBasedDamage[i]--;
-					}
-				}
-
-				// decrement damage duration, detect when done.
-				//MODDD - change to how that works.
-				//if (!m_rgbTimeBasedDamage[i] || --m_rgbTimeBasedDamage[i] == 0)
-				if(!m_rgbTimeBasedDamage[i])
-				{
-					m_rgbTimeBasedDamage[i] = 0;
-					//MODDD
-					m_rgbTimeBasedFirstFrame[i] = TRUE;
-					//MODDD
-					// if we're done, clear damage bits
-					//m_bitsDamageType &= ~(DMG_PARALYZE << i);	
-					(*m_bitsDamageTypeRef) &= ~(convert_itbd_to_damage(i));
-				}
-
+				timedDamage_nonFirstFrame(i, m_bitsDamageTypeRef);
 			}
 			else{
 				// first time taking this damage type - init damage duration
@@ -1705,9 +1695,8 @@ void CBaseMonster::CheckTimeBasedDamage(void)
 				m_rgbTimeBasedDamage[i] = bDuration;
 			}
 		}
-	}
-}
-
+	}//END OF loop through all damage types
+}//END OF CheckTimeBasedDamage
 
 
 
@@ -1719,79 +1708,9 @@ void CBaseMonster::onNewRouteNode(void){
 	//nothing by default
 }
 
-
-//CANNED!
-//MODDD - an injection that occurs before "MontserThink" for all monsters.
-void CBaseMonster::MonsterThinkPreMOD(void){
-	
-	//return;
-	//TODO: cancel my schedule / task on death?  is that possible?
-
-
-
-	/*
-	BOOL canCheck = TRUE;
-
-	Task_t* tempTask = NULL;
-	if( (tempTask = this->GetTask()) != NULL){
-		if( (tempTask->iTask) == TASK_DIE){
-			canCheck = FALSE;
-		}
-	}
-	
-	if(canCheck){
-
-		if(m_hEnemy != NULL && !UTIL_IsAliveEntity(m_hEnemy)){
-
-		
-			//SetConditions ( bits_COND_ENEMY_DEAD );
-			//ClearConditions( bits_COND_SEE_ENEMY | bits_COND_ENEMY_OCCLUDED );
-
-			m_hEnemy = NULL;
-			//assume the current schedule involves the monster not being null, for safety.
-			TaskFail();
-			canCheck = FALSE;
-			//return;
-		}
-	
-		if(canCheck && m_hTargetEnt != NULL && (!targetIsDeadException && !UTIL_IsAliveEntity(m_hTargetEnt)) ){
-			m_hTargetEnt = NULL;
-			TaskFail();
-			//return;
-		}
-
-	}
-	*/
-
-	/*
-
-	if(EASY_CVAR_GET(seeMonsterHealth) == 1 && pev->max_health >= 1){
-		//topCenter
-		Vector topCenter = Vector(this->pev->origin.x + (pev->maxs.x + pev->mins.x)/2, this->pev->origin.y + (pev->maxs.y + pev->mins.y)/2, this->pev->origin.z + (pev->maxs.z) - 4 );
-		int r;
-		int g;
-		int b;
-		UTIL_deriveColorFromMonsterHealth(pev->health, pev->max_health, r, g, b);
-
-		UTIL_drawLineFrameBoxAround(topCenter, 6, 16, r, g, b);
-	}
-
-	*/
-
-
-	//MonsterThink();
-
-	
-
-}//END OF MonsterThinkPreMOD
-
 BOOL CBaseMonster::usesAdvancedAnimSystem(void){
 	return FALSE;
 }
-
-
-
-
 
 
 //=========================================================
@@ -1825,7 +1744,6 @@ void CBaseMonster :: MonsterThink ( void )
 	//easyForcePrintLine("FRAMEA:%.2f seq:%d loop:%d fin:%d", this->pev->frame, pev->sequence, m_fSequenceLoops, m_fSequenceFinished);
 
 	
-	
 	/*
 	if(EASY_CVAR_GET(testVar) == 1){
 		//BLOCKER
@@ -1848,7 +1766,6 @@ void CBaseMonster :: MonsterThink ( void )
 	*/
 
 	
-
 	if(this->drawFieldOfVisionConstant == TRUE){
 		DrawFieldOfVision();
 	}
@@ -1909,7 +1826,6 @@ void CBaseMonster :: MonsterThink ( void )
 	
 
 	
-
 	if(EASY_CVAR_GET(animationPrintouts) == 1 && monsterID >= -1)easyForcePrintLine("%s:%d Anim info A? frame:%.2f done:%d", getClassname(), monsterID, pev->frame, m_fSequenceFinished);
 	
 	//if (!terminated) {
@@ -1919,7 +1835,6 @@ void CBaseMonster :: MonsterThink ( void )
 
 	if(EASY_CVAR_GET(animationPrintouts) == 1 && monsterID >= -1)easyForcePrintLine("%s:%d Anim info B frame:%.2f done:%d", getClassname(), monsterID, pev->frame, m_fSequenceFinished);
 	
-
 	//hey WELL.
 	if(EASY_CVAR_GET(timedDamageAffectsMonsters) == 1){
 		CheckTimeBasedDamage();
@@ -1969,9 +1884,9 @@ void CBaseMonster :: MonsterThink ( void )
 
 
 
-	//If looping and using a custom sequence (set by some "setSequenceBy..." method or similar, as opposed to selected by a new activity),
-	//do NOT force a new animation! We mean to keep the current animation.
-	//ALSO IMPORTANT: This will fuck with tasks based on waiting for for the sequence to be complete, which would be seen the next frame. Fuck that shit.
+	// If looping and using a custom sequence (set by some "setSequenceBy..." method or similar, as opposed to selected by a new activity),
+	// do NOT force a new animation! We mean to keep the current animation.
+	// ALSO IMPORTANT: This will fuck with tasks based on waiting for for the sequence to be complete, which would be seen the next frame. Fuck that shit.
 	if (
 		//!(m_pSchedule != NULL && getTaskNumber() ==  
 		
@@ -4870,7 +4785,9 @@ void CBaseMonster :: Move ( float flInterval )
 								TraceResult trTemp;
 								UTIL_TraceLine ( pev->origin + Vector(0, 0, 5), waypointGoalRef->vecLocation + Vector(0, 0, 5), dont_ignore_monsters, dont_ignore_glass,  ENT(pev), &trTemp );
 
-								DebugLine_ClearAll();
+								if(drawPathConstant){
+									DebugLine_ClearAll();
+								}
 								if( trTemp.flFraction==1 || trTemp.pHit == NULL || (m_hEnemy != NULL && trTemp.pHit == m_hEnemy.Get()) ){
 									//if nothing was hit or I happened to hit my enemy with this trace, pass.
 									
@@ -4878,7 +4795,11 @@ void CBaseMonster :: Move ( float flInterval )
 									return;
 								}else{
 									EASY_CVAR_PRINTIF_PRE(pathfindPrintout,easyForcePrintLine("PathfindEdgeCheck: TRACE FAILED?! classname:%s : fract:%.2f", STRING(trTemp.pHit->v.classname), trTemp.flFraction));
-									DebugLine_Setup(0, pev->origin+Vector(0, 0, 5), waypointGoalRef->vecLocation + Vector(0, 0, 5), trTemp.flFraction);
+									
+									
+									if(drawPathConstant){
+										DebugLine_Setup(0, pev->origin+Vector(0, 0, 5), waypointGoalRef->vecLocation + Vector(0, 0, 5), trTemp.flFraction);
+									}
 								}
 
 							}
@@ -5412,7 +5333,7 @@ void CBaseMonster :: MovementComplete( void )
 	case TASKSTATUS_NEW:
 	
 	
-	// YOU ARE NOW ALL POINTLESS FUCK YOU
+	// YOU ARE NOW ALL POINTLESS disregard YOU
 	/*
 	case TASKSTATUS_RUNNING:
 		m_iTaskStatus = TASKSTATUS_RUNNING_TASK;
@@ -7205,6 +7126,12 @@ BOOL CBaseMonster :: GetEnemy (BOOL arg_forceWork )
 //=========================================================
 CBaseEntity* CBaseMonster :: DropItem ( char *pszItemName, const Vector &vecPos, const Vector &vecAng )
 {
+	//MODDD - difficulty can block items coming from NPCs.
+	if (gSkillData.npc_drop_weapon == 0) {
+		// no dropped weapons for you!
+		return NULL;
+	}
+
 	if ( !pszItemName )
 	{
 		ALERT ( at_console, "DropItem() - No item name!\n" );
@@ -7282,7 +7209,7 @@ void CBaseMonster::DeathAnimationStart(){
 	
 	pev->deadflag = DEAD_DYING;
 	
-	//ensure the death activity we pick (or have picked) gets to run.
+	// ensure the death activity we pick (or have picked) gets to run.
 	signalActivityUpdate = TRUE;
 
 	if (this->usesAdvancedAnimSystem() == FALSE) {
@@ -7525,6 +7452,24 @@ void CBaseMonster::OnTakeDamageSetConditions(entvars_t *pevInflictor, entvars_t 
 		return;
 	}
 
+
+
+
+	//MODDD - HEAVY_DAMAGE was unused before.  For using the BIG_FLINCH activity that is (never got communicated)
+	//    Stricter requirement:  this attack took 70% of health away.
+	//    The agrunt used to use this so that its only flinch was for heavy damage (above 20 in one attack), but that's easy by overriding this OnTakeDamageSetconditions method now.
+	//    Keep it to using light damage for that instead.
+	//if ( flDamage >= 20 )
+	if (gpGlobals->time >= forgetBigFlinchTime && (flDamage >= pev->max_health * 0.55 || flDamage >= 30))
+	{
+		SetConditions(bits_COND_HEAVY_DAMAGE);
+		forgetSmallFlinchTime = gpGlobals->time + DEFAULT_FORGET_SMALL_FLINCH_TIME;
+		forgetBigFlinchTime = gpGlobals->time + DEFAULT_FORGET_BIG_FLINCH_TIME;
+		return;
+	}
+
+	//  OTHERWISE...
+
 	//default case from CBaseMonster's TakeDamage.
 	//Also count being in a non-combat state to force looking in that direction.  But maybe at least 0 damage should be a requirement too, even in cases where the minimum damage for LIGHT is above 0?
 	if (m_MonsterState == MONSTERSTATE_IDLE || m_MonsterState == MONSTERSTATE_ALERT || flDamage > 0 )
@@ -7535,17 +7480,6 @@ void CBaseMonster::OnTakeDamageSetConditions(entvars_t *pevInflictor, entvars_t 
 		forgetSmallFlinchTime = gpGlobals->time + DEFAULT_FORGET_SMALL_FLINCH_TIME;
 	}
 
-	//MODDD - HEAVY_DAMAGE was unused before.  For using the BIG_FLINCH activity that is (never got communicated)
-	//    Stricter requirement:  this attack took 70% of health away.
-	//    The agrunt used to use this so that its only flinch was for heavy damage (above 20 in one attack), but that's easy by overriding this OnTakeDamageSetconditions method now.
-	//    Keep it to using light damage for that instead.
-	//if ( flDamage >= 20 )
-	if(gpGlobals->time >= forgetBigFlinchTime && (flDamage >=  pev->max_health * 0.55 || flDamage >= 30) )
-	{
-		SetConditions(bits_COND_HEAVY_DAMAGE);
-		forgetSmallFlinchTime = gpGlobals->time + DEFAULT_FORGET_SMALL_FLINCH_TIME;
-		forgetBigFlinchTime = gpGlobals->time + DEFAULT_FORGET_BIG_FLINCH_TIME;
-	}
 
 /*
 	if(EASY_CVAR_GET(testVar) == 10){

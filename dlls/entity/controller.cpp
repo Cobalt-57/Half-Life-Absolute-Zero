@@ -278,11 +278,7 @@ GENERATE_TRACEATTACK_IMPLEMENTATION(CController)
 
 GENERATE_TAKEDAMAGE_IMPLEMENTATION(CController)
 {
-	// HACK HACK -- until we fix this.
-	if ( IsAlive() )
-		PainSound();
-	//MODDD NOTE - ...is this redundant now? TODO: check this out and remove it if this PainSound() call is not needed anymore.
-		
+
 	return GENERATE_TAKEDAMAGE_PARENT_CALL(CSquadMonster);
 }
 
@@ -333,9 +329,6 @@ GENERATE_GIBMONSTER_IMPLEMENTATION(CController)
 	}
 	GENERATE_GIBMONSTER_PARENT_CALL(CSquadMonster);
 }
-
-
-
 
 
 
