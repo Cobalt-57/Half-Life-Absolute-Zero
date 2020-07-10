@@ -310,7 +310,7 @@ int CHud::Redraw(float flTime, int intermission)
 			buildInfoY = 14;
 		}
 
-		if (!gHUD.canDrawSidebar()) {
+		if (!gHUD.m_Ammo.gWR.gpActiveSel) {
 			// this gives the default color.
 			gEngfuncs.pfnDrawSetTextColor(1.00, 0.63, 0);
 			DrawConsoleString(16, buildInfoY, "Half-Life: Absolute Zero Development Build");
