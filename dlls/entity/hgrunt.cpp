@@ -695,9 +695,7 @@ GENERATE_GIBMONSTER_IMPLEMENTATION(CHGrunt)
 
 #if FORCE_MP5 == 1
 		//always drop an mp5, since the original code would've if this grunt didn't have a shotgun (and the shotgun won't be equipped).
-
 		pGun = DropItem( "weapon_9mmAR", vecGunPos, vecGunAngles );
-
 #else
 		if (FBitSet( pev->weapons, HGRUNT_SHOTGUN ))
 		{
@@ -715,10 +713,12 @@ GENERATE_GIBMONSTER_IMPLEMENTATION(CHGrunt)
 			pGun->pev->avelocity = Vector ( 0, RANDOM_FLOAT( 200, 400 ), 0 );
 		}
 
+
 #if FORCE_MP5 == 1
-		//don't do anything here.  Never drop ARgrenades if we can never have them equipped.
-		//...unless we allowed "mp5grenades" (same as ARgrenades) again.
+		// don't do anything here.  Never drop ARgrenades if we can never have them equipped.
+		// ...unless we allowed "mp5grenades" (same as ARgrenades) again.
 		if(EASY_CVAR_GET(gruntsCanHaveMP5Grenade) == 1){
+#endif
 			if (FBitSet( pev->weapons, HGRUNT_GRENADELAUNCHER ))
 			{
 				pGun = DropItem( "ammo_ARgrenades", vecGunPos, vecGunAngles );
@@ -728,16 +728,7 @@ GENERATE_GIBMONSTER_IMPLEMENTATION(CHGrunt)
 					pGun->pev->avelocity = Vector ( 0, RANDOM_FLOAT( 200, 400 ), 0 );
 				}
 			}
-		}
-#else
-		if (FBitSet( pev->weapons, HGRUNT_GRENADELAUNCHER ))
-		{
-			pGun = DropItem( "ammo_ARgrenades", vecGunPos, vecGunAngles );
-			if ( pGun )
-			{
-				pGun->pev->velocity = Vector (RANDOM_FLOAT(-100,100), RANDOM_FLOAT(-100,100), RANDOM_FLOAT(200,300));
-				pGun->pev->avelocity = Vector ( 0, RANDOM_FLOAT( 200, 400 ), 0 );
-			}
+#if FORCE_MP5 == 1
 		}
 #endif
 	}
@@ -851,16 +842,15 @@ BOOL CHGrunt :: FCanCheckAttacks ( void )
 BOOL CHGrunt :: CheckMeleeAttack1 ( float flDot, float flDist )
 {
 	CBaseMonster *pEnemy;
-
 	if ( m_hEnemy != NULL )
 	{
 		pEnemy = m_hEnemy->MyMonsterPointer();
-
-		if ( !pEnemy )
-		{
-			return FALSE;
-		}
 	}
+	if ( !pEnemy )
+	{
+		return FALSE;
+	}
+	
 
 	if ( flDist <= 64 && flDot >= 0.7	&&
 		 pEnemy->Classify() != CLASS_ALIEN_BIOWEAPON &&
@@ -882,7 +872,9 @@ BOOL CHGrunt :: CheckMeleeAttack1 ( float flDot, float flDist )
 BOOL CHGrunt :: CheckRangeAttack1 ( float flDot, float flDist )
 {
 
-	if ( !HasConditions( bits_COND_ENEMY_OCCLUDED ) && flDist <= 2048 && flDot >= 0.5 && NoFriendlyFire() )
+	//MODDD - no check for SEE_ENEMY ??   REALLY.
+	//if ( !HasConditions( bits_COND_ENEMY_OCCLUDED ) && flDist <= 2048 && flDot >= 0.5 && NoFriendlyFire() )
+	if (HasConditions(bits_COND_SEE_ENEMY) && !HasConditions(bits_COND_ENEMY_OCCLUDED) && flDist <= 2048 && flDot >= 0.5 && NoFriendlyFire())
 	{
 		TraceResult	tr;
 
@@ -913,17 +905,24 @@ BOOL CHGrunt :: CheckRangeAttack1 ( float flDot, float flDist )
 BOOL CHGrunt :: CheckRangeAttack2 ( float flDot, float flDist )
 {
 
+	// enemy, MUST.  be occluded.
+	if (!HasConditions(bits_COND_ENEMY_OCCLUDED)) {
+		return FALSE;
+	}
+
+
 	if(EASY_CVAR_GET(hgruntAllowGrenades) == 0){
 		return FALSE;
 	}
 
 #if FORCE_MP5 == 1
-
 	if(EASY_CVAR_GET(gruntsCanHaveMP5Grenade) == 1){
+#endif
 		if (! FBitSet(pev->weapons, (HGRUNT_HANDGRENADE | HGRUNT_GRENADELAUNCHER)))
 		{
 			return FALSE;
 		}
+#if FORCE_MP5 == 1
 	}else{
 		//just count hand grenades.
 		if (! FBitSet(pev->weapons, (HGRUNT_HANDGRENADE)))
@@ -931,14 +930,6 @@ BOOL CHGrunt :: CheckRangeAttack2 ( float flDot, float flDist )
 			return FALSE;
 		}
 	}
-
-#else
-
-	if (! FBitSet(pev->weapons, (HGRUNT_HANDGRENADE | HGRUNT_GRENADELAUNCHER)))
-	{
-		return FALSE;
-	}
-
 #endif
 
 	// if the grunt isn't moving, it's ok to check.
@@ -2567,7 +2558,7 @@ void CHGrunt :: HandleAnimEvent( MonsterEvent_t *pEvent )
 		{
 			UTIL_MakeVectors( pev->angles );
 			// CGrenade::ShootTimed( pev, pev->origin + gpGlobals->v_forward * 34 + Vector (0, 0, 32), m_vecTossVelocity, 3.5 );
-			CGrenade::ShootTimed( pev, GetGunPosition(), m_vecTossVelocity, 3.5 );
+			CGrenade::ShootTimed( pev, GetGunPosition(), m_vecTossVelocity, gSkillData.plrDmgHandGrenade, 3.5 );
 
 			m_fThrowGrenade = FALSE;
 			m_flNextGrenadeCheck = gpGlobals->time + 6;// wait six seconds before even looking again to see if a grenade can be thrown.
@@ -2579,29 +2570,19 @@ void CHGrunt :: HandleAnimEvent( MonsterEvent_t *pEvent )
 		{
 
 #if FORCE_MP5 == 1
-
-			//no mp5 grenades, unless we specifically allow them.
+			// Under FORCE_MP5, no mp5 grenades unless they are allowed.
 			if(EASY_CVAR_GET(gruntsCanHaveMP5Grenade) == 1){
+#endif
 				EMIT_SOUND(ENT(pev), CHAN_WEAPON, "weapons/glauncher.wav", 0.8, ATTN_NORM);
-				CGrenade::ShootContact( pev, GetGunPosition(), m_vecTossVelocity );
+				CGrenade::ShootContact( pev, GetGunPosition(), m_vecTossVelocity, gSkillData.plrDmgM203Grenade );
 				m_fThrowGrenade = FALSE;
-				if (g_iSkillLevel == SKILL_HARD)
+				if (g_iSkillLevel == SKILL_HARD){
 					m_flNextGrenadeCheck = gpGlobals->time + RANDOM_FLOAT( 2, 5 );// wait a random amount of time before shooting again
-				else
+				}else{
 					m_flNextGrenadeCheck = gpGlobals->time + 6;// wait six seconds before even looking again to see if a grenade can be thrown.
-
-			}
-
-
-#else
-			EMIT_SOUND(ENT(pev), CHAN_WEAPON, "weapons/glauncher.wav", 0.8, ATTN_NORM);
-			CGrenade::ShootContact( pev, GetGunPosition(), m_vecTossVelocity );
-			m_fThrowGrenade = FALSE;
-			if (g_iSkillLevel == SKILL_HARD)
-				m_flNextGrenadeCheck = gpGlobals->time + RANDOM_FLOAT( 2, 5 );// wait a random amount of time before shooting again
-			else
-				m_flNextGrenadeCheck = gpGlobals->time + 6;// wait six seconds before even looking again to see if a grenade can be thrown.
-
+				}
+#if FORCE_MP5 == 1
+			}	
 #endif
 
 		}
@@ -2610,7 +2591,7 @@ void CHGrunt :: HandleAnimEvent( MonsterEvent_t *pEvent )
 		case HGRUNT_AE_GREN_DROP:
 		{
 			UTIL_MakeVectors( pev->angles );
-			CGrenade::ShootTimed( pev, pev->origin + gpGlobals->v_forward * 17 - gpGlobals->v_right * 27 + gpGlobals->v_up * 6, g_vecZero, 3 );
+			CGrenade::ShootTimed( pev, pev->origin + gpGlobals->v_forward * 17 - gpGlobals->v_right * 27 + gpGlobals->v_up * 6, g_vecZero, gSkillData.plrDmgHandGrenade, 3 );
 
 		}
 		break;
@@ -3009,41 +2990,26 @@ void CHGrunt :: Spawn()
 	//MODDD NOTE - this has no point. GetGunPosition was the only method that used this and it was already overridden as-is to use different coords.
 	m_HackedGunPos = Vector ( 0, 0, 55 );
 
-#if FORCE_MP5 == 1
+
 	//pev->weapons = HGRUNT_9MMAR | HGRUNT_GRENADELAUNCHER;
 	//pev->weapons = HGRUNT_9MMAR | HGRUNT_HANDGRENADE;
 
-	if(EASY_CVAR_GET(gruntsCanHaveMP5Grenade) == 1 ){
-		if(pev->weapons == 0 || pev->weapons == HGRUNT_SHOTGUN || pev->weapons == (HGRUNT_SHOTGUN | HGRUNT_HANDGRENADE) ){
-			//No shotguns, only the HGrunt_9MMAR.
-			pev->weapons = HGRUNT_9MMAR | HGRUNT_HANDGRENADE;
-			//Notice that if it used to be the 9MMAR w/ grenade launcher, we don't mind, and we leave it.
-		}
+	if(pev->weapons == 0){
+		pev->weapons = HGRUNT_9MMAR | HGRUNT_HANDGRENADE;
 	}else{
-		//Always use the 9MMAR (mp5 weapon).
-		pev->weapons = HGRUNT_9MMAR | HGRUNT_HANDGRENADE;
+		#if FORCE_MP5 == 1
+		if(pev->weapons & HGRUNT_SHOTGUN){
+			// Replace with mp5 and grenades.
+			pev->weapons = HGRUNT_9MMAR | HGRUNT_HANDGRENADE;
+		}
+		if(EASY_CVAR_GET(gruntsCanHaveMP5Grenade) == 0){
+			if(pev->weapons & HGRUNT_GRENADELAUNCHER){
+				// remove it then!
+				pev->weapons &= ~HGRUNT_GRENADELAUNCHER;
+			}
+		}
+		#endif
 	}
-
-#else
-
-	//would default to the mp5 if no weapon is present.
-	if (pev->weapons == 0)
-	{
-		// initialize to original values
-
-		//MODDD - this used to not be commented out.  The two commented out parts below were though.
-		//UNDONE!
-		pev->weapons = HGRUNT_9MMAR | HGRUNT_HANDGRENADE;
-
-		//Changing to use the mp5.
-		//No.
-		//pev->weapons = HGRUNT_9MMAR;
-
-		// pev->weapons = HGRUNT_SHOTGUN;
-		// pev->weapons = HGRUNT_9MMAR | HGRUNT_GRENADELAUNCHER;
-	}
-
-#endif
 
 
 #if FORCE_MP5 == 1
@@ -3237,8 +3203,6 @@ void CHGrunt :: Precache()
 
 
 
-
-
 }
 
 //=========================================================
@@ -3255,9 +3219,12 @@ void CHGrunt :: StartTask ( Task_t *pTask )
 	//return;
 	EASY_CVAR_PRINTIF_PRE(hgruntPrintout, easyForcePrintLine("HGRUNT STARTTASK eeee %s %d", getScheduleName(), getTaskNumber()));
 
-	//NOTICE - the method TaskBegin in basemonster.h, called by schedule.cpp's routinely called "MaintainSchedule" right before starting a task (StartTask here),
-	//         already sets m_iTaskSatus to TASKSTATUS_RUNNING.
-	m_iTaskStatus = TASKSTATUS_RUNNING;
+	//NOTICE - the method TaskBegin in basemonster.h, called by schedule.cpp's  "MaintainSchedule"
+	// right before starting a task (StartTask here), already sets m_iTaskSatus to TASKSTATUS_RUNNING.
+	// wait.. this already seems to be handled by MaintainSchedule, sets this before even calling StartTask.
+	// Make sure this is the case though?  If so similar settings like this in other specific monster. cpp files
+	// could be safely gutted mostl ikely
+	//m_iTaskStatus = TASKSTATUS_RUNNING;
 
 	switch ( pTask->iTask )
 	{
@@ -4721,9 +4688,9 @@ void CHGrunt :: SetActivity ( Activity NewActivity )
 		// grenade or fired grenade, we must determine which and pick proper sequence
 
 #if FORCE_MP5 == 1
-
-		//can launch hand grenade at least, I think?
+		// can launch hand grenade at least, I think?
 		if(EASY_CVAR_GET(gruntsCanHaveMP5Grenade) == 1 ){
+#endif
 			if ( pev->weapons & HGRUNT_HANDGRENADE )
 			{
 				// get toss anim
@@ -4734,6 +4701,7 @@ void CHGrunt :: SetActivity ( Activity NewActivity )
 				// get launch anim
 				iSequence = LookupSequence( "launchgrenade" );
 			}
+#if FORCE_MP5 == 1
 		}else{
 			if ( pev->weapons & HGRUNT_HANDGRENADE )
 			{
@@ -4742,19 +4710,6 @@ void CHGrunt :: SetActivity ( Activity NewActivity )
 			}
 
 		}
-
-#else
-		if ( pev->weapons & HGRUNT_HANDGRENADE )
-		{
-			// get toss anim
-			iSequence = LookupSequence( "throwgrenade" );
-		}
-		else
-		{
-			// get launch anim
-			iSequence = LookupSequence( "launchgrenade" );
-		}
-
 #endif
 
 		break;
@@ -5106,7 +5061,10 @@ Schedule_t *CHGrunt :: GetSchedule( void )
 				easyForcePrintLine("I AM YEAH %d : %d", HasConditions( bits_COND_SEE_ENEMY ), HasConditions ( bits_COND_CAN_RANGE_ATTACK1 ) );
 			}
 
-			if ( HasConditions( bits_COND_SEE_ENEMY ) && !HasConditions ( bits_COND_CAN_RANGE_ATTACK1 ) )
+			// Don't you mean, not occluded but I 'could' see if I wanted to?
+			// Although keep the bits_COND_SEE_ENEMY, don't want magical 'eyes-in-the-back-of-the-head' vision
+			//if ( HasConditions( bits_COND_SEE_ENEMY ) && !HasConditions ( bits_COND_CAN_RANGE_ATTACK1 ) )
+			if ( !HasConditions(bits_COND_ENEMY_OCCLUDED) && HasConditions(bits_COND_SEE_ENEMY) && !HasConditions(bits_COND_CAN_RANGE_ATTACK1))
 			{
 				return GetScheduleOfType ( SCHED_GRUNT_ESTABLISH_LINE_OF_FIRE );
 			}
@@ -5127,8 +5085,6 @@ Schedule_t *CHGrunt :: GetSchedule( void )
 //=========================================================
 Schedule_t* CHGrunt :: GetScheduleOfType ( int Type )
 {
-
-
 	EASY_CVAR_PRINTIF_PRE(hgruntPrintout, easyForcePrintLine("HGRUNT%d GetSchedOfType: %d", monsterID, Type));
 
 	if(monsterID == 1){

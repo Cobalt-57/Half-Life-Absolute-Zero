@@ -538,7 +538,6 @@ void CWorld :: Spawn( void )
 
 	applyLoadedCustomMapSettingsToGlobal();
 
-
 	
 	//screw this, no good.
 	//SetThink(&CWorld::WorldThink );
@@ -552,10 +551,6 @@ void CWorld :: Spawn( void )
 	//UPDATE: "GameDLLInit" method of game.cpp deemed the earliest point best for initial CVar update.
 
 
-
-
-
-
 	/////////////////////////////////////////////////////
 	
 	g_fGameOver = FALSE;
@@ -564,7 +559,6 @@ void CWorld :: Spawn( void )
 	//g_flWeaponCheat = CVAR_GET_FLOAT( "sv_cheats" );  // Is the impulse 101 command allowed?
 	//handled in the client instead now.
 }
-
 
 
 
@@ -582,11 +576,7 @@ void CWorld :: Precache( void )
 	//ALERT ( at_console, "MAP PRECACHE CALLED\n" );
 	//SetThink(&CWorld::worldThink);
 
-
-
 	OnMapLoadStart();
-
-	
 
 	g_pLastSpawn = NULL;
 	
@@ -658,14 +648,9 @@ void CWorld :: Precache( void )
 	//~Some other precache junk moved to PreacheAll.
 	
 	
-	
-	
 //
 // Setup light animation tables. 'a' is total darkness, 'z' is maxbright.
 //
-
-
-
 	/*
 	// 0 normal
 	LIGHT_STYLE(0, "m");
@@ -792,8 +777,6 @@ void CWorld :: Precache( void )
 	{
 		CVAR_SET_FLOAT( "mp_defaultteam", 0 );
 	}
-
-
 
 
 }
@@ -992,7 +975,6 @@ void CWorld::getCustomMapSettingsFromGlobal(void){
 	
 	m_f_map_anyAirNodes = map_anyAirNodes;
 }
-
 
 
 BOOL CWorld::IsWorld(){

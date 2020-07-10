@@ -932,11 +932,13 @@ void CHud :: Init( void )
 	//CVAR_CREATE("test_cvar", "6", 0);
 	// FCVAR_CLIENTDLL | FCVAR_ARCHIVE
 
-//MODDD - ctt is short for 'client trace test'.
-	CVAR_CREATE("ctt1", "0", 0);
-	CVAR_CREATE("ctt2", "2", 0);
-	CVAR_CREATE("ctt3", "0", 0);  //used to be 2, works better with 0 here!
-	CVAR_CREATE("ctt4", "0", 0);
+
+	// TEST CVARS, remove later.
+	CVAR_CREATE("ctt1", "1", 0);
+	CVAR_CREATE("ctt2", "-1", 0);
+	CVAR_CREATE("ctt3", "1", 0);  //used to be 2, works better with 0 here!
+
+
 	
 	gEngfuncs.pfnAddCommand("tc_init", command_test_cvar_init_link);
 
@@ -980,7 +982,6 @@ void CHud :: Init( void )
 	
 	
 	
-	
 	// These... are a confusing case as I don't remember anything about them, other than the note further above
 	// about thees CVars coming from a different version of the SDK.  Best not to touch.
 	cl_viewrollangle = CVAR_CREATE("cl_viewrollangle", "0.65", FCVAR_CLIENTDLL | FCVAR_ARCHIVE);
@@ -992,11 +993,8 @@ void CHud :: Init( void )
 	
 
 
-
-
 	//TEST!!!
 	CVAR_CREATE("pregame_server_cvar", "0", FCVAR_ARCHIVE | FCVAR_SERVER);		// controls whether or not to automatically take screenshots at the end of a round
-
 
 
 	m_iLogo = 0;
@@ -1014,30 +1012,7 @@ void CHud :: Init( void )
 	cl_lw = gEngfuncs.pfnGetCvarPointer( "cl_lw" );
 	
 	
-
-	//aspectratio_determined_fov = CVAR_CREATE("aspectratio_determined_fov", "0", 0);
 	
-	/*
-	//Do NOT remember the "old" value.  Always begins as empty!
-	CVAR_CREATE("canApplyDefaultFOV", "0", FCVAR_CLIENTDLL);
-	auto_adjust_fov = CVAR_CREATE("auto_adjust_fov", "1", FCVAR_CLIENTDLL | FCVAR_ARCHIVE);
-	
-	//MODDD - new FOV vars for zooming.
-	auto_adjust_zoomfov = CVAR_CREATE( "auto_adjust_zoomfov", "1", FCVAR_CLIENTDLL | FCVAR_ARCHIVE );
-	pythzon_oomfov = CVAR_CREATE( "python_zoomfov", "48", FCVAR_CLIENTDLL | FCVAR_ARCHIVE );
-	crossbow_zoomfov = CVAR_CREATE( "crossbow_zoomfov", "24", FCVAR_CLIENTDLL | FCVAR_ARCHIVE );
-	*/
-	
-	//Not necessary, updated by player really early if needed.
-	/*
-	if(auto_adjust_zoomfov->value == 1){
-		python_zoomfov->value = auto_adjust_zoomfov->value * 0.4444f;
-		crossbow_zoomfov->value = auto_adjust_zoomfov->value * 0.2222f;
-	}
-	*/
-
-	
-
 	m_pSpriteList = NULL;
 
 	// Clear any old HUD list

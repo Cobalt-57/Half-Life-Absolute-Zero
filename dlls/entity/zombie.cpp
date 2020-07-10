@@ -21,8 +21,6 @@
 //       It's as though they need some natural friction or something to slow down velocity forces from that bullet force CVar.
 
 
-
-
 // UNDONE: Don't flinch every time you get hit
 
 #include "extdll.h"
@@ -30,17 +28,15 @@
 #include "cbase.h"
 #include "basemonster.h"
 #include "schedule.h"
-
 #include "soundent.h"
-
 #include "util_debugdraw.h"
-
 #include "defaultai.h"
 #include "scripted.h"
 
-//MODDD - extern
 EASY_CVAR_EXTERN_DEBUGONLY(zombieBulletResistance);
 EASY_CVAR_EXTERN_DEBUGONLY(zombieBulletPushback);
+
+
 extern DLL_GLOBAL int	g_iSkillLevel;
 
 
@@ -844,21 +840,19 @@ Schedule_t* CZombie::GetSchedule( void )
 			//MODDD TODO - in general, hearing sensitiviy selective per type of thing, like scents and not noise, may be nice too at some point?
 			
 			
-			//If a victory dance is possible, look for the corpse to eat for a little bit. Near the enemyLKP.
+			//MODDD - zombie eating removal
+			/*
+			// If a victory dance is possible, look for the corpse to eat for a little bit. Near the enemyLKP.
 			if ( HasConditions( bits_COND_ENEMY_DEAD )){
 				//return GetScheduleOfType ( SCHED_VICTORY_DANCE );
 
-				corpseToSeek = NULL;  //in case there was one from before.
+				corpseToSeek = NULL;  // in case there was one from before.
 				lookForCorpseTime = gpGlobals->time + 26;
-				//wait a little before moving. Also gives the death anim time to play to then count as dead.
+				// wait a little before moving. Also gives the death anim time to play to then count as dead.
 				nextCorpseCheckTime = gpGlobals->time + RANDOM_FLOAT(1.7, 2.8);
 
 			}
-			//lookForCorpseTime
-
-
-
-
+			*/
 
 
 			/*
@@ -888,17 +882,10 @@ Schedule_t* CZombie::GetSchedule( void )
 
 Schedule_t* CZombie::GetScheduleOfType( int Type){
 	
-
-
-
-	switch(Type){
-		
-		/*
-		case SCHED_VICTORY_DANCE:
-			//from the base AI. Actually don't do the dance itself, but get closer to the corpse.
-			return &slZombieMoveToCorpse[ 0 ];
-		break;
-		*/
+	//MODDD - zombie eating removal
+	/*
+	switch(Type){	
+		//MODDD - zombie eating removal
 		case SCHED_ZOMBIE_VICTORY_DANCE:
 			//This can only come from being close enough to the corpse and wanting to do the animation.
 			return slZombieVictoryDance;
@@ -916,10 +903,8 @@ Schedule_t* CZombie::GetScheduleOfType( int Type){
 		case SCHED_ZOMBIE_SEEK_CORPSE_QUICK_FAIL:
 			return &slZombieSeekCorpseQuickFail[0];
 		break;
-		
-
-
 	}//END OF switch(Type)
+	*/
 	
 	return CBaseMonster::GetScheduleOfType(Type);
 }//END OF GetScheduleOfType
@@ -927,11 +912,7 @@ Schedule_t* CZombie::GetScheduleOfType( int Type){
 
 void CZombie::StartTask(Task_t* pTask){
 
-	
 	switch( pTask->iTask ){
-		
-	
-
 	case TASK_FORGET_CORPSE:{
 		corpseToSeek = NULL;
 		TaskComplete();
@@ -960,7 +941,6 @@ void CZombie::StartTask(Task_t* pTask){
 	//really started as a clone of TASK_GET_PATH_TO_ENEMY_CORPSE.
 	//Just touches the distance allowed from the corpse a little to require being closer.
 	case TASK_ZOMBIE_GET_PATH_TO_ENEMY_CORPSE:{
-
 
 		/*
 		UTIL_MakeVectors( pev->angles );
@@ -1002,11 +982,9 @@ void CZombie::StartTask(Task_t* pTask){
 			if(distanceToCorpse > 28){
 				Vector forwardVector;
 				
-
 				//UTIL_MakeVectors( pev->angles );
 				//forwardVector = gpGlobals->v_forward
 				forwardVector = (corpseToSeek->pev->origin - pev->origin).Normalize(); //direction to the corpse is more helpful.
-
 
 				if(MoveToLocation( m_movementActivity, 2, corpseToSeek->pev->origin - forwardVector * 50 )){
 					TaskComplete();
@@ -1021,8 +999,6 @@ void CZombie::StartTask(Task_t* pTask){
 
 		}
 		
-
-
 
 		if(!pass){
 			// no way to get there =(
@@ -1074,9 +1050,6 @@ void CZombie::StartTask(Task_t* pTask){
 			TaskComplete();
 			break;
 		}
-			
-
-
 
 		vecStart = pev->origin + Vector(0, 0, 24);
 		//UTIL_MakeVectors( pev->angles );
@@ -1087,10 +1060,8 @@ void CZombie::StartTask(Task_t* pTask){
 		vecEnd = absoluteEnd + Vector(0, 0, 24);
 		
 		UTIL_TraceHull( vecStart, vecEnd, dont_ignore_monsters, head_hull, edict(), &tr );
-		
 
 		DebugLine_Setup(6, vecStart, vecEnd, tr.flFraction);
-
 
 
 		if(tr.flFraction < 1 && tr.pHit != NULL){
@@ -1109,7 +1080,6 @@ void CZombie::StartTask(Task_t* pTask){
 			//(tr.pHit != NULL && CBaseEntity::Instance(tr.pHit)->edict() == corpseToSeek->edict() || CBaseEntity::Instance(tr.pHit)->pev->deadflag != DEAD_NO  )
 		//)
 		{
-			
 			//if(tr.flFraction >= 1){
 				pass = TRUE;
 			//}else{
@@ -1122,7 +1092,6 @@ void CZombie::StartTask(Task_t* pTask){
 		}else{
 			pass = FALSE;
 		}
-
 
 		if(pass){
 			//clear path? good.
@@ -1164,11 +1133,6 @@ void CZombie::StartTask(Task_t* pTask){
 
 void CZombie::RunTask(Task_t* pTask){
 
-
-
-
-
-	
 	//bits_COND_HEAR_SOUND...? careful.
 	if(!this->HasConditionsFrame(bits_COND_NEW_ENEMY | bits_COND_SEE_HATE | bits_COND_SEE_FEAR | bits_COND_SEE_DISLIKE | bits_COND_SEE_ENEMY | bits_COND_LIGHT_DAMAGE | bits_COND_HEAVY_DAMAGE | bits_COND_CAN_ATTACK)){
 		if(m_MonsterState == MONSTERSTATE_IDLE || m_MonsterState == MONSTERSTATE_ALERT && pev->deadflag == DEAD_NO){
@@ -1218,17 +1182,7 @@ void CZombie::RunTask(Task_t* pTask){
 
 
 
-
-
-
-
-
-
-
 	switch( pTask->iTask ){
-		
-
-
 	case TASK_CHECK_GETUP_SEQUENCE:{
 		//This task didn't finish instantly because we are waiting for the stand animation to finish (from crouching, eating, whichever)
 		

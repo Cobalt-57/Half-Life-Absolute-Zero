@@ -21,8 +21,13 @@
 
 #define TASKSTATUS_NEW				0			// Just started
 #define TASKSTATUS_RUNNING			1			// Running task & movement
+
+// FUCK YOU NOBODY LIKES YOU
+/*
 #define TASKSTATUS_RUNNING_MOVEMENT	2			// Just running movement
 #define TASKSTATUS_RUNNING_TASK		3			// Just running task
+*/
+
 #define TASKSTATUS_COMPLETE			4			// Completed, get next task
 
 

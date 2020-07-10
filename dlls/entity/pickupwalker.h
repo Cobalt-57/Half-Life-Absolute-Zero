@@ -22,9 +22,6 @@
 #include "gamerules.h"
 
 
-//extern CGraph WorldGraph;
-extern int gEvilImpulse101;
-
 
 enum
 {
@@ -42,6 +39,10 @@ enum
 };
 
 
+//extern CGraph WorldGraph;
+extern int gEvilImpulse101;
+
+
 
 
 
@@ -50,6 +51,8 @@ enum
 class CPickupWalker : public CBaseMonster
 {
 public:
+	Vector respawn_origin;
+	Vector respawn_angles;
 	
 	void IdleSound( void );
 	
@@ -63,9 +66,6 @@ public:
 	void StartTask ( Task_t *pTask );
 	void RunTask ( Task_t *pTask );
 	
-
-	
-	
 	
 	GENERATE_TRACEATTACK_PROTOTYPE_VIRTUAL
 	GENERATE_TAKEDAMAGE_PROTOTYPE_VIRTUAL
@@ -73,7 +73,14 @@ public:
 	GENERATE_DEADTAKEDAMAGE_PROTOTYPE_VIRTUAL
 	GENERATE_KILLED_PROTOTYPE_VIRTUAL
 	
-	//remain unoffensive / unoffending to all.  an "IRelationship" override should not be necessary, being CLASS_NONE should be good enough here.
+
+	void CheckRespawn(void);
+	CBaseEntity* Respawn(void);
+	void AttemptToMaterialize(void);
+	void Materialize(void);
+
+
+	// remain inoffensive / unoffending to all.  an "IRelationship" override should not be necessary, being CLASS_NONE should be good enough here.
 	virtual int Classify ( void ) { return CLASS_NONE; };
 
 	virtual BOOL isOrganic(void);
@@ -135,12 +142,6 @@ public:
 
 };//END OF CPickupWalker
 
-const char *CChumToadPickupWalker::pIdleSounds[] = 
-{
-	"chumtoad/cht_croak_medium.wav",
-	"chumtoad/cht_croak_long.wav",
-};
-
 
 
 class CSqueakPickupWalker : public CPickupWalker{
@@ -166,14 +167,6 @@ public:
 
 
 };//END OF CPickupWalker
-
-const char *CSqueakPickupWalker::pIdleSounds[] = 
-{
-	"squeek/sqk_hunt1.wav",
-	"squeek/sqk_hunt2.wav",
-	"squeek/sqk_hunt3.wav",
-	//"squeek/sqk_deploy1.wav",
-};
 
 
 #endif //PICKUPWALKER_H

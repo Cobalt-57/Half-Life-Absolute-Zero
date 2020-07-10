@@ -43,6 +43,7 @@
 #include "soundent.h"
 #include "decals.h"
 #include "gamerules.h"
+#include "pickupwalker.h"
 
 extern CGraph	WorldGraph;
 extern int gEvilImpulse101;
@@ -50,15 +51,19 @@ extern int gEvilImpulse101;
 
 #define NOT_USED 255
 
-DLL_GLOBAL	short	g_sModelIndexLaser;// holds the index for the laser beam
-DLL_GLOBAL  const char *g_pModelNameLaser = "sprites/laserbeam.spr";
-DLL_GLOBAL	short	g_sModelIndexLaserDot;// holds the index for the laser beam dot
-DLL_GLOBAL	short	g_sModelIndexFireball;// holds the index for the fireball
-DLL_GLOBAL	short	g_sModelIndexSmoke;// holds the index for the smoke cloud
-DLL_GLOBAL	short	g_sModelIndexWExplosion;// holds the index for the underwater explosion
-DLL_GLOBAL	short	g_sModelIndexBubbles;// holds the index for the bubbles model
-DLL_GLOBAL	short	g_sModelIndexBloodDrop;// holds the sprite index for the initial blood
-DLL_GLOBAL	short	g_sModelIndexBloodSpray;// holds the sprite index for splattered blood
+DLL_GLOBAL short g_sModelIndexLaser;// holds the index for the laser beam
+DLL_GLOBAL const char *g_pModelNameLaser = "sprites/laserbeam.spr";
+DLL_GLOBAL short g_sModelIndexLaserDot;// holds the index for the laser beam dot
+DLL_GLOBAL short g_sModelIndexFireball;// holds the index for the fireball
+DLL_GLOBAL short g_sModelIndexSmoke;// holds the index for the smoke cloud
+DLL_GLOBAL short g_sModelIndexWExplosion;// holds the index for the underwater explosion
+
+//MODDD - moved g_sModelIndexBubbles to util_shared.cpp.
+
+DLL_GLOBAL short g_sModelIndexBloodDrop;// holds the sprite index for the initial blood
+DLL_GLOBAL short g_sModelIndexBloodSpray;// holds the sprite index for splattered blood
+
+
 
 //MODDD - CBasePlayerItem::ItemInfoArray and CBasePlayerItem::AmmoInfoArray implementations moved
 // to util_shared.cpp.
@@ -363,6 +368,11 @@ CBaseEntity* CBasePlayerItem::Respawn( void )
 
 	if ( pNewWeapon )
 	{
+		//MODDD - remove the automatic "SF_NORESPAWN" given on Create calls.  Clearly this came from a Respawn call and
+		// thus should be respawnnable itself.
+		pNewWeapon->pev->spawnflags &= ~SF_NORESPAWN;
+		
+
 		pNewWeapon->pev->effects |= EF_NODRAW;// invisible for now
 		pNewWeapon->SetTouch( NULL );// no touch
 		pNewWeapon->SetThink( &CBasePlayerItem::AttemptToMaterialize );
@@ -380,7 +390,6 @@ CBaseEntity* CBasePlayerItem::Respawn( void )
 
 	return pNewWeapon;
 }
-
 
 
 
@@ -1991,6 +2000,23 @@ CBaseEntity* CBasePlayerWeapon::pickupWalkerReplaceCheck(void){
 
 		//CBaseEntity::Create(pickupWalkerName, pev->origin, pev->angles);
 		CBaseEntity* generated = CBaseEntity::Create(pickupNameTest, pev->origin, pev->angles);
+
+		// By default, all entities made with "Create" get the SF_NORESPAWN flag.
+		// This pickupwalker replaces this entity, so it should get that same flag only if the weapon it replaces had it too.
+		if (pev->spawnflags & SF_NORESPAWN) {
+			generated->pev->spawnflags |= SF_NORESPAWN;
+		}
+		else {
+			generated->pev->spawnflags &= ~SF_NORESPAWN;
+		}
+
+		// And tell the generated pickupwalker that its current coords are the ones to use for respawning, regardless
+		// of where it wanders off too.
+		CPickupWalker* tempWalk = static_cast<CPickupWalker*>(generated);
+		tempWalk->respawn_origin = pev->origin;
+		tempWalk->respawn_angles = pev->angles;
+
+
 		UTIL_Remove( this );
 
 		//easyForcePrintLine("pickupWalkerReplaceCheck TRUE");

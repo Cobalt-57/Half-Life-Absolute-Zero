@@ -3392,6 +3392,7 @@ void PM_CheckParamters( void )
 	// Set dead player view_offset
 	if ( pmove->dead )
 	{
+		//MODDD - DEAD CAMERA SETTING
 		pmove->view_ofs[2] = PM_DEAD_VIEWHEIGHT;
 	}
 

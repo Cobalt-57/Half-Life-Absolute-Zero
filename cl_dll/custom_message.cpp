@@ -1,6 +1,4 @@
 
-
-
 #include "external_lib_include.h"
 //#include <stdio.h>
 
@@ -92,6 +90,7 @@ PROTOTYPE_MESSAGE(UpdPlyA);
 PROTOTYPE_MESSAGE(MUnpause);
 PROTOTYPE_MESSAGE(UpdTWI);
 PROTOTYPE_MESSAGE(UpdJT);
+PROTOTYPE_MESSAGE(ServerDLLI);
 PROTOTYPE_MESSAGE(YMG);
 PROTOTYPE_MESSAGE(YMG_S);
 
@@ -128,10 +127,11 @@ void Init_CustomMessage(void){
 	HOOK_MESSAGE(MUnpause);
 	HOOK_MESSAGE(UpdTWI);
 	HOOK_MESSAGE(UpdJT);
+	HOOK_MESSAGE(ServerDLLI);
 	HOOK_MESSAGE(YMG);
 	HOOK_MESSAGE(YMG_S);
 	
-
+	
 }//END OF Init
 
 
@@ -540,6 +540,19 @@ IMPLEMENT_MESSAGE(UpdJT){
 	
 	flag_apply_m_fJustThrown = TRUE;
 	stored_m_fJustThrown = newJustThrown;
+
+	return 1;
+}
+
+// Get the server's DLL info for easy reference.
+IMPLEMENT_MESSAGE(ServerDLLI) {
+	BEGIN_READ(pbuf, iSize);
+
+	strcpy(&globalbuffer_sv_mod_version_cache[0], READ_STRING());
+	strcpy(&globalbuffer_sv_mod_date_cache[0], READ_STRING());
+
+	// ifll it out
+	sprintf(&globalbuffer_sv_mod_display[0], "SV: %s - %s", &globalbuffer_sv_mod_version_cache[0], &globalbuffer_sv_mod_date_cache[0]);
 
 	return 1;
 }

@@ -18,6 +18,9 @@
 
 */
 
+// WARNING!  Like weapons.cpp, this too is not a shared file.  Beware!
+
+
 #include "extdll.h"
 #include "util.h"
 #include "cbase.h"
@@ -26,36 +29,37 @@
 #include "nodes.h"
 #include "soundent.h"
 #include "decals.h"
-
-//never, really now??!
 #include "util_debugdraw.h"
 
 //===================grenade
 
+EASY_CVAR_EXTERN(cl_explosion)
+EASY_CVAR_EXTERN(explosionDebrisSoundVolume)
+EASY_CVAR_EXTERN(cheat_touchNeverExplodes)
+EASY_CVAR_EXTERN(handGrenadesUseOldBounceSound)
+EASY_CVAR_EXTERN(trailTypeTest)
+
+
+// Grenades flagged with this will be triggered when the owner calls detonateSatchelCharges
+#define SF_DETONATE		0x0001
 
 //MODDD
 #define ROCKET_TRAIL 2
 extern unsigned short g_sTrail;
 extern unsigned short g_sTrailRA;
 
-EASY_CVAR_EXTERN(cl_explosion)
-EASY_CVAR_EXTERN(explosionDebrisSoundVolume)
-EASY_CVAR_EXTERN(cheat_touchNeverExplodes)
-
-EASY_CVAR_EXTERN(trailTypeTest)
-
-
-LINK_ENTITY_TO_CLASS( grenade, CGrenade );
-
-// Grenades flagged with this will be triggered when the owner calls detonateSatchelCharges
-#define SF_DETONATE		0x0001
-
-//MODDD - extern
-EASY_CVAR_EXTERN(handGrenadesUseOldBounceSound)
+extern unsigned short g_quakeExplosionEffect;
+extern unsigned short model_explosivestuff;
 
 
 
-	
+
+LINK_ENTITY_TO_CLASS(grenade, CGrenade);
+
+
+
+
+
 GENERATE_TRACEATTACK_IMPLEMENTATION(CGrenade)
 {
 	//MODDD - class update, was CBaseMonster.
@@ -70,13 +74,31 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CGrenade)
 
 
 
+// Explode like a grenade without a dozen paramters.  Does not remove the "pDamageDealer" entity,
+// nor is it exempt from damage.  Just ignored in some effect-related logic.
+// This also does not touch the owner of the entity, send along and set to NULL yourself if needed.
+// If an owner is not provided, it will be implied to be the same as pDamageDealer itself.
+// This is used to determine who dealt the damage.  Otherwise, provide it as VARS(thisEnt->pev->owner)
+// to use the linked 'owner' entity.
+void SimpleStaticExplode(Vector rawExplodeOrigin, float rawDamage, CBaseEntity* pDamageDealer) {
+	entvars_t* entOwner = NULL;
+	if (pDamageDealer != NULL) {
+		entOwner = pDamageDealer->pev;
+	}
+	// oh.. actually it turns out sending entOwner as ourselves is pointless.
+	// RadiusDamage already knows to make the one blamed the same as the entity sent (pDamageDealer) in such a case.
+	SimpleStaticExplode(rawExplodeOrigin, rawDamage, pDamageDealer, entOwner);
+}
 
-
-
-
-
-
-
+void SimpleStaticExplode(Vector rawExplodeOrigin, float rawDamage, CBaseEntity* pDamageDealer, entvars_t* entOwner) {
+	edict_t* edThingy = NULL;
+	if (pDamageDealer != NULL) {
+		edThingy = pDamageDealer->edict();
+	}
+	TraceResult tr;
+	UTIL_TraceLine(rawExplodeOrigin, rawExplodeOrigin + Vector(0, 0, -32), ignore_monsters, edThingy, &tr);
+	StaticExplode(rawExplodeOrigin, rawDamage, pDamageDealer, entOwner, &tr, DMG_BLAST, 0, 1);
+}
 
 
 
@@ -94,81 +116,101 @@ void CGrenade::Explode( Vector vecSrc, Vector vecAim )
 	Explode( &tr, DMG_BLAST );
 }
 */
+
+
+// Assuming we have a pev->dmg to go off of.
 void CGrenade::Explode()
 {
 	TraceResult tr;
-	UTIL_TraceLine ( pev->origin, pev->origin + Vector ( 0, 0, -32 ),  ignore_monsters, ENT(pev), & tr);
+	UTIL_TraceLine(pev->origin, pev->origin + Vector(0, 0, -32), ignore_monsters, ENT(pev), &tr);
 
 	//CGrenade::   ???
-	Explode( &tr, DMG_BLAST, 0, 1 );
+	Explode(&tr, DMG_BLAST, 0, 1);
 }
 
-
-
-extern unsigned short g_quakeExplosionEffect;
-
-extern unsigned short model_explosivestuff;
-
-// UNDONE: temporary scorching for PreAlpha - find a less sleazy permenant solution.
-
-
-
-
-void CGrenade::Explode( TraceResult *pTrace, int bitsDamageType ){
+void CGrenade::Explode(TraceResult* pTrace, int bitsDamageType) {
 	CGrenade::Explode(pTrace, bitsDamageType, 0, 1);
 }
-void CGrenade::Explode( TraceResult *pTrace, int bitsDamageType, int bitsDamageTypeMod ){
+void CGrenade::Explode(TraceResult* pTrace, int bitsDamageType, int bitsDamageTypeMod) {
 	CGrenade::Explode(pTrace, bitsDamageType, bitsDamageTypeMod, 1);
 }
 
-
-//MODDD TODO - any other logic need the used-to-be modified origin (now "explosionOrigin" to be separate)? Then make explosionOrigin an instance var and read that after this... and trust its been set,
-//or defaults to pev->origin if not.
-
-void CGrenade::Explode( TraceResult *pTrace, int bitsDamageType, int bitsDamageTypeMod, float shrapMod )
+// Handle the grenade-instnace-specific details and call "StaticExplode" for the aspects that don't
+// depend on being a CGrenade.
+void CGrenade::Explode(TraceResult* pTrace, int bitsDamageType, int bitsDamageTypeMod, float shrapMod)
 {
-	float	flRndSound;// sound randomizer
-
 	pev->model = iStringNull;//invisible
+	pev->effects |= EF_NODRAW;
 	pev->solid = SOLID_NOT;// intangible
-
 	pev->takedamage = DAMAGE_NO;
 
+	entvars_t* pevOwner = NULL;
+	if (pev->owner) {
+		pevOwner = VARS(pev->owner);
+	}
+	pev->owner = NULL; // can't traceline attack owner if this is set
+
+	StaticExplode(pev->origin, pev->dmg, this, pevOwner, pTrace, bitsDamageType, bitsDamageTypeMod, shrapMod);
+
+	// The Smoke method soon leads to this entity's deletion. The "StaticExplode" call above already makes it invisible.
+	SetThink(&CGrenade::Smoke);
+	pev->velocity = g_vecZero;
+	pev->nextthink = gpGlobals->time + 0.3;
+}
+
+
+
+void StaticExplode(Vector rawExplodeOrigin, float rawDamage, CBaseEntity* pDamageDealer, entvars_t* entOwner, TraceResult* pTrace, int bitsDamageType) {
+	StaticExplode(rawExplodeOrigin, rawDamage, pDamageDealer, entOwner, pTrace, bitsDamageType, 0, 1);
+}
+void StaticExplode(Vector rawExplodeOrigin, float rawDamage, CBaseEntity* pDamageDealer, entvars_t* entOwner, TraceResult* pTrace, int bitsDamageType, int bitsDamageTypeMod) {
+	StaticExplode(rawExplodeOrigin, rawDamage, pDamageDealer, entOwner, pTrace, bitsDamageType, bitsDamageTypeMod, 1);
+}
+
+void StaticExplode(Vector rawExplodeOrigin, float rawDamage, CBaseEntity* pDamageDealer, entvars_t* entOwner, TraceResult* pTrace, int bitsDamageType, int bitsDamageTypeMod, float shrapMod){
+	float flRndSound;// sound randomizer
 	//MODDD - new
-	Vector explosionEffectStart = pev->origin;
-
+	Vector explosionEffectStart = rawExplodeOrigin;
 	//also retail's origin.
-	Vector explosionOrigin = pev->origin; //by default.
-
+	Vector explosionOrigin = rawExplodeOrigin; //by default.
 	//origin to do the explosion logic for, not necessiarly where the effect is spawned.
-	Vector explosionLogicOrigin = pev->origin;  //same.
+	Vector explosionLogicOrigin = rawExplodeOrigin;  //same.
+
+	/*
+	edict_t* ownerMem = NULL;
+	if (pev->owner != NULL) {
+		//before we do this trace, we must drop the owner.  Restore it afterwards in case that matters
+		//for some other behavior.
+		//During a trace, an entity ignored (this->edict()) also indicates to ignore its pev->owner if it has one.
+		//This implied behavior will tear every hair out of your head.
+		//const char* ownerClassname = STRING(pev->owner->v.classname);
+
+		ownerMem = pev->owner;
+		pev->owner = NULL;
+	}
+	*/
+
+	entvars_t* pevThingy = NULL;
+	edict_t* edictThingy = NULL;
+	
+	if (pDamageDealer != NULL) {
+		pevThingy = pDamageDealer->pev;
+		edictThingy = pDamageDealer->edict();
+	}
+
 
 	// Pull out of the wall a bit
-	if ( pTrace->flFraction != 1.0 )
+	if (pTrace->flFraction != 1.0)
 	{
 		TraceResult trToEffectOrigin;
-		edict_t* ownerMem = NULL;
-
 
 		//MODDD - let's not change our own origin, just record this.
 		//pev->origin = ...
-		explosionOrigin = pTrace->vecEndPos + (pTrace->vecPlaneNormal * (pev->dmg - 24) * 0.6);;
+		explosionOrigin = pTrace->vecEndPos + (pTrace->vecPlaneNormal * (rawDamage - 24) * 0.6);;
 
 		//MODDD - actually used for placing the quake explosion effect, if it is called for instead.
 		explosionEffectStart = pTrace->vecEndPos + (pTrace->vecPlaneNormal * 5);
 
-
-		
-		if(pev->owner != NULL){
-			//before we do this trace, we must drop the owner.  Restore it afterwards in case that matters
-			//for some other behavior.
-			//During a trace, an entity ignored (this->edict()) also indicates to ignore its pev->owner if it has one.
-			//This implied behavior will tear every hair out of your head.
-			//const char* ownerClassname = STRING(pev->owner->v.classname);
-
-			ownerMem = pev->owner;
-			pev->owner = NULL;
-		}
 
 
 		//MODDD -Check. Is there a straight line, unobstructed, from the surface to the explosionEffectStart?
@@ -177,28 +219,27 @@ void CGrenade::Explode( TraceResult *pTrace, int bitsDamageType, int bitsDamageT
 		vecCheckStart = pTrace->vecEndPos;
 		//and start just a little off from the pTrace->vecEndPos as to not collide with that surface itself. Just safety.
 		//...looks like we don't need to even do that.
-		UTIL_TraceLine(vecCheckStart, explosionOrigin, dont_ignore_monsters, this->edict(), &trToEffectOrigin);
-		if(trToEffectOrigin.fStartSolid || trToEffectOrigin.fAllSolid || trToEffectOrigin.flFraction < 1.0f){
+
+
+		UTIL_TraceLine(vecCheckStart, explosionOrigin, dont_ignore_monsters, edictThingy, &trToEffectOrigin);
+
+		if (trToEffectOrigin.fStartSolid || trToEffectOrigin.fAllSolid || trToEffectOrigin.flFraction < 1.0f) {
 			//if there was any problem making it over, the logic origin should be vecCheckStart.
 			float distanceThatMadeItA = (trToEffectOrigin.vecEndPos - vecCheckStart).Length();
 			float distanceThatMadeItB = (explosionOrigin - vecCheckStart).Length() * trToEffectOrigin.flFraction;
 			explosionLogicOrigin = vecCheckStart;
-		}else{
+		}
+		else {
 			//no problems? the retail behavior, same offset from the surface for RadiusDamage logic to start, is fine.
 			explosionLogicOrigin = explosionOrigin;
 		}
 		//::DebugLine_Setup(7, vecCheckStart, explosionOrigin, trToEffectOrigin.flFraction);
-		
-		//restore the pev->owner.
-		if(ownerMem != NULL){
-			pev->owner = ownerMem;
-		}
 
 
 	}//END OF surface hit check (pTrace)
 
 	//is this change from pev->origin to explosionOrigin ok?
-	int iContents = UTIL_PointContents ( explosionOrigin );
+	int iContents = UTIL_PointContents(explosionOrigin);
 	short spriteChosen;
 	if (iContents != CONTENTS_WATER)
 	{
@@ -209,146 +250,78 @@ void CGrenade::Explode( TraceResult *pTrace, int bitsDamageType, int bitsDamageT
 		spriteChosen = g_sModelIndexWExplosion;
 	}
 
-	
-	//MODDD - condensed that a bit. Also sending the "explosionOrigin in place of our pev->origin.
-	UTIL_Explosion(pev, explosionOrigin, spriteChosen, (pev->dmg - 50) * 0.60, 15, TE_EXPLFLAG_NONE, explosionEffectStart, shrapMod );
-	
+	//MODDD - condensed that a bit. Also sending the "explosionOrigin in place of our rawExplodeOrigin.
+	UTIL_Explosion(MSG_PAS, rawExplodeOrigin, NULL, pevThingy, explosionOrigin, spriteChosen, (rawDamage - 50) * 0.60, 15, TE_EXPLFLAG_NONE, explosionEffectStart, shrapMod);
 
-
-
-	/*
-	//MODDD - call just like breakmodel.
-#define FTENT_SMOKETRAIL		0x00000010
-#define FTENT_SLOWGRAVITY		0x00000008
-	int cFlag = BREAK_METAL | FTENT_SMOKETRAIL; //|  FTENT_SLOWGRAVITY;
-
-	MESSAGE_BEGIN( MSG_PVS, SVC_TEMPENTITY, (float *)&pev->origin );
-		WRITE_BYTE( TE_BREAKMODEL);
-
-		// position
-		WRITE_COORD( explosionEffectStart.x );
-		WRITE_COORD( explosionEffectStart.y );
-		WRITE_COORD( explosionEffectStart.z );
-
-		// size
-		WRITE_COORD( 1);
-		WRITE_COORD( 1);
-		WRITE_COORD( 1);
-
-		// velocity
-		WRITE_COORD( 0 ); 
-		WRITE_COORD( 0 );
-		WRITE_COORD( 0 );
-
-		// randomization
-		WRITE_BYTE( 24 ); 
-
-		// Model
-		WRITE_SHORT( model_explosivestuff );	//model id#
-
-		// # of shards
-		WRITE_BYTE( 26 );
-
-		// duration
-		WRITE_BYTE( 25 );// 2.5 seconds
-
-		// flags
-		WRITE_BYTE( cFlag );
-	MESSAGE_END();
-	*/
-
-	/*
-	MESSAGE_BEGIN( MSG_PAS, SVC_TEMPENTITY, pev->origin );
-			WRITE_BYTE( TE_LAVASPLASH);
-			WRITE_COORD( pev->origin.x );
-			WRITE_COORD( pev->origin.y );
-			WRITE_COORD( pev->origin.z );
-		MESSAGE_END();
-	*/
-
-	CSoundEnt::InsertSound ( bits_SOUND_COMBAT, explosionOrigin, NORMAL_EXPLOSION_VOLUME, 3.0 );
-	entvars_t *pevOwner;
-	if ( pev->owner )
-		pevOwner = VARS( pev->owner );
-	else
-		pevOwner = NULL;
-
-	pev->owner = NULL; // can't traceline attack owner if this is set
+	CSoundEnt::InsertSound(bits_SOUND_COMBAT, explosionOrigin, NORMAL_EXPLOSION_VOLUME, 3.0);
 
 	//MODDD - sending explosionOrigin instead of defaulting to pev->origin.
 	//RadiusDamageAutoRadius ( explosionOrigin, pev, pevOwner, pev->dmg, CLASS_NONE, bitsDamageType, bitsDamageTypeMod );
-	
+
 	//MODDD - and why were we still using explosionOrigin for the phyiscal damage spot all this time anyhow?
 	//...no, use the new explosionLogicOrigin instead.  If there is space out from the surface hit by the explosion, this records the same origin as the retail effect.
 	//But if something is in the way of even that, like a player firing a grenade while solidly against a crate, we don't want the player to block their own explosion
 	//from the crate because they thesmelves were in the way to block the explosion origin that got pushed behind.  That's... okay for the visible effect but not
 	//the explosion logic origin for doing radial damage.  It can't be blocked like that.
 	//RadiusDamage( explosionOrigin, pev, pevOwner, pev->dmg, pev->dmg * 2.5, CLASS_NONE, bitsDamageType, bitsDamageTypeMod );
-	RadiusDamage( explosionLogicOrigin, pev, pevOwner, pev->dmg, pev->dmg * 2.5, CLASS_NONE, bitsDamageType, bitsDamageTypeMod );
-	
-	
-	
+	RadiusDamage(explosionLogicOrigin, pevThingy, entOwner, rawDamage, rawDamage * 2.5, CLASS_NONE, bitsDamageType, bitsDamageTypeMod);
 
 
-	if ( RANDOM_FLOAT( 0 , 1 ) < 0.5 )
-	{
-		UTIL_DecalTrace( pTrace, DECAL_SCORCH1 );
+	if (RANDOM_FLOAT(0, 1) < 0.5){
+		UTIL_DecalTrace(pTrace, DECAL_SCORCH1);
 	}
-	else
-	{
-		UTIL_DecalTrace( pTrace, DECAL_SCORCH2 );
+	else{
+		UTIL_DecalTrace(pTrace, DECAL_SCORCH2);
 	}
 
-	flRndSound = RANDOM_FLOAT( 0 , 1 );
+	flRndSound = RANDOM_FLOAT(0, 1);
 
 
-	
 	//randDebrisSound = 1;
 	//easyPrintLine("DEBRIS SOUND: %d", randDebrisSound);
 
-	if(EASY_CVAR_GET(explosionDebrisSoundVolume) > 0){
+	if (EASY_CVAR_GET(explosionDebrisSoundVolume) > 0) {
 		int randDebrisSound = RANDOM_LONG(0, 2);
 
 		float debrisVolumeChoice = clamp(EASY_CVAR_GET(explosionDebrisSoundVolume), 0, 1);
 
-		switch ( randDebrisSound )
+		switch (randDebrisSound)
 		{
 			//NOTE: volume, the argument after the string-path, used to be 0.55.  Now 0.78.
-			case 0:	EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "weapons/debris1.wav", debrisVolumeChoice, ATTN_NORM, 0, 84, FALSE);	break;
-			case 1:	EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "weapons/debris2.wav", debrisVolumeChoice, ATTN_NORM, 0, 84, FALSE);	break;
-			case 2:	EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "weapons/debris3.wav", debrisVolumeChoice, ATTN_NORM, 0, 84, FALSE);	break;
+		case 0:	EMIT_SOUND_FILTERED(edictThingy, CHAN_VOICE, "weapons/debris1.wav", debrisVolumeChoice, ATTN_NORM, 0, 84, FALSE);	break;
+		case 1:	EMIT_SOUND_FILTERED(edictThingy, CHAN_VOICE, "weapons/debris2.wav", debrisVolumeChoice, ATTN_NORM, 0, 84, FALSE);	break;
+		case 2:	EMIT_SOUND_FILTERED(edictThingy, CHAN_VOICE, "weapons/debris3.wav", debrisVolumeChoice, ATTN_NORM, 0, 84, FALSE);	break;
 		}
 	}
-	
 
-	pev->effects |= EF_NODRAW;
-	SetThink( &CGrenade::Smoke );
-	pev->velocity = g_vecZero;
-	pev->nextthink = gpGlobals->time + 0.3;
 
 	//MODDD - only generate sparks if allowed.
-	if(UTIL_getExplosionsHaveSparks() ){
+	if (UTIL_getExplosionsHaveSparks()) {
 		if (iContents != CONTENTS_WATER)
 		{
-			int sparkCount = RANDOM_LONG(0,3);
-			for ( int i = 0; i < sparkCount; i++ )
-				Create( "spark_shower", explosionOrigin, pTrace->vecPlaneNormal, NULL );
+			int sparkCount = RANDOM_LONG(0, 3);
+			for (int i = 0; i < sparkCount; i++)
+				CBaseEntity::Create("spark_shower", explosionOrigin, pTrace->vecPlaneNormal, NULL);
 		}
 	}
-	
-	
-	
-}
+}//END OF StaticExplode
+
+
+
 
 
 void CGrenade::Smoke( void )
 {
-	//MODDD - smoke removed.  "return" terminates this method early.
+	//MODDD - may need to still be around for players that have
+	// a different cl_explosion value.  Although this CVar is no
+	// longer serverside.
+	/*
 	if(EASY_CVAR_GET(cl_explosion) == 1){
 		//does not smoke.
 		UTIL_Remove( this );
 		return;
 	}
+	*/
 
 	if (UTIL_PointContents ( pev->origin ) == CONTENTS_WATER)
 	{
@@ -356,7 +329,7 @@ void CGrenade::Smoke( void )
 	}
 	else
 	{
-	/*
+		/*
 		MESSAGE_BEGIN( MSG_PVS, SVC_TEMPENTITY, pev->origin );
 			WRITE_BYTE( TE_SMOKE );
 			WRITE_COORD( pev->origin.x );
@@ -367,6 +340,8 @@ void CGrenade::Smoke( void )
 			WRITE_BYTE( 12  ); // framerate
 		MESSAGE_END();
 		*/
+		
+		UTIL_ExplosionSmoke(MSG_PVS, pev->origin, NULL, pev->origin, 0, 0, 0, g_sModelIndexSmoke,  (pev->dmg - 50) * 0.80, 12);
 	}
 	UTIL_Remove( this );
 }
@@ -421,7 +396,6 @@ void CGrenade::Detonate( void )
 void CGrenade::ExplodeTouch( CBaseEntity *pOther )
 {
 	if(EASY_CVAR_GET(cheat_touchNeverExplodes) != 1){
-
 		TraceResult tr;
 		Vector		vecSpot;// trace starts here!
 
@@ -528,7 +502,6 @@ void CGrenade::BounceTouch( CBaseEntity *pOther )
 }
 
 
-
 void CGrenade::SlideTouch( CBaseEntity *pOther )
 {
 	// don't hit the guy that launched this grenade
@@ -622,15 +595,14 @@ void CGrenade:: Spawn( void )
 	SET_MODEL(ENT(pev), "models/grenade.mdl");
 	UTIL_SetSize(pev, Vector( 0, 0, 0), Vector(0, 0, 0));
 
+	// DEFAULT, some outside source should set this if necessary.
 	pev->dmg = 100;
 	m_fRegisteredSound = FALSE;
 }
 
-
-CGrenade *CGrenade::ShootContact( entvars_t *pevOwner, Vector vecStart, Vector vecVelocity )
+//MODDD - damage specified per call.
+CGrenade *CGrenade::ShootContact( entvars_t *pevOwner, Vector vecStart, Vector vecVelocity, float flDamage)
 {
-
-
 	//MODDD NOTE - call "Spawn" on something NULL.. this works.   W H A T
 	//             oh, GetClassPtr calls CREATE_ENTITY (engine method) to put an entity in the game. So it just isn't linked to some class besides CBaseEntity.
 	CGrenade *pGrenade = GetClassPtr( (CGrenade *)NULL );
@@ -652,17 +624,13 @@ CGrenade *CGrenade::ShootContact( entvars_t *pevOwner, Vector vecStart, Vector v
 	// Explode on contact
 	pGrenade->SetTouch( &CGrenade::ExplodeTouch );
 
-	pGrenade->pev->dmg = gSkillData.plrDmgM203Grenade;
-
-
-
+	pGrenade->pev->dmg = flDamage;
 
 
 	//MODDD - ?
 	//For a reference.
 	//PLAYBACK_EVENT_FULL( flags, m_pPlayer->edict(), fUseAutoAim ? m_usFireGlock1 : m_usFireGlock2, 0.0, (float *)&g_vecZero, (float *)&g_vecZero, vecDir.x, vecDir.y, m_fInAttack, 0, ( m_iClip == 0 ) ? 1 : 0, 0 );
 	
-
 
 	if(EASY_CVAR_GET(trailTypeTest) > -1){
 		//This was just for a test.  Enable (along with some other things in place), and this should make mp5 grenades fly with a trail of grey dots.
@@ -674,13 +642,12 @@ CGrenade *CGrenade::ShootContact( entvars_t *pevOwner, Vector vecStart, Vector v
 	
 	}
 
-
-
 	return pGrenade;
 }
 
 
-CGrenade * CGrenade:: ShootTimed( entvars_t *pevOwner, Vector vecStart, Vector vecVelocity, float time )
+//MODDD - wasn't a way to specify damage in the call?  Really?
+CGrenade * CGrenade:: ShootTimed( entvars_t *pevOwner, Vector vecStart, Vector vecVelocity, float flDamage, float flDetonateTime )
 {
 	CGrenade *pGrenade = GetClassPtr( (CGrenade *)NULL );
 	pGrenade->Spawn();
@@ -695,10 +662,10 @@ CGrenade * CGrenade:: ShootTimed( entvars_t *pevOwner, Vector vecStart, Vector v
 	// will insert a DANGER sound into the world sound list and delay detonation for one second so that 
 	// the grenade explodes after the exact amount of time specified in the call to ShootTimed(). 
 
-	pGrenade->pev->dmgtime = gpGlobals->time + time;
+	pGrenade->pev->dmgtime = gpGlobals->time + flDetonateTime;
 	pGrenade->SetThink( &CGrenade::TumbleThink );
 	pGrenade->pev->nextthink = gpGlobals->time + 0.1;
-	if (time < 0.1)
+	if (flDetonateTime < 0.1)
 	{
 		pGrenade->pev->nextthink = gpGlobals->time;
 		pGrenade->pev->velocity = Vector( 0, 0, 0 );
@@ -714,73 +681,14 @@ CGrenade * CGrenade:: ShootTimed( entvars_t *pevOwner, Vector vecStart, Vector v
 	pGrenade->pev->friction = 0.8;
 
 	SET_MODEL(ENT(pGrenade->pev), "models/w_grenade.mdl");
-	pGrenade->pev->dmg = 100;
+	pGrenade->pev->dmg = flDamage;
 
 	return pGrenade;
 }
 
 
-CGrenade * CGrenade :: ShootSatchelCharge( entvars_t *pevOwner, Vector vecStart, Vector vecVelocity )
-{
-	CGrenade *pGrenade = GetClassPtr( (CGrenade *)NULL );
-	pGrenade->pev->movetype = MOVETYPE_BOUNCE;
-	pGrenade->pev->classname = MAKE_STRING( "grenade" );
-	
-	pGrenade->pev->solid = SOLID_BBOX;
-
-	SET_MODEL(ENT(pGrenade->pev), "models/grenade.mdl");	// Change this to satchel charge model
-
-	UTIL_SetSize(pGrenade->pev, Vector( 0, 0, 0), Vector(0, 0, 0));
-
-	pGrenade->pev->dmg = 200;
-	UTIL_SetOrigin( pGrenade->pev, vecStart );
-	pGrenade->pev->velocity = vecVelocity;
-	pGrenade->pev->angles = g_vecZero;
-	pGrenade->pev->owner = ENT(pevOwner);
-	
-	// Detonate in "time" seconds
-	pGrenade->SetThink( &CBaseEntity::SUB_DoNothing );
-	pGrenade->SetUse( &CGrenade::DetonateUse );
-	pGrenade->SetTouch( &CGrenade::SlideTouch );
-	pGrenade->pev->spawnflags = SF_DETONATE;
-
-	pGrenade->pev->friction = 0.9;
-
-	return pGrenade;
-}
-
-
-
-void CGrenade :: UseSatchelCharges( entvars_t *pevOwner, SATCHELCODE code )
-{
-	edict_t *pentFind;
-	edict_t *pentOwner;
-
-	if ( !pevOwner )
-		return;
-
-	CBaseEntity	*pOwner = CBaseEntity::Instance( pevOwner );
-
-	pentOwner = pOwner->edict();
-
-	pentFind = FIND_ENTITY_BY_CLASSNAME( NULL, "grenade" );
-	while ( !FNullEnt( pentFind ) )
-	{
-		CBaseEntity *pEnt = Instance( pentFind );
-		if ( pEnt )
-		{
-			if ( FBitSet( pEnt->pev->spawnflags, SF_DETONATE ) && pEnt->pev->owner == pentOwner )
-			{
-				if ( code == SATCHEL_DETONATE )
-					pEnt->Use( pOwner, pOwner, USE_ON, 0 );
-				else	// SATCHEL_RELEASE
-					pEnt->pev->owner = NULL;
-			}
-		}
-		pentFind = FIND_ENTITY_BY_CLASSNAME( pentFind, "grenade" );
-	}
-}
-
+//MODDD - methods "ShootSatchelCharge" and "UseSatchelCharges" removed.
+// The Satchel class handled theses ideas without those methods.
 
 
 float CGrenade::massInfluence(void){

@@ -27,7 +27,8 @@
 #pragma once
 
 // And including this early.
-#include "ignore_warning_list.h"
+// no, end of file.
+//#include "ignore_warning_list.h"
 
 
 // "cdecl" looks to be some C or C++ keyword that's kinda comparable to "stdcall".
@@ -101,6 +102,16 @@
 #endif //END OF _MSC_VER checks
 ////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////
+
+
+// No idea why this used to be included along the "#define max" above, even in the same
+// '#ifndef' check. Weird.
+// ALSO, don't do this for VS6. At least this wide of availablity was the issue.
+// Very very strange for something present in as-is really.
+#ifndef IS_VS6
+	#define _vsnprintf(a,b,c,d) vsnprintf(a,b,c,d)
+#endif
+
 
 
 
@@ -189,6 +200,10 @@
 // Maybe we don't even need this, commenting out to see if it still works.
 //double sqrt(double x);
 
+
+
+		
+#include "ignore_warning_list.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #endif //EXTERNAL_LIB_INCLUDE_H

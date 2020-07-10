@@ -121,20 +121,11 @@
 #define CONSTANT
 
 
-
 // undefing min, max, and fabs is a terrible idea apparently.
 //#undef min
 //#undef max
 //#undef fabs
 //#undef ARRAYSIZE
-
-
-// No idea why this used to be included along the "#define max" above, even in the same
-// '#ifndef' check. Weird.
-
-#define _vsnprintf(a,b,c,d) vsnprintf(a,b,c,d)
-
-
 
 
 // some stuff from util.cpp
@@ -1091,6 +1082,7 @@ enum
 #define ISPLAYER (1 << 7) //128
 //#define NOREFLECT (DONOTDRAWSHADOW | ISNPC | ISPLAYER) //224 (exclusive combo)
 #define DONOTDRAWSHADOW (ISVIEWMODEL | ISPLAYER) //  (exclusive combo)
+#define ISMETALNPC (ISNPC | (1 << 1)) //  (exclusive combo... hopefully.)
 
 #define ISVIEWMODEL ( (1 << 2) | (1 << 3) | (1 << 4) ) //  (exclusive combo). This is 100011 in binary, which should not interfere with anything else.
 //#define ISVIEWMODEL (ISPLAYER | DONOTDRAWSHADOW) //  (exclusive combo)

@@ -103,6 +103,8 @@ public:
 	void EXPORT Retire(void);
 	
 	void EXPORT Initialize(void);
+	//MODDD - NEW.
+	virtual void PostInit(void);
 
 	virtual void Ping(void);
 	virtual void EyeOn(void);
@@ -219,12 +221,17 @@ public:
 class CSentry : public CBaseTurret
 {
 public:
+	float nextTouchCooldown;
 
 	static GibInfo_t* gibModelRef;
 	GibInfo_t* getGibInfoRef(void){return CSentry::gibModelRef;}
 	float getGibCVar(void);
 
+
+	CSentry(void);
 	void Spawn( );
+	void EXPORT PreInit(void);
+	virtual void PostInit(void);
 	void Precache(void);
 	// other functions
 	void Shoot(Vector &vecSrc, Vector &vecDirToEnemy);

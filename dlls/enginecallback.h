@@ -30,7 +30,7 @@ extern enginefuncs_t g_engfuncs;
 
 // The actual engine callbacks
 #define GETPLAYERUSERID (*g_engfuncs.pfnGetPlayerUserId)
-#define PRECACHE_MODEL	(*g_engfuncs.pfnPrecacheModel)
+#define PRECACHE_MODEL (*g_engfuncs.pfnPrecacheModel)
 
 
 
@@ -58,7 +58,7 @@ extern void UTIL_PRECACHESOUND(char* path);
 extern void UTIL_PRECACHESOUND(char* path, BOOL skipSave);
 
 #define PRECACHE_SOUND UTIL_PRECACHESOUND
-#define PRECACHE_SOUND_REAL	(*g_engfuncs.pfnPrecacheSound)
+#define PRECACHE_SOUND_REAL (*g_engfuncs.pfnPrecacheSound)
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

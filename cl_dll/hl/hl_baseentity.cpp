@@ -318,8 +318,8 @@ BOOL CGrenade::isOrganic(){return FALSE;}
 BOOL CGrenade::usesSoundSentenceSave(){return FALSE;}
 
 void CGrenade::Spawn( void ) { }
-CGrenade * CGrenade:: ShootTimed( entvars_t *pevOwner, Vector vecStart, Vector vecVelocity, float time ){ return 0; }
-CGrenade *CGrenade::ShootContact( entvars_t *pevOwner, Vector vecStart, Vector vecVelocity ){ return 0; }
+CGrenade * CGrenade:: ShootTimed( entvars_t *pevOwner, Vector vecStart, Vector vecVelocity, float flDamage, float flDetonateTime){ return 0; }
+CGrenade *CGrenade::ShootContact( entvars_t *pevOwner, Vector vecStart, Vector vecVelocity, float flDamage){ return 0; }
 void CGrenade::DetonateUse( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value ){ }
 
 void UTIL_Remove( CBaseEntity *pEntity ){ }
@@ -408,7 +408,6 @@ SCHEDULE_TYPE CBaseMonster::getHeardBaitSoundSchedule(){return (SCHEDULE_TYPE)0;
 BOOL CBaseMonster::hasSeeEnemyFix(){return FALSE;}
 BOOL CBaseMonster::getForceAllowNewEnemy(CBaseEntity* pOther){return FALSE;}
 
-void CBaseMonster::tempMethod(void){}
 BOOL CBaseMonster::needsMovementBoundFix(void){return FALSE;}
 void CBaseMonster::cheapKilled(void){}
 void CBaseMonster::cheapKilledFlyer(void){}
@@ -784,6 +783,7 @@ int CBaseMonster::CanUseGermanModel(){return 0;}
 BOOL CBaseMonster::attemptFindCoverFromEnemy(Task_t* pTask){return FALSE;}
 WayPoint_t* CBaseMonster::GetGoalNode(){return NULL;}
 void CBaseMonster::ReportGeneric(){}
+void CBaseMonster::onEnemyDead(CBaseEntity* pRecentEnemy) {}
 
 
 //removed.
@@ -913,6 +913,16 @@ void CBasePlayer::AddPointsToTeam( int score, BOOL bAllowNegativeScore ) { }
 void ClearMultiDamage(void) { }
 void ApplyMultiDamage(entvars_t *pevInflictor, entvars_t *pevAttacker ) { }
 void AddMultiDamage( entvars_t *pevInflictor, CBaseEntity *pEntity, float flDamage, int bitsDamageType) { }
+void AddMultiDamage(entvars_t* pevInflictor, CBaseEntity* pEntity, float flDamage, int bitsDamageType, int bitsDamageTypeMod) { }
+
+//MODDD - NEW, ggrenade-related.
+void SimpleStaticExplode(Vector rawExplodeOrigin, float rawDamage, CBaseEntity* pDamageDealer) { }
+void SimpleStaticExplode(Vector rawExplodeOrigin, float rawDamage, CBaseEntity* pDamageDealer, entvars_t* entOwner) { }
+void StaticExplode(Vector rawExplodeOrigin, float rawDamage, CBaseEntity* pDamageDealer, entvars_t* entOwner, TraceResult* pTrace, int bitsDamageType) { }
+void StaticExplode(Vector rawExplodeOrigin, float rawDamage, CBaseEntity* pDamageDealer, entvars_t* entOwner, TraceResult* pTrace, int bitsDamageType, int bitsDamageTypeMod) { }
+void StaticExplode(Vector rawExplodeOrigin, float rawDamage, CBaseEntity* pDamageDealer, entvars_t* entOwner, TraceResult* pTrace, int bitsDamageType, int bitsDamageTypeMod, float shrapMod) { }
+
+
 
 void SpawnBlood(Vector vecSpot, int bloodColor, float flDamage) { }
 int DamageDecal( CBaseEntity *pEntity, int bitsDamageType ) { return 0; }

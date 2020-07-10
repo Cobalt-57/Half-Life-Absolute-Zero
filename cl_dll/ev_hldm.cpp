@@ -169,6 +169,33 @@ void updateCVarRefsClient(){
 */
 
 
+
+
+
+//MODDD - few replacements with macros for convenience.
+// Only for the terms in ev_hldm.cpp.
+///////////////////////////////////////////////////////////////////////////////////////////
+// The FILLIN_TRACEFLAGS_... choices let any existing reference to PM_whatever
+// be replaced specifically, like all that used to be PM_STUDIO_BOX's turn into
+// PM_NORMAL's.
+
+// retail way
+/*
+#define FILLIN_TRACE_HULL HULL_TYPE::large_hull
+#define FILLIN_TRACEFLAGS_STUDIO_BOX PM_STUDIO_BOX
+#define FILLIN_TRACEFLAGS_NORMAL PM_NORMAL
+*/
+
+// new way, better accuracy at times
+#define FILLIN_TRACE_HULL large_hull
+#define FILLIN_TRACEFLAGS_STUDIO_BOX PM_NORMAL
+#define FILLIN_TRACEFLAGS_NORMAL PM_NORMAL
+///////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+
 // play a strike sound based on the texture that was hit by the attack traceline.  VecSrc/VecEnd are the
 // original traceline endpoints used by the attacker, iBulletType is the type of bullet that hit the texture.
 // returns volume of strike instrument (crowbar) to play
@@ -211,17 +238,14 @@ float EV_HLDM_PlayTextureSound( int idx, pmtrace_t *ptr, float *vecSrc, float *v
 	else if ( entity == 0 )
 	{
 
-
-
-
 		//MODDD - aw yea, from the fix I made for negentropy.  Tight as hell.
 		////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		pmtrace_t tr;
 		// do we even need this again..?
 		//gEngfuncs.pEventAPI->EV_SetSolidPlayers(idx - 1);
 
-		gEngfuncs.pEventAPI->EV_SetTraceHull(HULL_TYPE::large_hull);
-		gEngfuncs.pEventAPI->EV_PlayerTrace(vecSrc, vecEnd, PM_STUDIO_BOX, -1, &tr);
+		gEngfuncs.pEventAPI->EV_SetTraceHull(FILLIN_TRACE_HULL);
+		gEngfuncs.pEventAPI->EV_PlayerTrace(vecSrc, vecEnd, FILLIN_TRACEFLAGS_STUDIO_BOX, -1, &tr);
 
 		vec3_t vecSrc_trace;
 		vec3_t vecEnd_trace;
@@ -400,10 +424,8 @@ void EV_HLDM_GunshotDecalTrace( pmtrace_t *pTrace, char *decalName )
 	physent_t *pe;
 
 
-
 	//MODDD - Bullet effects disabled!
 	//gEngfuncs.pEfxAPI->R_BulletImpactParticles( pTrace->endpos );
-
 	
 	if(EASY_CVAR_GET(muteRicochetSound) < 1 ){
 
@@ -536,7 +558,7 @@ void EV_HLDM_FireBullets( int idx, float *forward, float *right, float *up, int 
 
 
 	//MODDD!!! DEBUG.  Stop this later.
-	flDistance = 200;
+	//flDistance = 200;
 
 
 	//MODDD - TODO. create and enable here.
@@ -544,7 +566,6 @@ void EV_HLDM_FireBullets( int idx, float *forward, float *right, float *up, int 
 		//Stop. The server is doing this instead.
 		return;
 	}
-
 
 	
 	for (iShot = 1; iShot <= cShots; iShot++)
@@ -581,78 +602,14 @@ void EV_HLDM_FireBullets( int idx, float *forward, float *right, float *up, int 
 		gEngfuncs.pEventAPI->EV_SetUpPlayerPrediction(false, true);
 
 
-
 		// Store off the old count
 		gEngfuncs.pEventAPI->EV_PushPMStates();
 
 
-
-		if (CVAR_GET_FLOAT("ctt4") == 0 || CVAR_GET_FLOAT("ctt4") == 2) {
-
-			// Now add in all of the players.
-			if (CVAR_GET_FLOAT("ctt1") == 0) {
-				gEngfuncs.pEventAPI->EV_SetSolidPlayers(idx - 1);
-			}
-			else if (CVAR_GET_FLOAT("ctt1") == 1) {
-				gEngfuncs.pEventAPI->EV_SetSolidPlayers(-1);
-			}
-
-			gEngfuncs.pEventAPI->EV_SetTraceHull((int)CVAR_GET_FLOAT("ctt2"));
-			gEngfuncs.pEventAPI->EV_PlayerTrace(vecSrc, vecEnd, (int)CVAR_GET_FLOAT("ctt3"), -1, &tr);
-
-			//typedef enum { point_hull = 0, human_hull = 1, large_hull = 2, head_hull = 3 } HULL_TYPE;
-			/*
-	#define PM_NORMAL			0x00000000
-	#define PM_STUDIO_IGNORE	0x00000001		// Skip studio models
-	#define PM_STUDIO_BOX		0x00000002		// Use boxes for non-complex studio models (even in traceline)
-	#define PM_GLASS_IGNORE		0x00000004		// Ignore entities with non-normal rendermode
-	#define PM_WORLD_ONLY		0x00000008		// Only trace against the world
-			*/
-
-			easyForcePrintLine("A So what did I hit? how far? %.2f", tr.fraction * flDistance);
-		}
-
-
-		if(CVAR_GET_FLOAT("ctt4") == 1 || CVAR_GET_FLOAT("ctt4") == 2) {
-			pmtrace_t* trace;
-			cl_entity_t* ent = NULL;
-
-			//tr = *(gEngfuncs.PM_TraceLine((float*)&vecSrc, (float*)&vecEnd, PM_TRACELINE_PHYSENTSONLY, HULL_TYPE::large_hull, -1));
-			trace = (gEngfuncs.PM_TraceLine((float*)&vecSrc, (float*)&vecEnd, PM_TRACELINE_PHYSENTSONLY, (int)CVAR_GET_FLOAT("ctt2"), -1));
-
-			//ent = gEngfuncs.GetEntityByIndex(PM_GetPhysEntInfo(trace->ent));
-
-			if (trace != NULL) {
-				if (trace->fraction != 1.0 && trace->ent != 0)
-				{
-					//int hitent = PM_GetPhysEntInfo(tr.ent);
-					//PM_ParticleLine((float*)&v_origin, (float*)&tr.endpos, 5, 1.0, 0.0);
-				}
-
-				//tr = *trace;
-				easyForcePrintLine("B So what did I hit? how far? %.2f", trace->fraction * flDistance);
-			}
-			else {
-				easyForcePrintLine("B So what did I hit? how far? OH NO");
-			}
-
-		}
-	
-
-
-		/*
 		gEngfuncs.pEventAPI->EV_SetSolidPlayers(idx - 1);
-		gEngfuncs.pEventAPI->EV_SetTraceHull(HULL_TYPE::large_hull);
-		gEngfuncs.pEventAPI->EV_PlayerTrace(vecSrc, vecEnd, PM_STUDIO_BOX, -1, &tr);
-		*/
+		gEngfuncs.pEventAPI->EV_SetTraceHull(FILLIN_TRACE_HULL);
 
-		/*
-		gEngfuncs.pEventAPI->EV_SetSolidPlayers (- 1 );
-		gEngfuncs.pEventAPI->EV_SetTraceHull(HULL_TYPE::point_hull);
-		gEngfuncs.pEventAPI->EV_PlayerTrace( vecSrc, vecEnd, PM_NORMAL, -1, &tr );
-		*/
-
-
+		gEngfuncs.pEventAPI->EV_PlayerTrace(vecSrc, vecEnd, FILLIN_TRACEFLAGS_STUDIO_BOX, -1, &tr);
 
 
 		//MODDD - check playerWeaponTracerMode to see if we need to do something special to iTracerFreq here for clientside.
@@ -693,7 +650,6 @@ void EV_HLDM_FireBullets( int idx, float *forward, float *right, float *up, int 
 		}//END OF switch
 
 		disableBulletHitDecal = EV_HLDM_CheckTracer( idx, vecSrc, tr.endpos, forward, right, iBulletType, iTracerFreq, tracerCountChoice );
-
 
 
 		// do damage, paint decals
@@ -1357,8 +1313,8 @@ void EV_FireGauss( event_args_t *args )
 		// Now add in all of the players.
 		gEngfuncs.pEventAPI->EV_SetSolidPlayers ( idx - 1 );	
 
-		gEngfuncs.pEventAPI->EV_SetTraceHull(HULL_TYPE::large_hull);
-		gEngfuncs.pEventAPI->EV_PlayerTrace( vecSrc, vecDest, PM_STUDIO_BOX, -1, &tr );
+		gEngfuncs.pEventAPI->EV_SetTraceHull(FILLIN_TRACE_HULL);
+		gEngfuncs.pEventAPI->EV_PlayerTrace( vecSrc, vecDest, FILLIN_TRACEFLAGS_STUDIO_BOX, -1, &tr );
 
 		gEngfuncs.pEventAPI->EV_PopPMStates();
 
@@ -1492,8 +1448,8 @@ void EV_FireGauss( event_args_t *args )
 					// Now add in all of the players.
 					gEngfuncs.pEventAPI->EV_SetSolidPlayers ( idx - 1 );
 
-					gEngfuncs.pEventAPI->EV_SetTraceHull(HULL_TYPE::large_hull);
-					gEngfuncs.pEventAPI->EV_PlayerTrace( start, vecDest, PM_STUDIO_BOX, -1, &beam_tr );
+					gEngfuncs.pEventAPI->EV_SetTraceHull(FILLIN_TRACE_HULL);
+					gEngfuncs.pEventAPI->EV_PlayerTrace( start, vecDest, FILLIN_TRACEFLAGS_STUDIO_BOX, -1, &beam_tr );
 
 					if ( !beam_tr.allsolid )
 					{
@@ -1503,7 +1459,7 @@ void EV_FireGauss( event_args_t *args )
 
 						// trace backwards to find exit point
 
-						gEngfuncs.pEventAPI->EV_PlayerTrace( beam_tr.endpos, tr.endpos, PM_STUDIO_BOX, -1, &beam_tr );
+						gEngfuncs.pEventAPI->EV_PlayerTrace( beam_tr.endpos, tr.endpos, FILLIN_TRACEFLAGS_STUDIO_BOX, -1, &beam_tr );
 
 						VectorSubtract_f( beam_tr.endpos, tr.endpos, delta );
 						
@@ -1623,14 +1579,16 @@ void createBall(int* sprite, Vector* loc){
 
 	
 	TEMPENTITY* eh = gEngfuncs.pEfxAPI->R_TempSprite( *loc, rot, 0.12f, *sprite, kRenderGlow, kRenderFxNoDissipation, 250.0 / 255.0, 0.22f, FTENT_GRAVITY | FTENT_COLLIDEWORLD | FTENT_FADEOUT );
-	eh->fadeSpeed = 3.3f;
+	if (eh != NULL) {
+		eh->fadeSpeed = 3.3f;
+	}
 	//easyPrintLine("??? %.2f", eh->bounceFactor);
 
 }
 
 
 
-void createBallPowerup(int* sprite, Vector* loc){
+void createBallPowerup(int* sprite, Vector* loc) {
 
 
 
@@ -1643,28 +1601,30 @@ void createBallPowerup(int* sprite, Vector* loc){
 	*/
 	float randx = gEngfuncs.pfnRandomFloat(0, randomStrength);
 	float randy = gEngfuncs.pfnRandomFloat(0, randomStrength);
-	float randz = gEngfuncs.pfnRandomFloat(35, randomStrength +80);
+	float randz = gEngfuncs.pfnRandomFloat(35, randomStrength + 80);
 
-	if(gEngfuncs.pfnRandomLong(0, 1) == 0){
+	if (gEngfuncs.pfnRandomLong(0, 1) == 0) {
 		randx *= -1;
 	}
-	if(gEngfuncs.pfnRandomLong(0, 1) == 0){
+	if (gEngfuncs.pfnRandomLong(0, 1) == 0) {
 		randy *= -1;
 	}
-	
-	if(gEngfuncs.pfnRandomLong(0, 1) == 0){
+
+	if (gEngfuncs.pfnRandomLong(0, 1) == 0) {
 		randz *= -1;
 	}
-	
 
-	
+
+
 	vec3_t rot = Vector(randx, randy, randz);
 
-	
+
 	//MODDD - color it red. how we dod that?
 	//life is 2nd from the last with the flags yo.
-	TEMPENTITY* eh = gEngfuncs.pEfxAPI->R_TempSprite( *loc, rot, 0.12f, *sprite, kRenderGlow, kRenderFxNoDissipation, 250.0 / 255.0, 1.22f, FTENT_SLOWGRAVITY | FTENT_COLLIDEWORLD | FTENT_FADEOUT );
-	eh->fadeSpeed = 0.6f;
+	TEMPENTITY* eh = gEngfuncs.pEfxAPI->R_TempSprite(*loc, rot, 0.12f, *sprite, kRenderGlow, kRenderFxNoDissipation, 250.0 / 255.0, 1.22f, FTENT_SLOWGRAVITY | FTENT_COLLIDEWORLD | FTENT_FADEOUT);
+	if (eh != NULL) {
+		eh->fadeSpeed = 0.6f;
+	}
 	//eh->entity.baseline.gravity
 	//eh->entity.curstate.gravity
 	//eh->entity.prevstate.gravity
@@ -2221,7 +2181,9 @@ void createShrapnel(int* sprite, Vector* loc, int testArg, float testArg2, float
 	}
 	
 	TEMPENTITY* eh = gEngfuncs.pEfxAPI->R_TempSprite( *loc, rot, 2.5f, *sprite, kRenderNormal, kRenderFxNone, 255.0 / 255.0, lifeValue, flags);
-	eh->fadeSpeed = 0.5f;
+	if (eh != NULL) {
+		eh->fadeSpeed = 0.5f;
+	}
 
 
 	//gives this the metal hit sound effects.  I guess it is hardcoded what values of "hitSound" make what sounds, can't find the resulting sound calls for that anywhere.
@@ -2504,7 +2466,7 @@ void EV_HLDM_DecalGunshotCustomEvent( event_args_t *args )
 	
 	
 	//pmtrace_t tr;
-	//gEngfuncs.pEventAPI->EV_PlayerTrace( vecSrc, vecEnd, PM_STUDIO_BOX, -1, &tr );
+	//gEngfuncs.pEventAPI->EV_PlayerTrace( vecSrc, vecEnd, FILLIN_TRACEFLAGS_STUDIO_BOX, -1, &tr );
 
 	
 //	EV_HLDM_DecalGunshot( origin, BULLET_PLAYER_9MM );
@@ -2564,11 +2526,14 @@ void EV_Crowbar( event_args_t *args )
 		
 	}
 	
-	
 }
 //======================
 //	   CROWBAR END 
 //======================
+
+
+
+
 
 //======================
 //	  CROSSBOW START
@@ -2631,55 +2596,109 @@ void EV_FireCrossbow2( event_args_t *args )
 
 	// Now add in all of the players.
 	gEngfuncs.pEventAPI->EV_SetSolidPlayers ( idx - 1 );	
-	gEngfuncs.pEventAPI->EV_SetTraceHull(HULL_TYPE::large_hull );
-	gEngfuncs.pEventAPI->EV_PlayerTrace( vecSrc, vecEnd, PM_STUDIO_BOX, -1, &tr );
+	gEngfuncs.pEventAPI->EV_SetTraceHull(FILLIN_TRACE_HULL );
+	gEngfuncs.pEventAPI->EV_PlayerTrace( vecSrc, vecEnd, FILLIN_TRACEFLAGS_STUDIO_BOX, -1, &tr );
 	
 	//We hit something
 	if ( tr.fraction < 1.0 )
 	{
-		physent_t *pe = gEngfuncs.pEventAPI->EV_GetPhysent( tr.ent ); 
+		physent_t *pe = gEngfuncs.pEventAPI->EV_GetPhysent( tr.ent );
+		cl_entity_t* cEntRef = gEngfuncs.GetEntityByIndex( PM_GetPhysEntInfo(tr.ent));
 
+		/*
+		// break point and see all this?
+		int testin = cEntRef->index;
+		int testin2 = cEntRef->curstate.eflags;
+		int xxx = pe->classnumber;
+		int xxx2 = pe->info;
+		const char* whut = pe->name;
+		*/
+
+
+		//MODDD - TODO.  Is there some way to read in info from the server, like whether a hit ent is metallic to play a differnet hit noise
+		// than the normal fleshy once?  wow not sure what to make of "pe".
 		//Not the world, let's assume we hit something organic ( dog, cat, uncle joe, etc ).
 		if ( pe->solid != SOLID_BSP )
 		{
-			switch( gEngfuncs.pfnRandomLong(0,1) )
-			{
-			case 0:
-				gEngfuncs.pEventAPI->EV_PlaySound( idx, tr.endpos, CHAN_BODY, "weapons/xbow_hitbod1.wav", 1, ATTN_NORM, 0, PITCH_NORM ); break;
-			case 1:
-				gEngfuncs.pEventAPI->EV_PlaySound( idx, tr.endpos, CHAN_BODY, "weapons/xbow_hitbod2.wav", 1, ATTN_NORM, 0, PITCH_NORM ); break;
+			
+			//if (!(pe->info == 8)) {
+			if( !((cEntRef->curstate.renderfx & ISMETALNPC) == ISMETALNPC) ){
+				switch (gEngfuncs.pfnRandomLong(0, 1))
+				{
+				case 0:
+					gEngfuncs.pEventAPI->EV_PlaySound(idx, tr.endpos, CHAN_BODY, "weapons/xbow_hitbod1.wav", 1, ATTN_NORM, 0, PITCH_NORM); break;
+				case 1:
+					gEngfuncs.pEventAPI->EV_PlaySound(idx, tr.endpos, CHAN_BODY, "weapons/xbow_hitbod2.wav", 1, ATTN_NORM, 0, PITCH_NORM); break;
+				}
+			}
+			else {
+				// not organic?  Slightly modified xbow_hit.wav
+				gEngfuncs.pEventAPI->EV_PlaySound(idx, origin, CHAN_BODY, "weapons/xbow_hit1.wav", RANDOM_FLOAT(0.98, 1.0), ATTN_NORM - 0.1, 0, 107 + RANDOM_LONG(0, 4));
+				//if (UTIL_PointContents(pev->origin) != CONTENTS_WATER)
+				//if(gEngfuncs.PM_PointContents(cEntRef->origin, NULL) != CONTENTS_WATER)
+				if (gEngfuncs.PM_PointContents(tr.endpos, NULL) != CONTENTS_WATER)
+				{
+					UTIL_Sparks(tr.endpos, DEFAULT_SPARK_BALLS, EASY_CVAR_GET(sparksPlayerCrossbowMulti));
+				}
+				else {
+					// A blend of pushed away from the surface collided with, and away from the direction I was moving in.
+					// Should push the bubbles away from the wall as to not clip too much and look like it's coming
+					// from the bolt itself.
+					Vector temp1 = tr.endpos + tr.plane.normal * 2 - forward * 6 + Vector(-1.7, -1.7, -1.7);
+					Vector temp2 = tr.endpos + tr.plane.normal * 2 + -forward * 6 + Vector(1.7, 1.7, 1.7);
+					UTIL_Bubbles(temp1, temp2, 8);
+				}
 			}
 		}
-		//Stick to world but don't stick to glass, it might break and leave the bolt floating. It can still stick to other non-transparent breakables though.
-		else if ( pe->rendermode == kRenderNormal ) 
+		// Stick to world but don't stick to glass, it might break and leave the bolt floating. It can still stick to other non-transparent breakables though.
+		//MODDD - it's fine not to want to generate a projectile because the thing that got hit could be glass,
+		// but shouldn't the sparks be generated anyway to show a sign of what area was hit?
+		//else if ( pe->rendermode == kRenderNormal ) 
+		else
 		{
-			gEngfuncs.pEventAPI->EV_PlaySound( 0, tr.endpos, CHAN_BODY, "weapons/xbow_hit1.wav", gEngfuncs.pfnRandomFloat(0.95, 1.0), ATTN_NORM, 0, PITCH_NORM );
-		
+			// ALSO, going to assume what is hit isn't organic.  Why not.
+			gEngfuncs.pEventAPI->EV_PlaySound(0, tr.endpos, CHAN_BODY, "weapons/xbow_hit1.wav", gEngfuncs.pfnRandomFloat(0.95, 1.0), ATTN_NORM, 0, PITCH_NORM);
+
 			//Not underwater, do some sparks...
 			if (gEngfuncs.PM_PointContents(tr.endpos, NULL) != CONTENTS_WATER) {
 				//MODDD - new method.
 				///	 gEngfuncs.pEfxAPI->R_SparkShower( tr.endpos );
 				UTIL_Sparks(tr.endpos);
 			}
-
-
-			vec3_t vBoltAngles;
-			int iModelIndex = gEngfuncs.pEventAPI->EV_FindModelIndex( "models/crossbow_bolt.mdl" );
-
-			VectorAngles( forward, vBoltAngles );
-
-			TEMPENTITY *bolt = gEngfuncs.pEfxAPI->R_TempModel( tr.endpos - forward * 10, Vector( 0, 0, 0), vBoltAngles , 5, iModelIndex, TE_BOUNCE_NULL );
-			
-			if ( bolt )
-			{
-				bolt->flags |= ( FTENT_CLIENTCUSTOM ); //So it calls the callback function.
-				bolt->entity.baseline.vuser1 = tr.endpos - forward * 10; // Pull out a little bit
-				bolt->entity.baseline.vuser2 = vBoltAngles; //Look forward!
-
-				//MODDD - be explicit! It's the address OF the method you want!
-				//        compiler figures it out anyways I suppose.
-				bolt->callback = &EV_BoltCallback; //So we can set the angles and origin back. (Stick the bolt to the wall)
+			else {
+				// A blend of pushed away from the surface collided with, and away from the direction I was moving in.
+				// Should push the bubbles away from the wall as to not clip too much and look like it's coming
+				// from the bolt itself.
+				Vector temp1 = tr.endpos + tr.plane.normal * 2 - forward * 6 + Vector(-1.7, -1.7, -1.7);
+				Vector temp2 = tr.endpos + tr.plane.normal * 2 + -forward * 6 + Vector(1.7, 1.7, 1.7);
+				UTIL_Bubbles(temp1, temp2, 8);
 			}
+
+			// Only place an arrow on something on the map we're certain won't disappear (like glass, complex things like trains, etc.)
+			// I think this includes trains at least?  Weird.
+			// ALSO, this gets some func_tracktrain entities: check for MOVETYPE_PUSH.  Or just require being MOVETYPE_NONE.
+			// The world does havea  pe->index of 0, but there may be other map-like entities (func_wall) that
+			// a bolt could stick out of just fine too.  I think this is the best we can do.
+			//if (pe->rendermode == kRenderNormal) {
+			if (pe->rendermode == kRenderNormal && cEntRef->curstate.movetype == MOVETYPE_NONE) {
+				vec3_t vBoltAngles;
+				int iModelIndex = gEngfuncs.pEventAPI->EV_FindModelIndex("models/crossbow_bolt.mdl");
+
+				VectorAngles(forward, vBoltAngles);
+
+				TEMPENTITY* bolt = gEngfuncs.pEfxAPI->R_TempModel(tr.endpos - forward * 10, Vector(0, 0, 0), vBoltAngles, 5, iModelIndex, TE_BOUNCE_NULL);
+
+				if (bolt)
+				{
+					bolt->flags |= (FTENT_CLIENTCUSTOM); //So it calls the callback function.
+					bolt->entity.baseline.vuser1 = tr.endpos - forward * 10; // Pull out a little bit
+					bolt->entity.baseline.vuser2 = vBoltAngles; //Look forward!
+
+					//MODDD - be explicit! It's the address OF the method you want!
+					//        compiler figures it out anyways I suppose.
+					bolt->callback = &EV_BoltCallback; //So we can set the angles and origin back. (Stick the bolt to the wall)
+				}
+			}//END OF kRenderNormal check
 		}
 	}
 
@@ -2782,7 +2801,6 @@ void EV_EgonFire( event_args_t *args )
 	int hasSpiralBeam;
 
 
-
 	if(EASY_CVAR_GET(egonEffectsMode == 3)){
 		//only the narrow beam gets it.
 		hasSpiralBeam = (iFireMode == FIRE_NARROW);
@@ -2791,7 +2809,6 @@ void EV_EgonFire( event_args_t *args )
 		hasSpiralBeam = TRUE;
 	}
 
-	
 	if(EASY_CVAR_GET(mutePlayerWeaponFire) != 1 ){
 		if ( iStartup )
 		{
@@ -2809,9 +2826,7 @@ void EV_EgonFire( event_args_t *args )
 		}
 	}
 
-
 	//easyPrintLine("EGONEVENT1 %d, %d, %d, %d, %d", iStartup==1, EV_IsLocal( idx ), !pBeam, !pBeam2, (int)cl_lw->value );
-
 	//Only play the weapon anims if I shot it.
 
 	if ( EV_IsLocal( idx ) ){
@@ -2825,7 +2840,6 @@ void EV_EgonFire( event_args_t *args )
 		}else{//wide
 			gEngfuncs.pEventAPI->EV_WeaponAnimation ( g_fireAnims2[0], 1 );
 		}
-		
 	}
 
 
@@ -2834,7 +2848,6 @@ void EV_EgonFire( event_args_t *args )
 	//if ( hasSpiralBeam ){
 	if(1){
 		//gets the spiral.
-
 
 		if ( iStartup == 1 && EV_IsLocal( idx ) && !pBeam && !pBeam2 && cl_lw->value ) //Adrian: Added the cl_lw check for those lital people that hate weapon prediction.
 		{
@@ -2848,7 +2861,6 @@ void EV_EgonFire( event_args_t *args )
 			vec3_t up;
 
 			pmtrace_t tr;
-
 			cl_entity_t *pl = gEngfuncs.GetEntityByIndex( idx );
 
 			//easyPrintLine("EGONEVENT2 %d", pl != 0 );
@@ -2870,8 +2882,8 @@ void EV_EgonFire( event_args_t *args )
 				// Now add in all of the players.
 				gEngfuncs.pEventAPI->EV_SetSolidPlayers ( idx - 1 );	
 
-				gEngfuncs.pEventAPI->EV_SetTraceHull(HULL_TYPE::large_hull);
-				gEngfuncs.pEventAPI->EV_PlayerTrace( vecSrc, vecEnd, PM_STUDIO_BOX, -1, &tr );
+				gEngfuncs.pEventAPI->EV_SetTraceHull(FILLIN_TRACE_HULL);
+				gEngfuncs.pEventAPI->EV_PlayerTrace( vecSrc, vecEnd, FILLIN_TRACEFLAGS_STUDIO_BOX, -1, &tr );
 
 				gEngfuncs.pEventAPI->EV_PopPMStates();
 
@@ -2903,11 +2915,8 @@ void EV_EgonFire( event_args_t *args )
 			}
 		}
 
-
-
 	
 	}//END OF spiral beam check
-
 
 
 }//END OF EV_EgonFire
@@ -2933,7 +2942,6 @@ void EV_EgonStop( event_args_t *args )
 			pBeam->die = 0.0;
 			pBeam = NULL;
 		}
-			
 		
 		if ( pBeam2 )
 		{
@@ -2967,7 +2975,6 @@ void EV_HornetGunFire( event_args_t *args )
 		gEngfuncs.pEventAPI->EV_WeaponAnimation ( HGUN_SHOOT, 1 );
 	}
 
-	
 	if(EASY_CVAR_GET(mutePlayerWeaponFire) != 1 ){
 		switch ( gEngfuncs.pfnRandomLong ( 0 , 2 ) )
 		{
@@ -2976,7 +2983,6 @@ void EV_HornetGunFire( event_args_t *args )
 			case 2:	gEngfuncs.pEventAPI->EV_PlaySound( idx, origin, CHAN_WEAPON, "agrunt/ag_fire3.wav", 1, ATTN_NORM, 0, 100 );	break;
 		}
 	}
-
 
 }
 //======================
@@ -3015,8 +3021,8 @@ void EV_TripmineFire( event_args_t *args )
 
 	// Now add in all of the players.
 	gEngfuncs.pEventAPI->EV_SetSolidPlayers ( idx - 1 );	
-	gEngfuncs.pEventAPI->EV_SetTraceHull(HULL_TYPE::large_hull);
-	gEngfuncs.pEventAPI->EV_PlayerTrace( vecSrc, vecSrc + forward * 128, PM_NORMAL, -1, &tr );
+	gEngfuncs.pEventAPI->EV_SetTraceHull(FILLIN_TRACE_HULL);
+	gEngfuncs.pEventAPI->EV_PlayerTrace( vecSrc, vecSrc + forward * 128, FILLIN_TRACEFLAGS_NORMAL, -1, &tr );
 
 	//Hit something solid
 
@@ -3027,7 +3033,6 @@ void EV_TripmineFire( event_args_t *args )
 		//gEngfuncs.pEventAPI->EV_WeaponAnimation ( TRIPMINE_ARM2, 0 );
 		//No, play it in "tripmine.cpp" instead for more control over doing 2 animations in succession: place, then draw.
 	}
-
 
 	gEngfuncs.pEventAPI->EV_PopPMStates();
 }
@@ -3062,8 +3067,8 @@ void EV_SnarkFire( event_args_t *args )
 
 	// Now add in all of the players.
 	gEngfuncs.pEventAPI->EV_SetSolidPlayers ( idx - 1 );	
-	gEngfuncs.pEventAPI->EV_SetTraceHull(HULL_TYPE::large_hull);
-	gEngfuncs.pEventAPI->EV_PlayerTrace( vecSrc + forward * 20, vecSrc + forward * 64, PM_NORMAL, -1, &tr );
+	gEngfuncs.pEventAPI->EV_SetTraceHull(FILLIN_TRACE_HULL);
+	gEngfuncs.pEventAPI->EV_PlayerTrace( vecSrc + forward * 20, vecSrc + forward * 64, FILLIN_TRACEFLAGS_NORMAL, -1, &tr );
 
 	//Find space to drop the thing.
 	if ( tr.allsolid == 0 && tr.startsolid == 0 && tr.fraction > 0.25 )
@@ -3077,14 +3082,10 @@ void EV_SnarkFire( event_args_t *args )
 
 
 
-
-
 //MODDD - NEW
 //======================
 //	   CHUMTOAD START
 //=====================
-
-
 void EV_ChumToadFire( event_args_t *args )
 {
 	int idx;
@@ -3108,8 +3109,8 @@ void EV_ChumToadFire( event_args_t *args )
 
 	// Now add in all of the players.
 	gEngfuncs.pEventAPI->EV_SetSolidPlayers ( idx - 1 );	
-	gEngfuncs.pEventAPI->EV_SetTraceHull(HULL_TYPE::large_hull);
-	gEngfuncs.pEventAPI->EV_PlayerTrace( vecSrc + forward * 20, vecSrc + forward * 64, PM_NORMAL, -1, &tr );
+	gEngfuncs.pEventAPI->EV_SetTraceHull(FILLIN_TRACE_HULL);
+	gEngfuncs.pEventAPI->EV_PlayerTrace( vecSrc + forward * 20, vecSrc + forward * 64, FILLIN_TRACEFLAGS_NORMAL, -1, &tr );
 
 	//Find space to drop the thing.
 	//if ( tr.allsolid == 0 && tr.startsolid == 0 && tr.fraction > 0.25 )
@@ -3120,9 +3121,6 @@ void EV_ChumToadFire( event_args_t *args )
 //======================
 //	   CHUMTOAD END
 //======================
-
-
-
 
 
 
@@ -3179,10 +3177,6 @@ int EV_TFC_IsAllyTeam( int iTeam1, int iTeam2 )
 {
 	return 0;
 }
-
-
-
-
 
 
 
@@ -3250,21 +3244,6 @@ void writeColorPickerChoices(void){
 		fclose(myFile);
 	}
 }//END OF wirteColorPickerChoices
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -3477,13 +3456,9 @@ void TEST_Particles( const Vector& v_origin, const Vector& v_velocity )
 	*/
 
 
-
-
 			//p->org = v_origin;
 			//p->vel = Vector(1, 1, 1);
 			//CrossProduct(v_velocity, Vector(0, 0, 1));
-
-
 
 
 			r = 255;
@@ -3984,8 +3959,15 @@ void EV_Mirror( event_args_t *args )
 	
 	
 	VectorCopy_f(args->origin,org_target);
-	float dist = (float)args->iparam1;
-	int type = args->iparam2;
+	
+	//MODDD - changed what parameters went where.
+	// Radius getting mapped to one of the "int" params when neither float param was used?  ...really?
+	//float dist = (float)args->iparam1;
+	//int type = args->iparam2;
+	float dist = (float)args->fparam1;
+	int type = args->iparam1;
+
+
 	int bEnabled = args->bparam1;
 
 	//we have mirror

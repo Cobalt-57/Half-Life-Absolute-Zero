@@ -740,6 +740,12 @@ auto_adjust_fov - BOOL.  When 1, the actual FOV used is assigned a value scaled 
 
 revolverLaserScope - BOOL.  When on, even in singleplayer, the revolver always has the scope (part of the model) and a laser that shows on zoom.
 
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!! NOTICE!!! CVar pending removal.  Changed how longjump works, there is no 'item_longjumpcharge', only 'item_longjump'
+    that is always collectable and replaces the retail idea of item_longjump (the one-time suit adddon that grants the ability).
+    The ability is now always present, you just don't start out with charge for it.  Besides cheats but anyway.
+--------------------------------------
 canTakeLongJump - MODEVAR.  Controls when the player can pick up item_longjump and item_longjumpcharge.
 ~Mainly, should picking up item_longjump again if the player already has be allowed?
 ~Pickup is always denied if the current longjump charge meter is full, similar to ammo.
@@ -754,6 +760,7 @@ canTakeLongJump - MODEVAR.  Controls when the player can pick up item_longjump a
 2: No restrictions, can pick up item_longjump multiple times.
    item_longjumpcharge still requires item_longjump first.
 3: Same as 2, but item_longjumpcharge also has no restriction.  Makes item_longjump & charge mutually exclusive.
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 
 printOutCommonTimables - shows the most wanted timed-damage values of this player in printout when on.
@@ -861,8 +868,11 @@ painFlashColorMode - mode.
 
 cl_explosion - BOOL.  If on, uses a quake explosion instead of the default one with the sprite, explosion-sound effect, and yellow flickering particles (retail).  The quake one sends shrapnel flying around with the grey-dot particle effect / trail.
 ~see debug vars further below such as "shrapRand" for customizing bits about the quake explosion's shrapnel too.
+0: default sprite and smoke effects when called for (retail)
+1: spawned shrapnel effect, no or fewer smoke effects.
 
-quakeExplosionSound (2) - modevar (only applies when "cl_explosion" is on, or non-zero). Unaffected by explosionDebrisSoundVolume.
+
+quakeExplosionSound (2) - modevar (only applies when "cl_explosion" is on). Unaffected by explosionDebrisSoundVolume.
 0: no sound.
 1: plays old/explode 0, 1, or 2 (quake explode sound)
 2: plays weapons/explode 3, 4, or 5 (retail explode sound)
@@ -1579,7 +1589,7 @@ Fine-tune the behavior of the pain flash. There are two things to keep in mind:
   Otherwise, opacity decreases with the cumulative to 0. Cumulative of 0.5 is half-opacity, Cumulative 1.5 is 100% opacity that stays until the cumulative falls to below 1.
 
 --CVARs:
-painFlashDmgMin (0.3) - DECIMAL. Range of 0 to 1. Minimum amount added to the cumulative on any non-zero damage attack (armor may prevent small attacks from touching the health, see "painFlashIgnoreArmor")
+painFlashDmgMin (0.3) - DECIMAL. Range of 0 to 1. Minimum amount added to the cumulative on any non-zero damage attack (armor may prevent small attacks from touching the health, see "painFlashArmorBlock")
 painFlashDmgExMult (0.08) - DECIMAL. Amount to multiply damage dealt by, which is added to the cumulative.
                             Example: A gargantua melee attack deals 10 damage, so with a default painFlashDmgExMult setting of 0.08, it ends up adding 0.8 to the cumulative.
 painFlashCumulativeMinDrowning (0.5) - DECIMAL. Range of 0 to 1. Requires "drownDrawPainMode" to be set to 1. When drowning, forces the cumulative (opacity) to this high.
@@ -1591,8 +1601,11 @@ painArrowDrawOpacityMin - (0.5) - DECIMAL. Range of 0 to 1. The least opacity po
 painArrowDrawOpacityMax - (1) - DECIMAL. Range of 0 to 1. The greatest opacity possible for arrows.
 painFlashFadeMult (1.7) - DECIMAL. Affects how quickly the cumulative decreases with time. Higher values "increase" the decay, making it decrease faster. Example: 6 is very fast, 0.2 is very slow.
 painArrowFadeMult (1.5) - DECIMAL. Same, for how quickly pain arrows fade.
-painFlashIgnoreArmor (0.5) - DECIMAL, range of 0 to 1. If 0, like retail (damage all absorbed by armor shows nothing). If 1, even damage absorbed by armor shows the same pain effect. If between 0 and 1, scales tothat portion of painFlashMaxOpacity if absorbed by armor.
-    Example: such as, a painFlashIgnoreArmor of 0.5 and a painFlashDrawOpacityMax of 0.8 will make the resulting change in cumulative, given all damage aborbed by armor, 0.4 (40%) of what it would have been had it affected health.
+painFlashArmorBlock (0.5) - DECIMAL, range of 0 to 1. How much of damage blocked by armor goes toward the pain flash intensity.
+~ Does NOT affect real health/battery loss, happens independently of the painflash.
+    0 = (retail): no effect, an attack that deals 4 damage to health, 16 to battery only affecs the pain flash by the 4 to the health (very dim).
+    0.5 = half damage, 4 + 16*0.5 = 12 effective damage for the pain flash.  The compromise.
+    1 = full effect, this same attack influences the pain flash by the full 4 + 16 = 20.
 painFlashDirTolerance (0.8) - DECIMAL. Range of 0 to 1. How easily a direction can count towards one of the four carindal directions. Higher is more flexible.
     Example: is 10 degrees off from a line straight forward enough to count as from the North direction? Value of 0.8 says yes, 0.01 says no.
 painArrowCumulativeAppearMin (0.4) - DECIMAL. Range of 0 to 1. Can ONLY draw a directional cumulative at all when it is above this much.
@@ -2159,7 +2172,7 @@ drawBarnacleDebug - draw a red box to show the barnacle's grab-zone (always show
 
 apacheForceCinBounds - force the apache to use alternate bounds, regardless of the spawnflag "SF_MONSTER_APACHE_CINBOUNDS" being present (which will always take precedence if it is present).  Prerequisite for "apacheBottomBoundAdj" to take effect.
 apacheBottomBoundAdj - affect the bottom collision bound of the apache, but only to those with the "SF_MONSTER_APACHE_CINBOUNDS" spawnflag set or if CVar "apacheForceCinBounds" is on.
-apacheInfluence - make "m_flNextRocket" = 9999999 on apaches at death, if turned on.  Test?
+apacheInfluence - make "m_flNextRocket" = 9999999 on apaches at death, if turned on.  2 forces m_flNextRocket to -1 instead.
 
 
 

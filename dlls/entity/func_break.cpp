@@ -98,7 +98,8 @@ const char *CBreakable::pSpawnObjects[] =
 	"item_antidote",		// 22
 	"item_adrenaline",	// 23
 	"item_radiation",	// 24
-	"item_longjumpcharge",	// 25
+	//MODDD - NOTE.  This used to be named "item_longjumpcharge", but support for item_longjump and "charge" removed, now there is only item_longjump.  Use that.
+	"item_longjump",	// 25
 	"weapon_chumtoad",  //26
 };
 

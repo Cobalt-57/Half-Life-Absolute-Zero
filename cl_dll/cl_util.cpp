@@ -31,7 +31,6 @@
 
 
 
-
 cvar_t* cl_lw = NULL;
 cvar_t* cl_viewrollangle;
 cvar_t* cl_viewrollspeed;
@@ -50,27 +49,18 @@ extern void determineMouseParams(float argNew);
 extern void onUpdateRawInput(void);
 
 
-
-
-
-
-
 //MODDD - no need!  Including common/mathlib.h, associated pm_shared/pm_math.c has vec3_origina already.
 // 
 //vec3_t vec3_origin( 0, 0, 0 );
-
 
 //MODDD - IMPORTANT!
 float globalPSEUDO_autoDeterminedFOV = -1;
 float globalPSEUDO_ScreenWidth = -1;
 float globalPSEUDO_ScreenHeight = -1;
-
 int global2PSEUDO_playerHasGlockSilencer = -1;
 float global2PSEUDO_IGNOREcameraMode = -1;
-
 //float global2PSEUDO_determinedFOV = -1;
 float global2PSEUDO_grabbedByBarancle = 0;
-
 // If cl_fvox has ever been changed, we have to let the server-version of the player know about
 // this up-to-date preference.
 float global2PSEUDO_cl_fvox = -1;
@@ -78,11 +68,6 @@ float global2PSEUDO_cl_fvox = -1;
 float global2PSEUDO_cl_holster = -1;
 float global2PSEUDO_cl_ladder = -1;
 float globalPSEUDO_m_rawinputMem = -1;
-
-
-
-
-
 float global2PSEUDO_default_fov = -1;
 float global2PSEUDO_auto_adjust_fov = -1;
 
@@ -123,8 +108,6 @@ void lateCVarInit(void){
 	globalPSEUDO_m_rawinputMem = EASY_CVAR_GET(DEFAULT_m_rawinput);
 
 
-
-	
 //	char aryChrToSend[128];//	const char* szFmt = "%s %d";
 //	sprintf(arg_dest, szFmt, arg_label, arg_arg);
 

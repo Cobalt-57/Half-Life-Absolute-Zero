@@ -271,11 +271,12 @@ void CBaseTurret::Spawn()
 	// m_flSightRange = TURRET_RANGE;
 
 	//MODDD - usually called by "monsterInit".
-	pev->renderfx |= ISNPC;
+	pev->renderfx |= ISMETALNPC;
 	
 	pev->max_health		= pev->health;
 
 }
+
 
 
 extern int global_useSentenceSave;
@@ -413,6 +414,9 @@ void CBaseTurret::Initialize(void)
 
 	m_vecGoalAngles.x = 0;
 
+	//MODDD - NEW. Implement per turret as needed.
+	PostInit();
+
 	if (m_iAutoStart)
 	{
 		m_flLastSight = gpGlobals->time + m_flMaxWait;
@@ -421,6 +425,11 @@ void CBaseTurret::Initialize(void)
 	}
 	else
 		SetThink(&CBaseEntity::SUB_DoNothing);
+}
+
+// implement per turret as needed, called by Initialize above.
+void CBaseTurret::PostInit(void) {
+	// ...
 }
 
 void CBaseTurret::TurretUse( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
@@ -853,7 +862,6 @@ void CBaseTurret::SetTurretAnim(TURRET_ANIM anim)
 	}
 }
 
-
 //
 // This search function will sit with the turret deployed and look for a new target. 
 // After a set amount of time, the barrel will spin down. After m_flMaxWait, the turret will
@@ -916,7 +924,6 @@ void CBaseTurret::SearchThink(void)
 		MoveTurret();
 	}
 }
-
 
 // 
 // This think function will deploy the turret when something comes into range. This is for
@@ -988,16 +995,12 @@ void CBaseTurret ::	TurretDeath( void )
 
 	if (pev->dmgtime + RANDOM_FLOAT( 0, 2 ) > gpGlobals->time)
 	{
+		Vector tempVec;
+		tempVec.x = RANDOM_FLOAT( pev->absmin.x, pev->absmax.x );
+		tempVec.y = RANDOM_FLOAT( pev->absmin.y, pev->absmax.y );
+		tempVec.z = pev->origin.z - m_iOrientation * 64;
 		// lots of smoke
-		MESSAGE_BEGIN( MSG_BROADCAST, SVC_TEMPENTITY );
-			WRITE_BYTE( TE_SMOKE );
-			WRITE_COORD( RANDOM_FLOAT( pev->absmin.x, pev->absmax.x ) );
-			WRITE_COORD( RANDOM_FLOAT( pev->absmin.y, pev->absmax.y ) );
-			WRITE_COORD( pev->origin.z - m_iOrientation * 64 );
-			WRITE_SHORT( g_sModelIndexSmoke );
-			WRITE_BYTE( 25 ); // scale * 10
-			WRITE_BYTE( 10 - m_iOrientation * 5); // framerate
-		MESSAGE_END();
+		UTIL_Smoke(MSG_BROADCAST, NULL, NULL, tempVec, 0, 0, 0, g_sModelIndexSmoke, 25, 10 - m_iOrientation * 5);
 	}
 	
 	if (pev->dmgtime + RANDOM_FLOAT( 0, 5 ) > gpGlobals->time)
@@ -1020,7 +1023,6 @@ void CBaseTurret ::	TurretDeath( void )
 	}
 }
 
-
 GENERATE_TRACEATTACK_IMPLEMENTATION(CBaseTurret)
 {
 	if ( ptr->iHitgroup == 10 )
@@ -1038,13 +1040,11 @@ GENERATE_TRACEATTACK_IMPLEMENTATION(CBaseTurret)
 	if ( !pev->takedamage )
 		return;
 
-
 	//MODDD NEW - can draw blood.
 	if(useBloodEffect && EASY_CVAR_GET(turretBleedsOil) ){
 		//MODDD!!!!!!
 		CBaseEntity::DrawAlphaBlood(flDamage, ptr );
 	}
-
 
 	AddMultiDamage( pevAttacker, this, flDamage, bitsDamageType, bitsDamageTypeMod );
 
@@ -1057,13 +1057,10 @@ GENERATE_TRACEATTACK_IMPLEMENTATION(CBaseTurret)
 
 
 
-
-
 //This returns a boolean: whether to interrupt the (presumably) TakeDamage calling method. It should act on this and block script below to behave like the original
 //when told to block. Returning TRUE (1) means pass, returning FALSE (0) means block.
 BOOL CBaseTurret::TurretDeathCheck(entvars_t* pevInflictor, entvars_t* pevAttacker, float flDamage, int bitsDamageType, int bitsDamageTypeMod, void (CBaseTurret::*eventMethod)() ){
 
-	
 	/*
 	if(!IsAlive())
 	{
@@ -1075,7 +1072,6 @@ BOOL CBaseTurret::TurretDeathCheck(entvars_t* pevInflictor, entvars_t* pevAttack
 	}
 	*/
 
-	
 	/*
 		if ( bitsDamageType & DMG_ALWAYSGIB )
 		{
@@ -1090,7 +1086,6 @@ BOOL CBaseTurret::TurretDeathCheck(entvars_t* pevInflictor, entvars_t* pevAttack
 			Killed( pevAttacker, GIB_NORMAL );
 		}
 		*/
-
 
 
 	if (pev->health <= 0)
@@ -1169,7 +1164,6 @@ BOOL CBaseTurret::TurretDeathCheck(entvars_t* pevInflictor, entvars_t* pevAttack
 			}
 
 
-
 			pev->dmgtime = gpGlobals->time;
 
 			ClearBits (pev->flags, FL_MONSTER); // why are they set in the first place???
@@ -1204,7 +1198,6 @@ BOOL CBaseTurret::TurretDeathCheck(entvars_t* pevInflictor, entvars_t* pevAttack
 		return 0;
 	}
 
-
 	if(pev->deadflag != DEAD_NO){
 		return 0; //force a block, nothing after me could be important.
 	}
@@ -1214,15 +1207,12 @@ BOOL CBaseTurret::TurretDeathCheck(entvars_t* pevInflictor, entvars_t* pevAttack
 
 
 
-
-
 // take damage. bitsDamageType indicates type of damage sustained, ie: DMG_BULLET
 GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBaseTurret)
 {
 	if ( !pev->takedamage )
 		return 0;
 
-	
 	if(pev->deadflag != DEAD_NO && this->getGibCVar() <= 0){
 		//if dead and the gib CVar is 0 (retail), this corpse is invlunerable.
 		return 0;
@@ -1233,7 +1223,6 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBaseTurret)
 			flDamage /= 10.0;
 
 	}
-
 
 
 	pev->health -= flDamage;
@@ -1398,16 +1387,11 @@ GENERATE_GIBMONSTER_IMPLEMENTATION(CBaseTurret){
 		}
 
 	}else{
-
 		//make some gibs.
 		gibbed = TRUE;
 		//TODO - should nubmer of gibs spawned depend on the type of turret destroyed? sentry, turret, miniturret?
 		CGib::SpawnRandomGibs( pev, 8, *getGibInfoRef(), fGibSpawnsDecal );	// Throw gibs
-		
-		
 	}
-
-		
 
 	
 	pev->takedamage = DAMAGE_NO;
@@ -1494,6 +1478,11 @@ float CSentry::getGibCVar(){
 	return EASY_CVAR_GET(sentryCanGib);
 }
 
+
+CSentry::CSentry(void) {
+	nextTouchCooldown = -1;
+}
+
 void CSentry::Spawn()
 { 
 	Precache( );
@@ -1507,16 +1496,78 @@ void CSentry::Spawn()
 
 	CBaseTurret::Spawn();
 
+
+	pev->movetype = MOVETYPE_FLY;
+	pev->solid = SOLID_SLIDEBOX;
+	pev->fuser1 = 8;
+
 	pev->classname = MAKE_STRING("monster_sentry");
+	
 	m_iRetractHeight = 64;
+
 	m_iDeployHeight = 64;
 	m_iMinPitch	= -60;
-	UTIL_SetSize(pev, Vector(-16, -16, -m_iRetractHeight), Vector(16, 16, m_iRetractHeight));
 
-	SetTouch(&CSentry::SentryTouch);
-	SetThink(&CBaseTurret::Initialize);	
-	pev->nextthink = gpGlobals->time + 0.3; 
+	//MODDD - doing that after the 'DROP_TO_FLOOR' call soon.
+	//UTIL_SetSize(pev, Vector(-16, -16, -m_iRetractHeight), Vector(16, 16, m_iRetractHeight));
+	UTIL_SetSize(pev, Vector(-16, -16, 0), Vector(16, 16, m_iRetractHeight));
+	
+
+
+	//MODDD - NOT YET FREEMAN.
+	// Something about touch being set this early has a rare chance of causing issues.
+	// If the sentry has a "Touch" event, it could tall "TakeDamage" and set the Think method before
+	// the intended one below has a chance to be called, so we get a Sentry that hasn't been setup
+	// trying to do combat.  Has a gun rotate speed of 0.  Not a pretty sight.
+	//SetTouch(&CSentry::SentryTouch);
+	
+	//MODDD - Not yet, Freeman!  Call "PostInit", like a very tiny "StartMonster".
+	//SetThink(&CBaseTurret::Initialize);	
+	//pev->nextthink = gpGlobals->time + 0.3; 
+
+	SetThink(&CSentry::PreInit);
+	pev->nextthink = gpGlobals->time + 0.1; 	
 }
+void CSentry::PreInit(void) {
+
+	//MODDD - copied over from StartMonster in basemonster.cpp.
+
+	
+	// Snap to the ground, this turret does look like a small turret on stands after all.
+	if (!FBitSet(pev->spawnflags, SF_MONSTER_FALL_TO_GROUND))
+	{
+		if (EASY_CVAR_GET(crazyMonsterPrintouts))easyForcePrintLine("YOU amazing piece of work");
+
+		//pev->solid = SOLID_SLIDEBOX;
+
+		//int oldMoveType = pev->movetype;
+		//pev->movetype = MOVETYPE_STEP;
+		pev->origin.z += 1;
+		DROP_TO_FLOOR(ENT(pev));
+		//UTIL_SetOrigin(pev, pev->origin);
+		//pev->movetype = oldMoveType;
+
+		// and finally apply the size intended.  Unsure why we have non-zero min Z, but ok.
+		UTIL_SetSize(pev, Vector(-16, -16, -m_iRetractHeight), Vector(16, 16, m_iRetractHeight));
+	}
+	else
+	{
+		pev->flags &= ~FL_ONGROUND;
+	}
+	
+
+	// now go do the intended init.
+	SetThink(&CBaseTurret::Initialize);	
+	pev->nextthink = gpGlobals->time + 0.2; 
+}
+// Called by CBaseTurret::Initialize.
+void CSentry::PostInit(void) {
+	// OK FREEMAN JEEZ.
+	SetTouch(&CSentry::SentryTouch);
+}
+
+
+
 
 void CSentry::Shoot(Vector &vecSrc, Vector &vecDirToEnemy)
 {
@@ -1574,9 +1625,12 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CSentry)
 
 void CSentry::SentryTouch( CBaseEntity *pOther )
 {
-	if ( pOther && (pOther->IsPlayer() || (pOther->pev->flags & FL_MONSTER)) )
-	{
-		TakeDamage(pOther->pev, pOther->pev, 0, 0 );
+	if (gpGlobals->time >= nextTouchCooldown) {
+		if (pOther && (pOther->IsPlayer() || (pOther->pev->flags & FL_MONSTER)))
+		{
+			TakeDamage(pOther->pev, pOther->pev, 0, 0);
+		}
+		nextTouchCooldown = gpGlobals->time + 1;
 	}
 }
 
@@ -1631,15 +1685,7 @@ void CSentry ::	SentryDeath( void )
 	if (pev->dmgtime + RANDOM_FLOAT( 0, 2 ) > gpGlobals->time)
 	{
 		// lots of smoke
-		MESSAGE_BEGIN( MSG_BROADCAST, SVC_TEMPENTITY );
-			WRITE_BYTE( TE_SMOKE );
-			WRITE_COORD( vecSrc.x + RANDOM_FLOAT( -16, 16 ) );
-			WRITE_COORD( vecSrc.y + RANDOM_FLOAT( -16, 16 ) );
-			WRITE_COORD( vecSrc.z - 32 );
-			WRITE_SHORT( g_sModelIndexSmoke );
-			WRITE_BYTE( 15 ); // scale * 10
-			WRITE_BYTE( 8 ); // framerate
-		MESSAGE_END();
+		UTIL_Smoke(MSG_BROADCAST, NULL, NULL, vecSrc, RANDOM_FLOAT( -16, 16 ), RANDOM_FLOAT( -16, 16 ), -32, g_sModelIndexSmoke, 15, 8);
 	}
 	
 	if (pev->dmgtime + RANDOM_FLOAT( 0, 8 ) > gpGlobals->time)

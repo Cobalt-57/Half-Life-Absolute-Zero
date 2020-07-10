@@ -170,6 +170,12 @@ int LookupActivity( void *pmodel, entvars_t *pev, int activity )
 				seq = i;
 		}
 	}
+
+	if (seq == -1 && activity != 23) {
+		// Breakpoint?
+		int x = 45;
+	}
+
 	return seq;
 }
 
@@ -854,6 +860,11 @@ float SetBlending( void *pmodel, entvars_t *pev, int iBlender, float flValue )
 
 	//easyPrintLineANIMATION("AW %d", pseqdesc->blendtype[iBlender]);
 
+	//MODDD - NOTE.  Apparently sequences themselves can allow/disallow blend adjustments
+	// like torso pitch?  Just seems odd the barney unholstering can't aim pitch-wise,
+	// but while firing can, so there's a near-instant moment where the model changes
+	// to looking what he's firing at.  Weird.
+	// Best not to force this, it won't do anything.  That's up to the model then.
 	if (pseqdesc->blendtype[iBlender] == 0)
 		return flValue;
 

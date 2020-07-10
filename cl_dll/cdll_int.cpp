@@ -197,8 +197,9 @@ EASY_CVAR_DECLARE_HASH_ARRAY
 
 void DLLEXPORT HUD_Init( void )
 {
-
 	EASY_CVAR_HASH_MASS
+
+	InitShared();
 
 	determineHiddenMemPath();
 	

@@ -221,8 +221,8 @@ void COsprey :: Spawn( void )
 	m_vel2 = pev->velocity;
 
 	
-
-	pev->renderfx |= ISNPC;
+	//MODDD
+	pev->renderfx |= ISMETALNPC;
 
 }
 
@@ -695,8 +695,8 @@ void COsprey :: DyingThink( void )
 
 
 		//MODDD - use this filter instead.
-		UTIL_Explosion(pev, vecSpot, RANDOM_FLOAT( -150, 150 ), RANDOM_FLOAT( -150, 150 ), RANDOM_FLOAT( -150, -50 ),g_sModelIndexFireball, RANDOM_LONG(0,29) + 30, 12, TE_EXPLFLAG_NONE, 0.4);
-		UTIL_Smoke(vecSpot, RANDOM_FLOAT( -150, 150 ), RANDOM_FLOAT( -150, 150 ), RANDOM_FLOAT( -150, -50 ), g_sModelIndexSmoke, 100, 10  );
+		UTIL_Explosion(MSG_PVS, vecSpot, NULL, pev, vecSpot, RANDOM_FLOAT( -150, 150 ), RANDOM_FLOAT( -150, 150 ), RANDOM_FLOAT( -150, -50 ),g_sModelIndexFireball, RANDOM_LONG(0,29) + 30, 12, TE_EXPLFLAG_NONE, 0.4);
+		UTIL_ExplosionSmoke(MSG_PVS, vecSpot, NULL, vecSpot, RANDOM_FLOAT( -150, 150 ), RANDOM_FLOAT( -150, 150 ), RANDOM_FLOAT( -150, -50 ), g_sModelIndexSmoke, 100, 10  );
 
 
 		vecSpot = pev->origin + (pev->mins + pev->maxs) * 0.5;
@@ -761,6 +761,9 @@ void COsprey :: DyingThink( void )
 		MESSAGE_END();
 		*/
 		
+
+		//MODDD - section replaced by below.
+		/*
 		//MODDD - check for this var.
 		if(EASY_CVAR_GET(cl_explosion) != 1){
 			// gibs
@@ -774,22 +777,32 @@ void COsprey :: DyingThink( void )
 				WRITE_BYTE( 255 ); // brightness
 			MESSAGE_END();
 
-			//NOTE: this was found commented out, seems similar to the apache one..
-			/*
-			MESSAGE_BEGIN( MSG_BROADCAST, SVC_TEMPENTITY );
-				WRITE_BYTE( TE_SMOKE );
-				WRITE_COORD( vecSpot.x );
-				WRITE_COORD( vecSpot.y );
-				WRITE_COORD( vecSpot.z + 300 );
-				WRITE_SHORT( g_sModelIndexSmoke );
-				WRITE_BYTE( 250 ); // scale * 10
-				WRITE_BYTE( 6  ); // framerate
-			MESSAGE_END();
-			*/
+
+			//NOTE: this was found commented out, seems similar to the apache one.
+			//
+			//MESSAGE_BEGIN( MSG_BROADCAST, SVC_TEMPENTITY );
+			//	WRITE_BYTE( TE_SMOKE );
+			//	WRITE_COORD( vecSpot.x );
+			//	WRITE_COORD( vecSpot.y );
+			//	WRITE_COORD( vecSpot.z + 300 );
+			//	WRITE_SHORT( g_sModelIndexSmoke );
+			//	WRITE_BYTE( 250 ); // scale * 10
+			//	WRITE_BYTE( 6  ); // framerate
+			//MESSAGE_END();
+			
+
 		}//END OF if(EASY_CVAR_GET(cl_explosion) != 1)
 		else{
 			UTIL_Explosion(pev, vecSpot, 0, 0, 256, m_iExplode, 120, 12, 0, vecSpot, 0.4);
 		}
+		*/
+
+		UTIL_SpriteOrQuakeExplosion(MSG_PVS, vecSpot, NULL, pev, vecSpot, 0, 0, 512, m_iExplode, 250, 255, vecSpot, 0.4);
+		// Was the smoke being commented out more of an accident?
+		// Going to add that back in like the apache does here.
+		UTIL_ExplosionSmoke(MSG_PVS, vecSpot, NULL, vecSpot, 0, 0, 512, g_sModelIndexSmoke, 250, 5);
+
+
 
 		// blast circle
 		MESSAGE_BEGIN( MSG_PAS, SVC_TEMPENTITY, pev->origin );
@@ -866,30 +879,19 @@ void COsprey :: ShowDamage( void )
 	if (m_iDoLeftSmokePuff > 0 || RANDOM_LONG(0,99) > m_flLeftHealth)
 	{
 		Vector vecSrc = pev->origin + gpGlobals->v_right * -340;
-		MESSAGE_BEGIN( MSG_PVS, SVC_TEMPENTITY, vecSrc );
-			WRITE_BYTE( TE_SMOKE );
-			WRITE_COORD( vecSrc.x );
-			WRITE_COORD( vecSrc.y );
-			WRITE_COORD( vecSrc.z );
-			WRITE_SHORT( g_sModelIndexSmoke );
-			WRITE_BYTE( RANDOM_LONG(0,9) + 20 ); // scale * 10
-			WRITE_BYTE( 12 ); // framerate
-		MESSAGE_END();
+		
+		UTIL_Smoke(MSG_PVS, vecSrc, NULL, vecSrc, 0, 0, 0, g_sModelIndexSmoke, RANDOM_LONG(0,9) + 20, 12);
+		
 		if (m_iDoLeftSmokePuff > 0)
 			m_iDoLeftSmokePuff--;
 	}
 	if (m_iDoRightSmokePuff > 0 || RANDOM_LONG(0,99) > m_flRightHealth)
 	{
 		Vector vecSrc = pev->origin + gpGlobals->v_right * 340;
-		MESSAGE_BEGIN( MSG_PVS, SVC_TEMPENTITY, vecSrc );
-			WRITE_BYTE( TE_SMOKE );
-			WRITE_COORD( vecSrc.x );
-			WRITE_COORD( vecSrc.y );
-			WRITE_COORD( vecSrc.z );
-			WRITE_SHORT( g_sModelIndexSmoke );
-			WRITE_BYTE( RANDOM_LONG(0,9) + 20 ); // scale * 10
-			WRITE_BYTE( 12 ); // framerate
-		MESSAGE_END();
+		
+		UTIL_Smoke(MSG_PVS, vecSrc, NULL, vecSrc, 0, 0, 0, g_sModelIndexSmoke, RANDOM_LONG(0,9) + 20, 12);
+		
+		
 		if (m_iDoRightSmokePuff > 0)
 			m_iDoRightSmokePuff--;
 	}

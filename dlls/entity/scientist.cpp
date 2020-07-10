@@ -73,6 +73,10 @@ EASY_CVAR_EXTERN(pissedNPCs)
 
 
 
+// yes, the physical is best under the allowed.  Very odd.
+#define SCIENTIST_MELEE_ALLOW_RANGE 54
+#define SCIENTIST_MELEE_PHYSICAL_RANGE 46
+
 #define NUM_SCIENTIST_HEADS		3
 
 //=========================================================
@@ -143,51 +147,49 @@ extern void scientistHeadFilter( CBaseMonster& somePerson, int arg_numberOfModel
 
 
 
-
-
 //=======================================================
 // Scientist
 //=======================================================
 
 class CScientist : public CTalkMonster
 {
+private:
+	float m_painTime;
+	float m_healTime;
+	float m_fearTime;
+	float explodeDelay;
 public:
 
 	static const char* pDeathSounds[];
-
+	static const char* madInterSentences[];
+	static int madInterSentencesMax;
+	static int numberOfModelBodyParts;
+	//MODDD - new data stuff.
+	static const char* pAttackHitSounds[];
+	static const char* pAttackMissSounds[];
 	float aggro;
-
 	float aggroCooldown;
 	float playFearAnimCooldown;
-
 	Vector aggroOrigin;
+    BOOL healNPCChosen;
+	int trueBody;
+	float healNPCCheckDelay;
+	// Yes, a cooldown just for screaming, separate from the general talk one.
+	float screamCooldown;
 
 
 	CScientist(void);
 	int getMadSentencesMax(void);
 	int getMadInterSentencesMax(void);
 
-	
-	static const char*		madInterSentences[];
-	static int			madInterSentencesMax;
-
-
 	void forgetHealNPC(void);
-
-    //MODDD
-    BOOL healNPCChosen;
-
 	//MODDD
 	void StartFollowing(CBaseEntity *pLeader);
 
-
 	//MODDD
 	void Activate( void );
-	//void playPissed();
-
 	void Spawn( void );
 	void Precache( void );
-
 	void SetYawSpeed( void );
 	int  Classify ( void );
 	BOOL isOrganic(void){return !CanUseGermanModel();}
@@ -201,11 +203,6 @@ public:
 	GENERATE_TRACEATTACK_PROTOTYPE
 	GENERATE_TAKEDAMAGE_PROTOTYPE
 
-	//MODDD
-	static int numberOfModelBodyParts;
-	int trueBody;
-	float healNPCCheckDelay;
-
 
 	virtual int FriendNumber( int arrayNumber );
 	void SetActivity ( Activity newActivity );
@@ -213,15 +210,14 @@ public:
 	int ISoundMask( void );
 	void DeclineFollowing( void );
 
-	float CoverRadius( void ) { return 1200; }		// Need more room for cover because scientists want to get far away!
+	float CoverRadius( void ) { return DEFAULT_COVER_SEEK_DISTANCE * 1.8; }		// Need more room for cover because scientists want to get far away!
 	
 	//MODDD MAJOR - DEBUG. NO.
 	//BOOL	DisregardEnemy( CBaseEntity *pEnemy ) { return !pEnemy->IsAlive() || (gpGlobals->time - m_fearTime) > 15; }
-	BOOL	DisregardEnemy( CBaseEntity *pEnemy ) { return FALSE; }
-
-	BOOL	CanHeal( void );
+	BOOL DisregardEnemy( CBaseEntity *pEnemy ) { return FALSE; }
+	BOOL CanHeal( void );
 	//MODDD
-	BOOL	CanHeal(CBaseMonster* arg_monsterTry);
+	BOOL CanHeal(CBaseMonster* arg_monsterTry);
 
 	void Heal( void );
 	void Scream( void );
@@ -234,37 +230,26 @@ public:
 	Schedule_t *GetSchedule ( void );
 	MONSTERSTATE GetIdealState ( void );
 
-
 	//MODDD - new.
-	void SetObjectCollisionBox( void )
-	{
+	void SetObjectCollisionBox( void ){
 		if(pev->deadflag != DEAD_NO){
 			pev->absmin = pev->origin + Vector(-65, -65, 0);
 			pev->absmax = pev->origin + Vector(65, 65, 72);
 		}else{
-
 			CBaseMonster::SetObjectCollisionBox();
-
 		}
 	}
 
-	//yes?
 	void MonsterThink(void);
 
-
-	//MODDD
 	void setModel(void);
 	void setModel(const char* m);
 	BOOL getGermanModelRequirement(void);
 	const char* getGermanModel(void);
 	const char* getNormalModel(void);
 
-
 	void DeathSound( void );
 	void PainSound( void );
-
-	void tempMethod(void);
-
 
 	void TalkInit( void );
 
@@ -278,8 +263,6 @@ public:
 
 	CUSTOM_SCHEDULES;
 
-
-	
 	BOOL CheckMeleeAttack1 ( float flDot, float flDist );
 	BOOL CheckMeleeAttack2 ( float flDot, float flDist );
 	
@@ -288,7 +271,6 @@ public:
 	int tryActivitySubstitute(int activity);
 	int LookupActivityHard(int activity);
 
-	
 	void DeclineFollowingProvoked(CBaseEntity* pCaller);
 	void SayProvoked(void);
 	void SaySuspicious(void);
@@ -305,19 +287,6 @@ public:
 
 	void initiateAss(void);
 	void myAssHungers(void);
-
-	
-//MODDD - new data stuff.
-	static const char *pAttackHitSounds[];
-	static const char *pAttackMissSounds[];
-
-
-
-private:
-	float m_painTime;
-	float m_healTime;
-	float m_fearTime;
-	float explodeDelay;
 };
 
 
@@ -328,7 +297,6 @@ const char* CScientist::pDeathSounds[] =
 	"scientist/sci_die3.wav",
 	"scientist/sci_die4.wav",
 };
-
 
 
 
@@ -380,8 +348,6 @@ const char *CScientist::pAttackMissSounds[] =
 
 
 
-
-
 const char* CScientist::madInterSentences[] = {
 	"!SC_POKE0",
 	"!SC_POKE1",
@@ -427,9 +393,6 @@ const char* CScientist::madInterSentences[] = {
 
 
 
-
-
-
 int CScientist::getMadInterSentencesMax(void){
 	if(globalPSEUDO_iCanHazMemez == TRUE){
 		return 34;
@@ -446,12 +409,15 @@ int CScientist::getMadSentencesMax(void){
 }
 
 
-
-
 // Chase enemy schedule
 Task_t tlAngryScientistChaseEnemyFailed[] = 
 {
 	{ TASK_SCIENTIST_ANGRY_CHASE_ENEMY_FAILED, (float)0 },
+
+	// Go ahead, look scared.  Why not.
+	{ TASK_PLAY_SEQUENCE_FACE_ENEMY, (float)ACT_EXCITED },	// This is really fear-stricken excitement
+	{ TASK_SET_ACTIVITY, (float)ACT_IDLE },
+
 	//no, just allow to repick a schedule.
 	//{ TASK_SET_SCHEDULE,	(float)???	}
 };
@@ -476,7 +442,7 @@ Task_t tlAngryScientistChaseEnemy[] =
 	//{ TASK_RUN_PATH,			(float)0		},
 	//{ TASK_WAIT_FOR_MOVEMENT,	(float)0		},
 	//Now modeled after the SmartFollow in schedule.cpp.
-	{ TASK_MOVE_TO_ENEMY_RANGE,(float)0		}
+	{ TASK_MOVE_TO_ENEMY_RANGE, (float)(SCIENTIST_MELEE_ALLOW_RANGE - 5) }
 };
 
 Schedule_t slAngryScientistChaseEnemy[] =
@@ -501,7 +467,6 @@ Schedule_t slAngryScientistChaseEnemy[] =
 };
 
 
-
 Task_t	tlScientistPunch[] =
 {
 	{ TASK_STOP_MOVING,			0				},
@@ -523,8 +488,6 @@ Schedule_t	slScientistPunch[] =
 		"scientist punch"
 	},
 };
-
-
 
 
 
@@ -724,7 +687,6 @@ Schedule_t	slScientistCover[] =
 };
 
 
-
 Task_t	tlScientistHide[] =
 {
 	{ TASK_SET_FAIL_SCHEDULE,		(float)SCHED_PANIC },		// If you fail, just panic!
@@ -756,9 +718,9 @@ Task_t	tlScientistStartle[] =
 	{ TASK_SET_FAIL_SCHEDULE,		(float)SCHED_PANIC },		// If you fail, just panic!
 	{ TASK_RANDOM_SCREAM,			(float)0.3 },				// Scream 30% of the time
 	{ TASK_STOP_MOVING,				(float)0					},
-	{ TASK_PLAY_SEQUENCE_FACE_ENEMY,			(float)ACT_CROUCH			},
+	{ TASK_PLAY_SEQUENCE_FACE_ENEMY,(float)ACT_CROUCH			},
 	{ TASK_RANDOM_SCREAM,			(float)0.1 },				// Scream again 10% of the time
-	{ TASK_PLAY_SEQUENCE_FACE_ENEMY,			(float)ACT_CROUCHIDLE		},
+	{ TASK_PLAY_SEQUENCE_FACE_ENEMY,(float)ACT_CROUCHIDLE		},
 	{ TASK_WAIT_RANDOM,				(float)1.0					},
 };
 
@@ -781,14 +743,11 @@ Schedule_t	slScientistStartle[] =
 };
 
 
-
 Task_t	tlFear[] =
 {
 	{ TASK_STOP_MOVING,				(float)0					},
 	{ TASK_FACE_ENEMY,				(float)0					},
-	
 	{ TASK_SAY_FEAR,				(float)0					},
-
 	//MODDD - new.
 	{ TASK_SCIENTIST_FIGHT_OR_FLIGHT,  (float)0   },
 
@@ -836,12 +795,6 @@ DEFINE_CUSTOM_SCHEDULES( CScientist )
 IMPLEMENT_CUSTOM_SCHEDULES( CScientist, CTalkMonster );
 
 
-
-
-
-
-
-
 	
 void CScientist::DeclineFollowingProvoked(CBaseEntity* pCaller){
 	//Barney won't say anything, he's too busy shooting you.
@@ -857,18 +810,19 @@ void CScientist::DeclineFollowingProvoked(CBaseEntity* pCaller){
 		//no reaction, already running.
 
 	}else if(aggro <= 0){
-		//try the fight or flight. No random chance of going agro if there is valid cover though.
-		ChangeSchedule(GetScheduleOfType(SCHED_FIGHT_OR_FLIGHT));
+		// try the fight or flight. No random chance of going agro if there is valid cover though.
+		// Don't interrupt already punching or running though.
+		if (m_Activity != ACT_MELEE_ATTACK2 && m_Activity != ACT_RUN_SCARED && m_Activity != ACT_RUN && m_Activity != ACT_RUN_HURT) {
+			ChangeSchedule(GetScheduleOfType(SCHED_FIGHT_OR_FLIGHT));
+		}
 
 	}else{  //aggro above > 0? for now, no effect, they are already angry.
 
 	}
-
 }
-void CScientist::SayProvoked(void){
-	
-	if(EASY_CVAR_GET(pissedNPCs) != 1 || !globalPSEUDO_iCanHazMemez){
 
+void CScientist::SayProvoked(void){
+	if(EASY_CVAR_GET(pissedNPCs) != 1 || !globalPSEUDO_iCanHazMemez){
 		switch(RANDOM_LONG(0, 4)){
 			case 0:
 				EMIT_SOUND_FILTERED( ENT(pev), CHAN_VOICE, "scientist/sci_pain2.wav", 1, ATTN_NORM, 0, GetVoicePitch());
@@ -891,7 +845,6 @@ void CScientist::SayProvoked(void){
 		PlaySentence( "BA_POKE_D", 8, VOL_NORM, ATTN_NORM );
 	}
 
-	
 	if(this->m_pSchedule == slScientistCover ){
 		//no reaction, already running.
 
@@ -904,11 +857,11 @@ void CScientist::SayProvoked(void){
 	}else{  //aggro above > 0? for now, no effect, they are already angry.
 
 	}
-
 }
+
+
 void CScientist::SaySuspicious(void){
 	if(EASY_CVAR_GET(pissedNPCs) != 1 || !globalPSEUDO_iCanHazMemez){
-	
 		switch(RANDOM_LONG(0, 7)){
 			case 0:
 			case 1:
@@ -925,13 +878,11 @@ void CScientist::SaySuspicious(void){
 				PlaySentence( "!SC_FEAR0", 4, VOL_NORM, ATTN_NORM ); //nooo
 			break;
 		}//END OF switch
-
 	}else{
 		PlaySentence( "BA_POKE_C", 6, VOL_NORM, ATTN_NORM );
 	}
 }
 void CScientist::SayLeaderDied(void){
-
 	switch(RANDOM_LONG(0, 7)){
 		case 0:
 		case 1:
@@ -950,18 +901,11 @@ void CScientist::SayLeaderDied(void){
 			PlaySentence( "!SC_FEAR0", 4, VOL_NORM, ATTN_NORM ); //nooo
 		break;
 	}//END OF switch
-	
-
 }//END OF SayLeaderDied
-
-
 
 
 //Say a sentence to express interest in something, like stopping to stare at a chumtoad.
 void CScientist::SayNearPassive(void){
-
-
-	
 	switch(RANDOM_LONG(0, 17)){
 	case 0:
 		PlaySentenceSingular( "SC_QUESTION0", 4, VOL_NORM, ATTN_NORM );
@@ -1021,15 +965,10 @@ void CScientist::SayNearPassive(void){
 
 	break;
 	}//END OF switch
-
-	
 }//END OF SayNearPassive
 
 
 void CScientist::SayNearCautious(void){
-	
-
-
 	switch(RANDOM_LONG(0, 23)){
 	case 0:
 		PlaySentenceSingular( "SC_HEAR0", 4, VOL_NORM, ATTN_NORM );
@@ -1112,20 +1051,6 @@ void CScientist::SayNearCautious(void){
 	
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 void CScientist::DeclineFollowing( void )
 {
 	//MODDD
@@ -1138,33 +1063,35 @@ void CScientist::DeclineFollowing( void )
 
 		playPissed();
 	}
-
-
 }
-
-/*
-void CScientist::playPissed(){
-
-	PlaySentence( "SC_POKE", RANDOM_FLOAT(2.8, 3.2), VOL_NORM, ATTN_IDLE );
-
-}
-*/
 
 
 void CScientist :: Scream( void )
 {
-	if ( FOkToSpeak() )
+	// Nope!  Use the custom cooldown.  Who politely declines screaming because someone else is talking anyway,
+	// if it's something worth screaming at?
+	//if ( FOkToSpeak() )
+
+	if (gpGlobals->time >= screamCooldown)
 	{
-		Talk( 10 );
+		screamCooldown = gpGlobals->time + RANDOM_FLOAT(6, 20);
+		//Talk( 10 );
 		m_hTalkTarget = m_hEnemy;
 		PlaySentence( "SC_SCREAM", RANDOM_FLOAT(3, 6), VOL_NORM, ATTN_NORM );
 	}
 }
 
-
 Activity CScientist::GetStoppedActivity( void )
 {
+	/*
+	if (m_Activity == ACT_WALK || m_Activity == ACT_RUN) {
+		//force a reset
+		m_Activity = ACT_RESET;
+	}
+	*/
+
 	//MODDD - if following, don't do this.
+	// ALSO, don't do this fresh from another punch.
 	if(m_hTargetEnt==NULL){
 		if ( m_hEnemy != NULL )
 			return ACT_EXCITED;
@@ -1191,27 +1118,25 @@ void CScientist :: StartTask( Task_t *pTask )
 		*/
 	//Also I meant to ask about the chumtoad spawning, trying to avoid being able to spawn on walls where it slowly falls through the world. If there's a location where it looks clearly open but won't spawn, see what lines turn red.
 
-	//easyPrintLine("I WILL EAT YOUR FLESH!!!!! %s:: %d", m_pSchedule->pName, pTask->iTask);
+	//easyPrintLine("I WILL give a report of the sci sched %s:: %d", m_pSchedule->pName, pTask->iTask);
 
 	switch( pTask->iTask )
 	{
-
-
 	case TASK_PLAY_SEQUENCE_FACE_ENEMY:
 	case TASK_PLAY_SEQUENCE_FACE_TARGET:
 	case TASK_PLAY_SEQUENCE:
 		easyPrintLine("WHAT THE hey %.2f", pTask->flData);
 		if(pTask->flData == ACT_EXCITED || pTask->flData == ACT_CROUCH || pTask->flData == ACT_CROUCHIDLE){
-			if(gpGlobals->time > playFearAnimCooldown ){
+			//if(gpGlobals->time > playFearAnimCooldown ){
 				//allowed.
 				easyPrintLine("I ALLOWED YOU!!! pfac:%.2f ct:%.2f", playFearAnimCooldown, gpGlobals->time);
 				playFearAnimCooldown = gpGlobals->time + 14;
-			}else{
-				//don't try to play this anim, it may get spammed and make the scientist even more useless than it already is.
-				easyPrintLine("I BLOCKED YOU!!! pfac:%.2f ct:%.2f", playFearAnimCooldown, gpGlobals->time);
-				TaskComplete();
-				break;
-			}
+			//}else{
+			//	//don't try to play this anim, it may get spammed and make the scientist even more useless than it already is.
+			//	easyPrintLine("I BLOCKED YOU!!! pfac:%.2f ct:%.2f", playFearAnimCooldown, gpGlobals->time);
+			//	TaskComplete();
+			//	break;
+			//}
 		}
 
 		//otherwise base behavior is good.
@@ -1220,11 +1145,12 @@ void CScientist :: StartTask( Task_t *pTask )
 	case TASK_SCIENTIST_ANGRY_CHASE_ENEMY_FAILED:
 		//just a notice to turn aggro off, if we can't even make it to our enemy.
 		aggro = 0;
+		// ...what.
+		m_movementGoal = MOVEGOAL_NONE;
 		TaskComplete();
 		return;
 	break;
 	case TASK_CANT_FOLLOW:
-
 		//MODDD - WARNING: sensitive script.  Let's be careful about this...
 		if(m_hTargetEnt == NULL){
 			TaskFail();
@@ -1247,12 +1173,8 @@ void CScientist :: StartTask( Task_t *pTask )
 			TaskFail();
 			return;
 		}
-
-
-		break;
-
+	break;
 	case TASK_SAY_HEAL:
-
 		//MODDD
 		if(m_hTargetEnt == NULL){
 			TaskFail();
@@ -1265,12 +1187,8 @@ void CScientist :: StartTask( Task_t *pTask )
 		PlaySentence( "SC_HEAL", 2, VOL_NORM, ATTN_IDLE );
 
 		TaskComplete();
-		break;
-
-		//MODDD
+	break;
 	case TASK_SCIENTIST_FIGHT_OR_FLIGHT:
-		
-
 		//if 0, this isn't the "panic".  This replaces the scream for panic, so only scream for panic.
 		if(pTask->flData == 1){
 			Scream();
@@ -1286,9 +1204,10 @@ void CScientist :: StartTask( Task_t *pTask )
 
 				aggro = 0;
 
+				float vertDiff = abs(m_hEnemy->pev->origin.z - pev->origin.z);
 
 				//elevation differences?  Nope, none of that.
-				if(m_hEnemy != NULL && (abs(m_hEnemy->pev->origin.z - pev->origin.z ) < 44) ) {
+				if(m_hEnemy != NULL && (vertDiff < 120) ) {
 					dist = (m_hEnemy->pev->origin - this->pev->origin).Length();
 
 					if(pTask->flData == 1){
@@ -1327,15 +1246,13 @@ void CScientist :: StartTask( Task_t *pTask )
 						fightOddsInfluence = 0.01f;
 					}
 
-
-					
 					//easyPrintLine("WHATS THE SIZE   %.2f %.2f %.2f %.2f", tempEnSize, dist, fearFactor, fightOddsInfluence);
 					//easyPrintLine("kk");
 
 					if(dist < 85){
 						//fight!
 						decidedToFight = TRUE;
-					}else if(dist < 130){
+					}else if(dist < 160){
 						if(aggro==-0.5){
 							decidedToFight = (RANDOM_FLOAT(0, 1) < 0.38 * fightOddsInfluence);
 						}else{
@@ -1347,15 +1264,16 @@ void CScientist :: StartTask( Task_t *pTask )
 							decidedToRun = TRUE;
 						}
 					}
-
 				}
-
 			}else if(aggro == -1){
 				decidedToRun = TRUE;
 				//FLEE!
 			}
-
 			//easyPrintLine("MY CHOICE?  aggro:%.2f pTask->flData:%.2f ::: decidedToFight:%d decidedToRun:%d", aggro, pTask->flData, decidedToFight, decidedToRun);
+
+
+			// whoops.
+			//decidedToFight = TRUE;
 
 			if(decidedToFight == TRUE){
 				aggro = 1;
@@ -1363,30 +1281,32 @@ void CScientist :: StartTask( Task_t *pTask )
 				aggroCooldown = gpGlobals->time + 2;
 				ChangeSchedule(this->GetScheduleOfType(SCHED_SCIENTIST_ANGRY_CHASE_ENEMY) );
 				break;
-			}else if(decidedToRun == TRUE){
+			}else{
 				aggro = 0;
-				ChangeSchedule(slScientistCover);
+
+				if (pTask->flData != 1) {
+					ChangeSchedule(slScientistCover);
+				}
+				else {
+					// we already tried finding cover to get this point.  GIVE UP, just play the panic anim as this schedule would.
+					TaskComplete();
+				}
 				break;
 			}
 		}
 
-
 		aggro = 0;
-
 		TaskComplete();
-
-		break;
+	break;
 	case TASK_SCREAM:
 		Scream();
 		TaskComplete();
-		break;
-
+	break;
 	case TASK_RANDOM_SCREAM:
 		if ( RANDOM_FLOAT( 0, 1 ) < pTask->flData )
 			Scream();
 		TaskComplete();
-		break;
-
+	break;
 	case TASK_SAY_FEAR:
 		if ( FOkToSpeak() )
 		{
@@ -1398,35 +1318,68 @@ void CScientist :: StartTask( Task_t *pTask )
 				PlaySentence( "SC_FEAR", 5, VOL_NORM, ATTN_NORM );
 		}
 		TaskComplete();
-		break;
-
+	break;
 	case TASK_HEAL:
 		m_IdealActivity = ACT_MELEE_ATTACK1;
-		break;
-
+	break;
 	case TASK_RUN_PATH_SCARED:
-		m_movementActivity = ACT_RUN_SCARED;
-		break;
+	{
+		// HOLD UP.  If we can't even navigate to the first node, it's all over before it began.
+		// No, too crude of a check.  Other ways a path can work out but I forget what exactly.
+		// FUCK IT
 
-	case TASK_MOVE_TO_TARGET_RANGE_SCARED:
-		{
-			//MODDD
-			if(m_hTargetEnt == NULL){
-				TaskFail();
-				return;
-			}
 
-			if ( (m_hTargetEnt->pev->origin - pev->origin).Length() < 1 )
-				TaskComplete();
-			else
-			{
-				m_vecMoveGoal = m_hTargetEnt->pev->origin;
-				if ( !MoveToTarget( ACT_WALK_SCARED, 0.5 ) )
-					TaskFail();
-			}
+		////Vector vecGoal = m_Route[0].vecLocation;
+		//Vector vecGoal;
+		//WayPoint_t* test = GetGoalNode();
+		//if (test != NULL) {
+		//	vecGoal = test->vecLocation;
+
+
+		//	if (!CheckLocalMove(pev->origin, vecGoal, NULL, NULL)) {
+		//		TaskFail();
+		//		return;
+		//	}
+			
+		if (!MovementIsComplete()) {
+			// okay?  How about this way?
+			m_movementActivity = ACT_RUN_SCARED;
 		}
-		break;
+		else {
+			TaskFail();
+		}
 
+		//}
+		//else {
+		//	// ????????????????
+		//	// Eh, go ahead and count as 'success', either way this leads into a new schedule.
+		//	// Lacking a node at all likely means the pathfinding was skipped from being
+		//	// close enough to the goal already.
+		//	// or not?
+		//	TaskFail();
+		//	//TaskComplete();
+		//}
+
+	}
+	break;
+	case TASK_MOVE_TO_TARGET_RANGE_SCARED:
+	{
+		//MODDD
+		if(m_hTargetEnt == NULL){
+			TaskFail();
+			return;
+		}
+
+		if ( (m_hTargetEnt->pev->origin - pev->origin).Length() < 1 )
+			TaskComplete();
+		else
+		{
+			m_vecMoveGoal = m_hTargetEnt->pev->origin;
+			if ( !MoveToTarget( ACT_WALK_SCARED, 0.5 ) )
+				TaskFail();
+		}
+	}
+	break;
 	case TASK_MELEE_ATTACK2_NOTURN:
 	case TASK_MELEE_ATTACK2:
 	{
@@ -1438,13 +1391,11 @@ void CScientist :: StartTask( Task_t *pTask )
 
 		m_IdealActivity = ACT_MELEE_ATTACK2;
 		this->signalActivityUpdate = TRUE;
-		break;
 	}
-
-
+	break;
 	default:
 		CTalkMonster::StartTask( pTask );
-		break;
+	break;
 	}
 }
 
@@ -1555,24 +1506,49 @@ int CScientist :: Classify ( void )
 void CScientist :: SetYawSpeed ( void )
 {
 	int ys;
-
 	ys = 90;
 
-	switch ( m_Activity )
-	{
-	case ACT_IDLE:
-		ys = 120;
-		break;
-	case ACT_WALK:
-		ys = 180;
-		break;
-	case ACT_RUN:
-		ys = 150;
-		break;
-	case ACT_TURN_LEFT:
-	case ACT_TURN_RIGHT:
-		ys = 120;
-		break;
+	//MODDD - let state influence the turn speeds mainly, but some others a little
+	if (m_MonsterState != MONSTERSTATE_COMBAT) {
+		// not combat?  Normal values
+		switch (m_Activity)
+		{
+		case ACT_IDLE:
+			ys = 120;
+			break;
+		case ACT_WALK:
+			ys = 180;
+			break;
+		case ACT_RUN:
+			ys = 150;
+			break;
+		case ACT_TURN_LEFT:
+		case ACT_TURN_RIGHT:
+			ys = 120;
+			break;
+		}
+	}
+	else {
+		// Combat?
+		// I gotta go fast!   At least improve the slow turnleft/right speeds, c'mon, we are panicking here.
+		// and new default for not specified here (although barney's is 0, maybe this never gets used):
+		ys = 140;
+		switch (m_Activity)
+		{
+		case ACT_IDLE:
+			ys = 150;
+			break;
+		case ACT_WALK:
+			ys = 180;
+			break;
+		case ACT_RUN:
+			ys = 160;
+			break;
+		case ACT_TURN_LEFT:
+		case ACT_TURN_RIGHT:
+			ys = 180;
+			break;
+		}
 	}
 
 	pev->yaw_speed = ys;
@@ -1693,6 +1669,8 @@ void CScientist :: Activate( void ){
 CScientist::CScientist(void){
 	//givenModelBody = -1;
 
+	screamCooldown = -1;
+
 	explodeDelay = -1;
 
 	aggroOrigin = Vector(0,0,0); //???
@@ -1774,11 +1752,7 @@ void CScientist :: Spawn( void )
 	//barney: 137
 
 	MonsterInit();
-	
-	//FL_CLIENT
-		//pev->flags |= FL_CLIENT;
 
-	
 	pev->skin = 0; //default.
 
 	//if( (pev->spawnflags & SF_MONSTER_TALKMONSTER_BLOODY) && EASY_CVAR_GET(sv_germancensorship) != 1 && EASY_CVAR_GET(scientistModel) < 2){
@@ -1806,11 +1780,9 @@ extern int global_useSentenceSave;
 //=========================================================
 void CScientist :: Precache( void )
 {
-
 	PRECACHE_MODEL("models/scientist.mdl");
 	//PRECACHE_MODEL("models/scientist_pre_e3.mdl");
 	//PRECACHE_MODEL("models/scientist_e3.mdl");
-
 
 	global_useSentenceSave = TRUE;
 	PRECACHE_SOUND("scientist/sci_pain1.wav");
@@ -1819,19 +1791,14 @@ void CScientist :: Precache( void )
 	PRECACHE_SOUND("scientist/sci_pain4.wav");
 	PRECACHE_SOUND("scientist/sci_pain5.wav");
 
-
-
 	PRECACHE_SOUND_ARRAY(pDeathSounds);
 
-
-	
 	//MODDD - can now play "Strike" sounds on hitting something with the kick.  NEW DATA STUFF
 	PRECACHE_SOUND("zombie/claw_strike1.wav");
 	PRECACHE_SOUND("zombie/claw_strike2.wav");
 	PRECACHE_SOUND("zombie/claw_strike3.wav");
 	PRECACHE_SOUND("zombie/claw_miss1.wav");
 	PRECACHE_SOUND("zombie/claw_miss2.wav");
-
 
 	global_useSentenceSave = FALSE;
 	// every new scientist must call this, otherwise
@@ -1841,7 +1808,6 @@ void CScientist :: Precache( void )
 	//Just do TalkInit() in spawn.
 	//Wait... why were we doing it that way instead of in Preacache like how the Barney does it?
 	//Just do it in both places then.
-
 
 
 	//MODDD - note that "CSittingScientist" calls this same method.
@@ -1856,7 +1822,11 @@ void CScientist :: TalkInit()
 
 	//pev->renderfx |= 128;
 	//why 128?  wasn't it 64 for "ISNPC"?   May be redundant with "monsterinit" already doing this, though.
-	pev->renderfx |= ISNPC;
+	if(isOrganic()){
+		pev->renderfx |= ISNPC;
+	}else{
+		pev->renderfx |= ISMETALNPC;
+	}
 
 	CTalkMonster::TalkInit();
 
@@ -1950,7 +1920,6 @@ void CScientist :: TalkInit()
 			case 3:	m_voicePitch = 100;  break; //slick
 		}
 
-
 	}else{
 		//otherwise, just work like alpha, pick from one of the voices based on what it would've been (#3 = 0).
 		//also note that "trueBody" is always offset by 1.
@@ -1992,8 +1961,6 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CScientist)
 		}
 
 
-
-
 		//IS THIS LINE OFFENDING?  search for the other example.
 		/*
 		if(aggro != -1 && aggro < 1 && (m_hEnemy == NULL || m_hEnemy != attackerEnt) ){
@@ -2007,11 +1974,7 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CScientist)
 			alreadyRunningAway = TRUE;
 		}
 		*/
-
 	}
-
-
-	
 
 
 	if(!alreadyRunningAway){
@@ -2024,7 +1987,6 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CScientist)
 			TaskFail();
 			ChangeSchedule(slScientistCover);//  ???
 			*/
-
 		}
 	}
 
@@ -2036,8 +1998,6 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CScientist)
 		StopFollowing( TRUE );
 	}
 	*/
-
-
 
 	// make sure friends talk about it if player hurts scientist...
 	tkdDmgRes = GENERATE_TAKEDAMAGE_PARENT_CALL(CTalkMonster);
@@ -2083,30 +2043,17 @@ void CScientist :: PainSound ( void )
 }
 
 
-void CScientist::tempMethod(void){
-	
-	//force the pain sound to be played?
-	//m_painTime = -1;
-	DeathSound();
-
-}//END OF tempMethod
-
 //=========================================================
 // DeathSound
 //=========================================================
 void CScientist :: DeathSound ( void )
 {
-
 	//sci_die1
-
-
 	//PainSound();
 	
 	if(explodeDelay == -1){
 		EMIT_SOUND_FILTERED( edict(), CHAN_VOICE, RANDOM_SOUND_ARRAY(pDeathSounds), 1.0, ATTN_NORM, 0, GetVoicePitch() );
 	}
-
-
 }
 
 
@@ -2150,15 +2097,11 @@ void CScientist :: SetActivity ( Activity newActivity )
 	//....why?! The base monster's SetActivity will work with this fine.
 	//iSequence = LookupActivity ( newActivity );
 	
-
-	
 	//if(monsterID==2)easyForcePrintLine("IT IS I WHO NUTS TO THAT ID:%d befr act:%d seq:%d fr:%.2f", monsterID, newActivity, iSequence, pev->frame);
 	
 	CTalkMonster::SetActivity( newActivity );
 
-
 	//if(monsterID==2)easyForcePrintLine("IT IS I WHO NUTS TO THAT ID:%d aftr act:%d seq:%d fr:%.2f", monsterID, newActivity, pev->sequence, pev->frame);
-
 
 	// Set to the desired anim, or default anim if the desired is not present
 	//if ( iSequence == ACTIVITY_NOT_AVAILABLE ){
@@ -2171,13 +2114,10 @@ void CScientist :: SetActivity ( Activity newActivity )
 	}
 	*/
 
-
 	if(pev->framerate != framerateChoice){
 		pev->framerate = framerateChoice;
 	}
-
 }
-
 
 void CScientist::ReportAIState(void){
 	//call the parent, and add on to that.
@@ -2206,7 +2146,6 @@ Schedule_t* CScientist :: GetScheduleOfType ( int Type )
 		}
 		else
 		{
-			
 			//MODDD - shouldn't you clear the conditions here too??
 			ClearConditions( bits_COND_ENEMY_DEAD );
 			
@@ -2217,11 +2156,6 @@ Schedule_t* CScientist :: GetScheduleOfType ( int Type )
 			}
 		}
 	}
-
-
-
-
-
 
 	switch( Type )
 	{
@@ -2253,8 +2187,6 @@ Schedule_t* CScientist :: GetScheduleOfType ( int Type )
 		aggro = 0;
 		return CTalkMonster::GetScheduleOfType(SCHED_TAKE_COVER_FROM_BEST_SOUND);
 	break;
-
-
 	// Hook these to make a looping schedule
 	case SCHED_TARGET_FACE:
 		// call base class default so that scientist will talk
@@ -2270,7 +2202,6 @@ Schedule_t* CScientist :: GetScheduleOfType ( int Type )
 
 	case SCHED_TARGET_CHASE:
 		return slFollow;
-
 	case SCHED_CANT_FOLLOW:
 		//return slStopFollowing;
 		//MODDD - we're going to do this instead.  CTalkMonster has the common method.
@@ -2283,9 +2214,7 @@ Schedule_t* CScientist :: GetScheduleOfType ( int Type )
 
 	case SCHED_TARGET_FACE_SCARED:
 		return slFaceTargetScared;
-
 	case SCHED_IDLE_STAND:
-
 		// call base class default so that scientist will talk
 		// when standing during idle
 		psched = CTalkMonster::GetScheduleOfType(Type);
@@ -2294,21 +2223,18 @@ Schedule_t* CScientist :: GetScheduleOfType ( int Type )
 			return slIdleSciStand; //substitution!
 		else
 			return psched;
-
 	case SCHED_HIDE:
 		{
 		aggro = 0;
 		return slScientistHide;
 		break;
 		}
-
 	case SCHED_STARTLE:
 		{
 		aggro = 0;
 		return slScientistStartle;
 		break;
 		}
-
 	case SCHED_FEAR:
 		{
 		aggro = 0;
@@ -2316,10 +2242,8 @@ Schedule_t* CScientist :: GetScheduleOfType ( int Type )
 		break;
 		}
 	}
-
 	return CTalkMonster::GetScheduleOfType( Type );
 }
-
 
 
 void CScientist::ScheduleChange(void){
@@ -2341,18 +2265,14 @@ Schedule_t *CScientist :: GetSchedule ( void )
 		return GetScheduleOfType(SCHED_PANIC);
 	}
 
-
 	//return CBaseMonster::GetSchedule();
 
 	//MODDD - is this okay?   This says that, on schedule failure, forget healing.
 	forgetHealNPC();
 
-	while(true){
-
+	while(TRUE){
 		if(aggro > 0){
-
 			//if ( HasConditions( bits_COND_HEAR_SOUND ) )
-
 			if(HasConditions(bits_COND_HEAR_SOUND) || HasConditions(bits_COND_SEE_ENEMY) || HasConditions(bits_COND_NEW_ENEMY) ){
 
 				if(m_hEnemy == NULL || (m_hEnemy->pev->origin - this->pev->origin).Length() > 310 ){
@@ -2364,7 +2284,6 @@ Schedule_t *CScientist :: GetSchedule ( void )
 					aggroCooldown = gpGlobals->time + 2;
 				}
 			}
-
 			if(gpGlobals->time >= aggroCooldown){
 				//not so aggressive now.  Continue with a usual schedule below all this.
 				aggro = 0;
@@ -2375,11 +2294,9 @@ Schedule_t *CScientist :: GetSchedule ( void )
 		}
 
 		break;
-	}//END OF while(true)...  just a procedural loop to be interrupted as needed.
-
+	}//END OF while(TRUE)...  just a procedural loop to be interrupted as needed.
 
 	CBaseEntity *pEntityScan = NULL;
-
 	// so we don't keep calling through the EHANDLE stuff
 	CBaseEntity *pEnemy = m_hEnemy;
 
@@ -2394,13 +2311,11 @@ Schedule_t *CScientist :: GetSchedule ( void )
 	}
 
 
-
 	float thisDistance;
 	float leastDistanceYet;
 	CBaseMonster* testMon;
 	CTalkMonster* thisNameSucks;
 	CTalkMonster* bestChoiceYet;
-
 
 	switch( m_MonsterState )
 	{
@@ -2608,10 +2523,15 @@ Schedule_t *CScientist :: GetSchedule ( void )
 	return CTalkMonster::GetSchedule();
 }
 
+
+// MODDD - base behavior possibly altered by returning the monsterstate determined
+// instead of always falling down to the CTalkMonster (or really CBaseMonster) GetIdealState
+// call.  That may have further changed what state gets returned, but doubtful.
+// Curiously, the base method never even did 'return' anywhere besides the very end of the
+// method (not that the returned value used to be used, had to be set to m_IdealMonsterState
+// in-method).  A few places like that would have stopped the parent GetIdealState calls.
 MONSTERSTATE CScientist :: GetIdealState ( void )
 {
-
-
 	if(aggro > 0){
 		//AGGRESSIVE!
 		return MONSTERSTATE_COMBAT;
@@ -2629,8 +2549,9 @@ MONSTERSTATE CScientist :: GetIdealState ( void )
 				if ( relationship != R_FR || relationship != R_HT && !HasConditions( bits_COND_LIGHT_DAMAGE | bits_COND_HEAVY_DAMAGE ) )
 				{
 					// Don't go to combat if you're following the player
-					m_IdealMonsterState = MONSTERSTATE_ALERT;
-					return m_IdealMonsterState;
+					//MODDD - going to assume preventing the 'StopFollowing' call below was intended
+					// behavior, but feel free to test by returning after that too.
+					return MONSTERSTATE_ALERT;
 				}
 				StopFollowing( TRUE );
 			}
@@ -2651,22 +2572,19 @@ MONSTERSTATE CScientist :: GetIdealState ( void )
 				if ( DisregardEnemy( pEnemy ) )		// After 15 seconds of being hidden, return to alert
 				{
 					// Strip enemy when going to alert
-					m_IdealMonsterState = MONSTERSTATE_ALERT;
 					m_hEnemy = NULL;
-					return m_IdealMonsterState;
+					return MONSTERSTATE_ALERT;
 				}
 				// Follow if only scared a little
 				if ( m_hTargetEnt != NULL )
 				{
-					m_IdealMonsterState = MONSTERSTATE_ALERT;
-					return m_IdealMonsterState;
+					return MONSTERSTATE_ALERT;
 				}
 
 				if ( HasConditions ( bits_COND_SEE_ENEMY ) )
 				{
 					m_fearTime = gpGlobals->time;
-					m_IdealMonsterState = MONSTERSTATE_COMBAT;
-					return m_IdealMonsterState;
+					return MONSTERSTATE_COMBAT;
 				}
 
 			}
@@ -2841,6 +2759,8 @@ void CScientist::MonsterThink(void){
 	while(TRUE){
 		if(aggro > 0){
 
+			// If I travel too far from the point I decided to chase someone, get cowardly and forget.
+			// Continuing to go forward is still possible after that though.
 			if((aggroOrigin - pev->origin).Length() > 270 ){
 				//traveled too far, just forget about this.
 				aggro = 0;
@@ -3407,8 +3327,13 @@ void CSittingScientist :: Spawn( )
 
 
 
-	//does not call "monsterInit", the normal source of this.  So, there.
-	pev->renderfx |= ISNPC;
+	// does not call "monsterInit", the normal source of this.  So, there.
+	if(isOrganic()){
+		pev->renderfx |= ISNPC;
+	}else{
+		pev->renderfx |= ISMETALNPC;
+	}
+	
 	DROP_TO_FLOOR ( ENT(pev) );
 
 	pev->view_ofs		= Vector ( 0, 0, 40 );// position of the eyes relative to monster's origin.
@@ -3659,7 +3584,8 @@ void CScientist::forgetHealNPC(void){
 
 
 BOOL CScientist::CheckMeleeAttack1(float flDot, float flDist){
-	//this is not an attack for the scientist, it is the syringe animation.  It is specifically called for, so don't allow this.
+	// this is not an attack for the scientist, it is the syringe animation.  It is specifically called for, so don't allow
+	// it this way.
 	return FALSE;
 }
 
@@ -3667,21 +3593,21 @@ BOOL CScientist::CheckMeleeAttack1(float flDot, float flDist){
 //ripped from HGrunt
 BOOL CScientist::CheckMeleeAttack2(float flDot, float flDist){
 	CBaseMonster *pEnemy = NULL;
-
-	//couldMeleeAttack1 = TRUE;
 	if ( m_hEnemy != NULL )
 	{
 		pEnemy = m_hEnemy->MyMonsterPointer();
 	}
-
-	if (pEnemy == NULL)return FALSE; //cannot proceed.
-
+	if ( !pEnemy )
+	{
+		return FALSE;
+	}
+	//couldMeleeAttack1 = TRUE;
 
 	//easyForcePrintLine("WAAAAT %.2f", flDist);
 
 	//allow any dot product, we're facing the enemy fast enough.
 	//if ( flDist <= 47 && 
-	if ( flDist <= 75 && flDot >= 0.7	&&   //0.5?
+	if ( flDist <= SCIENTIST_MELEE_ALLOW_RANGE && flDot >= 0.7	&&   //0.5?
 		 pEnemy->Classify() != CLASS_ALIEN_BIOWEAPON &&
 		 pEnemy->Classify() != CLASS_PLAYER_BIOWEAPON )
 	{
@@ -3700,24 +3626,21 @@ BOOL CScientist::CheckMeleeAttack2(float flDot, float flDist){
 }
 
 
-
 void CScientist::HandleEventQueueEvent(int arg_eventID){
-	
 	int rand;
 	BOOL pass;
 
 	switch(arg_eventID){
 		case 0:
 			//send a punch!
-
-			CBaseEntity *pHurt = CheckTraceHullAttack( 57, gSkillData.scientistDmgPunch, DMG_CLUB );
+			CBaseEntity *pHurt = CheckTraceHullAttack(SCIENTIST_MELEE_PHYSICAL_RANGE, gSkillData.scientistDmgPunch, DMG_CLUB );
 			if ( pHurt )
 			{
-				if ( !(pHurt->pev->flags & (FL_MONSTER|FL_CLIENT)) && !pHurt->blocksImpact() )
+				if ( (pHurt->pev->flags & (FL_MONSTER|FL_CLIENT)) && !pHurt->blocksImpact() )
 				{
-					pHurt->pev->punchangle.z = -18;
-					pHurt->pev->punchangle.x = 5;
-					pHurt->pev->velocity = pHurt->pev->velocity - gpGlobals->v_right * 100;
+					pHurt->pev->punchangle.z = -8;
+					pHurt->pev->punchangle.x = 3;
+					pHurt->pev->velocity = pHurt->pev->velocity - gpGlobals->v_right * 40;
 				}
 				// Play a random attack hit sound
 				EMIT_SOUND_FILTERED ( ENT(pev), CHAN_WEAPON, pAttackHitSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackHitSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
@@ -3758,8 +3681,6 @@ void CScientist::HandleEventQueueEvent(int arg_eventID){
 			}
 
 		break;
-
-
 	}//END OF switch(...)
 
 }
@@ -3771,17 +3692,10 @@ BOOL CScientist::usesAdvancedAnimSystem(void){
 
 
 int CScientist::LookupActivityHard(int activity){
-	
 	pev->framerate = 1;
 	resetEventQueue();
 
 	m_flFramerateSuggestion = 1;
-
-
-
-
-
-
 
 	//let's do m_IdealActivity??
 	//uh... why?  nevermind then.
@@ -3844,9 +3758,6 @@ int CScientist::LookupActivityHard(int activity){
 
 
 int CScientist::tryActivitySubstitute(int activity){
-	
-
-
 	int iRandChoice = 0;
 	int iRandWeightChoice = 0;
 	
@@ -3875,7 +3786,6 @@ int CScientist::tryActivitySubstitute(int activity){
 
 
 
-
 //MODDD TODO - NOTICE - the scientist is a little... backwards in this regard.
 //The violent death anim is a backwards flip.  The ACT_DIEBACKWARDS though is noticably backing up and then falling forward.
 //Perhaps even the forward / backward distances for success/fail of DIEFORWARDS / BACKWARDS should be virtual methods per BaseMonster child class too?
@@ -3891,17 +3801,10 @@ int CScientist::violentDeathPriority(void){
 	return 3;
 }
 
-
 // TEST. This is TRUE for most monsters.
 BOOL CScientist::canPredictActRepeat(void) {
 	return FALSE;
 }
-
-
-
-
-
-
 
 
 void CScientist::initiateAss(void){
@@ -3909,52 +3812,29 @@ void CScientist::initiateAss(void){
 	//Yes this fucking joke requires some design decisions. What am I doing.
 	explodeDelay = -3;
 }
-
 void CScientist::myAssHungers(void){
 	ShutUpFriends();
-
 	CBaseEntity* pEntityScan = NULL;
 	CBaseEntity* testMon = NULL;
 	float thisDistance;
 	float leastDistanceYet;
 	CTalkMonster* thisNameSucks;
 	CTalkMonster* bestChoiceYet;
-
 	//I'm number 1!
 	CTalkMonster* pickedNumber2 = NULL;
-
 	//does UTIL_MonstersInSphere work?
-	while ((pEntityScan = UTIL_FindEntityInSphere( pEntityScan, pev->origin, 600 )) != NULL)
-	{
+	while ((pEntityScan = UTIL_FindEntityInSphere( pEntityScan, pev->origin, 600 )) != NULL){
 		testMon = pEntityScan->MyMonsterPointer();
 		//if(testMon != NULL && testMon->pev != this->pev && ( FClassnameIs(testMon->pev, "monster_scientist") || FClassnameIs(testMon->pev, "monster_barney")  ) ){
 		if(testMon != NULL && testMon->pev != this->pev && UTIL_IsAliveEntity(testMon) && testMon->isTalkMonster() ){
 			thisDistance = (testMon->pev->origin - pev->origin).Length();
-					
 			thisNameSucks = static_cast<CTalkMonster*>(testMon);
-					
-			/*
-			//only allow one scientist to try to reach this NPC.  That is, this NPC's own "scientistTryingToHealMe" is null, that is.
-			if(thisNameSucks != NULL && thisNameSucks->scientistTryingToHealMeEHANDLE == NULL && thisDistance < leastDistanceYet){
-				//healTargetNPC = testMon;
-				bestChoiceYet = thisNameSucks;
-				leastDistanceYet = thisDistance;
-				//break;
-			}
-			*/
-
 			if(pickedNumber2 == NULL){
 				pickedNumber2 = thisNameSucks;
 				break;
 			}
-
 		}
-
 	}//END OF while(...)
-
-
-	
-	
 	if(pickedNumber2 != NULL){
 		//Other one will look at me.
 		pickedNumber2->PlaySentenceNoPitchTo("!meme_my_ass_hungers_a", 21, 1.0, ATTN_NORM, TRUE, this);
@@ -3962,21 +3842,5 @@ void CScientist::myAssHungers(void){
 		this->PlaySentenceNoPitchUninterruptable("!meme_my_ass_hungers_b", 21, 1.0, ATTN_NORM, TRUE);
 		this->explodeDelay = gpGlobals->time + 14.1 - 0.8;
 	}
-	
-	
-	/*
-	//solo only what.
-		//pickedNumber2->PlaySentenceTo("!meme_my_ass_hungers_a", 21, 1.0, ATTN_NORM, TRUE, this);
-		//I won't look at him.
-		this->PlaySentenceUninterruptable("!meme_my_ass_hungers_b", 21, 1.0, ATTN_NORM, TRUE);
-		this->explodeDelay = gpGlobals->time + 13.3 - 0.8;
-	*/
-	//TEST
-	//this->PlaySentenceUninterruptable("!meme_my_ass_hungers_b", 21, 1.0, ATTN_NORM, TRUE);
-
-
-
 }//END OF myAssHungers
-
-
 

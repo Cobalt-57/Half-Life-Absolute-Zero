@@ -76,7 +76,6 @@ EASY_CVAR_EXTERN(itemBatteryPrerequisite)
 EASY_CVAR_EXTERN(timedDamageDisableViewPunch)
 EASY_CVAR_EXTERN(batteryDrainsAtDeath)
 EASY_CVAR_EXTERN(batteryDrainsAtAdrenalineMode)
-//EASY_CVAR_EXTERN(canTakeLongJump)
 EASY_CVAR_EXTERN(printOutCommonTimables)
 EASY_CVAR_EXTERN(playerBrightLight)
 EASY_CVAR_EXTERN(disablePainPunchAutomatic)
@@ -91,7 +90,6 @@ EASY_CVAR_EXTERN(playerReviveBuddhaMode)
 EASY_CVAR_EXTERN(playerReviveTimeBlocksTimedDamage)
 EASY_CVAR_EXTERN(drawDebugCine)
 EASY_CVAR_EXTERN(wpn_glocksilencer)
-EASY_CVAR_EXTERN(painFlashIgnoreArmor)
 EASY_CVAR_EXTERN(nothingHurts)
 EASY_CVAR_EXTERN(RadiusDamageDrawDebug)
 EASY_CVAR_EXTERN(customLogoSprayMode)
@@ -386,13 +384,6 @@ TYPEDESCRIPTION	CBasePlayer::m_playerSaveData[] =
 
 	DEFINE_FIELD(CBasePlayer, foundRadiation, FIELD_BOOLEAN),
 	
-	DEFINE_FIELD(CBasePlayer, myRef_barnacleEatsEverything, FIELD_FLOAT),
-
-	//is that really necessary?
-	//DEFINE_FIELD(CBasePlayer, playerBrightLightMem, FIELD_FLOAT),
-	DEFINE_FIELD(CBasePlayer, alreadySpawned, FIELD_BOOLEAN),
-	
-	
 	DEFINE_FIELD( CBasePlayer, m_fNoPlayerSound, FIELD_INTEGER ), // NOTE: added back in.  No issue.
 	
 	//MODDD - m_flNextAttack saved in CBasePlayer now.  Removed from CBaseMonster due to being
@@ -648,9 +639,7 @@ Vector CBasePlayer :: GetGunPosition( )
 //	UTIL_MakeVectors(pev->v_angle);
 //	m_HackedGunPos = pev->view_ofs;
 	Vector origin;
-	
 	origin = pev->origin + pev->view_ofs;
-
 	return origin;
 }
 Vector CBasePlayer::GetGunPositionAI(){
@@ -1754,7 +1743,6 @@ GENERATE_KILLED_IMPLEMENTATION(CBasePlayer)
 }
 
 
-
 void CBasePlayer::onDelete(void) {
 
 	// shouldn't we force any suit sounds to stop playing in such a case too?
@@ -1765,8 +1753,6 @@ void CBasePlayer::onDelete(void) {
 	// wait.  player deleted.
 	// what.
 }
-
-
 
 
 
@@ -2007,9 +1993,6 @@ void CBasePlayer::set_cl_ladder_choice(float argNew) {
 
 
 
-
-
-
 void CBasePlayer::DebugCall1(){
 	debugPoint1 = pev->origin;
 	debugPoint1.z += 2;
@@ -2039,8 +2022,6 @@ void CBasePlayer::DebugCall3(){
 	BOOL success = this->CheckLocalMove(vecStart, vecEnd, NULL, &distReg);
 	//UTIL_TraceLine(tempplayer->pev->origin + tempplayer->pev->view_ofs + gpGlobals->v_forward * 5,pMe->pev->origin + pMe->pev->view_ofs + gpGlobals->v_forward * 2048,dont_ignore_monsters, pMe->edict(), &tr );
 	
-
-
 	if(success){
 		easyForcePrintLine("SUCCESS!  CLEAR!");
 		debugPoint3 = vecEnd;
@@ -2062,10 +2043,7 @@ void CBasePlayer::DebugCall3(){
 		//UTIL_printVector("debugPoint3", debugPoint3);
 		//UTIL_printVector("vecEnd", vecEnd);
 	}
-
-
 }//END OF DebugCall3()
-
 
 
 //MODDD - player constructor.
@@ -2075,32 +2053,22 @@ CBasePlayer::CBasePlayer(void){
 	//We want a lot of the exact same things for CBasePlayer creation and resetting between map transitions.
 	_commonReset();
 
-
 	queueFirstAppearanceMessageSend = FALSE;
 	
 	iWasFrozenToday = FALSE;
 	m_fLongJumpMemory = FALSE;
 
 	//oldWaterMoveTime = -1;
-
-
 	
 	m_bHolstering = FALSE;
 	m_pQueuedActiveItem = NULL;
 	m_fCustomHolsterWaitTime = -1;
-
-
 	superDuperDelay = -2;
-
 	friendlyCheckTime = -1;
-	
 	closestFriendlyMemEHANDLE = NULL;
 	closestFriendlyMem = NULL;
 	horrorPlayTimePreDelay = -1;
 	horrorPlayTime = -1;
-
-
-
 
 	debugPoint1Given = FALSE;
 	debugPoint2Given = FALSE;
@@ -2109,32 +2077,17 @@ CBasePlayer::CBasePlayer(void){
 	m_flStartCharge = -1;  //okay?
 	m_flStartChargeAnim = -1;
 	m_flStartChargePreSuperDuper = -1;
-
-
 	reviveSafetyTime = -1;
-	
 	grabbedByBarnacle = FALSE;
 	grabbedByBarnacleMem = FALSE;
 
-	//queueTotalFOVUpdate = TRUE;
-	//queueZoomFOVUpdate = FALSE;
-
-	//forceNoWeaponLoop = TRUE;
-
 	nextSpecialNode = -1;
 	nextSpecialNodeAlternateTime = -1;
-
 
 	recentlyGrantedGlockSilencer = FALSE;
 	recentlySaidBattery = -1;  //do not save, meant to relate to what was recently said in-game yet.
 
 	altLadderStep = FALSE;   //this alternates b/w the two view punches (left & right).
-
-
-	//if(cheat_barnacleEatsEverything == 0){
-		//then it has not been set yet.  This player will.    no, the player hasn't loaded "myref..." yes, so it will be 0 always.
-		//cheat_barnacleEatsEverything = myRef_barnacleEatsEverything;
-	//}
 
 	alreadyPassedLadderCheck = FALSE;
 
@@ -2146,15 +2099,10 @@ CBasePlayer::CBasePlayer(void){
 
 	hasGlockSilencer = FALSE;
 
-	//always start ready?
-	//clearWeaponFlag = -1;
-
-	
 	antidoteQueued = FALSE;
 	radiationQueued = FALSE;
 	adrenalineQueued = FALSE;
 
-	
 	for(int i = 0; i < CSUITPLAYLIST; i++){
 		m_rgSuitPlayListEvent[i] = NULL;
 		m_rgSuitPlayListEventDelay[i] = -1;
@@ -2169,14 +2117,12 @@ CBasePlayer::CBasePlayer(void){
 
 	rawDamageSustained = 0;
 
-
 	// lazy defaults, get from the client soon at startup.
 	default_fov = 90;
 	auto_adjust_fov = 0;
 	auto_determined_fov = 90;
 
 }//END OF CBasePlayer constructor
-
 
 /*
 ===========
@@ -2198,11 +2144,9 @@ void CBasePlayer::WaterMove()
 	// waterlevel 2 - waist in water
 	// waterlevel 3 - head in water
 
-
 	//MODDD - all new to keep track of how much time passed between this call and the last one.
 	float timeDelta;
 
-	
 	if(oldWaterMoveTime != -1){
 		timeDelta = gpGlobals->time - oldWaterMoveTime;
 	}else{
@@ -2498,6 +2442,13 @@ void CBasePlayer::PlayerDeathThink(void)
 
 	//...if execution wasn't stopped by the above check, the player is dead with no chance of revival.
 	
+	//MODDD - NEW.  Enforce taking away the solid-ness and let takedamage by DAMAGE_NO, why not.
+	// This avoids difficulties with stukabats landing that multiplayer doesn't have to deal with
+	// from the 'StartDeathCam' call further down.
+	pev->solid = SOLID_NOT;
+	pev->takedamage = DAMAGE_NO;
+
+
 	//MODDD - if landed on the ground, send the same scent the AI does at death to alert scavengers (eaters) of this.
 	if(FBitSet(pev->flags, FL_ONGROUND) && pev->velocity.Length() == 0 && !sentCarcassScent){
 		sentCarcassScent = TRUE;
@@ -3965,33 +3916,37 @@ void CBasePlayer::PreThink(void)
 
 
 
-//MODDD - REVERTED TO OLD TIMED DAMAGE
-//these used to be commented.  Revived; the ones in cbase.h are now commented out.
-//CHANGE: new constants that revolve around difficulty are used for DURATION instead.
+//MODDD
+// new constants that revolve around difficulty are used for duration instead.
 
 //NOTICE: damage & duration constants moved to CBaseMonster!
 
-
-
-//MODDD - checkpoint.
-//~Overrides "CheckTimeBasedDamage" from monster.cpp.
+// ~Overrides "CheckTimeBasedDamage" from monster.cpp.
+// This is a clone since just a few additions are needed in specific places, and it isn't
+// worth splitting this into some 3 implementable parts as only CBasePlayer needs some new
+// behavior.
 void CBasePlayer::CheckTimeBasedDamage() 
 {
 	static float gtbdPrev = 0.0;
 	int i;
 	BYTE bDuration = 0;
 
+	// no timed damage for 
+	if (pev->health <= 0 || pev->deadflag != DEAD_NO) {
+		return;
+	}
+
+	// only check for time based damage approx. every 2 seconds
+	if (abs(gpGlobals->time - m_tbdPrev) < 2.0)
+		return;
 
 	//MODDD - check other too!
 	//if (!(m_bitsDamageType & DMG_TIMEBASED))
 	if (!(m_bitsDamageType & DMG_TIMEBASED) && !(m_bitsDamageTypeMod & (DMG_TIMEBASEDMOD))  )
 		return;
 
-	// only check for time based damage approx. every 2 seconds
-	if (abs(gpGlobals->time - m_tbdPrev) < 2.0)
-		return;
-	
 	m_tbdPrev = gpGlobals->time;
+
 
 	for (i = 0; i < CDMG_TIMEBASED; i++)
 	{
@@ -4004,9 +3959,16 @@ void CBasePlayer::CheckTimeBasedDamage()
 			m_bitsDamageTypeRef = &m_bitsDamageTypeMod;
 		}
 
+		int damageBit = convert_itbd_to_damage(i);
+
+		if (damageBit == -1) {
+			easyForcePrintLine("CRITICAL ERROR: MONSTER TIMED DAMAGE BOOBOO: %d", i);
+			return;
+		}
+
 		// make sure bit is set for damage type
 		//if (m_bitsDamageType & (DMG_PARALYZE << i))
-		if((*m_bitsDamageTypeRef) & (convert_itbd_to_damage(i))  )
+		if((*m_bitsDamageTypeRef) & (damageBit)  )
 		{
 			int damageType = 0;
 			/*
@@ -4018,12 +3980,12 @@ void CBasePlayer::CheckTimeBasedDamage()
 				damageType = DMG_GENERIC;
 			}
 			*/
-			//no, can't just do that.
+			// no, can't just do that.
 
-			//instead, a damgeType being "DMG_TIMEDEFFECT" means,
-			//it is generic, but use this for telling whether to
-			//apply the armor-bypass or not without the sideeffect of what-
-			//ever happens to DMG_FALL.
+			// instead, a damgeType being "DMG_TIMEDEFFECT" means,
+			// it is generic, but use this for telling whether to
+			// apply the armor-bypass or not without the sideeffect of what-
+			// ever happens to DMG_FALL.
 			damageType = DMG_TIMEDEFFECT;
 
 
@@ -4060,6 +4022,8 @@ void CBasePlayer::CheckTimeBasedDamage()
 				//MODDD - see above.
 				//bDuration = RADIATION_DURATION;
 				break;
+
+			//NOTE - PLAYER ONLY.    oh.
 			case itbd_DrownRecover:
 				// NOTE: this hack is actually used to RESTORE health
 				// after the player has been drowning and finally takes a breath
@@ -4072,6 +4036,7 @@ void CBasePlayer::CheckTimeBasedDamage()
 				}
 				bDuration = 4;	// get up to 5*10 = 50 points back
 				break;
+
 			case itbd_Acid:
 				//MODDD - comment undone.
 				TakeDamage(pev, pev, ACID_DAMAGE, 0, damageType);
@@ -4100,12 +4065,16 @@ void CBasePlayer::CheckTimeBasedDamage()
 				break;
 				//MODDD - new.
 			case itbd_Bleeding:
-				//this will always ignore the armor (hence DMG_TIMEDEFFECT).
+				// this will always ignore the armor (hence DMG_TIMEDEFFECT).
 				TakeDamage(pev, pev, BLEEDING_DAMAGE, 0, damageType | DMG_TIMEDEFFECTIGNORE);
 				
+				UTIL_MakeVectors(pev->v_angle);
+				//pev->origin + pev->view_ofs
+				//BodyTargetMod(g_vecZero)
+				DrawAlphaBlood(BLEEDING_DAMAGE, pev->origin + pev->view_ofs + gpGlobals->v_forward * RANDOM_FLOAT(9, 13) + gpGlobals->v_right * RANDOM_FLOAT(-5, 5) + gpGlobals->v_up * RANDOM_FLOAT(4, 7) );
+
 				bDuration = bleedingDuration;
 				break;
-
 			default:
 				bDuration = 0;
 			}
@@ -4120,14 +4089,11 @@ void CBasePlayer::CheckTimeBasedDamage()
 			if (m_rgbTimeBasedDamage[i] > 0)
 			{
 				// use up an antitoxin on poison or nervegas after a few seconds of damage
-				//MODDD - instead of referring to constants like "NERVEGASDURATION", it is referring to the
-				//variable "nervegasDuration", which is set according to difficulty.  Same for poison.
+				// MODDD - instead of referring to constants like "NERVEGASDURATION", it is referring to the
+				// variable "nervegasDuration", which is set according to difficulty.  Same for poison.
 				if (((i == itbd_NerveGas) && (m_rgbTimeBasedDamage[i] < nervegasDuration)) ||
 					((i == itbd_Poison)   && (m_rgbTimeBasedDamage[i] < poisonDuration)))
 				{
-
-					//6m_rgItems[ITEM_ADRENALINE]
-
 					if (!antidoteQueued && m_rgItems[ITEM_ANTIDOTE] && (EASY_CVAR_GET(itemBatteryPrerequisite) == 0 || pev->armorvalue > 0 )  )
 					{
 						antidoteQueued = TRUE;
@@ -4139,15 +4105,12 @@ void CBasePlayer::CheckTimeBasedDamage()
 						//HEAL4, re-used below for the radiation item (power canister / syringe), refers to "anti-toxins".
 						//SetSuitUpdateFVoxlessFriendlyEvent("!HEV_ANT_USE", FALSE, SUIT_REPEAT_OK, -1, -2, consumeAntidote);
 
-
 						SetSuitUpdateEventFVoxCutoff("!HEV_ANT_USE", FALSE, SUIT_REPEAT_OK, SUITUPDATETIME, TRUE, 1.36, &CBasePlayer::consumeAntidote, 1.36 + 0.55);
 					}
 				}
-				
-				//MODDD - for the radiation instead.  Ditto for the variable.
+				//MODDD - for the radiation instead.
 				if (((i == itbd_Radiation) && (m_rgbTimeBasedDamage[i] < radiationDuration))  )
 				{
-
 					if (!radiationQueued && m_rgItems[ITEM_RADIATION] && (EASY_CVAR_GET(itemBatteryPrerequisite) == 0 || pev->armorvalue > 0 ))
 					{
 						radiationQueued = TRUE;
@@ -4158,8 +4121,6 @@ void CBasePlayer::CheckTimeBasedDamage()
 
 						SetSuitUpdateEventFVoxCutoff("!HEV_RAD_USE", FALSE, SUIT_REPEAT_OK, SUITUPDATETIME, TRUE, 1.28, &CBasePlayer::consumeRadiation, 1.28 + 0.55);
 					}
-					//MODDD - TODO - have damage types + use a radiation syringe / power canister.
-
 				}
 
 
@@ -5446,6 +5407,10 @@ void CBasePlayer::PostThink()
 		//!!! IMPORTANT  Any broadcast CVars sohuld show up here!!
 		// Let the client (per player) know of the defaults in its cache.
 
+		MESSAGE_BEGIN(MSG_ONE, gmsgServerDLL_Info, NULL, pev);
+			WRITE_STRING(globalbuffer_sv_mod_version);
+			WRITE_STRING(globalbuffer_sv_mod_date);
+		MESSAGE_END();
 		//MESSAGE_BEGIN(MSG_ALL, gmsgUpdateClientCVar, NULL);
 		MESSAGE_BEGIN(MSG_ONE, gmsgUpdateClientCVar, NULL, pev);
 			WRITE_SHORT(wpn_glocksilencer_ID);
@@ -5880,8 +5845,8 @@ void CBasePlayer::setArmorBattery(int newBattery){
 	pev->armorvalue = newBattery;
 }
 
-void CBasePlayer::grantAllItems(){
 
+void CBasePlayer::grantAllItems(){
 	/*
 	pev->weapons |= WEAPON_ALLWEAPONS;
 	*/
@@ -5890,8 +5855,10 @@ void CBasePlayer::grantAllItems(){
 	pev->weapons |= (1<<WEAPON_SUIT);
 
 	//All weapons granted, all ammo accessible.
+	if(m_fLongJump != TRUE){
+		longJumpChargeNeedsUpdate = TRUE;
+	}
 	m_fLongJump = TRUE;
-	longJumpChargeNeedsUpdate = TRUE;
 
 
 	//It is up to anything with special deploy sounds to deny playing extra sounds if this is set.
@@ -5946,7 +5913,7 @@ void CBasePlayer::grantAllItems(){
 		//SetSuitUpdate(NULL, FALSE, 0);
 }
 
-
+// often called alongside "grantAllItems" above.
 void CBasePlayer::giveMaxAmmo(){
 	GiveAmmo( 999, "9mm", _9MM_MAX_CARRY );
 	GiveAmmo( 999, "357", _357_MAX_CARRY );
@@ -5964,7 +5931,7 @@ void CBasePlayer::giveMaxAmmo(){
 	GiveAmmo( 999, "Chum Toads", CHUMTOAD_MAX_CARRY );
 	
 #if LONGJUMPUSESDELAY == 0
-	longJumpCharge = 100;
+	longJumpCharge = PLAYER_LONGJUMPCHARGE_MAX;
 	longJumpChargeNeedsUpdate = TRUE;
 #endif
 }
@@ -6044,17 +6011,6 @@ void CBasePlayer::commonReset(void){
 
 	playerBrightLightMem = -1;
 
-	if(cheat_barnacleEatsEverything == 0){
-		if(myRef_barnacleEatsEverything == 0){
-			cheat_barnacleEatsEverything = 2;
-			myRef_barnacleEatsEverything = 2;
-		}else{
-			cheat_barnacleEatsEverything = myRef_barnacleEatsEverything;
-		}
-
-	}
-
-
 	
 	drowning = FALSE;  //!!! FOR NOW.
 	drowningMem = -1;
@@ -6066,9 +6022,9 @@ void CBasePlayer::commonReset(void){
 	//It doesn't need to be in use for long, and most messages interrupted aren't really that important.
 	obligedCustomSentence = 0;
 
-	if (PLAYER_ALWAYSHASLONGJUMP){
+#if PLAYER_ALWAYSHASLONGJUMP == 1
 		m_fLongJump = TRUE;
-	}
+#endif
 	
 	//MODDD
 	deadflagmem = -1;
@@ -6133,9 +6089,13 @@ void CBasePlayer::commonReset(void){
 	if(m_fLongJumpMemory != m_fLongJump || (!m_fLongJump && longJumpCharge != -1) ){
 		//easyPrint("TEST2 %d\n", 0);
 		m_fLongJumpMemory = m_fLongJump;
-		resetLongJumpCharge();
+		// NOPE, probably remove more surrounding script later.
+		// Don't reset the longjump charge for this reason, not
+		// requiring any particular pickup anymore.
+		//resetLongJumpCharge();
 		longJumpChargeNeedsUpdate = TRUE;
 	}
+	
 
 	//MODDD - this actually enables the long jump.  The "animation" elsewhere isn't the physical long jump.
 	/*
@@ -6275,12 +6235,6 @@ void CBasePlayer::Spawn( BOOL revived ){
 
 	pev->classname = MAKE_STRING("player");
 	if(!revived){
-		if(!alreadySpawned){
-			//MODDD - line moved here.
-			//~...actually, save-restore already defaults this to false.  No need to here.
-			//m_fNoPlayerSound = FALSE;// normal sound behavior.
-
-		}
 		
 		drowning = FALSE;
 
@@ -6355,7 +6309,14 @@ void CBasePlayer::Spawn( BOOL revived ){
 
 
 	m_afPhysicsFlags	= 0;
-	m_fLongJump			= FALSE;// no longjump module. 
+
+
+#if PLAYER_ALWAYSHASLONGJUMP == 1
+		m_fLongJump = TRUE;
+#else
+		//start without it?
+		m_fLongJump = FALSE;
+#endif
 
 
 	if(!revived){
@@ -6558,12 +6519,6 @@ void CBasePlayer::Spawn( BOOL revived ){
 	pev->renderfx |= ISPLAYER;
 
 
-	//nah, just always do this if turned on.
-	//if(!alreadySpawned){
-		//autoSneakyCheck();
-	//}
-	alreadySpawned = TRUE;
-
 }//END OF Spawn
 
 
@@ -6667,8 +6622,6 @@ int CBasePlayer::Restore( CRestore &restore )
 
 
 	////easyPrintLine("PLAYER RESTORE METHOD CALLED!");
-	//loading the game implies the player has spawned once before.
-	alreadySpawned = TRUE;
 
 	if ( !CBaseMonster::Restore(restore) )
 		return 0;
@@ -7614,6 +7567,12 @@ void CBasePlayer::CheatImpulseCommands( int iImpulse )
 		GiveNamedItem( "weapon_hornetgun" );
 		GiveNamedItem( "weapon_chumtoad" );
 		
+		if(m_fLongJump != TRUE){
+			longJumpChargeNeedsUpdate = TRUE;
+		}
+		m_fLongJump = TRUE;
+		longJumpCharge = PLAYER_LONGJUMPCHARGE_MAX;
+		
 		gEvilImpulse101 = FALSE;
 		break;
 
@@ -8419,11 +8378,8 @@ void CBasePlayer :: UpdateClientData( void )
 	}
 
 
-
 	if(drowningMem != drowning){
 		//easyPrintLine("HELP %d %d" , drowningMem, drowning);
-	
-
 		drowningMem = drowning;
 
 		MESSAGE_BEGIN( MSG_ONE, gmsgDrowning, NULL, pev );
@@ -8433,17 +8389,15 @@ void CBasePlayer :: UpdateClientData( void )
 
 	if(playerBrightLightMem != EASY_CVAR_GET(playerBrightLight) ){
 		playerBrightLightMem = EASY_CVAR_GET(playerBrightLight);
-		if(EASY_CVAR_GET(playerBrightLight) == 1){
-			pev->effects |= EF_BRIGHTLIGHT;
-		}else{
+		if(playerBrightLightMem != 1){
 			pev->effects &= ~EF_BRIGHTLIGHT;
+		}else{
+			pev->effects |= EF_BRIGHTLIGHT;
 		}
 
 	}
 
 
-	
-	
 	// HACKHACK -- send the message to display the game title
 	if (gDisplayTitle)
 	{
@@ -8471,17 +8425,12 @@ void CBasePlayer :: UpdateClientData( void )
 	if(pev->deadflag != deadflagmem){
 		deadflagmem = pev->deadflag;
 
-
 		MESSAGE_BEGIN( MSG_ONE, gmsgUpdatePlayerAlive, NULL, pev );
 			WRITE_SHORT( IsAlive() );
 		MESSAGE_END();
-
 	}
 
-
 	//MODDD - update cheat vars.
-	
-
 	if(cheat_infiniteclipMem != EASY_CVAR_GET(cheat_infiniteclip) ){
 		cheat_infiniteclipMem = EASY_CVAR_GET(cheat_infiniteclip);
 	}
@@ -8503,10 +8452,8 @@ void CBasePlayer :: UpdateClientData( void )
 
 	
 
-	
 	if(recoveryIndexMem != recoveryIndex){
 		recoveryIndexMem = recoveryIndex;
-
 
 		if(recoveryIndex == 0){
 			//expected to recover sometime...
@@ -8519,16 +8466,11 @@ void CBasePlayer :: UpdateClientData( void )
 		}
 	}
 
-
 	if(recentlyGibbedMem != recentlyGibbed){
 		recentlyGibbedMem = recentlyGibbed;
 	}
 
 
-
-
-
-	
 	//MODDD - the next four if-then's are new.
 	if (m_rgItems[ITEM_ANTIDOTE] != m_iClientAntidote)
 	{
@@ -8571,14 +8513,14 @@ void CBasePlayer :: UpdateClientData( void )
 		WRITE_SHORT( (int)airTankAirTime);
 		//WRITE_ANGLE
 		MESSAGE_END();
-		
 	}
 
 
 	if(m_fLongJumpMemory != m_fLongJump || (!m_fLongJump && longJumpCharge != -1) ){
 		//easyPrint("TEST1 %d\n", 0);
 		m_fLongJumpMemory = m_fLongJump;
-		resetLongJumpCharge();
+		// See another note about commenting this out.
+		//resetLongJumpCharge();
 		longJumpChargeNeedsUpdate = TRUE;
 	}
 
@@ -8597,7 +8539,6 @@ void CBasePlayer :: UpdateClientData( void )
 	}
 
 	
-
 	if (pev->armorvalue != m_iClientBattery)
 	{
 		m_iClientBattery = pev->armorvalue;
@@ -8607,7 +8548,6 @@ void CBasePlayer :: UpdateClientData( void )
 		MESSAGE_BEGIN( MSG_ONE, gmsgBattery, NULL, pev );
 			WRITE_SHORT( (int)pev->armorvalue);
 		MESSAGE_END();
-
 	}
 
 
@@ -8623,21 +8563,10 @@ void CBasePlayer :: UpdateClientData( void )
 		MESSAGE_END();
 	}
 
-	/*
-	//NOPE.  SEND BOTH NOW!
-	float* damageToRead;
-	if(EASY_CVAR_GET(painFlashIgnoreArmor) == 1){
-		//ignores armor damage reduction; what enemies intended to deal since last sendoff.
-		damageToRead = &rawDamageSustained;
-	}else{
-		//factors in armor damage reduction.
-		damageToRead = &pev->dmg_take;
-	}
-	*/
+
 
 	//MODDD
 	//if (pev->dmg_take || pev->dmg_save || m_bitsHUDDamage != m_bitsDamageType)
-	//if ( *damageToRead || pev->dmg_save || m_bitsHUDDamage != m_bitsDamageType || m_bitsModHUDDamage != m_bitsDamageTypeMod)
 	if (  pev->dmg_take || rawDamageSustained || pev->dmg_save || m_bitsHUDDamage != m_bitsDamageType || m_bitsModHUDDamage != m_bitsDamageTypeMod)
 	{
 		// Comes from inside me if not set
@@ -8661,7 +8590,7 @@ void CBasePlayer :: UpdateClientData( void )
 			WRITE_BYTE( pev->dmg_save );
 
 			WRITE_BYTE( pev->dmg_take );
-			//MODDD
+			//MODDD - also send the amount of damage taken before the reduction from armor battery.
 			WRITE_BYTE( rawDamageSustained );
 			
 			WRITE_LONG( visibleDamageBits );
@@ -9692,7 +9621,6 @@ void CPlayerMarker :: Precache( void )
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-
 //=========================================================
 // Multiplayer intermission spots.
 //=========================================================
@@ -9726,8 +9654,5 @@ void CInfoIntermission::Think ( void )
 		pev->v_angle.x = -pev->v_angle.x;
 	}
 }
-
-
-
 LINK_ENTITY_TO_CLASS( info_intermission, CInfoIntermission );
 

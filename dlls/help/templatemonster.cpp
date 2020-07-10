@@ -563,8 +563,7 @@ Schedule_t* CTemplateMonster::GetStumpedWaitSchedule(){
 
 
 void CTemplateMonster::StartTask( Task_t* pTask ){
-
-
+	
 	switch( pTask->iTask ){
 		case TASK_TEMPLATEMONSTER_XXX:{
 

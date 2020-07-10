@@ -1220,8 +1220,7 @@ Schedule_t* CBullsquid :: GetScheduleOfType ( int Type )
 //=========================================================
 void CBullsquid :: StartTask ( Task_t *pTask )
 {
-	m_iTaskStatus = TASKSTATUS_RUNNING;
-
+	
 	switch ( pTask->iTask )
 	{
 	case TASK_MELEE_ATTACK2:
@@ -1326,15 +1325,29 @@ MONSTERSTATE CBullsquid :: GetIdealState ( void )
 			{
 				// if the squid has a headcrab enemy and something hurts it, it's going to forget about the crab for a while.
 				m_hEnemy = NULL;
-				m_IdealMonsterState = MONSTERSTATE_ALERT;
+				
+				// MODDD - see larger note below, but this change shouldn't affect base behavior
+				// much.  The change is, ending early (return; doesn't go furhter down to the
+				// CBaseMonster::GetIdealState call.
+				// VERIFY THOUGH
+				//m_IdealMonsterState = MONSTERSTATE_ALERT;
+				return MONSTERSTATE_ALERT;
+				
 			}
 			break;
 		}
 	}
 
-	m_IdealMonsterState = CBaseMonster :: GetIdealState();
-
-	return m_IdealMonsterState;
+	//MODDD - NOTE.  Unsure if this was intentional, but above's m_IdealMonsterState set to ALERT
+	// merely influences this a little, above happening did not end the method there so this point
+	// could be reached (CBaseMonster::GetIdealState) which may laregly override that decision.
+	// Unless the ALERT setting was meant to force picking a new enemy in the same frame?  Interesting.
+	// Wait. Base monster GetIdealState can't even change the state from MONSTERSTATE_ALERT in that call.
+	// WELP.  Whatever.
+	//m_IdealMonsterState = CBaseMonster :: GetIdealState();
+	//return m_IdealMonsterState;
+	
+	return CBaseMonster::GetIdealState();
 }
 
 

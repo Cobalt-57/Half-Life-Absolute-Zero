@@ -26,9 +26,7 @@
 //                   than a big hulking agrunt that's 2 feet away slashing at me that's "hated" would.
 //                   It's a bizarre picture.  At least in theory that's how it would work out, but see if it's such a problem it needs fixing.
 
-
 #include "extdll.h"
-
 #include "basemonster.h"  //MODDD - is this addition necessary?
 #include "util.h"	
 #include "nodes.h"
@@ -42,42 +40,19 @@
 #include "gamerules.h"
 //MODDD - never included before.?
 #include "defaultai.h"
-
 #include "util_debugdraw.h"
 //MODDD - why not?
 #include "game.h"
 	
-
-//MODDD - unused, now factors in the monster's current expected distance to cover this frame (groundspeed & frame time) 
-//        for a better tolerance instead.  Still a hard minimum of 8 to pass just in case it would otherwise be too small.
-//#define MONSTER_CUT_CORNER_DIST		8 // 8 means the monster's bounding box is contained without the box of the node in WC
-
-
-
-//#define USE_MOVEMENT_BOUND_FIX
-#define USE_MOVEMENT_BOUND_FIX_ALT
-
-
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-//extern DLL_GLOBAL	BOOL	g_fDrawLines;
-extern DLL_GLOBAL	short	g_sModelIndexLaser;// holds the index for the laser beam
-extern DLL_GLOBAL	short	g_sModelIndexLaserDot;// holds the index for the laser beam dot
-
-extern CGraph WorldGraph;// the world node graph
-
-//MODDD - added
+	
 EASY_CVAR_EXTERN(sv_germancensorship)
 EASY_CVAR_EXTERN(seeMonsterHealth)
 EASY_CVAR_EXTERN(applyLKPPathFixToAll)
 EASY_CVAR_EXTERN(crazyMonsterPrintouts)
 EASY_CVAR_EXTERN(monsterSpawnPrintout)
 EASY_CVAR_EXTERN(timedDamageAffectsMonsters)
-
 EASY_CVAR_EXTERN(STUextraTriangH)
 EASY_CVAR_EXTERN(STUextraTriangV)
-
 EASY_CVAR_EXTERN(timedDamageEndlessOnHard)
 extern float globalPSEUDO_canApplyGermanCensorship;
 EASY_CVAR_EXTERN(allowGermanModels)
@@ -103,7 +78,39 @@ EASY_CVAR_EXTERN(pathfindLargeBoundFix)
 EASY_CVAR_EXTERN(flyerKilledFallingLoop)
 EASY_CVAR_EXTERN(barnacleGrabNoInterpolation)
 
-//EASY_CVAR_EXTERN(testVar)
+
+
+//MODDD - unused, now factors in the monster's current expected distance to cover this frame (groundspeed & frame time) 
+//        for a better tolerance instead.  Still a hard minimum of 8 to pass just in case it would otherwise be too small.
+//#define MONSTER_CUT_CORNER_DIST		8 // 8 means the monster's bounding box is contained without the box of the node in WC
+
+
+//#define USE_MOVEMENT_BOUND_FIX
+#define USE_MOVEMENT_BOUND_FIX_ALT
+
+
+
+//extern DLL_GLOBAL	BOOL	g_fDrawLines;
+extern DLL_GLOBAL short g_sModelIndexLaser;// holds the index for the laser beam
+extern DLL_GLOBAL short g_sModelIndexLaserDot;// holds the index for the laser beam dot
+
+extern CGraph WorldGraph;// the world node graph
+
+//extern Schedule_t* slAnimationSmartAndStop;
+//extern Schedule_t* slAnimationSmart;
+
+
+
+
+float CBaseMonster::paralyzeDuration = 0;
+float CBaseMonster::nervegasDuration = 0;
+float CBaseMonster::poisonDuration = 0;
+float CBaseMonster::radiationDuration = 0;
+float CBaseMonster::acidDuration = 0;
+float CBaseMonster::slowburnDuration = 0;
+float CBaseMonster::slowfreezeDuration = 0;
+float CBaseMonster::bleedingDuration = 0;
+
 
 
 
@@ -139,7 +146,6 @@ TYPEDESCRIPTION	CBaseMonster::m_SaveData[] =
 
 	DEFINE_FIELD( CBaseMonster, m_iScheduleIndex, FIELD_INTEGER ),
 	DEFINE_FIELD( CBaseMonster, m_afConditions, FIELD_INTEGER ),
-	
 	//MODDD - new
 	DEFINE_FIELD( CBaseMonster, m_afConditionsFrame, FIELD_INTEGER ),
 	
@@ -190,6 +196,50 @@ TYPEDESCRIPTION	CBaseMonster::m_SaveData[] =
 
 };
 
+
+
+
+
+
+
+//IMPLEMENT_SAVERESTORE( CBaseMonster, CBaseToggle );
+int CBaseMonster::Save(CSave& save)
+{
+	if (!CBaseToggle::Save(save))
+		return 0;
+	return save.WriteFields("CBaseMonster", this, m_SaveData, ARRAYSIZE(m_SaveData));
+}
+
+int CBaseMonster::Restore(CRestore& restore)
+{
+	if (!CBaseToggle::Restore(restore))
+		return 0;
+	int status = restore.ReadFields("CBaseMonster", this, m_SaveData, ARRAYSIZE(m_SaveData));
+
+	// We don't save/restore routes yet
+	RouteClear();
+
+	// We don't save/restore schedules yet
+	m_pSchedule = NULL;
+	m_iTaskStatus = TASKSTATUS_NEW;
+
+	// Reset animation
+	m_Activity = ACT_RESET;
+
+	// If we don't have an enemy, clear conditions like see enemy, etc.
+	if (m_hEnemy == NULL) {
+		clearAllConditions();
+	}
+
+	PostRestore();
+
+	return status;
+}
+
+
+void CBaseMonster::PostRestore() {
+	//easyForcePrintLine("PostRestore: CBaseMonster: %s", getClassname(), monsterID);
+}
 
 
 
@@ -335,8 +385,6 @@ CBaseMonster::CBaseMonster(){
 
 	debugVectorMode = -1;
 	debugVectorsSet = FALSE;
-
-	deadSetActivityBlock = FALSE;
 
 	blockDamage = FALSE;
 	buddhaMode = FALSE;
@@ -517,24 +565,13 @@ void CBaseMonster::setAnimation(char* animationName, BOOL forceException, BOOL f
 	}
 	//canSetAnim == FALSE;
 	
-}
-
-
-
-
-
-
-
-
-//extern Schedule_t* slAnimationSmartAndStop;
-//extern Schedule_t* slAnimationSmart;
+}//END OF setAnimation
 
 
 
 void CBaseMonster::setAnimationSmart(const char* arg_animName){
 	setAnimationSmart(arg_animName, -999);
 }
-
 
 //modeled moreso after "setSequenceByName".
 void CBaseMonster::setAnimationSmart(const char* arg_animName, float arg_frameRate){
@@ -595,7 +632,6 @@ void CBaseMonster::setAnimationSmartAndStop(const char* arg_animName, float arg_
 	iSequence = LookupSequence ( arg_animName );
 
 	setAnimationSmartAndStop(iSequence, arg_frameRate);
-	
 }
 
 
@@ -637,53 +673,6 @@ void CBaseMonster::setAnimationSmartAndStop(int arg_animIndex, float arg_frameRa
 }
 
 
-
-
-
-
-
-
-
-
-
-//IMPLEMENT_SAVERESTORE( CBaseMonster, CBaseToggle );
-int CBaseMonster::Save( CSave &save )
-{
-	if ( !CBaseToggle::Save(save) )
-		return 0;
-	return save.WriteFields( "CBaseMonster", this, m_SaveData, ARRAYSIZE(m_SaveData) );
-}
-
-int CBaseMonster::Restore( CRestore &restore )
-{
-	if ( !CBaseToggle::Restore(restore) )
-		return 0;
-	int status = restore.ReadFields( "CBaseMonster", this, m_SaveData, ARRAYSIZE(m_SaveData) );
-	
-	// We don't save/restore routes yet
-	RouteClear();
-
-	// We don't save/restore schedules yet
-	m_pSchedule = NULL;
-	m_iTaskStatus = TASKSTATUS_NEW;
-	
-	// Reset animation
-	m_Activity = ACT_RESET;
-
-	// If we don't have an enemy, clear conditions like see enemy, etc.
-	if ( m_hEnemy == NULL ){
-		clearAllConditions();
-	}
-
-	PostRestore();
-
-	return status;
-}
-
-
-void CBaseMonster::PostRestore(){
-	//easyForcePrintLine("PostRestore: CBaseMonster: %s", getClassname(), monsterID);
-}
 
 
 //=========================================================
@@ -1447,20 +1436,6 @@ void CBaseMonster::wanderAway(const Vector& toWalkAwayFrom){
 
 
 
-
-
-float CBaseMonster::paralyzeDuration = 0;
-float CBaseMonster::nervegasDuration = 0;
-float CBaseMonster::poisonDuration = 0;
-float CBaseMonster::radiationDuration = 0;
-float CBaseMonster::acidDuration = 0;
-float CBaseMonster::slowburnDuration = 0;
-float CBaseMonster::slowfreezeDuration = 0;
-float CBaseMonster::bleedingDuration = 0;
-
-
-
-
 //Easy way to convert new damage types without adjusting existing constants.
 //That may be okay, but I'm not taking risks just yet.
 int CBaseMonster::convert_itbd_to_damage(int i){
@@ -1654,7 +1629,12 @@ void CBaseMonster::CheckTimeBasedDamage(void)
 				//MODDD - new.
 			case itbd_Bleeding:
 				//this will always ignore the armor (hence DMG_TIMEDEFFECT).
-				TakeDamage(pev, pev, BLEEDING_DAMAGE, 0, DMG_TIMEDEFFECTIGNORE);
+				TakeDamage(pev, pev, BLEEDING_DAMAGE, 0, damageType | DMG_TIMEDEFFECTIGNORE);
+				
+				UTIL_MakeAimVectors(pev->angles);
+				//pev->origin + pev->view_ofs
+				//BodyTargetMod(g_vecZero)
+				DrawAlphaBlood(BLEEDING_DAMAGE, BodyTargetMod(g_vecZero) + gpGlobals->v_forward * RANDOM_FLOAT(9, 13) + gpGlobals->v_right * RANDOM_FLOAT(-8, 8) + gpGlobals->v_up * RANDOM_FLOAT(-3, 5) );
 				
 				bDuration = bleedingDuration;
 				break;
@@ -1814,23 +1794,15 @@ BOOL CBaseMonster::usesAdvancedAnimSystem(void){
 
 
 
-
-
-
 //=========================================================
 // Monster Think - calls out to core AI functions and handles this
 // monster's specific animation events
 //=========================================================
 void CBaseMonster :: MonsterThink ( void )
 {
-
-
 	///pev->renderfx |= NOMUZZLEFLASH;
 	pev->nextthink = gpGlobals->time + 0.1;// keep monster thinking.
 	
-
-	
-
 
 	if(forgetSmallFlinchTime != -1 && gpGlobals->time >= forgetSmallFlinchTime){
 		forgetSmallFlinchTime = -1;
@@ -1840,7 +1812,6 @@ void CBaseMonster :: MonsterThink ( void )
 		forgetBigFlinchTime = -1;
 		//this->Forget(bits_MEMORY_BIG_FLINCHED);
 	}
-
 
 
 	//TODO - test frame. is 255 or 256 the last??
@@ -1854,7 +1825,6 @@ void CBaseMonster :: MonsterThink ( void )
 	//easyForcePrintLine("FRAMEA:%.2f seq:%d loop:%d fin:%d", this->pev->frame, pev->sequence, m_fSequenceLoops, m_fSequenceFinished);
 
 	
-
 	
 	/*
 	if(EASY_CVAR_GET(testVar) == 1){
@@ -1879,23 +1849,19 @@ void CBaseMonster :: MonsterThink ( void )
 
 	
 
-
 	if(this->drawFieldOfVisionConstant == TRUE){
 		DrawFieldOfVision();
 	}
 	
-
 	if(fApplyTempVelocity){
 		fApplyTempVelocity = FALSE;
 		pev->velocity = velocityApplyTemp;
 	}
 
 
-
 	int clrR = 0;
 	int clrG = 0;
 	int clrB = 0;
-
 
 	if(EASY_CVAR_GET(pathfindTopRampFixDraw)==1 && debugVectorsSet){
 		
@@ -1946,7 +1912,9 @@ void CBaseMonster :: MonsterThink ( void )
 
 	if(EASY_CVAR_GET(animationPrintouts) == 1 && monsterID >= -1)easyForcePrintLine("%s:%d Anim info A? frame:%.2f done:%d", getClassname(), monsterID, pev->frame, m_fSequenceFinished);
 	
-	RunAI();
+	//if (!terminated) {
+		RunAI();
+	//}
 
 
 	if(EASY_CVAR_GET(animationPrintouts) == 1 && monsterID >= -1)easyForcePrintLine("%s:%d Anim info B frame:%.2f done:%d", getClassname(), monsterID, pev->frame, m_fSequenceFinished);
@@ -1983,10 +1951,23 @@ void CBaseMonster :: MonsterThink ( void )
 		int x = 45;
 	}
 
-	if(EASY_CVAR_GET(animationPrintouts) == 1 && monsterID >= -1)easyForcePrintLine("%s:%d Anim info IDLE RESET check?: custo:%d autoblock:%d stateForbid:%d idle?%d seqfin?%d - frame:%.2f done:%d",
+
+
+	if (EASY_CVAR_GET(animationPrintouts) == 1 && monsterID >= -1) {
+		easyForcePrintLine(
+			"%s:%d Anim info IDLE RESET check?: custo:%d autoblock:%d stateForbid:%d idle?%d seqfin?%d - frame:%.2f done:%d",
 			getClassname(), monsterID,
-			usingCustomSequence, getMonsterBlockIdleAutoUpdate(), (m_MonsterState == MONSTERSTATE_SCRIPT||m_MonsterState==MONSTERSTATE_DEAD), (m_Activity==ACT_IDLE), m_fSequenceFinished,
-		pev->frame, m_fSequenceFinished);
+			usingCustomSequence,
+			getMonsterBlockIdleAutoUpdate(),
+			(m_MonsterState == MONSTERSTATE_SCRIPT || m_MonsterState == MONSTERSTATE_DEAD),
+			(m_Activity == ACT_IDLE),
+			m_fSequenceFinished,
+			pev->frame, m_fSequenceFinished
+		);
+	}
+
+
+
 
 	//If looping and using a custom sequence (set by some "setSequenceBy..." method or similar, as opposed to selected by a new activity),
 	//do NOT force a new animation! We mean to keep the current animation.
@@ -2102,7 +2083,28 @@ void CBaseMonster :: MonsterThink ( void )
 		//no... just draw it this frame only.
 		::UTIL_drawPointFrame(m_vecEnemyLKP + Vector(0, 0, 8), DEBUG_LINE_WIDTH, 255, 255, 0);
 	}
-	
+
+
+
+
+	//MODDD - NOTICE!  This check is not reliable!
+	// Could force the checked origin to be some 5 to 10 below the one checked, but eh.
+	// Leave it up to the map to skill stuff falls off into some ambiguous void, probably best.
+	/*
+	if (
+		pev->movetype == MOVETYPE_STEP ||
+		pev->movetype == MOVETYPE_TOSS ||
+		pev->movetype == MOVETYPE_PUSH ||
+		pev->movetype == MOVETYPE_BOUNCE ||
+		pev->movetype == MOVETYPE_PUSHSTEP
+	){
+		// if we're of some movetype that has gravity, and we touch a point that is considered "sky", remove this entity.
+		if(UTIL_PointContents(pev->origin) == CONTENTS_SKY ){
+			UTIL_Remove(this);
+		}
+	}
+	*/
+
 	//easyForcePrintLine("FRAMEB:%.2f seq:%d loop:%d fin:%d", this->pev->frame, pev->sequence, m_fSequenceLoops, m_fSequenceFinished);
 
 }//END OF monsterThink
@@ -2470,6 +2472,10 @@ BOOL CBaseMonster::MoveToLocation( Activity movementAct, float waitTime, const V
 
 BOOL CBaseMonster::MoveToTarget( Activity movementAct, float waitTime )
 {
+	if (movementAct == ACT_WALK) {
+		int x = 45;
+	}
+
 	m_movementActivity = movementAct;
 	m_moveWaitTime = waitTime;
 	
@@ -2765,8 +2771,8 @@ BOOL CBaseMonster :: CheckMeleeAttack2 ( float flDot, float flDist )
 //=========================================================
 void CBaseMonster :: CheckAttacks ( CBaseEntity *pTarget, float flDist )
 {
-	Vector2D	vec2LOS;
-	float	flDot;
+	Vector2D vec2LOS;
+	float flDot;
 
 	UTIL_MakeVectors ( pev->angles );
 
@@ -2891,6 +2897,10 @@ int CBaseMonster :: CheckEnemy ( CBaseEntity *pEnemy )
 	//bits_COND_SEE_ENEMY sure happens instantly the moment of death?
 	if ( !pEnemy->IsAlive_FromAI(this) )
 	{
+		//MODDD - new event, called when the checked enemy is dead
+		// (as bits_COND_ENEMY_DEAD is set)
+		onEnemyDead(pEnemy);
+		
 		SetConditions ( bits_COND_ENEMY_DEAD );
 		ClearConditions( bits_COND_SEE_ENEMY | bits_COND_ENEMY_OCCLUDED );
 		return FALSE;
@@ -2991,7 +3001,11 @@ int CBaseMonster :: CheckEnemy ( CBaseEntity *pEnemy )
 	
 	if ( FCanCheckAttacks() )	
 	{
-		CheckAttacks ( m_hEnemy, flDistToEnemy );
+		//MODDD - what?  Why sending m_hEnemy instead of pEnemy, the one given to this method?
+		// Although CheckEnemy is only ever called with m_hEnemy filling pEnemy.
+		//CheckAttacks ( m_hEnemy, flDistToEnemy );
+		CheckAttacks(pEnemy, flDistToEnemy);
+		
 
 		//MODDD - test?
 
@@ -3307,8 +3321,6 @@ const char* CBaseMonster::tryGetScheduleName(void){
 //MODDD- VIRTUAL
 void CBaseMonster :: SetActivity ( Activity NewActivity )
 {
-
-
 	if(monsterID == 14){
 		int x = 666;
 	}
@@ -3342,7 +3354,6 @@ void CBaseMonster :: SetActivity ( Activity NewActivity )
 
 	
 	
-
 	//easyForcePrintLine("SET ACTIVITY: %d I DID THIS: %d", NewActivity, iSequence);
 
 
@@ -3386,7 +3397,6 @@ void CBaseMonster :: SetActivity ( Activity NewActivity )
 	
 	// In case someone calls this with something other than the ideal activity
 	m_IdealActivity = m_Activity;
-
 
 }
 
@@ -3696,14 +3706,10 @@ int CBaseMonster :: CheckLocalMove ( const Vector &vecStart, const Vector &vecEn
 		
 //		UTIL_ParticleEffect ( pev->origin, g_vecZero, 255, 25 );
 
-
 		
 		oldOrigin = pev->origin;
 		if ( !WALK_MOVE( ENT(pev), flYaw, stepSize, WALKMOVE_CHECKONLY ) )
 		{// can't take the next step, fail!
-
-
-
 
 
 
@@ -3759,6 +3765,12 @@ int CBaseMonster :: CheckLocalMove ( const Vector &vecStart, const Vector &vecEn
 			}
 			else
 			{
+				// any other info on it?
+				if (gpGlobals->trace_ent != NULL) {
+					CBaseEntity* testRef = CBaseEntity::Instance(gpGlobals->trace_ent);
+					const char* mahName = testRef->getClassname();
+				}
+
 				// If we're going toward an entity, and we're almost getting there, it's OK.
 //				if ( pTarget && fabs( flDist - iStep ) < LOCAL_STEP_SIZE )
 //					fReturn = TRUE;
@@ -3770,7 +3782,6 @@ int CBaseMonster :: CheckLocalMove ( const Vector &vecStart, const Vector &vecEn
 		}
 	}
 
-	
 #if defined(USE_MOVEMENT_BOUND_FIX)
 	if(needsMovementBoundFix()){
 		//undo the bound change.
@@ -3800,7 +3811,6 @@ int CBaseMonster :: CheckLocalMove ( const Vector &vecStart, const Vector &vecEn
 	*/
 
 
-
 	if( EASY_CVAR_GET(drawDebugPathfinding) == 1){
 		switch(iReturn){
 			case LOCALMOVE_INVALID:
@@ -3822,14 +3832,12 @@ int CBaseMonster :: CheckLocalMove ( const Vector &vecStart, const Vector &vecEn
 	}
 
 
-
-
-
 	// since we've actually moved the monster during the check, undo the move.
 	UTIL_SetOrigin( pev, vecStartPos );
 
 	return iReturn;
 }
+
 
 float CBaseMonster :: OpenDoorAndWait( entvars_t *pevDoor )
 {
@@ -4127,15 +4135,11 @@ BOOL CBaseMonster :: BuildRoute ( const Vector &vecGoal, int iMoveFlag, CBaseEnt
 
 		if(rampFixAttempt != 0){
 			EASY_CVAR_PRINTIF_PRE(pathfindPrintout, easyPrintLine("%s:ID%d Pathfinding: TRYING RAMPFIX...", getClassnameShort(), monsterID) );
-	
-			
 			//first, check the point where the first localMove check failed. Is this a ramp? Check the slope.
 			
 			debugVectorMode = 1;
 
 			BOOL hasTowardsRampNode = FALSE;
-
-
 
 			Vector vecDirFlatUnnormal = Vector(vecDir.x, vecDir.y, 0);
 			//Vector initFailPoint = pev->origin + vecDir * flDist;
@@ -4149,11 +4153,6 @@ BOOL CBaseMonster :: BuildRoute ( const Vector &vecGoal, int iMoveFlag, CBaseEnt
 			UTIL_TraceLine(vecMyOrigin, pev->origin + vecDir * flCheckDist, dont_ignore_monsters, pentIgnore, &trPathFind);
 			//CBaseEntity* pEntityHit;
 			*/
-
-			//
-
-
-			//
 
 			TraceResult trRampBeginAttempt;
 	        edict_t* pentIgnore;
@@ -4183,7 +4182,6 @@ BOOL CBaseMonster :: BuildRoute ( const Vector &vecGoal, int iMoveFlag, CBaseEnt
 				pentIgnore = ENT( this->pev );
 			}
 
-			
 			/*
 			debugVector1 = vecRampLowPoint;
 			debugVector2 = rampTopPoint1;
@@ -4200,18 +4198,13 @@ BOOL CBaseMonster :: BuildRoute ( const Vector &vecGoal, int iMoveFlag, CBaseEnt
 			debugVectorMode = 2;
 			*/
 
-				
-
 			//UTIL_TraceLine(vecTraceStart, vecTraceEnd, dont_ignore_monsters, pentIgnore, &trRampBeginAttempt);
-				UTIL_TraceLine(vecTraceStart, vecTraceEnd, ignore_monsters, pentIgnore, &trRampBeginAttempt);
-				
-
-
+			UTIL_TraceLine(vecTraceStart, vecTraceEnd, ignore_monsters, pentIgnore, &trRampBeginAttempt);
+			
 			EASY_CVAR_PRINTIF_PRE(pathfindPrintout, easyForcePrintLine("%s:ID%d BOTTOM TO UP: GOALPOS? (%.2f %.2f %.2f) SLD?:%d FRAC:%.2f N:(%.2f %.2f %.2f)", getClassnameShort(), this->monsterID,
 				vecGoal.x, vecGoal.y, vecGoal.z
 				, !trRampBeginAttempt.fAllSolid, trRampBeginAttempt.flFraction,
 				trRampBeginAttempt.vecPlaneNormal.x, trRampBeginAttempt.vecPlaneNormal.y, trRampBeginAttempt.vecPlaneNormal.z ) );
-
 
 			//MODDD TODO - is it possible for a ramp to have a vecPlaneNormal.z that is negative and still a typical ramp (as opposed to an incline down from the ceiling)?
 
@@ -4221,13 +4214,8 @@ BOOL CBaseMonster :: BuildRoute ( const Vector &vecGoal, int iMoveFlag, CBaseEnt
 
 				Vector distVect = (vecGoal - vecMyOrigin);
 				Vector distVectFlat = Vector(distVect.x, distVect.y, 0);
-				
-
-
-
 				BOOL checkLocalMovePreRampTest;
 
-				
 				Vector toBaseRamp;
 				Vector vecRampLowPoint;
 				if(rampFixAttempt == 1){
@@ -4240,11 +4228,8 @@ BOOL CBaseMonster :: BuildRoute ( const Vector &vecGoal, int iMoveFlag, CBaseEnt
 					vecRampLowPoint = vecMyOrigin + Vector(0, 0, 12) + toBaseRamp + -vecDirFlatUnnormal * 6;
 				}
 
-				
 				/*
-
 				Vector vecRampLowPoint = vecMyOrigin + Vector(0, 0, 12) + toBaseRamp + -vecDirFlatUnnormal * 6;
-
 				if(toBaseRamp.Length() > 20){
 					hasTowardsRampNode = TRUE;
 				}else{
@@ -4252,7 +4237,6 @@ BOOL CBaseMonster :: BuildRoute ( const Vector &vecGoal, int iMoveFlag, CBaseEnt
 					//change. "I" am the ramp low point.
 					vecRampLowPoint = pev->origin;
 				}
-
 
 				if(!hasTowardsRampNode){
 					checkLocalMovePreRampTest = TRUE;
@@ -4262,7 +4246,6 @@ BOOL CBaseMonster :: BuildRoute ( const Vector &vecGoal, int iMoveFlag, CBaseEnt
 					checkLocalMovePreRampTest = TRUE;
 				}
 				*/
-
 
 				checkLocalMovePreRampTest = TRUE;
 
@@ -4374,15 +4357,11 @@ BOOL CBaseMonster :: BuildRoute ( const Vector &vecGoal, int iMoveFlag, CBaseEnt
 					//}//END OF dot check
 				}//END OF pre move test (from current place to the bottom of the ramp, if not immediately there)
 			}//END OF trace-hit-something check
-
 		}else{
-			
 			EASY_CVAR_PRINTIF_PRE(pathfindPrintout, easyPrintLine("%s:ID%d Pathfinding: NO RAMP TEST.", getClassnameShort(), monsterID) );
-
 		}
 
 	}//END OF first  if( !localMovePass)  check
-
 
 	
 	EASY_CVAR_PRINTIF_PRE(pathfindPrintout, easyPrintLine("%s:ID%d BuildRoute: TOTAL FAIL!", getClassnameShort(), monsterID) );
@@ -4390,11 +4369,6 @@ BOOL CBaseMonster :: BuildRoute ( const Vector &vecGoal, int iMoveFlag, CBaseEnt
 	// b0rk
 	return FALSE;
 }
-
-
-
-
-
 
 
 
@@ -4487,7 +4461,7 @@ BOOL CBaseMonster :: FTriangulate ( const Vector &vecStart , const Vector &vecEn
 	vecFarSide = m_Route[ m_iRouteIndex ].vecLocation;
 	
 	vecDir = vecDir * sizeX * 2;
-	if (pev->movetype == isMovetypeFlying() )
+	if (isMovetypeFlying() )
 		vecDirUp = vecDirUp * sizeZ * 2;
 
 	for ( i = 0 ; i < 8; i++ )
@@ -4612,27 +4586,16 @@ BOOL CBaseMonster :: FTriangulate ( const Vector &vecStart , const Vector &vecEn
 
 
 
-
-
-
-
-
-
 //=========================================================
 // Move - take a single step towards the next ROUTE location
 //=========================================================
 #define DIST_TO_CHECK	200
 
-
-
 void CBaseMonster :: Move ( float flInterval ) 
 {
-	
-
 	if(drawPathConstant){
 		DrawRoute( pev, m_Route, m_iRouteIndex, 0, 0, 176 );
 	}
-
 
 
 	float	flWaypointDist;
@@ -4693,8 +4656,6 @@ void CBaseMonster :: Move ( float flInterval )
 		flWaypointDist = ( m_Route[ m_iRouteIndex ].vecLocation - pev->origin ).Length();
 	}
 
-
-
 	
 	MakeIdealYaw ( m_Route[ m_iRouteIndex ].vecLocation );
 	ChangeYaw ( pev->yaw_speed );
@@ -4704,8 +4665,6 @@ void CBaseMonster :: Move ( float flInterval )
 		//no more! Cheap trick to interrupt the movement method if ChangeYaw decides to clear the route.
 		return; 
 	}
-
-
 
 	// if the waypoint is closer than CheckDist, CheckDist is the dist to waypoint
 	if ( flWaypointDist < DIST_TO_CHECK )
@@ -4746,28 +4705,22 @@ void CBaseMonster :: Move ( float flInterval )
 	}
 
 
-
 	// !!!BUGBUG - CheckDist should be derived from ground speed.
 	// If this fails, it should be because of some dynamic entity blocking this guy.
 	// We've already checked this path, so we should wait and time out if the entity doesn't move
 	flDist = 0;
 
 
-
 	//BOOL localMovePass = (CheckLocalMove ( pev->origin, pev->origin + vecDir * flWaypointDist, pTargetEnt, &flDist ) == LOCALMOVE_VALID);
 	
 	BOOL localMovePass;
 
-
 	//If using a RAMPFIX or NODE type of node, use "CheckLocalMoveHull" instead. It's a bit less strict.
-
 	int useHullCheckMask = bits_MF_RAMPFIX;
 	if(EASY_CVAR_GET(pathfindLooseMapNodes) == 1){
 		useHullCheckMask |= bits_MF_TO_NODE;
 	}
 	
-
-
 	if( (m_Route[ m_iRouteIndex ].iType & ~bits_MF_NOT_TO_MASK) & (useHullCheckMask) ){
 		//for now...
 		localMovePass = (CheckLocalMoveHull ( pev->origin, pev->origin + vecDir * flCheckDist, pTargetEnt, &flDist ) == LOCALMOVE_VALID);
@@ -4791,16 +4744,10 @@ void CBaseMonster :: Move ( float flInterval )
 		if(!localMovePass){
 			EASY_CVAR_PRINTIF_PRE(pathfindPrintout, easyForcePrintLine("%s:ID%d Move: CheckLocalMove Failed!", getClassnameShort(), monsterID) ) ;
 		}
-
 	}
 	
-	
-
-
 	//careful now!
 	//localMovePass = TRUE;
-
-
 
 
 	//MODDD
@@ -4885,10 +4832,6 @@ void CBaseMonster :: Move ( float flInterval )
 				else
 				{
 
-
-
-
-
 					if(EASY_CVAR_GET(pathfindEdgeCheck) == 1){
 
 						//Before admitting failure, do a check. Are we close enough to the goal to let this count as success?
@@ -4941,19 +4884,13 @@ void CBaseMonster :: Move ( float flInterval )
 							}
 						}
 						////////////////////////////////////////////////
-
-
 					}
-
-
 
 
 					EASY_CVAR_PRINTIF_PRE(pathfindPrintout, easyPrintLine("%s:ID%d Pathfinding: ROUTE D2", getClassnameShort(), monsterID) );
 					TaskFail();
 					ALERT( at_aiconsole, "%s Failed to move (%d)!\n", STRING(pev->classname), HasMemory( bits_MEMORY_MOVE_FAILED ) );
 					//ALERT( at_aiconsole, "%f, %f, %f\n", pev->origin.z, (pev->origin + (vecDir * flCheckDist)).z, m_Route[m_iRouteIndex].vecLocation.z );
-
-
 
 				}
 				return;
@@ -4971,7 +4908,6 @@ void CBaseMonster :: Move ( float flInterval )
 	///!!!BUGBUG- magic number
 	if ( ShouldAdvanceRoute( flWaypointDist, flInterval ) )
 	{
-
 		/*
 		//MODDD - no need. Notice the script below, "flCheckDist < distExpectedToCover". This will end up moving the monster
 		//        the right amount of distance to cover the point anyways.
@@ -4995,7 +4931,6 @@ void CBaseMonster :: Move ( float flInterval )
 		return;
 	}
 
-	
 	const float distExpectedToCover = m_flGroundSpeed * pev->framerate * EASY_CVAR_GET(animationFramerateMulti) * 1;
 
 	//flCheckDist: 6    (just to waypoint w/ a cap of 200)
@@ -5021,12 +4956,7 @@ void CBaseMonster :: Move ( float flInterval )
 	//MODDD - actually see above, the hack on flInterval is enough to make the monster move only far enough to reach the node exactly this frame without passing it.
 	//if(!skipMoveExecute){
 
-
-
-
-
 	BOOL facingNextNode = TRUE;
-
 	float facingTolerance = MoveYawDegreeTolerance();
 
 	if(facingTolerance > 0){
@@ -5070,8 +5000,6 @@ void CBaseMonster :: Move ( float flInterval )
 
 	}//END OF else OF facingNextNode
 
-
-
 	//}
 
 	if ( MovementIsComplete() )
@@ -5081,7 +5009,6 @@ void CBaseMonster :: Move ( float flInterval )
 		RouteClear();
 	}
 }
-
 
 
 
@@ -5131,12 +5058,9 @@ void CBaseMonster::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, f
 
 
 
-
 #ifdef USE_MOVEMENT_BOUND_FIX_ALT
 	flYaw = UTIL_VecToYaw ( m_Route[ m_iRouteIndex ].vecLocation - pev->origin );
 #endif
-
-
 
 	float flTotal = m_flGroundSpeed * pev->framerate * EASY_CVAR_GET(animationFramerateMulti) * flInterval;
 	float flStep;
@@ -5144,8 +5068,6 @@ void CBaseMonster::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, f
 	{
 		// don't walk more than 16 units or stairs stop working
 		flStep = min( 16.0, flTotal );
-
-
 
 #ifndef USE_MOVEMENT_BOUND_FIX_ALT
 		//Normal way!
@@ -5224,17 +5146,9 @@ void CBaseMonster::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, f
 
 		}//END OF else OF pathfindLargeBoundFix check
 
-
-
 		/////////////////////////////////////////////////////////////////////////////////////
 
 #endif
-
-		
-
-
-
-
 		flTotal -= flStep;
 	}
 	// ALERT( at_console, "dist %f\n", m_flGroundSpeed * pev->framerate * flInterval );
@@ -5246,8 +5160,6 @@ void CBaseMonster::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, f
 		UTIL_SetSize( pev, oldMins, oldMaxs );
 	}
 #endif
-
-
 
 }
 
@@ -5262,13 +5174,11 @@ void CBaseMonster::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, f
 //=========================================================
 void CBaseMonster :: MonsterInit ( void )
 {
-
 	//MODDD - extra check.
 	const char* classname_test = STRING(pev->classname);
 	if (classname_test == NULL || strlen(classname_test)==0) {
 		easyForcePrintLine("WARNING! Monster without a classname spawned?");
 	}
-
 	
 	//MODDD - "&& EASY_CVAR_GET(forceAllowMonsterSpawning) != 1" CVar removed.
 	// Redundant with "mp_allowmonsters".
@@ -5336,7 +5246,14 @@ void CBaseMonster :: MonsterInit ( void )
 	m_flDistLook		= getDistLook();
 
 	//MODDD - flag for mirror recognition.
-	pev->renderfx |= ISNPC;
+	// And letting clientside know whether this is organic or not for
+	// crossbowbolt hits to refer to sometimes clientside.
+	// Any check for "ISNPC" works for "ISMETALNPC" too.
+	if(isOrganic()){
+		pev->renderfx |= ISNPC;
+	}else{
+		pev->renderfx |= ISMETALNPC;
+	}
 
 	if(EASY_CVAR_GET(monsterSpawnPrintout) == 1){
 		easyPrintLine("I SPAWNED::: %s flags:%d", STRING(pev->classname), pev->spawnflags);
@@ -5344,8 +5261,6 @@ void CBaseMonster :: MonsterInit ( void )
 
 	// set eye position
 	SetEyePosition();
-
-
 
 	SetThink( &CBaseMonster::MonsterInitThink );
 
@@ -5397,10 +5312,9 @@ void CBaseMonster :: StartMonster ( void )
 	
 
 
-	//MODDD NOTE - Oddly enough? missing "SF_MONSTER_FALL_TO_GROUND" causes the monster to fall to the ground. Interdasting.
+	//MODDD NOTE - Oddly enough? missing "SF_MONSTER_FALL_TO_GROUND" causes the monster to fall to the ground.
 	if ( !isMovetypeFlying() && !FBitSet( pev->spawnflags, SF_MONSTER_FALL_TO_GROUND ) )
 	{
-
 		if(EASY_CVAR_GET(crazyMonsterPrintouts))easyForcePrintLine("YOU amazing piece of work");
 
 		pev->origin.z += 1;
@@ -5447,10 +5361,15 @@ void CBaseMonster :: StartMonster ( void )
 			
 
 			//MODDD - is this appropriate for swimmers too?
+			// Also, setting this early likely won't have a point.  Elsewhere handles this as these get switch back to stationary
+			// acts like ACT_IDLE anyway.
+			/*
 			if(isMovetypeFlying())
 				m_movementActivity = ACT_FLY;
 			else
 				m_movementActivity = ACT_WALK;
+			*/
+
 
 			if ( !FRefreshRoute() )
 			{
@@ -5481,6 +5400,9 @@ void CBaseMonster :: StartMonster ( void )
 
 
 
+// Note that this alone can no longer complete the currently running task.
+// Any movement-related tasks typically checked for "MovementIsComplete" and then
+// call "TaskComplete" themselves.
 void CBaseMonster :: MovementComplete( void ) 
 { 
 	if(EASY_CVAR_GET(movementIsCompletePrintout)==1)easyForcePrintLine("MovementComplete: %s:%d WHO CALLED THIS", getClassname(), monsterID);
@@ -5488,13 +5410,18 @@ void CBaseMonster :: MovementComplete( void )
 	switch( m_iTaskStatus )
 	{
 	case TASKSTATUS_NEW:
+	
+	
+	// YOU ARE NOW ALL POINTLESS FUCK YOU
+	/*
 	case TASKSTATUS_RUNNING:
 		m_iTaskStatus = TASKSTATUS_RUNNING_TASK;
 		break;
 
-	case TASKSTATUS_RUNNING_MOVEMENT:
-		TaskComplete();
-		break;
+	//MODDD - this was not even possible, nothing is ever assigned TASKSTATUS_RUNNING_MOVEMENT.
+	//case TASKSTATUS_RUNNING_MOVEMENT:
+	//	TaskComplete();
+	//	break;
 	
 	case TASKSTATUS_RUNNING_TASK:
 		ALERT( at_error, "Movement completed twice!\n" );
@@ -5503,6 +5430,7 @@ void CBaseMonster :: MovementComplete( void )
 		//...yes that seems funny, make more specific if other things are messed up as a result.
 		//TaskComplete();
 		break;
+	*/
 
 	case TASKSTATUS_COMPLETE:		
 		break;
@@ -5531,11 +5459,13 @@ void CBaseMonster::TaskFail(void)
 
 }
 
+// Keep in mind, this also counts TASKSTATUS_NEW.
 int CBaseMonster::TaskIsRunning( void )
 {
-	if ( m_iTaskStatus != TASKSTATUS_COMPLETE && 
-		 m_iTaskStatus != TASKSTATUS_RUNNING_MOVEMENT )
-		 return 1;
+	//MODDD - TASKSTATUS_RUNNING_MOVEMENT is never set, that check is useless.
+	//if ( m_iTaskStatus != TASKSTATUS_COMPLETE && m_iTaskStatus != TASKSTATUS_RUNNING_MOVEMENT )
+	if(m_iTaskStatus != TASKSTATUS_COMPLETE)
+		return 1;
 
 	return 0;
 }
@@ -5795,7 +5725,18 @@ BOOL CBaseMonster :: BuildNearestRoute ( Vector vecThreat, Vector vecViewOffset,
 			if ( flDist > flMinDist && flDist < flMaxDist)
 			{
 				// can I see where I want to be from there?
-				UTIL_TraceLine( node.m_vecOrigin + pev->view_ofs, vecLookersOffset, ignore_monsters, edict(), &tr );
+				//MODDD  - WARNING!!!  A TraceLine call will go through simple thin blocking objects like fences, fooling us into thinking
+				// that a route from point A to B through a fence is valid, just because a bullet can go through it.
+				// How about a trace-hull check instead?
+				//UTIL_TraceLine( node.m_vecOrigin + pev->view_ofs, vecLookersOffset, ignore_monsters, edict(), &tr );
+
+				// One of these too, yea.
+				//UTIL_TraceHull(vecFrom, vecPos, ignore_monsters, large_hull, m_hEnemy->edict(), &tr);
+				//TRACE_MONSTER_HULL(edict(), pev->origin, Probe, dont_ignore_monsters, edict(), &tr);
+
+				//	int		(*pfnTraceMonsterHull)		(edict_t *pEdict, const float *v1, const float *v2, int fNoMonsters, edict_t *pentToSkip, TraceResult *ptr);
+				TRACE_MONSTER_HULL(edict(), node.m_vecOrigin + pev->view_ofs, vecLookersOffset, dont_ignore_monsters, edict(), &tr);
+
 
 				if (tr.flFraction == 1.0)
 				{
@@ -6219,14 +6160,12 @@ void CBaseMonster :: HandleAnimEvent( MonsterEvent_t *pEvent )
 			}
 		}
 		break;
-
 	case MONSTER_EVENT_SWISHSOUND:
 		{
 			// NO MONSTER may use this anim event unless that monster's precache precaches this sound!!! this one uses the soundsentencesave.
 			EMIT_SOUND_FILTERED( ENT(pev), CHAN_BODY, "zombie/claw_miss2.wav", 1, ATTN_NORM, TRUE );
 			break;
 		}
-
 	default:
 		ALERT( at_aiconsole, "Unhandled animation event %d for %s\n", pEvent->event, STRING(pev->classname) );
 		break;
@@ -6235,15 +6174,9 @@ void CBaseMonster :: HandleAnimEvent( MonsterEvent_t *pEvent )
 }
 
 
+
+
 // Combat
-
-
-
-
-
-
-
-
 
 //MODDD - GetGunPositionAI is a new different version of GetGunPosition for use by AI calls. Things like 
 //        This version should be less precise to the literal point of the gun on the model, which may varry with what sequence or frame is
@@ -6258,7 +6191,6 @@ void CBaseMonster :: HandleAnimEvent( MonsterEvent_t *pEvent )
 	
 Vector CBaseMonster :: GetGunPosition( )
 {
-
 	UTIL_MakeVectors(pev->angles);
 
 	// Vector vecSrc = pev->origin + gpGlobals->v_forward * 10;
@@ -6268,9 +6200,9 @@ Vector CBaseMonster :: GetGunPosition( )
 					+ gpGlobals->v_forward * m_HackedGunPos.y 
 					+ gpGlobals->v_right * m_HackedGunPos.x 
 					+ gpGlobals->v_up * m_HackedGunPos.z;
-
 	return vecSrc;
 }
+
 Vector CBaseMonster::GetGunPositionAI(){
 	//return GetGunPosition();
 	//For safety, this will be a clone of GetGunPosition, not a redirect. This means we need to rely on m_HackedGunPos like a Monster would have before,
@@ -6282,7 +6214,6 @@ Vector CBaseMonster::GetGunPositionAI(){
 					+ gpGlobals->v_up * m_HackedGunPos.z;
 	return vecSrc;
 }
-
 
 
 //MODDD - this is commonly used to aim the torso of a monster pitch-wise to look at its enemy.  The model must support this,
@@ -6306,13 +6237,10 @@ void CBaseMonster::lookAtEnemy_pitch(void){
 
 
 
+
 //=========================================================
 // NODE GRAPH
 //=========================================================
-
-
-
-
 
 //=========================================================
 // FGetNodeRoute - tries to build an entire node path from
@@ -6324,9 +6252,10 @@ void CBaseMonster::lookAtEnemy_pitch(void){
 //=========================================================
 BOOL CBaseMonster :: FGetNodeRoute ( Vector vecDest )
 {
-
+	// Interesting to disable this for testing?
 	//return FALSE;
 
+	TraceResult tr;
 	int iPath[ MAX_PATH_SIZE ];
 	int iSrcNode, iDestNode;
 	int iResult;
@@ -6348,6 +6277,18 @@ BOOL CBaseMonster :: FGetNodeRoute ( Vector vecDest )
 //		ALERT ( at_aiconsole, "FGetNodeRoute: No valid node near target!\n" );
 		return FALSE;
 	}
+
+
+	// oh.  WorldGraph.Node is just a layer for m_pNodes, ok.
+	CNode& theStartNode = WorldGraph.Node(iSrcNode);
+	//MODDD - HOLD ON!  Can we even get to the iSrcNode?  Let's be safe.
+	TRACE_MONSTER_HULL(edict(), pev->origin + pev->view_ofs, theStartNode.m_vecOrigin + pev->view_ofs, dont_ignore_monsters, edict(), &tr);
+	if (tr.flFraction < 1.0) {
+		// oh dear.  Abort.  We picked a source node we can not even reach.
+		return FALSE;
+	}
+	
+
 
 	// valid src and dest nodes were found, so it's safe to proceed with
 	// find shortest path
@@ -6671,6 +6612,21 @@ void CBaseMonster::ReportAIState( void )
 		easyForcePrintLine("CINE: none");
 	}else{
 		easyForcePrintLine("CINE: %s:%d  sf:%d ob:%d targetname:%s target:%s iszE:%s globalname: %s", m_pCine->getClassname(), m_pCine->monsterID, m_pCine->pev->spawnflags, m_pCine->ObjectCaps(),  STRING(m_pCine->pev->targetname), STRING(m_pCine->pev->target),  STRING( m_pCine->m_iszEntity ), STRING(m_pCine->pev->globalname ) );
+		
+		// spread out to debug a little crash issue.
+		// Great were' in 2020 and a program can't give any more info about a long line crashing other than 'crash happen here'.   >_>
+		/*
+		easyForcePrintLine("ok its gonnna go a lil somethin like this yall");
+
+		easyForcePrintLine("CINE: %s:%d", m_pCine->getClassname(), m_pCine->monsterID);
+		easyForcePrintLine("CINE: sf:%d", m_pCine->pev->spawnflags);
+
+		easyForcePrintLine("CINE: ob:%d", m_pCine->ObjectCaps());
+		easyForcePrintLine("CINE: targetname:%s", STRING(m_pCine->pev->targetname));
+		easyForcePrintLine("CINE: target:%s", STRING(m_pCine->pev->target));
+		easyForcePrintLine("CINE: iszE:%s", STRING(m_pCine->m_iszEntity));
+		easyForcePrintLine("CINE: globalname: %s", STRING(m_pCine->pev->globalname));
+		*/
 	}
 	
 
@@ -7306,22 +7262,44 @@ void CBaseMonster::setPhysicalHitboxForDeath(void){
 }
 
 
-
-//All ripped from the start of TASK_DIE in schedule.cpp.
+// All ripped from the start of TASK_DIE in schedule.cpp.
+// Called anywhere by typical "Killed" calls, skipped if gibbed (no entity/model to work with then).
 void CBaseMonster::DeathAnimationStart(){
-	
-	
-	RouteClear();	
-			
+	RouteClear();
+
+	// TODO SHITTY IDEA.
+	// How about if m_Activity is already any of the DIE activities, don't call for the activity change at all.
+	// Just force the pev->framerate to -1 and set the deadflag to DEAD_DEAD if necessary (better safe than sorry?).
+	// Might need to change the schedule from the revive one to the death one like combat does inadvertently, the
+	// one with TASK_DIE or whatever.    And then it might go well / bug-free.
+	// See? shitty idea.
+
+
 	m_IdealActivity = GetDeathActivity();
-	signalActivityUpdate = TRUE;
-
+	
+	// good idea?
+	m_Activity = ACT_RESET;
+	
 	pev->deadflag = DEAD_DYING;
-
-	deadSetActivityBlock = TRUE;
 	
 	//ensure the death activity we pick (or have picked) gets to run.
 	signalActivityUpdate = TRUE;
+
+	if (this->usesAdvancedAnimSystem() == FALSE) {
+		// SAFE ASSUMPTION:  anytime we're playing a death animation we want to reset the frame/framerate.
+		// Just for the bizarre case of being killed while being revived (happens with headcrabs or things
+		// without much beyond the bare bones minimal animation-related stuff)
+		pev->frame = 0;
+		pev->framerate = 1;
+		this->m_flFrameRate = 1;
+		this->m_flFramerateSuggestion = 1;
+
+		// is this a good idea too?
+		animFrameStart = -1;
+		animFrameStartSuggestion = -1;
+		animFrameCutoff = -1;
+		animFrameCutoffSuggestion = -1;
+	}
 
 
 	//easyPrintLine("ARE YOU SOME KIND OF insecure person??? %.2f %d", EASY_CVAR_GET(thoroughHitBoxUpdates), pev->deadflag );
@@ -7330,11 +7308,9 @@ void CBaseMonster::DeathAnimationStart(){
 		//update the collision box now,
 		this->SetObjectCollisionBox();
 	}
-
 	if(EASY_CVAR_GET(animationKilledBoundsRemoval) == 1){
 		setPhysicalHitboxForDeath();
 	}
-
 }//END OF DeathAnimationStart
 
 
@@ -7591,11 +7567,16 @@ void CBaseMonster::ForgetEnemy(void) {
 	if (m_hEnemy != NULL) {
 		m_hEnemy = NULL;
 		m_hTargetEnt = NULL;
-		if (this->m_MonsterState == MONSTERSTATE_COMBAT) {
-			// doesn't make sense to be in COMBAT without an enemy.
-			this->m_MonsterState = MONSTERSTATE_ALERT;
+
+		if (pev->deadflag == DEAD_NO) {
+			// only fool around with the states or schedules of alive monsters.  Otherwise freaky stuff happens.
+			// And not that this matters for state anyway, it would have to be MONSTERSTATE_DEAD.
+			if (this->m_MonsterState == MONSTERSTATE_COMBAT) {
+				// doesn't make sense to be in COMBAT without an enemy.
+				this->m_MonsterState = MONSTERSTATE_ALERT;
+			}
+			TaskFail();
 		}
-		TaskFail();
 	}
 
 }//END OF ForgetEnemy
@@ -7634,15 +7615,17 @@ void CBaseMonster::forgetForcedEnemy(CBaseMonster* argIssuing, BOOL argPassive){
 void CBaseMonster::startReanimation(){
 	int i;
 	
+	// ???????
+	//m_IdealMonsterState = MONSTERSTATE_ALERT;// Assume monster will be alert, having come back from the dead and all.
+	//m_MonsterState = MONSTERSTATE_ALERT; //!!!
+
+	//this->m_Activity = ACT_RESET;
+
+
 	pev->deadflag = DEAD_NO;
-
-	//!!!
-	deadSetActivityBlock = FALSE;
 	
-
 	//before spawn or init script may interfere.
 	int oldSeq = pev->sequence;
-
 	//no recollection of that.
 	m_hEnemy = NULL;
 
@@ -7652,95 +7635,18 @@ void CBaseMonster::startReanimation(){
 		m_hOldEnemy[i] = NULL;
 	}
 
-	
-	/*
-	//!!!
-
-	UTIL_SetSize(pev, VEC_HUMAN_HULL_MIN, VEC_HUMAN_HULL_MAX);
-
-	//pev->classname = MAKE_STRING("monster_alien_slave");
-
-	pev->solid			= SOLID_SLIDEBOX;
-	pev->movetype		= MOVETYPE_STEP;
-	m_bloodColor		= BLOOD_COLOR_GREEN;
-	pev->effects		= 0;
-
-	//The outside has to figure this out??
-	//pev->health			= gSkillData.slaveHealth;
-	pev->health			= pev->max_health;
-
-	pev->view_ofs		= Vector ( 0, 0, 64 );// position of the eyes relative to monster's origin.
-	m_flFieldOfView		= VIEW_FIELD_WIDE; // NOTE: we need a wide field of view so npc will notice player and say hello
-	m_MonsterState		= MONSTERSTATE_NONE;
-	m_afCapability		= bits_CAP_HEAR | bits_CAP_TURN_HEAD | bits_CAP_RANGE_ATTACK2 | bits_CAP_DOORS_GROUP;
-
-	
-	//as to not cause this mismatch to change our desired revive animation.
-	
-	
-	*/
-
 	//This should set the monster's health to "pev->max_health".
 	//And assume it calls "MonsterInit" again if it ever did before.
 	Spawn();
 
 
-
-
 	//Most of MonsterInit's script here just to be safe... Nah, assume Spawn calls it if it makes sense to.
+	// The area mentioned ranged from
+	//     pev->effects		= 0;
+	// to
+	//     SetEyePosition();
 	
-	/*
-	// Set fields common to all monsters
-	pev->effects		= 0;
-	pev->takedamage		= DAMAGE_AIM;
-	pev->ideal_yaw		= pev->angles.y;
-	//pev->max_health		= pev->health;    //Better already know that...
-	pev->deadflag		= DEAD_NO;
-	m_IdealMonsterState	= MONSTERSTATE_IDLE;// Assume monster will be idle, until proven otherwise
-	//!!!
-	m_MonsterState = MONSTERSTATE_IDLE;
-
-
-	m_IdealActivity = ACT_IDLE;
-	//!!! No sequence changing, force the activity to this now.
-	m_Activity = ACT_IDLE;
-
-	SetBits (pev->flags, FL_MONSTER);
-	if ( pev->spawnflags & SF_MONSTER_HITMONSTERCLIP )
-		pev->flags |= FL_MONSTERCLIP;
-	
-	ClearSchedule();
-	RouteClear();
-	InitBoneControllers( ); // FIX: should be done in Spawn
-
-	m_iHintNode			= NO_NODE;
-
-	m_afMemory			= MEMORY_CLEAR;
-
-	m_hEnemy			= NULL;
-
-	m_flDistTooFar		= 1024.0;
-	m_flDistLook		= 2048.0;
-
-	//MODDD - flag for mirror recognition.
-	pev->renderfx |= ISNPC;
-
-
-	//if(EASY_CVAR_GET(monsterSpawnPrintout) == 1){
-	//	easyPrintLine("I SPAWNED::: %s flags:%d", STRING(pev->classname), pev->spawnflags);
-	//}
-
-	//m_MonsterState = ::MONSTERSTATE_IDLE;
-	//m_IdealMonsterState = ::MONSTERSTATE_IDLE;
-
-	// set eye position
-	//SetEyePosition();
-	*/
-
-
-
 	EndOfRevive(oldSeq);
-
 }//END OF startReanimation
 
 
@@ -7749,6 +7655,9 @@ void CBaseMonster::startReanimation(){
 //Override to let a monster determine how to revive the monster on its own, like pick a different animation.
 //Default behavior is to play the existing animation over again.
 void CBaseMonster::EndOfRevive(int preReviveSequence){
+
+	// doing this extra early to be safe.
+	m_afMemory = MEMORY_CLEAR;
 
 	m_IdealMonsterState	= MONSTERSTATE_ALERT;// Assume monster will be alert, having come back from the dead and all.
 	m_MonsterState = MONSTERSTATE_ALERT; //!!!
@@ -7795,15 +7704,6 @@ WayPoint_t* CBaseMonster::GetGoalNode(){
 	return NULL;
 }//END OF getGoalNode
 
-void CBaseMonster::ReportGeneric(){
-	CBaseEntity::ReportGeneric();
-
-	//Also call our own special report method: ReportAI.
-	ReportAIState();
-
-}//END OF ReportGeneric()
-
-
 
 //MODDD - off for most.  Some new NPCs may use this (or old could be made to).
 BOOL CBaseMonster::hasSeeEnemyFix(void){
@@ -7814,13 +7714,6 @@ BOOL CBaseMonster::hasSeeEnemyFix(void){
 BOOL CBaseMonster::getForceAllowNewEnemy(CBaseEntity* pOther){
 	return FALSE;
 }
-
-
-void CBaseMonster::tempMethod(void){
-	//by default nothing. Use me for testing with client calls
-	//(point at this monster ingame, crosshairs, and type some command that calls this one's tempMethod)
-}//END OF tempMethod
-
 
 
 //Monsters with bigger bounds may need them to be temporarily reduced to play better with the pathfiding.
@@ -8219,5 +8112,21 @@ float CBaseMonster::getDistTooFar(void){
 float CBaseMonster::getDistLook(void){
 	return 2048.0;
 }
+
+
+void CBaseMonster::ReportGeneric() {
+	CBaseEntity::ReportGeneric();
+
+	//Also call our own special report method: ReportAI.
+	ReportAIState();
+
+}//END OF ReportGeneric()
+
+// When my marked enemy has recently died, let me know.
+// m_hEnemy could be cleared at any moment after all.
+void CBaseMonster::onEnemyDead(CBaseEntity* pRecentEnemy) {
+
+}
+
 
 

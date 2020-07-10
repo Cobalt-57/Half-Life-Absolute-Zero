@@ -23,6 +23,11 @@
 	#include <string.h>
 	//#include "basemonster.h"
 
+// from ev_hldm.cpp
+	#include "r_efx.h"
+	#include "event_api.h"
+	#include "event_args.h"
+
 #else
 	//SERVER
 	#include "extdll.h"
@@ -39,16 +44,32 @@
 
 //SHARED STUFF BELOW
 #include "weapons.h"
+#include "util_version.h"
 
 
 //MODDD - includes for file-related things moved to external_lib_include.h
 EASY_CVAR_EXTERN_CLIENTONLY(cl_hornetspiral)
 
 
+
+
+// Although PRECACHE_MODEL is valid between client/serverside, it is dummied clientside under the assumption it's unnecessary there.
+// However, if it is meant to work for both, it needs to be re-defined for clientside.
+// To avoid contradictions with lots of other places that expect PRECACHE_MODEL to still be dummied out clientside, made a new one.
+// PRECACHE_MODEL_SHARED, same as PRECACHE_MODEL serverside but clientside uses its proper method.
+#ifdef CLIENT_DLL
+	// Client?
+#define PRECACHE_MODEL_SHARED (*gEngfuncs.pEventAPI->EV_FindModelIndex)
+#else
+	// Server? same as PRECACHE_MODEL
+#define PRECACHE_MODEL_SHARED (*g_engfuncs.pfnPrecacheModel)
+#endif
+
+
+
 #ifdef CLIENT_DLL
 	//from cl_dll/ev_hldm.cpp, needed for clientside UTIL_Sparks to call.
-
-	//extern cl_enginefunc_t gEngfuncs;
+	extern cl_enginefunc_t gEngfuncs;
 #else
 	//SERVER
 	extern float globalPSEUDO_cl_hornetspiral;
@@ -75,6 +96,20 @@ EASY_CVAR_EXTERN_CLIENTONLY(cl_hornetspiral)
 /////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////
+
+#ifdef CLIENT_DLL
+	char globalbuffer_cl_mod_version[128];
+	char globalbuffer_cl_mod_date[128];
+
+	char globalbuffer_sv_mod_version_cache[128];
+	char globalbuffer_sv_mod_date_cache[128];
+
+	char globalbuffer_cl_mod_display[128];
+	char globalbuffer_sv_mod_display[128];
+#else
+	char globalbuffer_sv_mod_version[128];
+	char globalbuffer_sv_mod_date[128];
+#endif
 
 
 extern char GET_GAME_PATH_VAR[];
@@ -105,6 +140,12 @@ AmmoInfo CBasePlayerItem::AmmoInfoArray[MAX_AMMO_SLOTS];
 BOOL globalflag_muteDeploySound = FALSE;
 
 
+DLL_GLOBAL short g_sModelIndexBubbles;// holds the index for the bubbles model
+
+
+globalvars_t *gpGlobals;
+
+
 // originally in nodes.cpp
 // and wat.  Why is the last value 0.
 int Primes[NUMBER_OF_PRIMES] =
@@ -121,7 +162,144 @@ int Primes[NUMBER_OF_PRIMES] =
 977, 983, 991, 997, 1009, 1013, 1019, 1021, 1031, 1033, 1039, 0 };
 
 
-globalvars_t *gpGlobals;
+
+
+
+// this never needs to be extern'd ?
+// glSeed and seed_table used to be copied between cl_dll/hl/com_weapons.cpp and dlls/util.cpp.
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+static unsigned int glSeed = 0;
+
+unsigned int seed_table[256] =
+{
+	28985, 27138, 26457, 9451, 17764, 10909, 28790, 8716, 6361, 4853, 17798, 21977, 19643, 20662, 10834, 20103,
+	27067, 28634, 18623, 25849, 8576, 26234, 23887, 18228, 32587, 4836, 3306, 1811, 3035, 24559, 18399, 315,
+	26766, 907, 24102, 12370, 9674, 2972, 10472, 16492, 22683, 11529, 27968, 30406, 13213, 2319, 23620, 16823,
+	10013, 23772, 21567, 1251, 19579, 20313, 18241, 30130, 8402, 20807, 27354, 7169, 21211, 17293, 5410, 19223,
+	10255, 22480, 27388, 9946, 15628, 24389, 17308, 2370, 9530, 31683, 25927, 23567, 11694, 26397, 32602, 15031,
+	18255, 17582, 1422, 28835, 23607, 12597, 20602, 10138, 5212, 1252, 10074, 23166, 19823, 31667, 5902, 24630,
+	18948, 14330, 14950, 8939, 23540, 21311, 22428, 22391, 3583, 29004, 30498, 18714, 4278, 2437, 22430, 3439,
+	28313, 23161, 25396, 13471, 19324, 15287, 2563, 18901, 13103, 16867, 9714, 14322, 15197, 26889, 19372, 26241,
+	31925, 14640, 11497, 8941, 10056, 6451, 28656, 10737, 13874, 17356, 8281, 25937, 1661, 4850, 7448, 12744,
+	21826, 5477, 10167, 16705, 26897, 8839, 30947, 27978, 27283, 24685, 32298, 3525, 12398, 28726, 9475, 10208,
+	617, 13467, 22287, 2376, 6097, 26312, 2974, 9114, 21787, 28010, 4725, 15387, 3274, 10762, 31695, 17320,
+	18324, 12441, 16801, 27376, 22464, 7500, 5666, 18144, 15314, 31914, 31627, 6495, 5226, 31203, 2331, 4668,
+	12650, 18275, 351, 7268, 31319, 30119, 7600, 2905, 13826, 11343, 13053, 15583, 30055, 31093, 5067, 761,
+	9685, 11070, 21369, 27155, 3663, 26542, 20169, 12161, 15411, 30401, 7580, 31784, 8985, 29367, 20989, 14203,
+	29694, 21167, 10337, 1706, 28578, 887, 3373, 19477, 14382, 675, 7033, 15111, 26138, 12252, 30996, 21409,
+	25678, 18555, 13256, 23316, 22407, 16727, 991, 9236, 5373, 29402, 6117, 15241, 27715, 19291, 19888, 19847
+};
+
+
+
+
+
+/*
+=====================
+UTIL_WeaponTimeBase
+
+Always 0.0 on client, even if not predicting weapons ( won't get called
+ in that case )
+=====================
+*/
+float UTIL_WeaponTimeBase(void)
+{
+#if CLIENT_DLL
+	// CLIENT
+	return 0.0;
+#else
+	// SERVER
+	#if defined( CLIENT_WEAPONS )
+		return 0.0;
+	#else
+		return gpGlobals->time;
+	#endif
+#endif
+}
+
+// These were never called outside of their own .cpp files.  Helper methods.
+unsigned int U_Random(void)
+{
+	glSeed *= 69069;
+	glSeed += seed_table[glSeed & 0xff];
+
+	return (++glSeed & 0x0fffffff);
+}
+
+void U_Srand(unsigned int seed)
+{
+	glSeed = seed_table[seed & 0xff];
+}
+
+/*
+=====================
+UTIL_SharedRandomLong
+=====================
+*/
+int UTIL_SharedRandomLong(unsigned int seed, int low, int high)
+{
+	unsigned int range;
+
+	U_Srand((int)seed + low + high);
+
+	range = high - low + 1;
+	if (!(range - 1))
+	{
+		return low;
+	}
+	else
+	{
+		int offset;
+		int rnum;
+
+		rnum = U_Random();
+
+		offset = rnum % range;
+
+		return (low + offset);
+	}
+}
+
+/*
+=====================
+UTIL_SharedRandomFloat
+=====================
+*/
+float UTIL_SharedRandomFloat(unsigned int seed, float low, float high)
+{
+	unsigned int range;
+
+	U_Srand((int)seed + *(int*)&low + *(int*)&high);
+
+	U_Random();
+	U_Random();
+
+	range = high - low;
+	if (!range)
+	{
+		return low;
+	}
+	else
+	{
+		int tensixrand;
+		float offset;
+
+		tensixrand = U_Random() & 65535;
+
+		offset = (float)tensixrand / 65536.0;
+
+		return (low + offset * range);
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
 
 
 
@@ -1562,22 +1740,6 @@ void UTIL_Sparks(const Vector& position){
 
 }//END OF Util_Sparks(...)
 
-
-/*
-//MODDD - can now accept a "ballsToSpawn" var, generally for spawning less to prevent crashes if a CVar is set.
-void UTIL_Sparks( const Vector &position){
-	//but, imply "DEFAULT_SPARK_BALLS" if unspecified.  (See const.h)
-	UTIL_Sparks( position, DEFAULT_SPARK_BALLS, 1 );
-
-}
-
-void UTIL_Sparks( const Vector &position, int arg_ballsToSpawn ){
-	UTIL_Sparks(position, arg_ballsToSpawn, 1);
-
-}
-*/
-
-
 void UTIL_Sparks(const Vector& position, int arg_ballsToSpawn, float arg_extraSparkMulti){
 
 	if (EASY_CVAR_GET(useAlphaSparks) == 0) {
@@ -1730,6 +1892,247 @@ void UTIL_Sparks(const Vector& position, int arg_ballsToSpawn, float arg_extraSp
 	*/
 
 }//END OF UTIL_Sparks
+
+
+
+
+
+
+
+
+//MODDD - yet more shared now!
+
+//TODO - a version that takes 'float*' might be nice for clientside?
+int UTIL_PointContents(const Vector& vec)
+{
+#ifdef CLIENT_DLL
+	return gEngfuncs.PM_PointContents((float*)&vec, NULL);
+#else
+	// serverside.
+	return POINT_CONTENTS(vec);
+#endif
+}
+
+
+float UTIL_WaterLevel(const Vector& position, float minz, float maxz)
+{
+	BOOL alreadyInWater = (UTIL_PointContents(position) == CONTENTS_WATER);
+	int pointContentsTemp;
+
+	if (alreadyInWater) {
+		minz = position.z; //go no lower.
+	}
+	else {
+		//go no higher.
+		maxz = position.z;
+	}
+
+	Vector midUp = position;
+	midUp.z = minz;
+
+	pointContentsTemp = UTIL_PointContents(midUp);
+
+	//MODDD - don't allow CONTENTS_SOLID to end early. It could just be at or past (beneath) the floor of this body of water.
+	if (pointContentsTemp != CONTENTS_WATER && pointContentsTemp != CONTENTS_SOLID)
+		return minz;
+
+	midUp.z = maxz;
+	if (UTIL_PointContents(midUp) == CONTENTS_WATER)
+		return maxz;
+
+	float diff = maxz - minz;
+	while (diff > 1.0)
+	{
+		midUp.z = minz + diff / 2.0;
+
+		pointContentsTemp = UTIL_PointContents(midUp);
+		if (pointContentsTemp == CONTENTS_WATER)
+		{
+			minz = midUp.z;
+		}
+		else if (pointContentsTemp != CONTENTS_SOLID)
+		{
+			maxz = midUp.z;
+		}
+		else
+		{
+			//MODDD - NEW. If equal to solid, it depends on what direction we want to go based on "alreadyInWater".
+			if (alreadyInWater) {
+				//lean on being below this.
+				maxz = midUp.z;
+			}
+			else {
+				//lean on being above this.
+				minz = midUp.z;
+			}
+
+		}
+		diff = maxz - minz;
+	}
+
+	return midUp.z;
+}
+
+
+void UTIL_Bubbles(Vector mins, Vector maxs, int count)
+{
+	Vector mid = (mins + maxs) * 0.5;
+
+	float flHeight = UTIL_WaterLevel(mid, mid.z, mid.z + 1024);
+	flHeight = flHeight - mins.z;
+
+
+// Now for the call.
+#ifdef CLIENT_DLL
+	gEngfuncs.pEfxAPI->R_Bubbles(mins, maxs, flHeight, g_sModelIndexBubbles, count, 8);
+	// does this make sense?
+	//void	(*R_Bubbles)					(float* mins, float* maxs, float height, int modelIndex, int count, float speed);
+	//void	(*R_BubbleTrail)				(float* start, float* end, float height, int modelIndex, int count, float speed);
+#else
+	MESSAGE_BEGIN(MSG_PAS, SVC_TEMPENTITY, mid);
+	WRITE_BYTE(TE_BUBBLES);
+	WRITE_COORD(mins.x);	// mins
+	WRITE_COORD(mins.y);
+	WRITE_COORD(mins.z);
+	WRITE_COORD(maxs.x);	// maxz
+	WRITE_COORD(maxs.y);
+	WRITE_COORD(maxs.z);
+	WRITE_COORD(flHeight);			// height
+	WRITE_SHORT(g_sModelIndexBubbles);
+	WRITE_BYTE(count); // count
+	WRITE_COORD(8); // speed
+	MESSAGE_END();
+#endif
+}// UTIL_Bubbles
+
+
+
+void UTIL_BubbleTrail(Vector from, Vector to, int count)
+{
+	float flHeight = UTIL_WaterLevel(from, from.z, from.z + 256);
+	flHeight = flHeight - from.z;
+
+	if (flHeight < 8)
+	{
+		flHeight = UTIL_WaterLevel(to, to.z, to.z + 256);
+		flHeight = flHeight - to.z;
+		if (flHeight < 8)
+			return;
+
+		// UNDONE: do a ploink sound
+		flHeight = flHeight + to.z - from.z;
+	}
+
+	if (count > 255)
+		count = 255;
+
+
+// Now for the call.
+#ifdef CLIENT_DLL
+	gEngfuncs.pEfxAPI->R_BubbleTrail(from, to, flHeight, g_sModelIndexBubbles, count, 8);
+	// does this make sense?
+	//void	(*R_Bubbles)					(float* mins, float* maxs, float height, int modelIndex, int count, float speed);
+	//void	(*R_BubbleTrail)				(float* start, float* end, float height, int modelIndex, int count, float speed);
+#else
+	MESSAGE_BEGIN(MSG_BROADCAST, SVC_TEMPENTITY);
+	WRITE_BYTE(TE_BUBBLETRAIL);
+	WRITE_COORD(from.x);	// mins
+	WRITE_COORD(from.y);
+	WRITE_COORD(from.z);
+	WRITE_COORD(to.x);	// maxz
+	WRITE_COORD(to.y);
+	WRITE_COORD(to.z);
+	WRITE_COORD(flHeight);			// height
+	WRITE_SHORT(g_sModelIndexBubbles);
+	WRITE_BYTE(count); // count
+	WRITE_COORD(8); // speed
+	MESSAGE_END();
+#endif
+
+}// UTIL_BubbleTrail
+
+
+
+
+
+
+
+void InitShared(void) {
+
+
+	// at startup, fill these arrays for reading from anytime.
+	// Can do from querying the version info from the server if necessary, although it's fine to trust client DLL's.
+#ifdef CLIENT_DLL
+	writeVersionInfo(globalbuffer_cl_mod_version, 128);
+	writeDateInfo(globalbuffer_cl_mod_date, 128);
+	// fill the display buffer with this info.
+	sprintf(&globalbuffer_cl_mod_display[0], "CL: %s - %s", &globalbuffer_cl_mod_version[0], &globalbuffer_cl_mod_date[0]);
+
+	// mark these as yet to be filled (conncet a server)
+	globalbuffer_sv_mod_version_cache[0] = '\0';
+	globalbuffer_sv_mod_date_cache[0] = '\0';
+	globalbuffer_sv_mod_display[0] = '\0';
+#else
+	writeVersionInfo(globalbuffer_sv_mod_version, 128);
+	writeDateInfo(globalbuffer_sv_mod_date, 128);
+#endif
+
+
+
+
+
+}//END OF InitShared
+
+
+
+void PrecacheShared(void){
+
+	// each side will handle calls to "RegisterWeapon" on its own to initalize weapon info.
+	// Clientside does it through "HUD_PrepEntity" per weapon, Serverside does it through "UTIL_PrecacheOtherWeapon" per weapon.
+	memset(CBasePlayerItem::ItemInfoArray, 0, sizeof(CBasePlayerItem::ItemInfoArray));
+	memset(CBasePlayerItem::AmmoInfoArray, 0, sizeof(CBasePlayerItem::AmmoInfoArray));
+	giAmmoIndex = 0;
+
+
+	g_sModelIndexBubbles = PRECACHE_MODEL_SHARED("sprites/bubble.spr");//bubbles
+
+
+}//END OF PrecacheShared
+
+
+
+
+
+
+
+
+
+
+
+/*
+void	(*R_Explosion)				(float* pos, int model, float scale, float framerate, int flags);
+
+void	(*R_ParticleExplosion)		(float* org);
+void	(*R_ParticleExplosion2)		(float* org, int colorStart, int colorLength);
+
+
+void	(*R_Spray)					(float* pos, float* dir, int modelIndex, int count, int speed, int spread, int rendermode);
+void	(*R_Sprite_Explode)			(TEMPENTITY* pTemp, float scale, int flags);
+void	(*R_Sprite_Smoke)				(TEMPENTITY* pTemp, float scale);
+void	(*R_Sprite_Spray)				(float* pos, float* dir, int modelIndex, int count, int speed, int iRand);
+void	(*R_Sprite_Trail)				(int type, float* start, float* end, int modelIndex, int count, float life, float size, float amplitude, int renderamt, float speed);
+
+
+
+void	(*R_SparkEffect)				(float* pos, int count, int velocityMin, int velocityMax);
+void	(*R_SparkShower)				(float* pos);
+void	(*R_SparkStreaks)				(float* pos, int count, int velocityMin, int velocityMax);
+*/
+
+
+
+
+
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////

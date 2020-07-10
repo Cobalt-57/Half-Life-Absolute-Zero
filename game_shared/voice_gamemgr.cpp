@@ -5,6 +5,9 @@
 // $NoKeywords: $
 //=============================================================================
 
+#include "const.h"   //why not?
+///////////////////////
+
 #include "voice_gamemgr.h"
 #include <string.h>
 #include <assert.h>
@@ -73,6 +76,13 @@ static void VoiceServerDebug( char const *pFmt, ... )
 		return;
 
 	va_start( marker, pFmt );
+
+//MODDD why is this just now coming up?!
+#ifdef IS_VS6
+
+#else
+
+#endif
 	_vsnprintf( msg, sizeof(msg), pFmt, marker );
 	va_end( marker );
 
@@ -103,7 +113,7 @@ bool CVoiceGameMgr::Init(
 {		  
 	m_pHelper = pHelper;
 	m_nMaxPlayers = VOICE_MAX_PLAYERS < maxClients ? VOICE_MAX_PLAYERS : maxClients;
-	g_engfuncs.pfnPrecacheModel("sprites/voiceicon.spr");
+	PRECACHE_MODEL("sprites/voiceicon.spr");
 
 	m_msgPlayerVoiceMask = REG_USER_MSG( "VoiceMask", VOICE_MAX_PLAYERS_DW*4 * 2 );
 	m_msgRequestState = REG_USER_MSG( "ReqState", 0 );

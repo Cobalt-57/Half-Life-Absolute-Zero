@@ -145,9 +145,7 @@ LINK_ENTITY_TO_CLASS( rpg_rocket, CRpgRocket );
 
 
 CRpgRocket::CRpgRocket(void){
-
 	//don't touch vecMoveDirectionMemory, it gets set when the entity's spawned.
-	
 	ignited = FALSE;
 	alreadyDeleted = FALSE;
 	forceDumb = FALSE;
@@ -204,9 +202,7 @@ CRpgRocket *CRpgRocket::CreateRpgRocket( Vector vecOrigin, Vector vecAngles, Vec
 		pRocket->pev->angles.x -= 90;
 	}
 
-	
 	pRocket->vecMoveDirectionMemory = arg_vecMoveDirection;
-
 
 	pRocket->Spawn();
 	pRocket->SetTouch( &CRpgRocket::RocketTouch );
@@ -221,8 +217,6 @@ CRpgRocket *CRpgRocket::CreateRpgRocket( Vector vecOrigin, Vector vecAngles, Vec
 
 	return pRocket;
 }
-
-
 
 
 
@@ -323,10 +317,7 @@ void saySomethingBarneyRocket(CBaseEntity* entRef){
 	
 	}//END OF switch
 
-	
 }//END OF saySomethingBarneyRocket
-
-
 
 
 //=========================================================
@@ -383,7 +374,6 @@ void CRpgRocket :: Spawn( void )
 		//}
 
 		pev->gravity = 0.5;
-
 		pev->nextthink = gpGlobals->time + 0.4;
 
 	}else{
@@ -397,8 +387,6 @@ void CRpgRocket :: Spawn( void )
 		pev->velocity = gpGlobals->v_forward * 180;
 		pev->nextthink = gpGlobals->time;
 	}
-
-	
 
 	pev->dmg = gSkillData.plrDmgRPG;
 }
@@ -424,7 +412,6 @@ void CRpgRocket :: RocketTouch ( CBaseEntity *pOther )
 	EMIT_SOUND( edict(), CHAN_WEAPON, "common/null.wav", 1.0, ATTN_IDLE );
 	//STOP_SOUND(edict(), CHAN_VOICE, "");
 	//STOP_SOUND(edict(), CHAN_WEAPON, "");
-
 
 }
 
@@ -475,8 +462,6 @@ void CRpgRocket::OnDeflected(CBaseEntity* arg_entDeflector){
 }
 
 
-
-
 //=========================================================
 //=========================================================
 void CRpgRocket :: Precache( void )
@@ -487,13 +472,10 @@ void CRpgRocket :: Precache( void )
 
 	if(EASY_CVAR_GET(myRocketsAreBarney) == 1){
 		PRECACHE_MODEL("models/barney.mdl");
-
 		PRECACHE_SOUND("barney/c1a4_ba_octo2.wav");
 		PRECACHE_SOUND("barney/c1a4_ba_octo3.wav");
 		PRECACHE_SOUND("barney/c1a4_ba_octo4.wav");
-		
 	}
-
 
 }
 
@@ -501,7 +483,6 @@ void CRpgRocket :: Precache( void )
 void CRpgRocket :: IgniteThink( void  )
 {
 	// pev->movetype = MOVETYPE_TOSS;
-
 	pev->movetype = MOVETYPE_FLY;
 	
 	if(EASY_CVAR_GET(cl_rockettrail) == 0 || EASY_CVAR_GET(cl_rockettrail) == 2){
@@ -517,7 +498,6 @@ void CRpgRocket :: IgniteThink( void  )
 	}
 
 
-
 	if(EASY_CVAR_GET(cl_rockettrail) == 0){
 		//EASY_CVAR_GET(myRocketsAreBarney) == 1
 
@@ -526,7 +506,6 @@ void CRpgRocket :: IgniteThink( void  )
 		//done.
 		// rocket trail
 		MESSAGE_BEGIN( MSG_BROADCAST, SVC_TEMPENTITY );
-
 			WRITE_BYTE( TE_BEAMFOLLOW );
 			WRITE_SHORT(entindex());	// entity
 			WRITE_SHORT(m_iTrail );	// model
@@ -546,7 +525,6 @@ void CRpgRocket :: IgniteThink( void  )
 		(float *)&this->pev->origin, (float *)&this->pev->angles, 0.0, 0.0, this->entindex(), 0, 0, 0);
 	
 	}
-
 
 
 	m_flIgniteTime = gpGlobals->time;
@@ -671,7 +649,6 @@ void CRpgRocket :: FollowThink( void  )
 			Detonate( );
 		}
 
-
 	}
 	// ALERT( at_console, "%.0f\n", flSpeed );
 
@@ -683,14 +660,8 @@ void CRpgRocket :: FollowThink( void  )
 
 
 
-
-
-
-
-
 //..... no RPG constructor.  what.
 CRpg::CRpg(void) {
-
 
 
 }//END OF CRpg constructor
@@ -706,7 +677,6 @@ TYPEDESCRIPTION	CRpg::m_SaveData[] =
 };
 IMPLEMENT_SAVERESTORE(CRpg, CBasePlayerWeapon);
 #endif
-
 
 
 

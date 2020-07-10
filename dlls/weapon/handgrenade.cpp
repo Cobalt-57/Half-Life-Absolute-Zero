@@ -32,11 +32,7 @@ LINK_ENTITY_TO_CLASS( weapon_handgrenade, CHandGrenade );
 //        Looks like the projectile is still a generic GGrenade object with a hand grenade model just like MP5
 //        grenades.
 
-
-
-
 CHandGrenade::CHandGrenade(void){
-
 	//NEW VAR.  If -500, we are cheating.  Better for syncing.
 	m_fireState = 0;
 
@@ -45,9 +41,7 @@ CHandGrenade::CHandGrenade(void){
 	// 1 (2 to the 0th) is for "replayDeploy", a watered-down version.
 	// 2 (2 to the 1st) is for "weaponRetired", which re-does the "DefaultDeploy" on call.
 	m_fInAttack = 0;
-
 }
-
 
 //MODDD
 void CHandGrenade::customAttachToPlayer(CBasePlayer *pPlayer ){
@@ -60,13 +54,18 @@ void CHandGrenade::Spawn( )
 	m_iId = WEAPON_HANDGRENADE;
 	SET_MODEL(ENT(pev), "models/w_grenade.mdl");
 
+
+	//MODDD - Aha!  I spot a mistake.
+	// 'pev->dmg' is never effective for the equippable player weapons themselves, only the spawned
+	// projectiles. CHandGrenade is the weapon, not the projectile.
+	// There is no custom Hand Grenade projectile, we only use a generic CGrenade.
+	/*
 #ifndef CLIENT_DLL
 	pev->dmg = gSkillData.plrDmgHandGrenade;
 #endif
-
-
-
+	*/
 	
+
 	/*
                                ...----....
                          ..-:"''         ''"-..
@@ -122,13 +121,12 @@ void CHandGrenade::Spawn( )
 	//source: http://www.ascii-art.de/ascii/s/skull.txt
 
 	
-	//if(EASY_CVAR_GET(handGrenadePickupYieldsOne) == 1){
+	//if(EASY_CVAR_GET(handGrenadePickupYieldsOne) == 1)
 
-	//Apparently, this method can be called before the player is present (and, even if so, hasn't made this pick-upable part of the inventory yet).
-	//So, just make "m_iDefaultAmmo" a non-zero value and determine what to give in an overridden "ExtractAmmo" method.
+	// Apparently, this method can be called before the player is present (and, even if so, hasn't made this pick-upable part of the inventory yet).
+	// So, just make "m_iDefaultAmmo" a non-zero value and determine what to give in an overridden "ExtractAmmo" method.
 	m_iDefaultAmmo = 1;
 	
-
 	FallInit();// get ready to fall down.
 }
 
@@ -167,7 +165,6 @@ int CHandGrenade::ExtractAmmo( CBasePlayerWeapon *pWeapon ){
 	return iReturn;
 
 }
-
 
 
 BOOL CHandGrenade :: AddPrimaryAmmo( int iCount, char *szName, int iMaxClip, int iMaxCarry )
@@ -221,11 +218,6 @@ BOOL CHandGrenade :: AddPrimaryAmmo( int iCount, char *szName, int iMaxClip, int
 
 
 
-
-
-
-
-
 void CHandGrenade::Precache( void )
 {
 	PRECACHE_MODEL("models/w_grenade.mdl");
@@ -270,7 +262,6 @@ BOOL CHandGrenade::CanHolster( void )
 void CHandGrenade::ItemPreFrame(){
 	CBasePlayerWeapon::ItemPreFrame();
 
-
 	//if(m_pPlayer->cheat_minimumfiredelayMem == 1){
 	if(EASY_CVAR_GET(cheat_minimumfiredelay) == 1){
 		//cheating.
@@ -280,8 +271,6 @@ void CHandGrenade::ItemPreFrame(){
 			m_fireState = 0;
 		}
 	}
-
-
 }
 
 void CHandGrenade::Holster( int skiplocal /* = 0 */ )
@@ -307,16 +296,37 @@ void CHandGrenade::Holster( int skiplocal /* = 0 */ )
 	}
 
 	EMIT_SOUND(ENT(m_pPlayer->pev), CHAN_WEAPON, "common/null.wav", 1.0, ATTN_NORM);
-}
+}//END OF Holster
+
 
 void CHandGrenade::PrimaryAttack()
 {
-
 	m_fInAttack &= (~1);
-
 
 	//if the player is not cheating:
 	if(m_fireState != -500){
+		//MODDD
+		// this method is called anytime primary fire is held down.
+		// So check to see if the grenade should explode in the user's hands (held down too long)
+		// ...nope!  Pineapple grenades don't explode in your hands.  But still do instantly on being
+		// thrown after being held for too long. That wasn't an oversight this time, go figure.
+		
+		if (m_flStartThrow && gpGlobals->time >= m_flStartThrow + 3) {
+			// Held down to long, explode at player origin!
+
+#ifndef CLIENT_DLL
+			//UTIL_MakeVectors(m_pPlayer->pev->v_angle + m_pPlayer->pev->punchangle);
+			SimpleStaticExplode(m_pPlayer->GetGunPosition(), gSkillData.plrDmgHandGrenade, m_pPlayer);
+#endif
+
+			//m_fInAttack &= (~1);
+			m_flReleaseThrow = 0;
+			m_flStartThrow = 0;
+			m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 0.5;
+			m_flTimeWeaponIdle = m_flNextSecondaryAttack = m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 0.5;// ensure that the animation can finish playing
+			return;
+		}
+		
 
 		//easyForcePrintLine("ARE YOU hello %d, %d", m_flStartThrow, m_pPlayer->m_rgAmmo[ m_iPrimaryAmmoType ]);
 
@@ -331,13 +341,10 @@ void CHandGrenade::PrimaryAttack()
 			m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 0.5;
 		}
 	}else{
-
-
-
+		// CHEATING.
 		m_flNextSecondaryAttack = m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + m_pPlayer->cheat_minimumfiredelaycustomMem;// ensure that the animation can finish playing
 
 		//m_flTimeWeaponIdle = m_flNextSecondaryAttack = m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 0.5;// ensure that the animation can finish playing
-
 
 
 		float flVel = 220 + 6 * 140;
@@ -356,20 +363,15 @@ void CHandGrenade::PrimaryAttack()
 		Vector vecSrc = m_pPlayer->pev->origin + m_pPlayer->pev->view_ofs + gpGlobals->v_forward * 16;
 		Vector vecThrow = gpGlobals->v_forward * flVel + m_pPlayer->pev->velocity;
 
-		CGrenade::ShootTimed( m_pPlayer->pev, vecSrc, vecThrow, 0.3f );
-		
+		CGrenade::ShootTimed( m_pPlayer->pev, vecSrc, vecThrow, gSkillData.plrDmgHandGrenade, 0.3f );
+	}//END OF cheat check
+}//END OF PrimaryAttack
 
-	}
-
-}
 
 
 void CHandGrenade::WeaponIdle( void )
 {
-
-
 	/*
-
 	//the retire-redeploy-on-ammo-check does not care if the idle delay is over yet or not.
 	if(m_fInAttack & 2 && m_pPlayer->m_rgAmmo[ m_iPrimaryAmmoType ] > 0){
 
@@ -385,7 +387,6 @@ void CHandGrenade::WeaponIdle( void )
 		return;
 	}
 	*/
-
 	
 	//MODDD - is this okay for grenades?
 	if(m_pPlayer->pev->viewmodel == iStringNull){
@@ -400,26 +401,20 @@ void CHandGrenade::WeaponIdle( void )
 	}
 
 
-
-
 	if ( m_flReleaseThrow == 0 && m_flStartThrow )
 		 m_flReleaseThrow = UTIL_WeaponTimeBase();//gpGlobals->time;  //UTIL_WeaponTimeBase()????
 
 	if ( m_flTimeWeaponIdle > UTIL_WeaponTimeBase() )
 		return;
 
-
-
 	//schedule to show the draw anim following throwing a grenade.
 	if ( m_pPlayer->m_rgAmmo[ m_iPrimaryAmmoType ] > 0 ){
-			
 		if(m_fInAttack & 1){
 			SendWeaponAnim( HANDGRENADE_DRAW );
 			m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + (16.0/30.0) + randomIdleAnimationDelay();
-			m_fInAttack = 0;
+			m_fInAttack &= (~1);
 			return;
 		}
-		
 	}
 	
 
@@ -433,55 +428,47 @@ void CHandGrenade::WeaponIdle( void )
 		else
 			angThrow.x = -10 + angThrow.x * ( ( 90 + 10 ) / 90.0 );
 
-	
+
+		float timeSinceThrow = gpGlobals->time - m_flStartThrow;
+
+		float timeUntilBoom = 3 - timeSinceThrow;
+		if (timeUntilBoom < 0) timeUntilBoom = 0;
+
 		//MODDD - flVel now depends on the time held down.
-		//For this reason, any "time" (fuse-time) related features have been moved above the velocity calculation.
-		// alway explode 3 seconds after the pin was pulled
-		float time = m_flStartThrow - gpGlobals->time + 3.0;
-		if (time < 0)
-			time = 0;
-
-		float timePassed = 3.0f - time;
-
+		
 		//short, medium, long?
 		//NOTE: all anim times shortened (cut off from the end) due to there being time where the screen is just blank during the anim.
-		if(timePassed < 1){
+		if(timeSinceThrow < 1){
 			SendWeaponAnim( HANDGRENADE_THROW1 );
 			//m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + (19.0/13.0);
 			m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + ((5.0 + 3.25)/13.0);
 			m_fInAttack |= 1;
-		}else if(timePassed < 2){
+		}else if(timeSinceThrow < 2){
 			SendWeaponAnim( HANDGRENADE_THROW2 );
 			//m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + (19.0/20.0);
 			m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + ((7.0 + 5.0) /20.0);
 			m_fInAttack |= 1;
-		}else{ // timePassed < 3
+		}else{ // timeSinceThrow < 3
 			SendWeaponAnim( HANDGRENADE_THROW3 );
 			//m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + (19.0/30.0);
 			m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + ((13.0 + 6.5) /30.0);
 			m_fInAttack |= 1;
 		}
 
-
 		//float flVel = ( 90 - angThrow.x ) * 4;
-		float flVel = 220 + timePassed * 140;
-		
-		//MODDD NOOOOOOOOOOOOOOOOOOOOOOOO
+		float flVel = 220 + timeSinceThrow * 140;
+		//MODDD NOOOOOOOOOOOOOOOOOOOOOOOO why??
 		//if ( flVel > 500 )
 		//	flVel = 500;
 
 		easyPrintLine("HAND GRENADE VELOCITY + THROW ANG: %.3f, %.3f", flVel, ((float) (( 90 - angThrow.x ) * 4))  );
 
-
 		UTIL_MakeVectors( angThrow );
 
 		Vector vecSrc = m_pPlayer->pev->origin + m_pPlayer->pev->view_ofs + gpGlobals->v_forward * 16;
-
 		Vector vecThrow = gpGlobals->v_forward * flVel + m_pPlayer->pev->velocity;
 
-		
-
-		CGrenade::ShootTimed( m_pPlayer->pev, vecSrc, vecThrow, time );
+		CGrenade::ShootTimed( m_pPlayer->pev, vecSrc, vecThrow, gSkillData.plrDmgHandGrenade, timeUntilBoom);
 		
 		//MODDD - section removed.   Odd, while testing, I could not trigger "THROW3" at all.
 		//time
@@ -520,9 +507,6 @@ void CHandGrenade::WeaponIdle( void )
 		}
 		*/
 
-		
-
-
 		// player "shoot" animation
 		m_pPlayer->SetAnimation( PLAYER_ATTACK1 );
 
@@ -537,6 +521,8 @@ void CHandGrenade::WeaponIdle( void )
 			m_pPlayer->m_rgAmmo[ m_iPrimaryAmmoType ]--;
 		}
 
+		//MODDD - no point to this section anymore.  WeaponIdles and the NextAttacks are set above already.
+		/*
 		if ( !m_pPlayer->m_rgAmmo[ m_iPrimaryAmmoType ] )
 		{
 			// just threw last grenade
@@ -544,8 +530,12 @@ void CHandGrenade::WeaponIdle( void )
 			// animation, weapon idle will automatically retire the weapon for us.
 			m_flTimeWeaponIdle = m_flNextSecondaryAttack = m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 0.5;// ensure that the animation can finish playing
 		}
+		*/
 		return;
 	}
+
+	//MODDD - never observed as m_flReleaseThrow never goes above 0?  Well, whoops.
+	/*
 	else if ( m_flReleaseThrow > 0 )
 	{
 		// we've finished the throw, restart.
@@ -567,11 +557,10 @@ void CHandGrenade::WeaponIdle( void )
 		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + (15.0 / 30.0) + randomIdleAnimationDelay();
 		
 
-		
-		
 		m_flReleaseThrow = -1;
 		return;
 	}
+	*/
 
 	if ( m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] )
 	{
@@ -591,7 +580,6 @@ void CHandGrenade::WeaponIdle( void )
 			m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + (75.0 / 30.0) + randomIdleAnimationDelay();
 		}
 		
-
 		SendWeaponAnim( iAnim );
 	}
 }

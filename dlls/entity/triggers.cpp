@@ -1178,7 +1178,7 @@ void CBaseTrigger :: HurtTouch ( CBaseEntity *pOther )
 	{
 		const char* myClassname = pOther->getClassname();
 		int isPlaya = pOther->IsPlayer();
-		int bootyButtcheeks = 69;
+		int breakme = 69;
 		easyForcePrintLine("I AM SUPER %s %d", myClassname, isPlaya);
 	}
 	*/

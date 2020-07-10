@@ -1108,11 +1108,8 @@ int CGraph::FindNearestNode(const Vector& vecOrigin, int afNodeTypes)
 	int i;
 	TraceResult tr;
 
-
-
 	//MODDD - DANGEROUS HACK.
 	//afNodeTypes |= bits_NODE_LAND | bits_NODE_WATER | bits_NODE_AIR;
-
 
 	if (!m_fGraphPresent || !m_fGraphPointersSet)
 	{// protect us in the case that the node graph isn't available

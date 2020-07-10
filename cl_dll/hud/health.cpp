@@ -71,7 +71,7 @@ EASY_CVAR_EXTERN(painFlashDirTolerance)
 EASY_CVAR_EXTERN(painArrowCumulativeAppearMin)
 EASY_CVAR_EXTERN(painArrowCumulativeDmgJump)
 EASY_CVAR_EXTERN(painFlashPrintouts)
-EASY_CVAR_EXTERN(painFlashIgnoreArmor)
+EASY_CVAR_EXTERN(painFlashArmorBlock)
 EASY_CVAR_EXTERN(itemFlashCumulativeJump)
 EASY_CVAR_EXTERN(itemFlashDrawOpacityMax)
 EASY_CVAR_EXTERN(itemFlashDrawOpacityMin)
@@ -268,6 +268,10 @@ int CHudHealth:: MsgFunc_Damage(const char *pszName,  int iSize, void *pbuf )
 	for ( int i = 0 ; i < 3 ; i++)
 		vecFrom[i] = READ_COORD();
 
+
+
+	int damageBlockedByArmor = rawDamageTaken - damageTaken;
+
 	//MODDD
 	//UpdateTiles(gHUD.m_flTime, bitsDamage);
 	UpdateTiles(gHUD.m_flTime, bitsDamage, bitsDamageMod);
@@ -283,9 +287,9 @@ int CHudHealth:: MsgFunc_Damage(const char *pszName,  int iSize, void *pbuf )
 		}else if(EASY_CVAR_GET(drownDrawPainMode) == 3){
 			//m_fAttackFront = m_fAttackRear = m_fAttackRight = m_fAttackLeft = 1;
 			//MODDD TODO - ditto.
-			const float damageFlashModTotal = damageTaken + rawDamageTaken * EASY_CVAR_GET(painFlashIgnoreArmor);
+			const float damageFlashModTotal = damageTaken + damageBlockedByArmor * EASY_CVAR_GET(painFlashArmorBlock);
 
-			m_fAttackFront = m_fAttackRear = m_fAttackRight = m_fAttackLeft = 0.25;
+			m_fAttackFront = m_fAttackRear = m_fAttackRight = m_fAttackLeft = 0.5;
 			setUniformDamage(damageFlashModTotal);
 			return 1;
 		}
@@ -297,7 +301,7 @@ int CHudHealth:: MsgFunc_Damage(const char *pszName,  int iSize, void *pbuf )
 	if(EASY_CVAR_GET(painFlashPrintouts) == 1)easyForcePrintLine("RAW DAMAGE %d %d", armor, damageTaken);
 	// Actually took damage
 	//if ( damageTaken > 0 || armor > 0 )
-	if ( damageTaken > 0 || (EASY_CVAR_GET(painFlashIgnoreArmor) > 0 && rawDamageTaken > 0) || armor > 0 )
+	if ( damageTaken > 0 || (EASY_CVAR_GET(painFlashArmorBlock) > 0 && damageBlockedByArmor > 0) || armor > 0 )
 		CalcDamageDirection(vecFrom, damageTaken, rawDamageTaken);
 
 	return 1;
@@ -509,7 +513,7 @@ void CHudHealth::CalcDamageDirection(vec3_t vecFrom, int damageAmount, int rawDa
 		return;
 	}
 	int damageBlockedByArmor = rawDamageAmount - damageAmount;
-	//this gets reduced by a factor of, "painFlashIgnoreArmor".
+	//this gets reduced by a factor of, "painFlashArmorBlock".
 
 	memcpy(vecOrigin, gHUD.m_vecOrigin, sizeof(vec3_t));
 	memcpy(vecAngles, gHUD.m_vecAngles, sizeof(vec3_t));
@@ -524,14 +528,14 @@ void CHudHealth::CalcDamageDirection(vec3_t vecFrom, int damageAmount, int rawDa
 	front = DotProduct (vecFrom, right);
 	side = DotProduct (vecFrom, forward);
 
-	const float damageFlashModTotal = damageAmount + rawDamageAmount * EASY_CVAR_GET(painFlashIgnoreArmor);
+	const float damageFlashModTotal = damageAmount + damageBlockedByArmor * EASY_CVAR_GET(painFlashArmorBlock);
 
 	if (flDistToTarget <= 50)
 	{
-		//MODDD TODO - should this be changed to "0.25", to set all directions to slight?
-		//             At least for the screen flash.  Arrows are okay getting brightened like this.
+		//MODDD - changes to half the intended effect instead, no need to make attacks close-up look too dramatic
+		// compared to actual damage.
 		//m_fAttackFront = m_fAttackRear = m_fAttackRight = m_fAttackLeft = 1;
-		m_fAttackFront = m_fAttackRear = m_fAttackRight = m_fAttackLeft = 0.25;
+		m_fAttackFront = m_fAttackRear = m_fAttackRight = m_fAttackLeft = 0.5;
 		setUniformDamage(damageFlashModTotal);
 	}
 	else 

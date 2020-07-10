@@ -324,10 +324,12 @@ typedef enum
 	MONSTERSTATE_IDLE,
 	MONSTERSTATE_COMBAT,
 	MONSTERSTATE_ALERT,
-	MONSTERSTATE_HUNT,
+	//MODDD - uh-oh.  you got cut.
+	//MONSTERSTATE_HUNT,
 	MONSTERSTATE_PRONE,
 	MONSTERSTATE_SCRIPT,
-	MONSTERSTATE_PLAYDEAD,
+	//MODDD - same for you.  The chumtoad works without this by the way.
+	//MONSTERSTATE_PLAYDEAD,
 	MONSTERSTATE_DEAD
 
 } MONSTERSTATE;
@@ -503,7 +505,6 @@ extern void UTIL_fromToBlood(CBaseEntity* arg_entSrc, CBaseEntity* arg_entDest, 
 extern void UTIL_fromToBlood(CBaseEntity* arg_entSrc, CBaseEntity* arg_entDest, const float& arg_fltDamage, const float &arg_fltdistanceHint, Vector* arg_suggestedTraceHullVecEndPos, Vector* arg_suggestedTraceHullStart, Vector* arg_suggestedTraceHullEnd);
 
 extern Vector	UTIL_GetAimVector		(edict_t* pent, float flSpeed);
-extern int		UTIL_PointContents		(const Vector &vec);
 
 extern int		UTIL_IsMasterTriggered	(string_t sMaster, CBaseEntity *pActivator);
 extern void		UTIL_BloodStream( const Vector &origin, const Vector &direction, int color, int amount );
@@ -521,25 +522,104 @@ extern void		UTIL_GunshotDecalTraceForceDefault( TraceResult *pTrace, int decalN
 
 //MODDD - new
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-extern Vector		UTIL_GetProjectileVelocityExtra(const Vector& playerVelocity, float velocityMode);
-extern void		UTIL_Explosion(const Vector &location, short sprite, float size, int framerate, int flag);
-extern void		UTIL_Explosion(const Vector &location, float offsetx, float offsety, float offsetz, short sprite, float size, int framerate, int flag);
-extern void		UTIL_Explosion(const Vector &location, short sprite, float size, int framerate, int flag, const Vector& altLocation);
+extern Vector	UTIL_GetProjectileVelocityExtra(const Vector& playerVelocity, float velocityMode);
 
-extern void		UTIL_Explosion(entvars_t* pev, const Vector &location, short sprite, float size, int framerate, int flag);
-extern void		UTIL_Explosion(entvars_t* pev, const Vector &location, float offsetx, float offsety, float offsetz, short sprite, float size, int framerate, int flag);
-extern void		UTIL_Explosion(entvars_t* pev, const Vector &location, float offsetx, float offsety, float offsetz, short sprite, float size, int framerate, int flag, float shrapMod);
-extern void		UTIL_Explosion(entvars_t* pev, const Vector &location, short sprite, float size, int framerate, int flag, const Vector& altLocation);
-extern void		UTIL_Explosion(entvars_t* pev, const Vector &location, short sprite, float size, int framerate, int flag, const Vector& altLocation, float shrapMode);
 
-extern void		UTIL_Explosion(const Vector &location, float offsetx, float offsety, float offsetz, short sprite, float size, int framerate, int flag, const Vector& altLocation);
-extern void		UTIL_Explosion(entvars_t* pev, const Vector &location, float offsetx, float offsety, float offsetz, short sprite, float size, int framerate, int flag, const Vector& altLocation);
-extern void		UTIL_Explosion(entvars_t* pev, const Vector &location, float offsetx, float offsety, float offsetz, short sprite, float size, int framerate, int flag, const Vector& altLocation, float shrapMod);
 
-extern void		UTIL_Smoke(const Vector& location, short sprite, float scale, int framerate);
-extern void		UTIL_Smoke(const Vector& location, float offsetx, float offsety, float offsetz, short sprite, float scale, int framerate);
-extern BOOL			UTIL_getExplosionsHaveSparks();
 
+
+extern void		UTIL_Explosion(int msg_dest, const Vector &location, short sprite, float size, int framerate, int flag);
+extern void		UTIL_Explosion(int msg_dest, const float* pMsgOrigin, const Vector& location, short sprite, float size, int framerate, int flag);
+extern void		UTIL_Explosion(int msg_dest, const float* pMsgOrigin, edict_t* ed, const Vector& location, short sprite, float size, int framerate, int flag);
+
+extern void		UTIL_Explosion(int msg_dest, const Vector &location, float offsetx, float offsety, float offsetz, short sprite, float size, int framerate, int flag);
+extern void		UTIL_Explosion(int msg_dest, const float* pMsgOrigin, const Vector& location, float offsetx, float offsety, float offsetz, short sprite, float size, int framerate, int flag);
+extern void		UTIL_Explosion(int msg_dest, const float* pMsgOrigin, edict_t* ed, const Vector& location, float offsetx, float offsety, float offsetz, short sprite, float size, int framerate, int flag);
+
+extern void		UTIL_Explosion(int msg_dest, const Vector &location, short sprite, float size, int framerate, int flag, const Vector& altLocation);
+extern void		UTIL_Explosion(int msg_dest, const float* pMsgOrigin, const Vector& location, short sprite, float size, int framerate, int flag, const Vector& altLocation);
+extern void		UTIL_Explosion(int msg_dest, const float* pMsgOrigin, edict_t* ed, const Vector& location, short sprite, float size, int framerate, int flag, const Vector& altLocation);
+
+
+
+
+extern void		UTIL_Explosion(int msg_dest, entvars_t* pev, const Vector &location, short sprite, float size, int framerate, int flag);
+extern void		UTIL_Explosion(int msg_dest, const float* pMsgOrigin, entvars_t* pev, const Vector& location, short sprite, float size, int framerate, int flag);
+extern void		UTIL_Explosion(int msg_dest, const float* pMsgOrigin, edict_t* ed, entvars_t* pev, const Vector& location, short sprite, float size, int framerate, int flag);
+
+extern void		UTIL_Explosion(int msg_dest, entvars_t* pev, const Vector &location, float offsetx, float offsety, float offsetz, short sprite, float size, int framerate, int flag);
+extern void		UTIL_Explosion(int msg_dest, const float* pMsgOrigin, entvars_t* pev, const Vector& location, float offsetx, float offsety, float offsetz, short sprite, float size, int framerate, int flag);
+extern void		UTIL_Explosion(int msg_dest, const float* pMsgOrigin, edict_t* ed, entvars_t* pev, const Vector& location, float offsetx, float offsety, float offsetz, short sprite, float size, int framerate, int flag);
+
+extern void		UTIL_Explosion(int msg_dest, entvars_t* pev, const Vector &location, float offsetx, float offsety, float offsetz, short sprite, float size, int framerate, int flag, float shrapMod);
+extern void		UTIL_Explosion(int msg_dest, const float* pMsgOrigin, entvars_t* pev, const Vector& location, float offsetx, float offsety, float offsetz, short sprite, float size, int framerate, int flag, float shrapMod);
+extern void		UTIL_Explosion(int msg_dest, const float* pMsgOrigin, edict_t* ed, entvars_t* pev, const Vector& location, float offsetx, float offsety, float offsetz, short sprite, float size, int framerate, int flag, float shrapMod);
+
+extern void		UTIL_Explosion(int msg_dest, entvars_t* pev, const Vector &location, short sprite, float size, int framerate, int flag, const Vector& altLocation);
+extern void		UTIL_Explosion(int msg_dest, const float* pMsgOrigin, entvars_t* pev, const Vector& location, short sprite, float size, int framerate, int flag, const Vector& altLocation);
+extern void		UTIL_Explosion(int msg_dest, const float* pMsgOrigin, edict_t* ed, entvars_t* pev, const Vector& location, short sprite, float size, int framerate, int flag, const Vector& altLocation);
+
+extern void		UTIL_Explosion(int msg_dest, entvars_t* pev, const Vector &location, short sprite, float size, int framerate, int flag, const Vector& altLocation, float shrapMode);
+extern void		UTIL_Explosion(int msg_dest, const float* pMsgOrigin, entvars_t* pev, const Vector& location, short sprite, float size, int framerate, int flag, const Vector& altLocation, float shrapMode);
+extern void		UTIL_Explosion(int msg_dest, const float* pMsgOrigin, edict_t* ed, entvars_t* pev, const Vector& location, short sprite, float size, int framerate, int flag, const Vector& altLocation, float shrapMode);
+
+
+
+extern void		UTIL_Explosion(int msg_dest, const Vector &location, float offsetx, float offsety, float offsetz, short sprite, float size, int framerate, int flag, const Vector& altLocation);
+extern void		UTIL_Explosion(int msg_dest, const float* pMsgOrigin, const Vector& location, float offsetx, float offsety, float offsetz, short sprite, float size, int framerate, int flag, const Vector& altLocation);
+extern void		UTIL_Explosion(int msg_dest, const float* pMsgOrigin, edict_t* ed, const Vector& location, float offsetx, float offsety, float offsetz, short sprite, float size, int framerate, int flag, const Vector& altLocation);
+
+extern void		UTIL_Explosion(int msg_dest, entvars_t* pev, const Vector &location, float offsetx, float offsety, float offsetz, short sprite, float size, int framerate, int flag, const Vector& altLocation);
+extern void		UTIL_Explosion(int msg_dest, const float* pMsgOrigin, entvars_t* pev, const Vector& location, float offsetx, float offsety, float offsetz, short sprite, float size, int framerate, int flag, const Vector& altLocation);
+extern void		UTIL_Explosion(int msg_dest, const float* pMsgOrigin, edict_t* ed, entvars_t* pev, const Vector& location, float offsetx, float offsety, float offsetz, short sprite, float size, int framerate, int flag, const Vector& altLocation);
+
+extern void		UTIL_Explosion(int msg_dest, entvars_t* pev, const Vector &location, float offsetx, float offsety, float offsetz, short sprite, float size, int framerate, int flag, const Vector& altLocation, float shrapMod);
+extern void		UTIL_Explosion(int msg_dest, const float* pMsgOrigin, entvars_t* pev, const Vector& location, float offsetx, float offsety, float offsetz, short sprite, float size, int framerate, int flag, const Vector& altLocation, float shrapMod);
+extern void		UTIL_Explosion(int msg_dest, const float* pMsgOrigin, edict_t* ed, entvars_t* pev, const Vector& location, float offsetx, float offsety, float offsetz, short sprite, float size, int framerate, int flag, const Vector& altLocation, float shrapMod);
+
+
+
+
+
+extern void		UTIL_QuakeExplosion(int msg_dest, entvars_t* pev, const Vector& location, float offsetx, float offsety, float offsetz, float shrapMod);
+extern void		UTIL_QuakeExplosion(int msg_dest, const float* pMsgOrigin, entvars_t* pev, const Vector& location, float offsetx, float offsety, float offsetz, float shrapMod);
+extern void		UTIL_QuakeExplosion(int msg_dest, const float* pMsgOrigin, edict_t* ed, entvars_t* pev, const Vector& location, float offsetx, float offsety, float offsetz, float shrapMod);
+
+extern void		UTIL_SpriteOrQuakeExplosion(int msg_dest, entvars_t* pev, const Vector& location, float offsetx, float offsety, float offsetz, short sprite, float size, int brightness, const Vector& altLocation, float shrapMod);
+extern void		UTIL_SpriteOrQuakeExplosion(int msg_dest, const float* pMsgOrigin, entvars_t* pev, const Vector& location, float offsetx, float offsety, float offsetz, short sprite, float size, int brightness, const Vector& altLocation, float shrapMod);
+extern void		UTIL_SpriteOrQuakeExplosion(int msg_dest, const float* pMsgOrigin, edict_t* ed, entvars_t* pev, const Vector& location, float offsetx, float offsety, float offsetz, short sprite, float size, int brightness, const Vector& altLocation, float shrapMod);
+
+
+
+
+extern void		UTIL_Smoke(int msg_dest, const Vector& location, short sprite, float scale, int framerate);
+extern void		UTIL_Smoke(int msg_dest, const float* pMsgOrigin, const Vector& location, short sprite, float scale, int framerate);
+extern void		UTIL_Smoke(int msg_dest, const float* pMsgOrigin, edict_t* ed, const Vector& location, short sprite, float scale, int framerate);
+
+extern void		UTIL_Smoke(int msg_dest, const Vector& location, float offsetx, float offsety, float offsetz, short sprite, float scale, int framerate);
+extern void		UTIL_Smoke(int msg_dest, const float* pMsgOrigin, const Vector& location, float offsetx, float offsety, float offsetz, short sprite, float scale, int framerate);
+extern void		UTIL_Smoke(int msg_dest, const float* pMsgOrigin, edict_t* ed, const Vector& location, float offsetx, float offsety, float offsetz, short sprite, float scale, int framerate);
+
+
+extern void		UTIL_ExplosionSmoke(int msg_dest, const Vector& location, short sprite, float scale, int framerate);
+extern void		UTIL_ExplosionSmoke(int msg_dest, const float* pMsgOrigin, const Vector& location, short sprite, float scale, int framerate);
+extern void		UTIL_ExplosionSmoke(int msg_dest, const float* pMsgOrigin, edict_t* ed, const Vector& location, short sprite, float scale, int framerate);
+
+extern void		UTIL_ExplosionSmoke(int msg_dest, const Vector& location, float offsetx, float offsety, float offsetz, short sprite, float scale, int framerate);
+extern void		UTIL_ExplosionSmoke(int msg_dest, const float* pMsgOrigin, const Vector& location, float offsetx, float offsety, float offsetz, short sprite, float scale, int framerate);
+extern void		UTIL_ExplosionSmoke(int msg_dest, const float* pMsgOrigin, edict_t* ed, const Vector& location, float offsetx, float offsety, float offsetz, short sprite, float scale, int framerate);
+
+
+/*
+inline void MESSAGE_BEGIN(int msg_dest, const float* pOrigin, entvars_t* ent) {
+	(*g_engfuncs.pfnMessageBegin)(msg_dest, msg_type, pOrigin, ENT(ent));
+}
+inline void MESSAGE_BEGIN(int msg_dest, const float* pOrigin = NULL, edict_t* ed = NULL) {
+*/
+
+
+
+extern BOOL		UTIL_getExplosionsHaveSparks(void);
 
 /*
 extern void UTIL_PlaySound(entvars_t* pev, int channel, const char *pszName, float volume, float attenuation );
@@ -706,10 +786,7 @@ extern BOOL UTIL_TeamsMatch( const char *pTeamName1, const char *pTeamName2 );
 // Use for ease-in, ease-out style interpolation (accel/decel)
 extern float UTIL_SplineFraction( float value, float scale );
 
-// Search for water transition along a vertical line
-extern float UTIL_WaterLevel( const Vector &position, float minz, float maxz );
-extern void UTIL_Bubbles( Vector mins, Vector maxs, int count );
-extern void UTIL_BubbleTrail( Vector from, Vector to, int count );
+//MODDD - few methods moved to util_shared.h
 
 // allows precacheing of other entities
 extern void UTIL_PrecacheOther( const char *szClassname );
@@ -777,14 +854,11 @@ float TEXTURETYPE_PlaySound(TraceResult *ptr,  Vector vecSrc, Vector vecEnd, int
 void UTIL_SetGroupTrace( int groupmask, int op );
 void UTIL_UnsetGroupTrace( void );
 
-int UTIL_SharedRandomLong( unsigned int seed, int low, int high );
-float UTIL_SharedRandomFloat( unsigned int seed, float low, float high );
-
-float UTIL_WeaponTimeBase( void );
 
 //MODDDMIRROR
 Vector UTIL_MirrorVector( Vector angles );
 Vector UTIL_MirrorPos ( Vector endpos );
+
 
 extern void UTIL_generateFreakyLight( const Vector& arg_origin);
 

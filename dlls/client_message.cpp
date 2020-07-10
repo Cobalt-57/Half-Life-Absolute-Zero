@@ -1,6 +1,5 @@
 
 
-#include "ignore_warning_list.h"
 #include "extdll.h"
 #include "client_message.h"
 
@@ -101,6 +100,8 @@ int gmsgPrintClientCVar = 0;
 
 int gmsgTimeWeaponIdleUpdate = 0;
 int gmsgJustThrownUpdate = 0;
+
+int gmsgServerDLL_Info = 0;
 
 int gmsgYMG = 0;
 int gmsgYMG_Stop = 0;
@@ -215,6 +216,7 @@ void LinkUserMessages( void )
 	gmsgTimeWeaponIdleUpdate = REG_USER_MSG("UpdTWI", 2);
 	gmsgJustThrownUpdate = REG_USER_MSG("UpdJT", 1);
 
+	gmsgServerDLL_Info = REG_USER_MSG("ServerDLLI", -1);
 
 
 

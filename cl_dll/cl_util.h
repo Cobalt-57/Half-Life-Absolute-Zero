@@ -26,6 +26,7 @@
 
 
 
+
 extern cvar_t* cl_lw;
 extern cvar_t* cl_viewrollangle;
 extern cvar_t* cl_viewrollspeed;

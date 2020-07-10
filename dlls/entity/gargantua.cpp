@@ -33,10 +33,26 @@
 #include "explode.h"
 #include "func_break.h"
 
+
+
+//MODDD - extern
+EASY_CVAR_EXTERN(drawCollisionBoundsAtDeath)
+EASY_CVAR_EXTERN(drawHitBoundsAtDeath)
+EASY_CVAR_EXTERN(thoroughHitBoxUpdates)
+EASY_CVAR_EXTERN(thatWasntPunch)
+EASY_CVAR_EXTERN(gargantuaPrintout)
+EASY_CVAR_EXTERN(gargantuaCorpseDeath)
+EASY_CVAR_EXTERN(gargantuaFallSound)
+EASY_CVAR_EXTERN(gargantuaBleeds)
+EASY_CVAR_EXTERN(animationKilledBoundsRemoval)
+EASY_CVAR_EXTERN(gargantuaKilledBoundsAssist)
+
+
+
+
 //=========================================================
 // Gargantua Monster
 //=========================================================
-const float GARG_ATTACKDIST = 80.0;
 
 // Garg animation events
 #define GARG_AE_SLASH_LEFT			1
@@ -61,26 +77,20 @@ const float GARG_ATTACKDIST = 80.0;
 
 #define STOMP_SPRITE_COUNT			10
 
-int gStompSprite = 0, gGargGibModel = 0;
-void SpawnExplosion( Vector center, float randomRange, float time, int magnitude );
+
+#define SPIRAL_INTERVAL 0.1 //025
+#define STOMP_INTERVAL		0.025
+
+const float GARG_ATTACKDIST = 80.0;
+
+// If you wanna get technical these should be static vars of CGargantua buuuuuuuut it doesn't really make a difference,
+// so long as these names aren't collided with elsewhere.
+int gStompSprite = 0;
+int gGargGibModel = 0;
 
 class CSmoker;
 
-//MODDD - extern
-EASY_CVAR_EXTERN(drawCollisionBoundsAtDeath)
-EASY_CVAR_EXTERN(drawHitBoundsAtDeath)
 
-EASY_CVAR_EXTERN(thoroughHitBoxUpdates)
-EASY_CVAR_EXTERN(thatWasntPunch)
-EASY_CVAR_EXTERN(gargantuaPrintout)
-EASY_CVAR_EXTERN(gargantuaCorpseDeath)
-EASY_CVAR_EXTERN(gargantuaFallSound)
-EASY_CVAR_EXTERN(gargantuaBleeds)
-
-EASY_CVAR_EXTERN(animationKilledBoundsRemoval)
-EASY_CVAR_EXTERN(gargantuaKilledBoundsAssist)
-
-//EASY_CVAR_EXTERN(testVar)
 
 
 // Spiral Effect
@@ -145,8 +155,6 @@ void CStomp::Spawn( void )
 	EMIT_SOUND_DYN( edict(), CHAN_BODY, GARG_STOMP_BUZZ_SOUND, 1, ATTN_NORM, 0, PITCH_NORM * 0.55);
 }
 
-
-#define STOMP_INTERVAL		0.025
 
 void CStomp::Think( void )
 {
@@ -228,15 +236,44 @@ void StreakSplash( const Vector &origin, const Vector &direction, int color, int
 
 class CGargantua : public CBaseMonster
 {
-public:
+private:
+	static const char* pAttackHitSounds[];
+	static const char* pBeamAttackSounds[];
+	static const char* pAttackMissSounds[];
+	//static const char *pRicSounds[];
+	static const char* pFootSounds[];
+	static const char* pIdleSounds[];
+	static const char* pAlertSounds[];
+	static const char* pPainSounds[];
+	static const char* pAttackSounds[];
+	static const char* pStompSounds[];
+	static const char* pBreatheSounds[];
+
 	//MODDD - new
-	CGargantua();
+	CBaseEntity* GargantuaCheckTraceHullAttack(float flDist, int iDamage, int iDmgType, int iDmgTypeMod);
+	CBaseEntity* GargantuaCheckTraceHullAttack(float flDist, int iDamage, int iDmgType);
+
+	BOOL needsMovementBoundFix(void);
+
+
+	CSprite* m_pEyeGlow;		// Glow around the eyes
+	CBeam* m_pFlame[4];		// Flame beams
+
+	int		m_eyeBrightness;	// Brightness target
+	float	m_seeTime;			// Time to attack (when I see the enemy, I set this)
+	float	m_flameTime;		// Time of next flame attack
+	float	m_painSoundTime;	// Time of next pain sound
+	float	m_streakTime;		// streak timer (don't send too many)
+	float	m_flameX;			// Flame thrower aim
+	float	m_flameY;
+
+public:
 	BOOL gargDeadBoundChangeYet;
 	float fallShakeTime;
 
-	void MonsterThink(void);
-	int  IRelationship( CBaseEntity *pTarget );
-	
+
+public:
+	CGargantua();
 
 	void Spawn( void );
 	void Precache( void );
@@ -245,10 +282,11 @@ public:
 	
 	BOOL isSizeGiant(void);
 
+	void MonsterThink(void);
+	int  IRelationship( CBaseEntity *pTarget );
 	
 	GENERATE_TRACEATTACK_PROTOTYPE
 	GENERATE_TAKEDAMAGE_PROTOTYPE
-
 
 
 	void HandleAnimEvent( MonsterEvent_t *pEvent );
@@ -281,10 +319,8 @@ public:
 			pev->absmin = pev->origin + Vector( -80, -80, 0 );
 			pev->absmax = pev->origin + Vector( 80, 80, 214 );
 			//CBaseMonster::SetObjectCollisionBox();
-
 		}
 	}
-
 
 
 	Schedule_t *GetScheduleOfType( int Type );
@@ -294,6 +330,10 @@ public:
 	void PrescheduleThink( void );
 
 	GENERATE_KILLED_PROTOTYPE
+	void onDelete(void);
+
+
+
 	void DeathEffect( void );
 
 	//MODDD - Why unused?
@@ -328,34 +368,7 @@ public:
 	static	TYPEDESCRIPTION m_SaveData[];
 
 	CUSTOM_SCHEDULES;
-
-private:
-	static const char *pAttackHitSounds[];
-	static const char *pBeamAttackSounds[];
-	static const char *pAttackMissSounds[];
-	//static const char *pRicSounds[];
-	static const char *pFootSounds[];
-	static const char *pIdleSounds[];
-	static const char *pAlertSounds[];
-	static const char *pPainSounds[];
-	static const char *pAttackSounds[];
-	static const char *pStompSounds[];
-	static const char *pBreatheSounds[];
-
-	//MODDD - new
-	CBaseEntity* GargantuaCheckTraceHullAttack(float flDist, int iDamage, int iDmgType, int iDmgTypeMod);
-	CBaseEntity* GargantuaCheckTraceHullAttack(float flDist, int iDamage, int iDmgType);
-
-	CSprite		*m_pEyeGlow;		// Glow around the eyes
-	CBeam		*m_pFlame[4];		// Flame beams
-
-	int		m_eyeBrightness;	// Brightness target
-	float	m_seeTime;			// Time to attack (when I see the enemy, I set this)
-	float	m_flameTime;		// Time of next flame attack
-	float	m_painSoundTime;	// Time of next pain sound
-	float	m_streakTime;		// streak timer (don't send too many)
-	float	m_flameX;			// Flame thrower aim
-	float	m_flameY;			
+		
 };
 
 
@@ -1248,7 +1261,6 @@ GENERATE_TRACEATTACK_IMPLEMENTATION(CGargantua){
 
 	//send "FALSE" for "useBloodEffect", as the hit effect to use was handled above already.
 	GENERATE_TRACEATTACK_PARENT_CALL(CBaseMonster);
-
 }
 
 
@@ -1261,15 +1273,10 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CGargantua)
 {
 	ALERT( at_aiconsole, "CGargantua::TakeDamage\n");
 
-
-
-
 	EASY_CVAR_PRINTIF_PRE(gargantuaPrintout, easyPrintLine( "GARG DAMAGE %.2f", pev->health ));
 	//easyForcePrintLine("????????????? %d %d", IsAlive(), pev->deadflag);
 	if ( IsAlive() )
 	{
-
-		
 		//usal checks.
 		if ( !(bitsDamageType & GARG_DAMAGE) )
 			flDamage *= 0.01;
@@ -1295,17 +1302,7 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CGargantua)
 
 	}
 
-
-
-	/*
-	//MODDD - NEW
-	else{
-		return 0;
-	}
-	*/
-
 	float valueOf = EASY_CVAR_GET(gargantuaCorpseDeath);
-
 
 	if( (valueOf == 1 || valueOf == 4) && pev->deadflag == DEAD_DYING){
 		EASY_CVAR_PRINTIF_PRE(gargantuaPrintout, easyPrintLine( "DAMAGE BLOCKED!"));
@@ -1313,9 +1310,9 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CGargantua)
 		return 1;
 	}
 
-
 	return GENERATE_TAKEDAMAGE_PARENT_CALL(CBaseMonster);
 }
+
 
 
 void CGargantua::DeathEffect( void )
@@ -1332,8 +1329,19 @@ void CGargantua::DeathEffect( void )
 	position.z += 32;
 	for ( i = 0; i < 7; i+=2 )
 	{
-		SpawnExplosion( position, 70, (i * 0.3), 60 + (i*20) );
-		position.z += 15;
+		// SpawnExplosion( position, 70, (i * 0.3), 60 + (i*20) );
+		//SpawnExplosion(Vector center, float randomRange, float time, int magnitude);
+		//ExplosionCreate(position, NULL, 70, (i * 0.3), 60 + (i * 20), 0)
+
+		Vector thisExpPos = position;
+		thisExpPos.x += RANDOM_FLOAT(-70, 70);
+		thisExpPos.y += RANDOM_FLOAT(-70, 70);
+		thisExpPos.z += RANDOM_FLOAT(6, 18);   //new
+
+		ExplosionCreate(thisExpPos, g_vecZero, NULL, 60 + (i * 20), FALSE, (i * 0.3));
+
+		//MODDD - upped from 15.
+		position.z += 20;
 	}
 
 	CBaseEntity *pSmoker = CBaseEntity::Create( "env_smoker", pev->origin, g_vecZero, NULL );
@@ -1345,34 +1353,17 @@ void CGargantua::DeathEffect( void )
 
 
 
-/*
-void CGargantua::Killed( entvars_t *pevAttacker, int iGib )
-{
-	EyeOff();
-	UTIL_Remove( m_pEyeGlow );
-	m_pEyeGlow = NULL;
-	CBaseMonster::Killed( pevAttacker, GIB_NEVER );
-}
-*/
-
 GENERATE_KILLED_IMPLEMENTATION(CGargantua)
 {
 	EyeOff();
 	UTIL_Remove( m_pEyeGlow );
 	m_pEyeGlow = NULL;
 
-
-
 	//MODDD - WHY IS THIS NOT HERE???!!!
 	FlameDestroy();
 
-
-
 	int gibFlag = 0;
-
 	float valueOf = EASY_CVAR_GET(gargantuaCorpseDeath);
-
-
 
 	EASY_CVAR_PRINTIF_PRE(gargantuaPrintout, easyPrintLine( "DEAD FLAG: %d", pev->deadflag));
 
@@ -1399,9 +1390,7 @@ GENERATE_KILLED_IMPLEMENTATION(CGargantua)
 
 	}
 
-	
 	BOOL justDied = (pev->deadflag == DEAD_NO);
-
 
 
 	//MODDD 
@@ -1417,11 +1406,7 @@ GENERATE_KILLED_IMPLEMENTATION(CGargantua)
 
 		//MODDD - not enough?  Try this for all pain sounds I guess.
 		//STOP_SOUND_FILTERED( ENT(pev), CHAN_STATIC, "apache/ap_rotor4.wav" );
-
-		
 	}
-
-
 
 	if(valueOf == 4 || valueOf == 5){
 		if(justDied){
@@ -1431,9 +1416,6 @@ GENERATE_KILLED_IMPLEMENTATION(CGargantua)
 		}
 	}
 	
-
-
-
 	if(pev->deadflag == DEAD_NO){
 		//The first blow can never gib this creature.  It's too big to be killed in one hit,
 		//no matter how many before that, and just disappear into flying gibs.
@@ -1451,6 +1433,19 @@ GENERATE_KILLED_IMPLEMENTATION(CGargantua)
 		}
 	}
 }//END OF killed
+
+
+void CGargantua::onDelete(void) {
+	EyeOff();
+	UTIL_Remove(m_pEyeGlow);
+	m_pEyeGlow = NULL;
+	FlameDestroy();
+}
+
+
+
+
+
 
 //=========================================================
 // CheckMeleeAttack1
@@ -1624,6 +1619,15 @@ CBaseEntity* CGargantua::GargantuaCheckTraceHullAttack(float flDist, int iDamage
 }
 
 
+// really?? The gargantuan ever had this?     WHAT.
+BOOL CGargantua::needsMovementBoundFix(void) {
+	return TRUE;
+}
+
+
+
+
+
 Schedule_t *CGargantua::GetScheduleOfType( int Type )
 {
 	// HACKHACK - turn off the flames if they are on and garg goes scripted / dead
@@ -1698,7 +1702,6 @@ void CGargantua::StartTask( Task_t *pTask )
 		RouteClear();
 		m_IdealActivity = GetDeathActivity();
 		pev->deadflag = DEAD_DYING;
-		deadSetActivityBlock = TRUE;
 		//easyPrintLine("ARE YOU SOME KIND OF insecure person??? %.2f %d", EASY_CVAR_GET(thoroughHitBoxUpdates), pev->deadflag );
 		//MODDD
 		if(EASY_CVAR_GET(thoroughHitBoxUpdates) == 1){
@@ -1733,16 +1736,11 @@ void CGargantua::RunTask( Task_t *pTask )
 	switch ( pTask->iTask )
 	{
 	case TASK_DIE:
-
 		//MODDD - This is the transform-effect.  Removed, fall and become a gib-able corpse like the rest.
-		
-
-
 		valueOf = EASY_CVAR_GET(gargantuaCorpseDeath);
 		valueOf2 = EASY_CVAR_GET(gargantuaFallSound);
 		
 		
-
 
 		if(fallShakeTime != -1 && valueOf > 0 && gpGlobals->time > fallShakeTime){
 			UTIL_ScreenShake( pev->origin, 12.0, 100.0, 2.0, 1000 );
@@ -1839,7 +1837,6 @@ void CGargantua::RunTask( Task_t *pTask )
 				gargDeadBoundChangeYet = TRUE;
 
 
-
 			/*
 				float radz = this->pev->angles[1];
 				*/
@@ -1905,7 +1902,6 @@ void CGargantua::RunTask( Task_t *pTask )
 				}
 
 
-
 				UTIL_SetSize(pev,
 					(boundCenter + Vector(-finalX, -finalY, 0)) - pev->origin,
 					(boundCenter + Vector(finalX, finalY, 86)) - pev->origin
@@ -1949,7 +1945,6 @@ void CGargantua::RunTask( Task_t *pTask )
 					
 				}
 
-
 				//MODDD - bound-altering script for death moved to "setPhyiscalHitboxForDeath" for better through by a CVar.
 				if ( ShouldFadeOnDeath() ){
 					// this monster was created by a monstermaker... fade the corpse out.
@@ -1965,13 +1960,9 @@ void CGargantua::RunTask( Task_t *pTask )
 			}
 
 
-
-
 			//}else{
 
 			//MODDDD - scrapped.
-			
-
 			/*
 				if ( m_fSequenceFinished && pev->frame >= 255 )
 				{
@@ -1986,7 +1977,6 @@ void CGargantua::RunTask( Task_t *pTask )
 					//
 					//
 
-
 					//UTIL_printLineVector("what is it", forward);
 
 					////UTIL_SetSize(pev, VEC_HUMAN_HULL_MIN, VEC_HUMAN_HULL_MAX);
@@ -1997,48 +1987,22 @@ void CGargantua::RunTask( Task_t *pTask )
 					//Vector pnt2 = UTIL_rotateShift( Vector(350, 80, 200), forward );
 
 					//UTIL_SetSize(pev, pnt1, pnt2);
-
-
-
-
-
 					//UTIL_drawBox(pev->origin + pev->mins, pev->origin + pev->maxs);
 					////EASY_CVAR_PRINTIF_PRE(gargantuaPrintout, easyPrintLine( "ahhh %.2f %.2f %.2f, %.2f %.2f %.2f, %.2f %.2f %.2f", pev->origin.x, pev->origin.y, pev->origin.z, pev->mins.x, pev->mins.y, pev->mins.z, pev->maxs.x, pev->maxs.y, pev->maxs.z ));
 
-
-
 					//UTIL_drawLine(pev->origin, pev->origin + Vector(0, 0, 40));
 					//
-
-
-
-
-
 					//UTIL_drawBox(pev->absmin, pev->absmax);
-
-
-
-					//
 					//pev->absmax = pev->origin + Vector(60, 60, 40);
 					//pev->absmin = pev->origin + Vector(40, 40, 0);
-
 					//UTIL_drawBox(pev->absmin, pev->absmax);
 					//
-
-
-
 				}
 			*/
 
 
-
-
 			//}//END OF else(...)
 			
-
-
-
-
 		}
 		break;
 
@@ -2113,6 +2077,8 @@ void CSmoker::Spawn( void )
 void CSmoker::Think( void )
 {
 	// lots of smoke
+	//MODDD - pooplord
+	/*
 	MESSAGE_BEGIN( MSG_PVS, SVC_TEMPENTITY, pev->origin );
 		WRITE_BYTE( TE_SMOKE );
 		WRITE_COORD( pev->origin.x + RANDOM_FLOAT( -pev->dmg, pev->dmg ));
@@ -2122,6 +2088,8 @@ void CSmoker::Think( void )
 		WRITE_BYTE( RANDOM_LONG(pev->scale, pev->scale * 1.1) );
 		WRITE_BYTE( RANDOM_LONG(8,14)  ); // framerate
 	MESSAGE_END();
+	*/
+	UTIL_Smoke(MSG_PVS, pev->origin, NULL, pev->origin, RANDOM_FLOAT( -pev->dmg, pev->dmg ), RANDOM_FLOAT( -pev->dmg, pev->dmg ), 0, g_sModelIndexSmoke, RANDOM_LONG(pev->scale, pev->scale * 1.1), RANDOM_LONG(8,14));
 
 	pev->health--;
 	if ( pev->health > 0 )
@@ -2137,17 +2105,17 @@ void CSpiral::Spawn( void )
 	pev->nextthink = gpGlobals->time;
 	pev->solid = SOLID_NOT;
 	UTIL_SetSize(pev, g_vecZero, g_vecZero );
-	pev->effects |= EF_NODRAW;
-	pev->angles = g_vecZero;
+pev->effects |= EF_NODRAW;
+pev->angles = g_vecZero;
 }
 
 
-CSpiral *CSpiral::Create( const Vector &origin, float height, float radius, float duration )
+CSpiral* CSpiral::Create(const Vector& origin, float height, float radius, float duration)
 {
-	if ( duration <= 0 )
+	if (duration <= 0)
 		return NULL;
 
-	CSpiral *pSpiral = GetClassPtr( (CSpiral *)NULL );
+	CSpiral* pSpiral = GetClassPtr((CSpiral*)NULL);
 	pSpiral->Spawn();
 	pSpiral->pev->dmgtime = pSpiral->pev->nextthink;
 	pSpiral->pev->origin = origin;
@@ -2160,28 +2128,27 @@ CSpiral *CSpiral::Create( const Vector &origin, float height, float radius, floa
 	return pSpiral;
 }
 
-#define SPIRAL_INTERVAL		0.1 //025
 
-void CSpiral::Think( void )
+void CSpiral::Think(void)
 {
 	float time = gpGlobals->time - pev->dmgtime;
 
-	while ( time > SPIRAL_INTERVAL )
+	while (time > SPIRAL_INTERVAL)
 	{
 		Vector position = pev->origin;
-		Vector direction = Vector(0,0,1);
-		
+		Vector direction = Vector(0, 0, 1);
+
 		float fraction = 1.0 / pev->speed;
 
 		float radius = (pev->scale * pev->health) * fraction;
 
 		position.z += (pev->health * pev->dmg) * fraction;
 		pev->angles.y = (pev->health * 360 * 8) * fraction;
-		UTIL_MakeVectors( pev->angles );
+		UTIL_MakeVectors(pev->angles);
 		position = position + gpGlobals->v_forward * radius;
 		direction = (direction + gpGlobals->v_forward).Normalize();
 
-		StreakSplash( position, Vector(0,0,1), RANDOM_LONG(8,11), 20, RANDOM_LONG(50,150), 400 );
+		StreakSplash(position, Vector(0, 0, 1), RANDOM_LONG(8, 11), 20, RANDOM_LONG(50, 150), 400);
 
 		// Jeez, how many counters should this take ? :)
 		pev->dmgtime += SPIRAL_INTERVAL;
@@ -2191,31 +2158,10 @@ void CSpiral::Think( void )
 
 	pev->nextthink = gpGlobals->time;
 
-	if ( pev->health >= pev->speed )
-		UTIL_Remove( this );
+	if (pev->health >= pev->speed)
+		UTIL_Remove(this);
 }
 
-
-// HACKHACK Cut and pasted from explode.cpp
-void SpawnExplosion( Vector center, float randomRange, float time, int magnitude )
-{
-	KeyValueData	kvd;
-	char			buf[128];
-
-	center.x += RANDOM_FLOAT( -randomRange, randomRange );
-	center.y += RANDOM_FLOAT( -randomRange, randomRange );
-
-	CBaseEntity *pExplosion = CBaseEntity::Create( "env_explosion", center, g_vecZero, NULL );
-	sprintf( buf, "%3d", magnitude );
-	kvd.szKeyName = "iMagnitude";
-	kvd.szValue = buf;
-	pExplosion->KeyValue( &kvd );
-	pExplosion->pev->spawnflags |= SF_ENVEXPLOSION_NODAMAGE;
-
-	pExplosion->Spawn();
-	pExplosion->SetThink( &CBaseEntity::SUB_CallUseToggle );
-	pExplosion->pev->nextthink = gpGlobals->time + time;
-}
 
 
 
@@ -2226,15 +2172,10 @@ void SpawnExplosion( Vector center, float randomRange, float time, int magnitude
 void CGargantua::OnTakeDamageSetConditions(entvars_t *pevInflictor, entvars_t *pevAttacker, float flDamage, int bitsDamageType, int bitsDamageTypeMod){
 
 	//MODDD - intervention. Timed damage might not affect the AI since it could get needlessly distracting.
-
-
-	
-
 	if(bitsDamageTypeMod & (DMG_TIMEDEFFECT|DMG_TIMEDEFFECTIGNORE) ){
-		//If this is continual timed damage, don't register as any damage condition. Not worth possibly interrupting the AI.
+		// If this is continual timed damage, don't register as any damage condition. Not worth possibly interrupting the AI.
 		return;
 	}
-
 	
 	//default case from CBaseMonster's TakeDamage.
 	//Also count being in a non-combat state to force looking in that direction.
@@ -2252,8 +2193,6 @@ void CGargantua::OnTakeDamageSetConditions(entvars_t *pevInflictor, entvars_t *p
 	//    Keep it to using light damage for that instead.
 	//if ( flDamage >= 20 )
 
-
-	
 	if(gpGlobals->time >= forgetBigFlinchTime && (flDamage >=  pev->max_health * 0.55 || flDamage >= 70) )
 	{
 		SetConditions(bits_COND_HEAVY_DAMAGE);
@@ -2261,32 +2200,20 @@ void CGargantua::OnTakeDamageSetConditions(entvars_t *pevInflictor, entvars_t *p
 		forgetBigFlinchTime = gpGlobals->time + DEFAULT_FORGET_BIG_FLINCH_TIME*2.2;
 	}
 
-
 /*
 	if(EASY_CVAR_GET(testVar) == 10){
 		//any damage causes me now.
 		SetConditions(bits_COND_HEAVY_DAMAGE);
 	}
 */
-
 	easyForcePrintLine("%s:%d OnTkDmgSetCond raw:%.2f fract:%.2f", getClassname(), monsterID, flDamage, (flDamage / pev->max_health));
 
-
-
 }//END OF OnTakeDamageSetConditions
-
-
-
-
-
 
 
 BOOL CGargantua::usesAdvancedAnimSystem(void){
 	return TRUE;
 }
-
-
-
 
 int CGargantua::LookupActivityHard(int activity){
 	int i = 0;
@@ -2322,7 +2249,6 @@ int CGargantua::LookupActivityHard(int activity){
 
 int CGargantua::tryActivitySubstitute(int activity){
 	int i = 0;
-
 	//no need for default, just falls back to the normal activity lookup.
 	switch(activity){
 		case ACT_RUN:
@@ -2330,17 +2256,12 @@ int CGargantua::tryActivitySubstitute(int activity){
 		break;
 	}//END OF switch(...)
 
-
 	//not handled by above? We're not using the script to determine animation then. Rely on the model's anim for this activity if there is one.
 	return CBaseAnimating::LookupActivity(activity);
 }//END OF tryActivitySubstitute(...)
 
-
-
 int CGargantua::getHullIndexForNodes(void){
     return NODE_LARGE_HULL;  //...ya think?
 }
-
-
 
 

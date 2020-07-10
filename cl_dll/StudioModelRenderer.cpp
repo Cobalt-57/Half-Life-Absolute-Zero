@@ -153,8 +153,10 @@ void CStudioModelRenderer::StudioCalcBoneAdj( float dadt, float *adj, const byte
 }
 
 
+// Only for small adjustable parts of the model, like the angle of the head in yaw and pitch.
 void CStudioModelRenderer::StudioCalcBoneAdj ( float dadt, float *adj, const byte *pcontroller1, const byte *pcontroller2, byte mouthopen, byte IsReflection )
 {
+
 	int				i, j;
 	float			value;
 	mstudiobonecontroller_t *pbonecontroller;
@@ -192,8 +194,14 @@ void CStudioModelRenderer::StudioCalcBoneAdj ( float dadt, float *adj, const byt
 
 				//NOTE: value of -90 is 90 degrees left (right angle), 90 is 90 degrees right, intuitive.   0 is just straight ahead.
 				//MODDD
-				if(IsReflection){
-					//Fix for rotatable NPC heads not rotating properly in the mirrors.
+
+				// 1?
+				if(i == 0 && IsReflection){
+					// MIRROR-RELATED!  Jeez is it hard to just say that.
+					// Fix for rotatable NPC heads not rotating properly in the mirrors.
+					// And best for only the yaw, the pitch (and likely roll) doesn't need this.
+					// Unfortunately this is just a guess, we'd need a way for the model to say which is the yaw for this to
+					// properly work.  Thinking this is a sympton of a bigger problem though...
 					value *= -1;
 				}
 			
@@ -482,15 +490,16 @@ StudioSetUpTransform
 */
 void CStudioModelRenderer::StudioSetUpTransform (int trivial_accept)
 {
-
-
+	//ASS
+	//if (trivial_accept >= 1024) {
+	//	return;
+	//}
+	//
 	int			i;
 	vec3_t			angles;
 	vec3_t			modelpos;
-
 	
 	int ic = trivial_accept - 1024;
-
 
 // tweek model origin	
 	//for (i = 0; i < 3; i++)
@@ -582,14 +591,39 @@ void CStudioModelRenderer::StudioSetUpTransform (int trivial_accept)
 	
 	//MODDD - very significant.  Better transformation than before, as when done at this point of time, it does not cause the culling glitch.
 	if(trivial_accept >= 1024){
-	angles[0] *= -1;
-	angles[1] *= -1;
-	angles[2] *= -1;
+		//angles[0] *= -1;
+		angles[1] *= -1;
+		//angles[2] *= -1;
 	}
 	
 	angles[PITCH] = -angles[PITCH];
 	AngleMatrix (angles, (*m_protationmatrix));
             
+
+	/*
+	//if (trivial_accept >= 1024) {
+
+	//*(m_pbonetransform[i][0][1]) *= 1;
+	//*(m_pbonetransform[i][1][1]) *= -1;
+	//*(m_pbonetransform[i][2][1]) *= 1;
+	float scalex = EASY_CVAR_GET(ctt1);
+	float scaley = EASY_CVAR_GET(ctt2);
+	float scalez = EASY_CVAR_GET(ctt3);
+	(*m_protationmatrix)[0][0] *= scalex;
+	(*m_protationmatrix)[1][0] *= scalex;
+	(*m_protationmatrix)[2][0] *= scalex;
+	(*m_protationmatrix)[0][1] *= scaley;
+	(*m_protationmatrix)[1][1] *= scaley;
+	(*m_protationmatrix)[2][1] *= scaley;
+	(*m_protationmatrix)[0][2] *= scalez;
+	(*m_protationmatrix)[1][2] *= scalez;
+	(*m_protationmatrix)[2][2] *= scalez;
+	
+	//}
+	*/
+
+
+
 
 
 
@@ -607,38 +641,36 @@ void CStudioModelRenderer::StudioSetUpTransform (int trivial_accept)
 		
 		if(trivial_accept >= 1024){
 			
-
 			(*m_protationmatrix)[0][3] = modelpos[0] - m_vRenderOrigin[0];
 			(*m_protationmatrix)[1][3] = modelpos[1] - m_vRenderOrigin[1];
 			(*m_protationmatrix)[2][3] = modelpos[2] - m_vRenderOrigin[2];
 
 
-			
 			//CHECKPOINT3
 			switch (gHUD.Mirrors[ic].type)
 			{
-
 			case 0:
-	       	        		(*m_protationmatrix)[0][0] *= 1;
-	      	        		(*m_protationmatrix)[0][1] *= 1;
-	       	        		(*m_protationmatrix)[0][2] *= 1;
-	      	        		(*m_protationmatrix)[0][3] += gHUD.Mirrors[ic].origin[0]*2 - modelpos[0]*2;
+	       		(*m_protationmatrix)[0][0] *= 1;
+	      		(*m_protationmatrix)[0][1] *= 1;
+	       		(*m_protationmatrix)[0][2] *= 1;
+	      		(*m_protationmatrix)[0][3] += gHUD.Mirrors[ic].origin[0]*2 - modelpos[0]*2;
 			break;
-
 			case 1:
-	       	        		(*m_protationmatrix)[1][1] *= 1;
-	      	        		(*m_protationmatrix)[1][0] *= 1;
-	       	        		(*m_protationmatrix)[1][2] *= 1;
-	      	        		(*m_protationmatrix)[1][3] += gHUD.Mirrors[ic].origin[1]*2 - modelpos[1]*2;
+	       	    (*m_protationmatrix)[1][1] *= 1;
+	      	    (*m_protationmatrix)[1][0] *= 1;
+	       	    (*m_protationmatrix)[1][2] *= 1;
+	      	    (*m_protationmatrix)[1][3] += gHUD.Mirrors[ic].origin[1]*2 - modelpos[1]*2;
 			break;
-
 			case 2:
-	       	        		//no idea how to translate this.?  is this okay?
-							(*m_protationmatrix)[2][2] *= -1;//minimal matrix transform - for right calculate origin of monster. G-cont
-
+				// no idea how to translate this.?  is this okay?
+				// Added back in the other missing [2][0], [2][1], and [2][3] areas.  Being absent is still the same as
+				// being multiplied by 1 or changed by an amount of 0 (no change).
+				(*m_protationmatrix)[2][0] *= 1;
+				(*m_protationmatrix)[2][1] *= 1;
+				(*m_protationmatrix)[2][2] *= -1;//minimal matrix transform - for right calculate origin of monster. G-cont
+				(*m_protationmatrix)[2][3] += 0;
 			break;
 			}
-
 
 			ConcatTransforms (viewmatrix, (*m_protationmatrix), (*m_paliastransform));
 			
@@ -648,8 +680,6 @@ void CStudioModelRenderer::StudioSetUpTransform (int trivial_accept)
 			
 		}else{
 
-
-			
 			//no reflection?   Nothing unusual.
 			(*m_protationmatrix)[0][3] = modelpos[0] - m_vRenderOrigin[0];
 			(*m_protationmatrix)[1][3] = modelpos[1] - m_vRenderOrigin[1];
@@ -667,8 +697,6 @@ void CStudioModelRenderer::StudioSetUpTransform (int trivial_accept)
 			(*m_protationmatrix)[0][3] = modelpos[0];
 			(*m_protationmatrix)[1][3] = modelpos[1];
 			(*m_protationmatrix)[2][3] = modelpos[2];
-			
-			
 			
 		}
 
@@ -698,20 +726,15 @@ void CStudioModelRenderer::StudioSetUpTransform (int trivial_accept)
 		}
 
 
-
-
 	}
 	else{
-	
 	//!!!!!!!!!!!!!!!!!!!!!!!!!
-	//else ????
-
-
-
+	
+		//!!!ASS
 		if(trivial_accept >= 1024){
+		//if(TRUE){
 			//mirror
-
-		
+			
 			//(*m_protationmatrix)[0][3] = modelpos[0] - m_vRenderOrigin[0];
 			//(*m_protationmatrix)[1][3] = modelpos[1] - m_vRenderOrigin[1];
 			//(*m_protationmatrix)[2][3] = modelpos[2] - m_vRenderOrigin[2];
@@ -721,32 +744,30 @@ void CStudioModelRenderer::StudioSetUpTransform (int trivial_accept)
 			(*m_protationmatrix)[1][3] = modelpos[1];
 			(*m_protationmatrix)[2][3] = modelpos[2];
 			
-
-			
 			//CHECKPOINT3
 			switch (gHUD.Mirrors[ic].type)
 			{
-
 			case 0:
-	       	        		(*m_protationmatrix)[0][0] *= 1;
-	      	        		(*m_protationmatrix)[0][1] *= 1;
-	       	        		(*m_protationmatrix)[0][2] *= 1;
-	      	        		(*m_protationmatrix)[0][3] = gHUD.Mirrors[ic].origin[0]*2 - modelpos[0];
-                              break;
-
+	       	    (*m_protationmatrix)[0][0] *= 1;
+	      	    (*m_protationmatrix)[0][1] *= 1;
+	       	    (*m_protationmatrix)[0][2] *= 1;
+	      	    (*m_protationmatrix)[0][3] = gHUD.Mirrors[ic].origin[0]*2 - modelpos[0];
+            break;
 			case 1:
-	       	        		(*m_protationmatrix)[1][1] *= 1;
-	      	        		(*m_protationmatrix)[1][0] *= 1;
-	       	        		(*m_protationmatrix)[1][2] *= 1;
-	      	        		(*m_protationmatrix)[1][3] = gHUD.Mirrors[ic].origin[1]*2 - modelpos[1];
-                              break;
-
+	       	    (*m_protationmatrix)[1][1] *= 1;
+	      	    (*m_protationmatrix)[1][0] *= 1;
+	       	    (*m_protationmatrix)[1][2] *= 1;
+				//if (trivial_accept >= 1024) {
+				(*m_protationmatrix)[1][3] = gHUD.Mirrors[ic].origin[1] * 2 - modelpos[1];
+				//}
+            break;
 			case 2:
-	       	        		(*m_protationmatrix)[2][2] *= -1;//minimal matrix transform - for right calculate origin of monster. G-cont
-                              break;
-                        }
-
-			
+				(*m_protationmatrix)[2][0] *= 1;
+				(*m_protationmatrix)[2][1] *= 1;
+				(*m_protationmatrix)[2][2] *= -1;//minimal matrix transform - for right calculate origin of monster. G-cont
+				(*m_protationmatrix)[2][3] += 0;
+            break;
+            }
 
 			
 		}else{
@@ -911,6 +932,11 @@ Studio_FxTransform
 */
 void CStudioModelRenderer::StudioFxTransform( cl_entity_t *ent, float transform[3][4] )
 {
+
+//	float scaled = -1;
+	//transform[0][1] *= scaled;
+	//transform[1][1] *= scaled;
+	//transform[2][1] *= scaled;
 
 
 	//MODDD - only involve the primary bits.
@@ -1081,7 +1107,7 @@ float CStudioModelRenderer::StudioEstimateFrame( mstudioseqdesc_t *pseqdesc )
 		f = pseqdesc->numframes - f - 1;
 	}
 
-	if(m_pCurrentEntity->curstate.renderfx & ISVIEWMODEL){
+	if( (m_pCurrentEntity->curstate.renderfx & ISVIEWMODEL) ==ISVIEWMODEL){
 		//easyPrintLineDummy("ILL CUT YER NUTS OFF s:%d f:%.2f mf:%d b?%d", m_pCurrentEntity->curstate.sequence, f, pseqdesc->numframes, animateBackwards);
 	}
 
@@ -1193,7 +1219,6 @@ void CStudioModelRenderer::StudioSetupBones (){
 
 void CStudioModelRenderer::StudioSetupBones ( byte isReflection )
 {
-
 	for(int i1 = 0; i1 < MAXSTUDIOBONES; i1++){
 		for(int i2 = 0; i2 < 3; i2++){
 			for(int i3 = 0; i3 < 4; i3++){
@@ -1201,7 +1226,6 @@ void CStudioModelRenderer::StudioSetupBones ( byte isReflection )
 			}
 		}
 	}
-
 
 	int				i;
 	double			f;
@@ -1235,7 +1259,6 @@ void CStudioModelRenderer::StudioSetupBones ( byte isReflection )
 	{
 		//easyPrintLineDummy("!! Sequence too high! 1");
 
-		
 		if( (m_pCurrentEntity->curstate.renderfx & ISVIEWMODEL) == ISVIEWMODEL){
 			if(m_pCurrentEntity->curstate.sequence & 128){
 				m_pCurrentEntity->curstate.sequence &= ~128;  //just take away the 128, 8th bit. 2^7th, starting from 2^0th (1) as the first bit.
@@ -1258,16 +1281,15 @@ void CStudioModelRenderer::StudioSetupBones ( byte isReflection )
 	
 	if (m_pCurrentEntity->curstate.sequence >=  m_pStudioHeader->numseq){
 		m_pCurrentEntity->curstate.sequence = 0;
-		easyPrintLineDummy("BULLSHIT 1a");
+		easyPrintLineDummy("hockey 1a");
 	}
 
 
 
 	if( (m_pCurrentEntity->curstate.renderfx & ISVIEWMODEL) == ISVIEWMODEL){
 		//oh shit son!
-		easyPrintLineDummy("AM I BACKWARDS MOTHAFUCKAAAAAAHHH id:%d b:%d", m_pCurrentEntity->index, m_pCurrentEntity->curstate.iuser1  );
+		easyPrintLineDummy("AM I BACKWARDS id:%d b:%d", m_pCurrentEntity->index, m_pCurrentEntity->curstate.iuser1  );
 	}
-
 
 
 	pseqdesc = (mstudioseqdesc_t *)((byte *)m_pStudioHeader + m_pStudioHeader->seqindex) + m_pCurrentEntity->curstate.sequence;
@@ -1284,8 +1306,8 @@ void CStudioModelRenderer::StudioSetupBones ( byte isReflection )
 
 	if (pseqdesc->numblends > 1)
 	{
-		float			s;
-		float			dadt;
+		float s;
+		float dadt;
 
 		panim += m_pStudioHeader->numbones;
 		StudioCalcRotations( pos2, q2, pseqdesc, panim, f, isReflection );
@@ -1318,7 +1340,7 @@ void CStudioModelRenderer::StudioSetupBones ( byte isReflection )
 	{
 		// blend from last sequence
 		static float	pos1b[MAXSTUDIOBONES][3];
-		static vec4_t		q1b[MAXSTUDIOBONES];
+		static vec4_t	q1b[MAXSTUDIOBONES];
 		float			s;
 
 		pseqdesc = (mstudioseqdesc_t *)((byte *)m_pStudioHeader + m_pStudioHeader->seqindex) + m_pCurrentEntity->latched.prevsequence;
@@ -1416,7 +1438,6 @@ void CStudioModelRenderer::StudioSetupBones ( byte isReflection )
 					//ConcatTransforms ((*m_protationmatrix), bonematrix, (*m_plighttransformMOD)[i]);
 				}else{
 					
-
 					float (m_protationmatrixClone)[ 3 ][ 4 ];
 
 					/*
@@ -1436,13 +1457,10 @@ void CStudioModelRenderer::StudioSetupBones ( byte isReflection )
 					(m_protationmatrixClone)[2][3] -= m_vRenderOrigin[2];
 
 
-
-
 					ConcatTransforms ((*m_protationmatrix), bonematrix, (m_plighttransformMOD)[i]);
 					ConcatTransforms ((m_protationmatrixClone), bonematrix, (*m_plighttransform)[i]);
 
 				}
-
 
 				//Software:
 				//~position = (my)origin - renderOrigin
@@ -1458,22 +1476,19 @@ void CStudioModelRenderer::StudioSetupBones ( byte isReflection )
 			{
 				//If software...
 				
-
 				ConcatTransforms ((*m_paliastransform), bonematrix, (*m_pbonetransform)[i]);
 				
-					for(int i1 = 0; i1 < MAXSTUDIOBONES; i1++){
-						for(int i2 = 0; i2 < 3; i2++){
-							for(int i3 = 0; i3 < 4; i3++){
-								m_plighttransformMOD[i1][i2][i3] = (*m_plighttransform)[i1][i2][i3];
-							}
+				for(int i1 = 0; i1 < MAXSTUDIOBONES; i1++){
+					for(int i2 = 0; i2 < 3; i2++){
+						for(int i3 = 0; i3 < 4; i3++){
+							m_plighttransformMOD[i1][i2][i3] = (*m_plighttransform)[i1][i2][i3];
 						}
 					}
-
-
+				}
 
 				/*
 				if(m_pCurrentEntity->curstate.renderfx & ISVIEWMODEL){
-					easyPrintLine("BOOTY TIME!!!!");
+					easyPrintLine("viewmodel TIME!!!!");
 				}
 				*/
 
@@ -1487,12 +1502,10 @@ void CStudioModelRenderer::StudioSetupBones ( byte isReflection )
 					(*m_protationmatrix)[2][3] = m_pCurrentEntity->origin[2];
 					*/
 
-					
 					ConcatTransforms ((*m_protationmatrix), bonematrix, (*m_plighttransform)[i]);
 					ConcatTransforms ((*m_protationmatrix), bonematrix, (m_plighttransformMOD)[i]);
 
 				}else{
-					
 					
 					float (m_protationmatrixClone)[ 3 ][ 4 ];
 
@@ -1515,18 +1528,32 @@ void CStudioModelRenderer::StudioSetupBones ( byte isReflection )
 					(m_protationmatrixClone)[1][3] -= m_vRenderOrigin[1];
 					(m_protationmatrixClone)[2][3] -= m_vRenderOrigin[2];
 					
-
 					ConcatTransforms ((*m_protationmatrix), bonematrix, (m_plighttransformMOD)[i]);
 					ConcatTransforms ((m_protationmatrixClone), bonematrix, (*m_plighttransform)[i]);
 
-					
 				}
 
-					
-
-
-
 			}//END OF hardware / software rendering-mode check
+
+
+
+			//*(m_pbonetransform[i][0][1]) *= 1;
+			//*(m_pbonetransform[i][1][1]) *= -1;
+			//*(m_pbonetransform[i][2][1]) *= 1;
+			/*
+			float scalex = EASY_CVAR_GET(ctt1);
+			float scaley = EASY_CVAR_GET(ctt2);
+			float scalez = EASY_CVAR_GET(ctt3);
+			(*m_pbonetransform[i])[0][0] *= scalex;
+			(*m_pbonetransform[i])[1][0] *= scalex;
+			(*m_pbonetransform[i])[2][0] *= scalex;
+			(*m_pbonetransform[i])[0][1] *= scaley;
+			(*m_pbonetransform[i])[1][1] *= scaley;
+			(*m_pbonetransform[i])[2][1] *= scaley;
+			(*m_pbonetransform[i])[0][2] *= scalez;
+			(*m_pbonetransform[i])[1][2] *= scalez;
+			(*m_pbonetransform[i])[2][2] *= scalez;
+			*/
 
 			// Apply client-side effects to the transformation matrix
 			StudioFxTransform( m_pCurrentEntity, (*m_pbonetransform)[i] );
@@ -1535,15 +1562,19 @@ void CStudioModelRenderer::StudioSetupBones ( byte isReflection )
 		else 
 		{
 			ConcatTransforms ((*m_pbonetransform)[pbones[i].parent], bonematrix, (*m_pbonetransform)[i]);
-
-			
 			ConcatTransforms ((*m_plighttransform)[pbones[i].parent], bonematrix, (*m_plighttransform)[i]);
-
 			ConcatTransforms ((m_plighttransformMOD)[pbones[i].parent], bonematrix, (m_plighttransformMOD)[i]);
 
-
 		}
-	}
+
+		/*
+		(*m_pbonetransform)[i][0][3] = 0;
+		(*m_pbonetransform)[i][1][3] = 0;
+		(*m_pbonetransform)[i][2][3] = 0;
+		(*m_pbonetransform)[i][3][3] = 0;
+		*/
+
+	}//END OF for loop
 }
 
 
@@ -1613,7 +1644,7 @@ void CStudioModelRenderer::StudioMergeBones ( model_t *m_pSubModel, byte isRefle
 	}
 
 	if (m_pCurrentEntity->curstate.sequence >=  m_pStudioHeader->numseq){
-		easyPrintLineDummy("BULLSHIT 3");
+		easyPrintLineDummy("hockey 3");
 		m_pCurrentEntity->curstate.sequence = 0;
 	}
 
@@ -1683,8 +1714,100 @@ void CStudioModelRenderer::StudioMergeBones ( model_t *m_pSubModel, byte isRefle
 }
 
 
+
+
+
+
+
+
+
+
+
+
+//MODDDMIRROR.  no duh.
+
+int CStudioModelRenderer::StudioDrawReflection(int flags)
+{
+	alight_t lighting;
+	vec3_t dir;
+
+	//NOTE: used to be "TRI_FRONT"?
+	gEngfuncs.pTriAPI->CullFace(TRI_NONE);
+
+	if (flags & STUDIO_RENDER)
+	{
+		// see if the bounding box lets us trivially reject, also sets
+		if (!IEngineStudio.StudioCheckBBox()) {//no need disabled frustrum cull for "mirroring" models. G-Cont
+			//MODDD - just try the next mirror.
+			return 0;
+			//continue;
+		}
+		(*m_pModelsDrawn)++;
+		(*m_pStudioModelCount)++; // render data cache cookie
+
+		if (m_pStudioHeader->numbodyparts == 0) {
+			//MODDD - just try the next mirror.
+			return 1;
+			//continue;
+		}
+	}
+
+
+	if (m_pCurrentEntity->curstate.movetype == MOVETYPE_FOLLOW)
+	{
+		//StudioMergeBones( m_pRenderModel );
+		//head fix.
+		StudioMergeBones(m_pRenderModel, TRUE);
+	}
+	else
+	{
+		//StudioSetupBones( );
+		StudioSetupBones(TRUE);
+	}
+	StudioSaveBones();
+
+	//MODDD - ATTACHMENTS - seems unconnected to either part of the player?
+	if (flags & STUDIO_EVENTS)
+	{
+		StudioCalcAttachments();
+		IEngineStudio.StudioClientEvents();
+		// copy attachments into global entity array
+
+		if (m_pCurrentEntity->index > 0)
+		{
+			cl_entity_t* ent = gEngfuncs.GetEntityByIndex(m_pCurrentEntity->index);
+			memcpy(ent->attachment, m_pCurrentEntity->attachment, sizeof(vec3_t) * 4);
+		}
+	}
+	if (flags & STUDIO_RENDER)
+	{
+		lighting.plightvec = dir;
+		IEngineStudio.StudioDynamicLight(m_pCurrentEntity, &lighting);
+
+		IEngineStudio.StudioEntityLight(&lighting);
+
+		// model and frame independant
+		IEngineStudio.StudioSetupLighting(&lighting);
+
+		// get remap colors
+		m_nTopColor = m_pCurrentEntity->curstate.colormap & 0xFF;
+		m_nBottomColor = (m_pCurrentEntity->curstate.colormap & 0xFF00) >> 8;
+
+		IEngineStudio.StudioSetRemapColors(m_nTopColor, m_nBottomColor);
+
+		StudioRenderModel();
+	}
+	//gEngfuncs.pTriAPI->CullFace( TRI_FRONT );
+	gEngfuncs.pTriAPI->CullFace(TRI_NONE);
+
+	return 1;
+}
+
+
+
 //MODDD - TEMPREF
 extern void RenderFog();
+
 
 /*
 ====================
@@ -1886,11 +2009,134 @@ int CStudioModelRenderer::StudioDrawModel( int flags )
 	IEngineStudio.StudioSetHeader( m_pStudioHeader );
 	IEngineStudio.SetRenderModel( m_pRenderModel );
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	/*
+	int ic = 0;
+
+	StudioSetUpTransform(1024 + ic); //HELP ME
+	//THIS USED TO GO BEFORE!!!
+
+	mirror_id = ic;
+	//NOTE: used to be "TRI_FRONT"?
+	gEngfuncs.pTriAPI->CullFace(TRI_NONE);
+
+	if (flags & STUDIO_RENDER)
+	{
+		// see if the bounding box lets us trivially reject, also sets
+		if (!IEngineStudio.StudioCheckBBox()) {//no need disabled frustrum cull for "mirroring" models. G-Cont
+			//MODDD - just try the next mirror.
+			//return 0;
+			//continue;
+		}
+		(*m_pModelsDrawn)++;
+		(*m_pStudioModelCount)++; // render data cache cookie
+
+		if (m_pStudioHeader->numbodyparts == 0) {
+			//MODDD - just try the next mirror.
+			//return 1;
+			//continue;
+		}
+	}
+
+	
+	if (m_pCurrentEntity->curstate.movetype == MOVETYPE_FOLLOW)
+	{
+		//StudioMergeBones( m_pRenderModel );
+		//head fix.
+		StudioMergeBones( m_pRenderModel, TRUE );
+	}
+	else
+	{
+		//StudioSetupBones( );
+		StudioSetupBones(TRUE);
+	}
+	StudioSaveBones( );
+
+	//MODDD - ATTACHMENTS - seems unconnected to either part of the player?
+	if (flags & STUDIO_EVENTS)
+	{
+		StudioCalcAttachments( );
+		IEngineStudio.StudioClientEvents( );
+		// copy attachments into global entity array
+
+		if ( m_pCurrentEntity->index > 0 )
+		{
+			cl_entity_t *ent = gEngfuncs.GetEntityByIndex( m_pCurrentEntity->index );
+			memcpy( ent->attachment, m_pCurrentEntity->attachment, sizeof( vec3_t ) * 4 );
+		}
+	}
+	
+	
+	if (flags & STUDIO_RENDER)
+	{
+		lighting.plightvec = dir;
+		IEngineStudio.StudioDynamicLight(m_pCurrentEntity, &lighting );
+
+		IEngineStudio.StudioEntityLight( &lighting );
+
+		// model and frame independant
+		IEngineStudio.StudioSetupLighting (&lighting);
+
+		// get remap colors
+		m_nTopColor = m_pCurrentEntity->curstate.colormap & 0xFF;
+				m_nBottomColor = (m_pCurrentEntity->curstate.colormap & 0xFF00) >> 8;
+
+		IEngineStudio.StudioSetRemapColors( m_nTopColor, m_nBottomColor );
+
+		StudioRenderModel( );
+	}
+	//gEngfuncs.pTriAPI->CullFace( TRI_FRONT );
+	gEngfuncs.pTriAPI->CullFace( TRI_NONE );
+
+	*/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 	StudioSetUpTransform( 0 );
 	
 	if( (m_pCurrentEntity->curstate.renderfx & ISVIEWMODEL) == ISVIEWMODEL){
 		easyPrintLineDummy("FLAG5. s:%d b:%d", m_pCurrentEntity->curstate.sequence, m_pCurrentEntity->curstate.iuser1 );
 	}
+
+	//MODDD - NEW.  FUCK YOU.
+	gEngfuncs.pTriAPI->CullFace(TRI_NONE);
 
 	if (flags & STUDIO_RENDER)
 	{
@@ -1960,6 +2206,8 @@ int CStudioModelRenderer::StudioDrawModel( int flags )
 	if( (m_pCurrentEntity->curstate.renderfx & ISVIEWMODEL) == ISVIEWMODEL){
 		easyPrintLineDummy("FLAG6. s:%d b:%d", m_pCurrentEntity->curstate.sequence, m_pCurrentEntity->curstate.iuser1 );
 	}
+
+
 	if (m_pCurrentEntity->curstate.movetype == MOVETYPE_FOLLOW)
 	{
 		StudioMergeBones( m_pRenderModel );
@@ -1980,6 +2228,7 @@ int CStudioModelRenderer::StudioDrawModel( int flags )
 	//Unfortunately StudioClientEvents() is hardcoded so it looks impossible.
 	//to tell it to behave differently with interpolation turned off. Oh well.
 		
+
 
 	if (flags & STUDIO_EVENTS)
 	{
@@ -2016,25 +2265,27 @@ int CStudioModelRenderer::StudioDrawModel( int flags )
 	{
 		//DISABLE BLOCK FOR silhouette MODE!
 		//////////////////////////////////////////////////////////////////////
-		
-		lighting.plightvec = dir;
-		IEngineStudio.StudioDynamicLight(m_pCurrentEntity, &lighting );
 
-		IEngineStudio.StudioEntityLight( &lighting );
+		lighting.plightvec = dir;
+		IEngineStudio.StudioDynamicLight(m_pCurrentEntity, &lighting);
+
+		IEngineStudio.StudioEntityLight(&lighting);
 
 		// model and frame independant
-		IEngineStudio.StudioSetupLighting (&lighting);
+		IEngineStudio.StudioSetupLighting(&lighting);
 
-		//////////////////////////////////////////////////////////////////////
-
+		//////////////////////////////////////////////////////////////////////////
+		
 		// get remap colors
 		m_nTopColor = m_pCurrentEntity->curstate.colormap & 0xFF;
 		m_nBottomColor = (m_pCurrentEntity->curstate.colormap & 0xFF00) >> 8;
 
-		IEngineStudio.StudioSetRemapColors( m_nTopColor, m_nBottomColor );
+		IEngineStudio.StudioSetRemapColors(m_nTopColor, m_nBottomColor);
 
-		StudioRenderModel( );
-		
+		StudioRenderModel();
+		//////////////////////////////////////////////////////////////////////////
+
+		gEngfuncs.pTriAPI->CullFace(TRI_NONE);
 	}
 	
 	if( (m_pCurrentEntity->curstate.renderfx & ISVIEWMODEL) == ISVIEWMODEL){
@@ -2101,77 +2352,8 @@ int CStudioModelRenderer::StudioDrawModel( int flags )
 			//THIS USED TO GO BEFORE!!!
 
 			mirror_id = ic;
-			//NOTE: used to be "TRI_FRONT"?
-			gEngfuncs.pTriAPI->CullFace( TRI_NONE ); 
-
-			if (flags & STUDIO_RENDER)
-			{
-				// see if the bounding box lets us trivially reject, also sets
-				if (!IEngineStudio.StudioCheckBBox ()){//no need disabled frustrum cull for "mirroring" models. G-Cont
-				    //MODDD - just try the next mirror.
-					//return 0;
-					continue;
-				}
-				(*m_pModelsDrawn)++;
-				(*m_pStudioModelCount)++; // render data cache cookie
-
-				if (m_pStudioHeader->numbodyparts == 0){
-					//MODDD - just try the next mirror.
-					//return 1;
-					continue;
-				}
-			}
 			
-			if (m_pCurrentEntity->curstate.movetype == MOVETYPE_FOLLOW)
-			{
-				//StudioMergeBones( m_pRenderModel );
-				//head fix.
-				StudioMergeBones( m_pRenderModel, TRUE );
-			}
-
-			else
-			{
-				//StudioSetupBones( );
-				StudioSetupBones(TRUE);
-			}
-			StudioSaveBones( );
-			
-			//MODDD - ATTACHMENTS - seems unconnected to either part of the player?
-			if (flags & STUDIO_EVENTS)
-			{
-				StudioCalcAttachments( );
-				IEngineStudio.StudioClientEvents( );
-				// copy attachments into global entity array
-
-				if ( m_pCurrentEntity->index > 0 )
-				{
-					cl_entity_t *ent = gEngfuncs.GetEntityByIndex( m_pCurrentEntity->index );
-					memcpy( ent->attachment, m_pCurrentEntity->attachment, sizeof( vec3_t ) * 4 );
-				}
-			}
-			
-			if (flags & STUDIO_RENDER)
-			{
-				lighting.plightvec = dir;
-				IEngineStudio.StudioDynamicLight(m_pCurrentEntity, &lighting );
-
-				IEngineStudio.StudioEntityLight( &lighting );
-
-				// model and frame independant
-				IEngineStudio.StudioSetupLighting (&lighting);
-
-				// get remap colors
-				m_nTopColor = m_pCurrentEntity->curstate.colormap & 0xFF;
-         				m_nBottomColor = (m_pCurrentEntity->curstate.colormap & 0xFF00) >> 8;
-
-				IEngineStudio.StudioSetRemapColors( m_nTopColor, m_nBottomColor );
-
-				StudioRenderModel( );
-			}
-
-		//gEngfuncs.pTriAPI->CullFace( TRI_FRONT );
-			gEngfuncs.pTriAPI->CullFace( TRI_NONE );
-
+			StudioDrawReflection(flags);
 		}
 
 	}//END OF mirror check.
@@ -2293,7 +2475,7 @@ void CStudioModelRenderer::StudioProcessGait( entity_state_t *pplayer )
 
 	//re-check.
 	if (m_pCurrentEntity->curstate.sequence >=  m_pStudioHeader->numseq) {
-		easyPrintLineDummy("BULLSHIT 2");
+		easyPrintLineDummy("hockey 2");
 		m_pCurrentEntity->curstate.sequence = 0;
 	}
 
@@ -2749,7 +2931,9 @@ int CStudioModelRenderer::StudioDrawPlayer( int flags, entity_state_t *pplayer )
 			}
 		} //end for
 
-		gEngfuncs.pTriAPI->CullFace( TRI_FRONT );
+		// MODDD - was still TRI_FRONT???
+		//gEngfuncs.pTriAPI->CullFace( TRI_FRONT );
+		gEngfuncs.pTriAPI->CullFace(TRI_NONE);
 	}
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

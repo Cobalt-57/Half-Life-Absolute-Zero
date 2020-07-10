@@ -790,13 +790,6 @@ Schedule_t slChaseEnemySmart_ShockerFollowup[] =
 
 
 
-
-
-
-
-
-
-
 /*
 Task_t	tlKingpinXXX[] =
 {
@@ -831,10 +824,8 @@ DEFINE_CUSTOM_SCHEDULES( CKingpin )
 	slKingpinSpeedMissile,
 	slKingpinElectricLaser,
 	slKingpinSuperBall,
-
 	slKingpinElectricBarrageChargeFail,
 	slKingpinElectricLaserChargeFail,
-
 	slChaseEnemySmart_ShockerFollowup,
 
 };
@@ -842,7 +833,6 @@ IMPLEMENT_CUSTOM_SCHEDULES( CKingpin, CBaseMonster );
 
 
 
-	
 
 //MODDD - sound calls dummied out until they actually exist.
 void CKingpin::DeathSound( void ){
@@ -854,7 +844,6 @@ void CKingpin::AlertSound( void ){
 	EMIT_SOUND_FILTERED( edict(), CHAN_VOICE, RANDOM_SOUND_ARRAY(pAlertSounds), 1.0, KINGPIN_VOICE_ATTENUATION, 0, pitch );
 }
 void CKingpin::IdleSound( void ){
-
 	if(RANDOM_LONG(0, 2) <= 1){  //2/3
 		int pitch = m_voicePitch + RANDOM_LONG(0,4);
 
@@ -865,8 +854,6 @@ void CKingpin::IdleSound( void ){
 		//the special one?
 		EMIT_SOUND_FILTERED( edict(), CHAN_VOICE, "ambience/alien_chatter.wav", 0.73f, KINGPIN_VOICE_ATTENUATION, 0, pitch );
 	}
-
-
 }
 void CKingpin::PainSound( void ){
 	int pitch = m_voicePitch + RANDOM_LONG(0,4);
@@ -2366,9 +2353,6 @@ void CKingpin::MonsterThink( void ){
 
 
 
-
-
-
 	if(m_IdealMonsterState != MONSTERSTATE_DEAD){
 		CBaseEntity* pEntityScan = NULL;
 
@@ -2468,17 +2452,9 @@ void CKingpin::MonsterThink( void ){
 				}//END OF "is projectile" check and moving check
 
 
-
-
 			}//END OF fl_killme check
-
 		}//END OF while loop through nearby entities
-
-
 	}//END OF dead check
-
-
-
 
 
 
@@ -2492,8 +2468,6 @@ void CKingpin::MonsterThink( void ){
 		}
 
 
-		
-
 		if(m_pSchedule == slCombatFaceNoStump || m_pSchedule == slCombatFace || m_pSchedule == slCombatLook){
 			//do a check.  Has enemyHiddenChaseTime been surpassed?
 			if(gpGlobals->time >= enemyHiddenChaseTime){
@@ -2504,8 +2478,6 @@ void CKingpin::MonsterThink( void ){
 				//or ChangeSchedule into that?  what is best.
 			}
 		}
-
-
 
 		if( 
 			//that is, if a monster recently damaged me, or our long-time cooldown is up....
@@ -2539,17 +2511,11 @@ void CKingpin::MonsterThink( void ){
 			forgetRecentInflictingMonsterCooldown = -1;
 		}
 
-
-
 	}//END OF combat state check
 
 
 
-	
-
-
 	CBaseMonster::MonsterThink();
-
 
 	//if(this->HasConditionsFrame(bits_COND_SEE_ENEMY) && !this->HasConditionsFrame(bits_COND_ENEMY_OCCLUDED) ){
 	if(this->HasConditionsFrame(bits_COND_SEE_ENEMY) ){
@@ -2559,13 +2525,11 @@ void CKingpin::MonsterThink( void ){
 		enemyHiddenChaseTime = gpGlobals->time + 40.0f;
 	}
 
-
 	UpdateBeams();
 	updateChargeEffect();
 	UpdateReflectEffects();
 
 }//END OF MonsterThink(...)
-
 
 
 
@@ -2590,21 +2554,14 @@ void CKingpin::ReportAIState(void){
 
 
 
-
-
-
 GENERATE_TRACEATTACK_IMPLEMENTATION(CKingpin){
-
 	easyForcePrintLine("kingpin ID%d: I WAS JUST HIT AT HITBOX:%d", this->monsterID, ptr->iHitgroup);
-
-
 
 	GENERATE_TRACEATTACK_PARENT_CALL(CBaseMonster);
 }
 
+
 GENERATE_TAKEDAMAGE_IMPLEMENTATION(CKingpin){
-
-
 	//Alert poweredupmonsters of this occurence in MonsterThink by the "recentlyDamage" feature!
 	if(this->pev->deadflag == DEAD_NO && pevInflictor != NULL){
 		CBaseEntity* entityTest = CBaseEntity::Instance(pevInflictor);
@@ -2626,18 +2583,13 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CKingpin){
 		//non-timed damage only counts for this feature.
 
 		if( !(bitsDamageTypeMod & (DMG_TIMEDEFFECT|DMG_TIMEDEFFECTIGNORE)) ){
-
 			//These are interruptable by //accumulatedDamageTaken
 			accumulatedDamageTaken += flDamage;
-
 			//also cut the actual damage received in half while charging.  Our goal was to interrupt the attack.
 			flDamage = flDamage / 2.0f;
 		
 		}//END OF non-timed damage check
 	}
-
-
-	
 
 	return GENERATE_TAKEDAMAGE_PARENT_CALL(CBaseMonster);
 }
@@ -2672,21 +2624,13 @@ void CKingpin::OnTakeDamageSetConditions(entvars_t *pevInflictor, entvars_t *pev
 		forgetSmallFlinchTime = gpGlobals->time + 9.0f;
 		forgetBigFlinchTime = gpGlobals->time + 15.0f;
 	}
-
-
-
-
 }//END OF OnTakeDamageSetConditions
 
 
-
-
 GENERATE_DEADTAKEDAMAGE_IMPLEMENTATION(CKingpin){
-	
-	
+
 	return GENERATE_DEADTAKEDAMAGE_PARENT_CALL(CBaseMonster);
 }
-
 
 //Parameters: integer named fGibSpawnsDecal
 GENERATE_GIBMONSTER_IMPLEMENTATION(CKingpin)
@@ -2698,8 +2642,6 @@ GENERATE_GIBMONSTER_IMPLEMENTATION(CKingpin)
 
 	GENERATE_GIBMONSTER_PARENT_CALL(CBaseMonster);
 }
-
-
 
 
 
@@ -2737,8 +2679,6 @@ GENERATE_KILLED_IMPLEMENTATION(CKingpin){
 	//it's just a good idea
 	stopElectricBarrageLoopSound();
 	
-	
-
 }//END OF Killed
 
 

@@ -2217,7 +2217,6 @@ void CFuncTrackAuto :: UpdateAutoTargets( int toggleState )
 		DebugLine_ClearLine(3);
 	}
 
-
 	if ( pNextTarget ){
 		easyForcePrintLine("CFuncTrackAuto%d:UpdateAutoTargets. Has next target. Turning its spawnflag PathDisabled bit on.", FuncTrackChangeID);
 		SetBits( pNextTarget->pev->spawnflags, SF_PATH_DISABLED );
@@ -2244,8 +2243,6 @@ void CFuncTrackAuto :: Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_T
 		pTarget = NULL;
 	}
 
-
-	
 	if(EASY_CVAR_GET(trackchangePrintouts)==1){
 		if(pTarget != NULL){
 			easyForcePrintLine("CFuncTrackAuto%d:Use. TARGET ORIGIN DRAWN.", FuncTrackChangeID);
@@ -2254,7 +2251,6 @@ void CFuncTrackAuto :: Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_T
 			DebugLine_ClearLine(3);
 		}
 	}
-
 
 
 	if ( FClassnameIs( pActivator->pev, "func_tracktrain" ) )

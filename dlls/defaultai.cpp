@@ -26,7 +26,6 @@
 #include "scripted.h"
 
 
-
 EASY_CVAR_EXTERN(pathfindStumpedMode)
 EASY_CVAR_EXTERN(pathfindStumpedWaitTime)
 EASY_CVAR_EXTERN(pathfindStumpedForgetEnemy)
@@ -1233,50 +1232,6 @@ Schedule_t slWaitForEnemyToEnterWater[] =
 		"slWaitForEnemyToEnterWater"
 	},
 };
-
-
-
-
-
-
-
-/*
-
-case TASK_MOVE_TO_TARGET_RANGE:
-		{
-			float distance;
-
-			if ( m_hTargetEnt == NULL ){
-				easyPrintLine("I HAVE FAILED THE EMPRAH.  ID: %d", this->monsterID);
-				TaskFail();
-			}else
-			{
-				distance = ( m_vecMoveGoal - pev->origin ).Length2D();
-				// Re-evaluate when you think your finished, or the target has moved too far
-				if ( (distance < pTask->flData) || (m_vecMoveGoal - m_hTargetEnt->pev->origin).Length() > pTask->flData * 0.5 )
-				{
-					m_vecMoveGoal = m_hTargetEnt->pev->origin;
-					distance = ( m_vecMoveGoal - pev->origin ).Length2D();
-					FRefreshRoute();
-				}
-
-				// Set the appropriate activity based on an overlapping range
-				// overlap the range to prevent oscillation
-				if ( distance < pTask->flData )
-				{
-					TaskComplete();
-					RouteClear();		// Stop moving
-				}
-				else if ( distance < 190 && m_movementActivity != ACT_WALK )
-					m_movementActivity = ACT_WALK;
-				else if ( distance >= 270 && m_movementActivity != ACT_RUN )
-					m_movementActivity = ACT_RUN;
-			}
-
-			break;
-		}
-*/
-
 
 
 

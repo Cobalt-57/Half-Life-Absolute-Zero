@@ -1183,14 +1183,8 @@ void HUD_InitClientWeapons( void )
 
 
 
-	//MODDD - mimicking dlls/util.cpp's W_Precache.  Start with giAmmoIndex at 0
-	// before calling all the HUD_PrepEntity's.
-	// And whatever the memsets were doing.
-	memset(CBasePlayerItem::ItemInfoArray, 0, sizeof(CBasePlayerItem::ItemInfoArray));
-	memset(CBasePlayerItem::AmmoInfoArray, 0, sizeof(CBasePlayerItem::AmmoInfoArray));
-	giAmmoIndex = 0;
-	////////////////////////////////////////////////////////////////////////////////
-
+	// MODDD - place for script similar between client and serverside.
+	PrecacheShared();
 
 	// Allocate a slot for the local player
 	HUD_PrepEntity( &player		, NULL );

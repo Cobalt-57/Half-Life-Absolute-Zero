@@ -703,17 +703,9 @@ public:
 	void turnOnSneaky(void);
 	void turnOffSneaky(void);
 
-	//BOOL queueTotalFOVUpdate;
-	//BOOL queueZoomFOVUpdate;
-	BOOL alreadySpawned;
-
-	//float python_zoomfov;
-	//float crossbow_zoomfov;
-
 	float default_fov;
 	float auto_adjust_fov;
 	float auto_determined_fov;
-
 
 	//Measuring the amount of time the player can breathe underwater with an air tank.
 	BOOL airTankAirTimeNeedsUpdate;
@@ -727,8 +719,7 @@ public:
 	BOOL longJumpChargeNeedsUpdate;
 	float oldThinkTime;
 	float lastDuckVelocityLength;
-
-
+	
 	//MODD
 	float nextMadEffect;
 	int deadflagmem;
@@ -835,7 +826,6 @@ public:
 	BOOL sentCarcassScent;
 
 	//MODDD
-	float myRef_barnacleEatsEverything;
 	int drowning;  //actually a BOOL, but the client doesn't know what bools are.  Probably wouldn't hurt anyways.
 	int drowningMem;
 

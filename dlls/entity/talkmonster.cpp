@@ -524,7 +524,7 @@ void CTalkMonster :: SetActivity ( Activity newActivity )
 	if (newActivity == ACT_IDLE && IsTalking() )
 		newActivity = ACT_SIGNAL3;
 	
-	if ( newActivity == ACT_SIGNAL3 && (LookupActivity ( ACT_SIGNAL3 ) == ACTIVITY_NOT_AVAILABLE))
+	if ( newActivity == ACT_SIGNAL3 && (LookupActivityFiltered( ACT_SIGNAL3 ) == ACTIVITY_NOT_AVAILABLE))
 		newActivity = ACT_IDLE;
 
 	CBaseMonster::SetActivity( newActivity );
@@ -688,9 +688,6 @@ void CTalkMonster :: StartTask( Task_t *pTask )
 		break;
 
 	case TASK_CANT_FOLLOW:
-
-		
-		
 		consecutiveFollowFails++;  //this counts as one failure.
 		
 		//MODDD - woa there, let's not be so hasty. It's possible the follow method failed because another NPC was in the way. Wait a little and try again.
@@ -1351,7 +1348,7 @@ int CTalkMonster :: FOkToSpeak( void )
 		return FALSE;
 
 	// if player is not in pvs, don't speak
-	if (!IsAlive() || FNullEnt(FIND_CLIENT_IN_PVS(edict())))
+	if (FNullEnt(FIND_CLIENT_IN_PVS(edict())))
 		return FALSE;
 
 	// don't talk if you're in combat

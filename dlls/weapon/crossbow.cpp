@@ -362,7 +362,6 @@ void CCrossbow::FireBolt()
 	}
 
 
-
 	CCrossbowBolt *pBolt = CCrossbowBolt::BoltCreate(arrowVelocity, arrowSpeed);
 	pBolt->pev->origin = vecSrc;
 	pBolt->pev->angles = anglesAim;
@@ -370,7 +369,7 @@ void CCrossbow::FireBolt()
 
 	//MODDD NOTE - a slight angular Z movement (or roll)? Did they really expect people to notice a slight roll on a speeding cylindrical object?
 	pBolt->pev->avelocity.z = 10;
-
+	
 #endif
 
 	if (!m_iClip && m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] <= 0)

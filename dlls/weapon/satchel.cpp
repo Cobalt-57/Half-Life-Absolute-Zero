@@ -29,10 +29,7 @@
 
 
 
-
-
-
-//MODDD - why wasn't this serverside anyway??
+//MODDD - why wasn't this serverside-only anyway??
 #ifndef CLIENT_DLL
 //=========================================================
 // DeactivateSatchels - removes all satchels owned by
@@ -67,7 +64,8 @@ void DeactivateSatchels(CBasePlayer* pOwner)
 
 
 
-//MODDD - why wasn't this always marked serverside-only??
+//MODDD - why wasn't this class always marked serverside-only??
+///////////////////////////////////////////////////////////////////////////////////////////////////
 #ifndef CLIENT_DLL
 
 LINK_ENTITY_TO_CLASS( monster_satchel, CSatchelCharge );
@@ -199,7 +197,7 @@ int CSatchelCharge::GetProjectileType(void){
 }
 
 #endif //CLIENT_DLL check
-
+///////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 
@@ -221,7 +219,6 @@ TYPEDESCRIPTION	CSatchel::m_SaveData[] =
 };
 IMPLEMENT_SAVERESTORE(CSatchel, CBasePlayerWeapon);
 #endif
-
 
 
 //=========================================================
@@ -260,7 +257,6 @@ int CSatchel::AddToPlayer( CBasePlayer *pPlayer )
 	}
 	return FALSE;
 }
-
 
 
 //MODDD
@@ -374,13 +370,9 @@ BOOL CSatchel::Deploy( )
 
 void CSatchel::Holster( int skiplocal /* = 0 */ )
 {
-
 	m_fInAttack = FALSE;
-
 	//m_pPlayer->m_flNextAttack = UTIL_WeaponTimeBase() + 0.5;
 	
-
-
 	if ( !m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] && !getchargeReady() )
 	{
 		m_pPlayer->pev->weapons &= ~(1<<WEAPON_SATCHEL);
@@ -400,10 +392,8 @@ void CSatchel::Holster( int skiplocal /* = 0 */ )
 		DefaultHolster(holsterAnimToSend, skiplocal, 0, (16.0f/30.0f));
 	}
 
-
 	EMIT_SOUND(ENT(m_pPlayer->pev), CHAN_WEAPON, "common/null.wav", 1.0, ATTN_NORM);
 }
-
 
 
 void CSatchel::PrimaryAttack()
@@ -518,8 +508,6 @@ void CSatchel::Throw( void )
 			//they stick together sometimes, so they get an extra delay.
 			m_flNextSecondaryAttack = UTIL_WeaponTimeBase() + m_pPlayer->cheat_minimumfiredelaycustomMem + 0.03f;
 		}
-		
-
 	}
 }
 
@@ -548,7 +536,6 @@ void CSatchel::WeaponIdle( void )
 			return;
 		}
 	}
-
 
 	//easyPrintLine("WHAT THE time %.2f, %.2f", m_flTimeWeaponIdle, UTIL_WeaponTimeBase());
 

@@ -880,11 +880,6 @@ void CChumToad::Spawn( void )
 
 	//until it's done falling?
 	
-	
-	//MODDD - flag for mirror recognition.
-	pev->renderfx |= ISNPC;
-
-
 
 	//pev->solid			= SOLID_SLIDEBOX;
 	//pev->movetype		= MOVETYPE_STEP;

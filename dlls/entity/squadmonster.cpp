@@ -554,10 +554,14 @@ int CSquadMonster :: CheckEnemy ( CBaseEntity *pEnemy )
 {
 	int iUpdatedLKP;
 
-	iUpdatedLKP = CBaseMonster :: CheckEnemy ( m_hEnemy );
+	//MODDD - m_hEnemy -> pEnemy replacement.
+	iUpdatedLKP = CBaseMonster :: CheckEnemy ( pEnemy );
 	
 	// communicate with squad members about the enemy IF this individual has the same enemy as the squad leader.
-	if ( InSquad() && (CBaseEntity *)m_hEnemy == MySquadLeader()->m_hEnemy )
+	//MODDD - use the parameter you got, dangit!
+	// Even though it will always end up being m_hEnemy anyway.
+	//if ( InSquad() && (CBaseEntity *)m_hEnemy == MySquadLeader()->m_hEnemy )
+	if ( InSquad() && pEnemy->edict() == MySquadLeader()->m_hEnemy.Get() )
 	{
 		if ( iUpdatedLKP )
 		{

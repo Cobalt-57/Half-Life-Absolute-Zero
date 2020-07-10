@@ -26,6 +26,7 @@ class CBasePlayerItem;
 class CBasePlayer;
 class CItem;
 class CBasePlayerAmmo;
+class CPickupWalker;  //NEW
 
 
 extern int g_teamplay;
@@ -120,6 +121,13 @@ public:
 	virtual float FlWeaponRespawnTime( CBasePlayerItem *pWeapon ) = 0;// when may this weapon respawn?
 	virtual float FlWeaponTryRespawn( CBasePlayerItem *pWeapon ) = 0; // can i respawn now,  and if not, when should i try again?
 	virtual Vector VecWeaponRespawnSpot( CBasePlayerItem *pWeapon ) = 0;// where in the world should this weapon respawn?
+
+//MODDD - NEW. Methods for pickupwalkers.
+	virtual int PickupWalkerShouldRespawn(CPickupWalker* pWeapon) = 0;// should this weapon respawn?
+	virtual float FlPickupWalkerRespawnTime(CPickupWalker* pWeapon) = 0;// when may this weapon respawn?
+	virtual float FlPickupWalkerTryRespawn(CPickupWalker* pWeapon) = 0; // can i respawn now,  and if not, when should i try again?
+	virtual Vector VecPickupWalkerRespawnSpot(CPickupWalker* pWeapon) = 0;// where in the world should this weapon respawn?
+
 
 // Item retrieval
 	virtual BOOL CanHaveItem( CBasePlayer *pPlayer, CItem *pItem ) = 0;// is this player allowed to take this item?
@@ -226,6 +234,13 @@ public:
 	virtual float FlWeaponTryRespawn( CBasePlayerItem *pWeapon );
 	virtual Vector VecWeaponRespawnSpot( CBasePlayerItem *pWeapon );
 
+//MODDD
+	virtual int PickupWalkerShouldRespawn(CPickupWalker* pWeapon);
+	virtual float FlPickupWalkerRespawnTime(CPickupWalker* pWeapon);
+	virtual float FlPickupWalkerTryRespawn(CPickupWalker* pWeapon);
+	virtual Vector VecPickupWalkerRespawnSpot(CPickupWalker* pWeapon);
+
+
 // Item retrieval
 	virtual BOOL CanHaveItem( CBasePlayer *pPlayer, CItem *pItem );
 	virtual void PlayerGotItem( CBasePlayer *pPlayer, CItem *pItem );
@@ -320,6 +335,13 @@ public:
 	virtual float FlWeaponRespawnTime( CBasePlayerItem *pWeapon );
 	virtual float FlWeaponTryRespawn( CBasePlayerItem *pWeapon );
 	virtual Vector VecWeaponRespawnSpot( CBasePlayerItem *pWeapon );
+
+//MODDD
+	virtual int PickupWalkerShouldRespawn(CPickupWalker* pWeapon);
+	virtual float FlPickupWalkerRespawnTime(CPickupWalker* pWeapon);
+	virtual float FlPickupWalkerTryRespawn(CPickupWalker* pWeapon);
+	virtual Vector VecPickupWalkerRespawnSpot(CPickupWalker* pWeapon);
+
 
 // Item retrieval
 	virtual BOOL CanHaveItem( CBasePlayer *pPlayer, CItem *pItem );

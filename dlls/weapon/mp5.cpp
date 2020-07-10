@@ -299,11 +299,11 @@ void CMP5::SecondaryAttack( void )
 #ifndef CLIENT_DLL
 	Vector extraStart = UTIL_GetProjectileVelocityExtra(m_pPlayer->pev->velocity, EASY_CVAR_GET(mp5GrenadeInheritsPlayerVelocity) );
 
-	
-
+	//MODDD - supply the damage to deal in this call.
 	CGrenade::ShootContact( m_pPlayer->pev, 
 							m_pPlayer->pev->origin + m_pPlayer->pev->view_ofs + gpGlobals->v_forward * 16, 
-							gpGlobals->v_forward * 800 + extraStart );
+							gpGlobals->v_forward * 800 + extraStart,
+							gSkillData.plrDmgM203Grenade);
 	
 #endif
 	

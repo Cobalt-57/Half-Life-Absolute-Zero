@@ -25,27 +25,30 @@
 #include "nodes.h"
 #include "defaultai.h"
 #include "soundent.h"
-
 #include "util_debugdraw.h"
 
-extern CGraph WorldGraph;
-
-//MODDD
 EASY_CVAR_EXTERN(sparksAIFailMulti)
 EASY_CVAR_EXTERN(crazyMonsterPrintouts)
 EASY_CVAR_EXTERN(movementIsCompletePrintout)
 EASY_CVAR_EXTERN(noFlinchOnHard)
-
 EASY_CVAR_EXTERN(drawCollisionBoundsAtDeath)
 EASY_CVAR_EXTERN(drawHitBoundsAtDeath)
-
-
-
 EASY_CVAR_EXTERN(scheduleInterruptPrintouts)
-	
 EASY_CVAR_EXTERN(pathfindStumpedMode)
 EASY_CVAR_EXTERN(pathfindStumpedWaitTime)
 EASY_CVAR_EXTERN(pathfindStumpedForgetEnemy)
+
+
+extern CGraph WorldGraph;
+
+
+//MODDD!!!!!!!!!!!!!!!!!!!!! 
+// Was m_afConditions
+#define CONDITIONS_BITMASK_USE m_afConditionsFrame
+
+
+
+
 
 //MODDD - new. Shortened form of 
 
@@ -133,12 +136,9 @@ BOOL CBaseMonster :: FScheduleDone ( void )
 //=========================================================
 void CBaseMonster :: ChangeSchedule ( Schedule_t *pNewSchedule )
 {
-	
 	if(EASY_CVAR_GET(crazyMonsterPrintouts))easyForcePrintLine("YOU despicable person %s %d", pNewSchedule->pName, pNewSchedule->iInterruptMask);
 
 	ASSERT( pNewSchedule != NULL );
-
-
 
 	//MODDD - for now, let's count failing to change to a new schedule as a TaskFail() but be sure to talk
 	//        about it in printouts, really don't want to miss this happening.
@@ -148,29 +148,37 @@ void CBaseMonster :: ChangeSchedule ( Schedule_t *pNewSchedule )
 		return;
 	}
 
-
 	//MODDD - is this safe to assume when changing schedules?
 	//        Don't want to feel obliged to stick with an animation that may no longer be fitting.
 	this->usingCustomSequence = FALSE;
 
 
-	m_pSchedule			= pNewSchedule;
-	m_iScheduleIndex	= 0;
-	m_iTaskStatus		= TASKSTATUS_NEW;
+	m_pSchedule = pNewSchedule;
+	m_iScheduleIndex = 0;
+	m_iTaskStatus = TASKSTATUS_NEW;
 
 	//MODDD - important.	ChangeSchedule now no longer resets conditions alone.
 	//Runtask() now resets some, if not most conditions before calling RunAI(). Or early on in RunAI() once.
 
 
 	//MODDD NOTE - don't get slick.  Just clear all conditions.
-	m_afConditions		= 0;// clear all of the conditions
-
-	//m_afConditions		&= ~(bits_COND_TASK_FAILED | bits_COND_SCHEDULE_DONE);
-
-	//m_afConditions		&= (bits_COND_CAN_RANGE_ATTACK1 | bits_COND_CAN_MELEE_ATTACK1 | bits_COND_CAN_RANGE_ATTACK2 | bits_COND_CAN_MELEE_ATTACK2);
+	// also, DAMMIT MAN.  We have clearAllConditions for a reason!!  Breakpoints.  DAMN.
+	//m_afConditions = 0;// clear all of the conditions
+	clearAllConditions_NonFrame();
 
 
-	m_failSchedule		= SCHED_NONE;
+	//weren't these good ideas though, sorta?
+	//////////////////////////////////////////////////////////////
+	//m_afConditions &= ~(bits_COND_TASK_FAILED | bits_COND_SCHEDULE_DONE);
+	//m_afConditions &= (bits_COND_CAN_RANGE_ATTACK1 | bits_COND_CAN_MELEE_ATTACK1 | bits_COND_CAN_RANGE_ATTACK2 | bits_COND_CAN_MELEE_ATTACK2);
+	//////////////////////////////////////////////////////////////
+	//MODDD!!!!!!!!!!!!!!!!!!!!! 
+	m_afConditions &= ~(bits_COND_TASK_FAILED | bits_COND_SCHEDULE_DONE);
+	m_afConditionsFrame &= ~(bits_COND_TASK_FAILED | bits_COND_SCHEDULE_DONE);
+
+
+
+	m_failSchedule = SCHED_NONE;
 	hardSetFailSchedule = FALSE;  //MODDD - any fail schedule resets also turn this off.
 	scheduleSurvivesStateChange = FALSE;  //MODDD - also new. Default schedule behavior: state changes force the schedule to want to change.
 
@@ -256,9 +264,8 @@ int CBaseMonster :: IScheduleFlags ( void )
 	}
 	
 	// strip off all bits excepts the ones capable of breaking this schedule.
-	return m_afConditions & m_pSchedule->iInterruptMask;
+	return CONDITIONS_BITMASK_USE & m_pSchedule->iInterruptMask;
 }
-
 
 
 
@@ -266,11 +273,11 @@ int CBaseMonster :: IScheduleFlags ( void )
 
 //#bitToCheck
 #define CHEAPO(nickname, bitToCheck) ,\
-	#nickname, (m_pSchedule->iInterruptMask & bits_COND_##bitToCheck)!=0, (m_afConditions & bits_COND_##bitToCheck)!= 0
+	#nickname, (m_pSchedule->iInterruptMask & bits_COND_##bitToCheck)!=0, (m_afConditions & bits_COND_##bitToCheck)!=0, (m_afConditionsFrame & bits_COND_##bitToCheck)!=0
 
 
 #define CHEAPO2(nickname, bitToCheck) ,\
-	#nickname, 9, (m_afConditions & bits_COND_##bitToCheck)!= 0
+	#nickname, 9, (m_afConditions & bits_COND_##bitToCheck)!=0, (m_afConditionsFrame & bits_COND_##bitToCheck)!=0
 
 //=========================================================
 // FScheduleValid - returns TRUE as long as the current
@@ -286,15 +293,21 @@ BOOL CBaseMonster :: FScheduleValid ( void )
 		return FALSE;
 	}
 
+	if (FClassnameIs(pev, "monster_scientist")) {
+		if (HasConditions(bits_COND_LIGHT_DAMAGE)) {
+			int x = 45;
+		}
+		if (HasConditions(bits_COND_HEAVY_DAMAGE)) {
+			int x = 45;
+		}
+	}
+
+
 	if ( HasConditions( m_pSchedule->iInterruptMask | bits_COND_SCHEDULE_DONE | bits_COND_TASK_FAILED ) )
 	{
 
-
-
-
 		if(EASY_CVAR_GET(crazyMonsterPrintouts))easyForcePrintLine("FScheduleValid: fail B: %s %d ::: %d %d %d", m_pSchedule->pName, m_pSchedule->iInterruptMask, (m_afConditions & m_pSchedule->iInterruptMask), (m_afConditions & bits_COND_SCHEDULE_DONE), (m_afConditions & bits_COND_TASK_FAILED) );
 		
-
 
 		//This is a table of all conditions, whether the interrupt mask has them (counts for interrupt), and whether we happen to
 		//have the condition set at this time (only interrupts if we have the condition set AND it is in the interupt list).
@@ -306,34 +319,34 @@ BOOL CBaseMonster :: FScheduleValid ( void )
 		
 		//if(FClassnameIs(this->pev, "monster_scientist"))
 		if(EASY_CVAR_GET(scheduleInterruptPrintouts) == 1)
-			easyForcePrintLine("%s:%d SCHEDULE INTERRUPTED. Name:%s task:%d\n"
-			"%s: %d %d\n"
-			"%s: %d %d\n"
-			"%s: %d %d\n"
-			"%s: %d %d\n"
-			"%s: %d %d\n"
-			"%s: %d %d\n"
-			"%s: %d %d\n"
-			"%s: %d %d\n"
-			"%s: %d %d\n"
-			"%s: %d %d\n"
-			"%s: %d %d\n"
-			"%s: %d %d\n"
-			"%s: %d %d\n"
-			"%s: %d %d\n"
-			"%s: %d %d\n"
-			"%s: %d %d\n"
-			"%s: %d %d\n"
-			"%s: %d %d\n"
-			"%s: %d %d\n"
-			"%s: %d %d\n"
-			"%s: %d %d\n"
-			"%s: %d %d\n"
-			"%s: %d %d\n"
-			"%s: %d %d\n"
-			"%s: %d %d\n"
-			"%s: %d %d\n",
-			getClassname(), monsterID, getScheduleName(), this->getTaskNumber()
+			easyForcePrintLine("%s:%d SCHEDULE INTERRUPTED. Name:%s task:%d taskindex:%d\n"
+			"%s: %d : %d %d\n"
+			"%s: %d : %d %d\n"
+			"%s: %d : %d %d\n"
+			"%s: %d : %d %d\n"
+			"%s: %d : %d %d\n"
+			"%s: %d : %d %d\n"
+			"%s: %d : %d %d\n"
+			"%s: %d : %d %d\n"
+			"%s: %d : %d %d\n"
+			"%s: %d : %d %d\n"
+			"%s: %d : %d %d\n"
+			"%s: %d : %d %d\n"
+			"%s: %d : %d %d\n"
+			"%s: %d : %d %d\n"
+			"%s: %d : %d %d\n"
+			"%s: %d : %d %d\n"
+			"%s: %d : %d %d\n"
+			"%s: %d : %d %d\n"
+			"%s: %d : %d %d\n"
+			"%s: %d : %d %d\n"
+			"%s: %d : %d %d\n"
+			"%s: %d : %d %d\n"
+			"%s: %d : %d %d\n"
+			"%s: %d : %d %d\n"
+			"%s: %d : %d %d\n"
+			"%s: %d : %d %d\n",
+			getClassname(), monsterID, getScheduleName(), this->getTaskNumber(), m_iScheduleIndex
 			CHEAPO(noammo, NO_AMMO_LOADED)
 			CHEAPO(seehat, SEE_HATE)
 			CHEAPO(se_fea, SEE_FEAR)
@@ -400,10 +413,10 @@ void CBaseMonster :: MaintainSchedule ( void )
 	int		i;
 	
 	/*
-		if(m_iTaskStatus == TASKSTATUS_RUNNING){
-			return;
-		}
-		*/
+	if(m_iTaskStatus == TASKSTATUS_RUNNING){
+		return;
+	}
+	*/
 
 	if(monsterID == 14){
 		int x = 666;
@@ -413,7 +426,9 @@ void CBaseMonster :: MaintainSchedule ( void )
 		easyPrintLine("DOCKS1 %d", HasConditions(bits_COND_CAN_MELEE_ATTACK1));
 	}
 	// UNDONE: Tune/fix this 10... This is just here so infinite loops are impossible
-	for ( i = 0; i < 10; i++ )
+	// MODDD - let's do more!  Upped to 25.
+	//for ( i = 0; i < 10; i++ )
+	for (i = 0; i < 25; i++)
 	{
 		if ( m_pSchedule != NULL && TaskIsComplete() )
 		{
@@ -462,20 +477,25 @@ void CBaseMonster :: MaintainSchedule ( void )
 			if ( m_IdealMonsterState != MONSTERSTATE_DEAD && 
 				 (m_IdealMonsterState != MONSTERSTATE_SCRIPT || m_IdealMonsterState == m_MonsterState) )
 			{
-
 				//easyForcePrintLine("doooop (%d && %d) %d (%d && %d)", m_afConditions, !HasConditions(bits_COND_SCHEDULE_DONE), (m_pSchedule && (m_pSchedule->iInterruptMask & bits_COND_SCHEDULE_DONE)), (m_MonsterState == MONSTERSTATE_COMBAT), (m_hEnemy==NULL) );
-				if (	(m_afConditions && !HasConditions(bits_COND_SCHEDULE_DONE)) ||
-						
-					//Sorry... What? Doesn't any schedule being done count as being done? They don't have to explicitly say they are interrupted by being done, 
-					//it is implied they are... what.  Keeping for safety.
+				if (	(CONDITIONS_BITMASK_USE && !HasConditions(bits_COND_SCHEDULE_DONE)) ||
+					// Sorry... What? Doesn't any schedule being done count as being done? They don't have to explicitly say they are interrupted by being done, 
+					// it is implied they are... what.  Keeping for safety.
 					(m_pSchedule && (m_pSchedule->iInterruptMask & bits_COND_SCHEDULE_DONE)) ||
-
-						((m_MonsterState == MONSTERSTATE_COMBAT) && (m_hEnemy == NULL))	)
+					((m_MonsterState == MONSTERSTATE_COMBAT) && (m_hEnemy == NULL))	)
 				{
 					if(EASY_CVAR_GET(crazyMonsterPrintouts) == 1){
 						easyPrintLine("OOPS A PLENTY 3 %d", HasConditions(bits_COND_CAN_MELEE_ATTACK1));
 					}
-					GetIdealState();
+					
+					// MODDD
+					// WAIT.
+					// What's this?
+					// We... call a method.  That returns something.
+					// And do nothing,  with what it returns.
+					//GetIdealState();
+					m_IdealMonsterState = GetIdealState();
+
 					if(EASY_CVAR_GET(crazyMonsterPrintouts) == 1){
 						easyPrintLine("OOPS A PLENTY 4 %d", HasConditions(bits_COND_CAN_MELEE_ATTACK1));
 					}
@@ -501,7 +521,6 @@ void CBaseMonster :: MaintainSchedule ( void )
 					pNewSchedule = GetScheduleOfType( SCHED_FAIL );
 				}
 
-
 				// schedule was invalid because the current task failed to start or complete
 				ALERT ( at_aiconsole, "Schedule Failed at %d!\n", m_iScheduleIndex );
 				if(EASY_CVAR_GET(crazyMonsterPrintouts) == 1){
@@ -519,12 +538,8 @@ void CBaseMonster :: MaintainSchedule ( void )
 					scheduleSurvivesStateChange = TRUE;
 				}
 
-				
 				//MODDD - Now that hardSetFailSchedule has been involved in a decision, it does not need to stay on (if it is)
 				hardSetFailSchedule = FALSE;
-
-
-
 			}
 			else
 			{
@@ -547,7 +562,6 @@ void CBaseMonster :: MaintainSchedule ( void )
 				//YOU STUPID LITTLE man, I WILL OBLITERATE YOUR VERY WILL TO LIVE AND PLAY IN THE ASHES.
 				//~what is this, Dilbert?    Damn, the rage is real yo.
 				
-				
 				if(EASY_CVAR_GET(crazyMonsterPrintouts))easyForcePrintLine("MaintainSchedule: NEW SCHEDULE WILL BE %s", pNewSchedule->pName);
 
 				ChangeSchedule( pNewSchedule );
@@ -562,15 +576,16 @@ void CBaseMonster :: MaintainSchedule ( void )
 		}//END OF valid check
 
 
-
-
 		if ( m_iTaskStatus == TASKSTATUS_NEW )
 		{	
 			Task_t *pTask = GetTask();
 			ASSERT( pTask != NULL );
 
-
-
+			// HEY THERE!!! I DO THIS
+			//    m_iTaskStatus = TASKSTATUS_RUNNING;
+			// ITS PRETTY <dearly> IMPORTANT.  THANKYOU.
+			// ...anyway, yes, that is all "TaskBegin" does, it is more of a signal for other logic to pay attention to.
+			// As opposed to "StartTask" below, that is way different.  Uhh.  Sure.
 			TaskBegin();
 			
 			//MODDD - change-schedule task complete / schedule failure check added.
@@ -587,7 +602,6 @@ void CBaseMonster :: MaintainSchedule ( void )
 					 easyForcePrintLine("!!!CRITICAL: %s:%d, sched:%s task:%d. Fresh schedule failed before running a single task! REPORT THIS", getClassname(), monsterID, getScheduleName(), getTaskNumber());
 					
 					 ClearConditions(bits_COND_TASK_FAILED);
-
 				 }else if( m_iTaskStatus == TASKSTATUS_COMPLETE){
 					 easyForcePrintLine("!!!CRITICAL: %s:%d, sched:%s task:%d. Fresh schedule completed first task before running a single task! REPORT THIS", getClassname(), monsterID, getScheduleName(), getTaskNumber());
 					 m_iTaskStatus = TASKSTATUS_NEW;
@@ -595,14 +609,15 @@ void CBaseMonster :: MaintainSchedule ( void )
 				 //Some correction for now, but still need to track any calls like these down and fix them. These automatic adjustments may not be all that is needed.
 			}//END OF m_fNewScheduleThisFrame check
 
-
+			if (HasConditions(bits_COND_TASK_FAILED)) {
+				//HACK
+				m_iTaskStatus = TASKSTATUS_NEW;
+			}
 
 		}//END OF if ( m_iTaskStatus == TASKSTATUS_NEW )
 
 
 
-
-		
 		if(EASY_CVAR_GET(crazyMonsterPrintouts) == 1){
 			easyPrintLine("OOPS A PLENTY 12 %d", HasConditions(bits_COND_CAN_MELEE_ATTACK1));
 		}
@@ -617,8 +632,77 @@ void CBaseMonster :: MaintainSchedule ( void )
 			easyPrintLine("OOPS A PLENTY 13 %d", HasConditions(bits_COND_CAN_MELEE_ATTACK1));
 		}
 		
-		if ( !TaskIsComplete() && m_iTaskStatus != TASKSTATUS_NEW )
-			break;
+		// MODDD - IDEA.  What if we could pick a new schedule in the same frame that another one picked failed in the same frame?
+		// Only if it is running do we assume we're sticking with it.
+		//if ( !TaskIsComplete() && m_iTaskStatus != TASKSTATUS_NEW )
+		if (m_iTaskStatus == TASKSTATUS_RUNNING){
+			//|| m_iTaskStatus == TASKSTATUS_RUNNING_TASK || m_iTaskStatus == TASKSTATUS_RUNNING_MOVEMENT) {
+			//break;
+
+
+
+
+	//MODDD - IMPORTANT SECTION.
+	//////////////////////////////////////////////////////////////////////////////////////////
+	//////////////////////////////////////////////////////////////////////////////////////////
+	//////////////////////////////////////////////////////////////////////////////////////////
+
+			if (TaskIsRunning())
+			{
+				Task_t* pTask = GetTask();
+				ASSERT(pTask != NULL);
+				//easyForcePrintLine("IM GONNA EXPLODE sched:%s task:%d act:%d", this->getScheduleName(), pTask->iTask, m_Activity);
+
+				//MODDD - change-schedule task complete / schedule failure check added.
+				m_fNewScheduleThisFrame = FALSE; //reset.
+
+				RunTask(pTask);
+
+				//Do the check.
+				if (m_fNewScheduleThisFrame) {
+					//If we recently called ChangeSchedule (this same frame) and the task ended up completed by a TaskComplete call or the schedule ended up failed by a TaskFail() in this
+					//same frame, something did not go right.
+
+					if (HasConditions(bits_COND_TASK_FAILED)) {
+						easyForcePrintLine("!!!CRITICAL: %s:%d, sched:%s task:%d. Fresh schedule failed before running a single task! REPORT THIS", getClassname(), monsterID, getScheduleName(), getTaskNumber());
+
+						ClearConditions(bits_COND_TASK_FAILED);
+					}
+					else if (m_iTaskStatus == TASKSTATUS_COMPLETE) {
+						easyForcePrintLine("!!!CRITICAL: %s:%d, sched:%s task:%d. Fresh schedule completed first task before running a single task! REPORT THIS", getClassname(), monsterID, getScheduleName(), getTaskNumber());
+						m_iTaskStatus = TASKSTATUS_NEW;
+					}
+					//Some correction for now, but still need to track any calls like these down and fix them. These automatic adjustments may not be all that is needed.
+				}//END OF m_fNewScheduleThisFrame check
+
+			}//END OF TaskIsRunning()
+
+			//////////////////////////////////////////////////////////////////////////////////////////
+			//////////////////////////////////////////////////////////////////////////////////////////
+			//////////////////////////////////////////////////////////////////////////////////////////
+
+			//MODDD
+			if (this->m_pfnThink == NULL || this->m_pfnThink == &CBaseEntity::SUB_FadeOut) {
+				// Some wacky hijinks, eh?  This loop goes byebye.
+				// Forget this and script stuff will try to call an idle animation through another run-thru of this loop,
+				// and it looks super awkward on anims that moved the actual scientist a good way from the origin
+				// (supposed to do the fade-out part out of view, or ones that don't fade suddenly go from corpses to
+				// standing up and animating, just not interactive.  Pretty dang weird stuff)
+				break;
+			}
+
+
+			if (m_iTaskStatus == TASKSTATUS_RUNNING) {
+				// sitll running?  Get out of this loop then, no point in going through more.
+				break;
+			}
+			else {
+				// go through the loop to pick another task/schedule, perhaps
+			}
+
+
+
+		}//END OF TASKSTATUS_RUNNING check
 			
 		if(EASY_CVAR_GET(crazyMonsterPrintouts) == 1){
 			easyPrintLine("OOPS A PLENTY 14 %d", HasConditions(bits_COND_CAN_MELEE_ATTACK1));
@@ -627,47 +711,8 @@ void CBaseMonster :: MaintainSchedule ( void )
 	}//END OF THE LOOP.  Come on now, let's not try and hide this.
 
 	
-	
 
-
-
-	if ( TaskIsRunning() )
-	{
-		Task_t *pTask = GetTask();
-		ASSERT( pTask != NULL );
-		//easyForcePrintLine("IM GONNA EXPLODE sched:%s task:%d act:%d", this->getScheduleName(), pTask->iTask, m_Activity);
-
-
-		//MODDD - change-schedule task complete / schedule failure check added.
-		m_fNewScheduleThisFrame = FALSE; //reset.
-
-		RunTask( pTask );
-
-		//Do the check.
-		if( m_fNewScheduleThisFrame ){
-			//If we recently called ChangeSchedule (this same frame) and the task ended up completed by a TaskComplete call or the schedule ended up failed by a TaskFail() in this
-			//same frame, something did not go right.
-		
-			 if(HasConditions(bits_COND_TASK_FAILED)){
-				 easyForcePrintLine("!!!CRITICAL: %s:%d, sched:%s task:%d. Fresh schedule failed before running a single task! REPORT THIS", getClassname(), monsterID, getScheduleName(), getTaskNumber());
-				 
-				 ClearConditions(bits_COND_TASK_FAILED);
-			 }else if( m_iTaskStatus == TASKSTATUS_COMPLETE){
-				 easyForcePrintLine("!!!CRITICAL: %s:%d, sched:%s task:%d. Fresh schedule completed first task before running a single task! REPORT THIS", getClassname(), monsterID, getScheduleName(), getTaskNumber());
-				 m_iTaskStatus = TASKSTATUS_NEW;
-			 }
-			 //Some correction for now, but still need to track any calls like these down and fix them. These automatic adjustments may not be all that is needed.
-		}//END OF m_fNewScheduleThisFrame check
-
-
-	}//END OF TaskIsRunning()
-	
-
-
-
-
-
-
+	// OLD LOCATION OF IMPORTANT SECTION
 
 
 
@@ -684,9 +729,9 @@ void CBaseMonster :: MaintainSchedule ( void )
 		//MODDD - well yea.
 		signalActivityUpdate = FALSE;
 
-
 		SetActivity ( m_IdealActivity );
 	}
+
 
 	if(EASY_CVAR_GET(crazyMonsterPrintouts) == 1){
 		easyPrintLine("CAN I MELEE COND1? %d", HasConditions(bits_COND_CAN_MELEE_ATTACK1));
@@ -749,28 +794,18 @@ void CBaseMonster :: RunTask ( Task_t *pTask )
 			}
 			break;
 		}
-
-
 	case TASK_FACE_ENEMY:
 		{
-
-
 			//if(monsterID == 1)easyForcePrintLine("HOO MANN sched:%s ang:%.2f ideal:%.2f", m_pSchedule->pName, UTIL_AngleMod( pev->angles.y ), pev->ideal_yaw );
-			
-
 			MakeIdealYaw( m_vecEnemyLKP );
-
 			ChangeYaw( pev->yaw_speed );
-
 			//easyForcePrintLine("TASK_FACE_ENEMY: %s%d WHAT? yawdif:%.2f yaw_spd:%.2f", this->getClassname(), this->monsterID,    FlYawDiff(), pev->yaw_speed);
-
 			if ( FacingIdeal() )
 			{
 				TaskComplete();
 			}
 			break;
 		}
-
 	//MODDD - new. No need
 	case TASK_FACE_POINT:
 	case TASK_FACE_HINTNODE:
@@ -921,9 +956,6 @@ void CBaseMonster :: RunTask ( Task_t *pTask )
 					if(!successfulRefresh){TaskFail();/*easyForcePrintLine("YEAAAHGHHHHHHHHHHH")*/;break;} //Not a good refresh? Stop.
 				}
 
-
-
-				
 				// Set the appropriate activity based on an overlapping range
 				// overlap the range to prevent oscillation
 				//MODDD - new possible satisfying condition. I am closer to my target's absolute position than the goaldist. I know, stunning.
@@ -939,10 +971,6 @@ void CBaseMonster :: RunTask ( Task_t *pTask )
 					m_movementActivity = ACT_WALK;
 				else if ( distance >= 270 && m_movementActivity != ACT_RUN )
 					m_movementActivity = ACT_RUN;
-
-
-
-
 
 			}//END OF m_hTargetEnt check
 
@@ -1269,11 +1297,9 @@ void CBaseMonster :: RunTask ( Task_t *pTask )
 		}
 	case TASK_DIE:
 	{
-
 		//Is the end 255 or 256?!
 		if ( m_fSequenceFinished && pev->frame >= 255 )
 		{
-
 			//MODDD - FOR DEBUGGING
 			if(EASY_CVAR_GET(drawCollisionBoundsAtDeath) == 1){
 				UTIL_drawBox(pev->origin + pev->mins, pev->origin + pev->maxs);
@@ -1281,10 +1307,6 @@ void CBaseMonster :: RunTask ( Task_t *pTask )
 			if(EASY_CVAR_GET(drawHitBoundsAtDeath) == 1){
 				UTIL_drawBox(pev->absmin, pev->absmax);
 			}
-				
-
-
-
 			//MODDD - does not seem effective, scrapped.
 				
 			/*
@@ -1302,12 +1324,10 @@ void CBaseMonster :: RunTask ( Task_t *pTask )
 			*/
 				
 			DeathAnimationEnd();
-				
-
+			
 			//MODDD
 			//pev->solid = SOLID_TRIGGER;
 			//pev->movetype = MOVETYPE_NONE;
-
 
 			/*
 			//pev->movetype = MOVETYPE_NOCLIP;
@@ -1322,7 +1342,6 @@ void CBaseMonster :: RunTask ( Task_t *pTask )
 			pev->solid			= SOLID_SLIDEBOX;
 			pev->movetype		= MOVETYPE_NONE;
 			*/
-
 		}
 		break;
 	}
@@ -1413,6 +1432,53 @@ void CBaseMonster :: RunTask ( Task_t *pTask )
 	case TASK_MELEE_ATTACK2_NOTURN:
 	case TASK_RELOAD_NOTURN:
 	{
+
+		//MODDD - BIG UGLY SECTION, make its own method if this turns out alright
+		/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		if (pTask->iTask == TASK_MELEE_ATTACK1_NOTURN || pTask->iTask == TASK_MELEE_ATTACK2_NOTURN) {
+
+			float flInterval = 0.1;  //mock interval, resembles think times.
+			float recentFrameAdvancePrediction = flInterval * m_flFrameRate * pev->framerate * EASY_CVAR_GET(animationFramerateMulti);
+			float tempCutoff;
+			if (animFrameCutoff != -1) {
+				tempCutoff = animFrameCutoff;
+			}
+			else {
+				//depends on framerate for direction.
+				tempCutoff = (pev->framerate >= 0) ? 256 : 0;
+			}
+			BOOL pass = FALSE;
+			if (pev->framerate < 0) {
+				if (pev->frame + recentFrameAdvancePrediction <= tempCutoff) {
+					pass = TRUE;
+				}
+			}
+			else {
+				if (pev->frame + recentFrameAdvancePrediction >= tempCutoff) {
+					pass = TRUE;
+				}
+			}
+			if (pass) {
+				//end now!
+				//pev->frame = 0;   // for next time?  blah.
+				//m_fSequenceFinished = TRUE;
+				// re-pick me to happen again
+				m_Activity = ACT_RESET;
+				m_IdealActivity = ACT_RESET;
+
+				//pev->framerate = 0;
+
+				TaskComplete();
+				return;
+			}
+		}
+		/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
 		if ( m_fSequenceFinished )
 		{
 			//MODDD - removed, see below.  REtail behavior was ONLY this line
@@ -1437,8 +1503,6 @@ void CBaseMonster :: RunTask ( Task_t *pTask )
 				return.
 			}
 			*/
-
-			
 			TaskComplete();
 		}
 	break;}
@@ -1451,6 +1515,53 @@ void CBaseMonster :: RunTask ( Task_t *pTask )
 	case TASK_RELOAD:
 	{
 		lookAtEnemyLKP();
+
+		//MODDD - BIG UGLY SECTION, make its own method if this turns out alright
+		/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		if (pTask->iTask == TASK_MELEE_ATTACK1_NOTURN || pTask->iTask == TASK_MELEE_ATTACK2_NOTURN) {
+
+			float flInterval = 0.1;  //mock interval, resembles think times.
+			float recentFrameAdvancePrediction = flInterval * m_flFrameRate * pev->framerate * EASY_CVAR_GET(animationFramerateMulti);
+			float tempCutoff;
+			if (animFrameCutoff != -1) {
+				tempCutoff = animFrameCutoff;
+			}
+			else {
+				//depends on framerate for direction.
+				tempCutoff = (pev->framerate >= 0) ? 256 : 0;
+			}
+			BOOL pass = FALSE;
+			if (pev->framerate < 0) {
+				if (pev->frame + recentFrameAdvancePrediction <= tempCutoff) {
+					pass = TRUE;
+				}
+			}
+			else {
+				if (pev->frame + recentFrameAdvancePrediction >= tempCutoff) {
+					pass = TRUE;
+				}
+			}
+			if (pass) {
+				//end now!
+				//pev->frame = 0;   // for next time?  blah.
+				//m_fSequenceFinished = TRUE;
+				// re-pick me to happen again
+				m_Activity = ACT_RESET;
+				m_IdealActivity = ACT_RESET;
+
+				//pev->framerate = 0;
+
+				TaskComplete();
+				return;
+			}
+		}
+		/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
 
 		if ( m_fSequenceFinished ){
 			//MODDD NOTE - BEWARE. This is likely to pick the same range attack activity again if the ideal activity remains that way.
@@ -1535,7 +1646,6 @@ void CBaseMonster :: RunTask ( Task_t *pTask )
 	break;}
 
 
-
 	}//END OF switch(...)
 
 }//END OF RunTask(...)
@@ -1546,15 +1656,12 @@ void CBaseMonster :: RunTask ( Task_t *pTask )
 // select one of the 180 turn animations.
 //=========================================================
 void CBaseMonster :: SetTurnActivity ( void ){
-
 	float flYD;
 	flYD = FlYawDiff();
-
 	
 	//MODDD - new. Remember the old activity before turning. Not that this is used in many places yet.
 	//Might not need it at all.
 	//m_IdealActivityBeforeTurn = m_IdealActivity;
-
 
 	if ( flYD <= -45 && LookupActivity ( ACT_TURN_RIGHT ) != ACTIVITY_NOT_AVAILABLE )
 	{// big right turn
@@ -1564,7 +1671,6 @@ void CBaseMonster :: SetTurnActivity ( void ){
 	{// big left turn
 		m_IdealActivity = ACT_TURN_LEFT;
 	}
-
 
 	if(FClassnameIs(pev, "monster_houndeye") && LookupActivity ( ACT_TURN_RIGHT ) == ACTIVITY_NOT_AVAILABLE && LookupActivity ( ACT_TURN_LEFT ) == ACTIVITY_NOT_AVAILABLE ){
 		easyForcePrintLine("HOUNDEYE ISSUE::: SETTURNACTIVITY BETTER BE DOING STUFF...... yawdelta: %.2f resulting act: %d", flYD, m_IdealActivity );
@@ -1706,11 +1812,17 @@ void CBaseMonster :: StartTask ( Task_t *pTask )
 			//Now, if the ideal activity isn't the stopped activity, AND it is the movement activity, we can do this change.
 			//I suppose if Ideal was matching both the Stopped activity and movement ACT, it would've done nothing but good to be safe.
 			//MODDD - also supporting a change if we're in LEFT or RIGHT turn activities.
-			if(m_IdealActivity != myStoppedActivity && m_IdealActivity == m_movementActivity 
-				|| m_Activity == ACT_TURN_LEFT || m_Activity == ACT_TURN_RIGHT)
+
+			// old condition (not the as-is SDK):
+			//if (m_IdealActivity != myStoppedActivity && m_IdealActivity == m_movementActivity
+			//	|| m_Activity == ACT_TURN_LEFT || m_Activity == ACT_TURN_RIGHT)
+
+			if( (m_IdealActivity != myStoppedActivity || m_Activity == ACT_TURN_LEFT || m_Activity == ACT_TURN_RIGHT)
+				&& m_IdealActivity == m_movementActivity
+				)
 			{
 
-				m_IdealActivity = GetStoppedActivity();
+				m_IdealActivity = myStoppedActivity;
 			}
 			//easyForcePrintLine("WEEEEEEEEEEEEEEEEEEELLLLLLLLLLLLLLLLLLLLLLLLB %d %d %d", m_IdealActivity, m_movementActivity, this->usingCustomSequence);
 
@@ -1957,6 +2069,14 @@ void CBaseMonster :: StartTask ( Task_t *pTask )
 		if ( m_hTargetEnt != NULL )
 		{
 			MakeIdealYaw ( m_hTargetEnt->pev->origin );
+
+			//MODDD - added, if we can complete early we can move on with thinking in the same frame
+			if (FacingIdeal())
+			{
+				TaskComplete();
+				return;
+			}
+
 			SetTurnActivity(); 
 		}
 		else
@@ -1965,7 +2085,16 @@ void CBaseMonster :: StartTask ( Task_t *pTask )
 	case TASK_FACE_ENEMY:
 		{
 			MakeIdealYaw ( m_vecEnemyLKP );
+
+			//MODDD - added, if we can complete early we can move on with thinking in the same frame
+			if (FacingIdeal())
+			{
+				TaskComplete();
+				return;
+			}
+
 			SetTurnActivity(); 
+
 			break;
 		}
 	case TASK_FACE_PREV_LKP:
@@ -1986,11 +2115,27 @@ void CBaseMonster :: StartTask ( Task_t *pTask )
 
 
 			MakeIdealYaw(m_vecEnemyLKP_prev);
+
+			//MODDD - added, if we can complete early we can move on with thinking in the same frame
+			if (FacingIdeal())
+			{
+				TaskComplete();
+				return;
+			}
+
 			SetTurnActivity(); 
 			break;
 		}
 	case TASK_FACE_IDEAL:
 		{
+
+			//MODDD - added, if we can complete early we can move on with thinking in the same frame
+			if (FacingIdeal())
+			{
+				TaskComplete();
+				return;
+			}
+
 			SetTurnActivity();
 			break;
 		}
@@ -2004,6 +2149,14 @@ void CBaseMonster :: StartTask ( Task_t *pTask )
 			else
 			{
 				MakeIdealYaw(m_Route[m_iRouteIndex].vecLocation);
+
+				//MODDD - added, if we can complete early we can move on with thinking in the same frame
+				if (FacingIdeal())
+				{
+					TaskComplete();
+					return;
+				}
+
 				SetTurnActivity();
 			}
 			break;
@@ -2020,6 +2173,14 @@ void CBaseMonster :: StartTask ( Task_t *pTask )
 			if(pSound)
 			{
 				MakeIdealYaw(pSound->m_vecOrigin);
+
+				//MODDD - added, if we can complete early we can move on with thinking in the same frame
+				if (FacingIdeal())
+				{
+					TaskComplete();
+					return;
+				}
+
 				SetTurnActivity();
 				//TaskComplete();
 			}else{
@@ -2042,16 +2203,12 @@ void CBaseMonster :: StartTask ( Task_t *pTask )
 			//no dont do it!!!!
 
 
-
-
 			//It is possible we're facing our last known position, but just repeatedly getting satisifed with that.
 			//Do a check. Are we looking at the enemy right now? If not, we need to force the LKP to the player to seek them.
 
 			if(!HasConditions(bits_COND_SEE_ENEMY)){
 				//Not looking at the enemy, but looking at LKP (presumably)?
 
-
-				
 				//If I was checking out a place I took damage at instead of chasing the enemy directly and I fail to see the enem
 				if(investigatingAltLKP){
 					//no longer!  Restore the LKP to the "real" one where the enemy was last sighted. If it hasn't been updated since that is.
@@ -2064,9 +2221,6 @@ void CBaseMonster :: StartTask ( Task_t *pTask )
 				}
 
 
-
-
-
 				if(EASY_CVAR_GET(pathfindStumpedMode) == 0){
 					//Forget the enemy, we lost sight. Will pick up on an old remembered enemy pushed into memory in a stack
 					//if there is one there.
@@ -2075,7 +2229,6 @@ void CBaseMonster :: StartTask ( Task_t *pTask )
 					TaskComplete();
 					return;
 				}
-
 
 				//Skip to re-routing towards the enemy, most likely.
 				if(EASY_CVAR_GET(pathfindStumpedMode) == 3){
@@ -2088,10 +2241,7 @@ void CBaseMonster :: StartTask ( Task_t *pTask )
 					return;
 				}
 
-
-
 				m_vecEnemyLKP_prev = m_vecEnemyLKP; //the old to look at for a little.
-
 
 				//easyForcePrintLine("AHHH. I don\'t see the enemy. Has enemy to seek? %d", (m_hEnemy != NULL));
 				if(m_hEnemy != NULL){
@@ -2151,20 +2301,41 @@ void CBaseMonster :: StartTask ( Task_t *pTask )
 		}
 	case TASK_MOVE_TO_TARGET_RANGE:
 		{
-
 			if(m_hTargetEnt == NULL){
 				//HOW DARE YOU.  HOw. DARE. YOU.
 				TaskFail();
 				return;
 			}
 
-			if ( (m_hTargetEnt->pev->origin - pev->origin).Length() < 1 )
+			//MODDD - why not end early if we're close enough??
+			//if ( (m_hTargetEnt->pev->origin - pev->origin).Length() < 1 )
+			if ((m_hTargetEnt->pev->origin - pev->origin).Length() < pTask->flData) {
 				TaskComplete();
-			else
-			{
+			}else{
 				m_vecMoveGoal = m_hTargetEnt->pev->origin;
-				if ( !MoveToTarget( ACT_WALK, 2 ) )
+				if (!MoveToTarget(ACT_WALK, 2)) {
 					TaskFail();
+				}
+				else {
+
+					//////////////////////////////////////////////////////////////////////////////////////////////////
+					//////////////////////////////////////////////////////////////////////////////////////////////////
+					//////////////////////////////////////////////////////////////////////////////////////////////////
+					// prepare to take the route soon.
+					/*
+					if (isMovetypeFlying())
+						m_movementActivity = ACT_FLY;
+					else
+						m_movementActivity = ACT_RUN;
+					*/
+
+					// or, assume m_movementActivity was set by MoveToTarget?
+					// Although it forces to ACT_WALK.   ehhh why not.
+					m_IdealActivity = m_movementActivity;
+					//////////////////////////////////////////////////////////////////////////////////////////////////
+					//////////////////////////////////////////////////////////////////////////////////////////////////
+					//////////////////////////////////////////////////////////////////////////////////////////////////
+				}
 			}
 			break;
 		}
@@ -2178,8 +2349,10 @@ void CBaseMonster :: StartTask ( Task_t *pTask )
 			return;
 		}
 
+		// WAIT.  Why not allow being close enough to the enemy ahead of time to work??
 		//if ( (m_hEnemy->pev->origin - pev->origin).Length() < 1 )
-		if ( (m_vecEnemyLKP - pev->origin).Length() < 1 ){
+		//if ( (m_vecEnemyLKP - pev->origin).Length() < 1 ){
+		if((m_vecEnemyLKP - pev->origin).Length() < pTask->flData){
 			TaskComplete();
 		}else{
 			//if ( !MoveToEnemy( ACT_WALK, 2 ) )
@@ -2192,16 +2365,40 @@ void CBaseMonster :: StartTask ( Task_t *pTask )
 			if(!test){
 				//easyForcePrintLine("!!! %s:%d YOU HAVE ALREADY FAILED.", this->getClassname(), this->monsterID);
 				TaskFail();
-			};
+			}
+			else {
+				// prepare to take the route soon.
+
+				//////////////////////////////////////////////////////////////////////////////////////////////////
+				//////////////////////////////////////////////////////////////////////////////////////////////////
+				//////////////////////////////////////////////////////////////////////////////////////////////////
+				/*
+				if (isMovetypeFlying())
+					m_movementActivity = ACT_FLY;
+				else
+					m_movementActivity = ACT_RUN;
+				*/
+
+				// or, assume m_movementActivity was set by FRefreshRouteChaseEnemySmart?
+				// Although it forces to ACT_RUN.   ehhh why not.
+				
+				m_IdealActivity = m_movementActivity;
+				//////////////////////////////////////////////////////////////////////////////////////////////////
+				//////////////////////////////////////////////////////////////////////////////////////////////////
+				//////////////////////////////////////////////////////////////////////////////////////////////////
+				//////////////////////////////////////////////////////////////////////////////////////////////////
+			}
 		}
 		break;
 	}
 	//MODDD - new, clone of TASK_MOVE_TO_TARGET_RANGE but for a point (m_vecMoveGoal) instead.
 	case TASK_MOVE_TO_POINT_RANGE:
 	{
-
+		
 		//NOTICE: task assumes "m_vecMoveGoal" has been set!
-		if ( (m_vecMoveGoal - pev->origin).Length() < 1 ){
+		//MODDD - ahh you know the drill.
+		//if ( (m_vecMoveGoal - pev->origin).Length() < 1 ){
+		if ( (m_vecMoveGoal - pev->origin).Length() < pTask->flData){
 			//easyForcePrintLine("HORRIBLE OKAY");
 			TaskComplete();
 		}else
@@ -2211,6 +2408,26 @@ void CBaseMonster :: StartTask ( Task_t *pTask )
 			if(!MoveToLocation(m_movementActivity, 2, m_vecMoveGoal)){
 				//easyForcePrintLine("HORRIBLE FFFF");
 				TaskFail();
+			}
+			else {
+				// prepare to take the route soon.
+
+				//////////////////////////////////////////////////////////////////////////////////////////////////
+				//////////////////////////////////////////////////////////////////////////////////////////////////
+				//////////////////////////////////////////////////////////////////////////////////////////////////
+				/*
+				if (isMovetypeFlying())
+					m_movementActivity = ACT_FLY;
+				else
+					m_movementActivity = ACT_RUN;
+				*/
+
+				// or, assume m_movementActivity was set by FRefreshRouteChaseEnemySmart?
+				// Although it forces to ACT_RUN.   ehhh why not.
+				m_IdealActivity = m_movementActivity;
+				//////////////////////////////////////////////////////////////////////////////////////////////////
+				//////////////////////////////////////////////////////////////////////////////////////////////////
+				//////////////////////////////////////////////////////////////////////////////////////////////////
 			}
 		}
 		break;
@@ -2285,6 +2502,11 @@ void CBaseMonster :: StartTask ( Task_t *pTask )
 			//m_Activity = ACT_RESET;  //force me to re-get this!
 			//m_fSequenceFinished = FALSE;
 			//pev->frame = 0;
+
+			//if (this->m_fSequenceLoops == FALSE) {
+			//???!!!???
+			//}
+
 
 			m_IdealActivity = ACT_MELEE_ATTACK2;
 			//this->signalActivityUpdate = TRUE;
@@ -2567,7 +2789,7 @@ void CBaseMonster :: StartTask ( Task_t *pTask )
 			}
 			break;
 		}
-case TASK_GET_PATH_TO_BESTSCENT:
+	case TASK_GET_PATH_TO_BESTSCENT:
 		{
 			CSound *pScent;
 
@@ -2713,9 +2935,7 @@ case TASK_GET_PATH_TO_BESTSCENT:
 		//These calls / settings are based off of "DeathAnimationStart" from basemonster.cpp.
 		//It is implied this sort of thing happens at the start of death.
 		RouteClear();
-		deadSetActivityBlock = TRUE;
 
-		
 		//don't force re-getting an animation just yet.
 		//A new animation comes from a discrepency between m_Activity and m_IdealActivity, so forcing both stops regetting an animation.
 		//also BOB SAGGETS FUCKING ASS. GetDeathActivity doesn't work if the pev->deadflag isn't DEAD_NO.
@@ -2724,8 +2944,6 @@ case TASK_GET_PATH_TO_BESTSCENT:
 		
 		pev->deadflag = DEAD_DYING;
 		
-
-
 	break;}
 	case TASK_SET_FALL_DEAD_TOUCH:{
 		//Just set my touch to anticipate hitting the ground and moving on to the next task (TASK_DIE) for the anim for hitting the ground to finish.
@@ -3075,9 +3293,11 @@ int CBaseMonster::getTaskNumber(void){
 Schedule_t *CBaseMonster :: GetSchedule ( void )
 {
 	//MODDD - safety.
-	if(pev->deadflag != DEAD_NO){
-		return GetScheduleOfType( SCHED_DIE );
-	}
+	//if(pev->deadflag != DEAD_NO){
+	//	return GetScheduleOfType( SCHED_DIE );
+	//}
+
+
 	SCHEDULE_TYPE baitSched = getHeardBaitSoundSchedule();
 
 	if(baitSched != SCHED_NONE){
@@ -3191,7 +3411,9 @@ Schedule_t *CBaseMonster :: GetSchedule ( void )
 			{
 				return GetScheduleOfType( SCHED_SMALL_FLINCH );
 			}
-			else if ( !HasConditions(bits_COND_SEE_ENEMY) )
+			else if ( !HasConditions
+				(bits_COND_SEE_ENEMY)
+			)
 			{
 				// we can't see the enemy
 				if ( !HasConditions(bits_COND_ENEMY_OCCLUDED) )

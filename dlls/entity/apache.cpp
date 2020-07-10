@@ -54,10 +54,6 @@ EASY_CVAR_EXTERN(cl_rockettrail)
 
 
 
-
-
-
-
 class CApache : public CBaseMonster
 {
 	//MODDD - why no public?
@@ -186,7 +182,6 @@ void CApache :: Spawn( void )
 
 	SET_MODEL(ENT(pev), "models/apache.mdl");
 
-
 	//MODDD - a flag can now influence the collision-bounds.
 	if(!(pev->spawnflags & SF_MONSTER_APACHE_CINBOUNDS) && EASY_CVAR_GET(apacheForceCinBounds) != 1  ){
 		UTIL_SetSize( pev, Vector( -32, -32, -64 ), Vector( 32, 32, 0 ) );
@@ -196,12 +191,7 @@ void CApache :: Spawn( void )
 	}
 
 	
-
-
 	UTIL_SetOrigin( pev, pev->origin );
-
-
-	
 
 	
 	//MODDD - did... did this get changed? Why?
@@ -230,6 +220,10 @@ void CApache :: Spawn( void )
 	}
 
 	m_iRockets = 10;
+	
+	
+	//MODDD
+	pev->renderfx |= ISMETALNPC;
 
 }
 
@@ -239,6 +233,7 @@ void CApache::Precache( void )
 {
 	PRECACHE_MODEL("models/apache.mdl");
 
+	/////////////////////////////////////////////////////////
 	global_useSentenceSave = TRUE;
 	PRECACHE_SOUND("apache/ap_rotor1.wav");
 	PRECACHE_SOUND("apache/ap_rotor2.wav");
@@ -252,6 +247,7 @@ void CApache::Precache( void )
 	PRECACHE_SOUND("turret/tu_fire1.wav");
 	
 	global_useSentenceSave = FALSE;
+	/////////////////////////////////////////////////////////
 
 	PRECACHE_MODEL("sprites/lgtning.spr");
 
@@ -260,7 +256,6 @@ void CApache::Precache( void )
 
 	UTIL_PrecacheOther( "hvr_rocket" );
 }
-
 
 
 void CApache::NullThink( void )
@@ -330,7 +325,7 @@ void CApache :: DyingThink( void )
 
 	//easyPrintLine("APACHE DYING %.2f %.2f", m_flNextRocket, gpGlobals->time);
 
-	float tempVal = EASY_CVAR_GET(apacheInfluence) == 1;
+	float tempVal = EASY_CVAR_GET(apacheInfluence);
 	if(tempVal == 1){
 		m_flNextRocket = 9999999;
 	}else if(tempVal == 2){
@@ -341,10 +336,9 @@ void CApache :: DyingThink( void )
 	// still falling?
 	if (m_flNextRocket > gpGlobals->time )
 	{
+		UTIL_Explosion(MSG_PVS, pev->origin, NULL, pev, pev->origin, RANDOM_FLOAT( -150, 150 ), RANDOM_FLOAT( -150, 150 ), RANDOM_FLOAT( -150, -50 ), g_sModelIndexFireball, RANDOM_LONG(0,29) + 30, 12, TE_EXPLFLAG_NONE, 0.4);
+		UTIL_ExplosionSmoke(MSG_PVS, pev->origin, NULL, pev->origin, RANDOM_FLOAT( -150, 150 ), RANDOM_FLOAT( -150, 150 ), RANDOM_FLOAT( -150, -50 ), g_sModelIndexSmoke, 100, 10);
 
-		UTIL_Explosion(pev, pev->origin, RANDOM_FLOAT( -150, 150 ), RANDOM_FLOAT( -150, 150 ), RANDOM_FLOAT( -150, -50 ), g_sModelIndexFireball, RANDOM_LONG(0,29) + 30, 12, TE_EXPLFLAG_NONE, 0.4);
-		
-		UTIL_Smoke(pev->origin, RANDOM_FLOAT( -150, 150 ), RANDOM_FLOAT( -150, 150 ), RANDOM_FLOAT( -150, -50 ), g_sModelIndexSmoke, 100, 10);
 
 		Vector vecSpot = pev->origin + (pev->mins + pev->maxs) * 0.5;
 		MESSAGE_BEGIN( MSG_PVS, SVC_TEMPENTITY, vecSpot );
@@ -393,6 +387,7 @@ void CApache :: DyingThink( void )
 	{
 		Vector vecSpot = pev->origin + (pev->mins + pev->maxs) * 0.5;
 
+		//MODDD - COMMENTED OUT AS-IS!
 		/*
 		MESSAGE_BEGIN( MSG_BROADCAST, SVC_TEMPENTITY );
 			WRITE_BYTE( TE_EXPLOSION);		// This just makes a dynamic light now
@@ -405,9 +400,15 @@ void CApache :: DyingThink( void )
 		MESSAGE_END();
 		*/
 
+
+
+		//MODDD - replacing this with a few lines below this ssection, see if that works.
+		/*
 		//MODDD - only do if the quake explosion is off.
 		if(EASY_CVAR_GET(cl_explosion) != 1){
-		// fireball
+			// fireball
+			// oh.  it's.  a sprite.  not.  TE_EXPLOSION.
+			//            okay.
 			MESSAGE_BEGIN( MSG_PVS, SVC_TEMPENTITY, vecSpot );
 				WRITE_BYTE( TE_SPRITE );
 				WRITE_COORD( vecSpot.x );
@@ -428,12 +429,16 @@ void CApache :: DyingThink( void )
 				WRITE_BYTE( 250 ); // scale * 10
 				WRITE_BYTE( 5  ); // framerate
 			MESSAGE_END();
-
 		}
 		else{
 			UTIL_Explosion(pev, vecSpot, 0, 0, 256, m_iExplode, 120, 12, 0, vecSpot, 0.4);
 		}
+		*/
 		
+		UTIL_SpriteOrQuakeExplosion(MSG_PVS, vecSpot, NULL, pev, vecSpot, 0, 0, 256, m_iExplode, 120, 255, vecSpot, 0.4);
+		UTIL_ExplosionSmoke(MSG_PVS, vecSpot, NULL, vecSpot, 0, 0, 512, g_sModelIndexSmoke, 250, 5);
+
+
 		
 
 		// blast circle
@@ -870,6 +875,8 @@ void CApache :: FireRocket( void )
 	case 4: break;
 	}
 
+	//MODDD - pooplord
+	/*
 	MESSAGE_BEGIN( MSG_PVS, SVC_TEMPENTITY, vecSrc );
 		WRITE_BYTE( TE_SMOKE );
 		WRITE_COORD( vecSrc.x );
@@ -879,6 +886,11 @@ void CApache :: FireRocket( void )
 		WRITE_BYTE( 20 ); // scale * 10
 		WRITE_BYTE( 12 ); // framerate
 	MESSAGE_END();
+	*/
+	UTIL_Smoke(MSG_PVS, vecSrc, NULL, vecSrc, 0, 0, 0, g_sModelIndexSmoke, 20, 12);
+
+	
+	
 
 	CBaseEntity *pRocket = CBaseEntity::Create( "hvr_rocket", vecSrc, pev->angles, edict() );
 	if (pRocket)
@@ -978,6 +990,8 @@ void CApache :: ShowDamage( void )
 {
 	if (m_iDoSmokePuff > 0 || RANDOM_LONG(0,99) > pev->health)
 	{
+		//MODDD - pooplord
+		/*
 		MESSAGE_BEGIN( MSG_PVS, SVC_TEMPENTITY, pev->origin );
 			WRITE_BYTE( TE_SMOKE );
 			WRITE_COORD( pev->origin.x );
@@ -987,6 +1001,9 @@ void CApache :: ShowDamage( void )
 			WRITE_BYTE( RANDOM_LONG(0,9) + 20 ); // scale * 10
 			WRITE_BYTE( 12 ); // framerate
 		MESSAGE_END();
+		*/
+		UTIL_Smoke(MSG_PVS, pev->origin, NULL, pev->origin, 0, 0, -32, g_sModelIndexSmoke, RANDOM_LONG(0,9) + 20, 12);
+
 	}
 	if (m_iDoSmokePuff > 0)
 		m_iDoSmokePuff--;

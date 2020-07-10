@@ -35,6 +35,45 @@
 #include "soundent.h"
 
 
+
+EASY_CVAR_EXTERN(hassaultSpinMovement)
+EASY_CVAR_EXTERN(hassaultFriendlyFire)
+EASY_CVAR_EXTERN(drawDebugPathfinding2)
+EASY_CVAR_EXTERN(hassaultIdleSpinSound)
+EASY_CVAR_EXTERN(hassaultFireSound)
+EASY_CVAR_EXTERN(hassaultIdleSpinSoundChannel)
+EASY_CVAR_EXTERN(hassaultFireSoundChannel)
+EASY_CVAR_EXTERN(hassaultSpinUpDownSoundChannel)
+EASY_CVAR_EXTERN(hassaultWaitTime)
+EASY_CVAR_EXTERN(hassaultSpinupRemainTime)
+EASY_CVAR_EXTERN(hassaultResidualAttackTime)
+EASY_CVAR_EXTERN(hassaultSpinupStartTime)
+EASY_CVAR_EXTERN(hassaultVoicePitchMin)
+EASY_CVAR_EXTERN(hassaultVoicePitchMax)
+EASY_CVAR_EXTERN(hassaultFireSpread)
+EASY_CVAR_EXTERN(noFlinchOnHard)
+EASY_CVAR_EXTERN(hassaultDrawLKP)
+EASY_CVAR_EXTERN(thatWasntPunch)
+EASY_CVAR_EXTERN(hassaultPrintout)
+EASY_CVAR_EXTERN(hassaultExtraMuzzleFlashRadius)
+EASY_CVAR_EXTERN(hassaultExtraMuzzleFlashBrightness)
+EASY_CVAR_EXTERN(hassaultExtraMuzzleFlashForward)
+EASY_CVAR_EXTERN(hassaultBulletDamageMulti)
+EASY_CVAR_EXTERN(hassaultBulletsPerShot)
+EASY_CVAR_EXTERN(hassaultFireAnimSpeedMulti)
+EASY_CVAR_EXTERN(hassaultMeleeAnimSpeedMulti)
+EASY_CVAR_EXTERN(hassaultMeleeAttackEnabled)
+EASY_CVAR_EXTERN(sv_germancensorship)
+extern BOOL globalPSEUDO_germanModel_hassaultFound;
+
+
+
+
+
+
+
+
+
 #define HASSAULT_SENTENCE_VOLUME (float)0.46
 
 
@@ -64,8 +103,6 @@
 
 
 
-
-
 //Try to use these to make some forced sequence work easier to understand?
 enum hassault_sequence{  //key: frames, FPS
 	SEQ_HASSAULT_IDLE1,
@@ -83,50 +120,6 @@ enum hassault_sequence{  //key: frames, FPS
 
 };
 
-
-
-
-EASY_CVAR_EXTERN(hassaultSpinMovement)
-EASY_CVAR_EXTERN(hassaultFriendlyFire)
-EASY_CVAR_EXTERN(drawDebugPathfinding2)
-EASY_CVAR_EXTERN(hassaultIdleSpinSound)
-EASY_CVAR_EXTERN(hassaultFireSound)
-
-EASY_CVAR_EXTERN(hassaultIdleSpinSoundChannel)
-EASY_CVAR_EXTERN(hassaultFireSoundChannel)
-EASY_CVAR_EXTERN(hassaultSpinUpDownSoundChannel)
-
-
-
-EASY_CVAR_EXTERN(hassaultWaitTime)
-EASY_CVAR_EXTERN(hassaultSpinupRemainTime)
-EASY_CVAR_EXTERN(hassaultResidualAttackTime)
-EASY_CVAR_EXTERN(hassaultSpinupStartTime)
-
-EASY_CVAR_EXTERN(hassaultVoicePitchMin)
-EASY_CVAR_EXTERN(hassaultVoicePitchMax)
-
-EASY_CVAR_EXTERN(hassaultFireSpread)
-EASY_CVAR_EXTERN(noFlinchOnHard)
-
-EASY_CVAR_EXTERN(hassaultDrawLKP)
-
-EASY_CVAR_EXTERN(thatWasntPunch)
-EASY_CVAR_EXTERN(hassaultPrintout)
-
-EASY_CVAR_EXTERN(hassaultExtraMuzzleFlashRadius)
-EASY_CVAR_EXTERN(hassaultExtraMuzzleFlashBrightness)
-EASY_CVAR_EXTERN(hassaultExtraMuzzleFlashForward)
-
-EASY_CVAR_EXTERN(hassaultBulletDamageMulti)
-EASY_CVAR_EXTERN(hassaultBulletsPerShot)
-EASY_CVAR_EXTERN(hassaultFireAnimSpeedMulti)
-EASY_CVAR_EXTERN(hassaultMeleeAnimSpeedMulti)
-
-EASY_CVAR_EXTERN(hassaultMeleeAttackEnabled)
-
-EASY_CVAR_EXTERN(sv_germancensorship)
-extern BOOL globalPSEUDO_germanModel_hassaultFound;
 
 
 
@@ -435,7 +428,6 @@ Task_t	tlHAssault_fire[] =
 };
 
 
-
 Schedule_t	slHAssault_fire[] =
 {
 	{ 
@@ -507,7 +499,6 @@ Task_t	tlHAssault_residualFire[] =
 };
 
 
-
 Schedule_t	slHAssault_residualFire[] =
 {
 	{ 
@@ -539,17 +530,6 @@ Schedule_t	slHAssault_residualFire[] =
 		"slHAssault_resfire"
 	},
 };
-
-
-/*
-	{ TASK_SET_FAIL_SCHEDULE,		(float)SCHED_HASSAULT_FIRE_OVER},
-	{ TASK_HASSAULT_CHECK_FIRE, (float)0	},
-	{ TASK_FACE_ENEMY,			(float)0		},
-	//set activity to ACT_RANGE_ATTACK1 ?
-	{TASK_SET_ACTIVITY,  (float)ACT_RANGE_ATTACK1},
-	
-	{ TASK_RANGE_ATTACK1,				(float)0		},
-	*/
 
 
 // MODDD TODO - Make the hgrunt check to see if the player is blocked by something, even while spinning up, and remember that object to then begin
@@ -671,7 +651,6 @@ IMPLEMENT_CUSTOM_SCHEDULES( CHAssault, CSquadMonster );
 
 
 
-
 const char *CHAssault::pAttackHitSounds[] = 
 {
 	"zombie/claw_strike1.wav",
@@ -724,7 +703,6 @@ const char *CHAssault::pPainSounds[] =
 
 
 
-
 TYPEDESCRIPTION	CHAssault::m_SaveData[] = 
 {
 	DEFINE_FIELD( CBaseEntity,m_pfnThink , FIELD_FUNCTION),
@@ -746,10 +724,6 @@ int CHAssault::Restore( CRestore &restore )
 		return 0;
 	return restore.ReadFields( "CHAssault", this, m_SaveData, ARRAYSIZE(m_SaveData) );
 }
-
-
-
-
 
 
 float CHAssault::SafeSetBlending ( int iBlender, float flValue ){
@@ -883,8 +857,6 @@ const char* CHAssault::getNormalModel(void){
 }
 
 
-
-
 //copied from hgrunt.
 //=========================================================
 // PrescheduleThink - this function runs after conditions
@@ -911,8 +883,6 @@ void CHAssault :: PrescheduleThink ( void )
 }//END OF PrescheduleThink
 
 
-
-
 //=========================================================
 // SetYawSpeed - allows each sequence to have a different
 // turn rate associated with it.
@@ -931,10 +901,8 @@ void CHAssault :: SetYawSpeed ( void )
 			break;
 	}
 
-
 	pev->yaw_speed = ys;
 }
-
 
 
 GENERATE_TRACEATTACK_IMPLEMENTATION(CHAssault)
@@ -944,19 +912,15 @@ GENERATE_TRACEATTACK_IMPLEMENTATION(CHAssault)
 
 GENERATE_TAKEDAMAGE_IMPLEMENTATION(CHAssault)
 {
-
 	//Anytime I take damage, if spun up, it resets the spinup timer. Not unspinning now.
 
 	if(spinuptimeremain != -1 && gpGlobals->time < spinuptimeremain){
 		spinuptimeremain = gpGlobals->time + EASY_CVAR_GET(hassaultSpinupRemainTime);
 	}
 
-
 	//taking damage makes the hassault walk faster while following.
 	rageTimer = gpGlobals->time + 8;
 	waittime = -1;  //if waiting, sure aren't now.
-
-
 
 	// HACK HACK -- until we fix this.
 	//if ( IsAlive() )
@@ -1007,8 +971,6 @@ void CHAssault :: IdleSound( void )
 }
 
 
-
-
 void CHAssault :: DeathSound ( void )
 {
 	int pitch = randomValueInt(m_voicePitch - 4, m_voicePitch + 3);
@@ -1028,15 +990,12 @@ void CHAssault :: DeathSound ( void )
 }
 
 
-
-
 //well, melee, currently unused.
 void CHAssault :: AttackSound( void )
 {
 	// Play a random attack sound
 	EMIT_SOUND_FILTERED ( ENT(pev), CHAN_VOICE, pAttackSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
 }
-
 
 
 void CHAssault::HandleEventQueueEvent(int arg_eventID){
@@ -1198,8 +1157,6 @@ CHAssault::CHAssault(){
 }
 
 
-
-
 float CHAssault::getBarnacleForwardOffset(void){
 	return 1.2f;
 }
@@ -1269,7 +1226,6 @@ void CHAssault :: Spawn()
 	m_HackedGunPos = Vector(9.594678, 41.80166, 42.344753);
 
 
-
 	//keep THESE in mind for your monster.
 	m_flDistTooFar		= 1024.0;
 	m_flDistLook		= 2048.0;
@@ -1315,9 +1271,6 @@ void CHAssault :: Precache()
 	//zombie strike's precached by the hgrunt already.
 	//precacheStandardMeleeAttackMissSounds(); //MODDD - lazy lazy.
 
-
-
-
 	for ( i = 0; i < ARRAYSIZE( pAttackHitSounds ); i++ )
 		PRECACHE_SOUND((char *)pAttackHitSounds[i]);
 
@@ -1348,7 +1301,6 @@ void CHAssault :: Precache()
 // AI Schedules Specific to this monster
 //=========================================================
 
-
 /*
 int CHAssault::IgnoreConditions ( void )
 {
@@ -1374,10 +1326,6 @@ int CHAssault::IgnoreConditions ( void )
 	return iIgnore;
 	
 }*/
-
-
-
-
 
 
 Vector CHAssault::GetGunPosition(void){
@@ -1417,18 +1365,8 @@ Vector CHAssault::GetGunPositionAI(void){
 //return pev->origin + Vector( 0, 0, 60 );
 
 
-
-
-
-
-
-
-
-
 void CHAssault :: Shoot ( void )
 {
-
-
 	//return;
 	/*
 	Vector vecShootOrigin = GetGunPosition();
@@ -1449,7 +1387,6 @@ void CHAssault :: Shoot ( void )
 	}
 
 	//UTIL_MakeAimVectors(pev->angles);
-
 
 	Vector	vecShellVelocity = gpGlobals->v_right * RANDOM_FLOAT(40,90) + gpGlobals->v_up * RANDOM_FLOAT(75,200) + gpGlobals->v_forward * RANDOM_FLOAT(-40, 40);
 	EjectBrass ( vecShootOrigin - vecShootDir * 24, vecShellVelocity, pev->angles.y, m_iBrassShell, TE_BOUNCE_SHELL); 
@@ -1539,20 +1476,16 @@ void CHAssault :: Shoot ( void )
 		MESSAGE_END( );
 	}
 
-
-
-
 	//This will use the gun position for AI instead so that the pitch doesn't jitter around.
 	//MODDD - just like hgrunt does it.
 	//Vector angDir = UTIL_VecToAngles( vecShootDirAI );
 	//SafeSetBlending( 0, angDir.x );
-
 }
 
 void CHAssault :: ShootAtForceFireTarget ( void )
 {
 
-	//EASY_CVAR_PRINTIF_PRE(hassaultPrintout, easyPrintLine( "BOOTY BUTT %d", forceFireTargetObject->free));
+	//EASY_CVAR_PRINTIF_PRE(hassaultPrintout, easyPrintLine( "is forceFireTargetObject free %d", forceFireTargetObject->free));
 
 	//return;
 
@@ -1627,8 +1560,6 @@ void CHAssault :: ShootAtForceFireTarget ( void )
 		attemptStopIdleSpinSound();
 	}
 	
-
-
 	if(EASY_CVAR_GET(hassaultExtraMuzzleFlashRadius)){
 		Vector extraFlashOrigin = vecShootOrigin + vecShootDir * EASY_CVAR_GET(hassaultExtraMuzzleFlashForward);
 	
@@ -1648,10 +1579,6 @@ void CHAssault :: ShootAtForceFireTarget ( void )
 			WRITE_BYTE( 0 );		// decay * 0.1
 		MESSAGE_END( );
 	}
-	
-
-
-	
 
 	//This will use the gun position for AI instead so that the pitch doesn't jitter around.
 	//MODDD - just like hgrunt does it.
@@ -1659,8 +1586,6 @@ void CHAssault :: ShootAtForceFireTarget ( void )
 
 	SafeSetBlending( 0, angDir.x );
 }
-
-
 
 
 
@@ -1683,13 +1608,11 @@ void CHAssault::resetChainFireSound(void){
 }
 
 
-
 void CHAssault::attemptStopIdleSpinSound(void){
 	attemptStopIdleSpinSound(FALSE);
 }
 
 void CHAssault::attemptStopIdleSpinSound(BOOL forceStop){
-	
 	if(EASY_CVAR_GET(hassaultIdleSpinSound) > 0 && idleSpinSoundDelay != -1 && ((EASY_CVAR_GET(hassaultIdleSpinSound) >= 3)||forceStop) ){
 		//be safe...
 		idleSpinSoundDelay = -1;
@@ -1699,8 +1622,6 @@ void CHAssault::attemptStopIdleSpinSound(BOOL forceStop){
 		
 void CHAssault::SetTurnActivity(void){
 	//If in the spinup anim, don't interrupt it with a turn.
-
-
 	if(pev->sequence == SEQ_HASSAULT_ATTACK){
 
 		//no.
@@ -1708,19 +1629,14 @@ void CHAssault::SetTurnActivity(void){
 		//see if a change to a turn activity makes sense as normal.
 		CSquadMonster::SetTurnActivity();
 	}
-
-
 }//END OF SetTurnActivity
 
 
 void CHAssault::SetActivity(Activity NewActivity){
-
 	if(m_pSchedule != slHAssault_residualFire && NewActivity != ACT_RANGE_ATTACK1 && EASY_CVAR_GET(hassaultFireSound) >= 2){
 			
 		resetChainFireSound();
 	}
-
-
 	if(spinuptimeremain >= gpGlobals->time && NewActivity == ACT_IDLE){
 		//HACK - if spun up and trying to do an IDLE animation, stay frozen in the attack anim instead.
 
@@ -1730,19 +1646,14 @@ void CHAssault::SetActivity(Activity NewActivity){
 		//return;
 	}
 
-
-
 	
 	EASY_CVAR_PRINTIF_PRE(hassaultPrintout, easyPrintLine( "HASS ACTIVITY: %d", NewActivity));
 	CSquadMonster::SetActivity(NewActivity);
-
 }
-
 
 
 BOOL CHAssault :: FCanCheckAttacks ( void )
 {
-
 	//reset HERE.
 	couldRangedAttack1 = FALSE;
 	couldRangedAttack2 = FALSE;
@@ -1770,20 +1681,13 @@ BOOL CHAssault :: CheckRangeAttack1 ( float flDot, float flDist )
 	//          Another check: a point from the gun's position to the target is unobscured, continue firing.
 	//          repeat.
 	
-
 	if (m_hEnemy == NULL){
 		EASY_CVAR_PRINTIF_PRE(hassaultPrintout, easyPrintLine( "NOOOO 1"));
 		
 		return FALSE;
 	}
 	
-
 	const Vector vecShootOrigin = GetGunPositionAI();
-
-
-
-
-
 
 	/*
 	//MODDD - this seems fairly important to update...
@@ -1793,10 +1697,6 @@ BOOL CHAssault :: CheckRangeAttack1 ( float flDot, float flDist )
 		m_vecEnemyLKP = m_hEnemy->pev->origin;
 	}
 	*/
-
-
-
-
 
 
 	//EASY_CVAR_PRINTIF_PRE(hassaultPrintout, easyPrintLine( "WHAT THE range %.2f, %.2f", flDot, flDist);
@@ -1819,9 +1719,8 @@ BOOL CHAssault :: CheckRangeAttack1 ( float flDot, float flDist )
 	 ));
 
 
-
 	//make the range larger in the future, seems like they are still fairly accurate further away than this.
-	if ( !HasConditions( bits_COND_ENEMY_OCCLUDED ) && flDist <= 1200 	&& 
+	if ( !HasConditions( bits_COND_ENEMY_OCCLUDED ) && flDist <= m_flDistTooFar &&
 	 m_hEnemy->Classify() != CLASS_ALIEN_BIOWEAPON &&
 	 m_hEnemy->Classify() != CLASS_PLAYER_BIOWEAPON && (EASY_CVAR_GET(hassaultFriendlyFire) != 0 || NoFriendlyFireImp(vecShootOrigin, m_hEnemy->BodyTargetMod(vecShootOrigin)  ) ) )
 	{
@@ -1832,9 +1731,6 @@ BOOL CHAssault :: CheckRangeAttack1 ( float flDot, float flDist )
 		if(EASY_CVAR_GET(drawDebugPathfinding2) == 1){
 			UTIL_drawLineFrame(vecSrc, m_hEnemy->BodyTargetMod(vecSrc), 7, 0, 255, 125);
 		}
-
-
-		
 
 		/*
 		//What? does this say anything about the game being paused when done on the player my nayer?
@@ -1857,9 +1753,6 @@ BOOL CHAssault :: CheckRangeAttack1 ( float flDot, float flDist )
 		entvars_t* test = &m_hEnemy.Get()->v;
 		*/
 
-
-		
-		
 		//m_hEnemy->edict();
 		//m_hEnemy.Get()
 
@@ -1878,7 +1771,7 @@ BOOL CHAssault :: CheckRangeAttack1 ( float flDot, float flDist )
 		}
 		
 
-		if(flDot >= 0.5){
+		if(flDot >= 0.5 && HasConditions(bits_COND_SEE_ENEMY)){
 			//proceed, nothing to see here.
 			return TRUE;
 		}else{
@@ -1892,10 +1785,14 @@ BOOL CHAssault :: CheckRangeAttack1 ( float flDot, float flDist )
 		couldRangedAttack1 = FALSE;
 		return FALSE;
 }
+
+
 BOOL CHAssault :: CheckRangeAttack2 ( float flDot, float flDist )
 {
 	return FALSE;
 }
+
+
 
 //ripped from HGrunt
 BOOL CHAssault::CheckMeleeAttack1(float flDot, float flDist){
@@ -1912,18 +1809,17 @@ BOOL CHAssault::CheckMeleeAttack1(float flDot, float flDist){
 		return FALSE;
 	}
 
-
 	couldMeleeAttack1 = TRUE;
 
 	if ( m_hEnemy != NULL )
 	{
 		pEnemy = m_hEnemy->MyMonsterPointer();
-
-		if ( !pEnemy )
-		{
-			return FALSE;
-		}
 	}
+	if ( !pEnemy )
+	{
+		return FALSE;
+	}
+	
 	EASY_CVAR_PRINTIF_PRE(hassaultPrintout, easyPrintLine( "THE DISTANCE BE %.2f", flDist));
 	//allow any dot product, we're facing the enemy fast enough.
 	if ( flDist <= 72 && 
@@ -1947,7 +1843,6 @@ BOOL CHAssault::CheckMeleeAttack1(float flDot, float flDist){
 
 
 
-
 void CHAssault::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, float flInterval )
 {
 	if(firing){
@@ -1959,23 +1854,15 @@ void CHAssault::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, floa
 
 
 
-
-
-
-
 void CHAssault::ReportAIState( void )
 {
-
 	easyForcePrintLine("resfire: %.2f, %.2f",
 		gpGlobals->time,
 		residualFireTime
-
 	);
 
 	CSquadMonster::ReportAIState();
-
 }
-
 
 
 //=========================================================
@@ -2115,7 +2002,6 @@ void CHAssault :: StartTask ( Task_t *pTask ){
 			}
 		}
 
-
 		if(!(EASY_CVAR_GET(hassaultFriendlyFire) != 0 || NoFriendlyFireImp(shootOrigin, m_hEnemy->BodyTargetMod(shootOrigin)  ) )    ){
 			SetConditions(bits_COND_SPECIAL1);
 		}else{
@@ -2130,34 +2016,26 @@ void CHAssault :: StartTask ( Task_t *pTask ){
 	break;
 	}
 
-
 }
-
 
 
 BOOL CHAssault :: FValidateCover ( const Vector &vecCoverLocation )
 {
-
 	/*
 	if ( !InSquad() )
 	{
 		return TRUE;
 	}
-
 	if (SquadMemberInRange( vecCoverLocation, 128 ))
 	{
 		// another squad member is too close to this piece of cover.
 		return FALSE;
 	}
-
 	return TRUE;
-	
 	*/
-	
 	//far too badass for cover.
 	return FALSE;
 }
-
 
 
 //=========================================================
@@ -2176,8 +2054,6 @@ int CHAssault :: ISoundMask ( void )
 }
 
 
-
-
 //=========================================================
 // RunTask
 //=========================================================
@@ -2188,14 +2064,11 @@ void CHAssault :: RunTask ( Task_t *pTask )
 	firing = FALSE;
 	//most things are certainly not "firing".
 
-
-
 	//easyForcePrintLine("HASSAULT: RunTask: s:%s t:%d", getScheduleName(), pTask->iTask);
 	//EASY_CVAR_PRINTIF_PRE(hassaultPrintout, easyPrintLine( "HASSAULT ACT: %d MOVACT: %d SCHED: %s TASK: %d", m_IdealActivity, m_movementActivity, m_pSchedule->pName, pTask->iTask));
 
 	switch ( pTask->iTask )
 	{
-
 	case TASK_MELEE_ATTACK1:
 
 		if(spinuptimeremain != -1){
@@ -2210,8 +2083,6 @@ void CHAssault :: RunTask ( Task_t *pTask )
 		MakeIdealYaw( m_vecEnemyLKP );
 		ChangeYaw( pev->yaw_speed );
 		
-
-
 		//Actually aim for a litle earlier if we're still able to attack. No need to return all the way to resting position.
 		if(m_fSequenceFinished || (HasConditions(bits_COND_CAN_MELEE_ATTACK1)  && pev->frame >= 220)  )
 		{
@@ -2233,7 +2104,7 @@ void CHAssault :: RunTask ( Task_t *pTask )
 			EASY_CVAR_PRINTIF_PRE(hassaultPrintout, easyPrintLine( "MAMA MIA!!! %d %.2f", HasConditions(bits_COND_CAN_MELEE_ATTACK1), (m_hEnemy->pev->origin - pev->origin).Length()));
 		}
 
-		if(!HasConditions(bits_COND_CAN_MELEE_ATTACK1)){
+		if(!HasConditionsFrame(bits_COND_CAN_MELEE_ATTACK1)){
 
 			if(couldMeleeAttack1){
 				//then face them!
@@ -2260,8 +2131,6 @@ void CHAssault :: RunTask ( Task_t *pTask )
 		CSquadMonster::RunTask(pTask);
 
 	break;
-
-	
 	case TASK_HASSAULT_WAIT_FOR_SPIN_FINISH:    //piggy back off of the script below.
 	case TASK_HASSAULT_SPIN:
 
@@ -2330,14 +2199,10 @@ void CHAssault :: RunTask ( Task_t *pTask )
 
 	break;
 	case TASK_RANGE_ATTACK1:
-
-
 		if(m_hEnemy == NULL){
 			TaskFail();
 			return;
 		}
-
-
 		//yep.
 		firing = TRUE;
 		
@@ -2356,7 +2221,6 @@ void CHAssault :: RunTask ( Task_t *pTask )
 			TaskFail();
 			return;
 		}
-
 
 		EASY_CVAR_PRINTIF_PRE(hassaultPrintout, easyForcePrintLine( "HASSAULT: range atta. FacingIdeal:%d enemy null?:%d targetent null?:%d", !FacingIdeal(), m_hEnemy!=NULL, m_hTargetEnt != NULL));
 		
@@ -2402,10 +2266,6 @@ void CHAssault :: RunTask ( Task_t *pTask )
 			//...wait doesn't this already naturally loop? what?
 		}
 
-
-
-
-
 	break;
 	case TASK_HASSAULT_FACE_FORCEFIRE:
 
@@ -2426,7 +2286,6 @@ void CHAssault :: RunTask ( Task_t *pTask )
 	break;
 	case TASK_HASSAULT_FORCEFIRE:
 		
-
 		if ( !FacingIdeal() )
 		{
 			MakeIdealYaw( forceFireTargetPosition );
@@ -2443,16 +2302,12 @@ void CHAssault :: RunTask ( Task_t *pTask )
 			//return;
 		}
 
-
-		
 		//if(forceFireTargetObject.Get()->free || forceFireGiveUp <= gpGlobals->time){
 		if(forceFireTargetObject == NULL || forceFireGiveUp <= gpGlobals->time){
 			//Destroyed that thing in the way?  Pick a new schedule!
 			TaskFail();
 			return;
 		}
-
-
 		//TaskComplete();
 	break;
 
@@ -2482,12 +2337,10 @@ void CHAssault :: RunTask ( Task_t *pTask )
 			}
 		}
 
-
 		//should we stop firing?
 		if(residualFireTime <= gpGlobals->time){
 			residualFireTime = -1;
 			TaskComplete();
-
 			/*
 			/////////////////////////////////////
 			this->SetSequenceByName("attack");
@@ -2495,7 +2348,6 @@ void CHAssault :: RunTask ( Task_t *pTask )
 			this->pev->framerate = 0;
 			//is this a good idea? VERIFY!
 			*/
-
 			return;
 		}
 
@@ -2571,15 +2423,12 @@ void CHAssault :: RunTask ( Task_t *pTask )
 		ChangeYaw( pev->yaw_speed );
 
 
-
-
 		if ( FacingIdeal() )
 		{
 			//TaskComplete();
 			//the RunTask parent call below will figure this out.
 		}else{
 
-			
 			if(m_IdealActivity == m_movementActivity && (m_IdealActivity != ACT_TURN_RIGHT || m_IdealActivity != ACT_TURN_LEFT) ){
 				//if moving, stop to look.
 				SetTurnActivity(); 
@@ -2629,15 +2478,12 @@ Schedule_t* CHAssault::GetSchedule(){
 		return GetScheduleOfType ( baitSched );
 	}
 
-
 	if(recentSchedule == slHAssault_fire && forceBlockResidual == FALSE){
 		recentSchedule = NULL;
 		//never twice.
 		forceBlockResidual = TRUE;
 		return GetScheduleOfType(SCHED_HASSAULT_RESIDUAL_FIRE);
 	}
-
-
 
 	if(recentSchedule == slHAssault_residualFire ||
 		recentSchedule == slHAssault_forceFireAtTarget ||
@@ -2654,14 +2500,8 @@ Schedule_t* CHAssault::GetSchedule(){
 		//}
 	}
 
-
-
-
-
-
 	recentRecentSchedule = recentSchedule;
 
-	
 	if(HasConditions(bits_COND_SEE_ENEMY) && !HasConditions(bits_COND_ENEMY_OCCLUDED) ){
 		//residual reset.
 		forceBlockResidual = FALSE;
@@ -2728,9 +2568,6 @@ Schedule_t* CHAssault::GetSchedule(){
 		}
 	case MONSTERSTATE_COMBAT:
 		{
-
-
-
 			if ( HasConditions( bits_COND_ENEMY_DEAD ) )
 			{
 				// clear the current (dead) enemy and try to find another.
@@ -2750,13 +2587,9 @@ Schedule_t* CHAssault::GetSchedule(){
 
 			if ( HasConditions(bits_COND_NEW_ENEMY) )
 			{
-
-
-
 				if ( InSquad() )
 				{
 					MySquadLeader()->m_fEnemyEluded = FALSE;
-
 
 					if ( !IsLeader() )
 					{
@@ -2765,7 +2598,6 @@ Schedule_t* CHAssault::GetSchedule(){
 					}
 					else
 					{
-
 						//HGrunt's "alerted" script to go with the hand signal.
 						//The hassault already has an alert sound that will play, can replace it with this hgrunt sentence instead of desired
 						//just for this (squad leader, not eluded, etc.)
@@ -2786,8 +2618,6 @@ Schedule_t* CHAssault::GetSchedule(){
 						}
 						*/
 
-	
-
 						//if ( HasConditions ( bits_COND_CAN_RANGE_ATTACK1 ) )
 						if ( m_hEnemy != NULL && !HasConditions ( bits_COND_ENEMY_OCCLUDED ) && gpGlobals->time > signal2Cooldown )
 						{
@@ -2802,10 +2632,6 @@ Schedule_t* CHAssault::GetSchedule(){
 						}
 					}
 				}
-
-
-
-
 				return GetScheduleOfType ( SCHED_WAKE_ANGRY );
 			}
 			//MODDD - other condition.  If "noFlinchOnHard" is on and the skill is hard, don't flinch from getting hit.
@@ -2815,7 +2641,6 @@ Schedule_t* CHAssault::GetSchedule(){
 			}
 			else if ( !HasConditions(bits_COND_SEE_ENEMY) )
 			{
-				
 				//MODDD - yes?
 				if ( HasConditions ( bits_COND_HEAR_SOUND ) )
 				{
@@ -2824,11 +2649,8 @@ Schedule_t* CHAssault::GetSchedule(){
 					//nonStumpableCombatLook = TRUE;
 					//return GetScheduleOfType( SCHED_COMBAT_FACE );
 
-
 					CSound *pSoundTemp;
 					pSoundTemp = PBestSound();
-
-					
 
 					//For now to be safe...
 					if(pSoundTemp && pSoundTemp->m_iType & bits_SOUND_PLAYER ){
@@ -2847,9 +2669,6 @@ Schedule_t* CHAssault::GetSchedule(){
 					}
 				}
 
-
-
-
 				// we can't see the enemy
 				if ( !HasConditions(bits_COND_ENEMY_OCCLUDED) )
 				{
@@ -2863,12 +2682,11 @@ Schedule_t* CHAssault::GetSchedule(){
 					}
 
 					//MODDD - is that ok?
+					// Maybe not, kinda gives them that 'eyes in the back of the head' power.
 					//m_vecEnemyLKP = m_hEnemy->pev->origin;
-					setEnemyLKP(m_hEnemy->pev->origin);
+					//setEnemyLKP(m_hEnemy->pev->origin);
 					
 					this->nonStumpableCombatLook = FALSE;
-
-
 
 					if(!FacingIdeal()){
 						// enemy is unseen, but not occluded!
@@ -2911,10 +2729,8 @@ Schedule_t* CHAssault::GetSchedule(){
 					return slCombatFaceNoStump;
 				}
 				
-
-
 				//SLIGHTLY DIFFERENT ORDER.  priotize melee attacks.
-				if ( HasConditions(bits_COND_CAN_MELEE_ATTACK1) )
+				if ( HasConditionsFrame(bits_COND_CAN_MELEE_ATTACK1) )
 				{
 					
 					//return GetScheduleOfType( SCHED_MELEE_ATTACK1 );
@@ -2923,14 +2739,9 @@ Schedule_t* CHAssault::GetSchedule(){
 
 
 
-
-
 				// we can see the enemy
 				if ( HasConditions(bits_COND_CAN_RANGE_ATTACK1) )
 				{
-
-
-					
 					if ( InSquad() )
 					{
 						// if the enemy has eluded the squad and a squad member has just located the enemy
@@ -2950,9 +2761,6 @@ Schedule_t* CHAssault::GetSchedule(){
 					//return GetScheduleOfType( SCHED_RANGE_ATTACK1 );
 					return GetScheduleOfType(SCHED_HASSAULT_SPIN);
 				}
-
-
-
 
 
 				if ( HasConditions(bits_COND_CAN_RANGE_ATTACK2) )
@@ -2977,7 +2785,14 @@ Schedule_t* CHAssault::GetSchedule(){
 					
 					//return GetScheduleOfType( SCHED_CHASE_ENEMY );
 
-					if(waittime == -1){
+
+
+					// WAIT!  If you can see the enemy, why the hell aren't you looking?
+					// this space already implies we can see the enemy, just not looking directly at em' I guess.
+					if (!HasConditions(bits_COND_ENEMY_OCCLUDED) && !HasConditions(bits_COND_CAN_RANGE_ATTACK1) && (pev->origin - m_hEnemy->pev->origin).Length() < m_flDistTooFar){
+						// look at them!
+						return GetScheduleOfType(SCHED_COMBAT_FACE);
+					}else if(waittime == -1){
 						//we're bored, go look.
 						return GetScheduleOfType( SCHED_CHASE_ENEMY );
 					}else{
@@ -2990,9 +2805,6 @@ Schedule_t* CHAssault::GetSchedule(){
 						m_IdealActivity = ACT_IDLE;
 						return GetScheduleOfType( SCHED_COMBAT_FACE );
 					}
-
-
-
 				}
 				else if ( !FacingIdeal() )
 				{
@@ -3038,7 +2850,6 @@ Schedule_t* CHAssault::GetSchedule(){
 
 	return &slError[ 0 ];
 }
-
 
 
 
@@ -3110,9 +2921,7 @@ Schedule_t* CHAssault::GetScheduleOfType(int Type){
 			}
 			return &slHAssault_fire[0];
 		break;
-
 		case SCHED_HASSAULT_FIRE_OVER:
-			
 			//...?  TASK_HASSAULT_SPINDOWN
 			EASY_CVAR_PRINTIF_PRE(hassaultPrintout, easyPrintLine( "FAILURE HASSAULT_FIRE_OVER FOREVER"));
 
@@ -3120,16 +2929,10 @@ Schedule_t* CHAssault::GetScheduleOfType(int Type){
 
 			return &slHAssaultFireOver[0];
 		break;
-
 		case SCHED_COMBAT_FACE:
-
 			//easyForcePrintLine("SCHED_COMBAT_FACE???? nonStump:%d : recentsched:%s", nonStumpableCombatLook, recentSchedule!=NULL?this->recentSchedule->pName:"NULL");
 			
-
 			//MODDD - not having so much luck with nostump. Try always stumpable.
-			
-
-
 			//return &slCombatFaceSound[0];
 
 			if(nonStumpableCombatLook){
@@ -3139,12 +2942,8 @@ Schedule_t* CHAssault::GetScheduleOfType(int Type){
 			}
 			
 			//return &slCombatFace[0];
-
 		break;
-
-
 	}
-
 	return CSquadMonster::GetScheduleOfType(Type);
 }
 
@@ -3193,14 +2992,9 @@ GENERATE_KILLED_IMPLEMENTATION(CHAssault){
 
 
 
-
 Vector giveZ(const Vector2D& arg, const float& myZ){
 	return Vector(arg.x, arg.y, myZ);
 }
-
-
-
-
 
 
 
@@ -3210,19 +3004,13 @@ void CHAssault :: MonsterThink ( void )
 	//MODDD - NOTICE.   Nothing in this think method, as of yet, seems to depend on the monster being alive or not.
 	//If something should be placed here that does (or in a lot of places really), have a dead check first.
 
-
 	//easyForcePrintLine("ID:%d SEQ:%d SCHED:%s TASK:%d", monsterID, this->pev->sequence, getScheduleName(), getTaskNumber());
-
 	//easyForcePrintLine("ugh YOU. sched:%s task:%d fr:%.2f f:%.2f s:%d act:%d iact:%d", getScheduleName(), getTaskNumber(), pev->framerate, pev->frame, pev->sequence, m_Activity, m_IdealActivity);
 
-
 	if(rageTimer != -1){
-
 		//movementBaseFramerate
 		//currently ACT_CREEPING_WALK, the only movement anim. no run one.
 		if(pev->sequence == SEQ_HASSAULT_CREEPING_WALK){
-
-
 			if(gpGlobals->time <= rageTimer){
 				//range: 1.8 - 1.3
 				float angryFactor = ((rageTimer - gpGlobals->time) / 8.0f ) * 0.5 + 1.3;
@@ -3238,15 +3026,10 @@ void CHAssault :: MonsterThink ( void )
 			//just stop.
 			rageTimer = -1;
 		}
-
-
 	}//END OF rageTimer check
 	else{
 		//normal framerate.
 	}
-
-
-
 
 	//is that okay.
 	if(EASY_CVAR_GET(hassaultDrawLKP) == 1){
@@ -3335,30 +3118,18 @@ void CHAssault :: MonsterThink ( void )
 				this->SetSequenceByName("barnacled4");
 			break;
 		}
-
 	}
-
 	//EASY_CVAR_PRINTIF_PRE(hassaultPrintout, easyPrintLine( "MOVEMENT WAIT COND: %d %d %d" , HasConditions(bits_COND_SEE_ENEMY), !HasConditions(bits_COND_ENEMY_OCCLUDED), HasConditions(HasConditionsFrame(bits_COND_CAN_RANGE_ATTACK1) ) ));
 	
-
 	//UTIL_drawLineFrameBoxAround(pev->origin, 3, 326, 255, 255, 0);
 	
-
-
 	//bits_COND_SEE_ENEMY |
 	//if(m_hEnemy != NULL && pev->sequence == 0 && pev->frame == 0 && pev->framerate == 0 && HasConditions( bits_COND_CAN_RANGE_ATTACK1) ){
 
-
-
-	
 	//point is when spun up, don't do the idle animation completely. stay frozen in place.
-	
 	
 	//HACKY: way to see if the player is in the attack anim but spinning. If so, stay frozen at frame 0 of that animation.
 	if(m_Activity == ACT_IDLE && pev->sequence == SEQ_HASSAULT_SMALL_PAIN2){
-
-
-
 		//easyForcePrintLine("OH NO WHATS HOT");
 
 		if(
@@ -3375,56 +3146,38 @@ void CHAssault :: MonsterThink ( void )
 				this->pev->frame = 0;
 				this->pev->framerate = 0;
 
-
-			
 				//if(m_Activity == ACT_IDLE){
 					//don't look like you're casually swinging your gun around, you're about to start shooting!
 					//this->SetSequenceByName("attack");
 					//this->pev->frame = 0;
 					//this->pev->framerate = 0;
 				//}
-
-				
 				
 				Vector vecShootOrigin;
 				Vector vecShootDir;
 				AimAtEnemy(vecShootOrigin, vecShootDir);
 
-
-				
 				//if(m_hEnemy != NULL){
 //
 				//}else{
 				//	//Have to set the blending
 				//	SafeSetBlending( 0, 0 );
 				//}
-				
 		}else{
-
 			//not spinning up or spun up? Just animate like you should.
 			//if(pev->sequence == SEQ_HASSAULT_SMALL_PAIN2){
 				pev->framerate = 1;
 				this->signalActivityUpdate = TRUE;
 				SetActivity(ACT_IDLE);
 			//}
-
 		}
-	
-
-
 	}//END OF ACT_IDLE check
 	
 
 
-
-
-
 	if(waittime != -1 && waittime <= gpGlobals->time){
 		waittime = -1;
-
-
 	}
-
 
 	if(spinuptimeremain != -1){
 		//EMIT_SOUND_FILTERED( ENT(pev), CHAN_WEAPON, "hassault/hw_spin.wav", 1, ATTN_NORM, 0, 100 );
@@ -3486,11 +3239,7 @@ void CHAssault :: MonsterThink ( void )
 					
 				}
 				
-
 			}
-			
-			
-
 
 		}
 	}else{
@@ -3503,23 +3252,16 @@ void CHAssault :: MonsterThink ( void )
 	
 
 
-	//SafeSetBlending( 0, 	EASY_CVAR_GET(testVar) );
-
-
 	CSquadMonster::MonsterThink();
 
 	//easyForcePrintLine("HASSAULT%d seq:%d fra:%.2f", monsterID, pev->sequence, pev->frame);
-
 }
-
 
 
 
 int CHAssault :: SquadRecruit( int searchRadius, int maxMembers ){
 	return CSquadMonster::SquadRecruit(searchRadius, maxMembers);
 }
-
-
 
 
 
@@ -3711,7 +3453,6 @@ int CHAssault::LookupActivityHard(int activity){
 			this->animFrameCutoffSuggestion = 230;  //these are out of 255. 255 is 100%, at the end.
 			*/
 
-
 			this->animationFPSSuggestion = 30;
 			//does this even do anything?
 			//this->animationFramesSuggestion = 76;
@@ -3751,7 +3492,6 @@ int CHAssault::LookupActivityHard(int activity){
 		break;
 
 	}
-
 
 	previousAnimationActivity = iSelectedActivity;
 
@@ -3797,10 +3537,6 @@ int CHAssault::tryActivitySubstitute(int activity){
 
 
 
-
-
-
-
 BOOL CHAssault::canResetBlend0(void){
 	return TRUE;
 }
@@ -3833,8 +3569,6 @@ BOOL CHAssault::onResetBlend0(void){
 	SafeSetBlending( 0, angDir.x );
 	*/
 
-
-	
 	Vector vecShootOrigin;
 	Vector vecShootDir;
 	AimAtEnemy(vecShootOrigin, vecShootDir);

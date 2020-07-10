@@ -324,9 +324,28 @@ extern DLL_GLOBAL const Vector g_vecZero;
 extern int giAmmoIndex;
 extern BOOL globalflag_muteDeploySound;
 
+
+extern DLL_GLOBAL short g_sModelIndexBubbles;// holds the index for the bubbles model
+
+
 extern globalvars_t *gpGlobals;
 
 extern int Primes[NUMBER_OF_PRIMES];
+
+
+#ifdef CLIENT_DLL
+	extern char globalbuffer_cl_mod_version[128];
+	extern char globalbuffer_cl_mod_date[128];
+
+	extern char globalbuffer_sv_mod_version_cache[128];
+	extern char globalbuffer_sv_mod_date_cache[128];
+
+	extern char globalbuffer_cl_mod_display[128];
+	extern char globalbuffer_sv_mod_display[128];
+#else
+	extern char globalbuffer_sv_mod_version[128];
+	extern char globalbuffer_sv_mod_date[128];
+#endif
 
 
 
@@ -385,12 +404,23 @@ typedef enum { point_hull = 0, human_hull = 1, large_hull = 2, head_hull = 3 } H
 
 
 
+// METHODS
+////////////////////////////////////////////////////////////////////////////////////////
+
+
+float UTIL_WeaponTimeBase(void);
+int UTIL_SharedRandomLong(unsigned int seed, int low, int high);
+float UTIL_SharedRandomFloat(unsigned int seed, float low, float high);
+
 
 
 extern int MaxAmmoCarry(int iszName);
 //MODDD NEW - prototype so that other places can call this method too.
 extern void AddAmmoNameToAmmoRegistry(const char* szAmmoname);
 extern void RegisterWeapon(CBasePlayerWeapon* pWeapon, CBasePlayerWeapon* pAryWeaponStore[]);
+
+
+
 
 
 
@@ -492,6 +522,15 @@ extern void UTIL_Sparks(const Vector& position);
 extern void UTIL_Sparks(const Vector& position, int arg_ballsToSpawn, float arg_extraSparkMulti);
 
 
+
+// Search for water transition along a vertical line
+extern int UTIL_PointContents(const Vector& vec);
+extern float UTIL_WaterLevel(const Vector& position, float minz, float maxz);
+extern void UTIL_Bubbles(Vector mins, Vector maxs, int count);
+extern void UTIL_BubbleTrail(Vector from, Vector to, int count);
+
+extern void InitShared(void);
+extern void PrecacheShared(void);
 
 /////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////

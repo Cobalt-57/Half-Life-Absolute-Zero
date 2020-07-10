@@ -108,8 +108,22 @@ enum
 class CHoundeye : public CSquadMonster
 {
 public:
-	CHoundeye();
+	CUSTOM_SCHEDULES;
+	static TYPEDESCRIPTION m_SaveData[];
 
+	BOOL firstSpecialAttackFrame;
+	BOOL canResetSound;
+
+	int m_iSpriteTexture;
+	BOOL m_fAsleep;// some houndeyes sleep in idle mode if this is set, the houndeye is lying down
+	BOOL m_fDontBlink;// don't try to open/close eye if this bit is set!
+	Vector	m_vecPackCenter; // the center of the pack. The leader maintains this by averaging the origins of all pack members.
+
+	static int numberOfEyeSkins;
+	float leaderlookTimeMax;
+
+
+	CHoundeye();
 
 	//MODDD
 	void setModel(void);
@@ -151,7 +165,6 @@ public:
 	BOOL CheckRangeAttack1 ( float flDot, float flDist );
 
 
-
 	void SetObjectCollisionBox( void )
 	{
 		if(pev->deadflag != DEAD_NO){
@@ -164,7 +177,6 @@ public:
 		}
 	}
 
-
 	BOOL FValidateHintType ( short sHint );
 	BOOL FCanActiveIdle ( void );
 	Schedule_t *GetScheduleOfType ( int Type );
@@ -172,17 +184,6 @@ public:
 
 	int Save( CSave &save );
 	int Restore( CRestore &restore );
-
-	CUSTOM_SCHEDULES;
-	static TYPEDESCRIPTION m_SaveData[];
-
-	BOOL firstSpecialAttackFrame;
-	BOOL canResetSound;
-
-	int m_iSpriteTexture;
-	BOOL m_fAsleep;// some houndeyes sleep in idle mode if this is set, the houndeye is lying down
-	BOOL m_fDontBlink;// don't try to open/close eye if this bit is set!
-	Vector	m_vecPackCenter; // the center of the pack. The leader maintains this by averaging the origins of all pack members.
 
 	//MODDD - test
 	int SquadRecruit( int searchRadius, int maxMembers );
@@ -195,10 +196,6 @@ public:
 
 	int tryActivitySubstitute(int activity);
 	int LookupActivityHard(int activity);
-
-
-	static int numberOfEyeSkins;
-	float leaderlookTimeMax;
 
 };
 
@@ -220,7 +217,6 @@ int CHoundeye::numberOfEyeSkins = -1;
 		LINK_ENTITY_TO_CLASS( hound, CHoundeye );
 		LINK_ENTITY_TO_CLASS( monster_hound, CHoundeye );
 	#endif
-
 #endif
 
 TYPEDESCRIPTION	CHoundeye::m_SaveData[] =
@@ -232,6 +228,339 @@ TYPEDESCRIPTION	CHoundeye::m_SaveData[] =
 };
 
 IMPLEMENT_SAVERESTORE( CHoundeye, CSquadMonster );
+
+
+
+
+
+
+
+
+
+//=========================================================
+// AI Schedules Specific to this monster
+//=========================================================
+
+//MODDD - new
+Task_t	tlLeaderLook1[] =
+{
+	{ TASK_STOP_MOVING,			0				},
+	//{ TASK_SET_ACTIVITY,		(float)ACT_LEADERLOOK },
+	{ TASK_HOUND_LEADERLOOK,		0 },
+	{ TASK_WAIT,				(float)5		},// repick IDLESTAND every five seconds. gives us a chance to pick an active idle, fidget, etc.
+};
+
+Schedule_t	slHoundLeaderLook[] =
+{
+	{
+		tlLeaderLook1,
+		ARRAYSIZE ( tlLeaderLook1 ),
+		//NOTE: conditions altered.  See "Schedule_t	slIdleStand[]" in "defaultai.cpp" for the original.
+
+		//MODDD - Why on Earth do most houndeye schedules lack this??
+		bits_COND_SEE_ENEMY |
+		//BOB SAGET'S LEFT NUT, WHY WAS THIS MISSING?!
+		bits_COND_NEW_ENEMY |
+
+		bits_COND_LIGHT_DAMAGE	|
+		bits_COND_HEAVY_DAMAGE	|
+		bits_COND_PROVOKED,
+		//likely already heard a sound to do the leaderlook, don't get interrupted in the middle of a leaderlook to do "leaderlook".
+		//bits_COND_HEAR_SOUND,
+
+		//sounds probably don't mean anything with bits_COND_HEAR_SOUND commented out.
+		bits_SOUND_COMBAT		|// sound flags
+		bits_SOUND_WORLD		|
+		bits_SOUND_PLAYER		|
+		bits_SOUND_DANGER/*		|
+
+		bits_SOUND_MEAT			|// scents
+		bits_SOUND_CARCASS		|
+		bits_SOUND_GARBAGE
+		*/
+		,
+
+		"LeaderLook"  //???
+	},
+};
+
+/////////////////////////////////////////////////////////////////
+
+
+
+
+Task_t	tlHoundGuardPack[] =
+{
+	{ TASK_STOP_MOVING,			(float)0		},
+	{ TASK_GUARD,				(float)0		},
+};
+
+Schedule_t	slHoundGuardPack[] =
+{
+	{
+		tlHoundGuardPack,
+		ARRAYSIZE ( tlHoundGuardPack ),
+		bits_COND_SEE_HATE		|
+		bits_COND_LIGHT_DAMAGE	|
+		bits_COND_HEAVY_DAMAGE	|
+		bits_COND_PROVOKED		|
+		bits_COND_HEAR_SOUND,
+
+		bits_SOUND_COMBAT		|// sound flags
+		bits_SOUND_WORLD		|
+		bits_SOUND_MEAT			|
+		bits_SOUND_PLAYER,
+		"GuardPack"
+	},
+};
+
+// primary range attack
+Task_t	tlHoundYell1[] =
+{
+	{ TASK_STOP_MOVING,			(float)0					},
+	{ TASK_FACE_IDEAL,			(float)0					},
+	{ TASK_RANGE_ATTACK1,		(float)0					},
+	{ TASK_SET_SCHEDULE,		(float)SCHED_HOUND_AGITATED	},
+};
+
+Task_t	tlHoundYell2[] =
+{
+	{ TASK_STOP_MOVING,			(float)0					},
+	{ TASK_FACE_IDEAL,			(float)0					},
+	{ TASK_RANGE_ATTACK1,		(float)0					},
+};
+
+Schedule_t	slHoundRangeAttack[] =
+{
+	{
+		tlHoundYell1,
+		ARRAYSIZE ( tlHoundYell1 ),
+		bits_COND_LIGHT_DAMAGE	|
+		bits_COND_HEAVY_DAMAGE,
+		0,
+		"HoundRangeAttack1"
+	},
+	{
+		tlHoundYell2,
+		ARRAYSIZE ( tlHoundYell2 ),
+		bits_COND_LIGHT_DAMAGE	|
+		bits_COND_HEAVY_DAMAGE,
+		0,
+		"HoundRangeAttack2"
+	},
+};
+
+// lie down and fall asleep
+Task_t	tlHoundSleep[] =
+{
+	{ TASK_STOP_MOVING,			(float)0		},
+	{ TASK_SET_ACTIVITY,		(float)ACT_IDLE			},
+	{ TASK_WAIT_RANDOM,			(float)5				},
+	{ TASK_PLAY_SEQUENCE,		(float)ACT_CROUCH		},
+	{ TASK_SET_ACTIVITY,		(float)ACT_CROUCHIDLE	},
+	{ TASK_HOUND_FALL_ASLEEP,	(float)0				},
+	{ TASK_WAIT_RANDOM,			(float)25				},
+	{ TASK_HOUND_CLOSE_EYE,		(float)0				},
+	//{ TASK_WAIT,				(float)10				},
+	//{ TASK_WAIT_RANDOM,			(float)10				},
+};
+
+Schedule_t	slHoundSleep[] =
+{
+	{
+		tlHoundSleep,
+		ARRAYSIZE ( tlHoundSleep ),
+		bits_COND_HEAR_SOUND	|
+		bits_COND_LIGHT_DAMAGE	|
+		bits_COND_HEAVY_DAMAGE	|
+		bits_COND_NEW_ENEMY,
+
+		bits_SOUND_COMBAT		|
+		bits_SOUND_PLAYER		|
+		bits_SOUND_WORLD,
+		"Hound Sleep"
+	},
+};
+
+// wake and stand up lazily
+Task_t	tlHoundWakeLazy[] =
+{
+	{ TASK_STOP_MOVING,			(float)0			},
+	{ TASK_HOUND_OPEN_EYE,		(float)0			},
+	{ TASK_WAIT_RANDOM,			(float)2.5			},
+	{ TASK_PLAY_SEQUENCE,		(float)ACT_STAND	},
+	{ TASK_HOUND_WAKE_UP,		(float)0			},
+};
+
+Schedule_t	slHoundWakeLazy[] =
+{
+	{
+		tlHoundWakeLazy,
+		ARRAYSIZE ( tlHoundWakeLazy ),
+		0,
+		0,
+		"WakeLazy"
+	},
+};
+
+// wake and stand up with great urgency!
+Task_t	tlHoundWakeUrgent[] =
+{
+	{ TASK_HOUND_OPEN_EYE,		(float)0			},
+	{ TASK_PLAY_SEQUENCE,		(float)ACT_HOP		},
+	{ TASK_FACE_IDEAL,			(float)0			},
+	{ TASK_HOUND_WAKE_UP,		(float)0			},
+};
+
+Schedule_t	slHoundWakeUrgent[] =
+{
+	{
+		tlHoundWakeUrgent,
+		ARRAYSIZE ( tlHoundWakeUrgent ),
+		0,
+		0,
+		"WakeUrgent"
+	},
+};
+
+
+Task_t	tlHoundSpecialAttack1[] =
+{
+	{ TASK_STOP_MOVING,			0				},
+	{ TASK_FACE_IDEAL,			(float)0		},
+
+
+	{ TASK_SPECIAL_ATTACK1,		(float)0		},
+	//MODDD - removed?? - NEVERMIND, it is okay.
+	{ TASK_PLAY_SEQUENCE,		(float)ACT_IDLE_ANGRY },
+};
+
+Schedule_t	slHoundSpecialAttack1[] =
+{
+	{
+		tlHoundSpecialAttack1,
+		ARRAYSIZE ( tlHoundSpecialAttack1 ),
+		bits_COND_NEW_ENEMY			|
+		bits_COND_LIGHT_DAMAGE		|
+		bits_COND_HEAVY_DAMAGE,
+		//MODDD - removed...  had no effect before at some point anyways?
+		//bits_COND_ENEMY_OCCLUDED,
+
+		0,
+		"Hound Special Attack1"
+	},
+};
+
+Task_t	tlHoundAgitated[] =
+{
+	{ TASK_STOP_MOVING,				0		},
+	{ TASK_HOUND_THREAT_DISPLAY,	0		},
+};
+
+Schedule_t	slHoundAgitated[] =
+{
+	{
+		tlHoundAgitated,
+		ARRAYSIZE ( tlHoundAgitated ),
+		bits_COND_NEW_ENEMY			|
+		bits_COND_LIGHT_DAMAGE		|
+		bits_COND_HEAVY_DAMAGE,
+		0,
+		"Hound Agitated"
+	},
+};
+
+Task_t	tlHoundHopRetreat[] =
+{
+	{ TASK_STOP_MOVING,				0											},
+	{ TASK_HOUND_HOP_BACK,			0											},
+	{ TASK_SET_SCHEDULE,			(float)SCHED_TAKE_COVER_FROM_ENEMY	},
+};
+
+Schedule_t	slHoundHopRetreat[] =
+{
+	{
+		tlHoundHopRetreat,
+		ARRAYSIZE ( tlHoundHopRetreat ),
+		0,
+		0,
+		"Hound Hop Retreat"
+	},
+};
+
+// hound fails in combat with client in the PVS
+Task_t	tlHoundCombatFailPVS[] =
+{
+	{ TASK_STOP_MOVING,				0			},
+	{ TASK_HOUND_THREAT_DISPLAY,	0			},
+	{ TASK_WAIT_FACE_ENEMY,			(float)1	},
+};
+
+Schedule_t	slHoundCombatFailPVS[] =
+{
+	{
+		tlHoundCombatFailPVS,
+		ARRAYSIZE ( tlHoundCombatFailPVS ),
+		bits_COND_NEW_ENEMY			|
+		bits_COND_LIGHT_DAMAGE		|
+		bits_COND_HEAVY_DAMAGE,
+		0,
+		"HoundCombatFailPVS"
+	},
+};
+
+// hound fails in combat with no client in the PVS. Don't keep peeping!
+Task_t	tlHoundCombatFailNoPVS[] =
+{
+	{ TASK_STOP_MOVING,				0				},
+	{ TASK_HOUND_THREAT_DISPLAY,	0				},
+	{ TASK_WAIT_FACE_ENEMY,			(float)2		},
+	{ TASK_SET_ACTIVITY,			(float)ACT_IDLE	},
+	{ TASK_WAIT_PVS,				0				},
+};
+
+Schedule_t	slHoundCombatFailNoPVS[] =
+{
+	{
+		tlHoundCombatFailNoPVS,
+		ARRAYSIZE ( tlHoundCombatFailNoPVS ),
+		bits_COND_NEW_ENEMY			|
+		bits_COND_LIGHT_DAMAGE		|
+		bits_COND_HEAVY_DAMAGE,
+		0,
+		"HoundCombatFailNoPVS"
+	},
+};
+
+DEFINE_CUSTOM_SCHEDULES( CHoundeye )
+{
+	slHoundGuardPack,
+	slHoundRangeAttack,
+	&slHoundRangeAttack[ 1 ],
+	slHoundSleep,
+	slHoundWakeLazy,
+	slHoundWakeUrgent,
+	slHoundSpecialAttack1,
+	slHoundAgitated,
+	slHoundHopRetreat,
+	slHoundCombatFailPVS,
+	slHoundCombatFailNoPVS,
+
+	//MODDD - new.
+	slHoundLeaderLook,
+
+};
+
+IMPLEMENT_CUSTOM_SCHEDULES( CHoundeye, CSquadMonster );
+
+
+
+
+
+
+
+
+
 
 //=========================================================
 // Classify - indicates this monster's place in the
@@ -964,8 +1293,7 @@ void CHoundeye :: SonicAttack (BOOL useAlt )
 //=========================================================
 void CHoundeye :: StartTask ( Task_t *pTask )
 {
-	m_iTaskStatus = TASKSTATUS_RUNNING;
-
+	
 	switch ( pTask->iTask )
 	{
 	//MODDD - from schedule.cpp
@@ -987,19 +1315,19 @@ void CHoundeye :: StartTask ( Task_t *pTask )
 	case TASK_HOUND_FALL_ASLEEP:
 		{
 			m_fAsleep = TRUE; // signal that hound is lying down (must stand again before doing anything else!)
-			m_iTaskStatus = TASKSTATUS_COMPLETE;
+			TaskComplete();
 			break;
 		}
 	case TASK_HOUND_WAKE_UP:
 		{
 			m_fAsleep = FALSE; // signal that hound is standing again
-			m_iTaskStatus = TASKSTATUS_COMPLETE;
+			TaskComplete();
 			break;
 		}
 	case TASK_HOUND_OPEN_EYE:
 		{
 			m_fDontBlink = FALSE; // turn blinking back on and that code will automatically open the eye
-			m_iTaskStatus = TASKSTATUS_COMPLETE;
+			TaskComplete();
 			break;
 		}
 	case TASK_HOUND_CLOSE_EYE:
@@ -1028,9 +1356,6 @@ void CHoundeye :: StartTask ( Task_t *pTask )
 
 			//this is exactly what the base monster (in schedule.cpp) says to do, we're fine.
 			//CSquadMonster :: StartTask(pTask);
-
-
-
 
 			//MODDD - this used to be commented out!
 			if ( InSquad() )
@@ -1069,17 +1394,10 @@ void CHoundeye :: StartTask ( Task_t *pTask )
 				}
 				*/
 
-
-
-
-
 				/*
-
 				// see if there is a battery to connect to.
 				//CSquadMonster *pSquad = m_hSquadLeader;
 				CSquadMonster *pSquad = (CSquadMonster *)((CBaseEntity *)m_hSquadLeader);
-
-
 				while ( pSquad )
 				{
 					if ( pSquad->m_iMySlot == bits_SLOT_HOUND_BATTERY )
@@ -1107,11 +1425,7 @@ void CHoundeye :: StartTask ( Task_t *pTask )
 					pSquad = pSquad->m_hSquadNext;
 				}
 				*/
-
-
 			}
-
-
 			break;
 		}
 
@@ -1165,10 +1479,7 @@ void CHoundeye :: StartTask ( Task_t *pTask )
 		firstSpecialAttackFrame = TRUE;
 	}
 
-
-
 }
-
 
 
 //MODDD - overwrite the original, don't call the original (any parts of the original that should stay are still here; calling that would be redundant with these parts and undermine the efforts to exlude / replace some parts)
@@ -1263,11 +1574,6 @@ int CHoundeye :: SquadRecruit( int searchRadius, int maxMembers )
 
 
 
-
-
-
-
-
 //=========================================================
 // RunTask
 //=========================================================
@@ -1294,14 +1600,10 @@ void CHoundeye :: RunTask ( Task_t *pTask )
 			pev->yaw_speed = 90;
 		}
 
-
 		ChangeYaw( pev->yaw_speed );
 
 		
-		
 		if(this->crazyPrintout){
-
-			
 			easyForcePrintLine("RUNTASK, TASK_FACE_IDEAL.  THE FUUUK yawspd: %.2f FacingIdeal? %d, ydelta: %.2f, yIdeal: %.2f", pev->yaw_speed, FacingIdeal(), FlYawDiff(), pev->ideal_yaw   );
 		
 		
@@ -1331,9 +1633,6 @@ void CHoundeye :: RunTask ( Task_t *pTask )
 			}
 
 		}
-
-
-
 
 
 
@@ -1473,9 +1772,6 @@ void CHoundeye :: RunTask ( Task_t *pTask )
 
 
 
-
-
-
 GENERATE_TRACEATTACK_IMPLEMENTATION(CHoundeye)
 {
 	GENERATE_TRACEATTACK_PARENT_CALL(CSquadMonster);
@@ -1488,15 +1784,7 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CHoundeye)
 
 
 
-
-
-
-
-
-
-
-
-
+//MODDD - NOTE.  See "PrescheduleThink" further down, that rarely shows up.
 void CHoundeye::MonsterThink(void){
 
 	if(m_pSchedule != NULL){
@@ -1515,7 +1803,6 @@ void CHoundeye::ChangeSchedule( Schedule_t *pNewSchedule ){
 	
 	CSquadMonster::ChangeSchedule(pNewSchedule);
 }
-
 
 
 //=========================================================
@@ -1569,331 +1856,6 @@ void CHoundeye::PrescheduleThink ( void )
 	}
 }
 
-
-
-//=========================================================
-// AI Schedules Specific to this monster
-//=========================================================
-
-
-
-//MODDD - new
-Task_t	tlLeaderLook1[] =
-{
-	{ TASK_STOP_MOVING,			0				},
-	//{ TASK_SET_ACTIVITY,		(float)ACT_LEADERLOOK },
-	{ TASK_HOUND_LEADERLOOK,		0 },
-	{ TASK_WAIT,				(float)5		},// repick IDLESTAND every five seconds. gives us a chance to pick an active idle, fidget, etc.
-};
-
-Schedule_t	slHoundLeaderLook[] =
-{
-	{
-		tlLeaderLook1,
-		ARRAYSIZE ( tlLeaderLook1 ),
-		//NOTE: conditions altered.  See "Schedule_t	slIdleStand[]" in "defaultai.cpp" for the original.
-
-		//MODDD - Why on Earth do most houndeye schedules lack this??
-		bits_COND_SEE_ENEMY |
-		//BOB SAGET'S LEFT NUT, WHY WAS THIS MISSING?!
-		bits_COND_NEW_ENEMY |
-
-		bits_COND_LIGHT_DAMAGE	|
-		bits_COND_HEAVY_DAMAGE	|
-		bits_COND_PROVOKED,
-		//likely already heard a sound to do the leaderlook, don't get interrupted in the middle of a leaderlook to do "leaderlook".
-		//bits_COND_HEAR_SOUND,
-
-		//sounds probably don't mean anything with bits_COND_HEAR_SOUND commented out.
-		bits_SOUND_COMBAT		|// sound flags
-		bits_SOUND_WORLD		|
-		bits_SOUND_PLAYER		|
-		bits_SOUND_DANGER/*		|
-
-		bits_SOUND_MEAT			|// scents
-		bits_SOUND_CARCASS		|
-		bits_SOUND_GARBAGE
-		*/
-		,
-
-		"LeaderLook"  //???
-	},
-};
-
-/////////////////////////////////////////////////////////////////
-
-
-
-
-
-
-
-
-
-Task_t	tlHoundGuardPack[] =
-{
-	{ TASK_STOP_MOVING,			(float)0		},
-	{ TASK_GUARD,				(float)0		},
-};
-
-Schedule_t	slHoundGuardPack[] =
-{
-	{
-		tlHoundGuardPack,
-		ARRAYSIZE ( tlHoundGuardPack ),
-		bits_COND_SEE_HATE		|
-		bits_COND_LIGHT_DAMAGE	|
-		bits_COND_HEAVY_DAMAGE	|
-		bits_COND_PROVOKED		|
-		bits_COND_HEAR_SOUND,
-
-		bits_SOUND_COMBAT		|// sound flags
-		bits_SOUND_WORLD		|
-		bits_SOUND_MEAT			|
-		bits_SOUND_PLAYER,
-		"GuardPack"
-	},
-};
-
-// primary range attack
-Task_t	tlHoundYell1[] =
-{
-	{ TASK_STOP_MOVING,			(float)0					},
-	{ TASK_FACE_IDEAL,			(float)0					},
-	{ TASK_RANGE_ATTACK1,		(float)0					},
-	{ TASK_SET_SCHEDULE,		(float)SCHED_HOUND_AGITATED	},
-};
-
-Task_t	tlHoundYell2[] =
-{
-	{ TASK_STOP_MOVING,			(float)0					},
-	{ TASK_FACE_IDEAL,			(float)0					},
-	{ TASK_RANGE_ATTACK1,		(float)0					},
-};
-
-Schedule_t	slHoundRangeAttack[] =
-{
-	{
-		tlHoundYell1,
-		ARRAYSIZE ( tlHoundYell1 ),
-		bits_COND_LIGHT_DAMAGE	|
-		bits_COND_HEAVY_DAMAGE,
-		0,
-		"HoundRangeAttack1"
-	},
-	{
-		tlHoundYell2,
-		ARRAYSIZE ( tlHoundYell2 ),
-		bits_COND_LIGHT_DAMAGE	|
-		bits_COND_HEAVY_DAMAGE,
-		0,
-		"HoundRangeAttack2"
-	},
-};
-
-// lie down and fall asleep
-Task_t	tlHoundSleep[] =
-{
-	{ TASK_STOP_MOVING,			(float)0		},
-	{ TASK_SET_ACTIVITY,		(float)ACT_IDLE			},
-	{ TASK_WAIT_RANDOM,			(float)5				},
-	{ TASK_PLAY_SEQUENCE,		(float)ACT_CROUCH		},
-	{ TASK_SET_ACTIVITY,		(float)ACT_CROUCHIDLE	},
-	{ TASK_HOUND_FALL_ASLEEP,	(float)0				},
-	{ TASK_WAIT_RANDOM,			(float)25				},
-	{ TASK_HOUND_CLOSE_EYE,		(float)0				},
-	//{ TASK_WAIT,				(float)10				},
-	//{ TASK_WAIT_RANDOM,			(float)10				},
-};
-
-Schedule_t	slHoundSleep[] =
-{
-	{
-		tlHoundSleep,
-		ARRAYSIZE ( tlHoundSleep ),
-		bits_COND_HEAR_SOUND	|
-		bits_COND_LIGHT_DAMAGE	|
-		bits_COND_HEAVY_DAMAGE	|
-		bits_COND_NEW_ENEMY,
-
-		bits_SOUND_COMBAT		|
-		bits_SOUND_PLAYER		|
-		bits_SOUND_WORLD,
-		"Hound Sleep"
-	},
-};
-
-// wake and stand up lazily
-Task_t	tlHoundWakeLazy[] =
-{
-	{ TASK_STOP_MOVING,			(float)0			},
-	{ TASK_HOUND_OPEN_EYE,		(float)0			},
-	{ TASK_WAIT_RANDOM,			(float)2.5			},
-	{ TASK_PLAY_SEQUENCE,		(float)ACT_STAND	},
-	{ TASK_HOUND_WAKE_UP,		(float)0			},
-};
-
-Schedule_t	slHoundWakeLazy[] =
-{
-	{
-		tlHoundWakeLazy,
-		ARRAYSIZE ( tlHoundWakeLazy ),
-		0,
-		0,
-		"WakeLazy"
-	},
-};
-
-// wake and stand up with great urgency!
-Task_t	tlHoundWakeUrgent[] =
-{
-	{ TASK_HOUND_OPEN_EYE,		(float)0			},
-	{ TASK_PLAY_SEQUENCE,		(float)ACT_HOP		},
-	{ TASK_FACE_IDEAL,			(float)0			},
-	{ TASK_HOUND_WAKE_UP,		(float)0			},
-};
-
-Schedule_t	slHoundWakeUrgent[] =
-{
-	{
-		tlHoundWakeUrgent,
-		ARRAYSIZE ( tlHoundWakeUrgent ),
-		0,
-		0,
-		"WakeUrgent"
-	},
-};
-
-
-Task_t	tlHoundSpecialAttack1[] =
-{
-	{ TASK_STOP_MOVING,			0				},
-	{ TASK_FACE_IDEAL,			(float)0		},
-
-
-	{ TASK_SPECIAL_ATTACK1,		(float)0		},
-	//MODDD - removed?? - NEVERMIND, it is okay.
-	{ TASK_PLAY_SEQUENCE,		(float)ACT_IDLE_ANGRY },
-};
-
-Schedule_t	slHoundSpecialAttack1[] =
-{
-	{
-		tlHoundSpecialAttack1,
-		ARRAYSIZE ( tlHoundSpecialAttack1 ),
-		bits_COND_NEW_ENEMY			|
-		bits_COND_LIGHT_DAMAGE		|
-		bits_COND_HEAVY_DAMAGE,
-		//MODDD - removed...  had no effect before at some point anyways?
-		//bits_COND_ENEMY_OCCLUDED,
-
-		0,
-		"Hound Special Attack1"
-	},
-};
-
-Task_t	tlHoundAgitated[] =
-{
-	{ TASK_STOP_MOVING,				0		},
-	{ TASK_HOUND_THREAT_DISPLAY,	0		},
-};
-
-Schedule_t	slHoundAgitated[] =
-{
-	{
-		tlHoundAgitated,
-		ARRAYSIZE ( tlHoundAgitated ),
-		bits_COND_NEW_ENEMY			|
-		bits_COND_LIGHT_DAMAGE		|
-		bits_COND_HEAVY_DAMAGE,
-		0,
-		"Hound Agitated"
-	},
-};
-
-Task_t	tlHoundHopRetreat[] =
-{
-	{ TASK_STOP_MOVING,				0											},
-	{ TASK_HOUND_HOP_BACK,			0											},
-	{ TASK_SET_SCHEDULE,			(float)SCHED_TAKE_COVER_FROM_ENEMY	},
-};
-
-Schedule_t	slHoundHopRetreat[] =
-{
-	{
-		tlHoundHopRetreat,
-		ARRAYSIZE ( tlHoundHopRetreat ),
-		0,
-		0,
-		"Hound Hop Retreat"
-	},
-};
-
-// hound fails in combat with client in the PVS
-Task_t	tlHoundCombatFailPVS[] =
-{
-	{ TASK_STOP_MOVING,				0			},
-	{ TASK_HOUND_THREAT_DISPLAY,	0			},
-	{ TASK_WAIT_FACE_ENEMY,			(float)1	},
-};
-
-Schedule_t	slHoundCombatFailPVS[] =
-{
-	{
-		tlHoundCombatFailPVS,
-		ARRAYSIZE ( tlHoundCombatFailPVS ),
-		bits_COND_NEW_ENEMY			|
-		bits_COND_LIGHT_DAMAGE		|
-		bits_COND_HEAVY_DAMAGE,
-		0,
-		"HoundCombatFailPVS"
-	},
-};
-
-// hound fails in combat with no client in the PVS. Don't keep peeping!
-Task_t	tlHoundCombatFailNoPVS[] =
-{
-	{ TASK_STOP_MOVING,				0				},
-	{ TASK_HOUND_THREAT_DISPLAY,	0				},
-	{ TASK_WAIT_FACE_ENEMY,			(float)2		},
-	{ TASK_SET_ACTIVITY,			(float)ACT_IDLE	},
-	{ TASK_WAIT_PVS,				0				},
-};
-
-Schedule_t	slHoundCombatFailNoPVS[] =
-{
-	{
-		tlHoundCombatFailNoPVS,
-		ARRAYSIZE ( tlHoundCombatFailNoPVS ),
-		bits_COND_NEW_ENEMY			|
-		bits_COND_LIGHT_DAMAGE		|
-		bits_COND_HEAVY_DAMAGE,
-		0,
-		"HoundCombatFailNoPVS"
-	},
-};
-
-DEFINE_CUSTOM_SCHEDULES( CHoundeye )
-{
-	slHoundGuardPack,
-	slHoundRangeAttack,
-	&slHoundRangeAttack[ 1 ],
-	slHoundSleep,
-	slHoundWakeLazy,
-	slHoundWakeUrgent,
-	slHoundSpecialAttack1,
-	slHoundAgitated,
-	slHoundHopRetreat,
-	slHoundCombatFailPVS,
-	slHoundCombatFailNoPVS,
-
-	//MODDD - new.
-	slHoundLeaderLook,
-
-
-};
-
-IMPLEMENT_CUSTOM_SCHEDULES( CHoundeye, CSquadMonster );
 
 //=========================================================
 // GetScheduleOfType
@@ -2016,10 +1978,7 @@ Schedule_t* CHoundeye :: GetScheduleOfType ( int Type )
 //=========================================================
 Schedule_t *CHoundeye :: GetSchedule( void )
 {
-
-
 	//no need for extra bait script, defaults should carry over.
-
 
 	switch	( m_MonsterState )
 	{
@@ -2032,8 +1991,6 @@ Schedule_t *CHoundeye :: GetSchedule( void )
 				return CBaseMonster :: GetSchedule();
 			}
 
-
-			
 			//MODDD - heavy damage must flinch.
 			if(HasConditions(bits_COND_HEAVY_DAMAGE)){
 				return GetScheduleOfType(SCHED_BIG_FLINCH);
@@ -2068,10 +2025,6 @@ Schedule_t *CHoundeye :: GetSchedule( void )
 						return GetScheduleOfType ( SCHED_RANGE_ATTACK1 );
 					}
 					//
-
-
-
-
 				}
 
 				return GetScheduleOfType ( SCHED_HOUND_AGITATED );
@@ -2088,16 +2041,6 @@ Schedule_t *CHoundeye :: GetSchedule( void )
 }
 
 
-
-
-
-//
-
-
-
-
-
-
 BOOL CHoundeye::getMonsterBlockIdleAutoUpdate(void){
 	return FALSE;
 }
@@ -2112,7 +2055,6 @@ BOOL CHoundeye::canPredictActRepeat(void){
 BOOL CHoundeye::usesAdvancedAnimSystem(void){
 	return TRUE;
 }
-
 
 
 int CHoundeye::tryActivitySubstitute(int activity){
@@ -2162,10 +2104,5 @@ int CHoundeye::LookupActivityHard(int activity){
 	//not handled by above?  try the real deal.
 	return CBaseAnimating::LookupActivity(activity);
 }//END OF LookupActivityHard
-
-
-
-
-
 
 

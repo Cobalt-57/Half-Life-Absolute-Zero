@@ -23,7 +23,6 @@
 
 */
 
-#include "ignore_warning_list.h"
 #include "extdll.h"
 #include "util.h"
 #include "cbase.h"
@@ -458,11 +457,7 @@ void resetModCVars(CBasePlayer* arg_plyRef, BOOL isEmergency){
 	//if the barnacle cheat is on, turn it of.
 	if(cheat_barnacleEatsEverything == 1){
 		cheat_barnacleEatsEverything = 2;
-		if(arg_plyRef != NULL){
-			easyForcePrintLineClient(pEntity, "CHEAT OFF: Barnacles returned to normal.");
-			//This is done so the player can save the cheat.
-			arg_plyRef->myRef_barnacleEatsEverything = cheat_barnacleEatsEverything;
-		}
+		easyForcePrintLineBroadcast("CHEAT OFF: Barnacles returned to normal.");
 	}
 	
 	EASY_CVAR_SET(cl_explosion, 0);
@@ -1203,11 +1198,7 @@ void ClientCommand( edict_t *pEntity )
 		//if the barnacle cheat is on, turn it of.
 		if(cheat_barnacleEatsEverything == 1){
 			cheat_barnacleEatsEverything = 2;
-			if(playerRef){
-				easyForcePrintLineClient(pEntity, "CHEAT OFF: Barnacles returned to normal.");
-				//This is done so the player can save the cheat.
-				playerRef->myRef_barnacleEatsEverything = cheat_barnacleEatsEverything;
-			}
+			easyForcePrintLineBroadcast("CHEAT OFF: Barnacles returned to normal.");
 		}
 
 
@@ -1221,18 +1212,11 @@ void ClientCommand( edict_t *pEntity )
 			}else if(cheat_barnacleEatsEverything == 2){
 				cheat_barnacleEatsEverything = 1;
 			}
-			CBasePlayer* playerRef = GetClassPtr((CBasePlayer *)pev);
-			if(playerRef){
-				//This is done so the player can save the cheat.
-				playerRef->myRef_barnacleEatsEverything = cheat_barnacleEatsEverything;
-			}
 			
-			//myRef_barnacleEatsEverything
-
 			if(cheat_barnacleEatsEverything == 1){
-				easyForcePrintLineClient(pEntity, "CHEAT ON: Barnacles can eat any monster (NPC)!");
+				easyForcePrintLineBroadcast("CHEAT ON: Barnacles can eat any monster (NPC)!");
 			}else if(cheat_barnacleEatsEverything == 2){
-				easyForcePrintLineClient(pEntity, "CHEAT OFF: Barnacles returned to normal.");
+				easyForcePrintLineBroadcast("CHEAT OFF: Barnacles returned to normal.");
 			}
 		}
 	}else if( FStrEq(pcmdRefinedRef, "fixrpg") ){
@@ -3962,14 +3946,11 @@ void ClientCommand( edict_t *pEntity )
 		//script moveed....
 	}
 
-
 	if(caughtByFirst){
 		return;   //skip the hidden CVar stuff below, no need for extra interpretation.
 	}
 
 	caughtByFirst = TRUE;
-
-
 
 
 	// Thanks for the else-if chain limit, guys...
@@ -4275,8 +4256,49 @@ void ClientCommand( edict_t *pEntity )
 			easyForcePrintLineClient(pEntity, "Nope.");
 		}
 	}
-	else if (FStrEq(pcmdRefinedRef, "test")) {
-		MESSAGE_BEGIN(MSG_ONE, gmsgCliTest, NULL, pev);
+	else if (FStrEq(pcmdRefinedRef, "testgay")) {
+		
+		const char* arg1ref = CMD_ARGV(1);
+
+		/*
+		if(FStrEq(arg1ref, "0") == TRUE) {
+			MESSAGE_BEGIN(MSG_ONE, gmsgCliTest, NULL, pev);
+			MESSAGE_END();
+		}
+		else if (FStrEq(arg1ref, "1") == TRUE) {
+
+			MESSAGE_BEGIN(MSG_ALL, SVC_CDTRACK);
+			WRITE_BYTE(3);
+			WRITE_BYTE(3);
+			MESSAGE_END();
+		}
+		else if (FStrEq(arg1ref, "2") == TRUE) {
+
+			MESSAGE_BEGIN(MSG_ALL, SVC_INTERMISSION);
+			MESSAGE_END();
+		}
+		else {
+			easyForcePrintClient(pEntity, "????????");
+		}
+		*/
+
+		/*
+		if (CMD_ARGC() < 3) {
+			easyForcePrintClient(pEntity, "AW SHIT");
+		}else {
+			int int1 = tryStringToFloat(CMD_ARGV(1));
+			int int2 = tryStringToFloat(CMD_ARGV(2));
+
+			MESSAGE_BEGIN(MSG_ALL, SVC_CDTRACK);
+			WRITE_BYTE(int1);
+			WRITE_BYTE(int2);
+			MESSAGE_END();
+		}
+		*/
+
+		MESSAGE_BEGIN(MSG_ALL, SVC_CDTRACK);
+		WRITE_BYTE(2);
+		WRITE_BYTE(0);
 		MESSAGE_END();
 
 	}else if (FStrEq(pcmdRefinedRef, "_mod_version_server")) {
@@ -4331,7 +4353,7 @@ void ClientCommand( edict_t *pEntity )
 		}
 
 	}
-	else if (FStrEq(pcmdRefinedRef, "cl_ladder")) {
+	else if (FStrEq(pcmdRefinedRef, "_cl_ladder")) {
 		if (CMD_ARGC() <= 1) {
 			return;
 		}
@@ -4761,9 +4783,6 @@ void PlayerPostThink( edict_t *pEntity )
 
 
 
-
-
-
 	if (pPlayer)
 		pPlayer->PostThink( );
 
@@ -4773,8 +4792,7 @@ void PlayerPostThink( edict_t *pEntity )
 		return;
 	}
 
-	
-	
+
 	
 #if defined( CLIENT_WEAPONS )
 

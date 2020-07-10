@@ -288,12 +288,6 @@ Also, need to extern (all?) CVars in dlls/client.cpp.
 
 
 
-
-
-
-
-
-
 	
 
 /*

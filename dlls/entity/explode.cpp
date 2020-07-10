@@ -67,31 +67,8 @@ void CShower::Spawn( void )
 
 void CShower::Think( void )
 {
-	
-	//MODDD - below has been OUTCLASSED BY "ExplosionShrapnelMulti"
-	/*
-	//float explosionsHaveSparksVar = EASY_CVAR_GET(explosionsHaveSparks);
-	//MODDD - imply the spark shower came from an explosion.
-	//If this CVar is 1, no change.
-	//If it is 2, we want less sparks.  Specify "1" instead of relying on the default of 6.
-	if(explosionsHaveSparksVar == 0){
-		//nothing.
-	}else if(explosionsHaveSparksVar == 1){
-		UTIL_Sparks( pev->origin, DEFAULT_SPARK_BALLS, EASY_CVAR_GET(sparksExplosionMulti) );
-	}
-	else if(explosionsHaveSparksVar == 2){
-		UTIL_Sparks( pev->origin, 1, EASY_CVAR_GET(sparksExplosionMulti) );
-	}
-	*/
-
-
 	UTIL_Sparks( pev->origin, DEFAULT_SPARK_BALLS, EASY_CVAR_GET(sparksExplosionMulti) );
 	
-
-
-
-
-
 	pev->speed -= 0.1;
 	if ( pev->speed > 0 )
 		pev->nextthink = gpGlobals->time + 0.1;
@@ -153,10 +130,7 @@ BOOL CEnvExplosion::isOrganic(void){
 }
 
 void CEnvExplosion::Spawn( void )
-{ 
-
-
-
+{
 	pev->solid = SOLID_NOT;
 	pev->effects = EF_NODRAW;
 
@@ -186,9 +160,7 @@ void CEnvExplosion::Spawn( void )
 }
 
 void CEnvExplosion::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
-{ 
-
-
+{
 	TraceResult tr;
 
 	pev->model = iStringNull;//invisible
@@ -227,11 +199,12 @@ void CEnvExplosion::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE
 	//MODDD - either way, uses the new filter.
 	if ( !( pev->spawnflags & SF_ENVEXPLOSION_NOFIREBALL ) )
 	{
-		UTIL_Explosion(pev, pev->origin, g_sModelIndexFireball, (BYTE) m_spriteScale, 15, TE_EXPLFLAG_NONE);
+		UTIL_Explosion(MSG_PAS, pev->origin, NULL, pev, pev->origin, g_sModelIndexFireball, (BYTE) m_spriteScale, 15, TE_EXPLFLAG_NONE);
 	}
 	else
 	{
-		UTIL_Explosion(pev, pev->origin, g_sModelIndexFireball, 0, 15, TE_EXPLFLAG_NONE);
+		// no sprite (0 after g_sModelIndexFireball means that?)
+		UTIL_Explosion(MSG_PAS, pev->origin, NULL, pev, pev->origin, g_sModelIndexFireball, 0, 15, TE_EXPLFLAG_NONE);
 	}
 	
 	//return;
@@ -263,16 +236,21 @@ void CEnvExplosion::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE
 
 void CEnvExplosion::Smoke( void )
 {
-
+	//MODDD - may need to still be around for players that have
+	// a different cl_explosion value.  Although this CVar is no
+	// longer serverside.
+	/*
 	if(EASY_CVAR_GET(cl_explosion) == 1){
 		//does not smoke.
 		UTIL_Remove( this );
 		return;
 	}
+	*/
 
-/*
 	if ( !( pev->spawnflags & SF_ENVEXPLOSION_NOSMOKE ) )
 	{
+		//MODDD - replace with call
+		/*
 		MESSAGE_BEGIN( MSG_PAS, SVC_TEMPENTITY, pev->origin );
 			WRITE_BYTE( TE_SMOKE );
 			WRITE_COORD( pev->origin.x );
@@ -282,8 +260,11 @@ void CEnvExplosion::Smoke( void )
 			WRITE_BYTE( (BYTE)m_spriteScale ); // scale * 10
 			WRITE_BYTE( 12  ); // framerate
 		MESSAGE_END();
+		*/
+		UTIL_ExplosionSmoke(MSG_PAS, pev->origin, NULL, pev->origin, 0, 0, 0, g_sModelIndexSmoke, (BYTE)m_spriteScale, 12);
+
 	}
-	*/
+	
 	if ( !(pev->spawnflags & SF_ENVEXPLOSION_REPEATABLE) )
 	{
 		UTIL_Remove( this );
@@ -291,20 +272,40 @@ void CEnvExplosion::Smoke( void )
 }
 
 
-// HACKHACK -- create one of these and fake a keyvalue to get the right explosion setup
-void ExplosionCreate( const Vector &center, const Vector &angles, edict_t *pOwner, int magnitude, BOOL doDamage )
-{
-	KeyValueData	kvd;
-	char			buf[128];
 
-	CBaseEntity *pExplosion = CBaseEntity::Create( "env_explosion", center, angles, pOwner );
-	sprintf( buf, "%3d", magnitude );
+void ExplosionCreate(const Vector& center, edict_t* pOwner, int magnitude, BOOL doDamage) {
+	ExplosionCreate(center, g_vecZero, pOwner, magnitude, doDamage, 0);
+}
+void ExplosionCreate(const Vector& center, const Vector& angles, edict_t* pOwner, int magnitude, BOOL doDamage) {
+	ExplosionCreate(center, angles, pOwner, magnitude, doDamage, 0);
+}
+void ExplosionCreate(const Vector& center, edict_t* pOwner, int magnitude, BOOL doDamage, float startExplosionDelay) {
+	ExplosionCreate(center, g_vecZero, pOwner, magnitude, doDamage, startExplosionDelay);
+}
+
+void ExplosionCreate(const Vector& center, const Vector& angles, edict_t* pOwner, int magnitude, BOOL doDamage, float startExplosionDelay) {
+	KeyValueData kvd;
+	char buf[128];
+
+	CBaseEntity* pExplosion = CBaseEntity::Create("env_explosion", center, angles, pOwner);
+	sprintf(buf, "%3d", magnitude);
 	kvd.szKeyName = "iMagnitude";
 	kvd.szValue = buf;
-	pExplosion->KeyValue( &kvd );
-	if ( !doDamage )
+	pExplosion->KeyValue(&kvd);
+	if (!doDamage)
 		pExplosion->pev->spawnflags |= SF_ENVEXPLOSION_NODAMAGE;
 
+
 	pExplosion->Spawn();
-	pExplosion->Use( NULL, NULL, USE_TOGGLE, 0 );
+	if (startExplosionDelay <= 0) {
+		// start instantly.
+		pExplosion->Use(NULL, NULL, USE_TOGGLE, 0);
+	}
+	else {
+		// delay
+		pExplosion->SetThink(&CBaseEntity::SUB_CallUseToggle);
+		pExplosion->pev->nextthink = gpGlobals->time + startExplosionDelay;
+	}
 }
+
+

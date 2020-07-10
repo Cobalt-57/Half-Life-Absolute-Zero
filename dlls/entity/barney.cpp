@@ -100,18 +100,21 @@ public:
 
 	void ReportAIState(void);
 
-
 	BOOL canUnholster;
 	float unholsterTimer;
+	int recentDeadEnemyClass;
+
+
+	static const char* madInterSentences[];
+	static int madInterSentencesMax;
+
+
 
 	int getMadSentencesMax(void);
 	int getMadInterSentencesMax(void);
 
 	void womboCombo(void);
 	
-	static const char*		madInterSentences[];
-	static int			madInterSentencesMax;
-
 	void MonsterThink(void);
 	int  IRelationship( CBaseEntity *pTarget );
 	
@@ -173,6 +176,9 @@ public:
 	BOOL violentDeathClear(void);
 	int violentDeathPriority(void);
 
+	void talkAboutKilledEnemy(void);
+	void onEnemyDead(CBaseEntity* pRecentEnemy);
+
 	
 	virtual int	Save( CSave &save );
 	virtual int	Restore( CRestore &restore );
@@ -191,7 +197,6 @@ public:
 	void CheckAmmo(void);
 	void SetActivity(Activity NewActivity);
 	float reloadSoundTime;
-	//void playPissed();
 
 	//MODDD - new anim stuff.
 	void HandleEventQueueEvent(int arg_eventID);
@@ -509,7 +514,6 @@ Schedule_t slBaReload[] =
 
 
 
-
 //MODDD TODO - why do NPCs behave so oddly on trying to reach a dead, especially gibbed, player's location?
 Task_t	tlBaFollow[] =
 {
@@ -658,8 +662,7 @@ void CBarney :: StartTask( Task_t *pTask )
 	//MODDD
 	///////////////////////////////////////////////////////////////////////
 	///???
-	m_iTaskStatus = TASKSTATUS_RUNNING;
-
+	//m_iTaskStatus = TASKSTATUS_RUNNING;
 	switch ( pTask->iTask )
 	{
 		case TASK_RELOAD:
@@ -667,17 +670,30 @@ void CBarney :: StartTask( Task_t *pTask )
 			break;
 	}
 	///////////////////////////////////////////////////////////////////////
-
 	CTalkMonster::StartTask( pTask );	
 }
 
-
-//int lastSecond = 0;
 
 void CBarney :: RunTask( Task_t *pTask )
 {
 	switch ( pTask->iTask )
 	{
+	//MODDD - sadly this does nothing, it's up to the model to support pitch-adjustments
+	// per sequence too, which the unholster anim just doesn't.  So this has no effect.
+	/*
+	case TASK_PLAY_SEQUENCE_FACE_ENEMY:
+	case TASK_PLAY_SEQUENCE_FACE_TARGET:
+	case TASK_FACE_ENEMY:
+	case TASK_WAIT_FACE_ENEMY:
+
+		// Set the pitch correctly every frame instead.  If I'm looking at the monster enough.
+		if (m_hEnemy != NULL && UTIL_IsFacing(pev, m_hEnemy->pev->origin, 0.15)) {
+			lookAtEnemy_pitch();
+		}
+		CTalkMonster::RunTask(pTask);
+	break;
+	*/
+
 	case TASK_RANGE_ATTACK1:{
 		if (m_hEnemy != NULL && (m_hEnemy->IsPlayer())){
 			pev->framerate = 1.5;
@@ -696,73 +712,14 @@ void CBarney :: RunTask( Task_t *pTask )
 	break;}
 
 	case TASK_DIE:
-
-
 		CTalkMonster::RunTask(pTask);
-
-		//MODDDD - scrapped.
-		/*
-		if ( m_fSequenceFinished && pev->frame >= 255 )
-		{
-			//set the size differently now.
-			
-			UTIL_SetSize(pev, VEC_HUMAN_HULL_MIN, VEC_HUMAN_HULL_MAX);
-		}
-		*/
-
-		
-
 		//UTIL_drawBox(pev->origin + pev->mins, pev->origin + pev->maxs);
 		//UTIL_drawBox(pev->origin + VEC_HUMAN_HULL_MIN, pev->origin + VEC_HUMAN_HULL_MAX);
-
 		break;
 	default:
 		CTalkMonster::RunTask( pTask );
 		break;
 	}
-
-	//easyForcePrintLine("HOW ARE YOU THIS WEIRD %.2f", gpGlobals->time);
-
-
-	//if(lastSecond != 0){
-
-	/*
-	if(lastSecond != (int)gpGlobals->time && ((int)gpGlobals->time) % 10 == 0){
-		lastSecond = (int)gpGlobals->time;
-		//UTIL_printoutVector(pev->origin);
-		easyForcePrintLine("GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG");
-		//easyForcePrintLine("baaa %.2f %.2f %.2f, %.2f %.2f %.2f", pev->mins.x, pev->mins.y, pev->mins.z, pev->maxs.x, pev->maxs.y, pev->maxs.z );
-
-
-			
-		//Vector forward;
-		//UTIL_MakeVectorsPrivate( pev->angles, forward, NULL, NULL );
-	
-
-		//UTIL_printLineVector("barnang", pev->angles);
-		//UTIL_printLineVector("barnfor", forward);
-			
-		UTIL_drawBox(pev->origin + pev->mins, pev->origin + pev->maxs);
-	}
-	*/
-
-	//}
-
-	//MODDD - does not seem effective, scrapped.  Note that this method is not reached after the death anim finishes anyways.
-	/*
-	if(gpGlobals->time > 20 && gpGlobals->time < 21){
-		//UTIL_printoutVector(pev->origin);
-		easyForcePrintLine("GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG");
-		easyForcePrintLine("GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG");
-		easyForcePrintLine("GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG");
-		easyForcePrintLine("GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG");
-		easyForcePrintLine("GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG");
-		easyForcePrintLine("hahaha what barneh %.2f %.2f %.2f, %.2f %.2f %.2f", pev->mins.x, pev->mins.y, pev->mins.z, pev->maxs.x, pev->maxs.y, pev->maxs.z );
-		UTIL_drawBox(pev->origin + pev->mins, pev->origin + pev->maxs);
-	}
-	//uh, shouldn't this bit go in front of the box-draw, so that the box-draw is a portrayal of the most recent resize?
-	CBaseMonster::smartResize();
-	*/
 
 }
 
@@ -814,12 +771,8 @@ int CBarney::IRelationship( CBaseEntity *pTarget )
 	}
 	*/
 
-
-
 	return CTalkMonster::IRelationship( pTarget );
 }
-
-
 
 
 
@@ -829,7 +782,6 @@ int CBarney::IRelationship( CBaseEntity *pTarget )
 //=========================================================
 void CBarney :: AlertSound( void )
 {
-	
 	if ( m_hEnemy != NULL )
 	{
 		//MODDD - probably had to enter combat to say this, so make that an exception this once.
@@ -848,7 +800,11 @@ void CBarney :: AlertSound( void )
 				// "Aim for the head if you can find it" against robotic or human foes.
 				int enemyClassify = m_hEnemy->Classify();
 				long randoRange;
-				if (enemyClassify == CLASS_PLAYER) {
+
+				if (enemyClassify == CLASS_NONE) {
+					// ???
+					PlaySentence("BA_ATTACK", RANDOM_FLOAT(2.8, 3.2), VOL_NORM, ATTN_IDLE);
+				}else if (enemyClassify == CLASS_PLAYER) {
 					// if the enemy is the player, any line can be said except the
 					// "open fire, Gordon!" one.  That doesn't make a whole lot of sense now.
 					
@@ -967,10 +923,6 @@ void CBarney :: AlertSound( void )
 						break;
 					}
 				}
-
-
-				
-
 			}else{
 				SENTENCEG_PlayRndSz( ENT(pev), "BA_POKE_A", VOL_NORM, ATTN_NORM, 0, m_voicePitch);
 			}
@@ -979,25 +931,19 @@ void CBarney :: AlertSound( void )
 			CBarney::g_barneyAlertTalkWaitTime = gpGlobals->time + 5;
 			//Also make all NPCs wait a bit to let this "battle cry" finish.
 			CTalkMonster::g_talkWaitTime = gpGlobals->time + 2.2f;
-
-
 		}
 	}
-
 }
+
+
 //=========================================================
 // SetYawSpeed - allows each sequence to have a different
 // turn rate associated with it.
 //=========================================================
 void CBarney :: SetYawSpeed ( void )
 {
-	int ys;
-
-	ys = 0;
-
-
-
-	
+	int ys = 0;
+	//MODDD - why were the Barney's turn rates so crappy? They are now more in-tune with hgrunt rates.
 	switch ( m_Activity )
 	{
 	case ACT_IDLE:
@@ -1020,25 +966,6 @@ void CBarney :: SetYawSpeed ( void )
 		ys = 90;
 		break;
 	}
-
-	/*
-	//MODDD - why are the Barney's turn rates so crappy? They are now more in-tune with hgrunt rates.
-	switch ( m_Activity )
-	{
-	case ACT_IDLE:		
-		ys = 70;
-		break;
-	case ACT_WALK:
-		ys = 70;
-		break;
-	case ACT_RUN:
-		ys = 90;
-		break;
-	default:
-		ys = 70;
-		break;
-	}
-	*/
 
 	pev->yaw_speed = ys;
 }
@@ -1091,13 +1018,17 @@ void CBarney :: BarneyFirePistol ( void )
 
 	FireBullets(1, vecShootOrigin, vecShootDir, VECTOR_CONE_2DEGREES, 1024, BULLET_MONSTER_9MM );
 	
-	int pitchShift = RANDOM_LONG( 0, 20 );
-	
+
 	// Only shift about half the time
-	if ( pitchShift > 10 )
+	long canPitchShift = RANDOM_LONG(0, 1);
+	int pitchShift;
+	if (canPitchShift == 0) {
+		//no pitch shift.
 		pitchShift = 0;
-	else
-		pitchShift -= 5;
+	}else {
+		pitchShift = RANDOM_LONG(-5, 5);
+	}
+
 	EMIT_SOUND_FILTERED( ENT(pev), CHAN_WEAPON, "barney/ba_attack2.wav", 1, ATTN_NORM, 0, 100 + pitchShift );
 
 	CSoundEnt::InsertSound ( bits_SOUND_COMBAT, pev->origin, 384, 0.3 );
@@ -1117,7 +1048,6 @@ void CBarney :: MonsterThink(void){
 		return;
 	}
 
-
 	if( (m_pSchedule == slBaFollow || m_pSchedule == slBaFaceTarget) &&
 		(m_hTargetEnt == NULL || (m_hTargetEnt != NULL && !m_hTargetEnt->IsAlive()) )
 		){
@@ -1127,7 +1057,6 @@ void CBarney :: MonsterThink(void){
 		TaskFail();
 	}
 
-	
 	if(reloadSoundTime != -1 && gpGlobals->time >= reloadSoundTime){
 
 		if(EASY_CVAR_GET(glockOldReloadLogicBarney) == 0 || m_cAmmoLoaded == 0 ){
@@ -1143,7 +1072,6 @@ void CBarney :: MonsterThink(void){
 
 	CTalkMonster::MonsterThink();
 
-	
 	if(EASY_CVAR_GET(barneyPrintouts) == 1){
 		if(m_hEnemy != NULL && m_hTargetEnt != NULL){
 			easyForcePrintLine("I AM A BARNEY AND MY ENEMY IS %s TARG: %s", STRING(m_hEnemy->pev->classname), STRING(m_hTargetEnt->pev->classname) );
@@ -1258,6 +1186,7 @@ CBarney::CBarney(void){
 	//reloadAmmoTime = -1;
 
 	unholsterTimer = -1;
+	recentDeadEnemyClass = CLASS_NONE;  //safe default?  (value: 0)
 
 	madInterSentencesLocation = madInterSentences;
 	//madInterSentencesMaxLocation = &madInterSentencesMax;
@@ -1427,15 +1356,11 @@ void CBarney :: TalkInit()
 
 GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBarney)
 {
-
-
 	//MODDD - all Barney damage is getting delegated to general TalkMonster's.
 	return GENERATE_TAKEDAMAGE_PARENT_CALL(CTalkMonster);
 }
 
 	
-
-
 
 void CBarney::PainSound(void){
 	PainSound(FALSE); //by default, typical. Obey the cooldown.
@@ -1460,10 +1385,6 @@ void CBarney :: PainSound ( BOOL bypassCooldown )
 
 
 
-
-
-
-
 //=========================================================
 // DeathSound 
 //=========================================================
@@ -1476,8 +1397,6 @@ void CBarney :: DeathSound ( void )
 	case 2: EMIT_SOUND_FILTERED( ENT(pev), CHAN_VOICE, "barney/ba_die3.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
 	}
 }
-
-
 
 
 //MODDD TODO - should explosion damage (DMG_BLAST) even pay attention to hitbox at all?
@@ -1514,7 +1433,6 @@ GENERATE_TRACEATTACK_IMPLEMENTATION(CBarney)
 }
 
 
-
 GENERATE_KILLED_IMPLEMENTATION(CBarney)
 {
 	if ( pev->body < BARNEY_BODY_GUNGONE )
@@ -1544,7 +1462,6 @@ GENERATE_KILLED_IMPLEMENTATION(CBarney)
 				}
 			}
 		}//END OF if(pGun != NULL)
-
 
 	}
 
@@ -1652,81 +1569,53 @@ Schedule_t* CBarney :: GetScheduleOfType ( int Type )
 
 
 
-
-
 //MODDD .... yep.
 void CBarney::womboCombo(void){
-	
-		//wombo combo.
-		//Gather' round all the NPCs.
+	//wombo combo.
+	//Gather' round all the NPCs.
+	//check for allied NPCs to heal if not following.
+	CBaseEntity* pEntityScan = NULL;
+	CBaseEntity* testMon = NULL;
+	float thisDistance;
+	float leastDistanceYet;
+	CTalkMonster* thisNameSucks;
+	CTalkMonster* bestChoiceYet;
+	float thisNameSucksExtraMax = 3;
+	//I'm number 1!
+	CTalkMonster* pickedNumber2 = NULL;
+	CTalkMonster* pickedNumber3 = NULL;
 
-
-			
-		//check for allied NPCs to heal if not following.
-		CBaseEntity* pEntityScan = NULL;
-		CBaseEntity* testMon = NULL;
-		float thisDistance;
-		float leastDistanceYet;
-		CTalkMonster* thisNameSucks;
-		CTalkMonster* bestChoiceYet;
-
-
-		float thisNameSucksExtraMax = 3;
-
-		//I'm number 1!
-		CTalkMonster* pickedNumber2 = NULL;
-		CTalkMonster* pickedNumber3 = NULL;
-
-		//does UTIL_MonstersInSphere work?
-		while ((pEntityScan = UTIL_FindEntityInSphere( pEntityScan, pev->origin, 800 )) != NULL)
-		{
-			testMon = pEntityScan->MyMonsterPointer();
-			//if(testMon != NULL && testMon->pev != this->pev && ( FClassnameIs(testMon->pev, "monster_scientist") || FClassnameIs(testMon->pev, "monster_barney")  ) ){
-			if(testMon != NULL && testMon->pev != this->pev && UTIL_IsAliveEntity(testMon) && testMon->isTalkMonster() ){
-				thisDistance = (testMon->pev->origin - pev->origin).Length();
-					
-				thisNameSucks = static_cast<CTalkMonster*>(testMon);
-					
-				/*
-				//only allow one scientist to try to reach this NPC.  That is, this NPC's own "scientistTryingToHealMe" is null, that is.
-				if(thisNameSucks != NULL && thisNameSucks->scientistTryingToHealMeEHANDLE == NULL && thisDistance < leastDistanceYet){
-					//healTargetNPC = testMon;
-					bestChoiceYet = thisNameSucks;
-					leastDistanceYet = thisDistance;
-					//break;
-				}
-				*/
-
-				if(pickedNumber2 == NULL){
-					pickedNumber2 = thisNameSucks;
-				}else if(pickedNumber3 == NULL){
-					pickedNumber3 = thisNameSucks;
-				}else if(thisNameSucksExtraMax > 0){
-					thisNameSucks->PlaySentence("!wombocrowd", 39, 0.9, ATTN_NORM);
-					thisNameSucksExtraMax--;
-				}
-
-				if(thisNameSucksExtraMax <= 0){
-					break;
-				}
-
-
+	//does UTIL_MonstersInSphere work?
+	while ((pEntityScan = UTIL_FindEntityInSphere( pEntityScan, pev->origin, 800 )) != NULL)
+	{
+		testMon = pEntityScan->MyMonsterPointer();
+		//if(testMon != NULL && testMon->pev != this->pev && ( FClassnameIs(testMon->pev, "monster_scientist") || FClassnameIs(testMon->pev, "monster_barney")  ) ){
+		if(testMon != NULL && testMon->pev != this->pev && UTIL_IsAliveEntity(testMon) && testMon->isTalkMonster() ){
+			thisDistance = (testMon->pev->origin - pev->origin).Length();
+			thisNameSucks = static_cast<CTalkMonster*>(testMon);
+			if(pickedNumber2 == NULL){
+				pickedNumber2 = thisNameSucks;
+			}else if(pickedNumber3 == NULL){
+				pickedNumber3 = thisNameSucks;
+			}else if(thisNameSucksExtraMax > 0){
+				thisNameSucks->PlaySentence("!wombocrowd", 39, 0.9, ATTN_NORM);
+				thisNameSucksExtraMax--;
 			}
-
-		}//END OF while(...)
-
-		if(pickedNumber2 != NULL && pickedNumber3 != NULL){
-			//WE GOT A COMBO!!!
-			this->PlaySentence("!wombo1", 39, 0.9, ATTN_NORM);
-			pickedNumber2->PlaySentence("!wombo2", 39, 0.9, ATTN_NORM);
-			pickedNumber3->PlaySentence("!wombo3", 39, 0.9, ATTN_NORM);
-		}else{
-			PlaySentence( "BA_POKE_B", 6, VOL_NORM, ATTN_NORM );
+			if(thisNameSucksExtraMax <= 0){
+				break;
+			}
 		}
+	}//END OF while(...)
 
-
+	if(pickedNumber2 != NULL && pickedNumber3 != NULL){
+		//WE GOT A COMBO!!!
+		this->PlaySentence("!wombo1", 39, 0.9, ATTN_NORM);
+		pickedNumber2->PlaySentence("!wombo2", 39, 0.9, ATTN_NORM);
+		pickedNumber3->PlaySentence("!wombo3", 39, 0.9, ATTN_NORM);
+	}else{
+		PlaySentence( "BA_POKE_B", 6, VOL_NORM, ATTN_NORM );
+	}
 }
-
 
 
 //=========================================================
@@ -1737,8 +1626,6 @@ void CBarney::womboCombo(void){
 //=========================================================
 Schedule_t *CBarney :: GetSchedule ( void )
 {
-
-
 	//MODDD - new block. If the one I was following recently died, get scared.
 	if(leaderRecentlyDied){
 		leaderRecentlyDied = FALSE;
@@ -1749,10 +1636,7 @@ Schedule_t *CBarney :: GetSchedule ( void )
 	}
 
 
-
-	
 	//easyForcePrintLine("MY timer %d    %d %d %d ::: %.2f %.2f", m_fGunDrawn, HasConditions( bits_COND_HEAR_SOUND ), HasConditions(bits_COND_SEE_ENEMY), HasConditions(bits_COND_NEW_ENEMY), gpGlobals->time, unholsterTimer);
-
 
 	canUnholster=FALSE;
 	if(EASY_CVAR_GET(barneyUnholsterTime) != -1 && m_fGunDrawn){
@@ -1764,10 +1648,7 @@ Schedule_t *CBarney :: GetSchedule ( void )
 		if(unholsterTimer != -1 && gpGlobals->time >= unholsterTimer){
 			canUnholster = TRUE;
 		}
-
 	}
-
-
 
 	if ( HasConditions( bits_COND_HEAR_SOUND ) )
 	{
@@ -1778,89 +1659,12 @@ Schedule_t *CBarney :: GetSchedule ( void )
 		if ( pSound && (pSound->m_iType & bits_SOUND_DANGER) )
 			return GetScheduleOfType( SCHED_TAKE_COVER_FROM_BEST_SOUND );
 	}
-	if ( HasConditions( bits_COND_ENEMY_DEAD ) && FOkToSpeak() )
+	if ( HasConditions( bits_COND_ENEMY_DEAD ) )
 	{
-
-
-
-		if(EASY_CVAR_GET(pissedNPCs) == 0  || !globalPSEUDO_iCanHazMemez){
-			
-			//MODDD - intervention again.
-			// Who says "That'll look great in my trophie room" after killing people?
-			// Madman.
-			//MODDD - oh shit, todo.  Right, the enemy's dead...
-			// would've had to remember the Classify of the recently removed enemy.
-			PlaySentence( "BA_KILL", 4, VOL_NORM, ATTN_NORM );
-
-
-
-			/*
-			int enemyClassify = m_hEnemy->Classify();
-			//long randoRange;
-			if (enemyClassify == CLASS_PLAYER) {
-				
-				switch (RANDOM_LONG(0, 2)) {
-				case 0:
-					PlaySentence("BA_KILL3", 3, VOL_NORM, ATTN_NORM);
-					break;
-				case 1:
-					PlaySentenceSingular("BA_KILL4", 4, VOL_NORM, ATTN_NORM);
-					break;
-				case 2:
-					PlaySentenceSingular("BA_KILL6", 4, VOL_NORM, ATTN_NORM);
-					break;
-				}
-			}
-			else if (
-				enemyClassify == CLASS_ALIEN_MILITARY ||
-				enemyClassify == CLASS_ALIEN_PASSIVE ||
-				enemyClassify == CLASS_ALIEN_MONSTER
-				) {
-				// smarter aliens? all good.
-				PlaySentence("BA_KILL", 4, VOL_NORM, ATTN_NORM);
-			}
-			else if (
-				enemyClassify == CLASS_ALIEN_PREY ||
-				enemyClassify == CLASS_ALIEN_PREDATOR ||
-				enemyClassify == CLASS_BARNACLE ||
-				enemyClassify == CLASS_ALIEN_BIOWEAPON ||
-				enemyClassify == CLASS_PLAYER_BIOWEAPON
-				) {
-				// animal aliens? all good.
-				PlaySentence("BA_KILL", 4, VOL_NORM, ATTN_NORM);
-			}
-			else {
-				// human or robotic?
-
-				switch (RANDOM_LONG(0, 2)) {
-				case 0:
-					PlaySentence("BA_KILL3", 3, VOL_NORM, ATTN_NORM);
-					break;
-				case 1:
-					PlaySentenceSingular("BA_KILL4", 4, VOL_NORM, ATTN_NORM);
-					break;
-				case 2:
-					PlaySentenceSingular("BA_KILL6", 4, VOL_NORM, ATTN_NORM);
-					break;
-				}
-			}//END OF enemy classify check
-			*/
-
-
-			if(EASY_CVAR_GET(barneyUnholsterTime) != -1 && unholsterTimer != -1){
-				//MODDD - go ahead and add some randomness to the unholster timer... can't hurt.
-				unholsterTimer += RANDOM_FLOAT(0, 3);
-			}
-
-		}else if(EASY_CVAR_GET(pissedNPCs) == 1){
-			if(RANDOM_FLOAT(0, 24) == 0){
-				womboCombo();
-			}else{
-				PlaySentence( "BA_POKE_B", 6, VOL_NORM, ATTN_NORM );
-			}
-		}else if(EASY_CVAR_GET(pissedNPCs) == 2){
-			//guaranteed wombo combo... maybe.
-			womboCombo();
+		// BREAKPOINT?
+		int x = 346;
+		if (FOkToSpeak()) {
+			talkAboutKilledEnemy();
 		}
 	}
 
@@ -1927,10 +1731,6 @@ Schedule_t *CBarney :: GetSchedule ( void )
 		}
 
 
-
-
-
-
 		if ( m_hEnemy == NULL && IsFollowing() )
 		{
 			if ( !m_hTargetEnt->IsAlive() )
@@ -1972,14 +1772,11 @@ Schedule_t *CBarney :: GetSchedule ( void )
 	}
 
 
-
 	if(canUnholster){
 		//try.
 		return GetScheduleOfType( SCHED_BARNEY_DISARM_WEAPON );
 	}
 
-
-	
 	return CTalkMonster::GetSchedule();
 }
 
@@ -1987,7 +1784,6 @@ MONSTERSTATE CBarney :: GetIdealState ( void )
 {
 	return CTalkMonster::GetIdealState();
 }
-
 
 
 void CBarney::DeclineFollowing( void )
@@ -1999,15 +1795,6 @@ void CBarney::DeclineFollowing( void )
 		playPissed();
 	}
 }
-
-//MODDD - new.
-/*
-void CBarney::playPissed(){
-	PlaySentence( "BA_POKE", RANDOM_FLOAT(2.8, 3.2), VOL_NORM, ATTN_IDLE );
-
-}
-*/
-
 
 
 //=========================================================
@@ -2127,7 +1914,6 @@ void CDeadBarney :: Spawn( )
 }
 
 
-
 void CBarney::HandleEventQueueEvent(int arg_eventID){
 	int rand;
 	BOOL pass;
@@ -2226,6 +2012,9 @@ int CBarney::LookupActivityHard(int activity){
 				//Not talking?  One more filter...
 				//Are we in predisaster?
 				if(FBitSet(pev->spawnflags, SF_MONSTER_PREDISASTER)){
+					// Idle's 2 and 4 are a little paranoid looking for a non-dangerous situation,
+					// or while talking (see above, even #3 is dropped).
+
 					//Don't allow "idle_look". We have no reason to look scared yet, ordinary day so far.
 					const int animationWeightTotal = 50+10;
 					const int animationWeightChoice = RANDOM_LONG(0, animationWeightTotal-1);
@@ -2243,12 +2032,10 @@ int CBarney::LookupActivityHard(int activity){
 			}//END OF IsTalking check
 			
 		break;}
-		/*
 		case ACT_VICTORY_DANCE:
 			m_flFramerateSuggestion = 1.11;
 			return LookupSequence("hambone");
 		break;
-		*/
 
 	}//END OF switch
 	//not handled by above?  try the real deal.
@@ -2259,14 +2046,10 @@ int CBarney::LookupActivityHard(int activity){
 int CBarney::tryActivitySubstitute(int activity){
 	int iRandChoice = 0;
 	int iRandWeightChoice = 0;
-	
 	char* animChoiceString = NULL;
 	int* weightsAbs = NULL;
-			
 	//pev->framerate = 1;
 	int maxRandWeight = 30;
-
-
 
 	//no need for default, just falls back to the normal activity lookup.
 	switch(activity){
@@ -2283,11 +2066,12 @@ int CBarney::tryActivitySubstitute(int activity){
 				return CBaseAnimating::LookupActivity(activity);
 			}
 		break;
-		/*
 		case ACT_VICTORY_DANCE:
-			return LookupSequence("hambone");
+			// a small portion of the time, allow this stupid little dance.   why not.
+			if (RANDOM_FLOAT(0, 1) < 0.08) {
+				return LookupSequence("hambone");
+			}
 		break;
-		*/
 
 	}//END OF switch
 	
@@ -2296,22 +2080,18 @@ int CBarney::tryActivitySubstitute(int activity){
 }
 
 
-
-
 BOOL CBarney::canResetBlend0(void){
 	return TRUE;
 }
 
 
 BOOL CBarney::onResetBlend0(void){
-
 	//easyForcePrintLine("HOW IT GO   %d", (m_hEnemy!=NULL));
 	if (m_hEnemy == NULL)
 	{
 		return FALSE;
 	}
 
-	
 	//NOTICE: may be a good idea to do this first.  ShootAtEnemy may use the global forward vector generated by this.
 	UTIL_MakeVectors(pev->angles);
 
@@ -2331,11 +2111,6 @@ BOOL CBarney::onResetBlend0(void){
 }
 
 
-
-
-
-
-
 BOOL CBarney::violentDeathAllowed(void){
 	return TRUE;
 }
@@ -2351,4 +2126,97 @@ int CBarney::violentDeathPriority(void){
 // both use the hacked gun position instead.  AGrunt shows querying the model itself for GetGunPosition instead,
 // which may or may not be present in the barney model or even worthwhile at this point.
 
+
+
+// TODOish? - barney cannot talk about enemies that have been gibbed, they don't even make it to CheckEnemy in basemonster.cpp,
+// which leads to calling onEnemyDead below which sets the recent class for basing comments off of for barney.
+// Not too big of a deal though, barney can't gib stuff so why should he try to take credit for gibbed kills.
+void CBarney::talkAboutKilledEnemy(void) {
+	if (EASY_CVAR_GET(pissedNPCs) == 0 || !globalPSEUDO_iCanHazMemez) {
+		//MODDD - intervention again.
+		// Who says "That'll look great in my trophie room" after killing people?
+		// Madman.
+		// And don't get from "m_hEnemy", as the whole point is they're recently dead.
+		// m_hEnemy might have already been wiped.
+
+		int enemyClassify = recentDeadEnemyClass;
+		//long randoRange;
+
+		if (enemyClassify == CLASS_NONE) {
+			// Really nothing? Go through all quotes as usual then.
+			PlaySentence("BA_KILL", 4, VOL_NORM, ATTN_NORM);
+		}
+		else if (enemyClassify == CLASS_PLAYER) {
+
+			switch (RANDOM_LONG(0, 2)) {
+			case 0:
+				PlaySentenceSingular("BA_KILL3", 3, VOL_NORM, ATTN_NORM);
+				break;
+			case 1:
+				PlaySentenceSingular("BA_KILL4", 4, VOL_NORM, ATTN_NORM);
+				break;
+			case 2:
+				PlaySentenceSingular("BA_KILL6", 4, VOL_NORM, ATTN_NORM);
+				break;
+			}
+		}
+		else if (
+			enemyClassify == CLASS_ALIEN_MILITARY ||
+			enemyClassify == CLASS_ALIEN_PASSIVE ||
+			enemyClassify == CLASS_ALIEN_MONSTER
+			) {
+			// smarter aliens? all good.
+			PlaySentence("BA_KILL", 4, VOL_NORM, ATTN_NORM);
+		}
+		else if (
+			enemyClassify == CLASS_ALIEN_PREY ||
+			enemyClassify == CLASS_ALIEN_PREDATOR ||
+			enemyClassify == CLASS_BARNACLE ||
+			enemyClassify == CLASS_ALIEN_BIOWEAPON ||
+			enemyClassify == CLASS_PLAYER_BIOWEAPON
+			) {
+			// animal aliens? all good.
+			PlaySentence("BA_KILL", 4, VOL_NORM, ATTN_NORM);
+		}
+		else {
+			// human or robotic?
+
+			switch (RANDOM_LONG(0, 2)) {
+			case 0:
+				PlaySentenceSingular("BA_KILL3", 3, VOL_NORM, ATTN_NORM);
+				break;
+			case 1:
+				PlaySentenceSingular("BA_KILL4", 4, VOL_NORM, ATTN_NORM);
+				break;
+			case 2:
+				PlaySentenceSingular("BA_KILL6", 4, VOL_NORM, ATTN_NORM);
+				break;
+			}
+		}//END OF enemy classify check
+
+
+		if (EASY_CVAR_GET(barneyUnholsterTime) != -1 && unholsterTimer != -1) {
+			//MODDD - go ahead and add some randomness to the unholster timer... can't hurt.
+			unholsterTimer += RANDOM_FLOAT(0, 3);
+		}
+	}
+	else if (EASY_CVAR_GET(pissedNPCs) == 1) {
+		if (RANDOM_FLOAT(0, 24) == 0) {
+			womboCombo();
+		}
+		else {
+			PlaySentence("BA_POKE_B", 6, VOL_NORM, ATTN_NORM);
+		}
+	}
+	else if (EASY_CVAR_GET(pissedNPCs) == 2) {
+		//guaranteed wombo combo... maybe.
+		womboCombo();
+	}
+}
+
+
+// pRecentEnemy can never be NULL.
+void CBarney::onEnemyDead(CBaseEntity* pRecentEnemy) {
+	recentDeadEnemyClass = pRecentEnemy->Classify();;
+}
 

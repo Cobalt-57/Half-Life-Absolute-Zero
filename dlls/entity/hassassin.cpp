@@ -1086,7 +1086,7 @@ void CHAssassin :: HandleAnimEvent( MonsterEvent_t *pEvent )
 				this->m_fSequenceLoops = FALSE;
 
 				UTIL_MakeVectors(pev->angles);
-				CGrenade::ShootTimed(pev, pev->origin + gpGlobals->v_forward * 34 + Vector(0, 0, 32), m_vecTossVelocity, 2.0);
+				CGrenade::ShootTimed(pev, pev->origin + gpGlobals->v_forward * 34 + Vector(0, 0, 32), m_vecTossVelocity, gSkillData.plrDmgHandGrenade, 2.0);
 
 				m_flNextGrenadeCheck = gpGlobals->time + 6;// wait six seconds before even looking again to see if a grenade can be thrown.
 				m_fThrowGrenade = FALSE;
@@ -1309,7 +1309,6 @@ BOOL CHAssassin :: CheckMeleeAttack2 ( float flDot, float flDist )
 	}
 	return FALSE;
 }
-
 
 
 //=========================================================

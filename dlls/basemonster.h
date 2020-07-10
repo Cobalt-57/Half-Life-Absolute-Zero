@@ -17,20 +17,52 @@
 #define BASEMONSTER_H
 
 
-
 #include "cbase.h"
-
 #include "basetoggle.h"
-
-//Moved to here from monsters.h.
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #include "skill.h"
 
+// monsters.h merged with this file.
 
 #define DEFAULT_FORGET_SMALL_FLINCH_TIME 12
 #define DEFAULT_FORGET_BIG_FLINCH_TIME 6
+
+
+//MODDD - new constant for convenience, all other CoverRadius methods should be some multiple of this.
+// Default was 784,  boosted to 1000.   Same for some others (Scientist, Panthereye) using 1200 boosted then, since they used to use 1.5 times this instead.
+// (now 1.8 times).
+#define DEFAULT_COVER_SEEK_DISTANCE 1000
+
+
+//MODDD - moved here from the since deleted h_ai.cpp.  Not sure why it wasn't always here with the others.
+// Never referred to anywhere?  What's the point.
+//DLL_GLOBAL BOOL g_fDrawLines = FALSE;
+
+
+//MODDD
+// These were in h_ai.cpp too?  Not some .h file included in some places?
+// Not even referred to anywhere.  GOODBYE.
+//#define NUM_LATERAL_CHECKS 13  // how many checks are made on each side of a monster looking for lateral cover
+//#define NUM_LATERAL_LOS_CHECKS 6  // how many checks are made on each side of a monster looking for lateral cover
+
+
+
+#define RANDOMWANDER_TRIES 4
+
+
+//MODDD - new. How fast this creature floats to the top. Divided by two each time it reaches the top and floats down until it is
+//        slow enough to be deemed stationary and kill the think method like most monsters do.
+//        This avoids annoying water wade sounds while it rapidly moves between water levels.
+// IMPORTANT - If the water level could ever be changed, the think method shouldn't be killed. There can be checks to see if the
+//             water level changes after being stationary (float / sink again at full speed), or a timing check to restore the
+//             floatSinkSpeed to its full (initial) value if too much time passes without switching.
+//             Without this a diffferent waterlevel would leave this creatue stuck where it stopped thinking.
+#define WATER_DEAD_SINKSPEED_INITIAL 8
+
+
+
+
+
+
 
 
 // CHECKLOCALMOVE result types 
@@ -147,30 +179,6 @@
 
 
 
-extern void UTIL_MoveToOrigin( edict_t* pent, const Vector &vecGoal, float flDist, int iMoveType ); 
-
-
-//MODDD - prototypes for h_ai.cpp methods (FBoxVisible, VecCheckToss, VecCheckThrow) moved to util.h.
-// Implementations too (util.cpp) since that file got deleted.
-extern DLL_GLOBAL Vector		g_vecAttackDir;
-extern DLL_GLOBAL CONSTANT float g_flMeleeRange;
-extern DLL_GLOBAL CONSTANT float g_flMediumRange;
-extern DLL_GLOBAL CONSTANT float g_flLongRange;
-
-//MODDD - moved here from the since deleted h_ai.cpp.  Not sure why it wasn't always here with the others.
-// Never referred to anywhere?  What's the point.
-//DLL_GLOBAL BOOL g_fDrawLines = FALSE;
-
-
-//MODDD
-// These were in h_ai.cpp too?  Not some .h file included in some places?
-// Not even referred to anywhere.  GOODBYE.
-//#define NUM_LATERAL_CHECKS 13  // how many checks are made on each side of a monster looking for lateral cover
-//#define NUM_LATERAL_LOS_CHECKS 6  // how many checks are made on each side of a monster looking for lateral cover
-
-
-
-
 
 
 //NOTICE - "monster to monster" relationship constnats moved to cbase.h because base entities have some relationship-related methods.
@@ -199,9 +207,81 @@ extern DLL_GLOBAL CONSTANT float g_flLongRange;
 
 
 
-#define RANDOMWANDER_TRIES 4
+#define PARALYZE_DURATION	30		// number of 2 second intervals to take damage
+#define PARALYZE_DAMAGE		0.0		// damage to take each 2 second interval
+
+#define NERVEGAS_DURATION	16
+#define NERVEGAS_DAMAGE		5.0
+
+#define POISON_DURATION		25
+#define POISON_DAMAGE		2.0
+
+#define RADIATION_DURATION	50
+#define RADIATION_DAMAGE	1.0
+
+#define ACID_DURATION		10
+#define ACID_DAMAGE			5.0
+
+#define SLOWBURN_DURATION	2
+#define SLOWBURN_DAMAGE		1.0
+
+#define SLOWFREEZE_DURATION	1.0
+#define SLOWFREEZE_DAMAGE	3.0
 
 
+#define PARALYZE_DURATION_EASY	21
+#define PARALYZE_DURATION_MEDIUM	30
+#define PARALYZE_DURATION_HARD	39
+#define PARALYZE_DAMAGE		0.0
+
+#define NERVEGAS_DURATION_EASY	12
+#define NERVEGAS_DURATION_MEDIUM	16
+#define NERVEGAS_DURATION_HARD	20
+#define NERVEGAS_DAMAGE		5.0
+
+#define POISON_DURATION_EASY		18
+#define POISON_DURATION_MEDIUM		25
+#define POISON_DURATION_HARD		32
+#define POISON_DAMAGE		2.0
+
+#define RADIATION_DURATION_EASY	35
+#define RADIATION_DURATION_MEDIUM	50
+#define RADIATION_DURATION_HARD	65
+#define RADIATION_DAMAGE	1.0
+
+#define ACID_DURATION_EASY		7
+#define ACID_DURATION_MEDIUM		10
+#define ACID_DURATION_HARD		13
+#define ACID_DAMAGE			5.0
+
+#define SLOWBURN_DURATION_EASY	1
+#define SLOWBURN_DURATION_MEDIUM	2
+#define SLOWBURN_DURATION_HARD	3
+#define SLOWBURN_DAMAGE		1.0
+
+#define SLOWFREEZE_DURATION_EASY	1.0
+#define SLOWFREEZE_DURATION_MEDIUM	1.0
+#define SLOWFREEZE_DURATION_HARD	2.0
+#define SLOWFREEZE_DAMAGE	3.0
+
+#define BLEEDING_DURATION_EASY	11.0
+#define BLEEDING_DURATION_MEDIUM	15.0
+#define BLEEDING_DURATION_HARD	19.0
+#define BLEEDING_DAMAGE 1.0
+
+
+
+//MODDD - prototypes for h_ai.cpp methods (FBoxVisible, VecCheckToss, VecCheckThrow) moved to util.h.
+// Implementations too (util.cpp) since that file got deleted.
+extern DLL_GLOBAL Vector g_vecAttackDir;
+extern DLL_GLOBAL CONSTANT float g_flMeleeRange;
+extern DLL_GLOBAL CONSTANT float g_flMediumRange;
+extern DLL_GLOBAL CONSTANT float g_flLongRange;
+
+
+
+
+extern void UTIL_MoveToOrigin(edict_t* pent, const Vector& vecGoal, float flDist, int iMoveType);
 
 
 
@@ -238,219 +318,116 @@ enum
 
 
 
-//MODDD - new. How fast this creature floats to the top. Divided by two each time it reaches the top and floats down until it is
-//        slow enough to be deemed stationary and kill the think method like most monsters do.
-//        This avoids annoying water wade sounds while it rapidly moves between water levels.
-// IMPORTANT - If the water level could ever be changed, the think method shouldn't be killed. There can be checks to see if the
-//             water level changes after being stationary (float / sink again at full speed), or a timing check to restore the
-//             floatSinkSpeed to its full (initial) value if too much time passes without switching.
-//             Without this a diffferent waterlevel would leave this creatue stuck where it stopped thinking.
-#define WATER_DEAD_SINKSPEED_INITIAL 8
-
-
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 //
 // generic Monster
 //
 class CBaseMonster : public CBaseToggle
 {
 private:
-		int				m_afConditions;
+	int m_afConditions;
 
-		//MODDD - new, for the m_afConditionsFrame instead. This var is similar to m_afConditions but retains conditions throughout one frame of gamelogic.
-		//        That is, schedule changes don't reset this. But the starting "RunTask" call in monsterstate.cpp "MaintainSchedule" resets this.
-		int m_afConditionsFrame;
+	//MODDD - new, for the m_afConditionsFrame instead. This var is similar to m_afConditions but retains conditions throughout one frame of gamelogic.
+	//        That is, schedule changes don't reset this. But the starting "RunTask" call in monsterstate.cpp "MaintainSchedule" resets this.
+	int m_afConditionsFrame;
 
 public:
-		typedef enum
-		{
-			SCRIPT_PLAYING = 0,		// Playing the sequence
-			SCRIPT_WAIT,				// Waiting on everyone in the script to be ready
-			SCRIPT_CLEANUP,					// Cancelling the script / cleaning up
-			SCRIPT_WALK_TO_MARK,
-			SCRIPT_RUN_TO_MARK,
-		} SCRIPTSTATE;
+	typedef enum
+	{
+		SCRIPT_PLAYING = 0,		// Playing the sequence
+		SCRIPT_WAIT,				// Waiting on everyone in the script to be ready
+		SCRIPT_CLEANUP,					// Cancelling the script / cleaning up
+		SCRIPT_WALK_TO_MARK,
+		SCRIPT_RUN_TO_MARK,
+	} SCRIPTSTATE;
 
 
-		//MODDD - moved outside iRelationship.
-		static int iEnemy[14][14];
+	//MODDD - moved outside iRelationship.
+	static int iEnemy[14][14];
 
-		//MODDD - new, for all monsters. Because the zombie ones are reused so much.
-		static const char *pStandardAttackHitSounds[];
-		static const char *pStandardAttackMissSounds[];
+	//MODDD - new, for all monsters. Because the zombie ones are reused so much.
+	static const char *pStandardAttackHitSounds[];
+	static const char *pStandardAttackMissSounds[];
 
 
-		//new
-		BOOL disableEnemyAutoNode;
-		BOOL waitForMovementTimed_Start;
+	static float paralyzeDuration;
+	static float nervegasDuration;
+	static float poisonDuration;
+	static float radiationDuration;
+	static float acidDuration;
+	static float slowburnDuration;
+	static float slowfreezeDuration;
+	static float bleedingDuration;
+
+	static Schedule_t* m_scheduleList[];
+
+
+	//new
+	BOOL disableEnemyAutoNode;
+	BOOL waitForMovementTimed_Start;
 		
-		BOOL investigatingAltLKP;
-		Vector m_vecEnemyLKP_Real;
+	BOOL investigatingAltLKP;
+	Vector m_vecEnemyLKP_Real;
 		
-		//MODDD - new
-		CBaseMonster(void);
-		virtual BOOL usesSoundSentenceSave(void);
-		BOOL canSetAnim;
-		BOOL m_fNewScheduleThisFrame;
+	BOOL canSetAnim;
+	BOOL m_fNewScheduleThisFrame;
 
-		BOOL canDrawDebugSurface;
+	BOOL canDrawDebugSurface;
 
-		static int monsterIDLatest;
-		int monsterID;
+	static int monsterIDLatest;
+	int monsterID;
 
-		Vector m_vecEnemyLKP_prev;
+	Vector m_vecEnemyLKP_prev;
 
-		BOOL signalActivityUpdate;
-		BOOL forceFlyInterpretation;
-
-		//void smartResize();
-		virtual BOOL getHasPathFindingMod();
-		virtual BOOL getHasPathFindingModA();
-		//this is okay to be virtual, yes?
-		virtual BOOL NoFriendlyFireImp(const Vector& startVec, const Vector& endVec);
-		virtual BOOL forceIdleFrameReset(void);
-
-		virtual void onNewRouteNode(void);
-		
-		virtual void setPhysicalHitboxForDeath(void);
-		virtual void DeathAnimationStart(void);
-		virtual void DeathAnimationEnd(void);
-		virtual void onDeathAnimationEnd(void);
-
-		virtual int LookupActivityFiltered(int NewAcitivty);
-		virtual int LookupActivity(int NewActivity);
-		virtual int LookupActivityHeaviest(int NewActivity);
-
-		virtual void OnTakeDamageSetConditions(entvars_t *pevInflictor, entvars_t *pevAttacker, float flDamage, int bitsDamageType, int bitsDamageTypeMod);
-
-		//MODDD - okay
-		Vector debugVector1;
-		Vector debugVector2;
-		Vector debugVector3;
-		Vector debugVector4;
-		BOOL debugVectorsSet;
-		BOOL debugFailColor;
-		BOOL debugVectorPrePass;
-		int debugVectorMode;
-
-		BOOL forceNoDrop;
-
-		BOOL fApplyTempVelocity;
-		Vector velocityApplyTemp;
-
-		BOOL drawPathConstant;
-		BOOL drawFieldOfVisionConstant;
+	BOOL signalActivityUpdate;
+	BOOL forceFlyInterpretation;
 
 
 
+	// these fields have been added in the process of reworking the state machine. (sjb)
+	EHANDLE				m_hEnemy;		 // the entity that the monster is fighting.
+	EHANDLE				m_hTargetEnt;	 // the entity that the monster is trying to reach
 
-		//MODDD - new, pertaining to "takeDamage".
-		BOOL blockDamage;
-		BOOL buddhaMode;
-		BOOL blockTimedDamage;
-
-		//MODDD - new, to block state changes when pulled up.
-		//possible glitch that enemies just stay stuck in a standing animation while pulled up?  This may solve that.
-		BOOL barnacleLocked;
-		MONSTERSTATE		queuedMonsterState;
-
-		
-		float forgetSmallFlinchTime;
-		float forgetBigFlinchTime;
-
-		float lastDamageReceived;
+	EHANDLE				m_hOldEnemy[MAX_OLD_ENEMIES];
+	Vector				m_vecOldEnemy[MAX_OLD_ENEMIES];
+	//It shall use the stack!
+	//Use this variable to record the most recent addition to take instead.
+	int m_intOldEnemyNextIndex;
 
 
+	float			m_flFieldOfView;// width of monster's field of view ( dot product )
+	float			m_flWaitFinished;// if we're told to wait, this is the time that the wait will be over.
+	float			m_flMoveWaitFinished;
 
+	Activity			m_Activity;// what the monster is doing (animation)
+	Activity			m_IdealActivity;// monster should switch to this activity
 
+	int				m_LastHitGroup; // the last body region that took damage
 
-		BOOL targetIsDeadException;
+	MONSTERSTATE		m_MonsterState;// monster's current state
+	MONSTERSTATE		m_IdealMonsterState;// monster should change to this state
 
-		BOOL canRangedAttack1;
-		BOOL canRangedAttack2;
-		
+	int				m_iTaskStatus;
+	Schedule_t* m_pSchedule;
+	int				m_iScheduleIndex;
 
+	WayPoint_t			m_Route[ROUTE_SIZE];	// Positions of movement
+	int				m_movementGoal;			// Goal that defines route
+	int				m_iRouteIndex;			// index into m_Route[]
+	float			m_moveWaitTime;			// How long I should wait for something to move
 
-		virtual void setAnimationSmart(const char* arg_animName);
-		virtual void setAnimationSmart(const char* arg_animName, float arg_frameRate);
-		virtual void setAnimationSmart(int arg_animIndex, float arg_frameRate);
-		virtual void setAnimationSmartAndStop(const char* arg_animName);
-		virtual void setAnimationSmartAndStop(const char* arg_animName, float arg_frameRate);
-		virtual void setAnimationSmartAndStop(int arg_animIndex, float arg_frameRate);
-		
-		virtual BOOL usesAdvancedAnimSystem(void);
+	Vector				m_vecMoveGoal; // kept around for node graph moves, so we know our ultimate goal
+	Activity			m_movementActivity;	// When moving, set this activity
 
-		void setAnimation(char* animationName);
-		void setAnimation(char* animationName, BOOL forceException);
-		void setAnimation(char* animationName, BOOL forceException, BOOL forceLoopsProperty);
-		void setAnimation(char* animationName, BOOL forceException, BOOL forceLoopsProperty, int extraLogic);
+	int				m_iAudibleList; // first index of a linked list of sounds that the monster can hear.
+	int				m_afSoundTypes;
 
-		virtual BOOL isSizeGiant(void);
-		virtual BOOL isOrganic(void);
-		virtual BOOL isOrganicLogic(void);
+	Vector				m_vecLastPosition;// monster sometimes wants to return to where it started after an operation.
 
-		virtual float getBarnaclePulledTopOffset(void);
+	int				m_iHintNode; // this is the hint node that the monster is moving towards or performing active idle on.
 
-		virtual float getBarnacleForwardOffset(void);
-		virtual float getBarnacleAnimationFactor(void);
+	int				m_afMemory;
 
-
-
-
-
-	
-		// these fields have been added in the process of reworking the state machine. (sjb)
-		EHANDLE				m_hEnemy;		 // the entity that the monster is fighting.
-		EHANDLE				m_hTargetEnt;	 // the entity that the monster is trying to reach
-		
-		EHANDLE				m_hOldEnemy[ MAX_OLD_ENEMIES ];
-		Vector				m_vecOldEnemy[ MAX_OLD_ENEMIES ];
-		//It shall use the stack!
-		//Use this variable to record the most recent addition to take instead.
-		int m_intOldEnemyNextIndex;
-
-		
-
-
-
-		float			m_flFieldOfView;// width of monster's field of view ( dot product )
-		float			m_flWaitFinished;// if we're told to wait, this is the time that the wait will be over.
-		float			m_flMoveWaitFinished;
-
-		Activity			m_Activity;// what the monster is doing (animation)
-		Activity			m_IdealActivity;// monster should switch to this activity
-		
-		int				m_LastHitGroup; // the last body region that took damage
-		
-		MONSTERSTATE		m_MonsterState;// monster's current state
-		MONSTERSTATE		m_IdealMonsterState;// monster should change to this state
-	
-		int				m_iTaskStatus;
-		Schedule_t			*m_pSchedule;
-		int				m_iScheduleIndex;
-
-		WayPoint_t			m_Route[ ROUTE_SIZE ];	// Positions of movement
-		int				m_movementGoal;			// Goal that defines route
-		int				m_iRouteIndex;			// index into m_Route[]
-		float			m_moveWaitTime;			// How long I should wait for something to move
-
-		Vector				m_vecMoveGoal; // kept around for node graph moves, so we know our ultimate goal
-		Activity			m_movementActivity;	// When moving, set this activity
-
-		int				m_iAudibleList; // first index of a linked list of sounds that the monster can hear.
-		int				m_afSoundTypes;
-
-		Vector				m_vecLastPosition;// monster sometimes wants to return to where it started after an operation.
-
-		int				m_iHintNode; // this is the hint node that the monster is moving towards or performing active idle on.
-
-		int				m_afMemory;
-
-		int				m_iMaxHealth;// keeps track of monster's maximum health value (for re-healing, etc)
+	int				m_iMaxHealth;// keeps track of monster's maximum health value (for re-healing, etc)
 
 	Vector				m_vecEnemyLKP;// last known position of enemy. (enemy's origin)
 
@@ -471,8 +448,34 @@ public:
 
 	//MODDD - new.
 	////////////////////////////////////////////////////////////////////////////////////////////
-	BOOL				m_rgbTimeBasedFirstFrame[CDMG_TIMEBASED];
+	BOOL			m_rgbTimeBasedFirstFrame[CDMG_TIMEBASED];
 	float			m_tbdPrev;				// Time-based damage timer
+
+
+	////////////////////////////////////////////////////////////////////////////////////////////
+
+	BYTE				m_rgbTimeBasedDamage[CDMG_TIMEBASED];
+
+	int				m_lastDamageAmount;// how much damage did monster (player) last take
+											// time based damage counters, decr. 1 per 2 seconds
+	int				m_bloodColor;		// color of blood particless
+
+	int				m_failSchedule;				// Schedule type to choose if current schedule fails
+
+	float			m_flHungryTime;// set this is a future time to stop the monster from eating for a while. 
+
+	float			m_flDistTooFar;	// if enemy farther away than this, bits_COND_ENEMY_TOOFAR set in CheckEnemy
+	float			m_flDistLook;	// distance monster sees (Default 2048)
+
+	int				m_iTriggerCondition;// for scripted AI, this is the condition that will cause the activation of the monster's TriggerTarget
+	string_t			m_iszTriggerTarget;// name of target that should be fired. 
+
+	Vector				m_HackedGunPos;	// HACK until we can query end of gun
+
+// Scripted sequence Info
+	SCRIPTSTATE m_scriptState;		// internal cinematic state
+	CCineMonster* m_pCine;
+
 
 	//MODDD - new
 	BOOL hardSetFailSchedule;
@@ -487,16 +490,102 @@ public:
 	float floatSinkSpeed;
 
 
+	//MODDD - okay
+	Vector debugVector1;
+	Vector debugVector2;
+	Vector debugVector3;
+	Vector debugVector4;
+	BOOL debugVectorsSet;
+	BOOL debugFailColor;
+	BOOL debugVectorPrePass;
+	int debugVectorMode;
+
+	BOOL forceNoDrop;
+
+	BOOL fApplyTempVelocity;
+	Vector velocityApplyTemp;
+
+	BOOL drawPathConstant;
+	BOOL drawFieldOfVisionConstant;
 
 
+	//MODDD - new, pertaining to "takeDamage".
+	BOOL blockDamage;
+	BOOL buddhaMode;
+	BOOL blockTimedDamage;
+
+	//MODDD - new, to block state changes when pulled up.
+	//possible glitch that enemies just stay stuck in a standing animation while pulled up?  This may solve that.
+	BOOL barnacleLocked;
+	MONSTERSTATE		queuedMonsterState;
+
+	float forgetSmallFlinchTime;
+	float forgetBigFlinchTime;
+
+	float lastDamageReceived;
+
+	BOOL targetIsDeadException;
+
+	BOOL canRangedAttack1;
+	BOOL canRangedAttack2;
+
+
+
+	//MODDD - new
+	CBaseMonster(void);
+
+	virtual BOOL usesSoundSentenceSave(void);
+
+
+	//void smartResize();
+	virtual BOOL getHasPathFindingMod();
+	virtual BOOL getHasPathFindingModA();
+	//this is okay to be virtual, yes?
+	virtual BOOL NoFriendlyFireImp(const Vector& startVec, const Vector& endVec);
+	virtual BOOL forceIdleFrameReset(void);
+
+	virtual void onNewRouteNode(void);
+		
+	virtual void setPhysicalHitboxForDeath(void);
+	virtual void DeathAnimationStart(void);
+	virtual void DeathAnimationEnd(void);
+	virtual void onDeathAnimationEnd(void);
+
+	virtual int LookupActivityFiltered(int NewAcitivty);
+	virtual int LookupActivity(int NewActivity);
+	virtual int LookupActivityHeaviest(int NewActivity);
+
+	virtual void OnTakeDamageSetConditions(entvars_t *pevInflictor, entvars_t *pevAttacker, float flDamage, int bitsDamageType, int bitsDamageTypeMod);
+
+
+	virtual void setAnimationSmart(const char* arg_animName);
+	virtual void setAnimationSmart(const char* arg_animName, float arg_frameRate);
+	virtual void setAnimationSmart(int arg_animIndex, float arg_frameRate);
+	virtual void setAnimationSmartAndStop(const char* arg_animName);
+	virtual void setAnimationSmartAndStop(const char* arg_animName, float arg_frameRate);
+	virtual void setAnimationSmartAndStop(int arg_animIndex, float arg_frameRate);
+		
+	virtual BOOL usesAdvancedAnimSystem(void);
+
+	void setAnimation(char* animationName);
+	void setAnimation(char* animationName, BOOL forceException);
+	void setAnimation(char* animationName, BOOL forceException, BOOL forceLoopsProperty);
+	void setAnimation(char* animationName, BOOL forceException, BOOL forceLoopsProperty, int extraLogic);
+
+	virtual BOOL isSizeGiant(void);
+	virtual BOOL isOrganic(void);
+	virtual BOOL isOrganicLogic(void);
+
+	virtual float getBarnaclePulledTopOffset(void);
+
+	virtual float getBarnacleForwardOffset(void);
+	virtual float getBarnacleAnimationFactor(void);
 
 
 
 	//MODDD - new var
 	virtual BOOL hasSeeEnemyFix(void);
 	virtual BOOL getForceAllowNewEnemy(CBaseEntity* pOther);
-
-	virtual void tempMethod(void);
 
 	virtual BOOL needsMovementBoundFix(void);
 	virtual void cheapKilled(void);
@@ -558,109 +647,7 @@ public:
 	//MODDD
 	virtual BOOL skipSpawnStuckCheck(void){return FALSE;}
 
-	
 
-	//pastable:
-	/*
-	virtual const char* getGermanModel();
-	virtual const char* getNormalModel();
-	
-	const char* CDeadScientist::getGermanModel(){
-		return "models/g_scientist.mdl";
-	}
-	const char* CDeadScientist::getNormalModel(){
-		return "models/scientist.mdl";
-	}
-	*/
-
-
-
-
-
-	//int	Save( CSave &save );
-	//int	Restore( CRestore &restore );
-	//static	TYPEDESCRIPTION m_SaveData[];
-
-	
-#define PARALYZE_DURATION	30		// number of 2 second intervals to take damage
-#define PARALYZE_DAMAGE		0.0		// damage to take each 2 second interval
-
-#define NERVEGAS_DURATION	16
-#define NERVEGAS_DAMAGE		5.0
-
-#define POISON_DURATION		25
-#define POISON_DAMAGE		2.0
-
-#define RADIATION_DURATION	50
-#define RADIATION_DAMAGE	1.0
-
-#define ACID_DURATION		10
-#define ACID_DAMAGE			5.0
-
-#define SLOWBURN_DURATION	2
-#define SLOWBURN_DAMAGE		1.0
-
-#define SLOWFREEZE_DURATION	1.0
-#define SLOWFREEZE_DAMAGE	3.0
-
-
-
-
-
-#define PARALYZE_DURATION_EASY	21
-#define PARALYZE_DURATION_MEDIUM	30
-#define PARALYZE_DURATION_HARD	39
-#define PARALYZE_DAMAGE		0.0
-
-#define NERVEGAS_DURATION_EASY	12
-#define NERVEGAS_DURATION_MEDIUM	16
-#define NERVEGAS_DURATION_HARD	20
-#define NERVEGAS_DAMAGE		5.0
-
-#define POISON_DURATION_EASY		18
-#define POISON_DURATION_MEDIUM		25
-#define POISON_DURATION_HARD		32
-#define POISON_DAMAGE		2.0
-
-#define RADIATION_DURATION_EASY	35
-#define RADIATION_DURATION_MEDIUM	50
-#define RADIATION_DURATION_HARD	65
-#define RADIATION_DAMAGE	1.0
-
-#define ACID_DURATION_EASY		7
-#define ACID_DURATION_MEDIUM		10
-#define ACID_DURATION_HARD		13
-#define ACID_DAMAGE			5.0
-
-#define SLOWBURN_DURATION_EASY	1
-#define SLOWBURN_DURATION_MEDIUM	2
-#define SLOWBURN_DURATION_HARD	3
-#define SLOWBURN_DAMAGE		1.0
-
-#define SLOWFREEZE_DURATION_EASY	1.0
-#define SLOWFREEZE_DURATION_MEDIUM	1.0
-#define SLOWFREEZE_DURATION_HARD	2.0
-#define SLOWFREEZE_DAMAGE	3.0
-
-#define BLEEDING_DURATION_EASY	11.0
-#define BLEEDING_DURATION_MEDIUM	15.0
-#define BLEEDING_DURATION_HARD	19.0
-#define BLEEDING_DAMAGE 1.0
-
-
-
-	static float paralyzeDuration;
-	static float nervegasDuration;
-	static float poisonDuration;
-	static float radiationDuration;
-	static float acidDuration;
-	static float slowburnDuration;
-	static float slowfreezeDuration;
-	static float bleedingDuration;
-
-
-	//CBaseMonster();
-	
 	int convert_itbd_to_damage(int i);
 	virtual void CheckTimeBasedDamage(void);
 	//void PreThink(void);
@@ -669,42 +656,14 @@ public:
 	void attemptResetTimedDamage(BOOL forceReset);
 	
 
-	////////////////////////////////////////////////////////////////////////////////////////////
-
-	BYTE				m_rgbTimeBasedDamage[CDMG_TIMEBASED];
-
-	int				m_lastDamageAmount;// how much damage did monster (player) last take
-											// time based damage counters, decr. 1 per 2 seconds
-	int				m_bloodColor;		// color of blood particless
-
-	int				m_failSchedule;				// Schedule type to choose if current schedule fails
-
-	float			m_flHungryTime;// set this is a future time to stop the monster from eating for a while. 
-
-	float			m_flDistTooFar;	// if enemy farther away than this, bits_COND_ENEMY_TOOFAR set in CheckEnemy
-	float			m_flDistLook;	// distance monster sees (Default 2048)
-
-	int				m_iTriggerCondition;// for scripted AI, this is the condition that will cause the activation of the monster's TriggerTarget
-	string_t			m_iszTriggerTarget;// name of target that should be fired. 
-
-	Vector				m_HackedGunPos;	// HACK until we can query end of gun
-
-// Scripted sequence Info
-	SCRIPTSTATE			m_scriptState;		// internal cinematic state
-	CCineMonster		*m_pCine;
-
-	BOOL deadSetActivityBlock;
-
-
-
-
+	static TYPEDESCRIPTION m_SaveData[];
 	virtual int	Save( CSave &save ); 
 	virtual int	Restore( CRestore &restore );
+
 
 	//MODDD - new
 	void PostRestore(void);
 	
-	static TYPEDESCRIPTION m_SaveData[];
 
 	void KeyValue( KeyValueData *pkvd );
 
@@ -741,8 +700,7 @@ public:
 
 	float DamageForce( float damage );
 
-
-
+	
 
 // stuff written for new state machine
 //MODDD NOTE - ...The meaning of the above comment shall forever be lost to time.
@@ -814,7 +772,6 @@ public:
 	Schedule_t *ScheduleInList( const char *pName, Schedule_t **pList, int listCount );
 
 	virtual Schedule_t *ScheduleFromName( const char *pName );
-	static Schedule_t *m_scheduleList[];
 
 	void MaintainSchedule ( void );
 	virtual void StartTask ( Task_t *pTask );
@@ -870,10 +827,8 @@ public:
 	void SetSequenceByNameForceLoops(char* szSequence, float flFramerateMulti, BOOL safeReset, BOOL forceLoops);
 
 
-
 	void SetState ( MONSTERSTATE State );
 	
-
 	//MODDD - new.
 	void reportNetName(void);
 
@@ -923,8 +878,6 @@ public:
 	static void DrawRoute( entvars_t *pev, WayPoint_t *m_Route, int m_iRouteIndex, int r, int g, int b );
 
 
-
-
 	void AdvanceRoute ( float distance, float flInterval );
 	virtual BOOL FTriangulate ( const Vector &vecStart , const Vector &vecEnd, float flDist, CBaseEntity *pTargetEnt, Vector *pApex );
 
@@ -950,12 +903,15 @@ public:
 	BOOL FindLateralCover ( const Vector &vecThreat, const Vector &vecViewOffset );
 	virtual BOOL FindCover ( Vector vecThreat, Vector vecViewOffset, float flMinDist, float flMaxDist );
 	virtual BOOL FValidateCover ( const Vector &vecCoverLocation ) { return TRUE; };
-	virtual float CoverRadius( void ) { return 784; } // Default cover radius
+	virtual float CoverRadius( void ) { return DEFAULT_COVER_SEEK_DISTANCE; } // Default cover radius
 
 	virtual BOOL FCanCheckAttacks ( void );
 	virtual void CheckAmmo( void ) { return; };
 	virtual int IgnoreConditions ( void );
 	
+
+
+
 
 	//MODDD - any calls to set / clear conditions now also apply to m_afConditionsFrame. It is reset per frame instead of per schedule change.
 	inline void SetConditions( int iConditions ) {
@@ -967,17 +923,29 @@ public:
 		m_afConditionsFrame &= ~iConditions;
 	}
 
-	inline BOOL HasConditions( int iConditions ) { if ( m_afConditions & iConditions ) return TRUE; return FALSE; }
-	inline BOOL HasAllConditions( int iConditions ) { if ( (m_afConditions & iConditions) == iConditions ) return TRUE; return FALSE; }
+	//MODDD!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	// DANGEROUS TEST.  Was m_afConditions.
+	inline BOOL HasConditions( int iConditions ) { if (m_afConditionsFrame & iConditions ) return TRUE; return FALSE; }
+	inline BOOL HasAllConditions( int iConditions ) { if ( (m_afConditionsFrame & iConditions) == iConditions ) return TRUE; return FALSE; }
 
 	//MODDD - new
 	inline BOOL HasConditionsFrame( int iConditions ) { if ( m_afConditionsFrame & iConditions ) return TRUE; return FALSE; }
 	inline BOOL HasAllConditionsFrame( int iConditions ) { if ( (m_afConditionsFrame & iConditions) == iConditions ) return TRUE; return FALSE; }
 
+	// For easier breakpoints.
+	inline void clearAllConditions_NonFrame(void) {
+		m_afConditions = 0;
+	}
+	inline void clearAllConditions_Frame(void) {
+		m_afConditionsFrame = 0;
+	}
 	inline void clearAllConditions(void){
 		m_afConditions = 0;
 		m_afConditionsFrame = 0;
 	}
+
+
+
 
 
 	virtual BOOL FValidateHintType( short sHint );
@@ -1107,7 +1075,6 @@ public:
 	virtual int TakeHealth( float flHealth, int bitsDamageType );
 	
 
-
 	//MODDD
 	virtual void setModel(void);
 	virtual void setModel(const char* m);
@@ -1180,9 +1147,8 @@ public:
 
 	virtual void ReportGeneric(void);
 
+	virtual void onEnemyDead(CBaseEntity* pRecentEnemy);
 
 };
-
-
 
 #endif // BASEMONSTER_H

@@ -2673,6 +2673,7 @@ void CEnvMirror :: MirrorThink( void )
 	{
 		if (pev->rendermode != m_iInitialRenderMode) pev->rendermode = m_iInitialRenderMode;
 
+		
 	    if (UTIL_PlayerByIndex(1))
 		{
 			//MODDD - NOTE.
@@ -2681,7 +2682,8 @@ void CEnvMirror :: MirrorThink( void )
 			// Point is they're generally expected to just be 0 or 1 for FALSE/TRUE.
 			// Anyway, they're read by ev_hldm.cpp's EV_Mirror.  1st one is significant of those two.
 			// It tells whether this mirror is supposed to be enabled or not (bEnabled in EV_Mirror).
-		    PLAYBACK_EVENT_FULL (FEV_RELIABLE|FEV_GLOBAL, edict(), m_usMirror, 0.0, (float *)&Center(), (float *)&g_vecZero, 0.0, 0.0, m_flRadius, pev->frags, 1, 0);
+			// And yes, 'pev->frags' is going to determine the mirror 'type', whatever that means.  Goody.
+		    PLAYBACK_EVENT_FULL (FEV_RELIABLE|FEV_GLOBAL, edict(), m_usMirror, 0.0, (float *)&Center(), (float *)&g_vecZero, m_flRadius, 0.0, pev->frags, 0, 1, 0);
 			bSent = TRUE;
 		}
 
@@ -2692,7 +2694,7 @@ void CEnvMirror :: MirrorThink( void )
 		{
 			pev->rendermode = kRenderNormal;
 			// MODDD - note.  And here too, sending 0 for 'bEnabled = FALSE' to be conveyed instead.
-			PLAYBACK_EVENT_FULL (FEV_RELIABLE|FEV_GLOBAL, edict(), m_usMirror, 0.0, (float *)&Center(), (float *)&g_vecZero, 0.0, 0.0, m_flRadius, pev->frags, 0, 0);
+			PLAYBACK_EVENT_FULL (FEV_RELIABLE|FEV_GLOBAL, edict(), m_usMirror, 0.0, (float *)&Center(), (float *)&g_vecZero, m_flRadius, 0.0, pev->frags, 0, 0, 0);
 		}
 
 		bSent = TRUE;

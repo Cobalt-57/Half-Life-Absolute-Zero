@@ -29,7 +29,7 @@ Schedule_t	slPickupWalkerIdleWait[] =
 		bits_COND_LIGHT_DAMAGE		|
 		bits_COND_HEAVY_DAMAGE,
 		0,
-		"slToadIdleWait"
+		"slPickupW_IdleWait"
 	},
 };
 
@@ -80,8 +80,6 @@ void CPickupWalker::IdleSound( void )
 
 void CPickupWalker::Spawn( void )
 {
-
-
 	//WARNING: CPickupWalker is not meant to be spawned! This should be inherited by something else and given more details.
 
 	easyForcePrintLine("WARNING: ehhh");
@@ -303,14 +301,7 @@ Schedule_t* CPickupWalker::GetSchedule ( void )
 
 					ALERT ( at_aiconsole, "No suitable combat schedule!\n" );
 				}
-
-
-
 			}
-
-
-
-
 			break;
 		}
 	case MONSTERSTATE_DEAD:
@@ -342,8 +333,6 @@ Schedule_t* CPickupWalker::GetSchedule ( void )
 			break;
 		}
 	}
-
-
 	EASY_CVAR_PRINTIF_PRE(chumtoadPrintout, easyPrintLine("ChumToad: GetSchedule FAIL TO PICK SCHEDULE. BROKEN.") );
 	*/
 	return &slError[ 0 ];
@@ -352,9 +341,7 @@ Schedule_t* CPickupWalker::GetSchedule ( void )
 
 
 
-
 Schedule_t* CPickupWalker::GetScheduleOfType( int Type){
-
 
 	//EASY_CVAR_PRINTIF_PRE(pickupWalkerPrintout, easyPrintLine("CPickupWalker: GetScheduleOfType. Type:%d", Type) );
 
@@ -370,26 +357,14 @@ Schedule_t* CPickupWalker::GetScheduleOfType( int Type){
 
 
 
-
-
-
-
-
-
-
-
-
-
 void CPickupWalker :: StartTask ( Task_t *pTask )
 {
-
-	Vector vec_forward;
-	Vector vec_right;
-	Vector vec_up;
-	TraceResult tempTrace;
-	float fracto;
+	//Vector vec_forward;
+	//Vector vec_right;
+	//Vector vec_up;
+	//TraceResult tempTrace;
+	//float fracto;
 	
-
 
 	switch ( pTask->iTask )
 	{
@@ -404,9 +379,6 @@ void CPickupWalker :: StartTask ( Task_t *pTask )
 	}//END OF switch(...)
 
 }//END OF StartTask(...)
-
-
-
 
 
 
@@ -435,17 +407,14 @@ void CPickupWalker::RunTask ( Task_t *pTask ){
 
 
 
-
 //unused. MonsterThink is good enough.
 void CPickupWalker::PickupWalkerThink( void ){
 	
 }//END OF ChumToadThink(...)
 
 
-
 //GOOD REF:
 /*
-
 int CSqueak::GetItemInfo(ItemInfo *p)
 {
 	p->pszName = STRING(pev->classname);
@@ -497,17 +466,14 @@ BOOL CPickupWalker::bypassAllowMonstersSpawnCheck(void) {
 
 
 
-
 void CPickupWalker::PickupWalkerTouch( CBaseEntity *pOther )
 {
-
 	/*
 	//this script kills the item it is run on.
 	SetTouch( NULL );
 	SetThink(&CBaseEntity::SUB_Remove);
 	pev->nextthink = gpGlobals->time + .1;
 	*/
-
 	if(pOther->IsPlayer()){
 		//CBaseMonster* monsterTouched = static_cast<CBaseMonster*>(pOther);
 		CBasePlayer* playerTouched = static_cast<CBasePlayer*>(pOther);
@@ -517,26 +483,18 @@ void CPickupWalker::PickupWalkerTouch( CBaseEntity *pOther )
 		//MODDD - possible exception to "canHavePlayerItem".  If this is a glock with a silencer, and the player has a glock without a silencer, the player can still pick up to receive the silencer.
 		if( !g_pGameRules->CanHavePlayerItem( playerTouched, myWeaponClassname(), myWeaponAmmoName(), myWeaponSlot(), myWeaponMaxAmmo() ) ) //&& !(weaponCanHaveExtraCheck(pPlayer) ) )
 		{
-			
-			
 			if( gEvilImpulse101 )
 			{
 				UTIL_Remove( this );
 			}
-			
 			//easyForcePrintLine("IMPULSE CHECK: %d", gEvilImpulse101);
 			return;
 		}else{
 			//easyForcePrintLine("MOVE ON SONNY");
 		}
-	
-
 		//easyForcePrintLine("WELLA??? %d", (this->m_pfnThink == &CBasePlayerWeapon::FallThink) );
 		//easyForcePrintLine("WELLB??? %d", (this->m_pfnThink == NULL) );
 		//easyForcePrintLine("WELLC??? %d", (this->m_pfnThink == &CBaseEntity::SUB_Remove) );
-
-
-
 
 		//NOTICE - This check, "AddPlayerItem" will fail (false) if the player already has the weapon and just adds its ammo to their existing one.
 		if (playerTouched->CanAddPlayerItem( myWeaponSlot(), myWeaponClassname(), myWeaponAmmoName(), myWeaponMaxAmmo() ))
@@ -558,21 +516,18 @@ void CPickupWalker::PickupWalkerTouch( CBaseEntity *pOther )
 				//createdWeap->v.renderamt		= 20;
 			}
 
+			// Can this be respawned?
+			CheckRespawn();
 
 			UTIL_Remove(this);
 		}
-	
-
 		//easyForcePrintLine("DELLA??? %d", (this->m_pfnThink == &CBasePlayerWeapon::FallThink) );
 		//easyForcePrintLine("DELLB??? %d", (this->m_pfnThink == NULL) );
 		//easyForcePrintLine("DELLC??? %d", (this->m_pfnThink == &CBaseEntity::SUB_Remove) );
 
-
 		////////SUB_UseTargets( pOther, USE_TOGGLE, 0 ); // UNDONE: when should this happen?
 		
 	}//END OF if pOther is player check
-
-
 		//if so, delete.  TODO!!!
 		/*
 		SetTouch( NULL );
@@ -580,7 +535,6 @@ void CPickupWalker::PickupWalkerTouch( CBaseEntity *pOther )
 		pev->nextthink = gpGlobals->time + .1;
 		*/
 	
-
 	//MODDD - no longer for fall script... unfortunate.
 	/*
 	
@@ -594,8 +548,6 @@ void CPickupWalker::PickupWalkerTouch( CBaseEntity *pOther )
 		easyForcePrintLine("MY NAME IS  %s", pOther->getClassname());
 		
 	}
-
-
 	if ( pev->flags & FL_ONGROUND )
 	{
 		if(initFall)easyForcePrintLine("DEATH BY ASS!");
@@ -603,28 +555,13 @@ void CPickupWalker::PickupWalkerTouch( CBaseEntity *pOther )
 	}
 	*/
 
-
-
-
-
-
 }//END OF PickupWalkerTouch(...)
-
 
 void CPickupWalker::MonsterThink ( void )
 {
-
     CBaseMonster::MonsterThink();
     return;
 }//END OF MonsterThink(...)
-
-
-
-
-
-
-
-
 
 
 
@@ -657,12 +594,120 @@ GENERATE_KILLED_IMPLEMENTATION(CPickupWalker){
 
 
 
+// from weapons.cpp.
+void CPickupWalker::CheckRespawn(void)
+{
+	switch (g_pGameRules->PickupWalkerShouldRespawn(this))
+	{
+	case GR_WEAPON_RESPAWN_YES:
+		Respawn();
+		break;
+	case GR_WEAPON_RESPAWN_NO:
+		return;
+		break;
+	}
+}
+
+// A modified clone of weapons.cpp's "Respawn" method for handling a AI monstser that should stay dormant during that time and go to the first place this was seen on the map.
+CBaseEntity* CPickupWalker::Respawn(void)
+{
+	// make a copy of this weapon that is invisible and inaccessible to players (no touch function). The weapon spawn/respawn code
+	// will decide when to make the weapon visible and touchable.
+	CBaseEntity* someEnt = CBaseEntity::Create((char*)STRING(pev->classname), g_pGameRules->VecPickupWalkerRespawnSpot(this), this->respawn_angles, pev->owner);
+	CPickupWalker* pNewWeapon = static_cast<CPickupWalker*>(someEnt);
+
+	if (pNewWeapon)
+	{
+		pNewWeapon->pev->spawnflags &= ~SF_NORESPAWN;
+
+		// pass on my respawn_ info:
+		pNewWeapon->respawn_origin = this->respawn_origin;
+		pNewWeapon->respawn_angles = this->respawn_angles;
+
+		pNewWeapon->pev->effects |= EF_NODRAW;// invisible for now
+		pNewWeapon->SetTouch(NULL);// no touch
+		pNewWeapon->SetThink(&CPickupWalker::AttemptToMaterialize);
+
+		DROP_TO_FLOOR(ENT(pev));
+
+		// not a typo! We want to know when the weapon the player just picked up should respawn! This new entity we created is the replacement,
+		// but when it should respawn is based on conditions belonging to the weapon that was taken.
+		pNewWeapon->pev->nextthink = g_pGameRules->FlPickupWalkerRespawnTime(this);
+	}
+	else
+	{
+		ALERT(at_console, "Respawn failed to create %s!\n", STRING(pev->classname));
+	}
+
+	return pNewWeapon;
+}
+
+
+
+
+void CPickupWalker::AttemptToMaterialize(void)
+{
+	float time = g_pGameRules->FlPickupWalkerTryRespawn(this);
+
+	if (time == 0)
+	{
+		Materialize();
+		return;
+	}
+
+	pev->nextthink = gpGlobals->time + time;
+}
+
+void CPickupWalker::Materialize(void)
+{
+	if (pev->effects & EF_NODRAW)
+	{
+		// changing from invisible state to visible.
+		EMIT_SOUND_DYN(ENT(pev), CHAN_WEAPON, "items/suitchargeok1.wav", 1, ATTN_NORM, 0, 150);
+		pev->effects &= ~EF_NODRAW;
+		pev->effects |= EF_MUZZLEFLASH;
+	}
+
+	pev->solid = SOLID_TRIGGER;
+
+	UTIL_SetOrigin(pev, pev->origin);// link into world.
+	
+	//SetTouch(&CPickupWalker::DefaultTouch);
+	//SetThink(NULL);
+
+
+	//SetTouch(&CPickupWalker::PickupWalkerTouch);
+	//MonsterInit();
+	//SetTouch(&CPickupWalker::PickupWalkerTouch);
+	//pev->solid = SOLID_TRIGGER;
+
+	// Now then, since I was so rudely interrupted.
+	SetThink(&CBaseMonster::MonsterInitThink);
+	SetTouch(&CPickupWalker::PickupWalkerTouch);
+	pev->nextthink = gpGlobals->time + 0.1;
+
+}
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
 
 
 
 
 //////////////////////////////////////////////////////////////////////////////////
 //CChumToadPickupWalker!!!
+
+const char* CChumToadPickupWalker::pIdleSounds[] =
+{
+	"chumtoad/cht_croak_medium.wav",
+	"chumtoad/cht_croak_long.wav",
+};
 
 
 extern int global_useSentenceSave;
@@ -681,9 +726,6 @@ void CChumToadPickupWalker::Precache( void )
 
 void CChumToadPickupWalker::Spawn( void )
 {
-
-	
-
 	//TEMPLATE
 	Precache( );
 
@@ -799,12 +841,16 @@ int CChumToadPickupWalker::tryActivitySubstitute(int activity){
 
 
 
-
-
-
-
 //////////////////////////////////////////////////////////////////////////////////
 //CSqueakPickupWalker!!!
+
+const char* CSqueakPickupWalker::pIdleSounds[] =
+{
+	"squeek/sqk_hunt1.wav",
+	"squeek/sqk_hunt2.wav",
+	"squeek/sqk_hunt3.wav",
+	//"squeek/sqk_deploy1.wav",
+};
 
 
 extern int global_useSentenceSave;
@@ -823,15 +869,11 @@ void CSqueakPickupWalker::Precache( void )
 
 void CSqueakPickupWalker::Spawn( void )
 {
-
-	
-
 	//TEMPLATE
 	Precache( );
 	
 	SET_MODEL(ENT(pev), "models/w_sqknest.mdl");
 	//UTIL_SetSize(pev, Vector(-12, -12, 0), Vector(12, 12, 24));
-	
 	UTIL_SetSize(pev, Vector( -8.3, -8.3, 0), Vector(8.3, 8.3, 8.4));
 
 	pev->classname = MAKE_STRING("monster_snarkpickupwalker");
@@ -933,4 +975,5 @@ int CSqueakPickupWalker::tryActivitySubstitute(int activity){
 	//not handled by above?
 	return CBaseAnimating::LookupActivity(activity);
 }
+
 

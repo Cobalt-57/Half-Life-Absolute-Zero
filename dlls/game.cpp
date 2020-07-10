@@ -711,6 +711,7 @@ extern int gmsgUpdateClientCVar;
 // This gets called one time when the game is initialied
 void GameDLLInit( void )
 {
+	InitShared();
 
 	easyForcePrintLine("!!!!!! GameDLLInit");
 

@@ -181,7 +181,8 @@ public:
 	virtual void playPissed();
 	virtual void playInterPissed();
 
-	void		TalkInit( void );
+	//MODDD - not virtual because?
+	virtual void TalkInit( void );
 
 	//MODDD - method now returns CBaseMonster instead.
 	// Not sure why it didn't always, entities that don't inherit from CBaseMonster

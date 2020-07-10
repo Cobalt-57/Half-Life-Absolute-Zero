@@ -98,7 +98,7 @@ EASY_CVAR_EXTERN(pissedNPCs)
 
 
 //extern int giPrecacheGrunt;
-extern DLL_GLOBAL short g_sModelIndexBubbles;// holds the index for the bubbles model
+//extern DLL_GLOBAL short g_sModelIndexBubbles;// holds the index for the bubbles model
 extern DLL_GLOBAL int g_iSkillLevel;
 extern DLL_GLOBAL short g_sModelIndexLaser;// holds the index for the laser beam
 
@@ -182,6 +182,10 @@ BOOL queueSkillUpdate = FALSE;
 BOOL queueYMG_stopSend = FALSE;
 
 
+int g_groupmask = 0;
+int g_groupop = 0;
+
+
 
 
 // Array of gib models with some helpful info.
@@ -203,114 +207,8 @@ GibInfo_t aryGibInfo[aryGibInfo_MAX_SIZE] = {
 
 
 
-static unsigned int glSeed = 0; 
-
-unsigned int seed_table[ 256 ] =
-{
-	28985, 27138, 26457, 9451, 17764, 10909, 28790, 8716, 6361, 4853, 17798, 21977, 19643, 20662, 10834, 20103,
-	27067, 28634, 18623, 25849, 8576, 26234, 23887, 18228, 32587, 4836, 3306, 1811, 3035, 24559, 18399, 315,
-	26766, 907, 24102, 12370, 9674, 2972, 10472, 16492, 22683, 11529, 27968, 30406, 13213, 2319, 23620, 16823,
-	10013, 23772, 21567, 1251, 19579, 20313, 18241, 30130, 8402, 20807, 27354, 7169, 21211, 17293, 5410, 19223,
-	10255, 22480, 27388, 9946, 15628, 24389, 17308, 2370, 9530, 31683, 25927, 23567, 11694, 26397, 32602, 15031,
-	18255, 17582, 1422, 28835, 23607, 12597, 20602, 10138, 5212, 1252, 10074, 23166, 19823, 31667, 5902, 24630,
-	18948, 14330, 14950, 8939, 23540, 21311, 22428, 22391, 3583, 29004, 30498, 18714, 4278, 2437, 22430, 3439,
-	28313, 23161, 25396, 13471, 19324, 15287, 2563, 18901, 13103, 16867, 9714, 14322, 15197, 26889, 19372, 26241,
-	31925, 14640, 11497, 8941, 10056, 6451, 28656, 10737, 13874, 17356, 8281, 25937, 1661, 4850, 7448, 12744,
-	21826, 5477, 10167, 16705, 26897, 8839, 30947, 27978, 27283, 24685, 32298, 3525, 12398, 28726, 9475, 10208,
-	617, 13467, 22287, 2376, 6097, 26312, 2974, 9114, 21787, 28010, 4725, 15387, 3274, 10762, 31695, 17320,
-	18324, 12441, 16801, 27376, 22464, 7500, 5666, 18144, 15314, 31914, 31627, 6495, 5226, 31203, 2331, 4668,
-	12650, 18275, 351, 7268, 31319, 30119, 7600, 2905, 13826, 11343, 13053, 15583, 30055, 31093, 5067, 761,
-	9685, 11070, 21369, 27155, 3663, 26542, 20169, 12161, 15411, 30401, 7580, 31784, 8985, 29367, 20989, 14203,
-	29694, 21167, 10337, 1706, 28578, 887, 3373, 19477, 14382, 675, 7033, 15111, 26138, 12252, 30996, 21409,
-	25678, 18555, 13256, 23316, 22407, 16727, 991, 9236, 5373, 29402, 6117, 15241, 27715, 19291, 19888, 19847
-};
-
-unsigned int U_Random( void ) 
-{ 
-	glSeed *= 69069; 
-	glSeed += seed_table[ glSeed & 0xff ];
- 
-	return ( ++glSeed & 0x0fffffff ); 
-} 
-
-void U_Srand( unsigned int seed )
-{
-	glSeed = seed_table[ seed & 0xff ];
-}
 
 
-
-float UTIL_WeaponTimeBase( void )
-{
-#if defined( CLIENT_WEAPONS )
-	return 0.0;
-#else
-	return gpGlobals->time;
-#endif
-}
-
-
-/*
-=====================
-UTIL_SharedRandomLong
-=====================
-*/
-int UTIL_SharedRandomLong( unsigned int seed, int low, int high )
-{
-	unsigned int range;
-
-	U_Srand( (int)seed + low + high );
-
-	range = high - low + 1;
-	if ( !(range - 1) )
-	{
-		return low;
-	}
-	else
-	{
-		int offset;
-		int rnum;
-
-		rnum = U_Random();
-
-		offset = rnum % range;
-
-		return (low + offset);
-	}
-}
-
-/*
-=====================
-UTIL_SharedRandomFloat
-=====================
-*/
-float UTIL_SharedRandomFloat( unsigned int seed, float low, float high )
-{
-	//
-	unsigned int range;
-
-	U_Srand( (int)seed + *(int *)&low + *(int *)&high );
-
-	U_Random();
-	U_Random();
-
-	range = high - low;
-	if ( !range )
-	{
-		return low;
-	}
-	else
-	{
-		int tensixrand;
-		float offset;
-
-		tensixrand = U_Random() & 65535;
-
-		offset = (float)tensixrand / 65536.0;
-
-		return (low + offset * range );
-	}
-}
 
 void UTIL_ParametricRocket( entvars_t *pev, Vector vecOrigin, Vector vecAngles, edict_t *owner )
 {	
@@ -332,8 +230,6 @@ void UTIL_ParametricRocket( entvars_t *pev, Vector vecOrigin, Vector vecAngles, 
 	pev->impacttime = gpGlobals->time + travelTime;
 }
 
-int g_groupmask = 0;
-int g_groupop = 0;
 
 // Normal overrides
 void UTIL_SetGroupTrace( int groupmask, int op )
@@ -1755,10 +1651,8 @@ BOOL UTIL_ShouldShowBlood( int color )
 	return FALSE;
 }
 
-int UTIL_PointContents(	const Vector &vec )
-{
-	return POINT_CONTENTS(vec);
-}
+// UTIL_PointContents moved to util_shared.h/.cpp
+
 
 void UTIL_BloodStream( const Vector &origin, const Vector &direction, int color, int amount )
 {
@@ -1774,7 +1668,6 @@ void UTIL_BloodStream( const Vector &origin, const Vector &direction, int color,
 	}
 	*/
 
-	
 	MESSAGE_BEGIN( MSG_PVS, SVC_TEMPENTITY, origin );
 		WRITE_BYTE( TE_BLOODSTREAM );
 		WRITE_COORD( origin.x );
@@ -1828,11 +1721,9 @@ void UTIL_BloodDrips( const Vector &origin, const Vector &direction, int color, 
 Vector UTIL_RandomBloodVector( void )
 {
 	Vector direction;
-
-	direction.x = RANDOM_FLOAT ( -1, 1 );
-	direction.y = RANDOM_FLOAT ( -1, 1 );
-	direction.z = RANDOM_FLOAT ( 0, 1 );
-
+	direction.x = RANDOM_FLOAT ( -1.2, 1.2 );
+	direction.y = RANDOM_FLOAT ( -1.2, 1.2 );
+	direction.z = RANDOM_FLOAT ( 0, 0.8 );
 	return direction;
 }
 
@@ -2230,7 +2121,7 @@ void UTIL_PlaySound(edict_t* entity, int channel, const char *pszName, float vol
 
 	//easyPrintLine("PLAYING SOUND %s", pszName);
 
-	easyPrintLine("ATTEMPT FILTERED SOUND: %s %d", pszName, useSoundSentenceSave);
+	//easyPrintLine("ATTEMPT FILTERED SOUND: %s %d", pszName, useSoundSentenceSave);
 	if(EASY_CVAR_GET(soundSentenceSave) == 1 && (useSoundSentenceSave)){
 
 		char interpretationFINAL[50];
@@ -2482,7 +2373,6 @@ void UTIL_playFleshHitSound(edict_t* pev){
 }
 */
 
-
 void UTIL_PRECACHESOUND(char* path){
 	//scientist/sci_dragoff.wav
 	//easyPrintLine("PRECACHE: %s", path);
@@ -2527,236 +2417,347 @@ void UTIL_PRECACHESOUND_ARRAY(const char** a, int aSize, BOOL dontSkipSave){
 
 
 
-void UTIL_Explosion(const Vector &location, short sprite, float size, int framerate, int flag){
-	UTIL_Explosion(NULL, location, 0.0f, 0.0f, 0.0f, sprite, size, framerate, flag, location, 1);
+// !!!
+/*
+int msg_dest,
+int msg_dest, const float* pOrigin,
+int msg_dest, const float* pOrigin, edict_t* ed,
+*/
+
+
+
+
+
+void UTIL_Explosion(int msg_dest, const Vector &location, short sprite, float size, int framerate, int flag){
+	UTIL_Explosion(msg_dest, NULL, NULL, NULL, location, 0.0f, 0.0f, 0.0f, sprite, size, framerate, flag, location, 1);
+}
+void UTIL_Explosion(int msg_dest, const float* pMsgOrigin, const Vector& location, short sprite, float size, int framerate, int flag) {
+	UTIL_Explosion(msg_dest, pMsgOrigin, NULL, NULL, location, 0.0f, 0.0f, 0.0f, sprite, size, framerate, flag, location, 1);
+}
+void UTIL_Explosion(int msg_dest, const float* pMsgOrigin, edict_t* ed, const Vector& location, short sprite, float size, int framerate, int flag) {
+	UTIL_Explosion(msg_dest, pMsgOrigin, ed, NULL, location, 0.0f, 0.0f, 0.0f, sprite, size, framerate, flag, location, 1);
 }
 
-void UTIL_Explosion(const Vector &location, float offsetx, float offsety, float offsetz, short sprite, float size, int framerate, int flag){
-	UTIL_Explosion(NULL, location, offsetx, offsety, offsetz, sprite, size, framerate, flag, location, 1);
+void UTIL_Explosion(int msg_dest, const Vector &location, float offsetx, float offsety, float offsetz, short sprite, float size, int framerate, int flag){
+	UTIL_Explosion(msg_dest, NULL, NULL, NULL, location, offsetx, offsety, offsetz, sprite, size, framerate, flag, location, 1);
+}
+void UTIL_Explosion(int msg_dest, const float* pMsgOrigin, const Vector& location, float offsetx, float offsety, float offsetz, short sprite, float size, int framerate, int flag) {
+	UTIL_Explosion(msg_dest, pMsgOrigin, NULL, NULL, location, offsetx, offsety, offsetz, sprite, size, framerate, flag, location, 1);
+}
+void UTIL_Explosion(int msg_dest, const float* pMsgOrigin, edict_t* ed, const Vector& location, float offsetx, float offsety, float offsetz, short sprite, float size, int framerate, int flag) {
+	UTIL_Explosion(msg_dest, pMsgOrigin, ed, NULL, location, offsetx, offsety, offsetz, sprite, size, framerate, flag, location, 1);
 }
 
-void UTIL_Explosion(const Vector &location, short sprite, float size, int framerate, int flag, const Vector& altLocation){
-	UTIL_Explosion(NULL, location, 0.0f, 0.0f, 0.0f, sprite, size, framerate, flag, altLocation, 1);
+void UTIL_Explosion(int msg_dest, const Vector &location, short sprite, float size, int framerate, int flag, const Vector& altLocation){
+	UTIL_Explosion(msg_dest, NULL, NULL, NULL, location, 0.0f, 0.0f, 0.0f, sprite, size, framerate, flag, altLocation, 1);
+}
+void UTIL_Explosion(int msg_dest, const float* pMsgOrigin, const Vector& location, short sprite, float size, int framerate, int flag, const Vector& altLocation) {
+	UTIL_Explosion(msg_dest, pMsgOrigin, NULL, NULL, location, 0.0f, 0.0f, 0.0f, sprite, size, framerate, flag, altLocation, 1);
+}
+void UTIL_Explosion(int msg_dest, const float* pMsgOrigin, edict_t* ed, const Vector& location, short sprite, float size, int framerate, int flag, const Vector& altLocation) {
+	UTIL_Explosion(msg_dest, pMsgOrigin, ed, NULL, location, 0.0f, 0.0f, 0.0f, sprite, size, framerate, flag, altLocation, 1);
+}
+
+void UTIL_Explosion(int msg_dest, entvars_t* pev, const Vector &location, short sprite, float size, int framerate, int flag){
+	UTIL_Explosion(msg_dest, NULL, NULL, pev, location, 0.0f, 0.0f, 0.0f, sprite, size, framerate, flag, location, 1);
+}
+void UTIL_Explosion(int msg_dest, const float* pMsgOrigin, entvars_t* pev, const Vector& location, short sprite, float size, int framerate, int flag) {
+	UTIL_Explosion(msg_dest, pMsgOrigin, NULL, pev, location, 0.0f, 0.0f, 0.0f, sprite, size, framerate, flag, location, 1);
+}
+void UTIL_Explosion(int msg_dest, const float* pMsgOrigin, edict_t* ed, entvars_t* pev, const Vector& location, short sprite, float size, int framerate, int flag) {
+	UTIL_Explosion(msg_dest, pMsgOrigin, ed, pev, location, 0.0f, 0.0f, 0.0f, sprite, size, framerate, flag, location, 1);
+}
+
+
+void UTIL_Explosion(int msg_dest, entvars_t* pev, const Vector &location, float offsetx, float offsety, float offsetz, short sprite, float size, int framerate, int flag){
+	UTIL_Explosion(msg_dest, NULL, NULL, pev, location, offsetx, offsety, offsetz, sprite, size, framerate, flag, location, 1);
+}
+void UTIL_Explosion(int msg_dest, const float* pMsgOrigin, entvars_t* pev, const Vector& location, float offsetx, float offsety, float offsetz, short sprite, float size, int framerate, int flag) {
+	UTIL_Explosion(msg_dest, pMsgOrigin, NULL, pev, location, offsetx, offsety, offsetz, sprite, size, framerate, flag, location, 1);
+}
+void UTIL_Explosion(int msg_dest, const float* pMsgOrigin, edict_t* ed, entvars_t* pev, const Vector& location, float offsetx, float offsety, float offsetz, short sprite, float size, int framerate, int flag) {
+	UTIL_Explosion(msg_dest, pMsgOrigin, ed, pev, location, offsetx, offsety, offsetz, sprite, size, framerate, flag, location, 1);
+}
+
+
+void UTIL_Explosion(int msg_dest, entvars_t* pev, const Vector &location, float offsetx, float offsety, float offsetz, short sprite, float size, int framerate, int flag, float shrapMod){
+	UTIL_Explosion(msg_dest, NULL, NULL, pev, location, offsetx, offsety, offsetz, sprite, size, framerate, flag, location, shrapMod);
+}
+void UTIL_Explosion(int msg_dest, const float* pMsgOrigin, entvars_t* pev, const Vector& location, float offsetx, float offsety, float offsetz, short sprite, float size, int framerate, int flag, float shrapMod) {
+	UTIL_Explosion(msg_dest, pMsgOrigin, NULL, pev, location, offsetx, offsety, offsetz, sprite, size, framerate, flag, location, shrapMod);
+}
+void UTIL_Explosion(int msg_dest, const float* pMsgOrigin, edict_t* ed, entvars_t* pev, const Vector& location, float offsetx, float offsety, float offsetz, short sprite, float size, int framerate, int flag, float shrapMod) {
+	UTIL_Explosion(msg_dest, pMsgOrigin, ed, pev, location, offsetx, offsety, offsetz, sprite, size, framerate, flag, location, shrapMod);
 }
 
 
 
-void UTIL_Explosion(entvars_t* pev, const Vector &location, short sprite, float size, int framerate, int flag){
-	UTIL_Explosion(pev, location, 0.0f, 0.0f, 0.0f, sprite, size, framerate, flag, location, 1);
-}
 
-void UTIL_Explosion(entvars_t* pev, const Vector &location, float offsetx, float offsety, float offsetz, short sprite, float size, int framerate, int flag){
-	UTIL_Explosion(pev, location, offsetx, offsety, offsetz, sprite, size, framerate, flag, location, 1);
+void UTIL_Explosion(int msg_dest, entvars_t* pev, const Vector &location, short sprite, float size, int framerate, int flag, const Vector& altLocation){
+	UTIL_Explosion(msg_dest, NULL, NULL, pev, location, 0.0f, 0.0f, 0.0f, sprite, size, framerate, flag, altLocation, 1);
 }
-void UTIL_Explosion(entvars_t* pev, const Vector &location, float offsetx, float offsety, float offsetz, short sprite, float size, int framerate, int flag, float shrapMod){
-	UTIL_Explosion(pev, location, offsetx, offsety, offsetz, sprite, size, framerate, flag, location, shrapMod);
+void UTIL_Explosion(int msg_dest, const float* pMsgOrigin, entvars_t* pev, const Vector& location, short sprite, float size, int framerate, int flag, const Vector& altLocation) {
+	UTIL_Explosion(msg_dest, pMsgOrigin, NULL, pev, location, 0.0f, 0.0f, 0.0f, sprite, size, framerate, flag, altLocation, 1);
 }
-
-
-
-void UTIL_Explosion(entvars_t* pev, const Vector &location, short sprite, float size, int framerate, int flag, const Vector& altLocation){
-	UTIL_Explosion(pev, location, 0.0f, 0.0f, 0.0f, sprite, size, framerate, flag, altLocation, 1);
-}
-void UTIL_Explosion(entvars_t* pev, const Vector &location, short sprite, float size, int framerate, int flag, const Vector& altLocation, float shrapMod){
-	UTIL_Explosion(pev, location, 0.0f, 0.0f, 0.0f, sprite, size, framerate, flag, altLocation, shrapMod);
+void UTIL_Explosion(int msg_dest, const float* pMsgOrigin, edict_t* ed, entvars_t* pev, const Vector& location, short sprite, float size, int framerate, int flag, const Vector& altLocation) {
+	UTIL_Explosion(msg_dest, pMsgOrigin, ed, pev, location, 0.0f, 0.0f, 0.0f, sprite, size, framerate, flag, altLocation, 1);
 }
 
 
-
-void UTIL_Explosion(const Vector &location, float offsetx, float offsety, float offsetz, short sprite, float size, int framerate, int flag, const Vector& altLocation){
-	UTIL_Explosion(NULL, location, offsetx, offsety, offsetz, sprite, size, framerate, flag, altLocation, 1);
+void UTIL_Explosion(int msg_dest, entvars_t* pev, const Vector &location, short sprite, float size, int framerate, int flag, const Vector& altLocation, float shrapMod){
+	UTIL_Explosion(msg_dest, NULL, NULL, pev, location, 0.0f, 0.0f, 0.0f, sprite, size, framerate, flag, altLocation, shrapMod);
+}
+void UTIL_Explosion(int msg_dest, const float* pMsgOrigin, entvars_t* pev, const Vector& location, short sprite, float size, int framerate, int flag, const Vector& altLocation, float shrapMod) {
+	UTIL_Explosion(msg_dest, pMsgOrigin, NULL, pev, location, 0.0f, 0.0f, 0.0f, sprite, size, framerate, flag, altLocation, shrapMod);
+}
+void UTIL_Explosion(int msg_dest, const float* pMsgOrigin, edict_t* ed, entvars_t* pev, const Vector& location, short sprite, float size, int framerate, int flag, const Vector& altLocation, float shrapMod) {
+	UTIL_Explosion(msg_dest, pMsgOrigin, ed, pev, location, 0.0f, 0.0f, 0.0f, sprite, size, framerate, flag, altLocation, shrapMod);
 }
 
-void UTIL_Explosion(entvars_t* pev, const Vector &location, float offsetx, float offsety, float offsetz, short sprite, float size, int framerate, int flag, const Vector& altLocation){
-	UTIL_Explosion(pev, location, offsetx, offsety, offsetz, sprite, size, framerate, flag, altLocation, 1);
+
+
+void UTIL_Explosion(int msg_dest, const Vector &location, float offsetx, float offsety, float offsetz, short sprite, float size, int framerate, int flag, const Vector& altLocation){
+	UTIL_Explosion(msg_dest, NULL, NULL, NULL, location, offsetx, offsety, offsetz, sprite, size, framerate, flag, altLocation, 1);
+}
+void UTIL_Explosion(int msg_dest, const float* pMsgOrigin, const Vector& location, float offsetx, float offsety, float offsetz, short sprite, float size, int framerate, int flag, const Vector& altLocation) {
+	UTIL_Explosion(msg_dest, pMsgOrigin, NULL, NULL, location, offsetx, offsety, offsetz, sprite, size, framerate, flag, altLocation, 1);
+}
+void UTIL_Explosion(int msg_dest, const float* pMsgOrigin, edict_t* ed, const Vector& location, float offsetx, float offsety, float offsetz, short sprite, float size, int framerate, int flag, const Vector& altLocation) {
+	UTIL_Explosion(msg_dest, pMsgOrigin, ed, NULL, location, offsetx, offsety, offsetz, sprite, size, framerate, flag, altLocation, 1);
 }
 
-void UTIL_Explosion(entvars_t* pev, const Vector &location, float offsetx, float offsety, float offsetz, short sprite, float size, int framerate, int flag, const Vector& altLocation, float shrapMod){
 
-
-	/*
-	// 0 normal
-	LIGHT_STYLE(0, "mmnnmmnnnmmnn");
-	
-	// 1 FLICKER (first variety)
-	LIGHT_STYLE(1, "mmnnmmnnnmmnn");
-	
-	// 2 SLOW STRONG PULSE
-	LIGHT_STYLE(2, "mmnnmmnnnmmnn");
-	
-	// 3 CANDLE (first variety)
-	LIGHT_STYLE(3, "mmnnmmnnnmmnn");
-	
-	// 4 FAST STROBE
-	LIGHT_STYLE(4, "mmnnmmnnnmmnn");
-	
-	// 5 GENTLE PULSE 1
-	LIGHT_STYLE(5,"mmnnmmnnnmmnn");
-	
-	// 6 FLICKER (second variety)
-	LIGHT_STYLE(6, "mmnnmmnnnmmnn");
-	
-	// 7 CANDLE (second variety)
-	LIGHT_STYLE(7, "mmnnmmnnnmmnn");
-	
-	// 8 CANDLE (third variety)
-	LIGHT_STYLE(8, "mmnnmmnnnmmnn");
-	
-	// 9 SLOW STROBE (fourth variety)
-	LIGHT_STYLE(9, "mmnnmmnnnmmnn");
-	
-	// 10 FLUORESCENT FLICKER
-	LIGHT_STYLE(10, "mmnnmmnnnmmnn");
-
-	// 11 SLOW PULSE NOT FADE TO BLACK
-	LIGHT_STYLE(11, "mmnnmmnnnmmnn");
-	
-	// 12 UNDERWATER LIGHT MUTATION
-	// this light only distorts the lightmap - no contribution
-	// is made to the brightness of affected surfaces
-	LIGHT_STYLE(12, "mmnnmmnnnmmnn");
-	
-	// styles 32-62 are assigned by the light program for switchable lights
-
-	// 63 testing
-	LIGHT_STYLE(63, "mmnnmmnnnmmnn");
-	*/
+void UTIL_Explosion(int msg_dest, entvars_t* pev, const Vector& location, float offsetx, float offsety, float offsetz, short sprite, float size, int framerate, int flag, const Vector& altLocation) {
+	UTIL_Explosion(msg_dest, NULL, NULL, pev, location, offsetx, offsety, offsetz, sprite, size, framerate, flag, altLocation, 1);
+}
+void UTIL_Explosion(int msg_dest, const float* pMsgOrigin, entvars_t* pev, const Vector& location, float offsetx, float offsety, float offsetz, short sprite, float size, int framerate, int flag, const Vector& altLocation) {
+	UTIL_Explosion(msg_dest, pMsgOrigin, NULL, pev, location, offsetx, offsety, offsetz, sprite, size, framerate, flag, altLocation, 1);
+}
+void UTIL_Explosion(int msg_dest, const float* pMsgOrigin, edict_t* ed, entvars_t* pev, const Vector &location, float offsetx, float offsety, float offsetz, short sprite, float size, int framerate, int flag, const Vector& altLocation){
+	UTIL_Explosion(msg_dest, pMsgOrigin, ed, pev, location, offsetx, offsety, offsetz, sprite, size, framerate, flag, altLocation, 1);
+}
 
 
 
-	//easyPrintLine("BOOTY : %d", ENTVARS_COUNT);
+void UTIL_Explosion(int msg_dest, entvars_t* pev, const Vector& location, float offsetx, float offsety, float offsetz, short sprite, float size, int framerate, int flag, const Vector& altLocation, float shrapMod) {
+	UTIL_Explosion(msg_dest, NULL, NULL, pev, location, offsetx, offsety, offsetz, sprite, size, framerate, flag, altLocation, shrapMod);
+}
+void UTIL_Explosion(int msg_dest, const float* pMsgOrigin, entvars_t* pev, const Vector& location, float offsetx, float offsety, float offsetz, short sprite, float size, int framerate, int flag, const Vector& altLocation, float shrapMod) {
+	UTIL_Explosion(msg_dest, pMsgOrigin, NULL, pev, location, offsetx, offsety, offsetz, sprite, size, framerate, flag, altLocation, shrapMod);
+}
 
-	//-1 = same as 1 but without the sound.
-	//0 = retail.
-	//1 is the quake explosion normally (with quake sound).
-	//2 will emit smoke and sound.
+// 
+void UTIL_Explosion(int msg_dest, const float* pMsgOrigin, edict_t * ed, entvars_t* pev, const Vector &location, float offsetx, float offsety, float offsetz, short sprite, float size, int framerate, int flag, const Vector& altLocation, float shrapMod){
+	//easyPrintLine("ENTVARS_COUNT? : %d", ENTVARS_COUNT);
 
-
-
-	if(EASY_CVAR_GET(cl_explosion) == 0){
-		MESSAGE_BEGIN( MSG_PAS, SVC_TEMPENTITY, location );
-			WRITE_BYTE( TE_EXPLOSION );		// This makes a dynamic light and the explosion sprites/sound
-			WRITE_COORD( location.x );	// Send to PAS because of the sound
-			WRITE_COORD( location.y );
-			WRITE_COORD( location.z );
-			WRITE_SHORT( sprite );
-			WRITE_BYTE( (int)size  ); // scale * 10
-			WRITE_BYTE( framerate  ); // framerate
-			WRITE_BYTE( TE_EXPLFLAG_NONE );
-		MESSAGE_END();
-	}else{
-
-		//MODDD - TEST!!!
-		//PLAYBACK_EVENT_FULL (FEV_GLOBAL, NULL, g_quakeExplosionEffect, 0.0, 
-		//(float *)&altLocation, (float *)&Vector(0,0,0), 0.0, 0.0, 0, 0, FALSE, FALSE);
-		
-		PLAYBACK_EVENT_FULL (FEV_GLOBAL, NULL, g_quakeExplosionEffect, 0.0, 
-		(float *)&altLocation, (float *)&Vector(0,0,0), EASY_CVAR_GET(shrapRand), EASY_CVAR_GET(shrapRandHeightExtra), (int)EASY_CVAR_GET(shrapMode), (int)(EASY_CVAR_GET(explosionShrapnelMulti) * 14 * shrapMod), FALSE, FALSE);
-
-
-		//MODDD TODO - these play the sound at the exploding entity's location, not necesarily at the sent origin.
-		//Should we use the AMBIENT sound player to play the sound at a specific origin? Would that be ok, no side effects?
-		//Example: This section was found in TEXTURETYPE_PlaySound, serverside:
-		//    UTIL_EmitAmbientSound(ENT(0), ptr->vecEndPos, rgsz[RANDOM_LONG(0,cnt-1)], fvol, fattn, 0, 96 + RANDOM_LONG(0,0xf));
-		//    //EMIT_SOUND_DYN( ENT(m_pPlayer->pev), CHAN_WEAPON, rgsz[RANDOM_LONG(0,cnt-1)], fvol, ATTN_NORM, 0, 96 + RANDOM_LONG(0,0xf));
-		//...2nd line commented out, or rough equivalent of the first Ambient version to give a more specific location.
-		if(EASY_CVAR_GET(quakeExplosionSound) == 1){
-			if(pev != NULL){
-				//UTIL_PlaySound(ENT(pev), CHAN_WEAPON, "!old_explode0", 0.7, ATTN_NORM);
-				
-				//MODDD - NOTE: used to use "CHAN_WEAPON".  changed to "CHAN_ITEM" so that it gets priority over mass sounds coming from "CHAN_VOICE" (tested with lots of headcrab deaths).
-				switch( RANDOM_LONG(0, 2)){
-				case 0:
-					UTIL_PlaySound(ENT(pev), CHAN_ITEM, "old/explode0.wav", 1.00, ATTN_NORM);
-				break;
-				case 1:
-					UTIL_PlaySound(ENT(pev), CHAN_ITEM, "old/explode1.wav", 1.00, ATTN_NORM);
-				break;
-				case 2:
-					UTIL_PlaySound(ENT(pev), CHAN_ITEM, "old/explode2.wav", 1.00, ATTN_NORM);
-				break;
-				}
-				
-			}
-		}//END OF if(EASY_CVAR_GET(cl_explosion) > 0)
-		else if(EASY_CVAR_GET(quakeExplosionSound) == 2){
-			if(pev != NULL){
-				//UTIL_PlaySound(ENT(pev), CHAN_WEAPON, "!old_explode0", 0.7, ATTN_NORM);
-				
-				//MODDD - NOTE: used to use "CHAN_WEAPON".  changed to "CHAN_ITEM" so that it gets priority over mass sounds coming from "CHAN_VOICE" (tested with lots of headcrab deaths).
-				switch( RANDOM_LONG(0, 2)){
-				case 0:
-					UTIL_PlaySound(ENT(pev), CHAN_ITEM, "weapons/explode3.wav", 1.00, ATTN_NORM);
-				break;
-				case 1:
-					UTIL_PlaySound(ENT(pev), CHAN_ITEM, "weapons/explode4.wav", 1.00, ATTN_NORM);
-				break;
-				case 2:
-					UTIL_PlaySound(ENT(pev), CHAN_ITEM, "weapons/explode5.wav", 1.00, ATTN_NORM);
-				break;
-				}
-				
-			}
-		
-		}//END OF quake explosion sound checks.
-
-
-
-	}//END OF else OF if(EASY_CVAR_GET(cl_explosion) != 1)
-
-
-	/*
-	RETAIL EXPLOSION UNABRIDGED for comparison.
-	MESSAGE_BEGIN( MSG_PAS, SVC_TEMPENTITY, pev->origin );
-		WRITE_BYTE( TE_EXPLOSION );		// This makes a dynamic light and the explosion sprites/sound
-		WRITE_COORD( pev->origin.x );	// Send to PAS because of the sound
-		WRITE_COORD( pev->origin.y );
-		WRITE_COORD( pev->origin.z );
-		if (iContents != CONTENTS_WATER)
-		{
-			WRITE_SHORT( g_sModelIndexFireball );
-		}
-		else
-		{
-			WRITE_SHORT( g_sModelIndexWExplosion );
-		}
-		WRITE_BYTE( (pev->dmg - 50) * .60  ); // scale * 10
-		WRITE_BYTE( 15  ); // framerate
-		WRITE_BYTE( TE_EXPLFLAG_NONE );
+	MESSAGE_BEGIN(msg_dest, SVC_TEMPENTITY, location, ed);
+		WRITE_BYTE(TE_EXPLOSION);		// This makes a dynamic light and the explosion sprites/sound
+		WRITE_COORD(location.x + offsetx);	// Send to PAS because of the sound
+		WRITE_COORD(location.y + offsety);
+		WRITE_COORD(location.z + offsetz);
+		WRITE_SHORT(sprite);
+		WRITE_BYTE((int)size); // scale * 10
+		WRITE_BYTE(framerate); // framerate
+		WRITE_BYTE(flag);
 	MESSAGE_END();
 
-	*/
 
-}
-
-void UTIL_Smoke(const Vector& location, short sprite, float scale, int framerate){
-
-	UTIL_Smoke(location, 0, 0, 0, sprite, scale, framerate);
-
-}
-
-void UTIL_Smoke(const Vector& location, float offsetx, float offsety, float offsetz, short sprite, float scale, int framerate){
-
-
-	if(EASY_CVAR_GET(cl_explosion) != 1){
-
-		MESSAGE_BEGIN( MSG_PVS, SVC_TEMPENTITY, location );
-			WRITE_BYTE( TE_SMOKE );
-			WRITE_COORD( location.x + offsetx);
+	/*
+	if(EASY_CVAR_GET(cl_explosion) == 0){
+		MESSAGE_BEGIN(msg_dest, SVC_TEMPENTITY, pMsgOrigin, ed );
+			WRITE_BYTE( TE_EXPLOSION );		// This makes a dynamic light and the explosion sprites/sound
+			WRITE_COORD( location.x + offsetx);	// Send to PAS because of the sound
 			WRITE_COORD( location.y + offsety);
 			WRITE_COORD( location.z + offsetz);
 			WRITE_SHORT( sprite );
-			WRITE_BYTE( (int)scale ); // scale * 10
+			WRITE_BYTE( (int)size  ); // scale * 10
 			WRITE_BYTE( framerate  ); // framerate
+			WRITE_BYTE( flag );
 		MESSAGE_END();
+	}else{
+		UTIL_QuakeExplosion(msg_dest, pMsgOrigin, ed, pev, altLocation, offsetx, offsety, offsetz, shrapMod);
+	}//END OF cl_explosion check
+	*/
 
+}//END OF UTIL_Explosion
+
+
+
+void UTIL_QuakeExplosion(int msg_dest, entvars_t* pev, const Vector& location, float offsetx, float offsety, float offsetz, float shrapMod) {
+	UTIL_QuakeExplosion(msg_dest, NULL, NULL, pev, location, offsetx, offsety, offsetz, shrapMod);
+}
+void UTIL_QuakeExplosion(int msg_dest, const float* pMsgOrigin, entvars_t* pev, const Vector& location, float offsetx, float offsety, float offsetz, float shrapMod) {
+	UTIL_QuakeExplosion(msg_dest, pMsgOrigin, NULL, pev, location, offsetx, offsety, offsetz, shrapMod);
+}
+
+// do not call directly outside of utility files!
+// UTIL_Explosion and some others call this if cl_explosion says it should be.
+// And so far we're ignoring the 'offset' coords, but they're stil given in case 
+// that changes.
+void UTIL_QuakeExplosion(int msg_dest, const float* pMsgOrigin, edict_t* ed, entvars_t* pev, const Vector& location, float offsetx, float offsety, float offsetz, float shrapMod) {
+	// never called serverside..?
+
+	//MODDD - TEST!!!
+	//PLAYBACK_EVENT_FULL (FEV_GLOBAL, NULL, g_quakeExplosionEffect, 0.0, 
+	//(float *)&altLocation, (float *)&Vector(0,0,0), 0.0, 0.0, 0, 0, FALSE, FALSE);
+
+	PLAYBACK_EVENT_FULL(FEV_GLOBAL, NULL, g_quakeExplosionEffect, 0.0,
+		(float*)&location, (float*)&Vector(0, 0, 0), EASY_CVAR_GET(shrapRand), EASY_CVAR_GET(shrapRandHeightExtra), (int)EASY_CVAR_GET(shrapMode), (int)(EASY_CVAR_GET(explosionShrapnelMulti) * 14 * shrapMod), FALSE, FALSE);
+	
+	//MODDD TODO - these play the sound at the exploding entity's location, not necesarily at the sent origin.
+	//Should we use the AMBIENT sound player to play the sound at a specific origin? Would that be ok, no side effects?
+	//Example: This section was found in TEXTURETYPE_PlaySound, serverside:
+	//    UTIL_EmitAmbientSound(ENT(0), ptr->vecEndPos, rgsz[RANDOM_LONG(0,cnt-1)], fvol, fattn, 0, 96 + RANDOM_LONG(0,0xf));
+	//    //EMIT_SOUND_DYN( ENT(m_pPlayer->pev), CHAN_WEAPON, rgsz[RANDOM_LONG(0,cnt-1)], fvol, ATTN_NORM, 0, 96 + RANDOM_LONG(0,0xf));
+	//...2nd line commented out, or rough equivalent of the first Ambient version to give a more specific location.
+
+	// ALSO, this is often playing on top of a relatively quiet sound, 'weapon/debris#.wav', as 
+	// seen in ggrenade.cpp, look for explosionDebrisSoundVolume.
+	if (EASY_CVAR_GET(quakeExplosionSound) == 1) {
+		if (pev != NULL) {
+			//UTIL_PlaySound(ENT(pev), CHAN_WEAPON, "!old_explode0", 0.7, ATTN_NORM);
+
+			//MODDD - NOTE: used to use "CHAN_WEAPON".  changed to "CHAN_ITEM" so that it gets priority over mass sounds coming from "CHAN_VOICE" (tested with lots of headcrab deaths).
+			switch (RANDOM_LONG(0, 2)) {
+			case 0:
+				UTIL_PlaySound(ENT(pev), CHAN_ITEM, "old/explode0.wav", 1.00, ATTN_NORM);
+				break;
+			case 1:
+				UTIL_PlaySound(ENT(pev), CHAN_ITEM, "old/explode1.wav", 1.00, ATTN_NORM);
+				break;
+			case 2:
+				UTIL_PlaySound(ENT(pev), CHAN_ITEM, "old/explode2.wav", 1.00, ATTN_NORM);
+				break;
+			}
+
+		}
+	}//END OF if(EASY_CVAR_GET(quakeExplosionSound) == 1)
+	else if (EASY_CVAR_GET(quakeExplosionSound) == 2) {
+		if (pev != NULL) {
+			//UTIL_PlaySound(ENT(pev), CHAN_WEAPON, "!old_explode0", 0.7, ATTN_NORM);
+
+			//MODDD - NOTE: used to use "CHAN_WEAPON".  changed to "CHAN_ITEM" so that it gets priority over mass sounds coming from "CHAN_VOICE" (tested with lots of headcrab deaths).
+			switch (RANDOM_LONG(0, 2)) {
+			case 0:
+				UTIL_PlaySound(ENT(pev), CHAN_ITEM, "weapons/explode3.wav", 1.00, ATTN_NORM);
+				break;
+			case 1:
+				UTIL_PlaySound(ENT(pev), CHAN_ITEM, "weapons/explode4.wav", 1.00, ATTN_NORM);
+				break;
+			case 2:
+				UTIL_PlaySound(ENT(pev), CHAN_ITEM, "weapons/explode5.wav", 1.00, ATTN_NORM);
+				break;
+			}
+
+		}
+
+	}//END OF quake explosion sound checks.
+
+}//END OF UTIL_QuakeExplosion
+
+
+
+
+void UTIL_SpriteOrQuakeExplosion(int msg_dest, entvars_t* pev, const Vector& location, float offsetx, float offsety, float offsetz, short sprite, float size, int brightness, const Vector& altLocation, float shrapMod) {
+	UTIL_SpriteOrQuakeExplosion(msg_dest, NULL, NULL, pev, location, offsetx, offsety, offsetz, sprite, size, brightness, altLocation, shrapMod);
+}
+void UTIL_SpriteOrQuakeExplosion(int msg_dest, const float* pMsgOrigin, entvars_t* pev, const Vector& location, float offsetx, float offsety, float offsetz, short sprite, float size, int brightness, const Vector& altLocation, float shrapMod) {
+	UTIL_SpriteOrQuakeExplosion(msg_dest, pMsgOrigin, NULL, pev, location, offsetx, offsety, offsetz, sprite, size, brightness, altLocation, shrapMod);
+}
+// Decision based off cl_explosion:
+// 0: generate a sprite effect (like a more custom explosion graphic), or...
+// 1: use the same quake explosion as most other places in that case.
+void UTIL_SpriteOrQuakeExplosion(int msg_dest, const float* pMsgOrigin, edict_t* ed, entvars_t* pev, const Vector& location, float offsetx, float offsety, float offsetz, short sprite, float size, int brightness, const Vector& altLocation, float shrapMod) {
+
+	if (EASY_CVAR_GET(cl_explosion) == 0) {
+		MESSAGE_BEGIN(msg_dest, SVC_TEMPENTITY, pMsgOrigin, ed);
+			WRITE_BYTE(TE_SPRITE);
+			WRITE_COORD(location.x + offsetx);
+			WRITE_COORD(location.y + offsety);
+			WRITE_COORD(location.z + offsetz);
+			WRITE_SHORT(sprite);
+			WRITE_BYTE(size); // scale * 10
+			WRITE_BYTE(brightness); // brightness
+		MESSAGE_END();
+	}else {
+		//UTIL_Explosion(pev, location, offsetx, offsety, offsetz, sprite, size, NO_FRAMERATE, NO_FLAG, ONLY_ALT_LOC, shrapMod);
+
+		// Copy that works for cl_explosion of 0.
+		UTIL_QuakeExplosion(msg_dest, pMsgOrigin, ed, pev, altLocation, offsetx, offsety, offsetz, shrapMod);
 	}
 
+}// UTIL_SpriteOrQuakeExplosion
+
+
+
+
+// Runs regardless of cl_explosion.
+void UTIL_Smoke(int msg_dest, const Vector& location, short sprite, float scale, int framerate){
+	UTIL_Smoke(msg_dest, NULL, NULL, location, 0, 0, 0, sprite, scale, framerate);
+}
+void UTIL_Smoke(int msg_dest, const float* pMsgOrigin, const Vector& location, short sprite, float scale, int framerate) {
+	UTIL_Smoke(msg_dest, pMsgOrigin, NULL, location, 0, 0, 0, sprite, scale, framerate);
+}
+void UTIL_Smoke(int msg_dest, const float* pMsgOrigin, edict_t* ed, const Vector& location, short sprite, float scale, int framerate) {
+	UTIL_Smoke(msg_dest, pMsgOrigin, ed, location, 0, 0, 0, sprite, scale, framerate);
+}
+
+void UTIL_Smoke(int msg_dest, const Vector& location, float offsetx, float offsety, float offsetz, short sprite, float scale, int framerate) {
+	UTIL_Smoke(msg_dest, NULL, NULL, location, offsetx, offsety, offsetz, sprite, scale, framerate);
+}
+void UTIL_Smoke(int msg_dest, const float* pMsgOrigin, const Vector& location, float offsetx, float offsety, float offsetz, short sprite, float scale, int framerate) {
+	UTIL_Smoke(msg_dest, pMsgOrigin, NULL, location, offsetx, offsety, offsetz, sprite, scale, framerate);
+}
+void UTIL_Smoke(int msg_dest, const float* pMsgOrigin, edict_t* ed, const Vector& location, float offsetx, float offsety, float offsetz, short sprite, float scale, int framerate){
+	MESSAGE_BEGIN(msg_dest, SVC_TEMPENTITY, pMsgOrigin, ed);
+		WRITE_BYTE( TE_SMOKE );
+		WRITE_COORD( location.x + offsetx);
+		WRITE_COORD( location.y + offsety);
+		WRITE_COORD( location.z + offsetz);
+		WRITE_SHORT( sprite );
+		WRITE_BYTE( (int)scale ); // scale * 10
+		WRITE_BYTE( framerate  ); // framerate
+	MESSAGE_END();
 }
 
 
+// Same as UTIL_Smoke, but requires cl_explosion to be 0 or 2 to work
+// (quake explosions don't involve the smoke effect by default).
+void UTIL_ExplosionSmoke(int msg_dest, const Vector& location, short sprite, float scale, int framerate) {
+	UTIL_ExplosionSmoke(msg_dest, NULL, NULL, location, 0, 0, 0, sprite, scale, framerate);
+}
+void UTIL_ExplosionSmoke(int msg_dest, const float* pMsgOrigin, const Vector& location, short sprite, float scale, int framerate) {
+	UTIL_ExplosionSmoke(msg_dest, pMsgOrigin, NULL, location, 0, 0, 0, sprite, scale, framerate);
+}
+void UTIL_ExplosionSmoke(int msg_dest, const float* pMsgOrigin, edict_t* ed, const Vector& location, short sprite, float scale, int framerate) {
+	UTIL_ExplosionSmoke(msg_dest, pMsgOrigin, ed, location, 0, 0, 0, sprite, scale, framerate);
+}
+
+
+void UTIL_ExplosionSmoke(int msg_dest, const Vector& location, float offsetx, float offsety, float offsetz, short sprite, float scale, int framerate) {
+	UTIL_ExplosionSmoke(msg_dest, NULL, NULL, location, offsetx, offsety, offsetz, sprite, scale, framerate);
+}
+void UTIL_ExplosionSmoke(int msg_dest, const float* pMsgOrigin, const Vector & location, float offsetx, float offsety, float offsetz, short sprite, float scale, int framerate) {
+	UTIL_ExplosionSmoke(msg_dest, pMsgOrigin, NULL, location, offsetx, offsety, offsetz, sprite, scale, framerate);
+}
+void UTIL_ExplosionSmoke(int msg_dest, const float* pMsgOrigin, edict_t* ed, const Vector& location, float offsetx, float offsety, float offsetz, short sprite, float scale, int framerate) {
+	if (EASY_CVAR_GET(cl_explosion) != 1) {
+		MESSAGE_BEGIN(msg_dest, SVC_TEMPENTITY, pMsgOrigin, ed);
+			WRITE_BYTE(TE_SMOKE);
+			WRITE_COORD(location.x + offsetx);
+			WRITE_COORD(location.y + offsety);
+			WRITE_COORD(location.z + offsetz);
+			WRITE_SHORT(sprite);
+			WRITE_BYTE((int)scale); // scale * 10
+			WRITE_BYTE(framerate); // framerate
+		MESSAGE_END();
+	}
+}
+
+
+
 //MODDD - new
-BOOL UTIL_getExplosionsHaveSparks(){
+BOOL UTIL_getExplosionsHaveSparks(void){
 	//Deprecated way.
 	/*
 	float explosionsHaveSparksVar = EASY_CVAR_GET(explosionsHaveSparks);
@@ -2767,7 +2768,6 @@ BOOL UTIL_getExplosionsHaveSparks(){
 
 	//For an explosion to satisfy the condition of generating sparks, the "cl_explosion" var must be off (retail explosions only) and the sparks multiple (of 6) must be above 0.
 	return  (EASY_CVAR_GET(cl_explosion) != 1 && EASY_CVAR_GET(sparksExplosionMulti) > 0 && EASY_CVAR_GET(sparksAllMulti) > 0) ;
-	
 }
 
 
@@ -2805,133 +2805,7 @@ BOOL UTIL_TeamsMatch( const char *pTeamName1, const char *pTeamName2 )
 }
 
 
-
-//MODDD - methods involving vectors moved to util_shared.h/.cpp.
-
-
-//MODDD - the as-is version can be fooled into picking a water level below oneself if the floor is closer than the top of the
-//        water.  But it's possible you are supposed to always supply a minz equal to the position's .z coordinate for that reason.
-//        I want more flexibility to know when to fall into the water though.
-//        So a check. If we're already in the water, don't be satisfied with a choice below our current .z. We have to find an answer upwards.
-//        If not in the water (AIR?), we need to find a water level below ourselves.  That may come naturally though.
-//        Keep in mind there are other CONTENTS_ types besides just WATER.  There are AIR and SOLID, may help to differentiate.
-//        SOLID probably includes going out of bounds of the map (into solid blackness)
-float UTIL_WaterLevel( const Vector &position, float minz, float maxz )
-{
-	BOOL alreadyInWater = (UTIL_PointContents(position) == CONTENTS_WATER);
-	int pointContentsTemp;
-
-	if(alreadyInWater){
-		minz = position.z; //go no lower.
-	}else{
-		//go no higher.
-		maxz = position.z;
-	}
-
-
-
-	Vector midUp = position;
-	midUp.z = minz;
-
-	pointContentsTemp = UTIL_PointContents(midUp);
-
-	//MODDD - don't allow CONTENTS_SOLID to end early. It could just be at or past (beneath) the floor of this body of water.
-	if (pointContentsTemp != CONTENTS_WATER && pointContentsTemp != CONTENTS_SOLID)
-		return minz;
-
-	midUp.z = maxz;
-	if (UTIL_PointContents(midUp) == CONTENTS_WATER)
-		return maxz;
-
-	float diff = maxz - minz;
-	while (diff > 1.0)
-	{
-		midUp.z = minz + diff/2.0;
-
-		pointContentsTemp = UTIL_PointContents(midUp);
-		if (pointContentsTemp == CONTENTS_WATER)
-		{
-			minz = midUp.z;
-		}
-		else if (pointContentsTemp != CONTENTS_SOLID)
-		{
-			maxz = midUp.z;
-		}
-		else
-		{
-			//MODDD - NEW. If equal to solid, it depends on what direction we want to go based on "alreadyInWater".
-			if(alreadyInWater){
-				//lean on being below this.
-				maxz = midUp.z;
-			}else{
-				//lean on being above this.
-				minz = midUp.z;
-			}
-
-		}
-		diff = maxz - minz;
-	}
-
-	return midUp.z;
-}
-
-
-void UTIL_Bubbles( Vector mins, Vector maxs, int count )
-{
-	Vector mid =  (mins + maxs) * 0.5;
-
-	float flHeight = UTIL_WaterLevel( mid,  mid.z, mid.z + 1024 );
-	flHeight = flHeight - mins.z;
-
-	MESSAGE_BEGIN( MSG_PAS, SVC_TEMPENTITY, mid );
-		WRITE_BYTE( TE_BUBBLES );
-		WRITE_COORD( mins.x );	// mins
-		WRITE_COORD( mins.y );
-		WRITE_COORD( mins.z );
-		WRITE_COORD( maxs.x );	// maxz
-		WRITE_COORD( maxs.y );
-		WRITE_COORD( maxs.z );
-		WRITE_COORD( flHeight );			// height
-		WRITE_SHORT( g_sModelIndexBubbles );
-		WRITE_BYTE( count ); // count
-		WRITE_COORD( 8 ); // speed
-	MESSAGE_END();
-}
-
-void UTIL_BubbleTrail( Vector from, Vector to, int count )
-{
-	float flHeight = UTIL_WaterLevel( from,  from.z, from.z + 256 );
-	flHeight = flHeight - from.z;
-
-	if (flHeight < 8)
-	{
-		flHeight = UTIL_WaterLevel( to,  to.z, to.z + 256 );
-		flHeight = flHeight - to.z;
-		if (flHeight < 8)
-			return;
-
-		// UNDONE: do a ploink sound
-		flHeight = flHeight + to.z - from.z;
-	}
-
-	if (count > 255) 
-		count = 255;
-
-	MESSAGE_BEGIN( MSG_BROADCAST, SVC_TEMPENTITY );
-		WRITE_BYTE( TE_BUBBLETRAIL );
-		WRITE_COORD( from.x );	// mins
-		WRITE_COORD( from.y );
-		WRITE_COORD( from.z );
-		WRITE_COORD( to.x );	// maxz
-		WRITE_COORD( to.y );
-		WRITE_COORD( to.z );
-		WRITE_COORD( flHeight );			// height
-		WRITE_SHORT( g_sModelIndexBubbles );
-		WRITE_BYTE( count ); // count
-		WRITE_COORD( 8 ); // speed
-	MESSAGE_END();
-}
-
+//MODDD - UTIL_WaterLevel, UTIL_Bubbles, UTIL_BubbleTrail moved to util_shared.h/cpp
 
 void UTIL_Remove( CBaseEntity *pEntity )
 {
@@ -2942,10 +2816,6 @@ void UTIL_Remove( CBaseEntity *pEntity )
 	pEntity->pev->flags |= FL_KILLME;
 	pEntity->pev->targetname = 0;
 }
-
-
-
-
 
 
 //MODDD
@@ -2977,7 +2847,6 @@ BOOL UTIL_IsDeadEntity( CBaseEntity* ent){
 }
 
 
-
 //MODDD - same as IsValidEntity for Entity, but also has a pev->deadflag check.
 //This is a literal check, not for the AI to be tricked or have a slightly delayed reaction to for things with the DEAD_DYING deadflag (death anim in progress).
 //flag DEAD_NO only.
@@ -3003,9 +2872,7 @@ BOOL UTIL_IsAliveEntity( CBaseEntity* ent){
 	}
 	*/
 	return UTIL_IsValidEntity(pentAttempt);
-
 }
-
 
 
 //MODDD - slight extension.
@@ -3022,9 +2889,7 @@ BOOL UTIL_IsValidEntity( CBaseEntity* ent){
 	}
 	*/
 	return UTIL_IsValidEntity(pentAttempt);
-
 }
-
 
 BOOL UTIL_IsValidEntity( edict_t *pent )
 {
@@ -3032,7 +2897,6 @@ BOOL UTIL_IsValidEntity( edict_t *pent )
 		return FALSE;
 	return TRUE;
 }
-
 
 
 void UTIL_PrecacheOther( const char *szClassname )
@@ -3100,8 +2964,6 @@ void UTIL_StripToken( const char *pKey, char *pDest )
 }
 
 
-
-
 //MODDD - SetMovedir and VecBModelOrigin moved here from subs.cpp and bmodels.cpp.
 /*
 QuakeEd only writes a single float for angles (bad idea), so up and down are
@@ -3130,7 +2992,6 @@ Vector VecBModelOrigin( entvars_t* pevBModel )
 {
 	return pevBModel->absmin + ( pevBModel->size * 0.5 );
 }
-
 
 
 
@@ -3168,12 +3029,10 @@ CSaveRestoreBuffer :: CSaveRestoreBuffer( void )
 	m_pdata = NULL;
 }
 
-
 CSaveRestoreBuffer :: CSaveRestoreBuffer( SAVERESTOREDATA *pdata )
 {
 	m_pdata = pdata;
 }
-
 
 CSaveRestoreBuffer :: ~CSaveRestoreBuffer( void )
 {
@@ -3185,7 +3044,6 @@ int CSaveRestoreBuffer :: EntityIndex( CBaseEntity *pEntity )
 		return -1;
 	return EntityIndex( pEntity->pev );
 }
-
 
 int CSaveRestoreBuffer :: EntityIndex( entvars_t *pevLookup )
 {
@@ -3217,7 +3075,6 @@ int CSaveRestoreBuffer :: EntityIndex( edict_t *pentLookup )
 	return -1;
 }
 
-
 edict_t *CSaveRestoreBuffer :: EntityFromIndex( int entityIndex )
 {
 	if ( !m_pdata || entityIndex < 0 )
@@ -3234,7 +3091,6 @@ edict_t *CSaveRestoreBuffer :: EntityFromIndex( int entityIndex )
 	}
 	return NULL;
 }
-
 
 int CSaveRestoreBuffer :: EntityFlagsSet( int entityIndex, int flags )
 {
@@ -5182,10 +5038,10 @@ void UTIL_PrecacheOtherWeapon( const char *szClassname )
 // called by worldspawn
 void W_Precache(void)
 {
-	memset( CBasePlayerItem::ItemInfoArray, 0, sizeof(CBasePlayerItem::ItemInfoArray) );
-	memset( CBasePlayerItem::AmmoInfoArray, 0, sizeof(CBasePlayerItem::AmmoInfoArray) );
-	giAmmoIndex = 0;
-
+	
+	// MODDD - place for script similar between client and serverside.
+	PrecacheShared();
+	
 	// custom items...
 	
 	/*
@@ -5194,7 +5050,6 @@ void W_Precache(void)
 	PRECACHE_SOUND("weapons/g_bounce2.wav");
 	PRECACHE_SOUND("weapons/g_bounce3.wav");
 	*/
-
 
 	// common world objects
 	UTIL_PrecacheOther( "item_suit" );
@@ -5209,6 +5064,7 @@ void W_Precache(void)
 
 	UTIL_PrecacheOther( "item_security" );
 	UTIL_PrecacheOther( "item_longjump" );
+	//UTIL_PrecacheOther( "item_longjumpcharge" );
 
 	// shotgun
 	UTIL_PrecacheOtherWeapon( "weapon_shotgun" );
@@ -5274,7 +5130,8 @@ void W_Precache(void)
 	g_sModelIndexFireball = PRECACHE_MODEL ("sprites/zerogxplode.spr");// fireball
 	g_sModelIndexWExplosion = PRECACHE_MODEL ("sprites/WXplo1.spr");// underwater fireball
 	g_sModelIndexSmoke = PRECACHE_MODEL ("sprites/steam1.spr");// smoke
-	g_sModelIndexBubbles = PRECACHE_MODEL ("sprites/bubble.spr");//bubbles
+	//MODDD - g_sModelIndexBubbles precache moved to util_shared's "PrecacheShared".
+	//g_sModelIndexBubbles = PRECACHE_MODEL ("sprites/bubble.spr");//bubbles
 	g_sModelIndexBloodSpray = PRECACHE_MODEL ("sprites/bloodspray.spr"); // initial blood
 	g_sModelIndexBloodDrop = PRECACHE_MODEL ("sprites/blood.spr"); // splattered blood 
 

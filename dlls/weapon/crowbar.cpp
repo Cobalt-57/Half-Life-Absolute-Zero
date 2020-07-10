@@ -590,7 +590,7 @@ int CCrowbar::Swing( int fFirst )
 				//doens't have any sort of Classify() section or inorganic? Make the usual crowbar metal-hitting sound.
 				//easyForcePrintLine("ILL realize I just hit some metallic enemy");
 
-				//Hitting a metalic foe? Do closer to full volume.
+				// Hitting a metalic foe? Do closer to full volume.
 				fvolbar = 0.71;
 
 				if(!useBulletHitSound){
@@ -602,7 +602,7 @@ int CCrowbar::Swing( int fFirst )
 				if(canPlayHitSound){
 
 					//!!!!!
-					//For now, metallics don't care about "useBulletHitSound", ricochet or not they play this. ... besides a little volume reduction on the hit sound actually.
+					// For now, metallics don't care about "useBulletHitSound", ricochet or not they play this. ... besides a little volume reduction on the hit sound actually.
 				
 					// also play crowbar strike
 					switch( RANDOM_LONG(0,1) )

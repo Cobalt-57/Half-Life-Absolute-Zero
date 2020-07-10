@@ -544,13 +544,6 @@ CBaseEntity* EHANDLE::GetEntity(){
 
 
 
-
-
-
-
-
-
-
 CBaseEntity::CBaseEntity(void){
 
 	usingCustomSequence = FALSE;
@@ -1198,6 +1191,9 @@ CBaseEntity * CBaseEntity::CreateManual( const char *szName, const Vector &vecOr
 	pEntity->pev->owner = pentOwner;
 	pEntity->pev->origin = vecOrigin;
 	pEntity->pev->angles = vecAngles;
+
+	// Don't respawn created or NPC-dropped weapons!
+	pEntity->pev->spawnflags |= SF_NORESPAWN;
 
 	return pEntity;
 }

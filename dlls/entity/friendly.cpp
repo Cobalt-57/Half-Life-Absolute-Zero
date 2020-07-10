@@ -226,6 +226,7 @@ Schedule_t	slFriendlyTakeCoverFromPlayer[] =
 		tlFriendlyTakeCoverFromPlayer,
 		ARRAYSIZE ( tlFriendlyTakeCoverFromPlayer ), 
 		bits_COND_NEW_ENEMY		|
+		bits_COND_SEE_ENEMY |
 		bits_COND_LIGHT_DAMAGE	|
 		bits_COND_HEAVY_DAMAGE	|
 		bits_COND_CAN_ATTACK |
@@ -283,6 +284,7 @@ Schedule_t	slFriendlyStareAtPlayer[] =
 		tlFriendlyStareAtPlayer,
 		ARRAYSIZE ( tlFriendlyStareAtPlayer ),
 		bits_COND_NEW_ENEMY		|
+		bits_COND_SEE_ENEMY |
 		bits_COND_LIGHT_DAMAGE	|
 		bits_COND_HEAVY_DAMAGE	|
 		bits_COND_CAN_ATTACK |

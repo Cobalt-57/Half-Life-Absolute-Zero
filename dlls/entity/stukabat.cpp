@@ -835,17 +835,17 @@ float CStukaBat::getAttackDelay(void){
 
 	switch(g_iSkillLevel){
 	case SKILL_EASY:
-		return RANDOM_FLOAT(1.9, 2.7);
+		return RANDOM_FLOAT(0.6, 1.1);
 	break;
 	case SKILL_MEDIUM:
-		return RANDOM_FLOAT(1.4, 2.1);
+		return RANDOM_FLOAT(0.4, 0.9);
 	break;
 	case SKILL_HARD:
-		return RANDOM_FLOAT(0.8, 1.6);
+		return RANDOM_FLOAT(0.3, 0.8);
 	break;
 	default:
 		//easy?
-		return RANDOM_FLOAT(1.9, 2.7);
+		return RANDOM_FLOAT(0.6, 1.1);
 	break;
 	}
 }
@@ -1686,8 +1686,18 @@ void CStukaBat :: StartTask ( Task_t *pTask )
 	//??
 	switch ( pTask->iTask )
 	{
-
-
+	//MODDD - copied here, terminating early would be more convenient.
+	case TASK_STUKA_WAIT_FOR_ANIM:
+		//this->m_fSequenceFinished || 
+		if (blockSetActivity == -1) {
+			//done!  Try something else.
+			TaskComplete();
+		}
+		else {
+			//nothing to do here.
+			return;
+		}
+	break;
 
 		
 	case TASK_STUKABAT_LAND:{
@@ -2437,7 +2447,7 @@ void CStukaBat::abortAttack(){
 //=========================================================
 void CStukaBat :: RunTask ( Task_t *pTask )
 {
-	easyForcePrintLine("WHAT? %d", pTask->iTask);
+	//easyForcePrintLine("WHAT? %d", pTask->iTask);
 	//reset, no landBrake unless specified by this task running.
 	landBrake = FALSE;
 	
@@ -2508,7 +2518,7 @@ void CStukaBat :: RunTask ( Task_t *pTask )
 
 
 	case TASK_STUKA_WAIT_FOR_ANIM:
-
+		//this->m_fSequenceFinished ||
 		if(blockSetActivity == -1){
 			//done!  Try something else.
 			TaskComplete();
@@ -2516,7 +2526,6 @@ void CStukaBat :: RunTask ( Task_t *pTask )
 			//nothing to do here.
 			return;
 		}
-
 	break;
 	
 	case TASK_WAIT_FOR_MOVEMENT:
@@ -2585,39 +2594,30 @@ void CStukaBat :: RunTask ( Task_t *pTask )
 
 		EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyPrintLine("MY SCHED BE DDDDDDDDDDDDDDDD %s %d", m_pSchedule->pName, getEnemy() != NULL));
 
-
 		if(getEnemy() != NULL){
 			ChangeSchedule( slStukaBatChaseEnemy);
 		}else{
-
-			
 			if(onGround){
 				ChangeSchedule( slIdleStand);
 			}else{
 				ChangeSchedule(slStukaIdleHover);
 			}
 			
-
-
 			//TaskComplete();
 		}
 		//ChangeSchedule( slStukaBatChaseEnemy);
-
 		return;
-
 		//CSquadMonster::RunTask(pTask);
 	break;
 	
-	//This task runs while following the monster and re-routes to stay accurate.
-	//Maybe re-routes a little too often, consider doing it every once in a while or rely more
-	//on the smart follow system that reroutes at the target moving too far from the previous path
-	//destination (LKP). LKP matches the enemy's real position when in plain sight of course.
+
+	// This task runs while following the monster and re-routes to stay accurate.
+	// Maybe re-routes a little too often, consider doing it every once in a while or rely more
+	// on the smart follow system that reroutes at the target moving too far from the previous path
+	// destination (LKP). LKP matches the enemy's real position when in plain sight of course.
 	case TASK_ACTION:
-
-
-
-		//If we're close to our LKP, we need to give up, get stumped and re-route.
-		//float distanceToCorpse = (pev->origin - corpseToSeek->pev->origin).Length();  //m_vecEnemyLKP).Length();
+		// If we're close to our LKP, we need to give up, get stumped and re-route.
+		// float distanceToCorpse = (pev->origin - corpseToSeek->pev->origin).Length();  //m_vecEnemyLKP).Length();
 		if((pev->origin - m_vecEnemyLKP).Length() < 20 && !this->HasConditions(bits_COND_SEE_ENEMY)){
 			//huh. give up for now.
 			TaskComplete();
@@ -2709,7 +2709,6 @@ void CStukaBat :: RunTask ( Task_t *pTask )
 				combatCloseEnough = FALSE;
 			}
 
-
 			//Don't set m_flGroundSpeed in this method, leave that up to
 			//MoveExecute. It can do these checks okay.
 			//m_flGroundSpeed = 380;
@@ -2717,7 +2716,6 @@ void CStukaBat :: RunTask ( Task_t *pTask )
 			//also, if index is non-negative, disallow changing anims automatically (and vice versa)?
 
 			//EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyPrintLine("ALL THE yay %d %.2f", attackIndex, dist3d));
-
 
 
 			//MODDD TODO - only look like we're about to attack IF we're going towards the goal node
@@ -2738,9 +2736,6 @@ void CStukaBat :: RunTask ( Task_t *pTask )
 				return;
 			}
 
-
-
-
 			/*
 			if(attackIndex < 0 && this->m_fSequenceFinished){
 				//don't be static, just hover.
@@ -2758,13 +2753,8 @@ void CStukaBat :: RunTask ( Task_t *pTask )
 				blockSetActivity = -1;  //nope.
 				this->SetActivity(ACT_HOVER);
 			}
-			
-
-			
+						
 			if( (attackIndex == -1)){
-
-
-
 
 				if(dist3d  <= 72 || (dist3d <= 114 && dist2d <= 55)  ){
 					attackIndex = 1;
@@ -3233,7 +3223,7 @@ Schedule_t *CStukaBat :: GetSchedule ( void )
 					return GetScheduleOfType( SCHED_STUKABAT_FINDEAT );
 
 				}else{
-					//land to eat da booty.
+					// land to eat
 
 					TraceResult trDown;
 					Vector vecStart = pev->origin + Vector(0, 0, 5);
@@ -4248,6 +4238,9 @@ void CStukaBat::setAnimation(char* animationName, BOOL forceException, BOOL forc
 
 	CBaseMonster::setAnimation(animationName, forceException, forceLoopsProperty, extraLogic);
 	m_flFramerateSuggestion = 1;
+
+	usingCustomSequence = TRUE;
+	//???
 }
 
 
@@ -4655,8 +4648,14 @@ void CStukaBat::MonsterThink(){
 	//EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyPrintLine("ang: %.2f vect: (%.2f %.2f %.2f)", pev->ideal_yaw, vecTry.x, vecTry.y, vecTry.z));
 	//EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyPrintLine("onGround:%d queueToggleGround%d", onGround, queueToggleGround));
 
-
-	if(this->m_Activity == ACT_HOVER && usingCustomSequence && m_fSequenceFinished){
+	if(
+		(this->m_Activity == ACT_HOVER || this->m_IdealActivity == ACT_HOVER) &&
+		(
+			this->m_pSchedule != slStukaBatChaseEnemy &&
+			m_fSequenceFinished &&
+			(usingCustomSequence || attackIndex==-2)
+		)
+	){
 		//reset it?? This can hapen when in the attack schedule (TASK_ACTION is prominent).
 		//It changes the animation, but keeps the activity set the way it is (likely ACT_HOVER).
 		//So when it stops the attack, the game needs to be told to pick a new fitting sequence for ACT_HOVER instead.
@@ -4667,7 +4666,7 @@ void CStukaBat::MonsterThink(){
 
 	SetYawSpeed();
 
-	if(!deadSetActivityBlock && pev->deadflag == DEAD_NO){
+	if(pev->deadflag == DEAD_NO){
 
 		if(pev->deadflag == DEAD_NO){
 			//not dead? influences on velocity not allowed.

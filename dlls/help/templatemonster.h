@@ -69,6 +69,11 @@ public:
 	static const char* pAttackHitSounds[];
 	static const char* pAttackMissSounds[];
 
+
+	int whateverVar;
+	// ...
+
+
 	CTemplateMonster(void);
 	
 	/*

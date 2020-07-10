@@ -664,10 +664,14 @@ void CCineAI :: FixScriptMonsterSchedule( CBaseMonster *pMonster )
 	}
 }
 
+
 BOOL CBaseMonster :: ExitScriptedSequence( )
 {
 	if ( pev->deadflag == DEAD_DYING )
 	{
+		//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+		//MODDD - is this interesting?
+
 		// is this legal?
 		// BUGBUG -- This doesn't call Killed()
 		m_IdealMonsterState = MONSTERSTATE_DEAD;
@@ -682,6 +686,7 @@ BOOL CBaseMonster :: ExitScriptedSequence( )
 	return TRUE;
 }
 //pev->spawnflags |= SF_SCRIPT_NOINTERRUPT;
+
 
 void CCineMonster::AllowInterrupt( BOOL fAllow )
 {
@@ -903,17 +908,23 @@ BOOL CBaseMonster :: CineCleanup( )
 			SetThink( NULL );	// This will probably break some stuff
 			SetTouch( NULL );
 		}
-		else
+		else {
 			SUB_StartFadeOut(); // SetThink( SUB_DoNothing );
+		}
 		// This turns off animation & physics in case their origin ends up stuck in the world or something
 		StopAnimation();
 		pev->movetype = MOVETYPE_NONE;
 		pev->effects |= EF_NOINTERP;	// Don't interpolate either, assume the corpse is positioned in its final resting place
+
 		return FALSE;
 	}
 
 	//MODDD - block of script moved to this implementable method.  CBaseMonster's default is exactly the same.
 	OnCineCleanup(pOldCine);
+
+	// The moved block had the comment:
+	//     If we actually played a sequence
+
 
 	// set them back into a normal state
 	pev->enemy = NULL;
@@ -1280,12 +1291,6 @@ BOOL CScriptedSentence :: StartSentence( CBaseMonster *pTarget )
 }
 
 
-
-
-
-/*
-
-*/
 
 
 //=========================================================

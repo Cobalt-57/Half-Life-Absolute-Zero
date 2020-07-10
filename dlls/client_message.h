@@ -92,6 +92,8 @@ extern int gmsgPrintClient;
 extern int gmsgTimeWeaponIdleUpdate;
 extern int gmsgJustThrownUpdate;
 
+extern int gmsgServerDLL_Info;
+
 extern int gmsgYMG;
 extern int gmsgYMG_Stop;
 

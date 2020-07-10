@@ -182,8 +182,6 @@
 
 
 
-
-
 #define LOUD_GUN_VOLUME			1000
 #define NORMAL_GUN_VOLUME		600
 #define QUIET_GUN_VOLUME		200
@@ -216,16 +214,16 @@ class CBasePlayer;
 
 
 
-extern DLL_GLOBAL	short	g_sModelIndexLaser;// holds the index for the laser beam
-extern DLL_GLOBAL	const char* g_pModelNameLaser;
+extern DLL_GLOBAL short g_sModelIndexLaser;// holds the index for the laser beam
+extern DLL_GLOBAL const char* g_pModelNameLaser;
 
-extern DLL_GLOBAL	short	g_sModelIndexLaserDot;// holds the index for the laser beam dot
-extern DLL_GLOBAL	short	g_sModelIndexFireball;// holds the index for the fireball
-extern DLL_GLOBAL	short	g_sModelIndexSmoke;// holds the index for the smoke cloud
-extern DLL_GLOBAL	short	g_sModelIndexWExplosion;// holds the index for the underwater explosion
-extern DLL_GLOBAL	short	g_sModelIndexBubbles;// holds the index for the bubbles model
-extern DLL_GLOBAL	short	g_sModelIndexBloodDrop;// holds the sprite index for blood drops
-extern DLL_GLOBAL	short	g_sModelIndexBloodSpray;// holds the sprite index for blood spray (bigger)
+extern DLL_GLOBAL short g_sModelIndexLaserDot;// holds the index for the laser beam dot
+extern DLL_GLOBAL short g_sModelIndexFireball;// holds the index for the fireball
+extern DLL_GLOBAL short g_sModelIndexSmoke;// holds the index for the smoke cloud
+extern DLL_GLOBAL short g_sModelIndexWExplosion;// holds the index for the underwater explosion
+//extern DLL_GLOBAL short g_sModelIndexBubbles;// holds the index for the bubbles model
+extern DLL_GLOBAL short g_sModelIndexBloodDrop;// holds the sprite index for blood drops
+extern DLL_GLOBAL short g_sModelIndexBloodSpray;// holds the sprite index for blood spray (bigger)
 
 extern int gmsgWeapPickup;
 
@@ -245,6 +243,19 @@ extern void ClearMultiDamage(void);
 extern void ApplyMultiDamage(entvars_t* pevInflictor, entvars_t* pevAttacker);
 extern void AddMultiDamage(entvars_t* pevInflictor, CBaseEntity* pEntity, float flDamage, int bitsDamageType);
 extern void AddMultiDamage(entvars_t* pevInflictor, CBaseEntity* pEntity, float flDamage, int bitsDamageType, int bitsDamageTypeMod);
+
+
+
+//MODDD - NEW.  Methods in ggrenade.cpp for allowing a grenade's explode to be used without an actual grenade.
+// Includes scorch effect (if possible), explosion sprite effect, and radiusDamage.
+extern void SimpleStaticExplode(Vector rawExplodeOrigin, float rawDamage, CBaseEntity* pDamageDealer);
+extern void SimpleStaticExplode(Vector rawExplodeOrigin, float rawDamage, CBaseEntity* pDamageDealer, entvars_t* entOwner);
+extern void StaticExplode(Vector rawExplodeOrigin, float rawDamage, CBaseEntity* pDamageDealer, entvars_t* entOwner, TraceResult* pTrace, int bitsDamageType);
+extern void StaticExplode(Vector rawExplodeOrigin, float rawDamage, CBaseEntity* pDamageDealer, entvars_t* entOwner, TraceResult* pTrace, int bitsDamageType, int bitsDamageTypeMod);
+extern void StaticExplode(Vector rawExplodeOrigin, float rawDamage, CBaseEntity* pDamageDealer, entvars_t* entOwner, TraceResult* pTrace, int bitsDamageType, int bitsDamageTypeMod, float shrapMod);
+
+
+
 
 
 
@@ -301,10 +312,14 @@ public:
 
 	typedef enum { SATCHEL_DETONATE = 0, SATCHEL_RELEASE } SATCHELCODE;
 
-	static CGrenade *ShootTimed( entvars_t *pevOwner, Vector vecStart, Vector vecVelocity, float time );
-	static CGrenade *ShootContact( entvars_t *pevOwner, Vector vecStart, Vector vecVelocity );
-	static CGrenade *ShootSatchelCharge( entvars_t *pevOwner, Vector vecStart, Vector vecVelocity );
-	static void UseSatchelCharges( entvars_t *pevOwner, SATCHELCODE code );
+	//MODDD - supports damage to deal in the call.
+	static CGrenade *ShootTimed( entvars_t *pevOwner, Vector vecStart, Vector vecVelocity, float flDamage, float flDetonateTime );
+	static CGrenade *ShootContact( entvars_t *pevOwner, Vector vecStart, Vector vecVelocity, float flDamage );
+
+
+	//MODDD - unused methods, removed.
+	//static CGrenade *ShootSatchelCharge( entvars_t *pevOwner, Vector vecStart, Vector vecVelocity );
+	//static void UseSatchelCharges( entvars_t *pevOwner, SATCHELCODE code );
 
 	//MODDD - parameters are ignored, removed.
 	//void Explode( Vector vecSrc, Vector vecAim );

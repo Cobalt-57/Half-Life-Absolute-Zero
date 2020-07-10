@@ -8,9 +8,7 @@
 void writeVersionInfo(char* aryChr, int maxLength) {
 	//char aryChr[128];
 	aryChr[0] = '\0';   //safety.
-
 	int mode = 0;
-
 #ifdef _DEBUG
 	const char* addon = "DEBUG";
 #else

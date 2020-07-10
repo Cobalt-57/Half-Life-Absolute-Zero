@@ -483,6 +483,8 @@ void CWreckage::Think( void )
 	VecSrc.y = RANDOM_FLOAT( pev->absmin.y, pev->absmax.y );
 	VecSrc.z = RANDOM_FLOAT( pev->absmin.z, pev->absmax.z );
 
+	//MODDD - pooplord
+	/*
 	MESSAGE_BEGIN( MSG_PVS, SVC_TEMPENTITY, VecSrc );
 		WRITE_BYTE( TE_SMOKE );
 		WRITE_COORD( VecSrc.x );
@@ -492,4 +494,7 @@ void CWreckage::Think( void )
 		WRITE_BYTE( RANDOM_LONG(0,49) + 50 ); // scale * 10
 		WRITE_BYTE( RANDOM_LONG(0, 3) + 8  ); // framerate
 	MESSAGE_END();
+	*/
+	UTIL_Smoke(MSG_PVS, VecSrc, NULL, VecSrc, 0, 0, 0, g_sModelIndexSmoke, RANDOM_LONG(0,49) + 50, RANDOM_LONG(0, 3) + 8);
+
 }

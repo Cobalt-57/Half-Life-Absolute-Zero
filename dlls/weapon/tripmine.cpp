@@ -27,8 +27,6 @@
 EASY_CVAR_EXTERN(tripmineAnimWaitsForFinish)
 
 
-
-
 #ifndef CLIENT_DLL
 
 
@@ -115,24 +113,14 @@ void CTripmineGrenade :: Spawn( void )
 		//ActivateMine(FALSE);
 	}
 
-
-
-
-
-
-
-
 	pev->takedamage = DAMAGE_YES;
 	pev->dmg = gSkillData.plrDmgTripmine;
 	pev->health = 1; // don't let die normally
-
-
 
 	UTIL_MakeAimVectors( pev->angles );
 
 	m_vecDir = gpGlobals->v_forward;
 	m_vecEnd = pev->origin + m_vecDir * 2048;
-	
 }
 
 
@@ -248,11 +236,6 @@ int CTripmineGrenade::GetProjectileType(void){
 
 
 
-
-
-
-
-
 void CTripmineGrenade :: Activate( void ){
 	CGrenade::Activate();
 
@@ -260,9 +243,7 @@ void CTripmineGrenade :: Activate( void ){
 	//m_pBeam->SetColor( 0, 214, 198 );
 	m_pBeam->SetColor( 218, 0, 0 );
 	}
-
 }
-
 
 //Not to be confused with "Activate", the built-in method for entities on finishing loading a map and all other entities.
 void CTripmineGrenade::ActivateMine(BOOL argPlayActivateSound){
@@ -278,9 +259,6 @@ void CTripmineGrenade::ActivateMine(BOOL argPlayActivateSound){
 		EMIT_SOUND_DYN( ENT(pev), CHAN_VOICE, "weapons/mine_activate.wav", 0.5, ATTN_NORM, 1.0, 75 );
 	}
 }//END OF ActivateMine
-
-
-
 
 
 
@@ -365,10 +343,6 @@ void CTripmineGrenade :: BeamBreakThink( void  )
 
 
 
-
-
-
-
 GENERATE_TRACEATTACK_IMPLEMENTATION(CTripmineGrenade)
 {
 	GENERATE_TRACEATTACK_PARENT_CALL(CGrenade);
@@ -421,13 +395,10 @@ void CTripmineGrenade::DelayDeathThink( void )
 LINK_ENTITY_TO_CLASS( weapon_tripmine, CTripmine );
 
 CTripmine::CTripmine(){
-
-
 	holdingSecondaryTarget0 = 0.0f;
 	holdingSecondaryTarget1 = 0.37f;
 	holdingSecondaryTarget2 = 0.54f;
 
-	
 	m_flReleaseThrow = -1;
 	m_flStartThrow = -1;
 
@@ -436,7 +407,6 @@ CTripmine::CTripmine(){
 
 	//NOTE: this used to be a custom var named "weaponRetired", but it does not seem to sync too well b/w the server & client.
 	m_fInAttack = 0;
-
 
 }
 
@@ -595,8 +565,6 @@ void CTripmine::PrimaryAttack( void )
 
 	}
 	
-
-
 	if(m_pPlayer->cheat_minimumfiredelayMem == 0){
 
 		//see "ItemPreFrame" for assignment.  "m_fireState" relies on the "tripmineAnimWaitsForFinish" cvar.
@@ -629,8 +597,6 @@ void CTripmine::ItemPreFrame( void ){
 		m_fireState = 0;
 	}
 
-
-
 	if(gpGlobals->time > m_flStartThrow){
 
 		if(m_flReleaseThrow == -1){
@@ -650,21 +616,14 @@ void CTripmine::ItemPreFrame( void ){
 
 				//m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + randomIdleAnimationDelay() + 10;
 				//m_pPlayer->forceNoWeaponLoop = TRUE;
-
-
 			}
 			
-			
-
 		}else if(m_flReleaseThrow == 1){
 			m_flReleaseThrow = -1;
 			m_flStartThrow = -1;
 			//m_flTimeWeaponIdle = 0;  //call for idle animation, nothing else to do.
 		}
-
 	}
-
-
 }
 
 //MODDD - new.
@@ -672,26 +631,17 @@ void CTripmine::ItemPostFrame( void ){
 
 	CBasePlayerWeapon::ItemPostFrame();
 
-
-
 }
-
-
 
 
 void CTripmine::WeaponIdle( void )
 {
-
-
-
-	
 	//Do not idle if doing another explicit animation.
 	if(m_flReleaseThrow == -1){
 
 	}else{
 		return;
 	}
-
 
 	/*
 
@@ -723,9 +673,6 @@ void CTripmine::WeaponIdle( void )
 		}
 	}
 
-
-
-
 	if ( m_flTimeWeaponIdle > UTIL_WeaponTimeBase() )
 		return;
 
@@ -755,10 +702,7 @@ void CTripmine::WeaponIdle( void )
 		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 100.0 / 30.0 + randomIdleAnimationDelay();
 	}
 
-
 	SendWeaponAnim( iAnim );
 }
-
-
 
 

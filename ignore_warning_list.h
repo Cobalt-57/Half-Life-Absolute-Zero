@@ -48,6 +48,15 @@
 // nope, actually a good one.  We want to know about bad formatting symbols.
 //#pragma warning(disable : 4477)
 #pragma warning(disable : 4407)
+
+
+
+
+//NOTICE - out of the 4001 - 4999 range?  Then it isn't for VS6.
+#ifndef IS_VS6
+///////////////////////////////////////////////////////////////
+
+
 #pragma warning(disable : 6001)     // Using uninitialized memory
                                     // ...would be nice if it were a little smarter.
 #pragma warning(disable : 6011)
@@ -135,6 +144,10 @@
 #pragma warning(disable : 26461)
 #pragma warning(disable : 26462)
 #pragma warning(disable : 26466)
+// "do not use c-style casts" ???
+// this one's so rare for whatever reason that we'll keep it for now.
+//#pragma warning(disable : 26475)
+
 #pragma warning(disable : 26477)  // 'use nullptr'?  Yeaa right.
 #pragma warning(disable : 26481)
 #pragma warning(disable : 26482)
@@ -155,5 +168,5 @@
 #pragma warning(disable : 26814)
 #pragma warning(disable : 28251)
 
-
-
+///////////////////////////////////////////////////////////////
+#endif //IS_VS6

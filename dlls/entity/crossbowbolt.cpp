@@ -291,11 +291,10 @@ void CCrossbowBolt::BoltTouch( CBaseEntity *pOther )
 		BOOL extraPasss = FALSE;
 		if (FClassnameIs(pOther->pev, "func_breakable")) {
 			CBreakable *tempBreak = static_cast<CBreakable*>(pOther);
-			if (tempBreak->m_Material == Materials::matWood || tempBreak->m_Material == Materials::matFlesh || tempBreak->m_Material == Materials::matLastMaterial) {
+			if (tempBreak->m_Material == matWood || tempBreak->m_Material == matFlesh || tempBreak->m_Material == matLastMaterial) {
 				extraPasss = TRUE;
 			}
 		}
-
 
 
 		pev->velocity = Vector(0, 0, 0);
@@ -312,7 +311,7 @@ void CCrossbowBolt::BoltTouch( CBaseEntity *pOther )
 		}
 		else {
 			// not organic?  Slightly modified xbow_hit.wav
-			EMIT_SOUND_DYN(ENT(pev), CHAN_BODY, "weapons/xbow_hit1.wav", RANDOM_FLOAT(0.98, 1.0), ATTN_NORM - 0.1, 0, 102 + RANDOM_LONG(0, 9));
+			EMIT_SOUND_DYN(ENT(pev), CHAN_BODY, "weapons/xbow_hit1.wav", RANDOM_FLOAT(0.98, 1.0), ATTN_NORM - 0.1, 0, 107 + RANDOM_LONG(0, 4));
 			if (UTIL_PointContents(pev->origin) != CONTENTS_WATER)
 			{
 				UTIL_Sparks(pev->origin, DEFAULT_SPARK_BALLS, EASY_CVAR_GET(sparksPlayerCrossbowMulti));
@@ -328,16 +327,24 @@ void CCrossbowBolt::BoltTouch( CBaseEntity *pOther )
 		}else{
 
 		}
-		
 	}
 	else
 	{
 		// Didn't hit something?  Probably going to stick out of a surface and stay for a little while.
 
-		EMIT_SOUND_DYN(ENT(pev), CHAN_BODY, "weapons/xbow_hit1.wav", RANDOM_FLOAT(0.95, 1.0), ATTN_NORM, 0, 98 + RANDOM_LONG(0,7));
-
 		SetThink( &CBaseEntity::SUB_Remove );
-		pev->nextthink = gpGlobals->time;// this will get changed below if the bolt is allowed to stick in what it hit.
+		// this will get changed below if the bolt is allowed to stick in what it hit.
+		// (as in, not be instant to look like it sticks to it for some seconds).
+		pev->nextthink = gpGlobals->time;
+		
+		if (UTIL_PointContents(pev->origin) == CONTENTS_SKY) {
+			// If we hit the sky, HALT!  No explosion, no sticking out, no sparks.
+			// Just end.
+			return;
+		}
+
+		EMIT_SOUND_DYN(ENT(pev), CHAN_BODY, "weapons/xbow_hit1.wav", RANDOM_FLOAT(0.95, 1.0), ATTN_NORM, 0, 98 + RANDOM_LONG(0, 7));
+
 
 		//MODDD - can stick to other map-related things so long as they don't move.
 		//if ( FClassnameIs( pOther->pev, "worldspawn" ) )
@@ -375,39 +382,28 @@ void CCrossbowBolt::BoltTouch( CBaseEntity *pOther )
 }
 
 
-
-
 // Makes bubbles if it is underwater.
 void CCrossbowBolt::BoltThink( void )
 {
 	//think every single frame of game logic, but only run the retail logic every 0.1 seconds for the same behavior there.
 	pev->nextthink = gpGlobals->time;
-	
-	
+		
 	if(EASY_CVAR_GET(crossbowBoltDirectionAffectedByWater) != 1){
 		//forcing velocity to the one that fired me's intention every frame can preserve direction underwater.
 		pev->velocity = m_velocity;
 	}
 
-
-
 	if(gpGlobals->time >= realNextThink ){
 		//one typical think cycle.
 		realNextThink = gpGlobals->time + 0.1;	
 
-
-
 		if (pev->waterlevel == 0)
 			return;
 
-		UTIL_BubbleTrail( pev->origin - pev->velocity * 0.1, pev->origin, 1 );
+		UTIL_BubbleTrail( pev->origin - pev->velocity * 0.1, pev->origin, 8);
 
 	}//END OF realNextThink check
 
-
-	
-
-	
 }//END OF BoltThink
 
 
@@ -416,16 +412,12 @@ void CCrossbowBolt::ExplodeThink( void )
 	int iContents = UTIL_PointContents ( pev->origin );
 	int iScale;
 	
-	
 	//NEW?
 	int shrapMod = 1;  //safe?
 	Vector vecSpot;
 
-
 	pev->dmg = 40;
 	iScale = 10;
-
-
 
 	short spriteChosen;
 	if (iContents != CONTENTS_WATER)
@@ -436,8 +428,6 @@ void CCrossbowBolt::ExplodeThink( void )
 	{
 		spriteChosen = g_sModelIndexWExplosion;
 	}
-
-
 
 	//MODDD - mimicking how ggrenade.cpp's Explode method, called by some touch method (ExplodeTouch) does it with its trace it sends.
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -451,13 +441,11 @@ void CCrossbowBolt::ExplodeThink( void )
 	Vector explosionEffectStartRetail = pev->origin;
 	Vector explosionEffectStartQuake = pev->origin;
 
-
 	Vector explosionOrigin = pev->origin; //by default.
 
 	// Pull out of the wall a bit
 	if ( pTrace.flFraction != 1.0 )
 	{
-
 		//MODDD - let's not change our own origin, just record this.
 		//pev->origin = ...
 		//used to double as both the explosionOrigin and explosionEffectStartRetail ?
@@ -479,7 +467,7 @@ void CCrossbowBolt::ExplodeThink( void )
 	//...
 
 
-	UTIL_Explosion(pev, explosionEffectStartRetail, spriteChosen, iScale, 15, TE_EXPLFLAG_NONE, explosionEffectStartQuake, shrapMod );
+	UTIL_Explosion(MSG_PVS, pev->origin, NULL, pev, explosionEffectStartRetail, spriteChosen, iScale, 15, TE_EXPLFLAG_NONE, explosionEffectStartQuake, shrapMod );
 	//MODDD - sending explosionOrigin instead of defaulting to pev->origin.
 	//RadiusDamageAutoRadius ( explosionOrigin, pev, pevOwner, pev->dmg, CLASS_NONE, bitsDamageType, bitsDamageTypeMod );
 	RadiusDamage( explosionOrigin, pev, pevOwner, pev->dmg, 128, CLASS_NONE, DMG_BLAST | DMG_ALWAYSGIB );
@@ -488,13 +476,10 @@ void CCrossbowBolt::ExplodeThink( void )
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
-
 	/*
 	//MODDD - sent through filter.
 	UTIL_Explosion(pev, pev->origin, spriteChosen, iScale, 15, TE_EXPLFLAG_NONE);
 	
-
 	entvars_t *pevOwner;
 
 	if ( pev->owner )

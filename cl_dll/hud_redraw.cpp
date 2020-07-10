@@ -300,68 +300,29 @@ int CHud :: Redraw( float flTime, int intermission )
 
 
 	
-	/*
-	//NO, DISABLED.  YOU GO SIT IN THE CORNER AND THINK ABOUT WHAT YOU'VE DONE!
-	//easyPrintLine(" ASS # %.2f", cvarHUD_letswatchamovie);
-	if(cvarHUD_letswatchamovie->value == 1){
-		if(firstMovieFrame == TRUE){
-			movieStartTime = flTime;
-			//play the audio!
-		}
-		firstMovieFrame = FALSE;
 
-		
-		//642x344
-		//dimensions:  640x480
-		//dimensions:  448x336
-		//dimensions:  256x192
-		//dimensions:  96x72
-		if(movieStartTime != -1){
-
-			while(true){
-				//work it!
-				#define GNFOS_FRAMES 500
-				#define GNFOS_FRAMES_PER_SEC 5
-
-				int x, y, i;
-
-				if (m_hsprGNFOS == 0)
-					m_hsprGNFOS = SPR_Load("sprites/gnfos.spr");
-
-
-				SPR_Set(m_hsprGNFOS, 255, 255, 255 );
-		
-				x = SPR_Width(m_hsprGNFOS, 0);
-				x = ScreenWidth - x;
-				//y = SPR_Height(m_hsprLogo, 0)/2;
-				y = 0;
-
-				// Draw the movie at 8 fps
-				i = (int)( (flTime-movieStartTime) * GNFOS_FRAMES_PER_SEC );
-			
-				//easyPrintLine("FRAME # %d", i);
-
-				if(i >= GNFOS_FRAMES){
-					//can't draw.
-					movieStartTime = -1;
-					cvarHUD_letswatchamovie->value = 0;
-					break;
-				}
-
-				SPR_DrawAdditive(i, x, y, NULL);
-
-				break;
-			}//END OF while(true)
-		}
-		
-
-	}else{
-		firstMovieFrame = TRUE;
-
+	// this gives the default color.
+	gEngfuncs.pfnDrawSetTextColor(1.00, 0.63, 0);
+	DrawConsoleString(16, 28, "Half-Life: Absolute Zero Development Build");
+	gEngfuncs.pfnDrawSetTextColor(1.00, 0.63, 0);
+	DrawConsoleString(16, 28+20, globalbuffer_cl_mod_display);
+	if (globalbuffer_sv_mod_display[0] != '\0') {
+		// go ahead
+		gEngfuncs.pfnDrawSetTextColor(1.00, 0.63, 0);
+		DrawConsoleString(16, 28+40, globalbuffer_sv_mod_display);
 	}
-	*/
-	
+	else {
+		// nothing from the server yet? Say so
+		gEngfuncs.pfnDrawSetTextColor(1.00, 0.63, 0);
+		DrawConsoleString(16, 28+40, "SV: wait...");
+	}
 
+	//gHUD.DrawHudString(16, 100, 500, "test text", 255, 0, 0);
+
+	
+	
+	
+	
 			//200x126
 #define CUSTOMVID_WIDTH 200.0f
 #define CUSTOMVID_HEIGHT 126.0f
@@ -428,7 +389,6 @@ int CHud :: Redraw( float flTime, int intermission )
 		}
 	}//END OF playingMov check
 	
-
 
 
 	/*
@@ -530,7 +490,6 @@ int CHud :: DrawHudStringReverse( int xpos, int ypos, int iMinX, char *szString,
 
 //How long would this number be if drawn?
 int CHud::DrawHUDNumber_widthOnly(int iFlags, int iNumber, int fontID){
-	
 	//MODDD - now uses the new boxed number widths instead of the other if "useBoxedNumbers".
 	//"m_HUD_number_0+10" gets boxed number 0.
 	//int iWidth = GetSpriteRect(m_HUD_number_0).right - GetSpriteRect(m_HUD_number_0).left;

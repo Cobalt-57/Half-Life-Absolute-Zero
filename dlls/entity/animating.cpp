@@ -21,21 +21,13 @@
 */
 
 #include "extdll.h"
-
 #include "animating.h"
 #include "basemonster.h"  //just to do some testing, not actually necessary.
-
 #include "util.h"
 #include "cbase.h"
-
 #include "basemonster.h"
-
 #include "util_model.h"
-
-
-
 #include "saverestore.h"
-
 
 
 EASY_CVAR_EXTERN(animationFramerateMulti)
@@ -58,10 +50,8 @@ TYPEDESCRIPTION	CBaseAnimating::m_SaveData[] =
 	DEFINE_FIELD( CBaseMonster, m_flFramerateSuggestion, FIELD_BOOLEAN),
 
 };
-
 //IMPLEMENT_SAVERESTORE( CBaseAnimating, CBaseDelay );
 
-//IMPLEMENT_SAVERESTORE( CTalkMonster, CBaseMonster );
 int CBaseAnimating::Save( CSave &save )
 {
 	if ( !CBaseDelay::Save(save) )
@@ -71,23 +61,15 @@ int CBaseAnimating::Save( CSave &save )
 int CBaseAnimating::Restore( CRestore &restore )
 {
 
-
-
-
-
-
 	//if ( !CBaseDelay::Restore(restore) )
 	//	return 0;
 	//return restore.ReadFields( "CBaseAnimating", this, m_SaveData, ARRAYSIZE(m_SaveData) );
-
 	int toReturn = 0;
 	if ( !CBaseDelay::Restore(restore) ){
 		toReturn = 0;
 	}else{
 		toReturn = restore.ReadFields( "CBaseAnimating", this, m_SaveData, ARRAYSIZE(m_SaveData) );
 	}
-
-
 
 	//to override a saved-value, you MUST edit it in this area, after having called the parent restore function.
 	if(m_flFramerateSuggestion == 0 && pev->deadflag != DEAD_DEAD){
@@ -97,16 +79,8 @@ int CBaseAnimating::Restore( CRestore &restore )
 
 	//...here may be ok though?
 	//setModelCustom();
-
 	return toReturn;
-
-
 }
-
-
-
-
-
 
 
 
@@ -207,7 +181,7 @@ void CBaseAnimating::checkEndOfAnimation(void){
 		if(pev->frame >= tempCutoff){
 			passedCutoff = TRUE;
 
-			if(animFrameCutoff != -1){
+			if(animFrameStart != -1){
 				//disable interp!
 				pev->renderfx |= STOPINTR;
 			}
@@ -233,7 +207,7 @@ void CBaseAnimating::checkEndOfAnimation(void){
 		if(pev->frame <= tempCutoff){
 			passedCutoff = TRUE;
 			
-			if(animFrameCutoff != -1){
+			if(animFrameStart != -1){
 				//disable interp!
 				pev->renderfx |= STOPINTR;
 			}
@@ -254,7 +228,6 @@ void CBaseAnimating::checkEndOfAnimation(void){
 	}
 
 	//(pev->frame <= 0.0 || pev->frame >= 255.0
-
 
 
 	/*
@@ -351,8 +324,6 @@ void CBaseAnimating::checkEndOfAnimation(void){
 				resetFrame();
 			}
 
-
-
 			if(queuedAnimFrameCutoff[queuedAnimCurrent] != -1){
 				animFrameCutoff = queuedAnimFrameCutoff[queuedAnimCurrent];
 			}else{
@@ -380,7 +351,6 @@ void CBaseAnimating::checkEndOfAnimation(void){
 	//}
 
 
-	
 	if(EASY_CVAR_GET(animationPrintouts) == 1){
 		CBaseMonster* tempMon = this->GetMonsterPointer();
 		if(tempMon != NULL && tempMon->monsterID >= -1){
@@ -389,7 +359,6 @@ void CBaseAnimating::checkEndOfAnimation(void){
 	}
 
 }
-
 
 
 
@@ -410,9 +379,7 @@ void CBaseAnimating::queuedAnimPush(char* arg_animName, float arg_frameStart, fl
 	queuedAnimFrameCutoffSuggestion[queuedAnimMaxSuggestion] = arg_frameCutoff;
 	queuedAnimFrameRateSuggestion[queuedAnimMaxSuggestion] = arg_framerate;
 
-
 	queuedAnimMaxSuggestion++;
-
 
 }
 
@@ -437,11 +404,7 @@ void CBaseAnimating::applyAnimationQueueSuggestion(void){
 	queuedAnimMax = queuedAnimMaxSuggestion;
 	queuedAnimCurrent = queuedAnimCurrentSuggestion;
 	queuedAnimClear();
-
 }
-
-
-
 
 
 
@@ -488,10 +451,6 @@ void CBaseAnimating::animEventQueuePush(float arg_timeFromStart, float arg_event
 	//Like so:   256 / m_flFrameRate = (frames - 1) / framerate = duration of animation.
 
 	//...factor in our suggestion too.
-	
-
-
-
 
 	/*
 	float animDuration = 256 / m_flFrameRate / framerateSuggestionUse;
@@ -501,67 +460,19 @@ void CBaseAnimating::animEventQueuePush(float arg_timeFromStart, float arg_event
 	//Send the event as a frame to check for having reached.
 	*/
 
-
 	animEventQueueTime[animEventQueueMax] = arg_timeFromStart;
 	//...make this fit the Byte range on "resetSequenceInfo" AFTER we are sure we have the new model's information for framerate.
-
-	//NOT YET, FREEMAN!
-
 
 	//easyPrintLine("TIME:::: %.2f ::: %.2f, %.2f", gpGlobals->time, arg_timeFromStart, animEventQueueTime[animEventQueueMax]);
 	//easyPrintLine("??? %.2f %.2f %.2f", animDuration, m_flFrameRate, framerateSuggestionUse);
 	
-	/*
-TIME:::: 533.57 ::: 0.17, 7.08
-??? 6.00 42.67 1.00
-TIME:::: 533.57 ::: 0.40, 17.00
-??? 6.00 42.67 1.00
-TIME:::: 533.57 ::: 1.22, 51.99
-??? 6.00 42.67 1.00
-TIME:::: 533.57 ::: 1.83, 77.92
-??? 6.00 42
-*/
-
-
 	//this newly added event begins "Active".
 	animEventQueueActive[animEventQueueMax] = 1;
-
 
 	animEventQueueID[animEventQueueMax] = arg_eventType;
 	animEventQueueMax++;
 
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -571,16 +482,8 @@ TIME:::: 533.57 ::: 1.83, 77.92
 //=========================================================
 float CBaseAnimating :: StudioFrameAdvance ( float flInterval )
 {
-
-
-
-
-
-
 	//const char* whut = STRING(pev->classname); //whut.
 
-
-	
 
 	if (flInterval == 0.0)
 	{
@@ -690,11 +593,6 @@ int CBaseAnimating :: LookupSequence ( const char *label )
 
 
 
-
-
-
-
-
 //=========================================================
 //=========================================================
 void CBaseAnimating :: ResetSequenceInfo ( )
@@ -730,7 +628,6 @@ void CBaseAnimating :: ResetSequenceInfo ( )
 	}
 
 
-
 	pev->animtime = gpGlobals->time;
 
 	//MODDD - "framerateSuggestion" can change this.
@@ -738,7 +635,6 @@ void CBaseAnimating :: ResetSequenceInfo ( )
 
 	//framerateS = m_flFramerateSuggestion;
 	//m_flFramerateSuggestion = -1;
-
 
 	//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	//MODDD NOTE - looks like "m_flFrameRate" stores the raw framerate of the model, while "m_flFramerateSuggestion" stores the multiple
@@ -765,12 +661,8 @@ void CBaseAnimating :: ResetSequenceInfo ( )
 	//MODDD - CHECK: are there consequences for doing this???
 	//pev->frame = 0;
 
-
 	//queuedAnim = NULL;
 	//earlyFrameCutoff = -1;
-
-
-	
 
 	//easyPrintLine("WHO ARE YOU EVEN???!!! %.2f", m_flFramerateSuggestion);
 
@@ -779,10 +671,6 @@ void CBaseAnimating :: ResetSequenceInfo ( )
 		//must be positive.  Even playing backwards, events would occur in "positive" amounts of time from start.
 		framerateSuggestionUse *= -1;
 	}
-
-
-
-
 
 
 	framerateSuggestionUse = 1;
@@ -796,7 +684,6 @@ void CBaseAnimating :: ResetSequenceInfo ( )
 			//easyPrintLine("ANIMEVE %d::: (norm: %.2f moddd: %.2f)", i, animEventQueueTime[i] / animDuration * 255.0f, animEventQueueTime[i] / (256.0f / m_flFrameRate / 1) * 255.0f);
 			animEventQueueTime[i] = animEventQueueTime[i] / animDuration * 255.0f;
 		}
-
 	}else{
 		this->resetEventQueue();
 	}
@@ -820,10 +707,6 @@ void CBaseAnimating :: ResetSequenceInfo ( )
 			SetBlending(2, 0);
 		}
 	}
-
-
-
-
 
 
 	applyAnimationQueueSuggestion();
@@ -861,8 +744,6 @@ BOOL CBaseAnimating::canResetBlend2(void){
 
 
 
-
-
 void CBaseAnimating :: ResetSequenceInfoSafe ( )
 {
 	if(EASY_CVAR_GET(animationPrintouts) == 1){
@@ -883,7 +764,6 @@ void CBaseAnimating :: ResetSequenceInfoSafe ( )
 	GetSequenceInfoSafe( pmodel, &m_flFrameRate, pev );
 	//easyPrintLine("B THIS SEQUENCE AINT GOT TIME FO SPEED");
 	
-	
 	if(m_iForceLoops == 0){
 		//force off.
 		m_fSequenceLoops = FALSE;
@@ -893,8 +773,6 @@ void CBaseAnimating :: ResetSequenceInfoSafe ( )
 		//get from the model as usual.
 		m_fSequenceLoops = ((GetSequenceFlags() & STUDIO_LOOPING) != 0);
 	}
-
-
 
 
 	pev->animtime = gpGlobals->time;
@@ -915,8 +793,6 @@ void CBaseAnimating :: ResetSequenceInfoSafe ( )
 
 	//queuedAnim = NULL;
 	//earlyFrameCutoff = -1;
-	
-
 
 	
 	float framerateSuggestionUse = m_flFramerateSuggestion;
@@ -926,27 +802,18 @@ void CBaseAnimating :: ResetSequenceInfoSafe ( )
 	}
 
 	if(m_flFrameRate != 0 && framerateSuggestionUse != 0){
-
 		float animDuration = 256 / m_flFrameRate / framerateSuggestionUse;
 		for(int i = 0; i<animEventQueueMax; i++){
 			animEventQueueTime[i] = animEventQueueTime[i] / animDuration * 255;
-
 		}
-
 	}else{
 		this->resetEventQueue();
 	}
 	
-
-
 	applyAnimationQueueSuggestion();
-
 	//MODDD - see note above about "usingCustomSequence".
 	usingCustomSequence = FALSE;
 }
-
-
-
 
 
 
@@ -972,7 +839,6 @@ void CBaseAnimating :: DispatchAnimEvents ( float flInterval )
 		//no framerate? No events.
 		return;
 	}
-
 
 
 	if ( !pmodel )
@@ -1012,19 +878,12 @@ void CBaseAnimating :: DispatchAnimEvents ( float flInterval )
 	//}
 
 
-
-
-
-
 	//MODDD - Any harm in only letting "StudioFrameAdvance" handle this...?
-
-
 
 	if(this->crazyPrintout == TRUE){
 		//easyForcePrintLine("DISPATCHANIMEVENTS::: flStart:%.2f flEnd: %.2f  interv: %.2f animtime:%.2f frame:%.2f m_flFR:%.2f pev->FR:%.2f", flStart, flEnd, flInterval, pev->animtime, pev->frame, m_flFrameRate, pev->framerate);
 	}
 
-	
 	
 	if(EASY_CVAR_GET(animationPrintouts) == 1){
 		CBaseMonster* tempMon = this->GetMonsterPointer();
@@ -1034,15 +893,11 @@ void CBaseAnimating :: DispatchAnimEvents ( float flInterval )
 	}
 
 
-
-	
-
 	//m_fSequenceFinished = FALSE;
 	//NO. This does not take the cutoff into effect!
 	//
 	//if (flEnd >= 256 || flEnd <= 0.0)
 	//	m_fSequenceFinished = TRUE;
-	
 
 
 	/*
@@ -1053,7 +908,6 @@ void CBaseAnimating :: DispatchAnimEvents ( float flInterval )
 	*/
 
 	//Yea... just don't do the check here, we only really need to record whether this anim is finished or not above.
-
 
 
 	int index = 0;
@@ -1079,7 +933,6 @@ void CBaseAnimating :: DispatchAnimEvents ( float flInterval )
 			//easyPrintLine("cusevent: %d %d G: %.2f %.2f E: %d", i, animEventQueueActive[i], gpGlobals->time, animEventQueueTime[i], animEventQueueID[i]);
 		}
 		*/
-
 
 		if(animEventQueueActive[i] == 0){
 			//if turned off, nope.
@@ -1107,10 +960,7 @@ void CBaseAnimating :: DispatchAnimEvents ( float flInterval )
 		}
 	}//END OF for(...)   for custom events.
 
-
-
 }//END OF DispatchAnimEvents
-
 
 
 
@@ -1137,8 +987,6 @@ void CBaseAnimating::showHitboxInfoNumber (int argID)
 	void *pmodel = GET_MODEL_PTR( ENT(pev) );
 	::showHitboxInfoNumber( pmodel, pev, argID );
 }
-
-
 
 
 
@@ -1208,8 +1056,6 @@ void CBaseAnimating::getHitboxCount (int& argCount)
 
 
 
-
-
 //=========================================================
 //=========================================================
 float CBaseAnimating :: SetBoneController ( int iController, float flValue )
@@ -1227,8 +1073,6 @@ float CBaseAnimating :: SetBoneControllerUnsafe ( int iController, float flValue
 
 	return SetControllerUnsafe( pmodel, pev, iController, flValue );
 }
-
-
 
 
 

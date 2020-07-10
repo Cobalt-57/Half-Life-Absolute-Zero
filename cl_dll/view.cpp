@@ -477,6 +477,7 @@ void V_CalcViewRoll(struct ref_params_s* pparams)
 	{
 		// only roll the view if the player is dead and the viewheight[2] is nonzero 
 		// this is so deadcam in multiplayer will work.
+		//MODDD - DEAD CAMERA SETTING
 		pparams->viewangles[ROLL] = 80;	// dead view angle
 		return;
 	}
@@ -1512,6 +1513,7 @@ void V_GetInEyePos(int target, float* origin, float* angles)
 
 	if (ent->curstate.solid == SOLID_NOT)
 	{
+		//MODDD - DEAD CAMERA SETTING
 		angles[ROLL] = 80;	// dead view angle
 		origin[2] += PM_DEAD_VIEWHEIGHT; //MODDD  - just use the constant dangit
 	}

@@ -39,7 +39,7 @@ extern int gmsgUpdateAirTankAirTime;
 
 //MODDD
 EASY_CVAR_EXTERN(wpn_glocksilencer)
-EASY_CVAR_EXTERN(canTakeLongJump)
+//EASY_CVAR_EXTERN(canTakeLongJump)
 
 
 
@@ -519,12 +519,6 @@ LINK_ENTITY_TO_CLASS(item_radiation, CItemRadiation);
 
 
 
-
-
-
-
-
-
 class CItemSecurity : public CItem
 {
 	void Spawn( void )
@@ -548,6 +542,8 @@ LINK_ENTITY_TO_CLASS(item_security, CItemSecurity);
 
 
 
+
+/*
 class CItemLongJump : public CItem
 {
 	void Spawn( void )
@@ -635,13 +631,19 @@ class CItemLongJump : public CItem
 };
 
 LINK_ENTITY_TO_CLASS( item_longjump, CItemLongJump );
+*/
+
 
 
 
 
 //MODDD - new.  This assumes the player already has acquired "item_longjump" (otherwise, not pickup-able) and adds charge to the
 //player's longjump module.
-class CItemLongJumpCharge : public CItem
+// NOTICE - idea of a separate "CItemLongJumpCharge" and "CItemLongJump" removed.
+// There will only be "CItemLongJump" which works like the "Charge"  (grant 25 charge on pickup, always allowed to be picked up).
+// In short, this has been changed from CItemLongJumpCharge to CItemLongJump, original CItemLongJump commented out above.
+// Similar change made to the entity name further below.
+class CItemLongJump : public CItem
 {
 	void Spawn( void )
 	{ 
@@ -658,6 +660,8 @@ class CItemLongJumpCharge : public CItem
 		if ( ( pPlayer->pev->weapons & (1<<WEAPON_SUIT) && pPlayer->m_fLongJump && pPlayer->longJumpCharge < PLAYER_LONGJUMPCHARGE_MAX ) )
 		{
 
+			// CVAR NOW INEFFECTIVE.
+			/*
 			float canTakeLongJumpVal = EASY_CVAR_GET(canTakeLongJump);
 			// hm...
 			if (canTakeLongJumpVal == 0) {
@@ -673,14 +677,11 @@ class CItemLongJumpCharge : public CItem
 			else {
 				//Take longjumpcharges whenever.
 			}
+			*/
 
 
-
-
-			
 			//MODDD - play this.
 			EMIT_SOUND( pPlayer->edict(), CHAN_ITEM, "items/gunpickup2.wav", 1, ATTN_NORM );
-
 
 
 			pPlayer->longJumpCharge += PLAYER_LONGJUMP_PICKUPADD;
@@ -703,7 +704,8 @@ class CItemLongJumpCharge : public CItem
 	}
 };
 
-LINK_ENTITY_TO_CLASS( item_longjumpcharge, CItemLongJumpCharge );
+//LINK_ENTITY_TO_CLASS( item_longjumpcharge, CItemLongJumpCharge );
+LINK_ENTITY_TO_CLASS(item_longjump, CItemLongJump);
 
 
 

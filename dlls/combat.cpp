@@ -1949,7 +1949,6 @@ void CBaseEntity::DrawAlphaBlood(float flDamage, const Vector& vecDrawLoc){
 		UTIL_BloodStream(vecDrawLoc, UTIL_RandomBloodVector(), BloodColor(), RANDOM_LONG(40, 70));
 		UTIL_BloodStream(vecDrawLoc, UTIL_RandomBloodVector(), BloodColor(), RANDOM_LONG(40, 70));
 		UTIL_BloodStream(vecDrawLoc, UTIL_RandomBloodVector(), BloodColor(), RANDOM_LONG(40, 70));
-		
 	}
 	else{
 		UTIL_BloodStream(vecDrawLoc, UTIL_RandomBloodVector(), BloodColor(), RANDOM_LONG(4, 7));
@@ -1958,9 +1957,7 @@ void CBaseEntity::DrawAlphaBlood(float flDamage, const Vector& vecDrawLoc){
 			
 	}
 
-
 }
-
 
 
 

@@ -152,7 +152,7 @@ typedef enum
 #define PRINT_VA\
 	va_list argptr;\
 	va_start(argptr, szFmt);\
-	DEFAULT_ENGINE_HANDLE.pfnAlertMessage(ALERT_TYPE::at_console, szFmt, argptr );\
+	DEFAULT_ENGINE_HANDLE.pfnAlertMessage(at_console, szFmt, argptr );\
 	va_end(argptr);
 */
 
@@ -168,7 +168,7 @@ typedef enum
 #define PRINT_VA_DEVELOPER\
 	va_list argptr;\
 	va_start(argptr, szFmt);\
-	DEFAULT_ENGINE_HANDLE.pfnAlertMessage(ALERT_TYPE::at_console, UTIL_VarArgsVA(szFmt, argptr ) );\
+	DEFAULT_ENGINE_HANDLE.pfnAlertMessage(at_console, UTIL_VarArgsVA(szFmt, argptr ) );\
 	va_end(argptr);
 
 #define PRINT_LINE_VA\
@@ -187,7 +187,7 @@ typedef enum
 	bufRef = UTIL_VarArgsVA_ID(szFmt, argptr );\
 	va_end(argptr);\
 	strcat(bufRef, "\n");\
-	DEFAULT_ENGINE_HANDLE.pfnAlertMessage(ALERT_TYPE::at_console, bufRef );
+	DEFAULT_ENGINE_HANDLE.pfnAlertMessage(at_console, bufRef );
 
 
 /*
@@ -402,7 +402,7 @@ void easyPrintStarter(void)
 #ifdef CLIENT_DLL
 		DEFAULT_ENGINE_HANDLE.Con_DPrintf(DEFAULT_PRINTOUT_ID);
 #else
-		DEFAULT_ENGINE_HANDLE.pfnAlertMessage(ALERT_TYPE::at_console, DEFAULT_PRINTOUT_ID);
+		DEFAULT_ENGINE_HANDLE.pfnAlertMessage(at_console, DEFAULT_PRINTOUT_ID);
 #endif
 #endif
 }
@@ -433,7 +433,7 @@ void easyPrintLine(void)
 #ifdef CLIENT_DLL
 		DEFAULT_ENGINE_HANDLE.Con_DPrintf("\n");
 #else
-		DEFAULT_ENGINE_HANDLE.pfnAlertMessage(ALERT_TYPE::at_console, "\n");
+		DEFAULT_ENGINE_HANDLE.pfnAlertMessage(at_console, "\n");
 #endif
 }
 void easyForcePrintLine(void)
@@ -689,11 +689,11 @@ typedef enum
 // plug in too.
 void easyPrintClient(edict_t* pEdict, const char* szFmt, ... ){
 	if (CVAR_GET_FLOAT("developer") >= 1) {
-		PRINT_SERVER_TO_CLIENT_VA_DEVELOPER(pEdict, PRINT_TYPE::print_console)
+		PRINT_SERVER_TO_CLIENT_VA_DEVELOPER(pEdict, print_console)
 	}
 }
 void easyForcePrintClient(edict_t* pEdict, const char* szFmt, ... ){
-	PRINT_SERVER_TO_CLIENT_VA_DEVELOPER(pEdict, PRINT_TYPE::print_console)
+	PRINT_SERVER_TO_CLIENT_VA_DEVELOPER(pEdict, print_console)
 	/*
 	char* formattedString;
 	va_list argptr;
@@ -710,13 +710,13 @@ void easyForcePrintClient(edict_t* pEdict, const char* szFmt, ... ){
 void easyPrintStarterClient(edict_t* pEdict) {
 #if (defined(_DEBUG) || FORCE_PRINTOUT_PREFIX != 0)
 	if (CVAR_GET_FLOAT("developer") >= 1) {
-		g_engfuncs.pfnClientPrintf(pEdict, PRINT_TYPE::print_console, "SV-CL: ");
+		g_engfuncs.pfnClientPrintf(pEdict, print_console, "SV-CL: ");
 	}
 #endif
 }
 void easyForcePrintStarterClient(edict_t* pEdict) {
 #if (defined(_DEBUG) || FORCE_PRINTOUT_PREFIX != 0)
-	g_engfuncs.pfnClientPrintf(pEdict, PRINT_TYPE::print_console, "SV-CL: ");
+	g_engfuncs.pfnClientPrintf(pEdict, print_console, "SV-CL: ");
 	/*
 	MESSAGE_BEGIN(MSG_ONE, gmsgPrintClient, NULL, pEdict);
 		WRITE_STRING("SV-CL: ");
@@ -727,11 +727,11 @@ void easyForcePrintStarterClient(edict_t* pEdict) {
 
 void easyPrintLineClient(edict_t* pEdict, const char* szFmt, ... ){
 	if (CVAR_GET_FLOAT("developer") >= 1) {
-		PRINT_SERVER_TO_CLIENT_LINE_VA_DEVELOPER(pEdict, PRINT_TYPE::print_console)
+		PRINT_SERVER_TO_CLIENT_LINE_VA_DEVELOPER(pEdict, print_console)
 	}
 }
 void easyForcePrintLineClient(edict_t* pEdict, const char* szFmt, ... ){
-	PRINT_SERVER_TO_CLIENT_LINE_VA_DEVELOPER(pEdict, PRINT_TYPE::print_console)
+	PRINT_SERVER_TO_CLIENT_LINE_VA_DEVELOPER(pEdict, print_console)
 	/*
 	char* formattedString;
 	va_list argptr;
@@ -747,11 +747,11 @@ void easyForcePrintLineClient(edict_t* pEdict, const char* szFmt, ... ){
 }
 void easyPrintLineClient(edict_t* pEdict) {
 	if (CVAR_GET_FLOAT("developer") >= 1) {
-		g_engfuncs.pfnClientPrintf(pEdict, PRINT_TYPE::print_console, "\n");
+		g_engfuncs.pfnClientPrintf(pEdict, print_console, "\n");
 	}
 }
 void easyForcePrintLineClient(edict_t* pEdict) {
-	g_engfuncs.pfnClientPrintf(pEdict, PRINT_TYPE::print_console, "\n");
+	g_engfuncs.pfnClientPrintf(pEdict, print_console, "\n");
 	/*
 	MESSAGE_BEGIN(MSG_ONE, gmsgPrintClient, NULL, pEdict);
 		WRITE_STRING("\n");

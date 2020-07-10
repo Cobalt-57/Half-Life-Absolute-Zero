@@ -25,9 +25,10 @@
 #include "items.h"
 //MODDD - bah just have all of them
 #include "client_message.h"
+#include "pickupwalker.h"
 
-extern DLL_GLOBAL CGameRules	*g_pGameRules;
-extern DLL_GLOBAL BOOL	g_fGameOver;
+extern DLL_GLOBAL CGameRules *g_pGameRules;
+extern DLL_GLOBAL BOOL g_fGameOver;
 
 //=========================================================
 //=========================================================
@@ -217,6 +218,61 @@ int CHalfLifeRules :: WeaponShouldRespawn( CBasePlayerItem *pWeapon )
 {
 	return GR_WEAPON_RESPAWN_NO;
 }
+
+
+
+
+
+
+
+//=========================================================
+// FlWeaponRespawnTime - what is the time in the future
+// at which this weapon may spawn?
+//=========================================================
+float CHalfLifeRules::FlPickupWalkerRespawnTime(CPickupWalker* pWeapon)
+{
+	return -1;
+}
+
+//=========================================================
+// FlWeaponRespawnTime - Returns 0 if the weapon can respawn 
+// now,  otherwise it returns the time at which it can try
+// to spawn again.
+//=========================================================
+float CHalfLifeRules::FlPickupWalkerTryRespawn(CPickupWalker* pWeapon)
+{
+	return 0;
+}
+
+//=========================================================
+// VecWeaponRespawnSpot - where should this weapon spawn?
+// Some game variations may choose to randomize spawn locations
+//=========================================================
+Vector CHalfLifeRules::VecPickupWalkerRespawnSpot(CPickupWalker* pWeapon)
+{
+	// Easy there!  Might've wandered off, so be sure to use this instead
+	//return pWeapon->pev->origin;
+	return pWeapon->respawn_origin;
+}
+
+//=========================================================
+// WeaponShouldRespawn - any conditions inhibiting the
+// respawning of this weapon?
+//=========================================================
+int CHalfLifeRules::PickupWalkerShouldRespawn(CPickupWalker* pWeapon)
+{
+	return GR_WEAPON_RESPAWN_NO;
+}
+
+
+
+
+
+
+
+
+
+
 
 //=========================================================
 //=========================================================

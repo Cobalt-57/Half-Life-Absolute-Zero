@@ -1638,7 +1638,7 @@ void CPantherEye::LeapTouch ( CBaseEntity *pOther )
 void CPantherEye::MonsterThink ( void )
 {
 
-	if(!deadSetActivityBlock && pev->deadflag == DEAD_NO){
+	if(pev->deadflag == DEAD_NO){
 		//ok?
 		//return;
 
@@ -1710,13 +1710,13 @@ void CPantherEye::SetActivity ( Activity NewActivity )
 	if(pev->deadflag != DEAD_NO &&
 	*/
 
-	if(deadSetActivityBlock &&
-		(NewActivity != ACT_DIESIMPLE &&
+	// if in any dying state, and haven't picked a ACT_DIE-act, deny this.
+	if(pev->deadflag != DEAD_NO &&
+		NewActivity != ACT_DIESIMPLE &&
 		NewActivity != ACT_DIEBACKWARD && 
 		NewActivity != ACT_DIEFORWARD &&
 		NewActivity != ACT_DIEVIOLENT 
-		)
-		){
+	){
 		//////easyForcePrintLine("OOOOOOOOOOOOOOOOOOOOOO freakin HOW %d ::: %d %d %d", monsterID, NewActivity, pev->deadflag, m_MonsterState);
 		return;
 	}
@@ -1784,10 +1784,10 @@ Schedule_t *CPantherEye::GetSchedule ( void )
 
 
 
-	if(pev->deadflag != DEAD_NO || deadSetActivityBlock){
+	if(pev->deadflag != DEAD_NO){
 		return GetScheduleOfType( SCHED_DIE );
 	}
-	if(pev->deadflag == DEAD_NO && deadSetActivityBlock){
+	if(pev->deadflag == DEAD_NO){
 		//////easyForcePrintLine("IM GONNA eat YOUR WHOLE box of raisins");
 	}
 
@@ -2024,7 +2024,7 @@ Schedule_t* CPantherEye::GetScheduleOfType( int Type){
 	EASY_CVAR_PRINTIF_PRE(panthereyePrintout, easyPrintLine("PANTHER: GET SCHEDULE OF TYPE: %d", Type));
 
 	
-	if( (pev->deadflag != DEAD_NO || deadSetActivityBlock) && Type != SCHED_DIE){
+	if( (pev->deadflag != DEAD_NO) && Type != SCHED_DIE){
 		//////easyForcePrintLine("I WILL eat YOUR WHOLE box of rasinssss %d: %d ::: %d", monsterID, deadSetActivityBlock, Type);
 	}
 
@@ -2302,7 +2302,7 @@ void CPantherEye::RunTask ( Task_t *pTask ){
 
 
 	//NOTE: should only do this logic check if alive of course.
-	if(pev->deadflag == DEAD_NO && !deadSetActivityBlock){
+	if(pev->deadflag == DEAD_NO){
 
 		if(pissedOffTime == -1 && runawayTime == -1 && m_hEnemy != NULL){
 			//nothing all that strong, and an enemy about?  Sneak time!
@@ -2572,7 +2572,7 @@ void CPantherEye::RunTask ( Task_t *pTask ){
 		}
 
 
-	}//END OF if(pev->deadflag == DEAD_NO && !deadSetActivityBlock)
+	}//END OF if(pev->deadflag == DEAD_NO &&
 	else{
 
 		//////easyForcePrintLine(".....???????? %d : %d   %d %d", monsterID, pTask->iTask, pev->deadflag, deadSetActivityBlock);
