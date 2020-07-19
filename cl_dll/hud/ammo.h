@@ -119,7 +119,7 @@ private:
 	int m_adrenalines;
 	int m_radiations;
 	//MODDD - other new things...
-	int m_airTankAirTime;
+	float m_airTankAirTime;
 	float m_longJumpCharge;
 	
 	float m_e_battery_empty;

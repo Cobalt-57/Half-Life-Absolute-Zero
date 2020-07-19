@@ -38,10 +38,11 @@ float GetSkillCvar( char *pName )
 
 	flValue = CVAR_GET_FLOAT ( szBuffer );
 
-	if ( flValue <= 0 )
-	{
-		ALERT ( at_console, "\n\n** GetSkillCVar Got a zero for %s **\n\n", szBuffer );
-	}
+	//MODDD - no longer send a message on 0 values, these are valid for some now.
+	//if ( flValue <= 0 )
+	//{
+	//	ALERT ( at_console, "\n\n** GetSkillCVar Got a zero for %s **\n\n", szBuffer );
+	//}
 
 	return flValue;
 }
@@ -53,10 +54,11 @@ float GetSkillCvarSingular(char* pName)
 	float flValue;
 	flValue = CVAR_GET_FLOAT(pName);
 
-	if (flValue <= 0)
-	{
-		ALERT(at_console, "\n\n** GetSkillCVar Got a zero for %s **\n\n", pName);
-	}
+	//MODDD - no longer send a message on 0 values, these are valid for some now.
+	//if (flValue <= 0)
+	//{
+	//	ALERT(at_console, "\n\n** GetSkillCVar Got a zero for %s **\n\n", pName);
+	//}
 
 	return flValue;
 }

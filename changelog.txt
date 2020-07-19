@@ -48,4 +48,16 @@ CVar "useAlphaCrosshair" removed.  Use the built-in "crosshair" to handle this i
 2: retail crosshair (varries per weapon)
 
 
+MAJOR BUGFIX:  revive called commonreset, but did not get updates from some clientside CVars to restore to their old values.
+That is, dying -> revive with cl_fvox on would act as though cl_fvox were off after (default).  May have explained other oddness following revives.
+
+MAJOR BUGFIX:  likely cause of "game thinks you're dead when you're really not or vice versa" glitch addressed.
+
+Various new HEV sounds able to be called for from sentences.txt, such as HEV_E1 on running out of battery, HEV_E2 on being gibbed, HEV_E3 40% of the time on non-gib deaths.
+
+"torniquette_applied" from sentence "HEV_HEAL1" now one of the 3 choices for ending bleeding damage early with healing
+
+Thrown grenades no longer jitter like the dickens.
+Yes, those were supposed to be animations.
+
 

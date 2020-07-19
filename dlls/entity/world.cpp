@@ -522,11 +522,6 @@ CWorld::CWorld(void){
 
 
 
-
-extern void updateCVarRefs(const Vector* arg_suggestedOrigin);
-
-
-
 //WARNING - this never gets called it seems!
 void CWorld::Activate(void){
 	CBaseEntity::Activate();
@@ -546,7 +541,7 @@ void CWorld :: Spawn( void )
 	/////////////////////////////////////////////////////
 
 	//this update is not particular to a player.
-	//updateCVarRefs(NULL);
+	//updateCVarRefs();
 	//NOTE: best do the early update in client.cpp @ "ServerActivate" instead.  Seems to occur earlier than this.
 	//UPDATE: "GameDLLInit" method of game.cpp deemed the earliest point best for initial CVar update.
 

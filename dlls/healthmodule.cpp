@@ -184,27 +184,7 @@ void HealthModule::Use( CBaseEntity* pActivator, CBaseEntity* pCaller, USE_TYPE 
 	
 	//MODDD - any healing items / charge removes the bleeding timed damage effect, if present.
 	//MODDD TODO - this does still remove bleeding even if the unit is out of health. Is that okay?
-	if(pPlayer->m_rgbTimeBasedDamage[itbd_Bleeding] > 0 || pPlayer->m_bitsDamageTypeMod & DMG_BLEEDING){
-		int choice = RANDOM_LONG(0,1);
-		//Note that, upon playing either of the two sounds, we don't want to play either until 30 seconds have passed.
-		//The other sound that was not picked must also be repeat-blocked or else both will be played in succession
-		//upon wall-charger healing (the damage-removal has a slight delay).
-		if(choice == 0){
-			//hiss, wound_sterilized
-			pPlayer->SetSuitUpdate("!HEV_HEAL6", FALSE, SUIT_NEXT_IN_30SEC);
-			pPlayer->forceRepeatBlock("!HEV_HEAL7", FALSE, SUIT_NEXT_IN_30SEC);
-		}else if(choice == 1){
-			//hiss, morphine_shot
-			pPlayer->SetSuitUpdate("!HEV_HEAL7", FALSE, SUIT_NEXT_IN_30SEC);
-			pPlayer->forceRepeatBlock("!HEV_HEAL6", FALSE, SUIT_NEXT_IN_30SEC);
-
-		}
-		pPlayer->m_rgbTimeBasedDamage[itbd_Bleeding] = 0;
-		pPlayer->m_rgbTimeBasedFirstFrame[itbd_Bleeding] = TRUE;
-		//necessary? isn't for antidote / anti-toxin (radiation item), though.
-		//Apply to the other bitmask, since this is new (old one was full).
-		pPlayer->m_bitsDamageTypeMod &= ~DMG_BLEEDING;
-	}
+	pPlayer->attemptCureBleeding();
 
 
 

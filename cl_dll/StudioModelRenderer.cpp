@@ -560,9 +560,14 @@ void CStudioModelRenderer::StudioSetUpTransform (int trivial_accept)
 
 	//Con_DPrintf("Angles %4.2f prev %4.2f for %i\n", angles[PITCH], m_pCurrentEntity->index);
 	//Con_DPrintf("movetype %d %d\n", m_pCurrentEntity->movetype, m_pCurrentEntity->aiment );
-	if (m_pCurrentEntity->curstate.movetype == MOVETYPE_STEP ) 
+	if (m_pCurrentEntity->curstate.movetype == MOVETYPE_STEP)
 	{
-		
+
+
+		if (m_pCurrentEntity->curstate.renderfx & STOPINTR) {
+			int x = 222;
+		}
+
 		float f = 0;
 		float d;
 		// don't do it if the goalstarttime hasn't updated in a while.
@@ -570,15 +575,35 @@ void CStudioModelRenderer::StudioSetUpTransform (int trivial_accept)
 		// NOTE:  Because we need to interpolate multiplayer characters, the interpolation time limit
 		//  was increased to 1.0 s., which is 2x the max lag we are accounting for.
 
-		if ( ( m_clTime < m_pCurrentEntity->curstate.animtime + 1.0f ) &&
-			 ( m_pCurrentEntity->curstate.animtime != m_pCurrentEntity->latched.prevanimtime ) )
-		{
-			f = (m_clTime - m_pCurrentEntity->curstate.animtime) / (m_pCurrentEntity->curstate.animtime - m_pCurrentEntity->latched.prevanimtime);
-			//Con_DPrintf("%4.2f %.2f %.2f\n", f, m_pCurrentEntity->curstate.animtime, m_clTime);
-		}
+
 
 		if (m_fDoInterp)
 		{
+			if ((m_clTime < m_pCurrentEntity->curstate.animtime + 1.0f) &&
+				(m_pCurrentEntity->curstate.animtime != m_pCurrentEntity->latched.prevanimtime))
+			{
+				float denomo = (m_pCurrentEntity->curstate.animtime - m_pCurrentEntity->latched.prevanimtime);
+
+				if (abs(denomo) <= 0.018) {
+					// To small of a denominator?  I suspect something is up.
+					f = 0;
+				}
+				else {
+					// ok.
+					f = (m_clTime - m_pCurrentEntity->curstate.animtime) / denomo;
+				}
+
+				//Con_DPrintf("%4.2f %.2f %.2f\n", f, m_pCurrentEntity->curstate.animtime, m_clTime);
+
+				/*
+				//MODDD - breakpoint
+				if (f > 10 || f < -10) {
+					int x = 222;
+				}
+				*/
+
+			}
+
 			// ugly hack to interpolate angle, position. current is reached 0.1 seconds after being set
 			f = f - 1.0;
 		}
@@ -587,15 +612,22 @@ void CStudioModelRenderer::StudioSetUpTransform (int trivial_accept)
 			f = 0;
 		}
 
+
+
 		timeoVar = f;
 
 
-		if (f < -1) {
-			f = -1;
-		}
-		if (f > 1) {
-			f = 1;
-		}
+		////if (m_pCurrentEntity->curstate.renderfx & STOPINTR) {
+		//	if (f < -1) {
+		//		f = -1;
+		//	}
+		//	if (f > 1) {
+		//		f = 1;
+		//	}
+		////}
+		
+
+		//////////////////////////////////////////////////////////
 
 		/*
 		for (i = 0; i < 3; i++)a
@@ -870,6 +902,7 @@ float CStudioModelRenderer::StudioEstimateInterpolant( void )
 			dadt = 2.0;
 		}
 	}
+
 	return dadt;
 }
 
@@ -1225,6 +1258,198 @@ CLIENTFR: 160 14.
 
 	return f;
 }
+
+
+
+
+
+
+
+
+
+// !!! TESTING
+float CStudioModelRenderer::StudioEstimateFrameNOINTERP(mstudioseqdesc_t* pseqdesc)
+{
+	double dfdt;
+	double f;
+	//return 0;
+
+	//??? StudioEstimateInterpolant
+
+	//MODDD NOTICE - should other places have this "renderfx & STOPINTR" check too.?
+	if (m_fDoInterp && !(m_pCurrentEntity->curstate.renderfx & STOPINTR))
+	{
+		if (m_clTime < m_pCurrentEntity->curstate.animtime)
+		{
+			dfdt = 0;
+		}
+		else
+		{
+			dfdt = (m_clTime - m_pCurrentEntity->curstate.animtime) * m_pCurrentEntity->curstate.framerate * pseqdesc->fps;
+
+		}
+	}
+	else
+	{
+		dfdt = 0;
+	}
+
+
+	/*
+	if((m_pCurrentEntity->curstate.renderfx & ISNPC) && !( (m_pCurrentEntity->curstate.renderfx & ISVIEWMODEL) == ISVIEWMODEL)   ){
+		//Check these?
+		easyForcePrintLine("YO WHATS GOOD %d %d %d %d %.2f %.2f %.2f %.2f",
+			m_pCurrentEntity->curstate.iuser1,
+			m_pCurrentEntity->curstate.iuser2,
+			m_pCurrentEntity->curstate.iuser3,
+			m_pCurrentEntity->curstate.iuser4,
+			m_pCurrentEntity->curstate.fuser1,
+			m_pCurrentEntity->curstate.fuser2,
+			m_pCurrentEntity->curstate.fuser3,
+			m_pCurrentEntity->curstate.fuser4
+		);
+	}
+	*/
+
+
+	//dfdt = 0;
+	//if(!strcmp(m_pCurrentEntity->curstate->
+
+	if (pseqdesc->numframes <= 1)
+	{
+		f = 0;
+	}
+	else
+	{
+		f = (m_pCurrentEntity->curstate.frame * (pseqdesc->numframes - 1)) / 256.0;
+	}
+
+	f += dfdt;
+
+	//MODDD - viewmodel idle anims may be forced not to loop, to remain static until a new anim is called.
+
+
+	BOOL animateBackwards = ((m_pCurrentEntity->curstate.renderfx & ISVIEWMODEL) == ISVIEWMODEL && (m_pCurrentEntity->curstate.iuser1 == 200));
+	//animateBackwards = FALSE;
+	/*
+	BOOL animateBackwards = FALSE;
+	if(m_pCurrentEntity->player & 2){
+		m_pCurrentEntity->player &= ~2;
+		animateBackwards = TRUE;
+	}
+	*/
+
+	if ((m_pCurrentEntity->curstate.renderfx & ISVIEWMODEL) == ISVIEWMODEL) {
+		//easyPrintLine("it is view model? %d ::: %d", m_pCurrentEntity->curstate.renderfx, m_pCurrentEntity->curstate.renderfx & FORCE_NOLOOP);
+	}
+
+	if (animateBackwards) {
+
+		f = pseqdesc->numframes - f - 1;
+	}
+
+	if ((m_pCurrentEntity->curstate.renderfx & ISVIEWMODEL) == ISVIEWMODEL) {
+		//easyPrintLineDummy("ILL CUT YER NUTS OFF s:%d f:%.2f mf:%d b?%d", m_pCurrentEntity->curstate.sequence, f, pseqdesc->numframes, animateBackwards);
+	}
+
+	if (pseqdesc->flags & STUDIO_LOOPING && !((m_pCurrentEntity->curstate.renderfx & ISVIEWMODEL) == ISVIEWMODEL && (m_pCurrentEntity->curstate.renderfx & FORCE_NOLOOP)))
+		//if (pseqdesc->flags & STUDIO_LOOPING) 
+	{
+		if (pseqdesc->numframes > 1)
+		{
+			f -= (int)(f / (pseqdesc->numframes - 1)) * (pseqdesc->numframes - 1);
+		}
+		if (f < 0)
+		{
+			f += (pseqdesc->numframes - 1);
+		}
+	}
+	else
+	{
+		//frames: 10.
+		//allowed range: 0-9, inclusive.
+
+		//inv: 9-0
+
+		//0: 9
+		//1: 8
+		//...
+		//7: 2
+		//8: 1
+		//9: 0
+
+		//if(!animateBackwards){
+		if (f >= pseqdesc->numframes - 1.001)
+		{
+			f = pseqdesc->numframes - 1.001;
+		}
+		if (f < 0.0)
+		{
+			f = 0.0;
+		}
+		//}
+		/*
+		else{
+
+			//f += 1;
+			if (f >= pseqdesc->numframes - 1.001)
+			{
+				f = pseqdesc->numframes - 1.001;
+			}
+			if (f < 0.0)
+			{
+				f = 0.0;
+			}
+
+		}
+		*/
+	}
+
+	if (animateBackwards) {
+		//easyPrintLine("WHAT THE?? f:%.2g if:%.2g n:%d", f, (pseqdesc->numframes - f - 1), pseqdesc->numframes);
+		//easyPrintLineDummy("I WILL please no %.2g %d", f, pseqdesc->numframes);
+		//10 frames. values 0 - 8 valid.
+
+		//f = pseqdesc->numframes - f - 1;
+	}
+
+
+	/*
+WEAPONIN: 9 9
+CLIENTFR: 160 14.00 15
+CLIENTFR: 160 14.00 15
+WEAPONIN: 9 9
+CLIENTFR: 160 14.
+*/
+//iAnim
+//m_pCurrentEntity->curstate.
+
+	if ((m_pCurrentEntity->curstate.renderfx & ISVIEWMODEL) == ISVIEWMODEL) {
+		//easyPrintLine("CLIENT FRAME: %.2f %.2f %.2f :: %d %.2f", f, m_pCurrentEntity->curstate.frame, currentFrame, pseqdesc->numframes, dfdt );
+		//easyPrintLine("CLIENTFR: %d %.2f %d", m_pCurrentEntity->curstate.renderfx, f, pseqdesc->numframes);
+
+		easyPrintLineDummy("RENDER: id:%d ai:%d seq:%d f:%.2f n:%d BACKWARDS: %d", m_pCurrentEntity->index, pseqdesc->animindex, m_pCurrentEntity->curstate.sequence, f, pseqdesc->numframes, animateBackwards);
+	}
+
+	return f;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /*
 ====================

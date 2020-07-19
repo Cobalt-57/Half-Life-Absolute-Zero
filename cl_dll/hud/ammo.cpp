@@ -678,7 +678,7 @@ int CHudAmmo:: MsgFunc_UpdTankTime(const char *pszName,  int iSize, void *pbuf )
 	BEGIN_READ( pbuf, iSize );
 	int x = READ_SHORT();
 
-	m_airTankAirTime = x;
+	m_airTankAirTime = ((float)x) / 100;
 
 	return 1;
 }
@@ -1141,7 +1141,7 @@ int CHudAmmo::Draw(float flTime)
 		wrect_t* spriterect = &gHUD.GetSpriteRect( m_airtank_full );
 
 		if(m_airTankAirTime > 0){
-			gHUD.drawPartialFromBottom(spritehandle, spriterect, ( (float)m_airTankAirTime / (float)PLAYER_AIRTANK_TIME_MAX ), x + 11, y + 3, r, g, b);
+			gHUD.drawPartialFromBottom(spritehandle, spriterect, ( m_airTankAirTime / (float)PLAYER_AIRTANK_TIME_MAX ), x + 11, y + 3, r, g, b);
 		}
 		
 		//////////////////////////////////////////////////////////////////////

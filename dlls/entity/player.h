@@ -123,15 +123,19 @@ enum sbar_data
 };
 
 
+
+extern BOOL gInitHUD;
+
 // MODDD - global method, moved from client.cpp
 extern void respawn(entvars_t *pev, BOOL fCopyCorpse);
+
+
 
 
 
 class CBasePlayer : public CBaseMonster
 {
 public:
-
 
 	//MODDD - new, but a lot of these are.
 
@@ -142,10 +146,6 @@ public:
 
 	BOOL m_bHolstering;
 	CBasePlayerItem* m_pQueuedActiveItem;
-
-
-	//BOOL forceNoWeaponLoop;
-
 
 	//the player will be unkillable up to this time (implied to be set & since revive).
 	float reviveSafetyTime;
@@ -182,7 +182,7 @@ public:
 	int				m_afButtonPressed;
 	int				m_afButtonReleased;
 	
-	edict_t			   *m_pentSndLast;			// last sound entity to modify player room type
+	edict_t			*m_pentSndLast;			// last sound entity to modify player room type
 	float			m_flSndRoomtype;		// last roomtype set by sound entity
 	float			m_flSndRange;			// dist from player to sound entity
 
@@ -220,9 +220,6 @@ public:
 	void (CBasePlayer::*currentSuitSoundEvent)();
 	
 
-
-
-
 	int				m_iSuitPlayNext;				// next sentence slot for queue storage;
 	int				m_rgiSuitNoRepeat[CSUITNOREPEAT];		// suit sentence no repeat list
 	float			m_rgflSuitNoRepeatTime[CSUITNOREPEAT];	// how long to wait before allowing repeat
@@ -235,8 +232,8 @@ public:
 	float			m_flgeigerDelay;		// delay per update of range msg to client
 	int				m_igeigerRangePrev;
 	int				m_iStepLeft;			// alternate left/right foot stepping sound
-	char				m_szTextureName[CBTEXTURENAMEMAX];	// current texture name we're standing on
-	char				m_chTextureType;		// current texture type
+	char			m_szTextureName[CBTEXTURENAMEMAX];	// current texture name we're standing on
+	char			m_chTextureType;		// current texture type
 
 	int				m_idrowndmg;			// track drowning damage taken
 	int				m_idrownrestored;		// track drowning damage restored
@@ -246,12 +243,12 @@ public:
 	//MODDD - complimentary
 	int				m_bitsModHUDDamage;
 
-	BOOL				m_fInitHUD;				// True when deferred HUD restart msg needs to be sent
-	BOOL				m_fGameHUDInitialized;
+	BOOL			m_fInitHUD;				// True when deferred HUD restart msg needs to be sent
+	BOOL			m_fGameHUDInitialized;
 	int				m_iTrain;				// Train control position
-	BOOL				m_fWeapon;				// Set this to FALSE to force a reset of the current weapon HUD info
+	BOOL			m_fWeapon;				// Set this to FALSE to force a reset of the current weapon HUD info
 
-	EHANDLE				m_pTank;				// the tank which the player is currently controlling,  NULL if no tank
+	EHANDLE			m_pTank;				// the tank which the player is currently controlling,  NULL if no tank
 	float			m_fDeadTime;			// the time at which the player died  (used in PlayerDeathThink())
 
 	BOOL			m_fNoPlayerSound;	// a debugging feature. Player makes no sound if this is true. 
@@ -260,10 +257,11 @@ public:
 	BOOL			m_fLongJumpMemory;
 
 
-	float       m_tSneaking;
+	float	m_tSneaking;
 	int		m_iUpdateTime;		// stores the number of frame ticks before sending HUD update messages
-	int		m_iClientHealth;	// the health currently known by the client.  If this changes, send a new
-	int		m_iClientBattery;	// the Battery currently known by the client.  If this changes, send a new
+	//MODDD - now floats.
+	float		m_iClientHealth;	// the health currently known by the client.  If this changes, send a new
+	float		m_iClientBattery;	// the Battery currently known by the client.  If this changes, send a new
 
 	//MODDD - added for the power canisters / syringes.
 	int m_iClientAntidote;
@@ -283,12 +281,13 @@ public:
 	int m_rgAmmo[MAX_AMMO_SLOTS];
 	int m_rgAmmoLast[MAX_AMMO_SLOTS];
 
-	Vector				m_vecAutoAim;
-	BOOL				m_fOnTarget;
+	Vector			m_vecAutoAim;
+	BOOL			m_fOnTarget;
 	int				m_iDeaths;
 	float			m_iRespawnFrames;	// used in PlayerDeathThink() to make sure players can always respawn
 
-	int m_lastx, m_lasty;  // These are the previous update's crosshair angles, DON"T SAVE/RESTORE
+	int m_lastx;
+	int m_lasty;  // These are the previous update's crosshair angles, DON"T SAVE/RESTORE
 
 	int m_nCustomSprayFrames;// Custom clan logo frames for this player
 	float m_flNextDecalTime;// next time this player can spray a decal
@@ -301,10 +300,166 @@ public:
 	float m_flNextAttack;
 
 
+	//VARIABLES
+	BOOL antidoteQueued;
+	BOOL radiationQueued;
+	BOOL adrenalineQueued;
+
+	float rawDamageSustained;
+
+
+	float m_flStartCharge;
+	//MODDD - new
+	float m_flStartChargeAnim;
+	float m_flStartChargePreSuperDuper;
+
+
+	float m_flAmmoStartCharge;
+	float m_flPlayAftershock;
+	float m_flNextAmmoBurn;// while charging, when to absorb another unit of player's ammo?
+
+	int m_izSBarState[SBAR_END];
+	float m_flNextSBarUpdateTime;
+	float m_flStatusBarDisappearDelay;
+	char m_SbarString0[SBAR_STRING_SIZE];
+	char m_SbarString1[SBAR_STRING_SIZE];
+
+	float m_flNextChatTime;
+
+	float default_fov;
+	float auto_adjust_fov;
+	float auto_determined_fov;
+
+	//Measuring the amount of time the player can breathe underwater with an air tank.
+	BOOL airTankAirTimeNeedsUpdate;
+	float airTankAirTime;
+	float airTankAirTimeMem;
+	float oldWaterMoveTime;
+	float longJumpCharge;
+	float longJumpChargeMem;
+	float longJumpDelay;
+	BOOL longJump_waitForRelease;
+	BOOL longJumpChargeNeedsUpdate;
+	float oldThinkTime;
+	float lastDuckVelocityLength;
+
+	//MODD
+	float nextMadEffect;
+	int deadflagmem;
+
+	BOOL recentlyGrantedGlockSilencer;
+
+	//float glockSilencerOnVar;
+
+	//float egonAltFireOnVar;
+
+
+	float cheat_infiniteclipMem;
+	float cheat_infiniteammoMem;
+	float cheat_minimumfiredelayMem;
+	float cheat_minimumfiredelaycustomMem;
+
+	float cheat_nogaussrecoilMem;
+	float gaussRecoilSendsUpInSPMem;
+
+
+	int recoveryIndex;
+	int recoveryDelay;
+
+	int recoveryIndexMem;
+	int recoveryDelayMin;
+
+	BOOL recentlyGibbed;
+
+	BOOL airTankWaitingStart;
+
+	BOOL scheduleRemoveAllItems;
+	BOOL scheduleRemoveAllItemsIncludeSuit;
+
+	//MODDD - created to differentiate between "m_fLongJump" (always on now) and having ever picked
+	//up the long jump item itself, if needed (mostly to satisfy the hazard course).
+	BOOL hasLongJumpItem;
+
+	// MOVED TO CBaseMonster
+	//BOOL	m_rgbTimeBasedFirstFrame[CDMG_TIMEBASED];
+
+	int hasGlockSilencer;
+	int hasGlockSilencerMem;
+
+
+	int obligedCustomSentence;
+
+
+	BOOL fvoxEnabled;
+	BOOL fHolsterAnimsEnabled;
+	float cl_ladder_choice;
+
+	float recentlySaidBattery;
+
+	//void Think(void);
+	//void MonsterThink(void);
+
+
+	//MODDD - is this the first time in a while the player has been close to radation (false)?
+	BOOL foundRadiation;
+	BOOL altLadderStep;
+
+	BOOL getBatteryValueRealTime;
+	int batterySayPhase;
+
+	BOOL batteryInitiative;
+
+	BOOL alreadyDroppedItemsAtDeath;
+	BOOL sentCarcassScent;
+
+	//MODDD
+	int drowning;  //actually a BOOL, but the client doesn't know what bools are.  Probably wouldn't hurt anyways.
+	int drowningMem;
+
+	float playerBrightLightMem;
+	float cameraModeMem;
+
+	float mirrorsDoNotReflectPlayerMem;
+
+	cvar_t* crossbowInheritsPlayerVelocity;
+	float crossbowInheritsPlayerVelocityMem;
+
+	cvar_t* fastHornetsInheritsPlayerVelocity;
+	float fastHornetsInheritsPlayerVelocityMem;
+
+	//cvar_t* autoSneaky;
+	float autoSneakyMem;
+
+	int framesUntilPushStops;
+
+	float pushSpeedMulti;
+	float pushSpeedMultiMem;
+
+	float noclipSpeedMultiMem;
+	float normalSpeedMultiMem;
+	float jumpForceMultiMem;
+	float ladderCycleMultiMem;
+	float ladderSpeedMultiMem;
+
+	int clearWeaponFlag;
+
+	BOOL alreadyPassedLadderCheck;
+
+	BOOL grabbedByBarnacle;
+	BOOL grabbedByBarnacleMem;
+
+	float minimumRespawnDelay;
+
+	char recentlyPlayedSound[CBSENTENCENAME_MAX];
+
 
 	//MODDD - some setter methods.
 	void setHealth(int newHealth);
 	void setArmorBattery(int newBattery);
+	void SetAndUpdateBattery(int argNewBattery);
+	void attemptCureBleeding();
+
+
 	void grantAllItems();
 	void giveMaxAmmo();
 
@@ -418,8 +573,8 @@ public:
 	// Player is moved across the transition by other means
 	virtual int	ObjectCaps( void ) { return CBaseMonster :: ObjectCaps() & ~FCAP_ACROSS_TRANSITION; }
 	virtual void Precache( void );
-	BOOL			IsOnLadder( void );
-	BOOL			FlashlightIsOn( void );
+	BOOL		IsOnLadder( void );
+	BOOL		FlashlightIsOn( void );
 	void		FlashlightTurnOn( void );
 	void		FlashlightTurnOff( void );
 	
@@ -500,9 +655,6 @@ public:
 	
 
 
-
-
-
 	
 	
 	void EnableControl(BOOL fControl);
@@ -515,7 +667,6 @@ public:
 	void PlayerUse( void );
 
 	void CheckSuitUpdate();
-
 
 	
 	BOOL SetSuitUpdatePRE();
@@ -555,18 +706,6 @@ public:
 	void SetSuitUpdateEventFVoxCutoff(char *name, int fgroup, float fNoRepeatTime, float playDuration, BOOL fvoxException, float eventDelay, void (CBasePlayer::*eventMethod)(), float fvoxOffCutoff );
 
 
-
-	
-
-
-
-
-
-
-
-
-
-
 	void SetSuitUpdateAndForceBlock(char *name, int fgroup, float fNoRepeatTime);
 	void SetSuitUpdateAndForceBlock(char *name, int fgroup, float fNoRepeatTime, float playDuration);
 	void SetSuitUpdateAndForceBlock(char *name, int fgroup, float fNoRepeatTime, float playDuration, BOOL fvoxException);
@@ -582,7 +721,6 @@ public:
 	void consumeRadiation(void);
 	void consumeAdrenaline(void);
 	
-
 
 	//MODDD
 	int getGeigerChannel();
@@ -616,16 +754,6 @@ public:
 	void set_cl_ladder_choice(float argNew);
 
 
-
-	//VARIABLES
-	BOOL antidoteQueued;
-	BOOL radiationQueued;
-	BOOL adrenalineQueued;
-
-	float rawDamageSustained;
-
-
-
 	//MODDD - phase these out.
 	///////////////////////////////////////////////////////////////////////////
 	///////////////////////////////////////////////////////////////////////////
@@ -657,34 +785,15 @@ public:
 	///////////////////////////////////////////////////////////////////////////
 	///////////////////////////////////////////////////////////////////////////
 
-
-
-
-
-
 	
 
-	float m_flStartCharge;
-	//MODDD - new
-	float m_flStartChargeAnim;
-	float m_flStartChargePreSuperDuper;
-
-
-	float m_flAmmoStartCharge;
-	float m_flPlayAftershock;
-	float m_flNextAmmoBurn;// while charging, when to absorb another unit of player's ammo?
-	
 	//Player ID
 	void InitStatusBar( void );
 	void UpdateStatusBar( void );
-	int m_izSBarState[ SBAR_END ];
-	float m_flNextSBarUpdateTime;
-	float m_flStatusBarDisappearDelay;
-	char m_SbarString0[ SBAR_STRING_SIZE ];
-	char m_SbarString1[ SBAR_STRING_SIZE ];
-	
-	float m_flNextChatTime;
 
+	//NEW METHODS for organization.
+	void _commonReset(void);
+	void commonReset(void);
 
 	void resetLongJumpCharge();
 
@@ -693,156 +802,6 @@ public:
 	void autoSneakyCheck(void);
 	void turnOnSneaky(void);
 	void turnOffSneaky(void);
-
-	float default_fov;
-	float auto_adjust_fov;
-	float auto_determined_fov;
-
-	//Measuring the amount of time the player can breathe underwater with an air tank.
-	BOOL airTankAirTimeNeedsUpdate;
-	float airTankAirTime;
-	float airTankAirTimeMem;
-	float oldWaterMoveTime;
-	float longJumpCharge;
-	float longJumpChargeMem;
-	float longJumpDelay;
-	BOOL longJump_waitForRelease;
-	BOOL longJumpChargeNeedsUpdate;
-	float oldThinkTime;
-	float lastDuckVelocityLength;
-	
-	//MODD
-	float nextMadEffect;
-	int deadflagmem;
-
-	BOOL recentlyGrantedGlockSilencer;
-
-	//float glockSilencerOnVar;
-
-	//float egonAltFireOnVar;
-
-
-	float cheat_infiniteclipMem;
-	float cheat_infiniteammoMem;
-	float cheat_minimumfiredelayMem;
-	float cheat_minimumfiredelaycustomMem;
-
-	float cheat_nogaussrecoilMem;
-	float gaussRecoilSendsUpInSPMem;
-
-
-
-	int recoveryIndex;
-	int recoveryDelay;
-
-	int recoveryIndexMem;
-	int recoveryDelayMin;
-
-	BOOL recentlyGibbed;
-	BOOL recentlyGibbedMem;
-
-
-	float skillMem;
-
-	cvar_t* timedDamageReviveRemoveMode;
-
-	float timedDamageReviveRemoveModeMem;
-
-
-
-	BOOL airTankWaitingStart;
-
-
-	
-	BOOL scheduleRemoveAllItems;
-	BOOL scheduleRemoveAllItemsIncludeSuit;
-
-	//NEW METHODS for organization.
-	void _commonReset(void);
-	void commonReset(void);
-
-	//MODDD - created to differentiate between "m_fLongJump" (always on now) and having ever picked
-	//up the long jump item itself, if needed (mostly to satisfy the hazard course).
-	BOOL hasLongJumpItem;
-
-	// MOVED TO CBaseMonster
-	//BOOL	m_rgbTimeBasedFirstFrame[CDMG_TIMEBASED];
-
-	int hasGlockSilencer;
-	int hasGlockSilencerMem;
-
-
-	int obligedCustomSentence;
-
-	float barnacleCanGibMem;
-
-
-	BOOL fvoxEnabled;
-	BOOL fHolsterAnimsEnabled;
-	float cl_ladder_choice;
-	
-	
-	float recentlySaidBattery;
-
-	//void Think(void);
-	//void MonsterThink(void);
-
-
-	//MODDD - is this the first time in a while the player has been close to radation (false)?
-	BOOL foundRadiation;
-	BOOL altLadderStep;
-
-	BOOL getBatteryValueRealTime;
-	int batterySayPhase;
-
-	BOOL batteryInitiative;
-
-	BOOL alreadyDroppedItemsAtDeath;
-	BOOL sentCarcassScent;
-
-	//MODDD
-	int drowning;  //actually a BOOL, but the client doesn't know what bools are.  Probably wouldn't hurt anyways.
-	int drowningMem;
-
-
-	float playerBrightLightMem;
-	
-	float cameraModeMem;
-
-
-	float mirrorsDoNotReflectPlayerMem;
-
-	
-	cvar_t* crossbowInheritsPlayerVelocity;
-	float crossbowInheritsPlayerVelocityMem;
-	
-	cvar_t* fastHornetsInheritsPlayerVelocity;
-	float fastHornetsInheritsPlayerVelocityMem;
-	
-	//cvar_t* autoSneaky;
-	float autoSneakyMem;
-	
-
-	int framesUntilPushStops;
-	
-	float pushSpeedMulti;
-	float pushSpeedMultiMem;
-
-	float noclipSpeedMultiMem;
-	float normalSpeedMultiMem;
-	float jumpForceMultiMem;
-	float ladderCycleMultiMem;
-	float ladderSpeedMultiMem;
-	
-	int clearWeaponFlag;
-
-	BOOL alreadyPassedLadderCheck;
-
-
-	BOOL grabbedByBarnacle;
-	BOOL grabbedByBarnacleMem;
-
-	float minimumRespawnDelay;
 
 
 	//MODDD - NEW.  Also inline now, very simple method and consistent for client/serverside.
@@ -863,9 +822,6 @@ public:
 
 
 };
-
-extern BOOL gInitHUD;
-
 
 
 #endif // PLAYER_H

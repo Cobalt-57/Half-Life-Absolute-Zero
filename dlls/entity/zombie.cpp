@@ -384,6 +384,10 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CZombie)
 				::UTIL_SetOrigin(pev, Vector(pev->origin.x, pev->origin.y, pev->origin.z + 0.4));
 				pev->flags &= ~FL_ONGROUND;  //is this ok?
 				pev->groundentity = NULL;
+
+				//pev->effects |= EF_NOINTERP;
+				//pev->renderfx |= STOPINTR;
+
 				// NOTE - not worth setting the movetype to MOVETYPE_TOSS.  The change does not even arrive in time to stop
 				// the weird glitchy 'teleport' effect from bad interpolation in studioModelRenderer.cpp, which has been
 				// fixed separately anyway.  Even letting that script refer to MOVETYPE_TOSS as well as MOVETYPE_STEP does not
@@ -558,10 +562,6 @@ void CZombie::BecomeDead(void)
 
 
 
-
-
-
-
 void CZombie :: PainSound( void )
 {
 	int pitch = 95 + RANDOM_LONG(0,9);
@@ -697,7 +697,6 @@ CZombie::CZombie(){
 //=========================================================
 void CZombie :: Spawn()
 {
-
 	Precache( );
 
 	pev->classname = MAKE_STRING("monster_zombie");
@@ -720,7 +719,6 @@ void CZombie :: Spawn()
 	MonsterInit();
 	
 	SetTouch(&CZombie::ZombieTouch );
-
 
 }
 
@@ -766,7 +764,8 @@ int CZombie::IgnoreConditions ( void )
 {
 	int iIgnore = CBaseMonster::IgnoreConditions();
 
-	if ((m_Activity == ACT_MELEE_ATTACK1) || (m_Activity == ACT_MELEE_ATTACK1))
+	//MODDD - shouldn't that be... or MELEE_ATTACK2?  why 1 twice?
+	if ((m_Activity == ACT_MELEE_ATTACK1) || (m_Activity == ACT_MELEE_ATTACK2))
 	{
 #if 0
 		if (pev->health < 20)
@@ -808,7 +807,6 @@ void CZombie::MonsterThink(){
 	*/
 	
 	
-
 	if(lookForCorpseTime != -1 && gpGlobals->time >= lookForCorpseTime){
 		//if we're done looking for a corpse, drop the last copy.
 		lookForCorpseTime = -1;
@@ -833,7 +831,6 @@ void CZombie::MonsterThink(){
 Schedule_t* CZombie::GetSchedule( void )
 {
 
-	
 	Schedule_t* endedSchedule = m_pSchedule;
 	if(endedSchedule != NULL && endedSchedule == slWaitScript && pev->sequence == ZOMBIE_EATBODY && m_MonsterState != MONSTERSTATE_DEAD && m_IdealMonsterState != MONSTERSTATE_DEAD){
 		//If this schedule was interrupted / ended and it was ZOMBIE_EATBODY, do a quick getup animation.
@@ -842,16 +839,11 @@ Schedule_t* CZombie::GetSchedule( void )
 		return slZombieSeekCorpseQuickFail;
 	}
 
-
-
-
-
 	switch	( m_MonsterState )
 	{
 	case MONSTERSTATE_ALERT:
 		{
 			//MODDD TODO - in general, hearing sensitiviy selective per type of thing, like scents and not noise, may be nice too at some point?
-			
 			
 			//MODDD - zombie eating removal
 			/*
@@ -866,7 +858,6 @@ Schedule_t* CZombie::GetSchedule( void )
 
 			}
 			*/
-
 
 			/*
 			if ( HasConditions(bits_COND_SMELL) )
@@ -1144,7 +1135,6 @@ void CZombie::StartTask(Task_t* pTask){
 }//END OF StartTask
 
 
-
 void CZombie::RunTask(Task_t* pTask){
 
 	//bits_COND_HEAR_SOUND...? careful.
@@ -1330,6 +1320,15 @@ int CZombie::LookupActivityHard(int activity){
 		//case ACT_VICTORY_DANCE:
 		//	return LookupSequence("eatbody");
 		//break;
+		case ACT_MELEE_ATTACK1:
+			//OVERRIDE.  Have a little better chance of picking the other melee one, will ya?
+			if (RANDOM_FLOAT(0, 1) <= 0.6) {
+				return LookupSequence("attack1");
+			}
+			else {
+				return LookupSequence("attack2");
+			}
+		break;
 		case ACT_CROUCH:
 			m_flFramerateSuggestion = -1;  //crouch to stand anim backwards, that works.
 			return LookupSequence("eatbodystand");
@@ -1417,6 +1416,20 @@ void CZombie::ZombieTouch( CBaseEntity *pOther ){
 		UTIL_TraceLine(vecStart, vecEnd, dont_ignore_monsters, this->edict(), &tr);
 		if (tr.flFraction < 1.0) {
 			pev->movetype = MOVETYPE_STEP;  //returned to ground
+		}
+	}
+	*/
+
+	/*
+	if (pOther->IsWorld() && !(pev->flags & FL_ONGROUND)) {
+		TraceResult tr;
+		// is the ground below me now?
+		Vector vecStart = pev->origin + Vector(0, 0, 1);
+		Vector vecEnd = pev->origin + Vector(0, 0, -0.5);
+		UTIL_TraceLine(vecStart, vecEnd, dont_ignore_monsters, this->edict(), &tr);
+		if (tr.flFraction < 1.0) {
+			//pev->effects &= ~EF_NOINTERP;  //returned to ground
+			//pev->renderfx &= ~STOPINTR;
 		}
 	}
 	*/

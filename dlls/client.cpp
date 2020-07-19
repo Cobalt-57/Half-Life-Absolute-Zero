@@ -99,6 +99,11 @@ extern BOOL globalPSEUDO_queueClientSendoff;
 EASY_CVAR_EXTERN_MASS
 
 
+
+
+static int g_serveractive = 0;
+
+
 CBaseEntity* crashableEntityRef = NULL;
 float crashableEntityReferTime = 0;
 int crashableEntityReferMode = 0;
@@ -321,9 +326,9 @@ void interpretAsHealth(edict_t* pEntity, CBaseEntity* arg_target, const char* ar
 			arg_target->pev->health = 0;
 		}else{
 			try{
-				int numbAttempt = tryStringToInt(arg_arg1Ref);
-				arg_target->pev->health = (float)numbAttempt;
-				easyForcePrintLineClient(pEntity, "%s\'s health set to %d.", arg_targetName, numbAttempt);
+				float numbAttempt = tryStringToFloat(arg_arg1Ref);
+				arg_target->pev->health = numbAttempt;
+				easyForcePrintLineClient(pEntity, "%s\'s health set to %g.", arg_targetName, numbAttempt);
 			}catch(int){
 				easyForcePrintLineClient(pEntity, "Problem reading number.  (arg must be whole number)");
 			}
@@ -378,9 +383,9 @@ void interpretAsBattery(edict_t* pEntity, CBaseEntity* arg_target, const char* a
 		}
 		else {
 			try {
-				int numbAttempt = tryStringToInt(arg_arg1Ref);
-				arg_target->pev->armorvalue = (float)numbAttempt;
-				easyForcePrintLineClient(pEntity, "%s\'s battery set to %d.", arg_targetName, numbAttempt);
+				float numbAttempt = tryStringToFloat(arg_arg1Ref);
+				arg_target->pev->armorvalue = numbAttempt;
+				easyForcePrintLineClient(pEntity, "%s\'s battery set to %g.", arg_targetName, numbAttempt);
 			}
 			catch (int) {
 				easyForcePrintLineClient(pEntity, "Problem reading number.  (arg must be whole number)");
@@ -388,10 +393,6 @@ void interpretAsBattery(edict_t* pEntity, CBaseEntity* arg_target, const char* a
 		}
 	}
 }
-
-
-
-
 
 
 
@@ -1103,10 +1104,24 @@ void ClientCommand( edict_t *pEntity )
 		
 				playerRef->setHealth(100);
 				playerRef->setArmorBattery(100);
+
+				playerRef->attemptResetTimedDamage(TRUE);
 				//playerRef->pev->flags |= FL_GODMODE;
 				//playerRef->pev->flags |= MOVETYPE_NOCLIP;
 			}
-
+		}else {
+			easyForcePrintLineClient(pEntity, "You need sv_cheats on for that!");
+		}
+	}else if ( FStrEq(pcmdRefinedRef, "notimeddamage") || FStrEq(pcmdRefinedRef, "notdmg") || FStrEq(pcmdRefinedRef, "resettimeddamage") || FStrEq(pcmdRefinedRef, "resettdmg") ){
+		// only reset timed damages.
+		if ( g_flWeaponCheat != 0.0)
+		{
+			CBasePlayer* playerRef = GetClassPtr((CBasePlayer *)pev);
+			if(playerRef){
+				playerRef->attemptResetTimedDamage(TRUE);
+			}
+		}else {
+			easyForcePrintLineClient(pEntity, "You need sv_cheats on for that!");
 		}
 	}else if ( FStrEq(pcmdRefinedRef, "supergun") || FStrEq(pcmdRefinedRef, "neverrunout") ){
 		if ( g_flWeaponCheat != 0.0)
@@ -1495,10 +1510,7 @@ void ClientCommand( edict_t *pEntity )
 
 			//a slight delay.  A sound playing instantly may cut off unexpectedly.
 			playQueuedTime = gpGlobals->time + 0.1f;
-				
-			//playedSoundPlayer = tempplayer;
 			playedSoundPlayer.Set(pEntity);
-
 			playQueued = TRUE;
 		}
 		
@@ -1550,7 +1562,6 @@ void ClientCommand( edict_t *pEntity )
 			playQueuedTime = gpGlobals->time + 0.1f;
 			playedSoundPlayer.Set(pEntity);
 			playQueued = TRUE;
-
 		}
 		
 	}else if ( FStrEq(pcmdRefinedRef, "stopsoundtest" ) ){
@@ -4442,14 +4453,8 @@ void ClientCommand( edict_t *pEntity )
 	ClientPrint( &pEntity->v, HUD_PRINTCONSOLE, UTIL_VarArgs( "Unknown command: %s\n", command ) );
 
 
-	
-		
 	//Proven true by finding the player-entered string to be a reference to a hidden CVar to stop further checks.
 	//BOOL hiddenCVarHandled = FALSE;
-
-
-
-
 
 
 	/*
@@ -4462,7 +4467,6 @@ void ClientCommand( edict_t *pEntity )
 
 	if(hiddenCVarHandled)return;  //stop, we're done.
 	
-
 	if(FALSE){
 	}
 	EASY_CVAR_HIDDEN_LIST_2
@@ -4479,10 +4483,6 @@ void ClientCommand( edict_t *pEntity )
 		ClientPrint( &pEntity->v, HUD_PRINTCONSOLE, UTIL_VarArgs( "Unknown command: %s\n", command ) );
 	}
 	*/
-
-
-
-
 }//END OF... something really big.
 
 
@@ -4551,7 +4551,6 @@ void ClientUserInfoChanged( edict_t *pEntity, char *infobuffer )
 	g_pGameRules->ClientUserInfoChanged( GetClassPtr((CBasePlayer *)&pEntity->v), infobuffer );
 }
 
-static int g_serveractive = 0;
 
 void ServerDeactivate( void )
 {
@@ -4569,15 +4568,12 @@ void ServerDeactivate( void )
 }
 
 
-
 void ServerActivate( edict_t *pEdictList, int edictCount, int clientMax )
 {
-	int			i;
-	CBaseEntity		*pClass;
-
+	int i;
+	CBaseEntity* pClass;
 
 	globalPSEUDO_queueClientSendoff = TRUE;
-
 
 	//MODDD
 	//updateCVarRefs(NULL);
@@ -4611,13 +4607,12 @@ void ServerActivate( edict_t *pEdictList, int edictCount, int clientMax )
 	// Link user messages here to make sure first client can get them...
 	LinkUserMessages();
 
-
 	//guaranteed to happen well after the last precache... or activate call reallly.
 	OnMapLoadEnd();
 
-
 	//..When does the game load gpGlobals->time from a save file exactly, from what it was at the time of save? No clue.
 }//END OF ServerActivate
+
 
 
 /*
@@ -4627,19 +4622,9 @@ PlayerPreThink
 Called every frame before physics are run
 ================
 */
-
-
-
-
-
 //Looks like "StartFrame", "PlayerPreThink", and "PlayerPostThink" are always called in the same order.
-//We can take advantage of this and just 
-
-
 void PlayerPreThink( edict_t *pEntity )
 {
-	
-
 	//typical non-paused delta:
 	//d:0.01669312
 
@@ -4654,7 +4639,6 @@ void PlayerPreThink( edict_t *pEntity )
 
 
 	//easyForcePrintLineClient(pEntity, "??A %d", playerCanThink1);
-
 
 	/*
 	if(!playerCanThink1){
@@ -4677,7 +4661,6 @@ void PlayerPreThink( edict_t *pEntity )
 
 	gamePaused = FALSE;
 
-
 	entvars_t *pev = &pEntity->v;
 	CBasePlayer *pPlayer = (CBasePlayer *)GET_PRIVATE(pEntity);
 
@@ -4692,9 +4675,6 @@ PlayerPostThink
 Called every frame after physics are run
 ================
 */
-
-
-
 void PlayerPostThink( edict_t *pEntity )
 {
 	
@@ -4708,27 +4688,15 @@ void PlayerPostThink( edict_t *pEntity )
 	playerCanThink2 = FALSE;
 	*/
 
-
 	//For organization's sake, we're going to not involve things that have nothing to do with the sent "pEntity" up there.
 	
 	entvars_t *pev = &pEntity->v;
 	CBasePlayer *pPlayer = (CBasePlayer *)GET_PRIVATE(pEntity);
 
-	//update CVar references continually, of course.
-
-	//&pPlayer->pev->origin
-	if(pPlayer != NULL){
-		updateCVarRefs( pev );
-	}else{
-		updateCVarRefs ( NULL );
-	}
-
-
 	if(queueYMG_stopSend == TRUE){
 		queueYMG_stopSend = FALSE;
 		message_ymg_stop(ENT(pev));
 	}
-
 
 
 	if(crashableEntityReferTime > 0 && gpGlobals->time >= crashableEntityReferTime){
@@ -4755,26 +4723,20 @@ void PlayerPostThink( edict_t *pEntity )
 		crashableEntityReferTime = -1;  //.... what?
 	}//END OF crashable check
 
-
-
 	if (pPlayer)
 		pPlayer->PostThink( );
-
 
 	if(!pPlayer){
 		//The next line would've been skipped anyways.  Cheat logic need not apply if there is no "player" either.
 		return;
 	}
 
-
-	
+// ................................................. what.
 #if defined( CLIENT_WEAPONS )
 
 	//iterate through the player's weapons.
-	for ( int i = 0 ; i < MAX_ITEM_TYPES ; i++ ){
-		if ( pPlayer->m_rgpPlayerItems[ i ] ){
-
-
+	//for ( int i = 0 ; i < MAX_ITEM_TYPES ; i++ ){
+	//	if ( pPlayer->m_rgpPlayerItems[ i ] ){
 			//
 			//CBasePlayerItem *pPlayerItem = pPlayer->m_rgpPlayerItems[ i ];
 
@@ -4813,9 +4775,8 @@ void PlayerPostThink( edict_t *pEntity )
 			//	}//END OF if(gun)
 			//}//END OF while (this particular chained item exists)
 			//pPlayerItem = pPlayerItem->m_pNext;
-		}//END OF if( this player's particular item exists)
-
-	}//END OF for each item in the player's inventory
+	//	}//END OF if( this player's particular item exists)
+	//}//END OF for each item in the player's inventory
 
 #endif //CLIENT_WEAPONS
 
@@ -4894,8 +4855,16 @@ void StartFrame( void )
 		DebugLine_drawTime = gpGlobals->time + 0.09;
 	}
 	
-
-	//MODDD - should "updateCVarRefs" just be done here to guarantee it just runs once for all players per frame? Unsure.
+	// And sending gmsgUpdateClientCVar messages in the first frame causes "PF_MessageEnd_I:  Unknown User Msg 119" messages
+	// beeeeecccccccccaaaaaaaaauuuuuuuusssssssseeeeeee?
+	// as in, yes, even the first time "StartFrame" here is called, which really runs every frame.  SPOOKY.
+	// Skipping the first two frames just to be safe.
+	if (g_ulFrameCount > 2) {
+		updateCVarRefs(FALSE);
+	}
+	else {
+		updateCVarRefs(TRUE);
+	}
 
 
 	if ( g_pGameRules )
@@ -5281,8 +5250,24 @@ int AddToFullPack( struct entity_state_s *state, int e, edict_t *ent, edict_t *h
 //		state->team			= ent->v.team;
 //		
 		state->usehull      = ( ent->v.flags & FL_DUCKING ) ? 1 : 0;
-		state->health		= ent->v.health;
-	}
+
+
+
+		//MODDD - INTERVENTION.
+		if (ent->v.health > 0 && ent->v.health < 1) {
+			// force it!  That is, round up if between 0 and 1
+			state->health = 1;
+		}
+		else {
+			// nothing special.
+			state->health = ent->v.health;
+		}
+		
+		//state->health = ent->v.health;
+
+
+		
+	}//END OF player check
 
 	return 1;
 }
@@ -5686,7 +5671,22 @@ engine sets cd to 0 before calling.
 void UpdateClientData ( const struct edict_s *ent, int sendweapons, struct clientdata_s *cd )
 {
 	cd->flags			= ent->v.flags;
-	cd->health			= ent->v.health;
+
+
+	//MODDD - INTERVENTION.
+	if (ent->v.health > 0 && ent->v.health < 1) {
+		// force it!  That is, round up if between 0 and 1
+		cd->health = 1;
+	}
+	else {
+		// nothing special.
+		cd->health = ent->v.health;
+	}
+	
+	//cd->health = ent->v.health;
+
+
+
 
 	cd->viewmodel		= MODEL_INDEX( STRING( ent->v.viewmodel ) );
 

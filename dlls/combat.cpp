@@ -29,11 +29,9 @@
 #include "util_model.h"
 #include "weapons.h"
 #include "func_break.h"
-
 //MODDD - okay?
 #include "squadmonster.h"
 #include "game.h"
-
 //MODDD - necessary anymore?
 #include "player.h"
 
@@ -76,10 +74,6 @@ extern DLL_GLOBAL Vector g_vecAttackDir;
 extern DLL_GLOBAL int g_iSkillLevel;
 
 //extern entvars_t *g_pevLastInflictor;
-
-
-//MODDD - hidden cheat.  Not a CVar, so that it can't be seen by console's autocomplete
-float cheat_barnacleEatsEverything = 0;
 
 
 
@@ -2098,7 +2092,7 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBaseMonster){
 			m_bitsDamageTypeMod |= (bitsDamageTypeMod & ~DMG_TIMEBASEDMOD);
 		}
 	}else{
-		//dead?  can't take any timed damages.
+		// dead?  can't take any timed damages.
 		m_bitsDamageType = 0;
 		m_bitsDamageTypeMod = 0;
 	}
@@ -2117,9 +2111,15 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBaseMonster){
 		}
 	}
 
+
+
 	// add to the damage total for clients, which will be sent as a single
 	// message at the end of the frame
 	// todo: remove after combining shotgun blasts?
+	//MODDD - above are as-is comments from the codebase.
+	// Why would this have to be removed after 'combinging shotgun blasts', whatever that means?  Whether that's already been done or not?
+	// There is collecting the damage of each hitting shell through traceattacks and adding the damage up to give at the end
+	// of a frame, not sure if it means that (which also already happens as of retail)
 	if ( IsPlayer() )
 	{
 		if ( pevInflictor )

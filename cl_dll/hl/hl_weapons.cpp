@@ -2159,7 +2159,7 @@ void DLLEXPORT HUD_PostRunCmd( struct local_state_s *from, struct local_state_s 
 	gpGlobals->time = time;
 	
 
-	/*
+	//////////////////////////////////////////////////////////////////////////
 	//MODDD - should we keep doing this??
 	if(gpGlobals->time - previousTime == 0){
 		//If no time has passed since the last client-reported time, assume we're paused. Don't try any logic.
@@ -2167,7 +2167,7 @@ void DLLEXPORT HUD_PostRunCmd( struct local_state_s *from, struct local_state_s 
 		return;
 	}
 	previousTime = gpGlobals->time;
-	*/
+	//////////////////////////////////////////////////////////////////////////
 	
 	//player = gEngfuncs.GetLocalPlayer();
 

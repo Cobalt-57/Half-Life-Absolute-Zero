@@ -64,6 +64,8 @@ public:
 
 	// Determine current frame for rendering
 	virtual float StudioEstimateFrame ( mstudioseqdesc_t *pseqdesc );
+	virtual float StudioEstimateFrameNOINTERP(mstudioseqdesc_t* pseqdesc);
+	
 
 	// Apply special effects to transform matrix
 	virtual void StudioFxTransform( cl_entity_t *ent, float transform[3][4] );

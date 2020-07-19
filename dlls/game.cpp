@@ -33,8 +33,6 @@ extern cvar_t* cvar_sv_cheats;
 
 
 extern void resetModCVars(CBasePlayer* arg_plyRef, BOOL isEmergency);
-extern void updateCVarRefs(entvars_t* pev);
-
 
 
 
@@ -830,8 +828,11 @@ void GameDLLInit( void )
 
 	loadHiddenCVars();
 
-
-	updateCVarRefs(NULL);
+	// Once to go as early as possible
+	// WARNING!!! This early is unacceptable, there's some spam about "PF_MessageEnd_I:  Unknown User Msg 119"
+	// seen on 'developer 2', if updateCVarRefs() is done this early.  Seems to be from the 
+	// gmsgUpdateClientCVar messages (although any message sent this early is problematic).
+	updateCVarRefs(TRUE);
 
 
 	//MODDD - Deemed best place for initializing CVars (first update, necessary for spawn-script so that it may see CVars in their intended form).
@@ -852,16 +853,6 @@ void GameDLLInit( void )
 		EASY_CVAR_SET_DEBUGONLY(emergencyFix, 0);
 		resetModCVars(NULL, TRUE);
 	}
-
-
-
-
-
-
-
-
-
-
 
 
 

@@ -91,23 +91,7 @@ BOOL CHealthKit::MyTouch( CBasePlayer *pPlayer )
 		//pPlayer->SetSuitUpdate("!HEV_BATTERY", FALSE, SUIT_NEXT_IN_1HOUR);
 
 		//MODDD - any healing items / charge removes the bleeding timed damage effect, if present.
-		if(pPlayer->m_rgbTimeBasedDamage[itbd_Bleeding] > 0 || pPlayer->m_bitsDamageTypeMod & DMG_BLEEDING){
-			int choice = RANDOM_LONG(0,1);
-			if(choice == 0){
-				//hiss, wound_sterilized
-				pPlayer->SetSuitUpdate("!HEV_HEAL6", FALSE, SUIT_NEXT_IN_30SEC);
-				pPlayer->forceRepeatBlock("!HEV_HEAL7", FALSE, SUIT_NEXT_IN_30SEC);
-			}else if(choice == 1){
-				//hiss, morphine_shot
-				pPlayer->SetSuitUpdate("!HEV_HEAL7", FALSE, SUIT_NEXT_IN_30SEC);
-				pPlayer->forceRepeatBlock("!HEV_HEAL6", FALSE, SUIT_NEXT_IN_30SEC);
-			}
-			pPlayer->m_rgbTimeBasedDamage[itbd_Bleeding] = 0;
-			pPlayer->m_rgbTimeBasedFirstFrame[itbd_Bleeding] = TRUE;
-			//necessary? isn't for antidote / anti-toxin (radiation item), though.
-			//Apply to the other bitmask, since this is new (old one was full).
-			pPlayer->m_bitsDamageTypeMod &= ~DMG_BLEEDING;
-		}
+		pPlayer->attemptCureBleeding();
 
 
 

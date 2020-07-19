@@ -539,6 +539,10 @@ void CGrenade:: Activate( void ){
 }
 */
 
+
+// A lot of these defaults are never used, like "grenade.mdl".   w_grenade is used for hand grenades!
+// TODO - strip em' out???    Or move to whatever relies on them.
+// ShootContact's grenade seems to keep it for the mp5 grenades though.   In fact, MOVED
 void CGrenade:: Spawn( void )
 {
 	pev->movetype = MOVETYPE_BOUNCE;
@@ -546,13 +550,15 @@ void CGrenade:: Spawn( void )
 	
 	pev->solid = SOLID_BBOX;
 
-	SET_MODEL(ENT(pev), "models/grenade.mdl");
 	UTIL_SetSize(pev, Vector( 0, 0, 0), Vector(0, 0, 0));
 
 	// DEFAULT, some outside source should set this if necessary.
 	pev->dmg = 100;
 	m_fRegisteredSound = FALSE;
 }
+
+
+
 
 //MODDD - damage specified per call.
 CGrenade *CGrenade::ShootContact( entvars_t *pevOwner, Vector vecStart, Vector vecVelocity, float flDamage)
@@ -561,6 +567,10 @@ CGrenade *CGrenade::ShootContact( entvars_t *pevOwner, Vector vecStart, Vector v
 	//             oh, GetClassPtr calls CREATE_ENTITY (engine method) to put an entity in the game. So it just isn't linked to some class besides CBaseEntity.
 	CGrenade *pGrenade = GetClassPtr( (CGrenade *)NULL );
 	pGrenade->Spawn();
+
+	//MODDD - moved here, as this is the only other grenade spawn call.  Other is the hand grenade that uses w_grenade.mdl.
+	SET_MODEL(ENT(pGrenade->pev), "models/grenade.mdl");
+
 	// contact grenades arc lower
 	pGrenade->pev->gravity = 0.5;// lower gravity since grenade is aerodynamic and engine doesn't know it.
 	UTIL_SetOrigin( pGrenade->pev, vecStart );
@@ -604,10 +614,26 @@ CGrenade * CGrenade:: ShootTimed( entvars_t *pevOwner, Vector vecStart, Vector v
 {
 	CGrenade *pGrenade = GetClassPtr( (CGrenade *)NULL );
 	pGrenade->Spawn();
+
+
+
+	// WOA HOLD UP DEVS.
+	// YOU FUCKED AROUND WITH THE SEQUENCE
+	// BEFORE SETTING THE MODEL.
+	// NO.    NO.           NO.        NO.                                           NO.
+	//                                                
+	//                           
+	//                                        NOOOOOOOOOOOOOOOOOOOOOO.
+
+	SET_MODEL(ENT(pGrenade->pev), "models/w_grenade.mdl");
+
+
+
 	UTIL_SetOrigin( pGrenade->pev, vecStart );
 	pGrenade->pev->velocity = vecVelocity;
 	pGrenade->pev->angles = UTIL_VecToAngles(pGrenade->pev->velocity);
 	pGrenade->pev->owner = ENT(pevOwner);
+
 	
 	pGrenade->SetTouch( &CGrenade::BounceTouch );	// Bounce if touched
 	
@@ -623,16 +649,32 @@ CGrenade * CGrenade:: ShootTimed( entvars_t *pevOwner, Vector vecStart, Vector v
 		pGrenade->pev->nextthink = gpGlobals->time;
 		pGrenade->pev->velocity = Vector( 0, 0, 0 );
 	}
-		
+
+
+
+	//MODDD - THANKS FOR NOT SAYING A FUCKING WORD ABOUT THIS SHIT THAT'S DRIVEN ME BATSHIT INSANE FOR YEARS.
+	// Randomizes an animation for the grenade.
 	pGrenade->pev->sequence = RANDOM_LONG( 3, 6 );
+	//pGrenade->pev->sequence = 5;
+
+	// HeYyyyyyy!! Set this too you fool!
+	pGrenade->pev->frame = 0;
+	pGrenade->ResetSequenceInfo();
+
+
 	pGrenade->pev->framerate = 1.0;
 
 	// Tumble through the air
 	// pGrenade->pev->avelocity.x = -400;
+
+	//MODDD - important maybe?  Explicitly set to zero.
+	pGrenade->pev->avelocity = g_vecZero;
+
+
 	pGrenade->pev->gravity = 0.5;
 	pGrenade->pev->friction = 0.8;
 
-	SET_MODEL(ENT(pGrenade->pev), "models/w_grenade.mdl");
+
 	pGrenade->pev->dmg = flDamage;
 
 	return pGrenade;

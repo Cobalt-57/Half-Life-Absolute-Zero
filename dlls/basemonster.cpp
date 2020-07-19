@@ -1608,12 +1608,14 @@ void CBaseMonster::timedDamage_nonFirstFrame(int i, int* m_bitsDamageTypeRef) {
 		//Hard mode is on, and "timedDamageEndlessOnHard" is on...
 		//Do NOT decrement non-curable durations.
 		//However, still decrement only ONCE on curables to satisfy the one-second-passing rule for canisters to work.
-		if (!m_rgbTimeBasedFirstFrame[i] &&
-			(i == itbd_NerveGas || i == itbd_Poison || i == itbd_Radiation || i == itbd_Bleeding)) {
+		if(i == itbd_NerveGas || i == itbd_Poison || i == itbd_Radiation || i == itbd_Bleeding) {
 			//DO NOTHING.  Only the appropriate cure can fix it.
 		}
-		else if (m_rgbTimeBasedDamage[i] > 0) {
-			m_rgbTimeBasedDamage[i]--;
+		else{
+			// ordinary behavior then.
+			if (m_rgbTimeBasedDamage[i] > 0) {
+				m_rgbTimeBasedDamage[i]--;
+			}
 		}
 
 	}
@@ -1680,6 +1682,9 @@ void CBaseMonster::CheckTimeBasedDamage(void)
 		//if (m_bitsDamageType & (DMG_PARALYZE << i))
 		if ((*m_bitsDamageTypeRef) & (damageBit))
 		{
+
+			/*
+			// OLD WAY
 			m_rgbTimeBasedFirstFrame[i] = FALSE;
 
 			parse_itbd(i, bDuration);
@@ -1694,6 +1699,26 @@ void CBaseMonster::CheckTimeBasedDamage(void)
 				m_rgbTimeBasedFirstFrame[i] = TRUE;
 				m_rgbTimeBasedDamage[i] = bDuration;
 			}
+			*/
+
+			parse_itbd(i, bDuration);
+
+			if(m_rgbTimeBasedFirstFrame[i] == FALSE){
+				// not the first frame?  Typical checks
+				timedDamage_nonFirstFrame(i, m_bitsDamageTypeRef);
+			}else{
+				// first time taking this damage type - init damage duration
+				// only if the duration received is above 0.  Otherwise there won't really be a 'next' time.
+				if (bDuration > 0) {
+					m_rgbTimeBasedDamage[i] = bDuration;
+					m_rgbTimeBasedFirstFrame[i] = FALSE;
+				}
+				else {
+					// don't come back!
+					removeTimedDamage(i, m_bitsDamageTypeRef);
+				}
+			}
+
 		}
 	}//END OF loop through all damage types
 }//END OF CheckTimeBasedDamage

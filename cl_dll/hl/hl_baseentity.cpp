@@ -841,6 +841,7 @@ GENERATE_GIBMONSTER_IMPLEMENTATION_DUMMY_CLIENT(CBasePlayer)
 
 void CBasePlayer::PackDeadPlayerItems( void ) { }
 void CBasePlayer::RemoveAllItems( BOOL removeSuit ) { }
+void CBasePlayer::SetAndUpdateBattery(int argNewBattery) {}
 
 void CBasePlayer::FadeMonster( void ) { }
 

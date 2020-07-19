@@ -177,9 +177,6 @@ void CGameRules::RefreshSkillData ( void )
 	//MODDD - and this wasn't below the iSkill bounds checking because...?
 	g_iSkillLevel = iSkill;
 
-	// use the new g_iSkill to pick the damage duration values to be used.
-	// NOPE!   Handled by other skill CVars now.
-	//updateTimedDamageDurations();
 
 	//MODDD - removed.
 	//gSkillData.iSkillLevel = iSkill;

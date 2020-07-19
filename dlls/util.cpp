@@ -144,6 +144,13 @@ cvar_t* cvar_sv_cheats = 0;
 float forceWorldLightOffMem = -1;
 float cvar_skill_mem = -1;
 
+float barnacleCanGibMem = -1;
+
+
+//MODDD - hidden cheat.  Not a CVar, so that it can't be seen by console's autocomplete
+float cheat_barnacleEatsEverything = 0;
+
+
 //VITAL!!!
 BOOL globalPSEUDO_queueClientSendoff = FALSE;
 
@@ -2219,9 +2226,10 @@ void EMIT_SOUND_SUIT(edict_t *entity, const char *sample)
 	if (RANDOM_LONG(0,1))
 		pitch = RANDOM_LONG(0,6) + 98;
 
-	//MODDD -changed min volume from 0.05 to 0.02.
+	//MODDD - changed min volume from 0.05 to 0.02.
 	if (fvol > 0.02) {
 		//EMIT_SOUND_DYN(entity, CHAN_STATIC, sample, fvol, ATTN_NORM, 0, pitch);
+		// higher attenuation to expire faster with distance
 		EMIT_SOUND_DYN(entity, CHAN_STATIC, sample, fvol, 4.0f, 0, pitch);
 	}
 }
@@ -2234,8 +2242,8 @@ void STOP_SOUND_SUIT(edict_t *entity, const char *sample)
 	
 	fvol = clamp(CVAR_GET_FLOAT("suitvolume")/2, 0, 1);
 
-	if (RANDOM_LONG(0,1))
-		pitch = RANDOM_LONG(0,6) + 98;
+	//if (RANDOM_LONG(0,1))
+	//	pitch = RANDOM_LONG(0,6) + 98;
 
 	if (fvol > 0.05)
 		EMIT_SOUND_DYN(entity, CHAN_STATIC, sample, fvol, ATTN_NORM, SND_STOP, pitch);
@@ -4487,36 +4495,33 @@ BOOL isErrorVector(const Vector& vec){
 
 
 //find any scientists in a wide area and update their models.
-void globalUpdateModel(const Vector& arg_suggestedOrigin){
-	CBaseEntity *pEntityTemp = NULL;
-	while ((pEntityTemp = UTIL_FindEntityInSphere( pEntityTemp, arg_suggestedOrigin, 1024*5 )) != NULL)
+void globalUpdateModel(){
+
+	edict_t* pEdict = g_engfuncs.pfnPEntityOfEntIndex(1);
+	CBaseEntity* pEntity;
+	if (!pEdict)
+		return;
+	for (int i = 1; i < gpGlobals->maxEntities; i++, pEdict++)
 	{
-		BOOL pass = FALSE;
+		if (pEdict->free)	// Not in use
+			continue;
+		if (!(pEdict->v.flags & (FL_CLIENT | FL_MONSTER)))	// Not a client/monster ?
+			continue;
 
-		CBaseMonster* tryMonsterPointer = pEntityTemp->GetMonsterPointer(pEntityTemp->edict());
+		pEntity = CBaseEntity::Instance(pEdict);
+		if (!pEntity)
+			continue;
 
-		if(tryMonsterPointer != NULL){
-			pass = TRUE;
+		CBaseMonster* tempMonster = pEntity->MyMonsterPointer();
+		if (tempMonster == NULL || FClassnameIs(tempMonster->pev, "player")) {
+			continue;  //not players or non-monsters.
 		}
-		/*
-		if(FClassnameIs(pEntityTemp->pev, "monster_scientist")){
-			//CScientist* tempSci = static_cast<CScientist*>(pEntityTemp);
-			pass = TRUE;
-		}else if(FClassnameIs(pEntityTemp->pev, "monster_sitting_scientist")){
-			pass = TRUE;
-		}else if(FClassnameIs(pEntityTemp->pev, "monster_scientist_dead")){
-			pass = TRUE;
-		}
-		*/
-		if(pass){
-			//CBaseMonster* tempMon = static_cast<CBaseMonster*>(pEntityTemp);
-			//tempMon->setModelCustom();
 
-			//now, any monster will try to use the german censorship model when appropriate.
-			//Sending a blank string just to satisfy the argument. This sent string goes unused in models with German versions, and the call is ignored for models without German versions.
-			tryMonsterPointer->setModel();
-		}
-	}
+		// ok!
+		tempMonster->setModel();
+
+	}//END OF through all entities.
+
 }
 
 void turnWorldLightsOn(){
@@ -4688,49 +4693,8 @@ void turnWorldLightsOff(){
 
 
 
-/*
-// Anytime the 'skill' CVAR is changed, update the durations for all the damage types to be used.
-void updateTimedDamageDurations(void) {
-
-	switch (g_iSkillLevel) {
-	case 1://easy
-		CBaseMonster::paralyzeDuration = PARALYZE_DURATION_EASY;
-		CBaseMonster::nervegasDuration = NERVEGAS_DURATION_EASY;
-		CBaseMonster::poisonDuration = POISON_DURATION_EASY;
-		CBaseMonster::radiationDuration = RADIATION_DURATION_EASY;
-		CBaseMonster::acidDuration = ACID_DURATION_EASY;
-		CBaseMonster::slowburnDuration = SLOWBURN_DURATION_EASY;
-		CBaseMonster::slowfreezeDuration = SLOWFREEZE_DURATION_EASY;
-		CBaseMonster::bleedingDuration = BLEEDING_DURATION_EASY;
-		break;
-	case 2://medium
-		CBaseMonster::paralyzeDuration = PARALYZE_DURATION_MEDIUM;
-		CBaseMonster::nervegasDuration = NERVEGAS_DURATION_MEDIUM;
-		CBaseMonster::poisonDuration = POISON_DURATION_MEDIUM;
-		CBaseMonster::radiationDuration = RADIATION_DURATION_MEDIUM;
-		CBaseMonster::acidDuration = ACID_DURATION_MEDIUM;
-		CBaseMonster::slowburnDuration = SLOWBURN_DURATION_MEDIUM;
-		CBaseMonster::slowfreezeDuration = SLOWFREEZE_DURATION_MEDIUM;
-		CBaseMonster::bleedingDuration = BLEEDING_DURATION_MEDIUM;
-		break;
-	case 3://hard
-		CBaseMonster::paralyzeDuration = PARALYZE_DURATION_HARD;
-		CBaseMonster::nervegasDuration = NERVEGAS_DURATION_HARD;
-		CBaseMonster::poisonDuration = POISON_DURATION_HARD;
-		CBaseMonster::radiationDuration = RADIATION_DURATION_HARD;
-		CBaseMonster::acidDuration = ACID_DURATION_HARD;
-		CBaseMonster::slowburnDuration = SLOWBURN_DURATION_HARD;
-		CBaseMonster::slowfreezeDuration = SLOWFREEZE_DURATION_HARD;
-		CBaseMonster::bleedingDuration = BLEEDING_DURATION_HARD;
-		break;
-	}
-}//END OF updateTimedDamageDurations
-*/
-
-
-
 //const Vector* arg_suggestedOrigin
-void updateCVarRefs(entvars_t *pev){
+void updateCVarRefs(BOOL isEarly){
 
 	if(cvar_skill == NULL){
 		cvar_skill = CVAR_GET_POINTER("skill");
@@ -4765,6 +4729,41 @@ void updateCVarRefs(entvars_t *pev){
 		//turnWorldLightsOn();
 	}
 	*/
+
+
+
+
+	if (EASY_CVAR_GET(barnacleCanGib) != barnacleCanGibMem) {
+		barnacleCanGibMem = EASY_CVAR_GET(barnacleCanGib);
+		//MODDD - section
+		////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		//If this CVar is changed, update all existing dead barnacles.  This makes barnacle corpses that were once unkillable killable, or vice versa.
+		CBaseEntity* pEntityTemp = NULL;
+		while ((pEntityTemp = UTIL_FindEntityByClassname(pEntityTemp, "monster_barnacle")) != NULL) {
+			//CBarnacle* tempBarnacle = (CBarnacle*)pEntityTemp;
+			//easyForcePrintLine("FOUND ONE? %d ", pEntityTemp->pev->deadflag == DEAD_NO);
+			if (pEntityTemp->pev->deadflag == DEAD_NO)
+			{
+
+			}
+			else {
+
+				if (EASY_CVAR_GET(barnacleCanGib) == 0) {
+					pEntityTemp->pev->takedamage = DAMAGE_NO;
+					pEntityTemp->pev->solid = SOLID_NOT;
+				}
+				else {
+					pEntityTemp->pev->takedamage = DAMAGE_AIM;
+					pEntityTemp->pev->solid = SOLID_SLIDEBOX;
+				}
+			}
+		}
+		////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	}//END OF barnacleCanGib CVar check
+
+
+
+
 
 
 	if(globalPSEUDO_gaussmodeMem != EASY_CVAR_GET(gaussmode)){
@@ -4815,7 +4814,6 @@ void updateCVarRefs(entvars_t *pev){
 
 
 
-
 	if(globalPSEUDO_germanCensorshipMem != EASY_CVAR_GET(sv_germancensorship) || globalPSEUDO_allowGermanModelsMem != EASY_CVAR_GET(allowGermanModels)){
 
 		globalPSEUDO_allowGermanModelsMem = EASY_CVAR_GET(allowGermanModels);
@@ -4831,18 +4829,10 @@ void updateCVarRefs(entvars_t *pev){
 
 		globalPSEUDO_germanCensorshipMem = EASY_CVAR_GET(sv_germancensorship);
 
-		//this will probably need updating too, as the scientist model is also affected by German censorship.
-		//if(arg_suggestedOrigin != NULL){
-		if(pev != NULL){
-			Vector arg_suggestedOrigin = pev->origin;
-
-			if(globalPSEUDO_canApplyGermanCensorship != 1){
-				//can't update.
-				
-			}else{
-				//globalUpdateModel(*arg_suggestedOrigin);
-				globalUpdateModel(arg_suggestedOrigin);
-			}
+		if(globalPSEUDO_canApplyGermanCensorship != 1){
+			//can't update.
+		}else{
+			globalUpdateModel();
 		}
 	}//END OF german CVars update check
 
@@ -4903,8 +4893,10 @@ void updateCVarRefs(entvars_t *pev){
 	//if(pev != NULL){
 		//these are to be sent to the player.
 		//~Initial time calls with null pev (start of game).  This is ok.
-		
+	
+	if (!isEarly) {
 		EASY_CVAR_UPDATE_SERVER_MASS
+	}
 
 		/*
 		int tempo = EASY_CVAR_GET(wpn_glocksilencer);

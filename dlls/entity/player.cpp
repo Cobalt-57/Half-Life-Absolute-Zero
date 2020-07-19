@@ -22,7 +22,6 @@
 
 #include "extdll.h"
 #include "util.h"
-
 #include "cbase.h"
 #include "player.h"
 #include "trains.h"
@@ -107,7 +106,6 @@ EASY_CVAR_EXTERN(precacheAll)
 
 extern cvar_t* cvar_sv_cheats;
 //MODDD
-extern float cheat_barnacleEatsEverything;
 extern unsigned short g_sFreakyLight;
 
 ///////////////////////////////////////////////////////////////////////////////////
@@ -603,7 +601,15 @@ void CBasePlayer :: DeathSound( BOOL plannedRevive )
 	if(plannedRevive == FALSE){
 		//play the usual beeps and flatline.  "Cause of Death" FVOX (player suit voice), if 
 		//implemented, will probably be played when not planning a revive too.
-		EMIT_GROUPNAME_SUIT(ENT(pev), "HEV_DEAD");
+		m_flSuitUpdate = gpGlobals->time;  //say the next line now!
+
+		if (RANDOM_FLOAT(0, 1) <= 0.4) {
+			// general failure notice
+			SetSuitUpdate("!HEV_E3", FALSE, SUIT_NEXT_IN_1MIN * 2, 4.2f);
+		}
+		else {
+			EMIT_GROUPNAME_SUIT(ENT(pev), "HEV_DEAD");
+		}
 	}else{
 
 		/*
@@ -621,6 +627,7 @@ void CBasePlayer :: DeathSound( BOOL plannedRevive )
 		//for now, don't play the flatline.
 		//SetSuitUpdate("!HEV_DEAD_ADR", FALSE, SUIT_NEXT_IN_30SEC);
 		*/
+		m_flSuitUpdate = gpGlobals->time;  //say the next line now!
 		EMIT_GROUPNAME_SUIT(ENT(pev), "HEV_DEADALT");
 	}
 }
@@ -654,9 +661,6 @@ Vector CBasePlayer::GetGunPositionAI(){
 //MODDD - uses the maximum args to guarantee this version ends up getting called.
 GENERATE_TRACEATTACK_IMPLEMENTATION(CBasePlayer)
 {
-
-	//easyPrintLine("IM BLEEEEEEEEEEEEEEEEEEDIN");
-	
 	//Just a print-out that I needed.
 	/*
 	easyPrint("Yes.......%d\n", 0);
@@ -772,7 +776,6 @@ GENERATE_TRACEATTACK_IMPLEMENTATION(CBasePlayer)
 			}
 			*/
 
-			
 			TraceBleed( flDamage, vecDir, ptr, bitsDamageType, bitsDamageTypeMod );
 		//}//END OF hideDamage check
 
@@ -902,7 +905,7 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBasePlayer)
 	//easyPrintLine("DAMAGE PRE DETAILS %d %.8f", fTookDamage, flDamage);
 
 
-	//How much damage was sustained since the last sendoff?  Like pev->dmg_take, but this gets only raw damage before doing armor damage reductions.
+	// How much damage was sustained since the last sendoff?  Like pev->dmg_take, but this gets only raw damage before doing armor damage reductions.
 	rawDamageSustained += flDamage;
 
 
@@ -917,7 +920,7 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBasePlayer)
 		!(bitsDamage & DMG_ARMORBLOCKEXCEPTION || bitsDamageMod & DMG_ARMORBLOCKEXCEPTIONMOD ) &&
 		(  !(bitsDamageMod & DMG_TIMEDEFFECTIGNORE)   &&   (EASY_CVAR_GET(timedDamageIgnoresArmor) == 0 || !(bitsDamageMod & (DMG_TIMEDEFFECT) ) ))
 		
-	)// armor doesn't protect against fall or drown damage!  ... or "DMG_TIMEDEFFECTIGNORE".
+	)  // armor doesn't protect against fall or drown damage!  ... or "DMG_TIMEDEFFECTIGNORE".
 	{
 		float flNew = flDamage * flRatio;
 
@@ -925,32 +928,52 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBasePlayer)
 
 		flArmor = (flDamage - flNew) * flBonus;
 
+
+		// if(flDamage * (1 - (flRatio) ) * flBonus >= pev->armorvalue) ...
+
 		//easyPrintLine("ARMOR RED: %.2f", flArmor);
 
 		// Does this use more armor than we have?
 		if (flArmor > pev->armorvalue)
 		{
+			// recalculate with what armor we have, use it up.
 			flArmor = pev->armorvalue;
-			flArmor *= (1/flBonus);
-			flNew = flDamage - flArmor;
-			pev->armorvalue = 0;
+			flNew = flDamage - (flArmor * (1 / flBonus));
 		}
-		else
+		else {
+			// no change needed.
+		}
+
+
+		if (flArmor >= pev->armorvalue) {
+
+			if (pev->armorvalue > 0) {
+				// if the armor value is not already 0 (going from above 0 to 0), we can play a line
+				SetSuitUpdate("!HEV_E1", FALSE, SUIT_NEXT_IN_1MIN*2, 4.2f);
+			}
+
+			// force to 0 for safety.
+			pev->armorvalue = 0;
+		}else {
 			pev->armorvalue -= flArmor;
-		
+		}
+
 		flDamage = flNew;
+	}
+
+	if (EASY_CVAR_GET(nothingHurts) > 0) {
+		//nothing hurts, the player does not take damage with this cheat on.
+		flDamage = 0;
 	}
 
 	// this cast to INT is critical!!! If a player ends up with 0.5 health, the engine will get that
 	// as an int (zero) and think the player is dead! (this will incite a clientside screentilt, etc)
-	//MODDD - added the new "bitsDamageMod".  Nothing else seems to rely on either bitmask, but this can't hurt.
-
-	
-	
-	if(EASY_CVAR_GET(nothingHurts) > 0){
-		//nothing hurts, the player does not take damage with this cheat on.
-		flDamage = 0;
-	}
+	// MODDD - CHANGE.  No need to force this to an int anymore!  Decimal player pev->health values are now fine.
+	// In client.cpp and here before health msg_func sendoff's, the value sent is forced  to 1 IF it is between
+	// 0 and 1.  That's all that really matters.
+	// Problem is when rounded-down, it's 0 (as the client receives it), yet over here it's treated as "above 0"
+	// from keeping the decimal.  So long as the client receives a forced 1 in such a case, it works fine.
+	//flDamage = (int)flDamage;
 
 	fTookDamage = GENERATE_TAKEDAMAGE_PARENT_CALL(CBaseMonster);
 	
@@ -1280,20 +1303,7 @@ GENERATE_DEADTAKEDAMAGE_IMPLEMENTATION(CBasePlayer) {
 //Parameters: integer named fGibSpawnsDecal
 GENERATE_GIBMONSTER_IMPLEMENTATION(CBasePlayer){
 	
-	// shouldn't we force any suit sounds to stop playing in such a case too?
-	EMIT_SOUND(ENT(pev), CHAN_STATIC, "common/null.wav", 1, ATTN_NORM);
-	// I think the base GibMonster already handles CHAN_VOICE.
-	//EMIT_SOUND(ENT(pev), CHAN_VOICE, "common/null.wav", 1, ATTN_NORM);
-
 	recentlyGibbed = TRUE;
-
-
-	// clear out the suit message cache so we don't keep chattering
-	SetSuitUpdate(NULL, FALSE, 0);
-
-	m_flSuitUpdate = gpGlobals->time;  //say the next line now!
-	// "critical failure"
-	SetSuitUpdate("!HEV_E2", FALSE, SUIT_REPEAT_OK, 4.2f);
 
 	GENERATE_GIBMONSTER_PARENT_CALL(CBaseMonster);
 }
@@ -1632,10 +1642,23 @@ GENERATE_KILLED_IMPLEMENTATION(CBasePlayer)
 	// clear out the suit message cache so we don't keep chattering
 	SetSuitUpdate(NULL, FALSE, 0);
 
+	// In fact, kill all sounds coming from the player / FVOX.
+	//////////////////////////////////////////////////////////////////////////////////////
+	// I think the base GibMonster already handles CHAN_VOICE.  Although we might not be calling gibmonster.
+	// Can't hurt.
+	EMIT_SOUND(ENT(pev), CHAN_VOICE, "common/null.wav", 1, ATTN_NORM);
+	// shouldn't we force any suit sounds to stop playing in such a case too?
+	EMIT_SOUND_DYN(ENT(pev), CHAN_STATIC, "common/null.wav", 1, ATTN_NORM, 0, 100);
+	// seems this usually works.
+	EMIT_SOUND_DYN(ENT(pev), CHAN_STATIC, recentlyPlayedSound, 1, ATTN_NORM, SND_STOP, 100);
+	//////////////////////////////////////////////////////////////////////////////////////
+
+
+
 	// send "health" update message to zero
 	m_iClientHealth = 0;
 	MESSAGE_BEGIN( MSG_ONE, gmsgHealth, NULL, pev );
-		WRITE_BYTE( m_iClientHealth );
+		WRITE_BYTE( (int)m_iClientHealth );
 	MESSAGE_END();
 
 	
@@ -1674,7 +1697,8 @@ GENERATE_KILLED_IMPLEMENTATION(CBasePlayer)
 	// UNDONE: Put this in, but add FFADE_PERMANENT and make fade time 8.8 instead of 4.12
 	// UTIL_ScreenFade( edict(), Vector(128,0,0), 6, 15, 255, FFADE_OUT | FFADE_MODULATE );
 
-	if ( ( pev->health < -40 && iGib != GIB_NEVER ) || iGib == GIB_ALWAYS )
+	//MODDD - pev->health requirement changed from -40.  Seems a little hard to reach typically.
+	if ( ( pev->health < -30 && iGib != GIB_NEVER ) || iGib == GIB_ALWAYS )
 	{
 		//pev->solid			= SOLID_NOT;   //but GibMonster already does this.
 		//GibMonster();	// This clears pev->model
@@ -1694,16 +1718,33 @@ GENERATE_KILLED_IMPLEMENTATION(CBasePlayer)
 	}
 
 
+	if (recentlyGibbed) {
+		if (EASY_CVAR_GET(timedDamageDeathRemoveMode) > 0) {
+			attemptResetTimedDamage(TRUE);
+		}
+
+		if (EASY_CVAR_GET(batteryDrainsAtDeath) == 1) {
+			SetAndUpdateBattery(0);
+		}
+
+		// clear out the suit message cache so we don't keep chattering
+		// already done earlier!
+		//SetSuitUpdate(NULL, FALSE, 0);
+
+		// the gib call should've cleared the currently playing suit sound, so this one can play
+		// uninterrupted.
+
+		m_flSuitUpdate = gpGlobals->time;  //say the next line now!
+		// "critical failure"
+		SetSuitUpdate("!HEV_E2", FALSE, SUIT_REPEAT_OK, 4.2f);
+
+	}else  //...
 	//MODDD
 	//For now, if the player has adrenaline and hasn't been gibbed, tell "DeathSound" this.
-	if( !recentlyGibbed && m_rgItems[ITEM_ADRENALINE] > 0){
+	if( m_rgItems[ITEM_ADRENALINE] > 0){
 
 		if(EASY_CVAR_GET(batteryDrainsAtAdrenalineMode) == 1){
-			pev->armorvalue = 0;
-			m_iClientBattery = pev->armorvalue;
-			MESSAGE_BEGIN( MSG_ONE, gmsgBattery, NULL, pev );
-				WRITE_SHORT( (int)pev->armorvalue);
-			MESSAGE_END();
+			SetAndUpdateBattery(0);
 		}
 
 		//also, this CVar.
@@ -1719,11 +1760,7 @@ GENERATE_KILLED_IMPLEMENTATION(CBasePlayer)
 		}
 
 		if(EASY_CVAR_GET(batteryDrainsAtDeath) == 1){
-			pev->armorvalue = 0;
-			m_iClientBattery = pev->armorvalue;
-			MESSAGE_BEGIN( MSG_ONE, gmsgBattery, NULL, pev );
-				WRITE_SHORT( (int)pev->armorvalue);
-			MESSAGE_END();
+			SetAndUpdateBattery(0);
 		}
 
 		DeathSound(FALSE);
@@ -1746,7 +1783,6 @@ GENERATE_KILLED_IMPLEMENTATION(CBasePlayer)
 
 
 void CBasePlayer::onDelete(void) {
-
 	// shouldn't we force any suit sounds to stop playing in such a case too?
 	EMIT_SOUND(ENT(pev), CHAN_STATIC, "common/null.wav", 1, ATTN_NORM);
 	EMIT_SOUND(ENT(pev), CHAN_VOICE, "common/null.wav", 1, ATTN_NORM);
@@ -1755,8 +1791,6 @@ void CBasePlayer::onDelete(void) {
 	// wait.  player deleted.
 	// what.
 }
-
-
 
 
 // Set the activity based on an event or current state
@@ -2123,6 +2157,9 @@ CBasePlayer::CBasePlayer(void){
 	default_fov = 90;
 	auto_adjust_fov = 0;
 	auto_determined_fov = 90;
+
+	recentlyPlayedSound[0] = '\0';
+
 
 }//END OF CBasePlayer constructor
 
@@ -3639,7 +3676,7 @@ void CBasePlayer::PreThink(void)
 
 
 	if(!fvoxEnabled && currentSuitSoundFVoxCutoff != -1 && currentSuitSoundFVoxCutoff <= gpGlobals->time){
-		//If waiting to cut off this sound...
+		// If waiting to cut off this sound...
 		currentSuitSoundFVoxCutoff = -1;
 
 		int isentence = sentenceFVoxCutoffStop;
@@ -4267,19 +4304,19 @@ void CBasePlayer::CheckSuitUpdate()
 			// play a sentence off of the end of the queue
 			for (i = 0; i < CSUITPLAYLIST; i++)
 			{
-			if (isentence = m_rgSuitPlayList[isearch])
-				break;
+				if (isentence = m_rgSuitPlayList[isearch])
+					break;
 			
-			if (++isearch == CSUITPLAYLIST)
-				isearch = 0;
+				if (++isearch == CSUITPLAYLIST)
+					isearch = 0;
 			}
 
 
 			if(isentence >= 10000){
-				//playing a real-time battery speech.
+				// playing a real-time battery speech.
 				batterySayPhase = 0;
 			}else{
-				//non-battery related messages will reset "recentlySaidBattery".
+				// non-battery related messages will reset "recentlySaidBattery".
 				recentlySaidBattery = -1;
 			}
 
@@ -4287,7 +4324,6 @@ void CBasePlayer::CheckSuitUpdate()
 			isentence = obligedCustomSentence;
 			//reset, needs to be another "obligedCustomSentence" to happen again.
 			obligedCustomSentence = 0;
-			
 		}
 
 		
@@ -4297,9 +4333,7 @@ void CBasePlayer::CheckSuitUpdate()
 		{
 			m_rgSuitPlayList[isearch] = 0;
 
-			
 			//Clearly "isearch" is the picked entry to play.  Get the other info needed and then clear it too.
-			
 			if(m_rgSuitPlayListEventDelay[isearch] != -1){
 				currentSuitSoundEventTime = gpGlobals->time + m_rgSuitPlayListEventDelay[isearch];
 				currentSuitSoundEvent = m_rgSuitPlayListEvent[isearch];
@@ -4307,7 +4341,6 @@ void CBasePlayer::CheckSuitUpdate()
 				currentSuitSoundEventTime = -1;
 				currentSuitSoundEvent = NULL;
 			}
-
 
 			if(!fvoxEnabled && m_rgSuitPlayListFVoxCutoff[isearch] != -1){
 				currentSuitSoundFVoxCutoff = gpGlobals->time + m_rgSuitPlayListFVoxCutoff[isearch];
@@ -4317,15 +4350,12 @@ void CBasePlayer::CheckSuitUpdate()
 				sentenceFVoxCutoffStop = -1;
 			}
 			
-
 			m_rgSuitPlayListEventDelay[isearch] = -1;
 			m_rgSuitPlayListEvent[isearch] = NULL;
 
-			
 
 			if (isentence > 0)
 			{
-				
 				// play sentence number
 				//MODDD - if the sentence number is less than 10,000, it is an ordinary sentence.
 				//Play as usual.
@@ -4334,6 +4364,10 @@ void CBasePlayer::CheckSuitUpdate()
 					strcpy(sentence, "!");
 					strcat(sentence, gszallsentencenames[isentence]);
 					EMIT_SOUND_SUIT(ENT(pev), sentence);
+					//STOP_SOUND_SUIT
+
+					strcpy(recentlyPlayedSound, "!");
+					strcat(recentlyPlayedSound, gszallsentencenames[isentence]);
 
 
 					m_flSuitUpdate = gpGlobals->time + m_rgSuitPlayListDuration[isearch];
@@ -4362,7 +4396,6 @@ void CBasePlayer::CheckSuitUpdate()
 							batterySayPhase = -1;
 							return;
 						}
-
 
 						recentlySaidBattery = determiner;  //do not repeat this immediately.
 
@@ -5238,7 +5271,7 @@ void CBasePlayer::PostThink()
 
 		easyPrintLineClient(this->edict(), "OnFirstAppearance AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
 		
-
+		// fvox, holster, ladder given to the server player from the client by a response from this call.
 		MESSAGE_BEGIN(MSG_ONE, gmsgOnFirstAppearance, NULL, pev);
 		MESSAGE_END();
 		
@@ -5683,6 +5716,51 @@ void CBasePlayer::setArmorBattery(int newBattery){
 	pev->armorvalue = newBattery;
 }
 
+void CBasePlayer::SetAndUpdateBattery(int argNewBattery) {
+	pev->armorvalue = argNewBattery;
+
+	if (pev->armorvalue != m_iClientBattery) {
+		m_iClientBattery = pev->armorvalue;
+		MESSAGE_BEGIN(MSG_ONE, gmsgBattery, NULL, pev);
+			WRITE_SHORT((int)pev->armorvalue);
+		MESSAGE_END();
+	}
+}
+
+// Called by things that heal on pickup/use.
+// If the player had BLEEDING damage, stop it and play one of these messages.
+void CBasePlayer::attemptCureBleeding(void) {
+
+	if (m_rgbTimeBasedDamage[itbd_Bleeding] > 0 || m_bitsDamageTypeMod & DMG_BLEEDING) {
+		int choice = RANDOM_LONG(0, 2);
+		if (choice == 0) {
+			// hiss, wound_sterilized
+			SetSuitUpdate("!HEV_HEAL6", FALSE, SUIT_NEXT_IN_30SEC);
+		}
+		else if (choice == 1) {
+			// hiss, morphine_shot
+			SetSuitUpdate("!HEV_HEAL7", FALSE, SUIT_NEXT_IN_30SEC);
+		}
+		else if (choice == 2) {
+			SetSuitUpdate("!HEV_HEAL1", FALSE, SUIT_NEXT_IN_30SEC);
+		}
+
+		forceRepeatBlock("!HEV_HEAL1", FALSE, SUIT_NEXT_IN_30SEC);
+		forceRepeatBlock("!HEV_HEAL6", FALSE, SUIT_NEXT_IN_30SEC);
+		forceRepeatBlock("!HEV_HEAL7", FALSE, SUIT_NEXT_IN_30SEC);
+
+		// removeTimedDamage ...
+		m_rgbTimeBasedDamage[itbd_Bleeding] = 0;
+		m_rgbTimeBasedFirstFrame[itbd_Bleeding] = TRUE;
+		// necessary? isn't for antidote / anti-toxin (radiation item), though.
+		// Apply to the other bitmask, since this is new (old one was full).
+		m_bitsDamageTypeMod &= ~DMG_BLEEDING;
+	}
+
+}//attemptCureBleeding
+
+
+
 
 void CBasePlayer::grantAllItems(){
 	/*
@@ -5819,10 +5897,6 @@ void CBasePlayer::commonReset(void){
 	cl_ladder_choice = 0;
 	
 	
-	
-	// or should this always just be forced to "EASY_CVAR_GET(barnacleCanGib)" to stop a re-do each time?  Might not be necessary so much.
-	barnacleCanGibMem = -1;
-
 	iWasFrozenToday = -1;
 
 	//This discrepency forces writing to the physics keys at least once.
@@ -6161,7 +6235,6 @@ void CBasePlayer::Spawn( BOOL revived ){
 		//These are some vars that are best reset only at spawn.  On revive, just leave them the way they are.
 
 		recentlyGibbed = FALSE;
-		recentlyGibbedMem = FALSE;
 
 		//glockSilencerOnVar = 0;
 		//egonAltFireOnVar = 0;
@@ -6340,7 +6413,8 @@ void CBasePlayer::Spawn( BOOL revived ){
 	
 	m_flNextChatTime = gpGlobals->time;
 
-	commonReset();
+	// commonReset DISABLE:  Do we really need it here?
+	//commonReset();
 
 	//TabulateAmmo();
 	//SendAmmoUpdate();
@@ -6425,6 +6499,11 @@ void CBasePlayer :: Precache( void )
 	if ( gInitHUD )
 		m_fInitHUD = TRUE;
 
+
+
+	// going to need some updates soon enough!
+	queueFirstAppearanceMessageSend = TRUE;
+
 }
 
 
@@ -6505,7 +6584,9 @@ int CBasePlayer::Restore( CRestore &restore )
 	
 	//autoSneakyCheck();
 	superDuperDelay = -2;
-	commonReset();
+
+	// commonReset DISABLE:  Do we really need it here?
+	//commonReset();
 
 	RenewItems();
 
@@ -8171,40 +8252,6 @@ void CBasePlayer :: UpdateClientData( void )
 
 
 
-	if(EASY_CVAR_GET(barnacleCanGib) != barnacleCanGibMem){
-
-
-		barnacleCanGibMem = EASY_CVAR_GET(barnacleCanGib);
-	
-		//MODDD - section
-		////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	
-		//If this CVar is changed, update all existing dead barnacles.  This makes barnacle corpses that were once unkillable killable, or vice versa.
-	
-			CBaseEntity *pEntityTemp = NULL;
-		
-			while ((pEntityTemp = UTIL_FindEntityByClassname( pEntityTemp, "monster_barnacle" )) != NULL)
-			{
-				//CBarnacle* tempBarnacle = (CBarnacle*)pEntityTemp;
-				//easyForcePrintLine("FOUND ONE? %d ", pEntityTemp->pev->deadflag == DEAD_NO);
-				if (pEntityTemp->pev->deadflag == DEAD_NO)
-				{
-				
-				}else{
-
-					if(EASY_CVAR_GET(barnacleCanGib) == 0){
-						pEntityTemp->pev->takedamage = DAMAGE_NO;
-						pEntityTemp->pev->solid = SOLID_NOT;
-					}else{
-						pEntityTemp->pev->takedamage = DAMAGE_AIM;
-						pEntityTemp->pev->solid = SOLID_SLIDEBOX;
-					}
-				}
-			}
-		////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-	}
-
 
 
 	if(grabbedByBarnacleMem != grabbedByBarnacle){
@@ -8245,17 +8292,49 @@ void CBasePlayer :: UpdateClientData( void )
 		gDisplayTitle = 0;
 	}
 
+
 	if (pev->health != m_iClientHealth)
+	//if(properlyRoundedHealth != m_iClientHealth)
 	{
+		/*
 		int iHealth = max( pev->health, 0 );  // make sure that no negative health values are sent
+
+		// send "health" update message
+		MESSAGE_BEGIN(MSG_ONE, gmsgHealth, NULL, pev);
+			WRITE_BYTE(iHealth);
+		MESSAGE_END();
+
+		m_iClientHealth = pev->health;
+		*/
+
+
+		
+		// NEW FILTER:  If health is between 0 and 1, just force it to 1.
+		//if (pev->health > 0 && pev->health < 1) {
+		///	pev->health = 1;
+		//}
+
+		int iHealth;
+
+		if (pev->health > 0 && pev->health < 1) {
+			// force it!
+			iHealth = 1;
+		}
+		else {
+			iHealth = max(pev->health, 0);  // make sure that no negative health values are sent
+		}
 
 		// send "health" update message
 		MESSAGE_BEGIN( MSG_ONE, gmsgHealth, NULL, pev );
 			WRITE_BYTE( iHealth );
 		MESSAGE_END();
 
-		m_iClientHealth = pev->health;
+		//m_iClientHealth = pev->health;
+		m_iClientHealth = iHealth;
+		//healthMem = pev->health;
+		
 	}
+
 
 
 	//MODDD 
@@ -8304,10 +8383,6 @@ void CBasePlayer :: UpdateClientData( void )
 		}
 	}
 
-	if(recentlyGibbedMem != recentlyGibbed){
-		recentlyGibbedMem = recentlyGibbed;
-	}
-
 
 	//MODDD - the next four if-then's are new.
 	if (m_rgItems[ITEM_ANTIDOTE] != m_iClientAntidote)
@@ -8348,7 +8423,7 @@ void CBasePlayer :: UpdateClientData( void )
 		//easyPrint("yes here is tank airtime %d\n", airTankAirTime);
 		
 		MESSAGE_BEGIN( MSG_ONE, gmsgUpdateAirTankAirTime, NULL, pev );
-		WRITE_SHORT( (int)airTankAirTime);
+		WRITE_SHORT( (int)(airTankAirTime * 100));
 		//WRITE_ANGLE
 		MESSAGE_END();
 	}
@@ -9165,11 +9240,8 @@ void CBasePlayer::consumeRadiation(){
 }//END OF consumeRadiation
 
 void CBasePlayer::consumeAdrenaline(){
-
-
 	m_rgItems[ITEM_ADRENALINE]--;
 
-	
 	recoveryIndex = 1;
 	recoveryIndexMem = 1;
 	recoveryDelay = gpGlobals->time + RANDOM_FLOAT(2.5f, 3.9f);
@@ -9179,11 +9251,7 @@ void CBasePlayer::consumeAdrenaline(){
 
 	if(EASY_CVAR_GET(batteryDrainsAtAdrenalineMode) == 2){
 		//MODDD - discharge battery.
-		pev->armorvalue = 0;
-		m_iClientBattery = pev->armorvalue;
-		MESSAGE_BEGIN( MSG_ONE, gmsgBattery, NULL, pev );
-			WRITE_SHORT( (int)pev->armorvalue);
-		MESSAGE_END();
+		SetAndUpdateBattery(0);
 	}
 
 	adrenalineQueued = FALSE;

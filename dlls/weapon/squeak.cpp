@@ -517,6 +517,7 @@ void CSqueak::Spawn( )
 	pev->animtime = gpGlobals->time;
 	pev->framerate = 1.0;
 
+
 	m_fInAttack = FALSE;
 }
 

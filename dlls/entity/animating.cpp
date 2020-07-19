@@ -135,8 +135,9 @@ void CBaseAnimating::onAnimationLoop(void){
 
 void CBaseAnimating::checkEndOfAnimation(void){
 
-	//by default
-	pev->renderfx &= ~STOPINTR;
+	// by default
+	// ...  ok  but.    why?
+	//pev->renderfx &= ~STOPINTR;
 
 
 	/*
