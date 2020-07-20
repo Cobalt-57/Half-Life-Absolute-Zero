@@ -821,6 +821,15 @@ void command_fvoxtoggle(void){
 	//gEngfuncs.pfnClientCmd("fvoxtoggle");
 }
 
+// because autocomplete is nice
+void command_mapname(void) {
+	gEngfuncs.pfnClientCmd("_mapname");
+}
+
+
+
+
+
 
 
 // This is called every time the DLL is loaded
@@ -875,7 +884,14 @@ void CHud :: Init( void )
 
 
 	gEngfuncs.pfnAddCommand("fvoxtoggle", command_fvoxtoggle);
-
+	// sadly the "mapname" command is not an option, it competes with autocomplete for "map", as in mapname fills itself in
+	// on typing "map" and then a space, which is irritating if you really wanted to use the 'map' command.  UGH.
+	//gEngfuncs.pfnAddCommand("mapname", command_mapname);
+	gEngfuncs.pfnAddCommand("getmap", command_mapname);
+	gEngfuncs.pfnAddCommand("currentmap", command_mapname);
+	gEngfuncs.pfnAddCommand("thismap", command_mapname);
+	gEngfuncs.pfnAddCommand("curmap", command_mapname);
+	
 
 	//weaponSelectSoundPlayOnMousewheel = gEngfuncs.pfnRegisterVariable("weaponSelectSoundPlayOnMousewheel", "1", FCVAR_CLIENTDLL | FCVAR_ARCHIVE);
 	//timedDamageDeathRemoveMode = CVAR_CREATE("timedDamageDeathRemoveMode", "1", FCVAR_CLIENTDLL | FCVAR_ARCHIVE);

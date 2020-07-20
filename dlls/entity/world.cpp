@@ -37,10 +37,10 @@
 extern CGraph WorldGraph;
 extern CSoundEnt *pSoundEnt;
 
-extern CBaseEntity				*g_pLastSpawn;
-DLL_GLOBAL edict_t				*g_pBodyQueueHead;
-CGlobalState					gGlobalState;
-extern DLL_GLOBAL	int		gDisplayTitle;
+extern CBaseEntity* g_pLastSpawn;
+DLL_GLOBAL edict_t* g_pBodyQueueHead;
+CGlobalState gGlobalState;
+extern DLL_GLOBAL int gDisplayTitle;
 
 
 //MODDD -
@@ -382,7 +382,6 @@ int CGlobalState::Save( CSave &save )
 	int i;
 	globalentity_t *pEntity;
 
-
 	
 	//MODDD - new. Needs to happen before saving so that the instance vars are updated in time to reach the written data.
 	SaveDynamicIDs(this);
@@ -516,6 +515,8 @@ CWorld::CWorld(void){
 
 	m_f_map_anyAirNodes = FALSE;
 
+	skyboxEverSet = FALSE;
+
 }//END OF CWorld constructor
 
 
@@ -530,6 +531,7 @@ void CWorld::Activate(void){
 
 void CWorld :: Spawn( void )
 {
+
 
 	applyLoadedCustomMapSettingsToGlobal();
 
@@ -548,6 +550,25 @@ void CWorld :: Spawn( void )
 
 	/////////////////////////////////////////////////////
 	
+
+
+	//MODDD
+	///////////////////////////////////////////////////////////////////////////////////////////////
+	// Those rancid devs hardcoded the engine to do "DispatchKeyword" calls before
+	// absolutely anything else.  Those dire bastards.
+	// Instead going to assume all the keywords are done by the time of the "Spawn" call.
+	// As this is in "Spawn", this does not apply to loading a saved game.
+	// Skybox is remembered just fine between games.
+	if (!skyboxEverSet) {
+		// Point is, if the skybox wasn't set by some keyword, force it to 'desert' here.
+		CVAR_SET_STRING("sv_skyname", "desert");
+	}
+
+	// until proven othewise.    ...for next time of course.
+	skyboxEverSet = FALSE;
+	///////////////////////////////////////////////////////////////////////////////////////////////
+
+
 	g_fGameOver = FALSE;
 	Precache( );
 	//MODDD - removed.
@@ -773,8 +794,10 @@ void CWorld :: Precache( void )
 		CVAR_SET_FLOAT( "mp_defaultteam", 0 );
 	}
 
+}//END OF Precache
 
-}
+
+
 //
 // Just to ignore the "wad" field.
 //
@@ -807,6 +830,18 @@ void CWorld :: KeyValue( KeyValueData *pkvd )
 	{
 		// Sent over net now.
 		CVAR_SET_STRING( "sv_skyname", pkvd->szValue );
+
+
+		// MODDD - record whether the skybox was specified in load properties.
+		// If not, enforce the default.  Stops say, crossfire.bsp from taking
+		// the skybox of whatever map was previously loaded.
+		// If any of our maps rely on using a previous map's skybox without setting
+		// one itself, this feature should be removed.
+		if (pkvd->szValue != NULL && strlen(pkvd->szValue) > 0) {
+			// this counts.
+			skyboxEverSet = TRUE;
+		}
+
 		pkvd->fHandled = TRUE;
 	}
 	else if ( FStrEq(pkvd->szKeyName, "sounds") )

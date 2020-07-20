@@ -314,7 +314,7 @@ void interpretAsHealth(edict_t* pEntity, CBaseEntity* arg_target, const char* ar
 	if(isStringEmpty(arg_arg1Ref)){
 		
 		//if no argument was provided, we're fetching the stats of this entity.
-		easyForcePrintLineClient(pEntity, "%s\'s health:%d maxHealth:%d deadflag:%d IsAlive:%d", arg_targetName, (int)arg_target->pev->health, (int)arg_target->pev->max_health, arg_target->pev->deadflag, arg_target->IsAlive() );
+		easyForcePrintLineClient(pEntity, "%s\'s health:%g maxHealth:%g deadflag:%d IsAlive:%d", arg_targetName, arg_target->pev->health, arg_target->pev->max_health, arg_target->pev->deadflag, arg_target->IsAlive() );
 	}else{
 		//set the entity's current health to the provided argument, if it is a whole number.
 		
@@ -368,7 +368,7 @@ void interpretAsBattery(edict_t* pEntity, CBaseEntity* arg_target, const char* a
 
 	if (isStringEmpty(arg_arg1Ref)) {
 		//if no argument was provided, we're fetching the stats of this entity.
-		easyForcePrintLineClient(pEntity, "%s\'s battery:%d, maxBattery:%d", arg_targetName, (int)arg_target->pev->armorvalue, (int)MAX_NORMAL_BATTERY);
+		easyForcePrintLineClient(pEntity, "%s\'s battery:%g, maxBattery:%g", arg_targetName, arg_target->pev->armorvalue, (float)MAX_NORMAL_BATTERY);
 	}
 	else {
 		//set the entity's current battery to the provided argument, if it is a whole number.
@@ -1718,11 +1718,7 @@ void ClientCommand( edict_t *pEntity )
 			if(g_flWeaponCheat != 0.0){
 				//can't do this without cheats.
 				
-				// stop any sounds too at the moment.
-				//STOP_SOUND(tempplayer->edict(), CHAN_STATIC, "");
-				EMIT_SOUND(pEntity, CHAN_VOICE, "common/null.wav", 1.0, ATTN_IDLE);
-				EMIT_SOUND(pEntity, CHAN_ITEM, "common/null.wav", 1.0, ATTN_IDLE);
-				EMIT_SOUND(pEntity, CHAN_STREAM, "common/null.wav", 1.0, ATTN_IDLE);
+				tempplayer->stopSelfSounds();
 
 				tempplayer->Spawn(TRUE);
 			}else{
@@ -1787,6 +1783,15 @@ void ClientCommand( edict_t *pEntity )
 			easyForcePrintLineClient(pEntity, "No health trickery for you, cheater!");
 			return;
 		}
+
+
+		/*
+		//TEMP - push forward!
+		UTIL_MakeVectors(pev->v_angle);
+		tempplayer->pev->origin = tempplayer->pev->origin + Vector(0, 0, 12);
+		tempplayer->pev->velocity = gpGlobals->v_forward * 600;
+		*/
+
 		//ambiguous as to whether this is what is in the crosshairs or the player itself.  Try to figure it out:
 		CBaseEntity* forwardEnt = FindEntityForward(tempplayer);
 
@@ -2946,8 +2951,16 @@ void ClientCommand( edict_t *pEntity )
 		}
 
 	}else if(FStrEq(pcmdRefinedRef, "god2")){
+		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer*)pev);
 
 		if(g_flWeaponCheat != 0.0){
+
+			if (pev->deadflag != DEAD_NO) {
+				// revive the player first!
+				tempplayer->stopSelfSounds();
+				tempplayer->Spawn(TRUE);
+			}
+
 			if(pev->flags & FL_GODMODE){
 				pev->flags &= ~FL_GODMODE;
 				easyForcePrintLineClient(pEntity, "godmode OFF");
@@ -4374,6 +4387,19 @@ void ClientCommand( edict_t *pEntity )
 		
 		tempRef->auto_determined_fov = tryStringToFloat(arg1ref);
 	}
+	// NEW SHIT HERE MAYBE
+	else if (FStrEq(pcmdRefinedRef, "_mapname")) {
+		easyForcePrintLineClient(pEntity, "Map: %s", STRING(gpGlobals->mapname));
+
+	}
+	
+
+
+
+
+
+
+
 	
 	else if (FStrEq(pcmdRefinedRef, "tcs_init_link")) {
 		global_test_cvar_ref = CVAR_GET_POINTER("test_cvar");
@@ -5696,7 +5722,17 @@ void UpdateClientData ( const struct edict_s *ent, int sendweapons, struct clien
 
 	// Vectors
 	cd->origin			= ent->v.origin;
-	cd->velocity		= ent->v.velocity;
+	
+	//MODDD - INTERVENTION.  Don't let bob logic think we're moving if we're dead.
+	if (ent->v.deadflag == DEAD_NO) {
+		cd->velocity = ent->v.velocity;
+	}
+	else {
+		cd->velocity = g_vecZero;
+	}
+
+
+
 	cd->view_ofs		= ent->v.view_ofs;
 	cd->punchangle		= ent->v.punchangle;
 

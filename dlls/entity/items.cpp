@@ -106,10 +106,15 @@ void CItem::Spawn( void )
 	UTIL_SetSize(pev, Vector(-16, -16, 0), Vector(16, 16, 16));
 	SetTouch(&CItem::ItemTouch);
 
+
 	if (DROP_TO_FLOOR(ENT(pev)) == 0)
 	{
-		ALERT(at_error, "Item %s fell out of level at %f,%f,%f", STRING( pev->classname ), pev->origin.x, pev->origin.y, pev->origin.z);
-		UTIL_Remove( this );
+		//MODDD - NOTICE.  Assuming spawning at a position not too close to the floor = falling through the world is a bad assumption.
+		// Disabling this ALERT / removal.  ...for things spawned by 'give' commands at least.
+		if (!spawnedDynamically) {
+			ALERT(at_error, "Item %s fell out of level at %f,%f,%f", STRING( pev->classname ), pev->origin.x, pev->origin.y, pev->origin.z);
+			UTIL_Remove( this );
+		}
 		return;
 	}
 }

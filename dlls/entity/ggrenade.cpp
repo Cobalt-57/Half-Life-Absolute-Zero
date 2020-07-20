@@ -654,7 +654,9 @@ CGrenade * CGrenade:: ShootTimed( entvars_t *pevOwner, Vector vecStart, Vector v
 
 	//MODDD - THANKS FOR NOT SAYING A FUCKING WORD ABOUT THIS SHIT THAT'S DRIVEN ME BATSHIT INSANE FOR YEARS.
 	// Randomizes an animation for the grenade.
-	pGrenade->pev->sequence = RANDOM_LONG( 3, 6 );
+	// ALSO, old range was 3 to 6.  Now 3 to 5.  What is with #6 anyway, it's still jittering too weird even
+	// when it plays correctly, it's just weeeiird.
+	pGrenade->pev->sequence = RANDOM_LONG( 3, 5 );
 	//pGrenade->pev->sequence = 5;
 
 	// HeYyyyyyy!! Set this too you fool!

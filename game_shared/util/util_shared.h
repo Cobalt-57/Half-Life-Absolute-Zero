@@ -195,8 +195,8 @@ EASY_CVAR_EXTERN(hiddenMemPrintout)
 
 
 //TF ADDITIONS
-// Don't even know why this was ever anywhere, but ok.  From clientside files (health.h & eventscripts.h)
-// Commented out!
+// Don't even know why this was ever anywhere, but ok.  From clientside files (health.h & eventscripts.h), never
+// present serverside.  Commented out!
 /*
 #define DMG_IGNITE			(1 << 24) // Players hit by this begin to burn
 #define DMG_RADIUS_MAX		(1 << 25) // Radius damage with this flag doesn't decrease over distance
@@ -222,25 +222,37 @@ EASY_CVAR_EXTERN(hiddenMemPrintout)
 
 
 //MODDD - new.  Careful not to overflow this integer, these powers of 2 are getting high!
-//Would have started with "24", but 24 - 31 may be placeholders for Team Fortress damage types, 
-//according to health.h.
-//NOTICE: beyond "31" in 1 << 31  is not valid.  Using a 2nd bitmask when referring to these values...
+// Would have started with "24", but 24 - 31 may be placeholders for Team Fortress damage types, 
+// according to health.h.
+// NOTICE: beyond "31" in 1 << 31  is not valid.  Using a 2nd bitmask when referring to these values...
 
 //#define DMG_TIMEDEFFECT			(1 << 32) // timed damage that must be differentiated from "generic".
 //#define DMG_BLEEDING			(1 << 33)   // bleeding, usually inflicted from strong melee attacks.  Medkits cure it.
 
 #define DMG_TIMEDEFFECT			(1 << 0) // timed damage that must be differentiated from "generic".  This is non-initial strike damage.
-//Do not confuse with the mask "DMG_TIMEBASED", which is unique and not inclusive of any other damage types.
-#define DMG_BLEEDING			(1 << 1)   // bleeding, usually inflicted from strong melee attacks.  Medkits cure it.
-#define DMG_TIMEDEFFECTIGNORE	(1 << 2)   //same as TIMEDEFFECT, but made to ignore armor (regardless of the cvar).
-#define DMG_BARNACLEBITE		(1 << 3)   //not timed.  Just sent by the barnacle's execution bite to NPCs to mark not to ignore (if they would).
-#define DMG_GAUSS				(1 << 4)   //coming from the player's gauss weapon. Some things (apache) are now immune to it.  ...or not? that got canceled.
-#define DMG_HITBOX_EQUAL		(1 << 5)   //signal that this type of damage can't be increased by hitting particular hitboxes.
-										   //It is still completely up to any given monster's TraceAttack / TakeDamage to implement this
-										   //(check for the presence of DMG_HITBOX_EQUAL in bitsDamageTypeMod and deny enhancing damage
-										   // per headshots, etc. accordingly).
-										   //For instance, for lightning attacks, different amounts of damage for body, leg, arm, or headshots don't make sense.
-										   //It's possible damage from NPC's just shouldn't even do this kind of damage anyways.
+// Do not confuse with the mask "DMG_TIMEBASED", which is unique and not inclusive of any other damage types.
+
+#define DMG_BLEEDING			(1 << 1)   //  bleeding, usually inflicted from strong melee attacks.  Medkits cure it.
+#define DMG_TIMEDEFFECTIGNORE	(1 << 2)   // same as TIMEDEFFECT, but made to ignore armor (regardless of the cvar).
+#define DMG_BARNACLEBITE		(1 << 3)   // not timed.  Just sent by the barnacle's execution bite to NPCs to mark not to ignore (if they would).
+#define DMG_GAUSS				(1 << 4)   // coming from the player's gauss weapon. Some things (apache) are now immune to it.  ...or not? that got canceled.
+#define DMG_HITBOX_EQUAL		(1 << 5)   // signal that this type of damage can't be increased by hitting particular hitboxes.
+										   // It is still completely up to any given monster's TraceAttack / TakeDamage to implement this
+										   // (check for the presence of DMG_HITBOX_EQUAL in bitsDamageTypeMod and deny enhancing damage
+										   //  per headshots, etc. accordingly).
+										   // For instance, for lightning attacks, different amounts of damage for body, leg, arm, or headshots don't make sense.
+										   // It's possible damage from NPC's just shouldn't even do this kind of damage anyways.
+#define DMG_MAP_TRIGGER			(1 << 6)   // From map triggers (trigger_hurt most likely).  On doing high damage in a single attack,
+										   // the intent is clear that the player is not meant to revive in a zone they can't reocver from.
+										   // Such as falling into a deep pit with no way out, often has a high-damage hurt trigger there.
+#define DMG_MAP_BLOCKED			(1 << 7)   // From being in the way of map geometry like heavy closing doors or wheels.
+										   // As it is difficult to tell whether the player would be stuck if revived from dying to this,
+										   // it is fine to play it safe and forbid reviving.  Often coincides with DMG_CRUSH, but it is not
+										   // the case that map-only entities use this (tentacles and xen trees deal DMG_CRUSH).
+										   // OR, check to see if any attempts to deal DMG_MAP_BLOCKED damage were dealt some short time after
+										   // the player stops moving, or never stops moving for a decent while taking DMG_MAP_BLOCKED 
+										   // (so not simply moving from being on a moving platforms).
+										   // If so, it is safe to assume the player is stuck in something moving and should not be revived.
 
 
 //Which types of damage in the new mask are secondary?

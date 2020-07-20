@@ -438,18 +438,14 @@ public:
 	//float			m_flNextAttack;		// cannot attack again until this time
 
 	int				m_bitsDamageType;	// what types of damage has monster (player) taken
-	//MODDD - complimentary.
+	//MODDD - complementary.
 	int				m_bitsDamageTypeMod;
 
-	//MODDD - new.
-	////////////////////////////////////////////////////////////////////////////////////////////
-	BOOL			m_rgbTimeBasedFirstFrame[CDMG_TIMEBASED];
 	float			m_tbdPrev;				// Time-based damage timer
+	BYTE			m_rgbTimeBasedDamage[CDMG_TIMEBASED];
+	BOOL			m_rgbTimeBasedFirstFrame[CDMG_TIMEBASED];
 
 
-	////////////////////////////////////////////////////////////////////////////////////////////
-
-	BYTE				m_rgbTimeBasedDamage[CDMG_TIMEBASED];
 
 	int				m_lastDamageAmount;// how much damage did monster (player) last take
 											// time based damage counters, decr. 1 per 2 seconds

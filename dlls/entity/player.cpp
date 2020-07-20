@@ -112,8 +112,8 @@ extern unsigned short g_sFreakyLight;
 
 // #define DUCKFIX
 
-extern DLL_GLOBAL ULONG		g_ulModelIndexPlayer;
-extern DLL_GLOBAL BOOL		g_fGameOver;
+extern DLL_GLOBAL ULONG g_ulModelIndexPlayer;
+extern DLL_GLOBAL BOOL g_fGameOver;
 int gEvilImpulse101;
 extern DLL_GLOBAL int g_iSkillLevel;
 extern DLL_GLOBAL int gDisplayTitle;
@@ -122,7 +122,7 @@ extern void CopyToBodyQue(entvars_t* pev);
 extern edict_t *EntSelectSpawnPoint( CBaseEntity *pPlayer );
 
 // the world node graph
-extern CGraph	WorldGraph;
+extern CGraph WorldGraph;
 
 
 
@@ -351,8 +351,6 @@ TYPEDESCRIPTION	CBasePlayer::m_playerSaveData[] =
 	DEFINE_FIELD(CBasePlayer, m_fLongJump, FIELD_BOOLEAN),
 	DEFINE_FIELD(CBasePlayer, m_fInitHUD, FIELD_BOOLEAN),
 	
-	//MODDD - moved to monsters.cpp for saving.
-	//DEFINE_FIELD(CBasePlayer, m_tbdPrev, FIELD_TIME),
 
 	DEFINE_FIELD(CBasePlayer, m_pTank, FIELD_EHANDLE),
 	DEFINE_FIELD(CBasePlayer, m_iHideHUD, FIELD_INTEGER),
@@ -376,8 +374,6 @@ TYPEDESCRIPTION	CBasePlayer::m_playerSaveData[] =
 	DEFINE_FIELD(CBasePlayer, airTankWaitingStart, FIELD_BOOLEAN),
 	DEFINE_FIELD(CBasePlayer, hasLongJumpItem, FIELD_BOOLEAN),
 
-	//moved to all CbaseMonster's now.
-	//DEFINE_ARRAY( CBasePlayer, m_rgbTimeBasedFirstFrame, FIELD_BOOLEAN, CDMG_TIMEBASED ),
 	DEFINE_ARRAY(CBasePlayer, m_rgSuitPlayListDuration, FIELD_FLOAT, CSUITPLAYLIST),
 
 	DEFINE_FIELD(CBasePlayer, foundRadiation, FIELD_BOOLEAN),
@@ -389,6 +385,10 @@ TYPEDESCRIPTION	CBasePlayer::m_playerSaveData[] =
 	DEFINE_FIELD( CBasePlayer, m_flNextAttack, FIELD_TIME ),
 
 	DEFINE_FIELD( CBasePlayer, hasGlockSilencer, FIELD_INTEGER ),
+
+	DEFINE_FIELD(CBasePlayer, recentMajorTriggerDamage, FIELD_BOOLEAN),
+	DEFINE_FIELD(CBasePlayer, lastBlockDamageAttemptReceived, FIELD_TIME),
+
 	
 	//DEFINE_FIELD( CBasePlayer, m_fDeadTime, FIELD_FLOAT ), // only used in multiplayer games
 	//DEFINE_FIELD( CBasePlayer, m_fGameHUDInitialized, FIELD_INTEGER ), // only used in multiplayer games
@@ -407,8 +407,11 @@ TYPEDESCRIPTION	CBasePlayer::m_playerSaveData[] =
 	//DEFINE_FIELD( CBasePlayer, m_chTextureType, FIELD_CHARACTER ), // Don't need to restore
 	//DEFINE_FIELD( CBasePlayer, m_fNoPlayerSound, FIELD_BOOLEAN ), // Don't need to restore, debug
 	//DEFINE_FIELD( CBasePlayer, m_iUpdateTime, FIELD_INTEGER ), // Don't need to restore
+
+	// !!! If put back in for whatever reason, these are FLOATs now!
 	//DEFINE_FIELD( CBasePlayer, m_iClientHealth, FIELD_INTEGER ), // Don't restore, client needs reset
 	//DEFINE_FIELD( CBasePlayer, m_iClientBattery, FIELD_INTEGER ), // Don't restore, client needs reset
+
 	//DEFINE_FIELD( CBasePlayer, m_iClientHideHUD, FIELD_INTEGER ), // Don't restore, client needs reset
 	//DEFINE_FIELD( CBasePlayer, m_fWeapon, FIELD_BOOLEAN ),  // Don't restore, client needs reset
 	//DEFINE_FIELD( CBasePlayer, m_nCustomSprayFrames, FIELD_INTEGER ), // Don't restore, depends on server message after spawning and only matters in multiplayer
@@ -603,13 +606,16 @@ void CBasePlayer :: DeathSound( BOOL plannedRevive )
 		//implemented, will probably be played when not planning a revive too.
 		m_flSuitUpdate = gpGlobals->time;  //say the next line now!
 
-		if (RANDOM_FLOAT(0, 1) <= 0.4) {
-			// general failure notice
-			SetSuitUpdate("!HEV_E3", FALSE, SUIT_NEXT_IN_1MIN * 2, 4.2f);
-		}
-		else {
+		
+		//if (RANDOM_FLOAT(0, 1) <= 0.4) {
+		//	// general failure notice
+		////SUIT_NEXT_IN_1MIN * 2
+		//	SetSuitUpdate("!HEV_E3", FALSE, SUIT_REPEAT_OK, 4.2f);
+		//}
+		//else {
 			EMIT_GROUPNAME_SUIT(ENT(pev), "HEV_DEAD");
-		}
+		//}
+		
 	}else{
 
 		/*
@@ -800,23 +806,27 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBasePlayer)
 	//easyPrintLine("PLAYER TAKEDAMAGE FLAGS: %d, %d", bitsDamageType, bitsDamageTypeMod);
 	
 	if(reviveSafetyTime != -1){
+
+		// revive safety time will not protect against MAP_BLOCKED damage.
+		if (!(bitsDamageTypeMod & DMG_MAP_BLOCKED)) {
 		
-		if(reviveSafetyTime >= gpGlobals->time){
-			if(EASY_CVAR_GET(playerReviveBuddhaMode) == 1){
-				buddhaMode = TRUE;
+			if(reviveSafetyTime >= gpGlobals->time){
+				if(EASY_CVAR_GET(playerReviveBuddhaMode) == 1){
+					buddhaMode = TRUE;
+				}else{
+					blockDamage = TRUE;
+				}
+				if(EASY_CVAR_GET(playerReviveTimeBlocksTimedDamage) == 1){
+					blockTimedDamage = TRUE;
+				}
 			}else{
-				blockDamage = TRUE;
+				reviveSafetyTime = -1;
+				buddhaMode = FALSE;
+				blockDamage = FALSE;
 			}
-			if(EASY_CVAR_GET(playerReviveTimeBlocksTimedDamage) == 1){
-				blockTimedDamage = TRUE;
-			}
-		}else{
-			reviveSafetyTime = -1;
-			buddhaMode = FALSE;
-			blockDamage = FALSE;
 		}
 
-	}
+	}//END OF reviveSafetyTime
 
 	//MODDD - don't make these noises if waiting for a revive.
 	//If dead, don't play.
@@ -853,8 +863,27 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBasePlayer)
 		}
 
 		//} //END OF if(bitsDamageType & (DMG_FALL)
-	}//END OF if(!IsAlive)
+	}//END OF if(IsAlive)
 	
+
+
+	if ((bitsDamageTypeMod & (DMG_MAP_TRIGGER | DMG_MAP_BLOCKED)) && flDamage >= 20) {
+		// intent for damage was over 20?
+		recentMajorTriggerDamage = TRUE;
+	}
+	else {
+		// forget it.
+		// TODO - forget with a small timer first.
+		lastBlockDamageAttemptReceived = FALSE;
+	}
+
+	if (bitsDamageTypeMod & DMG_MAP_BLOCKED) {
+		// mark it!
+		lastBlockDamageAttemptReceived = gpGlobals->time;
+	}
+
+
+
 
 	// have suit diagnose the problem - ie: report damage type
 	int bitsDamage = bitsDamageType;
@@ -871,11 +900,22 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBasePlayer)
 	flBonus = ARMOR_BONUS;
 	flRatio = ARMOR_RATIO;
 
-	if ( ( bitsDamageType & DMG_BLAST ) && g_pGameRules->IsMultiplayer() )
-	{
-		// blasts damage armor more.
-		flBonus *= 2;
+
+	float booty = EASY_CVAR_GET(blastExtraArmorDamageMode);
+
+
+	//MODDD - only double blast damage on armor, if the CVar allows.  0 is retail behavior (during multiplayer only)
+	if (
+		(EASY_CVAR_GET(blastExtraArmorDamageMode) == 0 && IsMultiplayer()) ||
+		EASY_CVAR_GET(blastExtraArmorDamageMode) == 2
+	) {
+		if ((bitsDamageType & DMG_BLAST) )
+		{
+			// blasts damage armor more.
+			flBonus *= 2;
+		}
 	}
+
 
 	// Already dead
 	if ( !IsAlive() )
@@ -1040,10 +1080,8 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBasePlayer)
 		// DMG_SHOCK
 
 	//This seems redundant with the base monster class... ?  It does this now.
-
 	/*
 	m_bitsDamageType |= bitsDamage; // Save this so we can report it to the client
-	//MODDD - complimentary
 	m_bitsDamageTypeMod |= bitsDamageMod;
 	*/
 
@@ -1633,25 +1671,11 @@ GENERATE_KILLED_IMPLEMENTATION(CBasePlayer)
 
 	pev->modelindex = g_ulModelIndexPlayer;    // don't use eyes
 
-	pev->deadflag		= DEAD_DYING;
-	pev->movetype		= MOVETYPE_TOSS;
-	ClearBits( pev->flags, FL_ONGROUND );
-	if (pev->velocity.z < 10)
-		pev->velocity.z += RANDOM_FLOAT(0,300);
 
-	// clear out the suit message cache so we don't keep chattering
-	SetSuitUpdate(NULL, FALSE, 0);
+	//MODDD - movetype change logic was here
 
-	// In fact, kill all sounds coming from the player / FVOX.
-	//////////////////////////////////////////////////////////////////////////////////////
-	// I think the base GibMonster already handles CHAN_VOICE.  Although we might not be calling gibmonster.
-	// Can't hurt.
-	EMIT_SOUND(ENT(pev), CHAN_VOICE, "common/null.wav", 1, ATTN_NORM);
-	// shouldn't we force any suit sounds to stop playing in such a case too?
-	EMIT_SOUND_DYN(ENT(pev), CHAN_STATIC, "common/null.wav", 1, ATTN_NORM, 0, 100);
-	// seems this usually works.
-	EMIT_SOUND_DYN(ENT(pev), CHAN_STATIC, recentlyPlayedSound, 1, ATTN_NORM, SND_STOP, 100);
-	//////////////////////////////////////////////////////////////////////////////////////
+
+	stopSelfSounds();
 
 
 
@@ -1698,7 +1722,7 @@ GENERATE_KILLED_IMPLEMENTATION(CBasePlayer)
 	// UTIL_ScreenFade( edict(), Vector(128,0,0), 6, 15, 255, FFADE_OUT | FFADE_MODULATE );
 
 	//MODDD - pev->health requirement changed from -40.  Seems a little hard to reach typically.
-	if ( ( pev->health < -30 && iGib != GIB_NEVER ) || iGib == GIB_ALWAYS )
+	if ( ( pev->health < -35 && iGib != GIB_NEVER ) || iGib == GIB_ALWAYS )
 	{
 		//pev->solid			= SOLID_NOT;   //but GibMonster already does this.
 		//GibMonster();	// This clears pev->model
@@ -1716,6 +1740,27 @@ GENERATE_KILLED_IMPLEMENTATION(CBasePlayer)
 		//recentlyGibbed = FALSE;   Keep this on until Spawn() gets called again
 
 	}
+
+
+
+	//MODDD - as-is movetype-changing logic moved here to respond to being gibbed or not.
+	// If gibbed, don't fall.  Why bother?  What is 'it' that's falling anyway?
+	if (!recentlyGibbed) {
+		pev->deadflag = DEAD_DYING;
+		pev->movetype = MOVETYPE_TOSS;
+		ClearBits(pev->flags, FL_ONGROUND);
+		if (pev->velocity.z < 10)
+			pev->velocity.z += RANDOM_FLOAT(0, 300);
+	}
+	else {
+		pev->deadflag = DEAD_DEAD;
+		pev->movetype = MOVETYPE_NONE;
+		ClearBits(pev->flags, FL_ONGROUND);
+		pev->velocity = g_vecZero;
+	}
+
+
+
 
 
 	if (recentlyGibbed) {
@@ -1738,31 +1783,36 @@ GENERATE_KILLED_IMPLEMENTATION(CBasePlayer)
 		// "critical failure"
 		SetSuitUpdate("!HEV_E2", FALSE, SUIT_REPEAT_OK, 4.2f);
 
-	}else  //...
-	//MODDD
-	//For now, if the player has adrenaline and hasn't been gibbed, tell "DeathSound" this.
-	if( m_rgItems[ITEM_ADRENALINE] > 0){
-
+	}
+	else if (recentMajorTriggerDamage) {
+		// For now, if the player has adrenaline and hasn't been gibbed, tell "DeathSound" this.
+		if (EASY_CVAR_GET(batteryDrainsAtAdrenalineMode) == 1) {
+			SetAndUpdateBattery(0);
+		}
+		// also, this CVar.
+		if (EASY_CVAR_GET(timedDamageReviveRemoveMode) == 1) {
+			attemptResetTimedDamage(TRUE);
+		}
+		// custom death sound
+		SetSuitUpdate("!HEV_E3", FALSE, SUIT_REPEAT_OK, 4.2f);
+	}
+	else if (m_rgItems[ITEM_ADRENALINE] > 0) {
+		// For now, if the player has adrenaline and hasn't been gibbed, tell "DeathSound" this.
 		if(EASY_CVAR_GET(batteryDrainsAtAdrenalineMode) == 1){
 			SetAndUpdateBattery(0);
 		}
-
-		//also, this CVar.
+		// also, this CVar.
 		if(EASY_CVAR_GET(timedDamageReviveRemoveMode) == 1){
 			attemptResetTimedDamage(TRUE);
 		}
-
 		DeathSound(TRUE);
 	}else{
-
 		if(EASY_CVAR_GET(timedDamageDeathRemoveMode) > 0){
 			attemptResetTimedDamage(TRUE);
 		}
-
 		if(EASY_CVAR_GET(batteryDrainsAtDeath) == 1){
 			SetAndUpdateBattery(0);
 		}
-
 		DeathSound(FALSE);
 	}
 	
@@ -1791,6 +1841,43 @@ void CBasePlayer::onDelete(void) {
 	// wait.  player deleted.
 	// what.
 }
+
+
+// commonly used script to silence any sounds coming from the player, should work usually.
+// Includes playing the most recently played FVOX line with the "SND_STOP" flag.  Unsure why
+// sometimes that is necessary and playing "null.wav" in all the usual channels isn't enough.
+void CBasePlayer::stopSelfSounds(void) {
+	// clear out the suit message cache so we don't keep chattering
+	SetSuitUpdate(NULL, FALSE, 0);
+
+	// In fact, kill all sounds coming from the player / FVOX.
+	//////////////////////////////////////////////////////////////////////////////////////
+	// I think the base GibMonster already handles CHAN_VOICE.  Although we might not be calling gibmonster.
+	// Can't hurt.
+
+	//EMIT_SOUND(ENT(pev), CHAN_VOICE, "common/null.wav", 1, ATTN_NORM);
+	//// shouldn't we force any suit sounds to stop playing in such a case too?
+	//EMIT_SOUND_DYN(ENT(pev), CHAN_STATIC, "common/null.wav", 1, ATTN_NORM, 0, 100);
+
+	EMIT_SOUND(ENT(pev), CHAN_VOICE, "common/null.wav", 1.0, ATTN_IDLE);
+	EMIT_SOUND(ENT(pev), CHAN_ITEM, "common/null.wav", 1.0, ATTN_IDLE);
+	EMIT_SOUND(ENT(pev), CHAN_STREAM, "common/null.wav", 1.0, ATTN_IDLE);
+
+	// seems this usually works.
+	if (recentlyPlayedSound[0] != '\0') {
+		EMIT_SOUND_DYN(ENT(pev), CHAN_STATIC, recentlyPlayedSound, 1, ATTN_NORM, SND_STOP, 100);
+		recentlyPlayedSound[0] = '\0';  //cleared.
+	}
+
+	//STOP_SOUND(tempplayer->edict(), CHAN_STATIC, "");
+	//////////////////////////////////////////////////////////////////////////////////////
+
+}//END OF stopSelfSounds
+
+
+
+
+
 
 
 // Set the activity based on an event or current state
@@ -2085,8 +2172,8 @@ void CBasePlayer::DebugCall3(){
 //MODDD - player constructor.
 CBasePlayer::CBasePlayer(void){
 
-	//turning this into a method for how much is otherwise just duplicated at this point.
-	//We want a lot of the exact same things for CBasePlayer creation and resetting between map transitions.
+	// turning this into a method for how much is otherwise just duplicated at this point.
+	// We want a lot of the exact same things for CBasePlayer creation and resetting between map transitions.
 	_commonReset();
 
 	queueFirstAppearanceMessageSend = FALSE;
@@ -2427,32 +2514,63 @@ void CBasePlayer::PlayerDeathThink(void)
 		}
 	}
 
+	if (!recentlyGibbed && pev->flags & FL_ONGROUND && m_flFallVelocity > 600) {
+		// nope, ded then.   No need for authentic gibbing but just count this as non-revivable.
+		recentlyGibbed = TRUE;
+		pev->velocity = g_vecZero;
+		EMIT_SOUND_FILTERED(ENT(pev), CHAN_ITEM, "common/bodysplat.wav", 1, ATTN_NORM, FALSE);
+
+		m_flFallVelocity = 0;  //I think this is safe?
+		SetSuitUpdate("!HEV_E3", FALSE, SUIT_REPEAT_OK, 4.2f);
+	}
+
+
 	if(recoveryIndex == 0){
-		//by the way, "pev->model != 0" is a gib-check.  The model being null (== 0) means, gibbed.  No "body" to recover.
-		//nah, just use "recentlyGibbed", new var.
-		//search "iGib" for more details on gibbing here (and in basemonster.h).
-		if( !recentlyGibbed && this->m_rgItems[ITEM_ADRENALINE] > 0){
+		// by the way, "pev->model != 0" is a gib-check.  The model being null (== 0) means, gibbed.  No "body" to recover.
+		// nah, just use "recentlyGibbed", new var.
+		// search "iGib" for more details on gibbing here (and in basemonster.h).
+		if( !recentlyGibbed && !recentMajorTriggerDamage && this->m_rgItems[ITEM_ADRENALINE] > 0){
 
-			//note that, if the player is not on the ground BUT otherwise meets conditions to recover,
-			//the respawn will still be stalled until the player hits the ground (where the timer starts and
-			//the player revives).
-			//Even if on the ground, a minimum time (recoveryDelayMin) must have passed to start, including midair time, usually small.
-			if ( (FBitSet(pev->flags, FL_ONGROUND) && gpGlobals->time >= recoveryDelayMin ) || gpGlobals->time >= recoveryDelay){
-				//can recover.
-
+			// note that, if the player is not on the ground BUT otherwise meets conditions to recover,
+			// the respawn will still be stalled until the player hits the ground (where the timer starts and
+			// the player revives).
+			// Even if on the ground, a minimum time (recoveryDelayMin) must have passed to start, including midair time, usually small.
+			if ( (FBitSet(pev->flags, FL_ONGROUND) && gpGlobals->time >= recoveryDelayMin && gpGlobals->time > lastBlockDamageAttemptReceived + 1.5 ) ){
+				// can recover.
 				if(!adrenalineQueued){
 					adrenalineQueued = TRUE;
 					SetSuitUpdateEventFVoxCutoff("!HEV_ADR_USE", FALSE, SUIT_REPEAT_OK, SUITUPDATETIME, TRUE, 0.41 - 0.07, &CBasePlayer::consumeAdrenaline, 0.41 - 0.07 + 0.55);
 				}
 				//if(revived){
-					//If revived, send the signal to reset falling velocity.
+					// If revived, send the signal to reset falling velocity.
 					g_engfuncs.pfnSetPhysicsKeyValue( edict(), "res", "1" );
 				//}
+			}
+			else {
+				if (gpGlobals->time >= recoveryDelay) {
+					// Took too long?  Make a decision now.
+
+					if (gpGlobals->time > lastBlockDamageAttemptReceived + 1.5) {
+						// not recently damaged by the map?  Try a revive.
+						if (!adrenalineQueued) {
+							adrenalineQueued = TRUE;
+							SetSuitUpdateEventFVoxCutoff("!HEV_ADR_USE", FALSE, SUIT_REPEAT_OK, SUITUPDATETIME, TRUE, 0.41 - 0.07, &CBasePlayer::consumeAdrenaline, 0.41 - 0.07 + 0.55);
+						}
+						g_engfuncs.pfnSetPhysicsKeyValue(edict(), "res", "1");
+					}
+					else {
+						// Critical failure.
+						SetSuitUpdate("!HEV_E2", FALSE, SUIT_REPEAT_OK, 4.2f);
+
+						recoveryIndex = 3;
+						recoveryIndexMem = 3;
+					}
+				}
 
 			}
 
 		}else{
-			//can not recover.  Let ordinary respawn-mechanisms handle this situation.
+			// can not recover.  Let ordinary respawn-mechanisms handle this situation.
 			recoveryIndex = 3;
 			recoveryIndexMem = 3;
 		}
@@ -2474,10 +2592,11 @@ void CBasePlayer::PlayerDeathThink(void)
 		return;
 	}
 
-	//ordinary respawn can not handle the situation if the player may revive.
+	// ordinary respawn can not handle the situation if the player may revive.
 	if(recoveryIndex != 3){
 		return;
 	}
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	//...if execution wasn't stopped by the above check, the player is dead with no chance of revival.
 	
@@ -3695,6 +3814,13 @@ void CBasePlayer::PreThink(void)
 	}//END OF currentSuitSoundEventTime check
 
 
+
+	//MODDD - new m_flFallVelocity set location
+	if (!FBitSet(pev->flags, FL_ONGROUND))
+	{
+		m_flFallVelocity = -pev->velocity.z;
+	}
+
 	if (pev->deadflag >= DEAD_DYING)
 	{
 		PlayerDeathThink();
@@ -3936,11 +4062,8 @@ void CBasePlayer::PreThink(void)
 		*/
 	//USED TO DO SOME LONG JUMP LOGIC HERE.  Now doing it before jump instead.
 	
+	//MODDD - old m_flFallVelocity set location
 
-	if ( !FBitSet ( pev->flags, FL_ONGROUND ) )
-	{
-		m_flFallVelocity = -pev->velocity.z;
-	}
 
 	// StudioFrameAdvance( );//!!!HACKHACK!!! Can't be hit by traceline when not animating?
 
@@ -5304,6 +5427,10 @@ void CBasePlayer::PostThink()
 	}
 
 
+	//MODDD - new m_flFallVelocity reset location
+	
+
+
 	if ( g_fGameOver )
 		goto pt_end;         // intermission or finale
 
@@ -5387,15 +5514,22 @@ void CBasePlayer::PostThink()
 		}
     }
 
+
+	//MODDD - old m_flFallVelocity reset location
 	if (FBitSet(pev->flags, FL_ONGROUND))
-	{		
-		if (m_flFallVelocity > 64 && !IsMultiplayer())
+	{
+		//MODDD - and why multiplayer only anyhow?  I know the sound's just for AI though, probably why.  Doesn't hurt to anyway though.
+		// (this isn't the audible sound of course)
+		// Do require being alive though.
+		//if (m_flFallVelocity > 64 && !IsMultiplayer())
+		if (m_flFallVelocity > 64 && pev->deadflag == DEAD_NO)
 		{
-			CSoundEnt::InsertSound ( bits_SOUND_PLAYER, pev->origin, m_flFallVelocity, 0.2 );
+			CSoundEnt::InsertSound(bits_SOUND_PLAYER, pev->origin, m_flFallVelocity, 0.2);
 			// ALERT( at_console, "fall %f\n", m_flFallVelocity );
 		}
 		m_flFallVelocity = 0;
 	}
+
 
 	// select the proper animation for the player character	
 	if ( IsAlive() )
@@ -5494,6 +5628,9 @@ void CBasePlayer::PostThink()
 	//pev->iuser4 = 47;
 	//easyPrintLine("Weeeee %d", pev->iuser4);
 	
+
+
+
 pt_end:
 #if defined( CLIENT_WEAPONS )
 		// Decay timers on weapons
@@ -5732,7 +5869,7 @@ void CBasePlayer::SetAndUpdateBattery(int argNewBattery) {
 void CBasePlayer::attemptCureBleeding(void) {
 
 	if (m_rgbTimeBasedDamage[itbd_Bleeding] > 0 || m_bitsDamageTypeMod & DMG_BLEEDING) {
-		int choice = RANDOM_LONG(0, 2);
+		int choice = RANDOM_LONG(0, 1);
 		if (choice == 0) {
 			// hiss, wound_sterilized
 			SetSuitUpdate("!HEV_HEAL6", FALSE, SUIT_NEXT_IN_30SEC);
@@ -5741,11 +5878,11 @@ void CBasePlayer::attemptCureBleeding(void) {
 			// hiss, morphine_shot
 			SetSuitUpdate("!HEV_HEAL7", FALSE, SUIT_NEXT_IN_30SEC);
 		}
-		else if (choice == 2) {
-			SetSuitUpdate("!HEV_HEAL1", FALSE, SUIT_NEXT_IN_30SEC);
-		}
+		//else if (choice == 2) {
+		//	SetSuitUpdate("!HEV_HEAL1", FALSE, SUIT_NEXT_IN_30SEC);
+		//}
 
-		forceRepeatBlock("!HEV_HEAL1", FALSE, SUIT_NEXT_IN_30SEC);
+		//forceRepeatBlock("!HEV_HEAL1", FALSE, SUIT_NEXT_IN_30SEC);
 		forceRepeatBlock("!HEV_HEAL6", FALSE, SUIT_NEXT_IN_30SEC);
 		forceRepeatBlock("!HEV_HEAL7", FALSE, SUIT_NEXT_IN_30SEC);
 
@@ -5863,11 +6000,11 @@ BOOL CBasePlayer::playerHasLongJump(){
 
 
 //MODDD - holds many of the things that used to be in the CBasePlayer constructor.
-//Now this can be called by that constructor, AND the "commonReset" method below to remove all those redundant variable resets.
-//This itself, "_commonReset" with the underscore, shouldn't be called straight by anything else.
-//The intention is the CBasePlayer constructor calls this only, and commonReset calls this in addition to some other things it 
-//needs to do now that the game has been created (can trust pev->... calls work, unlike in the constructor)
-//...oh.  actually almost nothing in common.  well ok then.
+// Now this can be called by that constructor, AND the "commonReset" method below to remove all those redundant variable resets.
+// This itself, "_commonReset" with the underscore, shouldn't be called straight by anything else.
+// The intention is the CBasePlayer constructor calls this only, and commonReset calls this in addition to some other things it 
+// needs to do now that the game has been created (can trust pev->... calls work, unlike in the constructor)
+// ...oh.  actually almost nothing in common.  well ok then.
 void CBasePlayer::_commonReset(void){
 
 	hasGlockSilencerMem = -1;
@@ -5877,18 +6014,24 @@ void CBasePlayer::_commonReset(void){
 
 	framesUntilPushStops = -1;
 
+
 }//END OF _commonReset
 
 
 
-//This holds a lot of commands common between just defaulting several attributes to say, "Please update me with the real value soon".
-//Methods that use this heavily are
-//Spawn
-//Precache
-//Restore
-//ForceClientDllUpdate
+// This holds a lot of commands common between just defaulting several attributes to say, "Please update me with the real value soon".
+// Methods that use this heavily are
+//  Spawn
+//  Precache
+//  Restore
+//  ForceClientDllUpdate
 void CBasePlayer::commonReset(void){
 	_commonReset();
+
+
+	recentMajorTriggerDamage = FALSE;
+	lastBlockDamageAttemptReceived = -5;
+
 
 	// This will be changed soon after the player joins a server if their setting differs.
 	fvoxEnabled = 0;
@@ -6205,7 +6348,15 @@ void CBasePlayer::Spawn( BOOL revived ){
 	//pev->max_health		= pev->health;
 	pev->max_health = 100;
 
-	pev->flags		   &= FL_PROXY;	// keep proxy flag sey by engine
+
+	// MODDD -  LETS   FUCKING   GOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
+	// Say you're resetting all the flags like a normal person.  Except for FL_PROXY which is to be preserved.
+	// Keeping FL_GOD flags too, because endlessly revive/die/revive/die/revive/die'ing in a insta-kill pit is hilarious.
+	//pev->flags		   &= FL_PROXY;	// keep proxy flag sey by engine
+	pev->flags = pev->flags & (FL_PROXY | FL_GODMODE | FL_NOTARGET);
+
+
+
 	pev->flags		   |= FL_CLIENT;
 	pev->air_finished	= gpGlobals->time + 12;
 	pev->dmg			= 2;				// initial water damage
@@ -8056,7 +8207,7 @@ void CBasePlayer :: UpdateClientData( void )
 
 			g_pGameRules->InitHUD( this );
 			m_fGameHUDInitialized = TRUE;
-			if ( g_pGameRules->IsMultiplayer() )
+			if ( IsMultiplayer() )
 			{
 				FireTargets( "game_playerjoin", this, this, USE_TOGGLE, 0 );
 			}
@@ -8980,8 +9131,8 @@ int CBasePlayer :: GetCustomDecalFrames( void )
 void CBasePlayer::DropPlayerItem ( char *pszItemName )
 {
 	//MODDD - new cvar.
-	//if ( !g_pGameRules->IsMultiplayer() || (weaponstay.value > 0) )
-	if ( EASY_CVAR_GET(canDropInSinglePlayer) == 0 && (!g_pGameRules->IsMultiplayer() || (weaponstay.value > 0)) )
+	//if ( !IsMultiplayer() || (weaponstay.value > 0) )
+	if ( EASY_CVAR_GET(canDropInSinglePlayer) == 0 && (!IsMultiplayer() || (weaponstay.value > 0)) )
 	{
 		// no dropping in single player.
 		return;

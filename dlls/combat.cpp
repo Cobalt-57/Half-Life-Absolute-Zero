@@ -2357,18 +2357,6 @@ int CBaseMonster :: TakeHealth (float flHealth, int bitsDamageType)
 }
 
 
-//NO.  See "monsters.cpp", this already exists.
-/*
-TYPEDESCRIPTION	CBaseMonster::m_SaveData[] = 
-{
-	DEFINE_ARRAY( CBaseMonster, m_rgbTimeBasedDamage, FIELD_BOOLEAN, CDMG_TIMEBASED ),
-	DEFINE_ARRAY( CBaseMonster, m_rgbTimeBasedFirstFrame, FIELD_BOOLEAN, CDMG_TIMEBASED ),
-	
-	DEFINE_FIELD(CBaseMonster, m_bitsDamageType, FIELD_INTEGER),
-	DEFINE_FIELD(CBaseMonster, m_bitsDamageTypeMod, FIELD_INTEGER),
-	//bitsDamageType
-};
-*/
 
 
 /*
@@ -3273,7 +3261,6 @@ Vector CBaseEntity::FireBulletsPlayer ( ULONG cShots, Vector vecSrc, Vector vecD
 			*/
 
 
-			
 			//MODDD
 			if (pEntity && pEntity->Classify() != CLASS_NONE && pEntity->Classify() != CLASS_MACHINE )
 			{
@@ -3296,12 +3283,9 @@ Vector CBaseEntity::FireBulletsPlayer ( ULONG cShots, Vector vecSrc, Vector vecD
 			
 		}//END OF if (tr.flFraction != 1.0)
 
-		
 		//easyPrintLine("NULL?? %d", FNullEnt(tr.pHit) );
-
 		//COME BACK
 			
-
 
 		// make bullet trails
 		UTIL_BubbleTrail( vecSrc, tr.vecEndPos, (flDistance * tr.flFraction) / 64.0 );
@@ -3327,9 +3311,9 @@ void CBaseEntity :: TraceBleed( float flDamage, Vector vecDir, TraceResult *ptr,
 	if (flDamage == 0)
 		return;
 
-	//can involve "bitsDamageTypeMod" if necessary too.
-	//Seems safe to imply any bleeding damage (DMG_BLEEDING for the bitsDamageTypeMod new bitmask) will come with DMG_SLASH so that blood is dealt.
-	//Eh, letting bleeding damage allow the effect. why not.
+	// can involve "bitsDamageTypeMod" if necessary too.
+	// Seems safe to imply any bleeding damage (DMG_BLEEDING for the bitsDamageTypeMod new bitmask) will come with DMG_SLASH so that blood is dealt.
+	// Eh, letting bleeding damage allow the effect. why not.
 	if (
 		!(bitsDamageType & (DMG_CRUSH | DMG_BULLET | DMG_SLASH | DMG_BLAST | DMG_CLUB | DMG_MORTAR)) &&
 		!( bitsDamageTypeMod & (DMG_BLEEDING) )

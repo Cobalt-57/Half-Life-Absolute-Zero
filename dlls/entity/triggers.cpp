@@ -553,7 +553,10 @@ public:
 	void KeyValue( KeyValueData *pkvd );
 	void EXPORT MultiTouch( CBaseEntity *pOther );
 	void EXPORT HurtTouch ( CBaseEntity *pOther );
-	void EXPORT CDAudioTouch ( CBaseEntity *pOther );
+	
+	//MODDD - unused...?
+	//void EXPORT CDAudioTouch ( CBaseEntity *pOther );
+
 	void ActivateMultiTrigger( CBaseEntity *pActivator );
 	void EXPORT MultiWaitOver( void );
 	void EXPORT CounterUse( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value );
@@ -1230,11 +1233,17 @@ void CBaseTrigger :: HurtTouch ( CBaseEntity *pOther )
 			pev->impulse = 0;
 			if ( pOther->IsPlayer() )
 			{
-				int playerMask = 1 << (pOther->entindex() - 1);
+				//MODDD - comment below heeded.  If for some strange reason the player index is over 32, this won't happen.
+				// Not that it ever should?
+				// Anyway, player index's start at 1, not 0, so the "minus 1" makes sense.
+				int myIndex = pOther->entindex();
+				if (myIndex <= 32) {
+					int playerMask = 1 << (myIndex - 1);
 
-				// Mark this player as touched
-				// BUGBUG - There can be only 32 players!
-				pev->impulse |= playerMask;
+					// Mark this player as touched
+					// BUGBUG - There can be only 32 players!
+					pev->impulse |= playerMask;
+				}
 			}
 		}
 	}
@@ -1245,7 +1254,6 @@ void CBaseTrigger :: HurtTouch ( CBaseEntity *pOther )
 			return;
 		}
 	}
-
 
 
 	// If this is time_based damage (poison, radiation), override the pev->dmg with a 
@@ -1274,7 +1282,7 @@ void CBaseTrigger :: HurtTouch ( CBaseEntity *pOther )
 	if ( fldmg < 0 )
 		pOther->TakeHealth( -fldmg, m_bitsDamageInflict );
 	else
-		pOther->TakeDamage( pev, pev, fldmg, m_bitsDamageInflict );
+		pOther->TakeDamage( pev, pev, fldmg, m_bitsDamageInflict, DMG_MAP_TRIGGER );
 
 	// Store pain time so we can get all of the other entities on this frame
 	pev->pain_finished = gpGlobals->time;
@@ -1300,7 +1308,9 @@ void CBaseTrigger :: HurtTouch ( CBaseEntity *pOther )
 		if ( pev->spawnflags & SF_TRIGGER_HURT_TARGETONCE )
 			pev->target = 0;
 	}
-}
+
+
+}//END OF HurtTouch
 
 
 
@@ -1901,8 +1911,10 @@ int CChangeLevel::InTransitionVolume( CBaseEntity *pEntity, char *pVolumeName )
 // be moved across.
 int CChangeLevel::ChangeList( LEVELLIST *pLevelList, int maxList )
 {
-	edict_t	*pentChangelevel, *pentLandmark;
-	int		i, count;
+	edict_t* pentChangelevel;
+	edict_t* pentLandmark;
+	int i;
+	int count;
 
 	count = 0;
 
@@ -1915,7 +1927,7 @@ int CChangeLevel::ChangeList( LEVELLIST *pLevelList, int maxList )
 	pEdicttt = g_engfuncs.pfnPEntityOfEntIndex( 1 );
 
 	if ( pEdicttt ){
-		for ( int i = 1; i < gpGlobals->maxEntities; i++, pEdicttt++ ){
+		for (i = 1; i < gpGlobals->maxEntities; i++, pEdicttt++ ){
 			if ( pEdicttt->free )	// Not in use
 			continue;
 		
@@ -1942,7 +1954,7 @@ int CChangeLevel::ChangeList( LEVELLIST *pLevelList, int maxList )
 	pEdicttt = g_engfuncs.pfnPEntityOfEntIndex( 1 );
 
 	if ( pEdicttt ){
-		for ( int i = 1; i < gpGlobals->maxEntities; i++, pEdicttt++ ){
+		for (i = 1; i < gpGlobals->maxEntities; i++, pEdicttt++ ){
 			if ( pEdicttt->free )	// Not in use
 			continue;
 		
@@ -2084,15 +2096,10 @@ int CChangeLevel::ChangeList( LEVELLIST *pLevelList, int maxList )
 
 
 
-
-
-
-
-
 	pEdicttt = g_engfuncs.pfnPEntityOfEntIndex( 1 );
 
 	if ( pEdicttt ){
-		for ( int i = 1; i < gpGlobals->maxEntities; i++, pEdicttt++ ){
+		for (i = 1; i < gpGlobals->maxEntities; i++, pEdicttt++ ){
 			if ( pEdicttt->free )	// Not in use
 			continue;
 		
@@ -2123,12 +2130,13 @@ int CChangeLevel::ChangeList( LEVELLIST *pLevelList, int maxList )
 	}
 
 
-
-
-
 	return count;
 }
 
+
+
+
+//MODDD - NOTE. apparently called, never.  whoopsie.
 /*
 go to the next level for deathmatch
 only called if a time or frag limit has expired

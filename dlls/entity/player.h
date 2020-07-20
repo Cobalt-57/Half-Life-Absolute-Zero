@@ -225,9 +225,6 @@ public:
 	float			m_rgflSuitNoRepeatTime[CSUITNOREPEAT];	// how long to wait before allowing repeat
 	int				m_lastDamageAmount;		// Last damage taken
 
-	//MODDD - moved to CBaseMonster
-	//float			m_tbdPrev;				// Time-based damage timer
-
 	float			m_flgeigerRange;		// range to nearest radiation source
 	float			m_flgeigerDelay;		// delay per update of range msg to client
 	int				m_igeigerRangePrev;
@@ -240,7 +237,7 @@ public:
 
 	int				m_bitsHUDDamage;		// Damage bits for the current fame. These get sent to 
 												// the hude via the DAMAGE message
-	//MODDD - complimentary
+	//MODDD - complementary
 	int				m_bitsModHUDDamage;
 
 	BOOL			m_fInitHUD;				// True when deferred HUD restart msg needs to be sent
@@ -452,6 +449,12 @@ public:
 
 	char recentlyPlayedSound[CBSENTENCENAME_MAX];
 
+	BOOL recentMajorTriggerDamage;
+	float lastBlockDamageAttemptReceived;
+
+
+
+
 
 	//MODDD - some setter methods.
 	void setHealth(int newHealth);
@@ -509,6 +512,7 @@ public:
 	GENERATE_KILLED_PROTOTYPE_VIRTUAL
 
 	void onDelete(void);
+	void stopSelfSounds(void);
 
 	virtual Vector BodyTarget( const Vector &posSrc ) { return Center( ) + pev->view_ofs * RANDOM_FLOAT( 0.5, 1.1 ); };		// position to shoot at
 	

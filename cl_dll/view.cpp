@@ -130,7 +130,7 @@ extern cvar_t* scr_ofsx, * scr_ofsy, * scr_ofsz;
 extern cvar_t* cl_vsmoothing;
 
 extern void RenderFog(void);
-void V_DropPunchAngle(float frametime, float* ev_punchangle);
+void V_DropPunchAngle(float frametime, float* arg_ev_punchangle);
 void VectorAngles(const float* forward, float* angles);
 
 
@@ -269,6 +269,7 @@ float V_CalcBob(struct ref_params_s* pparams)
 	// (don't count Z, or jumping messes it up)
 	VectorCopy_f(pparams->simvel, vel);
 	vel[2] = 0;
+
 
 	bob = sqrt(vel[0] * vel[0] + vel[1] * vel[1]) * cl_bob->value;
 	bob = bob * 0.3 + bob * 0.7 * sin(cycle);
@@ -550,11 +551,13 @@ void V_CalcNormalRefdef(struct ref_params_s* pparams)
 	if (EASY_CVAR_GET(myCameraSucks) == 1) {
 		return;
 	}
-	cl_entity_t* ent, * view;
-	int				i;
-	vec3_t			angles;
-	float			bob, waterOffset;
-	static viewinterp_t		ViewInterp;
+	cl_entity_t* ent;
+	cl_entity_t* view;
+	int i;
+	vec3_t		angles;
+	float		bob;
+	float		waterOffset;
+	static viewinterp_t ViewInterp;
 
 	static float oldz = 0;
 	static float lasttime;
@@ -613,7 +616,7 @@ void V_CalcNormalRefdef(struct ref_params_s* pparams)
 	waterOffset = 0;
 	if (pparams->waterlevel >= 2)
 	{
-		int		i, contents, waterDist, waterEntity;
+		int contents, waterDist, waterEntity;
 		vec3_t	point;
 		waterDist = cl_waterdist->value;
 
@@ -855,7 +858,6 @@ void V_CalcNormalRefdef(struct ref_params_s* pparams)
 		(pparams->smoothing && (pparams->maxclients > 1)))
 	{
 		int foundidx;
-		int i;
 		float t;
 
 		if (cl_vsmoothing->value < 0.0)
@@ -1857,14 +1859,14 @@ V_DropPunchAngle
 
 =============
 */
-void V_DropPunchAngle(float frametime, float* ev_punchangle)
+void V_DropPunchAngle(float frametime, float* arg_ev_punchangle)
 {
 	float	len;
 
-	len = VectorNormalize(ev_punchangle);
+	len = VectorNormalize(arg_ev_punchangle);
 	len -= (10.0 + len * 0.5) * frametime;
 	len = max(len, 0.0);
-	VectorScale(ev_punchangle, len, ev_punchangle);
+	VectorScale(arg_ev_punchangle, len, arg_ev_punchangle);
 }
 
 /*

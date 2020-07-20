@@ -1218,5 +1218,9 @@ cl_viewroll (1) - BOOL. If 1, other CVars cl_viewrollangle and cl_viewrollspeed 
 
 drawDebugCrowbar (0) - BOOL.  If 1, shows lines that help understand how the crowbar finds a target to 'hit'.
 
+blastExtraArmorDamageMode (0) - MODEVAR.  Controls when to apply the double-damage bonus from explosions to player armor.
+0: retail behavior.  Only applies in multiplayer.
+1: forced singleplayer behavior.  Never applies.
+2: forced multiplayer behavior.  Always applies.
 
 

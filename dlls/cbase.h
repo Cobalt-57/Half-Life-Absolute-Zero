@@ -1078,6 +1078,16 @@ push_trigger_data
 class CWorld : public CBaseEntity
 {
 public:
+	//Must reset these to defaults in case of changing the map.
+	float m_fl_node_linktest_height;
+	float m_fl_node_hulltest_height;
+	BOOL m_f_node_hulltest_heightswap;
+	BOOL m_f_map_anyAirNodes;
+
+	BOOL skyboxEverSet;
+
+
+
 	//MODDD - constructor?
 	CWorld(void);
 
@@ -1102,12 +1112,6 @@ public:
 	void getCustomMapSettingsFromGlobal(void);
 
 
-	
-	//Must reset these to defaults in case of changing the map.
-	float m_fl_node_linktest_height;
-	float m_fl_node_hulltest_height;
-	BOOL m_f_node_hulltest_heightswap;
-	BOOL m_f_map_anyAirNodes;
 
 	BOOL IsWorld(void);
 	BOOL IsWorldAffiliated(void);

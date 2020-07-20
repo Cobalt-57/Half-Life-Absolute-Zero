@@ -60,4 +60,11 @@ Various new HEV sounds able to be called for from sentences.txt, such as HEV_E1 
 Thrown grenades no longer jitter like the dickens.
 Yes, those were supposed to be animations.
 
+The 'view bob as though moving while killed and not moving' glitch fixed... maybe.
+
+NEW COMMAND:  getmap, currentmap, thismap,   to get the name of the current map.  Imagine that!
+
+The default skybox "desert" is enforced if a map lacks a "skyname" keyword to specify it.
+That is, a map that does not give a skyname (like crossfire.bsp) no longer borrows the skybox from the previously run map ('night' if the player was previously on a2a2.bsp, for example)
+
 

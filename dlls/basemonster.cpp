@@ -177,13 +177,19 @@ TYPEDESCRIPTION	CBaseMonster::m_SaveData[] =
 	//MODDD - removed.
 	//DEFINE_FIELD( CBaseMonster, m_flNextAttack, FIELD_TIME ),
 	DEFINE_FIELD( CBaseMonster, m_bitsDamageType, FIELD_INTEGER ),
+	DEFINE_FIELD( CBaseMonster, m_bitsDamageTypeMod, FIELD_INTEGER ),
+	
+
+	DEFINE_FIELD( CBaseMonster, m_tbdPrev, FIELD_TIME ),
 	DEFINE_ARRAY( CBaseMonster, m_rgbTimeBasedDamage, FIELD_CHARACTER, CDMG_TIMEBASED ),
+	DEFINE_ARRAY( CBaseMonster, m_rgbTimeBasedFirstFrame, FIELD_BOOLEAN, CDMG_TIMEBASED ),
+
+
 	DEFINE_FIELD( CBaseMonster, m_bloodColor, FIELD_INTEGER ),
 	DEFINE_FIELD( CBaseMonster, m_failSchedule, FIELD_INTEGER ),
 	DEFINE_FIELD( CBaseMonster, hardSetFailSchedule, FIELD_BOOLEAN ),  //MODDD - saved now too.
 	DEFINE_FIELD( CBaseMonster, scheduleSurvivesStateChange, FIELD_BOOLEAN ),  //MODDD - saved now too.
 
-	
 	
 
 	DEFINE_FIELD( CBaseMonster, m_flHungryTime, FIELD_TIME ),

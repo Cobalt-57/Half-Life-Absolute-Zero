@@ -474,7 +474,9 @@ givedist - works like "give", but spawns something a distance from you (see "off
 givelook - works like "give", but spawns something where your cursor intersects with a surface with a vertical offset (see "offsetgivelookvertica"l below).
 ent_create - same as "givelook".  Provided as an alias for those familiar with the Source 2 engine, since the result seems similar.
 
-removeFireFly - command, just call on its own.  Removes the glowing yellow dots from monsters that currently have it.
+getmap, currentmap, thismap - command.  Gets the name of the current map.  No more digging through a bunch of garbage from "status".
+
+removeFireFly - command.  Removes the glowing yellow dots from monsters that currently have it.
 showBounds - command.  Do when targeting a particular NPC to display its two types of main bounds (smaller collision and larger hit bounds) as two separate red boxes of dark red dotted lines.  These boxes last for 30 seconds and do not move with the entity.
 showBoundsAll - command.  Applies to all entities in a fair radius of the player.  Be careful, as too many entities will cause it to fail.  Best use "showBounds" individually when possible.
 
@@ -1697,8 +1699,6 @@ IMPORTANT: Cinematics (Scriped_Sequence, check your .fgd) now have a new option 
 Insert a new line like this, after the latest (5):
 		6 : "Instantaneous NOSCRIPT"
 ...Same as teleport (4), but this should stop the issue with monsters getting stuck in the "Scripted" state, which turns off AI most of the time.
-
-
 
 
 
