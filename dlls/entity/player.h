@@ -359,14 +359,12 @@ public:
 	float cheat_nogaussrecoilMem;
 	float gaussRecoilSendsUpInSPMem;
 
+	BOOL recentlyGibbed;
 
 	int recoveryIndex;
 	int recoveryDelay;
-
-	int recoveryIndexMem;
 	int recoveryDelayMin;
 
-	BOOL recentlyGibbed;
 
 	BOOL airTankWaitingStart;
 
@@ -451,7 +449,7 @@ public:
 
 	BOOL recentMajorTriggerDamage;
 	float lastBlockDamageAttemptReceived;
-
+	float recentRevivedTime;
 
 
 
@@ -587,6 +585,8 @@ public:
 	void DeathSound ( void );
 	//MODDD - new argument possibility, see player.cpp for more info.
 	void DeathSound ( BOOL plannedRevive);
+
+	void declareRevivelessDead(void);
 
 
 	int Classify ( void );

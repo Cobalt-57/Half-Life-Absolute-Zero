@@ -2237,15 +2237,15 @@ void EMIT_SOUND_SUIT(edict_t *entity, const char *sample)
 //MODDD - new.  Similar to EMIT_SOUND_SUIT, but have the SND_STOP to stop the sound / sentence.
 void STOP_SOUND_SUIT(edict_t *entity, const char *sample)
 {
-	float fvol;
+	const float fvol = 1;
 	int pitch = PITCH_NORM;
 	
-	fvol = clamp(CVAR_GET_FLOAT("suitvolume")/2, 0, 1);
+	///fvol = clamp(CVAR_GET_FLOAT("suitvolume")/2, 0, 1);
 
 	//if (RANDOM_LONG(0,1))
 	//	pitch = RANDOM_LONG(0,6) + 98;
 
-	if (fvol > 0.05)
+	//if (fvol > 0.02)
 		EMIT_SOUND_DYN(entity, CHAN_STATIC, sample, fvol, ATTN_NORM, SND_STOP, pitch);
 }
 
@@ -2259,7 +2259,7 @@ void EMIT_GROUPID_SUIT(edict_t *entity, int isentenceg)
 	if (RANDOM_LONG(0,1))
 		pitch = RANDOM_LONG(0,6) + 98;
 
-	if (fvol > 0.05)
+	if (fvol > 0.02)
 		SENTENCEG_PlayRndI(entity, isentenceg, fvol, ATTN_NORM, 0, pitch);
 }
 
@@ -2273,7 +2273,7 @@ void EMIT_GROUPNAME_SUIT(edict_t *entity, const char *groupname)
 	if (RANDOM_LONG(0,1))
 		pitch = RANDOM_LONG(0,6) + 98;
 
-	if (fvol > 0.05)
+	if (fvol > 0.02)
 		SENTENCEG_PlayRndSz(entity, groupname, fvol, ATTN_NORM, 0, pitch);
 }
 

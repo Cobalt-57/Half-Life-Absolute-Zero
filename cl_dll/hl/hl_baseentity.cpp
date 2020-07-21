@@ -737,6 +737,10 @@ void CBaseMonster :: RunAI ( void ) {}
 GENERATE_KILLED_IMPLEMENTATION_DUMMY_CLIENT(CBaseMonster)
 //void CBaseMonster :: Killed( entvars_t *pevAttacker, int iGib ) {}
 
+
+void CBasePlayer::declareRevivelessDead(void) {}
+
+
 int CBaseMonster :: TakeHealth (float flHealth, int bitsDamageType) { return 0; }
 
 //MODDD

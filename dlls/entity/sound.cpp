@@ -1147,7 +1147,7 @@ int USENTENCEG_Pick(int isentenceg, char *szfound)
 		{
 			strcpy(szfound, "!");
 			strcat(szfound, szgroupname);
-			//MODDD - why not %u instead of %d ?
+			//MODDD - why not %u?   ipick is unsigned, less fitting for %d
 			sprintf(sznum, "%u", ipick);
 			strcat(szfound, sznum);
 

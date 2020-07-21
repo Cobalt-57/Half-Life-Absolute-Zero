@@ -715,7 +715,7 @@
 #define DEFAULT_drawDebugCrowbar 0
 
 #define DEFAULT_blastExtraArmorDamageMode 0
-
+#define DEFAULT_hud_batteryhiddendead 1
 
 
 
@@ -2822,6 +2822,7 @@
 	EASY_CVAR_DECLARATION_SERVER(cl_viewroll)\
 	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY(drawDebugCrowbar)\
 	EASY_CVAR_DECLARATION_SERVER(blastExtraArmorDamageMode)\
+	EASY_CVAR_DECLARATION_SERVER(hud_batteryhiddendead)\
 	DUMMY
 
 
@@ -3327,6 +3328,7 @@
 	EASY_CVAR_DECLARATION_CLIENT(cl_viewroll)\
 	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY(drawDebugCrowbar)\
 	EASY_CVAR_DECLARATION_CLIENT(blastExtraArmorDamageMode)\
+	EASY_CVAR_DECLARATION_CLIENT(hud_batteryhiddendead)\
 	DUMMY
 
 #define EASY_CVAR_UPDATE_SERVER_MASS\
@@ -3830,6 +3832,7 @@
 	EASY_CVAR_UPDATE_SERVER(cl_viewroll)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(drawDebugCrowbar)\
 	EASY_CVAR_UPDATE_SERVER(blastExtraArmorDamageMode)\
+	EASY_CVAR_UPDATE_SERVER(hud_batteryhiddendead)\
 	DUMMY
 
 #define EASY_CVAR_UPDATE_CLIENT_MASS\
@@ -4333,6 +4336,7 @@
 	EASY_CVAR_UPDATE_CLIENT(cl_viewroll)\
 	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY(drawDebugCrowbar)\
 	EASY_CVAR_UPDATE_CLIENT(blastExtraArmorDamageMode)\
+	EASY_CVAR_UPDATE_CLIENT(hud_batteryhiddendead)\
 	DUMMY
 
 #define EASY_CVAR_CREATE_SERVER_SETUP_MASS\
@@ -4836,6 +4840,7 @@
 	EASY_CVAR_CREATE_SERVER_SETUP_A_CLIENTONLY(cl_viewroll)\
 	EASY_CVAR_CREATE_SERVER_SETUP_A_SERVERONLY_DEBUGONLY(drawDebugCrowbar)\
 	EASY_CVAR_CREATE_SERVER_SETUP_A_SERVERONLY(blastExtraArmorDamageMode)\
+	EASY_CVAR_CREATE_SERVER_SETUP_A_CLIENTONLY(hud_batteryhiddendead)\
 	DUMMY
 
 #define EASY_CVAR_CREATE_SERVER_MASS\
@@ -5339,6 +5344,7 @@
 	EASY_CVAR_CREATE_SERVER_A_CLIENTONLY(cl_viewroll)\
 	EASY_CVAR_CREATE_SERVER_A_SERVERONLY_DEBUGONLY(drawDebugCrowbar)\
 	EASY_CVAR_CREATE_SERVER_A_SERVERONLY(blastExtraArmorDamageMode)\
+	EASY_CVAR_CREATE_SERVER_A_CLIENTONLY(hud_batteryhiddendead)\
 	DUMMY
 
 
@@ -5843,6 +5849,7 @@
 	EASY_CVAR_CREATE_CLIENT_A_CLIENTONLY(cl_viewroll)\
 	EASY_CVAR_CREATE_CLIENT_A_SERVERONLY_DEBUGONLY(drawDebugCrowbar)\
 	EASY_CVAR_CREATE_CLIENT_A_SERVERONLY(blastExtraArmorDamageMode)\
+	EASY_CVAR_CREATE_CLIENT_A_CLIENTONLY(hud_batteryhiddendead)\
 	DUMMY
 
 #define EASY_CVAR_RESET_MASS\
@@ -6345,6 +6352,7 @@
 	EASY_CVAR_RESET_CLIENTONLY(cl_viewroll)\
 	EASY_CVAR_RESET_DEBUGONLY(drawDebugCrowbar)\
 	EASY_CVAR_RESET(blastExtraArmorDamageMode)\
+	EASY_CVAR_RESET(hud_batteryhiddendead)\
 	DUMMY
 
 #define EASY_CVAR_EXTERN_MASS\
@@ -6848,5 +6856,6 @@
 	EASY_CVAR_EXTERN(cl_viewroll)\
 	EASY_CVAR_EXTERN_DEBUGONLY(drawDebugCrowbar)\
 	EASY_CVAR_EXTERN(blastExtraArmorDamageMode)\
+	EASY_CVAR_EXTERN(hud_batteryhiddendead)\
 	DUMMY
 

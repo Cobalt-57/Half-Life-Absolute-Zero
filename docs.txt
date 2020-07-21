@@ -631,7 +631,7 @@ stukaAdvancedCombat - boolean, defaults to 0.  If 1, the stuka will hover instea
 
 
 
-cl_germancensorshipship - when 1, all red blood is colored black-grey, all human-gibs are replaced with robotic ones, and most human models are replaced with robots.  Germany be wack yo.
+sv_germancensorshipship - when 1, all red blood is colored black-grey, all human-gibs are replaced with robotic ones, and most human models are replaced with robots.  Germany be wack yo.
 *NOT TO BE CONFUSED WITH THE "CONTENT LOCK" FEATURE UNDER title screen -> Options -> Lock tab
 *"Content Lock" appears to set the following four CVars to 0 or 1 dependong on whether it is off or on:
 violence_ablood - show alien blood.  Never draws if 0.
@@ -641,9 +641,9 @@ violence_hgibs - ditto for people.
 *Note that if the "Content Lock" is turned on (violence_blood's are 1), not even the black-grey German blood will  be rendered.
 *"Content Lock" appears to be checked at game startup, turning on / off all violence_ CVars.  Changing any violence_ manually will still affect the present game regardless of Content lock setting, but changes would be reverted at next startup.
 *existing script MAY try to refer to some CVar "sv_language", but the game claims this does not exist.
-This name is NOT being reused to avoid any chance of conflict (think of "cl_germancensorshipship" just being "1 = German, 0 = Anything else" as a replacement)
+This name is NOT being reused to avoid any chance of conflict (think of "sv_germancensorshipship" just being "1 = German, 0 = Anything else" as a replacement)
 
-allowGermanModels (1) - BOOL. When on, substitution German robot models will be used instead of human ones where they exist. Requires cl_germancensorshipship to be 1.
+allowGermanModels (1) - BOOL. When on, substitution German robot models will be used instead of human ones where they exist. Requires sv_germancensorshipship to be 1.
 
 germanRobotGibs (1) - BOOL. Whether robots can spawn gibs from g_hgibs.mdl when destroyed. If off, robots simply fade out just like they would if the robot replacement models weren't available (allowGermanModels is off).
 ~Requires "allowGermanModels" to be on for robot model replacements first.
@@ -1683,9 +1683,9 @@ CVar is also hidden and can't be changed until you are ingame (when loading is a
 can see printouts for saving though on editing any hidden CVar.
 
 For instance, ingame, in a release build, in console, try
-cl_germancensorshipship 1
+sv_germancensorshipship 1
 
-Then exit the game and restart.  It should remember "cl_germancensorshipship" being something other than the
+Then exit the game and restart.  It should remember "sv_germancensorshipship" being something other than the
 default of 0.
 
 Files are saved to ...<hl.exe's folder>\absZeroMem.txt

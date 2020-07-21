@@ -369,6 +369,8 @@ TYPEDESCRIPTION	CBasePlayer::m_playerSaveData[] =
 	//DEFINE_FIELD(CBasePlayer, egonAltFireOnVar, FIELD_FLOAT),
 	
 	DEFINE_FIELD(CBasePlayer, recoveryIndex, FIELD_INTEGER),
+	DEFINE_FIELD(CBasePlayer, recoveryDelay, FIELD_TIME),
+	DEFINE_FIELD(CBasePlayer, recoveryDelayMin, FIELD_TIME),
 	
 	DEFINE_FIELD(CBasePlayer, recentlyGibbed, FIELD_BOOLEAN),
 	DEFINE_FIELD(CBasePlayer, airTankWaitingStart, FIELD_BOOLEAN),
@@ -388,7 +390,8 @@ TYPEDESCRIPTION	CBasePlayer::m_playerSaveData[] =
 
 	DEFINE_FIELD(CBasePlayer, recentMajorTriggerDamage, FIELD_BOOLEAN),
 	DEFINE_FIELD(CBasePlayer, lastBlockDamageAttemptReceived, FIELD_TIME),
-
+	DEFINE_FIELD(CBasePlayer, recentRevivedTime, FIELD_TIME),
+	
 	
 	//DEFINE_FIELD( CBasePlayer, m_fDeadTime, FIELD_FLOAT ), // only used in multiplayer games
 	//DEFINE_FIELD( CBasePlayer, m_fGameHUDInitialized, FIELD_INTEGER ), // only used in multiplayer games
@@ -613,7 +616,15 @@ void CBasePlayer :: DeathSound( BOOL plannedRevive )
 		//	SetSuitUpdate("!HEV_E3", FALSE, SUIT_REPEAT_OK, 4.2f);
 		//}
 		//else {
+		//     SENTENCEG_Stop
+
+
+		// MODDD - NOTICE!!!  Not supporting remembering the most recently played sentence just to be used twice in the player class.
+		// Would need to have a copy of the sentence recently played at all times to know what to stop, which just isn't worth it.
+		// This rarely ever comes up.  So, we're good.  Really.
+
 			EMIT_GROUPNAME_SUIT(ENT(pev), "HEV_DEAD");
+			//strcpy(recentlyPlayedSound, "HEV_DEAD");
 		//}
 		
 	}else{
@@ -635,12 +646,28 @@ void CBasePlayer :: DeathSound( BOOL plannedRevive )
 		*/
 		m_flSuitUpdate = gpGlobals->time;  //say the next line now!
 		EMIT_GROUPNAME_SUIT(ENT(pev), "HEV_DEADALT");
+		//strcpy(recentlyPlayedSound, "HEV_DEADALT");
 	}
 }
 
+
+
+
+// For having planned a revive, but deciding against it (fell too far on hitting the ground, stuck in geometry)
+void CBasePlayer::declareRevivelessDead(void) {
+	recoveryIndex = 3;
+	if (EASY_CVAR_GET(timedDamageDeathRemoveMode) > 0) {
+		attemptResetTimedDamage(TRUE);
+	}
+	if (EASY_CVAR_GET(batteryDrainsAtDeath) == 1) {
+		SetAndUpdateBattery(0);
+	}
+}
+
+
+
 // override takehealth
 // bitsDamageType indicates type of damage healed. 
-
 int CBasePlayer :: TakeHealth( float flHealth, int bitsDamageType )
 {
 	return CBaseMonster :: TakeHealth (flHealth, bitsDamageType);
@@ -867,8 +894,8 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBasePlayer)
 	
 
 
-	if ((bitsDamageTypeMod & (DMG_MAP_TRIGGER | DMG_MAP_BLOCKED)) && flDamage >= 20) {
-		// intent for damage was over 20?
+	if ((bitsDamageTypeMod & (DMG_MAP_TRIGGER | DMG_MAP_BLOCKED)) && flDamage >= 60) {
+		// intent for damage was too much?  Likely you're not meant to recover.
 		recentMajorTriggerDamage = TRUE;
 	}
 	else {
@@ -953,11 +980,11 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBasePlayer)
 	//!!!  not that this matters really.
 	// Athe moment bitmask 'DMG_ARMORBLOCKEXCEPTION' is empty, so any AND operation (&) with it must produce 0.
 	// Which is ok, look below.  That makes  "FALSE || ...",   which just makes this operation have no effect on the if-condition.
-	//Severity	Code	Description	Project	File	Line	Suppression State
 	//Warning	C6313	Incorrect operator:  zero - valued flag cannot be tested with bitwise - and .Use an equality test to check for zero - valued flags.
+	// ALSO, adding DMG_MAP_TRIGGER to armor exceptions.
 
 	if (pev->armorvalue && !(bitsDamageType & (DMG_FALL | DMG_DROWN)) && 
-		!(bitsDamage & DMG_ARMORBLOCKEXCEPTION || bitsDamageMod & DMG_ARMORBLOCKEXCEPTIONMOD ) &&
+		!(bitsDamage & DMG_ARMORBLOCKEXCEPTION || bitsDamageMod & DMG_ARMORBLOCKEXCEPTIONMOD || bitsDamageMod & DMG_MAP_TRIGGER) &&
 		(  !(bitsDamageMod & DMG_TIMEDEFFECTIGNORE)   &&   (EASY_CVAR_GET(timedDamageIgnoresArmor) == 0 || !(bitsDamageMod & (DMG_TIMEDEFFECT) ) ))
 		
 	)  // armor doesn't protect against fall or drown damage!  ... or "DMG_TIMEDEFFECTIGNORE".
@@ -1762,15 +1789,8 @@ GENERATE_KILLED_IMPLEMENTATION(CBasePlayer)
 
 
 
-
 	if (recentlyGibbed) {
-		if (EASY_CVAR_GET(timedDamageDeathRemoveMode) > 0) {
-			attemptResetTimedDamage(TRUE);
-		}
-
-		if (EASY_CVAR_GET(batteryDrainsAtDeath) == 1) {
-			SetAndUpdateBattery(0);
-		}
+		declareRevivelessDead();
 
 		// clear out the suit message cache so we don't keep chattering
 		// already done earlier!
@@ -1785,34 +1805,47 @@ GENERATE_KILLED_IMPLEMENTATION(CBasePlayer)
 
 	}
 	else if (recentMajorTriggerDamage) {
-		// For now, if the player has adrenaline and hasn't been gibbed, tell "DeathSound" this.
-		if (EASY_CVAR_GET(batteryDrainsAtAdrenalineMode) == 1) {
-			SetAndUpdateBattery(0);
-		}
-		// also, this CVar.
-		if (EASY_CVAR_GET(timedDamageReviveRemoveMode) == 1) {
-			attemptResetTimedDamage(TRUE);
-		}
-		// custom death sound
+		// gonna die.
+		declareRevivelessDead();
+
+		m_flSuitUpdate = gpGlobals->time;  //say the next line now!
 		SetSuitUpdate("!HEV_E3", FALSE, SUIT_REPEAT_OK, 4.2f);
+	}
+	else if (gpGlobals->time <= recentRevivedTime + 10) {
+		// If it's been too soon since the previous revive, report failure.
+
+		declareRevivelessDead();
+		//m_flSuitUpdate = gpGlobals->time;  //say the next line now!
+		//SetSuitUpdate("!HEV_E3", FALSE, SUIT_REPEAT_OK, 4.2f);
+		DeathSound(FALSE);
 	}
 	else if (m_rgItems[ITEM_ADRENALINE] > 0) {
 		// For now, if the player has adrenaline and hasn't been gibbed, tell "DeathSound" this.
 		if(EASY_CVAR_GET(batteryDrainsAtAdrenalineMode) == 1){
 			SetAndUpdateBattery(0);
 		}
-		// also, this CVar.
 		if(EASY_CVAR_GET(timedDamageReviveRemoveMode) == 1){
 			attemptResetTimedDamage(TRUE);
 		}
-		DeathSound(TRUE);
+
+		//if (gpGlobals->time > lastBlockDamageAttemptReceived + 1.5) {
+		//	// good chance we can revive.
+			DeathSound(TRUE);
+		//}
+		//else {
+		//	// not high hopes.
+		//	DeathSound(FALSE);
+		//}
+
+		// get started!
+		recoveryIndex = 0;
+
+		recoveryDelay = gpGlobals->time + 6;
+		recoveryDelayMin = gpGlobals->time + 0.4f;
+
 	}else{
-		if(EASY_CVAR_GET(timedDamageDeathRemoveMode) > 0){
-			attemptResetTimedDamage(TRUE);
-		}
-		if(EASY_CVAR_GET(batteryDrainsAtDeath) == 1){
-			SetAndUpdateBattery(0);
-		}
+		// gonna die.
+		declareRevivelessDead();
 		DeathSound(FALSE);
 	}
 	
@@ -1865,7 +1898,8 @@ void CBasePlayer::stopSelfSounds(void) {
 
 	// seems this usually works.
 	if (recentlyPlayedSound[0] != '\0') {
-		EMIT_SOUND_DYN(ENT(pev), CHAN_STATIC, recentlyPlayedSound, 1, ATTN_NORM, SND_STOP, 100);
+		//EMIT_SOUND_DYN(ENT(pev), CHAN_STATIC, recentlyPlayedSound, 1, ATTN_NORM, SND_STOP, 100);
+		STOP_SOUND_SUIT(ENT(pev), recentlyPlayedSound);
 		recentlyPlayedSound[0] = '\0';  //cleared.
 	}
 
@@ -2488,99 +2522,119 @@ void CBasePlayer::PlayerDeathThink(void)
 	
 	//recoveryIndex:
 	//-1: not out of health or in the dead / incapacitated state.
+	//    Changed from this immediately on the player's Killed call!
 	// 0: in incapacitated state, planned to revive, waiting for delay start
 	//    (when on ground, or after 6 seconds pass, just start anyways).
-	// 1: done waiting, force a revive delay.
-	// 2: can revive. (skipped, revive is just done then and there, but could be used
-	//    to let the user click and revive I suppose)
-	// 3: dead; can NOT revive, schedule respawn or let the player click-out.
+	//    Can be interrupted by being stuck in map geometry (like blocking a func_rotating).
+	//    This skips to 3 (dead), forbids revive.
+	//    Requires being on the ground or waiting for 6 seconds without map entanglement.
+	// 1: done waiting, beings playing the antidote FVOX line which gives the antidote.
+	// 2: antidote injected, waiting to respawn the player.
+	// -----------------------------------------------------
+	// 3: super dead; can NOT revive.  Respawn or let the player click-out to load a save.
+
+
 
 
 	//MODDD - adrenaline script "injection" - no pun intended.
-	//When "dead", and there is at least 1 Adrenaline, use it and respawn in-place in a few seconds.
-	if( recoveryIndex == -1){
-		if( !recentlyGibbed && this->m_rgItems[ITEM_ADRENALINE] > 0){
-			recoveryIndex = 0;
-			recoveryIndexMem = 0;
-			recoveryDelay = gpGlobals->time + 6;
-			recoveryDelayMin = gpGlobals->time + 0.4f;
-
-			if(EASY_CVAR_GET(timedDamageReviveRemoveMode) == 2){
-				attemptResetTimedDamage(TRUE);
-			}
-		}else{
-			recoveryIndex = 3;
-			recoveryIndexMem = 3;
-		}
-	}
-
-	if (!recentlyGibbed && pev->flags & FL_ONGROUND && m_flFallVelocity > 600) {
-		// nope, ded then.   No need for authentic gibbing but just count this as non-revivable.
-		recentlyGibbed = TRUE;
-		pev->velocity = g_vecZero;
-		EMIT_SOUND_FILTERED(ENT(pev), CHAN_ITEM, "common/bodysplat.wav", 1, ATTN_NORM, FALSE);
-
-		m_flFallVelocity = 0;  //I think this is safe?
-		SetSuitUpdate("!HEV_E3", FALSE, SUIT_REPEAT_OK, 4.2f);
-	}
-
+	
 
 	if(recoveryIndex == 0){
 		// by the way, "pev->model != 0" is a gib-check.  The model being null (== 0) means, gibbed.  No "body" to recover.
 		// nah, just use "recentlyGibbed", new var.
 		// search "iGib" for more details on gibbing here (and in basemonster.h).
-		if( !recentlyGibbed && !recentMajorTriggerDamage && this->m_rgItems[ITEM_ADRENALINE] > 0){
 
-			// note that, if the player is not on the ground BUT otherwise meets conditions to recover,
-			// the respawn will still be stalled until the player hits the ground (where the timer starts and
-			// the player revives).
-			// Even if on the ground, a minimum time (recoveryDelayMin) must have passed to start, including midair time, usually small.
-			if ( (FBitSet(pev->flags, FL_ONGROUND) && gpGlobals->time >= recoveryDelayMin && gpGlobals->time > lastBlockDamageAttemptReceived + 1.5 ) ){
-				// can recover.
-				if(!adrenalineQueued){
-					adrenalineQueued = TRUE;
-					SetSuitUpdateEventFVoxCutoff("!HEV_ADR_USE", FALSE, SUIT_REPEAT_OK, SUITUPDATETIME, TRUE, 0.41 - 0.07, &CBasePlayer::consumeAdrenaline, 0.41 - 0.07 + 0.55);
-				}
-				//if(revived){
-					// If revived, send the signal to reset falling velocity.
-					g_engfuncs.pfnSetPhysicsKeyValue( edict(), "res", "1" );
-				//}
-			}
-			else {
-				if (gpGlobals->time >= recoveryDelay) {
-					// Took too long?  Make a decision now.
 
-					if (gpGlobals->time > lastBlockDamageAttemptReceived + 1.5) {
-						// not recently damaged by the map?  Try a revive.
+		float fallSpeedToleranceMulti = 1;
+		float fallDamageReduction = 1;
+		if (jumpForceMultiMem > 1) {
+			//a jump force multiple above 1 will increase the tolerance for falls.
+			fallSpeedToleranceMulti = sqrt(jumpForceMultiMem);
+			fallDamageReduction = jumpForceMultiMem;
+		}
+		// Hit the ground while waiting for a revive?  Did we hit the ground too hard?
+		if ((pev->flags & FL_ONGROUND) && m_flFallVelocity > PLAYER_MAX_SAFE_FALL_SPEED * fallSpeedToleranceMulti) {
+			// nope, ded then.   No need for authentic gibbing but just count this as non-revivable.
+			//recentlyGibbed = TRUE;
+			pev->movetype = MOVETYPE_NONE;
+			ClearBits(pev->flags, FL_ONGROUND);
+			pev->velocity = g_vecZero;
+			// no need to set pev->deadflag to DEAD_DEAD, that would've been handled by the death animation finishing above.  I think.
+
+			EMIT_SOUND_FILTERED(ENT(pev), CHAN_ITEM, "common/bodysplat.wav", 1, ATTN_NORM, FALSE);
+
+			m_flFallVelocity = 0;  //I think this is safe?  No need to handle this again
+			m_flSuitUpdate = gpGlobals->time;
+			SetSuitUpdate("!HEV_E3", FALSE, SUIT_REPEAT_OK, 4.2f);
+
+			declareRevivelessDead();
+		}// END OF fall velocity check
+
+
+
+		if (recoveryIndex == 0) {
+			// only bother with any of this, if not dead from fall impact.
+			if (!recentMajorTriggerDamage && this->m_rgItems[ITEM_ADRENALINE] > 0) {
+
+				// note that, if the player is not on the ground BUT otherwise meets conditions to recover,
+				// the respawn will still be stalled until the player hits the ground (where the timer starts and
+				// the player revives).
+				// Even if on the ground, a minimum time (recoveryDelayMin) must have passed to start, including midair time, usually small.
+
+				if (pev->flags & FL_ONGROUND) {
+
+					if (gpGlobals->time >= recoveryDelayMin && gpGlobals->time > lastBlockDamageAttemptReceived + 1.5) {
+						// can recover.
 						if (!adrenalineQueued) {
+							recoveryIndex = 1;
+							adrenalineQueued = TRUE;
+							SetSuitUpdateEventFVoxCutoff("!HEV_ADR_USE", FALSE, SUIT_REPEAT_OK, SUITUPDATETIME, TRUE, 0.41 - 0.07, &CBasePlayer::consumeAdrenaline, 0.41 - 0.07 + 0.55);
+						}
+						//if(revived){
+							// If revived, send the signal to reset falling velocity.
+						g_engfuncs.pfnSetPhysicsKeyValue(edict(), "res", "1");
+						//}
+					}
+
+				}
+
+				if (recoveryIndex == 0) {
+					// Only check for waiting too long to revive / interrupting from map-inflicted damage if
+					// we're not already trying to revive.
+					if (gpGlobals->time >= recoveryDelay - 3 && !(gpGlobals->time > lastBlockDamageAttemptReceived + 1.5)) {
+						// 3 seconds away from the max recovery delay, and still recent map-inflicted damage?
+						// Give up.
+						m_flSuitUpdate = gpGlobals->time;
+						SetSuitUpdate("!HEV_E2", FALSE, SUIT_REPEAT_OK, 4.2f);
+
+						declareRevivelessDead();
+					}
+					else if (gpGlobals->time >= recoveryDelay) {
+						// Took too long?  Make a decision now.  Reviving as being blocked by map damage should've happened sooner if it would've canceled this.
+						if (!adrenalineQueued) {
+							recoveryIndex = 1;
 							adrenalineQueued = TRUE;
 							SetSuitUpdateEventFVoxCutoff("!HEV_ADR_USE", FALSE, SUIT_REPEAT_OK, SUITUPDATETIME, TRUE, 0.41 - 0.07, &CBasePlayer::consumeAdrenaline, 0.41 - 0.07 + 0.55);
 						}
 						g_engfuncs.pfnSetPhysicsKeyValue(edict(), "res", "1");
 					}
-					else {
-						// Critical failure.
-						SetSuitUpdate("!HEV_E2", FALSE, SUIT_REPEAT_OK, 4.2f);
-
-						recoveryIndex = 3;
-						recoveryIndexMem = 3;
-					}
-				}
+				}//END OF recoveryIndex == 0 check... again
 
 			}
+			else {
+				// Some condition went bad during this time?
+				// Can not recover.  Let ordinary respawning handle this situation.
+				m_flSuitUpdate = gpGlobals->time;
+				SetSuitUpdate("!HEV_E3", FALSE, SUIT_REPEAT_OK, 4.2f);
+				declareRevivelessDead();
+			}
+		}//END OF recoveryIndex == 0 check... again.
+	}//END OF huge-ass recoveryIndex == 0 check
 
-		}else{
-			// can not recover.  Let ordinary respawn-mechanisms handle this situation.
-			recoveryIndex = 3;
-			recoveryIndexMem = 3;
-		}
-	}
 
-
-	if(recoveryIndex == 1 && gpGlobals->time > recoveryDelay){
+	if(recoveryIndex == 2 && gpGlobals->time >= recoveryDelay){
 		//recover!
 		recoveryIndex = -1;
-		recoveryIndexMem = -1;
 		recoveryDelay = -1;
 		recoveryDelayMin = -1;
 		GetClassPtr( (CBasePlayer *)pev)->Spawn( TRUE );
@@ -6031,6 +6085,7 @@ void CBasePlayer::commonReset(void){
 
 	recentMajorTriggerDamage = FALSE;
 	lastBlockDamageAttemptReceived = -5;
+	recentRevivedTime = -1;
 
 
 	// This will be changed soon after the player joins a server if their setting differs.
@@ -6095,12 +6150,12 @@ void CBasePlayer::commonReset(void){
 	m_iClientAdrenaline = -1;
 	m_iClientRadiation = -1;
 
-	recoveryIndexMem = -5;
-	recoveryIndex = -1;  //nah, this is okay.
-	recoveryDelay = -1;  //force this to re-evaluate if needed.
-	recoveryDelayMin = -1;
 
-	recentlyGibbed = FALSE;
+	//recoveryIndex = -1;  //nah, this is okay.
+	//recoveryDelay = -1;
+	//recoveryDelayMin = -1;
+
+	//recentlyGibbed = FALSE;
 
 
 
@@ -6318,9 +6373,6 @@ void CBasePlayer::Spawn( BOOL revived ){
 		//m_bitsDamageType = 0;
 		//m_bitsDamageTypeMod = 0;
 
-		if(EASY_CVAR_GET(batteryDrainsAtAdrenalineMode) == 3){
-			pev->armorvalue		= 0;
-		}
 
 		//MODDD - the player will not recover previous drowning-induced drown damage after an
 		//        underwater "incapacitation".
@@ -6331,7 +6383,9 @@ void CBasePlayer::Spawn( BOOL revived ){
 		m_idrowndmg = 0;
 		pev->health = gSkillData.player_revive_health;
 
-		//damages reset here if the CVar is right:
+		if(EASY_CVAR_GET(batteryDrainsAtAdrenalineMode) == 3){
+			pev->armorvalue		= 0;
+		}
 		if(EASY_CVAR_GET(timedDamageReviveRemoveMode) == 3){
 			attemptResetTimedDamage(TRUE);
 		}
@@ -6382,10 +6436,12 @@ void CBasePlayer::Spawn( BOOL revived ){
 #endif
 
 
+
+	recentlyGibbed = FALSE;
+
+
 	if(!revived){
 		//These are some vars that are best reset only at spawn.  On revive, just leave them the way they are.
-
-		recentlyGibbed = FALSE;
 
 		//glockSilencerOnVar = 0;
 		//egonAltFireOnVar = 0;
@@ -8520,20 +8576,6 @@ void CBasePlayer :: UpdateClientData( void )
 
 	
 
-	if(recoveryIndexMem != recoveryIndex){
-		recoveryIndexMem = recoveryIndex;
-
-		if(recoveryIndex == 0){
-			//expected to recover sometime...
-			recoveryDelay = gpGlobals->time + 6.0f;
-			recoveryDelayMin = gpGlobals->time + 0.4f;
-		}
-		if(recoveryIndex == 1){
-			//expected to recover sometime...
-			recoveryDelay = gpGlobals->time + RANDOM_FLOAT(2.5f, 3.8f);
-		}
-	}
-
 
 	//MODDD - the next four if-then's are new.
 	if (m_rgItems[ITEM_ANTIDOTE] != m_iClientAntidote)
@@ -9391,18 +9433,21 @@ void CBasePlayer::consumeRadiation(){
 }//END OF consumeRadiation
 
 void CBasePlayer::consumeAdrenaline(){
+	recentRevivedTime = gpGlobals->time;
+
 	m_rgItems[ITEM_ADRENALINE]--;
 
-	recoveryIndex = 1;
-	recoveryIndexMem = 1;
-	recoveryDelay = gpGlobals->time + RANDOM_FLOAT(2.5f, 3.9f);
+	recoveryIndex = 2;
+	recoveryDelay = gpGlobals->time + RANDOM_FLOAT(2.3f, 3.6f);
 
 	//m_rgItems[ITEM_ADRENALINE] --;
 	//SetSuitUpdate("!HEV_ADR_USE", FALSE, SUIT_REPEAT_OK);
 
 	if(EASY_CVAR_GET(batteryDrainsAtAdrenalineMode) == 2){
-		//MODDD - discharge battery.
 		SetAndUpdateBattery(0);
+	}
+	if (EASY_CVAR_GET(timedDamageReviveRemoveMode) == 2) {
+		attemptResetTimedDamage(TRUE);
 	}
 
 	adrenalineQueued = FALSE;

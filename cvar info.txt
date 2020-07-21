@@ -188,10 +188,16 @@ timedDamageDisableViewPunch - BOOL.  If on, timed damage's continued pulsing dam
 
 batteryDrainsAtDeath - BOOL.  If on, battery drains at death (does not apply if revivable by non-gibbing and having an antidote).
 
-batteryDrainsAtAdrenalineMode - 0, 1, 2, 3.  0 does nothing. 1 drains battery at incapaciation (out of health).  2 drains at adrenaline use.  3 drains at revive.
+batteryDrainsAtAdrenalineMode - MODEVAR.
+0: does nothing
+1: drains battery at incapaciation (out of health)
+2: drains at adrenaline use.
+3: drains at revive.
+NOTICE - at setting 1, applies under the assumption that reviving will be possible at the moment of death, which is not certainly known.
+ Falling from too great a height while dead or getting stuck in moving map geometry will not undo the lost battery.  Not that it should matter since, you're staying dead in such a case.
 
 timedDamageReviveRemoveMode - 0, 1, 2, 3.  0 does nothing. 1 removes timed damage at incapacitation (out of health).  2 removes timed damages at adrenaline use. 3 removes timed damages at revive. 
-timedDamageDeathRemoveMode - 0, 1, 2.  0 does nothing.  1 remvoes timed damage immediately at death.  2 remvoes timed damage at death (but less strictly; they will still flash for a little while).
+timedDamageDeathRemoveMode - 0, 1, 2.  0 does nothing.  1 removes timed damage immediately at death.  2 removes timed damage at death (but less strictly; they will still flash for a little while).
 
 
 r_shadows - restored variable from previous builds.  Turn shadows on.  Seems to be workin in pre-steampipe release, crashes in steampipe.
@@ -1164,7 +1170,7 @@ pathfindEdgeCheck (1) - BOOL. Lets NPCs check to see if they are close to a goal
 
 RadiusDamageDrawDebug (1) - BOOL. When on, draws a line from an explosion to the player if the player was hit. Also makes some printouts about what an explosion hit or tried to hit and details about the line-traces. A blue line indicates where the player decided to draw the falling blood dot effect.
 
-AlienRadiationImmunity (0) - BOOL. Makes aliens immune to timed radiation damage, at least the timed version that maps give.
+AlienRadiationImmunity (0) - BOOL. Makes aliens immune to timed radiation damage, at least the timed version that map-related sources/triggers give.
 
 customLogoSprayMode (0) - MODEVAR. So far only two modes.
 0: retail's spraypaint behavior: spray a single image with the player's custom spray decal and color. These will most likely remain defaults as the multiplayer page of the options with these settings is unavailable in this mod.
@@ -1222,5 +1228,9 @@ blastExtraArmorDamageMode (0) - MODEVAR.  Controls when to apply the double-dama
 0: retail behavior.  Only applies in multiplayer.
 1: forced singleplayer behavior.  Never applies.
 2: forced multiplayer behavior.  Always applies.
+
+
+hud_batteryhiddendead (1) - BOOL.
+If 1, anytime the player is dead (including waiting for a revive) hides the battery, showing 0 charge, regardless of other battery-restore-affecting CVars about death/revive.
 
 

@@ -194,7 +194,7 @@ void CGlock::customAttachToPlayer(CBasePlayer *pPlayer ){
 
 int CGlock::ExtractAmmo( CBasePlayerWeapon *pWeapon )
 {
-	int		iReturn;
+	int iReturn;
 
 	if ( pszAmmo1() != NULL )
 	{

@@ -3701,8 +3701,19 @@ int CBaseMonster :: CheckLocalMove ( const Vector &vecStart, const Vector &vecEn
 				*pflDist = flStep;
 			}
 
-			const char* DEBUGSHIT = (gpGlobals->trace_ent!=NULL)?CBaseEntity::Instance(gpGlobals->trace_ent)->getClassname():"WHUT";
-
+			const char* debugStuff;
+			
+			if(gpGlobals->trace_ent!=NULL){
+				CBaseEntity* tempEntt = CBaseEntity::Instance(gpGlobals->trace_ent);
+				if(tempEntt != NULL){
+					debugStuff = tempEntt->getClassname();
+				}else{
+					debugStuff = "WHUT";
+				}
+			}else{
+				debugStuff = "WHUT";
+			}
+			
 			if ( pTarget && pTarget->edict() == gpGlobals->trace_ent )
 			{
 				// if this step hits target ent, the move is legal.
@@ -3714,7 +3725,9 @@ int CBaseMonster :: CheckLocalMove ( const Vector &vecStart, const Vector &vecEn
 				// any other info on it?
 				if (gpGlobals->trace_ent != NULL) {
 					CBaseEntity* testRef = CBaseEntity::Instance(gpGlobals->trace_ent);
-					const char* mahName = testRef->getClassname();
+					if(testRef != NULL){
+						const char* mahName = testRef->getClassname();
+					}
 				}
 
 				// If we're going toward an entity, and we're almost getting there, it's OK.
@@ -8055,8 +8068,12 @@ BOOL CBaseMonster::traceResultObstructionValidForAttack(const TraceResult& arg_t
 		}else{
 			//anything else blocking? wait... maybe I hate it anyways.
 			CBaseEntity* tempEnt = CBaseEntity::Instance(arg_tr.pHit);
-			if(this->IRelationship(tempEnt) > R_NO){
+			if(tempEnt == NULL){
+				// nothing, what?
+				return TRUE;
+			}else if(this->IRelationship(tempEnt) > R_NO){
 				//horray, I hate it anyways.
+				return TRUE;
 			}else{
 				//let's not.
 				return FALSE;

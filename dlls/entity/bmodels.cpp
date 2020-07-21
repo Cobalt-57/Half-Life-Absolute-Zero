@@ -554,7 +554,7 @@ void CFuncRotating :: HurtTouch ( CBaseEntity *pOther )
 	// calculate damage based on rotation speed
 	pev->dmg = pev->avelocity.Length() / 10;
 
-	pOther->TakeDamage( pev, pev, pev->dmg, DMG_CRUSH);
+	pOther->TakeDamage( pev, pev, pev->dmg, DMG_CRUSH, DMG_MAP_BLOCKED);
 	
 	pevOther->velocity = (pevOther->origin - VecBModelOrigin(pev) ).Normalize() * pev->dmg;
 }
@@ -965,7 +965,7 @@ void CPendulum :: Touch ( CBaseEntity *pOther )
 	if ( damage < 0 )
 		damage = -damage;
 
-	pOther->TakeDamage( pev, pev, damage, DMG_CRUSH );
+	pOther->TakeDamage( pev, pev, damage, DMG_CRUSH, DMG_MAP_BLOCKED );
 	
 	pevOther->velocity = (pevOther->origin - VecBModelOrigin(pev) ).Normalize() * damage;
 }

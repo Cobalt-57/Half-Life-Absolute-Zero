@@ -485,7 +485,7 @@ void CFuncPlat :: Blocked( CBaseEntity *pOther )
 {
 	ALERT( at_aiconsole, "%s Blocked by %s\n", STRING(pev->classname), STRING(pOther->pev->classname) );
 	// Hurt the blocker a little
-	pOther->TakeDamage(pev, pev, 1, DMG_CRUSH);
+	pOther->TakeDamage(pev, pev, 1, DMG_CRUSH, DMG_MAP_BLOCKED);
 
 	if(pev->noiseMovement)
 		STOP_SOUND(ENT(pev), CHAN_STATIC, (char*)STRING(pev->noiseMovement));
@@ -657,7 +657,7 @@ void CFuncTrain :: Blocked( CBaseEntity *pOther )
 
 	m_flActivateFinished = gpGlobals->time + 0.5;
 	
-	pOther->TakeDamage(pev, pev, pev->dmg, DMG_CRUSH);
+	pOther->TakeDamage(pev, pev, pev->dmg, DMG_CRUSH, DMG_MAP_BLOCKED);
 }
 
 
@@ -1010,7 +1010,7 @@ void CFuncTrackTrain :: Blocked( CBaseEntity *pOther )
 	if ( pev->dmg <= 0 )
 		return;
 	// we can't hurt this thing, so we're not concerned with it
-	pOther->TakeDamage(pev, pev, pev->dmg, DMG_CRUSH);
+	pOther->TakeDamage(pev, pev, pev->dmg, DMG_CRUSH, DMG_MAP_BLOCKED);
 }
 
 //MODDD - important point.

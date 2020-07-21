@@ -119,21 +119,15 @@ int CHudBattery::Draw(float flTime)
 		return 1;
 
 
-
 	if (EASY_CVAR_GET(hud_version) <= 1) {
 		// versions 0 and 1 do not draw the battery here, already handled in
 		// weapon sidebar
 		return 1;
 	}
 
-
-
+	int iBatDraw;
 	int r, g, b, x, y, a;
-	wrect_t rc;
 
-	rc = *m_prc2;
-	rc.top  += m_iHeight * ((float)(100-(min(100,m_iBat))) * 0.01);	// battery can go from 0 to 100 so * 0.01 goes from 0 to 1
-	
 	//MODDD - not quite that simple now.  Use formula, factoring in "m_iHealth",
 	//        AFTER we get the alpha from looking at "m_fFade":
 	//UnpackRGB(r,g,b, RGB_YELLOWISH);
@@ -141,6 +135,18 @@ int CHudBattery::Draw(float flTime)
 
 	if (!(gHUD.m_iWeaponBits & (1<<(WEAPON_SUIT)) ))
 		return 1;
+
+
+	//MODDD - if "batteryHiddenDead" is on and the player is dead, hide the battery amount (show 0).
+	if (!gHUD.m_fPlayerDead || EASY_CVAR_GET(hud_batteryhiddendead) != 1) {
+		iBatDraw = m_iBat;
+	}
+	else {
+		// dead and the CVar demands hiding battery?  Show 0 here.
+		iBatDraw = 0;
+	}
+
+
 
 	// Has health changed? Flash the health #
 	if (m_fFade)
@@ -242,12 +248,12 @@ int CHudBattery::Draw(float flTime)
 
 		if(EASY_CVAR_GET(hud_batterydraw) == 0){
 			//across.
-			gHUD.drawPartialFromLeft(m_SpriteHandle_t2, m_prc2, ((float)m_iBat / (float)100 ), x, y - iOffset , r, g, b);
+			gHUD.drawPartialFromLeft(m_SpriteHandle_t2, m_prc2, ((float)iBatDraw / (float)100 ), x, y - iOffset , r, g, b);
 		}else if(EASY_CVAR_GET(hud_batterydraw) == 1){
 			//vertically.
-			gHUD.drawPartialFromBottom(m_SpriteHandle_t2, m_prc2, ((float)m_iBat / (float)100 ), x, y - iOffset , r, g, b);
+			gHUD.drawPartialFromBottom(m_SpriteHandle_t2, m_prc2, ((float)iBatDraw / (float)100 ), x, y - iOffset , r, g, b);
 		}else if(EASY_CVAR_GET(hud_batterydraw) == 2){
-			gHUD.drawPartialFromRight(m_SpriteHandle_t2, m_prc2, ((float)m_iBat / (float)100 ), x, y - iOffset , r, g, b);
+			gHUD.drawPartialFromRight(m_SpriteHandle_t2, m_prc2, ((float)iBatDraw / (float)100 ), x, y - iOffset , r, g, b);
 		}
 		
 	}else{
@@ -291,14 +297,14 @@ int CHudBattery::Draw(float flTime)
 
 		x += 9;
 		y += 9;
-		//(float)(100-(min(100,m_iBat))) * 0.01
+		//(float)(100-(min(100,iBatDraw))) * 0.01
 
 		if(EASY_CVAR_GET(hud_batterydraw) == 0){
 			//across.
-			gHUD.drawPartialFromLeft(m_SpriteHandle_t2, m_prc2, ((float)m_iBat / (float)100 ), x, y, r, g, b);
+			gHUD.drawPartialFromLeft(m_SpriteHandle_t2, m_prc2, ((float)iBatDraw / (float)100 ), x, y, r, g, b);
 		}else{
 			//vertically.
-			gHUD.drawPartialFromBottom(m_SpriteHandle_t2, m_prc2, ((float)m_iBat / (float)100 ), x, y, r, g, b);
+			gHUD.drawPartialFromBottom(m_SpriteHandle_t2, m_prc2, ((float)iBatDraw / (float)100 ), x, y, r, g, b);
 		}
 
 
