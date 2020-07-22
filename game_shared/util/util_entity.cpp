@@ -6,8 +6,31 @@
 
 
 
+/*
+MODDD - question:  WHAT IS THE DIFFERENCE?   as seen in eiface.h
+
+INDEXENT:
+edict_t * (*pfnPEntityOfEntIndex)	(int iEntIndex);
+
+ENT:
+edict_t* (*pfnPEntityOfEntOffset)	(int iEntOffset);
+
+ Also, "pfnPEntityOfEntIndex( 1 )" seems to be used to grab the 1st player for logic that assumes single-player
+ (only one player to apply too, or a convenience feature for stuff never intended to be supported in multiplayer).
+ Why not the INDEXENT macro?  Why never "ENT( 1 )"?   This and more will never be answered!
+
+ pfnEntityOfEntIndex seems to be used almost exclusively for getting the 1st player in fact ( 1 ).
+ Only a few places with some other variable source of edict, the macro INDEXENT is more common for that.
+ wait... no, INDEXENT is almost exclusively for getting the world entity:  INDEXENT(0).   Madness!
 
 
+ For what it's worth, looks like almost everywhere leans on using 'offset'-named lookups
+ instead of 'index'-named lookups.  That is, odds are in any method that doesn't mention either
+ but has to use either (CBaseEntity::Instance's calls to work from a number, edict, or entvars)
+ will probably use the 'offset' lookups instead.  No clue why or why not the other.
+
+
+*/
 
 
 

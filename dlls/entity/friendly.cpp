@@ -1,5 +1,3 @@
-//y
-//...you're not serious are you?
 
 //TODO: stop the horror loop on death (if it was playing) with a chord?
 
@@ -1119,10 +1117,20 @@ void CFriendly::RunTask( Task_t *pTask ){
 					UTIL_TraceLine(pPlayerEntityScan->EyePosition(), this->pev->origin + Vector(0, 0, 10), dont_ignore_monsters, ignore_glass, pPlayerEntityScan->edict(), &trSeeCheck);
 
 					
-					EASY_CVAR_PRINTIF_PRE(friendlyPrintout, easyPrintLine("Friendly: Player looking at me? trace:%d, dist:%.2f, looking:%d", CBaseEntity::Instance(trSeeCheck.pHit)->pev == this->pev, distToPlayer, UTIL_IsFacing(pPlayerEntityScan->pev, pev->origin, 0.3)));
+					BOOL daMatchaa = FALSE;
+					CBaseEntity* tempEnt = CBaseEntity::Instance(trSeeCheck.pHit);
+					if(tempEnt != NULL){
+						daMatchaa = (tempEnt->pev == this->pev);
+					}
+					
+					
+					EASY_CVAR_PRINTIF_PRE(friendlyPrintout, easyPrintLine("Friendly: Player looking at me? trace:%d, dist:%.2f, looking:%d", daMatchaa, distToPlayer, UTIL_IsFacing(pPlayerEntityScan->pev, pev->origin, 0.3)));
+
+					
+					
 
 					////there is a straight line from them to me, good.
-					if( CBaseEntity::Instance(trSeeCheck.pHit)->pev == this->pev ){
+					if(daMatchaa ){
 						//not only is looking possible (unobstructed straight line from player to me), they also must actually BE looking.
 						if(UTIL_IsFacing(pPlayerEntityScan->pev, pev->origin, 0.3)){
 							//now the leastDist check.
@@ -1428,7 +1436,7 @@ void CFriendly::MonsterThink( void ){
 					//instead, just kill some shields.
 
 
-					if(pEntity->pev->flags & (FL_MONSTER|FL_CLIENT)){
+					if(pEntity != NULL && pEntity->pev->flags & (FL_MONSTER|FL_CLIENT)){
 						//What is wrong with this? Who knows.
 						
 						cumulativeThing++;
@@ -1659,12 +1667,14 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CFriendly)
 	if(pevAttacker != NULL){
 		CBaseEntity* pEntAttacker = CBaseEntity::Instance(pevAttacker);
 		
-		extraPissedFactor += flDamage * 5;
-		if (extraPissedFactor > 40) extraPissedFactor = 40;  //cap it.
+		if(pEntAttacker != NULL){
+			extraPissedFactor += flDamage * 5;
+			if (extraPissedFactor > 40) extraPissedFactor = 40;  //cap it.
 
-		if(pEntAttacker->IsPlayer() ){pHateVarRef = &m_fPissedAtPlayer;}
-		else if(pEntAttacker->Classify() == CLASS_PLAYER_ALLY){pHateVarRef = &m_fPissedAtPlayerAlly;}   //NOTE: scientists are CLASS_HUMAN_PASSIVE
-		else if(pEntAttacker->Classify() == CLASS_HUMAN_MILITARY){pHateVarRef = &m_fPissedAtHumanMilitary;}   //NOTE: scientists are CLASS_HUMAN_PASSIVE
+			if(pEntAttacker->IsPlayer() ){pHateVarRef = &m_fPissedAtPlayer;}
+			else if(pEntAttacker->Classify() == CLASS_PLAYER_ALLY){pHateVarRef = &m_fPissedAtPlayerAlly;}   //NOTE: scientists are CLASS_HUMAN_PASSIVE
+			else if(pEntAttacker->Classify() == CLASS_HUMAN_MILITARY){pHateVarRef = &m_fPissedAtHumanMilitary;}   //NOTE: scientists are CLASS_HUMAN_PASSIVE
+		}
 	}
 
 
@@ -1675,21 +1685,30 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CFriendly)
 
 			//MODDD SUGGESTION: make whoever attacked me my enemy if I currently have no enemy?
 			if(m_hEnemy == NULL && pevAttacker != NULL){
-				m_hEnemy = CBaseEntity::Instance(pevAttacker);
+				CBaseEntity* entTest = CBaseEntity::Instance(pevAttacker);
+				if(entTest != NULL){
+					m_hEnemy = entTest;
+				}
 			}
 
 			if(pHateVarRef == &m_fPissedAtPlayer){
 				//horror
 				//horrorPlayTime = gpGlobals->time; //play now!.. not this way.
+				if(m_hEnemy != NULL){
+					if(EASY_CVAR_GET(friendlyPianoOtherVolume) > 0){
+						EMIT_SOUND_FILTERED( m_hEnemy->edict(), CHAN_STATIC, "friendly/friendly_horror_start.wav", EASY_CVAR_GET(friendlyPianoOtherVolume), 1.8, 0, 100 );
+					}
+
+					CBaseEntity* entTest = CBaseEntity::Instance(m_hEnemy.Get() );
+					if(entTest != NULL && entTest->IsPlayer()){
+						// paranoia paranoia
+						CBasePlayer* tempPlayer = static_cast<CBasePlayer*>( entTest);
+						//horrorPlayTimePreDelay = gpGlobals->time + 0.531;
+						tempPlayer->horrorPlayTimePreDelay = gpGlobals->time + 0.531;
+					}
+				}//END OF enemy null check
 
 				
-				if(EASY_CVAR_GET(friendlyPianoOtherVolume) > 0){
-					EMIT_SOUND_FILTERED( m_hEnemy->edict(), CHAN_STATIC, "friendly/friendly_horror_start.wav", EASY_CVAR_GET(friendlyPianoOtherVolume), 1.8, 0, 100 );
-				}
-
-				CBasePlayer* tempPlayer = static_cast<CBasePlayer*>(CBaseEntity::Instance(m_hEnemy.Get() ));
-				//horrorPlayTimePreDelay = gpGlobals->time + 0.531;
-				tempPlayer->horrorPlayTimePreDelay = gpGlobals->time + 0.531;
 			}
 
 		}
@@ -1715,22 +1734,27 @@ GENERATE_KILLED_IMPLEMENTATION(CFriendly){
 		horrorPlayTime = -1;
 
 		if(m_hEnemy != NULL && m_hEnemy->IsPlayer()){
-			CBasePlayer* tempPlayer = static_cast<CBasePlayer*>(CBaseEntity::Instance(m_hEnemy.Get() ));
-
-			//if the player's closest mr. friendly was me, disassociate me with the player since I'm about to be deleted.
-			if(tempPlayer->closestFriendlyMem == this){
-				tempPlayer->horrorPlayTime = -1;
-				//stop!
-				stopHorrorSound();
-				tempPlayer->closestFriendlyMem = NULL;
-				tempPlayer->closestFriendlyMemEHANDLE = NULL;
-			}
-
-			//easyForcePrintLine("WELL?!! %d : %d", m_hEnemy!=NULL, (m_hEnemy!=NULL)?m_hEnemy->IsPlayer():-1 );
 			
-			if(EASY_CVAR_GET(friendlyPianoOtherVolume) > 0){
-				EMIT_SOUND_FILTERED( m_hEnemy->edict(), CHAN_STATIC, "friendly/friendly_horror_end.wav", EASY_CVAR_GET(friendlyPianoOtherVolume), 1.8, 0, 100 );
-			}
+			CBaseEntity* entTest = CBaseEntity::Instance(m_hEnemy.Get() );
+			if(entTest != NULL){
+				// paranoia paranoia
+				CBasePlayer* tempPlayer = static_cast<CBasePlayer*>( entTest);
+				
+				//if the player's closest mr. friendly was me, disassociate me with the player since I'm about to be deleted.
+				if(tempPlayer->closestFriendlyMem == this){
+					tempPlayer->horrorPlayTime = -1;
+					//stop!
+					stopHorrorSound();
+					tempPlayer->closestFriendlyMem = NULL;
+					tempPlayer->closestFriendlyMemEHANDLE = NULL;
+				}
+
+				//easyForcePrintLine("WELL?!! %d : %d", m_hEnemy!=NULL, (m_hEnemy!=NULL)?m_hEnemy->IsPlayer():-1 );
+				
+				if(EASY_CVAR_GET(friendlyPianoOtherVolume) > 0){
+					EMIT_SOUND_FILTERED( m_hEnemy->edict(), CHAN_STATIC, "friendly/friendly_horror_end.wav", EASY_CVAR_GET(friendlyPianoOtherVolume), 1.8, 0, 100 );
+				}
+			}//END OF entTest (player) null check
 		}//END OF enemy and isPlayer check
 
 	}
@@ -2072,7 +2096,16 @@ CBaseEntity* CFriendly::getNearestDeadBody(void){
 					*/
 
 					//easyForcePrintLine("ARE YOU daft man %.2f:%s", trSeeCheck.flFraction, FClassname(CBaseEntity::Instance(trSeeCheck.pHit)) );
-					if(trSeeCheck.flFraction != 1.0 && CBaseEntity::Instance(trSeeCheck.pHit)->pev != pEntityScan->pev ){
+					
+					BOOL tempSucc = FALSE;
+					if(trSeeCheck.flFraction != 1.0){
+						CBaseEntity* hitTest = CBaseEntity::Instance(trSeeCheck.pHit);
+						if(hitTest != NULL){
+							tempSucc = (hitTest->pev != pEntityScan->pev);
+						}
+					}
+					
+					if(tempSucc ){
 						//valid spot.
 						EASY_CVAR_PRINTIF_PRE(friendlyPrintout, easyPrintLine("YA goodboy %.2f", thisDistance ));
 					}else{

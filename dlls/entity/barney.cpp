@@ -28,24 +28,21 @@
 #include "weapons.h"
 #include "soundent.h"
 #include "glock.h"
-//MODDD - why not???
 #include "util_model.h"
+#include "util_debugdraw.h"
 
 EASY_CVAR_EXTERN(sv_germancensorship)
-
 extern BOOL globalPSEUDO_germanModel_barneyFound;
-
 EASY_CVAR_EXTERN(barneyDummy)
 EASY_CVAR_EXTERN(monsterSpawnPrintout)
-
 EASY_CVAR_EXTERN(pissedNPCs)
 EASY_CVAR_EXTERN(barneyPrintouts)
 EASY_CVAR_EXTERN(glockOldReloadLogicBarney)
 EASY_CVAR_EXTERN(barneyDroppedGlockAmmoCap)
 extern BOOL globalPSEUDO_iCanHazMemez;
-
 EASY_CVAR_EXTERN(barneyUnholsterTime)
 EASY_CVAR_EXTERN(barneyUnholsterAnimChoice)
+EASY_CVAR_EXTERN(hyperBarney)
 
 
 
@@ -57,7 +54,6 @@ extern Schedule_t slBarneyEnemyDraw[];
 
 //MODDD - how many shots before reloading?
 #define BARNEY_WEAPON_CLIP_SIZE 13
-
 
 #define BARNEY_BODY_GUNHOLSTERED	0
 #define BARNEY_BODY_GUNDRAWN		1
@@ -94,7 +90,6 @@ enum
 
 
 
-
 class CBarney : public CTalkMonster
 {
 public:
@@ -109,7 +104,6 @@ public:
 
 	static const char* madInterSentences[];
 	static int madInterSentencesMax;
-
 
 
 	int getMadSentencesMax(void);
@@ -186,12 +180,12 @@ public:
 	
 	virtual int	Save( CSave &save );
 	virtual int	Restore( CRestore &restore );
-	static	TYPEDESCRIPTION m_SaveData[];
+	static TYPEDESCRIPTION m_SaveData[];
 
-	BOOL	m_fGunDrawn;
+	BOOL m_fGunDrawn;
 	float m_painTime;
 	float m_checkAttackTime;
-	BOOL	m_lastAttackCheck;
+	BOOL m_lastAttackCheck;
 
 
 	//MODDD - for checking to play barney's alert, in case other sounds take precedence for some reason.
@@ -989,7 +983,11 @@ BOOL CBarney :: CheckRangeAttack1 ( float flDot, float flDist )
 			Vector shootOrigin = GetGunPositionAI();
 			CBaseEntity *pEnemy = m_hEnemy;
 			Vector shootTarget = ( (pEnemy->BodyTarget( shootOrigin ) - pEnemy->pev->origin) + m_vecEnemyLKP );
+
 			UTIL_TraceLine( shootOrigin, shootTarget, dont_ignore_monsters, ENT(pev), &tr );
+
+			//DebugLine_Setup(0, shootOrigin, shootTarget, tr.flFraction);
+
 			m_checkAttackTime = gpGlobals->time + 1;
 			if ( tr.flFraction == 1.0 || (tr.pHit != NULL && CBaseEntity::Instance(tr.pHit) == pEnemy) )
 				m_lastAttackCheck = TRUE;
@@ -1994,6 +1992,37 @@ int CBarney::LookupActivityHard(int activity){
 	//let's do m_IdealActivity??
 	//uh... why?  nevermind then.
 	switch(activity){
+		case ACT_RANGE_ATTACK1:
+			if (EASY_CVAR_GET(hyperBarney) != 1) {
+				if (g_iSkillLevel == SKILL_EASY) {
+					// bigger boost
+					m_flFramerateSuggestion = 1.20;
+				}else {
+					// slight boost anyway/
+					m_flFramerateSuggestion = 1.09;
+				}
+			}else {
+				// Bow before your new God
+				m_flFramerateSuggestion = 8;
+			}
+			//animFrameCutoffSuggestion = 220;
+			return CBaseAnimating::LookupActivity(activity);
+		break;
+		case ACT_RELOAD:
+			if (EASY_CVAR_GET(hyperBarney) != 1) {
+				if (g_iSkillLevel == SKILL_EASY) {
+					// bigger boost
+					m_flFramerateSuggestion = 1.23;
+				}else {
+					// slight boost anyway/
+					m_flFramerateSuggestion = 1.11;
+				}
+			}else {
+				// Bow before your new God
+				m_flFramerateSuggestion = 13;
+			}
+			return CBaseAnimating::LookupActivity(activity);
+			break;
 		case ACT_DISARM:
 			//here comes the train... the PAIN TRAIN.
 			//m_flFramerateSuggestion = 1.3;
@@ -2006,11 +2035,12 @@ int CBarney::LookupActivityHard(int activity){
 				//this->animFrameCutoff = 16;
 				//this->animFrameStart = 254;6
 				this->animEventQueuePush( 6.9/20.0, 0);
-				m_flFramerateSuggestion = -0.61;
+				m_flFramerateSuggestion = -0.67;
 				//pev->framerate = -1;
 				return LookupSequence("draw");
 			}else if(EASY_CVAR_GET(barneyUnholsterAnimChoice) == 1){
 				//just the disarm animation.
+				m_flFramerateSuggestion = 1.07;
 				return LookupSequence("disarm");
 			}else{
 				//???
@@ -2059,7 +2089,7 @@ int CBarney::LookupActivityHard(int activity){
 			
 		break;}
 		case ACT_VICTORY_DANCE:
-			m_flFramerateSuggestion = 1.11;
+			m_flFramerateSuggestion = 1.16;
 			return LookupSequence("hambone");
 		break;
 

@@ -312,7 +312,16 @@ int CGraph::HandleLinkEnt(int iNode, entvars_t* pevLinkEnt, int afCapMask, NODEQ
 	pentWorld = NULL;
 
 
-	easyPrintLine("LINK ENT:::  node: %d  linkedEnt: %s queryType: %d ", iNode, CBaseEntity::Instance(pevLinkEnt)->getClassname(), queryType);
+	const char* daClassname;
+	
+	CBaseEntity* tempEnt = CBaseEntity::Instance(pevLinkEnt);
+	if(tempEnt != NULL){
+		daClassname = tempEnt->getClassname();
+	}else{
+		daClassname = "???";
+	}
+
+	easyPrintLine("LINK ENT:::  node: %d  linkedEnt: %s queryType: %d ", iNode, daClassname, queryType);
 
 
 	// func_door
@@ -652,11 +661,14 @@ BOOL CGraph::pathBetweenClear(int curNode, int destNode) {
 		if (tr.pHit != NULL) {
 			int theMonsterID = -1;
 			CBaseEntity* tempEnt = CBaseEntity::Instance(tr.pHit);
-			CBaseMonster* tempMon;
-			if ((tempMon = tempEnt->GetMonsterPointer()) != NULL) {
-				theMonsterID = tempMon->monsterID;
+			
+			if(tempEnt != NULL){
+				CBaseMonster* tempMon = tempEnt->GetMonsterPointer();
+				if (tempMon != NULL) {
+					theMonsterID = tempMon->monsterID;
+				}
+				easyForcePrintLine("!!!! BLOCKED BY pathBetweenClear! Notes: %d - %d. blocker:%s:%d", curNode, destNode, tempEnt->getClassname(), theMonsterID);
 			}
-			easyForcePrintLine("!!!! BLOCKED BY pathBetweenClear! Notes: %d - %d. blocker:%s:%d", curNode, destNode, tempEnt->getClassname(), theMonsterID);
 		}
 		else {
 			easyForcePrintLine("!!!! BLOCKED BY pathBetweenClear! Notes: %d - %d. blocker:???", curNode, destNode);

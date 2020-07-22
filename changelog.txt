@@ -67,4 +67,13 @@ NEW COMMAND:  getmap, currentmap, thismap,   to get the name of the current map.
 The default skybox "desert" is enforced if a map lacks a "skyname" keyword to specify it.
 That is, a map that does not give a skyname (like crossfire.bsp) no longer borrows the skybox from the previously run map ('night' if the player was previously on a2a2.bsp, for example)
 
+Revive logic reworked.  Revives in bad conditions (interrupting moving map geometry like func_rotating, falling too far while dead, high trigger-inflicted damage, etc.) should no longer be possible.
+Battery also hidden while dead, including waiting on revive (CVar hud_batteryhiddendead).
+
+Barney 'running into crouched zombie' issue resolved.  Bad logic in determining a point to attack, and the fallback was pathfinding to them endlessly.  Which looks stupid when the foe is in plain sight.
+
+Python lasersight fixed a bit, RPG one was a while back.  Leaving the python lasersight on while paused no longer crashes.  Yep.  That happened.
+
+TODO:  scientists that fear the player in a very limited place lag the whole game like hell.
+      See in a scientist on top of another NPC (zombie?), and shoot at the scientist without killing.  Lag ahoy.
 

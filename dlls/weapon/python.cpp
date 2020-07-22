@@ -30,13 +30,19 @@ EASY_CVAR_EXTERN(revolverLaserScope)
 
 
 
+// eh?
+#ifdef CLIENT_DLL
+extern vec3_t ev_punchangle;
+#endif
+
+
+
 LINK_ENTITY_TO_CLASS( weapon_python, CPython );
 LINK_ENTITY_TO_CLASS( weapon_357, CPython );
 
 
 
 
-//MODDD - constructor.
 
 CPython::CPython(){
 	m_fInAttack = 0;
@@ -283,80 +289,22 @@ void CPython::SecondaryAttack( void )
 
 //MODDD - why was the python zoom even ever dependent on single/multiplayer to begin with?
 // Really, just don't use the zoom if you don't want it.  Why...
-// I'm not even CVaring this shit.  Fuck this.
 /*
 	if(!IsMultiplayer())
 	{
 		return;
 	}
 */
-	if (!(m_pPlayer->m_afButtonPressed & IN_ATTACK2)) {
-		//MODDD
-		return;
-	}
 
+	// Moved to ItemPostFrameThink
 
-	const int zoomedFOV = (int)roundf(getPlayerBaseFOV() * 0.4444f);
-
-	if ( m_pPlayer->pev->fov != 0 )
-	{
-		if(EASY_CVAR_GET(revolverLaserScope) == 1){
-			m_fSpotActive = FALSE;
-		}
-		m_fInZoom = FALSE;
-		m_pPlayer->pev->fov = m_pPlayer->m_iFOV = 0;  // 0 means reset to default fov
-
-	}
-	//MODDD - used to be 40.
-	else if ( m_pPlayer->pev->fov != zoomedFOV)
-	{
-		//"m_fireState == 1" means the block isn't on.
-		if(m_fireState == 1 && EASY_CVAR_GET(revolverLaserScope) == 1){
-			m_fSpotActive = TRUE;
-		}else{
-			m_fSpotActive = FALSE;
-		}
-		m_fInZoom = TRUE;
-		m_pPlayer->pev->fov = m_pPlayer->m_iFOV = zoomedFOV;
-
-
-		//if the spot is on and the python can attack, force the idle anim
-		if(m_fSpotActive && CanAttackPython( m_flNextPrimaryAttack, gpGlobals->time, UseDecrement() )){
-			//m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + randomIdleAnimationDelay();
-			//MOVED TO BELOW.  anytime on zoom, refresh the idle anim delay to be safe.
-		}
-		
-		//scramble the idle, to stop an animation that may make the python appear not to be looking forward.
-	}
-
-	m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + randomIdleAnimationDelay();
-
-	spotDeleteCheck();
-
-	//MODDD
-	//if(m_pPlayer->cheat_minimumfiredelayMem == 0){
-	// NOPE NOT EVEN YOU.
-	//	m_flNextSecondaryAttack = 0.5;
-	//}else{
-	//	m_flNextSecondaryAttack = m_pPlayer->cheat_minimumfiredelaycustomMem;
-	//}
-
-	
 }
 
-
-
-#ifdef CLIENT_DLL
-
-extern vec3_t ev_punchangle;
-
-#endif
 
 
 
 void CPython::PrimaryAttack()
 {
-
 	//force the spot inactive at fire.  Re-show it (if still zoomed-in) when the gun can fire again.
 	m_fSpotActive = FALSE;
 	spotDeleteCheck();
@@ -499,6 +447,65 @@ void CPython::Reload( void )
 
 void CPython::ItemPostFrameThink(){
 
+
+
+
+	//MODDD - SecondaryAttack script moved here.
+	if ((m_pPlayer->m_afButtonPressed & IN_ATTACK2)) {
+		
+
+		const int zoomedFOV = (int)roundf(getPlayerBaseFOV() * 0.4444f);
+
+		if (m_pPlayer->pev->fov != 0)
+		{
+			if (EASY_CVAR_GET(revolverLaserScope) == 1) {
+				m_fSpotActive = FALSE;
+			}
+			m_fInZoom = FALSE;
+			m_pPlayer->pev->fov = m_pPlayer->m_iFOV = 0;  // 0 means reset to default fov
+
+		}
+		//MODDD - used to be 40.
+		else if (m_pPlayer->pev->fov != zoomedFOV)
+		{
+			//"m_fireState == 1" means the block isn't on.
+			if (m_fireState == 1 && EASY_CVAR_GET(revolverLaserScope) == 1) {
+				m_fSpotActive = TRUE;
+			}
+			else {
+				m_fSpotActive = FALSE;
+			}
+			m_fInZoom = TRUE;
+			m_pPlayer->pev->fov = m_pPlayer->m_iFOV = zoomedFOV;
+
+
+			//if the spot is on and the python can attack, force the idle anim
+			if (m_fSpotActive && CanAttackPython(m_flNextPrimaryAttack, gpGlobals->time, UseDecrement())) {
+				//m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + randomIdleAnimationDelay();
+				//MOVED TO BELOW.  anytime on zoom, refresh the idle anim delay to be safe.
+			}
+
+			//scramble the idle, to stop an animation that may make the python appear not to be looking forward.
+		}
+
+		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + randomIdleAnimationDelay();
+
+		spotDeleteCheck();
+
+		//MODDD
+		//if(m_pPlayer->cheat_minimumfiredelayMem == 0){
+		// NOPE NOT EVEN YOU.
+		//	m_flNextSecondaryAttack = 0.5;
+		//}else{
+		//	m_flNextSecondaryAttack = m_pPlayer->cheat_minimumfiredelaycustomMem;
+		//}
+
+	}//END OF IN_ATTACK2 check
+
+
+
+
+
 	#ifndef CLIENT_DLL
 		
 	if(m_flSoundDelay != 0 && m_flSoundDelay <= gpGlobals->time)
@@ -519,8 +526,13 @@ void CPython::ItemPostFrameThink(){
 	
 	#endif
 
-	CBasePlayerWeapon::ItemPostFrameThink();
 
+
+
+	UpdateSpot();
+
+
+	CBasePlayerWeapon::ItemPostFrameThink();
 }//END OF ItemPostFrameThink()
 
 
@@ -538,6 +550,7 @@ void CPython::ItemPostFrame(){
 
 
 //MODDD - added.
+// ALSO beware, ItemPreFrame is server-only.   ItemPostFrame is called by both client & server.
 void CPython::ItemPreFrame(){
 
 
@@ -545,48 +558,46 @@ void CPython::ItemPreFrame(){
 
 	//easyPrintLine("PYTHON FIRESTATE %d \n", m_fireState );
 
-
 	if(EASY_CVAR_GET(revolverLaserScope) == 0){
 		if(m_fSpotActive){
 			m_fSpotActive = FALSE;
 			spotDeleteCheck();
 		}
 	}else{
-
-		
-		if(m_fSpotActive && ((m_pPlayer->pev->fov == 0) || m_fireState == 1) ){
+		/*
+		if(m_fSpotActive && ((m_pPlayer->pev->fov == 0) || m_fireState == 0) ){
 			m_fSpotActive = FALSE;
 			spotDeleteCheck();
 		}else if(!m_fSpotActive && m_pPlayer->pev->fov != 0){
 			m_fSpotActive = TRUE;
 		}
+		*/
+		
 
 		if(CanAttackPython( m_flNextPrimaryAttack, gpGlobals->time, UseDecrement() )){
 			//block turned off.
 			m_fireState = 1;
 		}
 
+		/*
 		if( m_fireState == 0 && m_fSpotActive ) {
 			m_fSpotActive = FALSE;
 			spotDeleteCheck();
-		}else if(m_fireState == 1 && !m_fSpotActive  && m_pPlayer->pev->fov != 0){
+		}else 
+		*/
+		if(m_fireState == 1 && !m_fSpotActive && m_pPlayer->pev->fov != 0){
 			//assume zoomed in, can have the laser on, but don't
 			m_fSpotActive = TRUE;
 		}
 
 	}
 	
-	UpdateSpot( );
-	
-
 	CBasePlayerWeapon::ItemPreFrame();
 }
 
 
 //MODDD - added.
 void CPython::updateModel(){
-
-
 	//MODDD - the python used to have two body values. Now the scope is always attached and part of the only default body value of 0. No need for this.
 	//The revolverLaserScope CVar is still checked for enabling / disabling the laser pointer that shows up on zooming in.
 	/*
@@ -619,8 +630,6 @@ void CPython::spotDeleteCheck(){
 }
 
 
-
-
 void CPython::WeaponIdle( void )
 {
 	ResetEmptySound( );
@@ -641,8 +650,6 @@ void CPython::WeaponIdle( void )
 	if (m_flTimeWeaponIdle > UTIL_WeaponTimeBase() )
 		return;
 
-
-	
 
 	int iAnim;
 	
@@ -691,7 +698,6 @@ void CPython::WeaponIdle( void )
 			m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + (88.0/30.0) + randomIdleAnimationDelay();
 		}
 
-
 	}
 	
 	/*
@@ -700,20 +706,15 @@ void CPython::WeaponIdle( void )
 	
 	//SendWeaponAnim( iAnim, UseDecrement() ? 1 : 0, bUseScope );
 	SendWeaponAnim( iAnim, UseDecrement() ? 1 : 0, m_fInAttack );
-	
 }
-
 
 
 
 void CPython::UpdateSpot( void )
 {
-
 	//easyPrintLine("SAY WHAT %.2f, %.2f, %.2f", m_pPlayer->pev->punchangle.x, m_pPlayer->pev->punchangle.y, m_pPlayer->pev->punchangle.z);
 
 #ifndef CLIENT_DLL
-
-
 	if (m_fSpotActive)
 	{
 		if (!m_pSpot)
@@ -740,14 +741,6 @@ void CPython::UpdateSpot( void )
 #endif
 
 }
-
-
-
-
-
-
-
-
 
 
 

@@ -1712,7 +1712,10 @@ void CChangeLevel :: Spawn( void )
 //	ALERT( at_console, "TRANSITION: %s (%s)\n", m_szMapName, m_szLandmarkName );
 }
 
-
+// MODDD - NOTE.  Do not be mislead!  This is never called.  Different means are used for changing CD audio and 
+// handling level transitions.   "SVC_INTERMISSION" doesn't even do that, it just... disables player movement and
+// makes the camera sway a little, mouselook still allowed?  Maybe like prep before changing the map in a multiplayer
+// game or something.
 void CChangeLevel :: ExecuteChangeLevel( void )
 {
 	MESSAGE_BEGIN( MSG_ALL, SVC_CDTRACK );
@@ -1723,6 +1726,8 @@ void CChangeLevel :: ExecuteChangeLevel( void )
 	MESSAGE_BEGIN(MSG_ALL, SVC_INTERMISSION);
 	MESSAGE_END();
 }
+
+
 
 
 FILE_GLOBAL char st_szNextMap[cchMapNameMost];

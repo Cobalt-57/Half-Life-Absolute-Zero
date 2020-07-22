@@ -911,16 +911,18 @@ EASY_CVAR_EXTERN(playerBulletHitEffectForceServer)
 
 
 GENERATE_TRACEATTACK_IMPLEMENTATION(CWorld){
-	CBaseEntity* tempEnt;
 
 	GENERATE_TRACEATTACK_PARENT_CALL(CBaseEntity);
 
 	//is the attacker a player?
-	if(pevAttacker != NULL && ((tempEnt = CBaseEntity::Instance(pevAttacker))!=NULL) ){
-		if(FClassnameIs(tempEnt->pev, "player") && EASY_CVAR_GET(playerBulletHitEffectForceServer) == 0 ){
-			//don't allow. Players already play sounds clientside.
-			if(useBulletHitSound){
-				*useBulletHitSound = FALSE;
+	if(pevAttacker != NULL){
+		CBaseEntity* tempEnt = CBaseEntity::Instance(pevAttacker);
+		if(tempEnt!=NULL) {
+			if(FClassnameIs(tempEnt->pev, "player") && EASY_CVAR_GET(playerBulletHitEffectForceServer) == 0 ){
+				//don't allow. Players already play sounds clientside.
+				if(useBulletHitSound){
+					*useBulletHitSound = FALSE;
+				}
 			}
 		}
 	}

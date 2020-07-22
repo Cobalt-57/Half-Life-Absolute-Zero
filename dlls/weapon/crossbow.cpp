@@ -248,7 +248,7 @@ void CCrossbow::FireSniperBolt(){
 		//if ( FClassnameIs( pOther->pev, "worldspawn" ) )
 		//if(pOther->IsWorldOrAffiliated() && pOther->pev->movetype == MOVETYPE_NONE)
 		//...why do some static map things use MOVETYPE_PUSH? foget this.
-		//if(tempEnt->IsWorld()){
+		//if(tempEnt != NULL && tempEnt->IsWorld()){
 		//	//make a crossbow bolt stick out of this.
 		//	CCrossbowBolt *pBolt = CCrossbowBolt::BoltCreate();
 		//	pBolt->pev->origin = tr.vecEndPos;

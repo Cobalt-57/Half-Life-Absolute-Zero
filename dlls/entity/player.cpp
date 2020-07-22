@@ -103,6 +103,7 @@ EASY_CVAR_EXTERN(hideDamage)
 EASY_CVAR_EXTERN(minimumRespawnDelay)
 EASY_CVAR_EXTERN(monsterToPlayerHitgroupSpecial)
 EASY_CVAR_EXTERN(precacheAll)
+EASY_CVAR_EXTERN(blastExtraArmorDamageMode)
 
 extern cvar_t* cvar_sv_cheats;
 //MODDD
@@ -651,7 +652,18 @@ void CBasePlayer :: DeathSound( BOOL plannedRevive )
 }
 
 
-
+void CBasePlayer::startRevive(void) {
+	// can recover.
+	//if (!adrenalineQueued) {
+		recoveryIndex = 1;
+	//	adrenalineQueued = TRUE;
+		SetSuitUpdateEventFVoxCutoff("!HEV_ADR_USE", FALSE, SUIT_REPEAT_OK, SUITUPDATETIME, TRUE, 0.41 - 0.07, &CBasePlayer::consumeAdrenaline, 0.41 - 0.07 + 0.55);
+	//}
+	//if(revived){
+		// If revived, send the signal to reset falling velocity.
+	g_engfuncs.pfnSetPhysicsKeyValue(edict(), "res", "1");
+	//}
+}
 
 // For having planned a revive, but deciding against it (fell too far on hitting the ground, stuck in geometry)
 void CBasePlayer::declareRevivelessDead(void) {
@@ -951,8 +963,9 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBasePlayer)
 
 	
 	CBaseEntity *pAttacker = CBaseEntity::Instance(pevAttacker);
-
-	if ( !g_pGameRules->FPlayerCanTakeDamage( this, pAttacker ) )
+	
+	//MODDD - is the pAttacker NULL check that forbids returning early okay here?
+	if ( pAttacker != NULL && !g_pGameRules->FPlayerCanTakeDamage( this, pAttacker ) )
 	{
 		// Refuse the damage
 		return 0;
@@ -2258,7 +2271,6 @@ CBasePlayer::CBasePlayer(void){
 
 	antidoteQueued = FALSE;
 	radiationQueued = FALSE;
-	adrenalineQueued = FALSE;
 
 	for(int i = 0; i < CSUITPLAYLIST; i++){
 		m_rgSuitPlayListEvent[i] = NULL;
@@ -2584,16 +2596,7 @@ void CBasePlayer::PlayerDeathThink(void)
 				if (pev->flags & FL_ONGROUND) {
 
 					if (gpGlobals->time >= recoveryDelayMin && gpGlobals->time > lastBlockDamageAttemptReceived + 1.5) {
-						// can recover.
-						if (!adrenalineQueued) {
-							recoveryIndex = 1;
-							adrenalineQueued = TRUE;
-							SetSuitUpdateEventFVoxCutoff("!HEV_ADR_USE", FALSE, SUIT_REPEAT_OK, SUITUPDATETIME, TRUE, 0.41 - 0.07, &CBasePlayer::consumeAdrenaline, 0.41 - 0.07 + 0.55);
-						}
-						//if(revived){
-							// If revived, send the signal to reset falling velocity.
-						g_engfuncs.pfnSetPhysicsKeyValue(edict(), "res", "1");
-						//}
+						startRevive();
 					}
 
 				}
@@ -2601,7 +2604,9 @@ void CBasePlayer::PlayerDeathThink(void)
 				if (recoveryIndex == 0) {
 					// Only check for waiting too long to revive / interrupting from map-inflicted damage if
 					// we're not already trying to revive.
-					if (gpGlobals->time >= recoveryDelay - 3 && !(gpGlobals->time > lastBlockDamageAttemptReceived + 1.5)) {
+					if(
+						(gpGlobals->time >= recoveryDelay - 3 && !(gpGlobals->time > lastBlockDamageAttemptReceived + 1.5))
+					) {
 						// 3 seconds away from the max recovery delay, and still recent map-inflicted damage?
 						// Give up.
 						m_flSuitUpdate = gpGlobals->time;
@@ -2611,12 +2616,16 @@ void CBasePlayer::PlayerDeathThink(void)
 					}
 					else if (gpGlobals->time >= recoveryDelay) {
 						// Took too long?  Make a decision now.  Reviving as being blocked by map damage should've happened sooner if it would've canceled this.
-						if (!adrenalineQueued) {
-							recoveryIndex = 1;
-							adrenalineQueued = TRUE;
-							SetSuitUpdateEventFVoxCutoff("!HEV_ADR_USE", FALSE, SUIT_REPEAT_OK, SUITUPDATETIME, TRUE, 0.41 - 0.07, &CBasePlayer::consumeAdrenaline, 0.41 - 0.07 + 0.55);
+						// ALTHOUGH, if still falling and too fast, forbid it. ||
+						if ( !(m_flFallVelocity > PLAYER_MAX_SAFE_FALL_SPEED* fallSpeedToleranceMulti) ) {
+							startRevive();
 						}
-						g_engfuncs.pfnSetPhysicsKeyValue(edict(), "res", "1");
+						else {
+							// falling too fast, call it dead.
+							EMIT_GROUPNAME_SUIT(ENT(pev), "HEV_DEAD");
+							declareRevivelessDead();
+						}
+						
 					}
 				}//END OF recoveryIndex == 0 check... again
 
@@ -3095,7 +3104,7 @@ void CBasePlayer::PlayerUse ( void )
 			//easyForcePrintLine("HIT SOMETHING? %s fract:%.2f distoff:%.2f", STRING(tr.pHit->v.classname), (tr.flFraction), distToPointHit*(1 - (tr.flFraction)) );
 
 			//may hit worldspawn, which does not block. Not sure why it even counts as hit if so (flFraction stays 1)
-			if(hitEntity->pev == pObject->pev || distToPointHit<=5 || distToPointHit*(1 - (tr.flFraction)) <= 10 ){
+			if( (hitEntity != NULL && hitEntity->pev == pObject->pev) || distToPointHit<=5 || distToPointHit*(1 - (tr.flFraction)) <= 10 ){
 				//the trace-hit entity matches the entity selected to "use" on? this is valid.
 				flUseSuccess = TRUE;
 				if (EASY_CVAR_GET(playerUseDrawDebug) == 1) {
@@ -3103,7 +3112,7 @@ void CBasePlayer::PlayerUse ( void )
 				}
 			}else{
 
-				if(::FClassnameIs(hitEntity->pev, "worldspawn")  ){
+				if( hitEntity != NULL && ::FClassnameIs(hitEntity->pev, "worldspawn")  ){
 					//possible exception. See if this is the case.
 					if(tr.flFraction>=1.0){
 						if (EASY_CVAR_GET(playerUseDrawDebug)) {
@@ -3132,7 +3141,7 @@ void CBasePlayer::PlayerUse ( void )
 						
 						if(tr2.pHit != NULL){
 							CBaseEntity* hitEntity2 = CBaseEntity::Instance(tr2.pHit);
-							if(hitEntity2->pev == pObject->pev || distToPointHit2<=5 || distToPointHit2*(1 - (tr2.flFraction)) <= 10){
+							if( (hitEntity2 != NULL && hitEntity2->pev == pObject->pev) || distToPointHit2<=5 || distToPointHit2*(1 - (tr2.flFraction)) <= 10){
 								//it's good!
 								if (EASY_CVAR_GET(playerUseDrawDebug)) {
 									easyForcePrintLine("playeruse: weird flag B (success) %s", pObject->getClassname());
@@ -3439,7 +3448,7 @@ void CBasePlayer::UpdateStatusBar()
 		{
 			CBaseEntity *pEntity = CBaseEntity::Instance( tr.pHit );
 
-			if (pEntity->Classify() == CLASS_PLAYER )
+			if (pEntity != NULL && pEntity->Classify() == CLASS_PLAYER )
 			{
 				newSBarState[ SBAR_ID_TARGETNAME ] = ENTINDEX( pEntity->edict() );
 				strcpy( sbuf1, "1 %p1\n2 Health: %i2%%\n3 Armor: %i3%%" );
@@ -9449,8 +9458,6 @@ void CBasePlayer::consumeAdrenaline(){
 	if (EASY_CVAR_GET(timedDamageReviveRemoveMode) == 2) {
 		attemptResetTimedDamage(TRUE);
 	}
-
-	adrenalineQueued = FALSE;
 	
 	MESSAGE_BEGIN( MSG_ONE, gmsgHUDItemFlash, NULL, pev );
 		WRITE_BYTE( 2 );

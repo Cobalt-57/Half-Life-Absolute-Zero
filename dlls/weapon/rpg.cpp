@@ -974,6 +974,8 @@ void CRpg::ItemPostFrameThink() {
 #endif
 
 
+	UpdateSpot();
+
 
 	CBasePlayerWeapon::ItemPostFrameThink();
 }
@@ -981,8 +983,6 @@ void CRpg::ItemPostFrameThink() {
 
 void CRpg::WeaponIdle( void )
 {
-	UpdateSpot( );
-
 	ResetEmptySound( );
 
 	if ( m_flTimeWeaponIdle > UTIL_WeaponTimeBase() )

@@ -105,7 +105,10 @@ void CCrossbowBolt::Spawn(BOOL useTracer, BOOL arg_noDamage)
 
 	Precache( );
 	pev->movetype = MOVETYPE_FLY;
+
 	pev->solid = SOLID_BBOX;
+	// wow, SOLID_TRIGGER is an awful idea.  Really inconsistent hit-detection, shame.
+	//pev->solid = SOLID_TRIGGER;
 
 	//MODDD - making these "Parabolic bolts" is easy!  Just change pev->movetype to MOVETYPE_TOSS !
 
@@ -249,6 +252,9 @@ void CCrossbowBolt::BoltTouch( CBaseEntity *pOther )
 	{
 		TraceResult tr = UTIL_GetGlobalTrace();
 
+		// Force pev->solid to SOLID_NOT.  Maybe that will stop a bolt from screwing with the physics of
+			// tossed corpses.
+		pev->solid = SOLID_NOT;
 
 		if (!noDamage) {
 
@@ -323,7 +329,11 @@ void CCrossbowBolt::BoltTouch( CBaseEntity *pOther )
 		// If it collided with an entity (must have to reach this point) and isn't going to explode (deleted soon later),
 		// go ahead.
 		if(!goingToExplode){
-			Killed( pev, pev, GIB_NEVER );
+			// wait, the Killed method for base entities does so little, meangingless to set flags for something about to be
+			// deleted, so why not just skip it and do UTIL_REMOVE?  If exploding that happens anyway.
+			
+			//Killed( pev, pev, GIB_NEVER );
+			UTIL_Remove(this);
 		}else{
 
 		}

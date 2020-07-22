@@ -2032,28 +2032,30 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CScientist)
 
 
 	if(pevInflictor != NULL   ){
-		CBaseEntity* attackerEnt = CBaseEntity::Instance(pevInflictor);
+		CBaseEntity* entInflictor = CBaseEntity::Instance(pevInflictor);
 
-		int rel = IRelationship(attackerEnt);
-		if(rel > R_NO || rel==R_FR){
-			m_fearTime = gpGlobals->time;  //something meant to hit me. 
-		}
+		if(entInflictor != NULL){
+			int rel = IRelationship(entInflictor);
+			if(rel > R_NO || rel==R_FR){
+				m_fearTime = gpGlobals->time;  //something meant to hit me. 
+			}
 
 
-		//IS THIS LINE OFFENDING?  search for the other example.
-		/*
-		if(aggro != -1 && aggro < 1 && (m_hEnemy == NULL || m_hEnemy != attackerEnt) ){
-			//took damage from something other what I expected to run from and I'm not feeling very brave? Hurry up and run away!
-			aggro = -1;
-			TaskFail();
-			ChangeSchedule(slScientistCover);//  ???
-			//WARNING - if StopFollowing() below is called, it will ignore ths ScientistCover call. Butu that may be ok, below
-			//is called only if the player (FL_CLIENT on the inflictor) attacked this scientist.
+			//IS THIS LINE OFFENDING?  search for the other example.
+			/*
+			if(aggro != -1 && aggro < 1 && (m_hEnemy == NULL || m_hEnemy != entInflictor) ){
+				//took damage from something other what I expected to run from and I'm not feeling very brave? Hurry up and run away!
+				aggro = -1;
+				TaskFail();
+				ChangeSchedule(slScientistCover);//  ???
+				//WARNING - if StopFollowing() below is called, it will ignore ths ScientistCover call. Butu that may be ok, below
+				//is called only if the player (FL_CLIENT on the inflictor) attacked this scientist.
 
-			alreadyRunningAway = TRUE;
-		}
-		*/
-	}
+				alreadyRunningAway = TRUE;
+			}
+			*/
+		}//END OF entInflictor NULL check
+	}//END OF pevInflictor NULL check
 
 
 	if(!alreadyRunningAway){

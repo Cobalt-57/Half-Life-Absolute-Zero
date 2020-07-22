@@ -241,7 +241,11 @@ void CGib :: SpawnStickyGibs( entvars_t *pevVictim, Vector vecOrigin, int cGibs,
 			pGib->pev->avelocity.y = RANDOM_FLOAT ( 250, 400 );
 
 			// copy owner's blood color
-			pGib->m_bloodColor = (CBaseEntity::Instance(pevVictim))->BloodColor();
+			// Woa there!   Make sure the result of ::Instance is non-null.  Zany shit.
+			CBaseEntity* tempInst = CBaseEntity::Instance(pevVictim);
+			if(tempInst != NULL){
+				pGib->m_bloodColor = tempInst->BloodColor();
+			}
 		
 			
 			//DONT THROW OFF THE EMPEROR'S GROVE
@@ -337,8 +341,13 @@ void CGib::SpawnHeadGib( entvars_t *pevVictim, const Vector gibSpawnOrigin, BOOL
 		pGib->pev->avelocity.y = RANDOM_FLOAT ( 100, 300 );
 
 		// copy owner's blood color
-		pGib->m_bloodColor = (CBaseEntity::Instance(pevVictim))->BloodColor();
-	
+		// Woa there!   Make sure the result of ::Instance is non-null.  Zany shit.
+		CBaseEntity* tempInst = CBaseEntity::Instance(pevVictim);
+		if(tempInst != NULL){
+			pGib->m_bloodColor = tempInst->BloodColor();
+		}
+		
+
 		// DONT THROW OFF THE EMPEROR'S GROVE
 		if(EASY_CVAR_GET(cheat_iwantguts) < 1){
 			if ( pevVictim->health > -50)
@@ -1467,7 +1476,7 @@ CBaseEntity* CBaseMonster :: CheckTraceHullAttack( const Vector vecStartOffset, 
 		CBaseEntity *pEntity = CBaseEntity::Instance( thingHit );
 		
 		
-		if ( iDamage > 0 )
+		if (pEntity != NULL && iDamage > 0 )
 		{
 			pEntity->TakeDamage( pev, pev, iDamage, iDmgType, iDmgTypeMod );
 
@@ -2956,97 +2965,95 @@ void CBaseEntity::FireBullets(ULONG cShots, Vector vecSrc, Vector vecDirShooting
 		if (tr.flFraction != 1.0)
 		{
 			CBaseEntity *pEntity = CBaseEntity::Instance(tr.pHit);
-			BOOL bulletHitEffectAllowed = TRUE;
-			BOOL doDefaultBulletHitEffectCheck = FALSE;
-
-			if ( iDamage )
-			{
-				pEntity->TraceAttack(pevAttacker, iDamage, vecDir, &tr, DMG_BULLET | ((iDamage > 16) ? DMG_ALWAYSGIB : DMG_NEVERGIB), 0, TRUE, &bulletHitEffectAllowed);
-				
-				//TEXTURETYPE_PlaySound(&tr, vecSrc, vecEnd, iBulletType);
-				//DecalGunshot( &tr, iBulletType );
-				doDefaultBulletHitEffectCheck = TRUE;
-			} 
-			//MODDD - changing how this works. Instead of always playing the textureHit sound, we will let the hit entity determine whether it wants to play
-			//        the texture sound / generate a hit decal. For instance, shots that hit helmets and ricochet shouldn't play flesh hit sounds at the same
-			//        time like the texture system wants to. That means, bullets merely ALLOW the bullethit sound to be played, but it doesn't have to be.
-			//        Acutally, little issue with this approach. TEXTURETYPE_PlaySound needs a fair amount of information (trace result, evSrc, vecEnd, and
-			//        our iBulletType). We really don't need another TraceAttack overload just for this
-			//        So, little compromise. Instead, traceAttack gets to set the "useBulletHitsound" variable which this method will send by reference.
-			//        If the hit entity allows the bullet hit sound to play, then we can call TEXTURETYPE_PlaySound and DecalGunshot from here as usual.
-			//        This also means, no need for checking to see if the bitsDamage bitmask includes DMG_BULLET. "useBulletHitSound" being provided at all
-			//        and not null alone tells us we're seeing if it is ok to play the sound (typically bullets checking).
-			else switch(iBulletType)
-			{
-			default:
-			case BULLET_MONSTER_9MM:
-				pEntity->TraceAttack(pevAttacker, gSkillData.monDmg9MM, vecDir, &tr, DMG_BULLET, 0, TRUE, &bulletHitEffectAllowed);
-				//TEXTURETYPE_PlaySound(&tr, vecSrc, vecEnd, iBulletType);
-				//DecalGunshot( &tr, iBulletType );
-				doDefaultBulletHitEffectCheck = TRUE;
-			break;
-			case BULLET_MONSTER_MP5:
-				pEntity->TraceAttack(pevAttacker, gSkillData.monDmgMP5, vecDir, &tr, DMG_BULLET, 0, TRUE, &bulletHitEffectAllowed);
-				//TEXTURETYPE_PlaySound(&tr, vecSrc, vecEnd, iBulletType);
-				//DecalGunshot( &tr, iBulletType );
-				doDefaultBulletHitEffectCheck = TRUE;
-			break;
-			case BULLET_MONSTER_12MM:		
-				pEntity->TraceAttack(pevAttacker, gSkillData.monDmg12MM, vecDir, &tr, DMG_BULLET, 0, TRUE, &bulletHitEffectAllowed);
-
-				if ( EASY_CVAR_GET(decalTracerExclusivity) != 1 || !disableBulletHitDecal )
+			if(pEntity != NULL){
+				BOOL bulletHitEffectAllowed = TRUE;
+				BOOL doDefaultBulletHitEffectCheck = FALSE;
+				if ( iDamage )
 				{
+					pEntity->TraceAttack(pevAttacker, iDamage, vecDir, &tr, DMG_BULLET | ((iDamage > 16) ? DMG_ALWAYSGIB : DMG_NEVERGIB), 0, TRUE, &bulletHitEffectAllowed);
+					
 					//TEXTURETYPE_PlaySound(&tr, vecSrc, vecEnd, iBulletType);
 					//DecalGunshot( &tr, iBulletType );
-					doDefaultBulletHitEffectCheck = TRUE;  //so tracers don't even get a normal shot at this? Isn't that a bit weird? Maybe CVar this.
-				}
-			break;
-			case BULLET_NONE: // FIX 
-				pEntity->TraceAttack(pevAttacker, 50, vecDir, &tr, DMG_CLUB, 0, TRUE, &bulletHitEffectAllowed);
-
-				//BULLET_NONE? When would this happen? And different logic for doing decals? why? Not even DMG_BULLET above?
-				//Just leaving this logic as it is.
-
-				if(bulletHitEffectAllowed == TRUE){
-					TEXTURETYPE_PlaySound(&tr, vecSrc, vecEnd, iBulletType);
-					// only decal glass
-					if ( !FNullEnt(tr.pHit) && VARS(tr.pHit)->rendermode != 0)
-					{
-						UTIL_DecalTrace( &tr, DECAL_GLASSBREAK1 + RANDOM_LONG(0,2) );
-					}
-				}
-			break;
-			}
-
-			if(doDefaultBulletHitEffectCheck && bulletHitEffectAllowed){
-				TEXTURETYPE_PlaySound(&tr, vecSrc, vecEnd, iBulletType);
-				DecalGunshot( &tr, iBulletType );
-			}
-
-
-			//MODDD
-			if (pEntity && pEntity->Classify() != CLASS_NONE && pEntity->Classify() != CLASS_MACHINE )
-			{
-				//easyPrintLine("WHAT IS THE THING I HIT %s", STRING(pEntity->pev->classname) );
-
-			}else{
-
-				//if ( FNullEnt(tr.pHit))
+					doDefaultBulletHitEffectCheck = TRUE;
+				} 
+				//MODDD - changing how this works. Instead of always playing the textureHit sound, we will let the hit entity determine whether it wants to play
+				//        the texture sound / generate a hit decal. For instance, shots that hit helmets and ricochet shouldn't play flesh hit sounds at the same
+				//        time like the texture system wants to. That means, bullets merely ALLOW the bullethit sound to be played, but it doesn't have to be.
+				//        Acutally, little issue with this approach. TEXTURETYPE_PlaySound needs a fair amount of information (trace result, evSrc, vecEnd, and
+				//        our iBulletType). We really don't need another TraceAttack overload just for this
+				//        So, little compromise. Instead, traceAttack gets to set the "useBulletHitsound" variable which this method will send by reference.
+				//        If the hit entity allows the bullet hit sound to play, then we can call TEXTURETYPE_PlaySound and DecalGunshot from here as usual.
+				//        This also means, no need for checking to see if the bitsDamage bitmask includes DMG_BULLET. "useBulletHitSound" being provided at all
+				//        and not null alone tells us we're seeing if it is ok to play the sound (typically bullets checking).
+				else switch(iBulletType)
 				{
+				default:
+				case BULLET_MONSTER_9MM:
+					pEntity->TraceAttack(pevAttacker, gSkillData.monDmg9MM, vecDir, &tr, DMG_BULLET, 0, TRUE, &bulletHitEffectAllowed);
+					//TEXTURETYPE_PlaySound(&tr, vecSrc, vecEnd, iBulletType);
+					//DecalGunshot( &tr, iBulletType );
+					doDefaultBulletHitEffectCheck = TRUE;
+				break;
+				case BULLET_MONSTER_MP5:
+					pEntity->TraceAttack(pevAttacker, gSkillData.monDmgMP5, vecDir, &tr, DMG_BULLET, 0, TRUE, &bulletHitEffectAllowed);
+					//TEXTURETYPE_PlaySound(&tr, vecSrc, vecEnd, iBulletType);
+					//DecalGunshot( &tr, iBulletType );
+					doDefaultBulletHitEffectCheck = TRUE;
+				break;
+				case BULLET_MONSTER_12MM:		
+					pEntity->TraceAttack(pevAttacker, gSkillData.monDmg12MM, vecDir, &tr, DMG_BULLET, 0, TRUE, &bulletHitEffectAllowed);
 
-					if(EASY_CVAR_GET(muteRicochetSound) < 1){
-						MESSAGE_BEGIN( MSG_PAS, SVC_TEMPENTITY, tr.vecEndPos );
-							WRITE_BYTE( TE_GUNSHOT );
-							WRITE_COORD( tr.vecEndPos.x );
-							WRITE_COORD( tr.vecEndPos.y );
-							WRITE_COORD( tr.vecEndPos.z );
-						MESSAGE_END();
+					if ( EASY_CVAR_GET(decalTracerExclusivity) != 1 || !disableBulletHitDecal )
+					{
+						//TEXTURETYPE_PlaySound(&tr, vecSrc, vecEnd, iBulletType);
+						//DecalGunshot( &tr, iBulletType );
+						doDefaultBulletHitEffectCheck = TRUE;  //so tracers don't even get a normal shot at this? Isn't that a bit weird? Maybe CVar this.
+					}
+				break;
+				case BULLET_NONE: // FIX 
+					pEntity->TraceAttack(pevAttacker, 50, vecDir, &tr, DMG_CLUB, 0, TRUE, &bulletHitEffectAllowed);
+
+					//BULLET_NONE? When would this happen? And different logic for doing decals? why? Not even DMG_BULLET above?
+					//Just leaving this logic as it is.
+
+					if(bulletHitEffectAllowed == TRUE){
+						TEXTURETYPE_PlaySound(&tr, vecSrc, vecEnd, iBulletType);
+						// only decal glass
+						if ( !FNullEnt(tr.pHit) && VARS(tr.pHit)->rendermode != 0)
+						{
+							UTIL_DecalTrace( &tr, DECAL_GLASSBREAK1 + RANDOM_LONG(0,2) );
+						}
+					}
+				break;
+				}
+
+				if(doDefaultBulletHitEffectCheck && bulletHitEffectAllowed){
+					TEXTURETYPE_PlaySound(&tr, vecSrc, vecEnd, iBulletType);
+					DecalGunshot( &tr, iBulletType );
+				}
+
+
+				//MODDD
+				if (pEntity && pEntity->Classify() != CLASS_NONE && pEntity->Classify() != CLASS_MACHINE )
+				{
+					//easyPrintLine("WHAT IS THE THING I HIT %s", STRING(pEntity->pev->classname) );
+
+				}else{
+
+					//if ( FNullEnt(tr.pHit))
+					{
+
+						if(EASY_CVAR_GET(muteRicochetSound) < 1){
+							MESSAGE_BEGIN( MSG_PAS, SVC_TEMPENTITY, tr.vecEndPos );
+								WRITE_BYTE( TE_GUNSHOT );
+								WRITE_COORD( tr.vecEndPos.x );
+								WRITE_COORD( tr.vecEndPos.y );
+								WRITE_COORD( tr.vecEndPos.z );
+							MESSAGE_END();
+						}
 					}
 				}
-			}
-
-
-
+			}//END OF pEntity NULL check
 		}
 		// make bullet trails
 		UTIL_BubbleTrail( vecSrc, tr.vecEndPos, (flDistance * tr.flFraction) / 64.0 );
@@ -3164,122 +3171,124 @@ Vector CBaseEntity::FireBulletsPlayer ( ULONG cShots, Vector vecSrc, Vector vecD
 		if (tr.flFraction != 1.0)
 		{
 			CBaseEntity *pEntity = CBaseEntity::Instance(tr.pHit);
-			BOOL bulletHitEffectAllowed = TRUE; //by default.
-			BOOL doDefaultBulletHitEffectCheck = FALSE;  //set to TRUE if a case relies on a common default for this. Leave FALSE if the case handles this itself.
+			if(pEntity != NULL){
+				BOOL bulletHitEffectAllowed = TRUE; //by default.
+				BOOL doDefaultBulletHitEffectCheck = FALSE;  //set to TRUE if a case relies on a common default for this. Leave FALSE if the case handles this itself.
 
-			//tr.pHit->v.origin
-			//Note that this is an "AI Sound", or not a real one audible to the player, but one that checks for monsters nearby (distance) and alerts them if they are in hearing range.
-			attemptSendBulletSound(tr.vecEndPos, pevAttacker);
+				//tr.pHit->v.origin
+				//Note that this is an "AI Sound", or not a real one audible to the player, but one that checks for monsters nearby (distance) and alerts them if they are in hearing range.
+				attemptSendBulletSound(tr.vecEndPos, pevAttacker);
 
 
-			//easyPrintLine("FireBulletsPlayer: iDamage: %d PLAYER BULLET TYPE?! %d THING HIT: %s", iDamage, iBulletType, pEntity->getClassname());
-			if ( iDamage )
-			{
-				//MODDD NOTE
-				//Why does this area, completely unused (the player never uses "iDamage" in FirePlayerBullets, relies in iBulletType to get a default damage value and pick from a below case),
-				//have the TEXTURETYPE_PlaySound and DecalGunshot calls that the NPC's FireBullets method has? The world may never know.
-				pEntity->TraceAttack(pevAttacker, iDamage, vecDir, &tr, DMG_BULLET | ((iDamage > 16) ? DMG_ALWAYSGIB : DMG_NEVERGIB), 0, TRUE, &bulletHitEffectAllowed);
-				//TEXTURETYPE_PlaySound(&tr, vecSrc, vecEnd, iBulletType);
-				//DecalGunshot( &tr, iBulletType );
-				
-				doDefaultBulletHitEffectCheck = TRUE;
-			} 
-			else switch(iBulletType)
-			{
-			default:
-			case BULLET_PLAYER_9MM:	
-				pEntity->TraceAttack(pevAttacker, gSkillData.plrDmg9MM, vecDir, &tr, DMG_BULLET, 0, TRUE, &bulletHitEffectAllowed);
-				//If what we hit was an entity, we need to play the sound from the server. Clientside's texture sound player won't catch this.
-				doDefaultBulletHitEffectCheck = TRUE;
-			break;
-			case BULLET_PLAYER_MP5:	
-				pEntity->TraceAttack(pevAttacker, gSkillData.plrDmgMP5, vecDir, &tr, DMG_BULLET, 0, TRUE, &bulletHitEffectAllowed);
-				doDefaultBulletHitEffectCheck = TRUE;
-			break;
-			case BULLET_PLAYER_BUCKSHOT:	
-				 // make distance based!
-				pEntity->TraceAttack(pevAttacker, gSkillData.plrDmgBuckshot, vecDir, &tr, DMG_BULLET, 0, TRUE, &bulletHitEffectAllowed);
-				doDefaultBulletHitEffectCheck = TRUE;
-			break;
-			case BULLET_PLAYER_357:		
-				pEntity->TraceAttack(pevAttacker, gSkillData.plrDmg357, vecDir, &tr, DMG_BULLET, 0, TRUE, &bulletHitEffectAllowed);
-				doDefaultBulletHitEffectCheck = TRUE;
-			break;
-			case BULLET_NONE: // FIX
-
-				pEntity->TraceAttack(pevAttacker, 50, vecDir, &tr, DMG_CLUB, 0, TRUE, &bulletHitEffectAllowed);
-				
-				//if( !FClassnameIs(pEntity->pev, "worldspawn") && bulletHitEffectAllowed){
-				if(bulletHitEffectAllowed){
-					TEXTURETYPE_PlaySound(&tr, vecSrc, vecEnd, iBulletType);
-					// only decal glass
-					if ( !FNullEnt(tr.pHit) && VARS(tr.pHit)->rendermode != 0)
-					{
-						UTIL_DecalTrace( &tr, DECAL_GLASSBREAK1 + RANDOM_LONG(0,2) );
-					}
-				}
-
+				//easyPrintLine("FireBulletsPlayer: iDamage: %d PLAYER BULLET TYPE?! %d THING HIT: %s", iDamage, iBulletType, pEntity->getClassname());
+				if ( iDamage )
+				{
+					//MODDD NOTE
+					//Why does this area, completely unused (the player never uses "iDamage" in FirePlayerBullets, relies in iBulletType to get a default damage value and pick from a below case),
+					//have the TEXTURETYPE_PlaySound and DecalGunshot calls that the NPC's FireBullets method has? The world may never know.
+					pEntity->TraceAttack(pevAttacker, iDamage, vecDir, &tr, DMG_BULLET | ((iDamage > 16) ? DMG_ALWAYSGIB : DMG_NEVERGIB), 0, TRUE, &bulletHitEffectAllowed);
+					//TEXTURETYPE_PlaySound(&tr, vecSrc, vecEnd, iBulletType);
+					//DecalGunshot( &tr, iBulletType );
+					
+					doDefaultBulletHitEffectCheck = TRUE;
+				} 
+				else switch(iBulletType)
+				{
+				default:
+				case BULLET_PLAYER_9MM:	
+					pEntity->TraceAttack(pevAttacker, gSkillData.plrDmg9MM, vecDir, &tr, DMG_BULLET, 0, TRUE, &bulletHitEffectAllowed);
+					//If what we hit was an entity, we need to play the sound from the server. Clientside's texture sound player won't catch this.
+					doDefaultBulletHitEffectCheck = TRUE;
 				break;
-			}//END OF switch
+				case BULLET_PLAYER_MP5:	
+					pEntity->TraceAttack(pevAttacker, gSkillData.plrDmgMP5, vecDir, &tr, DMG_BULLET, 0, TRUE, &bulletHitEffectAllowed);
+					doDefaultBulletHitEffectCheck = TRUE;
+				break;
+				case BULLET_PLAYER_BUCKSHOT:	
+					 // make distance based!
+					pEntity->TraceAttack(pevAttacker, gSkillData.plrDmgBuckshot, vecDir, &tr, DMG_BULLET, 0, TRUE, &bulletHitEffectAllowed);
+					doDefaultBulletHitEffectCheck = TRUE;
+				break;
+				case BULLET_PLAYER_357:		
+					pEntity->TraceAttack(pevAttacker, gSkillData.plrDmg357, vecDir, &tr, DMG_BULLET, 0, TRUE, &bulletHitEffectAllowed);
+					doDefaultBulletHitEffectCheck = TRUE;
+				break;
+				case BULLET_NONE: // FIX
 
-			//MODDD TODO - remove the "worldspawn" check and have worldspawn itself (CWorld, world.cpp) override TraceAttack to disallow if it is the player making the
-			//             request? That sounds neat.
+					pEntity->TraceAttack(pevAttacker, 50, vecDir, &tr, DMG_CLUB, 0, TRUE, &bulletHitEffectAllowed);
+					
+					//if( !FClassnameIs(pEntity->pev, "worldspawn") && bulletHitEffectAllowed){
+					if(bulletHitEffectAllowed){
+						TEXTURETYPE_PlaySound(&tr, vecSrc, vecEnd, iBulletType);
+						// only decal glass
+						if ( !FNullEnt(tr.pHit) && VARS(tr.pHit)->rendermode != 0)
+						{
+							UTIL_DecalTrace( &tr, DECAL_GLASSBREAK1 + RANDOM_LONG(0,2) );
+						}
+					}
 
-			
+					break;
+				}//END OF switch
 
-			//MODDD TODO - switch! Same for the above worldspawn check too.
-			//Also, if the "playerBulletHitEffectForceServer" CVar is set to 1, the client won't make hitsound / decal effects in ev_hldm.cpp. Instead, it will happen here serverside
-			//to be broadcast to all clients like all other effects (by NPCs, etc.).
-			
-			
-			//if(doDefaultBulletHitEffectCheck && (EASY_CVAR_GET(playerBulletHitEffectForceServer)==1 || !FClassnameIs(pEntity->pev, "worldspawn")) && bulletHitEffectAllowed){
-			//if(doDefaultBulletHitEffectCheck && !FClassnameIs(pEntity->pev, "worldspawn") && bulletHitEffectAllowed){
+				//MODDD TODO - remove the "worldspawn" check and have worldspawn itself (CWorld, world.cpp) override TraceAttack to disallow if it is the player making the
+				//             request? That sounds neat.
 
-			//The "bulletHitEffectAllowed" can be turned off by a TraceAttack method, presumably because it decided to handle the effect itself
-			//and handling it here would be redundant.
-			//This is common for things that do a ricochet effect on detecting a hit on armor or a helmet (hgrunts, agrunts).  They turn it off.
-			//Note that, unless TEXTURETYPE_PlaySound detects a machine or the world (CLASS_NONE.. however crude that is) was hit,
-			//it's going to force a flesh sound.  Just keeping that in tune with retail to play nicely.
-			if(doDefaultBulletHitEffectCheck && bulletHitEffectAllowed){
-				TEXTURETYPE_PlaySound(&tr, vecSrc, vecEnd, iBulletType);
-				DecalGunshot( &tr, iBulletType );
-			}
+				
 
+				//MODDD TODO - switch! Same for the above worldspawn check too.
+				//Also, if the "playerBulletHitEffectForceServer" CVar is set to 1, the client won't make hitsound / decal effects in ev_hldm.cpp. Instead, it will happen here serverside
+				//to be broadcast to all clients like all other effects (by NPCs, etc.).
+				
+				
+				//if(doDefaultBulletHitEffectCheck && (EASY_CVAR_GET(playerBulletHitEffectForceServer)==1 || !FClassnameIs(pEntity->pev, "worldspawn")) && bulletHitEffectAllowed){
+				//if(doDefaultBulletHitEffectCheck && !FClassnameIs(pEntity->pev, "worldspawn") && bulletHitEffectAllowed){
 
-			/*
-			if(iDamage == 0 &&
-				iBulletType != BULLET_NONE &&
-				( !FNullEnt(tr.pHit)) &&
-				!FClassnameIs(pEntity->pev, "worldspawn"))
-			{
-				//Play a sound since the client won't.
-				TEXTURETYPE_PlaySound(&tr, vecSrc, vecEnd, iBulletType);
-				if(VARS(tr.pHit)->rendermode != 0)){
+				//The "bulletHitEffectAllowed" can be turned off by a TraceAttack method, presumably because it decided to handle the effect itself
+				//and handling it here would be redundant.
+				//This is common for things that do a ricochet effect on detecting a hit on armor or a helmet (hgrunts, agrunts).  They turn it off.
+				//Note that, unless TEXTURETYPE_PlaySound detects a machine or the world (CLASS_NONE.. however crude that is) was hit,
+				//it's going to force a flesh sound.  Just keeping that in tune with retail to play nicely.
+				if(doDefaultBulletHitEffectCheck && bulletHitEffectAllowed){
+					TEXTURETYPE_PlaySound(&tr, vecSrc, vecEnd, iBulletType);
 					DecalGunshot( &tr, iBulletType );
 				}
-			}
-			*/
 
 
-			//MODDD
-			if (pEntity && pEntity->Classify() != CLASS_NONE && pEntity->Classify() != CLASS_MACHINE )
-			{
-				//easyPrintLine("WHAT IS THE THING I HIT %s", STRING(pEntity->pev->classname) );
-
-			}else{
-				
-				//if ( FNullEnt(tr.pHit))
+				/*
+				if(iDamage == 0 &&
+					iBulletType != BULLET_NONE &&
+					( !FNullEnt(tr.pHit)) &&
+					!FClassnameIs(pEntity->pev, "worldspawn"))
 				{
-					if(EASY_CVAR_GET(muteRicochetSound) < 1){
-						MESSAGE_BEGIN( MSG_PAS, SVC_TEMPENTITY, tr.vecEndPos );
-							WRITE_BYTE( TE_GUNSHOT );
-							WRITE_COORD( tr.vecEndPos.x );
-							WRITE_COORD( tr.vecEndPos.y );
-							WRITE_COORD( tr.vecEndPos.z );
-						MESSAGE_END();
+					//Play a sound since the client won't.
+					TEXTURETYPE_PlaySound(&tr, vecSrc, vecEnd, iBulletType);
+					if(VARS(tr.pHit)->rendermode != 0)){
+						DecalGunshot( &tr, iBulletType );
 					}
 				}
-			}
+				*/
+
+
+				//MODDD
+				if (pEntity->Classify() != CLASS_NONE && pEntity->Classify() != CLASS_MACHINE )
+				{
+					//easyPrintLine("WHAT IS THE THING I HIT %s", STRING(pEntity->pev->classname) );
+
+				}else{
+					
+					//if ( FNullEnt(tr.pHit))
+					{
+						if(EASY_CVAR_GET(muteRicochetSound) < 1){
+							MESSAGE_BEGIN( MSG_PAS, SVC_TEMPENTITY, tr.vecEndPos );
+								WRITE_BYTE( TE_GUNSHOT );
+								WRITE_COORD( tr.vecEndPos.x );
+								WRITE_COORD( tr.vecEndPos.y );
+								WRITE_COORD( tr.vecEndPos.z );
+							MESSAGE_END();
+						}
+					}
+				}
+			}//END OF pEntity NULL check
 			
 		}//END OF if (tr.flFraction != 1.0)
 

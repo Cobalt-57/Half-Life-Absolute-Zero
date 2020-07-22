@@ -629,7 +629,7 @@ panthereyeHasCloakingAbility (0) - DECIMAL (0 - 1).  When on (positive, non-zero
 
 
 hgruntHeadshotGore (1) - BOOL.  When on, a killing-headshot from a weapon dealing at least as much damage as the Python (revolver) will show the "missing head" - head.
-~Does not apply if "cl_germancensorshipship" is on.
+~Does not apply if "sv_germancensorshipship" is on.
 
 hgruntSpeedMulti (1) - Adjustable.  Multiple applied to HGrunt speed.  Best to test strafing.
 ~0 is stationary (will try to move, but can't), under 1 is slower, 1 is normal speed, over is faster.
@@ -1177,7 +1177,7 @@ customLogoSprayMode (0) - MODEVAR. So far only two modes.
 1: Spray the animating lambda decal insetad of the player's custom spray decal (ignored). Does not appear to factor in the player's custom spray decal color. Defaults to a similar if not identical orange-yellow color.
 
 
-monsterFadeOutRate (100) - ADJUSTABLE. How much monster opacity decreases in one second when fading out, out of 255 (opaque, starting). Players fade when cl_germancensorshipship is on or gibs are banned for any other reason.
+monsterFadeOutRate (100) - ADJUSTABLE. How much monster opacity decreases in one second when fading out, out of 255 (opaque, starting). Players fade when sv_germancensorshipship is on or gibs are banned for any other reason.
 ~For instance, set to 100, it takes a little under 3 seconds to fade out since 100 times 3 is 300, out of 255.
 playerFadeOutRate (120) - ADJUSTABLE. How much player opacity decreases in one second when fading out. See monsterFadeOutRate.
 
@@ -1234,3 +1234,4 @@ hud_batteryhiddendead (1) - BOOL.
 If 1, anytime the player is dead (including waiting for a revive) hides the battery, showing 0 charge, regardless of other battery-restore-affecting CVars about death/revive.
 
 
+hyperBarney (0) - BOOL.  If on, barney is a force to be reckoned with.

@@ -1535,14 +1535,15 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CChumToad)
 	if(pevAttacker != NULL){
 		CBaseEntity* pEntAttacker = CBaseEntity::Instance(pevAttacker);
 		
-		//If one of these used to be my friend, they aren't anymore.  Player attacking scares the frog from barnies too.
-		if(pEntAttacker->IsPlayer() ){
-			playerFriend = FALSE;
-			playerAllyFriend = FALSE;
-		}else if(pEntAttacker->Classify() == CLASS_PLAYER_ALLY){
-			playerAllyFriend = FALSE;
-		}//NOTE: scientists are CLASS_HUMAN_PASSIVE
-
+		if(pEntAttacker != NULL){
+			//If one of these used to be my friend, they aren't anymore.  Player attacking scares the frog from barnies too.
+			if(pEntAttacker->IsPlayer() ){
+				playerFriend = FALSE;
+				playerAllyFriend = FALSE;
+			}else if(pEntAttacker->Classify() == CLASS_PLAYER_ALLY){
+				playerAllyFriend = FALSE;
+			}//NOTE: scientists are CLASS_HUMAN_PASSIVE
+		}
 	}
 
 	//to see if we can play dead or stop playing dead, we must at least be on the ground.  And uh, not actually dead / dying.
@@ -2834,14 +2835,9 @@ void CChumToad::onDeathAnimationEnd(void){
 //NOTICE - look at how breakables see if the player is on top or not.  That might be miles better than this.
 //  Or even the mr. friendly's absmax - abxmin comparison, that's not bad either.
 CBaseEntity* CChumToad::getEntityBelow(void){
-	
 	//if ( FBitSet(pevToucher->flags,FL_ONGROUND) && pevToucher->groundentity && VARS(pevToucher->groundentity) == pev )
-	
 	//{
 	//...
-
-	
-
 		//assume the origin is at the floor of this entity.
 		const Vector backLeftBottom = pev->origin + Vector(pev->mins.x, pev->mins.y, 0);
 		const Vector backRightBottom = pev->origin + Vector(pev->mins.x, pev->maxs.y, 0);

@@ -2247,27 +2247,6 @@ void CStukaBat :: StartTask ( Task_t *pTask )
 		pev->velocity = Vector(0,0,0);
 		break;
 	*/
-	case TASK_GET_PATH_TO_SPOT:
-		{
-			//NO SCREW IT...
-			TaskFail();
-			return;
-
-			//eh, is that really okay?   Just to the "player"?...   sounds weird.
-			//And we don't even give BuildNearestRoute a chance anyways.
-			CBaseEntity *pPlayer = CBaseEntity::Instance( FIND_ENTITY_BY_CLASSNAME( NULL, "player" ) );
-			if ( BuildRoute ( m_vecMoveGoal, bits_MF_TO_LOCATION, pPlayer ) )
-			{
-				TaskComplete();
-			}
-			else
-			{
-				// no way to get there =(
-				ALERT ( at_aiconsole, "GetPathToSpot failed!!\n" );
-				TaskFail();
-			}
-			break;
-		}
 	case TASK_RANGE_ATTACK1:
 		//Ranges were blanked. Is that wise? Not even parent calls like "default" below does?
 		//CSquadMonster :: StartTask ( pTask );
@@ -2961,13 +2940,6 @@ void CStukaBat :: RunTask ( Task_t *pTask )
 		}
 		//this is a dummy for now.
 		TaskComplete();
-	
-	break;
-	case TASK_GET_PATH_TO_SPOT:
-	
-		if(EASY_CVAR_GET(stukaAdvancedCombat) == TRUE){
-			updateMoveAnim();
-		}
 	
 	break;
 	case TASK_RANGE_ATTACK2:

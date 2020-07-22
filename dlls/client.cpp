@@ -123,6 +123,11 @@ int playQueuedPitch = 100;
 EHANDLE playedSoundPlayer;
 
 
+char changeLevelQueuedName[64];
+char changeLevelQueuedSpot[64];
+float changeLevelQueuedTime = -1;
+
+
 
 
 //test for what crashes.
@@ -698,6 +703,11 @@ void ClientKill( edict_t *pEntity )
 	entvars_t *pev = &pEntity->v;
 
 	CBasePlayer *pl = (CBasePlayer*) CBasePlayer::Instance( pev );
+
+	//MODDD - just for safety.
+	if (pl == NULL) {
+		return;  // ?????????????
+	}
 
 	if ( pl->m_fNextSuicideTime > gpGlobals->time )
 		return;  // prevent suiciding too ofter
@@ -1784,13 +1794,6 @@ void ClientCommand( edict_t *pEntity )
 			return;
 		}
 
-
-		/*
-		//TEMP - push forward!
-		UTIL_MakeVectors(pev->v_angle);
-		tempplayer->pev->origin = tempplayer->pev->origin + Vector(0, 0, 12);
-		tempplayer->pev->velocity = gpGlobals->v_forward * 600;
-		*/
 
 		//ambiguous as to whether this is what is in the crosshairs or the player itself.  Try to figure it out:
 		CBaseEntity* forwardEnt = FindEntityForward(tempplayer);
@@ -3884,10 +3887,11 @@ void ClientCommand( edict_t *pEntity )
 			
 			//Any air nodes? need to let the world know.
 			//...oh this has to be difficult.
-			CBaseEntity* entTest = CBaseEntity::Instance(0);
-			if(entTest != NULL && FClassnameIs(entTest->pev, "worldspawn")){
-				CWorld* worldRef = static_cast<CWorld*>(entTest);
-				worldRef->getCustomMapSettingsFromGlobal();
+			
+			
+			CWorld* theWorld = getWorld();
+			if(theWorld != NULL){
+				theWorld->getCustomMapSettingsFromGlobal();
 			}
 			
 
@@ -4387,15 +4391,115 @@ void ClientCommand( edict_t *pEntity )
 		
 		tempRef->auto_determined_fov = tryStringToFloat(arg1ref);
 	}
-	// NEW SHIT HERE MAYBE
 	else if (FStrEq(pcmdRefinedRef, "_mapname")) {
 		easyForcePrintLineClient(pEntity, "Map: %s", STRING(gpGlobals->mapname));
 
 	}
+	else if (FStrEq(pcmdRefinedRef, "cmdclient") || (FStrEq(pcmdRefinedRef, "clientcmd")) ) {
+		char arychr_buffer[64];
+		// CMD_ARGS() sends all individual CMD_ARGV(#) put together for convenience.
+		if (CMD_ARGC() > 1) {
+			//strcpy(&arychr_buffer[0], CMD_ARGS());
+			sprintf(&arychr_buffer[0], "%s%s", CMD_ARGS(), "\n");
+			submitJukeboxRequest(pev, arychr_buffer);
+			//CLIENT_PRINTF(pev, print_console, "poopy");
+		}
+		else {
+			//not over 1?  You provided no more than just the command text!
+			easyForcePrintLineClient(pEntity, "***Can not send a null string!  Give more.***");
+		}
+
+		//sprintf(arychr_buffer, "cd play %3d\n", iTrack);
+		//CLIENT_COMMAND(pClient, arychr_buffer);
+		//char* cmdStringSend = UTIL_VarArgs("mp3 play media/%s.mp3", eh[choice]);
+		//CLIENT_COMMAND(tempEd, cmdStringSend);
+		//submitJukeboxRequest(pev, "anus");
+
+	}
+	else if (FStrEq(pcmdRefinedRef, "cmdserver") || (FStrEq(pcmdRefinedRef, "servercmd")) ) {
+		char arychr_buffer[64];
+		// CMD_ARGS() sends all individual CMD_ARGV(#) put together for convenience.
+		if (CMD_ARGC() > 1) {
+			//char* leaveOff = strcpy(&arychr_buffer[0], CMD_ARGS());
+			//strcpy(leaveOff, "\n");
+
+			sprintf(&arychr_buffer[0], "%s%s", CMD_ARGS(), "\n");
+
+
+			//submitJukeboxRequest(pev, arychr_buffer);
+			g_engfuncs.pfnServerCommand(arychr_buffer);
+		}
+		else {
+			//not over 1?  You provided no more than just the command text!
+			easyForcePrintLineClient(pEntity, "***Can not send a null string!  Give more.***");
+
+			//SERVER_COMMAND("reload\n");
+		}
+
+	}
+	else if (FStrEq(pcmdRefinedRef, "jolt") || FStrEq(pcmdRefinedRef, "boost") || (FStrEq(pcmdRefinedRef, "push"))) {
+		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer*)pev);
+		const char* arg1ref = CMD_ARGV(1);
+		if (g_flWeaponCheat == 0.0) {
+			easyForcePrintLineClient(pEntity, "No cheatin\'!");
+			return;
+		}
+		
+		float forceForward;
+
+		if (arg1ref == NULL) {
+			forceForward = 800;  //default
+		}
+		else {
+			try{
+				float tempFloat = tryStringToFloat(arg1ref);
+				forceForward = tempFloat;
+			}
+			catch (int) {
+				forceForward = 800;
+				easyForcePrintLineClient(pEntity, "Aw man!  Your number sucked.");
+			}
+		}
+
+		// push forward!
+		UTIL_MakeVectors(pev->v_angle);
+		tempplayer->pev->origin = tempplayer->pev->origin + Vector(0, 0, 12);
+		tempplayer->pev->velocity = gpGlobals->v_forward * forceForward;
+		
+	}
+	else if (FStrEq(pcmdRefinedRef, "changelevel3") ) {
+		char arychr_buffer[64];
+		// CMD_ARGS() sends all individual CMD_ARGV(#) put together for convenience.
+		if (CMD_ARGC() < 3) {
+			easyForcePrintLineClient(pEntity, "***changelevel3 needs two params: map name and spot name (immitates a transition call)***");
+			//easyForcePrintLineClient(pEntity, "***One parameter is supported (map name), as seen in multiplayer gamerules usage, but it doesn't appear to do anything.***");
+			
+		}
+		else {
+			easyForcePrintLineClient(pEntity, "***Standby for changelevel (close console!)***");
+			char* booty1 = (char*)CMD_ARGV(1);
+			char* booty2 = (char*)CMD_ARGV(2);
+
+			// send the parameters over to temp buffers to be played soon (when the console's closed, game unpaused)
+			strcpy(&changeLevelQueuedName[0], booty1);
+
+			if (booty2 != NULL) {
+				strcpy(&changeLevelQueuedSpot[0], booty2);
+			}else {
+				// whut.  Force to the empty string.
+				changeLevelQueuedSpot[0] = '\0';
+			}
+
+			// play it next time we're unpaused, likely out of console
+			//changeLevelQueuedTime = gpGlobals->time + 0.1f
+			changeLevelQueuedTime = gpGlobals->time + 0.5f;
+
+			//CHANGE_LEVEL(booty1, booty2);
+		}
+	}
+
 	
-
-
-
+	// NEW SHIT HERE MAYBE
 
 
 
@@ -4510,6 +4614,10 @@ void ClientCommand( edict_t *pEntity )
 	}
 	*/
 }//END OF... something really big.
+//!!!END OF THIS SILLY SILLY METHOD!!!
+
+
+
 
 
 /*
@@ -4896,6 +5004,27 @@ void StartFrame( void )
 	if ( g_pGameRules )
 		g_pGameRules->Think();
 
+
+	if (changeLevelQueuedTime != -1 && gpGlobals->time >= changeLevelQueuedTime) {
+		// JUST DO IT
+		changeLevelQueuedTime = -1;
+
+
+		if ( !(changeLevelQueuedSpot == NULL || changeLevelQueuedSpot[0] == '\0') ) {
+			char peepeebuffer[128];
+			sprintf(&peepeebuffer[0], "changelevel2 %s %s\n", changeLevelQueuedName, changeLevelQueuedSpot);
+			SERVER_COMMAND(peepeebuffer);
+		}
+		else {
+			easyForcePrintLine("***Cant work with a NULL spot!  Try again***");
+		}
+
+
+		//CHANGE_LEVEL(changeLevelQueuedName, changeLevelQueuedSpot);
+	}
+
+
+
 	if ( g_fGameOver )
 		return;
 
@@ -4931,6 +5060,11 @@ Engine is going to shut down, allows setting a breakpoint in game .dll to catch 
 void Sys_Error( const char *error_string )
 {
 	// Default case, do nothing.  MOD AUTHORS:  Add code ( e.g., _asm { int 3 }; here to cause a breakpoint for debugging your game .dlls
+
+	//MODDD - well,  here I am.   Is... this ok?
+	int x = 222;
+	_asm { int 3 };
+
 }
 
 /*

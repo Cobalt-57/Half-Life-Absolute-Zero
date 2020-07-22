@@ -1163,7 +1163,12 @@ void CTalkMonster::ShutUpFriends( void )
 void CTalkMonster::LimitFollowers( CBaseEntity *pPlayer, int maxFollowers )
 {
 	CBaseEntity *pFriend = NULL;
-	int i, count;
+	int i;
+	int count;
+	
+	if(pPlayer == NULL){
+		return;   //SAFETY: method is pointless if so.
+	}
 
 	count = 0;
 	// for each friend in this bsp...

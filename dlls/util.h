@@ -233,6 +233,7 @@ EASY_CVAR_EXTERN(soundVolumeStuka)
 class CBaseEntity;
 class CBasePlayerItem;
 class CBasePlayer;
+class CWorld;
 // oh shit that actually worked
 typedef struct GibInfo_s GibInfo_t;
 
@@ -928,6 +929,13 @@ extern void SaveDynamicIDs(CGlobalState* argGS);
 extern void RestoreDynamicIDs(CGlobalState* argGS);
 
 extern BOOL GermanModelOrganicLogic(void);
+
+extern CWorld* getWorld(void);
+
+
+
+
+
 
 //MODDD - moved prototypes from basemonster.h
 /////////////////////////////////////////

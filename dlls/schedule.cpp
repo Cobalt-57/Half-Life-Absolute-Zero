@@ -1443,6 +1443,7 @@ void CBaseMonster :: RunTask ( Task_t *pTask )
 		/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		// canPredictRangedActFinish() ||  ???
 		if (pTask->iTask == TASK_MELEE_ATTACK1_NOTURN || pTask->iTask == TASK_MELEE_ATTACK2_NOTURN) {
 
 			float flInterval = 0.1;  //mock interval, resembles think times.
@@ -2714,22 +2715,10 @@ void CBaseMonster :: StartTask ( Task_t *pTask )
 			}
 		}
 		break;
-	case TASK_GET_PATH_TO_SPOT:
-		{
-			CBaseEntity *pPlayer = CBaseEntity::Instance( FIND_ENTITY_BY_CLASSNAME( NULL, "player" ) );
-			if ( BuildRoute ( m_vecMoveGoal, bits_MF_TO_LOCATION, pPlayer ) )
-			{
-				TaskComplete();
-			}
-			else
-			{
-				// no way to get there =(
-				ALERT ( at_aiconsole, "GetPathToSpot failed!!\n" );
-				TaskFail();
-				m_movementGoal = MOVEGOAL_NONE;
-			}
-			break;
-		}
+	
+	//MODDD - NOTE.  TASK_GET_PATH_TO_SPOT removed.
+	// It build a route to wherever the player is?  Really?  Why?  May or may not even be the enemy.
+	// No wonder this went unused.
 
 	case TASK_GET_PATH_TO_TARGET:
 		{

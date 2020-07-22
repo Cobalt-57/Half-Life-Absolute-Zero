@@ -71,3 +71,7 @@
 // For CHalfLifeTeamplay (teamplay_gamerules.h).  Was "HL Teamplay"
 #define GAME_TEAMPLAY_DESCRIPTION "HL:AZ Teamplay"
 
+
+// .............. nothing
+#define secret_ymg 0
+

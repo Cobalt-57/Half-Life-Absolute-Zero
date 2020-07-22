@@ -300,7 +300,7 @@ public:
 	//VARIABLES
 	BOOL antidoteQueued;
 	BOOL radiationQueued;
-	BOOL adrenalineQueued;
+	//BOOL adrenalineQueued;    no need, recoveryIndex is enough
 
 	float rawDamageSustained;
 
@@ -586,6 +586,7 @@ public:
 	//MODDD - new argument possibility, see player.cpp for more info.
 	void DeathSound ( BOOL plannedRevive);
 
+	void startRevive(void);
 	void declareRevivelessDead(void);
 
 

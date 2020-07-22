@@ -724,7 +724,7 @@ void CHalfLifeMultiplay::DeathNotice( CBasePlayer *pVictim, entvars_t *pKiller, 
 	char *tau = "tau_cannon";
 	char *gluon = "gluon gun";
 
-	if ( pKiller->flags & FL_CLIENT )
+	if (pKiller != NULL && pKiller->flags & FL_CLIENT )
 	{
 		killer_index = ENTINDEX(ENT(pKiller));
 		

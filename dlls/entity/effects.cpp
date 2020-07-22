@@ -352,7 +352,9 @@ void CBeam::TriggerTouch( CBaseEntity *pOther )
 		if ( pev->owner )
 		{
 			CBaseEntity *pOwner = CBaseEntity::Instance(pev->owner);
-			pOwner->Use( pOther, this, USE_TOGGLE, 0 );
+			if(pOwner != NULL){
+				pOwner->Use( pOther, this, USE_TOGGLE, 0 );
+			}
 		}
 		ALERT( at_console, "Firing targets!!!\n" );
 	}
@@ -786,7 +788,7 @@ void CBeam::BeamDamage( TraceResult *ptr )
 	if ( ptr->flFraction != 1.0 && ptr->pHit != NULL )
 	{
 		CBaseEntity *pHit = CBaseEntity::Instance(ptr->pHit);
-		if ( pHit )
+		if ( pHit != NULL )
 		{
 			ClearMultiDamage();
 			pHit->TraceAttack( pev, pev->dmg * (gpGlobals->time - pev->dmgtime), (ptr->vecEndPos - pev->origin).Normalize(), ptr, DMG_ENERGYBEAM );

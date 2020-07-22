@@ -1603,7 +1603,7 @@ CBaseEntity* CGargantua::GargantuaCheckTraceHullAttack(float flDist, int iDamage
 	{
 		CBaseEntity *pEntity = CBaseEntity::Instance( tr.pHit );
 
-		if ( iDamage > 0 )
+		if (pEntity != NULL && iDamage > 0 )
 		{
 			pEntity->TakeDamage( pev, pev, iDamage, iDmgType );
 			//MODDD - here too.

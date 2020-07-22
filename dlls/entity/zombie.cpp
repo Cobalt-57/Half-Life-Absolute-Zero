@@ -350,7 +350,7 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CZombie)
 		IsAlive_FromAI(NULL)  //counts being into the DEAD_DYING deadflag somewhat
 	){
 		// ALSO - require the inflictor to be a monster.
-		// This disallows projectiles like crossbowbolts from counting as bullet damage (as the also use DMG_BULLET).
+		// This disallows projectiles like crossbowbolts from counting as bullet damage (as they also use DMG_BULLET).
 		// Could always make some "IsProjectile" method for entities that anything but grenades/bolts return FALSE to.
 		CBaseEntity* pInflictor = CBaseEntity::Instance(pevInflictor);
 		if (pInflictor && pInflictor->GetMonsterPointer()!=NULL ) {
@@ -1528,9 +1528,13 @@ void CZombie::OnCineCleanup(CCineMonster* pOldCine){
 
 Vector CZombie::BodyTarget(const Vector& posSrc) {
 	if (m_Activity == ACT_CROUCH || pev->sequence == ZOMBIE_EATBODY) {
-		//we're lower, make other things aim lower.
+		// we're lower, make other things aim lower.
+		// ALSO, do not just casually add "EyePosition"!  It is absolute, not relative.
+		// So Center() plus something else absolute, adds the origin twice.  Not good, far from accurate.
+		// ALSO, multiplying center by a decimal is a garbage idea.  Half brings it halfway to the origin
+		// of the map.       Yeah.  Not sure what I was smoking here.
 		//return Center( ) * 0.75 + EyePosition() * 0.25;
-		return Center() * 0.5 + EyePosition() * 0.15;
+		return Center() - Vector(0,0,12);
 	}
 	else {
 		//what the base monster does.

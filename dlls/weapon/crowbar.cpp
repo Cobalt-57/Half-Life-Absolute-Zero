@@ -30,6 +30,7 @@
 //EASY_CVAR_EXTERN(testVar)
 EASY_CVAR_EXTERN(multiplayerCrowbarHitSoundMode)
 EASY_CVAR_EXTERN(muteCrowbarSounds)
+EASY_CVAR_EXTERN(drawDebugCrowbar)
 
 
 //MODDD - some things moved to the new crowbar.h.

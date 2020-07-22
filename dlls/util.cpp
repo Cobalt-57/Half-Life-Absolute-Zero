@@ -5475,7 +5475,9 @@ void ExtraWorldPrecache(){
 void method_precacheAll(void){
 	//easyPrintLine("LANGUAGE: %d", g_Language);
 
+#if secret_ymg == 1
 	PRECACHE_SOUND("meme/ymg.wav", TRUE);
+#endif
 
 
 	easyForcePrintLine("method_precacheAll::: %.1f %.1f", EASY_CVAR_GET(precacheAll), EASY_CVAR_GET(soundSentenceSave));
@@ -6817,16 +6819,17 @@ void OnMapLoadStart(){
 
 
 
+
 void OnMapLoadEnd(){
 	//Going around changing the map? Need this to reset.
 	DebugLine_drawTime = -1;
 	queueYMG_stopSend = TRUE;
 	
-	CBaseEntity* tempEnt = CBaseEntity::Instance(0);
-	if(tempEnt != NULL && FClassnameIs(tempEnt->pev, "worldspawn")){
+	
+	CWorld* theWorld = getWorld();
+	if(theWorld != NULL){
 		//In case any node ent's spawned with an AIR type, let the worldspawn entity know.
-		CWorld* worldRef = static_cast<CWorld*>(tempEnt);
-		worldRef->getCustomMapSettingsFromGlobal();
+		theWorld->getCustomMapSettingsFromGlobal();
 	}
 	
 }//END OF OnMapLoadEnd
@@ -6879,6 +6882,29 @@ BOOL GermanModelOrganicLogic(){
 	// Can make this a CVar later.
 	return TRUE;
 }
+
+
+
+CWorld* getWorld(void){
+	// The world should be entity #0.  Standard.
+	// VARS(ENT(0))
+	// VARS(INDEXENT(0))
+	// CBaseEntity::Instance( INDEXENT(0) )
+	CBaseEntity* worldEntTest = CBaseEntity::Instance( ENT(0) );
+	if(worldEntTest != NULL && FClassnameIs(worldEntTest->pev, "worldspawn")){
+		return static_cast<CWorld*>(worldEntTest);
+	}else{
+		return NULL;     //whut
+	}
+}
+
+
+
+
+
+
+
+
 
 
 

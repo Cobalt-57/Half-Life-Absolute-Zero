@@ -2036,7 +2036,8 @@ void CHAssault :: StartTask ( Task_t *pTask ){
 				}else{
 					
 					CBaseEntity* tempEntTest = CBaseEntity::Instance(tr.pHit);
-					if(m_hEnemy->pev == tempEntTest->pev){
+					
+					if(tempEntTest != NULL && m_hEnemy->pev == tempEntTest->pev){
 						//identical, this is ok.  Enemy is now in plain sight.  Stop attacking this descructible.
 						//easyForcePrintLine("OOOHHHHH");
 						TaskFail();

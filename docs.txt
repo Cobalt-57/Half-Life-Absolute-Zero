@@ -706,6 +706,22 @@ crash, divideByZero, iWantMyDesktop, iWannaGoHome - the game ends.  Yep.  This e
 id, getid - take the thing in the crosshairs.  If it is a monster, print a number unique only to it.  Good for tracking down who's printing out what.
 
 
+cmdclient - run console, runs under the currently connected client's console.
+~ Possibly redundant with ingame console usage, but eh, why not.
+
+cmdserver - run console, runs under the server console.  More likely to have different behavior.
+~ Hacker's best friend, maybe.  But really, why would you play AZ with shady fellas?  It's one big sandbox anyway.
+
+changelevel3 - a whole new kind of changelevel.  Meant to work like changelevel2, but use the exact call transitions use.
+  And... not crash because you gave it only one parameter.        That's nice too.
+  (Takes two parameters, map to change to and spot being used for the transition, see console after using a transition for its name near the top)
+  Why is there different behavior between that ingame call and the already provided changelevel2?      WHO KNOWS.
+  THIS JUST IN:  the ingame call has identical behavior to changelevel2 actually.  It's just that running changelevel2 with the console open,
+  even the game unpaused while it's open,  has different behavior from calling for changelevel2 without the console open in any way (typically 
+  touching a transition), like changelevel3 does now.
+  (run about half a second after closing the console,  then it calls changelevel2).
+  DONT LOOK AT ME LIKE I KNOW WHY THEY MADE THE DECISIONS THEY DID.
+
 
 
 /////////////////////////////////////////////

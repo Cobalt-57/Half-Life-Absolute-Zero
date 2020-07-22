@@ -33,6 +33,8 @@ EASY_CVAR_EXTERN(hud_version)
 EASY_CVAR_EXTERN(forceDrawBatteryNumber)
 EASY_CVAR_EXTERN(hud_batterydraw)
 EASY_CVAR_EXTERN(hud_weaponselecthideslower)
+EASY_CVAR_EXTERN(blastExtraArmorDamageMode)
+
 
 int CHudBattery::Init(void)
 {
