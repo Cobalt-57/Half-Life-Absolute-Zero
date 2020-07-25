@@ -39,6 +39,7 @@ EASY_CVAR_EXTERN_DEBUGONLY(zombieBulletPushback);
 
 
 extern DLL_GLOBAL int g_iSkillLevel;
+extern DLL_GLOBAL float g_rawDamageCumula;
 
 
 //=========================================================
@@ -349,11 +350,21 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CZombie)
 		pev->movetype != MOVETYPE_FLY &&
 		IsAlive_FromAI(NULL)  //counts being into the DEAD_DYING deadflag somewhat
 	){
+
+		CBaseEntity* pInflictor = CBaseEntity::Instance(pevInflictor);
+
+		// Keep in mind, pInflictor is whatever is dealing the damage directly.  It can be the player hitting me with bullets,
+		// or with a projectile (the crossbowbolt is the inflictor instead).  In either case, pAttacker is still the player,
+		// the start of the damage chain (player fired the arrow that hit me).
+
 		// ALSO - require the inflictor to be a monster.
 		// This disallows projectiles like crossbowbolts from counting as bullet damage (as they also use DMG_BULLET).
 		// Could always make some "IsProjectile" method for entities that anything but grenades/bolts return FALSE to.
-		CBaseEntity* pInflictor = CBaseEntity::Instance(pevInflictor);
-		if (pInflictor && pInflictor->GetMonsterPointer()!=NULL ) {
+		// OR just DMG_PROJECTILE, for any damage dealt by an impacting projectile.
+		
+		
+		//if (pInflictor && pInflictor->GetMonsterPointer()!=NULL ) {
+		if(pInflictor != NULL &&  !(m_bitsDamageTypeMod & DMG_PROJECTILE) ){
 			Vector vecDir = (Center() - pInflictor->Center()).Normalize();
 
 			// some bonus to give smaller attacks more impact.
@@ -429,6 +440,10 @@ float CZombie::hitgroupDamage(float flDamage, int bitsDamageType, int bitsDamage
 	// ALSO - keep track of the damage dealt before adjusting for hitgroup.
 	// And ADD IT UP.  We'll assume it applies the next time TakeDamage is called,
 	// otherwise a full shotgun blast only does the pushback of one shell hitting. Not too exciting.
+
+
+	//---just because the basemonster hitgroupDamage does this now---
+	g_rawDamageCumula += flDamage;  //does not care about influence from hitboxes.
 
 	// flPushbackForceDamage is for determining how much damage will affect knockback.
 	if (dmgIsPureBullet) {
@@ -550,6 +565,8 @@ GENERATE_KILLED_IMPLEMENTATION(CZombie) {
 
 void CZombie::BecomeDead(void)
 {
+
+	/*
 	pev->takedamage = DAMAGE_YES;// don't let autoaim aim at corpses.
 
 	// give the corpse half of the monster's original maximum health. 
@@ -558,6 +575,10 @@ void CZombie::BecomeDead(void)
 
 	// don't do the MOVETYPE_TOSS change.  Loses velocity from pushback.  Somehow.
 	//pev->movetype = MOVETYPE_TOSS;
+	*/
+
+	// CHANGE,  copy from CBaseMonster.
+	CBaseMonster::BecomeDead();
 }
 
 

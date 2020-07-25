@@ -57,8 +57,16 @@ EASY_CVAR_EXTERN(turretGibDecal)
 #define TURRET_RANGE	(100 * 12)
 #define TURRET_SPREAD	Vector( 0, 0, 0 )
 #define TURRET_TURNRATE	30		//angles per 0.1 second
+
+
 #define TURRET_MAXWAIT	15		// seconds turret will stay active w/o a target
 #define TURRET_MAXSPIN	5		// seconds turret barrel will spin w/o a target
+// NOTICE!!!  Sentries actually have a huge default idle-until-sleep-time (100,000 or so), if keyvalue "maxsleep" 
+// is not set by the map.  In fact why not have its own constants.
+#define SENTRY_MAXWAIT 1E6;
+#define SENTRY_MAXSPIN 1E6;
+
+
 #define TURRET_MACHINE_VOLUME	0.5
 
 #define TURRET_GLOW_SPRITE "sprites/flare3.spr"
@@ -1150,7 +1158,15 @@ BOOL CBaseTurret::TurretDeathCheck(entvars_t* pevInflictor, entvars_t* pevAttack
 					SetTouch( NULL );
 					
 					
+					// MODDD - NOTICE!  If turrets were to be affected by the new corpse-toss (monsterKilledToss), it would
+					// go here.  But eh.  Turrets are associated with being stationary anyway.
+					// Sentries are on stands and could support it at least, but eh.  would need to rip some pieces out of
+					// basemonster's BecomeDead and go here.  Heck just make that its own method and call it from here.
+					// oh.
+					// MODDD - TODO TODO TODO.    maybe.
+
 					//BecomeDead();
+
 					pev->takedamage = DAMAGE_YES;// don't let autoaim aim at corpses.
 					// give the corpse half of the monster's original maximum health. 
 					pev->health = pev->max_health / 2;
@@ -1491,8 +1507,8 @@ void CSentry::Spawn()
 	pev->health			= gSkillData.sentryHealth;
 	m_HackedGunPos		= Vector( 0, 0, 48 );
 	pev->view_ofs.z		= 48;
-	m_flMaxWait = 1E6;
-	m_flMaxSpin	= 1E6;
+	m_flMaxWait = SENTRY_MAXWAIT;
+	m_flMaxSpin	= SENTRY_MAXSPIN;
 
 	CBaseTurret::Spawn();
 

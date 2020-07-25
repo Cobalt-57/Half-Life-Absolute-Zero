@@ -957,10 +957,11 @@ void CHAssassin :: SetYawSpeed ( void )
 //=========================================================
 void CHAssassin :: Shoot ( void )
 {
-	if (m_hEnemy == NULL)
-	{
-		return;
-	}
+	// No, still shoot, just straight forward then.  Residual shots.
+	//if (m_hEnemy == NULL)
+	//{
+	//	return;
+	//}
 
 	Vector vecShootOrigin = GetGunPosition();
 	

@@ -586,6 +586,10 @@ public:
 	//MODDD - new argument possibility, see player.cpp for more info.
 	void DeathSound ( BOOL plannedRevive);
 
+	void startReanimation(void);
+	void EndOfRevive(int preReviveSequence);
+
+	void reviveIfDead(void);
 	void startRevive(void);
 	void declareRevivelessDead(void);
 

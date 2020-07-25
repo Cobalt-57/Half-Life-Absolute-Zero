@@ -73,10 +73,13 @@ extern BOOL globalPSEUDO_germanModel_hgibFound;
 extern DLL_GLOBAL Vector g_vecAttackDir;
 extern DLL_GLOBAL int g_iSkillLevel;
 
+//MODDD - yea...
+extern DLL_GLOBAL int g_bitsDamageType;
+extern DLL_GLOBAL int g_bitsDamageTypeMod;
+extern DLL_GLOBAL BOOL g_tossKilledCall;
+extern DLL_GLOBAL float g_rawDamageCumula;
+
 //extern entvars_t *g_pevLastInflictor;
-
-
-
 
 
 
@@ -685,7 +688,6 @@ GENERATE_GIBMONSTERGIB_IMPLEMENTATION(CBaseMonster){
 		//MODDD - no involvement from germancensorship, keep to using violence_agibs.
 		if(CVAR_GET_FLOAT("violence_agibs") != 0)
 		{
-			//2152205.94
 			Vector temp = this->pev->absmax - this->pev->absmin;
 			//easyForcePrintLine("SUPER SIZE MULTI: %.2f %.2f %.2f : %.2f %.2f %.2f : %.2f %.2f %.2f", temp.x, temp.y, temp.z   pev->  );
 			
@@ -1002,26 +1004,108 @@ Activity CBaseMonster::GetBigFlinchActivity(void){
 }//END OF GetBigFlinchActivity
 
 
-
+//MODDD - NOTE
+// For intensity of the most recent attack, check pev->health to see how far into the negatives it is.
+// Maybe throw the corpse further if it's higher.
 void CBaseMonster::BecomeDead( void )
 {
 	pev->takedamage = DAMAGE_YES;// don't let autoaim aim at corpses.
 	
+	// make the corpse fly away from the attack vector
+	//MODDD - note that with any 'fling from previous damage' logic commented out below in the as-is script,
+	// this just meant plummet if there's no ground below me.  Probably just to stop being MOVETYPE_STEP or FLY.
+	pev->movetype = MOVETYPE_TOSS;
+
+
+	//MODDD - restored, was found commented-out as-is.   (monsterKilledToss == 1 restores it as found here)
+	// Seemed to be a thing in the alphas anyway, corpses to be flung a bit.
+
+
+	// eh.  BecomeDead isn't supposed to be able to be called twice,
+	// but can't hurt to check this anyway for unusual cases.
+	BOOL killedMemory = HasMemory(bits_MEMORY_KILLED);
+
+	// only the first time Killed is called, thank you!
+	// pev->deadflag == DEAD_NO  might be ok too, but eh
+	if (!killedMemory && g_tossKilledCall) {
+
+		if ( !(g_bitsDamageType & DMG_CRUSH) && !(g_bitsDamageTypeMod & (DMG_PROJECTILE | DMG_MAP_BLOCKED | DMG_MAP_TRIGGER) )) {
+
+			if (EASY_CVAR_GET(monsterKilledToss) == 1) {
+				pev->flags &= ~FL_ONGROUND;
+				pev->origin.z += 2;
+				pev->velocity = g_vecAttackDir * -1;
+				pev->velocity = pev->velocity * RANDOM_FLOAT(300, 400);
+				// adding a line.  Even here.
+				pev->groundentity = NULL;
+			}
+			else if (EASY_CVAR_GET(monsterKilledToss) == 2) {
+				//float tossAmount = (100 + -pev->health * 6);
+
+				float overkillAmount;
+
+				// say a headshot did 120 damage.  Health at the time was 2.
+				// raw damage was 40.
+				// Corpse pev->health is -118.
+				// We'll only go as far back as g_rawDamageCumula.  so -40 then.
+				
+				float forceAmountMulti;
+
+				Vector tempEnBoundDelta = (this->pev->absmax - this->pev->absmin);
+				float tempEnSize = tempEnBoundDelta.x * tempEnBoundDelta.y * tempEnBoundDelta.z;
+
+				if (tempEnSize < 16000) {  //headcrab size: 13824
+					// I go flyin'!
+					forceAmountMulti = 1.2;
+				}else if (tempEnSize <= 800000) {  //size of agrunt: about 348160
+					forceAmountMulti = 1 + -0.99*((tempEnSize - 16000) / (800000 - 16000));
+				}else {
+					// OH GOD ITS HUGE.
+					forceAmountMulti = 0.01;
+				}
+
+
+				if (g_rawDamageCumula >= -pev->health) {
+					// ok, just use neg health
+					overkillAmount = -pev->health;
+				}else {
+					// Too deep? Force to g_rawDamageCumula.
+					overkillAmount = g_rawDamageCumula;
+				}
+
+
+				// fuck this shit
+				g_vecAttackDir = Vector(g_vecAttackDir.x, g_vecAttackDir.y, 0).Normalize();
+
+				float tossAmount = (220 + overkillAmount * 8.5) * forceAmountMulti;
+
+				pev->flags &= ~FL_ONGROUND;
+				pev->origin.z += 2;
+				// variation between tossAmount itself and 12% more.  (base behavior was 33% more)
+				pev->velocity = (g_vecAttackDir * -1) * RANDOM_FLOAT(tossAmount, tossAmount * 1.12);
+				// And a tiny bit more z for more overkill.  Why not.
+				//pev->velocity.z += tossAmount * 0.035;
+				pev->velocity.z += tossAmount * 0.07;
+
+				pev->groundentity = NULL;
+			}//END OF monsterKilledToss check
+
+		}// damage type checks
+
+	}// g_tossKilledCall check
+
+	// assume not so next time without it being set again
+	g_tossKilledCall = FALSE;
+
+
+	//MODDD - moved to the bottom, as to not interfere with the negative health to use for
+	// determining extent of overkill.
+	//-----------
 	// give the corpse half of the monster's original maximum health. 
 	pev->health = pev->max_health / 2;
 	pev->max_health = 5; // max_health now becomes a counter for how many blood decals the corpse can place.
 
-	// make the corpse fly away from the attack vector
-	pev->movetype = MOVETYPE_TOSS;
 
-	//MODDD - restored, was found commented-out as-is. 
-	// Seemed to be a thing in the alphas anyway, corpses to be flung a bit.
-	pev->flags &= ~FL_ONGROUND;
-	pev->origin.z += 2;
-	pev->velocity = g_vecAttackDir * -1;
-	pev->velocity = pev->velocity * RANDOM_FLOAT( 300, 400 );
-	// also adding a line:
-	pev->groundentity = NULL;
 }
 
 
@@ -1084,7 +1168,13 @@ GENERATE_KILLED_IMPLEMENTATION(CBaseMonster)
 		}
 		return;
 	}
-	Remember( bits_MEMORY_KILLED );
+
+	//MODDD - Not yet, freeman!  Maybe "BecomeDead" wants to have an easy way of knowing if this is the first
+	// time it's been called before.
+	// ...oh wait, this was pointless.  If had KILLED already, that point would've never been reached.
+	// BecomeDead can't be called twice, even though 'Killed' can.
+	// Well.  Can't hurt at least.
+	//Remember( bits_MEMORY_KILLED );
 	
 	//MODDD NOTE - beats me why we don't just set the pev->deadflag to DEAD_DYING
 	// right here. Although picking TASK_DIE soon calls "deathAnimationStart"
@@ -1095,8 +1185,7 @@ GENERATE_KILLED_IMPLEMENTATION(CBaseMonster)
 	// clear the deceased's sound channels.(may have been firing or reloading when killed)
 	EMIT_SOUND(ENT(pev), CHAN_WEAPON, "common/null.wav", 1, ATTN_NORM);
 
-	//pDeathSounds
-	//MODDD - TODO: for voice maybe at some point?  Unless that would stop death-cries or something.
+	//MODDD - for voice maybe?  Unless that would stop death-cries or something.
 
 
 	m_IdealMonsterState = MONSTERSTATE_DEAD;
@@ -1121,6 +1210,9 @@ GENERATE_KILLED_IMPLEMENTATION(CBaseMonster)
 
 	if	( ShouldGibMonster( iGib ) )
 	{
+		//MODDD - this would've happened earlier before, may as well here to still at all at this point.
+		Remember(bits_MEMORY_KILLED);
+
 		//GibMonster(DetermineGibHeadBlock(), gibsSpawnDecals);
 		GENERATE_GIBMONSTER_CALL;
 		return;
@@ -1152,6 +1244,10 @@ GENERATE_KILLED_IMPLEMENTATION(CBaseMonster)
 	//pev->enemy = ENT( pevAttacker );//why? (sjb)
 	
 	m_IdealMonsterState = MONSTERSTATE_DEAD;
+
+
+	//MODDD - well golly gee, I do believe you are now dead
+	Remember(bits_MEMORY_KILLED);
 
 }//END OF Killed
 
@@ -1781,12 +1877,13 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBaseEntity)
 	else
 	// an actual missile was involved.
 	{
+		//MODDD - NOTE. ...oh.  no difference.  okay guys.
 		vecTemp = pevInflictor->origin - ( VecBModelOrigin(pev) );
 	}
 
 // this global is still used for glass and other non-monster killables, along with decals.
 	g_vecAttackDir = vecTemp.Normalize();
-		
+	
 // save damage based on the target's armor level
 
 // figure momentum add (don't let hurt brushes or other triggers move player)
@@ -2039,6 +2136,8 @@ GLOBALS ASSUMED SET:  g_iSkillLevel
 //MODDD - new TakeDamage interception.
 //MODDD - TODO. extra idea. Perhaps with a deadflag of DEAD_DYING,
 //        DeadTakeDamage should be called too? Just an idea.
+// AND NOTICE - g_rawDamageCumula must be set to 0 anywhere the method ends.  Before any 'return' too.
+// That way next time damage is dealt, it starts fresh.
 GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBaseMonster){
 	//TEMP
 	//bitsDamageType |= DMG_POISON;
@@ -2046,8 +2145,10 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBaseMonster){
 	float flTake;
 	Vector	vecDir;
 
-	if (!pev->takedamage)
+	if (!pev->takedamage) {
+		g_rawDamageCumula = 0;  //whoopsie
 		return 0;
+	}
 
 	if (FClassnameIs(pev, "monster_human_assault")) {
 		int xxx = 235;
@@ -2077,7 +2178,9 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBaseMonster){
 		//timed damages NOT allowed for corpses.
 		bitsDamageType &= ~ DMG_TIMEBASED;
 		bitsDamageTypeMod &= ~ DMG_TIMEBASEDMOD;
-		return DeadTakeDamage( pevInflictor, pevAttacker, flDamage, bitsDamageType, bitsDamageTypeMod );
+		int poopie = DeadTakeDamage( pevInflictor, pevAttacker, flDamage, bitsDamageType, bitsDamageTypeMod );
+		g_rawDamageCumula = 0;
+		return poopie;
 	}
 
 	if ( pev->deadflag == DEAD_NO )
@@ -2115,7 +2218,8 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBaseMonster){
 		CBaseEntity *pInflictor = CBaseEntity :: Instance( pevInflictor );
 		if (pInflictor)
 		{
-			vecDir = ( pInflictor->Center() - Vector ( 0, 0, 10 ) - Center() ).Normalize();
+			// And lower offset for the center!  Was 10.  (that vect's subtracted)
+			vecDir = ( pInflictor->Center() - Vector ( 0, 0, 15 ) - Center() ).Normalize();
 			vecDir = g_vecAttackDir = vecDir.Normalize();
 		}
 	}
@@ -2139,6 +2243,7 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBaseMonster){
 		// check for godmode or invincibility
 		if ( pev->flags & FL_GODMODE )
 		{
+			g_rawDamageCumula = 0;  //whoopsie
 			return 0;
 		}
 	}
@@ -2158,6 +2263,7 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBaseMonster){
 
 		if(this->blockDamage == TRUE){
 			//don't take damage.
+			g_rawDamageCumula = 0;  //whoopsie
 			return 0;
 		}else if(this->buddhaMode == TRUE){
 			//allow the loss of health, but have a minimum of 1 hit point.
@@ -2175,6 +2281,7 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBaseMonster){
 		if(  (!m_pCine || m_pCine->CanInterrupt())  ) {
 			SetConditions( bits_COND_LIGHT_DAMAGE );
 		}
+		g_rawDamageCumula = 0;  //whoopsie
 		return 0;
 	}
 
@@ -2188,6 +2295,12 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBaseMonster){
 
 		float MYHEALTH = pev->health;
 		
+
+		//MODDD - Freshly dead?  Anticipate a BecomeDead call soon.
+		g_tossKilledCall = TRUE;
+		g_bitsDamageType = bitsDamageType;
+		g_bitsDamageTypeMod = bitsDamageTypeMod;
+
 		if ( bitsDamageType & DMG_ALWAYSGIB )
 		{
 			Killed( pevInflictor, pevAttacker, GIB_ALWAYS );
@@ -2201,13 +2314,19 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBaseMonster){
 			Killed( pevInflictor, pevAttacker, GIB_NORMAL );
 		}
 
+		// Just in case BecomeDead didn't flick this off.
+		g_tossKilledCall = FALSE;
+
+
 		//g_pevLastInflictor = NULL;
 
+		g_rawDamageCumula = 0;  //ok
 		return 0;
 	}
 	//MODDD - else, if not killed by this strike:
 	else{
 
+		// player TakeDamage already handles these pretty deeply.
 		if(!IsPlayer()){
 			int myClassify = Classify();
 			for (int i = 0; i < CDMG_TIMEBASED; i++){
@@ -2256,7 +2375,7 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBaseMonster){
 
 			}//END OF for(int i = 0...)
 		}//END OF not player check.
-	}
+	}//END OF pev->health 0 check
 
 	// react to the damage (get mad)
 	if ( (pev->flags & FL_MONSTER) && !FNullEnt(pevAttacker) )
@@ -2314,6 +2433,7 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBaseMonster){
 		}
 	}
 
+	g_rawDamageCumula = 0;  //and done
 	return 1;
 }//END OF TakeDamage
 
@@ -2323,6 +2443,9 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBaseMonster){
 float CBaseMonster::hitgroupDamage(float flDamage, int bitsDamageType, int bitsDamageTypeMod, int iHitgroup) {
 	// ALSO, only allow changes if lacking DMG_HITBOX_EQUAL.  Explosions or inprecise attacks should use
 	// this damage type.  After all, a distant explosion doing headshot damage makes no sense.
+
+	g_rawDamageCumula += flDamage;  //does not care about influence from hitboxes.
+
 	if (!(bitsDamageTypeMod & DMG_HITBOX_EQUAL)) {
 		switch (iHitgroup)
 		{
@@ -2409,6 +2532,14 @@ void CBaseMonster::attemptResetTimedDamage(BOOL forceReset){
 
 }
 
+
+
+
+// TODO - let monster size influence the amount tossed for dead-tossing?
+// gargantuas should be barely phased ever, see scientist for some common size threshholds.
+// There's that mass overridable or whatever but who wants to do that.
+// And look at damage before factoring in what's done from hitgroups (no extra push for headshot),
+// think zombie does that.
 
 //=========================================================
 // DeadTakeDamage - takedamage function called when a monster's

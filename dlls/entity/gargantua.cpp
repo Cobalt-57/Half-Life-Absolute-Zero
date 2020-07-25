@@ -347,7 +347,7 @@ public:
 	void FlameCreate( void );
 	void FlameUpdate( void );
 	void FlameControls( float angleX, float angleY );
-	void FlameDestroy( void );
+	void FlameDestroy(BOOL playOffSound );
 	inline BOOL FlameIsOn( void ) { return m_pFlame[0] != NULL; }
 
 	void FlameDamage( Vector vecStart, Vector vecEnd, entvars_t *pevInflictor, entvars_t *pevAttacker, float flDamage, int iClassIgnore, int bitsDamageType );
@@ -982,11 +982,15 @@ void CGargantua :: FlameDamage( Vector vecStart, Vector vecEnd, entvars_t *pevIn
 }
 
 
-void CGargantua :: FlameDestroy( void )
+//MODDD - added 'playOffSound' parameter.  Might not want to do that on gibbing/deletion.
+void CGargantua :: FlameDestroy(BOOL playOffSound)
 {
 	int i;
 
-	EMIT_SOUND_FILTERED ( edict(), CHAN_WEAPON, pBeamAttackSounds[ 0 ], 1.0, ATTN_NORM, 0, PITCH_NORM );
+	if (playOffSound) {
+		EMIT_SOUND_FILTERED(edict(), CHAN_WEAPON, pBeamAttackSounds[0], 1.0, ATTN_NORM, 0, PITCH_NORM);
+	}
+
 	for ( i = 0; i < 4; i++ )
 	{
 		if ( m_pFlame[i] )
@@ -1155,18 +1159,16 @@ void CGargantua :: Precache()
 
 
 
-
-
-
-
-
 GENERATE_TRACEATTACK_IMPLEMENTATION(CGargantua){
-
-
 	ALERT( at_aiconsole, "CGargantua::TraceAttack\n");
-
-
 	BOOL isAliveVar = IsAlive();
+	//MODDD - if hit by the gauss, and it is charged enough, do damage.
+	BOOL gaussPass = ((bitsDamageTypeMod & (DMG_GAUSS)) && flDamage > 80);
+
+	// But cut it a bit.  Thick armor after all.
+	if (gaussPass) {
+		flDamage *= 0.75;
+	}
 
 	//MODDD - nah, this method is fine, even if dead.
 	/*
@@ -1176,8 +1178,6 @@ GENERATE_TRACEATTACK_IMPLEMENTATION(CGargantua){
 		return;
 	}
 	*/
-
-
 
 	BOOL painSoundPass = FALSE;
 	if(pev->deadflag == DEAD_NO){
@@ -1192,11 +1192,10 @@ GENERATE_TRACEATTACK_IMPLEMENTATION(CGargantua){
 		//leave false.
 	}
 
-
 	//pev->deadflag == DEAD_NO
 	//MODDD - condition also depends on "gargantuaCorpseDeath" (or being alive, neither dead nor in dying animation).
 	// UNDONE: Hit group specific damage?   (comment found here, oh well)
-	if ( painSoundPass && (bitsDamageType & (GARG_DAMAGE|DMG_BLAST) )    )
+	if ( painSoundPass && ( (bitsDamageType & GARG_DAMAGE) || gaussPass )    )
 	{
 		if ( m_painSoundTime < gpGlobals->time )
 		{
@@ -1205,29 +1204,24 @@ GENERATE_TRACEATTACK_IMPLEMENTATION(CGargantua){
 		}
 	}
 
-
-	//!!!!!!
 	if(pev->deadflag != DEAD_DEAD){
 		bitsDamageType &= GARG_DAMAGE;
 	}else{
-		//if dead, let "DMG_CLUB" pass...
+		// if dead, let "DMG_CLUB" pass...
 		bitsDamageType &= (GARG_DAMAGE|DMG_CLUB);
 	}
-
 
 	//MODDD - this might look a little weird. Note that, above, bitsDamageType gets all damage types filtered out except for those in GARG_DAMAGE (or also DMG_CLUB if dead so the crowbar is alloowed).
 	//        GARG_DAMAGE is made of a list of forms of damage that count against the gargantua.
 	//        If not a single damage type from GARG_DAMAGE is present in the provided bitsDamageType, then stripping bitsDamageType of all but GARG_DAMAGE leaves nothing (0).
 	//        So the 0 check here doesn't ask, "Did the sender give us a 0 bitsDamageType?". It's saying, "After stripping out all tpes but those in GARG_DAMAGE from bitsDamageType, does
 	//        anything remain? If not...". Also this ends up setting the damage dealt to 0 if the gargantua is alive.
-	if ( bitsDamageType == 0)
+	if ( bitsDamageType == 0 && !gaussPass)
 	{
 		if ( pev->dmgtime != gpGlobals->time || (RANDOM_LONG(0,100) < 20) )
 		{
-
 			float gargantuaBleedsVar = EASY_CVAR_GET(gargantuaBleeds);
 
-			
 			//MODDD - options for hit effect.
 			if(gargantuaBleedsVar == 0){
 				//no sound or effect.
@@ -1272,18 +1266,21 @@ BOOL CGargantua::isSizeGiant(void){
 GENERATE_TAKEDAMAGE_IMPLEMENTATION(CGargantua)
 {
 	ALERT( at_aiconsole, "CGargantua::TakeDamage\n");
+	BOOL gaussPass = ((bitsDamageTypeMod & (DMG_GAUSS)) && flDamage > 80);   //again??
 
 	EASY_CVAR_PRINTIF_PRE(gargantuaPrintout, easyPrintLine( "GARG DAMAGE %.2f", pev->health ));
 	//easyForcePrintLine("????????????? %d %d", IsAlive(), pev->deadflag);
 	if ( IsAlive() )
 	{
-		//usal checks.
-		if ( !(bitsDamageType & GARG_DAMAGE) )
+		//usual checks.
+		if (!(bitsDamageType & GARG_DAMAGE) && !gaussPass) {
 			flDamage *= 0.01;
-		if ( bitsDamageType & DMG_BLAST )
-			SetConditions( bits_COND_LIGHT_DAMAGE );
+		}
 
-		
+		if ((bitsDamageType & DMG_BLAST) || gaussPass) {
+			SetConditions(bits_COND_LIGHT_DAMAGE);
+		}
+
 
 	}else{
 		//MODDD - possible intervention.  If the player (FL_CLIENT) uses the crowbar on the corpse (DEAD_DEAD), do at least a little.
@@ -1293,9 +1290,9 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CGargantua)
 		if (   pev->deadflag == DEAD_DEAD ){
 
 			if(bitsDamageType & DMG_CLUB){
-				flDamage = 50;
-			}else if(DMG_BLAST & (DMG_BLAST | DMG_MORTAR) ){
-				flDamage *= 7;
+				flDamage = 70;
+			}else if(bitsDamageType & (DMG_BLAST | DMG_MORTAR) ){
+				flDamage *= 8;
 			}
 			//pev->health --;
 		}
@@ -1317,7 +1314,6 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CGargantua)
 
 void CGargantua::DeathEffect( void )
 {
-
 	int i;
 	UTIL_MakeVectors(pev->angles);
 	Vector deathPos = pev->origin + gpGlobals->v_forward * 100;
@@ -1356,11 +1352,14 @@ void CGargantua::DeathEffect( void )
 GENERATE_KILLED_IMPLEMENTATION(CGargantua)
 {
 	EyeOff();
-	UTIL_Remove( m_pEyeGlow );
-	m_pEyeGlow = NULL;
+	if (m_pEyeGlow) {
+		UTIL_Remove(m_pEyeGlow);
+		m_pEyeGlow = NULL;
+	}
 
 	//MODDD - WHY IS THIS NOT HERE???!!!
-	FlameDestroy();
+	if(FlameIsOn())
+		FlameDestroy(TRUE);
 
 	int gibFlag = 0;
 	float valueOf = EASY_CVAR_GET(gargantuaCorpseDeath);
@@ -1437,9 +1436,11 @@ GENERATE_KILLED_IMPLEMENTATION(CGargantua)
 
 void CGargantua::onDelete(void) {
 	EyeOff();
-	UTIL_Remove(m_pEyeGlow);
-	m_pEyeGlow = NULL;
-	FlameDestroy();
+	if (m_pEyeGlow) {
+		UTIL_Remove(m_pEyeGlow);
+		m_pEyeGlow = NULL;
+	}
+	FlameDestroy(FALSE);
 }
 
 
@@ -1632,7 +1633,7 @@ Schedule_t *CGargantua::GetScheduleOfType( int Type )
 {
 	// HACKHACK - turn off the flames if they are on and garg goes scripted / dead
 	if ( FlameIsOn() )
-		FlameDestroy();
+		FlameDestroy(TRUE);
 
 	switch( Type )
 	{
@@ -2009,7 +2010,7 @@ void CGargantua::RunTask( Task_t *pTask )
 	case TASK_FLAME_SWEEP:
 		if ( gpGlobals->time > m_flWaitFinished )
 		{
-			FlameDestroy();
+			FlameDestroy(TRUE);
 			TaskComplete();
 			FlameControls( 0, 0 );
 			SetBoneController( 0, 0 );

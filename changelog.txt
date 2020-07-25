@@ -76,4 +76,10 @@ Python lasersight fixed a bit, RPG one was a while back.  Leaving the python las
 
 TODO:  scientists that fear the player in a very limited place lag the whole game like hell.
       See in a scientist on top of another NPC (zombie?), and shoot at the scientist without killing.  Lag ahoy.
+GOT IT.  And it was in a very bizarre circumstance like having a scripted sequence but being interrupted by a barnacle, then landing on top of a monster.
+I'm surprised 300 people didn't run into this on their first playthrough, it honestly seems like that's how it always goes.
+
+NEW CVAR:
+monsterKilledToss - lets corpses move a short distance, depending on amount of overkill in the killing hit.
+
 

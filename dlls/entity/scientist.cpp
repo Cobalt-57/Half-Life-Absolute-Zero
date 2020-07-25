@@ -215,8 +215,10 @@ public:
 	float CoverRadius( void ) { return DEFAULT_COVER_SEEK_DISTANCE * 1.8; }		// Need more room for cover because scientists want to get far away!
 	
 	//MODDD MAJOR - DEBUG. NO.
-	//BOOL	DisregardEnemy( CBaseEntity *pEnemy ) { return !pEnemy->IsAlive() || (gpGlobals->time - m_fearTime) > 15; }
-	BOOL DisregardEnemy( CBaseEntity *pEnemy ) { return FALSE; }
+	// wanted to bring back again at some point, right?   And let's make it 20 instead anyway.  USED TO BE 15 for when to forget
+	BOOL DisregardEnemy( CBaseEntity *pEnemy ) { return !pEnemy->IsAlive() || (gpGlobals->time - m_fearTime) > 20; }
+	//BOOL DisregardEnemy( CBaseEntity *pEnemy ) { return FALSE; }
+
 	BOOL CanHeal( void );
 	//MODDD
 	BOOL CanHeal(CBaseMonster* arg_monsterTry);
@@ -806,7 +808,7 @@ void CScientist::DeclineFollowingProvoked(CBaseEntity* pCaller){
 		PlaySentence( "BA_POKE_D", 8, VOL_NORM, ATTN_NORM );
 	}
 
-	if(this->m_pSchedule == slScientistCover ){
+	if(this->m_pSchedule == slScientistCover || this->m_pSchedule == slSciPanic){
 		//no reaction, already running.
 
 	}else if(aggro <= 0){
@@ -1229,23 +1231,22 @@ void CScientist :: StartTask( Task_t *pTask )
 						float fightOddsInfluence = 1.05;
 						float fearFactor = 0;
 
-						//size of agrunt: 73728.
+						//size of hgrunt, maybe?: 73728.
+						//size of garg?   5478400.
 
 						if (tempEnSize < 16000) {  //headcrab size: 13824
 							//no change.
 
-						}
-						else if (tempEnSize <= 348160) {  //size of agrunt: about 348160
+						}else if (tempEnSize <= 500000) {  //size of agrunt: about 348160
 						   //less likely to fight, the more out of our comfort zone this is.
 
-							fearFactor = ((tempEnSize - 16000) / (348160 - 16000));
+							fearFactor = ((tempEnSize - 16000) / (500000 - 16000));
 							dist *= (1 + fearFactor);
 
 							fightOddsInfluence = (1 - fearFactor + 0.05f);
 
-						}
-						else {
-							//OH GOD ITS HUGE
+						}else {
+							// OH GOD ITS HUGE
 							dist *= 7;
 							fightOddsInfluence = 0.01f;
 						}
@@ -2259,7 +2260,11 @@ Schedule_t* CScientist :: GetScheduleOfType ( int Type )
 
 	switch( Type )
 	{
-
+	case SCHED_TAKE_COVER_FROM_ENEMY:
+		// wait.  This wasn't always here, beeeeeecccccccaaaaaaauuuuussssssseeee?
+		aggro = 0;
+		return slScientistCover;
+	break;
 	case SCHED_SCIENTIST_ANGRY_CHASE_ENEMY:	
 	//also, in case we pick this schedule from the TASK_FIND_COVER_FROM_ENEMY_OR_FIGHT in schedule.cpp, make sure to boost your aggro so the rest of the AI works right.
 	case SCHED_CHASE_ENEMY:
@@ -2438,6 +2443,8 @@ Schedule_t *CScientist :: GetSchedule ( void )
 			{
 				m_hEnemy = NULL;
 				pEnemy = NULL;
+				m_IdealMonsterState = MONSTERSTATE_ALERT;  //clearly
+				return GetSchedule();  //now try again.
 			}
 		}
 
@@ -2610,15 +2617,42 @@ Schedule_t *CScientist :: GetSchedule ( void )
 		TrySmellTalk();
 		break;
 	case MONSTERSTATE_COMBAT:
-		if ( HasConditions( bits_COND_NEW_ENEMY ) )
-			return slSciFear;					// Point and scream!
-		if ( HasConditions( bits_COND_SEE_ENEMY ) )
-			return slScientistCover;		// Take Cover
 
-		if ( HasConditions( bits_COND_HEAR_SOUND ) )
-			return slTakeCoverFromBestSound;	// Cower and panic from the scary sound!
+		//MODDD - check present here to.  Why not anyway?
+		if (pEnemy)
+		{
+			if (HasConditions(bits_COND_SEE_ENEMY))
+				m_fearTime = gpGlobals->time;
+			else if (DisregardEnemy(pEnemy))		// After 15 seconds of being hidden, return to alert
+			{
+				m_hEnemy = NULL;
+				pEnemy = NULL;
+			}
+		}
 
-		return slScientistCover;			// Run & Cower
+
+		//MODDD - WHY YALL RETURNIN STRAIGHT SCHEDUELS NOWHERE ELSE DOES THIS SHIT DAMN MAN.     DAM.
+		if (HasConditions(bits_COND_NEW_ENEMY)) {
+			//return slSciFear;					// Point and scream!
+			return GetScheduleOfType(SCHED_FEAR);
+		}
+
+		if (HasConditions(bits_COND_SEE_ENEMY)) {
+			//return slScientistCover;		// Take Cover
+			return GetScheduleOfType(SCHED_TAKE_COVER_FROM_ENEMY);
+		}
+
+		if (HasConditions(bits_COND_HEAR_SOUND)) {
+			//return slTakeCoverFromBestSound;	// Cower and panic from the scary sound!
+			return GetScheduleOfType(SCHED_TAKE_COVER_FROM_BEST_SOUND);
+		}
+
+
+		//return slScientistCover;			// Run & Cower
+		return GetScheduleOfType(SCHED_TAKE_COVER_FROM_ENEMY);
+
+
+
 		break;
 	}
 
@@ -2677,8 +2711,30 @@ MONSTERSTATE CScientist :: GetIdealState ( void )
 					m_hEnemy = NULL;
 					return MONSTERSTATE_ALERT;
 				}
-				// Follow if only scared a little
-				if ( m_hTargetEnt != NULL )
+				// Follow if only scared a little.
+
+
+
+				// MODDD.
+				//    Ahem.
+				/*
+I8,        8        ,8I  88888888ba     ,ad8888ba,      ,ad8888ba,      ,ad8888ba,      ,ad8888ba,      ,ad8888ba,      ,ad8888ba,      ,ad8888ba,      ,ad8888ba,    888b      88    ,ad8888ba,   
+`8b       d8b       d8'  88      "8b   d8"'    `"8b    d8"'    `"8b    d8"'    `"8b    d8"'    `"8b    d8"'    `"8b    d8"'    `"8b    d8"'    `"8b    d8"'    `"8b   8888b     88   d8"'    `"8b  
+ "8,     ,8"8,     ,8"   88      ,8P  d8'        `8b  d8'        `8b  d8'        `8b  d8'        `8b  d8'        `8b  d8'        `8b  d8'        `8b  d8'        `8b  88 `8b    88  d8'            
+  Y8     8P Y8     8P    88aaaaaa8P'  88          88  88          88  88          88  88          88  88          88  88          88  88          88  88          88  88  `8b   88  88             
+  `8b   d8' `8b   d8'    88""""88'    88          88  88          88  88          88  88          88  88          88  88          88  88          88  88          88  88   `8b  88  88      88888  
+   `8a a8'   `8a a8'     88    `8b    Y8,        ,8P  Y8,        ,8P  Y8,        ,8P  Y8,        ,8P  Y8,        ,8P  Y8,        ,8P  Y8,        ,8P  Y8,        ,8P  88    `8b 88  Y8,        88  
+    `8a8'     `8a8'      88     `8b    Y8a.    .a8P    Y8a.    .a8P    Y8a.    .a8P    Y8a.    .a8P    Y8a.    .a8P    Y8a.    .a8P    Y8a.    .a8P    Y8a.    .a8P   88     `8888   Y8a.    .a88  
+     `8'       `8'       88      `8b    `"Y8888Y"'      `"Y8888Y"'      `"Y8888Y"'      `"Y8888Y"'      `"Y8888Y"'      `"Y8888Y"'      `"Y8888Y"'      `"Y8888Y"'    88      `888    `"Y88888P"   
+                */
+				// ...you see.    m_hTargetEnt can also be NULL for having a scripted sequence in mind.
+				//    So.   No,  my dear boy.    Dont.    Do.    This.   Shit.
+				//    It makes the schedule oscillate between ALERT and COMBAT.
+				//    Which is bad.
+				//    Very.              Very.         Bad.
+                                                                                                                                                                                                   
+				//if ( m_hTargetEnt != NULL )
+				if(IsFollowing())
 				{
 					return MONSTERSTATE_ALERT;
 				}
@@ -2827,8 +2883,8 @@ void CScientist::MonsterThink(void){
 		) &&
 		(m_hTargetEnt == NULL || (m_hTargetEnt != NULL && !m_hTargetEnt->IsAlive()) )
 		)  {
-		//Fail if who we're supposed to follow dies.
-		//m_hTargetEnt = NULL;
+		// Fail if who we're supposed to follow dies.
+		// m_hTargetEnt = NULL;
 		leaderRecentlyDied = TRUE;
 		TaskFail();
 	}
@@ -2927,6 +2983,7 @@ void CScientist::MonsterThink(void){
 	}
 
 
+	//MODDD - I think this section is all new?
 	if( HasConditions(bits_COND_SEE_ENEMY|bits_COND_NEW_ENEMY|bits_COND_SEE_NEMESIS|bits_COND_SEE_HATE|bits_COND_SEE_FEAR|bits_COND_SEE_DISLIKE ) ){
 		//any sight of the enemy makes this happen.
 		m_fearTime = gpGlobals->time;
@@ -2949,7 +3006,6 @@ void CScientist::MonsterThink(void){
 	*/
 
 	CTalkMonster::MonsterThink();
-
 
 
 	/*

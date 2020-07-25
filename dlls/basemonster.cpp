@@ -259,16 +259,17 @@ void CBaseMonster::PostRestore() {
 
 //MODDD - moved from method iRelationship to instance scope. Accessible from other places now.
 //   And why did ALIENMONSTER and ALIENPREY have a R_NO with MACHINE? Machines (like sentries, part of security or human military) certainly hate them.
+//   Same for HUMAN_PASSIVE and ALIENPASSIVE?   why have a reacion of R_NO while machines attack them?.
 //static int iEnemy[14][14] =
 int CBaseMonster::iEnemy[14][14] =
 {			 //   NONE	 MACH	 PLYR	 HPASS	 HMIL	 AMIL	 APASS	 AMONST	APREY	 APRED	 INSECT	PLRALY	PBWPN	ABWPN
 /*NONE*/		{ R_NO	,R_NO	,R_NO	,R_NO	,R_NO	,R_NO	,R_NO	,R_NO	,R_NO	,R_NO	,R_NO	,R_NO,	R_NO,	R_NO	},
 /*MACHINE*/		{ R_NO	,R_NO	,R_DL	,R_DL	,R_NO	,R_DL	,R_DL	,R_DL	,R_DL	,R_DL	,R_NO	,R_DL,	R_DL,	R_DL	},
 /*PLAYER*/		{ R_NO	,R_DL	,R_NO	,R_NO	,R_DL	,R_DL	,R_DL	,R_DL	,R_DL	,R_DL	,R_NO	,R_NO,	R_DL,	R_DL	},
-/*HUMANPASSIVE*/{ R_NO	,R_NO	,R_AL	,R_AL	,R_HT	,R_FR	,R_NO	,R_HT	,R_DL	,R_FR	,R_NO	,R_AL,	R_NO,	R_NO	},
+/*HUMANPASSIVE*/{ R_NO	,R_DL	,R_AL	,R_AL	,R_HT	,R_FR	,R_NO	,R_HT	,R_DL	,R_FR	,R_NO	,R_AL,	R_NO,	R_NO	},
 /*HUMANMILITAR*/{ R_NO	,R_NO	,R_HT	,R_DL	,R_NO	,R_HT	,R_DL	,R_DL	,R_DL	,R_DL	,R_NO	,R_HT,	R_NO,	R_NO	},
 /*ALIENMILITAR*/{ R_NO	,R_DL	,R_HT	,R_DL	,R_HT	,R_NO	,R_NO	,R_NO	,R_NO	,R_NO	,R_NO	,R_DL,	R_NO,	R_NO	},
-/*ALIENPASSIVE*/{ R_NO	,R_NO	,R_NO	,R_NO	,R_NO	,R_NO	,R_NO	,R_NO	,R_NO	,R_NO	,R_NO	,R_NO,	R_NO,	R_NO	},
+/*ALIENPASSIVE*/{ R_NO	,R_DL,R_NO	,R_NO	,R_NO	,R_NO	,R_NO	,R_NO	,R_NO	,R_NO	,R_NO	,R_NO,	R_NO,	R_NO	},
 /*ALIENMONSTER*/{ R_NO	,R_DL	,R_DL	,R_DL	,R_DL	,R_NO	,R_NO	,R_NO	,R_NO	,R_NO	,R_NO	,R_DL,	R_NO,	R_NO	},
 /*ALIENPREY   */{ R_NO	,R_DL	,R_DL	,R_DL	,R_DL	,R_NO	,R_NO	,R_NO	,R_NO	,R_FR	,R_NO	,R_DL,	R_NO,	R_NO	},
 /*ALIENPREDATO*/{ R_NO	,R_DL	,R_DL	,R_DL	,R_DL	,R_NO	,R_NO	,R_NO	,R_HT	,R_DL	,R_NO	,R_DL,	R_NO,	R_NO	},
@@ -2136,7 +2137,31 @@ BOOL CBaseMonster::getMonsterBlockIdleAutoUpdate(){
 //=========================================================
 void CBaseMonster :: MonsterUse ( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
 {
-	m_IdealMonsterState = MONSTERSTATE_ALERT;
+	//MODDD - maybe don't force to ALERT?  Monsters in a COMBAT state don't need this downgrade.
+	// Instead, how about they look at whatever called USE on the monster?
+	// If they hate the monster that called USE that is.
+	//m_IdealMonsterState = MONSTERSTATE_ALERT;
+
+	if (pActivator != NULL) {
+		// If not already in view, turn to look at em'
+		if (!FInViewCone(pActivator)){
+			int theRel = IRelationship(pActivator);
+			Schedule_t* myIdealFacingSched = GetScheduleOfType(TASK_FACE_IDEAL);
+			if ( 
+				this->m_pSchedule != myIdealFacingSched &&
+				(theRel > R_NO || theRel == R_FR)
+			) {
+				m_vecEnemyLKP = pActivator->pev->origin;
+				MakeIdealYaw(m_vecEnemyLKP);
+
+				//ChangeSchedule(GetScheduleOfType(TASK_FACE_IDEAL));
+
+				// actually this is less invasive, as seen elsewhere to make a monster look at the source of a sound.
+				this->SetConditions(bits_COND_LIGHT_DAMAGE);
+			}
+		}
+	}
+
 }
 
 //=========================================================
@@ -2645,6 +2670,16 @@ BOOL CBaseMonster :: FBecomeProne ( void )
 
 	m_IdealMonsterState = MONSTERSTATE_PRONE;
 
+
+	// no script for you!  It is hopelessly broken to have run into this so what's the point.
+	// MODDD - CRITICAL.  If for some reason anything hit by a barnacle is supposed to keep its script-link after
+	// coming down, this might be such a good idea.
+
+	// That is, even talking to the scientist before he runs into the barnacle or after he comes down (a1a2a or the equivalent
+	// retail map), and the reported target ent is still "scripted", yet his schedule works like default (idle, panic, cowardly, etc.).
+	// No attempt to follow the script after a barnacle breaks it.  If it is ever wanted to return to the script instead whenever
+	// possible (out of barnacle), say so!
+	m_hTargetEnt = NULL;
 	
 	
 	//MODDD - turn off interpolation when bitten.
@@ -5881,7 +5916,6 @@ CBaseEntity *CBaseMonster :: BestVisibleEnemy ( void )
 void CBaseMonster :: MakeIdealYaw( Vector vecTarget )
 {
 	
-	
 
 	//MODDD - this kind of immitation "Strafe" is too crude and causes issues with the AI sometimes, like fiddling-around near the end point of a path..
 	// strafing monster needs to face 90 degrees away from its goal
@@ -6437,9 +6471,6 @@ void CBaseMonster::ReportAIState( void )
 	//m_pfnThink m_pfnTouch
 	ALERT_TYPE level = at_console;
 
-	//mirrors the states listed in util.h's MONSTERSTATE enum.
-	static const char *pStateNames[] = { "None", "Idle", "Combat", "Alert", "Hunt", "Prone", "Script", "PlayDead", "Dead" };
-
 	
 
 	easyForcePrintLine("%s ID:%d", getClassname(), monsterID);
@@ -6865,10 +6896,13 @@ Vector CBaseMonster :: ShootAtEnemyMod( const Vector &shootOrigin )
 		//    So why not make a separate BodyTarget method that never added pev->origin in the first place? Who knows.
 		return ( (pEnemy->BodyTargetMod( shootOrigin ) - pEnemy->pev->origin) + m_vecEnemyLKP - shootOrigin ).Normalize();
 	}
-	else
+	else {
+		UTIL_MakeAimVectors(this->pev->angles);
 		return gpGlobals->v_forward;
+	}
 	//MODDD NOTICE - isn't trusting "gpGlobals->v_forward" kinda dangerous? This assumes we recently called MakeVectors and not privately for v_forward to be relevant
 	//               to this monster.
+	//  CHANGED,  just call it then in such a case for the love of.
 }
 
 
@@ -7626,7 +7660,6 @@ void CBaseMonster::startReanimation(){
 	
 	EndOfRevive(oldSeq);
 }//END OF startReanimation
-
 
 
 //Overridable method. What to do when this monster is at the end of revival from startReanimation above.

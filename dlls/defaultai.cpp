@@ -1095,35 +1095,6 @@ Schedule_t slChaseEnemy[] =
 };
 
 
-/*
-Task_t	tlBaFollow[] =
-{
-
-	//MODDD - the Barney should use his BA_STOP lines.
-	{ TASK_SET_FAIL_SCHEDULE,	(float)SCHED_CANT_FOLLOW },	// If you fail, bail out of follow
-
-	{ TASK_MOVE_TO_TARGET_RANGE,(float)128		},	// Move within 128 of target ent (client)
-	{ TASK_SET_SCHEDULE,		(float)SCHED_TARGET_FACE },
-};
-
-Schedule_t	slBaFollow[] =
-{
-	{
-		tlBaFollow,
-		ARRAYSIZE ( tlBaFollow ),
-		bits_COND_NEW_ENEMY		|
-		bits_COND_LIGHT_DAMAGE	|
-		bits_COND_HEAVY_DAMAGE	|
-		bits_COND_HEAR_SOUND |
-		bits_COND_PROVOKED,
-		bits_SOUND_DANGER,
-		"Follow"
-	},
-};
-*/
-
-
-
 #ifdef CHASE_ENEMY_SMART
 
 #else

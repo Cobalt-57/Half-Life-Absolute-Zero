@@ -236,16 +236,17 @@ EASY_CVAR_EXTERN(hiddenMemPrintout)
 #define DMG_TIMEDEFFECTIGNORE	(1 << 2)   // same as TIMEDEFFECT, but made to ignore armor (regardless of the cvar).
 #define DMG_BARNACLEBITE		(1 << 3)   // not timed.  Just sent by the barnacle's execution bite to NPCs to mark not to ignore (if they would).
 #define DMG_GAUSS				(1 << 4)   // coming from the player's gauss weapon. Some things (apache) are now immune to it.  ...or not? that got canceled.
-#define DMG_HITBOX_EQUAL		(1 << 5)   // signal that this type of damage can't be increased by hitting particular hitboxes.
+#define DMG_PROJECTILE          (1 << 5)   // so far, only for crossbow bolt direct hits.   
+#define DMG_HITBOX_EQUAL		(1 << 6)   // signal that this type of damage can't be increased by hitting particular hitboxes.
 										   // It is still completely up to any given monster's TraceAttack / TakeDamage to implement this
 										   // (check for the presence of DMG_HITBOX_EQUAL in bitsDamageTypeMod and deny enhancing damage
 										   //  per headshots, etc. accordingly).
 										   // For instance, for lightning attacks, different amounts of damage for body, leg, arm, or headshots don't make sense.
 										   // It's possible damage from NPC's just shouldn't even do this kind of damage anyways.
-#define DMG_MAP_TRIGGER			(1 << 6)   // From map triggers (trigger_hurt most likely).  On doing high damage in a single attack,
+#define DMG_MAP_TRIGGER			(1 << 7)   // From map triggers (trigger_hurt most likely).  On doing high damage in a single attack,
 										   // the intent is clear that the player is not meant to revive in a zone they can't reocver from.
 										   // Such as falling into a deep pit with no way out, often has a high-damage hurt trigger there.
-#define DMG_MAP_BLOCKED			(1 << 7)   // From being in the way of map geometry like heavy closing doors or wheels.
+#define DMG_MAP_BLOCKED			(1 << 8)   // From being in the way of map geometry like heavy closing doors or wheels.
 										   // As it is difficult to tell whether the player would be stuck if revived from dying to this,
 										   // it is fine to play it safe and forbid reviving.  Often coincides with DMG_CRUSH, but it is not
 										   // the case that map-only entities use this (tentacles and xen trees deal DMG_CRUSH).
@@ -253,6 +254,8 @@ EASY_CVAR_EXTERN(hiddenMemPrintout)
 										   // the player stops moving, or never stops moving for a decent while taking DMG_MAP_BLOCKED 
 										   // (so not simply moving from being on a moving platforms).
 										   // If so, it is safe to assume the player is stuck in something moving and should not be revived.
+
+
 
 
 //Which types of damage in the new mask are secondary?

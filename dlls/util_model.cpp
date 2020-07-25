@@ -532,7 +532,11 @@ int GetAnimationEvent( void *pmodel, entvars_t *pev, MonsterEvent_t *pMonsterEve
 			}
 
 		}else{
-			float relativeFrame =  ( ( pseqdesc->numframes - 1) - pevent[index].frame);
+			//MODDD - hopefully this has no side-effects.  Lets the 'thud' sounds on bodies hitting the floor
+			// in reversed death anims be played in the right place.
+			//float relativeFrame =  ( ( pseqdesc->numframes - 1) - pevent[index].frame);
+			float relativeFrame = pevent[index].frame;
+
 			//easyForcePrintLine("absfr:%.2f relfr%.2f res:%.2f ree:%.2f", pevent[index].frame, relativeFrame, flStart, flEnd);
 			if(!loopPass){
 				//nothing special.

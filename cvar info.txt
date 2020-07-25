@@ -1235,3 +1235,9 @@ If 1, anytime the player is dead (including waiting for a revive) hides the batt
 
 
 hyperBarney (0) - BOOL.  If on, barney is a force to be reckoned with.
+
+monsterKilledToss (2) - MODEVAR.  How to send monsters a short distance on taking the killing shot.
+0: No change from retail (none).
+1: Toss as-found commented out.  Does not factor in amount of damage on the killing blow.
+2: Toss, more damage than necessary to kill = further distance, little extra upward boost too.
+

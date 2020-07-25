@@ -652,6 +652,24 @@ void CBasePlayer :: DeathSound( BOOL plannedRevive )
 }
 
 
+
+// PARANOIA:  Dummy these methods, player revive logic does not involve this!
+void CBasePlayer::startReanimation() {
+}
+void CBasePlayer::EndOfRevive(int preReviveSequence) {
+}
+
+// Convenient for cheat methods to revive the player if a cheat is used while the player is dead.
+// Obviously they wanted to continue playing.
+void CBasePlayer::reviveIfDead() {
+	if (pev->deadflag != DEAD_NO) {
+		// revive the player
+		stopSelfSounds();
+		Spawn(TRUE);
+	}
+}
+
+
 void CBasePlayer::startRevive(void) {
 	// can recover.
 	//if (!adrenalineQueued) {
@@ -1002,30 +1020,29 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBasePlayer)
 		
 	)  // armor doesn't protect against fall or drown damage!  ... or "DMG_TIMEDEFFECTIGNORE".
 	{
-		float flNew = flDamage * flRatio;
+		float flNewHealthDamage = flDamage * flRatio;
+		float flArmorDamage;
 
-		float flArmor;
-
-		flArmor = (flDamage - flNew) * flBonus;
+		flArmorDamage = (flDamage - flNewHealthDamage) * flBonus;
 
 
 		// if(flDamage * (1 - (flRatio) ) * flBonus >= pev->armorvalue) ...
 
-		//easyPrintLine("ARMOR RED: %.2f", flArmor);
+		//easyPrintLine("ARMOR RED: %.2f", flArmorDamage);
 
 		// Does this use more armor than we have?
-		if (flArmor > pev->armorvalue)
+		if (flArmorDamage > pev->armorvalue)
 		{
 			// recalculate with what armor we have, use it up.
-			flArmor = pev->armorvalue;
-			flNew = flDamage - (flArmor * (1 / flBonus));
+			flArmorDamage = pev->armorvalue;
+			flNewHealthDamage = flDamage - (flArmorDamage * (1 / flBonus));
 		}
 		else {
 			// no change needed.
 		}
 
 
-		if (flArmor >= pev->armorvalue) {
+		if (flArmorDamage >= pev->armorvalue) {
 
 			if (pev->armorvalue > 0) {
 				// if the armor value is not already 0 (going from above 0 to 0), we can play a line
@@ -1035,10 +1052,10 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBasePlayer)
 			// force to 0 for safety.
 			pev->armorvalue = 0;
 		}else {
-			pev->armorvalue -= flArmor;
+			pev->armorvalue -= flArmorDamage;
 		}
 
-		flDamage = flNew;
+		flDamage = flNewHealthDamage;
 	}
 
 	if (EASY_CVAR_GET(nothingHurts) > 0) {
@@ -3425,6 +3442,9 @@ void CBasePlayer::InitStatusBar()
 }
 
 //MODDD - uh, found as-is.  WHAT IS THIS???!
+// Oh, this is what puts the text showing the name of the player you're looking at in multiplayer.
+// Shows health/ammo too, but only for allies in some team-based mode.  Seems rare to ever run into that though.
+// TODO: maybe a CVar to force health/ammo on all the time just for the heck of it?   eh.
 void CBasePlayer::UpdateStatusBar()
 {
 	int newSBarState[ SBAR_END ];
@@ -3449,12 +3469,13 @@ void CBasePlayer::UpdateStatusBar()
 			CBaseEntity *pEntity = CBaseEntity::Instance( tr.pHit );
 
 			if (pEntity != NULL && pEntity->Classify() == CLASS_PLAYER )
+			//if (pEntity != NULL )
 			{
 				newSBarState[ SBAR_ID_TARGETNAME ] = ENTINDEX( pEntity->edict() );
 				strcpy( sbuf1, "1 %p1\n2 Health: %i2%%\n3 Armor: %i3%%" );
 
 				// allies and medics get to see the targets health
-				if ( g_pGameRules->PlayerRelationship( this, pEntity ) == GR_TEAMMATE )
+				//if ( g_pGameRules->PlayerRelationship( this, pEntity ) == GR_TEAMMATE )
 				{
 					newSBarState[ SBAR_ID_TARGETHEALTH ] = 100 * (pEntity->pev->health / pEntity->pev->max_health);
 					newSBarState[ SBAR_ID_TARGETARMOR ] = pEntity->pev->armorvalue; //No need to get it % based since 100 it's the max.

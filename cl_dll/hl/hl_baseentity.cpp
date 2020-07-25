@@ -738,7 +738,11 @@ GENERATE_KILLED_IMPLEMENTATION_DUMMY_CLIENT(CBaseMonster)
 //void CBaseMonster :: Killed( entvars_t *pevAttacker, int iGib ) {}
 
 
-void CBasePlayer::startRevive(void) {};
+void CBasePlayer::startReanimation(void) {}
+void CBasePlayer::EndOfRevive(int preReviveSequence) {}
+
+void CBasePlayer::reviveIfDead(void) {}
+void CBasePlayer::startRevive(void) {}
 void CBasePlayer::declareRevivelessDead(void) {}
 
 

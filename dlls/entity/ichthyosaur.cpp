@@ -29,8 +29,6 @@
 
 
 
-
-
 #include "extdll.h"
 #include "util.h"
 #include "cbase.h"
@@ -45,20 +43,31 @@
 
 #include "defaultai.h"  //why not?
 
-#define SEARCH_RETRY	16
-
-#define ICHTHYOSAUR_SPEED 150
-
 
 extern CGraph WorldGraph;
 
-//MODDD - looks like the eye idea was ditched, this is not on the model.
 
+#define SEARCH_RETRY 16
+
+#define ICHTHYOSAUR_SPEED 150
+
+//MODDD - looks like the eye idea was ditched, this is not on the model.
 #define EYE_MAD		0
 #define EYE_BASE	1
 #define EYE_CLOSED	2
 #define EYE_BACK	3
 #define EYE_LOOK	4
+
+
+#define ICHTHYOSAUR_AE_SHAKE_RIGHT 1
+#define ICHTHYOSAUR_AE_SHAKE_LEFT 2
+
+
+#define EMIT_ICKY_SOUND( chan, array ) \
+	EMIT_SOUND_FILTERED ( ENT(pev), chan , array [ RANDOM_LONG(0,ARRAYSIZE( array )-1) ], 1.0, 0.6, 0, RANDOM_LONG(95,105) ); 
+
+#define PROBE_LENGTH 150
+
 
 
 
@@ -220,10 +229,6 @@ const char *CIchthyosaur::pDieSounds[] =
 	"ichy/ichy_die2.wav",
 	"ichy/ichy_die4.wav",
 };
-
-#define EMIT_ICKY_SOUND( chan, array ) \
-	EMIT_SOUND_FILTERED ( ENT(pev), chan , array [ RANDOM_LONG(0,ARRAYSIZE( array )-1) ], 1.0, 0.6, 0, RANDOM_LONG(95,105) ); 
-
 
 void CIchthyosaur :: IdleSound( void )	
 { 
@@ -474,9 +479,6 @@ void CIchthyosaur::BecomeDead( void )
 	pev->health = pev->max_health / 2;
 	pev->max_health = 5; // max_health now becomes a counter for how many blood decals the corpse can place.
 }
-
-#define ICHTHYOSAUR_AE_SHAKE_RIGHT 1
-#define ICHTHYOSAUR_AE_SHAKE_LEFT  2
 
 
 //=========================================================
@@ -1037,7 +1039,7 @@ void CIchthyosaur::Swim( )
 	}
 	*/
 
-#define PROBE_LENGTH 150
+
 	Angles = UTIL_VecToAngles( m_SaveVelocity );
 	Angles.x = -Angles.x;
 	UTIL_MakeVectorsPrivate(Angles, Forward, Right, Up);

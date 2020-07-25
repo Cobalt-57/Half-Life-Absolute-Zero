@@ -717,6 +717,7 @@
 #define DEFAULT_blastExtraArmorDamageMode 0
 #define DEFAULT_hud_batteryhiddendead 1
 #define DEFAULT_hyperBarney 0
+#define DEFAULT_monsterKilledToss 2
 
 
 
@@ -2824,6 +2825,7 @@
 	EASY_CVAR_DECLARATION_SERVER(blastExtraArmorDamageMode)\
 	EASY_CVAR_DECLARATION_SERVER(hud_batteryhiddendead)\
 	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY(hyperBarney)\
+	EASY_CVAR_DECLARATION_SERVER(monsterKilledToss)\
 	DUMMY
 
 
@@ -3331,6 +3333,7 @@
 	EASY_CVAR_DECLARATION_CLIENT(blastExtraArmorDamageMode)\
 	EASY_CVAR_DECLARATION_CLIENT(hud_batteryhiddendead)\
 	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY(hyperBarney)\
+	EASY_CVAR_DECLARATION_CLIENT(monsterKilledToss)\
 	DUMMY
 
 #define EASY_CVAR_UPDATE_SERVER_MASS\
@@ -3836,6 +3839,7 @@
 	EASY_CVAR_UPDATE_SERVER(blastExtraArmorDamageMode)\
 	EASY_CVAR_UPDATE_SERVER(hud_batteryhiddendead)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(hyperBarney)\
+	EASY_CVAR_UPDATE_SERVER(monsterKilledToss)\
 	DUMMY
 
 #define EASY_CVAR_UPDATE_CLIENT_MASS\
@@ -4341,6 +4345,7 @@
 	EASY_CVAR_UPDATE_CLIENT(blastExtraArmorDamageMode)\
 	EASY_CVAR_UPDATE_CLIENT(hud_batteryhiddendead)\
 	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY(hyperBarney)\
+	EASY_CVAR_UPDATE_CLIENT(monsterKilledToss)\
 	DUMMY
 
 #define EASY_CVAR_CREATE_SERVER_SETUP_MASS\
@@ -4846,6 +4851,7 @@
 	EASY_CVAR_CREATE_SERVER_SETUP_A_SERVERONLY(blastExtraArmorDamageMode)\
 	EASY_CVAR_CREATE_SERVER_SETUP_A_CLIENTONLY(hud_batteryhiddendead)\
 	EASY_CVAR_CREATE_SERVER_SETUP_A_SERVERONLY_DEBUGONLY(hyperBarney)\
+	EASY_CVAR_CREATE_SERVER_SETUP_A_SERVERONLY(monsterKilledToss)\
 	DUMMY
 
 #define EASY_CVAR_CREATE_SERVER_MASS\
@@ -5351,6 +5357,7 @@
 	EASY_CVAR_CREATE_SERVER_A_SERVERONLY(blastExtraArmorDamageMode)\
 	EASY_CVAR_CREATE_SERVER_A_CLIENTONLY(hud_batteryhiddendead)\
 	EASY_CVAR_CREATE_SERVER_A_SERVERONLY_DEBUGONLY(hyperBarney)\
+	EASY_CVAR_CREATE_SERVER_A_SERVERONLY(monsterKilledToss)\
 	DUMMY
 
 
@@ -5857,6 +5864,7 @@
 	EASY_CVAR_CREATE_CLIENT_A_SERVERONLY(blastExtraArmorDamageMode)\
 	EASY_CVAR_CREATE_CLIENT_A_CLIENTONLY(hud_batteryhiddendead)\
 	EASY_CVAR_CREATE_CLIENT_A_SERVERONLY_DEBUGONLY(hyperBarney)\
+	EASY_CVAR_CREATE_CLIENT_A_SERVERONLY(monsterKilledToss)\
 	DUMMY
 
 #define EASY_CVAR_RESET_MASS\
@@ -6361,6 +6369,7 @@
 	EASY_CVAR_RESET(blastExtraArmorDamageMode)\
 	EASY_CVAR_RESET(hud_batteryhiddendead)\
 	EASY_CVAR_RESET_DEBUGONLY(hyperBarney)\
+	EASY_CVAR_RESET(monsterKilledToss)\
 	DUMMY
 
 #define EASY_CVAR_EXTERN_MASS\
@@ -6866,5 +6875,6 @@
 	EASY_CVAR_EXTERN(blastExtraArmorDamageMode)\
 	EASY_CVAR_EXTERN(hud_batteryhiddendead)\
 	EASY_CVAR_EXTERN_DEBUGONLY(hyperBarney)\
+	EASY_CVAR_EXTERN(monsterKilledToss)\
 	DUMMY
 

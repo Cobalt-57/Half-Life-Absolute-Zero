@@ -180,8 +180,55 @@ BOOL attemptParseStringToInt(edict_t* pEntity, int* toStoreResult, const char* t
 	return FALSE;  //how could this be reached??
 }//END OF attemptParseStringToInt
 
-CPathTrack* getPathTrackWithID(edict_t* pEntity, int argID){
 
+
+
+
+
+
+
+// For a given entity, print at least its name.  If a monster, give its MonsterID.  If it has a netname, give that too.
+// And this is NOT a 'printline' call, the caller can print something before and after this as needed
+// (most likely a newline character).
+// Caller accepted, but unused, sicne the server printout is used instead (to avoid buffer overflows).
+void printBasicInfo(edict_t* theCaller, CBaseEntity* entRef) {
+
+	CBaseMonster* monsterTest = entRef->GetMonsterPointer();
+	if (monsterTest != NULL) {
+		easyForcePrint("%s:%d", entRef->getClassname(), monsterTest->monsterID);
+	}
+	else {
+		easyForcePrint("%s", entRef->getClassname());
+	}
+
+	// FStringNull ?
+	if (entRef->pev->netname != NULL) {
+		const char* stuff = STRING(entRef->pev->netname);
+		if (stuff != NULL && stuff[0] != '\0') {
+			//ok, print it too.
+			easyForcePrint(" netname:%s", stuff);
+		}
+	}
+	if (entRef->pev->targetname != NULL) {
+		const char* stuff = STRING(entRef->pev->targetname);
+		if (stuff != NULL && stuff[0] != '\0') {
+			//ok, print it too.
+			easyForcePrint(" targetname:%s", stuff);
+		}
+	}
+	if (entRef->pev->globalname != NULL) {
+		const char* stuff = STRING(entRef->pev->globalname);
+		if (stuff != NULL && stuff[0] != '\0') {
+			//ok, print it too.
+			easyForcePrint(" globalname:%s", stuff);
+		}
+	}
+
+}//END OF printBasicInfo
+
+
+
+CPathTrack* getPathTrackWithID(edict_t* pEntity, int argID){
 	//try to find it.
 	CBaseEntity* pEntityScan = NULL;
 	while( (pEntityScan = UTIL_FindEntityByClassname(pEntityScan, "path_track")) != NULL){
@@ -199,8 +246,8 @@ CPathTrack* getPathTrackWithID(edict_t* pEntity, int argID){
 	return NULL;
 }//END OF getPathTrackWithID
 
+
 CFuncTrackChange* getTrackChangeWithID(edict_t* pEntity, int argID){
-	
 	//try to find it.
 	CBaseEntity* pEntityScan = NULL;
 	while( (pEntityScan = UTIL_FindEntityByClassname(pEntityScan, "func_trackchange")) != NULL){
@@ -218,7 +265,6 @@ CFuncTrackChange* getTrackChangeWithID(edict_t* pEntity, int argID){
 	return NULL;
 
 }//END OF getTrackChangeWithID
-
 
 
 
@@ -252,13 +298,15 @@ CBaseMonster* getMonsterWithID(int argSeekID){
 
 	}//END OF through all entities.
 
+
 	//did not find it?
 	return NULL;
 }//getMonsterWithID
 
-void reviveAllMonsters() {
+
+void reviveAllMonsters(edict_t* theCaller) {
 	edict_t* pEdict = g_engfuncs.pfnPEntityOfEntIndex(1);
-	CBaseEntity* pEntity;
+	CBaseEntity* pTempEntity;
 	if (!pEdict)
 		return;
 	for (int i = 1; i < gpGlobals->maxEntities; i++, pEdict++)
@@ -268,11 +316,11 @@ void reviveAllMonsters() {
 		if (!(pEdict->v.flags & (FL_CLIENT | FL_MONSTER)))	// Not a client/monster ?
 			continue;
 
-		pEntity = CBaseEntity::Instance(pEdict);
-		if (!pEntity)
+		pTempEntity = CBaseEntity::Instance(pEdict);
+		if (!pTempEntity)
 			continue;
 
-		CBaseMonster* tempMonster = pEntity->MyMonsterPointer();
+		CBaseMonster* tempMonster = pTempEntity->MyMonsterPointer();
 		if (tempMonster == NULL || FClassnameIs(tempMonster->pev, "player")) {
 			continue;  //not players or non-monsters.
 		}
@@ -280,14 +328,203 @@ void reviveAllMonsters() {
 		// try to revive.
 		if (tempMonster->pev->deadflag >= DEAD_DEAD) {
 			//ok
+
+			easyForcePrintStarter();
+			easyForcePrint("*REVIVED ");
+			printBasicInfo(theCaller, pTempEntity);
+			easyForcePrintLine();  // new line
+
 			tempMonster->startReanimation();
 		}
 	}//END OF through all entities.
 
-
-
-
 }//reviveAllMonsters
+
+
+void removeAllMonsters(edict_t* theCaller) {
+	edict_t* pEdict = g_engfuncs.pfnPEntityOfEntIndex(1);
+	CBaseEntity* pTempEntity;
+	if (!pEdict)
+		return;
+	for (int i = 1; i < gpGlobals->maxEntities; i++, pEdict++)
+	{
+		if (pEdict->free)	// Not in use
+			continue;
+
+		//TEST WHY NO REMOV
+		if (FClassnameIs(pEdict, "monster_barnacle")) {
+			int x = 66; //?
+		}
+
+		if (!(pEdict->v.flags & (FL_CLIENT | FL_MONSTER)))	// Not a client/monster ?
+			continue;
+
+		pTempEntity = CBaseEntity::Instance(pEdict);
+		if (!pTempEntity)
+			continue;
+
+		CBaseMonster* tempMonster = pTempEntity->MyMonsterPointer();
+		if (tempMonster == NULL || FClassnameIs(tempMonster->pev, "player")) {
+			continue;  //not players or non-monsters.
+		}
+
+		easyForcePrintStarter();
+		easyForcePrint("*REMOVED ");
+		printBasicInfo(theCaller, pTempEntity);
+		easyForcePrintLine();  // new line
+
+		//made it here? Remove it.
+		//::UTIL_Remove(tempMonster);
+		//tempMonster->onDelete();   automatically called by SUB_REMOVE, don't manually call this.
+		tempMonster->SetThink(&CBaseEntity::SUB_Remove);
+		tempMonster->pev->nextthink = gpGlobals->time;
+	}//END OF list through all entities.
+}
+
+void removeAllMonstersExcept(edict_t* theCaller, int excludeID) {
+	edict_t* pEdict = g_engfuncs.pfnPEntityOfEntIndex(1);
+	CBaseEntity* pTempEntity;
+	if (!pEdict)
+		return;
+	for (int i = 1; i < gpGlobals->maxEntities; i++, pEdict++)
+	{
+		if (pEdict->free)	// Not in use
+			continue;
+
+		//TEST WHY NO REMOV
+		if (FClassnameIs(pEdict, "monster_barnacle")) {
+			int x = 66; //?
+		}
+
+		if (!(pEdict->v.flags & (FL_CLIENT | FL_MONSTER)))	// Not a client/monster ?
+			continue;
+
+		pTempEntity = CBaseEntity::Instance(pEdict);
+		if (!pTempEntity)
+			continue;
+
+		CBaseMonster* tempMonster = pTempEntity->MyMonsterPointer();
+		if (tempMonster == NULL || FClassnameIs(tempMonster->pev, "player")) {
+			continue;  //not players or non-monsters.
+		}
+
+		if (tempMonster->monsterID == excludeID) {
+			continue;  // remove all BUT this one!  Skip.
+		}
+
+		easyForcePrintStarter();
+		easyForcePrint("*REMOVED ");
+		printBasicInfo(theCaller, pTempEntity);
+		easyForcePrintLine();  // new line
+
+		//made it here? Remove it.
+		//::UTIL_Remove(tempMonster);
+		//tempMonster->onDelete();   automatically called by SUB_REMOVE, don't manually call this.
+		tempMonster->SetThink(&CBaseEntity::SUB_Remove);
+		tempMonster->pev->nextthink = gpGlobals->time;
+	}//END OF list through all entities.
+}
+
+void removeAllEntities(edict_t* theCaller) {
+	edict_t* pEdict = g_engfuncs.pfnPEntityOfEntIndex(1);
+	CBaseEntity* pTempEntity;
+	if (!pEdict)
+		return;
+	for (int i = 1; i < gpGlobals->maxEntities; i++, pEdict++)
+	{
+		if (pEdict->free)	// Not in use
+			continue;
+
+		pTempEntity = CBaseEntity::Instance(pEdict);
+		if (!pTempEntity)
+			continue;
+
+		if (FClassnameIs(pTempEntity->pev, "worldspawn") || FClassnameIs(pTempEntity->pev, "player")) {
+			continue;  //not the map (???) or players.
+		}
+		
+		easyForcePrintStarter();
+		easyForcePrint("*REMOVED ");
+		printBasicInfo(theCaller, pTempEntity);
+		easyForcePrintLine();  // new line
+
+		//made it here? Remove it.
+		////::UTIL_Remove(tempMonster);
+		//actually do it this way below instead.
+		//pTempEntity->onDelete();
+		//pTempEntity->SetThink(&CBaseEntity::SUB_Remove);
+		//pTempEntity->pev->nextthink = gpGlobals->time;
+
+	}//END OF list through all entities.
+
+}
+
+
+void listAllEntities(edict_t* theCaller) {
+	edict_t* pEdict = g_engfuncs.pfnPEntityOfEntIndex(1);
+	CBaseEntity* pTempEntity;
+	if (!pEdict)
+		return;
+	for (int i = 1; i < gpGlobals->maxEntities; i++, pEdict++)
+	{
+		if (pEdict->free)	// Not in use
+			continue;
+
+		pTempEntity = CBaseEntity::Instance(pEdict);
+		if (!pTempEntity)
+			continue;
+
+		// exclude the world and the players, not helpful
+		if (FClassnameIs(pTempEntity->pev, "worldspawn") || FClassnameIs(pTempEntity->pev, "player")) {
+			continue;
+		}
+
+		// NOTICE!  Printing a huge volume of information this way just leads to buffer overflows and drops the player.
+		// It's a debug feature anyway so just use the server print.
+		easyForcePrintStarter();
+		//easyForcePrint("*Info: ");   no need
+		printBasicInfo(theCaller, pTempEntity);
+		easyForcePrintLine();  // new line
+
+	}//END OF list through all entities.
+
+}
+
+void listAllMonsters(edict_t* theCaller) {
+	edict_t* pEdict = g_engfuncs.pfnPEntityOfEntIndex(1);
+	CBaseEntity* pTempEntity;
+	if (!pEdict)
+		return;
+	for (int i = 1; i < gpGlobals->maxEntities; i++, pEdict++)
+	{
+		if (pEdict->free)	// Not in use
+			continue;
+
+		//TEST WHY NO REMOV
+		if (FClassnameIs(pEdict, "monster_barnacle")) {
+			int x = 66; //?
+		}
+
+		if (!(pEdict->v.flags & (FL_CLIENT | FL_MONSTER)))	// Not a client/monster ?
+			continue;
+
+		pTempEntity = CBaseEntity::Instance(pEdict);
+		if (!pTempEntity)
+			continue;
+
+		CBaseMonster* tempMonster = pTempEntity->MyMonsterPointer();
+		if (tempMonster == NULL || FClassnameIs(tempMonster->pev, "player")) {
+			continue;  //not players or non-monsters.
+		}
+
+		easyForcePrintStarter();
+		//easyForcePrint("*Info: ");   no need
+		printBasicInfo(theCaller, pTempEntity);
+		easyForcePrintLine();  // new line
+
+	}//END OF list through all entities.
+}
+
 
 
 
@@ -332,6 +569,15 @@ void interpretAsHealth(edict_t* pEntity, CBaseEntity* arg_target, const char* ar
 		}else{
 			try{
 				float numbAttempt = tryStringToFloat(arg_arg1Ref);
+
+				if (pEntity == arg_target->edict() && arg_target->IsPlayer()) {
+					// If I am setting my own health, and I'm a player, and the health is set above 0, I can revive.
+					CBasePlayer* tempplayer = static_cast<CBasePlayer*>(arg_target);
+					if (numbAttempt > 0) {
+						tempplayer->reviveIfDead();
+					}
+				}
+
 				arg_target->pev->health = numbAttempt;
 				easyForcePrintLineClient(pEntity, "%s\'s health set to %g.", arg_targetName, numbAttempt);
 			}catch(int){
@@ -1109,12 +1355,13 @@ void ClientCommand( edict_t *pEntity )
 		{
 			CBasePlayer* playerRef = GetClassPtr((CBasePlayer *)pev);
 			if(playerRef){
-				playerRef->grantAllItems();
-				playerRef->giveMaxAmmo();
-		
+
 				playerRef->setHealth(100);
 				playerRef->setArmorBattery(100);
 
+				playerRef->grantAllItems();
+				playerRef->giveMaxAmmo();
+				
 				playerRef->attemptResetTimedDamage(TRUE);
 				//playerRef->pev->flags |= FL_GODMODE;
 				//playerRef->pev->flags |= MOVETYPE_NOCLIP;
@@ -1151,11 +1398,13 @@ void ClientCommand( edict_t *pEntity )
 
 		CBasePlayer* playerRef = GetClassPtr((CBasePlayer *)pev);
 			if(playerRef){
+
+				playerRef->setHealth(100);
+				playerRef->setArmorBattery(100);
+
 				playerRef->grantAllItems();
 				playerRef->giveMaxAmmo();
 		
-				playerRef->setHealth(100);
-				playerRef->setArmorBattery(100);
 				//playerRef->pev->flags |= FL_GODMODE;
 				//playerRef->pev->flags |= MOVETYPE_NOCLIP;
 			}
@@ -1761,7 +2010,7 @@ void ClientCommand( edict_t *pEntity )
 
 	}else if (FStrEq(pcmdRefinedRef, "reviveall") || FStrEq(pcmdRefinedRef, "necromancy") || FStrEq(pcmdRefinedRef, "thriller") || FStrEq(pcmdRefinedRef, "thisisthriller") || FStrEq(pcmdRefinedRef, "cuzthisisthriller") || FStrEq(pcmdRefinedRef, "causethisisthriller") ) {
 
-		reviveAllMonsters();
+		reviveAllMonsters(pEntity);
 
 	}else if( FStrEq(pcmdRefinedRef, "ent_remove") || FStrEq(pcmdRefinedRef, "remove") || FStrEq(pcmdRefinedRef, "removeent") || FStrEq(pcmdRefinedRef, "removeentity") || FStrEq(pcmdRefinedRef, "entremove") || FStrEq(pcmdRefinedRef, "entityremove") || FStrEq(pcmdRefinedRef, "kaplow") || FStrEq(pcmdRefinedRef, "ihateyou") || FStrEq(pcmdRefinedRef, "begone") || FStrEq(pcmdRefinedRef, "begonepeasant") || FStrEq(pcmdRefinedRef, "bye") || FStrEq(pcmdRefinedRef, "byebye")){
 		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev);
@@ -1770,9 +2019,44 @@ void ClientCommand( edict_t *pEntity )
 			easyForcePrintLineClient(pEntity, "Can\'t remove things without cheats.");
 			return;
 		}
+
+		CBaseEntity* pEntityToRemove;
 		
-		CBaseEntity* pEntityForward = FindEntityForward( tempplayer );
-		if ( pEntityForward )
+		// NOTE - can supply arg now.
+		if (CMD_ARGC() > 1) {
+			// get an entity with that ID to remove
+			int theID;
+			int tempNumb;
+			try {
+				tempNumb = tryStringToInt(CMD_ARGV(1));
+				theID = tempNumb;
+				pEntityToRemove = getMonsterWithID(tempNumb);
+				if (pEntityToRemove != NULL) {
+					// ok
+				}
+				else {
+					// oh.
+					easyForcePrintLineClient(pEntity, "No entity of ID %d found.", theID);
+				}
+			}
+			catch (int) {
+				easyForcePrintClient(pEntity, "ERROR: ID given invalid. Must be integer.");
+			}
+		}
+		else {
+			// just look for something in front of me.
+			pEntityToRemove = FindEntityForward(tempplayer);
+			if (pEntityToRemove != NULL) {
+				// ok.
+			}
+			else {
+				// oh.
+				easyForcePrintClient(pEntity, "Could not find something in front to remove!");
+			}
+		}
+
+
+		if ( pEntityToRemove )
 		{
 			//if ( pEntity->pev->takedamage )
 
@@ -1780,11 +2064,13 @@ void ClientCommand( edict_t *pEntity )
 			//pEntityForward->onDelete();
 			//SUB_Remove calls this already, no need to manually  call onDelete.
 			
-			pEntityForward->pev->nextthink = gpGlobals->time;
-			pEntityForward->SetThink(&CBaseEntity::SUB_Remove);
+			pEntityToRemove->pev->nextthink = gpGlobals->time;
+			pEntityToRemove->SetThink(&CBaseEntity::SUB_Remove);
 		}else{
-			easyForcePrintLineClient(pEntity, "Could not find something to remove!");
+			// error message already handled.
 		}
+
+
 		
 	}else if( FStrEq(pcmdRefinedRef, "health") || FStrEq(pcmdRefinedRef, "gethealth") || FStrEq(pcmdRefinedRef, "sethealth")  ){
 		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *) pev);
@@ -1801,6 +2087,7 @@ void ClientCommand( edict_t *pEntity )
 		if(forwardEnt == NULL){
 			//assume this is for the player.
 			interpretAsHealth(pEntity, tempplayer, arg1ref, "Client");
+
 		}else{
 			interpretAsHealth(pEntity, forwardEnt, arg1ref, STRING(forwardEnt->pev->classname) );
 			//easyForcePrintLineClient(pEntity, "MODEL: %s", STRING(forwardEnt->pev->model));
@@ -1833,7 +2120,7 @@ void ClientCommand( edict_t *pEntity )
 		}else{
 			easyForcePrintLineClient(pEntity, "ERROR: Could not find an entity / monster in crosshairs.");
 		}
-	}else if( FStrEq(pcmdRefinedRef, "battery") || FStrEq(pcmdRefinedRef, "getbattery") || FStrEq(pcmdRefinedRef, "setbattery")  ){
+	}else if( FStrEq(pcmdRefinedRef, "battery") || FStrEq(pcmdRefinedRef, "getbattery") || FStrEq(pcmdRefinedRef, "setbattery") || FStrEq(pcmdRefinedRef, "armor") || FStrEq(pcmdRefinedRef, "getarmor") || FStrEq(pcmdRefinedRef, "setarmor")){
 		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *) pev);
 		const char* arg1ref = CMD_ARGV(1);
 		if(g_flWeaponCheat == 0.0){
@@ -1851,7 +2138,7 @@ void ClientCommand( edict_t *pEntity )
 			interpretAsBattery(pEntity, forwardEnt, arg1ref, STRING(forwardEnt->pev->classname));
 		}
 
-	}else if( FStrEq(pcmdRefinedRef, "setmybattery") || FStrEq(pcmdRefinedRef, "setplayerbattery") || FStrEq(pcmdRefinedRef, "getmybattery") || FStrEq(pcmdRefinedRef, "getplayerbattery") || FStrEq(pcmdRefinedRef, "mybattery") || FStrEq(pcmdRefinedRef, "playerbattery")  ){
+	}else if( FStrEq(pcmdRefinedRef, "setmybattery") || FStrEq(pcmdRefinedRef, "setplayerbattery") || FStrEq(pcmdRefinedRef, "getmybattery") || FStrEq(pcmdRefinedRef, "getplayerbattery") || FStrEq(pcmdRefinedRef, "mybattery") || FStrEq(pcmdRefinedRef, "playerbattery")    ||    FStrEq(pcmdRefinedRef, "setmyarmor") || FStrEq(pcmdRefinedRef, "setplayerarmor") || FStrEq(pcmdRefinedRef, "getmyarmor") || FStrEq(pcmdRefinedRef, "getplayerarmor") || FStrEq(pcmdRefinedRef, "myarmor") || FStrEq(pcmdRefinedRef, "playerarmor")){
 		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev);
 		const char* arg1ref = CMD_ARGV(1);
 		//tryStringToInt
@@ -1862,7 +2149,7 @@ void ClientCommand( edict_t *pEntity )
 
 		interpretAsBattery(pEntity, (CBaseEntity*)tempplayer, arg1ref, "Client" );
 
-	}else if( FStrEq(pcmdRefinedRef, "setentbattery") || FStrEq(pcmdRefinedRef, "setmonsterbattery") ||  FStrEq(pcmdRefinedRef, "setentitybattery") || FStrEq(pcmdRefinedRef, "getentbattery") || FStrEq(pcmdRefinedRef, "getmonsterbattery") ||  FStrEq(pcmdRefinedRef, "getentitybattery") || FStrEq(pcmdRefinedRef, "monsterbattery") || FStrEq(pcmdRefinedRef, "entbattery") || FStrEq(pcmdRefinedRef, "entitybattery")  ){
+	}else if( FStrEq(pcmdRefinedRef, "setentbattery") || FStrEq(pcmdRefinedRef, "setmonsterbattery") ||  FStrEq(pcmdRefinedRef, "setentitybattery") || FStrEq(pcmdRefinedRef, "getentbattery") || FStrEq(pcmdRefinedRef, "getmonsterbattery") ||  FStrEq(pcmdRefinedRef, "getentitybattery") || FStrEq(pcmdRefinedRef, "monsterbattery") || FStrEq(pcmdRefinedRef, "entbattery") || FStrEq(pcmdRefinedRef, "entitybattery")    ||    FStrEq(pcmdRefinedRef, "setentarmor") || FStrEq(pcmdRefinedRef, "setmonsterarmor") || FStrEq(pcmdRefinedRef, "setentityarmor") || FStrEq(pcmdRefinedRef, "getentarmor") || FStrEq(pcmdRefinedRef, "getmonsterarmor") || FStrEq(pcmdRefinedRef, "getentityarmor") || FStrEq(pcmdRefinedRef, "monsterarmor") || FStrEq(pcmdRefinedRef, "entarmor") || FStrEq(pcmdRefinedRef, "entityarmor")){
 		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev);
 		const char* arg1ref = CMD_ARGV(1);
 		if(g_flWeaponCheat == 0.0){
@@ -1877,7 +2164,7 @@ void ClientCommand( edict_t *pEntity )
 		}else{
 			easyForcePrintLineClient(pEntity, "ERROR: Could not find an entity / monster in crosshairs.");
 		}
-	}else if( FStrEq(pcmdRefinedRef, "id") || FStrEq(pcmdRefinedRef, "getid")  ){
+	}else if( FStrEq(pcmdRefinedRef, "id") || FStrEq(pcmdRefinedRef, "getid") || FStrEq(pcmdRefinedRef, "monsterid") || FStrEq(pcmdRefinedRef, "getmonsterid")){
 		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *) pev);
 		const char* arg1ref = CMD_ARGV(1);
 
@@ -2958,17 +3245,13 @@ void ClientCommand( edict_t *pEntity )
 
 		if(g_flWeaponCheat != 0.0){
 
-			if (pev->deadflag != DEAD_NO) {
-				// revive the player first!
-				tempplayer->stopSelfSounds();
-				tempplayer->Spawn(TRUE);
-			}
+			tempplayer->reviveIfDead();
 
-			if(pev->flags & FL_GODMODE){
-				pev->flags &= ~FL_GODMODE;
+			if(tempplayer->pev->flags & FL_GODMODE){
+				tempplayer->pev->flags &= ~FL_GODMODE;
 				easyForcePrintLineClient(pEntity, "godmode OFF");
 			}else{
-				pev->flags |= FL_GODMODE;
+				tempplayer->pev->flags |= FL_GODMODE;
 				easyForcePrintLineClient(pEntity, "godmode ON");
 			}
 		}else{
@@ -2976,15 +3259,16 @@ void ClientCommand( edict_t *pEntity )
 		}
 
 	}else if(FStrEq(pcmdRefinedRef, "noclip2")){
+		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer*)pev);
 	
 		if(g_flWeaponCheat != 0.0){
 
-			if(pev->deadflag == DEAD_NO){
-				if(pev->movetype == MOVETYPE_NOCLIP){
-					pev->movetype = MOVETYPE_BOUNCE;
+			if(tempplayer->pev->deadflag == DEAD_NO){
+				if(tempplayer->pev->movetype == MOVETYPE_NOCLIP){
+					tempplayer->pev->movetype = MOVETYPE_BOUNCE;
 					easyForcePrintLineClient(pEntity, "noclip OFF");
 				}else{
-					pev->movetype = MOVETYPE_NOCLIP;
+					tempplayer->pev->movetype = MOVETYPE_NOCLIP;
 					easyForcePrintLineClient(pEntity, "noclip ON");
 				}
 			}else{
@@ -3000,6 +3284,7 @@ void ClientCommand( edict_t *pEntity )
 	}else if(FStrEq(pcmdRefinedRef, "cameraper_t")){
 		globalPSEUDO_cameraMode = 1;
 	}else if( FStrEq(pcmdRefinedRef, "crazyprintoutoff") ){
+		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer*)pev);
 		
 		if(g_flWeaponCheat == 0.0){
 			easyForcePrintLineClient(pEntity, "Hm. No.");
@@ -3007,7 +3292,7 @@ void ClientCommand( edict_t *pEntity )
 		}
 
 		CBaseEntity *pSearchEntity = NULL;
-		while ((pSearchEntity = UTIL_FindEntityInSphere(pSearchEntity, pev->origin, 5000 )) != NULL)
+		while ((pSearchEntity = UTIL_FindEntityInSphere(pSearchEntity, tempplayer->pev->origin, 5000 )) != NULL)
 		{
 			//CBaseMonster *pMon = pSearchEntity->MyMonsterPointer( );
 			//if(pMon != NULL){
@@ -3254,8 +3539,8 @@ void ClientCommand( edict_t *pEntity )
 		UTIL_MakeVectors(tempplayer->pev->v_angle + tempplayer->pev->punchangle);
 
 		const Vector tempForward = gpGlobals->v_forward;
-		Vector vecStart = pev->origin + pev->view_ofs + tempForward * -10;
-		Vector vecEnd = pev->origin + pev->view_ofs + tempForward * 200;
+		Vector vecStart = tempplayer->pev->origin + tempplayer->pev->view_ofs + tempForward * -10;
+		Vector vecEnd = tempplayer->pev->origin + tempplayer->pev->view_ofs + tempForward * 200;
 
 		const char* arg1ref = CMD_ARGV(1);
 
@@ -3613,10 +3898,10 @@ void ClientCommand( edict_t *pEntity )
 		static float side = 1.0;
 		static int count;
 
-		Vector itsAngles = (Vector(-pev->v_angle.x, pev->v_angle.y, pev->v_angle.z) + pev->punchangle);
+		Vector itsAngles = (Vector(-tempplayer->pev->v_angle.x, tempplayer->pev->v_angle.y, tempplayer->pev->v_angle.z) + tempplayer->pev->punchangle);
 			
 		UTIL_MakeVectors(itsAngles);
-		Vector vecSrc = pev->origin + pev->view_ofs + (gpGlobals->v_forward * 8);
+		Vector vecSrc = tempplayer->pev->origin + tempplayer->pev->view_ofs + (gpGlobals->v_forward * 8);
 
 		/*
 		switch( m_iRockets % 5)
@@ -3667,11 +3952,11 @@ void ClientCommand( edict_t *pEntity )
 			TraceResult tr;
 
 			pentIgnore = tempplayer->edict();
-			UTIL_MakeVectors(pev->v_angle + pev->punchangle);
+			UTIL_MakeVectors(tempplayer->pev->v_angle + tempplayer->pev->punchangle);
 
 			//a tiny bit in front for safety.
-			Vector vecSrc = pev->origin + pev->view_ofs + gpGlobals->v_forward * 5;
-			Vector vecDest = pev->origin + pev->view_ofs + gpGlobals->v_forward * 2048;
+			Vector vecSrc = tempplayer->pev->origin + tempplayer->pev->view_ofs + gpGlobals->v_forward * 5;
+			Vector vecDest = tempplayer->pev->origin + tempplayer->pev->view_ofs + gpGlobals->v_forward * 2048;
 
 			//nah, precision for while ducking not necessary.
 			/*
@@ -3699,32 +3984,8 @@ void ClientCommand( edict_t *pEntity )
 									 TRUE, &tr);
 			*/
 
-			CBaseMonster* destMon = NULL;
+			CBaseMonster* destMon = getMonsterWithID(searchID);
 			
-			edict_t		*pEdicttt;
-			CBaseEntity *pEntityyy;
-			pEdicttt = g_engfuncs.pfnPEntityOfEntIndex( 1 );
-			if ( pEdicttt ){
-				for ( int i = 1; i < gpGlobals->maxEntities; i++, pEdicttt++ ){
-					if ( pEdicttt->free )	// Not in use
-					continue;
-		
-					pEntityyy = CBaseEntity::Instance(pEdicttt);
-					if ( !pEntityyy )
-						continue;
-
-					CBaseMonster* tempmon = NULL;
-					if(  (tempmon = pEntityyy->GetMonsterPointer()) != NULL){
-						if(tempmon->monsterID == searchID){
-							destMon = tempmon;
-							break;
-						}
-					}
-
-				}//END OF loop
-			}
-
-
 			if(destMon == NULL){
 				easyForcePrintLineClient(pEntity, "ERROR: could not find monster of id %d", searchID);
 			}else{
@@ -4102,11 +4363,11 @@ void ClientCommand( edict_t *pEntity )
 				TraceResult tr;
 
 				pentIgnore = tempplayer->edict();
-				UTIL_MakeVectors(pev->v_angle + pev->punchangle);
+				UTIL_MakeVectors(tempplayer->pev->v_angle + tempplayer->pev->punchangle);
 
 				//a tiny bit in front for safety.
-				Vector vecSrc = pev->origin + pev->view_ofs + gpGlobals->v_forward * 5;
-				Vector vecDest = pev->origin + pev->view_ofs + gpGlobals->v_forward * 2048;
+				Vector vecSrc = tempplayer->pev->origin + tempplayer->pev->view_ofs + gpGlobals->v_forward * 5;
+				Vector vecDest = tempplayer->pev->origin + tempplayer->pev->view_ofs + gpGlobals->v_forward * 2048;
 
 				//nah, precision for while ducking not necessary.
 				/*
@@ -4168,53 +4429,42 @@ void ClientCommand( edict_t *pEntity )
 			easyForcePrintLineClient(pEntity, "Captain Retrospect says: You shouldn\'t have pissed them off.\n");
 		}
 	}
-	else if (FStrEq(pcmdRefinedRef, "removeallmonsters")) {
+	else if (FStrEq(pcmdRefinedRef, "removeallmonsters") ) {
 
 		if (g_flWeaponCheat) {
-			edict_t* pEdict = g_engfuncs.pfnPEntityOfEntIndex(1);
-			CBaseEntity* pTempEntity;
-			int		count;
-			float	distance, delta;
-			count = 0;
-			if (!pEdict)
-				return;
-			for (int i = 1; i < gpGlobals->maxEntities; i++, pEdict++)
-			{
-				if (pEdict->free)	// Not in use
-					continue;
-
-				//TEST WHY NO REMOV
-				if (FClassnameIs(pEdict, "monster_barnacle")) {
-					int x = 66; //?
+			if (CMD_ARGC() <= 1) {
+				// good, they meant it.
+				removeAllMonsters(pEntity);
+			}
+			else {
+				easyForcePrintLineClient(pEntity, "WARNING: removeallmonsters does not accept any parameters.  Do you mean removeallmonstersexcept?");
+			}
+		}else {
+			easyForcePrintLineClient(pEntity, "Nope.");
+		}
+	}
+	else if (FStrEq(pcmdRefinedRef, "removeallmonstersexcept")) {
+		if (g_flWeaponCheat) {
+			if (CMD_ARGC() > 1) {
+				int tempNumb;
+				int theID = -1;
+				
+				try {
+					tempNumb = tryStringToInt(CMD_ARGV(1));
+					theID = tempNumb;
+					removeAllMonstersExcept(pEntity, theID);
+				}
+				catch (int) {
+					easyForcePrintClient(pEntity, "ID must be an integer.");
 				}
 
-				if (!(pEdict->v.flags & (FL_CLIENT | FL_MONSTER)))	// Not a client/monster ?
-					continue;
-
-				pTempEntity = CBaseEntity::Instance(pEdict);
-				if (!pEntity)
-					continue;
-
-				CBaseMonster* tempMonster = pTempEntity->MyMonsterPointer();
-				if (tempMonster == NULL || FClassnameIs(tempMonster->pev, "player")) {
-					continue;  //not players or non-monsters.
-				}
-				//MODDD - 
-				//if(/*tempMonster->monsterID == 4 ||*/ tempMonster->monsterID == 5 || tempMonster->monsterID == 6){
-				//	//remove all but those! TESTING
-				//	continue;
-				//}
-				easyForcePrintLineClient(pEntity, "*REMOVED %s", tempMonster->getClassname(), tempMonster->monsterID);
-				//made it here? Remove it.
-				//::UTIL_Remove(tempMonster);
-				//tempMonster->onDelete();   automatically called by SUB_REMOVE, don't manually call this.
-				tempMonster->SetThink(&CBaseEntity::SUB_Remove);
-				tempMonster->pev->nextthink = gpGlobals->time;
-			}//END OF list through all entities.
-
+			}
+			else {
+				easyForcePrintClient(pEntity, "Must specify an ID not to be removed!  Support for multiple exception ID\'s can be added if necessary.");
+			}
 		}
 		else {
-			easyForcePrintLineClient(pEntity, "Nope.");
+			easyForcePrintClient(pEntity, "Nope.");
 		}
 	}
 	else if (FStrEq(pcmdRefinedRef, "removeallentities")) {
@@ -4222,41 +4472,17 @@ void ClientCommand( edict_t *pEntity )
 		return;
 
 		if (g_flWeaponCheat) {
-			edict_t* pEdict = g_engfuncs.pfnPEntityOfEntIndex(1);
-			CBaseEntity* pTempEntity;
-			int		count;
-			float	distance, delta;
-			count = 0;
-			if (!pEdict)
-				return;
-			for (int i = 1; i < gpGlobals->maxEntities; i++, pEdict++)
-			{
-				if (pEdict->free)	// Not in use
-					continue;
-
-				pTempEntity = CBaseEntity::Instance(pEdict);
-				if (!pTempEntity)
-					continue;
-
-				easyForcePrintLineClient(pEntity, "WHAT WERE YOU GONNA DELETE?? %s", pTempEntity->getClassname());
-
-				if (FClassnameIs(pTempEntity->pev, "worldspawn") || FClassnameIs(pTempEntity->pev, "player")) {
-					continue;  //not the map (???) or players.
-				}
-
-				//made it here? Remove it.
-				////::UTIL_Remove(tempMonster);
-				//actually do it this way below instead.
-				//pTempEntity->onDelete();
-				//pTempEntity->SetThink(&CBaseEntity::SUB_Remove);
-				//pTempEntity->pev->nextthink = gpGlobals->time;
-
-			}//END OF list through all entities.
-
+			removeAllEntities(pEntity);
 		}
 		else {
 			easyForcePrintLineClient(pEntity, "Nope.");
 		}
+	}
+	else if (FStrEq(pcmdRefinedRef, "listallentities")) {
+		listAllEntities(pEntity);
+	}
+	else if (FStrEq(pcmdRefinedRef, "listallmonsters")) {
+		listAllMonsters(pEntity);
 	}
 	else if (FStrEq(pcmdRefinedRef, "testalt")) {
 		

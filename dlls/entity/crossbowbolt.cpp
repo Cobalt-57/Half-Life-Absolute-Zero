@@ -259,6 +259,7 @@ void CCrossbowBolt::BoltTouch( CBaseEntity *pOther )
 		if (!noDamage) {
 
 			// UNDONE: this needs to call TraceAttack instead
+			// ...what was that comment supposed to mean.  That does happen too.
 			ClearMultiDamage();
 
 			if (goingToExplode) {
@@ -266,7 +267,11 @@ void CCrossbowBolt::BoltTouch( CBaseEntity *pOther )
 				// ...eh, nevermind.  These are small explosions. Gib just if we deserve it as usual
 				// (overkill factor).  If you change your mind, add back DMG_ALWAYSGIB.
 				// Also, no poison for explosive arrows. C'mon, that's just ridiculous.
-				gMultiDamage.type = DMG_BLAST;
+				// And this is the direct hit, not the explosion.  Actually don't count just the impact
+				// as BLAST damage, whoops.  I don't think BULLET hurts though.
+				//gMultiDamage.type = DMG_BLAST | DMG_ALWAYSGIB;
+				gMultiDamage.type = DMG_BULLET | DMG_NEVERGIB;
+				gMultiDamage.typeMod = DMG_PROJECTILE;
 			}
 			else {
 				// May do lots of damage, but no gibbing. Does not make sense for ordinary
@@ -275,10 +280,10 @@ void CCrossbowBolt::BoltTouch( CBaseEntity *pOther )
 				// even without the poison.  Would need a new damage type (for the 2nd dmg bitmask
 				// probably).  BLEGH.
 				gMultiDamage.type = DMG_BULLET | DMG_NEVERGIB | DMG_POISON;
+				gMultiDamage.typeMod = DMG_PROJECTILE;
 			}
 
 
-			//TODO - explosion damage, based on monster-damage a bit maybe??
 			pOther->TraceAttack(pevOwner, damageToDeal, pev->velocity.Normalize(), &tr, gMultiDamage.type, gMultiDamage.typeMod);
 
 
@@ -384,6 +389,7 @@ void CCrossbowBolt::BoltTouch( CBaseEntity *pOther )
 
 	// It's your time to shine!  Explode and remove self.
 	if(goingToExplode){
+		pev->solid = SOLID_NOT;  //safety?
 		SetThink( &CCrossbowBolt::ExplodeThink );
 		pev->nextthink = gpGlobals->time + 0.1;
 	}
@@ -510,7 +516,7 @@ void CCrossbowBolt::ExplodeThink( void )
 
 
 float CCrossbowBolt::massInfluence(void){
-	return 0.03f;
+	return 0.02f;
 }//END OF massInfluence
 
 int CCrossbowBolt::GetProjectileType(void){

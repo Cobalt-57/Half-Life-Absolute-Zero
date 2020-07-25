@@ -1409,6 +1409,7 @@ void CFloater::HandleEventQueueEvent(int arg_eventID){
 		// do stuff for this event.
 		AttackSound();
 
+		//MODDD - TODO!!!   Should I have a little more customized of a projectile sprite than squidspit?
 		CSquidSpit::Shoot( this, vecSpitOffset, vecSpitDir, 900 );
 	break;
 	}

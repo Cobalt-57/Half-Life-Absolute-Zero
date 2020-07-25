@@ -418,7 +418,7 @@ void CBaseMonster :: MaintainSchedule ( void )
 	}
 	*/
 
-	if(monsterID == 14){
+	if(monsterID == 24){
 		int x = 666;
 	}
 
@@ -1444,6 +1444,7 @@ void CBaseMonster :: RunTask ( Task_t *pTask )
 		/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		// canPredictRangedActFinish() ||  ???
+		// m_fSequenceLoops || 
 		if (pTask->iTask == TASK_MELEE_ATTACK1_NOTURN || pTask->iTask == TASK_MELEE_ATTACK2_NOTURN) {
 
 			float flInterval = 0.1;  //mock interval, resembles think times.

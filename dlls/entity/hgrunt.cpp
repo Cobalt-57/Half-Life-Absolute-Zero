@@ -267,7 +267,7 @@ public:
 	BOOL hgruntMoveAndShootDotProductPass;
 
 	void EXPORT tempStrafeTouch(CBaseEntity *pOther);
-	void EXPORT		partyUse( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value );
+	void EXPORT hgruntUse( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value );
 	
 	float strafeFailTime;
 	float runAndGunFailTime;
@@ -531,35 +531,46 @@ const char *CHGrunt::pAttackHitSounds[] =
 };
 
 
+//MODDD - notes on pActivator and pCaller
+// If I understand right, pActivator is more likely to be tied to whatever started a chain of use-calls.
+// pCaller may be more tied to what immediately came before in a use-call-chain.
+// Such as, did a player start this chain (activator), or is a player the most recent 'caller' in this chain?
+// Not that it matters in most player-use checking situations, playeruse sends the player for both
+// pActivatory and pCaller.
+// Again, just guesses, no idea where any comments describing the difference are.
 
-void CHGrunt :: partyUse( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
+void CHGrunt::hgruntUse( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
 {
-
 	//easyForcePrintLine("????? %d %d %d", EASY_CVAR_GET(thatWasntPunch), pCaller, pCaller!=NULL?pCaller->IsPlayer():-1 );
-	if ( EASY_CVAR_GET(thatWasntPunch) == 1 && pCaller != NULL && pCaller->IsPlayer() )
+	if ( EASY_CVAR_GET(thatWasntPunch) == 1  )
 	{
-		//sentence.
-		int choice = RANDOM_LONG(0, 4);
+		if (pActivator != NULL && pActivator->IsPlayer()) {
+			//sentence.
+			int choice = RANDOM_LONG(0, 4);
 
-		switch(choice){
-		case 0:
-			EMIT_SOUND_DYN( edict(), CHAN_VOICE, "!HG_SUCKS", 0.87, ATTN_NORM, 0, m_voicePitch);
-		break;
-		case 1:
-			EMIT_SOUND_DYN( edict(), CHAN_VOICE, "!HG_CIVVIES", 0.87, ATTN_NORM, 0, m_voicePitch);
-		break;
-		case 2:
-			EMIT_SOUND_DYN( edict(), CHAN_VOICE, "!HG_MEME", 0.9, ATTN_NORM, 0, m_voicePitch);
-		break;
-		case 3:
-			EMIT_SOUND_DYN( edict(), CHAN_VOICE, "!HG_MEMEB", 0.9, ATTN_NORM, 0, m_voicePitch);
-		break;
-		case 4:
-			EMIT_SOUND_DYN( edict(), CHAN_VOICE, "!hgrunt_gr_pain2", 1.00, ATTN_NORM, 0, m_voicePitch);
-		break;
-		}
-		
-		
+			switch (choice) {
+			case 0:
+				EMIT_SOUND_DYN(edict(), CHAN_VOICE, "!HG_SUCKS", 0.87, ATTN_NORM, 0, m_voicePitch);
+				break;
+			case 1:
+				EMIT_SOUND_DYN(edict(), CHAN_VOICE, "!HG_CIVVIES", 0.87, ATTN_NORM, 0, m_voicePitch);
+				break;
+			case 2:
+				EMIT_SOUND_DYN(edict(), CHAN_VOICE, "!HG_MEME", 0.9, ATTN_NORM, 0, m_voicePitch);
+				break;
+			case 3:
+				EMIT_SOUND_DYN(edict(), CHAN_VOICE, "!HG_MEMEB", 0.9, ATTN_NORM, 0, m_voicePitch);
+				break;
+			case 4:
+				EMIT_SOUND_DYN(edict(), CHAN_VOICE, "!hgrunt_gr_pain2", 1.00, ATTN_NORM, 0, m_voicePitch);
+				break;
+			}
+
+		}//END OF pActivator check
+	}
+	else {
+		// redirect to MonsterUse
+		CBaseMonster::MonsterUse(pActivator, pCaller, useType, value);
 	}
 
 }
@@ -1851,10 +1862,11 @@ Vector CHGrunt::GetGunPositionAI(){
 //=========================================================
 void CHGrunt :: Shoot ( void )
 {
-	if (m_hEnemy == NULL)
-	{
-		return;
-	}
+	// No, still shoot, just straight forward then.  Residual shots.
+	//if (m_hEnemy == NULL)
+	//{
+	//	return;
+	//}
 
 	Vector vecShootOrigin = GetGunPosition();
 	Vector vecShootDir = ShootAtEnemyMod( vecShootOrigin );
@@ -3097,7 +3109,7 @@ void CHGrunt :: Spawn()
 	}
 
 	
-	SetUse( &CHGrunt::partyUse );
+	SetUse(&CHGrunt::hgruntUse);
 
 }
 

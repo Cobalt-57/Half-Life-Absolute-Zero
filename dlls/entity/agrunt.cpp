@@ -1009,7 +1009,11 @@ GENERATE_TRACEATTACK_IMPLEMENTATION(CAGrunt)
 	}
 	
 	//easyForcePrintLine("AGrunt:: TraceAttack ended with %.2f damage.", flDamage);
-	AddMultiDamage( pevAttacker, this, flDamage, bitsDamageType, bitsDamageTypeMod );
+	
+	// In as-is, we skipped call to the parent TraceAttack bbbbeeeeeecccccccaaaaaaauuuuuuussssssseeeeee?
+	// The hgrunt doesn't........
+	//AddMultiDamage( pevAttacker, this, flDamage, bitsDamageType, bitsDamageTypeMod );
+	GENERATE_TRACEATTACK_PARENT_CALL(CSquadMonster);
 }
 
 //=========================================================

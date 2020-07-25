@@ -36,6 +36,17 @@ DLL_GLOBAL int		g_iSkillLevel;
 DLL_GLOBAL int		gDisplayTitle;
 DLL_GLOBAL BOOL		g_fGameOver;
 
+//MODDD - ugh.  Hate doing it this way but we do rarely ever need to see bitsDamageType's in Killed or BecomeDead.
+DLL_GLOBAL int      g_bitsDamageType;
+DLL_GLOBAL int      g_bitsDamageTypeMod;
+// And a var to record whether this BecomeDead call should even involve g_vecAttackDir or the damage types.
+// If they're not set first, it doesn't make sense to trust them.
+// And why not default our globals anyway?
+DLL_GLOBAL BOOL      g_tossKilledCall = FALSE;
+
+DLL_GLOBAL float      g_rawDamageCumula = 0;
+
+
 //MODDD - now in util_shared.cpp.
 //DLL_GLOBAL const Vector	g_vecZero = Vector(0,0,0);
 

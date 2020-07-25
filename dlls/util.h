@@ -319,6 +319,10 @@ typedef struct hudtextparms_s
 
 
 
+// For printout convenience.    Probably should do that with tasks, as often as those numbers  come up.
+//static const char* pStateNames[] = { "None", "Idle", "Combat", "Alert", "Hunt", "Prone", "Script", "PlayDead", "Dead" };
+static const char* pStateNames[] = { "None", "Idle", "Combat", "Alert", "Prone", "Script", "Dead" };
+
 typedef enum 
 {
 	MONSTERSTATE_NONE = 0,

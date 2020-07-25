@@ -925,10 +925,10 @@ void retroGive(CBasePlayer* argPlayer, const char* pszName)
 // Based off of dlls/weapons.cpp's "DefaultTouch", but for the player calling "use" on me instead.
 void CChumToad::PickupUse(CBaseEntity* pActivator, CBaseEntity* pCaller, USE_TYPE useType, float value) {
 	// if it's not a player, ignore
-	if (!pCaller->IsPlayer())
+	if (!pActivator->IsPlayer())
 		return;
 
-	CBasePlayer* pPlayer = (CBasePlayer*)pCaller;
+	CBasePlayer* pPlayer = (CBasePlayer*)pActivator;
 
 	// No, you can't pick up dead frogs you sick fuck
 	if (!IsAlive()) {
@@ -962,7 +962,7 @@ void CChumToad::PickupUse(CBaseEntity* pActivator, CBaseEntity* pCaller, USE_TYP
 
 
 	/*
-	int giveResult = pCaller->GiveAmmo(1, "Chum Toads", CHUMTOAD_MAX_CARRY);
+	int giveResult = pActivator->GiveAmmo(1, "Chum Toads", CHUMTOAD_MAX_CARRY);
 	if (giveResult == -1) {
 		//assume I got rejected, no need to do anything.
 	}
