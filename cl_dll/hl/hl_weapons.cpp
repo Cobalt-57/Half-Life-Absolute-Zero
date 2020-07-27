@@ -14,20 +14,14 @@
 ****/
 #include "extdll.h"
 #include "util.h"
-
 #include "cbase.h"
-
 //MODDDD - interestingly enough...
-
 #include "animating.h"
 #include "basetoggle.h"
 #include "basebutton.h"
 #include "doors.h"  //is that okay?
-
-
 #include "basemonster.h"
 #include "weapons.h"
-
 //MODDD
 #include "chumtoadweapon.h"
 #include "crossbow.h"
@@ -46,11 +40,8 @@
 #include "tripmine.h"
 
 
-
-
 #include "nodes.h"
 #include "player.h"
-
 #include "usercmd.h"
 #include "entity_state.h"
 #include "demo_api.h"
@@ -102,7 +93,7 @@ static globalvars_t Globals;
 static CBasePlayerWeapon* g_pWpns[ 32 ];
 
 float g_flApplyVel = 0.0;
-int   g_irunninggausspred = 0;
+int g_irunninggausspred = 0;
 
 vec3_t previousorigin;
 
@@ -143,7 +134,7 @@ Print debug messages to console
 */
 void AlertMessage( ALERT_TYPE atype, char *szFmt, ... )
 {
-	va_list		argptr;
+	va_list argptr;
 	static char	string[1024];
 	
 	va_start (argptr, szFmt);
@@ -2131,7 +2122,6 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
 	}//END OF skin count check
 	
 
-
 }//END OF HUD_WeaponsPostThink
 
 
@@ -2147,7 +2137,7 @@ runfuncs is 1 if this is the first time we've predicted this command.  If so, so
 be ignored
 =====================
 */
-void DLLEXPORT HUD_PostRunCmd( struct local_state_s *from, struct local_state_s *to, struct usercmd_s *cmd, int runfuncs, double time, unsigned int random_seed )
+void DLLEXPORT HUD_PostRunCmd(struct local_state_s* from, struct local_state_s* to, struct usercmd_s* cmd, int runfuncs, double time, unsigned int random_seed)
 {
 	//MODDD - new. Must keep track of the time between method calls to know when it is ok to do an eye-check.
 	static float previousTime = -1; //to guarantee the first time always happens.
@@ -2155,43 +2145,53 @@ void DLLEXPORT HUD_PostRunCmd( struct local_state_s *from, struct local_state_s 
 	g_runfuncs = runfuncs;
 
 	//MODDD - moved to here from HUD_WeaponsPostThink.
-	HUD_InitClientWeapons();  
+	HUD_InitClientWeapons();
 	gpGlobals->time = time;
-	
+
+
+
+
+
 
 	//////////////////////////////////////////////////////////////////////////
 	//MODDD - should we keep doing this??
-	if(gpGlobals->time - previousTime == 0){
-		//If no time has passed since the last client-reported time, assume we're paused. Don't try any logic.
-		//easyForcePrintLine("HUD_PostRunCmd: paused. time:%.2f", gpGlobals->time);
-		return;
+	// ok, but ONLY for singleplayer!  In multiplayer it breaks viewmodel animations.  They often, randomly break.
+	// (EV_ calls don't make it from server to client; nothing shows up at all, no view anims / clientside event if the glitch happens)
+	// That's not a frustrating problem to run into at all!
+	if (!IsMultiplayer()) {
+		if (gpGlobals->time - previousTime == 0) {
+			//If no time has passed since the last client-reported time, assume we're paused. Don't try any logic.
+			//easyForcePrintLine("HUD_PostRunCmd: paused. time:%.2f", gpGlobals->time);
+			return;
+		}
+		previousTime = gpGlobals->time;
 	}
-	previousTime = gpGlobals->time;
 	//////////////////////////////////////////////////////////////////////////
-	
+
+
 	//player = gEngfuncs.GetLocalPlayer();
 
 	//if(player){
-
-		if(player.m_pActiveItem != 0){
-			player.m_pActiveItem->m_flStartThrow = 2;
-
-		}
-		if(player.m_pClientActiveItem != 0){
-			player.m_pClientActiveItem->m_flStartThrow = 2;
-
-		}
-		
+	if (player.m_pActiveItem != 0) {
+		player.m_pActiveItem->m_flStartThrow = 2;
+	}
+	if (player.m_pClientActiveItem != 0) {
+		player.m_pClientActiveItem->m_flStartThrow = 2;
+	}
 	//}
+
+
+
 
 #if defined( CLIENT_WEAPONS )
 
+	//MODDD - way to force some edits for testing.   Maybe.
+	////////////////////////////////////////////////////////////////////////////////////////
 	/*
 	if(from->client.m_iId == WEAPON_GLOCK){
 		gEngfuncs.GetViewModel()->curstate.body = pWeapon->m_fireState;
 	}
 	*/
-
 	/*
 	if(!cl_lw){
 		easyPrintLine("FLAG4234");
@@ -2201,33 +2201,31 @@ void DLLEXPORT HUD_PostRunCmd( struct local_state_s *from, struct local_state_s 
 		}
 	}
 	*/
-	
 	//gEngfuncs.GetViewModel()->curstate.body = 1;
+	////////////////////////////////////////////////////////////////////////////////////////
 
 
-	if ( cl_lw && cl_lw->value )
+
+
+	if (cl_lw && cl_lw->value)
 	{
-
-		HUD_WeaponsPostThink( from, to, cmd, time, random_seed );
+		HUD_WeaponsPostThink(from, to, cmd, time, random_seed);
 	}
 	else
 #endif
 	{
 		to->client.fov = g_lastFOV;
 	}
-	
-	
-	//gEngfuncs.GetViewModel()->curstate.body = 1;
 
-	if ( g_irunninggausspred == 1 )
+	if (g_irunninggausspred == 1)
 	{
 		Vector forward;
-		gEngfuncs.pfnAngleVectors( v_angles, forward, NULL, NULL );
-		to->client.velocity = to->client.velocity - forward * g_flApplyVel * 5; 
+		gEngfuncs.pfnAngleVectors(v_angles, forward, NULL, NULL);
+		to->client.velocity = to->client.velocity - forward * g_flApplyVel * 5;
 		g_irunninggausspred = false;
 	}
-	
+
 	// All games can use FOV state
 	g_lastFOV = to->client.fov;
-
 }
+

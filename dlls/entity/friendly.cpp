@@ -1331,10 +1331,7 @@ void CFriendly::CustomTouch( CBaseEntity *pOther ){
 
 
 
-//ROLL THOSE keyS FOR AN INTENSE ATTACK!
-
 void CFriendly::MonsterThink( void ){
-
 	//easyForcePrintLine("AM I A %d", HasConditions(bits_COND_SEE_ENEMY));
 
 	static int cumulativeThing = 0;
@@ -1484,22 +1481,13 @@ void CFriendly::MonsterThink( void ){
 	}
 
 	if (okayForNormalThink) {
-
-		if (pev->sequence == FRIENDLY_WALK) {
-			if (extraPissedFactor > 0) {
-				// don't let it go too high.
-				this->m_flFramerateSuggestion = min(5.5 + extraPissedFactor / 10, 8);
-				pev->framerate = this->m_flFramerateSuggestion;
-				if (::g_iSkillLevel == SKILL_HARD) this->m_flFramerateSuggestion *= 1.06;
-			}
-			else {
-				if (extraPissedFactor != -1) {
-					extraPissedFactor = -1;
-					this->m_flFramerateSuggestion = 1;
-					pev->framerate = 1;
-					if (::g_iSkillLevel == SKILL_HARD) this->m_flFramerateSuggestion *= 1.06;
-				}
-			}
+		
+		if (pev->sequence == FRIENDLY_WALK && m_Activity == ACT_RUN) {
+			// apply change to all framerate variables
+			m_flFramerateSuggestion = getRunActFramerate();
+			pev->framerate = m_flFramerateSuggestion;
+			// Not this one!  That's for deeper model animation logic, like what speed makes sense for the given model to give a framerate of "1"
+			//m_flFrameRate = m_flFramerateSuggestion;
 		}
 
 		if (extraPissedFactor > 0) {
@@ -1818,7 +1806,6 @@ void CFriendly::SetActivity( Activity NewActivity ){
 	CBaseMonster::SetActivity(NewActivity);
 }
 
-
 int CFriendly::LookupActivityHard(int activity){
 	int i = 0;
 	m_flFramerateSuggestion = 1;
@@ -1838,15 +1825,7 @@ int CFriendly::LookupActivityHard(int activity){
 			//easyForcePrintLine("Friendly: ACT_RUN?");
 			//also report that we have it.
 
-			this->m_flFramerateSuggestion = 5.5;
-			//this->m_flFramerateSuggestion = 24;
-
-			if (extraPissedFactor > 0) {
-				// don't let it go too high.
-				this->m_flFramerateSuggestion = min(5.5 + extraPissedFactor / 10, 8);
-			}
-
-			if (::g_iSkillLevel == SKILL_HARD) this->m_flFramerateSuggestion *= 1.06;
+			m_flFramerateSuggestion = getRunActFramerate();
 
 			return FRIENDLY_WALK;
 		break;
@@ -2029,6 +2008,25 @@ void CFriendly::HandleAnimEvent(MonsterEvent_t *pEvent ){
 	break;
 	}//END OF switch(...)
 }
+
+
+// Framerate to use for the running animation.  Bit of logic repeated for the moment run is picked
+// and in realtime as "extraPissedFactor" drops from time since taking damage.  (higher = faster).
+float CFriendly::getRunActFramerate(void) {
+	float targetFramerate;
+	if (extraPissedFactor <= 0) {
+		targetFramerate = 5.5;
+	}
+	else {
+		// don't let it go too high.
+		targetFramerate = min(5.5 + (extraPissedFactor / 10), 8);
+	}
+
+	if (::g_iSkillLevel == SKILL_HARD) targetFramerate *= 1.07;
+
+	return targetFramerate;
+}
+
 
 
 

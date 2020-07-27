@@ -129,6 +129,7 @@ EASY_CVAR_EXTERN(muteCrowbarSounds)
 
 EASY_CVAR_EXTERN(forceAllowServersideTextureSounds)
 
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(viewModelPrintouts)
 
 
 extern engine_studio_api_t IEngineStudio;
@@ -732,6 +733,8 @@ void EV_FireGlock1( event_args_t *args )
 		silencerOn = 1;
 	}
 
+	if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(viewModelPrintouts) == 1)easyForcePrintLine("!!!! EV_FireGlock1: is event local for player ID %d?  %d", idx, EV_IsLocal(idx));
+
 	if ( EV_IsLocal( idx ) )
 	{
 		//MODDD - silencer has no flash. This is the flash of light, not the sprite which is controlled by the animation itslef.
@@ -745,6 +748,9 @@ void EV_FireGlock1( event_args_t *args )
 				ent->curstate.effects &= ~EF_MUZZLEFLASH;
 			}
 		}
+
+		if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(viewModelPrintouts) == 1)easyForcePrintLine("!!!! EV_FireGlock1: EV_WeaponAnimation.");
+
 
 		//MODDD - use a body of "InAttack", coordinated with whether the silencer is on or not.
 		//gEngfuncs.pEventAPI->EV_WeaponAnimation( empty ? GLOCK_SHOOT_EMPTY : GLOCK_SHOOT, 2 );

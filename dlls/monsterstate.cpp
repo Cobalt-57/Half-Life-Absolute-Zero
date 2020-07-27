@@ -42,6 +42,10 @@ void CBaseMonster :: SetState ( MONSTERSTATE State )
 	}
 */
 
+	if (FClassnameIs(pev, "monster_gargantua")) {
+		int eckz = 666;
+	}
+
 
 	//MODDD - force the state to stay "PRONE" if caught by a barnacle!
 	// Any other state can be picked after this monster is freed.  Or, rather, 'if'.
@@ -152,6 +156,32 @@ void CBaseMonster :: RunAI ( void )
 			GetEnemy();
 		}
 
+
+		/*
+		BOOL enemyIsNull = (m_hEnemy == NULL);
+		BOOL enemyPrivIsNull1 = TRUE;
+		BOOL enemyPrivIsNull2 = TRUE;
+		
+		if (!enemyIsNull) {
+			enemyPrivIsNull1 = (m_hEnemy.GetEntity() == NULL);
+			enemyPrivIsNull2 = (m_hEnemy.Get() == NULL);
+
+
+			CBaseEntity* peepee = m_hEnemy;
+			const char* crashme = peepee->getClassname();
+		}
+		*/
+
+		// If our enemy has lost its private data, it has been deleted in an unusual way.  Drop it!
+		// NEW.  Do this check right before even calling MonsterThink (the virtual version).
+		// This way monster-specific MonsterThink's don't break just from being a little late to this check.
+		/*
+		if (m_hEnemy != NULL && m_hEnemy.GetEntity() == NULL) {
+			m_hEnemy = NULL;
+		}
+		*/
+
+
 		// do these calculations if monster has an enemy.
 		if ( m_hEnemy != NULL )
 		{
@@ -210,6 +240,11 @@ MONSTERSTATE CBaseMonster :: GetIdealState ( void )
 {
 	int iConditions;
 	iConditions = IScheduleFlags();
+
+
+	if (FClassnameIs(pev, "monster_gargantua")) {
+		int xxx = 666;
+	}
 	
 	// If no schedule conditions, the new ideal state is probably the reason we're in here.
 	switch ( m_MonsterState )

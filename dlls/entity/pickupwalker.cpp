@@ -618,6 +618,9 @@ CBaseEntity* CPickupWalker::Respawn(void)
 
 	if (pNewWeapon)
 	{
+		// MODDD - TODO.  wait, shouldn't we also set pev->solid to SOLID_NOT ??
+		// then again it doesn't matter, what else is SOLID_TRIGGER with a NULL TOUCH method anyway?  No impact.
+
 		pNewWeapon->pev->spawnflags &= ~SF_NORESPAWN;
 
 		// pass on my respawn_ info:

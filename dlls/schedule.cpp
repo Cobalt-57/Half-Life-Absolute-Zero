@@ -303,6 +303,15 @@ BOOL CBaseMonster :: FScheduleValid ( void )
 	}
 
 
+
+
+
+	if (FClassnameIs(pev, "monster_gargantua")) {
+		int x = 44325;
+	}
+
+
+
 	if ( HasConditions( m_pSchedule->iInterruptMask | bits_COND_SCHEDULE_DONE | bits_COND_TASK_FAILED ) )
 	{
 
@@ -418,13 +427,12 @@ void CBaseMonster :: MaintainSchedule ( void )
 	}
 	*/
 
-	if(monsterID == 24){
-		int x = 666;
-	}
+
 
 	if(EASY_CVAR_GET(crazyMonsterPrintouts) == 1){
 		easyPrintLine("DOCKS1 %d", HasConditions(bits_COND_CAN_MELEE_ATTACK1));
 	}
+
 	// UNDONE: Tune/fix this 10... This is just here so infinite loops are impossible
 	// MODDD - let's do more!  Upped to 25.
 	//for ( i = 0; i < 10; i++ )
@@ -444,13 +452,12 @@ void CBaseMonster :: MaintainSchedule ( void )
 
 		//MODDD - a schedule with "scheduleSurvivesStateChange" set to TRUE will disregard state changes. But the schedule going invalid by having interruptible conditions from the schedule is still possible.
 		//if ( (!FScheduleValid() || m_MonsterState != m_IdealMonsterState) )
-		if ( (!FScheduleValid() || (!scheduleSurvivesStateChange && m_MonsterState != m_IdealMonsterState)  ) )
-
-		
-
+		if (
+			!FScheduleValid() ||
+			(!scheduleSurvivesStateChange && m_MonsterState != m_IdealMonsterState)
+		)
 		{
 			if(EASY_CVAR_GET(crazyMonsterPrintouts))easyForcePrintLine("MaintainSchedule: INVALID A %d %d %d", FScheduleValid(), m_MonsterState, m_IdealMonsterState);
-
 
 
 			// if we come into this block of code, the schedule is going to have to be changed.
@@ -556,6 +563,13 @@ void CBaseMonster :: MaintainSchedule ( void )
 					pNewSchedule = GetSchedule();
 					if(EASY_CVAR_GET(crazyMonsterPrintouts))easyForcePrintLine("MaintainSchedule: INVALID B2. Schedule was: %s", getScheduleName());
 				}
+
+				if (pNewSchedule == NULL) {
+					// give up
+					break;
+				}
+
+
 				if(EASY_CVAR_GET(crazyMonsterPrintouts) == 1){
 					easyPrintLine("OOPS A PLENTY 9 %d::: new sched: %s", HasConditions(bits_COND_CAN_MELEE_ATTACK1), pNewSchedule->pName);
 				}
@@ -3046,6 +3060,10 @@ void CBaseMonster :: StartTask ( Task_t *pTask )
 
 	case TASK_SUGGEST_STATE:
 		{
+			if(FClassnameIs(pev, "monster_gargantua")){
+				int xxx = 666;
+			}
+
 			m_IdealMonsterState = (MONSTERSTATE)(int)pTask->flData;
 			TaskComplete();
 			break;
@@ -3295,6 +3313,29 @@ Schedule_t *CBaseMonster :: GetSchedule ( void )
 	//if(pev->deadflag != DEAD_NO){
 	//	return GetScheduleOfType( SCHED_DIE );
 	//}
+	if (FClassnameIs(pev, "monster_gargantua")) {
+		int x = 444;
+	}
+
+
+	//MODDD
+	// IF schedule is NULL and we're without a pCine,
+	// and the idealmonsterstate is not SCRIPT yet 'waitForScriptedTime' is not null,
+	// wait to give a new schedule.  Other places accepting a schedule need
+	// to be able to deal with a NULL schedule.
+	if (
+		m_pSchedule == NULL &&
+		m_pCine == NULL &&
+		// m_MonsterState != MONSTERSTATE_SCRIPT && 
+		m_IdealMonsterState != MONSTERSTATE_SCRIPT &&
+		gpGlobals->time < waitForScriptedTime
+		) {
+		// STALL IT
+		return NULL;
+	}
+	//////////////////////////////////////////////////////////////////
+
+
 
 
 	SCHEDULE_TYPE baitSched = getHeardBaitSoundSchedule();

@@ -1237,6 +1237,12 @@ void CBaseTrigger :: HurtTouch ( CBaseEntity *pOther )
 				// Not that it ever should?
 				// Anyway, player index's start at 1, not 0, so the "minus 1" makes sense.
 				int myIndex = pOther->entindex();
+				
+				//MODDD - there is also "gpGlobals->maxClients;" instead of the flat 32, but it still works.
+				// That is, only ID's 1 to maxClients are reserved, not all 32 at all times.
+				// If the server's max client number is 6, any slots after 7 are not intended to have players.
+				// But note the "IsPlayer" requirement above, so not that this really matters.
+				// Just be wary of any blind assumptions on index number alone (without checking maxClients).
 				if (myIndex <= 32) {
 					int playerMask = 1 << (myIndex - 1);
 
@@ -1279,10 +1285,13 @@ void CBaseTrigger :: HurtTouch ( CBaseEntity *pOther )
 	}
 #endif
 
-	if ( fldmg < 0 )
-		pOther->TakeHealth( -fldmg, m_bitsDamageInflict );
-	else
-		pOther->TakeDamage( pev, pev, fldmg, m_bitsDamageInflict, DMG_MAP_TRIGGER );
+	if (fldmg < 0) {
+		pOther->TakeHealth(-fldmg, m_bitsDamageInflict);
+	}
+	else {
+		pOther->TakeDamage(pev, pev, fldmg, m_bitsDamageInflict, DMG_MAP_TRIGGER);
+		easyPrintLine("trigger: hurt %s, dmg: %.2f", pOther->getClassname(), fldmg);
+	}
 
 	// Store pain time so we can get all of the other entities on this frame
 	pev->pain_finished = gpGlobals->time;

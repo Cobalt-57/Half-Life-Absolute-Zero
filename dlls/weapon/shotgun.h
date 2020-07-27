@@ -39,7 +39,7 @@ public:
 	//MODDD - new
 	CShotgun(void);
 
-	BOOL reloadBlockFireCheck(void);
+	BOOL reloadBlockFireCheck(BOOL isPrimary);
 	void reloadFinishPump(void);
 	BOOL reloadSemi(void);
 
@@ -60,6 +60,7 @@ public:
 
 	void PrimaryAttack(void);
 	void SecondaryAttack(void);
+	void FireShotgun(BOOL isPrimary);
 
 	//MODDD	
 	void Holster(int skiplocal = 0);

@@ -23,12 +23,9 @@
 #include "util.h"
 #include "cbase.h"
 #include "basemonster.h"
-
 #include "basetoggle.h"
-
 //derp?
 #include "util_model.h"
-
 //#ifndef SAVERESTORE_H
 #include "saverestore.h"
 //#endif
@@ -39,6 +36,21 @@
 
 //MODDD
 EASY_CVAR_EXTERN(cineChangelevelFix)
+
+
+
+
+
+#define CCineMonster_CLASSNAME scripted_sequence
+
+// for CScriptedSentence
+#define SF_SENTENCE_ONCE		0x0001
+#define SF_SENTENCE_FOLLOWERS	0x0002	// only say if following player
+#define SF_SENTENCE_INTERRUPT	0x0004	// force talking except when dead
+#define SF_SENTENCE_CONCURRENT	0x0008	// allow other people to keep talking
+
+
+
 
 
 
@@ -137,8 +149,7 @@ TYPEDESCRIPTION	CCineMonster::m_SaveData[] =
 
 IMPLEMENT_SAVERESTORE( CCineMonster, CBaseMonster );
 
-LINK_ENTITY_TO_CLASS( scripted_sequence, CCineMonster );
-#define CLASSNAME "scripted_sequence"
+LINK_ENTITY_TO_CLASS(CCineMonster_CLASSNAME, CCineMonster );
 
 LINK_ENTITY_TO_CLASS( aiscripted_sequence, CCineAI );
 
@@ -207,6 +218,14 @@ void CCineMonster :: Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYP
 	CBaseEntity		*pEntity = m_hTargetEnt;
 	CBaseMonster	*pTarget = NULL;
 
+	/*
+	// a1a2 garg test!!!
+	if (FStrEq(STRING(m_iszEntity), "kira")) {
+		int theid = ENTINDEX(this->edict());
+		int x = 666;
+	}
+	*/
+
 	if ( pEntity )
 		pTarget = pEntity->MyMonsterPointer();
 
@@ -216,7 +235,8 @@ void CCineMonster :: Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYP
 		if ( pTarget->m_scriptState == SCRIPT_PLAYING )
 			return;
 
-		m_startTime = gpGlobals->time + 0.05;
+		//MODDD - why 0.05?  Why not the next immediate frame guarnateed?
+		m_startTime = gpGlobals->time + 0.0;
 	}
 	else
 	{
@@ -295,7 +315,7 @@ void CCineMonster :: Pain( void )
 int CCineMonster :: FindEntity( void )
 {
 	edict_t *pentTarget;
-
+	
 	pentTarget = FIND_ENTITY_BY_TARGETNAME(NULL, STRING(m_iszEntity));
 	m_hTargetEnt = NULL;
 	CBaseMonster	*pTarget = NULL;
@@ -510,6 +530,14 @@ void CCineAI :: PossessEntity( void )
 
 void CCineMonster :: CineThink( void )
 {
+	/*
+	int entid = ENTINDEX(this->edict());
+	// a1a2 garg testing
+	if (FStrEq(STRING(m_iszEntity), "kira")) {
+		int x = 666;
+	}
+	*/
+
 	if (FindEntity())
 	{
 		PossessEntity( );
@@ -608,15 +636,47 @@ void CCineMonster :: SequenceDone ( CBaseMonster *pMonster )
 		pev->nextthink = gpGlobals->time + 0.1;
 	}
 	
+
+
+
+	//MODDD - Now wait just a minute!  Is the thing we're calling another scripted?
+	// If so, enforce a short delay because we expect that scripted to start telling what to do
+	// within a few frames.
+	// Unfortunately this won't catch calling something else that calls a scripted (indirect).
+	// For that we'd need some global "g_scriptedSequenceUse" set if that happens.
+	if (pev->target != NULL) {
+		const char* daString = STRING(pev->target);
+		edict_t* pentTarget = FIND_ENTITY_BY_TARGETNAME(NULL, daString);
+
+		const char* tempStr = NULL;
+
+		if (pentTarget != NULL) {
+			tempStr = STRING(pentTarget->v.classname);
+		}
+
+		if (pentTarget != NULL && FClassnameIs(&pentTarget->v, QUOTE(CCineMonster_CLASSNAME))) {
+			// calling a cine?  ok. enforce the delay.
+			pMonster->waitForScriptedTime = gpGlobals->time + 0.2f;
+		}
+	}
+	/////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+
+
 	// This is done so that another sequence can take over the monster when triggered by the first
-	
 	pMonster->CineCleanup();
 
 	FixScriptMonsterSchedule( pMonster );
 	
+	
 	// This may cause a sequence to attempt to grab this guy NOW, so we have to clear him out
 	// of the existing sequence
 	SUB_UseTargets( NULL, USE_TOGGLE, 0 );
+
+
 }
 
 //=========================================================
@@ -685,8 +745,6 @@ BOOL CBaseMonster :: ExitScriptedSequence( )
 
 	return TRUE;
 }
-//pev->spawnflags |= SF_SCRIPT_NOINTERRUPT;
-
 
 void CCineMonster::AllowInterrupt( BOOL fAllow )
 {
@@ -721,7 +779,7 @@ int CCineMonster::IgnoreConditions( void )
 void ScriptEntityCancel( edict_t *pentCine )
 {
 	// make sure they are a scripted_sequence
-	if (FClassnameIs( pentCine, CLASSNAME ))
+	if (FClassnameIs( pentCine, QUOTE(CCineMonster_CLASSNAME) ))
 	{
 		CCineMonster *pCineTarget = GetClassPtr((CCineMonster *)VARS(pentCine));
 		// make sure they have a monster in mind for the script
@@ -773,7 +831,7 @@ void CCineMonster :: DelayStart( int state )
 
 	while (!FNullEnt(pentCine))
 	{
-		if (FClassnameIs( pentCine, "scripted_sequence" ))
+		if (FClassnameIs( pentCine, QUOTE(CCineMonster_CLASSNAME)))
 		{
 			CCineMonster *pTarget = GetClassPtr((CCineMonster *)VARS(pentCine));
 			if (state)
@@ -783,8 +841,10 @@ void CCineMonster :: DelayStart( int state )
 			else
 			{
 				pTarget->m_iDelay--;
-				if (pTarget->m_iDelay <= 0)
-					pTarget->m_startTime = gpGlobals->time + 0.05;
+				if (pTarget->m_iDelay <= 0) {
+					//MODDD - why 0.05?  Why not the next immediate frame guarnateed?
+					m_startTime = gpGlobals->time + 0.0;
+				}
 			}
 		}
 		pentCine = FIND_ENTITY_BY_TARGETNAME(pentCine, STRING(pev->targetname));
@@ -869,7 +929,7 @@ void CCineMonster :: Activate( void )
 	}
 }
 
-		
+
 BOOL CBaseMonster :: CineCleanup( )
 {
 	CCineMonster *pOldCine = m_pCine;
@@ -928,8 +988,15 @@ BOOL CBaseMonster :: CineCleanup( )
 
 	// set them back into a normal state
 	pev->enemy = NULL;
-	if ( pev->health > 0 )
+	if (pev->health > 0) {
+
+		if (FClassnameIs(pev, "monster_gargantua")) {
+			//easyForcePrintLine("-~~IT IS I    THE SUPREME scripted ender~~-");
+			int x = 666;
+		}
+
 		m_IdealMonsterState = MONSTERSTATE_IDLE; // m_previousState;
+	}
 	else
 	{
 		// Dropping out because he got killed
@@ -1045,10 +1112,6 @@ private:
 	int	m_iszListener;	// name of entity to look at while talking
 };
 
-#define SF_SENTENCE_ONCE		0x0001
-#define SF_SENTENCE_FOLLOWERS	0x0002	// only say if following player
-#define SF_SENTENCE_INTERRUPT	0x0004	// force talking except when dead
-#define SF_SENTENCE_CONCURRENT	0x0008	// allow other people to keep talking
 
 TYPEDESCRIPTION	CScriptedSentence::m_SaveData[] = 
 {

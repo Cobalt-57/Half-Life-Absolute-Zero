@@ -632,8 +632,6 @@ void CGlock::ItemPostFrame(){
 
 
 		// LET IT BE KNOWN.  THIS IS WHAT DOES THE GLOCK SILENCER ATTACH/REMOVE ANIMATIONS.
-		// BECAUSE SAYING THAT IS FUCKING HARD I GUESS.
-		// GOD I FUCKING LOVE MYSELF.
 		if(m_flReleaseThrow == -1 && legalHoldSecondary){
 			if(m_fInAttack == 2){
 				//backwards!
@@ -645,9 +643,6 @@ void CGlock::ItemPostFrame(){
 			}
 			//SendWeaponAnimBypass(ANIM_NO_UPDATE, m_fireState & ~128);
 		}
-
-		
-
 
 
 
@@ -1046,9 +1041,11 @@ void CGlock::GlockFire( float flSpread , float flCycleTime, BOOL fUseAutoAim )
 	
 
 
-	if (!m_iClip && m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] <= 0)
+	if (!m_iClip && m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] <= 0) {
 		// HEV suit - indicate out of ammo condition
 		m_pPlayer->SetSuitUpdate("!HEV_AMO0", FALSE, 0);
+	}
+
 
 	//MODDD - no.  ,,,???
 	//m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + UTIL_SharedRandomFloat( m_pPlayer->random_seed, 10, 15 );

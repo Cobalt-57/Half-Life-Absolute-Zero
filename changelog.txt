@@ -82,4 +82,16 @@ I'm surprised 300 people didn't run into this on their first playthrough, it hon
 NEW CVAR:
 monsterKilledToss - lets corpses move a short distance, depending on amount of overkill in the killing hit.
 
+talker passives (scientists) no longer stare dumbly at sentries or turrets mowing them down.  Yeah.  what?
+
+Shotgun viewmodel logic improved, most notably with holding down double-fire.  It should no longer be possible to play clip-entry sounds on exiting shell-loading.
+
+Headshots to zombies no longer cause any pushback.
+
+Various scripted-sequence breaking problems done, tested with a1a2's garg vs. hgrunt sequences.  Check for side-effects anywhere else but the slight change should be safe.
+
+
+
+
+
 

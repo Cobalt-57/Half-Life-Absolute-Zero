@@ -72,9 +72,11 @@ int CBaseAnimating::Restore( CRestore &restore )
 	}
 
 	//to override a saved-value, you MUST edit it in this area, after having called the parent restore function.
-	if(m_flFramerateSuggestion == 0 && pev->deadflag != DEAD_DEAD){
-		//probably a mistake.
-		m_flFramerateSuggestion = 1;
+	if(pev->deadflag != DEAD_DEAD){
+		if (m_flFramerateSuggestion == 0) {
+			// probably a mistake.
+			m_flFramerateSuggestion = 1;
+		}
 	}
 
 	//...here may be ok though?
@@ -496,6 +498,7 @@ float CBaseAnimating :: StudioFrameAdvance ( float flInterval )
 				//easyForcePrintLine("STUDIOFRAMEADVANCE::: well I doubt that is normal: interv:%.2f %.2f %.2f", flInterval, pev->animtime, gpGlobals->time);
 			}
 			pev->animtime = gpGlobals->time;
+			//if(FClassnameIs(pev,"monster_zombie"))easyForcePrintLine("pev->animtime set A %.2f", pev->animtime);
 			return 0.0;
 		}
 	}
@@ -518,6 +521,7 @@ float CBaseAnimating :: StudioFrameAdvance ( float flInterval )
 
 	pev->frame += recentFrameAdvance;
 	pev->animtime = gpGlobals->time;
+	//if (FClassnameIs(pev, "monster_zombie"))easyForcePrintLine("pev->animtime set B %.2f", pev->animtime);
 	
 	if(EASY_CVAR_GET(animationPrintouts) == 1){
 		CBaseMonster* tempMon = this->GetMonsterPointer();
@@ -630,6 +634,7 @@ void CBaseAnimating :: ResetSequenceInfo ( )
 
 
 	pev->animtime = gpGlobals->time;
+	//if (FClassnameIs(pev, "monster_zombie"))easyForcePrintLine("pev->animtime set C %.2f", pev->animtime);
 
 	//MODDD - "framerateSuggestion" can change this.
 	//pev->framerate = 1.0;
@@ -777,6 +782,7 @@ void CBaseAnimating :: ResetSequenceInfoSafe ( )
 
 
 	pev->animtime = gpGlobals->time;
+	//if (FClassnameIs(pev, "monster_zombie"))easyForcePrintLine("pev->animtime set D %.2f", pev->animtime);
 
 	//MODDD - "framerateSuggestion" can change this.
 	//pev->framerate = 1.0;

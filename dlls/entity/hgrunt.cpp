@@ -2008,7 +2008,7 @@ BOOL CHGrunt::getIsStrafeLocked(void){
 
 void CHGrunt :: MonsterThink ( void ){
 
-
+	//return;  //no more DERP
 
 	/*
 	EASY_CVAR_PRINTIF_PRE(hgruntPrintout, easyForcePrintLine( "yey %d", test()) ) ;

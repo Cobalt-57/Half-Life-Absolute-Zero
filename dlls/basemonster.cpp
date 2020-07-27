@@ -1745,6 +1745,25 @@ BOOL CBaseMonster::usesAdvancedAnimSystem(void){
 }
 
 
+
+void CBaseMonster::CallMonsterThink(void){
+	// NEW, check to see if m_hEnemy is referring to a monster with invalid private memory.
+	// Disconnected players will leave it this way now.
+	//MODDD - SERIOUS TODO.
+	// Anything that could refer to a player should do this, any other edicts, etc.
+	// Doing it here for TargetEnt too out of paranoia.
+	if (m_hEnemy != NULL && m_hEnemy.GetEntity() == NULL) {
+		m_hEnemy = NULL;
+	}
+	if (m_hTargetEnt != NULL && m_hTargetEnt.GetEntity() == NULL) {
+		m_hTargetEnt = NULL;
+	}
+	////////////////////////////////////////////////////////////
+	// and all this used to do.
+	this->MonsterThink();
+}
+
+
 //=========================================================
 // Monster Think - calls out to core AI functions and handles this
 // monster's specific animation events
@@ -2181,8 +2200,34 @@ int CBaseMonster :: IgnoreConditions ( void )
 		iIgnoreConditions |= bits_COND_SMELL_FOOD;
 	}
 
-	if ( m_MonsterState == MONSTERSTATE_SCRIPT && m_pCine )
-		iIgnoreConditions |= m_pCine->IgnoreConditions();
+	/*
+	if (FClassnameIs(pev, "monster_gargantua")) {
+		int x = 666;
+		if (m_MonsterState != MONSTERSTATE_SCRIPT) {
+			int x2 = 666;
+		}
+		if (m_pCine == NULL) {
+			int x2 = 666;
+		}
+		else {
+			int theid = ENTINDEX(m_pCine->edict());
+			float agg1 = m_pCine->pev->nextthink;
+			float agg2 = gpGlobals->time;
+			void* agg3 = &m_pCine->m_pfnThink;
+		}
+
+		int err = 444;
+	}
+	*/
+
+
+	if (m_pCine) {
+		//MODDD - if the m_pCine is not NULL and disallows interruptions, also
+		// add these conditions to ignore.  May as well be easier to stay on track.
+		if (m_MonsterState == MONSTERSTATE_SCRIPT || !m_pCine->CanInterrupt()) {
+			iIgnoreConditions |= m_pCine->IgnoreConditions();
+		}
+	}
 
 	return iIgnoreConditions;
 }
@@ -6600,7 +6645,7 @@ void CBaseMonster::ReportAIState( void )
 	*/
 	
 	easyForcePrintLine("Health: %.2f / %.2f", pev->health, pev->max_health );
-	easyForcePrintLine("Sequence ID:%d Frame:%.2f Framerate:%.2f spawnflag:%d deadflag:%d loops:%d sequencefinished:%d ThinkACTIVE:%d nextThink:%.2f currentTime:%.2f targetname:%s target:%s globalname:%s", pev->sequence, pev->frame, pev->framerate, pev->spawnflags, pev->deadflag, this->m_fSequenceLoops, this->m_fSequenceFinished, (m_pfnThink!=NULL), pev->nextthink, gpGlobals->time,  STRING(pev->targetname), STRING(pev->target), STRING(pev->globalname ) );
+	easyForcePrintLine("Sequence ID:%d Frame:%.2f Framerate:%.2f FramerateSugg:%.2f spawnflag:%d deadflag:%d loops:%d sequencefinished:%d ThinkACTIVE:%d nextThink:%.2f currentTime:%.2f targetname:%s target:%s globalname:%s", pev->sequence, pev->frame, pev->framerate, m_flFramerateSuggestion, pev->spawnflags, pev->deadflag, this->m_fSequenceLoops, this->m_fSequenceFinished, (m_pfnThink!=NULL), pev->nextthink, gpGlobals->time,  STRING(pev->targetname), STRING(pev->target), STRING(pev->globalname ) );
 	easyForcePrintLine("Yaw:%.2f Ideal:%.2f yawspd:%.2f", currentYaw, pev->ideal_yaw, pev->yaw_speed);
 
 
@@ -6795,8 +6840,19 @@ int CBaseMonster :: CanPlaySequence( BOOL fDisregardMonsterState, int interruptL
 		// ok to go, but only in these states
 		return TRUE;
 	}
+
+
+	//MODDD - new block. force allow  SS_INTERRUPT_AI.  Really, what else was the point of specifying that.
+	if (interruptLevel >= SS_INTERRUPT_AI) {
+		return TRUE;
+	}
+	//////////////////////////////////////////////////////////////////////////////
+
 	
-	if ( m_MonsterState == MONSTERSTATE_ALERT && interruptLevel >= SS_INTERRUPT_BY_NAME )
+	//MODDD - and why could only ALERT be interrrupted for SS_INTERRUPT_BY_NAME?  Why not at least IDLE too?
+	//if ( m_MonsterState == MONSTERSTATE_ALERT && interruptLevel >= SS_INTERRUPT_BY_NAME )
+	if ( (m_MonsterState == MONSTERSTATE_ALERT || m_MonsterState == MONSTERSTATE_IDLE) && interruptLevel >= SS_INTERRUPT_BY_NAME)
+
 		return TRUE;
 
 	// unknown situation

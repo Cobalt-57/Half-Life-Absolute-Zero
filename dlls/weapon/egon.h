@@ -31,6 +31,7 @@ enum egon_e {
 };
 
 
+
 enum EGON_FIRESTATE { FIRE_OFF, FIRE_CHARGE };
 enum EGON_FIREMODE { FIRE_NARROW, FIRE_WIDE};
 

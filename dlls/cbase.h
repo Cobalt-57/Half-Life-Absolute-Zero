@@ -256,6 +256,85 @@ class CBaseEntity
 {
 public:
 
+	// Constructor.  Set engine to use C/C++ callback functions
+	// pointers to engine data
+	entvars_t* pev;		// Don't need to save/restore this pointer, the engine resets it
+
+	// path corners
+	CBaseEntity* m_pGoalEnt;// path corner we are heading towards
+	CBaseEntity* m_pLink;// used for temporary link-list operations. 
+
+
+	//We use this variables to store each ammo count.
+	int ammo_9mm;
+	int ammo_357;
+	int ammo_bolts;
+	int ammo_buckshot;
+	int ammo_rockets;
+	int ammo_uranium;
+	int ammo_hornets;
+	int ammo_argrens;
+	//Special stuff for grenades and satchels.
+	float m_flStartThrow;
+	float m_flReleaseThrow;
+
+	//WARNING - unreliable.  Do not use.
+	//float fuser4;
+	/*
+	float fuser5;
+	float fuser6;
+	float fuser7;
+	float fuser8;
+	*/
+
+	int m_chargeReady;
+	int m_fInAttack;
+	int m_fireState;
+
+
+	BOOL alreadySaved;
+	int wasAttached;
+
+	//MODDD - new instance var.
+	BOOL usingCustomSequence;
+
+	// New var to send printouts related to animation.
+	// Turn on for an entity by looking at it ingame and typing "crazyprintout"
+	BOOL crazyPrintout;
+
+
+
+	//MODDD
+	BOOL spawnedDynamically;
+	// Might want to know if the player sent along spawnflags in a 'give' command.
+	BOOL flagForced;
+
+	Activity timeOfDeath_activity;
+	int timeOfDeath_sequence;
+
+	float waitForScriptedTime;
+
+
+
+	static CBaseEntity *Instance( edict_t *pent )
+	{ 
+		if ( !pent )
+			pent = ENT(0);
+		CBaseEntity *pEnt = (CBaseEntity *)GET_PRIVATE(pent); 
+		return pEnt; 
+	}
+
+	static CBaseEntity *Instance( entvars_t *pev ) { return Instance( ENT( pev ) ); }
+	static CBaseEntity *Instance( int eoffset) { return Instance( ENT( eoffset) ); }
+
+	static edict_t* overyLongComplicatedProcessForCreatingAnEntity(const char* entityName);
+	static CBaseEntity* CreateManual(const char* szName, const Vector& vecOrigin, const Vector& vecAngles, edict_t* pentOwner = NULL);
+	static CBaseEntity* Create(const char* szName, const Vector& vecOrigin, const Vector& vecAngles, edict_t* pentOwner = NULL);
+	static CBaseEntity* Create(const char* szName, const Vector& vecOrigin, const Vector& vecAngles, int setSpawnFlags, edict_t* pentOwner = NULL);
+
+
+
+
 	virtual void ReportGeneric(void);
 
 	//MODDD - NEW!!! compatability.
@@ -279,28 +358,6 @@ public:
 
 	virtual void OnDeflected(CBaseEntity* arg_entDeflector);
 
-	BOOL alreadySaved;
-	int wasAttached;
-
-	// Constructor.  Set engine to use C/C++ callback functions
-	// pointers to engine data
-	entvars_t *pev;		// Don't need to save/restore this pointer, the engine resets it
-
-	// path corners
-	CBaseEntity			*m_pGoalEnt;// path corner we are heading towards
-	CBaseEntity			*m_pLink;// used for temporary link-list operations. 
-
-
-
-
-
-	//MODDD - new instance var.
-	BOOL usingCustomSequence;
-	
-	// New var to send printouts related to animation.
-	// Turn on for an entity by looking at it ingame and typing "crazyprintout"
-	BOOL crazyPrintout;
-
 
 
 	//MODDDMIRROR - snippets needed for the mirror from Spirit of HL 1.9.
@@ -308,8 +365,8 @@ public:
 	
 	//LRC - decent mechanisms for setting think times!
 	// this should have been done a long time ago, but MoveWith finally forced me.
-	virtual void	SetNextThink( float delay ) { SetNextThink(delay, FALSE); }
-	virtual void	SetNextThink( float delay, BOOL correctSpeed );
+	virtual void SetNextThink( float delay ) { SetNextThink(delay, FALSE); }
+	virtual void SetNextThink( float delay, BOOL correctSpeed );
 
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	
@@ -355,14 +412,6 @@ public:
 	virtual void DefaultSpawnNotice(void);
 	virtual void ForceSpawnFlag(int arg_spawnFlag);
 	
-	//MODDD
-	BOOL spawnedDynamically;
-	// Might want to know if the player sent along spawnflags in a 'give' command.
-	BOOL flagForced;
-	
-	Activity timeOfDeath_activity;
-	int timeOfDeath_sequence;
-
 	//MODDD
 	virtual BOOL usesSoundSentenceSave(void);
 
@@ -459,7 +508,7 @@ public:
 	virtual void DeathNotice ( entvars_t *pevChild ) {}// monster maker children use this to tell the monster maker that they have died.
 
 
-	static	TYPEDESCRIPTION m_SaveData[];
+	static TYPEDESCRIPTION m_SaveData[];
 
 
 	//MODDD - new args possible.
@@ -569,28 +618,24 @@ public:
 	//MODDD - new.
 	BOOL CheckTracer(const Vector& vecSrc, const Vector& vecEnd, const Vector& vecDirForward, const Vector& vecDirRight, int iBulletType, int iTracerFreq, int* p_tracerCount);
 
-	void	FireBullets( ULONG	cShots, Vector  vecSrc, Vector	vecDirShooting,	Vector	vecSpread, float flDistance, int iBulletType, int iTracerFreq = 4, int iDamage = 0, entvars_t *pevAttacker = NULL  );
-	Vector		FireBulletsPlayer( ULONG	cShots, Vector  vecSrc, Vector	vecDirShooting,	Vector	vecSpread, float flDistance, int iBulletType, int iTracerFreq = 4, int iDamage = 0, entvars_t *pevAttacker = NULL, int shared_rand = 0 );
+	void FireBullets( ULONG	cShots, Vector  vecSrc, Vector	vecDirShooting,	Vector	vecSpread, float flDistance, int iBulletType, int iTracerFreq = 4, int iDamage = 0, entvars_t *pevAttacker = NULL  );
+	Vector FireBulletsPlayer( ULONG	cShots, Vector  vecSrc, Vector	vecDirShooting,	Vector	vecSpread, float flDistance, int iBulletType, int iTracerFreq = 4, int iDamage = 0, entvars_t *pevAttacker = NULL, int shared_rand = 0 );
 
 	virtual CBaseEntity *Respawn( void ) { return NULL; }
 
+	//MODDD - NOTICE!  Identical version here and in CBaseDelay, despite not being virtual.
+	// This looks ok as only things within classes call it on themselves
+	// (always calls the version that makes the most sense).
+	// If there were floaty "CBaseEntity"'s of unknown depth (Delay? Animating? Monster? etc.), 
+	// it would be better for this to be virtual to call the deepest version possible.
+	// LEAVE IT FOR NOW
 	void SUB_UseTargets( CBaseEntity *pActivator, USE_TYPE useType, float value );
+
 	// Do the bounding boxes of these two intersect?
 	int	Intersects( CBaseEntity *pOther );
 	void MakeDormant( void );
 	int	IsDormant( void );
 	BOOL    IsLockedByMaster( void ) { return FALSE; }
-
-	static CBaseEntity *Instance( edict_t *pent )
-	{ 
-		if ( !pent )
-			pent = ENT(0);
-		CBaseEntity *pEnt = (CBaseEntity *)GET_PRIVATE(pent); 
-		return pEnt; 
-	}
-
-	static CBaseEntity *Instance( entvars_t *pev ) { return Instance( ENT( pev ) ); }
-	static CBaseEntity *Instance( int eoffset) { return Instance( ENT( eoffset) ); }
 
 
 	//MODDD - the wounded NPC to seek out.
@@ -664,16 +709,10 @@ public:
 	// used by monsters that are created by the MonsterMaker
 	virtual	void UpdateOwner( void ) { return; };
 
-	//
-	static edict_t* overyLongComplicatedProcessForCreatingAnEntity(const char* entityName);
-	static CBaseEntity* CreateManual( const char *szName, const Vector &vecOrigin, const Vector &vecAngles, edict_t *pentOwner = NULL );
-	static CBaseEntity* Create( const char *szName, const Vector &vecOrigin, const Vector &vecAngles, edict_t *pentOwner = NULL );
-	static CBaseEntity* Create( const char *szName, const Vector &vecOrigin, const Vector &vecAngles, int setSpawnFlags, edict_t *pentOwner = NULL );
-
 	virtual BOOL FBecomeProne( void ) {return FALSE;};
 	edict_t *edict() { return ENT( pev ); };
 	EOFFSET eoffset( ) { return OFFSET( pev ); };
-	int   entindex( ) { return ENTINDEX( edict() ); };
+	int entindex( ) { return ENTINDEX( edict() ); };
 
 	virtual Vector Center( ) { return (pev->absmax + pev->absmin) * 0.5; }; // center point of entity
 	virtual Vector EyePosition( ) { return pev->origin + pev->view_ofs; };			// position of eyes
@@ -701,34 +740,6 @@ public:
 
 	virtual BOOL SeeThroughWaterLine(void);
 
-	//We use this variables to store each ammo count.
-	int ammo_9mm;
-	int ammo_357;
-	int ammo_bolts;
-	int ammo_buckshot;
-	int ammo_rockets;
-	int ammo_uranium;
-	int ammo_hornets;
-	int ammo_argrens;
-	//Special stuff for grenades and satchels.
-	float m_flStartThrow;
-	float m_flReleaseThrow;
-
-	//WARNING - unreliable.  Do not use.
-	//float fuser4;
-	/*
-	float fuser5;
-	float fuser6;
-	float fuser7;
-	float fuser8;
-	*/
-
-	int m_chargeReady;
-	int m_fInAttack;
-
-
-	enum EGON_FIRESTATE { FIRE_OFF, FIRE_CHARGE };
-	int m_fireState;
 };
 
 

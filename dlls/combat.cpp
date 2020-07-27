@@ -1197,7 +1197,7 @@ GENERATE_KILLED_IMPLEMENTATION(CBaseMonster)
 	CBaseEntity *pOwner = CBaseEntity::Instance(pev->owner);
 	if ( pOwner )
 	{
-		easyPrintLine("DO I, %s, HAVE A OWNERS? %s", getClassname(), pOwner->getClassname());
+		easyPrintLine("DO I, %s, HAVE A OWNER? %s", getClassname(), pOwner->getClassname());
 		pOwner->DeathNotice( pev );
 	}
 	
@@ -2175,12 +2175,12 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBaseMonster){
 		}
 		*/
 
-		//timed damages NOT allowed for corpses.
+		// timed damages NOT allowed for corpses.
 		bitsDamageType &= ~ DMG_TIMEBASED;
 		bitsDamageTypeMod &= ~ DMG_TIMEBASEDMOD;
-		int poopie = DeadTakeDamage( pevInflictor, pevAttacker, flDamage, bitsDamageType, bitsDamageTypeMod );
+		int deadTakeDmgRes = DeadTakeDamage( pevInflictor, pevAttacker, flDamage, bitsDamageType, bitsDamageTypeMod );
 		g_rawDamageCumula = 0;
-		return poopie;
+		return deadTakeDmgRes;
 	}
 
 	if ( pev->deadflag == DEAD_NO )
@@ -2284,6 +2284,11 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBaseMonster){
 		g_rawDamageCumula = 0;  //whoopsie
 		return 0;
 	}
+
+	if (FClassnameIs(pev,"monster_gargantua")) {
+		int x = 666;
+	}
+
 
 	if ( pev->health <= 0 )
 	{

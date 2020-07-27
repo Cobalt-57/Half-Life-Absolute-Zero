@@ -32,6 +32,7 @@
 #include "decals.h"
 #include "explode.h"
 #include "func_break.h"
+#include "scripted.h"
 
 
 
@@ -990,6 +991,12 @@ void CGargantua :: FlameDestroy(BOOL playOffSound)
 	if (playOffSound) {
 		EMIT_SOUND_FILTERED(edict(), CHAN_WEAPON, pBeamAttackSounds[0], 1.0, ATTN_NORM, 0, PITCH_NORM);
 	}
+	else {
+		// still need to stop the sounds here.
+		STOP_SOUND_FILTERED(edict(), CHAN_WEAPON, pBeamAttackSounds[0]);
+		STOP_SOUND_FILTERED(edict(), CHAN_WEAPON, pBeamAttackSounds[1]);
+		STOP_SOUND_FILTERED(edict(), CHAN_WEAPON, pBeamAttackSounds[2]);
+	}
 
 	for ( i = 0; i < 4; i++ )
 	{
@@ -1265,6 +1272,13 @@ BOOL CGargantua::isSizeGiant(void){
 
 GENERATE_TAKEDAMAGE_IMPLEMENTATION(CGargantua)
 {
+	if (m_MonsterState == MONSTERSTATE_SCRIPT && (m_pCine && !m_pCine->CanInterrupt())) {
+		// in script, just let the parent method run only
+		int ret = GENERATE_TAKEDAMAGE_PARENT_CALL(CBaseMonster);
+		return ret;
+	}
+
+
 	ALERT( at_aiconsole, "CGargantua::TakeDamage\n");
 	BOOL gaussPass = ((bitsDamageTypeMod & (DMG_GAUSS)) && flDamage > 80);   //again??
 

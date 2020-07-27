@@ -2003,7 +2003,8 @@ Schedule_t* CBaseMonster :: GetScheduleOfType ( int Type )
 			switch ( m_pCine->m_fMoveTo )
 			{
 				case 0: 
-				case 4: 
+				case 4:
+				case 6:  //MODDD - let new choice 6 do whatever 4 does.  I think that's what was intended.
 					return slWaitScript;
 				case 1: 
 					return slWalkToScript;

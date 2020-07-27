@@ -562,6 +562,22 @@ void CHornet :: TrackTarget ( void )
 	
 		if ( m_hEnemy != NULL && FVisible( m_hEnemy ))
 		{
+
+			/*
+			easyPrintLine("hornet: homing in on %s", m_hEnemy->getClassname());
+
+			if (CVAR_GET_FLOAT("developer") == 1) {
+				CBaseMonster* monsterTest = m_hEnemy->GetMonsterPointer();
+				if (monsterTest != NULL) {
+					monsterTest->ReportAIState();
+				}
+				else {
+					monsterTest->ReportGeneric();
+					easyForcePrintLine("not a monster..?");
+				}
+			}
+			*/
+
 			//m_vecEnemyLKP = ...;
 			setEnemyLKP( m_hEnemy->BodyTarget( pev->origin ) );
 		}

@@ -696,6 +696,11 @@ public:
 
 	
 
+	// Used to call the virtual "MonsterThink" which monsters may implement
+	// for custom behavior.  Advisable to call the parent CBaseMonster
+	// MonsterThink though.
+	void EXPORT	CallMonsterThink( void );
+	
 // stuff written for new state machine
 //MODDD NOTE - ...The meaning of the above comment shall forever be lost to time.
 	virtual void MonsterThink( void );
@@ -703,12 +708,6 @@ public:
 	virtual void heardBulletHit(entvars_t* pevShooter);
 	virtual void wanderAway(const Vector& toWalkAwayFrom);
 	
-	// Used to call the virtual "MonsterThink" which monsters may implement
-	// for custom behavior.  Advisable to call the parent CBaseMonster
-	// MonsterThink though.
-	void EXPORT	CallMonsterThink( void ) { this->MonsterThink(); }
-
-
 
 	//NOTICE: beware of IRelationship's implementation in dlls/mpstubb.cpp if changing. By default it is identical to monster.cpp's implementation
 	virtual int IRelationship ( CBaseEntity *pTarget );

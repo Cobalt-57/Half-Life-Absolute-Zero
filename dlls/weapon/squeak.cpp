@@ -18,7 +18,6 @@
 //- the spawned snark model (w_squeak.mdl) has a "fidget" animation that is never used.  ?
 
 
-
 #pragma once
 
 #include "extdll.h"
@@ -34,6 +33,8 @@
 
 EASY_CVAR_EXTERN(snarkInheritsPlayerVelocity)
 
+
+#define SQUEEK_DETONATE_DELAY 15.0
 
 
 
@@ -68,7 +69,6 @@ TYPEDESCRIPTION	CSqueakGrenade::m_SaveData[] =
 //IMPLEMENT_SAVERESTORE( CSqueakGrenade, CGrenade );
 IMPLEMENT_SAVERESTORE(CSqueakGrenade, CBaseMonster);
 
-#define SQUEEK_DETONATE_DELAY	15.0
 
 int CSqueakGrenade :: Classify ( void )
 {

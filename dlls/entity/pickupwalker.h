@@ -76,8 +76,8 @@ public:
 
 	void CheckRespawn(void);
 	CBaseEntity* Respawn(void);
-	void AttemptToMaterialize(void);
-	void Materialize(void);
+	void EXPORT AttemptToMaterialize(void);
+	void EXPORT Materialize(void);
 
 
 	// remain inoffensive / unoffending to all.  an "IRelationship" override should not be necessary, being CLASS_NONE should be good enough here.

@@ -132,6 +132,7 @@ public:
 	void HandleEventQueueEvent(int arg_eventID);
 	void HandleAnimEvent(MonsterEvent_t *pEvent );
 
+	float getRunActFramerate(void);
 	CBaseEntity* getNearestDeadBody(void);
 	void friendly_findCoverFromPlayer( entvars_t* pevPlayerToHideFrom, float flMoveWaitFinishedDelay );
 

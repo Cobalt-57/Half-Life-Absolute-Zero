@@ -930,8 +930,44 @@ void ClientDisconnect( edict_t *pEntity )
 	pEntity->v.takedamage = DAMAGE_NO;// don't attract autoaim
 	pEntity->v.solid = SOLID_NOT;// nonsolid
 	UTIL_SetOrigin ( &pEntity->v, pEntity->v.origin );
-
+	
 	g_pGameRules->ClientDisconnected( pEntity );
+	
+
+	//MODDD - what.  Why not delete the player entity then?  Before this player number (2nd, 3rd, etc.), that edict
+	// space was NULL anyway.
+	//MODDD - TODO.  If necessary, the actual private data freeing (FREE_PRIVATE) could be moved to the end
+	// of some frame-thiink logic to happen at the end of the next frame, instead of right at the disconnect event.
+	// I have no clue if other things in the same frame don't expect a player's private data to have changed.
+	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+	//pEntity->v...
+	//entvars_t* tempEntVars = VARS(pEntity);
+	//tempEntVars->nextthink = gpGlobals->time;
+	// oh.  we need CBaseEntity.  dammit.
+	//pEntity->SetThink(&CBaseEntity::SUB_Remove);
+
+	
+	//CBaseEntity* playerEnt = CBaseEntity::Instance(pEntity);
+	//playerEnt->pev->nextthink = gpGlobals->time;
+	//playerEnt->SetThink(&CBaseEntity::SUB_Remove);
+
+	// UNWISE, UTIL_Remove looks to have no effect (maybe the think or FL_KILLME flags are never acted on.)
+	// And REMOVE_ENTITY has weird side-effects on another player joining, doesn't create a new edict the player
+	// just exists in the server without being linked to some edict.  Which is... pretty dang spooky.
+	// Some things continue to work, some things don't (ignored by any AI logic, ignores line traces,
+	// some touches, etc.)
+	//UTIL_Remove(playerEnt);
+	//REMOVE_ENTITY(pEntity);
+
+	// SO.  How about we make the player data NULL instead to look like an edict meant to hold a player, but
+	// none has connected to fill the slot yet?
+	//    pEntity->pvPrivateData
+	if (pEntity->pvPrivateData) {
+		FREE_PRIVATE(pEntity);
+		pEntity->pvPrivateData = NULL;  //freed!  Don't trick into thinking this is still valid memory.
+		UTIL_Remove(CBaseEntity::Instance(pEntity));
+	}
+
 }
 
 //MODDD - respawn method moved to player.h/.cpp.
@@ -1355,10 +1391,9 @@ void ClientCommand( edict_t *pEntity )
 		{
 			CBasePlayer* playerRef = GetClassPtr((CBasePlayer *)pev);
 			if(playerRef){
-
+				playerRef->reviveIfDead();
 				playerRef->setHealth(100);
 				playerRef->setArmorBattery(100);
-
 				playerRef->grantAllItems();
 				playerRef->giveMaxAmmo();
 				
@@ -1398,13 +1433,13 @@ void ClientCommand( edict_t *pEntity )
 
 		CBasePlayer* playerRef = GetClassPtr((CBasePlayer *)pev);
 			if(playerRef){
-
+				playerRef->reviveIfDead();
 				playerRef->setHealth(100);
 				playerRef->setArmorBattery(100);
-
 				playerRef->grantAllItems();
 				playerRef->giveMaxAmmo();
-		
+
+				playerRef->attemptResetTimedDamage(TRUE);
 				//playerRef->pev->flags |= FL_GODMODE;
 				//playerRef->pev->flags |= MOVETYPE_NOCLIP;
 			}
@@ -2079,7 +2114,6 @@ void ClientCommand( edict_t *pEntity )
 			easyForcePrintLineClient(pEntity, "No health trickery for you, cheater!");
 			return;
 		}
-
 
 		//ambiguous as to whether this is what is in the crosshairs or the player itself.  Try to figure it out:
 		CBaseEntity* forwardEnt = FindEntityForward(tempplayer);
@@ -4723,7 +4757,97 @@ void ClientCommand( edict_t *pEntity )
 			//CHANGE_LEVEL(booty1, booty2);
 		}
 	}
+	else if (FStrEq(pcmdRefinedRef, "basicentityinfo")) {
+		int i;
+		int highextUsedEntityIndex = -1;
+		easyForcePrintLine("---------------------------------------------------------");
 
+		// first count from maxentities down.  What is the greatest entity index that's ever used?
+		// No need to print out 800 lines of NULL entity info.
+		for (i = gpGlobals->maxEntities-1; i >= 0; i--) {
+			edict_t* pEdi = g_engfuncs.pfnPEntityOfEntIndex(i);
+			if (pEdi != NULL) {
+				// ok.
+				highextUsedEntityIndex = i;
+				break;
+			}
+		}
+
+		// go one beeyond, if allowed.
+		if (highextUsedEntityIndex < gpGlobals->maxEntities - 1) {
+			highextUsedEntityIndex++;
+		}
+
+
+		for (i = 0;  i <= highextUsedEntityIndex; i++) {
+			edict_t* pEdi = g_engfuncs.pfnPEntityOfEntIndex(i);
+			easyForcePrintStarter();
+			if (pEdi != NULL) {
+				easyForcePrint("%d Null? NO free?%d entindex:%i eoffset:%i", i, pEdi->free, ENTINDEX(pEdi), OFFSET(pEdi) );
+
+				if (pEdi->v.netname != NULL) {
+					easyForcePrint(" netname:%s", STRING(pEdi->v.netname));
+				}
+				if (pEdi->v.target != NULL) {
+					easyForcePrint(" target:%s", STRING(pEdi->v.target));
+				}
+				if (pEdi->v.targetname != NULL) {
+					easyForcePrint(" targetname:%s", STRING(pEdi->v.targetname));
+				}
+				if (pEdi->v.owner != NULL) {
+					easyForcePrint(" owner:%s", STRING(pEdi->v.owner->v.classname));
+				}
+				
+
+				CBaseEntity* tempEnt = CBaseEntity::Instance(pEdi);
+				if (tempEnt != NULL) {
+					easyForcePrint(" class:%s deadflag:%d", tempEnt->getClassname(), tempEnt->pev->deadflag);
+				}
+				// tempEnt->entindex(), or ENTINDEX(pEdi)
+				// tempEnt->eoffset(), or OFFSET(pEdi)
+			}
+			else {
+				easyForcePrint("%d Null? YES", i);
+			}
+			easyForcePrintLine();
+		}
+		if (highextUsedEntityIndex < gpGlobals->maxEntities - 1) {
+			// some entities skipped?  make note of that.
+			easyForcePrintLine("...");
+		}
+		easyForcePrintLine("---------------------------------------------------------");
+
+	}
+	/*
+	else if (FStrEq(pcmdRefinedRef, "basicentityinfooffset")) {
+		
+		//NOTICE!!! Not a wise thing to even try.
+		// Looks like offset is related to how much memory the pentity actually takes up and still starting
+		// from the first entity... or wherever edicts are stored in memory probably.
+		// Anyway, offsets are in increments of 804, but not really a point when getting by index (1, 2, 3)
+		// works perfectly fine.
+		
+		easyForcePrintLine("---------------------------------------------------------");
+		for (int i = 0; i < gpGlobals->maxEntities; i++) {
+			edict_t* pEdi = g_engfuncs.pfnPEntityOfEntOffset(i);
+			easyForcePrintStarter();
+			if (pEdi != NULL) {
+				easyForcePrint("%d Null? NO free?%d entindex:%i eoffset:%i ", i, pEdi->free, ENTINDEX(pEdi), OFFSET(pEdi));
+				// garbage, for... some... reason.   No freakin clue.
+				//CBaseEntity* tempEnt = CBaseEntity::Instance(pEdi);
+				//if (tempEnt != NULL) {
+				//	...
+				//}
+			}
+			else {
+				easyForcePrint("%d Null? YES", i);
+			}
+			easyForcePrintLine();
+		}
+		easyForcePrintLine("---------------------------------------------------------");
+		
+	}
+	*/
 	
 	// NEW SHIT HERE MAYBE
 

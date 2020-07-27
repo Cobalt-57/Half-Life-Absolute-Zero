@@ -651,7 +651,8 @@ void DLLEXPORT HUD_StudioEvent( const struct mstudioevent_s *event, const struct
 	}
 	
 	
-	easyForcePrintLine("HUD_StudioEvent::: event? %d", event->event);
+	// SSSSSSSSTTTTTTTTTOOOOOOOOOOOOPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP
+	//easyForcePrintLine("HUD_StudioEvent::: event? %d", event->event);
 
 
 

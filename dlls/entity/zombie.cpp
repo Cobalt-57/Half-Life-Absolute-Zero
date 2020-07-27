@@ -378,7 +378,7 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CZombie)
 				}
 				else {
 					// Amounts over that much become decreasinlgly less
-					flPushbackForceDamage = 11 + pow(flPushbackForceDamage - 11, 0.84);
+					flPushbackForceDamage = 11 + pow(flPushbackForceDamage - 11.0f, 0.84f);
 				}
 			}else{
 				// And why is this force amplified so much otherwise while in DEAD_DYING?  No idea.
@@ -447,7 +447,10 @@ float CZombie::hitgroupDamage(float flDamage, int bitsDamageType, int bitsDamage
 
 	// flPushbackForceDamage is for determining how much damage will affect knockback.
 	if (dmgIsPureBullet) {
-		flPushbackForceDamage += flDamage;
+		// NEW REQUIREMENT.  Pushback damage only comes from non-headshots.   ok.
+		if (iHitgroup != HITGROUP_HEAD) {
+			flPushbackForceDamage += flDamage;
+		}
 	}
 
 	if (!(bitsDamageTypeMod & DMG_HITBOX_EQUAL)) {
