@@ -107,11 +107,19 @@ void CBaseMonster :: RunAI ( void )
 	//MODDD - new. This mostly copy of the conditions will be maintained throughout this frame.
 	//clearAllConditions_Frame();
 	//MODDD!!!!!!!!!!!!!!!!!!!!! 
-	// ALSO - do nto clear the DAMAGE bits!  It seems these are set independently of think cycles (takedamage stuff are events in the engine), so they never
+	// ALSO - do not clear the DAMAGE bits!  It seems these are set independently of think cycles (takedamage stuff are events in the engine), so they never
 	// reach the think method in time to be understood in the same frame they happen.  The next frame, they can be read and reacted to.
 	// So, instead turn them off after this method finishes.  Kind of like as-is did.    Huh, imagine that.
-	m_afConditionsFrame &= ~(0xFFFFFFFF & ~(bits_COND_TASK_FAILED | bits_COND_SCHEDULE_DONE | bits_COND_LIGHT_DAMAGE | bits_COND_HEAVY_DAMAGE));
+	
 
+	// ... &= ~(1111 & ~0100)
+	// ... &= ~(1111 & 1011)
+	// ... &= ~(1011)
+	// ... &= 0100
+	// wait, can't we just do this then?
+	//m_afConditionsFrame &= ~(0xFFFFFFFF & ~(bits_COND_TASK_FAILED | bits_COND_SCHEDULE_DONE | bits_COND_LIGHT_DAMAGE | bits_COND_HEAVY_DAMAGE));
+	// keep ONLY these bits, all others not mentioned get reset.
+	m_afConditionsFrame &= (bits_COND_TASK_FAILED | bits_COND_SCHEDULE_DONE | bits_COND_LIGHT_DAMAGE | bits_COND_HEAVY_DAMAGE);
 
 	// to test model's eye height
 	//UTIL_ParticleEffect ( pev->origin + pev->view_ofs, g_vecZero, 255, 10 );

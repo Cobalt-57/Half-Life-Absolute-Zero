@@ -173,8 +173,8 @@ void CBaseMonster :: ChangeSchedule ( Schedule_t *pNewSchedule )
 	//m_afConditions &= (bits_COND_CAN_RANGE_ATTACK1 | bits_COND_CAN_MELEE_ATTACK1 | bits_COND_CAN_RANGE_ATTACK2 | bits_COND_CAN_MELEE_ATTACK2);
 	//////////////////////////////////////////////////////////////
 	//MODDD!!!!!!!!!!!!!!!!!!!!! 
-	m_afConditions &= ~(bits_COND_TASK_FAILED | bits_COND_SCHEDULE_DONE);
-	m_afConditionsFrame &= ~(bits_COND_TASK_FAILED | bits_COND_SCHEDULE_DONE);
+	m_afConditions &= ~(bits_COND_TASK_FAILED | bits_COND_SCHEDULE_DONE | bits_COND_NEW_ENEMY);
+	m_afConditionsFrame &= ~(bits_COND_TASK_FAILED | bits_COND_SCHEDULE_DONE | bits_COND_NEW_ENEMY);
 
 
 

@@ -303,6 +303,9 @@ public:
 	virtual void setModel(const char* m);
 	
 	virtual void DeclineFollowingProvoked(CBaseEntity* pCaller);
+	virtual void SayHello(CBaseEntity* argPlayerTalkTo);
+	virtual void SayIdleToPlayer(CBaseEntity* argPlayerTalkTo);
+	virtual void SayQuestion(CTalkMonster* argTalkTo);
 	virtual void SayProvoked(void);
 	virtual void SaySuspicious(void);
 	virtual void SayLeaderDied(void);

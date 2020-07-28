@@ -72,6 +72,10 @@ EASY_CVAR_EXTERN(pissedNPCs)
 
 
 
+static float g_scientist_PredisasterSuitMentionAllowedTime = -1;
+static float g_scientist_HeadcrabMentionAllowedTime = -1;
+
+
 
 // yes, the physical is best under the allowed.  Very odd.
 #define SCIENTIST_MELEE_ALLOW_RANGE 54
@@ -276,6 +280,9 @@ public:
 	int LookupActivityHard(int activity);
 
 	void DeclineFollowingProvoked(CBaseEntity* pCaller);
+	void SayHello(CBaseEntity* argPlayerTalkTo);
+	void SayIdleToPlayer(CBaseEntity* argPlayerTalkTo);
+	void SayQuestion(CTalkMonster* argTalkTo);
 	void SayProvoked(void);
 	void SaySuspicious(void);
 	void SayLeaderDied(void);
@@ -823,6 +830,78 @@ void CScientist::DeclineFollowingProvoked(CBaseEntity* pCaller){
 	}
 }
 
+
+
+void CScientist::SayHello(CBaseEntity* argPlayerTalkTo) {
+
+	if (FBitSet(pev->spawnflags, SF_MONSTER_PREDISASTER)) {
+		// If predisaster, and the player has the suit,
+		// (pPlayer->pev->weapons & (1<<WEAPON_SUIT))
+		if(argPlayerTalkTo->pev->weapons & (1 << WEAPON_SUIT)){
+			// Mention the suit once, and with a decent chance later too.
+			if (
+				g_scientist_PredisasterSuitMentionAllowedTime == -1 ||
+				(gpGlobals->time >= g_scientist_PredisasterSuitMentionAllowedTime && RANDOM_FLOAT(0, 1) <= 0.86)
+			) {
+				PlaySentence("!SC_HELLO6", 4, VOL_NORM, ATTN_NORM);  // new HEV suit, that should be very useful
+				g_scientist_PredisasterSuitMentionAllowedTime = gpGlobals->time + 16;
+			}
+			return;
+		}//END OF suit check
+	}
+
+	CTalkMonster::SayHello(argPlayerTalkTo);
+}
+
+
+void CScientist::SayIdleToPlayer(CBaseEntity* argPlayerTalkTo) {
+
+	if (FBitSet(pev->spawnflags, SF_MONSTER_PREDISASTER)) {
+		// If predisaster, and the player has the suit,
+		// (pPlayer->pev->weapons & (1<<WEAPON_SUIT))
+		if (argPlayerTalkTo->pev->weapons & (1 << WEAPON_SUIT)) {
+			// Mention the suit once, and with a decent chance later too.
+			if (g_scientist_PredisasterSuitMentionAllowedTime == -1 ||
+				(gpGlobals->time >= g_scientist_PredisasterSuitMentionAllowedTime && RANDOM_FLOAT(0, 1) <= 0.70)
+				) {
+				PlaySentenceSingular("SC_HELLO6", 4, VOL_NORM, ATTN_NORM);
+				g_scientist_PredisasterSuitMentionAllowedTime = gpGlobals->time + 16;
+			}
+			return;
+		}//END OF suit check
+	}
+	else {
+		// even after the disaster, might whine about ties... rarely.
+		if (RANDOM_FLOAT(0, 1) < 0.06) {
+			PlaySentenceSingular("SC_PIDLE1", 4.6, VOL_NORM, ATTN_NORM);  // weartie
+			return;
+		}
+	}
+
+	CTalkMonster::SayIdleToPlayer(argPlayerTalkTo);
+}
+
+
+void CScientist::SayQuestion(CTalkMonster* argTalkTo) {
+
+	if (FBitSet(pev->spawnflags, SF_MONSTER_PREDISASTER)) {
+		// nothing special
+	}
+	else {
+		// even after the disaster, might whine about something
+		if (RANDOM_FLOAT(0, 1) < 0.025) {
+			PlaySentenceSingular("SC_PQUEST15", 2.9, VOL_NORM, ATTN_NORM);  // hungryyet
+			return;
+		}
+	}
+
+	CTalkMonster::SayQuestion(argTalkTo);
+}
+
+
+
+
+
 void CScientist::SayProvoked(void){
 	if(EASY_CVAR_GET(pissedNPCs) != 1 || !globalPSEUDO_iCanHazMemez){
 		switch(RANDOM_LONG(0, 4)){
@@ -871,7 +950,7 @@ void CScientist::SaySuspicious(void){
 			case 3:
 			case 4:
 			case 5:
-			PlaySentence( "SC_SCREAM", 4, VOL_NORM, ATTN_NORM ); //actually ends up tying to the sci_fear sounds.
+				PlaySentence( "SC_SCREAM", 4, VOL_NORM, ATTN_NORM ); //actually ends up tying to the sci_fear sounds.
 			break;
 			case 6:
 				PlaySentence( "!SC_PLFEAR3", 4, VOL_NORM, ATTN_NORM ); //scientist/noplease
@@ -908,7 +987,7 @@ void CScientist::SayLeaderDied(void){
 
 //Say a sentence to express interest in something, like stopping to stare at a chumtoad.
 void CScientist::SayNearPassive(void){
-	switch(RANDOM_LONG(0, 17)){
+	switch(RANDOM_LONG(0, 18)){
 	case 0:
 		PlaySentenceSingular( "SC_QUESTION0", 4, VOL_NORM, ATTN_NORM );
 	break;
@@ -963,6 +1042,11 @@ void CScientist::SayNearPassive(void){
 	case 17:
 		PlaySentenceSingular( "SC_SMELL3", 4, VOL_NORM, ATTN_NORM );
 	break;
+	case 18:
+		PlaySentenceSingular("SC_PIDLE5", 4, VOL_NORM, ATTN_NORM);
+	break;
+
+	
 	default:
 
 	break;
@@ -1057,9 +1141,9 @@ void CScientist::DeclineFollowing( void )
 {
 	//MODDD
 	if(EASY_CVAR_GET(pissedNPCs) < 1){
-		Talk( 10 );
+		//Talk( 10 );   pointless. PlaySentence already sets the same thing.
 		m_hTalkTarget = m_hEnemy;
-		PlaySentence( "SC_POK", 2, VOL_NORM, ATTN_NORM );
+		PlaySentence( "SC_POK", 4, VOL_NORM, ATTN_NORM );
 
 	}else{
 
@@ -1072,14 +1156,15 @@ void CScientist :: Scream( void )
 {
 	// Nope!  Use the custom cooldown.  Who politely declines screaming because someone else is talking anyway,
 	// if it's something worth screaming at?
-	//if ( FOkToSpeak() )
-
-	if (gpGlobals->time >= screamCooldown)
-	{
-		screamCooldown = gpGlobals->time + RANDOM_FLOAT(6, 20);
-		//Talk( 10 );
-		m_hTalkTarget = m_hEnemy;
-		PlaySentence( "SC_SCREAM", RANDOM_FLOAT(3, 6), VOL_NORM, ATTN_NORM );
+	// ...eh, just go ahead, not worth being interruptive or spammy a lot like it would be.
+	if (FOkToSpeak()) {
+		if (gpGlobals->time >= screamCooldown)
+		{
+			screamCooldown = gpGlobals->time + RANDOM_FLOAT(6, 20);
+			//Talk( 10 );
+			m_hTalkTarget = m_hEnemy;
+			PlaySentence( "SC_SCREAM", RANDOM_FLOAT(3, 6), VOL_NORM, ATTN_NORM );
+		}
 	}
 }
 
@@ -1184,9 +1269,8 @@ void CScientist :: StartTask( Task_t *pTask )
 		}
 
 //		if ( FOkToSpeak() )
-		Talk( 2 );
 		m_hTalkTarget = m_hTargetEnt;
-		PlaySentence( "SC_HEAL", 2, VOL_NORM, ATTN_IDLE );
+		PlaySentence( "SC_HEAL", 4, VOL_NORM, ATTN_IDLE );
 
 		TaskComplete();
 	break;
@@ -1325,7 +1409,6 @@ void CScientist :: StartTask( Task_t *pTask )
 	case TASK_SAY_FEAR:
 		if ( FOkToSpeak() )
 		{
-			Talk( 2 );
 			m_hTalkTarget = m_hEnemy;
 			if ( m_hEnemy->IsPlayer() )
 				PlaySentence( "SC_PLFEAR", 5, VOL_NORM, ATTN_NORM );
@@ -1860,6 +1943,11 @@ extern int global_useSentenceSave;
 //=========================================================
 void CScientist :: Precache( void )
 {
+	//MODDD - LAZY RESETS.  Proper would be in world's precache!
+	g_scientist_PredisasterSuitMentionAllowedTime = -1;
+	g_scientist_HeadcrabMentionAllowedTime = -1;
+
+
 	PRECACHE_MODEL("models/scientist.mdl");
 	//PRECACHE_MODEL("models/scientist_pre_e3.mdl");
 	//PRECACHE_MODEL("models/scientist_e3.mdl");
@@ -2374,6 +2462,53 @@ Schedule_t *CScientist :: GetSchedule ( void )
 
 	//MODDD - is this okay?   This says that, on schedule failure, forget healing.
 	forgetHealNPC();
+
+	
+	if (HasConditions(bits_COND_SEE_ENEMY) ){
+		m_fearTime = gpGlobals->time;		// Update last fear... why not?
+	}
+
+	if (HasConditions(bits_COND_NEW_ENEMY) ) {
+
+
+		if (m_hEnemy != NULL) {
+
+			if (FClassnameIs(m_hEnemy->pev, "monster_headcrab")) {
+				if (
+					(
+					(g_scientist_HeadcrabMentionAllowedTime == -1 && FOkToSpeakAllowCombat(0)) ||
+						(FOkToSpeakAllowCombat(g_scientist_HeadcrabMentionAllowedTime) && RANDOM_FLOAT(0, 1) <= 0.87)
+						)
+					) {
+					PlaySentenceSingular("SC_MONST0", 4, VOL_NORM, ATTN_NORM);
+					g_scientist_HeadcrabMentionAllowedTime = gpGlobals->time + 40;
+				}else if (FOkToSpeakAllowCombat(g_scientist_HeadcrabMentionAllowedTime - 20)) {
+					PlaySentence("SC_FEAR", 5, VOL_NORM, ATTN_NORM);
+				}
+			}
+			else {
+				// any other enemy? check size
+
+
+				Vector tempEnBoundDelta = (m_hEnemy->pev->absmax - m_hEnemy->pev->absmin);
+				float tempEnSize = tempEnBoundDelta.x * tempEnBoundDelta.y * tempEnBoundDelta.z;
+
+				if (tempEnSize < 16000) {  //headcrab size: 13824
+					// no sounds.
+				}
+				else if (tempEnSize <= 500000) {  //size of agrunt: about 348160
+					// fear
+					PlaySentence("SC_FEAR", 5, VOL_NORM, ATTN_NORM);
+				}
+				else {
+					// OH GOD ITS HUGE
+					PlaySentence("SC_SCREAM_TRU", 5, VOL_NORM, ATTN_NORM);
+				}
+			}//END OF other monster size check
+			
+		}
+	}//END OF new enemy AND is a headcrab check
+
 
 	while(TRUE){
 		if(aggro > 0){
@@ -3310,7 +3445,7 @@ public:
 	int Classify ( void );
 	virtual int	Save( CSave &save );
 	virtual int	Restore( CRestore &restore );
-	static	TYPEDESCRIPTION m_SaveData[];
+	static TYPEDESCRIPTION m_SaveData[];
 
 	void PostRestore(void);
 

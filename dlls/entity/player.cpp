@@ -923,9 +923,12 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBasePlayer)
 	}//END OF if(IsAlive)
 	
 
-
-	if ((bitsDamageTypeMod & (DMG_MAP_TRIGGER | DMG_MAP_BLOCKED)) && flDamage >= 60) {
-		// intent for damage was too much?  Likely you're not meant to recover.
+	
+	if( (bitsDamageTypeMod & (DMG_MAP_TRIGGER)) && flDamage >= 5){
+		// died in a trigger? don't recover
+		recentMajorTriggerDamage = TRUE;
+	}else if ((bitsDamageTypeMod & (DMG_MAP_BLOCKED)) && flDamage >= 60) {
+		// too much damage from a crush? no chance.
 		recentMajorTriggerDamage = TRUE;
 	}
 	else {
@@ -6115,7 +6118,9 @@ void CBasePlayer::commonReset(void){
 
 	recentMajorTriggerDamage = FALSE;
 	lastBlockDamageAttemptReceived = -5;
-	recentRevivedTime = -1;
+	
+	// no... this causes it to be changed on revive, not what we want.
+	//recentRevivedTime = -1;
 
 
 	// This will be changed soon after the player joins a server if their setting differs.
@@ -6375,6 +6380,8 @@ void CBasePlayer::Spawn( BOOL revived ){
 
 	pev->classname = MAKE_STRING("player");
 	if(!revived){
+
+		recentRevivedTime = -1;  //safe to reset this then
 		
 		drowning = FALSE;
 
@@ -6718,6 +6725,9 @@ void CBasePlayer :: Precache( void )
 
 	superDuperDelay = -2;
 	commonReset();
+
+	recentRevivedTime = -1;  //is a reset here fine then?
+	// PENDING:  let commonReset be told whether it's for a player revive or not ('not' being a clean spawn, game restore or map transition)
 
 	m_iTrain = TRAIN_NEW;
 

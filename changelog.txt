@@ -21,7 +21,6 @@ Houndeyes close eyes near the end of killed animations.  Squadleader houndeyes w
 
 SKILL.CFG:
 Player ammo reserves and timed damage info (duration / damage per tick) can now be specified in skill.cfg.   Player ammo reserves are not specified per skill, only once.
-
 Also skills to control whether NPCs drop weapons per difficulty, and whether scientists can heal per difficulty (not amount healed, this is already in the file)
 
 Corpses move a bit in the direction of the last attack endured when enemies die.
@@ -90,8 +89,7 @@ Headshots to zombies no longer cause any pushback.
 
 Various scripted-sequence breaking problems done, tested with a1a2's garg vs. hgrunt sequences.  Check for side-effects anywhere else but the slight change should be safe.
 
-
-
+More unused scientist sounds added and tiny chance of a few pre-disaster ones to show up after disaster ('wear ties' and hungry ones.  They are whiny nerds after all)
 
 
 

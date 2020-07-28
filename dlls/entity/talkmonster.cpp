@@ -1450,12 +1450,16 @@ int CTalkMonster :: FOkToSpeakAllowCombat( float waitTime )
 		return FALSE;
 	}
 
+
+	// what.  why did we check for PRONE again.  what is the point of this.
+	/*
 	if ( m_MonsterState == MONSTERSTATE_PRONE ){
 		if(EASY_CVAR_GET(barneyPrintouts)==1){
 		easyPrintLine("BARNEY ALERT FAIL 5");
 		}
 		return FALSE;
 	}
+	*/
 
 	// if player is not in pvs, don't speak
 	if (!IsAlive() || FNullEnt(FIND_CLIENT_IN_PVS(edict()))){
@@ -1485,6 +1489,13 @@ int CTalkMonster::CanPlaySentence( BOOL fDisregardState )
 //=========================================================
 int CTalkMonster :: FIdleStare( void )
 {
+	//MODDD.
+	if (m_MonsterState == MONSTERSTATE_SCRIPT) {
+		// in script, ignore.
+		return FALSE;
+	}
+
+
 	if (!FOkToSpeak())
 		return FALSE;
 
@@ -1509,8 +1520,22 @@ int CTalkMonster :: FIdleStare( void )
 //=========================================================
 int CTalkMonster :: FIdleHello( void )
 {
+	//MODDD - no check for this, really?   Don't say hello while running for your life, it's... a wee bit strange.
+	// Even if in terruptable, there's usually a little much going on.  Just stop if in the SCRIPT state.
+	//if (m_MonsterState == MONSTERSTATE_SCRIPT && (m_pCine && !m_pCine->CanInterrupt())) {
+	//	//in script, ignore already.
+	//	return FALSE;
+	//}
+	//MODDD.
+	if (m_MonsterState == MONSTERSTATE_SCRIPT) {
+		// in script, ignore.
+		return FALSE;
+	}
+
+
 	if (!FOkToSpeak())
 		return FALSE;
+
 
 	// if this is first time scientist has seen player, greet him
 	if (!FBitSet(m_bitsSaid, bit_saidHelloPlayer))
@@ -1524,12 +1549,10 @@ int CTalkMonster :: FIdleHello( void )
 			{
 				m_hTalkTarget = pPlayer;
 
-				if(EASY_CVAR_GET(pissedNPCs) < 1){
-					if (FBitSet(pev->spawnflags, SF_MONSTER_PREDISASTER))
-						PlaySentence( m_szGrp[TLK_PHELLO], RANDOM_FLOAT(3, 3.5), VOL_NORM,  ATTN_IDLE );
-					else
-						PlaySentence( m_szGrp[TLK_HELLO], RANDOM_FLOAT(3, 3.5), VOL_NORM,  ATTN_IDLE );
-				}else{
+				if (EASY_CVAR_GET(pissedNPCs) < 1) {
+					SayHello(pPlayer);
+				}
+				else {
 					playPissed();
 				}
 
@@ -1566,32 +1589,20 @@ void CTalkMonster :: IdleHeadTurn( Vector &vecFriend )
 // ask question of nearby friend, or make statement
 //=========================================================
 int CTalkMonster :: FIdleSpeak ( void )
-{ 
+{
+	//MODDD.
+	if (m_MonsterState == MONSTERSTATE_SCRIPT) {
+		// in script, ignore.
+		return FALSE;
+	}
+
+
 	// try to start a conversation, or make statement
 	int pitch;
-	const char *szIdleGroup;
-	const char *szQuestionGroup;
-	float duration;
 
 	if (!FOkToSpeak())
 		return FALSE;
 
-	// set idle groups based on pre/post disaster
-	if (FBitSet(pev->spawnflags, SF_MONSTER_PREDISASTER))
-	{
-		szIdleGroup = m_szGrp[TLK_PIDLE];
-		szQuestionGroup = m_szGrp[TLK_PQUESTION];
-		// set global min delay for next conversation
-		duration = RANDOM_FLOAT(4.8, 5.2);
-	}
-	else
-	{
-		szIdleGroup = m_szGrp[TLK_IDLE];
-		szQuestionGroup = m_szGrp[TLK_QUESTION];
-		// set global min delay for next conversation
-		duration = RANDOM_FLOAT(2.8, 3.2);
-
-	}
 
 	pitch = GetVoicePitch();
 		
@@ -1604,6 +1615,8 @@ int CTalkMonster :: FIdleSpeak ( void )
 		{
 			if ( pTarget->IsAlive() )
 			{
+				float duration = RANDOM_FLOAT(4.2, 5.3);
+
 				m_hTalkTarget = m_hTargetEnt;
 				if (!FBitSet(m_bitsSaid, bit_saidDamageHeavy) && 
 					(m_hTargetEnt->pev->health <= m_hTargetEnt->pev->max_health / 8))
@@ -1629,6 +1642,10 @@ int CTalkMonster :: FIdleSpeak ( void )
 					SetBits(m_bitsSaid, bit_saidDamageLight);
 					return TRUE;
 				}
+				else {
+					//MODDD - talking to the player and no hurt lines were given?  Why not ...
+					// wait, only while following?  Nevermind, not really important.
+				}
 			}
 			else
 			{
@@ -1647,17 +1664,18 @@ int CTalkMonster :: FIdleSpeak ( void )
 
 	if (pFriend && !(pFriend->IsMoving()) && (RANDOM_LONG(0,99) < 75))
 	{
-		if(EASY_CVAR_GET(pissedNPCs) < 1){
-			PlaySentence( szQuestionGroup, duration, VOL_NORM, ATTN_IDLE );
-			//SENTENCEG_PlayRndSz( ENT(pev), szQuestionGroup, 1.0, ATTN_IDLE, 0, pitch );
-		}else{
-			playInterPissed();
-		}
-
 
 		// force friend to answer
 		CTalkMonster *pTalkMonster = (CTalkMonster *)pFriend;
 		m_hTalkTarget = pFriend;
+
+		if (EASY_CVAR_GET(pissedNPCs) < 1) {
+			SayQuestion(pTalkMonster);
+		}
+		else {
+			playInterPissed();
+		}
+
 		pTalkMonster->SetAnswerQuestion( this ); // UNDONE: This is EVIL!!!
 		pTalkMonster->m_flStopTalkTime = m_flStopTalkTime;
 
@@ -1676,7 +1694,7 @@ int CTalkMonster :: FIdleSpeak ( void )
 			m_hTalkTarget = pFriend;
 			
 			if(EASY_CVAR_GET(pissedNPCs) < 1){
-				PlaySentence( szIdleGroup, duration, VOL_NORM, ATTN_IDLE );
+				SayIdleToPlayer(pFriend);
 			}else{
 				playInterPissed();
 			}
@@ -1874,6 +1892,9 @@ void CTalkMonster::PlaySentenceSingular(const char *pszSentence, float duration,
 	//Just play the sentence given. But the system does require an exclamation mark for whatever reason.
 	static char sentenceToPlay[127];
 
+	//MODDD - Why not here too?!
+	Talk(duration);
+
 	CTalkMonster::g_talkWaitTime = gpGlobals->time + duration + 2.0;
 
 	sentenceToPlay[0] = '!';
@@ -1916,14 +1937,63 @@ void CTalkMonster :: SetAnswerQuestion( CTalkMonster *pSpeaker )
 
 
 
-
-
-
 //Implementable methods. Let a monster say what it needs to when (no default behavior)...
 //Provoked while declining a follow request. Scream or act really pissed.
 void CTalkMonster::DeclineFollowingProvoked(CBaseEntity* pCaller){
 	
 }
+// Hello message, moved here for specific beavior for scientist/barney if needed.
+// Do NOT replace this, call the base "SayHello" if not supplying your own line!
+void CTalkMonster::SayHello(CBaseEntity* argPlayerTalkTo) {
+	if (FBitSet(pev->spawnflags, SF_MONSTER_PREDISASTER)) {
+		PlaySentence(m_szGrp[TLK_PHELLO], RANDOM_FLOAT(3, 3.5), VOL_NORM, ATTN_IDLE);
+	}else {
+		PlaySentence(m_szGrp[TLK_HELLO], RANDOM_FLOAT(3, 3.5), VOL_NORM, ATTN_IDLE);
+	}
+}
+// Same for FIdleSpeak deciding to say something to the player.
+void CTalkMonster::SayIdleToPlayer(CBaseEntity* argPlayerTalkTo) {
+	const char* szIdleGroup;
+	float duration;
+	if (FBitSet(pev->spawnflags, SF_MONSTER_PREDISASTER))
+	{
+		szIdleGroup = m_szGrp[TLK_PIDLE];
+		// set global min delay for next conversation
+		duration = RANDOM_FLOAT(4.8, 5.2);
+	}
+	else
+	{
+		szIdleGroup = m_szGrp[TLK_IDLE];
+		// set global min delay for next conversation
+		duration = RANDOM_FLOAT(2.8, 3.2);
+	}
+
+	PlaySentence(szIdleGroup, duration, VOL_NORM, ATTN_IDLE);
+}
+// FIdleSpeak, talking to another NPC
+void CTalkMonster::SayQuestion(CTalkMonster* argTalkTo) {
+	const char* szQuestionGroup;
+	float duration;
+
+	// set idle groups based on pre/post disaster
+	if (FBitSet(pev->spawnflags, SF_MONSTER_PREDISASTER))
+	{
+		szQuestionGroup = m_szGrp[TLK_PQUESTION];
+		// set global min delay for next conversation
+		duration = RANDOM_FLOAT(4.8, 5.2);
+	}
+	else
+	{
+		szQuestionGroup = m_szGrp[TLK_QUESTION];
+		// set global min delay for next conversation
+		duration = RANDOM_FLOAT(2.8, 3.2);
+	}
+
+	PlaySentence(szQuestionGroup, duration, VOL_NORM, ATTN_IDLE);
+	//SENTENCEG_PlayRndSz( ENT(pev), szQuestionGroup, 1.0, ATTN_IDLE, 0, pitch );
+}
+
+
 //Provoked: this monster has turned on the player from too much or too direct friendly fire.
 void CTalkMonster::SayProvoked(void){
 	
@@ -2172,23 +2242,33 @@ Schedule_t* CTalkMonster :: GetScheduleOfType ( int Type )
 		{
 			canGoRavingMad = TRUE;
 			
+
+
+
+
 			// if never seen player, try to greet him
 			if (!FBitSet(m_bitsSaid, bit_saidHelloPlayer))
 			{
-				//Also do some preliminary checks.
-				//If we're just standing around and don't even see a player to say "hello" to, what is the point of calling this schedule?
-				CBaseEntity *pPlayer = FindNearestFriend(TRUE);
-				if (pPlayer && !entityHidden(pPlayer) )
-				{
-					if (FInViewCone(pPlayer) && FVisible(pPlayer)){
-						//original was just this line.
-						return slIdleHello;
+				//MODDD - can't be in the SCRIPT state to say hello.
+				if (m_MonsterState == MONSTERSTATE_SCRIPT) {
+					//in script, ignore already.
+				}
+				else {
+
+					//Also do some preliminary checks.
+					//If we're just standing around and don't even see a player to say "hello" to, what is the point of calling this schedule?
+					CBaseEntity* pPlayer = FindNearestFriend(TRUE);
+					if (pPlayer && !entityHidden(pPlayer))
+					{
+						if (FInViewCone(pPlayer) && FVisible(pPlayer)) {
+							//original was just this line.
+							return slIdleHello;
+						}
 					}
 				}
 				/////////////////////
-
-				
 			}
+
 
 			// sustained light wounds?
 			if (!FBitSet(m_bitsSaid, bit_saidWoundLight) && (pev->health <= (pev->max_health * 0.75)))
