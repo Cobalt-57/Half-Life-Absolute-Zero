@@ -62,7 +62,7 @@ void DebugLine_RenderAll(){
 	int i = 0;
 	//return;
 	/*
-	float fracto = abs(cos(gpGlobals->time/3));
+	float fracto = fabs(cos(gpGlobals->time/3));
 	easyForcePrintLine("WHAT? %.2f : %.2f", gpGlobals->time, fracto);
 	DebugLine_Setup(2, Vector(66.78, 805.35, 36.36), Vector(66.78, 805.35, 36.36) + Vector(-40, 200, 40), fracto );
 	

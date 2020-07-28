@@ -347,7 +347,6 @@ void CShotgun::SecondaryAttack( void )
 
 
 
-
 void CShotgun::FireShotgun(BOOL isPrimary) {
 
 	// don't fire underwater
@@ -356,13 +355,11 @@ void CShotgun::FireShotgun(BOOL isPrimary) {
 		PlayEmptySound();
 		m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 0.15;
 		m_flNextSecondaryAttack = m_flNextPrimaryAttack;
-		easyForcePrintLine("aw I no fire 0");
 		return;
 	}
 
 
 	if (reloadBlockFireCheck(isPrimary)) {
-		easyForcePrintLine("aw I no fire 1");
 		return;
 	}
 
@@ -381,7 +378,6 @@ void CShotgun::FireShotgun(BOOL isPrimary) {
 		if (m_iClip == 0) {
 			PlayEmptySound();
 		}
-		easyForcePrintLine("aw I no fire 2");
 		return;
 	}
 
@@ -432,8 +428,6 @@ void CShotgun::FireShotgun(BOOL isPrimary) {
 
 	Vector vecDir;
 
-
-	easyForcePrintLine("aw I FIRE");
 
 	//if (  EASY_CVAR_GET(playerWeaponSpreadMode)!=1 && (EASY_CVAR_GET(playerWeaponSpreadMode)==2 || IsMultiplayer() )  )
 	if (EASY_CVAR_GET(playerWeaponSpreadMode) != 2 && (EASY_CVAR_GET(playerWeaponSpreadMode) == 1 || !IsMultiplayer()))
@@ -657,8 +651,8 @@ void CShotgun::Reload( void )
 	}
 	else   //m_fInSpecialReload == 3
 	{
-		if (m_flTimeWeaponIdle > UTIL_WeaponTimeBase())
-			return;
+		//if (m_flTimeWeaponIdle > UTIL_WeaponTimeBase())
+		//	return;
 		// Add them to the clip
 		m_iClip += 1;
 		m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] -= 1;
@@ -782,7 +776,7 @@ void CShotgun::reloadFinishPump(){
 	}else{
 		//this->m_fireState |= 128;  //this means, play backwards.  Method call does this now.
 		//SendWeaponAnimServerOnlyReverse( SHOTGUN_START_RELOAD );
-
+		
 
 		if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(viewModelPrintouts)==1)easyForcePrintLine("ILL hahaha");
 		pev->iuser1 |= SHOTGUN_BIT7;

@@ -2471,7 +2471,7 @@ void CStukaBat :: RunTask ( Task_t *pTask )
 			pev->velocity.x = 0;
 			pev->velocity.y = 0;
 
-			verticalDist = abs(floorVect.z - pev->origin.z);
+			verticalDist = fabs(floorVect.z - pev->origin.z);
 
 			if(verticalDist < 12){
 				//finish up.
@@ -3877,7 +3877,7 @@ void CStukaBat :: SetTurnActivityCustom ( void )
 
 	flYD = pev->ideal_yaw - pev->angles.y;
 
-	if(abs( flYD) > 180){
+	if(fabs( flYD) > 180){
 		flYD -= 360;
 	}
 	//return
@@ -4555,7 +4555,7 @@ void CStukaBat::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, floa
 	EASY_CVAR_EXTERN(testVar);
 
 	//UTIL_MoveToOrigin ( ENT(pev), pev->origin + vecTotalAdjust , vecTotalAdjust.Length(), MOVE_STRAFE );
-	UTIL_MoveToOrigin ( ENT(pev), pev->origin + Vector(0, EASY_CVAR_GET(testVar), 0), abs(EASY_CVAR_GET(testVar)), MOVE_STRAFE );
+	UTIL_MoveToOrigin ( ENT(pev), pev->origin + Vector(0, EASY_CVAR_GET(testVar), 0), fabs(EASY_CVAR_GET(testVar)), MOVE_STRAFE );
 	*/
 
 	/*

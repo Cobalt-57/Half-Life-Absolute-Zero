@@ -363,16 +363,31 @@ void CHud::drawPartialFromRight(const SpriteHandle_t & arg_sprite, const wrect_t
 
 
 int CHud::canDrawSidebar(void){
-	if (
-         (EASY_CVAR_GET(hud_drawsidebarmode) == 2) ||
-		   (
-            (!canDrawBottomStats && EASY_CVAR_GET(hud_drawsidebarmode) == 0) ||
-             (canDrawBottomStats && EASY_CVAR_GET(hud_drawsidebarmode) == 1)
-	       )
+	
+	//NOTICE - override this if the screenheight is below some number of pixels, hud_drawsidebarmode is non-zero, and hud_version is 0, 1, or 3.
+	// Or forget the screen height check, whichever.
+	float vers = EASY_CVAR_GET(hud_version);
+	
+	if(
+	    //EASY_CVAR_GET(hud_drawsidebarmode) != 0 &&
+		vers == 0 || vers == 1 || (vers == 3 && ScreenHeight < 600)
+		//EASY_CVAR_GET(hud_weaponSelectHidesLower) == 2 &&
 	){
-		return TRUE;
+		// act as though hud_drawsidebarmode were 0 then.
+		return !canDrawBottomStats;
 	}else{
-		return FALSE;
+		// normal checks
+		if (
+			 (EASY_CVAR_GET(hud_drawsidebarmode) == 2) ||
+			   (
+				(!canDrawBottomStats && EASY_CVAR_GET(hud_drawsidebarmode) == 0) ||
+				 (canDrawBottomStats && EASY_CVAR_GET(hud_drawsidebarmode) == 1)
+			   )
+		){
+			return TRUE;
+		}else{
+			return FALSE;
+		}
 	}
 }
 

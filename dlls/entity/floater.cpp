@@ -437,9 +437,9 @@ int CFloater :: CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, C
 	TraceResult trBottomRight;
 	
 	Vector vecOff;
-	float boundXSize = abs(pev->mins.x);
-	float boundYSize = abs(pev->mins.y);
-	float boundZSize = abs(pev->maxs.z/2);
+	float boundXSize = fabs(pev->mins.x);
+	float boundYSize = fabs(pev->mins.y);
+	float boundZSize = fabs(pev->maxs.z/2);
 
 	//Vector vecCenter = Vector(pev->origin.x, pev->origin.y, pev->origin.z + (pev->maxs.z - pev->mins.z)/2.0);
 	Vector vecCenterRel = Vector(0, 0, (pev->maxs.z - pev->mins.z)/2.0);

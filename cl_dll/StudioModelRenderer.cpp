@@ -584,10 +584,10 @@ void CStudioModelRenderer::StudioSetUpTransform (int trivial_accept)
 			{
 				float denomo = (m_pCurrentEntity->curstate.animtime - m_pCurrentEntity->latched.prevanimtime);
 
-
-				// 0.013?  0.026?   0.06?
-				if (abs(denomo) <= 0.0599) {
-					// To small of a denominator?  I suspect something is up.
+				
+				// 0.013?  0.026?   0.06?   0.0599?
+				if (fabs(denomo) <= EASY_CVAR_GET(interpolation_movetypestep_mindelta)) {
+					// Too small of a denominator?  I suspect something is up.
 					f = 0;
 				}
 				else {

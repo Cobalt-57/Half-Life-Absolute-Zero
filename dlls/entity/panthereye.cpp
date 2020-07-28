@@ -1532,7 +1532,7 @@ BOOL CPantherEye::CheckMeleeAttack2 ( float flDot, float flDist )
 			enemyFloorZ = m_hEnemy->pev->origin.z;
 		}
 
-		//easyForcePrintLine("eeee %.2f", abs(this->pev->origin.z - enemyFloorZ));
+		//easyForcePrintLine("eeee %.2f", fabs(this->pev->origin.z - enemyFloorZ));
 	}
 
 	//MODDD - STOP ME LATER
@@ -1541,7 +1541,7 @@ BOOL CPantherEye::CheckMeleeAttack2 ( float flDot, float flDist )
 
 	if ( m_hEnemy != NULL &&
 		!HasConditions( bits_COND_ENEMY_OCCLUDED ) && flDist >= 270 && flDist <= 410 &&
-		abs(this->pev->origin.z - enemyFloorZ) < 30 &&     //not too much veritcal difference allowed, this is for a long floor-wise leap.
+		fabs(this->pev->origin.z - enemyFloorZ) < 30 &&     //not too much veritcal difference allowed, this is for a long floor-wise leap.
 	 m_hEnemy ->Classify() != CLASS_ALIEN_BIOWEAPON &&
 	 m_hEnemy ->Classify() != CLASS_PLAYER_BIOWEAPON   )
 	{

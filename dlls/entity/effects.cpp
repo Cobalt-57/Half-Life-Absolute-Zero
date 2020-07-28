@@ -1327,9 +1327,9 @@ void CSprite::Expand( float scaleSpeed, float fadeSpeed )
 
 	//why absolute value?  Because we're already going to bring this in the right direction in every think frame.
 	//Keep it absolute here, always positive.
-	pev->speed = abs(scaleSpeed);
+	pev->speed = fabs(scaleSpeed);
 
-	pev->health = abs(fadeSpeed);
+	pev->health = fabs(fadeSpeed);
 
 	SetThink( &CSprite::ExpandThink );
 
@@ -1386,8 +1386,8 @@ void CSprite::AnimationScaleFadeIn( float scaleSpeed, float fadeSpeed, float arg
 
 	//why absolute value?  Because we're already going to bring this in the right direction in every think frame.
 	//Keep it absolute here, always positive.
-	pev->speed = abs(scaleSpeed);
-	pev->health = abs(fadeSpeed);
+	pev->speed = fabs(scaleSpeed);
+	pev->health = fabs(fadeSpeed);
 
 	//reuse variables... ahoy!
 	pev->fuser1 = arg_targetScale;

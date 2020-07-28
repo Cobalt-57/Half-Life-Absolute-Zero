@@ -239,6 +239,10 @@ public:
 												// the hude via the DAMAGE message
 	//MODDD - complementary
 	int				m_bitsModHUDDamage;
+	//MODDD - yes.
+	int m_bitsDamageTypeForceShow;
+	int m_bitsDamageTypeModForceShow;
+
 
 	BOOL			m_fInitHUD;				// True when deferred HUD restart msg needs to be sent
 	BOOL			m_fGameHUDInitialized;
@@ -735,8 +739,9 @@ public:
 	int getGeigerChannel();
 	void UpdateGeigerCounter( void );
 
-
-	virtual void parse_itbd(int i, BYTE& bDuration);
+	
+	virtual BYTE parse_itbd_duration(int i);
+	virtual void parse_itbd(int i);
 	virtual void timedDamage_nonFirstFrame(int i, int* m_bitsDamageTypeRef);
 
 	BOOL FBecomeProne ( void );

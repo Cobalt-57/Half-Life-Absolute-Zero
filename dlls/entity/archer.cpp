@@ -624,9 +624,9 @@ int CArcher :: CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, CB
 	TraceResult trBottomRight;
 	
 	Vector vecOff;
-	float boundXSize = abs(pev->mins.x);
-	float boundYSize = abs(pev->mins.y);
-	float boundZSize = abs(pev->maxs.z/2);
+	float boundXSize = fabs(pev->mins.x);
+	float boundYSize = fabs(pev->mins.y);
+	float boundZSize = fabs(pev->maxs.z/2);
 
 	//Vector vecCenter = Vector(pev->origin.x, pev->origin.y, pev->origin.z + (pev->maxs.z - pev->mins.z)/2.0);
 	Vector vecCenterRel = Vector(0, 0, (pev->maxs.z - pev->mins.z)/2.0);
@@ -793,7 +793,7 @@ BOOL CArcher::ShouldAdvanceRoute( float flWaypointDist, float flInterval )
 
 				m_velocity = Vector(0, 0, 0);
 				pev->velocity = Vector(0, 0, 0);
-				UTIL_MoveToOrigin ( ENT(pev), Vector(pev->origin.x, pev->origin.y, m_Route[ m_iRouteIndex ].vecLocation.z), abs(m_Route[ m_iRouteIndex ].vecLocation.z - pev->origin.z) , MOVE_STRAFE );
+				UTIL_MoveToOrigin ( ENT(pev), Vector(pev->origin.x, pev->origin.y, m_Route[ m_iRouteIndex ].vecLocation.z), fabs(m_Route[ m_iRouteIndex ].vecLocation.z - pev->origin.z) , MOVE_STRAFE );
 			
 				return TRUE;
 			}else{
@@ -958,7 +958,7 @@ void CArcher::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, float 
 
 			if(anticipatedMoveDistance < differDence){
 				//still only move towards the water at most by this amount.
-				//m_velocity = Vector(m_velocity.x, m_velocity.y, abs(m_velocity.z) * -1);
+				//m_velocity = Vector(m_velocity.x, m_velocity.y, fabs(m_velocity.z) * -1);
 				m_velocity.z -= 3;
 			}else{
 				//puts us exactly at the water level if it would've gone past.
@@ -970,7 +970,7 @@ void CArcher::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, float 
 			m_velocity.z = 0;
 			//pev->origin.z = waterLevel;
 
-			UTIL_MoveToOrigin ( ENT(pev), Vector(pev->origin.x, pev->origin.y, waterLevelIdeal), abs(pev->origin.z - waterLevelIdeal) , MOVE_STRAFE );
+			UTIL_MoveToOrigin ( ENT(pev), Vector(pev->origin.x, pev->origin.y, waterLevelIdeal), fabs(pev->origin.z - waterLevelIdeal) , MOVE_STRAFE );
 			
 			//m_velocity.z = 0;
 		}
@@ -2239,7 +2239,7 @@ void CArcher::HandleEventQueueEvent(int arg_eventID){
 
 				if(distToEnemy < 84 && distToEnemy2D < 60){
 
-					float zDiff = abs(m_hEnemy->Center().z - this->Center().z);
+					float zDiff = fabs(m_hEnemy->Center().z - this->Center().z);
 					if(zDiff > 30){
 						//just hurt the enemy.
 						pHurt = m_hEnemy;

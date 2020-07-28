@@ -1292,7 +1292,7 @@ void CScientist :: StartTask( Task_t *pTask )
 
 					aggro = 0;
 
-					float vertDiff = abs(m_hEnemy->pev->origin.z - pev->origin.z);
+					float vertDiff = fabs(m_hEnemy->pev->origin.z - pev->origin.z);
 
 					//elevation differences?  Nope, none of that.
 					if (m_hEnemy != NULL && (vertDiff < 120)) {

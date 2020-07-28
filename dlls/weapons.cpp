@@ -1324,7 +1324,9 @@ BOOL CBasePlayerWeapon :: DefaultDeploy( char *szViewModel, char *szWeaponModel,
 
 	//MODDD - force!
 	//SendWeaponAnim( iAnim, skiplocal, body );
-	SendWeaponAnimBypass( iAnim, skiplocal );
+	// WRONG!  Bypass already ignores skiplocal.  Send the body here!
+	//SendWeaponAnimBypass( iAnim, skiplocal );
+	SendWeaponAnimBypass(iAnim, body);
 
 	if(fireDelayTime == -1){
 		//make match the "deployAnimTime":

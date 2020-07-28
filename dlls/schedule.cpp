@@ -1417,7 +1417,7 @@ void CBaseMonster :: RunTask ( Task_t *pTask )
 			//Reduce by half each time it reaches the surface.
 			//When it is sufficiently small, end this task and maybe shift the origin.
 
-			//if( abs(pev->velocity.z) <= 16){
+			//if( fabs(pev->velocity.z) <= 16){
 			//}
 		}
 

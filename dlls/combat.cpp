@@ -2040,27 +2040,30 @@ void CBaseEntity::DrawAlphaBlood(float flDamage, const Vector& vecDrawLoc){
 	int drawBloodVersionValue = 0;
 	int drawTripleBloodValue = 1;
 
-	if (pev->deadflag != DEAD_NO){
+	if (pev->deadflag == DEAD_NO){
 
 		if (pev->health <= flDamage) {
-			//killing blow?
-			UTIL_BloodStream(vecDrawLoc, UTIL_RandomBloodVector(), BloodColor(), RANDOM_LONG(50, 100));
-			UTIL_BloodStream(vecDrawLoc, UTIL_RandomBloodVector(), BloodColor(), RANDOM_LONG(50, 100));
-			UTIL_BloodStream(vecDrawLoc, UTIL_RandomBloodVector(), BloodColor(), RANDOM_LONG(50, 100));
+			// killing blow?
+			UTIL_BloodStream(vecDrawLoc, UTIL_RandomBloodVector(), BloodColor(), RANDOM_LONG(45, 68));
+			UTIL_BloodStream(vecDrawLoc, UTIL_RandomBloodVector(), BloodColor(), RANDOM_LONG(45, 68));
+			UTIL_BloodStream(vecDrawLoc, UTIL_RandomBloodVector(), BloodColor(), RANDOM_LONG(45, 68));
 		}
 		else {
-			//normal
-			UTIL_BloodStream(vecDrawLoc, UTIL_RandomBloodVector(), BloodColor(), RANDOM_LONG(3, 6));
-			UTIL_BloodStream(vecDrawLoc, UTIL_RandomBloodVector(), BloodColor(), RANDOM_LONG(3, 6));
-			UTIL_BloodStream(vecDrawLoc, UTIL_RandomBloodVector(), BloodColor(), RANDOM_LONG(3, 6));
+			// normal
+			UTIL_BloodStream(vecDrawLoc, UTIL_RandomBloodVector(), BloodColor(), RANDOM_LONG(4, 5));
+			UTIL_BloodStream(vecDrawLoc, UTIL_RandomBloodVector(), BloodColor(), RANDOM_LONG(4, 5));
+			UTIL_BloodStream(vecDrawLoc, UTIL_RandomBloodVector(), BloodColor(), RANDOM_LONG(4, 5));
 		}
-	}
-	else{
-		// dead.
-		UTIL_BloodStream(vecDrawLoc, UTIL_RandomBloodVector(), BloodColor(), RANDOM_LONG(15, 30));
-		UTIL_BloodStream(vecDrawLoc, UTIL_RandomBloodVector(), BloodColor(), RANDOM_LONG(15, 30));
-		UTIL_BloodStream(vecDrawLoc, UTIL_RandomBloodVector(), BloodColor(), RANDOM_LONG(15, 30));
-			
+	}else if (pev->deadflag == DEAD_DYING){
+		// dying
+		UTIL_BloodStream(vecDrawLoc, UTIL_RandomBloodVector(), BloodColor(), RANDOM_LONG(12, 21));
+		UTIL_BloodStream(vecDrawLoc, UTIL_RandomBloodVector(), BloodColor(), RANDOM_LONG(12, 21));
+		UTIL_BloodStream(vecDrawLoc, UTIL_RandomBloodVector(), BloodColor(), RANDOM_LONG(12, 21));
+	}else {
+		// DEAD.  Similar, but spray it further up to be more noticeable.
+		UTIL_BloodStream(vecDrawLoc, UTIL_RandomBloodVectorHigh(), BloodColor(), RANDOM_LONG(7, 16));
+		UTIL_BloodStream(vecDrawLoc, UTIL_RandomBloodVectorHigh(), BloodColor(), RANDOM_LONG(7, 16));
+		UTIL_BloodStream(vecDrawLoc, UTIL_RandomBloodVectorHigh(), BloodColor(), RANDOM_LONG(7, 16));
 	}
 }
 

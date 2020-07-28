@@ -1178,9 +1178,21 @@ int CHudAmmo::Draw(float flTime)
 			
 			spritehandle = gHUD.GetSprite( m_e_battery_full );
 			spriterect = &gHUD.GetSpriteRect( m_e_battery_full );
-			
-			if(gHUD.m_Battery.m_iBat > 0){
-				gHUD.drawPartialFromBottom(spritehandle, spriterect, ( (float)gHUD.m_Battery.m_iBat / 100.0f ), x + 0, y + 0, r, g, b);
+
+
+			int iBatDraw;
+			//MODDD - if "batteryHiddenDead" is on and the player is dead, hide the battery amount (show 0).
+			if (!gHUD.m_fPlayerDead || EASY_CVAR_GET(hud_batteryhiddendead) != 1) {
+				iBatDraw = gHUD.m_Battery.m_iBat;
+			}
+			else {
+				// dead and the CVar demands hiding battery?  Show 0 here.
+				iBatDraw = 0;
+			}
+
+			if(iBatDraw > 0){
+				float fillPortion = ((float)iBatDraw / 100.0f) * (0.95 - 0.15) + 0.15;
+				gHUD.drawPartialFromBottom(spritehandle, spriterect, fillPortion, x + 0, y + 0, r, g, b);
 			}
 		}
 

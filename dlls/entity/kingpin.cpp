@@ -2440,7 +2440,7 @@ void CKingpin::MonsterThink( void ){
 
 
 						const float zSpeed = incomingVelocity.z;
-						const float distanceZ = abs((pev->origin.z - pEntityScan->pev->origin.z));
+						const float distanceZ = fabs((pev->origin.z - pEntityScan->pev->origin.z));
 						const float distance2D = (pev->origin - pEntityScan->pev->origin).Length2D();
 
 						const Vector2D incomingDirection = incomingVelocity.Make2D().Normalize();
@@ -4555,7 +4555,7 @@ void CKingpin::administerShocker(void){
 
 					//HACK - if the directionToShockwave's Z is sufficiently small (absolute-value wise, distance from 0 positive or negative), force it to be a little higher positive.
 
-					if(abs(directionToShockwave.z) < 0.3f){
+					if(fabs(directionToShockwave.z) < 0.3f){
 						directionToShockwave.z = 0.8f;
 					}
 

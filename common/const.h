@@ -172,8 +172,16 @@
 //MODDD - edit
 //#define MAX_CLIMB_SPEED	200
 //130?
-#define MAX_CLIMB_SPEED 110  // fastest vertical climbing speed possible
-#define MAX_CLIMB_SPEEDPRE 200    //old speed for being forced off a ladder sometimes?
+#define MAX_CLIMB_SPEED 268  // fastest vertical climbing speed possible
+                             // (used for the alpha ladder, or cl_ladder 0 instead)
+#define MAX_CLIMB_SPEEDPRE 153    //old speed for being forced off a ladder sometimes?
+                                  // Mainly the speed of the retail ladder style (cl_ladder 1).
+								  // Keep in mind, slower than retail even at default ladderspeedmulti
+								  // (was 200)
+
+// OLD LADDER SPEED DEFAULTS:
+// MAX_CLIMB_SPEED 110
+// MAX_CLIMB_SPEEDPRE 200
 
 
 // uhh..  why not?

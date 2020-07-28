@@ -248,14 +248,19 @@ int CHudBattery::Draw(float flTime)
 		x += 5;
 		y += 5;
 
+
+
 		if(EASY_CVAR_GET(hud_batterydraw) == 0){
 			//across.
-			gHUD.drawPartialFromLeft(m_SpriteHandle_t2, m_prc2, ((float)iBatDraw / (float)100 ), x, y - iOffset , r, g, b);
+			float fillPortion = ((float)gHUD.m_Battery.m_iBat / 100.0f) * (0.98 - 0.02) + 0.02;
+			gHUD.drawPartialFromLeft(m_SpriteHandle_t2, m_prc2, fillPortion, x, y - iOffset , r, g, b);
 		}else if(EASY_CVAR_GET(hud_batterydraw) == 1){
 			//vertically.
-			gHUD.drawPartialFromBottom(m_SpriteHandle_t2, m_prc2, ((float)iBatDraw / (float)100 ), x, y - iOffset , r, g, b);
+			float fillPortion = ((float)gHUD.m_Battery.m_iBat / 100.0f) * (0.95 - 0.05) + 0.05;
+			gHUD.drawPartialFromBottom(m_SpriteHandle_t2, m_prc2, fillPortion, x, y - iOffset , r, g, b);
 		}else if(EASY_CVAR_GET(hud_batterydraw) == 2){
-			gHUD.drawPartialFromRight(m_SpriteHandle_t2, m_prc2, ((float)iBatDraw / (float)100 ), x, y - iOffset , r, g, b);
+			float fillPortion = ((float)gHUD.m_Battery.m_iBat / 100.0f) * (1.00 - 0.00) + 0.00;
+			gHUD.drawPartialFromRight(m_SpriteHandle_t2, m_prc2, fillPortion, x, y - iOffset , r, g, b);
 		}
 		
 	}else{

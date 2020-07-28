@@ -752,8 +752,13 @@ useAlphaSparks - boolean.  If 1 (default), semi-transparent particle balls are d
 normalSpeedMulti - float (1).  TMultiple applied to the player's foot speed.
 noclipSpeedMulti - float (1).  Multiple applied to the player's noclip speed.
 jumpForceMulti - float (1).  Multiple of the force in the usual player jump (also applies to longjumps)
-ladderCycleMulti- float (0.9). Multiple applied to the ladder's cycle length. Smaller is more often (quicker, shorter-distance cycles), larger is less often (slower, longer-distance cycles). Similar (same?) distance covered in the same amount of time total.
-ladderSpeedMulti - float (1.55). Multiple applied to the distance covered in one ladder cycle.
+ladderCycleMulti- float (1). Multiple applied to the ladder's cycle length. Smaller is more often (quicker, shorter-distance cycles), larger is less often (slower, longer-distance cycles). Similar (same?) distance covered in the same amount of time total.
+ladderSpeedMulti - float (1). Multiple applied to the distance covered in one ladder cycle.
+
+OLD LADDER DEFAULTS, may be a little more faithful to the original but on the slow side:
+ladderCycleMulti 0.9
+ladderSpeedMulti 1.55
+
 
 hassaultFriendlyFire - bool, defaults to 1.  Determines whether hassaults are cautious of firing at friendlies or not.  (1 = does not care, 0 = tries not to).
 
@@ -1200,7 +1205,7 @@ hud_drawSidebarMode (0) - MODEVAR.
 1: only draw when not in weapon select.
 2: always draw.
 NOTE: It is advisable to use "hud_weaponSelectHidesLower 2" with hud_drawSidebarMode choices other than 0 to still see ammo numbers unobscurred in typical usage.
-If the resolution is under around 550 pixels tall, you're fucked.
+CHANGE: this CVar only works for hud_version 2 now, or hud_version 3 for above 600 pixels high.  Otherwise, the game pretends like hud_drawSideBarMode is 0.
 
 
 
@@ -1494,4 +1499,9 @@ monsterKilledToss (2) - MODEVAR.  How to send monsters a short distance on takin
 0: No change from retail (none).
 1: Toss as-found commented out.  Does not factor in amount of damage on the killing blow.
 2: Toss, more damage than necessary to kill = further distance, little extra upward boost too.
+
+interpolation_movetypestep_mindelta (0.06) - FLOAT.  Extremely low, sometimes negative, amounts of times between frames can be recorded on zombies pushed back by bullets, which causes the 'teleport' issue: bad interpolation putting the zombie somewhere it shouldn't be for a split second.
+~Too low removes the pushback fix, too high stops interpolation for walking monsters.  Somewhere over 0.01 and under 0.10 is usually good.
+
+
 

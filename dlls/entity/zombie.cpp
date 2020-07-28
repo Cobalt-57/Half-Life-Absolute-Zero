@@ -423,8 +423,6 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CZombie)
 }
 
 
-//pev->deadflag == DEAD_DEAD
-
 
 //MODDD - NEW.
 // Let's reward head damage a little more.  It is the headcrab itself after all.
@@ -466,9 +464,9 @@ float CZombie::hitgroupDamage(float flDamage, int bitsDamageType, int bitsDamage
 			case HITGROUP_HEAD:
 				if (g_iSkillLevel == SKILL_HARD) {
 					// less help.
-					finalDamage = flDamage * gSkillData.monHead * 1.2;
+					finalDamage = flDamage * gSkillData.monHead * 1.00;
 				}else {
-					finalDamage = flDamage * gSkillData.monHead * 1.3;
+					finalDamage = flDamage * gSkillData.monHead * 1.00;
 				}
 			break;
 			case HITGROUP_CHEST:
@@ -501,24 +499,24 @@ float CZombie::hitgroupDamage(float flDamage, int bitsDamageType, int bitsDamage
 			case HITGROUP_HEAD:
 				if (g_iSkillLevel == SKILL_HARD) {
 					// less help.
-					finalDamage = flDamage * gSkillData.monHead * 1.2;
+					finalDamage = flDamage * gSkillData.monHead * 1.00;
 				}else {
-					finalDamage = flDamage * gSkillData.monHead * 1.3;
+					finalDamage = flDamage * gSkillData.monHead * 1.00;
 				}
 			break;
 			case HITGROUP_CHEST:
-				finalDamage = flDamage * gSkillData.monChest * 0.95;
+				finalDamage = flDamage * gSkillData.monChest * 0.97;
 			break;
 			case HITGROUP_STOMACH:
-				finalDamage = flDamage * gSkillData.monStomach * 0.95;
+				finalDamage = flDamage * gSkillData.monStomach * 0.97;
 			break;
 			case HITGROUP_LEFTARM:
 			case HITGROUP_RIGHTARM:
-				finalDamage = flDamage * gSkillData.monArm * 0.88;
+				finalDamage = flDamage * gSkillData.monArm * 0.92;
 			break;
 			case HITGROUP_LEFTLEG:
 			case HITGROUP_RIGHTLEG:
-				finalDamage = flDamage * gSkillData.monLeg * 0.88;
+				finalDamage = flDamage * gSkillData.monLeg * 0.92;
 			break;
 			default:
 				finalDamage = flDamage;
@@ -548,7 +546,9 @@ float CZombie::hitgroupDamage(float flDamage, int bitsDamageType, int bitsDamage
 		else {
 			// cut the reduction by 24%.  Unloading a full mp5 on the head, even in hard-mode and not killing the zombie,
 			// is pretty strange.
-			damageMulti = (100 - gSkillData.zombieBulletResistance * 0.76) / 100.0f;
+			// NOPE, 100% damage from headshots.  No reduction.
+			//damageMulti = (100 - gSkillData.zombieBulletResistance * 0.76) / 100.0f;
+			damageMulti = 1; //(100 - gSkillData.zombieBulletResistance * 0) / 100.0f;
 		}
 
 		finalDamage *= damageMulti;

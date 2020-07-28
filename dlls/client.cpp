@@ -5333,7 +5333,7 @@ void StartFrame( void )
 
 	if(gpGlobals->time >= DebugLine_drawTime){
 		//::debugLine_setup(1, 
-		//::debugLine_setupFract(0, 118, 759, 38, 118, 759, 600, abs(sin(gpGlobals->time*0.8)) );
+		//::debugLine_setupFract(0, 118, 759, 38, 118, 759, 600, fabs(sin(gpGlobals->time*0.8)) );
 		DebugLine_RenderAll();
 		//::UTIL_drawLineFrame(118.48, 759.76, 37.03, 500, 500, 500, 12, 255, 0, 0);
 		DebugLine_drawTime = gpGlobals->time + 0.09;

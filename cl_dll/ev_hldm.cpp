@@ -2361,20 +2361,21 @@ void createBallPowerup(int* sprite, Vector* loc) {
 	TEMPENTITY* eh = gEngfuncs.pEfxAPI->R_TempSprite(*loc, rot, 0.12f, *sprite, kRenderGlow, kRenderFxNoDissipation, 250.0 / 255.0, 1.22f, FTENT_SLOWGRAVITY | FTENT_COLLIDEWORLD | FTENT_FADEOUT);
 	if (eh != NULL) {
 		eh->fadeSpeed = 0.6f;
+		//eh->entity.baseline.gravity
+		//eh->entity.curstate.gravity
+		//eh->entity.prevstate.gravity
+		//???
+
+
+		//MODDD - remove "FTENT_GRAVITY" from above, yes or no?
+
+		//unnecessary yes?
+		//eh->flags |= (FTENT_SLOWGRAVITY);
+
+
+		//easyPrintLine("??? %.2f", eh->bounceFactor);
 	}
-	//eh->entity.baseline.gravity
-	//eh->entity.curstate.gravity
-	//eh->entity.prevstate.gravity
-	//???
 
-
-	//MODDD - remove "FTENT_GRAVITY" from above, yes or no?
-
-	//unnecessary yes?
-	//eh->flags |= (FTENT_SLOWGRAVITY);
-
-
-	//easyPrintLine("??? %.2f", eh->bounceFactor);
 
 }
 
@@ -2796,9 +2797,6 @@ void EV_FreakyLight(event_args_t* args) {
 
 
 void EV_FriendlyVomit(event_args_t* args) {
-
-
-
 	int duckyou = gEngfuncs.pEventAPI->EV_FindModelIndex("sprites/hotglow.spr");
 
 	int m_iHotglowGreen;
@@ -2824,9 +2822,7 @@ void EV_FriendlyVomit(event_args_t* args) {
 
 //MODDD - TODO. should behavior varry from being destroyed mid-fall or while on the ground?  such as gibbed midair or auto-exploded?
 void EV_FloaterExplode(event_args_t* args) {
-
 	int duckyou = gEngfuncs.pEventAPI->EV_FindModelIndex("sprites/hotglow.spr");
-
 	int m_iHotglowGreen;
 	m_iHotglowGreen = gEngfuncs.pEventAPI->EV_FindModelIndex("sprites/hotglow_green.spr");
 
@@ -2856,11 +2852,7 @@ void EV_FloaterExplode(event_args_t* args) {
 
 
 
-
-
 void shrapnelHitCallback(struct tempent_s* ent, struct pmtrace_s* ptr) {
-
-
 	dlight_t* dl = gEngfuncs.pEfxAPI->CL_AllocDlight(0);
 	VectorCopy_f(ent->entity.origin, dl->origin);
 
@@ -2877,15 +2869,11 @@ void shrapnelHitCallback(struct tempent_s* ent, struct pmtrace_s* ptr) {
 }
 
 void createShrapnel(int* sprite, Vector* loc, int testArg, float testArg2, float testArg3) {
-
-
-
 	float randomStrength = 190; //121;
 	float heightExtra = 140;
 
 	randomStrength = testArg2;
 	heightExtra = testArg3;
-
 
 	/*
 	float randx = gEngfuncs.pfnRandomFloat(-randomStrength, randomStrength);
@@ -2912,7 +2900,6 @@ void createShrapnel(int* sprite, Vector* loc, int testArg, float testArg2, float
 	vec3_t rot = Vector(randx, randy, randz);
 
 
-
 	float lifeValue = gEngfuncs.pfnRandomFloat(2.25, 3.55);
 
 
@@ -2930,48 +2917,38 @@ void createShrapnel(int* sprite, Vector* loc, int testArg, float testArg2, float
 	TEMPENTITY* eh = gEngfuncs.pEfxAPI->R_TempSprite(*loc, rot, 2.5f, *sprite, kRenderNormal, kRenderFxNone, 255.0 / 255.0, lifeValue, flags);
 	if (eh != NULL) {
 		eh->fadeSpeed = 0.5f;
+
+		//gives this the metal hit sound effects.  I guess it is hardcoded what values of "hitSound" make what sounds, can't find the resulting sound calls for that anywhere.
+		//Closest is entity.cpp, where this is referred to but still not used directly.
+		//Calls a method that is pre-compiled in this line:
+		//    Callback_TempEntPlaySound(pTemp, damp);
+		//...assume it is what refers to this.
+
+
+		//eh->hitSound = 2;    hit sound disabled, actually.  Enabling this gives it the break metal sounds though.
+		eh->hitcallback = &shrapnelHitCallback;
+
+		//no "BREAK_METAL " here.
+		//eh->flags |= (FTENT_SLOWGRAVITY  | FTENT_SMOKETRAIL );
+
+
+		eh->entity.baseline.angles[0] = gEngfuncs.pfnRandomFloat(-256, 256);
+		eh->entity.baseline.angles[1] = gEngfuncs.pfnRandomFloat(-256, 256);
+		eh->entity.baseline.angles[2] = gEngfuncs.pfnRandomFloat(-256, 256);
+
+		//easyPrintLine("??? %.2f", eh->bounceFactor);
+		//default bounce factor is 1.0.
 	}
-
-
-	//gives this the metal hit sound effects.  I guess it is hardcoded what values of "hitSound" make what sounds, can't find the resulting sound calls for that anywhere.
-	//Closest is entity.cpp, where this is referred to but still not used directly.
-	//Calls a method that is pre-compiled in this line:
-	//    Callback_TempEntPlaySound(pTemp, damp);
-	//...assume it is what refers to this.
-
-
-	//eh->hitSound = 2;    hit sound disabled, actually.  Enabling this gives it the break metal sounds though.
-	eh->hitcallback = &shrapnelHitCallback;
-
-	//no "BREAK_METAL " here.
-	//eh->flags |= (FTENT_SLOWGRAVITY  | FTENT_SMOKETRAIL );
-
-
-	eh->entity.baseline.angles[0] = gEngfuncs.pfnRandomFloat(-256, 256);
-	eh->entity.baseline.angles[1] = gEngfuncs.pfnRandomFloat(-256, 256);
-	eh->entity.baseline.angles[2] = gEngfuncs.pfnRandomFloat(-256, 256);
-
-
-
-
-
-
-
-	//easyPrintLine("??? %.2f", eh->bounceFactor);
-	//default bounce factor is 1.0.
 
 }
 
 
 
 void EV_QuakeExplosionEffect(event_args_t* args) {
-
-
 	Vector origin = args->origin;
 	int shrapnel3D = gEngfuncs.pEventAPI->EV_FindModelIndex("models/shrapnel.mdl");
 
 	//TEST IN SESSION!
-
 
 	//R_Explosion
 
@@ -2982,9 +2959,7 @@ void EV_QuakeExplosionEffect(event_args_t* args) {
 	//void	( *R_BreakModel )				( float *pos, float *size, float *dir, float random, float life, int count, int modelIndex, char flags );
 	//!!!!!!!!!!!!!!!!!!!!!!!!!
 
-
 	int testArg = args->iparam1;
-
 	float testArg2 = args->fparam1;
 	float testArg3 = args->fparam2;
 
@@ -2999,17 +2974,18 @@ void EV_QuakeExplosionEffect(event_args_t* args) {
 
 
 		dlight_t* dl = gEngfuncs.pEfxAPI->CL_AllocDlight(0);
-		VectorCopy_f(args->origin, dl->origin);
 
-		dl->radius = 130;
-		dl->dark = false;
-		dl->die = gEngfuncs.GetClientTime() + 0.03; //Kill it right away
+		if (dl != NULL) {
+			VectorCopy_f(args->origin, dl->origin);
 
-		dl->color.r = 255;
-		dl->color.g = 255;
-		dl->color.b = 255;
+			dl->radius = 130;
+			dl->dark = false;
+			dl->die = gEngfuncs.GetClientTime() + 0.03; //Kill it right away
 
-
+			dl->color.r = 255;
+			dl->color.g = 255;
+			dl->color.b = 255;
+		}
 
 
 		for (int i = 0; i < shrapz; i++) {
@@ -3017,8 +2993,6 @@ void EV_QuakeExplosionEffect(event_args_t* args) {
 		}
 	}
 
-
-	return;
 
 }
 
@@ -3826,8 +3800,10 @@ void EV_rocketAlphaTrailThink ( struct tempent_s *ent, float frametime, float cu
 
 	//not sure if "life" is necessary, seems to expire at the end of the last frame without any looping and/or cycle tags.  (framerate is 10, I assume,  10 frames per second:  9 frames, so  9 / 10 = 0.9 seconds to finish the anim.
 	TEMPENTITY* eh = gEngfuncs.pEfxAPI->R_TempSprite( ent->entity.origin, vec3_origin, EASY_CVAR_GET(rocketTrailAlphaScale), eckz, kRenderGlow, kRenderFxNoDissipation, 250.0 / 255.0, 0.91f, FTENT_SPRANIMATE );
-	//eh->fadeSpeed = 3.3f;  ???
-	//eh->entity.curstate.scale = EASY_CVAR_GET(rocketTrailAlphaScale);
+	if (eh != NULL) {
+		//eh->fadeSpeed = 3.3f;  ???
+		//eh->entity.curstate.scale = EASY_CVAR_GET(rocketTrailAlphaScale);
+	}
 
 	ent->entity.baseline.fuser1 = gEngfuncs.GetClientTime() + EASY_CVAR_GET(rocketTrailAlphaInterval);
 }

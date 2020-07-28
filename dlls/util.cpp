@@ -155,7 +155,6 @@ float cheat_barnacleEatsEverything = 0;
 BOOL globalPSEUDO_queueClientSendoff = FALSE;
 
 float globalPSEUDO_cameraMode = -1;
-float globalPSEUDO_forceFirstPersonIdleDelay = 1;
 
 float globalPSEUDO_canApplyGermanCensorship = 0;
 float globalPSEUDO_allowGermanModelsMem = -1;
@@ -1724,9 +1723,18 @@ void UTIL_BloodDrips( const Vector &origin, const Vector &direction, int color, 
 Vector UTIL_RandomBloodVector( void )
 {
 	Vector direction;
-	direction.x = RANDOM_FLOAT ( -1.2, 1.2 );
-	direction.y = RANDOM_FLOAT ( -1.2, 1.2 );
-	direction.z = RANDOM_FLOAT ( 0, 0.8 );
+	direction.x = RANDOM_FLOAT ( -1.0, 1.0 );
+	direction.y = RANDOM_FLOAT ( -1.0, 1.0 );
+	direction.z = RANDOM_FLOAT ( 0.3, 0.6 );
+	return direction;
+}
+// high, as in upwards moreso.
+Vector UTIL_RandomBloodVectorHigh(void)
+{
+	Vector direction;
+	direction.x = RANDOM_FLOAT(-0.3, 0.3);
+	direction.y = RANDOM_FLOAT(-0.3, 0.3);
+	direction.z = RANDOM_FLOAT(0.6, 1.0);
 	return direction;
 }
 
@@ -2556,6 +2564,8 @@ void UTIL_Explosion(int msg_dest, const float* pMsgOrigin, entvars_t* pev, const
 void UTIL_Explosion(int msg_dest, const float* pMsgOrigin, edict_t * ed, entvars_t* pev, const Vector &location, float offsetx, float offsety, float offsetz, short sprite, float size, int framerate, int flag, const Vector& altLocation, float shrapMod){
 	//easyPrintLine("ENTVARS_COUNT? : %d", ENTVARS_COUNT);
 
+
+	/*
 	MESSAGE_BEGIN(msg_dest, SVC_TEMPENTITY, location, ed);
 		WRITE_BYTE(TE_EXPLOSION);		// This makes a dynamic light and the explosion sprites/sound
 		WRITE_COORD(location.x + offsetx);	// Send to PAS because of the sound
@@ -2566,9 +2576,9 @@ void UTIL_Explosion(int msg_dest, const float* pMsgOrigin, edict_t * ed, entvars
 		WRITE_BYTE(framerate); // framerate
 		WRITE_BYTE(flag);
 	MESSAGE_END();
+	*/
 
-
-	/*
+	
 	if(EASY_CVAR_GET(cl_explosion) == 0){
 		MESSAGE_BEGIN(msg_dest, SVC_TEMPENTITY, pMsgOrigin, ed );
 			WRITE_BYTE( TE_EXPLOSION );		// This makes a dynamic light and the explosion sprites/sound
@@ -2583,7 +2593,7 @@ void UTIL_Explosion(int msg_dest, const float* pMsgOrigin, edict_t * ed, entvars
 	}else{
 		UTIL_QuakeExplosion(msg_dest, pMsgOrigin, ed, pev, altLocation, offsetx, offsety, offsetz, shrapMod);
 	}//END OF cl_explosion check
-	*/
+	
 
 }//END OF UTIL_Explosion
 

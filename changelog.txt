@@ -91,5 +91,32 @@ Various scripted-sequence breaking problems done, tested with a1a2's garg vs. hg
 
 More unused scientist sounds added and tiny chance of a few pre-disaster ones to show up after disaster ('wear ties' and hungry ones.  They are whiny nerds after all)
 
+---------------------------------------------------------------------------------------------
 
+2.0_M 
+
+Ladder logic changed, faster overall for alpha (cl_ladder 0), slower for retail-style (cl_ladder 1).
+Overall, gap between the two in speed greatly reduced.
+
+Battery sprites better scaled to not include dead space in the partial shading.
+That is, 0 to 10% should make a difference in the appearance of the battery, not fill in empty
+space below the battery (no change in appearance).
+
+---------------------------------------------------------------------------------------------
+
+2.0_N
+
+NPC walker interp glitch (jitter while moving) fixed.
+
+"deploy glock since saving game anim delaying to show silencer" issue fixed.
+
+In skill.cfg, using "-1" will stop a timed damage type from having any effect, even the icon that "0" still gives.
+Only bleeding listens for a value of -1 so far to guarantee never showing the icon, ordinary timed-damage logic runs infrequently and can miss it.
+
+Timed damages also no longer deal damage during the immediate frame they are given.  That is, a zombie slash of 25 damage used to deal 26 (bleeding's '1' immediately),
+on top of the duration times damage (15*1 on medium).  This also means damage durations of 0 or -1 won't deal any damage.
+
+***able to get stuck in scientists at a vending machine & inspecting machines, TODO...***
+
+---------------------------------------------------------------------------------------------
 

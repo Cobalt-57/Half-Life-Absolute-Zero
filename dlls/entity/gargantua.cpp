@@ -1887,13 +1887,13 @@ void CGargantua::RunTask( Task_t *pTask )
 				//that is, M_PI / 4.0f    (90 degrees, in radians).
 				//float halfRight = 0.7853981634f;
 
-				//float totalModScalar = ((abs(cos(theYaw)) - 0.70710678f )) ;
-				float totalModScalar =  (abs(cos(theYaw)) - abs(sin(theYaw)) )*0.45 + 0.65;
+				//float totalModScalar = ((fabs(cos(theYaw)) - 0.70710678f )) ;
+				float totalModScalar =  (fabs(cos(theYaw)) - fabs(sin(theYaw)) )*0.45 + 0.65;
 
 
 
-				float xMod = abs(cos(theYaw)) * 44 * totalModScalar;
-				float yMod = abs(sin(theYaw)) * 44 * totalModScalar;
+				float xMod = fabs(cos(theYaw)) * 44 * totalModScalar;
+				float yMod = fabs(sin(theYaw)) * 44 * totalModScalar;
 						
 				float finalX = 49 + xMod;
 				float finalY = 49 + yMod;

@@ -1217,6 +1217,12 @@ void CTalkMonster :: HandleAnimEvent( MonsterEvent_t *pEvent )
 		ShutUpFriends();
 		PlaySentence( pEvent->options, RANDOM_FLOAT(2.8, 3.4), VOL_NORM, ATTN_IDLE );
 		//ALERT(at_console, "script event speak\n");
+
+		// EXAMPLE OF PLAYING THE TIE SENTENCE:
+		// this works!  So supply the string "!SC_PIDLE1" to play that particular sentence.
+		// Or without '!' and without a number for the sentence group as usual, "SC_PIDLE".
+		//PlaySentence("!SC_PIDLE1", RANDOM_FLOAT(2.8, 3.4), VOL_NORM, ATTN_IDLE);
+
 		break;
 
 	default:
@@ -2242,9 +2248,6 @@ Schedule_t* CTalkMonster :: GetScheduleOfType ( int Type )
 		{
 			canGoRavingMad = TRUE;
 			
-
-
-
 
 			// if never seen player, try to greet him
 			if (!FBitSet(m_bitsSaid, bit_saidHelloPlayer))

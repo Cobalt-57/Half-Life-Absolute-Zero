@@ -641,7 +641,8 @@ public:
 
 	int convert_itbd_to_damage(int i);
 	void removeTimedDamage(int arg_type, int* m_bitsDamageTypeRef);
-	virtual void parse_itbd(int i, BYTE& bDuration);
+	virtual BYTE parse_itbd_duration(int i);
+	virtual void parse_itbd(int i);
 	virtual void timedDamage_nonFirstFrame(int i, int* m_bitsDamageTypeRef);
 	virtual void CheckTimeBasedDamage(void);
 	//void PreThink(void);

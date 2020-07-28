@@ -761,7 +761,8 @@ CBaseMonster::CBaseMonster(void){}
 BOOL CBaseMonster::usesSoundSentenceSave(void){return FALSE;}
 
 int CBaseMonster::convert_itbd_to_damage(int i){ return 0;}
-void CBaseMonster::parse_itbd(int i, BYTE& bDuration) {}
+BYTE CBaseMonster::parse_itbd_duration(int i) { return 0; };
+void CBaseMonster::parse_itbd(int i) {}
 void CBaseMonster::timedDamage_nonFirstFrame(int i, int* m_bitsDamageTypeRef) {}
 void CBaseMonster::CheckTimeBasedDamage(void){}
 //void CBaseMonster::Think(void){}
@@ -870,8 +871,9 @@ int  CBasePlayer::Classify ( void ) { return 0; }
 void CBasePlayer::PreThink(void) { }
 
 
-void CBasePlayer::parse_itbd(int i, BYTE& bDuration) {};
-void CBasePlayer::timedDamage_nonFirstFrame(int i, int* m_bitsDamageTypeRef) {};
+void CBasePlayer::parse_itbd(int i) {}
+BYTE CBasePlayer::parse_itbd_duration(int i) { return 0; }
+void CBasePlayer::timedDamage_nonFirstFrame(int i, int* m_bitsDamageTypeRef) {}
 
 void CBasePlayer :: UpdateGeigerCounter( void ) { }
 void CBasePlayer::CheckSuitUpdate() { }

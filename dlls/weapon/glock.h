@@ -27,80 +27,6 @@ enum glock_e {
 
 class CGlock : public CBasePlayerWeapon
 {
-public:
-
-	BOOL scheduleGlockDeletion;
-	BOOL includesGlockSilencer;
-	//BOOL playerHasGlockYet;
-
-	BOOL weaponCanHaveExtraCheck(CBasePlayer* pPlayer);
-	BOOL weaponPlayPickupSoundException(CBasePlayer* pPlayer);
-
-
-	void setExtraBulletFalse(void);
-	void setExtraBulletTrue(void);
-	BOOL getExtraBullet(void);
-	void setFiredSinceReloadFalse(void);
-	void setFiredSinceReloadTrue(void);
-	BOOL getFiredSinceReload(void);
-
-
-
-	//MODDD - this is necessary for  saving and loading, apparently.
-#ifndef CLIENT_DLL
-	int	Save(CSave& save);
-	int	Restore(CRestore& restore);
-	static	TYPEDESCRIPTION m_SaveData[];
-#endif
-
-	static float getUsingGlockOldReloadLogic(void);
-
-
-	//MODDD
-	virtual int ExtractAmmo(CBasePlayerWeapon* pWeapon);
-
-	BOOL nextAnimBackwards;
-
-	void Spawn(void);
-	void Precache(void);
-	int iItemSlot(void) { return 2; }
-	int GetItemInfo(ItemInfo* p);
-
-	int everSent;
-
-	//MODDD
-	CGlock();
-	void customAttachToPlayer(CBasePlayer* pPlayer);
-	void ItemPreFrame(void);
-	void ItemPostFrame(void);
-
-	void Holster(int skiplocal = 0);
-
-
-	void SendWeaponAnim(int iAnim, int skiplocal = 1, int body = 0);
-
-
-	void PrimaryAttack(void);
-	void SecondaryAttack(void);
-
-	void GlockFire(float flSpread, float flCycleTime, BOOL fUseAutoAim);
-	BOOL Deploy(void);
-	void Reload(void);
-	void WeaponIdle(void);
-
-	//MODDD - NEW, event.
-	void OnReloadApply(void);
-
-	virtual BOOL UseDecrement(void)
-	{
-#if defined( CLIENT_WEAPONS )
-		return TRUE;
-#else
-		return FALSE;
-#endif
-	}
-
-
 private:
 	int m_iShell;
 
@@ -125,6 +51,82 @@ private:
 
 	unsigned short m_usFireGlock1;
 	unsigned short m_usFireGlock2;
+
+public:
+
+	BOOL scheduleGlockDeletion;
+	BOOL includesGlockSilencer;
+	//BOOL playerHasGlockYet;
+
+	int everSent;
+	BOOL nextAnimBackwards;
+
+
+
+
+
+
+	static float getUsingGlockOldReloadLogic(void);
+
+	BOOL weaponCanHaveExtraCheck(CBasePlayer* pPlayer);
+	BOOL weaponPlayPickupSoundException(CBasePlayer* pPlayer);
+
+	void setExtraBulletFalse(void);
+	void setExtraBulletTrue(void);
+	BOOL getExtraBullet(void);
+	void setFiredSinceReloadFalse(void);
+	void setFiredSinceReloadTrue(void);
+	BOOL getFiredSinceReload(void);
+
+	//MODDD - this is necessary for  saving and loading, apparently.
+#ifndef CLIENT_DLL
+	int	Save(CSave& save);
+	int	Restore(CRestore& restore);
+	static	TYPEDESCRIPTION m_SaveData[];
+#endif
+
+	//MODDD
+	virtual int ExtractAmmo(CBasePlayerWeapon* pWeapon);
+
+	void Spawn(void);
+	void Precache(void);
+	int iItemSlot(void) { return 2; }
+	int GetItemInfo(ItemInfo* p);
+
+	//MODDD
+	CGlock();
+	void customAttachToPlayer(CBasePlayer* pPlayer);
+	void ItemPreFrame(void);
+	void ItemPostFrame(void);
+
+	void Holster(int skiplocal = 0);
+
+	void PrimaryAttack(void);
+	void SecondaryAttack(void);
+
+	void GlockFire(float flSpread, float flCycleTime, BOOL fUseAutoAim);
+	BOOL Deploy(void);
+	void Reload(void);
+	void WeaponIdle(void);
+
+	//MODDD - NEW, event.
+	void OnReloadApply(void);
+
+	void SendWeaponAnim(int iAnim, int skiplocal = 1, int body = 0);
+
+	void SetBodyFromDefault(void);
+
+
+	virtual BOOL UseDecrement(void)
+	{
+#if defined( CLIENT_WEAPONS )
+		return TRUE;
+#else
+		return FALSE;
+#endif
+	}
+
+
 
 };
 

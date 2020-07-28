@@ -64,7 +64,6 @@ EASY_CVAR_EXTERN(drawNodeSpecial)
 EASY_CVAR_EXTERN(drawNodeConnections)
 EASY_CVAR_EXTERN(drawNodeAlternateTime)
 EASY_CVAR_EXTERN(nodeSearchStartVerticalOffset)
-extern float globalPSEUDO_forceFirstPersonIdleDelay;
 EASY_CVAR_EXTERN(timedDamageDeathRemoveMode)
 extern float globalPSEUDO_cameraMode;
 EASY_CVAR_EXTERN(mirrorsDoNotReflectPlayer)
@@ -3862,11 +3861,14 @@ void CBasePlayer::PreThink(void)
 		m_iHideHUD |= HIDEHUD_FLASHLIGHT;
 
 
+
+	//MODDD - moved here, so that any damages forced to be removed by "-1" skill CVars never make it to the HUD.
+	CheckTimeBasedDamage();
+
 	// JOHN: checks if new client data (for HUD and view control) needs to be sent to the client
 	UpdateClientData();
 	
 	//return;
-	CheckTimeBasedDamage();
 	CheckSuitUpdate();
 
 
@@ -4167,12 +4169,31 @@ void CBasePlayer::PreThink(void)
 
 
 
+BYTE CBasePlayer::parse_itbd_duration(int i) {
+
+	switch (i)
+	{
+	//NOTE - PLAYER ONLY.
+	case itbd_DrownRecover:
+		return 4;	// get up to 5*10 = 50 points back
+
+	case itbd_Bleeding:
+		return gSkillData.tdmg_bleeding_duration;
+	default:
+		// Unhandled?  Let the monster class handle it instead
+		return CBaseMonster::parse_itbd_duration(i);
+	}
+
+}//parse_itbd_duration
+
+
+
 //MODDD - CheckTimeBasedDamage moved to basemonster.h/.cpp.
 // Instead, player.cpp will override certain parts of CheckTimeBasedDamage (below) to
 // do extra things or some things differently in key areas.  Otherwise, most logic
 // now applies to all monsters too.
 
-void CBasePlayer::parse_itbd(int i, BYTE& bDuration) {
+void CBasePlayer::parse_itbd(int i) {
 	// In short, the point is to work with types unsupported by the base monster (itbd_DrownRecover)
 	// or override how existing ones work (bleeding).
 
@@ -4192,11 +4213,11 @@ void CBasePlayer::parse_itbd(int i, BYTE& bDuration) {
 			TakeHealth(idif, DMG_GENERIC);
 			m_idrownrestored += idif;
 		}
-		bDuration = 4;	// get up to 5*10 = 50 points back
 	break;
 	// Overwriting this one compltely to use UTIL_MakeVectors instead of UTIL_MakeAimVectors.
 	// Yes, the player uses MakeVectors and monsters use MakeAimVectors.   Go.   Figure.
 	case itbd_Bleeding:
+		
 		// this will always ignore the armor (hence DMG_TIMEDEFFECT).
 		TakeDamage(pev, pev, BLEEDING_DAMAGE, 0, damageType | DMG_TIMEDEFFECTIGNORE);
 
@@ -4204,12 +4225,11 @@ void CBasePlayer::parse_itbd(int i, BYTE& bDuration) {
 		//pev->origin + pev->view_ofs
 		//BodyTargetMod(g_vecZero)
 		DrawAlphaBlood(BLEEDING_DAMAGE, pev->origin + pev->view_ofs + gpGlobals->v_forward * RANDOM_FLOAT(9, 13) + gpGlobals->v_right * RANDOM_FLOAT(-5, 5) + gpGlobals->v_up * RANDOM_FLOAT(4, 7));
-
-		bDuration = gSkillData.tdmg_bleeding_duration;
+		
 	break;
 	default:
 		// Unhandled?  Let the monster class handle it instead
-		CBaseMonster::parse_itbd(i, bDuration);
+		CBaseMonster::parse_itbd(i);
 	}
 
 }//END OF parse_itbd
@@ -6102,6 +6122,9 @@ void CBasePlayer::_commonReset(void){
 	framesUntilPushStops = -1;
 
 
+	m_bitsDamageTypeForceShow = 0;
+	m_bitsDamageTypeModForceShow = 0;
+
 }//END OF _commonReset
 
 
@@ -6114,7 +6137,6 @@ void CBasePlayer::_commonReset(void){
 //  ForceClientDllUpdate
 void CBasePlayer::commonReset(void){
 	_commonReset();
-
 
 	recentMajorTriggerDamage = FALSE;
 	lastBlockDamageAttemptReceived = -5;
@@ -6266,8 +6288,8 @@ void CBasePlayer::commonReset(void){
 
 
 	//MODDD - unsure.  But most client things are reset, I think this should be okay.
-	m_bitsHUDDamage		= -1;
-	m_bitsModHUDDamage		= -1;
+	m_bitsHUDDamage = -1;
+	m_bitsModHUDDamage = -1;
 
 	//MODDD
 	pev->renderfx |= ISPLAYER;
@@ -6782,7 +6804,10 @@ int CBasePlayer::Restore( CRestore &restore )
 	OnFirstAppearance();
 
 	friendlyCheckTime = 0;  //can check again.
-	globalPSEUDO_forceFirstPersonIdleDelay = 1;
+	
+	//MODDD - Remove this var at some point, not using this anymore.
+	// Causes weirdness at transitions, unsure if it's even necessary at a fresh spawn.
+	//globalPSEUDO_forceFirstPersonIdleDelay = 1;
 
 
 	////easyPrintLine("PLAYER RESTORE METHOD CALLED!");
@@ -8108,19 +8133,19 @@ void CBasePlayer::ItemPreFrame()
 
 
 
+	/*
 	//MODDD - just the first time, in case of load / starting out with an item
+	// NO.
 	if(globalPSEUDO_forceFirstPersonIdleDelay == 1){
-		
 		CBasePlayerWeapon* weapTest = (CBasePlayerWeapon*)m_pActiveItem->GetWeaponPtr();
-
 		if(weapTest != NULL){
 			//forceNoWeaponLoop = TRUE;
 			weapTest->forceBlockLooping();
 			weapTest->m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + weapTest->randomIdleAnimationDelay();
 			globalPSEUDO_forceFirstPersonIdleDelay = 0;
 		}
-		
 	}
+	*/
 
 
 	//MODDD - reference to new method.  Override this method in any item / weapon to get a "think"
@@ -8727,10 +8752,20 @@ void CBasePlayer :: UpdateClientData( void )
 				damageOrigin = pEntity->Center();
 		}
 
+		
+		int forbiddenBits = 0;
+		int forbiddenBitsMod = 0;
+
+		if (gSkillData.tdmg_bleeding_duration < 0) {
+			forbiddenBitsMod |= DMG_BLEEDING;
+		}
+
+
 		// only send down damage type that have hud art
-		int visibleDamageBits = m_bitsDamageType & DMG_SHOWNHUD;
+		//MODDD - the "ForceShow" bitmasks can force an icon to be shown this call, even if it does not do damage
+		int visibleDamageBits = ((m_bitsDamageType | m_bitsDamageTypeForceShow) & ~forbiddenBits) & DMG_SHOWNHUD;
 		//MODDD
-		int visibleDamageBitsMod = m_bitsDamageTypeMod & DMG_SHOWNHUDMOD;
+		int visibleDamageBitsMod = ((m_bitsDamageTypeMod | m_bitsDamageTypeModForceShow) & ~forbiddenBitsMod) & DMG_SHOWNHUDMOD;
 
 		MESSAGE_BEGIN( MSG_ONE, gmsgDamage, NULL, pev );
 			WRITE_BYTE( pev->dmg_save );
@@ -8746,7 +8781,11 @@ void CBasePlayer :: UpdateClientData( void )
 			WRITE_COORD( damageOrigin.y );
 			WRITE_COORD( damageOrigin.z );
 		MESSAGE_END();
-	
+
+		//MODDD reset these, only good one frame
+		m_bitsDamageTypeForceShow = 0;
+		m_bitsDamageTypeModForceShow = 0;
+
 		pev->dmg_take = 0;
 		pev->dmg_save = 0;
 		rawDamageSustained = 0;

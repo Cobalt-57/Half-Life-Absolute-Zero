@@ -404,6 +404,8 @@ BOOL CGlock::Deploy( )
 	//??? ???
 	forceBlockLooping();
 
+	SetBodyFromDefault();
+
 	//MODDD - is including the body here (not forced to 0) okay?
 	return DefaultDeploy( "models/v_9mmhandgun.mdl", "models/p_9mmhandgun.mdl", GLOCK_DRAW, "onehanded", /*UseDecrement() ? 1 : 0*/ 0, (m_fireState& ~128), (16.0f/20.0f), -1 );
 }
@@ -570,19 +572,7 @@ void CGlock::ItemPostFrame(){
 		}
 		*/
 		
-
-		//defaults.
-		if(m_fInAttack == 1){
-			//silencer off.
-			m_fireState = 0;
-			m_pPlayer->pev->renderfx &= ~NOMUZZLEFLASH;  //restore muzzle flash.
-		}else if(m_fInAttack == 2){
-			//silencer on.
-			m_fireState = 1;
-			//pev->renderfx &= ~NOMUZZLEFLASH;
-			m_pPlayer->pev->renderfx |= NOMUZZLEFLASH;
-			//m_pPlayer->pev->iuser2 = 200;
-		}
+		SetBodyFromDefault();
 
 		//----
 
@@ -1206,6 +1196,27 @@ void CGlock::SendWeaponAnim(int iAnim, int skiplocal, int body){
 
 	CBasePlayerWeapon::SendWeaponAnim(iAnim, skiplocal, body);
 }
+
+
+//MODDD - set the body choice (given by m_fireState) from m_fInAttack, which is saved.
+void CGlock::SetBodyFromDefault(void) {
+
+	//defaults.
+	if (m_fInAttack == 1) {
+		//silencer off.
+		m_fireState = 0;
+		m_pPlayer->pev->renderfx &= ~NOMUZZLEFLASH;  //restore muzzle flash.
+	}
+	else if (m_fInAttack == 2) {
+		//silencer on.
+		m_fireState = 1;
+		//pev->renderfx &= ~NOMUZZLEFLASH;
+		m_pPlayer->pev->renderfx |= NOMUZZLEFLASH;
+		//m_pPlayer->pev->iuser2 = 200;
+	}
+}//SetBodyFromDefault
+
+
 
 
 

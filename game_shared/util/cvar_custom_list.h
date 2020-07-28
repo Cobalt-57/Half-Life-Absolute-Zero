@@ -676,8 +676,8 @@
 #define DEFAULT_flyerKilledFallingLoop 1
 #define DEFAULT_floaterDummy 0
 #define DEFAULT_barneyDummy 0
-#define DEFAULT_ladderCycleMulti 0.9
-#define DEFAULT_ladderSpeedMulti 1.55
+#define DEFAULT_ladderCycleMulti 1
+#define DEFAULT_ladderSpeedMulti 1
 #define DEFAULT_barnacleGrabNoInterpolation 0
 #define DEFAULT_hideDamage 0
 #define DEFAULT_timedDamage_brightnessMax 256
@@ -718,6 +718,7 @@
 #define DEFAULT_hud_batteryhiddendead 1
 #define DEFAULT_hyperBarney 0
 #define DEFAULT_monsterKilledToss 2
+#define DEFAULT_interpolation_movetypestep_mindelta 0.06
 
 
 
@@ -2826,6 +2827,7 @@
 	EASY_CVAR_DECLARATION_SERVER(hud_batteryhiddendead)\
 	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY(hyperBarney)\
 	EASY_CVAR_DECLARATION_SERVER(monsterKilledToss)\
+	EASY_CVAR_DECLARATION_SERVER(interpolation_movetypestep_mindelta)\
 	DUMMY
 
 
@@ -3334,6 +3336,7 @@
 	EASY_CVAR_DECLARATION_CLIENT(hud_batteryhiddendead)\
 	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY(hyperBarney)\
 	EASY_CVAR_DECLARATION_CLIENT(monsterKilledToss)\
+	EASY_CVAR_DECLARATION_CLIENT(interpolation_movetypestep_mindelta)\
 	DUMMY
 
 #define EASY_CVAR_UPDATE_SERVER_MASS\
@@ -3840,6 +3843,7 @@
 	EASY_CVAR_UPDATE_SERVER(hud_batteryhiddendead)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(hyperBarney)\
 	EASY_CVAR_UPDATE_SERVER(monsterKilledToss)\
+	EASY_CVAR_UPDATE_SERVER(interpolation_movetypestep_mindelta)\
 	DUMMY
 
 #define EASY_CVAR_UPDATE_CLIENT_MASS\
@@ -4346,6 +4350,7 @@
 	EASY_CVAR_UPDATE_CLIENT(hud_batteryhiddendead)\
 	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY(hyperBarney)\
 	EASY_CVAR_UPDATE_CLIENT(monsterKilledToss)\
+	EASY_CVAR_UPDATE_CLIENT(interpolation_movetypestep_mindelta)\
 	DUMMY
 
 #define EASY_CVAR_CREATE_SERVER_SETUP_MASS\
@@ -4852,6 +4857,7 @@
 	EASY_CVAR_CREATE_SERVER_SETUP_A_CLIENTONLY(hud_batteryhiddendead)\
 	EASY_CVAR_CREATE_SERVER_SETUP_A_SERVERONLY_DEBUGONLY(hyperBarney)\
 	EASY_CVAR_CREATE_SERVER_SETUP_A_SERVERONLY(monsterKilledToss)\
+	EASY_CVAR_CREATE_SERVER_SETUP_A_CLIENTONLY(interpolation_movetypestep_mindelta)\
 	DUMMY
 
 #define EASY_CVAR_CREATE_SERVER_MASS\
@@ -5358,6 +5364,7 @@
 	EASY_CVAR_CREATE_SERVER_A_CLIENTONLY(hud_batteryhiddendead)\
 	EASY_CVAR_CREATE_SERVER_A_SERVERONLY_DEBUGONLY(hyperBarney)\
 	EASY_CVAR_CREATE_SERVER_A_SERVERONLY(monsterKilledToss)\
+	EASY_CVAR_CREATE_SERVER_A_CLIENTONLY(interpolation_movetypestep_mindelta)\
 	DUMMY
 
 
@@ -5865,6 +5872,7 @@
 	EASY_CVAR_CREATE_CLIENT_A_CLIENTONLY(hud_batteryhiddendead)\
 	EASY_CVAR_CREATE_CLIENT_A_SERVERONLY_DEBUGONLY(hyperBarney)\
 	EASY_CVAR_CREATE_CLIENT_A_SERVERONLY(monsterKilledToss)\
+	EASY_CVAR_CREATE_CLIENT_A_CLIENTONLY(interpolation_movetypestep_mindelta)\
 	DUMMY
 
 #define EASY_CVAR_RESET_MASS\
@@ -6370,6 +6378,7 @@
 	EASY_CVAR_RESET(hud_batteryhiddendead)\
 	EASY_CVAR_RESET_DEBUGONLY(hyperBarney)\
 	EASY_CVAR_RESET(monsterKilledToss)\
+	EASY_CVAR_RESET(interpolation_movetypestep_mindelta)\
 	DUMMY
 
 #define EASY_CVAR_EXTERN_MASS\
@@ -6876,5 +6885,6 @@
 	EASY_CVAR_EXTERN(hud_batteryhiddendead)\
 	EASY_CVAR_EXTERN_DEBUGONLY(hyperBarney)\
 	EASY_CVAR_EXTERN(monsterKilledToss)\
+	EASY_CVAR_EXTERN(interpolation_movetypestep_mindelta)\
 	DUMMY
 
