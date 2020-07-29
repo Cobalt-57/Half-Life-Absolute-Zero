@@ -252,6 +252,7 @@ void UTIL_PRECACHESOUND(char* path){}
 
 GENERATE_TRACEATTACK_IMPLEMENTATION_DUMMY_CLIENT(CBaseEntity)
 GENERATE_TAKEDAMAGE_IMPLEMENTATION_DUMMY_CLIENT(CBaseEntity)
+BOOL CBaseEntity::ChangeHealthFiltered(entvars_t* pevAttacker, float flDamage) { return FALSE; }
 float CBaseMonster::hitgroupDamage(float flDamage, int bitsDamageType, int bitsDamageTypeMod, int iHitgroup){return FALSE;}
 
 
@@ -657,6 +658,7 @@ BOOL CBaseMonster :: GetEnemy (BOOL arg_forceWork ){return FALSE;}
 
 GENERATE_TRACEATTACK_IMPLEMENTATION_DUMMY_CLIENT(CBaseMonster)
 GENERATE_TAKEDAMAGE_IMPLEMENTATION_DUMMY_CLIENT(CBaseMonster)
+BOOL CBaseMonster::ChangeHealthFiltered(entvars_t* pevAttacker, float flDamage) { return FALSE; }
 
 
 Task_t* CBaseMonster::GetTask(void){return NULL;}
@@ -765,7 +767,10 @@ BYTE CBaseMonster::parse_itbd_duration(int i) { return 0; };
 void CBaseMonster::parse_itbd(int i) {}
 void CBaseMonster::timedDamage_nonFirstFrame(int i, int* m_bitsDamageTypeRef) {}
 void CBaseMonster::CheckTimeBasedDamage(void){}
-//void CBaseMonster::Think(void){}
+
+void CBaseMonster::attemptResetTimedDamage(BOOL forceReset) {}
+void CBaseMonster::applyNewTimedDamage(int arg_bitsDamageType, int arg_bitsDamageTypeMod) {}
+
 
 BOOL CBaseMonster::isSizeGiant(void){return FALSE;}
 BOOL CBaseMonster::isOrganic(){return FALSE;}

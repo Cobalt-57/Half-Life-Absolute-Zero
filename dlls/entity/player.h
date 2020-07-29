@@ -350,10 +350,6 @@ public:
 
 	BOOL recentlyGrantedGlockSilencer;
 
-	//float glockSilencerOnVar;
-
-	//float egonAltFireOnVar;
-
 
 	float cheat_infiniteclipMem;
 	float cheat_infiniteammoMem;
@@ -378,9 +374,6 @@ public:
 	//MODDD - created to differentiate between "m_fLongJump" (always on now) and having ever picked
 	//up the long jump item itself, if needed (mostly to satisfy the hazard course).
 	BOOL hasLongJumpItem;
-
-	// MOVED TO CBaseMonster
-	//BOOL	m_rgbTimeBasedFirstFrame[CDMG_TIMEBASED];
 
 	int hasGlockSilencer;
 	int hasGlockSilencerMem;

@@ -61,7 +61,7 @@ int iAgruntMuzzleFlash;
 
 
 //MODDD - macro
-#define HITGROUP_AGRUNT_HELMET 10
+#define HITGROUP_AGRUNT_ARMOR 10
 
 
 
@@ -957,7 +957,9 @@ GENERATE_TRACEATTACK_IMPLEMENTATION(CAGrunt)
 	//easyForcePrintLine("AGrunt:: TraceAttack says I took %.2f damage.", flDamage);
 	//easyForcePrintLine("agrunt: TraceAttack hitgroup:%d B:%d S:%d C:%d", ptr->iHitgroup, (bitsDamageType & (DMG_BULLET)), (bitsDamageType & (DMG_SLASH)), (bitsDamageType & (DMG_CLUB))   );
 	//easyForcePrintLine("ILL %d %d", (ptr->iHitgroup), (bitsDamageType & (DMG_BULLET | DMG_SLASH | DMG_CLUB)) != 0 );
-	if ( ptr->iHitgroup == HITGROUP_AGRUNT_HELMET && (bitsDamageType & (DMG_BULLET | DMG_SLASH | DMG_CLUB)))
+
+	// NOTICE - this hitgroup is armor anywhere on the agrunt, not just the helmet like several other entities.
+	if ( ptr->iHitgroup == HITGROUP_AGRUNT_ARMOR && (bitsDamageType & (DMG_BULLET | DMG_SLASH | DMG_CLUB)))
 	{
 		// hit armor
 		if ( pev->dmgtime != gpGlobals->time || (RANDOM_LONG(0,10) < 1) )

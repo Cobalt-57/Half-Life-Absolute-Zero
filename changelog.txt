@@ -120,3 +120,18 @@ on top of the duration times damage (15*1 on medium).  This also means damage du
 
 ---------------------------------------------------------------------------------------------
 
+2.0_O
+
+Hits to Barney's helmet no longer cause blood or hit sounds, just like hgrunt and agrunt helmet/armor hits
+
+Other old scientist pain sounds added back in.
+
+PainSound reworked a bit, scientists and barnies will make pain noises less often on taking timed damage.
+
+ALSO, timed damage does 15% damage to talkers, 60% for all other monsters/NPCs.
+This makes timed damages much less of a certain 'death sentence' for NPC talkers.
+
+Few sentences from unused files for Barnies added.
+
+NPC's forced to unfollow from reaching the follower limit (1 by default) will not say the unfollow line.
+Unfollow sentences also won't be attempted for unfollowing due to taking damage from other monsters.

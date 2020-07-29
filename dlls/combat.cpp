@@ -537,13 +537,19 @@ BOOL CBaseMonster :: HasHumanGibs( void )
 	int myClass = Classify();
 
 	//MODDD NOTICE - this is before the "IsOrganic()" check was made.
-	//This will still catch robot replacement models, but that is fine, they are handled in GibMonster under a HasHumanGibs check.
-	if ( myClass == CLASS_HUMAN_MILITARY ||
-		 myClass == CLASS_PLAYER_ALLY	||
-		 myClass == CLASS_HUMAN_PASSIVE  ||
-		 myClass == CLASS_PLAYER )
+	// This will still catch robot replacement models, but that is fine, they are handled in GibMonster under a HasHumanGibs check.
+	// Other odd cases (apache) have dummied GibMonster methods so this won't matter.
+	if (
 
-		 return TRUE;
+		myClass == CLASS_HUMAN_MILITARY ||
+		myClass == CLASS_PLAYER_ALLY ||
+		myClass == CLASS_HUMAN_PASSIVE ||
+		myClass == CLASS_PLAYER
+	)
+	{
+
+		return TRUE;
+	}
 
 	return FALSE;
 }
@@ -1963,6 +1969,93 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBaseEntity)
 }
 
 
+//MODDD - new
+BOOL CBaseEntity::ChangeHealthFiltered(entvars_t* pevAttacker, float flDamage) {
+	BOOL canDoDmg = FALSE;
+
+	if (EASY_CVAR_GET(nothingHurts) == 0) {
+		canDoDmg = TRUE;
+	}
+	else if (EASY_CVAR_GET(nothingHurts) == 1) {
+		canDoDmg = FALSE;
+	}else if (EASY_CVAR_GET(nothingHurts) == 2) {
+		// only the player can deal damage.
+		CBaseEntity* attacka;
+		if (pevAttacker != NULL) {
+			attacka = CBaseEntity::Instance(pevAttacker);
+		}else {
+			attacka = NULL;
+		}
+		
+		if (attacka != NULL && attacka->IsPlayer()) {
+			canDoDmg = TRUE;
+		}
+	}//END Of "nothingHurts" CVar check.
+
+	if (canDoDmg) {
+		// ordinary take-damage.
+		pev->health -= flDamage;
+		return TRUE;
+	}else {
+		g_rawDamageCumula = 0;
+		return FALSE;
+	}
+}//ChangeHealthFiltered
+
+
+
+
+//MODDD - new.  Similar to CBaseEntity's version, but a few more variables to take advantage of for monsters receiving damage.
+BOOL CBaseMonster::ChangeHealthFiltered(entvars_t* pevAttacker, float flDamage) {
+	BOOL canDoDmg = FALSE;
+
+	if (EASY_CVAR_GET(nothingHurts) == 0) {
+		canDoDmg = TRUE;
+	}
+	else if (EASY_CVAR_GET(nothingHurts) == 1) {
+		canDoDmg = FALSE;
+	}
+	else if (EASY_CVAR_GET(nothingHurts) == 2) {
+		// only the player can deal damage.
+		CBaseEntity* attacka;
+		if (pevAttacker != NULL) {
+			attacka = CBaseEntity::Instance(pevAttacker);
+		}
+		else {
+			attacka = NULL;
+		}
+
+		if (attacka != NULL && attacka->IsPlayer()) {
+			canDoDmg = TRUE;
+		}
+	}//END Of "nothingHurts" CVar check.
+
+	if (canDoDmg) {
+		if (this->blockDamage == TRUE) {
+			// don't take damage.
+			g_rawDamageCumula = 0;  //whoopsie
+			return FALSE;
+		}
+		else if (this->buddhaMode == TRUE) {
+			// allow the loss of health, but have a minimum of 1 hit point.
+			pev->health = max(pev->health - flDamage, 1);
+			return TRUE;
+		}
+		else {
+			// ordinary take-damage.
+			pev->health -= flDamage;
+			return TRUE;
+		}
+	}
+	else {
+		g_rawDamageCumula = 0;
+		return FALSE;
+	}
+
+}//ChangeHealthFiltered
+
+
+
 
 // give health
 int CBaseEntity::TakeHealth( float flHealth, int bitsDamageType )
@@ -2145,17 +2238,14 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBaseMonster){
 	//TEMP
 	//bitsDamageType |= DMG_POISON;
 
-	float flTake;
-	Vector	vecDir;
+	float flDamageTake;
+	Vector vecDir;
 
 	if (!pev->takedamage) {
 		g_rawDamageCumula = 0;  //whoopsie
 		return 0;
 	}
 
-	if (FClassnameIs(pev, "monster_human_assault")) {
-		int xxx = 235;
-	}
 
 	////virtual BOOL	IsAlive( void ) { return (pev->deadflag != DEAD_DEAD); } inv:  == DEAD_DEAD
 	//virtual BOOL	IsAlive( void ) { return (pev->deadflag == DEAD_NO); }       inv:  != DEAD_NO
@@ -2186,6 +2276,12 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBaseMonster){
 		return deadTakeDmgRes;
 	}
 
+
+	if (pev->deadflag == DEAD_NO && m_MonsterState != MONSTERSTATE_SCRIPT && m_MonsterState != MONSTERSTATE_PRONE) {
+		OnTakeDamageSetConditions(pevInflictor, pevAttacker, flDamage, bitsDamageType, bitsDamageTypeMod);
+	}
+
+	//MODDD NOTE - can include PainSound in the same m_MonsterState restrictions above if wanted.
 	if ( pev->deadflag == DEAD_NO )
 	{
 		// no pain sound during death animation.
@@ -2193,19 +2289,76 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBaseMonster){
 	}
 
 	//!!!LATER - make armor consideration here!
-	flTake = flDamage;
+	flDamageTake = flDamage;
+
+	//MODDD - little edit though.  Talkmonsters and all other non-player damages take only a portion of timed damage.
+	// Their health is often lower than the player's 100 (especially Talkers), so this makes these forms of damage less
+	// game-breaking.
+	if (bitsDamageTypeMod & (DMG_TIMEDEFFECT | DMG_TIMEDEFFECTIGNORE)) {
+		if (this->isTalkMonster()) {
+			flDamageTake = flDamageTake * 0.15;
+		}
+		else if (!IsPlayer()) {
+			// non-player monster?
+			flDamageTake = flDamageTake * 0.60;
+		}
+	}
+
 
 
 	if(pev->deadflag == DEAD_NO){
 
+
 		if(!blockTimedDamage){
+
+
+			int myClassify = Classify();
+
+			if (
+				// because apaches are HUMAN_MILITARY, not MACHINE, but taking poison is zany.
+				myClassify == CLASS_MACHINE || (!isOrganic()) ||
+				(
+					EASY_CVAR_GET(AlienRadiationImmunity) == 1 &&
+					(
+						myClassify == CLASS_ALIEN_MILITARY ||
+						myClassify == CLASS_ALIEN_PASSIVE ||
+						myClassify == CLASS_ALIEN_MONSTER ||
+						myClassify == CLASS_ALIEN_PREY ||
+						myClassify == CLASS_ALIEN_PREDATOR ||
+						myClassify == CLASS_PLAYER_BIOWEAPON ||
+						myClassify == CLASS_ALIEN_BIOWEAPON ||
+						myClassify == CLASS_BARNACLE
+						)
+					)
+				)
+			{
+				// no radiation for you
+				bitsDamageType &= ~DMG_RADIATION;
+			}
+
+			if (myClassify == CLASS_MACHINE || (!isOrganic())) {
+				// no poison for you
+				bitsDamageType &= ~DMG_POISON;
+				bitsDamageTypeMod &= ~DMG_POISONHALF;
+			}
+
+
+			if (bitsDamageTypeMod & DMG_POISONHALF) {
+				bitsDamageType |= DMG_POISON;  // let it be so
+			}
+
+			applyNewTimedDamage(bitsDamageType, bitsDamageTypeMod);
+
 			// set damage type sustained
 			m_bitsDamageType |= bitsDamageType;
 			m_bitsDamageTypeMod |= bitsDamageTypeMod;
+
 		}else{
 			m_bitsDamageType |= (bitsDamageType & ~DMG_TIMEBASED);
 			m_bitsDamageTypeMod |= (bitsDamageTypeMod & ~DMG_TIMEBASEDMOD);
 		}
+
+
 	}else{
 		// dead?  can't take any timed damages.
 		m_bitsDamageType = 0;
@@ -2241,7 +2394,7 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBaseMonster){
 		if ( pevInflictor )
 			pev->dmg_inflictor = ENT(pevInflictor);
 
-		pev->dmg_take += flTake;
+		pev->dmg_take += flDamageTake;
 
 		// check for godmode or invincibility
 		if ( pev->flags & FL_GODMODE )
@@ -2261,22 +2414,11 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBaseMonster){
 	//easyPrintLine("CBaseMonster:: name:%s:%d TOOK DAMAGE. health:%.2f Damage:%.2f Blast:%d Gib:: N:%d A:%d", getClassname(), monsterID, pev->health, flDamage, (bitsDamageType & DMG_BLAST), (bitsDamageType & DMG_NEVERGIB), (bitsDamageType & DMG_ALWAYSGIB) );
 	//easyForcePrintLine("TakeDamage. %s:%d health:%.2f gib damge bits: %d %d", this->getClassname(), monsterID, pev->health, (bitsDamageType&DMG_NEVERGIB), (bitsDamageType&DMG_ALWAYSGIB) );
 	
-	if(EASY_CVAR_GET(nothingHurts) == 0 || (EASY_CVAR_GET(nothingHurts) == 2 && Instance(pevAttacker)->IsPlayer() ) ){
-		// do the damage
 
-		if(this->blockDamage == TRUE){
-			//don't take damage.
-			g_rawDamageCumula = 0;  //whoopsie
-			return 0;
-		}else if(this->buddhaMode == TRUE){
-			//allow the loss of health, but have a minimum of 1 hit point.
-			pev->health = max(pev->health - flTake, 1);
-		}else{
-			//ordinary take-damage.
-			pev->health -= flTake;
-		}
-	}//END Of "nothingHurts" CVar check.
-
+	if (!ChangeHealthFiltered(pevAttacker, flDamageTake)) {
+		// call to block the rest of the method if this returns FALSE. Sets g_rawDamageCumula already if that happens.
+		return 0;
+	}
 	
 	// HACKHACK Don't kill monsters in a script.  Let them break their scripts first
 	if ( m_MonsterState == MONSTERSTATE_SCRIPT )
@@ -2288,17 +2430,13 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBaseMonster){
 		return 0;
 	}
 
-	if (FClassnameIs(pev,"monster_gargantua")) {
-		int x = 666;
-	}
-
 
 	if ( pev->health <= 0 )
 	{
 		//MODDD - removing this. We can send the inflictor to killed now.
 		//g_pevLastInflictor = pevInflictor;
 		
-		lastDamageReceived = flDamage;
+		lastDamageReceived = flDamageTake;
 		attemptResetTimedDamage(TRUE);
 
 		float MYHEALTH = pev->health;
@@ -2334,55 +2472,12 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBaseMonster){
 	//MODDD - else, if not killed by this strike:
 	else{
 
-		// player TakeDamage already handles these pretty deeply.
-		if(!IsPlayer()){
-			int myClassify = Classify();
-			for (int i = 0; i < CDMG_TIMEBASED; i++){
-				//MODDD
-				//if (bitsDamageType & (DMG_PARALYZE << i))
-
-				if(
-					(i == itbd_Radiation && 
-					(myClassify == CLASS_MACHINE ||
-					(EASY_CVAR_GET(AlienRadiationImmunity) == 1 && 
-						(
-						myClassify == CLASS_ALIEN_MILITARY ||
-						myClassify == CLASS_ALIEN_PASSIVE ||
-						myClassify == CLASS_ALIEN_MONSTER ||
-						myClassify == CLASS_ALIEN_PREY ||
-						myClassify == CLASS_ALIEN_PREDATOR ||
-						myClassify == CLASS_PLAYER_BIOWEAPON ||
-						myClassify == CLASS_ALIEN_BIOWEAPON ||
-						myClassify == CLASS_BARNACLE 
-						)
-					)
-					)
-					) ||
-					(i == itbd_Poison &&
-					myClassify == CLASS_MACHINE  //machines are also immunte to poison.
-					)
-				){
-					continue;  //skip the damage check, this monster does not get this type of damage, at least not timed.
-				}
-
-				int* m_bitsDamageTypeRef = 0;
-				if(i <= 7){
-					//use the old bitmask.
-					m_bitsDamageTypeRef = &bitsDamageType;
-				}else{
-					//use the new bitmask.
-					m_bitsDamageTypeRef = &bitsDamageTypeMod;
-				}
-
-				//
-				if ((*m_bitsDamageTypeRef) & (convert_itbd_to_damage(i) )){
-					m_rgbTimeBasedDamage[i] = 0;
-					//MODDD - next frame this is brought up will be the first one again.
-					m_rgbTimeBasedFirstFrame[i] = TRUE;
-				}
-
-			}//END OF for(int i = 0...)
-		}//END OF not player check.
+		
+		// moved to above
+		//if(!blockTimedDamage){
+		//	applyNewTimedDamage(bitsDamageType, bitsDamageTypeMod);
+		//}
+		
 	}//END OF pev->health 0 check
 
 	// react to the damage (get mad)
@@ -2437,7 +2532,9 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBaseMonster){
 			// MODDD - I hear your cries, original devs. So shall it be done!
 			// Default behavior for the base monster in OnTakeDamageSetConditions, plus not triggering schedule-interrupting conditions
 			// ("Took Damage Recently" or something) for timed damage, which just looks annoying. Why react to predictable damage?
-			OnTakeDamageSetConditions(pevInflictor, pevAttacker, flDamage, bitsDamageType, bitsDamageTypeMod);
+			//***
+			// OnTakeDamageSetConditions call moved further above to before PainSound, for letting the reaction change to LIGHT, HEAVY, or 
+			// neither damage conditions being set (happens on timed damage in most cases)
 		}
 	}
 
@@ -2524,23 +2621,6 @@ void CBaseMonster::Think(void)
 
 }
 */
-
-
-void CBaseMonster::attemptResetTimedDamage(BOOL forceReset){
-
-	if(forceReset || m_bitsDamageType != 0 || m_bitsDamageTypeMod != 0){
-		for (int i = 0; i < CDMG_TIMEBASED; i++){
-			m_rgbTimeBasedDamage[i] = 0;
-			m_rgbTimeBasedFirstFrame[i] = TRUE;
-		}
-
-		m_bitsDamageType = 0;
-		m_bitsDamageTypeMod = 0;
-	}
-
-}
-
-
 
 
 // TODO - let monster size influence the amount tossed for dead-tossing?

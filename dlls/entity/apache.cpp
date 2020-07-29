@@ -491,7 +491,9 @@ GENERATE_GIBMONSTER_IMPLEMENTATION(CApache)
 	// EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "common/bodysplat.wav", 0.75, ATTN_NORM, 0, 200);		
 }
 
-	void GibMonster( BOOL spawnHeadBlock, BOOL gibsSpawnDecal );
+// ???
+//void GibMonster( BOOL spawnHeadBlock, BOOL gibsSpawnDecal );
+
 
 void CApache :: HuntThink( void )
 {

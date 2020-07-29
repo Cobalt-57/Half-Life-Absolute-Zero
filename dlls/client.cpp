@@ -1404,7 +1404,7 @@ void ClientCommand( edict_t *pEntity )
 		}else {
 			easyForcePrintLineClient(pEntity, "You need sv_cheats on for that!");
 		}
-	}else if ( FStrEq(pcmdRefinedRef, "notimeddamage") || FStrEq(pcmdRefinedRef, "notdmg") || FStrEq(pcmdRefinedRef, "resettimeddamage") || FStrEq(pcmdRefinedRef, "resettdmg") ){
+	}else if ( FStrEq(pcmdRefinedRef, "notimeddamage") || FStrEq(pcmdRefinedRef, "notdmg") || FStrEq(pcmdRefinedRef, "resettimeddamage") || FStrEq(pcmdRefinedRef, "resettdmg") || FStrEq(pcmdRefinedRef, "cleartimeddamage") || FStrEq(pcmdRefinedRef, "cleartdmg")){
 		// only reset timed damages.
 		if ( g_flWeaponCheat != 0.0)
 		{
@@ -1764,7 +1764,7 @@ void ClientCommand( edict_t *pEntity )
 			}
 		}
 
-	}else if ( FStrEq(pcmdRefinedRef, "soundtest" ) ){
+	}else if ( FStrEq(pcmdRefinedRef, "soundtest" ) || FStrEq(pcmdRefinedRef, "playsound")){
 
 		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev) ;
 			
@@ -1808,7 +1808,7 @@ void ClientCommand( edict_t *pEntity )
 			playQueued = TRUE;
 		}
 		
-	}else if ( FStrEq(pcmdRefinedRef, "sentencetest" ) ){
+	}else if ( FStrEq(pcmdRefinedRef, "sentencetest" ) || FStrEq(pcmdRefinedRef, "playsentence")){
 		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev) ;
 			
 		if ( tempplayer){
@@ -1858,7 +1858,7 @@ void ClientCommand( edict_t *pEntity )
 			playQueued = TRUE;
 		}
 		
-	}else if ( FStrEq(pcmdRefinedRef, "stopsoundtest" ) ){
+	}else if ( FStrEq(pcmdRefinedRef, "stopsoundtest" ) ){   // 'stopsound' is already occupied, funny enough
 		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev) ;
 		if ( tempplayer){
 			edict_t* tempEd = ENT(tempplayer->pev);
@@ -1879,7 +1879,7 @@ void ClientCommand( edict_t *pEntity )
 			submitJukeboxOff(tempEd);	
 		}
 
-	}else if ( FStrEq(pcmdRefinedRef, "stopsentencetest" ) ){
+	}else if ( FStrEq(pcmdRefinedRef, "stopsentencetest" ) || FStrEq(pcmdRefinedRef, "stopsentence")){
 		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev) ;
 		if ( tempplayer){
 			edict_t* tempEd = ENT(tempplayer->pev);

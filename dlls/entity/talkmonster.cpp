@@ -876,7 +876,18 @@ void CTalkMonster :: RunTask( Task_t *pTask )
 
 			//m_IdealActivity = ACT_IDLE;
 
-			
+			//MODDD - check.  If we're supposed to be following the player and we're talking to them, just force this to end early.
+			if (IsFollowing()) {
+				// don't wait while following!
+				if (m_hTalkTarget == NULL || m_hTalkTarget->edict() == m_hTargetEnt->edict()) {
+					// no "TalkTarget", or we're talking to the one we're following? Stop the wait!
+					TaskComplete();
+					return;   // break...?
+				}
+				else {
+					// proceed, nevermind
+				}
+			}
 
 			//MODDD - hold on.  If "wasLookingAtTalker" is FALSE, we don't care about the TalkTalker being NULL. Of course it is.
 			//if (!IsMoving() && IsTalking() && m_hTalkTarget != NULL && !entityHidden(m_hTalkTarget) )
@@ -889,7 +900,7 @@ void CTalkMonster :: RunTask( Task_t *pTask )
 					//Wasn't looking at a talker, but we're talking? Just let it finish.
 					break;  //don't complete yet.
 				}else{
-					//Now the extra check: does this talker still exist?
+					//Now the extra check: does the one we're talking to still exist?
 					if(m_hTalkTarget != NULL && !entityHidden(m_hTalkTarget)){
 
 						BOOL isPlayer = m_hTalkTarget->IsPlayer();
@@ -1182,8 +1193,11 @@ void CTalkMonster::LimitFollowers( CBaseEntity *pPlayer, int maxFollowers )
 				if ( pMonster->m_hTargetEnt == pPlayer )
 				{
 					count++;
-					if ( count > maxFollowers )
-						pMonster->StopFollowing( TRUE );
+					if (count > maxFollowers) {
+						//MODDD - don't play the unfollow sentence, just gets spammy with the most recent follower saying their follow sentence
+						// while this says 'why are you leaving me here' at the same time
+						pMonster->StopFollowing(TRUE, FALSE);
+					}
 				}
 			}
 		}
@@ -1622,29 +1636,36 @@ int CTalkMonster :: FIdleSpeak ( void )
 			if ( pTarget->IsAlive() )
 			{
 				float duration = RANDOM_FLOAT(4.2, 5.3);
-
+				
+				// TODO - fit to methods a little better.  Or not, it is just one sentence extra.
 				m_hTalkTarget = m_hTargetEnt;
 				if (!FBitSet(m_bitsSaid, bit_saidDamageHeavy) && 
 					(m_hTargetEnt->pev->health <= m_hTargetEnt->pev->max_health / 8))
 				{
-					//EMIT_SOUND_DYN(ENT(pev), CHAN_VOICE, m_szGrp[TLK_PLHURT3], 1.0, ATTN_IDLE, 0, pitch);
-					PlaySentence( m_szGrp[TLK_PLHURT3], duration, VOL_NORM, ATTN_IDLE );
+					if (FClassnameIs(pev, "monster_barney") && RANDOM_FLOAT(0, 1) < 0.5) { PlaySentence("!BA_CURE_ALT", duration, VOL_NORM, ATTN_IDLE); }
+					else {
+						PlaySentence(m_szGrp[TLK_PLHURT3], duration, VOL_NORM, ATTN_IDLE);
+					}
 					SetBits(m_bitsSaid, bit_saidDamageHeavy);
 					return TRUE;
 				}
 				else if (!FBitSet(m_bitsSaid, bit_saidDamageMedium) && 
 					(m_hTargetEnt->pev->health <= m_hTargetEnt->pev->max_health / 4))
 				{
-					//EMIT_SOUND_DYN(ENT(pev), CHAN_VOICE, m_szGrp[TLK_PLHURT2], 1.0, ATTN_IDLE, 0, pitch);
-					PlaySentence( m_szGrp[TLK_PLHURT2], duration, VOL_NORM, ATTN_IDLE );
+					if (FClassnameIs(pev, "monster_barney") && RANDOM_FLOAT(0, 1) < 0.5) { PlaySentence("!BA_CURE_ALT", duration, VOL_NORM, ATTN_IDLE); }
+					else {
+						PlaySentence(m_szGrp[TLK_PLHURT2], duration, VOL_NORM, ATTN_IDLE);
+					}
 					SetBits(m_bitsSaid, bit_saidDamageMedium);
 					return TRUE;
 				}
 				else if (!FBitSet(m_bitsSaid, bit_saidDamageLight) &&
 					(m_hTargetEnt->pev->health <= m_hTargetEnt->pev->max_health / 2))
 				{
-					//EMIT_SOUND_DYN(ENT(pev), CHAN_VOICE, m_szGrp[TLK_PLHURT1], 1.0, ATTN_IDLE, 0, pitch);
-					PlaySentence( m_szGrp[TLK_PLHURT1], duration, VOL_NORM, ATTN_IDLE );
+					if (FClassnameIs(pev, "monster_barney") && RANDOM_FLOAT(0, 1) < 0.3) { PlaySentence("!BA_CURE_ALT", duration, VOL_NORM, ATTN_IDLE); }
+					else {
+						PlaySentence(m_szGrp[TLK_PLHURT1], duration, VOL_NORM, ATTN_IDLE);
+					}
 					SetBits(m_bitsSaid, bit_saidDamageLight);
 					return TRUE;
 				}
@@ -2094,7 +2115,7 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CTalkMonster)
 			//MODDD - extra provoking condition - taken too much cumulative damage from the player.
 			if ( flDamage > 32 ||   //too much damage at one time? Pissed.
 				 m_flPlayerDamage > 16 ||  //too much damage over a long time? Pissed.
-				(m_afMemory & bits_MEMORY_SUSPICIOUS && m_flPlayerDamage > 8) || //two shots too soon + a little damage? Pissed.
+				((m_afMemory & bits_MEMORY_SUSPICIOUS) && m_flPlayerDamage > 8) || //two shots too soon + a little damage? Pissed.
 				UTIL_IsFacing( pevAttacker, pev->origin ) && m_flPlayerDamage > 4 //Facing me when he did it with a lower damage tolerance? Pissed.
 				) 
 			{
@@ -2133,7 +2154,7 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CTalkMonster)
 			//SaySuspicious();
 			if ( flDamage > 50 ||   //too much damage at one time? Pissed. Wait, how do you survive this?
 				 m_flPlayerDamage > 24 ||  //too much damage over a long time? Pissed.
-				(m_afMemory & bits_MEMORY_SUSPICIOUS && m_flPlayerDamage > 10) || //two shots too soon + a little damage? Pissed.
+				((m_afMemory & bits_MEMORY_SUSPICIOUS) && m_flPlayerDamage > 10) || //two shots too soon + a little damage? Pissed.
 				UTIL_IsFacing( pevAttacker, pev->origin ) && m_flPlayerDamage > 5 //Facing me when he did it with a lower damage tolerance? Pissed.
 				) 
 			{

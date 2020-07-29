@@ -12,9 +12,7 @@ int CChumToadWeapon::numberOfEyeSkins = -1;
 
 
 CChumToadWeapon::CChumToadWeapon(void){
-	//nevermind, probably already precached in whole by the player, no assistance needed.
-	//soundSentenceSavePreference = TRUE;
-
+	
 	antiGravityPositionY = -1;
 	
 	//Holy crap, even "pev" stuff needs to be initialized by something. Not doing this here then.

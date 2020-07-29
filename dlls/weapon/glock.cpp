@@ -676,7 +676,7 @@ void CGlock::ItemPostFrame(){
 					//EMIT_SOUND_DYN(ENT(m_pPlayer->pev), CHAN_ITEM, "items/9mmclip2.wav", RANDOM_FLOAT(0.52, 0.62), ATTN_IDLE, 0, 93 + RANDOM_LONG(0,0xF));
 					
 					//MODDD - soundsentencesave
-					EMIT_SOUND_FILTERED(ENT(m_pPlayer->pev), CHAN_ITEM, "weapons/glockSilencerOn.wav", RANDOM_FLOAT(1, 1), ATTN_IDLE, 0, 98 + RANDOM_LONG(0,4), TRUE);
+					UTIL_PlaySound(ENT(m_pPlayer->pev), CHAN_ITEM, "weapons/glockSilencerOn.wav", RANDOM_FLOAT(1, 1), ATTN_IDLE, 0, 98 + RANDOM_LONG(0,4), FALSE);
 				}
 			}else if(m_flReleaseThrow == 2){
 				m_flStartThrow = GLOCK_ADD_SILENCER;
@@ -736,8 +736,8 @@ void CGlock::ItemPostFrame(){
 					m_flReleaseThrow = 0;
 					animationTime = 0;
 				}
-					//!!!!
-					//m_fireState |= 128;
+				//!!!!
+				//m_fireState |= 128;
 
 			}else if(m_flReleaseThrow == 0){
 				m_flStartThrow = (GLOCK_ADD_SILENCER | 0); //!!!
@@ -747,23 +747,19 @@ void CGlock::ItemPostFrame(){
 					m_flReleaseThrow = 1;
 				}
 				
-					//m_fireState |= 128;
+				//m_fireState |= 128;
 				
 
 			}else if(m_flReleaseThrow == 1){
-
 				/*
 				m_flStartThrow = (GLOCK_ADD_SILENCER | 0); //!!!
 				animationTime += timeDelta;
 				m_fireState = (1 | 128);
 				*/
 
-				
-				
 				m_flStartThrow = (GLOCK_ADD_SILENCER | 0); //!!!
 				animationTime += timeDelta;
 				m_fireState = (1 | 128);
-
 
 				if(animationTime > holdingSecondaryTarget3){
 					m_flReleaseThrow = 2;
@@ -773,21 +769,15 @@ void CGlock::ItemPostFrame(){
 					//m_fInAttack = 1;
 					//EMIT_SOUND_DYN(ENT(m_pPlayer->pev), CHAN_ITEM, "items/9mmclip2.wav", RANDOM_FLOAT(0.52, 0.62), ATTN_IDLE, 0, 93 + RANDOM_LONG(0,0xF));
 					//MODDD - soundsentencesave
-					EMIT_SOUND_FILTERED(ENT(m_pPlayer->pev), CHAN_ITEM, "weapons/glockSilencerOff.wav", RANDOM_FLOAT(1, 1), ATTN_IDLE, 0, 98 + RANDOM_LONG(0,4), TRUE);
-
-
+					UTIL_PlaySound(ENT(m_pPlayer->pev), CHAN_ITEM, "weapons/glockSilencerOff.wav", RANDOM_FLOAT(1, 1), ATTN_IDLE, 0, 98 + RANDOM_LONG(0,4), FALSE);
 				}
-
-					//m_fireState |= 128;
-
+				
+				//m_fireState |= 128;
 			}else if(m_flReleaseThrow == 2){
-
 				m_flStartThrow = (GLOCK_ADD_SILENCER | 0); //!!!
 				animationTime += timeDelta;
 				m_fireState = (0 | 128);
 
-
-				
 				//m_fireState |= 128;
 
 				if(animationTime > holdingSecondaryTarget4){

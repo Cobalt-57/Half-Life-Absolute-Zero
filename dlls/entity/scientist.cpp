@@ -265,7 +265,7 @@ public:
 
 	virtual int	Save( CSave &save );
 	virtual int	Restore( CRestore &restore );
-	static	TYPEDESCRIPTION m_SaveData[];
+	static TYPEDESCRIPTION m_SaveData[];
 	
 	void PostRestore(void);
 
@@ -841,7 +841,7 @@ void CScientist::SayHello(CBaseEntity* argPlayerTalkTo) {
 			// Mention the suit once, and with a decent chance later too.
 			if (
 				g_scientist_PredisasterSuitMentionAllowedTime == -1 ||
-				(gpGlobals->time >= g_scientist_PredisasterSuitMentionAllowedTime && RANDOM_FLOAT(0, 1) <= 0.86)
+				(gpGlobals->time >= g_scientist_PredisasterSuitMentionAllowedTime && RANDOM_FLOAT(0, 1) <= 0.60)
 			) {
 				PlaySentence("!SC_HELLO6", 4, VOL_NORM, ATTN_NORM);  // new HEV suit, that should be very useful
 				g_scientist_PredisasterSuitMentionAllowedTime = gpGlobals->time + 16;
@@ -862,7 +862,7 @@ void CScientist::SayIdleToPlayer(CBaseEntity* argPlayerTalkTo) {
 		if (argPlayerTalkTo->pev->weapons & (1 << WEAPON_SUIT)) {
 			// Mention the suit once, and with a decent chance later too.
 			if (g_scientist_PredisasterSuitMentionAllowedTime == -1 ||
-				(gpGlobals->time >= g_scientist_PredisasterSuitMentionAllowedTime && RANDOM_FLOAT(0, 1) <= 0.70)
+				(gpGlobals->time >= g_scientist_PredisasterSuitMentionAllowedTime && RANDOM_FLOAT(0, 1) <= 0.34)
 				) {
 				PlaySentenceSingular("SC_HELLO6", 4, VOL_NORM, ATTN_NORM);
 				g_scientist_PredisasterSuitMentionAllowedTime = gpGlobals->time + 16;
@@ -2215,16 +2215,39 @@ void CScientist :: PainSound ( void )
 	if (gpGlobals->time < m_painTime )
 		return;
 
-	m_painTime = gpGlobals->time + RANDOM_FLOAT(0.5, 0.75);
+	//MODDD - these conditions are set before PainSound is called, so we can determine
+	if (HasConditions(bits_COND_LIGHT_DAMAGE | bits_COND_HEAVY_DAMAGE)) {
 
-	switch (RANDOM_LONG(0,4))
-	{
-	case 0: EMIT_SOUND_FILTERED( ENT(pev), CHAN_VOICE, "scientist/sci_pain1.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
-	case 1: EMIT_SOUND_FILTERED( ENT(pev), CHAN_VOICE, "scientist/sci_pain2.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
-	case 2: EMIT_SOUND_FILTERED( ENT(pev), CHAN_VOICE, "scientist/sci_pain3.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
-	case 3: EMIT_SOUND_FILTERED( ENT(pev), CHAN_VOICE, "scientist/sci_pain4.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
-	case 4: EMIT_SOUND_FILTERED( ENT(pev), CHAN_VOICE, "scientist/sci_pain5.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
+		m_painTime = gpGlobals->time + RANDOM_FLOAT(0.5, 0.75);
+
+		switch (RANDOM_LONG(0, 9))
+		{
+		case 0: EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "scientist/sci_pain1.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
+		case 1: EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "scientist/sci_pain2.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
+		case 2: EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "scientist/sci_pain3.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
+		case 3: EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "scientist/sci_pain4.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
+		case 4: EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "scientist/sci_pain5.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
+		//MODDD - new
+		case 5: EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "scientist/sci_pain6.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
+		case 6: EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "scientist/sci_pain7.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
+		case 7: EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "scientist/sci_pain8.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
+		case 8: EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "scientist/sci_pain9.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
+		case 9: EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "scientist/sci_pain10.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
+		}
 	}
+	else {
+		// takimg timed damage?  Be less saying 'no', just noises.
+
+		m_painTime = gpGlobals->time + RANDOM_FLOAT(3, 6);
+
+		switch (RANDOM_LONG(0, 2))
+		{
+		case 0: EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "scientist/sci_pain1.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
+		case 1: EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "scientist/sci_pain4.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
+		case 2: EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "scientist/sci_pain5.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
+		}
+	}
+
 }
 
 
@@ -2824,14 +2847,14 @@ MONSTERSTATE CScientist :: GetIdealState ( void )
 					// behavior, but feel free to test by returning after that too.
 					return MONSTERSTATE_ALERT;
 				}
-				StopFollowing( TRUE );
+				StopFollowing( TRUE, FALSE );
 			}
 		}
 		else if ( HasConditions( bits_COND_LIGHT_DAMAGE | bits_COND_HEAVY_DAMAGE ) )
 		{
 			// Stop following if you take damage
 			if ( IsFollowing() )
-				StopFollowing( TRUE );
+				StopFollowing( TRUE, FALSE);
 		}
 		break;
 

@@ -908,7 +908,7 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBasePlayer)
 			else if(EASY_CVAR_GET(playerExtraPainSoundsMode) == 1 || EASY_CVAR_GET(playerExtraPainSoundsMode) == 2 ){
 				pass = TRUE;
 			}
-		
+			
 		}//END OF if(EASY_CVAR_GET(mutePlayerPainSounds) != 1))
 
 		if(pass){
@@ -960,9 +960,6 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBasePlayer)
 	flRatio = ARMOR_RATIO;
 
 
-	float booty = EASY_CVAR_GET(blastExtraArmorDamageMode);
-
-
 	//MODDD - only double blast damage on armor, if the CVar allows.  0 is retail behavior (during multiplayer only)
 	if (
 		(EASY_CVAR_GET(blastExtraArmorDamageMode) == 0 && IsMultiplayer()) ||
@@ -1007,7 +1004,6 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBasePlayer)
 
 	// How much damage was sustained since the last sendoff?  Like pev->dmg_take, but this gets only raw damage before doing armor damage reductions.
 	rawDamageSustained += flDamage;
-
 
 
 	//!!!  not that this matters really.
@@ -1081,34 +1077,14 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBasePlayer)
 
 	// reset damage time countdown for each type of time based damage player just sustained
 
-	//uh, brackets... what?
-	//HEY, found a use for them.  How... resourceful of me?
 
+	// No need! BaseMonster script handles this fine now.
+	/*
 	if(!blockTimedDamage)
 	{
-		for (int i = 0; i < CDMG_TIMEBASED; i++){
-			//MODDD
-			//if (bitsDamageType & (DMG_PARALYZE << i))
-
-			int* m_bitsDamageTypeRef = 0;
-			if(i <= 7){
-				//use the old bitmask.
-				m_bitsDamageTypeRef = &bitsDamageType;
-			}else{
-				//use the new bitmask.
-				m_bitsDamageTypeRef = &bitsDamageTypeMod;
-			}
-
-
-			if ((*m_bitsDamageTypeRef) & (convert_itbd_to_damage(i) )){
-				m_rgbTimeBasedDamage[i] = 0;
-				//MODDD - next frame this is brought up will be the first one again.
-				m_rgbTimeBasedFirstFrame[i] = TRUE;
-			}
-
-
-		}//END OF for(int i = 0...)
+		applyNewTimedDamage(bitsDamageType, bitsDamageTypeMod);
 	}
+	*/
 
 	// tell director about it
 	MESSAGE_BEGIN( MSG_SPEC, SVC_DIRECTOR );
@@ -1260,13 +1236,14 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBasePlayer)
 			ffound = TRUE;
 		}
 
-		if (bitsDamage & (DMG_POISON | DMG_PARALYZE))
+		if ( (bitsDamage & (DMG_POISON | DMG_PARALYZE)) || (bitsDamageMod & (DMG_POISONHALF) ) )
 		{
 			if(!blockTimedDamageUpdates){
 				SetSuitUpdate("!HEV_DMG3", FALSE, SUIT_NEXT_IN_1MIN, 4.6f);	// blood toxins detected
 			}
 
 			bitsDamage &= ~(DMG_POISON | DMG_PARALYZE);
+			bitsDamageMod &= ~(DMG_POISONHALF);
 			ffound = TRUE;
 		}
 
@@ -1307,13 +1284,14 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBasePlayer)
 			bitsDamage &= ~DMG_SHOCK;
 			ffound = TRUE;
 		}
-		//MODDD - new
+		//MODDD - new.
 		if (bitsDamageMod & DMG_BLEEDING)
 		{
-			if(!blockTimedDamageUpdates){
-				//SetSuitUpdate("!???", FALSE, SUIT_NEXT_IN_1MIN);
+			if (gSkillData.tdmg_bleeding_duration >= 0) {
+				if (!blockTimedDamageUpdates) {
+					//SetSuitUpdate("!???", FALSE, SUIT_NEXT_IN_1MIN);
+				}
 			}
-			//bleeding?
 			bitsDamageMod &= ~DMG_BLEEDING;
 			ffound = TRUE;
 		}
@@ -4178,7 +4156,7 @@ BYTE CBasePlayer::parse_itbd_duration(int i) {
 		return 4;	// get up to 5*10 = 50 points back
 
 	case itbd_Bleeding:
-		return gSkillData.tdmg_bleeding_duration;
+		return ((gSkillData.tdmg_bleeding_duration >= 0) ? ((BYTE)gSkillData.tdmg_bleeding_duration) : 255);
 	default:
 		// Unhandled?  Let the monster class handle it instead
 		return CBaseMonster::parse_itbd_duration(i);
@@ -4239,8 +4217,10 @@ void CBasePlayer::timedDamage_nonFirstFrame(int i, int* m_bitsDamageTypeRef) {
 	// use up an antitoxin on poison or nervegas after a few seconds of damage
 	// MODDD - instead of referring to constants like "NERVEGASDURATION", it is referring to the
 	// variable "nervegasDuration", which is set according to difficulty.  Same for poison.
-	if (((i == itbd_NerveGas) && (m_rgbTimeBasedDamage[i] < gSkillData.tdmg_nervegas_duration)) ||
-		((i == itbd_Poison) && (m_rgbTimeBasedDamage[i] < gSkillData.tdmg_poison_duration)))
+	if (
+		((i == itbd_NerveGas) && (m_rgbTimeBasedDamage[i] < gSkillData.tdmg_nervegas_duration)) ||
+		((i == itbd_Poison) && (m_rgbTimeBasedDamage[i] < gSkillData.tdmg_poison_duration))
+	)
 	{
 		if (!antidoteQueued && m_rgItems[ITEM_ANTIDOTE] && (EASY_CVAR_GET(itemBatteryPrerequisite) == 0 || pev->armorvalue > 0))
 		{
@@ -8686,7 +8666,6 @@ void CBasePlayer :: UpdateClientData( void )
 		MESSAGE_END();
 	}
 
-
 	if(m_fLongJumpMemory != m_fLongJump || (!m_fLongJump && longJumpCharge != -1) ){
 		//easyPrint("TEST1 %d\n", 0);
 		m_fLongJumpMemory = m_fLongJump;
@@ -8694,7 +8673,6 @@ void CBasePlayer :: UpdateClientData( void )
 		//resetLongJumpCharge();
 		longJumpChargeNeedsUpdate = TRUE;
 	}
-
 
 	if(longJumpChargeNeedsUpdate || longJumpChargeMem != longJumpCharge){
 		longJumpChargeNeedsUpdate = FALSE;
@@ -8706,10 +8684,8 @@ void CBasePlayer :: UpdateClientData( void )
 		//WRITE_SHORT( (int)longJumpCharge);
 		//WRITE_ANGLE
 		MESSAGE_END();
-		
 	}
 
-	
 	if (pev->armorvalue != m_iClientBattery)
 	{
 		m_iClientBattery = pev->armorvalue;
@@ -8720,7 +8696,6 @@ void CBasePlayer :: UpdateClientData( void )
 			WRITE_SHORT( (int)pev->armorvalue);
 		MESSAGE_END();
 	}
-
 
 	int hasGlockSilencerTEST = ( !(EASY_CVAR_GET(wpn_glocksilencer)==0) && (hasGlockSilencer || EASY_CVAR_GET(wpn_glocksilencer)==2 ));
 	//easyForcePrintLine("disregardIN WHAT %d");
@@ -8733,7 +8708,6 @@ void CBasePlayer :: UpdateClientData( void )
 			WRITE_SHORT( hasGlockSilencerTEST);
 		MESSAGE_END();
 	}
-
 
 
 	//MODDD
@@ -8752,7 +8726,6 @@ void CBasePlayer :: UpdateClientData( void )
 				damageOrigin = pEntity->Center();
 		}
 
-		
 		int forbiddenBits = 0;
 		int forbiddenBitsMod = 0;
 
@@ -8800,8 +8773,6 @@ void CBasePlayer :: UpdateClientData( void )
 	}//END OF Crazy damage check
 
 
-
-
 	// Update Flashlight
 	if ((m_flFlashLightTime) && (m_flFlashLightTime <= gpGlobals->time))
 	{
@@ -8815,8 +8786,9 @@ void CBasePlayer :: UpdateClientData( void )
 					m_flFlashLightTime = FLASH_DRAIN_TIME + gpGlobals->time;
 					m_iFlashBattery--;
 				
-					if (!m_iFlashBattery)
+					if (!m_iFlashBattery) {
 						FlashlightTurnOff();
+					}
 				}
 			}
 			else
@@ -8826,8 +8798,9 @@ void CBasePlayer :: UpdateClientData( void )
 					m_flFlashLightTime = FLASH_CHARGE_TIME + gpGlobals->time;
 					m_iFlashBattery++;
 				}
-				else
+				else {
 					m_flFlashLightTime = 0;
+				}
 			}
 		
 
@@ -8881,10 +8854,12 @@ void CBasePlayer :: UpdateClientData( void )
 				continue;
 
 			const char *pszName;
-			if (!II.pszName)
+			if (!II.pszName) {
 				pszName = "Empty";
-			else
+			}
+			else {
 				pszName = II.pszName;
+			}
 
 			MESSAGE_BEGIN( MSG_ONE, gmsgWeaponList, NULL, pev );  
 				WRITE_STRING(pszName);			// string	weapon name
@@ -8906,8 +8881,9 @@ void CBasePlayer :: UpdateClientData( void )
 	// Update all the items
 	for ( int i = 0; i < MAX_ITEM_TYPES; i++ )
 	{
-		if ( m_rgpPlayerItems[i] )  // each item updates it's successors
-			m_rgpPlayerItems[i]->UpdateClientData( this );
+		if (m_rgpPlayerItems[i]) {  // each item updates it's successors
+			m_rgpPlayerItems[i]->UpdateClientData(this);
+		}
 	}
 
 	// Cache and client weapon change

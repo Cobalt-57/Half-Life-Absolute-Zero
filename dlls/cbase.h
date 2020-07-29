@@ -514,6 +514,11 @@ public:
 	//MODDD - new args possible.
 	GENERATE_TRACEATTACK_PROTOTYPE_VIRTUAL
 	GENERATE_TAKEDAMAGE_PROTOTYPE_VIRTUAL
+
+	// NEW, common TakeDamage utility method
+	virtual BOOL ChangeHealthFiltered(entvars_t* pevAttacker, float flDamage);
+
+
 	
 
 	virtual int	TakeHealth( float flHealth, int bitsDamageType );
@@ -525,7 +530,7 @@ public:
 	//MODDD - TraceBleed supports the extra damage bitmask.
 	virtual void TraceBleed( float flDamage, Vector vecDir, TraceResult *ptr, int bitsDamageType );
 	virtual void TraceBleed( float flDamage, Vector vecDir, TraceResult *ptr, int bitsDamageType, int bitsDamageTypeMod );
-	virtual BOOL    IsTriggered( CBaseEntity *pActivator ) {return TRUE;}
+	virtual BOOL IsTriggered( CBaseEntity *pActivator ) {return TRUE;}
 	virtual CBaseMonster *MyMonsterPointer( void ) { return NULL;}
 	virtual CSquadMonster *MySquadMonsterPointer( void ) { return NULL;}
 	virtual	int	GetToggleState( void ) { return TS_AT_TOP; }
@@ -882,6 +887,8 @@ public:
 // people gib if their health is <= this at the time of death
 #define GIB_HEALTH_VALUE	-30
 
+
+
 #define ROUTE_SIZE			8 // how many waypoints a monster can store at one time
 #define MAX_OLD_ENEMIES		4 // how many old enemies to remember
 
@@ -910,26 +917,8 @@ public:
 
 // instant damage
 
-//MODDD - damage types (DMG_...) moved to util_shared.h.  Merged with some other redundant stuff in some
+//MODDD - damage types (DMG_...) and itbd_'s moved to util_shared.h.  Merged with some other redundant stuff in some
 // clientside files.
-
-//MODDD - NOTE - Pay little attention to these.  They're just arbitrary, for helping an iterator method
-//see which damage type is which.  For instance, "itbd_Poison" and "DMG_POISON" further below have no link,
-//but "itbd_Poison" is useless outside of Player.cpp (and monsters.cpp since they take timeddamage too now)
-//while "DMG_POISON" is referred to both by attackers and player.cpp.
-#define itbd_Paralyze		0		
-#define itbd_NerveGas		1
-#define itbd_Poison			2
-#define itbd_Radiation		3
-#define itbd_DrownRecover	4
-#define itbd_Acid			5
-#define itbd_SlowBurn		6
-#define itbd_SlowFreeze		7
-//MODDD - addition.
-#define itbd_Bleeding		8
-//MODDD - size is now 9. 
-#define CDMG_TIMEBASED		9
-
 
 // when calling KILLED(), a value that governs gib behavior is expected to be 
 // one of these three values

@@ -559,8 +559,7 @@ CBaseEntity::CBaseEntity(void){
 
 }
 
-//OLD: soundSentenceSavePreference
-//Whether this entity uses the sound sentence save feature. By default, false.
+// Whether this entity uses the sound sentence save feature. By default, false.
 BOOL CBaseEntity::usesSoundSentenceSave(void){
 	return FALSE;
 }

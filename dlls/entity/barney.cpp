@@ -52,6 +52,10 @@ extern Schedule_t slBarneyEnemyDraw[];
 
 
 
+static float g_sayBulletHitCooldown = -1;
+
+
+
 //MODDD - how many shots before reloading?
 #define BARNEY_WEAPON_CLIP_SIZE 13
 
@@ -305,7 +309,7 @@ void CBarney::OnNearCautious(void){
 
 void CBarney::SayNearCautious(void){
 
-	switch(RANDOM_LONG(0, 31)){
+	switch(RANDOM_LONG(0, 33)){
 	case 0:
 		PlaySentenceSingular( "BA_OK0", 4, VOL_NORM, ATTN_NORM );
 	break;
@@ -376,33 +380,39 @@ void CBarney::SayNearCautious(void){
 		PlaySentenceSingular( "BA_IDLE7", 4, VOL_NORM, ATTN_NORM );
 	break;
 	case 23:
-		PlaySentenceSingular( "BA_IDLE9", 4, VOL_NORM, ATTN_NORM );
+		PlaySentenceSingular( "BA_IDLE8", 4, VOL_NORM, ATTN_NORM );
 	break;
 	case 24:
-		PlaySentenceSingular( "BA_IDLE10", 4, VOL_NORM, ATTN_NORM );
+		PlaySentenceSingular( "BA_IDLE9", 4, VOL_NORM, ATTN_NORM );
 	break;
 	case 25:
-		PlaySentenceSingular( "BA_ATTACK2", 4, VOL_NORM, ATTN_NORM );
+		PlaySentenceSingular( "BA_IDLE10", 4, VOL_NORM, ATTN_NORM );
 	break;
 	case 26:
-		PlaySentenceSingular( "BA_ATTACK5", 4, VOL_NORM, ATTN_NORM );
+		PlaySentenceSingular( "BA_IDLE11", 4, VOL_NORM, ATTN_NORM );  //badarea
 	break;
 	case 27:
-		PlaySentenceSingular( "BA_HEAR0", 4, VOL_NORM, ATTN_NORM );
+		PlaySentenceSingular( "BA_ATTACK2", 4, VOL_NORM, ATTN_NORM );
 	break;
 	case 28:
-		PlaySentenceSingular( "BA_HEAR1", 4, VOL_NORM, ATTN_NORM );
+		PlaySentenceSingular( "BA_ATTACK5", 4, VOL_NORM, ATTN_NORM );
 	break;
 	case 29:
-		PlaySentenceSingular( "BA_HEAR2", 4, VOL_NORM, ATTN_NORM );
+		PlaySentenceSingular( "BA_HEAR0", 4, VOL_NORM, ATTN_NORM );
 	break;
 	case 30:
-		PlaySentenceSingular( "BA_STOP3", 4, VOL_NORM, ATTN_NORM );
+		PlaySentenceSingular( "BA_HEAR1", 4, VOL_NORM, ATTN_NORM );
 	break;
 	case 31:
+		PlaySentenceSingular( "BA_HEAR2", 4, VOL_NORM, ATTN_NORM );
+	break;
+	case 32:
+		PlaySentenceSingular( "BA_STOP3", 4, VOL_NORM, ATTN_NORM );
+	break;
+	case 33:
 		PlaySentenceSingular( "BA_STOP4", 4, VOL_NORM, ATTN_NORM );
 	break;
-
+	
 	}//END OF switch
 }//END OF SayNearCautious
 
@@ -799,7 +809,15 @@ void CBarney :: AlertSound( void )
 				int enemyClassify = m_hEnemy->Classify();
 				long randoRange;
 
-				if (enemyClassify == CLASS_NONE) {
+
+				if (RANDOM_FLOAT(0, 1) < 0.9) {
+					// angry barney
+					switch (RANDOM_LONG(0, 3)) {
+						case 0:PlaySentenceSingular("BA_ATTACK7", 4, VOL_NORM, ATTN_NORM);break;
+						case 1:PlaySentenceSingular("BA_ATTACK8", 4, VOL_NORM, ATTN_NORM);break;
+						case 2:PlaySentenceSingular("BA_ATTACK9", 4, VOL_NORM, ATTN_NORM);break;
+					}
+				}else if (enemyClassify == CLASS_NONE) {
 					// ???
 					PlaySentence("BA_ATTACK", RANDOM_FLOAT(2.8, 3.2), VOL_NORM, ATTN_IDLE);
 				}else if (enemyClassify == CLASS_PLAYER) {
@@ -1389,7 +1407,26 @@ void CBarney :: PainSound ( BOOL bypassCooldown )
 	if (!bypassCooldown && gpGlobals->time < m_painTime)
 		return;
 	
-	m_painTime = gpGlobals->time + RANDOM_FLOAT(0.5, 0.75);
+	//MODDD - barney will have the same sounds for timed or nontimed damage, but just make noise less often.
+	if (HasConditions(bits_COND_LIGHT_DAMAGE | bits_COND_HEAVY_DAMAGE)) {
+		m_painTime = gpGlobals->time + RANDOM_FLOAT(0.5, 0.75);
+	}
+	else {
+		m_painTime = gpGlobals->time + RANDOM_FLOAT(3, 6);
+	}
+
+	if (m_bitsDamageType & DMG_BULLET || m_bitsDamageTypeMod & DMG_PROJECTILE) {
+		if (gpGlobals->time >= g_sayBulletHitCooldown && RANDOM_FLOAT(0, 1) <= 0.4) {
+			PlaySentenceSingular("BA_WOUND_HOT", 3, VOL_NORM, ATTN_NORM);
+			g_sayBulletHitCooldown = gpGlobals->time + 25;
+		}
+
+		m_bitsDamageType &= ~DMG_BULLET;
+		m_bitsDamageTypeMod &= ~DMG_PROJECTILE;
+		return;
+	}
+
+
 
 	switch (RANDOM_LONG(0,2))
 	{
@@ -1438,6 +1475,9 @@ GENERATE_TRACEATTACK_IMPLEMENTATION(CBarney)
 			{
 				UTIL_Ricochet( ptr->vecEndPos, 1.0 );
 				flDamage = 0.01;
+
+				if (useBulletHitSound) { *useBulletHitSound = FALSE; } //deny it.
+				useBloodEffect = FALSE;
 			}
 		}
 		// always a head shot for damage logic

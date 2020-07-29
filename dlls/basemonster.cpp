@@ -182,8 +182,8 @@ TYPEDESCRIPTION	CBaseMonster::m_SaveData[] =
 	
 
 	DEFINE_FIELD( CBaseMonster, m_tbdPrev, FIELD_TIME ),
-	DEFINE_ARRAY( CBaseMonster, m_rgbTimeBasedDamage, FIELD_CHARACTER, CDMG_TIMEBASED ),
-	DEFINE_ARRAY( CBaseMonster, m_rgbTimeBasedFirstFrame, FIELD_BOOLEAN, CDMG_TIMEBASED ),
+	DEFINE_ARRAY( CBaseMonster, m_rgbTimeBasedDamage, FIELD_CHARACTER, itbd_COUNT ),
+	DEFINE_ARRAY( CBaseMonster, m_rgbTimeBasedFirstFrame, FIELD_BOOLEAN, itbd_COUNT ),
 
 
 	DEFINE_FIELD( CBaseMonster, m_bloodColor, FIELD_INTEGER ),
@@ -1462,7 +1462,7 @@ void CBaseMonster::wanderAway(const Vector& toWalkAwayFrom){
 //That may be okay, but I'm not taking risks just yet.
 int CBaseMonster::convert_itbd_to_damage(int i){
 	
-	if(i <= 7){
+	if(i < itbd_BITMASK2_FIRST){
 		//The old way works fine for existing damage types.
 
 		//DAMNIT PAST ME, comments.
@@ -1481,10 +1481,10 @@ int CBaseMonster::convert_itbd_to_damage(int i){
 		// start at 8 = DMG_BLEEDING.
 		//return (DMG_PARALYZE << (i - 8));
 		// ...actually no, unless all future timed damages are placed so they occur
-		// one-after-the-other like for 'i <= 7' above.
+		// one-after-the-other like for 'i < itbd_BITMASK2_FIRST' above.
 		// Only one yet so hard to say.
 		switch(i){
-		case 8:
+		case itbd_Bleeding:
 			return DMG_BLEEDING;
 		break;
 		}//END OF switch(i)
@@ -1511,29 +1511,41 @@ void CBaseMonster::removeTimedDamage(int arg_type, int* m_bitsDamageTypeRef) {
 
 
 // Get the duration of a type of timed damage, now a separate method.  Mysterious that it wasn't always.
+// Also, "-1" is a wildcard value to signal that we should pretend like that damage type doesn't exist,
+// not even the icon for a moment.
+// Full support only available for bleeding for now, it takes a few other places (or at least Player's TakeDamage)
+// that would need to check for the '-1' duration in order to not play FVox lines too.
 BYTE CBaseMonster::parse_itbd_duration(int i) {
-
 	switch (i)
 	{
 	case itbd_Paralyze:
-		return gSkillData.tdmg_paralyze_duration;
+		return ((gSkillData.tdmg_paralyze_duration >= 0) ? ((BYTE)gSkillData.tdmg_paralyze_duration) : 255);
 	case itbd_NerveGas:
-		return gSkillData.tdmg_nervegas_duration;
-	case itbd_Poison:
-		return gSkillData.tdmg_poison_duration;
+		return ((gSkillData.tdmg_nervegas_duration >= 0) ? ((BYTE)gSkillData.tdmg_nervegas_duration) : 255);
+	case itbd_Poison: {
+		if (!(m_bitsDamageTypeMod & DMG_POISONHALF)) {
+			// normal duration
+			return ((gSkillData.tdmg_poison_duration >= 0) ? ((BYTE)gSkillData.tdmg_poison_duration) : 255);
+		}
+		else {
+			//has DMG_POISONHALF?  Clear it,
+			m_bitsDamageTypeMod &= ~DMG_POISONHALF;
+			return ((gSkillData.tdmg_poison_duration >= 0) ? ((BYTE)(gSkillData.tdmg_poison_duration/2)) : 255);
+		}
+	}
 	case itbd_Radiation:
-		return gSkillData.tdmg_radiation_duration;
-	//case itbd_DrownRecover:
+		return ((gSkillData.tdmg_radiation_duration >= 0) ? ((BYTE)gSkillData.tdmg_radiation_duration) : 255);
+	//case itbd_DrownRecover:    no, for the player only!
 	// ...
 	//return 4;	// get up to 5*10 = 50 points back
 	case itbd_Acid:
-		return gSkillData.tdmg_acid_duration;
+		return ((gSkillData.tdmg_acid_duration >= 0) ? ((BYTE)gSkillData.tdmg_acid_duration) : 255);
 	case itbd_SlowBurn:
-		return gSkillData.tdmg_slowburn_duration;
+		return ((gSkillData.tdmg_slowburn_duration >= 0) ? ((BYTE)gSkillData.tdmg_slowburn_duration) : 255);
 	case itbd_SlowFreeze:
-		return gSkillData.tdmg_slowfreeze_duration;
+		return ((gSkillData.tdmg_slowfreeze_duration >= 0) ? ((BYTE)gSkillData.tdmg_slowfreeze_duration) : 255);
 	case itbd_Bleeding:
-		return gSkillData.tdmg_bleeding_duration;
+		return ((gSkillData.tdmg_bleeding_duration >= 0) ? ((BYTE)gSkillData.tdmg_bleeding_duration) : 255);
 	default:
 		return 255;  //???
 	}
@@ -1632,9 +1644,9 @@ void CBaseMonster::parse_itbd(int i) {
 void CBaseMonster::timedDamage_nonFirstFrame(int i, int* m_bitsDamageTypeRef) {
 
 	if (g_iSkillLevel == 3 && EASY_CVAR_GET(timedDamageEndlessOnHard) == 1) {
-		//Hard mode is on, and "timedDamageEndlessOnHard" is on...
-		//Do NOT decrement non-curable durations.
-		//However, still decrement only ONCE on curables to satisfy the one-second-passing rule for canisters to work.
+		// Hard mode is on, and "timedDamageEndlessOnHard" is on...
+		// Do NOT decrement non-curable durations.
+		// However, still decrement only ONCE on curables to satisfy the one-second-passing rule for canisters to work.
 		if(i == itbd_NerveGas || i == itbd_Poison || i == itbd_Radiation || i == itbd_Bleeding) {
 			//DO NOTHING.  Only the appropriate cure can fix it.
 		}
@@ -1696,10 +1708,10 @@ void CBaseMonster::CheckTimeBasedDamage(void)
 
 	m_tbdPrev = gpGlobals->time;
 	
-	for (i = 0; i < CDMG_TIMEBASED; i++)
+	for (i = 0; i < itbd_COUNT; i++)
 	{
 		int* m_bitsDamageTypeRef = 0;
-		if(i <= 7){
+		if(i < itbd_BITMASK2_FIRST){
 			//use the old bitmask.
 			m_bitsDamageTypeRef = &m_bitsDamageType;
 		}else{
@@ -1718,7 +1730,6 @@ void CBaseMonster::CheckTimeBasedDamage(void)
 		//if (m_bitsDamageType & (DMG_PARALYZE << i))
 		if ((*m_bitsDamageTypeRef) & (damageBit))
 		{
-
 			/*
 			// OLD WAY
 			m_rgbTimeBasedFirstFrame[i] = FALSE;
@@ -1737,8 +1748,6 @@ void CBaseMonster::CheckTimeBasedDamage(void)
 			}
 			*/
 
-
-
 			/*
 			if (m_rgbTimeBasedFirstFrame[i] == FALSE) {
 				// not the first frame?  Typical checks
@@ -1749,9 +1758,6 @@ void CBaseMonster::CheckTimeBasedDamage(void)
 				parse_itbd(i, bDuration);
 			}
 			*/
-
-
-
 
 
 			if(m_rgbTimeBasedFirstFrame[i] == FALSE){
@@ -1774,41 +1780,16 @@ void CBaseMonster::CheckTimeBasedDamage(void)
 					// don't come back!
 					removeTimedDamage(i, m_bitsDamageTypeRef);
 					if (bDuration == 0) {
+						// still let the damage indicator icon show up.
 						if (this->IsPlayer()) {
 							CBasePlayer* selfRef = static_cast<CBasePlayer*>(this);
-
-							if (i <= 7) {
-								//use the old bitmask.
+							if (i < itbd_BITMASK2_FIRST) {
 								selfRef->m_bitsDamageTypeForceShow |= damageBit;
-							}
-							else {
-								//use the new bitmask.
+							}else {
 								selfRef->m_bitsDamageTypeModForceShow |= damageBit;
 							}
-
 						}
 					}
-
-					/*
-					if (bDuration == 255) {
-						if (this->IsPlayer()) {
-							CBasePlayer* selfRef = static_cast<CBasePlayer*>(this);
-
-							
-							if (i <= 7) {
-								//use the old bitmask.
-								selfRef->m_bitsHUDDamage &= ~damageBit;
-							}
-							else {
-								//use the new bitmask.
-								selfRef->m_bitsModHUDDamage &= ~damageBit;
-							}
-							
-
-						}
-						
-					}
-					*/
 
 				}//END OF duration checks
 			}//END OF firstFrame check
@@ -1816,6 +1797,55 @@ void CBaseMonster::CheckTimeBasedDamage(void)
 		}
 	}//END OF loop through all damage types
 }//END OF CheckTimeBasedDamage
+
+
+
+
+void CBaseMonster::attemptResetTimedDamage(BOOL forceReset) {
+
+	if (forceReset || m_bitsDamageType != 0 || m_bitsDamageTypeMod != 0) {
+		for (int i = 0; i < itbd_COUNT; i++) {
+			m_rgbTimeBasedDamage[i] = 0;
+			m_rgbTimeBasedFirstFrame[i] = TRUE;
+		}
+
+		m_bitsDamageType = 0;
+		m_bitsDamageTypeMod = 0;
+	}
+
+}
+
+
+// On a TakeDamage call, need to see what damages are timed and apply them.
+// Also, note that unhandled m_bitsDamageTypes (either bitmask) don't simply 'go away' without
+// something clearing them.  Use them anywhere else to see if recently-inflicted damage has some
+// type (like DMG_BULLET, DMG_SLASH, etc.).  Clear a looked-for type when done or else irrelevant
+// attacks after that will see it still in memory.
+void CBaseMonster::applyNewTimedDamage(int arg_bitsDamageType, int arg_bitsDamageTypeMod) {
+
+	for (int i = 0; i < itbd_COUNT; i++) {
+		//MODDD
+		//if (bitsDamageType & (DMG_PARALYZE << i))
+
+		int* m_bitsDamageTypeRef = 0;
+		if (i < itbd_BITMASK2_FIRST) {
+			//use the old bitmask.
+			m_bitsDamageTypeRef = &arg_bitsDamageType;
+		}else {
+			//use the new bitmask.
+			m_bitsDamageTypeRef = &arg_bitsDamageTypeMod;
+		}
+
+		//
+		if ((*m_bitsDamageTypeRef) & (convert_itbd_to_damage(i))) {
+			m_rgbTimeBasedDamage[i] = 0;
+			//MODDD - next frame this is brought up will be the first one again.
+			m_rgbTimeBasedFirstFrame[i] = TRUE;
+		}
+
+	}//END OF for through itbd's
+}//applyNewTimedDamage
+
 
 
 
@@ -6265,7 +6295,6 @@ void CBaseMonster :: HandleAnimEvent( MonsterEvent_t *pEvent )
 	case MONSTER_EVENT_BODYDROP_HEAVY:
 		if ( pev->flags & FL_ONGROUND )
 		{
-			//easyForcePrintLine("BODYDROP_HEAVY %d", this->soundSentenceSavePreference);
 			if ( RANDOM_LONG( 0, 1 ) == 0 )
 			{
 				EMIT_SOUND_FILTERED( ENT(pev), CHAN_BODY, "common/bodydrop3.wav", 1, ATTN_NORM, 0, 90, FALSE );
@@ -6280,7 +6309,6 @@ void CBaseMonster :: HandleAnimEvent( MonsterEvent_t *pEvent )
 	case MONSTER_EVENT_BODYDROP_LIGHT:
 		if ( pev->flags & FL_ONGROUND )
 		{
-			//easyForcePrintLine("BODYDROP_LIGHT %d", this->soundSentenceSavePreference);
 			if ( RANDOM_LONG( 0, 1 ) == 0 )
 			{
 				EMIT_SOUND_FILTERED( ENT(pev), CHAN_BODY, "common/bodydrop3.wav", 1, ATTN_NORM, FALSE );

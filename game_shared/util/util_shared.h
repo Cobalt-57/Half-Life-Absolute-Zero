@@ -178,9 +178,19 @@ EASY_CVAR_EXTERN(hiddenMemPrintout)
 //       This just shows the timed damages of the first bitmask as initial strikes.
 //       Any continual damage still uses the 2nd bitmask for the aforementioned choices regardless.
 
-//#define DMG_TIMEBASED		(~(0x3fff)) // mask for time-based damage
+//#define DMG_TIMEBASED		(~(0x00003fff))
 // Going with the version from clientside files to support TF damage types... I guess?
-#define DMG_TIMEBASED		(~(0xff003fff)) // mask for time-based damage
+//#define DMG_TIMEBASED		(~(0xff003fff))
+// NEVERMIND, if they're phased out in both places now it doesn't make sense to care about those bits.
+// Also notice the ~ (bitmask 'not').  So it would actually be 0xffffc000
+// That means, bits 14 to 31 from the right (calling the right-most bit #0) are part of DMG_TIMEBASED.
+// Although Half-Life (excluding that weird client-only TFC thing?) doesn't do anything with bits 24 to 31.
+// They may as well be excluded.  This leaves a proper bitmask of: 0x00ffc000
+#define DMG_TIMEBASED		(0x00ffc000)
+// Now that's great and all but HOW ABOUT WE LIST OUT THE BITS LIKE A NORMAL PERSON.
+// Beats me why they didn't, but too late now.
+
+
 
 #define DMG_PARALYZE		(1 << 15) // slows affected creature down
 #define DMG_NERVEGAS		(1 << 16) // nerve toxins, very bad
@@ -254,8 +264,9 @@ EASY_CVAR_EXTERN(hiddenMemPrintout)
 										   // the player stops moving, or never stops moving for a decent while taking DMG_MAP_BLOCKED 
 										   // (so not simply moving from being on a moving platforms).
 										   // If so, it is safe to assume the player is stuck in something moving and should not be revived.
-
-
+#define DMG_POISONHALF			(1 << 9)   // For crossbow bolts to use instead of DMG_POISON.  Has half the duration of poison (not a separate skill entry)
+										   // Note that this itself isn't a separate timed damage, or else having DMG_POISON and DMG_HALFPOISON counting down
+										   // at the same time would be possible (two poison indicator icons)... weird.
 
 
 //Which types of damage in the new mask are secondary?
@@ -285,12 +296,40 @@ EASY_CVAR_EXTERN(hiddenMemPrintout)
 //UNUSED, this mechanism wasn't needed actually.  Or wasn't particularly helpful; would have led to 
 //taking the "long" way.
 #define DMG_CURABLE			(DMG_NERVEGAS | DMG_POISON | DMG_RADIATION)
-#define DMG_CURABLEMOD		(DMG_BLEEDING)
+#define DMG_CURABLEMOD		(DMG_BLEEDING | DMG_POISON)
 
 //MODDD - any damages
 #define DMG_ARMORBLOCKEXCEPTION		(0) //empty.
 //Actually, doesn't involve "bleeding".  That is the initial strike.  It will leave "DMG_TIMEDEFFECTIGNORE", so it works.
 #define DMG_ARMORBLOCKEXCEPTIONMOD	(DMG_TIMEDEFFECTIGNORE)
+
+
+
+
+//MODDD - NOTE - Pay little attention to these.  They're just arbitrary, for helping an iterator method
+// see which damage type is which.  For instance, "itbd_Poison" and "DMG_POISON" further below have no link,
+// but "itbd_Poison" is useless outside of Player.cpp (and monsters.cpp since they take timeddamage too now)
+// while "DMG_POISON" is referred to both by attackers and player.cpp.
+#define itbd_Paralyze		0		
+#define itbd_NerveGas		1
+#define itbd_Poison			2
+#define itbd_Radiation		3
+#define itbd_DrownRecover	4
+#define itbd_Acid			5
+#define itbd_SlowBurn		6
+#define itbd_SlowFreeze		7
+
+// more flexible way of recording the first itbd that belongs to m_bitsDamageTypeMod.
+#define itbd_BITMASK2_FIRST	8
+
+//MODDD - addition.
+#define itbd_Bleeding		8
+
+//MODDD - record the count of all itbd values.   also renamed from CDMG_TIMEBASED to itbd_MAX.
+#define itbd_COUNT			9
+
+
+
 
 
 

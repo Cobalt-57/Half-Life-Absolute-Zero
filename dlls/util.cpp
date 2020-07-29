@@ -5358,8 +5358,8 @@ void ClientPrecache( void )
 	//MODD - NEW!
 	//NOTICE: adding   ,FALSE);   to a sound precache-entry, as of the current setup, allows
 	//it to have this precache line ignored so that sentences.txt can pick it up instead (saving precious precache's)
-	PRECACHE_SOUND("weapons/glockSilencerOn.wav", FALSE);
-	PRECACHE_SOUND("weapons/glockSilencerOff.wav", FALSE);
+	PRECACHE_SOUND("weapons/glockSilencerOn.wav");
+	PRECACHE_SOUND("weapons/glockSilencerOff.wav");
 	
 	//gauss fire sounds.
 	PRECACHE_SOUND("weapons/electro4.wav");

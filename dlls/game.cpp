@@ -736,21 +736,6 @@ cvar_t	tdmg_bleeding_damage3 = { "tdmg_bleeding_damage3", "1" };
 
 
 
-//MODDD - all new below to "END Cvars".  These have been moved to hud.cpp.
-//cvar_t	giveDistOffset = {"offsetgivedistance","100"};
-//cvar_t	giveLookVert = {"offsetgivelookvertical","2"};
-
-
-
-
-//MODDD - OUT OF DATE, these are no longer used.  At least, not declared here (see hud.cpp of the clientside)
-//Re-register below if using again.
-/*
-cvar_t	allowGlockSecondarySilencer = {"allowglocksecsil","1"};
-//MODDD - note that below has been unused, since using a cvar to coordinate the silencer being on or off
-//only seems to cause complications.  You're welcome to try using it again.
-cvar_t	glockSilencerOn = {"glocksilenceron","0"};
-*/
 
 
 // END Cvars 
@@ -758,8 +743,6 @@ cvar_t	glockSilencerOn = {"glocksilenceron","0"};
 
 
 //cvar_t tempVar = {"testvarrr", "24", 0};
-
-//EASY_CVAR_CREATE_SERVER_SETUP_A(testveyy)
 
 
 extern int gmsgUpdateClientCVar;
@@ -882,8 +865,6 @@ void GameDLLInit( void )
 	///tempVar.name = "testvarrr";
 	//tempVar.string = "18";
 	//CVAR_REGISTER(&tempVar);
-	//EASY_CVAR_CREATE_SERVER_A(testveyy)
-
 
 
 

@@ -442,8 +442,8 @@ public:
 	int				m_bitsDamageTypeMod;
 
 	float			m_tbdPrev;				// Time-based damage timer
-	BYTE			m_rgbTimeBasedDamage[CDMG_TIMEBASED];
-	BOOL			m_rgbTimeBasedFirstFrame[CDMG_TIMEBASED];
+	BYTE			m_rgbTimeBasedDamage[itbd_COUNT];
+	BOOL			m_rgbTimeBasedFirstFrame[itbd_COUNT];
 
 
 
@@ -649,6 +649,7 @@ public:
 	//virtual void Think(void);
 
 	void attemptResetTimedDamage(BOOL forceReset);
+	void applyNewTimedDamage(int arg_bitsDamageType, int arg_bitsDamageTypeMod);
 	
 
 	static TYPEDESCRIPTION m_SaveData[];
@@ -1014,6 +1015,9 @@ public:
 	// LETS OPEN UP PANDAROA's BOX, SHALL WE???
 	GENERATE_TRACEATTACK_PROTOTYPE_VIRTUAL
 	GENERATE_TAKEDAMAGE_PROTOTYPE_VIRTUAL
+
+	virtual BOOL ChangeHealthFiltered(entvars_t* pevAttacker, float flDamage);
+
 	//MODDD - NEW. Overridable part of TRACEATTACK.
 	virtual float hitgroupDamage(float flDamage, int bitsDamageType, int bitsDamageTypeMod, int iHitgroup);
 
@@ -1102,7 +1106,10 @@ public:
 	virtual void IdleSound ( void ) { return; };
 	virtual void PainSound ( void ) { return; };
 	
+	// don't have to be implemented in hl_baseentity.cpp?  ok, interesting.   ...oh.  because they're stubs, { }.   DERP.
 	virtual void StopFollowing( BOOL clearSchedule ) {}
+	//MODDD - new version.
+	virtual void StopFollowing(BOOL clearSchedule, BOOL playUnuseSentence) {};
 
 	inline void Remember( int iMemory ) { m_afMemory |= iMemory; }
 	inline void Forget( int iMemory ) { m_afMemory &= ~iMemory; }

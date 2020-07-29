@@ -21,7 +21,8 @@
 
 // !!! IMPORTANT!   Keep this in synch with the number of things in
 // giDmgFlags.
-#define DMGICO_NUM_DMG_TYPES		9
+// Aha!  How about just piggybacking off other constants that count this correctly anyway.
+#define DMGICO_NUM_DMG_TYPES		itbd_COUNT
 
 // ALSO, do not assume a direct connection between the giDmgFlags array of
 // damage types for icons and the list of timed damages in 
@@ -33,7 +34,7 @@
 // but not giDmgFlags.
 
 
-#define DMGICO_FIRST_MOD_TYPE_INDEX 8
+#define DMGICO_FIRST_MOD_TYPE_INDEX itbd_BITMASK2_FIRST
 // Keeps track of the divide between damage types that should be checked
 // from m_bitsDamage or m_bitsDamageMod.
 // It is a count, not a power of 2, from the first item in giDmgFlags.

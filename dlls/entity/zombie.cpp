@@ -497,8 +497,9 @@ float CZombie::hitgroupDamage(float flDamage, int bitsDamageType, int bitsDamage
 				finalDamage = flDamage;
 			break;
 			case HITGROUP_HEAD:
+				// NOTICE - enhanced headshot damage idea canned.  Already appealing enough with
+				// all 'bullet resistance' ignored on headshots now.
 				if (g_iSkillLevel == SKILL_HARD) {
-					// less help.
 					finalDamage = flDamage * gSkillData.monHead * 1.00;
 				}else {
 					finalDamage = flDamage * gSkillData.monHead * 1.00;
@@ -1346,7 +1347,7 @@ int CZombie::LookupActivityHard(int activity){
 		//break;
 		case ACT_MELEE_ATTACK1:
 			//OVERRIDE.  Have a little better chance of picking the other melee one, will ya?
-			if (RANDOM_FLOAT(0, 1) <= 0.6) {
+			if (RANDOM_FLOAT(0, 1) <= 0.57) {
 				return LookupSequence("attack1");
 			}
 			else {

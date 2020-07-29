@@ -50,6 +50,8 @@ EASY_CVAR_EXTERN(turretBleedsOil)
 EASY_CVAR_EXTERN(turretDamageDecal)
 EASY_CVAR_EXTERN(turretGibDecal)
 
+extern DLL_GLOBAL float g_rawDamageCumula;
+
 
 
 
@@ -1241,7 +1243,17 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBaseTurret)
 	}
 
 
-	pev->health -= flDamage;
+	//MODDD - bounded pev->health reduction with 'nothing hurts' CVar check
+	//pev->health -= flDamage;
+
+	///////////////////////////////////////////////////////////////////////////////////
+	if (!ChangeHealthFiltered(pevAttacker, flDamage)) {
+		// call to block the rest of the method if this returns FALSE. Sets g_rawDamageCumula already if that happens.
+		return 0;
+	}
+	///////////////////////////////////////////////////////////////////////////////////
+
+
 
 	//SetThink(&CBaseTurret::TurretDeath);
 	if(!TurretDeathCheck(pevInflictor, pevAttacker, flDamage, bitsDamageType, bitsDamageTypeMod, static_cast <void (CBaseTurret::*)(void)>(&CBaseTurret::TurretDeath) ) )return 0; //this can block.
@@ -1628,7 +1640,19 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CSentry)
 			pev->nextthink = gpGlobals->time + 0.1;
 		}
 	}
-	pev->health -= flDamage;
+
+
+
+	//MODDD - bounded pev->health reduction with 'nothing hurts' CVar check
+	//pev->health -= flDamage;
+	///////////////////////////////////////////////////////////////////////////////////
+	if (!ChangeHealthFiltered(pevAttacker, flDamage)) {
+		// call to block the rest of the method if this returns FALSE. Sets g_rawDamageCumula already if that happens.
+		return 0;
+	}
+	///////////////////////////////////////////////////////////////////////////////////
+
+
 
 
 	//void (CBaseTurret::*eventMethod)()

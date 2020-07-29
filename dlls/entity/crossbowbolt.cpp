@@ -279,8 +279,8 @@ void CCrossbowBolt::BoltTouch( CBaseEntity *pOther )
 				// MODDD TODO - make crossbow poison weaker than most?  It's already pretty devastating
 				// even without the poison.  Would need a new damage type (for the 2nd dmg bitmask
 				// probably).  BLEGH.
-				gMultiDamage.type = DMG_BULLET | DMG_NEVERGIB | DMG_POISON;
-				gMultiDamage.typeMod = DMG_PROJECTILE;
+				gMultiDamage.type = DMG_BULLET | DMG_NEVERGIB; //| DMG_POISON;
+				gMultiDamage.typeMod = DMG_PROJECTILE | DMG_POISONHALF;
 			}
 
 
