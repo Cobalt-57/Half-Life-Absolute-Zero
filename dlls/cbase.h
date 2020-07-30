@@ -637,34 +637,32 @@ public:
 	void SUB_UseTargets( CBaseEntity *pActivator, USE_TYPE useType, float value );
 
 	// Do the bounding boxes of these two intersect?
-	int	Intersects( CBaseEntity *pOther );
+	int Intersects( CBaseEntity *pOther );
 	void MakeDormant( void );
-	int	IsDormant( void );
-	BOOL    IsLockedByMaster( void ) { return FALSE; }
+	int IsDormant( void );
+	BOOL IsLockedByMaster( void ) { return FALSE; }
 
-
-	//MODDD - the wounded NPC to seek out.
-	CBaseMonster* healTargetNPC;
 
 	//MODDD - no idea why this version didn't exist before.  From SELF.
-	//...Oh.  "MyMonsterPointer", nevermind.
-	CBaseMonster *GetMonsterPointer(  ) 
-	{ 
-		CBaseEntity *pEntity = Instance( pev );
-		if ( pEntity )
-			return pEntity->MyMonsterPointer();
-		return NULL;
+	//...Oh.  "MyMonsterPointer", nevermind.  This can stay as an alias for MyMonsterPointer.
+	CBaseMonster *GetMonsterPointer(void)
+	{
+		//CBaseEntity *pEntity = Instance( pev );
+		//if ( pEntity )
+		//	return pEntity->MyMonsterPointer();
+		//return NULL;
+		return this->MyMonsterPointer();
 	}
-
-	CBaseMonster *GetMonsterPointer( entvars_t *pevMonster ) 
-	{ 
+	//MODDD - and why weren't these variants static anyway?  Nothing about the instance called is involved, may as well be
+	static CBaseMonster *GetMonsterPointer( entvars_t *pevMonster ) 
+	{
 		CBaseEntity *pEntity = Instance( pevMonster );
 		if ( pEntity )
 			return pEntity->MyMonsterPointer();
 		return NULL;
 	}
-	CBaseMonster *GetMonsterPointer( edict_t *pentMonster ) 
-	{ 
+	static CBaseMonster *GetMonsterPointer( edict_t *pentMonster ) 
+	{
 		CBaseEntity *pEntity = Instance( pentMonster );
 		if ( pEntity )
 			return pEntity->MyMonsterPointer();

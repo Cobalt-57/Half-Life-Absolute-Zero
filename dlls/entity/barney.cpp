@@ -309,7 +309,7 @@ void CBarney::OnNearCautious(void){
 
 void CBarney::SayNearCautious(void){
 
-	switch(RANDOM_LONG(0, 33)){
+	switch(RANDOM_LONG(0, 34)){
 	case 0:
 		PlaySentenceSingular( "BA_OK0", 4, VOL_NORM, ATTN_NORM );
 	break;
@@ -395,7 +395,7 @@ void CBarney::SayNearCautious(void){
 		PlaySentenceSingular( "BA_ATTACK2", 4, VOL_NORM, ATTN_NORM );
 	break;
 	case 28:
-		PlaySentenceSingular( "BA_ATTACK5", 4, VOL_NORM, ATTN_NORM );
+		PlaySentenceSingular( "BA_ATTACK4", 4, VOL_NORM, ATTN_NORM );
 	break;
 	case 29:
 		PlaySentenceSingular( "BA_HEAR0", 4, VOL_NORM, ATTN_NORM );
@@ -407,16 +407,18 @@ void CBarney::SayNearCautious(void){
 		PlaySentenceSingular( "BA_HEAR2", 4, VOL_NORM, ATTN_NORM );
 	break;
 	case 32:
-		PlaySentenceSingular( "BA_STOP3", 4, VOL_NORM, ATTN_NORM );
+		PlaySentenceSingular( "BA_HEAR3", 4, VOL_NORM, ATTN_NORM );
 	break;
 	case 33:
+		PlaySentenceSingular( "BA_STOP3", 4, VOL_NORM, ATTN_NORM );
+	break;
+	case 34:
 		PlaySentenceSingular( "BA_STOP4", 4, VOL_NORM, ATTN_NORM );
 	break;
 	
 	}//END OF switch
 }//END OF SayNearCautious
 
-	
 
 const char* CBarney::madInterSentences[] = {
 	"!BA_POKE0",
@@ -812,10 +814,10 @@ void CBarney :: AlertSound( void )
 
 				if (RANDOM_FLOAT(0, 1) < 0.9) {
 					// angry barney
-					switch (RANDOM_LONG(0, 3)) {
-						case 0:PlaySentenceSingular("BA_ATTACK7", 4, VOL_NORM, ATTN_NORM);break;
-						case 1:PlaySentenceSingular("BA_ATTACK8", 4, VOL_NORM, ATTN_NORM);break;
-						case 2:PlaySentenceSingular("BA_ATTACK9", 4, VOL_NORM, ATTN_NORM);break;
+					switch (RANDOM_LONG(0, 2)) {
+						case 0:PlaySentenceSingular("BA_ATTACK6", 4, VOL_NORM, ATTN_NORM);break;
+						case 1:PlaySentenceSingular("BA_ATTACK7", 4, VOL_NORM, ATTN_NORM);break;
+						case 2:PlaySentenceSingular("BA_ATTACK8", 4, VOL_NORM, ATTN_NORM);break;
 					}
 				}else if (enemyClassify == CLASS_NONE) {
 					// ???
@@ -835,7 +837,7 @@ void CBarney :: AlertSound( void )
 							PlaySentenceSingular("BA_ATTACK2", 4, VOL_NORM, ATTN_NORM);
 						break;
 						case 3:
-							PlaySentenceSingular("BA_ATTACK6", 4, VOL_NORM, ATTN_NORM);
+							PlaySentenceSingular("BA_ATTACK5", 4, VOL_NORM, ATTN_NORM);
 						break;
 					}
 				}else if(
@@ -863,16 +865,16 @@ void CBarney :: AlertSound( void )
 						PlaySentenceSingular("BA_ATTACK2", 4, VOL_NORM, ATTN_NORM);
 						break;
 					case 2:
-						PlaySentenceSingular("BA_ATTACK3", 4, VOL_NORM, ATTN_NORM);
+						PlaySentenceSingular("BA_IDLE0", 4, VOL_NORM, ATTN_NORM);
 						break;
 					case 3:
-						PlaySentenceSingular("BA_ATTACK4", 4, VOL_NORM, ATTN_NORM);
+						PlaySentenceSingular("BA_ATTACK3", 4, VOL_NORM, ATTN_NORM);
 						break;
 					case 4:
-						PlaySentenceSingular("BA_ATTACK5", 4, VOL_NORM, ATTN_NORM);
+						PlaySentenceSingular("BA_ATTACK4", 4, VOL_NORM, ATTN_NORM);
 						break;
 					case 5:
-						PlaySentenceSingular("BA_ATTACK6", 4, VOL_NORM, ATTN_NORM);
+						PlaySentenceSingular("BA_ATTACK5", 4, VOL_NORM, ATTN_NORM);
 						break;
 					case 6:
 						PlaySentenceSingular("BA_ATTACK0", 4, VOL_NORM, ATTN_NORM);
@@ -902,13 +904,13 @@ void CBarney :: AlertSound( void )
 						PlaySentenceSingular("BA_ATTACK2", 4, VOL_NORM, ATTN_NORM);
 						break;
 					case 2:
-						PlaySentenceSingular("BA_ATTACK3", 4, VOL_NORM, ATTN_NORM);
+						PlaySentenceSingular("BA_IDLE0", 4, VOL_NORM, ATTN_NORM);
 						break;
 					case 3:
-						PlaySentenceSingular("BA_ATTACK4", 4, VOL_NORM, ATTN_NORM);
+						PlaySentenceSingular("BA_ATTACK3", 4, VOL_NORM, ATTN_NORM);
 						break;
 					case 4:
-						PlaySentenceSingular("BA_ATTACK5", 4, VOL_NORM, ATTN_NORM);
+						PlaySentenceSingular("BA_ATTACK4", 4, VOL_NORM, ATTN_NORM);
 						break;
 					case 5:
 						PlaySentenceSingular("BA_ATTACK0", 4, VOL_NORM, ATTN_NORM);
@@ -932,7 +934,7 @@ void CBarney :: AlertSound( void )
 						PlaySentenceSingular("BA_ATTACK2", 4, VOL_NORM, ATTN_NORM);
 						break;
 					case 2:
-						PlaySentenceSingular("BA_ATTACK6", 4, VOL_NORM, ATTN_NORM);
+						PlaySentenceSingular("BA_ATTACK5", 4, VOL_NORM, ATTN_NORM);
 						break;
 					case 3:
 						PlaySentenceSingular("BA_ATTACK0", 4, VOL_NORM, ATTN_NORM);
@@ -1291,7 +1293,7 @@ void CBarney :: Precache()
 
 	global_useSentenceSave = TRUE;
 
-	//MODDD - what? why is ba_attack1 precached? This is just a clip of Barney saying "FREEZE", which is better for the sentence system with or without the soundsentencesave. Otherwise unused.
+	//MODDD - what? why was ba_attack1 precached? This is just a clip of Barney saying "FREEZE", which is better for the sentence system with or without the soundsentencesave. Otherwise unused.
 	//        ba_attack2 is his glock's firing sound so it should be precached to play like any other sound effect if necessary (not usuing soundsentencesave).
 	//PRECACHE_SOUND("barney/ba_attack1.wav" );
 	
@@ -2238,8 +2240,12 @@ void CBarney::talkAboutKilledEnemy(void) {
 
 		int enemyClassify = recentDeadEnemyClass;
 		//long randoRange;
+		
 
-		if (enemyClassify == CLASS_NONE) {
+		if (RANDOM_FLOAT(0, 1) < 0.09) {
+			PlaySentenceSingular("BA_KILL7", 3, VOL_NORM, ATTN_NORM);
+		}
+		else if (enemyClassify == CLASS_NONE) {
 			// Really nothing? Go through all quotes as usual then.
 			PlaySentence("BA_KILL", 4, VOL_NORM, ATTN_NORM);
 		}

@@ -138,40 +138,8 @@ int __MsgFunc_Logo(const char *pszName, int iSize, void *pbuf)
 */
 //...  (rest removed)
 
-
-// TFFree Command Menu
-void __CmdFunc_OpenCommandMenu(void)
-{
-	if ( gViewPort )
-	{
-		gViewPort->ShowCommandMenu( gViewPort->m_StandardMenu );
-	}
-}
-
-// TFC "special" command
-void __CmdFunc_InputPlayerSpecial(void)
-{
-	if ( gViewPort )
-	{
-		gViewPort->InputPlayerSpecial();
-	}
-}
-
-void __CmdFunc_CloseCommandMenu(void)
-{
-	if ( gViewPort )
-	{
-		gViewPort->InputSignalHideCommandMenu();
-	}
-}
-
-void __CmdFunc_ForceCloseCommandMenu( void )
-{
-	if ( gViewPort )
-	{
-		gViewPort->HideCommandMenu();
-	}
-}
+//MODDD - TF-specific messages removed.
+// Several others can likely be safely removed but playing it safe for now
 
 void __CmdFunc_ToggleServerBrowser( void )
 {
@@ -181,13 +149,6 @@ void __CmdFunc_ToggleServerBrowser( void )
 	}
 }
 
-// TFFree Command Menu Message Handlers
-int __MsgFunc_ValClass(const char *pszName, int iSize, void *pbuf)
-{
-	if (gViewPort)
-		return gViewPort->MsgFunc_ValClass( pszName, iSize, pbuf );
-	return 0;
-}
 
 int __MsgFunc_TeamNames(const char *pszName, int iSize, void *pbuf)
 {
@@ -196,24 +157,10 @@ int __MsgFunc_TeamNames(const char *pszName, int iSize, void *pbuf)
 	return 0;
 }
 
-int __MsgFunc_Feign(const char *pszName, int iSize, void *pbuf)
+int __MsgFunc_VGUIMenu(const char* pszName, int iSize, void* pbuf)
 {
 	if (gViewPort)
-		return gViewPort->MsgFunc_Feign( pszName, iSize, pbuf );
-	return 0;
-}
-
-int __MsgFunc_Detpack(const char *pszName, int iSize, void *pbuf)
-{
-	if (gViewPort)
-		return gViewPort->MsgFunc_Detpack( pszName, iSize, pbuf );
-	return 0;
-}
-
-int __MsgFunc_VGUIMenu(const char *pszName, int iSize, void *pbuf)
-{
-	if (gViewPort)
-		return gViewPort->MsgFunc_VGUIMenu( pszName, iSize, pbuf );
+		return gViewPort->MsgFunc_VGUIMenu(pszName, iSize, pbuf);
 	return 0;
 }
 
@@ -224,19 +171,6 @@ int __MsgFunc_MOTD(const char *pszName, int iSize, void *pbuf)
 	return 0;
 }
 
-int __MsgFunc_BuildSt(const char *pszName, int iSize, void *pbuf)
-{
-	if (gViewPort)
-		return gViewPort->MsgFunc_BuildSt( pszName, iSize, pbuf );
-	return 0;
-}
-
-int __MsgFunc_RandomPC(const char *pszName, int iSize, void *pbuf)
-{
-	if (gViewPort)
-		return gViewPort->MsgFunc_RandomPC( pszName, iSize, pbuf );
-	return 0;
-}
  
 int __MsgFunc_ServerName(const char *pszName, int iSize, void *pbuf)
 {
@@ -266,19 +200,23 @@ int __MsgFunc_TeamInfo(const char *pszName, int iSize, void *pbuf)
 	return 0;
 }
 
-int __MsgFunc_Spectator(const char *pszName, int iSize, void *pbuf)
+
+//MODDD - don't even know if it's possible for these to be called, but keeping them to be safe.
+int __MsgFunc_Spectator(const char* pszName, int iSize, void* pbuf)
 {
 	if (gViewPort)
-		return gViewPort->MsgFunc_Spectator( pszName, iSize, pbuf );
+		return gViewPort->MsgFunc_Spectator(pszName, iSize, pbuf);
 	return 0;
 }
 
-int __MsgFunc_AllowSpec(const char *pszName, int iSize, void *pbuf)
+int __MsgFunc_AllowSpec(const char* pszName, int iSize, void* pbuf)
 {
 	if (gViewPort)
-		return gViewPort->MsgFunc_AllowSpec( pszName, iSize, pbuf );
+		return gViewPort->MsgFunc_AllowSpec(pszName, iSize, pbuf);
 	return 0;
 }
+
+
 
 
 /*
@@ -856,31 +794,19 @@ void CHud :: Init( void )
 	//MODDD - HOOK_MESSAGE calls for hud_msg.cpp methods moved
 	// to custom_message.cpp, along with the methods themselves.
 	
-	// TFFree CommandMenu
-	HOOK_COMMAND( "+commandmenu", OpenCommandMenu );
-	HOOK_COMMAND( "-commandmenu", CloseCommandMenu );
-	HOOK_COMMAND( "ForceCloseCommandMenu", ForceCloseCommandMenu );
-	HOOK_COMMAND( "special", InputPlayerSpecial );
 	HOOK_COMMAND( "togglebrowser", ToggleServerBrowser );
 
-
-	HOOK_MESSAGE( ValClass );
 	HOOK_MESSAGE( TeamNames );
-	HOOK_MESSAGE( Feign );
-	HOOK_MESSAGE( Detpack );
+
+	HOOK_MESSAGE( VGUIMenu );
 	HOOK_MESSAGE( MOTD );
-	HOOK_MESSAGE( BuildSt );
-	HOOK_MESSAGE( RandomPC );
 	HOOK_MESSAGE( ServerName );
 	HOOK_MESSAGE( ScoreInfo );
 	HOOK_MESSAGE( TeamScore );
 	HOOK_MESSAGE( TeamInfo );
 
-	HOOK_MESSAGE( Spectator );
-	HOOK_MESSAGE( AllowSpec );
-
-	// VGUI Menus
-	HOOK_MESSAGE( VGUIMenu );
+	HOOK_MESSAGE(Spectator);
+	HOOK_MESSAGE(AllowSpec);
 
 
 	//MODDDDMIRROR - this block.   ...wait, really?  Don't you mean just the 'numMirrors' bit/
@@ -939,6 +865,7 @@ void CHud :: Init( void )
 	CVAR_CREATE("ctt1", "1", 0);
 	CVAR_CREATE("ctt2", "-1", 0);
 	CVAR_CREATE("ctt3", "1", 0);  //used to be 2, works better with 0 here!
+	CVAR_CREATE("ctt4", "0", 0);
 
 
 	
@@ -990,13 +917,15 @@ void CHud :: Init( void )
 	cl_viewrollspeed = CVAR_CREATE("cl_viewrollspeed", "300", FCVAR_CLIENTDLL | FCVAR_ARCHIVE);
 
 	// Same for these...?  No idea what business Team Fortress CVars have in HL but okay.
-	CVAR_CREATE( "hud_classautokill", "1", FCVAR_ARCHIVE | FCVAR_USERINFO );		// controls whether or not to suicide immediately on TF class switch
-	CVAR_CREATE( "hud_takesshots", "0", FCVAR_ARCHIVE );		// controls whether or not to automatically take screenshots at the end of a round
+	//MODDD - and bye.
+	// I don't know if hud_takesshots can even work in HL multiplayer.  If not definitely keep removed.
+	//CVAR_CREATE( "hud_classautokill", "1", FCVAR_ARCHIVE | FCVAR_USERINFO );		// controls whether or not to suicide immediately on TF class switch
+	//CVAR_CREATE( "hud_takesshots", "0", FCVAR_ARCHIVE );		// controls whether or not to automatically take screenshots at the end of a round
 	
 
 
 	//TEST!!!
-	CVAR_CREATE("pregame_server_cvar", "0", FCVAR_ARCHIVE | FCVAR_SERVER);		// controls whether or not to automatically take screenshots at the end of a round
+	CVAR_CREATE("pregame_server_cvar", "0", FCVAR_ARCHIVE | FCVAR_SERVER);
 	
 	
 	/*

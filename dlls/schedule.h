@@ -19,16 +19,18 @@
 #ifndef	SCHEDULE_H
 #define SCHEDULE_H
 
+// constants for m_iTaskStatus
 #define TASKSTATUS_NEW				0			// Just started
 #define TASKSTATUS_RUNNING			1			// Running task & movement
 
-// FUCK YOU NOBODY LIKES YOU
+//MODDD - never used actually, goodbye.
 /*
 #define TASKSTATUS_RUNNING_MOVEMENT	2			// Just running movement
 #define TASKSTATUS_RUNNING_TASK		3			// Just running task
 */
 
-#define TASKSTATUS_COMPLETE			4			// Completed, get next task
+// also this used to be 4, can be the new #2 I suppose
+#define TASKSTATUS_COMPLETE			2			// Completed, get next task
 
 
 //=========================================================

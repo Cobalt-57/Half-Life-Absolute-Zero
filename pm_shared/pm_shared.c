@@ -2806,7 +2806,6 @@ PM_Jump
 void PM_Jump (void)
 {
 	int i;
-	qboolean tfc = false;
 	//MODDD
 	float jumpForceMulti = 1;
 	qboolean cansuperjump = false;
@@ -2820,14 +2819,7 @@ void PM_Jump (void)
 		return;
 	}
 
-	tfc = atoi( pmove->PM_Info_ValueForKey( pmove->physinfo, "tfc" ) ) == 1 ? true : false;
-
-	// Spy that's feigning death cannot jump
-	if ( tfc && 
-		( pmove->deadflag == ( DEAD_DISCARDBODY + 1 ) ) )
-	{
-		return;
-	}
+	//MODDD - tfc check removed
 
 	// See if we are waterjumping.  If so, decrement count and return.
 	if ( pmove->waterjumptime )
@@ -2896,24 +2888,17 @@ void PM_Jump (void)
 	//MODDD - does removing this alone re-allow bunny hopping?
 	//PM_PreventMegaBunnyJumping();
 
-	if ( tfc )
-	{
-		pmove->PM_PlaySound( CHAN_BODY, "player/plyrjmp8.wav", 0.5, ATTN_NORM, 0, PITCH_NORM );
+	//MODDD - tfc check removed.
+	
+	PM_PlayStepSound( PM_MapTextureTypeStepType( pmove->chtexturetype ), 1.0 );
+
+	//MODDDREMOVE
+	random = pmove->RandomLong(0, 1);
+	if(random == 0){
+		pmove->PM_PlaySound( CHAN_BODY, "player/pl_jump1.wav", 0.8, ATTN_NORM, 0, PITCH_NORM );
+	}else if(random == 1){
+		pmove->PM_PlaySound( CHAN_BODY, "player/pl_jump2.wav", 0.8, ATTN_NORM, 0, PITCH_NORM );
 	}
-	else
-	{
-		PM_PlayStepSound( PM_MapTextureTypeStepType( pmove->chtexturetype ), 1.0 );
-
-		//MODDDREMOVE
-		random = pmove->RandomLong(0, 1);
-		if(random == 0){
-			pmove->PM_PlaySound( CHAN_BODY, "player/pl_jump1.wav", 0.8, ATTN_NORM, 0, PITCH_NORM );
-		}else if(random == 1){
-			pmove->PM_PlaySound( CHAN_BODY, "player/pl_jump2.wav", 0.8, ATTN_NORM, 0, PITCH_NORM );
-		}
-
-	}
-
 
 
 	//MODDD TODO - would it  be safer to let pm_shared here change physics key "slj" to a value of 0 after this is performed?
@@ -3156,17 +3141,20 @@ void PM_CheckFalling( void )
 		}
 		else if ( pmove->flFallVelocity > PLAYER_MAX_SAFE_FALL_SPEED / 2 )
 		{
-
-			qboolean tfc = false;
 #if DEBUG_PRINTFALL == 1
 			pmove->Con_Printf("FALL BRACKET 3 %.2f\n", pmove->flFallVelocity);
 #endif
+
+			//MODDD - glock disabled, re-declare 'tfc' to see again.   Although just playing pl_fallpain3?
+			// Why did this require being tf?
+			/*
 			tfc = atoi( pmove->PM_Info_ValueForKey( pmove->physinfo, "tfc" ) ) == 1 ? true : false;
 
 			if ( tfc )
 			{
 				pmove->PM_PlaySound( CHAN_VOICE, "player/pl_fallpain3.wav", 1, ATTN_NORM, 0, PITCH_NORM );
 			}
+			*/
 
 			fvol = 0.85;
 		}

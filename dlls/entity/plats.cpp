@@ -1889,8 +1889,7 @@ void CFuncTrackChange :: UpdateTrain( Vector &dest )
 	m_train->pev->velocity = pev->velocity;
 	m_train->pev->avelocity = pev->avelocity;
 
-	//MODDD - HOLY SHIT YOU HAVE NO FUCKIN IDEA HOW FUCKIN IMPORTANT THIS FUCKIN LINE IS MOTHERFUCKER.
-	//        ALSO THIS POWDER I SNORTED FROM OFF THE SIDEWALK IS REAL FUCKIN RAD
+	//MODDD - uh.   yea.    This line's pretty important.                yeah.
 	m_train->NextThink( m_train->pev->ltime + time, FALSE );
 
 	// Attempt at getting the train to rotate properly around the origin of the trackchange

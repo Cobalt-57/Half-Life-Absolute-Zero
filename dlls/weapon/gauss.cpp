@@ -13,7 +13,6 @@
 *
 ****/
 
-
 #pragma once
 
 #include "extdll.h"
@@ -32,14 +31,12 @@
 // Bunch of stuff moved to gauss.h for including things needed by here and ev_hldm.
 
 
-
 //NOTES ON VARS:
 //m_fireState   -  the mode that the animation uses for detecting "phase" (stage towards actually showing the full spin anim, as opposed to the pre-delay and showing the start spin anim).
 //m_flStartThrow - delay required for the charge animation to start playing
 //m_flReleaseThrow  -  alternate time recording since charging.  "Charging" for a very short amount of time
 //     registers as a "tap" (primary fire) instead, since (quake style) one mouse button is used for both primary
 //     (tap) and secondary (hold down) attacks.
-
 
 
 
@@ -58,7 +55,6 @@ EASY_CVAR_EXTERN(gauss_primarypunchthrough)
 EASY_CVAR_EXTERN(gauss_secondarypunchthrough)
 
 
-
 EASY_CVAR_EXTERN(gauss_betweenattackdelay)
 EASY_CVAR_EXTERN(gauss_secondarychargemindelay)
 EASY_CVAR_EXTERN(gauss_chargeMaxAmmo_SP)
@@ -69,10 +65,7 @@ EASY_CVAR_EXTERN(gauss_chargeInterval_MP)
 
 
 
-
 LINK_ENTITY_TO_CLASS( weapon_gauss, CGauss );
-
-
 
 
 
@@ -82,7 +75,6 @@ CGauss::CGauss(void){
 	ohDearSonny = -1;
 
 }//END OF CGauss constructor
-
 
 
 
@@ -99,9 +91,6 @@ TYPEDESCRIPTION	CGauss::m_SaveData[] =
 };
 IMPLEMENT_SAVERESTORE(CGauss, CBasePlayerWeapon);
 #endif
-
-
-
 
 
 
@@ -263,9 +252,6 @@ void CGauss::PrimaryAttack()
 
 	
 
-
-
-
 	//MODDD
 	if(EASY_CVAR_GET(gauss_primaryonly) == 1){
 		chargeWork();
@@ -279,7 +265,6 @@ void CGauss::PrimaryAttack()
 	}//END OF gauss quake style check
 	
 	
-
 
 	//similarly, this script has been moved to its own method to be more easily called.
 	attemptFirePrimary();
@@ -336,9 +321,6 @@ void CGauss::attemptFirePrimary(){
 
 
 
-
-
-
 EASY_CVAR_EXTERN(cheat_minimumfiredelay);
 
 void CGauss::ItemPreFrame(){
@@ -365,8 +347,6 @@ void CGauss::ItemPreFrame(){
 
 	}
 	*/
-	
-
 }
 
 void CGauss::ItemPostFrame(){
@@ -400,9 +380,6 @@ void CGauss::SecondaryAttack()
 
 
 }//END OF getNextAmmoBurnDelay()
-
-
-
 
 
 
@@ -483,7 +460,6 @@ void CGauss::chargeWork(){
 
 		
 
-		//ROLD ASS
 		m_pPlayer->m_flStartChargePreSuperDuper = gpGlobals->time;  //just record me.
 
 	}
@@ -553,7 +529,6 @@ void CGauss::chargeWork(){
 			m_pPlayer->m_flStartCharge = gpGlobals->time;
 			m_pPlayer->m_flAmmoStartCharge = UTIL_WeaponTimeBase() + GetFullChargeTime();
 		}
-
 
 
 		BOOL moveToNextPhase = FALSE;
@@ -673,8 +648,6 @@ void CGauss::chargeWork(){
 
 
 	postChargeAnimCheck();
-
-
 }//END OF chargeWork()
 
 
@@ -778,12 +751,7 @@ void CGauss::postChargeAnimCheck(){
 	
 		if(ohMySon != m_fireState){
 			ohMySon = m_fireState;
-
-
-
 		}
-
-
 
 
 		if (this->m_flReleaseThrow < gpGlobals->time)
@@ -841,7 +809,7 @@ void CGauss::StartFireDecision( void ){
 		float timePassed = gpGlobals->time - m_pPlayer->m_flStartChargePreSuperDuper;
 		//easyForcePrintLine("TimePassed!! : %.2f : %.2f", timePassed, EASY_CVAR_GET(gauss_secondarychargetimereq)  );
 
-		easyForcePrintLine("AW SHIT MAN %.2f", timePassed);
+		easyForcePrintLine("AW no MAN %.2f", timePassed);
 		if(m_fInAttack > 1 && timePassed > EASY_CVAR_GET(gauss_secondarychargetimereq) ){
 			//proceed with defaults: secondary attack.
 			m_fPrimaryFire = FALSE;
@@ -1002,12 +970,20 @@ void CGauss::Fire( Vector vecOrigSrc, Vector vecDir, float flDamage )
 		//...our modded model's "fire2" now takes 30/30 seconds, so maintaining.
 		//m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + (31.0/30.0);
 		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + (31.0/30.0) + randomIdleAnimationDelay();;
+
+
+		/////////////////////////////////////////////////////////////////////////////////////////////
+		//MODDD - NOTE. is m_flNextAttack redundant with m_flNextPrimary/Secondary Attack?  Who knows.
+		// also on primary, assume this is already handled.  So far at least.   Secondary needs this though.
+		//m_pPlayer->m_flNextAttack = m_flNextSecondaryAttack = m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 0.7;
+
 	}else{
 		//No need to set the idle time for secondary fire, as that is charging (release has to set the idle time)
 		//Actually, it is fine here.  Fire is called when released, so it works here too.
 		//m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + (41.0/30.0);
 		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + (31.0/30.0) + randomIdleAnimationDelay();;
 
+		m_pPlayer->m_flNextAttack = m_flNextSecondaryAttack = m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 0.7;
 	}
 
 	
@@ -1135,7 +1111,7 @@ void CGauss::Fire( Vector vecOrigSrc, Vector vecDir, float flDamage )
 						// trace backwards to find exit point
 						UTIL_TraceLine( beam_tr.vecEndPos, tr.vecEndPos, dont_ignore_monsters, pentIgnore, &beam_tr);
 
-						float n = (beam_tr.vecEndPos - tr.vecEndPos).Length( );
+						n = (beam_tr.vecEndPos - tr.vecEndPos).Length( );
 
 						if (n < flDamage)
 						{

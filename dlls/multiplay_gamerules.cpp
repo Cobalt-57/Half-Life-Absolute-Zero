@@ -49,11 +49,23 @@ extern DLL_GLOBAL BOOL g_fGameOver;
 // marked with the ITEM_FLAG_LIMITINWORLD will delay their respawn
 #define ENTITY_INTOLERANCE	100
 
+#define INTERMISSION_TIME		6
+
+#define MAX_RULE_BUFFER 1024
+
+// longest the intermission can last, in seconds
+#define MAX_INTERMISSION_TIME		120
+
+#define MAX_MOTD_CHUNK	  60
+#define MAX_MOTD_LENGTH   1536 // (MAX_MOTD_CHUNK * 4)
+
 
 
 float g_flIntermissionStartTime = 0;
 
 CVoiceGameMgr g_VoiceGameMgr;
+
+
 
 
 class CMultiplayGameMgrHelper : public IVoiceGameMgrHelper
@@ -201,9 +213,6 @@ void CHalfLifeMultiplay::RefreshSkillData( void )
 
 	}//END OF ignoreMultiplayerSkillOverride check
 }
-
-// longest the intermission can last, in seconds
-#define MAX_INTERMISSION_TIME		120
 
 //=========================================================
 //=========================================================
@@ -464,7 +473,7 @@ void CHalfLifeMultiplay :: InitHUD( CBasePlayer *pl )
 		WRITE_BYTE( ENTINDEX(pl->edict()) );
 		WRITE_SHORT( 0 );
 		WRITE_SHORT( 0 );
-		WRITE_SHORT( 0 );
+		//WRITE_SHORT( 0 ); MODDD
 		WRITE_SHORT( 0 );
 	MESSAGE_END();
 
@@ -482,7 +491,7 @@ void CHalfLifeMultiplay :: InitHUD( CBasePlayer *pl )
 				WRITE_BYTE( i );	// client number
 				WRITE_SHORT( plr->pev->frags );
 				WRITE_SHORT( plr->m_iDeaths );
-				WRITE_SHORT( 0 );
+				//WRITE_SHORT( 0 ); MODDD
 				WRITE_SHORT( GetTeamIndex( plr->m_szTeamName ) + 1 );
 			MESSAGE_END();
 		}
@@ -676,7 +685,7 @@ void CHalfLifeMultiplay :: PlayerKilled( CBasePlayer *pVictim, entvars_t *pKille
 		WRITE_BYTE( ENTINDEX(pVictim->edict()) );
 		WRITE_SHORT( pVictim->pev->frags );
 		WRITE_SHORT( pVictim->m_iDeaths );
-		WRITE_SHORT( 0 );
+		//WRITE_SHORT( 0 );
 		WRITE_SHORT( GetTeamIndex( pVictim->m_szTeamName ) + 1 );
 	MESSAGE_END();
 
@@ -690,7 +699,7 @@ void CHalfLifeMultiplay :: PlayerKilled( CBasePlayer *pVictim, entvars_t *pKille
 			WRITE_BYTE( ENTINDEX(PK->edict()) );
 			WRITE_SHORT( PK->pev->frags );
 			WRITE_SHORT( PK->m_iDeaths );
-			WRITE_SHORT( 0 );
+			//WRITE_SHORT( 0 );
 			WRITE_SHORT( GetTeamIndex( PK->m_szTeamName) + 1 );
 		MESSAGE_END();
 
@@ -1245,7 +1254,6 @@ BOOL CHalfLifeMultiplay :: FAllowMonsters( void )
 
 //=========================================================
 //======== CHalfLifeMultiplay private functions ===========
-#define INTERMISSION_TIME		6
 
 void CHalfLifeMultiplay :: GoToIntermission( void )
 {
@@ -1268,8 +1276,6 @@ void CHalfLifeMultiplay :: GoToIntermission( void )
 	g_fGameOver = TRUE;
 	m_iEndIntermissionButtonHit = FALSE;
 }
-
-#define MAX_RULE_BUFFER 1024
 
 typedef struct mapcycle_item_s
 {
@@ -1757,9 +1763,6 @@ void CHalfLifeMultiplay :: ChangeLevel( void )
 		SERVER_COMMAND( szCommands );
 	}
 }
-
-#define MAX_MOTD_CHUNK	  60
-#define MAX_MOTD_LENGTH   1536 // (MAX_MOTD_CHUNK * 4)
 
 void CHalfLifeMultiplay :: SendMOTDToClient( edict_t *pClient )
 {

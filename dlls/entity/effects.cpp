@@ -2679,8 +2679,7 @@ void CEnvMirror :: MirrorThink( void )
 	    if (UTIL_PlayerByIndex(1))
 		{
 			//MODDD - NOTE.
-			// BEEP BEEP MOTHERFUCKER, ITS TIME FOR A COMMENT TO EXPLAIN SHIT.
-			// See the last two parameters?  Those are the bparam1 and bparam2 (BOOL's, which are int's in disguise).
+			// Last two params 'bparam1 and bparam2' are BOOL's, which are int's in disguise.
 			// Point is they're generally expected to just be 0 or 1 for FALSE/TRUE.
 			// Anyway, they're read by ev_hldm.cpp's EV_Mirror.  1st one is significant of those two.
 			// It tells whether this mirror is supposed to be enabled or not (bEnabled in EV_Mirror).

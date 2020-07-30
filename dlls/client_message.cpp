@@ -177,7 +177,7 @@ void LinkUserMessages( void )
 	gmsgInitHUD = REG_USER_MSG("InitHUD", 0 );		// called every time a new player joins the server
 	gmsgShowGameTitle = REG_USER_MSG("GameTitle", 1);
 	gmsgDeathMsg = REG_USER_MSG( "DeathMsg", -1 );
-	gmsgScoreInfo = REG_USER_MSG( "ScoreInfo", 9 );
+	gmsgScoreInfo = REG_USER_MSG( "ScoreInfo", 7 );  //MODDD - reduced by 2 since removing the playerclass parameter
 	gmsgTeamInfo = REG_USER_MSG( "TeamInfo", -1 );  // sets the name of a player's team
 	gmsgTeamScore = REG_USER_MSG( "TeamScore", -1 );  // sets the score of a team on the scoreboard
 	gmsgGameMode = REG_USER_MSG( "GameMode", 1 );
@@ -194,10 +194,14 @@ void LinkUserMessages( void )
 	gmsgAmmoX = REG_USER_MSG("AmmoX", 2);
 	gmsgTeamNames = REG_USER_MSG( "TeamNames", -1 );
 
+
+	//MODDD - these were present in the recent SDK but not the 'ancient' one.
 	gmsgStatusText = REG_USER_MSG("StatusText", -1);
 	gmsgStatusValue = REG_USER_MSG("StatusValue", 3); 
-
+	
+	
 	gmsgPrintClient = REG_USER_MSG("PrintCl", -1);
+	
 	
 	//MODDD EXPERIMENTAL.  Is the -1 size okay?
 	gmsgJukeboxRequest = REG_USER_MSG("JBoxReq", -1);

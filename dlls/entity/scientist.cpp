@@ -181,6 +181,9 @@ public:
 	// Yes, a cooldown just for screaming, separate from the general talk one.
 	float screamCooldown;
 
+	//MODDD - the wounded NPC to seek out.
+	CBaseMonster* healTargetNPC;
+	
 
 	CScientist(void);
 	int getMadSentencesMax(void);
@@ -1045,8 +1048,6 @@ void CScientist::SayNearPassive(void){
 	case 18:
 		PlaySentenceSingular("SC_PIDLE5", 4, VOL_NORM, ATTN_NORM);
 	break;
-
-	
 	default:
 
 	break;

@@ -33,6 +33,8 @@ extern "C"
 #include "vgui_int.h"
 #include "interface.h"
 
+//MODD - show me what ya got.
+#include "utils/vgui/include/VGUI_Panel.h"
 
 EASY_CVAR_EXTERN(drawHUD);
 
@@ -41,7 +43,12 @@ EASY_CVAR_EXTERN(drawHUD);
 
 cl_enginefunc_t gEngfuncs;
 CHud gHUD;
-TeamFortressViewport *gViewPort = NULL;
+
+// Someday...
+//vgui::Panel* gViewPort = NULL;
+TeamFortressViewport* gViewPort = NULL;
+
+
 
 BOOL hasAutoMus = FALSE;
 float globalPSEUDO_drawHUDMem = -1;

@@ -493,7 +493,7 @@ BOOL EV_HLDM_CheckTracer( int idx, float *vecSrc, float *end, float *forward, fl
 	//        for some odd reason.
 	int disableBulletHitDecal = FALSE;
 	int i;
-	qboolean player = idx >= 1 && idx <= gEngfuncs.GetMaxClients() ? true : false;
+	qboolean player = idx >= 1 && idx <= gEngfuncs.GetMaxClients() ? TRUE : FALSE;
 
 	if ( iTracerFreq != 0 && ( (*tracerCountChoice)++ % iTracerFreq) == 0 )
 	{
@@ -600,7 +600,7 @@ void EV_HLDM_FireBullets( int idx, float *forward, float *right, float *up, int 
 			}
 		}
 
-		gEngfuncs.pEventAPI->EV_SetUpPlayerPrediction(false, true);
+		gEngfuncs.pEventAPI->EV_SetUpPlayerPrediction(FALSE, TRUE);
 
 
 		// Store off the old count
@@ -1292,22 +1292,50 @@ void EV_FireGauss( event_args_t *args )
 		V_PunchAxis( 0, -2.0 );
 		gEngfuncs.pEventAPI->EV_WeaponAnimation( GAUSS_FIRE2, 2 );
 
-		if ( m_fPrimaryFire == false )
-			 g_flApplyVel = flDamage;	
-			 
+		if (m_fPrimaryFire == FALSE) {
+			g_flApplyVel = flDamage;
+		}
 	}
 	
 	if(EASY_CVAR_GET(mutePlayerWeaponFire) != 1 ){
-		gEngfuncs.pEventAPI->EV_PlaySound( idx, origin, CHAN_WEAPON, "weapons/gauss2.wav", 0.5 + flDamage * (1.0 / 400.0), ATTN_NORM, 0, 85 + gEngfuncs.pfnRandomLong( 0, 0x1f ) );
-	}
+		// original line
+		//gEngfuncs.pEventAPI->EV_PlaySound( idx, origin, CHAN_WEAPON, "weapons/gauss2.wav", 0.5 + flDamage * (1.0 / 400.0), ATTN_NORM, 0, 85 + gEngfuncs.pfnRandomLong( 0, 0x1f ) );
+		float flVol;
+		float flAttn;
+		int iPitch;
+		float dmgFracto = min(flDamage, 200.0f) * (1.0f / 200.0f);
+		//MODDD - little safety filter for damage, if over 200 cap it's influence on volume.
+		// Paranoid but just being safe.
+		// Attenuation is less for higher damages too (sound carries further).
+		// damage readings
+		// primary : 20
+		// secondary min: 27.3719196
+		// secondary max: 200
+
+		if (m_fPrimaryFire) {
+			flVol = 0.7;
+			flAttn = ATTN_NORM - 0.05;
+			// original pitch range was 85 to 116.
+			iPitch = gEngfuncs.pfnRandomLong(90, 112);
+		}
+		else {
+			flVol = 0.7 + dmgFracto * 0.3;
+			flAttn = ATTN_NORM - ( 0.05 + 0.25 * dmgFracto);
+			// original pitch range was 85 to 116.
+			iPitch = gEngfuncs.pfnRandomLong(92 - (long)(dmgFracto * 10), 115 - (long)(dmgFracto * 18));
+		}
+		
+		gEngfuncs.pEventAPI->EV_PlaySound(idx, origin, CHAN_WEAPON, "weapons/gauss2.wav", flVol, flAttn, 0, iPitch);
+	}//END OF mutePlayerWeaponFirecheck
 
 	
 //NOTE: on any changes, sync me up with gauss.cpp (server-side)'s "Fire" method with a similar loop.
 	while (flDamage > 10 && nMaxHits > 0)
 	{
+
 		nMaxHits--;
 
-		gEngfuncs.pEventAPI->EV_SetUpPlayerPrediction( false, true );
+		gEngfuncs.pEventAPI->EV_SetUpPlayerPrediction( FALSE, TRUE );
 		
 		// Store off the old count
 		gEngfuncs.pEventAPI->EV_PushPMStates();
@@ -1323,6 +1351,32 @@ void EV_FireGauss( event_args_t *args )
 		if ( tr.allsolid )
 			break;
 
+
+		//MODDD - reget this each time in case of changes.
+		float dmgFracto;
+		float beamColor_r;
+		float beamColor_g;
+		float beamColor_b;
+		float beamWidth;  //default:  m_fPrimaryFire ? 1.0 : 2.5
+		float beamBrightness;  //default: (m_fPrimaryFire ? 128.0 : flDamage) / 255.0f
+
+		if (m_fPrimaryFire) {
+			dmgFracto = min(flDamage, 20.0f) * (1.0f / 20.0f);
+			beamColor_r = 1.0f;
+			beamColor_g = 0.5f;
+			beamColor_b = 0.0f;
+			beamWidth = 0.8f + dmgFracto*0.45f;
+			beamBrightness = 0.6f + dmgFracto*0.17f;
+		}else {
+			dmgFracto = min(flDamage, 200.0f) * (1.0f / 200.0f);
+			beamColor_r = 1.0f;
+			beamColor_g = 1.0f;
+			beamColor_b = 1.0f;
+			beamWidth = 1.5f + dmgFracto * 2.0f;
+			beamBrightness = 0.65f + dmgFracto * 0.35f;
+		}
+
+
 		if (fFirstBeam)
 		{
 			if ( EV_IsLocal( idx ) )
@@ -1332,20 +1386,25 @@ void EV_FireGauss( event_args_t *args )
 			}
 			fFirstBeam = 0;
 
-			gEngfuncs.pEfxAPI->R_BeamEntPoint( 
+			//MODDD - beam color touchups due to hastily pasted serverside script, believed to be from early in development
+			// when client prediction was implemented (clientside-effects methods often expect color as a float from 0 to 1,
+			// not a byte/int from 0 to 255 as found here).
+			// Thanks Nikita Butorin / @vasiavasiavasia95 !
+			
+			gEngfuncs.pEfxAPI->R_BeamEntPoint(
 				idx | 0x1000,
 				tr.endpos,
 				m_iBeam,
 				0.1,
-				m_fPrimaryFire ? 1.0 : 2.5,
+				beamWidth,
 				0.0,
-				m_fPrimaryFire ? 128.0 : flDamage,
+				beamBrightness,
 				0,
 				0,
 				0,
-				m_fPrimaryFire ? 255 : 255,
-				m_fPrimaryFire ? 128 : 255,
-				m_fPrimaryFire ? 0 : 255
+				beamColor_r,
+				beamColor_g,
+				beamColor_b
 			);
 		}
 		else
@@ -1354,15 +1413,15 @@ void EV_FireGauss( event_args_t *args )
 				tr.endpos,
 				m_iBeam,
 				0.1,
-				m_fPrimaryFire ? 1.0 : 2.5,
+				beamWidth,
 				0.0,
-				m_fPrimaryFire ? 128.0 : flDamage,
+				beamBrightness,
 				0,
 				0,
 				0,
-				m_fPrimaryFire ? 255 : 255,
-				m_fPrimaryFire ? 128 : 255,
-				m_fPrimaryFire ? 0 : 255
+				beamColor_r,
+				beamColor_g,
+				beamColor_b
 			);
 		}
 
@@ -1823,7 +1882,8 @@ void EV_FireRpg( event_args_t *args )
 	if(EASY_CVAR_GET(mutePlayerWeaponFire) != 1 ){
 		if(EASY_CVAR_GET(myRocketsAreBarney) != 1){
 			//ordinary
-			gEngfuncs.pEventAPI->EV_PlaySound( idx, origin, CHAN_WEAPON, "weapons/rocketfire1.wav", 0.9, ATTN_NORM, 0, PITCH_NORM );
+			//MODDD - little less attenuation for RPG's, it is a danged rocket going off after all
+			gEngfuncs.pEventAPI->EV_PlaySound( idx, origin, CHAN_WEAPON, "weapons/rocketfire1.wav", 0.9, ATTN_NORM - 0.14, 0, PITCH_NORM );
 			gEngfuncs.pEventAPI->EV_PlaySound( idx, origin, CHAN_ITEM, "weapons/glauncher.wav", 0.7, ATTN_NORM, 0, PITCH_NORM );
 		}else{
 			//we wanna hear barney!
@@ -1944,7 +2004,7 @@ void EV_EgonFire( event_args_t *args )
 
 				VectorMA( vecSrc, 2048, forward, vecEnd );
 
-				gEngfuncs.pEventAPI->EV_SetUpPlayerPrediction( false, true );	
+				gEngfuncs.pEventAPI->EV_SetUpPlayerPrediction( FALSE, TRUE );	
 				
 				// Store off the old count
 				gEngfuncs.pEventAPI->EV_PushPMStates();
@@ -1963,11 +2023,23 @@ void EV_EgonFire( event_args_t *args )
 				float g = 50.0f;
 				float b = 125.0f;
 
+
+				//MODDD NOTE - ........why is this the only place that checks for IsHardware in all of ev_hldm, even though
+				// there are other places that deal with colors?
+				// And this excludes the 'b' coord?   ...    *Why*
+				/*
 				if ( IEngineStudio.IsHardware() )
 				{
 					r /= 100.0f;
 					g /= 100.0f;
 				}
+				*/
+				// They'll just be out of 255 instead.
+				r = r * (1/255.0f);
+				g = g * (1 / 255.0f);
+				b = b * (1 / 255.0f);
+
+
 				
 				if(hasSpiralBeam){
 					//spiral purple beam.
@@ -2623,7 +2695,7 @@ void generateFreakyLight(const Vector& arg_origin) {
 	dl->origin.z = randz;
 
 
-	dl->dark = false;
+	dl->dark = FALSE;
 	dl->die = gEngfuncs.GetClientTime() + randLife;
 
 
@@ -2708,7 +2780,8 @@ void generateFreakyLaser(const Vector& arg_origin) {
 
 	float randAmp = gEngfuncs.pfnRandomFloat(EASY_CVAR_GET(raveLaserNoiseMin), EASY_CVAR_GET(raveLaserNoiseMax));
 
-	float randBrightness = gEngfuncs.pfnRandomFloat(EASY_CVAR_GET(raveLaserBrightnessMin) * 255, EASY_CVAR_GET(raveLaserBrightnessMax) * 255);
+	// and don't multiply brightness by 255!  Not necessary, just has to be divided out in the color to get the same point across
+	float randBrightness = gEngfuncs.pfnRandomFloat(EASY_CVAR_GET(raveLaserBrightnessMin), EASY_CVAR_GET(raveLaserBrightnessMax));
 	//INTERPRET FROM 0 - 1, like  0.8 - 1.0!
 	float frameRate = gEngfuncs.pfnRandomFloat(EASY_CVAR_GET(raveLaserFrameRateMin), EASY_CVAR_GET(raveLaserFrameRateMax));
 
@@ -2748,11 +2821,13 @@ void generateFreakyLaser(const Vector& arg_origin) {
 
 	}
 	else {
-		//divided by 65025.0f (this is 256^2).  Why?  Because anything above 1/256^2 distorts colors, making even (255, 12, 0) show up as bright yellow.
-		//Anything less than 1/256^2 is treated as getting closer to black, which makes it more transparent up to invisible at 0.
-		someBeam->r = colorReceive[0] / 65025.0f;
-		someBeam->g = colorReceive[1] / 65025.0f;
-		someBeam->b = colorReceive[2] / 65025.0f;
+		// divided by 65025.0f (this is 256^2).  Why?  Because anything above 1/256^2 distorts colors, making even (255, 12, 0) show up as bright yellow.
+		// Anything less than 1/256^2 is treated as getting closer to black, which makes it more transparent up to invisible at 0.
+		// NOPE, that was from having a brightness from 0 to 256 instead of 0 to 1.
+		// 65025.0f ...  nope.
+		someBeam->r = colorReceive[0] / 255.0f;
+		someBeam->g = colorReceive[1] / 255.0f;
+		someBeam->b = colorReceive[2] / 255.0f;
 	}
 
 
@@ -2856,7 +2931,7 @@ void shrapnelHitCallback(struct tempent_s* ent, struct pmtrace_s* ptr) {
 	dlight_t* dl = gEngfuncs.pEfxAPI->CL_AllocDlight(0);
 	VectorCopy_f(ent->entity.origin, dl->origin);
 
-	dl->dark = false;
+	dl->dark = FALSE;
 	//time of "0.01" or "0.001"?
 	//dl->die = gEngfuncs.GetClientTime() + 0.001; //Kill it right away
 	dl->die = gEngfuncs.GetClientTime() + 0.03; //Kill it right away
@@ -2979,7 +3054,7 @@ void EV_QuakeExplosionEffect(event_args_t* args) {
 			VectorCopy_f(args->origin, dl->origin);
 
 			dl->radius = 130;
-			dl->dark = false;
+			dl->dark = FALSE;
 			dl->die = gEngfuncs.GetClientTime() + 0.03; //Kill it right away
 
 			dl->color.r = 255;
@@ -3609,7 +3684,7 @@ void EV_RocketTrailCallback ( struct tempent_s *ent, float frametime, float curr
 		VectorCopy_f ( ent->entity.origin, dl->origin );
 
 		dl->radius = 160;
-		dl->dark = true;
+		dl->dark = TRUE;
 		dl->die = gEngfuncs.GetClientTime() + 0.001; //Kill it right away
 													 
 		dl->color.r = 255;

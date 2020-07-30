@@ -2349,7 +2349,7 @@ int CStudioModelRenderer::StudioDrawModel( int flags )
 		easyPrintLineDummy("FLAG5. s:%d b:%d", m_pCurrentEntity->curstate.sequence, m_pCurrentEntity->curstate.iuser1 );
 	}
 
-	//MODDD - NEW.  FUCK YOU.
+	//MODDD - NEW.
 	gEngfuncs.pTriAPI->CullFace(TRI_NONE);
 
 	if (flags & STUDIO_RENDER)

@@ -4849,10 +4849,20 @@ void ClientCommand( edict_t *pEntity )
 	}
 	*/
 	
+	else if (FStrEq(pcmdRefinedRef, "motd_show")) {
+		// the command "motd" is hardcoded, strangely enough, and doesn't show the MOTD again like startup does (connected to server).
+		// so how about this
+
+		if (IsMultiplayer()) {
+			CHalfLifeMultiplay* temp_multiPlayRules = static_cast<CHalfLifeMultiplay*>(g_pGameRules);
+			if (temp_multiPlayRules) {
+				temp_multiPlayRules->SendMOTDToClient( ENT(pev) );
+			}
+		}
+	}
+
+
 	// NEW SHIT HERE MAYBE
-
-
-
 
 	
 	else if (FStrEq(pcmdRefinedRef, "tcs_init_link")) {
@@ -5397,7 +5407,7 @@ const char *GetGameDescription()
 	if ( g_pGameRules ) // this function may be called before the world has spawned, and the game rules initialized
 		return g_pGameRules->GetGameDescription();
 	else
-		return "Half-Life";
+		return GAME_NORMAL_DESCRIPTION;
 }
 
 /*

@@ -219,7 +219,7 @@ ScorePanel::ScorePanel(int x,int y,int wide,int tall) : Panel(x,y,wide,tall)
 	m_HitTestPanel.setBounds(0, 0, wide, tall);
 	m_HitTestPanel.addInputSignal(this);
 
-	m_pCloseButton = new CommandButton( "x", wide-XRES(12 + 4), YRES(2), XRES( 12 ) , YRES( 12 ) );
+	m_pCloseButton = new CommandButton( "x", wide-XRES(12 + 4), YRES(2), XRES( 12 ) , YRES( 12 ), false, false );
 	m_pCloseButton->setParent( this );
 	m_pCloseButton->addActionSignal( new CMenuHandler_StringCommandWatch( "-showscores", true ) );
 	m_pCloseButton->setBgColor(0,0,0,255);
@@ -495,7 +495,6 @@ void ScorePanel::RebuildTeams()
 		if ( j > m_iNumTeams )
 		{ // they aren't in a listed team, so make a new one
 			// search through for an empty team slot
-			int j;
 			for ( j = 1; j <= m_iNumTeams; j++ )
 			{
 				if ( g_TeamInfo[j].name[0] == '\0' )
@@ -672,7 +671,8 @@ void ScorePanel::FillGrid()
 			}				
 
 			// Align 
-			if (col == COLUMN_NAME || col == COLUMN_CLASS)
+			//MODDD - COLUMN_CLASS removed
+			if (col == COLUMN_NAME)
 			{
 				pLabel->setContentAlignment( vgui::Label::a_west );
 			}
@@ -723,8 +723,7 @@ void ScorePanel::FillGrid()
 					break;
 				case COLUMN_VOICE:
 					break;
-				case COLUMN_CLASS:
-					break;
+				//MODDD - COLUMN_CLASS removed.  although it was empty here
 				case COLUMN_KILLS:
 					if ( m_iIsATeam[row] == TEAM_YES )
 						sprintf(sz, "%d",  team_info->frags );
@@ -743,8 +742,6 @@ void ScorePanel::FillGrid()
 			}
 			else
 			{
-				bool bShowClass = false;
-
 				switch (col)
 				{
 				case COLUMN_NAME:
@@ -758,35 +755,7 @@ void ScorePanel::FillGrid()
 						GetClientVoiceMgr()->UpdateSpeakerImage(pLabel, m_iSortedRows[row]);
 					}
 					break;
-				case COLUMN_CLASS:
-					// No class for other team's members (unless allied or spectator)
-					if ( gViewPort && EV_TFC_IsAllyTeam( g_iTeamNumber, g_PlayerExtraInfo[ m_iSortedRows[row] ].teamnumber )  )
-						bShowClass = true;
-					// Don't show classes if this client hasnt picked a team yet
-					if ( g_iTeamNumber == 0 )
-						bShowClass = false;
-
-					if (bShowClass)
-					{
-						// Only print Civilian if this team are all civilians
-						bool bNoClass = false;
-						if ( g_PlayerExtraInfo[ m_iSortedRows[row] ].playerclass == 0 )
-						{
-							if ( gViewPort->GetValidClasses( g_PlayerExtraInfo[ m_iSortedRows[row] ].teamnumber ) != -1 )
-								bNoClass = true;
-						}
-
-						if (bNoClass)
-							sprintf(sz, "");
-						else
-							sprintf( sz, "%s", CHudTextMessage::BufferedLocaliseTextString( sLocalisedClasses[ g_PlayerExtraInfo[ m_iSortedRows[row] ].playerclass ] ) );
-					}
-					else
-					{
-						strcpy(sz, "");
-					}
-					break;
-
+				//MODDD - COLUMN_CLASS removed
 				case COLUMN_TRACKER:
 					break;
 				case COLUMN_KILLS:

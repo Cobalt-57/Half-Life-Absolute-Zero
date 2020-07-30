@@ -450,7 +450,8 @@ void CHudSpectator::DirectorMessage( int iSize, void *pbuf )
 	{ 
 		case DRC_CMD_START	:	
 							// now we have to do some things clientside, since the proxy doesn't know our mod 
-							g_iPlayerClass = 0;
+							//MODDD - goodbye TFC hookups
+							//g_iPlayerClass = 0;
 							g_iTeamNumber = 0;
 
 							// fake a InitHUD & ResetHUD message
@@ -1520,8 +1521,12 @@ void CHudSpectator::CheckSettings()
 	// in First Person mode since this is our resticted forcecamera mode 2
 	// team number 3 = SPECTATOR see player.h
 
+	//MODDD - EHHhhhhh careful about gutting features not fully understood, leaving it for now.  Half-Life does have team-based multiplayer after all
+
 	if ( ( (g_iTeamNumber == 1) || (g_iTeamNumber == 2)) && (g_iUser1 == OBS_IN_EYE) )
+	if (g_iUser1 == OBS_IN_EYE) {
 		m_pip->value = INSET_OFF;
+	}
 
 	// draw small border around inset view, adjust upper black bar
 	gViewPort->m_pSpectatorPanel->EnableInsetView( m_pip->value != INSET_OFF );

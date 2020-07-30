@@ -67,32 +67,43 @@ EOFFSET OFFSET(entvars_t *pev)
 
 
 #ifdef DEBUG
-
 	///////////////////////////////////////////////////////////////////////////////////////////
 	#ifndef CLIENT_DLL
-	//SERVER: normal.
-	edict_t *DBG_EntOfVars( const entvars_t *pev )
-	{
-		if (pev->pContainingEntity != NULL)
-			return pev->pContainingEntity;
-		ALERT(at_console, "entvars_t pContainingEntity is NULL, calling into engine");
-		edict_t* pent = (*g_engfuncs.pfnFindEntityByVars)((entvars_t*)pev);
-		if (pent == NULL)
-			ALERT(at_console, "DAMN!  Even the engine couldn't FindEntityByVars!");
-		((entvars_t *)pev)->pContainingEntity = pent;
-		return pent;
-	}
+		// SERVER: normal.
+		edict_t *DBG_EntOfVars( const entvars_t *pev )
+		{
+			if (pev->pContainingEntity != NULL)
+				return pev->pContainingEntity;
+			ALERT(at_console, "entvars_t pContainingEntity is NULL, calling into engine");
+			edict_t* pent = (*g_engfuncs.pfnFindEntityByVars)((entvars_t*)pev);
+			if (pent == NULL)
+				ALERT(at_console, "DAMN!  Even the engine couldn't FindEntityByVars!");
+			((entvars_t *)pev)->pContainingEntity = pent;
+			return pent;
+		}
 	///////////////////////////////////////////////////////////////////////////////////////////
 	#else
-	//CLIENT: was dummied out in hl_baseentity.cpp, clientside. Keep it that way here?
-		edict_t *DBG_EntOfVars( const entvars_t *pev ) { return NULL; }
+		// CLIENT: was dummied out in hl_baseentity.cpp, clientside. Keep it that way here?
+		// ...although, keep in mind, for Release mode, "pev->ContainingEntity" is still returned
+		// for the client.  Let's just force it that way here too then, no sense in Debug having
+		// different behavior like that (returning NULL).
+		// Even though pContainingEntity may be meaningless for clientside,
+		// no idea.  This may not even matter at all.
+
+		//edict_t *DBG_EntOfVars( const entvars_t *pev ){
+		//	return NULL;
+		//}
+
+		edict_t* DBG_EntOfVars(const entvars_t* pev){
+			return pev->pContainingEntity;
+		}
+		
 	#endif
 	///////////////////////////////////////////////////////////////////////////////////////////
 
 #else
-//not in debug? no need, no DBG_EntOfVars mmethod at all and ENT is inlined (handled already)
-// and just skips calling DBG_EntOfVars.
-
+	// not in debug? no need, no DBG_EntOfVars mmethod at all and ENT is inlined (handled already)
+	// and just skips calling DBG_EntOfVars.
 #endif
 
 

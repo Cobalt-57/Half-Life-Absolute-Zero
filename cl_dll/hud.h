@@ -44,7 +44,12 @@ extern float globalPSEUDO_autoDeterminedFOV;
 #define FADE_TIME 100
 
 
+//NOTICE - sometime in the future.
+// any mentions of TeamFortressViewport should probably be replaced with 'vgui::Panel'.  Fully gut any involvement of TFC.
+// Any mentions of gViewPort can probably be canned at some point too, the 'ancient' SDK never needed that.
+
 class CHud;
+//class vgui::Panel;
 class TeamFortressViewport;
 struct extra_player_info_t;
 struct team_info_t;
@@ -52,9 +57,11 @@ struct team_info_t;
 
 
 extern CHud gHUD;
+//extern vgui::Panel* gViewPort;
 extern TeamFortressViewport* gViewPort;
 
-extern int g_iPlayerClass;
+//MODDD - goodbye TFC hookups
+//extern int g_iPlayerClass;
 extern int g_iTeamNumber;
 extern int g_iUser1;
 extern int g_iUser2;
@@ -242,7 +249,7 @@ struct extra_player_info_t
 {
 	short frags;
 	short deaths;
-	short playerclass;
+	//short playerclass;      MODDD - NO.
 	short teamnumber;
 	char teamname[MAX_TEAM_NAME];
 };

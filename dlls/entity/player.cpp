@@ -3390,7 +3390,7 @@ void CBasePlayer::AddPoints( int score, BOOL bAllowNegativeScore )
 		WRITE_BYTE( ENTINDEX(edict()) );
 		WRITE_SHORT( pev->frags );
 		WRITE_SHORT( m_iDeaths );
-		WRITE_SHORT( 0 );
+		//WRITE_SHORT( 0 );  No need, playerclass longer expected.
 		WRITE_SHORT( g_pGameRules->GetTeamIndex( m_szTeamName ) + 1 );
 	MESSAGE_END();
 }

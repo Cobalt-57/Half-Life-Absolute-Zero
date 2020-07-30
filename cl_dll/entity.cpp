@@ -174,7 +174,8 @@ void DLLEXPORT HUD_ProcessPlayerState( struct entity_state_s *dst, const struct 
 	cl_entity_t *player = gEngfuncs.GetLocalPlayer();	// Get the local player's index
 	if ( dst->number == player->index )
 	{
-		g_iPlayerClass = dst->playerclass;
+		//MODDD - goodbye TFC hookups
+		//g_iPlayerClass = dst->playerclass;
 		g_iTeamNumber = dst->team;
 
 		g_iUser1 = src->iuser1;

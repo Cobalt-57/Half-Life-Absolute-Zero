@@ -157,6 +157,9 @@ public:
 	int m_voicePitch;
 	EHANDLE m_hDead;
 
+	//MODDD - the wounded NPC to seek out.
+	CBaseMonster* healTargetNPC;
+
 
 	CISlave(void);
 	void MonsterThink(void);

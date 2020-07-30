@@ -1652,7 +1652,7 @@ int CTalkMonster :: FIdleSpeak ( void )
 				else if (!FBitSet(m_bitsSaid, bit_saidDamageMedium) && 
 					(m_hTargetEnt->pev->health <= m_hTargetEnt->pev->max_health / 4))
 				{
-					if (FClassnameIs(pev, "monster_barney") && RANDOM_FLOAT(0, 1) < 0.5) { PlaySentence("!BA_CURE_ALT", duration, VOL_NORM, ATTN_IDLE); }
+					if (FClassnameIs(pev, "monster_barney") && RANDOM_FLOAT(0, 1) < 0.4) { PlaySentence("!BA_CURE_ALT", duration, VOL_NORM, ATTN_IDLE); }
 					else {
 						PlaySentence(m_szGrp[TLK_PLHURT2], duration, VOL_NORM, ATTN_IDLE);
 					}
@@ -1662,7 +1662,7 @@ int CTalkMonster :: FIdleSpeak ( void )
 				else if (!FBitSet(m_bitsSaid, bit_saidDamageLight) &&
 					(m_hTargetEnt->pev->health <= m_hTargetEnt->pev->max_health / 2))
 				{
-					if (FClassnameIs(pev, "monster_barney") && RANDOM_FLOAT(0, 1) < 0.3) { PlaySentence("!BA_CURE_ALT", duration, VOL_NORM, ATTN_IDLE); }
+					if (FClassnameIs(pev, "monster_barney") && RANDOM_FLOAT(0, 1) < 0.25) { PlaySentence("!BA_CURE_ALT", duration, VOL_NORM, ATTN_IDLE); }
 					else {
 						PlaySentence(m_szGrp[TLK_PLHURT1], duration, VOL_NORM, ATTN_IDLE);
 					}
@@ -2208,12 +2208,8 @@ Schedule_t* CTalkMonster::GetSchedule(){
 
 
 
-
 Schedule_t* CTalkMonster :: GetScheduleOfType ( int Type )
 {
-
-	
-	
 	//easyForcePrintLine("%s:%d WHATS GOOD IM CTalkMonster AND I PICKED SCHED TYPE %d", getClassname(), monsterID, Type);
 
 	canGoRavingMad = FALSE; //by default.	

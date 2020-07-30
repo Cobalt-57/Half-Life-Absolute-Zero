@@ -24,11 +24,31 @@
 #include "teamplay_gamerules.h"
 #include "game.h"
 
+#include "voice_gamemgr.h"
+
+
 static char team_names[MAX_TEAMS][MAX_TEAMNAME_LENGTH];
 static int team_scores[MAX_TEAMS];
 static int num_teams = 0;
 
-extern DLL_GLOBAL BOOL		g_fGameOver;
+extern DLL_GLOBAL BOOL g_fGameOver;
+
+
+extern int gmsgDeathMsg;
+
+extern int gmsgGameMode;
+extern int gmsgSayText;
+extern int gmsgTeamInfo;
+extern int gmsgTeamNames;
+extern int gmsgScoreInfo;
+
+extern cvar_t timeleft;
+extern cvar_t fragsleft;
+
+extern CVoiceGameMgr g_VoiceGameMgr;
+
+
+
 
 CHalfLifeTeamplay :: CHalfLifeTeamplay()
 {
@@ -66,10 +86,7 @@ CHalfLifeTeamplay :: CHalfLifeTeamplay()
 	RecountTeams();
 }
 
-extern cvar_t timeleft, fragsleft;
 
-#include "voice_gamemgr.h"
-extern CVoiceGameMgr	g_VoiceGameMgr;
 
 void CHalfLifeTeamplay :: Think ( void )
 {
@@ -162,12 +179,6 @@ BOOL CHalfLifeTeamplay :: ClientCommand( CBasePlayer *pPlayer, const char *pcmd 
 
 	return FALSE;
 }
-
-extern int gmsgGameMode;
-extern int gmsgSayText;
-extern int gmsgTeamInfo;
-extern int gmsgTeamNames;
-extern int gmsgScoreInfo;
 
 void CHalfLifeTeamplay :: UpdateGameMode( CBasePlayer *pPlayer )
 {
@@ -301,7 +312,7 @@ void CHalfLifeTeamplay::ChangePlayerTeam( CBasePlayer *pPlayer, const char *pTea
 		WRITE_BYTE( clientIndex );
 		WRITE_SHORT( pPlayer->pev->frags );
 		WRITE_SHORT( pPlayer->m_iDeaths );
-		WRITE_SHORT( 0 );
+		//WRITE_SHORT( 0 );  MODDD - playerclass no longer expected
 		WRITE_SHORT( g_pGameRules->GetTeamIndex( pPlayer->m_szTeamName ) + 1 );
 	MESSAGE_END();
 }
@@ -357,8 +368,6 @@ void CHalfLifeTeamplay::ClientUserInfoChanged( CBasePlayer *pPlayer, char *infob
 	// recound stuff
 	RecountTeams( TRUE );
 }
-
-extern int gmsgDeathMsg;
 
 //=========================================================
 // Deathnotice. 

@@ -135,3 +135,12 @@ Few sentences from unused files for Barnies added.
 
 NPC's forced to unfollow from reaching the follower limit (1 by default) will not say the unfollow line.
 Unfollow sentences also won't be attempted for unfollowing due to taking damage from other monsters.
+
+Gauss beam improvements.  Beam colors follow the likely intended logic with some other enhancements.  Volume/attenuation for various damages redone.
+
+Similar fix applied to egon in color only, no extra touchups.  No change between software or hardware graphics modes either.
+
+
+
+
+

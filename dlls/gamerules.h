@@ -28,6 +28,13 @@ class CItem;
 class CBasePlayerAmmo;
 class CPickupWalker;  //NEW
 
+class DLL_GLOBAL CGameRules;
+
+
+
+extern DLL_GLOBAL CGameRules* g_pGameRules;
+
+
 
 extern int g_teamplay;
 
@@ -282,6 +289,10 @@ public:
 class CHalfLifeMultiplay : public CGameRules
 {
 public:
+	float m_flIntermissionEndTime;
+	BOOL m_iEndIntermissionButtonHit;
+
+
 	CHalfLifeMultiplay();
 
 // GR_Think
@@ -383,14 +394,12 @@ public:
 	// Immediately end a multiplayer game
 	virtual void EndMultiplayerGame( void ) { GoToIntermission(); }
 
-protected:
+//MODDD - 'protected'?   bah who needs that
+//protected:
 	virtual void ChangeLevel( void );
 	virtual void GoToIntermission( void );
-	float m_flIntermissionEndTime;
-	BOOL m_iEndIntermissionButtonHit;
 	void SendMOTDToClient( edict_t *pClient );
 };
 
-extern DLL_GLOBAL CGameRules*	g_pGameRules;
 
 #endif //GAMERULES_H

@@ -519,13 +519,13 @@ ServerBrowser::ServerBrowser(int x,int y,int wide,int tall) : CTransparentPanel(
 
 	int btnx = 10;
 
-	_connectButton = new CommandButton( "Connect", btnx, by, bw, bh );
+	_connectButton = new CommandButton( "Connect", btnx, by, bw, bh, false, false );
 	_connectButton->setParent( this );
 	_connectButton->addActionSignal( new ConnectHandler(  (ServerBrowserTablePanel * )_tablePanel ) );
 
 	btnx += bw;
 
-	_refreshButton = new CommandButton( "Refresh", btnx, by, bw, bh );
+	_refreshButton = new CommandButton( "Refresh", btnx, by, bw, bh, false, false);
 	_refreshButton->setParent( this );
 	_refreshButton->addActionSignal( new RefreshHandler(  (ServerBrowserTablePanel * )_tablePanel ) );
 
@@ -539,7 +539,7 @@ ServerBrowser::ServerBrowser(int x,int y,int wide,int tall) : CTransparentPanel(
 
 	btnx += bw;
 
-	_stopButton = new CommandButton( "Stop", btnx, by, bw, bh );
+	_stopButton = new CommandButton( "Stop", btnx, by, bw, bh, false, false );
 	_stopButton->setParent( this );
 	_stopButton->addActionSignal( new StopHandler(  (ServerBrowserTablePanel * )_tablePanel ) );
 
@@ -559,7 +559,7 @@ ServerBrowser::ServerBrowser(int x,int y,int wide,int tall) : CTransparentPanel(
 
 	btnx += bw;
 
-	_cancelButton = new CommandButton( "Close", btnx, by, bw, bh );
+	_cancelButton = new CommandButton( "Close", btnx, by, bw, bh, false, false);
 	_cancelButton->setParent( this );
 	_cancelButton->addActionSignal( new CancelHandler(  (ServerBrowserTablePanel * )_tablePanel ) );
 

@@ -159,7 +159,7 @@ char* ConvertCRtoNL( char *str )
 // the next (optional) one to four strings are parameters for that string (which can also be message names if they begin with '#')
 int CHudTextMessage::MsgFunc_TextMsg( const char *pszName, int iSize, void *pbuf )
 {
-	//MODDD -  ALRIGHTY.  Since yall motherfuckers are allergic to explaining shit.
+	//MODDD -  explanation
 	// First off, the decision to make szBuf a multi-dimensional array was really weird.
 	// It ends up being 6 strings, each 128 characters in size.
 	// Strings "sstr#" are made from 1 to 4, each come from loading one of the four optional

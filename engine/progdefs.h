@@ -183,6 +183,10 @@ typedef struct entvars_s
 	float	radsuit_finished;
 	
 	edict_t		*pContainingEntity;
+	
+	
+	//MODDD - All below looks exclusive to the recent SDK.  The 'ancient' lacks anything below.
+	
 
 	int		playerclass;
 	float	maxspeed;

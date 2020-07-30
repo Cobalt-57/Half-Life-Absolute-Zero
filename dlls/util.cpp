@@ -6498,36 +6498,13 @@ void attemptSendBulletSound(const Vector& bulletHitLoc, entvars_t* pevShooter){
 }
 
 
-//MODDD - moved here from player.cpp.   Replaced by the slight mod below.
-/*
-CBaseEntity *FindEntityForwardOLDVERSION( CBaseEntity *pMe )
-{
-	TraceResult tr;
-
-	//UTIL_MakeVectors(pev->v_angle + pev->punchangle);
-	
-
-	UTIL_MakeVectors(pMe->pev->v_angle);
-	UTIL_TraceLine(pMe->pev->origin + pMe->pev->view_ofs,pMe->pev->origin + pMe->pev->view_ofs + gpGlobals->v_forward * 8192,dont_ignore_monsters, pMe->edict(), &tr );
-	if ( tr.flFraction != 1.0 && !FNullEnt( tr.pHit) )
-	{
-		CBaseEntity *pHit = CBaseEntity::Instance( tr.pHit );
-		return pHit;
-	}
-	return NULL;
-}
-*/
 
 //...better fitted to a "player" actually.  Was good for the most part before, but not perfect.
 CBaseEntity *FindEntityForward( CBasePlayer* pMe )
 {
 	TraceResult tr;
-
 	//UTIL_MakeVectors(pev->v_angle + pev->punchangle);
-
-
 	//UTIL_MakeVectors( pev->v_angle + pev->punchangle );
-
 	//UTIL_MakeVectors(pMe->pev->v_angle + pMe->pev->punchangle);
 
 
@@ -6567,7 +6544,6 @@ CBaseEntity *FindEntityForward( CBasePlayer* pMe )
 	
 	if(EASY_CVAR_GET(drawDebugPathfinding2) == 1){::DebugLine_ClearAll();}
 	
-
 	//float fullLength = 5 + 2048;
 	BOOL success = FALSE;
 	float fracto = 1.0;
@@ -6577,14 +6553,12 @@ CBaseEntity *FindEntityForward( CBasePlayer* pMe )
 	{
 		CBaseEntity *pHit = CBaseEntity::Instance( tr.pHit );
 
-
 		fracto = tr.flFraction;
 		if(EASY_CVAR_GET(drawDebugPathfinding2) == 1){::DebugLine_Setup(0, vecStart, vecEnd, fracto);}
 
 		return pHit;
-
-		//just a check:  we did actually hit something tangible at least, right?  Even the map?
 	}else if(tr.flFraction != 1.0){
+		//just a check:  we did actually hit something tangible at least, right?  Even the map?
 
 		fracto = tr.flFraction;
 
