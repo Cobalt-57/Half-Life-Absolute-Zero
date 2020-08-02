@@ -91,6 +91,17 @@ static float g_scientist_HeadcrabMentionAllowedTime = -1;
 #define SCIENTIST_AE_NEEDLEOFF	( 3 )
 
 
+
+
+#define BODYGROUP_HEAD 1
+// no need for specifics here, head choices handled further below
+
+#define BODYGROUP_NEEDLE 2
+#define NEEDLE_OFF 0
+#define NEEDLE_ON 1
+
+
+
 //MODDD - there is a rather suble problem with this setup.
 //Old head enumeration:
 //enum { HEAD_GLASSES = 0, HEAD_EINSTEIN = 1, HEAD_LUTHER = 2, HEAD_SLICK = 3}
@@ -108,6 +119,19 @@ static float g_scientist_HeadcrabMentionAllowedTime = -1;
 //So if there are any immediate issues, try adjusting this first.
 #define headOffsetFix 0
 //NOTE: the alpa model can still treat "HEAD_SLICK" as the egon head if it sticks to being "2".  What is in a name, after all?
+
+
+
+
+#if headOffsetFix == 0
+enum { HEAD_GLASSES = 0, HEAD_EINSTEIN = 1, HEAD_SLICK = 2 };
+int scientistHeadsModelRef[] = { 0, 1, 2 };
+#else
+enum { HEAD_GLASSES = 0, HEAD_EINSTEIN = 1, HEAD_SLICK = 3 };
+int scientistHeadsModelRef[] = { 0, 1, 3 };
+#endif
+
+
 
 
 
@@ -141,16 +165,6 @@ enum
 extern void scientistHeadFilter( CBaseMonster& somePerson, int arg_numberOfModelBodyParts, int* trueBody);
 
 
-#if headOffsetFix == 0
-	enum { HEAD_GLASSES = 0, HEAD_EINSTEIN = 1, HEAD_SLICK = 2 };
-	int scientistHeadsModelRef[] = {0, 1, 2};
-#else
-	enum { HEAD_GLASSES = 0, HEAD_EINSTEIN = 1, HEAD_SLICK = 3 };
-	int scientistHeadsModelRef[] = {0, 1, 3};
-#endif
-
-
-
 //=======================================================
 // Scientist
 //=======================================================
@@ -182,7 +196,8 @@ public:
 	float screamCooldown;
 
 	//MODDD - the wounded NPC to seek out.
-	CBaseMonster* healTargetNPC;
+	// ...or not using this var anymore, whoops
+	//CBaseMonster* healTargetNPC;
 	
 
 	CScientist(void);
@@ -578,13 +593,16 @@ Schedule_t	slFaceTargetScared[] =
 Task_t	tlHeal[] =
 {
 	{ TASK_SET_FAIL_SCHEDULE,	(float)SCHED_TARGET_CHASE },	// If you fail, catch up with that guy! (change this to put syringe away and then chase)
+	//MODDD - NOTE ON PREVIOUS COMMENT.  Actually getting far away while the scientist is getting the syringe out does not make the schedule fail,
+	// TASK_HEAL just refuses to play the inject anim and  ACT_DISARM happens right then.
+	// So, removed the ACT_DISARM set from this schedule and leave it up to elsewhere to call ACT_DISARM when not pursuing something to heal.
 	{ TASK_MOVE_TO_TARGET_RANGE,(float)56		},	// Move within 60 of target ent (client)
 	{ TASK_FOLLOW_SUCCESSFUL, (float)0		},
 	{ TASK_FACE_IDEAL,			(float)0		},
 	{ TASK_SAY_HEAL,			(float)0		},
 	{ TASK_PLAY_SEQUENCE_FACE_TARGET,		(float)ACT_ARM	},			// Whip out the needle
 	{ TASK_HEAL,				(float)0	},	// Put it in the player
-	{ TASK_PLAY_SEQUENCE_FACE_TARGET,		(float)ACT_DISARM	},			// Put away the needle
+	//{ TASK_PLAY_SEQUENCE_FACE_TARGET,		(float)ACT_DISARM	},			// Put away the needle
 };
 
 Schedule_t	slHeal[] =
@@ -597,6 +615,29 @@ Schedule_t	slHeal[] =
 		"Heal"
 	},
 };
+
+
+
+//MODDD - new!  Just to force putting the syringe away if slHeal gets interrupted.
+Task_t	tlScientistPutAwaySyringe[] =
+{
+	{ TASK_STOP_MOVING, 0 },
+	{ TASK_PLAY_SEQUENCE, (float)ACT_DISARM },
+};
+
+Schedule_t slScientistPutAwaySyringe[] =
+{
+	{
+		tlScientistPutAwaySyringe,
+		ARRAYSIZE(tlScientistPutAwaySyringe),
+		0,
+		0,
+		"ScientistPutAwaySyr"
+	}
+};
+
+
+
 
 
 Task_t	tlFaceTarget[] =
@@ -796,6 +837,7 @@ DEFINE_CUSTOM_SCHEDULES( CScientist )
 	slScientistHide,
 	slScientistStartle,
 	slHeal,
+	slScientistPutAwaySyringe,
 	//slStopFollowing,    Belongs to all of TalkMonster now!
 	slSciPanic,
 	slFollowScared,
@@ -864,13 +906,14 @@ void CScientist::SayIdleToPlayer(CBaseEntity* argPlayerTalkTo) {
 		// (pPlayer->pev->weapons & (1<<WEAPON_SUIT))
 		if (argPlayerTalkTo->pev->weapons & (1 << WEAPON_SUIT)) {
 			// Mention the suit once, and with a decent chance later too.
+			float theRandom = RANDOM_FLOAT(0, 1);
 			if (g_scientist_PredisasterSuitMentionAllowedTime == -1 ||
-				(gpGlobals->time >= g_scientist_PredisasterSuitMentionAllowedTime && RANDOM_FLOAT(0, 1) <= 0.34)
+				(gpGlobals->time >= g_scientist_PredisasterSuitMentionAllowedTime && theRandom < 0.34)
 				) {
 				PlaySentenceSingular("SC_HELLO6", 4, VOL_NORM, ATTN_NORM);
 				g_scientist_PredisasterSuitMentionAllowedTime = gpGlobals->time + 16;
+				return;
 			}
-			return;
 		}//END OF suit check
 	}
 	else {
@@ -1213,11 +1256,11 @@ void CScientist :: StartTask( Task_t *pTask )
 	case TASK_PLAY_SEQUENCE_FACE_ENEMY:
 	case TASK_PLAY_SEQUENCE_FACE_TARGET:
 	case TASK_PLAY_SEQUENCE:
-		easyPrintLine("WHAT THE hey %.2f", pTask->flData);
+		easyPrintLine("sci, PLAY_SEQ: WHAT THE hey %.2f", pTask->flData);
 		if(pTask->flData == ACT_EXCITED || pTask->flData == ACT_CROUCH || pTask->flData == ACT_CROUCHIDLE){
 			//if(gpGlobals->time > playFearAnimCooldown ){
 				//allowed.
-				easyPrintLine("I ALLOWED YOU!!! pfac:%.2f ct:%.2f", playFearAnimCooldown, gpGlobals->time);
+				easyPrintLine("sci, PLAY_SEQ: I ALLOWED YOU!!! pfac:%.2f ct:%.2f", playFearAnimCooldown, gpGlobals->time);
 				playFearAnimCooldown = gpGlobals->time + 14;
 			//}else{
 			//	//don't try to play this anim, it may get spammed and make the scientist even more useless than it already is.
@@ -1226,6 +1269,26 @@ void CScientist :: StartTask( Task_t *pTask )
 			//	break;
 			//}
 		}
+
+		if (pTask->flData == ACT_ARM ) {
+			if (GetBodygroup(BODYGROUP_NEEDLE) == NEEDLE_ON) {
+				// already have the needle out?  Skip this step.
+				TaskComplete();
+				break;
+			}
+			else {
+				// Getting the syringe out? Then look at who we're supposed to be healing and say the line.
+				if (m_hTargetEnt == NULL) {
+					TaskFail();
+					return;
+				}
+				//		if ( FOkToSpeak() )
+				m_hTalkTarget = m_hTargetEnt;
+				PlaySentence("SC_HEAL", 4, VOL_NORM, ATTN_IDLE);
+			}
+		}
+
+
 
 		//otherwise base behavior is good.
 		CTalkMonster::StartTask(pTask);
@@ -1263,6 +1326,11 @@ void CScientist :: StartTask( Task_t *pTask )
 		}
 	break;
 	case TASK_SAY_HEAL:
+
+
+		/*
+		//NOTICE - task dummied out!  Say "SC_HEAL" only on getting the needle out instead,
+		// to avoid spam from rapidly getting close to / away from the scientist
 		//MODDD
 		if(m_hTargetEnt == NULL){
 			TaskFail();
@@ -1272,6 +1340,7 @@ void CScientist :: StartTask( Task_t *pTask )
 //		if ( FOkToSpeak() )
 		m_hTalkTarget = m_hTargetEnt;
 		PlaySentence( "SC_HEAL", 4, VOL_NORM, ATTN_IDLE );
+		*/
 
 		TaskComplete();
 	break;
@@ -1521,6 +1590,38 @@ void CScientist :: RunTask( Task_t *pTask )
 			Scream();
 		break;
 
+
+
+	case TASK_MOVE_TO_TARGET_RANGE: {
+		//MODDD - intervention.
+
+
+		if (pTask->flData <= 60) {
+			// can do an extra check for very short distance checks to avoid stupidly running against my target.
+			if (m_hTargetEnt != NULL) {
+				float dist_3D = Distance(pev->origin, m_hTargetEnt->pev->origin);
+				if (dist_3D < pTask->flData * 1.2) {
+					// if the 2D distance is good enough, just say 'yes' already.
+					//Vector origin2D
+					float dist_2D = Distance2D(pev->origin, m_hTargetEnt->pev->origin);
+					if (dist_2D < pTask->flData) {
+						// If the 2D distance is good even though the 3D is a little off, just go ahead and pass.
+						TaskComplete();
+
+						// OHHHHH IF YOU FORGET THIS EVER AGAIN IM GONNA <redacted in respect of the Geneva convention>
+						RouteClear();		// Stop moving
+						break;
+					}
+				}
+			}
+			else {
+				easyForcePrintLine("W H A T");
+			}
+		}
+
+		CTalkMonster::RunTask(pTask);
+	}
+	break;
 	case TASK_MOVE_TO_TARGET_RANGE_SCARED:
 		{
 			if ( RANDOM_LONG(0,63)< 8 )
@@ -1566,6 +1667,8 @@ void CScientist :: RunTask( Task_t *pTask )
 		break;
 
 	case TASK_HEAL:
+		// I can proceed for two reasons.
+		// Animation finished (actually healed), or target got too far away.
 		if ( m_fSequenceFinished )
 		{
 			TaskComplete();
@@ -1577,8 +1680,10 @@ void CScientist :: RunTask( Task_t *pTask )
 				return;
 			}
 
-			if ( TargetDistance() > 90 )
+			if (TargetDistance() > 90) {
+				// too far away?  Give up.
 				TaskComplete();
+			}
 			pev->ideal_yaw = UTIL_VecToYaw( m_hTargetEnt->pev->origin - pev->origin );
 			ChangeYaw( pev->yaw_speed );
 		}
@@ -1676,20 +1781,28 @@ void CScientist :: HandleAnimEvent( MonsterEvent_t *pEvent )
 	}
 	case SCIENTIST_AE_NEEDLEON:
 	{
+		SetBodygroup(BODYGROUP_NEEDLE, NEEDLE_ON);
+
+		/*
 		oldBody = pev->body;
 		//easyPrintLine("OLD BODY1 %d %d", oldBody, pev->body);
+
 		if(NUM_SCIENTIST_HEADS_MODEL > 1){
 			pev->body = (oldBody % (NUM_SCIENTIST_HEADS_MODEL) ) + (NUM_SCIENTIST_HEADS_MODEL) * 1;
 		}else{
 			//no others, just 0.
 			pev->body = 0;
 		}
+		*/
 
 		//easyPrintLine("NEW BODY1 %d", pev->body);
 		break;
 	}
 	case SCIENTIST_AE_NEEDLEOFF:
 	{
+		SetBodygroup(BODYGROUP_NEEDLE, NEEDLE_OFF);
+
+		/*
 		oldBody = pev->body;
 		//easyPrintLine("OLD BODY2 %d %d", oldBody, pev->body);
 		if(NUM_SCIENTIST_HEADS_MODEL > 1){
@@ -1697,6 +1810,7 @@ void CScientist :: HandleAnimEvent( MonsterEvent_t *pEvent )
 		}else{
 			pev->body = 0;
 		}
+		*/
 
 		//easyPrintLine("NEW BODY2 %d", pev->body);
 		break;
@@ -1715,11 +1829,12 @@ void scientistHeadFilter( CBaseMonster& somePerson, int arg_numberOfModelBodyPar
 		*arg_pTrueBody = RANDOM_LONG(1, 3);
 	}
 	if(*arg_pTrueBody > 3){
-		//so what do we do?  randomize it, or just force it something?
-		//Forcing 0 for now.
+		// so what do we do?  randomize it, or just force it something?
+		// Forcing 0 for now.
 		somePerson.pev->body = 0;
 		easyForcePrintLine("SCIENTIST: BAD HEAD VALUE? body:%d arg_pTrueBody:%d", somePerson.pev->body, *arg_pTrueBody);
 	}else{
+		// sets the head, like SetBodygroup(BODYGROUP_HEAD, ...);
 		somePerson.pev->body = *arg_pTrueBody-1;
 	}
 }
@@ -1803,13 +1918,13 @@ void CScientist :: Spawn( void )
 
 	//easyPrintLine("I AMS %d %d", pev->body, trueBody);
 	if(spawnedDynamically){
-		pev->body = -1;
-		//signal a randomization if spawned by the player.
+		// signal a randomization if spawned by the player.
+		//pev->body = -1;    no need, getting overridden soon anyway
+		trueBody = 0;
 	}else{
-		//leave "pev->body" to whatever the map made it...?
+		// leave "pev->body" to whatever the map made it
+		trueBody = pev->body + 1;
 	}
-	//offset by one.  "Random" is now 0 instead.
-	trueBody = pev->body + 1;
 
 	CTalkMonster::Spawn();
 
@@ -2090,8 +2205,8 @@ void CScientist :: TalkInit()
 		}
 
 	}else{
-		//otherwise, just work like alpha, pick from one of the voices based on what it would've been (#3 = 0).
-		//also note that "trueBody" is always offset by 1.
+		// otherwise, just work like alpha, pick from one of the voices based on what it would've been (#3 = 0).
+		// also note that "trueBody" is always offset by 1.
 		switch ((trueBody-1) % 3)
 		{
 		default:
@@ -2290,23 +2405,9 @@ GENERATE_KILLED_IMPLEMENTATION(CScientist)
 
 void CScientist :: SetActivity ( Activity newActivity )
 {
-	int iSequence;
-
-	float framerateChoice = 1;
+	//int iSequence;
+	//float framerateChoice = 1;
 	
-	//Note that "ACT_MELEE_ATTACK1" is when it is applying the heal.  It may be very short, about negligible, but oh well.
-	if(newActivity == ACT_ARM || newActivity == ACT_DISARM || newActivity == ACT_MELEE_ATTACK1){
-		if(healNPCChosen == FALSE){
-			//the heal anim for the player gets a slight boost.
-			framerateChoice = 1.4f;
-		}else{
-			//For other NPC's, we need to be faster.  Barney's and scientists can't take much damage and need timed damage cured ASAP.
-			framerateChoice = 1.8f;
-		}
-	}else{
-
-	}
-
 	//....why?! The base monster's SetActivity will work with this fine.
 	//iSequence = LookupActivity ( newActivity );
 	
@@ -2327,9 +2428,6 @@ void CScientist :: SetActivity ( Activity newActivity )
 	}
 	*/
 
-	if(pev->framerate != framerateChoice){
-		pev->framerate = framerateChoice;
-	}
 }
 
 void CScientist::ReportAIState(void){
@@ -2372,6 +2470,26 @@ Schedule_t* CScientist :: GetScheduleOfType ( int Type )
 
 	switch( Type )
 	{
+
+
+	case SCHED_FAIL: {
+		// HOLD ON.  If in combat, we'll panic here!
+		if (m_MonsterState == MONSTERSTATE_COMBAT) {
+			return slSciPanic;
+		}
+
+		return slFail;
+	}
+	case SCHED_FAIL_QUICK: {
+		// HOLD ON.  If in combat, we'll panic here!
+		if (m_MonsterState == MONSTERSTATE_COMBAT) {
+			return slSciPanic;
+		}
+
+		return slFailQuick;
+	}
+
+
 	case SCHED_TAKE_COVER_FROM_ENEMY:
 		// wait.  This wasn't always here, beeeeeecccccccaaaaaaauuuuussssssseeee?
 		aggro = 0;
@@ -2472,31 +2590,32 @@ void CScientist::ScheduleChange(void){
 
 Schedule_t *CScientist :: GetSchedule ( void )
 {
+	//MODDD - is this okay?   This says that, on schedule failure, forget healing.
+	forgetHealNPC();
+
+
 	//MODDD - new block. If the one I was following recently died, get scared.
 	if(leaderRecentlyDied){
 		leaderRecentlyDied = FALSE;
 		SayLeaderDied();
         StopFollowing( FALSE, FALSE );  //no generic unuse sentence.
 
-		//enter a panic state.
+		// enter a panic state.
 		return GetScheduleOfType(SCHED_PANIC);
 	}
 
+
 	//return CBaseMonster::GetSchedule();
 
-	//MODDD - is this okay?   This says that, on schedule failure, forget healing.
-	forgetHealNPC();
 
 	
 	if (HasConditions(bits_COND_SEE_ENEMY) ){
-		m_fearTime = gpGlobals->time;		// Update last fear... why not?
+		m_fearTime = gpGlobals->time; // Update last fear... why not?
 	}
 
 	if (HasConditions(bits_COND_NEW_ENEMY) ) {
 
-
 		if (m_hEnemy != NULL) {
-
 			if (FClassnameIs(m_hEnemy->pev, "monster_headcrab")) {
 				if (
 					(
@@ -2556,7 +2675,6 @@ Schedule_t *CScientist :: GetSchedule ( void )
 				return CBaseMonster::GetSchedule();
 			}
 		}
-
 		break;
 	}//END OF while(TRUE)...  just a procedural loop to be interrupted as needed.
 
@@ -2573,6 +2691,22 @@ Schedule_t *CScientist :: GetSchedule ( void )
 		if ( pSound && (pSound->m_iType & bits_SOUND_DANGER) )
 			return GetScheduleOfType( SCHED_TAKE_COVER_FROM_BEST_SOUND );
 	}
+
+
+
+	// If I was interrupted from holding the syringe, put it away
+	// TODO!!!
+	//if(pev->body)
+	// ...
+
+	if (GetBodygroup(BODYGROUP_NEEDLE) == NEEDLE_ON && !CanHeal() ) {
+		// Done or change my mind?  Put it back then!  
+		return slScientistPutAwaySyringe;
+	}
+
+
+
+
 
 
 	float thisDistance;
@@ -2678,11 +2812,7 @@ Schedule_t *CScientist :: GetSchedule ( void )
 
 
 		
-
-
 		//!!
-
-
 
 		// Behavior for following the player... OR tracking down an NPC to heal them.
 		if ( m_hTargetEnt != NULL && (IsFollowing() || healNPCChosen == TRUE) )
@@ -2729,9 +2859,10 @@ Schedule_t *CScientist :: GetSchedule ( void )
 			// UNDONE: Model fear properly, fix R_FR and add multiple levels of fear
 			if ( relationship != R_DL && relationship != R_HT )
 			{
+				float daDistance = TargetDistance();
 				// If I'm already close enough to my target
 				//MODDD - changed to a little higher than 128 to avoid a possible staring glitch, maybe.
-				if ( TargetDistance() <= 140 )
+				if ( daDistance <= 140 )
 				{
 					if ( CanHeal() ){	//Heal opportunistically
 						return slHeal;
@@ -2754,7 +2885,7 @@ Schedule_t *CScientist :: GetSchedule ( void )
 				//if ( HasConditions( bits_COND_LIGHT_DAMAGE | bits_COND_HEAVY_DAMAGE ) )
 				//	return slScientistCover;		// Take Cover
 
-				easyPrintLine("OH MAI GAWD %d", HasConditions( bits_COND_NEW_ENEMY ));
+				easyPrintLine("OH dear %d", HasConditions( bits_COND_NEW_ENEMY ));
 
 				if ( HasConditions( bits_COND_NEW_ENEMY ) ) // I just saw something new and scary, react
 					return GetScheduleOfType( SCHED_FEAR );					// React to something scary
@@ -2766,10 +2897,8 @@ Schedule_t *CScientist :: GetSchedule ( void )
 
 
 
-
 		if ( HasConditions( bits_COND_CLIENT_PUSH ) )	// Player wants me to move
 			return GetScheduleOfType( SCHED_MOVE_AWAY );
-
 
 
 		// try to say something about smells
@@ -2811,9 +2940,11 @@ Schedule_t *CScientist :: GetSchedule ( void )
 		return GetScheduleOfType(SCHED_TAKE_COVER_FROM_ENEMY);
 
 
-
 		break;
-	}
+	}//END OF Swtich ON monsterstate
+
+
+	
 
 	return CTalkMonster::GetSchedule();
 }
@@ -2929,7 +3060,9 @@ BOOL CScientist::CanHeal( CBaseMonster* arg_monsterTry ){
 
 BOOL CScientist::CanHeal( void )
 {
+
 	if(m_hTargetEnt == NULL){
+		// no target? clearly a 'no', not even trying
 		return FALSE;
 	}
 
@@ -3050,11 +3183,6 @@ void CScientist::MonsterThink(void){
 
 
 	//if(monsterID==2)easyForcePrintLine("ID:%d FRAME: %.2f SEQ: %d", monsterID, pev->frame, pev->sequence);
-
-
-
-
-
 
 
 
@@ -3355,16 +3483,17 @@ void CDeadScientist :: Spawn( )
 
 
 	if(EASY_CVAR_GET(monsterSpawnPrintout) == 1){
-	easyPrintLine("MY <dead scientist> BODYH??? %d %d", spawnedDynamically, pev->body);
+		easyPrintLine("MY <dead scientist> BODYH??? %d %d", spawnedDynamically, pev->body);
 	}
 
 	if(spawnedDynamically){
-		pev->body = -1;
-		//signal a randomization if spawned by the player.
+		// signal a randomization if spawned by the player.
+		//pev->body = -1;    no need, getting overridden soon anyway
+		trueBody = 0;
 	}else{
-		//leave "pev->body" to whatever the map made it...?
+		// leave "pev->body" to whatever the map made it
+		trueBody = pev->body + 1;
 	}
-	trueBody = pev->body + 1;
 
 
 	//MODDD - do it ahead of time for me!
@@ -3580,14 +3709,15 @@ void CSittingScientist :: Spawn( )
 	PRECACHE_MODEL("models/scientist.mdl");
 	Precache();
 
-
 	if(spawnedDynamically){
-		pev->body = -1;
-		//signal a randomization if spawned by the player.
+		// signal a randomization if spawned by the player.
+		//pev->body = -1;    no need, getting overridden soon anyway
+		trueBody = 0;
 	}else{
-		//leave "pev->body" to whatever hte map made it...?
+		// leave "pev->body" to whatever the map made it
+		trueBody = pev->body + 1;
 	}
-	trueBody = pev->body + 1;
+
 	//skip to talk monster, this script is independent of what happens in CScientist.
 	
 	
@@ -4011,8 +4141,37 @@ int CScientist::LookupActivityHard(int activity){
 	//let's do m_IdealActivity??
 	//uh... why?  nevermind then.
 	switch(activity){
+
+		case ACT_ARM:
+			if (healNPCChosen == FALSE) {
+				// the heal anim for the player gets a slight boost.
+				m_flFramerateSuggestion = 1.7f;
+			}else {
+				// For other NPC's, we need to be faster.  Barney's and scientists can't take much damage and need timed damage cured ASAP.
+				// ...not as urgent now that timed damage is 15% for talkmonsters, but eh.
+				m_flFramerateSuggestion = 2.1f;
+			}
+			return CBaseAnimating::LookupActivity(activity);
+		break;
+		case ACT_DISARM:
+			if (healNPCChosen == FALSE) {
+				m_flFramerateSuggestion = 2.1f;
+			}else {
+				m_flFramerateSuggestion = 2.5f;
+			}
+			return CBaseAnimating::LookupActivity(activity);
+		break;
+		// actual healing animation (syringe goes in), short but eh.
+		case ACT_MELEE_ATTACK1:
+			if (healNPCChosen == FALSE) {
+				m_flFramerateSuggestion = 1.7f;
+			}else {
+				m_flFramerateSuggestion = 2.4f;
+			}
+			return CBaseAnimating::LookupActivity(activity);
+		break;
+		// melee punch.   Yes.   really.
 		case ACT_MELEE_ATTACK2:{
-			//here comes the train... the PAIN TRAIN.
 			m_flFramerateSuggestion = 1.24;
 			animEventQueuePush(6.7f / 30.0f, 0);
 			animFrameCutoffSuggestion = 240;
@@ -4031,8 +4190,10 @@ int CScientist::LookupActivityHard(int activity){
 				const int animationWeightChoice = RANDOM_LONG(0, animationWeightTotal-1);
 
 				if(animationWeightChoice < 90){
+					m_flFramerateSuggestion = 0.9f;
 					return LookupSequence("idle1");
 				}else{ //if(animationWeightChoice < 90+20){
+					m_flFramerateSuggestion = 0.85f;
 					return LookupSequence("idle_subtle_alpha");
 				}
 			}else{
@@ -4044,20 +4205,35 @@ int CScientist::LookupActivityHard(int activity){
 					const int animationWeightChoice = RANDOM_LONG(0, animationWeightTotal-1);
 
 					if(animationWeightChoice < 90){
+						m_flFramerateSuggestion = 0.64f;
 						return LookupSequence("idle1");
 					}else if(animationWeightChoice < 90+20){
+						m_flFramerateSuggestion = 0.78f;
 						return LookupSequence("idle_subtle_alpha");
 					}else if(animationWeightChoice < 90+20+3){
+						m_flFramerateSuggestion = 0.93f;
 						return LookupSequence("idle_brush");
 						//no idle_look
 					}else if(animationWeightChoice < 90+20+3+2){
+						m_flFramerateSuggestion = 0.87f;
 						return LookupSequence("idle_adjust");
 					}else{ //if(animationWeightChoice < 90+20+3+2+1){
+						m_flFramerateSuggestion = 0.92f;
 						return LookupSequence("idle_yawn");
 					}
 				}else{
-					//Just pick from the model, any idle animation is okay right now.
-					return CBaseAnimating::LookupActivity(activity);
+					// Just pick from the model, any idle animation is okay right now.
+					int theSeq = CBaseAnimating::LookupActivity(activity);
+
+					// idle or idle_subtle_alpha?  slow down a little.
+					if (theSeq == 12 || theSeq == 13) {
+						m_flFramerateSuggestion = 0.84f;
+					}
+					else {
+						m_flFramerateSuggestion = 0.95f;
+					}
+
+					return theSeq;
 				}
 			}//END OF IsTalking check
 			

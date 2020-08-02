@@ -33,7 +33,7 @@ LINK_ENTITY_TO_CLASS( weapon_9mmAR, CMP5 );
 //Note that this CVar is serverside only. The client should never use it.
 EASY_CVAR_EXTERN(mp5GrenadeInheritsPlayerVelocity)
 
-EASY_CVAR_EXTERN(playerWeaponSpreadMode)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST(playerWeaponSpreadMode)
 
 
 //=========================================================
@@ -184,7 +184,7 @@ void CMP5::PrimaryAttack()
 
 	//MODDD NOTE - for whatever reason the outcomes were swapped. That is, the condition was "NOT in multiplayer", yet passing picked the "optimized muliplayer" one and vice versa.
 	//Changed.
-	if(EASY_CVAR_GET(playerWeaponSpreadMode)!=2 && (EASY_CVAR_GET(playerWeaponSpreadMode)==1 || !IsMultiplayer()) )
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST(playerWeaponSpreadMode)!=2 && (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST(playerWeaponSpreadMode)==1 || !IsMultiplayer()) )
 	{
 		// single player spread
 		vecDir = m_pPlayer->FireBulletsPlayer( 1, vecSrc, vecAiming, VECTOR_CONE_3DEGREES, 8192, BULLET_PLAYER_MP5, 2, 0, m_pPlayer->pev, m_pPlayer->random_seed );
@@ -484,21 +484,6 @@ class CMP5AmmoGrenade : public CBasePlayerAmmo
 };
 LINK_ENTITY_TO_CLASS( ammo_mp5grenades, CMP5AmmoGrenade );
 LINK_ENTITY_TO_CLASS( ammo_ARgrenades, CMP5AmmoGrenade );
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

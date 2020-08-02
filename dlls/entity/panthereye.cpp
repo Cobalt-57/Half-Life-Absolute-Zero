@@ -24,7 +24,7 @@
 #include "soundent.h"
 #include "game.h"
 #include "util_debugdraw.h"
-
+#include "ignore_warning_list.h"
 
 EASY_CVAR_EXTERN(noFlinchOnHard)
 EASY_CVAR_EXTERN(panthereyeHasCloakingAbility)
@@ -1130,11 +1130,7 @@ void CPantherEye::HandleEventQueueEvent(int arg_eventID){
 			//	//no floor? just use the area...
 			//	vecSearchStart = vecForwardFrom - (0, 0, 5);
 			//}
-						
-						
-			debugDrawVect = vecForwardFrom;
-
-
+			
 			CBaseEntity* pEntityScan = NULL;
 			while ( (pEntityScan = UTIL_FindEntityInSphere( pEntityScan, vecSearchStart, 40 ) ) != NULL)
 			{
@@ -1376,7 +1372,8 @@ void CPantherEye::Spawn()
 	Precache( );
 
 	SET_MODEL(ENT(pev), "models/panthereye.mdl");
-	UTIL_SetSize( pev, Vector(-30, -30, 0), Vector(30, 30, 40) );
+	// size made a little more snug.
+	UTIL_SetSize( pev, Vector(-28, -28, 0), Vector(28, 28, 36) );
 	//UTIL_SetSize( pev, VEC_HUMAN_HULL_MIN, VEC_HUMAN_HULL_MAX );
 
 
@@ -2750,13 +2747,11 @@ void CPantherEye::RunTask ( Task_t *pTask ){
 
 
 
-
-
 BOOL CPantherEye::violentDeathAllowed(void){
 	return TRUE;
 }
 BOOL CPantherEye::violentDeathClear(void){
-	//Works for a lot of things going backwards.
+	// Works for a lot of things going backwards.
 	return violentDeathClear_BackwardsCheck(430);
 }//END OF violentDeathAllowed
 int CPantherEye::violentDeathPriority(void){
@@ -2764,22 +2759,16 @@ int CPantherEye::violentDeathPriority(void){
 }
 
 
-
-
 //Copy, takes more to make this guy react.
 void CPantherEye::OnTakeDamageSetConditions(entvars_t *pevInflictor, entvars_t *pevAttacker, float flDamage, int bitsDamageType, int bitsDamageTypeMod){
 
 	//MODDD - intervention. Timed damage might not affect the AI since it could get needlessly distracting.
-
-	
-
 
 	if(bitsDamageTypeMod & (DMG_TIMEDEFFECT|DMG_TIMEDEFFECTIGNORE) ){
 		//If this is continual timed damage, don't register as any damage condition. Not worth possibly interrupting the AI.
 		return;
 	}
 
-	
 	//default case from CBaseMonster's TakeDamage.
 	//Also count being in a non-combat state to force looking in that direction.
 	//if ( flDamage > 0 )
@@ -2804,7 +2793,6 @@ void CPantherEye::OnTakeDamageSetConditions(entvars_t *pevInflictor, entvars_t *
 		forgetBigFlinchTime = gpGlobals->time + 10;  //agrunt has a longer big flinch anim than most so just do this.
 	}
 
-
 /*
 	if(EASY_CVAR_GET(testVar) == 10){
 		//any damage causes me now.
@@ -2820,27 +2808,4 @@ void CPantherEye::OnTakeDamageSetConditions(entvars_t *pevInflictor, entvars_t *
 int CPantherEye::getHullIndexForNodes(void){
     return NODE_LARGE_HULL;  //safe?
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

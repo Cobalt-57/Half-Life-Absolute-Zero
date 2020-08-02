@@ -120,6 +120,22 @@ EASY_CVAR_EXTERN_MASS
 
 DLL_GLOBAL const Vector g_vecZero = Vector(0, 0, 0);
 
+
+DLL_GLOBAL const Vector VECTOR_CONE_1DEGREES = Vector(0.00873, 0.00873, 0.00873);
+DLL_GLOBAL const Vector VECTOR_CONE_2DEGREES = Vector(0.01745, 0.01745, 0.01745);
+DLL_GLOBAL const Vector VECTOR_CONE_3DEGREES = Vector(0.02618, 0.02618, 0.02618);
+DLL_GLOBAL const Vector VECTOR_CONE_4DEGREES = Vector(0.03490, 0.03490, 0.03490);
+DLL_GLOBAL const Vector VECTOR_CONE_5DEGREES = Vector(0.04362, 0.04362, 0.04362);
+DLL_GLOBAL const Vector VECTOR_CONE_6DEGREES = Vector(0.05234, 0.05234, 0.05234);
+DLL_GLOBAL const Vector VECTOR_CONE_7DEGREES = Vector(0.06105, 0.06105, 0.06105);
+DLL_GLOBAL const Vector VECTOR_CONE_8DEGREES = Vector(0.06976, 0.06976, 0.06976);
+DLL_GLOBAL const Vector VECTOR_CONE_9DEGREES = Vector(0.07846, 0.07846, 0.07846);
+DLL_GLOBAL const Vector VECTOR_CONE_10DEGREES = Vector(0.08716, 0.08716, 0.08716);
+DLL_GLOBAL const Vector VECTOR_CONE_15DEGREES = Vector(0.13053, 0.13053, 0.13053);
+DLL_GLOBAL const Vector VECTOR_CONE_20DEGREES = Vector(0.17365, 0.17365, 0.17365);
+
+
+
 // Used to be only in dlls/weapons.cpp (serverside only file).
 // This means the server and client has its own "giAmmoIndex", for use through AddAmmoNameToAmmoRegistry
 // calls.  It is good practice to set giAmmoIndex to 0 before potentially making a lot of calls to that

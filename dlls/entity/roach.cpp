@@ -246,8 +246,8 @@ void CRoach :: MonsterThink( void  )
 
 	switch ( m_iMode )
 	{
-	case	ROACH_IDLE:
-	case	ROACH_EAT:
+	case ROACH_IDLE:
+	case ROACH_EAT:
 		{
 			// if not moving, sample environment to see if anything scary is around. Do a radius search 'look' at random.
 			if ( RANDOM_LONG(0,3) == 1 )
@@ -308,7 +308,7 @@ void CRoach :: MonsterThink( void  )
 
 			break;
 		}
-	case	ROACH_SCARED_BY_LIGHT:
+	case ROACH_SCARED_BY_LIGHT:
 		{
 			// if roach was scared by light, then stop if we're over a spot at least as dark as where we started!
 			if ( GETENTITYILLUM( ENT( pev ) ) <= m_flLastLightLevel )
@@ -476,10 +476,10 @@ void CRoach :: Look ( float flDistance )
 				// we see monsters other than the Enemy.
 				switch ( IRelationship ( pSightEnt ) )
 				{
-				case	R_FR:		
+				case R_FR:		
 					iSighted |= bits_COND_SEE_FEAR;	
 					break;
-				case	R_NO:
+				case R_NO:
 					break;
 				default:
 					ALERT ( at_console, "%s can't asses %s\n", STRING(pev->classname), STRING(pSightEnt->pev->classname ) );

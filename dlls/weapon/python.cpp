@@ -613,6 +613,7 @@ void CPython::updateModel(){
 	m_fInAttack = 0;
 
 	if(pev->body != m_fInAttack){
+		// body choice, goes with presence of laser-sight, no/yes
 		pev->body = m_fInAttack;
 	}
 }

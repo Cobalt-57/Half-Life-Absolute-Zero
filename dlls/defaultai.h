@@ -22,6 +22,7 @@ extern Schedule_t slWaitForReviveSequence[];
 // Failed
 //=========================================================
 extern Schedule_t	slFail[];
+extern Schedule_t	slFailQuick[];
 
 extern Schedule_t slPathfindStumped[];
 

@@ -230,4 +230,17 @@ public:
 	Vector  m_firePosition;
 };
 
+
+
+//MODDD NOTE - was in player.cpp.
+// This class existed only for the 'impulse 202' call to use.  (and still might)
+// Still more fitting as an 'effect', moved here.
+class CBloodSplat : public CBaseEntity
+{
+public:
+	void Spawn ( entvars_t *pevOwner );
+	//MODDD - and no EXPORT for something used with SetThink?  TSK TSK TSK
+	void EXPORT Spray ( void );
+};
+
 #endif		//EFFECTS_H

@@ -67,32 +67,6 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CGrenade)
 }
 
 
-// Explode like a grenade without a dozen paramters.  Does not remove the "pDamageDealer" entity,
-// nor is it exempt from damage.  Just ignored in some effect-related logic.
-// This also does not touch the owner of the entity, send along and set to NULL yourself if needed.
-// If an owner is not provided, it will be implied to be the same as pDamageDealer itself.
-// This is used to determine who dealt the damage.  Otherwise, provide it as VARS(thisEnt->pev->owner)
-// to use the linked 'owner' entity.
-void SimpleStaticExplode(Vector rawExplodeOrigin, float rawDamage, CBaseEntity* pDamageDealer) {
-	entvars_t* entOwner = NULL;
-	if (pDamageDealer != NULL) {
-		entOwner = pDamageDealer->pev;
-	}
-	// oh.. actually it turns out sending entOwner as ourselves is pointless.
-	// RadiusDamage already knows to make the one blamed the same as the entity sent (pDamageDealer) in such a case.
-	SimpleStaticExplode(rawExplodeOrigin, rawDamage, pDamageDealer, entOwner);
-}
-
-void SimpleStaticExplode(Vector rawExplodeOrigin, float rawDamage, CBaseEntity* pDamageDealer, entvars_t* entOwner) {
-	edict_t* edThingy = NULL;
-	if (pDamageDealer != NULL) {
-		edThingy = pDamageDealer->edict();
-	}
-	TraceResult tr;
-	UTIL_TraceLine(rawExplodeOrigin, rawExplodeOrigin + Vector(0, 0, -32), ignore_monsters, edThingy, &tr);
-	StaticExplode(rawExplodeOrigin, rawDamage, pDamageDealer, entOwner, &tr, DMG_BLAST, 0, 1);
-}
-
 //
 // Grenade Explode
 //
@@ -108,25 +82,25 @@ void CGrenade::Explode( Vector vecSrc, Vector vecAim )
 */
 
 // Assuming we have a pev->dmg to go off of.
-void CGrenade::Explode()
+void CGrenade::Explode(void)
 {
 	TraceResult tr;
 	UTIL_TraceLine(pev->origin, pev->origin + Vector(0, 0, -32), ignore_monsters, ENT(pev), &tr);
 
 	//CGrenade::   ???
-	Explode(&tr, DMG_BLAST, 0, 1);
+	CGrenade::Explode(&tr, pev->dmg, pev->dmg * 2.5, DMG_BLAST, 0, 1);
 }
 
 void CGrenade::Explode(TraceResult* pTrace, int bitsDamageType) {
-	CGrenade::Explode(pTrace, bitsDamageType, 0, 1);
+	CGrenade::Explode(pTrace, pev->dmg, pev->dmg * 2.5, bitsDamageType, 0, 1);
 }
 void CGrenade::Explode(TraceResult* pTrace, int bitsDamageType, int bitsDamageTypeMod) {
-	CGrenade::Explode(pTrace, bitsDamageType, bitsDamageTypeMod, 1);
+	CGrenade::Explode(pTrace, pev->dmg, pev->dmg * 2.5, bitsDamageType, bitsDamageTypeMod, 1);
 }
 
-// Handle the grenade-instnace-specific details and call "StaticExplode" for the aspects that don't
+// Handle the grenade-instance-specific details and call "StaticExplode" for the aspects that don't
 // depend on being a CGrenade.
-void CGrenade::Explode(TraceResult* pTrace, int bitsDamageType, int bitsDamageTypeMod, float shrapMod)
+void CGrenade::Explode(TraceResult* pTrace, float rawDamage, float flRange, int bitsDamageType, int bitsDamageTypeMod, float shrapMod)
 {
 	pev->model = iStringNull;//invisible
 	pev->effects |= EF_NODRAW;
@@ -139,7 +113,7 @@ void CGrenade::Explode(TraceResult* pTrace, int bitsDamageType, int bitsDamageTy
 	}
 	pev->owner = NULL; // can't traceline attack owner if this is set
 
-	StaticExplode(pev->origin, pev->dmg, this, pevOwner, pTrace, bitsDamageType, bitsDamageTypeMod, shrapMod);
+	StaticExplode(pev->origin, rawDamage, flRange, this, pevOwner, pTrace, bitsDamageType, bitsDamageTypeMod, shrapMod);
 
 	// The Smoke method soon leads to this entity's deletion. The "StaticExplode" call above already makes it invisible.
 	SetThink(&CGrenade::Smoke);
@@ -149,14 +123,67 @@ void CGrenade::Explode(TraceResult* pTrace, int bitsDamageType, int bitsDamageTy
 
 
 
-void StaticExplode(Vector rawExplodeOrigin, float rawDamage, CBaseEntity* pDamageDealer, entvars_t* entOwner, TraceResult* pTrace, int bitsDamageType) {
-	StaticExplode(rawExplodeOrigin, rawDamage, pDamageDealer, entOwner, pTrace, bitsDamageType, 0, 1);
+
+
+// Explode like a grenade without a dozen paramters.  Does not remove the "pDamageDealer" entity,
+// nor is it exempt from damage.  Just ignored in some effect-related logic.
+// This also does not touch the owner of the entity, send along and set to NULL yourself if needed.
+// If an owner is not provided, it will be implied to be the same as pDamageDealer itself.
+// This is used to determine who dealt the damage.  Otherwise, provide it as VARS(thisEnt->pev->owner)
+// to use the linked 'owner' entity.
+void SimpleStaticExplode(Vector rawExplodeOrigin, float rawDamage, CBaseEntity* pDamageDealer) {
+	SimpleStaticExplode(rawExplodeOrigin, rawDamage, rawDamage * 2.5, pDamageDealer);
 }
-void StaticExplode(Vector rawExplodeOrigin, float rawDamage, CBaseEntity* pDamageDealer, entvars_t* entOwner, TraceResult* pTrace, int bitsDamageType, int bitsDamageTypeMod) {
-	StaticExplode(rawExplodeOrigin, rawDamage, pDamageDealer, entOwner, pTrace, bitsDamageType, bitsDamageTypeMod, 1);
+void SimpleStaticExplode(Vector rawExplodeOrigin, float rawDamage, CBaseEntity* pDamageDealer, entvars_t* entOwner) {
+	SimpleStaticExplode(rawExplodeOrigin, rawDamage, rawDamage * 2.5, pDamageDealer, entOwner);
+}
+void SimpleStaticExplode(Vector rawExplodeOrigin, float rawDamage, float flRange, CBaseEntity* pDamageDealer) {
+	entvars_t* entOwner = NULL;
+	if (pDamageDealer != NULL) {
+		entOwner = pDamageDealer->pev;
+	}
+	// oh.. actually it turns out sending entOwner as ourselves is pointless.
+	// RadiusDamage already knows to make the one blamed the same as the entity sent (pDamageDealer) in such a case.
+	SimpleStaticExplode(rawExplodeOrigin, rawDamage, flRange, pDamageDealer, entOwner);
 }
 
+void SimpleStaticExplode(Vector rawExplodeOrigin, float rawDamage, float flRange, CBaseEntity* pDamageDealer, entvars_t* entOwner) {
+	edict_t* edThingy = NULL;
+	if (pDamageDealer != NULL) {
+		edThingy = pDamageDealer->edict();
+	}
+	TraceResult tr;
+	UTIL_TraceLine(rawExplodeOrigin, rawExplodeOrigin + Vector(0, 0, -32), ignore_monsters, edThingy, &tr);
+	StaticExplode(rawExplodeOrigin, rawDamage, flRange, pDamageDealer, entOwner, &tr, DMG_BLAST, 0, 1);
+}
+
+
+
+
+
+
+
+
+// variants without range.
+void StaticExplode(Vector rawExplodeOrigin, float rawDamage, CBaseEntity * pDamageDealer, entvars_t * entOwner, TraceResult * pTrace, int bitsDamageType) {
+	StaticExplode(rawExplodeOrigin, rawDamage, rawDamage * 2.5, pDamageDealer, entOwner, pTrace, bitsDamageType, 0, 1);
+}
+void StaticExplode(Vector rawExplodeOrigin, float rawDamage, CBaseEntity* pDamageDealer, entvars_t* entOwner, TraceResult* pTrace, int bitsDamageType, int bitsDamageTypeMod) {
+	StaticExplode(rawExplodeOrigin, rawDamage, rawDamage * 2.5, pDamageDealer, entOwner, pTrace, bitsDamageType, bitsDamageTypeMod, 1);
+}
 void StaticExplode(Vector rawExplodeOrigin, float rawDamage, CBaseEntity* pDamageDealer, entvars_t* entOwner, TraceResult* pTrace, int bitsDamageType, int bitsDamageTypeMod, float shrapMod){
+	StaticExplode(rawExplodeOrigin, rawDamage, rawDamage * 2.5, pDamageDealer, entOwner, pTrace, bitsDamageType, bitsDamageTypeMod, shrapMod);
+}
+
+// variants with range
+void StaticExplode(Vector rawExplodeOrigin, float rawDamage, float flRange, CBaseEntity* pDamageDealer, entvars_t* entOwner, TraceResult* pTrace, int bitsDamageType) {
+	StaticExplode(rawExplodeOrigin, rawDamage, flRange, pDamageDealer, entOwner, pTrace, bitsDamageType, 0, 1);
+}
+void StaticExplode(Vector rawExplodeOrigin, float rawDamage, float flRange, CBaseEntity* pDamageDealer, entvars_t* entOwner, TraceResult* pTrace, int bitsDamageType, int bitsDamageTypeMod) {
+	StaticExplode(rawExplodeOrigin, rawDamage, flRange, pDamageDealer, entOwner, pTrace, bitsDamageType, bitsDamageTypeMod, 1);
+}
+
+void StaticExplode(Vector rawExplodeOrigin, float rawDamage, float flRange, CBaseEntity* pDamageDealer, entvars_t* entOwner, TraceResult* pTrace, int bitsDamageType, int bitsDamageTypeMod, float shrapMod){
 	float flRndSound;// sound randomizer
 	//MODDD - new
 	Vector explosionEffectStart = rawExplodeOrigin;
@@ -247,7 +274,7 @@ void StaticExplode(Vector rawExplodeOrigin, float rawDamage, CBaseEntity* pDamag
 	//from the crate because they thesmelves were in the way to block the explosion origin that got pushed behind.  That's... okay for the visible effect but not
 	//the explosion logic origin for doing radial damage.  It can't be blocked like that.
 	//RadiusDamage( explosionOrigin, pev, pevOwner, pev->dmg, pev->dmg * 2.5, CLASS_NONE, bitsDamageType, bitsDamageTypeMod );
-	RadiusDamage(explosionLogicOrigin, pevThingy, entOwner, rawDamage, rawDamage * 2.5, CLASS_NONE, bitsDamageType, bitsDamageTypeMod);
+	RadiusDamage(explosionLogicOrigin, pevThingy, entOwner, rawDamage, flRange, CLASS_NONE, bitsDamageType, bitsDamageTypeMod);
 
 
 	if (RANDOM_FLOAT(0, 1) < 0.5){

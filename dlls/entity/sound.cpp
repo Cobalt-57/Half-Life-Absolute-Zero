@@ -1796,10 +1796,7 @@ char TEXTURETYPE_Find(char *name)
 
 float TEXTURETYPE_PlaySound(TraceResult *ptr,  Vector vecSrc, Vector vecEnd, int iBulletType)
 {
-// hit the world, try to play sound based on texture material type
-	
-
-
+	// hit the world, try to play sound based on texture material type
 	char chTextureType;
 	float fvol;
 	float fvolbar;
@@ -1811,7 +1808,6 @@ float TEXTURETYPE_PlaySound(TraceResult *ptr,  Vector vecSrc, Vector vecEnd, int
 	int cnt;
 	float fattn = ATTN_NORM;
 
-	
 
 	if(EASY_CVAR_GET(muteBulletHitSounds) == 1){
 		return 0;
@@ -1828,13 +1824,39 @@ float TEXTURETYPE_PlaySound(TraceResult *ptr,  Vector vecSrc, Vector vecEnd, int
 	CBaseEntity *pEntity = CBaseEntity::Instance(ptr->pHit);
 
 	chTextureType = 0;
+
+	
+	BOOL isEntityWorld;
+	
+	
+	// just in case short-circuit doesn't work.
+	if (pEntity == NULL) {
+		isEntityWorld = TRUE;  // just go ahead and say 'yes'.
+	}
+	else {
+		// more to work with.
+		isEntityWorld = (pEntity->IsWorld() || pEntity->Classify() == CLASS_NONE);
+	}
+
+	//
 	
 	//MODDD - why are we making such a strong assumption here?
 	//        Why not call pEntity->IsWorld or pEntity->IsWorldAffiliated?
-	//        uhh.. it's meant to work a certain way, check out combat.cpp's FireBulletsPlayer, around "doDefaultBulletHitEffectCheck && bulletHitEffectAllowed".
-	if (pEntity && pEntity->Classify() != CLASS_NONE && pEntity->Classify() != CLASS_MACHINE)
-		// hit body
-		chTextureType = CHAR_TEX_FLESH;
+	//        uhh.. it's meant to work a certain way, check out combat.cpp's FireBulletsPlayer, around "doDefaultBulletHitEffectCheck && useBulletHitSound".
+	
+	//MODDD - differnet check.
+	//if (pEntity && pEntity->Classify() != CLASS_NONE && pEntity->Classify() != CLASS_MACHINE)
+	if (!isEntityWorld) {
+		// Actually we can be a little more specific.
+		if (pEntity->isOrganic()) {
+			// hit body
+			chTextureType = CHAR_TEX_FLESH;
+		}
+		else {
+			// oh
+			chTextureType = CHAR_TEX_METAL;
+		}
+	}
 	else
 	{
 		// hit world

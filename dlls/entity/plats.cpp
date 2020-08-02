@@ -111,58 +111,58 @@ void CBasePlatTrain::Precache( void )
 // set the plat's "in-motion" sound
 	switch (m_bMoveSnd)
 	{
-	case	0:
+	case 0:
 		pev->noiseMoving = MAKE_STRING("common/null.wav");
 		break;
-	case	1:
+	case 1:
 		PRECACHE_SOUND ("plats/bigmove1.wav");
 		pev->noiseMoving = MAKE_STRING("plats/bigmove1.wav");
 		break;
-	case	2:
+	case 2:
 		PRECACHE_SOUND ("plats/bigmove2.wav");
 		pev->noiseMoving = MAKE_STRING("plats/bigmove2.wav");
 		break;
-	case	3:
+	case 3:
 		PRECACHE_SOUND ("plats/elevmove1.wav");
 		pev->noiseMoving = MAKE_STRING("plats/elevmove1.wav");
 		break;
-	case	4:
+	case 4:
 		PRECACHE_SOUND ("plats/elevmove2.wav");
 		pev->noiseMoving = MAKE_STRING("plats/elevmove2.wav");
 		break;
-	case	5:
+	case 5:
 		PRECACHE_SOUND ("plats/elevmove3.wav");
 		pev->noiseMoving = MAKE_STRING("plats/elevmove3.wav");
 		break;
-	case	6:
+	case 6:
 		PRECACHE_SOUND ("plats/freightmove1.wav");
 		pev->noiseMoving = MAKE_STRING("plats/freightmove1.wav");
 		break;
-	case	7:
+	case 7:
 		PRECACHE_SOUND ("plats/freightmove2.wav");
 		pev->noiseMoving = MAKE_STRING("plats/freightmove2.wav");
 		break;
-	case	8:
+	case 8:
 		PRECACHE_SOUND ("plats/heavymove1.wav");
 		pev->noiseMoving = MAKE_STRING("plats/heavymove1.wav");
 		break;
-	case	9:
+	case 9:
 		PRECACHE_SOUND ("plats/rackmove1.wav");
 		pev->noiseMoving = MAKE_STRING("plats/rackmove1.wav");
 		break;
-	case	10:
+	case 10:
 		PRECACHE_SOUND ("plats/railmove1.wav");
 		pev->noiseMoving = MAKE_STRING("plats/railmove1.wav");
 		break;
-	case	11:
+	case 11:
 		PRECACHE_SOUND ("plats/squeekmove1.wav");
 		pev->noiseMoving = MAKE_STRING("plats/squeekmove1.wav");
 		break;
-	case	12:
+	case 12:
 		PRECACHE_SOUND ("plats/talkmove1.wav");
 		pev->noiseMoving = MAKE_STRING("plats/talkmove1.wav");
 		break;
-	case	13:
+	case 13:
 		PRECACHE_SOUND ("plats/talkmove2.wav");
 		pev->noiseMoving = MAKE_STRING("plats/talkmove2.wav");
 		break;
@@ -174,38 +174,38 @@ void CBasePlatTrain::Precache( void )
 // set the plat's 'reached destination' stop sound
 	switch (m_bStopSnd)
 	{
-	case	0:
+	case 0:
 		pev->noiseArrived = MAKE_STRING("common/null.wav");
 		break;
-	case	1:
+	case 1:
 		PRECACHE_SOUND ("plats/bigstop1.wav");
 		pev->noiseArrived = MAKE_STRING("plats/bigstop1.wav");
 		break;
-	case	2:
+	case 2:
 		PRECACHE_SOUND ("plats/bigstop2.wav");
 		pev->noiseArrived = MAKE_STRING("plats/bigstop2.wav");
 		break;
-	case	3:
+	case 3:
 		PRECACHE_SOUND ("plats/freightstop1.wav");
 		pev->noiseArrived = MAKE_STRING("plats/freightstop1.wav");
 		break;
-	case	4:
+	case 4:
 		PRECACHE_SOUND ("plats/heavystop2.wav");
 		pev->noiseArrived = MAKE_STRING("plats/heavystop2.wav");
 		break;
-	case	5:
+	case 5:
 		PRECACHE_SOUND ("plats/rackstop1.wav");
 		pev->noiseArrived = MAKE_STRING("plats/rackstop1.wav");
 		break;
-	case	6:
+	case 6:
 		PRECACHE_SOUND ("plats/railstop1.wav");
 		pev->noiseArrived = MAKE_STRING("plats/railstop1.wav");
 		break;
-	case	7:
+	case 7:
 		PRECACHE_SOUND ("plats/squeekstop1.wav");
 		pev->noiseArrived = MAKE_STRING("plats/squeekstop1.wav");
 		break;
-	case	8:
+	case 8:
 		PRECACHE_SOUND ("plats/talkstop1.wav");
 		pev->noiseArrived = MAKE_STRING("plats/talkstop1.wav");
 		break;

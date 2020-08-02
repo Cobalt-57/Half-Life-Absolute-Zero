@@ -85,6 +85,7 @@
 
 	#if defined(__cplusplus)
 		#include <iostream>
+		using namespace std;
 		#include <cmath>
 	#endif
 
@@ -126,6 +127,7 @@
 
 	//MODDD - used by determineHiddenMemPath.
 	#include <iostream>
+	using namespace std;
 	#include <fstream>
 	#include <string>
 	//using namespace std;

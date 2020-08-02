@@ -210,13 +210,22 @@ void CMortar::Spawn( )
 	pev->movetype	= MOVETYPE_NONE;
 	pev->solid		= SOLID_NOT;
 
-	pev->dmg		= 200;
+	//MODDD - c'mon, 200?  really?
+	//pev->dmg		= 200;
+
+	if (g_iSkillLevel == SKILL_MEDIUM) {
+		pev->dmg = 160;
+	}else if (g_iSkillLevel == SKILL_HARD) {
+		pev->dmg = 175;
+	}else {
+		// easy?
+		pev->dmg = 150;
+	}
 
 	SetThink( &CMortar::MortarExplode );
 	pev->nextthink = 0;
 
 	Precache( );
-
 
 }
 
@@ -281,8 +290,21 @@ void CMortar::MortarExplode( void )
 
 
 
+	float flRange;
 
-	Explode( &tr, DMG_BLAST | DMG_MORTAR, 0, 0.54 );
+	//MODDD - new version of Explode that supports giving explosion range.
+	if (g_iSkillLevel == SKILL_MEDIUM) {
+		flRange = pev->dmg * 2.2;
+	}else if (g_iSkillLevel == SKILL_HARD) {
+		flRange = pev->dmg * 2.4;
+	}else {
+		// easy?
+		flRange = pev->dmg * 2.1;
+	}
+
+	Explode( &tr, pev->dmg, flRange, DMG_BLAST | DMG_MORTAR, 0, 0.54 );
+
+
 
 	UTIL_ScreenShake( tr.vecEndPos, 25.0, 150.0, 1.0, 750 );
 

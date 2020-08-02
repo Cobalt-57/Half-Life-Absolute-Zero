@@ -14,6 +14,12 @@
 
 
 
+// TODO!  How about a big psionic shield?  After being interrupted from taking a lot of damage, puts up a temporary big blue shield
+// that takes up twice it's normal health, and blocks enemies that touch it + a push a direction away and shock damage, but goes away
+// with a single explosion (can't block projectiles while it's up, that is passive ability that doesn't work only while the big shield's up).
+
+
+
 #define KINGPIN_SHOCKER_RADIUS 260
 //Max range to search for powerup-able monsters. Bigger than the APPLY range below. If the closest monster is outside of APPLY but within SEARCH, this Kingpin may walk closer to get in APPLY range.
 #define KINGPIN_POWERUP_SEARCH_RANGE 2100
@@ -77,8 +83,9 @@ extern short g_sBallForceFieldSprite;
 
 
 //TODO - reflect projectiles and with a neat blue glowbright or whatever they're called sprites, clientside event or here as a sprite. probably that.
-//and the charge effect sprite (glowing flare thing above the mage_loop'ing kingpin) should probably also fade into existance like the fade out instead of instantly appearing
-//at the start of a CHARGE task.
+// and the charge effect sprite (glowing flare thing above the mage_loop'ing kingpin) should probably also fade into existance like the fade out instead of instantly appearing
+// at the start of a CHARGE task.
+// ...I think this works now?
 
 
 
@@ -93,6 +100,8 @@ extern short g_sBallForceFieldSprite;
 //sequences in the anim, in the order they appear in the anim. Some anims have the same display name and so should just be referenced by order
 //(numbered index), named well after purpose and based on display names for clarity. Safer this way.
 
+
+/*
 enum kingpin_sequence {  //key: frames, FPS
 	KINGPIN_ATTACK_BOTH,  //21, 30
 	KINGPIN_ATTACK_LEFT,  //21, 30
@@ -103,14 +112,38 @@ enum kingpin_sequence {  //key: frames, FPS
 	KINGPIN_MAGE_START,  //16, 30
 	KINGPIN_MAGE_LOOP,  //16, 30
 	KINGPIN_MAGE_END,  //15, 30
-	KINGPIN_SMALL_FLINCH1,  //16, 30  WARNING - broken yet.
+	KINGPIN_SMALL_FLINCH1,  //16, 30
 	KINGPIN_SMALL_FLINCH2,  //16, 30
 	KINGPIN_IDLE1,  //121, 22
 	KINGPIN_WALK,  //41, 30
 	KINGPIN_RUN  //20, 30
 
+};
+*/
+
+
+enum kingpin_sequence {  //key: frames, FPS
+	KINGPIN_IDLE1,  //121, 22
+	KINGPIN_WALK,  //41, 30
+	KINGPIN_RUN,  //20, 30
+	KINGPIN_SMALL_FLINCH1,  //16, 30
+	KINGPIN_SMALL_FLINCH2,  //16, 30
+	KINGPIN_ATTACK_BOTH,  //21, 30
+	KINGPIN_ATTACK_LEFT,  //21, 30
+	KINGPIN_ATTACK_RIGHT, //21, 30
+	KINGPIN_MAGE_START,  //16, 30
+	KINGPIN_MAGE_LOOP,  //16, 30
+	KINGPIN_MAGE_END,  //15, 30
+	KINGPIN_DIE_FORWARD,  //41, 30
+	KINGPIN_DIE_HEADSHOT,  //47, 30
+	KINGPIN_DIE_SIMPLE,  //71, 30
+
 
 };
+
+
+
+
 
 
 /*

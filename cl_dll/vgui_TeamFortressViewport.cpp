@@ -1127,9 +1127,10 @@ void TeamFortressViewport::UpdateSpectatorPanel()
 		// add sting auto if we are in auto directed mode
 		if (gHUD.m_Spectator.m_autoDirector->value)
 		{
-			char tempString[128];
-			sprintf(tempString, "#Spec_Auto %s", helpString2);
-			strcpy(helpString2, tempString);
+			//MODDD - keeping it safe, just renaming this from tempString to tempStringDeeper (conflict with outter scope)
+			char tempStringDeeper[128];
+			sprintf(tempStringDeeper, "#Spec_Auto %s", helpString2);
+			strcpy(helpString2, tempStringDeeper);
 		}
 
 		m_pSpectatorPanel->m_BottomMainLabel->setText(CHudTextMessage::BufferedLocaliseTextString(bottomText));
@@ -1297,7 +1298,11 @@ CMenuPanel* TeamFortressViewport::CreateTextWindow(int iTextToShow)
 		CHudTextMessage::LocaliseTextString("#Spec_Help_Title", cTitle, MAX_TITLE_LENGTH);
 		cTitle[MAX_TITLE_LENGTH - 1] = 0;
 
-		char* pfile = CHudTextMessage::BufferedLocaliseTextString("#Spec_Help_Text");
+		//MODDD - same name as "pfile", but a different scope? Weird.
+		// I can't tell if it was their intention for the outter "pfile" to stay NULL anyway then.
+		// Let's assume it was, below is COM_FreeFile to free-up a reference to the file, I assume.
+		//char* pfile = ...
+		pfile = CHudTextMessage::BufferedLocaliseTextString("#Spec_Help_Text");
 		if (pfile)
 		{
 			cText = pfile;

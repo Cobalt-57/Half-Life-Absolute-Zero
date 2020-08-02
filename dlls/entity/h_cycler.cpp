@@ -54,7 +54,7 @@ public:
 	virtual int	Restore( CRestore &restore );
 	static	TYPEDESCRIPTION m_SaveData[];
 
-	int		m_animate;
+	int m_animate;
 };
 
 TYPEDESCRIPTION	CCycler::m_SaveData[] = 

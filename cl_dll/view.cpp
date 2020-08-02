@@ -786,8 +786,19 @@ void V_CalcNormalRefdef(struct ref_params_s* pparams)
 	//              done in melee attacks serverside, and that just got sent over here.  That's fine.
 	// Looks like "ev_punchangle" below actually comes from say, a weapon's lasting effect.
 
-	if (EASY_CVAR_GET(cl_viewpunch) != 0) {
-		VectorAdd_f(pparams->viewangles, pparams->punchangle, pparams->viewangles);
+	if (EASY_CVAR_GET(cl_viewpunch) > 0) {
+		Vector vPunchFinal;
+		if (EASY_CVAR_GET(cl_viewpunch) == 1) {
+			VectorCopy_f(pparams->punchangle, vPunchFinal);
+		}
+		else {
+			VectorScale(pparams->punchangle, EASY_CVAR_GET(cl_viewpunch), vPunchFinal);
+		}
+
+		VectorAdd_f(pparams->viewangles, vPunchFinal, pparams->viewangles);
+		if (pparams->punchangle[0] != 0 && pparams->punchangle[1] != 0 && pparams->punchangle[2] != 0) {
+			int x = 45;
+		}
 		//VectorAdd_f ( pparams->viewangles, vecTemp, pparams->viewangles );
 	}
 
@@ -797,7 +808,11 @@ void V_CalcNormalRefdef(struct ref_params_s* pparams)
 	//MODDD - only use the punch if the "minimumfiredelay" cheat is off.  This way, rapid fire doesn't
 	//distort the real damage-point.
 	// Also we have another CVar just for stopping viewpunch.  Sometimes we don't need that distraction.
-	if (EASY_CVAR_GET(cheat_minimumfiredelay) != 1 && EASY_CVAR_GET(cl_viewpunch) != 0) {
+
+	// ALSO, ev_punchangle seems to come from 'events' in ev_hldm (weapon recoil most often, if not always).
+	// See V_PunchAxis which sets it).   pparms->punchangle  above looks to come from serverside entities
+	// inflicting it on the player by setting 'pev->punchangle', usually melee attacks throwing the camera off.
+	if (EASY_CVAR_GET(cheat_minimumfiredelay) != 1 && EASY_CVAR_GET(cl_viewpunch) > 0) {
 		VectorAdd_f(pparams->viewangles, (float*)&ev_punchangle, pparams->viewangles);
 	}
 	else {
@@ -812,30 +827,131 @@ void V_CalcNormalRefdef(struct ref_params_s* pparams)
 	//        So looking in the same direction while a view punch happens and expires, leaves you looking in the exact same direction as before the punch.
 	V_DropPunchAngle(pparams->frametime, (float*)&ev_punchangle);
 
+
+
 	// smooth out stair step ups
+	//MODDD - support for going down stairs too to look smooth!
+	//MODDD - NOTE.  These seem to be looking at a hardcoded stepsize of "18", even though
+	// sv_stepsize is a CVar that can be changed.
+	// Perhaps it should be broadcasted to clients, then use that client-cached version here?
 #if 1
-	if (!pparams->smoothing && pparams->onground && pparams->simorg[2] - oldz > 0)
+
+	// bunch of scraps from testing around.
+	// Sweet GOD does figuring out the view-offset out of simorg have to be some act of eldritch witchcraft???
+	// NEVERMIND THIS.
+
+//view->curstate.
+// bInDuck ???
+
+	/*
+	extern BOOL recentDuckVal;
+	extern int recentDuckTime;
+
+	float test1 = pparams->simorg[2];
+	float test2 = pparams->simorg[2] - pparams->viewheight[2];
+	float test3 = pparams->viewheight[2];
+
+
+	vec3_t TEMP_view_ofs;
+	gEngfuncs.pEventAPI->EV_LocalPlayerViewheight(TEMP_view_ofs);
+	float TEMP_view_ofs_z = TEMP_view_ofs[2];
+	int hulltesto = ent->curstate.usehull;
+	*/
+
+	static float oldViewHeight = 0;
+
+	float safeSimZ = pparams->simorg[2];   // - pparams->viewheight[2]
+
+
+	/*
+	if (ent->curstate.usehull == 1) {
+		int x = 12;
+	}else if (recentDuckVal) {
+		int x = 12;
+	}
+	*/
+
+	/*
+	if ( (nButtonPressed & IN_DUCK ) && !( pmove->flags & FL_DUCKING ) )
+	if ((nButtonPressed & IN_DUCK) && !(ent->curstate.usehull == 1))
 	{
-		float steptime;
+		// Use 1 second so super long jump will work
+		pmove->flDuckTime = 1000;
+		pmove->bInDuck = true;
+	}
+	*/
 
-		steptime = pparams->time - lasttime;
-		if (steptime < 0)
-			//FIXME		I_Error ("steptime < 0");
-			steptime = 0;
+	//if(ent->curstate.usehull == 2){
+	//	int x = 666;
+	//}else
 
-		oldz += steptime * 150;
-		if (oldz > pparams->simorg[2])
-			oldz = pparams->simorg[2];
-		if (pparams->simorg[2] - oldz > 18)
-			oldz = pparams->simorg[2] - 18;
-		pparams->vieworg[2] += oldz - pparams->simorg[2];
-		view->origin[2] += oldz - pparams->simorg[2];
+
+
+	//if (!pparams->smoothing && pparams->onground && safeSimZ - oldz > 0)
+	if (!pparams->smoothing && pparams->onground)
+	{
+		if (safeSimZ - oldz > 0) {
+			float steptime;
+
+			steptime = pparams->time - lasttime;
+			if (steptime < 0)
+				//FIXME		I_Error ("steptime < 0");
+				steptime = 0;
+
+			oldz += steptime * 150;
+			if (oldz > safeSimZ)
+				oldz = safeSimZ;
+			if (safeSimZ - oldz > 18)
+				oldz = safeSimZ - 18;
+			pparams->vieworg[2] += oldz - (safeSimZ);
+			view->origin[2] += oldz - (safeSimZ);
+		}
+		else if (safeSimZ - oldz < 0) {
+
+			// FOR the new downward stairs/incline checks, don't do interpolation
+			// while the user's viewheight has changed since last frame (ducking and unducking typically).
+			// This wasn't expected so it looks wonky when it happens.  Interp from the other way around 
+			// is actually needed though, go figure.
+			if (pparams->viewheight[2] != oldViewHeight) {
+				oldz = safeSimZ;
+			}
+			else {
+				//MODDD - camera Z interp logic for going down stairs.
+				float steptime;
+
+				steptime = pparams->time - lasttime;
+				if (steptime < 0)
+					//FIXME		I_Error ("steptime < 0");
+					steptime = 0;
+
+				oldz -= steptime * 150;
+				if (oldz < safeSimZ)
+					oldz = safeSimZ;
+				if (-safeSimZ + oldz > 18)
+					oldz = safeSimZ + 18;
+				pparams->vieworg[2] -= -oldz + (safeSimZ);
+				view->origin[2] -= -oldz + (safeSimZ);
+			}
+			
+		}
+		else {
+			// oh
+			oldz = safeSimZ;
+		}
+
+
 	}
 	else
 	{
-		oldz = pparams->simorg[2];
+		oldz = safeSimZ;
 	}
+
+	// MODDD
+	oldViewHeight = pparams->viewheight[2];
+
 #endif
+
+
 
 	{
 		static float lastorg[3];
@@ -1864,7 +1980,9 @@ void V_DropPunchAngle(float frametime, float* arg_ev_punchangle)
 	float	len;
 
 	len = VectorNormalize(arg_ev_punchangle);
-	len -= (10.0 + len * 0.5) * frametime;
+	//MODDD - little touchup
+	//len -= (10.0 + len * 0.5) * frametime;
+	len -= (11.0 + len * 0.67) * frametime;
 	len = max(len, 0.0);
 	VectorScale(arg_ev_punchangle, len, arg_ev_punchangle);
 }
@@ -1878,7 +1996,9 @@ Client side punch effect
 */
 void V_PunchAxis(int axis, float punch)
 {
-	ev_punchangle[axis] = punch;
+	if (EASY_CVAR_GET(cl_viewpunch) > 0) {
+		ev_punchangle[axis] = punch * EASY_CVAR_GET(cl_viewpunch);
+	}
 }
 
 

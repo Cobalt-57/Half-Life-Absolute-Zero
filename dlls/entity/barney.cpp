@@ -33,13 +33,13 @@
 
 EASY_CVAR_EXTERN(sv_germancensorship)
 extern BOOL globalPSEUDO_germanModel_barneyFound;
+extern BOOL globalPSEUDO_iCanHazMemez;
 EASY_CVAR_EXTERN(barneyDummy)
 EASY_CVAR_EXTERN(monsterSpawnPrintout)
 EASY_CVAR_EXTERN(pissedNPCs)
 EASY_CVAR_EXTERN(barneyPrintouts)
 EASY_CVAR_EXTERN(glockOldReloadLogicBarney)
 EASY_CVAR_EXTERN(barneyDroppedGlockAmmoCap)
-extern BOOL globalPSEUDO_iCanHazMemez;
 EASY_CVAR_EXTERN(barneyUnholsterTime)
 EASY_CVAR_EXTERN(barneyUnholsterAnimChoice)
 EASY_CVAR_EXTERN(hyperBarney)
@@ -47,21 +47,9 @@ EASY_CVAR_EXTERN(hyperBarney)
 
 
 
-//Yes, need to know this ahead of time.
-extern Schedule_t slBarneyEnemyDraw[];
-
-
-
-static float g_sayBulletHitCooldown = -1;
-
-
-
 //MODDD - how many shots before reloading?
 #define BARNEY_WEAPON_CLIP_SIZE 13
 
-#define BARNEY_BODY_GUNHOLSTERED	0
-#define BARNEY_BODY_GUNDRAWN		1
-#define BARNEY_BODY_GUNGONE			2
 
 //MODDD - macro.
 #define HITGROUP_BARNEY_HELMET 10
@@ -75,6 +63,21 @@ static float g_sayBulletHitCooldown = -1;
 #define BARNEY_AE_HOLSTER	( 4 )
 //MODDD 
 #define BARNEY_AE_RELOAD	( 5 )
+
+// oh, already had these constants?  ah well, doesn't hurt to be formal and say it's part of bodygroup #1.
+#define BODYGROUP_GUN 1
+#define BARNEY_BODY_GUNHOLSTERED 0
+#define BARNEY_BODY_GUNDRAWN 1
+#define BARNEY_BODY_GUNGONE 2
+
+
+//Yes, need to know this ahead of time.
+extern Schedule_t slBarneyEnemyDraw[];
+
+
+static float g_sayBulletHitCooldown = -1;
+
+
 
 
 
@@ -97,23 +100,35 @@ enum
 class CBarney : public CTalkMonster
 {
 public:
-	CBarney(void);
 
-	void ReportAIState(void);
-
-	BOOL canUnholster;
-	float unholsterTimer;
-	int recentDeadEnemyClass;
-
+	//MODDD - for checking to play barney's alert, in case other sounds take precedence for some reason.
+	static float g_barneyAlertTalkWaitTime;
 
 	static const char* madInterSentences[];
 	static int madInterSentencesMax;
 
 
+	BOOL canUnholster;
+	float unholsterTimer;
+	int recentDeadEnemyClass;
+
+	BOOL m_fGunDrawn;
+	float m_painTime;
+	float m_checkAttackTime;
+	BOOL m_lastAttackCheck;
+
+	float reloadSoundTime;
+
+
+
+	CBarney(void);
+
+	void ReportAIState(void);
+
+
 	int getMadSentencesMax(void);
 	int getMadInterSentencesMax(void);
 
-	void womboCombo(void);
 	
 	void MonsterThink(void);
 	int  IRelationship( CBaseEntity *pTarget );
@@ -186,19 +201,9 @@ public:
 	virtual int	Restore( CRestore &restore );
 	static TYPEDESCRIPTION m_SaveData[];
 
-	BOOL m_fGunDrawn;
-	float m_painTime;
-	float m_checkAttackTime;
-	BOOL m_lastAttackCheck;
-
-
-	//MODDD - for checking to play barney's alert, in case other sounds take precedence for some reason.
-	static float g_barneyAlertTalkWaitTime;
-
 	//void Think(void);
 	void CheckAmmo(void);
 	void SetActivity(Activity NewActivity);
-	float reloadSoundTime;
 
 	//MODDD - new anim stuff.
 	void HandleEventQueueEvent(int arg_eventID);
@@ -219,6 +224,7 @@ public:
 	BOOL canResetBlend0(void);
 	BOOL onResetBlend0(void);
 
+	void womboCombo(void);
 
 	CUSTOM_SCHEDULES;
 };
@@ -235,189 +241,10 @@ float CBarney::g_barneyAlertTalkWaitTime = 0;
 	LINK_ENTITY_TO_CLASS( barney, CBarney );
 	
 	//no extras.
-
 #endif
 
 
-void CBarney::DeclineFollowingProvoked(CBaseEntity* pCaller){
-	//Barney won't say anything, he's too busy shooting you.
-	//...or will he? MUHAHAHA.
-	
-	if(EASY_CVAR_GET(pissedNPCs) != 1 || !globalPSEUDO_iCanHazMemez){
-		PlaySentence( "BA_PISSED", 3, VOL_NORM, ATTN_NORM );
-	}else{
-		PlaySentence( "BA_POKE_D", 8, VOL_NORM, ATTN_NORM );
-	}
 
-
-}
-void CBarney::SayProvoked(void){
-	
-	if(EASY_CVAR_GET(pissedNPCs) != 1 || !globalPSEUDO_iCanHazMemez){
-		PlaySentence( "BA_MAD", 4, VOL_NORM, ATTN_NORM );
-	}else{
-		PlaySentence( "BA_POKE_D", 8, VOL_NORM, ATTN_NORM );
-	}
-}
-void CBarney::SaySuspicious(void){
-	if(EASY_CVAR_GET(pissedNPCs) != 1 || !globalPSEUDO_iCanHazMemez){
-		PlaySentence( "BA_SHOT", 4, VOL_NORM, ATTN_NORM );
-	}else{
-		PlaySentence( "BA_POKE_C", 6, VOL_NORM, ATTN_NORM );
-	}
-}
-void CBarney::SayLeaderDied(void){
-	PainSound(TRUE); //force the pain sound
-}
-
-
-void CBarney::SayNearPassive(void){
-
-	switch(RANDOM_LONG(0, 4)){
-	case 0:
-		PlaySentenceSingular( "BA_QUESTION10", 4, VOL_NORM, ATTN_NORM );
-	break;
-	case 1:
-		PlaySentenceSingular( "BA_QUESTION12", 4, VOL_NORM, ATTN_NORM );
-	break;
-	case 2:
-		PlaySentenceSingular( "BA_QUESTION13", 4, VOL_NORM, ATTN_NORM );
-	break;
-	case 3:
-		PlaySentenceSingular( "BA_SMELL1", 4, VOL_NORM, ATTN_NORM );
-	break;
-	case 4:
-		PlaySentenceSingular( "BA_SMELL2", 4, VOL_NORM, ATTN_NORM );
-	break;
-	default:
-
-	break;
-	}//END OF switch
-
-}
-
-
-void CBarney::OnNearCautious(void){
-	
-	if(m_fGunDrawn == FALSE && m_pSchedule != slBarneyEnemyDraw){
-		//Barney will have his gun out around potential hostiles. He's ready for anything.
-		ChangeSchedule(slBarneyEnemyDraw);
-	}
-	
-	unholsterTimer = gpGlobals->time + EASY_CVAR_GET(barneyUnholsterTime);
-}//END OF onNearCautious
-
-void CBarney::SayNearCautious(void){
-
-	switch(RANDOM_LONG(0, 34)){
-	case 0:
-		PlaySentenceSingular( "BA_OK0", 4, VOL_NORM, ATTN_NORM );
-	break;
-	case 1:
-		PlaySentenceSingular( "BA_OK2", 4, VOL_NORM, ATTN_NORM );
-	break;
-	case 2:
-		PlaySentenceSingular( "BA_OK5", 4, VOL_NORM, ATTN_NORM );
-	break;
-	case 3:
-		PlaySentenceSingular( "BA_OK6", 4, VOL_NORM, ATTN_NORM );
-	break;
-	case 4:
-		PlaySentenceSingular( "BA_QUESTION0", 4, VOL_NORM, ATTN_NORM );
-	break;
-	case 5:
-		PlaySentenceSingular( "BA_QUESTION3", 4, VOL_NORM, ATTN_NORM );
-	break;
-	case 6:
-		PlaySentenceSingular( "BA_QUESTION4", 4, VOL_NORM, ATTN_NORM );
-	break;
-	case 7:
-		PlaySentenceSingular( "BA_QUESTION6", 4, VOL_NORM, ATTN_NORM );
-	break;
-	case 8:
-		PlaySentenceSingular( "BA_QUESTION7", 4, VOL_NORM, ATTN_NORM );
-	break;
-	case 9:
-		PlaySentenceSingular( "BA_QUESTION8", 4, VOL_NORM, ATTN_NORM );
-	break;
-	case 10:
-		PlaySentenceSingular( "BA_QUESTION9", 4, VOL_NORM, ATTN_NORM );
-	break;
-	case 11:
-		PlaySentenceSingular( "BA_QUESTION10", 4, VOL_NORM, ATTN_NORM );
-	break;
-	case 12:
-		PlaySentenceSingular( "BA_QUESTION11", 4, VOL_NORM, ATTN_NORM );
-	break;
-	case 13:
-		PlaySentenceSingular( "BA_QUESTION12", 4, VOL_NORM, ATTN_NORM );
-	break;
-	case 14:
-		PlaySentenceSingular( "BA_QUESTION13", 4, VOL_NORM, ATTN_NORM );
-	break;
-	case 15:
-		PlaySentenceSingular( "BA_QUESTION14", 4, VOL_NORM, ATTN_NORM );
-	break;
-	case 16:
-		PlaySentenceSingular( "BA_HELLO6", 4, VOL_NORM, ATTN_NORM );
-	break;
-	case 17:
-		PlaySentenceSingular( "BA_IDLE0", 4, VOL_NORM, ATTN_NORM );
-	break;
-	case 18:
-		PlaySentenceSingular( "BA_IDLE1", 4, VOL_NORM, ATTN_NORM );
-	break;
-	case 19:
-		PlaySentenceSingular( "BA_IDLE2", 4, VOL_NORM, ATTN_NORM );
-	break;
-	case 20:
-		PlaySentenceSingular( "BA_IDLE3", 4, VOL_NORM, ATTN_NORM );
-	break;
-	case 21:
-		PlaySentenceSingular( "BA_IDLE6", 4, VOL_NORM, ATTN_NORM );
-	break;
-	case 22:
-		PlaySentenceSingular( "BA_IDLE7", 4, VOL_NORM, ATTN_NORM );
-	break;
-	case 23:
-		PlaySentenceSingular( "BA_IDLE8", 4, VOL_NORM, ATTN_NORM );
-	break;
-	case 24:
-		PlaySentenceSingular( "BA_IDLE9", 4, VOL_NORM, ATTN_NORM );
-	break;
-	case 25:
-		PlaySentenceSingular( "BA_IDLE10", 4, VOL_NORM, ATTN_NORM );
-	break;
-	case 26:
-		PlaySentenceSingular( "BA_IDLE11", 4, VOL_NORM, ATTN_NORM );  //badarea
-	break;
-	case 27:
-		PlaySentenceSingular( "BA_ATTACK2", 4, VOL_NORM, ATTN_NORM );
-	break;
-	case 28:
-		PlaySentenceSingular( "BA_ATTACK4", 4, VOL_NORM, ATTN_NORM );
-	break;
-	case 29:
-		PlaySentenceSingular( "BA_HEAR0", 4, VOL_NORM, ATTN_NORM );
-	break;
-	case 30:
-		PlaySentenceSingular( "BA_HEAR1", 4, VOL_NORM, ATTN_NORM );
-	break;
-	case 31:
-		PlaySentenceSingular( "BA_HEAR2", 4, VOL_NORM, ATTN_NORM );
-	break;
-	case 32:
-		PlaySentenceSingular( "BA_HEAR3", 4, VOL_NORM, ATTN_NORM );
-	break;
-	case 33:
-		PlaySentenceSingular( "BA_STOP3", 4, VOL_NORM, ATTN_NORM );
-	break;
-	case 34:
-		PlaySentenceSingular( "BA_STOP4", 4, VOL_NORM, ATTN_NORM );
-	break;
-	
-	}//END OF switch
-}//END OF SayNearCautious
 
 
 const char* CBarney::madInterSentences[] = {
@@ -462,10 +289,10 @@ const char* CBarney::madInterSentences[] = {
 	"!BA_POKE38",
 	"!BA_POKE39",
 	"!BA_POKE40"
-	
-
 };
 //int CBarney::madInterSentencesMax = 41;
+
+
 
 int CBarney::getMadInterSentencesMax(void){
 	if(globalPSEUDO_iCanHazMemez == TRUE){
@@ -485,6 +312,7 @@ int CBarney::getMadSentencesMax(void){
 
 
 
+
 TYPEDESCRIPTION	CBarney::m_SaveData[] = 
 {
 	DEFINE_FIELD( CBarney, m_fGunDrawn, FIELD_BOOLEAN ),
@@ -499,6 +327,8 @@ IMPLEMENT_SAVERESTORE( CBarney, CTalkMonster );
 //=========================================================
 // AI Schedules Specific to this monster
 //=========================================================
+
+
 
 
 //MODDD
@@ -576,7 +406,6 @@ Schedule_t slBarneyEnemyDraw[] =
 
 
 //MODDD - new!
-
 Task_t	tlBarneyUnDraw[] =
 {
 	{ TASK_STOP_MOVING,					0				},
@@ -666,6 +495,201 @@ DEFINE_CUSTOM_SCHEDULES( CBarney )
 
 
 IMPLEMENT_CUSTOM_SCHEDULES( CBarney, CTalkMonster );
+
+
+
+
+
+
+
+void CBarney::DeclineFollowingProvoked(CBaseEntity* pCaller) {
+	//Barney won't say anything, he's too busy shooting you.
+	//...or will he? MUHAHAHA.
+
+	if (EASY_CVAR_GET(pissedNPCs) != 1 || !globalPSEUDO_iCanHazMemez) {
+		PlaySentence("BA_PISSED", 3, VOL_NORM, ATTN_NORM);
+	}
+	else {
+		PlaySentence("BA_POKE_D", 8, VOL_NORM, ATTN_NORM);
+	}
+
+
+}
+void CBarney::SayProvoked(void) {
+
+	if (EASY_CVAR_GET(pissedNPCs) != 1 || !globalPSEUDO_iCanHazMemez) {
+		PlaySentence("BA_MAD", 4, VOL_NORM, ATTN_NORM);
+	}
+	else {
+		PlaySentence("BA_POKE_D", 8, VOL_NORM, ATTN_NORM);
+	}
+}
+void CBarney::SaySuspicious(void) {
+	if (EASY_CVAR_GET(pissedNPCs) != 1 || !globalPSEUDO_iCanHazMemez) {
+		PlaySentence("BA_SHOT", 4, VOL_NORM, ATTN_NORM);
+	}
+	else {
+		PlaySentence("BA_POKE_C", 6, VOL_NORM, ATTN_NORM);
+	}
+}
+void CBarney::SayLeaderDied(void) {
+	PainSound(TRUE); //force the pain sound
+}
+
+
+void CBarney::SayNearPassive(void) {
+
+	switch (RANDOM_LONG(0, 4)) {
+	case 0:
+		PlaySentenceSingular("BA_QUESTION10", 4, VOL_NORM, ATTN_NORM);
+		break;
+	case 1:
+		PlaySentenceSingular("BA_QUESTION12", 4, VOL_NORM, ATTN_NORM);
+		break;
+	case 2:
+		PlaySentenceSingular("BA_QUESTION13", 4, VOL_NORM, ATTN_NORM);
+		break;
+	case 3:
+		PlaySentenceSingular("BA_SMELL1", 4, VOL_NORM, ATTN_NORM);
+		break;
+	case 4:
+		PlaySentenceSingular("BA_SMELL2", 4, VOL_NORM, ATTN_NORM);
+		break;
+	default:
+
+		break;
+	}//END OF switch
+
+}
+
+
+void CBarney::OnNearCautious(void) {
+
+	if (m_fGunDrawn == FALSE && m_pSchedule != slBarneyEnemyDraw) {
+		//Barney will have his gun out around potential hostiles. He's ready for anything.
+		ChangeSchedule(slBarneyEnemyDraw);
+	}
+
+	unholsterTimer = gpGlobals->time + EASY_CVAR_GET(barneyUnholsterTime);
+}//END OF onNearCautious
+
+void CBarney::SayNearCautious(void) {
+
+	switch (RANDOM_LONG(0, 34)) {
+	case 0:
+		PlaySentenceSingular("BA_OK0", 4, VOL_NORM, ATTN_NORM);
+		break;
+	case 1:
+		PlaySentenceSingular("BA_OK2", 4, VOL_NORM, ATTN_NORM);
+		break;
+	case 2:
+		PlaySentenceSingular("BA_OK5", 4, VOL_NORM, ATTN_NORM);
+		break;
+	case 3:
+		PlaySentenceSingular("BA_OK6", 4, VOL_NORM, ATTN_NORM);
+		break;
+	case 4:
+		PlaySentenceSingular("BA_QUESTION0", 4, VOL_NORM, ATTN_NORM);
+		break;
+	case 5:
+		PlaySentenceSingular("BA_QUESTION3", 4, VOL_NORM, ATTN_NORM);
+		break;
+	case 6:
+		PlaySentenceSingular("BA_QUESTION4", 4, VOL_NORM, ATTN_NORM);
+		break;
+	case 7:
+		PlaySentenceSingular("BA_QUESTION6", 4, VOL_NORM, ATTN_NORM);
+		break;
+	case 8:
+		PlaySentenceSingular("BA_QUESTION7", 4, VOL_NORM, ATTN_NORM);
+		break;
+	case 9:
+		PlaySentenceSingular("BA_QUESTION8", 4, VOL_NORM, ATTN_NORM);
+		break;
+	case 10:
+		PlaySentenceSingular("BA_QUESTION9", 4, VOL_NORM, ATTN_NORM);
+		break;
+	case 11:
+		PlaySentenceSingular("BA_QUESTION10", 4, VOL_NORM, ATTN_NORM);
+		break;
+	case 12:
+		PlaySentenceSingular("BA_QUESTION11", 4, VOL_NORM, ATTN_NORM);
+		break;
+	case 13:
+		PlaySentenceSingular("BA_QUESTION12", 4, VOL_NORM, ATTN_NORM);
+		break;
+	case 14:
+		PlaySentenceSingular("BA_QUESTION13", 4, VOL_NORM, ATTN_NORM);
+		break;
+	case 15:
+		PlaySentenceSingular("BA_QUESTION14", 4, VOL_NORM, ATTN_NORM);
+		break;
+	case 16:
+		PlaySentenceSingular("BA_HELLO6", 4, VOL_NORM, ATTN_NORM);
+		break;
+	case 17:
+		PlaySentenceSingular("BA_IDLE0", 4, VOL_NORM, ATTN_NORM);
+		break;
+	case 18:
+		PlaySentenceSingular("BA_IDLE1", 4, VOL_NORM, ATTN_NORM);
+		break;
+	case 19:
+		PlaySentenceSingular("BA_IDLE2", 4, VOL_NORM, ATTN_NORM);
+		break;
+	case 20:
+		PlaySentenceSingular("BA_IDLE3", 4, VOL_NORM, ATTN_NORM);
+		break;
+	case 21:
+		PlaySentenceSingular("BA_IDLE6", 4, VOL_NORM, ATTN_NORM);
+		break;
+	case 22:
+		PlaySentenceSingular("BA_IDLE7", 4, VOL_NORM, ATTN_NORM);
+		break;
+	case 23:
+		PlaySentenceSingular("BA_IDLE8", 4, VOL_NORM, ATTN_NORM);
+		break;
+	case 24:
+		PlaySentenceSingular("BA_IDLE9", 4, VOL_NORM, ATTN_NORM);
+		break;
+	case 25:
+		PlaySentenceSingular("BA_IDLE10", 4, VOL_NORM, ATTN_NORM);
+		break;
+	case 26:
+		PlaySentenceSingular("BA_IDLE11", 4, VOL_NORM, ATTN_NORM);  //badarea
+		break;
+	case 27:
+		PlaySentenceSingular("BA_ATTACK2", 4, VOL_NORM, ATTN_NORM);
+		break;
+	case 28:
+		PlaySentenceSingular("BA_ATTACK4", 4, VOL_NORM, ATTN_NORM);
+		break;
+	case 29:
+		PlaySentenceSingular("BA_HEAR0", 4, VOL_NORM, ATTN_NORM);
+		break;
+	case 30:
+		PlaySentenceSingular("BA_HEAR1", 4, VOL_NORM, ATTN_NORM);
+		break;
+	case 31:
+		PlaySentenceSingular("BA_HEAR2", 4, VOL_NORM, ATTN_NORM);
+		break;
+	case 32:
+		PlaySentenceSingular("BA_HEAR3", 4, VOL_NORM, ATTN_NORM);
+		break;
+	case 33:
+		PlaySentenceSingular("BA_STOP3", 4, VOL_NORM, ATTN_NORM);
+		break;
+	case 34:
+		PlaySentenceSingular("BA_STOP4", 4, VOL_NORM, ATTN_NORM);
+		break;
+
+	}//END OF switch
+}//END OF SayNearCautious
+
+
+
+
+
+
 
 void CBarney :: StartTask( Task_t *pTask )
 {
@@ -1162,17 +1186,17 @@ void CBarney :: HandleAnimEvent( MonsterEvent_t *pEvent )
 		//easyForcePrintLine("ARE YOU really WEIRD %.2f, %.2f", pev->framerate, this->m_flFramerateSuggestion);
 		if(pev->framerate < 0){
 			//no, let the custom event handle this... this is way too iffy...
-			//pev->body = BARNEY_BODY_GUNHOLSTERED;
+			//SetBodygroup(BODYGROUP_GUN, BARNEY_BODY_GUNHOLSTERED);
 			//m_fGunDrawn = FALSE;
 		}else{
-			pev->body = BARNEY_BODY_GUNDRAWN;
+			SetBodygroup(BODYGROUP_GUN, BARNEY_BODY_GUNDRAWN);
 			m_fGunDrawn = TRUE;
 		}
 		break;
 
 	case BARNEY_AE_HOLSTER:
 		// change bodygroup to replace gun in holster
-		pev->body = BARNEY_BODY_GUNHOLSTERED;
+		SetBodygroup(BODYGROUP_GUN, BARNEY_BODY_GUNHOLSTERED);
 		m_fGunDrawn = FALSE;
 		break;
 
@@ -1218,7 +1242,6 @@ CBarney::CBarney(void){
 //=========================================================
 void CBarney :: Spawn()
 {
-
 	if(EASY_CVAR_GET(monsterSpawnPrintout)){
 		easyForcePrintLine("IM BARNEY, MY SPAWN FLAG BE : %d", pev->spawnflags);
 	}
@@ -1247,11 +1270,12 @@ void CBarney :: Spawn()
 	m_flFieldOfView		= VIEW_FIELD_WIDE; // NOTE: we need a wide field of view so npc will notice player and say hello
 	m_MonsterState		= MONSTERSTATE_NONE;
 
-	pev->body			= 0; // gun in holster
+	pev->body			= 0; // gun in holster.  Good to start with a clean set at spawn, but the intent is below.
+	//SetBodygroup(BODYGROUP_GUN, BARNEY_BODY_GUNHOLSTERED);
+
 	m_fGunDrawn			= FALSE;
 
 
-	
 
 	if(EASY_CVAR_GET(glockOldReloadLogicBarney) == 0 ){
 		//not using old reload logic?  Barney just has 12 rounds.
@@ -1280,7 +1304,6 @@ void CBarney :: Spawn()
 
 	//just a test..
 	//pev->body = BARNEY_BODY_GUNGONE;
-
 }
 
 extern int global_useSentenceSave;
@@ -1396,7 +1419,6 @@ void CBarney::OnAlerted(BOOL alerterWasKilled) {
 }
 
 
-	
 
 void CBarney::PainSound(void){
 	PainSound(FALSE); //by default, typical. Obey the cooldown.
@@ -1427,7 +1449,6 @@ void CBarney :: PainSound ( BOOL bypassCooldown )
 		m_bitsDamageTypeMod &= ~DMG_PROJECTILE;
 		return;
 	}
-
 
 
 	switch (RANDOM_LONG(0,2))
@@ -1510,8 +1531,7 @@ GENERATE_KILLED_IMPLEMENTATION(CBarney)
 
 		//MODDD - the dropped weapon will always give the default ammount of ammo (assumes it's been fired & lost the first shot in the firing chamber.  For the not old firing method, the assumption of not + 1 still works.).
 		if(pGun != NULL){
-			pev->body = BARNEY_BODY_GUNGONE;
-
+			SetBodygroup(BODYGROUP_GUN, BARNEY_BODY_GUNGONE);
 			
 			CGlock* g = static_cast<CGlock*>(pGun);
 			if(g != NULL){
@@ -1608,8 +1628,6 @@ Schedule_t* CBarney :: GetScheduleOfType ( int Type )
 	break;
 
 
-
-
 	//MODDD - why was this not here?
 	//NO, NEVERMIND.  Better method above where "SCHED_SMALL_FLINCH" is referred to.
 	/*
@@ -1625,61 +1643,10 @@ Schedule_t* CBarney :: GetScheduleOfType ( int Type )
 
 
 
-
 	return CTalkMonster::GetScheduleOfType( Type );
 }
 
 
-
-
-
-//MODDD .... yep.
-void CBarney::womboCombo(void){
-	//wombo combo.
-	//Gather' round all the NPCs.
-	//check for allied NPCs to heal if not following.
-	CBaseEntity* pEntityScan = NULL;
-	CBaseEntity* testMon = NULL;
-	float thisDistance;
-	float leastDistanceYet;
-	CTalkMonster* thisNameSucks;
-	CTalkMonster* bestChoiceYet;
-	float thisNameSucksExtraMax = 3;
-	//I'm number 1!
-	CTalkMonster* pickedNumber2 = NULL;
-	CTalkMonster* pickedNumber3 = NULL;
-
-	//does UTIL_MonstersInSphere work?
-	while ((pEntityScan = UTIL_FindEntityInSphere( pEntityScan, pev->origin, 800 )) != NULL)
-	{
-		testMon = pEntityScan->MyMonsterPointer();
-		//if(testMon != NULL && testMon->pev != this->pev && ( FClassnameIs(testMon->pev, "monster_scientist") || FClassnameIs(testMon->pev, "monster_barney")  ) ){
-		if(testMon != NULL && testMon->pev != this->pev && UTIL_IsAliveEntity(testMon) && testMon->isTalkMonster() ){
-			thisDistance = (testMon->pev->origin - pev->origin).Length();
-			thisNameSucks = static_cast<CTalkMonster*>(testMon);
-			if(pickedNumber2 == NULL){
-				pickedNumber2 = thisNameSucks;
-			}else if(pickedNumber3 == NULL){
-				pickedNumber3 = thisNameSucks;
-			}else if(thisNameSucksExtraMax > 0){
-				thisNameSucks->PlaySentence("!wombocrowd", 39, 0.9, ATTN_NORM);
-				thisNameSucksExtraMax--;
-			}
-			if(thisNameSucksExtraMax <= 0){
-				break;
-			}
-		}
-	}//END OF while(...)
-
-	if(pickedNumber2 != NULL && pickedNumber3 != NULL){
-		//WE GOT A COMBO!!!
-		this->PlaySentence("!wombo1", 39, 0.9, ATTN_NORM);
-		pickedNumber2->PlaySentence("!wombo2", 39, 0.9, ATTN_NORM);
-		pickedNumber3->PlaySentence("!wombo3", 39, 0.9, ATTN_NORM);
-	}else{
-		PlaySentence( "BA_POKE_B", 6, VOL_NORM, ATTN_NORM );
-	}
-}
 
 
 //=========================================================
@@ -1702,7 +1669,7 @@ Schedule_t *CBarney :: GetSchedule ( void )
 
 	//easyForcePrintLine("MY timer %d    %d %d %d ::: %.2f %.2f", m_fGunDrawn, HasConditions( bits_COND_HEAR_SOUND ), HasConditions(bits_COND_SEE_ENEMY), HasConditions(bits_COND_NEW_ENEMY), gpGlobals->time, unholsterTimer);
 
-	canUnholster=FALSE;
+	canUnholster=FALSE; // until proven otherwise
 	if(EASY_CVAR_GET(barneyUnholsterTime) != -1 && m_fGunDrawn){
 		if( (HasConditions( bits_COND_HEAR_SOUND ) || HasConditions(bits_COND_SEE_ENEMY) || HasConditions(bits_COND_NEW_ENEMY)) ){
 			//set the timer...  keep it up.
@@ -1921,11 +1888,6 @@ CDeadBarney::CDeadBarney(){
 #endif
 
 
-
-
-
-
-
 BOOL CDeadBarney::getGermanModelRequirement(void){
 	return globalPSEUDO_germanModel_barneyFound;
 }
@@ -1966,11 +1928,16 @@ void CDeadBarney :: Spawn( )
 	MonsterInitDead();
 	
 	//MODDD - by request, spawned dead barny's lack guns.
-	pev->body = BARNEY_BODY_GUNGONE;
+	SetBodygroup(BODYGROUP_GUN, BARNEY_BODY_GUNGONE);
 
 	//MODDD - see scientist.cpp, this lets the mouth stay open.
 	// Hard to prove if it was meant to be this way for barnies too, but eh, why not.
 	SetBoneController(4, 15);
+
+	// TEST!!!     Is this readable in studiomodelrenderer?
+	// no.  it is not.     dam.
+	//pev->playerclass = 4;
+
 	
 	if(isOrganicLogic()){
 		//MODDD - emit a stench that eaters will pick up.
@@ -1987,7 +1954,7 @@ void CBarney::HandleEventQueueEvent(int arg_eventID){
 					//easyForcePrintLine("EVETTTT::: %d", arg_eventID);
 	switch(arg_eventID){
 		case 0:
-			pev->body = BARNEY_BODY_GUNHOLSTERED;
+			SetBodygroup(BODYGROUP_GUN, BARNEY_BODY_GUNHOLSTERED);
 			m_fGunDrawn = FALSE;
 			//...
 		break;
@@ -2104,7 +2071,8 @@ int CBarney::LookupActivityHard(int activity){
 				const int animationWeightChoice = RANDOM_LONG(0, animationWeightTotal-1);
 
 				//if(animationWeightChoice < 50){
-					return LookupSequence("idle1");
+				m_flFramerateSuggestion = 0.86f;
+				return LookupSequence("idle1");
 				//}
 			}else{
 				//Not talking?  One more filter...
@@ -2118,13 +2086,25 @@ int CBarney::LookupActivityHard(int activity){
 					const int animationWeightChoice = RANDOM_LONG(0, animationWeightTotal-1);
 
 					if(animationWeightChoice < 50){
+						m_flFramerateSuggestion = 0.71f;
 						return LookupSequence("idle1");
 					}else{ //if(animationWeightChoice < 50+10){
+						m_flFramerateSuggestion = 0.76f;
 						return LookupSequence("idle3");
 					}
 				}else{
 					//Just pick from the model, any idle animation is okay right now.
-					return CBaseAnimating::LookupActivity(activity);
+					int theSeq = CBaseAnimating::LookupActivity(activity);
+
+					//idle1 and idle3.
+					if (theSeq == 0 || theSeq == 2) {
+						m_flFramerateSuggestion = 0.84f;
+					}
+					else {
+						m_flFramerateSuggestion = 0.95f;
+					}
+
+					return theSeq;
 				}
 				
 			}//END OF IsTalking check
@@ -2322,4 +2302,68 @@ void CBarney::talkAboutKilledEnemy(void) {
 void CBarney::onEnemyDead(CBaseEntity* pRecentEnemy) {
 	recentDeadEnemyClass = pRecentEnemy->Classify();;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+//MODDD .... yep.
+void CBarney::womboCombo(void) {
+	//wombo combo.
+	//Gather' round all the NPCs.
+	//check for allied NPCs to heal if not following.
+	CBaseEntity* pEntityScan = NULL;
+	CBaseEntity* testMon = NULL;
+	float thisDistance;
+	float leastDistanceYet;
+	CTalkMonster* thisNameSucks;
+	CTalkMonster* bestChoiceYet;
+	float thisNameSucksExtraMax = 3;
+	//I'm number 1!
+	CTalkMonster* pickedNumber2 = NULL;
+	CTalkMonster* pickedNumber3 = NULL;
+
+	//does UTIL_MonstersInSphere work?
+	while ((pEntityScan = UTIL_FindEntityInSphere(pEntityScan, pev->origin, 800)) != NULL)
+	{
+		testMon = pEntityScan->MyMonsterPointer();
+		//if(testMon != NULL && testMon->pev != this->pev && ( FClassnameIs(testMon->pev, "monster_scientist") || FClassnameIs(testMon->pev, "monster_barney")  ) ){
+		if (testMon != NULL && testMon->pev != this->pev && UTIL_IsAliveEntity(testMon) && testMon->isTalkMonster()) {
+			thisDistance = (testMon->pev->origin - pev->origin).Length();
+			thisNameSucks = static_cast<CTalkMonster*>(testMon);
+			if (pickedNumber2 == NULL) {
+				pickedNumber2 = thisNameSucks;
+			}
+			else if (pickedNumber3 == NULL) {
+				pickedNumber3 = thisNameSucks;
+			}
+			else if (thisNameSucksExtraMax > 0) {
+				thisNameSucks->PlaySentence("!wombocrowd", 39, 0.9, ATTN_NORM);
+				thisNameSucksExtraMax--;
+			}
+			if (thisNameSucksExtraMax <= 0) {
+				break;
+			}
+		}
+	}//END OF while(...)
+
+	if (pickedNumber2 != NULL && pickedNumber3 != NULL) {
+		//WE GOT A COMBO!!!
+		this->PlaySentence("!wombo1", 39, 0.9, ATTN_NORM);
+		pickedNumber2->PlaySentence("!wombo2", 39, 0.9, ATTN_NORM);
+		pickedNumber3->PlaySentence("!wombo3", 39, 0.9, ATTN_NORM);
+	}
+	else {
+		PlaySentence("BA_POKE_B", 6, VOL_NORM, ATTN_NORM);
+	}
+}
+
+
 

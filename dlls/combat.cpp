@@ -47,7 +47,7 @@ EASY_CVAR_EXTERN(nothingHurts)
 EASY_CVAR_EXTERN(timedDamageAffectsMonsters)
 EASY_CVAR_EXTERN(bulletHoleAlertPrintout)
 EASY_CVAR_EXTERN(bulletholeAlertStukaOnly)
-EASY_CVAR_EXTERN(playerBulletHitEffectForceServer)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST(playerBulletHitEffectForceServer)
 EASY_CVAR_EXTERN(baseEntityDamagePushNormalMulti)
 EASY_CVAR_EXTERN(baseEntityDamagePushVerticalBoost)
 EASY_CVAR_EXTERN(baseEntityDamagePushVerticalMulti)
@@ -59,7 +59,7 @@ EASY_CVAR_EXTERN(germanRobotBleedsOil)
 EASY_CVAR_EXTERN(germanRobotDamageDecal)
 EASY_CVAR_EXTERN(germanRobotGibsDecal)
 EASY_CVAR_EXTERN(monsterFadeOutRate)
-EASY_CVAR_EXTERN(playerWeaponTracerMode)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST(playerWeaponTracerMode)
 EASY_CVAR_EXTERN(monsterWeaponTracerMode)
 EASY_CVAR_EXTERN(decalTracerExclusivity)
 EASY_CVAR_EXTERN(cheat_iwantguts)
@@ -195,7 +195,7 @@ void CGib :: SpawnStickyGibs( entvars_t *pevVictim, Vector vecOrigin, int cGibs,
 	{
 		// no sticky gibs in germany right now!
 		//MODDD TODO - above comment found as-is.  Can re-enable and just use german gibs instead.
-		//             ...actually, it seems "SpawnStikcyGibs" is never called as-is.  Huh.
+		//             ...actually, it seems "SpawnStickyGibs" is never called as-is.  Huh.
 		return; 
 	}
 
@@ -700,11 +700,31 @@ GENERATE_GIBMONSTERGIB_IMPLEMENTATION(CBaseMonster){
 			//garg size: 262144   ... and agrunt size too??? really?
 			//ABS::: 5478400.00  for garg, better discrepency!!!gibsSpawnDecals
 			//easyForcePrintLine("IM A no  %.2f %d %d ", temp.x * temp.y * temp.z, 200000,  (temp.x * temp.y * temp.z) < 200000);
+			int gibSpawnCount;
+			int myBlood = BloodColor();
+			int gibChoiceID;
+
 			if(temp.x * temp.y * temp.z < 5000000){
-				CGib::SpawnRandomGibs( pev, 4, GIB_ALIEN_ID, fGibSpawnsDecal );	// Throw alien gibs
+				gibSpawnCount = 4;
 			}else{
-				CGib::SpawnRandomGibs( pev, 20, GIB_ALIEN_ID, fGibSpawnsDecal );	// Throw alien gibs
+				gibSpawnCount = 20;
+				// This check is... interesting, given that the gargantua already spawns gibs in its own file in retail (end of the transform-death-effect; no fall/corpse).
 			}
+
+			// Now need a little more info.   Yellow or green-blooded alien gibs?
+			if (myBlood == BLOOD_COLOR_YELLOW) {
+				gibChoiceID = GIB_ALIEN_YELLOW_ID;
+			}
+			else if (myBlood == BLOOD_COLOR_GREEN) {
+				gibChoiceID = GIB_ALIEN_GREEN_ID;
+			}
+			else {
+				// ???  unknown color for aliens
+				gibChoiceID = GIB_DUMMY_ID;
+			}
+
+			CGib::SpawnRandomGibs(pev, gibSpawnCount, gibChoiceID, fGibSpawnsDecal);	// Throw alien gibs
+
 			gibbed = TRUE;
 			
 		}
@@ -1080,15 +1100,14 @@ void CBaseMonster::BecomeDead( void )
 				}
 
 
-				// fuck this shit
-				g_vecAttackDir = Vector(g_vecAttackDir.x, g_vecAttackDir.y, 0).Normalize();
+				Vector attackDirRev_2D = Vector(-g_vecAttackDir.x, -g_vecAttackDir.y, 0).Normalize();
 
 				float tossAmount = (220 + overkillAmount * 8.5) * forceAmountMulti;
 
 				pev->flags &= ~FL_ONGROUND;
 				pev->origin.z += 2;
 				// variation between tossAmount itself and 12% more.  (base behavior was 33% more)
-				pev->velocity = (g_vecAttackDir * -1) * RANDOM_FLOAT(tossAmount, tossAmount * 1.12);
+				pev->velocity = attackDirRev_2D * RANDOM_FLOAT(tossAmount, tossAmount * 1.12);
 				// And a tiny bit more z for more overkill.  Why not.
 				//pev->velocity.z += tossAmount * 0.035;
 				pev->velocity.z += tossAmount * 0.07;
@@ -1359,7 +1378,7 @@ void CGib :: BounceGibTouch ( CBaseEntity *pOther )
 	else
 	{
 		//if ( g_Language != LANGUAGE_GERMAN && m_cBloodDecals > 0 && m_bloodColor != DONT_BLEED )
-		if( (EASY_CVAR_GET(sv_germancensorship) != 1 || m_bloodColor == BLOOD_COLOR_BLACK) && m_cBloodDecals > 0 && m_bloodColor != DONT_BLEED )
+		if( UTIL_ShouldShowBlood(m_bloodColor) && m_cBloodDecals > 0 )
 		{
 			vecSpot = pev->origin + Vector ( 0 , 0 , 8 );//move up a bit, and trace down.
 			UTIL_TraceLine ( vecSpot, vecSpot + Vector ( 0, 0, -24 ),  ignore_monsters, ENT(pev), & tr);
@@ -1401,7 +1420,9 @@ void CGib :: StickyGibTouch ( CBaseEntity *pOther )
 
 	UTIL_TraceLine ( pev->origin, pev->origin + pev->velocity * 32,  ignore_monsters, ENT(pev), & tr);
 
-	UTIL_BloodDecalTrace( &tr, m_bloodColor );
+	if (UTIL_ShouldShowBlood(m_bloodColor)) {
+		UTIL_BloodDecalTrace(&tr, m_bloodColor);
+	}
 
 	pev->velocity = tr.vecPlaneNormal * -1;
 	pev->angles = UTIL_VecToAngles ( pev->velocity );
@@ -1830,35 +1851,30 @@ TraceAttack
 //CBaseEntity's "TraceAttack" method doesn't seem to be used very often, if at all.  All NPCs are of "CBaseMonster" which never calls its parent class (CBaseEntity)'s "TraceAttack".
 GENERATE_TRACEATTACK_IMPLEMENTATION(CBaseEntity)
 {
-	Vector vecOrigin = ptr->vecEndPos - vecDir * 4;
-
 	if ( pev->takedamage )
 	{
 		AddMultiDamage( pevAttacker, this, flDamage, bitsDamageType, bitsDamageTypeMod );
 
-		int blood = BloodColor();
-		
-		if ( blood != DONT_BLEED )
-		{
-			//MODDD - old way.
-			//SpawnBlood(vecOrigin, blood, flDamage);// a little surface blood.
-			if(useBloodEffect){
-				//MODDD!!!!!!
-				DrawAlphaBlood(flDamage, ptr );
-			}else{
-				//MODDD TODO - breakpoint, see who sent this with FALSE here? repeat for useBulletHitSound?
-			}
+		//MODDD - old way.
+		//SpawnBlood(vecOrigin, blood, flDamage);// a little surface blood.
+		if(useBloodEffect){
+			Vector vecBloodOrigin = ptr->vecEndPos - vecDir * 4;
+			SpawnBlood(vecBloodOrigin, flDamage);// a little surface blood.
 
 			TraceBleed( flDamage, vecDir, ptr, bitsDamageType, bitsDamageTypeMod );
-			
-			//if(useBulletHitSound && (pevAttacker != NULL && (pevAttacker->renderfx & (ISPLAYER | ISNPC))) ){
-			
-			//UTIL_playFleshHitSound(pev);
-
-			//By default, if a monster wants to play a bullet hit sound on me, allow it.
-			//if(useBulletHitSound)*useBulletHitSound=TRUE;
-			
 		}
+
+		// NOTICE - useBulletHitSound will be checked for in whatever called TraceAttack so that other places
+		// can play custom hit sounds (like FireBullets).  That is, TraceAttack determines whether the caller can play its hit sound.
+		// Things that ricochet want to deny this hit sound, it's needless extra noise.
+
+		//if(useBulletHitSound && (pevAttacker != NULL && (pevAttacker->renderfx & (ISPLAYER | ISNPC))) ){
+		
+		//UTIL_playFleshHitSound(pev);
+
+		//By default, if a monster wants to play a bullet hit sound on me, allow it.
+		//if(useBulletHitSound)*useBulletHitSound=TRUE;
+		
 	}
 }
 
@@ -1867,7 +1883,7 @@ GENERATE_TRACEATTACK_IMPLEMENTATION(CBaseEntity)
 // inflict damage on this entity.  bitsDamageType indicates type of damage inflicted, ie: DMG_CRUSH
 GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBaseEntity)
 {
-	Vector			vecTemp;
+	Vector vecTemp;
 
 	if (!pev->takedamage)
 		return 0;
@@ -2088,77 +2104,92 @@ GENERATE_KILLED_IMPLEMENTATION(CBaseEntity)
 }
 
 
+// Meant to be called by combat-related methods (if not only TraceAttack) to determine direction, if wanted (retail).
+void CBaseEntity::SpawnBlood(const Vector& vecSpot, float flDamage) {
+	int theBlood = BloodColor();
 
+	if (!UTIL_ShouldShowBlood(theBlood)) {
+		return;
+	}
 
-void CBaseEntity::DrawAlphaBlood(float flDamage, const Vector& vecDrawLoc, int amount){
-	//MODDD - TODO: INVESTIGATE: RandomBloodVector() ?
-	UTIL_BloodStream(vecDrawLoc, UTIL_RandomBloodVector(), BloodColor(), amount);
-}
+	if (EASY_CVAR_GET(sv_bloodparticlemode) == 1 || EASY_CVAR_GET(sv_bloodparticlemode) == 2) {
+		// NOTE - ignores bloodDir and uses random blood vectors in each place
+		int drawBloodVersionValue = 0;
+		int drawTripleBloodValue = 1;
 
-void CBaseEntity::DrawAlphaBloodSlash(float flDamage, const Vector& vecDrawLoc, const Vector& vecTraceLine  ){
-	DrawAlphaBloodSlash(flDamage, vecDrawLoc, vecTraceLine, FALSE);
-}
+		// any damage over a limit does not contribute to extra blood.
+		float extraBloodFactor = (min(flDamage, 30) / 30);
 
-//takes a TraceResult ONLY so that info like the surface it hit 
-void CBaseEntity::DrawAlphaBloodSlash(float flDamage, const Vector& vecDrawLoc, const Vector& vecTraceLine, const BOOL& extraBlood  ){
+		if (pev->deadflag == DEAD_NO) {
+
+			if (pev->health <= flDamage) {
+				// killing blow?
+				UTIL_BloodStream(vecSpot, UTIL_RandomBloodVector(), theBlood, RANDOM_LONG(20, 28) + (int)(22 * extraBloodFactor));
+				UTIL_BloodStream(vecSpot, UTIL_RandomBloodVector(), theBlood, RANDOM_LONG(20, 28) + (int)(22 * extraBloodFactor));
+				UTIL_BloodStream(vecSpot, UTIL_RandomBloodVector(), theBlood, RANDOM_LONG(20, 28) + (int)(22 * extraBloodFactor));
+			}
+			else {
+				// normal
+				UTIL_BloodStream(vecSpot, UTIL_RandomBloodVector(), theBlood, RANDOM_LONG(2, 4) + (int)(RANDOM_FLOAT(4, 6) * extraBloodFactor));
+				UTIL_BloodStream(vecSpot, UTIL_RandomBloodVector(), theBlood, RANDOM_LONG(2, 4) + (int)(RANDOM_FLOAT(4, 6) * extraBloodFactor));
+				UTIL_BloodStream(vecSpot, UTIL_RandomBloodVector(), theBlood, RANDOM_LONG(2, 4) + (int)(RANDOM_FLOAT(4, 6) * extraBloodFactor));
+			}
+		}
+		else if (pev->deadflag == DEAD_DYING) {
+			// dying
+			UTIL_BloodStream(vecSpot, UTIL_RandomBloodVector(), theBlood, RANDOM_LONG(9, 14) + (int)(18 * extraBloodFactor));
+			UTIL_BloodStream(vecSpot, UTIL_RandomBloodVector(), theBlood, RANDOM_LONG(9, 14) + (int)(18 * extraBloodFactor));
+			UTIL_BloodStream(vecSpot, UTIL_RandomBloodVector(), theBlood, RANDOM_LONG(9, 14) + (int)(18 * extraBloodFactor));
+		}
+		else {
+			// DEAD.  Similar, but spray it further up to be more noticeable.
+			UTIL_BloodStream(vecSpot, UTIL_RandomBloodVectorHigh(), theBlood, RANDOM_LONG(7, 10) + (int)(15 * extraBloodFactor));
+			UTIL_BloodStream(vecSpot, UTIL_RandomBloodVectorHigh(), theBlood, RANDOM_LONG(7, 10) + (int)(15 * extraBloodFactor));
+			UTIL_BloodStream(vecSpot, UTIL_RandomBloodVectorHigh(), theBlood, RANDOM_LONG(7, 10) + (int)(15 * extraBloodFactor));
+		}
+
+	}//END OF alpha check
+	if (EASY_CVAR_GET(sv_bloodparticlemode) == 0 || EASY_CVAR_GET(sv_bloodparticlemode) == 2) {
+		// RETAIL CALL.
+		// Is it still a good idea to assume g_vecAttackDir is always set as it was (hopefully?) in retail?
+		UTIL_BloodDrips(vecSpot, g_vecAttackDir, theBlood, (int)flDamage);
+	}
 	
-	Vector vecDirUp = Vector(0, 0, 1);
-	Vector vecCross = CrossProduct ( vecTraceLine, vecDirUp);
+}//SpawnBlood
 
+
+
+void CBaseEntity::SpawnBloodSlash(float flDamage, const Vector& vecDrawLoc, const Vector& vecTraceLine) {
+	SpawnBloodSlash(flDamage, vecDrawLoc, vecTraceLine, FALSE);
+}
+
+// takes a TraceResult ONLY so that info like the surface it hit 
+void CBaseEntity::SpawnBloodSlash(float flDamage, const Vector& vecDrawLoc, const Vector& vecTraceLine, const BOOL& extraBlood) {
+	int theBlood = BloodColor();
+
+	if (!UTIL_ShouldShowBlood(theBlood)) {
+		return;
+	}
+
+	Vector vecDirUp = Vector(0, 0, 1);
+	Vector vecCross = CrossProduct(vecTraceLine, vecDirUp);
 
 	//draw blood across "vecCross":
 
-	for(int i = 0; i <= 4; i++){
-
+	for (int i = 0; i <= 4; i++) {
 		Vector vecThisDrawLoc = vecDrawLoc + vecCross * (i - 2) * 3.5;
+		float bloodAmount;
 
-		if(!extraBlood){
-			UTIL_BloodStream(vecThisDrawLoc, UTIL_RandomBloodVector(), BloodColor(), RANDOM_LONG(4, 6));
-		}else{
-			UTIL_BloodStream(vecThisDrawLoc, UTIL_RandomBloodVector(), BloodColor(), RANDOM_LONG(36, 56));
+		if (!extraBlood) {
+			bloodAmount = RANDOM_LONG(4, 7);
+		}else {
+			bloodAmount = RANDOM_LONG(22, 40);
 		}
+
+		//UTIL_BloodStream(vecThisDrawLoc, UTIL_RandomBloodVector(), theBlood, bloodAmount);
+		UTIL_SpawnBlood(vecThisDrawLoc, theBlood, bloodAmount);
 	}
-
-}
-
-
-//MODDD - new
-void CBaseEntity::DrawAlphaBlood(float flDamage, TraceResult *ptr ){
-	//MODDD NOTE - how good is ptr->vecEndPos???
-	DrawAlphaBlood(flDamage, ptr->vecEndPos);
-}
-
-
-void CBaseEntity::DrawAlphaBlood(float flDamage, const Vector& vecDrawLoc){
-	int drawBloodVersionValue = 0;
-	int drawTripleBloodValue = 1;
-
-	if (pev->deadflag == DEAD_NO){
-
-		if (pev->health <= flDamage) {
-			// killing blow?
-			UTIL_BloodStream(vecDrawLoc, UTIL_RandomBloodVector(), BloodColor(), RANDOM_LONG(45, 68));
-			UTIL_BloodStream(vecDrawLoc, UTIL_RandomBloodVector(), BloodColor(), RANDOM_LONG(45, 68));
-			UTIL_BloodStream(vecDrawLoc, UTIL_RandomBloodVector(), BloodColor(), RANDOM_LONG(45, 68));
-		}
-		else {
-			// normal
-			UTIL_BloodStream(vecDrawLoc, UTIL_RandomBloodVector(), BloodColor(), RANDOM_LONG(4, 5));
-			UTIL_BloodStream(vecDrawLoc, UTIL_RandomBloodVector(), BloodColor(), RANDOM_LONG(4, 5));
-			UTIL_BloodStream(vecDrawLoc, UTIL_RandomBloodVector(), BloodColor(), RANDOM_LONG(4, 5));
-		}
-	}else if (pev->deadflag == DEAD_DYING){
-		// dying
-		UTIL_BloodStream(vecDrawLoc, UTIL_RandomBloodVector(), BloodColor(), RANDOM_LONG(12, 21));
-		UTIL_BloodStream(vecDrawLoc, UTIL_RandomBloodVector(), BloodColor(), RANDOM_LONG(12, 21));
-		UTIL_BloodStream(vecDrawLoc, UTIL_RandomBloodVector(), BloodColor(), RANDOM_LONG(12, 21));
-	}else {
-		// DEAD.  Similar, but spray it further up to be more noticeable.
-		UTIL_BloodStream(vecDrawLoc, UTIL_RandomBloodVectorHigh(), BloodColor(), RANDOM_LONG(7, 16));
-		UTIL_BloodStream(vecDrawLoc, UTIL_RandomBloodVectorHigh(), BloodColor(), RANDOM_LONG(7, 16));
-		UTIL_BloodStream(vecDrawLoc, UTIL_RandomBloodVectorHigh(), BloodColor(), RANDOM_LONG(7, 16));
-	}
-}
+}//SpawnBloodSlash
 
 
 
@@ -2177,15 +2208,17 @@ GENERATE_TRACEATTACK_IMPLEMENTATION(CBaseMonster)
 		flDamage = hitgroupDamage(flDamage, bitsDamageType, bitsDamageTypeMod, ptr->iHitgroup);
 
 		//MODDD - surrounded by parameter.  The gargantua has customized bleeding.
+
 		
 		//MODDD - similar case below, robot requires this CVar to emit black oil blood.
-		if( !(this->CanUseGermanModel() && EASY_CVAR_GET(germanRobotBleedsOil)==0 ) ){
-			if( useBloodEffect){
-				//MODDD!!!!!!
-				CBaseEntity::DrawAlphaBlood(flDamage, ptr );
-			}
+		if( !(this->CanUseGermanModel() && EASY_CVAR_GET(germanRobotBleedsOil)==0 ) && useBloodEffect){
+			Vector vecBloodOrigin = ptr->vecEndPos - vecDir * 4;
+			SpawnBlood(vecBloodOrigin, flDamage);// a little surface blood.
 		}
 
+		// NOTICE - useBulletHitSound will be checked for in whatever called TraceAttack so that other places
+		// can play custom hit sounds (like FireBullets).  That is, TraceAttack determines whether the caller can play its hit sound.
+		// Things that ricochet want to deny this hit sound, it's needless extra noise.
 		/*
 		if(useBulletHitSound && (pevAttacker != NULL && (pevAttacker->renderfx & (ISPLAYER | ISNPC))) ){
 			//UTIL_playFleshHitSound(pev);
@@ -2195,7 +2228,7 @@ GENERATE_TRACEATTACK_IMPLEMENTATION(CBaseMonster)
 		//MODDD!!!
 		// SpawnBlood(ptr->vecEndPos, BloodColor(), flDamage);// a little surface blood.
 		
-		// NOTE: "SpawnBlood" does the same thing as "UTIL_BloodStream".  Should've seen that sooner, eh, whoops.
+		// NOTE: "SpawnBlood" does the same thing as "UTIL_BloodStream".  Should've seen that sooner.
 		// Apparently, "TraceBleed" draws the blood texture on a nearby surface (floor, wall)...
 
 		// Can TraceBleed all the time with germancensorship off.
@@ -2203,7 +2236,7 @@ GENERATE_TRACEATTACK_IMPLEMENTATION(CBaseMonster)
 		// If this monster has a german model replacement but this CVar is off, block the TraceBleed request.
 		// Note that "CanUseGermanModel" is always false when GermanCensorship is turned off.
 		// If TraceBleed is called with a monster with red blood (no german robot model provided), this will get denied anyways.
-		if( !(this->CanUseGermanModel() && EASY_CVAR_GET(germanRobotDamageDecal)==0 ) ){
+		if( !(this->CanUseGermanModel() && EASY_CVAR_GET(germanRobotDamageDecal)==0 ) && useBloodEffect){
 			TraceBleed( flDamage, vecDir, ptr, bitsDamageType, bitsDamageTypeMod );
 		}
 
@@ -3135,8 +3168,9 @@ void CBaseEntity::FireBullets(ULONG cShots, Vector vecSrc, Vector vecDirShooting
 	Vector vecRight = gpGlobals->v_right;
 	Vector vecUp = gpGlobals->v_up;
 
-	if ( pevAttacker == NULL )
+	if (pevAttacker == NULL) {
 		pevAttacker = pev;  // the default attacker is ourselves
+	}
 
 	ClearMultiDamage();
 	gMultiDamage.type = DMG_BULLET | DMG_NEVERGIB;
@@ -3185,11 +3219,13 @@ void CBaseEntity::FireBullets(ULONG cShots, Vector vecSrc, Vector vecDirShooting
 		{
 			CBaseEntity *pEntity = CBaseEntity::Instance(tr.pHit);
 			if(pEntity != NULL){
-				BOOL bulletHitEffectAllowed = TRUE;
+				BOOL useBulletHitSound = TRUE;
 				BOOL doDefaultBulletHitEffectCheck = FALSE;
+				// NOTICE - iDamage is specified for a custom amount of damage.  Otherwise rely on iBulletType to fill that in for us.
+				// This will also force gibbing on over 16 damage (which a lot of damage sources that happen to be over 16 don't do).
 				if ( iDamage )
 				{
-					pEntity->TraceAttack(pevAttacker, iDamage, vecDir, &tr, DMG_BULLET | ((iDamage > 16) ? DMG_ALWAYSGIB : DMG_NEVERGIB), 0, TRUE, &bulletHitEffectAllowed);
+					pEntity->TraceAttack(pevAttacker, iDamage, vecDir, &tr, DMG_BULLET | ((iDamage > 16) ? DMG_ALWAYSGIB : DMG_NEVERGIB), 0, TRUE, &useBulletHitSound);
 					
 					//TEXTURETYPE_PlaySound(&tr, vecSrc, vecEnd, iBulletType);
 					//DecalGunshot( &tr, iBulletType );
@@ -3208,19 +3244,19 @@ void CBaseEntity::FireBullets(ULONG cShots, Vector vecSrc, Vector vecDirShooting
 				{
 				default:
 				case BULLET_MONSTER_9MM:
-					pEntity->TraceAttack(pevAttacker, gSkillData.monDmg9MM, vecDir, &tr, DMG_BULLET, 0, TRUE, &bulletHitEffectAllowed);
+					pEntity->TraceAttack(pevAttacker, gSkillData.monDmg9MM, vecDir, &tr, DMG_BULLET, 0, TRUE, &useBulletHitSound);
 					//TEXTURETYPE_PlaySound(&tr, vecSrc, vecEnd, iBulletType);
 					//DecalGunshot( &tr, iBulletType );
 					doDefaultBulletHitEffectCheck = TRUE;
 				break;
 				case BULLET_MONSTER_MP5:
-					pEntity->TraceAttack(pevAttacker, gSkillData.monDmgMP5, vecDir, &tr, DMG_BULLET, 0, TRUE, &bulletHitEffectAllowed);
+					pEntity->TraceAttack(pevAttacker, gSkillData.monDmgMP5, vecDir, &tr, DMG_BULLET, 0, TRUE, &useBulletHitSound);
 					//TEXTURETYPE_PlaySound(&tr, vecSrc, vecEnd, iBulletType);
 					//DecalGunshot( &tr, iBulletType );
 					doDefaultBulletHitEffectCheck = TRUE;
 				break;
 				case BULLET_MONSTER_12MM:		
-					pEntity->TraceAttack(pevAttacker, gSkillData.monDmg12MM, vecDir, &tr, DMG_BULLET, 0, TRUE, &bulletHitEffectAllowed);
+					pEntity->TraceAttack(pevAttacker, gSkillData.monDmg12MM, vecDir, &tr, DMG_BULLET, 0, TRUE, &useBulletHitSound);
 
 					if ( EASY_CVAR_GET(decalTracerExclusivity) != 1 || !disableBulletHitDecal )
 					{
@@ -3230,12 +3266,12 @@ void CBaseEntity::FireBullets(ULONG cShots, Vector vecSrc, Vector vecDirShooting
 					}
 				break;
 				case BULLET_NONE: // FIX 
-					pEntity->TraceAttack(pevAttacker, 50, vecDir, &tr, DMG_CLUB, 0, TRUE, &bulletHitEffectAllowed);
+					pEntity->TraceAttack(pevAttacker, 50, vecDir, &tr, DMG_CLUB, 0, TRUE, &useBulletHitSound);
 
-					//BULLET_NONE? When would this happen? And different logic for doing decals? why? Not even DMG_BULLET above?
-					//Just leaving this logic as it is.
+					// BULLET_NONE? When would this happen? And different logic for doing decals? why? Not even DMG_BULLET above?
+					// Just leaving this logic as it is.
 
-					if(bulletHitEffectAllowed == TRUE){
+					if(useBulletHitSound == TRUE){
 						TEXTURETYPE_PlaySound(&tr, vecSrc, vecEnd, iBulletType);
 						// only decal glass
 						if ( !FNullEnt(tr.pHit) && VARS(tr.pHit)->rendermode != 0)
@@ -3246,7 +3282,7 @@ void CBaseEntity::FireBullets(ULONG cShots, Vector vecSrc, Vector vecDirShooting
 				break;
 				}
 
-				if(doDefaultBulletHitEffectCheck && bulletHitEffectAllowed){
+				if(doDefaultBulletHitEffectCheck && useBulletHitSound){
 					TEXTURETYPE_PlaySound(&tr, vecSrc, vecEnd, iBulletType);
 					DecalGunshot( &tr, iBulletType );
 				}
@@ -3283,7 +3319,6 @@ void CBaseEntity::FireBullets(ULONG cShots, Vector vecSrc, Vector vecDirShooting
 
 
 
-
 /*
 ================
 FireBulletsPlayer
@@ -3315,15 +3350,16 @@ Vector CBaseEntity::FireBulletsPlayer ( ULONG cShots, Vector vecSrc, Vector vecD
 	Vector vecUp = gpGlobals->v_up;
 	float x, y, z;
 
-	if ( pevAttacker == NULL )
+	if ( pevAttacker == NULL ){
 		pevAttacker = pev;  // the default attacker is ourselves
+	}
 
 	ClearMultiDamage();
 	gMultiDamage.type = DMG_BULLET | DMG_NEVERGIB;
 
 	for ( ULONG iShot = 1; iShot <= cShots; iShot++ )
 	{
-		//Use player's random seed.
+		// Use player's random seed.
 		// get circular gaussian spread
 		x = UTIL_SharedRandomFloat( shared_rand + iShot, -0.5, 0.5 ) + UTIL_SharedRandomFloat( shared_rand + ( 1 + iShot ) , -0.5, 0.5 );
 		y = UTIL_SharedRandomFloat( shared_rand + ( 2 + iShot ), -0.5, 0.5 ) + UTIL_SharedRandomFloat( shared_rand + ( 3 + iShot ), -0.5, 0.5 );
@@ -3339,37 +3375,37 @@ Vector CBaseEntity::FireBulletsPlayer ( ULONG cShots, Vector vecSrc, Vector vecD
 		
 
 		//MODDD - tracers added for the player, serverside, depending on playerWeaponTracerMode choice.
-		switch( (int)EASY_CVAR_GET(playerWeaponTracerMode)  ){
+		switch( (int)EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST(playerWeaponTracerMode)  ){
 		case 0:
-			//nothing.
+			// nothing.
 			iTracerFreq = 0;
 		break;
 		case 1:
-			//clientside only (retail).  So nothing here.
+			// clientside only (retail).  So nothing here.
 			iTracerFreq = 0;
 		break;
 		case 2:
-			//serverside, per whatever weapons said to do for tracers.  Leave "iTracerFreq" as it was sent.
+			// serverside, per whatever weapons said to do for tracers.  Leave "iTracerFreq" as it was sent.
 
 		break;
 		case 3:
-			//clientside and serverside as-is.  Let it proceed.
+			// clientside and serverside as-is.  Let it proceed.
 
 		break;
 		case 4:
-			//clientside, all weapons, all shots. Not here.
+			// clientside, all weapons, all shots. Not here.
 			iTracerFreq = 0;
 		break;
 		case 5:
-			//serverside, all weapons, all shots. Force it.
+			// serverside, all weapons, all shots. Force it.
 			iTracerFreq = 1;
 		break;
 		case 6:
-			//clientside and serverside, all weapons, all shots. Go.
+			// clientside and serverside, all weapons, all shots. Go.
 			iTracerFreq = 1;
 		break;
 		default:
-			//unrecognized setting?  Default to nothing like retail did.
+			// unrecognized setting?  Default to nothing like retail did.
 			iTracerFreq = 0;
 		break;
 		}//END OF switch
@@ -3391,21 +3427,27 @@ Vector CBaseEntity::FireBulletsPlayer ( ULONG cShots, Vector vecSrc, Vector vecD
 		{
 			CBaseEntity *pEntity = CBaseEntity::Instance(tr.pHit);
 			if(pEntity != NULL){
-				BOOL bulletHitEffectAllowed = TRUE; //by default.
-				BOOL doDefaultBulletHitEffectCheck = FALSE;  //set to TRUE if a case relies on a common default for this. Leave FALSE if the case handles this itself.
+				BOOL useBulletHitSound = TRUE; //by default.
+				// set to TRUE if a case relies on a common default for this.
+				// Leave FALSE if the case handles this itself.
+				BOOL doDefaultBulletHitEffectCheck = FALSE;
 
 				//tr.pHit->v.origin
-				//Note that this is an "AI Sound", or not a real one audible to the player, but one that checks for monsters nearby (distance) and alerts them if they are in hearing range.
+				
+				// This is an "AI Sound", or not a real one audible to the player, but one that checks for monsters nearby (distance) and alerts them if they are in hearing range.
 				attemptSendBulletSound(tr.vecEndPos, pevAttacker);
 
 
 				//easyPrintLine("FireBulletsPlayer: iDamage: %d PLAYER BULLET TYPE?! %d THING HIT: %s", iDamage, iBulletType, pEntity->getClassname());
+
+				// NOTICE - iDamage is specified for a custom amount of damage.  Otherwise rely on iBulletType to fill that in for us.
+				// This will also force gibbing on over 16 damage (which a lot of damage sources that happen to be over 16 don't do).
 				if ( iDamage )
 				{
 					//MODDD NOTE
-					//Why does this area, completely unused (the player never uses "iDamage" in FirePlayerBullets, relies in iBulletType to get a default damage value and pick from a below case),
-					//have the TEXTURETYPE_PlaySound and DecalGunshot calls that the NPC's FireBullets method has? The world may never know.
-					pEntity->TraceAttack(pevAttacker, iDamage, vecDir, &tr, DMG_BULLET | ((iDamage > 16) ? DMG_ALWAYSGIB : DMG_NEVERGIB), 0, TRUE, &bulletHitEffectAllowed);
+					// Why does this area, completely unused (the player never uses "iDamage" in FirePlayerBullets, relies in iBulletType to get a default damage value and pick from a below case),
+					// have the TEXTURETYPE_PlaySound and DecalGunshot calls that the NPC's FireBullets method has? The world may never know.
+					pEntity->TraceAttack(pevAttacker, iDamage, vecDir, &tr, DMG_BULLET | ((iDamage > 16) ? DMG_ALWAYSGIB : DMG_NEVERGIB), 0, TRUE, &useBulletHitSound);
 					//TEXTURETYPE_PlaySound(&tr, vecSrc, vecEnd, iBulletType);
 					//DecalGunshot( &tr, iBulletType );
 					
@@ -3415,29 +3457,29 @@ Vector CBaseEntity::FireBulletsPlayer ( ULONG cShots, Vector vecSrc, Vector vecD
 				{
 				default:
 				case BULLET_PLAYER_9MM:	
-					pEntity->TraceAttack(pevAttacker, gSkillData.plrDmg9MM, vecDir, &tr, DMG_BULLET, 0, TRUE, &bulletHitEffectAllowed);
+					pEntity->TraceAttack(pevAttacker, gSkillData.plrDmg9MM, vecDir, &tr, DMG_BULLET, 0, TRUE, &useBulletHitSound);
 					//If what we hit was an entity, we need to play the sound from the server. Clientside's texture sound player won't catch this.
 					doDefaultBulletHitEffectCheck = TRUE;
 				break;
 				case BULLET_PLAYER_MP5:	
-					pEntity->TraceAttack(pevAttacker, gSkillData.plrDmgMP5, vecDir, &tr, DMG_BULLET, 0, TRUE, &bulletHitEffectAllowed);
+					pEntity->TraceAttack(pevAttacker, gSkillData.plrDmgMP5, vecDir, &tr, DMG_BULLET, 0, TRUE, &useBulletHitSound);
 					doDefaultBulletHitEffectCheck = TRUE;
 				break;
 				case BULLET_PLAYER_BUCKSHOT:	
 					 // make distance based!
-					pEntity->TraceAttack(pevAttacker, gSkillData.plrDmgBuckshot, vecDir, &tr, DMG_BULLET, 0, TRUE, &bulletHitEffectAllowed);
+					pEntity->TraceAttack(pevAttacker, gSkillData.plrDmgBuckshot, vecDir, &tr, DMG_BULLET, 0, TRUE, &useBulletHitSound);
 					doDefaultBulletHitEffectCheck = TRUE;
 				break;
 				case BULLET_PLAYER_357:		
-					pEntity->TraceAttack(pevAttacker, gSkillData.plrDmg357, vecDir, &tr, DMG_BULLET, 0, TRUE, &bulletHitEffectAllowed);
+					pEntity->TraceAttack(pevAttacker, gSkillData.plrDmg357, vecDir, &tr, DMG_BULLET, 0, TRUE, &useBulletHitSound);
 					doDefaultBulletHitEffectCheck = TRUE;
 				break;
 				case BULLET_NONE: // FIX
 
-					pEntity->TraceAttack(pevAttacker, 50, vecDir, &tr, DMG_CLUB, 0, TRUE, &bulletHitEffectAllowed);
+					pEntity->TraceAttack(pevAttacker, 50, vecDir, &tr, DMG_CLUB, 0, TRUE, &useBulletHitSound);
 					
-					//if( !FClassnameIs(pEntity->pev, "worldspawn") && bulletHitEffectAllowed){
-					if(bulletHitEffectAllowed){
+					//if( !FClassnameIs(pEntity->pev, "worldspawn") && useBulletHitSound){
+					if(useBulletHitSound == TRUE){
 						TEXTURETYPE_PlaySound(&tr, vecSrc, vecEnd, iBulletType);
 						// only decal glass
 						if ( !FNullEnt(tr.pHit) && VARS(tr.pHit)->rendermode != 0)
@@ -3449,29 +3491,27 @@ Vector CBaseEntity::FireBulletsPlayer ( ULONG cShots, Vector vecSrc, Vector vecD
 					break;
 				}//END OF switch
 
+
+				// !!! I think these have been taken care of since!
 				//MODDD TODO - remove the "worldspawn" check and have worldspawn itself (CWorld, world.cpp) override TraceAttack to disallow if it is the player making the
 				//             request? That sounds neat.
-
-				
-
 				//MODDD TODO - switch! Same for the above worldspawn check too.
-				//Also, if the "playerBulletHitEffectForceServer" CVar is set to 1, the client won't make hitsound / decal effects in ev_hldm.cpp. Instead, it will happen here serverside
-				//to be broadcast to all clients like all other effects (by NPCs, etc.).
+				// Also, if the "playerBulletHitEffectForceServer" CVar is set to 1, the client won't make hitsound / decal effects in ev_hldm.cpp. Instead, it will happen here serverside
+				// to be broadcast to all clients like all other effects (by NPCs, etc.).
 				
-				
-				//if(doDefaultBulletHitEffectCheck && (EASY_CVAR_GET(playerBulletHitEffectForceServer)==1 || !FClassnameIs(pEntity->pev, "worldspawn")) && bulletHitEffectAllowed){
-				//if(doDefaultBulletHitEffectCheck && !FClassnameIs(pEntity->pev, "worldspawn") && bulletHitEffectAllowed){
+				//if(doDefaultBulletHitEffectCheck && (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST(playerBulletHitEffectForceServer)==1 || !FClassnameIs(pEntity->pev, "worldspawn")) && useBulletHitSound){
+				//if(doDefaultBulletHitEffectCheck && !FClassnameIs(pEntity->pev, "worldspawn") && useBulletHitSound){
+				///////////////////////////////////////////////////////////////////////////////////////
 
-				//The "bulletHitEffectAllowed" can be turned off by a TraceAttack method, presumably because it decided to handle the effect itself
-				//and handling it here would be redundant.
-				//This is common for things that do a ricochet effect on detecting a hit on armor or a helmet (hgrunts, agrunts).  They turn it off.
-				//Note that, unless TEXTURETYPE_PlaySound detects a machine or the world (CLASS_NONE.. however crude that is) was hit,
-				//it's going to force a flesh sound.  Just keeping that in tune with retail to play nicely.
-				if(doDefaultBulletHitEffectCheck && bulletHitEffectAllowed){
+				// The "useBulletHitSound" can be turned off by a TraceAttack method, presumably because it decided to handle the effect itself
+				// and handling it here would be redundant.
+				// This is common for things that do a ricochet effect on detecting a hit on armor or a helmet (hgrunts, agrunts).  They turn it off.
+				// Note that, unless TEXTURETYPE_PlaySound detects a machine or the world (CLASS_NONE.. however crude that is) was hit,
+				// it's going to force a flesh sound.  Just keeping that in tune with retail to play nicely.
+				if(doDefaultBulletHitEffectCheck && useBulletHitSound){
 					TEXTURETYPE_PlaySound(&tr, vecSrc, vecEnd, iBulletType);
 					DecalGunshot( &tr, iBulletType );
 				}
-
 
 				/*
 				if(iDamage == 0 &&
@@ -3533,8 +3573,9 @@ void CBaseEntity :: TraceBleed( float flDamage, Vector vecDir, TraceResult *ptr,
 
 void CBaseEntity :: TraceBleed( float flDamage, Vector vecDir, TraceResult *ptr, int bitsDamageType, int bitsDamageTypeMod )
 {
-	if (BloodColor() == DONT_BLEED)
+	if (!UTIL_ShouldShowBlood(BloodColor())) {
 		return;
+	}
 	
 	if (flDamage == 0)
 		return;
@@ -3609,6 +3650,10 @@ void CBaseEntity :: TraceBleed( float flDamage, Vector vecDir, TraceResult *ptr,
 //=========================================================
 void CBaseMonster :: MakeDamageBloodDecal ( int cCount, float flNoise, TraceResult *ptr, const Vector &vecDir )
 {
+	if (!UTIL_ShouldShowBlood(BloodColor())) {
+		return;
+	}
+
 	// make blood decal on the wall! 
 	TraceResult Bloodtr;
 	Vector vecTraceDir; 

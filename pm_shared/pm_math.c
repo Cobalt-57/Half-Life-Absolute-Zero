@@ -337,6 +337,22 @@ float Distance(const vec3_t v1, const vec3_t v2)
 	return Length(d);
 }
 
+//MODDD - NEW. Only involve the X and Y coords
+float Distance2D(const vec3_t v1, const vec3_t v2)
+{
+	float d[2];
+	//(d)[0] = (v2)[0] - (v1)[0]; (d)[1] = (v2)[1] - (v1)[1]; (d)[2] = (v2)[2] - (v1)[2];
+	d[0] = v2[0] - v1[0];
+	d[1] = v2[1] - v1[1];
+	// And return the length with from the two coord differences.
+	float length = 0.0f;
+	length += d[0] * d[0];
+	length += d[1] * d[1];
+	length = sqrt(length);		// FIXME
+	return length;
+}
+
+
 float VectorNormalize (vec3_t v)
 {
 	float length, ilength;

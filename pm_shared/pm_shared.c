@@ -477,6 +477,8 @@ void PM_CatagorizeTextureType( void )
 	VectorCopy_f( pmove->origin, start );
 	VectorCopy_f( pmove->origin, end );
 
+	Distance(pmove->origin, pmove->origin);
+
 	// Straight down
 	end[2] -= 64;
 
@@ -1062,10 +1064,11 @@ void PM_WalkMove ()
 	//MODDD - original trace "trace" given a... better name.
 	//        The original was made to see if we run into an incline going upwards (and counts for bumping against something way too tall/steep like a wall instead)
 	pmtrace_t traceInclineDetection_Forward;
-	
 	//MODDD 
 	pmtrace_t traceInclineDetection_Down;
+	BOOL skipInclineChecks = FALSE;
 	
+
 	// Copy movement amounts
 	fmove = pmove->cmd.forwardmove;
 	smove = pmove->cmd.sidemove;
@@ -1164,31 +1167,54 @@ void PM_WalkMove ()
 	dest[2] = pmove->origin[2];
 
 
-	// first try moving directly to the next spot
-	VectorCopy_f (dest, start);
-	traceInclineDetection_Forward = pmove->PM_PlayerTrace (pmove->origin, dest, PM_NORMAL, -1 );
-	// If we made it all the way, then copy trace end
-	//  as new player position.
-	//MODDD NOTE - fraction of 1 says nothing is in the way. So we're trusting we can move forwards that much.
-	//             If this soon turns out to no longer be on the ground, we'll start falling by some other _MOVE method in here instead.
-	//BUUUUUUt... what if we want to smoothly move down an incline/stairs instead?  Can we detect that too?
-	if (traceInclineDetection_Forward.fraction == 1)
-	{
-		//MODDD - new block!
-		////////////////////////////////////////////////////////////////////////////////
 
-		////////////////////////////////////////////////////////////////////////////////
-
-		VectorCopy_f (traceInclineDetection_Forward.endpos, pmove->origin);
-		return;
+	//MODDD - 'few checks placed further above'
+	// placed here so that whether to check for going up inclines or going down inclines can
+	// be skipped if either of these checks says to.
+	if (oldonground == -1 &&   // Don't walk up stairs if not on ground.
+		pmove->waterlevel == 0) {
+		skipInclineChecks = TRUE;
 	}
 
-	if (oldonground == -1 &&   // Don't walk up stairs if not on ground.
-		pmove->waterlevel  == 0)
-		return;
+	if (pmove->waterjumptime) {         // If we are jumping out of water, don't do anything more.
+		skipInclineChecks = TRUE;
+	}
 
-	if (pmove->waterjumptime)         // If we are jumping out of water, don't do anything more.
+
+
+
+
+
+	//MODDD - few checks placed further above instead.
+	// replaced with this now.
+	if (skipInclineChecks) {
+
+		//MODDD  block moved inside this 'skipIncludeChecks' area,
+		// as with downward incline/stairs detection it just gets in the way
+		// if we plan on doing those checks later.  If not, this way works fine.
+		/////////////////////////////////////////////////////////////////////////////////////////////
+		// first try moving directly to the next spot
+		VectorCopy_f(dest, start);
+		traceInclineDetection_Forward = pmove->PM_PlayerTrace(pmove->origin, dest, PM_NORMAL, -1);
+		// If we made it all the way, then copy trace end
+		//  as new player position.
+		//MODDD NOTE - fraction of 1 says nothing is in the way. So we're trusting we can move forwards that much.
+		//             If this soon turns out to no longer be on the ground, we'll start falling by some other _MOVE method in here instead.
+		//BUUUUUUt... what if we want to smoothly move down an incline/stairs instead?  Can we detect that too?
+		// actually before this.  yes.  really.
+		if (traceInclineDetection_Forward.fraction == 1)
+		{
+
+			VectorCopy_f(traceInclineDetection_Forward.endpos, pmove->origin);
+			return;
+		}
+		/////////////////////////////////////////////////////////////////////////////////////////////
+
+
+		// don't proceed then, below is only for checking for warping to the top of stairs in a frame
+		// (smooth movement against an upward incline).
 		return;
+	}//skipInclineChecks
 
 
 
@@ -1205,10 +1231,153 @@ void PM_WalkMove ()
 	VectorCopy_f (pmove->origin  , down);
 	VectorCopy_f (pmove->velocity, downvel);
 
+
+
+	//MODDD - new block!   Can we detect a floor below a little further out?
+	// This is the main support for downward stairs / inclines.
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	if (!skipInclineChecks) {
+		// old logic
+		////////////////////////////////////////////////////////////
+		////////////////////////////////////////////////////////////
+		////////////////////////////////////////////////////////////
+		/*
+		float flatVel = sqrt(pmove->velocity[0] * pmove->velocity[0] + pmove->velocity[1] * pmove->velocity[1]);
+
+		vec3_t destDown;
+		//vec3_t tempVec = { 0, 0, -(flatVel * pmove->frametime*50 * 0.3) };
+		vec3_t tempVec = { 0, 0, -pmove->movevars->stepsize };
+
+		VectorAdd_f(dest, tempVec, destDown);
+
+
+		pmtrace_t traceInclineDetection_ForwardDown = pmove->PM_PlayerTrace(dest, destDown, PM_NORMAL, -1);
+
+		if (traceInclineDetection_ForwardDown.fraction == -1) {
+			// oh piffle.
+		}
+		else {
+			float normalZ = traceInclineDetection_ForwardDown.plane.normal[2];
+
+			if (normalZ < 0.99) {
+				int x = 4; //breakpoint
+			}
+
+
+			if (
+				!traceInclineDetection_ForwardDown.startsolid &&
+				!traceInclineDetection_ForwardDown.allsolid &&
+				normalZ >= 0.8 //&& normalZ < 0.99
+				) {
+
+
+				//got a hit?  ok.
+				VectorCopy_f(traceInclineDetection_ForwardDown.endpos, pmove->origin);
+				return;
+			}
+
+		}
+		*/
+		/*
+		// Start out up one stair height
+		VectorCopy_f(pmove->origin, dest);
+		dest[2] -= pmove->movevars->stepsize;
+
+		traceInclineDetection_Forward = pmove->PM_PlayerTrace(pmove->origin, dest, PM_NORMAL, -1);
+		// If we started okay and made it part of the way at least,
+		//  copy the results to the movement start position and then
+		//  run another move try.
+		if (!traceInclineDetection_Forward.startsolid && !traceInclineDetection_Forward.allsolid)
+		{
+			VectorCopy_f(traceInclineDetection_Forward.endpos, pmove->origin);
+		}
+		*/
+		////////////////////////////////////////////////////////////
+		////////////////////////////////////////////////////////////
+		////////////////////////////////////////////////////////////
+
+
+		pmtrace_t traceInclineDetection_ForwardDown;
+
+		/*
+		VectorCopy_f(pmove->origin, original);       // Save out original pos &
+		VectorCopy_f(pmove->velocity, originalvel);  //  velocity.
+
+		// slide move the rest of the way.
+		clip = PM_FlyMove();
+
+		// Now try going back <up> <no down..?> from the end point
+		//  press down the stepheight
+		*/
+
+
+		VectorCopy_f(pmove->origin, dest);
+		dest[2] -= pmove->movevars->stepsize;
+
+		traceInclineDetection_ForwardDown = pmove->PM_PlayerTrace(pmove->origin, dest, PM_NORMAL, -1);
+
+
+		/*
+		VectorCopy_f(traceInclineDetection_Forward.endpos, dest);
+		dest[2] -= pmove->movevars->stepsize;
+		traceInclineDetection_ForwardDown = pmove->PM_PlayerTrace(traceInclineDetection_Forward.endpos, dest, PM_NORMAL, -1);
+		*/
+
+
+
+
+		// If we are not on the ground any more then
+		//  use the original movement attempt
+
+		// ????????????????????????????????????????????????????????????????
+		// 'normal[2] < 0.7' tends to mean that's a floor by the way.
+		//if (traceInclineDetection_Forward.plane.normal[2] < 0.7)
+		//	goto usedown;
+
+		//MODDD NOTICE - "goto usedown" above is getting called if the plane we hit can't be walked up, like an incline way to steep
+		// or flat-out a wall in the way.  So skipping to below instead of trying to skip to the top of it (below up to the downdist > updist comparison)
+		// That is for forcing the origin to the top of an incline I look to be trying to go up.
+
+
+		// If the trace ended up in empty space, copy the end
+		//  over to the origin.
+		//MODDD NOTE - this might be what places us exactly at the ramp.
+		// And if the fraction is way too small, that's a sign we're either going along flat-ground or an upward incline/stairs.
+		if (
+			traceInclineDetection_ForwardDown.fraction > 0.06 && traceInclineDetection_ForwardDown.fraction < 1.0 &&
+			!traceInclineDetection_ForwardDown.startsolid && !traceInclineDetection_ForwardDown.allsolid
+		)
+		{
+			// Is a downward incline or stairs?  Snap to the ground then!  No further checks needed.
+			// Already even have 'downvel' here for pmove->velocity.  Did not touch the velocity so it stays as it is.
+			VectorCopy_f(traceInclineDetection_ForwardDown.endpos, pmove->origin);
+			return;
+		}
+		else {
+			// Reset original values.  (no, done below already)
+			/*
+			VectorCopy_f(original, pmove->origin);
+			VectorCopy_f(originalvel, pmove->velocity);
+			*/
+			// The rest of the method proceeds with the rest of the upward incline/stairs check, which may
+			// find that or deem it a blocking wall.
+		}
+
+	}//skipInclineChecks
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
 	// Reset original values.
 	VectorCopy_f (original, pmove->origin);
-
 	VectorCopy_f (originalvel, pmove->velocity);
+
+
 
 	// Start out up one stair height
 	VectorCopy_f (pmove->origin, dest);
@@ -2232,6 +2401,29 @@ void PM_LadderMove( physent_t *pLadder )
 	float ladderCycleMulti;
 	float ladderSpeedMulti;
 	float ladderCycleActual;
+
+
+
+	//MODDD - control.  Might want to act on jump being tapped (pressed for the first frame), not continuously.
+	//////////////////////////////////////////////////////////////////////////////
+	static int iJumpPressed = 0;
+	if (pmove->cmd.buttons & IN_JUMP) {
+		if (iJumpPressed == 0) {
+			// released to tapped
+			iJumpPressed = 1;
+		}else if (iJumpPressed == 1) {
+			// tapped to pressed
+			iJumpPressed = 2;
+		}else {
+			// stay pressed.
+		}
+	}else {
+		// no longer held? released
+		iJumpPressed = 0;
+	}
+	//////////////////////////////////////////////////////////////////////////////
+
+
 	
 	if ( pmove->movetype == MOVETYPE_NOCLIP )
 		return;
@@ -2349,13 +2541,19 @@ void PM_LadderMove( physent_t *pLadder )
 			rightRaw += varRaw;
 		}
 
-		if ( pmove->cmd.buttons & IN_JUMP )
+
+
+		//MODDD - only a solid jump tap allowed, not holding it down.  This should stop trying to jump from a ladder the moment
+		// it is hit from having space held down ever so slightly too long.
+		if ( iJumpPressed == 1 )
 		{
 			filterediuser4 = 0;
 			pmove->iuser4 |= FLAG_JUMPED;  //why?  so that, on jumping down, the "drop" tilt isn't triggered.
 
 			pmove->movetype = MOVETYPE_WALK;
-			VectorScale( trace.plane.normal, 270, pmove->velocity );
+			//MODDD - lower ladder jump distance, no need to be obnoxious.
+			// Was 270, see constant.
+			VectorScale( trace.plane.normal, 190, pmove->velocity );
 		}
 		else
 		{
@@ -3955,7 +4153,6 @@ void PM_Move ( struct playermove_s *ppmove, int server )
 		pmove->iuser4 |= FLAG_RESET_RECEIVED;
 
 	}
-
 
 
 

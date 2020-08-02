@@ -110,6 +110,8 @@ public:
 	virtual int BloodColor(void) {
 		// if german censorship, all of the body has green blood.  
 		// Otherwise, only the head(crab) does.
+
+
 		if (EASY_CVAR_GET(sv_germancensorship) == 1 || m_LastHitGroup == HITGROUP_HEAD) {
 			// standard
 			return BLOOD_COLOR_GREEN;

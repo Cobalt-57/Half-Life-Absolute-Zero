@@ -140,7 +140,35 @@ Gauss beam improvements.  Beam colors follow the likely intended logic with some
 
 Similar fix applied to egon in color only, no extra touchups.  No change between software or hardware graphics modes either.
 
+Scientists should always (or at least very soon) put the syringe away if healing is no longer necessary or the scientist unfollows before healing.  They will also not withdraw the syringe simply because the target moves.
 
+Movement over downward inclines and stairs is now as smooth as upward inclines/stairs in retail.
 
+Idle animations for scientists and barnies slowed, especially in pre-disaster.  Common standing idles are slowed the most.  Slightly faster while talking.
 
+Ladder jump-off force reduced a bit.  Jumping off a ladder now only works on the key (typically space) being pressed for the first frame, not continuously, so that holding space too long in a tight jump to a ladder doesn't immediately fall off.
 
+Blood logic reworked, again.  Damage done per attack factors into the amount of blood.
+
+Blood-spray decals will no longer be drawn if the blood-drip effect was disabled (usually from armor absorbing the shot, shows a ricochet effect).
+
+Retail blood effect is available by CVar: "sv_bloodparticlemode", defaults to 1.
+
+Mortar (prominent in a1a3b.bsp) nerfed, degree depends on skill.  On Hard difficulty, it is only slighlty less damaging, range is more significantly impacted.
+
+Very minor agrunt improvements.  Won't aim extremely high/low on getting close while it range-attacks.
+Also no longer adding retail blood sprite drops on melee hits.  Whoops.
+
+Gibbed monster sound effects should no longer be overshadowed by other sounds, most notably like a barnacle making chew sounds shortly after gibbing what it held.
+
+Gargantua can be hurt by gauss shots charged enough, but takes 30% less damage from them.
+
+Gauss does 16% less damage on aircraft in non-critical areas (not the cockpit or engines).
+
+Gauss makes hit-sounds on monsters.
+
+Blood type 'green' restored to be distinct from 'yellow' all aliens had in retail, some monsters use this now.
+
+Machines (mainly sentries) play metal-sounds when hit with bullets.
+
+Snarks can now gib with alpha blood, not forced to retail.

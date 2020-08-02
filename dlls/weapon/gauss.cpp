@@ -1006,14 +1006,11 @@ void CGauss::Fire( Vector vecOrigSrc, Vector vecDir, float flDamage )
 
 		// ALERT( at_console, "." );
 		UTIL_TraceLine(vecSrc, vecDest, dont_ignore_monsters, pentIgnore, &tr);
-
-		if (tr.fAllSolid)
+		
+		if (tr.fAllSolid) {
 			break;
+		}
 
-		CBaseEntity *pEntity = CBaseEntity::Instance(tr.pHit);
-
-		if (pEntity == NULL)
-			break;
 
 		if ( fFirstBeam )
 		{
@@ -1022,15 +1019,47 @@ void CGauss::Fire( Vector vecOrigSrc, Vector vecDir, float flDamage )
 	
 			nTotal += 26;
 		}
+
+		// MODDD - added check for flFraction like FireBulletsPlayer does.  I assume that had a point.
+		if (tr.flFraction >= 1.0) {
+			break;
+		}
 		
-		if (pEntity->pev->takedamage)
+		CBaseEntity *pEntity = CBaseEntity::Instance(tr.pHit);
+
+		if (pEntity == NULL) {
+			break;
+		}
+
+
+		//MODDD - no need for this check, the world knows not to take damage.
+		// Methods with TraceAttack methods will reject damage just like ones called by FirePlayerBullets do,
+		// which doesn't even do a ThingHit->pev->takedamage check itself anyway
+		//if (pEntity->pev->takedamage)
 		{
+			BOOL useBulletHitSound = TRUE;
 			ClearMultiDamage();
-			pEntity->TraceAttack( m_pPlayer->pev, flDamage, vecDir, &tr, DMG_BULLET, DMG_GAUSS );
+
+			//MODDD - NEW.
+			// This is an "AI Sound", or not a real one audible to the player, but one that checks for monsters nearby (distance) and alerts them if they are in hearing range.
+			// TODO - egon can get this too, probably.
+			attemptSendBulletSound(tr.vecEndPos, m_pPlayer->pev);
+
+			pEntity->TraceAttack( m_pPlayer->pev, flDamage, vecDir, &tr, DMG_BULLET, DMG_GAUSS, TRUE, &useBulletHitSound);
+
+			//MODDD - Play a texture-hit sound, it is a bullet after all.
+			// And just force a bullet type to MP5 here, point is it's not the crowbar
+			// NOTICE - just use FirePlayerBullets at this point for better support, whether to do texture-sounds or decals
+			// server or clientside is a little more comlpex than just tacking it on here.
+			// Entities can make noise this way though, just not the world under default CVars.
+			if (useBulletHitSound) {
+				TEXTURETYPE_PlaySound(&tr, vecSrc, vecDest, BULLET_PLAYER_MP5);
+				DecalGunshot(&tr, BULLET_PLAYER_MP5);
+			}
+			
+
 			ApplyMultiDamage(m_pPlayer->pev, m_pPlayer->pev);
-			
 			//easyPrintLine("GAUSSLASER: HIT an enemy?? %d", nMaxHits);
-			
 		}
 
 

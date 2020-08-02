@@ -69,6 +69,37 @@ int iAgruntMuzzleFlash;
 class CAGrunt : public CSquadMonster
 {
 public:
+
+	static const char* pAttackHitSounds[];
+	static const char* pAttackMissSounds[];
+	static const char* pAttackSounds[];
+	static const char* pDieSounds[];
+	static const char* pPainSounds[];
+	static const char* pIdleSounds[];
+	static const char* pAlertSounds[];
+
+	BOOL	m_fCanHornetAttack;
+	float m_flNextHornetAttackCheck;
+	float m_flNextPainTime;
+	// three hacky fields for speech stuff. These don't really need to be saved.
+	float m_flNextSpeakTime;
+	float m_flNextWordTime;
+	int	m_iLastWord;
+
+	BOOL m_fIsPoweredUp;
+	float nextPoweredUpParticleTime;
+	float poweredUpTimeEnd;
+	EHANDLE poweredUpCauseEnt;
+	float poweredUpCauseEntChangeCooldown;
+	EHANDLE powerupCauseEntDirectedEnemy;
+
+	float forceNewEnemyCooldownTightTime;
+	float forceNewEnemyCooldownTime;
+	EHANDLE directedEnemyIssuer;
+	float forgetPowerupCauseEntDirectedEnemyTime;
+
+
+
 	CAGrunt();
 
 	void MonsterThink(void);
@@ -118,7 +149,7 @@ public:
 	GENERATE_TRACEATTACK_PROTOTYPE
 	GENERATE_TAKEDAMAGE_PROTOTYPE
 	
-	
+
 	void forceNewEnemy(CBaseEntity* argIssuing, CBaseEntity* argNewEnemy, BOOL argPassive);
 	void forgetForcedEnemy(CBaseMonster* argIssuing, BOOL argPassive);
 	void ReportAIState(void);
@@ -145,40 +176,14 @@ public:
 	//void HandleAnimEvent(MonsterEvent_t *pEvent );
 
 	void setChaseSpeed(void);
-	void forceNewEnemy(CBaseMonster* argNewEnemy);
 	
 	Vector GetGunPosition( void );
 	Vector GetGunPositionAI(void);
 	void OnTakeDamageSetConditions(entvars_t *pevInflictor, entvars_t *pevAttacker, float flDamage, int bitsDamageType, int bitsDamageTypeMod);
 	int getHullIndexForNodes(void);
 
-	static const char *pAttackHitSounds[];
-	static const char *pAttackMissSounds[];
-	static const char *pAttackSounds[];
-	static const char *pDieSounds[];
-	static const char *pPainSounds[];
-	static const char *pIdleSounds[];
-	static const char *pAlertSounds[];
+	BOOL predictRangeAttackEnd(void);
 
-	BOOL	m_fCanHornetAttack;
-	float m_flNextHornetAttackCheck;
-	float m_flNextPainTime;
-	// three hacky fields for speech stuff. These don't really need to be saved.
-	float m_flNextSpeakTime;
-	float m_flNextWordTime;
-	int	m_iLastWord;
-
-	BOOL m_fIsPoweredUp;
-	float nextPoweredUpParticleTime;
-	float poweredUpTimeEnd;
-	EHANDLE poweredUpCauseEnt;
-	float poweredUpCauseEntChangeCooldown;
-	EHANDLE powerupCauseEntDirectedEnemy;
-	
-	float forceNewEnemyCooldownTightTime;
-	float forceNewEnemyCooldownTime;
-	EHANDLE directedEnemyIssuer;
-	float forgetPowerupCauseEntDirectedEnemyTime;
 
 };
 
@@ -959,7 +964,8 @@ GENERATE_TRACEATTACK_IMPLEMENTATION(CAGrunt)
 	//easyForcePrintLine("ILL %d %d", (ptr->iHitgroup), (bitsDamageType & (DMG_BULLET | DMG_SLASH | DMG_CLUB)) != 0 );
 
 	// NOTICE - this hitgroup is armor anywhere on the agrunt, not just the helmet like several other entities.
-	if ( ptr->iHitgroup == HITGROUP_AGRUNT_ARMOR && (bitsDamageType & (DMG_BULLET | DMG_SLASH | DMG_CLUB)))
+	// MODDD - ALSO, protecting against DMG_BLAST now.  HGrunt does, so why not.
+	if ( ptr->iHitgroup == HITGROUP_AGRUNT_ARMOR && (bitsDamageType & (DMG_BULLET | DMG_SLASH | DMG_BLAST | DMG_CLUB)))
 	{
 		// hit armor
 		if ( pev->dmgtime != gpGlobals->time || (RANDOM_LONG(0,10) < 1) )
@@ -997,18 +1003,7 @@ GENERATE_TRACEATTACK_IMPLEMENTATION(CAGrunt)
 			useBloodEffect = FALSE;  //don't now.
 		}
 	}
-	else
-	{
-		//MODDD
-		//SpawnBlood(ptr->vecEndPos, BloodColor(), flDamage);// a little surface blood.
-		DrawAlphaBlood(flDamage, ptr );
-
-		//if(useBulletHitSound && (pevAttacker != NULL && (pevAttacker->renderfx & (ISPLAYER | ISNPC))) ){
-			//UTIL_playFleshHitSound(pev);
-		//}
-		
-		TraceBleed( flDamage, vecDir, ptr, bitsDamageType, bitsDamageTypeMod );
-	}
+	
 	
 	//easyForcePrintLine("AGrunt:: TraceAttack ended with %.2f damage.", flDamage);
 	
@@ -1154,7 +1149,7 @@ void CAGrunt :: SetYawSpeed ( void )
 
 	switch ( m_Activity )
 	{
-		//MODDD - like grunts, turn a little faster while running or walking.
+	//MODDD - like grunts, turn a little faster while running or walking.
 	case ACT_RUN:
 		ys = 140;
 		break;
@@ -1197,38 +1192,15 @@ void CAGrunt :: HandleAnimEvent( MonsterEvent_t *pEvent )
 			// m_vecEnemyLKP should be center of enemy body
 			Vector vecArmPos;
 			Vector vecDirToEnemy;
-			Vector vecDirToEnemyAI;
 			Vector angDir;
-			Vector angDirAI;
 
-			if (HasConditions( bits_COND_SEE_ENEMY))
+			if (HasConditions(bits_COND_SEE_ENEMY))
 			{
-				//Careful - this doesn't factor in where they are aiming.
-				//The hgrunt uses this, but this is unnecessarily precise. Making the hornet's velocity based off of "vecDirToEnemy" instead of the Hornet's forward angles (likely does not factor in pitch... up / down angles unlike vecDirToEnemy).
-				//Vector vecShootOrigin = GetGunPosition();
-				//Vector vecShootDir = ShootAtEnemy( vecShootOrigin );
-
-				//MODDD - NAH. go ahead and use the precise version.
-				vecDirToEnemy = ( ( m_vecEnemyLKP ) - pev->origin );
-				angDir = UTIL_VecToAngles( vecDirToEnemy );
+				vecDirToEnemy = ((m_vecEnemyLKP)-pev->origin);
 				vecDirToEnemy = vecDirToEnemy.Normalize();
-				
-				/*
-				Vector vecShootOriginAI = GetGunPositionAI();
-				vecDirToEnemyAI = ShootAtEnemyMod(vecShootOriginAI());
-				angDirAI = UTIL_VecToAngles(vecDirToEnemyAI);
-
-				Vector vecShootOrigin = GetGunPosition();
-				vecDirToEnemy = ShootAtEnemyMod( vecShootOrigin );
-				angDir = UTIL_VecToAngles(vecDirToEnemy);
-				*/
-
 			}
-			else
-			{
-				//angDirAI = pev->angles;
-				angDir = pev->angles;
-				UTIL_MakeAimVectors( angDir );
+			else {
+				UTIL_MakeAimVectors(pev->angles);
 				vecDirToEnemy = gpGlobals->v_forward;
 			}
 
@@ -1236,13 +1208,7 @@ void CAGrunt :: HandleAnimEvent( MonsterEvent_t *pEvent )
 				pev->effects = EF_MUZZLEFLASH;
 			}
 
-			// make angles +-180
-			if (angDir.x > 180)
-			{
-				angDir.x = angDir.x - 360;
-			}
-
-			SetBlending( 0, angDir.x );
+			lookAtEnemy_pitch();
 
 
 			//MODDD - easier to recognize.
@@ -1250,22 +1216,23 @@ void CAGrunt :: HandleAnimEvent( MonsterEvent_t *pEvent )
 			vecArmPos = GetGunPosition();
 
 			//MODDD - toned down from 32.
-			vecArmPos = vecArmPos + vecDirToEnemy * 20;
+			Vector vecArmMuzzlePos = vecArmPos + vecDirToEnemy * 20;
+			Vector vecHornetSpawnPos = vecArmPos + vecDirToEnemy * 12;
 
 
 			if(EASY_CVAR_GET(agrunt_muzzleflash) != 0){
 				MESSAGE_BEGIN( MSG_PVS, SVC_TEMPENTITY, vecArmPos );
 					WRITE_BYTE( TE_SPRITE );
-					WRITE_COORD( vecArmPos.x );	// pos
-					WRITE_COORD( vecArmPos.y );	
-					WRITE_COORD( vecArmPos.z );	
+					WRITE_COORD(vecArmMuzzlePos.x );	// pos
+					WRITE_COORD(vecArmMuzzlePos.y );
+					WRITE_COORD(vecArmMuzzlePos.z );
 					WRITE_SHORT( iAgruntMuzzleFlash );		// model
 					WRITE_BYTE( 6 );				// size * 10
 					WRITE_BYTE( 128 );			// brightness
 				MESSAGE_END();
 			}
 
-			CBaseEntity *pHornet = CBaseEntity::Create( "hornet", vecArmPos, UTIL_VecToAngles( vecDirToEnemy ), edict() );
+			CBaseEntity *pHornet = CBaseEntity::Create( "hornet", vecHornetSpawnPos, UTIL_VecToAngles( vecDirToEnemy ), edict() );
 			UTIL_MakeVectors ( pHornet->pev->angles );
 			
 			//MODDD - change, explanation above.
@@ -1337,12 +1304,8 @@ void CAGrunt :: HandleAnimEvent( MonsterEvent_t *pEvent )
 
 				EMIT_SOUND_FILTERED ( ENT(pev), CHAN_WEAPON, pAttackHitSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackHitSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
 
-				Vector vecArmPos;
-				
-				//MODDD - easier to recognize.
-				//GetAttachment( 0, vecArmPos, vecArmAng );
-				vecArmPos = GetGunPosition();
-				SpawnBlood(vecArmPos, pHurt->BloodColor(), 25);// a little surface blood.
+				//MODDD - blood call not needed!  The CheckTraceHullAttack call already does this.
+				//SpawnBlood(vecArmPos, pHurt->BloodColor(), 25);// a little surface blood.
 			}
 			else
 			{
@@ -1373,12 +1336,8 @@ void CAGrunt :: HandleAnimEvent( MonsterEvent_t *pEvent )
 
 				EMIT_SOUND_FILTERED ( ENT(pev), CHAN_WEAPON, pAttackHitSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackHitSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
 
-				Vector vecArmPos;
-				//MODDD - easier to recognize.
-				//GetAttachment( 0, vecArmPos, vecArmAng );
-				vecArmPos = GetGunPosition();
-
-				SpawnBlood(vecArmPos, pHurt->BloodColor(), 25);// a little surface blood.
+				//MODDD - blood call not needed!  The CheckTraceHullAttack call already does this.
+				//SpawnBlood(vecArmPos, pHurt->BloodColor(), 25);// a little surface blood.
 			}
 			else
 			{
@@ -2173,7 +2132,7 @@ void CAGrunt::ReportAIState(void){
 	//call the parent, and add on to that.
 	CBaseMonster::ReportAIState();
 
-	easyForcePrintLine("CUSTOM: isPU:%d nextPUPartt:%.2f PUtEnd:%.2f PUCauseEnt:%s PUEntChangeCD:%.2f PUentDirEn:%s fneCDT:%.2f fneCD:%.2f direniss:%s fpcedet:%.2f curtime:%.2f",
+	easyForcePrintLine("CUSTOM REPORTAI: isPU:%d nextPUPartt:%.2f PUtEnd:%.2f PUCauseEnt:%s PUEntChangeCD:%.2f PUentDirEn:%s fneCDT:%.2f fneCD:%.2f direniss:%s fpcedet:%.2f curtime:%.2f",
 		m_fIsPoweredUp,
 		nextPoweredUpParticleTime,
 		poweredUpTimeEnd,
@@ -2206,8 +2165,10 @@ Vector CAGrunt::GetGunPosition(void){
 
 Vector CAGrunt::GetGunPositionAI(void){
 	////Clone of GetGunPosition from monsters.cpp. The GetGunPositionAI method of CBaseMonster would have called Monster's GetGunPosition, but we've made ours more specific.
-	return CBaseMonster::GetGunPosition();
+	//return CBaseMonster::GetGunPosition();
 	////CHANGED.  Just using the hacked position to determine this.
+	//return CBaseMonster::GetGunPositionAI();
+	return EyePosition();
 
 	/*
 	Vector v_forward, v_right, v_up, angle;
@@ -2284,5 +2245,9 @@ void CAGrunt::OnTakeDamageSetConditions(entvars_t *pevInflictor, entvars_t *pevA
 
 int CAGrunt::getHullIndexForNodes(void){
     return NODE_LARGE_HULL;  //safe?
+}
+
+BOOL CAGrunt::predictRangeAttackEnd(void) {
+	return TRUE;
 }
 

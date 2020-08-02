@@ -2738,7 +2738,7 @@ GENERATE_GIBMONSTERGIB_IMPLEMENTATION(CChumToad){
 
 	if(CVAR_GET_FLOAT("violence_agibs") != 0)
 	{
-		CGib::SpawnRandomGibs( pev, 2, GIB_ALIEN_ID, fGibSpawnsDecal );	// Throw alien gibs
+		CGib::SpawnRandomGibs( pev, 2, GIB_ALIEN_GREEN_ID, fGibSpawnsDecal );	// Throw alien gibs
 		return TRUE;
 	}
 

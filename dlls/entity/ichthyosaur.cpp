@@ -42,6 +42,7 @@
 #include "weapons.h"
 
 #include "defaultai.h"  //why not?
+#include "ignore_warning_list.h"
 
 
 extern CGraph WorldGraph;

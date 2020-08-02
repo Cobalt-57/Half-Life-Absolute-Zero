@@ -208,10 +208,19 @@ void CCineBlood :: BloodGush ( void )
 	pev->nextthink = gpGlobals->time + 0.1;
 
 	UTIL_MakeVectors(pev->angles);
-	if ( pev->health-- < 0 )
+	
+	if ( pev->health-- < 0 ){
 		REMOVE_ENTITY(ENT(pev));
+	}
 // CHANGE_METHOD ( ENT(pev), em_think, SUB_Remove );
 
+
+	//MODDD - at least check for the color being valid here.  Why bother with other logic if not.
+	if ( !UTIL_ShouldShowBlood( BLOOD_COLOR_RED ) ){
+		return;
+	}
+
+	//MODDD - this is some ancient blood effect entity.  Do we even care?  If so, check for 'sv_bloodparticlemode'.  Maybe.
 	if ( RANDOM_FLOAT ( 0 , 1 ) < 0.7 )// larger chance of globs
 	{
 		UTIL_BloodDrips( pev->origin, UTIL_RandomBloodVector(), BLOOD_COLOR_RED, 10 );

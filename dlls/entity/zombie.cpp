@@ -338,6 +338,7 @@ void CZombie :: SetYawSpeed ( void )
 
 GENERATE_TRACEATTACK_IMPLEMENTATION(CZombie)
 {
+
 	GENERATE_TRACEATTACK_PARENT_CALL(CBaseMonster);
 }
 GENERATE_TAKEDAMAGE_IMPLEMENTATION(CZombie)
@@ -734,7 +735,9 @@ void CZombie :: Spawn()
 	pev->movetype		= MOVETYPE_STEP;
 	//pev->movetype = MOVETYPE_TOSS;
 
+	// NOTE - this is ignored now!  See the BloodColor override in zombie.h
 	m_bloodColor		= BLOOD_COLOR_GREEN;
+
 	pev->health			= gSkillData.zombieHealth;
 	pev->view_ofs		= VEC_VIEW;// position of the eyes relative to monster's origin.
 	m_flFieldOfView		= 0.5;// indicates the width of this monster's forward view cone ( as a dotproduct result )

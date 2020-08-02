@@ -20,6 +20,7 @@
 #include "explode.h"
 
 #include "player.h"
+#include "ignore_warning_list.h"
 
 
 #define SF_TANK_ACTIVE			0x0001

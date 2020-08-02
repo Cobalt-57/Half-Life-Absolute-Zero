@@ -374,6 +374,10 @@ BOOL CBaseMonster::NoFriendlyFireImp(const Vector& startVec, const Vector& endVe
 //MODDD - new
 CBaseMonster::CBaseMonster(){
 	
+	// Just a setting to keep this from being garbage from entities that never specify it.
+	// Probably paranoia at this point though, think any issues with black-and-white blood are gone anyway.
+	m_bloodColor = DONT_BLEED;
+
 
 	timeOfDeath_activity = ACT_RESET;
 	timeOfDeath_sequence = 0;
@@ -1202,23 +1206,23 @@ void CBaseMonster :: Look ( float flDistance )
 					{
 					
 					//MODDD - trying out treating R_BA as NEMESIS.  See if that works out.
-					case	R_BA:
+					case R_BA:
 						iSighted |= bits_COND_SEE_NEMESIS;		
 					break;
 
-					case	R_NM:
+					case R_NM:
 						iSighted |= bits_COND_SEE_NEMESIS;		
 						break;
-					case	R_HT:		
+					case R_HT:		
 						iSighted |= bits_COND_SEE_HATE;		
 						break;
-					case	R_DL:
+					case R_DL:
 						iSighted |= bits_COND_SEE_DISLIKE;
 						break;
-					case	R_FR:
+					case R_FR:
 						iSighted |= bits_COND_SEE_FEAR;
 						break;
-					case    R_AL:
+					case R_AL:
 						//nothing special about allies apparently.
 						break;
 					default:
@@ -1577,22 +1581,21 @@ void CBaseMonster::parse_itbd(int i) {
 	// If so, make the damage type (DMG_GENERIC) become "DMG_FALL" instead (known to ignore armor).
 	// ...this might have been handled since by the new dmg type DMG_TIMEDEFFECTIGNORE
 
-	switch (i)
-	{
+	switch (i){
 	case itbd_Paralyze:
 		// UNDONE - flag movement as half-speed
-		break;
+	break;
 	case itbd_NerveGas:
 		//MODDD - comment undone.
 		TakeDamage(pev, pev, NERVEGAS_DAMAGE, 0, damageType);
-		break;
+	break;
 	case itbd_Poison:
 		TakeDamage(pev, pev, POISON_DAMAGE, 0, damageType | DMG_TIMEDEFFECTIGNORE);
-		break;
+	break;
 	case itbd_Radiation:
 		//MODDD - comment on "TakeDamage" undone.
 		TakeDamage(pev, pev, RADIATION_DAMAGE, 0, damageType | DMG_TIMEDEFFECTIGNORE);
-		break;
+	break;
 	//case itbd_DrownRecover:
 		//
 		//// NOTE: this hack is actually used to RESTORE health
@@ -1604,24 +1607,24 @@ void CBaseMonster::parse_itbd(int i) {
 		//	TakeHealth(idif, DMG_GENERIC);
 		//	m_idrownrestored += idif;
 		//}
-	//	break;
+	//break;
 	case itbd_Acid:
 		//MODDD - comment undone.
 		TakeDamage(pev, pev, ACID_DAMAGE, 0, damageType);
 		//MODDD - see above.
-		break;
+	break;
 	case itbd_SlowBurn:
 		//MODDD - comment undone.
 		TakeDamage(pev, pev, SLOWBURN_DAMAGE, 0, damageType);
 		//MODDD - see above.
-		break;
+	break;
 	case itbd_SlowFreeze:
 		//easyPrintLine("DO YOU EVER TAKE FREEZE DAMAGE?");
 		//this won't be called, as the map's called freeze effect never starts like this.
 		//MODDD - comment undone.
 		TakeDamage(pev, pev, SLOWFREEZE_DAMAGE, 0, damageType);
 		//MODDD - see above.
-		break;
+	break;
 	//MODDD - new.
 	case itbd_Bleeding:
 		// this will always ignore the armor (hence DMG_TIMEDEFFECT).
@@ -1630,12 +1633,17 @@ void CBaseMonster::parse_itbd(int i) {
 		UTIL_MakeAimVectors(pev->angles);
 		//pev->origin + pev->view_ofs
 		//BodyTargetMod(g_vecZero)
-		DrawAlphaBlood(BLEEDING_DAMAGE, BodyTargetMod(g_vecZero) + gpGlobals->v_forward * RANDOM_FLOAT(9, 13) + gpGlobals->v_right * RANDOM_FLOAT(-8, 8) + gpGlobals->v_up * RANDOM_FLOAT(-3, 5));
-		break;
+		// BLEEDING_DAMAGE
+		UTIL_SpawnBlood(
+			pev->origin + pev->view_ofs + gpGlobals->v_forward * RANDOM_FLOAT(9, 13) + gpGlobals->v_right * RANDOM_FLOAT(-5, 5) + gpGlobals->v_up * RANDOM_FLOAT(4, 7),
+			BloodColor(),
+			RANDOM_LONG(8, 15)
+		);
+	break;
 	default:
 		// ???
-		break;
-	}
+	break;
+	}//switch(i)
 
 }//END OF parse_itbd
 
@@ -1869,12 +1877,16 @@ void CBaseMonster::CallMonsterThink(void){
 	//MODDD - SERIOUS TODO.
 	// Anything that could refer to a player should do this, any other edicts, etc.
 	// Doing it here for TargetEnt too out of paranoia.
+	// Changed how looking for nullity in EHandles works, I think the usual way everywhere should be fine now.
+	// If that has side effects undo that and restore this.   (cbase.cpp, 'MODDD - CRITICAL' )
+	/*
 	if (m_hEnemy != NULL && m_hEnemy.GetEntity() == NULL) {
 		m_hEnemy = NULL;
 	}
 	if (m_hTargetEnt != NULL && m_hTargetEnt.GetEntity() == NULL) {
 		m_hTargetEnt = NULL;
 	}
+	*/
 	////////////////////////////////////////////////////////////
 	// and all this used to do.
 	this->MonsterThink();
@@ -2073,11 +2085,11 @@ void CBaseMonster :: MonsterThink ( void )
 			// fidget.
 			if(EASY_CVAR_GET(animationPrintouts) == 1 && monsterID >= -1)easyForcePrintLine("%s:%d Anim info IDLE RESET #1? frame:%.2f done:%d", getClassname(), monsterID, pev->frame, m_fSequenceFinished);
 
-				if(usesAdvancedAnimSystem()){
-					iSequence = LookupActivityHard ( m_Activity );
-				}else{
-					iSequence = LookupActivity ( m_Activity );
-				}
+			if(usesAdvancedAnimSystem()){
+				iSequence = LookupActivityHard ( m_Activity );
+			}else{
+				iSequence = LookupActivity ( m_Activity );
+			}
 			
 		}
 		else
@@ -2094,18 +2106,25 @@ void CBaseMonster :: MonsterThink ( void )
 			}
 
 		}
+
 		if ( iSequence != ACTIVITY_NOT_AVAILABLE )
 		{
 			int oldSequence = pev->sequence;
 			//BOOL resetFrameYet = FALSE;
 
+			// don't reset sinceLoopMem, that is remembered through this type of change.
+			BOOL sinceLoopMem = m_fSequenceFinishedSinceLoop;
 			
 			//easyPrintLine("ANIMATION CHANGE!!!! B");
 			pev->sequence = iSequence;	// Set to new anim (if it's there)
 			ResetSequenceInfo( );
 
+			m_fSequenceFinishedSinceLoop = sinceLoopMem;
+
+
 			//MODDD IMPORTANT. Go ahead and let the system know this sequence finshed at least once, sometimes that matters. Even a replacement different idle sequence.
-			m_fSequenceFinishedSinceLoop = TRUE;
+			//m_fSequenceFinishedSinceLoop = TRUE;
+			// NO NOT HERE.  Leave it to animating.cpp, probably
 
 			
 			//MODDD - why wasn't this here before?!  Why do we assume the new sequence will reset the frame? We sure don't know that?
@@ -3503,15 +3522,23 @@ void CBaseMonster :: SetActivity ( Activity NewActivity )
 	// Set to the desired anim, or default anim if the desired is not present
 	if ( iSequence > ACTIVITY_NOT_AVAILABLE )
 	{
+		//BOOL sinceLoopMem = m_fSequenceFinishedSinceLoop;
+
 		//MODDD - added "forceReset"... NO, REVERTED.
 		//if ( forceReset || (pev->sequence != iSequence || !m_fSequenceLoops) )
 		if (  pev->sequence != iSequence || !m_fSequenceLoops )
 		{
 			// don't reset frame between walk and run
-			if ( !(m_Activity == ACT_WALK || m_Activity == ACT_RUN) || !(NewActivity == ACT_WALK || NewActivity == ACT_RUN))
+			if (!(m_Activity == ACT_WALK || m_Activity == ACT_RUN) || !(NewActivity == ACT_WALK || NewActivity == ACT_RUN)) {
 				resetFrame();
+			}
+
+			// If a difference sequence or the previous one didn't loop,  go ahead and reset this.
+			// or... not here at least.
+			//sinceLoopMem = FALSE;
 		}
-			
+
+		
 		//easyPrintLine("ANIMATION CHANGE!!!! C %d");
 		pev->sequence		= iSequence;	// Set to the reset anim (if it's there)
 
@@ -3522,6 +3549,7 @@ void CBaseMonster :: SetActivity ( Activity NewActivity )
 		//pev->frame = 0;
 		//pev->framerate = 2;
 		m_fSequenceFinished = FALSE;
+		m_fSequenceFinishedSinceLoop = FALSE;
 
 
 		usingCustomSequence = FALSE;  //MODDD - automatically picked.
@@ -6364,8 +6392,8 @@ Vector CBaseMonster :: GetGunPosition( )
 
 Vector CBaseMonster::GetGunPositionAI(){
 	//return GetGunPosition();
-	//For safety, this will be a clone of GetGunPosition, not a redirect. This means we need to rely on m_HackedGunPos like a Monster would have before,
-	//not possibly redirect to a particular monster's own overly precise GetGunPosition.
+	// For safety, this will be a clone of GetGunPosition, not a redirect. This means we need to rely on m_HackedGunPos like a Monster would have before,
+	// not possibly redirect to a particular monster's own overly precise GetGunPosition.
 	UTIL_MakeVectors(pev->angles);
 	Vector vecSrc = pev->origin 
 					+ gpGlobals->v_forward * m_HackedGunPos.y 
@@ -6375,19 +6403,49 @@ Vector CBaseMonster::GetGunPositionAI(){
 }
 
 
-//MODDD - this is commonly used to aim the torso of a monster pitch-wise to look at its enemy.  The model must support this,
-//        and this is assuming blend #0 handles that.
+//MODDD - this is commonly used to aim the torso of a monster pitch-wise to look at its enemy.  The model must
+//        support this, and this is assuming blend #0 handles that.
 void CBaseMonster::lookAtEnemy_pitch(void){
 	Vector vecShootDir;
 	Vector angDir;
+
+
+	if (m_hEnemy != NULL) {
+		// test.  Is the enemy too close?
+		float tempDist = Distance(pev->origin, m_hEnemy->pev->origin);
+		if (tempDist < 90) {
+			// don't use the pitch!  It gets really odd looking trying to aim extremely close.
+			float thePitch = 0;
+			SetBlending(0, thePitch);
+			return;
+		}
+	}
+
+
+
 	UTIL_MakeVectors(pev->angles);
-	vecShootDir = ShootAtEnemyMod( GetGunPosition() );
+	// MODDD - is it fine to use the AI variant?
+	// Want something more approximate than our actual 'gun' height to be used for determining what's looking at
+	// something anyway
+	vecShootDir = ShootAtEnemyMod(GetGunPositionAI() );
+
+
+	/*
+	if (m_hEnemy != NULL) {
+		Vector shootOrigin = GetGunPositionAI();
+		::DebugLine_ClearAll();
+		DebugLine_Setup(0, shootOrigin, m_hEnemy->BodyTargetMod(shootOrigin), 0, 255, 0);
+		DebugLine_Setup(1, shootOrigin, shootOrigin + vecShootDir * 300, 1.0, 0, 0, 255);
+	}
+	*/
+	
 	angDir = UTIL_VecToAngles( vecShootDir );
 	
 	// make angles +-180
 	if (angDir.x > 180){
 		angDir.x = angDir.x - 360;
 	}
+
 
 	SetBlending( 0, angDir.x );
 }//END OF lookAtEnemy_pitch
@@ -7496,7 +7554,8 @@ void CBaseMonster::DeathAnimationEnd(){
 	
 	//do we need to force the frame to 255 in here?
 	pev->frame = 255;
-	this->m_fSequenceFinished = TRUE;  //forcing too?
+	m_fSequenceFinished = TRUE;  //forcing too?
+	m_fSequenceFinishedSinceLoop = TRUE;
 
 	pev->deadflag = DEAD_DEAD;
 	
@@ -7550,7 +7609,6 @@ void CBaseMonster::onDeathAnimationEnd(){
 void CBaseMonster::Activate( void ){
 
 	CBaseToggle::Activate();
-
 
 	//const char* nameCheat = STRING(pev->classname);
 
@@ -7619,27 +7677,19 @@ void CBaseMonster::Activate( void ){
 }
 
 void CBaseMonster::Spawn( ){
-
 	//careful, not everything calls the parent spawn method, even if it should.
 	//MonsterInit is a better place that's often called by most monster Spawn scripts. Beware of those that don't even do that.
 
 	CBaseToggle::Spawn();
-
 	//setModelCustom();
 }
 
 
 //MODDD - use "usesAdvancedAnimSystem()" to determine whether to use LookupActivityHard for this or just the ordinary LookupActivity.
 int CBaseMonster::LookupActivityFiltered(int NewActivity){
-
-
 	if(usesAdvancedAnimSystem()){
-
-		//
 		//return LookupActivityHard ( NewActivity );
 		return tryActivitySubstitute ( NewActivity );
-		
-
 	}else{
 		return LookupActivity ( NewActivity );
 	}
@@ -7863,18 +7913,18 @@ float CBaseMonster::MoveYawDegreeTolerance(){
 }
 
 
-//Shortcut to UTIL_BloodColorRedFilter that lets a monster provide its own german model requirement CVar automatically.
+// Shortcut to UTIL_BloodColorRedFilter that lets a monster provide its own german model requirement CVar automatically.
 int CBaseMonster::BloodColorRedFilter(){
 	return UTIL_BloodColorRedFilter(getGermanModelRequirement()==1);
 }
 
 int CBaseMonster::CanUseGermanModel(){
-	//If we can use our german model and found ours
+	// If we can use our german model and found ours
 	return (getGermanModelsAllowed() && getGermanModelRequirement()==1 );
 }
 
 
-//Try to find the earliest node that is marked GOAL. Sometimes this gets shifted around from 0
+// Try to find the earliest node that is marked GOAL. Sometimes this gets shifted around from 0
 WayPoint_t* CBaseMonster::GetGoalNode(){
 	for(int i = 0; i <= m_iRouteIndex; i++){
 		if(m_Route[i].iType & bits_MF_IS_GOAL){
@@ -7882,7 +7932,7 @@ WayPoint_t* CBaseMonster::GetGoalNode(){
 			return &m_Route[i];
 		}
 	}
-	//didn't find a node with bits_MF_IS_GOAL set from 0 to m_iRouteIndex?
+	// didn't find a node with bits_MF_IS_GOAL set from 0 to m_iRouteIndex?
 	return NULL;
 }//END OF getGoalNode
 
@@ -7892,15 +7942,15 @@ BOOL CBaseMonster::hasSeeEnemyFix(void){
 	return FALSE;
 }
 
-//Can this monster accept a new enemy, regardless of whether or not the current schedule is interruptible by "cond_NEW_ENEMY" ?
+// Can this monster accept a new enemy, regardless of whether or not the current schedule is interruptible by "cond_NEW_ENEMY" ?
 BOOL CBaseMonster::getForceAllowNewEnemy(CBaseEntity* pOther){
 	return FALSE;
 }
 
 
-//Monsters with bigger bounds may need them to be temporarily reduced to play better with the pathfiding.
-//Side effects not well understood yet, see if this is really worth it.
-//By default off, enable per monsters as needed.
+// Monsters with bigger bounds may need them to be temporarily reduced to play better with the pathfiding.
+// Side effects not well understood yet, see if this is really worth it.
+// By default off, enable per monsters as needed.
 BOOL CBaseMonster::needsMovementBoundFix(){
 
 	return FALSE;
@@ -7927,18 +7977,18 @@ void CBaseMonster::cheapKilled(void){
 }//END OF cheapKilled
 
 
-//Version of cheapKilled for flying monsters. They should still drop to the ground as expected, not akwardly freeze in mid-air.  Or maybe they should? dunno.
+// Version of cheapKilled for flying monsters. They should still drop to the ground as expected, not akwardly freeze in mid-air.  Or maybe they should? dunno.
 void CBaseMonster::cheapKilledFlyer(void){
 	this->m_IdealMonsterState = MONSTERSTATE_DEAD;
 	//MODDD - major HACK - pathetic stand-in death anim until there is a proper death anim.
 	//this->pev->gravity = 0;
 
-	//Not working out so great anymore.  okay then..
+	// Not working out so great anymore.  okay then..
 	//pev->movetype		= MOVETYPE_STEP;
 
 	//this->pev->origin = pev->origin + Vector(0, 0, 13.4);   //so it isn't poking through the ground. Yes this will look really weird.
 	
-	//Copied from Flyer's killed script
+	// Copied from Flyer's killed script
 	ClearBits( pev->flags, FL_ONGROUND );
 	//pev->angles.z = 0;
 	//pev->angles.x = 0;
@@ -7996,10 +8046,8 @@ int CBaseMonster::getLoopingDeathSequence(void){
 // Depending on the value of CVar flyerKilledFallingLoop, pick the schedule that uses the looping animation or don't.
 Schedule_t* CBaseMonster::flyerDeathSchedule(void){
 	
-	
 	if(EASY_CVAR_GET(flyerKilledFallingLoop) == 1){
-
-		//First a check. If we are very close or virtually on the ground, just skip to the typical die method to do the "hitting the ground" animation.
+		// First a check. If we are very close or virtually on the ground, just skip to the typical die method to do the "hitting the ground" animation.
 
 		TraceResult tr;
 		Vector vecStart = pev->origin + Vector(0, 0, pev->mins.z);
@@ -8007,9 +8055,9 @@ Schedule_t* CBaseMonster::flyerDeathSchedule(void){
 		UTIL_TraceLine(vecStart, vecStart + Vector(0, 0, -6), dont_ignore_monsters, this->edict(), &tr);
 
 		if(tr.fStartSolid || tr.fAllSolid || tr.flFraction < 1.0){
-			//go to "slDie" below.
+			// go to "slDie" below.
 		}else{
-			//clear? send this.
+			// clear? send this.
 			return slDieFallLoop;
 		}
 
@@ -8314,5 +8362,13 @@ void CBaseMonster::onEnemyDead(CBaseEntity* pRecentEnemy) {
 
 }
 
+// Can this monster try to anticipate ranged attacks ending to end the schedule early?
+// This stops (or at least makes less noticeable) the monster from sticking on the last frame
+// of the animation for a think-frame.  But it's not good for most monsters that rely on every
+// bit of the ranged anim playing (like hgrunts, it can skip portions of the sequence for firing
+// inconsistently).  Good for slow-firing ones or long ranged anims, like the agrunt's.
+BOOL CBaseMonster::predictRangeAttackEnd(void) {
+	return FALSE;
+}
 
 

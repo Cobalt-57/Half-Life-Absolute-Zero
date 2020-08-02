@@ -158,7 +158,8 @@ public:
 	EHANDLE m_hDead;
 
 	//MODDD - the wounded NPC to seek out.
-	CBaseMonster* healTargetNPC;
+	// ...or not using this var anymore, whoops
+	//CBaseMonster* healTargetNPC;
 
 
 	CISlave(void);

@@ -121,6 +121,16 @@ int CBarnacle::forcedRelationshipWith(CBaseEntity *pWith){
 }
 
 
+
+
+/*
+// Some other killed-related methods if needed (see basemonster.cpp)
+setPhysicalHitboxForDeath
+DeathAnimationStart
+DeathAnimationEnd
+onDeathAnimationEnd
+*/
+
 void CBarnacle::EndOfRevive(int preReviveSequence){
 	
 	//LEAVE THIS OUT. I don't do what most mosnters do.
@@ -131,7 +141,6 @@ void CBarnacle::EndOfRevive(int preReviveSequence){
 	
 	SetUse ( &CBaseMonster::MonsterUse );
 	*/
-
 
 	m_IdealMonsterState	= MONSTERSTATE_ALERT;// Assume monster will be alert, having come back from the dead and all.
 	m_MonsterState = MONSTERSTATE_ALERT; //!!!
@@ -147,11 +156,10 @@ void CBarnacle::EndOfRevive(int preReviveSequence){
 
 
 
-
-
-//The Barnacle typically wants to spawn blood red gibs.
-//If this is germancensorship, can replace the blood red gibs with robot gibs provided some other CVars allow it. Otherwise don't spawn any.
-//If germancensorship is off, depends on violence_hgihs being off.
+// The Barnacle typically wants to spawn blood red gibs.
+// If this is germancensorship, can replace the blood red gibs with robot gibs provided
+// some other CVars allow it. Otherwise don't spawn any.
+// If germancensorship is off, depends on violence_hgihs being off.
 int CBarnacle::BarnacleGetStandardGibSpawnID(){
 
 	if(CVAR_GET_FLOAT("violence_agibs") == 0){
@@ -160,25 +168,19 @@ int CBarnacle::BarnacleGetStandardGibSpawnID(){
 	}
 
 	if(EASY_CVAR_GET(sv_germancensorship) != 1){
-		//german censorship is off? this will depend on this CVar.
+		// german censorship is off? this will depend on this CVar.
 		if(CVAR_GET_FLOAT("violence_hgibs") != 0){
 			return GIB_HUMAN_ID;
 		}
 	}else{
-		//german censorship is on? This will depend on whether robot models are allowed and use gears instead if so.
+		// german censorship is on? This will depend on whether robot models are allowed and use gears instead if so.
 		if(EASY_CVAR_GET(allowGermanModels)==1 && EASY_CVAR_GET(germanRobotGibs)==1 && globalPSEUDO_germanModel_hgibFound==TRUE){
-			return GIB_GERMAN_ID; 	
+			return GIB_GERMAN_ID;
 		}
 	}
-
+	
 	return GIB_DUMMY_ID; //not allowed.
 }
-
-
-
-
-
-
 
 
 
@@ -439,34 +441,18 @@ void CBarnacle :: BarnacleThink ( void )
 				m_flKillVictimTime = gpGlobals->time + 10;// now that the victim is in place, the killing bite will be administered in 10 seconds.
 
 				//paint a bunch of blood around the perimeter?
-
+				float daBlood = pVictim->BloodColor();
 				for(float i = 0; i < 2*M_PI; i+= M_PI/6){
-					
-					//13.4, 6?
-					pVictim->DrawAlphaBlood(25, Vector(
-						pev->origin.x + cos(i)*(RANDOM_FLOAT(15.8, 17.8) ),
-						pev->origin.y + sin(i)*(RANDOM_FLOAT(15.8, 17.8) ),
-						pev->origin.z + pev->mins.z + (RANDOM_FLOAT(8, 23) ) )
-						,
-						RANDOM_LONG(18, 28)
-
-						);
-
-					/*
-					pVictim->DrawAlphaBlood(25, Vector(
-						pev->origin.x + cos(i)*15,
-						pev->origin.y + sin(i)*15,
-						pev->origin.z + pev->mins.z + 6 )
-						);
-
-					pVictim->DrawAlphaBlood(25, Vector(
-						pev->origin.x + cos(i)*18,
-						pev->origin.y + sin(i)*18,
-						pev->origin.z + pev->mins.z + 6 )
-						);
-
-						*/
-				}
+					UTIL_SpawnBlood(
+						Vector(
+							pev->origin.x + cos(i)*(RANDOM_FLOAT(15.8, 17.8) ),
+							pev->origin.y + sin(i)*(RANDOM_FLOAT(15.8, 17.8) ),
+							pev->origin.z + pev->mins.z + (RANDOM_FLOAT(8, 23) )
+						),
+						daBlood,
+						RANDOM_LONG(13, 18)
+					);
+				}//END OF loop
 
 
 
@@ -782,8 +768,6 @@ GENERATE_GIBMONSTER_IMPLEMENTATION(CBarnacle){
 }//END OF GibMonster
 
 
-
-
 GENERATE_GIBMONSTERGIB_IMPLEMENTATION(CBarnacle){
 	//replaces parent logic:
 
@@ -793,17 +777,17 @@ GENERATE_GIBMONSTERGIB_IMPLEMENTATION(CBarnacle){
 		BOOL canSpawnBlend = TRUE;
 
 		if(CBarnacle::s_iStandardGibID == GIB_DUMMY_ID){
-			//didn't work. Disallow the blend.
+			// didn't work. Disallow the blend.
 			canSpawnBlend = FALSE;
 		}
 
 		if(canSpawnBlend){
-			//a blend of blood red (or robot) and alien gibs.
+			// a blend of blood red (or robot) and alien gibs.
 			CGib::SpawnRandomGibs( pev, m_cGibs + 2, CBarnacle::s_iStandardGibID, CBarnacle::s_fStandardGibDecal && fGibSpawnsDecal );
-			CGib::SpawnRandomGibs( pev, 4, GIB_ALIEN_ID, fGibSpawnsDecal );
+			CGib::SpawnRandomGibs( pev, 4, GIB_ALIEN_GREEN_ID, fGibSpawnsDecal );
 		}else{
-			//all alien gibs.
-			CGib::SpawnRandomGibs( pev, 6, GIB_ALIEN_ID, fGibSpawnsDecal );
+			// all alien gibs.
+			CGib::SpawnRandomGibs( pev, 6, GIB_ALIEN_GREEN_ID, fGibSpawnsDecal );
 		}
 
 		return TRUE;
@@ -811,8 +795,6 @@ GENERATE_GIBMONSTERGIB_IMPLEMENTATION(CBarnacle){
 
 	return FALSE;
 }//END OF GibMonsterGib
-
-
 
 
 //=========================================================

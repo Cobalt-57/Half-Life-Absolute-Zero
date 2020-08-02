@@ -181,19 +181,19 @@ void CBaseMonster :: Look ( float flDistance )
 				// we see monsters other than the Enemy.
 				switch ( IRelationship ( pSightEnt ) )
 				{
-				case	R_NM:
+				case R_NM:
 					iSighted |= bits_COND_SEE_NEMESIS;		
 					break;
-				case	R_HT:		
+				case R_HT:		
 					iSighted |= bits_COND_SEE_HATE;		
 					break;
-				case	R_DL:
+				case R_DL:
 					iSighted |= bits_COND_SEE_DISLIKE;
 					break;
-				case	R_FR:
+				case R_FR:
 					iSighted |= bits_COND_SEE_FEAR;
 					break;
-				case    R_AL:
+				case R_AL:
 					break;
 				default:
 					ALERT ( at_aiconsole, "%s can't assess %s\n", STRING(pev->classname), STRING(pSightEnt->pev->classname ) );

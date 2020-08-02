@@ -1051,14 +1051,15 @@ GENERATE_TRACEATTACK_IMPLEMENTATION(CBaseTurret)
 		return;
 
 	//MODDD NEW - can draw blood.
-	if(useBloodEffect && EASY_CVAR_GET(turretBleedsOil) ){
+	if(useBloodEffect && EASY_CVAR_GET(turretBleedsOil) != 0 ){
 		//MODDD!!!!!!
-		CBaseEntity::DrawAlphaBlood(flDamage, ptr );
+		Vector vecBloodOrigin = ptr->vecEndPos - vecDir * 4;
+		SpawnBlood(vecBloodOrigin, flDamage);// a little surface blood.   ...  oil.  yeah.
 	}
 
 	AddMultiDamage( pevAttacker, this, flDamage, bitsDamageType, bitsDamageTypeMod );
 
-	if(EASY_CVAR_GET(turretDamageDecal)){
+	if(EASY_CVAR_GET(turretDamageDecal) != 0){
 		//MODDD - also new, from base monster blood drawing for oil.
 		TraceBleed( flDamage, vecDir, ptr, bitsDamageType, bitsDamageTypeMod );
 	}
@@ -1174,13 +1175,9 @@ BOOL CBaseTurret::TurretDeathCheck(entvars_t* pevInflictor, entvars_t* pevAttack
 					pev->health = pev->max_health / 2;
 					pev->max_health = 5; // max_health now becomes a counter for how many blood decals the corpse can place.
 
-
-
-
+					
 				}
-
 			}
-
 
 			pev->dmgtime = gpGlobals->time;
 
@@ -1237,9 +1234,9 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBaseTurret)
 	}
 
 	if(pev->deadflag == DEAD_NO){
-		if (!m_iOn)
+		if (!m_iOn) {
 			flDamage /= 10.0;
-
+		}
 	}
 
 
@@ -1254,7 +1251,6 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBaseTurret)
 	///////////////////////////////////////////////////////////////////////////////////
 
 
-
 	//SetThink(&CBaseTurret::TurretDeath);
 	if(!TurretDeathCheck(pevInflictor, pevAttacker, flDamage, bitsDamageType, bitsDamageTypeMod, static_cast <void (CBaseTurret::*)(void)>(&CBaseTurret::TurretDeath) ) )return 0; //this can block.
 
@@ -1262,7 +1258,10 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBaseTurret)
 	if(pev->deadflag == DEAD_NO){
 		if (pev->health <= 10)
 		{
-			if (m_iOn && (1 || RANDOM_LONG(0, 0x7FFF) > 800))
+			//MODDD
+			// what?  The random check 'RANDOM_LONG(0, 0x7FFF) > 800' that used to be here was completly ignored.
+			// Assuming that was the point, keeping it out.
+			if (m_iOn)
 			{
 				m_fBeserk = 1;
 				SetThink(&CBaseTurret::SearchThink);
@@ -1271,11 +1270,6 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBaseTurret)
 
 	}
 	
-
-
-
-	
-
 	return 1;
 }
 

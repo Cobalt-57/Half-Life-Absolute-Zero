@@ -249,9 +249,10 @@ void ScorePanel::Initialize( void )
 
 bool HACK_GetPlayerUniqueID( int iPlayer, char playerID[16] )
 {
+	//MODDD - just a note.  Double exclamation marks, huh?  Danged strange
 	return !!gEngfuncs.GetPlayerUniqueID( iPlayer, playerID );
 }
-		
+
 //-----------------------------------------------------------------------------
 // Purpose: Recalculate the internal scoreboard data
 //-----------------------------------------------------------------------------

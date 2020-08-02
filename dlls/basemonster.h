@@ -664,12 +664,12 @@ public:
 	void KeyValue( KeyValueData *pkvd );
 
 // monster use function
-	void EXPORT			MonsterUse( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value );
-	void EXPORT			CorpseUse( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value );
+	void EXPORT MonsterUse( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value );
+	void EXPORT CorpseUse( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value );
 
 // overrideable Monster member functions
 	
-	virtual int  BloodColor( void ) { return m_bloodColor; }
+	virtual int BloodColor( void ) { return m_bloodColor; }
 
 	virtual CBaseMonster *MyMonsterPointer( void ) { return this; }
 	virtual void Look ( float flDistance );// basic sight function for monsters
@@ -1149,6 +1149,9 @@ public:
 	virtual void ReportGeneric(void);
 
 	virtual void onEnemyDead(CBaseEntity* pRecentEnemy);
+
+	virtual BOOL predictRangeAttackEnd(void);
+
 
 };
 

@@ -111,6 +111,10 @@ typedef float vec_t;
 
 
 // If this is C++, get the majority of the script.
+// NOTICE - a lot of the 'extern "C"' script below is prototyped in common/mathlib.h instead,
+// included by C files like pm_shared.c.  extern "C"'s below are mostly prototypes of those
+// for C++ to use.
+// CHANGE, now in this file too, see the 'else' of this line
 #ifdef __cplusplus
 
 #ifdef CLIENT_DLL
@@ -252,7 +256,6 @@ public:
 };
 
 
-
 inline Vector operator*(float fl, const Vector& v) { return v * fl; }
 inline Vector2D operator*(float fl, const Vector2D& v) { return v * fl; }
 
@@ -265,12 +268,17 @@ inline float DotProduct(const Vector& a, const Vector& b) { return(a.x * b.x + a
 inline void VectorClear(float* a) { a[0] = 0.0; a[1] = 0.0; a[2] = 0.0; }
 
 
-
 // A few externs from cl_dll/view.cpp to pull out ordinarilly C-only functions from common/mathlib.h
 // "NormalizeAngles" was also included by hud_spectator.cpp
 extern "C" void InterpolateAngles(vec3_t start, vec3_t end, vec3_t output, float frac);
 extern "C" void NormalizeAngles(vec3_t angles);
-extern "C" float Distance(const float* v1, const float* v2);
+
+// to be more fitting with the actual pm_math.c implementation
+//extern "C" float Distance(const float* v1, const float* v2);
+// testing, disabled for C++ access.  Seems to crash when called from there anyway. No clue.
+//extern "C" float Distance(const vec3_t v1, const vec3_t v2);
+//extern "C" float Distance2D(const vec3_t v1, const vec3_t v2);
+
 extern "C" float AngleBetweenVectors(const vec3_t v1, const vec3_t v2);
 // And from cl_dll/input.cpp.
 extern "C" float anglemod( float a );
@@ -279,14 +287,32 @@ extern "C" float anglemod( float a );
 // from cl_dll/cl_util.cpp, implemented in common/vector.cpp.  C++ only.
 extern vec3_t vec3_origin;
 extern float Length(const float* v);
+
+//MODDD - NEW.  For C++.  cloned from C.   for some reason.
+float Distance(const vec3_t v1, const vec3_t v2);
+float Distance2D(const vec3_t v1, const vec3_t v2);
+
 extern void VectorAngles(const float* forward, float* angles);
 extern float VectorNormalize(float* v);
 extern void VectorMA(const float* veca, float scale, const float* vecb, float* vecc);
 extern void VectorScale(const float* in, float scale, float* out);
 extern void VectorInverse(float* v);
 
-#endif //END OF C++ requirement
 
+#else
+
+// Base C?  From common/mathlib.h, implementations (all?) in pm_shared/pm_math.c
+void VectorMA(const vec3_t veca, float scale, const vec3_t vecb, vec3_t vecc);
+int VectorCompare(const vec3_t v1, const vec3_t v2);
+float Length(const vec3_t v);
+void CrossProduct(const vec3_t v1, const vec3_t v2, vec3_t cross);
+float Distance(const vec3_t v1, const vec3_t v2);
+float Distance2D(const vec3_t v1, const vec3_t v2);
+float VectorNormalize(vec3_t v);		// returns vector length
+void VectorInverse(vec3_t v);
+void VectorScale(const vec3_t in, vec_t scale, vec3_t out);
+
+#endif //END OF C++ requirement
 
 
 
@@ -331,7 +357,6 @@ extern void VectorInverse(float* v);
 #ifndef __cplusplus
 #include "mathlib.h"
 #endif
-
 
 
 

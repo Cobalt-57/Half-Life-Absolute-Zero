@@ -1271,11 +1271,6 @@ void ClientCommand( edict_t *pEntity )
 
 	if ( FStrEq(pcmdRefinedRef, "say" ) )
 	{
-	
-		//ClientPrint( &pEntity->v, HUD_PRINTCONSOLE, "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaB" );
-
-		//easyForcePrintLineClient(pEntity, "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaBBB" );
-
 		Host_Say( pEntity, 0 );
 	}
 	else if ( FStrEq(pcmdRefinedRef, "say_team" ) )
@@ -4662,9 +4657,7 @@ void ClientCommand( edict_t *pEntity )
 			//strcpy(&arychr_buffer[0], CMD_ARGS());
 			sprintf(&arychr_buffer[0], "%s%s", CMD_ARGS(), "\n");
 			submitJukeboxRequest(pev, arychr_buffer);
-			//CLIENT_PRINTF(pev, print_console, "poopy");
-		}
-		else {
+		}else {
 			//not over 1?  You provided no more than just the command text!
 			easyForcePrintLineClient(pEntity, "***Can not send a null string!  Give more.***");
 		}
@@ -4913,6 +4906,28 @@ void ClientCommand( edict_t *pEntity )
 			easyForcePrintLineClient(pEntity, "***ERROR: test_cvar struct call did not work.");
 		}
 	}
+	else if (FStrEq(pcmdRefinedRef, "testo")) {
+		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer*)pev);
+
+		const char* arg1ref = CMD_ARGV(1);
+
+		int numbAttempt = tryStringToInt(arg1ref);
+
+		// CHAN_BODY ??`
+		switch (numbAttempt) {
+		case 0:
+			EMIT_SOUND_FILTERED(ENT(tempplayer->pev), CHAN_WEAPON, "common/bodysplat.wav", 1, ATTN_NORM - 0.12, FALSE);
+			break;
+		case 1:
+			EMIT_SOUND_FILTERED(ENT(tempplayer->pev), CHAN_WEAPON, "debris/bustflesh1.wav", 1, ATTN_NORM - 0.35, TRUE);
+			break;
+		case 2:
+			EMIT_SOUND_FILTERED(ENT(tempplayer->pev), CHAN_WEAPON, "debris/bustflesh2.wav", 1, ATTN_NORM - 0.35, TRUE);
+			break;
+		}//END OF switch
+		
+		}
+
 	else {
 		caughtByFirst = FALSE;
 	}
@@ -4992,7 +5007,8 @@ it gets sent into the rest of the engine.
 void ClientUserInfoChanged( edict_t *pEntity, char *infobuffer )
 {
 	// Is the client spawned yet?
-	if ( !pEntity->pvPrivateData )
+	//MODDD - null check on pEntity too
+	if (!pEntity || !pEntity->pvPrivateData )
 		return;
 
 	// msg everyone if someone changes their name,  and it isn't the first time (changing no name to current name)
@@ -5016,6 +5032,10 @@ void ClientUserInfoChanged( edict_t *pEntity, char *infobuffer )
 
 		char text[256];
 		sprintf( text, "* %s changed name to %s\n", STRING(pEntity->v.netname), g_engfuncs.pfnInfoKeyValue( infobuffer, "name" ) );
+
+		//MODDD - put it in console too, laziness.
+		easyForcePrintLine("ClientUserInfoChanged, place 1: %s", text);
+
 		MESSAGE_BEGIN( MSG_ALL, gmsgSayText, NULL );
 			WRITE_BYTE( ENTINDEX(pEntity) );
 			WRITE_STRING( text );
@@ -5024,6 +5044,14 @@ void ClientUserInfoChanged( edict_t *pEntity, char *infobuffer )
 		// team match?
 		if ( g_teamplay )
 		{
+			//MODDD - put it in console too, I have no idea where UTIL_LogPrintf is putting this.
+			easyForcePrintLine("ClientUserInfoChanged, place 2: \"%s<%i><%s><%s>\" changed name to \"%s\"",
+				STRING(pEntity->v.netname),
+				GETPLAYERUSERID(pEntity),
+				GETPLAYERAUTHID(pEntity),
+				g_engfuncs.pfnInfoKeyValue(infobuffer, "model"),
+				g_engfuncs.pfnInfoKeyValue(infobuffer, "name"));
+
 			UTIL_LogPrintf( "\"%s<%i><%s><%s>\" changed name to \"%s\"\n", 
 				STRING( pEntity->v.netname ), 
 				GETPLAYERUSERID( pEntity ), 
@@ -5033,6 +5061,14 @@ void ClientUserInfoChanged( edict_t *pEntity, char *infobuffer )
 		}
 		else
 		{
+			//MODDD - put it in console too, I have no idea where UTIL_LogPrintf is putting this.
+			easyForcePrintLine("ClientUserInfoChanged, place 3: \"%s<%i><%s><%i>\" changed name to \"%s\"",
+				STRING(pEntity->v.netname),
+				GETPLAYERUSERID(pEntity),
+				GETPLAYERAUTHID(pEntity),
+				GETPLAYERUSERID(pEntity),
+				g_engfuncs.pfnInfoKeyValue(infobuffer, "name"));
+
 			UTIL_LogPrintf( "\"%s<%i><%s><%i>\" changed name to \"%s\"\n", 
 				STRING( pEntity->v.netname ), 
 				GETPLAYERUSERID( pEntity ), 
@@ -5042,7 +5078,10 @@ void ClientUserInfoChanged( edict_t *pEntity, char *infobuffer )
 		}
 	}
 
-	g_pGameRules->ClientUserInfoChanged( GetClassPtr((CBasePlayer *)&pEntity->v), infobuffer );
+	//MODDD - NULL-CHECK PARANOIA.  Just being safe.
+	if (g_pGameRules != NULL) {
+		g_pGameRules->ClientUserInfoChanged(GetClassPtr((CBasePlayer*)&pEntity->v), infobuffer);
+	}
 }
 
 
@@ -5382,6 +5421,20 @@ void StartFrame( void )
 
 		//CHANGE_LEVEL(changeLevelQueuedName, changeLevelQueuedSpot);
 	}
+
+
+
+
+	//MODDD - TEST.  Use some CVar to change my blood.  See what looks good.
+	static float nextBloodGen = 0;
+
+	if (gpGlobals->time > nextBloodGen) {
+		// BLOOD TEST.
+		Vector bloodSpawnOrigin = Vector(105.33, 598.49, 80);
+		UTIL_SpawnBlood(bloodSpawnOrigin, (int)EASY_CVAR_GET(hyperBarney), 1);
+		nextBloodGen = gpGlobals->time + 0.08;
+	}
+
 
 
 

@@ -54,6 +54,9 @@ typedef struct SCREENINFO_s
 } SCREENINFO;
 
 
+//MODDD - NOTE.
+// Not to be confused with... common/entity_state.h's clientdata_s/clientdata_t.
+// WHO COMES UP WITH THESE NAMES GOD
 typedef struct client_data_s
 {
 	// fields that cannot be modified  (ie. have no effect if changed)

@@ -829,7 +829,7 @@ GENERATE_TRACEATTACK_IMPLEMENTATION(CBasePlayer)
 		
 		//NEVERMIND THIS REDUCTION. Other places don't disable bleeding per this Var so it's a lost cause. Just leave this, not too jarring or distracting.
 		//if(EASY_CVAR_GET(hideDamage) <= 0){
-			DrawAlphaBlood(flDamage, ptr->vecEndPos);
+			SpawnBlood(ptr->vecEndPos, flDamage);
 
 			//already seems to play?  Verify!
 			/*
@@ -4178,8 +4178,7 @@ void CBasePlayer::parse_itbd(int i) {
 	int damageType = 0;
 	damageType = DMG_TIMEDEFFECT;
 
-	switch (i)
-	{
+	switch (i){
 	//NOTE - PLAYER ONLY.
 	case itbd_DrownRecover:
 		// NOTE: this hack is actually used to RESTORE health
@@ -4195,20 +4194,24 @@ void CBasePlayer::parse_itbd(int i) {
 	// Overwriting this one compltely to use UTIL_MakeVectors instead of UTIL_MakeAimVectors.
 	// Yes, the player uses MakeVectors and monsters use MakeAimVectors.   Go.   Figure.
 	case itbd_Bleeding:
-		
 		// this will always ignore the armor (hence DMG_TIMEDEFFECT).
 		TakeDamage(pev, pev, BLEEDING_DAMAGE, 0, damageType | DMG_TIMEDEFFECTIGNORE);
 
 		UTIL_MakeVectors(pev->v_angle);
 		//pev->origin + pev->view_ofs
 		//BodyTargetMod(g_vecZero)
-		DrawAlphaBlood(BLEEDING_DAMAGE, pev->origin + pev->view_ofs + gpGlobals->v_forward * RANDOM_FLOAT(9, 13) + gpGlobals->v_right * RANDOM_FLOAT(-5, 5) + gpGlobals->v_up * RANDOM_FLOAT(4, 7));
-		
+		// BLEEDING_DAMAGE
+		UTIL_SpawnBlood(
+			pev->origin + pev->view_ofs + gpGlobals->v_forward * RANDOM_FLOAT(9, 13) + gpGlobals->v_right * RANDOM_FLOAT(-5, 5) + gpGlobals->v_up * RANDOM_FLOAT(4, 7),
+			BloodColor(),
+			RANDOM_LONG(8, 15)
+		);
 	break;
 	default:
 		// Unhandled?  Let the monster class handle it instead
 		CBaseMonster::parse_itbd(i);
-	}
+	break;
+	}//switch(i)
 
 }//END OF parse_itbd
 
@@ -5479,13 +5482,13 @@ void CBasePlayer::PostThink()
 		queueFirstAppearanceMessageSend = FALSE;
 
 
-		easyPrintLineClient(this->edict(), "OnFirstAppearance AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
+		easyPrintLineClient(this->edict(), "PLAYER: OnFirstAppearance");
 		
 		// fvox, holster, ladder given to the server player from the client by a response from this call.
 		MESSAGE_BEGIN(MSG_ONE, gmsgOnFirstAppearance, NULL, pev);
 		MESSAGE_END();
 		
-		//!!! IMPORTANT  Any broadcast CVars sohuld show up here!!
+		//!!! IMPORTANT  Any broadcast CVars should show up here!!
 		// Let the client (per player) know of the defaults in its cache.
 
 		MESSAGE_BEGIN(MSG_ONE, gmsgServerDLL_Info, NULL, pev);
@@ -6310,6 +6313,8 @@ void CBasePlayer::turnOffSneaky(void){
 // the connected client's cache.
 // Because lacking FCVAR_REPLICATED is a bitch.
 void CBasePlayer::OnFirstAppearance(void) {
+	//NOTICE - this is happening on coming from map transitions too (Restore call), but not sure what can really be done about that.
+	// Not that it's really a big problem though.
 
 	// Can't send messages this early, becaaaaaaaaause???
 	queueFirstAppearanceMessageSend = TRUE;
@@ -7165,40 +7170,6 @@ void CSprayCan::Think( void )
 	pev->nextthink = gpGlobals->time + 0.1;
 }
 
-class	CBloodSplat : public CBaseEntity
-{
-public:
-	void Spawn ( entvars_t *pevOwner );
-	void Spray ( void );
-};
-
-void CBloodSplat::Spawn ( entvars_t *pevOwner )
-{
-	pev->origin = pevOwner->origin + Vector ( 0 , 0 , 32 );
-	pev->angles = pevOwner->v_angle;
-	pev->owner = ENT(pevOwner);
-
-	SetThink ( &CBloodSplat::Spray );
-	pev->nextthink = gpGlobals->time + 0.1;
-}
-
-void CBloodSplat::Spray ( void )
-{
-	TraceResult	tr;	
-	
-	//MODDD - can't spray blood in german censorship mode.  If the player is a robot, spray oil maybe?
-	//MODDD TODO: oil?
-	//if ( g_Language != LANGUAGE_GERMAN )
-	if(EASY_CVAR_GET(sv_germancensorship) != 1)
-	{
-		UTIL_MakeVectors(pev->angles);
-		UTIL_TraceLine ( pev->origin, pev->origin + gpGlobals->v_forward * 128, ignore_monsters, pev->owner, & tr);
-
-		UTIL_BloodDecalTrace( &tr, BLOOD_COLOR_RED );
-	}
-	SetThink ( &CBaseEntity::SUB_Remove );
-	pev->nextthink = gpGlobals->time + 0.1;
-}
 
 //==============================================
 
@@ -7635,7 +7606,7 @@ void CBasePlayer::ImpulseCommands( )
 		}
 		break;
 
-	case	201:// paint decal
+	case 201:// paint decal
 		
 		
 		if ( gpGlobals->time < m_flNextDecalTime )
@@ -7821,32 +7792,33 @@ void CBasePlayer::CheatImpulseCommands( int iImpulse )
 				ALERT( at_console, "Texture: %s\n", pTextureName );
 		}
 		break;
-	case	195:// show shortest paths for entire level to nearest node
+	case 195:// show shortest paths for entire level to nearest node
 		{
 			Create("node_viewer_fly", pev->origin, pev->angles);
 		}
 		break;
-	case	196:// show shortest paths for entire level to nearest node
+	case 196:// show shortest paths for entire level to nearest node
 		{
 			Create("node_viewer_large", pev->origin, pev->angles);
 		}
 		break;
-	case	197:// show shortest paths for entire level to nearest node
+	case 197:// show shortest paths for entire level to nearest node
 		{
 			Create("node_viewer_human", pev->origin, pev->angles);
 		}
 		break;
-	case	199:// show nearest node and all connections
+	case 199:// show nearest node and all connections
 		{
 			ALERT ( at_console, "%d\n", WorldGraph.FindNearestNode ( pev->origin, bits_NODE_GROUP_REALM ) );
 			WorldGraph.ShowNodeConnections ( WorldGraph.FindNearestNode ( pev->origin, bits_NODE_GROUP_REALM ) );
 		}
 		break;
-	case	202:// Random blood splatter
+	case 202:// Random blood splatter
 		{
 			TraceResult tr;
 			UTIL_MakeVectors(pev->v_angle);
-			UTIL_TraceLine(pev->origin + pev->view_ofs, pev->origin + pev->view_ofs + gpGlobals->v_forward * 128, ignore_monsters, ENT(pev), &tr);
+			// only a distance of 128.  why.
+			UTIL_TraceLine(pev->origin + pev->view_ofs, pev->origin + pev->view_ofs + gpGlobals->v_forward * 600, ignore_monsters, ENT(pev), &tr);
 
 			if (tr.flFraction != 1.0)
 			{// line hit something, so paint a decal
@@ -7855,7 +7827,7 @@ void CBasePlayer::CheatImpulseCommands( int iImpulse )
 			}
 		}
 	break;
-	case	203:// remove creature.
+	case 203:// remove creature.
 		pEntity = FindEntityForward( this );
 		if ( pEntity )
 		{

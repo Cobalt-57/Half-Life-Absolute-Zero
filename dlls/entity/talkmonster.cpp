@@ -377,11 +377,46 @@ Schedule_t	slMoveAwayFollow[] =
 	},
 };
 
+
+
+
+
+//MODDD - tasks below split into separate schedules.  Beats me why they made the tasks part of one sechedule, only either is used
+// at a time and they have no relation (calling one does not lead into the other happening).  Nowhere else does this from what
+// I can tell.
+
 Task_t	tlTlkIdleWatchClient[] =
 {
 	{ TASK_STOP_MOVING,			0				},
 	{ TASK_SET_ACTIVITY,		(float)ACT_IDLE	},
 	{ TASK_TLK_LOOK_AT_CLIENT,	(float)6		},
+};
+
+Schedule_t	slTlkIdleWatchClient[] =
+{
+	{
+		tlTlkIdleWatchClient,
+		ARRAYSIZE(tlTlkIdleWatchClient),
+		bits_COND_NEW_ENEMY |
+		bits_COND_LIGHT_DAMAGE |
+		bits_COND_HEAVY_DAMAGE |
+		bits_COND_HEAR_SOUND |
+		bits_COND_SMELL |
+		bits_COND_CLIENT_PUSH |
+		bits_COND_CLIENT_UNSEEN |
+		bits_COND_PROVOKED,
+
+		bits_SOUND_COMBAT |// sound flags - change these, and you'll break the talking code.
+		//bits_SOUND_PLAYER		|
+		//bits_SOUND_WORLD		|
+
+		bits_SOUND_DANGER |
+		bits_SOUND_MEAT |// scents
+		bits_SOUND_CARCASS |
+		bits_SOUND_GARBAGE,
+		"TlkIdleWatchClient"
+	},
+
 };
 
 Task_t	tlTlkIdleWatchClientStare[] =
@@ -396,54 +431,43 @@ Task_t	tlTlkIdleWatchClientStare[] =
 	{ TASK_TLK_EYECONTACT,		(float)0		},
 };
 
-Schedule_t	slTlkIdleWatchClient[] =
+Schedule_t	slTlkIdleWatchClientStare[] =
 {
-	{ 
-		tlTlkIdleWatchClient,
-		ARRAYSIZE ( tlTlkIdleWatchClient ), 
-		bits_COND_NEW_ENEMY		|
-		bits_COND_LIGHT_DAMAGE	|
-		bits_COND_HEAVY_DAMAGE	|
-		bits_COND_HEAR_SOUND	|
-		bits_COND_SMELL			|
-		bits_COND_CLIENT_PUSH	|
-		bits_COND_CLIENT_UNSEEN	|
-		bits_COND_PROVOKED,
-
-		bits_SOUND_COMBAT		|// sound flags - change these, and you'll break the talking code.
-		//bits_SOUND_PLAYER		|
-		//bits_SOUND_WORLD		|
-		
-		bits_SOUND_DANGER		|
-		bits_SOUND_MEAT			|// scents
-		bits_SOUND_CARCASS		|
-		bits_SOUND_GARBAGE,
-		"TlkIdleWatchClient"
-	},
-
-	{ 
+	{
 		tlTlkIdleWatchClientStare,
-		ARRAYSIZE ( tlTlkIdleWatchClientStare ), 
-		bits_COND_NEW_ENEMY		|
-		bits_COND_LIGHT_DAMAGE	|
-		bits_COND_HEAVY_DAMAGE	|
-		bits_COND_HEAR_SOUND	|
-		bits_COND_SMELL			|
-		bits_COND_CLIENT_PUSH	|
-		bits_COND_CLIENT_UNSEEN	|
+		ARRAYSIZE(tlTlkIdleWatchClientStare),
+		bits_COND_NEW_ENEMY |
+		bits_COND_LIGHT_DAMAGE |
+		bits_COND_HEAVY_DAMAGE |
+		bits_COND_HEAR_SOUND |
+		bits_COND_SMELL |
+		bits_COND_CLIENT_PUSH |
+		bits_COND_CLIENT_UNSEEN |
 		bits_COND_PROVOKED,
 
-		bits_SOUND_COMBAT		|// sound flags - change these, and you'll break the talking code.
+		bits_SOUND_COMBAT |// sound flags - change these, and you'll break the talking code.
 		//bits_SOUND_PLAYER		|
 		//bits_SOUND_WORLD		|
-		
-		bits_SOUND_DANGER		|
-		bits_SOUND_MEAT			|// scents
-		bits_SOUND_CARCASS		|
+
+		bits_SOUND_DANGER |
+		bits_SOUND_MEAT |// scents
+		bits_SOUND_CARCASS |
 		bits_SOUND_GARBAGE,
 		"TlkIdleWatchClientStare"
 	},
 };
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 Task_t	tlTlkIdleEyecontact[] =
@@ -510,13 +534,15 @@ DEFINE_CUSTOM_SCHEDULES( CTalkMonster )
 	slMoveAwayFollow,
 	slMoveAwayFail,
 	slTlkIdleWatchClient,
-	&slTlkIdleWatchClient[ 1 ],
+	slTlkIdleWatchClientStare,
 	slTlkIdleEyecontact,
 	//NEW!! moved up from scientist.
 	slStopFollowing,
 };
 
 IMPLEMENT_CUSTOM_SCHEDULES( CTalkMonster, CBaseMonster );
+
+
 
 
 void CTalkMonster :: SetActivity ( Activity newActivity )
@@ -536,6 +562,17 @@ void CTalkMonster :: StartTask( Task_t *pTask )
 	switch ( pTask->iTask )
 	{
 
+
+	case TASK_GATE_ORGANICLOGIC_NEAR_LKP: {
+		int x = 4;
+		TaskComplete();
+	}break;
+	case TASK_WATER_DEAD_FLOAT: {
+		int x = 4;
+		TaskComplete();
+	}break;
+
+
 	case TASK_SET_ACTIVITY:{
 		//MODDD - yes, this needs to have new behavior. Or a little check really.
 		
@@ -554,8 +591,7 @@ void CTalkMonster :: StartTask( Task_t *pTask )
 
 		TaskComplete();
 	break;}
-
-		//MODDD - new, simple.
+	//MODDD - new, simple.
 	case TASK_FOLLOW_SUCCESSFUL:
 	{	
 		consecutiveFollowFails = 0; //reset to mark success.
@@ -2116,7 +2152,7 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CTalkMonster)
 			if ( flDamage > 32 ||   //too much damage at one time? Pissed.
 				 m_flPlayerDamage > 16 ||  //too much damage over a long time? Pissed.
 				((m_afMemory & bits_MEMORY_SUSPICIOUS) && m_flPlayerDamage > 8) || //two shots too soon + a little damage? Pissed.
-				UTIL_IsFacing( pevAttacker, pev->origin ) && m_flPlayerDamage > 4 //Facing me when he did it with a lower damage tolerance? Pissed.
+				UTIL_IsFacing( pevAttacker, pev->origin, 0.05) && m_flPlayerDamage > 4 //Facing me when he did it with a lower damage tolerance? Pissed.
 				) 
 			{
 
@@ -2155,7 +2191,7 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CTalkMonster)
 			if ( flDamage > 50 ||   //too much damage at one time? Pissed. Wait, how do you survive this?
 				 m_flPlayerDamage > 24 ||  //too much damage over a long time? Pissed.
 				((m_afMemory & bits_MEMORY_SUSPICIOUS) && m_flPlayerDamage > 10) || //two shots too soon + a little damage? Pissed.
-				UTIL_IsFacing( pevAttacker, pev->origin ) && m_flPlayerDamage > 5 //Facing me when he did it with a lower damage tolerance? Pissed.
+				UTIL_IsFacing( pevAttacker, pev->origin, 0.05) && m_flPlayerDamage > 5 //Facing me when he did it with a lower damage tolerance? Pissed.
 				) 
 			{
 
@@ -2338,11 +2374,14 @@ Schedule_t* CTalkMonster :: GetScheduleOfType ( int Type )
 				{
 					// watch the client.
 					UTIL_MakeVectors ( pPlayer->v.angles );
-					if ( ( pPlayer->v.origin - pev->origin ).Length2D() < TLK_STARE_DIST	&& 
-						 UTIL_DotPoints( pPlayer->v.origin, pev->origin, gpGlobals->v_forward ) >= m_flFieldOfView )
+					if ( ( pPlayer->v.origin - pev->origin ).Length2D() < TLK_STARE_DIST && 
+						//MODDD - stricter standards
+						//UTIL_DotPoints( pPlayer->v.origin, pev->origin, gpGlobals->v_forward ) >= m_flFieldOfView
+						UTIL_IsFacing(&pPlayer->v, pev->origin, 0.076)
+					)
 					{
 						// go into the special STARE schedule if the player is close, and looking at me too.
-						return &slTlkIdleWatchClient[ 1 ];
+						return slTlkIdleWatchClientStare;
 					}
 
 					return slTlkIdleWatchClient;
@@ -2769,10 +2808,9 @@ void CTalkMonster::playPissed(){
 	}
 	
 	if(madSentencesMax > 0){
-
 		long someRand;
 
-		//chance for other groups too.
+		// chance for other groups too.
 		if(RANDOM_LONG(0, 4) == 0){
 			someRand = RANDOM_LONG(0, madSentencesMax-1);
 		}else{

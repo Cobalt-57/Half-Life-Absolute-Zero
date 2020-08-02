@@ -86,19 +86,7 @@ void _VectorAdd (vec3_t veca, vec3_t vecb, vec3_t out);
 void _VectorCopy (vec3_t in, vec3_t out);
 */
 
-
-void VectorMA(const vec3_t veca, float scale, const vec3_t vecb, vec3_t vecc);
-int VectorCompare (const vec3_t v1, const vec3_t v2);
-float Length (const vec3_t v);
-void CrossProduct (const vec3_t v1, const vec3_t v2, vec3_t cross);
-
-//MODDD - why no prototype?!
-float Distance(const vec3_t v1, const vec3_t v2);
-
-float VectorNormalize (vec3_t v);		// returns vector length
-void VectorInverse (vec3_t v);
-void VectorScale (const vec3_t in, vec_t scale, vec3_t out);
-
+// MODDD - vector method prototypes moved to vector.h
 
 
 int Q_log2(int val);

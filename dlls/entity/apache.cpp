@@ -79,7 +79,7 @@ public:
 	BOOL isOrganic(void);
 	BOOL isSizeGiant(void);
 
-	int  BloodColor( void ) { return DONT_BLEED; }
+	int BloodColor( void ) { return DONT_BLEED; }
 	
 	GENERATE_KILLED_PROTOTYPE
 
@@ -963,8 +963,15 @@ GENERATE_TRACEATTACK_IMPLEMENTATION(CApache)
 	// ALERT( at_console, "%d %.0f\n", ptr->iHitgroup, flDamage );
 
 	// ignore blades
+	//NOTICE - a direct gauss hit includes DMG_BULLET.  That is fine, just pointing that out.
 	if (ptr->iHitgroup == 6 && (bitsDamageType & (DMG_ENERGYBEAM|DMG_BULLET|DMG_CLUB)))
 		return;
+
+	//MODDD - gauss loses some damage on non-critical points
+	if (!(ptr->iHitgroup == 1 || ptr->iHitgroup == 2) && (bitsDamageTypeMod & (DMG_GAUSS))) {
+		flDamage *= 0.84;
+	}
+
 
 	// hit hard, hits cockpit, hits engines
 	if (flDamage > 50 || ptr->iHitgroup == 1 || ptr->iHitgroup == 2)

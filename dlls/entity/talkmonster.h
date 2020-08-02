@@ -24,9 +24,11 @@
 // Used for scientists and barneys
 //=========================================================
 
-#define TALKRANGE_MIN 500.0				// don't talk to anyone farther away than this
+//MODDD - reduced a little, was 500
+#define TALKRANGE_MIN 460.0				// don't talk to anyone farther away than this
 
-#define TLK_STARE_DIST	128				// anyone closer than this and looking at me is probably staring at me.
+//MODDD - higher allowed now, was 128
+#define TLK_STARE_DIST	156				// anyone closer than this and looking at me is probably staring at me.
 
 #define bit_saidDamageLight		(1<<0)	// bits so we don't repeat key sentences
 #define bit_saidDamageMedium	(1<<1)
@@ -44,7 +46,6 @@
 #define bits_COND_CLIENT_PUSH		( bits_COND_SPECIAL1 )
 // Don't see a client right now.
 #define bits_COND_CLIENT_UNSEEN		( bits_COND_SPECIAL2 )
-
 
 
 
@@ -71,7 +72,6 @@ typedef enum
 
 	TLK_CGROUPS,					// MUST be last entry
 } TALKGROUPNAMES;
-
 
 
 
@@ -117,20 +117,34 @@ enum
 
 
 
-
-
-
-
-
-
-
-
-
-
-
 class CTalkMonster : public CBaseMonster
 {
 public:
+
+	static char* m_szFriends[TLK_CFRIENDS];		// array of friend names
+	static float g_talkWaitTime;
+
+	int		m_bitsSaid;						// set bits for sentences we don't want repeated
+	int		m_nSpeak;						// number of times initiated talking
+	int		m_voicePitch;					// pitch of voice for this head
+	const char* m_szGrp[TLK_CGROUPS];			// sentence group names
+	float	m_useTime;						// Don't allow +USE until this time
+	int		m_iszUse;						// Custom +USE sentence group (follow)
+	int		m_iszUnUse;						// Custom +USE sentence group (stop following)
+
+	float	m_flLastSaidSmelled;// last time we talked about something that stinks
+	float	m_flStopTalkTime;// when in the future that I'll be done saying this sentence.
+
+	//MODDD
+	//BOOL goneMad;
+	float madYaw;
+	BOOL leaderRecentlyDied;
+	float followAgainTime;
+	int consecutiveFollowFails;
+	float followResetFailTime;
+	BOOL wasLookingAtTalker;
+
+	EHANDLE m_hTalkTarget;	// who to look at while talking
 
 	EHANDLE closestCautiousNPC;
 	EHANDLE closestCautiousNPC_memory;
@@ -139,43 +153,43 @@ public:
 	EHANDLE closestPassiveNPC_memory;
 	float closestPassiveNPC_distance;
 
-
-	//MODDD
-	CTalkMonster(void);
-
-	virtual int getMadSentencesMax(void);
-	virtual int getMadInterSentencesMax(void);
-
 	float nextMadEffect;
-	virtual void MonsterThink(void);
 	BOOL madDir;
 	BOOL canGoRavingMad;
-	virtual BOOL isTalkMonster(void);
 
 	//This is a talk monster because the "TalkMonster" class is unaware of its children.  Can still work thanks to virtual methods.
 	CTalkMonster* scientistTryingToHealMe;
 	EHANDLE scientistTryingToHealMeEHANDLE;
 
-	virtual void forgetHealNPC(void);
-
-	virtual void ReportAIState(void);
-
-	//MODDD
-	const char*		madSentences[5];
-	int			madSentencesMax;
-	//EACH!
-	//static const char*		madInterSentences[];
-	//...each child will define "madInterSentences" instead, and use "madInterSentencesLocation" to refer to its own one.
-	//int*				madInterSentencesMaxLocation;
-	const char** madInterSentencesLocation;
-
-	
 	//MODDD - m_flPlayerDamage moved from the Barney to TalkMonster so that the Scientist also benefits from it.
 	float m_flPlayerDamage;// how much pain has the player inflicted on me. Slowly decreases over time.
 	float forgiveSuspiciousTime;
 	float forgiveSomePlayerDamageTime;
 
 
+	//MODDD
+	const char* madSentences[5];
+	int madSentencesMax;
+	//EACH!
+	//static const char*		madInterSentences[];
+	//...each child will define "madInterSentences" instead, and use "madInterSentencesLocation" to refer to its own one.
+	//int*				madInterSentencesMaxLocation;
+	const char** madInterSentencesLocation;
+
+
+
+
+
+	CTalkMonster(void);
+
+
+	virtual int getMadSentencesMax(void);
+	virtual int getMadInterSentencesMax(void);
+	virtual void MonsterThink(void);
+	virtual BOOL isTalkMonster(void);
+
+	virtual void forgetHealNPC(void);
+	virtual void ReportAIState(void);
 	
 	//MODDD - also new.
 	virtual void playPissed();
@@ -225,16 +239,16 @@ public:
 	void PlaySentenceTo(const char *pszSentence, float duration, float volume, float attenuation, int pitch, BOOL bConcurrent, CBaseEntity *pListener );
 
 	
-	void		PlayScriptedSentence( const char *pszSentence, float duration, float volume, float attenuation, BOOL bConcurrent, CBaseEntity *pListener );
-	void		PlayScriptedSentenceNoPitch( const char *pszSentence, float duration, float volume, float attenuation, BOOL bConcurrent, CBaseEntity *pListener );
-	void		PlayScriptedSentence( const char *pszSentence, float duration, float volume, float attenuation, int pitch, BOOL bConcurrent, CBaseEntity *pListener );
+	void PlayScriptedSentence( const char *pszSentence, float duration, float volume, float attenuation, BOOL bConcurrent, CBaseEntity *pListener );
+	void PlayScriptedSentenceNoPitch( const char *pszSentence, float duration, float volume, float attenuation, BOOL bConcurrent, CBaseEntity *pListener );
+	void PlayScriptedSentence( const char *pszSentence, float duration, float volume, float attenuation, int pitch, BOOL bConcurrent, CBaseEntity *pListener );
 
-	void		KeyValue( KeyValueData *pkvd );
+	void KeyValue( KeyValueData *pkvd );
 
 
 	//..these weren't virtual. why not.
 	// AI functions
-	virtual void		SetActivity ( Activity newActivity );
+	virtual void SetActivity ( Activity newActivity );
 
 	//MODDD - this one's new though. huh.
 	virtual Schedule_t* GetSchedule();
@@ -285,9 +299,9 @@ public:
 
 
 	virtual void DeclineFollowing( void ) {}
-	void		LimitFollowers( CBaseEntity *pPlayer, int maxFollowers );
+	void LimitFollowers( CBaseEntity *pPlayer, int maxFollowers );
 
-	void EXPORT		FollowerUse( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value );
+	void EXPORT FollowerUse( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value );
 	
 	virtual void SetAnswerQuestion( CTalkMonster *pSpeaker );
 	virtual int	FriendNumber( int arrayNumber )	{ return arrayNumber; }
@@ -329,33 +343,7 @@ public:
 	static	TYPEDESCRIPTION m_SaveData[];
 
 	
-	static char *m_szFriends[TLK_CFRIENDS];		// array of friend names
-	static float g_talkWaitTime;
-	
-	int		m_bitsSaid;						// set bits for sentences we don't want repeated
-	int		m_nSpeak;						// number of times initiated talking
-	int		m_voicePitch;					// pitch of voice for this head
-	const char	*m_szGrp[TLK_CGROUPS];			// sentence group names
-	float	m_useTime;						// Don't allow +USE until this time
-	int		m_iszUse;						// Custom +USE sentence group (follow)
-	int		m_iszUnUse;						// Custom +USE sentence group (stop following)
-
-	float	m_flLastSaidSmelled;// last time we talked about something that stinks
-	float	m_flStopTalkTime;// when in the future that I'll be done saying this sentence.
-
-	//MODDD
-	//BOOL goneMad;
-	float madYaw;
-	BOOL leaderRecentlyDied;
-	float followAgainTime;
-	int consecutiveFollowFails;
-	float followResetFailTime;
-	BOOL wasLookingAtTalker;
-
-
-	EHANDLE		m_hTalkTarget;	// who to look at while talking
 	CUSTOM_SCHEDULES;
-
 
 	virtual void initiateAss();
 

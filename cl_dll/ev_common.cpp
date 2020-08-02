@@ -59,7 +59,7 @@ Creates a tracer effect
 */
 void EV_CreateTracer( float *start, float *end )
 {
-	//gEngfuncs.pEfxAPI->R_TracerEffect( start, end );
+	gEngfuncs.pEfxAPI->R_TracerEffect( start, end );
 }
 
 /*

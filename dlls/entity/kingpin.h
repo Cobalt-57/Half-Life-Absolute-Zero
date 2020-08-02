@@ -189,12 +189,10 @@ public:
 	void deTargetMyCommandedMonsters(void);
 	void forceEnemyOnPoweredUpMonsters(CBaseEntity* monsterToForce, BOOL argPassive);
 
-	
 	void playPsionicLaunchSound(void);
 
 	
 	void SetObjectCollisionBox( void ){
-
 		if(pev->deadflag != DEAD_NO){
 			//no need to do anything special anymore I think.
 			//CBaseMonster::SetObjectCollisionBox();
@@ -205,14 +203,10 @@ public:
 			pev->absmin = pev->origin + Vector(-32, -32, 0);
 			pev->absmax = pev->origin + Vector(32, 32, 110);
 		}
-		
 	}//END OF SetObjectCollisionBox
 
 
 	void ScheduleChange(void);
-
-
-
 
 	void playForceFieldReflectSound(void);
 

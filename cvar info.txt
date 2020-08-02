@@ -285,6 +285,7 @@ playerWeaponSpreadMode (0) - MODEVAR. If non-zero, forces weapons whose spread i
 0 - no effect; default behavior per game.
 1 - forces singleplayer behavior: spread radius is circular.
 2 - forces multiplayer behavior: spread radius of the shotgun is less wide and taller, supposedly for being more likely to hit other fast-moving players. The mp5's spread radius is greater overall in multiplayer.
+    Also, the shotgun has a different number of shells per barrel.  6 for single-player, 4 for multiplayer (double each for secondary).  This behavior can be made separate of this CVar if wanted.
 
 hud_swapFirstTwoBuckets (0) - BOOLEAN.
 0: no effect (retail).
@@ -696,8 +697,8 @@ gargantuaFallSound - modevar (only applicable for "gargantuaCorpseDeath" values 
 2 - play the joke metal "clink".
 
 
-gargantuaBleeds - modevar:
-0 - no effect occurs when the gargantua is shot.
+gargantuaBleeds - modevar, hit effects for shots that dealt no damage to the gargantua.
+0 - no effect
 1 - gargantua bleeds like any other alien: blood-drip particles and sound (for bullet impact if applicable).
 2 - gargantua bleeds, but no sound plays.
 3 - hitting the gargantua Ricochets (like retail)
@@ -1503,5 +1504,7 @@ monsterKilledToss (2) - MODEVAR.  How to send monsters a short distance on takin
 interpolation_movetypestep_mindelta (0.06) - FLOAT.  Extremely low, sometimes negative, amounts of times between frames can be recorded on zombies pushed back by bullets, which causes the 'teleport' issue: bad interpolation putting the zombie somewhere it shouldn't be for a split second.
 ~Too low removes the pushback fix, too high stops interpolation for walking monsters.  Somewhere over 0.01 and under 0.10 is usually good.
 
-
-
+sv_bloodparticlemode (0) - MODEVAR.  Affects the blood particle created when nearly anyhting organic takes damage.
+0: retail.
+1: alpha (solid-colored dots)
+2: both at the same time

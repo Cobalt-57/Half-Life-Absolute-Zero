@@ -1975,7 +1975,6 @@ Schedule_t* CBaseMonster :: GetScheduleOfType ( int Type )
 {
 
 
-
 	if(Type == SCHED_RANGE_ATTACK2){
 		int x = 666;
 	}
@@ -2057,40 +2056,40 @@ Schedule_t* CBaseMonster :: GetScheduleOfType ( int Type )
 		}
 	case SCHED_COMBAT_FACE_NOSTUMP:{
 		return &slCombatFaceNoStump[0];
-	break;}
+	}
 	case SCHED_COMBAT_LOOK:{
 		return &slCombatLook[0];
-    break;}
+    }
 	case SCHED_WAIT_FOR_ENEMY_TO_ENTER_WATER:{
 		return &slWaitForEnemyToEnterWater[0];
-	break;}
+	}
 	case SCHED_CHASE_ENEMY:{
 		//MODDD - see what happens.
 		//return &slChaseEnemy[ 0 ];
 		return &slChaseEnemySmart[0];
-	break;}
+	}
 	case SCHED_CHASE_ENEMY_STOP_SIGHT:{
 		//MODDD - new. Same as slChaseEnemySmart, but stops if the enemy is in sight.
-			return &slChaseEnemySmart_StopSight[0];
-	break;}
+		return &slChaseEnemySmart_StopSight[0];
+	}
 	case SCHED_CHASE_ENEMY_SMART:{
 		return &slChaseEnemySmart[ 0 ];
-	break;}
+	}
 	case SCHED_CHASE_ENEMY_SMART_STOP_SIGHT:{
 		return &slChaseEnemySmart_StopSight[ 0 ];
-	break;}
+	}
 	case SCHED_CHASE_ENEMY_FAILED:
-		{
-			//MODDD NOTE - nothing special? damn.
-			//ACTUALLY YES, force an update on the enemy LKP just to unclog things maybe.
+	{
+		//MODDD NOTE - nothing special? damn.
+		//ACTUALLY YES, force an update on the enemy LKP just to unclog things maybe.
 
-			if(m_hEnemy != NULL){
-				//this->m_vecEnemyLKP = m_hEnemy->pev->origin;
-				setEnemyLKP(m_hEnemy->pev->origin);
-			}
-
-			return &slFail[ 0 ];
+		if(m_hEnemy != NULL){
+			//this->m_vecEnemyLKP = m_hEnemy->pev->origin;
+			setEnemyLKP(m_hEnemy->pev->origin);
 		}
+
+		return &slFail[ 0 ];
+	}
 	case SCHED_SMALL_FLINCH:
 		{
 			return &slSmallFlinch[ 0 ];
@@ -2101,10 +2100,10 @@ Schedule_t* CBaseMonster :: GetScheduleOfType ( int Type )
 		}
 	case SCHED_BIG_FLINCH:{
 		return &slBigFlinch[0];
-	break;}
+	}
 	case SCHED_ALERT_BIG_FLINCH:{
 		return &slAlertBigFlinch[0];
-	break;}
+	}
 	case SCHED_RELOAD:
 		{
 			return &slReload[ 0 ];
@@ -2176,65 +2175,57 @@ Schedule_t* CBaseMonster :: GetScheduleOfType ( int Type )
 	}
 	case SCHED_CANT_FOLLOW_BAIT:
 	{
-		easyForcePrintLine("YOU STUPID guy");
+		easyPrintLine("%s:%d picked SCHED_CANT_FOLLOW_BAIT", getClassname(), monsterID);
 		return &slCantFollowBait[ 0];
 	}
-
-	case SCHED_DIE:
-		{
-			return &slDie[ 0 ];
-		}
+	case SCHED_DIE:{
+		return &slDie[ 0 ];
+	}
 	//MODDD - new
 	case SCHED_DIE_LOOP:{
 		return &slDieLoop[ 0 ];
-	break;}
+	}
 	case SCHED_DIE_FALL_LOOP:{
 		return &slDieFallLoop[0];
-	break;}
-
-	case SCHED_TAKE_COVER_FROM_ORIGIN:
-		{
-			return &slTakeCoverFromOrigin[ 0 ];
-		}
-		//MODDD - NEW
-	case SCHED_WALK_AWAY_FROM_ORIGIN:
-		{
-			return &slWalkAwayFromOrigin[0];
-		}
-	case SCHED_RANDOMWANDER:
+	}
+	case SCHED_TAKE_COVER_FROM_ORIGIN:{
+		return &slTakeCoverFromOrigin[ 0 ];
+	}
+	//MODDD - NEW
+	case SCHED_WALK_AWAY_FROM_ORIGIN:{
+		return &slWalkAwayFromOrigin[0];
+	}
+	case SCHED_RANDOMWANDER: {
 		return &slRandomWander[0];
-	break;
-	case SCHED_RANDOMWANDER_UNINTERRUPTABLE:
+	}
+	case SCHED_RANDOMWANDER_UNINTERRUPTABLE: {
 		return &slRandomWanderUninterruptable[0];
-	break;
-	case SCHED_TAKE_COVER_FROM_ENEMY_OR_CHASE:
+	}
+	case SCHED_TAKE_COVER_FROM_ENEMY_OR_CHASE: {
 		return &slTakeCoverFromEnemyOrChase[0];
-	break;
-	case SCHED_FIGHT_OR_FLIGHT:
+	}
+	case SCHED_FIGHT_OR_FLIGHT: {
 		return &slFightOrFlight[0];
-	break;
-	case SCHED_VICTORY_DANCE:
-		{
-			return &slVictoryDance[ 0 ];
-		}
-	case SCHED_PATHFIND_STUMPED:
+	}
+	case SCHED_VICTORY_DANCE:{
+		return &slVictoryDance[ 0 ];
+	}
+	case SCHED_PATHFIND_STUMPED: {
 		return &slPathfindStumped[0];
-	break;
-	case SCHED_FAIL:
-		{
-			return slFail;
-		}
+	}
+	case SCHED_FAIL:{
+		return slFail;
+	}
 	case SCHED_FAIL_QUICK:{
 		return slFailQuick;
-	break;}
-	default:
-		{
-			ALERT ( at_console, "GetScheduleOfType()\nNo CASE for Schedule Type %d!\n", Type );
-
-			return &slIdleStand[ 0 ];
-			break;
-		}
 	}
+	default:
+	{
+		ALERT ( at_console, "GetScheduleOfType()\nNo CASE for Schedule Type %d!\n", Type );
+
+		return &slIdleStand[ 0 ];
+	}
+	}//END OF switch
 
 	return NULL;
 }

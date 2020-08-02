@@ -88,8 +88,8 @@ EASY_CVAR_EXTERN(weaponSelectUsesReloadSounds)
 EASY_CVAR_EXTERN(cl_bullsquidspit)
 EASY_CVAR_EXTERN(cl_hornetspiral)
 EASY_CVAR_EXTERN(mutePlayerPainSounds)
-EASY_CVAR_EXTERN(playerBulletHitEffectForceServer)
-EASY_CVAR_EXTERN(playerWeaponSpreadMode)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST(playerBulletHitEffectForceServer)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST(playerWeaponSpreadMode)
 EASY_CVAR_EXTERN(sentryCanGib)
 EASY_CVAR_EXTERN(miniturretCanGib)
 EASY_CVAR_EXTERN(turretCanGib)
@@ -201,7 +201,9 @@ int g_groupop = 0;
 GibInfo_t aryGibInfo[aryGibInfo_MAX_SIZE] = {
 	{"", 0, 0, 0}, //the dummy
 	{"models/hgibs.mdl", 1, HUMAN_GIB_COUNT-1, BLOOD_COLOR_RED},
-	{"models/agibs.mdl", 0, ALIEN_GIB_COUNT-1, BLOOD_COLOR_YELLOW},  //or BLOOD_COLOR_GREEN ?  Need a check in gib spawning methods if that ever becomes important perhaps.
+	// Distinct yellow & green colors now!
+	{"models/agibs.mdl", 0, ALIEN_GIB_COUNT-1, BLOOD_COLOR_YELLOW},
+	{"models/agibs.mdl", 0, ALIEN_GIB_COUNT-1, BLOOD_COLOR_GREEN},
 	{GERMAN_GIB_PATH, 0, GERMAN_GIB_COUNT-1, BLOOD_COLOR_BLACK},
 	
 	{"models/metalplategibs.mdl", 0, 12, BLOOD_COLOR_BLACK},
@@ -1168,7 +1170,7 @@ meleeDrawBloodModeB - Mode variable, for drawing blood when "checkTraceHullAttac
 
 				//arg_entDest->DrawAlphaBlood(arg_fltDamage, *arg_suggestedTraceHullVecEndPos);
 				vecFromToDir = (vecEnd - vecStart).Normalize();
-				arg_entDest->DrawAlphaBloodSlash(arg_fltDamage, *arg_suggestedTraceHullVecEndPos - (vecFromToDir * EASY_CVAR_GET(meleeDrawBloodModeAOffset) ), vecFromToDir, extraBlood );
+				arg_entDest->SpawnBloodSlash(arg_fltDamage, *arg_suggestedTraceHullVecEndPos - (vecFromToDir * EASY_CVAR_GET(meleeDrawBloodModeAOffset) ), vecFromToDir, extraBlood );
 
 
 				if(arg_entDest->IsPlayer()){
@@ -1266,7 +1268,7 @@ meleeDrawBloodModeB - Mode variable, for drawing blood when "checkTraceHullAttac
 				if ( tr.pHit ){
 					
 					vecFromToDir = (vecEnd - vecStart).Normalize();
-					arg_entDest->DrawAlphaBloodSlash(arg_fltDamage, tr.vecEndPos - (vecFromToDir * EASY_CVAR_GET(meleeDrawBloodModeBOffset)), vecFromToDir, extraBlood );
+					arg_entDest->SpawnBloodSlash(arg_fltDamage, tr.vecEndPos - (vecFromToDir * EASY_CVAR_GET(meleeDrawBloodModeBOffset)), vecFromToDir, extraBlood );
 
 					if(arg_entDest->IsPlayer()){
 						//easyPrintLine("BUT WHAT %.2f  %s", tr.flFraction, STRING(tr.pHit->v.classname) );
@@ -1345,9 +1347,9 @@ meleeDrawBloodModeB - Mode variable, for drawing blood when "checkTraceHullAttac
 		vecFromToDir = (vecEnd - vecStart).Normalize();
 		//easyPrintLine("TRACE HULL ATTACK USED?: %d", checkTraceHullAttackUsed);
 		if(checkTraceHullAttackUsed){
-			arg_entDest->DrawAlphaBloodSlash(arg_fltDamage, tr.vecEndPos - (vecFromToDir * EASY_CVAR_GET(meleeDrawBloodModeAOffset) ), vecFromToDir, extraBlood );
+			arg_entDest->SpawnBloodSlash(arg_fltDamage, tr.vecEndPos - (vecFromToDir * EASY_CVAR_GET(meleeDrawBloodModeAOffset) ), vecFromToDir, extraBlood );
 		}else{
-			arg_entDest->DrawAlphaBloodSlash(arg_fltDamage, tr.vecEndPos - (vecFromToDir * EASY_CVAR_GET(meleeDrawBloodModeBOffset) ), vecFromToDir, extraBlood );
+			arg_entDest->SpawnBloodSlash(arg_fltDamage, tr.vecEndPos - (vecFromToDir * EASY_CVAR_GET(meleeDrawBloodModeBOffset) ), vecFromToDir, extraBlood );
 		}
 
 	}
@@ -1627,29 +1629,26 @@ int UTIL_IsMasterTriggered(string_t sMaster, CBaseEntity *pActivator)
 
 BOOL UTIL_ShouldShowBlood( int color )
 {
-
-	//EASY_CVAR_GET(sv_germancensorship) != 1 &&
-	//if (&& color != DONT_BLEED )
-	//{
-
-		if(color == DONT_BLEED){
-			//don't try, clearly a signal not to.
-			return FALSE;
-		}else if (color == BLOOD_COLOR_RED && EASY_CVAR_GET(sv_germancensorship) != 1 )
-		{
-			if ( CVAR_GET_FLOAT("violence_hblood") != 0 )
-				return TRUE;
-		}
-		else if(color == BLOOD_COLOR_BLACK){
-			//oil from robots? never censored.
+	if(color == DONT_BLEED){
+		// don't try, clearly a signal not to.
+		return FALSE;
+	}else if (color == BLOOD_COLOR_RED){
+		// hblood CVar allows it and germancensorship is off?  Proceed.
+		if (CVAR_GET_FLOAT("violence_hblood") != 0 && EASY_CVAR_GET(sv_germancensorship) != 1) {
 			return TRUE;
 		}
-		else if(EASY_CVAR_GET(sv_germancensorship) != 1) //even alien blood is restricted by sv_germancensorship, but not gibs? Keep it this way?
-		{
-			if ( CVAR_GET_FLOAT("violence_ablood") != 0 )
-				return TRUE;
+	}
+	else if(color == BLOOD_COLOR_BLACK){
+		// oil from robots? never censored.
+		return TRUE;
+	}
+	else if(EASY_CVAR_GET(sv_germancensorship) != 1)
+	{
+		// even alien blood is restricted by sv_germancensorship, but not gibs? Keep it this way?
+		if (CVAR_GET_FLOAT("violence_ablood") != 0) {
+			return TRUE;
 		}
-	//}
+	}
 	return FALSE;
 }
 
@@ -1658,18 +1657,18 @@ BOOL UTIL_ShouldShowBlood( int color )
 
 void UTIL_BloodStream( const Vector &origin, const Vector &direction, int color, int amount )
 {
-	if ( !UTIL_ShouldShowBlood( color ) ){
+	if (amount == 0) {
 		return;
 	}
 
-	//MODDD - g_Language  is linked to a non-existent CVar.  Use this instead.
-	//if ( g_Language == LANGUAGE_GERMAN && color == BLOOD_COLOR_RED )
-	/*
-	if(EASY_CVAR_GET(sv_germancensorship) == 1 && color==BLOOD_COLOR_RED){
-		color = 0;
-	}
-	*/
 
+// as described in const.h:
+//  coord coord coord (start position)
+//  coord coord coord (spray vector)
+//  byte (color)
+//  byte (speed)
+// ...weird that the last coord is described as 'speed' there and 'amount' here, suppose it defines both.
+// Shame, would be nice if the effect moved faster without needing to be more particles.
 	MESSAGE_BEGIN( MSG_PVS, SVC_TEMPENTITY, origin );
 		WRITE_BYTE( TE_BLOODSTREAM );
 		WRITE_COORD( origin.x );
@@ -1683,21 +1682,13 @@ void UTIL_BloodStream( const Vector &origin, const Vector &direction, int color,
 	MESSAGE_END();
 }
 
+// And the retail blood effect doesn't do anything with direction.  o-kay then.
 void UTIL_BloodDrips( const Vector &origin, const Vector &direction, int color, int amount )
 {
-	//return;
-	if ( !UTIL_ShouldShowBlood( color ) )
+	//MODDD - several checks removed, done in the caller instead
+	if (amount == 0) {
 		return;
-
-	if ( color == DONT_BLEED || amount == 0 )
-		return;
-
-	//MODDD - new var
-	//if ( g_Language == LANGUAGE_GERMAN && color == BLOOD_COLOR_RED )
-	
-	//MODDD - handle this per model instead.
-	//if(EASY_CVAR_GET(sv_germancensorship) == 1 && EASY_CVAR_GET(allowGermanModels) == 1 && color == BLOOD_COLOR_RED)
-	//	color = 0;
+	}
 
 	if ( IsMultiplayer() )
 	{
@@ -1728,12 +1719,12 @@ Vector UTIL_RandomBloodVector( void )
 	direction.z = RANDOM_FLOAT ( 0.3, 0.6 );
 	return direction;
 }
-// high, as in upwards moreso.
+// high, as in upwards moreso.  Maybe?  I really don't get how TE_BLOODSTREAM interprets this, if it does at all.
 Vector UTIL_RandomBloodVectorHigh(void)
 {
 	Vector direction;
-	direction.x = RANDOM_FLOAT(-0.3, 0.3);
-	direction.y = RANDOM_FLOAT(-0.3, 0.3);
+	direction.x = RANDOM_FLOAT(-0.33, 0.33);
+	direction.y = RANDOM_FLOAT(-0.33, 0.33);
 	direction.z = RANDOM_FLOAT(0.6, 1.0);
 	return direction;
 }
@@ -1741,7 +1732,6 @@ Vector UTIL_RandomBloodVectorHigh(void)
 
 void UTIL_BloodDecalTrace( TraceResult *pTrace, int bloodColor )
 {
-	
 	if ( UTIL_ShouldShowBlood( bloodColor ) )
 	{
 		if ( bloodColor == BLOOD_COLOR_RED ){
@@ -1749,6 +1739,8 @@ void UTIL_BloodDecalTrace( TraceResult *pTrace, int bloodColor )
 		}else if ( bloodColor == BLOOD_COLOR_BLACK ){
 			UTIL_DecalTrace( pTrace, DECAL_OIL1 + RANDOM_LONG(0,1) );
 		}else{
+			//MODDD - if separate decals between BLOOD_COLOR_YELLOW and BLOOD_COLOR_GREEN were found,
+			// they would go here as checks for those.
 			UTIL_DecalTrace( pTrace, DECAL_YBLOOD1 + RANDOM_LONG(0,5) );
 		}
 	}
@@ -4985,8 +4977,8 @@ int attemptInterpretSpawnFlag(const char* pszSpawnFlags){
 }//END OF attemptInterpretSpawnFlag
 
 
-//This is called by human monsters looking for the RED blood color instead of a direct call for RED blood.
-//This lets german censorship give black blood (oil) in anticipation of the robot model replacement.
+// This is called by human monsters looking for the RED blood color instead of a direct call for RED blood.
+// This lets german censorship give black blood (oil) in anticipation of the robot model replacement.
 int UTIL_BloodColorRedFilter(BOOL robotReplacementModelExists){
 	if(getGermanModelsAllowed() && robotReplacementModelExists){
 		//If german models are allowed and this monster's german model has been found, use the oil blood.
@@ -6713,17 +6705,20 @@ BOOL entityHidden(edict_t* test){
 }
 
 
+// MODD - trying another instead of CHAN_WEAPON, this should be harder to interrupt.
+// No idea if other channels (CHAN_STATIC) just support more than 1 sound fine though.
+// If that has some issue CHAN_BODY may be ok too.
 void UTIL_playOrganicGibSound(entvars_t* pevSoundSource){
-	switch(RANDOM_LONG(0, 3)){
+	// CHAN_BODY ???
+	switch(RANDOM_LONG(0, 2)){
 	case 0:
+		EMIT_SOUND_FILTERED(ENT(pevSoundSource), CHAN_STATIC, "common/bodysplat.wav", 1, ATTN_NORM - 0.12, FALSE);
+	break;
 	case 1:
-		EMIT_SOUND_FILTERED(ENT(pevSoundSource), CHAN_WEAPON, "common/bodysplat.wav", 1, ATTN_NORM, FALSE);
+		EMIT_SOUND_FILTERED(ENT(pevSoundSource), CHAN_STATIC, "debris/bustflesh1.wav", 1, ATTN_NORM - 0.35, TRUE);
 	break;
 	case 2:
-		EMIT_SOUND_FILTERED(ENT(pevSoundSource), CHAN_WEAPON, "debris/bustflesh1.wav", 1, ATTN_NORM, TRUE);
-	break;
-	case 3:
-		EMIT_SOUND_FILTERED(ENT(pevSoundSource), CHAN_WEAPON, "debris/bustflesh2.wav", 1, ATTN_NORM, TRUE);
+		EMIT_SOUND_FILTERED(ENT(pevSoundSource), CHAN_STATIC, "debris/bustflesh2.wav", 1, ATTN_NORM - 0.35, TRUE);
 	break;
 	}//END OF switch
 }//END OF Util_playOrganicGibsound
@@ -6732,19 +6727,19 @@ void UTIL_playOrganicGibSound(entvars_t* pevSoundSource){
 void UTIL_playMetalGibSound(entvars_t* pevSoundSource){
 	switch(RANDOM_LONG(0, 4)){
 	case 0:
-		EMIT_SOUND_FILTERED(ENT(pevSoundSource), CHAN_WEAPON, "debris/bustmetal1.wav", 1, ATTN_NORM, TRUE);
+		EMIT_SOUND_FILTERED(ENT(pevSoundSource), CHAN_STATIC, "debris/bustmetal1.wav", 1, ATTN_NORM - 0.12, TRUE);
 	break;
 	case 1:
-		EMIT_SOUND_FILTERED(ENT(pevSoundSource), CHAN_WEAPON, "debris/bustmetal2.wav", 1, ATTN_NORM, TRUE);
+		EMIT_SOUND_FILTERED(ENT(pevSoundSource), CHAN_STATIC, "debris/bustmetal2.wav", 1, ATTN_NORM - 0.12, TRUE);
 	break;
 	case 2:
-		EMIT_SOUND_FILTERED(ENT(pevSoundSource), CHAN_WEAPON, "debris/metal2.wav", 1, ATTN_NORM, TRUE);
+		EMIT_SOUND_FILTERED(ENT(pevSoundSource), CHAN_STATIC, "debris/metal2.wav", 1, ATTN_NORM - 0.12, TRUE);
 	break;
 	case 3:
-		EMIT_SOUND_FILTERED(ENT(pevSoundSource), CHAN_WEAPON, "debris/metal4.wav", 1, ATTN_NORM, TRUE);
+		EMIT_SOUND_FILTERED(ENT(pevSoundSource), CHAN_STATIC, "debris/metal4.wav", 1, ATTN_NORM - 0.12, TRUE);
 	break;
 	case 4:
-		EMIT_SOUND_FILTERED(ENT(pevSoundSource), CHAN_WEAPON, "debris/metal5.wav", 1, ATTN_NORM, TRUE);
+		EMIT_SOUND_FILTERED(ENT(pevSoundSource), CHAN_STATIC, "debris/metal5.wav", 1, ATTN_NORM - 0.12, TRUE);
 	break;
 	}//END OF switch
 }//END OF UTIL_playMetalGibSound
@@ -6803,7 +6798,6 @@ void OnMapLoadStart(){
 
 
 
-
 void OnMapLoadEnd(){
 	//Going around changing the map? Need this to reset.
 	DebugLine_drawTime = -1;
@@ -6859,14 +6853,12 @@ void RestoreDynamicIDs(CGlobalState* argGS){
 }//END OF RestoreGlobalState
 
 
-
 BOOL GermanModelOrganicLogic(){
 	// Do german models still have the behavior of their organic originals, like being attractive to scavenger enemies
 	// when dead?
 	// Can make this a CVar later.
 	return TRUE;
 }
-
 
 
 CWorld* getWorld(void){
@@ -6886,12 +6878,6 @@ CWorld* getWorld(void){
 
 
 
-
-
-
-
-
-
 //=========================================================
 // FBoxVisible - a more accurate ( and slower ) version
 // of FVisible. 
@@ -6901,9 +6887,12 @@ CWorld* getWorld(void){
 BOOL FBoxVisible ( entvars_t *pevLooker, entvars_t *pevTarget, Vector &vecTargetOrigin, float flSize )
 {
 	// don't look through water
-	if ((pevLooker->waterlevel != 3 && pevTarget->waterlevel == 3) 
-		|| (pevLooker->waterlevel == 3 && pevTarget->waterlevel == 0))
+	if (
+		(pevLooker->waterlevel != 3 && pevTarget->waterlevel == 3)
+		|| (pevLooker->waterlevel == 3 && pevTarget->waterlevel == 0)
+	) {
 		return FALSE;
+	}
 
 	TraceResult tr;
 	Vector	vecLookerOrigin = pevLooker->origin + pevLooker->view_ofs;//look through the monster's 'eyes'
@@ -6931,12 +6920,12 @@ BOOL FBoxVisible ( entvars_t *pevLooker, entvars_t *pevTarget, Vector &vecTarget
 // 
 Vector VecCheckToss ( entvars_t *pev, const Vector &vecSpot1, Vector vecSpot2, float flGravityAdj )
 {
-	TraceResult		tr;
-	Vector			vecMidPoint;// halfway point between Spot1 and Spot2
-	Vector			vecApex;// highest point 
-	Vector			vecScale;
-	Vector			vecGrenadeVel;
-	Vector			vecTemp;
+	TraceResult tr;
+	Vector		vecMidPoint;// halfway point between Spot1 and Spot2
+	Vector		vecApex;// highest point 
+	Vector		vecScale;
+	Vector		vecGrenadeVel;
+	Vector		vecTemp;
 	float		flGravity = g_psv_gravity->value * flGravityAdj;
 
 	if (vecSpot2.z - vecSpot1.z > 500)
@@ -7017,7 +7006,7 @@ Vector VecCheckToss ( entvars_t *pev, const Vector &vecSpot1, Vector vecSpot2, f
 // 
 Vector VecCheckThrow ( entvars_t *pev, const Vector &vecSpot1, Vector vecSpot2, float flSpeed, float flGravityAdj )
 {
-	float		flGravity = g_psv_gravity->value * flGravityAdj;
+	float flGravity = g_psv_gravity->value * flGravityAdj;
 
 	Vector vecGrenadeVel = (vecSpot2 - vecSpot1);
 
@@ -7060,10 +7049,27 @@ Vector VecCheckThrow ( entvars_t *pev, const Vector &vecSpot1, Vector vecSpot2, 
 SpawnBlood
 ================
 */
-void SpawnBlood(Vector vecSpot, int bloodColor, float flDamage)
-{
-	UTIL_BloodDrips( vecSpot, g_vecAttackDir, bloodColor, (int)flDamage );
+// Used to call only BloodStream (retail blood effect).
+// Now looks at sv_bloodparticlemode to pick from BloodStream or BloodDrips.
+void UTIL_SpawnBlood(const Vector& vecSpot, int bloodColor, int amount) {
+	UTIL_SpawnBlood(vecSpot, UTIL_RandomBloodVector(), bloodColor, amount);
 }
+void UTIL_SpawnBlood(const Vector& vecSpot, const Vector& bloodDir, int bloodColor, int amount)
+{
+	if (!UTIL_ShouldShowBlood(bloodColor)) {
+		return;
+	}
+	if (EASY_CVAR_GET(sv_bloodparticlemode) == 1 || EASY_CVAR_GET(sv_bloodparticlemode) == 2) {
+		UTIL_BloodStream(vecSpot, bloodDir, bloodColor, amount);
+	}
+	if (EASY_CVAR_GET(sv_bloodparticlemode) == 0 || EASY_CVAR_GET(sv_bloodparticlemode) == 2) {
+		// RETAIL CALL.
+		// Is 'g_vecZero' safe to assume or should this be able to be specified?  I don't
+		// think most places calling here can really give any input on blood direction though
+		// WAIT, how about UTIL_RandomBloodVector() ?
+		UTIL_BloodDrips(vecSpot, bloodDir, bloodColor, amount);
+	}
+}//UTIL_SpawnBlood
 
 
 int DamageDecal( CBaseEntity *pEntity, int bitsDamageType )
@@ -7072,8 +7078,9 @@ int DamageDecal( CBaseEntity *pEntity, int bitsDamageType )
 }
 int DamageDecal( CBaseEntity *pEntity, int bitsDamageType, int bitsDamageTypeMod )
 {
-	if ( !pEntity )
-		return (DECAL_GUNSHOT1 + RANDOM_LONG(0,4));
+	if (!pEntity) {
+		return (DECAL_GUNSHOT1 + RANDOM_LONG(0, 4));
+	}
 	
 	return pEntity->DamageDecal( bitsDamageType, bitsDamageTypeMod );
 }
@@ -7081,8 +7088,9 @@ int DamageDecal( CBaseEntity *pEntity, int bitsDamageType, int bitsDamageTypeMod
 void DecalGunshot( TraceResult *pTrace, int iBulletType )
 {
 	// Is the entity valid
-	if ( !UTIL_IsValidEntity( pTrace->pHit ) )
+	if (!UTIL_IsValidEntity(pTrace->pHit)) {
 		return;
+	}
 
 	if ( VARS(pTrace->pHit)->solid == SOLID_BSP || VARS(pTrace->pHit)->movetype == MOVETYPE_PUSHSTEP )
 	{

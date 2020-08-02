@@ -424,14 +424,12 @@ public:
 	virtual void precacheAmmoPickupSound();
 	virtual void precacheGunPickupSound();
 
-	virtual void DrawAlphaBlood(float flDamage, const Vector& vecDrawLoc, int amount );
-	
-	virtual void DrawAlphaBloodSlash(float flDamage, const Vector& vecDrawLoc, const Vector& vecTraceLine  );
-	virtual void DrawAlphaBloodSlash(float flDamage, const Vector& vecDrawLoc, const Vector& vecTraceLine, const BOOL& extraBlood );
 
-	
-	virtual void DrawAlphaBlood(float flDamage, TraceResult *ptr );
-	virtual void DrawAlphaBlood(float flDamage, const Vector& vecDrawLoc );
+	//MODDD - method to create a blood effect.  Moved to CBaseEntity for involving more details about the entity
+	// spawning the blood without the need for 3 to 6 parameters.
+	virtual void SpawnBlood(const Vector& vecSpot, float flDamage);
+	virtual void SpawnBloodSlash(float flDamage, const Vector& vecDrawLoc, const Vector& vecTraceLine);
+	virtual void SpawnBloodSlash(float flDamage, const Vector& vecDrawLoc, const Vector& vecTraceLine, const BOOL& extraBlood);
 
 
 

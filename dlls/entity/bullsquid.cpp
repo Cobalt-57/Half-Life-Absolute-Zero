@@ -685,10 +685,10 @@ void CBullsquid :: SetYawSpeed ( void )
 
 	switch ( m_Activity )
 	{
-	case	ACT_WALK:			ys = 90;	break;
-	case	ACT_RUN:			ys = 90;	break;
-	case	ACT_IDLE:			ys = 90;	break;
-	case	ACT_RANGE_ATTACK1:	ys = 90;	break;
+	case ACT_WALK:			ys = 90;	break;
+	case ACT_RUN:			ys = 90;	break;
+	case ACT_IDLE:			ys = 90;	break;
+	case ACT_RANGE_ATTACK1:	ys = 90;	break;
 	default:
 		ys = 90;
 		break;

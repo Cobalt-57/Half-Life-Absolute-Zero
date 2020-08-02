@@ -34,13 +34,11 @@
 // Lightning target, just alias landmark
 LINK_ENTITY_TO_CLASS( info_target, CPointEntity );
 
-//MODDD - extern
 EASY_CVAR_EXTERN(sv_germancensorship)
 EASY_CVAR_EXTERN(sparksBeamMulti)
 EASY_CVAR_EXTERN(mirrorsDoNotReflectPlayer)
 
 extern float globalPSEUDO_canApplyGermanCensorship;
-
 extern float globalPSEUDO_cameraMode;
 
 
@@ -2051,10 +2049,17 @@ Vector CBlood::BloodPosition( CBaseEntity *pActivator )
 
 void CBlood::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
 {
-	if ( pev->spawnflags & SF_BLOOD_STREAM )
-		UTIL_BloodStream( BloodPosition(pActivator), Direction(), (Color() == BLOOD_COLOR_RED) ? 70 : Color(), BloodAmount() );
-	else
+	//MODDD - at least check for the color being valid here.  Why bother with other logic if not.
+	if ( !UTIL_ShouldShowBlood( Color() ) ){
+		return;
+	}
+	
+	//MODDD - raw blood call?  Should this be forced to depend on 'sv_bloodparticlemode' instead?
+	if ( pev->spawnflags & SF_BLOOD_STREAM ){
+		UTIL_BloodStream( BloodPosition(pActivator), Direction(), Color(), BloodAmount() );
+	}else{
 		UTIL_BloodDrips( BloodPosition(pActivator), Direction(), Color(), BloodAmount() );
+	}
 
 	if ( pev->spawnflags & SF_BLOOD_DECAL )
 	{
@@ -2534,6 +2539,47 @@ void CItemSoda::CanTouch ( CBaseEntity *pOther )
 
 
 
+// MODDD - CBloodSplat's implementations.
+// Remember, intended only for hte player to use 'impulse 202'.  So very very specific to that, but nice
+// base for other effects.   Maybe?
+void CBloodSplat::Spawn ( entvars_t *pevOwner )
+{
+	pev->origin = pevOwner->origin + Vector ( 0 , 0 , 32 );
+	pev->angles = pevOwner->v_angle;
+	pev->owner = ENT(pevOwner);
+
+	SetThink ( &CBloodSplat::Spray );
+	pev->nextthink = gpGlobals->time + 0.1;
+}
+
+void CBloodSplat::Spray ( void )
+{
+	TraceResult	tr;	
+	
+	//if ( g_Language != LANGUAGE_GERMAN )
+	if(UTIL_ShouldShowBlood(BLOOD_COLOR_RED))
+	{
+		UTIL_MakeVectors(pev->angles);
+		UTIL_TraceLine ( pev->origin, pev->origin + gpGlobals->v_forward * 128, ignore_monsters, pev->owner, & tr);
+
+		UTIL_BloodDecalTrace( &tr, BLOOD_COLOR_RED );
+	}
+	SetThink ( &CBaseEntity::SUB_Remove );
+	pev->nextthink = gpGlobals->time + 0.1;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
 //MODDDMIRROR - pretty significant.
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2747,478 +2793,9 @@ BOOL CEnvMirror::canDrawPlayer(void){
 //=========================================================
 // nah?
 
-
-//Simple version of the below for basic functionality.
-
-///////////////////////////////////////////////////////////////////////////
-//MODDD - thanks to Spirit of Half-Life 1.9!
-///////////////////////////////////////////////////////////////////////////
-
-//=================================================================
-// env_model: like env_sprite, except you can specify a sequence.
-//=================================================================
-#define SF_ENVMODEL_OFF			1
-#define SF_ENVMODEL_DROPTOFLOOR	2
-#define SF_ENVMODEL_SOLID		4
-
-class CEnvModelSimple : public CBaseAnimating
-{
-	void Spawn( void );
-	void Precache( void );
-	void EXPORT Think( void );
-	void KeyValue( KeyValueData *pkvd );
-	virtual BOOL IsWorldAffiliated(void);
-	STATE GetState( void );
-	void Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value );
-	virtual int ObjectCaps( void ) { return CBaseEntity :: ObjectCaps() & ~FCAP_ACROSS_TRANSITION; }
-
-	virtual int	Save( CSave &save );
-	virtual int	Restore( CRestore &restore );
-	static	TYPEDESCRIPTION m_SaveData[];
-
-	void SetSequence( void );
-
-	string_t m_iszSequence;
-};
-
-TYPEDESCRIPTION CEnvModelSimple::m_SaveData[] =
-{
-	DEFINE_FIELD( CEnvModelSimple, m_iszSequence, FIELD_STRING )
-};
-
-IMPLEMENT_SAVERESTORE( CEnvModelSimple, CBaseAnimating );
-LINK_ENTITY_TO_CLASS( env_modelsimple, CEnvModelSimple );
-
-void CEnvModelSimple::KeyValue( KeyValueData *pkvd )
-{
-	if (FStrEq(pkvd->szKeyName, "m_iszSequence"))
-	{
-		m_iszSequence = ALLOC_STRING(pkvd->szValue);
-		pkvd->fHandled = TRUE;
-	}
-	else
-	{
-		CBaseAnimating::KeyValue( pkvd );
-	}
-}
-
-BOOL CEnvModelSimple::IsWorldAffiliated(){
-	return TRUE;
-}
-
-void CEnvModelSimple :: Spawn( void )
-{
-	
-	Precache();
-	setModel( STRING(pev->model) );
-	UTIL_SetOrigin(this, pev->origin);
-
-	
-	//MODDD - disabled.
-	if (pev->spawnflags & SF_ENVMODEL_SOLID)
-	{
-		pev->solid = SOLID_SLIDEBOX;
-		UTIL_SetSize(pev, Vector(-10, -10, -10), Vector(10, 10, 10));	//LRCT
-	}
-	
-
-	if (pev->spawnflags & SF_ENVMODEL_DROPTOFLOOR)
-	{
-		pev->origin.z += 1;
-		DROP_TO_FLOOR ( ENT(pev) );
-	}
-	SetBoneController( 0, 0 );
-	SetBoneController( 1, 0 );
-
-	easyForcePrintLine("Surely, you spawn! spawnflags: %d", pev->spawnflags);
-
-	SetSequence();
-	
-	SetNextThink( 0.1 );
-}
-
-void CEnvModelSimple::Precache( void )
-{
-	PRECACHE_MODEL( (char *)STRING(pev->model) );
-}
-
-STATE CEnvModelSimple::GetState( void )
-{
-	/*
-	if (pev->spawnflags & SF_ENVMODEL_OFF)
-		return STATE_OFF;
-	else
-		return STATE_ON;
-	*/
-	return STATE_ON;
-}
-
-void CEnvModelSimple::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
-{
-	//MODDD - use disabled.  Always just run?
-	/*
-	//?/???
-	if (ShouldToggle(useType, !(pev->spawnflags & SF_ENVMODEL_OFF)))
-	{
-		if (pev->spawnflags & SF_ENVMODEL_OFF)
-			pev->spawnflags &= ~SF_ENVMODEL_OFF;
-		else
-			pev->spawnflags |= SF_ENVMODEL_OFF;
-
-		//easyForcePrintLine("WHYYYYYY");
-		SetSequence();
-		SetNextThink( 0.1 );
-	}
-	*/
-	//CBaseAnimating::Use(pActivator, pCaller, useType, value);
-}
-
-void CEnvModelSimple::Think( void )
-{
-	int iTemp;
-
-//	ALERT(at_console, "env_model Think fr=%f\n", pev->framerate);
-
-	//StudioFrameAdvance ( ); // set m_fSequenceFinished if necessary
-
-	//CRUDE COMMENT - never happens!!!
-	if(false){
-
-
-//	if (m_fSequenceLoops)
-//	{
-//		SetNextThink( 1E6 );
-//		return; // our work here is done.
-//	}
-	if (m_fSequenceFinished && !m_fSequenceLoops)
-	{
-		/*
-		if (pev->spawnflags & SF_ENVMODEL_OFF)
-			iTemp = m_iAction_Off;
-		else
-			iTemp = m_iAction_On;
-		*/
-
-		switch (iTemp)
-		{
-//		case 1: // loop
-//			pev->animtime = gpGlobals->time;
-//			m_fSequenceFinished = FALSE;
-//			m_flLastEventCheck = gpGlobals->time;
-//			pev->frame = 0;
-//			break;
-		case 2: // change state
-			if (pev->spawnflags & SF_ENVMODEL_OFF)
-				pev->spawnflags &= ~SF_ENVMODEL_OFF;
-			else
-				pev->spawnflags |= SF_ENVMODEL_OFF;
-			//easyForcePrintLine("WHYYYYYY2");
-			SetSequence();
-			break;
-		default: //remain frozen
-			return;
-		}
-	}
-
-	}//END OF CRUDE COMMENT
-
-
-	SetNextThink( 0.1 );
-	
-}
-
-void CEnvModelSimple :: SetSequence( void )
-{
-	int iszSeq;
-
-	
-	easyForcePrintLine("SetSequence called.  Spawnflags: %d", pev->spawnflags);
-
-	/*
-	easyForcePrintLine("Turned on / off: %d", !(pev->spawnflags & SF_ENVMODEL_OFF) );
-	if (pev->spawnflags & SF_ENVMODEL_OFF)
-		iszSeq = m_iszSequence_Off;
-	else
-		iszSeq = m_iszSequence_On;
-	*/
-	iszSeq = m_iszSequence;
-
-	//iszSeq = ALLOC_STRING("orbit");
-
-	easyForcePrintLine("Null?: %d", (iszSeq==0) );
-	if (!iszSeq)
-		return;
-	pev->sequence = LookupSequence( STRING( iszSeq ));
-
-	if (pev->sequence == -1)
-	{
-		if (pev->targetname)
-			ALERT( at_error, "env_model %s: unknown sequence \"%s\"\n", STRING( pev->targetname ), STRING( iszSeq ));
-		else
-			ALERT( at_error, "env_model: unknown sequence \"%s\"\n", STRING( pev->targetname ), STRING( iszSeq ));
-		pev->sequence = 0;
-	}
-	
-	easyForcePrintLine("Frame reset...");
-	pev->frame = 0;
-	ResetSequenceInfo( );
-
-	/*
-	if (pev->spawnflags & SF_ENVMODEL_OFF)
-	{
-		if (m_iAction_Off == 1)
-			m_fSequenceLoops = 1;
-		else
-			m_fSequenceLoops = 0;
-	}
-	else
-	{
-		if (m_iAction_On == 1)
-			m_fSequenceLoops = 1;
-		else
-			m_fSequenceLoops = 0;
-	}
-	*/
-	easyForcePrintLine("Some results: m_iAction_Off=NA m_fSequenceLoops=%d",  m_fSequenceLoops);
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////
-
-
-
-///////////////////////////////////////////////////////////////////////////
-//MODDD - thanks to Spirit of Half-Life 1.9!
-///////////////////////////////////////////////////////////////////////////
-
-//=================================================================
-// env_model: like env_sprite, except you can specify a sequence.
-//=================================================================
-//...see defines above.
-
-class CEnvModel : public CBaseAnimating
-{
-	void Spawn( void );
-	void Precache( void );
-	void EXPORT Think( void );
-	void KeyValue( KeyValueData *pkvd );
-
-	virtual BOOL IsWorldAffiliated(void);
-
-	STATE GetState( void );
-	void Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value );
-	virtual int ObjectCaps( void ) { return CBaseEntity :: ObjectCaps() & ~FCAP_ACROSS_TRANSITION; }
-
-	virtual int	Save( CSave &save );
-	virtual int	Restore( CRestore &restore );
-	static	TYPEDESCRIPTION m_SaveData[];
-
-	void SetSequence( void );
-
-	string_t m_iszSequence_On;
-	string_t m_iszSequence_Off;
-	int m_iAction_On;
-	int m_iAction_Off;
-};
-
-TYPEDESCRIPTION CEnvModel::m_SaveData[] =
-{
-	DEFINE_FIELD( CEnvModel, m_iszSequence_On, FIELD_STRING ),
-	DEFINE_FIELD( CEnvModel, m_iszSequence_Off, FIELD_STRING ),
-	DEFINE_FIELD( CEnvModel, m_iAction_On, FIELD_INTEGER ),
-	DEFINE_FIELD( CEnvModel, m_iAction_Off, FIELD_INTEGER ),
-};
-
-IMPLEMENT_SAVERESTORE( CEnvModel, CBaseAnimating );
-LINK_ENTITY_TO_CLASS( env_model, CEnvModel );
-
-void CEnvModel::KeyValue( KeyValueData *pkvd )
-{
-	if (FStrEq(pkvd->szKeyName, "m_iszSequence_On"))
-	{
-		m_iszSequence_On = ALLOC_STRING(pkvd->szValue);
-		pkvd->fHandled = TRUE;
-	}
-	else if (FStrEq(pkvd->szKeyName, "m_iszSequence_Off"))
-	{
-		m_iszSequence_Off = ALLOC_STRING(pkvd->szValue);
-		pkvd->fHandled = TRUE;
-	}
-	else if (FStrEq(pkvd->szKeyName, "m_iAction_On"))
-	{
-		m_iAction_On = atoi(pkvd->szValue);
-		pkvd->fHandled = TRUE;
-	}
-	else if (FStrEq(pkvd->szKeyName, "m_iAction_Off"))
-	{
-		m_iAction_Off = atoi(pkvd->szValue);
-		pkvd->fHandled = TRUE;
-	}
-	else
-	{
-		CBaseAnimating::KeyValue( pkvd );
-	}
-}
-
-BOOL CEnvModel::IsWorldAffiliated(){
-	return TRUE;
-}
-
-void CEnvModel :: Spawn( void )
-{
-	
-	Precache();
-	setModel( STRING(pev->model) );
-	UTIL_SetOrigin(this, pev->origin);
-
-	
-	//MODDD - disabled.
-	if (pev->spawnflags & SF_ENVMODEL_SOLID)
-	{
-		pev->solid = SOLID_SLIDEBOX;
-		UTIL_SetSize(pev, Vector(-10, -10, -10), Vector(10, 10, 10));	//LRCT
-	}
-	
-
-	if (pev->spawnflags & SF_ENVMODEL_DROPTOFLOOR)
-	{
-		pev->origin.z += 1;
-		DROP_TO_FLOOR ( ENT(pev) );
-	}
-	SetBoneController( 0, 0 );
-	SetBoneController( 1, 0 );
-
-	easyForcePrintLine("Surely, you spawn! spawnflags: %d", pev->spawnflags);
-
-	SetSequence();
-	
-	SetNextThink( 0.1 );
-}
-
-void CEnvModel::Precache( void )
-{
-	PRECACHE_MODEL( (char *)STRING(pev->model) );
-}
-
-STATE CEnvModel::GetState( void )
-{
-	if (pev->spawnflags & SF_ENVMODEL_OFF)
-		return STATE_OFF;
-	else
-		return STATE_ON;
-}
-
-void CEnvModel::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
-{
-	//?/???
-	if (ShouldToggle(useType, !(pev->spawnflags & SF_ENVMODEL_OFF)))
-	{
-		if (pev->spawnflags & SF_ENVMODEL_OFF)
-			pev->spawnflags &= ~SF_ENVMODEL_OFF;
-		else
-			pev->spawnflags |= SF_ENVMODEL_OFF;
-
-		//easyForcePrintLine("WHYYYYYY");
-		SetSequence();
-		SetNextThink( 0.1 );
-	}
-}
-
-void CEnvModel::Think( void )
-{
-	int iTemp;
-
-//	ALERT(at_console, "env_model Think fr=%f\n", pev->framerate);
-
-	//StudioFrameAdvance ( ); // set m_fSequenceFinished if necessary
-
-
-
-//	if (m_fSequenceLoops)
-//	{
-//		SetNextThink( 1E6 );
-//		return; // our work here is done.
-//	}
-	if (m_fSequenceFinished && !m_fSequenceLoops)
-	{
-		if (pev->spawnflags & SF_ENVMODEL_OFF)
-			iTemp = m_iAction_Off;
-		else
-			iTemp = m_iAction_On;
-
-		switch (iTemp)
-		{
-//		case 1: // loop
-//			pev->animtime = gpGlobals->time;
-//			m_fSequenceFinished = FALSE;
-//			m_flLastEventCheck = gpGlobals->time;
-//			pev->frame = 0;
-//			break;
-		case 2: // change state
-			if (pev->spawnflags & SF_ENVMODEL_OFF)
-				pev->spawnflags &= ~SF_ENVMODEL_OFF;
-			else
-				pev->spawnflags |= SF_ENVMODEL_OFF;
-			//easyForcePrintLine("WHYYYYYY2");
-			SetSequence();
-			break;
-		default: //remain frozen
-			return;
-		}
-	}
-	SetNextThink( 0.1 );
-	
-}
-
-void CEnvModel :: SetSequence( void )
-{
-	int iszSeq;
-	easyForcePrintLine("SetSequence called.  Spawnflags: %d", pev->spawnflags);
-
-	easyForcePrintLine("Turned on / off: %d", !(pev->spawnflags & SF_ENVMODEL_OFF) );
-	if (pev->spawnflags & SF_ENVMODEL_OFF)
-		iszSeq = m_iszSequence_Off;
-	else
-		iszSeq = m_iszSequence_On;
-
-	//iszSeq = ALLOC_STRING("orbit");
-
-	easyForcePrintLine("Null?: %d", (iszSeq==0) );
-	if (!iszSeq)
-		return;
-	pev->sequence = LookupSequence( STRING( iszSeq ));
-
-	if (pev->sequence == -1)
-	{
-		if (pev->targetname)
-			ALERT( at_error, "env_model %s: unknown sequence \"%s\"\n", STRING( pev->targetname ), STRING( iszSeq ));
-		else
-			ALERT( at_error, "env_model: unknown sequence \"%s\"\n", STRING( pev->targetname ), STRING( iszSeq ));
-		pev->sequence = 0;
-	}
-	
-	easyForcePrintLine("Frame reset...");
-	pev->frame = 0;
-	ResetSequenceInfo( );
-
-	if (pev->spawnflags & SF_ENVMODEL_OFF)
-	{
-		if (m_iAction_Off == 1)
-			m_fSequenceLoops = 1;
-		else
-			m_fSequenceLoops = 0;
-	}
-	else
-	{
-		if (m_iAction_On == 1)
-			m_fSequenceLoops = 1;
-		else
-			m_fSequenceLoops = 0;
-	}
-	easyForcePrintLine("Some results: m_iAction_Off=%d m_fSequenceLoops=%d", m_iAction_Off, m_fSequenceLoops);
-}
+// NOTICE.
+// env_modelsimple (CEnvModelSimple) and env_model (CEnvModel) removed!
+// Not necessary for the mirror stuff we wanted
 
 //END OF MODDDMIRROR.
 /////////////////////////////////////////////////////////////////////////////////////////////////////

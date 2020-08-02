@@ -282,11 +282,19 @@ extern void AddMultiDamage(entvars_t* pevInflictor, CBaseEntity* pEntity, float 
 
 //MODDD - NEW.  Methods in ggrenade.cpp for allowing a grenade's explode to be used without an actual grenade.
 // Includes scorch effect (if possible), explosion sprite effect, and radiusDamage.
+
+
 extern void SimpleStaticExplode(Vector rawExplodeOrigin, float rawDamage, CBaseEntity* pDamageDealer);
 extern void SimpleStaticExplode(Vector rawExplodeOrigin, float rawDamage, CBaseEntity* pDamageDealer, entvars_t* entOwner);
+extern void SimpleStaticExplode(Vector rawExplodeOrigin, float rawDamage, float flRange, CBaseEntity* pDamageDealer);
+extern void SimpleStaticExplode(Vector rawExplodeOrigin, float rawDamage, float flRange, CBaseEntity* pDamageDealer, entvars_t* entOwner);
+
 extern void StaticExplode(Vector rawExplodeOrigin, float rawDamage, CBaseEntity* pDamageDealer, entvars_t* entOwner, TraceResult* pTrace, int bitsDamageType);
 extern void StaticExplode(Vector rawExplodeOrigin, float rawDamage, CBaseEntity* pDamageDealer, entvars_t* entOwner, TraceResult* pTrace, int bitsDamageType, int bitsDamageTypeMod);
 extern void StaticExplode(Vector rawExplodeOrigin, float rawDamage, CBaseEntity* pDamageDealer, entvars_t* entOwner, TraceResult* pTrace, int bitsDamageType, int bitsDamageTypeMod, float shrapMod);
+extern void StaticExplode(Vector rawExplodeOrigin, float rawDamage, float flRange, CBaseEntity* pDamageDealer, entvars_t* entOwner, TraceResult* pTrace, int bitsDamageType);
+extern void StaticExplode(Vector rawExplodeOrigin, float rawDamage, float flRange, CBaseEntity* pDamageDealer, entvars_t* entOwner, TraceResult* pTrace, int bitsDamageType, int bitsDamageTypeMod);
+extern void StaticExplode(Vector rawExplodeOrigin, float rawDamage, float flRange, CBaseEntity* pDamageDealer, entvars_t* entOwner, TraceResult* pTrace, int bitsDamageType, int bitsDamageTypeMod, float shrapMod);
 
 
 
@@ -359,15 +367,15 @@ public:
 	//void Explode( Vector vecSrc, Vector vecAim );
 
 
-	//MODD - why do we even need these?
+	//MODDD - why do we even need these?
 	GENERATE_TRACEATTACK_PROTOTYPE_VIRTUAL
 	GENERATE_TAKEDAMAGE_PROTOTYPE_VIRTUAL
 
 
-	void Explode();
+	void Explode(void);
 	void Explode( TraceResult *pTrace, int bitsDamageType );
 	void Explode( TraceResult *pTrace, int bitsDamageType, int bitsDamageTypeMod );
-	void Explode( TraceResult *pTrace, int bitsDamageType, int bitsDamageTypeMod, float shrapMod );
+	void Explode(TraceResult* pTrace, float rawDamage, float flRange, int bitsDamageType, int bitsDamageTypeMod, float shrapMod);
 
 	void EXPORT Smoke( void );
 

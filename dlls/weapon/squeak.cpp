@@ -16,6 +16,11 @@
 
 //MODDD TODO
 //- the spawned snark model (w_squeak.mdl) has a "fidget" animation that is never used.  ?
+// And a jump one.  	WSQUEAK_FIDGET,  WSQUEAK_JUMP.  Although not really sure where to use those.
+// Anim's that fudge the origin of the monster like that are awkward enough to deal with in death anims,
+// let alone alive things.
+
+
 
 
 #pragma once
@@ -193,8 +198,24 @@ GENERATE_KILLED_IMPLEMENTATION(CSqueakGrenade){
 
 	CSoundEnt::InsertSound ( bits_SOUND_COMBAT, pev->origin, SMALL_EXPLOSION_VOLUME, 3.0 );
 
-	UTIL_BloodDrips( pev->origin, g_vecZero, BloodColor(), 80 );
 
+
+	//MODDD - does this still look ok with alpha blood instead of retail?  Can fancy it up a bit in that case if needed
+	// ...yep.
+	//UTIL_SpawnBlood(pev->origin, g_vecZero, BloodColor(), 80);
+	if (UTIL_ShouldShowBlood(BloodColor())) {
+		if (EASY_CVAR_GET(sv_bloodparticlemode) == 1 || EASY_CVAR_GET(sv_bloodparticlemode) == 2) {
+			// alpha effect
+			UTIL_BloodStream(pev->origin + Vector(RANDOM_FLOAT(-4.5,4.5), RANDOM_FLOAT(-4.5, 4.5), RANDOM_FLOAT(7, 14)), UTIL_RandomBloodVectorHigh(), BloodColor(), RANDOM_FLOAT(16, 22));
+			UTIL_BloodStream(pev->origin + Vector(RANDOM_FLOAT(-4.5, 4.5), RANDOM_FLOAT(-4.5, 4.5), RANDOM_FLOAT(7, 14)), UTIL_RandomBloodVectorHigh(), BloodColor(), RANDOM_FLOAT(16, 22));
+			UTIL_BloodStream(pev->origin + Vector(RANDOM_FLOAT(-4.5,4.5), RANDOM_FLOAT(-4.5, 4.5), RANDOM_FLOAT(7, 14)), UTIL_RandomBloodVectorHigh(), BloodColor(), RANDOM_FLOAT(16, 22));
+		}
+		if (EASY_CVAR_GET(sv_bloodparticlemode) == 0 || EASY_CVAR_GET(sv_bloodparticlemode) == 2) {
+			// retail effect
+			UTIL_BloodDrips(pev->origin, g_vecZero, BloodColor(), 80);
+		}
+	}//END OF should show blood check
+	
 
 	if (m_hOwner != NULL)
 		RadiusDamageAutoRadius ( pev, m_hOwner->pev, pev->dmg, CLASS_NONE, DMG_BLAST );

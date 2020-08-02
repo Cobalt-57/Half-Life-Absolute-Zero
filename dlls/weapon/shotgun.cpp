@@ -28,10 +28,9 @@ EASY_CVAR_EXTERN(cheat_infiniteclip)
 EASY_CVAR_EXTERN(cheat_infiniteammo)
 EASY_CVAR_EXTERN(cheat_minimumfiredelay)
 
-EASY_CVAR_EXTERN(playerWeaponSpreadMode)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST(playerWeaponSpreadMode)
 
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(viewModelPrintouts)
-
 
 
 
@@ -46,8 +45,12 @@ EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(viewModelPrintouts)
 #define SHOTGUN_BIT8 128
 
 
+DLL_GLOBAL const Vector VECTOR_CONE_DM_SHOTGUN = Vector(0.08716, 0.04362, 0.00);// 10 degrees by 5 degrees
+DLL_GLOBAL const Vector VECTOR_CONE_DM_DOUBLESHOTGUN = Vector(0.17365, 0.04362, 0.00); // 20 degrees by 5 degrees
 
-BOOL makeNoise = FALSE;
+
+// oops.
+//BOOL makeNoise = FALSE;
 
 
 
@@ -429,15 +432,18 @@ void CShotgun::FireShotgun(BOOL isPrimary) {
 	Vector vecDir;
 
 
-	//if (  EASY_CVAR_GET(playerWeaponSpreadMode)!=1 && (EASY_CVAR_GET(playerWeaponSpreadMode)==2 || IsMultiplayer() )  )
-	if (EASY_CVAR_GET(playerWeaponSpreadMode) != 2 && (EASY_CVAR_GET(playerWeaponSpreadMode) == 1 || !IsMultiplayer()))
+	if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST(playerWeaponSpreadMode) != 2 && (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST(playerWeaponSpreadMode) == 1 || !IsMultiplayer()))
 	{
 		// regular old, untouched spread for singleplayer
 		if (isPrimary) {
 			vecDir = m_pPlayer->FireBulletsPlayer(6, vecSrc, vecAiming, VECTOR_CONE_10DEGREES, 2048, BULLET_PLAYER_BUCKSHOT, 0, 0, m_pPlayer->pev, m_pPlayer->random_seed);
+			// TEST!
+			//vecDir = VECTOR_CONE_10DEGREES;
 		}
 		else {
 			vecDir = m_pPlayer->FireBulletsPlayer(12, vecSrc, vecAiming, VECTOR_CONE_10DEGREES, 2048, BULLET_PLAYER_BUCKSHOT, 0, 0, m_pPlayer->pev, m_pPlayer->random_seed);
+			// TEST!
+			//vecDir = VECTOR_CONE_10DEGREES;
 		}
 	}
 	else
@@ -445,10 +451,13 @@ void CShotgun::FireShotgun(BOOL isPrimary) {
 		// tuned for deathmatch
 		if (isPrimary) {
 			vecDir = m_pPlayer->FireBulletsPlayer(4, vecSrc, vecAiming, VECTOR_CONE_DM_SHOTGUN, 2048, BULLET_PLAYER_BUCKSHOT, 0, 0, m_pPlayer->pev, m_pPlayer->random_seed);
+			// TEST!
+			//vecDir = VECTOR_CONE_DM_SHOTGUN;
 		}
 		else {
 			vecDir = m_pPlayer->FireBulletsPlayer(8, vecSrc, vecAiming, VECTOR_CONE_DM_DOUBLESHOTGUN, 2048, BULLET_PLAYER_BUCKSHOT, 0, 0, m_pPlayer->pev, m_pPlayer->random_seed);
-
+			// TEST!
+			//vecDir = VECTOR_CONE_DM_DOUBLESHOTGUN;
 		}
 	}
 
@@ -460,14 +469,14 @@ void CShotgun::FireShotgun(BOOL isPrimary) {
 	}
 
 
-	//is this necessary here?
+	// is this necessary here?
 	m_fireState &= ~128;
 
-
+	
 
 	if (isPrimary) {
 		PLAYBACK_EVENT_FULL(flags, m_pPlayer->edict(), m_usSingleFire, 0.0, (float*)&g_vecZero, (float*)&g_vecZero, vecDir.x, vecDir.y, 0, 0, 0, 0);
-		//this is single fire.
+		// this is single fire.
 		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + (20.0 / 20.0) + randomIdleAnimationDelay();
 	}
 	else {
@@ -477,17 +486,14 @@ void CShotgun::FireShotgun(BOOL isPrimary) {
 	}
 
 
-
 	if (!m_iClip && m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] <= 0) {
 		// HEV suit - indicate out of ammo condition
 		m_pPlayer->SetSuitUpdate("!HEV_AMO0", FALSE, 0);
 	}
 
 
-
 	if (isPrimary) {
-
-		//MODDD - WRONG.   if we were out of ammo, execution wouldn't have even reached this point to begin with!
+		//MODDD - WRONG.   if we were out of ammo, execution wouldn't have reached this point to begin with!
 		// this just causes the last visible reload pump of the shotgun (before auto-reloading) to make no noise.
 		//if (m_iClip != 0){
 		m_flPumpTime = gpGlobals->time + 0.5;
@@ -819,10 +825,12 @@ BOOL CShotgun::reloadSemi(){
 	{
 		if (m_iClip != 8 && m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType]  )
 		{
+			/*
 			makeNoise = TRUE;
 			if (m_iClip > 0 && (pev->iuser1 & SHOTGUN_BIT4)) {
 				makeNoise = FALSE;
 			}
+			*/
 
 
 

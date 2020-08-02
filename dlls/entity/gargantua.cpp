@@ -1084,7 +1084,9 @@ void CGargantua :: Spawn()
 
 	pev->solid			= SOLID_SLIDEBOX;
 	pev->movetype		= MOVETYPE_STEP;
+
 	m_bloodColor		= BLOOD_COLOR_GREEN;
+
 	pev->health			= gSkillData.gargantuaHealth;
 	//pev->view_ofs		= Vector ( 0, 0, 96 );// taken from mdl file
 	m_flFieldOfView		= -0.2;// width of forward view cone ( as a dotproduct result )
@@ -1174,7 +1176,7 @@ GENERATE_TRACEATTACK_IMPLEMENTATION(CGargantua){
 
 	// But cut it a bit.  Thick armor after all.
 	if (gaussPass) {
-		flDamage *= 0.75;
+		flDamage *= 0.70;
 	}
 
 	//MODDD - nah, this method is fine, even if dead.
@@ -1236,10 +1238,15 @@ GENERATE_TRACEATTACK_IMPLEMENTATION(CGargantua){
 			}else if(gargantuaBleedsVar == 1){
 				//UTIL_playFleshHitSound(pev);
 				//just don't block.
-				DrawAlphaBlood(flDamage, ptr );
+				Vector vecBloodOrigin = ptr->vecEndPos - vecDir * 4;
+				SpawnBlood(vecBloodOrigin, flDamage);// a little surface blood.
+
 			}else if(gargantuaBleedsVar == 2){
 				if(useBulletHitSound)*useBulletHitSound=FALSE;
-				DrawAlphaBlood(flDamage, ptr );
+
+				Vector vecBloodOrigin = ptr->vecEndPos - vecDir * 4;
+				SpawnBlood(vecBloodOrigin, flDamage);// a little surface blood.
+
 			}else if(gargantuaBleedsVar == 3){
 				if(useBulletHitSound)*useBulletHitSound=FALSE;
 				UTIL_Ricochet( ptr->vecEndPos, RANDOM_FLOAT(0.5,1.5) );
@@ -1257,10 +1264,13 @@ GENERATE_TRACEATTACK_IMPLEMENTATION(CGargantua){
 		if(isAliveVar){
 			flDamage = 0;
 		}
-		
-	}
 
-	//send "FALSE" for "useBloodEffect", as the hit effect to use was handled above already.
+		//send "FALSE" for "useBloodEffect", as the hit effect to use was handled above already.
+		useBloodEffect = FALSE;
+		
+	}//END OF no normal damage check
+
+
 	GENERATE_TRACEATTACK_PARENT_CALL(CBaseMonster);
 }
 
@@ -1782,6 +1792,8 @@ void CGargantua::RunTask( Task_t *pTask )
 			StopAnimation();
 			pev->nextthink = gpGlobals->time + 0.15;
 			SetThink( &CBaseEntity::SUB_Remove );
+			
+			//MODDD - NOTE. custom gib generation?  ok, suppose that's fine.
 			int i;
 			int parts = MODEL_FRAMES( gGargGibModel );
 			for ( i = 0; i < 10; i++ )
@@ -1795,13 +1807,18 @@ void CGargantua::RunTask( Task_t *pTask )
 					bodyPart = RANDOM_LONG( 0, pev->body-1 );
 
 				pGib->pev->body = bodyPart;
-				pGib->m_bloodColor = BLOOD_COLOR_YELLOW;
+
+				//MODDD - blood from YELLOW to GREEN, and they are now different.
+				pGib->m_bloodColor = BLOOD_COLOR_GREEN;
+
 				pGib->m_material = matNone;
 				pGib->pev->origin = pev->origin;
 				pGib->pev->velocity = UTIL_RandomBloodVector() * RANDOM_FLOAT( 300, 500 );
 				pGib->pev->nextthink = gpGlobals->time + 1.25;
 				pGib->SetThink( &CBaseEntity::SUB_FadeOut );
 			}
+			
+			
 			MESSAGE_BEGIN( MSG_PVS, SVC_TEMPENTITY, pev->origin );
 				WRITE_BYTE( TE_BREAKMODEL);
 

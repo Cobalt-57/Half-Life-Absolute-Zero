@@ -8,8 +8,9 @@
 
 
 // special deathmatch shotgun spreads
-#define VECTOR_CONE_DM_SHOTGUN	Vector( 0.08716, 0.04362, 0.00  )// 10 degrees by 5 degrees
-#define VECTOR_CONE_DM_DOUBLESHOTGUN Vector( 0.17365, 0.04362, 0.00 ) // 20 degrees by 5 degrees
+//MODDD - made into const vectors instead of #define's because blablabla see util_shared.h
+extern DLL_GLOBAL const Vector VECTOR_CONE_DM_SHOTGUN;// 10 degrees by 5 degrees
+extern DLL_GLOBAL const Vector VECTOR_CONE_DM_DOUBLESHOTGUN; // 20 degrees by 5 degrees
 
 enum shotgun_e {
 	SHOTGUN_IDLE = 0,

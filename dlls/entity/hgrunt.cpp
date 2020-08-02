@@ -5586,7 +5586,7 @@ void CHGrunt::checkHeadGore(int iGib ){
 			SetBodygroup( BODYGROUP_HEAD, HEAD_GORE );
 
 			//FOUNTAIN O BLOOD
-			UTIL_BloodStream(lastHeadHit, UTIL_RandomBloodVector(), BloodColor(), RANDOM_LONG(70, 80) );
+			UTIL_SpawnBlood(lastHeadHit, UTIL_RandomBloodVector(), BloodColor(), RANDOM_LONG(50, 70) );
 
 			//EMIT_SOUND_FILTERED( ENT(pev), CHAN_VOICE, "!SC_SCREAM_TRU0", 1, ATTN_IDLE );
 			//playedSoundAlready = TRUE;

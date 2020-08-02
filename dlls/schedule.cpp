@@ -794,7 +794,8 @@ void CBaseMonster :: RunTask ( Task_t *pTask )
 				pev->ideal_yaw = UTIL_VecToYaw( pTarget->pev->origin - pev->origin );
 				ChangeYaw( pev->yaw_speed );
 			}
-			if ( m_fSequenceFinished )
+			//MODDD - and why do we need m_fSequenceFinishedSinceLoop now?  WHO KNOWS
+			if ( m_fSequenceFinished || m_fSequenceFinishedSinceLoop)
 				TaskComplete();
 		}
 		break;
@@ -1459,7 +1460,11 @@ void CBaseMonster :: RunTask ( Task_t *pTask )
 		/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		// canPredictRangedActFinish() ||  ???
 		// m_fSequenceLoops || 
-		if (pTask->iTask == TASK_MELEE_ATTACK1_NOTURN || pTask->iTask == TASK_MELEE_ATTACK2_NOTURN) {
+
+		if (
+			pTask->iTask == TASK_MELEE_ATTACK1_NOTURN || pTask->iTask == TASK_MELEE_ATTACK2_NOTURN ||
+			(predictRangeAttackEnd() && (pTask->iTask == TASK_RANGE_ATTACK1_NOTURN || pTask->iTask == TASK_RANGE_ATTACK2_NOTURN))
+		) {
 
 			float flInterval = 0.1;  //mock interval, resembles think times.
 			float recentFrameAdvancePrediction = flInterval * m_flFrameRate * pev->framerate * EASY_CVAR_GET(animationFramerateMulti);
@@ -1542,7 +1547,10 @@ void CBaseMonster :: RunTask ( Task_t *pTask )
 		/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-		if (pTask->iTask == TASK_MELEE_ATTACK1_NOTURN || pTask->iTask == TASK_MELEE_ATTACK2_NOTURN) {
+		if (
+			pTask->iTask == TASK_MELEE_ATTACK1 || pTask->iTask == TASK_MELEE_ATTACK2 || 
+			(predictRangeAttackEnd() && (pTask->iTask == TASK_RANGE_ATTACK1 || pTask->iTask == TASK_RANGE_ATTACK2))
+		) {
 
 			float flInterval = 0.1;  //mock interval, resembles think times.
 			float recentFrameAdvancePrediction = flInterval * m_flFrameRate * pev->framerate * EASY_CVAR_GET(animationFramerateMulti);

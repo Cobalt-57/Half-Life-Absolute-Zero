@@ -826,8 +826,11 @@ void COsprey :: ShowDamage( void )
 
 GENERATE_TRACEATTACK_IMPLEMENTATION(COsprey)
 {
-	//return;
 
+	//MODDD - gauss loses some damage on non-critical points
+	if (!(ptr->iHitgroup == 1 || ptr->iHitgroup == 2) && (bitsDamageTypeMod & (DMG_GAUSS))) {
+		flDamage *= 0.84;
+	}
 
 	// ALERT( at_console, "%d %.0f\n", ptr->iHitgroup, flDamage );
 

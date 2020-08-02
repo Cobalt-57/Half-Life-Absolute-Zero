@@ -154,6 +154,8 @@ void CBaseAnimating::checkEndOfAnimation(void){
 	//by default, this sequence is unfinished. The frame going past cutoff in the appropriate direction below will change this to TRUE instead.
 	m_fSequenceFinished = FALSE;
 	//But not you, m_fSequenceFinishedSinceLoop. You stay on until you have a reason to be set back to FALSE (new anim)
+	//m_fSequenceFinishedSinceLoop = FALSE;
+
 
 	if(pev->framerate == 0){
 		return;

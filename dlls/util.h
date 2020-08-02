@@ -38,7 +38,7 @@ EASY_CVAR_EXTERN(soundVolumeStuka)
 
 
 // Keep in synch with the array if more entries are added!
-#define aryGibInfo_MAX_SIZE 9
+#define aryGibInfo_MAX_SIZE 10
 
 
 //
@@ -154,21 +154,24 @@ EASY_CVAR_EXTERN(soundVolumeStuka)
 #define DONT_BLEED			-1
 #define BLOOD_COLOR_RED		(BYTE)70 //(BYTE)247
 #define BLOOD_COLOR_YELLOW	(BYTE)195
-#define BLOOD_COLOR_GREEN	BLOOD_COLOR_YELLOW
+// NEW!  Distinct green blood.  Most accurate choice pending but this looks ok
+#define BLOOD_COLOR_GREEN	(BYTE)54
 #define BLOOD_COLOR_BLACK	(BYTE)0 //black like oil
 
 
 
 #define GIB_DUMMY_ID 0
 #define GIB_HUMAN_ID 1
-#define GIB_ALIEN_ID 2
-#define GIB_GERMAN_ID 3
+//MODDD - separate alien colors YELLOW and GREEN now supported, gib-wise too.  Read from alien blood color.
+#define GIB_ALIEN_YELLOW_ID 2
+#define GIB_ALIEN_GREEN_ID 3
+#define GIB_GERMAN_ID 4
 
-#define GIB_EXTRAMETAL_1_ID 4
-#define GIB_EXTRAMETAL_2_ID 5
-#define GIB_EXTRAMETAL_3_ID 6
-#define GIB_EXTRAMETAL_4_ID 7
-#define GIB_EXTRAMETAL_5_ID 8
+#define GIB_EXTRAMETAL_1_ID 5
+#define GIB_EXTRAMETAL_2_ID 6
+#define GIB_EXTRAMETAL_3_ID 7
+#define GIB_EXTRAMETAL_4_ID 8
+#define GIB_EXTRAMETAL_5_ID 9
 #define GIB_EXTRAMETAL_6_ID GIB_GERMAN_ID
 
 
@@ -954,7 +957,11 @@ Vector VecCheckThrow ( entvars_t *pev, const Vector &vecSpot1, Vector vecSpot2, 
 
 
 //MODDD - moved from weapons.h
-extern void SpawnBlood(Vector vecSpot, int bloodColor, float flDamage);
+// changed a bit though.
+extern void UTIL_SpawnBlood(const Vector& vecSpot, int bloodColor, int amount);
+extern void UTIL_SpawnBlood(const Vector& vecSpot, const Vector& bloodDir, int bloodColor, int amount);
+
+
 //MODDD - extra damage bitmask support.
 extern int DamageDecal( CBaseEntity *pEntity, int bitsDamageType );
 extern int DamageDecal( CBaseEntity *pEntity, int bitsDamageType, int bitsDamageTypeMod );

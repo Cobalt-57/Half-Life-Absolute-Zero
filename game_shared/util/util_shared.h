@@ -100,19 +100,23 @@ EASY_CVAR_EXTERN(hiddenMemPrintout)
 #define SND_CHANGE_PITCH	(1<<7)		// duplicated in protocol.h change sound pitch
 
 
+//MODDD - turned into global const's for conveniently getting .x, .y, .z out of if needed.
+// The 'DLL_GLOBAL' is meaningless but eh, g_vecZero had it
+// Old example:
+//#define VECTOR_CONE_1DEGREES	Vector(x, y, z)
 
-#define VECTOR_CONE_1DEGREES	Vector( 0.00873, 0.00873, 0.00873 )
-#define VECTOR_CONE_2DEGREES	Vector( 0.01745, 0.01745, 0.01745 )
-#define VECTOR_CONE_3DEGREES	Vector( 0.02618, 0.02618, 0.02618 )
-#define VECTOR_CONE_4DEGREES	Vector( 0.03490, 0.03490, 0.03490 )
-#define VECTOR_CONE_5DEGREES	Vector( 0.04362, 0.04362, 0.04362 )
-#define VECTOR_CONE_6DEGREES	Vector( 0.05234, 0.05234, 0.05234 )
-#define VECTOR_CONE_7DEGREES	Vector( 0.06105, 0.06105, 0.06105 )
-#define VECTOR_CONE_8DEGREES	Vector( 0.06976, 0.06976, 0.06976 )
-#define VECTOR_CONE_9DEGREES	Vector( 0.07846, 0.07846, 0.07846 )
-#define VECTOR_CONE_10DEGREES	Vector( 0.08716, 0.08716, 0.08716 )
-#define VECTOR_CONE_15DEGREES	Vector( 0.13053, 0.13053, 0.13053 )
-#define VECTOR_CONE_20DEGREES	Vector( 0.17365, 0.17365, 0.17365 )
+extern DLL_GLOBAL const Vector VECTOR_CONE_1DEGREES;
+extern DLL_GLOBAL const Vector VECTOR_CONE_2DEGREES;
+extern DLL_GLOBAL const Vector VECTOR_CONE_3DEGREES;
+extern DLL_GLOBAL const Vector VECTOR_CONE_4DEGREES;
+extern DLL_GLOBAL const Vector VECTOR_CONE_5DEGREES;
+extern DLL_GLOBAL const Vector VECTOR_CONE_6DEGREES;
+extern DLL_GLOBAL const Vector VECTOR_CONE_7DEGREES;
+extern DLL_GLOBAL const Vector VECTOR_CONE_8DEGREES;
+extern DLL_GLOBAL const Vector VECTOR_CONE_9DEGREES;
+extern DLL_GLOBAL const Vector VECTOR_CONE_10DEGREES;
+extern DLL_GLOBAL const Vector VECTOR_CONE_15DEGREES;
+extern DLL_GLOBAL const Vector VECTOR_CONE_20DEGREES;
 
 // used by the player's auto-aim I think.  May as well be constants for everywhere.
 // wait, no.

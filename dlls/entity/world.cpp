@@ -34,6 +34,11 @@
 #include "gamerules.h"
 #include "teamplay_gamerules.h"
 
+
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST(playerBulletHitEffectForceServer)
+
+
+
 extern CGraph WorldGraph;
 extern CSoundEnt *pSoundEnt;
 
@@ -907,19 +912,16 @@ void CWorld :: KeyValue( KeyValueData *pkvd )
 }
 
 
-EASY_CVAR_EXTERN(playerBulletHitEffectForceServer)
-
-
 GENERATE_TRACEATTACK_IMPLEMENTATION(CWorld){
 
 	GENERATE_TRACEATTACK_PARENT_CALL(CBaseEntity);
 
-	//is the attacker a player?
+	// is the attacker a player?
 	if(pevAttacker != NULL){
 		CBaseEntity* tempEnt = CBaseEntity::Instance(pevAttacker);
 		if(tempEnt!=NULL) {
-			if(FClassnameIs(tempEnt->pev, "player") && EASY_CVAR_GET(playerBulletHitEffectForceServer) == 0 ){
-				//don't allow. Players already play sounds clientside.
+			if(FClassnameIs(tempEnt->pev, "player") && EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST(playerBulletHitEffectForceServer) == 0 ){
+				// don't allow. Players already play sounds clientside.
 				if(useBulletHitSound){
 					*useBulletHitSound = FALSE;
 				}

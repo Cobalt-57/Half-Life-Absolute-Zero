@@ -480,10 +480,27 @@ edict_t * EHANDLE::Get( void )
 { 
 	if (m_pent)
 	{
+		//MODDD - CRITICAL.
+		// If anything strange happens, consider blaming this line.
+		// This should make crashes less likely, anything with private data cleared but the m_pent leftover should
+		// not work like normal, this can trick something into thinking say m_hEnemy is not null but it sitll has
+		// no entity info attached to it.  This can now happen on disconnected player's spaces.
+		// This is probbably just paranoia though.
+		// Also serial of 0 not allowed, it suggests NULL
+		// or... maybe don't do that?  that 'm_serialnumber != 0' check just caused random crashes.  alrighty then.
+		if ( m_pent->serialnumber == m_serialnumber && m_pent->pvPrivateData != NULL) {
+			return m_pent;
+		}
+		else {
+			return NULL;
+		}
+
+		/*
 		if (m_pent->serialnumber == m_serialnumber) 
 			return m_pent; 
 		else
 			return NULL;
+		*/
 	}
 	return NULL; 
 };
@@ -492,8 +509,14 @@ edict_t * EHANDLE::Get( void )
 edict_t * EHANDLE::Set( edict_t *pent ) 
 { 
 	m_pent = pent;  
-	if (pent) 
-		m_serialnumber = m_pent->serialnumber; 
+	if (pent) {
+		m_serialnumber = m_pent->serialnumber;
+	}
+	else {
+		//MODDD - This step is new.  If set to something that is NULL, don't leave our serial from the
+		// previous time, force it to NULL.  No trickery.
+		m_serialnumber = 0;
+	}
 	return pent; 
 };
 
@@ -509,8 +532,13 @@ CBaseEntity * EHANDLE :: operator = (CBaseEntity *pEntity)
 	if (pEntity)
 	{
 		m_pent = ENT( pEntity->pev );
-		if (m_pent)
+		if (m_pent) {
 			m_serialnumber = m_pent->serialnumber;
+		}
+		else {
+			//MODDD - this step is new.  If that m_pent ended up NULL, don't leave m_serialnumber.
+			m_serialnumber = 0;
+		}
 	}
 	else
 	{

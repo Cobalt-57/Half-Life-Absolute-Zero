@@ -27,6 +27,19 @@
 EASY_CVAR_EXTERN(tripmineAnimWaitsForFinish)
 
 
+
+//MODDD - for the viewmodel and worldmodel, same v_tripmine.mdl model used.
+#define BODYGROUP_HANDS 0
+#define HANDS_VISIBLE 0
+#define HANDS_INVISIBLE 1
+
+#define BODYGROUP_MINE 1
+#define MINE_VIEWMODEL 0
+#define MINE_WORLD 1
+
+
+
+
 #ifndef CLIENT_DLL
 
 
@@ -48,6 +61,9 @@ TYPEDESCRIPTION	CTripmineGrenade::m_SaveData[] =
 IMPLEMENT_SAVERESTORE(CTripmineGrenade,CGrenade);
 
 
+
+
+
 void CTripmineGrenade :: Spawn( void )
 {
 
@@ -64,7 +80,14 @@ void CTripmineGrenade :: Spawn( void )
 	SET_MODEL(ENT(pev), "models/v_tripmine.mdl");
 
 	pev->frame = 0;
-	pev->body = 3;
+
+	pev->body = 0;
+	SetBodygroup(BODYGROUP_HANDS, HANDS_INVISIBLE);
+	SetBodygroup(BODYGROUP_MINE, MINE_WORLD);
+	// same net effect of = 3
+
+
+
 	pev->sequence = TRIPMINE_WORLD;
 	ResetSequenceInfo( );
 	pev->framerate = 0;
@@ -422,7 +445,12 @@ void CTripmine::Spawn( )
 	m_iId = WEAPON_TRIPMINE;
 	SET_MODEL(ENT(pev), "models/v_tripmine.mdl");
 	pev->frame = 0;
-	pev->body = 3;
+
+	pev->body = 0;
+	SetBodygroup(BODYGROUP_HANDS, HANDS_INVISIBLE);
+	SetBodygroup(BODYGROUP_MINE, MINE_WORLD);
+	// same net effect of = 3
+
 	pev->sequence = TRIPMINE_GROUND;
 	// ResetSequenceInfo( );
 	pev->framerate = 0;

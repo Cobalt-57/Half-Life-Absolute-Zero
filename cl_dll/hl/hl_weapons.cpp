@@ -2126,6 +2126,10 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
 
 
 
+
+BOOL recentDuckVal = FALSE;
+int recentDuckTime = 0;
+
 /*
 =====================
 HUD_PostRunCmd
@@ -2149,8 +2153,9 @@ void DLLEXPORT HUD_PostRunCmd(struct local_state_s* from, struct local_state_s* 
 	gpGlobals->time = time;
 
 
-
-
+	//MODDD - for now, these are unused.  Who knows if they'd ever be useful.
+	recentDuckVal = to->client.bInDuck;
+	recentDuckTime = to->client.flDuckTime;
 
 
 	//////////////////////////////////////////////////////////////////////////

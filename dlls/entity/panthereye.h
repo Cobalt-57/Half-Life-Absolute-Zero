@@ -15,7 +15,15 @@
 class CPantherEye : public CBaseMonster
 {
 public:
-
+	static const char *pAttackSounds[];
+	static const char *pIdleSounds[];
+	static const char *pAlertSounds[];
+	static const char *pPainSounds[];
+	static const char *pAttackHitSounds[];
+	static const char *pAttackMissSounds[];
+	static const char *pLeapAttackHitSounds[];
+	static const char *pDeathSounds[];
+	
 	float HearingSensitivity(void);
 	BOOL testLeapNoBlock(void);
 
@@ -32,8 +40,6 @@ public:
 	BOOL isPissable;
 	BOOL isCornered;
 
-	CPantherEye(void);
-
 	float runawayTime;
 	float pissedOffTime;
 	float timeTillSneakAgain;
@@ -44,7 +50,46 @@ public:
 	//-1 = not sneaking.
 	//0 = sneaking.
 
-	Vector debugDrawVect;
+	float newPathDelay;
+
+	float bugAnimBlockedTime;
+	BOOL waitingForNewPath;
+
+	//UNUSED, I guess.
+	float chaseMode;
+	//-1: not yet chasing anything.
+	//0: trying to get into circle range...
+	//1: circling around, ready to pick random position.
+	//2: go to random position within circle edge
+	//3: jump at target.
+	//4: charge directly at foe.  (leads to attack melee1).
+
+	float stareTime;
+    float maxWaitPVSTime;
+	//MODDD - NOTE!  Is this now redundant with CBaseMonster's forgetSmallFlinchTime and forgetBigFlinchTime ?
+	float m_flNextFlinch;
+
+
+
+
+	CPantherEye(void);
+
+
+	void SetObjectCollisionBox(void) {
+		if (pev->deadflag != DEAD_NO) {
+			//no need to do anything special anymore I think.
+			//CBaseMonster::SetObjectCollisionBox();
+			pev->absmin = pev->origin + Vector(-76, -76, 0);
+			pev->absmax = pev->origin + Vector(76, 76, 60);
+		}
+		else {
+			// = DEAD_NO
+			pev->absmin = pev->origin + Vector(-35, -35, 0);
+			pev->absmax = pev->origin + Vector(35, 35, 42);
+			//return CBaseMonster::SetObjectCollisionBox();
+		}
+	}//END OF SetObjectCollisionBox
+
 
 	void EXPORT LeapTouch ( CBaseEntity *pOther );
 		
@@ -57,7 +102,6 @@ public:
 	int LookupActivityHard(int activity);
 	int tryActivitySubstitute(int activity);
 	
-
 	void Spawn( void );
 	void Precache( void );
 	
@@ -71,7 +115,6 @@ public:
 
 	int IgnoreConditions ( void );
 
-	float newPathDelay;
 
 	BOOL CheckMeleeAttack1 ( float flDot, float flDist );
 	BOOL CheckMeleeAttack2 ( float flDot, float flDist );
@@ -90,23 +133,6 @@ public:
 	void OnTakeDamageSetConditions(entvars_t *pevInflictor, entvars_t *pevAttacker, float flDamage, int bitsDamageType, int bitsDamageTypeMod);
 
 
-	float bugAnimBlockedTime;
-	BOOL waitingForNewPath;
-
-	//UNUSED, I guess.
-	float chaseMode;
-	//-1: not yet chasing anything.
-	//0: trying to get into circle range...
-	//1: circling around, ready to pick random position.
-	//2: go to random position within circle edge
-	//3: jump at target.
-	//4: charge directly at foe.  (leads to attack melee1).
-
-	float stareTime;
-
-    float maxWaitPVSTime;
-
-	float m_flNextFlinch;
 
 	void PainSound( void );
 	void AlertSound( void );
@@ -114,16 +140,6 @@ public:
 	void AttackSound( void );
 	void DeathSound( void );
 
-
-	static const char *pAttackSounds[];
-	static const char *pIdleSounds[];
-	static const char *pAlertSounds[];
-	static const char *pPainSounds[];
-	static const char *pAttackHitSounds[];
-	static const char *pAttackMissSounds[];
-	static const char *pLeapAttackHitSounds[];
-	static const char *pDeathSounds[];
-	
 	//MODDD
 	GENERATE_TAKEDAMAGE_PROTOTYPE
 	GENERATE_TRACEATTACK_PROTOTYPE
