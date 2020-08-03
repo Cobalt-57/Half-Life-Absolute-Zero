@@ -123,7 +123,7 @@ BOOL reloadBlocker = FALSE;
 
 
 //MODDD - NOTE - ???
-// Don't really understand giving g_engfuncs methods here as this is all clientside.
+// Don't understand giving g_engfuncs methods here as this is all clientside.
 // AlertMessage is pretty generic at least.  Leaving it here as-is.
 /*
 ======================
@@ -176,7 +176,7 @@ void HUD_PrepEntity( CBaseEntity *pEntity, CBasePlayer *pWeaponOwner )
 	pEntity->Precache();
 	pEntity->Spawn();
 
-	// yes.. really.  Only proceed with all this, if pWeaponOwner isn't NULL.
+	// Only proceed with all this, if pWeaponOwner isn't NULL.
 	// I sure hope it isn't NULL.
 
 	//MODDD - now, only a check for whether this entity is a Player or not.
@@ -712,9 +712,9 @@ void CBasePlayerWeapon::ItemPostFrame( )
 	//         So the check must be done here since player-specific script is all in player.cpp, a serverside-only file and most
 	//         player think logic is not clientside at all, besides a little for working with weapons like here.
 	//         It was this wa in the as-is script but just pointing this out.
-	//         ...Actually some things in here don't require m_flNextPrimaryAttack to be 0 regardless? odd, but not much difference if any.
-	//         ACTUALLY... notice that ItemPostFrame even clientside just checks if m_pPlayer->flNextAttack is aboe 0.
-	//         So any "...m_flNextAttack <= 0.0" checks in here are actually very redundant. Oh well.
+	//         ...some things in here don't require m_flNextPrimaryAttack to be 0 regardless? odd, but not much difference if any.
+	//         notice that ItemPostFrame even clientside just checks if m_pPlayer->flNextAttack is aboe 0.
+	//         So any "...m_flNextAttack <= 0.0" checks in here are very redundant. Oh well.
 
 	if ((m_fInReload) && (m_pPlayer->m_flNextAttack <= 0.0))
 	{
@@ -964,7 +964,7 @@ void CBasePlayer::Spawn( void )
 
 	g_irunninggausspred = false;
 }
-//MODDD - for the alt version, if ever called, do the same.  Doesn't really involve that BOOL.
+//MODDD - for the alt version, if ever called, do the same.  Doesn't involve that BOOL.
 void CBasePlayer::Spawn( BOOL revived )
 {
 	if (m_pActiveItem)

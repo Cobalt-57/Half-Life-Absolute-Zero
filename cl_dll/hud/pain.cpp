@@ -401,7 +401,7 @@ void CHudPain::CalcDamageDirection(vec3_t vecFrom, int damageAmount, int rawDama
 	if (flDistToTarget <= 50)
 	{
 		//MODDD - changes to half the intended effect instead, no need to make attacks close-up look too dramatic
-		// compared to actual damage.
+		// compared to real damage.
 		//m_fAttackFront = m_fAttackRear = m_fAttackRight = m_fAttackLeft = 1;
 		m_fAttackFront = m_fAttackRear = m_fAttackRight = m_fAttackLeft = 0.5;
 		setUniformDamage(damageFlashModTotal);

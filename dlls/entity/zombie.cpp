@@ -389,7 +389,7 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CZombie)
 			}
 
 
-			// Actually check skill.cfg (sk_zombie_bulletpushback) for how intense the pushback is per difficulty.
+			// check skill.cfg (sk_zombie_bulletpushback) for how intense the pushback is per difficulty.
 			pev->velocity = pev->velocity + vecDir * (DamageForce(flPushbackForceDamage) * gSkillData.zombieBulletPushback);
 
 			if (pev->flags & FL_ONGROUND) {

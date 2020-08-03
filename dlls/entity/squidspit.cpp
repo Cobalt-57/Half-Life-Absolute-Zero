@@ -228,7 +228,7 @@ void CSquidSpit::Shoot( entvars_t *pevOwner, Vector vecStart, Vector vecDirectio
 			for(i = 0; i < EASY_CVAR_GET(bullsquidSpitEffectSpawn); i++){
 				Vector particleDir = getParticleDir(vecVelocityNorm);
 				
-				UTIL_SpawnBlood(vecStart, particleDir, BLOOD_COLOR_YELLOW, RANDOM_LONG((long)EASY_CVAR_GET(bullsquidSpitEffectMin), (long)EASY_CVAR_GET(bullsquidSpitEffectMax) ));
+				UTIL_SpawnBlood(vecStart, particleDir, COLOR_SQUIDSPIT, RANDOM_LONG((long)EASY_CVAR_GET(bullsquidSpitEffectMin), (long)EASY_CVAR_GET(bullsquidSpitEffectMax) ));
 			}
 		}
 
@@ -346,7 +346,7 @@ void CSquidSpit::Shoot( entvars_t *pevOwner, Vector vecStart, Vector vecDirectio
 
 		for(i = 0; i < EASY_CVAR_GET(bullsquidSpitEffectSpawn); i++){
 			Vector particleDir = getParticleDir(vecVelocityNorm);
-			UTIL_SpawnBlood(vecStart, particleDir, BLOOD_COLOR_YELLOW, RANDOM_LONG((long)EASY_CVAR_GET(bullsquidSpitEffectMin), (long)EASY_CVAR_GET(bullsquidSpitEffectMax) ));
+			UTIL_SpawnBlood(vecStart, particleDir, COLOR_SQUIDSPIT, RANDOM_LONG((long)EASY_CVAR_GET(bullsquidSpitEffectMin), (long)EASY_CVAR_GET(bullsquidSpitEffectMax) ));
 		}
 	}
 
@@ -413,7 +413,7 @@ void CSquidSpit :: Touch ( CBaseEntity *pOther )
 
 			for(i = 0; i < EASY_CVAR_GET(bullsquidSpitEffectHitSpawn); i++){
 				Vector particleDir = getParticleDir(velocityFlyOffNorm);
-				UTIL_SpawnBlood(tr.vecEndPos, particleDir, BLOOD_COLOR_YELLOW, RANDOM_LONG((long)EASY_CVAR_GET(bullsquidSpitEffectHitMin), (long)EASY_CVAR_GET(bullsquidSpitEffectHitMax)));
+				UTIL_SpawnBlood(tr.vecEndPos, particleDir, COLOR_SQUIDSPIT, RANDOM_LONG((long)EASY_CVAR_GET(bullsquidSpitEffectHitMin), (long)EASY_CVAR_GET(bullsquidSpitEffectHitMax)));
 			}
 
 		}

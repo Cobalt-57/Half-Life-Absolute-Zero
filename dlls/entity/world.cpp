@@ -723,12 +723,13 @@ void CWorld :: Precache( void )
 	turnWorldLightsOn();
 
 
-	//WHYYY won't ARRAYSIZE(gDecals) work just because it was moved to decals.cpp?? Damn you C++...
+	// WHYYY won't ARRAYSIZE(gDecals) work just because it was moved to decals.cpp?? Damn you C++...
 	for ( int i = 0; i < DLL_DECALLIST_SIZE; i++ ){
 		gDecals[i].index = DECAL_INDEX( gDecals[i].name );
 
-		if(EASY_CVAR_GET(hiddenMemPrintout) == 1)
-		easyForcePrintLine("DECAL DERIVATION: %s %d", gDecals[i].name, gDecals[i].index);
+		if(EASY_CVAR_GET(hiddenMemPrintout) == 1){
+			easyForcePrintLine("DECAL DERIVATION: %s %d", gDecals[i].name, gDecals[i].index);
+		}
 	}
 
 	//Keep track of "scheduleNodeUpdate", because it's about to get reset by InitGraph below.

@@ -98,7 +98,7 @@ enum islave_sequence {  //key: frames, FPS
 	ISLAVE_DIESIMPLE, //80, 20
 	ISLAVE_DIEFORWARD,  //30, 20
 	ISLAVE_DIEBACKWARD,  //70, 20
-	ISLAVE_DIEVIOLENT,  //70, 20  named "dieforward" but actually mapped to ACT_DIEVIOLENT. and dieforward is the same name as another earlier.
+	ISLAVE_DIEVIOLENT,  //70, 20  named "dieforward" but mapped to ACT_DIEVIOLENT. and dieforward is the same name as another earlier.
 	ISLAVE_COLLAR1, //60, 18
 	ISLAVE_COLLAR2,  //30, 18
 	ISLAVE_PUSHUP, //50, 20
@@ -151,7 +151,7 @@ public:
 
 	int m_iBeams;
 	//MODDD - well would ya look at that.
-	// Actually used by something other than CBasePlayer.
+	// Used by something other than CBasePlayer.
 	// No idea why CBaseMonster used to have this, never touched it there.
 	float m_flNextAttack;
 	int m_voicePitch;
@@ -1107,7 +1107,7 @@ BOOL CISlave :: CheckRangeAttack1 ( float flDot, float flDist )
 //=========================================================
 BOOL CISlave :: CheckRangeAttack2 ( float flDot, float flDist )
 {
-	// NO.  We're not doing this as a separate attack, that actually makes a lot less sense.
+	// NO.  We're not doing this as a separate attack, that makes a lot less sense.
 	return FALSE;
 	/////////////////////////////////////////////////////////////////
 	/////////////////////////////////////////////////////////////////
@@ -1697,9 +1697,8 @@ float CISlave::getBarnaclePulledTopOffset(void){
 
 
 
-
 //MODDD - do we need to do something for ACT_BARNACLE_CHEW  too?  ACT_BARNACLE_CHOMP ?
-//Actually those are already in the model. They can be involved below to adjust their framerates similarly.
+// Those are already in the model. They can be involved below to adjust their framerates similarly.
 
 int CISlave::LookupActivityHard(int activity){
 

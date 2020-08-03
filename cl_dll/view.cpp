@@ -784,7 +784,7 @@ void V_CalcNormalRefdef(struct ref_params_s* pparams)
 	// Add in the punchangle, if any
 	// MODDD NOTE - is "pparams->punchangle" always 0's?  what is the point?  OHH.  It comes from raw settings from "pev->viewpunch" changes
 	//              done in melee attacks serverside, and that just got sent over here.  That's fine.
-	// Looks like "ev_punchangle" below actually comes from say, a weapon's lasting effect.
+	// Looks like "ev_punchangle" below comes from say, a weapon's lasting effect.
 
 	if (EASY_CVAR_GET(cl_viewpunch) > 0) {
 		Vector vPunchFinal;
@@ -829,6 +829,34 @@ void V_CalcNormalRefdef(struct ref_params_s* pparams)
 
 
 
+
+
+	/*
+	// OLD WAY.
+	if (!pparams->smoothing && pparams->onground && pparams->simorg[2] - oldz > 0)
+	{
+		float steptime;
+
+		steptime = pparams->time - lasttime;
+		if (steptime < 0)
+			//FIXME		I_Error ("steptime < 0");
+			steptime = 0;
+
+		oldz += steptime * 150;
+		if (oldz > pparams->simorg[2])
+			oldz = pparams->simorg[2];
+		if (pparams->simorg[2] - oldz > 18)
+			oldz = pparams->simorg[2] - 18;
+		pparams->vieworg[2] += oldz - pparams->simorg[2];
+		view->origin[2] += oldz - pparams->simorg[2];
+	}
+	else
+	{
+		oldz = pparams->simorg[2];
+	}
+	*/
+
+	/////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// smooth out stair step ups
 	//MODDD - support for going down stairs too to look smooth!
 	//MODDD - NOTE.  These seem to be looking at a hardcoded stepsize of "18", even though
@@ -858,6 +886,7 @@ void V_CalcNormalRefdef(struct ref_params_s* pparams)
 	int hulltesto = ent->curstate.usehull;
 	*/
 
+	static float rawOldViewHeight = 0;
 	static float oldViewHeight = 0;
 
 	float safeSimZ = pparams->simorg[2];   // - pparams->viewheight[2]
@@ -890,6 +919,47 @@ void V_CalcNormalRefdef(struct ref_params_s* pparams)
 	//if (!pparams->smoothing && pparams->onground && safeSimZ - oldz > 0)
 	if (!pparams->smoothing && pparams->onground)
 	{
+
+		//easyForcePrintLine("the what %.2f %.2f :: %.2f   %.2f %.2f :: %.2f", pparams->viewheight[2], oldViewHeight, pparams->viewheight[2] - oldViewHeight + (safeSimZ - oldz), safeSimZ, oldz, (safeSimZ - oldz));
+
+		//!(safeSimZ - oldz > 0)
+		// safeSimZ - oldz == 0 && 
+
+
+		// Now, changes in veiw height alone (like canceling a duck early) can be recorded.
+
+		// A sudden change in hull-size throws off the viewheight, add in that difference so it has no effect
+		// on what we're working with
+		float filteredViewheight = pparams->viewheight[2] + (safeSimZ - oldz);
+
+		//if (pparams->viewheight[2] != oldViewHeight) {
+		if (filteredViewheight - oldViewHeight > 0) {
+			//MODDD - EXPERIMENTAL.
+			float steptime;
+
+			steptime = pparams->time - lasttime;
+			if (steptime < 0)
+				//FIXME		I_Error ("steptime < 0");
+				steptime = 0;
+
+			oldViewHeight += steptime * 120;
+			if (oldViewHeight > filteredViewheight)
+				oldViewHeight = filteredViewheight;
+			if (filteredViewheight - oldViewHeight > 18)
+				oldViewHeight = filteredViewheight - 18;
+
+			pparams->vieworg[2] += (oldViewHeight - (filteredViewheight)) * 1;
+			view->origin[2] += (oldViewHeight - (filteredViewheight)) * 1;
+			//easyForcePrintLine("test %.2f", (oldViewHeight - (filteredViewheight)));
+
+		}
+		else {
+			oldViewHeight = pparams->viewheight[2];
+		}
+		//}
+
+		// And back to the normal Z comparisons.  Retail only handled interp for going up stairs to look more smooth
+		// and unducking after a full duck (this changes the hull size, so the change showed up for this).
 		if (safeSimZ - oldz > 0) {
 			float steptime;
 
@@ -898,21 +968,23 @@ void V_CalcNormalRefdef(struct ref_params_s* pparams)
 				//FIXME		I_Error ("steptime < 0");
 				steptime = 0;
 
-			oldz += steptime * 150;
+			oldz += steptime * 130;
 			if (oldz > safeSimZ)
 				oldz = safeSimZ;
 			if (safeSimZ - oldz > 18)
 				oldz = safeSimZ - 18;
 			pparams->vieworg[2] += oldz - (safeSimZ);
 			view->origin[2] += oldz - (safeSimZ);
+
+			//oldViewHeight += oldz - (safeSimZ);
 		}
 		else if (safeSimZ - oldz < 0) {
 
 			// FOR the new downward stairs/incline checks, don't do interpolation
 			// while the user's viewheight has changed since last frame (ducking and unducking typically).
 			// This wasn't expected so it looks wonky when it happens.  Interp from the other way around 
-			// is actually needed though, go figure.
-			if (pparams->viewheight[2] != oldViewHeight) {
+			// is needed though, go figure.
+			if (pparams->viewheight[2] != rawOldViewHeight) {
 				oldz = safeSimZ;
 			}
 			else {
@@ -924,7 +996,7 @@ void V_CalcNormalRefdef(struct ref_params_s* pparams)
 					//FIXME		I_Error ("steptime < 0");
 					steptime = 0;
 
-				oldz -= steptime * 150;
+				oldz -= steptime * 130;
 				if (oldz < safeSimZ)
 					oldz = safeSimZ;
 				if (-safeSimZ + oldz > 18)
@@ -938,8 +1010,6 @@ void V_CalcNormalRefdef(struct ref_params_s* pparams)
 			// oh
 			oldz = safeSimZ;
 		}
-
-
 	}
 	else
 	{
@@ -947,9 +1017,12 @@ void V_CalcNormalRefdef(struct ref_params_s* pparams)
 	}
 
 	// MODDD
-	oldViewHeight = pparams->viewheight[2];
+	//oldViewHeight = pparams->viewheight[2];
+	rawOldViewHeight = pparams->viewheight[2];
 
 #endif
+	/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 
 
 

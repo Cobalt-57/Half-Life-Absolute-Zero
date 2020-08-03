@@ -170,7 +170,7 @@
 
 
 // the default amount of ammo that comes with each gun when it spawns
-//MODDD - NOTE: is actually "12", but we add one in the case of first getting the weapon for the first time or reloading when not empty.  IF the CVar "glockOldReloadLogic" is on.
+//MODDD - NOTE: is "12", but we add one in the case of first getting the weapon for the first time or reloading when not empty.  IF the CVar "glockOldReloadLogic" is on.
 #define GLOCK_DEFAULT_GIVE			13
 
 #define PYTHON_DEFAULT_GIVE			6
@@ -280,7 +280,7 @@ extern void AddMultiDamage(entvars_t* pevInflictor, CBaseEntity* pEntity, float 
 
 
 
-//MODDD - NEW.  Methods in ggrenade.cpp for allowing a grenade's explode to be used without an actual grenade.
+//MODDD - NEW.  Methods in ggrenade.cpp for allowing a grenade's explode to be used without a grenade.
 // Includes scorch effect (if possible), explosion sprite effect, and radiusDamage.
 
 
@@ -347,7 +347,7 @@ class CGrenade : public CBaseAnimating
 {
 public:
 	//MODDD - added for compatibility.
-	//Actually, not necessary.
+	// not necessary.
 	//void Activate( void );
 
 	void Spawn( void );
@@ -429,7 +429,7 @@ public:
 	
 	
 	virtual int AddDuplicate( CBasePlayerItem *pItem ) { return FALSE; }	// return TRUE if you want your duplicate removed from world
-	//MODDD NOTE - not sure if this was intentional or not, but this method actually returns how much ammo the given item actually gave to the player.  As seen in weapons.cpp's implementation, if any ammo is given, remove this item.  Being "0" (no ammo given) is the same as returning FALSE, or saying not to remove the item (did not touch).
+	//MODDD NOTE - not sure if this was intentional or not, but this method returns how much ammo the given item gave to the player.  As seen in weapons.cpp's implementation, if any ammo is given, remove this item.  Being "0" (no ammo given) is the same as returning FALSE, or saying not to remove the item (did not touch).
 	
 	//MODDD - the glock has an exception for being picked up anyways: giving the player the silencer.
 	virtual BOOL weaponCanHaveExtraCheck( CBasePlayer* pPlayer){return FALSE; }
@@ -464,7 +464,7 @@ public:
 
 	virtual void ItemPreFrame( void )	{ return; }		// called each frame by the player PreThink
 	virtual void ItemPostFrame( void ) { return; }		// called each frame by the player PostThink
-	//MODDD - it appears the above two are actually not called when the player's "m_flNextAttack" var is on (delay before being able to fire again).
+	//MODDD - it appears the above two are not called when the player's "m_flNextAttack" var is on (delay before being able to fire again).
 	
 	//So, new methods that work regardless of that:
 	virtual void ItemPreFrameThink( void )	{ return; }		// called each frame by the player PreThink, even when "m_flNextAttack" is on.
@@ -574,7 +574,7 @@ public:
 
 	virtual void SendWeaponAnim( int iAnim, int skiplocal = 1, int body = 0 );  // skiplocal is 1 if client is predicting weapon animations
 	virtual void SendWeaponAnimReverse( int iAnim, int skiplocal = 1, int body = 0 ); 
-	//MODDD - new version that works more like a direct client call... actually does server and client.
+	//MODDD - new version that works more like a direct client call... does server and client.
 	virtual void SendWeaponAnimBypass(int iAnim, int body = 0);
 	virtual void SendWeaponAnimBypassReverse(int iAnim, int body = 0);
 	//THIS is a client-only call. Careful.
@@ -637,11 +637,11 @@ public:
 	//MODDD - new
 	virtual const char* GetPickupWalkerName(void);
 	virtual CBaseEntity* pickupWalkerReplaceCheck();
-	//MODDD - new event, called alongside a reload actually changing the ammo counts.
+	//MODDD - new event, called alongside a reload changing the ammo counts.
 	virtual void OnReloadApply(void);
 
 	//MODDD - new general event for easy compatability with a commonly wanted feature (getting the player's
-	// actual FOV choice given a possible influencing CVar).
+	// FOV choice given a possible influencing CVar).
 	// Wanted to make this inline with 'ifdef's for CLIENT_DLL and not, but the player has to be defined at this point.
 	// So see implementations in cl_dll/hl/hl_baseentity.cpp and dlls/weapons.cpp.
 	float getPlayerBaseFOV(void);

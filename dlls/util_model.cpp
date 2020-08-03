@@ -253,8 +253,96 @@ int IsSoundEvent( int eventNumber )
 }
 
 
-void SequencePrecache( void *pmodel, const char *pSequenceName )
-{
+
+
+
+//MODDD - print out the sounds in all sequences belonging to a given model.
+void Sequence_PrintSound_All(void* pmodel) {
+	studiohdr_t* pstudiohdr;
+
+	pstudiohdr = (studiohdr_t*)pmodel;
+
+	for (int index = 0; index < pstudiohdr->numseq; index++) {
+
+		Sequence_PrintSound(pmodel, index);
+	}
+}
+
+//MODDD - version of SequencePrecache that accepts sequence index here, and prints out any sounds mentioned by the sequence.
+void Sequence_PrintSound(void* pmodel, int index) {
+	studiohdr_t* pstudiohdr;
+
+	pstudiohdr = (studiohdr_t*)pmodel;
+	if (!pstudiohdr || index >= pstudiohdr->numseq)
+		return;
+
+	mstudioseqdesc_t* pseqdesc;
+	mstudioevent_t* pevent;
+
+	pseqdesc = (mstudioseqdesc_t*)((byte*)pstudiohdr + pstudiohdr->seqindex) + index;
+	pevent = (mstudioevent_t*)((byte*)pstudiohdr + pseqdesc->eventindex);
+
+	for (int i = 0; i < pseqdesc->numevents; i++)
+	{
+		// Don't send client-side events to the server AI
+		if (pevent[i].event >= EVENT_CLIENT) {
+			continue;
+		}
+
+		// UNDONE: Add a callback to check to see if a sound is precached yet and don't allocate a copy
+		// of it's name if it is.
+		if (IsSoundEvent(pevent[i].event))
+		{
+			if (!strlen(pevent[i].options))
+			{
+				ALERT(at_error, "Bad sound event %d in sequence %s :: seqIndex:%d, label:%s (sound is \"%s\")\n", pevent[i].event, pstudiohdr->name, index, pseqdesc->label, pevent[i].options);
+			}
+			else {
+				//MODDD - let me know.
+				ALERT(at_console, "Sound event found %d in sequence %s :: seqIndex:%d, label:%s (sound is \"%s\")\n", pevent[i].event, pstudiohdr->name, index, pseqdesc->label, pevent[i].options);
+			}
+			// don't do anything else, the printout is all
+		}
+	}
+}
+
+//MODDD - version of SequencePrecache that accepts sequence index here too.
+void SequencePrecache(void* pmodel, int index) {
+	studiohdr_t* pstudiohdr;
+
+	pstudiohdr = (studiohdr_t*)pmodel;
+	if (!pstudiohdr || index >= pstudiohdr->numseq)
+		return;
+
+	mstudioseqdesc_t* pseqdesc;
+	mstudioevent_t* pevent;
+
+	pseqdesc = (mstudioseqdesc_t*)((byte*)pstudiohdr + pstudiohdr->seqindex) + index;
+	pevent = (mstudioevent_t*)((byte*)pstudiohdr + pseqdesc->eventindex);
+
+	for (int i = 0; i < pseqdesc->numevents; i++)
+	{
+		// Don't send client-side events to the server AI
+		if (pevent[i].event >= EVENT_CLIENT) {
+			continue;
+		}
+
+		// UNDONE: Add a callback to check to see if a sound is precached yet and don't allocate a copy
+		// of it's name if it is.
+		if (IsSoundEvent(pevent[i].event))
+		{
+			if (!strlen(pevent[i].options))
+			{
+				//MODDD - does ->label even work?
+				ALERT(at_error, "Bad sound event %d in sequence %s :: seqIndex:%d (sound is \"%s\")\n", pevent[i].event, pstudiohdr->name, index, pevent[i].options);
+			}
+
+			PRECACHE_SOUND((char*)(gpGlobals->pStringBase + ALLOC_STRING(pevent[i].options)));
+		}
+	}
+}
+
+void SequencePrecache( void *pmodel, const char *pSequenceName ){
 	int index = LookupSequence( pmodel, pSequenceName );
 	if ( index >= 0 )
 	{
@@ -273,8 +361,9 @@ void SequencePrecache( void *pmodel, const char *pSequenceName )
 		for (int i = 0; i < pseqdesc->numevents; i++)
 		{
 			// Don't send client-side events to the server AI
-			if ( pevent[i].event >= EVENT_CLIENT )
+			if (pevent[i].event >= EVENT_CLIENT) {
 				continue;
+			}
 
 			// UNDONE: Add a callback to check to see if a sound is precached yet and don't allocate a copy
 			// of it's name if it is.
@@ -762,7 +851,7 @@ float SetController( void *pmodel, entvars_t *pev, int iController, float flValu
 		// no problem with the default way?
 		iControllerActual = i;
 	}else {
-		// stop at "i" instead, controller #4 does not actually exist!
+		// stop at "i" instead, controller #4 does not exist!
 		iControllerActual = i;
 	}
 	////////////////////////////////////////

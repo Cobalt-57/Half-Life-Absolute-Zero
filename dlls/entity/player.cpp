@@ -459,12 +459,13 @@ void CBasePlayer :: PainSound( void )
 
 	flRndSound = RANDOM_FLOAT ( 0 , 1 ); 
 	
-	if ( flRndSound <= 0.33 )
-		EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "player/pl_pain5.wav", 1, ATTN_NORM, TRUE);
-	else if ( flRndSound <= 0.66 )	
-		EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "player/pl_pain6.wav", 1, ATTN_NORM, TRUE);
-	else
-		EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "player/pl_pain7.wav", 1, ATTN_NORM, TRUE);
+	if (flRndSound <= 0.33) {
+		EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "player/pl_pain5.wav", 1, ATTN_NORM, FALSE);
+	}else if (flRndSound <= 0.66) {
+		EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "player/pl_pain6.wav", 1, ATTN_NORM, FALSE);
+	}else {
+		EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "player/pl_pain7.wav", 1, ATTN_NORM, FALSE);
+	}
 }//END OF PainSound
 
 
@@ -480,15 +481,9 @@ void CBasePlayer :: PainChance( void )
 	//NOTICE that #4 and #5 are possible (which, as of writing, do nothing at all: no sound).
 	switch (RANDOM_LONG(1,5)) 
 	{
-	case 1: 
-		EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "player/pl_pain5.wav", 1, ATTN_NORM, TRUE);
-		break;
-	case 2: 
-		EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "player/pl_pain6.wav", 1, ATTN_NORM, TRUE);
-		break;
-	case 3: 
-		EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "player/pl_pain7.wav", 1, ATTN_NORM, TRUE);
-		break;
+	case 1: EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "player/pl_pain5.wav", 1, ATTN_NORM, FALSE);break;
+	case 2: EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "player/pl_pain6.wav", 1, ATTN_NORM, FALSE);break;
+	case 3: EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "player/pl_pain7.wav", 1, ATTN_NORM, FALSE);break;
 	}
 
 }//END OF PainChance
@@ -588,10 +583,9 @@ void CBasePlayer :: DeathSound( void ){
 void CBasePlayer :: DeathSound( BOOL plannedRevive )
 {
 	// water death sounds
-	//MODDDREMOVE
 	if (pev->waterlevel == 3)
 	{
-		EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "player/h2odeath.wav", 1, ATTN_NONE, TRUE);
+		EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "player/h2odeath.wav", 1, ATTN_NONE, FALSE);
 		return;
 	}
 
@@ -621,7 +615,7 @@ void CBasePlayer :: DeathSound( BOOL plannedRevive )
 
 		// MODDD - NOTICE!!!  Not supporting remembering the most recently played sentence just to be used twice in the player class.
 		// Would need to have a copy of the sentence recently played at all times to know what to stop, which just isn't worth it.
-		// This rarely ever comes up.  So, we're good.  Really.
+		// This rarely ever comes up.  So, we're good.
 
 			EMIT_GROUPNAME_SUIT(ENT(pev), "HEV_DEAD");
 			//strcpy(recentlyPlayedSound, "HEV_DEAD");
@@ -1006,7 +1000,7 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBasePlayer)
 	rawDamageSustained += flDamage;
 
 
-	//!!!  not that this matters really.
+	//!!!  not that this matters.
 	// Athe moment bitmask 'DMG_ARMORBLOCKEXCEPTION' is empty, so any AND operation (&) with it must produce 0.
 	// Which is ok, look below.  That makes  "FALSE || ...",   which just makes this operation have no effect on the if-condition.
 	//Warning	C6313	Incorrect operator:  zero - valued flag cannot be tested with bitwise - and .Use an equality test to check for zero - valued flags.
@@ -2254,10 +2248,6 @@ CBasePlayer::CBasePlayer(void){
 	recentlyGrantedGlockSilencer = FALSE;
 	recentlySaidBattery = -1;  //do not save, meant to relate to what was recently said in-game yet.
 
-	altLadderStep = FALSE;   //this alternates b/w the two view punches (left & right).
-
-	alreadyPassedLadderCheck = FALSE;
-
 	nextMadEffect = -1;
 
 	
@@ -2902,7 +2892,7 @@ void CBasePlayer::PlayerUse ( void )
 		//if (((pObject->pev->origin - this->pev->origin).Length() <= 64) && pObject->ObjectCaps() & (FCAP_IMPULSE_USE | FCAP_CONTINUOUS_USE | FCAP_ONOFF_USE))
 		{
 			// !!!PERFORMANCE- should this check be done on a per case basis AFTER we've determined that
-			// this object is actually usable? This dot is being done for every object within PLAYER_USE_SEARCH_RADIUS
+			// this object is usable? This dot is being done for every object within PLAYER_USE_SEARCH_RADIUS
 			// when player hits the use key. How many objects can be in that area, anyway? (sjb)
 			vecLOS = (VecBModelOrigin( pObject->pev ) - (pev->origin + pev->view_ofs));
 			
@@ -2940,7 +2930,7 @@ void CBasePlayer::PlayerUse ( void )
 			Vector2D vecLOS2D = vecLOSNorm.Make2D();
 			Vector2D vecForward2D = gpGlobals->v_forward.Make2D();
 			// CHECK.  Lines going straight up/down (0,0,+-1) will cause
-			// the X and Y of the resulting 2D vector be 0 just fine actually.
+			// the X and Y of the resulting 2D vector be 0 just fine.
 			// Made a mistake, they were "NaN" because the divide lines below
 			// were dividing by that "0" length.  FUCK.
 
@@ -4113,8 +4103,9 @@ void CBasePlayer::PreThink(void)
 	}
 
 	// If trying to duck, already ducked, or in the process of ducking
-	if ((pev->button & IN_DUCK) || FBitSet(pev->flags,FL_DUCKING) || (m_afPhysicsFlags & PFLAG_DUCKING) )
+	if ((pev->button & IN_DUCK) || FBitSet(pev->flags, FL_DUCKING) || (m_afPhysicsFlags & PFLAG_DUCKING)) {
 		Duck();
+	}
 
 	
 	/*
@@ -4465,9 +4456,8 @@ void CBasePlayer :: UpdateGeigerCounter( void )
 			//Should the suit not use CHAN_STATIC if in multiplayer?  Other comments here warn against using "CHAN_STATIC" in multiplayer.
 			
 			//MODDD - soundsentencesave... CANCELED
-			EMIT_SOUND_DYN(ENT(pev), getGeigerChannel(), sz, flvol, ATTN_NORM, 0, 100);
+			EMIT_SOUND_FILTERED(ENT(pev), getGeigerChannel(), sz, flvol, ATTN_NORM, 0, 100, FALSE);
 
-			///EMIT_SOUND(ENT(pev), CHAN_VOICE, "player/pl_pain5.wav", 1, ATTN_NORM);
 			//UTIL_EmitAmbientSound(ENT(pev), headPos, sz, flvol, ATTN_STATIC, 0, 100);
 
 			//sprintf(sz, "player/geiger%d.wav", j + 1);
@@ -5468,19 +5458,13 @@ void CBasePlayer :: UpdatePlayerSound ( void )
 void CBasePlayer::PostThink()
 {
 	//if(EASY_CVAR_GET(testVar) == -1)return;
-	int filterediuser4 = pev->iuser4 & ~(FLAG_JUMPED | FLAG_RESET_RECEIVED);
-
-	//printLineIntAsBinary( 4294967295u, 32);
-
 	//CBasePlayer* tempplayerTTT = this;
 	//easyPrintLine("VIEW ANGLES?! %.2f %.2f %.2f", tempplayerTTT->pev->v_angle.x, tempplayerTTT->pev->v_angle.y, tempplayerTTT->pev->v_angle.z);
-
 	//easyPrintLine("MY VIEW ANGLES: %.2f, %.2f, %.2f", pev->angles.x, pev->angles.y, pev->angles.z);
 
 
 	if (queueFirstAppearanceMessageSend) {
 		queueFirstAppearanceMessageSend = FALSE;
-
 
 		easyPrintLineClient(this->edict(), "PLAYER: OnFirstAppearance");
 		
@@ -5641,83 +5625,15 @@ void CBasePlayer::PostThink()
 	m_afButtonLast = pev->button;
 
 
-	//this means, play one of the sounds & punch.
+
+	// BLOCK REMOVED.  See pm_shared.c, 'special ladder movement check'. Turns out this can be done there
+	// like it should have been.
+	/*
+	int filterediuser4 = pev->iuser4 & ~(FLAG_JUMPED | FLAG_RESET_RECEIVED);
 	//NOTE: coordinate the right-hand-side value with "ladderCycle" inside of "pm_shared.c".
 	
-	if(filterediuser4 > LADDER_CYCLE_BASE*EASY_CVAR_GET(ladderCycleMulti) && !alreadyPassedLadderCheck){
-		float flvol = 1;
-		int rndSound;//sound randomizer
-
-		//can't do this again until another frame passes that recognizes "filterediuser4" was below the threshold at some point before passing it again.
-		alreadyPassedLadderCheck = TRUE;
-
-		switch((int)cl_ladder_choice){
-			case 0:
-				//don't do anything.
-			break;
-			case 1:
-				flvol = 0.35f;
-				if(FBitSet(pev->flags, FL_DUCKING)){
-					flvol *= 0.35f;  //again.
-				}
-				
-				rndSound = altLadderStep*2 + RANDOM_LONG(0, 1);
-
-				//play retail's sounds.
-				switch(rndSound){
-
-					case 0:	EMIT_SOUND(ENT(pev), CHAN_VOICE, "player/pl_ladder1.wav", flvol, ATTN_NORM); break;
-					case 1:	EMIT_SOUND(ENT(pev), CHAN_VOICE, "player/pl_ladder3.wav", flvol, ATTN_NORM); break;
-					// left foot
-					case 2:	EMIT_SOUND(ENT(pev), CHAN_VOICE, "player/pl_ladder2.wav", flvol, ATTN_NORM); break;
-					case 3:	EMIT_SOUND(ENT(pev), CHAN_VOICE, "player/pl_ladder4.wav", flvol, ATTN_NORM); break;
-				}
-
-			break;
-			case 2:
-				//play a random pain sound, don't factor in whether this is the right or left step (as far as I know)
-				flvol = 1;  //Var not used yet!
-				rndSound = RANDOM_LONG(0, 3); 
-	
-				switch(rndSound){
-				case 0:
-					//MODDD - soundsentencesave
-					EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "player/pl_pain2.wav", 1, ATTN_NORM, TRUE);
-				break;
-				case 1:
-					EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "player/pl_pain4.wav", 1, ATTN_NORM, TRUE);
-				break;
-				case 2:
-					EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "player/pl_pain5.wav", 1, ATTN_NORM, TRUE);
-				break;
-				case 3:
-					EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "player/pl_pain6.wav", 1, ATTN_NORM, TRUE);
-				break;
-				}//END OF switch(rndSound)
-			break;
-		}
-
-		
-		
-		//#'s 1 and 2 will give the view punch.
-		if(cl_ladder_choice == 1 || cl_ladder_choice == 2){
-			if(altLadderStep){
-				pev->punchangle.z = 7;
-			}else{
-				pev->punchangle.z = -7;
-			}
-		}
-		altLadderStep = !altLadderStep;  //alternates.
-	}else{
-		if(filterediuser4 < LADDER_CYCLE_BASE*EASY_CVAR_GET(ladderCycleMulti)){
-			//reset!
-			alreadyPassedLadderCheck = FALSE;
-		}
-	}
-	
-	//pev->iuser4 = 47;
-	//easyPrintLine("Weeeee %d", pev->iuser4);
-	
+	//...
+	*/
 
 
 
@@ -6051,7 +5967,7 @@ void CBasePlayer::grantAllItems(){
 		this->hasGlockSilencer = TRUE;
 		// Eliminate HEV chatter from all these new weapons (since the new HEV messages 
 		// play upon receiving a weapon now)
-		// ACTUALLY no longer necessary, if granted while globalflag_muteDeploySound is on, they also won't
+		// No longer necessary, if granted while globalflag_muteDeploySound is on, they also won't
 		// add FVox messages.
 		//SetSuitUpdate(NULL, FALSE, 0);
 }
@@ -6094,7 +6010,7 @@ BOOL CBasePlayer::playerHasLongJump(){
 // This itself, "_commonReset" with the underscore, shouldn't be called straight by anything else.
 // The intention is the CBasePlayer constructor calls this only, and commonReset calls this in addition to some other things it 
 // needs to do now that the game has been created (can trust pev->... calls work, unlike in the constructor)
-// ...oh.  actually almost nothing in common.  well ok then.
+// ...oh.  almost nothing in common.  well ok then.
 void CBasePlayer::_commonReset(void){
 
 	hasGlockSilencerMem = -1;
@@ -6151,7 +6067,7 @@ void CBasePlayer::commonReset(void){
 	clearWeaponFlag = -1;
 
 
-	autoSneakyMem = -2;  //because -1 is actually a valid value for triggering a check in this case.
+	autoSneakyMem = -2;  //because -1 is a valid value for triggering a check in this case.
 
 
 	//alphaCrosshairMem = -1;
@@ -6169,7 +6085,7 @@ void CBasePlayer::commonReset(void){
 	obligedCustomSentence = 0;  //reset.
 
 	//NOTICE::: for now, obligedCustomSentence will be reset when loading or entering a new place.
-	//It doesn't need to be in use for long, and most messages interrupted aren't really that important.
+	//It doesn't need to be in use for long, and most messages interrupted aren't that important.
 	obligedCustomSentence = 0;
 
 #if PLAYER_ALWAYSHASLONGJUMP == 1
@@ -6228,7 +6144,7 @@ void CBasePlayer::commonReset(void){
 
 
 	//MODDD
-	//only spawn does this below, actually.  proceed?
+	// only spawn does this below.  proceed?
 	m_fLongJumpMemory = m_fLongJump;
 	longJumpDelay = 0;
 	longJump_waitForRelease = FALSE;
@@ -6247,7 +6163,7 @@ void CBasePlayer::commonReset(void){
 	}
 	
 
-	//MODDD - this actually enables the long jump.  The "animation" elsewhere isn't the physical long jump.
+	//MODDD - this enables the long jump.  The "animation" elsewhere isn't the physical long jump.
 	/*
 	if ( m_fLongJump )
 	{
@@ -6313,8 +6229,8 @@ void CBasePlayer::turnOffSneaky(void){
 // the connected client's cache.
 // Because lacking FCVAR_REPLICATED is a bitch.
 void CBasePlayer::OnFirstAppearance(void) {
-	//NOTICE - this is happening on coming from map transitions too (Restore call), but not sure what can really be done about that.
-	// Not that it's really a big problem though.
+	//NOTICE - this is happening on coming from map transitions too (Restore call), but not sure what can be done about that.
+	// Not that it's a big problem though.
 
 	// Can't send messages this early, becaaaaaaaaause???
 	queueFirstAppearanceMessageSend = TRUE;
@@ -6510,7 +6426,7 @@ void CBasePlayer::Spawn( BOOL revived ){
 
 
 	// may as well turn these off, either way.  It would have been done by now if it was going to be done.
-	// hm... apply it now actually.  Adrenaline revives, remember?
+	// hm... apply it now.  Adrenaline revives, remember?
 	// Wait.  No, on adrenaline revives we do want to keep weapons not dropped.
 	// How about, if reviving, we don't follow this.
 	// We'll trust on reviving that anything dropped was also removed from the player as to avoid duplicates.
@@ -6554,7 +6470,9 @@ void CBasePlayer::Spawn( BOOL revived ){
 	m_iStepLeft = 0;
 	m_flFieldOfView		= 0.5;// some monsters use this to determine whether or not the player is looking at them.
 
+
 	m_bloodColor	= BLOOD_COLOR_RED;
+
 	m_flNextAttack	= UTIL_WeaponTimeBase();
 	StartSneaking();
 
@@ -6664,7 +6582,7 @@ void CBasePlayer::Spawn( BOOL revived ){
 	
 	m_flNextChatTime = gpGlobals->time;
 
-	// commonReset DISABLE:  Do we really need it here?
+	// commonReset DISABLE:  Do we need it here?
 	//commonReset();
 
 	//TabulateAmmo();
@@ -6842,7 +6760,7 @@ int CBasePlayer::Restore( CRestore &restore )
 	//autoSneakyCheck();
 	superDuperDelay = -2;
 
-	// commonReset DISABLE:  Do we really need it here?
+	// commonReset DISABLE:  Do we need it here?
 	//commonReset();
 
 	RenewItems();
@@ -7377,7 +7295,7 @@ edict_t* CBasePlayer::GiveNamedItem( const char *pszName, int pszSpawnFlags, con
 				//placed on a ceiling, mark as such.
 				//addedSpawnFlags |= SF_STUKABAT_CEILING;
 				//no, the flag is "SF_MONSTER_STUKA_ONGROUND"...
-				//Force this as a non-dynamic spawn and it will snap to  the ceiling without the flag, actually.
+				//Force this as a non-dynamic spawn and it will snap to  the ceiling without the flag.
 
 				coordMod.z -= 28;
 
@@ -8138,7 +8056,7 @@ void CBasePlayer::ItemPostFrame()
 	BOOL canCallItemPostFrame = TRUE;
 
 	//MODDD - moved here.  May as well terminate here if NULL, so that the new "think" method only happens if at least there is an item to "think" for.
-	//(actually, just use a bool for more control)
+	//(just use a bool for more control)
 	if (!m_pActiveItem)
 		canCallItemPostFrame = FALSE;
 
@@ -8148,7 +8066,7 @@ void CBasePlayer::ItemPostFrame()
 		m_pActiveItem->ItemPostFrameThink( );
 	}	
 
-	//MODDDD - now always done, actually, BUT with a few edits to ensure the same logic.
+	//MODDDD - now always done, BUT with a few edits to ensure the same logic.
 	//MODDDD - no, reverted to normal for now...
 	//m_pActiveItem->ItemPostFrame( );
 	

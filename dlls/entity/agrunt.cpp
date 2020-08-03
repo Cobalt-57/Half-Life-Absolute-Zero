@@ -29,10 +29,14 @@
 #include "activity.h"
 #include "util_model.h"
 #include "defaultai.h"
+#include "util_debugdraw.h"
 
 EASY_CVAR_EXTERN_DEBUGONLY(noFlinchOnHard);
 EASY_CVAR_EXTERN_DEBUGONLY(thatWasntPunch);
 EASY_CVAR_EXTERN_DEBUGONLY(agrunt_muzzleflash);
+
+
+
 
 extern unsigned short g_sCustomBallsPowerup;
 
@@ -963,46 +967,105 @@ GENERATE_TRACEATTACK_IMPLEMENTATION(CAGrunt)
 	//easyForcePrintLine("agrunt: TraceAttack hitgroup:%d B:%d S:%d C:%d", ptr->iHitgroup, (bitsDamageType & (DMG_BULLET)), (bitsDamageType & (DMG_SLASH)), (bitsDamageType & (DMG_CLUB))   );
 	//easyForcePrintLine("ILL %d %d", (ptr->iHitgroup), (bitsDamageType & (DMG_BULLET | DMG_SLASH | DMG_CLUB)) != 0 );
 
-	// NOTICE - this hitgroup is armor anywhere on the agrunt, not just the helmet like several other entities.
-	// MODDD - ALSO, protecting against DMG_BLAST now.  HGrunt does, so why not.
-	if ( ptr->iHitgroup == HITGROUP_AGRUNT_ARMOR && (bitsDamageType & (DMG_BULLET | DMG_SLASH | DMG_BLAST | DMG_CLUB)))
-	{
-		// hit armor
-		if ( pev->dmgtime != gpGlobals->time || (RANDOM_LONG(0,10) < 1) )
-		{
-			UTIL_Ricochet( ptr->vecEndPos, RANDOM_FLOAT( 1, 2) );
-			pev->dmgtime = gpGlobals->time;
+	
+	if ((bitsDamageType & DMG_BLAST) || (bitsDamageTypeMod & DMG_HITBOX_EQUAL)) {
+		//MODDD - DMG_BLAST isn't at all precise, shots for whatever hitgroup are a shot in the dark.
+		// So ignore the ihtgroup check.  Have a flat 30% reduction, and a ricochet effect anyway.  ...if it makes sense?
+		flDamage = flDamage * 0.70;
+		if (ptr->iHitgroup == HITGROUP_AGRUNT_ARMOR){
+			UTIL_Ricochet(ptr->vecEndPos, RANDOM_FLOAT(2.5, 3.4));
+			if (useBulletHitSound) { *useBulletHitSound = FALSE; }
+			useBloodEffect = FALSE;
+		}
+	}else if (ptr->iHitgroup == HITGROUP_AGRUNT_ARMOR) {
+		// NOTICE - this hitgroup is armor anywhere on the agrunt, not just the helmet like several other entities.
+		// ALSO, protecting against DMG_BLAST now.  HGrunt does, so why not.
+		// damage under 20 won't be reduced so hard but will still be greatly changed
+		// damage split up.  only BULLET should have the RicochetTracer effect.
+		if (bitsDamageType & (DMG_BULLET)) {
+			if (flDamage <= 20) {
+
+				
+				//flDamage = 0.1;// don't hurt the monster much, but allow bits_COND_LIGHT_DAMAGE to be generated
+				// Do this instead, 12% damage.
+				flDamage = flDamage * 0.12;
+				//MODDD - only do ricochet effects if the damage was effectively blocked (not enough to 'pierce' the armor)
+				// hit armor
+				if (pev->dmgtime != gpGlobals->time || (RANDOM_LONG(0, 10) < 1)) {
+					//MODDD - little tighter ricochet range, was 1 to 2.
+					////////////////////////////////////////////////////////////////////UTIL_Ricochet(ptr->vecEndPos, RANDOM_FLOAT(1.2, 1.8));
+					pev->dmgtime = gpGlobals->time;
+				}
+				//MODDD - why a random chance?  Just do it.
+				//if (RANDOM_LONG(0, 1) == 0) {
+					//MODDD - turned into method.
+					UTIL_RicochetTracer(ptr->vecEndPos, vecDir);
+				//}
+				if (useBulletHitSound) { *useBulletHitSound = FALSE; }
+				useBloodEffect = FALSE;
+				
+
+
+
+
+
+				//sooooo what is "someTrace.flPlaneDist"?    What does that even measure.
+
+				Vector position = ptr->vecEndPos;
+
+				//Vector vecTracerDir = vecDir;
+				Vector vecTracerDir = ptr->vecPlaneNormal;
+
+				vecTracerDir.x += RANDOM_FLOAT(-0.3, 0.3);
+				vecTracerDir.y += RANDOM_FLOAT(-0.3, 0.3);
+				vecTracerDir.z += RANDOM_FLOAT(-0.3, 0.3);
+
+				vecTracerDir = vecTracerDir * 512;
+
+				// vecDir ?
+				DebugLine_Setup(0, position, position + vecTracerDir, 255, 0, 255);
+
+				MESSAGE_BEGIN(MSG_PVS, SVC_TEMPENTITY, position);
+				WRITE_BYTE(TE_TRACER);
+				WRITE_COORD(position.x);
+				WRITE_COORD(position.y);
+				WRITE_COORD(position.z);
+
+				WRITE_COORD(vecTracerDir.x);
+				WRITE_COORD(vecTracerDir.y);
+				WRITE_COORD(vecTracerDir.z);
+				MESSAGE_END();
+
+
+
+
+			}else {
+				//MODDD - Hitting the armor still shouldn't be insignificant, reduce damage by 15%.
+				flDamage = flDamage * 0.85;
+			}
+		}else if (bitsDamageType & (DMG_SLASH | DMG_CLUB) ) {
+			if (flDamage <= 20) {
+				// reduce by 40% instead.
+				flDamage = flDamage * 0.6;
+				UTIL_Ricochet(ptr->vecEndPos, RANDOM_FLOAT(1.5, 2.3));
+
+				if (useBulletHitSound) { *useBulletHitSound = FALSE; }
+				useBloodEffect = FALSE;
+			}else {
+				//MODDD - Hitting the armor still shouldn't be insignificant, reduce damage by 10%.  If this even exists.
+				flDamage = flDamage * 0.90;
+			}
 		}
 
-		if ( RANDOM_LONG( 0, 1 ) == 0 )
-		{
-			Vector vecTracerDir = vecDir;
-
-			vecTracerDir.x += RANDOM_FLOAT( -0.3, 0.3 );
-			vecTracerDir.y += RANDOM_FLOAT( -0.3, 0.3 );
-			vecTracerDir.z += RANDOM_FLOAT( -0.3, 0.3 );
-
-			vecTracerDir = vecTracerDir * -512;
-
-			MESSAGE_BEGIN( MSG_PVS, SVC_TEMPENTITY, ptr->vecEndPos );
-			WRITE_BYTE( TE_TRACER );
-				WRITE_COORD( ptr->vecEndPos.x );
-				WRITE_COORD( ptr->vecEndPos.y );
-				WRITE_COORD( ptr->vecEndPos.z );
-
-				WRITE_COORD( vecTracerDir.x );
-				WRITE_COORD( vecTracerDir.y );
-				WRITE_COORD( vecTracerDir.z );
-			MESSAGE_END();
-		}
-
-		flDamage -= 20;
-		if (flDamage <= 0){
-			flDamage = 0.1;// don't hurt the monster much, but allow bits_COND_LIGHT_DAMAGE to be generated
-			if(useBulletHitSound){*useBulletHitSound=FALSE;} 
-			useBloodEffect = FALSE;  //don't now.
+	}
+	else {
+		// hit anywhere else?  Pretty fleshy and exposed, but kinda tough-looking I guess.  8%.
+		if (bitsDamageType & (DMG_BULLET)) {
+			flDamage = flDamage * 0.92;
 		}
 	}
+	//END OF armor hitgroup check
+
 	
 	
 	//easyForcePrintLine("AGrunt:: TraceAttack ended with %.2f damage.", flDamage);

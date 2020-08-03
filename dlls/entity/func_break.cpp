@@ -1223,7 +1223,7 @@ void CPushable :: Move( CBaseEntity *pOther, int push, int useValue )
 				// jolt forward and disable the 'use' velocity clone for a very short time to let the box advance
 				// forward to be out of the way, then go back to copying player velocity while the player 
 				// moves forward.
-				// Yes... deluxe pushable logic, we really have everything.
+				// Yes... deluxe pushable logic, we have everything.
 				if( (pOther->pev->button & IN_FORWARD && UTIL_IsFacing(pOther->pev, realOrigin, 0.707)) ){
 					
 					//::DebugLine_ClearAll();
@@ -1267,13 +1267,13 @@ void CPushable :: Move( CBaseEntity *pOther, int push, int useValue )
 			}
 		}else{
 			// Not the player? Use its mass to influence how far it pushes me.
-			// This isn't specified for most monsters as monsters pushing this very often really isn't expected.
+			// This isn't specified for most monsters as monsters pushing this very often isn't expected.
 			// But projectiles (arrows) or hornets could hit this and going flying looks kinda silly.
 			pev->velocity.x += pevToucher->velocity.x * pOther->massInfluence() * pushSpeedFactor;
 			pev->velocity.y += pevToucher->velocity.y * pOther->massInfluence() * pushSpeedFactor;
 				
 			// the other object will slow down any frame it touches me.  IF it is not another pusable.
-			// And trains, they can look weird if thrown off.  This should really be a virtual method like massInfluence (pushSlowdown?) if much more needs it.
+			// And trains, they can look weird if thrown off.  This should be a virtual method like massInfluence (pushSlowdown?) if much more needs it.
 			// Any other fixed moving things like this should probably be ignored for velocity changes by pushables.
 			if(!FClassnameIs(pevToucher, "func_pushable") && !FClassnameIs(pevToucher, "func_train")){
 				pOther->pev->velocity.x *= 0.6;
@@ -1325,7 +1325,7 @@ void CPushable :: Move( CBaseEntity *pOther, int push, int useValue )
 	//MODD - now why do ya think we have a m_maxSpeed ???
 	// Cap it!
 	// WRRROOONNNNNNNG.
-	// Cap to a m_maxSpeed of 1?  You really want to do that?  No.
+	// Cap to a m_maxSpeed of 1?  You want to do that?  No.
 	// Just force it 400, a good upper limit for player speed.
 	// (all cases of m_maxSpeed below replaced with 400)
 
@@ -1342,7 +1342,7 @@ void CPushable :: Move( CBaseEntity *pOther, int push, int useValue )
 
 	//if ( push && (length > maxSpeedTemp) )
 	//MODDD - always require the length check now!
-	//MODDD - actually remove the speed length check.  The new system doesn't need this, the box can only move as fast as the player.
+	//MODDD - remove the speed length check.  The new system doesn't need this, the box can only move as fast as the player.
 	//        Tossing around not supported, loses control too much.
 	/*
 	if ((length > maxSpeedTemp) )
@@ -1432,7 +1432,7 @@ BOOL CPushable::isBreakableOrchild(void){
 }
 //MODDD
 BOOL CPushable::isDestructibleInanimate(void){
-	//Pushables are actually NON-destructible by default.  Require SF_PUSH_BREAKABLE to return TRUE.
+	//Pushables are NON-destructible by default.  Require SF_PUSH_BREAKABLE to return TRUE.
 	//...However, any of the above conditions being met for breakables being indestructible (mat is
 	//unbreakableGlass, or SF_BREAK_TRIGGER_ONLY is set), it looks like damage won't be taken.  So,
 	//for parent conditions, FORCE us to return false.

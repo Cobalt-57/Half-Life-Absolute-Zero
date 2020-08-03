@@ -195,7 +195,7 @@ void CGib :: SpawnStickyGibs( entvars_t *pevVictim, Vector vecOrigin, int cGibs,
 	{
 		// no sticky gibs in germany right now!
 		//MODDD TODO - above comment found as-is.  Can re-enable and just use german gibs instead.
-		//             ...actually, it seems "SpawnStickyGibs" is never called as-is.  Huh.
+		//             ...it seems "SpawnStickyGibs" is never called as-is.  Huh.
 		return; 
 	}
 
@@ -640,7 +640,7 @@ GENERATE_GIBMONSTERGIB_IMPLEMENTATION(CBaseMonster){
 	TraceResult	tr;
 	BOOL gibbed = FALSE;
 	
-	//MODDD NOTE - Mainly, GibMonster means we really plan on gibbing the monster, but filter out a few more possibilities, like being disallowed by violence_Xgibs per
+	//MODDD NOTE - Mainly, GibMonster means we plan on gibbing the monster, but filter out a few more possibilities, like being disallowed by violence_Xgibs per
 	//             this monster's type, or german censorship not allowing gibs for humans or even robot replacements (germanRobotGibs of 0).
 
 
@@ -695,11 +695,7 @@ GENERATE_GIBMONSTERGIB_IMPLEMENTATION(CBaseMonster){
 		if(CVAR_GET_FLOAT("violence_agibs") != 0)
 		{
 			Vector temp = this->pev->absmax - this->pev->absmin;
-			//easyForcePrintLine("SUPER SIZE MULTI: %.2f %.2f %.2f : %.2f %.2f %.2f : %.2f %.2f %.2f", temp.x, temp.y, temp.z   pev->  );
 			
-			//garg size: 262144   ... and agrunt size too??? really?
-			//ABS::: 5478400.00  for garg, better discrepency!!!gibsSpawnDecals
-			//easyForcePrintLine("IM A no  %.2f %d %d ", temp.x * temp.y * temp.z, 200000,  (temp.x * temp.y * temp.z) < 200000);
 			int gibSpawnCount;
 			int myBlood = BloodColor();
 			int gibChoiceID;
@@ -1229,7 +1225,7 @@ GENERATE_KILLED_IMPLEMENTATION(CBaseMonster)
 
 	// Before any mods to health, record what it was for monitoring overkill.
 	//////killedHealth = pev->health;
-	// ACTUALLY just make it the amount of damage dealth by the last attack.
+	// Just make it the amount of damage dealth by the last attack.
 	// may feel a little better this way.
 	
 
@@ -1283,7 +1279,7 @@ GENERATE_KILLED_IMPLEMENTATION(CBaseMonster)
 //
 // DON'T USE ME FOR GIBS AND STUFF IN MULTIPLAYER! 
 // SET A FUTURE THINK AND A RENDERMODE!!
-//MODDD NOTE - luckily this doesn't actually fade out the player, 
+//MODDD NOTE - luckily this doesn't really fade out the player, 
 //but only because the player immediately sets the Think on its own to PlayerDeathThink
 //after calling GibMonster. This overrides the SUB_FadeOut Set Think call below.
 //But the player should still not call this method anyways.
@@ -1341,7 +1337,7 @@ void CGib :: WaitTillLand ( void )
 		SetThink (&CBaseEntity::SUB_StartFadeOut);
 		pev->nextthink = gpGlobals->time + m_lifeTime;
 
-		// If you bleed, you stink!... unless you're a robot, gears don't really attract eaters.
+		// If you bleed, you stink!... unless you're a robot, gears don't attract eaters.
 		// But exceptions are exceptions (GermanModelOrganicLogic).
 		if ( m_bloodColor != DONT_BLEED && (GermanModelOrganicLogic() || m_bloodColor != BLOOD_COLOR_BLACK)  )
 		{
@@ -1958,7 +1954,7 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBaseEntity)
 				::UTIL_SetOrigin(pev, Vector(pev->origin.x, pev->origin.y, pev->origin.z + 0.3));
 				pev->flags &= ~FL_ONGROUND;  //is this ok?
 				
-				//NOTICE - to really have any effective pushing beyond a little weird-looking glitchiness, we really need this MOVETYPE_TOSS.
+				//NOTICE - to have any effective pushing beyond a little weird-looking glitchiness, we need this MOVETYPE_TOSS.
 				//Other movetypes like STEP can instantly lock to the ground.
 				//If it were formal for entities meant to be pushed to revert movetype to MOVETYPE_STEP on touching the ground since going airborne (however slight),
 				//this would be more effective. Unknown if just having a MOVETYPE_TOSS permanently otherwise is even an issue come to think of it?
@@ -2399,7 +2395,7 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBaseMonster){
 	}
 
 
-	// grab the vector of the incoming attack. ( pretend that the inflictor is a little lower than it really is, so the body will tend to fly upward a bit).
+	// grab the vector of the incoming attack. ( pretend that the inflictor is a little lower than it is, so the body will tend to fly upward a bit).
 	//MODDD - important note!  Only the player is moved by "vecDir", otherwise that variable gets ignored
 	vecDir = Vector( 0, 0, 0 );
 	if (!FNullEnt( pevInflictor ))
@@ -2679,7 +2675,7 @@ GENERATE_DEADTAKEDAMAGE_IMPLEMENTATION(CBaseMonster)
 	// ...oh.  It's a leftover paste from CBaseMonster's TAKEDAMAGE, although only the player uses vecDir.
 	// And since the player never gets checked in DEADTAKEDAMAGE here... yea.
 
-	// grab the vector of the incoming attack. ( pretend that the inflictor is a little lower than it really is, so the body will tend to fly upward a bit).
+	// grab the vector of the incoming attack. ( pretend that the inflictor is a little lower than it is, so the body will tend to fly upward a bit).
 	vecDir = Vector( 0, 0, 0 );
 	if (!FNullEnt( pevInflictor ))
 	{
@@ -2739,7 +2735,7 @@ float CBaseMonster :: DamageForce( float damage )
 
 
 /*
-//...actually not anymore. Any calls to RadiusDamage, even from RadiusDamageAutoRadius, end up getting redirected to RadiusDamageTest if the RadiusDamageDrawDebug CVar is set.
+//...Not anymore. Any calls to RadiusDamage, even from RadiusDamageAutoRadius, end up getting redirected to RadiusDamageTest if the RadiusDamageDrawDebug CVar is set.
 void CBaseMonster :: RadiusDamageAutoRadiusTest(entvars_t* pevInflictor, entvars_t*	pevAttacker, float flDamage, int iClassIgnore, int bitsDamageType )
 {
 	::RadiusDamageTest( pev->origin, pevInflictor, pevAttacker, flDamage, flDamage * 2.5, iClassIgnore, bitsDamageType, 0 );
@@ -3235,7 +3231,7 @@ void CBaseEntity::FireBullets(ULONG cShots, Vector vecSrc, Vector vecDirShooting
 				//        the texture sound / generate a hit decal. For instance, shots that hit helmets and ricochet shouldn't play flesh hit sounds at the same
 				//        time like the texture system wants to. That means, bullets merely ALLOW the bullethit sound to be played, but it doesn't have to be.
 				//        Acutally, little issue with this approach. TEXTURETYPE_PlaySound needs a fair amount of information (trace result, evSrc, vecEnd, and
-				//        our iBulletType). We really don't need another TraceAttack overload just for this
+				//        our iBulletType). We don't need another TraceAttack overload just for this
 				//        So, little compromise. Instead, traceAttack gets to set the "useBulletHitsound" variable which this method will send by reference.
 				//        If the hit entity allows the bullet hit sound to play, then we can call TEXTURETYPE_PlaySound and DecalGunshot from here as usual.
 				//        This also means, no need for checking to see if the bitsDamage bitmask includes DMG_BULLET. "useBulletHitSound" being provided at all
@@ -3336,7 +3332,7 @@ This version is used by Players, uses the random seed generator to sync client a
 //        such as, say, func_breakable already make on hit. That may or may not be terrible, but could be correctable. Check if the hit thing is the map, and, if so, play
 //        a hit sound because we know the map won't on its own and the client can't (that is only for player-bullet hits). So the monster must in that case. Otherwise trust
 //        the hit entity... not the map... handles playing sounds for taking hits correctly.
-//        ACTUALLY... looks like most things do expect the attacker/shooter to handle the sound part at least. Func_breakables are more of an exception to play a sound no matter
+//        Looks like most things do expect the attacker/shooter to handle the sound part at least. Func_breakables are more of an exception to play a sound no matter
 //        where they are hit. It's fine to make the player play a texturehitsound when not hitting the map (worldspawn) still.
 
 ================

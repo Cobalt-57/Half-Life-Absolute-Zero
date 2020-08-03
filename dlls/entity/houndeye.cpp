@@ -839,7 +839,7 @@ void CHoundeye::setModel(const char* m){
 			EASY_CVAR_PRINTIF_PRE(houndeyePrintout, easyPrintLine( "WARNING: Houndeye skin count is 0, error! Check houndeye.mdl for multiple skins. If it has them, please report this.  Forcing default of 4..."));
 			numberOfEyeSkins = 4;
 		}else if(numberOfEyeSkins != 4){
-			EASY_CVAR_PRINTIF_PRE(houndeyePrintout, easyPrintLine( "WARNING: Houndeye skin count is %d, not 4. If houndeye.mdl does actually have 4 skins, please report this.", numberOfEyeSkins));
+			EASY_CVAR_PRINTIF_PRE(houndeyePrintout, easyPrintLine( "WARNING: Houndeye skin count is %d, not 4. If houndeye.mdl does have 4 skins, please report this.", numberOfEyeSkins));
 			if(numberOfEyeSkins < 1) numberOfEyeSkins = 1; //safety.
 		}
 	}
@@ -848,7 +848,7 @@ void CHoundeye::setModel(const char* m){
 
 
 //MODDD - doesn't "restore" make more sense?
-//Actually this is ok. But see if the scientist should change.
+// this is ok. But see if the scientist should change.
 void CHoundeye :: Activate(){
 	
 	//easyForcePrintLine("HOUNDEYE RAW SKIN COUNT B: %d", getNumberOfSkins());

@@ -574,7 +574,7 @@ void CFloater::Move( float flInterval )
 
 BOOL CFloater::ShouldAdvanceRoute( float flWaypointDist, float flInterval )
 {
-	// Get true 3D distance to the goal so we actually reach the correct height
+	// Get true 3D distance to the goal so we reach the correct height
 	if ( m_Route[ m_iRouteIndex ].iType & bits_MF_IS_GOAL )
 		flWaypointDist = ( m_Route[ m_iRouteIndex ].vecLocation - pev->origin ).Length();
 
@@ -847,7 +847,7 @@ Schedule_t* CFloater::GetSchedule ( void )
 			}
 			else  
 			{
-				//easyPrintLine("I say, really now? %d %d", HasConditions(bits_COND_CAN_RANGE_ATTACK1), HasConditions(bits_COND_CAN_RANGE_ATTACK2) );
+				//easyPrintLine("I say, what? %d %d", HasConditions(bits_COND_CAN_RANGE_ATTACK1), HasConditions(bits_COND_CAN_RANGE_ATTACK2) );
 
 				// we can see the enemy
 				if ( HasConditions(bits_COND_CAN_RANGE_ATTACK1) )
@@ -1028,7 +1028,7 @@ BOOL CFloater::CheckRangeAttack1( float flDot, float flDist ){
 	//if ( flDot > 0.5 && flDist > 256 && flDist <= 2048 )
 	if ( flDot > 0.5 && flDist <= 1024 )
 	{
-		//actually there is one more check to do.  Is there a little wider of a straight line of sight available, not just barely peeking around a wall?
+		// there is one more check to do.  Is there a little wider of a straight line of sight available, not just barely peeking around a wall?
 		
 
 		//easyForcePrintLine("YAY?!");
@@ -1155,7 +1155,7 @@ GENERATE_DEADTAKEDAMAGE_IMPLEMENTATION(CFloater)
 
 //Parameters: integer named fGibSpawnsDecal
 // The parent method calls GIBMONSTERGIB, then GIBMONSTERSOUND and GIBMONSTEREND, passing along to the latter two whether GIBMONSTERGIB
-// actually "gibbed" or not (it must return whether it did or not).
+// really "gibbed" or not (it must return whether it did or not).
 // This default behavior is ok, change pieces at a time instead in other methods. GIBMONSTERGIB is the most likely one that needs customization,
 // such as only spawning two alien gibs for the ChumToad. The others are good as defaults.
 GENERATE_GIBMONSTER_IMPLEMENTATION(CFloater)
@@ -1196,7 +1196,6 @@ GENERATE_GIBMONSTERGIB_IMPLEMENTATION(CFloater)
 		BOOL parentResult = GENERATE_GIBMONSTERGIB_PARENT_CALL(CFlyingMonster);
 
 
-		//do this actually.
 		PLAYBACK_EVENT_FULL (FEV_GLOBAL, this->edict(), g_sFloaterExplode, 0.0, (float *)&this->pev->origin, (float *)&this->pev->angles, 0.0, 0.0, this->entindex(), 0, 0, 0);
 
 		//UTIL_Explosion(pev, pev->origin + Vector(0, 0, 8), spriteChosen, (160 - 50) * 0.60, 15, TE_EXPLFLAG_NOSOUND | TE_EXPLFLAG_NOPARTICLES, pev->origin + Vector(0, 0, 16), 1 );
@@ -1229,7 +1228,7 @@ GENERATE_KILLED_IMPLEMENTATION(CFloater)
 	//GENERATE_KILLED_PARENT_CALL(CBaseMonster);
 	//return;
 	
-	// Not killed before?    (yes, really).
+	// Not killed before?
 	if(!HasMemory( bits_MEMORY_KILLED )){
 		//Only reset the velocity if this is the first Killed call (since we stop following).
 		//Any further resets will look like gravity suddenly stops with each shot (Killed call again).

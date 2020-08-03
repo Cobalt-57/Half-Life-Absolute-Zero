@@ -751,7 +751,7 @@ void command_updateCameraPerspectiveT(void){
 // That is, it's a way of getting around being unable to use "pfnAddCommand" serverside.
 // You do it clientside, then tell the server the same thing and the server reads it in
 // dlls/client.cpp.
-// These in particular are alternate "god" and "noclip" commands, since we can't really
+// These in particular are alternate "god" and "noclip" commands, since we can't
 // make the engine allow them in multiplayer and/or even after turning sv_cheats on
 // (without restarting the map that is, but these don't care about map restarts).
 void command_god2(void){
@@ -826,7 +826,7 @@ void CHud :: Init( void )
 
 	gEngfuncs.pfnAddCommand("fvoxtoggle", command_fvoxtoggle);
 	// sadly the "mapname" command is not an option, it competes with autocomplete for "map", as in mapname fills itself in
-	// on typing "map" and then a space, which is irritating if you really wanted to use the 'map' command.  UGH.
+	// on typing "map" and then a space, which is irritating if you wanted to use the 'map' command.  UGH.
 	//gEngfuncs.pfnAddCommand("mapname", command_mapname);
 	gEngfuncs.pfnAddCommand("getmap", command_mapname);
 	gEngfuncs.pfnAddCommand("currentmap", command_mapname);
@@ -892,7 +892,7 @@ void CHud :: Init( void )
 	writeDateInfo(aryChrD, 128);
 
 	//NOTE - SPECIAL.  Not using the EasyCVAR system, these are for getting info about the game.
-	//...actually getting replaced by commands, makes more sense as read-only values anyway.
+	//...getting replaced by commands, makes more sense as read-only values anyway.
 	CVAR_CREATE("cl_mod_version", aryChr, FCVAR_CLIENTDLL);
 	CVAR_CREATE("cl_mod_date", aryChrD, FCVAR_CLIENTDLL);
 	*/

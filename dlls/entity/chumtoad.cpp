@@ -637,11 +637,6 @@ BOOL CChumToad::getMonsterBlockIdleAutoUpdate(){
 	//EXPERIMENT: allow again.
 	//return FALSE;
 
-	//Actually...
-	if(monsterID == 24){
-		int x = 34;
-	}
-
 
 	//easyForcePrintLine("DO YOU???? %.2f", toadPlayDeadTimer);
 	if(this->toadPlayDeadTimer != -1){
@@ -698,7 +693,7 @@ void CChumToad::setModel(const char* m){
 			easyPrintLine( "WARNING: Chumtoad (NPC) skin count is 0, error! Check chumtoad.mdl for multiple skins. If it has them, please report this.  Forcing default of 3...");
 			numberOfEyeSkins = 3;
 		}else if(numberOfEyeSkins != 3){
-			easyPrintLine( "WARNING: Chumtoad (NPC) skin count is %d, not 3. If chumtoad.mdl does actually have 3 skins, please report this.", numberOfEyeSkins);
+			easyPrintLine( "WARNING: Chumtoad (NPC) skin count is %d, not 3. If chumtoad.mdl does have 3 skins, please report this.", numberOfEyeSkins);
 			if(numberOfEyeSkins < 1) numberOfEyeSkins = 1; //safety.
 		}
 	}
@@ -881,7 +876,7 @@ void CChumToad::ChumToadTouch( CBaseEntity *pOther ){
 		pOther != NULL &&
 		!(pOther->IsWorld()) && pOther != NULL &&
 		!(pev->flags & FL_ONGROUND) &&
-		//if already on top of something and this touch is for that same thing, this isn't really going to help.
+		//if already on top of something and this touch is for that same thing, this isn't going to help.
 		(m_hEntitySittingOn==NULL || (pOther->edict() != m_hEntitySittingOn->edict())  )
 	){
 		//If not on the ground and touching an entity other than the map, need to know if what we just touched is immediately below.
@@ -1165,9 +1160,9 @@ Schedule_t *CChumToad::GetSchedule ( void )
 				{
 					//return GetScheduleOfType( SCHED_ALERT_SMALL_FLINCH );
 					return GetScheduleOfType( SCHED_TOAD_ALERT_SMALL_FLINCH );
-					//You're cowardly. Don't stop to turn and stare at what damaged you. Just run.
-					//actually we can still do a flinch animation.  Our own flinch schedule(s) will handle running away
-					//afterwards immediately.
+					// You're cowardly. Don't stop to turn and stare at what damaged you. Just run.
+					// we can still do a flinch animation.  Our own flinch schedule(s) will handle running away
+					// afterwards immediately.
 					//return GetScheduleOfType( SCHED_TAKE_COVER_FROM_ORIGIN );
 				}
 			}
@@ -1181,7 +1176,7 @@ Schedule_t *CChumToad::GetSchedule ( void )
 				//...oh wait, this state means we dropped the enemy.
 				//if(UTIL_IsFacing(m_hEnemy->pev, pev->origin, 0.6)
 
-				//Really all we care about here is not turning to stare at the player twenty times.
+				// all we care about here is not turning to stare at the player twenty times.
 				//Check the best sound and see if it's PLAYER noise.  If so THEN skip looking.
 				//Can't be too paranoid or else so much as a friendly walking nearby will scare me.
 				//Although any combat noise scaring a chumtoad, regardless of source, does seem fitting too...
@@ -1546,7 +1541,7 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CChumToad)
 		}
 	}
 
-	//to see if we can play dead or stop playing dead, we must at least be on the ground.  And uh, not actually dead / dying.
+	//to see if we can play dead or stop playing dead, we must at least be on the ground.  And uh, not dead / dying.
 	if(this->m_IdealMonsterState != MONSTERSTATE_DEAD && m_MonsterState != MONSTERSTATE_DEAD && pev->deadflag == DEAD_NO && pev->flags & FL_ONGROUND){
 
 		//IM RUNNIN
@@ -1752,7 +1747,7 @@ void CChumToad :: StartTask ( Task_t *pTask )
 
 
 			//***IMPORTANT***
-			//determine the chance of actually fooling anyone who gets close.
+			//determine the chance of fooling anyone who gets close.
 			this->playDeadSuccessful = (RANDOM_FLOAT(0, 1) < EASY_CVAR_GET(chumtoadPlayDeadFoolChance) );
 			
 			EASY_CVAR_PRINTIF_PRE(chumtoadPrintout, easyPrintLine("PLAYDEAD SUCCESS? %d", playDeadSuccessful) );
@@ -1852,7 +1847,7 @@ void CChumToad::RunTask ( Task_t *pTask ){
 			if(m_hEntitySittingOn){
 				
 				//if sitting on something, check to see if we should fall.
-				//it appears this never really has a chance to be effective.
+				//it appears this never has a chance to be effective.
 				const char* tessst = m_hEntitySittingOn->getClassname();
 				//check. are we still sitting on it?
 				CBaseEntity* entityBelow = getEntityBelow();
@@ -2249,7 +2244,7 @@ void CChumToad::randomDelay(){
 BOOL CChumToad::IsAlive_FromAI( CBaseMonster* whoWantsToKnow ){
 
 	if(whoWantsToKnow == NULL){
-		//don't know "whoWantsToKnow"? Nothing to really try here.
+		//don't know "whoWantsToKnow"? Nothing to try here.
 		return CBaseMonster::IsAlive_FromAI(whoWantsToKnow);
 	}
 

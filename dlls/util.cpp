@@ -1418,7 +1418,7 @@ Vector UTIL_VecGetForward2D( const Vector &vecAng )
 	return Vector(cos(yawInRads), sin(yawInRads), 0);
 }
 
-//NOTICE: player's up&down angle is actually inverted (negative).  Handle that, somehow?  Maybe just before sending off the view angle here, if you do that?
+//NOTICE: player's up&down angle is inverted (negative).  Handle that, somehow?  Maybe just before sending off the view angle here, if you do that?
 Vector UTIL_VecGetForward( const Vector &vecAng )
 {
 	const float yawInRads = vecAng.y * (M_PI / 180.0);
@@ -1442,46 +1442,46 @@ Vector UTIL_VecGetForward( const Vector &vecAng )
 }
 
 Vector UTIL_velocityToAngles( const Vector &vecVel){
-	//nothing happens to angles.z.
+	// nothing happens to angles.z.
 
-	//just want "direction" information about the velocity only.
+	// just want "direction" information about the velocity only.
 	Vector vecVelDir = vecVel.Normalize();
 	Vector vecVelDir2D = Vector(vecVelDir.x, vecVelDir.y, 0).Normalize();
 
-	//angle X component is pitch: how far looking up or down?   Based on Z component of velocity.
+	// angle X component is pitch: how far looking up or down?   Based on Z component of velocity.
 	float xComp = asin(vecVelDir.z) * (180.0f / M_PI);  //get as degrees... yes, really.
 	
-	//our angle's Y component is made of the velocity's X and Y actually...
+	// our angle's Y component is made of the velocity's X and Y...
 	float yComp = 0;
 
 	if(vecVelDir2D.x == 0){
-		//we are at the top or bottom.  Which?
+		// we are at the top or bottom.  Which?
 		if(vecVelDir2D.y < 0){
-			//bottom.
+			// bottom.
 			yComp = 270;
 		}else{
-			//top.
+			// top.
 			yComp = 90;
 		}
 	}else if(vecVelDir2D.y == 0){
-		//to the leftmost or rightmost, which?
+		// to the leftmost or rightmost, which?
 		if(vecVelDir2D.x < 0){
-			//left.
+			// left.
 			yComp = 180;
 		}else{
-			//right.
+			// right.
 			yComp = 0;
 		}
 	}else{
 
-		//But wait there is atan2.  Aaaaahhhhh fuck.
+		// But wait there is atan2.  Aaaaahhhhh fuck.
 
-		//neither flattened X or Y is 0?  ok.
+		// neither flattened X or Y is 0?  ok.
 		if(vecVelDir2D.x >= 0){
-			//right-half of the graph (quadrants I and IV).  OK.
+			// right-half of the graph (quadrants I and IV).  OK.
 			yComp = atan( vecVelDir2D.y / vecVelDir2D.x ) * (180.0f / M_PI);  //to degrees... stop cringing.
 		}else{
-			//right-half of the graph (quadrants II and III).  CAREFUL!  add 180 degrees.
+			// right-half of the graph (quadrants II and III).  CAREFUL!  add 180 degrees.
 			yComp = atan( vecVelDir2D.y / vecVelDir2D.x ) * (180.0f / M_PI) + 180;  //to degrees... stop cringing.
 		}
 	}
@@ -1802,8 +1802,9 @@ void UTIL_DecalTrace( TraceResult *pTrace, int decalNumber )
 		WRITE_COORD( pTrace->vecEndPos.y );
 		WRITE_COORD( pTrace->vecEndPos.z );
 		WRITE_BYTE( index );
-		if ( entityIndex )
-			WRITE_SHORT( entityIndex );
+		if (entityIndex) {
+			WRITE_SHORT(entityIndex);
+		}
 	MESSAGE_END();
 	
 }
@@ -2063,7 +2064,8 @@ void interpretSoundAsSentence(char* interpretationFINAL, const char* pszName){
 
 
 //MODDDSOUNDSAVE - name edited. Used to be EMIT_SOUND and EMIT_SOUND_DYN directly, now has some filtering.
-//Yeah... should just replace all EMIT_SOUND_FILTERED calls with UTIL_PlaySound at some point, would really ease confusion. EMIT_SOUND_FILTERED adds nothing new here.
+//Yeah... should just replace all EMIT_SOUND_FILTERED calls with UTIL_PlaySound at some point, would
+// ease confusion. EMIT_SOUND_FILTERED adds nothing new here.
 void EMIT_SOUND_FILTERED(edict_t *entity, int channel, const char *sample, float volume, float attenuation)
 {
 	UTIL_PlaySound(entity, channel, sample, volume, attenuation, 0, 100, ((CBaseEntity*)(CBaseEntity::Instance(entity)))->usesSoundSentenceSave());
@@ -2083,7 +2085,6 @@ void EMIT_SOUND_FILTERED(edict_t *entity, int channel, const char *sample, float
 
 
 void UTIL_PlaySound(entvars_t* entity, int channel, const char *pszName, float volume, float attenuation ){
-	if ( !pszName )return;
 	UTIL_PlaySound(ENT(entity), channel, pszName, volume, attenuation, 0, 100, ((CBaseEntity*)(CBaseEntity::Instance(entity)))->usesSoundSentenceSave());
 }
 void UTIL_PlaySound(entvars_t* entity, int channel, const char *pszName, float volume, float attenuation, BOOL useSoundSentenceSave ){
@@ -2097,7 +2098,6 @@ void UTIL_PlaySound(edict_t* entity, int channel, const char *pszName, float vol
 	UTIL_PlaySound(entity, channel, pszName, volume, attenuation, 0, 100, useSoundSentenceSave);
 }
 void UTIL_PlaySound(entvars_t* entity, int channel, const char *pszName, float volume, float attenuation, int flags, int pitch ){
-	if ( !pszName )return;
 	//if ( pszSentence[0] == '!' )
 	//is "ENT( pev )" always okay?
 	//	EMIT_SOUND_DYN( ENT( pev ), channel, pszSentence, volume, attenuation, flags, pitch);
@@ -2203,7 +2203,7 @@ void EMIT_SOUND_DYN(edict_t *entity, int channel, const char *sample, float volu
 
 
 
-//MODDD - suit sound methods. They really just specify some flags for EMIT_SOUND_DYN, the raw engine call for playing sounds.
+//MODDD - suit sound methods. They specify some flags for EMIT_SOUND_DYN, the raw engine call for playing sounds.
 //        They don't need to use the soundsentencesave system - it is implied that the user knows they are sentences and treats them as such.
 //        No sound file references are to be used with these is all, and exclamation marks in front for single sentences. Sentence Groups
 //        don't get them.
@@ -2286,7 +2286,7 @@ void EMIT_GROUPNAME_SUIT(edict_t *entity, const char *groupname)
 
 
 //MODDD NOTE
-//Note that "EMIT_SOUND_FILTER" is really a call in sound.cpp that entities/monsters call that ends up going over here to util.cpp to's UTIL_PlaySound, which
+//Note that "EMIT_SOUND_FILTER" is a call in sound.cpp that entities/monsters call that ends up going over here to util.cpp to's UTIL_PlaySound, which
 //tells whether to do the sound-sentence-save effect (search for the sentence in sentences.txt instead of straight on the filesystem to save on precaches).
 //After that, EMIT_SOUND_DYN acts as a parser to tell whether what it has is a single-sentence call or not
 //(the engine then figures out whether it is a single sound file reference or a sentence-group reference... who came up with this?)
@@ -2782,7 +2782,7 @@ BOOL UTIL_getExplosionsHaveSparks(void){
 
 
 //Note that this is most commonly used for the armor ricochet effect (hgrunt helmet non-fatal hits, agrunt plated armor).
-void UTIL_Ricochet( const Vector &position, float scale )
+void UTIL_Ricochet( const Vector& position, float scale )
 {
 	if(EASY_CVAR_GET(muteRicochetSound) < 2){
 		MESSAGE_BEGIN( MSG_PVS, SVC_TEMPENTITY, position );
@@ -2794,6 +2794,32 @@ void UTIL_Ricochet( const Vector &position, float scale )
 		MESSAGE_END();
 	}
 }
+
+//MODDD - NEW.  From a snippet of AGrunt's script, may as well be re-usable
+void UTIL_RicochetTracer(const Vector& position, const Vector& vecDir) {
+	Vector vecTracerDir = vecDir;
+
+	vecTracerDir.x += RANDOM_FLOAT(-0.3, 0.3);
+	vecTracerDir.y += RANDOM_FLOAT(-0.3, 0.3);
+	vecTracerDir.z += RANDOM_FLOAT(-0.3, 0.3);
+
+	vecTracerDir = vecTracerDir * -512;
+
+	// vecDir ?
+	DebugLine_Setup(0, position, position + vecTracerDir, 255, 0, 255);
+
+	MESSAGE_BEGIN(MSG_PVS, SVC_TEMPENTITY, position);
+	WRITE_BYTE(TE_TRACER);
+	WRITE_COORD(position.x);
+	WRITE_COORD(position.y);
+	WRITE_COORD(position.z);
+
+	WRITE_COORD(vecTracerDir.x);
+	WRITE_COORD(vecTracerDir.y);
+	WRITE_COORD(vecTracerDir.z);
+	MESSAGE_END();
+}
+
 
 
 BOOL UTIL_TeamsMatch( const char *pTeamName1, const char *pTeamName2 )
@@ -5310,15 +5336,17 @@ void ClientPrecache( void )
 
 
 
+	// Just hard precache these (TRUE), not sure how I feel about playing sentences through pm_shared (even though it looks like it works).
+	// It just might be telling if retail never did that.
 // player pain sounds
-	PRECACHE_SOUND("player/pl_pain2.wav", FALSE);
-	PRECACHE_SOUND("player/pl_pain4.wav", FALSE);
-	PRECACHE_SOUND("player/pl_pain5.wav", FALSE);
-	PRECACHE_SOUND("player/pl_pain6.wav", FALSE);
-	PRECACHE_SOUND("player/pl_pain7.wav", FALSE);
+	PRECACHE_SOUND("player/pl_pain2.wav", TRUE);
+	PRECACHE_SOUND("player/pl_pain4.wav", TRUE);
+	PRECACHE_SOUND("player/pl_pain5.wav", TRUE);
+	PRECACHE_SOUND("player/pl_pain6.wav", TRUE);
+	PRECACHE_SOUND("player/pl_pain7.wav", TRUE);
 
 	//MODDD - now precached.
-	PRECACHE_SOUND("player/h2odeath.wav", FALSE);
+	PRECACHE_SOUND("player/h2odeath.wav", TRUE);
 
 	PRECACHE_MODEL("models/player.mdl");
 
@@ -5587,8 +5615,7 @@ void method_precacheAll(void){
 	globalPSEUDO_allowGermanModelsMem = EASY_CVAR_GET(allowGermanModels);
 	//globalPSEUDO_germanCensorshipMem = EASY_CVAR_GET(sv_germancensorship);
 
-
-	//Actually these are so likely to be called, just precache them unconditionally.
+	// these are so likely to be called, just precache them unconditionally.
 	/*
 	if(!soundSentenceSaveVar){
 		if(EASY_CVAR_GET(weaponSelectUsesReloadSounds) != 1){
@@ -6111,7 +6138,7 @@ void method_precacheAll(void){
 	//PRECACHE_MODEL ("models/hgibs.mdl");
 
 
-	//is that really necessary?
+	// is that necessary?
 	PRECACHE_MODEL( "models/can.mdl" );
 	PRECACHE_MODEL("sprites/laserdot.spr");
 
@@ -6287,7 +6314,7 @@ void method_precacheAll(void){
 //             is allowed.
 //             Tolerance can not be negative, as a tolerance of 0 is already impossibly strict (exactly 1.0 or -1.0 respectively
 //             between IsFacing / IsFacingAway).
-//             A tolerance of 1.0 actually supports looking 180 degrees around, or +- 90.
+//             A tolerance of 1.0 supports looking 180 degrees around, or +- 90.
 //             Use a tolerance of 2.0 to allow looking anywhere (360 degrees), +- 180.
 //             IN SHORT, the range of tolerance is 0 to 2.
 
@@ -6491,7 +6518,7 @@ void attemptSendBulletSound(const Vector& bulletHitLoc, entvars_t* pevShooter){
 
 
 
-//...better fitted to a "player" actually.  Was good for the most part before, but not perfect.
+//...better fitted to a "player".  Was good for the most part before, but not perfect.
 CBaseEntity *FindEntityForward( CBasePlayer* pMe )
 {
 	TraceResult tr;
@@ -6550,7 +6577,7 @@ CBaseEntity *FindEntityForward( CBasePlayer* pMe )
 
 		return pHit;
 	}else if(tr.flFraction != 1.0){
-		//just a check:  we did actually hit something tangible at least, right?  Even the map?
+		//just a check:  we did hit something tangible at least, right?  Even the map?
 
 		fracto = tr.flFraction;
 
@@ -7065,7 +7092,7 @@ void UTIL_SpawnBlood(const Vector& vecSpot, const Vector& bloodDir, int bloodCol
 	if (EASY_CVAR_GET(sv_bloodparticlemode) == 0 || EASY_CVAR_GET(sv_bloodparticlemode) == 2) {
 		// RETAIL CALL.
 		// Is 'g_vecZero' safe to assume or should this be able to be specified?  I don't
-		// think most places calling here can really give any input on blood direction though
+		// think most places calling here can give any input on blood direction though
 		// WAIT, how about UTIL_RandomBloodVector() ?
 		UTIL_BloodDrips(vecSpot, bloodDir, bloodColor, amount);
 	}

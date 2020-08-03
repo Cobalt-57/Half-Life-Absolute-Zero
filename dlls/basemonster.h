@@ -92,7 +92,7 @@
 //     spawn flags 256 and above are already taken by the engine
 // ...do with that what you will.  Spawnflag 2^10 looked mostly unused from my testing at least.
 // I don't even know if that warning applies to completely new entities placed by the mapper or what flags
-// could even get implicitly turned on by the map program or however that works, really don't know.
+// could even get implicitly turned on by the map program or however that works, don't know.
 // There is still keyvalue stuff of course, somehow I keep forgetting about that.
 
 // Anyway, a list of flags for seeing what's available for giving to custom entities 
@@ -604,7 +604,7 @@ public:
 	virtual BOOL violentDeathClear(void);
 	virtual int violentDeathPriority(void);
 
-	//not really meant to be implemented in other places but in case it happens, I trust whoever else knows what they're doing.
+	//not meant to be implemented in other places but in case it happens, I trust whoever else knows what they're doing.
 	virtual BOOL violentDeathClear_BackwardsCheck(float argDistance);
 
 	void lookAtEnemyLKP(void);
@@ -616,7 +616,7 @@ public:
 	virtual CBaseEntity* HumanKick(void);
 	virtual CBaseEntity* HumanKick(float argCheckDistance);
 
-	//Never actually used by the base monster class. Must be called by a given monster, and can be implemented there to be more specific or custom if necessary.
+	//Never used by the base monster class. Must be called by a given monster, and can be implemented there to be more specific or custom if necessary.
 	virtual void precacheStandardMeleeAttackMissSounds(void);
 	virtual void precacheStandardMeleeAttackHitSounds(void);
 	virtual void playStandardMeleeAttackMissSound(void);
@@ -1056,7 +1056,7 @@ public:
 	virtual BOOL	HasHumanGibs( void );
 	virtual BOOL	HasAlienGibs( void );
 	virtual void FadeMonster( void );	// Called instead of GibMonster() when gibs are disabled
-	                                        //MODDD - little out of date comment above. Actually GibMonster is called in anticipation of possibly gibbing a monster.
+	                                        //MODDD - little out of date comment above. GibMonster is called in anticipation of possibly gibbing a monster.
 	                                        //        GibMonster will call FadeMonster if the monster is to be deleted without spawning any gibs.
 
 	Vector ShootAtEnemy( const Vector &shootOrigin );

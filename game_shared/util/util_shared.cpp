@@ -378,7 +378,7 @@ void RegisterWeapon(CBasePlayerWeapon* pWeapon, CBasePlayerWeapon* pAryWeaponSto
 	if (pWeapon->GetItemInfo(&tempInfo)) {
 
 		//TAGGG - CRITICAL CRITICAL CRITICAL.
-		// This shit right here?  This is what actually sets something in
+		// This is what sets something in
 		// ItemInfoArray.  Any other mentions of "GetItemInfo" are often forgotten,
 		// so changes to some stat on a whim (like glock max ammo on seeing a change
 		// in CVar "glockOldReloadLogic") can change ItemInfoArray right there.
@@ -1586,7 +1586,7 @@ void convertIntToBinary(char* buffer, unsigned int arg, unsigned int binaryDigit
 	}else{
 		//between 1 and 31 inclusive? this is fine. 2 to the binaryDigits power, minus 1 to remove the left-most single 1 bit and make all the ones right-ward into 1's.
 		//That produces the largest number possibly stored by our number of bits all being 1's.
-		//This is because actually all bits from 2^0 to 2^(binaryDigits - 1) are included,  2^(binaryDigits) itself is excluded.
+		//This is because all bits from 2^0 to 2^(binaryDigits - 1) are included,  2^(binaryDigits) itself is excluded.
 		maxNumberPossible = (1 << binaryDigits) - 1;
 	}
 

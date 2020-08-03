@@ -499,7 +499,7 @@ Schedule_t	slHAssault_residualFire[] =
 
 		bits_COND_NEW_ENEMY			|
 
-		//MODDD - Surpsrisingly no. Just because we can see an enemy behind cover doesn't mean we can actually hit them, this tricks the system.
+		//MODDD - Surpsrisingly no. Just because we can see an enemy behind cover doesn't mean we can hit them, this tricks the system.
 		//////bits_COND_SEE_ENEMY			|
 		//But being able to do a ranged attack (clear shot) means we can stop using residual fire.
 		bits_COND_CAN_RANGE_ATTACK1 |
@@ -743,7 +743,7 @@ float CHAssault::SafeSetBlending ( int iBlender, float flValue ){
 
 
 //Some commonly used script for aiminat at the enemy consistently (no jitter).
-//Also doesn't aim ridiculously high if the enemy gets really close like it usually would.
+//Also doesn't aim ridiculously high if the enemy gets close like it usually would.
 void CHAssault::AimAtEnemy(Vector& refVecShootOrigin, Vector& refVecShootDir ){
 	//DebugLine_ClearAll();
 	
@@ -1218,7 +1218,7 @@ void CHAssault :: Spawn()
 	m_flFieldOfView = 0.24;
 	//m_flFieldOfView		= EASY_CVAR_GET(testVar);
 
-	//MODDD - grunt seems to lack this line in spawn (or anywhere really), disabling?
+	//MODDD - grunt seems to lack this line in spawn (or anywhere), disabling?
 	//nah, let's try with this on again.
 	//m_MonsterState		= MONSTERSTATE_COMBAT;
 	//Off now.
@@ -2128,7 +2128,7 @@ void CHAssault :: RunTask ( Task_t *pTask )
 		MakeIdealYaw( m_vecEnemyLKP );
 		ChangeYaw( pev->yaw_speed );
 		
-		//Actually aim for a litle earlier if we're still able to attack. No need to return all the way to resting position.
+		// aim for a litle earlier if we're still able to attack. No need to return all the way to resting position.
 		if(m_fSequenceFinished || (HasConditions(bits_COND_CAN_MELEE_ATTACK1)  && pev->frame >= 220)  )
 		{
 			m_Activity = ACT_RESET;
@@ -2286,7 +2286,7 @@ void CHAssault :: RunTask ( Task_t *pTask )
 			}
 		
 		}
-		//REALLY YOU SURE THOUGH
+		
 		//CSquadMonster :: RunTask( pTask );
 
 		
@@ -2295,7 +2295,7 @@ void CHAssault :: RunTask ( Task_t *pTask )
 		ChangeYaw ( pev->yaw_speed );
 
 		/*
-		//Actually drop this part, let it keep looping.
+		// drop this part, let it keep looping.
 		if ( m_fSequenceFinished )
 		{
 			m_Activity = ACT_RESET;
@@ -2924,7 +2924,7 @@ Schedule_t* CHAssault::GetScheduleOfType(int Type){
 			
 			spinuptimeSet = FALSE;
 			//MODDD - TEST: is this okay?
-			//...no, being -1 is okay actually.   This is in order to call "spin", after all.
+			//...no, being -1 is okay.   This is in order to call "spin", after all.
 
 			const float cheaterFloat = gpGlobals->time;
 
@@ -3045,7 +3045,7 @@ void CHAssault :: MonsterThink ( void )
 //void CHAssault::HAssaultThink( void ) //Save & Restore only work properly if this is MonsterThink
 {
 	//MODDD - NOTICE.   Nothing in this think method, as of yet, seems to depend on the monster being alive or not.
-	//If something should be placed here that does (or in a lot of places really), have a dead check first.
+	//If something should be placed here that does (or in a lot of places), have a dead check first.
 
 	//easyForcePrintLine("ID:%d SEQ:%d SCHED:%s TASK:%d", monsterID, this->pev->sequence, getScheduleName(), getTaskNumber());
 	//easyForcePrintLine("ugh YOU. sched:%s task:%d fr:%.2f f:%.2f s:%d act:%d iact:%d", getScheduleName(), getTaskNumber(), pev->framerate, pev->frame, pev->sequence, m_Activity, m_IdealActivity);
@@ -3362,7 +3362,7 @@ int CHAssault::LookupActivityHard(int activity){
 	}
 
 
-	//let's do m_IdealActivity??
+	// let's do m_IdealActivity??
 	switch(iSelectedActivity){
 		case ACT_IDLE:
 			if(
@@ -3373,7 +3373,7 @@ int CHAssault::LookupActivityHard(int activity){
 			  )
 			){
 				//spinning up or maintaining spin? Just return the firing anim, the logic will know to freeze the anim at this frame.
-				//...actually don't trust it, just freeze it now.
+				//...don't trust it, just freeze it now.
 				pev->framerate = 0;
 				m_flFramerateSuggestion = 0;
 				return LookupSequence("attack"); //firing sequence.

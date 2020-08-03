@@ -30,7 +30,7 @@
 // The point of this is, don't do 'ifdef CLIENT_DLL' checks in here, they are pointless.  They either always pass
 // or never pass, because there's only one reading of weapons.cpp:  serverside.
 // Make separate copies for clientside elsewhere over in cl_dll/hl/hl_weapons.cpp, probably.
-// Dummy out anything actually needed by weapons clientside (like FOV requests) at your own peril!
+// Dummy out anything needed by weapons clientside (like FOV requests) at your own peril!
 
 #include "extdll.h"
 #include "util.h"
@@ -746,7 +746,7 @@ void CBasePlayerWeapon::ItemPostFrame( void )
 		// Nowhere else removes IN_... flags manually.  weeeeeeiiiiiirrrrrrddd.
 		// ***This seems to screw with m_pPlayer->m_afButtonPressed working right (records a button
 		// press being this very frame), so disabling this one!  Don't know what they were thinking here.
-		// Really, think about it.  Every frame just resets pev->button to IN_ATTACK2 as it is held down,
+		// Think about it.  Every frame just resets pev->button to IN_ATTACK2 as it is held down,
 		// so this doesn't stop continual fire. It just tricks the game into thinking every single frame
 		// is a completley new press.  Which.... makes m_afButtonPressed and Released useless.
 		// IN_ATTACK (primary) lacked this line as seen below, and did not have this issue. Case closed.

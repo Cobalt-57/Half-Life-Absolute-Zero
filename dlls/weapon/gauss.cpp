@@ -32,7 +32,7 @@
 
 
 //NOTES ON VARS:
-//m_fireState   -  the mode that the animation uses for detecting "phase" (stage towards actually showing the full spin anim, as opposed to the pre-delay and showing the start spin anim).
+//m_fireState   -  the mode that the animation uses for detecting "phase" (stage towards showing the full spin anim, as opposed to the pre-delay and showing the start spin anim).
 //m_flStartThrow - delay required for the charge animation to start playing
 //m_flReleaseThrow  -  alternate time recording since charging.  "Charging" for a very short amount of time
 //     registers as a "tap" (primary fire) instead, since (quake style) one mouse button is used for both primary
@@ -489,7 +489,7 @@ void CGauss::chargeWork(){
 			m_pPlayer->m_flAmmoStartCharge = UTIL_WeaponTimeBase() + GetFullChargeTime();
 			*/
 				
-			//move on and actually collect charge?
+			//move on and collect charge?
 			m_fInAttack = 2;
 				
 			//MOVED DOWN
@@ -979,7 +979,7 @@ void CGauss::Fire( Vector vecOrigSrc, Vector vecDir, float flDamage )
 
 	}else{
 		//No need to set the idle time for secondary fire, as that is charging (release has to set the idle time)
-		//Actually, it is fine here.  Fire is called when released, so it works here too.
+		// it is fine here.  Fire is called when released, so it works here too.
 		//m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + (41.0/30.0);
 		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + (31.0/30.0) + randomIdleAnimationDelay();;
 

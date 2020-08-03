@@ -141,7 +141,7 @@ void CBaseMonster :: ChangeSchedule ( Schedule_t *pNewSchedule )
 	ASSERT( pNewSchedule != NULL );
 
 	//MODDD - for now, let's count failing to change to a new schedule as a TaskFail() but be sure to talk
-	//        about it in printouts, really don't want to miss this happening.
+	//        about it in printouts, don't want to miss this happening.
 	if(pNewSchedule == NULL){
 		easyPrintLine("WARNING: %s:%d: ChangeSchedule called with NULL schedule!", this->getClassname(), monsterID);
 		TaskFail();
@@ -1238,7 +1238,7 @@ void CBaseMonster :: RunTask ( Task_t *pTask )
 			// overlap the range to prevent oscillation
 			if ( distance < pTask->flData )
 			{
-				//easyForcePrintLine("%s:%d O REALLY NOW! %.2f %.2f", this->getClassnameShort(), this->monsterID, distance, pTask->flData);
+				//easyForcePrintLine("%s:%d O NOW! %.2f %.2f", this->getClassnameShort(), this->monsterID, distance, pTask->flData);
 				TaskComplete();
 				RouteClear();		// Stop moving
 			}
@@ -1392,7 +1392,7 @@ void CBaseMonster :: RunTask ( Task_t *pTask )
 	//MODDD - MOVED FROM ichthyosaur.cpp, renamed from TASK_ICHTHYOSAUR_FLOAT
 	case TASK_WATER_DEAD_FLOAT:{
 
-		//yea this is really pointless to anticipate, but whatever.
+		//yea this is pointless to anticipate, but whatever.
 		if(pev->waterlevel == 0 && pev->velocity.Length() < 0.001){
 			//on land and stopped moving? stop.
 			DeathAnimationEnd();
@@ -1525,7 +1525,7 @@ void CBaseMonster :: RunTask ( Task_t *pTask )
 			/*
 			if(m_Activity != ACT_RESET){
 				//HACKY MC HACKERSAXXX
-				//actually it doesn't look like this is really doing anything.
+				// it doesn't look like this is doing anything.
 				ChangeSchedule(GetSchedule());
 				return.
 			}
@@ -1611,7 +1611,7 @@ void CBaseMonster :: RunTask ( Task_t *pTask )
 			/*
 			if(m_Activity != ACT_RESET){
 				//HACKY MC HACKERSAXXX
-				//actually it doesn't look like this is really doing anything.
+				// it doesn't look like this is doing anything.
 				//...Now calling this and then "MaintainSchedule"?  That would be truly dastardly.
 				ChangeSchedule(GetSchedule());
 				return.
@@ -1991,7 +1991,7 @@ void CBaseMonster :: StartTask ( Task_t *pTask )
 		{
 			
 			//the "fight" part, since "flight" doesn't look so good.
-			//Really just a repeat of the "SEE" condition script (attack-condition checks) in GetSchedule.
+			// just a repeat of the "SEE" condition script (attack-condition checks) in GetSchedule.
 			if ( HasConditions(bits_COND_CAN_RANGE_ATTACK1) )
 			{
 				ChangeSchedule(GetScheduleOfType( SCHED_RANGE_ATTACK1 ));
@@ -2278,14 +2278,14 @@ void CBaseMonster :: StartTask ( Task_t *pTask )
 
 				//easyForcePrintLine("AHHH. I don\'t see the enemy. Has enemy to seek? %d", (m_hEnemy != NULL));
 				if(m_hEnemy != NULL){
-					//Go actually look at them next time to break this cycle.
+					// Go look at them next time to break this cycle.
 
-					//safety feature, do this all the time.
+					// safety feature, do this all the time.
 					//m_vecEnemyLKP = ...
 					setEnemyLKP(m_hEnemy->pev->origin);
 					
 					//Before we resume, pause for a little.
-					//...Actually this will suffice, just fail regardless.
+					//... this will suffice, just fail regardless.
 					m_failSchedule = SCHED_PATHFIND_STUMPED;  //A variant of FAIL that will be interrupted like idle, by sounds, seeing the enemy, etc.
 					TaskFail();
 				}else{
@@ -2295,7 +2295,7 @@ void CBaseMonster :: StartTask ( Task_t *pTask )
 
 			}else{
 				//easyForcePrintLine("But it is ok, I see the enemy at least.");
-				TaskComplete();  //If we actually can see the enemy now, no need for corrective action.
+				TaskComplete();  //If we can see the enemy now, no need for corrective action.
 			}
 
 		}
@@ -2578,8 +2578,8 @@ void CBaseMonster :: StartTask ( Task_t *pTask )
 			//this->signalActivityUpdate = TRUE;
 			//Force the activity to pick a new anim even if already on that activity.
 			//This stops the monster from freezing on the last set animation if already on the activity for some reason.
-			//...ACTUALLY don't do this. Look at the end of TASK_RANGE_ATTACK1 and others for setting the current activity to ACT_RESET.
-			//This effectively forces the sequence to be regathered too.  Doing it here too is actually redundant.
+			//... don't do this. Look at the end of TASK_RANGE_ATTACK1 and others for setting the current activity to ACT_RESET.
+			//This effectively forces the sequence to be regathered too.  Doing it here too is redundant.
 			//See if a monster isn't doing the same at the end of their own TASK_RANGE_ATTACK1 or similar.
 			break;
 		}
@@ -2740,7 +2740,7 @@ void CBaseMonster :: StartTask ( Task_t *pTask )
 		break;
 	
 	//MODDD - NOTE.  TASK_GET_PATH_TO_SPOT removed.
-	// It build a route to wherever the player is?  Really?  Why?  May or may not even be the enemy.
+	// It build a route to wherever the player is?  Why?  May or may not even be the enemy.
 	// No wonder this went unused.
 
 	case TASK_GET_PATH_TO_TARGET:
@@ -2833,7 +2833,7 @@ void CBaseMonster :: StartTask ( Task_t *pTask )
 	case TASK_RUN_PATH:
 		{
 			//MODDD SUGGESTION - would it be a good idea to clear "m_flMoveWaitFinished" here too?
-			//                   Or really in any path generation or RouteClear?
+			//                   Or in any path generation or RouteClear?
 			m_flMoveWaitFinished = gpGlobals->time;
 
 			// UNDONE: This is in some default AI and some monsters can't run? -- walk instead?
@@ -3492,7 +3492,7 @@ Schedule_t *CBaseMonster :: GetSchedule ( void )
 			else  
 			{
 
-				//easyPrintLine("I say, really now? %d %d", HasConditions(bits_COND_CAN_RANGE_ATTACK1), HasConditions(bits_COND_CAN_RANGE_ATTACK2) );
+				//easyPrintLine("I say, what? %d %d", HasConditions(bits_COND_CAN_RANGE_ATTACK1), HasConditions(bits_COND_CAN_RANGE_ATTACK2) );
 
 
 
@@ -3529,7 +3529,7 @@ Schedule_t *CBaseMonster :: GetSchedule ( void )
 					return GetScheduleOfType( SCHED_MELEE_ATTACK2 );
 				}
 				//MODDD - NOTE - is that intentional?  range1 & melee1,  and not say,  melee1 & melee2???
-				//MODDD - ok, this condition is actually redundant. If all 4 condition checks above failed, each RANGE and MELEE attack, 1 and 2, failed.
+				//MODDD - ok, this condition is redundant. If all 4 condition checks above failed, each RANGE and MELEE attack, 1 and 2, failed.
 				//        That means RANGE1 and MELEE1 also had to have failed. This is guaranteed true.
 				if ( !HasConditions(bits_COND_CAN_RANGE_ATTACK1 | bits_COND_CAN_MELEE_ATTACK1) )
 				{

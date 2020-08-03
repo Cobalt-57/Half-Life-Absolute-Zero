@@ -222,7 +222,7 @@ int CGlock::ExtractAmmo( CBasePlayerWeapon *pWeapon )
 	if(includesGlockSilencer && pWeapon->m_pPlayer->hasGlockSilencer == FALSE){
 		pWeapon->m_pPlayer->hasGlockSilencer = TRUE;
 
-		//not just yet..  ever really necessary to turn off?
+		//not just yet..  ever necessary to turn off?
 		//includesGlockSilencer = FALSE;
 
 		
@@ -364,7 +364,7 @@ int CGlock::GetItemInfo(ItemInfo *p)
 	//MODDD
 	// w-.. what possessed me to make this direct of an edit.
 	// Is it necessary?  It might be?
-	// Yes, it is.  Only precaching in util.cpp sets the actual ItemInfoArray spots
+	// Yes, it is.  Only precaching in util.cpp sets the ItemInfoArray spots
 	// with what comes from "GetItemInfo".  So this has to be forced in case of a change since then.
 	// Thank you 'past me' for saying fucking nothing here!
 	ItemInfoArray[ m_iId ].iMaxClip = p->iMaxClip;
@@ -437,7 +437,7 @@ void CGlock::Holster( int skiplocal /* = 0 */ ){
 
 	//interrupting this bit?  Keep the change then.
 	if(m_flReleaseThrow == 2){
-		//silencer not on, putting it on (is now really)
+		//silencer not on, putting it on (is now)
 		if(m_fInAttack == 1){
 			//m_fireState = 1;
 			m_fInAttack = 2;
@@ -697,7 +697,7 @@ void CGlock::ItemPostFrame(){
 					// MODDD - IMPORTANT.
 					// Need the server to stop sending the signal to play this animation,
 					// which happens if it isn't explicitly told to stop doing that at the end
-					// I suppose.  I really don't get that.
+					// I suppose.  I don't get that.
 					SendWeaponAnimBypass(ANIM_NO_UPDATE, m_fireState & ~128);
 
 					CBasePlayerWeapon::ItemPostFrame();
@@ -853,7 +853,7 @@ void CGlock::ItemPostFrame(){
 		//does this even do anything??
 		//pev->body = m_fireState;
 
-		//experimental?  Not really doing anything methinks.
+		//experimental?  Not doing anything methinks.
 		//m_chargeReady = -500;
 
 		//this->nextAnimBackwards = TRUE;
@@ -1044,7 +1044,7 @@ void CGlock::Reload( void )
 		//the constant change again.
 
 		iResult = DefaultReload( GLOCK_MAX_CLIP - 1, GLOCK_RELOAD, (37.0/18.0) );
-		//MODDD - ALSO.  Max is actually one above the usual (without a round in the firing chamber).
+		//MODDD - ALSO.  Max is one above the usual (without a round in the firing chamber).
 		setExtraBulletTrue();
 	}else{
 		if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(glockOldReloadLogic) == 1 && getFiredSinceReload() ){

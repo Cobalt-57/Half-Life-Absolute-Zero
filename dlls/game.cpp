@@ -37,7 +37,7 @@ extern void resetModCVars(CBasePlayer* arg_plyRef, BOOL isEmergency);
 
 
 //MODDD - NEW!  Version-related CVars, used to be named "protoVersionS" and "protoDateS".
-//...actually replaced by a console command now, disregard this.
+//...replaced by a console command now, disregard this.
 //cvar_t	sv_mod_version	= {"sv_mod_version", "0", FCVAR_SERVER | FCVAR_UNLOGGED | FCVAR_SPONLY };
 //cvar_t	sv_mod_date	= {"sv_mod_date", "0", FCVAR_SERVER | FCVAR_UNLOGGED | FCVAR_SPONLY };
 
@@ -68,7 +68,7 @@ void test_cvar_create(){
 	// This test has been done.  Looks like the pointer returned from CVAR_GET_POINTER
 	// is not the same as the one supplied to CVAR_CREATE, for a request of the same name.
 	// I'm guessing CVAR_CREATE generates a copy from the supplied cvar_t and then returns
-	// some part of memory where it's actually updated in real-time from changes to the CVar.
+	// some part of memory where it's updated in real-time from changes to the CVar.
 	// ...then what's the point of supplying the cvar_t struct anyway instead of just a bunch
 	// of separate parameters like clientside does?  WHO KNOWS.
 	/*
@@ -781,7 +781,7 @@ void GameDLLInit( void )
 	//CVAR_SET_STRING("sl_mod_date", aryChrD);
 	
 	
-	//...actually replaced by a console command now, disregard this.
+	//...replaced by a console command now, disregard this.
 	sv_mod_version->value_string = aryChr;
 	sv_mod_date->value_string = aryChrD;
 	CVAR_CREATE(&sv_mod_version);

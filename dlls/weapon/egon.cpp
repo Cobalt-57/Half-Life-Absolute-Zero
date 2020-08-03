@@ -398,7 +398,7 @@ CEgon::CEgon(){
 	//---------------------------------------------------------------------------------------------------------------------
 	//m_flReleaseThrow ->  "animationSequence".  Which animation to perform next?
 	//-3 = firing PRIMARY (narrow now).   Resets to -1 when released.
-	//-2 = idle (wait for release; not in effect, so same effect as -1 actually).
+	//-2 = idle (wait for release; not in effect, so same effect as -1).
 	//-1 = idle (wait to be triggered by mouse press at all)
 	//0 = ALTFIREON.  turn the top lever to the bottom.
 	//1 = ALTFIRECYCLE - attacking.  Firing the "wide" beam (as opposed to the NOW default "narrow"; tradeoff for delay).
@@ -1161,7 +1161,7 @@ void CEgon::CreateEffect( void )
 			//}
 			//else
 			//{
-			////Actually want narrow mode's features.
+			//// want narrow mode's features.
 				m_pBeam->SetScrollRate( 110 );
 				m_pBeam->SetNoise( 5 );
 			//}
@@ -1195,7 +1195,7 @@ void CEgon::CreateEffect( void )
 			//}
 			//else
 			//{
-			////actually want narrow's features.
+			//// want narrow's features.
 				m_pNoise->SetColor( 80, 120, 255 );
 				m_pNoise->SetNoise( 2 );
 			//}
@@ -1420,7 +1420,7 @@ void CEgon::EndAttack( void )
 
 	PLAYBACK_EVENT_FULL( FEV_GLOBAL | FEV_RELIABLE, m_pPlayer->edict(), m_usEgonStop, 0, (float *)&m_pPlayer->pev->origin, (float *)&m_pPlayer->pev->angles, 0.0, 0.0, bMakeNoise, 0, 0, 0 );
 
-	//MODDD - actually, this part should use "UTIL_WeaponBase()", even if it is 0...
+	//MODDD - this part should use "UTIL_WeaponBase()", even if it is 0...
 	//m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 2.0;
 
 	//easyPrintLine("TEH ee %.2f", UTIL_WeaponTimeBase());

@@ -177,7 +177,7 @@ Schedule_t	slPathfindStumped[] =
 		bits_COND_HEAVY_DAMAGE |
 		bits_COND_HEAR_SOUND	|
 		bits_COND_PROVOKED |
-		//MODDD NEW - also interrupted by the enemy being dead. Don't really need to wonder where a dead enemy is.
+		//MODDD NEW - also interrupted by the enemy being dead. Don't need to wonder where a dead enemy is.
 		bits_COND_ENEMY_DEAD,
 
 		bits_SOUND_COMBAT		|// sound flags
@@ -1175,7 +1175,7 @@ Schedule_t slChaseEnemySmart_StopSight[] =
 
 //MODDD - clone of slCombatLook.
 //Modified to be interrupted by the enemy returning to the water.
-//Otherwise trying to get closer won't really do you any good.
+//Otherwise trying to get closer won't do you any good.
 Task_t tlWaitForEnemyToEnterWater[] =
 {
 	{ TASK_STOP_MOVING,				0				},

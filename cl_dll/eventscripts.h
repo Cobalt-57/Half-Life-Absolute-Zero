@@ -16,7 +16,7 @@
 // VEC_DUCK_VIEW_Z.
 
 //MODDD - why was FTENT_FADEOUT defined here when it already is in common/r_efx.h?
-// oh.. actually don't need FTENT_FADEOUT present here at all.  ok then.
+// oh.. don't need FTENT_FADEOUT present here at all.  ok then.
 
 //MODDD - identical copy of DMG_ macros from health.h removed.
 // Include em' from somewhere common, don't copy and paste that much stuff

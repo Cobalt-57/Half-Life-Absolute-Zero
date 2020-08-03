@@ -3217,13 +3217,13 @@ void CStudioModelRenderer::StudioRenderModel( void )
 
 
 	//MODDD - only count the primary bits (what was available in retail, or "as-is").
-	//        ...actually, already removed the secondary bits from renderfx during these calls up until the end of this method. Proceed as usual.
+	//        ...already removed the secondary bits from renderfx during these calls up until the end of this method. Proceed as usual.
 	//if ( (m_pCurrentEntity->curstate.renderfx & RENDERFX_PRIMARY_BITS) == kRenderFxGlowShell )
 	if ( m_pCurrentEntity->curstate.renderfx == kRenderFxGlowShell )
 	{
 		//MODDD - hold on! Remember what the cutoff bits were to re-apply them.
 		//        A plain equals assignment would forget all of those.
-		//        ...actually already done, nevermind.
+		//        ...already done, nevermind.
 		//int secondaryBitsMem = (m_pCurrentEntity->curstate.renderfx & RENDERFX_SECONDARY_BITS );
 		m_pCurrentEntity->curstate.renderfx = kRenderFxNone;
 		

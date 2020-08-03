@@ -242,7 +242,7 @@ void CBaseMonster :: RunAI ( void )
 // GetIdealState - surveys the Conditions information available
 // and finds the best new state for a monster.
 //=========================================================
-// MODDD - now that schedule.cpp's MaintainSchedule actually uses the returned result of this call (go figure),
+// MODDD - now that schedule.cpp's MaintainSchedule uses the returned result of this call (go figure),
 // no need to set 'm_IdealMonsterState' to whatever is about to be returned.
 MONSTERSTATE CBaseMonster :: GetIdealState ( void )
 {

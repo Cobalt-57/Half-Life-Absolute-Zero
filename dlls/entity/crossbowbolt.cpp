@@ -160,7 +160,7 @@ void CCrossbowBolt::Precache( )
 	PRECACHE_SOUND("weapons/xbow_hitbod1.wav");
 	PRECACHE_SOUND("weapons/xbow_hitbod2.wav");
 	
-	//MODDD - do we even actually ever play this? Not even in clientside events (cl_dll/ev_hldm.cpp)? 
+	//MODDD - do we even ever play this? Not even in clientside events (cl_dll/ev_hldm.cpp)? 
 	//        That's ok, this sounds terrible anyways. At least at the same default volume as everything else which is blisteringly loud in any sound player for some reason.
 	PRECACHE_SOUND("weapons/xbow_fly1.wav");
 
@@ -267,7 +267,7 @@ void CCrossbowBolt::BoltTouch( CBaseEntity *pOther )
 				// ...eh, nevermind.  These are small explosions. Gib just if we deserve it as usual
 				// (overkill factor).  If you change your mind, add back DMG_ALWAYSGIB.
 				// Also, no poison for explosive arrows. C'mon, that's just ridiculous.
-				// And this is the direct hit, not the explosion.  Actually don't count just the impact
+				// And this is the direct hit, not the explosion.  Don't count just the impact
 				// as BLAST damage, whoops.  I don't think BULLET hurts though.
 				//gMultiDamage.type = DMG_BLAST | DMG_ALWAYSGIB;
 				gMultiDamage.type = DMG_BULLET | DMG_NEVERGIB;

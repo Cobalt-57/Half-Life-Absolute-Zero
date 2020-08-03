@@ -1,6 +1,6 @@
 
 // File to put a bunch of warning-ignores.
-// No sense getting ten thousand warnings on full re-builds, how about they actually mean something?
+// No sense getting ten thousand warnings on full re-builds, how about they mean something?
 
 
 #if (_MSC_VER <= 1200)
@@ -45,7 +45,7 @@
 #pragma warning(disable : 4065)
 #pragma warning(disable : 4091)
 #pragma warning(disable : 4101)		// unreferenced local variable
-// nope, actually a good one.  We want to know about bad formatting symbols.
+// nope, a good one.  We want to know about bad formatting symbols.
 //#pragma warning(disable : 4477)
 #pragma warning(disable : 4407)
 

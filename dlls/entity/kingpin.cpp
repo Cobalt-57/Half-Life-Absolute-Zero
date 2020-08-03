@@ -874,7 +874,7 @@ IMPLEMENT_CUSTOM_SCHEDULES( CKingpin, CBaseMonster );
 
 
 
-//MODDD - sound calls dummied out until they actually exist.
+//MODDD - sound calls dummied out until they really exist.
 void CKingpin::DeathSound( void ){
 	int pitch = m_voicePitch + RANDOM_LONG(0,4);
 	EMIT_SOUND_FILTERED( edict(), CHAN_VOICE, RANDOM_SOUND_ARRAY(pDeathSounds), 1.0, KINGPIN_VOICE_ATTENUATION, 0, pitch );
@@ -1739,7 +1739,7 @@ void CKingpin::StartTask( Task_t *pTask ){
 
 			playElectricLaserChargeSound();
 
-			accumulatedDamageTaken = 0;  //start keeping track of this.  may not actually use it this time.
+			accumulatedDamageTaken = 0;  //start keeping track of this.  may not use it this time.
 
 
 			chargeFinishTime = gpGlobals->time + KINPIN_ELECTRIC_LASER_CHARGETIME;
@@ -2339,9 +2339,9 @@ BOOL CKingpin::CheckRangeAttack1( float flDot, float flDist ){
 	if( seesEnemy &&  flDist >= 0 && flDist <= 2600.0f) ///&& flDot >= 0.8 )
 	{
 		//HACK - count this as seeing the enemy in case it's indirectly through the beam.
-		//This actually works because "CheckAttacks" is called in basemonster.cpp by "CheckEnemy", which is called by monsterstate.cpp's "runAI" method.
+		//This works because "CheckAttacks" is called in basemonster.cpp by "CheckEnemy", which is called by monsterstate.cpp's "runAI" method.
 		//The important part is, this (RunAI -> CheckEnemy -> CheckAttacks -> CheckRangeAttack1) gets called AFTER Look (RunAI -> Look),
-		//so that this decision to override the bits_COND_SEE_ENEMY getting cleared by not having a direct line of sight actually lasts (we force it on but it was off)
+		//so that this decision to override the bits_COND_SEE_ENEMY getting cleared by not having a direct line of sight lasts (we force it on but it was off)
 		//until the MaintainSchedule which calls StartTask / RunTask with the current schedule in mind.
 		//But "SetconditionsFrame" could've worked if that weren't the case.  Or maybe not, there would still be ways around that.
 		SetConditions(bits_COND_SEE_ENEMY);
@@ -2467,7 +2467,7 @@ void CKingpin::MonsterThink( void ){
 					//rangeFactor
 
 					if (otherProjType > PROJECTILE_NONE&& incomingSpeed > 0.1f && distanceToEnt < (rangeFactor * 700)) {
-						//also, is it actually coming towards me? This should also avoid trying to re-reflect projectiles already reflected
+						//also, is it coming towards me? This should also avoid trying to re-reflect projectiles already reflected
 						//but still in reflection range for a little bit.
 						const char* entityName = pEntityScan->getClassname();
 
@@ -3944,7 +3944,7 @@ void CKingpin::fireElectricDenseLaser(CBaseEntity* arg_hitIntention, const Vecto
 
 
 //homing ball of doom! Or is if there are air nodes.
-//TODO - actually be super homing, not just a controller head ball clone.
+//TODO - be super homing, not just a controller head ball clone.
 void CKingpin::fireSuperBall(void){
 	
 	//create the ball
@@ -3957,7 +3957,7 @@ void CKingpin::fireSuperBall(void){
 	//super ball.  USe pathfinding to route towards the enemy if there are air nodes.
 	//Otherwise just immitate a typical controller ball, that's the best we can do.
 
-	//psionic launch (actually launch a ball)
+	//psionic launch (launch a ball)
 
 		
 	if(m_hEnemy == NULL){
@@ -4557,8 +4557,8 @@ void CKingpin::administerShocker(void){
 					else if(!isBreakable)
 					{
 						//MODDD NOTE 
-						//ACTUALLY hold on here. This may never get reached becacuse of the relationship block. Put an exception for that above too
-						//if that's really wanted.   DONE NOW.
+						// hold on here. This may never get reached becacuse of the relationship block. Put an exception for that above too
+						// if that's really wanted.   DONE NOW.
 						// do not hurt nonclients through walls, but allow damage to be done to breakables
 						flAdjustedDamage = 0;
 					}
@@ -4730,12 +4730,12 @@ void CKingpin::attemptReflectProjectileStart(CBaseEntity* arg_toReflect, float a
 	m_pReflectEffect[emptyReflectHandleID] = CSprite::SpriteCreate( "sprites/hotglow_ff.spr", anticipatedProjectileOrigin, TRUE );
 
 	
-	//SAFETY. Did I actually create the effect?
+	//SAFETY. Did I create the effect?
 	if(m_pReflectEffect[emptyReflectHandleID]){
 		m_pReflectEffect[emptyReflectHandleID]->AnimationScaleFadeIn_TimeTarget(1.1, 0.8f, 170, 0.3 * arg_delayFactor);
 
 		//was arg_delayFactor.
-		m_flReflectEffect_EndDelayFactor[emptyReflectHandleID] = 1.0f;  //actually always take the same amount of time to end.  We need to see it.
+		m_flReflectEffect_EndDelayFactor[emptyReflectHandleID] = 1.0f;  // always take the same amount of time to end.  We need to see it.
 
 		//Good, now set this slot up to reflect this entity soon with an effect.
 		m_pEntityToReflect[emptyReflectHandleID] = arg_toReflect;

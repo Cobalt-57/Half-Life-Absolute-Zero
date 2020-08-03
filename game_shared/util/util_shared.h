@@ -120,8 +120,8 @@ extern DLL_GLOBAL const Vector VECTOR_CONE_20DEGREES;
 
 // used by the player's auto-aim I think.  May as well be constants for everywhere.
 // wait, no.
-// ACTUALLY NO.   See player.h for AUTOAIM_2DEGREES, those are what I was thinking of.
-// These 'DOT_#DEGREE' ones are never actually used
+// NO.   See player.h for AUTOAIM_2DEGREES, those are what I was thinking of.
+// These 'DOT_#DEGREE' ones are never used
 /*
 #define DOT_1DEGREE   0.9998476951564
 #define DOT_2DEGREE   0.9993908270191
@@ -178,7 +178,7 @@ extern DLL_GLOBAL const Vector VECTOR_CONE_20DEGREES;
 
 // time-based damage
 //NOTE:  I believe this is just a way of saying, 1's for all timed damage (included), 0's for all else.
-//       Any actual continual time damage is indicated by the 2nd damage bit (bitsDamageTypeMod) having DMG_TIMEDEFFECT or DMG_TIMEDEFFECTIGNORE.
+//       Any continual time damage is indicated by the 2nd damage bit (bitsDamageTypeMod) having DMG_TIMEDEFFECT or DMG_TIMEDEFFECTIGNORE.
 //       This just shows the timed damages of the first bitmask as initial strikes.
 //       Any continual damage still uses the 2nd bitmask for the aforementioned choices regardless.
 
@@ -186,7 +186,7 @@ extern DLL_GLOBAL const Vector VECTOR_CONE_20DEGREES;
 // Going with the version from clientside files to support TF damage types... I guess?
 //#define DMG_TIMEBASED		(~(0xff003fff))
 // NEVERMIND, if they're phased out in both places now it doesn't make sense to care about those bits.
-// Also notice the ~ (bitmask 'not').  So it would actually be 0xffffc000
+// Also notice the ~ (bitmask 'not').  So it would be 0xffffc000
 // That means, bits 14 to 31 from the right (calling the right-most bit #0) are part of DMG_TIMEBASED.
 // Although Half-Life (excluding that weird client-only TFC thing?) doesn't do anything with bits 24 to 31.
 // They may as well be excluded.  This leaves a proper bitmask of: 0x00ffc000
@@ -297,14 +297,14 @@ extern DLL_GLOBAL const Vector VECTOR_CONE_20DEGREES;
 //CVar on.  This way, only CURABLES (by some item) last forever, and non-curables don't (that
 //would be far too cruel).
 //Perhaps "DMG_ACID" should appear ingame and be cured by the antidote or something? unsure.
-//UNUSED, this mechanism wasn't needed actually.  Or wasn't particularly helpful; would have led to 
+//UNUSED, this mechanism wasn't needed.  Or wasn't particularly helpful; would have led to 
 //taking the "long" way.
 #define DMG_CURABLE			(DMG_NERVEGAS | DMG_POISON | DMG_RADIATION)
 #define DMG_CURABLEMOD		(DMG_BLEEDING | DMG_POISON)
 
 //MODDD - any damages
 #define DMG_ARMORBLOCKEXCEPTION		(0) //empty.
-//Actually, doesn't involve "bleeding".  That is the initial strike.  It will leave "DMG_TIMEDEFFECTIGNORE", so it works.
+// doesn't involve "bleeding".  That is the initial strike.  It will leave "DMG_TIMEDEFFECTIGNORE", so it works.
 #define DMG_ARMORBLOCKEXCEPTIONMOD	(DMG_TIMEDEFFECTIGNORE)
 
 

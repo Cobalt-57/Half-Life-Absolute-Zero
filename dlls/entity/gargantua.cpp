@@ -84,7 +84,7 @@ EASY_CVAR_EXTERN(gargantuaKilledBoundsAssist)
 
 const float GARG_ATTACKDIST = 80.0;
 
-// If you wanna get technical these should be static vars of CGargantua buuuuuuuut it doesn't really make a difference,
+// If you wanna get technical these should be static vars of CGargantua buuuuuuuut it doesn't make a difference,
 // so long as these names aren't collided with elsewhere.
 int gStompSprite = 0;
 int gGargGibModel = 0;
@@ -1644,12 +1644,9 @@ CBaseEntity* CGargantua::GargantuaCheckTraceHullAttack(float flDist, int iDamage
 }
 
 
-// really?? The gargantuan ever had this?     WHAT.
 BOOL CGargantua::needsMovementBoundFix(void) {
 	return TRUE;
 }
-
-
 
 
 

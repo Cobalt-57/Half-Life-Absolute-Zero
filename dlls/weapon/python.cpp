@@ -724,7 +724,7 @@ void CPython::UpdateSpot( void )
 		}
 
 		//MODDD TODO - for whatever reason this earlier line that made the laser pointer include the punch angle was commented out.  Restored.
-		//    ...nevermind.  Restore it IF the laser sight is actually visible during the delay before firing again, but maybe only if there's at
+		//    ...nevermind.  Restore it IF the laser sight is visible during the delay before firing again, but maybe only if there's at
 		//    least one bullet left before having to reload.
 		//UTIL_MakeVectors( m_pPlayer->pev->v_angle + m_pPlayer->pev->punchangle );
 		UTIL_MakeVectors( m_pPlayer->pev->v_angle );

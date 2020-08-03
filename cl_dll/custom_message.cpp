@@ -362,7 +362,7 @@ int CHud::MsgFunc_Damage(const char* pszName, int iSize, void* pbuf)
 	//trigger a damage draw on any "takeDamage" event, even if the damage is 0?
 
 	if (EASY_CVAR_GET(painFlashPrintouts) == 1)easyForcePrintLine("RAW DAMAGE %d %d", armor, damageTaken);
-	// Actually took damage
+	// took damage
 	//if ( damageTaken > 0 || armor > 0 )
 	if (damageTaken > 0 || (EASY_CVAR_GET(painFlashArmorBlock) > 0 && damageBlockedByArmor > 0) || armor > 0)
 		gHUD.m_Pain.CalcDamageDirection(vecFrom, damageTaken, rawDamageTaken);

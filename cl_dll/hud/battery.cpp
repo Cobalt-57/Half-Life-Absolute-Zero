@@ -242,7 +242,7 @@ int CHudBattery::Draw(float flTime)
 
 		gHUD.attemptDrawBrokenTrans(emptyBatteryX, emptyBatteryY, m_prc1->right-m_prc1->left+3, m_prc1->bottom-m_prc1->top);
 
-		//actually, no trans yet.  Do it after everything else...
+		// no trans yet.  Do it after everything else...
 		gHUD.drawAdditiveFilter(m_SpriteHandle_t1, r, g, b, 0,  emptyBatteryX, emptyBatteryY, m_prc1, 0);
 
 		x += 5;

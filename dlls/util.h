@@ -157,6 +157,7 @@ EASY_CVAR_EXTERN(soundVolumeStuka)
 // NEW!  Distinct green blood.  Most accurate choice pending but this looks ok
 #define BLOOD_COLOR_GREEN	(BYTE)54
 #define BLOOD_COLOR_BLACK	(BYTE)0 //black like oil
+#define COLOR_SQUIDSPIT	(BYTE)22  // another similar choice: 84 ?
 
 
 
@@ -225,7 +226,7 @@ EASY_CVAR_EXTERN(soundVolumeStuka)
 	EMIT_SOUND_DYN ( ENT(pev), chan , array [ RANDOM_LONG(0,ARRAYSIZE( array )-1) ], 1.0, ATTN_NORM, 0, RANDOM_LONG(95,105) ); 
 
 //This is used a lot more - much more flexible.
-//This doesn't actually play the sound, it just grabs one sound path string from the array. It's up to the caller to give it the usual volume, attenuation, flags, pitch.
+//This doesn't play the sound, it just grabs one sound path string from the array. It's up to the caller to give it the usual volume, attenuation, flags, pitch.
 #define RANDOM_SOUND_ARRAY( array ) (array) [ RANDOM_LONG(0,ARRAYSIZE( (array) )-1) ]
 
 
@@ -237,7 +238,6 @@ class CBaseEntity;
 class CBasePlayerItem;
 class CBasePlayer;
 class CWorld;
-// oh shit that actually worked
 typedef struct GibInfo_s GibInfo_t;
 
 
@@ -768,6 +768,7 @@ extern Vector UTIL_rotateShift(const float srcX, const float srcY, const float s
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 extern void UTIL_Ricochet( const Vector &position, float scale );
+extern void UTIL_RicochetTracer(const Vector& position, const Vector& vecDir);
 
 extern float UTIL_Approach( float target, float value, float speed );
 extern float UTIL_ApproachAngle( float target, float value, float speed );

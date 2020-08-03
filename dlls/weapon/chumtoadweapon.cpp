@@ -228,7 +228,7 @@ void CChumToadWeapon::setModel(const char* m){
 			easyPrintLine( "WARNING: Chumtoad (first person model) skin count is 0, error! Check v_chub.mdl for multiple skins. If it has them, please report this.  Forcing default of 3...");
 			numberOfEyeSkins = 3;
 		}else if(numberOfEyeSkins != 3){
-			easyPrintLine( "WARNING: Chumtoad (first person model) skin count is %d, not 3. If v_chub.mdl does actually have 3 skins, please report this.", numberOfEyeSkins);
+			easyPrintLine( "WARNING: Chumtoad (first person model) skin count is %d, not 3. If v_chub.mdl does have 3 skins, please report this.", numberOfEyeSkins);
 			if(numberOfEyeSkins < 1) numberOfEyeSkins = 1; //safety.
 		}
 	}
@@ -684,7 +684,7 @@ void CChumToadWeapon::WeaponIdle( void )
 	//return;
 	//forceBlockLooping();
 
-	//THis is actually reusing the "m_fInAttack" variable for telling when to make the chumtoad re-appear.
+	//This is reusing the "m_fInAttack" variable for telling when to make the chumtoad re-appear.
 	//...no? just do a literal check for whether the weapon model is null, hence retired and able to be brought back up.
 	//if(m_fInAttack == TRUE){
 	if(m_pPlayer->pev->viewmodel == iStringNull){

@@ -220,7 +220,7 @@ int CHudAmmo::VidInit(void)
 	}
 
 
-	//MODDD - replaced.  ACTUALLY, remove that too later, now completely unused either way.
+	//MODDD - replaced, remove that too later, now completely unused either way.
 	//m_HUD_bucket0 = gHUD.GetSpriteIndex( "bucket1" );
 	m_HUD_weapons_categorybackground = gHUD.GetSpriteIndex( "weapons_categorybackground");
 

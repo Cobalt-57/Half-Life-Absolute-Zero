@@ -1015,7 +1015,7 @@ GENERATE_KILLED_IMPLEMENTATION(CHornet){
 
 	switch ( hornetDeathMode ){
 		case 0:
-			//nothing.  Usual way, actually.
+			//nothing.  Usual way.
 			GENERATE_KILLED_PARENT_CALL(CBaseMonster);
 			return;
 		break;

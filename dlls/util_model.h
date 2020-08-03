@@ -72,7 +72,14 @@ int getNumberOfSkins(void *pmodel, entvars_t *pev);
 
 float SetBlending( void *pmodel, entvars_t *pev, int iBlender, float flValue );
 void GetEyePosition( void *pmodel, float *vecEyePosition );
+
+
+void Sequence_PrintSound_All(void* pmodel);
+void Sequence_PrintSound(void* pmodel, int index);
+
+void SequencePrecache(void* pmodel, int index);
 void SequencePrecache( void *pmodel, const char *pSequenceName );
+
 int FindTransition( void *pmodel, int iEndingAnim, int iGoalAnim, int *piDir );
 void SetBodygroup( void *pmodel, entvars_t *pev, int iGroup, int iValue );
 int GetBodygroup( void *pmodel, entvars_t *pev, int iGroup );

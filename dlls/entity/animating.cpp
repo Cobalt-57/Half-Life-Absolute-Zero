@@ -22,7 +22,7 @@
 
 #include "extdll.h"
 #include "animating.h"
-#include "basemonster.h"  //just to do some testing, not actually necessary.
+#include "basemonster.h"  //just to do some testing, not necessary.
 #include "util.h"
 #include "cbase.h"
 #include "basemonster.h"
@@ -507,10 +507,10 @@ float CBaseAnimating :: StudioFrameAdvance ( float flInterval )
 	if (! pev->animtime)
 		flInterval = 0.0;
 
-	//MODDD NOTE - "m_flFrameRate" is unused, or supposed to be. "m_flFrameRateSuggestion" is a bit more flexible and is independent of it, actually, being the new
+	//MODDD NOTE - "m_flFrameRate" is unused, or supposed to be. "m_flFrameRateSuggestion" is a bit more flexible and is independent of it,, being the new
 	//             value for "pev->framerate" at the start of the next called anim. Check first for any updates / replacements, but consider removal.
 
-	//keep this for reference. ... TODO if we bother to do this actually.
+	//keep this for reference. ... TODO if we bother to do this.
 	float recentFrameAdvance = flInterval * m_flFrameRate * pev->framerate * EASY_CVAR_GET(animationFramerateMulti);
 	
 	/*
@@ -1080,7 +1080,7 @@ float CBaseAnimating :: SetBoneController ( int iController, float flValue )
 // controller ID at all) and does not scale the given flValue to what the controller
 // expects in value.  That is, if the bone controller expects a value between 0 and 20,
 // and you give the call a value of 18, the bone will be set to purely that 18,
-// even though that's actually way smaller of an effect than you might have intended
+// even though that's way smaller of an effect than you might have intended
 // (always out of 255!).
 float CBaseAnimating :: SetBoneControllerUnsafe ( int iController, float flValue )
 {

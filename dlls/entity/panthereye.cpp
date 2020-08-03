@@ -849,7 +849,7 @@ int CPantherEye::LookupActivityHard(int activity){
 				}
 				delete[] weightsAbs;
 
-				//"get_bug" may make more sense when there is ACTUALLY a cockroach nearby.
+				//"get_bug" may make more sense when there is a cockroach nearby.
 			
 				//iRandChoice = 2;
 				switch(iRandChoice){
@@ -887,7 +887,7 @@ int CPantherEye::LookupActivityHard(int activity){
 				}
 				delete[] weightsAbs;
 
-				//"get_bug" may make more sense when there is ACTUALLY a cockroach nearby.
+				//"get_bug" may make more sense when there is a cockroach nearby.
 			
 				//iRandChoice = 2;
 				switch(iRandChoice){
@@ -1615,7 +1615,7 @@ void CPantherEye::LeapTouch ( CBaseEntity *pOther )
 		EMIT_SOUND_FILTERED( edict(), CHAN_WEAPON, RANDOM_SOUND_ARRAY(pLeapAttackHitSounds), 1, ATTN_IDLE, 0, 100 );
 		
 		//Increase damage beyond default?  Probably not.?
-		//Actually let's let the damage depend on the velocity.  Full damage for over 600, goes down towards the minimum.
+		// let's let the damage depend on the velocity.  Full damage for over 600, goes down towards the minimum.
 		//The factor must be between 0.30 and 1.25.
 		damageMulti = max( (min(velocityLength2D, 900.0f) / 900.0f) * 1.30f, 0.25f);
 
@@ -1670,7 +1670,7 @@ void CPantherEye::MonsterThink ( void )
 		//MODDD - TODO: how about another CVar to check that we're not in the middle of real combat (getting distracted by bugs while getting shot it is a bit odd).  While chasing alone, having not been fired at and/or damaged isn't as bad though.
 		if (pev->deadflag == DEAD_NO && m_IdealActivity == ACT_IDLE && m_pSchedule != slPanthereyeGetBug && bugAnimBlockedTime <= gpGlobals->time ) //do this stuff while alive
 		{
-			//does this get every roach on the map or anything?    Just one "roach" if I understand right?   Can that really work?
+			//does this get every roach on the map or anything?    Just one "roach" if I understand right?   Can that work?
 			//(I'm thinking check for ents in a radius every-so-often, maybe half-a-second?).
 		
 			CBaseEntity* pEntityScan = NULL;
@@ -2265,7 +2265,7 @@ void CPantherEye::StartTask ( Task_t *pTask ){
 		}
 		case TASK_WAIT_FOR_MOVEMENT:
 
-			//actually, nothing unusual.  Let the normal "Move" method do its thing.
+			// nothing unusual.  Let the normal "Move" method do its thing.
 			
 			CBaseMonster::StartTask(pTask);
 
@@ -2661,7 +2661,7 @@ void CPantherEye::RunTask ( Task_t *pTask ){
 					m_vecMoveGoal = m_hTargetEnt->pev->origin;
 					distance = ( m_vecMoveGoal - pev->origin ).Length2D();
 
-					//MODDD - NOTE: is this really necessary??
+					//MODDD - NOTE: is this necessary??
 					//FRefreshRoute();
 				}
 				//keep goin'

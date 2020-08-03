@@ -476,7 +476,7 @@ int CHudHealth::DrawDamage(float flTime)
 	// This is already declared below in the only for-loop it is relevant for.
 	//DAMAGE_IMAGE *pdmg;
 
-	//Actually... nevermind, status indicators aren't too distracting and it's good to be aware of these going on.
+	//... nevermind, status indicators aren't too distracting and it's good to be aware of these going on.
 	//We'd practically hide the GUI if we didn't want this.  ONLY if 2 instead now.
 	if (EASY_CVAR_GET(timedDamage_debug) <= 0 && EASY_CVAR_GET(hideDamage) >= 2) {
 		//don't do it.  If we're debugging clearly we want to see it though (above 0)

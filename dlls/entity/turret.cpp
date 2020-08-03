@@ -63,7 +63,7 @@ extern DLL_GLOBAL float g_rawDamageCumula;
 
 #define TURRET_MAXWAIT	15		// seconds turret will stay active w/o a target
 #define TURRET_MAXSPIN	5		// seconds turret barrel will spin w/o a target
-// NOTICE!!!  Sentries actually have a huge default idle-until-sleep-time (100,000 or so), if keyvalue "maxsleep" 
+// NOTICE!!!  Sentries have a huge default idle-until-sleep-time (100,000 or so), if keyvalue "maxsleep" 
 // is not set by the map.  In fact why not have its own constants.
 #define SENTRY_MAXWAIT 1E6;
 #define SENTRY_MAXSPIN 1E6;

@@ -16,7 +16,7 @@
 
 //MODDD TODO
 //- the spawned snark model (w_squeak.mdl) has a "fidget" animation that is never used.  ?
-// And a jump one.  	WSQUEAK_FIDGET,  WSQUEAK_JUMP.  Although not really sure where to use those.
+// And a jump one.  	WSQUEAK_FIDGET,  WSQUEAK_JUMP.  Although not sure where to use those.
 // Anim's that fudge the origin of the monster like that are awkward enough to deal with in death anims,
 // let alone alive things.
 
@@ -177,7 +177,7 @@ void CSqueakGrenade::setModel(const char* m){
 	//MODDD - class change.  Was CGrenade.
 	CBaseMonster::setModel(m);
 
-	//no blinking expected here, too tiny & jumpy for that to really be worthwhile.
+	//no blinking expected here, too tiny & jumpy for that to be worthwhile.
 
 }//END OF setModel
 
@@ -228,7 +228,7 @@ GENERATE_KILLED_IMPLEMENTATION(CSqueakGrenade){
 
 		
 	//is calling through the direct parent CBaseGrenade instead of CBaseMonster okay?
-	//YES. Because we don't want this monster to blow up like a grenade does when "Killed". CBaseMonster actually lacks the unwanted behavior
+	//YES. Because we don't want this monster to blow up like a grenade does when "Killed". CBaseMonster lacks the unwanted behavior
 	//Grenade has (giant explosion here for some reason), even if it is less direct of a parent.
 	GENERATE_KILLED_PARENT_CALL(CBaseMonster);
 }
@@ -584,7 +584,7 @@ void CSqueak::setModel(const char* m){
 			easyPrintLine( "WARNING: Squeak skin count is 0, error! Check v_squeak.mdl for multiple skins. If it has them, please report this.  Forcing default of 3...");
 			numberOfEyeSkins = 3;
 		}else if(numberOfEyeSkins != 3){
-			easyPrintLine( "WARNING: Squeak skin count is %d, not 3. If v_squeak.mdl does actually have 3 skins, please report this.", numberOfEyeSkins);
+			easyPrintLine( "WARNING: Squeak skin count is %d, not 3. If v_squeak.mdl does have 3 skins, please report this.", numberOfEyeSkins);
 			if(numberOfEyeSkins < 1) numberOfEyeSkins = 1; //safety.
 		}
 	}
@@ -783,7 +783,7 @@ void CSqueak::WeaponIdle( void )
 
 	/*
 
-	//THis is actually reusing the "m_fInAttack" variable for telling when to make the chumtoad re-appear.
+	//THis is reusing the "m_fInAttack" variable for telling when to make the chumtoad re-appear.
 	if(m_fInAttack == TRUE){
 		
 		easyForcePrintLine("SQUEAK AAAAAAAAAA");

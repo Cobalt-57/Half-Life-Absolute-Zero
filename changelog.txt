@@ -172,3 +172,25 @@ Blood type 'green' restored to be distinct from 'yellow' all aliens had in retai
 Machines (mainly sentries) play metal-sounds when hit with bullets.
 
 Snarks can now gib with alpha blood, not forced to retail.
+
+Speed while crouched increased.
+
+Viewpunch (recoil / getting knocked by melee hits, alpha ladder effect) decays more smoothly and slightly faster.
+Viewpunch of alpha ladders reduced slightly on top of this.
+
+Alpha ladder view effects moved from serverside-only (player.cpp) to pm_shared.c.  Might not appear different for singleplayer or low-latency multiplayer.
+
+Hits on armored enemies (hgrunt/barney helmets, agrunt helemt or body plating).
+
+All get the same 50% chance of a bullet ricochet effect the agrunt has for bullet hits, and damage logic changed.
+~Bullet damage: Instead of near-0 damage for 20-or-under hits, damage reduced to 12%.  Even piercing hits to armor (over 20) do 15% less damage.
+~Melee damage: Hits to armor reduced by 40% instead.
+~Blast damage: no longer pays attention to armor hits, flat damage reduction that assumes it was hit.  Explosions are more of an 'area of effect' than a precise strike like other weapons, it doesn't make as much sense to care what hitgroup a line from an explosion to the center of an entity hits.
+~ In general, HGrunts take 20% less damage from explosions, Agrunts take 30% less damage from explosions, Barnies take 50% less damage from explosions (their low health doesn't stop insta-kills from near direct hits)
+~Barny kevlar more effective against weak bullet damages (60% reduction).
+~HGrunt kevlar (body shots) reduces weak bullet damage (5 or less; includes mp5 and shotgun shells) lose 30% damage.  Higher bullet damage loses 15% damage instead.
+~ Bullet damage anywhere else (arms, legs) loses 10%, Barnies too.  Non-armor agrunt bullet damage does 8% less damage.
+
+AGrunts should no longer skip the sound-sentence-save system when playing some sounds (lead to 'sound not precached' warnings in console).  No file in the mentioned 'agrunt/bflinch.wav' of sequence 'bigflinch' exists, however.
+
+Uncrouching rapidly no longer puts the player in the air momentarily.  Uncrouching while in the middle of a crouch is smooth now.

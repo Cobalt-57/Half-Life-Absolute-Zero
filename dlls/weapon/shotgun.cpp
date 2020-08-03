@@ -429,35 +429,31 @@ void CShotgun::FireShotgun(BOOL isPrimary) {
 	Vector vecSrc = m_pPlayer->GetGunPosition();
 	Vector vecAiming = m_pPlayer->GetAutoaimVector(AUTOAIM_5DEGREES);
 
-	Vector vecDir;
-
+	
+	//MODDD - NOTE!  Don't bother recording vecDir from the shotgun.
+	// FireBulletsPlayer only returns the direction of the most recently fired bullet, so multi-bullet firings like the shotgun just return the direction
+	// of the last fired pellet.  Not very useful.
+	// I think even Valve gave up on trying (or never did) to network shotgun blasts, tracers from serverside show they don't match up with the
+	// client/ev_hldm-generated bullet decals.
+	//Vector vecDir;
 
 	if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST(playerWeaponSpreadMode) != 2 && (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST(playerWeaponSpreadMode) == 1 || !IsMultiplayer()))
 	{
+		// (used t ostart with   vecDir = ...)
 		// regular old, untouched spread for singleplayer
 		if (isPrimary) {
-			vecDir = m_pPlayer->FireBulletsPlayer(6, vecSrc, vecAiming, VECTOR_CONE_10DEGREES, 2048, BULLET_PLAYER_BUCKSHOT, 0, 0, m_pPlayer->pev, m_pPlayer->random_seed);
-			// TEST!
-			//vecDir = VECTOR_CONE_10DEGREES;
-		}
-		else {
-			vecDir = m_pPlayer->FireBulletsPlayer(12, vecSrc, vecAiming, VECTOR_CONE_10DEGREES, 2048, BULLET_PLAYER_BUCKSHOT, 0, 0, m_pPlayer->pev, m_pPlayer->random_seed);
-			// TEST!
-			//vecDir = VECTOR_CONE_10DEGREES;
+			m_pPlayer->FireBulletsPlayer(6, vecSrc, vecAiming, VECTOR_CONE_10DEGREES, 2048, BULLET_PLAYER_BUCKSHOT, 0, 0, m_pPlayer->pev, m_pPlayer->random_seed);
+		}else {
+			m_pPlayer->FireBulletsPlayer(12, vecSrc, vecAiming, VECTOR_CONE_10DEGREES, 2048, BULLET_PLAYER_BUCKSHOT, 0, 0, m_pPlayer->pev, m_pPlayer->random_seed);
 		}
 	}
 	else
 	{
 		// tuned for deathmatch
 		if (isPrimary) {
-			vecDir = m_pPlayer->FireBulletsPlayer(4, vecSrc, vecAiming, VECTOR_CONE_DM_SHOTGUN, 2048, BULLET_PLAYER_BUCKSHOT, 0, 0, m_pPlayer->pev, m_pPlayer->random_seed);
-			// TEST!
-			//vecDir = VECTOR_CONE_DM_SHOTGUN;
-		}
-		else {
-			vecDir = m_pPlayer->FireBulletsPlayer(8, vecSrc, vecAiming, VECTOR_CONE_DM_DOUBLESHOTGUN, 2048, BULLET_PLAYER_BUCKSHOT, 0, 0, m_pPlayer->pev, m_pPlayer->random_seed);
-			// TEST!
-			//vecDir = VECTOR_CONE_DM_DOUBLESHOTGUN;
+			m_pPlayer->FireBulletsPlayer(4, vecSrc, vecAiming, VECTOR_CONE_DM_SHOTGUN, 2048, BULLET_PLAYER_BUCKSHOT, 0, 0, m_pPlayer->pev, m_pPlayer->random_seed);
+		}else {
+			m_pPlayer->FireBulletsPlayer(8, vecSrc, vecAiming, VECTOR_CONE_DM_DOUBLESHOTGUN, 2048, BULLET_PLAYER_BUCKSHOT, 0, 0, m_pPlayer->pev, m_pPlayer->random_seed);
 		}
 	}
 
@@ -475,12 +471,15 @@ void CShotgun::FireShotgun(BOOL isPrimary) {
 	
 
 	if (isPrimary) {
-		PLAYBACK_EVENT_FULL(flags, m_pPlayer->edict(), m_usSingleFire, 0.0, (float*)&g_vecZero, (float*)&g_vecZero, vecDir.x, vecDir.y, 0, 0, 0, 0);
+		//MODDD
+		// used to send vecDir.x, vecDir.y for the 5th, 6th parameters from the end.  They're not useful for reasons described above,
+		// and even ev_hldm.cpp's shotgun events ignore those parameters.  So that was just a lazy paste-over.
+		PLAYBACK_EVENT_FULL(flags, m_pPlayer->edict(), m_usSingleFire, 0.0, (float*)&g_vecZero, (float*)&g_vecZero, 0, 0, 0, 0, 0, 0);
 		// this is single fire.
 		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + (20.0 / 20.0) + randomIdleAnimationDelay();
 	}
 	else {
-		PLAYBACK_EVENT_FULL(flags, m_pPlayer->edict(), m_usDoubleFire, 0.0, (float*)&g_vecZero, (float*)&g_vecZero, vecDir.x, vecDir.y, 0, 0, 0, 0);
+		PLAYBACK_EVENT_FULL(flags, m_pPlayer->edict(), m_usDoubleFire, 0.0, (float*)&g_vecZero, (float*)&g_vecZero, 0, 0, 0, 0, 0, 0);
 		//MODDD - secondary fire idle delay.
 		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + (21.0 / 13.0) + randomIdleAnimationDelay();
 	}
@@ -647,7 +646,7 @@ void CShotgun::Reload( void )
 		m_flNextReload = UTIL_WeaponTimeBase() + 0.5;
 
 		
-		//MODDD - Actually, beware.  Altering the "m_flTimeWeaponIdle" to be different will affect "m_flNextReload" as well, since
+		//MODDD - beware.  Altering the "m_flTimeWeaponIdle" to be different will affect "m_flNextReload" as well, since
 		//        "m_flNextReload" is only checked if "m_flTimeWeaponIdle" is not applied (not waiting for the delay to pass).
 		//m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + (10.0 / 16.0);
 		

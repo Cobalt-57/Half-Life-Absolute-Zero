@@ -450,7 +450,7 @@ void removeAllEntities(edict_t* theCaller) {
 
 		//made it here? Remove it.
 		////::UTIL_Remove(tempMonster);
-		//actually do it this way below instead.
+		// do it this way below instead.
 		//pTempEntity->onDelete();
 		//pTempEntity->SetThink(&CBaseEntity::SUB_Remove);
 		//pTempEntity->pev->nextthink = gpGlobals->time;
@@ -936,7 +936,7 @@ void ClientDisconnect( edict_t *pEntity )
 
 	//MODDD - what.  Why not delete the player entity then?  Before this player number (2nd, 3rd, etc.), that edict
 	// space was NULL anyway.
-	//MODDD - TODO.  If necessary, the actual private data freeing (FREE_PRIVATE) could be moved to the end
+	//MODDD - TODO.  If necessary, the private data freeing (FREE_PRIVATE) could be moved to the end
 	// of some frame-thiink logic to happen at the end of the next frame, instead of right at the disconnect event.
 	// I have no clue if other things in the same frame don't expect a player's private data to have changed.
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2634,7 +2634,7 @@ void ClientCommand( edict_t *pEntity )
 	}else if( FStrEq(pcmdRefinedRef, "dividebyzero") || FStrEq(pcmdRefinedRef, "crash") || FStrEq(pcmdRefinedRef, "enditalready") || FStrEq(pcmdRefinedRef, "thissucks") || FStrEq(pcmdRefinedRef, "iwantmydesktop") || FStrEq(pcmdRefinedRef, "iwannagohome")   ){
 		
 		if(g_flWeaponCheat == 0.0){
-			easyForcePrintLineClient(pEntity, "Really now? Oh no you don\'t.");
+			easyForcePrintLineClient(pEntity, "Oh no you don\'t.");
 			return;
 		}
 
@@ -4085,11 +4085,8 @@ void ClientCommand( edict_t *pEntity )
 		int count = UTIL_EntitiesInBox( pList, 500, Vector(-99999999,-99999999,-99999999), Vector(99999999,99999999,99999999), 0 );
 		BOOL anyYet = FALSE;
 
-
 		if(count > 0){
-
-
-			easyForcePrintLineClient(pEntity, "***HEALER LIST... actually bits 13 to 30 now***");
+			easyForcePrintLineClient(pEntity, "***HEALER LIST... bits 13 to 30 now***");
 			for ( i = 0; i < count; i++){
 				int flagFound = -1;
 				CBaseEntity* ent = pList[i];
@@ -4811,11 +4808,12 @@ void ClientCommand( edict_t *pEntity )
 		easyForcePrintLine("---------------------------------------------------------");
 
 	}
+	
 	/*
 	else if (FStrEq(pcmdRefinedRef, "basicentityinfooffset")) {
 		
 		//NOTICE!!! Not a wise thing to even try.
-		// Looks like offset is related to how much memory the pentity actually takes up and still starting
+		// Looks like offset is related to how much memory the pentity takes up and still starting
 		// from the first entity... or wherever edicts are stored in memory probably.
 		// Anyway, offsets are in increments of 804, but not really a point when getting by index (1, 2, 3)
 		// works perfectly fine.
@@ -4988,7 +4986,7 @@ void ClientCommand( edict_t *pEntity )
 		ClientPrint( &pEntity->v, HUD_PRINTCONSOLE, UTIL_VarArgs( "Unknown command: %s\n", command ) );
 	}
 	*/
-}//END OF... something really big.
+}//END OF... something big.
 //!!!END OF THIS SILLY SILLY METHOD!!!
 
 
@@ -5390,7 +5388,7 @@ void StartFrame( void )
 	
 	// And sending gmsgUpdateClientCVar messages in the first frame causes "PF_MessageEnd_I:  Unknown User Msg 119" messages
 	// beeeeecccccccccaaaaaaaaauuuuuuuusssssssseeeeeee?
-	// as in, yes, even the first time "StartFrame" here is called, which really runs every frame.  SPOOKY.
+	// as in, yes, even the first time "StartFrame" here is called, which runs every frame.  SPOOKY.
 	// Skipping the first two frames just to be safe.
 	if (g_ulFrameCount > 2) {
 		updateCVarRefs(FALSE);
@@ -5424,7 +5422,7 @@ void StartFrame( void )
 
 
 
-
+	
 	//MODDD - TEST.  Use some CVar to change my blood.  See what looks good.
 	static float nextBloodGen = 0;
 
@@ -5434,7 +5432,6 @@ void StartFrame( void )
 		UTIL_SpawnBlood(bloodSpawnOrigin, (int)EASY_CVAR_GET(hyperBarney), 1);
 		nextBloodGen = gpGlobals->time + 0.08;
 	}
-
 
 
 

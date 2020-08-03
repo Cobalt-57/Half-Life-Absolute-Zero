@@ -75,7 +75,7 @@ EASY_CVAR_DECLARATION_CLIENT_MASS
 
 // Easy place for any other CVar init stuff after loading hidden vars (if applicble).
 // Called from cl_dll/cdll_int.cpp
-// ACTUALLY no. Now called from a custom message sent when the player's "OnFirstAppearance" is called form joining
+// no. Now called from a custom message sent when the player's "OnFirstAppearance" is called form joining
 // a server or loading a game.  This keeps the info in sync at startup since possibly falling out of sync between games.
 void lateCVarInit(void){
 	

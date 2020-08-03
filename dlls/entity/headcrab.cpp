@@ -494,7 +494,7 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CHeadCrab)
 	// Don't take any acid damage -- BigMomma's mortar is acid
 
 	//MODDD - TODO: create a better way of immunity to DMG_ACID.
-	//...actually, nevermind, this should be okay.
+	//...nevermind, this should be okay.
 	if ( bitsDamageType & DMG_ACID )
 		flDamage = 0;
 

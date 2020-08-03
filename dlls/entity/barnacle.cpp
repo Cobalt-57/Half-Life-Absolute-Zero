@@ -1070,20 +1070,20 @@ CBaseEntity *CBarnacle :: TongueTouchEnt ( float *pflLength, float *pflLengthMin
 
 				
 				passedRelationTest = (
-					//As an ALIEN_MONSTER, I actually have to dislike them.
+					// As an ALIEN_MONSTER, I have to dislike them.
 					((IRelationship( pList[i] ) > R_NO) ) &&
 					//( (pList[i]->pev->size.x * pList[i]->pev->size.y * pList[i]->pev->size.z) < 27000) &&
 					//(monstaSiz < 200000) &&   //300000?
 					!pList[i]->GetMonsterPointer()->isSizeGiant()
 				);
 				
-				//bound size??
+				// bound size??
 				EASY_CVAR_PRINTIF_PRE(barnaclePrintout, easyPrintLine("lets not perhaps %.2f", temp.x * temp.y * temp.z));
 
 
-				//This 2nd check is to avoid trying to eat ridiculously large entities.
-				//Little known fact: barnacles can eat Apaches and Ospreys in the base game, but this would never be seen because
-				//they can't be spawned in the same place.
+				// This 2nd check is to avoid trying to eat ridiculously large entities.
+				// Little known fact: barnacles can eat Apaches and Ospreys in the base game, but this would never be seen because
+				// they can't be spawned in the same place.
 				
 				//EASY_CVAR_PRINTIF_PRE(barnaclePrintout, easyPrintLine("WHAT IS THE VOLUME? %.2f", pList[i]->pev->size.x * pList[i]->pev->size.y * pList[i]->pev->size.z));
 				//EASY_CVAR_PRINTIF_PRE(barnaclePrintout, easyPrintLine("WHAT IS THE VOLUME? %.2f", temp.x * temp.y * temp.z));

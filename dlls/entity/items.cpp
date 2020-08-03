@@ -113,7 +113,7 @@ void CItem::Spawn( void )
 		// Yes.  DROP_TO_FLOOR just returns 0 if an object is too far above the ground, not necessarily because no floor exists.
 		// And come to think of it, why not a "IsInWorld" check?  Wouldn't that make sense?
 
-		// Way it should work is, if actually not in the world, yea, say that.
+		// Way it should work is, if indeed not in the world, yea, say that.
 		if (!IsInWorld()) {
 			ALERT(at_error, "Item %s fell out of level at (%f,%f,%f)", STRING(pev->classname), pev->origin.x, pev->origin.y, pev->origin.z);
 			UTIL_Remove(this);

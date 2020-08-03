@@ -781,7 +781,7 @@ GENERATE_DEADTAKEDAMAGE_IMPLEMENTATION(CTemplateMonster){
 
 // Parameters: integer named fGibSpawnsDecal
 //  The parent method calls GIBMONSTERGIB, then GIBMONSTERSOUND and GIBMONSTEREND, passing along to the latter two whether GIBMONSTERGIB
-//  actually "gibbed" or not (it must return whether it did or not).
+//  really "gibbed" or not (it must return whether it did or not).
 //  This default behavior is ok, change pieces at a time instead in other methods. GIBMONSTERGIB is the most likely one that needs
 //  customization, such as only spawning two alien gibs for the ChumToad. The others are good as defaults.
 GENERATE_GIBMONSTER_IMPLEMENTATION(CTemplateMonster)

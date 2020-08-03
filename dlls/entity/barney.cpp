@@ -501,7 +501,6 @@ IMPLEMENT_CUSTOM_SCHEDULES( CBarney, CTalkMonster );
 
 
 
-
 void CBarney::DeclineFollowingProvoked(CBaseEntity* pCaller) {
 	//Barney won't say anything, he's too busy shooting you.
 	//...or will he? MUHAHAHA.
@@ -540,24 +539,12 @@ void CBarney::SayLeaderDied(void) {
 void CBarney::SayNearPassive(void) {
 
 	switch (RANDOM_LONG(0, 4)) {
-	case 0:
-		PlaySentenceSingular("BA_QUESTION10", 4, VOL_NORM, ATTN_NORM);
-		break;
-	case 1:
-		PlaySentenceSingular("BA_QUESTION12", 4, VOL_NORM, ATTN_NORM);
-		break;
-	case 2:
-		PlaySentenceSingular("BA_QUESTION13", 4, VOL_NORM, ATTN_NORM);
-		break;
-	case 3:
-		PlaySentenceSingular("BA_SMELL1", 4, VOL_NORM, ATTN_NORM);
-		break;
-	case 4:
-		PlaySentenceSingular("BA_SMELL2", 4, VOL_NORM, ATTN_NORM);
-		break;
-	default:
-
-		break;
+	case 0:PlaySentenceSingular("BA_QUESTION10", 4, VOL_NORM, ATTN_NORM);break;
+	case 1:PlaySentenceSingular("BA_QUESTION12", 4, VOL_NORM, ATTN_NORM);break;
+	case 2:PlaySentenceSingular("BA_QUESTION13", 4, VOL_NORM, ATTN_NORM);break;
+	case 3:PlaySentenceSingular("BA_SMELL1", 4, VOL_NORM, ATTN_NORM);break;
+	case 4:PlaySentenceSingular("BA_SMELL2", 4, VOL_NORM, ATTN_NORM);break;
+	default:break;
 	}//END OF switch
 
 }
@@ -573,119 +560,48 @@ void CBarney::OnNearCautious(void) {
 	unholsterTimer = gpGlobals->time + EASY_CVAR_GET(barneyUnholsterTime);
 }//END OF onNearCautious
 
+
 void CBarney::SayNearCautious(void) {
 
 	switch (RANDOM_LONG(0, 34)) {
-	case 0:
-		PlaySentenceSingular("BA_OK0", 4, VOL_NORM, ATTN_NORM);
-		break;
-	case 1:
-		PlaySentenceSingular("BA_OK2", 4, VOL_NORM, ATTN_NORM);
-		break;
-	case 2:
-		PlaySentenceSingular("BA_OK5", 4, VOL_NORM, ATTN_NORM);
-		break;
-	case 3:
-		PlaySentenceSingular("BA_OK6", 4, VOL_NORM, ATTN_NORM);
-		break;
-	case 4:
-		PlaySentenceSingular("BA_QUESTION0", 4, VOL_NORM, ATTN_NORM);
-		break;
-	case 5:
-		PlaySentenceSingular("BA_QUESTION3", 4, VOL_NORM, ATTN_NORM);
-		break;
-	case 6:
-		PlaySentenceSingular("BA_QUESTION4", 4, VOL_NORM, ATTN_NORM);
-		break;
-	case 7:
-		PlaySentenceSingular("BA_QUESTION6", 4, VOL_NORM, ATTN_NORM);
-		break;
-	case 8:
-		PlaySentenceSingular("BA_QUESTION7", 4, VOL_NORM, ATTN_NORM);
-		break;
-	case 9:
-		PlaySentenceSingular("BA_QUESTION8", 4, VOL_NORM, ATTN_NORM);
-		break;
-	case 10:
-		PlaySentenceSingular("BA_QUESTION9", 4, VOL_NORM, ATTN_NORM);
-		break;
-	case 11:
-		PlaySentenceSingular("BA_QUESTION10", 4, VOL_NORM, ATTN_NORM);
-		break;
-	case 12:
-		PlaySentenceSingular("BA_QUESTION11", 4, VOL_NORM, ATTN_NORM);
-		break;
-	case 13:
-		PlaySentenceSingular("BA_QUESTION12", 4, VOL_NORM, ATTN_NORM);
-		break;
-	case 14:
-		PlaySentenceSingular("BA_QUESTION13", 4, VOL_NORM, ATTN_NORM);
-		break;
-	case 15:
-		PlaySentenceSingular("BA_QUESTION14", 4, VOL_NORM, ATTN_NORM);
-		break;
-	case 16:
-		PlaySentenceSingular("BA_HELLO6", 4, VOL_NORM, ATTN_NORM);
-		break;
-	case 17:
-		PlaySentenceSingular("BA_IDLE0", 4, VOL_NORM, ATTN_NORM);
-		break;
-	case 18:
-		PlaySentenceSingular("BA_IDLE1", 4, VOL_NORM, ATTN_NORM);
-		break;
-	case 19:
-		PlaySentenceSingular("BA_IDLE2", 4, VOL_NORM, ATTN_NORM);
-		break;
-	case 20:
-		PlaySentenceSingular("BA_IDLE3", 4, VOL_NORM, ATTN_NORM);
-		break;
-	case 21:
-		PlaySentenceSingular("BA_IDLE6", 4, VOL_NORM, ATTN_NORM);
-		break;
-	case 22:
-		PlaySentenceSingular("BA_IDLE7", 4, VOL_NORM, ATTN_NORM);
-		break;
-	case 23:
-		PlaySentenceSingular("BA_IDLE8", 4, VOL_NORM, ATTN_NORM);
-		break;
-	case 24:
-		PlaySentenceSingular("BA_IDLE9", 4, VOL_NORM, ATTN_NORM);
-		break;
-	case 25:
-		PlaySentenceSingular("BA_IDLE10", 4, VOL_NORM, ATTN_NORM);
-		break;
-	case 26:
-		PlaySentenceSingular("BA_IDLE11", 4, VOL_NORM, ATTN_NORM);  //badarea
-		break;
-	case 27:
-		PlaySentenceSingular("BA_ATTACK2", 4, VOL_NORM, ATTN_NORM);
-		break;
-	case 28:
-		PlaySentenceSingular("BA_ATTACK4", 4, VOL_NORM, ATTN_NORM);
-		break;
-	case 29:
-		PlaySentenceSingular("BA_HEAR0", 4, VOL_NORM, ATTN_NORM);
-		break;
-	case 30:
-		PlaySentenceSingular("BA_HEAR1", 4, VOL_NORM, ATTN_NORM);
-		break;
-	case 31:
-		PlaySentenceSingular("BA_HEAR2", 4, VOL_NORM, ATTN_NORM);
-		break;
-	case 32:
-		PlaySentenceSingular("BA_HEAR3", 4, VOL_NORM, ATTN_NORM);
-		break;
-	case 33:
-		PlaySentenceSingular("BA_STOP3", 4, VOL_NORM, ATTN_NORM);
-		break;
-	case 34:
-		PlaySentenceSingular("BA_STOP4", 4, VOL_NORM, ATTN_NORM);
-		break;
-
+	case 0:PlaySentenceSingular("BA_OK0", 4, VOL_NORM, ATTN_NORM);break;
+	case 1:PlaySentenceSingular("BA_OK2", 4, VOL_NORM, ATTN_NORM);break;
+	case 2:PlaySentenceSingular("BA_OK5", 4, VOL_NORM, ATTN_NORM);break;
+	case 3:PlaySentenceSingular("BA_OK6", 4, VOL_NORM, ATTN_NORM);break;
+	case 4:PlaySentenceSingular("BA_QUESTION0", 4, VOL_NORM, ATTN_NORM);break;
+	case 5:PlaySentenceSingular("BA_QUESTION3", 4, VOL_NORM, ATTN_NORM);break;
+	case 6:PlaySentenceSingular("BA_QUESTION4", 4, VOL_NORM, ATTN_NORM);break;
+	case 7:PlaySentenceSingular("BA_QUESTION6", 4, VOL_NORM, ATTN_NORM);break;
+	case 8:PlaySentenceSingular("BA_QUESTION7", 4, VOL_NORM, ATTN_NORM);break;
+	case 9:PlaySentenceSingular("BA_QUESTION8", 4, VOL_NORM, ATTN_NORM);break;
+	case 10:PlaySentenceSingular("BA_QUESTION9", 4, VOL_NORM, ATTN_NORM);break;
+	case 11:PlaySentenceSingular("BA_QUESTION10", 4, VOL_NORM, ATTN_NORM);break;
+	case 12:PlaySentenceSingular("BA_QUESTION11", 4, VOL_NORM, ATTN_NORM);break;
+	case 13:PlaySentenceSingular("BA_QUESTION12", 4, VOL_NORM, ATTN_NORM);break;
+	case 14:PlaySentenceSingular("BA_QUESTION13", 4, VOL_NORM, ATTN_NORM);break;
+	case 15:PlaySentenceSingular("BA_QUESTION14", 4, VOL_NORM, ATTN_NORM);break;
+	case 16:PlaySentenceSingular("BA_HELLO6", 4, VOL_NORM, ATTN_NORM);break;
+	case 17:PlaySentenceSingular("BA_IDLE0", 4, VOL_NORM, ATTN_NORM);break;
+	case 18:PlaySentenceSingular("BA_IDLE1", 4, VOL_NORM, ATTN_NORM);break;
+	case 19:PlaySentenceSingular("BA_IDLE2", 4, VOL_NORM, ATTN_NORM);break;
+	case 20:PlaySentenceSingular("BA_IDLE3", 4, VOL_NORM, ATTN_NORM);break;
+	case 21:PlaySentenceSingular("BA_IDLE6", 4, VOL_NORM, ATTN_NORM);break;
+	case 22:PlaySentenceSingular("BA_IDLE7", 4, VOL_NORM, ATTN_NORM);break;
+	case 23:PlaySentenceSingular("BA_IDLE8", 4, VOL_NORM, ATTN_NORM);break;
+	case 24:PlaySentenceSingular("BA_IDLE9", 4, VOL_NORM, ATTN_NORM);break;
+	case 25:PlaySentenceSingular("BA_IDLE10", 4, VOL_NORM, ATTN_NORM);break;
+	case 26:PlaySentenceSingular("BA_IDLE11", 4, VOL_NORM, ATTN_NORM); break;  //badarea
+	case 27:PlaySentenceSingular("BA_ATTACK2", 4, VOL_NORM, ATTN_NORM);break;
+	case 28:PlaySentenceSingular("BA_ATTACK4", 4, VOL_NORM, ATTN_NORM);break;
+	case 29:PlaySentenceSingular("BA_HEAR0", 4, VOL_NORM, ATTN_NORM);break;
+	case 30:PlaySentenceSingular("BA_HEAR1", 4, VOL_NORM, ATTN_NORM);break;
+	case 31:PlaySentenceSingular("BA_HEAR2", 4, VOL_NORM, ATTN_NORM);break;
+	case 32:PlaySentenceSingular("BA_HEAR3", 4, VOL_NORM, ATTN_NORM);break;
+	case 33:PlaySentenceSingular("BA_STOP3", 4, VOL_NORM, ATTN_NORM);break;
+	case 34:PlaySentenceSingular("BA_STOP4", 4, VOL_NORM, ATTN_NORM);break;
+	default:break;
 	}//END OF switch
 }//END OF SayNearCautious
-
-
 
 
 
@@ -701,7 +617,7 @@ void CBarney :: StartTask( Task_t *pTask )
 	{
 		case TASK_RELOAD:
 			m_IdealActivity = ACT_RELOAD;
-			break;
+		break;
 	}
 	///////////////////////////////////////////////////////////////////////
 	CTalkMonster::StartTask( pTask );	
@@ -810,7 +726,6 @@ int CBarney::IRelationship( CBaseEntity *pTarget )
 
 
 
-
 //=========================================================
 // ALertSound - barney says "Freeze!"
 //=========================================================
@@ -851,18 +766,10 @@ void CBarney :: AlertSound( void )
 					// "open fire, Gordon!" one.  That doesn't make a whole lot of sense now.
 					
 					switch (RANDOM_LONG(0, 3)) {
-						case 0:
-							PlaySentence("BA_PISSED", 3, VOL_NORM, ATTN_NORM);
-						break;
-						case 1:
-							PlaySentenceSingular("BA_ATTACK1", 4, VOL_NORM, ATTN_NORM);
-						break;
-						case 2:
-							PlaySentenceSingular("BA_ATTACK2", 4, VOL_NORM, ATTN_NORM);
-						break;
-						case 3:
-							PlaySentenceSingular("BA_ATTACK5", 4, VOL_NORM, ATTN_NORM);
-						break;
+						case 0:PlaySentence("BA_PISSED", 3, VOL_NORM, ATTN_NORM);break;
+						case 1:PlaySentenceSingular("BA_ATTACK1", 4, VOL_NORM, ATTN_NORM);break;
+						case 2:PlaySentenceSingular("BA_ATTACK2", 4, VOL_NORM, ATTN_NORM);break;
+						case 3:PlaySentenceSingular("BA_ATTACK5", 4, VOL_NORM, ATTN_NORM);break;
 					}
 				}else if(
 					enemyClassify == CLASS_ALIEN_MILITARY ||
@@ -882,27 +789,13 @@ void CBarney :: AlertSound( void )
 					}
 
 					switch (RANDOM_LONG(0, randoRange)) {
-					case 0:
-						PlaySentenceSingular("BA_ATTACK1", 4, VOL_NORM, ATTN_NORM);
-						break;
-					case 1:
-						PlaySentenceSingular("BA_ATTACK2", 4, VOL_NORM, ATTN_NORM);
-						break;
-					case 2:
-						PlaySentenceSingular("BA_IDLE0", 4, VOL_NORM, ATTN_NORM);
-						break;
-					case 3:
-						PlaySentenceSingular("BA_ATTACK3", 4, VOL_NORM, ATTN_NORM);
-						break;
-					case 4:
-						PlaySentenceSingular("BA_ATTACK4", 4, VOL_NORM, ATTN_NORM);
-						break;
-					case 5:
-						PlaySentenceSingular("BA_ATTACK5", 4, VOL_NORM, ATTN_NORM);
-						break;
-					case 6:
-						PlaySentenceSingular("BA_ATTACK0", 4, VOL_NORM, ATTN_NORM);
-						break;
+					case 0:PlaySentenceSingular("BA_ATTACK1", 4, VOL_NORM, ATTN_NORM);break;
+					case 1:PlaySentenceSingular("BA_ATTACK2", 4, VOL_NORM, ATTN_NORM);break;
+					case 2:PlaySentenceSingular("BA_IDLE0", 4, VOL_NORM, ATTN_NORM);break;
+					case 3:PlaySentenceSingular("BA_ATTACK3", 4, VOL_NORM, ATTN_NORM);break;
+					case 4:PlaySentenceSingular("BA_ATTACK4", 4, VOL_NORM, ATTN_NORM);break;
+					case 5:PlaySentenceSingular("BA_ATTACK5", 4, VOL_NORM, ATTN_NORM);break;
+					case 6:PlaySentenceSingular("BA_ATTACK0", 4, VOL_NORM, ATTN_NORM);break;
 					}
 
 				}
@@ -921,24 +814,12 @@ void CBarney :: AlertSound( void )
 					}
 
 					switch (RANDOM_LONG(0, randoRange)) {
-					case 0:
-						PlaySentenceSingular("BA_ATTACK1", 4, VOL_NORM, ATTN_NORM);
-						break;
-					case 1:
-						PlaySentenceSingular("BA_ATTACK2", 4, VOL_NORM, ATTN_NORM);
-						break;
-					case 2:
-						PlaySentenceSingular("BA_IDLE0", 4, VOL_NORM, ATTN_NORM);
-						break;
-					case 3:
-						PlaySentenceSingular("BA_ATTACK3", 4, VOL_NORM, ATTN_NORM);
-						break;
-					case 4:
-						PlaySentenceSingular("BA_ATTACK4", 4, VOL_NORM, ATTN_NORM);
-						break;
-					case 5:
-						PlaySentenceSingular("BA_ATTACK0", 4, VOL_NORM, ATTN_NORM);
-						break;
+					case 0:PlaySentenceSingular("BA_ATTACK1", 4, VOL_NORM, ATTN_NORM);break;
+					case 1:PlaySentenceSingular("BA_ATTACK2", 4, VOL_NORM, ATTN_NORM);break;
+					case 2:PlaySentenceSingular("BA_IDLE0", 4, VOL_NORM, ATTN_NORM);break;
+					case 3:PlaySentenceSingular("BA_ATTACK3", 4, VOL_NORM, ATTN_NORM);break;
+					case 4:PlaySentenceSingular("BA_ATTACK4", 4, VOL_NORM, ATTN_NORM);break;
+					case 5:PlaySentenceSingular("BA_ATTACK0", 4, VOL_NORM, ATTN_NORM);break;
 					}
 
 				}else {
@@ -951,18 +832,10 @@ void CBarney :: AlertSound( void )
 					}
 
 					switch (RANDOM_LONG(0, randoRange)) {
-					case 0:
-						PlaySentenceSingular("BA_ATTACK1", 4, VOL_NORM, ATTN_NORM);
-						break;
-					case 1:
-						PlaySentenceSingular("BA_ATTACK2", 4, VOL_NORM, ATTN_NORM);
-						break;
-					case 2:
-						PlaySentenceSingular("BA_ATTACK5", 4, VOL_NORM, ATTN_NORM);
-						break;
-					case 3:
-						PlaySentenceSingular("BA_ATTACK0", 4, VOL_NORM, ATTN_NORM);
-						break;
+					case 0:PlaySentenceSingular("BA_ATTACK1", 4, VOL_NORM, ATTN_NORM);break;
+					case 1:PlaySentenceSingular("BA_ATTACK2", 4, VOL_NORM, ATTN_NORM);break;
+					case 2:PlaySentenceSingular("BA_ATTACK5", 4, VOL_NORM, ATTN_NORM);break;
+					case 3:PlaySentenceSingular("BA_ATTACK0", 4, VOL_NORM, ATTN_NORM);break;
 					}
 				}
 			}else{
@@ -1075,6 +948,7 @@ void CBarney :: BarneyFirePistol ( void )
 		pitchShift = RANDOM_LONG(-5, 5);
 	}
 
+	// This is a glock-firing sound effect.  Don't throw in voice pitch.
 	EMIT_SOUND_FILTERED( ENT(pev), CHAN_WEAPON, "barney/ba_attack2.wav", 1, ATTN_NORM, 0, 100 + pitchShift );
 
 	CSoundEnt::InsertSound ( bits_SOUND_COMBAT, pev->origin, 384, 0.3 );
@@ -1183,7 +1057,7 @@ void CBarney :: HandleAnimEvent( MonsterEvent_t *pEvent )
 	case BARNEY_AE_DRAW:
 		// barney's bodygroup switches here so he can pull gun from holster
 		//MODDD - can undraw... if we're doing the negative framerate thing that is.
-		//easyForcePrintLine("ARE YOU really WEIRD %.2f, %.2f", pev->framerate, this->m_flFramerateSuggestion);
+		//easyForcePrintLine("ARE YOU WEIRD %.2f, %.2f", pev->framerate, this->m_flFramerateSuggestion);
 		if(pev->framerate < 0){
 			//no, let the custom event handle this... this is way too iffy...
 			//SetBodygroup(BODYGROUP_GUN, BARNEY_BODY_GUNHOLSTERED);
@@ -1481,32 +1355,99 @@ void CBarney :: DeathSound ( void )
 //             damage differently still looks weird, no way that precision makes sense.
 GENERATE_TRACEATTACK_IMPLEMENTATION(CBarney)
 {
-	switch( ptr->iHitgroup)
-	{
-	case HITGROUP_CHEST:
-	case HITGROUP_STOMACH:
-		if (bitsDamageType & (DMG_BULLET | DMG_SLASH | DMG_BLAST))
-		{
-			flDamage = flDamage / 2;
-		}
-		break;
-	case HITGROUP_BARNEY_HELMET:
-		if (bitsDamageType & (DMG_BULLET | DMG_SLASH | DMG_CLUB))
-		{
-			flDamage -= 20;
-			if (flDamage <= 0.01)
-			{
-				UTIL_Ricochet( ptr->vecEndPos, 1.0 );
-				flDamage = 0.01;
 
-				if (useBulletHitSound) { *useBulletHitSound = FALSE; } //deny it.
-				useBloodEffect = FALSE;
-			}
+	//MODDD - like agrunts and hgruntsn now, blast damage does even damage.  So block 10% unconditionally.
+	if ((bitsDamageType & DMG_BLAST) || (bitsDamageTypeMod & DMG_HITBOX_EQUAL)) {
+		// flat 50% reduction.  Kevlar.  Easy to assume any explosive hit is a body hit.
+		// Barney's don't even have the 50 health to survive a near-direct hit.
+		flDamage = flDamage * 0.50;
+		if (ptr->iHitgroup == HITGROUP_BARNEY_HELMET) {
+			UTIL_Ricochet(ptr->vecEndPos, RANDOM_FLOAT(2.1, 2.8));
+			if (useBulletHitSound) { *useBulletHitSound = FALSE; }
+			useBloodEffect = FALSE;
 		}
-		// always a head shot for damage logic
-		ptr->iHitgroup = HITGROUP_HEAD;
-		break;
 	}
+	else {
+		// And now normal hitgroup checks.
+		switch (ptr->iHitgroup)
+		{
+		case HITGROUP_CHEST:
+		case HITGROUP_STOMACH: {
+			//MODDD - CLUB damage included now too with melee.  Blast damage removed, only from being handled unconditionally above.
+			// Also, damage-cuts changed.  Damage from bullets is cut in half if high (over 16), but even more otherwise (cut by 60%).
+			// Melee damage from slash is cut by 50% like it was, CLUB by 40%.
+			if (bitsDamageType & (DMG_BULLET))
+			{
+				if (flDamage > 12) {
+					// high damage?  Cut in half.  Still bleed.
+					flDamage = flDamage * 0.5;
+				}
+				else {
+					// low damage?
+					// cut by 60%
+					flDamage = flDamage * 0.4;
+					useBloodEffect = FALSE;
+				}
+			}
+			else if (bitsDamageType & (DMG_SLASH) ) {
+				flDamage = flDamage * 0.5;
+			}
+			else if (bitsDamageType & (DMG_CLUB) ) {
+				flDamage = flDamage * 0.4;
+			}
+		}break;
+		case HITGROUP_BARNEY_HELMET: {
+
+			if (bitsDamageType & (DMG_BULLET)) {
+
+				// absorb damage
+				if (flDamage <= 20) {
+					//flDamage = 0.01;
+					flDamage = flDamage * 0.12;
+					//MODDD - why not a little random-ness in ricochet flash size like the agrunt?
+					// was a flat 1.
+					UTIL_Ricochet(ptr->vecEndPos, RANDOM_FLOAT(1.0, 1.6));
+					//MODDD - how about you too?  bullet ricochet effect from agrunt
+					UTIL_RicochetTracer(ptr->vecEndPos, vecDir);
+					if (useBulletHitSound) { *useBulletHitSound = FALSE; }
+					useBloodEffect = FALSE;
+				}else {
+					//MODDD - Hitting the armor still shouldn't be insignificant, reduce damage by 15%.
+					flDamage *= 0.85;
+				}
+			}else if (bitsDamageType & (DMG_SLASH | DMG_CLUB)) {
+				if (flDamage <= 20) {
+					// reduce by 40% instead.
+					flDamage = flDamage * 0.6;
+					UTIL_Ricochet(ptr->vecEndPos, RANDOM_FLOAT(1.2, 1.8));
+
+					if (useBulletHitSound) { *useBulletHitSound = FALSE; }
+					useBloodEffect = FALSE;
+				}else {
+					//MODDD - Hitting the armor still shouldn't be insignificant, reduce damage by 10%.  If this even exists.
+					flDamage *= 0.90;
+				}
+			}
+
+			// it's head shot anyways
+			ptr->iHitgroup = HITGROUP_HEAD;
+
+		}break;
+
+		//MODDD - anywhere else, cut bullet damage by 10%.  Still some protection there.
+		// just be 'default' at this point
+		//case HITGROUP_LEFTARM:
+		//case HITGROUP_RIGHTARM:
+		//case HITGROUP_LEFTLEG:
+		//case HITGROUP_RIGHTLEG:
+		default:
+			if (bitsDamageType & (DMG_BULLET)) {
+				flDamage = flDamage * 0.1;
+			}
+		break;
+
+		}//END OF switch on hitbox
+	}//END OF not DMG_BLAST or EQUAL_HITBOX check
 
 	GENERATE_TRACEATTACK_PARENT_CALL(CTalkMonster);
 }
@@ -1640,7 +1581,6 @@ Schedule_t* CBarney :: GetScheduleOfType ( int Type )
 
 
 	}//END OF switch( Type )
-
 
 
 	return CTalkMonster::GetScheduleOfType( Type );
@@ -2222,25 +2162,19 @@ void CBarney::talkAboutKilledEnemy(void) {
 		//long randoRange;
 		
 
-		if (RANDOM_FLOAT(0, 1) < 0.09) {
+		if (RANDOM_FLOAT(0, 1) < 0.06) {
 			PlaySentenceSingular("BA_KILL7", 3, VOL_NORM, ATTN_NORM);
 		}
 		else if (enemyClassify == CLASS_NONE) {
-			// Really nothing? Go through all quotes as usual then.
+			// nothing? Go through all quotes as usual then.
 			PlaySentence("BA_KILL", 4, VOL_NORM, ATTN_NORM);
 		}
 		else if (enemyClassify == CLASS_PLAYER) {
 
 			switch (RANDOM_LONG(0, 2)) {
-			case 0:
-				PlaySentenceSingular("BA_KILL3", 3, VOL_NORM, ATTN_NORM);
-				break;
-			case 1:
-				PlaySentenceSingular("BA_KILL4", 4, VOL_NORM, ATTN_NORM);
-				break;
-			case 2:
-				PlaySentenceSingular("BA_KILL6", 4, VOL_NORM, ATTN_NORM);
-				break;
+			case 0:PlaySentenceSingular("BA_KILL3", 3, VOL_NORM, ATTN_NORM);break;
+			case 1:PlaySentenceSingular("BA_KILL4", 4, VOL_NORM, ATTN_NORM);break;
+			case 2:PlaySentenceSingular("BA_KILL6", 4, VOL_NORM, ATTN_NORM);break;
 			}
 		}
 		else if (
@@ -2265,15 +2199,9 @@ void CBarney::talkAboutKilledEnemy(void) {
 			// human or robotic?
 
 			switch (RANDOM_LONG(0, 2)) {
-			case 0:
-				PlaySentenceSingular("BA_KILL3", 3, VOL_NORM, ATTN_NORM);
-				break;
-			case 1:
-				PlaySentenceSingular("BA_KILL4", 4, VOL_NORM, ATTN_NORM);
-				break;
-			case 2:
-				PlaySentenceSingular("BA_KILL6", 4, VOL_NORM, ATTN_NORM);
-				break;
+			case 0:PlaySentenceSingular("BA_KILL3", 3, VOL_NORM, ATTN_NORM);break;
+			case 1:PlaySentenceSingular("BA_KILL4", 4, VOL_NORM, ATTN_NORM);break;
+			case 2:PlaySentenceSingular("BA_KILL6", 4, VOL_NORM, ATTN_NORM);break;
 			}
 		}//END OF enemy classify check
 
@@ -2302,11 +2230,6 @@ void CBarney::talkAboutKilledEnemy(void) {
 void CBarney::onEnemyDead(CBaseEntity* pRecentEnemy) {
 	recentDeadEnemyClass = pRecentEnemy->Classify();;
 }
-
-
-
-
-
 
 
 

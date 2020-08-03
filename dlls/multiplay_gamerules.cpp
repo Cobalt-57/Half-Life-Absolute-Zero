@@ -187,7 +187,7 @@ void CHalfLifeMultiplay::RefreshSkillData( void )
 		// In multiplayer, whatever was there, would be ignored and use this hardcoded "20" instead.
 		// Absolutely.  Baffling.
 		// And note that 'plrDmgCrossbowMonster' is not overridden.
-		// Which makes sense, monsters in multiplayer wasn't really focused on anyway.
+		// Which makes sense, monsters in multiplayer wasn't focused on anyway.
 		gSkillData.plrDmgCrossbowClient = 20;
 		
 
@@ -570,7 +570,7 @@ BOOL CHalfLifeMultiplay::FPlayerCanTakeDamage( CBasePlayer *pPlayer, CBaseEntity
 void CHalfLifeMultiplay :: PlayerThink( CBasePlayer *pPlayer )
 {
 	//MODDD - NOTE.  ...what is this?  Why for multiplayer only?
-	// Don't really get what this is trying to do any differently compared to
+	// Don't get what this is trying to do any differently compared to
 	// single player behavior.  Single player's rules PlayerThink is empty.
 	// Disable clicking to force respawn, maybe..?  What a crude way to
 	// accomplish that if so.

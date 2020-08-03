@@ -231,7 +231,7 @@ void CCineMonster::Use(CBaseEntity* pActivator, CBaseEntity* pCaller, USE_TYPE u
 }
 
 
-// This doesn't really make sense since only MOVETYPE_PUSH get 'Blocked' events
+// This doesn't make sense since only MOVETYPE_PUSH get 'Blocked' events
 void CCineMonster::Blocked(CBaseEntity* pOther)
 {
 
@@ -1009,7 +1009,7 @@ void CBaseMonster::OnCineCleanup(CCineMonster* pOldCine) {
 			GetBonePosition(0, new_origin, new_angle);
 
 			// Figure out how far they have moved
-			// We can't really solve this problem because we can't query the movement of the origin relative
+			// We can't solve this problem because we can't query the movement of the origin relative
 			// to the sequence.  We can get the root bone's position as we do here, but there are
 			// cases where the root bone is in a different relative position to the entity's origin
 			// before/after the sequence plays.  So we are stuck doing this:

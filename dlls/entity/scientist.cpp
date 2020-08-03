@@ -593,7 +593,7 @@ Schedule_t	slFaceTargetScared[] =
 Task_t	tlHeal[] =
 {
 	{ TASK_SET_FAIL_SCHEDULE,	(float)SCHED_TARGET_CHASE },	// If you fail, catch up with that guy! (change this to put syringe away and then chase)
-	//MODDD - NOTE ON PREVIOUS COMMENT.  Actually getting far away while the scientist is getting the syringe out does not make the schedule fail,
+	//MODDD - NOTE ON PREVIOUS COMMENT.  Getting far away while the scientist is getting the syringe out does not make the schedule fail,
 	// TASK_HEAL just refuses to play the inject anim and  ACT_DISARM happens right then.
 	// So, removed the ACT_DISARM set from this schedule and leave it up to elsewhere to call ACT_DISARM when not pursuing something to heal.
 	{ TASK_MOVE_TO_TARGET_RANGE,(float)56		},	// Move within 60 of target ent (client)
@@ -886,9 +886,9 @@ void CScientist::SayHello(CBaseEntity* argPlayerTalkTo) {
 			// Mention the suit once, and with a decent chance later too.
 			if (
 				g_scientist_PredisasterSuitMentionAllowedTime == -1 ||
-				(gpGlobals->time >= g_scientist_PredisasterSuitMentionAllowedTime && RANDOM_FLOAT(0, 1) <= 0.60)
+				(gpGlobals->time >= g_scientist_PredisasterSuitMentionAllowedTime && RANDOM_FLOAT(0, 1) <= 0.55)
 			) {
-				PlaySentence("!SC_HELLO6", 4, VOL_NORM, ATTN_NORM);  // new HEV suit, that should be very useful
+				PlaySentenceSingular("SC_HELLO6", 4, VOL_NORM, ATTN_NORM);  // new HEV suit, that should be very useful
 				g_scientist_PredisasterSuitMentionAllowedTime = gpGlobals->time + 16;
 			}
 			return;
@@ -908,7 +908,7 @@ void CScientist::SayIdleToPlayer(CBaseEntity* argPlayerTalkTo) {
 			// Mention the suit once, and with a decent chance later too.
 			float theRandom = RANDOM_FLOAT(0, 1);
 			if (g_scientist_PredisasterSuitMentionAllowedTime == -1 ||
-				(gpGlobals->time >= g_scientist_PredisasterSuitMentionAllowedTime && theRandom < 0.34)
+				(gpGlobals->time >= g_scientist_PredisasterSuitMentionAllowedTime && theRandom < 0.31)
 				) {
 				PlaySentenceSingular("SC_HELLO6", 4, VOL_NORM, ATTN_NORM);
 				g_scientist_PredisasterSuitMentionAllowedTime = gpGlobals->time + 16;
@@ -951,21 +951,11 @@ void CScientist::SayQuestion(CTalkMonster* argTalkTo) {
 void CScientist::SayProvoked(void){
 	if(EASY_CVAR_GET(pissedNPCs) != 1 || !globalPSEUDO_iCanHazMemez){
 		switch(RANDOM_LONG(0, 4)){
-			case 0:
-				EMIT_SOUND_FILTERED( ENT(pev), CHAN_VOICE, "scientist/sci_pain2.wav", 1, ATTN_NORM, 0, GetVoicePitch());
-			break;
-			case 1:
-				PlaySentence( "!SC_FEAR3", 6, VOL_NORM, ATTN_NORM );
-			break;
-			case 2:
-				PlaySentence( "!SC_PLFEAR3", 6, VOL_NORM, ATTN_NORM );
-			break;
-			case 3:
-				PlaySentence( "!SCI_EXTRAPROVOKED", 6, VOL_NORM, ATTN_NORM );
-			break;
-			case 4:
-				PlaySentence( "SC_SCREAM_TRU", 6, VOL_NORM, ATTN_NORM );
-			break;
+			case 0:EMIT_SOUND_FILTERED( ENT(pev), CHAN_VOICE, "scientist/sci_pain2.wav", 1, ATTN_NORM, 0, GetVoicePitch());break;
+			case 1:PlaySentenceSingular( "SC_FEAR3", 6, VOL_NORM, ATTN_NORM );break;
+			case 2:PlaySentenceSingular( "SC_PLFEAR3", 6, VOL_NORM, ATTN_NORM );break;
+			case 3:PlaySentenceSingular( "SCI_EXTRAPROVOKED", 6, VOL_NORM, ATTN_NORM );break;
+			case 4:PlaySentence( "SC_SCREAM_TRU", 6, VOL_NORM, ATTN_NORM );break;
 		}//END OF decision
 
 	}else{
@@ -995,15 +985,9 @@ void CScientist::SaySuspicious(void){
 			case 2:
 			case 3:
 			case 4:
-			case 5:
-				PlaySentence( "SC_SCREAM", 4, VOL_NORM, ATTN_NORM ); //actually ends up tying to the sci_fear sounds.
-			break;
-			case 6:
-				PlaySentence( "!SC_PLFEAR3", 4, VOL_NORM, ATTN_NORM ); //scientist/noplease
-			break;
-			case 7:
-				PlaySentence( "!SC_FEAR0", 4, VOL_NORM, ATTN_NORM ); //nooo
-			break;
+			case 5:PlaySentence( "SC_SCREAM", 4, VOL_NORM, ATTN_NORM );break; //ends up tying to the sci_fear sounds.
+			case 6:PlaySentenceSingular( "SC_PLFEAR3", 4, VOL_NORM, ATTN_NORM );break; //scientist/noplease
+			case 7:PlaySentenceSingular( "SC_FEAR0", 4, VOL_NORM, ATTN_NORM );break; //nooo
 		}//END OF switch
 	}else{
 		PlaySentence( "BA_POKE_C", 6, VOL_NORM, ATTN_NORM );
@@ -1015,18 +999,11 @@ void CScientist::SayLeaderDied(void){
 		case 1:
 		case 2:
 		case 3:
-		case 4:
-			PlaySentence( "SC_SCREAM", 4, VOL_NORM, ATTN_NORM );
-		break;
-		case 5:
-			PlaySentence( "!SC_PLFEAR3", 4, VOL_NORM, ATTN_NORM ); //scientist/noplease
-		break;
-		case 6:
-			PlaySentence( "!SC_PLFEAR4", 4, VOL_NORM, ATTN_NORM ); //getoutofhere
-		break;
-		case 7:
-			PlaySentence( "!SC_FEAR0", 4, VOL_NORM, ATTN_NORM ); //nooo
-		break;
+		case 4:PlaySentence( "SC_SCREAM", 4, VOL_NORM, ATTN_NORM );break;
+		case 5:PlaySentenceSingular( "SC_PLFEAR3", 4, VOL_NORM, ATTN_NORM ); break; //scientist/noplease
+		case 6:PlaySentenceSingular( "SC_PLFEAR4", 4, VOL_NORM, ATTN_NORM ); break; //getoutofhere
+		case 7:PlaySentenceSingular( "SC_FEAR0", 4, VOL_NORM, ATTN_NORM ); break; //nooo
+
 	}//END OF switch
 }//END OF SayLeaderDied
 
@@ -1034,147 +1011,57 @@ void CScientist::SayLeaderDied(void){
 //Say a sentence to express interest in something, like stopping to stare at a chumtoad.
 void CScientist::SayNearPassive(void){
 	switch(RANDOM_LONG(0, 18)){
-	case 0:
-		PlaySentenceSingular( "SC_QUESTION0", 4, VOL_NORM, ATTN_NORM );
-	break;
-	case 1:
-		PlaySentenceSingular( "SC_QUESTION2", 4, VOL_NORM, ATTN_NORM );
-	break;
-	case 2:
-		PlaySentenceSingular( "SC_QUESTION7", 4, VOL_NORM, ATTN_NORM );
-	break;
-	case 3:
-		PlaySentenceSingular( "SC_QUESTION8", 4, VOL_NORM, ATTN_NORM );
-	break;
-	case 4:
-		PlaySentenceSingular( "SC_QUESTION10", 4, VOL_NORM, ATTN_NORM );
-	break;
-	case 5:
-		PlaySentenceSingular( "SC_QUESTION11", 4, VOL_NORM, ATTN_NORM );
-	break;
-	case 6:
-		PlaySentenceSingular( "SC_QUESTION16", 4, VOL_NORM, ATTN_NORM );
-	break;
-	case 7:
-		PlaySentenceSingular( "SC_QUESTION17", 4, VOL_NORM, ATTN_NORM );
-	break;
-	case 8:
-		PlaySentenceSingular( "SC_QUESTION18", 4, VOL_NORM, ATTN_NORM );
-	break;
-	case 9:
-		PlaySentenceSingular( "SC_QUESTION22", 4, VOL_NORM, ATTN_NORM );
-	break;
-	case 10:
-		PlaySentenceSingular( "SC_IDLE3", 4, VOL_NORM, ATTN_NORM );
-	break;
-	case 11:
-		PlaySentenceSingular( "SC_IDLE4", 4, VOL_NORM, ATTN_NORM );
-	break;
-	case 12:
-		PlaySentenceSingular( "SC_IDLE5", 4, VOL_NORM, ATTN_NORM );
-	break;
-	case 13:
-		PlaySentenceSingular( "SC_IDLE11", 4, VOL_NORM, ATTN_NORM );
-	break;
-	case 14:
-		PlaySentenceSingular( "SC_IDLE13", 4, VOL_NORM, ATTN_NORM );
-	break;
-	case 15:
-		PlaySentenceSingular( "SC_MONST1", 4, VOL_NORM, ATTN_NORM );
-	break;
-	case 16:
-		PlaySentenceSingular( "SC_SMELL2", 4, VOL_NORM, ATTN_NORM );
-	break;
-	case 17:
-		PlaySentenceSingular( "SC_SMELL3", 4, VOL_NORM, ATTN_NORM );
-	break;
-	case 18:
-		PlaySentenceSingular("SC_PIDLE5", 4, VOL_NORM, ATTN_NORM);
-	break;
-	default:
-
-	break;
+	case 0:PlaySentenceSingular( "SC_QUESTION0", 4, VOL_NORM, ATTN_NORM );break;
+	case 1:PlaySentenceSingular( "SC_QUESTION2", 4, VOL_NORM, ATTN_NORM );break;
+	case 2:PlaySentenceSingular( "SC_QUESTION7", 4, VOL_NORM, ATTN_NORM );break;
+	case 3:PlaySentenceSingular( "SC_QUESTION8", 4, VOL_NORM, ATTN_NORM );break;
+	case 4:PlaySentenceSingular( "SC_QUESTION10", 4, VOL_NORM, ATTN_NORM );break;
+	case 5:PlaySentenceSingular( "SC_QUESTION11", 4, VOL_NORM, ATTN_NORM );break;
+	case 6:PlaySentenceSingular( "SC_QUESTION16", 4, VOL_NORM, ATTN_NORM );break;
+	case 7:PlaySentenceSingular( "SC_QUESTION17", 4, VOL_NORM, ATTN_NORM );break;
+	case 8:PlaySentenceSingular( "SC_QUESTION18", 4, VOL_NORM, ATTN_NORM );break;
+	case 9:PlaySentenceSingular( "SC_QUESTION22", 4, VOL_NORM, ATTN_NORM );break;
+	case 10:PlaySentenceSingular( "SC_IDLE3", 4, VOL_NORM, ATTN_NORM );break;
+	case 11:PlaySentenceSingular( "SC_IDLE4", 4, VOL_NORM, ATTN_NORM );break;
+	case 12:PlaySentenceSingular( "SC_IDLE5", 4, VOL_NORM, ATTN_NORM );break;
+	case 13:PlaySentenceSingular( "SC_IDLE11", 4, VOL_NORM, ATTN_NORM );break;
+	case 14:PlaySentenceSingular( "SC_IDLE13", 4, VOL_NORM, ATTN_NORM );break;
+	case 15:PlaySentenceSingular( "SC_MONST1", 4, VOL_NORM, ATTN_NORM );break;
+	case 16:PlaySentenceSingular( "SC_SMELL2", 4, VOL_NORM, ATTN_NORM );break;
+	case 17:PlaySentenceSingular( "SC_SMELL3", 4, VOL_NORM, ATTN_NORM );break;
+	case 18:PlaySentenceSingular("SC_PIDLE5", 4, VOL_NORM, ATTN_NORM);break;
+	default:break;
 	}//END OF switch
 }//END OF SayNearPassive
 
 
 void CScientist::SayNearCautious(void){
 	switch(RANDOM_LONG(0, 23)){
-	case 0:
-		PlaySentenceSingular( "SC_HEAR0", 4, VOL_NORM, ATTN_NORM );
-	break;
-	case 1:
-		PlaySentenceSingular( "SC_HEAR1", 4, VOL_NORM, ATTN_NORM );
-	break;
-	case 2:
-		PlaySentenceSingular( "SC_HEAR2", 4, VOL_NORM, ATTN_NORM );
-	break;
-	case 3:
-		PlaySentenceSingular( "SC_FEAR0", 4, VOL_NORM, ATTN_NORM );
-	break;
-	case 4:
-		PlaySentenceSingular( "SC_FEAR1", 4, VOL_NORM, ATTN_NORM );
-	break;
-	case 5:
-		PlaySentenceSingular( "SC_FEAR2", 4, VOL_NORM, ATTN_NORM );
-	break;
-	case 6:
-		PlaySentenceSingular( "SC_FEAR4", 4, VOL_NORM, ATTN_NORM );
-	break;
-	case 7:
-		PlaySentenceSingular( "SC_FEAR5", 4, VOL_NORM, ATTN_NORM );
-	break;
-	case 8:
-		PlaySentenceSingular( "SC_FEAR6", 4, VOL_NORM, ATTN_NORM );
-	break;
-	case 9:
-		PlaySentenceSingular( "SC_FEAR7", 4, VOL_NORM, ATTN_NORM );
-	break;
-	case 10:
-		PlaySentenceSingular( "SC_FEAR8", 4, VOL_NORM, ATTN_NORM );
-	break;
-	case 11:
-		PlaySentenceSingular( "SC_FEAR9", 4, VOL_NORM, ATTN_NORM );
-	break;
-	case 12:
-		PlaySentenceSingular( "SC_FEAR10", 4, VOL_NORM, ATTN_NORM );
-	break;
-	case 13:
-		PlaySentenceSingular( "SC_FEAR11", 4, VOL_NORM, ATTN_NORM );
-	break;
-	case 14:
-		PlaySentenceSingular( "SC_FEAR12", 4, VOL_NORM, ATTN_NORM );
-	break;
-	case 15:
-		PlaySentenceSingular( "SC_SCREAM1", 4, VOL_NORM, ATTN_NORM );
-	break;
-	case 16:
-		PlaySentenceSingular( "SC_SCREAM3", 4, VOL_NORM, ATTN_NORM );
-	break;
-	case 17:
-		PlaySentenceSingular( "SC_SCREAM4", 4, VOL_NORM, ATTN_NORM );
-	break;
-	case 18:
-		PlaySentenceSingular( "SC_SCREAM5", 4, VOL_NORM, ATTN_NORM );
-	break;
-	case 19:
-		PlaySentenceSingular( "SC_SCREAM10", 4, VOL_NORM, ATTN_NORM );
-	break;
-	case 20:
-		PlaySentenceSingular( "SC_SCREAM11", 4, VOL_NORM, ATTN_NORM );
-	break;
-	case 21:
-		PlaySentenceSingular( "SC_QUESTION4", 4, VOL_NORM, ATTN_NORM );
-	break;
-	case 22:
-		PlaySentenceSingular( "SC_QUESTION5", 4, VOL_NORM, ATTN_NORM );
-	break;
-	case 23:
-		PlaySentenceSingular( "SC_IDLE13", 4, VOL_NORM, ATTN_NORM );
-	break;
-	default:
-
-	break;
+	case 0:PlaySentenceSingular( "SC_HEAR0", 4, VOL_NORM, ATTN_NORM );break;
+	case 1:PlaySentenceSingular( "SC_HEAR1", 4, VOL_NORM, ATTN_NORM );break;
+	case 2:PlaySentenceSingular( "SC_HEAR2", 4, VOL_NORM, ATTN_NORM );break;
+	case 3:PlaySentenceSingular( "SC_FEAR0", 4, VOL_NORM, ATTN_NORM );break;
+	case 4:PlaySentenceSingular( "SC_FEAR1", 4, VOL_NORM, ATTN_NORM );break;
+	case 5:PlaySentenceSingular( "SC_FEAR2", 4, VOL_NORM, ATTN_NORM );break;
+	case 6:PlaySentenceSingular( "SC_FEAR4", 4, VOL_NORM, ATTN_NORM );break;
+	case 7:PlaySentenceSingular( "SC_FEAR5", 4, VOL_NORM, ATTN_NORM );break;
+	case 8:PlaySentenceSingular( "SC_FEAR6", 4, VOL_NORM, ATTN_NORM );break;
+	case 9:PlaySentenceSingular( "SC_FEAR7", 4, VOL_NORM, ATTN_NORM );break;
+	case 10:PlaySentenceSingular( "SC_FEAR8", 4, VOL_NORM, ATTN_NORM );break;
+	case 11:PlaySentenceSingular( "SC_FEAR9", 4, VOL_NORM, ATTN_NORM );break;
+	case 12:PlaySentenceSingular( "SC_FEAR10", 4, VOL_NORM, ATTN_NORM );break;
+	case 13:PlaySentenceSingular( "SC_FEAR11", 4, VOL_NORM, ATTN_NORM );break;
+	case 14:PlaySentenceSingular( "SC_FEAR12", 4, VOL_NORM, ATTN_NORM );break;
+	case 15:PlaySentenceSingular( "SC_SCREAM1", 4, VOL_NORM, ATTN_NORM );break;
+	case 16:PlaySentenceSingular( "SC_SCREAM3", 4, VOL_NORM, ATTN_NORM );break;
+	case 17:PlaySentenceSingular( "SC_SCREAM4", 4, VOL_NORM, ATTN_NORM );break;
+	case 18:PlaySentenceSingular( "SC_SCREAM5", 4, VOL_NORM, ATTN_NORM );break;
+	case 19:PlaySentenceSingular( "SC_SCREAM10", 4, VOL_NORM, ATTN_NORM );break;
+	case 20:PlaySentenceSingular( "SC_SCREAM11", 4, VOL_NORM, ATTN_NORM );break;
+	case 21:PlaySentenceSingular( "SC_QUESTION4", 4, VOL_NORM, ATTN_NORM );break;
+	case 22:PlaySentenceSingular( "SC_QUESTION5", 4, VOL_NORM, ATTN_NORM );break;
+	case 23:PlaySentenceSingular( "SC_IDLE13", 4, VOL_NORM, ATTN_NORM );break;
+	default:break;
 	}//END OF switch
 
 }//END OF SayNearCautious
@@ -1238,8 +1125,8 @@ void CScientist :: StartTask( Task_t *pTask )
 	BOOL decidedToFight;
 	BOOL decidedToRun;
 
-	//"m_iScheduleIndex" is actually what task we picked. Fuckin' names man.
-	//easyForcePrintLine("EACH DAY I CRY SOME MORE StartTask sched:%s: task:%d index:%d", getScheduleName(), pTask->iTask, m_iScheduleIndex);
+	//"m_iScheduleIndex" is what task we picked of those in the current schedule.
+	//easyForcePrintLine("StartTask sched:%s: task:%d index:%d", getScheduleName(), pTask->iTask, m_iScheduleIndex);
 
 	/*
 	if(m_hTargetEnt == NULL){
@@ -1668,7 +1555,7 @@ void CScientist :: RunTask( Task_t *pTask )
 
 	case TASK_HEAL:
 		// I can proceed for two reasons.
-		// Animation finished (actually healed), or target got too far away.
+		// Animation finished (healed), or target got too far away.
 		if ( m_fSequenceFinished )
 		{
 			TaskComplete();
@@ -1765,7 +1652,7 @@ void CScientist :: SetYawSpeed ( void )
 void CScientist :: HandleAnimEvent( MonsterEvent_t *pEvent )
 {
 	//MODDD - COUNTREMOVAL.  Count is not consistent across machines.  Scrapped.
-	// Wait.. really?  Let's try this again sometime.
+	// Let's try this again sometime.
 	//const int NUM_SCIENTIST_HEADS_MODEL = this->numberOfModelBodyParts+1;
 	const int NUM_SCIENTIST_HEADS_MODEL = 3;
 
@@ -1864,7 +1751,7 @@ void CScientist::setModel(const char* m){
 	if(numberOfModelBodyParts==-1)numberOfModelBodyParts = getNumberOfBodyParts();
 	//easyPrintLine("BOOT: %d", numberOfModelBodyParts);
 
-	//It is actually a bad idea to depend on saved things in here like "trueBody". It might not have loaded yet and so isn't reliable, it would be better to hook this at the end of Restore.
+	// It is a bad idea to depend on saved things in here like "trueBody". It might not have loaded yet and so isn't reliable, it would be better to hook this at the end of Restore.
 	//scientistHeadFilter(*this, numberOfModelBodyParts, &trueBody);
 }
 
@@ -2178,7 +2065,7 @@ void CScientist :: TalkInit()
 	}
 #else
 	switch (pev->body % (NUM_SCIENTIST_HEADS+1)) //as "3" was "4 - 1", or "NUM_SCIENTIST_HEADS - 1".
-		//...ACTUALLY, NO.   I am convinced that it should NOT be one less than NUM_..., because the range
+		//...NO.   I am convinced that it should NOT be one less than NUM_..., because the range
 		//of modulus is already  0 to 2nd # - 1.  So, range of  # % 4 is  0 - 3, and # % 3 --> 0 - 2 (desirable).
 		//Making it "plus 1" to accept "3".
 	{
@@ -2419,7 +2306,7 @@ void CScientist :: SetActivity ( Activity newActivity )
 
 	// Set to the desired anim, or default anim if the desired is not present
 	//if ( iSequence == ACTIVITY_NOT_AVAILABLE ){
-	//MODDD NOTE - actually, if the sequence is left 0, that means the activity get failed.
+	//MODDD NOTE - if the sequence is left 0, that means the activity get failed.
 	//...it's handled fine the way it is, forget this.
 	/*
 	if(pev->sequence == 0){
@@ -2951,7 +2838,7 @@ Schedule_t *CScientist :: GetSchedule ( void )
 
 
 // MODDD - base behavior possibly altered by returning the monsterstate determined
-// instead of always falling down to the CTalkMonster (or really CBaseMonster) GetIdealState
+// instead of always falling down to the CTalkMonster (or CBaseMonster) GetIdealState
 // call.  That may have further changed what state gets returned, but doubtful.
 // Curiously, the base method never even did 'return' anywhere besides the very end of the
 // method (not that the returned value used to be used, had to be set to m_IdealMonsterState
@@ -3072,7 +2959,6 @@ BOOL CScientist::CanHeal( void )
 		return FALSE;
 	}
 
-	//HA!  THIS WOULD ACTUALLY BE really INTUITIVE.  CAN'T HAVE nice things.  FIND ME IN THE ALPS.
 	//CBaseEntity* entityAttempt = CBaseEntity::Instance(m_hTargetEnt);
 	CBaseEntity* entityAttempt = CBaseEntity::Instance(m_hTargetEnt->pev);
 	//CBaseEntity* entityAttempt = GetClassPtr((CBaseEntity *)pev);
@@ -3104,16 +2990,18 @@ BOOL CScientist::CanHeal( void )
 
 void CScientist::Heal( void )
 {
-	if ( !CanHeal() )
+	if (!CanHeal()) {
 		return;
+	}
 
 	if(m_hTargetEnt == NULL){
 		return;
 	}
 
 	Vector target = m_hTargetEnt->pev->origin - pev->origin;
-	if ( target.Length() > 100 )
+	if (target.Length() > 100) {
 		return;
+	}
 
 	CBaseEntity* entityAttempt = CBaseEntity::Instance(m_hTargetEnt->pev);
 	CBaseMonster* monsterAttempt = NULL;
@@ -3121,16 +3009,15 @@ void CScientist::Heal( void )
 		monsterAttempt = entityAttempt->MyMonsterPointer();
 	}
 	if(monsterAttempt == NULL){
-		//can only heal a "Monster".
+		// can only heal a "Monster".
 		return;
 	}
 	BOOL timedDamageFlag = FALSE;
 	if(monsterAttempt->m_bitsDamageType & DMG_TIMEBASED || monsterAttempt->m_bitsDamageTypeMod & DMG_TIMEBASEDMOD){
 		timedDamageFlag = TRUE;
 
-		
 		if(monsterAttempt->IsPlayer()){
-			//send an HEV update.
+			// send an HEV update.
 			CBasePlayer* uhhhhh = static_cast<CBasePlayer*>(monsterAttempt);
 			uhhhhh->SetSuitUpdate("!HEV_HEAL_GNC", FALSE, SUIT_REPEAT_OK);
 		}
@@ -3142,7 +3029,7 @@ void CScientist::Heal( void )
 		percentage = EASY_CVAR_GET(scientistHealNPCFract);
 	}
 	//MODDD - added this check.  Now, healing does not add health if over 50% health (before, could abuse the timed-damage-heal-trigger by taking timed damage over and over again to get enough healing to reach max health, when this was not possible before.
-	//Note that if the player isn't healing for timed damage, this check is ignored (safe to assume that is just the result of multiple scientists healing at the same time, legal in the base game)
+	// Note that if the player isn't healing for timed damage, this check is ignored (safe to assume that is just the result of multiple scientists healing at the same time, legal in the base game)
 	if(!timedDamageFlag || m_hTargetEnt->pev->health <= (m_hTargetEnt->pev->max_health * percentage)){
 		m_hTargetEnt->TakeHealth( gSkillData.scientistHeal, DMG_GENERIC );
 	}
@@ -3156,8 +3043,9 @@ void CScientist::Heal( void )
 int CScientist::FriendNumber( int arrayNumber )
 {
 	static int array[3] = { 1, 2, 0 };
-	if ( arrayNumber < 3 )
-		return array[ arrayNumber ];
+	if (arrayNumber < 3) {
+		return array[arrayNumber];
+	}
 	return arrayNumber;
 }
 
@@ -3992,7 +3880,6 @@ void CScientist::StartFollowing(CBaseEntity *pLeader){
 
 void CScientist::forgetHealNPC(void){
 	
-
 	if(healNPCChosen){
 		healNPCChosen = FALSE;
 
@@ -4019,8 +3906,6 @@ void CScientist::forgetHealNPC(void){
 	}
 
 }
-
-
 
 
 
@@ -4170,7 +4055,7 @@ int CScientist::LookupActivityHard(int activity){
 			}
 			return CBaseAnimating::LookupActivity(activity);
 		break;
-		// melee punch.   Yes.   really.
+		// melee punch.
 		case ACT_MELEE_ATTACK2:{
 			m_flFramerateSuggestion = 1.24;
 			animEventQueuePush(6.7f / 30.0f, 0);

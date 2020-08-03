@@ -142,7 +142,7 @@ void SimpleStaticExplode(Vector rawExplodeOrigin, float rawDamage, float flRange
 	if (pDamageDealer != NULL) {
 		entOwner = pDamageDealer->pev;
 	}
-	// oh.. actually it turns out sending entOwner as ourselves is pointless.
+	// oh.. it turns out sending entOwner as ourselves is pointless.
 	// RadiusDamage already knows to make the one blamed the same as the entity sent (pDamageDealer) in such a case.
 	SimpleStaticExplode(rawExplodeOrigin, rawDamage, flRange, pDamageDealer, entOwner);
 }
@@ -223,7 +223,7 @@ void StaticExplode(Vector rawExplodeOrigin, float rawDamage, float flRange, CBas
 		//pev->origin = ...
 		explosionOrigin = pTrace->vecEndPos + (pTrace->vecPlaneNormal * (rawDamage - 24) * 0.6);;
 
-		//MODDD - actually used for placing the quake explosion effect, if it is called for instead.
+		//MODDD - used for placing the quake explosion effect, if it is called for instead.
 		explosionEffectStart = pTrace->vecEndPos + (pTrace->vecPlaneNormal * 5);
 
 		//MODDD -Check. Is there a straight line, unobstructed, from the surface to the explosionEffectStart?
@@ -386,7 +386,7 @@ void CGrenade::ExplodeTouch( CBaseEntity *pOther )
 		pev->enemy = pOther->edict();
 
 		//MODDD - just put the explosion exactly at the impact point for now (or maybe just less of an extreme later)
-		//REVERTED, not really the issue.
+		//REVERTED, not the issue.
 		vecSpot = pev->origin - pev->velocity.Normalize() * 32;
 		UTIL_TraceLine( vecSpot, vecSpot + pev->velocity.Normalize() * 64, ignore_monsters, ENT(pev), &tr );
 		
@@ -454,7 +454,7 @@ void CGrenade::BounceTouch( CBaseEntity *pOther )
 	{
 		//ALERT( at_console, "Grenade Registered!: %f\n", vecTestVelocity.Length() );
 
-		// grenade is moving really slow. It's probably very close to where it will ultimately stop moving. 
+		// grenade is moving very slow. It's probably very close to where it will ultimately stop moving. 
 		// go ahead and emit the danger sound.
 		
 		// register a radius louder than the explosion, so we make sure everyone gets out of the way
@@ -558,7 +558,7 @@ void CGrenade :: TumbleThink( void )
 
 /*
 //MODDD - added.
-//Actually, not necessary.
+// not necessary.
 void CGrenade:: Activate( void ){
 	
 	CBaseMonster::Activate();
@@ -636,7 +636,7 @@ CGrenade *CGrenade::ShootContact( entvars_t *pevOwner, Vector vecStart, Vector v
 }
 
 
-//MODDD - wasn't a way to specify damage in the call?  Really?
+//MODDD - wasn't a way to specify damage in the call?  Why?
 CGrenade * CGrenade:: ShootTimed( entvars_t *pevOwner, Vector vecStart, Vector vecVelocity, float flDamage, float flDetonateTime )
 {
 	CGrenade *pGrenade = GetClassPtr( (CGrenade *)NULL );

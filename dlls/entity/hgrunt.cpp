@@ -86,6 +86,11 @@ EASY_CVAR_EXTERN(hgruntAllowGrenades)
 #define FORCE_MP5 1
 
 
+// How much damage must a single shot do to deal a headshot?  Should include revolvers
+// (old check was for exactly plrDmg357)
+#define headshotDamageReq 30
+
+
 #define GRUNT_CLIP_SIZE					36 // how many bullets in a clip? - NOTE: 3 round burst sound, so keep as 3 * x!
 
 #define HGRUNT_LIMP_HEALTH				20
@@ -890,7 +895,7 @@ BOOL CHGrunt :: CheckMeleeAttack1 ( float flDot, float flDist )
 BOOL CHGrunt :: CheckRangeAttack1 ( float flDot, float flDist )
 {
 
-	//MODDD - no check for SEE_ENEMY ??   REALLY.
+	//MODDD - no check for SEE_ENEMY ??
 	//if ( !HasConditions( bits_COND_ENEMY_OCCLUDED ) && flDist <= 2048 && flDot >= 0.5 && NoFriendlyFire() )
 	if (HasConditions(bits_COND_SEE_ENEMY) && !HasConditions(bits_COND_ENEMY_OCCLUDED) && flDist <= 2048 && flDot >= 0.5 && NoFriendlyFire())
 	{
@@ -1079,39 +1084,89 @@ BOOL CHGrunt :: CheckRangeAttack2 ( float flDot, float flDist )
 //=========================================================
 GENERATE_TRACEATTACK_IMPLEMENTATION(CHGrunt)
 {
+	//MODDD - hardcoded damage requirement for player damage instead.  Shots over 25 can do headshots then.
+	//const float headshotDamageReq = gSkillData.plrDmg357;
 	//easyForcePrintLine("HGrunt:: TraceAttack says I took %.2f damage.", flDamage);
 
-	
-	if(ptr->iHitgroup == HITGROUP_HGRUNT_HELMET || ptr->iHitgroup == HITGROUP_HEAD && flDamage >= gSkillData.plrDmg357 && GetBodygroup(BODYGROUP_HEAD) != HEAD_GORE){
-		//a python round (at least)?  Remember that...
-
+	if(GetBodygroup(BODYGROUP_HEAD) == HEAD_GRUNT && (ptr->iHitgroup == HITGROUP_HGRUNT_HELMET || ptr->iHitgroup == HITGROUP_HEAD) && flDamage >= headshotDamageReq){
+		// a python round (at least)?  Remember that...
 		missingHeadPossible = TRUE;
 		lastHeadHit = ptr->vecEndPos;
-
 	}else{
 		missingHeadPossible = FALSE;
 	}
 
 
-	// check for helmet shot
-	if (ptr->iHitgroup == HITGROUP_HGRUNT_HELMET)
-	{
-		// make sure we're wearing one
-		if (GetBodygroup( BODYGROUP_HEAD ) == HEAD_GRUNT && (bitsDamageType & (DMG_BULLET | DMG_SLASH | DMG_BLAST | DMG_CLUB)))
-		{
-			// absorb damage
-			flDamage -= 20;
-			if (flDamage <= 0)
-			{
-				UTIL_Ricochet( ptr->vecEndPos, 1.0 );
-				flDamage = 0.01;
-				if(useBulletHitSound){*useBulletHitSound=FALSE;} //deny it.
-				useBloodEffect = FALSE;  //don't now.
-			}
+	if ((bitsDamageType & DMG_BLAST) || (bitsDamageTypeMod & DMG_HITBOX_EQUAL)) {
+		// flat 20% reduction
+		flDamage = flDamage * 0.80;
+		if (ptr->iHitgroup == HITGROUP_HGRUNT_HELMET){
+			UTIL_Ricochet(ptr->vecEndPos, RANDOM_FLOAT(2.1, 2.8));
+			if (useBulletHitSound) { *useBulletHitSound = FALSE; }
+			useBloodEffect = FALSE;
 		}
+		// check for helmet shot
+	}else if (ptr->iHitgroup == HITGROUP_HGRUNT_HELMET) {
+		// make sure we're wearing a helmet.  Only choice now though.  Besides being headless.
+		if (GetBodygroup(BODYGROUP_HEAD) == HEAD_GRUNT){
+			if (bitsDamageType & (DMG_BULLET)) {
+				// absorb damage
+				if (flDamage <= 20) {
+					//flDamage = 0.01;
+					flDamage = flDamage * 0.12;
+					//MODDD - why not a little random-ness in ricochet flash size like the agrunt?
+					// was a flat 1.
+					UTIL_Ricochet(ptr->vecEndPos, RANDOM_FLOAT(1.0, 1.6));
+					//MODDD - how about you too?  bullet ricochet effect from agrunt
+					UTIL_RicochetTracer(ptr->vecEndPos, vecDir);
+					if (useBulletHitSound) { *useBulletHitSound = FALSE; }
+					useBloodEffect = FALSE;
+				}else {
+					//MODDD - Hitting the armor still shouldn't be insignificant, reduce damage by 15%.
+					flDamage *= 0.85;
+				}
+			}else if (bitsDamageType & (DMG_SLASH | DMG_CLUB) ) {
+				if (flDamage <= 20) {
+					// reduce by 40% instead.
+					flDamage = flDamage * 0.6;
+					UTIL_Ricochet(ptr->vecEndPos, RANDOM_FLOAT(1.2, 1.8));
+
+					if (useBulletHitSound) { *useBulletHitSound = FALSE; }
+					useBloodEffect = FALSE;
+				}else {
+					//MODDD - Hitting the armor still shouldn't be insignificant, reduce damage by 10%.  If this even exists.
+					flDamage *= 0.90;
+				}
+			}
+		}//END OF has helmet check
+
 		// it's head shot anyways
 		ptr->iHitgroup = HITGROUP_HEAD;
 	}
+	else if (ptr->iHitgroup == HITGROUP_CHEST || ptr->iHitgroup == HITGROUP_STOMACH) {
+		// hits to the backback count as chest near the top, stomach near the bottom... really now.
+
+		// Cut bullet damage by 15%, lots of protection there
+		if (bitsDamageType & (DMG_BULLET)) {
+			// tiny damage really gets soaked up.  mp5, shotgun shells not effective here.
+			if (flDamage <= 5) {
+				flDamage *= 0.7;
+				useBloodEffect = FALSE;
+			}
+			else {
+				flDamage *= 0.85;
+			}
+		}
+	}
+	else {
+		// anywhere else, legs, arms, etc.?  Cut by 10%.
+		if (bitsDamageType & (DMG_BULLET)) {
+			flDamage *= 0.90;
+		}
+	}
+	//END OF armor hitgroup check
+
+	easyPrintLine("hgrunt RECENT HITGROUP: %d", ptr->iHitgroup);
 
 	//easyForcePrintLine("HGrunt:: TraceAttack ended with %.2f damage.", flDamage);
 	GENERATE_TRACEATTACK_PARENT_CALL(CSquadMonster);
@@ -1155,24 +1210,24 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CHGrunt)
 	//return 0;
 
 	//HACK -
-	if(flDamage < gSkillData.plrDmg357){
-		//less than python damage?  We've been scammed!
+	if(flDamage < headshotDamageReq){
+		// less than python damage?  We've been scammed!
 		missingHeadPossible = FALSE;
 	}
 
 	
 
+	if((bitsDamageType & DMG_BLAST) && m_Activity == ACT_COWER){
+		// reduce explosive damage while ducking in cover.
 
-
-	if(bitsDamageType & DMG_BLAST && m_Activity == ACT_COWER){
-		//reduce explosive damage while ducking in cover.
-
-		if(flDamage >= 50){
+		// NEW - upper armor cap changed from 50 to 60.  Lower notes a little inconsistent with that.
+		// Mid one changed from 15 to 22.
+		if(flDamage >= 60){
 			//Not as effective, too much damage. Assuming too direct or forceful of an explosion.
 			flDamage *= 0.7;
-			//at 50 damage, that's 35 adjusted points of damage dealt.
+			//at 60 damage, that's 42 adjusted points of damage dealt.
 
-		}else if(flDamage > 15){
+		}else if(flDamage > 22){
 			//Formula - scale the factor applied to damage (closer to 1 is less reduction, closer to 0 is more reduction).
 			//As in, more damage is scaled less than what was less damage to begin with. 40 damage is less affected than 30 damage. This makes 
 
@@ -1285,7 +1340,7 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CHGrunt)
 
 		float healthRatio = pev->health / pev->max_health;
 
-		if(healthRatio < 0.49 || flDamage > gSkillData.plrDmg357){
+		if(healthRatio < 0.52 || flDamage > headshotDamageReq){
 			//always.
 			randomPass = 0;
 		}else{
@@ -1811,7 +1866,7 @@ BOOL CHGrunt::getMovementCanAutoTurn(void){
 	if(strafeMode == -1){
 		return TRUE;
 	}else{
-		//strafing? forbid the auto turn, can get really confusing to deal with.
+		//strafing? forbid the auto turn, can get confusing to deal with.
 		return FALSE;
 	}
 }//END OF getMovementCanAutoTurn
@@ -3207,7 +3262,7 @@ void CHGrunt :: Precache()
 	PRECACHE_SOUND("zombie/zo_attack1.wav");
 	PRECACHE_SOUND("zombie/zo_attack2.wav");
 
-	//MODDD - probably don't actually need to (not needed for sentences, which these already were in, stand-alone)?  Verify this though.
+	//MODDD - probably don't need to (not needed for sentences, which these already were in, stand-alone)?  Verify this though.
 	//Yes, these sounds are never called directly. The HG_IDLE sentencegroup (0-2) already uses them.
 	//PRECACHE_SOUND("hgrunt/gr_idle1.wav");
 	//PRECACHE_SOUND("hgrunt/gr_idle2.wav");
@@ -4030,7 +4085,7 @@ Task_t tlGruntEstablishLineOfFire[] =
 
 	//MODDD - extra step.
 	//{ TASK_CHECK_STUMPED,	(float)0						},
-	//Actually no. If we get to the goal and don't see the enemy, do a sweep first. Seeing them will interrupt the sweep.
+	//  no. If we get to the goal and don't see the enemy, do a sweep first. Seeing them will interrupt the sweep.
 	{ TASK_SET_SCHEDULE,			(float)SCHED_GRUNT_SWEEP	},
 };
 
@@ -4374,7 +4429,7 @@ Task_t	tlGruntSweep[] =
 {
 
 	/*
-	//ACTUALLY changed a little more. Now looks +- 90 degrees instead.
+	// changed a little more. Now looks +- 90 degrees instead.
 	{ TASK_TURN_LEFT,			(float)179	},
 	{ TASK_WAIT,				(float)1	},
 	{ TASK_TURN_LEFT,			(float)179	},
@@ -4643,10 +4698,10 @@ void CHGrunt :: SetActivity ( Activity NewActivity )
 	int iSequence = ACTIVITY_NOT_AVAILABLE;
 	void *pmodel = GET_MODEL_PTR( ENT(pev) );
 
-	//To differentiate between what's used for animation and what activity we're actually getting set to.
+	//To differentiate between what's used for animation and what activity we're getting set to.
 	//This is less confusing to the system for knowing not to reget the same ACT_IDLE_ANGRY over and over again because it isn't ACT_IDLE for instance.
 	//This can be changed independently of NewActivity and used separately.
-	//...Actually, nevermind this, we're just going to use activityToAnimateFor as the new actiivty to set anyways.
+	//...Nevermind this, we're just going to use activityToAnimateFor as the new actiivty to set anyways.
 	//Looks like the issue was caused by not setting both m_Actiivty and m_IdealActivity, only one or the other causes problems.
 	Activity activityToAnimateFor = NewActivity;
 
@@ -4964,7 +5019,7 @@ Schedule_t *CHGrunt :: GetSchedule( void )
 
 				if ( iPercent <= 90 && m_hEnemy != NULL )
 				{
-					// only try to take cover if we actually have an enemy!
+					// only try to take cover if we have an enemy!
 
 					//!!!KELLY - this grunt was hit and is going to run to cover.
 					if (FOkToSpeak()) // && RANDOM_LONG(0,1))
@@ -5308,7 +5363,7 @@ void CHGruntRepel::Spawn( void )
 
 	/////////////////////////////////////////////////////////////////////////
 	//  just in case..? Wait how is all this other stuff missing? There never was even a blood set call in here.
-	//  OH. This monster actually lasts the initial frame, despawns and creates a grunt that begins sliding down
+	//  OH. This monster lasts the initial frame, despawns and creates a grunt that begins sliding down
 	//    a rope in its place.
 	//m_bloodColor = BloodColorRedFilter();
 	/////////////////////////////////////////////////////////////////////////

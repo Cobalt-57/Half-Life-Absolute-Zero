@@ -58,7 +58,7 @@ extern char* UTIL_VarArgsVA_Custom( const char *szFmt, const char* szPrefix, con
 
 // ALSO,  VS6  C++ doesn't appear to even support the "..." macro required for
 // doing this all in the preprocessor to work.  OH WELL.
-// ACTUALLY.  Not doing this.  Breaks a surprising number of other places for various
+// Not doing this.  Breaks a surprising number of other places for various
 // reasons.  Not worth it.
 
 //#ifdef IS_VS6

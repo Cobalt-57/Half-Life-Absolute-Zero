@@ -1014,7 +1014,7 @@ void CBasePlayerWeapon::RetireWeapon( void ) { }
 //MODDD - new
 CBaseEntity* CBasePlayerWeapon::pickupWalkerReplaceCheck(void){return 0;}
 const char* CBasePlayerWeapon::GetPickupWalkerName(void){return 0;}
-//MODDD - new event, called alongside a reload actually changing the ammo counts.
+//MODDD - new event, called alongside a reload changing the ammo counts.
 void CBasePlayerWeapon::OnReloadApply(void) {};
 
 // Aha - don't dummy me!  I'm still important clientside, weapons

@@ -127,7 +127,7 @@ float vJumpAngles[3];
 
 
 //MODDD - utility function.
-// Usefullness outside of this file really unknown though.
+// Usefullness outside of this file unknown though.
 float getSafeSqureRoot(float fltInput){
 	float toReturn;
 	if(fltInput < 0){
@@ -277,52 +277,165 @@ char PM_FindTextureType( char *name )
 	return CHAR_TEX_CONCRETE;
 }
 
+
+void PM_PlayStepSound_LadderAlpha(int playerLadderMovement) {
+	int irand;
+	float fvol;
+	//MODDD - new.
+	//int playerLadderMovement;
+	//MODDD - TODO.  Make this per player instead!
+	//static int alreadyPassedLadderCheck = 0;
+
+
+	// NOTE - 'playerLadderMovement' is the old name of CVar 'cl_ladder_choice'.
+	//playerLadderMovement = atoi(pmove->PM_Info_ValueForKey(pmove->physinfo, "plm"));
+
+	//MODDD - needs to be in player.cpp instead for playerLadderMovement other than 0,
+	// because the pev->punchangle has 
+	//if (step == STEP_LADDER && playerLadderMovement != 0) {
+		// If playerLadderMovement is anything but 0, we use player.cpp to play ladder sounds instead.
+		// CHANGED.  Do it here now, turns out there is a way.  Still special logic done differently from
+		// usual step logic below then, so skip after this area.
+
+		int filterediuser4 = pmove->iuser4 & ~(FLAG_JUMPED | FLAG_RESET_RECEIVED | FLAG_CYCLE_PASSED);
+		float ladderCycleMulti = atof(pmove->PM_Info_ValueForKey(pmove->physinfo, "lcm"));
+
+		// this means, play one of the sounds & punch.
+		// OLD CONDITION FOR player.cpp.   Rely on iuser4's FLAG_CYCLE_PASSED instead.
+		//if (filterediuser4 > LADDER_CYCLE_BASE* ladderCycleMulti && !alreadyPassedLadderCheck) {
+		if (pmove->iuser4 & FLAG_CYCLE_PASSED) {
+			int iStepLeftFrame = pmove->iStepLeft;
+
+			pmove->iuser4 &= ~FLAG_CYCLE_PASSED;  // and don't play me again without a reason
+
+			// alternate.
+			pmove->iStepLeft = !pmove->iStepLeft;
+
+			// can't do this again until another frame passes that recognizes "filterediuser4" was below the threshold at some point before passing it again.
+			// NO NEED ANYMORE
+			//alreadyPassedLadderCheck = TRUE;
+
+			// not possible to reach here for playerLadderMovement of 0, normal step logic below handles that.
+
+
+			if (playerLadderMovement == 1 || playerLadderMovement == 3) {
+
+				// little higher
+				//fvol = 0.35f;
+				fvol = 0.60f;
+				if (pmove->flags & FL_DUCKING) {
+					// little harsh, half is plenty
+					//flvol *= 0.35f;  //again.
+					fvol *= 0.5f;
+				}
+
+				irand = pmove->RandomLong(0, 1) + (iStepLeftFrame * 2);
+
+				// play retail's sounds.
+				// why did I use CHAN_VOICE for the player.cpp version?
+				switch (irand) {
+					// right foot
+					case 0:	pmove->PM_PlaySound(CHAN_BODY, "player/pl_ladder1.wav", fvol, ATTN_NORM, 0, PITCH_NORM); break;
+					case 1:	pmove->PM_PlaySound(CHAN_BODY, "player/pl_ladder3.wav", fvol, ATTN_NORM, 0, PITCH_NORM); break;
+					// left foot
+					case 2:	pmove->PM_PlaySound(CHAN_BODY, "player/pl_ladder2.wav", fvol, ATTN_NORM, 0, PITCH_NORM); break;
+					case 3:	pmove->PM_PlaySound(CHAN_BODY, "player/pl_ladder4.wav", fvol, ATTN_NORM, 0, PITCH_NORM); break;
+				}
+			}
+
+			if (playerLadderMovement == 2 || playerLadderMovement == 3) {
+				// play a random pain sound, don't factor in whether this is the right or left step (as far as I know)
+
+				// not alternating random pairs like most other places, but verify if that was the case for these.
+				// Even if it was, I don't know which two two pain sounds were alternating for each left and right.
+				irand = pmove->RandomLong(0, 3);
+
+				// And override fvol!  They're pain sounds unrelated to foot-movement (speed).
+				fvol = 1.0;
+
+				// Should this use CHAN_VOICE?  They are 'pain' sounds but any other step sounds use CHAN_BODY.
+				// Keeping it VOICE for now.
+				// Well I'll be damned!  sentences work from pm_shared.  Still seems a little odd as nowhere else does this,
+				// maybe for a reason...
+				/*
+				switch (irand) {
+				case 0:	pmove->PM_PlaySound(CHAN_VOICE, "!player_pl_pain2", fvol, ATTN_NORM, 0, PITCH_NORM); break;
+				case 1:	pmove->PM_PlaySound(CHAN_VOICE, "!player_pl_pain4", fvol, ATTN_NORM, 0, PITCH_NORM); break;
+				case 2:	pmove->PM_PlaySound(CHAN_VOICE, "!player_pl_pain5", fvol, ATTN_NORM, 0, PITCH_NORM); break;
+				case 3:	pmove->PM_PlaySound(CHAN_VOICE, "!player_pl_pain6", fvol, ATTN_NORM, 0, PITCH_NORM); break;
+				}//END OF switch(rndSound)
+				*/
+
+				switch (irand) {
+					case 0:	pmove->PM_PlaySound(CHAN_VOICE, "player/pl_pain2.wav", fvol, ATTN_NORM, 0, PITCH_NORM); break;
+					case 1:	pmove->PM_PlaySound(CHAN_VOICE, "player/pl_pain4.wav", fvol, ATTN_NORM, 0, PITCH_NORM); break;
+					case 2:	pmove->PM_PlaySound(CHAN_VOICE, "player/pl_pain5.wav", fvol, ATTN_NORM, 0, PITCH_NORM); break;
+					case 3:	pmove->PM_PlaySound(CHAN_VOICE, "player/pl_pain6.wav", fvol, ATTN_NORM, 0, PITCH_NORM); break;
+				}//END OF switch(rndSound)
+			}
+
+			//#'s 1 and 2 will give the view punch.  And the new 3 then.
+			// So anything that makes it here (not 0).
+			//if (playerLadderMovement == 1 || playerLadderMovement == 2) {
+			if (iStepLeftFrame == 0) {
+				pmove->punchangle[2] = 5.6;
+			}
+			else {
+				pmove->punchangle[2] = -5.6;
+			}
+			//}
+			// iStepLeft is already alternated above
+		}//END OF cycle-check
+		//MODDD - area is unnecessary after the move from player.cpp
+		//else {
+		//	if (filterediuser4 < LADDER_CYCLE_BASE * ladderCycleMulti) {
+		//		// reset!
+		//		alreadyPassedLadderCheck = FALSE;
+		//	}
+		//}
+
+		//return;
+	//}//END OF special ladder movement check
+
+
+}//PM_PlayStepSound_LadderAlpha
+
+
 void PM_PlayStepSound( int step, float fvol )
 {
-	//MODDD - new.
-	int playerLadderMovement;
-
 	static int iSkipStep = 0;
 	int irand;
 	vec3_t hvel;
+	int iStepLeftFrame = pmove->iStepLeft;
 
-	pmove->iStepLeft = !pmove->iStepLeft;
 
+	//MODDD - use the old version of iStepLeft instead, want to start with choice #0, right?
+	// And doing the change after the 'pmove->runfuncs' check below, why alternate if it won't
+	// be used this frame?
 	if ( !pmove->runfuncs )
 	{
 		return;
 	}
 
-
-
-
-	playerLadderMovement = atoi( pmove->PM_Info_ValueForKey( pmove->physinfo, "plm" ) );
-
-	if(step == STEP_LADDER && playerLadderMovement != 0){
-		//If playerLadderMovement is anything but 0, we use player.cpp to play ladder sounds instead.
-		return;
-	}
-
-	/*
-	if(pmove->server){
-		pmove->Con_DPrintf("S444 %d\n", playerLadderMovement);
-	}else{
-		pmove->Con_DPrintf("C444 %d\n", playerLadderMovement);
-	}
-	*/
-	
-	irand = pmove->RandomLong(0,1) + ( pmove->iStepLeft * 2 );
-
-	
 	// FIXME mp_footsteps needs to be a movevar
-	if ( pmove->multiplayer && !pmove->movevars->footsteps )
+	if (pmove->multiplayer && !pmove->movevars->footsteps) {
 		return;
+	}
 
+	if (pmove->multiplayer && (!g_onladder && Length(hvel) <= 220)) {
+		return;
+	}
+
+
+	// alternate.
+	pmove->iStepLeft = !pmove->iStepLeft;
+	
 	VectorCopy_f( pmove->velocity, hvel );
 	hvel[2] = 0.0;
 
-	if ( pmove->multiplayer && ( !g_onladder && Length( hvel ) <= 220 ) )
-		return;
+
+
+	irand = pmove->RandomLong(0, 1) + (iStepLeftFrame * 2);
 
 	// irand - 0,1 for right foot, 2,3 for left foot
 	// used to alternate left and right foot
@@ -519,6 +632,32 @@ void PM_UpdateStepSound( void )
 	float flduck;
 	int fLadder;
 	int step;
+	//MODDD - new
+	int playerLadderMovement;
+
+
+
+	// determine if we are on a ladder
+	fLadder = (pmove->movetype == MOVETYPE_FLY);// IsOnLadder();
+
+
+
+
+	if (fLadder) {
+		// NOTE - 'playerLadderMovement' is the old name of CVar 'cl_ladder_choice'.
+		playerLadderMovement = atoi(pmove->PM_Info_ValueForKey(pmove->physinfo, "plm"));
+
+		// do a check.  Is the playerLadderMovement 1, 2, or 3?  If soo, use the LadderAlpha step-logic instead.
+		// it ignores the pmove->flTimeStepSound requirement.  Skip the rest of this method.
+		if (playerLadderMovement == 1 || playerLadderMovement == 2 || playerLadderMovement == 3) {
+			PM_PlayStepSound_LadderAlpha(playerLadderMovement);
+			return;
+		}
+
+	}//END OF FladderCheck
+
+
+
 
 	if ( pmove->flTimeStepSound > 0 )
 		return;
@@ -530,8 +669,10 @@ void PM_UpdateStepSound( void )
 
 	speed = Length( pmove->velocity );
 
-	// determine if we are on a ladder
-	fLadder = ( pmove->movetype == MOVETYPE_FLY );// IsOnLadder();
+
+
+
+
 
 	// UNDONE: need defined numbers for run, walk, crouch, crouch run velocities!!!!	
 	if ( ( pmove->flags & FL_DUCKING) || fLadder )
@@ -634,9 +775,11 @@ void PM_UpdateStepSound( void )
 
 		// play the sound
 		// 35% volume if ducking
+		// MODDD - 45% now.
 		if ( pmove->flags & FL_DUCKING )
 		{
-			fvol *= 0.35;
+			//fvol *= 0.35;
+			fvol *= 0.45;
 		}
 
 		PM_PlayStepSound( step, fvol );
@@ -894,7 +1037,7 @@ int PM_FlyMove (void)
 		
 		// Did we run out of planes to clip against?
 		if (numplanes >= MAX_CLIP_PLANES)
-		{	// this shouldn't really happen
+		{	// this shouldn't happen
 			//  Stop our movement if so.
 			VectorCopy_f (vec3_origin, pmove->velocity);
 			//Con_DPrintf("Too many planes 4\n");
@@ -1200,8 +1343,6 @@ void PM_WalkMove ()
 		//  as new player position.
 		//MODDD NOTE - fraction of 1 says nothing is in the way. So we're trusting we can move forwards that much.
 		//             If this soon turns out to no longer be on the ground, we'll start falling by some other _MOVE method in here instead.
-		//BUUUUUUt... what if we want to smoothly move down an incline/stairs instead?  Can we detect that too?
-		// actually before this.  yes.  really.
 		if (traceInclineDetection_Forward.fraction == 1)
 		{
 
@@ -1864,8 +2005,8 @@ void PM_CatagorizePositionBASIC(){
 //void PM_CatagorizePosition (void)
 void PM_CatagorizePosition (physent_t *pLadder)
 {
-	vec3_t		point;
-	pmtrace_t		tr;
+	vec3_t point;
+	pmtrace_t tr;
 
 // if the player hull point one unit down is solid, the player
 // is on ground
@@ -2253,10 +2394,29 @@ void PM_UnDuck( void )
 
 	if ( pmove->onground != -1 )
 	{
-		for ( i = 0; i < 3; i++ )
-		{
-			newOrigin[i] += ( pmove->player_mins[1][i] - pmove->player_mins[0][i] );
+		float modder = 0;
+		//MODDD - I disagree.
+		//for ( i = 0; i < 3; i++ )
+		//{
+		//	newOrigin[i] += ( pmove->player_mins[1][i] - pmove->player_mins[0][i] );
+		//}
+
+		if (pmove->usehull == 1) {
+			newOrigin[0] += (pmove->player_mins[1][0] - pmove->player_mins[0][0]);
+			newOrigin[1] += (pmove->player_mins[1][1] - pmove->player_mins[0][1]);
+			//newOrigin[2] += (pmove->player_mins[1][2] - pmove->player_mins[0][2]);
+			//easyForcePrintLine("duckin bounds %.2f : %.2f %.2f", (pmove->player_mins[1][2] - pmove->player_mins[0][2]), pmove->player_mins[1][2], pmove->player_mins[0][2] ) ;
+			//newOrigin[2] += 18;
+
+			// no need for this in place of (1) now...     (VEC_VIEW_Z - pmove->view_ofs[2]) / (VEC_VIEW_Z - VEC_DUCK_VIEW_Z)
+			// Only doing this when the hull is ducking.
+			modder = (1) * (pmove->player_mins[1][2] - pmove->player_mins[0][2]);
+			newOrigin[2] += modder;
 		}
+
+	}
+	else {
+		int x = 4;  //breakpoint
 	}
 	
 	trace = pmove->PM_PlayerTrace( newOrigin, newOrigin, PM_NORMAL, -1 );
@@ -2293,11 +2453,14 @@ void PM_Duck( void )
 	float time;
 	float duckFraction;
 
+	//MODDD - nice, but... why isn't this something done early on in this file and 
+	// made available to all other methods then?
 	int buttonsChanged	= ( pmove->oldbuttons ^ pmove->cmd.buttons );	// These buttons have changed this frame
 	int nButtonPressed	=  buttonsChanged & pmove->cmd.buttons;		// The changed ones still down are "pressed"
 
-	int duckchange		= buttonsChanged & IN_DUCK ? 1 : 0;
-	int duckpressed		= nButtonPressed & IN_DUCK ? 1 : 0;
+	//MODDD - nice, but was never referred to.  Whoops.
+	//int duckchange		= buttonsChanged & IN_DUCK ? 1 : 0;
+	//int duckpressed		= nButtonPressed & IN_DUCK ? 1 : 0;
 
 	if ( pmove->cmd.buttons & IN_DUCK )
 	{
@@ -2321,9 +2484,13 @@ void PM_Duck( void )
 
 	if ( pmove->flags & FL_DUCKING )
 	{
-		pmove->cmd.forwardmove *= 0.333;
-		pmove->cmd.sidemove    *= 0.333;
-		pmove->cmd.upmove      *= 0.333;
+		//MODDD - how about reducing the move speed penalties a little.
+		//pmove->cmd.forwardmove *= 0.333;
+		//pmove->cmd.sidemove    *= 0.333;
+		//pmove->cmd.upmove      *= 0.333;
+		pmove->cmd.forwardmove *= 0.48;
+		pmove->cmd.sidemove    *= 0.48;
+		pmove->cmd.upmove      *= 0.48;
 	}
 
 	if ( ( pmove->cmd.buttons & IN_DUCK ) || ( pmove->bInDuck ) || ( pmove->flags & FL_DUCKING ) )
@@ -2401,12 +2568,37 @@ void PM_LadderMove( physent_t *pLadder )
 	float ladderCycleMulti;
 	float ladderSpeedMulti;
 	float ladderCycleActual;
+	BOOL cyclePassed = FALSE;
 
 
 
 	//MODDD - control.  Might want to act on jump being tapped (pressed for the first frame), not continuously.
+	//MODDD TODO - make this per-player instead, a static like this is sloppy.
+	// And have frame countdown logic moved to somewhere called every frame, like whatever calls
+	// PM_LadderMove, counting down only from calling PM_LadderMove isn't proper.
 	//////////////////////////////////////////////////////////////////////////////
-	static int iJumpPressed = 0;
+	static iJumpOffLadderFrames = 0;
+	int iJumpPressed = 0;
+
+	// sometimes jumping off a ladder only on the tap (first) frame isn't enough.
+	// Allow a few more frames of holding space to jump while touching a ladder.
+	if ((pmove->cmd.buttons & IN_JUMP) && !(pmove->oldbuttons & IN_JUMP)) {
+		iJumpOffLadderFrames = 2;
+	}
+
+	if (iJumpOffLadderFrames > 0) {
+		// If jump wasn't held down the previous frame (this is the first in a while),
+		// or we've already jumped off recently,  count this as a button press.
+
+		if (pmove->cmd.buttons & IN_JUMP) {
+			iJumpPressed = 1;
+		}
+		iJumpOffLadderFrames -= 1;
+	}
+
+
+	//static int iJumpPressed = 0;
+	/*
 	if (pmove->cmd.buttons & IN_JUMP) {
 		if (iJumpPressed == 0) {
 			// released to tapped
@@ -2421,6 +2613,7 @@ void PM_LadderMove( physent_t *pLadder )
 		// no longer held? released
 		iJumpPressed = 0;
 	}
+	*/
 	//////////////////////////////////////////////////////////////////////////////
 
 
@@ -2474,27 +2667,27 @@ void PM_LadderMove( physent_t *pLadder )
 		ladderCycleMulti = atof( pmove->PM_Info_ValueForKey( pmove->physinfo, "lcm" ) );
 		ladderSpeedMulti = getSafeSqureRoot(atof( pmove->PM_Info_ValueForKey( pmove->physinfo, "lsm" ) ));
 
+		//pmove->punchangle[2] = 20; //!!!  TEST
 
 		if(playerLadderMovement == 0){
 			//if 0, use retail's ladder speed.
-			ladderSpeed = MAX_CLIMB_SPEEDPRE;
+			ladderSpeed = MAX_CLIMB_SPEED_RETAIL;
 		}else{
-			ladderSpeed = MAX_CLIMB_SPEED;
+			ladderSpeed = MAX_CLIMB_SPEED_ALPHA;
 		}
 		
-		//LADDER STUFF WAS HERE!
 
 		//the counter we are concerned with.
-		filterediuser4 = pmove->iuser4 & ~(FLAG_JUMPED | FLAG_RESET_RECEIVED);
+		filterediuser4 = pmove->iuser4 & ~(FLAG_JUMPED | FLAG_RESET_RECEIVED | FLAG_CYCLE_PASSED);
 		
 
 		ladderCycleActual = LADDER_CYCLE_BASE*ladderCycleMulti;
 
 		if(filterediuser4 >= ladderCycleActual){
+			cyclePassed = TRUE;  // send this to iuser4 later
 			filterediuser4-= ladderCycleActual;
 		}
 		
-
 
 		if(playerLadderMovement == 0){
 			//if 0, retail's ladder movement is constant (no sine slow-down to immitate steps).
@@ -2653,7 +2846,7 @@ void PM_LadderMove( physent_t *pLadder )
 				if ( onFloor && normal > 0 )	// On ground moving away from the ladder
 				{
 					filterediuser4 = 0;  //reset.  A jump will add the "FLAG_JUMPED" (avoid the drop-tilt on small drops) later if necessary.
-					VectorMA( pmove->velocity, MAX_CLIMB_SPEEDPRE, trace.plane.normal, pmove->velocity );
+					VectorMA( pmove->velocity, JUMP_OFF_FORCE, trace.plane.normal, pmove->velocity );
 				}
 				
 
@@ -2682,6 +2875,9 @@ void PM_LadderMove( physent_t *pLadder )
 
 		if(pmove->iuser4 & FLAG_JUMPED){
 			filterediuser4 |= FLAG_JUMPED;
+		}
+		if (cyclePassed) {
+			filterediuser4 |= FLAG_CYCLE_PASSED;
 		}
 		pmove->iuser4 = filterediuser4;
 
@@ -3401,7 +3597,7 @@ void PM_CheckFalling( void )
 		}
 
 		//MODDDREMOVE - ?  this if statement and its contents are completely new.
-		//Hey, this is kinda sloppily added.  It doesn't really meld into the above, so this may coincide with other punches above. change that?
+		//Hey, this is kinda sloppily added.  It doesn't meld into the above, so this may coincide with other punches above. change that?
 		if ( pmove->flFallVelocity >= 350 )
 		{
 			pmove->punchangle[ 0 ] = pmove->flFallVelocity * 0.013;	// punch z axis  ... no, that is the x axis.  leftover comment?
@@ -3696,7 +3892,8 @@ void PM_PlayerMove ( qboolean server )
 		}
 	}
 
-	PM_UpdateStepSound();
+	//MODDD - why wasn't UpdateStepSound after LadderMove below?
+	// Was here.
 
 	PM_Duck();
 	
@@ -3717,13 +3914,15 @@ void PM_PlayerMove ( qboolean server )
 		}
 	}
 
+	PM_UpdateStepSound();
+
 
 	
 	// Slow down, I'm pulling it! (a box maybe) but only when I'm standing on ground
 	//MODDD - behavior changed. Instead, hold down use does NOT cause a base slowdown of always 30% like this (effectively friction, more effort
 	//        into movement gets sucked away to look slower).
 	//        But not all crates should slow you down equally, right?
-	//        In the new system, a crate's weight (friction really) affects how much it slows the player pushing or use'ing on it.
+	//        In the new system, a crate's weight (friction) affects how much it slows the player pushing or use'ing on it.
 	//        The box otherwise moves consistently with the player's velocity, but forces the player to slow down while use'ing on it,
 	//        or forces the player to slow down if pushing the box.
 	//        This can be done by setting a physics flag on the player when a box makes contact with the player (physical touch-push) or is use'd by

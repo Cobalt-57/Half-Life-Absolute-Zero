@@ -740,18 +740,11 @@ void CFuncRotating :: RotatingUse( CBaseEntity *pActivator, CBaseEntity *pCaller
 // RotatingBlocked - An entity has blocked the brush
 //
 void CFuncRotating :: Blocked( CBaseEntity *pOther )
-
 {
 
 	pOther->TakeDamage( pev, pev, pev->dmg, DMG_CRUSH, DMG_MAP_BLOCKED);
 }
 
-
-
-
-
-
-//#endif
 
 
 class CPendulum : public CBaseEntity

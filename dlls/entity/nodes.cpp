@@ -1131,10 +1131,10 @@ int CGraph::FindNearestNode(const Vector& vecOrigin, int afNodeTypes)
 	// Check with the cache
 	//
 	// MODDD - renamed CACHE_SIZE, as seen in nodes.h.
-	// Also to ensure the CACHE_SIZE actually meant for m_Cache is used.
+	// Also to ensure the CACHE_SIZE meant for m_Cache is used.
 	ULONG iHash = (GRAPH_CACHE_SIZE - 1) & Hash((void*)(const float*)vecOrigin, sizeof(vecOrigin));
 
-	//MODDD - extra check.  allowed to return a -1 node? really?
+	//MODDD - extra check.  allowed to return a -1 node?
 	//...then again, memory is memory. If it failed before, it won't change. guess this is ok.
 
 	//if (m_Cache[iHash].n != -1 && m_Cache[iHash].v == vecOrigin)

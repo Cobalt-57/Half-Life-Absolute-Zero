@@ -481,7 +481,7 @@ void CRpgRocket :: IgniteThink( void  )
 		//EASY_CVAR_GET(myRocketsAreBarney) == 1
 
 		//MODDD - can we make the end of the trail disappear right at the moment of impact so it doesn't teleport to the explosion's inevitable offset away from the hit surface?
-		//ACTUALLY... it may be better to make it so the explosion just happens at an offset of the rocket's hit place and the rocket itself does not teleport to that offset at all.
+		// it may be better to make it so the explosion just happens at an offset of the rocket's hit place and the rocket itself does not teleport to that offset at all.
 		//done.
 		// rocket trail
 		MESSAGE_BEGIN( MSG_BROADCAST, SVC_TEMPENTITY );
@@ -560,7 +560,7 @@ void CRpgRocket :: FollowThink( void  )
 	}//END OF forceDumb check
 
 
-	//MODDD - actually this is fine.  buuuuut
+	//MODDD - this is fine.  buuuuut
 	//pev->angles = UTIL_VecToAngles( vecTarget );
 	pev->angles = UTIL_VecToAngles( vecMoveDirectionMemory );
 

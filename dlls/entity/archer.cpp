@@ -65,10 +65,10 @@ void CController::Stop( void )
 //       or more urgently on taking damage?
 
 //       CheckLocalMove needs to see if the destination is towards a different waterlevel than the source.
-//       (or really just not underwater at all, archers should never move anywhere outside of water)
+//       (or just not underwater at all, archers should never move anywhere outside of water)
 //       But maybe make it a little less sensitive when going above the water slightly to do a sea-land attack.
 
-//       Finally when itself and the enemy are both underwater, it really acts like an underwater bullsquid.
+//       Finally when itself and the enemy are both underwater, it acts like an underwater bullsquid.
 //       Use ranged projectiles if possible, and follow the enemy otherwise. Can melee when close enough.
 
 //       QUESTION: there are sequences sink, dead_float, die1 and die2.  Does one of the "die"s lead to floating to the top (die2?) and the other sinking (die1)?
@@ -307,7 +307,7 @@ Schedule_t	slArcherRangeAttack1[] =
 	},
 };
 
-//Really the ranged attack 1 surrounded by steps to ensure a random point at the water level's surface is picked that puts the enemy in a line of fire and is
+// Really the ranged attack 1 surrounded by steps to ensure a random point at the water level's surface is picked that puts the enemy in a line of fire and is
 //reachable by the archer can be use to make an attack, followed by returning to the same point or maybe moving randomly a bit underwater too.
 Task_t	tlArcherSurfaceRangeAttack[] =
 {
@@ -782,7 +782,7 @@ BOOL CArcher::ShouldAdvanceRoute( float flWaypointDist, float flInterval )
 		//Tighter standards!
 		
 		//AND YES THIS EXPLAINS A LOOOOOOOOT.
-		// Get true 3D distance to the goal so we actually reach the correct height
+		// Get true 3D distance to the goal so we reach the correct height
 		if ( m_Route[ m_iRouteIndex ].iType & bits_MF_IS_GOAL )
 			flWaypointDist = ( m_Route[ m_iRouteIndex ].vecLocation - pev->origin ).Length();
 
@@ -1195,7 +1195,7 @@ Schedule_t* CArcher::GetSchedule ( void )
 			else  
 			{
 
-				//easyPrintLine("I say, really now? %d %d", HasConditions(bits_COND_CAN_RANGE_ATTACK1), HasConditions(bits_COND_CAN_RANGE_ATTACK2) );
+				//easyPrintLine("I say, what? %d %d", HasConditions(bits_COND_CAN_RANGE_ATTACK1), HasConditions(bits_COND_CAN_RANGE_ATTACK2) );
 
 
 				// If in melee range, just do that instead.
@@ -1288,7 +1288,7 @@ Schedule_t* CArcher::GetScheduleOfType( int Type){
 			return slArcherRetreatIntoWater;
 		break;}
 		case SCHED_CHASE_ENEMY:{
-			//HOLD UP.  Does it really make sense to try this?
+			//HOLD UP.  Does it make sense to try this?
 
 			if(m_hEnemy == NULL || m_hEnemy->pev->waterlevel == 3){
 				//our enemy disappeared (???) or is in the water? ok. proceed as usual.
@@ -1589,7 +1589,7 @@ void CArcher::StartTask( Task_t *pTask ){
 				}
 
 
-				//actually this is no good, the loop above would've ended early if it passed instead.
+				// this is no good, the loop above would've ended early if it passed instead.
 				TaskFail();
 				return;
 
@@ -1902,7 +1902,7 @@ GENERATE_DEADTAKEDAMAGE_IMPLEMENTATION(CArcher)
 
 //Parameters: integer named fGibSpawnsDecal
 // The parent method calls GIBMONSTERGIB, then GIBMONSTERSOUND and GIBMONSTEREND, passing along to the latter two whether GIBMONSTERGIB
-// actually "gibbed" or not (it must return whether it did or not).
+// really "gibbed" or not (it must return whether it did or not).
 // This default behavior is ok, change pieces at a time instead in other methods. GIBMONSTERGIB is the most likely one that needs customization,
 // such as only spawning two alien gibs for the ChumToad. The others are good as defaults.
 GENERATE_GIBMONSTER_IMPLEMENTATION(CArcher)
@@ -1964,7 +1964,7 @@ GENERATE_KILLED_IMPLEMENTATION(CArcher)
 
 	//MODDD NOTE
 	//Forcing the movetype to MOVETYPE_STEP in CFlyingMonster's Killed above can be bad for the floating logic.
-	//Or flyers in general ever really, MOVETYPE_TOSS falls just fine. no idea why
+	//Or flyers in general ever, MOVETYPE_TOSS falls just fine. no idea why
 	pev->movetype = MOVETYPE_FLY;
 
 

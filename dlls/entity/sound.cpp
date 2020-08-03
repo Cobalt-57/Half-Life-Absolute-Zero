@@ -1335,7 +1335,7 @@ void SENTENCEG_Stop(edict_t *entity, int isentenceg, int ipick)
 	strcat(buffer, sznum);
 
 	//MODDD NOTE - nah, don't filter, this is always a sentence anyways.
-	//(uh, actually, I think this method in particular is never used?)
+	//(I think this method in particular is never used?)
 	STOP_SOUND(entity, CHAN_VOICE, buffer);
 }
 
@@ -1526,7 +1526,7 @@ void SENTENCEG_Init()
 		}
 
 
-		//This means (intentionally)... if it doesn't match. strcmp actually returns 0, or passes with "!strcmp(...)" if there is a match. Yes, confusing.
+		//This means (intentionally)... if it doesn't match. strcmp returns 0, or passes with "!strcmp(...)" if there is a match. Yes, confusing.
 		if (strcmp(szgroup, &(buffer[i])))
 		{
 			// name doesn't match with prev name,
@@ -1820,12 +1820,10 @@ float TEXTURETYPE_PlaySound(TraceResult *ptr,  Vector vecSrc, Vector vecEnd, int
 	//	return 0.0;
 
 
-
-	CBaseEntity *pEntity = CBaseEntity::Instance(ptr->pHit);
-
 	chTextureType = 0;
 
-	
+
+	CBaseEntity *pEntity = CBaseEntity::Instance(ptr->pHit);
 	BOOL isEntityWorld;
 	
 	
@@ -1847,13 +1845,22 @@ float TEXTURETYPE_PlaySound(TraceResult *ptr,  Vector vecSrc, Vector vecEnd, int
 	//MODDD - differnet check.
 	//if (pEntity && pEntity->Classify() != CLASS_NONE && pEntity->Classify() != CLASS_MACHINE)
 	if (!isEntityWorld) {
-		// Actually we can be a little more specific.
+		// can be a little more specific.
+
+		// !!!
+		// possible to check for ptr->iHitgroup?  Doubt it's necessary.
+
 		if (pEntity->isOrganic()) {
 			// hit body
 			chTextureType = CHAR_TEX_FLESH;
 		}
 		else {
-			// oh
+			// oh, metal.
+			// Note that as-is behavior is to do TRACE_TEXTURE on the ent anyway,
+			// but that doesn't seem to work.  If you want an attempt anyway...
+			//   pTextureName = TRACE_TEXTURE(ENT(pEntity->pev), rgfl1, rgfl2);
+			// ...and turn determining 'chTextureType' from that into a method (further below).
+			// For now, just assuming METAL texture.
 			chTextureType = CHAR_TEX_METAL;
 		}
 	}
@@ -1869,29 +1876,35 @@ float TEXTURETYPE_PlaySound(TraceResult *ptr,  Vector vecSrc, Vector vecEnd, int
 		vecEnd.CopyToArray(rgfl2);
 
 		// get texture from entity or world (world is ent(0))
-		if (pEntity)
-			pTextureName = TRACE_TEXTURE( ENT(pEntity->pev), rgfl1, rgfl2 );
-		else
-			pTextureName = TRACE_TEXTURE( ENT(0), rgfl1, rgfl2 );
+		//MODDD - although metal entities are taken earlier now, that does leave heavily map-specific entities (breakables)
+		// that still reach here.   Probably.
+		if (pEntity) {
+			pTextureName = TRACE_TEXTURE(ENT(pEntity->pev), rgfl1, rgfl2);
+		}else {
+			pTextureName = TRACE_TEXTURE(ENT(0), rgfl1, rgfl2);
+		}
 			
 		if ( pTextureName )
 		{
 			// strip leading '-0' or '+0~' or '{' or '!'
-			if (*pTextureName == '-' || *pTextureName == '+')
+			if (*pTextureName == '-' || *pTextureName == '+'){
 				pTextureName += 2;
+			}
 
-			if (*pTextureName == '{' || *pTextureName == '!' || *pTextureName == '~' || *pTextureName == ' ')
+			if (*pTextureName == '{' || *pTextureName == '!' || *pTextureName == '~' || *pTextureName == ' '){
 				pTextureName++;
+			}
+
 			// '}}'
 			strcpy(szbuffer, pTextureName);
 			szbuffer[CBTEXTURENAMEMAX - 1] = 0;
-				
+
 			// ALERT ( at_console, "texture hit: %s\n", szbuffer);
 
 			// get texture type
 			chTextureType = TEXTURETYPE_Find(szbuffer);	
 		}
-	}
+	}//END OF world check
 
 	
 	if(EASY_CVAR_GET(textureHitSoundPrintouts)==1)easyForcePrintLine("SND PLAY TEXTURE SOUND: %d, %c", (int)chTextureType, chTextureType);
@@ -1967,7 +1980,7 @@ float TEXTURETYPE_PlaySound(TraceResult *ptr,  Vector vecSrc, Vector vecEnd, int
 		cnt = 2;
 		break;
 	default:
-		//MODDD - no default case?  really guys?         really?
+		//MODDD - no default case?
 		fvol = 0;
 		fvolbar = 0;
 		//fattn is already defaulted

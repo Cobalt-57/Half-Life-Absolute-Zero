@@ -60,7 +60,7 @@
 //#include "extdll.h"
 //#include "util.h"  <-- includes  """ #include "enginecallback.h" """
 
-//ALSO UNNECESSARY, actually. just use "gEngfuncs".
+//ALSO UNNECESSARY. just use "gEngfuncs".
 //#include "enginecallback.h"
 //should be acceptable.
 
@@ -205,18 +205,16 @@ void updateCVarRefsClient(){
 float EV_HLDM_PlayTextureSound(int idx, pmtrace_t* ptr, float* vecSrc, float* vecEnd, int iBulletType)
 {
 	// hit the world, try to play sound based on texture material type
-	char chTextureType = CHAR_TEX_CONCRETE;
+	char chTextureType;   //what... was the point of the CHAR_TEX_CONCRETE default to be replaced with 0 shortly below
 	float fvol;
 	float fvolbar;
 	char* rgsz[4];
 	int cnt;
 	float fattn = ATTN_NORM;
-	int entity;
+	int entityIndex;
 	char* pTextureName;
 	char texname[64];
 	char szbuffer[64];
-
-	entity = gEngfuncs.pEventAPI->EV_IndexFromTrace(ptr);
 
 	// FIXME check if playtexture sounds movevar is set
 	//
@@ -230,16 +228,67 @@ float EV_HLDM_PlayTextureSound(int idx, pmtrace_t* ptr, float* vecSrc, float* ve
 
 	chTextureType = 0;
 
-	// Player
-	if (entity >= 1 && entity <= gEngfuncs.GetMaxClients())
-	{
-		// hit body
-		chTextureType = CHAR_TEX_FLESH;
-	}
-	else if (entity == 0)
-	{
 
-		//MODDD - aw yea, from the fix I made for negentropy.  Tight as hell.
+	BOOL isEntityWorld;
+	entityIndex = gEngfuncs.pEventAPI->EV_IndexFromTrace(ptr);
+
+	// a 'null' check for a number where 0 is valid doesn't make sense.
+	//if (entity == NULL) {
+	//	isEntityWorld = TRUE;  // just go ahead and say 'yes'.
+	//}
+	//else {
+		// more to work with.
+		//isEntityWorld = (pEntity->IsWorld() || pEntity->Classify() == CLASS_NONE);
+		isEntityWorld = (entityIndex == 0);
+	//}
+
+
+
+	if (!isEntityWorld) {
+		// can be a little more specific.
+
+
+		if ((entityIndex >= 1 && entityIndex <= gEngfuncs.GetMaxClients()))
+		{
+			// hit body, players count as flesh.   Unless there's some weird german censorship thing to force them into robots I don't know of.
+			chTextureType = CHAR_TEX_FLESH;
+		}
+		else {
+			// Not the world, not a player.  Is it organic?
+
+			//physent_t* pe = gEngfuncs.pEventAPI->EV_GetPhysent(tr.ent);
+			//cl_entity_t* cEntRef = gEngfuncs.GetEntityByIndex(PM_GetPhysEntInfo(tr.ent));
+
+			
+			cl_entity_t* cEntRefAlt = gEngfuncs.GetEntityByIndex(entityIndex);
+
+			// !!!
+			// possible to check for ptr->hitgroup?  Doubt it's necesary.
+
+			if(cEntRefAlt != NULL && ((cEntRefAlt->curstate.renderfx & ISMETALNPC) == ISMETALNPC) ){
+				// metal.
+				// Come to think of it, odd that retail behavior on serverside would have tried to trace the texture of a non-organic entity (also non-world) anyway,
+				// but clientside never did, required that strict 'entityIntex == 0' check to do that.
+				chTextureType = CHAR_TEX_METAL;
+			}else {
+				// hit body
+				chTextureType = CHAR_TEX_FLESH;
+			}
+
+		}
+
+
+	}
+	else
+	{
+		// It is the world?
+
+		/*
+		// OLD WAY! replaced with below
+		pTextureName = (char *)gEngfuncs.pEventAPI->EV_TraceTexture( ptr->ent, vecSrc, vecEnd );
+		*/
+
+		//MODDD - new chunk, should fix a little obscure issue with certain texture-hit sounds being wrong.
 		////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		pmtrace_t tr;
 		// do we even need this again..?
@@ -274,17 +323,9 @@ float EV_HLDM_PlayTextureSound(int idx, pmtrace_t* ptr, float* vecSrc, float* ve
 
 		}
 
-		// get texture from entity or world (world is ent(0))4
+		// get texture from entity or world (world is ent(0))
 		pTextureName = (char*)gEngfuncs.pEventAPI->EV_TraceTexture(ptr->ent, vecSrc_trace, vecEnd_trace);
 		////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-
-		/*
-		//MODDD - OLD WAY!
-		// get texture from entity or world (world is ent(0))
-		pTextureName = (char *)gEngfuncs.pEventAPI->EV_TraceTexture( ptr->ent, vecSrc, vecEnd );
-		*/
 
 
 		if (pTextureName)
@@ -293,13 +334,11 @@ float EV_HLDM_PlayTextureSound(int idx, pmtrace_t* ptr, float* vecSrc, float* ve
 			pTextureName = texname;
 
 			// strip leading '-0' or '+0~' or '{' or '!'
-			if (*pTextureName == '-' || *pTextureName == '+')
-			{
+			if (*pTextureName == '-' || *pTextureName == '+'){
 				pTextureName += 2;
 			}
 
-			if (*pTextureName == '{' || *pTextureName == '!' || *pTextureName == '~' || *pTextureName == ' ')
-			{
+			if (*pTextureName == '{' || *pTextureName == '!' || *pTextureName == '~' || *pTextureName == ' '){
 				pTextureName++;
 			}
 
@@ -310,7 +349,9 @@ float EV_HLDM_PlayTextureSound(int idx, pmtrace_t* ptr, float* vecSrc, float* ve
 			// get texture type
 			chTextureType = PM_FindTextureType(szbuffer);
 		}
-	}
+	}//END OF world check
+
+
 
 	if (EASY_CVAR_GET(textureHitSoundPrintouts) == 1)easyPrintLine("EV PLAY TEXTURE SOUND: %d, %c", (int)chTextureType, chTextureType);
 
@@ -319,7 +360,6 @@ float EV_HLDM_PlayTextureSound(int idx, pmtrace_t* ptr, float* vecSrc, float* ve
 
 	switch (chTextureType)
 	{
-
 		//...I mean, clever.
 		//No, let's not do that.
 		//default:
@@ -609,35 +649,35 @@ void EV_HLDM_FireBullets(int idx, float* forward, float* right, float* up, int c
 		case 0:
 			//nothing.
 			iTracerFreq = 0;
-			break;
+		break;
 		case 1:
 			//clientside, per whatever weapons said to do for tracers.  Leave "iTracerFreq" as it was sent.
 
-			break;
+		break;
 		case 2:
 			//serverside only (retail).  So nothing here.
 			iTracerFreq = 0;
-			break;
+		break;
 		case 3:
 			//clientside and serverside as-is.  Let it proceed.
 
-			break;
+		break;
 		case 4:
 			//clientside, all weapons, all shots. Force it.
 			iTracerFreq = 1;
-			break;
+		break;
 		case 5:
 			//serverside, all weapons, all shots. Not here.
 			iTracerFreq = 0;
-			break;
+		break;
 		case 6:
 			//clientside and serverside, all weapons, all shots. Go.
 			iTracerFreq = 1;
-			break;
+		break;
 		default:
 			//unrecognized setting?  Default to whatever was sent like in retail.
 
-			break;
+		break;
 		}//END OF switch
 
 		disableBulletHitDecal = EV_HLDM_CheckTracer(idx, vecSrc, tr.endpos, forward, right, iBulletType, iTracerFreq, tracerCountChoice);
@@ -764,7 +804,7 @@ void EV_FireGlock1(event_args_t* args)
 		}
 		else {
 
-			//The range of "0.6 - 0.8" for volume is what the "hassassin" uses.  Reasonable?  ACTUALLY, reduced slightly more...
+			// The range of "0.6 - 0.8" for volume is what the "hassassin" uses.  Reasonable? reduced slightly more...
 			switch (gEngfuncs.pfnRandomLong(0, 1))
 			{
 			case 0:
@@ -1728,8 +1768,19 @@ void EV_FireCrossbow2(event_args_t* args)
 	//We hit something
 	if (tr.fraction < 1.0)
 	{
-		physent_t* pe = gEngfuncs.pEventAPI->EV_GetPhysent(tr.ent);
-		cl_entity_t* cEntRef = gEngfuncs.GetEntityByIndex(PM_GetPhysEntInfo(tr.ent));
+		//physent_t* pe = gEngfuncs.pEventAPI->EV_GetPhysent(tr.ent);
+		//cl_entity_t* cEntRef = gEngfuncs.GetEntityByIndex(PM_GetPhysEntInfo(tr.ent));
+
+		// ALTERNATE WAY:  Test it out?
+		int hitEntIndex = gEngfuncs.pEventAPI->EV_IndexFromTrace(&tr);
+		cl_entity_t* cEntRef = gEngfuncs.GetEntityByIndex(hitEntIndex);
+
+
+		// Hmm.  is that good enough?
+		// So cl_entity_t has both solid and renderfx, but physent_t only has solid.  Odd.
+		// cEntRef->curstate.solid;
+		// cEntRef->curstate.renderfx;
+
 
 		/*
 		// break point and see all this?
@@ -1741,14 +1792,14 @@ void EV_FireCrossbow2(event_args_t* args)
 		*/
 
 
-		//MODDD - TODO.  Is there some way to read in info from the server, like whether a hit ent is metallic to play a differnet hit noise
-		// than the normal fleshy once?  wow not sure what to make of "pe".
-		//Not the world, let's assume we hit something organic ( dog, cat, uncle joe, etc ).
-		if (pe->solid != SOLID_BSP)
+
+		// Not the world, let's assume we hit something organic ( dog, cat, uncle joe, etc ).
+		// pe->solid
+		if (cEntRef->curstate.solid != SOLID_BSP)
 		{
 
 			//if (!(pe->info == 8)) {
-			if (!((cEntRef->curstate.renderfx & ISMETALNPC) == ISMETALNPC)) {
+			if (cEntRef != NULL && !((cEntRef->curstate.renderfx & ISMETALNPC) == ISMETALNPC) ) {
 				switch (gEngfuncs.pfnRandomLong(0, 1))
 				{
 				case 0:
@@ -1806,7 +1857,8 @@ void EV_FireCrossbow2(event_args_t* args)
 			// The world does havea  pe->index of 0, but there may be other map-like entities (func_wall) that
 			// a bolt could stick out of just fine too.  I think this is the best we can do.
 			//if (pe->rendermode == kRenderNormal) {
-			if (pe->rendermode == kRenderNormal && cEntRef->curstate.movetype == MOVETYPE_NONE) {
+			// pe->rendermode
+			if (cEntRef != NULL && cEntRef->curstate.rendermode == kRenderNormal && cEntRef->curstate.movetype == MOVETYPE_NONE) {
 				vec3_t vBoltAngles;
 				int iModelIndex = gEngfuncs.pEventAPI->EV_FindModelIndex("models/crossbow_bolt.mdl");
 
@@ -3000,7 +3052,7 @@ void createShrapnel(int* sprite, Vector* loc, int testArg, float testArg2, float
 		//...assume it is what refers to this.
 
 
-		//eh->hitSound = 2;    hit sound disabled, actually.  Enabling this gives it the break metal sounds though.
+		//eh->hitSound = 2;    hit sound disabled.  Enabling this gives it the break metal sounds though.
 		eh->hitcallback = &shrapnelHitCallback;
 
 		//no "BREAK_METAL " here.
@@ -3967,7 +4019,7 @@ void EV_Mirror(event_args_t* args)
 	VectorCopy_f(args->origin, org_target);
 
 	//MODDD - changed what parameters went where.
-	// Radius getting mapped to one of the "int" params when neither float param was used?  ...really?
+	// Radius getting mapped to one of the "int" params when neither float param was used?
 	//float dist = (float)args->iparam1;
 	//int type = args->iparam2;
 	float dist = (float)args->fparam1;

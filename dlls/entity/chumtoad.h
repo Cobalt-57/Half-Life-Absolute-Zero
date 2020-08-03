@@ -24,7 +24,7 @@
 chumtoad small walking npc that flees from preys, should attract bullsquids and agrunts - maps going to be featured in (c1a1 onwards) + weapon (should behave like the snark weapon)
     world pickable entity should roam around (or make it being able to follow paths like monster_generics) apply the same for the snarks counterpart
     note: add blinking system on both the npc and player weapon, also apply to snarks
-    should feign death if the hunter npc gets real close, faking death should have a 50% chance of making the prey to actually buying it, and thus scaring the hunter away (or make it chase another chum or entity, including the player)(edited)
+    should feign death if the hunter npc gets real close, faking death should have a 50% chance of making the prey to buying it, and thus scaring the hunter away (or make it chase another chum or entity, including the player)(edited)
 	*/
 
 

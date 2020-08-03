@@ -33,7 +33,7 @@
 // This will also include "mathlib.h", if it makes sense to
 // (always for serverside, only for the C Lang for clientside, as there are already
 //  C++ versions in common/vector.cpp.  The C versions don't support method overloading).
-// actually never mind the client/server restriction, just not being C++ is enough.
+// never mind the client/server restriction, just not being C++ is enough.
 #include "vector.h"
 
 
@@ -169,22 +169,6 @@
 #define MAX_CLIENTS 32
 
 
-//MODDD - edit
-//#define MAX_CLIMB_SPEED	200
-//130?
-#define MAX_CLIMB_SPEED 268  // fastest vertical climbing speed possible
-                             // (used for the alpha ladder, or cl_ladder 0 instead)
-#define MAX_CLIMB_SPEEDPRE 153    //old speed for being forced off a ladder sometimes?
-                                  // Mainly the speed of the retail ladder style (cl_ladder 1).
-								  // Keep in mind, slower than retail even at default ladderspeedmulti
-								  // (was 200)
-
-// OLD LADDER SPEED DEFAULTS:
-// MAX_CLIMB_SPEED 110
-// MAX_CLIMB_SPEEDPRE 200
-
-
-// uhh..  why not?
 #define M_PI 3.14159265358979323846
 #define Q_PI 3.14159265358979323846
 
@@ -242,8 +226,6 @@
 #define VEC_DUCK_VIEW_Z		12
 
 // defaults for clientinfo messages
-#define VEC_DUCK_VIEW_Z 12
-
 
 // up / down
 #define PITCH	0
@@ -296,11 +278,34 @@ typedef float vec_t;
 
 //MODDD
 // for pre-release player ladder logic. Needs to be here to reach pm_shared.h.
-#define LADDER_CYCLE_BASE (0.3833 * 10000)
+// was 0.3833
+#define LADDER_CYCLE_BASE (0.4000 * 10000)
+
+//MODDD - edit
+//#define MAX_CLIMB_SPEED_ALPHA	200
+//130?
+// previous build, was 268 and 153.
+#define MAX_CLIMB_SPEED_ALPHA 240  // fastest vertical climbing speed possible
+							 // (used for the alpha ladder, or cl_ladder 0 instead)
+#define MAX_CLIMB_SPEED_RETAIL 125    //old speed for being forced off a ladder sometimes?
+								  // Mainly the speed of the retail ladder style (cl_ladder 1).
+								  // Keep in mind, slower than retail even at default ladderspeedmulti
+								  // (was 200)
+// OLD LADDER SPEED DEFAULTS:
+// MAX_CLIMB_SPEED_ALPHA 110
+// MAX_CLIMB_SPEED_RETAIL 200
+
+// this used to be the same as MAX_CLIMB_SPEED_RETAIL, new constant for this.
+#define JUMP_OFF_FORCE 120
+
+
+
 
 //MODDD - also seen by pm_shared.c.
+// flags for iuser4.
 #define FLAG_JUMPED	8192	//2^13.
 #define FLAG_RESET_RECEIVED 16384 //2^14.
+#define FLAG_CYCLE_PASSED 32768 //2^15.
 
 
 
@@ -357,7 +362,7 @@ typedef float vec_t;
 //#define MOVETYPE_ANGLECLIP		2
 #define MOVETYPE_WALK			3		// Player only - moving on the ground
 
-//MODDD REALLY IMPORTANT NOTE - ARE WE REALLY NOT GONNA MENTION THIS DEVS?!
+//MODDD REALLY IMPORTANT NOTE
 // This move flag locks the monster to the ground. That isn't too surprising though.
 // The surprising thing is, this also interpolates monster movement so that they don't snap to the 0.1 second increments that it would usually be limited 
 // to due to MonsterThink's limit of 0.1 seconds. MOVETYPE_TOSS can also move against the ground, but it has this issue.

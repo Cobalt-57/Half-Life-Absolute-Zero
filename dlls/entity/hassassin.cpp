@@ -1149,7 +1149,7 @@ void CHAssassin :: Spawn()
 	m_flFieldOfView		= VIEW_FIELD_WIDE; // indicates the width of this monster's forward view cone ( as a dotproduct result )
 	m_MonsterState		= MONSTERSTATE_NONE;
 
-	//actually automatically picks these up just from having ACT's for each (MELEE_ATTACK1 and 2), but being explicit doesn't hurt.
+	// automatically picks these up just from having ACT's for each (MELEE_ATTACK1 and 2), but being explicit doesn't hurt.
 	m_afCapability		= bits_CAP_MELEE_ATTACK1 | bits_CAP_MELEE_ATTACK2 | bits_CAP_DOORS_GROUP;
 	pev->friction		= 1;
 
@@ -2001,7 +2001,7 @@ Schedule_t* CHAssassin :: GetScheduleOfType ( int Type )
 				if(HasConditions(bits_COND_CAN_MELEE_ATTACK1)){
 					return slAssassinMeleeAttack;
 				}else{
-					//then I can't really do anything.
+					//then I can't do anything.
 					return slAssassinFail;
 				}
 
@@ -2187,7 +2187,7 @@ int CHAssassin::LookupActivityHard(int activity){
 			return HASSASSIN_SHOOT;
 		break;}
 		case ACT_IDLE_ANGRY:{
-			//should this really do anything special?  or copy ACT_RANGE_ATTACK1? probably not that.
+			//should this do anything special?  or copy ACT_RANGE_ATTACK1? probably not that.
 			//maybe freeze a frame from "shoot" for a bit? probably unnecessary.
 			return CBaseAnimating::LookupActivity(activity);
 		break;}
@@ -2243,7 +2243,7 @@ int CHAssassin::tryActivitySubstitute(int activity){
 			return HASSASSIN_IDLE2;
 		break;}
 		case ACT_MELEE_ATTACK1:{
-			//really just to say we have something.  Really picks between KICK and KICKSHORT.
+			// just to say we have something.  picks between KICK and KICKSHORT.
 			return HASSASSIN_KICK;
 		break;}
 		case ACT_RANGE_ATTACK1:{

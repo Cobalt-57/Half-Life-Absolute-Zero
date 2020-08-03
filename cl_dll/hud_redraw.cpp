@@ -127,7 +127,7 @@ void CHud::Think(void)
 		m_iPlayerFOV = newfov;
 	}
 
-	// the clients fov is actually set in the client data update section of the hud
+	// the clients fov is set in the client data update section of the hud
 
 	// Set a new sensitivity
 	//MODDD
@@ -465,9 +465,9 @@ int CHud::Redraw(float flTime, int intermission)
 }
 
 //NOTICE: This method probably looks strange, not being one of "CHud".
-//It is just a top-level method sitting on its own.
-//It is actually the implementation of a top-level prototype in "cl_util.h".
-//This method may always be referred to in any other context, just don't try to re-declare or re-define it.
+// It is just a top-level method sitting on its own.
+// It is the implementation of a top-level prototype in "cl_util.h".
+// This method may always be referred to in any other context, just don't try to re-declare or re-define it.
 void ScaleColors( int &r, int &g, int &b, int a )
 {
 	float x = (float)a / 255.0f;
@@ -639,7 +639,7 @@ int CHud :: DrawHudNumber( int x, int y, int iFlags, int iNumber, const int& r, 
 	
 	int k;
 
-	//MODDD - new var be more faded for filler "0" digits (transparency is actually melded into the numbers,
+	//MODDD - new var be more faded for filler "0" digits (transparency is melded into the numbers,
 	//as the darker / closer to black they are, the more transparent they become).
 	int fadedr = r;
 	int fadedg = g;

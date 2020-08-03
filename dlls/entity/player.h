@@ -394,7 +394,6 @@ public:
 
 	//MODDD - is this the first time in a while the player has been close to radation (false)?
 	BOOL foundRadiation;
-	BOOL altLadderStep;
 
 	BOOL getBatteryValueRealTime;
 	int batterySayPhase;
@@ -405,7 +404,7 @@ public:
 	BOOL sentCarcassScent;
 
 	//MODDD
-	int drowning;  //actually a BOOL, but the client doesn't know what bools are.  Probably wouldn't hurt anyways.
+	int drowning;  // a BOOL, but the client doesn't know what bools are.  Probably wouldn't hurt anyways.
 	int drowningMem;
 
 	float playerBrightLightMem;
@@ -434,8 +433,6 @@ public:
 	float ladderSpeedMultiMem;
 
 	int clearWeaponFlag;
-
-	BOOL alreadyPassedLadderCheck;
 
 	BOOL grabbedByBarnacle;
 	BOOL grabbedByBarnacleMem;

@@ -103,7 +103,7 @@ void CCrowbar::Holster( int skiplocal /* = 0 */ )
 // Checking to see if the trace changed at all seems hacky and may have a 1 in a billion chance of being wrong.
 // Just return a Boolean: found a point at all so it can be trusted that the trace now holds that, or no suitable point was found.
 // also, MODDD - BAD BAD BAD!  Assuming vecEnd from the existing trace is BAAAAAAAAD.  it could be centered on the origin (player's eyes)
-// instead of knowing to actually go outward in the direction we're facing!
+// instead of knowing to go outward in the direction we're facing!
 BOOL FindHullIntersection( const Vector &vecSrc, const Vector &vecEnd, TraceResult &tr, float *mins, float *maxs, edict_t *pEntity )
 {
 	BOOL success = FALSE;
@@ -561,7 +561,7 @@ int CCrowbar::Swing( int fFirst )
 
 				if (canPlayHitSound) {
 					//!!!!!
-					// For now, metallics don't care about "useBulletHitSound", ricochet or not they play this. ... besides a little volume reduction on the hit sound actually.
+					// For now, metallics don't care about "useBulletHitSound", ricochet or not they play this. ... besides a little volume reduction on the hit sound.
 
 					// also play crowbar strike
 					switch (RANDOM_LONG(0, 1))
@@ -640,7 +640,7 @@ int CCrowbar::Swing( int fFirst )
 
 				//if forced by multiplayer, don't bother. We meant to make it 0 or whatever.
 				if (fvolbar == 0 && !forcedByMultiplayer) {
-					//NOTICE - it's possible we actually DID hit something (given taking this route from trace results, we did infact), but because
+					//NOTICE - it's possible we DID hit something (given taking this route from trace results, we did infact), but because
 					//         an extra linetrace is needed to detect what surface was hit, and it might have come from a HULL trace instead,
 					//         we aren't given the exact point that was hit, only that there was a hit.
 					//soooo should we force it to a safe default like 0.6 in that case??

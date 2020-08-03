@@ -223,16 +223,17 @@ void CFlyingMonster :: HandleAnimEvent( MonsterEvent_t *pEvent )
 	{
 	case FLYING_AE_FLAP:
 		m_flightSpeed = 400;
-		break;
-
+	break;
 	case FLYING_AE_FLAPSOUND:
+	//MODDD - something never set.
+	/*
 		if ( m_pFlapSound )
 			EMIT_SOUND( edict(), CHAN_BODY, m_pFlapSound, 1, ATTN_NORM );	
-		break;
-
+	*/
+	break;
 	default:
 		CBaseMonster::HandleAnimEvent( pEvent );
-		break;
+	break;
 	}
 }
 

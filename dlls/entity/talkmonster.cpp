@@ -68,7 +68,7 @@ TYPEDESCRIPTION	CTalkMonster::m_SaveData[] =
 	DEFINE_FIELD( CTalkMonster, m_hTalkTarget, FIELD_EHANDLE ),
 
 	DEFINE_FIELD( CTalkMonster, m_flPlayerDamage, FIELD_FLOAT ),
-	//DEFINE_FIELD( CTalkMonster, forgiveSuspiciousTime, FIELD_TIME ),  no need really?  happens so often.
+	//DEFINE_FIELD( CTalkMonster, forgiveSuspiciousTime, FIELD_TIME ),  no need?  happens so often.
 	DEFINE_FIELD( CTalkMonster, forgiveSomePlayerDamageTime, FIELD_TIME ),
 	
 
@@ -574,7 +574,7 @@ void CTalkMonster :: StartTask( Task_t *pTask )
 
 
 	case TASK_SET_ACTIVITY:{
-		//MODDD - yes, this needs to have new behavior. Or a little check really.
+		//MODDD - yes, this needs to have new behavior. Or a little check.
 		
 		m_IdealActivity = (Activity)(int)pTask->flData;
 
@@ -1243,7 +1243,7 @@ void CTalkMonster::LimitFollowers( CBaseEntity *pPlayer, int maxFollowers )
 
 float CTalkMonster::TargetDistance( void )
 {
-	// If we lose the player, or he dies, return a really large distance
+	// If we lose the player, or he dies, return a large distance
 	if ( m_hTargetEnt == NULL || !m_hTargetEnt->IsAlive() )
 		return 1e6;
 
@@ -1576,7 +1576,7 @@ int CTalkMonster :: FIdleStare( void )
 //=========================================================
 int CTalkMonster :: FIdleHello( void )
 {
-	//MODDD - no check for this, really?   Don't say hello while running for your life, it's... a wee bit strange.
+	//MODDD - no check for this?   Don't say hello while running for your life, it's... a wee bit strange.
 	// Even if in terruptable, there's usually a little much going on.  Just stop if in the SCRIPT state.
 	//if (m_MonsterState == MONSTERSTATE_SCRIPT && (m_pCine && !m_pCine->CanInterrupt())) {
 	//	//in script, ignore already.
@@ -1707,7 +1707,7 @@ int CTalkMonster :: FIdleSpeak ( void )
 				}
 				else {
 					//MODDD - talking to the player and no hurt lines were given?  Why not ...
-					// wait, only while following?  Nevermind, not really important.
+					// wait, only while following?  Nevermind, not important.
 				}
 			}
 			else
@@ -2001,7 +2001,7 @@ void CTalkMonster :: SetAnswerQuestion( CTalkMonster *pSpeaker )
 
 
 //Implementable methods. Let a monster say what it needs to when (no default behavior)...
-//Provoked while declining a follow request. Scream or act really pissed.
+//Provoked while declining a follow request. Scream or act pissed.
 void CTalkMonster::DeclineFollowingProvoked(CBaseEntity* pCaller){
 	
 }
@@ -2779,7 +2779,7 @@ void CTalkMonster::StartFollowing( CBaseEntity *pLeader )
 	//just in case.
 	consecutiveFollowFails = 0;
 	//if(m_pSchedule == slStopFollowing){TaskFail();}  //if we're waiting for this delay to pass, just stop.
-	//...actually no need, any start / stop by the player pressing Use on talkmonsters already resets the schedule.
+	//...no need, any start / stop by the player pressing Use on talkmonsters already resets the schedule.
 
 	if ( m_pCine )
 		m_pCine->CancelScript();
@@ -2898,7 +2898,7 @@ void CTalkMonster :: FollowerUse( CBaseEntity *pActivator, CBaseEntity *pCaller,
 		else if ( CanFollow() )
 		{
 			//easyPrintLine("TALK DEBUG 3b???");
-			//why minus 1? Because this is BEFORE letting the new NPC follow the player. So at a max value of "1", it's actually treated as a real max of 2.
+			//why minus 1? Because this is BEFORE letting the new NPC follow the player. So at a max value of "1", it's treated as a real max of 2.
 			//Why? because before letting a new NPC follow the player, if one is following, the count is still 1. Then we add the new follower without doing the check again.
 			//This guarantees that the most recent follow request gets to follow the player (without getting unfollowed right after) no matter what.
 			LimitFollowers( pCaller , EASY_CVAR_GET(playerFollowerMax)-1 );
@@ -2944,7 +2944,7 @@ void CTalkMonster::Precache( void )
 
 	//easyForcePrintLine("HEY THIS IS %s AND WELCOME TO JACKASS %s", this->getClassname(), STRING( m_iszUse ));
 
-	//NOTE: no need for sentence-sound-save stuff here really.
+	//NOTE: no need for sentence-sound-save stuff here.
 	if ( m_iszUse )
 		m_szGrp[TLK_USE] = STRING( m_iszUse );
 	if ( m_iszUnUse )

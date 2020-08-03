@@ -23,22 +23,24 @@
 //MODDD - needed for getNumberOfSkins and getNumberOfBodyParts.
 #include "util_model.h"
 
+EASY_CVAR_EXTERN(cl_explosion)
+EASY_CVAR_EXTERN(soundSentenceSave)
+EASY_CVAR_EXTERN(weaponPickupPlaysAnyReloadSounds);
 
-void EntvarsKeyvalue( entvars_t *pev, KeyValueData *pkvd );
 
 extern "C" void PM_Move ( struct playermove_s *ppmove, int server );
 extern "C" void PM_Init ( struct playermove_s *ppmove  );
 extern "C" char PM_FindTextureType( char *name );
 
+
 extern DLL_GLOBAL Vector g_vecAttackDir;
 extern DLL_GLOBAL int g_iSkillLevel;
 
-//MODDD 
-EASY_CVAR_EXTERN(cl_explosion)
-EASY_CVAR_EXTERN(soundSentenceSave)
-EASY_CVAR_EXTERN(weaponPickupPlaysAnyReloadSounds);
-
 extern short g_sGaussBallSprite;
+
+static void SetObjectCollisionBox( entvars_t *pev );
+
+void EntvarsKeyvalue( entvars_t *pev, KeyValueData *pkvd );
 
 
 
@@ -106,7 +108,10 @@ static DLL_FUNCTIONS gFunctionTable =
 	AllowLagCompensation,		//pfnAllowLagCompensation
 };
 
-static void SetObjectCollisionBox( entvars_t *pev );
+
+
+
+
 
 #ifndef _WIN32
 extern "C" {
@@ -596,7 +601,7 @@ BOOL CBaseEntity::usesSoundSentenceSave(void){
 
 //Is this monster a flyer for the purposes of pathfinding or what nodes to use?
 //Flyers use a different type of nodes than the typical snapped-to-ground ones.
-//Flyers are things that defy gravity and can move anywhere on the Z axis really.  Not just anything that can jump.
+//Flyers are things that defy gravity and can move anywhere on the Z axis.  Not just anything that can jump.
 //Don't worry about swimming (pev->flags having FL_SWIM I think).  Swimmers are just flyers with a different coat of paint
 //and already know to use their own in-water nodes.
 BOOL CBaseEntity::isMovetypeFlying(void) const{
@@ -683,7 +688,7 @@ const char* CBaseEntity::getClassnameShort(void){
 
 
 
-//MODDD - mostly for testing, really.
+//MODDD - mostly for testing.
 void CBaseEntity::Spawn(void){
 	//easyPrintLine("WWWWWWW %s", STRING(pev->classname) );
 	return;
@@ -1313,7 +1318,7 @@ float CBaseEntity::massInfluence(void){
 }//END OF massInfluence
 
 //What type of projectile am I, if I am a projectile at all?
-//This includes bolts, grenades, and rockets.  Really any entity with the sole purpose of moving in one direction or following a target just to do damage.
+//This includes bolts, grenades, and rockets.  Any entity with the sole purpose of moving in one direction or following a target just to do damage.
 //Can include throwable organics too (snarks / chumtoads).
 int CBaseEntity::GetProjectileType(void){
 	return PROJECTILE_NONE;

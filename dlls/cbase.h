@@ -476,7 +476,7 @@ public:
 
 	// A simpler version of forcedRelationshipWith that should be considered at the same time.
 	// Just a quick check to see whether the current should be unconditionably hated no matter what.
-	// It actually isn't taken to heart too much, as it would conflict with  forcedRelationshipWith.
+	// It isn't taken to heart too much, as it would conflict with  forcedRelationshipWith.
 	// This method is not involved in IRelationship.
 	virtual BOOL isForceHated(CBaseEntity *pBy);
 
@@ -755,7 +755,7 @@ inline BOOL FNullEnt(CBaseEntity* ent) { return (ent == NULL) || FNullEnt(ent->e
 // used, auto-casting the EHANDLE as a BOOL to fit that FNullEnt overload.
 // And that calls for "Get() != NULL", so may as well cut out the middleman (cast)
 // and skip to that.  Also the check in the EHANDLE one was for "<some int == 0>", 
-// since being NULL actually returns TRUE and otherwise FALSE (invert the '!= NULL' part).
+// since being NULL returns TRUE and otherwise FALSE (invert the '!= NULL' part).
 inline BOOL FNullEnt(EHANDLE someHandle) { return (someHandle.Get() == NULL); }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 

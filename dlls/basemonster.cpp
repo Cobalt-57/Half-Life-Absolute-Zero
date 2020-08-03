@@ -342,7 +342,7 @@ BOOL CBaseMonster::NoFriendlyFireImp(const Vector& startVec, const Vector& endVe
 	}
 
 	//easyForcePrintLine("NoFriendlyFireImp: Flag 2: %.2f %d %d %d %d",  tr.flFraction, tempTarget==NULL, (tempTarget == pEnemy), reltemp  > R_NO, reltemp == R_FR );
-	//tempTarget being NULL really shouldn't be possible, but this doesn't hurt.
+	//tempTarget being NULL shouldn't be possible, but this doesn't hurt.
 
 
 	BOOL isInanimate = FALSE;
@@ -1125,7 +1125,7 @@ void CBaseMonster :: Look ( float flDistance )
 				 //MODDD - exluding this for now.  Still think it's alive for a tiny bit during the death animation.
 				 //pSightEnt->pev->health > 0 &&
 				 
-				 //MODDD - new conditions. Must be alive... wait, this really wasn't here before?! Without a check like this, the conditions can still be flagged
+				 //MODDD - new conditions. Must be alive... wait, this wasn't here before?! Without a check like this, the conditions can still be flagged
 				 //and cause the AI to act as though there is some hostile monster forwards, such as stopping a monster fooled by a chumtoad from wandering off
 				 //the millisecond it gets that schedule because the chumtoad playing dead is in front of it.
 				 pSightEnt->IsAlive_FromAI(this)
@@ -1484,7 +1484,7 @@ int CBaseMonster::convert_itbd_to_damage(int i){
 	}else{
 		// start at 8 = DMG_BLEEDING.
 		//return (DMG_PARALYZE << (i - 8));
-		// ...actually no, unless all future timed damages are placed so they occur
+		// ...no, unless all future timed damages are placed so they occur
 		// one-after-the-other like for 'i < itbd_BITMASK2_FIRST' above.
 		// Only one yet so hard to say.
 		switch(i){
@@ -1597,16 +1597,7 @@ void CBaseMonster::parse_itbd(int i) {
 		TakeDamage(pev, pev, RADIATION_DAMAGE, 0, damageType | DMG_TIMEDEFFECTIGNORE);
 	break;
 	//case itbd_DrownRecover:
-		//
-		//// NOTE: this hack is actually used to RESTORE health
-		//// after the player has been drowning and finally takes a breath
-		//if (m_idrowndmg > m_idrownrestored)
-		//{
-		//	int idif = min(m_idrowndmg - m_idrownrestored, 10);
-
-		//	TakeHealth(idif, DMG_GENERIC);
-		//	m_idrownrestored += idif;
-		//}
+	// ...
 	//break;
 	case itbd_Acid:
 		//MODDD - comment undone.
@@ -1774,7 +1765,7 @@ void CBaseMonster::CheckTimeBasedDamage(void)
 				timedDamage_nonFirstFrame(i, m_bitsDamageTypeRef);
 			}else{
 				// first time taking this damage type - init damage duration
-				// only if the duration received is above 0.  Otherwise there won't really be a 'next' time.
+				// only if the duration received is above 0.  Otherwise there won't be a 'next' time.
 				// 255 is the stand-in for "-1", a special choice to mean this damage type should not appear in any form, not even
 				// the small damage icon that disappears soon without any timed damage.
 
@@ -2232,9 +2223,9 @@ void CBaseMonster::setModel(void){
 	CBaseMonster::setModel(NULL);
 }
 void CBaseMonster::setModel(const char* m){
-	//too broad to do much here.
+	// too broad to do much here.
 
-	//...actually, if unspecified, a little default behavior:
+	// if unspecified, a little default behavior:
 	const char* germanModelPath = getGermanModel();
 	BOOL hasGermanModel = (germanModelPath != NULL);
 
@@ -2245,34 +2236,32 @@ void CBaseMonster::setModel(const char* m){
 	if(hasGermanModel){
 
 		const char* normalModelPath = getNormalModel();
-		//This should NEVER be null, as the german & normal model paths should be set at the same time.
-
-		//if german censorship is off
+		// This should NEVER be null, as the german & normal model paths should be set at the same time.
 
 
-		//NOTICE: not sure what to do if  "getGermanModelRequirement()"  fails.  Crash?  Invisible model?    For now, just relying on retail's version.
+		// NOTICE: not sure what to do if  "getGermanModelRequirement()"  fails.  Crash?  Invisible model?    For now, just relying on retail's version.
 		if(EASY_CVAR_GET(sv_germancensorship) == 0 || EASY_CVAR_GET(allowGermanModels) != 1 || globalPSEUDO_canApplyGermanCensorship == 0 || getGermanModelRequirement() == FALSE){
-			//but we're using the german model...
+			// but we're using the german model...
 			//if(usingGermanModel){
 				SET_MODEL(ENT(pev), normalModelPath);
 			//}
 			//if german censorship is on
 		}else if(EASY_CVAR_GET(sv_germancensorship) == 1 && EASY_CVAR_GET(allowGermanModels) == 1 && globalPSEUDO_canApplyGermanCensorship == 1){
-			//but we're not using the german model (and have one)
+			// but we're not using the german model (and have one)
 			//if(hasGermanModel && !usingGermanModel){
 			//if(hasGermanModel){   //REDUNDANT.
 				SET_MODEL(ENT(pev), germanModelPath);
 			//}
 			//}
 		}else{
-			//FREAKY INBETWEEN STATE.  HELP!!!
+			// FREAKY INBETWEEN STATE.  HELP!!!
 			easyPrintLine("!!!ERROR 93r|\\|\\4|\\|.  %s:%d", this->getClassname(), this->monsterID);
 		}
 
 	}else{
 
 		if(m != NULL && m[0] != '\0'){
-			//Non-empty string? Not using the GermanModel system? Just go with what we were sent.
+			// Non-empty string? Not using the GermanModel system? Just go with what we were sent.
 			CBaseEntity::setModel(m);
 		}
 	}
@@ -2280,10 +2269,10 @@ void CBaseMonster::setModel(const char* m){
 }
 
 BOOL CBaseMonster::getMonsterBlockIdleAutoUpdate(){
-	//by default, monsters have no problems looping the idle anim / looking for a new one automatically when it finishes.
-	//Override this method in child monster classes (children of CBaseMonster) to change this per child.
+	// by default, monsters have no problems looping the idle anim / looking for a new one automatically when it finishes.
+	// Override this method in child monster classes (children of CBaseMonster) to change this per child.
 	return FALSE;
-}//END OF getMonsterBlockIdleAutoUpdate(...)
+}//END OF getMonsterBlockIdleAutoUpdate
 
 
 //=========================================================
@@ -2311,7 +2300,7 @@ void CBaseMonster :: MonsterUse ( CBaseEntity *pActivator, CBaseEntity *pCaller,
 
 				//ChangeSchedule(GetScheduleOfType(TASK_FACE_IDEAL));
 
-				// actually this is less invasive, as seen elsewhere to make a monster look at the source of a sound.
+				// this is less invasive, as seen elsewhere to make a monster look at the source of a sound.
 				this->SetConditions(bits_COND_LIGHT_DAMAGE);
 			}
 		}
@@ -3236,8 +3225,8 @@ int CBaseMonster :: CheckEnemy ( CBaseEntity *pEnemy )
 //(also reducing m_intOldEnemeyNextIndex)
 void CBaseMonster::refreshStack() {
 
-	//minus 1, because m_intOldEnemyNextIndex is ACTUALLY the place to put a new enemy. It itself, is not actually the most recently added enemy. But one index less, is.
-	//This is also why it must be above 0 to actually have anything (index of 0 - 1 = -1, meaning empty. index of 2 - 1 = 1, meaning the most recent addition is at #1).
+	//minus 1, because m_intOldEnemyNextIndex is the place to put a new enemy. It itself, is not the most recently added enemy. But one index less, is.
+	//This is also why it must be above 0 to have anything (index of 0 - 1 = -1, meaning empty. index of 2 - 1 = 1, meaning the most recent addition is at #1).
 
 	for(int i = m_intOldEnemyNextIndex - 1; i >= 0; i--){
 
@@ -3761,7 +3750,7 @@ static const float stepChoiceArray[] = {LOCAL_STEP_SIZE, LOCAL_STEP_SIZE_MOD};
 
 int CBaseMonster::CheckLocalMoveHull(const Vector &vecStart, const Vector &vecEnd, CBaseEntity *pTarget, float *pflDist  )
 {
-	//MODDD - todo at some point. Is that really a good idea... always TRUE here??
+	//MODDD - todo at some point. Is that a good idea... always TRUE here??
 	return LOCALMOVE_VALID;
 
 	
@@ -3847,7 +3836,7 @@ int CBaseMonster :: CheckLocalMove ( const Vector &vecStart, const Vector &vecEn
 		// We don't lose much here, because a distance this great is very likely
 		// to have something in the way.
 
-		// since we've actually moved the monster during the check, undo the move.
+		// since we've moved the monster during the check, undo the move.
 		pev->origin = vecStartPos;
 		return FALSE;
 	}
@@ -4016,7 +4005,7 @@ int CBaseMonster :: CheckLocalMove ( const Vector &vecStart, const Vector &vecEn
 	}
 
 
-	// since we've actually moved the monster during the check, undo the move.
+	// since we've moved the monster during the check, undo the move.
 	UTIL_SetOrigin( pev, vecStartPos );
 
 	return iReturn;
@@ -4151,7 +4140,7 @@ void CBaseMonster :: AdvanceRoute ( float distance, float flInterval )
 			}
 			*/
 			
-			//MODDD - replaced with ShouldAdvanceRoute call since the logic's really the same.  
+			//MODDD - replaced with ShouldAdvanceRoute call since the logic's the same.  
 			//...this exact check HAD to pass to even make it to this point. Just skip it and continue already.
 			//   We wanted to advance, we called this method BECAUSE we were close enough, just go. Say you're done. Thank you.
 			//if(ShouldAdvanceRoute(distance, flInterval)){
@@ -4264,7 +4253,7 @@ BOOL CBaseMonster :: BuildRoute ( const Vector &vecGoal, int iMoveFlag, CBaseEnt
 
 	//TODO IN THE PATH FINDING:
 	//elevation check?  See if the goal (next node; m_Route[m_iRouteIndex].vecLocation) position is above my current position, or below.
-	// If the goal is  on the same level... can't really do the fix.
+	// If the goal is  on the same level... can't do the fix.
 	// If the goal is below me, it's the top-ramp fix.  (currently in)
 	// If the goal is above me, it's the bottom-ramp fix (not done)
 
@@ -5092,7 +5081,7 @@ void CBaseMonster :: Move ( float flInterval )
 	BOOL skipMoveExecute = FALSE;
 	
 	EASY_CVAR_PRINTIF_PRE(pathfindPrintout, easyPrintLine("%s:ID%d Pathfinding: ROUTE X", getClassnameShort(), monsterID) );
-	// close enough to the target, now advance to the next target. This is done before actually reaching
+	// close enough to the target, now advance to the next target. This is done before reaching
 	// the target so that we get a nice natural turn while moving.
 
 	///!!!BUGBUG- magic number
@@ -5143,16 +5132,16 @@ void CBaseMonster :: Move ( float flInterval )
 	
 	//MODDD - if we've already been snapped to the waypoint (allowed, was close enough to, and did), no need to move this frame. The logic won't move us towards the next waypoint yet,
 	//        no need to go further beyond.
-	//MODDD - actually see above, the hack on flInterval is enough to make the monster move only far enough to reach the node exactly this frame without passing it.
+	//MODDD - see above, the hack on flInterval is enough to make the monster move only far enough to reach the node exactly this frame without passing it.
 	//if(!skipMoveExecute){
 
 	BOOL facingNextNode = TRUE;
 	float facingTolerance = MoveYawDegreeTolerance();
 
 	if(facingTolerance > 0){
-		//One more thing. Are we actually facing where we want to go enough?
+		//One more thing. Are we facing where we want to go enough?
 		//Vector vecDirToCurrentNode = (pev->origin - m_Route[ m_iRouteIndex ].vecLocation).Normalize();
-		//...actually our ideal yaw already has to be towards this node. Just use that.
+		//...our ideal yaw already has to be towards this node. Just use that.
 		
 		//pev->ideal_yaw
 
@@ -5364,6 +5353,11 @@ void CBaseMonster::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, f
 //=========================================================
 void CBaseMonster :: MonsterInit ( void )
 {
+
+	//DEBUG - show me the sounds in your sequences.
+	Sequence_PrintSound_All(GET_MODEL_PTR(this->edict()));
+
+
 	//MODDD - extra check.
 	const char* classname_test = STRING(pev->classname);
 	if (classname_test == NULL || strlen(classname_test)==0) {
@@ -5430,8 +5424,8 @@ void CBaseMonster :: MonsterInit ( void )
 
 	//MODDD - these are now received from overridable methods instead so that child classes can change them.
 	//        What else would the point of them being instance variables be?
-	//        that and they really should just be per class as methods like this instead of per individual monster (instance).
-	//        Really, when is say, one Kingpin going to have different DistTooFar or DistLook than any other Kingpin?
+	//        that and they should just be per class as methods like this instead of per individual monster (instance).
+	//        When is say, one Kingpin going to have different DistTooFar or DistLook than any other Kingpin?
 	m_flDistTooFar		= getDistTooFar();
 	m_flDistLook		= getDistLook();
 
@@ -5681,7 +5675,7 @@ int CBaseMonster::IRelationship ( CBaseEntity *pTarget )
 {
 
 	//NOTICE - Bioweapon's relationship with AMONST changed from R_DL to R_NO so that snarks don't attack alien monsters that otherwise are uninsterested in them.
-	//Besides, is there really all that big of a difference between ALIEN_MILITARY and ALIEN_MONSTER or even ALIEN_PREDATOR?
+	//Besides, is there all that big of a difference between ALIEN_MILITARY and ALIEN_MONSTER or even ALIEN_PREDATOR?
 	
 	//MODDD - there is a new feature: "isForceHated".
 	//        If true, we must hate this monster.
@@ -5930,7 +5924,7 @@ BOOL CBaseMonster :: BuildNearestRoute ( Vector vecThreat, Vector vecViewOffset,
 
 				if (tr.flFraction == 1.0)
 				{
-					// try to actually get there
+					// try to get there
 					//MODDD - involve the now parameterized "iMoveFlag" and "pTarget".
 					//if ( BuildRoute ( node.m_vecOrigin, bits_MF_TO_LOCATION, NULL ) )
 					if ( BuildRoute ( node.m_vecOrigin, iMoveFlag, pTarget ) )
@@ -5991,12 +5985,12 @@ CBaseEntity *CBaseMonster :: BestVisibleEnemy ( void )
 	iBestRelationship = R_NO;
 	//iBestRelationship = R_FR;
 
-	//Note that "R_NO" relationship'd enemies can't be checked. They are not added to the m_pLink list that's populated by the "Look" method called before this BestVisibleEnemy one.
+	// Note that "R_NO" relationship'd enemies can't be checked. They are not added to the m_pLink list that's populated by the "Look" method called before this BestVisibleEnemy one.
 
-	//ACTUALLY slightly different take. If a feared monster is the closest, it gets priority no matter what. Otherwise the usual system goes: "no" up to "nemesis", and then
+	// slightly different take. If a feared monster is the closest, it gets priority no matter what. Otherwise the usual system goes: "no" up to "nemesis", and then
 	//the closest of those at the same highest hatred.
 
-	//ACTUALLY another change: keep track of all feared enemies and normal ones (Dislike to Nemesis) separately.
+	// another change: keep track of all feared enemies and normal ones (Dislike to Nemesis) separately.
 	//If the closest of all feared enemies is closer than closest of all normal enemies (not necessarily just the most despised enemy, who may be further away than that),
 	//then we make our enemy the feared enemy instead.
 
@@ -6093,7 +6087,7 @@ CBaseEntity *CBaseMonster :: BestVisibleEnemy ( void )
 		}
 	}
 
-	//should not be reached.
+	// should not be reached.
 	return pReturn;
 }//END OF BestVisibleEnemy
 
@@ -6284,13 +6278,27 @@ void CBaseMonster :: HandleAnimEvent( MonsterEvent_t *pEvent )
 		}
 		break;
 
-	case SCRIPT_EVENT_SOUND:			// Play a named wave file
-		EMIT_SOUND( edict(), CHAN_BODY, pEvent->options, 1.0, ATTN_IDLE );
-		break;
+	case SCRIPT_EVENT_SOUND: {			// Play a named wave file
+		//MODDD - so do we use the soundsentencesave system here or not then?   Hm.
+		// Depends on if it's a sound usually played (called for in its file, agrunt.cpp, etc.).
+		// Scripted's may precache their own sounds that don't normally come from this entity.
+		// So, little risky of an assumption.
+		// Compromise:  If it's in a scripted state, assume the monster can play unusual sequences or invoke unusual sounds.
+		// But run through a monster's commonly-played sequences (no script intervention needed to play idle anims, most
+		// attack ones, etc.)
+		// So don't trust the soundsentencesave system when scripted.  It's required to precahce any sounds that come
+		// from sequences expected to be played in that monster while scripted anyway.
+		// Otherwise (not scripted), assume soundsentencesave can catch the sound
+		BOOL useSoundSentenceSave = (m_MonsterState != MONSTERSTATE_SCRIPT);
+		EMIT_SOUND_FILTERED(edict(), CHAN_BODY, pEvent->options, 1.0, ATTN_IDLE, 0, 100, useSoundSentenceSave);
+	}
+	break;
 
-	case SCRIPT_EVENT_SOUND_VOICE:
-		EMIT_SOUND( edict(), CHAN_VOICE, pEvent->options, 1.0, ATTN_IDLE );
-		break;
+	case SCRIPT_EVENT_SOUND_VOICE: {
+		//MODDD - you too
+		BOOL useSoundSentenceSave = (m_MonsterState != MONSTERSTATE_SCRIPT);
+		EMIT_SOUND_FILTERED(edict(), CHAN_VOICE, pEvent->options, 1.0, ATTN_IDLE, 0, 100, useSoundSentenceSave);
+	}break;
 
 	case SCRIPT_EVENT_SENTENCE_RND1:		// Play a named sentence group 33% of the time
 		if (RANDOM_LONG(0,2) == 0)
@@ -6414,7 +6422,7 @@ void CBaseMonster::lookAtEnemy_pitch(void){
 		// test.  Is the enemy too close?
 		float tempDist = Distance(pev->origin, m_hEnemy->pev->origin);
 		if (tempDist < 90) {
-			// don't use the pitch!  It gets really odd looking trying to aim extremely close.
+			// don't use the pitch!  It gets odd looking trying to aim extremely close.
 			float thePitch = 0;
 			SetBlending(0, thePitch);
 			return;
@@ -7015,7 +7023,7 @@ int CBaseMonster :: CanPlaySequence( BOOL fDisregardMonsterState, int interruptL
 	}
 
 
-	//MODDD - new block. force allow  SS_INTERRUPT_AI.  Really, what else was the point of specifying that.
+	//MODDD - new block. force allow  SS_INTERRUPT_AI.  What else was the point of specifying that.
 	if (interruptLevel >= SS_INTERRUPT_AI) {
 		return TRUE;
 	}
@@ -7204,6 +7212,7 @@ void CBaseMonster::PlaySentence( const char *pszSentence, float duration, float 
 }
 
 
+//MODDD - bConcurrent and pListener are ignored by default, but other implementations (talkmonster and gman) do something with them.
 void CBaseMonster::PlayScriptedSentence( const char *pszSentence, float duration, float volume, float attenuation, BOOL bConcurrent, CBaseEntity *pListener )
 { 
 	PlaySentence( pszSentence, duration, volume, attenuation );
@@ -7409,7 +7418,7 @@ BOOL CBaseMonster :: GetEnemy (BOOL arg_forceWork )
 			{
 				SetConditions(bits_COND_NEW_ENEMY);
 				//MODDD - hold on. Shouldn't we also rip the old enemy LKP from the stack too?
-				//        ACTUALLY The PopEnemy() call above automatically does that. It did even change m_hEnemy to the next enemy remembered in line.
+				//        The PopEnemy() call above automatically does that. It did even change m_hEnemy to the next enemy remembered in line.
 
 			}
 		}
@@ -7419,7 +7428,7 @@ BOOL CBaseMonster :: GetEnemy (BOOL arg_forceWork )
 	{
 		// monster has an enemy.
 		//MODDD NOTE - returning trues just because m_hEnemy ends up "not null" isn't very informative.
-		//Perhaps we should return TRUE only if a new enemy was actually picked, or at least an attempt was made to pick the bestVisibleEnemy regarldess
+		//Perhaps we should return TRUE only if a new enemy was picked, or at least an attempt was made to pick the bestVisibleEnemy regarldess
 		//of it matching our old enemy or not?  Say we just... did something?
 		return TRUE;
 	}
@@ -7473,7 +7482,7 @@ BOOL CBaseMonster :: ShouldFadeOnDeath( void )
 
 
 void CBaseMonster::setPhysicalHitboxForDeath(void){
-	//just stuff schedule.cpp used to do at death (and still does really, just more modular this way)
+	//just stuff schedule.cpp used to do at death (and still does, just more modular this way)
 
 	//MODDD NOTE - it seems this is not always quite right, unsure.
 	if ( !BBoxFlat() )
@@ -7677,8 +7686,8 @@ void CBaseMonster::Activate( void ){
 }
 
 void CBaseMonster::Spawn( ){
-	//careful, not everything calls the parent spawn method, even if it should.
-	//MonsterInit is a better place that's often called by most monster Spawn scripts. Beware of those that don't even do that.
+	// careful, not everything calls the parent spawn method, even if it should.
+	// MonsterInit is a better place that's often called by most monster Spawn scripts. Beware of those that don't even do that.
 
 	CBaseToggle::Spawn();
 	//setModelCustom();
@@ -7697,7 +7706,7 @@ int CBaseMonster::LookupActivityFiltered(int NewActivity){
 
 
 
-//Name is kind of odd.  ACTUALLY gets the (or an) animation (by integer?) related to this activity.
+//Name is kind of odd.  Gets the (or an) animation (by integer?) related to this activity.
 int CBaseMonster :: LookupActivity(int activity )
 {
 	if( !usesAdvancedAnimSystem()){
@@ -7949,7 +7958,7 @@ BOOL CBaseMonster::getForceAllowNewEnemy(CBaseEntity* pOther){
 
 
 // Monsters with bigger bounds may need them to be temporarily reduced to play better with the pathfiding.
-// Side effects not well understood yet, see if this is really worth it.
+// Side effects not well understood yet, see if this is worth it.
 // By default off, enable per monsters as needed.
 BOOL CBaseMonster::needsMovementBoundFix(){
 
@@ -7962,7 +7971,7 @@ void CBaseMonster::cheapKilled(void){
 	//MODDD - major HACK - pathetic stand-in death anim until there is a proper death anim.
 	this->pev->gravity = 0;
 	pev->movetype		= MOVETYPE_NONE;
-	this->pev->origin = pev->origin + Vector(0, 0, 13.4);   //so it isn't poking through the ground. Yes this will look really weird.
+	this->pev->origin = pev->origin + Vector(0, 0, 13.4);   //so it isn't poking through the ground. Yes this will look weird.
 	this->pev->angles = Vector(0, 0, 90);
 	this->pev->framerate = 0;
 	this->m_flFramerateSuggestion = 0;
@@ -7986,7 +7995,7 @@ void CBaseMonster::cheapKilledFlyer(void){
 	// Not working out so great anymore.  okay then..
 	//pev->movetype		= MOVETYPE_STEP;
 
-	//this->pev->origin = pev->origin + Vector(0, 0, 13.4);   //so it isn't poking through the ground. Yes this will look really weird.
+	//this->pev->origin = pev->origin + Vector(0, 0, 13.4);   //so it isn't poking through the ground. Yes this will look weird.
 	
 	// Copied from Flyer's killed script
 	ClearBits( pev->flags, FL_ONGROUND );
@@ -8102,7 +8111,7 @@ void CBaseMonster::setEnemyLKP_Investigate(const Vector& argToInvestigate){
 
 //MODDD
 // Moved to the base monster for usefullness.  Probably needs to be overridden per monster.
-// More of a special utility per monster, bound not to really be salvagable on its own here.
+// More of a special utility per monster, bound not to be salvagable on its own here.
 CBaseEntity* CBaseMonster::getNearestDeadBody(const Vector& arg_searchOrigin, const float arg_maxDist){
 
 	CBaseEntity* pEntityScan = NULL;
@@ -8164,7 +8173,7 @@ BOOL CBaseMonster::bypassAllowMonstersSpawnCheck(void){
 // It is up to an individual monster with a violent death sequence, regardless of whether it's mapped to activity ACT_DIEVIOLENT or not, to
 // override this and say "TRUE", along with providing its own rule for a clear distance check.  That is, if whatevre distance forwards/backwards
 // (typically backwards) is safe.  But it varries from monster to monster's sequence, just have to make it so the sequence can't clip through anything
-// and look really weird.
+// and look weird.
 // It is also OK if the sequence for violent death is not tied to ACT_DIEVIOLENT in the model. Then pick it for ACT_DIEVIOLENT in the custom animation system instead.
 BOOL CBaseMonster::violentDeathAllowed(void){
 	return FALSE;

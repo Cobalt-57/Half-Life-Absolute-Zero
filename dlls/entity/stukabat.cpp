@@ -162,7 +162,7 @@ Task_t tlStukaBatChaseEnemy[] =
 	{ TASK_GET_PATH_TO_ENEMY,	(float)128		},
 
 	//{TASK_STRAFE_PATH, (float)128 },
-	//is that really wise alone..?
+	//is that wise alone..?
 	//{ TASK_WAIT_FOR_MOVEMENT,	(float)0		},
 	//{ TASK_WAIT,	(float)1		},
 	{ TASK_ACTION,	(float)1		},
@@ -870,7 +870,7 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CStukaBat)
 	
 	PRINTQUEUE_STUKA_SEND(stukaPrint.tookDamage, "TOOK DMG");
 
-	//...also, why is this "CBaseMonster" and not "CSquadMonster", the direct parent of Controller OR StukaBat?  Ah well, I guess both work technically (CSquadMonster doesn't really affect how takeDamage works)
+	//...also, why is this "CBaseMonster" and not "CSquadMonster", the direct parent of Controller OR StukaBat?  Ah well, I guess both work technically (CSquadMonster doesn't affect how takeDamage works)
 	//probably just doesn't matter.
 	return GENERATE_TAKEDAMAGE_PARENT_CALL(CSquadMonster);
 }
@@ -1002,7 +1002,7 @@ float CStukaBat::ChangeYaw ( int yawSpeed )
 			//don't care.
 		}
 
-		return 0;  //cannot rotate on the ceiling, do NOT go up the method heirarchy (actually turn).
+		return 0;  //cannot rotate on the ceiling, do NOT go up the method heirarchy (turn).
 	}else{
 		//we can go.
 	}
@@ -1442,7 +1442,7 @@ void CStukaBat::checkStartSnap(){
 		distFromUp = -1;
 		distFromDown = -1;
 	
-		//actually hit something?
+		// hit something?
 		if(trUp.flFraction < 1.0){
 			distFromUp = (vecStartLower - trUp.vecEndPos).Length();
 			if(distFromUp < 28+5){
@@ -1928,7 +1928,7 @@ void CStukaBat :: StartTask ( Task_t *pTask )
 		//if(!timetostop){
 			pScent = PBestScent();
 			if(pScent != NULL){
-				//Pick a random spot away from the scent actually.
+				//Pick a random spot away from the scent.
 				//tempGoal = Vector(pev->origin.x, pev->origin.y, pScent->m_vecOrigin.z + 6);
 
 				scentSpot = pScent->m_vecOrigin;
@@ -2601,7 +2601,7 @@ void CStukaBat :: RunTask ( Task_t *pTask )
 		}
 
 
-		//MODDD TODO - is "getEnemy" really necessary? Would "m_hEnemy" with a null check before be sufficient?
+		//MODDD TODO - is "getEnemy" necessary? Would "m_hEnemy" with a null check before be sufficient?
 		//if(getEnemy() != NULL && getEnemy()->Get()->v.deadflag == DEAD_NO){
 		if(m_hEnemy != NULL){
 
@@ -3121,7 +3121,7 @@ Schedule_t *CStukaBat :: GetSchedule ( void )
 			){
 			canSeeEnemy = FALSE;
 
-			//MODDD TODO - m_hTargetEnt check? Is that really necessary?
+			//MODDD TODO - m_hTargetEnt check? Is that necessary?
 	}else if(getEnemy() != NULL || (m_hEnemy != NULL && m_hEnemy->pev->deadflag == DEAD_NO) || m_hTargetEnt!=NULL ){
 
 		canSeeEnemy = TRUE;
@@ -3279,7 +3279,7 @@ Schedule_t *CStukaBat :: GetSchedule ( void )
 
 	if(fallToIdling){
 
-		//Actually... path find to the enemy regardless.
+		// path find to the enemy regardless.
 		if(m_hEnemy != NULL){
 			//Go to our enemy in the default monster script!
 			//easyForcePrintLine("CAUGHT YOU YA STUPID butt fornicator");
@@ -3427,7 +3427,7 @@ Schedule_t* CStukaBat :: GetScheduleOfType ( int Type )
 		return &slStukaBatAnimWait[0];
 	break;
 	//case SCHED_STUKABAT_PATHFIND_STUMPED:
-	case SCHED_PATHFIND_STUMPED:  //actually no, just override the default call for the stumped wait method.
+	case SCHED_PATHFIND_STUMPED:  // no, just override the default call for the stumped wait method.
 		return &slStukaPathfindStumped[0];
 	break;
 
@@ -4480,7 +4480,7 @@ void CStukaBat::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, floa
 		//ChangeYaw( pev->yaw_speed );
 
 		if(m_fSequenceFinished){
-			//can't really do anything, just idle?
+			//can't do anything, just idle?
 			setAnimation("Subtle_fidget_on_ground", TRUE, TRUE, 2);
 		}
 

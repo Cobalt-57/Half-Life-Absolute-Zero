@@ -360,7 +360,7 @@ const char* CFriendly::pVomitVoiceSounds[] =
 const char* CFriendly::pVomitHitSounds[] = 
 {
 	"weapons/electro4.wav",    //This is precached by the player's gauss, so it is always available. No harm done in a redundant precache or skip (soundsentencesave) then. 
-	//ACTUALLY they all these are precached by the player's gauss.
+	// they all these are precached by the player's gauss.
 	"weapons/electro5.wav",
 	"weapons/electro6.wav",
 };
@@ -754,7 +754,7 @@ Schedule_t* CFriendly::GetSchedule ( void )
 			else  
 			{
 
-				//easyPrintLine("I say, really now? %d %d", HasConditions(bits_COND_CAN_RANGE_ATTACK1), HasConditions(bits_COND_CAN_RANGE_ATTACK2) );
+				//easyPrintLine("I say, what now? %d %d", HasConditions(bits_COND_CAN_RANGE_ATTACK1), HasConditions(bits_COND_CAN_RANGE_ATTACK2) );
 
 				// we can see the enemy
 				if ( HasConditions(bits_COND_CAN_RANGE_ATTACK1) )
@@ -941,7 +941,7 @@ void CFriendly::StartTask( Task_t *pTask ){
 		break;
 		case TASK_FRIENDLY_EAT_POST_WAIT:
 			nextPlayerSightCheck = gpGlobals->time + 1.0;
-			//nothing else to do really. "eatFinishPostWaitTimer" already tells me how long to wait.
+			//nothing else to do. "eatFinishPostWaitTimer" already tells me how long to wait.
 		break;
 		case TASK_FRIENDLY_SEEK_CORPSE_FAIL_WAIT:
 		case TASK_FRIENDLY_TAKE_COVER_FROM_PLAYER_FAIL_WAIT:
@@ -1085,7 +1085,7 @@ void CFriendly::RunTask( Task_t *pTask ){
 		case TASK_FRIENDLY_EAT_POST_WAIT:
 		case TASK_FRIENDLY_GENERIC_WAIT:
 		{
-			//really, waiting in cover.
+			// waiting in cover.
 			//If the player looks at me, look back for a little perhaps? interrupt to have a "stare at" schedule and then wait a little more, uninterruptably?
 
 
@@ -1131,7 +1131,7 @@ void CFriendly::RunTask( Task_t *pTask ){
 
 					////there is a straight line from them to me, good.
 					if(daMatchaa ){
-						//not only is looking possible (unobstructed straight line from player to me), they also must actually BE looking.
+						//not only is looking possible (unobstructed straight line from player to me), they also must BE looking.
 						if(UTIL_IsFacing(pPlayerEntityScan->pev, pev->origin, 0.3)){
 							//now the leastDist check.
 							if(distToPlayer < leastDistanceYet){

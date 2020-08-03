@@ -35,7 +35,7 @@
 
 
 
-//MODDD - NOTE.  The battery is actually in items.cpp.  This file only has the wall charger.
+//MODDD - NOTE.  The battery pickup-able is in items.cpp.  This file only has the wall charger.
 // Go figure.
 
 
