@@ -74,6 +74,7 @@ EASY_CVAR_EXTERN(pissedNPCs)
 
 static float g_scientist_PredisasterSuitMentionAllowedTime = -1;
 static float g_scientist_HeadcrabMentionAllowedTime = -1;
+static float g_scientist_sayGetItOffCooldown = -1;
 
 
 
@@ -897,7 +898,6 @@ void CScientist::SayHello(CBaseEntity* argPlayerTalkTo) {
 
 	CTalkMonster::SayHello(argPlayerTalkTo);
 }
-
 
 void CScientist::SayIdleToPlayer(CBaseEntity* argPlayerTalkTo) {
 
@@ -2218,24 +2218,39 @@ void CScientist :: PainSound ( void )
 	if (gpGlobals->time < m_painTime )
 		return;
 
+
+	// don't let other things in the same entity be so eager to interrupt my pain noises
+	CTalkMonster::g_talkWaitTime = gpGlobals->time + RANDOM_FLOAT(2, 3);
+	//m_flStopTalkTime = CTalkMonster::g_talkWaitTime;
+
+
 	//MODDD - these conditions are set before PainSound is called, so we can determine
 	if (HasConditions(bits_COND_LIGHT_DAMAGE | bits_COND_HEAVY_DAMAGE)) {
 
-		m_painTime = gpGlobals->time + RANDOM_FLOAT(0.5, 0.75);
+		m_painTime = gpGlobals->time + RANDOM_FLOAT(1.8, 2.4);
 
-		switch (RANDOM_LONG(0, 9))
-		{
-		case 0: EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "scientist/sci_pain1.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
-		case 1: EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "scientist/sci_pain2.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
-		case 2: EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "scientist/sci_pain3.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
-		case 3: EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "scientist/sci_pain4.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
-		case 4: EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "scientist/sci_pain5.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
-		//MODDD - new
-		case 5: EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "scientist/sci_pain6.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
-		case 6: EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "scientist/sci_pain7.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
-		case 7: EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "scientist/sci_pain8.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
-		case 8: EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "scientist/sci_pain9.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
-		case 9: EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "scientist/sci_pain10.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
+		if (gpGlobals->time >= g_scientist_sayGetItOffCooldown && m_bitsDamageType & DMG_SLASH && RANDOM_FLOAT(0, 1) < 0.8) {
+			g_scientist_sayGetItOffCooldown = gpGlobals->time + 30;
+			PlaySentenceSingular("SC_TENT", 5, VOL_NORM, ATTN_NORM);  // get it off, get it off get it OFFF
+			m_bitsDamageType &= ~DMG_SLASH;
+		}
+		else {
+
+
+			switch (RANDOM_LONG(0, 9))
+			{
+			case 0: EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "scientist/sci_pain1.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
+			case 1: EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "scientist/sci_pain2.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
+			case 2: EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "scientist/sci_pain3.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
+			case 3: EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "scientist/sci_pain4.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
+			case 4: EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "scientist/sci_pain5.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
+				//MODDD - new
+			case 5: EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "scientist/sci_pain6.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
+			case 6: EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "scientist/sci_pain7.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
+			case 7: EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "scientist/sci_pain8.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
+			case 8: EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "scientist/sci_pain9.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
+			case 9: EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "scientist/sci_pain10.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
+			}
 		}
 	}
 	else {
@@ -2506,13 +2521,13 @@ Schedule_t *CScientist :: GetSchedule ( void )
 			if (FClassnameIs(m_hEnemy->pev, "monster_headcrab")) {
 				if (
 					(
-					(g_scientist_HeadcrabMentionAllowedTime == -1 && FOkToSpeakAllowCombat(0)) ||
+					(g_scientist_HeadcrabMentionAllowedTime == -1 && FOkToSpeakAllowCombat( CTalkMonster::g_talkWaitTime )) ||
 						(FOkToSpeakAllowCombat(g_scientist_HeadcrabMentionAllowedTime) && RANDOM_FLOAT(0, 1) <= 0.87)
 						)
 					) {
 					PlaySentenceSingular("SC_MONST0", 4, VOL_NORM, ATTN_NORM);
 					g_scientist_HeadcrabMentionAllowedTime = gpGlobals->time + 40;
-				}else if (FOkToSpeakAllowCombat(g_scientist_HeadcrabMentionAllowedTime - 20)) {
+				}else if ( gpGlobals->time >= CTalkMonster::g_talkWaitTime && FOkToSpeakAllowCombat(g_scientist_HeadcrabMentionAllowedTime - 20)) {
 					PlaySentence("SC_FEAR", 5, VOL_NORM, ATTN_NORM);
 				}
 			}
@@ -2631,8 +2646,11 @@ Schedule_t *CScientist :: GetSchedule ( void )
 		if ( HasConditions(bits_COND_LIGHT_DAMAGE | bits_COND_HEAVY_DAMAGE))
 		{
 			// flinch if hurt
-			return GetScheduleOfType( SCHED_SMALL_FLINCH );
+			//MODDD - Face what inflicted the damage and get scared dangit!  Do like barney now
+			//return GetScheduleOfType( SCHED_SMALL_FLINCH );
+			return GetScheduleOfType(SCHED_ALERT_SMALL_FLINCH);
 		}
+
 
 		// Cower when you hear something scary
 		if ( HasConditions( bits_COND_HEAR_SOUND ) )

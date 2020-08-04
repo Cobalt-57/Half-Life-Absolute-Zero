@@ -5354,8 +5354,8 @@ void CBaseMonster::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, f
 void CBaseMonster :: MonsterInit ( void )
 {
 
-	//DEBUG - show me the sounds in your sequences.
-	Sequence_PrintSound_All(GET_MODEL_PTR(this->edict()));
+	//MODDD - DEBUG - show me the sounds in your sequences.
+	//Sequence_PrintSound_All(GET_MODEL_PTR(this->edict()));
 
 
 	//MODDD - extra check.

@@ -5422,7 +5422,7 @@ void StartFrame( void )
 
 
 
-	
+	/*
 	//MODDD - TEST.  Use some CVar to change my blood.  See what looks good.
 	static float nextBloodGen = 0;
 
@@ -5432,7 +5432,7 @@ void StartFrame( void )
 		UTIL_SpawnBlood(bloodSpawnOrigin, (int)EASY_CVAR_GET(hyperBarney), 1);
 		nextBloodGen = gpGlobals->time + 0.08;
 	}
-
+	*/
 
 
 	if ( g_fGameOver )

@@ -9,10 +9,21 @@
 #include "animating.h"
 #include "eiface.h"
 
+
+//MODDD - TODO MAJOR.  Kindof.
+// A lot of variables here are never used by CBaseMonster.  There may as well be a common "CBaseToggleBasic" for Monster and the actual CBaseToggle to inherit from instead,
+// and anything that really needs the old CBaseToggle's stuff can just inherit from that one as usual.
+// But low priotity.
+///////////////////////////////////////////////////////////////////
+
+
+
 //
 // generic Toggle entity.
 //
 #define SF_ITEM_USE_ONLY	256 //  ITEM_USE_ONLY = BUTTON_USE_ONLY = DOOR_USE_ONLY!!! 
+
+
 
 class CBaseToggle : public CBaseAnimating
 {

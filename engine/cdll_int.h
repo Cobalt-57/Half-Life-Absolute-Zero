@@ -29,6 +29,16 @@ extern "C" {
 #include "const.h"
 #include "wrect.h"
 
+//MODDD - few things moved to the top for neatness.
+#ifndef IN_BUTTONS_H
+#include "in_buttons.h"
+#endif
+
+// ???
+#define CLDLL_INTERFACE_VERSION 7
+
+
+
 
 //MODDD - moved from cl_dll.h and hud_iface.h.
 // What?  Why was this even part of the game files like this if it's required by the engine?
@@ -265,11 +275,7 @@ typedef struct cl_enginefuncs_s
 	void					( *pfnSetMouseEnable )( qboolean fEnable );
 } cl_enginefunc_t;
 
-#ifndef IN_BUTTONS_H
-#include "in_buttons.h"
-#endif
 
-#define CLDLL_INTERFACE_VERSION		7
 
 extern void ClientDLL_Init( void ); // from cdll_int.c
 extern void ClientDLL_Shutdown( void );

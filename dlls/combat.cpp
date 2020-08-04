@@ -2310,12 +2310,7 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBaseMonster){
 		OnTakeDamageSetConditions(pevInflictor, pevAttacker, flDamage, bitsDamageType, bitsDamageTypeMod);
 	}
 
-	//MODDD NOTE - can include PainSound in the same m_MonsterState restrictions above if wanted.
-	if ( pev->deadflag == DEAD_NO )
-	{
-		// no pain sound during death animation.
-		PainSound();// "Ouch!"
-	}
+	//MODDD - old location of pain sound
 
 	//!!!LATER - make armor consideration here!
 	flDamageTake = flDamage;
@@ -2386,6 +2381,14 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBaseMonster){
 			m_bitsDamageType |= (bitsDamageType & ~DMG_TIMEBASED);
 			m_bitsDamageTypeMod |= (bitsDamageTypeMod & ~DMG_TIMEBASEDMOD);
 		}
+
+		//MODDD NOTE - can include PainSound in the same m_MonsterState restrictions above if wanted.
+		// ...not sure what this comment was about.  But yea, painsound now below the m_bitsDamageType setting, check for that in PainSound if wanted.
+		//if (pev->deadflag == DEAD_NO)
+		//{
+			// no pain sound during death animation.
+			PainSound();// "Ouch!"
+		//}
 
 
 	}else{

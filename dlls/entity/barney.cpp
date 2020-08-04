@@ -1307,7 +1307,7 @@ void CBarney :: PainSound ( BOOL bypassCooldown )
 	
 	//MODDD - barney will have the same sounds for timed or nontimed damage, but just make noise less often.
 	if (HasConditions(bits_COND_LIGHT_DAMAGE | bits_COND_HEAVY_DAMAGE)) {
-		m_painTime = gpGlobals->time + RANDOM_FLOAT(0.5, 0.75);
+		m_painTime = gpGlobals->time + RANDOM_FLOAT(1.8, 2.4);
 	}
 	else {
 		m_painTime = gpGlobals->time + RANDOM_FLOAT(3, 6);
@@ -2162,7 +2162,10 @@ void CBarney::talkAboutKilledEnemy(void) {
 		//long randoRange;
 		
 
-		if (RANDOM_FLOAT(0, 1) < 0.06) {
+		// If my health is under 40%, chance of complaining about health.
+		if (pev->health < pev->max_health*0.4 && RANDOM_FLOAT(0,1) < 0.3) {
+			PlaySentenceSingular("BA_ZOMBIE4", 3, VOL_NORM, ATTN_NORM);
+		}else if (RANDOM_FLOAT(0, 1) < 0.06) {
 			PlaySentenceSingular("BA_KILL7", 3, VOL_NORM, ATTN_NORM);
 		}
 		else if (enemyClassify == CLASS_NONE) {

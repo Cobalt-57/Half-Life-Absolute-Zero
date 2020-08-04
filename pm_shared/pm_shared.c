@@ -2401,6 +2401,9 @@ void PM_UnDuck( void )
 		//	newOrigin[i] += ( pmove->player_mins[1][i] - pmove->player_mins[0][i] );
 		//}
 
+		// That is, only do this origin adjustment if the hull was actually changed to the duck-one (usehull == 1).
+		// If not, it just brings the player upward for no reason.  No need for factoring in the view-offset Z either
+		// (it gets smoothly adjusted here going from standing to ducking, but doesn't affect the bounds until it finishes).
 		if (pmove->usehull == 1) {
 			newOrigin[0] += (pmove->player_mins[1][0] - pmove->player_mins[0][0]);
 			newOrigin[1] += (pmove->player_mins[1][1] - pmove->player_mins[0][1]);

@@ -720,6 +720,7 @@
 #define DEFAULT_monsterKilledToss 2
 #define DEFAULT_interpolation_movetypestep_mindelta 0.06
 #define DEFAULT_sv_bloodparticlemode 1
+#define DEFAULT_cl_interp_view_extra 1
 
 
 
@@ -2830,6 +2831,7 @@
 	EASY_CVAR_DECLARATION_SERVER(monsterKilledToss)\
 	EASY_CVAR_DECLARATION_SERVER(interpolation_movetypestep_mindelta)\
 	EASY_CVAR_DECLARATION_SERVER(sv_bloodparticlemode)\
+	EASY_CVAR_DECLARATION_SERVER(cl_interp_view_extra)\
 	DUMMY
 
 
@@ -3340,6 +3342,7 @@
 	EASY_CVAR_DECLARATION_CLIENT(monsterKilledToss)\
 	EASY_CVAR_DECLARATION_CLIENT(interpolation_movetypestep_mindelta)\
 	EASY_CVAR_DECLARATION_CLIENT(sv_bloodparticlemode)\
+	EASY_CVAR_DECLARATION_CLIENT(cl_interp_view_extra)\
 	DUMMY
 
 #define EASY_CVAR_UPDATE_SERVER_MASS\
@@ -3848,6 +3851,7 @@
 	EASY_CVAR_UPDATE_SERVER(monsterKilledToss)\
 	EASY_CVAR_UPDATE_SERVER(interpolation_movetypestep_mindelta)\
 	EASY_CVAR_UPDATE_SERVER(sv_bloodparticlemode)\
+	EASY_CVAR_UPDATE_SERVER(cl_interp_view_extra)\
 	DUMMY
 
 #define EASY_CVAR_UPDATE_CLIENT_MASS\
@@ -4356,6 +4360,7 @@
 	EASY_CVAR_UPDATE_CLIENT(monsterKilledToss)\
 	EASY_CVAR_UPDATE_CLIENT(interpolation_movetypestep_mindelta)\
 	EASY_CVAR_UPDATE_CLIENT(sv_bloodparticlemode)\
+	EASY_CVAR_UPDATE_CLIENT(cl_interp_view_extra)\
 	DUMMY
 
 #define EASY_CVAR_CREATE_SERVER_SETUP_MASS\
@@ -4864,6 +4869,7 @@
 	EASY_CVAR_CREATE_SERVER_SETUP_A_SERVERONLY(monsterKilledToss)\
 	EASY_CVAR_CREATE_SERVER_SETUP_A_CLIENTONLY(interpolation_movetypestep_mindelta)\
 	EASY_CVAR_CREATE_SERVER_SETUP_A_SERVERONLY(sv_bloodparticlemode)\
+	EASY_CVAR_CREATE_SERVER_SETUP_A_CLIENTONLY(cl_interp_view_extra)\
 	DUMMY
 
 #define EASY_CVAR_CREATE_SERVER_MASS\
@@ -5372,6 +5378,7 @@
 	EASY_CVAR_CREATE_SERVER_A_SERVERONLY(monsterKilledToss)\
 	EASY_CVAR_CREATE_SERVER_A_CLIENTONLY(interpolation_movetypestep_mindelta)\
 	EASY_CVAR_CREATE_SERVER_A_SERVERONLY(sv_bloodparticlemode)\
+	EASY_CVAR_CREATE_SERVER_A_CLIENTONLY(cl_interp_view_extra)\
 	DUMMY
 
 
@@ -5881,6 +5888,7 @@
 	EASY_CVAR_CREATE_CLIENT_A_SERVERONLY(monsterKilledToss)\
 	EASY_CVAR_CREATE_CLIENT_A_CLIENTONLY(interpolation_movetypestep_mindelta)\
 	EASY_CVAR_CREATE_CLIENT_A_SERVERONLY(sv_bloodparticlemode)\
+	EASY_CVAR_CREATE_CLIENT_A_CLIENTONLY(cl_interp_view_extra)\
 	DUMMY
 
 #define EASY_CVAR_RESET_MASS\
@@ -6388,6 +6396,7 @@
 	EASY_CVAR_RESET(monsterKilledToss)\
 	EASY_CVAR_RESET(interpolation_movetypestep_mindelta)\
 	EASY_CVAR_RESET(sv_bloodparticlemode)\
+	EASY_CVAR_RESET(cl_interp_view_extra)\
 	DUMMY
 
 #define EASY_CVAR_EXTERN_MASS\
@@ -6896,5 +6905,6 @@
 	EASY_CVAR_EXTERN(monsterKilledToss)\
 	EASY_CVAR_EXTERN(interpolation_movetypestep_mindelta)\
 	EASY_CVAR_EXTERN(sv_bloodparticlemode)\
+	EASY_CVAR_EXTERN(cl_interp_view_extra)\
 	DUMMY
 

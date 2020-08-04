@@ -541,6 +541,17 @@ V_CalcRefdef
 */
 
 
+//extern BOOL resetNormalRefDefVars;
+
+//MODD - these used to be inside method 'V_CalcNormalRefdef', but moved outside for loading a game to force them instantly.
+// ...or just change them with a variable set by elsewhere in-method instead, makes more sense that way.
+BOOL resetNormalRefDefVars = FALSE;
+static float oldz = 0;
+//MODDD - NEW for cl_interp_view_extra
+static float rawOldViewHeight = 0;
+static float oldViewHeight = 0;
+
+
 void V_CalcNormalRefdef(struct ref_params_s* pparams)
 {
 	//MODDD -
@@ -559,8 +570,8 @@ void V_CalcNormalRefdef(struct ref_params_s* pparams)
 	float		waterOffset;
 	static viewinterp_t ViewInterp;
 
-	static float oldz = 0;
 	static float lasttime;
+
 
 	vec3_t camAngles;
 	vec3_t camForward;
@@ -591,6 +602,8 @@ void V_CalcNormalRefdef(struct ref_params_s* pparams)
 	// refresh position
 	VectorCopy_f(pparams->simorg, pparams->vieworg);
 	pparams->vieworg[2] += (bob);
+
+	// MODDD - this line moved further below ...or not
 	VectorAdd_f(pparams->vieworg, pparams->viewheight, pparams->vieworg);
 
 	VectorCopy_f(pparams->cl_viewangles, pparams->viewangles);
@@ -720,6 +733,9 @@ void V_CalcNormalRefdef(struct ref_params_s* pparams)
 	// Use predicted origin as view origin.
 	VectorCopy_f(pparams->simorg, view->origin);
 	view->origin[2] += (waterOffset);
+
+
+	// MODDD - this line moved further below ...or not.
 	VectorAdd_f(view->origin, pparams->viewheight, view->origin);
 
 	// Let the viewmodel shake at about 10% of the amplitude
@@ -886,9 +902,6 @@ void V_CalcNormalRefdef(struct ref_params_s* pparams)
 	int hulltesto = ent->curstate.usehull;
 	*/
 
-	static float rawOldViewHeight = 0;
-	static float oldViewHeight = 0;
-
 	float safeSimZ = pparams->simorg[2];   // - pparams->viewheight[2]
 
 
@@ -916,79 +929,183 @@ void V_CalcNormalRefdef(struct ref_params_s* pparams)
 
 
 
+
+
+	//MODDD - between games/maps, forget any differences, interp from that is just silly.
+	if (resetNormalRefDefVars) {
+		resetNormalRefDefVars = FALSE;
+		oldz = safeSimZ;
+		rawOldViewHeight = pparams->viewheight[2];
+		oldViewHeight = pparams->viewheight[2];
+	}
+
+
 	//if (!pparams->smoothing && pparams->onground && safeSimZ - oldz > 0)
-	if (!pparams->smoothing && pparams->onground)
+	if (!pparams->smoothing)
 	{
+		/*
+		if (pparams->onground) {
+			float filteredViewheight = pparams->viewheight[2] + (safeSimZ - oldz);
 
-		//easyForcePrintLine("the what %.2f %.2f :: %.2f   %.2f %.2f :: %.2f", pparams->viewheight[2], oldViewHeight, pparams->viewheight[2] - oldViewHeight + (safeSimZ - oldz), safeSimZ, oldz, (safeSimZ - oldz));
+			if (pparams->viewheight[2] != oldViewHeight) {
+				if (filteredViewheight - oldViewHeight > 0) {
+					//MODDD - EXPERIMENTAL.
+					float steptime;
 
-		//!(safeSimZ - oldz > 0)
-		// safeSimZ - oldz == 0 && 
+					steptime = pparams->time - lasttime;
+					if (steptime < 0)
+						//FIXME		I_Error ("steptime < 0");
+						steptime = 0;
 
+					oldViewHeight += steptime * 120;
+					if (oldViewHeight > filteredViewheight)
+						oldViewHeight = filteredViewheight;
+					if (filteredViewheight - oldViewHeight > 18)
+						oldViewHeight = filteredViewheight - 18;
 
-		// Now, changes in veiw height alone (like canceling a duck early) can be recorded.
+					pparams->vieworg[2] += (oldViewHeight - (filteredViewheight)) * 1;
+					view->origin[2] += (oldViewHeight - (filteredViewheight)) * 1;
+					//easyForcePrintLine("test %.2f", (oldViewHeight - (filteredViewheight)));
 
-		// A sudden change in hull-size throws off the viewheight, add in that difference so it has no effect
-		// on what we're working with
-		float filteredViewheight = pparams->viewheight[2] + (safeSimZ - oldz);
-
-		//if (pparams->viewheight[2] != oldViewHeight) {
-		if (filteredViewheight - oldViewHeight > 0) {
-			//MODDD - EXPERIMENTAL.
-			float steptime;
-
-			steptime = pparams->time - lasttime;
-			if (steptime < 0)
-				//FIXME		I_Error ("steptime < 0");
-				steptime = 0;
-
-			oldViewHeight += steptime * 120;
-			if (oldViewHeight > filteredViewheight)
-				oldViewHeight = filteredViewheight;
-			if (filteredViewheight - oldViewHeight > 18)
-				oldViewHeight = filteredViewheight - 18;
-
-			pparams->vieworg[2] += (oldViewHeight - (filteredViewheight)) * 1;
-			view->origin[2] += (oldViewHeight - (filteredViewheight)) * 1;
-			//easyForcePrintLine("test %.2f", (oldViewHeight - (filteredViewheight)));
-
+				}
+				else {
+					oldViewHeight = pparams->viewheight[2];
+				}
+			}
 		}
-		else {
-			oldViewHeight = pparams->viewheight[2];
-		}
-		//}
+		*/
 
-		// And back to the normal Z comparisons.  Retail only handled interp for going up stairs to look more smooth
-		// and unducking after a full duck (this changes the hull size, so the change showed up for this).
-		if (safeSimZ - oldz > 0) {
-			float steptime;
+		// allow extra interp for changes in viewheight (most likely ducking/unducking) never, on the ground, or always (+midair)
+		// depending on cl_interp_view_extra.
+		if (EASY_CVAR_GET(cl_interp_view_extra) == 2 || (EASY_CVAR_GET(cl_interp_view_extra) == 1 && pparams->onground) ) {
 
-			steptime = pparams->time - lasttime;
-			if (steptime < 0)
-				//FIXME		I_Error ("steptime < 0");
-				steptime = 0;
 
-			oldz += steptime * 130;
-			if (oldz > safeSimZ)
-				oldz = safeSimZ;
-			if (safeSimZ - oldz > 18)
-				oldz = safeSimZ - 18;
-			pparams->vieworg[2] += oldz - (safeSimZ);
-			view->origin[2] += oldz - (safeSimZ);
+			float theAddIn = 0;
+			float theDiff = (safeSimZ - oldz);
+			// If the difference is over 18 in one frame, it is most likely from changing
+			// the hull size (duck to unduck or vice versa) in the same frame.  Add-in this change or else it throws off
+			// the view height during this frame.
+			//if (abs(theDiff) >= 18) {
+				theAddIn = theDiff;
+			//}
 
-			//oldViewHeight += oldz - (safeSimZ);
-		}
-		else if (safeSimZ - oldz < 0) {
+			//TODO -
+			// can we count falling velocity?  Is it this?
+			// See if falling too fast, if so forget the 'addin',.  Although this is probably just me being paranoid, who would notice oddities
+			// at over 18 difference in Z per second.
+			//    pparams->cmd->upmove
 
-			// FOR the new downward stairs/incline checks, don't do interpolation
-			// while the user's viewheight has changed since last frame (ducking and unducking typically).
-			// This wasn't expected so it looks wonky when it happens.  Interp from the other way around 
-			// is needed though, go figure.
-			if (pparams->viewheight[2] != rawOldViewHeight) {
-				oldz = safeSimZ;
+
+			float filteredViewheight = pparams->viewheight[2] + theAddIn;
+
+			//if (pparams->viewheight[2] != oldViewHeight) {
+			if (filteredViewheight - oldViewHeight > 0) {
+
+				//safeSimZ - oldz > 0
+				//  (safeSimZ == oldz) ???
+				if (pparams->viewheight[2] != oldViewHeight)
+				// safeSimZ != oldz
+				//if (pparams->onground || pparams->viewheight[2] != rawOldViewHeight) {
+				//	oldViewHeight = pparams->viewheight[2];
+				//}
+				//else
+				{
+
+					//MODDD - EXPERIMENTAL.
+					float steptime;
+
+					steptime = pparams->time - lasttime;
+					if (steptime < 0)
+						//FIXME		I_Error ("steptime < 0");
+						steptime = 0;
+
+					oldViewHeight += steptime * 260;
+					if (oldViewHeight > filteredViewheight)
+						oldViewHeight = filteredViewheight;
+					if (filteredViewheight - oldViewHeight > 18)
+						oldViewHeight = filteredViewheight - 18;
+
+					pparams->vieworg[2] += (oldViewHeight - (filteredViewheight)) * 1;
+					view->origin[2] += (oldViewHeight - (filteredViewheight)) * 1;
+					//easyForcePrintLine("test %.2f", (oldViewHeight - (filteredViewheight)));
+				}
+
+			}else if (filteredViewheight - oldViewHeight < 0) {
+
+				// safeSimZ != oldz
+				if (pparams->onground ) {
+					oldViewHeight = pparams->viewheight[2];
+				}
+				else {
+					//MODDD - EXPERIMENTAL.
+					float steptime;
+
+					steptime = pparams->time - lasttime;
+					if (steptime < 0)
+						//FIXME		I_Error ("steptime < 0");
+						steptime = 0;
+
+					oldViewHeight -= steptime * 260;
+					if (oldViewHeight < filteredViewheight)
+						oldViewHeight = filteredViewheight;
+					if (-filteredViewheight + oldViewHeight > 18)
+						oldViewHeight = filteredViewheight + 18;
+
+					pparams->vieworg[2] -= (-oldViewHeight + (filteredViewheight)) * 1;
+					view->origin[2] -= (-oldViewHeight + (filteredViewheight)) * 1;
+					easyForcePrintLine("test %.2f", (oldViewHeight - (filteredViewheight)));
+				}
+			
+			
+				//if (pparams->viewheight[2] != rawOldViewHeight) {
+				//	oldz = safeSimZ;
+				//}
+				//else {
+				//	//MODDD - camera Z interp logic for going down stairs.
+				//	float steptime;
+
+				//	steptime = pparams->time - lasttime;
+				//	if (steptime < 0)
+				//		//FIXME		I_Error ("steptime < 0");
+				//		steptime = 0;
+
+				//	oldz -= steptime * 130;
+				//	if (oldz < safeSimZ)
+				//		oldz = safeSimZ;
+				//	if (-safeSimZ + oldz > 18)
+				//		oldz = safeSimZ + 18;
+				//	pparams->vieworg[2] -= -oldz + (safeSimZ);
+				//	view->origin[2] -= -oldz + (safeSimZ);
+				//}
+			
 			}
 			else {
-				//MODDD - camera Z interp logic for going down stairs.
+				oldViewHeight = pparams->viewheight[2];
+			}
+			//}
+
+		}else{
+			oldViewHeight = pparams->viewheight[2];
+		}
+
+
+
+		if (1 && pparams->onground) {
+			//easyForcePrintLine("the what %.2f %.2f :: %.2f   %.2f %.2f :: %.2f", pparams->viewheight[2], oldViewHeight, pparams->viewheight[2] - oldViewHeight + (safeSimZ - oldz), safeSimZ, oldz, (safeSimZ - oldz));
+
+			//!(safeSimZ - oldz > 0)
+			// safeSimZ - oldz == 0 && 
+
+
+			// Now, changes in veiw height alone (like canceling a duck early) can be recorded.
+
+			// A sudden change in hull-size throws off the viewheight, add in that difference so it has no effect
+			// on what we're working with
+
+
+			// And back to the normal Z comparisons.  Retail only handled interp for going up stairs to look more smooth
+			// and unducking after a full duck (this changes the hull size, so the change showed up for this).
+			if (safeSimZ - oldz > 0) {
 				float steptime;
 
 				steptime = pparams->time - lasttime;
@@ -996,23 +1113,60 @@ void V_CalcNormalRefdef(struct ref_params_s* pparams)
 					//FIXME		I_Error ("steptime < 0");
 					steptime = 0;
 
-				oldz -= steptime * 130;
-				if (oldz < safeSimZ)
+				oldz += steptime * 160;
+				if (oldz > safeSimZ)
 					oldz = safeSimZ;
-				if (-safeSimZ + oldz > 18)
-					oldz = safeSimZ + 18;
-				pparams->vieworg[2] -= -oldz + (safeSimZ);
-				view->origin[2] -= -oldz + (safeSimZ);
+				if (safeSimZ - oldz > 18)
+					oldz = safeSimZ - 18;
+				pparams->vieworg[2] += oldz - (safeSimZ);
+				view->origin[2] += oldz - (safeSimZ);
+
+				//oldViewHeight += oldz - (safeSimZ);
 			}
-			
-		}
-		else {
-			// oh
+			else if (safeSimZ - oldz < 0) {
+
+				// FOR the new downward stairs/incline checks, don't do interpolation
+				// while the user's viewheight has changed since last frame (ducking and unducking typically).
+				// This wasn't expected so it looks wonky when it happens.  Interp from the other way around 
+				// is needed though, go figure.
+				if (pparams->viewheight[2] != rawOldViewHeight) {
+					oldz = safeSimZ;
+					easyForcePrintLine("FUCK YOU MAN %.2f", gpGlobals->time);
+				}
+				else {
+					//MODDD - camera Z interp logic for going down stairs.
+					float steptime;
+
+					steptime = pparams->time - lasttime;
+					if (steptime < 0)
+						//FIXME		I_Error ("steptime < 0");
+						steptime = 0;
+
+					oldz -= steptime * 160;
+					if (oldz < safeSimZ)
+						oldz = safeSimZ;
+					if (-safeSimZ + oldz > 18)
+						oldz = safeSimZ + 18;
+					pparams->vieworg[2] -= -oldz + (safeSimZ);
+					view->origin[2] -= -oldz + (safeSimZ);
+				}
+
+			}
+			else{
+				// oh
+				oldz = safeSimZ;
+			}
+
+			if (safeSimZ - oldz != 0) {
+				oldViewHeight = pparams->viewheight[2];
+			}
+
+		}// END OF onground check
+		else{
 			oldz = safeSimZ;
 		}
-	}
-	else
-	{
+	}// END OF smoothing check
+	else{
 		oldz = safeSimZ;
 	}
 
@@ -1020,8 +1174,14 @@ void V_CalcNormalRefdef(struct ref_params_s* pparams)
 	//oldViewHeight = pparams->viewheight[2];
 	rawOldViewHeight = pparams->viewheight[2];
 
+
 #endif
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	//MODDD - lines from above moved here.  ...or not
+	//VectorAdd_f(view->origin, pparams->viewheight, view->origin);
+	//VectorAdd_f(pparams->vieworg, pparams->viewheight, pparams->vieworg);
+
 
 
 

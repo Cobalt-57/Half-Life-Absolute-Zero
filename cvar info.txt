@@ -1512,4 +1512,8 @@ sv_bloodparticlemode (0) - MODEVAR.  Affects the blood particle created when nea
 1: alpha (solid-colored dots)
 2: both at the same time
 
+cl_interp_view_extra (1) - MODEVAR.  View camera smoothness for crouching to look more smooth.
+0: Nothing extra (retail), besides the smoothness for going down inclines/stairs.
+1: Only on uncrouching before finishing a full crouch (releasing CTRL too early), similar smoothness to uncrouching from a full crouch.
+2: In addition to #1, interp while crouching/uncrouching to any extent through the air.
 

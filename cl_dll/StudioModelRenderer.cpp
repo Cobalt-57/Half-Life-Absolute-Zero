@@ -26,6 +26,7 @@
 
 #include "StudioModelRenderer.h"
 #include "GameStudioModelRenderer.h"
+#include "ignore_warning_list.h"
 
 // Global engine <-> studio model rendering code interface
 engine_studio_api_t IEngineStudio;

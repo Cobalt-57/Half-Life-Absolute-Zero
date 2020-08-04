@@ -182,6 +182,11 @@ so the HUD can reinitialize itself.
 
 int DLLEXPORT HUD_VidInit( void )
 {
+	//MODDD
+	extern BOOL resetNormalRefDefVars;
+	resetNormalRefDefVars = TRUE;  //does this work
+
+
 	gHUD.VidInit();
 
 	VGui_Startup();
@@ -205,6 +210,7 @@ EASY_CVAR_DECLARE_HASH_ARRAY
 void DLLEXPORT HUD_Init( void )
 {
 	EASY_CVAR_HASH_MASS
+
 
 	InitShared();
 
