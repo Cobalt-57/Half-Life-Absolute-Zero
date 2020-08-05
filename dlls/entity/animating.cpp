@@ -840,6 +840,7 @@ BOOL CBaseAnimating :: GetSequenceFlags( )
 //=========================================================
 void CBaseAnimating :: DispatchAnimEvents ( float flInterval )
 {
+	//return;
 	MonsterEvent_t	event;
 
 	void *pmodel = GET_MODEL_PTR( ENT(pev) );

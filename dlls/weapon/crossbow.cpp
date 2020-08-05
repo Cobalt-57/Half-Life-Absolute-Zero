@@ -402,7 +402,7 @@ void CCrossbow::SecondaryAttack()
 
 	// This is what checks for a key being pressed for the first frame since a previous release (or first time ever).
 	// This does not count continually holding it down after.
-	// SO FUCKING GREAT RETAIL NEVER ONCE TOOK ADVANTAGE OF THIS, HUH.
+	// odd that retail never took advantage of this.
 	if(!(m_pPlayer->m_afButtonPressed & IN_ATTACK2)){
 		//MODDD
 		// If we're not the first frame, don't do it!  Stops holding down the key from continuously

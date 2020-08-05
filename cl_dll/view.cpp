@@ -548,8 +548,9 @@ V_CalcRefdef
 BOOL resetNormalRefDefVars = FALSE;
 static float oldz = 0;
 //MODDD - NEW for cl_interp_view_extra
-static float rawOldViewHeight = 0;
 static float oldViewHeight = 0;
+static int oldHull = 0;
+
 
 
 void V_CalcNormalRefdef(struct ref_params_s* pparams)
@@ -947,167 +948,123 @@ void V_CalcNormalRefdef(struct ref_params_s* pparams)
 	if (resetNormalRefDefVars) {
 		resetNormalRefDefVars = FALSE;
 		oldz = safeSimZ;
-		rawOldViewHeight = pparams->viewheight[2];
 		oldViewHeight = pparams->viewheight[2];
+		oldHull = ent->curstate.usehull;
 	}
 
 	//if (!pparams->smoothing && pparams->onground && safeSimZ - oldz > 0)
 	if (!pparams->smoothing)
 	{
-		/*
-		if (pparams->onground) {
-			float filteredViewheight = pparams->viewheight[2] + (safeSimZ - oldz);
-
-			if (pparams->viewheight[2] != oldViewHeight) {
-				if (filteredViewheight - oldViewHeight > 0) {
-					//MODDD - EXPERIMENTAL.
-					float steptime;
-
-					steptime = pparams->time - lasttime;
-					if (steptime < 0)
-						//FIXME		I_Error ("steptime < 0");
-						steptime = 0;
-
-					oldViewHeight += steptime * 120;
-					if (oldViewHeight > filteredViewheight)
-						oldViewHeight = filteredViewheight;
-					if (filteredViewheight - oldViewHeight > 18)
-						oldViewHeight = filteredViewheight - 18;
-
-					pparams->vieworg[2] += (oldViewHeight - (filteredViewheight)) * 1;
-					view->origin[2] += (oldViewHeight - (filteredViewheight)) * 1;
-					//easyForcePrintLine("test %.2f", (oldViewHeight - (filteredViewheight)));
-
-				}
-				else {
-					oldViewHeight = pparams->viewheight[2];
-				}
-			}
-		}
-		*/
-
 		// allow extra interp for changes in viewheight (most likely ducking/unducking) never, on the ground, or always (+midair)
 		// depending on cl_interp_view_extra.
-		if (EASY_CVAR_GET(cl_interp_view_extra) == 2 || (EASY_CVAR_GET(cl_interp_view_extra) == 1 && pparams->onground) ) {
+		
+		//easyForcePrintLine("the what H:%d %.2f %.2f :: %.2f   %.2f %.2f :: %.2f", ent->curstate.usehull, pparams->viewheight[2], oldViewHeight, pparams->viewheight[2] - oldViewHeight + (safeSimZ - oldz), safeSimZ, oldz, (safeSimZ - oldz));
 
+		// On the hull changing, correct the observed change in Z.
+		// It doesn't need to play a role in view changes, this is already handled elsewhere and would
+		// cause glitchiness if it were.
+		if (ent->curstate.usehull != oldHull) {
 
-			float theAddIn = 0;
-			float theDiff = (safeSimZ - oldz);
-			// If the difference is over 18 in one frame, it is most likely from changing
-			// the hull size (duck to unduck or vice versa) in the same frame.  Add-in this change or else it throws off
-			// the view height during this frame.
-			//if (abs(theDiff) >= 18) {
-				theAddIn = theDiff;
-			//}
+			if (ent->curstate.usehull == 0) {
+				// Going to 0 (standing?
+				if (pparams->onground) {
+					// Why is this extra offset on oldZ needed to avoid an upward
+					// jolt at the start of crouching?
+					// Something about hull-sizes between crouch/standing maybe.
+					oldViewHeight = pparams->viewheight[2] - 0;
+					oldz -= 16;
+				}
+			}
+			else if (ent->curstate.usehull == 1) {
+				// Going to 1 (ducking)?
+				if (pparams->onground) {
+					// Ending a duck on the ground?  No further interp logic needed,
+					// pm_shared already makes this go smoothly.  Just call it finished.
+					oldViewHeight = pparams->viewheight[2];
+					oldz = safeSimZ;
+				}
+			}
+			else {
+				// ????
+			}
 
-			//TODO -
-			// can we count falling velocity?  Is it this?
-			// See if falling too fast, if so forget the 'addin',.  Although this is probably just me being paranoid, who would notice oddities
-			// at over 18 difference in Z per second.
-			//    pparams->cmd->upmove
+			oldHull = ent->curstate.usehull;
+		}//END OF hull change check
 
+		// can we count falling velocity?  Don't think we need it though, if that's what this is?
+		//    pparams->cmd->upmove
 
-			float filteredViewheight = pparams->viewheight[2] + theAddIn;
+		if (EASY_CVAR_GET(cl_interp_view_extra) == 2 || (EASY_CVAR_GET(cl_interp_view_extra) == 1 && pparams->onground)) {
+			// unmodified now, no need for changes.
+			const float filteredViewheight = pparams->viewheight[2];
 
-			//if (pparams->viewheight[2] != oldViewHeight) {
 			if (filteredViewheight - oldViewHeight > 0) {
+				//MODDD - EXPERIMENTAL.
+				float steptime;
 
-				//safeSimZ - oldz > 0
-				//  (safeSimZ == oldz) ???
-				if (pparams->viewheight[2] != oldViewHeight)
-				// safeSimZ != oldz
-				//if (pparams->onground || pparams->viewheight[2] != rawOldViewHeight) {
-				//	oldViewHeight = pparams->viewheight[2];
-				//}
-				//else
-				{
-
-					//MODDD - EXPERIMENTAL.
-					float steptime;
-
-					steptime = pparams->time - lasttime;
-					if (steptime < 0)
-						//FIXME		I_Error ("steptime < 0");
-						steptime = 0;
-
-					oldViewHeight += steptime * 260;
-					if (oldViewHeight > filteredViewheight)
-						oldViewHeight = filteredViewheight;
-					if (filteredViewheight - oldViewHeight > 18)
-						oldViewHeight = filteredViewheight - 18;
-
-					pparams->vieworg[2] += (oldViewHeight - (filteredViewheight)) * 1;
-					view->origin[2] += (oldViewHeight - (filteredViewheight)) * 1;
-					//easyForcePrintLine("test %.2f", (oldViewHeight - (filteredViewheight)));
+				steptime = pparams->time - lasttime;
+				if (steptime < 0) {
+					//FIXME		I_Error ("steptime < 0");
+					steptime = 0;
 				}
 
-			}else if (filteredViewheight - oldViewHeight < 0) {
-
-				// safeSimZ != oldz
-				if (pparams->onground ) {
-					oldViewHeight = pparams->viewheight[2];
+				if (pparams->onground) {
+					oldViewHeight += steptime * 140;
 				}
 				else {
-					//MODDD - EXPERIMENTAL.
-					float steptime;
-
-					steptime = pparams->time - lasttime;
-					if (steptime < 0)
-						//FIXME		I_Error ("steptime < 0");
-						steptime = 0;
-
-					oldViewHeight -= steptime * 260;
-					if (oldViewHeight < filteredViewheight)
-						oldViewHeight = filteredViewheight;
-					if (-filteredViewheight + oldViewHeight > 18)
-						oldViewHeight = filteredViewheight + 18;
-
-					pparams->vieworg[2] -= (-oldViewHeight + (filteredViewheight)) * 1;
-					view->origin[2] -= (-oldViewHeight + (filteredViewheight)) * 1;
-					////////////easyForcePrintLine("test %.2f", (oldViewHeight - (filteredViewheight)));
+					oldViewHeight += steptime * 170;
 				}
-			
-			
-				//if (pparams->viewheight[2] != rawOldViewHeight) {
-				//	oldz = safeSimZ;
-				//}
-				//else {
-				//	//MODDD - camera Z interp logic for going down stairs.
-				//	float steptime;
+				if (oldViewHeight > filteredViewheight) {
+					oldViewHeight = filteredViewheight;
+				}
+				if (filteredViewheight - oldViewHeight > 18) {
+					oldViewHeight = filteredViewheight - 18;
+				}
 
-				//	steptime = pparams->time - lasttime;
-				//	if (steptime < 0)
-				//		//FIXME		I_Error ("steptime < 0");
-				//		steptime = 0;
+				pparams->vieworg[2] += (oldViewHeight - (filteredViewheight)) * 1;
+				view->origin[2] += (oldViewHeight - (filteredViewheight)) * 1;
+				//easyForcePrintLine("test %.2f %.2f ::: %.2f", oldViewHeight, filteredViewheight, (oldViewHeight - (filteredViewheight)));
 
-				//	oldz -= steptime * 130;
-				//	if (oldz < safeSimZ)
-				//		oldz = safeSimZ;
-				//	if (-safeSimZ + oldz > 18)
-				//		oldz = safeSimZ + 18;
-				//	pparams->vieworg[2] -= -oldz + (safeSimZ);
-				//	view->origin[2] -= -oldz + (safeSimZ);
-				//}
-			
+			}
+			else if (filteredViewheight - oldViewHeight < 0) {
+				float steptime;
+
+				steptime = pparams->time - lasttime;
+				if (steptime < 0) {
+					//FIXME		I_Error ("steptime < 0");
+					steptime = 0;
+				}
+
+				if (pparams->onground) {
+					oldViewHeight -= steptime * 140;
+				}else {
+					oldViewHeight -= steptime * 170;
+				}
+				if (oldViewHeight < filteredViewheight) {
+					oldViewHeight = filteredViewheight;
+				}
+				if (-filteredViewheight + oldViewHeight > 18) {
+					oldViewHeight = filteredViewheight + 18;
+				}
+
+				pparams->vieworg[2] -= (-oldViewHeight + (filteredViewheight)) * 1;
+				view->origin[2] -= (-oldViewHeight + (filteredViewheight)) * 1;
+				////////////easyForcePrintLine("test %.2f", (oldViewHeight - (filteredViewheight)));
+
 			}
 			else {
 				oldViewHeight = pparams->viewheight[2];
 			}
-			//}
 
-		}else{
+		}//END OF cl_interp_view_extra checks
+		else {
 			oldViewHeight = pparams->viewheight[2];
 		}
 
 
-
-		if (1 && pparams->onground) {
-			//easyForcePrintLine("the what %.2f %.2f :: %.2f   %.2f %.2f :: %.2f", pparams->viewheight[2], oldViewHeight, pparams->viewheight[2] - oldViewHeight + (safeSimZ - oldz), safeSimZ, oldz, (safeSimZ - oldz));
-
-			//!(safeSimZ - oldz > 0)
-			// safeSimZ - oldz == 0 && 
-
-
+		// ONLY interp changes in Z if standing on the ground.
+		// Works for the change from a complete-duck to standing and going up/down stairs & inclines.
+		if (pparams->onground) {
 			// Now, changes in veiw height alone (like canceling a duck early) can be recorded.
 
 			// A sudden change in hull-size throws off the viewheight, add in that difference so it has no effect
@@ -1120,19 +1077,23 @@ void V_CalcNormalRefdef(struct ref_params_s* pparams)
 				float steptime;
 
 				steptime = pparams->time - lasttime;
-				if (steptime < 0)
+				if (steptime < 0) {
 					//FIXME		I_Error ("steptime < 0");
 					steptime = 0;
+				}
 
-				oldz += steptime * 160;
-				if (oldz > safeSimZ)
+				oldz += steptime * 140;
+				if (oldz > safeSimZ) {
 					oldz = safeSimZ;
-				if (safeSimZ - oldz > 18)
-					oldz = safeSimZ - 18;
+				}
+				//MODDD - tolerance changed from 18 to allow for the difference
+				// between the duck and standing hulls.  I think.
+				if (safeSimZ - oldz > 34) {
+					oldz = safeSimZ - 34;
+				}
 				pparams->vieworg[2] += oldz - (safeSimZ);
 				view->origin[2] += oldz - (safeSimZ);
 
-				//oldViewHeight += oldz - (safeSimZ);
 			}
 			else if (safeSimZ - oldz < 0) {
 
@@ -1140,37 +1101,35 @@ void V_CalcNormalRefdef(struct ref_params_s* pparams)
 				// while the user's viewheight has changed since last frame (ducking and unducking typically).
 				// This wasn't expected so it looks wonky when it happens.  Interp from the other way around 
 				// is needed though, go figure.
-				if (pparams->viewheight[2] != rawOldViewHeight) {
+				
+				//MODDD - camera Z interp logic for going down stairs.
+				float steptime;
+
+				steptime = pparams->time - lasttime;
+				if (steptime < 0) {
+					//FIXME		I_Error ("steptime < 0");
+					steptime = 0;
+				}
+
+				oldz -= steptime * 140;
+				if (oldz < safeSimZ) {
 					oldz = safeSimZ;
-					////////easyForcePrintLine("hey YOU MAN %.2f", gpGlobals->time);
 				}
-				else {
-					//MODDD - camera Z interp logic for going down stairs.
-					float steptime;
-
-					steptime = pparams->time - lasttime;
-					if (steptime < 0)
-						//FIXME		I_Error ("steptime < 0");
-						steptime = 0;
-
-					oldz -= steptime * 160;
-					if (oldz < safeSimZ)
-						oldz = safeSimZ;
-					if (-safeSimZ + oldz > 18)
-						oldz = safeSimZ + 18;
-					pparams->vieworg[2] -= -oldz + (safeSimZ);
-					view->origin[2] -= -oldz + (safeSimZ);
+				if (-safeSimZ + oldz > 18) {
+					oldz = safeSimZ + 18;
 				}
-
+				pparams->vieworg[2] -= -oldz + (safeSimZ);
+				view->origin[2] -= -oldz + (safeSimZ);
+				
 			}
 			else{
 				// oh
 				oldz = safeSimZ;
 			}
 
-			if (safeSimZ - oldz != 0) {
-				oldViewHeight = pparams->viewheight[2];
-			}
+			//if (safeSimZ - oldz != 0) {
+			//	oldViewHeight = pparams->viewheight[2];
+			//}
 
 		}// END OF onground check
 		else{
@@ -1181,9 +1140,9 @@ void V_CalcNormalRefdef(struct ref_params_s* pparams)
 		oldz = safeSimZ;
 	}
 
-	// MODDD
-	//oldViewHeight = pparams->viewheight[2];
-	rawOldViewHeight = pparams->viewheight[2];
+
+	// no.  This is unholy.
+//skipper:
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////////////////////////////////////////

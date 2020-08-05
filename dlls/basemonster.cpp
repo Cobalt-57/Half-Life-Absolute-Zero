@@ -243,7 +243,7 @@ int CBaseMonster::Restore(CRestore& restore)
 	if (m_hEnemy == NULL) {
 		clearAllConditions();
 	}
-
+	
 	PostRestore();
 
 	return status;
@@ -2057,7 +2057,7 @@ void CBaseMonster :: MonsterThink ( void )
 
 	// If looping and using a custom sequence (set by some "setSequenceBy..." method or similar, as opposed to selected by a new activity),
 	// do NOT force a new animation! We mean to keep the current animation.
-	// ALSO IMPORTANT: This will fuck with tasks based on waiting for for the sequence to be complete, which would be seen the next frame. Fuck that shit.
+	// ALSO IMPORTANT: This will <interfere> with tasks based on waiting for for the sequence to be complete, which would be seen the next frame. <disregard> that <inconsequential substance>.
 	if (
 		//!(m_pSchedule != NULL && getTaskNumber() ==  
 		
