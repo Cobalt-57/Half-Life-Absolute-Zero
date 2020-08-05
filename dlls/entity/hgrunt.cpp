@@ -2645,7 +2645,7 @@ void CHGrunt :: HandleAnimEvent( MonsterEvent_t *pEvent )
 			// Under FORCE_MP5, no mp5 grenades unless they are allowed.
 			if(EASY_CVAR_GET(gruntsCanHaveMP5Grenade) == 1){
 #endif
-				EMIT_SOUND(ENT(pev), CHAN_WEAPON, "weapons/glauncher.wav", 0.8, ATTN_NORM);
+				EMIT_SOUND_FILTERED(ENT(pev), CHAN_WEAPON, "weapons/glauncher.wav", 0.8, ATTN_NORM, 0, 100, FALSE);
 				CGrenade::ShootContact( pev, GetGunPosition(), m_vecTossVelocity, gSkillData.plrDmgM203Grenade );
 				m_fThrowGrenade = FALSE;
 				if (g_iSkillLevel == SKILL_HARD){
@@ -2708,7 +2708,7 @@ void CHGrunt :: HandleAnimEvent( MonsterEvent_t *pEvent )
 			{
 				Shotgun( );
 
-				EMIT_SOUND(ENT(pev), CHAN_WEAPON, "weapons/sbarrel1.wav", 1, ATTN_NORM );
+				EMIT_SOUND_FILTERED(ENT(pev), CHAN_WEAPON, "weapons/sbarrel1.wav", 1, ATTN_NORM, 0, 100, FALSE );
 			}
 
 #endif

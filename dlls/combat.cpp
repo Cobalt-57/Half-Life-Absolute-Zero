@@ -129,7 +129,7 @@ void EstablishGutLoverGib(CGib* pGib, entvars_t* pevVictim, const Vector gibSpaw
 	/*
 	float ang = 0;
 	if(distVertical ==0){
-		ang = 90 *(M_PI / 180.0);
+		ang = 90.0f *(M_PI / 180.0f);
 	}else{
 		ang = atan(distVertical / distFloorwise);
 	}
@@ -764,10 +764,9 @@ GENERATE_GIBMONSTEREND_IMPLEMENTATION(CBaseMonster){
 	pev->takedamage = DAMAGE_NO;
 	pev->solid = SOLID_NOT;// do something with the body. while monster blows up
 
-	if ( fGibbed )
-	{
-		//MODDD MAJOR - new. Stop the voice channel when deleted.
-		EMIT_SOUND(ENT(pev), CHAN_VOICE, "common/null.wav", 1, ATTN_NORM);
+	if ( fGibbed ){
+		//MODDD - new. Stop the voice channel when deleted.
+		EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "common/null.wav", 1, ATTN_NORM, 0, 100, FALSE);
 
 		pev->effects = EF_NODRAW; // make the model invisible.
 		
@@ -1029,10 +1028,10 @@ Activity CBaseMonster::GetBigFlinchActivity(void){
 //MODDD - NOTE
 // For intensity of the most recent attack, check pev->health to see how far into the negatives it is.
 // Maybe throw the corpse further if it's higher.
-void CBaseMonster::BecomeDead( void )
+void CBaseMonster::BecomeDead(void)
 {
 	pev->takedamage = DAMAGE_YES;// don't let autoaim aim at corpses.
-	
+
 	// make the corpse fly away from the attack vector
 	//MODDD - note that with any 'fling from previous damage' logic commented out below in the as-is script,
 	// this just meant plummet if there's no ground below me.  Probably just to stop being MOVETYPE_STEP or FLY.
@@ -1051,7 +1050,7 @@ void CBaseMonster::BecomeDead( void )
 	// pev->deadflag == DEAD_NO  might be ok too, but eh
 	if (!killedMemory && g_tossKilledCall) {
 
-		if ( !(g_bitsDamageType & DMG_CRUSH) && !(g_bitsDamageTypeMod & (DMG_PROJECTILE | DMG_MAP_BLOCKED | DMG_MAP_TRIGGER) )) {
+		if (!(g_bitsDamageType & DMG_CRUSH) && !(g_bitsDamageTypeMod & (DMG_PROJECTILE | DMG_MAP_BLOCKED | DMG_MAP_TRIGGER))) {
 
 			if (EASY_CVAR_GET(monsterKilledToss) == 1) {
 				pev->flags &= ~FL_ONGROUND;
@@ -1070,7 +1069,7 @@ void CBaseMonster::BecomeDead( void )
 				// raw damage was 40.
 				// Corpse pev->health is -118.
 				// We'll only go as far back as g_rawDamageCumula.  so -40 then.
-				
+
 				float forceAmountMulti;
 
 				Vector tempEnBoundDelta = (this->pev->absmax - this->pev->absmin);
@@ -1079,9 +1078,11 @@ void CBaseMonster::BecomeDead( void )
 				if (tempEnSize < 16000) {  //headcrab size: 13824
 					// I go flyin'!
 					forceAmountMulti = 1.2;
-				}else if (tempEnSize <= 800000) {  //size of agrunt: about 348160
-					forceAmountMulti = 1 + -0.99*((tempEnSize - 16000) / (800000 - 16000));
-				}else {
+				}
+				else if (tempEnSize <= 800000) {  //size of agrunt: about 348160
+					forceAmountMulti = 1 + -0.99 * ((tempEnSize - 16000) / (800000 - 16000));
+				}
+				else {
 					// OH GOD ITS HUGE.
 					forceAmountMulti = 0.01;
 				}
@@ -1090,7 +1091,8 @@ void CBaseMonster::BecomeDead( void )
 				if (g_rawDamageCumula >= -pev->health) {
 					// ok, just use neg health
 					overkillAmount = -pev->health;
-				}else {
+				}
+				else {
 					// Too deep? Force to g_rawDamageCumula.
 					overkillAmount = g_rawDamageCumula;
 				}
@@ -1204,7 +1206,7 @@ GENERATE_KILLED_IMPLEMENTATION(CBaseMonster)
 	
 
 	// clear the deceased's sound channels.(may have been firing or reloading when killed)
-	EMIT_SOUND(ENT(pev), CHAN_WEAPON, "common/null.wav", 1, ATTN_NORM);
+	EMIT_SOUND_FILTERED(ENT(pev), CHAN_WEAPON, "common/null.wav", 1, ATTN_NORM, 0, 100, FALSE);
 
 	//MODDD - for voice maybe?  Unless that would stop death-cries or something.
 

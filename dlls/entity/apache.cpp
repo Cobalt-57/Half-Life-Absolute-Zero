@@ -216,7 +216,7 @@ void CApache::Precache( void )
 	PRECACHE_SOUND("apache/ap_rotor3.wav");
 	PRECACHE_SOUND("apache/ap_whine1.wav");
 
-	PRECACHE_SOUND("weapons/mortarhit.wav");
+	PRECACHE_SOUND("weapons/mortarhit.wav", TRUE);
 
 	m_iSpriteTexture = PRECACHE_MODEL( "sprites/white.spr" );
 
@@ -404,7 +404,7 @@ void CApache :: DyingThink( void )
 			WRITE_BYTE( 0 );		// speed
 		MESSAGE_END();
 
-		EMIT_SOUND_FILTERED(ENT(pev), CHAN_STATIC, "weapons/mortarhit.wav", 1.0, 0.3);
+		EMIT_SOUND_FILTERED(ENT(pev), CHAN_STATIC, "weapons/mortarhit.wav", 1.0, 0.3, 0, 100, FALSE);
 
 		RadiusDamageAutoRadius( pev->origin, pev, pev, 300, CLASS_NONE, DMG_BLAST );
 

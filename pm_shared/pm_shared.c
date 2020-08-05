@@ -2392,34 +2392,26 @@ void PM_UnDuck( void )
 
 	VectorCopy_f( pmove->origin, newOrigin );
 
+
+
+
+	//MODDD - crouch interp, modified section
+	/////////////////////////////////////////////////////////////////////////////////////////////////////////
 	if ( pmove->onground != -1 )
 	{
-		float modder = 0;
-		//MODDD - I disagree.
-		//for ( i = 0; i < 3; i++ )
-		//{
-		//	newOrigin[i] += ( pmove->player_mins[1][i] - pmove->player_mins[0][i] );
-		//}
-
+		//MODDD
 		// That is, only do this origin adjustment if the hull was actually changed to the duck-one (usehull == 1).
 		// If not, it just brings the player upward for no reason.  No need for factoring in the view-offset Z either
 		// (it gets smoothly adjusted here going from standing to ducking, but doesn't affect the bounds until it finishes).
 		if (pmove->usehull == 1) {
-			newOrigin[0] += (pmove->player_mins[1][0] - pmove->player_mins[0][0]);
-			newOrigin[1] += (pmove->player_mins[1][1] - pmove->player_mins[0][1]);
-			//newOrigin[2] += (pmove->player_mins[1][2] - pmove->player_mins[0][2]);
-			//easyForcePrintLine("duckin bounds %.2f : %.2f %.2f", (pmove->player_mins[1][2] - pmove->player_mins[0][2]), pmove->player_mins[1][2], pmove->player_mins[0][2] ) ;
-			//newOrigin[2] += 18;
-
-			// no need for this in place of (1) now...     (VEC_VIEW_Z - pmove->view_ofs[2]) / (VEC_VIEW_Z - VEC_DUCK_VIEW_Z)
-			// Only doing this when the hull is ducking.
-			modder = (1) * (pmove->player_mins[1][2] - pmove->player_mins[0][2]);
-			newOrigin[2] += modder;
+			for (i = 0; i < 3; i++)
+			{
+				newOrigin[i] += (pmove->player_mins[1][i] - pmove->player_mins[0][i]);
+			}
 		}
-
 	}
 	else {
-		int x = 4;  //breakpoint
+		//int x = 4;  //breakpoint
 	}
 	
 	trace = pmove->PM_PlayerTrace( newOrigin, newOrigin, PM_NORMAL, -1 );

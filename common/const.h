@@ -168,9 +168,31 @@
 
 #define MAX_CLIENTS 32
 
+//MODDD - version better for working with floats.
+// It begins losing accuracy after the first 5 decimal places, but even visual studio added
+// a few extra anyway on a preview of 3.14...f.
+#define M_PI 3.141592741f
 
-#define M_PI 3.14159265358979323846
-#define Q_PI 3.14159265358979323846
+// OLD PI CONSTANT
+// A printout of the as-is PI constant, even as a proper double, gave this instead printed out (for comparison):
+// Accurate up to 15 places.
+//           3.141592653589793115997963...
+//#define M_PI 3.14159265358979323846
+
+//MODDD - Some extra math stuff because hey, why not.
+#define M_180_RAD 3.141592741f
+#define M_2PI 6.283185482f
+
+// may as well be floats  (changed to approximations they end up as anyway)
+//#define CONST_DEG_TO_RAD_CONV 0.017453293
+//#define CONST_RAD_TO_DEG_CONV 57.295779506
+#define CONST_DEG_TO_RAD_CONV 0.01745329238f
+#define CONST_RAD_TO_DEG_CONV 57.29578018f
+
+
+
+
+
 
 
 #define PLAYER_FATAL_FALL_SPEED		1024// approx 60 feet
@@ -263,17 +285,6 @@ typedef float vec_t;
 //#ifdef __cplusplus
 //typedef int qboolean;
 //#endif
-
-
-
-
-//MODDD - Some extra math stuff because hey, why not.
-#define CONST_PI 3.141592654f
-#define CONST_180_RAD CONST_PI
-#define CONST_2PI 6.283185307f
-
-#define CONST_DEG_TO_RAD_CONV 0.017453293
-#define CONST_RAD_TO_DEG_CONV 57.295779506
 
 
 //MODDD

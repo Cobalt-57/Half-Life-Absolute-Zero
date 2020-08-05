@@ -704,7 +704,7 @@
 #define DEFAULT_cl_fvox 1
 #define DEFAULT_cl_ladder 1
 #define DEFAULT_precacheAll 1
-#define DEFAULT_cl_server_interpolation 1
+#define DEFAULT_cl_interp_entity 1
 
 #define DEFAULT_hud_swapFirstTwoBuckets 0
 #define DEFAULT_ignoreMultiplayerSkillOverride 1
@@ -721,6 +721,7 @@
 #define DEFAULT_interpolation_movetypestep_mindelta 0.06
 #define DEFAULT_sv_bloodparticlemode 1
 #define DEFAULT_cl_interp_view_extra 1
+#define DEFAULT_cl_interp_viewmodel 1
 
 
 
@@ -2818,7 +2819,7 @@
 	EASY_CVAR_DECLARATION_SERVER(cl_fvox)\
 	EASY_CVAR_DECLARATION_SERVER(cl_ladder)\
 	EASY_CVAR_DECLARATION_SERVER(precacheAll)\
-	EASY_CVAR_DECLARATION_SERVER(cl_server_interpolation)\
+	EASY_CVAR_DECLARATION_SERVER(cl_interp_entity)\
 	EASY_CVAR_DECLARATION_SERVER(hud_swapFirstTwoBuckets)\
 	EASY_CVAR_DECLARATION_SERVER(ignoreMultiplayerSkillOverride)\
 	EASY_CVAR_DECLARATION_SERVER(m_rawinput)\
@@ -2832,6 +2833,7 @@
 	EASY_CVAR_DECLARATION_SERVER(interpolation_movetypestep_mindelta)\
 	EASY_CVAR_DECLARATION_SERVER(sv_bloodparticlemode)\
 	EASY_CVAR_DECLARATION_SERVER(cl_interp_view_extra)\
+	EASY_CVAR_DECLARATION_SERVER(cl_interp_viewmodel)\
 	DUMMY
 
 
@@ -3329,7 +3331,7 @@
 	EASY_CVAR_DECLARATION_CLIENT(cl_fvox)\
 	EASY_CVAR_DECLARATION_CLIENT(cl_ladder)\
 	EASY_CVAR_DECLARATION_CLIENT(precacheAll)\
-	EASY_CVAR_DECLARATION_CLIENT(cl_server_interpolation)\
+	EASY_CVAR_DECLARATION_CLIENT(cl_interp_entity)\
 	EASY_CVAR_DECLARATION_CLIENT(hud_swapFirstTwoBuckets)\
 	EASY_CVAR_DECLARATION_CLIENT(ignoreMultiplayerSkillOverride)\
 	EASY_CVAR_DECLARATION_CLIENT(m_rawinput)\
@@ -3343,6 +3345,7 @@
 	EASY_CVAR_DECLARATION_CLIENT(interpolation_movetypestep_mindelta)\
 	EASY_CVAR_DECLARATION_CLIENT(sv_bloodparticlemode)\
 	EASY_CVAR_DECLARATION_CLIENT(cl_interp_view_extra)\
+	EASY_CVAR_DECLARATION_CLIENT(cl_interp_viewmodel)\
 	DUMMY
 
 #define EASY_CVAR_UPDATE_SERVER_MASS\
@@ -3838,7 +3841,7 @@
 	EASY_CVAR_UPDATE_SERVER(cl_fvox)\
 	EASY_CVAR_UPDATE_SERVER(cl_ladder)\
 	EASY_CVAR_UPDATE_SERVER(precacheAll)\
-	EASY_CVAR_UPDATE_SERVER(cl_server_interpolation)\
+	EASY_CVAR_UPDATE_SERVER(cl_interp_entity)\
 	EASY_CVAR_UPDATE_SERVER(hud_swapFirstTwoBuckets)\
 	EASY_CVAR_UPDATE_SERVER(ignoreMultiplayerSkillOverride)\
 	EASY_CVAR_UPDATE_SERVER(m_rawinput)\
@@ -3852,6 +3855,7 @@
 	EASY_CVAR_UPDATE_SERVER(interpolation_movetypestep_mindelta)\
 	EASY_CVAR_UPDATE_SERVER(sv_bloodparticlemode)\
 	EASY_CVAR_UPDATE_SERVER(cl_interp_view_extra)\
+	EASY_CVAR_UPDATE_SERVER(cl_interp_viewmodel)\
 	DUMMY
 
 #define EASY_CVAR_UPDATE_CLIENT_MASS\
@@ -4347,7 +4351,7 @@
 	EASY_CVAR_UPDATE_CLIENT(cl_fvox)\
 	EASY_CVAR_UPDATE_CLIENT(cl_ladder)\
 	EASY_CVAR_UPDATE_CLIENT(precacheAll)\
-	EASY_CVAR_UPDATE_CLIENT(cl_server_interpolation)\
+	EASY_CVAR_UPDATE_CLIENT(cl_interp_entity)\
 	EASY_CVAR_UPDATE_CLIENT(hud_swapFirstTwoBuckets)\
 	EASY_CVAR_UPDATE_CLIENT(ignoreMultiplayerSkillOverride)\
 	EASY_CVAR_UPDATE_CLIENT(m_rawinput)\
@@ -4361,6 +4365,7 @@
 	EASY_CVAR_UPDATE_CLIENT(interpolation_movetypestep_mindelta)\
 	EASY_CVAR_UPDATE_CLIENT(sv_bloodparticlemode)\
 	EASY_CVAR_UPDATE_CLIENT(cl_interp_view_extra)\
+	EASY_CVAR_UPDATE_CLIENT(cl_interp_viewmodel)\
 	DUMMY
 
 #define EASY_CVAR_CREATE_SERVER_SETUP_MASS\
@@ -4856,7 +4861,7 @@
 	EASY_CVAR_CREATE_SERVER_SETUP_A_CLIENTONLY(cl_fvox)\
 	EASY_CVAR_CREATE_SERVER_SETUP_A_CLIENTONLY(cl_ladder)\
 	EASY_CVAR_CREATE_SERVER_SETUP_A_SERVERONLY(precacheAll)\
-	EASY_CVAR_CREATE_SERVER_SETUP_A_CLIENTONLY(cl_server_interpolation)\
+	EASY_CVAR_CREATE_SERVER_SETUP_A_CLIENTONLY(cl_interp_entity)\
 	EASY_CVAR_CREATE_SERVER_SETUP_A_CLIENTONLY(hud_swapFirstTwoBuckets)\
 	EASY_CVAR_CREATE_SERVER_SETUP_A_SERVERONLY(ignoreMultiplayerSkillOverride)\
 	EASY_CVAR_CREATE_SERVER_SETUP_A_CLIENTONLY(m_rawinput)\
@@ -4870,6 +4875,7 @@
 	EASY_CVAR_CREATE_SERVER_SETUP_A_CLIENTONLY(interpolation_movetypestep_mindelta)\
 	EASY_CVAR_CREATE_SERVER_SETUP_A_SERVERONLY(sv_bloodparticlemode)\
 	EASY_CVAR_CREATE_SERVER_SETUP_A_CLIENTONLY(cl_interp_view_extra)\
+	EASY_CVAR_CREATE_SERVER_SETUP_A_CLIENTONLY(cl_interp_viewmodel)\
 	DUMMY
 
 #define EASY_CVAR_CREATE_SERVER_MASS\
@@ -5365,7 +5371,7 @@
 	EASY_CVAR_CREATE_SERVER_A_CLIENTONLY(cl_fvox)\
 	EASY_CVAR_CREATE_SERVER_A_CLIENTONLY(cl_ladder)\
 	EASY_CVAR_CREATE_SERVER_A_SERVERONLY(precacheAll)\
-	EASY_CVAR_CREATE_SERVER_A_CLIENTONLY(cl_server_interpolation)\
+	EASY_CVAR_CREATE_SERVER_A_CLIENTONLY(cl_interp_entity)\
 	EASY_CVAR_CREATE_SERVER_A_CLIENTONLY(hud_swapFirstTwoBuckets)\
 	EASY_CVAR_CREATE_SERVER_A_SERVERONLY(ignoreMultiplayerSkillOverride)\
 	EASY_CVAR_CREATE_SERVER_A_CLIENTONLY(m_rawinput)\
@@ -5379,6 +5385,7 @@
 	EASY_CVAR_CREATE_SERVER_A_CLIENTONLY(interpolation_movetypestep_mindelta)\
 	EASY_CVAR_CREATE_SERVER_A_SERVERONLY(sv_bloodparticlemode)\
 	EASY_CVAR_CREATE_SERVER_A_CLIENTONLY(cl_interp_view_extra)\
+	EASY_CVAR_CREATE_SERVER_A_CLIENTONLY(cl_interp_viewmodel)\
 	DUMMY
 
 
@@ -5875,7 +5882,7 @@
 	EASY_CVAR_CREATE_CLIENT_A_CLIENTONLY(cl_fvox)\
 	EASY_CVAR_CREATE_CLIENT_A_CLIENTONLY(cl_ladder)\
 	EASY_CVAR_CREATE_CLIENT_A_SERVERONLY(precacheAll)\
-	EASY_CVAR_CREATE_CLIENT_A_CLIENTONLY(cl_server_interpolation)\
+	EASY_CVAR_CREATE_CLIENT_A_CLIENTONLY(cl_interp_entity)\
 	EASY_CVAR_CREATE_CLIENT_A_CLIENTONLY(hud_swapFirstTwoBuckets)\
 	EASY_CVAR_CREATE_CLIENT_A_SERVERONLY(ignoreMultiplayerSkillOverride)\
 	EASY_CVAR_CREATE_CLIENT_A_CLIENTONLY(m_rawinput)\
@@ -5889,6 +5896,7 @@
 	EASY_CVAR_CREATE_CLIENT_A_CLIENTONLY(interpolation_movetypestep_mindelta)\
 	EASY_CVAR_CREATE_CLIENT_A_SERVERONLY(sv_bloodparticlemode)\
 	EASY_CVAR_CREATE_CLIENT_A_CLIENTONLY(cl_interp_view_extra)\
+	EASY_CVAR_CREATE_CLIENT_A_CLIENTONLY(cl_interp_viewmodel)\
 	DUMMY
 
 #define EASY_CVAR_RESET_MASS\
@@ -6383,7 +6391,7 @@
 	EASY_CVAR_RESET_CLIENTONLY(cl_fvox)\
 	EASY_CVAR_RESET_CLIENTONLY(cl_ladder)\
 	EASY_CVAR_RESET(precacheAll)\
-	EASY_CVAR_RESET(cl_server_interpolation)\
+	EASY_CVAR_RESET(cl_interp_entity)\
 	EASY_CVAR_RESET(hud_swapFirstTwoBuckets)\
 	EASY_CVAR_RESET(ignoreMultiplayerSkillOverride)\
 	EASY_CVAR_RESET_CLIENTONLY(m_rawinput)\
@@ -6397,6 +6405,7 @@
 	EASY_CVAR_RESET(interpolation_movetypestep_mindelta)\
 	EASY_CVAR_RESET(sv_bloodparticlemode)\
 	EASY_CVAR_RESET(cl_interp_view_extra)\
+	EASY_CVAR_RESET(cl_interp_viewmodel)\
 	DUMMY
 
 #define EASY_CVAR_EXTERN_MASS\
@@ -6892,7 +6901,7 @@
 	EASY_CVAR_EXTERN(cl_fvox)\
 	EASY_CVAR_EXTERN(cl_ladder)\
 	EASY_CVAR_EXTERN(precacheAll)\
-	EASY_CVAR_EXTERN(cl_server_interpolation)\
+	EASY_CVAR_EXTERN(cl_interp_entity)\
 	EASY_CVAR_EXTERN(hud_swapFirstTwoBuckets)\
 	EASY_CVAR_EXTERN(ignoreMultiplayerSkillOverride)\
 	EASY_CVAR_EXTERN(m_rawinput)\
@@ -6906,5 +6915,6 @@
 	EASY_CVAR_EXTERN(interpolation_movetypestep_mindelta)\
 	EASY_CVAR_EXTERN(sv_bloodparticlemode)\
 	EASY_CVAR_EXTERN(cl_interp_view_extra)\
+	EASY_CVAR_EXTERN(cl_interp_viewmodel)\
 	DUMMY
 

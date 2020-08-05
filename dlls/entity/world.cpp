@@ -35,17 +35,22 @@
 #include "teamplay_gamerules.h"
 
 
+EASY_CVAR_EXTERN(sv_germancensorship)
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST(playerBulletHitEffectForceServer)
 
+
+#define SF_WORLD_DARK		0x0001		// Fade from black at startup
+#define SF_WORLD_TITLE		0x0002		// Display game title at startup
+#define SF_WORLD_FORCETEAM	0x0004		// Force teams
 
 
 extern CGraph WorldGraph;
 extern CSoundEnt *pSoundEnt;
 
 extern CBaseEntity* g_pLastSpawn;
-DLL_GLOBAL edict_t* g_pBodyQueueHead;
-CGlobalState gGlobalState;
 extern DLL_GLOBAL int gDisplayTitle;
+extern DLL_GLOBAL BOOL g_fGameOver;
+extern DLL_DECALLIST gDecals[];
 
 
 //MODDD -
@@ -53,9 +58,11 @@ extern void turnWorldLightsOn();
 extern void turnWorldLightsOff();
 extern void resetModCVars(CBasePlayer* arg_plyRef, BOOL isEmergency);
 
-EASY_CVAR_EXTERN(sv_germancensorship)
 
-extern DLL_DECALLIST gDecals[];
+DLL_GLOBAL edict_t* g_pBodyQueueHead;
+CGlobalState gGlobalState;
+float g_flWeaponCheat;
+
 
 
 //MODDD - comment below is likely out of date. "util.h" does not have any such decal list. "declas.h" does however.
@@ -138,7 +145,8 @@ void CDecal :: TriggerDecal ( CBaseEntity *pActivator, CBaseEntity *pCaller, USE
 void CDecal :: StaticDecal( void )
 {
 	TraceResult trace;
-	int		entityIndex, modelIndex;
+	int entityIndex;
+	int modelIndex;
 
 	UTIL_TraceLine( pev->origin - Vector(5,5,5), pev->origin + Vector(5,5,5),  ignore_monsters, ENT(pev), &trace );
 
@@ -497,17 +505,6 @@ void ResetGlobalState( void )
 //=======================
 
 LINK_ENTITY_TO_CLASS( worldspawn, CWorld );
-
-#define SF_WORLD_DARK		0x0001		// Fade from black at startup
-#define SF_WORLD_TITLE		0x0002		// Display game title at startup
-#define SF_WORLD_FORCETEAM	0x0004		// Force teams
-
-extern DLL_GLOBAL BOOL		g_fGameOver;
-float g_flWeaponCheat; 
-
-
-
-
 
 
 

@@ -351,10 +351,6 @@ void removeAllMonsters(edict_t* theCaller) {
 		if (pEdict->free)	// Not in use
 			continue;
 
-		//TEST WHY NO REMOV
-		if (FClassnameIs(pEdict, "monster_barnacle")) {
-			int x = 66; //?
-		}
 
 		if (!(pEdict->v.flags & (FL_CLIENT | FL_MONSTER)))	// Not a client/monster ?
 			continue;
@@ -839,24 +835,10 @@ void partyOff(CBasePlayer* playerRef){
 	//CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev) ;
 	if ( playerRef){
 		edict_t* tempEd = ENT(playerRef->pev);
-
-
-		//EMIT_SOUND_DYN2(tempEd, CHAN_ITEM, "!partysong", 0, 0, SND_STOP, PITCH_NORM);
-		//stop.
-
-		/*
-		EMIT_SOUND( tempEd, CHAN_VOICE, "common/null.wav", 1.0, ATTN_IDLE );
-		EMIT_SOUND( tempEd, CHAN_ITEM, "common/null.wav", 1.0, ATTN_IDLE );
-		EMIT_SOUND( tempEd, CHAN_STREAM, "common/null.wav", 1.0, ATTN_IDLE );
-		*/
-		//EMIT_SOUND_DYN( tempEd, CHAN_STREAM, SOUND_FLASHLIGHT_ON, 1.0, ATTN_NORM, 0, PITCH_NORM );
-
-		//no, just do this instead.
 		submitJukeboxOff(tempEd);
 	}
 
-}
-
+}//partyOff
 
 
 
@@ -1399,6 +1381,41 @@ void ClientCommand( edict_t *pEntity )
 		}else {
 			easyForcePrintLineClient(pEntity, "You need sv_cheats on for that!");
 		}
+
+
+
+		// Just a test to see how many entities can be spawned before the game pukes.  Looks like the magic number is 900.
+		// Any index that tries to go over 899 crashes.
+		// Any indexes ever deleted before that point try to be used first.
+		// Note that going past 200 to 300 will already give 'too many entities in visible packet' or whatever that was errors.
+		/*
+		// (keep in mind: 3 entities were giving rendering printouts before this began)
+		SZp#753 : SV: 898
+		SV : SZd#753
+		SZp#754 : SV: 899
+		SV : SZd#754
+		SZp#755 : hl.exe has triggered a breakpoint.
+		*/
+		/*
+		for (int i = 0; i < 50; i++) {
+			easyForcePrint("SZp#%d : ", i);
+			CBaseEntity* entRef = CBaseEntity::Create("monster_zombie", Vector(105.33, 598.49, 80), Vector(0, 0, 0), NULL);
+
+			if (entRef != NULL) {
+				// ENTINDEX( this->edict() )
+				int yea = entRef->entindex();
+				easyForcePrintLine("%d", yea);
+			}
+			else {
+				easyForcePrintLine("none?");
+			}
+
+			//UTIL_Remove(entRef);
+			easyForcePrintLine("SZd#%d", i);
+		}
+		*/
+
+
 	}else if ( FStrEq(pcmdRefinedRef, "notimeddamage") || FStrEq(pcmdRefinedRef, "notdmg") || FStrEq(pcmdRefinedRef, "resettimeddamage") || FStrEq(pcmdRefinedRef, "resettdmg") || FStrEq(pcmdRefinedRef, "cleartimeddamage") || FStrEq(pcmdRefinedRef, "cleartdmg")){
 		// only reset timed damages.
 		if ( g_flWeaponCheat != 0.0)
@@ -1715,43 +1732,41 @@ void ClientCommand( edict_t *pEntity )
 
 				switch(result){
 				case 0:  //ENT(pev)???
-					EMIT_SOUND(tempEd, CHAN_ITEM, "!playtestEnd", 1, ATTN_NORM);
+					EMIT_SOUND_FILTERED(tempEd, CHAN_ITEM, "!playtestEnd", 1, ATTN_NORM, 0, 100, FALSE);
 				break;
 				case 1:
-					EMIT_SOUND(tempEd, CHAN_ITEM, "weapons/reload2.wav", 1, ATTN_NORM);
+					EMIT_SOUND_FILTERED(tempEd, CHAN_ITEM, "weapons/reload2.wav", 1, ATTN_NORM, 0, 100, FALSE);
 				break;
 				case 2:
-					EMIT_SOUND(tempEd, CHAN_ITEM, "weapons/reload3.wav", 1, ATTN_NORM);
+					EMIT_SOUND_FILTERED(tempEd, CHAN_ITEM, "weapons/reload3.wav", 1, ATTN_NORM, 0, 100, FALSE);
 				break;
 				case 3:
-					EMIT_SOUND(tempEd, CHAN_ITEM, "weapons/357_reload1.wav", 1, ATTN_NORM);
+					EMIT_SOUND_FILTERED(tempEd, CHAN_ITEM, "weapons/357_reload1.wav", 1, ATTN_NORM, 0, 100, FALSE);
 				break;
 				case 4:
-					EMIT_SOUND(tempEd, CHAN_ITEM, "weapons/guncock1.wav", 1, ATTN_NORM);
+					EMIT_SOUND_FILTERED(tempEd, CHAN_ITEM, "weapons/guncock1.wav", 1, ATTN_NORM, 0, 100, FALSE);
 				break;
 				case 5:
-					EMIT_SOUND(tempEd, CHAN_ITEM, "items/gunpickup1.wav", 1, ATTN_NORM);
+					EMIT_SOUND_FILTERED(tempEd, CHAN_ITEM, "items/gunpickup1.wav", 1, ATTN_NORM, 0, 100, FALSE);
 				break;
 				case 6:
-					EMIT_SOUND(tempEd, CHAN_ITEM, "items/gunpickup2.wav", 1, ATTN_NORM);
+					EMIT_SOUND_FILTERED(tempEd, CHAN_ITEM, "items/gunpickup2.wav", 1, ATTN_NORM, 0, 100, FALSE);
 				break;
 				case 7:
-					EMIT_SOUND(tempEd, CHAN_ITEM, "items/gunpickup3.wav", 1, ATTN_NORM);
+					EMIT_SOUND_FILTERED(tempEd, CHAN_ITEM, "items/gunpickup3.wav", 1, ATTN_NORM, 0, 100, FALSE);
 				break;
 				case 8:
-					EMIT_SOUND(tempEd, CHAN_ITEM, "items/gunpickup4.wav", 1, ATTN_NORM);
+					EMIT_SOUND_FILTERED(tempEd, CHAN_ITEM, "items/gunpickup4.wav", 1, ATTN_NORM, 0, 100, FALSE);
 				break;
 				case 9:
-					EMIT_SOUND(tempEd, CHAN_ITEM, "vox/acknowledge.wav", 1, ATTN_NORM);
+					EMIT_SOUND_FILTERED(tempEd, CHAN_ITEM, "vox/acknowledge.wav", 1, ATTN_NORM, 0, 100, FALSE);
 				break;
 				case 10:
-					EMIT_SOUND(tempEd, CHAN_ITEM, "weapons/xbow_hitbod1.wav", 1, ATTN_NORM);
+					EMIT_SOUND_FILTERED(tempEd, CHAN_ITEM, "weapons/xbow_hitbod1.wav", 1, ATTN_NORM, 0, 100, FALSE);
 				break;
 				case 11:
-					EMIT_SOUND(tempEd, CHAN_ITEM, "weapons/xbow_hitbod2.wav", 1, ATTN_NORM);
+					EMIT_SOUND_FILTERED(tempEd, CHAN_ITEM, "weapons/xbow_hitbod2.wav", 1, ATTN_NORM, 0, 100, FALSE);
 				break;
-
-
 				default:
 					easyForcePrintLineClient(pEntity, "sound %d not found.", result);
 				break;
@@ -1764,20 +1779,12 @@ void ClientCommand( edict_t *pEntity )
 		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev) ;
 			
 		if ( tempplayer){
-
 			edict_t* tempEd = ENT(tempplayer->pev);
-				
 			int iszItem = ALLOC_STRING( CMD_ARGV(1) );
 			const char* argPitch = CMD_ARGV(2);
-
 			const char* pszName = STRING(iszItem);
 
-
-			//no, wait to start playing soon.
-			//EMIT_SOUND(tempEd, CHAN_ITEM, pszName, 1, ATTN_NORM);
-				
 			copyString(pszName, queuedSound, 127 );
-
 			playQueuedPitch = 100;  //default pitch if not provided
 
 			if(argPitch != NULL && !isStringEmpty(argPitch)){
@@ -1807,17 +1814,11 @@ void ClientCommand( edict_t *pEntity )
 		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev) ;
 			
 		if ( tempplayer){
-
 			edict_t* tempEd = ENT(tempplayer->pev);
-				
 			int iszItem = ALLOC_STRING( CMD_ARGV(1) );
 			const char* argPitch = CMD_ARGV(2);
-
 			const char* pszName = STRING(iszItem);
-			//no, wait to start playing soon.
-			//EMIT_SOUND(tempEd, CHAN_ITEM, pszName, 1, ATTN_NORM);
-				
-
+			
 			if(pszName[0] != '!'){
 				queuedSound[0] = '!';
 				copyString(pszName, &queuedSound[1], 127 - 1);
@@ -1827,7 +1828,6 @@ void ClientCommand( edict_t *pEntity )
 				copyString(pszName, queuedSound, 127 );
 			}
 
-				
 			playQueuedPitch = 100;  //default pitch if not provided
 
 			if(argPitch != NULL && !isStringEmpty(argPitch)){
@@ -1857,17 +1857,16 @@ void ClientCommand( edict_t *pEntity )
 		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev) ;
 		if ( tempplayer){
 			edict_t* tempEd = ENT(tempplayer->pev);
-				
 			int iszItem = ALLOC_STRING( CMD_ARGV(1) );
 			const char* pszName = STRING(iszItem);
 
 			if(pszName[0] == '\0'){
-				EMIT_SOUND( tempEd, CHAN_VOICE, "common/null.wav", 1.0, ATTN_IDLE );
-				EMIT_SOUND( tempEd, CHAN_ITEM, "common/null.wav", 1.0, ATTN_IDLE );
-				EMIT_SOUND( tempEd, CHAN_STREAM, "common/null.wav", 1.0, ATTN_IDLE );
+				EMIT_SOUND_FILTERED( tempEd, CHAN_VOICE, "common/null.wav", 1.0, ATTN_IDLE, 0, 100, FALSE);
+				EMIT_SOUND_FILTERED( tempEd, CHAN_ITEM, "common/null.wav", 1.0, ATTN_IDLE, 0, 100, FALSE);
+				EMIT_SOUND_FILTERED( tempEd, CHAN_STREAM, "common/null.wav", 1.0, ATTN_IDLE, 0, 100, FALSE);
 			}else{
+				//same as STOP_SOUND, maybe?
 				EMIT_SOUND_DYN(tempEd, CHAN_STREAM, pszName, 0, 0, SND_STOP, PITCH_NORM);
-
 			}
 
 			//also turn off MP3 music.
@@ -1878,15 +1877,13 @@ void ClientCommand( edict_t *pEntity )
 		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev) ;
 		if ( tempplayer){
 			edict_t* tempEd = ENT(tempplayer->pev);
-				
 			int iszItem = ALLOC_STRING( CMD_ARGV(1) );
 			const char* pszName = STRING(iszItem);
 
 			if(pszName[0] == '\0'){
-				EMIT_SOUND( tempEd, CHAN_VOICE, "common/null.wav", 1.0, ATTN_IDLE );
-				EMIT_SOUND( tempEd, CHAN_ITEM, "common/null.wav", 1.0, ATTN_IDLE );
-				EMIT_SOUND( tempEd, CHAN_STREAM, "common/null.wav", 1.0, ATTN_IDLE );
-
+				EMIT_SOUND_FILTERED( tempEd, CHAN_VOICE, "common/null.wav", 1.0, ATTN_IDLE, 0, 100, FALSE);
+				EMIT_SOUND_FILTERED( tempEd, CHAN_ITEM, "common/null.wav", 1.0, ATTN_IDLE, 0, 100, FALSE);
+				EMIT_SOUND_FILTERED( tempEd, CHAN_STREAM, "common/null.wav", 1.0, ATTN_IDLE, 0, 100, FALSE);
 			}else{
 				char tempsound[127];
 				if(pszName[0] != '!'){
@@ -1896,11 +1893,10 @@ void ClientCommand( edict_t *pEntity )
 					//eh, just overwrite that "!".
 					copyString(pszName, tempsound, 127 );
 				}
-
 				EMIT_SOUND_DYN(tempEd, CHAN_STREAM, tempsound, 0, 0, SND_STOP, PITCH_NORM);
 			}
 				
-			//also turn off MP3 music.
+			// also turn off MP3 music.
 			submitJukeboxOff(tempEd);
 		}//END OF if(tempplayer)
 
@@ -4853,7 +4849,7 @@ void ClientCommand( edict_t *pEntity )
 	}
 
 
-	// NEW SHIT HERE MAYBE
+	// NEW things HERE MAYBE
 
 	
 	else if (FStrEq(pcmdRefinedRef, "tcs_init_link")) {
@@ -4904,28 +4900,6 @@ void ClientCommand( edict_t *pEntity )
 			easyForcePrintLineClient(pEntity, "***ERROR: test_cvar struct call did not work.");
 		}
 	}
-	else if (FStrEq(pcmdRefinedRef, "testo")) {
-		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer*)pev);
-
-		const char* arg1ref = CMD_ARGV(1);
-
-		int numbAttempt = tryStringToInt(arg1ref);
-
-		// CHAN_BODY ??`
-		switch (numbAttempt) {
-		case 0:
-			EMIT_SOUND_FILTERED(ENT(tempplayer->pev), CHAN_WEAPON, "common/bodysplat.wav", 1, ATTN_NORM - 0.12, FALSE);
-			break;
-		case 1:
-			EMIT_SOUND_FILTERED(ENT(tempplayer->pev), CHAN_WEAPON, "debris/bustflesh1.wav", 1, ATTN_NORM - 0.35, TRUE);
-			break;
-		case 2:
-			EMIT_SOUND_FILTERED(ENT(tempplayer->pev), CHAN_WEAPON, "debris/bustflesh2.wav", 1, ATTN_NORM - 0.35, TRUE);
-			break;
-		}//END OF switch
-		
-		}
-
 	else {
 		caughtByFirst = FALSE;
 	}
@@ -5471,8 +5445,7 @@ void Sys_Error( const char *error_string )
 {
 	// Default case, do nothing.  MOD AUTHORS:  Add code ( e.g., _asm { int 3 }; here to cause a breakpoint for debugging your game .dlls
 
-	//MODDD - well,  here I am.   Is... this ok?
-	int x = 222;
+	//MODDD - well,  here I am.   Is this ok?
 	_asm { int 3 };
 
 }

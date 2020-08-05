@@ -18,8 +18,7 @@
 //
 // Dynamic Decals
 //
-enum decal_e 
-{	
+enum decal_e {	
 	DECAL_GUNSHOT1 = 0, 
 	DECAL_GUNSHOT2,
 	DECAL_GUNSHOT3,
@@ -64,6 +63,14 @@ enum decal_e
 	DECAL_MOMMASPLAT,
 	DECAL_OIL1, //MODDD - these are new.
 	DECAL_OIL2,
+	DECAL_GBLOOD1,
+	DECAL_GBLOOD2,
+	DECAL_GBLOOD3,
+	DECAL_GBLOOD4,
+	DECAL_GBLOOD5,
+	DECAL_GBLOOD6,
+	DECAL_GBLOOD7,
+	DECAL_GBLOOD8,
 	DLL_DECALLIST_SIZE   //Leave this at the end. Conveniently acts as a count of this list. Still, keep it in sync with decals.cpp's array, minus this _SIZE entry.
 };
 
@@ -75,7 +82,6 @@ typedef struct
 
 
 extern DLL_DECALLIST gDecals[];
-//#define DLL_DECALLIST_SIZE 42
 
 
 #endif	// DECALS_H

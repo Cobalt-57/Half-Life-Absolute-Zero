@@ -2560,7 +2560,7 @@ void CBasePlayer::PlayerDeathThink(void)
 			pev->velocity = g_vecZero;
 			// no need to set pev->deadflag to DEAD_DEAD, that would've been handled by the death animation finishing above.  I think.
 
-			EMIT_SOUND_FILTERED(ENT(pev), CHAN_ITEM, "common/bodysplat.wav", 1, ATTN_NORM, FALSE);
+			EMIT_SOUND_FILTERED(ENT(pev), CHAN_ITEM, "common/bodysplat.wav", 1, ATTN_NORM, 0, 100, FALSE);
 
 			m_flFallVelocity = 0;  //I think this is safe?  No need to handle this again
 			m_flSuitUpdate = gpGlobals->time;
@@ -2855,7 +2855,7 @@ void CBasePlayer::PlayerUse ( void )
 					m_iTrain = TrainSpeed(pTrain->pev->speed, pTrain->pev->impulse);
 					m_iTrain |= TRAIN_NEW;
 					//MODDD - soundsentencesave
-					EMIT_SOUND_FILTERED( ENT(pev), CHAN_ITEM, "plats/train_use1.wav", 0.8, ATTN_NORM, TRUE);
+					EMIT_SOUND_FILTERED( ENT(pev), CHAN_ITEM, "plats/train_use1.wav", 0.8, ATTN_NORM, 0, 100, FALSE);
 					return;
 				}
 			}
@@ -3200,7 +3200,7 @@ void CBasePlayer::PlayerUse ( void )
 		int caps = pObject->ObjectCaps();
 
 		if ( m_afButtonPressed & IN_USE ){
-			EMIT_SOUND_FILTERED( ENT(pev), CHAN_ITEM, "common/wpn_select.wav", 0.4, ATTN_NORM, TRUE);
+			EMIT_SOUND_FILTERED( ENT(pev), CHAN_ITEM, "common/wpn_select.wav", 0.4, ATTN_NORM, 0, 100, FALSE);
 		}
 
 		if ( ( (pev->button & IN_USE) && (caps & FCAP_CONTINUOUS_USE) ) ||
@@ -3223,7 +3223,7 @@ void CBasePlayer::PlayerUse ( void )
 		//NOTE - is that a little hard to read? m_afButtonPressed is a bitmask of inputs. IN_USE is on when the player pressed the USE key this frame, I assume.
 		//      So this just means, only play the "deny" sound if pressing the USE key.
 		if ( m_afButtonPressed & IN_USE ){
-			EMIT_SOUND_FILTERED( ENT(pev), CHAN_ITEM, "common/wpn_denyselect.wav", 0.4, ATTN_NORM, TRUE);
+			EMIT_SOUND_FILTERED( ENT(pev), CHAN_ITEM, "common/wpn_denyselect.wav", 0.4, ATTN_NORM, 0, 100, FALSE);
 		}
 	}
 }//END OF PlayerUse
@@ -5569,7 +5569,7 @@ void CBasePlayer::PostThink()
 			if ( flFallDamage > pev->health )
 			{//splat
 				// note: play on item channel because we play footstep landing on body channel
-				EMIT_SOUND_FILTERED(ENT(pev), CHAN_ITEM, "common/bodysplat.wav", 1, ATTN_NORM, FALSE);
+				EMIT_SOUND_FILTERED(ENT(pev), CHAN_ITEM, "common/bodysplat.wav", 1, ATTN_NORM, 0, 100, FALSE);
 			}
 
 			if ( flFallDamage > 0 )
@@ -7024,7 +7024,7 @@ void CSprayCan::Spawn ( entvars_t *pevOwner )
 
 	pev->nextthink = gpGlobals->time + 0.1;
 	//MODDD - soundsentencesave. This one's ok to play through it.
-	EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "player/sprayer.wav", 1, ATTN_NORM, TRUE);
+	EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "player/sprayer.wav", 1, ATTN_NORM, 0, 100, FALSE);
 }
 
 void CSprayCan::Think( void )
@@ -7256,8 +7256,8 @@ edict_t* CBasePlayer::GiveNamedItem( const char *pszName, int pszSpawnFlags, con
 
 	CBaseEntity* temptest = Instance(pent);
 
-	//If the "monster_barancle" was spawned, push it down a bit to be safe.  If any of it clips
-	//through the ceiling, the tongue won't drop.
+	// If the "monster_barancle" was spawned, push it down a bit to be safe.  If any of it clips
+	// through the ceiling, the tongue won't drop.
 	float extraOffset = 0;
 	//easyPrintLine("WHAT %s", pszNameFinal);
 	if(FStrEq(pszNameFinal, "monster_barnacle") || FStrEq(pszNameFinal, "barnacle")  ){
@@ -7405,7 +7405,7 @@ void CBasePlayer :: FlashlightTurnOn( void )
 	{
 		//MODDD - channel changed from "CHAN_WEAPON" to "CHAN_STREAM".
 		//MODDD - soundsentencesave
-		EMIT_SOUND_FILTERED( ENT(pev), CHAN_STREAM, SOUND_FLASHLIGHT_ON, 1.0, ATTN_NORM, 0, PITCH_NORM, TRUE );
+		EMIT_SOUND_FILTERED( ENT(pev), CHAN_STREAM, SOUND_FLASHLIGHT_ON, 1.0, ATTN_NORM, 0, PITCH_NORM, FALSE );
 		SetBits(pev->effects, EF_DIMLIGHT);
 		MESSAGE_BEGIN( MSG_ONE, gmsgFlashlight, NULL, pev );
 		WRITE_BYTE(1);
@@ -7422,7 +7422,7 @@ void CBasePlayer :: FlashlightTurnOff( void )
 {
 	//MODDD - channel changed from "CHAN_WEAPON" to "CHAN_STREAM".
 	//MODDD - soundsentencesave
-	EMIT_SOUND_FILTERED( ENT(pev), CHAN_STREAM, SOUND_FLASHLIGHT_OFF, 1.0, ATTN_NORM, 0, PITCH_NORM, TRUE );
+	EMIT_SOUND_FILTERED( ENT(pev), CHAN_STREAM, SOUND_FLASHLIGHT_OFF, 1.0, ATTN_NORM, 0, PITCH_NORM, FALSE );
     ClearBits(pev->effects, EF_DIMLIGHT);
 	MESSAGE_BEGIN( MSG_ONE, gmsgFlashlight, NULL, pev );
 	WRITE_BYTE(0);

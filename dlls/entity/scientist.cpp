@@ -52,7 +52,6 @@ SC_HEAR2 scientist/whatissound
 //MODDD - added, so that the player's "setSuitUpdate" may be called directly (edicts are too general
 //and don't have that, nor are they safely moddable to my knowledge, very DLL intensive in transfers).
 #include "player.h"
-#include "ignore_warning_list.h"
 
 
 //MODDD
@@ -2647,8 +2646,15 @@ Schedule_t *CScientist :: GetSchedule ( void )
 		{
 			// flinch if hurt
 			//MODDD - Face what inflicted the damage and get scared dangit!  Do like barney now
+			// ACTUALLY go a step further.  Jump to the combat state and start running if it's something I hate that attacked me.
+			// No need to stupidly face it and then run away screaming, especially since this hit likely made a scream/pain noise anyway
+			// ...unfortunately we don't really have a way of telling what entity did the damage leading to LIGHT/HEAVY_DAMAGE.  drat.
 			//return GetScheduleOfType( SCHED_SMALL_FLINCH );
-			return GetScheduleOfType(SCHED_ALERT_SMALL_FLINCH);
+
+			//return GetScheduleOfType(SCHED_ALERT_SMALL_FLINCH);
+
+			// how bout dis
+			return GetScheduleOfType(SCHED_TAKE_COVER_FROM_ORIGIN);
 		}
 
 

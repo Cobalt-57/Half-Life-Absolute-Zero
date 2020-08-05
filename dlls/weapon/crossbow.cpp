@@ -514,7 +514,6 @@ void CCrossbow::Reload( void )
 		#endif
 	}
 
-
 }
 
 
@@ -527,8 +526,6 @@ void CCrossbow::WeaponIdle( void )
 	easyForcePrintLine("SV: WeaponIdle %.2f %.2f %d", m_flTimeWeaponIdle, UTIL_WeaponTimeBase(), (UTIL_WeaponTimeBase() >= m_flTimeWeaponIdle) );
 #endif
 	*/
-
-	
 
 	m_pPlayer->GetAutoaimVector( AUTOAIM_2DEGREES );  // get the autoaim vector but ignore it;  used for autoaim crosshair in DM
 

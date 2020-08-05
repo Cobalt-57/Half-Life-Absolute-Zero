@@ -986,7 +986,7 @@ void CBarney :: MonsterThink(void){
 		}
 
 		
-		EMIT_SOUND( ENT(pev), CHAN_WEAPON, "items/9mmclip1.wav", 1, ATTN_NORM );
+		EMIT_SOUND_FILTERED( ENT(pev), CHAN_WEAPON, "items/9mmclip1.wav", 1, ATTN_NORM, 0, 100, FALSE );
 		reloadSoundTime = -1;
 	}
 

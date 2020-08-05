@@ -10,7 +10,6 @@
 #include "util_model.h"
 #include "defaultai.h"
 #include "game.h"
-#include "ignore_warning_list.h"
 #include "util_debugdraw.h"
 
 //????
@@ -662,20 +661,10 @@ void CChumToad::Precache( void )
 	//PRECACHE_SOUND("chumtoad/cht_throw1.wav");
 	//PRECACHE_SOUND("chumtoad/cht_throw2.wav");
 	
-	
 	PRECACHE_SOUND("chumtoad/cht_croak_short.wav");
 	PRECACHE_SOUND("chumtoad/cht_croak_medium.wav");
 	PRECACHE_SOUND("chumtoad/cht_croak_long.wav");
 	
-
-	/*
-	PRECACHE_SOUND("common/bodysplat.wav");
-	PRECACHE_SOUND("squeek/sqk_die1.wav");
-	PRECACHE_SOUND("squeek/sqk_hunt1.wav");
-	PRECACHE_SOUND("squeek/sqk_hunt2.wav");
-	PRECACHE_SOUND("squeek/sqk_hunt3.wav");
-	PRECACHE_SOUND("squeek/sqk_deploy1.wav");
-	*/
 	//global_useSentenceSave = FALSE;
 
 }

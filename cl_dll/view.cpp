@@ -262,7 +262,7 @@ float V_CalcBob(struct ref_params_s* pparams)
 	}
 	else
 	{
-		cycle = M_PI + M_PI * (cycle - cl_bobup->value) / (1.0 - cl_bobup->value);
+		cycle = M_PI + M_PI * (cycle - cl_bobup->value) / (1.0f - cl_bobup->value);
 	}
 
 	// bob is proportional to simulated velocity in the xy plane
@@ -847,30 +847,14 @@ void V_CalcNormalRefdef(struct ref_params_s* pparams)
 
 
 
-	/*
-	// OLD WAY.
-	if (!pparams->smoothing && pparams->onground && pparams->simorg[2] - oldz > 0)
-	{
-		float steptime;
 
-		steptime = pparams->time - lasttime;
-		if (steptime < 0)
-			//FIXME		I_Error ("steptime < 0");
-			steptime = 0;
 
-		oldz += steptime * 150;
-		if (oldz > pparams->simorg[2])
-			oldz = pparams->simorg[2];
-		if (pparams->simorg[2] - oldz > 18)
-			oldz = pparams->simorg[2] - 18;
-		pparams->vieworg[2] += oldz - pparams->simorg[2];
-		view->origin[2] += oldz - pparams->simorg[2];
-	}
-	else
-	{
-		oldz = pparams->simorg[2];
-	}
-	*/
+
+
+
+	// bunch of scraps from testing around.
+	// Sweet GOD does figuring out the view-offset out of simorg have to be some act of eldritch witchcraft???
+	// NEVERMIND THIS.
 
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// smooth out stair step ups
@@ -878,11 +862,6 @@ void V_CalcNormalRefdef(struct ref_params_s* pparams)
 	//MODDD - NOTE.  These seem to be looking at a hardcoded stepsize of "18", even though
 	// sv_stepsize is a CVar that can be changed.
 	// Perhaps it should be broadcasted to clients, then use that client-cached version here?
-#if 1
-
-	// bunch of scraps from testing around.
-	// Sweet GOD does figuring out the view-offset out of simorg have to be some act of eldritch witchcraft???
-	// NEVERMIND THIS.
 
 //view->curstate.
 // bInDuck ???
@@ -901,9 +880,6 @@ void V_CalcNormalRefdef(struct ref_params_s* pparams)
 	float TEMP_view_ofs_z = TEMP_view_ofs[2];
 	int hulltesto = ent->curstate.usehull;
 	*/
-
-	float safeSimZ = pparams->simorg[2];   // - pparams->viewheight[2]
-
 
 	/*
 	if (ent->curstate.usehull == 1) {
@@ -931,6 +907,42 @@ void V_CalcNormalRefdef(struct ref_params_s* pparams)
 
 
 
+
+
+
+
+	//MODDD - crouch interp
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	/*
+	// OLD WAY.
+	if (!pparams->smoothing && pparams->onground && pparams->simorg[2] - oldz > 0)
+	{
+		float steptime;
+
+		steptime = pparams->time - lasttime;
+		if (steptime < 0)
+			//FIXME		I_Error ("steptime < 0");
+			steptime = 0;
+
+		oldz += steptime * 150;
+		if (oldz > pparams->simorg[2])
+			oldz = pparams->simorg[2];
+		if (pparams->simorg[2] - oldz > 18)
+			oldz = pparams->simorg[2] - 18;
+		pparams->vieworg[2] += oldz - pparams->simorg[2];
+		view->origin[2] += oldz - pparams->simorg[2];
+	}
+	else
+	{
+		oldz = pparams->simorg[2];
+	}
+	*/
+
+	float safeSimZ = pparams->simorg[2];   // - pparams->viewheight[2]
+	
 	//MODDD - between games/maps, forget any differences, interp from that is just silly.
 	if (resetNormalRefDefVars) {
 		resetNormalRefDefVars = FALSE;
@@ -938,7 +950,6 @@ void V_CalcNormalRefdef(struct ref_params_s* pparams)
 		rawOldViewHeight = pparams->viewheight[2];
 		oldViewHeight = pparams->viewheight[2];
 	}
-
 
 	//if (!pparams->smoothing && pparams->onground && safeSimZ - oldz > 0)
 	if (!pparams->smoothing)
@@ -1053,7 +1064,7 @@ void V_CalcNormalRefdef(struct ref_params_s* pparams)
 
 					pparams->vieworg[2] -= (-oldViewHeight + (filteredViewheight)) * 1;
 					view->origin[2] -= (-oldViewHeight + (filteredViewheight)) * 1;
-					easyForcePrintLine("test %.2f", (oldViewHeight - (filteredViewheight)));
+					////////////easyForcePrintLine("test %.2f", (oldViewHeight - (filteredViewheight)));
 				}
 			
 			
@@ -1131,7 +1142,7 @@ void V_CalcNormalRefdef(struct ref_params_s* pparams)
 				// is needed though, go figure.
 				if (pparams->viewheight[2] != rawOldViewHeight) {
 					oldz = safeSimZ;
-					easyForcePrintLine("FUCK YOU MAN %.2f", gpGlobals->time);
+					////////easyForcePrintLine("hey YOU MAN %.2f", gpGlobals->time);
 				}
 				else {
 					//MODDD - camera Z interp logic for going down stairs.
@@ -1174,8 +1185,9 @@ void V_CalcNormalRefdef(struct ref_params_s* pparams)
 	//oldViewHeight = pparams->viewheight[2];
 	rawOldViewHeight = pparams->viewheight[2];
 
-
-#endif
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////////////////////////////////////
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	//MODDD - lines from above moved here.  ...or not
@@ -2319,11 +2331,11 @@ float CalcFov(float fov_x, float width, float height)
 	if (fov_x < 1 || fov_x > 179)
 		fov_x = 90;	// error, set to 90
 
-	x = width / tan(fov_x / 360 * M_PI);
+	x = width / tan(fov_x / 360.0f * M_PI);
 
 	a = atan(height / x);
 
-	a = a * 360 / M_PI;
+	a = a * 360.0f / M_PI;
 
 	return a;
 }

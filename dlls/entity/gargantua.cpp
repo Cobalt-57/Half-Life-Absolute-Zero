@@ -153,7 +153,7 @@ void CStomp::Spawn( void )
 	pev->model = MAKE_STRING(GARG_STOMP_SPRITE_NAME);
 	pev->rendermode = kRenderTransTexture;
 	pev->renderamt = 0;
-	EMIT_SOUND_DYN( edict(), CHAN_BODY, GARG_STOMP_BUZZ_SOUND, 1, ATTN_NORM, 0, PITCH_NORM * 0.55);
+	EMIT_SOUND_FILTERED( edict(), CHAN_BODY, GARG_STOMP_BUZZ_SOUND, 1, ATTN_NORM, 0, PITCH_NORM * 0.55, FALSE);
 }
 
 
@@ -210,7 +210,7 @@ void CStomp::Think( void )
 		{
 			// Life has run out
 			UTIL_Remove(this);
-			STOP_SOUND_FILTERED( edict(), CHAN_BODY, GARG_STOMP_BUZZ_SOUND );
+			STOP_SOUND_FILTERED( edict(), CHAN_BODY, GARG_STOMP_BUZZ_SOUND, FALSE );
 		}
 
 	}
@@ -1122,7 +1122,7 @@ void CGargantua :: Precache()
 	global_useSentenceSave = TRUE;
 	PRECACHE_SOUND( GARG_STOMP_BUZZ_SOUND, TRUE ); //precached by the player, can't skip.
 	
-	PRECACHE_SOUND("debris/metal6.wav");
+	PRECACHE_SOUND("debris/metal6.wav", TRUE);
 
 	for ( i = 0; i < ARRAYSIZE( pAttackHitSounds ); i++ )
 		PRECACHE_SOUND((char *)pAttackHitSounds[i]);
@@ -1769,9 +1769,9 @@ void CGargantua::RunTask( Task_t *pTask )
 			fallShakeTime = -1;
 
 			if(valueOf2 == 1){
-				EMIT_SOUND_FILTERED( edict(), CHAN_BODY, "!gargFallSnd", 1, ATTN_NORM, 0, PITCH_NORM); //* 0.55);
+				EMIT_SOUND_FILTERED( edict(), CHAN_BODY, "!gargFallSnd", 1, ATTN_NORM, 0, PITCH_NORM, FALSE); //* 0.55);
 			}else if(valueOf2 == 2){
-				EMIT_SOUND_FILTERED( edict(), CHAN_BODY, "debris/metal6.wav", 1, ATTN_NORM, 0, PITCH_NORM);
+				EMIT_SOUND_FILTERED( edict(), CHAN_BODY, "debris/metal6.wav", 1, ATTN_NORM, 0, PITCH_NORM, FALSE);
 			}
 
 		}

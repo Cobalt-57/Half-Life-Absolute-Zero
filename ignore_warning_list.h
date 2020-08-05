@@ -157,6 +157,10 @@
 #pragma warning(disable : 26485)
 #pragma warning(disable : 26486)
 #pragma warning(disable : 26487)
+
+// Do not dereference a potentially null pointer.  Keeping this one.
+//#pragma warning(disable : 26488)
+
 #pragma warning(disable : 26489)
 #pragma warning(disable : 26492)
 #pragma warning(disable : 26493)

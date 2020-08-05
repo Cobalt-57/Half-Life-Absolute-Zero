@@ -442,6 +442,7 @@ char* EV_HLDM_DamageDecal(physent_t* pe)
 	static char decalname[32];
 	int idx;
 
+	// what does 'classnumber == 1' mean
 	if (pe->classnumber == 1)
 	{
 		idx = gEngfuncs.pfnRandomLong(0, 2);
@@ -470,7 +471,7 @@ void EV_HLDM_GunshotDecalTrace(pmtrace_t* pTrace, char* decalName)
 
 	if (EASY_CVAR_GET(muteRicochetSound) < 1) {
 
-		//redundant with TE_GUNSHOT now used instead. It automatically plays a ricochet sound.
+		// redundant with TE_GUNSHOT now used instead. It automatically plays a ricochet sound.
 		/*
 		iRand = gEngfuncs.pfnRandomLong(0,0x7FFF);
 		if ( iRand < (0x7fff/2) )// not every bullet makes a sound.
@@ -495,8 +496,20 @@ void EV_HLDM_GunshotDecalTrace(pmtrace_t* pTrace, char* decalName)
 	{
 		if (CVAR_GET_FLOAT("r_decals"))
 		{
+			// ALSO - even if the real filename is capitalized as stored in decals.wad, 
+			// still must be given lowercase here.  Good luck figuring that one out.
+			
+			/*
+			int theIndex1 = gEngfuncs.pEfxAPI->Draw_DecalIndexFromName("{blood2");   // ok.
+			int theIndex2 = gEngfuncs.pEfxAPI->Draw_DecalIndexFromName("{yblood2");  // ok.
+			int theIndex3 = gEngfuncs.pEfxAPI->Draw_DecalIndexFromName("{gblood2");  // ok.
+			int theIndex4 = gEngfuncs.pEfxAPI->Draw_DecalIndexFromName("{GBLOOD2"); // gives 0.
+			int theIndex5 = gEngfuncs.pEfxAPI->Draw_DecalIndexFromName("{doesnotexist"); // same 0?
+			*/
+			int theIndex = gEngfuncs.pEfxAPI->Draw_DecalIndexFromName(decalName);  // ok.
+
 			gEngfuncs.pEfxAPI->R_DecalShoot(
-				gEngfuncs.pEfxAPI->Draw_DecalIndex(gEngfuncs.pEfxAPI->Draw_DecalIndexFromName(decalName)),
+				gEngfuncs.pEfxAPI->Draw_DecalIndex(theIndex),
 				gEngfuncs.pEventAPI->EV_IndexFromTrace(pTrace), 0, pTrace->endpos, 0);
 		}
 	}
@@ -808,11 +821,9 @@ void EV_FireGlock1(event_args_t* args)
 			switch (gEngfuncs.pfnRandomLong(0, 1))
 			{
 			case 0:
-				//easyPrintLine("snd 0");
 				gEngfuncs.pEventAPI->EV_PlaySound(idx, origin, CHAN_WEAPON, "weapons/pl_gun1.wav", gEngfuncs.pfnRandomFloat(0.55, 0.75), ATTN_IDLE, 0, 98 + gEngfuncs.pfnRandomLong(0, 3));
 				break;
 			case 1:
-				//easyPrintLine("snd 1");
 				gEngfuncs.pEventAPI->EV_PlaySound(idx, origin, CHAN_WEAPON, "weapons/pl_gun2.wav", gEngfuncs.pfnRandomFloat(0.55, 0.75), ATTN_IDLE, 0, 98 + gEngfuncs.pfnRandomLong(0, 3));
 				break;
 			}
@@ -2792,19 +2803,19 @@ void generateFreakyLaser(const Vector& arg_origin) {
 	//range??
 	float mag = randomValue(EASY_CVAR_GET(raveLaserLength), EASY_CVAR_GET(raveLaserLength));
 
-	float fltDeg = randomValue(0, CONST_2PI);
-	if (fltDeg >= CONST_2PI) {
-		fltDeg -= CONST_2PI;
+	float fltDeg = randomValue(0, M_2PI);
+	if (fltDeg >= M_2PI) {
+		fltDeg -= M_2PI;
 	}
 
 	float x = cos(fltDeg) * mag;
 	float y = sin(fltDeg) * mag;
 
 
-	fltDeg += CONST_180_RAD;
+	fltDeg += M_180_RAD;
 
-	if (fltDeg >= CONST_2PI) {
-		fltDeg -= CONST_2PI;
+	if (fltDeg >= M_2PI) {
+		fltDeg -= M_2PI;
 	}
 
 	//float fltMag = sqrt( pow(x, 2) + pow(y, 2) + pow(z, 2) );
@@ -3518,7 +3529,7 @@ void TEST_Particles(const Vector& v_origin, const Vector& v_velocity)
 			//Each 1/#'th will be covered.
 			//For instance, if numParticles were 12, it would be 1/12'th.  so 0/12, 1/12, 2/12, 3/12, ... 9/12, 10/12, 11/12.
 			//Exclude the last whole one (12/12) since that wraps around to the start of the circle, redundant with 0/12.
-			float circleRad = 2 * M_PI * (((float)i) / ((float)numParticles));
+			float circleRad = 2.0f * M_PI * (((float)i) / ((float)numParticles));
 
 			float circle_x = cos(circleRad);
 			float circle_y = sin(circleRad);

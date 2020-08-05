@@ -319,7 +319,7 @@ void CChumToadWeapon::Holster( int skiplocal /* = 0 */ )
 
 	//SendWeaponAnim( CHUMTOADWEAPON_DOWN );
 	
-	EMIT_SOUND(ENT(m_pPlayer->pev), CHAN_WEAPON, "common/null.wav", 1.0, ATTN_NORM);
+	EMIT_SOUND_FILTERED(ENT(m_pPlayer->pev), CHAN_WEAPON, "common/null.wav", 1.0, ATTN_NORM, 0, 100, FALSE);
 }
 
 
@@ -536,8 +536,10 @@ void CChumToadWeapon::ThrowChumtoad(Vector vecSpawnPoint){
 	m_pPlayer->m_iWeaponVolume = QUIET_GUN_VOLUME;
 
 	CBaseEntity *pChumToad = CBaseEntity::Create( "monster_chumtoad", toadSpawnPoint, Vector(0, m_pPlayer->pev->v_angle.y, 0), SF_MONSTER_THROWN, m_pPlayer->edict() );
-			
-	pChumToad->pev->velocity = gpGlobals->v_forward * 200 + UTIL_GetProjectileVelocityExtra(m_pPlayer->pev->velocity, EASY_CVAR_GET(chumtoadInheritsPlayerVelocity) );
+		
+	if (pChumToad != NULL) {
+		pChumToad->pev->velocity = gpGlobals->v_forward * 200 + UTIL_GetProjectileVelocityExtra(m_pPlayer->pev->velocity, EASY_CVAR_GET(chumtoadInheritsPlayerVelocity));
+	}
 #endif
 	//MODDD - cheat check
 	if(m_pPlayer->cheat_infiniteclipMem == 0 && m_pPlayer->cheat_infiniteammoMem == 0){

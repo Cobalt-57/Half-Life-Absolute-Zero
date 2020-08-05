@@ -235,7 +235,7 @@ void COsprey::Precache( void )
 
 	global_useSentenceSave = TRUE;
 	PRECACHE_SOUND("apache/ap_rotor4.wav");
-	PRECACHE_SOUND("weapons/mortarhit.wav");
+	PRECACHE_SOUND("weapons/mortarhit.wav", TRUE);
 
 	global_useSentenceSave = FALSE;
 
@@ -752,7 +752,7 @@ void COsprey :: DyingThink( void )
 
 		//easyPrintLine("OSPREY DEAD!!!!!!!!!!!!!!!!!!!!!!!!!");
 
-		EMIT_SOUND_FILTERED(ENT(pev), CHAN_STATIC, "weapons/mortarhit.wav", 1.0, 0.3);
+		EMIT_SOUND_FILTERED(ENT(pev), CHAN_STATIC, "weapons/mortarhit.wav", 1.0, 0.3, 0, 100, FALSE);
 
 		RadiusDamageAutoRadius( pev->origin, pev, pev, 300, CLASS_NONE, DMG_BLAST );
 

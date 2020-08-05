@@ -126,8 +126,8 @@ void updateClientCVarRefs(void){
 	EASY_CVAR_UPDATE_CLIENT_MASS
 
 	//nope, this is what EASY_CVAR should be doing.  Or something better.
-	//if(cvar2_cl_server_interpolation != NULL && cvar2_cl_server_interpolation->value != global2_cl_server_interpolation){\
-	//	global2_cl_server_interpolation = cvar2_cl_server_interpolation->value;\
+	//if(cvar2_cl_interp_entity != NULL && cvar2_cl_interp_entity->value != global2_cl_interp_entity){\
+	//	global2_cl_interp_entity = cvar2_cl_interp_entity->value;\
 	//}
 
 	
@@ -827,7 +827,7 @@ void drawCrazyShit(float flTime)
 	int originY = ScreenHeight / 2 - 8;
 
 
-	for(rad = 0; rad < M_PI * 2; rad += (M_PI / 48)){
+	for(rad = 0.0f; rad < M_PI * 2.0f; rad += (M_PI / 48.0f)){
 		int tempx = (int) (cos(rad) * anotherPeriod + originX);
 		int tempy = (int) (sin(rad) * anotherPeriod + originY);
 

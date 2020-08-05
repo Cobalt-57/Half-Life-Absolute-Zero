@@ -154,13 +154,13 @@ void AngleMatrix (const vec3_t angles, float (*matrix)[4] )
 	float	angle;
 	float	sr, sp, sy, cr, cp, cy;
 	
-	angle = angles[2] * (Q_PI*2 / 360);
+	angle = angles[2] * (M_PI*2.0f / 360.0f);
 	sy = sin(angle);
 	cy = cos(angle);
-	angle = angles[1] * (Q_PI*2 / 360);
+	angle = angles[1] * (M_PI*2.0f / 360.0f);
 	sp = sin(angle);
 	cp = cos(angle);
-	angle = angles[0] * (Q_PI*2 / 360);
+	angle = angles[0] * (M_PI*2.0f / 360.0f);
 	sr = sin(angle);
 	cr = cos(angle);
 
@@ -184,13 +184,13 @@ void AngleIMatrix (const vec3_t angles, float matrix[3][4] )
 	float	angle;
 	float	sr, sp, sy, cr, cp, cy;
 	
-	angle = angles[2] * (Q_PI*2 / 360);
+	angle = angles[2] * (M_PI*2.0f / 360.0f);
 	sy = sin(angle);
 	cy = cos(angle);
-	angle = angles[1] * (Q_PI*2 / 360);
+	angle = angles[1] * (M_PI*2.0f / 360.0f);
 	sp = sin(angle);
 	cp = cos(angle);
-	angle = angles[0] * (Q_PI*2 / 360);
+	angle = angles[0] * (M_PI*2.0f / 360.0f);
 	sr = sin(angle);
 	cr = cos(angle);
 
@@ -343,8 +343,8 @@ void QuaternionSlerp( const vec4_t p, vec4_t q, float t, vec4_t qt )
 		qt[1] = p[0];
 		qt[2] = -p[3];
 		qt[3] = p[2];
-		sclp = sin( (1.0 - t) * 0.5 * Q_PI);
-		sclq = sin( t * 0.5 * Q_PI);
+		sclp = sin( (1.0f - t) * 0.5f * M_PI);
+		sclq = sin( t * 0.5f * M_PI);
 		for (i = 0; i < 3; i++) {
 			qt[i] = sclp * p[i] + sclq * qt[i];
 		}

@@ -608,7 +608,7 @@ int CArcher :: CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, CB
 
 	//Gets a yaw (0 - 360 degrees).
 	//To radians:
-	//float goal_pitch = UTIL_VecToYaw(vecEnd - vecStart) * (CONST_PI/180.0f);
+	//float goal_pitch = UTIL_VecToYaw(vecEnd - vecStart) * (M_PI/180.0f);
 
 	Vector goal_direction = (vecEnd - vecStart).Normalize();
 	Vector goal_direction_adjacent = CrossProduct(goal_direction, Vector(0, 0, 1) ).Normalize();

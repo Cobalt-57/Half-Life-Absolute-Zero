@@ -391,18 +391,18 @@ void DBG_AssertFunction(BOOL fExpr, const char* szExpr, const char* szFile, int 
 
 
 
-inline edict_t *FIND_ENTITY_BY_CLASSNAME(edict_t *entStart, const char *pszName) 
+inline edict_t *FIND_ENTITY_BY_CLASSNAME(edict_t* entStart, const char* pszName) 
 {
 	return FIND_ENTITY_BY_STRING(entStart, "classname", pszName);
 }	
 
-inline edict_t *FIND_ENTITY_BY_TARGETNAME(edict_t *entStart, const char *pszName) 
+inline edict_t *FIND_ENTITY_BY_TARGETNAME(edict_t* entStart, const char* pszName) 
 {
 	return FIND_ENTITY_BY_STRING(entStart, "targetname", pszName);
 }	
 
 // for doing a reverse lookup. Say you have a door, and want to find its button.
-inline edict_t *FIND_ENTITY_BY_TARGET(edict_t *entStart, const char *pszName) 
+inline edict_t *FIND_ENTITY_BY_TARGET(edict_t* entStart, const char* pszName) 
 {
 	return FIND_ENTITY_BY_STRING(entStart, "target", pszName);
 }	
@@ -619,24 +619,7 @@ extern void		UTIL_ExplosionSmoke(int msg_dest, const float* pMsgOrigin, const Ve
 extern void		UTIL_ExplosionSmoke(int msg_dest, const float* pMsgOrigin, edict_t* ed, const Vector& location, float offsetx, float offsety, float offsetz, short sprite, float scale, int framerate);
 
 
-/*
-inline void MESSAGE_BEGIN(int msg_dest, const float* pOrigin, entvars_t* ent) {
-	(*g_engfuncs.pfnMessageBegin)(msg_dest, msg_type, pOrigin, ENT(ent));
-}
-inline void MESSAGE_BEGIN(int msg_dest, const float* pOrigin = NULL, edict_t* ed = NULL) {
-*/
-
-
-
-extern BOOL		UTIL_getExplosionsHaveSparks(void);
-
-/*
-extern void UTIL_PlaySound(entvars_t* pev, int channel, const char *pszName, float volume, float attenuation );
-extern void UTIL_PlaySound(edict_t* pev, int channel, const char *pszName, float volume, float attenuation );
-extern void UTIL_PlaySound(entvars_t* pev, int channel, const char *pszName, float volume, float attenuation, int flags, int pitch );
-extern void UTIL_PlaySound(edict_t* pev, int channel, const char *pszName, float volume, float attenuation, int flags, int pitch );
-*/
-
+extern BOOL UTIL_getExplosionsHaveSparks(void);
 
 // NOTE: use EMIT_SOUND_DYN to set the pitch of a sound. Pitch of 100
 // is no pitch shift.  Pitch > 100 up to 255 is a higher pitch, pitch < 100
@@ -644,57 +627,51 @@ extern void UTIL_PlaySound(edict_t* pev, int channel, const char *pszName, float
 // EMIT_SOUND_DYN with pitch != 100 should be used sparingly, as it's not quite as
 // fast as EMIT_SOUND (the pitchshift mixer is not native coded).
 
-
 //MODDD HEADERS: see all four.
-void EMIT_SOUND_FILTERED(edict_t *entity, int channel, const char *sample, float volume, float attenuation);
-void EMIT_SOUND_FILTERED(edict_t *entity, int channel, const char *sample, float volume, float attenuation, BOOL useSoundSentenceSave);
-void EMIT_SOUND_FILTERED(edict_t *entity, int channel, const char *sample, float volume, float attenuation, int flags, int pitch);
-void EMIT_SOUND_FILTERED(edict_t *entity, int channel, const char *sample, float volume, float attenuation, int flags, int pitch, BOOL useSoundSentenceSave);
+void EMIT_SOUND_FILTERED(edict_t* entity, int channel, const char* pszName, float volume, float attenuation);
+void EMIT_SOUND_FILTERED(edict_t* entity, int channel, const char* pszName, float volume, float attenuation, BOOL useSoundSentenceSave);
+void EMIT_SOUND_FILTERED(edict_t* entity, int channel, const char* pszName, float volume, float attenuation, int flags, int pitch);
+void EMIT_SOUND_FILTERED(edict_t* entity, int channel, const char* pszName, float volume, float attenuation, int flags, int pitch, BOOL useSoundSentenceSave);
 
-extern void UTIL_PlaySound(entvars_t* entity, int channel, const char *pszName, float volume, float attenuation );
-extern void UTIL_PlaySound(entvars_t* entity, int channel, const char *pszName, float volume, float attenuation, BOOL useSoundSentenceSave );
-extern void UTIL_PlaySound(edict_t* entity, int channel, const char *pszName, float volume, float attenuation );
-extern void UTIL_PlaySound(edict_t* entity, int channel, const char *pszName, float volume, float attenuation, BOOL useSoundSentenceSave  );
-extern void UTIL_PlaySound(entvars_t* entity, int channel, const char *pszName, float volume, float attenuation, int flags, int pitch );
-extern void UTIL_PlaySound(entvars_t* entity, int channel, const char *pszName, float volume, float attenuation, int flags, int pitch, BOOL useSoundSentenceSave );
-extern void UTIL_PlaySound(edict_t* entity, int channel, const char *pszName, float volume, float attenuation, int flags, int pitch );
-extern void UTIL_PlaySound(edict_t* entity, int channel, const char *pszName, float volume, float attenuation, int flags, int pitch, BOOL useSoundSentenceSave );
+extern void UTIL_PlaySound(entvars_t* entity, int channel, const char* pszName, float volume, float attenuation );
+extern void UTIL_PlaySound(entvars_t* entity, int channel, const char* pszName, float volume, float attenuation, BOOL useSoundSentenceSave );
+extern void UTIL_PlaySound(edict_t* entity, int channel, const char* pszName, float volume, float attenuation );
+extern void UTIL_PlaySound(edict_t* entity, int channel, const char* pszName, float volume, float attenuation, BOOL useSoundSentenceSave  );
+extern void UTIL_PlaySound(entvars_t* entity, int channel, const char* pszName, float volume, float attenuation, int flags, int pitch );
+extern void UTIL_PlaySound(entvars_t* entity, int channel, const char* pszName, float volume, float attenuation, int flags, int pitch, BOOL useSoundSentenceSave );
+extern void UTIL_PlaySound(edict_t* entity, int channel, const char* pszName, float volume, float attenuation, int flags, int pitch );
+extern void UTIL_PlaySound(edict_t* entity, int channel, const char* pszName, float volume, float attenuation, int flags, int pitch, BOOL useSoundSentenceSave );
 
 
-void EMIT_SOUND_DYN(edict_t *entity, int channel, const char *sample, float volume, float attenuation,
-						   int flags, int pitch);
+void EMIT_SOUND_DYN(edict_t* entity, int channel, const char* pszName, float volume, float attenuation, int flags, int pitch);
 
 
 //WARNING - bypasses soundsentencesave filter. Careful. EMIT_SOUND_FILTERED takes this just fine anyways now.
-inline void EMIT_SOUND(edict_t *entity, int channel, const char *sample, float volume, float attenuation)
-{
-	EMIT_SOUND_DYN(entity, channel, sample, volume, attenuation, 0, PITCH_NORM);
+inline void EMIT_SOUND(edict_t* entity, int channel, const char* pszName, float volume, float attenuation){
+	EMIT_SOUND_DYN(entity, channel, pszName, volume, attenuation, 0, PITCH_NORM);
 }
-inline void STOP_SOUND(edict_t *entity, int channel, const char *sample)
-{
-	EMIT_SOUND_DYN(entity, channel, sample, 0, 0, SND_STOP, PITCH_NORM);
+inline void STOP_SOUND(edict_t* entity, int channel, const char* pszName){
+	EMIT_SOUND_DYN(entity, channel, pszName, 0, 0, SND_STOP, PITCH_NORM);
 }
 
 
 //MODDD - filtered version, so that "STOP" can apply to the sentence-trick too.
 //        And yes it works, it goes through _FILTERED like the rest of the soundsentencesave system.
 //        After all even a "STOP" is just an order through the exact same sound playing system.
-inline void STOP_SOUND_FILTERED(edict_t *entity, int channel, const char *sample)
-{
-	EMIT_SOUND_FILTERED(entity, channel, sample, 0, 0, SND_STOP, PITCH_NORM);
+inline void STOP_SOUND_FILTERED(edict_t* entity, int channel, const char* pszName){
+	EMIT_SOUND_FILTERED(entity, channel, pszName, 0, 0, SND_STOP, PITCH_NORM);
 }
 //And me too for specifying whether to use the soundSentenceSave in the call instead of leaving it up to context (the setting on the entity)
-inline void STOP_SOUND_FILTERED(edict_t *entity, int channel, const char *sample, BOOL useSoundSentenceSave)
-{
-	EMIT_SOUND_FILTERED(entity, channel, sample, 0, 0, SND_STOP, PITCH_NORM, useSoundSentenceSave);
+inline void STOP_SOUND_FILTERED(edict_t* entity, int channel, const char* pszName, BOOL useSoundSentenceSave){
+	EMIT_SOUND_FILTERED(entity, channel, pszName, 0, 0, SND_STOP, PITCH_NORM, useSoundSentenceSave);
 }
 
 
 
-void EMIT_SOUND_SUIT(edict_t *entity, const char *sample);
-void STOP_SOUND_SUIT(edict_t *entity, const char *sample);
-void EMIT_GROUPID_SUIT(edict_t *entity, int isentenceg);
-void EMIT_GROUPNAME_SUIT(edict_t *entity, const char *groupname);
+void EMIT_SOUND_SUIT(edict_t* entity, const char* pszName);
+void STOP_SOUND_SUIT(edict_t* entity, const char* pszName);
+void EMIT_GROUPID_SUIT(edict_t* entity, int isentenceg);
+void EMIT_GROUPNAME_SUIT(edict_t* entity, const char* groupname);
 
 
 //MODDD - several new versions added here too.
@@ -842,7 +819,7 @@ int SENTENCEG_PlayRndSz_Ambient(edict_t *entity, Vector vOrigin, const char *szg
 
 int SENTENCEG_PlaySequentialSz(edict_t *entity, const char *szrootname, float volume, float attenuation, int flags, int pitch, int ipick, int freset);
 int SENTENCEG_GetIndex(const char *szrootname);
-int SENTENCEG_Lookup(const char *sample, char *sentencenum);
+int SENTENCEG_Lookup(const char* pszName, char *sentencenum);
 
 
 //MODDD - why did we have no option for playing a singular sentence on any particular entity like a utility, not just TalkMonster's???

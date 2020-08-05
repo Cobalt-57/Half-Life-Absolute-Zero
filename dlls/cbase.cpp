@@ -764,6 +764,17 @@ CBaseEntity *CBaseEntity::GetNextTarget( void )
 
 // Global Savedata for Delay
 //MODDD - uh, this was found to be for CBaseEntity?  Oh well.
+// Should this have some other fields like pev->ideal_yaw?  etc.?
+// More of monster schedules could be saved maybe.
+// Notice that you can go to an enemy that hasn't seen you (back turned), like a 
+// headcrab standing still, jump to make a noise to see it start a turning animation,
+// save the game, load it, and the headcrab will be in that turning animation for one frame
+// and immediately go back to standing without caring.
+// Not a huge issue but eh.  Just worth pointing out.  Save/restore's can cause forgetfulness
+// or lose whatever can't be regotten from picking the same schedule, due to lost conditions
+// at load (HEAR_SOUND).  It would start over at the 1st task anyay and cause somewhat differnet
+// behavior.
+// And yes, that example's been that way since Retail HL.  Woohoo, I didn't break something.
 TYPEDESCRIPTION	CBaseEntity::m_SaveData[] = 
 {
 	DEFINE_FIELD( CBaseEntity, m_pGoalEnt, FIELD_CLASSPTR ),
@@ -795,19 +806,19 @@ void CBaseEntity::playAmmoPickupSound(entvars_t* sentPev){
 
 	if(EASY_CVAR_GET(weaponPickupPlaysAnyReloadSounds) != 1){
 		//normal.
-		EMIT_SOUND(ENT(pevToUse), CHAN_ITEM, "items/9mmclip1.wav", 1, ATTN_NORM);
+		EMIT_SOUND_FILTERED(ENT(pevToUse), CHAN_ITEM, "items/9mmclip1.wav", 1, ATTN_NORM, 0, 100, FALSE);
 
 	}else{
 
 		switch(g_engfuncs.pfnRandomLong(0,2)){
 		case 0:
-			EMIT_SOUND(ENT(pevToUse), CHAN_ITEM, "weapons/reload1.wav", 1, ATTN_NORM);
+			EMIT_SOUND_FILTERED(ENT(pevToUse), CHAN_ITEM, "weapons/reload1.wav", 1, ATTN_NORM, 0, 100, FALSE);
 		break;
 		case 1:
-			EMIT_SOUND(ENT(pevToUse), CHAN_ITEM, "weapons/reload2.wav", 1, ATTN_NORM);
+			EMIT_SOUND_FILTERED(ENT(pevToUse), CHAN_ITEM, "weapons/reload2.wav", 1, ATTN_NORM, 0, 100, FALSE);
 		break;
 		case 2:
-			EMIT_SOUND(ENT(pevToUse), CHAN_ITEM, "weapons/reload3.wav", 1, ATTN_NORM);
+			EMIT_SOUND_FILTERED(ENT(pevToUse), CHAN_ITEM, "weapons/reload3.wav", 1, ATTN_NORM, 0, 100, FALSE);
 		break;
 		}
 
@@ -831,16 +842,16 @@ void CBaseEntity::playGunPickupSound(entvars_t* sentPev){
 
 	switch(RANDOM_LONG(0, 3)){
 	case 0:
-		EMIT_SOUND(ENT(pevToUse), CHAN_ITEM, "items/gunpickup1.wav", 1, ATTN_NORM);
+		EMIT_SOUND_FILTERED(ENT(pevToUse), CHAN_ITEM, "items/gunpickup1.wav", 1, ATTN_NORM, 0, 100, FALSE);
 	break;
 	case 1:
-		EMIT_SOUND(ENT(pevToUse), CHAN_ITEM, "items/gunpickup2.wav", 1, ATTN_NORM);
+		EMIT_SOUND_FILTERED(ENT(pevToUse), CHAN_ITEM, "items/gunpickup2.wav", 1, ATTN_NORM, 0, 100, FALSE);
 	break;
 	case 2:
-		EMIT_SOUND(ENT(pevToUse), CHAN_ITEM, "items/gunpickup3.wav", 1, ATTN_NORM);
+		EMIT_SOUND_FILTERED(ENT(pevToUse), CHAN_ITEM, "items/gunpickup3.wav", 1, ATTN_NORM, 0, 100, FALSE);
 	break;
 	case 3:
-		EMIT_SOUND(ENT(pevToUse), CHAN_ITEM, "items/gunpickup4.wav", 1, ATTN_NORM);
+		EMIT_SOUND_FILTERED(ENT(pevToUse), CHAN_ITEM, "items/gunpickup4.wav", 1, ATTN_NORM, 0, 100, FALSE);
 	break;
 	}
 
@@ -926,10 +937,10 @@ void CBaseEntity::playMetallicHitSound(int arg_channel, float arg_volume){
 	//default to CHAN_ITEM or CHAN_WEAPON if unspecified?  Most enemies use CHAN_WEAPON so probably that. CHAN_ITEM may have just been for coming from the player crowbar.
 	switch( RANDOM_LONG(0,1) ){
 	case 0:
-		EMIT_SOUND_DYN(ENT(pev), arg_channel, "weapons/cbar_hit1.wav", arg_volume, ATTN_NORM, 0, 103 + RANDOM_LONG(0,3)); 
+		EMIT_SOUND_FILTERED(ENT(pev), arg_channel, "weapons/cbar_hit1.wav", arg_volume, ATTN_NORM, 0, 103 + RANDOM_LONG(0,3), FALSE);
 		break;
 	case 1:
-		EMIT_SOUND_DYN(ENT(pev), arg_channel, "weapons/cbar_hit2.wav", arg_volume, ATTN_NORM, 0, 103 + RANDOM_LONG(0,3)); 
+		EMIT_SOUND_FILTERED(ENT(pev), arg_channel, "weapons/cbar_hit2.wav", arg_volume, ATTN_NORM, 0, 103 + RANDOM_LONG(0,3), FALSE);
 		break;
 	}
 }//END OF playMetallicHitSound

@@ -938,10 +938,6 @@ hgruntAllowStrafeFire (0) - BOOL.  When on, hgrunts may switch to the "strafeDIR
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-barnacleGrabNoInterpolation (0) - BOOL. If on, monsters grabbed by barnacles lose interpolation.
-~This may reduce some of the glitchiness in height as they travel to the top. Or not.
-
-
 
 EVENT CVARS (all default to "1" for on).  Some are related to the player view model, no idea how many.
 ~Say so if something important is not included here.
@@ -1369,11 +1365,6 @@ pathfindLargeBoundFix (0) - BOOL. For NPCs that have trouble going up or down in
 flyerKilledFallingLoop (1) - BOOL. Fliers (flying NPCs/monsters) that have a looping animation for falling while killed mid-air will use this animation instead of skipping straight to a death animation that assumes the ground has been touched.
 ~Touching the ground proceeds to the typical death animation.
 
-
-cl_server_interpolation (1) - BOOL. Whether server-sent entities are subject to interpolation.
-~Interpolation gives a smoothness in animation between frames of think logic (by the server), which happens every 1/10th of a second (slower than a framerate like 60 fps).
-~Turning off does not apply to viewmodels. They are naturally rendered smoothly by the client regardless.
-
 NOTICE - there is an as-is command, "interp", that claims to turn interpolation off too.
 It might in a different way.  It seems to cause clientside events like hgrunt muzzle flashes to stay frozen in the whole 1/10th second timeframe they occupy.  Maybe longer? unsure.
 
@@ -1502,6 +1493,8 @@ monsterKilledToss (2) - MODEVAR.  How to send monsters a short distance on takin
 0: No change from retail (none).
 1: Toss as-found commented out.  Does not factor in amount of damage on the killing blow.
 2: Toss, more damage than necessary to kill = further distance, little extra upward boost too.
+NOTICE: values other than 0 look to play with interp a bit on death animations, if the look jittery or skippy, try making this var 0.
+        ~This should be fixed now.  Mostly.
 
 interpolation_movetypestep_mindelta (0.06) - FLOAT.  Extremely low, sometimes negative, amounts of times between frames can be recorded on zombies pushed back by bullets, which causes the 'teleport' issue: bad interpolation putting the zombie somewhere it shouldn't be for a split second.
 ~Too low removes the pushback fix, too high stops interpolation for walking monsters.  Somewhere over 0.01 and under 0.10 is usually good.
@@ -1512,8 +1505,36 @@ sv_bloodparticlemode (0) - MODEVAR.  Affects the blood particle created when nea
 1: alpha (solid-colored dots)
 2: both at the same time
 
+
+==============================================================================
+INTERPOLATION-RELATED CVARs
+==============================================================================
+
+Interpolation is the smoothness between frames to simulate continuous movement from one 'frame' to the next, typically with longer inbetween times from server lag or even think-times in single-player.
+Most server think logic runs every 0.1 seconds (10 fps), which is slower than a typical client's framerate (60 fps).
+Disabling interpolation causes the affected thing's animations to look choppy, as only changes made every 0.1 seconds are seen.
+NOTICE: The built-in 'interp' console command is separate from these CVars.  These CVars assume that it is turned on, toggle 'interp' off/on to see its status.
+
+barnacleGrabNoInterpolation (0) - BOOL. If on, monsters grabbed by barnacles lose interpolation.
+~This may reduce some of the glitchiness in height as they travel to the top. Or not.
+
+cl_interp_entity(1) - BOOL. Whether server-sent entities are subject to interpolation.
+~Turning off does not apply to viewmodels. They are naturally rendered smoothly by the client regardless.
+
+cl_interp_viewmodel (1) - BOOL.  When off, simulates lack of interpolation to add choppiness to viewmodels.  If off, simulates 0.08 second updates instead.
+They do not normally behave like server-side entities when interpolation is turned off, only freeze at the first frame, likely from not receiving the same updates other serverside entities receive in think logic.
+
 cl_interp_view_extra (1) - MODEVAR.  View camera smoothness for crouching to look more smooth.
 0: Nothing extra (retail), besides the smoothness for going down inclines/stairs.
 1: Only on uncrouching before finishing a full crouch (releasing CTRL too early), similar smoothness to uncrouching from a full crouch.
 2: In addition to #1, interp while crouching/uncrouching to any extent through the air.
+
+-------------------------------------------------------------------------------
+
+
+
+
+
+
+
 

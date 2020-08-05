@@ -11,7 +11,6 @@
 
 #include <string.h>
 #include "interface.h"
-#include "ignore_warning_list.h"
 
 //MODDD - '#ifndef _WIN32' chunk moved to external_lib_include.
 

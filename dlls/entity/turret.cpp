@@ -683,9 +683,9 @@ void CMiniTurret::Shoot(Vector &vecSrc, Vector &vecDirToEnemy)
 
 	switch(RANDOM_LONG(0,2))
 	{
-	case 0: EMIT_SOUND(ENT(pev), CHAN_WEAPON, "weapons/hks1.wav", 1, ATTN_NORM); break;
-	case 1: EMIT_SOUND(ENT(pev), CHAN_WEAPON, "weapons/hks2.wav", 1, ATTN_NORM); break;
-	case 2: EMIT_SOUND(ENT(pev), CHAN_WEAPON, "weapons/hks3.wav", 1, ATTN_NORM); break;
+	case 0: EMIT_SOUND_FILTERED(ENT(pev), CHAN_WEAPON, "weapons/hks1.wav", 1, ATTN_NORM, 0, 100, FALSE); break;
+	case 1: EMIT_SOUND_FILTERED(ENT(pev), CHAN_WEAPON, "weapons/hks2.wav", 1, ATTN_NORM, 0, 100, FALSE); break;
+	case 2: EMIT_SOUND_FILTERED(ENT(pev), CHAN_WEAPON, "weapons/hks3.wav", 1, ATTN_NORM, 0, 100, FALSE); break;
 	}
 	pev->effects = pev->effects | EF_MUZZLEFLASH;
 }
@@ -1181,7 +1181,10 @@ BOOL CBaseTurret::TurretDeathCheck(entvars_t* pevInflictor, entvars_t* pevAttack
 
 			pev->dmgtime = gpGlobals->time;
 
-			ClearBits (pev->flags, FL_MONSTER); // why are they set in the first place???
+			//MODDD - line commented out.  What was wrong with having a child class of CBaseMonster,
+			// have the FL_MONSTER flag?  Just caused 'removeAllMonsters' not to work with these when dead, BAH.
+			// Clearly this thing's still targetable by other AI whether it has FL_MONSTER or not so,... dunno.
+			//ClearBits (pev->flags, FL_MONSTER); // why are they set in the first place???
 
 			//MODDD - now first, was below "SetUse". Is that okay?
 			SUB_UseTargets( this, USE_ON, 0 ); // wake up others
@@ -1597,9 +1600,9 @@ void CSentry::Shoot(Vector &vecSrc, Vector &vecDirToEnemy)
 	
 	switch(RANDOM_LONG(0,2))
 	{
-	case 0: EMIT_SOUND(ENT(pev), CHAN_WEAPON, "weapons/hks1.wav", 1, ATTN_NORM); break;
-	case 1: EMIT_SOUND(ENT(pev), CHAN_WEAPON, "weapons/hks2.wav", 1, ATTN_NORM); break;
-	case 2: EMIT_SOUND(ENT(pev), CHAN_WEAPON, "weapons/hks3.wav", 1, ATTN_NORM); break;
+	case 0: EMIT_SOUND_FILTERED(ENT(pev), CHAN_WEAPON, "weapons/hks1.wav", 1, ATTN_NORM, 0, 100, FALSE); break;
+	case 1: EMIT_SOUND_FILTERED(ENT(pev), CHAN_WEAPON, "weapons/hks2.wav", 1, ATTN_NORM, 0, 100, FALSE); break;
+	case 2: EMIT_SOUND_FILTERED(ENT(pev), CHAN_WEAPON, "weapons/hks3.wav", 1, ATTN_NORM, 0, 100, FALSE); break;
 	}
 	pev->effects = pev->effects | EF_MUZZLEFLASH;
 }

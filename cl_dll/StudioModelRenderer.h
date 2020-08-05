@@ -31,6 +31,7 @@ public:
 	// Public Interfaces
 	virtual int StudioDrawReflection(int flags);
 	virtual int StudioDrawModel ( int flags );
+	// that's 'entity_state_t' in the implementation.  You sneaky bastard.
 	virtual int StudioDrawPlayer ( int flags, struct entity_state_s *pplayer );
 
 public:
@@ -205,8 +206,8 @@ public:
 
 
 	// Mirror stuff
-	//MODDDMIRROR - Tag your shit, jeez.    (that's a message to myself)
-	int			mirror_id;
+	//MODDDMIRROR
+	int mirror_id;
 	bool b_PlayerMarkerParsed;
 	int m_nCachedFrameCount;
 

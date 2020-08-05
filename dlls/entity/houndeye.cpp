@@ -1634,7 +1634,6 @@ void CHoundeye :: RunTask ( Task_t *pTask )
 		}
 
 
-
 		if ( FacingIdeal() )
 		{
 			TaskComplete();
@@ -1780,14 +1779,11 @@ void CHoundeye :: RunTask ( Task_t *pTask )
 }
 
 
-
-GENERATE_TRACEATTACK_IMPLEMENTATION(CHoundeye)
-{
+GENERATE_TRACEATTACK_IMPLEMENTATION(CHoundeye){
 	GENERATE_TRACEATTACK_PARENT_CALL(CSquadMonster);
 }
 
-GENERATE_TAKEDAMAGE_IMPLEMENTATION(CHoundeye)
-{
+GENERATE_TAKEDAMAGE_IMPLEMENTATION(CHoundeye){
 	return GENERATE_TAKEDAMAGE_PARENT_CALL(CSquadMonster);
 }
 
@@ -1807,11 +1803,10 @@ void CHoundeye::BecomeDead(void)
 	CSquadMonster::BecomeDead();
 }
 
-GENERATE_DEADTAKEDAMAGE_IMPLEMENTATION(CHoundeye)
-{
+GENERATE_DEADTAKEDAMAGE_IMPLEMENTATION(CHoundeye){
 	return GENERATE_DEADTAKEDAMAGE_PARENT_CALL(CBaseMonster);
 }
-void CHoundeye::DeathAnimationStart() {
+void CHoundeye::DeathAnimationStart(){
 	CSquadMonster::DeathAnimationStart();
 }
 void CHoundeye::DeathAnimationEnd(){
@@ -1832,24 +1827,19 @@ void CHoundeye::startReanimation(void) {
 }
 
 
-
 //MODDD - NOTE.  See "PrescheduleThink" further down, that rarely shows up.
 void CHoundeye::MonsterThink(void){
-
 	if(m_pSchedule != NULL){
 		EASY_CVAR_PRINTIF_PRE(houndeyePrintout, easyPrintLine( "HOUNDEYE REPORT: sched: %s task: %d state: %d idealstate: %d act: %d idealact: %d see-en: %d interruptable: %d enemy: %s target: %s", getScheduleName(), getTaskNumber(), this->m_MonsterState, this->m_IdealMonsterState, this->m_Activity, this->m_IdealActivity, HasConditions(bits_COND_SEE_ENEMY), m_pSchedule->iInterruptMask, FClassname(m_hEnemy), FClassname(m_hTargetEnt)  ));
 	}else{
 		EASY_CVAR_PRINTIF_PRE(houndeyePrintout, easyPrintLine( "IM A ineffective houndeye"));
 	}
 	
-
 	CSquadMonster::MonsterThink();
 }
 
 void CHoundeye::ChangeSchedule( Schedule_t *pNewSchedule ){
-
 	EASY_CVAR_PRINTIF_PRE(houndeyePrintout, easyPrintLine( "HOUNDEYE: SCHED CHANGED!!!!!!!!!!!!!! %s", getScheduleName()));
-	
 	CSquadMonster::ChangeSchedule(pNewSchedule);
 }
 

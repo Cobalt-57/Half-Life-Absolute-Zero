@@ -12,6 +12,7 @@
 *   without written permission from Valve LLC.
 *
 ****/
+
 #include "extdll.h"
 #include "util.h"
 #include "cbase.h"
@@ -20,7 +21,6 @@
 #include "explode.h"
 
 #include "player.h"
-#include "ignore_warning_list.h"
 
 
 #define SF_TANK_ACTIVE			0x0001
@@ -643,12 +643,12 @@ void CFuncTank::AdjustAnglesForBarrel( Vector &angles, float distance )
 		if ( m_barrelPos.y )
 		{
 			r2 = m_barrelPos.y * m_barrelPos.y;
-			angles.y += (180.0 / M_PI) * atan2( m_barrelPos.y, sqrt( d2 - r2 ) );
+			angles.y += (180.0f / M_PI) * (atan2( m_barrelPos.y, (float)sqrt( d2 - r2 ) ));
 		}
 		if ( m_barrelPos.z )
 		{
 			r2 = m_barrelPos.z * m_barrelPos.z;
-			angles.x += (180.0 / M_PI) * atan2( -m_barrelPos.z, sqrt( d2 - r2 ) );
+			angles.x += (180.0f / M_PI) * (atan2( -m_barrelPos.z, (float)sqrt( d2 - r2 ) ));
 		}
 	}
 }

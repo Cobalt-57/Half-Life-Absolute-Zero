@@ -116,7 +116,7 @@ void CFuncMortarField :: Spawn( void )
 void CFuncMortarField :: Precache( void )
 {
 	PRECACHE_SOUND ("weapons/mortar.wav");
-	PRECACHE_SOUND ("weapons/mortarhit.wav", FALSE); //this sound is part of the soundsentencesave system, can skip.
+	PRECACHE_SOUND ("weapons/mortarhit.wav");
 	PRECACHE_MODEL( "sprites/lgtning.spr" );
 }
 

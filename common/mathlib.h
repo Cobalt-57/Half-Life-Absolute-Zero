@@ -39,7 +39,7 @@
 
 //MODDD - new include.  Leave any vector-related defines/typedefs to this file instead.
 //#include "vector.h"  //common/vector.h
-// nah, go all-out.  const it is.  it has M_PI and Q_PI now.
+// nah, go all-out.  const it is.  it has M_PI, need it.
 #include "const.h"
 
 

@@ -7221,7 +7221,7 @@ void CBaseMonster::PlayScriptedSentence( const char *pszSentence, float duration
 
 void CBaseMonster::SentenceStop( void )
 {
-	EMIT_SOUND( edict(), CHAN_VOICE, "common/null.wav", 1.0, ATTN_IDLE );
+	EMIT_SOUND_FILTERED( edict(), CHAN_VOICE, "common/null.wav", 1.0, ATTN_IDLE, 0, 100, FALSE );
 }
 
 

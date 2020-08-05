@@ -103,6 +103,45 @@
 ////////////////////////////////////////////////////////////////////////
 
 
+
+// And now that we know whether it's VS6 or not, include ignore_warning_list to stop
+// a lot of useless warnings from showing up.  VS2019 added a lot of possible warnings
+// it seems.  Many warnings weren't possible at VS6's time.
+#include "ignore_warning_list.h"
+
+
+
+// And, some notes on a certain type of warning that's irritating.
+// See warnings like this (as of VS2019)?
+//     Severity	Code	Description	Project	File	Line	Suppression State
+//         Warning	C4244	'=': conversion from 'double' to 'float', possible loss of data	Test Project	C : \Program Files(x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.24.28314\include\xtgmath.h	24
+// And it's not from a bad order of library includes like some other cases, verify with a blank VS2019
+// project.  They're often caused by lines like this (last one),
+//     float yaw;
+//     ...
+//     yaw = (atan2(X, Y) * 2.4);
+// It that means you're multiplying something that is a double (like something coming from
+// atan2 ) by something of double type like an unspecified decimal number (implied double).
+// Force that 2nd number to a float:   2.4f
+// It's much more likely from constants near M_PI (changed to refer to a float literal since), like in
+// (M_PI / 4).
+// Unsure why when the error occurs is inconsistent, it can be hard to reproduce in the exact same way in
+// a blank project but it can be done.  It is possible to run into a warning about downcasting from double 
+// to float that involves the line in that file instead, imagine that.
+// The exact lines can be tracked down by putting messages like this and recompiling the .cpp
+// files (Visual Studio):
+//     #pragma message("this point was reached")
+// Look at the 'output' tab after compiling to see after what .cpp file was compiled that the warning
+// happened.  It could also be from including .h files, so put warnings before/after includes to see
+// what .h file to narrow down on if so.
+
+
+
+
+
+
+
+
 // No idea why this used to be included along the "#define max" above, even in the same
 // '#ifndef' check. Weird.
 // ALSO, don't do this for VS6. At least this wide of availablity was the issue.
@@ -179,6 +218,7 @@
 
 
 
+
 // Is there a 'roundf' function?
 #ifndef roundf
 	#ifdef round
@@ -201,9 +241,6 @@
 //double sqrt(double x);
 
 
-
-// Just...  I give up Visual Studio.  Go be stupid with warnings.
-#include "ignore_warning_list.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #endif //EXTERNAL_LIB_INCLUDE_H

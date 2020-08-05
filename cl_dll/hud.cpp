@@ -37,7 +37,7 @@ EASY_CVAR_EXTERN(preE3UsesFailColors)
 EASY_CVAR_EXTERN(E3UsesFailColors)
 EASY_CVAR_EXTERN(weaponSelectUsesReloadSounds)
 EASY_CVAR_EXTERN(hud_drawsidebarmode)
-EASY_CVAR_EXTERN(cl_server_interpolation)
+EASY_CVAR_EXTERN(cl_interp_entity)
 EASY_CVAR_EXTERN(hud_brokentrans)
 
 extern float globalPSEUDO_autoDeterminedFOV;

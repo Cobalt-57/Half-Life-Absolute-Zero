@@ -1436,7 +1436,7 @@ BOOL CBasePlayerWeapon :: PlayEmptySound( void )
 {
 	if (m_iPlayEmptySound)
 	{
-		EMIT_SOUND(ENT(m_pPlayer->pev), CHAN_WEAPON, "weapons/357_cock1.wav", 0.8, ATTN_NORM);
+		EMIT_SOUND_FILTERED(ENT(m_pPlayer->pev), CHAN_WEAPON, "weapons/357_cock1.wav", 0.8, ATTN_NORM, 0, 100, FALSE);
 		m_iPlayEmptySound = 0;
 		return 0;
 	}

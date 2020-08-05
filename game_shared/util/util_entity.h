@@ -80,8 +80,7 @@ typedef struct _SelAmmo
 
 
 
-
-//MODDD NOTE - HOLD ON THERE. So nothing happens here? Just returns the same "pent" given? Just checking.
+// Yes, returns the same 'pent' given.  I guess just to let surrounding anything with ENT work.
 edict_t *ENT(edict_t *pent);
 
 edict_t *ENT(EOFFSET eoffset);

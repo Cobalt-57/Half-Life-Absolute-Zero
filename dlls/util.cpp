@@ -1407,13 +1407,13 @@ float UTIL_VecToYaw( const Vector &vec )
 //same as above, but comes already in radians.
 float UTIL_VecToYawRadians( const Vector &vecAng )
 {
-	return vecAng.y * (M_PI / 180.0);
+	return vecAng.y * (M_PI / 180.0f);
 }
 
 //shortcut:  just give a ".angles" and this will return the forward-vector for it.
 Vector UTIL_VecGetForward2D( const Vector &vecAng )
 {
-	float yawInRads = vecAng.y * (M_PI / 180.0);
+	float yawInRads = vecAng.y * (M_PI / 180.0f);
 	//return a vector made of this yaw.
 	return Vector(cos(yawInRads), sin(yawInRads), 0);
 }
@@ -1421,8 +1421,8 @@ Vector UTIL_VecGetForward2D( const Vector &vecAng )
 //NOTICE: player's up&down angle is inverted (negative).  Handle that, somehow?  Maybe just before sending off the view angle here, if you do that?
 Vector UTIL_VecGetForward( const Vector &vecAng )
 {
-	const float yawInRads = vecAng.y * (M_PI / 180.0);
-	const float upAndDown = sin( vecAng.x * (M_PI / 180.0) ) ;
+	const float yawInRads = vecAng.y * (M_PI / 180.0f);
+	const float upAndDown = sin( vecAng.x * (M_PI / 180.0f) ) ;
 	//return a vector made of this yaw.
 
 	//we need a vector that involves the "upAndDown" angle, but still has a total length of "1".
@@ -1506,7 +1506,7 @@ Vector UTIL_YawToVec( const float &yaw )
 	//Keep in mind, trigonometry is for arclettes (whatever the  hell they're called), not degrees.
 	//~RADIANS, you fool!
 
-	float yawInRads = yaw * (M_PI / 180.0);
+	float yawInRads = yaw * (M_PI / 180.0f);
 
 	float x = cos(yawInRads);
 	float y = sin(yawInRads);
@@ -1739,9 +1739,17 @@ void UTIL_BloodDecalTrace( TraceResult *pTrace, int bloodColor )
 		}else if ( bloodColor == BLOOD_COLOR_BLACK ){
 			UTIL_DecalTrace( pTrace, DECAL_OIL1 + RANDOM_LONG(0,1) );
 		}else{
-			//MODDD - if separate decals between BLOOD_COLOR_YELLOW and BLOOD_COLOR_GREEN were found,
-			// they would go here as checks for those.
-			UTIL_DecalTrace( pTrace, DECAL_YBLOOD1 + RANDOM_LONG(0,5) );
+
+			// EXPERIMENTAL
+			if (bloodColor == BLOOD_COLOR_GREEN) {
+				UTIL_DecalTrace(pTrace, DECAL_GBLOOD1 + RANDOM_LONG(0, 7));
+			}
+			else {
+				//MODDD - if separate decals between BLOOD_COLOR_YELLOW and BLOOD_COLOR_GREEN were found,
+				// they would go here as checks for those.
+				UTIL_DecalTrace(pTrace, DECAL_YBLOOD1 + RANDOM_LONG(0, 5));
+			}
+
 		}
 	}
 }
@@ -1920,29 +1928,21 @@ Vector UTIL_GetProjectileVelocityExtra(const Vector& playerVelocity, float veloc
 
 
 void interpretSoundAsSentence(char* interpretationFINAL, const char* pszName){
-
 	char interpretation1[46];
-
-	interpretationFINAL[0] = '!';
-
 	int finalOutputOffset = 1;
-
 	BOOL reading = TRUE;
 	int readIndex = 0;
 	int writeIndex = 0;
-
 	int currentLength = 0;
-
 	BOOL success = FALSE;
-
 	BOOL foundSlash = FALSE;
 	char* writeTo = interpretation1;
 
+	interpretationFINAL[0] = '!';
 
 	int endOutputIndex = -1;
 
 	while(reading){
-
 		char thisChar = pszName[readIndex];
 
 		switch(thisChar){
@@ -1955,10 +1955,7 @@ void interpretSoundAsSentence(char* interpretationFINAL, const char* pszName){
 				if(currentLength <= 15){
 					strncpy( &interpretationFINAL[finalOutputOffset], &writeTo[0], currentLength );
 					interpretationFINAL[finalOutputOffset + currentLength] = '_';
-			
 					interpretationFINAL[finalOutputOffset + currentLength+1] = '\0';
-
-					//!abc_def
 
 					//writeTo = interpretation2;
 					writeIndex = 0;
@@ -1967,9 +1964,9 @@ void interpretSoundAsSentence(char* interpretationFINAL, const char* pszName){
 					currentLength = 0;
 			
 				}else{
-
 					easyForcePrintLine("ERROR CODE 32589321");
 					break;
+					// Nevermind below here... apparently.
 
 					strncpy( &interpretationFINAL[finalOutputOffset], &writeTo[0], 2 );
 					strncpy( &interpretationFINAL[finalOutputOffset+2], &writeTo[currentLength-2], 2 );
@@ -1986,7 +1983,6 @@ void interpretSoundAsSentence(char* interpretationFINAL, const char* pszName){
 					writeIndex = 0;
 					currentLength = 0;
 					finalOutputOffset = finalOutputOffset + 5;
-
 				}
 
 			}else{
@@ -2022,9 +2018,7 @@ void interpretSoundAsSentence(char* interpretationFINAL, const char* pszName){
 		break;
 		}//END OF switch(thisChar)
 
-	
 		readIndex += 1;
-
 
 	}//END OF while(reading)
 
@@ -2033,27 +2027,20 @@ void interpretSoundAsSentence(char* interpretationFINAL, const char* pszName){
 		easyForcePrintLine("ERROR CODE: GENERIC45");
 	}
 
-	//11? 10?
 	if(currentLength <= 30){
 		//easyPrintLine("wat??? %d", finalOutputOffset);
 		strncpy( &interpretationFINAL[finalOutputOffset], &writeTo[0], currentLength );
 		interpretationFINAL[finalOutputOffset + currentLength] = '\0';
-	
-		//abcdefghijklmnop
 	}else{
-
-	
 		easyForcePrintLine("ERROR CODE 5474572");
 		return;
 
 		//easyPrintLine("wat??! %d %d %d", finalOutputOffset + currentLength, finalOutputOffset, currentLength);
 		strncpy( &interpretationFINAL[finalOutputOffset], &writeTo[0], 6 );
-
 		strncpy( &interpretationFINAL[finalOutputOffset+6], &writeTo[currentLength-5], 5 );
 	
 		//easyPrintLine("LAST? %d", finalOutputOffset + 11);
 		interpretationFINAL[finalOutputOffset + 11] = '\0';
-
 	}
 
 	//easyPrintLine("OFFSET? %d srcSTART? %d FILENAMELENGTH? %d", offset, srcStart, fileNameLength);
@@ -2064,56 +2051,45 @@ void interpretSoundAsSentence(char* interpretationFINAL, const char* pszName){
 
 
 //MODDDSOUNDSAVE - name edited. Used to be EMIT_SOUND and EMIT_SOUND_DYN directly, now has some filtering.
-//Yeah... should just replace all EMIT_SOUND_FILTERED calls with UTIL_PlaySound at some point, would
+// Yeah... should just replace all EMIT_SOUND_FILTERED calls with UTIL_PlaySound at some point, would
 // ease confusion. EMIT_SOUND_FILTERED adds nothing new here.
-void EMIT_SOUND_FILTERED(edict_t *entity, int channel, const char *sample, float volume, float attenuation)
-{
-	UTIL_PlaySound(entity, channel, sample, volume, attenuation, 0, 100, ((CBaseEntity*)(CBaseEntity::Instance(entity)))->usesSoundSentenceSave());
-}
-void EMIT_SOUND_FILTERED(edict_t *entity, int channel, const char *sample, float volume, float attenuation, BOOL useSoundSentenceSave)
-{
-	UTIL_PlaySound(entity, channel, sample, volume, attenuation, 0, 100, useSoundSentenceSave);
-}
-void EMIT_SOUND_FILTERED(edict_t *entity, int channel, const char *sample, float volume, float attenuation, int flags, int pitch)
-{
-	UTIL_PlaySound(entity, channel, sample, volume, attenuation, flags, pitch, ((CBaseEntity*)(CBaseEntity::Instance(entity)))->usesSoundSentenceSave());
-}
-void EMIT_SOUND_FILTERED(edict_t *entity, int channel, const char *sample, float volume, float attenuation, int flags, int pitch, BOOL useSoundSentenceSave)
-{
-	UTIL_PlaySound(entity, channel, sample, volume, attenuation, flags, pitch, useSoundSentenceSave);
-}
-
-
-void UTIL_PlaySound(entvars_t* entity, int channel, const char *pszName, float volume, float attenuation ){
-	UTIL_PlaySound(ENT(entity), channel, pszName, volume, attenuation, 0, 100, ((CBaseEntity*)(CBaseEntity::Instance(entity)))->usesSoundSentenceSave());
-}
-void UTIL_PlaySound(entvars_t* entity, int channel, const char *pszName, float volume, float attenuation, BOOL useSoundSentenceSave ){
-	UTIL_PlaySound(ENT(entity), channel, pszName, volume, attenuation, 0, 100, useSoundSentenceSave);
-}
-void UTIL_PlaySound(edict_t* entity, int channel, const char *pszName, float volume, float attenuation ){
+void EMIT_SOUND_FILTERED(edict_t* entity, int channel, const char* pszName, float volume, float attenuation){
 	UTIL_PlaySound(entity, channel, pszName, volume, attenuation, 0, 100, ((CBaseEntity*)(CBaseEntity::Instance(entity)))->usesSoundSentenceSave());
 }
-void UTIL_PlaySound(edict_t* entity, int channel, const char *pszName, float volume, float attenuation, BOOL useSoundSentenceSave ){
-	//"Ent(pev)" necessary?... for a type of edict_t*, the answer is No.
+void EMIT_SOUND_FILTERED(edict_t* entity, int channel, const char* pszName, float volume, float attenuation, BOOL useSoundSentenceSave){
 	UTIL_PlaySound(entity, channel, pszName, volume, attenuation, 0, 100, useSoundSentenceSave);
 }
-void UTIL_PlaySound(entvars_t* entity, int channel, const char *pszName, float volume, float attenuation, int flags, int pitch ){
-	//if ( pszSentence[0] == '!' )
-	//is "ENT( pev )" always okay?
-	//	EMIT_SOUND_DYN( ENT( pev ), channel, pszSentence, volume, attenuation, flags, pitch);
+void EMIT_SOUND_FILTERED(edict_t* entity, int channel, const char* pszName, float volume, float attenuation, int flags, int pitch){
+	UTIL_PlaySound(entity, channel, pszName, volume, attenuation, flags, pitch, ((CBaseEntity*)(CBaseEntity::Instance(entity)))->usesSoundSentenceSave());
+}
+void EMIT_SOUND_FILTERED(edict_t* entity, int channel, const char* pszName, float volume, float attenuation, int flags, int pitch, BOOL useSoundSentenceSave){
+	UTIL_PlaySound(entity, channel, pszName, volume, attenuation, flags, pitch, useSoundSentenceSave);
+}
+
+void UTIL_PlaySound(entvars_t* entity, int channel, const char* pszName, float volume, float attenuation ){
+	UTIL_PlaySound(ENT(entity), channel, pszName, volume, attenuation, 0, 100, ((CBaseEntity*)(CBaseEntity::Instance(entity)))->usesSoundSentenceSave());
+}
+void UTIL_PlaySound(entvars_t* entity, int channel, const char* pszName, float volume, float attenuation, BOOL useSoundSentenceSave ){
+	UTIL_PlaySound(ENT(entity), channel, pszName, volume, attenuation, 0, 100, useSoundSentenceSave);
+}
+void UTIL_PlaySound(edict_t* entity, int channel, const char* pszName, float volume, float attenuation ){
+	UTIL_PlaySound(entity, channel, pszName, volume, attenuation, 0, 100, ((CBaseEntity*)(CBaseEntity::Instance(entity)))->usesSoundSentenceSave());
+}
+void UTIL_PlaySound(edict_t* entity, int channel, const char* pszName, float volume, float attenuation, BOOL useSoundSentenceSave ){
+	UTIL_PlaySound(entity, channel, pszName, volume, attenuation, 0, 100, useSoundSentenceSave);
+}
+void UTIL_PlaySound(entvars_t* entity, int channel, const char* pszName, float volume, float attenuation, int flags, int pitch ){
 	UTIL_PlaySound(ENT(entity), channel, pszName, volume, attenuation, flags, pitch, ((CBaseEntity*)(CBaseEntity::Instance(entity)))->usesSoundSentenceSave());
 }
-void UTIL_PlaySound(entvars_t* entity, int channel, const char *pszName, float volume, float attenuation, int flags, int pitch, BOOL useSoundSentenceSave ){
+void UTIL_PlaySound(entvars_t* entity, int channel, const char* pszName, float volume, float attenuation, int flags, int pitch, BOOL useSoundSentenceSave ){
 	UTIL_PlaySound(ENT(entity), channel, pszName, volume, attenuation, flags, pitch, useSoundSentenceSave);
 }
-void UTIL_PlaySound(edict_t* entity, int channel, const char *pszName, float volume, float attenuation, int flags, int pitch){
-	UTIL_PlaySound(ENT(entity), channel, pszName, volume, attenuation, flags, pitch, ((CBaseEntity*)(CBaseEntity::Instance(entity)))->usesSoundSentenceSave());
-
+void UTIL_PlaySound(edict_t* entity, int channel, const char* pszName, float volume, float attenuation, int flags, int pitch){
+	UTIL_PlaySound(entity, channel, pszName, volume, attenuation, flags, pitch, ((CBaseEntity*)(CBaseEntity::Instance(entity)))->usesSoundSentenceSave());
 }
 
 
-void UTIL_PlaySound(edict_t* entity, int channel, const char *pszName, float volume, float attenuation, int flags, int pitch, BOOL useSoundSentenceSave )
-{
+void UTIL_PlaySound(edict_t* entity, int channel, const char* pszName, float volume, float attenuation, int flags, int pitch, BOOL useSoundSentenceSave ){
 	if ( !pszName )
 		return;
 /*
@@ -2131,7 +2107,7 @@ void UTIL_PlaySound(edict_t* entity, int channel, const char *pszName, float vol
 		if(pszName[0] != '!'){
 			interpretSoundAsSentence(interpretationFINAL, pszName);
 		}else{
-			//already a sentence, send as is.
+			// already a sentence, send as is.
 			strcpy(&interpretationFINAL[0], pszName);
 		}
 		//easyForcePrintLine("UTIL_PlaySound - used sentence: |||%s|||", interpretationFINAL);
@@ -2144,9 +2120,10 @@ void UTIL_PlaySound(edict_t* entity, int channel, const char *pszName, float vol
 		}
 		*/
 
-		EMIT_SOUND_DYN( ENT( entity ), channel, interpretationFINAL, volume, attenuation, flags, pitch);
+		EMIT_SOUND_DYN(entity, channel, interpretationFINAL, volume, attenuation, flags, pitch);
 	}else{
-		EMIT_SOUND_DYN( ENT( entity ), channel, pszName, volume, attenuation, flags, pitch);
+		// no sentence-save interpretation, send it as it came.
+		EMIT_SOUND_DYN(entity, channel, pszName, volume, attenuation, flags, pitch);
 	}
 
 
@@ -2157,10 +2134,8 @@ void UTIL_PlaySound(edict_t* entity, int channel, const char *pszName, float vol
 
 
 
-void EMIT_SOUND_DYN(edict_t *entity, int channel, const char *sample, float volume, float attenuation, int flags, int pitch)
-{
-
-	//easyPrintLine("sound was: %s  %d", sample, flags);
+void EMIT_SOUND_DYN(edict_t* entity, int channel, const char* pszName, float volume, float attenuation, int flags, int pitch){
+	//easyPrintLine("sound was: %s  %d", pszName, flags);
 	/*
 	if(flags != 0){
 		easyPrintLine("******************************************************");
@@ -2172,7 +2147,7 @@ void EMIT_SOUND_DYN(edict_t *entity, int channel, const char *sample, float volu
 		easyPrintLine("******************************************************");
 		easyPrintLine("******************************************************");
 		easyPrintLine("******************************************************");
-		easyPrintLine("sound was: %s  %d", sample, flags);
+		easyPrintLine("sound was: %s  %d", pszName, flags);
 		if(entity){
 			easyPrintLine("entity that gave this: %s", STRING(entity->v.classname));
 		}else{
@@ -2184,20 +2159,21 @@ void EMIT_SOUND_DYN(edict_t *entity, int channel, const char *sample, float volu
 	}
 	*/
 	
-	//easyPrintLine("EMITTED SOUND SON %s %s", STRING(CBaseEntity::Instance(entity)->pev->classname), sample  );
+	//easyPrintLine("EMITTED SOUND SON %s %s", STRING(CBaseEntity::Instance(entity)->pev->classname), pszName  );
 	
-	if (sample && *sample == '!')
+	if (pszName && *pszName == '!')
 	{
 		char name[32];
-		if (SENTENCEG_Lookup(sample, name) >= 0){
+		if (SENTENCEG_Lookup(pszName, name) >= 0){
 			EMIT_SOUND_DYN2(entity, channel, name, volume, attenuation, flags, pitch);
-			//easyPrintLine("SENTENCE PLAYED SENDOFF: %s ::: %s", sample, name);
+			//easyPrintLine("SENTENCE PLAYED SENDOFF: %s ::: %s", pszName, name);
 		}else{
-			ALERT( at_aiconsole, "Unable to find %s in sentences.txt\n", sample );
+			ALERT( at_aiconsole, "Unable to find %s in sentences.txt\n", pszName );
 		}
 	}
-	else
-		EMIT_SOUND_DYN2(entity, channel, sample, volume, attenuation, flags, pitch);
+	else {
+		EMIT_SOUND_DYN2(entity, channel, pszName, volume, attenuation, flags, pitch);
+	}
 }//END OF EMIT_SOUND_DYN
 
 
@@ -2213,7 +2189,7 @@ void EMIT_SOUND_DYN(edict_t *entity, int channel, const char *sample, float volu
 
 // play a specific sentence over the HEV suit speaker - just pass player entity, and !sentencename
 // MODDD - lower the attenuation to not play for other players!
-void EMIT_SOUND_SUIT(edict_t *entity, const char *sample)
+void EMIT_SOUND_SUIT(edict_t* entity, const char* pszName)
 {
 	float fvol;
 	int pitch = PITCH_NORM;
@@ -2228,14 +2204,14 @@ void EMIT_SOUND_SUIT(edict_t *entity, const char *sample)
 
 	//MODDD - changed min volume from 0.05 to 0.02.
 	if (fvol > 0.02) {
-		//EMIT_SOUND_DYN(entity, CHAN_STATIC, sample, fvol, ATTN_NORM, 0, pitch);
+		//EMIT_SOUND_DYN(entity, CHAN_STATIC, pszName, fvol, ATTN_NORM, 0, pitch);
 		// higher attenuation to expire faster with distance
-		EMIT_SOUND_DYN(entity, CHAN_STATIC, sample, fvol, 4.0f, 0, pitch);
+		EMIT_SOUND_DYN(entity, CHAN_STATIC, pszName, fvol, 4.0f, 0, pitch);
 	}
 }
 
 //MODDD - new.  Similar to EMIT_SOUND_SUIT, but have the SND_STOP to stop the sound / sentence.
-void STOP_SOUND_SUIT(edict_t *entity, const char *sample)
+void STOP_SOUND_SUIT(edict_t* entity, const char* pszName)
 {
 	const float fvol = 1;
 	int pitch = PITCH_NORM;
@@ -2246,11 +2222,11 @@ void STOP_SOUND_SUIT(edict_t *entity, const char *sample)
 	//	pitch = RANDOM_LONG(0,6) + 98;
 
 	//if (fvol > 0.02)
-		EMIT_SOUND_DYN(entity, CHAN_STATIC, sample, fvol, ATTN_NORM, SND_STOP, pitch);
+		EMIT_SOUND_DYN(entity, CHAN_STATIC, pszName, fvol, ATTN_NORM, SND_STOP, pitch);
 }
 
 // play a sentence, randomly selected from the passed in group id, over the HEV suit speaker
-void EMIT_GROUPID_SUIT(edict_t *entity, int isentenceg)
+void EMIT_GROUPID_SUIT(edict_t* entity, int isentenceg)
 {
 	float fvol;
 	int pitch = PITCH_NORM;
@@ -2264,7 +2240,7 @@ void EMIT_GROUPID_SUIT(edict_t *entity, int isentenceg)
 }
 
 // play a sentence, randomly selected from the passed in groupname
-void EMIT_GROUPNAME_SUIT(edict_t *entity, const char *groupname)
+void EMIT_GROUPNAME_SUIT(edict_t* entity, const char* groupname)
 {
 	float fvol;
 	int pitch = PITCH_NORM;
@@ -2298,22 +2274,22 @@ void EMIT_GROUPNAME_SUIT(edict_t *entity, const char *groupname)
 
 
 //entvars_t??
-void UTIL_EmitAmbientSound_Filtered( entvars_t *entity, const Vector &vecOrigin, const char *samp, float vol, float attenuation ){
+void UTIL_EmitAmbientSound_Filtered( entvars_t* entity, const Vector &vecOrigin, const char *samp, float vol, float attenuation ){
 	UTIL_EmitAmbientSound_Filtered(ENT(entity), vecOrigin, samp, vol, attenuation, 0, 100, ((CBaseEntity*)(CBaseEntity::Instance(entity)))->usesSoundSentenceSave());
 }
-void UTIL_EmitAmbientSound_Filtered( entvars_t *entity, const Vector &vecOrigin, const char *samp, float vol, float attenuation, BOOL useSoundSentenceSave ){
+void UTIL_EmitAmbientSound_Filtered( entvars_t* entity, const Vector &vecOrigin, const char *samp, float vol, float attenuation, BOOL useSoundSentenceSave ){
 	UTIL_EmitAmbientSound_Filtered(ENT(entity), vecOrigin, samp, vol, attenuation, 0, 100, useSoundSentenceSave);
 }
-void UTIL_EmitAmbientSound_Filtered( entvars_t *entity, const Vector &vecOrigin, const char *samp, float vol, float attenuation, int fFlags, int pitch ){
+void UTIL_EmitAmbientSound_Filtered( entvars_t* entity, const Vector &vecOrigin, const char *samp, float vol, float attenuation, int fFlags, int pitch ){
 	UTIL_EmitAmbientSound_Filtered(ENT(entity), vecOrigin, samp, vol, attenuation, fFlags, pitch, ((CBaseEntity*)(CBaseEntity::Instance(entity)))->usesSoundSentenceSave());
 }
-void UTIL_EmitAmbientSound_Filtered( entvars_t *entity, const Vector &vecOrigin, const char *samp, float vol, float attenuation, int fFlags, int pitch, BOOL useSoundSentenceSave ){
+void UTIL_EmitAmbientSound_Filtered( entvars_t* entity, const Vector &vecOrigin, const char *samp, float vol, float attenuation, int fFlags, int pitch, BOOL useSoundSentenceSave ){
 	UTIL_EmitAmbientSound_Filtered(ENT(entity), vecOrigin, samp, vol, attenuation, fFlags, pitch, useSoundSentenceSave);
 }
-void UTIL_EmitAmbientSound_Filtered( edict_t *entity, const Vector &vecOrigin, const char *samp, float vol, float attenuation, int fFlags, int pitch ){
+void UTIL_EmitAmbientSound_Filtered( edict_t* entity, const Vector &vecOrigin, const char *samp, float vol, float attenuation, int fFlags, int pitch ){
 	UTIL_EmitAmbientSound_Filtered(entity, vecOrigin, samp, vol, attenuation, fFlags, pitch, ((CBaseEntity*)(CBaseEntity::Instance(entity)))->usesSoundSentenceSave());
 }
-void UTIL_EmitAmbientSound_Filtered( edict_t *entity, const Vector &vecOrigin, const char *samp, float vol, float attenuation, int fFlags, int pitch, BOOL useSoundSentenceSave )
+void UTIL_EmitAmbientSound_Filtered( edict_t* entity, const Vector &vecOrigin, const char *samp, float vol, float attenuation, int fFlags, int pitch, BOOL useSoundSentenceSave )
 {
 	if ( !samp )
 		return;
@@ -2343,41 +2319,17 @@ void UTIL_EmitAmbientSound( edict_t *entity, const Vector &vecOrigin, const char
 	float rgfl[3];
 	vecOrigin.CopyToArray(rgfl);
 
-	if (samp && *samp == '!')
-	{
+	if (samp && *samp == '!'){
 		char name[32];
-		if (SENTENCEG_Lookup(samp, name) >= 0)
+		if (SENTENCEG_Lookup(samp, name) >= 0) {
 			EMIT_AMBIENT_SOUND(entity, rgfl, name, vol, attenuation, fFlags, pitch);
-	}
-	else
-		EMIT_AMBIENT_SOUND(entity, rgfl, samp, vol, attenuation, fFlags, pitch);
-}//END OF UTIL_EmitAmbientSound
-
-
-
-//void UTIL_PlaySound(
-
-/*
-//MODDD - don't do it like this anymore.
-void UTIL_playFleshHitSound(entvars_t* pev){
-	//route to below.
-	UTIL_playFleshHitSound(ENT(pev));
-}
-
-void UTIL_playFleshHitSound(edict_t* pev){
-
-	if(EASY_CVAR_GET(fleshhitmakessound) == 1 ){
-		switch( RANDOM_LONG(0, 1)){
-		case 0:
-			EMIT_SOUND_DYN(ENT(pev), CHAN_WEAPON, "weapons/bullet_hit1.wav", 0.8f, ATTN_NORM, 0, PITCH_NORM);
-		break;
-		case 1:
-			EMIT_SOUND_DYN(ENT(pev), CHAN_WEAPON, "weapons/bullet_hit2.wav", 0.8f, ATTN_NORM, 0, PITCH_NORM);
-		break;
 		}
 	}
-}
-*/
+	else {
+		EMIT_AMBIENT_SOUND(entity, rgfl, samp, vol, attenuation, fFlags, pitch);
+	}
+}//END OF UTIL_EmitAmbientSound
+
 
 void UTIL_PRECACHESOUND(char* path){
 	//scientist/sci_dragoff.wav
@@ -2386,10 +2338,10 @@ void UTIL_PRECACHESOUND(char* path){
 	//easyForcePrintLine("UTIL_PRECACHESOUND call 1  %s : %.1f %d", path, global_useSentenceSave, !global_useSentenceSave);
 
 	if(!global_useSentenceSave){
-		//if the "useSentenceSave" variable isn't turned on (to help make affecting mass precaches more managable), don't let this be skipped.
+		// if the "useSentenceSave" variable isn't turned on (to help make affecting mass precaches more managable), don't let this be skipped.
 		UTIL_PRECACHESOUND(path, TRUE);
 	}else{
-		//Otherwise, skip away, provided the CVar "soundSentenceSave" still allows it.
+		// Otherwise, skip away, provided the CVar "soundSentenceSave" still allows it.
 		UTIL_PRECACHESOUND(path, FALSE);
 	}
 }
@@ -2398,8 +2350,8 @@ void UTIL_PRECACHESOUND(char* path, BOOL dontSkipSave){
 
 	//easyPrintLine("LETS PRECACHE... %s, %d", path, skipSave);
 
-	//To be clear, this just means... if the soundSentenceSave CVar is off, we have to precache this sound unconditionally.
-	//Otherwise, ordinarilly skip the precache, but if "dontSkipSave" is on, we still have to precache the sound. Some things defy the soundSentenceSave and play without sentences anyways.
+	// To be clear, this just means... if the soundSentenceSave CVar is off, we have to precache this sound unconditionally.
+	// Otherwise, ordinarilly skip the precache, but if "dontSkipSave" is on, we still have to precache the sound. Some things defy the soundSentenceSave and play without sentences anyways.
 	//easyForcePrintLine("UTIL_PRECACHESOUND call 2  %.1f %d", EASY_CVAR_GET(soundSentenceSave), dontSkipSave);
 	if(EASY_CVAR_GET(soundSentenceSave) == 0 || dontSkipSave){
 		PRECACHE_SOUND_REAL(path);
@@ -2417,20 +2369,6 @@ void UTIL_PRECACHESOUND_ARRAY(const char** a, int aSize){
 void UTIL_PRECACHESOUND_ARRAY(const char** a, int aSize, BOOL dontSkipSave){
 	for (int i = 0; i < aSize; i++ ) PRECACHE_SOUND( (char *) a[i], dontSkipSave); 
 }
-
-
-
-
-
-
-// !!!
-/*
-int msg_dest,
-int msg_dest, const float* pOrigin,
-int msg_dest, const float* pOrigin, edict_t* ed,
-*/
-
-
 
 
 
@@ -5056,18 +4994,19 @@ void UTIL_PrecacheOtherWeapon( const char *szClassname )
 // called by worldspawn
 void W_Precache(void)
 {
+
+
+	//just to be clear. Should be this way by default.
+	global_useSentenceSave = FALSE;
+
 	
 	// MODDD - place for script similar between client and serverside.
 	PrecacheShared();
 	
 	// custom items...
 	
-	/*
 	//NOTICE - these are already precached by the weapon_satchel, which is called here for precaching all the assets of.
-	PRECACHE_SOUND("weapons/g_bounce1.wav");
-	PRECACHE_SOUND("weapons/g_bounce2.wav");
-	PRECACHE_SOUND("weapons/g_bounce3.wav");
-	*/
+	//  PRECACHE_SOUND("weapons/g_bounce1.wav"); ...
 
 	// common world objects
 	UTIL_PrecacheOther( "item_suit" );
@@ -5177,8 +5116,7 @@ void W_Precache(void)
 }//END OF W_Precache
 
 
-void ClientPrecache( void )
-{
+void ClientPrecache( void ){
 
 	BOOL precacheAllVar = (EASY_CVAR_GET(precacheAll) >= 1);
 
@@ -5206,8 +5144,8 @@ void ClientPrecache( void )
 	*/
 
 
-	PRECACHE_SOUND("player/sprayer.wav", FALSE);		// spray paint sound for PreAlpha
-	PRECACHE_SOUND("plats/train_use1.wav", FALSE);		// use a train
+	PRECACHE_SOUND("player/sprayer.wav");		// spray paint sound for PreAlpha
+	PRECACHE_SOUND("plats/train_use1.wav");		// use a train
 	
 
 
@@ -5327,11 +5265,23 @@ void ClientPrecache( void )
 	PRECACHE_SOUND("debris/glass2.wav");
 	PRECACHE_SOUND("debris/glass3.wav");
 
-	PRECACHE_SOUND( SOUND_FLASHLIGHT_ON, FALSE );
-	PRECACHE_SOUND( SOUND_FLASHLIGHT_OFF, FALSE );
+	// breakables involve some of these, a utility method too, just precache them always now and play without soundsentencesave.
+	PRECACHE_SOUND("debris/bustflesh1.wav");
+	PRECACHE_SOUND("debris/bustflesh2.wav");
+	PRECACHE_SOUND("debris/bustmetal1.wav");
+	PRECACHE_SOUND("debris/bustmetal2.wav");
+	PRECACHE_SOUND("debris/metal2.wav");
+	PRECACHE_SOUND("debris/metal4.wav");
+	PRECACHE_SOUND("debris/metal5.wav");
+	// for the garg fall.  But really just be forced at this point.
+	PRECACHE_SOUND("debris/metal6.wav");
+
+
+	PRECACHE_SOUND( SOUND_FLASHLIGHT_ON );
+	PRECACHE_SOUND( SOUND_FLASHLIGHT_OFF );
 
 // player gib sounds
-	PRECACHE_SOUND("common/bodysplat.wav", FALSE);		
+	PRECACHE_SOUND("common/bodysplat.wav");		
 
 
 
@@ -5339,34 +5289,29 @@ void ClientPrecache( void )
 	// Just hard precache these (TRUE), not sure how I feel about playing sentences through pm_shared (even though it looks like it works).
 	// It just might be telling if retail never did that.
 // player pain sounds
-	PRECACHE_SOUND("player/pl_pain2.wav", TRUE);
-	PRECACHE_SOUND("player/pl_pain4.wav", TRUE);
-	PRECACHE_SOUND("player/pl_pain5.wav", TRUE);
-	PRECACHE_SOUND("player/pl_pain6.wav", TRUE);
-	PRECACHE_SOUND("player/pl_pain7.wav", TRUE);
+	PRECACHE_SOUND("player/pl_pain2.wav");
+	PRECACHE_SOUND("player/pl_pain4.wav");
+	PRECACHE_SOUND("player/pl_pain5.wav");
+	PRECACHE_SOUND("player/pl_pain6.wav");
+	PRECACHE_SOUND("player/pl_pain7.wav");
 
 	//MODDD - now precached.
-	PRECACHE_SOUND("player/h2odeath.wav", TRUE);
+	PRECACHE_SOUND("player/h2odeath.wav");
 
 	PRECACHE_MODEL("models/player.mdl");
 
 	// hud sounds
-
-	/*
-	sounds only played client-side. Those don't need any sort of precaching or sentences for soundsentencesave.
-	PRECACHE_SOUND("common/wpn_hudoff.wav", FALSE);
-	PRECACHE_SOUND("common/wpn_hudon.wav", FALSE);
-	PRECACHE_SOUND("common/wpn_moveselect.wav", FALSE);
-	*/
-	
-	//These are used by the player for the "use" button.
-	PRECACHE_SOUND("common/wpn_select.wav", FALSE);
-	PRECACHE_SOUND("common/wpn_denyselect.wav", FALSE);
+	// sounds only played client-side. Those don't need any sort of precaching or sentences for soundsentencesave.
+	//PRECACHE_SOUND("common/wpn_hudoff.wav", FALSE);
+	//PRECACHE_SOUND("common/wpn_hudon.wav", FALSE);
+	//PRECACHE_SOUND("common/wpn_moveselect.wav", FALSE);
+	// These are used by the player for the "use" button too (player.cpp; server calls).
+	PRECACHE_SOUND("common/wpn_select.wav");
+	PRECACHE_SOUND("common/wpn_denyselect.wav");
 	
 
 	// geiger sounds
-
-	//Using the sentence system for these regardless.?
+	// Not using soundsentencesave for those either.
 	PRECACHE_SOUND("player/geiger6.wav");
 	PRECACHE_SOUND("player/geiger5.wav");
 	PRECACHE_SOUND("player/geiger4.wav");
@@ -5381,7 +5326,7 @@ void ClientPrecache( void )
 	PRECACHE_SOUND("weapons/glockSilencerOn.wav");
 	PRECACHE_SOUND("weapons/glockSilencerOff.wav");
 	
-	//gauss fire sounds.
+	// gauss fire sounds.
 	PRECACHE_SOUND("weapons/electro4.wav");
 	PRECACHE_SOUND("weapons/electro5.wav");
 	PRECACHE_SOUND("weapons/electro6.wav");
@@ -5404,7 +5349,7 @@ void ClientPrecache( void )
 	//PRECACHE_SOUND("weapons/reload3.wav");
 	PRECACHE_SOUND("common/null.wav");
 
-	//So far used for picking up power canisters (items.cpp) instead of the more randomized gunPickupSound.
+	// So far used for picking up power canisters (items.cpp) instead of the more randomized gunPickupSound.
 	//MODDD TODO - Is that on purpose? Should they be more randomized?
 	PRECACHE_SOUND( "items/gunpickup2.wav" );
 
@@ -5422,12 +5367,8 @@ void ClientPrecache( void )
 	PRECACHE_SOUND("weapons/rocket1.wav");
 	PRECACHE_SOUND("weapons/cbar_miss1.wav");
 
-	PRECACHE_SOUND("weapons/pl_gun1.wav");
-	PRECACHE_SOUND("weapons/pl_gun2.wav");
-	PRECACHE_SOUND("weapons/pl_gun3.wav");
-
-	
-	
+	// NOTE - no need to precache pl_gun sounds here, already precached by the glock.
+	// They won't use the soundsentencesave system.
 	
 	//explosion sounds don't use the soundsentencesave.
 	PRECACHE_SOUND("old/explode0.wav");
@@ -5510,7 +5451,7 @@ void method_precacheAll(void){
 #endif
 
 
-	easyForcePrintLine("method_precacheAll::: %.1f %.1f", EASY_CVAR_GET(precacheAll), EASY_CVAR_GET(soundSentenceSave));
+	easyPrintLine("method_precacheAll::: %.1f %.1f", EASY_CVAR_GET(precacheAll), EASY_CVAR_GET(soundSentenceSave));
 
 	PRECACHE_SOUND("items/clipinsert1.wav");
 	PRECACHE_SOUND("items/cliprelease1.wav");
@@ -5630,22 +5571,6 @@ void method_precacheAll(void){
 	
 
 
-	global_useSentenceSave = TRUE;
-	//Even if precacheAllVar is off, these are expected to always be precached without the soundSentenceSave.
-	//Extra gib sound effects.
-	PRECACHE_SOUND("debris/bustflesh1.wav");
-	PRECACHE_SOUND("debris/bustflesh2.wav");
-	PRECACHE_SOUND("debris/bustmetal1.wav");
-	PRECACHE_SOUND("debris/bustmetal2.wav");
-	PRECACHE_SOUND("debris/metal2.wav");
-	PRECACHE_SOUND("debris/metal4.wav");
-	PRECACHE_SOUND("debris/metal5.wav");
-	
-
-	global_useSentenceSave = FALSE;
-
-
-
 	//MODDD - precache unconditionally now. Never call these through sentences.
 	PRECACHE_SOUND("common/bodydrop3.wav", TRUE);
 	PRECACHE_SOUND("common/bodydrop4.wav", TRUE);
@@ -5669,7 +5594,7 @@ void method_precacheAll(void){
 			//NOTICE - bodysplat sound already precached in ClientPrecache to be guaranteed to get precached, it may be played normally even with the soundsentencesave on.
 
 
-			PRECACHE_SOUND("weapons/mortarhit.wav", FALSE);
+			PRECACHE_SOUND("weapons/mortarhit.wav", TRUE);
 
 			/*
 			//NOTE: don't bother precaching snarks.  They are likely already precached by the player (precaches for all weapons already from retail to never crash on spawning / getting weapons not on map)
@@ -5716,6 +5641,13 @@ void method_precacheAll(void){
 			PRECACHE_SOUND("garg/gar_breathe1.wav");
 			PRECACHE_SOUND("garg/gar_breathe2.wav");
 			PRECACHE_SOUND("garg/gar_breathe3.wav");
+
+			PRECACHE_SOUND("garg/gar_die1.wav");
+			PRECACHE_SOUND("garg/gar_die2.wav");
+
+
+
+
 
 			/*
 			gargantua ricochet sound. Unused, forget about this.
@@ -6298,10 +6230,12 @@ void method_precacheAll(void){
 	PRECACHE_MODEL("models/floater.mdl");
 	PRECACHE_MODEL("models/aflock.mdl");
 	
+
+
 	}//END OF if(precacheAllVar)
 	else if(EASY_CVAR_GET(canDropInSinglePlayer) == 1){
-		//If the player can drop in SinglePlayer, precache this in anticipation of that.
-		//If "precacheAll" was already run, it already covered this (hence this happening in "else")
+		// If the player can drop in SinglePlayer, precache this in anticipation of that.
+		// If "precacheAll" was already run, it already covered this (hence this happening in "else")
 		PRECACHE_MODEL("models/w_weaponbox.mdl");
 	}
 
@@ -6636,7 +6570,7 @@ Vector getRotatedVectorAboutZAxis(const Vector& arg_vec, const float& arg_deg){
 	
 	Vector vecReturn;
 
-	float arc = (M_PI * arg_deg / 180);
+	float arc = (M_PI * arg_deg / 180.0f);
 
 	Vector rotMatrix[3];
 	rotMatrix[0].x = cos(arc);
@@ -6742,10 +6676,10 @@ void UTIL_playOrganicGibSound(entvars_t* pevSoundSource){
 		EMIT_SOUND_FILTERED(ENT(pevSoundSource), CHAN_STATIC, "common/bodysplat.wav", 1, ATTN_NORM - 0.12, FALSE);
 	break;
 	case 1:
-		EMIT_SOUND_FILTERED(ENT(pevSoundSource), CHAN_STATIC, "debris/bustflesh1.wav", 1, ATTN_NORM - 0.35, TRUE);
+		EMIT_SOUND_FILTERED(ENT(pevSoundSource), CHAN_STATIC, "debris/bustflesh1.wav", 1, ATTN_NORM - 0.35, FALSE);
 	break;
 	case 2:
-		EMIT_SOUND_FILTERED(ENT(pevSoundSource), CHAN_STATIC, "debris/bustflesh2.wav", 1, ATTN_NORM - 0.35, TRUE);
+		EMIT_SOUND_FILTERED(ENT(pevSoundSource), CHAN_STATIC, "debris/bustflesh2.wav", 1, ATTN_NORM - 0.35, FALSE);
 	break;
 	}//END OF switch
 }//END OF Util_playOrganicGibsound
@@ -6754,19 +6688,19 @@ void UTIL_playOrganicGibSound(entvars_t* pevSoundSource){
 void UTIL_playMetalGibSound(entvars_t* pevSoundSource){
 	switch(RANDOM_LONG(0, 4)){
 	case 0:
-		EMIT_SOUND_FILTERED(ENT(pevSoundSource), CHAN_STATIC, "debris/bustmetal1.wav", 1, ATTN_NORM - 0.12, TRUE);
+		EMIT_SOUND_FILTERED(ENT(pevSoundSource), CHAN_STATIC, "debris/bustmetal1.wav", 1, ATTN_NORM - 0.12, FALSE);
 	break;
 	case 1:
-		EMIT_SOUND_FILTERED(ENT(pevSoundSource), CHAN_STATIC, "debris/bustmetal2.wav", 1, ATTN_NORM - 0.12, TRUE);
+		EMIT_SOUND_FILTERED(ENT(pevSoundSource), CHAN_STATIC, "debris/bustmetal2.wav", 1, ATTN_NORM - 0.12, FALSE);
 	break;
 	case 2:
-		EMIT_SOUND_FILTERED(ENT(pevSoundSource), CHAN_STATIC, "debris/metal2.wav", 1, ATTN_NORM - 0.12, TRUE);
+		EMIT_SOUND_FILTERED(ENT(pevSoundSource), CHAN_STATIC, "debris/metal2.wav", 1, ATTN_NORM - 0.12, FALSE);
 	break;
 	case 3:
-		EMIT_SOUND_FILTERED(ENT(pevSoundSource), CHAN_STATIC, "debris/metal4.wav", 1, ATTN_NORM - 0.12, TRUE);
+		EMIT_SOUND_FILTERED(ENT(pevSoundSource), CHAN_STATIC, "debris/metal4.wav", 1, ATTN_NORM - 0.12, FALSE);
 	break;
 	case 4:
-		EMIT_SOUND_FILTERED(ENT(pevSoundSource), CHAN_STATIC, "debris/metal5.wav", 1, ATTN_NORM - 0.12, TRUE);
+		EMIT_SOUND_FILTERED(ENT(pevSoundSource), CHAN_STATIC, "debris/metal5.wav", 1, ATTN_NORM - 0.12, FALSE);
 	break;
 	}//END OF switch
 }//END OF UTIL_playMetalGibSound

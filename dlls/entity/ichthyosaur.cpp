@@ -16,15 +16,15 @@
 
 #pragma once
 
-
 //=========================================================
 // icthyosaur - evin, satan fish monster
 //=========================================================
 
 
 //TODO - in primaryAttack shcedule, sometimes gets hung up in
-//TASK_FACE_ENEMY.  Maybe facing its ideal dart position
-//is a better metric in this case?
+// TASK_FACE_ENEMY.  Maybe facing its ideal dart position
+// is a better metric in this case?
+// ...has this already been fixed a while ago? I forget
 
 
 
@@ -40,9 +40,7 @@
 #include "util_model.h"
 #include "effects.h"
 #include "weapons.h"
-
 #include "defaultai.h"  //why not?
-#include "ignore_warning_list.h"
 
 
 extern CGraph WorldGraph;
@@ -858,7 +856,8 @@ float CIchthyosaur::VectorToPitch( const Vector &vec )
 		pitch = 0;
 	else
 	{
-		pitch = (int) (atan2(vec.z, sqrt(vec.x*vec.x+vec.y*vec.y)) * 180 / M_PI);
+		//MODDD - why was this all casted to an int anyway?  pitch is a float.
+		pitch = (atan2(vec.z, (float)sqrt(vec.x*vec.x+vec.y*vec.y)) * 180.0f / M_PI);
 		if (pitch < 0)
 			pitch += 360;
 	}

@@ -2503,7 +2503,7 @@ void CItemSoda::Spawn( void )
 
 void CItemSoda::CanThink ( void )
 {
-	EMIT_SOUND (ENT(pev), CHAN_WEAPON, "weapons/g_bounce3.wav", 1, ATTN_NORM );
+	EMIT_SOUND(ENT(pev), CHAN_WEAPON, "weapons/g_bounce3.wav", 1, ATTN_NORM );
 
 	pev->solid = SOLID_TRIGGER;
 	UTIL_SetSize ( pev, Vector ( -8, -8, 0 ), Vector ( 8, 8, 8 ) );

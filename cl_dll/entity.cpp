@@ -653,7 +653,7 @@ void DLLEXPORT HUD_StudioEvent( const struct mstudioevent_s *event, const struct
 	
 	
 	// SSSSSSSSTTTTTTTTTOOOOOOOOOOOOPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP
-	//easyForcePrintLine("HUD_StudioEvent::: event? %d", event->event);
+	easyForcePrintLine("HUD_StudioEvent::: event? %d", event->event);
 
 
 
@@ -748,12 +748,18 @@ void DLLEXPORT HUD_TempEntUpdate (
 	void ( *Callback_TempEntPlaySound )( TEMPENTITY *pTemp, float damp ) )
 {
 	static int gTempEntFrame = 0;
-	int		i;
-	TEMPENTITY	*pTemp, *pnext, *pprev;
-	float	freq, gravity, gravitySlow, life, fastFreq;
+	int i;
+	TEMPENTITY* pTemp;
+	TEMPENTITY* pnext;
+	TEMPENTITY* pprev;
+	float freq;
+	float gravity;
+	float gravitySlow;
+	float life;
+	float fastFreq;
 
 	// Nothing to simulate
-	if ( !*ppTempEntActive )		
+	if ( !*ppTempEntActive )
 		return;
 
 	// in order to have tents collide with players, we have to run the player prediction code so

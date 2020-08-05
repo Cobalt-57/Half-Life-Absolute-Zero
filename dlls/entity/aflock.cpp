@@ -191,13 +191,19 @@ void CFlockingFlyerFlock :: Precache( )
 }
 
 
+extern int global_useSentenceSave;
 void CFlockingFlyerFlock :: PrecacheFlockSounds( void )
 {
+	//MODDD - no, no soundsentencesave for you.  So rarely used, don't bother.
+	//global_useSentenceSave = TRUE;
 	PRECACHE_SOUND("boid/boid_alert1.wav" );
 	PRECACHE_SOUND("boid/boid_alert2.wav" );
 
 	PRECACHE_SOUND("boid/boid_idle1.wav" );
 	PRECACHE_SOUND("boid/boid_idle2.wav" );
+	//MODDD - WHY NOT?
+	PRECACHE_SOUND("boid/boid_idle3.wav" );
+	//global_useSentenceSave = FALSE;
 }
 
 //=========================================================
@@ -287,10 +293,12 @@ void CFlockingFlyer :: MakeSound( void )
 	}
 
 	// make normal sound
-	switch ( RANDOM_LONG( 0, 1 ) )
+	switch ( RANDOM_LONG( 0, 2 ) )
 	{
 	case 0:	EMIT_SOUND( ENT(pev), CHAN_WEAPON, "boid/boid_idle1.wav", 1, ATTN_NORM );	break;
 	case 1:	EMIT_SOUND( ENT(pev), CHAN_WEAPON, "boid/boid_idle2.wav", 1, ATTN_NORM );	break;
+	//MODDD - 3rd boid idle sound.  Because really, why not.   Really...
+	case 2:	EMIT_SOUND(ENT(pev), CHAN_WEAPON, "boid/boid_idle3.wav", 1, ATTN_NORM);	break;
 	}
 }
 

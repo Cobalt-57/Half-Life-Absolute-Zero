@@ -513,17 +513,17 @@ void CGrenade :: BounceSound( void )
 	if(EASY_CVAR_GET(handGrenadesUseOldBounceSound) != 1){
 		switch ( RANDOM_LONG( 0, 2 ) )
 		{
-		case 0:	EMIT_SOUND(ENT(pev), CHAN_VOICE, "weapons/grenade_hit1.wav", 0.25, ATTN_NORM);	break;
-		case 1:	EMIT_SOUND(ENT(pev), CHAN_VOICE, "weapons/grenade_hit2.wav", 0.25, ATTN_NORM);	break;
-		case 2:	EMIT_SOUND(ENT(pev), CHAN_VOICE, "weapons/grenade_hit3.wav", 0.25, ATTN_NORM);	break;
+		case 0:	EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "weapons/grenade_hit1.wav", 0.25, ATTN_NORM, 0, 100, FALSE);	break;
+		case 1:	EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "weapons/grenade_hit2.wav", 0.25, ATTN_NORM, 0, 100, FALSE);	break;
+		case 2:	EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "weapons/grenade_hit3.wav", 0.25, ATTN_NORM, 0, 100, FALSE);	break;
 		}
 	}else{
 		//Using the old sound if the CVar is 1.  copied from the sachel.
 		switch ( RANDOM_LONG( 0, 2 ) )
 		{
-		case 0:	EMIT_SOUND(ENT(pev), CHAN_VOICE, "weapons/g_bounce1.wav", 1, ATTN_NORM);	break;
-		case 1:	EMIT_SOUND(ENT(pev), CHAN_VOICE, "weapons/g_bounce2.wav", 1, ATTN_NORM);	break;
-		case 2:	EMIT_SOUND(ENT(pev), CHAN_VOICE, "weapons/g_bounce3.wav", 1, ATTN_NORM);	break;
+		case 0:	EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "weapons/g_bounce1.wav", 1, ATTN_NORM, 0, 100, FALSE);	break;
+		case 1:	EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "weapons/g_bounce2.wav", 1, ATTN_NORM, 0, 100, FALSE);	break;
+		case 2:	EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "weapons/g_bounce3.wav", 1, ATTN_NORM, 0, 100, FALSE);	break;
 		}
 	}
 

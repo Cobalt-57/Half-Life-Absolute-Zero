@@ -159,7 +159,7 @@ void CSqueakGrenade::Precache( void )
 	//nevermind this, see "precacheAll" in util.cpp for more info.
 	//global_useSentenceSave = TRUE;
 	PRECACHE_SOUND("squeek/sqk_blast1.wav");
-	PRECACHE_SOUND("common/bodysplat.wav");
+	PRECACHE_SOUND("common/bodysplat.wav", TRUE);
 	PRECACHE_SOUND("squeek/sqk_die1.wav");
 	PRECACHE_SOUND("squeek/sqk_hunt1.wav");
 	PRECACHE_SOUND("squeek/sqk_hunt2.wav");

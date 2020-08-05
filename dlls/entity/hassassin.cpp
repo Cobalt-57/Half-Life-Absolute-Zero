@@ -993,10 +993,10 @@ void CHAssassin :: Shoot ( void )
 	switch(RANDOM_LONG(0,1))
 	{
 	case 0:
-		EMIT_SOUND(ENT(pev), CHAN_WEAPON, "weapons/pl_gun1.wav", RANDOM_FLOAT(0.6, 0.8), ATTN_NORM);
+		EMIT_SOUND_FILTERED(ENT(pev), CHAN_WEAPON, "weapons/pl_gun1.wav", RANDOM_FLOAT(0.6, 0.8), ATTN_NORM, 0, 100, FALSE);
 		break;
 	case 1:
-		EMIT_SOUND(ENT(pev), CHAN_WEAPON, "weapons/pl_gun2.wav", RANDOM_FLOAT(0.6, 0.8), ATTN_NORM);
+		EMIT_SOUND_FILTERED(ENT(pev), CHAN_WEAPON, "weapons/pl_gun2.wav", RANDOM_FLOAT(0.6, 0.8), ATTN_NORM, 0, 100, FALSE);
 		break;
 	}
 
@@ -1008,7 +1008,7 @@ void CHAssassin :: Shoot ( void )
 	//TODO: different fire sounds? don't know if we ever want this.
 	switch(RANDOM_LONG(0,0)){
 	    case 0:
-	        EMIT_SOUND(ENT(pev), CHAN_WEAPON, "weapons/xbow_fire1.wav", RANDOM_FLOAT(0.78, 0.94), ATTN_NORM);
+	        EMIT_SOUND_FILTERED(ENT(pev), CHAN_WEAPON, "weapons/xbow_fire1.wav", RANDOM_FLOAT(0.78, 0.94), ATTN_NORM, 0, 100, FALSE);
 	    break;
 	}
 	Vector arrowVelocity;
@@ -1191,12 +1191,13 @@ void CHAssassin :: Precache()
 	PRECACHE_MODEL("models/hassassin.mdl");
 
 	global_useSentenceSave = TRUE;
+	// If the sound is forced to be precached (avoid soundsentencesave) by the player,
+	// let this call precache it too then.
 	//PRECACHE_SOUND("weapons/pl_gun1.wav", TRUE);
 	//PRECACHE_SOUND("weapons/pl_gun2.wav", TRUE);
-
 	//MODDD - fires using this instead.
-	PRECACHE_SOUND("weapons/xbow_fire1.wav");
-	PRECACHE_SOUND("weapons/xbow_reload1.wav");
+	PRECACHE_SOUND("weapons/xbow_fire1.wav", TRUE);
+	PRECACHE_SOUND("weapons/xbow_reload1.wav", TRUE);
 
 
 	PRECACHE_SOUND("debris/beamstart1.wav");
@@ -1411,7 +1412,7 @@ void CHAssassin :: RunAI( void )
 		//VISIBLE, MAKE NOISE TO SIGNAL START OF LOWERING!
 		if (pev->renderamt == 255)
 		{
-			EMIT_SOUND_FILTERED (ENT(pev), CHAN_BODY, "debris/beamstart1.wav", 0.2, ATTN_NORM );
+			EMIT_SOUND_FILTERED (ENT(pev), CHAN_BODY, "debris/beamstart1.wav", 0.2, ATTN_NORM, 0, 100, TRUE );
 		}
 
 		pev->renderamt = max( pev->renderamt - 50, m_iTargetRanderamt );
@@ -2283,42 +2284,40 @@ void CHAssassin::HandleEventQueueEvent(int arg_eventID){
 	case 1:{
 		//right foot, walk
 		switch( RANDOM_LONG( 0, 1 ) ){
-		case 0:	EMIT_SOUND_FILTERED( ENT(pev), CHAN_BODY, "player/pl_step1.wav", 0.28, ATTN_NORM, FALSE);	break;
-		case 1:	EMIT_SOUND_FILTERED( ENT(pev), CHAN_BODY, "player/pl_step3.wav", 0.28, ATTN_NORM, FALSE);	break;
+		case 0:	EMIT_SOUND_FILTERED( ENT(pev), CHAN_BODY, "player/pl_step1.wav", 0.28, ATTN_NORM, 0, 100, FALSE);	break;
+		case 1:	EMIT_SOUND_FILTERED( ENT(pev), CHAN_BODY, "player/pl_step3.wav", 0.28, ATTN_NORM, 0, 100, FALSE);	break;
 		}
 	break;}
 	case 2:{
 		//left foot, walk
 		switch( RANDOM_LONG( 0, 1 ) )
 		{
-		case 0:	EMIT_SOUND_FILTERED( ENT(pev), CHAN_BODY, "player/pl_step2.wav", 0.28, ATTN_NORM, FALSE);	break;
-		case 1:	EMIT_SOUND_FILTERED( ENT(pev), CHAN_BODY, "player/pl_step4.wav", 0.28, ATTN_NORM, FALSE);	break;
+		case 0:	EMIT_SOUND_FILTERED( ENT(pev), CHAN_BODY, "player/pl_step2.wav", 0.28, ATTN_NORM, 0, 100, FALSE);	break;
+		case 1:	EMIT_SOUND_FILTERED( ENT(pev), CHAN_BODY, "player/pl_step4.wav", 0.28, ATTN_NORM, 0, 100, FALSE);	break;
 		}
 	break;}
 	case 3:{
 		//right foot, run
 		switch( RANDOM_LONG( 0, 1 ) ){
-		case 0:	EMIT_SOUND_FILTERED( ENT(pev), CHAN_BODY, "player/pl_step1.wav", 0.5, ATTN_NORM, FALSE);	break;
-		case 1:	EMIT_SOUND_FILTERED( ENT(pev), CHAN_BODY, "player/pl_step3.wav", 0.5, ATTN_NORM, FALSE);	break;
+		case 0:	EMIT_SOUND_FILTERED( ENT(pev), CHAN_BODY, "player/pl_step1.wav", 0.5, ATTN_NORM, 0, 100, FALSE);	break;
+		case 1:	EMIT_SOUND_FILTERED( ENT(pev), CHAN_BODY, "player/pl_step3.wav", 0.5, ATTN_NORM, 0, 100, FALSE);	break;
 		}
 	break;}
 	case 4:{
 		//left foot, run
 		switch( RANDOM_LONG( 0, 1 ) )
 		{
-		case 0:	EMIT_SOUND_FILTERED( ENT(pev), CHAN_BODY, "player/pl_step2.wav", 0.5, ATTN_NORM, FALSE);	break;
-		case 1:	EMIT_SOUND_FILTERED( ENT(pev), CHAN_BODY, "player/pl_step4.wav", 0.5, ATTN_NORM, FALSE);	break;
+		case 0:	EMIT_SOUND_FILTERED( ENT(pev), CHAN_BODY, "player/pl_step2.wav", 0.5, ATTN_NORM, 0, 100, FALSE);	break;
+		case 1:	EMIT_SOUND_FILTERED( ENT(pev), CHAN_BODY, "player/pl_step4.wav", 0.5, ATTN_NORM, 0, 100, FALSE);	break;
 		}
 	break;}
 
 	//shorter kick
 	case 5:{
-		
 		CBaseEntity *pHurt = HumanKick();
 
 		if ( pHurt )
 		{
-
 			// SOUND HERE!
 			UTIL_MakeVectors( pev->angles );
 			if(!pHurt->blocksImpact()){
@@ -2336,15 +2335,11 @@ void CHAssassin::HandleEventQueueEvent(int arg_eventID){
 			playStandardMeleeAttackMissSound();
 		}
 	break;}
-
 	//longer kick
 	case 6:{
-		
 		CBaseEntity *pHurt = HumanKick();
-
 		if ( pHurt )
 		{
-
 			// SOUND HERE!
 			UTIL_MakeVectors( pev->angles );
 			if(!pHurt->blocksImpact()){
@@ -2355,22 +2350,15 @@ void CHAssassin::HandleEventQueueEvent(int arg_eventID){
 			//is taking the hgrunt's kick damage okay?
 			pHurt->TakeDamage( pev, pev, gSkillData.hgruntDmgKick, DMG_CLUB );
 
-			//derp.
-			//EMIT_SOUND_FILTERED( ENT(pev), CHAN_WEAPON, "hgrunt/gr_pain3.wav", 1, ATTN_NORM );
 			playStandardMeleeAttackHitSound();
 		}else{
 			playStandardMeleeAttackMissSound();
 		}
 	break;}
 
-	
-
 	}//END OF switch
 
-
 }//END OF HandleEventQueueEvent
-
-
 
 
 

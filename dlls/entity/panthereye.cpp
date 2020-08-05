@@ -24,7 +24,6 @@
 #include "soundent.h"
 #include "game.h"
 #include "util_debugdraw.h"
-#include "ignore_warning_list.h"
 
 EASY_CVAR_EXTERN(noFlinchOnHard)
 EASY_CVAR_EXTERN(panthereyeHasCloakingAbility)

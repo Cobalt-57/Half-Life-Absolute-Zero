@@ -26,7 +26,6 @@
 
 #include "StudioModelRenderer.h"
 #include "GameStudioModelRenderer.h"
-#include "ignore_warning_list.h"
 
 // Global engine <-> studio model rendering code interface
 engine_studio_api_t IEngineStudio;
@@ -54,11 +53,24 @@ EASY_CVAR_EXTERN(chromeEffect)
 EASY_CVAR_EXTERN(mirrorsReflectOnlyNPCs)
 EASY_CVAR_EXTERN(mirrorsDoNotReflectPlayer)
 EASY_CVAR_EXTERN(r_shadows)
-EASY_CVAR_EXTERN(cl_server_interpolation)
+EASY_CVAR_EXTERN(cl_interp_entity)
+EASY_CVAR_EXTERN(cl_interp_viewmodel)
 EASY_CVAR_EXTERN(drawViewModel)
 EASY_CVAR_EXTERN(r_glowshell_debug)
 
 extern float global2PSEUDO_IGNOREcameraMode;
+
+
+
+// Turn on to not render anything.  Debug ahoy!
+#define STUDIO_NO_RENDERING 0
+
+
+
+
+
+
+
 
 
 
@@ -71,6 +83,18 @@ Init
 
 ====================
 */
+
+
+
+
+
+// Pretty sure the max number of entities is around 1024, but the game crashes at trying to spawn over 900 anyway.
+// Or at least when an index reaches 900.
+// MAX_MAP_ENTITIES ???  that constant was set to 1024.  Close enough to the observed 900 anyway, unless that's some
+// freak coincidence.
+float ary_g_prevTime[1024];
+float ary_g_prevFrame[1024];
+
 void CStudioModelRenderer::Init( void )
 {
 	// Set up some variables shared with engine
@@ -87,6 +111,13 @@ void CStudioModelRenderer::Init( void )
 	m_plighttransform		= (float (*)[MAXSTUDIOBONES][3][4])IEngineStudio.StudioGetLightTransform();
 	m_paliastransform		= (float (*)[3][4])IEngineStudio.StudioGetAliasTransform();
 	m_protationmatrix		= (float (*)[3][4])IEngineStudio.StudioGetRotationMatrix();
+
+	//MODDD - safety
+	for (int i = 0; i < 1024; i++) {
+		ary_g_prevTime[i] = 0;
+		ary_g_prevFrame[i] = 0;
+	}
+
 }
 
 /*
@@ -144,9 +175,9 @@ void CStudioModelRenderer::StudioCalcBoneAdj( float dadt, float *adj, const byte
 // Only for small adjustable parts of the model, like the angle of the head in yaw and pitch.
 void CStudioModelRenderer::StudioCalcBoneAdj ( float dadt, float *adj, const byte *pcontroller1, const byte *pcontroller2, byte mouthopen, byte IsReflection )
 {
-	int		i;
-	int		j;
-	float	value;
+	int i;
+	int j;
+	float value;
 	mstudiobonecontroller_t *pbonecontroller;
 	
 	pbonecontroller = (mstudiobonecontroller_t *)((byte *)m_pStudioHeader + m_pStudioHeader->bonecontrollerindex);
@@ -264,7 +295,7 @@ void CStudioModelRenderer::StudioCalcBoneAdj ( float dadt, float *adj, const byt
 		case STUDIO_XR:
 		case STUDIO_YR:
 		case STUDIO_ZR:
-			adj[j] = value * (M_PI / 180.0);
+			adj[j] = value * (M_PI / 180.0f);
 			break;
 		case STUDIO_X:
 		case STUDIO_Y:
@@ -286,8 +317,8 @@ StudioCalcBoneQuaterion
 void CStudioModelRenderer::StudioCalcBoneQuaterion( int frame, float s, mstudiobone_t *pbone, mstudioanim_t *panim, float *adj, float *q )
 {
 	int				j, k;
-	vec4_t				q1, q2;
-	vec3_t				angle1, angle2;
+	vec4_t			q1, q2;
+	vec3_t			angle1, angle2;
 	mstudioanimvalue_t	*panimvalue;
 
 	for (j = 0; j < 3; j++)
@@ -371,7 +402,7 @@ StudioCalcBonePosition
 */
 void CStudioModelRenderer::StudioCalcBonePosition( int frame, float s, mstudiobone_t *pbone, mstudioanim_t *panim, float *adj, float *pos )
 {
-	int				j, k;
+	int j, k;
 	mstudioanimvalue_t	*panimvalue;
 
 	for (j = 0; j < 3; j++)
@@ -439,9 +470,9 @@ StudioSlerpBones
 */
 void CStudioModelRenderer::StudioSlerpBones( vec4_t q1[], float pos1[][3], vec4_t q2[], float pos2[][3], float s )
 {
-	int		i;
-	vec4_t		q3;
-	float	s1;
+	int i;
+	vec4_t q3;
+	float s1;
 
 	if (s < 0) s = 0;
 	else if (s > 1.0) s = 1.0;
@@ -469,7 +500,7 @@ StudioGetAnim
 */
 mstudioanim_t *CStudioModelRenderer::StudioGetAnim( model_t *m_pSubModel, mstudioseqdesc_t *pseqdesc )
 {
-	mstudioseqgroup_t	*pseqgroup;
+	mstudioseqgroup_t *pseqgroup;
 	cache_user_t *paSequences;
 
 	pseqgroup = (mstudioseqgroup_t *)((byte *)m_pStudioHeader + m_pStudioHeader->seqgroupindex) + pseqdesc->seqgroup;
@@ -538,9 +569,9 @@ void CStudioModelRenderer::StudioSetUpTransform (int trivial_accept)
 	//	return;
 	//}
 	//
-	int			i;
-	vec3_t			angles;
-	vec3_t			modelpos;
+	int i;
+	vec3_t angles;
+	vec3_t modelpos;
 	
 	int ic = trivial_accept - 1024;
 
@@ -952,6 +983,7 @@ void CStudioModelRenderer::StudioCalcRotations ( float pos[][3], vec4_t *q, mstu
 
 
 	dadt = StudioEstimateInterpolant( );
+
 	s = (f - frame);
 
 	// add in programtic controllers
@@ -970,7 +1002,7 @@ void CStudioModelRenderer::StudioCalcRotations ( float pos[][3], vec4_t *q, mstu
 		//	Con_DPrintf("%d %d %d %d\n", m_pCurrentEntity->curstate.sequence, frame, j, k );
 	}
 
-	//MODDD - unvonentional?
+	//MODDD - unconventional?
 	//return; ???  was this supposed to be commented out?
 
 	if (pseqdesc->motiontype & STUDIO_X)
@@ -1097,13 +1129,41 @@ StudioEstimateFrame
 
 ====================
 */
+
+//static float g_prevTime;
+//static float g_prevFrame;
+static float g_OLDprevTime;
+static float g_debugPrevTime;
+
+
 float CStudioModelRenderer::StudioEstimateFrame( mstudioseqdesc_t *pseqdesc )
 {
 	double dfdt;
 	double f;
 	//return 0;
+	BOOL DEBUG_NeededFix = FALSE;
+	double DEBUG_old_f;
 
 	//??? StudioEstimateInterpolant
+
+
+	//if (m_pCurrentEntity->curstate.renderfx & ISNPC) {
+	//	int x = 45;
+	//}
+
+
+
+
+	// NOPE.  This is a bad idea actually.
+	//if (
+	//	(m_pCurrentEntity->prevstate.frame == m_pCurrentEntity->curstate.frame)
+	//	) {
+	//	if (m_pCurrentEntity->curstate.animtime != m_pCurrentEntity->prevstate.animtime) {
+	//		m_pCurrentEntity->curstate.animtime = m_pCurrentEntity->prevstate.animtime;
+	//	}
+	//}
+
+
 
 	//MODDD NOTICE - should other places have this "renderfx & STOPINTR" check too.?
 	if ( m_fDoInterp && !(m_pCurrentEntity->curstate.renderfx & STOPINTR) )
@@ -1122,6 +1182,125 @@ float CStudioModelRenderer::StudioEstimateFrame( mstudioseqdesc_t *pseqdesc )
 	{
 		dfdt = 0;
 	}
+
+	
+
+
+	//MODDD - viewmodel interp
+	// If interpolation is turned off and this is a viewmodel, have to be a little more careful with the approach.
+	// Disabling interp completely for viewmodels causes them to be stuck at the first frame of animation, never changes
+	// without getting a new anim completely.  So handle its 'no interp' differently.
+
+	// Idea.  Get how much the anim should've increased by in a 0.1 time period, and only move in increments of that much.
+	// Pretty weird to have to go through effort so simulate an interp-less state.
+	// Eh be a little faster than 0.1, view anims can be fast and nothing to gain from any real 'accuracy' anyway.
+	///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	if(EASY_CVAR_GET(cl_interp_viewmodel) == 0) {
+		if((m_pCurrentEntity->curstate.renderfx & ISVIEWMODEL) == ISVIEWMODEL) {
+
+			// example of modulo (however helpful it may be).  Or subtracting a remainder maybe?
+			//m_pPlayerInfo->gaitframe = m_pPlayerInfo->gaitframe - (int)(m_pPlayerInfo->gaitframe / pseqdesc->numframes) * pseqdesc->numframes;
+
+			// 37 - (int)(37 / 30)
+			// ...guess the times 'psesdesc->numframes' isn't that relevant.
+
+			float typicalDuration = 0.08 * m_pCurrentEntity->curstate.framerate * pseqdesc->fps;
+
+			dfdt = (m_clTime - m_pCurrentEntity->curstate.animtime) * m_pCurrentEntity->curstate.framerate * pseqdesc->fps;
+
+			/*
+			// always 0 ?
+			float whut = gpGlobals->frametime;
+			// what about this?  Looks to work, but the point is to get the time between server sendoff's.  We can't look to other entities
+			// for that info (another serverside-rendered entity's curstae.animtime) without something stupidly hacky.
+			float whut2 = m_clTime - m_clOldTime;
+			*/
+
+			int diviso = (int)(dfdt / typicalDuration);
+			dfdt = diviso * typicalDuration;
+
+		}
+	}
+	///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+	//MODDD - interp physics issue
+	// Seems on reaching the ground recently, the curstate.animtime gets instantly set to the
+	// current time before this point of script gets a chance to see what it really was
+	// at the time of a server sendoff.
+	// That is, isntead of seing the curstate.animtime go from say 36.4, 36.5, 36.6, etc., it
+	// suddenly goes up every single render frame: 34.4, 34.41, 34.42, 34.43, etc.
+	// Problem is, interp won't know how much time really passed so we can't judge how much
+	// to push the imaginary frame 'f' set further below.
+	// curstate.frame is the same the whole time during those 0.1 second intervals in any case,
+	// regardless of curstate.anim time correctly updating every 0.1 second interval or 
+	// incorrectly (way too often).  As the point of interp is to see how much to add to
+	// curstate.frame to simulate time passing before getting the next curstate.frame,
+	// not having a good curstate.animtime throws it off.
+
+
+	// Beware, this includes the player (ISPLAYER includes the ISNPC flag).  Can check to see that the result
+	// of the bistmask == ISNPC, but including the player itself isn't terrible here anyway.
+	///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	if (m_pCurrentEntity->curstate.renderfx & ISNPC) {
+		
+		// CAREFUL!  Check for these condtions too.
+
+		g_OLDprevTime = ary_g_prevTime[m_pCurrentEntity->index];
+
+
+		if (
+			m_pCurrentEntity->curstate.framerate == 0 ||
+			
+			(
+				(!(pseqdesc->flags & STUDIO_LOOPING)) &&
+				(
+					m_pCurrentEntity->curstate.frame >= 255 ||
+					m_pCurrentEntity->curstate.frame < 0
+				)
+			)
+		) {
+			// 0 framerate, or our frame is out of bounds & no plans on looping?  do not!
+			// (this is for a breakpoint)
+			int x = 45;
+		}
+		else {
+			
+			if (ary_g_prevFrame[m_pCurrentEntity->index] != m_pCurrentEntity->curstate.frame) {
+				ary_g_prevFrame[m_pCurrentEntity->index] = m_pCurrentEntity->curstate.frame;
+				ary_g_prevTime[m_pCurrentEntity->index] = m_clTime;
+				
+			}
+
+			//m_pCurrentEntity->curstate.iuser4 = ary_g_prevFrame[m_pCurrentEntity->index];
+			//m_pCurrentEntity->curstate.fuser4 = ary_g_prevTime[m_pCurrentEntity->index];
+
+
+
+			if (dfdt == 0) {
+				DEBUG_NeededFix = TRUE;
+				// try this.
+				// m_clTime ?  gpGlobals->time ?
+				float diffo = m_clTime - ary_g_prevTime[m_pCurrentEntity->index];
+				if (diffo > 0) {
+					dfdt = (m_clTime - ary_g_prevTime[m_pCurrentEntity->index]) * m_pCurrentEntity->curstate.framerate * pseqdesc->fps;
+				}
+			}
+		}
+	}
+	///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
 
 
 	/*
@@ -1152,6 +1331,7 @@ float CStudioModelRenderer::StudioEstimateFrame( mstudioseqdesc_t *pseqdesc )
 	{
 		f = (m_pCurrentEntity->curstate.frame * (pseqdesc->numframes - 1)) / 256.0;
 	}
+	DEBUG_old_f = f;
 
 	f += dfdt;
 
@@ -1186,6 +1366,7 @@ float CStudioModelRenderer::StudioEstimateFrame( mstudioseqdesc_t *pseqdesc )
 	{
 		if (pseqdesc->numframes > 1)
 		{
+			//MODDD - Oh.  Casted to 'int' to remove whole multiples of the animation in frames instead, ok.
 			f -= (int)(f / (pseqdesc->numframes - 1)) *  (pseqdesc->numframes - 1);
 		}
 		if (f < 0) 
@@ -1257,8 +1438,34 @@ CLIENTFR: 160 14.
 		//easyPrintLine("CLIENT FRAME: %.2f %.2f %.2f :: %d %.2f", f, m_pCurrentEntity->curstate.frame, currentFrame, pseqdesc->numframes, dfdt );
 		//easyPrintLine("CLIENTFR: %d %.2f %d", m_pCurrentEntity->curstate.renderfx, f, pseqdesc->numframes);
 
-		easyPrintLineDummy("RENDER: id:%d ai:%d seq:%d f:%.2f n:%d BACKWARDS: %d", m_pCurrentEntity->index, pseqdesc->animindex, m_pCurrentEntity->curstate.sequence, f, pseqdesc->numframes, animateBackwards );
+		//easyPrintLineDummy("RENDER: id:%d ai:%d seq:%d f:%.2f n:%d BACKWARDS: %d", m_pCurrentEntity->index, pseqdesc->animindex, m_pCurrentEntity->curstate.sequence, f, pseqdesc->numframes, animateBackwards );
 	}
+
+
+
+	// Debug printouts for seeing how the 'interp physics issue' fix above works.
+	// Best with only one NPC on the map, kill in slow motion with CVars set to put it in the air a tiny bit (monsterKilledToss set to 1 or 2),
+	// with a low host_frametime (like 0.001) and watch how these printouts change.  Compare to the printouts during just an idle animation,
+	// without the headcrab in combat or anything (spawn with 'autosneaky 1') to see interp working correctly without the fix running nor needed.
+	
+	/*
+	if (g_debugPrevTime != m_clTime) {
+		
+		if (m_pCurrentEntity->curstate.renderfx & ISNPC) {
+			if (!DEBUG_NeededFix) {
+				easyForcePrintLine("nofix recframe:%.3f times:%.3f,%.3f d:%.3f final:%.2f F:%.2f->%.2f", m_pCurrentEntity->curstate.frame, m_clTime, m_pCurrentEntity->curstate.animtime, (m_clTime - m_pCurrentEntity->curstate.animtime), dfdt, DEBUG_old_f, f);
+			}
+			else {
+				easyForcePrintLine("yefix recframe:%.3f times:%.3f,%.3f d:%.3f final:%.2f F:%.2f->%.2f", m_pCurrentEntity->curstate.frame, m_clTime, g_OLDprevTime, (m_clTime - g_OLDprevTime), dfdt, DEBUG_old_f, f);
+			}
+			g_debugPrevTime = m_clTime;
+			//easyForcePrintLine("MY INDEX: %d isnpc:%d", m_pCurrentEntity->index, (m_pCurrentEntity->curstate.renderfx & ISNPC) == ISNPC);
+		}
+	}
+	*/
+
+	
+	
 
 	return f;
 }
@@ -1498,8 +1705,7 @@ void CStudioModelRenderer::StudioSetupBones ( byte isReflection )
 
 
 	if( (m_pCurrentEntity->curstate.renderfx & ISVIEWMODEL) == ISVIEWMODEL){
-		//oh shit son!
-		easyPrintLineDummy("O SHIT??? id:%d seq:%d", m_pCurrentEntity->index, m_pCurrentEntity->curstate.sequence  );
+		easyPrintLineDummy("O its a viewmodel??? id:%d seq:%d", m_pCurrentEntity->index, m_pCurrentEntity->curstate.sequence  );
 	}
 
 
@@ -1538,7 +1744,6 @@ void CStudioModelRenderer::StudioSetupBones ( byte isReflection )
 
 
 	if( (m_pCurrentEntity->curstate.renderfx & ISVIEWMODEL) == ISVIEWMODEL){
-		//oh shit son!
 		easyPrintLineDummy("AM I BACKWARDS id:%d b:%d", m_pCurrentEntity->index, m_pCurrentEntity->curstate.iuser1  );
 	}
 
@@ -1583,6 +1788,18 @@ void CStudioModelRenderer::StudioSetupBones ( byte isReflection )
 			StudioSlerpBones( q, pos, q3, pos3, s );
 		}
 	}
+	
+
+
+
+
+
+	//MODDD - Is something in here to blame for a sequence recently hitting the ground having slower anim interpolation
+	// (catches up soon and looks a little jarring?)
+	// Actually no, at least not more than negligibly.
+	// See the 'interp physics issue' comment.
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 	
 	if (m_fDoInterp &&
 		m_pCurrentEntity->latched.sequencetime &&
@@ -1631,6 +1848,15 @@ void CStudioModelRenderer::StudioSetupBones ( byte isReflection )
 		//Con_DPrintf("prevframe = %4.2f\n", f);
 		m_pCurrentEntity->latched.prevframe = f;
 	}
+	
+	
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+
+
 
 	pbones = (mstudiobone_t *)((byte *)m_pStudioHeader + m_pStudioHeader->boneindex);
 
@@ -1664,6 +1890,27 @@ void CStudioModelRenderer::StudioSetupBones ( byte isReflection )
 		bonematrix[0][3] = pos[i][0];
 		bonematrix[1][3] = pos[i][1];
 		bonematrix[2][3] = pos[i][2];
+
+		
+		
+		// WOA THIS ONES FREAKY
+		/*
+		float scalex = EASY_CVAR_GET(ctt1);
+		float scaley = EASY_CVAR_GET(ctt2);
+		float scalez = EASY_CVAR_GET(ctt3);
+		bonematrix[0][0] *= 1;
+		bonematrix[1][0] *= 1;
+		bonematrix[2][0] *= 1;
+		bonematrix[0][1] *= scalex;
+		bonematrix[1][1] *= scaley;
+		bonematrix[2][1] *= scalez;
+		bonematrix[0][2] *= 1;
+		bonematrix[1][2] *= 1;
+		bonematrix[2][2] *= 1;
+		*/
+		
+
+
 
 		if (pbones[i].parent == -1) 
 		{
@@ -1789,20 +2036,27 @@ void CStudioModelRenderer::StudioSetupBones ( byte isReflection )
 			//*(m_pbonetransform[i][0][1]) *= 1;
 			//*(m_pbonetransform[i][1][1]) *= -1;
 			//*(m_pbonetransform[i][2][1]) *= 1;
+			
+
+			
+			//MODDD - well I tried.
 			/*
-			float scalex = EASY_CVAR_GET(ctt1);
-			float scaley = EASY_CVAR_GET(ctt2);
-			float scalez = EASY_CVAR_GET(ctt3);
-			(*m_pbonetransform[i])[0][0] *= scalex;
-			(*m_pbonetransform[i])[1][0] *= scalex;
-			(*m_pbonetransform[i])[2][0] *= scalex;
-			(*m_pbonetransform[i])[0][1] *= scaley;
-			(*m_pbonetransform[i])[1][1] *= scaley;
-			(*m_pbonetransform[i])[2][1] *= scaley;
-			(*m_pbonetransform[i])[0][2] *= scalez;
-			(*m_pbonetransform[i])[1][2] *= scalez;
-			(*m_pbonetransform[i])[2][2] *= scalez;
+			if (isReflection) {
+				float scalex = EASY_CVAR_GET(ctt1);
+				float scaley = EASY_CVAR_GET(ctt2);
+				float scalez = EASY_CVAR_GET(ctt3);
+				(*m_pbonetransform[i])[0][0] *= 1;
+				(*m_pbonetransform[i])[1][0] *= 1;
+				(*m_pbonetransform[i])[2][0] *= 1;
+				(*m_pbonetransform[i])[0][1] *= scalex;
+				(*m_pbonetransform[i])[1][1] *= scaley;
+				(*m_pbonetransform[i])[2][1] *= scalez;
+				(*m_pbonetransform[i])[0][2] *= 1;
+				(*m_pbonetransform[i])[1][2] *= 1;
+				(*m_pbonetransform[i])[2][2] *= 1;
+			}
 			*/
+			
 
 			// Apply client-side effects to the transformation matrix
 			StudioFxTransform( m_pCurrentEntity, (*m_pbonetransform)[i] );
@@ -1974,6 +2228,27 @@ int CStudioModelRenderer::StudioDrawReflection(int flags)
 	alight_t lighting;
 	vec3_t dir;
 
+
+
+	/*
+	//MODDD - well I tried.  Any attempt to make something look truly 'reflected' (flipped) still keeps several faces on the model going the wrong way,
+	// so you see them show the backs through (such as seeing a scientist's face through the back of the head).
+	float scalex = EASY_CVAR_GET(ctt1);
+	float scaley = EASY_CVAR_GET(ctt2);
+	float scalez = EASY_CVAR_GET(ctt3);
+	(*m_protationmatrix)[0][0] *= 1;
+	(*m_protationmatrix)[1][0] *= 1;
+	(*m_protationmatrix)[2][0] *= 1;
+	(*m_protationmatrix)[0][1] *= scalex;
+	(*m_protationmatrix)[1][1] *= scaley;
+	(*m_protationmatrix)[2][1] *= scalez;
+	(*m_protationmatrix)[0][2] *= 1;
+	(*m_protationmatrix)[1][2] *= 1;
+	(*m_protationmatrix)[2][2] *= 1;
+	*/
+
+
+
 	//NOTE: used to be "TRI_FRONT"?
 	gEngfuncs.pTriAPI->CullFace(TRI_NONE);
 
@@ -2062,6 +2337,12 @@ StudioDrawModel
 #include "triangleapi.h"
 int CStudioModelRenderer::StudioDrawModel( int flags )
 {
+#if STUDIO_NO_RENDERING == 1
+	return 0;
+#endif
+
+
+
 	//easyPrintLine("FLAGZ %d", (flags & 128));
 	alight_t lighting;
 	vec3_t dir;
@@ -2120,11 +2401,12 @@ int CStudioModelRenderer::StudioDrawModel( int flags )
 	}
 
 	
-	if(EASY_CVAR_GET(cl_server_interpolation) != 0){
-		//not off, typical setting.
+	if(EASY_CVAR_GET(cl_interp_entity) != 0){
+		// not off, typical setting.
 		m_fDoInterp = 1;
 	}else{
-		//off, only apply to server-sent entities. this is too bizarre (frozen on first frame) for viewmodel stuff.
+		// off, only apply to server-sent entities. this is too bizarre (frozen on first frame) for viewmodel stuff.
+		// Leaving that to its own CVar 'cl_interp_viewmodel' now.
 		if( (m_pCurrentEntity->curstate.renderfx & ISVIEWMODEL) == ISVIEWMODEL){
 			//usual setting
 			m_fDoInterp = 1;
@@ -2651,7 +2933,7 @@ void CStudioModelRenderer::StudioEstimateGait( entity_state_t *pplayer )
 	}
 	else
 	{
-		m_pPlayerInfo->gaityaw = (atan2(est_velocity[1], est_velocity[0]) * 180 / M_PI);
+		m_pPlayerInfo->gaityaw = (atan2(est_velocity[1], est_velocity[0]) * 180.0f / M_PI);
 		if (m_pPlayerInfo->gaityaw > 180)
 			m_pPlayerInfo->gaityaw = 180;
 		if (m_pPlayerInfo->gaityaw < -180)
@@ -2785,6 +3067,10 @@ StudioDrawPlayer
 */
 int CStudioModelRenderer::StudioDrawPlayer( int flags, entity_state_t *pplayer )
 {
+#if STUDIO_NO_RENDERING == 1
+	return 0;
+#endif
+
 	alight_t lighting;
 	vec3_t dir;
 
@@ -3238,11 +3524,8 @@ void CStudioModelRenderer::StudioRenderModel( void )
 		
 		IEngineStudio.SetForceFaceFlags( STUDIO_NF_CHROME );
 		
-		
 		gEngfuncs.pTriAPI->SpriteTexture( m_pChromeSprite, 0 );
 
-		
-		
 		//MODDD - and restore the secondary bits, if any.
 		//        ...also, secondary bits will come back after all other calls in this method. So not yet.
 		m_pCurrentEntity->curstate.renderfx = kRenderFxGlowShell;

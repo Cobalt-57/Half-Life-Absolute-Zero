@@ -194,3 +194,12 @@ All get the same 50% chance of a bullet ricochet effect the agrunt has for bulle
 AGrunts should no longer skip the sound-sentence-save system when playing some sounds (lead to 'sound not precached' warnings in console).  No file in the mentioned 'agrunt/bflinch.wav' of sequence 'bigflinch' exists, however.
 
 Uncrouching rapidly no longer puts the player in the air momentarily.  Uncrouching while in the middle of a crouch is smooth now.
+
+New CVAR: cl_interp_view_extra.  Default is 1 so that crouching/uncrouching rapidly looks smooth.  2 lets midair crouching/uncrouching look more smooth. 0 goes to no additional smoothness beyond retail (besides the downward stairs/incline improvement).
+
+Scientists not in a combat state will run away when attacked with their backs turned.  Go figure.
+
+Issue from falling monsters losing interp (animation smoothness) shortly after touching the ground from a fall (usually monsterKilledToss other than 0 to cause this) should be resolved, mostly.  Hacky solution.
+
+CVar 'cl_server_interpolation' renamed to 'cl_interp_entity'.
+New CVar:  'cl_interp_viewmodel'.  Simulates lack of interpolation to add choppiness to viewmodels when off.

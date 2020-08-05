@@ -24,8 +24,7 @@
 #include "nodes.h"
 #include "util_model.h"
 #include "doors.h"
-#include "weapons.h" //MODDD - some externs there.
-#include "ignore_warning_list.h"
+#include "weapons.h"
 
 EASY_CVAR_EXTERN(pathfindPrintout)
 EASY_CVAR_EXTERN(nodeSearchStartVerticalOffset)

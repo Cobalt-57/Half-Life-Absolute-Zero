@@ -47,4 +47,14 @@ DLL_DECALLIST gDecals[] = {
 	{ "{mommablob", 0 },	// DECAL_MOMMASPLAT		// BM Mortar spray?? need decal
 	{ "{oil1", 0 },	// MODDD - these are new.
 	{ "{oil2", 0 },	// 
+	{ "{GBLOOD1", 0 },	//EXPERIMENTAL
+	{ "{GBLOOD2", 0 },	//EXPERIMENTAL
+	{ "{GBLOOD3", 0 },	//EXPERIMENTAL
+	{ "{GBLOOD4", 0 },	//EXPERIMENTAL
+	{ "{GBLOOD5", 0 },	//EXPERIMENTAL
+	{ "{GBLOOD6", 0 },	//EXPERIMENTAL
+	{ "{GBLOOD7", 0 },	//EXPERIMENTAL
+	{ "{GBLOOD8", 0 },	//EXPERIMENTAL
+
+
 };

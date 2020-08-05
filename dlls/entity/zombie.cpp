@@ -815,6 +815,7 @@ int CZombie::IgnoreConditions ( void )
 
 
 void CZombie::MonsterThink(){
+
 	// Debug feature for serverside printouts.
 	// Place a zombie and watch printouts only go to the server console (or player running the server if non-deicated).
 	// Uh. Yay.
