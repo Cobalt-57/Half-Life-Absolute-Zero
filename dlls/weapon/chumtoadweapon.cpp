@@ -319,7 +319,7 @@ void CChumToadWeapon::Holster( int skiplocal /* = 0 */ )
 
 	//SendWeaponAnim( CHUMTOADWEAPON_DOWN );
 	
-	EMIT_SOUND_FILTERED(ENT(m_pPlayer->pev), CHAN_WEAPON, "common/null.wav", 1.0, ATTN_NORM, 0, 100, FALSE);
+	UTIL_PlaySound(ENT(m_pPlayer->pev), CHAN_WEAPON, "common/null.wav", 1.0, ATTN_NORM, 0, 100, FALSE);
 }
 
 

@@ -447,6 +447,7 @@ public:
 
 
 
+	CBasePlayer(void);
 
 	//MODDD - some setter methods.
 	void setHealth(int newHealth);
@@ -555,6 +556,9 @@ public:
 
 	virtual int	Save( CSave &save );
 	virtual int	Restore( CRestore &restore );
+	static TYPEDESCRIPTION m_playerSaveData[];
+
+
 
 	void RenewItems(void);
 	void PackDeadPlayerItems( void );
@@ -564,7 +568,6 @@ public:
 	// JOHN:  sends custom messages if player HUD data has changed  (eg health, ammo)
 	virtual void UpdateClientData( void );
 	
-	static	TYPEDESCRIPTION m_playerSaveData[];
 
 	// Player is moved across the transition by other means
 	virtual int	ObjectCaps( void ) { return CBaseMonster :: ObjectCaps() & ~FCAP_ACROSS_TRANSITION; }
@@ -789,9 +792,6 @@ public:
 	///////////////////////////////////////////////////////////////////////////
 	///////////////////////////////////////////////////////////////////////////
 
-	
-
-	//Player ID
 	void InitStatusBar( void );
 	void UpdateStatusBar( void );
 
@@ -801,11 +801,11 @@ public:
 
 	void resetLongJumpCharge();
 
-	//MODDD - added.
-	CBasePlayer(void);
 	void autoSneakyCheck(void);
 	void turnOnSneaky(void);
 	void turnOffSneaky(void);
+
+	BOOL usesSoundSentenceSave(void);
 
 
 	//MODDD - NEW.  Also inline now, very simple method and consistent for client/serverside.

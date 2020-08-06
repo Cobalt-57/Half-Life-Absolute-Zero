@@ -373,11 +373,17 @@ void CHudPain::CalcDamageDirection(vec3_t vecFrom, int damageAmount, int rawDama
 	float side, front;
 	vec3_t vecOrigin, vecAngles;
 
-	if (!vecFrom[0] && !vecFrom[1] && !vecFrom[2])
+	if ( (!vecFrom[0] && !vecFrom[1] && !vecFrom[2]) || 
+		// MODDD - new condition.  Having the suit without 'painFlashSuitless' also prevents pain from
+		// ever registering.  Stops the rare case of accumulated pain without the suit suddenly
+		// showing up as bright red after getting the suit.
+		(EASY_CVAR_GET(painFlashSuitless) == 0 && !(gHUD.m_iWeaponBits & (1 << (WEAPON_SUIT))))
+	)
 	{
 		//easyPrintLine("OH NO I HAVE FAILED");
 		m_fAttackFront = m_fAttackRear = m_fAttackRight = m_fAttackLeft = 0;
-		setUniformDamage(0);
+		m_fAttackFrontDamage = m_fAttackRearDamage = m_fAttackRightDamage = m_fAttackLeftDamage = 0;
+		//setUniformDamage(0);
 		return;
 	}
 	int damageBlockedByArmor = rawDamageAmount - damageAmount;

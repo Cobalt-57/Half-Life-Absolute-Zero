@@ -195,27 +195,27 @@ int CTemplateMonster::Restore( CRestore &restore )
 	
 void CTemplateMonster::DeathSound( void ){
 	int pitch = 95 + RANDOM_LONG(0,9);
-	EMIT_SOUND_FILTERED( edict(), CHAN_VOICE, RANDOM_SOUND_ARRAY(pDeathSounds), 1.0, ATTN_IDLE, 0, pitch );
+	UTIL_PlaySound( edict(), CHAN_VOICE, RANDOM_SOUND_ARRAY(pDeathSounds), 1.0, ATTN_IDLE, 0, pitch );
 }
 void CTemplateMonster::AlertSound( void ){
 	int pitch = 95 + RANDOM_LONG(0,9);
-	EMIT_SOUND_FILTERED( edict(), CHAN_VOICE, RANDOM_SOUND_ARRAY(pAlertSounds), 1.0, ATTN_NORM, 0, pitch );
+	UTIL_PlaySound( edict(), CHAN_VOICE, RANDOM_SOUND_ARRAY(pAlertSounds), 1.0, ATTN_NORM, 0, pitch );
 }
 void CTemplateMonster::IdleSound( void ){
 	int pitch = 95 + RANDOM_LONG(0,9);
 	// Play a random idle sound
-	EMIT_SOUND_FILTERED( edict(), CHAN_VOICE, RANDOM_SOUND_ARRAY(pIdleSounds), 1.0, ATTN_NORM, 0, pitch );
+	UTIL_PlaySound( edict(), CHAN_VOICE, RANDOM_SOUND_ARRAY(pIdleSounds), 1.0, ATTN_NORM, 0, pitch );
 }
 void CTemplateMonster::PainSound( void ){
 	int pitch = 95 + RANDOM_LONG(0,9);
 	if (RANDOM_LONG(0,5) < 2){
-		EMIT_SOUND_FILTERED( edict(), CHAN_VOICE, RANDOM_SOUND_ARRAY(pPainSounds), 1.0, ATTN_NORM, 0, pitch );
+		UTIL_PlaySound( edict(), CHAN_VOICE, RANDOM_SOUND_ARRAY(pPainSounds), 1.0, ATTN_NORM, 0, pitch );
 	}
 }
 void CTemplateMonster::AttackSound( void ){
 	int pitch = 95 + RANDOM_LONG(0,9);
 	// Play a random attack sound
-	EMIT_SOUND_FILTERED( edict(), CHAN_VOICE, RANDOM_SOUND_ARRAY(pAttackSounds), 1.0, ATTN_NORM, 0, pitch );
+	UTIL_PlaySound( edict(), CHAN_VOICE, RANDOM_SOUND_ARRAY(pAttackSounds), 1.0, ATTN_NORM, 0, pitch );
 }
 
 
@@ -826,7 +826,7 @@ GENERATE_KILLED_IMPLEMENTATION(CTemplateMonster){
 // engine depending on whether or not something is marked a certain way by method "ChangeList" of triggers.cpp.
 // I think looping sounds are reset on initiating transitions, so that shouldn't be an issue at least.
 void CTemplateMonster::onDelete(void){
-	//STOP_SOUND_FILTERED(ENT(pev), CHAN_X, "templatemonster/templatemonster_loopingsound.wav");
+	//UTIL_StopSound(ENT(pev), CHAN_X, "templatemonster/templatemonster_loopingsound.wav");
 	//...
 
 }//END OF onDelete

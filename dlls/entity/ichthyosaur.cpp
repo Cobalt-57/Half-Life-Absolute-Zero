@@ -63,7 +63,7 @@ extern CGraph WorldGraph;
 
 
 #define EMIT_ICKY_SOUND( chan, array ) \
-	EMIT_SOUND_FILTERED ( ENT(pev), chan , array [ RANDOM_LONG(0,ARRAYSIZE( array )-1) ], 1.0, 0.6, 0, RANDOM_LONG(95,105) ); 
+	UTIL_PlaySound( ENT(pev), chan , array [ RANDOM_LONG(0,ARRAYSIZE( array )-1) ], 1.0, 0.6, 0, RANDOM_LONG(95,105) ); 
 
 #define PROBE_LENGTH 150
 

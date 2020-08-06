@@ -950,7 +950,7 @@ void CScientist::SayQuestion(CTalkMonster* argTalkTo) {
 void CScientist::SayProvoked(void){
 	if(EASY_CVAR_GET(pissedNPCs) != 1 || !globalPSEUDO_iCanHazMemez){
 		switch(RANDOM_LONG(0, 4)){
-			case 0:EMIT_SOUND_FILTERED( ENT(pev), CHAN_VOICE, "scientist/sci_pain2.wav", 1, ATTN_NORM, 0, GetVoicePitch());break;
+			case 0:UTIL_PlaySound( ENT(pev), CHAN_VOICE, "scientist/sci_pain2.wav", 1, ATTN_NORM, 0, GetVoicePitch());break;
 			case 1:PlaySentenceSingular( "SC_FEAR3", 6, VOL_NORM, ATTN_NORM );break;
 			case 2:PlaySentenceSingular( "SC_PLFEAR3", 6, VOL_NORM, ATTN_NORM );break;
 			case 3:PlaySentenceSingular( "SCI_EXTRAPROVOKED", 6, VOL_NORM, ATTN_NORM );break;
@@ -2238,17 +2238,17 @@ void CScientist :: PainSound ( void )
 
 			switch (RANDOM_LONG(0, 9))
 			{
-			case 0: EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "scientist/sci_pain1.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
-			case 1: EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "scientist/sci_pain2.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
-			case 2: EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "scientist/sci_pain3.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
-			case 3: EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "scientist/sci_pain4.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
-			case 4: EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "scientist/sci_pain5.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
+			case 0: UTIL_PlaySound(ENT(pev), CHAN_VOICE, "scientist/sci_pain1.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
+			case 1: UTIL_PlaySound(ENT(pev), CHAN_VOICE, "scientist/sci_pain2.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
+			case 2: UTIL_PlaySound(ENT(pev), CHAN_VOICE, "scientist/sci_pain3.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
+			case 3: UTIL_PlaySound(ENT(pev), CHAN_VOICE, "scientist/sci_pain4.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
+			case 4: UTIL_PlaySound(ENT(pev), CHAN_VOICE, "scientist/sci_pain5.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
 				//MODDD - new
-			case 5: EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "scientist/sci_pain6.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
-			case 6: EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "scientist/sci_pain7.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
-			case 7: EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "scientist/sci_pain8.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
-			case 8: EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "scientist/sci_pain9.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
-			case 9: EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "scientist/sci_pain10.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
+			case 5: UTIL_PlaySound(ENT(pev), CHAN_VOICE, "scientist/sci_pain6.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
+			case 6: UTIL_PlaySound(ENT(pev), CHAN_VOICE, "scientist/sci_pain7.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
+			case 7: UTIL_PlaySound(ENT(pev), CHAN_VOICE, "scientist/sci_pain8.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
+			case 8: UTIL_PlaySound(ENT(pev), CHAN_VOICE, "scientist/sci_pain9.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
+			case 9: UTIL_PlaySound(ENT(pev), CHAN_VOICE, "scientist/sci_pain10.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
 			}
 		}
 	}
@@ -2259,9 +2259,9 @@ void CScientist :: PainSound ( void )
 
 		switch (RANDOM_LONG(0, 2))
 		{
-		case 0: EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "scientist/sci_pain1.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
-		case 1: EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "scientist/sci_pain4.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
-		case 2: EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "scientist/sci_pain5.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
+		case 0: UTIL_PlaySound(ENT(pev), CHAN_VOICE, "scientist/sci_pain1.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
+		case 1: UTIL_PlaySound(ENT(pev), CHAN_VOICE, "scientist/sci_pain4.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
+		case 2: UTIL_PlaySound(ENT(pev), CHAN_VOICE, "scientist/sci_pain5.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
 		}
 	}
 
@@ -2277,7 +2277,7 @@ void CScientist :: DeathSound ( void )
 	//PainSound();
 	
 	if(explodeDelay == -1){
-		EMIT_SOUND_FILTERED( edict(), CHAN_VOICE, RANDOM_SOUND_ARRAY(pDeathSounds), 1.0, ATTN_NORM, 0, GetVoicePitch() );
+		UTIL_PlaySound( edict(), CHAN_VOICE, RANDOM_SOUND_ARRAY(pDeathSounds), 1.0, ATTN_NORM, 0, GetVoicePitch() );
 	}
 }
 
@@ -3993,7 +3993,7 @@ void CScientist::HandleEventQueueEvent(int arg_eventID){
 					pHurt->pev->velocity = pHurt->pev->velocity - gpGlobals->v_right * 40;
 				}
 				// Play a random attack hit sound
-				EMIT_SOUND_FILTERED ( ENT(pev), CHAN_WEAPON, pAttackHitSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackHitSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
+				UTIL_PlaySound( ENT(pev), CHAN_WEAPON, pAttackHitSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackHitSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
 
 				//each hit contributes to fear.  raise aggro, but each time reduces the chance of staying in aggro..
 				
@@ -4027,7 +4027,7 @@ void CScientist::HandleEventQueueEvent(int arg_eventID){
 
 			}
 			else{ // Play a random attack miss sound
-				EMIT_SOUND_FILTERED ( ENT(pev), CHAN_WEAPON, pAttackMissSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackMissSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
+				UTIL_PlaySound( ENT(pev), CHAN_WEAPON, pAttackMissSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackMissSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
 			}
 
 		break;

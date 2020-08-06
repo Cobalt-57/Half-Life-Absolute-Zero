@@ -30,16 +30,25 @@
 #include "soundent.h"
 
 
-#define ACT_T_IDLE		1010
-#define ACT_T_TAP			1020
-#define ACT_T_STRIKE		1030
-#define ACT_T_REARIDLE	1040
-
-
-//MODDD
 EASY_CVAR_EXTERN(tentacleAlertSound)
 EASY_CVAR_EXTERN(tentacleSwingSound1)
 EASY_CVAR_EXTERN(tentacleSwingSound2)
+
+
+// Wait. Custom activities in the model?  Why is that idea barely used elsewhere?
+#define ACT_T_IDLE		1010
+#define ACT_T_TAP		1020
+#define ACT_T_STRIKE	1030
+#define ACT_T_REARIDLE	1040
+
+
+// stike sounds
+#define TE_NONE -1
+#define TE_SILO 0
+#define TE_DIRT 1
+#define TE_WATER 2
+
+
 
 
 class CTentacle : public CBaseMonster
@@ -91,6 +100,8 @@ public:
 	int Level( float dz );
 	int MyLevel( void );
 	float MyHeight( void );
+	
+	
 
 	float m_flInitialYaw;
 	int m_iGoalAnim;
@@ -136,15 +147,8 @@ int CTentacle :: g_fSquirmSound;
 	LINK_ENTITY_TO_CLASS( tentacle, CTentacle );
 	
 	//no extras.
-
 #endif
 
-
-// stike sounds
-#define TE_NONE -1
-#define TE_SILO 0
-#define TE_DIRT 1
-#define TE_WATER 2
 
 const char *CTentacle::pHitSilo[] = 
 {
@@ -330,16 +334,18 @@ void CTentacle :: Precache( )
 	global_useSentenceSave = TRUE;
 	PRECACHE_SOUND("tentacle/te_sing1.wav");
 	PRECACHE_SOUND("tentacle/te_sing2.wav");
-	PRECACHE_SOUND("ambience/flies.wav");
-	PRECACHE_SOUND("ambience/squirm2.wav");
+	//PRECACHE_SOUND("ambience/flies.wav");
+	//PRECACHE_SOUND("ambience/squirm2.wav");
 
 	PRECACHE_SOUND("tentacle/te_alert1.wav");
 	PRECACHE_SOUND("tentacle/te_alert2.wav");
 	
-	//Sound file "tentacle/te_flies1.wav" is unused and practically identical to the used "ambient/flies.wav".
-	//File size is slightly different but I can't hear a difference. Delete this? Also same case for tentacle/te_squirm2 vs. ambient/squirm
-	//PRECACHE_SOUND("tentacle/te_flies1.wav");
-	//PRECACHE_SOUND("tentacle/te_squirm2.wav");
+	// Sound file "tentacle/te_flies1.wav" is unused and practically identical to the used "ambient/flies.wav".
+	// File size is slightly different but I can't hear a difference. Delete this? Also same case for tentacle/te_squirm2 vs. ambient/squirm
+	// SINCE BEEN SWAPPED.  Instead, the 'tentacle/' ones will be played and the 'ambience' ones won't be.  Eh why not,
+	// seems really out of place to borrow from ambience/ only twice like that anyway.
+	PRECACHE_SOUND("tentacle/te_flies1.wav");
+	PRECACHE_SOUND("tentacle/te_squirm2.wav");
 	
 	PRECACHE_SOUND("tentacle/te_move1.wav");
 	PRECACHE_SOUND("tentacle/te_move2.wav");
@@ -350,7 +356,9 @@ void CTentacle :: Precache( )
 	PRECACHE_SOUND("tentacle/te_swing1.wav");
 	PRECACHE_SOUND("tentacle/te_swing2.wav");
 
-	PRECACHE_SOUND_ARRAY( pHitSilo );
+	// These are client sounds and so avoid the soundsentencesave system.  Precache unconditionally.
+	PRECACHE_SOUND_ARRAY_SKIPSAVE( pHitSilo);
+	
 	PRECACHE_SOUND_ARRAY( pHitDirt );
 	PRECACHE_SOUND_ARRAY( pHitWater );
 	global_useSentenceSave = FALSE;
@@ -561,7 +569,7 @@ void CTentacle :: Cycle( void )
 			}
 			
 			if(EASY_CVAR_GET(tentacleAlertSound) >= 0){
-				UTIL_EmitAmbientSound_Filtered(ENT(pev), pev->origin + Vector( 0, 0, MyHeight()), sound, 1.0, ATTN_NORM, 0, 100);
+				UTIL_EmitAmbientSound(ENT(pev), pev->origin + Vector( 0, 0, MyHeight()), sound, 1.0, ATTN_NORM, 0, RANDOM_LONG(96, 102), TRUE);
 			}
 		}
 		m_flSoundTime = gpGlobals->time + RANDOM_FLOAT( 5.0, 10.0 );
@@ -658,7 +666,7 @@ void CTentacle :: Cycle( void )
 					case 1: sound = "tentacle/te_sing2.wav"; break;
 					}
 
-					EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, sound, 1.0, ATTN_NORM);
+					UTIL_PlaySound(ENT(pev), CHAN_VOICE, sound, 1.0, ATTN_NORM, 0, RANDOM_LONG(98, 102), TRUE);
 
 					m_flNextSong = gpGlobals->time + RANDOM_FLOAT( 10, 20 );
 				}
@@ -853,7 +861,8 @@ void CTentacle :: DieThink( void )
 void CTentacle :: HandleAnimEvent( MonsterEvent_t *pEvent )
 {
 	char *sound;
-
+	
+	//MODDD - little pitch randomization added to these sounds.
 	switch( pEvent->event )
 	{
 	case 1:	// bang 
@@ -868,15 +877,15 @@ void CTentacle :: HandleAnimEvent( MonsterEvent_t *pEvent )
 			switch( m_iTapSound )
 			{
 			case TE_SILO:
-				UTIL_EmitAmbientSound_Filtered(ENT(pev), vecSrc, RANDOM_SOUND_ARRAY( pHitSilo ), 1.0, ATTN_NORM, 0, 100);
+				UTIL_EmitAmbientSound(ENT(pev), vecSrc, RANDOM_SOUND_ARRAY( pHitSilo ), 1.0, ATTN_NORM, 0, RANDOM_LONG(97, 101), TRUE);
 				break;
 			case TE_NONE:
 				break;
 			case TE_DIRT:
-				UTIL_EmitAmbientSound_Filtered(ENT(pev), vecSrc, RANDOM_SOUND_ARRAY( pHitDirt ), 1.0, ATTN_NORM, 0, 100);
+				UTIL_EmitAmbientSound(ENT(pev), vecSrc, RANDOM_SOUND_ARRAY( pHitDirt ), 1.0, ATTN_NORM, 0, RANDOM_LONG(97, 101), FALSE);
 				break;
 			case TE_WATER:
-				UTIL_EmitAmbientSound_Filtered(ENT(pev), vecSrc, RANDOM_SOUND_ARRAY( pHitWater ), 1.0, ATTN_NORM, 0, 100);
+				UTIL_EmitAmbientSound(ENT(pev), vecSrc, RANDOM_SOUND_ARRAY( pHitWater ), 1.0, ATTN_NORM, 0, RANDOM_LONG(97, 101), FALSE);
 				break;
 			}
           gpGlobals->force_retouch++;
@@ -886,7 +895,7 @@ void CTentacle :: HandleAnimEvent( MonsterEvent_t *pEvent )
 	case 3: // start killing swing
 		m_iHitDmg = 200;
 		if(EASY_CVAR_GET(tentacleSwingSound1) >= 0){
-			UTIL_EmitAmbientSound_Filtered(ENT(pev), pev->origin + Vector( 0, 0, MyHeight()), "tentacle/te_swing1.wav", 1.0, ATTN_NORM, 0, 100);
+			UTIL_EmitAmbientSound(ENT(pev), pev->origin + Vector( 0, 0, MyHeight()), "tentacle/te_swing1.wav", 1.0, ATTN_NORM, 0, RANDOM_LONG(97, 101), TRUE);
 		}
 		break;
 
@@ -896,7 +905,7 @@ void CTentacle :: HandleAnimEvent( MonsterEvent_t *pEvent )
 
 	case 5: // just "whoosh" sound
 		if(EASY_CVAR_GET(tentacleSwingSound2) >= 0){
-			UTIL_EmitAmbientSound_Filtered(ENT(pev), pev->origin + Vector( 0, 0, MyHeight()), "tentacle/te_swing2.wav", 1.0, ATTN_NORM, 0, 100);
+			UTIL_EmitAmbientSound(ENT(pev), pev->origin + Vector( 0, 0, MyHeight()), "tentacle/te_swing2.wav", 1.0, ATTN_NORM, 0, RANDOM_LONG(97, 101), TRUE);
 		}
 		break;
 
@@ -912,15 +921,15 @@ void CTentacle :: HandleAnimEvent( MonsterEvent_t *pEvent )
 			switch( m_iTapSound )
 			{
 			case TE_SILO:
-				UTIL_EmitAmbientSound_Filtered(ENT(pev), vecSrc, RANDOM_SOUND_ARRAY( pHitSilo ), flVol, ATTN_NORM, 0, 100);
+				UTIL_EmitAmbientSound(ENT(pev), vecSrc, RANDOM_SOUND_ARRAY( pHitSilo ), flVol, ATTN_NORM, 0, RANDOM_LONG(99, 103), TRUE);
 				break;
 			case TE_NONE:
 				break;
 			case TE_DIRT:
-				UTIL_EmitAmbientSound_Filtered(ENT(pev), vecSrc, RANDOM_SOUND_ARRAY( pHitDirt ), flVol, ATTN_NORM, 0, 100);
+				UTIL_EmitAmbientSound(ENT(pev), vecSrc, RANDOM_SOUND_ARRAY( pHitDirt ), flVol, ATTN_NORM, 0, RANDOM_LONG(99, 103), FALSE);
 				break;
 			case TE_WATER:
-				UTIL_EmitAmbientSound_Filtered(ENT(pev), vecSrc, RANDOM_SOUND_ARRAY( pHitWater ), flVol, ATTN_NORM, 0, 100);
+				UTIL_EmitAmbientSound(ENT(pev), vecSrc, RANDOM_SOUND_ARRAY( pHitWater ), flVol, ATTN_NORM, 0, RANDOM_LONG(99, 103), FALSE);
 				break;
 			}
 		}
@@ -934,7 +943,7 @@ void CTentacle :: HandleAnimEvent( MonsterEvent_t *pEvent )
 		case 1: sound = "tentacle/te_roar2.wav"; break;
 		}
 
-		UTIL_EmitAmbientSound_Filtered(ENT(pev), pev->origin + Vector( 0, 0, MyHeight()), sound, 1.0, ATTN_NORM, 0, 100);
+		UTIL_EmitAmbientSound(ENT(pev), pev->origin + Vector( 0, 0, MyHeight()), sound, 1.0, ATTN_NORM, 0, RANDOM_LONG(96, 100), TRUE);
 		break;
 
 	case 8: // search
@@ -944,7 +953,7 @@ void CTentacle :: HandleAnimEvent( MonsterEvent_t *pEvent )
 		case 1: sound = "tentacle/te_search2.wav"; break;
 		}
 
-		UTIL_EmitAmbientSound_Filtered(ENT(pev), pev->origin + Vector( 0, 0, MyHeight()), sound, 1.0, ATTN_NORM, 0, 100);
+		UTIL_EmitAmbientSound(ENT(pev), pev->origin + Vector( 0, 0, MyHeight()), sound, 1.0, ATTN_NORM, 0, RANDOM_LONG(96, 100), TRUE);
 		break;
 
 	case 9: // swing
@@ -954,7 +963,7 @@ void CTentacle :: HandleAnimEvent( MonsterEvent_t *pEvent )
 		case 1: sound = "tentacle/te_move2.wav"; break;
 		}
 
-		UTIL_EmitAmbientSound_Filtered(ENT(pev), pev->origin + Vector( 0, 0, MyHeight()), sound, 1.0, ATTN_NORM, 0, 100);
+		UTIL_EmitAmbientSound(ENT(pev), pev->origin + Vector( 0, 0, MyHeight()), sound, 1.0, ATTN_NORM, 0, RANDOM_LONG(96, 103), TRUE);
 		break;
 
 	default:
@@ -973,13 +982,15 @@ void CTentacle :: Start( void )
 
 	if ( !g_fFlySound )
 	{
-		EMIT_SOUND_FILTERED (ENT(pev), CHAN_BODY, "ambience/flies.wav", 1, ATTN_NORM );
+		//UTIL_PlaySound(ENT(pev), CHAN_BODY, "ambience/flies.wav", 1, ATTN_NORM, 0, 100, TRUE );
+		UTIL_PlaySound(ENT(pev), CHAN_BODY, "tentacle/te_flies1.wav", 1, ATTN_NORM, 0, 100, TRUE );
 		g_fFlySound = TRUE;
 //		pev->nextthink = gpGlobals-> time + 0.1;
 	}
 	else if ( !g_fSquirmSound )
 	{
-		EMIT_SOUND_FILTERED (ENT(pev), CHAN_BODY, "ambience/squirm2.wav", 1, ATTN_NORM );
+		//UTIL_PlaySound(ENT(pev), CHAN_BODY, "ambience/squirm2.wav", 1, ATTN_NORM, 0, 100, TRUE );
+		UTIL_PlaySound(ENT(pev), CHAN_BODY, "tentacle/te_squirm2.wav", 1, ATTN_NORM, 0, RANDOM_LONG(98, 101), TRUE );
 		g_fSquirmSound = TRUE;
 	}
 	

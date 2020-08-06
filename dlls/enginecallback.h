@@ -133,7 +133,11 @@ extern void UTIL_PRECACHESOUND(char* path, BOOL skipSave);
 #define GETENTITYILLUM	(*g_engfuncs.pfnGetEntityIllum)
 #define FIND_ENTITY_IN_SPHERE		(*g_engfuncs.pfnFindEntityInSphere)
 #define FIND_CLIENT_IN_PVS			(*g_engfuncs.pfnFindClientInPVS)
-#define EMIT_AMBIENT_SOUND			(*g_engfuncs.pfnEmitAmbientSound)
+
+//MODDD - used to be EMIT_AMBIENT_SOUND, changed to resemble EMIT_SOUND_DYN
+// (engine call was the one with a '2', plain one was a normal method that still did some processing first)
+#define EMIT_AMBIENT_SOUND2			(*g_engfuncs.pfnEmitAmbientSound)
+
 #define GET_MODEL_PTR				(*g_engfuncs.pfnGetModelPtr)
 #define REG_USER_MSG				(*g_engfuncs.pfnRegUserMsg)
 #define GET_BONE_POSITION			(*g_engfuncs.pfnGetBonePosition)

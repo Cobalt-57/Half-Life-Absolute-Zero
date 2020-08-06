@@ -201,11 +201,11 @@ GENERATE_KILLED_IMPLEMENTATION(CRoach)
 	//random sound
 	if ( RANDOM_LONG(0,4) == 1 )
 	{
-		EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "roach/rch_die.wav", 0.8, ATTN_NORM, 0, 80 + RANDOM_LONG(0,39) );
+		UTIL_PlaySound(ENT(pev), CHAN_VOICE, "roach/rch_die.wav", 0.8, ATTN_NORM, 0, 80 + RANDOM_LONG(0,39) );
 	}
 	else
 	{
-		EMIT_SOUND_FILTERED(ENT(pev), CHAN_BODY, "roach/rch_smash.wav", 0.7, ATTN_NORM, 0, 80 + RANDOM_LONG(0,39) );
+		UTIL_PlaySound(ENT(pev), CHAN_BODY, "roach/rch_smash.wav", 0.7, ATTN_NORM, 0, 80 + RANDOM_LONG(0,39) );
 	}
 	
 	CSoundEnt::InsertSound ( bits_SOUND_WORLD, pev->origin, 128, 1 );
@@ -376,7 +376,7 @@ void CRoach :: PickNewDest ( int iCondition )
 	if ( RANDOM_LONG(0,9) == 1 )
 	{
 		// every once in a while, a roach will play a skitter sound when they decide to run
-		EMIT_SOUND_FILTERED(ENT(pev), CHAN_BODY, "roach/rch_walk.wav", 1, ATTN_NORM, 0, 80 + RANDOM_LONG(0,39) );
+		UTIL_PlaySound(ENT(pev), CHAN_BODY, "roach/rch_walk.wav", 1, ATTN_NORM, 0, 80 + RANDOM_LONG(0,39) );
 	}
 }
 

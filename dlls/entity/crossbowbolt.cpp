@@ -315,9 +315,9 @@ void CCrossbowBolt::BoltTouch( CBaseEntity *pOther )
 			switch (RANDOM_LONG(0, 1))
 			{
 			case 0:
-				EMIT_SOUND_FILTERED(ENT(pev), CHAN_BODY, "weapons/xbow_hitbod1.wav", 1, ATTN_NORM, 0, 100, FALSE); break;
+				UTIL_PlaySound(ENT(pev), CHAN_BODY, "weapons/xbow_hitbod1.wav", 1, ATTN_NORM, 0, 100, FALSE); break;
 			case 1:
-				EMIT_SOUND_FILTERED(ENT(pev), CHAN_BODY, "weapons/xbow_hitbod2.wav", 1, ATTN_NORM, 0, 100, FALSE); break;
+				UTIL_PlaySound(ENT(pev), CHAN_BODY, "weapons/xbow_hitbod2.wav", 1, ATTN_NORM, 0, 100, FALSE); break;
 			}
 		}
 		else {

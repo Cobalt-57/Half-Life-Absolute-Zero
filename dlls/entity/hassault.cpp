@@ -935,7 +935,7 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CHAssault)
 
 	if (HasConditions(bits_COND_HEAVY_DAMAGE)) {
 		int pitch = randomValueInt(m_voicePitch - 3, m_voicePitch + 5);
-		EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "hgrunt/gr_cover2.wav", 1.0, ATTN_NORM - 0.5, 0, pitch);
+		UTIL_PlaySound(ENT(pev), CHAN_VOICE, "hgrunt/gr_cover2.wav", 1.0, ATTN_NORM - 0.5, 0, pitch);
 	}
 
 	return eck;
@@ -947,7 +947,7 @@ void CHAssault :: PainSound( void )
 	int pitch = randomValueInt(m_voicePitch - 4, m_voicePitch + 4);
 
 	if (RANDOM_LONG(0,5) < 2)
-		EMIT_SOUND_FILTERED ( ENT(pev), CHAN_VOICE, pPainSounds[ RANDOM_LONG(0,ARRAYSIZE(pPainSounds)-1) ], 1.0, ATTN_NORM, 0, pitch );
+		UTIL_PlaySound( ENT(pev), CHAN_VOICE, pPainSounds[ RANDOM_LONG(0,ARRAYSIZE(pPainSounds)-1) ], 1.0, ATTN_NORM, 0, pitch );
 }
 
 void CHAssault :: AlertSound( void )
@@ -963,17 +963,17 @@ void CHAssault :: AlertSound( void )
 
 	if (InSquad()) {
 		if (RANDOM_FLOAT(0, 1) <= 0.6) {
-			EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "hgrunt/gr_squadform.wav", 1.0, ATTN_NORM - 0.23, 0, pitch);
+			UTIL_PlaySound(ENT(pev), CHAN_VOICE, "hgrunt/gr_squadform.wav", 1.0, ATTN_NORM - 0.23, 0, pitch);
 		}
 		else {
 			//same as usual
 			SENTENCEG_PlayRndSz(ENT(pev), "HG_ALERT", 1, ATTN_NORM - 0.23, 0, pitch);
-			//EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, pAlertSounds[RANDOM_LONG(0, ARRAYSIZE(pAlertSounds) - 1)], 1.0, ATTN_NORM - 0.2, 0, pitch);
+			//UTIL_PlaySound(ENT(pev), CHAN_VOICE, pAlertSounds[RANDOM_LONG(0, ARRAYSIZE(pAlertSounds) - 1)], 1.0, ATTN_NORM - 0.2, 0, pitch);
 		}
 	}
 	else {
 		SENTENCEG_PlayRndSz(ENT(pev), "HG_ALERT", 1, ATTN_NORM - 0.23, 0, pitch);
-		//EMIT_SOUND_FILTERED ( ENT(pev), CHAN_VOICE, pAlertSounds[ RANDOM_LONG(0,ARRAYSIZE(pAlertSounds)-1) ], 1.0, ATTN_NORM-0.2, 0, pitch );
+		//UTIL_PlaySound( ENT(pev), CHAN_VOICE, pAlertSounds[ RANDOM_LONG(0,ARRAYSIZE(pAlertSounds)-1) ], 1.0, ATTN_NORM-0.2, 0, pitch );
 	}
 }
 
@@ -984,13 +984,13 @@ void CHAssault :: IdleSound( void )
 
 	// Play a random idle sound
 	//...if we add different direct sounds, can randomly choose between this and the HG_IDLE sentence.
-	//EMIT_SOUND_FILTERED ( ENT(pev), CHAN_VOICE, pIdleSounds[ RANDOM_LONG(0,ARRAYSIZE(pIdleSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
+	//UTIL_PlaySound( ENT(pev), CHAN_VOICE, pIdleSounds[ RANDOM_LONG(0,ARRAYSIZE(pIdleSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
 
 	//mODDD - this instead??  depend on being in a squad? I don't know.
 	//SENTENCEG_PlayRndSz(ENT(pev), "HG_IDLE", HASSAULT_SENTENCE_VOLUME, ATTN_NORM, 0, pitch);
 	
 	// also less attenuation, go further.
-	EMIT_SOUND_FILTERED(ENT(pev), CHAN_WEAPON, pIdleSounds[RANDOM_LONG(0, ARRAYSIZE(pIdleSounds) - 1)], 1.0, ATTN_NORM - 0.21, 0, 100 + RANDOM_LONG(-8, 8));
+	UTIL_PlaySound(ENT(pev), CHAN_WEAPON, pIdleSounds[RANDOM_LONG(0, ARRAYSIZE(pIdleSounds) - 1)], 1.0, ATTN_NORM - 0.21, 0, 100 + RANDOM_LONG(-8, 8));
 
 }
 
@@ -1002,13 +1002,13 @@ void CHAssault :: DeathSound ( void )
 	switch ( RANDOM_LONG(0,2) )
 	{
 	case 0:	
-		EMIT_SOUND_FILTERED( ENT(pev), CHAN_VOICE, "hgrunt/gr_die1.wav", 1, ATTN_IDLE, 0, pitch );
+		UTIL_PlaySound( ENT(pev), CHAN_VOICE, "hgrunt/gr_die1.wav", 1, ATTN_IDLE, 0, pitch );
 		break;
 	case 1:
-		EMIT_SOUND_FILTERED( ENT(pev), CHAN_VOICE, "hgrunt/gr_die2.wav", 1, ATTN_IDLE, 0, pitch );
+		UTIL_PlaySound( ENT(pev), CHAN_VOICE, "hgrunt/gr_die2.wav", 1, ATTN_IDLE, 0, pitch );
 		break;
 	case 2:
-		EMIT_SOUND_FILTERED( ENT(pev), CHAN_VOICE, "hgrunt/gr_die3.wav", 1, ATTN_IDLE, 0, pitch );
+		UTIL_PlaySound( ENT(pev), CHAN_VOICE, "hgrunt/gr_die3.wav", 1, ATTN_IDLE, 0, pitch );
 		break;
 	}
 }
@@ -1018,7 +1018,7 @@ void CHAssault :: DeathSound ( void )
 void CHAssault :: AttackSound( void )
 {
 	// Play a random attack sound
-	EMIT_SOUND_FILTERED ( ENT(pev), CHAN_VOICE, pAttackSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
+	UTIL_PlaySound( ENT(pev), CHAN_VOICE, pAttackSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
 }
 
 
@@ -1042,8 +1042,8 @@ void CHAssault::HandleEventQueueEvent(int arg_eventID){
 
 			pHurt->TakeDamage( pev, pev, gSkillData.hassaultDmgMelee*0.6, DMG_CLUB );
 
-			//EMIT_SOUND_FILTERED ( ENT(pev), CHAN_WEAPON, pAttackHitSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackHitSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
-			EMIT_SOUND_FILTERED ( ENT(pev), CHAN_WEAPON, pAttackHitSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackHitSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
+			//UTIL_PlaySound( ENT(pev), CHAN_WEAPON, pAttackHitSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackHitSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
+			UTIL_PlaySound( ENT(pev), CHAN_WEAPON, pAttackHitSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackHitSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
 							
 		}else{
 			playStandardMeleeAttackMissSound();
@@ -1067,7 +1067,7 @@ void CHAssault::HandleEventQueueEvent(int arg_eventID){
 			}
 
 			pHurt->TakeDamage( pev, pev, gSkillData.hassaultDmgMelee, DMG_CLUB );
-			EMIT_SOUND_FILTERED ( ENT(pev), CHAN_WEAPON, pAttackHitSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackHitSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
+			UTIL_PlaySound( ENT(pev), CHAN_WEAPON, pAttackHitSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackHitSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
 							
 		}else{
 			playStandardMeleeAttackMissSound();
@@ -1293,40 +1293,17 @@ void CHAssault :: Precache()
 	PRECACHE_SOUND("hgrunt/gr_cover2.wav");
 	
 
-
-
-	//already covered in "pAttackMissSounds".  Check it.
+	// already covered in "pAttackMissSounds".  Check it.
 	//PRECACHE_SOUND("zombie/claw_miss2.wav");// because we use the basemonster SWIPE animation event
+	// zombie strike's precached by the hgrunt already.
+	//precacheStandardMeleeAttackMissSounds();
 
-	//zombie strike's precached by the hgrunt already.
-	//precacheStandardMeleeAttackMissSounds(); //MODDD - lazy lazy.
-
-
-	
-	for (i = 0; i < ARRAYSIZE(pIdleSounds); i++)
-		PRECACHE_SOUND((char*)pIdleSounds[i]);
-
-	for ( i = 0; i < ARRAYSIZE( pAttackHitSounds ); i++ )
-		PRECACHE_SOUND((char *)pAttackHitSounds[i]);
-
-	for ( i = 0; i < ARRAYSIZE( pAttackMissSounds ); i++ )
-		PRECACHE_SOUND((char *)pAttackMissSounds[i]);
-
-	for ( i = 0; i < ARRAYSIZE( pAttackSounds ); i++ )
-		PRECACHE_SOUND((char *)pAttackSounds[i]);
-
-	//nothing in there. Whatever.
-	//for ( i = 0; i < ARRAYSIZE( pIdleSounds ); i++ )
-	//	PRECACHE_SOUND((char *)pIdleSounds[i]);
-
-
-
-	//for ( i = 0; i < ARRAYSIZE( pAlertSounds ); i++ )
-	//	PRECACHE_SOUND((char *)pAlertSounds[i]);
-
-	for ( i = 0; i < ARRAYSIZE( pPainSounds ); i++ )
-		PRECACHE_SOUND((char *)pPainSounds[i]);
-
+	PRECACHE_SOUND_ARRAY(pIdleSounds)
+	PRECACHE_SOUND_ARRAY(pAttackHitSounds)
+	PRECACHE_SOUND_ARRAY(pAttackMissSounds)
+	PRECACHE_SOUND_ARRAY(pAttackSounds)
+	//PRECACHE_SOUND_ARRAY(pAlertSounds)
+	PRECACHE_SOUND_ARRAY(pPainSounds)
 
 	global_useSentenceSave = FALSE;
 
@@ -1465,13 +1442,13 @@ void CHAssault :: Shoot ( void )
 		switch(RANDOM_LONG(0,2))
 		{
 			case 0:
-				EMIT_SOUND_FILTERED( ENT(pev), getChainFireChannel(), "hassault/hw_shoot1.wav", 1, ATTN_NORM, 0, 100 );
+				UTIL_PlaySound( ENT(pev), getChainFireChannel(), "hassault/hw_shoot1.wav", 1, ATTN_NORM, 0, 100 );
 			break;
 			case 1:
-				EMIT_SOUND_FILTERED( ENT(pev), getChainFireChannel(), "hassault/hw_shoot2.wav", 1, ATTN_NORM, 0, 100 );
+				UTIL_PlaySound( ENT(pev), getChainFireChannel(), "hassault/hw_shoot2.wav", 1, ATTN_NORM, 0, 100 );
 			break;
 			case 2:
-				EMIT_SOUND_FILTERED( ENT(pev), getChainFireChannel(), "hassault/hw_shoot3.wav", 1, ATTN_NORM, 0, 100 );
+				UTIL_PlaySound( ENT(pev), getChainFireChannel(), "hassault/hw_shoot3.wav", 1, ATTN_NORM, 0, 100 );
 			break;
 
 			//just to know when the idle spin is allowed to be played, if it cannot play alongside fire sounds.
@@ -1483,12 +1460,12 @@ void CHAssault :: Shoot ( void )
 		if(chainFireSoundDelay == -1 || chainFireSoundDelay <= gpGlobals->time){
 			//chainFireSoundDelay = gpGlobals->time + 2.385;
 			chainFireSoundDelay = gpGlobals->time + 2.07;
-			STOP_SOUND_FILTERED(ENT(pev), getChainFireChannel(), "hassault/hw_gun4.wav");
-			EMIT_SOUND_FILTERED(ENT(pev), getChainFireChannel(), "hassault/hw_gun4.wav", 1, ATTN_NORM, 0, 100 );
+			UTIL_StopSound(ENT(pev), getChainFireChannel(), "hassault/hw_gun4.wav");
+			UTIL_PlaySound(ENT(pev), getChainFireChannel(), "hassault/hw_gun4.wav", 1, ATTN_NORM, 0, 100 );
 			attemptStopIdleSpinSound();
 		}
 	}else if(EASY_CVAR_GET(hassaultFireSound) == 3){
-		EMIT_SOUND_FILTERED( ENT(pev), getChainFireChannel(), "hassault/hw_gun4.wav", 1, ATTN_NORM, 0, 100 );
+		UTIL_PlaySound( ENT(pev), getChainFireChannel(), "hassault/hw_gun4.wav", 1, ATTN_NORM, 0, 100 );
 		attemptStopIdleSpinSound();
 	}
 
@@ -1568,13 +1545,13 @@ void CHAssault :: ShootAtForceFireTarget ( void )
 		switch(RANDOM_LONG(0,2))
 		{
 			case 0:
-				EMIT_SOUND_FILTERED( ENT(pev), getChainFireChannel(), "hassault/hw_shoot1.wav", 1, ATTN_NORM, 0, 100 );
+				UTIL_PlaySound( ENT(pev), getChainFireChannel(), "hassault/hw_shoot1.wav", 1, ATTN_NORM, 0, 100 );
 			break;
 			case 1:
-				EMIT_SOUND_FILTERED( ENT(pev), getChainFireChannel(), "hassault/hw_shoot2.wav", 1, ATTN_NORM, 0, 100 );
+				UTIL_PlaySound( ENT(pev), getChainFireChannel(), "hassault/hw_shoot2.wav", 1, ATTN_NORM, 0, 100 );
 			break;
 			case 2:
-				EMIT_SOUND_FILTERED( ENT(pev), getChainFireChannel(), "hassault/hw_shoot3.wav", 1, ATTN_NORM, 0, 100 );
+				UTIL_PlaySound( ENT(pev), getChainFireChannel(), "hassault/hw_shoot3.wav", 1, ATTN_NORM, 0, 100 );
 			break;
 
 			//just to know when the idle spin is allowed to be played, if it cannot play alongside fire sounds.
@@ -1586,12 +1563,12 @@ void CHAssault :: ShootAtForceFireTarget ( void )
 		if(chainFireSoundDelay == -1 || chainFireSoundDelay <= gpGlobals->time){
 			//chainFireSoundDelay = gpGlobals->time + 2.385;
 			chainFireSoundDelay = gpGlobals->time + 2.07;
-			STOP_SOUND_FILTERED(ENT(pev), getChainFireChannel(), "hassault/hw_gun4.wav");
-			EMIT_SOUND_FILTERED(ENT(pev), getChainFireChannel(), "hassault/hw_gun4.wav", 1, ATTN_NORM, 0, 100 );
+			UTIL_StopSound(ENT(pev), getChainFireChannel(), "hassault/hw_gun4.wav");
+			UTIL_PlaySound(ENT(pev), getChainFireChannel(), "hassault/hw_gun4.wav", 1, ATTN_NORM, 0, 100 );
 			attemptStopIdleSpinSound();
 		}
 	}else if(EASY_CVAR_GET(hassaultFireSound) == 3){
-		EMIT_SOUND_FILTERED( ENT(pev), getChainFireChannel(), "hassault/hw_gun4.wav", 1, ATTN_NORM, 0, 100 );
+		UTIL_PlaySound( ENT(pev), getChainFireChannel(), "hassault/hw_gun4.wav", 1, ATTN_NORM, 0, 100 );
 		attemptStopIdleSpinSound();
 	}
 	
@@ -1637,7 +1614,7 @@ int CHAssault::getChainFireChannel(void){
 
 
 void CHAssault::resetChainFireSound(void){
-	STOP_SOUND_FILTERED(ENT(pev), getChainFireChannel(), "hassault/hw_gun4.wav");
+	UTIL_StopSound(ENT(pev), getChainFireChannel(), "hassault/hw_gun4.wav");
 	//EMIT_SOUND( ENT(pev), CHAN_WEAPON, "common/null.wav", 1.0, ATTN_IDLE );
 	chainFireSoundDelay = -1;
 }
@@ -1651,7 +1628,7 @@ void CHAssault::attemptStopIdleSpinSound(BOOL forceStop){
 	if(EASY_CVAR_GET(hassaultIdleSpinSound) > 0 && idleSpinSoundDelay != -1 && ((EASY_CVAR_GET(hassaultIdleSpinSound) >= 3)||forceStop) ){
 		//be safe...
 		idleSpinSoundDelay = -1;
-		STOP_SOUND_FILTERED(ENT(pev), getIdleSpinChannel(), "hassault/hw_spin.wav");
+		UTIL_StopSound(ENT(pev), getIdleSpinChannel(), "hassault/hw_spin.wav");
 	}
 }
 		
@@ -1685,17 +1662,17 @@ void CHAssault::SetActivity(Activity NewActivity){
 
 	if (NewActivity == ACT_SIGNAL1 || NewActivity == ACT_SIGNAL3) {
 		//play the sound with it
-		EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "hgrunt/gr_squadform.wav", 1.0, ATTN_NORM - 0.23, 0, pitch);
+		UTIL_PlaySound(ENT(pev), CHAN_VOICE, "hgrunt/gr_squadform.wav", 1.0, ATTN_NORM - 0.23, 0, pitch);
 	}
 	else if (NewActivity == ACT_SIGNAL2) {   //flank_signal"
 		//require a 60% chance
 		if (RANDOM_FLOAT(0, 1) <= 0.6) {
-			EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "hgrunt/gr_squadform.wav", 1.0, ATTN_NORM - 0.23, 0, pitch);
+			UTIL_PlaySound(ENT(pev), CHAN_VOICE, "hgrunt/gr_squadform.wav", 1.0, ATTN_NORM - 0.23, 0, pitch);
 		}
 		else if(RANDOM_FLOAT(0, 1) <= 0.8) {
 			//same as usual
 			SENTENCEG_PlayRndSz(ENT(pev), "HG_ALERT", 1, ATTN_NORM - 0.23, 0, pitch);
-			//EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, pAlertSounds[RANDOM_LONG(0, ARRAYSIZE(pAlertSounds) - 1)], 1.0, ATTN_NORM - 0.2, 0, pitch);
+			//UTIL_PlaySound(ENT(pev), CHAN_VOICE, pAlertSounds[RANDOM_LONG(0, ARRAYSIZE(pAlertSounds) - 1)], 1.0, ATTN_NORM - 0.2, 0, pitch);
 		}
 	}
 
@@ -1953,7 +1930,7 @@ void CHAssault :: StartTask ( Task_t *pTask ){
 		
 		if(spinuptime == -1){
 			//aren't going to rely on a previous spin?  Then start spinning.
-			EMIT_SOUND_FILTERED( ENT(pev), getSpinUpDownChannel(), "hassault/hw_spinup.wav", 1, ATTN_NORM, 0, 100 );
+			UTIL_PlaySound( ENT(pev), getSpinUpDownChannel(), "hassault/hw_spinup.wav", 1, ATTN_NORM, 0, 100 );
 
 
 			//OLD FORCE FREEZE FRAME LOCATION
@@ -2997,9 +2974,9 @@ Schedule_t* CHAssault::GetScheduleOfType(int Type){
 //So they must be explicitly stopped.
 //Why can't sounds looping automatically be a setting of its own in script? No idea.
 void CHAssault::onDelete(void){
-	STOP_SOUND_FILTERED(ENT(pev), getIdleSpinChannel(), "hassault/hw_spin.wav");
-	STOP_SOUND_FILTERED(ENT(pev), getIdleSpinChannel(), "hassault/hw_spindown.wav");
-	STOP_SOUND_FILTERED(ENT(pev), getIdleSpinChannel(), "hassault/hw_spinup.wav");
+	UTIL_StopSound(ENT(pev), getIdleSpinChannel(), "hassault/hw_spin.wav");
+	UTIL_StopSound(ENT(pev), getIdleSpinChannel(), "hassault/hw_spindown.wav");
+	UTIL_StopSound(ENT(pev), getIdleSpinChannel(), "hassault/hw_spinup.wav");
 }
 
 
@@ -3012,9 +2989,9 @@ GENERATE_KILLED_IMPLEMENTATION(CHAssault){
 
 		//force it to stop just in case...
 		//stopIdleSpinSoundForever = TRUE;
-		STOP_SOUND_FILTERED(ENT(pev), getIdleSpinChannel(), "hassault/hw_spin.wav");
-		STOP_SOUND_FILTERED(ENT(pev), getIdleSpinChannel(), "hassault/hw_spindown.wav");
-		STOP_SOUND_FILTERED(ENT(pev), getIdleSpinChannel(), "hassault/hw_spinup.wav");
+		UTIL_StopSound(ENT(pev), getIdleSpinChannel(), "hassault/hw_spin.wav");
+		UTIL_StopSound(ENT(pev), getIdleSpinChannel(), "hassault/hw_spindown.wav");
+		UTIL_StopSound(ENT(pev), getIdleSpinChannel(), "hassault/hw_spinup.wav");
 		if(EASY_CVAR_GET(hassaultFireSound) >= 2){
 			resetChainFireSound();
 		}
@@ -3025,7 +3002,7 @@ GENERATE_KILLED_IMPLEMENTATION(CHAssault){
 
 		//force it to stop just in case...
 		//stopIdleSpinSoundForever = TRUE;
-		STOP_SOUND_FILTERED(ENT(pev), getIdleSpinChannel(), "hassault/hw_spin.wav");
+		UTIL_StopSound(ENT(pev), getIdleSpinChannel(), "hassault/hw_spin.wav");
 
 		if(EASY_CVAR_GET(hassaultFireSound) >= 2){
 			resetChainFireSound();
@@ -3221,13 +3198,13 @@ void CHAssault :: MonsterThink ( void )
 	}
 
 	if(spinuptimeremain != -1){
-		//EMIT_SOUND_FILTERED( ENT(pev), CHAN_WEAPON, "hassault/hw_spin.wav", 1, ATTN_NORM, 0, 100 );
+		//UTIL_PlaySound( ENT(pev), CHAN_WEAPON, "hassault/hw_spin.wav", 1, ATTN_NORM, 0, 100 );
 		
 		//could do  " || m_pSchedule == slDie ",  not as reliable for sound though.
 		if(spinuptimeremain <= gpGlobals->time || m_pSchedule == slDie){
 				//we're bored.  Play unspin.   Know this means we can try to scout where the enemy is.
-				STOP_SOUND_FILTERED(ENT(pev), getIdleSpinChannel(), "hassault/hw_spin.wav");
-				EMIT_SOUND_FILTERED( ENT(pev), getSpinUpDownChannel(), "hassault/hw_spindown.wav", 1, ATTN_NORM, 0, 100 );
+				UTIL_StopSound(ENT(pev), getIdleSpinChannel(), "hassault/hw_spin.wav");
+				UTIL_PlaySound( ENT(pev), getSpinUpDownChannel(), "hassault/hw_spindown.wav", 1, ATTN_NORM, 0, 100 );
 				spinuptimeremain = -1;
 				spinuptime = -1;
 				
@@ -3253,24 +3230,24 @@ void CHAssault :: MonsterThink ( void )
 						//Uh, wow.  This sound automatically loops, all on its own.  Would not guess this in 1 million years.
 						//How in the Hell...             Yea, guess how long it took to figure that $#!% out.
 						//Unsure if this can be stopped or interrupted, so still pumping it out as usual.  The "Stop" further below than this is effective.
-						STOP_SOUND_FILTERED(ENT(pev), getIdleSpinChannel(), "hassault/hw_spin.wav");
-						EMIT_SOUND_FILTERED(ENT(pev), getIdleSpinChannel(), "hassault/hw_spin.wav", 1, ATTN_NORM, 0, 100 );
+						UTIL_StopSound(ENT(pev), getIdleSpinChannel(), "hassault/hw_spin.wav");
+						UTIL_PlaySound(ENT(pev), getIdleSpinChannel(), "hassault/hw_spin.wav", 1, ATTN_NORM, 0, 100 );
 					}
 					//}
 				}else if(EASY_CVAR_GET(hassaultIdleSpinSound) == 2){
-					EMIT_SOUND_FILTERED(ENT(pev), getIdleSpinChannel(), "hassault/hw_spin.wav", 1, ATTN_NORM, 0, 100 );
+					UTIL_PlaySound(ENT(pev), getIdleSpinChannel(), "hassault/hw_spin.wav", 1, ATTN_NORM, 0, 100 );
 				}else if(EASY_CVAR_GET(hassaultIdleSpinSound) == 3){
 					
 					if(chainFireSoundDelay <= gpGlobals->time){
 						if(idleSpinSoundDelay == -1 || idleSpinSoundDelay <= gpGlobals->time){
 							idleSpinSoundDelay = gpGlobals->time + 0.214;
-							STOP_SOUND_FILTERED(ENT(pev), getIdleSpinChannel(), "hassault/hw_spin.wav");
-							EMIT_SOUND_FILTERED(ENT(pev), getIdleSpinChannel(), "hassault/hw_spin.wav", 1, ATTN_NORM, 0, 100 );
+							UTIL_StopSound(ENT(pev), getIdleSpinChannel(), "hassault/hw_spin.wav");
+							UTIL_PlaySound(ENT(pev), getIdleSpinChannel(), "hassault/hw_spin.wav", 1, ATTN_NORM, 0, 100 );
 						}
 					}
 				}else if(EASY_CVAR_GET(hassaultIdleSpinSound) == 4){
 					if(chainFireSoundDelay <= gpGlobals->time){
-						EMIT_SOUND_FILTERED(ENT(pev), getIdleSpinChannel(), "hassault/hw_spin.wav", 1, ATTN_NORM, 0, 100 );
+						UTIL_PlaySound(ENT(pev), getIdleSpinChannel(), "hassault/hw_spin.wav", 1, ATTN_NORM, 0, 100 );
 					}
 				}
 			}

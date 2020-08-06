@@ -310,7 +310,7 @@ void CMortar::MortarExplode( void )
 
 #if 0
 	int pitch = RANDOM_LONG(95,124);
-	EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "weapons/mortarhit.wav", 1.0, 0.55, 0, pitch, TRUE);
+	UTIL_PlaySound(ENT(pev), CHAN_VOICE, "weapons/mortarhit.wav", 1.0, 0.55, 0, pitch, TRUE);
 
 	// ForceSound( SNDRADIUS_MP5, bits_SOUND_COMBAT );
 

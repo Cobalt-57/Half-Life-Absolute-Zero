@@ -2621,7 +2621,7 @@ void CHGrunt :: HandleAnimEvent( MonsterEvent_t *pEvent )
 		break;
 
 		case HGRUNT_AE_RELOAD:
-			EMIT_SOUND_FILTERED( ENT(pev), CHAN_WEAPON, "hgrunt/gr_reload1.wav", 1, ATTN_NORM );
+			UTIL_PlaySound( ENT(pev), CHAN_WEAPON, "hgrunt/gr_reload1.wav", 1, ATTN_NORM );
 			m_cAmmoLoaded = getClipSize();
 			ClearConditions(bits_COND_NO_AMMO_LOADED);
 		break;
@@ -2645,7 +2645,7 @@ void CHGrunt :: HandleAnimEvent( MonsterEvent_t *pEvent )
 			// Under FORCE_MP5, no mp5 grenades unless they are allowed.
 			if(EASY_CVAR_GET(gruntsCanHaveMP5Grenade) == 1){
 #endif
-				EMIT_SOUND_FILTERED(ENT(pev), CHAN_WEAPON, "weapons/glauncher.wav", 0.8, ATTN_NORM, 0, 100, FALSE);
+				UTIL_PlaySound(ENT(pev), CHAN_WEAPON, "weapons/glauncher.wav", 0.8, ATTN_NORM, 0, 100, FALSE);
 				CGrenade::ShootContact( pev, GetGunPosition(), m_vecTossVelocity, gSkillData.plrDmgM203Grenade );
 				m_fThrowGrenade = FALSE;
 				if (g_iSkillLevel == SKILL_HARD){
@@ -2683,11 +2683,11 @@ void CHGrunt :: HandleAnimEvent( MonsterEvent_t *pEvent )
 			// the first round of the three round burst plays the sound and puts a sound in the world sound list.
 			if ( RANDOM_LONG(0,1) )
 			{
-				EMIT_SOUND_FILTERED( ENT(pev), CHAN_WEAPON, "hgrunt/gr_mgun1.wav", 1, ATTN_NORM );
+				UTIL_PlaySound( ENT(pev), CHAN_WEAPON, "hgrunt/gr_mgun1.wav", 1, ATTN_NORM );
 			}
 			else
 			{
-				EMIT_SOUND_FILTERED( ENT(pev), CHAN_WEAPON, "hgrunt/gr_mgun2.wav", 1, ATTN_NORM );
+				UTIL_PlaySound( ENT(pev), CHAN_WEAPON, "hgrunt/gr_mgun2.wav", 1, ATTN_NORM );
 			}
 #else
 			if ( FBitSet( pev->weapons, HGRUNT_9MMAR ))
@@ -2697,18 +2697,18 @@ void CHGrunt :: HandleAnimEvent( MonsterEvent_t *pEvent )
 				// the first round of the three round burst plays the sound and puts a sound in the world sound list.
 				if ( RANDOM_LONG(0,1) )
 				{
-					EMIT_SOUND_FILTERED( ENT(pev), CHAN_WEAPON, "hgrunt/gr_mgun1.wav", 1, ATTN_NORM );
+					UTIL_PlaySound( ENT(pev), CHAN_WEAPON, "hgrunt/gr_mgun1.wav", 1, ATTN_NORM );
 				}
 				else
 				{
-					EMIT_SOUND_FILTERED( ENT(pev), CHAN_WEAPON, "hgrunt/gr_mgun2.wav", 1, ATTN_NORM );
+					UTIL_PlaySound( ENT(pev), CHAN_WEAPON, "hgrunt/gr_mgun2.wav", 1, ATTN_NORM );
 				}
 			}
 			else
 			{
 				Shotgun( );
 
-				EMIT_SOUND_FILTERED(ENT(pev), CHAN_WEAPON, "weapons/sbarrel1.wav", 1, ATTN_NORM, 0, 100, FALSE );
+				UTIL_PlaySound(ENT(pev), CHAN_WEAPON, "weapons/sbarrel1.wav", 1, ATTN_NORM, 0, 100, FALSE );
 			}
 
 #endif
@@ -2740,8 +2740,8 @@ void CHGrunt :: HandleAnimEvent( MonsterEvent_t *pEvent )
 				pHurt->TakeDamage( pev, pev, gSkillData.hgruntDmgKick, DMG_CLUB );
 
 				//derp.
-				//EMIT_SOUND_FILTERED( ENT(pev), CHAN_WEAPON, "hgrunt/gr_pain3.wav", 1, ATTN_NORM );
-				EMIT_SOUND_FILTERED ( ENT(pev), CHAN_WEAPON, pAttackHitSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackHitSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
+				//UTIL_PlaySound( ENT(pev), CHAN_WEAPON, "hgrunt/gr_pain3.wav", 1, ATTN_NORM );
+				UTIL_PlaySound( ENT(pev), CHAN_WEAPON, pAttackHitSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackHitSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
 
 			}else{
 				//play woosh sound?
@@ -3920,19 +3920,19 @@ void CHGrunt :: PainSound ( void )
 		switch ( RANDOM_LONG(0,6) )
 		{
 		case 0:
-			EMIT_SOUND_FILTERED( ENT(pev), CHAN_VOICE, "hgrunt/gr_pain3.wav", 1, ATTN_NORM );
+			UTIL_PlaySound( ENT(pev), CHAN_VOICE, "hgrunt/gr_pain3.wav", 1, ATTN_NORM );
 			break;
 		case 1:
-			EMIT_SOUND_FILTERED( ENT(pev), CHAN_VOICE, "hgrunt/gr_pain4.wav", 1, ATTN_NORM );
+			UTIL_PlaySound( ENT(pev), CHAN_VOICE, "hgrunt/gr_pain4.wav", 1, ATTN_NORM );
 			break;
 		case 2:
-			EMIT_SOUND_FILTERED( ENT(pev), CHAN_VOICE, "hgrunt/gr_pain5.wav", 1, ATTN_NORM );
+			UTIL_PlaySound( ENT(pev), CHAN_VOICE, "hgrunt/gr_pain5.wav", 1, ATTN_NORM );
 			break;
 		case 3:
-			EMIT_SOUND_FILTERED( ENT(pev), CHAN_VOICE, "hgrunt/gr_pain1.wav", 1, ATTN_NORM );
+			UTIL_PlaySound( ENT(pev), CHAN_VOICE, "hgrunt/gr_pain1.wav", 1, ATTN_NORM );
 			break;
 		case 4:
-			EMIT_SOUND_FILTERED( ENT(pev), CHAN_VOICE, "hgrunt/gr_pain2.wav", 1, ATTN_NORM );
+			UTIL_PlaySound( ENT(pev), CHAN_VOICE, "hgrunt/gr_pain2.wav", 1, ATTN_NORM );
 			break;
 		}
 
@@ -3952,13 +3952,13 @@ void CHGrunt :: DeathSound ( void )
 	switch ( RANDOM_LONG(0,2) )
 	{
 	case 0:
-		EMIT_SOUND_FILTERED( ENT(pev), CHAN_VOICE, "hgrunt/gr_die1.wav", 1, ATTN_IDLE );
+		UTIL_PlaySound( ENT(pev), CHAN_VOICE, "hgrunt/gr_die1.wav", 1, ATTN_IDLE );
 		break;
 	case 1:
-		EMIT_SOUND_FILTERED( ENT(pev), CHAN_VOICE, "hgrunt/gr_die2.wav", 1, ATTN_IDLE );
+		UTIL_PlaySound( ENT(pev), CHAN_VOICE, "hgrunt/gr_die2.wav", 1, ATTN_IDLE );
 		break;
 	case 2:
-		EMIT_SOUND_FILTERED( ENT(pev), CHAN_VOICE, "hgrunt/gr_die3.wav", 1, ATTN_IDLE );
+		UTIL_PlaySound( ENT(pev), CHAN_VOICE, "hgrunt/gr_die3.wav", 1, ATTN_IDLE );
 		break;
 	}
 	*/
@@ -3967,19 +3967,19 @@ void CHGrunt :: DeathSound ( void )
 
 	if(GetBodygroup(BODYGROUP_HEAD) == HEAD_GORE){
 		//headless.
-		EMIT_SOUND_FILTERED( ENT(pev), CHAN_VOICE, "common/bodysplat.wav", 1, ATTN_IDLE, 0, 108, FALSE );
+		UTIL_PlaySound( ENT(pev), CHAN_VOICE, "common/bodysplat.wav", 1, ATTN_IDLE, 0, 108, FALSE );
 
 	}else{
 		switch ( RANDOM_LONG(0,2) )
 		{
 		case 0:
-			EMIT_SOUND_FILTERED( ENT(pev), CHAN_VOICE, "hgrunt/gr_die1.wav", 1, ATTN_IDLE );
+			UTIL_PlaySound( ENT(pev), CHAN_VOICE, "hgrunt/gr_die1.wav", 1, ATTN_IDLE );
 			break;
 		case 1:
-			EMIT_SOUND_FILTERED( ENT(pev), CHAN_VOICE, "hgrunt/gr_die2.wav", 1, ATTN_IDLE );
+			UTIL_PlaySound( ENT(pev), CHAN_VOICE, "hgrunt/gr_die2.wav", 1, ATTN_IDLE );
 			break;
 		case 2:
-			EMIT_SOUND_FILTERED( ENT(pev), CHAN_VOICE, "hgrunt/gr_die3.wav", 1, ATTN_IDLE );
+			UTIL_PlaySound( ENT(pev), CHAN_VOICE, "hgrunt/gr_die3.wav", 1, ATTN_IDLE );
 			break;
 		}
 	}
@@ -5643,7 +5643,7 @@ void CHGrunt::checkHeadGore(int iGib ){
 			//FOUNTAIN O BLOOD
 			UTIL_SpawnBlood(lastHeadHit, UTIL_RandomBloodVector(), BloodColor(), RANDOM_LONG(50, 70) );
 
-			//EMIT_SOUND_FILTERED( ENT(pev), CHAN_VOICE, "!SC_SCREAM_TRU0", 1, ATTN_IDLE );
+			//UTIL_PlaySound( ENT(pev), CHAN_VOICE, "!SC_SCREAM_TRU0", 1, ATTN_IDLE );
 			//playedSoundAlready = TRUE;
 
 			CGib::SpawnHeadGib(this->pev, gibsSpawnDecals);

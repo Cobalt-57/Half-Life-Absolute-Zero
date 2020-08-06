@@ -104,6 +104,53 @@ EASY_CVAR_EXTERN(monsterToPlayerHitgroupSpecial)
 EASY_CVAR_EXTERN(precacheAll)
 EASY_CVAR_EXTERN(blastExtraArmorDamageMode)
 
+
+
+
+
+
+
+#define TRAIN_NEW		0xc0
+#define TRAIN_OFF		0x00
+#define TRAIN_NEUTRAL	0x01
+#define TRAIN_SLOW		0x02
+#define TRAIN_MEDIUM	0x03
+#define TRAIN_FAST		0x04 
+#define TRAIN_BACK		0x05
+
+#define TRAIN_ACTIVE	0x80 
+
+#define FLASH_DRAIN_TIME	 1.2 //100 units/3 minutes
+#define FLASH_CHARGE_TIME	 0.2 // 100 units/20 seconds  (seconds per unit)
+
+
+
+// Unused constants from the as-is codebase?  Whoops!
+// Looks unrelated to the ladder, maybe climbing up something more complex than a ladder was planned at some point.
+// Not to be confused with the MAX_CLIMB_SPEED (now _ALPHA and _RETAIL) constants in const.h.
+/*
+#define CLIMB_SHAKE_FREQUENCY	22	// how many frames in between screen shakes when climbing
+
+#define CLIMB_SPEED_DEC			15	// climbing deceleration rate
+#define CLIMB_PUNCH_X			-7  // how far to 'punch' client X axis when climbing
+#define CLIMB_PUNCH_Z			7	// how far to 'punch' client Z axis when climbing
+*/
+
+
+#define ARMOR_RATIO 0.2	// Armor Takes 80% of the damage
+#define ARMOR_BONUS 0.5	// Each Point of Armor is work 1/x points of health
+
+//MODDD NOTE - if there were a need for this to be drawn on the HUD, it would be
+// best to move this to util_shared.h.
+#define PLAYER_AIRTIME 12		// lung full of air lasts this many seconds
+
+//#define PLAYER_USE_SEARCH_RADIUS	(float)64
+#define PLAYER_USE_SEARCH_RADIUS 72
+
+#define GEIGERDELAY 0.25
+
+
+
 extern cvar_t* cvar_sv_cheats;
 //MODDD
 extern unsigned short g_sFreakyLight;
@@ -114,7 +161,6 @@ extern unsigned short g_sFreakyLight;
 
 extern DLL_GLOBAL ULONG g_ulModelIndexPlayer;
 extern DLL_GLOBAL BOOL g_fGameOver;
-int gEvilImpulse101;
 extern DLL_GLOBAL int g_iSkillLevel;
 extern DLL_GLOBAL int gDisplayTitle;
 
@@ -125,6 +171,17 @@ extern edict_t *EntSelectSpawnPoint( CBaseEntity *pPlayer );
 extern CGraph WorldGraph;
 
 
+int gEvilImpulse101;
+//MODDD - and just what was this doing above EntSelectSpawnPoint halfway down the file?
+// Also, FNullEnt moved to util_entity.h.  Because why would only the player want this.
+DLL_GLOBAL CBaseEntity* g_pLastSpawn;
+BOOL gInitHUD = TRUE;
+
+
+
+
+
+LINK_ENTITY_TO_CLASS( player, CBasePlayer );
 
 
 //MODDD - some notes from throughout the file from the as-is codebase moved here for convenience.
@@ -256,52 +313,9 @@ Things powered by the battery
 		Augments armor. Reduces Armor drain by one half
 
 */
-
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-
-#define TRAIN_NEW		0xc0
-#define TRAIN_OFF		0x00
-#define TRAIN_NEUTRAL	0x01
-#define TRAIN_SLOW		0x02
-#define TRAIN_MEDIUM	0x03
-#define TRAIN_FAST		0x04 
-#define TRAIN_BACK		0x05
-
-#define TRAIN_ACTIVE	0x80 
-
-#define FLASH_DRAIN_TIME	 1.2 //100 units/3 minutes
-#define FLASH_CHARGE_TIME	 0.2 // 100 units/20 seconds  (seconds per unit)
-
-
-#define CLIMB_SHAKE_FREQUENCY	22	// how many frames in between screen shakes when climbing
-
-#define CLIMB_SPEED_DEC			15	// climbing deceleration rate
-#define CLIMB_PUNCH_X			-7  // how far to 'punch' client X axis when climbing
-#define CLIMB_PUNCH_Z			7	// how far to 'punch' client Z axis when climbing
-
-
-#define ARMOR_RATIO	 0.2	// Armor Takes 80% of the damage
-#define ARMOR_BONUS  0.5	// Each Point of Armor is work 1/x points of health
-
-//MODDD NOTE - if there were a need for this to be drawn on the HUD, it would be
-// best to move this to util_shared.h.
-#define PLAYER_AIRTIME	12		// lung full of air lasts this many seconds
-
-//#define PLAYER_USE_SEARCH_RADIUS	(float)64
-#define PLAYER_USE_SEARCH_RADIUS 72
-
-#define GEIGERDELAY 0.25
-
-
-//MODDD - and just what was this doing above EntSelectSpawnPoint halfway down the file?
-// Also, FNullEnt moved to util_entity.h.  Because why would only the player want this.
-DLL_GLOBAL CBaseEntity	*g_pLastSpawn;
-BOOL gInitHUD = TRUE;
 
 
 
@@ -427,11 +441,10 @@ TYPEDESCRIPTION	CBasePlayer::m_playerSaveData[] =
 
 //MODDD - LinkUserMessages and message ID's moved to client.cpp.
 
-LINK_ENTITY_TO_CLASS( player, CBasePlayer );
+
 
 //MODDD - new
-inline
-void CBasePlayer::resetLongJumpCharge(){
+inline void CBasePlayer::resetLongJumpCharge(){
 
 	if(m_fLongJump){
 		//Can render an empty spring icon.
@@ -448,7 +461,6 @@ void CBasePlayer::resetLongJumpCharge(){
 //Below, PainChance is custom and new for the player, and can only be called by the Player in here.
 void CBasePlayer :: PainSound( void )
 {
-	
 	float flRndSound;//sound randomizer
 
 	//disallow making noise if this CVar is on.
@@ -460,11 +472,11 @@ void CBasePlayer :: PainSound( void )
 	flRndSound = RANDOM_FLOAT ( 0 , 1 ); 
 	
 	if (flRndSound <= 0.33) {
-		EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "player/pl_pain5.wav", 1, ATTN_NORM, FALSE);
+		UTIL_PlaySound(ENT(pev), CHAN_VOICE, "player/pl_pain5.wav", 1, ATTN_NORM, FALSE);
 	}else if (flRndSound <= 0.66) {
-		EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "player/pl_pain6.wav", 1, ATTN_NORM, FALSE);
+		UTIL_PlaySound(ENT(pev), CHAN_VOICE, "player/pl_pain6.wav", 1, ATTN_NORM, FALSE);
 	}else {
-		EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "player/pl_pain7.wav", 1, ATTN_NORM, FALSE);
+		UTIL_PlaySound(ENT(pev), CHAN_VOICE, "player/pl_pain7.wav", 1, ATTN_NORM, FALSE);
 	}
 }//END OF PainSound
 
@@ -481,9 +493,9 @@ void CBasePlayer :: PainChance( void )
 	//NOTICE that #4 and #5 are possible (which, as of writing, do nothing at all: no sound).
 	switch (RANDOM_LONG(1,5)) 
 	{
-	case 1: EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "player/pl_pain5.wav", 1, ATTN_NORM, FALSE);break;
-	case 2: EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "player/pl_pain6.wav", 1, ATTN_NORM, FALSE);break;
-	case 3: EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "player/pl_pain7.wav", 1, ATTN_NORM, FALSE);break;
+	case 1: UTIL_PlaySound(ENT(pev), CHAN_VOICE, "player/pl_pain5.wav", 1, ATTN_NORM, FALSE);break;
+	case 2: UTIL_PlaySound(ENT(pev), CHAN_VOICE, "player/pl_pain6.wav", 1, ATTN_NORM, FALSE);break;
+	case 3: UTIL_PlaySound(ENT(pev), CHAN_VOICE, "player/pl_pain7.wav", 1, ATTN_NORM, FALSE);break;
 	}
 
 }//END OF PainChance
@@ -585,7 +597,7 @@ void CBasePlayer :: DeathSound( BOOL plannedRevive )
 	// water death sounds
 	if (pev->waterlevel == 3)
 	{
-		EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "player/h2odeath.wav", 1, ATTN_NONE, FALSE);
+		UTIL_PlaySound(ENT(pev), CHAN_VOICE, "player/h2odeath.wav", 1, ATTN_NONE, FALSE);
 		return;
 	}
 
@@ -1907,7 +1919,7 @@ void CBasePlayer::stopSelfSounds(void) {
 		recentlyPlayedSound[0] = '\0';  //cleared.
 	}
 
-	//STOP_SOUND(tempplayer->edict(), CHAN_STATIC, "");
+	//UTIL_StopSound(tempplayer->edict(), CHAN_STATIC, "");
 	//////////////////////////////////////////////////////////////////////////////////////
 
 }//END OF stopSelfSounds
@@ -2340,7 +2352,7 @@ void CBasePlayer::WaterMove()
 				//MODDD - if going 
 				if(airTankWaitingStart == TRUE){
 					//pPlayer->edict() ???
-					EMIT_SOUND_FILTERED( ENT(pev), CHAN_ITEM, "items/airtank1.wav", 1, ATTN_NORM, TRUE );
+					UTIL_PlaySound( ENT(pev), CHAN_ITEM, "items/airtank1.wav", 1, ATTN_NORM, TRUE );
 					airTankWaitingStart = FALSE;
 				}
 			}
@@ -2560,7 +2572,7 @@ void CBasePlayer::PlayerDeathThink(void)
 			pev->velocity = g_vecZero;
 			// no need to set pev->deadflag to DEAD_DEAD, that would've been handled by the death animation finishing above.  I think.
 
-			EMIT_SOUND_FILTERED(ENT(pev), CHAN_ITEM, "common/bodysplat.wav", 1, ATTN_NORM, 0, 100, FALSE);
+			UTIL_PlaySound(ENT(pev), CHAN_ITEM, "common/bodysplat.wav", 1, ATTN_NORM, 0, 100, FALSE);
 
 			m_flFallVelocity = 0;  //I think this is safe?  No need to handle this again
 			m_flSuitUpdate = gpGlobals->time;
@@ -2855,7 +2867,7 @@ void CBasePlayer::PlayerUse ( void )
 					m_iTrain = TrainSpeed(pTrain->pev->speed, pTrain->pev->impulse);
 					m_iTrain |= TRAIN_NEW;
 					//MODDD - soundsentencesave
-					EMIT_SOUND_FILTERED( ENT(pev), CHAN_ITEM, "plats/train_use1.wav", 0.8, ATTN_NORM, 0, 100, FALSE);
+					UTIL_PlaySound( ENT(pev), CHAN_ITEM, "plats/train_use1.wav", 0.8, ATTN_NORM, 0, 100, FALSE);
 					return;
 				}
 			}
@@ -3200,7 +3212,7 @@ void CBasePlayer::PlayerUse ( void )
 		int caps = pObject->ObjectCaps();
 
 		if ( m_afButtonPressed & IN_USE ){
-			EMIT_SOUND_FILTERED( ENT(pev), CHAN_ITEM, "common/wpn_select.wav", 0.4, ATTN_NORM, 0, 100, FALSE);
+			UTIL_PlaySound( ENT(pev), CHAN_ITEM, "common/wpn_select.wav", 0.4, ATTN_NORM, 0, 100, FALSE);
 		}
 
 		if ( ( (pev->button & IN_USE) && (caps & FCAP_CONTINUOUS_USE) ) ||
@@ -3223,7 +3235,7 @@ void CBasePlayer::PlayerUse ( void )
 		//NOTE - is that a little hard to read? m_afButtonPressed is a bitmask of inputs. IN_USE is on when the player pressed the USE key this frame, I assume.
 		//      So this just means, only play the "deny" sound if pressing the USE key.
 		if ( m_afButtonPressed & IN_USE ){
-			EMIT_SOUND_FILTERED( ENT(pev), CHAN_ITEM, "common/wpn_denyselect.wav", 0.4, ATTN_NORM, 0, 100, FALSE);
+			UTIL_PlaySound( ENT(pev), CHAN_ITEM, "common/wpn_denyselect.wav", 0.4, ATTN_NORM, 0, 100, FALSE);
 		}
 	}
 }//END OF PlayerUse
@@ -3647,10 +3659,10 @@ void CBasePlayer::PreThink(void)
 					//easyForcePrintLine("WHERE ELSE SUCKAH %.2f", tempVol);
 
 					// ATTN_STATIC ?
-					//EMIT_SOUND_FILTERED( edict(), CHAN_VOICE, "friendly/friendly_horror.wav", 1.0, 1.8, 0, 100 );
+					//UTIL_PlaySound( edict(), CHAN_VOICE, "friendly/friendly_horror.wav", 1.0, 1.8, 0, 100 );
 					// Now with higher attenuation!  Want to play just for the intended target.
 					// Attenuation is the number after the volume (tempVol).  Old attn: 1.8
-					EMIT_SOUND_FILTERED( this->edict(), CHAN_STATIC, "friendly/friendly_horror.wav", tempVol, 4.0, 0, 100 );
+					UTIL_PlaySound( this->edict(), CHAN_STATIC, "friendly/friendly_horror.wav", tempVol, 4.0, 0, 100 );
 				}
 
 			}
@@ -4456,9 +4468,9 @@ void CBasePlayer :: UpdateGeigerCounter( void )
 			//Should the suit not use CHAN_STATIC if in multiplayer?  Other comments here warn against using "CHAN_STATIC" in multiplayer.
 			
 			//MODDD - soundsentencesave... CANCELED
-			EMIT_SOUND_FILTERED(ENT(pev), getGeigerChannel(), sz, flvol, ATTN_NORM, 0, 100, FALSE);
+			UTIL_PlaySound(ENT(pev), getGeigerChannel(), sz, flvol, ATTN_NORM, 0, 100, FALSE);
 
-			//UTIL_EmitAmbientSound(ENT(pev), headPos, sz, flvol, ATTN_STATIC, 0, 100);
+			//UTIL_EmitAmbientSound(ENT(pev), headPos, sz, flvol, ATTN_STATIC, 0, 100, FALSE);
 
 			//sprintf(sz, "player/geiger%d.wav", j + 1);
 			//PlaySound(sz, flvol);
@@ -5569,7 +5581,7 @@ void CBasePlayer::PostThink()
 			if ( flFallDamage > pev->health )
 			{//splat
 				// note: play on item channel because we play footstep landing on body channel
-				EMIT_SOUND_FILTERED(ENT(pev), CHAN_ITEM, "common/bodysplat.wav", 1, ATTN_NORM, 0, 100, FALSE);
+				UTIL_PlaySound(ENT(pev), CHAN_ITEM, "common/bodysplat.wav", 1, ATTN_NORM, 0, 100, FALSE);
 			}
 
 			if ( flFallDamage > 0 )
@@ -7024,7 +7036,7 @@ void CSprayCan::Spawn ( entvars_t *pevOwner )
 
 	pev->nextthink = gpGlobals->time + 0.1;
 	//MODDD - soundsentencesave. This one's ok to play through it.
-	EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "player/sprayer.wav", 1, ATTN_NORM, 0, 100, FALSE);
+	UTIL_PlaySound(ENT(pev), CHAN_VOICE, "player/sprayer.wav", 1, ATTN_NORM, 0, 100, FALSE);
 }
 
 void CSprayCan::Think( void )
@@ -7135,7 +7147,7 @@ edict_t* CBasePlayer::GiveNamedItem( const char *pszName, int pszSpawnFlags  )
 			MESSAGE_END();
 
 			//MODDD QUESTION - does the precache sentence save system handle this, or is it guaranteed precached like other player sounds?
-			EMIT_SOUND_FILTERED( edict(), CHAN_ITEM, "items/airtank1.wav", 1, ATTN_NORM, TRUE );
+			UTIL_PlaySound( edict(), CHAN_ITEM, "items/airtank1.wav", 1, ATTN_NORM, TRUE );
 			}
 			return NULL;
 		}
@@ -7405,7 +7417,7 @@ void CBasePlayer :: FlashlightTurnOn( void )
 	{
 		//MODDD - channel changed from "CHAN_WEAPON" to "CHAN_STREAM".
 		//MODDD - soundsentencesave
-		EMIT_SOUND_FILTERED( ENT(pev), CHAN_STREAM, SOUND_FLASHLIGHT_ON, 1.0, ATTN_NORM, 0, PITCH_NORM, FALSE );
+		UTIL_PlaySound( ENT(pev), CHAN_STREAM, SOUND_FLASHLIGHT_ON, 1.0, ATTN_NORM, 0, PITCH_NORM, FALSE );
 		SetBits(pev->effects, EF_DIMLIGHT);
 		MESSAGE_BEGIN( MSG_ONE, gmsgFlashlight, NULL, pev );
 		WRITE_BYTE(1);
@@ -7422,7 +7434,7 @@ void CBasePlayer :: FlashlightTurnOff( void )
 {
 	//MODDD - channel changed from "CHAN_WEAPON" to "CHAN_STREAM".
 	//MODDD - soundsentencesave
-	EMIT_SOUND_FILTERED( ENT(pev), CHAN_STREAM, SOUND_FLASHLIGHT_OFF, 1.0, ATTN_NORM, 0, PITCH_NORM, FALSE );
+	UTIL_PlaySound( ENT(pev), CHAN_STREAM, SOUND_FLASHLIGHT_OFF, 1.0, ATTN_NORM, 0, PITCH_NORM, FALSE );
     ClearBits(pev->effects, EF_DIMLIGHT);
 	MESSAGE_BEGIN( MSG_ONE, gmsgFlashlight, NULL, pev );
 	WRITE_BYTE(0);
@@ -9400,6 +9412,15 @@ void CBasePlayer::consumeAdrenaline(){
 	MESSAGE_END();
 
 }//END OF consumeAdrenaline
+
+
+// Sounds from the player do NOT attempt to use the soundsentencesave system.  They are
+// precached always and don't expect equivalent sentences to exist (they shouldn't, it is
+// wasteful to have a sentence entry and use a guaranteed precache when only either is needed)
+BOOL CBasePlayer::usesSoundSentenceSave(void) {
+	return FALSE;
+}
+
 
 
 

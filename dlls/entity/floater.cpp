@@ -109,10 +109,10 @@ void CBloater :: PainSound( void )
 	switch (RANDOM_LONG(0,5))
 	{
 	case 0: 
-		EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "zombie/zo_pain1.wav", 1.0, ATTN_NORM, 0, pitch);
+		UTIL_PlaySound(ENT(pev), CHAN_VOICE, "zombie/zo_pain1.wav", 1.0, ATTN_NORM, 0, pitch);
 		break;
 	case 1:
-		EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "zombie/zo_pain2.wav", 1.0, ATTN_NORM, 0, pitch);
+		UTIL_PlaySound(ENT(pev), CHAN_VOICE, "zombie/zo_pain2.wav", 1.0, ATTN_NORM, 0, pitch);
 		break;
 	default:
 		break;
@@ -128,13 +128,13 @@ void CBloater :: AlertSound( void )
 	switch (RANDOM_LONG(0,2))
 	{
 	case 0: 
-		EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "zombie/zo_alert10.wav", 1.0, ATTN_NORM, 0, pitch);
+		UTIL_PlaySound(ENT(pev), CHAN_VOICE, "zombie/zo_alert10.wav", 1.0, ATTN_NORM, 0, pitch);
 		break;
 	case 1:
-		EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "zombie/zo_alert20.wav", 1.0, ATTN_NORM, 0, pitch);
+		UTIL_PlaySound(ENT(pev), CHAN_VOICE, "zombie/zo_alert20.wav", 1.0, ATTN_NORM, 0, pitch);
 		break;
 	case 2:
-		EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "zombie/zo_alert30.wav", 1.0, ATTN_NORM, 0, pitch);
+		UTIL_PlaySound(ENT(pev), CHAN_VOICE, "zombie/zo_alert30.wav", 1.0, ATTN_NORM, 0, pitch);
 		break;
 	}
 #endif
@@ -148,13 +148,13 @@ void CBloater :: IdleSound( void )
 	switch (RANDOM_LONG(0,2))
 	{
 	case 0: 
-		EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "zombie/zo_idle1.wav", 1.0, ATTN_NORM, 0, pitch);
+		UTIL_PlaySound(ENT(pev), CHAN_VOICE, "zombie/zo_idle1.wav", 1.0, ATTN_NORM, 0, pitch);
 		break;
 	case 1:
-		EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "zombie/zo_idle2.wav", 1.0, ATTN_NORM, 0, pitch);
+		UTIL_PlaySound(ENT(pev), CHAN_VOICE, "zombie/zo_idle2.wav", 1.0, ATTN_NORM, 0, pitch);
 		break;
 	case 2:
-		EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "zombie/zo_idle3.wav", 1.0, ATTN_NORM, 0, pitch);
+		UTIL_PlaySound(ENT(pev), CHAN_VOICE, "zombie/zo_idle3.wav", 1.0, ATTN_NORM, 0, pitch);
 		break;
 	}
 #endif
@@ -168,10 +168,10 @@ void CBloater :: AttackSnd( void )
 	switch (RANDOM_LONG(0,1))
 	{
 	case 0: 
-		EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "zombie/zo_attack1.wav", 1.0, ATTN_NORM, 0, pitch);
+		UTIL_PlaySound(ENT(pev), CHAN_VOICE, "zombie/zo_attack1.wav", 1.0, ATTN_NORM, 0, pitch);
 		break;
 	case 1:
-		EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "zombie/zo_attack2.wav", 1.0, ATTN_NORM, 0, pitch);
+		UTIL_PlaySound(ENT(pev), CHAN_VOICE, "zombie/zo_attack2.wav", 1.0, ATTN_NORM, 0, pitch);
 		break;
 	}
 #endif
@@ -298,27 +298,27 @@ IMPLEMENT_CUSTOM_SCHEDULES( CFloater, CFlyingMonster );
 	
 void CFloater::DeathSound( void ){
 	int pitch = 95 + RANDOM_LONG(0,9);
-	EMIT_SOUND_FILTERED( edict(), CHAN_VOICE, RANDOM_SOUND_ARRAY(pDeathSounds), 1.0, ATTN_IDLE, 0, pitch );
+	UTIL_PlaySound( edict(), CHAN_VOICE, RANDOM_SOUND_ARRAY(pDeathSounds), 1.0, ATTN_IDLE, 0, pitch );
 }
 void CFloater::AlertSound( void ){
 	int pitch = 95 + RANDOM_LONG(0,9);
-	EMIT_SOUND_FILTERED( edict(), CHAN_VOICE, RANDOM_SOUND_ARRAY(pAlertSounds), 1.0, ATTN_NORM, 0, pitch );
+	UTIL_PlaySound( edict(), CHAN_VOICE, RANDOM_SOUND_ARRAY(pAlertSounds), 1.0, ATTN_NORM, 0, pitch );
 }
 void CFloater::IdleSound( void ){
 	int pitch = 95 + RANDOM_LONG(0,9);
 	// Play a random idle sound
-	EMIT_SOUND_FILTERED( edict(), CHAN_VOICE, RANDOM_SOUND_ARRAY(pIdleSounds), 1.0, ATTN_NORM, 0, pitch );
+	UTIL_PlaySound( edict(), CHAN_VOICE, RANDOM_SOUND_ARRAY(pIdleSounds), 1.0, ATTN_NORM, 0, pitch );
 }
 void CFloater::PainSound( void ){
 	int pitch = 95 + RANDOM_LONG(0,9);
 	if (RANDOM_LONG(0,5) < 2){
-		EMIT_SOUND_FILTERED( edict(), CHAN_VOICE, RANDOM_SOUND_ARRAY(pPainSounds), 1.0, ATTN_NORM, 0, pitch );
+		UTIL_PlaySound( edict(), CHAN_VOICE, RANDOM_SOUND_ARRAY(pPainSounds), 1.0, ATTN_NORM, 0, pitch );
 	}
 }
 void CFloater::AttackSound( void ){
 	int pitch = 95 + RANDOM_LONG(0,9);
 	// Play a random attack sound
-	EMIT_SOUND_FILTERED( edict(), CHAN_VOICE, RANDOM_SOUND_ARRAY(pAttackSounds), 1.0, ATTN_NORM, 0, pitch );
+	UTIL_PlaySound( edict(), CHAN_VOICE, RANDOM_SOUND_ARRAY(pAttackSounds), 1.0, ATTN_NORM, 0, pitch );
 }
 
 

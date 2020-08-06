@@ -634,7 +634,7 @@ void CBaseDoor::OnDoorHitTop(void){
 	
 	if ( !FBitSet( pev->spawnflags, SF_DOOR_SILENT ) )
 	{
-		STOP_SOUND(ENT(pev), CHAN_STATIC, (char*)STRING(pev->noiseMoving) );
+		UTIL_StopSound(ENT(pev), CHAN_STATIC, (char*)STRING(pev->noiseMoving) );
 		EMIT_SOUND(ENT(pev), CHAN_STATIC, (char*)STRING(pev->noiseArrived), 1, ATTN_NORM);
 	}
 
@@ -690,7 +690,7 @@ void CBaseDoor::OnDoorHitBottom(void){
 
 	if ( !FBitSet( pev->spawnflags, SF_DOOR_SILENT ) )
 	{
-		STOP_SOUND(ENT(pev), CHAN_STATIC, (char*)STRING(pev->noiseMoving) );
+		UTIL_StopSound(ENT(pev), CHAN_STATIC, (char*)STRING(pev->noiseMoving) );
 		EMIT_SOUND(ENT(pev), CHAN_STATIC, (char*)STRING(pev->noiseArrived), 1, ATTN_NORM);
 	}
 
@@ -1301,14 +1301,14 @@ void CMomentaryDoor::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYP
 	
 	if(canStopSound){
 		easyPrintLine("CMomentaryDoor STOPSND %s", STRING(pev->noiseMoving));
-		STOP_SOUND(ENT(pev), CHAN_STATIC, (char*)STRING(pev->noiseMoving));
+		UTIL_StopSound(ENT(pev), CHAN_STATIC, (char*)STRING(pev->noiseMoving));
 		hasPreviousValue = FALSE;
 		previousValueDelta = 0;
 	}else if(canPlaySound){
 		easyPrintLine("CMomentaryDoor PLAYSND %s", STRING(pev->noiseMoving));
 		//const char* debugNoiseMoving = STRING(pev->noiseMoving);
-		//STOP_SOUND(ENT(pev), CHAN_STATIC, (char*)STRING(pev->noiseMoving)); //1, ATTN_NORM);
-		STOP_SOUND(ENT(pev), CHAN_STATIC, (char*)STRING(pev->noiseMoving));
+		//UTIL_StopSound(ENT(pev), CHAN_STATIC, (char*)STRING(pev->noiseMoving)); //1, ATTN_NORM);
+		UTIL_StopSound(ENT(pev), CHAN_STATIC, (char*)STRING(pev->noiseMoving));
 		EMIT_SOUND(ENT(pev), CHAN_STATIC, (char*)STRING(pev->noiseMoving), 1, ATTN_NORM);
 	}
 
@@ -1324,7 +1324,7 @@ void CMomentaryDoor::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYP
 void CMomentaryDoor::Think(){
 	if(stopSoundDelay != -1 && gpGlobals->time >= stopSoundDelay){
 		stopSoundDelay = -1;
-		STOP_SOUND(ENT(pev), CHAN_STATIC, (char*)STRING(pev->noiseMoving)); //1, ATTN_NORM);
+		UTIL_StopSound(ENT(pev), CHAN_STATIC, (char*)STRING(pev->noiseMoving)); //1, ATTN_NORM);
 	}
 	CBaseToggle::Think();
 }//END OF Think

@@ -265,7 +265,7 @@ void CAmbientGeneric :: Precache( void )
 	}
 	if ( m_fActive )
 	{
-		UTIL_EmitAmbientSound ( ENT(pev), pev->origin, szSoundFile, 
+		EMIT_AMBIENT_SOUND( ENT(pev), pev->origin, szSoundFile, 
 				(m_dpv.vol * 0.01), m_flAttenuation, SND_SPAWNING, m_dpv.pitch);
 
 		pev->nextthink = gpGlobals->time + 0.1;
@@ -315,7 +315,7 @@ void CAmbientGeneric :: RampThink( void )
 			m_dpv.spindown = 0;				// done with ramp down
 
 			// shut sound off
-			UTIL_EmitAmbientSound(ENT(pev), pev->origin, szSoundFile, 
+			EMIT_AMBIENT_SOUND(ENT(pev), pev->origin, szSoundFile, 
 					0, 0, SND_STOP, 0);
 
 			// return without setting nextthink
@@ -357,7 +357,7 @@ void CAmbientGeneric :: RampThink( void )
 			m_dpv.fadeout = 0;				// done with ramp down
 			
 			// shut sound off
-			UTIL_EmitAmbientSound(ENT(pev), pev->origin, szSoundFile, 
+			EMIT_AMBIENT_SOUND(ENT(pev), pev->origin, szSoundFile, 
 					0, 0, SND_STOP, 0);
 
 			// return without setting nextthink
@@ -458,7 +458,7 @@ void CAmbientGeneric :: RampThink( void )
 		if (pitch == PITCH_NORM)
 			pitch = PITCH_NORM + 1; // don't send 'no pitch' !
 
-		UTIL_EmitAmbientSound(ENT(pev), pev->origin, szSoundFile, 
+		EMIT_AMBIENT_SOUND(ENT(pev), pev->origin, szSoundFile, 
 				(vol * 0.01), m_flAttenuation, flags, pitch);
 	}
 
@@ -578,7 +578,7 @@ void CAmbientGeneric :: ToggleUse ( CBaseEntity *pActivator, CBaseEntity *pCalle
 
 		m_dpv.pitch = fraction * 255;
 
-		UTIL_EmitAmbientSound(ENT(pev), pev->origin, szSoundFile, 
+		EMIT_AMBIENT_SOUND(ENT(pev), pev->origin, szSoundFile, 
 					0, 0, SND_CHANGE_PITCH, m_dpv.pitch);
 
 		return;
@@ -633,7 +633,7 @@ void CAmbientGeneric :: ToggleUse ( CBaseEntity *pActivator, CBaseEntity *pCalle
 				pev->nextthink = gpGlobals->time + 0.1;
 			}
 			else
-				UTIL_EmitAmbientSound(ENT(pev), pev->origin, szSoundFile, 
+				EMIT_AMBIENT_SOUND(ENT(pev), pev->origin, szSoundFile, 
 					0, 0, SND_STOP, 0);
 		}
 	}
@@ -649,14 +649,14 @@ void CAmbientGeneric :: ToggleUse ( CBaseEntity *pActivator, CBaseEntity *pCalle
 			m_fActive = TRUE;
 		else
 			// shut sound off now - may be interrupting a long non-looping sound
-			UTIL_EmitAmbientSound(ENT(pev), pev->origin, szSoundFile, 
+			EMIT_AMBIENT_SOUND(ENT(pev), pev->origin, szSoundFile, 
 				0, 0, SND_STOP, 0);
 			
 		// init all ramp params for startup
 
 		InitModulationParms();
 
-		UTIL_EmitAmbientSound(ENT(pev), pev->origin, szSoundFile, 
+		EMIT_AMBIENT_SOUND(ENT(pev), pev->origin, szSoundFile, 
 				(m_dpv.vol * 0.01), m_flAttenuation, 0, m_dpv.pitch);
 		
 		pev->nextthink = gpGlobals->time + 0.1;
@@ -1236,28 +1236,12 @@ int SENTENCEG_PlayRndSz(edict_t *entity, const char *szgroupname,
 }
 
 
-
-/*
-	if (samp && *samp == '!')
-	{
-		char name[32];
-		if (SENTENCEG_Lookup(samp, name) >= 0)
-			EMIT_AMBIENT_SOUND(entity, rgfl, name, vol, attenuation, fFlags, pitch);
-	}
-	else
-		EMIT_AMBIENT_SOUND(entity, rgfl, samp, vol, attenuation, fFlags, pitch);
-		*/
-
-
 //MODDD - new. same as SENTENCEG_PlayRndSz, but can do ambient sounds.
-
 int SENTENCEG_PlayRndSz_Ambient(edict_t *entity, Vector vOrigin, const char *szgroupname, float volume, float attenuation, int flags, int pitch)
 {
 	char name[64];
 	int ipick;
 	int isentenceg;
-
-
 
 	//float rgfl[3];
 	//vOrigin.CopyToArray(rgfl);
@@ -1276,18 +1260,12 @@ int SENTENCEG_PlayRndSz_Ambient(edict_t *entity, Vector vOrigin, const char *szg
 
 	ipick = USENTENCEG_Pick(isentenceg, name);
 	//easyPrintLine("SENTENCE PLAYED: %s", name);
-	if (ipick >= 0 && name[0])
-		UTIL_EmitAmbientSound(entity, vOrigin, name, volume, attenuation, flags, pitch);
+	if (ipick >= 0 && name[0]){
+		EMIT_AMBIENT_SOUND(entity, vOrigin, name, volume, attenuation, flags, pitch);
+	}
 
 	return ipick;
 }
-
-
-
-
-
-
-
 
 
 // play sentences in sequential order from sentence group.  Reset after last sentence.
@@ -1336,43 +1314,14 @@ void SENTENCEG_Stop(edict_t *entity, int isentenceg, int ipick)
 
 	//MODDD NOTE - nah, don't filter, this is always a sentence anyways.
 	//(I think this method in particular is never used?)
-	STOP_SOUND(entity, CHAN_VOICE, buffer);
+	UTIL_StopSound(entity, CHAN_VOICE, buffer, FALSE);
 }
 
 // open sentences.txt, scan for groups, build rgsentenceg
 // Should be called from world spawn, only works on the
 // first call and is ignored subsequently.
 
-/*
-char checkEqual(char* str1, char* str2){
-	BOOL reading = TRUE;
-	BOOL equal = TRUE; //until proven otherwise.
-	int readIndex = 0;
-	while(reading){
-		
 
-		if(str1[readIndex] == '\0' && str2[readIndex] == '\0'){
-
-			break;
-		}
-
-		if(str1[readIndex] != str2[readIndex]){
-			equal = FALSE;
-			reading = FALSE;
-			break;
-		}else{
-			
-		}
-
-		readIndex++;
-
-	}//END OF while(reading)
-	return equal;
-}
-*/
-
-
-//easyPrintLine("SEE ME FREAKO!");
 void SENTENCEG_Init()
 {
 	//MODDD
@@ -1635,9 +1584,7 @@ void SENTENCEG_PlaySingular(edict_t* entity, int arg_channel, const char *pszSen
 
 
 
-
-
-//MODDD - EMIT_SOUND_FILTERED method implementations (used to be EMIT_SOUND and EMIT_SOUND_DYN directly) have been moved to util.cpp.
+//MODDD - UTIL_PlaySound method implementations (used to be EMIT_SOUND and EMIT_SOUND_DYN directly) have been moved to util.cpp.
 //        No reason to be separate from the rest of the sound-handling stuff ultimately in util.cpp.
 
 
@@ -2011,8 +1958,8 @@ float TEXTURETYPE_PlaySound(TraceResult *ptr,  Vector vecSrc, Vector vecEnd, int
 			float flVolume = RANDOM_FLOAT ( 0.7 , 1.0 );//random volume range
 			switch ( RANDOM_LONG(0,1) )
 			{
-				case 0: UTIL_EmitAmbientSound(ENT(0), ptr->vecEndPos, "buttons/spark5.wav", flVolume, ATTN_NORM, 0, 100); break;
-				case 1: UTIL_EmitAmbientSound(ENT(0), ptr->vecEndPos, "buttons/spark6.wav", flVolume, ATTN_NORM, 0, 100); break;
+				case 0: EMIT_AMBIENT_SOUND(ENT(0), ptr->vecEndPos, "buttons/spark5.wav", flVolume, ATTN_NORM, 0, 100); break;
+				case 1: EMIT_AMBIENT_SOUND(ENT(0), ptr->vecEndPos, "buttons/spark6.wav", flVolume, ATTN_NORM, 0, 100); break;
 				// case 0: EMIT_SOUND(ENT(pev), CHAN_VOICE, "buttons/spark5.wav", flVolume, ATTN_NORM);	break;
 				// case 1: EMIT_SOUND(ENT(pev), CHAN_VOICE, "buttons/spark6.wav", flVolume, ATTN_NORM);	break;
 			}
@@ -2023,7 +1970,7 @@ float TEXTURETYPE_PlaySound(TraceResult *ptr,  Vector vecSrc, Vector vecEnd, int
 	if (EASY_CVAR_GET(forceAllowServersideTextureSounds) >= 1 || g_pGameRules->PlayTextureSounds() ){
 		if(cnt > 0){
 			// play material hit sound
-			UTIL_EmitAmbientSound(ENT(0), ptr->vecEndPos, rgsz[RANDOM_LONG(0,cnt-1)], fvol, fattn, 0, 96 + RANDOM_LONG(0,0xf));
+			EMIT_AMBIENT_SOUND(ENT(0), ptr->vecEndPos, rgsz[RANDOM_LONG(0,cnt-1)], fvol, fattn, 0, 96 + RANDOM_LONG(0,0xf));
 			//EMIT_SOUND_DYN( ENT(m_pPlayer->pev), CHAN_WEAPON, rgsz[RANDOM_LONG(0,cnt-1)], fvol, ATTN_NORM, 0, 96 + RANDOM_LONG(0,0xf));
 		}
 	}
@@ -2167,7 +2114,7 @@ void CSpeaker :: SpeakerThink( void )
 	if (szSoundFile[0] == '!')
 	{
 		// play single sentence, one shot
-		UTIL_EmitAmbientSound ( ENT(pev), pev->origin, szSoundFile, flvolume, flattenuation, flags, pitch);
+		EMIT_AMBIENT_SOUND( ENT(pev), pev->origin, szSoundFile, flvolume, flattenuation, flags, pitch);
 
 		// shut off and reset
 		pev->nextthink = 0.0;

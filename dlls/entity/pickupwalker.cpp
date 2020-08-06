@@ -73,7 +73,7 @@ void CPickupWalker::IdleSound( void )
 {
 	//int pitch = 95 + RANDOM_LONG(0,9);
 	// Play a random idle sound
-	//EMIT_SOUND_FILTERED ( ENT(pev), CHAN_VOICE, pIdleSounds[ RANDOM_LONG(0,ARRAYSIZE(pIdleSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
+	//UTIL_PlaySound( ENT(pev), CHAN_VOICE, pIdleSounds[ RANDOM_LONG(0,ARRAYSIZE(pIdleSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
 }
 
 
@@ -666,7 +666,7 @@ void CPickupWalker::Materialize(void)
 	if (pev->effects & EF_NODRAW)
 	{
 		// changing from invisible state to visible.
-		EMIT_SOUND_DYN(ENT(pev), CHAN_WEAPON, "items/suitchargeok1.wav", 1, ATTN_NORM, 0, 150);
+		UTIL_PlaySound(ENT(pev), CHAN_WEAPON, "items/suitchargeok1.wav", 1, ATTN_NORM, 0, 150, FALSE);
 		pev->effects &= ~EF_NODRAW;
 		pev->effects |= EF_MUZZLEFLASH;
 	}
@@ -721,8 +721,8 @@ void CChumToadPickupWalker::Precache( void )
 	PRECACHE_MODEL("models/chumtoad.mdl");
 	
 	global_useSentenceSave = TRUE;
-	for ( i = 0; i < ARRAYSIZE( pIdleSounds ); i++ )
-		PRECACHE_SOUND((char *)pIdleSounds[i]);
+	
+	PRECACHE_SOUND_ARRAY(pIdleSounds);
 	
 	global_useSentenceSave = FALSE;
 }
@@ -766,7 +766,7 @@ void CChumToadPickupWalker::Spawn( void )
 void CChumToadPickupWalker::IdleSound( void )
 {
 	int pitch = 95 + RANDOM_LONG(0,9);
-	EMIT_SOUND_FILTERED ( ENT(pev), CHAN_VOICE, pIdleSounds[ RANDOM_LONG(0,ARRAYSIZE(pIdleSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
+	UTIL_PlaySound( ENT(pev), CHAN_VOICE, pIdleSounds[ RANDOM_LONG(0,ARRAYSIZE(pIdleSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
 }
 
 const char* CChumToadPickupWalker::myWeaponClassname(){
@@ -910,7 +910,7 @@ void CSqueakPickupWalker::Spawn( void )
 void CSqueakPickupWalker::IdleSound( void )
 {
 	int pitch = 95 + RANDOM_LONG(0,9);
-	EMIT_SOUND_FILTERED ( ENT(pev), CHAN_VOICE, pIdleSounds[ RANDOM_LONG(0,ARRAYSIZE(pIdleSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
+	UTIL_PlaySound( ENT(pev), CHAN_VOICE, pIdleSounds[ RANDOM_LONG(0,ARRAYSIZE(pIdleSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
 }
 
 const char* CSqueakPickupWalker::myWeaponClassname(){

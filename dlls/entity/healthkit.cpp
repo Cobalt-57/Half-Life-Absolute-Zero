@@ -83,7 +83,7 @@ BOOL CHealthKit::MyTouch( CBasePlayer *pPlayer )
 			WRITE_STRING( STRING(pev->classname) );
 		MESSAGE_END();
 
-		EMIT_SOUND_FILTERED(ENT(pPlayer->pev), CHAN_ITEM, "items/smallmedkit1.wav", 1, ATTN_NORM, TRUE);
+		UTIL_PlaySound(ENT(pPlayer->pev), CHAN_ITEM, "items/smallmedkit1.wav", 1, ATTN_NORM, TRUE);
 
 
 		pPlayer->SetSuitUpdate("!HEV_MEDKIT", FALSE, SUIT_NEXT_IN_30MIN);

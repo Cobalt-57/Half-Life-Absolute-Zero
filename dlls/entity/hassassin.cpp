@@ -993,10 +993,10 @@ void CHAssassin :: Shoot ( void )
 	switch(RANDOM_LONG(0,1))
 	{
 	case 0:
-		EMIT_SOUND_FILTERED(ENT(pev), CHAN_WEAPON, "weapons/pl_gun1.wav", RANDOM_FLOAT(0.6, 0.8), ATTN_NORM, 0, 100, FALSE);
+		UTIL_PlaySound(ENT(pev), CHAN_WEAPON, "weapons/pl_gun1.wav", RANDOM_FLOAT(0.6, 0.8), ATTN_NORM, 0, 100, FALSE);
 		break;
 	case 1:
-		EMIT_SOUND_FILTERED(ENT(pev), CHAN_WEAPON, "weapons/pl_gun2.wav", RANDOM_FLOAT(0.6, 0.8), ATTN_NORM, 0, 100, FALSE);
+		UTIL_PlaySound(ENT(pev), CHAN_WEAPON, "weapons/pl_gun2.wav", RANDOM_FLOAT(0.6, 0.8), ATTN_NORM, 0, 100, FALSE);
 		break;
 	}
 
@@ -1008,7 +1008,7 @@ void CHAssassin :: Shoot ( void )
 	//TODO: different fire sounds? don't know if we ever want this.
 	switch(RANDOM_LONG(0,0)){
 	    case 0:
-	        EMIT_SOUND_FILTERED(ENT(pev), CHAN_WEAPON, "weapons/xbow_fire1.wav", RANDOM_FLOAT(0.78, 0.94), ATTN_NORM, 0, 100, FALSE);
+	        UTIL_PlaySound(ENT(pev), CHAN_WEAPON, "weapons/xbow_fire1.wav", RANDOM_FLOAT(0.78, 0.94), ATTN_NORM, 0, 100, FALSE);
 	    break;
 	}
 	Vector arrowVelocity;
@@ -1206,9 +1206,9 @@ void CHAssassin :: Precache()
 	//const char* what = CBaseMonster::pStandardAttackHitSounds[0];
 
 	//MODDD - has a melee attack + the usual sounds now.
-	//anything using "sizeof", a C call (maybe C++?) needs to have that thing defined or at least implemented in the same file.
-	//why? no clue. But we certainly aren't doing this by calling CBaseMonster's arrays directly at least.
-	//Just call a method from there to handle this instead. Never enough of those...
+	// anything using "sizeof", a C call (maybe C++?) needs to have that thing defined or at least implemented in the same file.
+	// why? no clue. But we certainly aren't doing this by calling CBaseMonster's arrays directly at least.
+	// Just call a method from there to handle this instead. Never enough of those...
 	//PRECACHE_SOUND_ARRAY(CBaseMonster::pStandardAttackMissSounds);
 	//PRECACHE_SOUND_ARRAY(CBaseMonster::pStandardAttackHitSounds);
 	precacheStandardMeleeAttackMissSounds();
@@ -1412,7 +1412,7 @@ void CHAssassin :: RunAI( void )
 		//VISIBLE, MAKE NOISE TO SIGNAL START OF LOWERING!
 		if (pev->renderamt == 255)
 		{
-			EMIT_SOUND_FILTERED (ENT(pev), CHAN_BODY, "debris/beamstart1.wav", 0.2, ATTN_NORM, 0, 100, TRUE );
+			UTIL_PlaySound(ENT(pev), CHAN_BODY, "debris/beamstart1.wav", 0.2, ATTN_NORM, 0, 100, TRUE );
 		}
 
 		pev->renderamt = max( pev->renderamt - 50, m_iTargetRanderamt );
@@ -1439,10 +1439,10 @@ void CHAssassin :: RunAI( void )
 			//        May as well take advantage of this.
 			switch( RANDOM_LONG( 0, 3 ) )
 			{
-			case 0:	EMIT_SOUND_FILTERED( ENT(pev), CHAN_BODY, "player/pl_step1.wav", 0.5, ATTN_NORM, FALSE);	break;
-			case 1:	EMIT_SOUND_FILTERED( ENT(pev), CHAN_BODY, "player/pl_step3.wav", 0.5, ATTN_NORM, FALSE);	break;
-			case 2:	EMIT_SOUND_FILTERED( ENT(pev), CHAN_BODY, "player/pl_step2.wav", 0.5, ATTN_NORM, FALSE);	break;
-			case 3:	EMIT_SOUND_FILTERED( ENT(pev), CHAN_BODY, "player/pl_step4.wav", 0.5, ATTN_NORM, FALSE);	break;
+			case 0:	UTIL_PlaySound( ENT(pev), CHAN_BODY, "player/pl_step1.wav", 0.5, ATTN_NORM, FALSE);	break;
+			case 1:	UTIL_PlaySound( ENT(pev), CHAN_BODY, "player/pl_step3.wav", 0.5, ATTN_NORM, FALSE);	break;
+			case 2:	UTIL_PlaySound( ENT(pev), CHAN_BODY, "player/pl_step2.wav", 0.5, ATTN_NORM, FALSE);	break;
+			case 3:	UTIL_PlaySound( ENT(pev), CHAN_BODY, "player/pl_step4.wav", 0.5, ATTN_NORM, FALSE);	break;
 			}
 		}
 	}
@@ -1652,7 +1652,7 @@ void CHAssassin :: RunTask ( Task_t *pTask )
 			reloadApplyTime = -1;
 			m_cAmmoLoaded = 1;  //loaded.
 			//notice: not using the sound sentence save. The player precaches this.
-			EMIT_SOUND_FILTERED(ENT(this->pev), CHAN_ITEM, "weapons/xbow_reload1.wav", RANDOM_FLOAT(0.85, 0.94), ATTN_NORM, 0, 93 + RANDOM_LONG(0,0xF), FALSE);
+			UTIL_PlaySound(ENT(this->pev), CHAN_ITEM, "weapons/xbow_reload1.wav", RANDOM_FLOAT(0.85, 0.94), ATTN_NORM, 0, 93 + RANDOM_LONG(0,0xF), FALSE);
 			//sound!!
 		}
 		//are we done?
@@ -2284,31 +2284,31 @@ void CHAssassin::HandleEventQueueEvent(int arg_eventID){
 	case 1:{
 		//right foot, walk
 		switch( RANDOM_LONG( 0, 1 ) ){
-		case 0:	EMIT_SOUND_FILTERED( ENT(pev), CHAN_BODY, "player/pl_step1.wav", 0.28, ATTN_NORM, 0, 100, FALSE);	break;
-		case 1:	EMIT_SOUND_FILTERED( ENT(pev), CHAN_BODY, "player/pl_step3.wav", 0.28, ATTN_NORM, 0, 100, FALSE);	break;
+		case 0:	UTIL_PlaySound( ENT(pev), CHAN_BODY, "player/pl_step1.wav", 0.28, ATTN_NORM, 0, 100, FALSE);	break;
+		case 1:	UTIL_PlaySound( ENT(pev), CHAN_BODY, "player/pl_step3.wav", 0.28, ATTN_NORM, 0, 100, FALSE);	break;
 		}
 	break;}
 	case 2:{
 		//left foot, walk
 		switch( RANDOM_LONG( 0, 1 ) )
 		{
-		case 0:	EMIT_SOUND_FILTERED( ENT(pev), CHAN_BODY, "player/pl_step2.wav", 0.28, ATTN_NORM, 0, 100, FALSE);	break;
-		case 1:	EMIT_SOUND_FILTERED( ENT(pev), CHAN_BODY, "player/pl_step4.wav", 0.28, ATTN_NORM, 0, 100, FALSE);	break;
+		case 0:	UTIL_PlaySound( ENT(pev), CHAN_BODY, "player/pl_step2.wav", 0.28, ATTN_NORM, 0, 100, FALSE);	break;
+		case 1:	UTIL_PlaySound( ENT(pev), CHAN_BODY, "player/pl_step4.wav", 0.28, ATTN_NORM, 0, 100, FALSE);	break;
 		}
 	break;}
 	case 3:{
 		//right foot, run
 		switch( RANDOM_LONG( 0, 1 ) ){
-		case 0:	EMIT_SOUND_FILTERED( ENT(pev), CHAN_BODY, "player/pl_step1.wav", 0.5, ATTN_NORM, 0, 100, FALSE);	break;
-		case 1:	EMIT_SOUND_FILTERED( ENT(pev), CHAN_BODY, "player/pl_step3.wav", 0.5, ATTN_NORM, 0, 100, FALSE);	break;
+		case 0:	UTIL_PlaySound( ENT(pev), CHAN_BODY, "player/pl_step1.wav", 0.5, ATTN_NORM, 0, 100, FALSE);	break;
+		case 1:	UTIL_PlaySound( ENT(pev), CHAN_BODY, "player/pl_step3.wav", 0.5, ATTN_NORM, 0, 100, FALSE);	break;
 		}
 	break;}
 	case 4:{
 		//left foot, run
 		switch( RANDOM_LONG( 0, 1 ) )
 		{
-		case 0:	EMIT_SOUND_FILTERED( ENT(pev), CHAN_BODY, "player/pl_step2.wav", 0.5, ATTN_NORM, 0, 100, FALSE);	break;
-		case 1:	EMIT_SOUND_FILTERED( ENT(pev), CHAN_BODY, "player/pl_step4.wav", 0.5, ATTN_NORM, 0, 100, FALSE);	break;
+		case 0:	UTIL_PlaySound( ENT(pev), CHAN_BODY, "player/pl_step2.wav", 0.5, ATTN_NORM, 0, 100, FALSE);	break;
+		case 1:	UTIL_PlaySound( ENT(pev), CHAN_BODY, "player/pl_step4.wav", 0.5, ATTN_NORM, 0, 100, FALSE);	break;
 		}
 	break;}
 
@@ -2329,7 +2329,7 @@ void CHAssassin::HandleEventQueueEvent(int arg_eventID){
 			pHurt->TakeDamage( pev, pev, gSkillData.hgruntDmgKick, DMG_CLUB );
 
 			//derp.
-			//EMIT_SOUND_FILTERED( ENT(pev), CHAN_WEAPON, "hgrunt/gr_pain3.wav", 1, ATTN_NORM );
+			//UTIL_PlaySound( ENT(pev), CHAN_WEAPON, "hgrunt/gr_pain3.wav", 1, ATTN_NORM );
 			playStandardMeleeAttackHitSound();
 		}else{
 			playStandardMeleeAttackMissSound();

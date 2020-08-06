@@ -843,7 +843,7 @@ void CAGrunt::setPoweredUpOn(CBaseMonster* argPoweredUpCauseEnt, float argHowLon
 	
 	if(m_fIsPoweredUp == FALSE){
 		//play the powerup sound?
-		EMIT_SOUND_FILTERED ( ENT(pev), CHAN_VOICE, "agrunt/ag_powerup.wav", 1.0, ATTN_NORM, 0, RANDOM_LONG(95, 105) );
+		UTIL_PlaySound( ENT(pev), CHAN_VOICE, "agrunt/ag_powerup.wav", 1.0, ATTN_NORM, 0, RANDOM_LONG(95, 105) );
 	}
 
 	m_fIsPoweredUp = TRUE;
@@ -1130,7 +1130,7 @@ void CAGrunt :: PrescheduleThink ( void )
 			m_iLastWord = num;
 
 			// play a new sound
-			EMIT_SOUND_FILTERED ( ENT(pev), CHAN_VOICE, pIdleSounds[ num ], 1.0, ATTN_NORM );
+			UTIL_PlaySound( ENT(pev), CHAN_VOICE, pIdleSounds[ num ], 1.0, ATTN_NORM );
 
 			// is this word our last?
 			if ( RANDOM_LONG( 1, 10 ) <= 1 )
@@ -1153,7 +1153,7 @@ void CAGrunt :: DeathSound ( void )
 {
 	StopTalking();
 
-	EMIT_SOUND_FILTERED ( ENT(pev), CHAN_VOICE, pDieSounds[RANDOM_LONG(0,ARRAYSIZE(pDieSounds)-1)], 1.0, ATTN_NORM );
+	UTIL_PlaySound( ENT(pev), CHAN_VOICE, pDieSounds[RANDOM_LONG(0,ARRAYSIZE(pDieSounds)-1)], 1.0, ATTN_NORM );
 }
 
 //=========================================================
@@ -1162,7 +1162,7 @@ void CAGrunt :: DeathSound ( void )
 void CAGrunt :: AlertSound ( void )
 {
 	StopTalking();
-	EMIT_SOUND_FILTERED ( ENT(pev), CHAN_VOICE, pAlertSounds[RANDOM_LONG(0,ARRAYSIZE(pAlertSounds)-1)], 1.0, ATTN_NORM );
+	UTIL_PlaySound( ENT(pev), CHAN_VOICE, pAlertSounds[RANDOM_LONG(0,ARRAYSIZE(pAlertSounds)-1)], 1.0, ATTN_NORM );
 }
 
 //=========================================================
@@ -1171,7 +1171,7 @@ void CAGrunt :: AlertSound ( void )
 void CAGrunt :: AttackSound ( void )
 {
 	StopTalking();
-	EMIT_SOUND_FILTERED ( ENT(pev), CHAN_VOICE, pAttackSounds[RANDOM_LONG(0,ARRAYSIZE(pAttackSounds)-1)], 1.0, ATTN_NORM );
+	UTIL_PlaySound( ENT(pev), CHAN_VOICE, pAttackSounds[RANDOM_LONG(0,ARRAYSIZE(pAttackSounds)-1)], 1.0, ATTN_NORM );
 }
 
 //=========================================================
@@ -1187,7 +1187,7 @@ void CAGrunt :: PainSound ( void )
 	m_flNextPainTime = gpGlobals->time + 0.6;
 
 	StopTalking();
-	EMIT_SOUND_FILTERED ( ENT(pev), CHAN_VOICE, pPainSounds[RANDOM_LONG(0,ARRAYSIZE(pPainSounds)-1)], 1.0, ATTN_NORM );
+	UTIL_PlaySound( ENT(pev), CHAN_VOICE, pPainSounds[RANDOM_LONG(0,ARRAYSIZE(pPainSounds)-1)], 1.0, ATTN_NORM );
 }
 
 //=========================================================
@@ -1314,9 +1314,9 @@ void CAGrunt :: HandleAnimEvent( MonsterEvent_t *pEvent )
 			
 			switch ( RANDOM_LONG ( 0 , 2 ) )
 			{
-				case 0:	EMIT_SOUND_FILTERED ( ENT(pev), CHAN_WEAPON, "agrunt/ag_fire1.wav", 1.0, ATTN_NORM, 0, 100 );	break;
-				case 1:	EMIT_SOUND_FILTERED ( ENT(pev), CHAN_WEAPON, "agrunt/ag_fire2.wav", 1.0, ATTN_NORM, 0, 100 );	break;
-				case 2:	EMIT_SOUND_FILTERED ( ENT(pev), CHAN_WEAPON, "agrunt/ag_fire3.wav", 1.0, ATTN_NORM, 0, 100 );	break;
+				case 0:	UTIL_PlaySound( ENT(pev), CHAN_WEAPON, "agrunt/ag_fire1.wav", 1.0, ATTN_NORM, 0, 100 );	break;
+				case 1:	UTIL_PlaySound( ENT(pev), CHAN_WEAPON, "agrunt/ag_fire2.wav", 1.0, ATTN_NORM, 0, 100 );	break;
+				case 2:	UTIL_PlaySound( ENT(pev), CHAN_WEAPON, "agrunt/ag_fire3.wav", 1.0, ATTN_NORM, 0, 100 );	break;
 			}
 
 			CBaseMonster *pHornetMonster = pHornet->MyMonsterPointer();
@@ -1329,21 +1329,21 @@ void CAGrunt :: HandleAnimEvent( MonsterEvent_t *pEvent )
 		break;
 
 	//MODDD NOTE - BEWARE. These aren't in the soundSentenceSave because the player already precaches them.
-	//             Just use EMIT_SOUND to avoid trying equivalent sentences that don't exist.
+	//MODDD - slightly lower pitches. was 70, now between 67 and 72.
 	case AGRUNT_AE_LEFT_FOOT:
 		switch (RANDOM_LONG(0,1))
 		{
 		// left foot
-		case 0:	EMIT_SOUND_DYN ( ENT(pev), CHAN_BODY, "player/pl_ladder2.wav", 1, ATTN_NORM, 0, 70 );	break;
-		case 1:	EMIT_SOUND_DYN ( ENT(pev), CHAN_BODY, "player/pl_ladder4.wav", 1, ATTN_NORM, 0, 70 );	break;
+		case 0:	UTIL_PlaySound( ENT(pev), CHAN_BODY, "player/pl_ladder2.wav", 1, ATTN_NORM, 0, RANDOM_LONG(67, 72), FALSE );	break;
+		case 1:	UTIL_PlaySound( ENT(pev), CHAN_BODY, "player/pl_ladder4.wav", 1, ATTN_NORM, 0, RANDOM_LONG(67, 72), FALSE );	break;
 		}
 		break;
 	case AGRUNT_AE_RIGHT_FOOT:
 		// right foot
 		switch (RANDOM_LONG(0,1))
 		{
-		case 0:	EMIT_SOUND_DYN ( ENT(pev), CHAN_BODY, "player/pl_ladder1.wav", 1, ATTN_NORM, 0, 70 );	break;
-		case 1:	EMIT_SOUND_DYN ( ENT(pev), CHAN_BODY, "player/pl_ladder3.wav", 1, ATTN_NORM, 0 ,70);	break;
+		case 0:	UTIL_PlaySound( ENT(pev), CHAN_BODY, "player/pl_ladder1.wav", 1, ATTN_NORM, 0, RANDOM_LONG(67, 72), FALSE );	break;
+		case 1:	UTIL_PlaySound( ENT(pev), CHAN_BODY, "player/pl_ladder3.wav", 1, ATTN_NORM, 0, RANDOM_LONG(67, 72), FALSE );	break;
 		}
 		break;
 
@@ -1365,7 +1365,7 @@ void CAGrunt :: HandleAnimEvent( MonsterEvent_t *pEvent )
 					}
 				}
 
-				EMIT_SOUND_FILTERED ( ENT(pev), CHAN_WEAPON, pAttackHitSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackHitSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
+				UTIL_PlaySound( ENT(pev), CHAN_WEAPON, pAttackHitSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackHitSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
 
 				//MODDD - blood call not needed!  The CheckTraceHullAttack call already does this.
 				//SpawnBlood(vecArmPos, pHurt->BloodColor(), 25);// a little surface blood.
@@ -1373,7 +1373,7 @@ void CAGrunt :: HandleAnimEvent( MonsterEvent_t *pEvent )
 			else
 			{
 				// Play a random attack miss sound
-				EMIT_SOUND_FILTERED ( ENT(pev), CHAN_WEAPON, pAttackMissSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackMissSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
+				UTIL_PlaySound( ENT(pev), CHAN_WEAPON, pAttackMissSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackMissSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
 			}
 		}
 		break;
@@ -1397,7 +1397,7 @@ void CAGrunt :: HandleAnimEvent( MonsterEvent_t *pEvent )
 					}
 				}
 
-				EMIT_SOUND_FILTERED ( ENT(pev), CHAN_WEAPON, pAttackHitSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackHitSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
+				UTIL_PlaySound( ENT(pev), CHAN_WEAPON, pAttackHitSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackHitSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
 
 				//MODDD - blood call not needed!  The CheckTraceHullAttack call already does this.
 				//SpawnBlood(vecArmPos, pHurt->BloodColor(), 25);// a little surface blood.
@@ -1405,7 +1405,7 @@ void CAGrunt :: HandleAnimEvent( MonsterEvent_t *pEvent )
 			else
 			{
 				// Play a random attack miss sound
-				EMIT_SOUND_FILTERED ( ENT(pev), CHAN_WEAPON, pAttackMissSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackMissSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
+				UTIL_PlaySound( ENT(pev), CHAN_WEAPON, pAttackMissSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackMissSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
 			}
 		}
 		break;
@@ -1475,28 +1475,17 @@ void CAGrunt :: Precache()
 
 	PRECACHE_MODEL("models/agrunt.mdl");
 
-	for ( i = 0; i < ARRAYSIZE( pAttackHitSounds ); i++ )
-		PRECACHE_SOUND((char *)pAttackHitSounds[i]);
 
-	for ( i = 0; i < ARRAYSIZE( pAttackMissSounds ); i++ )
-		PRECACHE_SOUND((char *)pAttackMissSounds[i]);
+	PRECACHE_SOUND_ARRAY(pAttackHitSounds)
+	PRECACHE_SOUND_ARRAY(pAttackMissSounds)
+	PRECACHE_SOUND_ARRAY(pIdleSounds)
+	PRECACHE_SOUND_ARRAY(pDieSounds)
+	PRECACHE_SOUND_ARRAY(pPainSounds)
+	PRECACHE_SOUND_ARRAY(pAttackSounds)
+	PRECACHE_SOUND_ARRAY(pAlertSounds)
 
-	for ( i = 0; i < ARRAYSIZE( pIdleSounds ); i++ )
-		PRECACHE_SOUND((char *)pIdleSounds[i]);
-
-	for ( i = 0; i < ARRAYSIZE( pDieSounds ); i++ )
-		PRECACHE_SOUND((char *)pDieSounds[i]);
-
-	for ( i = 0; i < ARRAYSIZE( pPainSounds ); i++ )
-		PRECACHE_SOUND((char *)pPainSounds[i]);
-
-	for ( i = 0; i < ARRAYSIZE( pAttackSounds ); i++ )
-		PRECACHE_SOUND((char *)pAttackSounds[i]);
-
-	for ( i = 0; i < ARRAYSIZE( pAlertSounds ); i++ )
-		PRECACHE_SOUND((char *)pAlertSounds[i]);
-
-	PRECACHE_SOUND( "hassault/hw_shoot1.wav" );
+	// what... why.
+	//PRECACHE_SOUND( "hassault/hw_shoot1.wav" );
 	PRECACHE_SOUND( "agrunt/ag_powerup.wav" );
 	
 	iAgruntMuzzleFlash = PRECACHE_MODEL( "sprites/muz4.spr" );

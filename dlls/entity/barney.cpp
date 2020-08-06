@@ -949,7 +949,7 @@ void CBarney :: BarneyFirePistol ( void )
 	}
 
 	// This is a glock-firing sound effect.  Don't throw in voice pitch.
-	EMIT_SOUND_FILTERED( ENT(pev), CHAN_WEAPON, "barney/ba_attack2.wav", 1, ATTN_NORM, 0, 100 + pitchShift );
+	UTIL_PlaySound( ENT(pev), CHAN_WEAPON, "barney/ba_attack2.wav", 1, ATTN_NORM, 0, 100 + pitchShift );
 
 	CSoundEnt::InsertSound ( bits_SOUND_COMBAT, pev->origin, 384, 0.3 );
 
@@ -986,7 +986,7 @@ void CBarney :: MonsterThink(void){
 		}
 
 		
-		EMIT_SOUND_FILTERED( ENT(pev), CHAN_WEAPON, "items/9mmclip1.wav", 1, ATTN_NORM, 0, 100, FALSE );
+		UTIL_PlaySound( ENT(pev), CHAN_WEAPON, "items/9mmclip1.wav", 1, ATTN_NORM, 0, 100, FALSE );
 		reloadSoundTime = -1;
 	}
 
@@ -1077,7 +1077,7 @@ void CBarney :: HandleAnimEvent( MonsterEvent_t *pEvent )
 	//MODDD - unfortunately, this never seems to get called.  Just use "SetActivity"s intervention of "ACT_RELOAD" to do this.
 	/*
 	case BARNEY_AE_RELOAD:
-		EMIT_SOUND_FILTERED( ENT(pev), CHAN_WEAPON, "hgrunt/gr_reload1.wav", 1, ATTN_NORM );
+		UTIL_PlaySound( ENT(pev), CHAN_WEAPON, "hgrunt/gr_reload1.wav", 1, ATTN_NORM );
 		m_cAmmoLoaded = 4;
 		ClearConditions(bits_COND_NO_AMMO_LOADED);
 
@@ -1327,9 +1327,9 @@ void CBarney :: PainSound ( BOOL bypassCooldown )
 
 	switch (RANDOM_LONG(0,2))
 	{
-	case 0: EMIT_SOUND_FILTERED( ENT(pev), CHAN_VOICE, "barney/ba_pain1.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
-	case 1: EMIT_SOUND_FILTERED( ENT(pev), CHAN_VOICE, "barney/ba_pain2.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
-	case 2: EMIT_SOUND_FILTERED( ENT(pev), CHAN_VOICE, "barney/ba_pain3.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
+	case 0: UTIL_PlaySound( ENT(pev), CHAN_VOICE, "barney/ba_pain1.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
+	case 1: UTIL_PlaySound( ENT(pev), CHAN_VOICE, "barney/ba_pain2.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
+	case 2: UTIL_PlaySound( ENT(pev), CHAN_VOICE, "barney/ba_pain3.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
 	}
 }
 
@@ -1342,9 +1342,9 @@ void CBarney :: DeathSound ( void )
 {
 	switch (RANDOM_LONG(0,2))
 	{
-	case 0: EMIT_SOUND_FILTERED( ENT(pev), CHAN_VOICE, "barney/ba_die1.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
-	case 1: EMIT_SOUND_FILTERED( ENT(pev), CHAN_VOICE, "barney/ba_die2.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
-	case 2: EMIT_SOUND_FILTERED( ENT(pev), CHAN_VOICE, "barney/ba_die3.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
+	case 0: UTIL_PlaySound( ENT(pev), CHAN_VOICE, "barney/ba_die1.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
+	case 1: UTIL_PlaySound( ENT(pev), CHAN_VOICE, "barney/ba_die2.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
+	case 2: UTIL_PlaySound( ENT(pev), CHAN_VOICE, "barney/ba_die3.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
 	}
 }
 

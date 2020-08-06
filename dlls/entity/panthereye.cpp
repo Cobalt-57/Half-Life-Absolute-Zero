@@ -29,12 +29,10 @@ EASY_CVAR_EXTERN(noFlinchOnHard)
 EASY_CVAR_EXTERN(panthereyeHasCloakingAbility)
 EASY_CVAR_EXTERN(panthereyeJumpDotTol)
 EASY_CVAR_EXTERN(panthereyePrintout)
-
 EASY_CVAR_EXTERN(animationFramerateMulti)
 EASY_CVAR_EXTERN(drawDebugPathfinding2)
-//EASY_CVAR_EXTERN(testVar)
 
-extern DLL_GLOBAL int	g_iSkillLevel;
+extern DLL_GLOBAL int g_iSkillLevel;
 
 #define newPathDelayDuration 0.5;
 
@@ -52,9 +50,7 @@ extern DLL_GLOBAL int	g_iSkillLevel;
 	#if EXTRA_NAMES == 2
 		LINK_ENTITY_TO_CLASS( panther, CPantherEye );
 	#endif
-	
 #endif
-
 
 
 
@@ -1047,14 +1043,14 @@ void CPantherEye :: PainSound( void )
 //	int pitch = 95 + RANDOM_LONG(0,9);
 
 //	if (RANDOM_LONG(0,5) < 2)
-//		EMIT_SOUND_FILTERED ( ENT(pev), CHAN_VOICE, pPainSounds[ RANDOM_LONG(0,ARRAYSIZE(pPainSounds)-1) ], 1.0, ATTN_NORM, 0, pitch );
+//		UTIL_PlaySound( ENT(pev), CHAN_VOICE, pPainSounds[ RANDOM_LONG(0,ARRAYSIZE(pPainSounds)-1) ], 1.0, ATTN_NORM, 0, pitch );
 }
 
 void CPantherEye :: AlertSound( void )
 {
 //	int pitch = 95 + RANDOM_LONG(0,9);
 
-//	EMIT_SOUND_FILTERED ( ENT(pev), CHAN_VOICE, pAlertSounds[ RANDOM_LONG(0,ARRAYSIZE(pAlertSounds)-1) ], 1.0, ATTN_NORM, 0, pitch );
+//	UTIL_PlaySound( ENT(pev), CHAN_VOICE, pAlertSounds[ RANDOM_LONG(0,ARRAYSIZE(pAlertSounds)-1) ], 1.0, ATTN_NORM, 0, pitch );
 }
 
 void CPantherEye :: IdleSound( void )
@@ -1062,13 +1058,13 @@ void CPantherEye :: IdleSound( void )
 	int pitch = 95 + RANDOM_LONG(0,9);
 
 	// Play a random idle sound
-	EMIT_SOUND_FILTERED ( ENT(pev), CHAN_VOICE, pIdleSounds[ RANDOM_LONG(0,ARRAYSIZE(pIdleSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
+	UTIL_PlaySound( ENT(pev), CHAN_VOICE, pIdleSounds[ RANDOM_LONG(0,ARRAYSIZE(pIdleSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
 }
 
 void CPantherEye :: AttackSound( void )
 {
 	// Play a random attack sound
-	EMIT_SOUND_FILTERED ( ENT(pev), CHAN_VOICE, pAttackSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
+	UTIL_PlaySound( ENT(pev), CHAN_VOICE, pAttackSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
 }
 
 
@@ -1097,7 +1093,7 @@ void CPantherEye::HandleEventQueueEvent(int arg_eventID){
 				
 				if(pHurt->isOrganic() || pHurt->IsWorldOrAffiliated() ){
 					// Play a random attack hit sound
-					EMIT_SOUND_FILTERED ( ENT(pev), CHAN_WEAPON, pAttackHitSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackHitSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
+					UTIL_PlaySound( ENT(pev), CHAN_WEAPON, pAttackHitSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackHitSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
 				}else{
 					
 					playMetallicHitSound(CHAN_WEAPON, 0.71f);
@@ -1105,7 +1101,7 @@ void CPantherEye::HandleEventQueueEvent(int arg_eventID){
 
 			}
 			else // Play a random attack miss sound
-				EMIT_SOUND_FILTERED ( ENT(pev), CHAN_WEAPON, pAttackMissSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackMissSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
+				UTIL_PlaySound( ENT(pev), CHAN_WEAPON, pAttackMissSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackMissSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
 
 			if (RANDOM_LONG(0,1))
 				AttackSound();
@@ -1235,7 +1231,7 @@ void CPantherEye::HandleEventQueueEvent(int arg_eventID){
 
 			int iSound = RANDOM_LONG(0,2);
 			if ( iSound != 0 )
-				EMIT_SOUND_FILTERED( edict(), CHAN_VOICE, pAttackSounds[iSound], 1, ATTN_IDLE, 0, 100 );
+				UTIL_PlaySound( edict(), CHAN_VOICE, pAttackSounds[iSound], 1, ATTN_IDLE, 0, 100 );
 
 			pev->velocity = vecJumpDir;
 
@@ -1278,7 +1274,7 @@ void CPantherEye :: HandleAnimEvent( MonsterEvent_t *pEvent )
 				if(pHurt->isOrganic() || pHurt->IsWorldOrAffiliated() ){
 					//yes, if organic or the map. Because we have no way of seeing what plane on the map was hit for a texture sound from that.
 
-					EMIT_SOUND_FILTERED ( ENT(pev), CHAN_WEAPON, pAttackHitSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackHitSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
+					UTIL_PlaySound( ENT(pev), CHAN_WEAPON, pAttackHitSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackHitSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
 				}else{
 
 
@@ -1320,7 +1316,7 @@ void CPantherEye :: HandleAnimEvent( MonsterEvent_t *pEvent )
 
 			}
 			else // Play a random attack miss sound
-				EMIT_SOUND_FILTERED ( ENT(pev), CHAN_WEAPON, pAttackMissSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackMissSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
+				UTIL_PlaySound( ENT(pev), CHAN_WEAPON, pAttackMissSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackMissSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
 
 			if (RANDOM_LONG(0,1))
 				AttackSound();
@@ -1420,31 +1416,16 @@ void CPantherEye :: Precache()
 	PRECACHE_MODEL("models/panthereye.mdl");
 
 	global_useSentenceSave = TRUE;
-	for ( i = 0; i < ARRAYSIZE( pAttackHitSounds ); i++ )
-		PRECACHE_SOUND((char *)pAttackHitSounds[i]);
-
-	for ( i = 0; i < ARRAYSIZE( pAttackMissSounds ); i++ )
-		PRECACHE_SOUND((char *)pAttackMissSounds[i]);
-
-	for ( i = 0; i < ARRAYSIZE( pAttackSounds ); i++ )
-		PRECACHE_SOUND((char *)pAttackSounds[i]);
-
-	for ( i = 0; i < ARRAYSIZE( pIdleSounds ); i++ )
-		PRECACHE_SOUND((char *)pIdleSounds[i]);
-
-	for ( i = 0; i < ARRAYSIZE( pAlertSounds ); i++ )
-		PRECACHE_SOUND((char *)pAlertSounds[i]);
-
-	for ( i = 0; i < ARRAYSIZE( pPainSounds ); i++ )
-		PRECACHE_SOUND((char *)pPainSounds[i]);
-
-	for ( i = 0; i < ARRAYSIZE( pLeapAttackHitSounds ); i++ )
-		PRECACHE_SOUND((char *)pLeapAttackHitSounds[i]);
-
-	for ( i = 0; i < ARRAYSIZE( pDeathSounds ); i++ )
-		PRECACHE_SOUND((char *)pDeathSounds[i]);
-
-
+	
+	PRECACHE_SOUND_ARRAY(pAttackHitSounds);
+	PRECACHE_SOUND_ARRAY(pAttackMissSounds);
+	PRECACHE_SOUND_ARRAY(pAttackSounds);
+	PRECACHE_SOUND_ARRAY(pIdleSounds);
+	PRECACHE_SOUND_ARRAY(pAlertSounds);
+	PRECACHE_SOUND_ARRAY(pPainSounds);
+	PRECACHE_SOUND_ARRAY(pLeapAttackHitSounds);
+	PRECACHE_SOUND_ARRAY(pDeathSounds);
+	
 	global_useSentenceSave = FALSE;
 }	
 
@@ -1459,7 +1440,7 @@ void CPantherEye :: DeathSound ( void )
 {
 	int pitch = randomValueInt(96, 102);
 
-	EMIT_SOUND_FILTERED( edict(), CHAN_VOICE, RANDOM_SOUND_ARRAY(pDeathSounds), 1, ATTN_IDLE, 0, pitch );
+	UTIL_PlaySound( edict(), CHAN_VOICE, RANDOM_SOUND_ARRAY(pDeathSounds), 1, ATTN_IDLE, 0, pitch );
 		
 }
 
@@ -1611,7 +1592,7 @@ void CPantherEye::LeapTouch ( CBaseEntity *pOther )
 	{
 		float damageMulti;
 		//generic attack sound?
-		EMIT_SOUND_FILTERED( edict(), CHAN_WEAPON, RANDOM_SOUND_ARRAY(pLeapAttackHitSounds), 1, ATTN_IDLE, 0, 100 );
+		UTIL_PlaySound( edict(), CHAN_WEAPON, RANDOM_SOUND_ARRAY(pLeapAttackHitSounds), 1, ATTN_IDLE, 0, 100 );
 		
 		//Increase damage beyond default?  Probably not.?
 		// let's let the damage depend on the velocity.  Full damage for over 600, goes down towards the minimum.

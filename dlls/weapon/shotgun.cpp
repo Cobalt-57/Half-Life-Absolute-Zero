@@ -196,7 +196,7 @@ BOOL CShotgun::Deploy( )
 #ifndef CLIENT_DLL
 	if(EASY_CVAR_GET(soundSentenceSave) == 1){
 		if(!globalflag_muteDeploySound){
-			EMIT_SOUND_FILTERED(ENT(m_pPlayer->pev), CHAN_WEAPON, "meme/i_got_a_shotgun.wav", 1, ATTN_NORM, 0, 100, TRUE);
+			UTIL_PlaySound(ENT(m_pPlayer->pev), CHAN_WEAPON, "meme/i_got_a_shotgun.wav", 1, ATTN_NORM, 0, 100, TRUE);
 		}
 	}
 #endif

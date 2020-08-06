@@ -1471,18 +1471,9 @@ Insert a new line like this, after the latest (5):
 ...Same as teleport (4), but this should stop the issue with monsters getting stuck in the "Scripted" state, which turns off AI most of the time.
 
 
-
-
-
-	//MODDD - soundsentencesave
-	EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "player/sprayer.wav", 1, ATTN_NORM, TRUE);
 	
-	
-Sentence or Pitch shift ignored. > 16 playing!
-Sentence or Pitch shift ignored. > 16 playing!
-Sentence or Pitch shift ignored. > 16 playing!
-Sentence or Pitch shift ignored. > 16 playing!
 NOTE: not wise to use soundsentencesave for things played rapidly like geiger sounds...  this gets spammed.
+    Sentence or Pitch shift ignored. > 16 playing!
 
 
 

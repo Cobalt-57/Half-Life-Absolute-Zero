@@ -186,9 +186,9 @@ void CHornetKingpin::SmartDieTouch(CBaseEntity* pOther )
 		if(pOther->pev->takedamage && !FClassnameIs(pOther->pev, "hornet_kingpin") ){
 			switch (RANDOM_LONG(0,2))
 			{// buzz when you plug someone
-				case 0:	EMIT_SOUND_FILTERED( ENT(pev), CHAN_VOICE, "hornet/ag_hornethit1.wav", 1, ATTN_NORM);	break;
-				case 1:	EMIT_SOUND_FILTERED( ENT(pev), CHAN_VOICE, "hornet/ag_hornethit2.wav", 1, ATTN_NORM);	break;
-				case 2:	EMIT_SOUND_FILTERED( ENT(pev), CHAN_VOICE, "hornet/ag_hornethit3.wav", 1, ATTN_NORM);	break;
+				case 0:	UTIL_PlaySound( ENT(pev), CHAN_VOICE, "hornet/ag_hornethit1.wav", 1, ATTN_NORM);	break;
+				case 1:	UTIL_PlaySound( ENT(pev), CHAN_VOICE, "hornet/ag_hornethit2.wav", 1, ATTN_NORM);	break;
+				case 2:	UTIL_PlaySound( ENT(pev), CHAN_VOICE, "hornet/ag_hornethit3.wav", 1, ATTN_NORM);	break;
 			}
 			
 			pOther->TakeDamage( pev, VARS( pev->owner ), pev->dmg, DMG_BULLET );

@@ -1551,9 +1551,11 @@ void CStukaBat :: Precache()
 	//CHANGENOTICE: also add to "precacheAll" in cbase.cpp.
 	PRECACHE_MODEL("models/stukabat.mdl");
 
-	global_useSentenceSave = TRUE;
+	iPoisonSprite = PRECACHE_MODEL( "sprites/poison.spr" );
 
-	
+
+
+	global_useSentenceSave = TRUE;
 	PRECACHE_SOUND_ARRAY( pAttackHitSounds );
 	PRECACHE_SOUND_ARRAY( pAttackMissSounds );
 	PRECACHE_SOUND_ARRAY( pAttackSounds );
@@ -1561,16 +1563,10 @@ void CStukaBat :: Precache()
 	PRECACHE_SOUND_ARRAY( pAlertSounds );
 	PRECACHE_SOUND_ARRAY( pPainSounds );
 	PRECACHE_SOUND_ARRAY( pDeathSounds );
-
-	
-	iPoisonSprite = PRECACHE_MODEL( "sprites/poison.spr" );
-
-
-
 	//add anything else the stukabat needs (if applicable), especially sounds to benefit from the sound-sentence-save fix.
-
+	
 	global_useSentenceSave = FALSE;
-
+	
 }
 
 
@@ -2867,15 +2863,15 @@ void CStukaBat :: RunTask ( Task_t *pTask )
 							m_hEnemy->pev->punchangle.x = 5;
 						}
 						// Play a random attack hit sound
-						EMIT_SOUND_FILTERED ( ENT(pev), CHAN_WEAPON, pAttackHitSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackHitSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5, 5 ) );
-						//EMIT_SOUND_FILTERED(ENT(pev), CHAN_WEAPON, "zombie/claw_strike3.wav", 1.0, 1.0, 0, 100, FALSE);
+						UTIL_PlaySound( ENT(pev), CHAN_WEAPON, pAttackHitSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackHitSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5, 5 ) );
+						//UTIL_PlaySound(ENT(pev), CHAN_WEAPON, "zombie/claw_strike3.wav", 1.0, 1.0, 0, 100, FALSE);
 						
 					}
 					else
 					{
 						// Play a random attack miss sound
-						EMIT_SOUND_FILTERED ( ENT(pev), CHAN_WEAPON, pAttackMissSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackMissSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5, 5) );
-						//EMIT_SOUND_FILTERED(ENT(pev), CHAN_WEAPON, "zombie/claw_miss1.wav", 1.0, 1.0, 0, 100, FALSE);
+						UTIL_PlaySound( ENT(pev), CHAN_WEAPON, pAttackMissSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackMissSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5, 5) );
+						//UTIL_PlaySound(ENT(pev), CHAN_WEAPON, "zombie/claw_miss1.wav", 1.0, 1.0, 0, 100, FALSE);
 					}
 				}//END OF if(attackEffectDelay...)
 

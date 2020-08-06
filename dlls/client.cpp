@@ -1732,40 +1732,40 @@ void ClientCommand( edict_t *pEntity )
 
 				switch(result){
 				case 0:  //ENT(pev)???
-					EMIT_SOUND_FILTERED(tempEd, CHAN_ITEM, "!playtestEnd", 1, ATTN_NORM, 0, 100, FALSE);
+					UTIL_PlaySound(tempEd, CHAN_ITEM, "!playtestEnd", 1, ATTN_NORM, 0, 100, FALSE);
 				break;
 				case 1:
-					EMIT_SOUND_FILTERED(tempEd, CHAN_ITEM, "weapons/reload2.wav", 1, ATTN_NORM, 0, 100, FALSE);
+					UTIL_PlaySound(tempEd, CHAN_ITEM, "weapons/reload2.wav", 1, ATTN_NORM, 0, 100, FALSE);
 				break;
 				case 2:
-					EMIT_SOUND_FILTERED(tempEd, CHAN_ITEM, "weapons/reload3.wav", 1, ATTN_NORM, 0, 100, FALSE);
+					UTIL_PlaySound(tempEd, CHAN_ITEM, "weapons/reload3.wav", 1, ATTN_NORM, 0, 100, FALSE);
 				break;
 				case 3:
-					EMIT_SOUND_FILTERED(tempEd, CHAN_ITEM, "weapons/357_reload1.wav", 1, ATTN_NORM, 0, 100, FALSE);
+					UTIL_PlaySound(tempEd, CHAN_ITEM, "weapons/357_reload1.wav", 1, ATTN_NORM, 0, 100, FALSE);
 				break;
 				case 4:
-					EMIT_SOUND_FILTERED(tempEd, CHAN_ITEM, "weapons/guncock1.wav", 1, ATTN_NORM, 0, 100, FALSE);
+					UTIL_PlaySound(tempEd, CHAN_ITEM, "weapons/guncock1.wav", 1, ATTN_NORM, 0, 100, FALSE);
 				break;
 				case 5:
-					EMIT_SOUND_FILTERED(tempEd, CHAN_ITEM, "items/gunpickup1.wav", 1, ATTN_NORM, 0, 100, FALSE);
+					UTIL_PlaySound(tempEd, CHAN_ITEM, "items/gunpickup1.wav", 1, ATTN_NORM, 0, 100, FALSE);
 				break;
 				case 6:
-					EMIT_SOUND_FILTERED(tempEd, CHAN_ITEM, "items/gunpickup2.wav", 1, ATTN_NORM, 0, 100, FALSE);
+					UTIL_PlaySound(tempEd, CHAN_ITEM, "items/gunpickup2.wav", 1, ATTN_NORM, 0, 100, FALSE);
 				break;
 				case 7:
-					EMIT_SOUND_FILTERED(tempEd, CHAN_ITEM, "items/gunpickup3.wav", 1, ATTN_NORM, 0, 100, FALSE);
+					UTIL_PlaySound(tempEd, CHAN_ITEM, "items/gunpickup3.wav", 1, ATTN_NORM, 0, 100, FALSE);
 				break;
 				case 8:
-					EMIT_SOUND_FILTERED(tempEd, CHAN_ITEM, "items/gunpickup4.wav", 1, ATTN_NORM, 0, 100, FALSE);
+					UTIL_PlaySound(tempEd, CHAN_ITEM, "items/gunpickup4.wav", 1, ATTN_NORM, 0, 100, FALSE);
 				break;
 				case 9:
-					EMIT_SOUND_FILTERED(tempEd, CHAN_ITEM, "vox/acknowledge.wav", 1, ATTN_NORM, 0, 100, FALSE);
+					UTIL_PlaySound(tempEd, CHAN_ITEM, "vox/acknowledge.wav", 1, ATTN_NORM, 0, 100, FALSE);
 				break;
 				case 10:
-					EMIT_SOUND_FILTERED(tempEd, CHAN_ITEM, "weapons/xbow_hitbod1.wav", 1, ATTN_NORM, 0, 100, FALSE);
+					UTIL_PlaySound(tempEd, CHAN_ITEM, "weapons/xbow_hitbod1.wav", 1, ATTN_NORM, 0, 100, FALSE);
 				break;
 				case 11:
-					EMIT_SOUND_FILTERED(tempEd, CHAN_ITEM, "weapons/xbow_hitbod2.wav", 1, ATTN_NORM, 0, 100, FALSE);
+					UTIL_PlaySound(tempEd, CHAN_ITEM, "weapons/xbow_hitbod2.wav", 1, ATTN_NORM, 0, 100, FALSE);
 				break;
 				default:
 					easyForcePrintLineClient(pEntity, "sound %d not found.", result);
@@ -1861,11 +1861,11 @@ void ClientCommand( edict_t *pEntity )
 			const char* pszName = STRING(iszItem);
 
 			if(pszName[0] == '\0'){
-				EMIT_SOUND_FILTERED( tempEd, CHAN_VOICE, "common/null.wav", 1.0, ATTN_IDLE, 0, 100, FALSE);
-				EMIT_SOUND_FILTERED( tempEd, CHAN_ITEM, "common/null.wav", 1.0, ATTN_IDLE, 0, 100, FALSE);
-				EMIT_SOUND_FILTERED( tempEd, CHAN_STREAM, "common/null.wav", 1.0, ATTN_IDLE, 0, 100, FALSE);
+				UTIL_PlaySound( tempEd, CHAN_VOICE, "common/null.wav", 1.0, ATTN_IDLE, 0, 100, FALSE);
+				UTIL_PlaySound( tempEd, CHAN_ITEM, "common/null.wav", 1.0, ATTN_IDLE, 0, 100, FALSE);
+				UTIL_PlaySound( tempEd, CHAN_STREAM, "common/null.wav", 1.0, ATTN_IDLE, 0, 100, FALSE);
 			}else{
-				//same as STOP_SOUND, maybe?
+				//same as UTIL_StopSound, maybe?
 				EMIT_SOUND_DYN(tempEd, CHAN_STREAM, pszName, 0, 0, SND_STOP, PITCH_NORM);
 			}
 
@@ -1881,9 +1881,9 @@ void ClientCommand( edict_t *pEntity )
 			const char* pszName = STRING(iszItem);
 
 			if(pszName[0] == '\0'){
-				EMIT_SOUND_FILTERED( tempEd, CHAN_VOICE, "common/null.wav", 1.0, ATTN_IDLE, 0, 100, FALSE);
-				EMIT_SOUND_FILTERED( tempEd, CHAN_ITEM, "common/null.wav", 1.0, ATTN_IDLE, 0, 100, FALSE);
-				EMIT_SOUND_FILTERED( tempEd, CHAN_STREAM, "common/null.wav", 1.0, ATTN_IDLE, 0, 100, FALSE);
+				UTIL_PlaySound( tempEd, CHAN_VOICE, "common/null.wav", 1.0, ATTN_IDLE, 0, 100, FALSE);
+				UTIL_PlaySound( tempEd, CHAN_ITEM, "common/null.wav", 1.0, ATTN_IDLE, 0, 100, FALSE);
+				UTIL_PlaySound( tempEd, CHAN_STREAM, "common/null.wav", 1.0, ATTN_IDLE, 0, 100, FALSE);
 			}else{
 				char tempsound[127];
 				if(pszName[0] != '!'){

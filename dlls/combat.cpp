@@ -746,7 +746,7 @@ GENERATE_GIBMONSTERSOUND_IMPLEMENTATION(CBaseMonster){
 		if(fGibbed){
 			//MODDD - use soundsentencesave, always available in sentence form.
 			//Also, german censorship will block this sound for humans regardless of robot models.
-			//EMIT_SOUND_FILTERED(ENT(pev), CHAN_WEAPON, "common/bodysplat.wav", 1, ATTN_NORM, TRUE);
+			//UTIL_PlaySound(ENT(pev), CHAN_WEAPON, "common/bodysplat.wav", 1, ATTN_NORM, TRUE);
 			UTIL_playOrganicGibSound(pev);
 		}
 	}else{
@@ -766,7 +766,7 @@ GENERATE_GIBMONSTEREND_IMPLEMENTATION(CBaseMonster){
 
 	if ( fGibbed ){
 		//MODDD - new. Stop the voice channel when deleted.
-		EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "common/null.wav", 1, ATTN_NORM, 0, 100, FALSE);
+		UTIL_PlaySound(ENT(pev), CHAN_VOICE, "common/null.wav", 1, ATTN_NORM, 0, 100, FALSE);
 
 		pev->effects = EF_NODRAW; // make the model invisible.
 		
@@ -1206,7 +1206,7 @@ GENERATE_KILLED_IMPLEMENTATION(CBaseMonster)
 	
 
 	// clear the deceased's sound channels.(may have been firing or reloading when killed)
-	EMIT_SOUND_FILTERED(ENT(pev), CHAN_WEAPON, "common/null.wav", 1, ATTN_NORM, 0, 100, FALSE);
+	UTIL_PlaySound(ENT(pev), CHAN_WEAPON, "common/null.wav", 1, ATTN_NORM, 0, 100, FALSE);
 
 	//MODDD - for voice maybe?  Unless that would stop death-cries or something.
 

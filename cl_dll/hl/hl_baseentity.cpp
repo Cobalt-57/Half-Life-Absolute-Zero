@@ -50,10 +50,6 @@ enginefuncs_t g_engfuncs;
 
 
 //MODDD - is that okay?  Just putting these new method-stubs here since the EMIT_SOUND_DYN was found here as-is.
-void EMIT_SOUND_FILTERED(edict_t *entity, int channel, const char *sample, float volume, float attenuation){}
-void EMIT_SOUND_FILTERED(edict_t *entity, int channel, const char *sample, float volume, float attenuation, BOOL useSoundSentenceSave){}
-void EMIT_SOUND_FILTERED(edict_t *entity, int channel, const char *sample, float volume, float attenuation, int flags, int pitch){}
-void EMIT_SOUND_FILTERED(edict_t *entity, int channel, const char *sample, float volume, float attenuation, int flags, int pitch, BOOL useSoundSentenceSave){}
 
 void UTIL_PlaySound(entvars_t* entity, int channel, const char *pszName, float volume, float attenuation ){}
 void UTIL_PlaySound(entvars_t* entity, int channel, const char *pszName, float volume, float attenuation, BOOL useSoundSentenceSave ){}
@@ -71,13 +67,13 @@ void EMIT_SOUND_DYN(edict_t *entity, int channel, const char *sample, float volu
 
 
 //MODDD - also here dummied just in case.
-void UTIL_EmitAmbientSound_Filtered( entvars_t *entity, const Vector &vecOrigin, const char *samp, float vol, float attenuation ){}
-void UTIL_EmitAmbientSound_Filtered( entvars_t *entity, const Vector &vecOrigin, const char *samp, float vol, float attenuation, BOOL useSoundSentenceSave ){}
-void UTIL_EmitAmbientSound_Filtered( entvars_t *entity, const Vector &vecOrigin, const char *samp, float vol, float attenuation, int fFlags, int pitch ){}
-void UTIL_EmitAmbientSound_Filtered( entvars_t *entity, const Vector &vecOrigin, const char *samp, float vol, float attenuation, int fFlags, int pitch, BOOL useSoundSentenceSave ){}
-void UTIL_EmitAmbientSound_Filtered( edict_t *entity, const Vector &vecOrigin, const char *samp, float vol, float attenuation, int fFlags, int pitch ){}
-void UTIL_EmitAmbientSound_Filtered( edict_t *entity, const Vector &vecOrigin, const char *samp, float vol, float attenuation, int fFlags, int pitch, BOOL useSoundSentenceSave ){}
+void UTIL_EmitAmbientSound( entvars_t *entity, const Vector &vecOrigin, const char *samp, float vol, float attenuation ){}
+void UTIL_EmitAmbientSound( entvars_t *entity, const Vector &vecOrigin, const char *samp, float vol, float attenuation, BOOL useSoundSentenceSave ){}
+void UTIL_EmitAmbientSound( entvars_t *entity, const Vector &vecOrigin, const char *samp, float vol, float attenuation, int fFlags, int pitch ){}
+void UTIL_EmitAmbientSound( entvars_t *entity, const Vector &vecOrigin, const char *samp, float vol, float attenuation, int fFlags, int pitch, BOOL useSoundSentenceSave ){}
 void UTIL_EmitAmbientSound( edict_t *entity, const Vector &vecOrigin, const char *samp, float vol, float attenuation, int fFlags, int pitch ){}
+void UTIL_EmitAmbientSound( edict_t *entity, const Vector &vecOrigin, const char *samp, float vol, float attenuation, int fFlags, int pitch, BOOL useSoundSentenceSave ){}
+void EMIT_AMBIENT_SOUND( edict_t *entity, const Vector &vecOrigin, const char *samp, float vol, float attenuation, int fFlags, int pitch ){}
 
 
 
@@ -932,6 +928,11 @@ const char *CBasePlayer::TeamID( void ) { return ""; }
 int CBasePlayer :: GiveAmmo( int iCount, char *szName, int iMax ) { return 0; }
 void CBasePlayer::AddPoints( int score, BOOL bAllowNegativeScore ) { } 
 void CBasePlayer::AddPointsToTeam( int score, BOOL bAllowNegativeScore ) { } 
+
+BOOL CBasePlayer::usesSoundSentenceSave(void) { return FALSE; }
+
+
+
 
 void ClearMultiDamage(void) { }
 void ApplyMultiDamage(entvars_t *pevInflictor, entvars_t *pevAttacker ) { }

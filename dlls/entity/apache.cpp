@@ -265,7 +265,7 @@ GENERATE_KILLED_IMPLEMENTATION(CApache)
 	pev->movetype = MOVETYPE_TOSS;
 	pev->gravity = 0.3;
 
-	STOP_SOUND_FILTERED( ENT(pev), CHAN_STATIC, "apache/ap_rotor2.wav" );
+	UTIL_StopSound( ENT(pev), CHAN_STATIC, "apache/ap_rotor2.wav" );
 
 	UTIL_SetSize( pev, Vector( -32, -32, -64), Vector( 32, 32, 0) );
 	SetThink( &CApache::DyingThink );
@@ -286,7 +286,7 @@ GENERATE_KILLED_IMPLEMENTATION(CApache)
 
 void CApache::onDelete(void){
 
-	STOP_SOUND_FILTERED( ENT(pev), CHAN_STATIC, "apache/ap_rotor2.wav" );
+	UTIL_StopSound(ENT(pev), CHAN_STATIC, "apache/ap_rotor2.wav" );
 
 }//END OF onDelete
 
@@ -404,7 +404,7 @@ void CApache :: DyingThink( void )
 			WRITE_BYTE( 0 );		// speed
 		MESSAGE_END();
 
-		EMIT_SOUND_FILTERED(ENT(pev), CHAN_STATIC, "weapons/mortarhit.wav", 1.0, 0.3, 0, 100, FALSE);
+		UTIL_PlaySound(ENT(pev), CHAN_STATIC, "weapons/mortarhit.wav", 1.0, 0.3, 0, 100, FALSE);
 
 		RadiusDamageAutoRadius( pev->origin, pev, pev, 300, CLASS_NONE, DMG_BLAST );
 
@@ -488,7 +488,7 @@ void CApache::CrashTouch( CBaseEntity *pOther )
 
 GENERATE_GIBMONSTER_IMPLEMENTATION(CApache)
 {
-	// EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "common/bodysplat.wav", 0.75, ATTN_NORM, 0, 200);		
+	// UTIL_PlaySound(ENT(pev), CHAN_VOICE, "common/bodysplat.wav", 0.75, ATTN_NORM, 0, 200);		
 }
 
 // ???
@@ -760,8 +760,8 @@ void CApache :: Flight( void )
 	// make rotor, engine sounds
 	if (m_iSoundState == 0)
 	{
-		EMIT_SOUND_FILTERED(ENT(pev), CHAN_STATIC, "apache/ap_rotor2.wav", 1.0, 0.3, 0, 110 );
-		// EMIT_SOUND_FILTERED(ENT(pev), CHAN_STATIC, "apache/ap_whine1.wav", 0.5, 0.2, 0, 110 );
+		UTIL_PlaySound(ENT(pev), CHAN_STATIC, "apache/ap_rotor2.wav", 1.0, 0.3, 0, 110 );
+		// UTIL_PlaySound(ENT(pev), CHAN_STATIC, "apache/ap_whine1.wav", 0.5, 0.2, 0, 110 );
 
 		m_iSoundState = SND_CHANGE_PITCH; // hack for going through level transitions
 	}
@@ -789,9 +789,9 @@ void CApache :: Flight( void )
 			if (flVol > 1.0) 
 				flVol = 1.0;
 
-			EMIT_SOUND_FILTERED(ENT(pev), CHAN_STATIC, "apache/ap_rotor2.wav", 1.0, 0.3, SND_CHANGE_PITCH | SND_CHANGE_VOL, pitch);
+			UTIL_PlaySound(ENT(pev), CHAN_STATIC, "apache/ap_rotor2.wav", 1.0, 0.3, SND_CHANGE_PITCH | SND_CHANGE_VOL, pitch);
 		}
-		// EMIT_SOUND_FILTERED(ENT(pev), CHAN_STATIC, "apache/ap_whine1.wav", flVol, 0.2, SND_CHANGE_PITCH | SND_CHANGE_VOL, pitch);
+		// UTIL_PlaySound(ENT(pev), CHAN_STATIC, "apache/ap_whine1.wav", flVol, 0.2, SND_CHANGE_PITCH | SND_CHANGE_VOL, pitch);
 	
 		// ALERT( at_console, "%.0f %.2f\n", pitch, flVol );
 	}
@@ -878,7 +878,7 @@ BOOL CApache :: FireGun( )
 	{
 #if 1
 		FireBullets( 1, posGun, vecGun, VECTOR_CONE_4DEGREES, 8192, BULLET_MONSTER_12MM, 1 );
-		EMIT_SOUND_FILTERED(ENT(pev), CHAN_WEAPON, "turret/tu_fire1.wav", 1, 0.3);
+		UTIL_PlaySound(ENT(pev), CHAN_WEAPON, "turret/tu_fire1.wav", 1, 0.3);
 #else
 		static float flNext;
 		TraceResult tr;
@@ -1076,7 +1076,7 @@ void CApacheHVR :: CustomHVRExplodeTouch ( CBaseEntity *pOther )
 	}
 	*/
 
-	STOP_SOUND( edict(), CHAN_VOICE, "weapons/rocket1.wav" );
+	UTIL_StopSound( edict(), CHAN_VOICE, "weapons/rocket1.wav" );
 	ExplodeTouch( pOther );
 }
 

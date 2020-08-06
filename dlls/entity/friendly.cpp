@@ -459,46 +459,47 @@ CFriendly::CFriendly(void){
 	
 void CFriendly::DeathSound( void ){
 	int pitch = 95 + RANDOM_LONG(0,9);
-	EMIT_SOUND_FILTERED( edict(), CHAN_VOICE, RANDOM_SOUND_ARRAY(pDeathSounds), 1.0, ATTN_IDLE, 0, pitch );
+	UTIL_PlaySound( edict(), CHAN_VOICE, RANDOM_SOUND_ARRAY(pDeathSounds), 1.0, ATTN_IDLE, 0, pitch );
 }
 void CFriendly::AlertSound( void ){
 	int pitch = 95 + RANDOM_LONG(0,9);
-	EMIT_SOUND_FILTERED( edict(), CHAN_VOICE, RANDOM_SOUND_ARRAY(pAlertSounds), 1.0, ATTN_NORM, 0, pitch );
+	UTIL_PlaySound( edict(), CHAN_VOICE, RANDOM_SOUND_ARRAY(pAlertSounds), 1.0, ATTN_NORM, 0, pitch );
 }
 void CFriendly::IdleSound( void ){
 	int pitch = 95 + RANDOM_LONG(0,9);
 	// Play a random idle sound
-	EMIT_SOUND_FILTERED( edict(), CHAN_VOICE, RANDOM_SOUND_ARRAY(pIdleSounds), 1.0, ATTN_NORM, 0, pitch );
+	UTIL_PlaySound( edict(), CHAN_VOICE, RANDOM_SOUND_ARRAY(pIdleSounds), 1.0, ATTN_NORM, 0, pitch );
 }
 void CFriendly::PainSound( void ){
 	int pitch = 95 + RANDOM_LONG(0,9);
 	if (RANDOM_LONG(0,5) < 2){
-		EMIT_SOUND_FILTERED( edict(), CHAN_VOICE, RANDOM_SOUND_ARRAY(pPainSounds), 1.0, ATTN_NORM, 0, pitch );
+		UTIL_PlaySound( edict(), CHAN_VOICE, RANDOM_SOUND_ARRAY(pPainSounds), 1.0, ATTN_NORM, 0, pitch );
 	}
 }
 void CFriendly::AttackSound( void ){
 	int pitch = 95 + RANDOM_LONG(0,9);
 	// Play a random attack sound
-	EMIT_SOUND_FILTERED( edict(), CHAN_VOICE, RANDOM_SOUND_ARRAY(pAttackSounds), 1.0, ATTN_NORM, 0, pitch );
+	UTIL_PlaySound( edict(), CHAN_VOICE, RANDOM_SOUND_ARRAY(pAttackSounds), 1.0, ATTN_NORM, 0, pitch );
 }
 
 void CFriendly::VomitSound(void){
 	int pitch = 88 + RANDOM_LONG(0,8);
-	EMIT_SOUND_FILTERED( ENT(pev), CHAN_WEAPON, RANDOM_SOUND_ARRAY(pVomitSounds), 1.0, ATTN_NORM, 0, pitch );
+	UTIL_PlaySound( ENT(pev), CHAN_WEAPON, RANDOM_SOUND_ARRAY(pVomitSounds), 1.0, ATTN_NORM, 0, pitch );
 }
 void CFriendly::VomitVoiceSound(void){
 	int pitch = 32 + RANDOM_LONG(0,14);
 	// Play a random attack sound
-	EMIT_SOUND_FILTERED( edict(), CHAN_VOICE, RANDOM_SOUND_ARRAY(pVomitVoiceSounds), 1.0, ATTN_NORM, 0, pitch );
+	UTIL_PlaySound( edict(), CHAN_VOICE, RANDOM_SOUND_ARRAY(pVomitVoiceSounds), 1.0, ATTN_NORM, 0, pitch );
 }
 void CFriendly::VomitHitSound(edict_t* pevToPlayAt){	
 	int pitch = 90 + RANDOM_LONG(-9, 3);
-	//EMIT_SOUND_FILTERED( edict(), CHAN_STATIC, RANDOM_SOUND_ARRAY(pVomitHitSounds), 1.0, ATTN_NORM, 0, pitch );
-	//UTIL_EmitAmbientSound( ENT( CBaseEntity::Instance(tr.pHit)->pev ), tr.vecEndPos, RANDOM_SOUND_ARRAY(pVomitHitSounds), 0.8, ATTN_NORM, 0, pitch );
+	//UTIL_PlaySound( edict(), CHAN_STATIC, RANDOM_SOUND_ARRAY(pVomitHitSounds), 1.0, ATTN_NORM, 0, pitch );
+	
 
 	const int randomSound = RANDOM_LONG(0, ARRAYSIZE(pVomitHitSounds)-1 );
 	
-	//no soundsentencesave.
+	// UTIL_EmitAmbientSound ?
+	// no soundsentencesave.  (Ambient supports sentences though)
 	EMIT_SOUND_DYN( pevToPlayAt, CHAN_STATIC, pVomitHitSounds[randomSound], 1.0, ATTN_NORM, 0, pitch );
 	
 }//END OF VomitHitSound
@@ -901,7 +902,7 @@ void CFriendly::StartTask( Task_t *pTask ){
 			}
 			
 			//play a bite sound?
-			EMIT_SOUND_FILTERED( ENT(pev), CHAN_WEAPON, "barnacle/bcl_bite3.wav", 1, ATTN_NORM, 0, 80 + RANDOM_LONG(2, 8) );	
+			UTIL_PlaySound( ENT(pev), CHAN_WEAPON, "barnacle/bcl_bite3.wav", 1, ATTN_NORM, 0, 80 + RANDOM_LONG(2, 8) );	
 
 			//headcrab size: 13824
 			//size of agrunt: about 348160. corpse is 3073280.00
@@ -1075,7 +1076,7 @@ void CFriendly::RunTask( Task_t *pTask ){
 
 			if(gpGlobals->time >= nextChewSound){
 				nextChewSound = gpGlobals->time + 1.0;
-				EMIT_SOUND_FILTERED( ENT(pev), CHAN_STATIC, RANDOM_SOUND_ARRAY(pChewSounds), 1.0, ATTN_NORM, 0, 90 + RANDOM_LONG(2, 8) );
+				UTIL_PlaySound( ENT(pev), CHAN_STATIC, RANDOM_SOUND_ARRAY(pChewSounds), 1.0, ATTN_NORM, 0, 90 + RANDOM_LONG(2, 8) );
 			}
 
 
@@ -1373,8 +1374,8 @@ void CFriendly::MonsterThink( void ){
 
 			easyForcePrintLine("WHERE ELSE SUCKAH %.2f", tempVol);
 
-			//EMIT_SOUND_FILTERED( edict(), CHAN_VOICE, "friendly/friendly_horror.wav", 1.0, 1.8, 0, 100 );
-			EMIT_SOUND_FILTERED( m_hEnemy->edict(), CHAN_STATIC, "friendly/friendly_horror.wav", tempVol, 1.8, 0, 100 );
+			//UTIL_PlaySound( edict(), CHAN_VOICE, "friendly/friendly_horror.wav", 1.0, 1.8, 0, 100 );
+			UTIL_PlaySound( m_hEnemy->edict(), CHAN_STATIC, "friendly/friendly_horror.wav", tempVol, 1.8, 0, 100 );
 		}
 	}
 	*/
@@ -1591,12 +1592,12 @@ void CFriendly::MonsterThink( void ){
 	}
 
 
-}//END OF MonsterThink(...)
+}//END OF MonsterThink
 
 
 void CFriendly::stopHorrorSound(void){
-	//STOP_SOUND_FILTERED( edict(), CHAN_VOICE, "friendly/friendly_horror.wav" );
-	if(m_hEnemy!=NULL && m_hEnemy->IsPlayer())STOP_SOUND_FILTERED( m_hEnemy->edict(), CHAN_STATIC, "friendly/friendly_horror.wav" );
+	//UTIL_StopSound( edict(), CHAN_VOICE, "friendly/friendly_horror.wav" );
+	if(m_hEnemy!=NULL && m_hEnemy->IsPlayer())UTIL_StopSound( m_hEnemy->edict(), CHAN_STATIC, "friendly/friendly_horror.wav" );
 }
 
 
@@ -1684,7 +1685,7 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CFriendly)
 				//horrorPlayTime = gpGlobals->time; //play now!.. not this way.
 				if(m_hEnemy != NULL){
 					if(EASY_CVAR_GET(friendlyPianoOtherVolume) > 0){
-						EMIT_SOUND_FILTERED( m_hEnemy->edict(), CHAN_STATIC, "friendly/friendly_horror_start.wav", EASY_CVAR_GET(friendlyPianoOtherVolume), 1.8, 0, 100 );
+						UTIL_PlaySound( m_hEnemy->edict(), CHAN_STATIC, "friendly/friendly_horror_start.wav", EASY_CVAR_GET(friendlyPianoOtherVolume), 1.8, 0, 100 );
 					}
 
 					CBaseEntity* entTest = CBaseEntity::Instance(m_hEnemy.Get() );
@@ -1740,7 +1741,7 @@ GENERATE_KILLED_IMPLEMENTATION(CFriendly){
 				//easyForcePrintLine("WELL?!! %d : %d", m_hEnemy!=NULL, (m_hEnemy!=NULL)?m_hEnemy->IsPlayer():-1 );
 				
 				if(EASY_CVAR_GET(friendlyPianoOtherVolume) > 0){
-					EMIT_SOUND_FILTERED( m_hEnemy->edict(), CHAN_STATIC, "friendly/friendly_horror_end.wav", EASY_CVAR_GET(friendlyPianoOtherVolume), 1.8, 0, 100 );
+					UTIL_PlaySound( m_hEnemy->edict(), CHAN_STATIC, "friendly/friendly_horror_end.wav", EASY_CVAR_GET(friendlyPianoOtherVolume), 1.8, 0, 100 );
 				}
 			}//END OF entTest (player) null check
 		}//END OF enemy and isPlayer check
@@ -1921,10 +1922,10 @@ void CFriendly::HandleEventQueueEvent(int arg_eventID){
 				pHurt->pev->velocity = pHurt->pev->velocity + gpGlobals->v_forward * 40 + gpGlobals->v_up * 23 - gpGlobals->v_right * 15;
 			}
 			// Play a random attack hit sound
-			EMIT_SOUND_FILTERED ( ENT(pev), CHAN_WEAPON, pAttackHitSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackHitSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
+			UTIL_PlaySound( ENT(pev), CHAN_WEAPON, pAttackHitSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackHitSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
 		}
 		else // Play a random attack miss sound
-			EMIT_SOUND_FILTERED ( ENT(pev), CHAN_WEAPON, pAttackMissSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackMissSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
+			UTIL_PlaySound( ENT(pev), CHAN_WEAPON, pAttackMissSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackMissSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
 
 		if (RANDOM_LONG(0,1))
 			AttackSound();
@@ -1945,10 +1946,10 @@ void CFriendly::HandleEventQueueEvent(int arg_eventID){
 				pHurt->pev->velocity = pHurt->pev->velocity - gpGlobals->v_forward * 480 + gpGlobals->v_up * 170 + gpGlobals->v_right * 46;
 			}
 			// Play a random attack hit sound
-			EMIT_SOUND_FILTERED ( ENT(pev), CHAN_WEAPON, pAttackHitSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackHitSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
+			UTIL_PlaySound( ENT(pev), CHAN_WEAPON, pAttackHitSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackHitSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
 		}
 		else // Play a random attack miss sound
-			EMIT_SOUND_FILTERED ( ENT(pev), CHAN_WEAPON, pAttackMissSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackMissSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
+			UTIL_PlaySound( ENT(pev), CHAN_WEAPON, pAttackMissSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackMissSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
 
 		if (RANDOM_LONG(0,1))
 			AttackSound();
@@ -1966,10 +1967,10 @@ void CFriendly::HandleEventQueueEvent(int arg_eventID){
 				pHurt->pev->velocity = pHurt->pev->velocity - gpGlobals->v_forward * 420 + gpGlobals->v_up * 120 - gpGlobals->v_right * 45;
 			}
 			// Play a random attack hit sound
-			EMIT_SOUND_FILTERED ( ENT(pev), CHAN_WEAPON, pAttackHitSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackHitSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
+			UTIL_PlaySound( ENT(pev), CHAN_WEAPON, pAttackHitSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackHitSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
 		}
 		else // Play a random attack miss sound
-			EMIT_SOUND_FILTERED ( ENT(pev), CHAN_WEAPON, pAttackMissSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackMissSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
+			UTIL_PlaySound( ENT(pev), CHAN_WEAPON, pAttackMissSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackMissSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
 
 		if (RANDOM_LONG(0,1))
 			AttackSound();

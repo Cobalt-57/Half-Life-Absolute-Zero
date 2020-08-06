@@ -1524,7 +1524,7 @@ cl_interp_entity(1) - BOOL. Whether server-sent entities are subject to interpol
 cl_interp_viewmodel (1) - BOOL.  When off, simulates lack of interpolation to add choppiness to viewmodels.  If off, simulates 0.08 second updates instead.
 They do not normally behave like server-side entities when interpolation is turned off, only freeze at the first frame, likely from not receiving the same updates other serverside entities receive in think logic.
 
-cl_interp_view_extra (1) - MODEVAR.  View camera smoothness for crouching to look more smooth.
+cl_interp_view_extra (2) - MODEVAR.  View camera smoothness for crouching to look more smooth.
 0: Nothing extra (retail), besides the smoothness for going down inclines/stairs.
 1: Only on uncrouching before finishing a full crouch (releasing CTRL too early), similar smoothness to uncrouching from a full crouch.
 2: In addition to #1, interp while crouching/uncrouching to any extent through the air.

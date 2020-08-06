@@ -273,10 +273,10 @@ void HealthModule::ChargeRestored(void)
 
 //Play a sound using my parent entity.
 void HealthModule::PlaySound(int channel, const char *sample, float volume, float attenuation){
-	EMIT_SOUND_FILTERED(ENT(parentEntity_entity->pev), channel, sample, volume, attenuation, TRUE );
+	UTIL_PlaySound(ENT(parentEntity_entity->pev), channel, sample, volume, attenuation, TRUE );
 }
 void HealthModule::StopSound(int channel, const char *sample){
-	STOP_SOUND_FILTERED(ENT(parentEntity_entity->pev), channel, sample, TRUE );
+	UTIL_StopSound(ENT(parentEntity_entity->pev), channel, sample, TRUE );
 }
 
 //Note that I may be called even if out of charge.

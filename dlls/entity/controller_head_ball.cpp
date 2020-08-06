@@ -133,7 +133,7 @@ void CControllerHeadBall :: HuntThink( void  )
 			MESSAGE_END();
 			
 
-			UTIL_EmitAmbientSound_Filtered( ENT(pev), tr.vecEndPos, "weapons/electro4.wav", 0.5, ATTN_NORM, 0, RANDOM_LONG( 140, 160 ), FALSE );
+			UTIL_EmitAmbientSound( ENT(pev), tr.vecEndPos, "weapons/electro4.wav", 0.5, ATTN_NORM, 0, RANDOM_LONG( 140, 160 ), FALSE );
 
 			m_flNextAttack = gpGlobals->time + 3.0;
 

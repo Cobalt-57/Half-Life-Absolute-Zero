@@ -204,30 +204,35 @@ EASY_CVAR_EXTERN(soundVolumeStuka)
 
 
 //NOTE: involve "global_soundAttenuationAll" instead of ATTN_NORM
-#define EMIT_SOUND_ARRAY_FILTERED( chan, array ) \
-	EMIT_SOUND_FILTERED ( ENT(pev), chan , array [ RANDOM_LONG(0,ARRAYSIZE( array )-1) ], EASY_CVAR_GET(soundVolumeAll), EASY_CVAR_GET(soundAttenuationAll), 0, RANDOM_LONG(95,105) ); 
+#define EMIT_SOUND_ARRAY_FILTERED( chan, arg_array ) \
+	UTIL_PlaySound( ENT(pev), chan , arg_array [ RANDOM_LONG(0,ARRAYSIZE( arg_array )-1) ], EASY_CVAR_GET(soundVolumeAll), EASY_CVAR_GET(soundAttenuationAll), 0, RANDOM_LONG(95,105) ); 
 
-#define EMIT_SOUND_ARRAY_STUKA_FILTERED( chan, array ) \
-	EMIT_SOUND_FILTERED ( ENT(pev), chan , array [ RANDOM_LONG(0,ARRAYSIZE( array )-1) ], EASY_CVAR_GET(soundVolumeStuka), EASY_CVAR_GET(soundAttenuationStuka), 0, RANDOM_LONG(m_voicePitch - 5,m_voicePitch + 5) ); 
+#define EMIT_SOUND_ARRAY_STUKA_FILTERED( chan, arg_array ) \
+	UTIL_PlaySound( ENT(pev), chan , arg_array [ RANDOM_LONG(0,ARRAYSIZE( arg_array )-1) ], EASY_CVAR_GET(soundVolumeStuka), EASY_CVAR_GET(soundAttenuationStuka), 0, RANDOM_LONG(m_voicePitch - 5,m_voicePitch + 5) ); 
 
 //OLD WAY:
-	//EMIT_SOUND_FILTERED ( ENT(pev), chan , array [ RANDOM_LONG(0,ARRAYSIZE( array )-1) ], 1.0, ATTN_NORM, 0, RANDOM_LONG(95,105) ); 
+	//UTIL_PlaySound( ENT(pev), chan , arg_array [ RANDOM_LONG(0,ARRAYSIZE( arg_array )-1) ], 1.0, ATTN_NORM, 0, RANDOM_LONG(95,105) ); 
 
-//#define RANDOM_SOUND_ARRAY( array ) (array) [ RANDOM_LONG(0,ARRAYSIZE( (array) )-1) ]
+//#define RANDOM_SOUND_ARRAY( arg_array ) (arg_array) [ RANDOM_LONG(0,ARRAYSIZE( (arg_array) )-1) ]
+
+
 
 #define PRECACHE_SOUND_ARRAY( a ) \
 	{ for (int i = 0; i < ARRAYSIZE( a ); i++ ) PRECACHE_SOUND((char *) a [i]); }
-//#define PRECACHE_SOUND_ARRAY UTIL_PRECACHESOUND_ARRAY
+#define PRECACHE_SOUND_ARRAY_SKIPSAVE( a ) \
+	{ for (int i = 0; i < ARRAYSIZE( a ); i++ ) PRECACHE_SOUND((char *) a [i], TRUE); }
 //#define PRECACHE_SOUND_ARRAY UTIL_PRECACHESOUND_ARRAY
 
-//No need to worry, this "method?" is almost completely unused.  Looks to be only used in xen.cpp.
-//It skips any soundSentenceSave checks, plays straight without the sentence system.
-#define EMIT_SOUND_ARRAY_DYN( chan, array ) \
-	EMIT_SOUND_DYN ( ENT(pev), chan , array [ RANDOM_LONG(0,ARRAYSIZE( array )-1) ], 1.0, ATTN_NORM, 0, RANDOM_LONG(95,105) ); 
 
-//This is used a lot more - much more flexible.
-//This doesn't play the sound, it just grabs one sound path string from the array. It's up to the caller to give it the usual volume, attenuation, flags, pitch.
-#define RANDOM_SOUND_ARRAY( array ) (array) [ RANDOM_LONG(0,ARRAYSIZE( (array) )-1) ]
+
+// No need to worry, this "method?" is almost completely unused.  Looks to be only used in xen.cpp.
+// It skips any soundSentenceSave checks.
+#define EMIT_SOUND_ARRAY_DYN( chan, arg_array ) \
+	EMIT_SOUND_DYN( ENT(pev), chan , arg_array [ RANDOM_LONG(0,ARRAYSIZE( arg_array )-1) ], 1.0, ATTN_NORM, 0, RANDOM_LONG(95,105) ); 
+
+// This is used a lot more - much more flexible.
+// This doesn't play the sound, it just grabs one sound path string from the array. It's up to the caller to give it the usual volume, attenuation, flags, pitch.
+#define RANDOM_SOUND_ARRAY( arg_array ) (arg_array) [ RANDOM_LONG(0,ARRAYSIZE( (arg_array) )-1) ]
 
 
 
@@ -627,12 +632,6 @@ extern BOOL UTIL_getExplosionsHaveSparks(void);
 // EMIT_SOUND_DYN with pitch != 100 should be used sparingly, as it's not quite as
 // fast as EMIT_SOUND (the pitchshift mixer is not native coded).
 
-//MODDD HEADERS: see all four.
-void EMIT_SOUND_FILTERED(edict_t* entity, int channel, const char* pszName, float volume, float attenuation);
-void EMIT_SOUND_FILTERED(edict_t* entity, int channel, const char* pszName, float volume, float attenuation, BOOL useSoundSentenceSave);
-void EMIT_SOUND_FILTERED(edict_t* entity, int channel, const char* pszName, float volume, float attenuation, int flags, int pitch);
-void EMIT_SOUND_FILTERED(edict_t* entity, int channel, const char* pszName, float volume, float attenuation, int flags, int pitch, BOOL useSoundSentenceSave);
-
 extern void UTIL_PlaySound(entvars_t* entity, int channel, const char* pszName, float volume, float attenuation );
 extern void UTIL_PlaySound(entvars_t* entity, int channel, const char* pszName, float volume, float attenuation, BOOL useSoundSentenceSave );
 extern void UTIL_PlaySound(edict_t* entity, int channel, const char* pszName, float volume, float attenuation );
@@ -642,46 +641,42 @@ extern void UTIL_PlaySound(entvars_t* entity, int channel, const char* pszName, 
 extern void UTIL_PlaySound(edict_t* entity, int channel, const char* pszName, float volume, float attenuation, int flags, int pitch );
 extern void UTIL_PlaySound(edict_t* entity, int channel, const char* pszName, float volume, float attenuation, int flags, int pitch, BOOL useSoundSentenceSave );
 
+extern void EMIT_SOUND_DYN(edict_t* entity, int channel, const char* pszName, float volume, float attenuation, int flags, int pitch);
 
-void EMIT_SOUND_DYN(edict_t* entity, int channel, const char* pszName, float volume, float attenuation, int flags, int pitch);
 
-
-//WARNING - bypasses soundsentencesave filter. Careful. EMIT_SOUND_FILTERED takes this just fine anyways now.
+//WARNING - bypasses soundsentencesave filter. Careful. UTIL_PlaySound can take the same params now anyway.
 inline void EMIT_SOUND(edict_t* entity, int channel, const char* pszName, float volume, float attenuation){
 	EMIT_SOUND_DYN(entity, channel, pszName, volume, attenuation, 0, PITCH_NORM);
-}
-inline void STOP_SOUND(edict_t* entity, int channel, const char* pszName){
-	EMIT_SOUND_DYN(entity, channel, pszName, 0, 0, SND_STOP, PITCH_NORM);
 }
 
 
 //MODDD - filtered version, so that "STOP" can apply to the sentence-trick too.
 //        And yes it works, it goes through _FILTERED like the rest of the soundsentencesave system.
 //        After all even a "STOP" is just an order through the exact same sound playing system.
-inline void STOP_SOUND_FILTERED(edict_t* entity, int channel, const char* pszName){
-	EMIT_SOUND_FILTERED(entity, channel, pszName, 0, 0, SND_STOP, PITCH_NORM);
+inline void UTIL_StopSound(edict_t* entity, int channel, const char* pszName){
+	UTIL_PlaySound(entity, channel, pszName, 0, 0, SND_STOP, PITCH_NORM);
 }
 //And me too for specifying whether to use the soundSentenceSave in the call instead of leaving it up to context (the setting on the entity)
-inline void STOP_SOUND_FILTERED(edict_t* entity, int channel, const char* pszName, BOOL useSoundSentenceSave){
-	EMIT_SOUND_FILTERED(entity, channel, pszName, 0, 0, SND_STOP, PITCH_NORM, useSoundSentenceSave);
+inline void UTIL_StopSound(edict_t* entity, int channel, const char* pszName, BOOL useSoundSentenceSave){
+	UTIL_PlaySound(entity, channel, pszName, 0, 0, SND_STOP, PITCH_NORM, useSoundSentenceSave);
 }
 
 
 
-void EMIT_SOUND_SUIT(edict_t* entity, const char* pszName);
-void STOP_SOUND_SUIT(edict_t* entity, const char* pszName);
-void EMIT_GROUPID_SUIT(edict_t* entity, int isentenceg);
-void EMIT_GROUPNAME_SUIT(edict_t* entity, const char* groupname);
+extern void EMIT_SOUND_SUIT(edict_t* entity, const char* pszName);
+extern void STOP_SOUND_SUIT(edict_t* entity, const char* pszName);
+extern void EMIT_GROUPID_SUIT(edict_t* entity, int isentenceg);
+extern void EMIT_GROUPNAME_SUIT(edict_t* entity, const char* groupname);
 
 
 //MODDD - several new versions added here too.
-extern void UTIL_EmitAmbientSound_Filtered( entvars_t *entity, const Vector &vecOrigin, const char *samp, float vol, float attenuation );
-extern void UTIL_EmitAmbientSound_Filtered( entvars_t *entity, const Vector &vecOrigin, const char *samp, float vol, float attenuation, BOOL useSoundSentenceSave );
-extern void UTIL_EmitAmbientSound_Filtered( entvars_t *entity, const Vector &vecOrigin, const char *samp, float vol, float attenuation, int fFlags, int pitch );
-extern void UTIL_EmitAmbientSound_Filtered( entvars_t *entity, const Vector &vecOrigin, const char *samp, float vol, float attenuation, int fFlags, int pitch, BOOL useSoundSentenceSave );
-extern void UTIL_EmitAmbientSound_Filtered( edict_t *entity, const Vector &vecOrigin, const char *samp, float vol, float attenuation, int fFlags, int pitch );
-extern void UTIL_EmitAmbientSound_Filtered( edict_t *entity, const Vector &vecOrigin, const char *samp, float vol, float attenuation, int fFlags, int pitch, BOOL useSoundSentenceSave );
+extern void UTIL_EmitAmbientSound( entvars_t *entity, const Vector &vecOrigin, const char *samp, float vol, float attenuation );
+extern void UTIL_EmitAmbientSound( entvars_t *entity, const Vector &vecOrigin, const char *samp, float vol, float attenuation, BOOL useSoundSentenceSave );
+extern void UTIL_EmitAmbientSound( entvars_t *entity, const Vector &vecOrigin, const char *samp, float vol, float attenuation, int fFlags, int pitch );
+extern void UTIL_EmitAmbientSound( entvars_t *entity, const Vector &vecOrigin, const char *samp, float vol, float attenuation, int fFlags, int pitch, BOOL useSoundSentenceSave );
 extern void UTIL_EmitAmbientSound( edict_t *entity, const Vector &vecOrigin, const char *samp, float vol, float attenuation, int fFlags, int pitch );
+extern void UTIL_EmitAmbientSound( edict_t *entity, const Vector &vecOrigin, const char *samp, float vol, float attenuation, int fFlags, int pitch, BOOL useSoundSentenceSave );
+extern void EMIT_AMBIENT_SOUND( edict_t *entity, const Vector &vecOrigin, const char *samp, float vol, float attenuation, int fFlags, int pitch );
 
 extern void UTIL_PRECACHESOUND(char* path);
 extern void UTIL_PRECACHESOUND(char* path, BOOL dontSkipSave);

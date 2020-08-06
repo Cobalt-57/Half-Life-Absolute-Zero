@@ -429,20 +429,15 @@ CBaseMonster::CBaseMonster(){
 	canRangedAttack1 = FALSE;
 	canRangedAttack2 = FALSE;
 
-
-	//no by default.
+	// no by default.
 	canDrawDebugSurface = FALSE;
-
-	//default.
+	// default.
 	m_flFramerateSuggestion = 1;
-
-	
 	fApplyTempVelocity = FALSE;
-	//velocityApplyTemp;
-
+	
 }
 
-//All monsters use this feature by default. Just not necessarily all entities.
+// All monsters use this feature by default. Just not necessarily all entities.
 BOOL CBaseMonster::usesSoundSentenceSave(void){
 	return TRUE;
 }
@@ -450,7 +445,7 @@ BOOL CBaseMonster::usesSoundSentenceSave(void){
 
 
 /*
-//done in cbase.h (CBaseEntity) instead.
+// done in cbase.h (CBaseEntity) instead.
 BOOL CBaseMonster::isBarnacleVictimException(){
 	//by default, no monster is an "exception" to what the relationship says (mostly non-aliens).
 	return FALSE;
@@ -6290,14 +6285,14 @@ void CBaseMonster :: HandleAnimEvent( MonsterEvent_t *pEvent )
 		// from sequences expected to be played in that monster while scripted anyway.
 		// Otherwise (not scripted), assume soundsentencesave can catch the sound
 		BOOL useSoundSentenceSave = (m_MonsterState != MONSTERSTATE_SCRIPT);
-		EMIT_SOUND_FILTERED(edict(), CHAN_BODY, pEvent->options, 1.0, ATTN_IDLE, 0, 100, useSoundSentenceSave);
+		UTIL_PlaySound(edict(), CHAN_BODY, pEvent->options, 1.0, ATTN_IDLE, 0, 100, useSoundSentenceSave);
 	}
 	break;
 
 	case SCRIPT_EVENT_SOUND_VOICE: {
 		//MODDD - you too
 		BOOL useSoundSentenceSave = (m_MonsterState != MONSTERSTATE_SCRIPT);
-		EMIT_SOUND_FILTERED(edict(), CHAN_VOICE, pEvent->options, 1.0, ATTN_IDLE, 0, 100, useSoundSentenceSave);
+		UTIL_PlaySound(edict(), CHAN_VOICE, pEvent->options, 1.0, ATTN_IDLE, 0, 100, useSoundSentenceSave);
 	}break;
 
 	case SCRIPT_EVENT_SENTENCE_RND1:		// Play a named sentence group 33% of the time
@@ -6333,11 +6328,11 @@ void CBaseMonster :: HandleAnimEvent( MonsterEvent_t *pEvent )
 		{
 			if ( RANDOM_LONG( 0, 1 ) == 0 )
 			{
-				EMIT_SOUND_FILTERED( ENT(pev), CHAN_BODY, "common/bodydrop3.wav", 1, ATTN_NORM, 0, 90, FALSE );
+				UTIL_PlaySound( ENT(pev), CHAN_BODY, "common/bodydrop3.wav", 1, ATTN_NORM, 0, 90, FALSE );
 			}
 			else
 			{
-				EMIT_SOUND_FILTERED( ENT(pev), CHAN_BODY, "common/bodydrop4.wav", 1, ATTN_NORM, 0, 90, FALSE );
+				UTIL_PlaySound( ENT(pev), CHAN_BODY, "common/bodydrop4.wav", 1, ATTN_NORM, 0, 90, FALSE );
 			}
 		}
 		break;
@@ -6347,18 +6342,18 @@ void CBaseMonster :: HandleAnimEvent( MonsterEvent_t *pEvent )
 		{
 			if ( RANDOM_LONG( 0, 1 ) == 0 )
 			{
-				EMIT_SOUND_FILTERED( ENT(pev), CHAN_BODY, "common/bodydrop3.wav", 1, ATTN_NORM, FALSE );
+				UTIL_PlaySound( ENT(pev), CHAN_BODY, "common/bodydrop3.wav", 1, ATTN_NORM, FALSE );
 			}
 			else
 			{
-				EMIT_SOUND_FILTERED( ENT(pev), CHAN_BODY, "common/bodydrop4.wav", 1, ATTN_NORM, FALSE );
+				UTIL_PlaySound( ENT(pev), CHAN_BODY, "common/bodydrop4.wav", 1, ATTN_NORM, FALSE );
 			}
 		}
 		break;
 	case MONSTER_EVENT_SWISHSOUND:
 		{
 			// NO MONSTER may use this anim event unless that monster's precache precaches this sound!!! this one uses the soundsentencesave.
-			EMIT_SOUND_FILTERED( ENT(pev), CHAN_BODY, "zombie/claw_miss2.wav", 1, ATTN_NORM, TRUE );
+			UTIL_PlaySound( ENT(pev), CHAN_BODY, "zombie/claw_miss2.wav", 1, ATTN_NORM, TRUE );
 			break;
 		}
 	default:
@@ -7221,7 +7216,7 @@ void CBaseMonster::PlayScriptedSentence( const char *pszSentence, float duration
 
 void CBaseMonster::SentenceStop( void )
 {
-	EMIT_SOUND_FILTERED( edict(), CHAN_VOICE, "common/null.wav", 1.0, ATTN_IDLE, 0, 100, FALSE );
+	UTIL_PlaySound( edict(), CHAN_VOICE, "common/null.wav", 1.0, ATTN_IDLE, 0, 100, FALSE );
 }
 
 
@@ -8307,10 +8302,10 @@ void CBaseMonster::precacheStandardMeleeAttackHitSounds(void){
 }
 
 void CBaseMonster::playStandardMeleeAttackMissSound(void){
-	EMIT_SOUND_FILTERED ( ENT(pev), CHAN_WEAPON, RANDOM_SOUND_ARRAY(pStandardAttackMissSounds), 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
+	UTIL_PlaySound( ENT(pev), CHAN_WEAPON, RANDOM_SOUND_ARRAY(pStandardAttackMissSounds), 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
 }
 void CBaseMonster::playStandardMeleeAttackHitSound(void){
-	EMIT_SOUND_FILTERED ( ENT(pev), CHAN_WEAPON, RANDOM_SOUND_ARRAY(pStandardAttackHitSounds), 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
+	UTIL_PlaySound( ENT(pev), CHAN_WEAPON, RANDOM_SOUND_ARRAY(pStandardAttackHitSounds), 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
 }
 
 BOOL CBaseMonster::traceResultObstructionValidForAttack(const TraceResult& arg_tr){

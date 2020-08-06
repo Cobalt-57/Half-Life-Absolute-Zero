@@ -2050,22 +2050,6 @@ void interpretSoundAsSentence(char* interpretationFINAL, const char* pszName){
 }
 
 
-//MODDDSOUNDSAVE - name edited. Used to be EMIT_SOUND and EMIT_SOUND_DYN directly, now has some filtering.
-// Yeah... should just replace all EMIT_SOUND_FILTERED calls with UTIL_PlaySound at some point, would
-// ease confusion. EMIT_SOUND_FILTERED adds nothing new here.
-void EMIT_SOUND_FILTERED(edict_t* entity, int channel, const char* pszName, float volume, float attenuation){
-	UTIL_PlaySound(entity, channel, pszName, volume, attenuation, 0, 100, ((CBaseEntity*)(CBaseEntity::Instance(entity)))->usesSoundSentenceSave());
-}
-void EMIT_SOUND_FILTERED(edict_t* entity, int channel, const char* pszName, float volume, float attenuation, BOOL useSoundSentenceSave){
-	UTIL_PlaySound(entity, channel, pszName, volume, attenuation, 0, 100, useSoundSentenceSave);
-}
-void EMIT_SOUND_FILTERED(edict_t* entity, int channel, const char* pszName, float volume, float attenuation, int flags, int pitch){
-	UTIL_PlaySound(entity, channel, pszName, volume, attenuation, flags, pitch, ((CBaseEntity*)(CBaseEntity::Instance(entity)))->usesSoundSentenceSave());
-}
-void EMIT_SOUND_FILTERED(edict_t* entity, int channel, const char* pszName, float volume, float attenuation, int flags, int pitch, BOOL useSoundSentenceSave){
-	UTIL_PlaySound(entity, channel, pszName, volume, attenuation, flags, pitch, useSoundSentenceSave);
-}
-
 void UTIL_PlaySound(entvars_t* entity, int channel, const char* pszName, float volume, float attenuation ){
 	UTIL_PlaySound(ENT(entity), channel, pszName, volume, attenuation, 0, 100, ((CBaseEntity*)(CBaseEntity::Instance(entity)))->usesSoundSentenceSave());
 }
@@ -2262,37 +2246,36 @@ void EMIT_GROUPNAME_SUIT(edict_t* entity, const char* groupname)
 
 
 //MODDD NOTE
-//Note that "EMIT_SOUND_FILTER" is a call in sound.cpp that entities/monsters call that ends up going over here to util.cpp to's UTIL_PlaySound, which
-//tells whether to do the sound-sentence-save effect (search for the sentence in sentences.txt instead of straight on the filesystem to save on precaches).
-//After that, EMIT_SOUND_DYN acts as a parser to tell whether what it has is a single-sentence call or not
-//(the engine then figures out whether it is a single sound file reference or a sentence-group reference... who came up with this?)
-//Then, EMIT_SOUDN_DYN2 is the direct call to the engine.
-//However, EMIT_AMBIENT_SOUND does no such parsing. It is a direct call to the engine. UTIL_EmitAmbientSound is the parser instead.
-//If it were consistent both UTIL's would be called by entity/monster script to handle whatever overhead and probably just handle parsing in the same method.
-//Let "EMIT_"'s be direct engine calls only.
-//To be clear, "UTIL_EmitAmbientSound_Filtered" does the exact same thing EMIT_SOUND_FILTER and UTIL_PlaySound (same method) do: use the soundSentenceSave system if possible.
-
+// UTIL_PlaySound tells whether to do the sound-sentence-save effect (use the equivalent sentence in sentences.txt
+// instead of playing normally to save on precaches).
+// After that, EMIT_SOUND_DYN acts as a parser to tell whether what it has is a single-sentence call or not
+// (the engine then figures out whether it is a single sound file reference or a sentence-group reference... who came up with this?)
+// Then, EMIT_SOUDN_DYN2 is the direct call to the engine.
+// The AmbientSound calls now work in the same way: Call UTIL_EmitAmbientSound to let whether to use the soundsentencesave
+// system be implied or forced yes/no, that calls EMIT_AMBIENT_SOUND which does a little more processing, then 
+// that calls EMIT_AMBIENT_SOUND2 (engine).
 
 //entvars_t??
-void UTIL_EmitAmbientSound_Filtered( entvars_t* entity, const Vector &vecOrigin, const char *samp, float vol, float attenuation ){
-	UTIL_EmitAmbientSound_Filtered(ENT(entity), vecOrigin, samp, vol, attenuation, 0, 100, ((CBaseEntity*)(CBaseEntity::Instance(entity)))->usesSoundSentenceSave());
+void UTIL_EmitAmbientSound( entvars_t* entity, const Vector &vecOrigin, const char *samp, float vol, float attenuation ){
+	UTIL_EmitAmbientSound(ENT(entity), vecOrigin, samp, vol, attenuation, 0, 100, ((CBaseEntity*)(CBaseEntity::Instance(entity)))->usesSoundSentenceSave());
 }
-void UTIL_EmitAmbientSound_Filtered( entvars_t* entity, const Vector &vecOrigin, const char *samp, float vol, float attenuation, BOOL useSoundSentenceSave ){
-	UTIL_EmitAmbientSound_Filtered(ENT(entity), vecOrigin, samp, vol, attenuation, 0, 100, useSoundSentenceSave);
+void UTIL_EmitAmbientSound( entvars_t* entity, const Vector &vecOrigin, const char *samp, float vol, float attenuation, BOOL useSoundSentenceSave ){
+	UTIL_EmitAmbientSound(ENT(entity), vecOrigin, samp, vol, attenuation, 0, 100, useSoundSentenceSave);
 }
-void UTIL_EmitAmbientSound_Filtered( entvars_t* entity, const Vector &vecOrigin, const char *samp, float vol, float attenuation, int fFlags, int pitch ){
-	UTIL_EmitAmbientSound_Filtered(ENT(entity), vecOrigin, samp, vol, attenuation, fFlags, pitch, ((CBaseEntity*)(CBaseEntity::Instance(entity)))->usesSoundSentenceSave());
+void UTIL_EmitAmbientSound( entvars_t* entity, const Vector &vecOrigin, const char *samp, float vol, float attenuation, int fFlags, int pitch ){
+	UTIL_EmitAmbientSound(ENT(entity), vecOrigin, samp, vol, attenuation, fFlags, pitch, ((CBaseEntity*)(CBaseEntity::Instance(entity)))->usesSoundSentenceSave());
 }
-void UTIL_EmitAmbientSound_Filtered( entvars_t* entity, const Vector &vecOrigin, const char *samp, float vol, float attenuation, int fFlags, int pitch, BOOL useSoundSentenceSave ){
-	UTIL_EmitAmbientSound_Filtered(ENT(entity), vecOrigin, samp, vol, attenuation, fFlags, pitch, useSoundSentenceSave);
+void UTIL_EmitAmbientSound( entvars_t* entity, const Vector &vecOrigin, const char *samp, float vol, float attenuation, int fFlags, int pitch, BOOL useSoundSentenceSave ){
+	UTIL_EmitAmbientSound(ENT(entity), vecOrigin, samp, vol, attenuation, fFlags, pitch, useSoundSentenceSave);
 }
-void UTIL_EmitAmbientSound_Filtered( edict_t* entity, const Vector &vecOrigin, const char *samp, float vol, float attenuation, int fFlags, int pitch ){
-	UTIL_EmitAmbientSound_Filtered(entity, vecOrigin, samp, vol, attenuation, fFlags, pitch, ((CBaseEntity*)(CBaseEntity::Instance(entity)))->usesSoundSentenceSave());
+void UTIL_EmitAmbientSound( edict_t* entity, const Vector &vecOrigin, const char *samp, float vol, float attenuation, int fFlags, int pitch ){
+	UTIL_EmitAmbientSound(entity, vecOrigin, samp, vol, attenuation, fFlags, pitch, ((CBaseEntity*)(CBaseEntity::Instance(entity)))->usesSoundSentenceSave());
 }
-void UTIL_EmitAmbientSound_Filtered( edict_t* entity, const Vector &vecOrigin, const char *samp, float vol, float attenuation, int fFlags, int pitch, BOOL useSoundSentenceSave )
+void UTIL_EmitAmbientSound( edict_t* entity, const Vector &vecOrigin, const char *samp, float vol, float attenuation, int fFlags, int pitch, BOOL useSoundSentenceSave )
 {
-	if ( !samp )
+	if (!samp) {
 		return;
+	}
 
 	//CBaseEntity* pEntity = (CBaseEntity*)(CBaseEntity::Instance(entity));
 
@@ -2308,27 +2291,31 @@ void UTIL_EmitAmbientSound_Filtered( edict_t* entity, const Vector &vecOrigin, c
 		}
 		//easyPrintLine("UTIL_EmitAmbientSound - used sentence: |||%s|||", interpretationFINAL);
 
-		UTIL_EmitAmbientSound( entity, vecOrigin, interpretationFINAL, vol, attenuation, fFlags, pitch);
+		EMIT_AMBIENT_SOUND( entity, vecOrigin, interpretationFINAL, vol, attenuation, fFlags, pitch);
 	}else{
-		UTIL_EmitAmbientSound( entity, vecOrigin, samp, vol, attenuation, fFlags, pitch);
+		EMIT_AMBIENT_SOUND( entity, vecOrigin, samp, vol, attenuation, fFlags, pitch);
 	}
 
-}//END OF UTIL_EmitAmbientSound_Filtered
+}//END OF UTIL_EmitAmbientSound
 
-void UTIL_EmitAmbientSound( edict_t *entity, const Vector &vecOrigin, const char *samp, float vol, float attenuation, int fFlags, int pitch){
+
+
+void EMIT_AMBIENT_SOUND( edict_t *entity, const Vector &vecOrigin, const char *samp, float vol, float attenuation, int fFlags, int pitch){
 	float rgfl[3];
 	vecOrigin.CopyToArray(rgfl);
 
 	if (samp && *samp == '!'){
 		char name[32];
 		if (SENTENCEG_Lookup(samp, name) >= 0) {
-			EMIT_AMBIENT_SOUND(entity, rgfl, name, vol, attenuation, fFlags, pitch);
+			EMIT_AMBIENT_SOUND2(entity, rgfl, name, vol, attenuation, fFlags, pitch);
 		}
 	}
 	else {
-		EMIT_AMBIENT_SOUND(entity, rgfl, samp, vol, attenuation, fFlags, pitch);
+		EMIT_AMBIENT_SOUND2(entity, rgfl, samp, vol, attenuation, fFlags, pitch);
 	}
 }//END OF UTIL_EmitAmbientSound
+
+
 
 
 void UTIL_PRECACHESOUND(char* path){
@@ -2359,14 +2346,14 @@ void UTIL_PRECACHESOUND(char* path, BOOL dontSkipSave){
 }
 
 
-void UTIL_PRECACHESOUND_ARRAY(const char** a, int aSize){
+void UTIL_PRECACHESOUND_ARRAY(const char* a[], int aSize){
 	if(!global_useSentenceSave){
 		UTIL_PRECACHESOUND_ARRAY(a, aSize, TRUE);
 	}else{
 		UTIL_PRECACHESOUND_ARRAY(a, aSize, FALSE);
 	}
 }
-void UTIL_PRECACHESOUND_ARRAY(const char** a, int aSize, BOOL dontSkipSave){
+void UTIL_PRECACHESOUND_ARRAY(const char* a[], int aSize, BOOL dontSkipSave){
 	for (int i = 0; i < aSize; i++ ) PRECACHE_SOUND( (char *) a[i], dontSkipSave); 
 }
 
@@ -5332,11 +5319,12 @@ void ClientPrecache( void ){
 	PRECACHE_SOUND("weapons/electro6.wav");
 
 
+	// NOTICE - being FALSE here actually means, these are part of the soundsentencesave system.  So
+	// these are exceptions that get sentences in sentences.txt anyway.
 	PRECACHE_SOUND("items/smallmedkit1.wav", FALSE);
 	PRECACHE_SOUND("items/medshot4.wav", FALSE);
 	PRECACHE_SOUND("items/medshotno1.wav", FALSE);
 	PRECACHE_SOUND("items/medcharge4.wav", FALSE);
-
 	PRECACHE_SOUND("items/suitcharge1.wav", FALSE);
 	PRECACHE_SOUND("items/suitchargeno1.wav", FALSE);
 	
@@ -5646,9 +5634,6 @@ void method_precacheAll(void){
 			PRECACHE_SOUND("garg/gar_die2.wav");
 
 
-
-
-
 			/*
 			gargantua ricochet sound. Unused, forget about this.
 			#if 0
@@ -5662,7 +5647,6 @@ void method_precacheAll(void){
 			PRECACHE_SOUND("debris/metal6.wav");
 			#endif
 			*/
-			
 			
 			//see debris/zap# 1 - 8 for some more sounds like weapons/electro#.
 
@@ -5776,12 +5760,12 @@ void method_precacheAll(void){
 			PRECACHE_SOUND("X/x_die1.wav");
 			PRECACHE_SOUND("debris/beamstart7.wav");
 
-			PRECACHE_SOUND("ambience/flies.wav");
-			PRECACHE_SOUND("ambience/squirm2.wav");
+			//PRECACHE_SOUND("ambience/flies.wav");
+			//PRECACHE_SOUND("ambience/squirm2.wav");
 			PRECACHE_SOUND("tentacle/te_alert1.wav");
 			PRECACHE_SOUND("tentacle/te_alert2.wav");
-			//PRECACHE_SOUND("tentacle/te_flies1.wav");    //completely unused.
-			//PRECACHE_SOUND("tentacle/te_squirm2.wav");
+			PRECACHE_SOUND("tentacle/te_flies1.wav");
+			PRECACHE_SOUND("tentacle/te_squirm2.wav");
 			PRECACHE_SOUND("tentacle/te_move1.wav");
 			PRECACHE_SOUND("tentacle/te_move2.wav");
 			PRECACHE_SOUND("tentacle/te_roar1.wav");
@@ -6673,13 +6657,13 @@ void UTIL_playOrganicGibSound(entvars_t* pevSoundSource){
 	// CHAN_BODY ???
 	switch(RANDOM_LONG(0, 2)){
 	case 0:
-		EMIT_SOUND_FILTERED(ENT(pevSoundSource), CHAN_STATIC, "common/bodysplat.wav", 1, ATTN_NORM - 0.12, FALSE);
+		UTIL_PlaySound(ENT(pevSoundSource), CHAN_STATIC, "common/bodysplat.wav", 1, ATTN_NORM - 0.12, FALSE);
 	break;
 	case 1:
-		EMIT_SOUND_FILTERED(ENT(pevSoundSource), CHAN_STATIC, "debris/bustflesh1.wav", 1, ATTN_NORM - 0.35, FALSE);
+		UTIL_PlaySound(ENT(pevSoundSource), CHAN_STATIC, "debris/bustflesh1.wav", 1, ATTN_NORM - 0.35, FALSE);
 	break;
 	case 2:
-		EMIT_SOUND_FILTERED(ENT(pevSoundSource), CHAN_STATIC, "debris/bustflesh2.wav", 1, ATTN_NORM - 0.35, FALSE);
+		UTIL_PlaySound(ENT(pevSoundSource), CHAN_STATIC, "debris/bustflesh2.wav", 1, ATTN_NORM - 0.35, FALSE);
 	break;
 	}//END OF switch
 }//END OF Util_playOrganicGibsound
@@ -6688,19 +6672,19 @@ void UTIL_playOrganicGibSound(entvars_t* pevSoundSource){
 void UTIL_playMetalGibSound(entvars_t* pevSoundSource){
 	switch(RANDOM_LONG(0, 4)){
 	case 0:
-		EMIT_SOUND_FILTERED(ENT(pevSoundSource), CHAN_STATIC, "debris/bustmetal1.wav", 1, ATTN_NORM - 0.12, FALSE);
+		UTIL_PlaySound(ENT(pevSoundSource), CHAN_STATIC, "debris/bustmetal1.wav", 1, ATTN_NORM - 0.12, FALSE);
 	break;
 	case 1:
-		EMIT_SOUND_FILTERED(ENT(pevSoundSource), CHAN_STATIC, "debris/bustmetal2.wav", 1, ATTN_NORM - 0.12, FALSE);
+		UTIL_PlaySound(ENT(pevSoundSource), CHAN_STATIC, "debris/bustmetal2.wav", 1, ATTN_NORM - 0.12, FALSE);
 	break;
 	case 2:
-		EMIT_SOUND_FILTERED(ENT(pevSoundSource), CHAN_STATIC, "debris/metal2.wav", 1, ATTN_NORM - 0.12, FALSE);
+		UTIL_PlaySound(ENT(pevSoundSource), CHAN_STATIC, "debris/metal2.wav", 1, ATTN_NORM - 0.12, FALSE);
 	break;
 	case 3:
-		EMIT_SOUND_FILTERED(ENT(pevSoundSource), CHAN_STATIC, "debris/metal4.wav", 1, ATTN_NORM - 0.12, FALSE);
+		UTIL_PlaySound(ENT(pevSoundSource), CHAN_STATIC, "debris/metal4.wav", 1, ATTN_NORM - 0.12, FALSE);
 	break;
 	case 4:
-		EMIT_SOUND_FILTERED(ENT(pevSoundSource), CHAN_STATIC, "debris/metal5.wav", 1, ATTN_NORM - 0.12, FALSE);
+		UTIL_PlaySound(ENT(pevSoundSource), CHAN_STATIC, "debris/metal5.wav", 1, ATTN_NORM - 0.12, FALSE);
 	break;
 	}//END OF switch
 }//END OF UTIL_playMetalGibSound

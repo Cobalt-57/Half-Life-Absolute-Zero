@@ -382,15 +382,15 @@ void CRpgRocket :: RocketTouch ( CBaseEntity *pOther )
 		easyForcePrintLine("CRpgRocket RED ALERT A: ROCKET LAUNCHER MISSING?! WHAT");
 	}
 
-	STOP_SOUND( edict(), CHAN_VOICE, "weapons/rocket1.wav" );
+	UTIL_StopSound( edict(), CHAN_VOICE, "weapons/rocket1.wav" );
 	ExplodeTouch( pOther );
 
 	
 	//making any noise? stop.
 	EMIT_SOUND( edict(), CHAN_VOICE, "common/null.wav", 1.0, ATTN_IDLE );
 	EMIT_SOUND( edict(), CHAN_WEAPON, "common/null.wav", 1.0, ATTN_IDLE );
-	//STOP_SOUND(edict(), CHAN_VOICE, "");
-	//STOP_SOUND(edict(), CHAN_WEAPON, "");
+	//UTIL_StopSound(edict(), CHAN_VOICE, "");
+	//UTIL_StopSound(edict(), CHAN_WEAPON, "");
 
 }
 
@@ -617,7 +617,7 @@ void CRpgRocket :: FollowThink( void  )
 				pev->effects = 0;
 			}
 			ignited = FALSE;
-			STOP_SOUND( ENT(pev), CHAN_VOICE, "weapons/rocket1.wav" );
+			UTIL_StopSound( ENT(pev), CHAN_VOICE, "weapons/rocket1.wav" );
 		}
 		pev->velocity = pev->velocity * 0.2 + vecMoveDirectionMemory * flSpeed * velocityPreserveMulti;
 		

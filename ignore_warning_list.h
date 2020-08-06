@@ -36,10 +36,14 @@
 
 
 
+//    nope, that's a good one.
+//    Warning	C4002	too many arguments for function - like macro invocation
+//#pragma warning(disable : 4002)
 
 // nope, that's a good one.
 //    not enough arguments for function-like macro invocation 'X'
 //#pragma warning(disable : 4003)
+
 
 //////////
 #pragma warning(disable : 4065)

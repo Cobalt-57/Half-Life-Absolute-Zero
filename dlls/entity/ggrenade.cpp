@@ -298,9 +298,9 @@ void StaticExplode(Vector rawExplodeOrigin, float rawDamage, float flRange, CBas
 		switch (randDebrisSound)
 		{
 			//NOTE: volume, the argument after the string-path, used to be 0.55.  Now 0.78.
-		case 0:	EMIT_SOUND_FILTERED(edictThingy, CHAN_VOICE, "weapons/debris1.wav", debrisVolumeChoice, ATTN_NORM, 0, 84, FALSE);	break;
-		case 1:	EMIT_SOUND_FILTERED(edictThingy, CHAN_VOICE, "weapons/debris2.wav", debrisVolumeChoice, ATTN_NORM, 0, 84, FALSE);	break;
-		case 2:	EMIT_SOUND_FILTERED(edictThingy, CHAN_VOICE, "weapons/debris3.wav", debrisVolumeChoice, ATTN_NORM, 0, 84, FALSE);	break;
+		case 0:	UTIL_PlaySound(edictThingy, CHAN_VOICE, "weapons/debris1.wav", debrisVolumeChoice, ATTN_NORM, 0, 84, FALSE);	break;
+		case 1:	UTIL_PlaySound(edictThingy, CHAN_VOICE, "weapons/debris2.wav", debrisVolumeChoice, ATTN_NORM, 0, 84, FALSE);	break;
+		case 2:	UTIL_PlaySound(edictThingy, CHAN_VOICE, "weapons/debris3.wav", debrisVolumeChoice, ATTN_NORM, 0, 84, FALSE);	break;
 		}
 	}
 
@@ -513,17 +513,17 @@ void CGrenade :: BounceSound( void )
 	if(EASY_CVAR_GET(handGrenadesUseOldBounceSound) != 1){
 		switch ( RANDOM_LONG( 0, 2 ) )
 		{
-		case 0:	EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "weapons/grenade_hit1.wav", 0.25, ATTN_NORM, 0, 100, FALSE);	break;
-		case 1:	EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "weapons/grenade_hit2.wav", 0.25, ATTN_NORM, 0, 100, FALSE);	break;
-		case 2:	EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "weapons/grenade_hit3.wav", 0.25, ATTN_NORM, 0, 100, FALSE);	break;
+		case 0:	UTIL_PlaySound(ENT(pev), CHAN_VOICE, "weapons/grenade_hit1.wav", 0.25, ATTN_NORM, 0, 100, FALSE);	break;
+		case 1:	UTIL_PlaySound(ENT(pev), CHAN_VOICE, "weapons/grenade_hit2.wav", 0.25, ATTN_NORM, 0, 100, FALSE);	break;
+		case 2:	UTIL_PlaySound(ENT(pev), CHAN_VOICE, "weapons/grenade_hit3.wav", 0.25, ATTN_NORM, 0, 100, FALSE);	break;
 		}
 	}else{
 		//Using the old sound if the CVar is 1.  copied from the sachel.
 		switch ( RANDOM_LONG( 0, 2 ) )
 		{
-		case 0:	EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "weapons/g_bounce1.wav", 1, ATTN_NORM, 0, 100, FALSE);	break;
-		case 1:	EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "weapons/g_bounce2.wav", 1, ATTN_NORM, 0, 100, FALSE);	break;
-		case 2:	EMIT_SOUND_FILTERED(ENT(pev), CHAN_VOICE, "weapons/g_bounce3.wav", 1, ATTN_NORM, 0, 100, FALSE);	break;
+		case 0:	UTIL_PlaySound(ENT(pev), CHAN_VOICE, "weapons/g_bounce1.wav", 1, ATTN_NORM, 0, 100, FALSE);	break;
+		case 1:	UTIL_PlaySound(ENT(pev), CHAN_VOICE, "weapons/g_bounce2.wav", 1, ATTN_NORM, 0, 100, FALSE);	break;
+		case 2:	UTIL_PlaySound(ENT(pev), CHAN_VOICE, "weapons/g_bounce3.wav", 1, ATTN_NORM, 0, 100, FALSE);	break;
 		}
 	}
 

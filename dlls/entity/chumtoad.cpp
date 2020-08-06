@@ -973,7 +973,7 @@ void CChumToad :: DeathSound( void )
 	int pitch = 90 + RANDOM_LONG(0,18);
 
 	//if (RANDOM_LONG(0,5) < 2)
-	EMIT_SOUND_FILTERED ( ENT(pev), CHAN_VOICE, pDeathSounds[ RANDOM_LONG(0,ARRAYSIZE(pDeathSounds)-1) ], 1.0, ATTN_NORM, 0, pitch );
+	UTIL_PlaySound( ENT(pev), CHAN_VOICE, pDeathSounds[ RANDOM_LONG(0,ARRAYSIZE(pDeathSounds)-1) ], 1.0, ATTN_NORM, 0, pitch );
 }
 
 
@@ -982,14 +982,14 @@ void CChumToad :: PainSound( void )
 	int pitch = 99 + RANDOM_LONG(0,5);
 
 	if (RANDOM_LONG(0,5) < 2)
-		EMIT_SOUND_FILTERED ( ENT(pev), CHAN_VOICE, pPainSounds[ RANDOM_LONG(0,ARRAYSIZE(pPainSounds)-1) ], 1.0, ATTN_NORM, 0, pitch );
+		UTIL_PlaySound( ENT(pev), CHAN_VOICE, pPainSounds[ RANDOM_LONG(0,ARRAYSIZE(pPainSounds)-1) ], 1.0, ATTN_NORM, 0, pitch );
 }
 
 void CChumToad :: AlertSound( void )
 {
 	int pitch = 97 + RANDOM_LONG(0,6);
 
-	EMIT_SOUND_FILTERED ( ENT(pev), CHAN_VOICE, pAlertSounds[ RANDOM_LONG(0,ARRAYSIZE(pAlertSounds)-1) ], 1.0, ATTN_NORM, 0, pitch );
+	UTIL_PlaySound( ENT(pev), CHAN_VOICE, pAlertSounds[ RANDOM_LONG(0,ARRAYSIZE(pAlertSounds)-1) ], 1.0, ATTN_NORM, 0, pitch );
 }
 
 
@@ -1021,7 +1021,7 @@ void CChumToad :: IdleSound( void )
 		int pitch = 93 + RANDOM_LONG(0,8);
 
 		// Play a random idle sound
-		EMIT_SOUND_FILTERED ( ENT(pev), CHAN_VOICE, pIdleSounds[ RANDOM_LONG(0,ARRAYSIZE(pIdleSounds)-1) ], 1.0, ATTN_NORM, 0, pitch );
+		UTIL_PlaySound( ENT(pev), CHAN_VOICE, pIdleSounds[ RANDOM_LONG(0,ARRAYSIZE(pIdleSounds)-1) ], 1.0, ATTN_NORM, 0, pitch );
 		
 
 		//This is the AI "sound" that sends a signal to attract (TODO?) monsters as intended.

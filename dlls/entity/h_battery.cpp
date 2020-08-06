@@ -40,8 +40,6 @@
 
 
 
-
-
 class CRecharge : public CBaseToggle
 {
 public:
@@ -60,6 +58,7 @@ public:
 	virtual int ObjectCaps( void ) { return (CBaseToggle :: ObjectCaps() | FCAP_CONTINUOUS_USE) & ~FCAP_ACROSS_TRANSITION; }
 	virtual int	Save( CSave &save );
 	virtual int	Restore( CRestore &restore );
+
 
 	static	TYPEDESCRIPTION m_SaveData[];
 
@@ -106,8 +105,9 @@ void CRecharge::KeyValue( KeyValueData *pkvd )
 		m_iReactivate = atoi(pkvd->szValue);
 		pkvd->fHandled = TRUE;
 	}
-	else
+	else{
 		CBaseToggle::KeyValue( pkvd );
+	}
 }
 
 BOOL CRecharge::IsWorldAffiliated(){
@@ -155,8 +155,9 @@ void CRecharge::Precache()
 void CRecharge::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
 { 
 	// if it's not a player, ignore
-	if (!FClassnameIs(pActivator->pev, "player"))
+	if (!FClassnameIs(pActivator->pev, "player")){
 		return;
+	}
 
 	// if there is no juice left, turn it off
 	if (m_iJuice <= 0)
@@ -186,7 +187,7 @@ void CRecharge::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE use
 		if (m_flSoundTime <= gpGlobals->time)
 		{
 			m_flSoundTime = gpGlobals->time + 0.62;
-			EMIT_SOUND_FILTERED(ENT(pev), CHAN_ITEM, "items/suitchargeno1.wav", 0.85, ATTN_NORM );
+			UTIL_PlaySound(ENT(pev), CHAN_ITEM, "items/suitchargeno1.wav", 0.85, ATTN_NORM );
 		}
 		return;
 	}
@@ -198,31 +199,34 @@ void CRecharge::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE use
 
 	// Time to recharge yet?
 
-	if (m_flNextCharge >= gpGlobals->time)
+	if (m_flNextCharge >= gpGlobals->time){
 		return;
+	}
 
 	// Make sure that we have a caller
-	if (!pActivator)
+	if (!pActivator){
 		return;
+	}
 
 	m_hActivator = pActivator;
 
 	//only recharge the player
 
-	if (!m_hActivator->IsPlayer() )
+	if (!m_hActivator->IsPlayer() ){
 		return;
+	}
 	
 	// Play the on sound or the looping charging sound
 	if (!m_iOn)
 	{
 		m_iOn++;
-		EMIT_SOUND(ENT(pev), CHAN_ITEM, "items/suitchargeok1.wav", 0.85, ATTN_NORM );
+		UTIL_PlaySound(ENT(pev), CHAN_ITEM, "items/suitchargeok1.wav", 0.85, ATTN_NORM, FALSE );
 		m_flSoundTime = 0.56 + gpGlobals->time;
 	}
 	if ((m_iOn == 1) && (m_flSoundTime <= gpGlobals->time))
 	{
 		m_iOn++;
-		EMIT_SOUND_FILTERED(ENT(pev), CHAN_STATIC, "items/suitcharge1.wav", 0.85, ATTN_NORM );
+		UTIL_PlaySound(ENT(pev), CHAN_STATIC, "items/suitcharge1.wav", 0.85, ATTN_NORM );
 	}
 
 
@@ -232,8 +236,9 @@ void CRecharge::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE use
 		m_iJuice--;
 		m_hActivator->pev->armorvalue += 1;
 
-		if (m_hActivator->pev->armorvalue > 100)
+		if (m_hActivator->pev->armorvalue > 100){
 			m_hActivator->pev->armorvalue = 100;
+		}
 	}
 
 	// govern the rate of charge
@@ -250,8 +255,9 @@ void CRecharge::Recharge(void)
 void CRecharge::Off(void)
 {
 	// Stop looping sound.
-	if (m_iOn > 1)
-		STOP_SOUND_FILTERED( ENT(pev), CHAN_STATIC, "items/suitcharge1.wav" );
+	if (m_iOn > 1){
+		UTIL_StopSound( ENT(pev), CHAN_STATIC, "items/suitcharge1.wav" );
+	}
 
 	m_iOn = 0;
 
@@ -275,6 +281,7 @@ void CRecharge::Off(void)
 			SetThink(&CRecharge::Recharge);
 		}
 	}
-	else
+	else{
 		SetThink( &CBaseEntity::SUB_DoNothing );
+	}
 }

@@ -877,34 +877,34 @@ IMPLEMENT_CUSTOM_SCHEDULES( CKingpin, CBaseMonster );
 //MODDD - sound calls dummied out until they really exist.
 void CKingpin::DeathSound( void ){
 	int pitch = m_voicePitch + RANDOM_LONG(0,4);
-	EMIT_SOUND_FILTERED( edict(), CHAN_VOICE, RANDOM_SOUND_ARRAY(pDeathSounds), 1.0, KINGPIN_VOICE_ATTENUATION, 0, pitch );
+	UTIL_PlaySound( edict(), CHAN_VOICE, RANDOM_SOUND_ARRAY(pDeathSounds), 1.0, KINGPIN_VOICE_ATTENUATION, 0, pitch );
 }
 void CKingpin::AlertSound( void ){
 	int pitch = m_voicePitch + RANDOM_LONG(0,4);
-	EMIT_SOUND_FILTERED( edict(), CHAN_VOICE, RANDOM_SOUND_ARRAY(pAlertSounds), 1.0, KINGPIN_VOICE_ATTENUATION, 0, pitch );
+	UTIL_PlaySound( edict(), CHAN_VOICE, RANDOM_SOUND_ARRAY(pAlertSounds), 1.0, KINGPIN_VOICE_ATTENUATION, 0, pitch );
 }
 void CKingpin::IdleSound( void ){
 	if(RANDOM_LONG(0, 2) <= 1){  //2/3
 		int pitch = m_voicePitch + RANDOM_LONG(0,4);
 
 		// Play a random idle sound
-		EMIT_SOUND_FILTERED( edict(), CHAN_VOICE, RANDOM_SOUND_ARRAY(pIdleSounds), 1.0, KINGPIN_VOICE_ATTENUATION, 0, pitch );
+		UTIL_PlaySound( edict(), CHAN_VOICE, RANDOM_SOUND_ARRAY(pIdleSounds), 1.0, KINGPIN_VOICE_ATTENUATION, 0, pitch );
 	}else{  //1/3
 		int pitch = 99 + RANDOM_LONG(0, 6);
 		//the special one?
-		EMIT_SOUND_FILTERED( edict(), CHAN_VOICE, "ambience/alien_chatter.wav", 0.73f, KINGPIN_VOICE_ATTENUATION, 0, pitch );
+		UTIL_PlaySound( edict(), CHAN_VOICE, "ambience/alien_chatter.wav", 0.73f, KINGPIN_VOICE_ATTENUATION, 0, pitch );
 	}
 }
 void CKingpin::PainSound( void ){
 	int pitch = m_voicePitch + RANDOM_LONG(0,4);
 	if (RANDOM_LONG(0,5) < 2){
-		EMIT_SOUND_FILTERED( edict(), CHAN_VOICE, RANDOM_SOUND_ARRAY(pPainSounds), 1.0, KINGPIN_VOICE_ATTENUATION, 0, pitch );
+		UTIL_PlaySound( edict(), CHAN_VOICE, RANDOM_SOUND_ARRAY(pPainSounds), 1.0, KINGPIN_VOICE_ATTENUATION, 0, pitch );
 	}
 }
 void CKingpin::AttackSound( void ){
 	int pitch = m_voicePitch + RANDOM_LONG(0,4);
 	// Play a random attack sound
-	EMIT_SOUND_FILTERED( edict(), CHAN_VOICE, RANDOM_SOUND_ARRAY(pAttackSounds), 1.0, KINGPIN_VOICE_ATTENUATION, 0, pitch );
+	UTIL_PlaySound( edict(), CHAN_VOICE, RANDOM_SOUND_ARRAY(pAttackSounds), 1.0, KINGPIN_VOICE_ATTENUATION, 0, pitch );
 }
 
 
@@ -2978,10 +2978,10 @@ void CKingpin::HandleEventQueueEvent(int arg_eventID){
 				//pHurt->pev->velocity = pHurt->pev->velocity + gpGlobals->v_forward * 40 + gpGlobals->v_up * 23 - gpGlobals->v_right * 15;
 			}
 			// Play a random attack hit sound
-			EMIT_SOUND_FILTERED ( ENT(pev), CHAN_WEAPON, pAttackHitSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackHitSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
+			UTIL_PlaySound( ENT(pev), CHAN_WEAPON, pAttackHitSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackHitSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
 		}
 		else // Play a random attack miss sound
-			EMIT_SOUND_FILTERED ( ENT(pev), CHAN_WEAPON, pAttackMissSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackMissSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
+			UTIL_PlaySound( ENT(pev), CHAN_WEAPON, pAttackMissSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackMissSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
 
 		if (RANDOM_LONG(0,1))
 			AttackSound();
@@ -3000,10 +3000,10 @@ void CKingpin::HandleEventQueueEvent(int arg_eventID){
 				//pHurt->pev->velocity = pHurt->pev->velocity + gpGlobals->v_forward * 40 + gpGlobals->v_up * 23 - gpGlobals->v_right * 15;
 			}
 			// Play a random attack hit sound
-			EMIT_SOUND_FILTERED ( ENT(pev), CHAN_WEAPON, pAttackHitSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackHitSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
+			UTIL_PlaySound( ENT(pev), CHAN_WEAPON, pAttackHitSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackHitSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
 		}
 		else // Play a random attack miss sound
-			EMIT_SOUND_FILTERED ( ENT(pev), CHAN_WEAPON, pAttackMissSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackMissSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
+			UTIL_PlaySound( ENT(pev), CHAN_WEAPON, pAttackMissSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackMissSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
 
 		if (RANDOM_LONG(0,1))
 			AttackSound();
@@ -3022,10 +3022,10 @@ void CKingpin::HandleEventQueueEvent(int arg_eventID){
 				//pHurt->pev->velocity = pHurt->pev->velocity + gpGlobals->v_forward * 40 + gpGlobals->v_up * 23 - gpGlobals->v_right * 15;
 			}
 			// Play a random attack hit sound
-			EMIT_SOUND_FILTERED ( ENT(pev), CHAN_WEAPON, pAttackHitSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackHitSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
+			UTIL_PlaySound( ENT(pev), CHAN_WEAPON, pAttackHitSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackHitSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
 		}
 		else // Play a random attack miss sound
-			EMIT_SOUND_FILTERED ( ENT(pev), CHAN_WEAPON, pAttackMissSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackMissSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
+			UTIL_PlaySound( ENT(pev), CHAN_WEAPON, pAttackMissSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackMissSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
 
 		if (RANDOM_LONG(0,1))
 			AttackSound();
@@ -3275,13 +3275,13 @@ void CKingpin::forceEnemyOnPoweredUpMonsters(CBaseEntity* monsterToForce, BOOL a
 void CKingpin::playPsionicLaunchSound(){
 	switch(RANDOM_LONG(0, 2)){
 	case 0:
-		EMIT_SOUND_FILTERED(ENT(pev), CHAN_WEAPON, "houndeye/he_blast1.wav", EASY_CVAR_GET(soundVolumeAll), EASY_CVAR_GET(soundAttenuationAll)*0.5, 0, 80 + RANDOM_LONG(0, 5));
+		UTIL_PlaySound(ENT(pev), CHAN_WEAPON, "houndeye/he_blast1.wav", EASY_CVAR_GET(soundVolumeAll), EASY_CVAR_GET(soundAttenuationAll)*0.5, 0, 80 + RANDOM_LONG(0, 5));
 	break;
 	case 1:
-		EMIT_SOUND_FILTERED(ENT(pev), CHAN_WEAPON, "houndeye/he_blast2.wav", EASY_CVAR_GET(soundVolumeAll), EASY_CVAR_GET(soundAttenuationAll)*0.5, 0, 80 + RANDOM_LONG(0, 5));
+		UTIL_PlaySound(ENT(pev), CHAN_WEAPON, "houndeye/he_blast2.wav", EASY_CVAR_GET(soundVolumeAll), EASY_CVAR_GET(soundAttenuationAll)*0.5, 0, 80 + RANDOM_LONG(0, 5));
 	break;
 	case 2:
-		EMIT_SOUND_FILTERED(ENT(pev), CHAN_WEAPON, "houndeye/he_blast3.wav", EASY_CVAR_GET(soundVolumeAll), EASY_CVAR_GET(soundAttenuationAll)*0.5, 0, 80 + RANDOM_LONG(0, 5));
+		UTIL_PlaySound(ENT(pev), CHAN_WEAPON, "houndeye/he_blast3.wav", EASY_CVAR_GET(soundVolumeAll), EASY_CVAR_GET(soundAttenuationAll)*0.5, 0, 80 + RANDOM_LONG(0, 5));
 	break;
 	}
 }//END OF playPsionicLaunchSound()
@@ -3315,7 +3315,7 @@ void CKingpin::ScheduleChange(void){
 void CKingpin::playSuperBallStartSound(void){
 	int pitch = 100;
 	
-	EMIT_SOUND_FILTERED( edict(), CHAN_VOICE, "ambience/alien_hollow.wav", 1.0, ATTN_NORM, 0, pitch );
+	UTIL_PlaySound( edict(), CHAN_VOICE, "ambience/alien_hollow.wav", 1.0, ATTN_NORM, 0, pitch );
 }
 
 */
@@ -3327,7 +3327,7 @@ void CKingpin::playSuperBallStartSound(void){
 void CKingpin::playForceFieldReflectSound(void){
 	int pitch = 150 + RANDOM_LONG(-5, 5);
 	
-	EMIT_SOUND_FILTERED( edict(), CHAN_VOICE, "debris/beamstart4.wav", 1.0, ATTN_NORM - 0.3f, 0, pitch );
+	UTIL_PlaySound( edict(), CHAN_VOICE, "debris/beamstart4.wav", 1.0, ATTN_NORM - 0.3f, 0, pitch );
 }
 
 
@@ -3335,13 +3335,13 @@ void CKingpin::playForceFieldReflectSound(void){
 void CKingpin::playSuperBallFireSound(void){
 	int pitch = 100 + RANDOM_LONG(-5, 5);
 	
-	EMIT_SOUND_FILTERED( edict(), CHAN_VOICE, "x/x_shoot1.wav", 1.0, ATTN_NORM - 0.6f, 0, pitch );
+	UTIL_PlaySound( edict(), CHAN_VOICE, "x/x_shoot1.wav", 1.0, ATTN_NORM - 0.6f, 0, pitch );
 }
 
 
 void CKingpin::playElectricBarrageStartSound(void){
 	int pitch = 112;
-	EMIT_SOUND_FILTERED( edict(), CHAN_VOICE, "ambience/particle_suck1.wav", 1.0, ATTN_NORM - 0.6f, 0, pitch );
+	UTIL_PlaySound( edict(), CHAN_VOICE, "ambience/particle_suck1.wav", 1.0, ATTN_NORM - 0.6f, 0, pitch );
 }//END OF playElectricBarrageStartSound
 
 
@@ -3350,18 +3350,18 @@ void CKingpin::playElectricBarrageLoopSound(void){
 	
 	//x/x_teleattack1.wav  ???  pitch lower or higher maybe?
 	
-	EMIT_SOUND_FILTERED( edict(), CHAN_STATIC, "ambience/zapmachine.wav", 1.0, ATTN_NORM - 0.24f, 0, pitch );
+	UTIL_PlaySound( edict(), CHAN_STATIC, "ambience/zapmachine.wav", 1.0, ATTN_NORM - 0.24f, 0, pitch );
 }//END OF playElectricBarrageStartSound
 
 void CKingpin::stopElectricBarrageLoopSound(void){
-	STOP_SOUND_FILTERED( edict(), CHAN_STATIC, "ambience/zapmachine.wav");
+	UTIL_StopSound( edict(), CHAN_STATIC, "ambience/zapmachine.wav");
 }
 
 
 
 void CKingpin::playElectricBarrageEndSound(void){
 	int pitch = 90 + RANDOM_LONG(0,4);
-	EMIT_SOUND_FILTERED( edict(), CHAN_STATIC, RANDOM_SOUND_ARRAY(pElectricBarrageEndSounds), 1.0, ATTN_NORM - 0.5f, 0, pitch );
+	UTIL_PlaySound( edict(), CHAN_STATIC, RANDOM_SOUND_ARRAY(pElectricBarrageEndSounds), 1.0, ATTN_NORM - 0.5f, 0, pitch );
 	
 }//END OF playElectricBarrageEndSound
 
@@ -3371,7 +3371,7 @@ void CKingpin::playElectricBarrageFireSound(void){
 	//maybe don't play a sound for this, it's spammy enough as it is.
 
 	//int pitch = 180;
-	//EMIT_SOUND_FILTERED( edict(), CHAN_WEAPON, "weapons/gauss2.wav", 1.0, ATTN_NORM, 0, pitch, FALSE );
+	//UTIL_PlaySound( edict(), CHAN_WEAPON, "weapons/gauss2.wav", 1.0, ATTN_NORM, 0, pitch, FALSE );
 	//pElectricBarrageFireSounds ????
 }
 
@@ -3389,13 +3389,13 @@ void CKingpin::playElectricBarrageHitSound(CBaseEntity* arg_target, const Vector
 	switch(RANDOM_LONG(0, 2)){
 	case 0:
 		//precached by the client always, so don't use the soundSentenceSave system for this one.
-		UTIL_EmitAmbientSound_Filtered( toSend, arg_location, "weapons/electro4.wav", 0.74f, ATTN_NORM, 0, pitch, FALSE );
+		UTIL_EmitAmbientSound( toSend, arg_location, "weapons/electro4.wav", 0.74f, ATTN_NORM, 0, pitch, FALSE );
 	break;
 	case 1:
-		UTIL_EmitAmbientSound_Filtered( toSend, arg_location, "weapons/electro5.wav", 0.74f, ATTN_NORM, 0, pitch, FALSE );
+		UTIL_EmitAmbientSound( toSend, arg_location, "weapons/electro5.wav", 0.74f, ATTN_NORM, 0, pitch, FALSE );
 	break;
 	case 2:
-		UTIL_EmitAmbientSound_Filtered( toSend, arg_location, "weapons/electro6.wav", 0.74f, ATTN_NORM, 0, pitch, FALSE );
+		UTIL_EmitAmbientSound( toSend, arg_location, "weapons/electro6.wav", 0.74f, ATTN_NORM, 0, pitch, FALSE );
 	break;
 	}//END OF switch
 
@@ -3407,15 +3407,15 @@ void CKingpin::playElectricBarrageHitSound(CBaseEntity* arg_target, const Vector
 void CKingpin::playElectricLaserChargeSound(void){
 	int pitch = 89;
 	
-	EMIT_SOUND_FILTERED( edict(), CHAN_WEAPON, "weapons/mine_charge.wav", 1.0, ATTN_NORM - 0.6f, 0, pitch, FALSE );
+	UTIL_PlaySound( edict(), CHAN_WEAPON, "weapons/mine_charge.wav", 1.0, ATTN_NORM - 0.6f, 0, pitch, FALSE );
 
 }
 
 void CKingpin::stopElectricLaserChargeSound(void){
 	int pitch = 89;
 	
-	//STOP_SOUND_FILTERED( ENT(pev), CHAN_WEAPON, "debris/zap4.wav" );
-	STOP_SOUND_FILTERED( edict(), CHAN_WEAPON, "weapons/mine_charge.wav", FALSE);
+	//UTIL_StopSound( ENT(pev), CHAN_WEAPON, "debris/zap4.wav" );
+	UTIL_StopSound( edict(), CHAN_WEAPON, "weapons/mine_charge.wav", FALSE);
 
 }
 
@@ -3427,7 +3427,7 @@ void CKingpin::stopElectricLaserChargeSound(void){
 
 void CKingpin::playElectricLaserFireSound(void){
 	int pitch = 88;
-	EMIT_SOUND_FILTERED( edict(), CHAN_WEAPON, "weapons/gauss2.wav", 1.0, ATTN_NORM - 0.7f, 0, pitch, FALSE );
+	UTIL_PlaySound( edict(), CHAN_WEAPON, "weapons/gauss2.wav", 1.0, ATTN_NORM - 0.7f, 0, pitch, FALSE );
 	
 	//or maybe one of the other beamstart#.wav's from pElectricBarrageFireSounds since that's no longer used for electric barrage firing?
 	
@@ -3438,7 +3438,7 @@ void CKingpin::playElectricLaserFireSound(void){
 //That is, at the location hit, regardless of hitting anything organic or not.
 void CKingpin::playElectricLaserHitSound(CBaseEntity* arg_target, const Vector& arg_location){
 	int pitch = 102;
-	//EMIT_SOUND_FILTERED( edict(), CHAN_VOICE, "garg/gar_stomp1.wav", 1.0, ATTN_NORM, 0, pitch );
+	//UTIL_PlaySound( edict(), CHAN_VOICE, "garg/gar_stomp1.wav", 1.0, ATTN_NORM, 0, pitch );
 
 	
 	edict_t* toSend;
@@ -3450,18 +3450,18 @@ void CKingpin::playElectricLaserHitSound(CBaseEntity* arg_target, const Vector& 
 	}
 
 
-	UTIL_EmitAmbientSound_Filtered( toSend, arg_location, "garg/gar_stomp1.wav", 1.0, ATTN_NORM - 0.34f, 0, pitch );
+	UTIL_EmitAmbientSound( toSend, arg_location, "garg/gar_stomp1.wav", 1.0, ATTN_NORM - 0.34f, 0, pitch );
 
 	switch(RANDOM_LONG(0, 2)){
 	case 0:
 		//precached by the client always, so don't use the soundSentenceSave system for this one.
-		UTIL_EmitAmbientSound_Filtered( toSend, arg_location, "weapons/electro4.wav", 1.0, ATTN_NORM, 0, pitch, FALSE );
+		UTIL_EmitAmbientSound( toSend, arg_location, "weapons/electro4.wav", 1.0, ATTN_NORM, 0, pitch, FALSE );
 	break;
 	case 1:
-		UTIL_EmitAmbientSound_Filtered( toSend, arg_location, "weapons/electro5.wav", 1.0, ATTN_NORM, 0, pitch, FALSE );
+		UTIL_EmitAmbientSound( toSend, arg_location, "weapons/electro5.wav", 1.0, ATTN_NORM, 0, pitch, FALSE );
 	break;
 	case 2:
-		UTIL_EmitAmbientSound_Filtered( toSend, arg_location, "weapons/electro6.wav", 1.0, ATTN_NORM, 0, pitch, FALSE );
+		UTIL_EmitAmbientSound( toSend, arg_location, "weapons/electro6.wav", 1.0, ATTN_NORM, 0, pitch, FALSE );
 	break;
 	}//END OF switch
 	
@@ -3519,7 +3519,7 @@ void CKingpin::ClearBeams(void){
 	m_iBeams = 0;
 	//pev->skin = 0;
 
-	//STOP_SOUND_FILTERED( ENT(pev), CHAN_WEAPON, "debris/zap4.wav", FALSE );
+	//UTIL_StopSound( ENT(pev), CHAN_WEAPON, "debris/zap4.wav", FALSE );
 }//END OF ClearBeams
 
 //Call me every frame of think logic.  Do any beams need to be cleaned up?
@@ -3628,7 +3628,7 @@ void CKingpin::ClearReflectEffects(void){
 	m_iReflectEffect = 0;
 	//pev->skin = 0;
 
-	//STOP_SOUND_FILTERED( ENT(pev), CHAN_WEAPON, "debris/zap4.wav", FALSE );
+	//UTIL_StopSound( ENT(pev), CHAN_WEAPON, "debris/zap4.wav", FALSE );
 }//END OF ClearReflectEffects
 
 //Call me every frame of think logic.  Do any refs need to be cleaned up?
@@ -4016,9 +4016,9 @@ void CKingpin::fireSpeedMissile(void){
 	//including the sound here I guess.
 	int iPitch = 89 + RANDOM_LONG(0, 5);
 	switch(RANDOM_LONG(0, 2)){
-		case 0: EMIT_SOUND_FILTERED ( ENT(pev), CHAN_WEAPON, "agrunt/ag_fire1.wav", 1.0, ATTN_NORM - 0.63f, 0, iPitch ); break;
-		case 1: EMIT_SOUND_FILTERED ( ENT(pev), CHAN_WEAPON, "agrunt/ag_fire2.wav", 1.0, ATTN_NORM - 0.63f, 0, iPitch ); break;
-		case 2: EMIT_SOUND_FILTERED ( ENT(pev), CHAN_WEAPON, "agrunt/ag_fire3.wav", 1.0, ATTN_NORM - 0.63f, 0, iPitch ); break;
+		case 0: UTIL_PlaySound( ENT(pev), CHAN_WEAPON, "agrunt/ag_fire1.wav", 1.0, ATTN_NORM - 0.63f, 0, iPitch ); break;
+		case 1: UTIL_PlaySound( ENT(pev), CHAN_WEAPON, "agrunt/ag_fire2.wav", 1.0, ATTN_NORM - 0.63f, 0, iPitch ); break;
+		case 2: UTIL_PlaySound( ENT(pev), CHAN_WEAPON, "agrunt/ag_fire3.wav", 1.0, ATTN_NORM - 0.63f, 0, iPitch ); break;
 	}
 
 
@@ -4296,7 +4296,7 @@ void CKingpin::setPrimaryAttackCooldown(void){
 
 void CKingpin::playShockerFireSound(CBaseEntity* arg_target, const Vector& arg_location){
 	int pitch = 84 + RANDOM_LONG(0, 10);
-	//EMIT_SOUND_FILTERED( edict(), CHAN_WEAPON, RANDOM_SOUND_ARRAY(pShockerFireSounds), 1.0, ATTN_NORM, 0, pitch );
+	//UTIL_PlaySound( edict(), CHAN_WEAPON, RANDOM_SOUND_ARRAY(pShockerFireSounds), 1.0, ATTN_NORM, 0, pitch );
 	//arg_location
 
 
@@ -4308,7 +4308,7 @@ void CKingpin::playShockerFireSound(CBaseEntity* arg_target, const Vector& arg_l
 		toSend = edict();
 	}
 
-	UTIL_EmitAmbientSound_Filtered( toSend, arg_location, RANDOM_SOUND_ARRAY(pShockerFireSounds), 1.0, ATTN_NORM, 0, pitch );
+	UTIL_EmitAmbientSound( toSend, arg_location, RANDOM_SOUND_ARRAY(pShockerFireSounds), 1.0, ATTN_NORM, 0, pitch );
 }
 
 

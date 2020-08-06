@@ -1017,8 +1017,8 @@ void V_CalcNormalRefdef(struct ref_params_s* pparams)
 				if (oldViewHeight > filteredViewheight) {
 					oldViewHeight = filteredViewheight;
 				}
-				if (filteredViewheight - oldViewHeight > 18) {
-					oldViewHeight = filteredViewheight - 18;
+				if (filteredViewheight - oldViewHeight > 34) {
+					oldViewHeight = filteredViewheight - 34;
 				}
 
 				pparams->vieworg[2] += (oldViewHeight - (filteredViewheight)) * 1;
@@ -1043,8 +1043,8 @@ void V_CalcNormalRefdef(struct ref_params_s* pparams)
 				if (oldViewHeight < filteredViewheight) {
 					oldViewHeight = filteredViewheight;
 				}
-				if (-filteredViewheight + oldViewHeight > 18) {
-					oldViewHeight = filteredViewheight + 18;
+				if (-filteredViewheight + oldViewHeight > 34) {
+					oldViewHeight = filteredViewheight + 34;
 				}
 
 				pparams->vieworg[2] -= (-oldViewHeight + (filteredViewheight)) * 1;
@@ -1115,8 +1115,8 @@ void V_CalcNormalRefdef(struct ref_params_s* pparams)
 				if (oldz < safeSimZ) {
 					oldz = safeSimZ;
 				}
-				if (-safeSimZ + oldz > 18) {
-					oldz = safeSimZ + 18;
+				if (-safeSimZ + oldz > 34) {
+					oldz = safeSimZ + 34;
 				}
 				pparams->vieworg[2] -= -oldz + (safeSimZ);
 				view->origin[2] -= -oldz + (safeSimZ);

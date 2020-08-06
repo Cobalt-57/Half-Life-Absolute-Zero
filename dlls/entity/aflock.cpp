@@ -285,8 +285,8 @@ void CFlockingFlyer :: MakeSound( void )
 		// make agitated sounds
 		switch ( RANDOM_LONG( 0, 1 ) )
 		{
-		case 0:	EMIT_SOUND( ENT(pev), CHAN_WEAPON, "boid/boid_alert1.wav", 1, ATTN_NORM );	break;
-		case 1:	EMIT_SOUND( ENT(pev), CHAN_WEAPON, "boid/boid_alert2.wav", 1, ATTN_NORM );	break;
+		case 0:	UTIL_PlaySound( ENT(pev), CHAN_WEAPON, "boid/boid_alert1.wav", 1, ATTN_NORM, 0, 100, FALSE);	break;
+		case 1:	UTIL_PlaySound( ENT(pev), CHAN_WEAPON, "boid/boid_alert2.wav", 1, ATTN_NORM, 0, 100, FALSE);	break;
 		}
 
 		return;
@@ -295,10 +295,10 @@ void CFlockingFlyer :: MakeSound( void )
 	// make normal sound
 	switch ( RANDOM_LONG( 0, 2 ) )
 	{
-	case 0:	EMIT_SOUND( ENT(pev), CHAN_WEAPON, "boid/boid_idle1.wav", 1, ATTN_NORM );	break;
-	case 1:	EMIT_SOUND( ENT(pev), CHAN_WEAPON, "boid/boid_idle2.wav", 1, ATTN_NORM );	break;
+	case 0:	UTIL_PlaySound( ENT(pev), CHAN_WEAPON, "boid/boid_idle1.wav", 1, ATTN_NORM, 0, 100, FALSE);	break;
+	case 1:	UTIL_PlaySound( ENT(pev), CHAN_WEAPON, "boid/boid_idle2.wav", 1, ATTN_NORM, 0, 100, FALSE);	break;
 	//MODDD - 3rd boid idle sound.  Because really, why not.   Really...
-	case 2:	EMIT_SOUND(ENT(pev), CHAN_WEAPON, "boid/boid_idle3.wav", 1, ATTN_NORM);	break;
+	case 2:	UTIL_PlaySound(ENT(pev), CHAN_WEAPON, "boid/boid_idle3.wav", 1, ATTN_NORM, 0, 100, FALSE);	break;
 	}
 }
 
