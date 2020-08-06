@@ -59,6 +59,14 @@ HELPFUL: every entity (CBaseEntity or descendent) has a "edict()" instance metho
          "ENT( yourEntityOrDescendent )" is also helpful.
 
 ATTENTION: Looks like the "UTIL_EmitAmbientSound" can also play sentences.
+(Since changed to UTIL_PlayAmbientSound)
+
+Attenuation can go from 0 to 4, verify exactly 0 and 4 though, I forget.
+Higher causes a sound to drop off faster with distance, good for sounds not meant to carry far like suit sounds
+(not that this really matters for single player).  Explosions have really low attenuation to sound similar close
+or far away to create an illusion of more loudness, it's usually fine to lower attenuation a lot to get more
+loudness when a volume of 1 isn't enough (hearing a sound the same at a great distance seems like loudness).
+
 
 Also, setting a monster's "pev->nextthink" to 0 may sound like a neat way to make it play instantly (after all, we're certianly past 0 at any point of time after start), but this actually disables the think method so that it cannot be called.
 To set a monster's think method to be called instantly, just set pev->nextthink to 0.1 (a tiny amount of time that's clearly been passed since the start of a game) or gpGlobals->time.

@@ -3271,18 +3271,12 @@ void CKingpin::forceEnemyOnPoweredUpMonsters(CBaseEntity* monsterToForce, BOOL a
 
 
 
-//this is being used for something else instead.
+// this is being used for something else instead.
 void CKingpin::playPsionicLaunchSound(){
 	switch(RANDOM_LONG(0, 2)){
-	case 0:
-		UTIL_PlaySound(ENT(pev), CHAN_WEAPON, "houndeye/he_blast1.wav", EASY_CVAR_GET(soundVolumeAll), EASY_CVAR_GET(soundAttenuationAll)*0.5, 0, 80 + RANDOM_LONG(0, 5));
-	break;
-	case 1:
-		UTIL_PlaySound(ENT(pev), CHAN_WEAPON, "houndeye/he_blast2.wav", EASY_CVAR_GET(soundVolumeAll), EASY_CVAR_GET(soundAttenuationAll)*0.5, 0, 80 + RANDOM_LONG(0, 5));
-	break;
-	case 2:
-		UTIL_PlaySound(ENT(pev), CHAN_WEAPON, "houndeye/he_blast3.wav", EASY_CVAR_GET(soundVolumeAll), EASY_CVAR_GET(soundAttenuationAll)*0.5, 0, 80 + RANDOM_LONG(0, 5));
-	break;
+	case 0:UTIL_PlaySound(ENT(pev), CHAN_WEAPON, "houndeye/he_blast1.wav", 1, ATTN_NORM + 0.2, 0, 80 + RANDOM_LONG(0, 5));break;
+	case 1:UTIL_PlaySound(ENT(pev), CHAN_WEAPON, "houndeye/he_blast2.wav", 1, ATTN_NORM + 0.2, 0, 80 + RANDOM_LONG(0, 5));break;
+	case 2:UTIL_PlaySound(ENT(pev), CHAN_WEAPON, "houndeye/he_blast3.wav", 1, ATTN_NORM + 0.2, 0, 80 + RANDOM_LONG(0, 5));break;
 	}
 }//END OF playPsionicLaunchSound()
 

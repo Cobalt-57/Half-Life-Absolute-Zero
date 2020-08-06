@@ -108,14 +108,8 @@ friendlyPrintout (0) - BOOL. you know the drill.
 drawDebugCine (0) - draw out cinematic nodes as cyan blue.
 
 
-
-
-SOUND TESTING - see how sound works.
-~ ISNOMER; anything named "all" here applies only to islave and (possibly) the controller.
-soundAttenuationAll (0.85) - RANGE(0 - 4)
-soundAttenuationStuka (0.85) - RANGE(0 - 4) how well the sound carries over distance.  Higher values make sound drop off faster with distance.
-soundVolumeAll (1) - RANGE(0 - 1)
-soundVolumeStuka (1) RANGE(0 - 1)
+soundAttenuationStuka (0.85) - RANGE(0 - 4)
+soundVolumeStuka (1) - RANGE(0 - 1)
 
 cineChangelevelFix (3) - MODEVAR.  Has to do with minor additions for allowing cine(matic) entities to flow better through transitions, or in the best way possible.
 ~cinematics not wanting to move b/w transitions is not an inherent problem.  What CAN be is if the thing they are attached to IS sent to the next level, but its cine ent is NOT.  This delinks the cine ent, and even on going back, it will not re-pick it up (plus there are immediate changes... hard to avoid these in some cases in any way, if the cine ent isn't even close enough to the transition zone but the host ent is)

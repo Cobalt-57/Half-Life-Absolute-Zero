@@ -32,11 +32,6 @@ EASY_CVAR_EXTERN(houndeyeAttackMode)
 EASY_CVAR_EXTERN(houndeyePrintout)
 EASY_CVAR_EXTERN(houndeye_attack_canGib)
 
-EASY_CVAR_EXTERN(soundVolumeAll)
-EASY_CVAR_EXTERN(soundAttenuationAll)
-//MODDD - search for this ...    soundVolumeAll, soundAttenuationAll
-//MODDD - it used to be,   1, ATTN_NORM   I believe.
-
 
 
 // How long after doing a "leaderlook", can I do a leaderlook again?
@@ -788,11 +783,11 @@ void CHoundeye :: HandleAnimEvent( MonsterEvent_t *pEvent )
 			break;
 
 		case HOUND_AE_ANGERSOUND1:
-			UTIL_PlaySound(ENT(pev), CHAN_VOICE, "houndeye/he_pain3.wav", EASY_CVAR_GET(soundVolumeAll), EASY_CVAR_GET(soundAttenuationAll));
+			UTIL_PlaySound(ENT(pev), CHAN_VOICE, "houndeye/he_pain3.wav", 1, ATTN_NORM);
 			break;
 
 		case HOUND_AE_ANGERSOUND2:
-			UTIL_PlaySound(ENT(pev), CHAN_VOICE, "houndeye/he_pain1.wav", EASY_CVAR_GET(soundVolumeAll), EASY_CVAR_GET(soundAttenuationAll));
+			UTIL_PlaySound(ENT(pev), CHAN_VOICE, "houndeye/he_pain1.wav", 1, ATTN_NORM);
 			break;
 
 		case HOUND_AE_CLOSE_EYE:
@@ -961,16 +956,16 @@ void CHoundeye :: IdleSound ( void )
 	switch ( RANDOM_LONG(0,3) )
 	{
 	case 0:
-		UTIL_PlaySound( ENT(pev), CHAN_VOICE, "houndeye/he_idle1.wav", EASY_CVAR_GET(soundVolumeAll), EASY_CVAR_GET(soundAttenuationAll) );
+		UTIL_PlaySound( ENT(pev), CHAN_VOICE, "houndeye/he_idle1.wav", 1, ATTN_NORM );
 		break;
 	case 1:
-		UTIL_PlaySound( ENT(pev), CHAN_VOICE, "houndeye/he_idle2.wav", EASY_CVAR_GET(soundVolumeAll), EASY_CVAR_GET(soundAttenuationAll) );
+		UTIL_PlaySound( ENT(pev), CHAN_VOICE, "houndeye/he_idle2.wav", 1, ATTN_NORM );
 		break;
 	case 2:
-		UTIL_PlaySound( ENT(pev), CHAN_VOICE, "houndeye/he_idle3.wav", EASY_CVAR_GET(soundVolumeAll), EASY_CVAR_GET(soundAttenuationAll) );
+		UTIL_PlaySound( ENT(pev), CHAN_VOICE, "houndeye/he_idle3.wav", 1, ATTN_NORM );
 		break;
 	case 3:
-		UTIL_PlaySound(ENT(pev), CHAN_VOICE, "houndeye/he_idle4.wav", EASY_CVAR_GET(soundVolumeAll), EASY_CVAR_GET(soundAttenuationAll));
+		UTIL_PlaySound(ENT(pev), CHAN_VOICE, "houndeye/he_idle4.wav", 1, ATTN_NORM);
 	}
 }
 
@@ -982,13 +977,13 @@ void CHoundeye :: WarmUpSound ( void )
 	switch ( RANDOM_LONG(0,2) )
 	{
 	case 0:
-		UTIL_PlaySound( ENT(pev), CHAN_WEAPON, "houndeye/he_attack1.wav", EASY_CVAR_GET(soundVolumeAll) * 0.7, EASY_CVAR_GET(soundAttenuationAll) );
+		UTIL_PlaySound( ENT(pev), CHAN_WEAPON, "houndeye/he_attack1.wav", 0.7, ATTN_NORM );
 		break;
 	case 1:
-		UTIL_PlaySound(ENT(pev), CHAN_WEAPON, "houndeye/he_attack2.wav", EASY_CVAR_GET(soundVolumeAll) * 0.7, EASY_CVAR_GET(soundAttenuationAll));
+		UTIL_PlaySound(ENT(pev), CHAN_WEAPON, "houndeye/he_attack2.wav", 0.7, ATTN_NORM );
 		break;
 	case 2:
-		UTIL_PlaySound( ENT(pev), CHAN_WEAPON, "houndeye/he_attack3.wav", EASY_CVAR_GET(soundVolumeAll) * 0.7, EASY_CVAR_GET(soundAttenuationAll) );
+		UTIL_PlaySound( ENT(pev), CHAN_WEAPON, "houndeye/he_attack3.wav", 0.7, ATTN_NORM );
 		break;
 	}
 }
@@ -1001,16 +996,16 @@ void CHoundeye :: WarnSound ( void )
 	switch ( RANDOM_LONG(0,3) )
 	{
 	case 0:
-		UTIL_PlaySound( ENT(pev), CHAN_VOICE, "houndeye/he_hunt1.wav", EASY_CVAR_GET(soundVolumeAll), EASY_CVAR_GET(soundAttenuationAll) );
+		UTIL_PlaySound( ENT(pev), CHAN_VOICE, "houndeye/he_hunt1.wav", 1, ATTN_NORM );
 		break;
 	case 1:
-		UTIL_PlaySound( ENT(pev), CHAN_VOICE, "houndeye/he_hunt2.wav", EASY_CVAR_GET(soundVolumeAll), EASY_CVAR_GET(soundAttenuationAll) );
+		UTIL_PlaySound( ENT(pev), CHAN_VOICE, "houndeye/he_hunt2.wav", 1, ATTN_NORM );
 		break;
 	case 2:
-		UTIL_PlaySound( ENT(pev), CHAN_VOICE, "houndeye/he_hunt3.wav", EASY_CVAR_GET(soundVolumeAll), EASY_CVAR_GET(soundAttenuationAll) );
+		UTIL_PlaySound( ENT(pev), CHAN_VOICE, "houndeye/he_hunt3.wav", 1, ATTN_NORM );
 		break;
 	case 3:
-		UTIL_PlaySound(ENT(pev), CHAN_VOICE, "houndeye/he_hunt4.wav", EASY_CVAR_GET(soundVolumeAll), EASY_CVAR_GET(soundAttenuationAll));
+		UTIL_PlaySound(ENT(pev), CHAN_VOICE, "houndeye/he_hunt4.wav", 1, ATTN_NORM );
 		break;
 	}
 }
@@ -1029,13 +1024,13 @@ void CHoundeye :: AlertSound ( void )
 	switch ( RANDOM_LONG(0,2) )
 	{
 	case 0:
-		UTIL_PlaySound( ENT(pev), CHAN_VOICE, "houndeye/he_alert1.wav", EASY_CVAR_GET(soundVolumeAll), EASY_CVAR_GET(soundAttenuationAll) );
+		UTIL_PlaySound( ENT(pev), CHAN_VOICE, "houndeye/he_alert1.wav", 1, ATTN_NORM );
 		break;
 	case 1:
-		UTIL_PlaySound( ENT(pev), CHAN_VOICE, "houndeye/he_alert2.wav", EASY_CVAR_GET(soundVolumeAll), EASY_CVAR_GET(soundAttenuationAll) );
+		UTIL_PlaySound( ENT(pev), CHAN_VOICE, "houndeye/he_alert2.wav", 1, ATTN_NORM );
 		break;
 	case 2:
-		UTIL_PlaySound( ENT(pev), CHAN_VOICE, "houndeye/he_alert3.wav", EASY_CVAR_GET(soundVolumeAll), EASY_CVAR_GET(soundAttenuationAll) );
+		UTIL_PlaySound( ENT(pev), CHAN_VOICE, "houndeye/he_alert3.wav", 1, ATTN_NORM );
 		break;
 	}
 }
@@ -1048,13 +1043,13 @@ void CHoundeye :: DeathSound ( void )
 	switch ( RANDOM_LONG(0,2) )
 	{
 	case 0:
-		UTIL_PlaySound( ENT(pev), CHAN_VOICE, "houndeye/he_die1.wav", EASY_CVAR_GET(soundVolumeAll), EASY_CVAR_GET(soundAttenuationAll) );
+		UTIL_PlaySound( ENT(pev), CHAN_VOICE, "houndeye/he_die1.wav", 1, ATTN_NORM );
 		break;
 	case 1:
-		UTIL_PlaySound( ENT(pev), CHAN_VOICE, "houndeye/he_die2.wav", EASY_CVAR_GET(soundVolumeAll), EASY_CVAR_GET(soundAttenuationAll) );
+		UTIL_PlaySound( ENT(pev), CHAN_VOICE, "houndeye/he_die2.wav", 1, ATTN_NORM );
 		break;
 	case 2:
-		UTIL_PlaySound( ENT(pev), CHAN_VOICE, "houndeye/he_die3.wav", EASY_CVAR_GET(soundVolumeAll), EASY_CVAR_GET(soundAttenuationAll) );
+		UTIL_PlaySound( ENT(pev), CHAN_VOICE, "houndeye/he_die3.wav", 1, ATTN_NORM );
 		break;
 	}
 }
@@ -1067,19 +1062,19 @@ void CHoundeye :: PainSound ( void )
 	switch ( RANDOM_LONG(0,4) )
 	{
 	case 0:
-		UTIL_PlaySound( ENT(pev), CHAN_VOICE, "houndeye/he_pain3.wav", EASY_CVAR_GET(soundVolumeAll), EASY_CVAR_GET(soundAttenuationAll) );
+		UTIL_PlaySound( ENT(pev), CHAN_VOICE, "houndeye/he_pain3.wav", 1, ATTN_NORM );
 		break;
 	case 1:
-		UTIL_PlaySound( ENT(pev), CHAN_VOICE, "houndeye/he_pain4.wav", EASY_CVAR_GET(soundVolumeAll), EASY_CVAR_GET(soundAttenuationAll) );
+		UTIL_PlaySound( ENT(pev), CHAN_VOICE, "houndeye/he_pain4.wav", 1, ATTN_NORM );
 		break;
 	case 2:
-		UTIL_PlaySound( ENT(pev), CHAN_VOICE, "houndeye/he_pain5.wav", EASY_CVAR_GET(soundVolumeAll), EASY_CVAR_GET(soundAttenuationAll) );
+		UTIL_PlaySound( ENT(pev), CHAN_VOICE, "houndeye/he_pain5.wav", 1, ATTN_NORM );
 		break;
 	case 3:
-		UTIL_PlaySound(ENT(pev), CHAN_VOICE, "houndeye/he_pain1.wav", EASY_CVAR_GET(soundVolumeAll), EASY_CVAR_GET(soundAttenuationAll));
+		UTIL_PlaySound(ENT(pev), CHAN_VOICE, "houndeye/he_pain1.wav", 1, ATTN_NORM );
 		break;
 	case 4:
-		UTIL_PlaySound(ENT(pev), CHAN_VOICE, "houndeye/he_pain2.wav", EASY_CVAR_GET(soundVolumeAll), EASY_CVAR_GET(soundAttenuationAll));
+		UTIL_PlaySound(ENT(pev), CHAN_VOICE, "houndeye/he_pain2.wav", 1, ATTN_NORM );
 		break;
 	}
 }
@@ -1172,9 +1167,9 @@ void CHoundeye :: SonicAttack (BOOL useAlt )
 
 	switch ( RANDOM_LONG( 0, 2 ) )
 	{
-	case 0:	UTIL_PlaySound(ENT(pev), CHAN_WEAPON, "houndeye/he_blast1.wav", EASY_CVAR_GET(soundVolumeAll), EASY_CVAR_GET(soundAttenuationAll));	break;
-	case 1:	UTIL_PlaySound(ENT(pev), CHAN_WEAPON, "houndeye/he_blast2.wav", EASY_CVAR_GET(soundVolumeAll), EASY_CVAR_GET(soundAttenuationAll));	break;
-	case 2:	UTIL_PlaySound(ENT(pev), CHAN_WEAPON, "houndeye/he_blast3.wav", EASY_CVAR_GET(soundVolumeAll), EASY_CVAR_GET(soundAttenuationAll));	break;
+	case 0:	UTIL_PlaySound(ENT(pev), CHAN_WEAPON, "houndeye/he_blast1.wav", 1, ATTN_NORM);break;
+	case 1:	UTIL_PlaySound(ENT(pev), CHAN_WEAPON, "houndeye/he_blast2.wav", 1, ATTN_NORM);break;
+	case 2:	UTIL_PlaySound(ENT(pev), CHAN_WEAPON, "houndeye/he_blast3.wav", 1, ATTN_NORM);break;
 	}
 
 	// blast circles
@@ -1581,7 +1576,7 @@ void CHoundeye :: RunTask ( Task_t *pTask )
 
 	if(pTask->iTask != TASK_SPECIAL_ATTACK1){
 		if(canResetSound){
-			UTIL_PlaySound(ENT(pev), CHAN_WEAPON, "common/null.wav", EASY_CVAR_GET(soundVolumeAll), EASY_CVAR_GET(soundAttenuationAll));
+			UTIL_PlaySound(ENT(pev), CHAN_WEAPON, "common/null.wav", 1, ATTN_NORM);
 		}
 		canResetSound = FALSE;
 	}

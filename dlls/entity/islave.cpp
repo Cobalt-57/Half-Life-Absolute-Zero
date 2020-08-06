@@ -21,7 +21,6 @@
 //Also the light from a lightning charge stays on even if that schedule is interrupted since the light is made to stay on for a set amount of time since it is created.
 //That isn't too big of a deal though.
 
-//NOTICE: all cases of "ATTN_NORM" replaced with "EASY_CVAR_GET(soundAttenuationAll)" for testing.
 
 #include "extdll.h"
 #include "util.h"
@@ -45,7 +44,6 @@ EASY_CVAR_EXTERN(islaveReviveSelfMaxDelay)
 EASY_CVAR_EXTERN(islaveReviveSelfChance)
 EASY_CVAR_EXTERN(noFlinchOnHard)
 EASY_CVAR_EXTERN(thatWasntPunch)
-EASY_CVAR_EXTERN(soundAttenuationAll)
 
 
 //MODDD - anything above its real declaration need to know about it?
@@ -713,7 +711,8 @@ void CISlave :: AlertSound( void )
 {
 	if ( m_hEnemy != NULL )
 	{
-		SENTENCEG_PlayRndSz(ENT(pev), "SLV_ALERT", min(0.85 * EASY_CVAR_GET(soundVolumeAll), 1), EASY_CVAR_GET(soundAttenuationAll), 0, m_voicePitch);
+		//MODDD - little louder, it is an alert noise after all.  Was 0.85
+		SENTENCEG_PlayRndSz(ENT(pev), "SLV_ALERT", 0.95, ATTN_NORM, 0, m_voicePitch);
 
 		CallForHelp( "monster_alien_slave", 512, m_hEnemy, m_vecEnemyLKP );
 	}
@@ -726,9 +725,10 @@ void CISlave :: IdleSound( void )
 {
 	if (RANDOM_LONG( 0, 2 ) == 0)
 	{
-		SENTENCEG_PlayRndSz(ENT(pev), "SLV_IDLE", min(0.85 * EASY_CVAR_GET(soundVolumeAll), 1), EASY_CVAR_GET(soundAttenuationAll), 0, m_voicePitch);
+		SENTENCEG_PlayRndSz(ENT(pev), "SLV_IDLE", 0.85, ATTN_NORM, 0, m_voicePitch);
 	}
 
+// ...casual lightning effects disabled?  well alrighty then
 #if 0
 	int side = RANDOM_LONG( 0, 1 ) * 2 - 1;
 
@@ -750,7 +750,7 @@ void CISlave :: IdleSound( void )
 		WRITE_BYTE( 0 );		// decay * 0.1
 	MESSAGE_END( );
 
-	UTIL_PlaySound( ENT(pev), CHAN_WEAPON, "debris/zap1.wav", min(1 * EASY_CVAR_GET(soundVolumeAll), 1), EASY_CVAR_GET(soundAttenuationAll), 0, 100 );
+	UTIL_PlaySound( ENT(pev), CHAN_WEAPON, "debris/zap1.wav", 1, ATTN_NORM, 0, 100 );
 #endif
 }
 
@@ -761,7 +761,7 @@ void CISlave :: PainSound( void )
 {
 	if (RANDOM_LONG( 0, 2 ) == 0)
 	{
-		UTIL_PlaySound( ENT(pev), CHAN_WEAPON, pPainSounds[ RANDOM_LONG(0,ARRAYSIZE(pPainSounds)-1) ], min(1 * EASY_CVAR_GET(soundVolumeAll), 1), EASY_CVAR_GET(soundAttenuationAll), 0, m_voicePitch );
+		UTIL_PlaySound( ENT(pev), CHAN_WEAPON, pPainSounds[ RANDOM_LONG(0,ARRAYSIZE(pPainSounds)-1) ], 1.0, ATTN_NORM, 0, m_voicePitch );
 	}
 }
 
@@ -771,7 +771,7 @@ void CISlave :: PainSound( void )
 
 void CISlave :: DeathSound( void )
 {
-	UTIL_PlaySound( ENT(pev), CHAN_WEAPON, pDeathSounds[ RANDOM_LONG(0,ARRAYSIZE(pDeathSounds)-1) ], min(1 * EASY_CVAR_GET(soundVolumeAll), 1), EASY_CVAR_GET(soundAttenuationAll), 0, m_voicePitch );
+	UTIL_PlaySound( ENT(pev), CHAN_WEAPON, pDeathSounds[ RANDOM_LONG(0,ARRAYSIZE(pDeathSounds)-1) ], 1.0, ATTN_NORM, 0, m_voicePitch );
 }
 
 
@@ -793,35 +793,28 @@ int CISlave :: ISoundMask ( void)
 //NOTICE: default behavior for "onDeathAnimationEnd" is to turn the think method off. So the check for whether this monster will be self-revived or not makes sense here.
 //A self reviving monster can't even check its own countdown timer for revival if its think method is turned off.
 void CISlave::onDeathAnimationEnd(void){
-	
-	//let's have a planned revive...
-
+	//let's have a planned revive.
 	//If I plan on fading though, ignore all this and just let me fade out. No chance of self-revive to avoid spam.
 
 	if(!this->ShouldFadeOnDeath()){
 		BOOL canRevive = (EASY_CVAR_GET(islaveReviveSelfChance) > 0 && RANDOM_FLOAT(0, 1) <= EASY_CVAR_GET(islaveReviveSelfChance) );
 
 		if(canRevive){
-
 			selfReviveTime = gpGlobals->time + RANDOM_LONG(EASY_CVAR_GET(islaveReviveSelfMinDelay), EASY_CVAR_GET(islaveReviveSelfMaxDelay) );
-
 			//note that we omitt the think unlink if we plan on reviving.  Need something to count the time left until a self-revive.
 		}else{
 			//kill the "think" linkup like in normal death.
 			SetThink ( NULL );
 		}
 	}else{
-		
 		//parent method would also do nothing so don't call it.
 		//...this decision may age poorly.  Whatever just call it even if it denies doing anything at the moment.
 		CSquadMonster::onDeathAnimationEnd();
 	}
 
-
 }
 
-GENERATE_KILLED_IMPLEMENTATION(CISlave)
-{
+GENERATE_KILLED_IMPLEMENTATION(CISlave){
 	//MODDD
 	forgetReviveTarget();
 	beingRevived = 0;
@@ -913,12 +906,12 @@ void CISlave :: HandleAnimEvent( MonsterEvent_t *pEvent )
 					pHurt->pev->punchangle.x = 5;
 				}
 				// Play a random attack hit sound
-				UTIL_PlaySound( ENT(pev), CHAN_WEAPON, pAttackHitSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackHitSounds)-1) ], min(1 * EASY_CVAR_GET(soundVolumeAll), 1), EASY_CVAR_GET(soundAttenuationAll), 0, m_voicePitch );
+				UTIL_PlaySound( ENT(pev), CHAN_WEAPON, pAttackHitSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackHitSounds)-1) ], 1.0, ATTN_NORM, 0, m_voicePitch );
 			}
 			else
 			{
 				// Play a random attack miss sound
-				UTIL_PlaySound( ENT(pev), CHAN_WEAPON, pAttackMissSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackMissSounds)-1) ], min(1 * EASY_CVAR_GET(soundVolumeAll), 1), EASY_CVAR_GET(soundAttenuationAll), 0, m_voicePitch );
+				UTIL_PlaySound( ENT(pev), CHAN_WEAPON, pAttackMissSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackMissSounds)-1) ], 1.0, ATTN_NORM, 0, m_voicePitch );
 			}
 		}
 		break;
@@ -934,11 +927,11 @@ void CISlave :: HandleAnimEvent( MonsterEvent_t *pEvent )
 					pHurt->pev->punchangle.z = -18;
 					pHurt->pev->punchangle.x = 5;
 				}
-				UTIL_PlaySound( ENT(pev), CHAN_WEAPON, pAttackHitSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackHitSounds)-1) ], min(1 * EASY_CVAR_GET(soundVolumeAll), 1), EASY_CVAR_GET(soundAttenuationAll), 0, m_voicePitch );
+				UTIL_PlaySound( ENT(pev), CHAN_WEAPON, pAttackHitSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackHitSounds)-1) ], 1.0, ATTN_NORM, 0, m_voicePitch );
 			}
 			else
 			{
-				UTIL_PlaySound( ENT(pev), CHAN_WEAPON, pAttackMissSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackMissSounds)-1) ], min(1 * EASY_CVAR_GET(soundVolumeAll), 1), EASY_CVAR_GET(soundAttenuationAll), 0, m_voicePitch );
+				UTIL_PlaySound( ENT(pev), CHAN_WEAPON, pAttackMissSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackMissSounds)-1) ], 1.0, ATTN_NORM, 0, m_voicePitch );
 			}
 		}
 		break;
@@ -980,8 +973,8 @@ void CISlave :: HandleAnimEvent( MonsterEvent_t *pEvent )
 				BeamGlow( );
 			}
 
-			//MODDD - NOTE - PERIOD SOUND.  Played constantly.
-			UTIL_PlaySound( ENT(pev), CHAN_WEAPON, "debris/zap4.wav", min(1 * EASY_CVAR_GET(soundVolumeAll), 1), EASY_CVAR_GET(soundAttenuationAll), 0, 100 + m_iBeams * 10 );
+			//MODDD - NOTE - PERIOD SOUND.  Played constantly.  ...did I mean 'looped' here?
+			UTIL_PlaySound( ENT(pev), CHAN_WEAPON, "debris/zap4.wav", 1, ATTN_NORM, 0, 100 + m_iBeams * 10 );
 			pev->skin = m_iBeams / 2;
 		}
 		break;
@@ -1008,7 +1001,10 @@ void CISlave :: HandleAnimEvent( MonsterEvent_t *pEvent )
 					WackBeam( -1, pNew );
 					WackBeam( 1, pNew );
 					UTIL_Remove( m_hDead );
-					UTIL_PlaySound( ENT(pev), CHAN_WEAPON, "hassault/hw_shoot1.wav", min(1 * EASY_CVAR_GET(soundVolumeAll), 1), EASY_CVAR_GET(soundAttenuationAll), 0, RANDOM_LONG( 130, 160 ) );
+					UTIL_PlaySound( ENT(pev), CHAN_WEAPON, "hassault/hw_shoot1.wav", 1, ATTN_NORM, 0, RANDOM_LONG( 130, 160 ) );
+					
+					//...what was this supposed to do?
+					pNew->pev->spawnflags |= 1;
 					*/
 
 
@@ -1021,10 +1017,8 @@ void CISlave :: HandleAnimEvent( MonsterEvent_t *pEvent )
 						tempIslave->riseFromTheGrave();
 						WackBeam( -1, tempIslave );
 						WackBeam( 1, tempIslave );
-						UTIL_PlaySound( ENT(pev), CHAN_WEAPON, "hassault/hw_shoot1.wav", min(1 * EASY_CVAR_GET(soundVolumeAll), 1), EASY_CVAR_GET(soundAttenuationAll), 0, RANDOM_LONG( 130, 160 ) );
+						UTIL_PlaySound( ENT(pev), CHAN_WEAPON, "hassault/hw_shoot1.wav", 1, ATTN_NORM, 0, RANDOM_LONG( 125, 140 ) );
 							
-						//...what is this supposed to do?
-						//pNew->pev->spawnflags |= 1;
 					
 					}else{
 
@@ -1060,7 +1054,7 @@ void CISlave :: HandleAnimEvent( MonsterEvent_t *pEvent )
 			ZapBeam( 1 );
 
 			//MODDD - pitch tightened, was 130 to 160
-			UTIL_PlaySound( ENT(pev), CHAN_WEAPON, "hassault/hw_shoot1.wav", min(1 * EASY_CVAR_GET(soundVolumeAll), 1), EASY_CVAR_GET(soundAttenuationAll), 0, RANDOM_LONG( 140, 165 ) );
+			UTIL_PlaySound( ENT(pev), CHAN_WEAPON, "hassault/hw_shoot1.wav", 1, ATTN_NORM, 0, RANDOM_LONG( 140, 165 ) );
 			// UTIL_StopSound( ENT(pev), CHAN_WEAPON, "debris/zap4.wav" );
 			ApplyMultiDamage(pev, pev);
 
@@ -2354,7 +2348,7 @@ void CISlave :: ZapBeam( int side )
 	}
 	//MODDD - pitch lowered, was 140 to 160.
 	// Also don't play with soundsentencesave, electro4 is a gauss player weapon (Client) sound.
-	UTIL_EmitAmbientSound( ENT(pev), tr.vecEndPos, "weapons/electro4.wav", min(0.5 * EASY_CVAR_GET(soundVolumeAll), 1), EASY_CVAR_GET(soundAttenuationAll), 0, RANDOM_LONG( 135, 150 ), FALSE );
+	UTIL_EmitAmbientSound( ENT(pev), tr.vecEndPos, "weapons/electro4.wav", 0.5, ATTN_NORM, 0, RANDOM_LONG( 135, 150 ), FALSE );
 }
 
 

@@ -5807,8 +5807,6 @@ void method_precacheAll(void){
 			PRECACHE_SOUND("houndeye/he_blast1.wav");
 			PRECACHE_SOUND("houndeye/he_blast2.wav");
 			PRECACHE_SOUND("houndeye/he_blast3.wav");
-
-
 			//MODDD - this is an addition.
 			PRECACHE_SOUND("houndeye/he_idle4.wav");
 			PRECACHE_SOUND("houndeye/he_hunt4.wav");

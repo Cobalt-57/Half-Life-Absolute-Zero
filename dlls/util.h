@@ -31,9 +31,7 @@
 #include "saverestore.h"
 
 //MODDD - referred to in here, yes.
-EASY_CVAR_EXTERN(soundAttenuationAll)
 EASY_CVAR_EXTERN(soundAttenuationStuka)
-EASY_CVAR_EXTERN(soundVolumeAll)
 EASY_CVAR_EXTERN(soundVolumeStuka)
 
 
@@ -176,6 +174,14 @@ EASY_CVAR_EXTERN(soundVolumeStuka)
 #define GIB_EXTRAMETAL_6_ID GIB_GERMAN_ID
 
 
+
+// For UTIL_SetGroupTrace and checks against g_groupop in dlls/client.cpp.   what?
+#define GROUP_OP_AND	0
+#define GROUP_OP_NAND	1
+
+
+
+
 #define UTIL_EntitiesInPVS(pent)			(*g_engfuncs.pfnEntitiesInPVS)(pent)
 
 
@@ -199,13 +205,8 @@ EASY_CVAR_EXTERN(soundVolumeStuka)
 #define PLAYBACK_EVENT( flags, who, index ) PLAYBACK_EVENT_FULL( flags, who, index, 0, (float *)&g_vecZero, (float *)&g_vecZero, 0.0, 0.0, 0, 0, 0, 0 );
 #define PLAYBACK_EVENT_DELAY( flags, who, index, delay ) PLAYBACK_EVENT_FULL( flags, who, index, delay, (float *)&g_vecZero, (float *)&g_vecZero, 0.0, 0.0, 0, 0, 0, 0 );
 
-#define GROUP_OP_AND	0
-#define GROUP_OP_NAND	1
-
-
-//NOTE: involve "global_soundAttenuationAll" instead of ATTN_NORM
 #define EMIT_SOUND_ARRAY_FILTERED( chan, arg_array ) \
-	UTIL_PlaySound( ENT(pev), chan , arg_array [ RANDOM_LONG(0,ARRAYSIZE( arg_array )-1) ], EASY_CVAR_GET(soundVolumeAll), EASY_CVAR_GET(soundAttenuationAll), 0, RANDOM_LONG(95,105) ); 
+	UTIL_PlaySound( ENT(pev), chan , arg_array [ RANDOM_LONG(0,ARRAYSIZE( arg_array )-1) ], 1.0, ATTN_NORM, 0, RANDOM_LONG(95,105) ); 
 
 #define EMIT_SOUND_ARRAY_STUKA_FILTERED( chan, arg_array ) \
 	UTIL_PlaySound( ENT(pev), chan , arg_array [ RANDOM_LONG(0,ARRAYSIZE( arg_array )-1) ], EASY_CVAR_GET(soundVolumeStuka), EASY_CVAR_GET(soundAttenuationStuka), 0, RANDOM_LONG(m_voicePitch - 5,m_voicePitch + 5) ); 
