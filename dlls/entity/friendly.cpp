@@ -359,8 +359,7 @@ const char* CFriendly::pVomitVoiceSounds[] =
 };
 const char* CFriendly::pVomitHitSounds[] = 
 {
-	"weapons/electro4.wav",    //This is precached by the player's gauss, so it is always available. No harm done in a redundant precache or skip (soundsentencesave) then. 
-	// they all these are precached by the player's gauss.
+	"weapons/electro4.wav",    // This is precached by the player's gauss, always available.  Rest are too.
 	"weapons/electro5.wav",
 	"weapons/electro6.wav",
 };
@@ -500,7 +499,7 @@ void CFriendly::VomitHitSound(edict_t* pevToPlayAt){
 	
 	// UTIL_EmitAmbientSound ?
 	// no soundsentencesave.  (Ambient supports sentences though)
-	EMIT_SOUND_DYN( pevToPlayAt, CHAN_STATIC, pVomitHitSounds[randomSound], 1.0, ATTN_NORM, 0, pitch );
+	UTIL_PlaySound( pevToPlayAt, CHAN_STATIC, pVomitHitSounds[randomSound], 1.0, ATTN_NORM, 0, pitch, FALSE);
 	
 }//END OF VomitHitSound
 

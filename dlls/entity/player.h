@@ -630,7 +630,8 @@ public:
 	void SelectItem(const char *pstr);
 
 	void setActiveItem(CBasePlayerItem* argItem);
-
+	void setActiveItem_HolsterCheck(CBasePlayerItem* argItem);
+	
 	void ItemPreFrame( void );
 	void ItemPostFrame( void );
 

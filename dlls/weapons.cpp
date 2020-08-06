@@ -505,14 +505,14 @@ void CBasePlayerWeapon::ItemPostFrameThink(){
 		m_pQueuedActiveItem = FALSE;
 	}
 	*/
+
+	// HOLSTER - SWAPPO DISABLE.
 	//MODDD - should be a good place to check for deplying the next weapon.
 	if(m_pPlayer->m_bHolstering && gpGlobals->time >= m_pPlayer->m_fCustomHolsterWaitTime){  //m_pPlayer->m_flNextAttack <= 0.0){
-	    //done holstering? complete the switch to the picked weapon. Deploy that one.
-
+	    // done holstering? complete the switch to the picked weapon. Deploy that one.
 		m_pPlayer->m_bHolstering = FALSE;
 		m_pPlayer->setActiveItem(m_pPlayer->m_pQueuedActiveItem);
 		m_pPlayer->m_pQueuedActiveItem = NULL;
-
 		m_pPlayer->m_fCustomHolsterWaitTime = -1;
 	}
 
@@ -521,7 +521,7 @@ void CBasePlayerWeapon::ItemPostFrameThink(){
 
 
 
-//MODDD - stub.s
+//MODDD - stub.
 void CBasePlayerWeapon::ItemPreFrame( void ){
 	//CBasePlayerItem::ItemPreFrame();  necessary?   "ItemPostFrame" does not seem to need to call its parent class's method.
 	//empty.
@@ -536,6 +536,19 @@ void CBasePlayerWeapon::ItemPostFrame( void )
 	//easyPrintLine("DFFFF %d", pev->body);
 	//easyPrintLine("DFFFF %d", m_fInAttack);
 
+	// HOLSTER - SWAPPO DISABLE.
+	/*
+	if(m_pPlayer->m_bHolstering){  //m_pPlayer->m_flNextAttack <= 0.0){
+		// done holstering? complete the switch to the picked weapon. Deploy that one.
+		m_pPlayer->m_bHolstering = FALSE;
+		m_pPlayer->setActiveItem(m_pPlayer->m_pQueuedActiveItem);
+		m_pPlayer->m_pQueuedActiveItem = NULL;
+		m_pPlayer->m_fCustomHolsterWaitTime = -1;
+		return;
+	}
+	*/
+
+
 	BOOL secondaryHeld = ((m_pPlayer->pev->button & IN_ATTACK2) && CanAttack( m_flNextSecondaryAttack, gpGlobals->time, UseDecrement() ));
 	BOOL primaryHeld = ((m_pPlayer->pev->button & IN_ATTACK) && CanAttack( m_flNextPrimaryAttack, gpGlobals->time, UseDecrement() ));
 
@@ -547,6 +560,8 @@ void CBasePlayerWeapon::ItemPostFrame( void )
 		WeaponIdle();
 		return;   //block!
 	}
+
+
 
 
 	/*
@@ -561,7 +576,6 @@ void CBasePlayerWeapon::ItemPostFrame( void )
 		buttonFiltered &= ~(2);
 	}
 	*/
-
 
 	/*
 	m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] = 999;
@@ -826,7 +840,7 @@ void CBasePlayerWeapon::ItemPostFrame( void )
 		WeaponIdle( );
 		return;
 	}
-	//MODDD - note: ISSUE.  This method, "itemPostFrame", happens when "fireDelay" isn't on.  So, this "idle" block is never reached, even if it is okay to.
+	//MODDD - note: ISSUE.  This method, "itemPostFrame", happens when m_flNextAttack isn't passed yet.  So, this "idle" block is never reached, even if it is okay to.
 
 	// catch all
 	if ( ShouldWeaponIdle() )
@@ -1302,6 +1316,7 @@ BOOL CBasePlayerWeapon :: CanDeploy( void )
 
 
 //MODDD - should a weapon NOT have any deploy methods, this default will also undo the player silencer render effect.  Just for safety.
+// ...or not?
 BOOL CBasePlayerWeapon :: Deploy(){
 	
 
@@ -1313,8 +1328,9 @@ BOOL CBasePlayerWeapon :: Deploy(){
 
 BOOL CBasePlayerWeapon :: DefaultDeploy( char *szViewModel, char *szWeaponModel, int iAnim, char *szAnimExt, int skiplocal /* = 0 */, int body, float deployAnimTime, float fireDelayTime )
 {
-	if (!CanDeploy( ))
+	if (!CanDeploy()) {
 		return FALSE;
+	}
 
 	m_pPlayer->TabulateAmmo();
 	m_pPlayer->pev->viewmodel = MAKE_STRING(szViewModel);
@@ -1329,7 +1345,7 @@ BOOL CBasePlayerWeapon :: DefaultDeploy( char *szViewModel, char *szWeaponModel,
 	SendWeaponAnimBypass(iAnim, body);
 
 	if(fireDelayTime == -1){
-		//make match the "deployAnimTime":
+		// use deployAnimTime then
 		fireDelayTime = deployAnimTime;
 	}
 
@@ -1342,10 +1358,10 @@ BOOL CBasePlayerWeapon :: DefaultDeploy( char *szViewModel, char *szWeaponModel,
 	forceBlockLooping();
 
 
-	//MODDD - remove the silencer block (no muzzle flash) edit if necessary.
+	//MODDD - remove the silencer block (no muzzle flash)
 	//m_pPlayer->pev->renderfx &= ~128;
 	
-	//NEVERMIND, canned.
+	// NEVERMIND, canned.
 	/*
 	easyPrintLine("WHATTT %d", (int)CVAR_GET_FLOAT("deployingWeaponPlaysOtherSound") );
 	if(CVAR_GET_FLOAT("deployingWeaponPlaysSound") == 1){
@@ -1359,7 +1375,7 @@ BOOL CBasePlayerWeapon :: DefaultDeploy( char *szViewModel, char *szWeaponModel,
 void CBasePlayerWeapon::DefaultHolster( int iAnim, int skiplocal /* = 0 */, int body, float holsterAnimTime )
 {
 
-	//Like base Holster which may not get called, set reload to False.
+	// Like base Holster which may not get called, set reload to False.
 	m_fInReload = FALSE;
 
 
@@ -1367,7 +1383,7 @@ void CBasePlayerWeapon::DefaultHolster( int iAnim, int skiplocal /* = 0 */, int 
 	//       The notice to deploy the next weapon may come a little late.
 	m_pPlayer->m_flNextAttack = UTIL_WeaponTimeBase() + holsterAnimTime + 1;
 
-	//Let this handle the time it takes to change anims instead, not transmitted to the client by default.
+	// Let this handle the time it takes to change anims instead, not transmitted to the client by default.
 	m_pPlayer->m_fCustomHolsterWaitTime = gpGlobals->time + holsterAnimTime;
 
 	//Don't want to risk setting idle animations while holstering, set this to an impossible value.

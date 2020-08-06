@@ -145,7 +145,7 @@ void CAirtank::TankTouch( CBaseEntity *pOther )
 		MESSAGE_END();
 
 
-		UTIL_PlaySound( pPlayer->edict(), CHAN_ITEM, "items/airtank1.wav", 1, ATTN_NORM, TRUE );
+		UTIL_PlaySound( pPlayer->edict(), CHAN_ITEM, "items/airtank1.wav", 1, ATTN_NORM, 0, 100, TRUE );
 
 
 

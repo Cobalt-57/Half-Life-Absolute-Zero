@@ -1489,3 +1489,10 @@ HELPFUL BUILT-IN CVARS:
 
 r_drawentities (1) - int; can draw models differently to emphasize hitboxes with numbers other than 1.
  
+
+
+
+
+ what is "tr.flPlaneDist", where tr is a TraceResult?    What does that even measure.  Nothing uses flPlaneDist.
+
+

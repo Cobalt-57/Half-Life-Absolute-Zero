@@ -6428,7 +6428,8 @@ void CBasePlayer::Spawn( BOOL revived ){
 		//start with no charge.
 
 		g_engfuncs.pfnSetPhysicsKeyValue( edict(), "slj", "0" );
-		g_engfuncs.pfnSetPhysicsKeyValue( edict(), "hl", "1" );
+		// I assure you this is still half-life
+		//g_engfuncs.pfnSetPhysicsKeyValue( edict(), "hl", "1" );
 
 		//new phyiscs var: player ladder movement.  This is related to a CVar that may be changed.
 		g_engfuncs.pfnSetPhysicsKeyValue( edict(), "plm", "0" );
@@ -6766,7 +6767,9 @@ int CBasePlayer::Restore( CRestore &restore )
 		UTIL_SetSize(pev, VEC_HULL_MIN, VEC_HULL_MAX);
 	}
 
-	g_engfuncs.pfnSetPhysicsKeyValue( edict(), "hl", "1" );
+	// This is to let pm_shared know that this is half-life?  uh, ok
+	// MODDD - DISABLED.  pm_shared never checks for any "hl" physics key so this is pointless
+	//g_engfuncs.pfnSetPhysicsKeyValue( edict(), "hl", "1" );
 
 	
 	//autoSneakyCheck();
@@ -6804,6 +6807,10 @@ int CBasePlayer::Restore( CRestore &restore )
 }
 
 
+
+
+//MODDD - ... wait.  This is never called either.  OOPS.
+// Was it meant to be for the really unfinished hud_fastswitch maybe?  Same for the found-empty SelectPrevItem?
 void CBasePlayer::SelectNextItem( int iItem )
 {
 	CBasePlayerItem *pItem;
@@ -6835,6 +6842,10 @@ void CBasePlayer::SelectNextItem( int iItem )
 
 	ResetAutoaim( );
 
+
+
+
+	/*
 	// FIX, this needs to queue them up and delay
 	if (m_pActiveItem)
 	{
@@ -6848,6 +6859,15 @@ void CBasePlayer::SelectNextItem( int iItem )
 		m_pActiveItem->Deploy( );
 		m_pActiveItem->UpdateItemInfo( );
 	}
+	*/
+	//MODDD - replaced by this.
+
+	// ...wait.  No line like this?  why?
+	//m_pLastItem = m_pActiveItem;
+
+	setActiveItem_HolsterCheck(pItem);
+
+
 
 	// Wait.. why did I even put this here?  SelectNextItem...  what?
 	// It's not at startup or called per frame.  Good god what was I smoking
@@ -6897,12 +6917,38 @@ void CBasePlayer::SelectItem(const char *pstr)
 	
 	ResetAutoaim( );
 
+	setActiveItem_HolsterCheck(pItem);
 
-	// FIX, this needs to queue them up and delay
+}//END OF SelectItem
+
+
+//MODDD - final step in selecting an item.  Doesn't do the holster-decision, this would be called by that
+// or anything selecting a weapon that skips holstering.
+void CBasePlayer::setActiveItem(CBasePlayerItem* argItem){
+
+	m_pLastItem = m_pActiveItem;
+
+
+	m_pActiveItem = argItem;
+
+	if (m_pActiveItem)
+	{
+		m_pActiveItem->Deploy( );
+		m_pActiveItem->UpdateItemInfo( );
+	}
+}
+
+// if allowed by cl_holster, and sets the target weapon to deploy after that finishes.
+// Or goes to deploy instantly like retail.
+// a filter that calls setActiveItem straight away if holstering is disabled.
+void CBasePlayer::setActiveItem_HolsterCheck(CBasePlayerItem* argItem) {
+
+	// ******SCRIPT THIS REPLACES, exact or similar-intent repeated a few places
 	/*
+	// FIX, this needs to queue them up and delay
 	if (m_pActiveItem)
 		m_pActiveItem->Holster( );
-	
+
 	m_pLastItem = m_pActiveItem;
 	m_pActiveItem = pItem;
 
@@ -6912,48 +6958,37 @@ void CBasePlayer::SelectItem(const char *pstr)
 		m_pActiveItem->UpdateItemInfo( );
 	}
 	*/
+	///////////////////////////////////////////////////////////////////////////
 
-	//MODDD - above comment is from the as-is project. I shall obey thy command, developers from long ago.
-
-	if (m_pActiveItem ){
+	if (m_pActiveItem) {
 		//easyForcePrintLine("OH yeah AM I HOLSTERIN ALREADY %d", m_bHolstering);
 
-		if(!m_bHolstering){
-			//don't holster the currently equipped weapon if already in the middle of holstering.
-			m_pActiveItem->Holster( );
+		if (!m_bHolstering) {
+			// don't holster the currently equipped weapon if already in the middle of holstering.
+			m_pActiveItem->Holster();
 			m_bHolstering = TRUE;
 		}
-		
+
 		// cl_holster
-		if(fHolsterAnimsEnabled == TRUE){
-			//using holster anim? Tell the currently equipped item to change to this weapon when that is over.
-			m_pQueuedActiveItem = pItem;  //set this later instead, after the holster anim is done.
-		}else{
-			//Not using holster anims? Immediately change weapon.
-			setActiveItem(pItem);
+		if (fHolsterAnimsEnabled == TRUE) {
+			// using holster anim? Tell the currently equipped item to change to this weapon when that is over.
+			m_pQueuedActiveItem = argItem;  //set this later instead, after the holster anim is done.
+		}
+		else {
+			// Not using holster anims? Immediately change weapon.
+			setActiveItem(argItem);
 			m_bHolstering = FALSE;
 		}
 
-	}else{
-		//just pick it now.
-		setActiveItem(pItem);
-
 	}
-	
-}//END OF SelectItem
-
-
-void CBasePlayer::setActiveItem(CBasePlayerItem* argItem){
-	
-	m_pLastItem = m_pActiveItem;
-	m_pActiveItem = argItem;
-
-	if (m_pActiveItem)
-	{
-		m_pActiveItem->Deploy( );
-		m_pActiveItem->UpdateItemInfo( );
+	else {
+		// just pick it now.
+		setActiveItem(argItem);
 	}
+
 }
+
+
 
 
 void CBasePlayer::SelectLastItem(void)
@@ -6970,6 +7005,9 @@ void CBasePlayer::SelectLastItem(void)
 
 	ResetAutoaim( );
 
+
+
+	/*
 	// FIX, this needs to queue them up and delay
 	if (m_pActiveItem)
 		m_pActiveItem->Holster( );
@@ -6979,6 +7017,16 @@ void CBasePlayer::SelectLastItem(void)
 	m_pLastItem = pTemp;
 	m_pActiveItem->Deploy( );
 	m_pActiveItem->UpdateItemInfo( );
+	*/
+
+	//MODDD - replaced with this.
+
+	// Record the current active item, setting it with LastItem forgets what it was otherwise.
+	//CBasePlayerItem* pTemp = m_pActiveItem;
+	setActiveItem_HolsterCheck(m_pLastItem);
+	// And the previous ActiveItem is now the 'Last' (recent) item in case of another switch-back.
+	//m_pLastItem = pTemp;
+
 }
 
 //==============================================
@@ -6999,9 +7047,15 @@ BOOL CBasePlayer::HasWeapons( void )
 	return FALSE;
 }
 
+// whut.  Nothing calls this at least.
 void CBasePlayer::SelectPrevItem( int iItem )
 {
 }
+
+
+
+
+
 
 
 const char *CBasePlayer::TeamID( void )

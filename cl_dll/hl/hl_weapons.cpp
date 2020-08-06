@@ -370,6 +370,7 @@ void CBasePlayerWeapon::DefaultHolster( int iAnim, int skiplocal /* = 0 */, int 
 	
 	//HACK - make this a little longer to stop the client from thinking it is done the moment this ends.
 	//       The notice to deploy the next weapon may come a little late.
+	// try with and without + 1 maybe?
 	m_pPlayer->m_flNextAttack = UTIL_WeaponTimeBase() + holsterAnimTime + 1;
 
 	//Let this handle the time it takes to change anims instead, not transmitted to the client by default.
@@ -662,17 +663,32 @@ void CBasePlayerWeapon::ItemPostFrameThink(){
 
 	//Surprisingly no, don't do this, this never even happens nor should it. Deploy should only be called by the server
 	//and its results are echoed to the client.
-	
+
+
+
+
+	// HOLSTER - SWAPPO DISABLE.
+	// or both disable.
+	// MODDD - MAJOR TODO.
+	// Supporting this client-side would be great and all, but there's a major problem.
+	// SelectLastItem is never getting called clientside, so interrupting a LastItem call through
+	// a normal number selection (4 twice, click, etc.) interrupts that clientside and interrupts
+	// the deploy animation soon after by repeating itself.  Client-server synch issues are weird.
+	// Does it make sense to let "lastinv" work clientside, like interpret console input right there?
+	// maybe if it were a client command that send the same thing to the server....
+	/*
 	//easyForcePrintLine("HOLS:%d HOLSTIM:%.2f NEXTATTA:%.2f TIME:%.2f",m_pPlayer->m_bHolstering, m_pPlayer->m_fCustomHolsterWaitTime, m_pPlayer->m_flNextAttack, gpGlobals->time);
 	//MODDD - should be a good place to check for deplying the next weapon.
-	if(m_pPlayer->m_bHolstering && gpGlobals->time >= m_pPlayer->m_fCustomHolsterWaitTime){ //m_pPlayer->m_flNextAttack <= 0.0){
-	    //done holstering? complete the switch to the picked weapon. Deploy that one.
+	if (m_pPlayer->m_bHolstering && gpGlobals->time >= m_pPlayer->m_fCustomHolsterWaitTime) { //m_pPlayer->m_flNextAttack <= 0.0){
+		//done holstering? complete the switch to the picked weapon. Deploy that one.
 
 		m_pPlayer->m_bHolstering = FALSE;
 		m_pPlayer->setActiveItem(m_pPlayer->m_pQueuedActiveItem);
 		m_pPlayer->m_pQueuedActiveItem = NULL;
 	}
+	*/
 	
+
 
 	//easyForcePrintLine("AFTR HOLS:%d HOLSTIM:%.2f NEXTATTA:%.2f TIME:%.2f",m_pPlayer->m_bHolstering, m_pPlayer->m_fCustomHolsterWaitTime, m_pPlayer->m_flNextAttack, gpGlobals->time);
 	
@@ -703,6 +719,31 @@ void CBasePlayerWeapon::ItemPostFrame( )
 	//if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(viewModelPrintouts)==1)easyForcePrintLine("ItemPostFrame: b:%d npa:%.2f", m_pPlayer->pev->button & IN_ATTACK, m_flNextPrimaryAttack);
 
 	//easyForcePrintLine("I EAT things %.2f %d %.2f", gpGlobals->time, m_pPlayer->pev->button & IN_ATTACK, m_flNextPrimaryAttack);
+
+
+
+	//Surprisingly no, don't do this, this never even happens nor should it. Deploy should only be called by the server
+	//and its results are echoed to the client.
+
+	//easyForcePrintLine("HOLS:%d HOLSTIM:%.2f NEXTATTA:%.2f TIME:%.2f",m_pPlayer->m_bHolstering, m_pPlayer->m_fCustomHolsterWaitTime, m_pPlayer->m_flNextAttack, gpGlobals->time);
+	//MODDD - should be a good place to check for deplying the next weapon.
+
+
+	// HOLSTER - SWAPPO DISABLE.
+	/*
+	if (m_pPlayer->m_bHolstering) { //m_pPlayer->m_flNextAttack <= 0.0){
+		// done holstering? complete the switch to the picked weapon. Deploy that one.
+
+		m_pPlayer->m_bHolstering = FALSE;
+		m_pPlayer->setActiveItem(m_pPlayer->m_pQueuedActiveItem);
+		m_pPlayer->m_pQueuedActiveItem = NULL;
+		return;
+	}
+	*/
+
+
+
+
 
 	BOOL secondaryHeld = ((m_pPlayer->pev->button & IN_ATTACK2) && m_flNextSecondaryAttack <= 0.0);
 	BOOL primaryHeld = ((m_pPlayer->pev->button & IN_ATTACK) && m_flNextPrimaryAttack <= 0.0);
@@ -839,7 +880,7 @@ CBasePlayer::SelectItem
 */
 //MODDD - IMPORTANT. Apparently this may as well have been dummied, but was found in the as-is script.
 //        This method is never called for the client, any vars set by the server calling SelectItem on
-//        its own side this need to be sent to the client.
+//        its own side need to be sent to the client.
 void CBasePlayer::SelectItem(const char *pstr)
 {
 	//easyPrintLine("MESSAGE11");
@@ -883,6 +924,64 @@ void CBasePlayer::setActiveItem(CBasePlayerItem* argItem){
 		m_pActiveItem->UpdateItemInfo( );
 	}
 }
+
+
+// if allowed by cl_holster, and sets the target weapon to deploy after that finishes.
+// Or goes to deploy instantly like retail.
+// a filter that calls setActiveItem straight away if holstering is disabled.
+void CBasePlayer::setActiveItem_HolsterCheck(CBasePlayerItem* argItem) {
+
+	// ******SCRIPT THIS REPLACES, exact or similar-intent repeated a few places
+	/*
+	// FIX, this needs to queue them up and delay
+	if (m_pActiveItem)
+		m_pActiveItem->Holster( );
+
+	m_pLastItem = m_pActiveItem;
+	m_pActiveItem = pItem;
+
+	if (m_pActiveItem)
+	{
+		m_pActiveItem->Deploy( );
+		m_pActiveItem->UpdateItemInfo( );
+	}
+	*/
+	///////////////////////////////////////////////////////////////////////////
+
+	if (m_pActiveItem) {
+		//easyForcePrintLine("OH yeah AM I HOLSTERIN ALREADY %d", m_bHolstering);
+
+		if (!m_bHolstering) {
+			// don't holster the currently equipped weapon if already in the middle of holstering.
+			m_pActiveItem->Holster();
+			m_bHolstering = TRUE;
+		}
+
+		// cl_holster
+		if (fHolsterAnimsEnabled == TRUE) {
+			// using holster anim? Tell the currently equipped item to change to this weapon when that is over.
+			m_pQueuedActiveItem = argItem;  //set this later instead, after the holster anim is done.
+		}
+		else {
+			// Not using holster anims? Immediately change weapon.
+			setActiveItem(argItem);
+			m_bHolstering = FALSE;
+		}
+
+	}
+	else {
+		// just pick it now.
+		setActiveItem(argItem);
+	}
+
+}
+
+
+
+
+
+
+
 
 
 /*

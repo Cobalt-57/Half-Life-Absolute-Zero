@@ -8,22 +8,17 @@ EASY_CVAR_EXTERN(bullsquidSpitTrajTimeMin)
 EASY_CVAR_EXTERN(bullsquidSpitTrajTimeMax)
 EASY_CVAR_EXTERN(bullsquidSpitTrajDistMin)
 EASY_CVAR_EXTERN(bullsquidSpitTrajDistMax)
-
 EASY_CVAR_EXTERN(bullsquidSpitGravityMulti)
-
 EASY_CVAR_EXTERN(cl_bullsquidspitarc)
 EASY_CVAR_EXTERN(bullsquidSpitUseAlphaModel)
 EASY_CVAR_EXTERN(bullsquidSpitUseAlphaEffect)
-
 EASY_CVAR_EXTERN(bullsquidSpitEffectSpread)
-
 EASY_CVAR_EXTERN(bullsquidSpitEffectMin)
 EASY_CVAR_EXTERN(bullsquidSpitEffectMax)
 EASY_CVAR_EXTERN(bullsquidSpitEffectHitMin)
 EASY_CVAR_EXTERN(bullsquidSpitEffectHitMax)
 EASY_CVAR_EXTERN(bullsquidSpitEffectSpawn)
 EASY_CVAR_EXTERN(bullsquidSpitEffectHitSpawn)
-
 EASY_CVAR_EXTERN(bullsquidSpitAlphaScale)
 EASY_CVAR_EXTERN(bullsquidSpitSpriteScale)
 
@@ -40,6 +35,14 @@ CSquidSpit::CSquidSpit(void){
 }
 
 
+TYPEDESCRIPTION	CSquidSpit::m_SaveData[] = 
+{
+	DEFINE_FIELD( CSquidSpit, m_maxFrame, FIELD_INTEGER ),
+};
+
+IMPLEMENT_SAVERESTORE( CSquidSpit, CBaseEntity );
+
+
 
 
 //IMPORTANT - dummied out!
@@ -47,14 +50,6 @@ GENERATE_TRACEATTACK_IMPLEMENTATION_DUMMY(CSquidSpit)
 GENERATE_TAKEDAMAGE_IMPLEMENTATION_DUMMY(CSquidSpit)
 
 
-
-
-TYPEDESCRIPTION	CSquidSpit::m_SaveData[] = 
-{
-	DEFINE_FIELD( CSquidSpit, m_maxFrame, FIELD_INTEGER ),
-};
-
-IMPLEMENT_SAVERESTORE( CSquidSpit, CBaseEntity );
 
 
 BOOL CSquidSpit::usesSoundSentenceSave(void){
@@ -72,7 +67,6 @@ Vector getParticleDir(const Vector& vecVelDir){
 
 	return Vector(vecVelDir2D.x, vecVelDir2D.y, 1);
 }
-
 
 
 void CSquidSpit:: Spawn( void )
@@ -435,7 +429,6 @@ void CSquidSpit :: Touch ( CBaseEntity *pOther )
 
 
 
-
 float CSquidSpit::massInfluence(void){
 	return 0.03f;
 }//END OF massInfluence
@@ -443,8 +436,6 @@ float CSquidSpit::massInfluence(void){
 int CSquidSpit::GetProjectileType(void){
 	return PROJECTILE_ORGANIC_DUMB;
 }
-
-
 
 
 

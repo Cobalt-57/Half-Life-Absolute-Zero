@@ -1189,8 +1189,7 @@ int SENTENCEG_GetIndex(const char *szgroupname)
 // play from the group. Ipick is only needed if you plan on stopping
 // the sound before playback is done (see SENTENCEG_Stop).
 
-int SENTENCEG_PlayRndI(edict_t *entity, int isentenceg, 
-					  float volume, float attenuation, int flags, int pitch)
+int SENTENCEG_PlayRndI(edict_t *entity, int isentenceg, float volume, float attenuation, int flags, int pitch)
 {
 	char name[64];
 	int ipick;
@@ -1207,9 +1206,7 @@ int SENTENCEG_PlayRndI(edict_t *entity, int isentenceg,
 }
 
 // same as above, but takes sentence group name instead of index
-
-int SENTENCEG_PlayRndSz(edict_t *entity, const char *szgroupname, 
-					  float volume, float attenuation, int flags, int pitch)
+int SENTENCEG_PlayRndSz(edict_t *entity, const char *szgroupname, float volume, float attenuation, int flags, int pitch)
 {
 	char name[64];
 	int ipick;
@@ -1270,8 +1267,7 @@ int SENTENCEG_PlayRndSz_Ambient(edict_t *entity, Vector vOrigin, const char *szg
 
 // play sentences in sequential order from sentence group.  Reset after last sentence.
 
-int SENTENCEG_PlaySequentialSz(edict_t *entity, const char *szgroupname, 
-					  float volume, float attenuation, int flags, int pitch, int ipick, int freset)
+int SENTENCEG_PlaySequentialSz(edict_t *entity, const char *szgroupname, float volume, float attenuation, int flags, int pitch, int ipick, int freset)
 {
 	char name[64];
 	int ipicknext;
@@ -1313,7 +1309,7 @@ void SENTENCEG_Stop(edict_t *entity, int isentenceg, int ipick)
 	strcat(buffer, sznum);
 
 	//MODDD NOTE - nah, don't filter, this is always a sentence anyways.
-	//(I think this method in particular is never used?)
+	// (I think this method in particular is never used?)
 	UTIL_StopSound(entity, CHAN_VOICE, buffer, FALSE);
 }
 
@@ -1360,13 +1356,11 @@ void SENTENCEG_Init()
 		if (!buffer[i])
 			continue;
 		
-
-
 		if(::stringStartsWith(buffer, "/###")){
-			//Why this wonky-ass identity string in front? At least a single slash marks this line as a comment so the engine won't
-			//try to count this line as a sentence, offsetting all sentence names and accompanying sound lists by 1.
-			//This can lead to some stupid stuff like so much as commented out lines immediately after the flag causing the offset issue to show up.
-			//Just less stable unless you use a comment character "/" in it. The "###" is so it won't get mistaken for other comments not meant to be flags.
+			// Why this wonky-ass identity string in front? At least a single slash marks this line as a comment so the engine won't
+			// try to count this line as a sentence, offsetting all sentence names and accompanying sound lists by 1.
+			// This can lead to some stupid stuff like so much as commented out lines immediately after the flag causing the offset issue to show up.
+			// Just less stable unless you use a comment character "/" in it. The "###" is so it won't get mistaken for other comments not meant to be flags.
 			int readIndex = 4; //start at the end of the identify string.
 
 			int writeIndex = 0;
@@ -1414,9 +1408,6 @@ void SENTENCEG_Init()
 		if (buffer[i] == '/' || (!isalpha(buffer[i]) ) )
 			continue;
 
-
-		
-			
 
 		// get sentence name
 		j = i;
@@ -1547,7 +1538,6 @@ int SENTENCEG_Lookup(const char *sample, char *sentencenum)
 	// sentence name not found!
 	return -1;
 }
-
 
 
 
@@ -1766,9 +1756,7 @@ float TEXTURETYPE_PlaySound(TraceResult *ptr,  Vector vecSrc, Vector vecEnd, int
 	//if (EASY_CVAR_GET(forceAllowServersideTextureSounds) < 1 && !g_pGameRules->PlayTextureSounds() )
 	//	return 0.0;
 
-
 	chTextureType = 0;
-
 
 	CBaseEntity *pEntity = CBaseEntity::Instance(ptr->pHit);
 	BOOL isEntityWorld;
@@ -1783,8 +1771,6 @@ float TEXTURETYPE_PlaySound(TraceResult *ptr,  Vector vecSrc, Vector vecEnd, int
 		isEntityWorld = (pEntity->IsWorld() || pEntity->Classify() == CLASS_NONE);
 	}
 
-	//
-	
 	//MODDD - why are we making such a strong assumption here?
 	//        Why not call pEntity->IsWorld or pEntity->IsWorldAffiliated?
 	//        uhh.. it's meant to work a certain way, check out combat.cpp's FireBulletsPlayer, around "doDefaultBulletHitEffectCheck && useBulletHitSound".
@@ -2065,22 +2051,14 @@ void CSpeaker :: SpeakerThink( void )
 	int pitch = 100;
 
 
-
 	if( EASY_CVAR_GET(announcerIsAJerk) > 0){
-
-	
 		pev->nextthink = gpGlobals->time + RANDOM_FLOAT(11, 16);
-
 		flvolume = 1.0;
 		SENTENCEG_PlayRndSz_Ambient ( ENT(pev), pev->origin, "voxjerk", flvolume, flattenuation, flags, pitch);
-
 		CTalkMonster::g_talkWaitTime = gpGlobals->time + 10;
-
 		return;
 	}
 	//////////////////////////////////////////////////////////////////////////////////////////////
-
-
 
 
 	// Wait for the talkmonster to finish first.

@@ -1007,10 +1007,6 @@ GENERATE_TRACEATTACK_IMPLEMENTATION(CAGrunt)
 
 
 
-
-
-				//sooooo what is "someTrace.flPlaneDist"?    What does that even measure.
-
 				Vector position = ptr->vecEndPos;
 
 				//Vector vecTracerDir = vecDir;
@@ -1035,8 +1031,6 @@ GENERATE_TRACEATTACK_IMPLEMENTATION(CAGrunt)
 				WRITE_COORD(vecTracerDir.y);
 				WRITE_COORD(vecTracerDir.z);
 				MESSAGE_END();
-
-
 
 
 			}else {
@@ -2290,7 +2284,7 @@ void CAGrunt::OnTakeDamageSetConditions(entvars_t *pevInflictor, entvars_t *pevA
 	}
 */
 
-	easyForcePrintLine("%s:%d OnTkDmgSetCond raw:%.2f fract:%.2f", getClassname(), monsterID, flDamage, (flDamage / pev->max_health));
+	easyPrintLine("%s:%d OnTkDmgSetCond raw:%.2f fract:%.2f", getClassname(), monsterID, flDamage, (flDamage / pev->max_health));
 
 }//END OF OnTakeDamageSetConditions
 

@@ -1369,15 +1369,12 @@ void CNihilanthHVR :: Precache( void )
 	PRECACHE_MODEL("sprites/xspark4.spr");
 	PRECACHE_MODEL("sprites/muzzleflash3.spr");
 
-
-
 	
-	PRECACHE_SOUND("weapons/electro4.wav", TRUE); //force it. player gausss sound.
 	//just doing this raw since "ambient" is used on it.
 
 	global_useSentenceSave = TRUE;
 	PRECACHE_SOUND("debris/zap4.wav");
-	//PRECACHE_SOUND("weapons/electro4.wav");
+	PRECACHE_SOUND("weapons/electro4.wav", TRUE); //force it. player gausss sound.
 	PRECACHE_SOUND("x/x_teleattack1.wav");
 	global_useSentenceSave = FALSE;
 }

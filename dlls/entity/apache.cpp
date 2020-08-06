@@ -1076,7 +1076,7 @@ void CApacheHVR :: CustomHVRExplodeTouch ( CBaseEntity *pOther )
 	}
 	*/
 
-	UTIL_StopSound( edict(), CHAN_VOICE, "weapons/rocket1.wav" );
+	UTIL_StopSound( edict(), CHAN_VOICE, "weapons/rocket1.wav", FALSE );
 	ExplodeTouch( pOther );
 }
 
@@ -1108,7 +1108,7 @@ void CApacheHVR :: IgniteThink( void  )
 	//ignited = TRUE;
 
 	// make rocket sound
-	EMIT_SOUND( ENT(pev), CHAN_VOICE, "weapons/rocket1.wav", 1, 0.5 );
+	UTIL_PlaySound( ENT(pev), CHAN_VOICE, "weapons/rocket1.wav", 1, 0.5, 0, 100, FALSE );
 
 
 	if(EASY_CVAR_GET(cl_rockettrail) == 0){

@@ -592,7 +592,7 @@ CBaseEntity::CBaseEntity(void){
 
 }
 
-// Whether this entity uses the sound sentence save feature. By default, false.
+// Whether this entity uses the sound sentence save feature. By default, false.  Most commonly expected monsters will though.
 BOOL CBaseEntity::usesSoundSentenceSave(void){
 	return FALSE;
 }
@@ -794,22 +794,16 @@ void CBaseEntity::playAmmoPickupSound(){
 }
 
 void CBaseEntity::playAmmoPickupSound(entvars_t* sentPev){
-
 	entvars_t* pevToUse = NULL;
-
 	if(sentPev != NULL){
 		pevToUse = sentPev;
 	}else{
 		pevToUse = pev;
 	}
-
-
 	if(EASY_CVAR_GET(weaponPickupPlaysAnyReloadSounds) != 1){
 		//normal.
 		UTIL_PlaySound(ENT(pevToUse), CHAN_ITEM, "items/9mmclip1.wav", 1, ATTN_NORM, 0, 100, FALSE);
-
 	}else{
-
 		switch(g_engfuncs.pfnRandomLong(0,2)){
 		case 0:
 			UTIL_PlaySound(ENT(pevToUse), CHAN_ITEM, "weapons/reload1.wav", 1, ATTN_NORM, 0, 100, FALSE);
@@ -821,9 +815,7 @@ void CBaseEntity::playAmmoPickupSound(entvars_t* sentPev){
 			UTIL_PlaySound(ENT(pevToUse), CHAN_ITEM, "weapons/reload3.wav", 1, ATTN_NORM, 0, 100, FALSE);
 		break;
 		}
-
 	}
-
 }
 
 void CBaseEntity::playGunPickupSound(){
@@ -831,15 +823,12 @@ void CBaseEntity::playGunPickupSound(){
 }
 
 void CBaseEntity::playGunPickupSound(entvars_t* sentPev){
-	
 	entvars_t* pevToUse = NULL;
-
 	if(sentPev != NULL){
 		pevToUse = sentPev;
 	}else{
 		pevToUse = pev;
 	}
-
 	switch(RANDOM_LONG(0, 3)){
 	case 0:
 		UTIL_PlaySound(ENT(pevToUse), CHAN_ITEM, "items/gunpickup1.wav", 1, ATTN_NORM, 0, 100, FALSE);
@@ -854,16 +843,13 @@ void CBaseEntity::playGunPickupSound(entvars_t* sentPev){
 		UTIL_PlaySound(ENT(pevToUse), CHAN_ITEM, "items/gunpickup4.wav", 1, ATTN_NORM, 0, 100, FALSE);
 	break;
 	}
-
 }
-
-
 
 
 void CBaseEntity::precacheAmmoPickupSound(){
 
 	if(EASY_CVAR_GET(weaponPickupPlaysAnyReloadSounds) != 1){
-		//normal.
+		// normal.
 		PRECACHE_SOUND("items/9mmclip1.wav", TRUE);
 	}else{
 		PRECACHE_SOUND("weapons/reload1.wav", TRUE);
@@ -873,15 +859,11 @@ void CBaseEntity::precacheAmmoPickupSound(){
 }
 
 void CBaseEntity::precacheGunPickupSound(){
-
 	PRECACHE_SOUND("items/gunpickup1.wav", TRUE);
 	PRECACHE_SOUND("items/gunpickup2.wav", TRUE);
 	PRECACHE_SOUND("items/gunpickup3.wav", TRUE);
 	PRECACHE_SOUND("items/gunpickup4.wav", TRUE);
-	
 }
-
-
 
 
 int CBaseEntity::Save( CSave &save )

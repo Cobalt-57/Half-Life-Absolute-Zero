@@ -101,7 +101,7 @@ CSqueakGrenade::CSqueakGrenade(){
 	
 }
 
-//nevermind, probably already precached in whole by the player, no assistance needed.  Whatever, being explicit doesn't hurt.
+// nevermind, probably already precached in whole by the player, no assistance needed.  Whatever, being explicit doesn't hurt.
 BOOL CSqueakGrenade::usesSoundSentenceSave(void){
 	return FALSE;
 }

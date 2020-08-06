@@ -5327,7 +5327,6 @@ void ClientPrecache( void ){
 	PRECACHE_SOUND("items/medcharge4.wav", FALSE);
 	PRECACHE_SOUND("items/suitcharge1.wav", FALSE);
 	PRECACHE_SOUND("items/suitchargeno1.wav", FALSE);
-	
 	PRECACHE_SOUND("items/airtank1.wav", FALSE);
 	
 	PRECACHE_SOUND( "items/suitchargeok1.wav" );//!!! temporary sound for respawning weapons.

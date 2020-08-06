@@ -920,8 +920,9 @@ void CHudAmmo::UserCmd_Close(void)
 		gWR.gpActiveSel = NULL;
 		PlaySound("common/wpn_hudoff.wav", 1);
 	}
-	else
+	else {
 		ClientCmd("escape");
+	}
 }
 
 

@@ -341,7 +341,7 @@ BOOL CGrenade::isOrganic(void){
 	return FALSE;
 }
 
-//I do not.  Player weapons don't.
+// I do not.  Player weapons don't.
 BOOL CGrenade::usesSoundSentenceSave(void){
 	return FALSE;
 }
