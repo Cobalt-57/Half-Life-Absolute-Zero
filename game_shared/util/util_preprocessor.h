@@ -5,6 +5,11 @@
 
 
 
+// Use before involving m_iPrimaryAmmoType or m_iSecondaryAmmoType of CBasePlayerWeapon.
+// It can sometimes be -1 (invalid memory) although 0 is also an impossible place to be assigned.
+// Hard to say if high values could come from unsigned variables seeing -1, so checking for that too.
+#define IS_AMMOTYPE_VALID(argVarRef) (argVarRef > 0 && argVarRef < MAX_AMMO_SLOTS)
+
 
 
 //MODDD - moved from monsters.h. This area is made for preprocessor script generator methods like this.

@@ -993,45 +993,19 @@ GENERATE_TRACEATTACK_IMPLEMENTATION(CAGrunt)
 				// hit armor
 				if (pev->dmgtime != gpGlobals->time || (RANDOM_LONG(0, 10) < 1)) {
 					//MODDD - little tighter ricochet range, was 1 to 2.
-					////////////////////////////////////////////////////////////////////UTIL_Ricochet(ptr->vecEndPos, RANDOM_FLOAT(1.2, 1.8));
+					UTIL_Ricochet(ptr->vecEndPos, RANDOM_FLOAT(1.2, 1.8));
 					pev->dmgtime = gpGlobals->time;
 				}
 				//MODDD - why a random chance?  Just do it.
 				//if (RANDOM_LONG(0, 1) == 0) {
 					//MODDD - turned into method.
-					UTIL_RicochetTracer(ptr->vecEndPos, vecDir);
+					// And, sending 'ptr->vecPlaneNormal' instead of 'vecDir' for a source of better reflection.
+					// Would have to be '-vecDir' now anyway, method no longer multiplies the direction by -1.
+					UTIL_RicochetTracer(ptr->vecEndPos, ptr->vecPlaneNormal);
 				//}
 				if (useBulletHitSound) { *useBulletHitSound = FALSE; }
 				useBloodEffect = FALSE;
 				
-
-
-
-				Vector position = ptr->vecEndPos;
-
-				//Vector vecTracerDir = vecDir;
-				Vector vecTracerDir = ptr->vecPlaneNormal;
-
-				vecTracerDir.x += RANDOM_FLOAT(-0.3, 0.3);
-				vecTracerDir.y += RANDOM_FLOAT(-0.3, 0.3);
-				vecTracerDir.z += RANDOM_FLOAT(-0.3, 0.3);
-
-				vecTracerDir = vecTracerDir * 512;
-
-				// vecDir ?
-				DebugLine_Setup(0, position, position + vecTracerDir, 255, 0, 255);
-
-				MESSAGE_BEGIN(MSG_PVS, SVC_TEMPENTITY, position);
-				WRITE_BYTE(TE_TRACER);
-				WRITE_COORD(position.x);
-				WRITE_COORD(position.y);
-				WRITE_COORD(position.z);
-
-				WRITE_COORD(vecTracerDir.x);
-				WRITE_COORD(vecTracerDir.y);
-				WRITE_COORD(vecTracerDir.z);
-				MESSAGE_END();
-
 
 			}else {
 				//MODDD - Hitting the armor still shouldn't be insignificant, reduce damage by 15%.
@@ -1463,8 +1437,6 @@ extern int global_useSentenceSave;
 //=========================================================
 void CAGrunt :: Precache()
 {
-	int i;
-
 	global_useSentenceSave = 1;
 
 	PRECACHE_MODEL("models/agrunt.mdl");

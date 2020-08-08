@@ -299,6 +299,9 @@ void CBaseDoor::Spawn( )
 	}
 	else // touchable button
 		SetTouch( &CBaseDoor::DoorTouch );
+
+	// nevermind this test.
+	//this->pev->playerclass = 2;
 }
  
 

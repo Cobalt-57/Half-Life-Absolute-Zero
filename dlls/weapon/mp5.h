@@ -41,7 +41,7 @@ public:
 
 	void PrimaryAttack(void);
 	void SecondaryAttack(void);
-	int SecondaryAmmoIndex(void);
+	//int SecondaryAmmoIndex(void);
 	BOOL Deploy(void);
 	//MODDD - new
 	void Holster(int skiplocal = 0);

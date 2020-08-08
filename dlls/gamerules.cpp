@@ -26,10 +26,7 @@
 #include "skill.h"
 #include "game.h"
 
-extern edict_t *EntSelectSpawnPoint( CBaseEntity *pPlayer );
-
-DLL_GLOBAL CGameRules*	g_pGameRules = NULL;
-extern DLL_GLOBAL BOOL	g_fGameOver;
+extern DLL_GLOBAL BOOL g_fGameOver;
 extern int gmsgDeathMsg;	// client dll messages
 extern int gmsgMOTD;
 
@@ -37,6 +34,9 @@ extern int gmsgMOTD;
 extern float cvar_skill_mem;
 extern BOOL queueSkillUpdate;
 
+extern edict_t *EntSelectSpawnPoint( CBaseEntity *pPlayer );
+
+DLL_GLOBAL CGameRules* g_pGameRules = NULL;
 int g_teamplay = 0;
 
 //=========================================================
@@ -47,7 +47,8 @@ BOOL CGameRules::CanHaveAmmo( CBasePlayer *pPlayer, const char *pszAmmoName, int
 
 	if ( pszAmmoName )
 	{
-		iAmmoIndex = pPlayer->GetAmmoIndex( pszAmmoName );
+		//MODDD - GetAmmoIndex is no longer a member of CBasePlayer.
+		iAmmoIndex = GetAmmoIndex( pszAmmoName );
 		//easyForcePrintLine("WELL??? |%s| : %d", pszAmmoName, iAmmoIndex);
 
 		if ( iAmmoIndex > -1 )
@@ -62,6 +63,34 @@ BOOL CGameRules::CanHaveAmmo( CBasePlayer *pPlayer, const char *pszAmmoName, int
 
 	return FALSE;
 }
+
+
+//MODDD - new version that supports ammo type Id given directly instead.
+BOOL CGameRules::CanHaveAmmo(CBasePlayer* pPlayer, int iAmmoTypeId, int iMaxCarry)
+{
+	int iAmmoIndex;
+
+	if(IS_AMMOTYPE_VALID(iAmmoTypeId))
+	{
+		//MODDD - GetAmmoIndex is no longer a member of CBasePlayer.
+		iAmmoIndex = iAmmoTypeId;
+		//easyForcePrintLine("WELL??? |%s| : %d", pszAmmoName, iAmmoIndex);
+
+		if (iAmmoIndex > -1)
+		{
+			if (pPlayer->AmmoInventory(iAmmoIndex) < iMaxCarry)
+			{
+				// player has room for more of this type of ammo
+				return TRUE;
+			}
+		}
+	}
+
+	return FALSE;
+}
+
+
+
 
 //=========================================================
 //=========================================================

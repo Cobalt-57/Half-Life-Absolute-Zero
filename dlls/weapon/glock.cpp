@@ -192,9 +192,9 @@ void CGlock::customAttachToPlayer(CBasePlayer *pPlayer ){
 }
 
 
-int CGlock::ExtractAmmo( CBasePlayerWeapon *pWeapon )
+BOOL CGlock::ExtractAmmo( CBasePlayerWeapon *pWeapon )
 {
-	int iReturn;
+	BOOL iReturn = FALSE;
 
 	if ( pszAmmo1() != NULL )
 	{
@@ -209,13 +209,13 @@ int CGlock::ExtractAmmo( CBasePlayerWeapon *pWeapon )
 		//MODDD!!!
 		//iReturn = pWeapon->AddPrimaryAmmo( m_iDefaultAmmo, (char *)pszAmmo1(), iMaxClip(), iMaxAmmo1() );
 		//ALSO: forces the gun pickup sound.
-		iReturn = pWeapon->AddPrimaryAmmo( m_iDefaultAmmo, (char *)pszAmmo1(), adjustedMaxClip, iMaxAmmo1(), 2 );
+		iReturn |= pWeapon->AddPrimaryAmmo( m_iDefaultAmmo, (char *)pszAmmo1(), adjustedMaxClip, iMaxAmmo1(), 2 );
 		m_iDefaultAmmo = 0;
 	}
 
 	if ( pszAmmo2() != NULL )
 	{
-		iReturn = pWeapon->AddSecondaryAmmo( 0, (char *)pszAmmo2(), iMaxAmmo2() );
+		iReturn |= pWeapon->AddSecondaryAmmo( 0, (char *)pszAmmo2(), iMaxAmmo2() );
 	}
 
 	//easyPrintLine("HOW??? %d %d", includesGlockSilencer, pWeapon->m_pPlayer->hasGlockSilencer );
@@ -245,9 +245,9 @@ int CGlock::ExtractAmmo( CBasePlayerWeapon *pWeapon )
 		//let the player know if this is new.   ...nah, do it in the same place the weapon-pickup notice is issued.
 		//pWeapon->m_pPlayer->SetSuitUpdate("!HEV_SILENCER", FALSE, SUIT_NEXT_IN_30MIN);
 			
-		if(iReturn == 0){
-			//just to say something happened (remove this).  Return value does nothing to ammo, only determines whether to delete this item (used) or not (untouched).
-			iReturn = 1;
+		if(iReturn == FALSE){
+			// just to say something happened (remove this).  Return value does nothing to ammo, only determines whether to delete this item (used) or not (untouched).
+			iReturn = TRUE;
 		}
 
 		//Received the silencer!
@@ -355,10 +355,8 @@ int CGlock::GetItemInfo(ItemInfo *p)
 	//easyPrintLine("SUPAMAN THAT %d %d", usingGlockOldReloadLogic==1, m_chargeReady);
 	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(glockOldReloadLogic) == 0 || ( getExtraBullet() ) || !getFiredSinceReload()   ) {
 		p->iMaxClip = GLOCK_MAX_CLIP - 1;
-		//pl->m_rgAmmo[gun->m_iPrimaryAmmoType]
 	}else{
 		p->iMaxClip = GLOCK_MAX_CLIP;
-		//pl->m_rgAmmo[gun->m_iPrimaryAmmoType]
 	}
 
 	//MODDD
@@ -1021,7 +1019,7 @@ void CGlock::GlockFire( float flSpread , float flCycleTime, BOOL fUseAutoAim )
 	
 
 
-	if (!m_iClip && m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] <= 0) {
+	if (!m_iClip && PlayerPrimaryAmmoCount() <= 0) {
 		// HEV suit - indicate out of ammo condition
 		m_pPlayer->SetSuitUpdate("!HEV_AMO0", FALSE, 0);
 	}

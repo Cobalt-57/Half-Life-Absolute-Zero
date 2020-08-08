@@ -756,8 +756,6 @@ extern int global_useSentenceSave;
 //=========================================================
 void CZombie :: Precache()
 {
-	int i;
-
 	PRECACHE_MODEL("models/zombie.mdl");
 
 	global_useSentenceSave = TRUE;

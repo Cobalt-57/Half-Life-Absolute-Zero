@@ -157,7 +157,7 @@ void CHgun::PrimaryAttack()
 
 	Reload( );
 
-	if (m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] <= 0)
+	if (PlayerPrimaryAmmoCount() <= 0)
 	{
 		return;
 	}
@@ -182,7 +182,7 @@ void CHgun::PrimaryAttack()
 	
 	//MODDD
 	if(m_pPlayer->cheat_infiniteclipMem == 0 && m_pPlayer->cheat_infiniteammoMem == 0){
-		m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType]--;
+		ChangePlayerPrimaryAmmoCount(-1);
 	}
 	m_pPlayer->m_iWeaponVolume = QUIET_GUN_VOLUME;
 	m_pPlayer->m_iWeaponFlash = DIM_GUN_FLASH;
@@ -228,9 +228,9 @@ void CHgun::SecondaryAttack( void )
 {
 
 	if(m_pPlayer->cheat_infiniteammoMem == 1){
-		if ( pszAmmo1() && m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] < 8 )
+		if ( pszAmmo1() && PlayerPrimaryAmmoCount() < 8 )
 		{
-			m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] = 8;
+			SetPlayerPrimaryAmmoCount(8);
 		}
 	}
 
@@ -238,7 +238,7 @@ void CHgun::SecondaryAttack( void )
 
 	Reload();
 
-	if (m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] <= 0)
+	if (PlayerPrimaryAmmoCount() <= 0)
 	{
 		return;
 	}
@@ -311,7 +311,7 @@ void CHgun::SecondaryAttack( void )
 
 	//MODDD
 	if(m_pPlayer->cheat_infiniteclipMem == 0 && m_pPlayer->cheat_infiniteammoMem == 0){
-		m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType]--;
+		ChangePlayerPrimaryAmmoCount(-1);
 	}
 
 	m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + (11.0/24.0) + randomIdleAnimationDelay();
@@ -338,12 +338,16 @@ void CHgun::SecondaryAttack( void )
 
 void CHgun::Reload( void )
 {
-	if (m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] >= HORNET_MAX_CARRY)
+	if (PlayerPrimaryAmmoCount() >= HORNET_MAX_CARRY)
 		return;
 
-	while (m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] < HORNET_MAX_CARRY && m_flRechargeTime < gpGlobals->time)
+	//MODDD NOTE.    wait...  what is this trying to do.  Mabe between putting the weapon away see how much
+	// time has passed without think logic running on this weapon to put more hornets in?
+	// Like putting 3 hornets back in the instant the player puts this weapon back on after having it off a while?
+	// Anything glitchy about that?
+	while (PlayerPrimaryAmmoCount() < HORNET_MAX_CARRY && m_flRechargeTime < gpGlobals->time)
 	{
-		m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType]++;
+		ChangePlayerPrimaryAmmoCount(1);
 		m_flRechargeTime += 0.5;
 	}
 }

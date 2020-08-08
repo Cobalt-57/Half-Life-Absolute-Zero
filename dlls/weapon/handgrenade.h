@@ -31,13 +31,13 @@ class CHandGrenade : public CBasePlayerWeapon
 {
 public:
 
+
 	//MODDD
 	void customAttachToPlayer(CBasePlayer* pPlayer);
-	int ExtractAmmo(CBasePlayerWeapon* pWeapon);
+	BOOL ExtractAmmo(CBasePlayerWeapon* pWeapon);
 	BOOL AddPrimaryAmmo(int iCount, char* szName, int iMaxClip, int iMaxCarry);
-
-	//A flag for playing the deploy anim again (after throwing), so the grenade doen't just appear in an instant.
-	BOOL replayDeploy;
+	BOOL AddPrimaryAmmo(int iCount, char* szName, int iMaxClip, int iMaxCarry, int forcePickupSound);
+	
 
 
 	void Spawn(void);

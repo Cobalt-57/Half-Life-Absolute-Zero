@@ -225,7 +225,7 @@ void CCrossbow::FireSniperBolt(){
 	// And it even works for other players: they see the bolt at the same place still.
 	// So generating our own instant projectile at the destination serverside is redundant.
 	// But still need to do the trace here to deal the damage.  Whoops.
-	PLAYBACK_EVENT_FULL( flags, m_pPlayer->edict(), m_usCrossbow2, 0.0, (float *)&g_vecZero, (float *)&g_vecZero, 0, 0, m_iClip, m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType], 0, 0 );
+	PLAYBACK_EVENT_FULL( flags, m_pPlayer->edict(), m_usCrossbow2, 0.0, (float *)&g_vecZero, (float *)&g_vecZero, 0, 0, m_iClip, PlayerPrimaryAmmoCount(), 0, 0 );
 
 	// player "shoot" animation
 	m_pPlayer->SetAnimation( PLAYER_ATTACK1 );
@@ -312,12 +312,12 @@ void CCrossbow::FireBolt()
 
 
 	//!!!
-	PLAYBACK_EVENT_FULL( flags, m_pPlayer->edict(), m_usCrossbow, 0.0, (float *)&g_vecZero, (float *)&g_vecZero, 0, 0, m_iClip, m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType], 0, 0 );
+	PLAYBACK_EVENT_FULL( flags, m_pPlayer->edict(), m_usCrossbow, 0.0, (float *)&g_vecZero, (float *)&g_vecZero, 0, 0, m_iClip, PlayerPrimaryAmmoCount(), 0, 0 );
 
 	//MODDD - sync the idle delay with the lengths of the animations planned (as seen in ev_hldm for the crossbow's event)
 	if(m_iClip ){
 		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + (111.0 / 60.0) + randomIdleAnimationDelay() + randomIdleAnimationDelay();
-	}else if(m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType]){
+	}else if(PlayerPrimaryAmmoCount() > 0){
 		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + (16.0 / 30.0) + randomIdleAnimationDelay() + randomIdleAnimationDelay();
 	}
 
@@ -372,7 +372,7 @@ void CCrossbow::FireBolt()
 	
 #endif
 
-	if (!m_iClip && m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] <= 0)
+	if (!m_iClip && PlayerPrimaryAmmoCount() <= 0)
 		// HEV suit - indicate out of ammo condition
 		m_pPlayer->SetSuitUpdate("!HEV_AMO0", FALSE, 0);
 

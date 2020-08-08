@@ -187,6 +187,8 @@ copy ".\$(configuration)\client.pdb" "C:\Program Files (x86)\Valve\Half-Life NGH
     <ClCompile Include="..\game_shared\util\util_shared.cpp" />
     <ClCompile Include="..\game_shared\util\util_version.cpp" />
     <ClCompile Include="..\pm_shared\pm_printout.c" />
+    <ClCompile Include="hl\cl_player.cpp" />
+    <ClCompile Include="hl\cl_weapons.cpp" />
     <ClCompile Include="hud\ammo.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -668,6 +670,7 @@ copy ".\$(configuration)\client.pdb" "C:\Program Files (x86)\Valve\Half-Life NGH
     <ClInclude Include="cl_util.h" />
     <ClInclude Include="custom_message.h" />
     <ClInclude Include="glInclude.h" />
+    <ClInclude Include="hl\hl_weapons.h" />
     <ClInclude Include="hud\ammo.h" />
     <ClInclude Include="hud\ammohistory.h" />
     <ClInclude Include="camera.h" />

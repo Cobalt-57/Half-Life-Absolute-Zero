@@ -283,7 +283,7 @@ void CGauss::attemptFirePrimary(){
 		return;
 	}
 
-	if ( m_pPlayer->m_rgAmmo[ m_iPrimaryAmmoType ] < 2 )
+	if (PlayerPrimaryAmmoCount() < 2 )
 	{
 		PlayEmptySound( );
 		//easyForcePrintLine("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
@@ -299,7 +299,7 @@ void CGauss::attemptFirePrimary(){
 
 	//MODDD - only reduce ammo if cheats are off.
 	if(m_pPlayer->cheat_infiniteclipMem == 0 && m_pPlayer->cheat_infiniteammoMem == 0){
-		m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] -= 2;
+		ChangePlayerPrimaryAmmoCount(-2);
 	}
 
 	StartFire();
@@ -420,8 +420,8 @@ void CGauss::chargeWork(){
 	{
 		ohDearSonny = 0;
 
-		//////easyForcePrintLine("WHAT? WHAT? %.2f", m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType]);
-		if ( m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] <= 0 )
+		//////easyForcePrintLine("WHAT? WHAT? %d", PlayerPrimaryAmmoCount());
+		if (PlayerPrimaryAmmoCount() <= 0 )
 		{
 			EMIT_SOUND(ENT(m_pPlayer->pev), CHAN_WEAPON, "weapons/357_cock1.wav", 0.8, ATTN_NORM);
 			m_pPlayer->m_flNextAttack = UTIL_WeaponTimeBase() + 0.5;
@@ -435,7 +435,7 @@ void CGauss::chargeWork(){
 
 
 
-		//m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType]--;// take one ammo just to start the spin
+		//ChangePlayerPrimaryAmmoCount(-1);// take one ammo just to start the spin
 		//m_pPlayer->m_flNextAmmoBurn = UTIL_WeaponTimeBase();
 		//NOT YET, FREEMAN!
 
@@ -521,7 +521,7 @@ void CGauss::chargeWork(){
 			
 
 
-			m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType]--;// take one ammo just to start the spin
+			ChangePlayerPrimaryAmmoCount(-1);// take one ammo just to start the spin
 				
 
 
@@ -568,15 +568,13 @@ void CGauss::chargeWork(){
 		//if ( UTIL_WeaponTimeBase() >= m_pPlayer->m_flNextAmmoBurn && m_pPlayer->m_flNextAmmoBurn != 1000 )
 		if ( UTIL_WeaponTimeBase() >= m_pPlayer->m_flNextAmmoBurn && m_pPlayer->m_flNextAmmoBurn != 1000 )
 		{
-
-			m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType]--;
+			ChangePlayerPrimaryAmmoCount(-1);
 			m_pPlayer->m_flNextAmmoBurn = UTIL_WeaponTimeBase() + getAmmoChargeInterval();   // + 0.1
 			
-	
-			easyForcePrintLine("OH dear MAN YOU DROP AMMO %d", m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType]);
+			easyPrintLine("gauss: dropped ammo by 1, left: %d", PlayerPrimaryAmmoCount());
 		}
 
-		if ( m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] <= 0 )
+		if (PlayerPrimaryAmmoCount() <= 0 )
 		{
 			// out of ammo! force the gun to fire
 			StartFireDecision();  //is that okay?
@@ -602,8 +600,9 @@ void CGauss::chargeWork(){
 		
 		// ALERT( at_console, "%d %d %d\n", m_fInAttack, m_iSoundState, pitch );
 
-		if ( m_iSoundState == 0 )
-			ALERT( at_console, "sound state %d\n", m_iSoundState );
+		if (m_iSoundState == 0) {
+			ALERT(at_console, "sound state %d\n", m_iSoundState);
+		}
 
 		//
 		//PLAYBACK_EVENT_FULL( FEV_NOTHOST, m_pPlayer->edict(), m_usGaussSpin, 0.0, (float *)&g_vecZero, (float *)&g_vecZero, 0.0, 0.0, pitch, 0, ( m_iSoundState == SND_CHANGE_PITCH ) ? 1 : 0, 0 );
@@ -725,12 +724,12 @@ void CGauss::postChargeAnimCheck(){
 			
 			//only allow when primary fire is disallowed.
 			//MODDD NO, moved to the logic (chargeWork) instead.
-			//m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType]--;// take one ammo just to start the spin
+			//ChangePlayerPrimaryAmmoCount(-1);// take one ammo just to start the spin
 			//m_pPlayer->m_flNextAmmoBurn = UTIL_WeaponTimeBase();
 
 			
 			//NOTICE - 
-			//m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType]--;// take one ammo just to start the spin
+			//ChangePlayerPrimaryAmmoCount(-1);// take one ammo just to start the spin
 			//m_pPlayer->m_flNextAmmoBurn = UTIL_WeaponTimeBase();
 
 
@@ -917,7 +916,7 @@ void CGauss::StartFire( void )
 
 	
 	/*
-	if ( m_pPlayer->m_rgAmmo[ m_iPrimaryAmmoType ] < 2 )
+	if ( PlayerPrimaryAmmoCount() < 2 )
 	{
 		PlayEmptySound( );
 		m_pPlayer->m_flNextAttack = gpGlobals->time + 0.5;
@@ -1260,7 +1259,7 @@ void CGauss::WeaponIdle( void )
 	//easyForcePrintLine("AAACK!!!!!!");
 	if (m_fInAttack != 0)
 	{
-		easyForcePrintLine("MY STATZ: mia: %d mf: %d",
+		easyPrintLine("MY STATZ: mia: %d mf: %d",
 			m_fInAttack,
 			m_fireState
 		);
@@ -1291,7 +1290,7 @@ void CGauss::WeaponIdle( void )
 			m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + (71.0f + 1.0f)/(30.0f);
 		}
 
-		return;
+		return;      //no.     apparently.
 		SendWeaponAnim( iAnim );
 		
 	}

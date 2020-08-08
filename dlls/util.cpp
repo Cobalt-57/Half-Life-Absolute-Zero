@@ -2720,15 +2720,18 @@ void UTIL_Ricochet( const Vector& position, float scale )
 	}
 }
 
-//MODDD - NEW.  From a snippet of AGrunt's script, may as well be re-usable
+//MODDD - NEW.  From a snippet of AGrunt's script, may as well be re-usable.
+// Also try sending ptr->vecPlaneNormal instead of -vecDir in calls to here like retail did.
+// (that is 'negative' vecDir because here no longer makes the direction negative).
 void UTIL_RicochetTracer(const Vector& position, const Vector& vecDir) {
 	Vector vecTracerDir = vecDir;
 
-	vecTracerDir.x += RANDOM_FLOAT(-0.3, 0.3);
-	vecTracerDir.y += RANDOM_FLOAT(-0.3, 0.3);
-	vecTracerDir.z += RANDOM_FLOAT(-0.3, 0.3);
+	//MODDD - tightened a bit, was from -0.3 to 0.3
+	vecTracerDir.x += RANDOM_FLOAT(-0.24, 0.24);
+	vecTracerDir.y += RANDOM_FLOAT(-0.24, 0.24);
+	vecTracerDir.z += RANDOM_FLOAT(-0.24, 0.24);
 
-	vecTracerDir = vecTracerDir * -512;
+	vecTracerDir = vecTracerDir * 512;
 
 	// vecDir ?
 	DebugLine_Setup(0, position, position + vecTracerDir, 255, 0, 255);

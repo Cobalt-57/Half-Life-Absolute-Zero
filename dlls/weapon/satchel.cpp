@@ -373,8 +373,9 @@ void CSatchel::Holster( int skiplocal /* = 0 */ )
 	m_fInAttack = FALSE;
 	//m_pPlayer->m_flNextAttack = UTIL_WeaponTimeBase() + 0.5;
 	
-	if ( !m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] && !getchargeReady() )
+	if (PlayerPrimaryAmmoCount() <= 0 && !getchargeReady() )
 	{
+		// Out of satchels, nothing deployed out there to be detonated.
 		m_pPlayer->pev->weapons &= ~(1<<WEAPON_SATCHEL);
 		SetThink( &CBasePlayerItem::DestroyItem );
 		pev->nextthink = gpGlobals->time + 0.1;
@@ -462,7 +463,7 @@ void CSatchel::SecondaryAttack( void )
 
 void CSatchel::Throw( void )
 {
-	if ( m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] )
+	if (PlayerPrimaryAmmoCount() > 0)
 	{
 		Vector vecSrc = m_pPlayer->pev->origin;
 
@@ -494,7 +495,7 @@ void CSatchel::Throw( void )
 		
 		//MODDD - cheat check.			
 		if(m_pPlayer->cheat_infiniteclipMem == 0 && m_pPlayer->cheat_infiniteammoMem == 0){
-			m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType]--;
+			ChangePlayerPrimaryAmmoCount(-1);
 		}
 
 		//MODDD
@@ -518,7 +519,7 @@ void CSatchel::WeaponIdle( void )
 
 	//if the weapon is retired but we pick up ammo, re-deploy it.
 	/*
-	if(m_fInAttack && m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] > 0){
+	if(m_fInAttack && PlayerPrimaryAmmoCount() > 0){
 		m_fInAttack = FALSE;
 		DefaultDeploy( "models/v_satchel.mdl", "models/p_satchel.mdl", SATCHEL_DRAW, "trip", 0, 0, (99.0/30.0), (24.0/30.0) );
 		return;
@@ -527,7 +528,7 @@ void CSatchel::WeaponIdle( void )
 
 	//MODDD - is this okay?
 	if(m_pPlayer->pev->viewmodel == iStringNull){
-		if ( m_pPlayer->m_rgAmmo[ m_iPrimaryAmmoType ] > 0 ){
+		if (PlayerPrimaryAmmoCount() > 0 ){
 
 			globalflag_muteDeploySound = TRUE;
 			Deploy();
@@ -577,7 +578,7 @@ void CSatchel::WeaponIdle( void )
 		strcpy( m_pPlayer->m_szAnimExtention, "hive" );
 		break;
 	case 2:
-		if ( !m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] )
+		if (PlayerPrimaryAmmoCount() <= 0)
 		{
 			setchargeReady(0);
 			RetireWeapon();

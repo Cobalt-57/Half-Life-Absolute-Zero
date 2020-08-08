@@ -147,6 +147,9 @@ public:
 
 // Ammo retrieval
 	virtual BOOL CanHaveAmmo( CBasePlayer *pPlayer, const char *pszAmmoName, int iMaxCarry );// can this player take more of this ammo?
+	//MODDD - new version
+	virtual BOOL CanHaveAmmo(CBasePlayer* pPlayer, int iAmmoTypeId, int iMaxCarry);
+
 	virtual void PlayerGotAmmo( CBasePlayer *pPlayer, char *szName, int iCount ) = 0;// called each time a player picks up some ammo in the world
 
 // Ammo spawn/respawn control

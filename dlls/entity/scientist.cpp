@@ -134,6 +134,19 @@ int scientistHeadsModelRef[] = { 0, 1, 3 };
 
 
 
+// sitting scientist animation sequence aliases
+typedef enum
+{
+	SITTING_ANIM_sitlookleft,
+	SITTING_ANIM_sitlookright,
+	SITTING_ANIM_sitscared,
+	SITTING_ANIM_sitting2,
+	SITTING_ANIM_sitting3
+} SITTING_ANIM;
+
+
+
+
 
 enum
 {
@@ -2917,23 +2930,17 @@ MONSTERSTATE CScientist :: GetIdealState ( void )
 
 
 				// MODDD.
-				//    Ahem.
-				/*
-I8,        8        ,8I  88888888ba     ,ad8888ba,      ,ad8888ba,      ,ad8888ba,      ,ad8888ba,      ,ad8888ba,      ,ad8888ba,      ,ad8888ba,      ,ad8888ba,    888b      88    ,ad8888ba,   
-`8b       d8b       d8'  88      "8b   d8"'    `"8b    d8"'    `"8b    d8"'    `"8b    d8"'    `"8b    d8"'    `"8b    d8"'    `"8b    d8"'    `"8b    d8"'    `"8b   8888b     88   d8"'    `"8b  
- "8,     ,8"8,     ,8"   88      ,8P  d8'        `8b  d8'        `8b  d8'        `8b  d8'        `8b  d8'        `8b  d8'        `8b  d8'        `8b  d8'        `8b  88 `8b    88  d8'            
-  Y8     8P Y8     8P    88aaaaaa8P'  88          88  88          88  88          88  88          88  88          88  88          88  88          88  88          88  88  `8b   88  88             
-  `8b   d8' `8b   d8'    88""""88'    88          88  88          88  88          88  88          88  88          88  88          88  88          88  88          88  88   `8b  88  88      88888  
-   `8a a8'   `8a a8'     88    `8b    Y8,        ,8P  Y8,        ,8P  Y8,        ,8P  Y8,        ,8P  Y8,        ,8P  Y8,        ,8P  Y8,        ,8P  Y8,        ,8P  88    `8b 88  Y8,        88  
-    `8a8'     `8a8'      88     `8b    Y8a.    .a8P    Y8a.    .a8P    Y8a.    .a8P    Y8a.    .a8P    Y8a.    .a8P    Y8a.    .a8P    Y8a.    .a8P    Y8a.    .a8P   88     `8888   Y8a.    .a88  
-     `8'       `8'       88      `8b    `"Y8888Y"'      `"Y8888Y"'      `"Y8888Y"'      `"Y8888Y"'      `"Y8888Y"'      `"Y8888Y"'      `"Y8888Y"'      `"Y8888Y"'    88      `888    `"Y88888P"   
-                */
-				// ...you see.    m_hTargetEnt can also be NULL for having a scripted sequence in mind.
-				//    So.   No,  my dear boy.    Dont.    Do.    This.   Shit.
-				//    It makes the schedule oscillate between ALERT and COMBAT.
-				//    Which is bad.
-				//    Very.              Very.         Bad.
-                                                                                                                                                                                                   
+				//    m_hTargetEnt can also be non-NULL for scripted behavior.
+				//    Use the proper IsFollowing check instead.
+				//    Otherise, a weak 'm_hTargetEnt != NULL' check confuses having a target-ent from scripted behavior
+				//    (even without the scripted state) for following the player like this was meant for, and
+				//    the schedule oscillates between ALERT and COMBAT really fast
+				//    (ALERT from here, then COMBAT soon on realizing it's not actually following a player when there's
+				//     an enemy nearby,  then ALERT here,  COMBAT seeing enemy, ALERT, COMBAT, ALERT, etc.)
+				//    Which is bad.  Lags with pathfind checks as it bypasses the 'force panic anim' safety.
+				//    Can m_pCine be checked for being NULL too?
+				// (m_pCine == NULL)                                                                                                                        
+
 				//if ( m_hTargetEnt != NULL )
 				if(IsFollowing())
 				{
@@ -3559,21 +3566,6 @@ IMPLEMENT_SAVERESTORE( CSittingScientist, CScientist );
 void CSittingScientist::PostRestore(){
 	//NOTICE - no need to call the headFilter here. Our parent class, CScientist, still does this.
 }
-
-
-
-
-
-// animation sequence aliases
-typedef enum
-{
-SITTING_ANIM_sitlookleft,
-SITTING_ANIM_sitlookright,
-SITTING_ANIM_sitscared,
-SITTING_ANIM_sitting2,
-SITTING_ANIM_sitting3
-} SITTING_ANIM;
-
 
 
 

@@ -214,7 +214,8 @@ int CHud::MsgFunc_ResetHUD(const char *pszName, int iSize, void *pbuf )
 	//MODDD - this entire method used to be dummied.  Any reason why?
 	//!!!
 	
-	ASSERT( iSize == 0 );
+	//MODDD - Referred to the ASSERT defned in cl_dll/parsemsg.h.  Which was dummied.  Renamed here and there to be
+	ASSERT_DUMMY( iSize == 0 );
 
 	// clear all hud data
 	HUDLIST *pList = m_pHudList;

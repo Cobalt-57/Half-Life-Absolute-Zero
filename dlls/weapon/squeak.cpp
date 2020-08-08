@@ -652,7 +652,7 @@ void CSqueak::Holster( int skiplocal /* = 0 */ )
 	m_fInAttack = FALSE;
 
 
-	if ( !m_pPlayer->m_rgAmmo[ m_iPrimaryAmmoType ] )
+	if (PlayerPrimaryAmmoCount() <= 0)
 	{
 		m_pPlayer->pev->weapons &= ~(1<<WEAPON_SNARK);
 		SetThink( &CBasePlayerItem::DestroyItem );
@@ -674,7 +674,7 @@ float CSqueak::randomIdleAnimationDelay(){
 
 void CSqueak::PrimaryAttack()
 {
-	if ( m_pPlayer->m_rgAmmo[ m_iPrimaryAmmoType ] )
+	if (PlayerPrimaryAmmoCount() > 0)
 	{
 		UTIL_MakeVectors( m_pPlayer->pev->v_angle );
 		TraceResult tr;
@@ -726,7 +726,7 @@ void CSqueak::PrimaryAttack()
 
 			//MODDD - cheat check
 			if(m_pPlayer->cheat_infiniteclipMem == 0 && m_pPlayer->cheat_infiniteammoMem == 0){
-				m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType]--;
+				ChangePlayerPrimaryAmmoCount(-1);
 			}
 			
 
@@ -787,7 +787,7 @@ void CSqueak::WeaponIdle( void )
 	if(m_fInAttack == TRUE){
 		
 		easyForcePrintLine("SQUEAK AAAAAAAAAA");
-		if ( m_pPlayer->m_rgAmmo[ m_iPrimaryAmmoType ] > 0 ){
+		if ( PlayerPrimaryAmmoCount() > 0 ){
 			DefaultDeploy( "models/v_squeak.mdl", "models/p_squeak.mdl", SQUEAK_UP, "squeak", 0, 0, (51.0 / 30.0),  (0.6)  );
 			
 			m_fInAttack = FALSE;
@@ -798,7 +798,7 @@ void CSqueak::WeaponIdle( void )
 
 	
 	if(m_pPlayer->pev->viewmodel == iStringNull){
-		if ( m_pPlayer->m_rgAmmo[ m_iPrimaryAmmoType ] > 0 ){
+		if (PlayerPrimaryAmmoCount() > 0 ){
 
 			globalflag_muteDeploySound = TRUE;
 			Deploy();

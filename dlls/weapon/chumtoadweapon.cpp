@@ -307,7 +307,7 @@ void CChumToadWeapon::Holster( int skiplocal /* = 0 */ )
 	pev->fuser1 = -1;
 	waitingForChumtoadThrow = FALSE;
 
-	if ( !m_pPlayer->m_rgAmmo[ m_iPrimaryAmmoType ] )
+	if ( PlayerPrimaryAmmoCount() <= 0)
 	{
 		m_pPlayer->pev->weapons &= ~(1<<WEAPON_CHUMTOAD);
 		SetThink( &CBasePlayerItem::DestroyItem );
@@ -543,7 +543,7 @@ void CChumToadWeapon::ThrowChumtoad(Vector vecSpawnPoint){
 #endif
 	//MODDD - cheat check
 	if(m_pPlayer->cheat_infiniteclipMem == 0 && m_pPlayer->cheat_infiniteammoMem == 0){
-		m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType]--;
+		ChangePlayerPrimaryAmmoCount(-1);
 	}
 
 }//END OF ThrowChumtoad()
@@ -553,7 +553,7 @@ void CChumToadWeapon::ThrowChumtoad(Vector vecSpawnPoint){
 void CChumToadWeapon::PrimaryAttack()
 {
 #ifndef CLIENT_DLL
-	if ( m_pPlayer->m_rgAmmo[ m_iPrimaryAmmoType ] )
+	if (PlayerPrimaryAmmoCount() > 0)
 	{
 		Vector trace_origin;
 		// HACK HACK:  Ugly hacks to handle change in origin based on new physics code for players
@@ -690,8 +690,9 @@ void CChumToadWeapon::WeaponIdle( void )
 	//...no? just do a literal check for whether the weapon model is null, hence retired and able to be brought back up.
 	//if(m_fInAttack == TRUE){
 	if(m_pPlayer->pev->viewmodel == iStringNull){
-		if ( m_pPlayer->m_rgAmmo[ m_iPrimaryAmmoType ] > 0 ){
-			//let's not.
+		if (PlayerPrimaryAmmoCount() > 0 ){
+			// let's not play the deploy sound.
+			// MODDD - TODO: make a parameter for Deploy perhaps?
 			globalflag_muteDeploySound = TRUE;
 	        Deploy();
 			globalflag_muteDeploySound = FALSE;
@@ -710,7 +711,7 @@ void CChumToadWeapon::WeaponIdle( void )
 #ifndef CLIENT_DLL
 		sendJustThrown( ENT(m_pPlayer->pev), m_fJustThrown);
 #endif
-		if ( !m_pPlayer->m_rgAmmo[PrimaryAmmoIndex()] )
+		if (PlayerPrimaryAmmoCount() <= 0)
 		{
 			RetireWeapon();
 			//m_fInAttack = TRUE;

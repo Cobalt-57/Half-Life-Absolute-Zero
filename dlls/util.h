@@ -219,9 +219,9 @@ EASY_CVAR_EXTERN(soundVolumeStuka)
 
 
 #define PRECACHE_SOUND_ARRAY( a ) \
-	{ for (int i = 0; i < ARRAYSIZE( a ); i++ ) PRECACHE_SOUND((char *) a [i]); }
+	{ for (int iLOCAL = 0; iLOCAL < ARRAYSIZE( a ); iLOCAL++ ) PRECACHE_SOUND((char *) a [iLOCAL]); }
 #define PRECACHE_SOUND_ARRAY_SKIPSAVE( a ) \
-	{ for (int i = 0; i < ARRAYSIZE( a ); i++ ) PRECACHE_SOUND((char *) a [i], TRUE); }
+	{ for (int iLOCAL = 0; iLOCAL < ARRAYSIZE( a ); iLOCAL++ ) PRECACHE_SOUND((char *) a [iLOCAL], TRUE); }
 //#define PRECACHE_SOUND_ARRAY UTIL_PRECACHESOUND_ARRAY
 
 
@@ -653,7 +653,7 @@ inline void EMIT_SOUND(edict_t* entity, int channel, const char* pszName, float 
 
 //MODDD - filtered version, so that "STOP" can apply to the sentence-trick too.
 //        And yes it works, it goes through _FILTERED like the rest of the soundsentencesave system.
-//        After all even a "STOP" is just an order through the exact same sound playing system.
+//        After all even a "STOP" is just an order through the same sound playing call.
 inline void UTIL_StopSound(edict_t* entity, int channel, const char* pszName){
 	UTIL_PlaySound(entity, channel, pszName, 0, 0, SND_STOP, PITCH_NORM);
 }

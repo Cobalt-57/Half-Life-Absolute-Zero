@@ -2226,6 +2226,10 @@ CBasePlayer::CBasePlayer(void){
 	// We want a lot of the exact same things for CBasePlayer creation and resetting between map transitions.
 	_commonReset();
 
+	m_pLastItem = NULL;
+	m_pActiveItem = NULL;
+	m_pQueuedActiveItem = NULL;
+
 	queueFirstAppearanceMessageSend = FALSE;
 	
 	iWasFrozenToday = FALSE;
@@ -6811,6 +6815,8 @@ int CBasePlayer::Restore( CRestore &restore )
 
 //MODDD - ... wait.  This is never called either.  OOPS.
 // Was it meant to be for the really unfinished hud_fastswitch maybe?  Same for the found-empty SelectPrevItem?
+// Oh.  Actually look in clientside weapons_resource.cpp, a comment suggests fast-swapping to a weapon is only
+// supposed to work if there is only one item in that bucket.  Oooooookay, seems limited then.
 void CBasePlayer::SelectNextItem( int iItem )
 {
 	CBasePlayerItem *pItem;
@@ -6965,8 +6971,9 @@ void CBasePlayer::setActiveItem_HolsterCheck(CBasePlayerItem* argItem) {
 
 		if (!m_bHolstering) {
 			// don't holster the currently equipped weapon if already in the middle of holstering.
-			m_pActiveItem->Holster();
 			m_bHolstering = TRUE;
+			m_chargeReady |= 128;
+			m_pActiveItem->Holster();
 		}
 
 		// cl_holster
@@ -7825,7 +7832,7 @@ void CBasePlayer::CheatImpulseCommands( int iImpulse )
 //
 // Add a weapon to the player (Item == Weapon == Selectable Object)
 //
-int CBasePlayer::AddPlayerItem( CBasePlayerItem *pItem )
+BOOL CBasePlayer::AddPlayerItem( CBasePlayerItem *pItem )
 {
 	CBasePlayerItem *pInsert;
 	
@@ -7894,7 +7901,7 @@ void CBasePlayer::printOutWeapons(){
 		CBasePlayerItem* thisItem = m_rgpPlayerItems[i];
 		while(thisItem){
 
-			easyForcePrintLine("%d:%d %s", i, i2, STRING(thisItem->pev->classname) );
+			easyForcePrintLine("slot:%d row:%d %s", i, i2, STRING(thisItem->pev->classname) );
 			i2++;
 			thisItem = thisItem->m_pNext;
 		}//END OF while(...)
@@ -7907,7 +7914,6 @@ void CBasePlayer::printOutWeapons(){
 //TEST: see if, given an item with this iItemSlot and classname string, we are capable of adding it (not out of ammo).
 BOOL CBasePlayer::CanAddPlayerItem( int arg_iItemSlot, const char* arg_classname, const char* arg_ammoname, int arg_iMaxAmmo)
 {
-
 	//printOutWeapons();
 
 	CBasePlayerItem *pInsert;
@@ -7953,7 +7959,7 @@ BOOL CBasePlayer::CanAddPlayerItem( int arg_iItemSlot, const char* arg_classname
 	//For now, if the player doesn't already have it, just assume "yes".
 
 	return TRUE;
-}//END OF CanAddPlayerItem(...)
+}//END OF CanAddPlayerItem
 
 
 
@@ -7998,7 +8004,7 @@ int CBasePlayer::RemovePlayerItem( CBasePlayerItem *pItem )
 //
 // Returns the unique ID for the ammo, or -1 if error
 //
-int CBasePlayer :: GiveAmmo( int iCount, char *szName, int iMax )
+int CBasePlayer :: GiveAmmo( int iCount, const char* szName, int iMax )
 {
 	if ( !szName )
 	{
@@ -8012,9 +8018,8 @@ int CBasePlayer :: GiveAmmo( int iCount, char *szName, int iMax )
 		return -1;
 	}
 
-	int i = 0;
-
-	i = GetAmmoIndex( szName );
+	//MODDD - Nothing about 'i' nor szName changes between now and WRITE_BYTE below?  Just send 'i' then!
+	const int i = GetAmmoIndex( szName );
 
 	if ( i < 0 || i >= MAX_AMMO_SLOTS )
 		return -1;
@@ -8030,7 +8035,7 @@ int CBasePlayer :: GiveAmmo( int iCount, char *szName, int iMax )
 	{
 		// Send the message that ammo has been picked up
 		MESSAGE_BEGIN( MSG_ONE, gmsgAmmoPickup, NULL, pev );
-			WRITE_BYTE( GetAmmoIndex(szName) );		// ammo ID
+			WRITE_BYTE( i );		// ammo ID
 			WRITE_BYTE( iAdd );		// amount
 		MESSAGE_END();
 	}
@@ -8039,6 +8044,54 @@ int CBasePlayer :: GiveAmmo( int iCount, char *szName, int iMax )
 
 	return i;
 }
+
+
+
+//MODDD - new version, given the ammo type ID instead of the name of the ammo.
+int CBasePlayer::GiveAmmo(int iCount, int iAmmoTypeId, int iMax)
+{
+	if(!IS_AMMOTYPE_VALID(iAmmoTypeId))
+	{
+		// no ammo.
+		return -1;
+	}
+
+	if (!g_pGameRules->CanHaveAmmo(this, iAmmoTypeId, iMax))
+	{
+		// game rules say I can't have any more of this ammo type.
+		return -1;
+	}
+
+	const int i = iAmmoTypeId;
+
+	int iAdd = min(iCount, iMax - m_rgAmmo[i]);
+	if (iAdd < 1)
+		return i;
+
+	m_rgAmmo[i] += iAdd;
+
+
+	if (gmsgAmmoPickup)  // make sure the ammo messages have been linked first
+	{
+		// Send the message that ammo has been picked up
+		MESSAGE_BEGIN(MSG_ONE, gmsgAmmoPickup, NULL, pev);
+		WRITE_BYTE(i);		// ammo ID
+		WRITE_BYTE(iAdd);		// amount
+		MESSAGE_END();
+	}
+
+	TabulateAmmo();
+
+	return i;
+}
+
+
+
+
+
+
+
+
 
 
 /*
@@ -8174,28 +8227,6 @@ int CBasePlayer::AmmoInventory( int iAmmoIndex )
 }
 
 
-
-
-int CBasePlayer::GetAmmoIndex(const char *psz)
-{
-	int i;
-
-	if (!psz)
-		return -1;
-
-
-	for (i = 1; i < MAX_AMMO_SLOTS; i++)
-	{
-		
-		if ( !CBasePlayerItem::AmmoInfoArray[i].pszName )
-			continue;
-
-		if (stricmp( psz, CBasePlayerItem::AmmoInfoArray[i].pszName ) == 0)
-			return i;
-	}
-
-	return -1;
-}
 
 // Called from UpdateClientData
 // makes sure the client has all the necessary ammo info,  if values have changed
@@ -8819,9 +8850,17 @@ void CBasePlayer :: UpdateClientData( void )
 
 			MESSAGE_BEGIN( MSG_ONE, gmsgWeaponList, NULL, pev );  
 				WRITE_STRING(pszName);			// string	weapon name
-				WRITE_BYTE(GetAmmoIndex(II.pszAmmo1));	// byte	Ammo Type
+
+				//MODDD - cached now
+				//WRITE_BYTE(GetAmmoIndex(II.pszAmmo1));	// byte	Ammo Type
+				WRITE_BYTE(CBasePlayerItem::getPrimaryAmmoType(II.iId));
+
 				WRITE_BYTE(II.iMaxAmmo1);				// byte     Max Ammo 1
-				WRITE_BYTE(GetAmmoIndex(II.pszAmmo2));	// byte	Ammo2 Type
+
+				//MODDD - cached now
+				//WRITE_BYTE(GetAmmoIndex(II.pszAmmo2));	// byte	Ammo2 Type
+				WRITE_BYTE(CBasePlayerItem::getSecondaryAmmoType(II.iId));
+
 				WRITE_BYTE(II.iMaxAmmo2);				// byte     Max Ammo 2
 				WRITE_BYTE(II.iSlot);					// byte	bucket
 				WRITE_BYTE(II.iPosition);				// byte	bucket pos
@@ -9259,7 +9298,8 @@ void CBasePlayer::DropPlayerItem ( char *pszItemName )
 			// drop half of the ammo for this weapon.
 			int iAmmoIndex;
 
-			iAmmoIndex = GetAmmoIndex ( pWeapon->pszAmmo1() ); // ???
+			//iAmmoIndex = GetAmmoIndex ( pWeapon->pszAmmo1() ); // ???
+			iAmmoIndex = pWeapon->getPrimaryAmmoType();
 			
 			if ( iAmmoIndex != -1 )
 			{

@@ -921,8 +921,8 @@ void CRpg::PrimaryAttack()
 	else
 	{
 
-		if(m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] <= 0){
-			//only do the empty click if we can't reload.
+		if(PlayerPrimaryAmmoCount() <= 0){
+			// only do the empty click if we can't reload.
 			PlayEmptySound();
 			m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 0.5;  //MODDD - this is all it takes to block sound spam. Come on man.
 		}
@@ -973,8 +973,10 @@ void CRpg::ItemPostFrameThink() {
 	}
 #endif
 
-
-	UpdateSpot();
+	if (!m_pPlayer->m_bHolstering) {
+		// If the player is putting the weapon away, don't do this!
+		UpdateSpot();
+	}
 
 
 	CBasePlayerWeapon::ItemPostFrameThink();
@@ -989,7 +991,7 @@ void CRpg::WeaponIdle( void )
 		return;
 
 	//MODDD - requirement for idle anim removed.
-	//if ( m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType])
+	//if ( PlayerPrimaryAmmoCount() > 0)
 	{
 		int iAnim;
 		float flRand = UTIL_SharedRandomFloat( m_pPlayer->random_seed, 0, 1 );

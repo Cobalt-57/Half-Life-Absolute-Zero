@@ -91,8 +91,7 @@ void lateCVarInit(void){
 	global2PSEUDO_cl_holster = EASY_CVAR_GET(cl_holster);
 	if (global2PSEUDO_cl_holster == 0) {
 		easyClientCommand("_cl_holster 0");
-	}
-	else {
+	}else {
 		easyClientCommand("_cl_holster 1");
 	}
 

@@ -1118,7 +1118,7 @@ GENERATE_TRACEATTACK_IMPLEMENTATION(CHGrunt)
 					// was a flat 1.
 					UTIL_Ricochet(ptr->vecEndPos, RANDOM_FLOAT(1.0, 1.6));
 					//MODDD - how about you too?  bullet ricochet effect from agrunt
-					UTIL_RicochetTracer(ptr->vecEndPos, vecDir);
+					UTIL_RicochetTracer(ptr->vecEndPos, ptr->vecPlaneNormal);
 					if (useBulletHitSound) { *useBulletHitSound = FALSE; }
 					useBloodEffect = FALSE;
 				}else {

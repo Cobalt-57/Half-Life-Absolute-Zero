@@ -84,6 +84,12 @@ void COM_Log( char *pszFile, char *fmt, ...)
 }
 
 
+
+
+
+extern float resistTime;
+
+
 /*
 =====================
 HUD_SendWeaponAnim
@@ -93,6 +99,12 @@ Change weapon model animation
 */
 void HUD_SendWeaponAnim( int iAnim, int body, int force )
 {
+
+
+
+	//RESIST
+	//resistTime = gpGlobals->time + 0.01;
+
 	// Don't actually change it.
 	if ( !g_runfuncs && !force && force != 2  )
 		return;
@@ -137,7 +149,9 @@ void HUD_SendWeaponAnim( int iAnim, int body, int force )
 	*/
 
 	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(viewModelPrintouts)==1)easyForcePrintLine("!!!!pfnWeaponAnim: a:%d rev?:%d", iAnim, doReverse);
+
 	gEngfuncs.pfnWeaponAnim( iAnim, body);
+
 
 	//MODDD - just to make sure there isn't a flicker.
 	if(force == 2){

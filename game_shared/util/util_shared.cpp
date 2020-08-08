@@ -140,12 +140,23 @@ DLL_GLOBAL const Vector VECTOR_CONE_20DEGREES = Vector(0.17365, 0.17365, 0.17365
 // This means the server and client has its own "giAmmoIndex", for use through AddAmmoNameToAmmoRegistry
 // calls.  It is good practice to set giAmmoIndex to 0 before potentially making a lot of calls to that
 // method, however indirectly (such as before precaching weapons).
-int giAmmoIndex = 0;
+int giAmmoIndex;
+
+
 
 // Also from weapons.cpp, since we can refer to these in both client/server now.
 // These are implementations of CBasePlayerItem's two static arrays.
 ItemInfo CBasePlayerItem::ItemInfoArray[MAX_WEAPONS];
+
+//MODDD - NEW. More of a complement to ItemInfoArray, but not meant to be set by a weapon's GetItemInfo call.
+// Instead, set by AddAmmoNameToAmmoRegistry methods.  They decide ammo type numbers for a given weapon,
+// so they may as well store that for future reference per weapon too.
+AmmoTypeCache CBasePlayerItem::AmmoTypeCacheArray[MAX_WEAPONS];
+
 AmmoInfo CBasePlayerItem::AmmoInfoArray[MAX_AMMO_SLOTS];
+
+
+
 
 // flag to disable extra deploy sounds from weapons spawned by cheats, when set to TRUE before giving
 // items and back to FALSE when done. Shared so that the client won't complain that this is missing,
@@ -318,50 +329,166 @@ float UTIL_SharedRandomFloat(unsigned int seed, float low, float high)
 
 
 
+//MODDD - w-...what?  Why was this a CBasePlayer method at all?  Just be a global shared utility then.
+// It depends on nothing about any spawned or blank player data.
+int GetAmmoIndex(const char* psz)
+{
+	int i;
+
+	if (!psz)
+		return -1;
+
+
+	for (i = 1; i < MAX_AMMO_SLOTS; i++)
+	{
+
+		if (!CBasePlayerItem::AmmoInfoArray[i].pszName)
+			continue;
+
+		if (stricmp(psz, CBasePlayerItem::AmmoInfoArray[i].pszName) == 0)
+			return i;
+	}
+
+	return -1;
+}
+
 
 //...oh.  This was only ever referred to in weapons.cpp.  Well, whoops. Doesn't hurt to be here (shared) I suppose.
+// Although note that a weapon's 'm_iId' can be used to access ItemInfoArray[] if there is some wepaon in mind.
+// Come to think of it it seems odd that max ammo counts are stored in weapons (ItemInfoArray) instead of Ammo
+// (AmmoInfoArray).   So the glock and mp5 just get copies of the same maximum when it should've been attached to
+// the same ammo entry.     ah well.
+// In finding a maximum for 9mm ammo, it likely awkwardly finds the glock first in the ItemInfoArray list and 
+// reports its maxAmmo from being one weapon with the correct 'psz' string.  YECH.
+// Also, takes the name as a 'const char*' instead of an int meant to be converted to a string.
 //=========================================================
 // MaxAmmoCarry - pass in a name and this function will tell
 // you the maximum amount of that type of ammunition that a 
 // player can carry.
 //=========================================================
-int MaxAmmoCarry(int iszName)
+int MaxAmmoCarry(const char* psz)
 {
 	for (int i = 0; i < MAX_WEAPONS; i++)
 	{
-		if (CBasePlayerItem::ItemInfoArray[i].pszAmmo1 && !strcmp(STRING(iszName), CBasePlayerItem::ItemInfoArray[i].pszAmmo1))
+		if (CBasePlayerItem::ItemInfoArray[i].pszAmmo1 && !strcmp(psz, CBasePlayerItem::ItemInfoArray[i].pszAmmo1)) {
 			return CBasePlayerItem::ItemInfoArray[i].iMaxAmmo1;
-		if (CBasePlayerItem::ItemInfoArray[i].pszAmmo2 && !strcmp(STRING(iszName), CBasePlayerItem::ItemInfoArray[i].pszAmmo2))
+		}
+		if (CBasePlayerItem::ItemInfoArray[i].pszAmmo2 && !strcmp(psz, CBasePlayerItem::ItemInfoArray[i].pszAmmo2)) {
 			return CBasePlayerItem::ItemInfoArray[i].iMaxAmmo2;
+		}
 	}
 
-	ALERT(at_console, "MaxAmmoCarry() doesn't recognize '%s'!\n", STRING(iszName));
+	ALERT(at_console, "MaxAmmoCarry() doesn't recognize '%s'!\n", psz);
 	return -1;
 }
 
 
+/*
+// ... in fact, alternate version that takes a weapon ID instead.
+// SCRAPPED, only the weaponbox uses MaxAmmoCarry.  Not worth supporting when nothing else would use this.
+// Picked-up weapons for ammo and ammo pickups already use the item's ItemInfoArray[m_iId].iMaxAmmo# values,
+// see weapon.h "iMaxAmmo#()" methods that do this (most common, if not only way used).
+int MaxAmmoCarry_ItemID(int iID)
+{
+	// I... guess an ID of 0 is valid technically but odd.
+	// Nah disallowed.  Represents WEAPON_NONE, weapons.h
+	if (iID > 0 && iID < MAX_WEAPONS) {
+		// ok
+	}
+	else {
+		// oh.
+		ALERT(at_console, "MaxAmmoCarry() iID out of bounds: '%d'!\n", iID);
+		return -1;
+	}
+
+	const ItemInfo& theItem = CBasePlayerItem::ItemInfoArray[iID];
+
+	// then to choose what maxAmmo to return.  Different variants for returning each would be good then.
+	return 
+	theItem.iMaxAmmo1;
+	theItem.iMaxAmmo2;
+}
+*/
+
+
+
 
 // Precaches the ammo and queues the ammo info for sending to clients
-void AddAmmoNameToAmmoRegistry(const char* szAmmoname)
+//MODDD - Accepts weapon taking the ammos for saving to CBasePlayerItem::AmmoTypeCacheArray[#].
+// Also, variants created for primary/secondary ammo to know which one to use in AmmoTypeCacheArray[#].
+void AddAmmoNameToAmmoRegistry_Primary(int iId, const char* szAmmoname)
 {
 	// make sure it's not already in the registry
 	for (int i = 0; i < MAX_AMMO_SLOTS; i++)
 	{
-		if (!CBasePlayerItem::AmmoInfoArray[i].pszName)
+		if (!CBasePlayerItem::AmmoInfoArray[i].pszName) {
 			continue;
+		}
 
-		if (stricmp(CBasePlayerItem::AmmoInfoArray[i].pszName, szAmmoname) == 0)
+		if (stricmp(CBasePlayerItem::AmmoInfoArray[i].pszName, szAmmoname) == 0) {
+			//MODDD - still, save this number as the ammo type for this weapon.
+			CBasePlayerItem::AmmoTypeCacheArray[iId].iPrimaryAmmoType = i;
 			return; // ammo already in registry, just quit
+		}
 	}
 
+	//MODDD - Note that incrementing this early means index #0 is forever unused.
+	// Although perpaps this was intentional.  If 0 is a valid space and the data sent over
+	// is unsigned, it's more awkward to check for some high number just because -1 isn't an option.
+	// Just leave it.
+	// Another thing to consider.  Save-restore expects these to be the same since last time as it
+	// always happens at game startup, so be prepared for lots of crying.
 	giAmmoIndex++;
+
 	ASSERT(giAmmoIndex < MAX_AMMO_SLOTS);
-	if (giAmmoIndex >= MAX_AMMO_SLOTS)
+	if (giAmmoIndex >= MAX_AMMO_SLOTS) {
+		easyForcePrintLine("ERROR!!! Too many ammo types, overflowed into #0!");
 		giAmmoIndex = 0;
+	}
 
 	CBasePlayerItem::AmmoInfoArray[giAmmoIndex].pszName = szAmmoname;
 	CBasePlayerItem::AmmoInfoArray[giAmmoIndex].iId = giAmmoIndex;   // yes, this info is redundant
-}//END OF AddAmmoNameToAmmoRegistry
+
+	//MODDD - and save as the ammo type for this weapon.
+	CBasePlayerItem::AmmoTypeCacheArray[iId].iPrimaryAmmoType = giAmmoIndex;
+
+	//giAmmoIndex++;
+}//END OF AddAmmoNameToAmmoRegistry_Primary
+
+void AddAmmoNameToAmmoRegistry_Secondary(int iId, const char* szAmmoname)
+{
+	// make sure it's not already in the registry
+	for (int i = 0; i < MAX_AMMO_SLOTS; i++)
+	{
+		if (!CBasePlayerItem::AmmoInfoArray[i].pszName) {
+			continue;
+		}
+
+		if (stricmp(CBasePlayerItem::AmmoInfoArray[i].pszName, szAmmoname) == 0) {
+			CBasePlayerItem::AmmoTypeCacheArray[iId].iSecondaryAmmoType = i;
+			return; // ammo already in registry, just quit
+		}
+	}
+
+	giAmmoIndex++;
+
+	ASSERT(giAmmoIndex < MAX_AMMO_SLOTS);
+	if (giAmmoIndex >= MAX_AMMO_SLOTS) {
+		easyForcePrintLine("ERROR!!! Too many ammo types, overflowed into #0!");
+		giAmmoIndex = 0;
+	}
+
+	CBasePlayerItem::AmmoInfoArray[giAmmoIndex].pszName = szAmmoname;
+	CBasePlayerItem::AmmoInfoArray[giAmmoIndex].iId = giAmmoIndex;   // yes, this info is redundant
+
+	//MODDD
+	CBasePlayerItem::AmmoTypeCacheArray[iId].iSecondaryAmmoType = giAmmoIndex;
+
+	//giAmmoIndex++;
+}//END OF AddAmmoNameToAmmoRegistry_Secondary
+
+
+
 
 
 
@@ -394,13 +521,20 @@ void RegisterWeapon(CBasePlayerWeapon* pWeapon, CBasePlayerWeapon* pAryWeaponSto
 		if (pAryWeaponStore != NULL){
 			pAryWeaponStore[tempInfo.iId] = pWeapon;
 		}
+
+		//MODDD - and if there isn't an ammo-type, tell the ammo type cache this.
 		if (tempInfo.pszAmmo1 && *tempInfo.pszAmmo1){
-			AddAmmoNameToAmmoRegistry(tempInfo.pszAmmo1);
+			AddAmmoNameToAmmoRegistry_Primary(tempInfo.iId, tempInfo.pszAmmo1);
+		}else {
+			CBasePlayerItem::AmmoTypeCacheArray[tempInfo.iId].iPrimaryAmmoType = -1;
 		}
+
 		if (tempInfo.pszAmmo2 && *tempInfo.pszAmmo2){
-			AddAmmoNameToAmmoRegistry(tempInfo.pszAmmo2);
+			AddAmmoNameToAmmoRegistry_Secondary(tempInfo.iId, tempInfo.pszAmmo2);
+		}else {
+			CBasePlayerItem::AmmoTypeCacheArray[tempInfo.iId].iSecondaryAmmoType = -1;
 		}
-		
+
 		// this memset is unnecessary, the method ends after this.
 		//memset(&tempInfo, 0, sizeof tempInfo);
 	}//END OF GetItemInfo pass check

@@ -382,9 +382,16 @@ public:
 	int obligedCustomSentence;
 
 
+
+	//MODDD - why even have these clientside at all if it's going to be ignored by having the actual
+	// clientside CVars available?  Just something to trick me into thinking compiled script works as expected there.
+#ifndef CLIENT_DLL
 	BOOL fvoxEnabled;
 	BOOL fHolsterAnimsEnabled;
 	float cl_ladder_choice;
+#endif
+
+
 
 	float recentlySaidBattery;
 
@@ -666,7 +673,10 @@ public:
 	
 	void EnableControl(BOOL fControl);
 
-	int  GiveAmmo( int iAmount, char *szName, int iMax );
+	//MODDD - now 'const char*' instead of just 'char*', most places involving strings do that.
+	int GiveAmmo( int iAmount, const char* szName, int iMax );
+	int GiveAmmo(int iCount, int iAmmoTypeId, int iMax);
+
 	void SendAmmoUpdate(void);
 
 	void WaterMove( void );
@@ -741,7 +751,7 @@ public:
 	BOOL FBecomeProne ( void );
 	void BarnacleVictimBitten ( entvars_t *pevBarnacle );
 	void BarnacleVictimReleased ( void );
-	static int GetAmmoIndex(const char *psz);
+
 	int AmmoInventory( int iAmmoIndex );
 	int Illumination( void );
 
@@ -814,6 +824,8 @@ public:
 	// Clientside should use gHUD.getPlayerBaseFOV intead, as these places are not updated clientside.
 	// In CBaseWeapon and child classes (just about anything), just use CBaseWeapon's own "getPlayerBaseFOV"
 	// instead. It redirects to the right place between client/serverside for you.
+	// No, do it proper, compile only serverside then.  No trickery.
+#ifndef CLIENT_DLL
 	inline float getBaseFOV(void) {
 		if (auto_adjust_fov == 0) {
 			// don't use the auto one then.
@@ -824,6 +836,7 @@ public:
 			return auto_determined_fov;
 		}
 	}//END OF getBaseFOV
+#endif
 
 
 };

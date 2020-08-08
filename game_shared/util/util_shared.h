@@ -439,9 +439,12 @@ float UTIL_SharedRandomFloat(unsigned int seed, float low, float high);
 
 
 
-extern int MaxAmmoCarry(int iszName);
+
+extern int GetAmmoIndex(const char* psz);
+extern int MaxAmmoCarry(const char* psz);
 //MODDD NEW - prototype so that other places can call this method too.
-extern void AddAmmoNameToAmmoRegistry(const char* szAmmoname);
+extern void AddAmmoNameToAmmoRegistry_Primary(int iId, const char* szAmmoname);
+extern void AddAmmoNameToAmmoRegistry_Secondary(int iId, const char* szAmmoname);
 extern void RegisterWeapon(CBasePlayerWeapon* pWeapon, CBasePlayerWeapon* pAryWeaponStore[]);
 
 

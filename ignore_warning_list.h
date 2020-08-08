@@ -44,6 +44,11 @@
 //    not enough arguments for function-like macro invocation 'X'
 //#pragma warning(disable : 4003)
 
+//    Keep this one too.
+//    Warning	C4005	'ASSERT': macro redefinition	cl_dll	C : \Users\blue2\Desktop\SM\HLS1 AZ\dlls\util.h	391
+//#pragma warning(disable : 4005)
+
+
 
 //////////
 #pragma warning(disable : 4065)

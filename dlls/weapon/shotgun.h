@@ -8,6 +8,8 @@
 
 
 // special deathmatch shotgun spreads
+// REMEMBER, specific weapon .cpp's are included clientside too so cl_dll/ev_hldm.cpp already sees
+// these vectors in shotgun.cpp.
 //MODDD - made into const vectors instead of #define's because blablabla see util_shared.h
 extern DLL_GLOBAL const Vector VECTOR_CONE_DM_SHOTGUN;// 10 degrees by 5 degrees
 extern DLL_GLOBAL const Vector VECTOR_CONE_DM_DOUBLESHOTGUN; // 20 degrees by 5 degrees

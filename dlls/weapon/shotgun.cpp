@@ -27,11 +27,8 @@
 EASY_CVAR_EXTERN(cheat_infiniteclip)
 EASY_CVAR_EXTERN(cheat_infiniteammo)
 EASY_CVAR_EXTERN(cheat_minimumfiredelay)
-
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST(playerWeaponSpreadMode)
-
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(viewModelPrintouts)
-
 
 
 #define SHOTGUN_BIT1 1
@@ -485,7 +482,7 @@ void CShotgun::FireShotgun(BOOL isPrimary) {
 	}
 
 
-	if (!m_iClip && m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] <= 0) {
+	if (!m_iClip && PlayerPrimaryAmmoCount() <= 0) {
 		// HEV suit - indicate out of ammo condition
 		m_pPlayer->SetSuitUpdate("!HEV_AMO0", FALSE, 0);
 	}
@@ -546,11 +543,11 @@ void CShotgun::FireShotgun(BOOL isPrimary) {
 
 
 
-	// are these... necessary at all anymore?
+	// is this cheat check necessary anymore?
 	if (m_chargeReady & SHOTGUN_BIT2) {
-		if (pszAmmo1() && m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] < 8)
+		if (pszAmmo1() && PlayerPrimaryAmmoCount() < 8)
 		{
-			m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] = 8;
+			SetPlayerPrimaryAmmoCount(8);
 		}
 	}
 	if (m_chargeReady & SHOTGUN_BIT1) {
@@ -583,7 +580,7 @@ void CShotgun::FireShotgun(BOOL isPrimary) {
 
 void CShotgun::Reload( void )
 {
-	if (m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] <= 0 || m_iClip == SHOTGUN_MAX_CLIP)
+	if (PlayerPrimaryAmmoCount() <= 0 || m_iClip == SHOTGUN_MAX_CLIP)
 		return;
 
 	// don't reload until recoil is done
@@ -660,7 +657,7 @@ void CShotgun::Reload( void )
 		//	return;
 		// Add them to the clip
 		m_iClip += 1;
-		m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] -= 1;
+		ChangePlayerPrimaryAmmoCount(-1);
 		m_fInSpecialReload = 2;
 	}
 }
@@ -763,7 +760,7 @@ void CShotgun::reloadFinishPump(){
 		if (m_fInSpecialReload == 3) {
 			// Add them to the clip
 			m_iClip += 1;
-			m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] -= 1;
+			ChangePlayerPrimaryAmmoCount(-1);
 		}
 
 		m_fInSpecialReload = 0;
@@ -790,7 +787,7 @@ void CShotgun::reloadFinishPump(){
 		if (m_fInSpecialReload == 3) {
 			// Add them to the clip
 			m_iClip += 1;
-			m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] -= 1;
+			ChangePlayerPrimaryAmmoCount(-1);
 		}
 
 		m_fInSpecialReload = 0;
@@ -816,13 +813,13 @@ void CShotgun::reloadFinishPump(){
 
 BOOL CShotgun::reloadSemi(){
 	
-	if (m_iClip == 0 && m_fInSpecialReload == 0 && m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType])
+	if (m_iClip == 0 && m_fInSpecialReload == 0 && PlayerPrimaryAmmoCount() > 0)
 	{
 		Reload( );
 	}
 	else if (m_fInSpecialReload != 0)
 	{
-		if (m_iClip != 8 && m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType]  )
+		if (m_iClip != 8 && PlayerPrimaryAmmoCount() > 0)
 		{
 			/*
 			makeNoise = TRUE;

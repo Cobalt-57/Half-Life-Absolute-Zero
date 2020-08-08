@@ -39,7 +39,6 @@
 #include "squeak.h"
 #include "tripmine.h"
 
-
 #include "nodes.h"
 #include "player.h"
 #include "usercmd.h"
@@ -54,10 +53,6 @@
 #include "../demo.h"
 
 
-
-//MODDD - handy?
-//EASY_CVAR_EXTERN(testVar)
-
 EASY_CVAR_EXTERN(firstPersonIdleDelayMin)
 EASY_CVAR_EXTERN(firstPersonIdleDelayMax)
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(viewModelPrintouts)
@@ -65,12 +60,30 @@ EASY_CVAR_EXTERN(viewModelSyncFixPrintouts)
 EASY_CVAR_EXTERN(cl_holster)
 EASY_CVAR_EXTERN(wpn_glocksilencer)
 
+
+
+// Implementations for methods usually found in dlls/weapons.cpp and dlls/player.cpp moved to their own files clientside:
+// cl_dll/hl/cl_weapons.cpp and cl_dll/hl/cl_player.cpp.
+// There are a few CBaseEntity (cbase.cpp) methods here, but not worth making a new file for.   Moved to the top for easy
+// access.  Everything else here should be a class-less method.
+
+// This class still has mainly classless methods that are a complement to ones in dlls/client.cpp.  Data is sent from
+// the server to here to be unpacked for clientside animations / other temporary logic to keep in-synch.
+
+
+
+
+// BEWARE - gpGlobals is said to be a 'dummy' object clientside!  gpGlobals->time seems to still work though,
+// but a lot of times are based on 0 and count down towards that instead for whatever reason clientside
+
+// !!!!!!!!!!
+// Also, CHECK!  What is g_iUser1?  Is that the check for menu/VGUI/console being open while ingame that might block
+// clientside weapon think?  Not huge but worth knowing!
+
 extern int flag_apply_m_flTimeWeaponIdle;
 extern float stored_m_flTimeWeaponIdle;
-
 extern int flag_apply_m_fJustThrown;
 extern int stored_m_fJustThrown;
-
 
 
 //MODDD - important point before
@@ -79,13 +92,15 @@ extern int stored_m_fJustThrown;
 extern int g_iUser1;
 
 // Pool of client side entities/entvars_t
-static entvars_t	ev[ 32 ];
-static int		num_ents = 0;
+static entvars_t ev[ 32 ];
+static int num_ents = 0;
 
 
 
 // The entity we'll use to represent the local client
-static CBasePlayer player;
+//MODDD - named changed from 'player' to 'localPlayer', losing 'static' to be extern'able from other places.
+//static CBasePlayer player;
+CBasePlayer localPlayer;
 
 // Local version of game .dll global variables ( time, etc. )
 static globalvars_t Globals; 
@@ -119,12 +134,101 @@ CChumToadWeapon g_ChumToadWeapon;
 //clientside only variable.
 BOOL reloadBlocker = FALSE;
 
+// MODDD - TEST.
+float flNextAttackChangeMem = 0;
+
+
+// TEST.
+BOOL blockUntilModelChange = FALSE;
+int oldModel = -1;
+int queuedBlockedModelAnim = -1;
+
+float forgetBlockUntilModelChangeTime = 0;
+float resistTime = -1;
+
+float seqPlayDelay = -1;
+int seqPlay = 0;
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+/*
+=====================
+CBaseEntity :: Killed
+
+If weapons code "kills" an entity, just set its effects to EF_NODRAW
+=====================
+*/
+GENERATE_KILLED_IMPLEMENTATION(CBaseEntity)
+{
+	//easyPrintLine("MESSAGE2");
+	pev->effects |= EF_NODRAW;
+}
 
 
 
-//MODDD - NOTE - ???
-// Don't understand giving g_engfuncs methods here as this is all clientside.
-// AlertMessage is pretty generic at least.  Leaving it here as-is.
+//MODDD - overrides for methods clientside moved to their own "cl_" versions now.
+
+
+
+/*
+=====================
+CBaseEntity::FireBulletsPlayer
+
+Only produces random numbers to match the server ones.
+=====================
+*/
+Vector CBaseEntity::FireBulletsPlayer(ULONG cShots, Vector vecSrc, Vector vecDirShooting, Vector vecSpread, float flDistance, int iBulletType, int iTracerFreq, int iDamage, entvars_t* pevAttacker, int shared_rand)
+{
+	float x, y, z;
+
+	for (ULONG iShot = 1; iShot <= cShots; iShot++)
+	{
+		if (pevAttacker == NULL)
+		{
+			// get circular gaussian spread
+			do {
+				x = RANDOM_FLOAT(-0.5, 0.5) + RANDOM_FLOAT(-0.5, 0.5);
+				y = RANDOM_FLOAT(-0.5, 0.5) + RANDOM_FLOAT(-0.5, 0.5);
+				z = x * x + y * y;
+			} while (z > 1);
+		}
+		else
+		{
+			//Use player's random seed.
+			// get circular gaussian spread
+			x = UTIL_SharedRandomFloat(shared_rand + iShot, -0.5, 0.5) + UTIL_SharedRandomFloat(shared_rand + (1 + iShot), -0.5, 0.5);
+			y = UTIL_SharedRandomFloat(shared_rand + (2 + iShot), -0.5, 0.5) + UTIL_SharedRandomFloat(shared_rand + (3 + iShot), -0.5, 0.5);
+			z = x * x + y * y;
+		}
+
+	}
+
+	return Vector(x * vecSpread.x, y * vecSpread.y, 0.0);
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+
+
+
+
+
+
+
+
+//MODDD
+// Looks like this is done to give any calls to 'AlertMessage' something to do for clientside, since the
+// normally serverside-only methods aren't available here.  Some are completely dummied, this still does something.
+// Still, have the 'easyPrint' system so that's obsolete.
 /*
 ======================
 AlertMessage
@@ -187,898 +291,17 @@ void HUD_PrepEntity( CBaseEntity *pEntity, CBasePlayer *pWeaponOwner )
 		CBasePlayerWeapon* tempWeaponRef = (CBasePlayerWeapon*)pEntity;
 		tempWeaponRef->m_pPlayer = pWeaponOwner;
 		RegisterWeapon(tempWeaponRef, g_pWpns);
+
+		// nope, given by RegisterWeapon now.  In ItemInfoArray so that it's available
+		// for serverside weapons which don't use global static copies like clientside deos.
+		//tempWeaponRef->m_iPrimaryAmmoType = GetAmmoIndex(szName);
+
 	}//END OF pWeaponOwner check
 }//END OF HUD_PrepEntity
 
 
 
 
-
-
-/*
-=====================
-CBaseEntity :: Killed
-
-If weapons code "kills" an entity, just set its effects to EF_NODRAW
-=====================
-*/
-GENERATE_KILLED_IMPLEMENTATION(CBaseEntity)
-{
-	//easyPrintLine("MESSAGE2");
-	pev->effects |= EF_NODRAW;
-}
-
-
-//MODDD - ????      This file seems to need re-implementations of several (including newly added) CBasePlayerWeapon methods from weapons.h
-//(besides weapons.cpp ...    parallel implementations for the same exact prototypes?  Very strange.)
-CBasePlayerWeapon::CBasePlayerWeapon(){
-	//Starts as 0, not a garbage value, for ALL weapons.
-	m_chargeReady = 0;
-	
-	//bitmask.
-	//1 = primary held and ready to fire.
-	//2 = secondary held and ready to fire.
-	buttonFiltered = 0;
-
-	bothFireButtonsMode = 2;
-}
-
-
-//MODDD - should a weapon NOT have any deploy methods, this default will also undo the player silencer render effect.  Just for safety.
-//...not using this 128 for renderfx anymore, at least not for this.
-BOOL CBasePlayerWeapon :: Deploy(){
-
-	//m_pPlayer->pev->renderfx &= ~128;
-	return CBasePlayerItem::Deploy();
-}
-/*
-=====================
-CBasePlayerWeapon :: DefaultReload
-=====================
-*/
-BOOL CBasePlayerWeapon :: DefaultReload( int iClipSize, int iAnim, float fDelay, int body )
-{
-	//easyPrintLine("MESSAGE3");
-	
-	if(m_pPlayer->cheat_infiniteammoMem != 1){
-		if (m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] <= 0)
-			return FALSE;
-
-		int j = min(iClipSize - m_iClip, m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType]);	
-		//MODDD - is this edit ok?  To help with things that mess with the max-count like the glock with old reload logic.
-		//if (j == 0)
-		if (j <= 0)
-			return FALSE;
-	}else{
-		if (m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] <= 0)
-			m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] = 1;
-
-		int j = min(iClipSize - m_iClip, m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType]);
-		if (j <= 0)
-			m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] = 1;
-
-		return TRUE;
-	}
-
-
-	m_pPlayer->m_flNextAttack = UTIL_WeaponTimeBase() + fDelay;
-
-	//MODDD - seems to make sense?  undo if this is more problematic.
-	if(pev->body != body){
-		pev->body = body;
-	}
-
-	//!!UNDONE -- reload sound goes here !!!     <--- MODDD - not my message.
-	SendWeaponAnim( iAnim, UseDecrement(), body );
-	
-	m_fInReload = TRUE;
-	reloadBlocker = FALSE;
-
-	m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 3;
-	return TRUE;
-}
-
-/*
-=====================
-CBasePlayerWeapon :: CanDeploy
-=====================
-*/
-BOOL CBasePlayerWeapon :: CanDeploy( void ) 
-{
-	//easyPrintLine("MESSAGE4");
-	BOOL bHasAmmo = 0;
-
-	if ( !pszAmmo1() )
-	{
-		// this weapon doesn't use ammo, can always deploy.
-		return TRUE;
-	}
-
-	if ( pszAmmo1() )
-	{
-		bHasAmmo |= (m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] != 0);
-	}
-	if ( pszAmmo2() )
-	{
-		bHasAmmo |= (m_pPlayer->m_rgAmmo[m_iSecondaryAmmoType] != 0);
-	}
-	if (m_iClip > 0)
-	{
-		bHasAmmo |= 1;
-	}
-	if (!bHasAmmo)
-	{
-		return FALSE;
-	}
-
-	return TRUE;
-}
-
-/*
-=====================
-CBasePlayerWeapon :: DefaultDeploy
-
-=====================
-*/
-//MODDD - additions since.
-//BOOL CBasePlayerWeapon :: DefaultDeploy( char *szViewModel, char *szWeaponModel, int iAnim, char *szAnimExt, int skiplocal, int body )
-
-//NOTE: "fireDelayTime" defaults to 0.5, but can also be set to -1 to be forced to "deployAnimTime" instead.
-BOOL CBasePlayerWeapon :: DefaultDeploy( char *szViewModel, char *szWeaponModel, int iAnim, char *szAnimExt, int skiplocal /* = 0 */, int body, float deployAnimTime, float fireDelayTime )
-{
-	//easyPrintLine("MESSAGE5");
-	
-	if ( !CanDeploy() )
-		return FALSE;
-
-	gEngfuncs.CL_LoadModel( szViewModel, &m_pPlayer->pev->viewmodel );
-	
-
-	//MODDD - seems to make sense?  undo if this is more problematic.
-	if(pev->body != body){
-		pev->body = body;
-	}
-	SendWeaponAnim( iAnim, skiplocal, body );
-	
-	
-	//MODDD - I SWEAR IF YOU GO FORGETTING THIS SHIT LIKE THIS AGAIN I WILL <<<redacted for fucking insanity>>>
-	//        Yes that's me talking to myself. Ain't I healthy?
-	if(fireDelayTime == -1){
-		//make match the "deployAnimTime":
-		fireDelayTime = deployAnimTime;
-	}
-	
-
-	g_irunninggausspred = false;
-	//m_pPlayer->m_flNextAttack = 0.5;
-	m_pPlayer->m_flNextAttack = fireDelayTime;
-
-	//m_flTimeWeaponIdle = 1.0;
-	m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + deployAnimTime; //used to be "1.0", now depends on optional parameter (defaults to "1.0");
-
-	return TRUE;
-}
-
-//Not much difference between this and the server's one (weapons.cpp). Is that ok?
-void CBasePlayerWeapon::DefaultHolster( int iAnim, int skiplocal /* = 0 */, int body, float holsterAnimTime )
-{
-	//Do the same things a Holster() call would do since we're effecitvely replacing that.
-	m_fInReload = FALSE; // cancel any reload in progress.
-	reloadBlocker = FALSE;
-	g_irunninggausspred = false;
-
-	
-	//HACK - make this a little longer to stop the client from thinking it is done the moment this ends.
-	//       The notice to deploy the next weapon may come a little late.
-	// try with and without + 1 maybe?
-	m_pPlayer->m_flNextAttack = UTIL_WeaponTimeBase() + holsterAnimTime + 1;
-
-	//Let this handle the time it takes to change anims instead, not transmitted to the client by default.
-	m_pPlayer->m_fCustomHolsterWaitTime = gpGlobals->time + holsterAnimTime;
-
-	//Don't want to risk setting idle animations while holstering, set this to an impossible value.
-	m_pPlayer->m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + holsterAnimTime + 5;
-
-	SendWeaponAnim( iAnim );
-
-
-}//END OF DefaultHolster
-
-
-
-/*
-=====================
-CBasePlayerWeapon :: PlayEmptySound
-
-=====================
-*/
-BOOL CBasePlayerWeapon :: PlayEmptySound( void )
-{
-	//easyPrintLine("MESSAGE6");
-	if (m_iPlayEmptySound)
-	{
-		HUD_PlaySound( "weapons/357_cock1.wav", 0.8 );
-		m_iPlayEmptySound = 0;
-		return 0;
-	}
-	return 0;
-}
-
-/*
-=====================
-CBasePlayerWeapon :: ResetEmptySound
-
-=====================
-*/
-void CBasePlayerWeapon :: ResetEmptySound( void )
-{
-	m_iPlayEmptySound = 1;
-}
-
-/*
-=====================
-CBasePlayerWeapon::Holster
-
-Put away weapon
-=====================
-*/
-void CBasePlayerWeapon::Holster( int skiplocal /* = 0 */ )
-{ 
-	//easyPrintLine("MESSAGE8");
-	m_fInReload = FALSE; // cancel any reload in progress.
-	reloadBlocker = FALSE;
-	g_irunninggausspred = false;
-
-	//TODO - not quite, switch to our designated holder anim (fetch by a virtual method, could even be this same method that calls  CBaseWeapon's).
-	//Or have a "DefaultHolster" like "DefaultDeploy" exist to be called most of the time in any given weapon's own Holster implementation.
-	//ADDRESSED - each weapon will now implement the Holster method and call "DefaultHolster" to provide its own anim index and anim duration. 
-	//            By default blanking out the viewmodel and instnatly changing is ok.
-	m_pPlayer->pev->viewmodel = 0; 
-
-
-	//For safety, set this to instantly change the weapon.
-	m_pPlayer->m_flNextAttack = 0;
-	
-	m_pPlayer->m_fCustomHolsterWaitTime = gpGlobals->time;
-
-	//Don't want to risk setting idle animations while holstering, set this to an impossible value. ?
-	m_pPlayer->m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 5;
-}
-
-/*
-=====================
-CBasePlayerWeapon::SendWeaponAnim
-
-Animate weapon model
-=====================
-*/
-void CBasePlayerWeapon::SendWeaponAnim( int iAnim, int skiplocal, int body )
-{
-	this->m_fireState &= ~128;
-	//gEngfuncs.GetViewModel()->curstate.renderfx &= ~ANIMATEBACKWARDS;
-	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(viewModelPrintouts)==1)easyForcePrintLine("SendWeaponAnim %d", iAnim);
-	
-	//MODDD - seems to make sense?  undo if this is more problematic.
-	/*
-	if(pev->body != body){
-		pev->body = body;
-	}
-	*/
-
-	m_pPlayer->pev->weaponanim = iAnim;
-	HUD_SendWeaponAnim( iAnim, body, 0 );
-}
-
-
-void CBasePlayerWeapon::SendWeaponAnimReverse( int iAnim, int skiplocal, int body )
-{
-	this->m_fireState |= 128;
-	//gEngfuncs.GetViewModel()->curstate.renderfx |= ANIMATEBACKWARDS;
-	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(viewModelPrintouts)==1)easyForcePrintLine("SendWeaponAnimReverse %d", iAnim);
-	
-	//MODDD - seems to make sense?  undo if this is more problematic.
-	/*
-	if(pev->body != body){
-		pev->body = body;
-	}
-	*/
-	
-	iAnim |= 128;
-
-	m_pPlayer->pev->weaponanim = iAnim;
-	HUD_SendWeaponAnim( iAnim, body, 0 );
-}
-
-
-
-void CBasePlayerWeapon::SendWeaponAnimBypass( int iAnim, int body )
-{
-	this->m_fireState &= ~128;
-	//gEngfuncs.GetViewModel()->curstate.renderfx &= ~ANIMATEBACKWARDS;
-	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(viewModelPrintouts)==1)easyForcePrintLine("SendWeaponAnimBypass %d", iAnim);
-	
-	m_pPlayer->pev->weaponanim = iAnim;
-	HUD_SendWeaponAnim( iAnim, body, 2 );
-}
-
-void CBasePlayerWeapon::SendWeaponAnimBypassReverse( int iAnim, int body )
-{
-	this->m_fireState |= 128;
-	//gEngfuncs.GetViewModel()->curstate.renderfx |= ANIMATEBACKWARDS;
-	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(viewModelPrintouts)==1)easyForcePrintLine("SendWeaponAnimBypassReverse %d", iAnim);
-
-	
-	iAnim |= 128;
-
-	m_pPlayer->pev->weaponanim = iAnim;
-	
-	HUD_SendWeaponAnim( iAnim, body, 2 );
-}
-
-
-
-void CBasePlayerWeapon::SendWeaponAnimClientOnly( int iAnim, int body )
-{
-	this->m_fireState &= ~128;
-	//gEngfuncs.GetViewModel()->curstate.renderfx &= ~ANIMATEBACKWARDS;
-	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(viewModelPrintouts)==1)easyForcePrintLine("SendWeaponAnimClientOnly %d", iAnim);
-	
-
-	m_pPlayer->pev->weaponanim = iAnim;
-	
-	HUD_SendWeaponAnim( iAnim, body, 2 );
-}
-
-//MODDD
-void CBasePlayerWeapon::SendWeaponAnimClientOnlyReverse( int iAnim, int body )
-{
-	this->m_fireState |= 128;
-	//gEngfuncs.GetViewModel()->curstate.renderfx |= ANIMATEBACKWARDS;
-	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(viewModelPrintouts)==1)easyForcePrintLine("SendWeaponAnimClientOnlyReverse %d", iAnim);
-
-	iAnim |= 128;
-
-	m_pPlayer->pev->weaponanim = iAnim;
-
-	HUD_SendWeaponAnim( iAnim, body, 2 );
-}
-
-
-//MODDD
-void CBasePlayerWeapon::SendWeaponAnimServerOnly( int iAnim, int body )
-{
-	//client? no.
-}
-
-//MODDD
-void CBasePlayerWeapon::SendWeaponAnimServerOnlyReverse( int iAnim, int body )
-{
-	//no.
-}
-
-
-
-/*
-=====================
-CBaseEntity::FireBulletsPlayer
-
-Only produces random numbers to match the server ones.
-=====================
-*/
-Vector CBaseEntity::FireBulletsPlayer ( ULONG cShots, Vector vecSrc, Vector vecDirShooting, Vector vecSpread, float flDistance, int iBulletType, int iTracerFreq, int iDamage, entvars_t *pevAttacker, int shared_rand )
-{
-	float x, y, z;
-
-	for ( ULONG iShot = 1; iShot <= cShots; iShot++ )
-	{
-		if ( pevAttacker == NULL )
-		{
-			// get circular gaussian spread
-			do {
-					x = RANDOM_FLOAT(-0.5, 0.5) + RANDOM_FLOAT(-0.5, 0.5);
-					y = RANDOM_FLOAT(-0.5, 0.5) + RANDOM_FLOAT(-0.5, 0.5);
-					z = x*x+y*y;
-			} while (z > 1);
-		}
-		else
-		{
-			//Use player's random seed.
-			// get circular gaussian spread
-			x = UTIL_SharedRandomFloat( shared_rand + iShot, -0.5, 0.5 ) + UTIL_SharedRandomFloat( shared_rand + ( 1 + iShot ) , -0.5, 0.5 );
-			y = UTIL_SharedRandomFloat( shared_rand + ( 2 + iShot ), -0.5, 0.5 ) + UTIL_SharedRandomFloat( shared_rand + ( 3 + iShot ), -0.5, 0.5 );
-			z = x * x + y * y;
-		}
-			
-	}
-
-    return Vector ( x * vecSpread.x, y * vecSpread.y, 0.0 );
-}
-
-
-///////////////////////////////////////////////
-
-//MODDD - all new, clones.
-void CBasePlayerWeapon::setchargeReady(int arg){
-	int mem = m_chargeReady & 64;
-	m_chargeReady = arg;
-	if(mem){
-		m_chargeReady |= 64;
-	}
-}
-int CBasePlayerWeapon::getchargeReady(void){
-	return m_chargeReady & ~64;
-}
-void CBasePlayerWeapon::forceBlockLooping(void){
-	m_chargeReady |= 64;
-}
-void CBasePlayerWeapon::stopBlockLooping(void){
-	m_chargeReady &= ~64;
-}
-
-//................................................
-/*
-void CGlock::setExtraBulletFalse(void){
-	m_chargeReady &= ~32;
-}
-void CGlock::setExtraBulletTrue(void){
-	m_chargeReady |= 32;
-}
-BOOL CGlock::getExtraBullet(void){
-	return (m_chargeReady & 32) != 0;
-}
-*/
-
-///////////////////////////////////////////////
-
-
-//MODDD - also new.
-// WE'RE ONLY INCLUDED CLIENTSIDE DAMMIT.
-// Check dlls/weapons.cpp for the serverside equivalent.  Only server-exclusive file of weapons-specific files, funny enough.
-float CBasePlayerWeapon::randomIdleAnimationDelay(void){
-	if(EASY_CVAR_GET(firstPersonIdleDelayMin) > 0 && EASY_CVAR_GET(firstPersonIdleDelayMax) > 0){
-		//let's go.
-		float rand = UTIL_SharedRandomFloat(m_pPlayer->random_seed, EASY_CVAR_GET(firstPersonIdleDelayMin), EASY_CVAR_GET(firstPersonIdleDelayMax));
-		//easyPrintLine("OK client client %.2f", rand);
-		return rand;
-	}else{
-		return 0;
-	}
-}//END OF randomIdleAnimationDelay
-
-
-
-//MODDD - new, now called.
-void CBasePlayerWeapon::ItemPostFrameThink(){
-
-	/*
-	//MODDD - should be a good place to check for deplying the next weapon.
-	if(m_pActiveItem && m_bHolstering && gpGlobals->time >= m_flNextAttack){
-	    //done holstering? complete the switch to the picked weapon. Deploy that one.
-
-		m_bHolstering = FALSE;
-		setActiveItem(m_pQueuedActiveItem);
-		m_pQueuedActiveItem = FALSE;
-	}
-	*/
-
-	//Surprisingly no, don't do this, this never even happens nor should it. Deploy should only be called by the server
-	//and its results are echoed to the client.
-
-
-
-
-	// HOLSTER - SWAPPO DISABLE.
-	// or both disable.
-	// MODDD - MAJOR TODO.
-	// Supporting this client-side would be great and all, but there's a major problem.
-	// SelectLastItem is never getting called clientside, so interrupting a LastItem call through
-	// a normal number selection (4 twice, click, etc.) interrupts that clientside and interrupts
-	// the deploy animation soon after by repeating itself.  Client-server synch issues are weird.
-	// Does it make sense to let "lastinv" work clientside, like interpret console input right there?
-	// maybe if it were a client command that send the same thing to the server....
-	/*
-	//easyForcePrintLine("HOLS:%d HOLSTIM:%.2f NEXTATTA:%.2f TIME:%.2f",m_pPlayer->m_bHolstering, m_pPlayer->m_fCustomHolsterWaitTime, m_pPlayer->m_flNextAttack, gpGlobals->time);
-	//MODDD - should be a good place to check for deplying the next weapon.
-	if (m_pPlayer->m_bHolstering && gpGlobals->time >= m_pPlayer->m_fCustomHolsterWaitTime) { //m_pPlayer->m_flNextAttack <= 0.0){
-		//done holstering? complete the switch to the picked weapon. Deploy that one.
-
-		m_pPlayer->m_bHolstering = FALSE;
-		m_pPlayer->setActiveItem(m_pPlayer->m_pQueuedActiveItem);
-		m_pPlayer->m_pQueuedActiveItem = NULL;
-	}
-	*/
-	
-
-
-	//easyForcePrintLine("AFTR HOLS:%d HOLSTIM:%.2f NEXTATTA:%.2f TIME:%.2f",m_pPlayer->m_bHolstering, m_pPlayer->m_fCustomHolsterWaitTime, m_pPlayer->m_flNextAttack, gpGlobals->time);
-	
-
-	CBasePlayerItem::ItemPostFrameThink();
-}//END OF ItemPostFrameThink
-
-
-//MODDD - added.  Doubt it will work
-void CBasePlayerWeapon::ItemPreFrame( ){
-	easyPrintLine("ItemPreFrame CLIENT called???");
-	//Evidently, not.  I guess the DLL doesn't.
-}
-
-
-/*
-=====================
-CBasePlayerWeapon::ItemPostFrame
-
-Handles weapon firing, reloading, etc.
-=====================
-*/
-//MODDD NOTICE - only this seems to get called clientside. Any other item think variants, at least in as-is script (still?),
-//               any other item think methods never get called.
-void CBasePlayerWeapon::ItemPostFrame( )
-{
-	//little much even for you.
-	//if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(viewModelPrintouts)==1)easyForcePrintLine("ItemPostFrame: b:%d npa:%.2f", m_pPlayer->pev->button & IN_ATTACK, m_flNextPrimaryAttack);
-
-	//easyForcePrintLine("I EAT things %.2f %d %.2f", gpGlobals->time, m_pPlayer->pev->button & IN_ATTACK, m_flNextPrimaryAttack);
-
-
-
-	//Surprisingly no, don't do this, this never even happens nor should it. Deploy should only be called by the server
-	//and its results are echoed to the client.
-
-	//easyForcePrintLine("HOLS:%d HOLSTIM:%.2f NEXTATTA:%.2f TIME:%.2f",m_pPlayer->m_bHolstering, m_pPlayer->m_fCustomHolsterWaitTime, m_pPlayer->m_flNextAttack, gpGlobals->time);
-	//MODDD - should be a good place to check for deplying the next weapon.
-
-
-	// HOLSTER - SWAPPO DISABLE.
-	/*
-	if (m_pPlayer->m_bHolstering) { //m_pPlayer->m_flNextAttack <= 0.0){
-		// done holstering? complete the switch to the picked weapon. Deploy that one.
-
-		m_pPlayer->m_bHolstering = FALSE;
-		m_pPlayer->setActiveItem(m_pPlayer->m_pQueuedActiveItem);
-		m_pPlayer->m_pQueuedActiveItem = NULL;
-		return;
-	}
-	*/
-
-
-
-
-
-	BOOL secondaryHeld = ((m_pPlayer->pev->button & IN_ATTACK2) && m_flNextSecondaryAttack <= 0.0);
-	BOOL primaryHeld = ((m_pPlayer->pev->button & IN_ATTACK) && m_flNextPrimaryAttack <= 0.0);
-
-
-	//NOTICE - the player would usually check "m_flNextAttack" and not even call ItemPostFrame in the first place if it weren't 0.
-	//         So the check must be done here since player-specific script is all in player.cpp, a serverside-only file and most
-	//         player think logic is not clientside at all, besides a little for working with weapons like here.
-	//         It was this wa in the as-is script but just pointing this out.
-	//         ...some things in here don't require m_flNextPrimaryAttack to be 0 regardless? odd, but not much difference if any.
-	//         notice that ItemPostFrame even clientside just checks if m_pPlayer->flNextAttack is aboe 0.
-	//         So any "...m_flNextAttack <= 0.0" checks in here are very redundant. Oh well.
-
-	if ((m_fInReload) && (m_pPlayer->m_flNextAttack <= 0.0))
-	{
-//MODDD - NOTE.  Oh dear, a note left as-is.  Or don't fix what ain't broken?
-// I don't know what ingame issue this is referring to.
-#if 0 // FIXME, need ammo on client to make this work right
-		// complete the reload. 
-		int j = min( iMaxClip() - m_iClip, m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType]);	
-
-		// Add them to the clip
-		m_iClip += j;
-		m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] -= j;
-#else	
-		m_iClip += 10;
-#endif
-		//MODDD - new event!
-		this->OnReloadApply();
-
-		m_fInReload = FALSE;
-	}
-
-	//BOOL canDoNormalPressBehavior = TRUE;
-	BOOL canCallBoth = TRUE;
-	BOOL canCallPrimaryNot = TRUE;
-	BOOL canCallPrimary = TRUE;
-	BOOL canCallSecondaryNot = TRUE;
-	BOOL canCallSecondary = TRUE;
-	BOOL canCallNeither = TRUE;
-
-
-	if (canCallNeither && !secondaryHeld && !primaryHeld) {
-		NeitherHeld();
-	}
-
-	if (canCallBoth && secondaryHeld && primaryHeld) {
-		BothHeld();
-		//canCallBoth = TRUE;
-		canCallPrimaryNot = FALSE;
-		canCallPrimary = FALSE;
-		canCallSecondaryNot = FALSE;
-		canCallSecondary = FALSE;
-		canCallNeither = FALSE;
-
-		primaryHeld = FALSE;
-	}
-
-	//easyPrintLine("NOT HELDD!!! %d %d %.2f", canCallPrimaryNot, primaryHeld, gpGlobals->time);
-	if (canCallPrimaryNot && !primaryHeld) {
-		PrimaryNotHeld();
-	}
-	if (canCallSecondaryNot && !secondaryHeld) {
-		SecondaryNotHeld();
-	}
-
-
-	//MODDD
-	//if ((m_pPlayer->pev->button & IN_ATTACK2) && (m_flNextSecondaryAttack <= 0.0))
-	if (canCallSecondary && secondaryHeld)
-	{
-		if ( pszAmmo2() && !m_pPlayer->m_rgAmmo[SecondaryAmmoIndex()] )
-		{
-			m_fFireOnEmpty = TRUE;
-		}
-
-		SecondaryAttack();
-
-
-		//MODDD NOTE - ?????
-		// Removal.  See notes in this same place in dlls/weapons.cpp.
-		//m_pPlayer->pev->button &= ~IN_ATTACK2;
-	}
-	//MODDD
-	//else if ((m_pPlayer->pev->button & IN_ATTACK) && (m_flNextPrimaryAttack <= 0.0))
-	else if (canCallPrimary && primaryHeld)
-	{
-		if ( (m_iClip == 0 && pszAmmo1()) || (iMaxClip() == -1 && !m_pPlayer->m_rgAmmo[PrimaryAmmoIndex()] ) )
-		{
-			m_fFireOnEmpty = TRUE;
-		}
-
-		if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(viewModelPrintouts)==1)easyForcePrintLine("Postframe PrimaryAttack!");
-		PrimaryAttack();
-		if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(viewModelPrintouts)==1)easyForcePrintLine("My new npa: %.2f", m_flNextPrimaryAttack);
-
-	}
-	else if ( m_pPlayer->pev->button & IN_RELOAD && iMaxClip() != WEAPON_NOCLIP && !m_fInReload ) 
-	{
-		// reload when reload is pressed, or if no buttons are down and weapon is empty.
-		Reload();
-	}
-	else if ( !(m_pPlayer->pev->button & (IN_ATTACK|IN_ATTACK2) ) )
-	{
-		// no fire buttons down
-
-		m_fFireOnEmpty = FALSE;
-
-		// weapon is useable. Reload if empty and weapon has waited as long as it has to after firing
-		if ( m_iClip == 0 && !(iFlags() & ITEM_FLAG_NOAUTORELOAD) && m_flNextPrimaryAttack < 0.0 )
-		{
-			Reload();
-			return;
-		}
-
-		WeaponIdle( );
-		return;
-	}
-	
-	// catch all
-	if ( ShouldWeaponIdle() )
-	{
-		WeaponIdle();
-	}
-}
-
-
-/*
-=====================
-CBasePlayer::SelectItem
-
-  Switch weapons
-=====================
-*/
-//MODDD - IMPORTANT. Apparently this may as well have been dummied, but was found in the as-is script.
-//        This method is never called for the client, any vars set by the server calling SelectItem on
-//        its own side need to be sent to the client.
-void CBasePlayer::SelectItem(const char *pstr)
-{
-	//easyPrintLine("MESSAGE11");
-	if (!pstr)
-		return;
-
-	CBasePlayerItem *pItem = NULL;
-
-	if (!pItem)
-		return;
-
-	
-	if (pItem == m_pActiveItem)
-		return;
-
-	/*
-	if (m_pActiveItem)
-		m_pActiveItem->Holster( );
-	
-	m_pLastItem = m_pActiveItem;
-	m_pActiveItem = pItem;
-
-	if (m_pActiveItem)
-	{
-		m_pActiveItem->Deploy( );
-	}
-	*/
-
-	easyForcePrintLine("$$$$ AHA I SHOULD NEVER EVER HAPPEN, REPORT ME IF I DO YOU HEAR?! $$$$");
-}//END OF SelectItem
-
-
-void CBasePlayer::setActiveItem(CBasePlayerItem* argItem){
-	
-	m_pLastItem = m_pActiveItem;
-	m_pActiveItem = argItem;
-
-	if (m_pActiveItem)
-	{
-		m_pActiveItem->Deploy( );
-		m_pActiveItem->UpdateItemInfo( );
-	}
-}
-
-
-// if allowed by cl_holster, and sets the target weapon to deploy after that finishes.
-// Or goes to deploy instantly like retail.
-// a filter that calls setActiveItem straight away if holstering is disabled.
-void CBasePlayer::setActiveItem_HolsterCheck(CBasePlayerItem* argItem) {
-
-	// ******SCRIPT THIS REPLACES, exact or similar-intent repeated a few places
-	/*
-	// FIX, this needs to queue them up and delay
-	if (m_pActiveItem)
-		m_pActiveItem->Holster( );
-
-	m_pLastItem = m_pActiveItem;
-	m_pActiveItem = pItem;
-
-	if (m_pActiveItem)
-	{
-		m_pActiveItem->Deploy( );
-		m_pActiveItem->UpdateItemInfo( );
-	}
-	*/
-	///////////////////////////////////////////////////////////////////////////
-
-	if (m_pActiveItem) {
-		//easyForcePrintLine("OH yeah AM I HOLSTERIN ALREADY %d", m_bHolstering);
-
-		if (!m_bHolstering) {
-			// don't holster the currently equipped weapon if already in the middle of holstering.
-			m_pActiveItem->Holster();
-			m_bHolstering = TRUE;
-		}
-
-		// cl_holster
-		if (fHolsterAnimsEnabled == TRUE) {
-			// using holster anim? Tell the currently equipped item to change to this weapon when that is over.
-			m_pQueuedActiveItem = argItem;  //set this later instead, after the holster anim is done.
-		}
-		else {
-			// Not using holster anims? Immediately change weapon.
-			setActiveItem(argItem);
-			m_bHolstering = FALSE;
-		}
-
-	}
-	else {
-		// just pick it now.
-		setActiveItem(argItem);
-	}
-
-}
-
-
-
-
-
-
-
-
-
-/*
-=====================
-CBasePlayer::SelectLastItem
-
-=====================
-*/
-void CBasePlayer::SelectLastItem(void)
-{
-	//easyPrintLine("MESSAGE12");
-	if (!m_pLastItem)
-	{
-		return;
-	}
-
-	if ( m_pActiveItem && !m_pActiveItem->CanHolster() )
-	{
-		return;
-	}
-
-	if (m_pActiveItem)
-		m_pActiveItem->Holster( );
-	
-	CBasePlayerItem *pTemp = m_pActiveItem;
-	m_pActiveItem = m_pLastItem;
-	m_pLastItem = pTemp;
-	m_pActiveItem->Deploy( );
-}
-
-
-
-
-
-
-
-
-//MODDD NOTE.
-// And If wanted, remove these from hl_baseentity.cpp and implement them here.
-//GENERATE_DEADTAKEDAMAGE_IMPLEMENTATION_DUMMY_CLIENT(CBasePlayer)
-//GENERATE_GIBMONSTER_IMPLEMENTATION_DUMMY_CLIENT(CBasePlayer)
-
-
-/*
-=====================
-CBasePlayer::Killed
-
-=====================
-*/
-GENERATE_KILLED_IMPLEMENTATION(CBasePlayer)
-{
-	// Holster weapon immediately, to allow it to cleanup
-	if ( m_pActiveItem )
-		 m_pActiveItem->Holster( );
-	
-	g_irunninggausspred = false;
-
-}
-
-//MODD - NEW.
-void CBasePlayer::onDelete(void) {
-	// ???  anything we want to do here?
-}
-
-
-
-
-
-/*
-=====================
-CBasePlayer::Spawn
-
-=====================
-*/
-void CBasePlayer::Spawn( void )
-{
-	if (m_pActiveItem)
-		m_pActiveItem->Deploy( );
-
-	g_irunninggausspred = false;
-}
-//MODDD - for the alt version, if ever called, do the same.  Doesn't involve that BOOL.
-void CBasePlayer::Spawn( BOOL revived )
-{
-	if (m_pActiveItem)
-		m_pActiveItem->Deploy( );
-
-	g_irunninggausspred = false;
-}
-
-
-
-void CBasePlayer::Activate( void )
-{
-	//um, what.
-
-}
 
 /*
 =====================
@@ -1196,21 +419,6 @@ void UTIL_ParticleLine( CBasePlayer * pPlayer, float *start, float *end, float l
 	gEngfuncs.pEfxAPI->R_ParticleLine( start, end, r, g, b, life );
 }
 
-/*
-=====================
-CBasePlayerWeapon::PrintState
-
-For debugging, print out state variables to log file
-=====================
-*/
-void CBasePlayerWeapon::PrintState( void )
-{
-	COM_Log( "c:\\hl.log", "%.4f ", gpGlobals->time );
-	COM_Log( "c:\\hl.log", "%.4f ", m_pPlayer->m_flNextAttack );
-	COM_Log( "c:\\hl.log", "%.4f ", m_flNextPrimaryAttack );
-	COM_Log( "c:\\hl.log", "%.4f ", m_flTimeWeaponIdle - gpGlobals->time);
-	COM_Log( "c:\\hl.log", "%i ", m_iClip );
-}
 
 /*
 =====================
@@ -1225,8 +433,9 @@ Set up weapons, player and functions needed to run weapons code client-side.
 void HUD_InitClientWeapons( void )
 {
 	static int initialized = 0;
-	if ( initialized )
+	if (initialized) {
 		return;  //right there.
+	}
 
 	initialized = 1;
 
@@ -1262,25 +471,25 @@ void HUD_InitClientWeapons( void )
 	PrecacheShared();
 
 	// Allocate a slot for the local player
-	HUD_PrepEntity( &player		, NULL );
+	HUD_PrepEntity( &localPlayer	, NULL );
 
 	// Allocate slot(s) for each weapon that we are going to be predicting
-	HUD_PrepEntity( &g_Glock	, &player );
-	HUD_PrepEntity( &g_Crowbar	, &player );
-	HUD_PrepEntity( &g_Python	, &player );
-	HUD_PrepEntity( &g_Mp5	, &player );
-	HUD_PrepEntity( &g_Crossbow	, &player );
-	HUD_PrepEntity( &g_Shotgun	, &player );
-	HUD_PrepEntity( &g_Rpg	, &player );
-	HUD_PrepEntity( &g_Gauss	, &player );
-	HUD_PrepEntity( &g_Egon	, &player );
-	HUD_PrepEntity( &g_HGun	, &player );
-	HUD_PrepEntity( &g_HandGren	, &player );
-	HUD_PrepEntity( &g_Satchel	, &player );
-	HUD_PrepEntity( &g_Tripmine	, &player );
-	HUD_PrepEntity( &g_Snark	, &player );
+	HUD_PrepEntity( &g_Glock	, &localPlayer );
+	HUD_PrepEntity( &g_Crowbar	, &localPlayer );
+	HUD_PrepEntity( &g_Python	, &localPlayer );
+	HUD_PrepEntity( &g_Mp5	, &localPlayer );
+	HUD_PrepEntity( &g_Crossbow	, &localPlayer );
+	HUD_PrepEntity( &g_Shotgun	, &localPlayer );
+	HUD_PrepEntity( &g_Rpg	, &localPlayer );
+	HUD_PrepEntity( &g_Gauss	, &localPlayer );
+	HUD_PrepEntity( &g_Egon	, &localPlayer );
+	HUD_PrepEntity( &g_HGun	, &localPlayer );
+	HUD_PrepEntity( &g_HandGren	, &localPlayer );
+	HUD_PrepEntity( &g_Satchel	, &localPlayer );
+	HUD_PrepEntity( &g_Tripmine	, &localPlayer );
+	HUD_PrepEntity( &g_Snark	, &localPlayer );
 	//MODDD - new 
-	HUD_PrepEntity( &g_ChumToadWeapon	, &player );
+	HUD_PrepEntity( &g_ChumToadWeapon	, &localPlayer );
 
 
 }
@@ -1439,12 +648,12 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
 	{
 		if ( to->client.health <= 0 && lasthealth > 0 )
 		{
-			player.Killed( NULL, 0 );
+			localPlayer.Killed( NULL, 0 );
 			
 		}
 		else if ( to->client.health > 0 && lasthealth <= 0 )
 		{
-			player.Spawn();
+			localPlayer.Spawn();
 		}
 
 		lasthealth = to->client.health;
@@ -1465,7 +674,7 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
 	//100000
 	
 	/*
-	if(player.forceNoWeaponLoop == TRUE){
+	if(localPlayer.forceNoWeaponLoop == TRUE){
 		gEngfuncs.GetViewModel()->curstate.renderfx |= FORCE_NOLOOP;
 	}else{
 		gEngfuncs.GetViewModel()->curstate.renderfx &= ~FORCE_NOLOOP;
@@ -1487,7 +696,7 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
 		gEngfuncs.GetViewModel()->curstate.renderfx &= ~FORCE_NOLOOP;
 	}
 	
-	//easyPrintLine("POOOOOOP %d", player.forceNoWeaponLoop);
+	//easyPrintLine("LOOOOOOP %d", localPlayer.forceNoWeaponLoop);
 	
 
 
@@ -1555,10 +764,34 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
 		pCurrent->m_fInAttack			= pfrom->iuser2;
 		pCurrent->m_fireState			= pfrom->iuser3;
 
-		pCurrent->m_iSecondaryAmmoType		= (int)from->client.vuser3[ 2 ];
-		pCurrent->m_iPrimaryAmmoType		= (int)from->client.vuser4[ 0 ];
-		player.m_rgAmmo[ pCurrent->m_iPrimaryAmmoType ]	= (int)from->client.vuser4[ 1 ];
-		player.m_rgAmmo[ pCurrent->m_iSecondaryAmmoType ]	= (int)from->client.vuser4[ 2 ];
+
+		if (pfrom->iuser1 & 128) {
+			// HOLSTERING CHECK
+			int x = 45;
+		}
+
+
+		//MODDD - disabled since now, ammotypes are cached client and serverside at startup.
+		//pCurrent->m_iSecondaryAmmoType		= (int)from->client.vuser3[ 2 ];
+		//pCurrent->m_iPrimaryAmmoType		= (int)from->client.vuser4[ 0 ];
+
+		int myPrimaryAmmoType = pCurrent->getPrimaryAmmoType();
+		int mySecondaryAmmoType = pCurrent->getSecondaryAmmoType();
+
+
+		//MODDD - MAJOR BUG AS OF RETAIL.
+		//   m_iPrimaryAmmoType and  m_iSecondaryAmmoType can be -1!  Setting an array at -1 here <interferes with> up unrelated memory.
+		//   Like poor poor m_pLastItem, which becomes a pointer to invalid memory but is still tried to be used because it technically
+		//   isn't 'NULL' (is really non-zero).
+		//   CURSE YOU C/C++ AND YOUR LACK OF BOUNDARY CHECKING!
+		//   ...yes I know, It's c++, but it's <definitely> called    \..~$----->>>>debug<<<<-----$~../   mode for a <heckin>' reason
+
+		if (IS_AMMOTYPE_VALID(myPrimaryAmmoType)) {
+			localPlayer.m_rgAmmo[myPrimaryAmmoType] = (int)from->client.vuser4[1];
+		}
+		if (IS_AMMOTYPE_VALID(mySecondaryAmmoType)) {
+			localPlayer.m_rgAmmo[mySecondaryAmmoType] = (int)from->client.vuser4[2];
+		}
 
 
 		//This stuff used to be above. Isn't this area better?
@@ -1593,44 +826,44 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
 	
 
 	// For random weapon events, use this seed to seed random # generator
-	player.random_seed = random_seed;
+	localPlayer.random_seed = random_seed;
 
 	// Get old buttons from previous state.
-	player.m_afButtonLast = from->playerstate.oldbuttons;
+	localPlayer.m_afButtonLast = from->playerstate.oldbuttons;
 
 	// Which buttsons chave changed
-	buttonsChanged = (player.m_afButtonLast ^ cmd->buttons);	// These buttons have changed this frame
+	buttonsChanged = (localPlayer.m_afButtonLast ^ cmd->buttons);	// These buttons have changed this frame
 	
 	// Debounced button codes for pressed/released
 	// The changed ones still down are "pressed"
-	player.m_afButtonPressed =  buttonsChanged & cmd->buttons;	
+	localPlayer.m_afButtonPressed =  buttonsChanged & cmd->buttons;	
 	// The ones not down are "released"
-	player.m_afButtonReleased = buttonsChanged & (~cmd->buttons);
+	localPlayer.m_afButtonReleased = buttonsChanged & (~cmd->buttons);
 
 	// Set player variables that weapons code might check/alter
 	// TAGGG - CRITICAL CRITICAL CRITICAL!!!  Kinda important methinks.
 	// Although this looks to be for receiving button info from the server to the client?
 	// Seems a bit backwards, but all this prediction mumbo jumbo can be weird.
 	// input.cpp's own "->button" transfer is probably more forward to understand.
-	player.pev->button = cmd->buttons;
+	localPlayer.pev->button = cmd->buttons;
 
-	player.pev->velocity = from->client.velocity;
-	player.pev->flags = from->client.flags;
+	localPlayer.pev->velocity = from->client.velocity;
+	localPlayer.pev->flags = from->client.flags;
 
-	player.pev->deadflag = from->client.deadflag;
-	player.pev->waterlevel = from->client.waterlevel;
-	player.pev->maxspeed    = from->client.maxspeed;
-	player.pev->fov = from->client.fov;
+	localPlayer.pev->deadflag = from->client.deadflag;
+	localPlayer.pev->waterlevel = from->client.waterlevel;
+	localPlayer.pev->maxspeed    = from->client.maxspeed;
+	localPlayer.pev->fov = from->client.fov;
 
 	//IS THAT OKAY???
-	//player.pev->weaponanim = from->client.weaponanim;
+	//localPlayer.pev->weaponanim = from->client.weaponanim;
 
 
 	//MODDD - little insertion here...
 	//LITTLE TIP ABOUT WEAPON ANIMS: send an anim with 128 as part of a bitmask and it will animate backwards!
 
 
-	//player.pev->weaponanim
+	//localPlayer.pev->weaponanim
 
 
 	
@@ -1660,42 +893,49 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
 	}
 
 
-	player.pev->weaponanim = from->client.weaponanim;
+	localPlayer.pev->weaponanim = from->client.weaponanim;
 
-	player.pev->viewmodel = from->client.viewmodel;
-	player.m_flNextAttack = from->client.m_flNextAttack;
-	player.m_flNextAmmoBurn = from->client.fuser2;
-	player.m_flAmmoStartCharge = from->client.fuser3;
+	localPlayer.pev->viewmodel = from->client.viewmodel;
+
+
+	//mODDD - SIGNIFICANT!!!   Don't give m_flNextAttack from here if it was set clientside before this point in this frame!
+	if (localPlayer.m_flNextAttack == flNextAttackChangeMem) {
+		localPlayer.m_flNextAttack = from->client.m_flNextAttack;
+	}
+	flNextAttackChangeMem = localPlayer.m_flNextAttack;
+
+	localPlayer.m_flNextAmmoBurn = from->client.fuser2;
+	localPlayer.m_flAmmoStartCharge = from->client.fuser3;
 
 	//Stores all our ammo info, so the client side weapons can use them.
-	player.ammo_9mm			= (int)from->client.vuser1[0];
-	player.ammo_357			= (int)from->client.vuser1[1];
-	player.ammo_argrens		= (int)from->client.vuser1[2];
-	player.ammo_bolts		= (int)from->client.ammo_nails; //is an int anyways...
-	player.ammo_buckshot	= (int)from->client.ammo_shells; 
-	player.ammo_uranium		= (int)from->client.ammo_cells;
-	player.ammo_hornets		= (int)from->client.vuser2[0];
-	player.ammo_rockets		= (int)from->client.ammo_rockets;
+	localPlayer.ammo_9mm			= (int)from->client.vuser1[0];
+	localPlayer.ammo_357			= (int)from->client.vuser1[1];
+	localPlayer.ammo_argrens		= (int)from->client.vuser1[2];
+	localPlayer.ammo_bolts		= (int)from->client.ammo_nails; //is an int anyways...
+	localPlayer.ammo_buckshot	= (int)from->client.ammo_shells; 
+	localPlayer.ammo_uranium		= (int)from->client.ammo_cells;
+	localPlayer.ammo_hornets		= (int)from->client.vuser2[0];
+	localPlayer.ammo_rockets		= (int)from->client.ammo_rockets;
 
 	
 	// Point to current weapon object
 	if ( from->client.m_iId )
 	{
-		player.m_pActiveItem = g_pWpns[ from->client.m_iId ];
+		localPlayer.m_pActiveItem = g_pWpns[ from->client.m_iId ];
 	}
 
 
-	//easyForcePrintLine("AW snao D %.2f", player.m_flNextAttack);
+	//easyForcePrintLine("AW snao D %.2f", localPlayer.m_flNextAttack);
 
 
-	if ( player.m_pActiveItem->m_iId == WEAPON_RPG )
+	if ( localPlayer.m_pActiveItem->m_iId == WEAPON_RPG )
 	{
-		 ( ( CRpg * )player.m_pActiveItem)->m_fSpotActive = (int)from->client.vuser2[ 1 ];
-		 ( ( CRpg * )player.m_pActiveItem)->m_cActiveRockets = (int)from->client.vuser2[ 2 ];
+		 ( ( CRpg * )localPlayer.m_pActiveItem)->m_fSpotActive = (int)from->client.vuser2[ 1 ];
+		 ( ( CRpg * )localPlayer.m_pActiveItem)->m_cActiveRockets = (int)from->client.vuser2[ 2 ];
 	}
 	//MODDD - added.
-	else if(player.m_pActiveItem->m_iId == WEAPON_PYTHON){
-		( ( CPython * )player.m_pActiveItem)->m_fSpotActive = (int)from->client.vuser2[ 1 ];
+	else if(localPlayer.m_pActiveItem->m_iId == WEAPON_PYTHON){
+		( ( CPython * )localPlayer.m_pActiveItem)->m_fSpotActive = (int)from->client.vuser2[ 1 ];
 	}
 
 	//MODDD
@@ -1721,12 +961,12 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
 
 	//is this okay?
 	if(flag_apply_m_flTimeWeaponIdle){
-		easyForcePrintLine("FIGHTERS LAUNCHED. newidle: %.2f", stored_m_flTimeWeaponIdle);
+		easyForcePrintLine("flag_apply1. newidle: %.2f", stored_m_flTimeWeaponIdle);
 		pWeapon->m_flTimeWeaponIdle = stored_m_flTimeWeaponIdle;
 		flag_apply_m_flTimeWeaponIdle = FALSE;
 	}
 	if(flag_apply_m_fJustThrown){
-		easyForcePrintLine("FIGHTERS LAUNCHED 2. newthrown: %d", stored_m_fJustThrown);
+		easyForcePrintLine("flag_apply2 . newthrown: %d", stored_m_fJustThrown);
 		//can only work if our weapon is a snark or chumtoad.
 
 		if(pWeapon->m_iId == WEAPON_SNARK){
@@ -1742,15 +982,15 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
 
 
 	//MODDD - OLD LOCATION OF ItemPostFrame() CALLS.  Moved to back here, some issues with the new location.
-	if ( ( player.pev->deadflag != ( DEAD_DISCARDBODY + 1 ) ) && 
-		 !CL_IsDead() && player.pev->viewmodel && !g_iUser1 )
+	if ( ( localPlayer.pev->deadflag != ( DEAD_DISCARDBODY + 1 ) ) && 
+		 !CL_IsDead() && localPlayer.pev->viewmodel && !g_iUser1 )
 	{
 		//MODDD - just like the player does, call this too.		
 		pWeapon->ItemPostFrameThink( );
 			
 
 
-		if ( player.m_flNextAttack <= 0 )
+		if ( localPlayer.m_flNextAttack <= 0 )
 		{
 			pWeapon->ItemPostFrame();
 		}
@@ -1760,7 +1000,7 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
 	to->client.m_iId					= from->client.m_iId;
 
 	// Now see if we issued a changeweapon command ( and we're not dead )
-	if ( cmd->weaponselect && ( player.pev->deadflag != ( DEAD_DISCARDBODY + 1 ) ) )
+	if ( cmd->weaponselect && ( localPlayer.pev->deadflag != ( DEAD_DISCARDBODY + 1 ) ) )
 	{
 		// Switched to a different weapon?
 		if ( from->weapondata[ cmd->weaponselect ].m_iId == cmd->weaponselect )
@@ -1779,23 +1019,23 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
 			if ( pNew && ( pNew != pWeapon )
 				//MODDD - new condition to mirror the player's change. If queueing up a weapon during the holster anim,
 				//        it can be the same as you started with.
-				|| (player.m_pQueuedActiveItem != NULL && pNew != player.m_pQueuedActiveItem)
+				|| (localPlayer.m_pQueuedActiveItem != NULL && pNew != localPlayer.m_pQueuedActiveItem)
 				)
 			{
 
 				//MODDD - now anticipates the holster animations better.
 				/*
 				// Put away old weapon
-				if (player.m_pActiveItem)
-					player.m_pActiveItem->Holster( );
+				if (localPlayer.m_pActiveItem)
+					localPlayer.m_pActiveItem->Holster( );
 				
-				player.m_pLastItem = player.m_pActiveItem;
-				player.m_pActiveItem = pNew;
+				localPlayer.m_pLastItem = localPlayer.m_pActiveItem;
+				localPlayer.m_pActiveItem = pNew;
 
 				// Deploy new weapon
-				if (player.m_pActiveItem)
+				if (localPlayer.m_pActiveItem)
 				{
-					player.m_pActiveItem->Deploy( );
+					localPlayer.m_pActiveItem->Deploy( );
 				}
 
 				// Update weapon id so we can predict things correctly.
@@ -1803,103 +1043,50 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
 				*/
 
 
-
-				/*
-				if(player.m_pActiveItem){
-					if(player.m_bHolstering == FALSE){
-						player.m_pActiveItem->Holster();
-						player.m_bHolstering = TRUE;
-					}
-					player.m_pQueuedActiveItem = pNew;  //set this later instead, after the holster anim is done.
-				}else{
-					//just pick it now.
-					player.setActiveItem(pNew);
-
-				}
-				
-				*/
-
-
-
-				/*
-				
-				if(player.m_pActiveItem){
-					if(player.m_bHolstering == FALSE){
-						player.m_pActiveItem->Holster();
-						player.m_bHolstering = TRUE;
-					}
-					player.m_pQueuedActiveItem = pNew;  //set this later instead, after the holster anim is done.
-				}else{
-					//just pick it now.
-					player.setActiveItem(pNew);
-
-				}
-
-				*/
-
+				//MODDD - NEW.
+				localPlayer.setActiveItem_HolsterCheck(pNew);
 
 				
-				if(!player.m_bHolstering){
-					//don't holster the currently equipped weapon if already in the middle of holstering.
-					player.m_pActiveItem->Holster( );
-					player.m_bHolstering = TRUE;
+				//MODDD - See if the requested weapon (pnew) become the one equipped (active).
+				// That happens when not using holster (instantly applied instead of unholstering the current and queueing the one wanted)
+				if (localPlayer.m_pActiveItem == pNew) {
+					// Update weapon id so we can predict things correctly.
+					to->client.m_iId = cmd->weaponselect;
 				}
-
-
-				if(EASY_CVAR_GET(cl_holster) == 1){
-					//using holster anim? Tell the currently equipped item to change to this weapon when that is over.
-					player.m_pQueuedActiveItem = pNew;  //set this later instead, after the holster anim is done.
-				}else{
-					//Not using holster anims? Immediately change weapon.
-					player.setActiveItem(pNew);
-					player.m_bHolstering = FALSE;
-					player.m_pQueuedActiveItem = NULL; //just in case.
-				}
-
-
-
-
-				//Perhaps doing something with this would be safer.?
-				//if(
-				//6player.m_fCustomHolsterWaitTime = 45;
-
-				//Is keeping this out safe regardless?
-				// Update weapon id so we can predict things correctly.
-				to->client.m_iId = cmd->weaponselect;
-
+				/////////////////////////////////////////////////////////////////////////////////////////////
 
 			}
 		}
 	}
 
 	// Copy in results of prediction code
-	to->client.viewmodel				= player.pev->viewmodel;
-	to->client.fov						= player.pev->fov;
-	to->client.weaponanim				= player.pev->weaponanim;
-	to->client.m_flNextAttack			= player.m_flNextAttack;
-	to->client.fuser2					= player.m_flNextAmmoBurn;
-	to->client.fuser3					= player.m_flAmmoStartCharge;
-	to->client.maxspeed					= player.pev->maxspeed;
+	to->client.viewmodel				= localPlayer.pev->viewmodel;
+	to->client.fov						= localPlayer.pev->fov;
+	to->client.weaponanim				= localPlayer.pev->weaponanim;
+	to->client.m_flNextAttack			= localPlayer.m_flNextAttack;
+	to->client.fuser2					= localPlayer.m_flNextAmmoBurn;
+	to->client.fuser3					= localPlayer.m_flAmmoStartCharge;
+	to->client.maxspeed					= localPlayer.pev->maxspeed;
 
 	//HL Weapons
-	to->client.vuser1[0]				= player.ammo_9mm;
-	to->client.vuser1[1]				= player.ammo_357;
-	to->client.vuser1[2]				= player.ammo_argrens;
+	to->client.vuser1[0]				= localPlayer.ammo_9mm;
+	to->client.vuser1[1]				= localPlayer.ammo_357;
+	to->client.vuser1[2]				= localPlayer.ammo_argrens;
 
-	to->client.ammo_nails				= player.ammo_bolts;
-	to->client.ammo_shells				= player.ammo_buckshot;
-	to->client.ammo_cells				= player.ammo_uranium;
-	to->client.vuser2[0]				= player.ammo_hornets;
-	to->client.ammo_rockets				= player.ammo_rockets;
+	to->client.ammo_nails				= localPlayer.ammo_bolts;
+	to->client.ammo_shells				= localPlayer.ammo_buckshot;
+	to->client.ammo_cells				= localPlayer.ammo_uranium;
+	to->client.vuser2[0]				= localPlayer.ammo_hornets;
+	to->client.ammo_rockets				= localPlayer.ammo_rockets;
 
-	if ( player.m_pActiveItem->m_iId == WEAPON_RPG )
+	if ( localPlayer.m_pActiveItem->m_iId == WEAPON_RPG )
 	{
-		 from->client.vuser2[ 1 ] = ( ( CRpg * )player.m_pActiveItem)->m_fSpotActive;
-		 from->client.vuser2[ 2 ] = ( ( CRpg * )player.m_pActiveItem)->m_cActiveRockets;
+		 from->client.vuser2[ 1 ] = ( ( CRpg * )localPlayer.m_pActiveItem)->m_fSpotActive;
+		 from->client.vuser2[ 2 ] = ( ( CRpg * )localPlayer.m_pActiveItem)->m_cActiveRockets;
 	}
 	//MODDD - addition
-	else if(player.m_pActiveItem->m_iId == WEAPON_PYTHON){
-		from->client.vuser2[ 1 ] = ( ( CPython * )player.m_pActiveItem)->m_fSpotActive;
+	else if(localPlayer.m_pActiveItem->m_iId == WEAPON_PYTHON){
+		from->client.vuser2[ 1 ] = ( ( CPython * )localPlayer.m_pActiveItem)->m_fSpotActive;
 		//??
 	}
 
@@ -1922,6 +1109,33 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
 		int xxx = 4;
 	}
 
+
+
+
+	
+	// OOOOOOOOOooooooooooooooooooooooookay.  So maybe don't do this, random crash ahoy.
+	// Just check m_chargeReady straightaway.    Sheesh.
+	/*
+	if (pWeapon->m_chargeReady & 128) {
+		localPlayer.m_bHolstering = TRUE;
+	}
+	else {
+		localPlayer.m_bHolstering = FALSE;
+	}
+	*/
+	
+
+
+	int themodeltemp = gEngfuncs.GetViewModel()->curstate.modelindex;
+
+
+	if (seqPlayDelay != -1 && gpGlobals->time >= seqPlayDelay) {
+		seqPlayDelay = -1;
+		//SendWeaponAnim(seqPlay, 1, pCurrent->pev->body);
+		HUD_SendWeaponAnim(seqPlay, 2, 1);
+	}
+
+
 	//MODDD - added check for "254".  That's a special code for, "the serverside anim request got cleared".
 	// This probably happened from becoming irrelevant and we don't want to make the client play an
 	// irrelevant animation, like putting on/taking off the glock silencer twice.
@@ -1937,7 +1151,7 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
 
 		if(to->client.weaponanim & 64){
 			//this is only a cheap trick to get the animation to change. Remove it.
-			easyForcePrintLine("GET YA haha UP");
+			easyForcePrintLine("flaggo 46");
 
 			/*
 			to->client.weaponanim &= ~64;
@@ -1959,26 +1173,92 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
 		*/
 		if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(viewModelPrintouts)==1)easyForcePrintLine("Client: Received anim from server. Existing anim: %d New: %d", HUD_GetWeaponAnim(), to->client.weaponanim);
 
-		//MODDD
-		if ( pWeapon == &g_Glock){
-			// Force a fixed anim down to viewmodel
-			HUD_SendWeaponAnim( to->client.weaponanim, g_Glock.m_fireState , 2);
 
-		}else if( pWeapon == &g_Python){
-			HUD_SendWeaponAnim( to->client.weaponanim, g_Python.m_fInAttack, 2 );
-			
-		}else if( pWeapon == &g_Shotgun){
-			
-			HUD_SendWeaponAnim( to->client.weaponanim, body, 2 );
-			
-		}else{
-			// Force a fixed anim down to viewmodel
-			HUD_SendWeaponAnim( to->client.weaponanim, body, 1 );
+
+		if(forgetBlockUntilModelChangeTime != -1 && gpGlobals->time >= forgetBlockUntilModelChangeTime) {
+			//aw no
+			forgetBlockUntilModelChangeTime = -1;
+			blockUntilModelChange = FALSE;
+		}
+
+		if(blockUntilModelChange) {
+			// has the model changed?
+			int theModel = gEngfuncs.GetViewModel()->curstate.modelindex;
+			if (oldModel != -1 && theModel != oldModel) {
+				// pass.
+				blockUntilModelChange = FALSE;
+				// !!! DANGEROUSLY HACKY reconsider
+				if (queuedBlockedModelAnim != -1) {
+					to->client.weaponanim = queuedBlockedModelAnim;
+				}
+				queuedBlockedModelAnim = -1;
+				oldModel = -1;
+			}
+		}
+
+
+
+		if (seqPlayDelay != -1) {
+			int x = 666;
+
+
+
+
+		}else
+
+			//if (!localPlayer.m_bHolstering) {
+			// This is a sign of holsterng.  If doing so, don't accept further requests to change animation.
+			// They are too early.
+			//if( (!(pWeapon->m_chargeReady & 128) && !localPlayer.m_bHolstering) && !blockUntilModelChange ){
+		if (!blockUntilModelChange) {
+		//if(1){
+
+
+
+			if (resistTime != -1) {
+				if (gpGlobals->time >= resistTime) {
+					resistTime = -1;
+				}
+				else {
+					//return;
+					goto skipperLoc;
+				}
+			}
+
+			//MODDD
+			if (pWeapon == &g_Glock) {
+				// Force a fixed anim down to viewmodel
+				HUD_SendWeaponAnim(to->client.weaponanim, g_Glock.m_fireState, 2);
+
+			}
+			else if (pWeapon == &g_Python) {
+				HUD_SendWeaponAnim(to->client.weaponanim, g_Python.m_fInAttack, 2);
+
+			}
+			else if (pWeapon == &g_Shotgun) {
+
+				HUD_SendWeaponAnim(to->client.weaponanim, body, 2);
+
+			}
+			else {
+				// Force a fixed anim down to viewmodel
+				HUD_SendWeaponAnim(to->client.weaponanim, body, 1);
+			}
+		skipperLoc:		int x = 4;
+
+		}//END OF holstering check
+		else {
+			int x = 45;
 		}
 
 		//put above in "else".
 		//// Force a fixed anim down to viewmodel
 		//HUD_SendWeaponAnim( to->client.weaponanim, body, 1 );
+	}
+	else {
+		// Forget this then!!
+		// careful, don't be so eager.
+		//blockUntilModelChange = FALSE;
 	}
 
 
@@ -2041,10 +1321,29 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
 		pto->m_flTimeWeaponIdle			-= cmd->msec / 1000.0;
 		pto->fuser1						-= cmd->msec / 1000.0;
 
-		to->client.vuser3[2]				= pCurrent->m_iSecondaryAmmoType;
-		to->client.vuser4[0]				= pCurrent->m_iPrimaryAmmoType;
-		to->client.vuser4[1]				= player.m_rgAmmo[ pCurrent->m_iPrimaryAmmoType ];
-		to->client.vuser4[2]				= player.m_rgAmmo[ pCurrent->m_iSecondaryAmmoType ];
+		//MODDD - cached ammo types, disregard
+		//to->client.vuser3[2]				= pCurrent->m_iSecondaryAmmoType;
+		//to->client.vuser4[0]				= pCurrent->m_iPrimaryAmmoType;
+
+
+
+		/*
+		int myPrimaryAmmoType = pCurrent->getPrimaryAmmoType();
+		int mySecondaryAmmoType = pCurrent->getSecondaryAmmoType();
+
+		//MODDD - boundary checks
+		//...cached now, nevermind this
+		if (IS_AMMOTYPE_VALID(myPrimaryAmmoType)) {
+			to->client.vuser4[1] = localPlayer.m_rgAmmo[myPrimaryAmmoType];
+		}
+
+		if (IS_AMMOTYPE_VALID(mySecondaryAmmoType)) {
+			to->client.vuser4[2] = localPlayer.m_rgAmmo[mySecondaryAmmoType];
+		}
+		*/
+
+
+
 
 /*		if ( pto->m_flPumpTime != -9999 )
 		{
@@ -2126,7 +1425,7 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
 	/*
 	gEngfuncs.GetLocalPlayer()->curstate.body = 50000;
 	gEngfuncs.GetViewModel()->curstate.body = -500;
-	player.pev->body = 50002;
+	localPlayer.pev->body = 50002;
 	pWeapon->m_pPlayer->pev->body = -250;
 	*/
 
@@ -2140,7 +1439,6 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
 	//MODDD TODO - shouldn't the body always be reset to 0 just in case?
 	//gEngfuncs.GetViewModel()->curstate.body = 0;
 
-	
 	if(from->client.m_iId == WEAPON_TRIPMINE){
 		//...the tripmine still needs this to reset its body to 0 if it has been tampered with (like by the glock-silencer
 		//setting the client model's body to "1".  Default is 0.
@@ -2159,7 +1457,7 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
 			gEngfuncs.GetViewModel()->curstate.renderfx |= NOMUZZLEFLASH;
 			//will this work??
 			//pWeapon->m_pPlayer->pev->renderfx |= NOMUZZLEFLASH;
-			//player.pev->renderfx |= NOMUZZLEFLASH;
+			//localPlayer.pev->renderfx |= NOMUZZLEFLASH;
 		}
 
 		//gEngfuncs.GetViewModel()->curstate.iuser1 = -500;  //tells the event system to pay attention to the model (no muzzle flash if the silencer is on)
@@ -2167,7 +1465,7 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
 		//easyPrintLine("CLIENT FIRESTATE: %d", pWeapon->m_fireState);
 		
 
-		//player.pev->iuser1 = 50000;
+		//localPlayer.pev->iuser1 = 50000;
 		//gEngfuncs.GetLocalPlayer()->curstate.iuser1 = 500 + pWeapon->m_fireState;
 
 	}else if(from->client.m_iId == WEAPON_PYTHON){
@@ -2273,15 +1571,17 @@ void DLLEXPORT HUD_PostRunCmd(struct local_state_s* from, struct local_state_s* 
 	//////////////////////////////////////////////////////////////////////////
 
 
-	//player = gEngfuncs.GetLocalPlayer();
+	//localPlayer = gEngfuncs.GetLocalPlayer();
 
-	//if(player){
-	if (player.m_pActiveItem != 0) {
-		player.m_pActiveItem->m_flStartThrow = 2;
+	//if(localPlayer){
+	if (localPlayer.m_pActiveItem != 0) {
+		localPlayer.m_pActiveItem->m_flStartThrow = 2;
 	}
-	if (player.m_pClientActiveItem != 0) {
-		player.m_pClientActiveItem->m_flStartThrow = 2;
-	}
+	// NOTE!  Pointless!   Funny enough 'm_pClientActiveItem' is only for the server to see whetehr the active
+	// item changed by the end of a frame for doing a certain update.  May as well be dummied clientside!
+	//if (localPlayer.m_pClientActiveItem != 0) {
+	//	localPlayer.m_pClientActiveItem->m_flStartThrow = 2;
+	//}
 	//}
 
 

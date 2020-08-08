@@ -203,7 +203,7 @@ BOOL CEgon::HasAmmo( void )
 		return FALSE;
 		
 	/*
-	if ( m_pPlayer->m_rgAmmo[ m_iPrimaryAmmoType ] <= 0 )
+	if ( PlayerPrimaryAmmoCount() <= 0 )
 	{
 		//PlayEmptySound( );
 		//m_pPlayer->m_flNextAttack = UTIL_WeaponTimeBase() + 0.5;
@@ -221,10 +221,14 @@ void CEgon::UseAmmo( int count )
 	//MODDD - could the "infinite ammo cheat" be useful here?
 	//So yea, only use ammo if the cheat is off.  Other weapon-related behavior should happen still.
 	if(m_pPlayer->cheat_infiniteammoMem == 0){
-		if ( m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] >= count )
-			m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] -= count;
-		else
-			m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] = 0;
+		if (PlayerPrimaryAmmoCount() >= count) {
+			//m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] -= count;
+			ChangePlayerPrimaryAmmoCount(-count);
+		}
+		else {
+			//m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] = 0;
+			SetPlayerPrimaryAmmoCount(0);
+		}
 	}
 
 }

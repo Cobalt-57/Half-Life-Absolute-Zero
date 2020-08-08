@@ -40,7 +40,6 @@
 #include "netadr.h"
 //MODDD
 #include "scripted.h"
-//MODDD - TESTING! ???
 #include "squadmonster.h"
 #include "nodes.h"
 #include "util_debugdraw.h"
@@ -50,14 +49,18 @@
 #include "entity_state.h"
 #include "trains.h"
 #include "talkmonster.h"
-//MODDD - new.
 #include "util_version.h"
 
-
-extern cvar_t* global_test_cvar_ref;
-extern CGraph WorldGraph;
-
+//MODDD
+extern float cheat_barnacleEatsEverything;
+extern float globalPSEUDO_cameraMode;
+extern BOOL globalPSEUDO_queueClientSendoff;
+extern int global_useSentenceSave;
 extern BOOL queueYMG_stopSend;
+extern cvar_t* global_test_cvar_ref;
+
+
+extern CGraph WorldGraph;
 
 
 //MODDD - cheat CVAR storage.
@@ -70,12 +73,9 @@ cvar_t* clientCheat_minimumfiredelay = 0;
 */
 
 extern cvar_t* cvar_sv_cheats;
-extern int global_useSentenceSave;
 extern float g_flWeaponCheat;
 //old voice_gamemgr.h include location.
 extern CVoiceGameMgr g_VoiceGameMgr;
-extern float g_flWeaponCheat;
-
 
 
 
@@ -84,12 +84,9 @@ extern DLL_GLOBAL BOOL g_fGameOver;
 extern DLL_GLOBAL int g_iSkillLevel;
 extern DLL_GLOBAL ULONG g_ulFrameCount;
 
-extern void CopyToBodyQue(entvars_t* pev);
 
-//MODDD
-extern float cheat_barnacleEatsEverything;
-extern float globalPSEUDO_cameraMode;
-extern BOOL globalPSEUDO_queueClientSendoff;
+
+extern void CopyToBodyQue(entvars_t* pev);
 
 
 //No.  For once, something here in client.cpp is to be externed elsewhere instead.
@@ -102,7 +99,6 @@ EASY_CVAR_EXTERN_MASS
 
 
 static int g_serveractive = 0;
-
 
 CBaseEntity* crashableEntityRef = NULL;
 float crashableEntityReferTime = 0;
@@ -1492,7 +1488,7 @@ void ClientCommand( edict_t *pEntity )
 		EASY_CVAR_SET_DEBUGONLY(jumpForceMulti, 1);
 		EASY_CVAR_SET_DEBUGONLY(ladderSpeedMulti, DEFAULT_ladderSpeedMulti);
 
-	}else if ( FStrEq(pcmdRefinedRef, "disablecheats") || FStrEq(pcmdRefinedRef, "disablecheat") || FStrEq(pcmdRefinedRef, "nocheating") || FStrEq(pcmdRefinedRef, "nocheats") || FStrEq(pcmdRefinedRef, "nocheat") || FStrEq(pcmdRefinedRef, "cheatingisforpussies") || FStrEq(pcmdRefinedRef, "winnersdontdodrugs") ){
+	}else if ( FStrEq(pcmdRefinedRef, "disablecheats") || FStrEq(pcmdRefinedRef, "disablecheat") || FStrEq(pcmdRefinedRef, "nocheating") || FStrEq(pcmdRefinedRef, "nocheats") || FStrEq(pcmdRefinedRef, "nocheat") || FStrEq(pcmdRefinedRef, "winnersdontdodrugs") ){
 
 		CBasePlayer* playerRef = GetClassPtr((CBasePlayer *)pev);
 		
@@ -4206,7 +4202,7 @@ void ClientCommand( edict_t *pEntity )
 		//easyForcePrintLineClient(pEntity, "HOW THE %s", pcmdRefinedRef);
 		GetClassPtr((CBasePlayer *)pev)->SelectItem(pcmd);
 	}
-	else if (FStrEq(pcmdRefinedRef, "lastinv" ))
+	else if (FStrEq(pcmdRefinedRef, "_lastinv" ))
 	{
 		GetClassPtr((CBasePlayer *)pev)->SelectLastItem();
 	}
@@ -4250,7 +4246,7 @@ void ClientCommand( edict_t *pEntity )
 	else if (FStrEq(pcmdRefinedRef, "blockalltriggers") || FStrEq(pcmdRefinedRef, "unblockalltriggers")) {
 
 		if (g_flWeaponCheat == 0.0) {
-			easyForcePrintLineClient(pEntity, "Let\'s not toy with integral map features.");
+			easyForcePrintLineClient(pEntity, "Let\'s not toy with integral map features.  Without cheats that is.");
 			return;
 		}
 
@@ -4501,9 +4497,17 @@ void ClientCommand( edict_t *pEntity )
 		}
 	}
 	else if (FStrEq(pcmdRefinedRef, "listallentities")) {
+		if (g_flWeaponCheat == 0.0) {
+			easyForcePrintLineClient(pEntity, "Woa hey.  You need cheats.");
+			return;
+		}
 		listAllEntities(pEntity);
 	}
 	else if (FStrEq(pcmdRefinedRef, "listallmonsters")) {
+		if (g_flWeaponCheat == 0.0) {
+			easyForcePrintLineClient(pEntity, "Woa hey.  You need cheats.");
+			return;
+		}
 		listAllMonsters(pEntity);
 	}
 	else if (FStrEq(pcmdRefinedRef, "testalt")) {
@@ -4663,6 +4667,10 @@ void ClientCommand( edict_t *pEntity )
 
 	}
 	else if (FStrEq(pcmdRefinedRef, "cmdserver") || (FStrEq(pcmdRefinedRef, "servercmd")) ) {
+		if (g_flWeaponCheat == 0.0) {
+			easyForcePrintLineClient(pEntity, "Woa hey.  You need cheats for that.");
+			return;
+		}
 		char arychr_buffer[64];
 		// CMD_ARGS() sends all individual CMD_ARGV(#) put together for convenience.
 		if (CMD_ARGC() > 1) {
@@ -4687,7 +4695,7 @@ void ClientCommand( edict_t *pEntity )
 		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer*)pev);
 		const char* arg1ref = CMD_ARGV(1);
 		if (g_flWeaponCheat == 0.0) {
-			easyForcePrintLineClient(pEntity, "No cheatin\'!");
+			easyForcePrintLineClient(pEntity, "No violating the laws of physics without cheats.");
 			return;
 		}
 		
@@ -4714,6 +4722,10 @@ void ClientCommand( edict_t *pEntity )
 		
 	}
 	else if (FStrEq(pcmdRefinedRef, "changelevel3") ) {
+		if (g_flWeaponCheat == 0.0) {
+			easyForcePrintLineClient(pEntity, "Woa hey.  You need cheats.");
+			return;
+		}
 		char arychr_buffer[64];
 		// CMD_ARGS() sends all individual CMD_ARGV(#) put together for convenience.
 		if (CMD_ARGC() < 3) {
@@ -4744,6 +4756,10 @@ void ClientCommand( edict_t *pEntity )
 		}
 	}
 	else if (FStrEq(pcmdRefinedRef, "basicentityinfo")) {
+		if (g_flWeaponCheat == 0.0) {
+			easyForcePrintLineClient(pEntity, "Woa hey.  You need cheats.");
+			return;
+		}
 		int i;
 		int highextUsedEntityIndex = -1;
 		easyForcePrintLine("---------------------------------------------------------");
@@ -4846,6 +4862,11 @@ void ClientCommand( edict_t *pEntity )
 				temp_multiPlayRules->SendMOTDToClient( ENT(pev) );
 			}
 		}
+	}
+	else if (FStrEq(pcmdRefinedRef, "printweapons")) {
+		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer*)pev);
+		easyForcePrintClient(tempplayer->edict(), "***Printing your weapons***");
+		tempplayer->printOutWeapons();
 	}
 
 
@@ -5779,6 +5800,26 @@ int AddToFullPack( struct entity_state_s *state, int e, edict_t *ent, edict_t *h
 		state->playerclass  = ent->v.playerclass;
 	}
 
+
+	/*
+	state->playerclass = 2;
+	state->usehull = 3;
+	//state->
+	state->iuser1 = 2;
+	state->iuser1 = 2;
+	state->iuser2 = 2;
+	state->iuser3 = 2;
+	state->fuser4 = 2;
+	state->fuser2 = 2;
+	state->fuser3 = 2;
+	state->fuser4 = 2;
+	state->vuser1.x = 2;
+	state->vuser2.x = 2;
+	state->vuser3.x = 2;
+	state->vuser4.x = 2;
+	*/
+
+
 	// Special stuff for players only
 	if ( player )
 	{
@@ -6158,6 +6199,29 @@ int GetWeaponData( struct edict_s *player, struct weapon_data_s *pInfo)
 					memset( &II, 0, sizeof( II ) );
 					gun->GetItemInfo( &II );
 
+
+					//MODDD - EXPERIMENT!
+					// Comment out the above two lines and try this.
+					// If this works out fine, let every weapon have a 'GetItemInfoID'
+					// to return only its ID in the ItemInfoArray for convenience.
+					// Or... do it anyway because that's kinda neat.
+					// Just seems like there's no need to write-out to some ItemInfo instance
+					// every single frame when what's already in CBasePlayerItem::ItemInfoArray
+					// should work just fine.
+					// HOWEVER.  Keep in mind weaposn that may fudge with specifics from time to time.
+					// Glock can modify its max clip allowed on a whim.
+					// Perhaps each ItemInfo, or even a separate array (one index per weapon)
+					// can be used to tell if an ItemInfo block is invalid, and, if so, re-get it
+					// through the usual 'GetItemInfo' thing above.
+					/*
+					ItemInfo temper;
+					memset( &temper, 0, sizeof(temper) );
+					gun->GetItemInfo(&temper);
+
+					II = CBasePlayerItem::ItemInfoArray[temper.iId];
+					*/
+
+
 					if ( II.iId >= 0 && II.iId < 32 )
 					{
 						item = &pInfo[ II.iId ];
@@ -6304,10 +6368,36 @@ void UpdateClientData ( const struct edict_s *ent, int sendweapons, struct clien
 
 					cd->m_iId = II.iId;
 
+
+
+					//MODDD - m_iPrimary/Secondary Ammo Types are cached now between client and serverside, don't bother sending.
+					/*
 					cd->vuser3.z	= gun->m_iSecondaryAmmoType;
 					cd->vuser4.x	= gun->m_iPrimaryAmmoType;
-					cd->vuser4.y	= pl->m_rgAmmo[gun->m_iPrimaryAmmoType];
-					cd->vuser4.z	= pl->m_rgAmmo[gun->m_iSecondaryAmmoType];
+					*/
+
+					int myPrimaryAmmoType = gun->getPrimaryAmmoType();
+					int mySecondaryAmmoType = gun->getSecondaryAmmoType();
+
+					//MODDD - don't bother accessing the array at bad memory, even though the value will be properly ignored now
+					// clientside.
+					if (IS_AMMOTYPE_VALID(myPrimaryAmmoType)) {
+						cd->vuser4.y = pl->m_rgAmmo[myPrimaryAmmoType];
+					}
+					else {
+						// to be ignored but keep it clean
+						cd->vuser4.y = 0;
+					}
+					//MODDD - same.
+					if (IS_AMMOTYPE_VALID(mySecondaryAmmoType)) {
+						cd->vuser4.z = pl->m_rgAmmo[mySecondaryAmmoType];
+					}
+					else {
+						// to be ignored but keep it clean
+						cd->vuser4.z = 0;
+					}
+
+
 					
 					if ( pl->m_pActiveItem->m_iId == WEAPON_RPG )
 					{

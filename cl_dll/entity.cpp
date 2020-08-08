@@ -67,6 +67,10 @@ int DLLEXPORT HUD_AddEntity( int type, struct cl_entity_s *ent, const char *mode
 	// (most likely skip rendering, physics / server logic still applies)
 	//return 0;
 
+	// And is the incoming 'ent' just about useless?   Really?   It pulls barely nothing unlike player-related
+	// receive methods below.  Although everything else is 0'd no matter how hard I try to make it get sent in
+	// dlls/client.cpp methods.  UGH.  That persistence.  Why create the illusion of flexibility at all.
+
 	switch ( type )
 	{
 	case ET_NORMAL:

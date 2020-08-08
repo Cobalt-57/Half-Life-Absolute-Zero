@@ -322,6 +322,13 @@ typedef struct
 	int iId;
 } AmmoInfo;
 
+//MODDD - NEW.  See AmmoTypeCacheArray.
+typedef struct {
+	int iPrimaryAmmoType;
+	int iSecondaryAmmoType;
+} AmmoTypeCache;
+
+
 typedef struct
 {
 	CBaseEntity* pEntity;
@@ -425,10 +432,10 @@ public:
 	
 	static	TYPEDESCRIPTION m_SaveData[];
 
-	virtual int AddToPlayer( CBasePlayer *pPlayer );	// return TRUE if the item you want the item added to the player inventory
+	virtual BOOL AddToPlayer( CBasePlayer *pPlayer );	// return TRUE if the item you want the item added to the player inventory
 	
 	
-	virtual int AddDuplicate( CBasePlayerItem *pItem ) { return FALSE; }	// return TRUE if you want your duplicate removed from world
+	virtual BOOL AddDuplicate( CBasePlayerItem *pItem ) { return FALSE; }	// return TRUE if you want your duplicate removed from world
 	//MODDD NOTE - not sure if this was intentional or not, but this method returns how much ammo the given item gave to the player.  As seen in weapons.cpp's implementation, if any ammo is given, remove this item.  Being "0" (no ammo given) is the same as returning FALSE, or saying not to remove the item (did not touch).
 	
 	//MODDD - the glock has an exception for being picked up anyways: giving the player the silencer.
@@ -484,8 +491,11 @@ public:
 
 	virtual CBasePlayerItem *GetWeaponPtr( void ) { return NULL; };
 
-	static ItemInfo ItemInfoArray[ MAX_WEAPONS ];
-	static AmmoInfo AmmoInfoArray[ MAX_AMMO_SLOTS ];
+	static ItemInfo ItemInfoArray[MAX_WEAPONS];
+	//MODDD - NEW.
+	static AmmoTypeCache AmmoTypeCacheArray[MAX_WEAPONS];
+
+	static AmmoInfo AmmoInfoArray[MAX_AMMO_SLOTS];
 
 	CBasePlayer	*m_pPlayer;
 	CBasePlayerItem *m_pNext;
@@ -503,6 +513,15 @@ public:
 	int		iWeight( void )		{ return ItemInfoArray[ m_iId ].iWeight; }
 	int		iFlags( void )		{ return ItemInfoArray[ m_iId ].iFlags; }
 
+	//MODDD - NEW!  Convenient access for the new AmmoTypeCacheArray.
+	// It may be possible to phase out CBasePlayerWeapon's m_iPrimaryAmmoType and m_iSecondaryAmmoType vars.
+	// These do not involve those variables.
+	int getPrimaryAmmoType(void) { return AmmoTypeCacheArray[m_iId].iPrimaryAmmoType; }
+	int getSecondaryAmmoType(void) { return AmmoTypeCacheArray[m_iId].iSecondaryAmmoType; }
+	// And static versions, for use with an ID only
+	static int getPrimaryAmmoType(int arg_iId) { return AmmoTypeCacheArray[arg_iId].iPrimaryAmmoType; }
+	static int getSecondaryAmmoType(int arg_iId) { return AmmoTypeCacheArray[arg_iId].iSecondaryAmmoType; }
+
 	// int	m_iIdPrimary;										// Unique Id for primary ammo
 	// int	m_iIdSecondary;										// Unique Id for secondary ammo
 };
@@ -517,21 +536,17 @@ public:
 
 	static	TYPEDESCRIPTION m_SaveData[];
 
+
 	//MODDD - constructor.
 	CBasePlayerWeapon();
-	//MODDD - new var.  Like "pev->button" from the player, but accounts for whether firing with the weapon is allowed at the moment (can't be done in weapons themselves, only in weapons.cpp)
-	int buttonFiltered;
+
 	//MODDD - new.
-	
 	void setchargeReady(int arg);
 	int getchargeReady(void);
 	void forceBlockLooping(void);
 	void stopBlockLooping(void);
 
-
-
 	BOOL isBasePlayerWeapon(void){return TRUE;};
-
 
 
 	//MODDD - new.  Get the time to add to an idle animation's delay (beyondthe bare minimum to finish the current anim of course)
@@ -539,36 +554,24 @@ public:
 	virtual float randomIdleAnimationDelay(void);
 
 
-	int bothFireButtonsMode;
-	//0 = can not press both at the same time (nothing happens, not even NeitherHeld).
-	//1 = can not press both at the same time (NeitherHeld() is called only).
-	//2 = usual behavior: only "secondaryPressed" is called, "primaryNotPressed" forced.
-	//3 = same as 2, but "primaryNotPressed" is not called.
-	//4 = "bothPressed" called only.
-	//5 = "bothPressed" called as well as the two "not"'s.
-		
-
 	// generic weapon versions of CBasePlayerItem calls
-	virtual int AddToPlayer( CBasePlayer *pPlayer );
-	virtual int AddDuplicate( CBasePlayerItem *pItem );
+	virtual BOOL AddToPlayer( CBasePlayer *pPlayer );
+	virtual BOOL AddDuplicate( CBasePlayerItem *pItem );
 
-	virtual int ExtractAmmo( CBasePlayerWeapon *pWeapon ); //{ return TRUE; };			// Return TRUE if you can add ammo to yourself when picked up
-	virtual int ExtractClipAmmo( CBasePlayerWeapon *pWeapon );// { return TRUE; };			// Return TRUE if you can add ammo to yourself when picked up
+	virtual BOOL ExtractAmmo( CBasePlayerWeapon *pWeapon ); //{ return TRUE; };			// Return TRUE if you can add ammo to yourself when picked up
+	virtual BOOL ExtractClipAmmo( CBasePlayerWeapon *pWeapon );// { return TRUE; };			// Return TRUE if you can add ammo to yourself when picked up
 
-	virtual int AddWeapon( void ) { ExtractAmmo( this ); return TRUE; };	// Return TRUE if you want to add yourself to the player
+	virtual BOOL AddWeapon( void ) { ExtractAmmo( this ); return TRUE; };	// Return TRUE if you want to add yourself to the player
 
 	// generic "shared" ammo handlers
 	//MODDD - "AddPrimaryAmmo" has been made "virtual" so that overriden methods in child classes get priority.
 	virtual BOOL AddPrimaryAmmo( int iCount, char *szName, int iMaxClip, int iMaxCarry );
-	virtual BOOL AddPrimaryAmmo( int iCount, char *szName, int iMaxClip, int iMaxCarry, BOOL forcePickupSound );
+	virtual BOOL AddPrimaryAmmo( int iCount, char *szName, int iMaxClip, int iMaxCarry, int forcePickupSound );
 	
 	BOOL AddSecondaryAmmo( int iCount, char *szName, int iMaxCarry );
 
 	virtual void UpdateItemInfo( void ) {};	// updates HUD state
 
-	int m_iPlayEmptySound;
-	int m_fFireOnEmpty;		// True when the gun is empty and the player is still holding down the
-							// attack key(s)
 	virtual BOOL PlayEmptySound( void );
 	virtual void ResetEmptySound( void );
 
@@ -583,6 +586,8 @@ public:
 
 	virtual void SendWeaponAnimServerOnly(int iAnim, int body = 0);
 	virtual void SendWeaponAnimServerOnlyReverse(int iAnim, int body = 0);
+
+	virtual void SendWeaponAnimMessageFromServer(int iAnim, int body);
 
 
 	virtual BOOL CanDeploy( void );
@@ -629,8 +634,17 @@ public:
 	virtual void NeitherHeld( void ) { return; };
 	virtual void BothHeld( void ) { return; };
 	
-	int PrimaryAmmoIndex(); 
-	int SecondaryAmmoIndex(); 
+	int PrimaryAmmoIndex(void);
+	int SecondaryAmmoIndex(void);
+	
+	///MODDD - beats me why these didn't exist up until this point.
+	int PlayerPrimaryAmmoCount(void);
+	int PlayerSecondaryAmmoCount(void);
+	void ChangePlayerPrimaryAmmoCount(int changeBy);
+	void ChangePlayerSecondaryAmmoCount(int changeBy);
+	void SetPlayerPrimaryAmmoCount(int changeBy);
+	void SetPlayerSecondaryAmmoCount(int changeBy);
+
 
 	void PrintState( void );
 	
@@ -649,19 +663,45 @@ public:
 
 	virtual CBasePlayerItem *GetWeaponPtr( void ) { return (CBasePlayerItem *)this; };
 
+
+
+
+	//MODDD - new var.  Like "pev->button" from the player, but accounts for whether firing with the weapon is allowed at the moment (can't be done in weapons themselves, only in weapons.cpp)
+	// Are this and bothFireButtonsMode still used/necessary?
+	int buttonFiltered;
+
+
+	int bothFireButtonsMode;
+	//0 = can not press both at the same time (nothing happens, not even NeitherHeld).
+	//1 = can not press both at the same time (NeitherHeld() is called only).
+	//2 = usual behavior: only "secondaryPressed" is called, "primaryNotPressed" forced.
+	//3 = same as 2, but "primaryNotPressed" is not called.
+	//4 = "bothPressed" called only.
+	//5 = "bothPressed" called as well as the two "not"'s.
+
+
+
+
+	int m_iPlayEmptySound;
+	int m_fFireOnEmpty;		// True when the gun is empty and the player is still holding down the
+							// attack key(s)
+
 	float m_flPumpTime;
-	int	m_fInSpecialReload;									// Are we in the middle of a reload for the shotguns
+	int m_fInSpecialReload;									// Are we in the middle of a reload for the shotguns
 	float m_flNextPrimaryAttack;								// soonest time ItemPostFrame will call PrimaryAttack
 	float m_flNextSecondaryAttack;							// soonest time ItemPostFrame will call SecondaryAttack
 	float m_flTimeWeaponIdle;									// soonest time ItemPostFrame will call WeaponIdle
-	int	m_iPrimaryAmmoType;									// "primary" ammo index into players m_rgAmmo[]
-	int	m_iSecondaryAmmoType;								// "secondary" ammo index into players m_rgAmmo[]
-	int	m_iClip;											// number of shots left in the primary weapon clip, -1 it not used
-	int	m_iClientClip;										// the last version of m_iClip sent to hud dll
-	int	m_iClientWeaponState;								// the last version of the weapon state sent to hud dll (is current weapon, is on target)
-	int	m_fInReload;										// Are we in the middle of a reload;
+	
+	//MODDD - PHASED OUT, use getPrimary/SecondaryAmmoType methods to get
+	// ammo-type numbers from the cache instead
+	//int m_iPrimaryAmmoType;									// "primary" ammo index into players m_rgAmmo[]
+	//int m_iSecondaryAmmoType;								// "secondary" ammo index into players m_rgAmmo[]
+	int m_iClip;											// number of shots left in the primary weapon clip, -1 it not used
+	int m_iClientClip;										// the last version of m_iClip sent to hud dll
+	int m_iClientWeaponState;								// the last version of the weapon state sent to hud dll (is current weapon, is on target)
+	int m_fInReload;										// Are we in the middle of a reload;
 
-	int	m_iDefaultAmmo;// how much ammo you get when you pick up this weapon as placed by a level designer.
+	int m_iDefaultAmmo;// how much ammo you get when you pick up this weapon as placed by a level designer.
 	
 };
 
@@ -696,7 +736,8 @@ class CWeaponBox : public CBaseEntity
 	void Touch( CBaseEntity *pOther );
 	void KeyValue( KeyValueData *pkvd );
 	BOOL IsEmpty( void );
-	int  GiveAmmo( int iCount, char *szName, int iMax, int *pIndex = NULL );
+	//MODDD - uses const char* now
+	int GiveAmmo( int iCount, const char* szName, int iMax, int *pIndex = NULL );
 	void SetObjectCollisionBox( void );
 
 public:

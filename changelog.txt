@@ -203,3 +203,7 @@ Issue from falling monsters losing interp (animation smoothness) shortly after t
 
 CVar 'cl_server_interpolation' renamed to 'cl_interp_entity'.
 New CVar:  'cl_interp_viewmodel'.  Simulates lack of interpolation to add choppiness to viewmodels when off.
+
+Ricochet effect on agrunt armor & hgrunt/barney helmets uses the 'normal' of whatever surface it hit instead of going roughly in the direction of where it came from unconditionally.
+
+recent-weapon-switching ('q' key by default) no longer ignores cl_holster.  Possible slight client/server synch issue with cl_holster in general fixed too.

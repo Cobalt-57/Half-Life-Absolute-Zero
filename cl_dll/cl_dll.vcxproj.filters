@@ -25,6 +25,9 @@
     <Filter Include="Source Files\_root">
       <UniqueIdentifier>{4e992f95-d16e-4055-83ec-9230cd5fa010}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\hl">
+      <UniqueIdentifier>{388a0ea5-8bc5-4115-b4b2-c21438ff1ff2}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="cdll_int.cpp">
@@ -300,6 +303,12 @@
     <ClCompile Include="hud\pain.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="hl\cl_weapons.cpp">
+      <Filter>Source Files\hl</Filter>
+    </ClCompile>
+    <ClCompile Include="hl\cl_player.cpp">
+      <Filter>Source Files\hl</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="camera.h">
@@ -451,6 +460,9 @@
     </ClInclude>
     <ClInclude Include="hud\pain.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="hl\hl_weapons.h">
+      <Filter>Header Files\hl</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

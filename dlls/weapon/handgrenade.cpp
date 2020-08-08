@@ -36,7 +36,7 @@ CHandGrenade::CHandGrenade(void){
 	//NEW VAR.  If -500, we are cheating.  Better for syncing.
 	m_fireState = 0;
 
-	//Used to be a var called "replayDeploy".  If on, at the next idle-call, it will first play the deploy (AKA draw) anim first to bring the grenade into view.
+	// Used to be a var called "replayDeploy".  If on, at the next idle-call, it will first play the deploy (AKA draw) anim first to bring the grenade into view.
 	//NOTE: is a bitmask.  
 	// 1 (2 to the 0th) is for "replayDeploy", a watered-down version.
 	// 2 (2 to the 1st) is for "weaponRetired", which re-does the "DefaultDeploy" on call.
@@ -74,90 +74,40 @@ void CHandGrenade::Spawn( )
 	FallInit();// get ready to fall down.
 }
 
-//overridden.
-int CHandGrenade::ExtractAmmo( CBasePlayerWeapon *pWeapon ){
-	int		iReturn;
-
-	if ( pszAmmo1() != NULL )
-	{
-		// blindly call with m_iDefaultAmmo. It's either going to be a value or zero. If it is zero,
-		// we only get the ammo in the weapon's clip, which is what we want. 
-		
-
-		//easyPrintLine(PLAYER NULL? %d", m_pPlayer == NULL);
-		//MODDD - NOTE - uh, "m_pPlayer" is null here, but in the method, "AddPrimaryAmmo", it is not null.
-		//This is some quantum-mechanics BS.
-
-		//MODDD - Intercept.
-		//...this time, having a non-zero ammo value means, not picked up yet.  The method is overridden for this class and will handle how much to give the player based on a CVar.
-		if(m_iDefaultAmmo != 0){
-			iReturn = pWeapon->AddPrimaryAmmo( m_iDefaultAmmo, (char *)pszAmmo1(), iMaxClip(), iMaxAmmo1() );
-		}else{
-			//not sure what else is really expected.
-			iReturn = FALSE;
-		}
-		
-		
-		m_iDefaultAmmo = 0;
-	}
-
-	if ( pszAmmo2() != NULL )
-	{
-		iReturn = pWeapon->AddSecondaryAmmo( 0, (char *)pszAmmo2(), iMaxAmmo2() );
-	}
-
-	return iReturn;
-
+// overridden.
+BOOL CHandGrenade::ExtractAmmo( CBasePlayerWeapon *pWeapon ){
+	// Nevermind, not sure what I was thinking.
+	// If 'm_iDefaultAmmo' is 0, just detect that in AddPrimaryAmmo as it's called and don't do anything.
+	return CBasePlayerWeapon::ExtractAmmo(pWeapon);
 }
 
 
-BOOL CHandGrenade :: AddPrimaryAmmo( int iCount, char *szName, int iMaxClip, int iMaxCarry )
+
+
+BOOL CHandGrenade::AddPrimaryAmmo(int iCount, char* szName, int iMaxClip, int iMaxCarry) {
+	return CHandGrenade::AddPrimaryAmmo(iCount, szName, iMaxClip, iMaxCarry, 0);
+}
+
+BOOL CHandGrenade::AddPrimaryAmmo( int iCount, char *szName, int iMaxClip, int iMaxCarry, int forcePickupSound)
 {
-	int iIdAmmo;
-
-	//This is the real intervention.  The grenade gives only "one" grenade if the CVar is being used ( = 1), and 5 otherwise (retail value).
-	if(m_pPlayer && EASY_CVAR_GET(handGrenadePickupYieldsOne) == 1 ){
-		iCount = 1;
-	}else{
-		iCount = HANDGRENADE_DEFAULT_GIVE;
-	}
-
-	//easyPrintLine("PLAYER NULL 2?? %d", m_pPlayer == NULL);
-
-	if (iMaxClip < 1)
-	{
-		m_iClip = -1;
-		iIdAmmo = m_pPlayer->GiveAmmo( iCount, szName, iMaxCarry );
-	}
-	else if (m_iClip == 0)
-	{
-		int i;
-		i = min( m_iClip + iCount, iMaxClip ) - m_iClip;
-		m_iClip += i;
-		iIdAmmo = m_pPlayer->GiveAmmo( iCount - i, szName, iMaxCarry );
-	}
-	else
-	{
-		iIdAmmo = m_pPlayer->GiveAmmo( iCount, szName, iMaxCarry );
-	}
-	
-	// m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] = iMaxCarry; // hack for testing
-
-	if (iIdAmmo > 0)
-	{
-		m_iPrimaryAmmoType = iIdAmmo;
-		if (m_pPlayer->HasPlayerItem( this ) )
-		{
-			// play the "got ammo" sound only if we gave some ammo to a player that already had this gun.
-			// if the player is just getting this gun for the first time, DefaultTouch will play the "picked up gun" sound for us.
-			
-			playAmmoPickupSound();
-			//EMIT_SOUND(ENT(pev), CHAN_ITEM, "items/9mmclip1.wav", 1, ATTN_NORM);
-
+	// No behavior if m_iDefaultAmmo is 0, even calling the parent method.
+	// I forget what the point of this check even was, but something like this used to happen here.  (My script, not as-is).
+	if (m_iDefaultAmmo > 0) {
+		//This is the real intervention.  The grenade gives only "one" grenade if the CVar is being used ( = 1), and 5 otherwise (retail value).
+		if (m_pPlayer && EASY_CVAR_GET(handGrenadePickupYieldsOne) == 1) {
+			iCount = 1;
 		}
+		else {
+			iCount = HANDGRENADE_DEFAULT_GIVE;
+		}
+		// and default behavior
+		return CBasePlayerWeapon::AddPrimaryAmmo(iCount, szName, iMaxClip, iMaxCarry, forcePickupSound);
 	}
-
-	return iIdAmmo > 0 ? TRUE : FALSE;
+	else {
+		// finish?
+		m_iDefaultAmmo = 0;
+		return FALSE;
+	}
 }
 
 
@@ -226,7 +176,7 @@ void CHandGrenade::Holster( int skiplocal /* = 0 */ )
 	//MODDD NEW - safe?
 	m_flStartThrow = 0;
 
-	if ( m_pPlayer->m_rgAmmo[ m_iPrimaryAmmoType ] )
+	if (PlayerPrimaryAmmoCount() > 0)
 	{
 		//SendWeaponAnim( HANDGRENADE_HOLSTER );
 		DefaultHolster(HANDGRENADE_HOLSTER, skiplocal, 0, (16.0f/30.0f));
@@ -283,10 +233,10 @@ void CHandGrenade::EitherAttack() {
 		}
 		*/
 
-		//easyForcePrintLine("ARE YOU hello %d, %d", m_flStartThrow, m_pPlayer->m_rgAmmo[ m_iPrimaryAmmoType ]);
+		//easyForcePrintLine("ARE YOU hello %.2f, %d", m_flStartThrow, PlayerPrimaryAmmoCount());
 
 		//"!m_flStartThrow"? Just say ==0 for fuck's sake.
-		if (m_flStartThrow == 0 && m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] > 0)
+		if (m_flStartThrow == 0 && PlayerPrimaryAmmoCount() > 0)
 		{
 			m_flStartThrow = gpGlobals->time;
 			m_flReleaseThrow = 0;
@@ -337,7 +287,7 @@ void CHandGrenade::WeaponIdle( void )
 	
 	//MODDD - is this okay for grenades?
 	if(m_pPlayer->pev->viewmodel == iStringNull){
-		if ( m_pPlayer->m_rgAmmo[ m_iPrimaryAmmoType ] > 0 ){
+		if (PlayerPrimaryAmmoCount() > 0 ){
 
 			globalflag_muteDeploySound = TRUE;
 			Deploy();
@@ -356,7 +306,7 @@ void CHandGrenade::WeaponIdle( void )
 		return;
 
 	//schedule to show the draw anim following throwing a grenade.
-	if ( m_pPlayer->m_rgAmmo[ m_iPrimaryAmmoType ] > 0 ){
+	if (PlayerPrimaryAmmoCount() > 0 ){
 		if(m_fInAttack & 1){
 			SendWeaponAnim( HANDGRENADE_DRAW );
 			m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + (16.0/30.0) + randomIdleAnimationDelay();
@@ -516,12 +466,12 @@ void CHandGrenade::WeaponIdle( void )
 
 		//MODDD - cheat check.
 		if(m_pPlayer->cheat_infiniteclipMem == 0 && m_pPlayer->cheat_infiniteammoMem == 0){
-			m_pPlayer->m_rgAmmo[ m_iPrimaryAmmoType ]--;
+			ChangePlayerPrimaryAmmoCount(-1);
 		}
 
 		//MODDD - no point to this section anymore.  WeaponIdles and the NextAttacks are set above already.
 		/*
-		if ( !m_pPlayer->m_rgAmmo[ m_iPrimaryAmmoType ] )
+		if ( PlayerPrimaryAmmoCount() <= 0 )
 		{
 			// just threw last grenade
 			// set attack times in the future, and weapon idle in the future so we can see the whole throw
@@ -533,34 +483,9 @@ void CHandGrenade::WeaponIdle( void )
 	}
 
 	//MODDD - never observed as m_flReleaseThrow never goes above 0?  Well, whoops.
-	/*
-	else if ( m_flReleaseThrow > 0 )
-	{
-		// we've finished the throw, restart.
-		m_flStartThrow = 0;
+	// SECTION REMOVED, see older versions for it.
 
-		if ( m_pPlayer->m_rgAmmo[ m_iPrimaryAmmoType ] )
-		{
-			SendWeaponAnim( HANDGRENADE_DRAW );
-		}
-		else
-		{
-			RetireWeapon();
-			//"2" means, a full re-deploy is required, not just sending the anim.
-			m_fInAttack |= 2;
-			return;
-		}
-
-		//m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + UTIL_SharedRandomFloat( m_pPlayer->random_seed, 10, 15 );
-		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + (15.0 / 30.0) + randomIdleAnimationDelay();
-		
-
-		m_flReleaseThrow = -1;
-		return;
-	}
-	*/
-
-	if ( m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] )
+	if (PlayerPrimaryAmmoCount() > 0)
 	{
 		int iAnim;
 		float flRand = UTIL_SharedRandomFloat( m_pPlayer->random_seed, 0, 1 );

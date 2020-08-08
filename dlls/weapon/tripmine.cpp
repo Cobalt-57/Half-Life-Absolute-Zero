@@ -329,8 +329,9 @@ void CTripmineGrenade :: BeamBreakThink( void  )
 	if ( !m_pBeam )
 	{
 		MakeBeam( );
-		if ( tr.pHit )
-			m_hOwner = CBaseEntity::Instance( tr.pHit );	// reset owner too
+		if (tr.pHit) {
+			m_hOwner = CBaseEntity::Instance(tr.pHit);	// reset owner too
+		}
 	}
 
 	if (fabs( m_flBeamLength - tr.flFraction ) > 0.001)
@@ -500,7 +501,6 @@ BOOL CTripmine::Deploy( )
 	//MODDD - new.
 	m_fInAttack = FALSE;
 
-
 	//pev->body = 0;
 	return DefaultDeploy( "models/v_tripmine.mdl", "models/p_tripmine.mdl", TRIPMINE_DRAW, "trip", 0, 0, (16.0/30.0), -1 );
 }
@@ -513,7 +513,7 @@ void CTripmine::Holster( int skiplocal /* = 0 */ )
 
 	//m_pPlayer->m_flNextAttack = UTIL_WeaponTimeBase() + 0.5;
 
-	if (!m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType])
+	if (PlayerPrimaryAmmoCount() <= 0)
 	{
 		// out of mines
 		m_pPlayer->pev->weapons &= ~(1<<WEAPON_TRIPMINE);
@@ -530,10 +530,9 @@ void CTripmine::Holster( int skiplocal /* = 0 */ )
 
 void CTripmine::PrimaryAttack( void )
 {
-	 
-
-	if (m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] <= 0)
+	if (PlayerPrimaryAmmoCount() <= 0) {
 		return;
+	}
 
 	UTIL_MakeVectors( m_pPlayer->pev->v_angle + m_pPlayer->pev->punchangle );
 	Vector vecSrc	 = m_pPlayer->GetGunPosition( );
@@ -569,16 +568,16 @@ void CTripmine::PrimaryAttack( void )
 
 			//MODDD - cheat check.			
 			if(m_pPlayer->cheat_infiniteclipMem == 0 && m_pPlayer->cheat_infiniteammoMem == 0){
-				m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType]--;
+				ChangePlayerPrimaryAmmoCount(-1);
 			}
 
 			// player "shoot" animation
 			m_pPlayer->SetAnimation( PLAYER_ATTACK1 );
 			
-			if ( m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] <= 0 )
+			if (PlayerPrimaryAmmoCount() <= 0 )
 			{
 				// no more mines! 
-				//MODDD - rather, do this after showing the "place" (arm2) animation.
+				//MODDD - rather, do this after the "place" (arm2) animation is done.
 				//RetireWeapon();
 				return;
 			}
@@ -609,7 +608,6 @@ void CTripmine::PrimaryAttack( void )
 	}
 
 	//m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + UTIL_SharedRandomFloat( m_pPlayer->random_seed, 10, 15 );
-	//
 }
 
 
@@ -630,8 +628,7 @@ void CTripmine::ItemPreFrame( void ){
 		if(m_flReleaseThrow == -1){
 
 		}else if(m_flReleaseThrow == 0){
-			if ( m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] <= 0 ){
-
+			if (PlayerPrimaryAmmoCount() <= 0 ){
 				//If out of ammo, let the idle method catch this and retire the weapon.
 				m_flReleaseThrow = -1;
 				m_flStartThrow = -1;
@@ -673,7 +670,7 @@ void CTripmine::WeaponIdle( void )
 
 	/*
 
-	if ( m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] > 0 ){
+	if ( PlayerPrimaryAmmoCount() > 0 ){
 		//VERIFY.  Is this even reached anymore?
 		if(m_fInAttack == TRUE){
 			m_fInAttack = FALSE;
@@ -691,7 +688,7 @@ void CTripmine::WeaponIdle( void )
 
 	
 	if(m_pPlayer->pev->viewmodel == iStringNull){
-		if ( m_pPlayer->m_rgAmmo[ m_iPrimaryAmmoType ] > 0 ){
+		if (PlayerPrimaryAmmoCount() > 0 ){
 
 			globalflag_muteDeploySound = TRUE;
 			Deploy();
@@ -706,7 +703,7 @@ void CTripmine::WeaponIdle( void )
 
 	
 	//no ammo? retire.
-	if ( m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] <= 0 ){
+	if (PlayerPrimaryAmmoCount() <= 0 ){
 		RetireWeapon();
 		m_fInAttack = TRUE;
 		return;

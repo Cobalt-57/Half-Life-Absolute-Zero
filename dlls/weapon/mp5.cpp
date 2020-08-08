@@ -36,12 +36,13 @@ EASY_CVAR_EXTERN(mp5GrenadeInheritsPlayerVelocity)
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST(playerWeaponSpreadMode)
 
 
-//=========================================================
-//=========================================================
+/*
+// MODDD - no need for this now, all weapons give their secondary ammo type index, even if it is -1.
 int CMP5::SecondaryAmmoIndex( void )
 {
 	return m_iSecondaryAmmoType;
 }
+*/
 
 
 //MODDD
@@ -229,9 +230,12 @@ void CMP5::PrimaryAttack()
 
 
 
-	if (!m_iClip && m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] <= 0)
+	if (!m_iClip && PlayerPrimaryAmmoCount() <= 0) {
 		// HEV suit - indicate out of ammo condition
+		// NOTE that this noticing the player is out of ammo after firing, being out of ammo at the moment
+		// without ammo ends far earlier and plays the 'click' noise.
 		m_pPlayer->SetSuitUpdate("!HEV_AMO0", FALSE, 0);
+	}
 
 
 	//MODDD - no idea why the last 2 lines are there or what they do differently, just 
@@ -265,7 +269,7 @@ void CMP5::SecondaryAttack( void )
 		return;
 	}
 
-	if (m_pPlayer->m_rgAmmo[m_iSecondaryAmmoType] == 0)
+	if (PlayerSecondaryAmmoCount() == 0)
 	{
 		PlayEmptySound( );
 		return;
@@ -279,7 +283,7 @@ void CMP5::SecondaryAttack( void )
 		
 	//MODDD - cheat check.
 	if(m_pPlayer->cheat_infiniteammoMem == 0 && m_pPlayer->cheat_infiniteclipMem == 0){
-		m_pPlayer->m_rgAmmo[m_iSecondaryAmmoType]--;
+		ChangePlayerSecondaryAmmoCount(-1);
 	}
 
 	// player "shoot" animation
@@ -331,12 +335,12 @@ void CMP5::SecondaryAttack( void )
 	}
 
 
-
 	//m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 5;// idle pretty soon after shooting.
 
-	if (!m_pPlayer->m_rgAmmo[m_iSecondaryAmmoType])
+	if (PlayerSecondaryAmmoCount() <= 0) {
 		// HEV suit - indicate out of ammo condition
 		m_pPlayer->SetSuitUpdate("!HEV_AMO0", FALSE, 0);
+	}
 }
 
 void CMP5::Reload( void )

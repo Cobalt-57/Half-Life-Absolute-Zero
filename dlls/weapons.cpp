@@ -189,8 +189,9 @@ TYPEDESCRIPTION	CBasePlayerWeapon::m_SaveData[] =
 	DEFINE_FIELD( CBasePlayerWeapon, m_flNextSecondaryAttack, FIELD_TIME ),
 	DEFINE_FIELD( CBasePlayerWeapon, m_flTimeWeaponIdle, FIELD_TIME ),
 #endif	// CLIENT_WEAPONS
-	DEFINE_FIELD( CBasePlayerWeapon, m_iPrimaryAmmoType, FIELD_INTEGER ),
-	DEFINE_FIELD( CBasePlayerWeapon, m_iSecondaryAmmoType, FIELD_INTEGER ),
+	//MODDD - phased out
+	//DEFINE_FIELD( CBasePlayerWeapon, m_iPrimaryAmmoType, FIELD_INTEGER ),
+	//DEFINE_FIELD( CBasePlayerWeapon, m_iSecondaryAmmoType, FIELD_INTEGER ),
 	DEFINE_FIELD( CBasePlayerWeapon, m_iClip, FIELD_INTEGER ),
 	DEFINE_FIELD( CBasePlayerWeapon, m_iDefaultAmmo, FIELD_INTEGER ),
 //	DEFINE_FIELD( CBasePlayerWeapon, m_iClientClip, FIELD_INTEGER )	 , reset to zero on load so hud gets updated correctly
@@ -506,15 +507,25 @@ void CBasePlayerWeapon::ItemPostFrameThink(){
 	}
 	*/
 
+
+	
 	// HOLSTER - SWAPPO DISABLE.
 	//MODDD - should be a good place to check for deplying the next weapon.
 	if(m_pPlayer->m_bHolstering && gpGlobals->time >= m_pPlayer->m_fCustomHolsterWaitTime){  //m_pPlayer->m_flNextAttack <= 0.0){
 	    // done holstering? complete the switch to the picked weapon. Deploy that one.
 		m_pPlayer->m_bHolstering = FALSE;
-		m_pPlayer->setActiveItem(m_pPlayer->m_pQueuedActiveItem);
-		m_pPlayer->m_pQueuedActiveItem = NULL;
+		m_chargeReady &= ~128;
+
+		if (m_pPlayer->m_pQueuedActiveItem != NULL) {
+			m_pPlayer->m_pQueuedActiveItem->m_chargeReady &= ~128;
+			m_pPlayer->setActiveItem(m_pPlayer->m_pQueuedActiveItem);
+
+			m_pPlayer->m_pQueuedActiveItem = NULL;
+		}
+
 		m_pPlayer->m_fCustomHolsterWaitTime = -1;
 	}
+	
 
 	CBasePlayerItem::ItemPostFrameThink();
 }//END OF ItemPostFrameThink
@@ -541,7 +552,10 @@ void CBasePlayerWeapon::ItemPostFrame( void )
 	if(m_pPlayer->m_bHolstering){  //m_pPlayer->m_flNextAttack <= 0.0){
 		// done holstering? complete the switch to the picked weapon. Deploy that one.
 		m_pPlayer->m_bHolstering = FALSE;
+		m_chargeReady &= ~128;
+		m_pPlayer->m_pQueuedActiveItem->m_chargeReady &= ~128;
 		m_pPlayer->setActiveItem(m_pPlayer->m_pQueuedActiveItem);
+
 		m_pPlayer->m_pQueuedActiveItem = NULL;
 		m_pPlayer->m_fCustomHolsterWaitTime = -1;
 		return;
@@ -609,26 +623,30 @@ void CBasePlayerWeapon::ItemPostFrame( void )
 	//NOTICE: had to mod this method, as it seems to sync better.
 	if ((m_fInReload) && ( m_pPlayer->m_flNextAttack <= UTIL_WeaponTimeBase() ) )
 	{
-		// complete the reload. 
-		int j = min( iMaxClip() - m_iClip, m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType]);	
+		int myPrimaryAmmoType = getPrimaryAmmoType();
+		if (IS_AMMOTYPE_VALID(myPrimaryAmmoType)) {
+			// complete the reload. 
+			int j = min(iMaxClip() - m_iClip, m_pPlayer->m_rgAmmo[myPrimaryAmmoType]);
 
-		// Add them to the clip
-		m_iClip += j;
+			// Add them to the clip
+			m_iClip += j;
 
-		//MODDD - cheat intervention, if available.  With this cheat, reloading does not consume total ammo.
-		if(EASY_CVAR_GET(cheat_infiniteammo) == 0){
-			m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] -= j;
-		}else{
-			if(m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] == 0){ 
-				m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] = 1;
+			//MODDD - cheat intervention, if available.  With this cheat, reloading does not consume total ammo.
+			if (EASY_CVAR_GET(cheat_infiniteammo) == 0) {
+				m_pPlayer->m_rgAmmo[myPrimaryAmmoType] -= j;
+			}
+			else {
+				if (m_pPlayer->m_rgAmmo[myPrimaryAmmoType] == 0) {
+					m_pPlayer->m_rgAmmo[myPrimaryAmmoType] = 1;
+				}
+
 			}
 
-		}
+			m_pPlayer->TabulateAmmo();
 
-		m_pPlayer->TabulateAmmo();
-
-		//MODDD - new event!
-		this->OnReloadApply();
+			//MODDD - new event!
+			this->OnReloadApply();
+		}// END OF Valid ammotype check
 
 		m_fInReload = FALSE;
 	}
@@ -816,7 +834,7 @@ void CBasePlayerWeapon::ItemPostFrame( void )
 			// weapon isn't useable, switch.
 			if ( !(iFlags() & ITEM_FLAG_NOAUTOSWITCHEMPTY) && g_pGameRules->GetNextBestWeapon( m_pPlayer, this ) )
 			{
-				easyForcePrintLine("OH DEAR IT TURNS OUT YOUR WEAPON IS UNUSABLE. LET ME TRY TO PICK A BETTER ONE FOR YOU!");
+				easyPrintLineClient(m_pPlayer->edict(), "OH DEAR IT TURNS OUT YOUR WEAPON IS UNUSABLE. LET ME TRY TO PICK A BETTER ONE FOR YOU!");
 				m_flNextPrimaryAttack = ( UseDecrement() ? 0.0 : gpGlobals->time ) + 0.3;
 				return;
 			}
@@ -861,7 +879,7 @@ void CBasePlayerItem::DestroyItem( void )
 	Kill( );
 }
 
-int CBasePlayerItem::AddToPlayer( CBasePlayer *pPlayer )
+BOOL CBasePlayerItem::AddToPlayer( CBasePlayer *pPlayer )
 {
 	m_pPlayer = pPlayer;
 
@@ -920,14 +938,15 @@ void CBasePlayerItem::AttachToPlayer ( CBasePlayer *pPlayer )
 
 }
 
+//MODDD - BOOL edit
 // CALLED THROUGH the newly-touched weapon instance. The existing player weapon is pOriginal
-int CBasePlayerWeapon::AddDuplicate( CBasePlayerItem *pOriginal )
+BOOL CBasePlayerWeapon::AddDuplicate( CBasePlayerItem *pOriginal )
 {
 
 	//easyPrintLine("WHO AIM EYE?! %d : %s", m_iDefaultAmmo, STRING(pOriginal->pev->classname) );
 	if ( m_iDefaultAmmo )
 	{
-		int test = ExtractAmmo( (CBasePlayerWeapon *)pOriginal );
+		BOOL test = ExtractAmmo( (CBasePlayerWeapon *)pOriginal );
 		//easyPrintLine("DOOP3 %d", test);
 		return test;
 	}
@@ -939,22 +958,33 @@ int CBasePlayerWeapon::AddDuplicate( CBasePlayerItem *pOriginal )
 }
 
 
-int CBasePlayerWeapon::AddToPlayer( CBasePlayer *pPlayer )
+//MODDD - BOOL edit
+BOOL CBasePlayerWeapon::AddToPlayer( CBasePlayer *pPlayer )
 {
-	int bResult = CBasePlayerItem::AddToPlayer( pPlayer );
+	BOOL bResult = CBasePlayerItem::AddToPlayer( pPlayer );
 
 	//MODDD NOTE - is it safe to make this mask change (adjustment) before we've even confirmed that Adding this weapon to the player is allowed?
 	pPlayer->pev->weapons |= (1<<m_iId);
 
-	if ( !m_iPrimaryAmmoType )
+	//MODDD - in case ammo types were to ever start at 0 intead, watch out for places like this.
+	// Re-gets the ammo index on finding 0.  Also have IS_AMMOTYPE_VALID but eh, unnecessary here.
+	// CHANGE: No longer possible, these are cached at startup.  If it is 0 here we just don't have an ammo type, re-gets are senseless.
+	/*
+	if ( m_iPrimaryAmmoType == 0 )
 	{
-		m_iPrimaryAmmoType = pPlayer->GetAmmoIndex( pszAmmo1() );
-		m_iSecondaryAmmoType = pPlayer->GetAmmoIndex( pszAmmo2() );
+		//MODDD - method no longer belongs to player, no point.
+		// And cached anyway.  Do we even need m_iPrimary/SecondaryAmmoType anymore?
+		//m_iPrimaryAmmoType = GetAmmoIndex( pszAmmo1() );
+		//m_iSecondaryAmmoType = GetAmmoIndex( pszAmmo2() );
+		m_iPrimaryAmmoType = getPrimaryAmmoType();
+		m_iSecondaryAmmoType = getSecondaryAmmoType();
 	}
+	*/
 
 
-	if (bResult)
-		return AddWeapon( );
+	if (bResult) {
+		return AddWeapon();
+	}
 	return FALSE;
 }
 
@@ -1016,6 +1046,8 @@ int CBasePlayerWeapon::UpdateClientData( CBasePlayer *pPlayer )
 
 
 
+
+
 void CBasePlayerWeapon::SendWeaponAnim( int iAnim, int skiplocal, int body )
 {
 	if ( UseDecrement() )
@@ -1043,15 +1075,9 @@ void CBasePlayerWeapon::SendWeaponAnim( int iAnim, int skiplocal, int body )
 
 	this->m_fireState &= ~128;
 
+	//MODDD - turned into a method for breakpoint convenience.
+	SendWeaponAnimMessageFromServer(iAnim, body);
 	
-	MESSAGE_BEGIN( MSG_ONE, SVC_WEAPONANIM, NULL, m_pPlayer->pev );
-		WRITE_BYTE( iAnim );						// sequence number
-		//WRITE_BYTE( pev->body );					// weaponmodel bodygroup.
-		//...wait. We provided a "body", didn't we? Why are we sending our own instance pev->body instead??
-		WRITE_BYTE( body );					// weaponmodel bodygroup.
-	MESSAGE_END();
-	
-
 }
 
 
@@ -1083,11 +1109,7 @@ void CBasePlayerWeapon::SendWeaponAnimReverse( int iAnim, int skiplocal, int bod
 	
 	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(viewModelPrintouts)==1)easyForcePrintLine("SendWeaponAnimReverse: %d", iAnim);
 	
-
-	MESSAGE_BEGIN( MSG_ONE, SVC_WEAPONANIM, NULL, m_pPlayer->pev );
-		WRITE_BYTE( iAnim );						// sequence number
-		WRITE_BYTE( body );					// weaponmodel bodygroup.
-	MESSAGE_END();
+	SendWeaponAnimMessageFromServer(iAnim, body);
 }
 
 
@@ -1101,10 +1123,7 @@ void CBasePlayerWeapon::SendWeaponAnimBypass( int iAnim, int body )
 	this->m_fireState &= ~128;
 	
 	m_pPlayer->pev->weaponanim = iAnim;
-	MESSAGE_BEGIN( MSG_ONE, SVC_WEAPONANIM, NULL, m_pPlayer->pev );
-		WRITE_BYTE( iAnim );						// sequence number
-		WRITE_BYTE( body );					// weaponmodel bodygroup.
-	MESSAGE_END();
+	SendWeaponAnimMessageFromServer(iAnim, body);
 }
 
 //MODDD
@@ -1116,11 +1135,8 @@ void CBasePlayerWeapon::SendWeaponAnimBypassReverse( int iAnim, int body )
 	iAnim |= 128;
 	
 	m_pPlayer->pev->weaponanim = iAnim;
+	SendWeaponAnimMessageFromServer(iAnim, body);
 
-	MESSAGE_BEGIN( MSG_ONE, SVC_WEAPONANIM, NULL, m_pPlayer->pev );
-		WRITE_BYTE( iAnim );						// sequence number
-		WRITE_BYTE( body );					// weaponmodel bodygroup.
-	MESSAGE_END();
 }
 
 
@@ -1145,11 +1161,8 @@ void CBasePlayerWeapon::SendWeaponAnimServerOnly( int iAnim, int body )
 	this->m_fireState &= ~128;
 	
 	m_pPlayer->pev->weaponanim = iAnim;
-
-	MESSAGE_BEGIN( MSG_ONE, SVC_WEAPONANIM, NULL, m_pPlayer->pev );
-		WRITE_BYTE( iAnim );						// sequence number
-		WRITE_BYTE( body );					// weaponmodel bodygroup.
-	MESSAGE_END();
+	SendWeaponAnimMessageFromServer(iAnim, body);
+	
 }
 
 //MODDD
@@ -1161,17 +1174,20 @@ void CBasePlayerWeapon::SendWeaponAnimServerOnlyReverse( int iAnim, int body )
 	iAnim |= 128;
 
 	m_pPlayer->pev->weaponanim = iAnim;
-
-	MESSAGE_BEGIN( MSG_ONE, SVC_WEAPONANIM, NULL, m_pPlayer->pev );
-		WRITE_BYTE( iAnim );						// sequence number
-		WRITE_BYTE( body );					// weaponmodel bodygroup.   ...does this even make it over in any way shape or form?
-	MESSAGE_END();
+	SendWeaponAnimMessageFromServer(iAnim, body);
+	
 }
 
+void CBasePlayerWeapon::SendWeaponAnimMessageFromServer(int iAnim, int body) {
+	MESSAGE_BEGIN(MSG_ONE, SVC_WEAPONANIM, NULL, m_pPlayer->pev);
+		WRITE_BYTE(iAnim);						// sequence number
+		//WRITE_BYTE( pev->body );					// weaponmodel bodygroup.
+		//...wait. We provided a "body", didn't we? Why send the pev->body the weapon has instead of that???
+		WRITE_BYTE(body);					// weaponmodel bodygroup.
+	MESSAGE_END();
 
-
-
-
+	pev->body = body;  // is this a good idea?
+}
 
 
 
@@ -1183,33 +1199,33 @@ void CBasePlayerWeapon::SendWeaponAnimServerOnlyReverse( int iAnim, int body )
 
 
 BOOL CBasePlayerWeapon :: AddPrimaryAmmo( int iCount, char *szName, int iMaxClip, int iMaxCarry ){
-	return AddPrimaryAmmo(iCount, szName, iMaxClip, iMaxCarry, FALSE);
+	return AddPrimaryAmmo(iCount, szName, iMaxClip, iMaxCarry, 0);
 }
 
 //MODDD - called for either extra weapons OR ammo itself adding the ammunition
-BOOL CBasePlayerWeapon :: AddPrimaryAmmo( int iCount, char *szName, int iMaxClip, int iMaxCarry, BOOL forcePickupSound )
+BOOL CBasePlayerWeapon :: AddPrimaryAmmo( int iCount, char *szName, int iMaxClip, int iMaxCarry, int forcePickupSound )
 {
 	int iIdAmmo;
 
-
-	
 	//easyPrintLine("PLAYER NULL 3??? %d", m_pPlayer == NULL);
+	int myPrimaryAmmoType = getPrimaryAmmoType();
 
+	//MODDD - sending myPrimaryAmmoType instead of szName throughout, consider changing the whole method sometime
 	if (iMaxClip < 1)
 	{
 		m_iClip = -1;
-		iIdAmmo = m_pPlayer->GiveAmmo( iCount, szName, iMaxCarry );
+		iIdAmmo = m_pPlayer->GiveAmmo( iCount, myPrimaryAmmoType, iMaxCarry );
 	}
 	else if (m_iClip == 0)
 	{
 		int i;
 		i = min( m_iClip + iCount, iMaxClip ) - m_iClip;
 		m_iClip += i;
-		iIdAmmo = m_pPlayer->GiveAmmo( iCount - i, szName, iMaxCarry );
+		iIdAmmo = m_pPlayer->GiveAmmo( iCount - i, myPrimaryAmmoType, iMaxCarry );
 	}
 	else
 	{
-		iIdAmmo = m_pPlayer->GiveAmmo( iCount, szName, iMaxCarry );
+		iIdAmmo = m_pPlayer->GiveAmmo( iCount, myPrimaryAmmoType, iMaxCarry );
 	}
 	
 	// m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] = iMaxCarry; // hack for testing
@@ -1223,7 +1239,13 @@ BOOL CBasePlayerWeapon :: AddPrimaryAmmo( int iCount, char *szName, int iMaxClip
 
 	if (iIdAmmo > 0 )//|| weaponPlayPickupSoundException(m_pPlayer))
 	{
-		m_iPrimaryAmmoType = iIdAmmo;
+		//MODDD - now wait just a moment.
+		// Shouldn't a weapon know its AmmoType numbers well before receiving ammo like this?
+		// Why is it being set by the GiveAmmo calls above.
+		// I...     I don't.  I can't.  (changed since, does not re-find the AmmoType numbers, uses cached version from startup)
+		// In fact, phased out.  Byebye!
+		//m_iPrimaryAmmoType = iIdAmmo;
+
 		if (m_pPlayer->HasPlayerItem( this ) )
 		{
 			// play the "got ammo" sound only if we gave some ammo to a player that already had this gun.
@@ -1250,13 +1272,18 @@ BOOL CBasePlayerWeapon :: AddSecondaryAmmo( int iCount, char *szName, int iMax )
 {
 	int iIdAmmo;
 
-	iIdAmmo = m_pPlayer->GiveAmmo( iCount, szName, iMax );
+	int mySecondaryAmmoType = getSecondaryAmmoType();
+
+	//MODDD - sending mySecondaryAmmoType instead of szName throughout, consider changing the whole method sometime
+	iIdAmmo = m_pPlayer->GiveAmmo( iCount, mySecondaryAmmoType, iMax );
 
 	//m_pPlayer->m_rgAmmo[m_iSecondaryAmmoType] = iMax; // hack for testing
 
 	if (iIdAmmo > 0)
 	{
-		m_iSecondaryAmmoType = iIdAmmo;
+		//MODDD - phased out, byebye
+		//m_iSecondaryAmmoType = iIdAmmo;
+
 		playAmmoPickupSound();
 		//EMIT_SOUND(ENT(pev), CHAN_ITEM, "items/9mmclip1.wav", 1, ATTN_NORM);
 	}
@@ -1296,11 +1323,23 @@ BOOL CBasePlayerWeapon :: CanDeploy( void )
 
 	if ( pszAmmo1() )
 	{
-		bHasAmmo |= (m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] != 0);
+		int ammoIndex = getPrimaryAmmoType();
+		if (IS_AMMOTYPE_VALID(ammoIndex)) {
+			bHasAmmo |= (m_pPlayer->m_rgAmmo[ammoIndex] != 0);
+		}
+		else {
+			// oh.
+		}
 	}
 	if ( pszAmmo2() )
 	{
-		bHasAmmo |= (m_pPlayer->m_rgAmmo[m_iSecondaryAmmoType] != 0);
+		int ammoIndex = getSecondaryAmmoType();
+		if (IS_AMMOTYPE_VALID(ammoIndex)) {
+			bHasAmmo |= (m_pPlayer->m_rgAmmo[ammoIndex] != 0);
+		}
+		else {
+			// oh.
+		}
 	}
 	if (m_iClip > 0)
 	{
@@ -1332,6 +1371,8 @@ BOOL CBasePlayerWeapon :: DefaultDeploy( char *szViewModel, char *szWeaponModel,
 		return FALSE;
 	}
 
+	m_chargeReady &= ~128;
+
 	m_pPlayer->TabulateAmmo();
 	m_pPlayer->pev->viewmodel = MAKE_STRING(szViewModel);
 	m_pPlayer->pev->weaponmodel = MAKE_STRING(szWeaponModel);
@@ -1339,6 +1380,7 @@ BOOL CBasePlayerWeapon :: DefaultDeploy( char *szViewModel, char *szWeaponModel,
 
 
 	//MODDD - force!
+	// ...no, rather not fight the engine.  It works in mysterious ways.
 	//SendWeaponAnim( iAnim, skiplocal, body );
 	// WRONG!  Bypass already ignores skiplocal.  Send the body here!
 	//SendWeaponAnimBypass( iAnim, skiplocal );
@@ -1381,6 +1423,7 @@ void CBasePlayerWeapon::DefaultHolster( int iAnim, int skiplocal /* = 0 */, int 
 
 	//HACK - make this a little longer to stop the client from thinking it is done the moment this ends.
 	//       The notice to deploy the next weapon may come a little late.
+	// try with and without + 1 maybe?
 	m_pPlayer->m_flNextAttack = UTIL_WeaponTimeBase() + holsterAnimTime + 1;
 
 	// Let this handle the time it takes to change anims instead, not transmitted to the client by default.
@@ -1388,6 +1431,9 @@ void CBasePlayerWeapon::DefaultHolster( int iAnim, int skiplocal /* = 0 */, int 
 
 	//Don't want to risk setting idle animations while holstering, set this to an impossible value.
 	m_pPlayer->m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + holsterAnimTime + 5;
+
+
+	m_chargeReady |= 128;
 
 	SendWeaponAnim( iAnim );
 
@@ -1401,26 +1447,34 @@ void CBasePlayerWeapon::DefaultHolster( int iAnim, int skiplocal /* = 0 */, int 
 
 BOOL CBasePlayerWeapon :: DefaultReload( int iClipSize, int iAnim, float fDelay, int body )
 {
-	
+	int myPrimaryAmmoType = getPrimaryAmmoType();
+	if (IS_AMMOTYPE_VALID(myPrimaryAmmoType)) {
+		// ok.
+	}
+	else {
+		// oh.
+		return FALSE;
+	}
+
 
 	//MODDD - cheat intervention.  Can only fail to reload if the infiniteAmmo cheat is off.
 	if(EASY_CVAR_GET(cheat_infiniteammo) != 1){
-		if (m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] <= 0)
+		if (m_pPlayer->m_rgAmmo[myPrimaryAmmoType] <= 0)
 			return FALSE;
 
-		int j = min(iClipSize - m_iClip, m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType]);	
+		int j = min(iClipSize - m_iClip, m_pPlayer->m_rgAmmo[myPrimaryAmmoType]);
 
 		//MODDD - is this edit ok?  To help with things that mess with the max-count like the glock with old reload logic.
 		//if (j == 0)
 		if(j <= 0)
 			return FALSE;
 	}else{
-		if (m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] <= 0)
-			m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] = 1;
+		if (m_pPlayer->m_rgAmmo[myPrimaryAmmoType] <= 0)
+			m_pPlayer->m_rgAmmo[myPrimaryAmmoType] = 1;
 
-		int j = min(iClipSize - m_iClip, m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType]);
+		int j = min(iClipSize - m_iClip, m_pPlayer->m_rgAmmo[myPrimaryAmmoType]);
 		if (j <= 0)
-			m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] = 1;
+			m_pPlayer->m_rgAmmo[myPrimaryAmmoType] = 1;
 
 		return TRUE;
 	}
@@ -1450,6 +1504,7 @@ BOOL CBasePlayerWeapon :: DefaultReload( int iClipSize, int iAnim, float fDelay,
 
 BOOL CBasePlayerWeapon :: PlayEmptySound( void )
 {
+	// wait.  return 0 regardless of... anything?  Hell's the point
 	if (m_iPlayEmptySound)
 	{
 		UTIL_PlaySound(ENT(m_pPlayer->pev), CHAN_WEAPON, "weapons/357_cock1.wav", 0.8, ATTN_NORM, 0, 100, FALSE);
@@ -1468,15 +1523,79 @@ void CBasePlayerWeapon :: ResetEmptySound( void )
 //=========================================================
 int CBasePlayerWeapon::PrimaryAmmoIndex( void )
 {
-	return m_iPrimaryAmmoType;
+	//return m_iPrimaryAmmoType;
+	return getPrimaryAmmoType();
 }
 
 //=========================================================
 //=========================================================
 int CBasePlayerWeapon::SecondaryAmmoIndex( void )
 {
-	return -1;
+	//MODDD - why not always return m_iSecondaryAmmoType?  It will just remain -1 for things that never set it
+	//return -1;
+	//return m_iSecondaryAmmoType;
+	return getSecondaryAmmoType();
 }
+
+
+int CBasePlayerWeapon::PlayerPrimaryAmmoCount() {
+	int myPrimaryAmmoType = getPrimaryAmmoType();
+	if (IS_AMMOTYPE_VALID(myPrimaryAmmoType)) {
+		return m_pPlayer->m_rgAmmo[myPrimaryAmmoType];
+	}else{
+		return -1;  //what
+	}
+}
+int CBasePlayerWeapon::PlayerSecondaryAmmoCount() {
+	int mySecondaryAmmoType = getSecondaryAmmoType();
+	if (IS_AMMOTYPE_VALID(mySecondaryAmmoType)) {
+		return m_pPlayer->m_rgAmmo[mySecondaryAmmoType];
+	}
+	else {
+		return -1;  //what
+	}
+}
+
+
+// WARNING - these don't check to see whether removing ammo goes below 0 or
+// adding ammo goes over the max allowed in reserve!
+void CBasePlayerWeapon::ChangePlayerPrimaryAmmoCount(int changeBy) {
+	int myPrimaryAmmoType = getPrimaryAmmoType();
+	if (IS_AMMOTYPE_VALID(myPrimaryAmmoType)) {
+		m_pPlayer->m_rgAmmo[myPrimaryAmmoType] += changeBy;
+	}
+	else {
+		//what
+	}
+}
+void CBasePlayerWeapon::ChangePlayerSecondaryAmmoCount(int changeBy) {
+	int mySecondaryAmmoType = getSecondaryAmmoType();
+	if (IS_AMMOTYPE_VALID(mySecondaryAmmoType)) {
+		m_pPlayer->m_rgAmmo[mySecondaryAmmoType] += changeBy;
+	}
+	else {
+		//what
+	}
+}
+void CBasePlayerWeapon::SetPlayerPrimaryAmmoCount(int newVal) {
+	int myPrimaryAmmoType = getPrimaryAmmoType();
+	if (IS_AMMOTYPE_VALID(myPrimaryAmmoType)) {
+		m_pPlayer->m_rgAmmo[myPrimaryAmmoType] = newVal;
+	}
+	else {
+		//what
+	}
+}
+void CBasePlayerWeapon::SetPlayerSecondaryAmmoCount(int newVal) {
+	int mySecondaryAmmoType = getSecondaryAmmoType();
+	if (IS_AMMOTYPE_VALID(mySecondaryAmmoType)) {
+		m_pPlayer->m_rgAmmo[mySecondaryAmmoType] = newVal;
+	}
+	else {
+		//what
+	}
+}
+
 
 void CBasePlayerWeapon::Holster( int skiplocal /* = 0 */ )
 { 
@@ -1495,7 +1614,6 @@ void CBasePlayerWeapon::Holster( int skiplocal /* = 0 */ )
 
 	//Don't want to risk setting idle animations while holstering, set this to an impossible value. ?
 	m_pPlayer->m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 5;
-
 
 }
 
@@ -1573,21 +1691,27 @@ void CBasePlayerAmmo :: DefaultTouch( CBaseEntity *pOther )
 // the weapon clip comes along. 
 //=========================================================
 //MODDD - NOTE - this method occurs for picked-up weapons (instead of ammo) ONLY!
-int CBasePlayerWeapon::ExtractAmmo( CBasePlayerWeapon *pWeapon )
+// ALSO, little edit.  AddPrimary & AddSecondary ammo actually return BOOL's, int's in the end but meant to convey
+// just 0 or 1,  "no" or "yes".  Seems dishonest to call it 'int' here for no reason.
+// Also changed how 'iReturn' works a little.  Either AddPrimaryAmmo or AddSecondaryAmmo call returning TRUE should
+// let iReturn be TRUE.  Otherwise, calling AddPrimaryAmmo that returns TRUE and then AddSecondaryAmmo that returns FALSE
+// forgets that PrimaryAmmo said TRUE.  Which I assume isn't what was wanted here.
+// So iReturn should start as false and do '|=' on the Add calls.
+BOOL CBasePlayerWeapon::ExtractAmmo( CBasePlayerWeapon *pWeapon )
 {
-	int		iReturn;
+	BOOL iReturn = FALSE;
 
 	if ( pszAmmo1() != NULL )
 	{
 		// blindly call with m_iDefaultAmmo. It's either going to be a value or zero. If it is zero,
 		// we only get the ammo in the weapon's clip, which is what we want. 
-		iReturn = pWeapon->AddPrimaryAmmo( m_iDefaultAmmo, (char *)pszAmmo1(), iMaxClip(), iMaxAmmo1() );
+		iReturn |= pWeapon->AddPrimaryAmmo( m_iDefaultAmmo, (char *)pszAmmo1(), iMaxClip(), iMaxAmmo1() );
 		m_iDefaultAmmo = 0;
 	}
 
 	if ( pszAmmo2() != NULL )
 	{
-		iReturn = pWeapon->AddSecondaryAmmo( 0, (char *)pszAmmo2(), iMaxAmmo2() );
+		iReturn |= pWeapon->AddSecondaryAmmo( 0, (char *)pszAmmo2(), iMaxAmmo2() );
 	}
 	
 	//easyPrintLine("DOOP2 %d", iReturn);
@@ -1597,9 +1721,10 @@ int CBasePlayerWeapon::ExtractAmmo( CBasePlayerWeapon *pWeapon )
 //=========================================================
 // called by the new item's class with the existing item as parameter
 //=========================================================
-int CBasePlayerWeapon::ExtractClipAmmo( CBasePlayerWeapon *pWeapon )
+//MODDD - same BOOL edit as above.
+BOOL CBasePlayerWeapon::ExtractClipAmmo( CBasePlayerWeapon *pWeapon )
 {
-	int		iAmmo;
+	int iAmmo;
 
 	if ( m_iClip == WEAPON_NOCLIP )
 	{
@@ -1610,7 +1735,10 @@ int CBasePlayerWeapon::ExtractClipAmmo( CBasePlayerWeapon *pWeapon )
 		iAmmo = m_iClip;
 	}
 	
-	return pWeapon->m_pPlayer->GiveAmmo( iAmmo, (char *)pszAmmo1(), iMaxAmmo1() ); // , &m_iPrimaryAmmoType
+	//MODDD - GiveAmmo can return a number outside of 0 or 1 (FALSE/TRUE) though? odd.  Edit.
+	// And beware, -1 is also technically not equal to 0 like a simple 'not 0' check would yield.
+	//return pWeapon->m_pPlayer->GiveAmmo( iAmmo, (char *)pszAmmo1(), iMaxAmmo1() ); // , &m_iPrimaryAmmoType
+	return (pWeapon->m_pPlayer->GiveAmmo(iAmmo, (char*)pszAmmo1(), iMaxAmmo1() ) > 0);
 }
 	
 //=========================================================
@@ -1739,8 +1867,9 @@ void CWeaponBox::Touch( CBaseEntity *pOther )
 	{
 		if ( !FStringNull( m_rgiszAmmo[ i ] ) )
 		{
+			const char* thisAmmoString = (char*)STRING(m_rgiszAmmo[i]);
 			// there's some ammo of this type. 
-			pPlayer->GiveAmmo( m_rgAmmo[ i ], (char *)STRING( m_rgiszAmmo[ i ] ), MaxAmmoCarry( m_rgiszAmmo[ i ] ) );
+			pPlayer->GiveAmmo( m_rgAmmo[ i ], thisAmmoString, MaxAmmoCarry(thisAmmoString) );
 
 			//ALERT ( at_console, "Gave %d rounds of %s\n", m_rgAmmo[i], STRING(m_rgiszAmmo[i]) );
 
@@ -1848,13 +1977,15 @@ BOOL CWeaponBox::PackAmmo( int iszName, int iCount )
 		ALERT ( at_console, "NULL String in PackAmmo!\n" );
 		return FALSE;
 	}
+
+	const char* thisAmmoString = (char*)STRING(iszName);
 	
-	iMaxCarry = MaxAmmoCarry( iszName );
+	iMaxCarry = MaxAmmoCarry(thisAmmoString);
 
 	if ( iMaxCarry != -1 && iCount > 0 )
 	{
 		//ALERT ( at_console, "Packed %d rounds of %s\n", iCount, STRING(iszName) );
-		GiveAmmo( iCount, (char *)STRING( iszName ), iMaxCarry );
+		GiveAmmo( iCount, thisAmmoString, iMaxCarry );
 		return TRUE;
 	}
 
@@ -1864,7 +1995,7 @@ BOOL CWeaponBox::PackAmmo( int iszName, int iCount )
 //=========================================================
 // CWeaponBox - GiveAmmo
 //=========================================================
-int CWeaponBox::GiveAmmo( int iCount, char *szName, int iMax, int *pIndex/* = NULL*/ )
+int CWeaponBox::GiveAmmo( int iCount, const char* szName, int iMax, int *pIndex/* = NULL*/ )
 {
 	int i;
 

@@ -378,7 +378,7 @@ void CPython::PrimaryAttack()
 	PLAYBACK_EVENT_FULL( flags, m_pPlayer->edict(), m_usFirePython, 0.0, (float *)&g_vecZero, (float *)&g_vecZero, vecDir.x, vecDir.y, m_fInAttack, 0, 0, 0 );
 	m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + (31.0 / 30.0) + randomIdleAnimationDelay();
 
-	if (!m_iClip && m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] <= 0)
+	if (!m_iClip && PlayerPrimaryAmmoCount() <= 0)
 		// HEV suit - indicate out of ammo condition
 		m_pPlayer->SetSuitUpdate("!HEV_AMO0", FALSE, 0);
 
@@ -527,9 +527,11 @@ void CPython::ItemPostFrameThink(){
 	#endif
 
 
-
-
-	UpdateSpot();
+	// PARANOIA:  doesn't happen anyway it seems but did for the RPG rocket.
+	// If holstering definitely don't restore the lasersight.
+	if (!m_pPlayer->m_bHolstering) {
+		UpdateSpot();
+	}
 
 
 	CBasePlayerWeapon::ItemPostFrameThink();

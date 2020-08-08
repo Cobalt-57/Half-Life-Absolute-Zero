@@ -30,6 +30,8 @@
 #include "demo_api.h"
 #include "vgui_scorepanel.h"
 #include "util_version.h"
+#include "player.h"
+
 
 //MODDD - externs
 EASY_CVAR_EXTERN(hud_version)
@@ -40,7 +42,9 @@ EASY_CVAR_EXTERN(hud_drawsidebarmode)
 EASY_CVAR_EXTERN(cl_interp_entity)
 EASY_CVAR_EXTERN(hud_brokentrans)
 
-extern float globalPSEUDO_autoDeterminedFOV;
+
+//MODDD - because I am diabolical
+extern CBasePlayer localPlayer;
 
 
 //NEWSDK: these cvars are Absent from the new SDK.  We'll keep them though.
@@ -780,6 +784,36 @@ void command_mapname(void) {
 }
 
 
+//MODDD - TEST.  I'll suck up references to "lastinv" and tell the server "_lastinv" instead, clear separation.
+// Not doing the idea of clientside weapon switching though, even in hud/ammo.cpp and weapons_resource.cpp,
+// they don't try to look at the clientside copy of playey inventory, they send a command to the server and
+// do nothing else that frame:
+//     ServerCmd(gWR.gpActiveSel->szName);
+// ...In short, having a weapon-select order go straight to serverside, which then relays what it does to the client,
+// is nothing unusual.  Don't try to mimck other logic like the timer for unholstering weapons, which may be set by
+// some calls to switch weapons (like a number key + click), but others like 'lastinv' don't.
+// !!!
+// Not quite right, changes to slot from input numbers/click do make it over to weapon-related script in hl_weapons.cpp,
+// mainly ItemPostFrame and ItemPostFrameThink because they're called from checking for clicks clientside.
+// "lastinv" however, is still called only from serverside.  
+void command_lastinv(void) {
+	
+	CBasePlayerItem* thingy = localPlayer.m_pLastItem;
+	
+	//if (!IsMultiplayer()) {
+	//	localPlayer.SelectLastItem();
+	//}
+	//else
+	{
+		// just... <disregard> trying to get that to look right.  Holy <frick>.
+		// That works or it doesn't.  I'm out.
+		// Oh holy <crap> that's way better!  <severely disregard> this <blasted> <nematode-consuming> engine!!!    <oh dear me>
+		localPlayer.m_bHolstering = TRUE;
+		localPlayer.m_fCustomHolsterWaitTime = gpGlobals->time + 666;
+	}
+
+	gEngfuncs.pfnClientCmd("_lastinv");
+}
 
 
 
@@ -832,7 +866,11 @@ void CHud :: Init( void )
 	gEngfuncs.pfnAddCommand("currentmap", command_mapname);
 	gEngfuncs.pfnAddCommand("thismap", command_mapname);
 	gEngfuncs.pfnAddCommand("curmap", command_mapname);
+
+	gEngfuncs.pfnAddCommand("lastinv", command_lastinv);
+
 	
+
 
 	//weaponSelectSoundPlayOnMousewheel = gEngfuncs.pfnRegisterVariable("weaponSelectSoundPlayOnMousewheel", "1", FCVAR_CLIENTDLL | FCVAR_ARCHIVE);
 	//timedDamageDeathRemoveMode = CVAR_CREATE("timedDamageDeathRemoveMode", "1", FCVAR_CLIENTDLL | FCVAR_ARCHIVE);

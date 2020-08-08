@@ -244,6 +244,12 @@ float EV_HLDM_PlayTextureSound(int idx, pmtrace_t* ptr, float* vecSrc, float* ve
 
 
 
+
+	
+	cl_entity_t* bagina = gEngfuncs.GetEntityByIndex(entityIndex);
+	bagina->curstate.playerclass;
+	bagina->curstate.number;
+
 	if (!isEntityWorld) {
 		// can be a little more specific.
 
@@ -258,7 +264,7 @@ float EV_HLDM_PlayTextureSound(int idx, pmtrace_t* ptr, float* vecSrc, float* ve
 
 			//physent_t* pe = gEngfuncs.pEventAPI->EV_GetPhysent(tr.ent);
 			//cl_entity_t* cEntRef = gEngfuncs.GetEntityByIndex(PM_GetPhysEntInfo(tr.ent));
-
+			
 			
 			cl_entity_t* cEntRefAlt = gEngfuncs.GetEntityByIndex(entityIndex);
 
@@ -1661,7 +1667,7 @@ void EV_FireGauss(event_args_t* args)
 //	   CROWBAR START
 //======================
 
-int g_iSwing;
+//int g_iSwing = 0;
 
 //Only predict the miss sounds, hit sounds are still played 
 //server side, so players don't get the wrong idea.
@@ -1687,10 +1693,10 @@ void EV_Crowbar(event_args_t* args)
 
 	if (EV_IsLocal(idx))
 	{
-		//why this call??
-		gEngfuncs.pEventAPI->EV_WeaponAnimation(CROWBAR_ATTACK1MISS, 1);
+		// why this call??
+		//gEngfuncs.pEventAPI->EV_WeaponAnimation(CROWBAR_ATTACK1MISS, 1);
 
-
+		
 		//MODDD - handle by parameter now.
 		//switch( (g_iSwing++) % 3 )
 		switch (swingMissChoice)
