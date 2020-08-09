@@ -93,6 +93,8 @@ PROTOTYPE_MESSAGE(UpdPlyA);
 PROTOTYPE_MESSAGE(MUnpause);
 PROTOTYPE_MESSAGE(UpdTWI);
 PROTOTYPE_MESSAGE(UpdJT);
+PROTOTYPE_MESSAGE(CWFNSOE);
+
 PROTOTYPE_MESSAGE(ServerDLLI);
 PROTOTYPE_MESSAGE(YMG);
 PROTOTYPE_MESSAGE(YMG_S);
@@ -132,11 +134,13 @@ void Init_CustomMessage(void){
 	HOOK_MESSAGE(MUnpause);
 	HOOK_MESSAGE(UpdTWI);
 	HOOK_MESSAGE(UpdJT);
+	HOOK_MESSAGE(CWFNSOE);
+
 	HOOK_MESSAGE(ServerDLLI);
 	HOOK_MESSAGE(YMG);
 	HOOK_MESSAGE(YMG_S);
 	
-	
+
 }//END OF Init
 
 
@@ -620,6 +624,25 @@ IMPLEMENT_MESSAGE(UpdJT){
 
 	return 1;
 }
+
+
+// Short for, CurWeaponForceNoSelectOnEmpty
+IMPLEMENT_MESSAGE(CWFNSOE) {
+	BEGIN_READ(pbuf, iSize);
+
+	int iId = READ_CHAR();
+	WEAPON* pWeapon = gHUD.m_Ammo.gWR.GetWeapon(iId);
+	
+	if (!pWeapon)
+		return 0;
+
+	pWeapon->fForceNoSelectOnEmpty = TRUE;
+
+	return 1;
+}
+
+//gmsgCurWeaponForceNoSelectOnEmpty = REG_USER_MSG("CWFNSOE", 0);
+
 
 // Get the server's DLL info for easy reference.
 IMPLEMENT_MESSAGE(ServerDLLI) {

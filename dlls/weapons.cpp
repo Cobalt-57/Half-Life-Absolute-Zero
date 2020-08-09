@@ -53,6 +53,12 @@ EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(viewModelPrintouts)
 
 
 
+
+#define TRACER_FREQ 4			// Tracers fire every fourth bullet
+#define NOT_USED 255
+
+
+
 DLL_GLOBAL short g_sModelIndexLaser;// holds the index for the laser beam
 DLL_GLOBAL const char *g_pModelNameLaser = "sprites/laserbeam.spr";
 DLL_GLOBAL short g_sModelIndexLaserDot;// holds the index for the laser beam dot
@@ -62,8 +68,6 @@ DLL_GLOBAL short g_sModelIndexWExplosion;// holds the index for the underwater e
 DLL_GLOBAL short g_sModelIndexBloodDrop;// holds the sprite index for the initial blood
 DLL_GLOBAL short g_sModelIndexBloodSpray;// holds the sprite index for splattered blood
 
-#define TRACER_FREQ 4			// Tracers fire every fourth bullet
-#define NOT_USED 255
 
 extern int gmsgCurWeapon;
 MULTIDAMAGE gMultiDamage;
@@ -1026,10 +1030,12 @@ int CBasePlayerWeapon::UpdateClientData( CBasePlayer *pPlayer )
 
 	if ( bSend )
 	{
+		//MODDD - wait. Why were m_iId & m_iClip written as BYTE when MsgFunc_CurWeapon reads them as CHAR?
+		// Making them written as CHAR here.  just, what.
 		MESSAGE_BEGIN( MSG_ONE, gmsgCurWeapon, NULL, pPlayer->pev );
 			WRITE_BYTE( state );
-			WRITE_BYTE( m_iId );
-			WRITE_BYTE( m_iClip );
+			WRITE_CHAR( m_iId );
+			WRITE_CHAR( m_iClip );
 		MESSAGE_END();
 
 		m_iClientClip = m_iClip;

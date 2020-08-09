@@ -32,6 +32,8 @@
 #include "util_version.h"
 #include "player.h"
 
+#include "hl/hl_weapons.h"
+
 
 //MODDD - externs
 EASY_CVAR_EXTERN(hud_version)
@@ -795,10 +797,12 @@ void command_mapname(void) {
 // !!!
 // Not quite right, changes to slot from input numbers/click do make it over to weapon-related script in hl_weapons.cpp,
 // mainly ItemPostFrame and ItemPostFrameThink because they're called from checking for clicks clientside.
-// "lastinv" however, is still called only from serverside.  
+// "lastinv" however, is still called only from serverside. 
 void command_lastinv(void) {
 	
 	CBasePlayerItem* thingy = localPlayer.m_pLastItem;
+	
+
 	
 	//if (!IsMultiplayer()) {
 	//	localPlayer.SelectLastItem();
@@ -809,8 +813,16 @@ void command_lastinv(void) {
 		// That works or it doesn't.  I'm out.
 		// Oh holy <crap> that's way better!  <severely disregard> this <blasted> <nematode-consuming> engine!!!    <oh dear me>
 		localPlayer.m_bHolstering = TRUE;
-		localPlayer.m_fCustomHolsterWaitTime = gpGlobals->time + 666;
+		localPlayer.m_fCustomHolsterWaitTime = gpGlobals->time + 10;
 	}
+	
+
+	// can call for localPlayer.SelectLastItem() during the next input frame too but eh.
+	// Still strangely inferior to the above approach.  Just.  Weird.
+	// Still not amazing, shows its flaws on multiplayer.  The approach to replicate more clientside.
+	// Has more issues in multiplayer.
+	// Go figure!
+	//queuecall_lastinv = TRUE;
 
 	gEngfuncs.pfnClientCmd("_lastinv");
 }

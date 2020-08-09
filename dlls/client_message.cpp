@@ -100,6 +100,8 @@ int gmsgPrintClientCVar = 0;
 
 int gmsgTimeWeaponIdleUpdate = 0;
 int gmsgJustThrownUpdate = 0;
+int gmsgCurWeaponForceNoSelectOnEmpty = 0;
+
 
 int gmsgServerDLL_Info = 0;
 
@@ -219,10 +221,13 @@ void LinkUserMessages( void )
 
 	gmsgTimeWeaponIdleUpdate = REG_USER_MSG("UpdTWI", 2);
 	gmsgJustThrownUpdate = REG_USER_MSG("UpdJT", 1);
+	gmsgCurWeaponForceNoSelectOnEmpty = REG_USER_MSG("CWFNSOE", 1);
+
+
 
 	gmsgServerDLL_Info = REG_USER_MSG("ServerDLLI", -1);
 
-
+	
 
 	gmsgYMG = REG_USER_MSG("YMG", 0);
 	gmsgYMG_Stop = REG_USER_MSG("YMG_S", 0);

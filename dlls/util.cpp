@@ -2727,24 +2727,32 @@ void UTIL_RicochetTracer(const Vector& position, const Vector& vecDir) {
 	Vector vecTracerDir = vecDir;
 
 	//MODDD - tightened a bit, was from -0.3 to 0.3
-	vecTracerDir.x += RANDOM_FLOAT(-0.24, 0.24);
-	vecTracerDir.y += RANDOM_FLOAT(-0.24, 0.24);
-	vecTracerDir.z += RANDOM_FLOAT(-0.24, 0.24);
+	vecTracerDir.x += RANDOM_FLOAT(-0.18, 0.18);
+	vecTracerDir.y += RANDOM_FLOAT(-0.18, 0.18);
+	vecTracerDir.z += RANDOM_FLOAT(-0.18, 0.18);
 
-	vecTracerDir = vecTracerDir * 512;
+	// now normalize it after that fudging.
+	vecTracerDir = vecTracerDir.Normalize();
+	
+	//MODDD - RETAIL BUG FIXED, TE_TRACER expects the end point exactly as the 2nd arg,
+	// not direction or point relative to the start!
+	// And starting pushed back a little in the opposite direction to boost the odds of seeing 
+	// the ricochet effect if it happens while the player is close to the thing hit.
+	// Oddly might not work though.
+	Vector vecStart = position - (vecTracerDir * 80);
+	Vector vecEnd = position + vecTracerDir * 650;   // was 512
 
-	// vecDir ?
-	DebugLine_Setup(0, position, position + vecTracerDir, 255, 0, 255);
+	//DebugLine_Setup(0, vecStart, vecEnd, 255, 0, 255);
 
 	MESSAGE_BEGIN(MSG_PVS, SVC_TEMPENTITY, position);
 	WRITE_BYTE(TE_TRACER);
-	WRITE_COORD(position.x);
-	WRITE_COORD(position.y);
-	WRITE_COORD(position.z);
-
-	WRITE_COORD(vecTracerDir.x);
-	WRITE_COORD(vecTracerDir.y);
-	WRITE_COORD(vecTracerDir.z);
+	WRITE_COORD(vecStart.x);
+	WRITE_COORD(vecStart.y);
+	WRITE_COORD(vecStart.z);
+	
+	WRITE_COORD(vecEnd.x);
+	WRITE_COORD(vecEnd.y);
+	WRITE_COORD(vecEnd.z);
 	MESSAGE_END();
 }
 

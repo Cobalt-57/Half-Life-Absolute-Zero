@@ -27,8 +27,12 @@ class HistoryResource;
 
 
 #define MAX_WEAPON_NAME 128
-#define WEAPON_FLAGS_SELECTONEMPTY	1
-#define WEAPON_IS_ONTARGET 0x40
+
+//MODDD - and why is this flag redefined like this?  It's set as ITEM_FLAG_SELECTONEMPTY in specific
+// weapon's files (the satchel is the only one that uses this though).
+// weapons.h is even included client & serverside.  But not for weapons_resource.cpp to see?
+// Fine, ITEM_FLAG's moved to const.h then to be useable absolutely everywhere.
+//#define WEAPON_FLAGS_SELECTONEMPTY 1
 
 typedef int AMMO;
 extern HistoryResource gHR;
@@ -37,24 +41,27 @@ extern HistoryResource gHR;
 
 struct WEAPON
 {
-	char	szName[MAX_WEAPON_NAME];
-	int	iAmmoType;
-	int	iAmmo2Type;
-	int	iMax1;
-	int	iMax2;
-	int	iSlot;
-	int	iSlotPos;
-	int	iFlags;
-	int	iId;
-	int	iClip;
+	char szName[MAX_WEAPON_NAME];
+	int iAmmoType;
+	int iAmmo2Type;
+	int iMax1;
+	int iMax2;
+	int iSlot;
+	int iSlotPos;
+	int iFlags;
+	int iId;
+	int iClip;
 
-	int	iCount;		// # of itesm in plist
+	int iCount;  // # of itesm in plist
+	
+	//MODDD - new
+	BOOL fForceNoSelectOnEmpty;
 
 	SpriteHandle_t hActive;
 	wrect_t rcActive;
 	SpriteHandle_t hInactive;
 	wrect_t rcInactive;
-	SpriteHandle_t	hAmmo;
+	SpriteHandle_t hAmmo;
 	wrect_t rcAmmo;
 	SpriteHandle_t hAmmo2;
 	wrect_t rcAmmo2;

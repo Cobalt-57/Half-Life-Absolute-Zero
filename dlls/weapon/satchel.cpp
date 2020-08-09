@@ -27,6 +27,12 @@
 #include "gamerules.h"
 
 
+// "ChargeReady" values, get through accessor/setters named like that, are as follows:
+// 0: ready to toss a satchel, left or right-click
+// 1: satchel(s) deployed, left click to detonate ones deployed or right click to toss another (if there is ammo)
+// 2: recently detonated satchels, button-press animation played.  Little delay before Charge goes to 0 IF there is ammo.
+
+
 
 
 //MODDD - why wasn't this serverside-only anyway??
@@ -208,6 +214,9 @@ CSatchel::CSatchel() {
 	//Now reusing an existing sync'd var.
 	m_fInAttack = FALSE;
 
+	alreadySentOutOfAmmoNotice = FALSE;
+	sentOutOfAmmoHolster = FALSE;
+
 }
 
 
@@ -247,6 +256,11 @@ int CSatchel::AddDuplicate( CBasePlayerItem *pOriginal )
 int CSatchel::AddToPlayer( CBasePlayer *pPlayer )
 {
 	int bResult = CBasePlayerItem::AddToPlayer( pPlayer );
+
+	
+	// just in case it was?
+	alreadySentOutOfAmmoNotice = FALSE;
+	sentOutOfAmmoHolster = FALSE;
 
 	pPlayer->pev->weapons |= (1<<m_iId);
 	this->setchargeReady(0);// this satchel charge weapon now forgets that any satchels are deployed by it.
@@ -373,13 +387,54 @@ void CSatchel::Holster( int skiplocal /* = 0 */ )
 	m_fInAttack = FALSE;
 	//m_pPlayer->m_flNextAttack = UTIL_WeaponTimeBase() + 0.5;
 	
-	if (PlayerPrimaryAmmoCount() <= 0 && !getchargeReady() )
+
+
+	//MODDD - If the remote isn't out or recently detonated already, put it away then!
+	if (getchargeReady() != 1 && PlayerPrimaryAmmoCount() <= 0)
+	{
+		setchargeReady(0);
+		//RetireWeapon();
+		//m_fInAttack = TRUE;
+		//return;
+	}
+
+
+
+
+
+	if (PlayerPrimaryAmmoCount() <= 0 && !getchargeReady())
 	{
 		// Out of satchels, nothing deployed out there to be detonated.
-		m_pPlayer->pev->weapons &= ~(1<<WEAPON_SATCHEL);
-		SetThink( &CBasePlayerItem::DestroyItem );
+
+
+		/*
+
+#ifndef CLIENT_DLL
+		if (m_pPlayer->fHolsterAnimsEnabled) {
+			m_pPlayer->pev->weapons &= ~(1 << WEAPON_SATCHEL);
+			SetThink(&CBasePlayerItem::DestroyItem);
+			pev->nextthink = gpGlobals->time + 0.8;
+		}
+		else
+#endif
+		{
+			m_pPlayer->pev->weapons &= ~(1 << WEAPON_SATCHEL);
+			SetThink(&CBasePlayerItem::DestroyItem);
+			pev->nextthink = gpGlobals->time + 0.1;
+			return;
+		}
+		*/
+
+
+		m_pPlayer->pev->weapons &= ~(1 << WEAPON_SATCHEL);
+		SetThink(&CBasePlayerItem::DestroyItem);
 		pev->nextthink = gpGlobals->time + 0.1;
-	}else{
+		return;
+	}
+
+
+
+	{
 		int holsterAnimToSend;
 		if ( getchargeReady() )
 		{
@@ -421,7 +476,9 @@ void CSatchel::PrimaryAttack()
 				if (pSatchel->pev->owner == pPlayer)
 				{
 					pSatchel->Use( m_pPlayer, m_pPlayer, USE_ON, 0 );
-					setchargeReady(2);
+					// wait... what's the point of this call if below already sets it regardless of finding any
+					// satchels.  Nevermind.
+					//setchargeReady(2);
 				}
 			}
 		}
@@ -442,6 +499,19 @@ void CSatchel::PrimaryAttack()
 		}
 		break;
 	}
+
+
+	//MODDD - check.  See if this should be removed soon.
+	// That is, not with charges out already (chargeReady == 1) nor ammo in reserve.
+	// Note that a Throw() call with 0 ammo doesn't do anything.
+	if (getchargeReady() != 1 && PlayerPrimaryAmmoCount() <= 0)
+	{
+		setchargeReady(0);
+		// not yet!  Wait for animation to end
+		//RetireWeapon();
+		m_fInAttack = TRUE;
+	}
+
 }
 
 
@@ -450,14 +520,9 @@ void CSatchel::SecondaryAttack( void )
 	if ( getchargeReady() != 2 )
 	{
 		Throw( );
-
-		//if the cheat is not off:
-		if(! (m_pPlayer->cheat_minimumfiredelayMem == 0) ){
-			m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 1.0;
-			m_flNextSecondaryAttack = UTIL_WeaponTimeBase() + m_pPlayer->cheat_minimumfiredelaycustomMem + 0.03f;
-		}
-
+		// why nextattack delays here?  Throw handles that
 	}
+
 }
 
 
@@ -501,15 +566,41 @@ void CSatchel::Throw( void )
 		//MODDD
 		//NOTE: Primary fire isn't affected here since this may be the first charge (holding any longer would make it blow up
 		//in the player's face).
+		// also, times changed a bit.  Used to be 1.0 and 0.5.
 		if(m_pPlayer->cheat_minimumfiredelayMem == 0){
-			m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 1.0;
-			m_flNextSecondaryAttack = UTIL_WeaponTimeBase() + 0.5;
+			m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 1.2;
+			m_flNextSecondaryAttack = UTIL_WeaponTimeBase() + 0.8;
 		}else{
 			m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 1.0;
 			//they stick together sometimes, so they get an extra delay.
 			m_flNextSecondaryAttack = UTIL_WeaponTimeBase() + m_pPlayer->cheat_minimumfiredelaycustomMem + 0.03f;
 		}
+
+	}//END OF ammo check
+}
+
+
+
+void CSatchel::ItemPostFrameThink(void) {
+
+
+#ifndef CLIENT_DLL
+	if (m_pPlayer != NULL && (PlayerPrimaryAmmoCount() <= 0 && !getchargeReady()) ) {
+		if (!alreadySentOutOfAmmoNotice) {
+			// send it!  Let the weapon's place on the HUD's weapon-select know it can turn red, ordinarily it doesn't know to.
+			alreadySentOutOfAmmoNotice = TRUE;
+
+			MESSAGE_BEGIN(MSG_ONE, gmsgCurWeaponForceNoSelectOnEmpty, NULL, m_pPlayer->pev);
+				WRITE_CHAR(m_iId);
+				//WRITE_BYTE(m_iClip);
+			MESSAGE_END();
+
+		}
 	}
+#endif
+
+
+	return CBasePlayerWeapon::ItemPostFrameThink();
 }
 
 
@@ -546,19 +637,38 @@ void CSatchel::WeaponIdle( void )
 	switch( getchargeReady() )
 	{
 	case 0:
-		randomAnim = RANDOM_LONG(0, 1);
 
-		if(randomAnim == 0){
-			SendWeaponAnim( SATCHEL_IDLE1 );
-			m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 101.0/20.0 + randomIdleAnimationDelay();
-		}else{
-			SendWeaponAnim( SATCHEL_FIDGET1 );
-			m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 61.0/30.0 + randomIdleAnimationDelay();
+		if (PlayerPrimaryAmmoCount() > 0) {
+			randomAnim = RANDOM_LONG(0, 1);
+
+			if (randomAnim == 0) {
+				SendWeaponAnim(SATCHEL_IDLE1);
+				m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 101.0 / 20.0 + randomIdleAnimationDelay();
+			}
+			else {
+				SendWeaponAnim(SATCHEL_FIDGET1);
+				m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 61.0 / 30.0 + randomIdleAnimationDelay();
+			}
+
+
+			// use tripmine animations
+			strcpy(m_pPlayer->m_szAnimExtention, "trip");
 		}
+		else {
+			// no ammo?  uh-oh.
 
-		
-		// use tripmine animations
-		strcpy( m_pPlayer->m_szAnimExtention, "trip" );
+			//if (m_pPlayer->pev->viewmodel != iStringNull) {
+				// make it so then.
+
+//#ifndef CLIENT_DLL
+			if (!sentOutOfAmmoHolster) {
+				//this->Holster();
+				SendWeaponAnim(SATCHEL_RADIO_HOLSTER);
+			}
+//#endif
+			//}
+
+		}
 		break;
 	case 1:
 		randomAnim = RANDOM_LONG(0, 1);
@@ -578,6 +688,9 @@ void CSatchel::WeaponIdle( void )
 		strcpy( m_pPlayer->m_szAnimExtention, "hive" );
 		break;
 	case 2:
+
+		/*
+		// check here no longer necessary, done a bit earlier
 		if (PlayerPrimaryAmmoCount() <= 0)
 		{
 			setchargeReady(0);
@@ -585,6 +698,7 @@ void CSatchel::WeaponIdle( void )
 			m_fInAttack = TRUE;
 			return;
 		}
+		*/
 
 #ifndef CLIENT_DLL
 		m_pPlayer->pev->viewmodel = MAKE_STRING("models/v_satchel.mdl");
@@ -604,7 +718,7 @@ void CSatchel::WeaponIdle( void )
 		//MODDD - addition.
 		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 61.0/30.0 + randomIdleAnimationDelay();
 		break;
-	}
+	}// END OF switch ON getChargeReady()
 
 	//MODDD - no, specific to the anim that was chosen's time.
 	//m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + UTIL_SharedRandomFloat( m_pPlayer->random_seed, 10, 15 );// how long till we do this again.

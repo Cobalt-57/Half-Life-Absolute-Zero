@@ -1728,12 +1728,18 @@ GENERATE_KILLED_IMPLEMENTATION(CBasePlayer)
 		WRITE_BYTE( (int)m_iClientHealth );
 	MESSAGE_END();
 
+
+	//MODDD - no more holstering if in progress.
+	this->m_bHolstering = FALSE;
+	this->m_chargeReady &= ~128;
+
 	
 	// Tell Ammo Hud that the player is dead
+	//MODDD - last two things are read as CHARS, so why not write as CHARs then
 	MESSAGE_BEGIN( MSG_ONE, gmsgCurWeapon, NULL, pev );
 		WRITE_BYTE(0);
-		WRITE_BYTE(0XFF);
-		WRITE_BYTE(0xFF);
+		WRITE_CHAR(0XFF);
+		WRITE_CHAR(0xFF);
 	MESSAGE_END();
 	
 	//MODDD - this is more accurate?
@@ -8870,7 +8876,8 @@ void CBasePlayer :: UpdateClientData( void )
 		}
 	}
 
-
+	//MODDD NOTE -   It may seem like ammo updates happen every single frame,
+	// but only ammo pools changed since last send-off are updated.
 	SendAmmoUpdate();
 
 	// Update all the items

@@ -260,6 +260,8 @@ BOOL CBasePlayerWeapon::DefaultDeploy(char* szViewModel, char* szWeaponModel, in
 	// Until then, be sure no sequences meant for while the new model is up play.  That would be bad.
 
 	//gEngfuncs.CL_LoadModel(szViewModel, &m_pPlayer->pev->viewmodel);
+
+
 	// Why not use this then?
 	LoadVModel(szViewModel, m_pPlayer);
 
@@ -274,18 +276,30 @@ BOOL CBasePlayerWeapon::DefaultDeploy(char* szViewModel, char* szWeaponModel, in
 	// !!!!!!!!!!!!
 	// don't play the deploy anim until we're certain the model actually updated
 	
+	// WARNING!!! No good!  The current viewmodel is still reported
+	// to be the newer one, even before the LoadVModel call above.
+	// hhhhhhhhoooooooowwwwwww.
 	/*
 	blockUntilModelChange = TRUE;
+	// Not even this can be trusted?!
+	// gEngfuncs.GetViewModel()->curstate.modelindex;
 	oldModel = gEngfuncs.GetViewModel()->curstate.modelindex;
 	queuedBlockedModelAnim = iAnim;
 	*/
 
+
+	//!!!!!!
+	/////////////////
 	forgetBlockUntilModelChangeTime = gpGlobals->time + 0.3;
 
-	//resistTime = gpGlobals->time + 0.01;
+	resistTime = gpGlobals->time + 0.50;  //0.01 ?
 
-	seqPlayDelay = gpGlobals->time + 0.01;
-	seqPlay = iAnim;
+	// TEST.
+	g_currentanim = iAnim; 
+
+	//seqPlayDelay = gpGlobals->time + 0.02;
+	//seqPlay = iAnim;
+	//////////////////
 
 	//MODDD - TESTING! Disabled
 	//SendWeaponAnim(iAnim, skiplocal, body);
@@ -325,16 +339,17 @@ void CBasePlayerWeapon::DefaultHolster(int iAnim, int skiplocal /* = 0 */, int b
 	// try with and without + 1 maybe?
 	m_pPlayer->m_flNextAttack = UTIL_WeaponTimeBase() + holsterAnimTime + 1;
 
-	//Let this handle the time it takes to change anims instead, not transmitted to the client by default.
+	// Let this handle the time it takes to change anims instead, not transmitted to the client by default.
 	m_pPlayer->m_fCustomHolsterWaitTime = gpGlobals->time + holsterAnimTime;
 
-	//Don't want to risk setting idle animations while holstering, set this to an impossible value.
+	// Don't want to risk setting idle animations while holstering, set this to an impossible value.
 	m_pPlayer->m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + holsterAnimTime + 5;
 
 	m_chargeReady |= 128;
 
 
-	resistTime = gpGlobals->time + 0.03;
+	//!!!!!!
+	resistTime = gpGlobals->time + 0.5; //0.03?
 
 	SendWeaponAnim(iAnim);
 
@@ -601,6 +616,12 @@ void CBasePlayerWeapon::ItemPostFrameThink() {
 
 
 
+	if (queuecall_lastinv == TRUE) {
+		queuecall_lastinv = FALSE;
+		localPlayer.SelectLastItem();
+		return;
+	}
+
 
 	// HOLSTER - SWAPPO DISABLE.
 	// or both disable.
@@ -617,8 +638,9 @@ void CBasePlayerWeapon::ItemPostFrameThink() {
 	if (m_pPlayer->m_bHolstering && gpGlobals->time >= m_pPlayer->m_fCustomHolsterWaitTime) { //m_pPlayer->m_flNextAttack <= 0.0){
 		//done holstering? complete the switch to the picked weapon. Deploy that one.
 
+		//!!!!!!
 		//RESIST
-		resistTime = gpGlobals->time + 0.01;
+		//resistTime = gpGlobals->time + 0.01;
 
 		m_pPlayer->m_bHolstering = FALSE;
 		m_chargeReady &= ~128;
@@ -693,9 +715,6 @@ void CBasePlayerWeapon::ItemPostFrame()
 	
 
 
-
-
-
 	BOOL secondaryHeld = ((m_pPlayer->pev->button & IN_ATTACK2) && m_flNextSecondaryAttack <= 0.0);
 	BOOL primaryHeld = ((m_pPlayer->pev->button & IN_ATTACK) && m_flNextPrimaryAttack <= 0.0);
 
@@ -707,8 +726,6 @@ void CBasePlayerWeapon::ItemPostFrame()
 	//         ...some things in here don't require m_flNextPrimaryAttack to be 0 regardless? odd, but not much difference if any.
 	//         notice that ItemPostFrame even clientside just checks if m_pPlayer->flNextAttack is aboe 0.
 	//         So any "...m_flNextAttack <= 0.0" checks in here are very redundant. Oh well.
-
-
 
 
 

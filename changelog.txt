@@ -205,5 +205,12 @@ CVar 'cl_server_interpolation' renamed to 'cl_interp_entity'.
 New CVar:  'cl_interp_viewmodel'.  Simulates lack of interpolation to add choppiness to viewmodels when off.
 
 Ricochet effect on agrunt armor & hgrunt/barney helmets uses the 'normal' of whatever surface it hit instead of going roughly in the direction of where it came from unconditionally.
+It also... is used correctly.  Didn't receive the end-point correctly in retail, does now.  Engine often hides the effect up-close however.
 
 recent-weapon-switching ('q' key by default) no longer ignores cl_holster.  Possible slight client/server synch issue with cl_holster in general fixed too.
+
+Issue fixed with deploy animation replaying if killed/revived while a holster was in progress.
+
+General satchel fixes.  Holsters automatically instead of instantly disappearing after detonating the last charges (no more ammo), and removed from inventory the moment
+the weapon is unequipped without ammo or charges to detonate (instead of being pickable again if the player switches weapons shortly after detonating the last charges).
+

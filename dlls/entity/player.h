@@ -278,6 +278,12 @@ public:
 	CBasePlayerItem *m_pActiveItem;
 	CBasePlayerItem *m_pClientActiveItem;  // client version of the active item
 	CBasePlayerItem *m_pLastItem;
+
+#ifdef CLIENT_DLL
+	// And this version is for clientside only, ignores serverside issues for holstering to work better
+	CBasePlayerItem* m_pActiveItemCLIENTHISTORY;
+#endif
+
 	// shared ammo slots
 	int m_rgAmmo[MAX_AMMO_SLOTS];
 	int m_rgAmmoLast[MAX_AMMO_SLOTS];

@@ -36,5 +36,7 @@ extern float forgetBlockUntilModelChangeTime;
 extern float resistTime;
 extern float seqPlayDelay;
 extern int seqPlay;
+extern BOOL queuecall_lastinv;
+extern int g_currentanim;
 
 #endif //HL_WEAPONS_H

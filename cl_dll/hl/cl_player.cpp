@@ -34,7 +34,7 @@
 CBasePlayer::CBasePlayer(void) {
 
 	m_pLastItem = NULL;
-	m_pActiveItem = NULL;
+	m_pActiveItemCLIENTHISTORY = NULL;
 	m_pQueuedActiveItem = NULL;
 }
 
@@ -120,19 +120,19 @@ void CBasePlayer::SelectItem(const char* pstr)
 		return;
 
 
-	if (pItem == m_pActiveItem)
+	if (pItem == m_pActiveItemCLIENTHISTORY)
 		return;
 
 	/*
-	if (m_pActiveItem)
-		m_pActiveItem->Holster( );
+	if (m_pActiveItemCLIENTHISTORY)
+		m_pActiveItemCLIENTHISTORY->Holster( );
 
-	m_pLastItem = m_pActiveItem;
-	m_pActiveItem = pItem;
+	m_pLastItem = m_pActiveItemCLIENTHISTORY;
+	m_pActiveItemCLIENTHISTORY = pItem;
 
-	if (m_pActiveItem)
+	if (m_pActiveItemCLIENTHISTORY)
 	{
-		m_pActiveItem->Deploy( );
+		m_pActiveItemCLIENTHISTORY->Deploy( );
 	}
 	*/
 
@@ -142,13 +142,13 @@ void CBasePlayer::SelectItem(const char* pstr)
 
 void CBasePlayer::setActiveItem(CBasePlayerItem* argItem) {
 
-	m_pLastItem = m_pActiveItem;
-	m_pActiveItem = argItem;
+	m_pLastItem = m_pActiveItemCLIENTHISTORY;
+	m_pActiveItemCLIENTHISTORY = argItem;
 
-	if (m_pActiveItem)
+	if (m_pActiveItemCLIENTHISTORY)
 	{
-		m_pActiveItem->Deploy();
-		m_pActiveItem->UpdateItemInfo();
+		m_pActiveItemCLIENTHISTORY->Deploy();
+		m_pActiveItemCLIENTHISTORY->UpdateItemInfo();
 	}
 }
 
@@ -160,26 +160,26 @@ void CBasePlayer::setActiveItem_HolsterCheck(CBasePlayerItem* argItem) {
 	// ******SCRIPT THIS REPLACES, exact or similar-intent repeated a few places
 	/*
 	// FIX, this needs to queue them up and delay
-	if (m_pActiveItem)
-		m_pActiveItem->Holster( );
+	if (m_pActiveItemCLIENTHISTORY)
+		m_pActiveItemCLIENTHISTORY->Holster( );
 
-	m_pLastItem = m_pActiveItem;
-	m_pActiveItem = pItem;
+	m_pLastItem = m_pActiveItemCLIENTHISTORY;
+	m_pActiveItemCLIENTHISTORY = pItem;
 
-	if (m_pActiveItem)
+	if (m_pActiveItemCLIENTHISTORY)
 	{
-		m_pActiveItem->Deploy( );
-		m_pActiveItem->UpdateItemInfo( );
+		m_pActiveItemCLIENTHISTORY->Deploy( );
+		m_pActiveItemCLIENTHISTORY->UpdateItemInfo( );
 	}
 	*/
 	///////////////////////////////////////////////////////////////////////////
 
-	if (m_pActiveItem) {
+	if (m_pActiveItemCLIENTHISTORY) {
 		//easyForcePrintLine("OH yeah AM I HOLSTERIN ALREADY %d", m_bHolstering);
 
 		if (!m_bHolstering) {
 			// don't holster the currently equipped weapon if already in the middle of holstering.
-			m_pActiveItem->Holster();
+			m_pActiveItemCLIENTHISTORY->Holster();
 			m_bHolstering = TRUE;
 		}
 
@@ -219,20 +219,20 @@ void CBasePlayer::SelectLastItem(void)
 		return;
 	}
 
-	if (m_pActiveItem && !m_pActiveItem->CanHolster())
+	if (m_pActiveItemCLIENTHISTORY && !m_pActiveItemCLIENTHISTORY->CanHolster())
 	{
 		return;
 	}
 
 	//MODDD - disabled, replaced with the _HolsterCheck call below
 	/*
-	if (m_pActiveItem)
-		m_pActiveItem->Holster( );
+	if (m_pActiveItemCLIENTHISTORY)
+		m_pActiveItemCLIENTHISTORY->Holster( );
 
-	CBasePlayerItem *pTemp = m_pActiveItem;
-	m_pActiveItem = m_pLastItem;
+	CBasePlayerItem *pTemp = m_pActiveItemCLIENTHISTORY;
+	m_pActiveItemCLIENTHISTORY = m_pLastItem;
 	m_pLastItem = pTemp;
-	m_pActiveItem->Deploy( );
+	m_pActiveItemCLIENTHISTORY->Deploy( );
 	*/
 
 
@@ -255,8 +255,8 @@ void CBasePlayer::SelectLastItem(void)
 GENERATE_KILLED_IMPLEMENTATION(CBasePlayer)
 {
 	// Holster weapon immediately, to allow it to cleanup
-	if (m_pActiveItem)
-		m_pActiveItem->Holster();
+	if (m_pActiveItemCLIENTHISTORY)
+		m_pActiveItemCLIENTHISTORY->Holster();
 
 	g_irunninggausspred = false;
 
@@ -279,16 +279,16 @@ CBasePlayer::Spawn
 */
 void CBasePlayer::Spawn(void)
 {
-	if (m_pActiveItem)
-		m_pActiveItem->Deploy();
+	if (m_pActiveItemCLIENTHISTORY)
+		m_pActiveItemCLIENTHISTORY->Deploy();
 
 	g_irunninggausspred = false;
 }
 //MODDD - for the alt version, if ever called, do the same.  Doesn't involve that BOOL.
 void CBasePlayer::Spawn(BOOL revived)
 {
-	if (m_pActiveItem)
-		m_pActiveItem->Deploy();
+	if (m_pActiveItemCLIENTHISTORY)
+		m_pActiveItemCLIENTHISTORY->Deploy();
 
 	g_irunninggausspred = false;
 }

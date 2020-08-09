@@ -24,6 +24,8 @@
 #include "entity_state.h"
 #include "r_efx.h"
 
+#include "hl/hl_weapons.h"
+
 
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(viewModelPrintouts)
 
@@ -43,7 +45,10 @@ struct local_state_s *g_finalstate = NULL;
 
 // remember the current animation for the view model, in case we get out of sync with
 //  server.
-static int g_currentanim;
+//MODDD - why static though?  And careful relying on this, some viewmodel sets get past even HUD_SendWeaponAnim below.
+// In fact moved to hl_weapons.h / .cpp, why not.
+//static int g_currentanim;
+
 
 
 
@@ -87,9 +92,6 @@ void COM_Log( char *pszFile, char *fmt, ...)
 
 
 
-extern float resistTime;
-
-
 /*
 =====================
 HUD_SendWeaponAnim
@@ -115,6 +117,7 @@ void HUD_SendWeaponAnim( int iAnim, int body, int force )
 		iAnim &= ~64;
 	}
 
+	// MOVED ABOVE  ... or not, maybe don't
 	g_currentanim = iAnim;
 
 

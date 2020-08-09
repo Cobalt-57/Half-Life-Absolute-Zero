@@ -77,8 +77,28 @@ int WeaponsResource::HasAmmo(WEAPON* p)
 	if (p->iMax1 == -1)
 		return TRUE;
 
-	return (p->iAmmoType == -1) || p->iClip > 0 || CountAmmo(p->iAmmoType)
-		|| CountAmmo(p->iAmmo2Type) || (p->iFlags & WEAPON_FLAGS_SELECTONEMPTY);
+
+	BOOL hasAnyReserveAmmo = (CountAmmo(p->iAmmoType) > 0 || CountAmmo(p->iAmmo2Type) > 0);
+
+	if (hasAnyReserveAmmo) {
+		// new ammo since?  Flick this flag off.
+		p->fForceNoSelectOnEmpty = FALSE;
+	}
+
+	//MODDD - fForceNoSelectOnEmpty created so that, if the satchel is out of deployed charges
+	// and has no ammo, this can be detected and shown on the client as red.
+	// Otherwise the client can't tell and will always show it green (even though picking another
+	// weapon in that state would remove it)
+	return (
+		(p->iAmmoType == -1) ||
+		p->iClip > 0 ||
+		hasAnyReserveAmmo ||
+		(
+			(p->iFlags & ITEM_FLAG_SELECTONEMPTY) &&
+			!(p->fForceNoSelectOnEmpty)
+		)
+	);
+
 }
 
 

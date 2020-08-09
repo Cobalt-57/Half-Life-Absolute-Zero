@@ -321,6 +321,22 @@ typedef float vec_t;
 
 
 
+//MODDD - flags moved from weapons.h to be available clientside as well
+#define ITEM_FLAG_SELECTONEMPTY		1
+#define ITEM_FLAG_NOAUTORELOAD		2
+#define ITEM_FLAG_NOAUTOSWITCHEMPTY	4
+#define ITEM_FLAG_LIMITINWORLD		8
+#define ITEM_FLAG_EXHAUSTIBLE		16 // A player can totally exhaust their ammo supply and lose this weapon
+
+#define WEAPON_IS_ONTARGET 0x40
+
+
+
+
+
+
+
+
 
 // edict->flags
 #define FL_FLY					(1<<0)	// Changes the SV_Movestep() behavior to not need to be on ground

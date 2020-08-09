@@ -34,6 +34,11 @@ class CSatchel : public CBasePlayerWeapon
 {
 public:
 
+	BOOL alreadySentOutOfAmmoNotice;
+	BOOL sentOutOfAmmoHolster;
+
+
+
 #ifndef CLIENT_DLL
 	int	Save(CSave& save);
 	int	Restore(CRestore& restore);
@@ -60,6 +65,9 @@ public:
 	void Holster(int skiplocal = 0);
 	void WeaponIdle(void);
 	void Throw(void);
+
+	// there is also ItemPostFrame, it runs when m_flNextAttack is off.
+	void ItemPostFrameThink(void);
 
 	virtual BOOL UseDecrement(void)
 	{

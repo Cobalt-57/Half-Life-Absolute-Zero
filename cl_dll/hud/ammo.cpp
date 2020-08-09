@@ -32,6 +32,9 @@
 #include "ammohistory.h"
 #include "vgui_TeamFortressViewport.h"
 
+#include "hl/hl_weapons.h"
+#include "dlls/entity/player.h"
+
 
 // Note about all the 'filterSlot' calls.
 // These are for support of the new CVar 'hud_swapFirstTwoBuckets', which switches the 1st and
@@ -534,6 +537,7 @@ int CHudAmmo::MsgFunc_CurWeapon(const char *pszName, int iSize, void *pbuf )
 	int iClip = READ_CHAR();
 
 	// detect if we're also on target
+	//MODDD - NOTICE.  This should be what counts WEAPON_IS_ONTARGET (clearly over 1)
 	if ( iState > 1 )
 	{
 		fOnTarget = TRUE;
@@ -553,6 +557,12 @@ int CHudAmmo::MsgFunc_CurWeapon(const char *pszName, int iSize, void *pbuf )
 		m_pWeapon = NULL;
 		gWR.gpActiveSel = NULL;
 		updateCrosshair();
+
+
+		// HACKY.  See if this helps with some issues.
+		localPlayer.m_bHolstering = FALSE;
+		localPlayer.m_chargeReady &= ~128;
+
 		return 0;
 	}
 
@@ -576,10 +586,27 @@ int CHudAmmo::MsgFunc_CurWeapon(const char *pszName, int iSize, void *pbuf )
 	if ( !pWeapon )
 		return 0;
 
+
+	//MODDD - wait... what.
+	// If under -1 (-2, -3, etc.), interpret it as positive.    what.   w-why.  Why would any other negative be used.
+	/*
 	if ( iClip < -1 )
 		pWeapon->iClip = abs(iClip);
 	else
 		pWeapon->iClip = iClip;
+	*/
+
+	if (iClip < -1) {
+		int x = 45;    // NOT POSSIBLE???
+	}
+
+	// See if this casues any problems really.
+	pWeapon->iClip = iClip;
+
+
+
+
+
 
 	if ( iState == 0 )	// we're not the current weapon, so update no more
 		return 1;
@@ -608,19 +635,28 @@ int CHudAmmo::MsgFunc_WeaponList(const char *pszName, int iSize, void *pbuf )
 	Weapon.iAmmoType = (int)READ_CHAR();	
 	
 	Weapon.iMax1 = READ_BYTE();
-	if (Weapon.iMax1 == 255)
+
+	//MODDD - NOTE.  No edit, just mentioning.  255 is really -1 in disguise, as these BYTEs are unsigned,
+	// -1 is forced to the highest int possible for the type instead.
+	if (Weapon.iMax1 == 255) {
 		Weapon.iMax1 = -1;
+	}
 
 	Weapon.iAmmo2Type = READ_CHAR();
 	Weapon.iMax2 = READ_BYTE();
-	if (Weapon.iMax2 == 255)
+
+	if (Weapon.iMax2 == 255) {
 		Weapon.iMax2 = -1;
+	}
 
 	Weapon.iSlot = READ_CHAR();
 	Weapon.iSlotPos = READ_CHAR();
 	Weapon.iId = READ_CHAR();
 	Weapon.iFlags = READ_BYTE();
 	Weapon.iClip = 0;
+	
+	//MODDD - off until told otherwise
+	Weapon.fForceNoSelectOnEmpty = FALSE;
 
 	gWR.AddWeapon( &Weapon );
 
@@ -1798,8 +1834,9 @@ int CHudAmmo::DrawWList(float flTime)
 						}
 						else{
 							// Draw Weapon if Red if no ammo
-							if ( gWR.HasAmmo(p) )
+							if (gWR.HasAmmo(p)) {
 								ScaleColors(r, g, b, 192);
+							}
 							else
 							{
 								//UnpackRGB(r,g,b, RGB_REDISH);

@@ -148,6 +148,8 @@ float resistTime = -1;
 
 float seqPlayDelay = -1;
 int seqPlay = 0;
+BOOL queuecall_lastinv = FALSE;
+int g_currentanim = -1;
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -921,9 +923,9 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
 	// Point to current weapon object
 	if ( from->client.m_iId )
 	{
+		// OOoooooooo you motherfucker you
 		localPlayer.m_pActiveItem = g_pWpns[ from->client.m_iId ];
 	}
-
 
 	//easyForcePrintLine("AW snao D %.2f", localPlayer.m_flNextAttack);
 
@@ -1049,7 +1051,7 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
 				
 				//MODDD - See if the requested weapon (pnew) become the one equipped (active).
 				// That happens when not using holster (instantly applied instead of unholstering the current and queueing the one wanted)
-				if (localPlayer.m_pActiveItem == pNew) {
+				if (localPlayer.m_pActiveItemCLIENTHISTORY == pNew) {
 					// Update weapon id so we can predict things correctly.
 					to->client.m_iId = cmd->weaponselect;
 				}
@@ -1136,6 +1138,43 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
 	}
 
 
+
+
+
+	if (forgetBlockUntilModelChangeTime != -1 && gpGlobals->time >= forgetBlockUntilModelChangeTime) {
+		//aw no
+		forgetBlockUntilModelChangeTime = -1;
+		blockUntilModelChange = FALSE;
+	}
+
+
+	if (blockUntilModelChange) {
+		// has the model changed?
+		int theModel = gEngfuncs.GetViewModel()->curstate.modelindex;
+		if (oldModel != -1 && theModel != oldModel) {
+			// pass.
+			blockUntilModelChange = FALSE;
+			// !!! DANGEROUSLY HACKY reconsider
+			if (queuedBlockedModelAnim != -1) {
+				//to->client.weaponanim = queuedBlockedModelAnim;
+				HUD_SendWeaponAnim(queuedBlockedModelAnim, 2, 1);
+			}
+			queuedBlockedModelAnim = -1;
+			oldModel = -1;
+			goto skipperLoc2;
+		}
+	}
+
+
+
+	//MODDD - is this better?
+	// ...actually no, bad idea.  It causes client-only issued animations like ones
+	// given in ev_hldm to get overwritten by a repeat of the most previously issueed
+	// server animation (to->client.weaponanim).
+	//extern int g_currentanim;
+	//g_currentanim = gEngfuncs.GetViewModel()->curstate.sequence;
+
+
 	//MODDD - added check for "254".  That's a special code for, "the serverside anim request got cleared".
 	// This probably happened from becoming irrelevant and we don't want to make the client play an
 	// irrelevant animation, like putting on/taking off the glock silencer twice.
@@ -1173,28 +1212,6 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
 		*/
 		if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(viewModelPrintouts)==1)easyForcePrintLine("Client: Received anim from server. Existing anim: %d New: %d", HUD_GetWeaponAnim(), to->client.weaponanim);
 
-
-
-		if(forgetBlockUntilModelChangeTime != -1 && gpGlobals->time >= forgetBlockUntilModelChangeTime) {
-			//aw no
-			forgetBlockUntilModelChangeTime = -1;
-			blockUntilModelChange = FALSE;
-		}
-
-		if(blockUntilModelChange) {
-			// has the model changed?
-			int theModel = gEngfuncs.GetViewModel()->curstate.modelindex;
-			if (oldModel != -1 && theModel != oldModel) {
-				// pass.
-				blockUntilModelChange = FALSE;
-				// !!! DANGEROUSLY HACKY reconsider
-				if (queuedBlockedModelAnim != -1) {
-					to->client.weaponanim = queuedBlockedModelAnim;
-				}
-				queuedBlockedModelAnim = -1;
-				oldModel = -1;
-			}
-		}
 
 
 
@@ -1260,6 +1277,9 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
 		// careful, don't be so eager.
 		//blockUntilModelChange = FALSE;
 	}
+
+	skipperLoc2:
+
 
 
 	for ( i = 0; i < 32; i++ )
@@ -1518,6 +1538,10 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
 
 	}//END OF skin count check
 	
+
+
+	// And keep this in synch in case of changes the client didn't replicate.
+	localPlayer.m_pActiveItemCLIENTHISTORY = localPlayer.m_pActiveItem;
 
 }//END OF HUD_WeaponsPostThink
 

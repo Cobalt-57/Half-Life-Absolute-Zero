@@ -91,6 +91,9 @@ extern int gmsgPrintClient;
 
 extern int gmsgTimeWeaponIdleUpdate;
 extern int gmsgJustThrownUpdate;
+extern int gmsgCurWeaponForceNoSelectOnEmpty;
+
+
 
 extern int gmsgServerDLL_Info;
 
