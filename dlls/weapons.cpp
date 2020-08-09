@@ -762,14 +762,14 @@ void CBasePlayerWeapon::ItemPostFrame( void )
 	{
 		//MODD - cheat intervention.  This check is only done if the infinite ammo & clip cheats are off (secondary weaps don't use clips).
 		if(EASY_CVAR_GET(cheat_infiniteammo) == 0 && EASY_CVAR_GET(cheat_infiniteclip) == 0){
-			if ( pszAmmo2() && !m_pPlayer->m_rgAmmo[SecondaryAmmoIndex()] )
+			if ( pszAmmo2() && PlayerSecondaryAmmoCount() <= 0 )
 			{
 				m_fFireOnEmpty = TRUE;
 			}
 		}else{
-			if ( pszAmmo2() && m_pPlayer->m_rgAmmo[SecondaryAmmoIndex()] < 1 )
+			if ( pszAmmo2() && PlayerSecondaryAmmoCount() < 1 )
 			{
-				m_pPlayer->m_rgAmmo[SecondaryAmmoIndex()] = 1;
+				SetPlayerSecondaryAmmoCount(1);
 			}
 		}
 
@@ -792,15 +792,15 @@ void CBasePlayerWeapon::ItemPostFrame( void )
 	{
 		//MODDD - cheat intervention.
 		if(EASY_CVAR_GET(cheat_infiniteclip) == 0){
-			if ( (m_iClip == 0 && pszAmmo1()) || (iMaxClip() == -1 && PrimaryAmmoIndex()!=-1 && !m_pPlayer->m_rgAmmo[PrimaryAmmoIndex()] ) )
+			if ( (m_iClip == 0 && pszAmmo1()) || (iMaxClip() == -1 && PrimaryAmmoIndex()!=-1 && PlayerPrimaryAmmoCount() <= 0 ) )
 			{
 				m_fFireOnEmpty = TRUE;
 			}
 		}else{
 			/*
-			if ( (m_iClip == 0 && pszAmmo1()) || (iMaxClip() == -1 && !m_pPlayer->m_rgAmmo[PrimaryAmmoIndex()] ) )
+			if ( (m_iClip == 0 && pszAmmo1()) || (iMaxClip() == -1 && PlayerPrimaryAmmoCount() <= 0 ) )
 			{
-				m_pPlayer->m_rgAmmo[PrimaryAmmoIndex()] = 1;
+				SetPlayerPrimaryAmmoCount(1);
 			}*/
 			
 			//-1 means, this weap does not use the "clip" but goes straight to using primary ammo.
@@ -809,14 +809,18 @@ void CBasePlayerWeapon::ItemPostFrame( void )
 			}
 		}
 
+		// Doubt this is necessary anymore, but verify.  Improvements for ammo, boundary checking in lots of places.
+		/*
 		if(EASY_CVAR_GET(cheat_infiniteammo) == 1){
 			//MODDD - this was a nasty bug.
 			//(crash by going through the glass-door near the end of the laser room, where you get the 1st crowbar to beat it with & walk through WHILE cheat_infiniteammo is on, solved by this)
-			if(PrimaryAmmoIndex() != -1 && m_pPlayer->m_rgAmmo[PrimaryAmmoIndex()] < 1){
-				m_pPlayer->m_rgAmmo[PrimaryAmmoIndex()] = 1;
+			
+			if(PrimaryAmmoIndex() != -1 && PlayerPrimaryAmmoCount() < 1){
+				SetPlayerPrimaryAmmoCount(1);
 			}
 		}
-
+		*/
+		
 		m_pPlayer->TabulateAmmo();
 		if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(viewModelPrintouts)==1)easyForcePrintLine("Postframe PrimaryAttack!");
 		PrimaryAttack();
@@ -1306,7 +1310,7 @@ BOOL CBasePlayerWeapon :: IsUseable( void )
 {
 	if ( m_iClip <= 0 )
 	{
-		if ( m_pPlayer->m_rgAmmo[ PrimaryAmmoIndex() ] <= 0 && iMaxAmmo1() != -1 )			
+		if ( PlayerPrimaryAmmoCount() <= 0 && iMaxAmmo1() != -1 )			
 		{
 			// clip is empty (or nonexistant) and the player has no more ammo of this type. 
 			return FALSE;

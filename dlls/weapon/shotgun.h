@@ -32,6 +32,17 @@ enum shotgun_e {
 class CShotgun : public CBasePlayerWeapon
 {
 public:
+	int m_fInReload;
+	float m_flNextReload;
+	int m_iShell;
+
+private:
+	unsigned short m_usDoubleFire;
+	unsigned short m_usSingleFire;
+
+public:
+	BOOL queueReload;
+
 
 #ifndef CLIENT_DLL
 	int	Save(CSave& save);
@@ -45,6 +56,7 @@ public:
 	BOOL reloadBlockFireCheck(BOOL isPrimary);
 	void reloadFinishPump(void);
 	BOOL reloadSemi(void);
+	void reloadLogic(void);
 
 	void Spawn(void);
 	void Precache(void);
@@ -60,6 +72,7 @@ public:
 	//MODDD - new.
 	void ItemPreFrame(void);
 	void ItemPostFrame(void);
+	void ItemPostFrameThink(void);
 
 	void PrimaryAttack(void);
 	void SecondaryAttack(void);
@@ -71,9 +84,6 @@ public:
 	BOOL Deploy();
 	void Reload(void);
 	void WeaponIdle(void);
-	int m_fInReload;
-	float m_flNextReload;
-	int m_iShell;
 
 	virtual BOOL UseDecrement(void)
 	{
@@ -84,9 +94,6 @@ public:
 #endif
 	}
 
-private:
-	unsigned short m_usDoubleFire;
-	unsigned short m_usSingleFire;
 };
 
 

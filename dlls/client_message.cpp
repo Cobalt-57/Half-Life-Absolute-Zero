@@ -98,8 +98,8 @@ int gmsgUpdateClientCVar = 0;
 int gmsgResetClientCVar = 0;
 int gmsgPrintClientCVar = 0;
 
-int gmsgTimeWeaponIdleUpdate = 0;
-int gmsgJustThrownUpdate = 0;
+//int gmsgTimeWeaponIdleUpdate = 0;
+//int gmsgJustThrownUpdate = 0;
 int gmsgCurWeaponForceNoSelectOnEmpty = 0;
 
 
@@ -219,8 +219,10 @@ void LinkUserMessages( void )
 	gmsgResetClientCVar = REG_USER_MSG("RstClientC", 0);
 	gmsgPrintClientCVar = REG_USER_MSG("PntClientC", 2);
 
-	gmsgTimeWeaponIdleUpdate = REG_USER_MSG("UpdTWI", 2);
-	gmsgJustThrownUpdate = REG_USER_MSG("UpdJT", 1);
+	// Dummied!
+	//gmsgTimeWeaponIdleUpdate = REG_USER_MSG("UpdTWI", 2);
+	//gmsgJustThrownUpdate = REG_USER_MSG("UpdJT", 1);
+
 	gmsgCurWeaponForceNoSelectOnEmpty = REG_USER_MSG("CWFNSOE", 1);
 
 
@@ -270,6 +272,9 @@ void submitUnpauseRequest(edict_t* pev){
 }
 
 
+// REMOVED. not doing this anymore.  Use properly synched vars or bitflags.
+// And why was updating m_flTimeWeaponIdle even a thing?  Isn't that already synched?
+/*
 void sendTimeWeaponIdleUpdate(edict_t* pev, float argVal){
 
 	int tempcon = (int)(argVal * 1000);
@@ -288,6 +293,7 @@ void sendJustThrown(edict_t* pev, int argVal){
 		WRITE_BYTE( tempcon );
 	MESSAGE_END();
 }
+*/
 
 void message_ymg(edict_t* pev){
 	MESSAGE_BEGIN( MSG_ONE, gmsgYMG, NULL, pev );

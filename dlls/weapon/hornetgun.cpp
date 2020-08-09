@@ -85,7 +85,7 @@ int CHgun::AddToPlayer( CBasePlayer *pPlayer )
 		if ( IsMultiplayer() )
 		{
 			// in multiplayer, all hivehands come full. 
-			pPlayer->m_rgAmmo[ PrimaryAmmoIndex() ] = HORNET_MAX_CARRY;
+			SetPlayerPrimaryAmmoCount(HORNET_MAX_CARRY);
 		}
 #endif
 
@@ -122,7 +122,8 @@ int CHgun::GetItemInfo(ItemInfo *p)
 
 
 	p->iId = m_iId = WEAPON_HORNETGUN;
-	p->iFlags = ITEM_FLAG_NOAUTOSWITCHEMPTY | ITEM_FLAG_NOAUTORELOAD;
+	//MODDD - added ITEM_FLAG_SELECTONEMPTY.
+	p->iFlags = ITEM_FLAG_SELECTONEMPTY | ITEM_FLAG_NOAUTOSWITCHEMPTY | ITEM_FLAG_NOAUTORELOAD;
 	p->iWeight = HORNETGUN_WEIGHT;
 
 	return 1;
@@ -141,10 +142,16 @@ void CHgun::Holster( int skiplocal /* = 0 */ )
 	//SendWeaponAnim( HGUN_DOWN );
 
 	//!!!HACKHACK - can't select hornetgun if it's empty! no way to get ammo for it, either.
-	if ( !m_pPlayer->m_rgAmmo[ PrimaryAmmoIndex() ] )
+	//MODDD - wait wait wait wait wait.
+	// You guys made... a flag, just to let weapons be select-able even without ammo.
+	// What.  The.
+	// See GetItemInfo...
+	/*
+	if ( PlayerPrimaryAmmoCount() <= 0 )
 	{
-		m_pPlayer->m_rgAmmo[ PrimaryAmmoIndex() ] = 1;
+		SetPlayerPrimaryAmmoCount(1);
 	}
+	*/
 
 	//WARNING - this is retail's, not sure if what we use will have a different anim time.
 	DefaultHolster(HGUN_DOWN, skiplocal, 0, (19.0f/16.0f) );

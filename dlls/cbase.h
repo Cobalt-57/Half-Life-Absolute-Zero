@@ -513,6 +513,8 @@ public:
 	GENERATE_TRACEATTACK_PROTOTYPE_VIRTUAL
 	GENERATE_TAKEDAMAGE_PROTOTYPE_VIRTUAL
 
+	// NEW
+	virtual void Knockback(const int knockbackAmount, const Vector& knockbackDir);
 	// NEW, common TakeDamage utility method
 	virtual BOOL ChangeHealthFiltered(entvars_t* pevAttacker, float flDamage);
 

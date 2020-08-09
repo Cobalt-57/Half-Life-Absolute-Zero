@@ -112,8 +112,9 @@ extern void submitJukeboxOff(entvars_t* pev);
 extern void submitJukeboxOff(edict_t* pev);
 extern void submitUnpauseRequest(entvars_t* pev);
 extern void submitUnpauseRequest(edict_t* pev);
-extern void sendTimeWeaponIdleUpdate(edict_t* pev, float argVal);
-extern void sendJustThrown(edict_t* pev, int argVal);
+
+//extern void sendTimeWeaponIdleUpdate(edict_t* pev, float argVal);
+//extern void sendJustThrown(edict_t* pev, int argVal);
 
 extern void message_ymg(edict_t* pev);
 extern void message_ymg_stop(edict_t* pev);

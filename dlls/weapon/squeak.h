@@ -10,6 +10,7 @@
 #include "weapons.h"
 
 
+// world model version (thing that runs around, makes noise and bites)
 enum w_squeak_e {
 	WSQUEAK_IDLE1 = 0,
 	WSQUEAK_FIDGET,
@@ -17,6 +18,7 @@ enum w_squeak_e {
 	WSQUEAK_RUN,
 };
 
+// viewmodel version
 enum squeak_e {
 	SQUEAK_IDLE1 = 0,  //31, 16
 	SQUEAK_FIDGETFIT,  //71, 16
@@ -34,10 +36,15 @@ enum squeak_e {
 // ...........what.
 class CSqueak : public CBasePlayerWeapon
 {
+static int numberOfEyeSkins;
+
+private:
+	unsigned short m_usSnarkFire;
 public:
-	//MODDD
+	// Var dropped, no reason not to rely on an already-synched var instead.
+	//int m_fJustThrown;
+
 	CSqueak();
-	BOOL m_fInAttack;
 
 	const char* GetPickupWalkerName(void);
 	virtual void Spawn(void);
@@ -53,6 +60,7 @@ public:
 
 	void PrimaryAttack(void);
 	void SecondaryAttack(void);
+	void Throw(void);
 	BOOL Deploy(void);
 	void Holster(int skiplocal = 0);
 
@@ -60,11 +68,9 @@ public:
 
 	//MODDD - new
 	void ItemPostFrame(void);
-
+	void ItemPostFrameThink(void);
+	
 	void WeaponIdle(void);
-	int m_fJustThrown;
-
-	static int numberOfEyeSkins;
 
 
 	virtual BOOL UseDecrement(void)
@@ -76,8 +82,6 @@ public:
 #endif
 	}
 
-private:
-	unsigned short m_usSnarkFire;
 };
 
 

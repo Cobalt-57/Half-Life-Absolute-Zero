@@ -62,13 +62,33 @@ extern float global2PSEUDO_IGNOREcameraMode;
 
 
 
-// Turn on to not render anything.  Debug ahoy!
+//MODDD - Turn on to avoid rendering anything.  Debug ahoy!
+// Going off of reload sounds not called by script still playing, events (entity.cpp)
+// still happen without rendering.
 #define STUDIO_NO_RENDERING 0
 
 
 
 
+// until told otherwise.  Any drawing method should start with this set some way though,
+// relying on a previous run's setting is bad
+drawtype_e g_drawType = DRAWTYPE_ENTITY;
 
+// For recording the viewmodel.  Only needs to be updated once a frame, no idea how efficient
+// the 'GetViewModel()' engine call is.  Rendering needs to be fast.
+cl_entity_s* g_viewModelRef = NULL;
+
+
+
+// All cases of this:
+//    m_pCurrentEntity->curstate.renderfx & ISPLAYER
+// replaced with:
+//    g_drawType == DRAWTYPE_PLAYER
+
+// and this
+//    (m_pCurrentEntity->curstate.renderfx & ISVIEWMODEL) == ISVIEWMODEL
+// as well checks between m_pCurrentEntity and gEngfuncs.GetViewModel(),  replaced with
+//    g_drawType == DRAWTYPE_VIEWMODEL
 
 
 
@@ -83,10 +103,6 @@ Init
 
 ====================
 */
-
-
-
-
 
 // Pretty sure the max number of entities is around 1024, but the game crashes at trying to spawn over 900 anyway.
 // Or at least when an index reaches 900.
@@ -1198,7 +1214,7 @@ float CStudioModelRenderer::StudioEstimateFrame( mstudioseqdesc_t *pseqdesc )
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	if(EASY_CVAR_GET(cl_interp_viewmodel) == 0) {
-		if((m_pCurrentEntity->curstate.renderfx & ISVIEWMODEL) == ISVIEWMODEL) {
+		if(g_drawType == DRAWTYPE_VIEWMODEL) {
 
 			// example of modulo (however helpful it may be).  Or subtracting a remainder maybe?
 			//m_pPlayerInfo->gaitframe = m_pPlayerInfo->gaitframe - (int)(m_pPlayerInfo->gaitframe / pseqdesc->numframes) * pseqdesc->numframes;
@@ -1304,7 +1320,7 @@ float CStudioModelRenderer::StudioEstimateFrame( mstudioseqdesc_t *pseqdesc )
 
 
 	/*
-	if((m_pCurrentEntity->curstate.renderfx & ISNPC) && !( (m_pCurrentEntity->curstate.renderfx & ISVIEWMODEL) == ISVIEWMODEL)   ){
+	if((m_pCurrentEntity->curstate.renderfx & ISNPC) && !( g_drawType == DRAWTYPE_VIEWMODEL)   ){
 		//Check these?
 		easyForcePrintLine("YO WHATS GOOD %d %d %d %d %.2f %.2f %.2f %.2f",
 			m_pCurrentEntity->curstate.iuser1,
@@ -1338,7 +1354,7 @@ float CStudioModelRenderer::StudioEstimateFrame( mstudioseqdesc_t *pseqdesc )
 	//MODDD - viewmodel idle anims may be forced not to loop, to remain static until a new anim is called.
 	
 	
-	BOOL animateBackwards = ( (m_pCurrentEntity->curstate.renderfx & ISVIEWMODEL)==ISVIEWMODEL && (m_pCurrentEntity->curstate.iuser1 == 200)  );
+	BOOL animateBackwards = ( g_drawType == DRAWTYPE_VIEWMODEL && (m_pCurrentEntity->curstate.iuser1 == 200)  );
 	//animateBackwards = FALSE;
 	/*
 	BOOL animateBackwards = FALSE;
@@ -1348,7 +1364,7 @@ float CStudioModelRenderer::StudioEstimateFrame( mstudioseqdesc_t *pseqdesc )
 	}
 	*/
 
-	if( (m_pCurrentEntity->curstate.renderfx & ISVIEWMODEL)==ISVIEWMODEL ){
+	if( g_drawType == DRAWTYPE_VIEWMODEL ){
 		//easyPrintLine("it is view model? %d ::: %d", m_pCurrentEntity->curstate.renderfx, m_pCurrentEntity->curstate.renderfx & FORCE_NOLOOP);
 	}
 
@@ -1357,11 +1373,11 @@ float CStudioModelRenderer::StudioEstimateFrame( mstudioseqdesc_t *pseqdesc )
 		f = pseqdesc->numframes - f - 1;
 	}
 
-	if( (m_pCurrentEntity->curstate.renderfx & ISVIEWMODEL) ==ISVIEWMODEL){
+	if( g_drawType == DRAWTYPE_VIEWMODEL){
 		//easyPrintLineDummy("ILL CUT YER NUTS OFF s:%d f:%.2f mf:%d b?%d", m_pCurrentEntity->curstate.sequence, f, pseqdesc->numframes, animateBackwards);
 	}
 
-	if (pseqdesc->flags & STUDIO_LOOPING &&  !( (m_pCurrentEntity->curstate.renderfx & ISVIEWMODEL)==ISVIEWMODEL && (m_pCurrentEntity->curstate.renderfx & FORCE_NOLOOP)) )
+	if (pseqdesc->flags & STUDIO_LOOPING &&  !( g_drawType == DRAWTYPE_VIEWMODEL && (m_pCurrentEntity->curstate.renderfx & FORCE_NOLOOP)) )
 	//if (pseqdesc->flags & STUDIO_LOOPING) 
 	{
 		if (pseqdesc->numframes > 1)
@@ -1434,7 +1450,7 @@ CLIENTFR: 160 14.
 	//iAnim
 	//m_pCurrentEntity->curstate.
 
-	if((m_pCurrentEntity->curstate.renderfx & ISVIEWMODEL)==ISVIEWMODEL  ){
+	if(g_drawType == DRAWTYPE_VIEWMODEL  ){
 		//easyPrintLine("CLIENT FRAME: %.2f %.2f %.2f :: %d %.2f", f, m_pCurrentEntity->curstate.frame, currentFrame, pseqdesc->numframes, dfdt );
 		//easyPrintLine("CLIENTFR: %d %.2f %d", m_pCurrentEntity->curstate.renderfx, f, pseqdesc->numframes);
 
@@ -1507,7 +1523,7 @@ float CStudioModelRenderer::StudioEstimateFrameNOINTERP(mstudioseqdesc_t* pseqde
 
 
 	/*
-	if((m_pCurrentEntity->curstate.renderfx & ISNPC) && !( (m_pCurrentEntity->curstate.renderfx & ISVIEWMODEL) == ISVIEWMODEL)   ){
+	if((m_pCurrentEntity->curstate.renderfx & ISNPC) && !( g_drawType == DRAWTYPE_VIEWMODEL)   ){
 		//Check these?
 		easyForcePrintLine("YO WHATS GOOD %d %d %d %d %.2f %.2f %.2f %.2f",
 			m_pCurrentEntity->curstate.iuser1,
@@ -1540,7 +1556,7 @@ float CStudioModelRenderer::StudioEstimateFrameNOINTERP(mstudioseqdesc_t* pseqde
 	//MODDD - viewmodel idle anims may be forced not to loop, to remain static until a new anim is called.
 
 
-	BOOL animateBackwards = ((m_pCurrentEntity->curstate.renderfx & ISVIEWMODEL) == ISVIEWMODEL && (m_pCurrentEntity->curstate.iuser1 == 200));
+	BOOL animateBackwards = (g_drawType == DRAWTYPE_VIEWMODEL && (m_pCurrentEntity->curstate.iuser1 == 200));
 	//animateBackwards = FALSE;
 	/*
 	BOOL animateBackwards = FALSE;
@@ -1550,7 +1566,7 @@ float CStudioModelRenderer::StudioEstimateFrameNOINTERP(mstudioseqdesc_t* pseqde
 	}
 	*/
 
-	if ((m_pCurrentEntity->curstate.renderfx & ISVIEWMODEL) == ISVIEWMODEL) {
+	if (g_drawType == DRAWTYPE_VIEWMODEL) {
 		//easyPrintLine("it is view model? %d ::: %d", m_pCurrentEntity->curstate.renderfx, m_pCurrentEntity->curstate.renderfx & FORCE_NOLOOP);
 	}
 
@@ -1559,11 +1575,11 @@ float CStudioModelRenderer::StudioEstimateFrameNOINTERP(mstudioseqdesc_t* pseqde
 		f = pseqdesc->numframes - f - 1;
 	}
 
-	if ((m_pCurrentEntity->curstate.renderfx & ISVIEWMODEL) == ISVIEWMODEL) {
+	if (g_drawType == DRAWTYPE_VIEWMODEL) {
 		//easyPrintLineDummy("ILL CUT YER NUTS OFF s:%d f:%.2f mf:%d b?%d", m_pCurrentEntity->curstate.sequence, f, pseqdesc->numframes, animateBackwards);
 	}
 
-	if (pseqdesc->flags & STUDIO_LOOPING && !((m_pCurrentEntity->curstate.renderfx & ISVIEWMODEL) == ISVIEWMODEL && (m_pCurrentEntity->curstate.renderfx & FORCE_NOLOOP)))
+	if (pseqdesc->flags & STUDIO_LOOPING && !(g_drawType == DRAWTYPE_VIEWMODEL && (m_pCurrentEntity->curstate.renderfx & FORCE_NOLOOP)))
 		//if (pseqdesc->flags & STUDIO_LOOPING) 
 	{
 		if (pseqdesc->numframes > 1)
@@ -1635,7 +1651,7 @@ CLIENTFR: 160 14.
 //iAnim
 //m_pCurrentEntity->curstate.
 
-	if ((m_pCurrentEntity->curstate.renderfx & ISVIEWMODEL) == ISVIEWMODEL) {
+	if (g_drawType == DRAWTYPE_VIEWMODEL) {
 		//easyPrintLine("CLIENT FRAME: %.2f %.2f %.2f :: %d %.2f", f, m_pCurrentEntity->curstate.frame, currentFrame, pseqdesc->numframes, dfdt );
 		//easyPrintLine("CLIENTFR: %d %.2f %d", m_pCurrentEntity->curstate.renderfx, f, pseqdesc->numframes);
 
@@ -1704,7 +1720,7 @@ void CStudioModelRenderer::StudioSetupBones ( byte isReflection )
 	static vec4_t		q4[MAXSTUDIOBONES];
 
 
-	if( (m_pCurrentEntity->curstate.renderfx & ISVIEWMODEL) == ISVIEWMODEL){
+	if( g_drawType == DRAWTYPE_VIEWMODEL){
 		easyPrintLineDummy("O its a viewmodel??? id:%d seq:%d", m_pCurrentEntity->index, m_pCurrentEntity->curstate.sequence  );
 	}
 
@@ -1716,7 +1732,7 @@ void CStudioModelRenderer::StudioSetupBones ( byte isReflection )
 	{
 		//easyPrintLineDummy("!! Sequence too high! 1");
 
-		if( (m_pCurrentEntity->curstate.renderfx & ISVIEWMODEL) == ISVIEWMODEL){
+		if( g_drawType == DRAWTYPE_VIEWMODEL){
 			if(m_pCurrentEntity->curstate.sequence & 128){
 				m_pCurrentEntity->curstate.sequence &= ~128;  //just take away the 128, 8th bit. 2^7th, starting from 2^0th (1) as the first bit.
 				//m_pCurrentEntity->player |= 2;  //This is hacky as fuck.
@@ -1743,7 +1759,7 @@ void CStudioModelRenderer::StudioSetupBones ( byte isReflection )
 
 
 
-	if( (m_pCurrentEntity->curstate.renderfx & ISVIEWMODEL) == ISVIEWMODEL){
+	if( g_drawType == DRAWTYPE_VIEWMODEL){
 		easyPrintLineDummy("AM I BACKWARDS id:%d b:%d", m_pCurrentEntity->index, m_pCurrentEntity->curstate.iuser1  );
 	}
 
@@ -1924,7 +1940,7 @@ void CStudioModelRenderer::StudioSetupBones ( byte isReflection )
 
 				ConcatTransforms ((*m_protationmatrix), bonematrix, (*m_pbonetransform)[i]);
 
-				//if(EASY_CVAR_GET(chromeEffect) != 1 || !(m_pCurrentEntity->curstate.renderfx & ISVIEWMODEL) ){
+				//if(EASY_CVAR_GET(chromeEffect) != 1 || !g_drawType == DRAWTYPE_VIEWMODEL ){
 				if(EASY_CVAR_GET(chromeEffect) != 1){
 					// MatrixCopy should be faster...
 					//ConcatTransforms ((*m_protationmatrix), bonematrix, (*m_plighttransform)[i]);
@@ -1985,12 +2001,12 @@ void CStudioModelRenderer::StudioSetupBones ( byte isReflection )
 				}
 
 				/*
-				if(m_pCurrentEntity->curstate.renderfx & ISVIEWMODEL){
+				if( g_drawType == DRAWTYPE_VIEWMODEL ){
 					easyPrintLine("viewmodel TIME!!!!");
 				}
 				*/
 
-				//if(EASY_CVAR_GET(chromeEffect) != 1 || !(m_pCurrentEntity->curstate.renderfx & ISVIEWMODEL) ){
+				//if(EASY_CVAR_GET(chromeEffect) != 1 || !( g_drawType == DRAWTYPE_VIEWMODEL ) ){
 				if(EASY_CVAR_GET(chromeEffect) != 1){
 
 					/*
@@ -2133,7 +2149,7 @@ void CStudioModelRenderer::StudioMergeBones ( model_t *m_pSubModel, byte isRefle
 
 	if (m_pCurrentEntity->curstate.sequence >=  m_pStudioHeader->numseq) 
 	{
-		if( (m_pCurrentEntity->curstate.renderfx & ISVIEWMODEL) == ISVIEWMODEL){
+		if( g_drawType == DRAWTYPE_VIEWMODEL){
 			//easyPrintLineDummy("!! Sequence too high! 2");
 			if(m_pCurrentEntity->curstate.sequence & 128){
 				m_pCurrentEntity->curstate.sequence &= ~128;  //that is all? remove this bit(ch).
@@ -2342,7 +2358,6 @@ int CStudioModelRenderer::StudioDrawModel( int flags )
 #endif
 
 
-
 	//easyPrintLine("FLAGZ %d", (flags & 128));
 	alight_t lighting;
 	vec3_t dir;
@@ -2350,17 +2365,24 @@ int CStudioModelRenderer::StudioDrawModel( int flags )
 	IEngineStudio.GetTimes( &m_nFrameCount, &m_clTime, &m_clOldTime );
 
 	//MODDDMIRROR - makes the player show up in first person (for mirror reflections), wtf?
+	// ALSO, looks like this is how to judge the start of a new frame.  Niiiiice that this is what we have to
+	// resort to.    Thanks though Spirit of HL.
 	if (m_nCachedFrameCount != m_nFrameCount)
 	{
 		b_PlayerMarkerParsed = false;
 		m_nCachedFrameCount = m_nFrameCount;
-	}
+
+		//MODDD - while we're at it, refresh g_viewModelRef.  Just safety, and no reason to do after the
+		// start of a frame
+		g_viewModelRef = gEngfuncs.GetViewModel();
+
+	}//END OF frameCount checks
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	//if (!strcmp(m_pCurrentEntity->model->name,"models/null.mdl"))
 	//if(  (m_pCurrentEntity->curstate.renderfx & RENDERFX_PRIMARY_BITS) == kRenderFxHologram)
 
-	//(m_pCurrentEntity->curstate.renderfx & ISPLAYER)   no, to determine whether to make the first-person reflection, we don't need the actual player on hand.
+	//(g_drawType == DRAWTYPE_PLAYER)   no, to determine whether to make the first-person reflection, we don't need the actual player on hand.
 	
 
 	//easyPrintLineDummy("OH no MY friend %.2f %.2f", global2PSEUDO_IGNOREcameraMode, EASY_CVAR_GET(mirrorsDoNotReflectPlayer));
@@ -2382,7 +2404,13 @@ int CStudioModelRenderer::StudioDrawModel( int flags )
 
 			m_pCurrentEntity = player;
 
+			// Ordinarily it would be a good idea to save the g_drawType for restoring after this call,
+			// but it hasn't been set yet for the real current "m_pCurrentEntity".  So no need.
+			// This sets g_drawType to DRAWTYPE_PLAYER for any other calls it makes on its own.
 			StudioDrawPlayer( flags, shinyplr );
+
+			//MODDD - why keep that 2048 bit after the draw call???
+			flags &= ~2048;
 
 			b_PlayerMarkerParsed = true;
 			m_fDoInterp = save_interp;
@@ -2395,8 +2423,21 @@ int CStudioModelRenderer::StudioDrawModel( int flags )
 	
 	m_pCurrentEntity = IEngineStudio.GetCurrentEntity();
 	
+	//MODDD - so is it any ordinary entity or the viewmodel?
+	// The viewmodel is a special case that needs some things handled differnetly, as the server
+	// has no direct interaction with it and so customization, even playing anims backwards, has
+	// to be done a lot differently.
+	if (g_viewModelRef != m_pCurrentEntity) {
+		g_drawType = DRAWTYPE_ENTITY;
+	}
+	else {
+		g_drawType = DRAWTYPE_VIEWMODEL;
+	}
 
-	if( (m_pCurrentEntity->curstate.renderfx & ISVIEWMODEL) == ISVIEWMODEL){
+
+
+
+	if( g_drawType == DRAWTYPE_VIEWMODEL){
 		easyPrintLineDummy("FLAG1. s:%d b:%d", m_pCurrentEntity->curstate.sequence, m_pCurrentEntity->curstate.iuser1 );
 	}
 
@@ -2407,7 +2448,7 @@ int CStudioModelRenderer::StudioDrawModel( int flags )
 	}else{
 		// off, only apply to server-sent entities. this is too bizarre (frozen on first frame) for viewmodel stuff.
 		// Leaving that to its own CVar 'cl_interp_viewmodel' now.
-		if( (m_pCurrentEntity->curstate.renderfx & ISVIEWMODEL) == ISVIEWMODEL){
+		if( g_drawType == DRAWTYPE_VIEWMODEL){
 			//usual setting
 			m_fDoInterp = 1;
 		}else{
@@ -2431,7 +2472,7 @@ int CStudioModelRenderer::StudioDrawModel( int flags )
 	}
 
 	//MODDD - if this is the model, the user turned it off for some reason. Don't draw.
-	if(EASY_CVAR_GET(drawViewModel) <= 0 && (m_pCurrentEntity->curstate.renderfx & ISVIEWMODEL)==ISVIEWMODEL ){
+	if(EASY_CVAR_GET(drawViewModel) <= 0 && g_drawType == DRAWTYPE_VIEWMODEL ){
 		return 0;
 	}
 
@@ -2440,7 +2481,7 @@ int CStudioModelRenderer::StudioDrawModel( int flags )
 	IEngineStudio.GetAliasScale( &m_fSoftwareXScale, &m_fSoftwareYScale );
 
 
-	if( (m_pCurrentEntity->curstate.renderfx & ISVIEWMODEL) == ISVIEWMODEL){
+	if( g_drawType == DRAWTYPE_VIEWMODEL){
 		easyPrintLineDummy("FLAG2. s:%d b:%d", m_pCurrentEntity->curstate.sequence, m_pCurrentEntity->curstate.iuser1 );
 	}
 	
@@ -2482,12 +2523,12 @@ int CStudioModelRenderer::StudioDrawModel( int flags )
 
 	//MODDD - old location of 1st-person drawing logic.
 
-	if( (m_pCurrentEntity->curstate.renderfx & ISVIEWMODEL) == ISVIEWMODEL){
+	if( g_drawType == DRAWTYPE_VIEWMODEL){
 		easyPrintLineDummy("FLAG3. s:%d b:%d", m_pCurrentEntity->curstate.sequence, m_pCurrentEntity->curstate.iuser1 );
 	}
 	
 	//MODDD - only check against the primary bits.
-	if ((m_pCurrentEntity->curstate.renderfx & RENDERFX_PRIMARY_BITS)  == kRenderFxDeadPlayer)
+	if ((m_pCurrentEntity->curstate.renderfx & RENDERFX_PRIMARY_BITS) == kRenderFxDeadPlayer)
 	{
 		entity_state_t deadplayer;
 
@@ -2516,6 +2557,9 @@ int CStudioModelRenderer::StudioDrawModel( int flags )
 		
 		// draw as though it were a player
 		result = StudioDrawPlayer( flags, &deadplayer );
+
+		// WARNING!!! That call overwrites g_drawType.
+		// However this method ends soon after, so not really concerned.  Keep in mind for future reference if much chances though.
 		
 		m_fDoInterp = save_interp;
 		return result;
@@ -2525,7 +2569,7 @@ int CStudioModelRenderer::StudioDrawModel( int flags )
 	//m_pCurrentEntity->curstate.body = 1;
 
 	
-	if( (m_pCurrentEntity->curstate.renderfx & ISVIEWMODEL) == ISVIEWMODEL){
+	if( g_drawType == DRAWTYPE_VIEWMODEL){
 		easyPrintLineDummy("FLAG4. s:%d b:%d", m_pCurrentEntity->curstate.sequence, m_pCurrentEntity->curstate.iuser1 );
 	}
 
@@ -2629,7 +2673,7 @@ int CStudioModelRenderer::StudioDrawModel( int flags )
 
 	StudioSetUpTransform( 0 );
 	
-	if( (m_pCurrentEntity->curstate.renderfx & ISVIEWMODEL) == ISVIEWMODEL){
+	if( g_drawType == DRAWTYPE_VIEWMODEL){
 		easyPrintLineDummy("FLAG5. s:%d b:%d", m_pCurrentEntity->curstate.sequence, m_pCurrentEntity->curstate.iuser1 );
 	}
 
@@ -2654,7 +2698,7 @@ int CStudioModelRenderer::StudioDrawModel( int flags )
 		//
 		/////////////////////////////////////////////////////////////////////////////////////////////
 
-		if( (m_pCurrentEntity->curstate.renderfx & ISVIEWMODEL) == ISVIEWMODEL){
+		if( g_drawType == DRAWTYPE_VIEWMODEL){
 			easyPrintLineDummy("FLAG5a. s:%d b:%d", m_pCurrentEntity->curstate.sequence, m_pCurrentEntity->curstate.iuser1 );
 		}
 
@@ -2664,7 +2708,7 @@ int CStudioModelRenderer::StudioDrawModel( int flags )
 		int oldSeq = m_pCurrentEntity->curstate.sequence;
 
 		//play it safe.
-		if( (m_pCurrentEntity->curstate.renderfx & ISVIEWMODEL) == ISVIEWMODEL){
+		if( g_drawType == DRAWTYPE_VIEWMODEL){
 			m_pCurrentEntity->curstate.sequence &= ~(128 | 64);
 		}
 
@@ -2672,12 +2716,12 @@ int CStudioModelRenderer::StudioDrawModel( int flags )
 		{
 			vec3_t delta;
 			float dist;
-			if( (m_pCurrentEntity->curstate.renderfx & ISVIEWMODEL) == ISVIEWMODEL){
+			if( g_drawType == DRAWTYPE_VIEWMODEL){
 				easyPrintLineDummy("FLAG5b. s:%d b:%d", m_pCurrentEntity->curstate.sequence, m_pCurrentEntity->curstate.iuser1 );
 			}
 			VectorSubtract_f(gHUD.Mirrors[mirror_id].origin,m_pCurrentEntity->origin,delta);
 			dist = Length(delta);
-			if( (m_pCurrentEntity->curstate.renderfx & ISVIEWMODEL) == ISVIEWMODEL){
+			if( g_drawType == DRAWTYPE_VIEWMODEL){
 				easyPrintLineDummy("FLAG5c. s:%d b:%d", m_pCurrentEntity->curstate.sequence, m_pCurrentEntity->curstate.iuser1 );
 			}
 			
@@ -2688,7 +2732,7 @@ int CStudioModelRenderer::StudioDrawModel( int flags )
 		
 		(*m_pModelsDrawn)++;
 		(*m_pStudioModelCount)++; // render data cache cookie
-		if( (m_pCurrentEntity->curstate.renderfx & ISVIEWMODEL) == ISVIEWMODEL){
+		if( g_drawType == DRAWTYPE_VIEWMODEL){
 			easyPrintLineDummy("FLAG5d. s:%d b:%d", m_pCurrentEntity->curstate.sequence, m_pCurrentEntity->curstate.iuser1 );
 		}
 
@@ -2701,7 +2745,7 @@ int CStudioModelRenderer::StudioDrawModel( int flags )
 
 	}//END OF STUDIO_RENDER check
 	
-	if( (m_pCurrentEntity->curstate.renderfx & ISVIEWMODEL) == ISVIEWMODEL){
+	if( g_drawType == DRAWTYPE_VIEWMODEL){
 		easyPrintLineDummy("FLAG6. s:%d b:%d", m_pCurrentEntity->curstate.sequence, m_pCurrentEntity->curstate.iuser1 );
 	}
 
@@ -2716,7 +2760,7 @@ int CStudioModelRenderer::StudioDrawModel( int flags )
 	}
 	StudioSaveBones( );
 	
-	if( (m_pCurrentEntity->curstate.renderfx & ISVIEWMODEL) == ISVIEWMODEL){
+	if( g_drawType == DRAWTYPE_VIEWMODEL){
 		easyPrintLineDummy("FLAG7. s:%d b:%d", m_pCurrentEntity->curstate.sequence, m_pCurrentEntity->curstate.iuser1 );
 	}
 
@@ -2755,7 +2799,7 @@ int CStudioModelRenderer::StudioDrawModel( int flags )
 		}
 	}
 
-	if( (m_pCurrentEntity->curstate.renderfx & ISVIEWMODEL) == ISVIEWMODEL){
+	if( g_drawType == DRAWTYPE_VIEWMODEL){
 		easyPrintLineDummy("FLAG8. s:%d b:%d", m_pCurrentEntity->curstate.sequence, m_pCurrentEntity->curstate.iuser1 );
 	}
 	
@@ -2786,7 +2830,7 @@ int CStudioModelRenderer::StudioDrawModel( int flags )
 		gEngfuncs.pTriAPI->CullFace(TRI_NONE);
 	}
 	
-	if( (m_pCurrentEntity->curstate.renderfx & ISVIEWMODEL) == ISVIEWMODEL){
+	if( g_drawType == DRAWTYPE_VIEWMODEL){
 		easyPrintLineDummy("FLAG9. s:%d b:%d", m_pCurrentEntity->curstate.sequence, m_pCurrentEntity->curstate.iuser1 );
 	}
 
@@ -2806,20 +2850,22 @@ int CStudioModelRenderer::StudioDrawModel( int flags )
 	//if ((gHUD.numMirrors>0 && !(m_pCurrentEntity->model->name[7]=='v' && m_pCurrentEntity->model->name[8]=='_')))
 	
 	int canReflect = TRUE;
-	if(EASY_CVAR_GET(mirrorsReflectOnlyNPCs) == 1 && !(m_pCurrentEntity->curstate.renderfx & ISNPC) && !(m_pCurrentEntity->curstate.renderfx & ISPLAYER)  ){
+	if(EASY_CVAR_GET(mirrorsReflectOnlyNPCs) == 1 && !(m_pCurrentEntity->curstate.renderfx & ISNPC) && !(g_drawType == DRAWTYPE_PLAYER)  ){
 		//if this CVar is on and this entity is not an npc, skip drawing to mirror.
 		canReflect = FALSE;
 	}
 	
-	if( (m_pCurrentEntity->curstate.renderfx & ISVIEWMODEL) == ISVIEWMODEL){
+	if( g_drawType == DRAWTYPE_VIEWMODEL){
 		easyPrintLineDummy("FLAG10. s:%d b:%d", m_pCurrentEntity->curstate.sequence, m_pCurrentEntity->curstate.iuser1 );
 	}
 	
-	if(m_pCurrentEntity->curstate.renderfx & ISPLAYER){
+	if(g_drawType == DRAWTYPE_PLAYER){
 		//canReflect = FALSE;
 	}
 
-	if ((canReflect && gHUD.numMirrors>0 && (gEngfuncs.GetViewModel() != m_pCurrentEntity)))
+	// that ok?
+	//if ((canReflect && gHUD.numMirrors>0 && (gEngfuncs.GetViewModel() != m_pCurrentEntity)))
+	if ((canReflect && gHUD.numMirrors>0 && (g_drawType != DRAWTYPE_VIEWMODEL)))
 	{
 		for (int ic = 0; ic < gHUD.numMirrors; ic++)
 		{
@@ -2863,7 +2909,7 @@ int CStudioModelRenderer::StudioDrawModel( int flags )
 	}
 	*/
 	
-	if( (m_pCurrentEntity->curstate.renderfx & ISVIEWMODEL) == ISVIEWMODEL){
+	if( g_drawType == DRAWTYPE_VIEWMODEL){
 		easyPrintLineDummy("FLAG11. s:%d b:%d", m_pCurrentEntity->curstate.sequence, m_pCurrentEntity->curstate.iuser1 );
 	}
 
@@ -2959,7 +3005,7 @@ void CStudioModelRenderer::StudioProcessGait( entity_state_t *pplayer )
 	{
 		//easyPrintLineDummy("!! Sequence too high! 3");
 		
-		if( (m_pCurrentEntity->curstate.renderfx & ISVIEWMODEL) == ISVIEWMODEL){
+		if( g_drawType == DRAWTYPE_VIEWMODEL){
 		
 			if(m_pCurrentEntity->curstate.sequence & 128){
 				m_pCurrentEntity->curstate.sequence &= ~128;  //that is all? remove this bit(ch).
@@ -3080,6 +3126,11 @@ int CStudioModelRenderer::StudioDrawPlayer( int flags, entity_state_t *pplayer )
  		m_pCurrentEntity = IEngineStudio.GetCurrentEntity();
 	}
 
+	//MODDD - clearly.
+	// Any manual calls to StudioDrawPlayer (from this file instead of the engine) need to set g_drawType
+	// back to the previous value before this call, if it was found yet for some other entity and significant.
+	g_drawType = DRAWTYPE_PLAYER;
+
 	IEngineStudio.GetTimes( &m_nFrameCount, &m_clTime, &m_clOldTime );
 	IEngineStudio.GetViewInfo( m_vRenderOrigin, m_vUp, m_vRight, m_vNormal );
 	IEngineStudio.GetAliasScale( &m_fSoftwareXScale, &m_fSoftwareYScale );
@@ -3112,10 +3163,10 @@ int CStudioModelRenderer::StudioDrawPlayer( int flags, entity_state_t *pplayer )
 	//(CVAR_GET_FLOAT("mirrorsDoNotReflectPlayer") == 1) &&
 	//if(  (m_pCurrentEntity->curstate.renderfx & NOREFLECT) ){
 
-	//if(m_pCurrentEntity->curstate.renderfx & ISPLAYER)easyPrintLineDummy("MY friendAA %.2f %.2f", global2PSEUDO_IGNOREcameraMode, EASY_CVAR_GET(mirrorsDoNotReflectPlayer));
+	//if(g_drawType == DRAWTYPE_PLAYER)easyPrintLineDummy("MY friendAA %.2f %.2f", global2PSEUDO_IGNOREcameraMode, EASY_CVAR_GET(mirrorsDoNotReflectPlayer));
 
 	//in third person and we're told not to reflect the player? Don't do that then.
-	if( (m_pCurrentEntity->curstate.renderfx & ISPLAYER) && global2PSEUDO_IGNOREcameraMode == 1 && EASY_CVAR_GET(mirrorsDoNotReflectPlayer) == 1) {
+	if( (g_drawType == DRAWTYPE_PLAYER) && global2PSEUDO_IGNOREcameraMode == 1 && EASY_CVAR_GET(mirrorsDoNotReflectPlayer) == 1) {
 		//easyPrintLine("STATUS: %d %d", (int)CVAR_GET_FLOAT("IGNOREcameraMode"), (int)CVAR_GET_FLOAT("mirrorsDoNotReflectPlayer"));
 		canReflect = FALSE;
 	}
@@ -3652,7 +3703,10 @@ void CStudioModelRenderer::StudioRenderFinal_Hardware( void )
 			GL_StudioDrawShadow_Old = (void(*)(void))(((unsigned int)IEngineStudio.GL_StudioDrawShadow) + 32);
 
 			//MODDD TODO - we also have a viewmodel check too, but regardless.
-			if (EASY_CVAR_GET(r_shadows) == 1 && gEngfuncs.GetViewModel() != m_pCurrentEntity) // FIX : Avoid view model
+			
+			// that ok?
+			//if (EASY_CVAR_GET(r_shadows) == 1 && gEngfuncs.GetViewModel() != m_pCurrentEntity) // FIX : Avoid view model
+			if (EASY_CVAR_GET(r_shadows) == 1 && g_drawType != DRAWTYPE_VIEWMODEL) // FIX : Avoid view model
 			{
 				//DropShadows();
 				

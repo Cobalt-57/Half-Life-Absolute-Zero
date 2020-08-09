@@ -1025,17 +1025,16 @@ Activity CBaseMonster::GetBigFlinchActivity(void){
 }//END OF GetBigFlinchActivity
 
 
+
+
+
 //MODDD - NOTE
 // For intensity of the most recent attack, check pev->health to see how far into the negatives it is.
 // Maybe throw the corpse further if it's higher.
 void CBaseMonster::BecomeDead(void)
 {
+	
 	pev->takedamage = DAMAGE_YES;// don't let autoaim aim at corpses.
-
-	// make the corpse fly away from the attack vector
-	//MODDD - note that with any 'fling from previous damage' logic commented out below in the as-is script,
-	// this just meant plummet if there's no ground below me.  Probably just to stop being MOVETYPE_STEP or FLY.
-	pev->movetype = MOVETYPE_TOSS;
 
 
 	//MODDD - restored, was found commented-out as-is.   (monsterKilledToss == 1 restores it as found here)
@@ -1046,76 +1045,63 @@ void CBaseMonster::BecomeDead(void)
 	// but can't hurt to check this anyway for unusual cases.
 	BOOL killedMemory = HasMemory(bits_MEMORY_KILLED);
 
-	// only the first time Killed is called, thank you!
-	// pev->deadflag == DEAD_NO  might be ok too, but eh
-	if (!killedMemory && g_tossKilledCall) {
 
-		if (!(g_bitsDamageType & DMG_CRUSH) && !(g_bitsDamageTypeMod & (DMG_PROJECTILE | DMG_MAP_BLOCKED | DMG_MAP_TRIGGER))) {
+	// If the thing killed had a movetype of NONE (stationary), tossing might not make so much sense.
+	// See if anything/anywhere has issues with this.
+	if (pev->movetype != MOVETYPE_NONE) {
 
-			if (EASY_CVAR_GET(monsterKilledToss) == 1) {
-				pev->flags &= ~FL_ONGROUND;
-				pev->origin.z += 2;
-				pev->velocity = g_vecAttackDir * -1;
-				pev->velocity = pev->velocity * RANDOM_FLOAT(300, 400);
-				// adding a line.  Even here.
-				pev->groundentity = NULL;
-			}
-			else if (EASY_CVAR_GET(monsterKilledToss) == 2) {
-				//float tossAmount = (100 + -pev->health * 6);
+		// make the corpse fly away from the attack vector
+		//MODDD - note that with any 'fling from previous damage' logic commented out below in the as-is script,
+		// this just meant plummet if there's no ground below me.  Probably just to stop being MOVETYPE_STEP or FLY.
+		pev->movetype = MOVETYPE_TOSS;
 
-				float overkillAmount;
+		// only the first time Killed is called, thank you!
+		// pev->deadflag == DEAD_NO  might be ok too, but eh
+		if (!killedMemory && g_tossKilledCall) {
 
-				// say a headshot did 120 damage.  Health at the time was 2.
-				// raw damage was 40.
-				// Corpse pev->health is -118.
-				// We'll only go as far back as g_rawDamageCumula.  so -40 then.
 
-				float forceAmountMulti;
+			//if (EASY_CVAR_GET(sv_explosionknockback) > 0.5 && (g_bitsDamageType & DMG_BLAST)) {
+				// If I likely took good knockback from some explosion already, deny adding further knockback.
+				// or... not?  I don't see anything ridiculous without this.
+			//}else
+			if (!(g_bitsDamageType & DMG_CRUSH) && !(g_bitsDamageTypeMod & (DMG_PROJECTILE | DMG_MAP_BLOCKED | DMG_MAP_TRIGGER))) {
 
-				Vector tempEnBoundDelta = (this->pev->absmax - this->pev->absmin);
-				float tempEnSize = tempEnBoundDelta.x * tempEnBoundDelta.y * tempEnBoundDelta.z;
-
-				if (tempEnSize < 16000) {  //headcrab size: 13824
-					// I go flyin'!
-					forceAmountMulti = 1.2;
+				if (EASY_CVAR_GET(monsterKilledToss) == 1) {
+					pev->flags &= ~FL_ONGROUND;
+					pev->origin.z += 2;
+					pev->velocity = g_vecAttackDir * -1;
+					pev->velocity = pev->velocity * RANDOM_FLOAT(300, 400);
+					// adding a line.  Even here.
+					pev->groundentity = NULL;
 				}
-				else if (tempEnSize <= 800000) {  //size of agrunt: about 348160
-					forceAmountMulti = 1 + -0.99 * ((tempEnSize - 16000) / (800000 - 16000));
-				}
-				else {
-					// OH GOD ITS HUGE.
-					forceAmountMulti = 0.01;
-				}
+				else if (EASY_CVAR_GET(monsterKilledToss) == 2) {
+					//float tossAmount = (100 + -pev->health * 6);
+					float overkillAmount;
 
+					// say a headshot did 120 damage.  Health at the time was 2.
+					// raw damage was 40.
+					// Corpse pev->health is -118.
+					// We'll only go as far back as g_rawDamageCumula.  so -40 then.
 
-				if (g_rawDamageCumula >= -pev->health) {
-					// ok, just use neg health
-					overkillAmount = -pev->health;
-				}
-				else {
-					// Too deep? Force to g_rawDamageCumula.
-					overkillAmount = g_rawDamageCumula;
-				}
+					if (g_rawDamageCumula >= -pev->health) {
+						// ok, just use neg health
+						overkillAmount = -pev->health;
+					}
+					else {
+						// Too deep? Force to g_rawDamageCumula.
+						overkillAmount = g_rawDamageCumula;
+					}
 
+					Knockback(overkillAmount, -g_vecAttackDir);
 
-				Vector attackDirRev_2D = Vector(-g_vecAttackDir.x, -g_vecAttackDir.y, 0).Normalize();
+				}//END OF monsterKilledToss check
 
-				float tossAmount = (220 + overkillAmount * 8.5) * forceAmountMulti;
+			}// damage type checks
 
-				pev->flags &= ~FL_ONGROUND;
-				pev->origin.z += 2;
-				// variation between tossAmount itself and 12% more.  (base behavior was 33% more)
-				pev->velocity = attackDirRev_2D * RANDOM_FLOAT(tossAmount, tossAmount * 1.12);
-				// And a tiny bit more z for more overkill.  Why not.
-				//pev->velocity.z += tossAmount * 0.035;
-				pev->velocity.z += tossAmount * 0.07;
+		}// g_tossKilledCall check
 
-				pev->groundentity = NULL;
-			}//END OF monsterKilledToss check
+	}//END OF movetype check
 
-		}// damage type checks
-
-	}// g_tossKilledCall check
 
 	// assume not so next time without it being set again
 	g_tossKilledCall = FALSE;
@@ -1980,7 +1966,53 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBaseEntity)
 	}
 
 	return 1;
-}
+}//TakeDamage
+
+
+
+
+//NEW METHOD.  How far should a monster be pushed?
+// Larger montsers are affected less by the same force.
+//NOTE: zombie does its own knockback from several other damage sources separately.
+void CBaseEntity::Knockback(const int knockbackAmount, const Vector& knockbackDir) {
+
+	float forceAmountMulti;
+	Vector tempEnBoundDelta = (this->pev->absmax - this->pev->absmin);
+	float tempEnSize = tempEnBoundDelta.x * tempEnBoundDelta.y * tempEnBoundDelta.z;
+
+	if (tempEnSize < 16000) {  //headcrab size: 13824
+		// I go flyin'!
+		forceAmountMulti = 1.2;
+	}
+	else if (tempEnSize <= 800000) {  //size of agrunt: about 348160
+		forceAmountMulti = 1 + -0.99 * ((tempEnSize - 16000) / (800000 - 16000));
+	}
+	else {
+		// OH GOD ITS HUGE.
+		forceAmountMulti = 0.01;
+	}
+
+
+	Vector attackDirRev_2D = Vector(knockbackDir.x, knockbackDir.y, 0).Normalize();
+
+	float tossAmount = (220 + knockbackAmount * 8.5) * forceAmountMulti;
+
+	pev->flags &= ~FL_ONGROUND;
+	pev->origin.z += 2;
+	// variation between tossAmount itself and 12% more.  (base behavior was 33% more)
+	pev->velocity = attackDirRev_2D * RANDOM_FLOAT(tossAmount, tossAmount * 1.12);
+	// And a tiny bit more z for more overkill.  Why not.
+	//pev->velocity.z += tossAmount * 0.035;
+	pev->velocity.z += tossAmount * 0.07;
+
+	pev->groundentity = NULL;
+
+}//Knockback
+
+
+
+
+
 
 
 //MODDD - new
@@ -2334,10 +2366,7 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBaseMonster){
 
 	if(pev->deadflag == DEAD_NO){
 
-
 		if(!blockTimedDamage){
-
-
 			int myClassify = Classify();
 
 			if (
@@ -2392,7 +2421,6 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBaseMonster){
 			PainSound();// "Ouch!"
 		//}
 
-
 	}else{
 		// dead?  can't take any timed damages.
 		m_bitsDamageType = 0;
@@ -2425,8 +2453,9 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBaseMonster){
 	// of a frame, not sure if it means that (which also already happens as of retail)
 	if ( IsPlayer() )
 	{
-		if ( pevInflictor )
+		if (pevInflictor) {
 			pev->dmg_inflictor = ENT(pevInflictor);
+		}
 
 		pev->dmg_take += flDamageTake;
 
@@ -2440,9 +2469,26 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBaseMonster){
 	
 	//if ( !FNullEnt(pevInflictor) && (pevAttacker->solid != SOLID_TRIGGER) )
 	// if this is a player, move him around!
-	if ( ( !FNullEnt( pevInflictor ) ) && (pev->movetype == MOVETYPE_WALK) && (!pevAttacker || pevAttacker->solid != SOLID_TRIGGER) )
-	{
-		pev->velocity = pev->velocity + vecDir * -DamageForce( flDamage );
+	//MODDD NOTE - only the player can have MOVETYPE_WALK.
+	// the SOLID_TRIGGER check is on the attacker, not the victim.  So trigger-inflicted damage doesn't move the player
+	// around I assume, although that is its own damage type now (DMG_MAP_TRIGGER) for the 2nd damagetype bitmask.
+	// Let's just put this in a proper IsPlayer check to be safe.
+	// Although CBasePlayer has its own TakeDamage method.  Odd, odd.
+	if (IsPlayer()) {
+		if ((!FNullEnt(pevInflictor)) && (pev->movetype == MOVETYPE_WALK) && (!pevAttacker || pevAttacker->solid != SOLID_TRIGGER))
+		{
+			pev->velocity = pev->velocity + vecDir * -DamageForce(flDamage);
+		}
+	}
+	else {
+		// Anything else?  Can be knocked back by explosive damage, if a CVar permits.
+		if (EASY_CVAR_GET(sv_explosionknockback) > 0) {
+			if (pev->deadflag < DEAD_DEAD && pev->movetype != MOVETYPE_NONE) {
+				if (bitsDamageType & DMG_BLAST) {
+					Knockback(g_rawDamageCumula * 0.28 * EASY_CVAR_GET(sv_explosionknockback), -g_vecAttackDir);
+				}
+			}
+		}
 	}
 
 	//easyPrintLine("CBaseMonster:: name:%s:%d TOOK DAMAGE. health:%.2f Damage:%.2f Blast:%d Gib:: N:%d A:%d", getClassname(), monsterID, pev->health, flDamage, (bitsDamageType & DMG_BLAST), (bitsDamageType & DMG_NEVERGIB), (bitsDamageType & DMG_ALWAYSGIB) );

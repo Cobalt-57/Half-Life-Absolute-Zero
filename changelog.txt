@@ -213,4 +213,15 @@ Issue fixed with deploy animation replaying if killed/revived while a holster wa
 
 General satchel fixes.  Holsters automatically instead of instantly disappearing after detonating the last charges (no more ammo), and removed from inventory the moment
 the weapon is unequipped without ammo or charges to detonate (instead of being pickable again if the player switches weapons shortly after detonating the last charges).
+Picking up satchel charges with an empty-satchel weapon also correctly updates the viewmodel as though freshly picked.
+
+Shotgun tightened, times between firing single-wise and double-wise finer (single slightly moreso for balance reasons).
+Reload times between bullets inserted also improved slightly.
+Pressing reload is more responsive; the order is remembered and applied as soon as possible (which can skip the last portion of the reload animation).
+
+AI is alerted by all weapons at greater ranges now.  RPGs and shotguns (especially double-fire) have the greatest boosts.
+
+Snark throw animation throws the snark at the time suggested by the new animation instead of instantly.
+
+Explosive damage can now deal knockback, see CVar "sv_explosionknockback".
 

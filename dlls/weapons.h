@@ -205,13 +205,19 @@
 
 // MODDD - 'bullet types' enum moved to util_shared.
 
-//MODDD - ITEM_FLAG_... and WEAPON_IS_ONTARGET macros moved to const.h to show up everywhere
+// ITEM_FLAG_... and WEAPON_IS_ONTARGET macros moved to const.h to show up everywhere
 
 
 
-#define LOUD_GUN_VOLUME			1000
-#define NORMAL_GUN_VOLUME		600
-#define QUIET_GUN_VOLUME		200
+// new choice.  Rockets and shotguns ain't exactly subtle.
+#define LOUDEST_GUN_VOLUME		2200
+
+// changed from 1000 to 1400.  They are loud after all.
+#define LOUD_GUN_VOLUME			1500
+// changed from 600 to 900.  C'mon, glocks aren't quiet
+#define NORMAL_GUN_VOLUME		900
+// changed from 200 to 300
+#define QUIET_GUN_VOLUME		300
 
 #define BRIGHT_GUN_FLASH		512
 #define NORMAL_GUN_FLASH		256
@@ -224,7 +230,7 @@
 #define WEAPON_ACTIVITY_VOLUME	64
 
 
-//MODDD - VECTOR_CONE_... macros moved to util_shared.h
+// VECTOR_CONE_... macros moved to util_shared.h
 
 
 

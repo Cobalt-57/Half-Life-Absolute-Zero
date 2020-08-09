@@ -167,7 +167,7 @@ BOOL CBasePlayerWeapon::DefaultReload(int iClipSize, int iAnim, float fDelay, in
 	}
 
 
-	m_pPlayer->m_flNextAttack = UTIL_WeaponTimeBase() + fDelay;
+	m_pPlayer->m_flNextAttackCLIENTHISTORY = UTIL_WeaponTimeBase() + fDelay;
 
 	//MODDD - seems to make sense?  undo if this is more problematic.
 	if (pev->body != body) {
@@ -316,8 +316,8 @@ BOOL CBasePlayerWeapon::DefaultDeploy(char* szViewModel, char* szWeaponModel, in
 
 
 	g_irunninggausspred = false;
-	//m_pPlayer->m_flNextAttack = 0.5;
-	m_pPlayer->m_flNextAttack = fireDelayTime;
+	//m_pPlayer->m_flNextAttackCLIENTHISTORY = 0.5;
+	m_pPlayer->m_flNextAttackCLIENTHISTORY = fireDelayTime;
 
 	//m_flTimeWeaponIdle = 1.0;
 	m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + deployAnimTime; //used to be "1.0", now depends on optional parameter (defaults to "1.0");
@@ -337,7 +337,7 @@ void CBasePlayerWeapon::DefaultHolster(int iAnim, int skiplocal /* = 0 */, int b
 	//HACK - make this a little longer to stop the client from thinking it is done the moment this ends.
 	//       The notice to deploy the next weapon may come a little late.
 	// try with and without + 1 maybe?
-	m_pPlayer->m_flNextAttack = UTIL_WeaponTimeBase() + holsterAnimTime + 1;
+	m_pPlayer->m_flNextAttackCLIENTHISTORY = UTIL_WeaponTimeBase() + holsterAnimTime + 1;
 
 	// Let this handle the time it takes to change anims instead, not transmitted to the client by default.
 	m_pPlayer->m_fCustomHolsterWaitTime = gpGlobals->time + holsterAnimTime;
@@ -409,7 +409,7 @@ void CBasePlayerWeapon::Holster(int skiplocal /* = 0 */)
 
 
 	//For safety, set this to instantly change the weapon.
-	m_pPlayer->m_flNextAttack = 0;
+	m_pPlayer->m_flNextAttackCLIENTHISTORY = 0;
 
 	m_pPlayer->m_fCustomHolsterWaitTime = gpGlobals->time;
 
@@ -602,7 +602,7 @@ void CBasePlayerWeapon::ItemPostFrameThink() {
 
 	/*
 	//MODDD - should be a good place to check for deplying the next weapon.
-	if(m_pActiveItem && m_bHolstering && gpGlobals->time >= m_flNextAttack){
+	if(m_pActiveItem && m_bHolstering && gpGlobals->time >= m_flNextAttackCLIENTHISTORY){
 		//done holstering? complete the switch to the picked weapon. Deploy that one.
 
 		m_bHolstering = FALSE;
@@ -633,9 +633,9 @@ void CBasePlayerWeapon::ItemPostFrameThink() {
 	// Does it make sense to let "lastinv" work clientside, like interpret console input right there?
 	// maybe if it were a client command that send the same thing to the server....
 	
-	//easyForcePrintLine("HOLS:%d HOLSTIM:%.2f NEXTATTA:%.2f TIME:%.2f",m_pPlayer->m_bHolstering, m_pPlayer->m_fCustomHolsterWaitTime, m_pPlayer->m_flNextAttack, gpGlobals->time);
+	//easyForcePrintLine("HOLS:%d HOLSTIM:%.2f NEXTATTA:%.2f TIME:%.2f",m_pPlayer->m_bHolstering, m_pPlayer->m_fCustomHolsterWaitTime, m_pPlayer->m_flNextAttackCLIENTHISTORY, gpGlobals->time);
 	//MODDD - should be a good place to check for deplying the next weapon.
-	if (m_pPlayer->m_bHolstering && gpGlobals->time >= m_pPlayer->m_fCustomHolsterWaitTime) { //m_pPlayer->m_flNextAttack <= 0.0){
+	if (m_pPlayer->m_bHolstering && gpGlobals->time >= m_pPlayer->m_fCustomHolsterWaitTime) { //m_pPlayer->m_flNextAttackCLIENTHISTORY <= 0.0){
 		//done holstering? complete the switch to the picked weapon. Deploy that one.
 
 		//!!!!!!
@@ -658,7 +658,7 @@ void CBasePlayerWeapon::ItemPostFrameThink() {
 
 
 
-	//easyForcePrintLine("AFTR HOLS:%d HOLSTIM:%.2f NEXTATTA:%.2f TIME:%.2f",m_pPlayer->m_bHolstering, m_pPlayer->m_fCustomHolsterWaitTime, m_pPlayer->m_flNextAttack, gpGlobals->time);
+	//easyForcePrintLine("AFTR HOLS:%d HOLSTIM:%.2f NEXTATTA:%.2f TIME:%.2f",m_pPlayer->m_bHolstering, m_pPlayer->m_fCustomHolsterWaitTime, m_pPlayer->m_flNextAttackCLIENTHISTORY, gpGlobals->time);
 
 
 	CBasePlayerItem::ItemPostFrameThink();
@@ -693,14 +693,14 @@ void CBasePlayerWeapon::ItemPostFrame()
 	//Surprisingly no, don't do this, this never even happens nor should it. Deploy should only be called by the server
 	//and its results are echoed to the client.
 
-	//easyForcePrintLine("HOLS:%d HOLSTIM:%.2f NEXTATTA:%.2f TIME:%.2f",m_pPlayer->m_bHolstering, m_pPlayer->m_fCustomHolsterWaitTime, m_pPlayer->m_flNextAttack, gpGlobals->time);
+	//easyForcePrintLine("HOLS:%d HOLSTIM:%.2f NEXTATTA:%.2f TIME:%.2f",m_pPlayer->m_bHolstering, m_pPlayer->m_fCustomHolsterWaitTime, m_pPlayer->m_flNextAttackCLIENTHISTORY, gpGlobals->time);
 	//MODDD - should be a good place to check for deplying the next weapon.
 
 
 	// HOLSTER - SWAPPO DISABLE.
 	
 	/*
-	if (m_pPlayer->m_bHolstering) { //m_pPlayer->m_flNextAttack <= 0.0){
+	if (m_pPlayer->m_bHolstering) { //m_pPlayer->m_flNextAttackCLIENTHISTORY <= 0.0){
 		// done holstering? complete the switch to the picked weapon. Deploy that one.
 
 		m_pPlayer->m_bHolstering = FALSE;
@@ -719,20 +719,20 @@ void CBasePlayerWeapon::ItemPostFrame()
 	BOOL primaryHeld = ((m_pPlayer->pev->button & IN_ATTACK) && m_flNextPrimaryAttack <= 0.0);
 
 
-	//NOTICE - the player would usually check "m_flNextAttack" and not even call ItemPostFrame in the first place if it weren't 0.
+	//NOTICE - the player would usually check "m_flNextAttackCLIENTHISTORY" and not even call ItemPostFrame in the first place if it weren't 0.
 	//         So the check must be done here since player-specific script is all in player.cpp, a serverside-only file and most
 	//         player think logic is not clientside at all, besides a little for working with weapons like here.
 	//         It was this wa in the as-is script but just pointing this out.
 	//         ...some things in here don't require m_flNextPrimaryAttack to be 0 regardless? odd, but not much difference if any.
 	//         notice that ItemPostFrame even clientside just checks if m_pPlayer->flNextAttack is aboe 0.
-	//         So any "...m_flNextAttack <= 0.0" checks in here are very redundant. Oh well.
+	//         So any "...m_flNextAttackCLIENTHISTORY <= 0.0" checks in here are very redundant. Oh well.
 
 
 
 	//MODDD - the 0.0 here is the same 0'd current time to check for given by UTIL_WeaponTimeBase() for being clientside.
 	// So it checks out
 
-	if ((m_fInReload) && (m_pPlayer->m_flNextAttack <= 0.0))
+	if ((m_fInReload) && (m_pPlayer->m_flNextAttackCLIENTHISTORY <= 0.0))
 	{
 		//MODDD - NOTE.  Oh dear, a note left as-is.  Or don't fix what ain't broken?
 		// I don't know what ingame issue this is referring to.
@@ -828,7 +828,7 @@ void CBasePlayerWeapon::ItemPostFrame()
 	//if ((m_pPlayer->pev->button & IN_ATTACK2) && (m_flNextSecondaryAttack <= 0.0))
 	if (canCallSecondary && secondaryHeld)
 	{
-		if (pszAmmo2() && !m_pPlayer->m_rgAmmo[SecondaryAmmoIndex()])
+		if (pszAmmo2() && PlayerSecondaryAmmoCount() <= 0)
 		{
 			m_fFireOnEmpty = TRUE;
 		}
@@ -844,7 +844,7 @@ void CBasePlayerWeapon::ItemPostFrame()
 	//else if ((m_pPlayer->pev->button & IN_ATTACK) && (m_flNextPrimaryAttack <= 0.0))
 	else if (canCallPrimary && primaryHeld)
 	{
-		if ((m_iClip == 0 && pszAmmo1()) || (iMaxClip() == -1 && !m_pPlayer->m_rgAmmo[PrimaryAmmoIndex()]))
+		if ((m_iClip == 0 && pszAmmo1()) || (iMaxClip() == -1 && PlayerPrimaryAmmoCount() <= 0 ) )
 		{
 			m_fFireOnEmpty = TRUE;
 		}
@@ -896,7 +896,7 @@ For debugging, print out state variables to log file
 void CBasePlayerWeapon::PrintState(void)
 {
 	COM_Log("c:\\hl.log", "%.4f ", gpGlobals->time);
-	COM_Log("c:\\hl.log", "%.4f ", m_pPlayer->m_flNextAttack);
+	COM_Log("c:\\hl.log", "%.4f ", m_pPlayer->m_flNextAttackCLIENTHISTORY);
 	COM_Log("c:\\hl.log", "%.4f ", m_flNextPrimaryAttack);
 	COM_Log("c:\\hl.log", "%.4f ", m_flTimeWeaponIdle - gpGlobals->time);
 	COM_Log("c:\\hl.log", "%i ", m_iClip);

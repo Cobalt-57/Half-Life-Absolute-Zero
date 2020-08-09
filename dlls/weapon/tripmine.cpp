@@ -687,8 +687,12 @@ void CTripmine::WeaponIdle( void )
 	*/
 
 	
-	if(m_pPlayer->pev->viewmodel == iStringNull){
-		if (PlayerPrimaryAmmoCount() > 0 ){
+	if ( m_flTimeWeaponIdle > UTIL_WeaponTimeBase() )
+		return;
+
+
+	if (m_pPlayer->pev->viewmodel == iStringNull) {
+		if (PlayerPrimaryAmmoCount() > 0) {
 
 			globalflag_muteDeploySound = TRUE;
 			Deploy();
@@ -697,9 +701,6 @@ void CTripmine::WeaponIdle( void )
 			return;
 		}
 	}
-
-	if ( m_flTimeWeaponIdle > UTIL_WeaponTimeBase() )
-		return;
 
 	
 	//no ammo? retire.

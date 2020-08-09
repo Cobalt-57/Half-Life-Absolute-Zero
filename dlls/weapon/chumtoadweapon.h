@@ -40,7 +40,11 @@ enum chumtoadweapon_e {  //key: frames, FPS
 
 class CChumToadWeapon : public CBasePlayerWeapon{
 
-    public:
+private:
+	unsigned short m_usChumToadFire;
+	static int numberOfEyeSkins;
+
+public:
 	BOOL waitingForChumtoadThrow;
 	float chumtoadThrowReverseDelay;
 	int antiGravityPositionY;
@@ -56,7 +60,6 @@ class CChumToadWeapon : public CBasePlayerWeapon{
 	BOOL usesSoundSentenceSave(void);
 
 
-	BOOL m_fInAttack;
 
 
 	void EXPORT FallThinkCustom ( void );
@@ -85,9 +88,9 @@ class CChumToadWeapon : public CBasePlayerWeapon{
 	float randomIdleAnimationDelay(void);
 	//MODDD - new
 	void ItemPostFrame(void);
-
+	void ItemPostFrameThink(void);
+	
 	void WeaponIdle( void );
-	int m_fJustThrown;
 
 	virtual BOOL UseDecrement( void )
 	{ 
@@ -97,10 +100,6 @@ class CChumToadWeapon : public CBasePlayerWeapon{
 		return FALSE;
 #endif
 	}
-
-private:
-	unsigned short m_usChumToadFire;
-	static int numberOfEyeSkins;
 
 };//END OF CChumToadWeapon
 

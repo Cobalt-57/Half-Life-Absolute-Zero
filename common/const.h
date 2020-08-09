@@ -1097,6 +1097,9 @@ enum
 //       to have those effects in addition to the setting above.
 //       Some bits can be reused for special circumstances, like only viewmodels using the 3rd bit (4, NOMUZZLEFLASH).
 
+// IMPORTANT - renderflags ISVIEWMODEL and ISPLAYER removed.  There are other ways to determine these in
+// studiomodelrenderer.cpp and other clientside places.  These can be freed up for other ideas.
+
 //This is in binary for, the first 5 bits (powers 0 to 4).  Those cover values from 1 to 31 inclusive.
 //This mask can be used to remove the new FX bits used for combinations of choices.
 //For instance, to see if the choice for renderFX is kRenderFxExplode, it would be best to do this:
@@ -1119,18 +1122,28 @@ enum
 
 
 #define ISNPC (1 << 6) //64
-#define ISPLAYER (1 << 7) //128
 //#define NOREFLECT (DONOTDRAWSHADOW | ISNPC | ISPLAYER) //224 (exclusive combo)
-#define DONOTDRAWSHADOW (ISVIEWMODEL | ISPLAYER) //  (exclusive combo)
+#define ISWORLDAFFILIATED (1 << 7)
+
 #define ISMETALNPC (ISNPC | (1 << 1)) //  (exclusive combo... hopefully.)
 
-#define ISVIEWMODEL ( (1 << 2) | (1 << 3) | (1 << 4) ) //  (exclusive combo). This is 100011 in binary, which should not interfere with anything else.
-//#define ISVIEWMODEL (ISPLAYER | DONOTDRAWSHADOW) //  (exclusive combo)
 
+
+// Removing either of these when both are present would be a little awkward but shouldn't be possible anyway.
+// Mainly keep the (1 << 3) and (1 << 4) bits after removing either to keep the other (remove only (1 << 1) or (1 << 2),  unless both NOMUZZLEFLASH
+// and DONOTDRAWSHADOW are being removed,  then (1 << 3) and (1 << 4) go too).
 #define NOMUZZLEFLASH ( (1 << 1) | (1 << 3) | (1 << 4) ) //with non-view models, this prevents the muzzle flash. This is not for viewmodels, they use a different way. Or bit(s).
+#define DONOTDRAWSHADOW (1 << 2) | (1 << 3) | (1 << 4) 
+
+// These used to be uncommented before the ISPLAYER / ISVIEWMODEL removal
+//#define ISPLAYER (1 << 7) //128
+//#define ISVIEWMODEL ( (1 << 2) | (1 << 3) | (1 << 4) ) //  (exclusive combo). This is 100011 in binary, which should not interfere with anything else.
+//#define DONOTDRAWSHADOW (ISVIEWMODEL | ISPLAYER) //  (exclusive combo)
+
+// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+// exclusive combo ((1 << 2) | (1 << 3) | (1 << 4) | (1 << 7)) is still available,  maybe?
 
 
-//WARNING - if the DONOTDRAWSHADOW flag is used, make sure it is not looking at ISVIEWMODEL, or that (2 | 1) is not set.
 
 //!!! Make sure this is ok!
 #define FX_DUMMY kRenderFxDummy

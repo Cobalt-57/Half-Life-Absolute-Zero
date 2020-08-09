@@ -11,6 +11,17 @@
 #pragma once
 #endif
 
+
+//MODDD - new.  Good to easily keep track of drawing special cases when there is a clear sign that
+// can be determined early on in a draw call.
+// See GameStudioModelRenderer.cpp where "drawType" is set as the entry points to here are called.
+enum drawtype_e {
+	DRAWTYPE_ENTITY = 0,
+	DRAWTYPE_PLAYER,
+	DRAWTYPE_VIEWMODEL
+};
+
+
 /*
 ====================
 CStudioModelRenderer
@@ -205,18 +216,18 @@ public:
 
 
 
-	// Mirror stuff
 	//MODDDMIRROR
+	//////////////////////////////////////////////
+	// Mirror stuff
 	int mirror_id;
 	bool b_PlayerMarkerParsed;
 	int m_nCachedFrameCount;
+	//////////////////////////////////////////////
 
 
 	//DUMMY TEMP
 	float		m_rgCachedLightTransformDUMB[ MAXSTUDIOBONES ][ 3 ][ 4 ];
 	float		(*m_plighttransformDUMB)[ MAXSTUDIOBONES ][ 3 ][ 4 ];
-
-
 
 
 

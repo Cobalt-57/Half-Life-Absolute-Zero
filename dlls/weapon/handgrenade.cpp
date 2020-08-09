@@ -285,9 +285,21 @@ void CHandGrenade::WeaponIdle( void )
 	}
 
 	
+	// does... does m_flReleaseThrow even have a point???
+
+	if (m_flReleaseThrow == 0 && m_flStartThrow) {
+		m_flReleaseThrow = UTIL_WeaponTimeBase();//gpGlobals->time;  //UTIL_WeaponTimeBase()????
+	}
+
+	if (m_flTimeWeaponIdle > UTIL_WeaponTimeBase()) {
+		return;
+	}
+
+
+
 	//MODDD - is this okay for grenades?
-	if(m_pPlayer->pev->viewmodel == iStringNull){
-		if (PlayerPrimaryAmmoCount() > 0 ){
+	if (m_pPlayer->pev->viewmodel == iStringNull) {
+		if (PlayerPrimaryAmmoCount() > 0) {
 
 			globalflag_muteDeploySound = TRUE;
 			Deploy();
@@ -297,13 +309,8 @@ void CHandGrenade::WeaponIdle( void )
 		}
 	}
 
-	// does... does m_flReleaseThrow even have a point???
 
-	if ( m_flReleaseThrow == 0 && m_flStartThrow )
-		 m_flReleaseThrow = UTIL_WeaponTimeBase();//gpGlobals->time;  //UTIL_WeaponTimeBase()????
 
-	if ( m_flTimeWeaponIdle > UTIL_WeaponTimeBase() )
-		return;
 
 	//schedule to show the draw anim following throwing a grenade.
 	if (PlayerPrimaryAmmoCount() > 0 ){

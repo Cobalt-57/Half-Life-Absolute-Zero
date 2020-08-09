@@ -6212,8 +6212,8 @@ void CBasePlayer::commonReset(void){
 	m_bitsHUDDamage = -1;
 	m_bitsModHUDDamage = -1;
 
-	//MODDD
-	pev->renderfx |= ISPLAYER;
+	// Nevermind, no longer necessary.  Other ways to determine being a player at clientside.
+	//pev->renderfx |= ISPLAYER;
 
 
 }//END OF commonReset
@@ -6619,8 +6619,8 @@ void CBasePlayer::Spawn( BOOL revived ){
 
 	//Force a client re-update at revive!
 
-	//MODDD - here too.
-	pev->renderfx |= ISPLAYER;
+	// Nevermind.
+	//pev->renderfx |= ISPLAYER;
 
 
 }//END OF Spawn

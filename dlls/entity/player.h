@@ -281,6 +281,7 @@ public:
 
 #ifdef CLIENT_DLL
 	// And this version is for clientside only, ignores serverside issues for holstering to work better
+	float m_flNextAttackCLIENTHISTORY;
 	CBasePlayerItem* m_pActiveItemCLIENTHISTORY;
 #endif
 

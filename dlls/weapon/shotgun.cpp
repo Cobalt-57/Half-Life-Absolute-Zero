@@ -60,6 +60,8 @@ CShotgun::CShotgun(){
 	//NEW VAR.  If non-zero, we are cheating.  Better for syncing.
 	m_chargeReady = 0;
 
+	queueReload = FALSE;
+
 }
 
 
@@ -333,6 +335,40 @@ void CShotgun::ItemPostFrame( void )
 
 
 
+
+
+
+void CShotgun::ItemPostFrameThink(void) {
+
+
+	if (PlayerPrimaryAmmoCount() > 0 && m_iClip < SHOTGUN_MAX_CLIP) {
+		// Close enough since wanting to?
+		if (m_flNextPrimaryAttack - 0.25 <= UTIL_WeaponTimeBase()) {
+
+			if (queueReload) {
+				// yay!
+				reloadLogic();
+				queueReload = FALSE;
+			}
+		}
+		else {
+
+		}
+	}//END OF checks
+
+
+
+	CBasePlayerWeapon::ItemPostFrameThink();
+}
+
+
+
+
+
+
+
+
+
 void CShotgun::PrimaryAttack()
 {
 	FireShotgun(TRUE);
@@ -353,13 +389,14 @@ void CShotgun::FireShotgun(BOOL isPrimary) {
 	if (m_pPlayer->pev->waterlevel == 3)
 	{
 		PlayEmptySound();
-		m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 0.15;
+		m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 0.4;
 		m_flNextSecondaryAttack = m_flNextPrimaryAttack;
 		return;
 	}
 
 
 	if (reloadBlockFireCheck(isPrimary)) {
+		queueReload = FALSE;  // clearly don't want to do it that way at least.  Might not be necessary to even do this here
 		return;
 	}
 
@@ -374,7 +411,7 @@ void CShotgun::FireShotgun(BOOL isPrimary) {
 
 	if (!enoughClip)
 	{
-		Reload();
+		reloadLogic();
 		if (m_iClip == 0) {
 			PlayEmptySound();
 		}
@@ -385,9 +422,16 @@ void CShotgun::FireShotgun(BOOL isPrimary) {
 	pev->iuser1 &= ~(SHOTGUN_BIT6);
 
 
-
-	m_pPlayer->m_iWeaponVolume = LOUD_GUN_VOLUME;
-	m_pPlayer->m_iWeaponFlash = NORMAL_GUN_FLASH;
+	//MODDD - little different behavior between primary/secondary.
+	// And even louder (for alerting AI) with double
+	if (isPrimary) {
+		m_pPlayer->m_iWeaponVolume = LOUD_GUN_VOLUME + 200;
+		m_pPlayer->m_iWeaponFlash = NORMAL_GUN_FLASH;
+	}
+	else {
+		m_pPlayer->m_iWeaponVolume = LOUDEST_GUN_VOLUME;  //louder
+		m_pPlayer->m_iWeaponFlash = NORMAL_GUN_FLASH + 128;  //brighter
+	}
 
 	//MODDD - cheat check.
 	if (!(m_chargeReady & SHOTGUN_BIT1)) {
@@ -518,18 +562,19 @@ void CShotgun::FireShotgun(BOOL isPrimary) {
 	//MODDD
 	if (!(m_chargeReady & SHOTGUN_BIT3)) {
 
+		//MODDD - little tighter now, people want responsiveness.
 		if (isPrimary) {
 			//MODDD - now enough for the full anim, or almost. Real anim time is 1.00 seconds
-			m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 0.90;
-			m_flNextSecondaryAttack = UTIL_WeaponTimeBase() + 0.90;
+			m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 0.90 - 0.08;
+			m_flNextSecondaryAttack = UTIL_WeaponTimeBase() + 0.90 - 0.08;
 
 			//m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 0.75;
 			//m_flNextSecondaryAttack = UTIL_WeaponTimeBase() + 0.75;
 		}
 		else {
 			//MODDD - enough for full anim. Or almost. Real time is ~1.615 seconds.
-			m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 1.5;  //nah default is good here.
-			m_flNextSecondaryAttack = UTIL_WeaponTimeBase() + 1.5;
+			m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 1.5 - 0.09;  //nah default is good here.
+			m_flNextSecondaryAttack = UTIL_WeaponTimeBase() + 1.5 - 0.09;
 
 			//m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 1.5;
 			//m_flNextSecondaryAttack = UTIL_WeaponTimeBase() + 1.5;
@@ -573,94 +618,25 @@ void CShotgun::FireShotgun(BOOL isPrimary) {
 
 
 
+void CShotgun::Reload( void ){
+	//MODDD - majority of contents moved to 'reloadLogic', see that method.
+	// This is now the only entry point into reload logic from outside the class for neatness.
 
+	// MODDD - little more flexibility though for ease of use (0.25 sec away is ok to start anyway)
+	if (m_flNextPrimaryAttack - 0.25 > UTIL_WeaponTimeBase()) {
 
-
-
-
-void CShotgun::Reload( void )
-{
-	if (PlayerPrimaryAmmoCount() <= 0 || m_iClip == SHOTGUN_MAX_CLIP)
-		return;
-
-	// don't reload until recoil is done
-	if (m_flNextPrimaryAttack > UTIL_WeaponTimeBase())
-		return;
-
-	// check to see if we're ready to reload
-	if (m_fInSpecialReload == 0)
-	{
-		//MODDD - important!  was just  "SendWeaponAnimServerOnly".
-		SendWeaponAnimServerOnly( SHOTGUN_START_RELOAD );
-		//
-		m_fInSpecialReload = 1;
-		//m_pPlayer->m_flNextAttack = UTIL_WeaponTimeBase() + 0.6;
-		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 0.75; //this is the animation length.
-		
-
-		//m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 0.6; //why 1?
-		//m_flNextSecondaryAttack = UTIL_WeaponTimeBase() + 0.6;
-		
+		// NOTICE!  Only count the intent if the player actually held down reload, this 'Reload' method can be called
+		// by other shotgun-related logic too!  This check is good enough though.
+		// And no need for that check, only entry point from input now.  Yay.
+		//if (m_pPlayer->pev->button & IN_RELOAD) {
+			// And let a reload start when possible then.
+			queueReload = TRUE;
+		//}
 		return;
 	}
-	else if (m_fInSpecialReload == 1)
-	{
-		if (m_flTimeWeaponIdle > UTIL_WeaponTimeBase())
-			return;
 
-		m_fInSpecialReload = 2;
-
-
-	}else if (m_fInSpecialReload == 2)
-	{
-		if (m_flTimeWeaponIdle > UTIL_WeaponTimeBase())
-			return;
-
-		//if (makeNoise == FALSE)return;
-
-		// was waiting for gun to move to side
-		m_fInSpecialReload = 3;
-
-		if (RANDOM_LONG(0,1))
-			EMIT_SOUND_DYN(ENT(m_pPlayer->pev), CHAN_ITEM, "weapons/reload1.wav", 1, ATTN_NORM, 0, 85 + RANDOM_LONG(0,0x1f));
-		else
-			EMIT_SOUND_DYN(ENT(m_pPlayer->pev), CHAN_ITEM, "weapons/reload3.wav", 1, ATTN_NORM, 0, 85 + RANDOM_LONG(0,0x1f));
-		
-		//MODDD - important!  was just  "SendWeaponAnimServerOnly".
-
-		
-		SendWeaponAnimServerOnly( SHOTGUN_RELOAD );
-
-
-		// drop #8, pick up #4.  Queue a pump after this shell is in.
-		if(pev->iuser1 & SHOTGUN_BIT8){
-			pev->iuser1 &= ~SHOTGUN_BIT8;
-			pev->iuser1 |= SHOTGUN_BIT4;
-		}
-
-
-		
-		m_flNextReload = UTIL_WeaponTimeBase() + 0.5;
-
-		
-		//MODDD - beware.  Altering the "m_flTimeWeaponIdle" to be different will affect "m_flNextReload" as well, since
-		//        "m_flNextReload" is only checked if "m_flTimeWeaponIdle" is not applied (not waiting for the delay to pass).
-		//m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + (10.0 / 16.0);
-		
-		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 0.5;
-		
-
-	}
-	else   //m_fInSpecialReload == 3
-	{
-		//if (m_flTimeWeaponIdle > UTIL_WeaponTimeBase())
-		//	return;
-		// Add them to the clip
-		m_iClip += 1;
-		ChangePlayerPrimaryAmmoCount(-1);
-		m_fInSpecialReload = 2;
-	}
-}
+	reloadLogic();
+}//Reload
 
 
 
@@ -815,7 +791,7 @@ BOOL CShotgun::reloadSemi(){
 	
 	if (m_iClip == 0 && m_fInSpecialReload == 0 && PlayerPrimaryAmmoCount() > 0)
 	{
-		Reload( );
+		reloadLogic( );
 	}
 	else if (m_fInSpecialReload != 0)
 	{
@@ -828,15 +804,12 @@ BOOL CShotgun::reloadSemi(){
 			}
 			*/
 
-
-
 			if (m_iClip > 0 && (pev->iuser1 & SHOTGUN_BIT4)) {
 				// force the pump!
 				reloadFinishPump();
 			}
 
-			Reload( );
-
+			reloadLogic( );
 
 		}
 		else
@@ -851,6 +824,98 @@ BOOL CShotgun::reloadSemi(){
 
 	return TRUE;
 }
+
+
+//MODDD - has most of what used to be the 'Reload' method.
+// Done so calls from outside the class can be separated (anywhere in-class that used to call Reload now calls 'reloadLogic' instead)
+void CShotgun::reloadLogic(void) {
+
+
+	if (PlayerPrimaryAmmoCount() <= 0 || m_iClip == SHOTGUN_MAX_CLIP)
+		return;
+
+	// don't reload until recoil is done
+	// MODDD - little more flexibility though for ease of use (0.25 sec away is ok to start anyway)
+	if (m_flNextPrimaryAttack - 0.25 > UTIL_WeaponTimeBase()) {
+		return;
+	}
+
+	// check to see if we're ready to reload
+	if (m_fInSpecialReload == 0)
+	{
+		//MODDD - important!  was just  "SendWeaponAnimServerOnly".
+		SendWeaponAnimServerOnly(SHOTGUN_START_RELOAD);
+		//
+		m_fInSpecialReload = 1;
+		//m_pPlayer->m_flNextAttack = UTIL_WeaponTimeBase() + 0.6;
+		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 0.75; //this is the animation length.
+
+
+		//m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 0.6; //why 1?
+		//m_flNextSecondaryAttack = UTIL_WeaponTimeBase() + 0.6;
+
+		return;
+	}
+	else if (m_fInSpecialReload == 1)
+	{
+		if (m_flTimeWeaponIdle > UTIL_WeaponTimeBase())
+			return;
+
+		m_fInSpecialReload = 2;
+
+
+	}
+	else if (m_fInSpecialReload == 2)
+	{
+		if (m_flTimeWeaponIdle > UTIL_WeaponTimeBase())
+			return;
+
+		//if (makeNoise == FALSE)return;
+
+		// was waiting for gun to move to side
+		m_fInSpecialReload = 3;
+
+		if (RANDOM_LONG(0, 1))
+			EMIT_SOUND_DYN(ENT(m_pPlayer->pev), CHAN_ITEM, "weapons/reload1.wav", 1, ATTN_NORM, 0, 85 + RANDOM_LONG(0, 0x1f));
+		else
+			EMIT_SOUND_DYN(ENT(m_pPlayer->pev), CHAN_ITEM, "weapons/reload3.wav", 1, ATTN_NORM, 0, 85 + RANDOM_LONG(0, 0x1f));
+
+		// still server only?   maybe.  Is a singleplayer mod anyway.
+		SendWeaponAnimServerOnly(SHOTGUN_RELOAD);
+
+
+		// drop #8, pick up #4.  Queue a pump after this shell is in.
+		if (pev->iuser1 & SHOTGUN_BIT8) {
+			pev->iuser1 &= ~SHOTGUN_BIT8;
+			pev->iuser1 |= SHOTGUN_BIT4;
+		}
+
+		//MODDD - beware.  Altering the "m_flTimeWeaponIdle" to be different will affect "m_flNextReload" as well, since
+		//        "m_flNextReload" is only checked if "m_flTimeWeaponIdle" is not applied (not waiting for the delay to pass).
+		//m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + (10.0 / 16.0);
+
+		//MODDD - tightened as well.  These are delays between bullets being put into the shotgun
+		m_flNextReload = UTIL_WeaponTimeBase() + 0.5 - 0.025;
+		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 0.5 - 0.025;
+
+	}
+	else   //m_fInSpecialReload == 3
+	{
+		//if (m_flTimeWeaponIdle > UTIL_WeaponTimeBase())
+		//	return;
+		// Add them to the clip
+		m_iClip += 1;
+		ChangePlayerPrimaryAmmoCount(-1);
+		m_fInSpecialReload = 2;
+	}
+
+	queueReload = FALSE;  // clearly did it.
+
+}//reloadLogic
+
+
+
+
 
 
 void CShotgun::WeaponIdle( void )

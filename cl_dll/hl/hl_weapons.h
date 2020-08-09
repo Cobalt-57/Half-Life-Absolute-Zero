@@ -24,8 +24,7 @@ extern vec3_t previousorigin;
 //clientside only variable.
 extern BOOL reloadBlocker;
 
-// MODDD - TEST.
-extern float flNextAttackChangeMem;
+//extern float flNextAttackChangeMem;
 
 
 extern BOOL blockUntilModelChange;

@@ -35,6 +35,28 @@
 // Global engine <-> studio model rendering code interface
 extern engine_studio_api_t IEngineStudio;
 
+
+
+//MODDD - NEW.  Set me at the start of the drawcalls below.
+//extern drawtype_e g_drawType;
+// ...actually nevermind doing it in this file, to determine whether an entity is ordinary or the
+// viewmodel, need m_pCurrentEntity.  Which is grabbed in StudioModelRenderer.cpp...
+
+
+// It would've been really nice to have a definite start point of a draw frame at least, but nope.
+// Every single thing is just drawn one after the other.  When does another frame actually happen?
+// Who knows.
+// No idea if something hacky like seeing when the same reliably drawn entity (#0? #1?) happens to
+// judge that maybe.  Time check, unless beginning to end of the same frame reports a different time
+// and the difference can't reliably tell whether a frame passed since last rendered object or not?
+
+// ... oh.  Spirit of HL might have already done this, see the "m_nCachedFrameCount != m_nFrameCount"
+// line in StudioModelRenderer.    SIGH, having to check a frame-count for change to see if it's
+// a new frame, what a world.  Just gimmie engine access dammit.
+
+
+
+
 // The renderer object, created on the stack.
 CGameStudioModelRenderer g_StudioRenderer;
 /*

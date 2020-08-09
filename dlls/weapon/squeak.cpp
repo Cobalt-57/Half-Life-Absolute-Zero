@@ -98,7 +98,7 @@ int CSqueakGrenade :: Classify ( void )
 }
 
 CSqueakGrenade::CSqueakGrenade(){
-	
+
 }
 
 // nevermind, probably already precached in whole by the player, no assistance needed.  Whatever, being explicit doesn't hurt.
@@ -493,16 +493,14 @@ LINK_ENTITY_TO_CLASS( weapon_snark, CSqueak );
 
 
 
-
-
 //CSQueak, the player weapon
 int CSqueak::numberOfEyeSkins = -1;
 
 
 CSqueak::CSqueak(){
 
-	//"weaponetired"?
-	m_fInAttack = FALSE;
+	m_flReleaseThrow = -1;
+	m_chargeReady &= ~32;
 
 }
 
@@ -539,7 +537,6 @@ void CSqueak::Spawn( )
 	pev->framerate = 1.0;
 
 
-	m_fInAttack = FALSE;
 }
 
 
@@ -624,6 +621,8 @@ int CSqueak::GetItemInfo(ItemInfo *p)
 BOOL CSqueak::Deploy( )
 {
 
+	m_flReleaseThrow = -1;
+	m_chargeReady &= ~32;
 
 	// play hunt sound
 	float flRndSound = RANDOM_FLOAT ( 0 , 1 );
@@ -634,11 +633,9 @@ BOOL CSqueak::Deploy( )
 		}else{ 
 			EMIT_SOUND_DYN(ENT(pev), CHAN_VOICE, "squeek/sqk_hunt3.wav", 1, ATTN_NORM, 0, 100);
 		}
+		m_pPlayer->m_iWeaponVolume = QUIET_GUN_VOLUME;
 	}
 
-	m_pPlayer->m_iWeaponVolume = QUIET_GUN_VOLUME;
-
-	m_fInAttack = FALSE;
 
 	return DefaultDeploy( "models/v_squeak.mdl", "models/p_squeak.mdl", SQUEAK_UP, "squeak", 0, 0, (51.0 / 30.0), (0.6) );
 }
@@ -649,7 +646,8 @@ void CSqueak::Holster( int skiplocal /* = 0 */ )
 	//m_pPlayer->m_flNextAttack = UTIL_WeaponTimeBase() + 0.5;
 	
 
-	m_fInAttack = FALSE;
+	m_flReleaseThrow = -1;
+	m_chargeReady &= ~32;
 
 
 	if (PlayerPrimaryAmmoCount() <= 0)
@@ -672,77 +670,97 @@ float CSqueak::randomIdleAnimationDelay(){
 }
 
 
+
+
+
+
+
+
+
+
+
 void CSqueak::PrimaryAttack()
 {
-	if (PlayerPrimaryAmmoCount() > 0)
-	{
-		UTIL_MakeVectors( m_pPlayer->pev->v_angle );
-		TraceResult tr;
-		Vector trace_origin;
+	//MODDD - animation has a delay before the visible snark is thrown, show it.
 
+	// time of snark throw:  31/30   (time in the animation the snark is out of the hand)
+
+	if (PlayerPrimaryAmmoCount() <= 0){
+		// forget it
+		return;
+	}
+
+//#ifndef CLIENT_DLL
+	//if (m_flReleaseThrow == -1) {
+	// Nevermind this check, throwing already sets m_flNextPrimaryAttack which blocks interrupting a throw
+	if(1 == 1){
+		// start throw only
+		UTIL_MakeVectors(m_pPlayer->pev->v_angle);
+		TraceResult tr;
+		
 		// HACK HACK:  Ugly hacks to handle change in origin based on new physics code for players
 		// Move origin up if crouched and start trace a bit outside of body ( 20 units instead of 16 )
+		////////////////////////////////////////
+		// MODDD -   ...  okay but why?  The center is shifted a bit lower during a duck which seems appropriate.
+		//           Commenting out the duck check, maybe this is from some older state of physics/engine development
+		//           when this used to make sense.
+		Vector trace_origin;
 		trace_origin = m_pPlayer->pev->origin;
+		/*
 		if ( m_pPlayer->pev->flags & FL_DUCKING )
 		{
 			trace_origin = trace_origin - ( VEC_HULL_MIN - VEC_DUCK_HULL_MIN );
 		}
-
-		// find place to toss monster
-		UTIL_TraceLine( trace_origin + gpGlobals->v_forward * 20, trace_origin + gpGlobals->v_forward * 64, dont_ignore_monsters, NULL, &tr );
-
-	int flags;
+		*/
+		
+		int flags;
 #ifdef CLIENT_WEAPONS
-	flags = FEV_NOTHOST;
+		flags = FEV_NOTHOST;
 #else
-	flags = 0;
+		flags = 0;
 #endif
+		PLAYBACK_EVENT_FULL(flags, m_pPlayer->edict(), m_usSnarkFire, 0.0, (float*)&g_vecZero, (float*)&g_vecZero, 0.0, 0.0, 0, 0, 0, 0);
 
-	    PLAYBACK_EVENT_FULL( flags, m_pPlayer->edict(), m_usSnarkFire, 0.0, (float *)&g_vecZero, (float *)&g_vecZero, 0.0, 0.0, 0, 0, 0, 0 );
 
-		if ( tr.fAllSolid == 0 && tr.fStartSolid == 0 && tr.flFraction > 0.25 )
-		{
-			// player "shoot" animation
-			m_pPlayer->SetAnimation( PLAYER_ATTACK1 );
-
+		//MODDD - why even bother doing this clientside, UTIL_TraceLine is dummied clientside, always
+		// returns 'nothing in the way' no matter the start/endpoint.
+		// even though ev_hldm's isn't, and can detect monsters...?
+		//     er.   Why was this UTIL_TraceLine dummied clientside again.
 #ifndef CLIENT_DLL
-			//Doesn't make a difference to send the SF_MONSTER_THROWN spawn flag here since snarks don't have the default monster behavior of snapping
-			//to the ground at spawn, but it doesn't hurt.
-			CBaseEntity *pSqueak = CBaseEntity::Create( "monster_snark", tr.vecEndPos, m_pPlayer->pev->v_angle, SF_MONSTER_THROWN, m_pPlayer->edict() );
+		// find place to toss monster
+		UTIL_TraceLine(trace_origin + gpGlobals->v_forward * 20, trace_origin + gpGlobals->v_forward * 64, dont_ignore_monsters, NULL, &tr);
 
-			//MODDD - now the generated snark inherits a factor of the player's velocity instead of all of it, such as 12%. Set by CVar.
-			pSqueak->pev->velocity = gpGlobals->v_forward * 200 + UTIL_GetProjectileVelocityExtra(m_pPlayer->pev->velocity, EASY_CVAR_GET(snarkInheritsPlayerVelocity) );
-#endif
+		//
+		if (tr.fAllSolid == 0 && tr.fStartSolid == 0 && tr.flFraction > 0.25)
+		{
+			// success?  Begin actual snark-generation delay
+			m_flReleaseThrow = gpGlobals->time + (31.0f / 30.0f);
 
-			// play hunt sound
-			float flRndSound = RANDOM_FLOAT ( 0 , 1 );
 
-			if ( flRndSound <= 0.5 )
-				EMIT_SOUND_DYN(ENT(pev), CHAN_VOICE, "squeek/sqk_hunt2.wav", 1, ATTN_NORM, 0, 105);
-			else 
-				EMIT_SOUND_DYN(ENT(pev), CHAN_VOICE, "squeek/sqk_hunt3.wav", 1, ATTN_NORM, 0, 105);
 
-			m_pPlayer->m_iWeaponVolume = QUIET_GUN_VOLUME;
+			// player "shoot" animation
+			m_pPlayer->SetAnimation(PLAYER_ATTACK1);
 
-			//MODDD - cheat check
-			if(m_pPlayer->cheat_infiniteclipMem == 0 && m_pPlayer->cheat_infiniteammoMem == 0){
-				ChangePlayerPrimaryAmmoCount(-1);
-			}
-			
 
-			m_fJustThrown = 1;
+			m_chargeReady |= 32;
 
 			//MODDD 
-			if(m_pPlayer->cheat_minimumfiredelayMem == 0){
-				m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 0.3;
-			}else{
-				//extra delay so that the things don't just collide with each other and... start defying gravity I guess.
+			if (m_pPlayer->cheat_minimumfiredelayMem == 0) {
+				m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + (31.0f / 30.0f) + 0.4f;
+			}
+			else {
 				m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + m_pPlayer->cheat_minimumfiredelaycustomMem + 0.03f;
 			}
-			//NOTE: this ends up being the delay before doing the re-draw animation (can still fire before then, unaffected by the time of the "throw" animation that hides the hands)
-			m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + (14.0/24.0) + 0.7f;
-		}
-	}
+			//NOTE: this ends up being the delay before doing the re-draw animation
+			// (can still fire before then, unaffected by the time of the "throw" animation that hides the hands)
+			m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + (44.0 / 30.0) + 0.4f;
+
+		}// END OF trace success (nothing in the way) check
+#endif
+
+	}// END OF m_flReleaseThrow check... maybe
+//#endif
+
 }
 
 
@@ -752,10 +770,87 @@ void CSqueak::SecondaryAttack( void )
 }
 
 
+//should only be called by the server.
+void CSqueak::Throw(void) {
+
+	if (PlayerPrimaryAmmoCount() <= 0) {
+		// forget it
+		return;
+	}
+
+
+	UTIL_MakeVectors(m_pPlayer->pev->v_angle);
+	TraceResult tr;
+
+	Vector trace_origin;
+	trace_origin = m_pPlayer->pev->origin;
+	/*
+	if (m_pPlayer->pev->flags & FL_DUCKING)
+	{
+		trace_origin = trace_origin - (VEC_HULL_MIN - VEC_DUCK_HULL_MIN);
+	}
+	*/
+
+		
+#ifndef CLIENT_DLL
+	// find place to toss monster
+	UTIL_TraceLine(trace_origin + gpGlobals->v_forward * 20, trace_origin + gpGlobals->v_forward * 64, dont_ignore_monsters, NULL, &tr);
+
+	//
+	if (tr.fAllSolid == 0 && tr.fStartSolid == 0 && tr.flFraction > 0.25)
+	{
+			
+		// hence cometh thy creature.  or some shit.
+#ifndef CLIENT_DLL
+		//Doesn't make a difference to send the SF_MONSTER_THROWN spawn flag here since snarks don't have the default monster behavior of snapping
+		//to the ground at spawn, but it doesn't hurt.
+		CBaseEntity* pSqueak = CBaseEntity::Create("monster_snark", tr.vecEndPos, m_pPlayer->pev->v_angle, SF_MONSTER_THROWN, m_pPlayer->edict());
+
+		//MODDD - now the generated snark inherits a factor of the player's velocity instead of all of it, such as 12%. Set by CVar.
+		pSqueak->pev->velocity = gpGlobals->v_forward * 200 + UTIL_GetProjectileVelocityExtra(m_pPlayer->pev->velocity, EASY_CVAR_GET(snarkInheritsPlayerVelocity));
+#endif
+
+		// play hunt sound
+		float flRndSound = RANDOM_FLOAT(0, 1);
+
+		if (flRndSound <= 0.5)
+			EMIT_SOUND_DYN(ENT(pev), CHAN_VOICE, "squeek/sqk_hunt2.wav", 1, ATTN_NORM, 0, 105);
+		else
+			EMIT_SOUND_DYN(ENT(pev), CHAN_VOICE, "squeek/sqk_hunt3.wav", 1, ATTN_NORM, 0, 105);
+
+		//MODDD - little more radius to alert things on a throw, it is a 'squeak' after all.
+		// Normal gun volume is 600.
+		m_pPlayer->m_iWeaponVolume = QUIET_GUN_VOLUME + 200;
+
+		//MODDD - cheat check
+		if (m_pPlayer->cheat_infiniteclipMem == 0 && m_pPlayer->cheat_infiniteammoMem == 0) {
+			ChangePlayerPrimaryAmmoCount(-1);
+		}
+
+	}// END OF trace success (nothing in the way) check
+	else {
+		// But if that failed, don't finish the throw animation.  Looks a little odd to do that.
+		// Just force a re-deploy this instant.
+		SendWeaponAnimBypass(SQUEAK_UP);
+		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + (52.0 / 30.0) + randomIdleAnimationDelay();
+
+		m_flReleaseThrow = -1;
+		m_chargeReady &= ~32;
+	}
+
+
+#endif
+
+//#endif
+
+
+}
 
 
 
-void CSqueak::ItemPostFrame(){
+
+
+void CSqueak::ItemPostFrame(void){
 	
 	//MODDD - nope.
 	/*
@@ -778,27 +873,56 @@ void CSqueak::ItemPostFrame(){
 
 
 
+void CSqueak::ItemPostFrameThink(void) {
+
+	// Moved here to not require no keys to be held down (WeaponIdle does).
+	if (m_chargeReady & 32 && m_flTimeWeaponIdle <= UTIL_WeaponTimeBase())
+	{
+		m_flReleaseThrow = -1;
+		m_chargeReady &= ~32;
+
+		if (PlayerPrimaryAmmoCount() <= 0)
+		{
+			RetireWeapon();
+			return;
+		}
+		SendWeaponAnimBypass(SQUEAK_UP);
+		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + (52.0 / 30.0) + randomIdleAnimationDelay();
+		return;
+	}
+
+
+
+
+#ifndef CLIENT_DLL
+	// Queued up a throw?  Let's go then
+	if (m_flReleaseThrow != -1 && gpGlobals->time >= m_flReleaseThrow) {
+		m_flReleaseThrow = -1;
+		Throw();
+	}
+#endif
+
+
+	CBasePlayerWeapon::ItemPostFrameThink();
+}//ItemPostFrameThink
+
+
+
+
+
+
 void CSqueak::WeaponIdle( void )
 {
 
-	/*
 
-	//THis is reusing the "m_fInAttack" variable for telling when to make the chumtoad re-appear.
-	if(m_fInAttack == TRUE){
-		
-		easyForcePrintLine("SQUEAK AAAAAAAAAA");
-		if ( PlayerPrimaryAmmoCount() > 0 ){
-			DefaultDeploy( "models/v_squeak.mdl", "models/p_squeak.mdl", SQUEAK_UP, "squeak", 0, 0, (51.0 / 30.0),  (0.6)  );
-			
-			m_fInAttack = FALSE;
-			return;
-		}
-	}
-	*/
 
-	
-	if(m_pPlayer->pev->viewmodel == iStringNull){
-		if (PlayerPrimaryAmmoCount() > 0 ){
+
+	if ( m_flTimeWeaponIdle > UTIL_WeaponTimeBase() )
+		return;
+
+
+	if (m_pPlayer->pev->viewmodel == iStringNull) {
+		if (PlayerPrimaryAmmoCount() > 0) {
 
 			globalflag_muteDeploySound = TRUE;
 			Deploy();
@@ -809,25 +933,6 @@ void CSqueak::WeaponIdle( void )
 	}
 
 
-	if ( m_flTimeWeaponIdle > UTIL_WeaponTimeBase() )
-		return;
-
-
-
-	if (m_fJustThrown)
-	{
-		m_fJustThrown = 0;
-
-		if ( !m_pPlayer->m_rgAmmo[PrimaryAmmoIndex()] )
-		{
-			RetireWeapon();
-			m_fInAttack = TRUE;
-			return;
-		}
-		SendWeaponAnim( SQUEAK_UP );
-		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + (52.0 / 30.0) + randomIdleAnimationDelay();
-		return;
-	}
 
 	//Now that there isn't a static delay for living throwables, the odds of a unique idle anim have been slightly reduced.
 	//Old ones were:

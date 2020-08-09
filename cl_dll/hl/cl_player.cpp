@@ -34,8 +34,10 @@
 CBasePlayer::CBasePlayer(void) {
 
 	m_pLastItem = NULL;
-	m_pActiveItemCLIENTHISTORY = NULL;
 	m_pQueuedActiveItem = NULL;
+
+	m_pActiveItemCLIENTHISTORY = NULL;
+	m_flNextAttackCLIENTHISTORY = -1;
 }
 
 

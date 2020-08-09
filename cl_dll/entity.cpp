@@ -637,14 +637,26 @@ void DLLEXPORT HUD_StudioEvent( const struct mstudioevent_s *event, const struct
 
 
 
+//(entity->curstate.renderfx & ISPLAYER)
+//(entity->curstate.renderfx & ISVIEWMODEL) == ISVIEWMODEL
+
+
+	int entityIndex = entity->index;   //does this work?
+
+	BOOL isPlayer = ((entityIndex >= 1 && entityIndex <= gEngfuncs.GetMaxClients()));
+	BOOL isViewmodel = (entity == gEngfuncs.GetViewModel());
+
 
 	//easyForcePrintLine("AW naw rfx:%d e:%d", entity->curstate.renderfx, event->event);
-
+	
 
 	
 	if(event->event == 5001 || event->event == 5011 || event->event == 5021 || event->event == 5031){
 		//can skip muzzleflash events, check.
-		if(EASY_CVAR_GET(cl_muzzleflash) != 1 && (EASY_CVAR_GET(cl_muzzleflash) == 0 || ((entity->curstate.renderfx & ISVIEWMODEL) == ISVIEWMODEL ) || ((entity->curstate.renderfx & ISPLAYER) )     )  ){
+		//MODDD - NEEDS HELP!
+		//if(EASY_CVAR_GET(cl_muzzleflash) != 1 && (EASY_CVAR_GET(cl_muzzleflash) == 0 || ((entity->curstate.renderfx & ISVIEWMODEL) == ISVIEWMODEL ) || ((entity->curstate.renderfx & ISPLAYER) )     )  ){
+		if(EASY_CVAR_GET(cl_muzzleflash) != 1 && (EASY_CVAR_GET(cl_muzzleflash) == 0 || (isViewmodel ) || ( isPlayer ) )  ){
+			
 			//easyForcePrintLine("I AM not good.");
 			return;
 		}

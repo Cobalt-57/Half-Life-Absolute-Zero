@@ -328,7 +328,7 @@ int CSatchel::GetItemInfo(ItemInfo *p)
 //=========================================================
 BOOL CSatchel::IsUseable( void )
 {
-	if ( m_pPlayer->m_rgAmmo[ PrimaryAmmoIndex() ] > 0 ) 
+	if ( PlayerPrimaryAmmoCount() > 0 ) 
 	{
 		// player is carrying some satchels
 		return TRUE;
@@ -345,7 +345,7 @@ BOOL CSatchel::IsUseable( void )
 
 BOOL CSatchel::CanDeploy( void )
 {
-	if ( m_pPlayer->m_rgAmmo[ PrimaryAmmoIndex() ] > 0 ) 
+	if ( PlayerPrimaryAmmoCount() > 0 ) 
 	{
 		// player is carrying some satchels
 		return TRUE;
@@ -597,6 +597,13 @@ void CSatchel::ItemPostFrameThink(void) {
 
 		}
 	}
+
+	if (PlayerPrimaryAmmoCount() > 0 && alreadySentOutOfAmmoNotice && getchargeReady() == 0) {
+		alreadySentOutOfAmmoNotice = FALSE;  // can re-send.
+		Deploy(); // show the charge viewmodel again
+		return;
+	}
+
 #endif
 
 
@@ -617,9 +624,15 @@ void CSatchel::WeaponIdle( void )
 	}
 	*/
 
+	//easyPrintLine("WHAT THE time %.2f, %.2f", m_flTimeWeaponIdle, UTIL_WeaponTimeBase());
+
+	if ( m_flTimeWeaponIdle > UTIL_WeaponTimeBase() )
+		return;
+
+
 	//MODDD - is this okay?
-	if(m_pPlayer->pev->viewmodel == iStringNull){
-		if (PlayerPrimaryAmmoCount() > 0 ){
+	if (m_pPlayer->pev->viewmodel == iStringNull) {
+		if (PlayerPrimaryAmmoCount() > 0) {
 
 			globalflag_muteDeploySound = TRUE;
 			Deploy();
@@ -629,10 +642,6 @@ void CSatchel::WeaponIdle( void )
 		}
 	}
 
-	//easyPrintLine("WHAT THE time %.2f, %.2f", m_flTimeWeaponIdle, UTIL_WeaponTimeBase());
-
-	if ( m_flTimeWeaponIdle > UTIL_WeaponTimeBase() )
-		return;
 
 	switch( getchargeReady() )
 	{
@@ -664,6 +673,7 @@ void CSatchel::WeaponIdle( void )
 			if (!sentOutOfAmmoHolster) {
 				//this->Holster();
 				SendWeaponAnim(SATCHEL_RADIO_HOLSTER);
+				sentOutOfAmmoHolster = TRUE;
 			}
 //#endif
 			//}

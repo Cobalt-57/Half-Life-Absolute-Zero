@@ -536,7 +536,7 @@ void CGlock::ItemPostFrame(){
 
 	int determiner = 0;
 	
-	//!!!MY VAR NOW!  .. no changed.
+	// !!!MY VAR NOW!  .. no changed.
 	int playerHasGlockYet = 0;
 
 
@@ -549,11 +549,11 @@ void CGlock::ItemPostFrame(){
 #endif
 
 	if( (determiner == 1 && playerHasGlockYet == 1) || (determiner == 2)){
-		//silencer available, and...
+		// silencer available, and...
 
 
 		if(m_fInAttack == 0){
-			//must be 1 or 2.  Default to "1" : off.
+			// must be 1 or 2.  Default to "1" : off.
 			m_fInAttack = 1;
 		}
 

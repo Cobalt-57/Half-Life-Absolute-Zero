@@ -18,9 +18,11 @@ CChumToadWeapon::CChumToadWeapon(void){
 	//Holy crap, even "pev" stuff needs to be initialized by something. Not doing this here then.
 	//pev->fuser1 = -1;
 	waitingForChumtoadThrow = FALSE;
+
+
+	//m_flReleaseThrow = -1;
+	m_chargeReady &= ~32;
 	
-	//"weaponetired"?
-	m_fInAttack = FALSE;
 }
 BOOL CChumToadWeapon::usesSoundSentenceSave(void){
 	return FALSE;
@@ -82,7 +84,6 @@ void CChumToadWeapon::Spawn( )
 	pev->framerate = 1.0;
 	*/
 
-	m_fInAttack = FALSE;
 
 }
 
@@ -264,6 +265,9 @@ int CChumToadWeapon::GetItemInfo(ItemInfo *p)
 
 BOOL CChumToadWeapon::Deploy( )
 {
+
+	m_chargeReady &= ~32;
+
 	if(!globalflag_muteDeploySound){
 		// play hunt sound
 		float flRndSound = RANDOM_FLOAT ( 0 , 1 );
@@ -276,11 +280,10 @@ BOOL CChumToadWeapon::Deploy( )
 		}
 		*/
 		EMIT_SOUND_DYN(ENT(m_pPlayer->pev), CHAN_WEAPON, "chumtoad/chub_draw.wav", 1, ATTN_NORM, 0, 100);
+		m_pPlayer->m_iWeaponVolume = QUIET_GUN_VOLUME;
 	}
 	
-	m_pPlayer->m_iWeaponVolume = QUIET_GUN_VOLUME;
 
-	m_fInAttack = FALSE;
 	pev->fuser1 = -1;
 	waitingForChumtoadThrow = FALSE;
 
@@ -303,9 +306,10 @@ void CChumToadWeapon::Holster( int skiplocal /* = 0 */ )
 {
 	//m_pPlayer->m_flNextAttack = UTIL_WeaponTimeBase() + 0.5;
 	
-	m_fInAttack = FALSE;
 	pev->fuser1 = -1;
 	waitingForChumtoadThrow = FALSE;
+
+	m_chargeReady &= ~32;
 
 	if ( PlayerPrimaryAmmoCount() <= 0)
 	{
@@ -533,7 +537,8 @@ void CChumToadWeapon::ThrowChumtoad(Vector vecSpawnPoint){
 	//MODDD TODO - throw sound (creature noise)?
 	EMIT_SOUND_DYN(ENT(pev), CHAN_VOICE, "chumtoad/cht_croak_short.wav", 1, ATTN_NORM, 0, RANDOM_LONG(98, 106));
 
-	m_pPlayer->m_iWeaponVolume = QUIET_GUN_VOLUME;
+	// Little range boost, but not much.  Point is to be stealthy with this.
+	m_pPlayer->m_iWeaponVolume = QUIET_GUN_VOLUME + 80;
 
 	CBaseEntity *pChumToad = CBaseEntity::Create( "monster_chumtoad", toadSpawnPoint, Vector(0, m_pPlayer->pev->v_angle.y, 0), SF_MONSTER_THROWN, m_pPlayer->edict() );
 		
@@ -578,8 +583,9 @@ void CChumToadWeapon::PrimaryAttack()
 			m_pPlayer->SetAnimation( PLAYER_ATTACK1 );
 
 			//MODDD - old throw location, now throwing with a little delay...
-			m_fJustThrown = 1;
-			sendJustThrown( ENT(m_pPlayer->pev), m_fJustThrown);
+
+			m_chargeReady |= 32;
+			//sendJustThrown( ENT(m_pPlayer->pev), m_fJustThrown);
 
 			//MODDD 
 			if(m_pPlayer->cheat_minimumfiredelayMem == 0){
@@ -598,8 +604,8 @@ void CChumToadWeapon::PrimaryAttack()
 
 
 
-			//Keep the client in sync, send this.
-			sendTimeWeaponIdleUpdate( ENT(m_pPlayer->pev), m_flTimeWeaponIdle);
+			//Keep the client in sync, send this.   .... why?
+			//sendTimeWeaponIdleUpdate( ENT(m_pPlayer->pev), m_flTimeWeaponIdle);
 
 			//server-only, but if it updates for the client, no problem. The only effect, a spawned chumtoad, is server-only anyways.
 			waitingForChumtoadThrow = TRUE;
@@ -666,7 +672,7 @@ void CChumToadWeapon::ItemPostFrame(){
 		}else{
 			//interrupt throw anim?
 			m_flTimeWeaponIdle = 0;
-			sendTimeWeaponIdleUpdate( ENT(m_pPlayer->pev), m_flTimeWeaponIdle);
+			//sendTimeWeaponIdleUpdate( ENT(m_pPlayer->pev), m_flTimeWeaponIdle);
 		}
 		//m_flStartThrow = -1;
 		//chumtoadThrowReverseDelay = -1;  //don't throw again this time.
@@ -681,14 +687,47 @@ void CChumToadWeapon::ItemPostFrame(){
 
 
 
+
+
+void CChumToadWeapon::ItemPostFrameThink(void) {
+
+
+	//if (m_fJustThrown)
+	if ((m_chargeReady & 32) && m_flTimeWeaponIdle <= UTIL_WeaponTimeBase())
+	{
+		m_chargeReady &= ~32;
+
+
+//#ifndef CLIENT_DLL
+//		sendJustThrown(ENT(m_pPlayer->pev), m_fJustThrown);
+//#endif
+		if (PlayerPrimaryAmmoCount() <= 0)
+		{
+			RetireWeapon();
+			return;
+		}
+
+		SendWeaponAnim(CHUMTOADWEAPON_UP);
+		//MODDD - no static.  Start another anim right at the end of it.
+		//m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + UTIL_SharedRandomFloat( m_pPlayer->random_seed, 10, 15 );
+		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + (36 / 36.0) + randomIdleAnimationDelay();
+		return;
+	}
+
+	CBasePlayerWeapon::ItemPostFrameThink();
+}//ItemPostFrameThink
+
+
+
+
+
+
 void CChumToadWeapon::WeaponIdle( void )
 {
 	//return;
 	//forceBlockLooping();
 
-	//This is reusing the "m_fInAttack" variable for telling when to make the chumtoad re-appear.
-	//...no? just do a literal check for whether the weapon model is null, hence retired and able to be brought back up.
-	//if(m_fInAttack == TRUE){
+
 	if(m_pPlayer->pev->viewmodel == iStringNull){
 		if (PlayerPrimaryAmmoCount() > 0 ){
 			// let's not play the deploy sound.
@@ -705,26 +744,8 @@ void CChumToadWeapon::WeaponIdle( void )
 	if ( m_flTimeWeaponIdle > UTIL_WeaponTimeBase() )
 		return;
 
-	if (m_fJustThrown)
-	{
-		m_fJustThrown = 0;
-#ifndef CLIENT_DLL
-		sendJustThrown( ENT(m_pPlayer->pev), m_fJustThrown);
-#endif
-		if (PlayerPrimaryAmmoCount() <= 0)
-		{
-			RetireWeapon();
-			//m_fInAttack = TRUE;
-			return;
-		}
 
-		SendWeaponAnim( CHUMTOADWEAPON_UP );
-		//MODDD - no static.  Start another anim right at the end of it.
-		//m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + UTIL_SharedRandomFloat( m_pPlayer->random_seed, 10, 15 );
-		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + (36 / 36.0) + randomIdleAnimationDelay();
-		return;
-	}
-	
+
 	//Now that there isn't a static delay for living throwables, the odds of a unique idle anim have been slightly reduced.
 	//Old ones were:
 	//      if  flRand <= 0.75

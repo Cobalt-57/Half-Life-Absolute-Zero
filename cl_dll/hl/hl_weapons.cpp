@@ -80,10 +80,16 @@ EASY_CVAR_EXTERN(wpn_glocksilencer)
 // Also, CHECK!  What is g_iUser1?  Is that the check for menu/VGUI/console being open while ingame that might block
 // clientside weapon think?  Not huge but worth knowing!
 
+// ignored now, consider phasing out.
 extern int flag_apply_m_flTimeWeaponIdle;
 extern float stored_m_flTimeWeaponIdle;
 extern int flag_apply_m_fJustThrown;
 extern int stored_m_fJustThrown;
+
+// Same.  In fact already out.
+//BOOL recentDuckVal = FALSE;
+//int recentDuckTime = 0;
+
 
 
 //MODDD - important point before
@@ -134,8 +140,8 @@ CChumToadWeapon g_ChumToadWeapon;
 //clientside only variable.
 BOOL reloadBlocker = FALSE;
 
-// MODDD - TEST.
-float flNextAttackChangeMem = 0;
+// no need?
+//float flNextAttackChangeMem = 0;
 
 
 // TEST.
@@ -667,13 +673,12 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
 
 
 	
-	//???
-	gEngfuncs.GetViewModel()->curstate.renderfx |= ISVIEWMODEL;
+	// Nope, no need.  The viewmodel can be accessed this same way in studiomodelrenderer.cpp so there is no point in this
+	// renderflag telling what it is.
+	//gEngfuncs.GetViewModel()->curstate.renderfx |= ISVIEWMODEL;
+
 	//gEngfuncs.GetViewModel()->curstate.renderfx &= ~ANIMATEBACKWARDS;
 
-
-	//100001
-	//100000
 	
 	/*
 	if(localPlayer.forceNoWeaponLoop == TRUE){
@@ -731,20 +736,25 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
 			//easyForcePrintLine("UPDATE A: %.2f -> %.2f", pCurrent->m_flNextPrimaryAttack, pfrom->m_flNextPrimaryAttack);
 		}
 
-		//Little filter...
-		
 		//If the new value would be less than 0 but our next primary attack is noticably above 0, this is too much chance in one frame. Deny the transfer this time.
-		if( !(pfrom->m_flNextPrimaryAttack <= 0 && pCurrent->m_flNextPrimaryAttack >= 0.1) ){
+		// CHANGE!!!    Nevermind this.
+		// Anything relying on this needs to be checked.  denying significant differences causes 
+		// retail snark throws to fail, even though it's perfectly sound.
+		// Although...  they shouldn't have set m_flNextPrimaryAttack as though a snark was thrown just because the serverside
+		// traces are dummied (called in PrimaryAttack in snark.cpp;  the ev_hldm ones worked fine).
+		// So.   eh.  whichever makes the most sense.
+		// Getting a signal from the server is still best.  Keep values accurate.
+		//if( !(pfrom->m_flNextPrimaryAttack <= 0 && pCurrent->m_flNextPrimaryAttack >= 0.1) ){
 			pCurrent->m_flNextPrimaryAttack	= pfrom->m_flNextPrimaryAttack;
-		}
-		if( !(pfrom->m_flNextSecondaryAttack <= 0 && pCurrent->m_flNextSecondaryAttack >= 0.1) ){
+		//}
+		//if( !(pfrom->m_flNextSecondaryAttack <= 0 && pCurrent->m_flNextSecondaryAttack >= 0.1) ){
 			pCurrent->m_flNextSecondaryAttack = pfrom->m_flNextSecondaryAttack;
-		}
-		if( !(pfrom->m_flTimeWeaponIdle <= 0 && pCurrent->m_flTimeWeaponIdle >= 0.1) ){
+		//}
+		//if( !(pfrom->m_flTimeWeaponIdle <= 0 && pCurrent->m_flTimeWeaponIdle >= 0.1) ){
 			pCurrent->m_flTimeWeaponIdle = pfrom->m_flTimeWeaponIdle;
-		}else{
-			if(EASY_CVAR_GET(viewModelSyncFixPrintouts)==1) easyForcePrintLine("*****VIEWMODEL SYNCH FIX APPLIED.");
-		}
+		//}else{
+		//	if(EASY_CVAR_GET(viewModelSyncFixPrintouts)==1) easyForcePrintLine("*****VIEWMODEL SYNCH FIX APPLIED.");
+		//}
 
 
 		pCurrent->pev->fuser1			= pfrom->fuser1;
@@ -901,10 +911,14 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
 
 
 	//mODDD - SIGNIFICANT!!!   Don't give m_flNextAttack from here if it was set clientside before this point in this frame!
-	if (localPlayer.m_flNextAttack == flNextAttackChangeMem) {
+	// Using a different idea, a copy of m_flNextAttack called m_flNextAttackCLIENTHISTORY instead, kept the same until the end
+	// of this method.  That is to be used in cl_weapons.cpp instead.   (and cl_player.cpp if it showed up there)
+	// Might not need anything like this regardless but it doesn't appear to hurt.
+	//if (localPlayer.m_flNextAttack == flNextAttackChangeMem) {
 		localPlayer.m_flNextAttack = from->client.m_flNextAttack;
-	}
-	flNextAttackChangeMem = localPlayer.m_flNextAttack;
+	//}
+	//flNextAttackChangeMem = localPlayer.m_flNextAttack;
+
 
 	localPlayer.m_flNextAmmoBurn = from->client.fuser2;
 	localPlayer.m_flAmmoStartCharge = from->client.fuser3;
@@ -961,7 +975,10 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
 	//easyPrintLine("WHAT??? %d %d %d", gEngfuncs.GetViewModel()->curstate.renderfx,  (DONOTDRAWSHADOW | ISPLAYER), ISVIEWMODEL);
 	
 
-	//is this okay?
+
+	/*
+	// REMOVED, used better-synched vars since, but keep this sort of thing in mind if needed in the future.
+	// And why was m_flTimeWeaponIdle a thing?  Isn't it synched already?  Wow I completely forget why I did that.
 	if(flag_apply_m_flTimeWeaponIdle){
 		easyForcePrintLine("flag_apply1. newidle: %.2f", stored_m_flTimeWeaponIdle);
 		pWeapon->m_flTimeWeaponIdle = stored_m_flTimeWeaponIdle;
@@ -980,6 +997,7 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
 		}
 		flag_apply_m_fJustThrown = FALSE;
 	}
+	*/
 
 
 
@@ -1542,14 +1560,12 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
 
 	// And keep this in synch in case of changes the client didn't replicate.
 	localPlayer.m_pActiveItemCLIENTHISTORY = localPlayer.m_pActiveItem;
-
+	localPlayer.m_flNextAttackCLIENTHISTORY = localPlayer.m_flNextAttack;
+	
 }//END OF HUD_WeaponsPostThink
 
 
 
-
-BOOL recentDuckVal = FALSE;
-int recentDuckTime = 0;
 
 /*
 =====================
@@ -1575,8 +1591,8 @@ void DLLEXPORT HUD_PostRunCmd(struct local_state_s* from, struct local_state_s* 
 
 
 	//MODDD - for now, these are unused.  Who knows if they'd ever be useful.
-	recentDuckVal = to->client.bInDuck;
-	recentDuckTime = to->client.flDuckTime;
+	//recentDuckVal = to->client.bInDuck;
+	//recentDuckTime = to->client.flDuckTime;
 
 
 	//////////////////////////////////////////////////////////////////////////

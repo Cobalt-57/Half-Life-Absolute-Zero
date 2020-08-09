@@ -596,8 +596,10 @@ IMPLEMENT_MESSAGE(MUnpause){
 	return 1;
 }
 
+
+//MODDD - Dummied, don't call!
 IMPLEMENT_MESSAGE(UpdTWI){
-	
+	/*
 	BEGIN_READ( pbuf, iSize );
 	int x = READ_SHORT();
 
@@ -606,13 +608,14 @@ IMPLEMENT_MESSAGE(UpdTWI){
 	
 	flag_apply_m_flTimeWeaponIdle = TRUE;
 	stored_m_flTimeWeaponIdle = newWeaponIdleTime;
-
+	*/
 	return 1;
 }
 
-
+//MODDD - Dummied, don't call!
 IMPLEMENT_MESSAGE(UpdJT){
 	
+	/*
 	BEGIN_READ( pbuf, iSize );
 	int x = READ_BYTE();
 	
@@ -621,7 +624,7 @@ IMPLEMENT_MESSAGE(UpdJT){
 	
 	flag_apply_m_fJustThrown = TRUE;
 	stored_m_fJustThrown = newJustThrown;
-
+	*/
 	return 1;
 }
 

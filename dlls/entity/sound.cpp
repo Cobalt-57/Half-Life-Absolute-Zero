@@ -1768,7 +1768,10 @@ float TEXTURETYPE_PlaySound(TraceResult *ptr,  Vector vecSrc, Vector vecEnd, int
 	}
 	else {
 		// more to work with.
-		isEntityWorld = (pEntity->IsWorld() || pEntity->Classify() == CLASS_NONE);
+		BOOL temp_isWorld = pEntity->IsWorld();
+		int temp_class = pEntity->Classify();
+
+		isEntityWorld = (temp_isWorld || temp_class == CLASS_NONE);
 	}
 
 	//MODDD - why are we making such a strong assumption here?

@@ -846,71 +846,12 @@ void V_CalcNormalRefdef(struct ref_params_s* pparams)
 
 
 
-
-
-
-
-
-
-
-	// bunch of scraps from testing around.
-	// Sweet GOD does figuring out the view-offset out of simorg have to be some act of eldritch witchcraft???
-	// NEVERMIND THIS.
-
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// smooth out stair step ups
 	//MODDD - support for going down stairs too to look smooth!
 	//MODDD - NOTE.  These seem to be looking at a hardcoded stepsize of "18", even though
 	// sv_stepsize is a CVar that can be changed.
 	// Perhaps it should be broadcasted to clients, then use that client-cached version here?
-
-//view->curstate.
-// bInDuck ???
-
-	/*
-	extern BOOL recentDuckVal;
-	extern int recentDuckTime;
-
-	float test1 = pparams->simorg[2];
-	float test2 = pparams->simorg[2] - pparams->viewheight[2];
-	float test3 = pparams->viewheight[2];
-
-
-	vec3_t TEMP_view_ofs;
-	gEngfuncs.pEventAPI->EV_LocalPlayerViewheight(TEMP_view_ofs);
-	float TEMP_view_ofs_z = TEMP_view_ofs[2];
-	int hulltesto = ent->curstate.usehull;
-	*/
-
-	/*
-	if (ent->curstate.usehull == 1) {
-		int x = 12;
-	}else if (recentDuckVal) {
-		int x = 12;
-	}
-	*/
-
-	/*
-	if ( (nButtonPressed & IN_DUCK ) && !( pmove->flags & FL_DUCKING ) )
-	if ((nButtonPressed & IN_DUCK) && !(ent->curstate.usehull == 1))
-	{
-		// Use 1 second so super long jump will work
-		pmove->flDuckTime = 1000;
-		pmove->bInDuck = true;
-	}
-	*/
-
-	//if(ent->curstate.usehull == 2){
-	//	int x = 666;
-	//}else
-
-
-
-
-
-
-
-
 
 	//MODDD - crouch interp
 	////////////////////////////////////////////////////////////////////////////////////////////////////

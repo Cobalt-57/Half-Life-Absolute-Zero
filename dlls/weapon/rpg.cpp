@@ -875,7 +875,7 @@ void CRpg::PrimaryAttack()
 {
 	if ( m_iClip )
 	{
-		m_pPlayer->m_iWeaponVolume = LOUD_GUN_VOLUME;
+		m_pPlayer->m_iWeaponVolume = LOUDEST_GUN_VOLUME; //MODDD - louder, for alerting AI that is.
 		m_pPlayer->m_iWeaponFlash = BRIGHT_GUN_FLASH;
 
 #ifndef CLIENT_DLL

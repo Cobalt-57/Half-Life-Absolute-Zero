@@ -36,15 +36,6 @@ EASY_CVAR_EXTERN(mp5GrenadeInheritsPlayerVelocity)
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST(playerWeaponSpreadMode)
 
 
-/*
-// MODDD - no need for this now, all weapons give their secondary ammo type index, even if it is -1.
-int CMP5::SecondaryAmmoIndex( void )
-{
-	return m_iSecondaryAmmoType;
-}
-*/
-
-
 //MODDD
 void CMP5::customAttachToPlayer(CBasePlayer *pPlayer ){
 	m_pPlayer->SetSuitUpdate("!HEV_ASSAULT", FALSE, SUIT_NEXT_IN_30MIN, 6.9f);

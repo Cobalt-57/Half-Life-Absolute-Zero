@@ -1525,7 +1525,9 @@ cl_interp_view_extra (2) - MODEVAR.  View camera smoothness for crouching to loo
 
 -------------------------------------------------------------------------------
 
-
+sv_explosionknockback (1) - FLOAT (adjustable).  1 is the default amount of knockback from explosions for all non-player monsters (player is already knocked back by most damage sources including explosions).
+~0 is none.
+~Uses the same procedure as 'monsterKilledToss' set to 2 to determine knockback.  Larger monsters are affected by the same damage less.
 
 
 

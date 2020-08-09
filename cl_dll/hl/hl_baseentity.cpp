@@ -246,6 +246,7 @@ void UTIL_PRECACHESOUND(char* path){}
 
 GENERATE_TRACEATTACK_IMPLEMENTATION_DUMMY_CLIENT(CBaseEntity)
 GENERATE_TAKEDAMAGE_IMPLEMENTATION_DUMMY_CLIENT(CBaseEntity)
+void CBaseEntity::Knockback(const int knockbackAmount, const Vector& knockbackDir) {}
 BOOL CBaseEntity::ChangeHealthFiltered(entvars_t* pevAttacker, float flDamage) { return FALSE; }
 float CBaseMonster::hitgroupDamage(float flDamage, int bitsDamageType, int bitsDamageTypeMod, int iHitgroup){return FALSE;}
 

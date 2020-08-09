@@ -232,6 +232,8 @@ float EV_HLDM_PlayTextureSound(int idx, pmtrace_t* ptr, float* vecSrc, float* ve
 	BOOL isEntityWorld;
 	entityIndex = gEngfuncs.pEventAPI->EV_IndexFromTrace(ptr);
 
+	cl_entity_t* cEntRefAlt = gEngfuncs.GetEntityByIndex(entityIndex);
+
 	// a 'null' check for a number where 0 is valid doesn't make sense.
 	//if (entity == NULL) {
 	//	isEntityWorld = TRUE;  // just go ahead and say 'yes'.
@@ -239,16 +241,22 @@ float EV_HLDM_PlayTextureSound(int idx, pmtrace_t* ptr, float* vecSrc, float* ve
 	//else {
 		// more to work with.
 		//isEntityWorld = (pEntity->IsWorld() || pEntity->Classify() == CLASS_NONE);
-		isEntityWorld = (entityIndex == 0);
+
+		//TODO - for now, assume anything without the ISNPC flag is world-affiliated, or whatever.
+		// Later go in ad ad ISWORLDAFFILIATED to all stuff with say Class == CLASS_NONE or indeed, that IsWorldAffiliated() as TRUE.
+		// No idea why serverside didn't check for that too.
+		//isEntityWorld = (entityIndex == 0 || cEntRefAlt->curstate.renderfx & ISWORLDAFFILIATED);
+		isEntityWorld = (entityIndex == 0 || !(cEntRefAlt->curstate.renderfx & ISNPC) );
+
 	//}
 
 
 
 
 	
-	cl_entity_t* bagina = gEngfuncs.GetEntityByIndex(entityIndex);
-	bagina->curstate.playerclass;
-	bagina->curstate.number;
+	//cl_entity_t* testent = gEngfuncs.GetEntityByIndex(entityIndex);
+	//testent->curstate.playerclass;
+	//testent->curstate.number;
 
 	if (!isEntityWorld) {
 		// can be a little more specific.
@@ -266,8 +274,6 @@ float EV_HLDM_PlayTextureSound(int idx, pmtrace_t* ptr, float* vecSrc, float* ve
 			//cl_entity_t* cEntRef = gEngfuncs.GetEntityByIndex(PM_GetPhysEntInfo(tr.ent));
 			
 			
-			cl_entity_t* cEntRefAlt = gEngfuncs.GetEntityByIndex(entityIndex);
-
 			// !!!
 			// possible to check for ptr->hitgroup?  Doubt it's necesary.
 
@@ -2270,8 +2276,11 @@ void EV_SnarkFire(event_args_t* args)
 	if (!EV_IsLocal(idx))
 		return;
 
-	if (args->ducking)
-		vecSrc = vecSrc - (VEC_HULL_MIN - VEC_DUCK_HULL_MIN);
+	//MODDD - duck correction removed.  It just placed things at the same height
+	// as standing while ducking, which kinda doesn't make sense.
+	//if (args->ducking){
+	//	vecSrc = vecSrc - (VEC_HULL_MIN - VEC_DUCK_HULL_MIN);
+	//}
 
 	// Store off the old count
 	gEngfuncs.pEventAPI->EV_PushPMStates();
@@ -2312,9 +2321,10 @@ void EV_ChumToadFire(event_args_t* args)
 	if (!EV_IsLocal(idx))
 		return;
 
-	if (args->ducking)
-		vecSrc = vecSrc - (VEC_HULL_MIN - VEC_DUCK_HULL_MIN);
-
+	//if (args->ducking){
+	//	vecSrc = vecSrc - (VEC_HULL_MIN - VEC_DUCK_HULL_MIN);
+	//}
+	
 	// Store off the old count
 	gEngfuncs.pEventAPI->EV_PushPMStates();
 
