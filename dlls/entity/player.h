@@ -137,7 +137,18 @@ class CBasePlayer : public CBaseMonster
 {
 public:
 
-	//MODDD - new, but a lot of these are.
+
+	//MODDD - moved from CBaseEntity.  Stores ammo counts as named vars.
+	// Might not even be necessary, notice the lack of one for snark/squeak ammo, a retail weapon.
+	int ammo_9mm;
+	int ammo_357;
+	int ammo_bolts;
+	int ammo_buckshot;
+	int ammo_rockets;
+	int ammo_uranium;
+	int ammo_hornets;
+	int ammo_argrens;
+
 
 	BOOL queueFirstAppearanceMessageSend;
 	float superDuperDelay;
@@ -682,7 +693,7 @@ public:
 
 	//MODDD - now 'const char*' instead of just 'char*', most places involving strings do that.
 	int GiveAmmo( int iAmount, const char* szName, int iMax );
-	int GiveAmmo(int iCount, int iAmmoTypeId, int iMax);
+	int GiveAmmoID(int iCount, int iAmmoTypeId, int iMax);
 
 	void SendAmmoUpdate(void);
 

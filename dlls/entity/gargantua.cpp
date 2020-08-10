@@ -33,7 +33,7 @@
 #include "explode.h"
 #include "func_break.h"
 #include "scripted.h"
-
+#include "gib.h"
 
 
 //MODDD - extern
@@ -1769,6 +1769,8 @@ void CGargantua::RunTask( Task_t *pTask )
 			SetThink( &CBaseEntity::SUB_Remove );
 			
 			//MODDD - NOTE. custom gib generation?  ok, suppose that's fine.
+			// The way most places would do this is CGib::SpawnRandomGibs(...).  Might be worth looking at other examples
+			// to see if this can be fitted to that easily.
 			int i;
 			int parts = MODEL_FRAMES( gGargGibModel );
 			for ( i = 0; i < 10; i++ )

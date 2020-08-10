@@ -2,8 +2,6 @@
 #ifndef GAUSS_H
 #define GAUSS_H
 
-
-#include "extdll.h"
 #include "weapons.h"
 
 

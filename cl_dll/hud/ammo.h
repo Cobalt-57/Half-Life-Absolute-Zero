@@ -33,9 +33,58 @@ extern client_sprite_t* GetSpriteList(client_sprite_t* pList, const char* psz, i
 class CHudAmmo: public CHudBase
 {
 public:
+
+	// private, huh?               no
+//private:
+public:
+	float m_fFade;
+	RGBA  m_rgba;
+	WEAPON* m_pWeapon;
+	int m_HUD_bucket0;
+	int m_HUD_selection;
+	//MODDD - new sprite index
+	int m_HUD_slash;
+
+	//MODDD - new
+	int recentOnTarget;
+
+	//MODDD - Sprite Graphics for power canisters
+	int m_antidoteindex;
+	int m_adrenalineindex;
+	int m_radiationindex;
+
+	//int m_antidote_emptyindex;
+	//int m_adrenaline_emptyindex;
+	//int m_radiation_emptyindex;
+
+	//MODDD - new to refer to the number of each power canister the player has
+	int m_antidotes;
+	int m_adrenalines;
+	int m_radiations;
+	//MODDD - other new things...
+	float m_airTankAirTime;
+	float m_longJumpCharge;
+
+	float m_e_battery_empty;
+	float m_e_battery_full;
+
+	int m_longjump_empty;
+	int m_longjump_full;
+	int m_airtank_empty;
+	int m_airtank_full;
+
+	int m_HUD_weapons_categorybackground;
+
+	//SpriteHandle_t* alphaCrossHair;
+	//wrect_t* alphaCrossHairRect;
+	//int alphaCrossHairIndex;  this is no longer an instance variable.  It is global, as seen in "cl_util.h".
+
 	//MODDD - moved from ammo.cpp.
 	WeaponsResource gWR;
 
+
+
+public:
 
 	int Init( void );
 	int VidInit( void );
@@ -93,48 +142,7 @@ public:
 	//MODDD - constructor added.
 	CHudAmmo::CHudAmmo();
 
-private:
-	float m_fFade;
-	RGBA  m_rgba;
-	WEAPON *m_pWeapon;
-	int m_HUD_bucket0;
-	int m_HUD_selection;
-	//MODDD - new sprite index
-	int m_HUD_slash;
 
-	//MODDD - new
-	int recentOnTarget;
-
-	//MODDD - Sprite Graphics for power canisters
-	int m_antidoteindex;
-	int m_adrenalineindex;
-	int m_radiationindex;
-
-	//int m_antidote_emptyindex;
-	//int m_adrenaline_emptyindex;
-	//int m_radiation_emptyindex;
-
-	//MODDD - new to refer to the number of each power canister the player has
-	int m_antidotes;
-	int m_adrenalines;
-	int m_radiations;
-	//MODDD - other new things...
-	float m_airTankAirTime;
-	float m_longJumpCharge;
-	
-	float m_e_battery_empty;
-	float m_e_battery_full;
-
-	int m_longjump_empty;
-	int m_longjump_full;
-	int m_airtank_empty;
-	int m_airtank_full;
-
-	int m_HUD_weapons_categorybackground;
-
-	//SpriteHandle_t* alphaCrossHair;
-	//wrect_t* alphaCrossHairRect;
-	//int alphaCrossHairIndex;  this is no longer an instance variable.  It is global, as seen in "cl_util.h".
 };
 
 

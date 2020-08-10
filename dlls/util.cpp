@@ -5021,6 +5021,11 @@ void W_Precache(void)
 	UTIL_PrecacheOther( "item_longjump" );
 	//UTIL_PrecacheOther( "item_longjumpcharge" );
 
+
+
+	//MODDD - marker. Weapon precache starts here.
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 	// shotgun
 	UTIL_PrecacheOtherWeapon( "weapon_shotgun" );
 	UTIL_PrecacheOther( "ammo_buckshot" );
@@ -5076,6 +5081,14 @@ void W_Precache(void)
 
 	// hornetgun
 	UTIL_PrecacheOtherWeapon( "weapon_hornetgun" );
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	//MODDD - with all weapons precached, all ammo types are available.  Call this.
+	PostWeaponRegistry();
+
+
+
 
 	if ( g_pGameRules->IsDeathmatch() )
 	{

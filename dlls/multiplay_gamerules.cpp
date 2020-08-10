@@ -613,7 +613,10 @@ void CHalfLifeMultiplay :: PlayerSpawn( CBasePlayer *pPlayer )
 		globalflag_muteDeploySound = TRUE;
 		pPlayer->GiveNamedItem( "weapon_crowbar" );
 		pPlayer->GiveNamedItem( "weapon_9mmhandgun" );
-		pPlayer->GiveAmmo( 68, "9mm", _9MM_MAX_CARRY );// 4 full reloads
+		//MODDD - default, for the '4 full reloads', being 5 instead. That would be 12 times 5.  I think.
+		// I forget how the whole 'extra bullet' logic would play into that.
+		//pPlayer->GiveAmmo( 68, "9mm", _9MM_MAX_CARRY );// 4 full reloads
+		pPlayer->GiveAmmo( 60, "9mm", _9MM_MAX_CARRY );// 4 full reloads
 		globalflag_muteDeploySound = FALSE;
 	}
 }

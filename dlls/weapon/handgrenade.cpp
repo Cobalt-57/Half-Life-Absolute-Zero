@@ -67,8 +67,11 @@ void CHandGrenade::Spawn( )
 	
 	//if(EASY_CVAR_GET(handGrenadePickupYieldsOne) == 1)
 
-	// Apparently, this method can be called before the player is present (and, even if so, hasn't made this pick-upable part of the inventory yet).
-	// So, just make "m_iDefaultAmmo" a non-zero value and determine what to give in an overridden "ExtractAmmo" method.
+
+	// Make "m_iDefaultAmmo" non-zero so that it works like other pickups.  Ones with a defaultAmmo of 0
+	// go a different route (ExtractClipAmmo).
+	// Handle what to give in the grenade's own AddPrimaryAmmo (CVar makes it 1 or retail default, 5).
+	//m_iDefaultAmmo = HANDGRENADE_DEFAULT_GIVE;
 	m_iDefaultAmmo = 1;
 	
 	FallInit();// get ready to fall down.
@@ -92,7 +95,11 @@ BOOL CHandGrenade::AddPrimaryAmmo( int iCount, char *szName, int iMaxClip, int i
 {
 	// No behavior if m_iDefaultAmmo is 0, even calling the parent method.
 	// I forget what the point of this check even was, but something like this used to happen here.  (My script, not as-is).
-	if (m_iDefaultAmmo > 0) {
+	// WWWWWRRRRRRRROOOOOOONNNNNNNNNNNGGGGG.  Bad.
+	// Checking iCount is plenty.  Only force amount given on brand new pickups, not existing drops.
+	// Forcing a count coming as 0 just adds more grenades than there actually were in the dropped weaponbox
+	// (11 or 15 grenades from a weaponbox that had 10)
+	if (iCount > 0) {
 		//This is the real intervention.  The grenade gives only "one" grenade if the CVar is being used ( = 1), and 5 otherwise (retail value).
 		if (m_pPlayer && EASY_CVAR_GET(handGrenadePickupYieldsOne) == 1) {
 			iCount = 1;
@@ -104,9 +111,11 @@ BOOL CHandGrenade::AddPrimaryAmmo( int iCount, char *szName, int iMaxClip, int i
 		return CBasePlayerWeapon::AddPrimaryAmmo(iCount, szName, iMaxClip, iMaxCarry, forcePickupSound);
 	}
 	else {
-		// finish?
-		m_iDefaultAmmo = 0;
-		return FALSE;
+		// finish?... don't tamper with anything, just go straight to default and elegantly add nothing I guess
+		//m_iDefaultAmmo = 0;
+		//return FALSE;
+
+		return CBasePlayerWeapon::AddPrimaryAmmo(iCount, szName, iMaxClip, iMaxCarry, forcePickupSound);
 	}
 }
 

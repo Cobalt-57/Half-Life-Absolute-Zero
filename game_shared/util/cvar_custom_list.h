@@ -648,7 +648,7 @@
 #define DEFAULT_scheduleInterruptPrintouts 0
 #define DEFAULT_animationPrintouts 0
 #define DEFAULT_hassaultMeleeAttackEnabled 1
-#define DEFAULT_pathfindStumpedWaitTime 10
+#define DEFAULT_pathfindStumpedWaitTime 6
 #define DEFAULT_pathfindStumpedMode 2
 #define DEFAULT_pathfindStumpedForgetEnemy 0
 #define DEFAULT_pathfindEdgeCheck 1

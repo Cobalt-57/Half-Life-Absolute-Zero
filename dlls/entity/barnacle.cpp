@@ -21,8 +21,8 @@
 #include "util.h"
 #include "cbase.h"
 #include "basemonster.h"
+#include "gib.h"
 #include "schedule.h"
-
 #include "defaultai.h"
 
 extern BOOL globalPSEUDO_germanModel_hgibFound;
@@ -38,9 +38,6 @@ EASY_CVAR_EXTERN(germanRobotGibsDecal)
 
 
 
-//MODDD
-//#include "skill.h"
-extern DLL_GLOBAL int		g_iSkillLevel;
 
 #define BARNACLE_BODY_HEIGHT	44 // how 'tall' the barnacle's model is.
 #define BARNACLE_PULL_SPEED		8
@@ -56,6 +53,10 @@ extern DLL_GLOBAL int		g_iSkillLevel;
 
 
 
+extern DLL_GLOBAL int g_iSkillLevel;
+
+
+
 
 #if REMOVE_ORIGINAL_NAMES != 1
 	LINK_ENTITY_TO_CLASS( monster_barnacle, CBarnacle );
@@ -65,13 +66,14 @@ extern DLL_GLOBAL int		g_iSkillLevel;
 	LINK_ENTITY_TO_CLASS( barnacle, CBarnacle );
 	
 	//no extras.
-
 #endif
-
 
 
 int CBarnacle::s_iStandardGibID = -1;
 int CBarnacle::s_fStandardGibDecal = TRUE;
+
+
+
 
 //MODDD
 CBarnacle::CBarnacle(){

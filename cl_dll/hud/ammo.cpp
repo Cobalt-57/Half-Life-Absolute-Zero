@@ -292,69 +292,9 @@ int CHudAmmo::VidInit(void)
 //
 void CHudAmmo::Think(void)
 {
-	
-
-	//MODDD - still okay to do weapon selection during death, IF the option is on.
-	//if ( gHUD.m_fPlayerDead )
-	if(EASY_CVAR_GET(canShowWeaponSelectAtDeath) == 0 && gHUD.m_fPlayerDead)
-		return;
-
-	if ( gHUD.m_iWeaponBits != gWR.iOldWeaponBits )
-	{
-		gWR.iOldWeaponBits = gHUD.m_iWeaponBits;
-
-		for (int i = MAX_WEAPONS-1; i > 0; i-- )
-		{
-			WEAPON *p = gWR.GetWeapon(i);
-
-			if ( p )
-			{
-				if ( gHUD.m_iWeaponBits & ( 1 << p->iId ) )
-					gWR.PickupWeapon( p );
-				else
-					gWR.DropWeapon( p );
-			}
-		}
-	}
-
-	if (!gWR.gpActiveSel)
-		return;
-
-
-	// has the player selected one?
-	if (gHUD.m_iKeyBits & IN_ATTACK)
-	{
-		//MODDD - player must also not be dead to make a selection (in case weapons menu is still enabled)
-		//MODDD - new condition...?
-		//if(!gHUD.m_fPlayerDead ){
-			if (gWR.gpActiveSel != (WEAPON *)1)
-			{
-				ServerCmd(gWR.gpActiveSel->szName);
-				g_weaponselect = gWR.gpActiveSel->iId;
-			}
-		//}
-
-
-		PlaySound("common/wpn_select.wav", 1);
-
-		//Misunderstood something, nevermind this.
-		/*
-		if(CVAR_GET_FLOAT("deployingWeaponPlaysOtherSound") == 1){
-			PlaySound("items/gunpickup4.wav", 1);
-		}else{
-			PlaySound("common/wpn_select.wav", 1);
-		}
-		*/
-
-
-		gHUD.m_iKeyBits &= ~IN_ATTACK;
-
-		gWR.gpLastSel = gWR.gpActiveSel;
-		gWR.gpActiveSel = NULL;
-
-
-	}
-
+	//MODDD - redirect to the gWR (weapons_resource.cpp) Think method instead.
+	// Almost everything involved the gWR, more at home there.
+	gWR.Think();
 }
 
 
@@ -948,8 +888,11 @@ void CHudAmmo::UserCmd_Slot10(void)
 	SlotInput( 9 );
 }
 
+// Linked to 'cancelselect' in console.     ok.
 void CHudAmmo::UserCmd_Close(void)
 {
+	//MODDD - similar to the new gWR (weapons_resource.cpp) method 'CancelSelection', but
+	// leaving the "escape" call here in case that had a point.
 	if (gWR.gpActiveSel)
 	{
 		gWR.gpLastSel = gWR.gpActiveSel;
@@ -1015,11 +958,13 @@ void CHudAmmo::UserCmd_PrevWeapon(void)
 {
 
 	//if ( gHUD.m_fPlayerDead || (gHUD.m_iHideHUDDisplay & (HIDEHUD_WEAPONS | HIDEHUD_ALL)) )
-	if ( (EASY_CVAR_GET(canShowWeaponSelectAtDeath) == 0 && gHUD.m_fPlayerDead) || (gHUD.m_iHideHUDDisplay & (HIDEHUD_WEAPONS | HIDEHUD_ALL)) )
+	if ((EASY_CVAR_GET(canShowWeaponSelectAtDeath) == 0 && gHUD.m_fPlayerDead) || (gHUD.m_iHideHUDDisplay & (HIDEHUD_WEAPONS | HIDEHUD_ALL))) {
 		return;
+	}
 
-	if ( !gWR.gpActiveSel || gWR.gpActiveSel == (WEAPON*)1 )
+	if (!gWR.gpActiveSel || gWR.gpActiveSel == (WEAPON*)1) {
 		gWR.gpActiveSel = m_pWeapon;
+	}
 
 	int pos = MAX_WEAPON_POSITIONS-1;
 	int slot = MAX_WEAPON_SLOTS-1;

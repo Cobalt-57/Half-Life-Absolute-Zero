@@ -45,7 +45,7 @@ CBasePlayer::CBasePlayer(void) {
 int CBasePlayer::GiveAmmo(int iCount, const char* szName, int iMax) {
 	return 0;
 }
-int CBasePlayer::GiveAmmo(int iCount, int iAmmoTypeId, int iMax) {
+int CBasePlayer::GiveAmmoID(int iCount, int iAmmoTypeId, int iMax) {
 	return 0;
 }
 
@@ -92,14 +92,14 @@ int CBasePlayer::AmmoInventory(int iAmmoIndex)
 //MODDD - copied over.
 void CBasePlayer::TabulateAmmo()
 {
-	ammo_9mm = AmmoInventory(GetAmmoIndex("9mm"));
-	ammo_357 = AmmoInventory(GetAmmoIndex("357"));
-	ammo_argrens = AmmoInventory(GetAmmoIndex("ARgrenades"));
-	ammo_bolts = AmmoInventory(GetAmmoIndex("bolts"));
-	ammo_buckshot = AmmoInventory(GetAmmoIndex("buckshot"));
-	ammo_rockets = AmmoInventory(GetAmmoIndex("rockets"));
-	ammo_uranium = AmmoInventory(GetAmmoIndex("uranium"));
-	ammo_hornets = AmmoInventory(GetAmmoIndex("Hornets"));
+	ammo_9mm = AmmoInventory(AmmoIndex_9mm);
+	ammo_357 = AmmoInventory(AmmoIndex_357);
+	ammo_argrens = AmmoInventory(AmmoIndex_ARgrenades);
+	ammo_bolts = AmmoInventory(AmmoIndex_bolts);
+	ammo_buckshot = AmmoInventory(AmmoIndex_buckshot);
+	ammo_rockets = AmmoInventory(AmmoIndex_rockets);
+	ammo_uranium = AmmoInventory(AmmoIndex_uranium);
+	ammo_hornets = AmmoInventory(AmmoIndex_Hornets);
 }
 
 
@@ -302,3 +302,32 @@ void CBasePlayer::Activate(void)
 	//um, what.
 
 }
+
+
+// other dummied methods.
+BOOL CBasePlayer::HasPlayerItem(CBasePlayerItem* pCheckItem) { return FALSE; }
+
+// should this be dummied? ever get called clientside anyway?
+// Seems it isn't.  oh well.
+BOOL CBasePlayer::SwitchWeapon(CBasePlayerItem* pWeapon) {
+	if (!pWeapon->CanDeploy())
+	{
+		return FALSE;
+	}
+
+	ResetAutoaim();
+
+	setActiveItem_HolsterCheck(pWeapon);
+	return TRUE;
+}
+
+Vector CBasePlayer::GetGunPosition(void) { return g_vecZero; }
+Vector CBasePlayer::GetGunPositionAI(void) { return g_vecZero; }
+const char* CBasePlayer::TeamID(void) { return ""; }
+
+void CBasePlayer::AddPoints(int score, BOOL bAllowNegativeScore) { }
+void CBasePlayer::AddPointsToTeam(int score, BOOL bAllowNegativeScore) { }
+
+BOOL CBasePlayer::usesSoundSentenceSave(void) { return FALSE; }
+
+

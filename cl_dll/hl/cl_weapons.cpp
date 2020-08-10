@@ -191,6 +191,23 @@ CBasePlayerWeapon :: CanDeploy
 */
 BOOL CBasePlayerWeapon::CanDeploy(void)
 {
+
+	//MODDD - don't leave this up to clientside!
+	// Goldsrc is just bad at working with this.
+	
+	// Caused an issue where CanDeploy says "yes" on the server,
+	// but "no" on the client so it thinks the deploy animation
+	// didn't happen and forces it to be replayed awkwardly.
+	
+	// Can be seen by emptying a clip of something (mp5),
+	// wait for it to reload automatically, but don't let it finish.
+	// Swap to another weapon, and back.  Deploy will play over itself once.
+	// Tested with cl_holster 0 but still happens with 1.
+
+	return TRUE;
+
+
+
 	//easyPrintLine("MESSAGE4");
 	BOOL bHasAmmo = 0;
 
@@ -251,7 +268,12 @@ BOOL CBasePlayerWeapon::DefaultDeploy(char* szViewModel, char* szWeaponModel, in
 	if (!CanDeploy())
 		return FALSE;
 
+	// safety
+	m_fInReload = FALSE;
+
 	m_chargeReady &= ~128;
+
+
 
 	int x = 45;
 
@@ -751,6 +773,7 @@ void CBasePlayerWeapon::ItemPostFrame()
 		//m_iClip += 10;
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
+		/*
 		// complete the reload.
 		int myPrimaryAmmoType = getPrimaryAmmoType();
 		if (IS_AMMOTYPE_VALID(myPrimaryAmmoType)) {
@@ -776,17 +799,18 @@ void CBasePlayerWeapon::ItemPostFrame()
 			this->OnReloadApply();
 		}
 		m_fInReload = FALSE;
+		*/
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #endif
 		//MODDD - old leftovers as a bare minimum before the weapons.cpp restoration above.
-		/*
+		
 		this->OnReloadApply();
 
 		m_fInReload = FALSE;
-		*/
+		
 
 	}//END OF that reload stuff
 
@@ -863,6 +887,11 @@ void CBasePlayerWeapon::ItemPostFrame()
 	{
 		// no fire buttons down
 
+
+
+		// no.   fuck this.
+		/*
+
 		m_fFireOnEmpty = FALSE;
 
 		// weapon is useable. Reload if empty and weapon has waited as long as it has to after firing
@@ -871,6 +900,7 @@ void CBasePlayerWeapon::ItemPostFrame()
 			Reload();
 			return;
 		}
+		*/
 
 		WeaponIdle();
 		return;

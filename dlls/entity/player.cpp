@@ -34,6 +34,7 @@
 #include "gamerules.h"
 #include "game.h"
 #include "hltv.h"
+#include "gib.h"
 #include "util_debugdraw.h"
 // only included to see what some default AI schedules are such as "slSmallFlinsh" for another
 // monster.
@@ -2118,18 +2119,25 @@ This function is used to find and store
 all the ammo we have into the ammo vars.
 ============
 */
+
+
+//MODDD - supports the cached ammotype indeces.
+// These "ammo_" counts can probably be phased out at some point, several weapons don't even use them
+// (gauss makes no mention of ammo_uranium, there isn't even a count for a retail weapon: snarks/squeak).
+// Ammo counts through the array of ammo's on the player (m_rgAmmo) are kept in synch with clientside
+// anyway, which is really what these are tied to.
+// So these counts look to have no advantage over say, PlayerPrimaryAmmoCount() for a given weapon.
 void CBasePlayer::TabulateAmmo()
 {
-	ammo_9mm = AmmoInventory( GetAmmoIndex( "9mm" ) );
-	ammo_357 = AmmoInventory( GetAmmoIndex( "357" ) );
-	ammo_argrens = AmmoInventory( GetAmmoIndex( "ARgrenades" ) );
-	ammo_bolts = AmmoInventory( GetAmmoIndex( "bolts" ) );
-	ammo_buckshot = AmmoInventory( GetAmmoIndex( "buckshot" ) );
-	ammo_rockets = AmmoInventory( GetAmmoIndex( "rockets" ) );
-	ammo_uranium = AmmoInventory( GetAmmoIndex( "uranium" ) );
-	ammo_hornets = AmmoInventory( GetAmmoIndex( "Hornets" ) );
+	ammo_9mm = AmmoInventory( AmmoIndex_9mm );
+	ammo_357 = AmmoInventory(AmmoIndex_357 );
+	ammo_argrens = AmmoInventory(AmmoIndex_ARgrenades );
+	ammo_bolts = AmmoInventory(AmmoIndex_bolts );
+	ammo_buckshot = AmmoInventory(AmmoIndex_buckshot );
+	ammo_rockets = AmmoInventory(AmmoIndex_rockets );
+	ammo_uranium = AmmoInventory(AmmoIndex_uranium );
+	ammo_hornets = AmmoInventory(AmmoIndex_Hornets );
 }
-
 
 
 void CBasePlayer::set_fvoxEnabled(BOOL argNew, BOOL setSilent) {
@@ -8054,7 +8062,7 @@ int CBasePlayer :: GiveAmmo( int iCount, const char* szName, int iMax )
 
 
 //MODDD - new version, given the ammo type ID instead of the name of the ammo.
-int CBasePlayer::GiveAmmo(int iCount, int iAmmoTypeId, int iMax)
+int CBasePlayer::GiveAmmoID(int iCount, int iAmmoTypeId, int iMax)
 {
 	if(!IS_AMMOTYPE_VALID(iAmmoTypeId))
 	{
@@ -9436,11 +9444,14 @@ CBasePlayerItem* CBasePlayer::FindNamedPlayerItem(const char *pszItemName){
 
 
 
-//=========================================================
-// 
-//=========================================================
+
+//MODDD - as-is method, modified to work with holstering.
+// This is called on the player weapon being forced to something else by event, most likely (if not only)
+// picking up a new weapon that wants to deploy.
 BOOL CBasePlayer :: SwitchWeapon( CBasePlayerItem *pWeapon ) 
 {
+	// old contents of method, now supports holstering
+	/*
 	if ( !pWeapon->CanDeploy() )
 	{
 		return FALSE;
@@ -9457,6 +9468,18 @@ BOOL CBasePlayer :: SwitchWeapon( CBasePlayerItem *pWeapon )
 	pWeapon->Deploy( );
 
 	return TRUE;
+	*/
+
+	if (!pWeapon->CanDeploy())
+	{
+		return FALSE;
+	}
+
+	ResetAutoaim();
+
+	setActiveItem_HolsterCheck(pWeapon);
+	return TRUE;
+	
 }
 
 

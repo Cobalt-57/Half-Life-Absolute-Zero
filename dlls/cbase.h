@@ -22,15 +22,6 @@
 #define CBASE_H
 
 
-// what.  dude, this is cbase.h.
-//#include "cbase.h"
-// Better believe we'll need this though.
-#include "util_entity.h"
-
-// Also, look below for an overload of FNullEnt that used to be in player.cpp.
-// Moved below CBaseEntity's class definition so it can be used mostly anywhere else now too.
-
-
 /*
 
 Class Hierachy
@@ -44,6 +35,22 @@ CBaseEntity
 				CBasePlayer
 				CBaseGroup
 */
+
+
+
+
+// what.  dude, this is cbase.h.
+//#include "cbase.h"
+// Better believe we'll need this though.
+#include "util_entity.h"
+
+// Also, look below for an overload of FNullEnt that used to be in player.cpp.
+// Moved below CBaseEntity's class definition so it can be used mostly anywhere else now too.
+
+
+
+
+
 
 #define MAX_PATH_SIZE 10 // max number of nodes available for a path.
 
@@ -63,16 +70,28 @@ CBaseEntity
 
 
 
+// what... what is this.  Nowhere refered to this constant
+//#define BAD_WEAPON 0x00007FFF
+
+
+
+
 //MODDD - bizarre...? Shouldn't basemonster.h or .cpp include schedule.h and monsterevent.h instead?
 #include "saverestore.h"
 #include "schedule.h"
 
 #include "monsterevent.h"
 
-
-
 #include "util.h"
 #include "vector.h"
+
+
+
+
+
+// spawnflag.
+#define SF_NORESPAWN	( 1 << 30 )// !!!set this bit on guns and stuff that should never respawn.
+
 
 
 
@@ -117,45 +136,6 @@ CBaseEntity
 #define PROJECTILE_ORGANIC_HOSTILE 8
 
 
-
-
-
-
-//MODDD - moved defines for 'EXPORT' to util_shared.h.
-
-extern "C" EXPORT int GetEntityAPI( DLL_FUNCTIONS *pFunctionTable, int interfaceVersion );
-extern "C" EXPORT int GetEntityAPI2( DLL_FUNCTIONS *pFunctionTable, int *interfaceVersion );
-
-extern int DispatchSpawn( edict_t *pent );
-extern void DispatchKeyValue( edict_t *pentKeyvalue, KeyValueData *pkvd );
-extern void DispatchTouch( edict_t *pentTouched, edict_t *pentOther );
-extern void DispatchUse( edict_t *pentUsed, edict_t *pentOther );
-extern void DispatchThink( edict_t *pent );
-extern void DispatchBlocked( edict_t *pentBlocked, edict_t *pentOther );
-extern void DispatchSave( edict_t *pent, SAVERESTOREDATA *pSaveData );
-extern int  DispatchRestore( edict_t *pent, SAVERESTOREDATA *pSaveData, int globalEntity );
-extern void DispatchObjectCollsionBox( edict_t *pent );
-extern void SaveWriteFields( SAVERESTOREDATA *pSaveData, const char *pname, void *pBaseData, TYPEDESCRIPTION *pFields, int fieldCount );
-extern void SaveReadFields( SAVERESTOREDATA *pSaveData, const char *pname, void *pBaseData, TYPEDESCRIPTION *pFields, int fieldCount );
-extern void SaveGlobalState( SAVERESTOREDATA *pSaveData );
-extern void RestoreGlobalState( SAVERESTOREDATA *pSaveData );
-extern void ResetGlobalState( void );
-
-typedef enum { USE_OFF = 0, USE_ON = 1, USE_SET = 2, USE_TOGGLE = 3 } USE_TYPE;
-
-extern void FireTargets( const char *targetName, CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value );
-
-//MODDD - temporary.
-extern void FireTargetsTest( const char *targetName, CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value );
-
-
-typedef void (CBaseEntity::*BASEPTR)(void);
-typedef void (CBaseEntity::*ENTITYFUNCPTR)(CBaseEntity *pOther );
-typedef void (CBaseEntity::*USEPTR)( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value );
-
-
-
-
 // For CLASSIFY
 #define CLASS_NONE				0
 #define CLASS_MACHINE			1
@@ -172,6 +152,7 @@ typedef void (CBaseEntity::*USEPTR)( CBaseEntity *pActivator, CBaseEntity *pCall
 #define CLASS_PLAYER_BIOWEAPON	12 // hornets and snarks.launched by players
 #define CLASS_ALIEN_BIOWEAPON	13 // hornets and snarks.launched by the alien menace
 #define CLASS_BARNACLE			99 // special because no one pays attention to it, and it eats a wide cross-section of creatures.
+
 
 
 
@@ -201,8 +182,82 @@ typedef void (CBaseEntity::*USEPTR)( CBaseEntity *pActivator, CBaseEntity *pCall
 #define R_BA    4//
 
 
-#define SF_NORESPAWN	( 1 << 30 )// !!!set this bit on guns and stuff that should never respawn.
 
+// Neither of these constants was used (both in weapons.cpp, TRACER_FREQ cloned here in cbase.h or whatever reason)
+//#define TRACER_FREQ		4			// Tracers fire every 4 bullets
+//#define NOT_USED 255
+
+
+
+
+
+// Ugly technique to override base member functions
+// Normally it's illegal to cast a pointer to a member function of a derived class to a pointer to a 
+// member function of a base class.  static_cast is a sleezy way around that problem.
+
+#ifdef _DEBUG
+
+#define SetThink( a ) ThinkSet( static_cast <void (CBaseEntity::*)(void)> (a), #a )
+#define SetTouch( a ) TouchSet( static_cast <void (CBaseEntity::*)(CBaseEntity *)> (a), #a )
+#define SetUse( a ) UseSet( static_cast <void (CBaseEntity::*)(	CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )> (a), #a )
+#define SetBlocked( a ) BlockedSet( static_cast <void (CBaseEntity::*)(CBaseEntity *)> (a), #a )
+
+#else
+
+#define SetThink( a ) m_pfnThink = static_cast <void (CBaseEntity::*)(void)> (a)
+#define SetTouch( a ) m_pfnTouch = static_cast <void (CBaseEntity::*)(CBaseEntity *)> (a)
+#define SetUse( a ) m_pfnUse = static_cast <void (CBaseEntity::*)( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )> (a)
+#define SetBlocked( a ) m_pfnBlocked = static_cast <void (CBaseEntity::*)(CBaseEntity *)> (a)
+
+#endif
+
+
+
+//MODDD - interesting. Several of these capabilities are never referred to anywhere else, hinting that they may have been intended for
+//        use in telling whether a monster could say, "Duck" or "Jump" for use in dodging or pathfinding
+
+// people gib if their health is <= this at the time of death
+#define GIB_HEALTH_VALUE	-30
+
+
+
+#define ROUTE_SIZE			8 // how many waypoints a monster can store at one time
+#define MAX_OLD_ENEMIES		4 // how many old enemies to remember
+
+#define bits_CAP_DUCK			( 1 << 0 )// crouch
+#define bits_CAP_JUMP			( 1 << 1 )// jump/leap
+#define bits_CAP_STRAFE			( 1 << 2 )// strafe ( walk/run sideways)
+#define bits_CAP_SQUAD			( 1 << 3 )// can form squads
+#define bits_CAP_SWIM			( 1 << 4 )// proficiently navigate in water
+#define bits_CAP_CLIMB			( 1 << 5 )// climb ladders/ropes
+#define bits_CAP_USE			( 1 << 6 )// open doors/push buttons/pull levers
+#define bits_CAP_HEAR			( 1 << 7 )// can hear forced sounds
+#define bits_CAP_AUTO_DOORS		( 1 << 8 )// can trigger auto doors
+#define bits_CAP_OPEN_DOORS		( 1 << 9 )// can open manual doors
+#define bits_CAP_TURN_HEAD		( 1 << 10)// can turn head, always bone controller 0
+
+#define bits_CAP_RANGE_ATTACK1	( 1 << 11)// can do a range attack 1
+#define bits_CAP_RANGE_ATTACK2	( 1 << 12)// can do a range attack 2
+#define bits_CAP_MELEE_ATTACK1	( 1 << 13)// can do a melee attack 1
+#define bits_CAP_MELEE_ATTACK2	( 1 << 14)// can do a melee attack 2
+
+#define bits_CAP_FLY			( 1 << 15)// can fly, move all around
+
+#define bits_CAP_DOORS_GROUP    (bits_CAP_USE | bits_CAP_AUTO_DOORS | bits_CAP_OPEN_DOORS)
+
+// used by suit voice to indicate damage sustained and repaired type to player
+
+// instant damage
+
+//MODDD - damage types (DMG_...) and itbd_'s moved to util_shared.h.  Merged with some other redundant stuff in some
+// clientside files.
+
+// when calling KILLED(), a value that governs gib behavior is expected to be 
+// one of these three values
+#define GIB_NORMAL			0// gib if entity was overkilled
+#define GIB_NEVER			1// never gib, no matter how much death damage is done ( freezing, etc )
+#define GIB_ALWAYS			2// always gib ( Houndeye Shock, Barnacle Bite )
+#define GIB_ALWAYS_NODECAL	3// MODDD - new. Always gib, but no decals (blood splatter on the ground) for spawned gibs.
 
 
 
@@ -214,10 +269,57 @@ class CBasePlayerItem;
 class CSquadMonster;
 
 
-//MODDD - server only.
-#ifndef CLIENT_DLL
+
+
+class CCineMonster;
+// Note that even though CSound is serverside, still need it clientside as all the standard serverside entity header files (cbase.h, basemonster.h)
+// are included to keep references to entity-types in shared script (specific weapon .cpp files and other needed headers) satisfied, even though
+// their implementations are either never seen or dummied in hl/hl_baseentity.cpp.  This applies to other types too.
 class CSound;
-#endif
+
+
+
+
+
+
+
+typedef enum { USE_OFF = 0, USE_ON = 1, USE_SET = 2, USE_TOGGLE = 3 } USE_TYPE;
+
+typedef void (CBaseEntity::*BASEPTR)(void);
+typedef void (CBaseEntity::*ENTITYFUNCPTR)(CBaseEntity *pOther );
+typedef void (CBaseEntity::*USEPTR)( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value );
+
+
+
+//MODDD - moved defines for 'EXPORT' to util_shared.h.
+
+extern "C" EXPORT int GetEntityAPI( DLL_FUNCTIONS *pFunctionTable, int interfaceVersion );
+extern "C" EXPORT int GetEntityAPI2( DLL_FUNCTIONS *pFunctionTable, int *interfaceVersion );
+
+extern int DispatchSpawn( edict_t *pent );
+extern void DispatchKeyValue( edict_t *pentKeyvalue, KeyValueData *pkvd );
+extern void DispatchTouch( edict_t *pentTouched, edict_t *pentOther );
+extern void DispatchUse( edict_t *pentUsed, edict_t *pentOther );
+extern void DispatchThink( edict_t *pent );
+extern void DispatchBlocked( edict_t *pentBlocked, edict_t *pentOther );
+extern void DispatchSave( edict_t *pent, SAVERESTOREDATA *pSaveData );
+extern int  DispatchRestore( edict_t *pent, SAVERESTOREDATA *pSaveData, int globalEntity );
+extern void DispatchObjectCollsionBox( edict_t *pent );
+extern void SaveWriteFields( SAVERESTOREDATA *pSaveData, const char *pname, void *pBaseData, TYPEDESCRIPTION *pFields, int fieldCount );
+extern void SaveReadFields( SAVERESTOREDATA *pSaveData, const char *pname, void *pBaseData, TYPEDESCRIPTION *pFields, int fieldCount );
+extern void SaveGlobalState( SAVERESTOREDATA *pSaveData );
+extern void RestoreGlobalState( SAVERESTOREDATA *pSaveData );
+extern void ResetGlobalState( void );
+
+extern void FireTargets( const char *targetName, CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value );
+
+//MODDD - temporary.
+extern void FireTargetsTest( const char *targetName, CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value );
+
+
+
+
+
 
 
 
@@ -264,16 +366,9 @@ public:
 	CBaseEntity* m_pGoalEnt;// path corner we are heading towards
 	CBaseEntity* m_pLink;// used for temporary link-list operations. 
 
+	//MODDD - 'ammo_' variables moved to CBasePlayer.
+	// Why were they available for even NPCs that never use them...
 
-	//We use this variables to store each ammo count.
-	int ammo_9mm;
-	int ammo_357;
-	int ammo_bolts;
-	int ammo_buckshot;
-	int ammo_rockets;
-	int ammo_uranium;
-	int ammo_hornets;
-	int ammo_argrens;
 	//Special stuff for grenades and satchels.
 	float m_flStartThrow;
 	float m_flReleaseThrow;
@@ -511,6 +606,7 @@ public:
 
 	//MODDD - new args possible.
 	GENERATE_TRACEATTACK_PROTOTYPE_VIRTUAL
+	virtual void TraceAttack_Traceless(entvars_t* pevAttacker, float flDamage, Vector vecDir, int bitsDamageType, int bitsDamageTypeMod);
 	GENERATE_TAKEDAMAGE_PROTOTYPE_VIRTUAL
 
 	// NEW
@@ -536,9 +632,11 @@ public:
 	virtual	int	GetToggleState( void ) { return TS_AT_TOP; }
 	virtual void AddPoints( int score, BOOL bAllowNegativeScore ) {}
 	virtual void AddPointsToTeam( int score, BOOL bAllowNegativeScore ) {}
-	virtual BOOL	AddPlayerItem( CBasePlayerItem *pItem ) { return 0; }
-	virtual BOOL	RemovePlayerItem( CBasePlayerItem *pItem ) { return 0; }
-	virtual int	GiveAmmo( int iAmount, char *szName, int iMax ) { return -1; };
+	virtual BOOL AddPlayerItem( CBasePlayerItem *pItem ) { return 0; }
+	virtual BOOL RemovePlayerItem( CBasePlayerItem *pItem ) { return 0; }
+	
+	//MODDD - 'const char*' now
+	virtual int	GiveAmmo( int iAmount, const char* szName, int iMax ) { return -1; };
 	virtual float GetDelay( void ) { return 0; }
 	virtual int	IsMoving( void ) { return pev->velocity != g_vecZero; }
 	virtual void OverrideReset( void ) {}
@@ -764,29 +862,6 @@ inline BOOL FNullEnt(EHANDLE someHandle) { return (someHandle.Get() == NULL); }
 
 
 
-
-
-// Ugly technique to override base member functions
-// Normally it's illegal to cast a pointer to a member function of a derived class to a pointer to a 
-// member function of a base class.  static_cast is a sleezy way around that problem.
-
-#ifdef _DEBUG
-
-#define SetThink( a ) ThinkSet( static_cast <void (CBaseEntity::*)(void)> (a), #a )
-#define SetTouch( a ) TouchSet( static_cast <void (CBaseEntity::*)(CBaseEntity *)> (a), #a )
-#define SetUse( a ) UseSet( static_cast <void (CBaseEntity::*)(	CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )> (a), #a )
-#define SetBlocked( a ) BlockedSet( static_cast <void (CBaseEntity::*)(CBaseEntity *)> (a), #a )
-
-#else
-
-#define SetThink( a ) m_pfnThink = static_cast <void (CBaseEntity::*)(void)> (a)
-#define SetTouch( a ) m_pfnTouch = static_cast <void (CBaseEntity::*)(CBaseEntity *)> (a)
-#define SetUse( a ) m_pfnUse = static_cast <void (CBaseEntity::*)( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )> (a)
-#define SetBlocked( a ) m_pfnBlocked = static_cast <void (CBaseEntity::*)(CBaseEntity *)> (a)
-
-#endif
-
-
 class CPointEntity : public CBaseEntity
 {
 public:
@@ -879,130 +954,11 @@ public:
 
 
 
-//MODDD - interesting. Several of these capabilities are never referred to anywhere else, hinting that they may have been intended for
-//        use in telling whether a monster could say, "Duck" or "Jump" for use in dodging or pathfinding
-
-// people gib if their health is <= this at the time of death
-#define GIB_HEALTH_VALUE	-30
-
-
-
-#define ROUTE_SIZE			8 // how many waypoints a monster can store at one time
-#define MAX_OLD_ENEMIES		4 // how many old enemies to remember
-
-#define bits_CAP_DUCK			( 1 << 0 )// crouch
-#define bits_CAP_JUMP			( 1 << 1 )// jump/leap
-#define bits_CAP_STRAFE			( 1 << 2 )// strafe ( walk/run sideways)
-#define bits_CAP_SQUAD			( 1 << 3 )// can form squads
-#define bits_CAP_SWIM			( 1 << 4 )// proficiently navigate in water
-#define bits_CAP_CLIMB			( 1 << 5 )// climb ladders/ropes
-#define bits_CAP_USE			( 1 << 6 )// open doors/push buttons/pull levers
-#define bits_CAP_HEAR			( 1 << 7 )// can hear forced sounds
-#define bits_CAP_AUTO_DOORS		( 1 << 8 )// can trigger auto doors
-#define bits_CAP_OPEN_DOORS		( 1 << 9 )// can open manual doors
-#define bits_CAP_TURN_HEAD		( 1 << 10)// can turn head, always bone controller 0
-
-#define bits_CAP_RANGE_ATTACK1	( 1 << 11)// can do a range attack 1
-#define bits_CAP_RANGE_ATTACK2	( 1 << 12)// can do a range attack 2
-#define bits_CAP_MELEE_ATTACK1	( 1 << 13)// can do a melee attack 1
-#define bits_CAP_MELEE_ATTACK2	( 1 << 14)// can do a melee attack 2
-
-#define bits_CAP_FLY			( 1 << 15)// can fly, move all around
-
-#define bits_CAP_DOORS_GROUP    (bits_CAP_USE | bits_CAP_AUTO_DOORS | bits_CAP_OPEN_DOORS)
-
-// used by suit voice to indicate damage sustained and repaired type to player
-
-// instant damage
-
-//MODDD - damage types (DMG_...) and itbd_'s moved to util_shared.h.  Merged with some other redundant stuff in some
-// clientside files.
-
-// when calling KILLED(), a value that governs gib behavior is expected to be 
-// one of these three values
-#define GIB_NORMAL			0// gib if entity was overkilled
-#define GIB_NEVER			1// never gib, no matter how much death damage is done ( freezing, etc )
-#define GIB_ALWAYS			2// always gib ( Houndeye Shock, Barnacle Bite )
-#define GIB_ALWAYS_NODECAL	3// MODDD - new. Always gib, but no decals (blood splatter on the ground) for spawned gibs.
-
-
-
-
-
-
-//... ???
-class CBaseMonster;
-class CCineMonster;
-class CSound;
-
-
 //MODDD - removed. CBaseMonster's file, basemonster.h, can now be included anywhere else without any assumptions about what's been included by the caller at that point.
 //#include "basemonster.h"
 
 
-
-
-
-
-//MODDD TODO - move to cbase.h? Why is it here for monsters only?
-//
-// A gib is a chunk of a body, or a piece of wood/metal/rocks/etc.
-//
-class CGib : public CBaseEntity
-{
-public:
-
-	void Spawn( const char *szGibModel );
-	void Spawn( const char *szGibModel, BOOL spawnsDecal  );
-
-	void EXPORT BounceGibTouch ( CBaseEntity *pOther );
-	void EXPORT StickyGibTouch ( CBaseEntity *pOther );
-	void EXPORT WaitTillLand( void );
-	void	LimitVelocity( void );
-
-	virtual int ObjectCaps( void ) { return (CBaseEntity :: ObjectCaps() & ~FCAP_ACROSS_TRANSITION) | FCAP_DONT_SAVE; }
-
-	
-	static void SpawnHeadGib( entvars_t *pevVictim );
-	static void SpawnHeadGib( entvars_t *pevVictim, BOOL spawnDecals );
-	//MODDD - this version accepts a different origin from the default determined typically.
-	static void SpawnHeadGib( entvars_t *pevVictim, const Vector gibSpawnOrigin );
-	static void SpawnHeadGib( entvars_t *pevVictim, const Vector gibSpawnOrigin, BOOL spawnDecals );
-	
-	//MODDD - third parameter chagned from "human" (as in, "should we spawn human gibs or, otherwise, alien gibs"?) to "argSpawnGibID", to call upon a particular aryGibInfo choice (element of that ID).
-	
-	static void SpawnRandomGibs(entvars_t* pevVictim, int cGibs, int argSpawnGibID);
-	static void SpawnRandomGibs(entvars_t* pevVictim, int cGibs, int argSpawnGibID, BOOL spawnDecals);
-	static void SpawnRandomGibs(entvars_t* pevVictim, int cGibs, int argSpawnGibID, BOOL spawnDecals, int argBloodColor);
-	static void SpawnRandomGibs(entvars_t* pevVictim, int cGibs, const GibInfo_t& gibInfoChoice);
-	static void SpawnRandomGibs(entvars_t* pevVictim, int cGibs, const GibInfo_t& gibInfoChoice, BOOL spawnDecals);
-	static void SpawnRandomGibs(entvars_t* pevVictim, int cGibs, const GibInfo_t& gibInfoChoice, BOOL spawnDecals, int argBloodColor);
-	static void SpawnRandomGibs(entvars_t* pevVictim, int cGibs, const char* argGibPath, int gibBodyMin, int gibBodyMax);
-	static void SpawnRandomGibs(entvars_t* pevVictim, int cGibs, const char* argGibPath, int gibBodyMin, int gibBodyMax, BOOL spawnDecals);
-	static void SpawnRandomGibs(entvars_t* pevVictim, int cGibs, const char* argGibPath, int gibBodyMin, int gibBodyMax, BOOL spawnDecals, int argBloodColor);
-
-	
-	static void SpawnStickyGibs( entvars_t *pevVictim, Vector vecOrigin, int cGibs );
-	static void SpawnStickyGibs( entvars_t *pevVictim, Vector vecOrigin, int cGibs, BOOL spawnDecals );
-	
-	
-
-
-	int	m_bloodColor;
-	int	m_cBloodDecals;
-	int	m_material;
-	float m_lifeTime;
-
-
-
-	//MODDD - stubs.  Because why not.
-	GENERATE_TRACEATTACK_PROTOTYPE
-	GENERATE_TAKEDAMAGE_PROTOTYPE
-
-	float massInfluence(void);
-
-};
-
+//MODDD - CGib moved to its own file, gib.h
 
 
 
@@ -1012,7 +968,6 @@ public:
 // Weapons 
 //
 
-#define BAD_WEAPON 0x00007FFF
 
 //
 // Converts a entvars_t * to a class pointer
@@ -1062,9 +1017,7 @@ env_sound_data
 push_trigger_data
 */
 
-#define TRACER_FREQ		4			// Tracers fire every 4 bullets
-
-//MODDD - SelAmmo moved to enginecallback.h to be accessible to all serverside.
+//MODDD - SelAmmo moved to game_shared/util/util_entity.h
 
 
 // this moved here from world.cpp, to allow classes to be derived from it

@@ -8017,7 +8017,13 @@ void CBaseMonster::cheapKilledFlyer(void){
 // In that case, default behavior of turning touch off would leave you scratching your head as to why it ignores everything after killed.
 // HOWEVER the new slDieFallLoop schedule include setting Touch to KilledFinishTouch which works for all monsters.  This method (OnKilledSetTouch) may no longer be necessary.
 void CBaseMonster::OnKilledSetTouch(void){
+	
+	//m_pfnTouch = NULL;
+	//SetTouch(NULL);
+
+	//if (this->m_pfnTouch != NULL) {
 	SetTouch(NULL);
+	//}
 }
 
 // I need to finish the looping death animation with the "OnKilledSetTouch" one.

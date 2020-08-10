@@ -10,6 +10,7 @@
 #include "util_model.h"
 #include "defaultai.h"
 #include "game.h"
+#include "gib.h"
 #include "util_debugdraw.h"
 
 //????

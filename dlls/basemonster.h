@@ -136,11 +136,12 @@
 
 
 
-//ALSO: it appears this is consistently set for entities spawned by the player (or anything spawned outside of map-start, maybe?). 
+// ALSO: it appears this is consistently set for entities spawned by the player (or anything spawned outside of map-start, maybe?). 
 // Marking, not sure why it wasn't before.
 #define SF_MONSTER_DYNAMICSPAWN			(1<<30)
-//NOTICE!!!!!! THIS PLACE,  (1<<30), IS SHARED BY AN EXISTING FLAG IN cbase.h:
+// Notice! (1<<30) is shared by an existing flag in cbase.h:
 //#define SF_NORESPAWN	( 1 << 30 )// !!!set this bit on guns and stuff that should never respawn.
+// ...this might be intentional, both are related to spawning.  Maybe it's the same thing.
 
 
 //NOTE: the spot "32" (2^5) can be occupied by squadmonsters to mean "squadleader" (see "SF_SQUADMONSTER_LEADER" of "squadmonster.cpp").

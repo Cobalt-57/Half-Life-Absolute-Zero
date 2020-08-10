@@ -26,6 +26,7 @@ public:
 	float nextCorpseCheckTime;
 	float flPushbackForceDamage;
 
+
 	CZombie();
 
 	//MODDD
@@ -103,9 +104,10 @@ public:
 	BOOL CheckRangeAttack2(float flDot, float flDist) { return FALSE; }
 
 	GENERATE_TRACEATTACK_PROTOTYPE
-		GENERATE_TAKEDAMAGE_PROTOTYPE
-		//MODDD - NEW.
-		float hitgroupDamage(float flDamage, int bitsDamageType, int bitsDamageTypeMod, int iHitgroup);
+	void TraceAttack_Traceless(entvars_t* pevAttacker, float flDamage, Vector vecDir, int bitsDamageType, int bitsDamageTypeMod);
+	GENERATE_TAKEDAMAGE_PROTOTYPE
+	//MODDD - NEW.
+	float hitgroupDamage(float flDamage, int bitsDamageType, int bitsDamageTypeMod, int iHitgroup);
 
 	virtual int BloodColor(void) {
 		// if german censorship, all of the body has green blood.  
@@ -123,7 +125,7 @@ public:
 	}
 
 	GENERATE_KILLED_PROTOTYPE
-		void BecomeDead(void);
+	void BecomeDead(void);
 
 };
 

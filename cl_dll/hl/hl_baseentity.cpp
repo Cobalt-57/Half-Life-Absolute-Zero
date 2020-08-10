@@ -245,6 +245,7 @@ void UTIL_PRECACHESOUND(char* path){}
 
 
 GENERATE_TRACEATTACK_IMPLEMENTATION_DUMMY_CLIENT(CBaseEntity)
+void CBaseEntity::TraceAttack_Traceless(entvars_t* pevAttacker, float flDamage, Vector vecDir, int bitsDamageType, int bitsDamageTypeMod) {}
 GENERATE_TAKEDAMAGE_IMPLEMENTATION_DUMMY_CLIENT(CBaseEntity)
 void CBaseEntity::Knockback(const int knockbackAmount, const Vector& knockbackDir) {}
 BOOL CBaseEntity::ChangeHealthFiltered(entvars_t* pevAttacker, float flDamage) { return FALSE; }
@@ -914,16 +915,6 @@ void CBasePlayer :: ResetAutoaim( ) { }
 void CBasePlayer :: SetCustomDecalFrames( int nFrames ) { }
 int CBasePlayer :: GetCustomDecalFrames( void ) { return -1; }
 void CBasePlayer::DropPlayerItem ( char *pszItemName ) { }
-BOOL CBasePlayer::HasPlayerItem( CBasePlayerItem *pCheckItem ) { return FALSE; }
-BOOL CBasePlayer :: SwitchWeapon( CBasePlayerItem *pWeapon )  { return FALSE; }
-Vector CBasePlayer :: GetGunPosition( void ) { return g_vecZero; }
-Vector CBasePlayer :: GetGunPositionAI(void){return g_vecZero;}
-const char *CBasePlayer::TeamID( void ) { return ""; }
-
-void CBasePlayer::AddPoints( int score, BOOL bAllowNegativeScore ) { } 
-void CBasePlayer::AddPointsToTeam( int score, BOOL bAllowNegativeScore ) { } 
-
-BOOL CBasePlayer::usesSoundSentenceSave(void) { return FALSE; }
 
 
 

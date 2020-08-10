@@ -962,6 +962,26 @@ void CL_ResetButtonBits( int bits )
 			in_attack.state &= ~7;
 		}
 	}
+
+	//MODDD - right-click can be aborbed by the UI too.
+	////////////////////////////////////////////////////////
+	if (bitsNew & IN_ATTACK2)
+	{
+		// Was it pressed? or let go?
+		if (bits & IN_ATTACK2)
+		{
+			KeyDown(&in_attack2);
+		}
+		else
+		{
+			// totally clear state
+			in_attack2.state &= ~7;
+		}
+	}
+	////////////////////////////////////////////////////////
+
+
+
 }
 
 /*

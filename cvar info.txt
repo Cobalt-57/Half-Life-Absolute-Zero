@@ -1409,13 +1409,14 @@ pathfindStumpedMode (2) - MODEVAR. How to handle losing sight of the enemy after
 2: Re-route to the monster's current location immediately when done waiting.
 3: Skip any calls to wait methods or even turning to look at the last-known position when stumped. Goes straight to re-routing to the enemy. RETAIL, generally.
 
-pathfindStumpedWaitTime (10) - ADJUSTABLE. Amount of time to look at the last known position before proceeding accorindg to pathfindStumpedMode. re-routing to the enemy's current location. Applies to pathfindStumped modes 2 and 3.
+pathfindStumpedWaitTime (6) - ADJUSTABLE. Amount of time to look at the last known position before proceeding accorindg to pathfindStumpedMode. re-routing to the enemy's current location. Applies to pathfindStumped modes 2 and 3.
 
 pathfindStumpedForgetEnemy (0) - BOOL. Whether to drop the current enemy after going to the last known position from StumpedModes 1 or 2 above, not much different from mode 0. There will be a similar reaction to seeing a new enemy when seeing the same enemy again.
 
 pathfindEdgeCheck (1) - BOOL. Lets NPCs check to see if they are close to a goal node on failing to move ever so slightly closer to one that may be nearby, such as walking up to a wall and failing because pathfinding won't let them get any closer. If turned on, should count this scenario is movement completion to move on with other things.
 
-RadiusDamageDrawDebug (1) - BOOL. When on, draws a line from an explosion to the player if the player was hit. Also makes some printouts about what an explosion hit or tried to hit and details about the line-traces. A blue line indicates where the player decided to draw the falling blood dot effect.
+RadiusDamageDrawDebug (0) - BOOL. When on, draws a line from an explosion to the player if the player was hit. Also makes some printouts about what an explosion hit or tried to hit and details about the line-traces. A blue line indicates where the player decided to draw the falling blood dot effect.
+~New form updated that's not some out-of-date copy.  For the old version use 2 instead.
 
 AlienRadiationImmunity (0) - BOOL. Makes aliens immune to timed radiation damage, at least the timed version that map-related sources/triggers give.
 

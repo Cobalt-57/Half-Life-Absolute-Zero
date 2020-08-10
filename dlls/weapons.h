@@ -132,20 +132,26 @@
 #define M203_GRENADE_MAX_CARRY	gSkillData.player_ammomax_mp5_grenade
 #define CHUMTOAD_MAX_CARRY		gSkillData.player_ammomax_chumtoad
 #else
-// methods dealing with these are dummied clientide anyway
-#define URANIUM_MAX_CARRY		0
-#define _9MM_MAX_CARRY			0
-#define _357_MAX_CARRY			0
-#define BUCKSHOT_MAX_CARRY		0
-#define BOLT_MAX_CARRY			0
-#define ROCKET_MAX_CARRY		0
-#define HANDGRENADE_MAX_CARRY	0
-#define SATCHEL_MAX_CARRY		0
-#define TRIPMINE_MAX_CARRY		0
-#define SNARK_MAX_CARRY			0
-#define HORNET_MAX_CARRY		0
-#define M203_GRENADE_MAX_CARRY	0
-#define CHUMTOAD_MAX_CARRY		0
+// methods dealing with these are dummied clientide anyway.
+// Using 254 instead of 0 in case that helps with some dumb "is 0" checks clientside,
+// but logic isn't strong there anyway.  If it were to be smarter, the gsSkillData's
+// would need to be sent to be broadcasted from server to clientside for all players
+// at startup.      ........no.
+// And using 254 instead of 255 in case 255 is some equivalent for '-1' in interpreting
+// a signed type as unsigned somewhere.
+#define URANIUM_MAX_CARRY		254
+#define _9MM_MAX_CARRY			254
+#define _357_MAX_CARRY			254
+#define BUCKSHOT_MAX_CARRY		254
+#define BOLT_MAX_CARRY			254
+#define ROCKET_MAX_CARRY		254
+#define HANDGRENADE_MAX_CARRY	254
+#define SATCHEL_MAX_CARRY		254
+#define TRIPMINE_MAX_CARRY		254
+#define SNARK_MAX_CARRY			254
+#define HORNET_MAX_CARRY		254
+#define M203_GRENADE_MAX_CARRY	254
+#define CHUMTOAD_MAX_CARRY		254
 #endif
 
 
@@ -319,6 +325,8 @@ typedef struct
 {
 	const char* pszName;
 	int iId;
+	//MODDD - and capacity per ammo type wasn't stored here, beeecaaaauuuuuussssseee?
+	int iAmmoMax;
 } AmmoInfo;
 
 //MODDD - NEW.  See AmmoTypeCacheArray.
@@ -560,7 +568,11 @@ public:
 	virtual BOOL ExtractAmmo( CBasePlayerWeapon *pWeapon ); //{ return TRUE; };			// Return TRUE if you can add ammo to yourself when picked up
 	virtual BOOL ExtractClipAmmo( CBasePlayerWeapon *pWeapon );// { return TRUE; };			// Return TRUE if you can add ammo to yourself when picked up
 
-	virtual BOOL AddWeapon( void ) { ExtractAmmo( this ); return TRUE; };	// Return TRUE if you want to add yourself to the player
+	//MODDD -  impossible to return FALSE but still expected to do something (ExtractAmmo)?  Works though.
+	virtual BOOL AddWeapon( void ) {
+		ExtractAmmo( this );
+		return TRUE;
+	};	// Return TRUE if you want to add yourself to the player
 
 	// generic "shared" ammo handlers
 	//MODDD - "AddPrimaryAmmo" has been made "virtual" so that overriden methods in child classes get priority.

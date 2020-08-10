@@ -53,12 +53,6 @@ EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(viewModelPrintouts)
 
 
 
-
-#define TRACER_FREQ 4			// Tracers fire every fourth bullet
-#define NOT_USED 255
-
-
-
 DLL_GLOBAL short g_sModelIndexLaser;// holds the index for the laser beam
 DLL_GLOBAL const char *g_pModelNameLaser = "sprites/laserbeam.spr";
 DLL_GLOBAL short g_sModelIndexLaserDot;// holds the index for the laser beam dot
@@ -74,6 +68,13 @@ MULTIDAMAGE gMultiDamage;
 extern CGraph WorldGraph;
 extern int gEvilImpulse101;
 //MODDD - moved g_sModelIndexBubbles to util_shared.cpp.
+
+
+// LAZY WAY.  Global flag turned on if coming from a call adding a new weapon.
+// Only new weapons can put ammo into the clip of the player weapon directly, reload required otherwise
+// (retail behavior is to put ammo into the clip from pickups if there is 0 ammo in the clip already).
+BOOL g_isNewWeapon = FALSE;
+
 
 //MODDD - CBasePlayerItem::ItemInfoArray and CBasePlayerItem::AmmoInfoArray implementations moved
 // to util_shared.cpp.
@@ -496,10 +497,8 @@ float CBasePlayerWeapon::randomIdleAnimationDelay(void){
 
 
 
-
 //MODDD - new.
 void CBasePlayerWeapon::ItemPostFrameThink(){
-
 	/*
 	//MODDD - should be a good place to check for deplying the next weapon.
 	if(m_pActiveItem && m_bHolstering && gpGlobals->time >= m_flNextAttack){
@@ -511,8 +510,6 @@ void CBasePlayerWeapon::ItemPostFrameThink(){
 	}
 	*/
 
-
-	
 	// HOLSTER - SWAPPO DISABLE.
 	//MODDD - should be a good place to check for deplying the next weapon.
 	if(m_pPlayer->m_bHolstering && gpGlobals->time >= m_pPlayer->m_fCustomHolsterWaitTime){  //m_pPlayer->m_flNextAttack <= 0.0){
@@ -950,6 +947,7 @@ void CBasePlayerItem::AttachToPlayer ( CBasePlayer *pPlayer )
 // CALLED THROUGH the newly-touched weapon instance. The existing player weapon is pOriginal
 BOOL CBasePlayerWeapon::AddDuplicate( CBasePlayerItem *pOriginal )
 {
+	g_isNewWeapon = FALSE;
 
 	//easyPrintLine("WHO AIM EYE?! %d : %s", m_iDefaultAmmo, STRING(pOriginal->pev->classname) );
 	if ( m_iDefaultAmmo )
@@ -966,9 +964,12 @@ BOOL CBasePlayerWeapon::AddDuplicate( CBasePlayerItem *pOriginal )
 }
 
 
-//MODDD - BOOL edit
+//MODDD - BOOL edit.
+// Also, this is only for completely new weapons.  Existing ones ripped for ammo don't use this, they use AddDuplicate.
 BOOL CBasePlayerWeapon::AddToPlayer( CBasePlayer *pPlayer )
 {
+	g_isNewWeapon = TRUE;
+
 	BOOL bResult = CBasePlayerItem::AddToPlayer( pPlayer );
 
 	//MODDD NOTE - is it safe to make this mask change (adjustment) before we've even confirmed that Adding this weapon to the player is allowed?
@@ -991,7 +992,12 @@ BOOL CBasePlayerWeapon::AddToPlayer( CBasePlayer *pPlayer )
 
 
 	if (bResult) {
-		return AddWeapon();
+		// 'AddWeapon()' includes an ExtractAmmo() call.  Always.  Tricky tricky tricky...
+		BOOL theResult = AddWeapon();
+
+		g_isNewWeapon = FALSE;   // safety.
+
+		return theResult;
 	}
 	return FALSE;
 }
@@ -1076,7 +1082,6 @@ void CBasePlayerWeapon::SendWeaponAnim( int iAnim, int skiplocal, int body )
 	}
 #endif
 
-	// OH SHIT OH SHIT IS THAT A GOOD IDEA AT ALL MAN.
 	// Moved below the CLIENTSKIP above.
 	//m_pPlayer->pev->weaponanim = iAnim;
 
@@ -1112,7 +1117,6 @@ void CBasePlayerWeapon::SendWeaponAnimReverse( int iAnim, int skiplocal, int bod
 	}
 #endif
 
-	// OH SHIT OH SHIT IS THAT A GOOD IDEA AT ALL MAN.
 	// Moved below the CLIENTSKIP above.
 	//m_pPlayer->pev->weaponanim = iAnim;
 
@@ -1224,18 +1228,20 @@ BOOL CBasePlayerWeapon :: AddPrimaryAmmo( int iCount, char *szName, int iMaxClip
 	if (iMaxClip < 1)
 	{
 		m_iClip = -1;
-		iIdAmmo = m_pPlayer->GiveAmmo( iCount, myPrimaryAmmoType, iMaxCarry );
+		iIdAmmo = m_pPlayer->GiveAmmoID( iCount, myPrimaryAmmoType, iMaxCarry );
 	}
-	else if (m_iClip == 0)
+	//MODDD - nope!  Ammo to an existing weapon always goes straight to the pool.
+	// Reload you lazy bastard.
+	else if (m_iClip == 0 && g_isNewWeapon == TRUE)
 	{
 		int i;
 		i = min( m_iClip + iCount, iMaxClip ) - m_iClip;
 		m_iClip += i;
-		iIdAmmo = m_pPlayer->GiveAmmo( iCount - i, myPrimaryAmmoType, iMaxCarry );
+		iIdAmmo = m_pPlayer->GiveAmmoID( iCount - i, myPrimaryAmmoType, iMaxCarry );
 	}
 	else
 	{
-		iIdAmmo = m_pPlayer->GiveAmmo( iCount, myPrimaryAmmoType, iMaxCarry );
+		iIdAmmo = m_pPlayer->GiveAmmoID( iCount, myPrimaryAmmoType, iMaxCarry );
 	}
 	
 	// m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] = iMaxCarry; // hack for testing
@@ -1285,7 +1291,7 @@ BOOL CBasePlayerWeapon :: AddSecondaryAmmo( int iCount, char *szName, int iMax )
 	int mySecondaryAmmoType = getSecondaryAmmoType();
 
 	//MODDD - sending mySecondaryAmmoType instead of szName throughout, consider changing the whole method sometime
-	iIdAmmo = m_pPlayer->GiveAmmo( iCount, mySecondaryAmmoType, iMax );
+	iIdAmmo = m_pPlayer->GiveAmmoID( iCount, mySecondaryAmmoType, iMax );
 
 	//m_pPlayer->m_rgAmmo[m_iSecondaryAmmoType] = iMax; // hack for testing
 
@@ -1380,6 +1386,9 @@ BOOL CBasePlayerWeapon :: DefaultDeploy( char *szViewModel, char *szWeaponModel,
 	if (!CanDeploy()) {
 		return FALSE;
 	}
+
+	// safety
+	m_fInReload = FALSE;
 
 	m_chargeReady &= ~128;
 
@@ -1701,6 +1710,7 @@ void CBasePlayerAmmo :: DefaultTouch( CBaseEntity *pOther )
 // the weapon clip comes along. 
 //=========================================================
 //MODDD - NOTE - this method occurs for picked-up weapons (instead of ammo) ONLY!
+// But is called regardless of being for a new pickup or ones the player already has just for ammo.
 // ALSO, little edit.  AddPrimary & AddSecondary ammo actually return BOOL's, int's in the end but meant to convey
 // just 0 or 1,  "no" or "yes".  Seems dishonest to call it 'int' here for no reason.
 // Also changed how 'iReturn' works a little.  Either AddPrimaryAmmo or AddSecondaryAmmo call returning TRUE should
@@ -1748,7 +1758,22 @@ BOOL CBasePlayerWeapon::ExtractClipAmmo( CBasePlayerWeapon *pWeapon )
 	//MODDD - GiveAmmo can return a number outside of 0 or 1 (FALSE/TRUE) though? odd.  Edit.
 	// And beware, -1 is also technically not equal to 0 like a simple 'not 0' check would yield.
 	//return pWeapon->m_pPlayer->GiveAmmo( iAmmo, (char *)pszAmmo1(), iMaxAmmo1() ); // , &m_iPrimaryAmmoType
-	return (pWeapon->m_pPlayer->GiveAmmo(iAmmo, (char*)pszAmmo1(), iMaxAmmo1() ) > 0);
+	
+	//return (pWeapon->m_pPlayer->GiveAmmo(iAmmo, (const char*)pszAmmo1(), iMaxAmmo1() ) > 0);
+	// is this replacement ok???
+	// This is hard to debug, doing this for now.
+	int myPrimaryAmmotype = PrimaryAmmoIndex();
+	if (IS_AMMOTYPE_VALID(myPrimaryAmmotype)) {
+		// trust it
+		easyPrintLine("!!! Report this!  SUCCESS minor");
+		return (pWeapon->m_pPlayer->GiveAmmoID(iAmmo, myPrimaryAmmotype, iMaxAmmo1()) > 0);
+	}
+	else {
+		// oh
+		easyForcePrintLine("!!! Report this!  FAILURE minor");
+		return (pWeapon->m_pPlayer->GiveAmmo(iAmmo, (const char*)pszAmmo1(), iMaxAmmo1()) > 0);
+	}
+
 }
 	
 //=========================================================

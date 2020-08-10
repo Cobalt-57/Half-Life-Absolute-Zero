@@ -1133,7 +1133,7 @@ enum
 // Mainly keep the (1 << 3) and (1 << 4) bits after removing either to keep the other (remove only (1 << 1) or (1 << 2),  unless both NOMUZZLEFLASH
 // and DONOTDRAWSHADOW are being removed,  then (1 << 3) and (1 << 4) go too).
 #define NOMUZZLEFLASH ( (1 << 1) | (1 << 3) | (1 << 4) ) //with non-view models, this prevents the muzzle flash. This is not for viewmodels, they use a different way. Or bit(s).
-#define DONOTDRAWSHADOW (1 << 2) | (1 << 3) | (1 << 4) 
+#define DONOTDRAWSHADOW ( (1 << 2) | (1 << 3) | (1 << 4) )
 
 // These used to be uncommented before the ISPLAYER / ISVIEWMODEL removal
 //#define ISPLAYER (1 << 7) //128

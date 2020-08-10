@@ -100,6 +100,11 @@ public:
 	int CountAmmo(int iId);
 
 	SpriteHandle_t* GetAmmoPicFromWeapon(int iAmmoId, wrect_t& rect);
+
+
+	void CancelSelection(void);
+	void Think(void);
+
 };
 
 

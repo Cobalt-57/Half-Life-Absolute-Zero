@@ -46,6 +46,7 @@
 #include "weapons.h"
 #include "talkmonster.h"
 #include "soundent.h"
+#include "gib.h"
 #include "effects.h"
 #include "customentity.h"
 
@@ -267,12 +268,40 @@ enum
 class CHGrunt : public CSquadMonster
 {
 public:
-	CHGrunt(void);
+
+	static const char* pGruntSentences[];
+
+
+	// checking the feasibility of a grenade toss is kind of costly, so we do it every couple of seconds,
+	// not every server frame.
+	float m_flNextGrenadeCheck;
+	float m_flNextPainTime;
+	float m_flLastEnemySightTime;
+
+	Vector	m_vecTossVelocity;
+	BOOL m_fThrowGrenade;
+	BOOL m_fStanding;
+	BOOL m_fFirstEncounter;// only put on the handsign show in the squad's first encounter.
+	int	m_cClipSize;
+	int m_voicePitch;
+
+	int	m_iBrassShell;
+	int	m_iShotgunShell;
+
+	int	m_iSentence;
+
+	int runAndGunSequenceID;
+	int tempStrafeAct;
+
+	int strafeMode;
+	int idealStrafeMode;
+	//-1 = not strafing.
+	//0 = strafe left.
+	//1 = strafe left + fire.
+	//2 = strafe right.
+	//3 = strafe right + fire.
 
 	BOOL hgruntMoveAndShootDotProductPass;
-
-	void EXPORT tempStrafeTouch(CBaseEntity *pOther);
-	void EXPORT hgruntUse( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value );
 	
 	float strafeFailTime;
 	float runAndGunFailTime;
@@ -283,6 +312,19 @@ public:
 	BOOL runAndGun;
 	Vector lastHeadHit;
 
+	float lastStrafeCoverCheck;
+
+	BOOL missingHeadPossible;
+	BOOL friendlyFireStrafeBlock;
+	BOOL strafeCanFire;
+
+
+
+	CHGrunt(void);
+
+	void EXPORT tempStrafeTouch(CBaseEntity *pOther);
+	void EXPORT hgruntUse( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value );
+	
 	int getClipSize(void);
 
 	void updateStrafeStatus(void);
@@ -296,25 +338,7 @@ public:
 	float findCoverInDirection(const Vector& arg_vecStart, const float& arg_vecDistanceCompete, const Vector& arg_inDir, const float& arg_maxDist, Vector* arg_vecDirFeedback);
 	float findCoverInDirection(const Vector& arg_vecStart, const float& arg_vecDistanceCompete, const Vector& arg_inDir, const float& arg_maxDist, Vector* arg_vecDirFeedback, BOOL canTryAlternateDegrees);
 
-	float lastStrafeCoverCheck;
-
-	BOOL missingHeadPossible;
-	BOOL friendlyFireStrafeBlock;
-	BOOL strafeCanFire;
-
 	void onAnimationLoop(void);
-
-	int runAndGunSequenceID;
-
-	int tempStrafeAct;
-
-	int strafeMode;
-	int idealStrafeMode;
-	//-1 = not strafing.
-	//0 = strafe left.
-	//1 = strafe left + fire.
-	//2 = strafe right.
-	//3 = strafe right + fire.
 
 	void MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, float flInterval );
 
@@ -385,6 +409,7 @@ public:
 
 	int Save( CSave &save );
 	int Restore( CRestore &restore );
+	static TYPEDESCRIPTION m_SaveData[];
 
 	//MODDD - moved to CBaseMonster and renamed HumanKick to be callable by other monsters.
 	//CBaseEntity	*Kick( void );
@@ -417,44 +442,12 @@ public:
 	void JustSpoke( void );
 
 	CUSTOM_SCHEDULES;
-	static TYPEDESCRIPTION m_SaveData[];
-
-	// checking the feasibility of a grenade toss is kind of costly, so we do it every couple of seconds,
-	// not every server frame.
-	float m_flNextGrenadeCheck;
-	float m_flNextPainTime;
-	float m_flLastEnemySightTime;
-
-	Vector	m_vecTossVelocity;
-
-	BOOL	m_fThrowGrenade;
-	BOOL	m_fStanding;
-	BOOL	m_fFirstEncounter;// only put on the handsign show in the squad's first encounter.
-	int	m_cClipSize;
-
-	int m_voicePitch;
-
-	int	m_iBrassShell;
-	int	m_iShotgunShell;
-
-	int	m_iSentence;
-
-	static const char *pGruntSentences[];
 
 	//MODDD - see comments below at implementation.
 	//int SquadRecruit( int searchRadius, int maxMembers );
 
-	//OH YOU GREASY, CHEEKY LITTLE guy.  I.  WILL.  HURT.  YOU.   (PlayerUse  uses this to judge whether or not this is worth sending a "touch" to).
+	// OH YOU GREASY LITTLE.  (PlayerUse  uses this to judge whether or not this is worth sending a "touch" to).
 	int ObjectCaps( void ) { return CSquadMonster :: ObjectCaps() | FCAP_IMPULSE_USE; }
-
-	/*
-	void Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value ) 
-	{ 
-		easyForcePrintLine("WELL IS HE????? %d %s", m_pfnUse == NULL, pCaller!=NULL?pCaller->getClassname():"blankcaller?");
-		if (m_pfnUse) 
-			(this->*m_pfnUse)( pActivator, pCaller, useType, value );
-	}
-	*/
 
 	BOOL canResetBlend0(void);
 	BOOL onResetBlend0(void);
@@ -1088,7 +1081,14 @@ GENERATE_TRACEATTACK_IMPLEMENTATION(CHGrunt)
 	//const float headshotDamageReq = gSkillData.plrDmg357;
 	//easyForcePrintLine("HGrunt:: TraceAttack says I took %.2f damage.", flDamage);
 
-	if(GetBodygroup(BODYGROUP_HEAD) == HEAD_GRUNT && (ptr->iHitgroup == HITGROUP_HGRUNT_HELMET || ptr->iHitgroup == HITGROUP_HEAD) && flDamage >= headshotDamageReq){
+	if(
+		// Can not go headless from BLAST or equal-hitbox damage, hits to whatever bodygroup is
+		// nearly random.
+		!((bitsDamageType & DMG_BLAST) || (bitsDamageTypeMod & DMG_HITBOX_EQUAL)) &&
+		GetBodygroup(BODYGROUP_HEAD) == HEAD_GRUNT &&
+		(ptr->iHitgroup == HITGROUP_HGRUNT_HELMET || ptr->iHitgroup == HITGROUP_HEAD) &&
+		flDamage >= headshotDamageReq
+	){
 		// a python round (at least)?  Remember that...
 		missingHeadPossible = TRUE;
 		lastHeadHit = ptr->vecEndPos;

@@ -24,6 +24,7 @@
 #include "weapons.h"
 #include "decals.h"
 #include "func_break.h"
+#include "gib.h"
 #include "shake.h"
 
 #define SF_GIBSHOOTER_REPEATABLE	1 // allows a gibshooter to be refired

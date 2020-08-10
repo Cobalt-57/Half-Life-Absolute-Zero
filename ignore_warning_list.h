@@ -45,7 +45,7 @@
 //#pragma warning(disable : 4003)
 
 //    Keep this one too.
-//    Warning	C4005	'ASSERT': macro redefinition	cl_dll	C : \Users\blue2\Desktop\SM\HLS1 AZ\dlls\util.h	391
+//    Warning	C4005	'ASSERT': macro redefinition
 //#pragma warning(disable : 4005)
 
 
@@ -83,6 +83,12 @@
 // Nope!  That's a good one too,
 //    'local declaraiton of X hides declaraiton of the same name in outer scope'.
 //#pragma warning(disable : 6246)
+
+
+
+// And keep that one.
+//Warning	C6281	Incorrect order of operations : relational operators have higher precedence than bitwise operators.
+//#pragma warning(disable : 6281) 
 
 // Nope!  Keep this one.
 //#pragma warning(disable : 6283)     // 'X' is allocated with array new[], but delted with scalar delete.

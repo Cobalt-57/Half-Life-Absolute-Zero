@@ -93,6 +93,27 @@ cl_entity_s* g_viewModelRef = NULL;
 
 
 
+// Pretty sure the max number of entities is around 1024, but the game crashes at trying to spawn over 900 anyway.
+// Or at least when an index reaches 900.
+// MAX_MAP_ENTITIES ???  that constant was set to 1024.  Close enough to the observed 900 anyway, unless that's some
+// freak coincidence.
+float ary_g_prevTime[1024];
+float ary_g_prevFrame[1024];
+
+
+//static float g_prevTime;
+//static float g_prevFrame;
+static float g_OLDprevTime;
+static float g_debugPrevTime;
+
+
+
+
+
+
+
+
+
 
 /////////////////////
 // Implementation of CStudioModelRenderer.h
@@ -103,13 +124,6 @@ Init
 
 ====================
 */
-
-// Pretty sure the max number of entities is around 1024, but the game crashes at trying to spawn over 900 anyway.
-// Or at least when an index reaches 900.
-// MAX_MAP_ENTITIES ???  that constant was set to 1024.  Close enough to the observed 900 anyway, unless that's some
-// freak coincidence.
-float ary_g_prevTime[1024];
-float ary_g_prevFrame[1024];
 
 void CStudioModelRenderer::Init( void )
 {
@@ -245,7 +259,7 @@ void CStudioModelRenderer::StudioCalcBoneAdj ( float dadt, float *adj, const byt
 		else
 		{
 			if (m_pCurrentEntity->curstate.eflags & 4) {
-				easyForcePrintLine("OH hey SON");
+				easyForcePrintLine("OH hey ther");
 			}
 
 
@@ -604,8 +618,6 @@ void CStudioModelRenderer::StudioSetUpTransform (int trivial_accept)
 	angles[PITCH] = m_pCurrentEntity->curstate.angles[PITCH];
 	angles[YAW] = m_pCurrentEntity->curstate.angles[YAW];
 
-	//MODDD - new.
-	float timeoVar;
 
 	//Con_DPrintf("Angles %4.2f prev %4.2f for %i\n", angles[PITCH], m_pCurrentEntity->index);
 	//Con_DPrintf("movetype %d %d\n", m_pCurrentEntity->movetype, m_pCurrentEntity->aiment );
@@ -626,10 +638,30 @@ void CStudioModelRenderer::StudioSetUpTransform (int trivial_accept)
 
 
 
+		/*
+		// printouts.
+		if (m_pCurrentEntity->curstate.renderfx & ISNPC) {
+			float denomoTest = (m_pCurrentEntity->curstate.animtime - m_pCurrentEntity->latched.prevanimtime);
+			easyForcePrint("AAAAA cltime:%.2f curanim:%.2f latchedprevanim:%.2f, cltime-curanim:%.2f denomo:%.2f ordinaryf:", m_clTime, m_pCurrentEntity->curstate.animtime, m_pCurrentEntity->latched.prevanimtime, (m_clTime - m_pCurrentEntity->curstate.animtime), denomoTest);
+			if (denomoTest > 0) {
+				float reso = (m_clTime - m_pCurrentEntity->curstate.animtime) / denomoTest;
+				easyForcePrintLine("%.2f", denomoTest);
+			}
+			else {
+				// 0 or under?  Don't bother with denomoTest.
+				easyForcePrintLine("N/A");
+			}
+		}
+		*/
+
 		if (m_fDoInterp)
 		{
-			if ((m_clTime < m_pCurrentEntity->curstate.animtime + 1.0f) &&
-				(m_pCurrentEntity->curstate.animtime != m_pCurrentEntity->latched.prevanimtime))
+			if (
+				(m_clTime < m_pCurrentEntity->curstate.animtime + 1.0f)
+				// MODDD - Do we need this check now?  Glitchiness can happen when animtime is way too close or even under prevanimtime...
+				// however that's managed.
+				//&& (m_pCurrentEntity->curstate.animtime != m_pCurrentEntity->latched.prevanimtime)
+			)
 			{
 				float denomo = (m_pCurrentEntity->curstate.animtime - m_pCurrentEntity->latched.prevanimtime);
 
@@ -638,9 +670,111 @@ void CStudioModelRenderer::StudioSetUpTransform (int trivial_accept)
 				if (fabs(denomo) <= EASY_CVAR_GET(interpolation_movetypestep_mindelta)) {
 					// Too small of a denominator?  I suspect something is up.
 					f = 0;
+
+
+					//MODDD - NEW.  Same fix for things recently touching the ground losing interp.
+					// Assuming the issues are related.
+					///////////////////////////////////////////////////////////////////////////////////////////////////
+					///////////////////////////////////////////////////////////////////////////////////////////////////
+					///////////////////////////////////////////////////////////////////////////////////////////////////
+					///////////////////////////////////////////////////////////////////////////////////////////////////
+
+					if (m_fDoInterp && (m_pCurrentEntity->curstate.renderfx & ISNPC) && !(m_pCurrentEntity->curstate.renderfx & STOPINTR) ) {
+						g_OLDprevTime = ary_g_prevTime[m_pCurrentEntity->index];
+
+						// CAREFUL!  Check for these condtions too.
+						// An animation not even playing or one that's ended (out of bounds without looping)
+						// Then again, this might not even be necessary.  The as-is dfdt-giving script (furthest above)
+						// does no checks like this.  Disabling, should not be a problem.
+						/*
+						if (
+							m_pCurrentEntity->curstate.framerate == 0 ||
+							(
+								(!(pseqdesc->flags & STUDIO_LOOPING)) &&
+								(
+									(m_pCurrentEntity->curstate.framerate > 0 && m_pCurrentEntity->curstate.frame >= 255) ||
+									(m_pCurrentEntity->curstate.framerate < 0 && m_pCurrentEntity->curstate.frame <= 0)
+								)
+							)
+						) {
+							// 0 framerate, or our frame is out of bounds & no plans on looping?  do not!
+							// (this is for a breakpoint)
+							int x = 45;
+						}
+						else
+						*/
+						{
+
+
+							// MODDD - !!!!!!!!!!
+							///////////////////////////////////////////////////////////////////////
+							// Why do this check again?  Elsewhere handles this
+							/*
+							// It would be nice to tell when a server update occurred for whether it's worth bothering to check
+							// curstate.frame for a change but even that is a check all the same
+							if (ary_g_prevFrame[m_pCurrentEntity->index] != m_pCurrentEntity->curstate.frame) {
+								ary_g_prevFrame[m_pCurrentEntity->index] = m_pCurrentEntity->curstate.frame;
+								ary_g_prevTime[m_pCurrentEntity->index] = m_clTime;
+
+							}
+							*/
+							///////////////////////////////////////////////////////////////////////
+
+
+
+							//m_pCurrentEntity->curstate.iuser4 = ary_g_prevFrame[m_pCurrentEntity->index];
+							//m_pCurrentEntity->curstate.fuser4 = ary_g_prevTime[m_pCurrentEntity->index];
+
+
+					// f = (m_clTime - m_pCurrentEntity->curstate.animtime) / denomo;
+					// f = (m_clTime - m_pCurrentEntity->curstate.animtime) / (m_pCurrentEntity->curstate.animtime - m_pCurrentEntity->latched.prevanimtime)
+
+							// of course it was!
+							//if (f == 0) {
+								// try this.
+								// m_clTime ?  gpGlobals->time ?
+
+
+								/*
+								float diffo = m_clTime - ary_g_prevTime[m_pCurrentEntity->index];
+								if (diffo > 0) {
+									dfdt = diffo * m_pCurrentEntity->curstate.framerate * pseqdesc->fps;
+								}
+								*/
+
+								/*
+								float diffo = m_clTime - ary_g_prevTime[m_pCurrentEntity->index];
+								if (fabs(diffo) > EASY_CVAR_GET(interpolation_movetypestep_mindelta)) {
+									//f = (m_clTime - m_pCurrentEntity->curstate.animtime) / diffo;
+									f = (m_clTime - m_pCurrentEntity->curstate.animtime) / diffo;
+									//f = (m_clTime - ary_g_prevTime[m_pCurrentEntity->index]) * m_pCurrentEntity->curstate.framerate * pseqdesc->fps;
+								}
+								*/
+
+								/*
+								float denomoTest2 = (ary_g_prevTime[m_pCurrentEntity->index] - m_pCurrentEntity->latched.prevanimtime);
+								if (denomoTest2 > EASY_CVAR_GET(interpolation_movetypestep_mindelta)) {
+									float attempt = (m_clTime - ary_g_prevTime[m_pCurrentEntity->index]) / denomoTest2;
+									f = attempt;
+								}
+								*/
+
+									float attempt = (m_clTime - ary_g_prevTime[m_pCurrentEntity->index]);
+									f = attempt;
+
+							//}
+						}
+					}
+					///////////////////////////////////////////////////////////////////////////////////////////////////
+					///////////////////////////////////////////////////////////////////////////////////////////////////
+					///////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
 				}
 				else {
-					// ok.
+					// ok.  This runs if there wasn't a problem with 'denomo' (not too small or negative).
 					f = (m_clTime - m_pCurrentEntity->curstate.animtime) / denomo;
 				}
 
@@ -665,7 +799,11 @@ void CStudioModelRenderer::StudioSetUpTransform (int trivial_accept)
 
 
 
-		timeoVar = f;
+
+
+
+
+
 
 
 		////if (m_pCurrentEntity->curstate.renderfx & STOPINTR) {
@@ -1146,11 +1284,6 @@ StudioEstimateFrame
 ====================
 */
 
-//static float g_prevTime;
-//static float g_prevFrame;
-static float g_OLDprevTime;
-static float g_debugPrevTime;
-
 
 float CStudioModelRenderer::StudioEstimateFrame( mstudioseqdesc_t *pseqdesc )
 {
@@ -1213,7 +1346,9 @@ float CStudioModelRenderer::StudioEstimateFrame( mstudioseqdesc_t *pseqdesc )
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	if(EASY_CVAR_GET(cl_interp_viewmodel) == 0) {
+	// I... still don't know how m_fDoInterp would ever be off, but if it were not worth bothering.
+	// The viewmodel would be frozen to the first frame the whole time without the server to set curstate.animtime.
+	if(m_fDoInterp && EASY_CVAR_GET(cl_interp_viewmodel) == 0) {
 		if(g_drawType == DRAWTYPE_VIEWMODEL) {
 
 			// example of modulo (however helpful it may be).  Or subtracting a remainder maybe?
@@ -1266,21 +1401,21 @@ float CStudioModelRenderer::StudioEstimateFrame( mstudioseqdesc_t *pseqdesc )
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	if (m_fDoInterp && m_pCurrentEntity->curstate.renderfx & ISNPC) {
-		
-		// CAREFUL!  Check for these condtions too.
-
+	if (m_fDoInterp && (m_pCurrentEntity->curstate.renderfx & ISNPC)  && !(m_pCurrentEntity->curstate.renderfx & STOPINTR) ) {
 		g_OLDprevTime = ary_g_prevTime[m_pCurrentEntity->index];
 
-
+		// CAREFUL!  Check for these condtions too.
+		// An animation not even playing or one that's ended (out of bounds without looping)
+		// Then again, this might not even be necessary.  The as-is dfdt-giving script (furthest above)
+		// does no checks like this.  Disabling, should not be a problem.
+		/*
 		if (
 			m_pCurrentEntity->curstate.framerate == 0 ||
-			
 			(
 				(!(pseqdesc->flags & STUDIO_LOOPING)) &&
 				(
-					m_pCurrentEntity->curstate.frame >= 255 ||
-					m_pCurrentEntity->curstate.frame < 0
+					(m_pCurrentEntity->curstate.framerate > 0 && m_pCurrentEntity->curstate.frame >= 255) ||
+					(m_pCurrentEntity->curstate.framerate < 0 && m_pCurrentEntity->curstate.frame <= 0)
 				)
 			)
 		) {
@@ -1288,8 +1423,12 @@ float CStudioModelRenderer::StudioEstimateFrame( mstudioseqdesc_t *pseqdesc )
 			// (this is for a breakpoint)
 			int x = 45;
 		}
-		else {
+		else
+		*/
+		{
 			
+			// It would be nice to tell when a server update occurred for whether it's worth bothering to check
+			// curstate.frame for a change but even that is a check all the same
 			if (ary_g_prevFrame[m_pCurrentEntity->index] != m_pCurrentEntity->curstate.frame) {
 				ary_g_prevFrame[m_pCurrentEntity->index] = m_pCurrentEntity->curstate.frame;
 				ary_g_prevTime[m_pCurrentEntity->index] = m_clTime;
@@ -1307,7 +1446,7 @@ float CStudioModelRenderer::StudioEstimateFrame( mstudioseqdesc_t *pseqdesc )
 				// m_clTime ?  gpGlobals->time ?
 				float diffo = m_clTime - ary_g_prevTime[m_pCurrentEntity->index];
 				if (diffo > 0) {
-					dfdt = (m_clTime - ary_g_prevTime[m_pCurrentEntity->index]) * m_pCurrentEntity->curstate.framerate * pseqdesc->fps;
+					dfdt = diffo * m_pCurrentEntity->curstate.framerate * pseqdesc->fps;
 				}
 			}
 		}
@@ -1430,6 +1569,10 @@ float CStudioModelRenderer::StudioEstimateFrame( mstudioseqdesc_t *pseqdesc )
 		}
 		*/
 	}
+
+
+
+
 	
 	if( animateBackwards  ){
 		//easyPrintLine("WHAT THE?? f:%.2g if:%.2g n:%d", f, (pseqdesc->numframes - f - 1), pseqdesc->numframes);
@@ -1458,7 +1601,6 @@ CLIENTFR: 160 14.
 	}
 
 
-
 	// Debug printouts for seeing how the 'interp physics issue' fix above works.
 	// Best with only one NPC on the map, kill in slow motion with CVars set to put it in the air a tiny bit (monsterKilledToss set to 1 or 2),
 	// with a low host_frametime (like 0.001) and watch how these printouts change.  Compare to the printouts during just an idle animation,
@@ -1480,7 +1622,6 @@ CLIENTFR: 160 14.
 	}
 	*/
 
-	
 	
 
 	return f;
@@ -2775,7 +2916,7 @@ int CStudioModelRenderer::StudioDrawModel( int flags )
 	if (flags & STUDIO_EVENTS)
 	{
 		if(m_pCurrentEntity->curstate.renderfx & ISNPC){
-			easyPrintLineDummy("OHSHIT");
+			easyPrintLineDummy("OHdear");
 		}
 
 		//Setting the framerate to 0 before doing attachments can fool StudioClientEvents into thinking no time passed?
@@ -2851,7 +2992,8 @@ int CStudioModelRenderer::StudioDrawModel( int flags )
 	
 	int canReflect = TRUE;
 	if(EASY_CVAR_GET(mirrorsReflectOnlyNPCs) == 1 && !(m_pCurrentEntity->curstate.renderfx & ISNPC) && !(g_drawType == DRAWTYPE_PLAYER)  ){
-		//if this CVar is on and this entity is not an npc, skip drawing to mirror.
+		// if this CVar is on and this entity is not an npc, skip drawing to mirror.
+		// Player models not included (still reflected).  Players may or may not use the ISNPC flag, it gives no new information there.
 		canReflect = FALSE;
 	}
 	

@@ -143,6 +143,24 @@ DLL_GLOBAL const Vector VECTOR_CONE_20DEGREES = Vector(0.17365, 0.17365, 0.17365
 int giAmmoIndex;
 
 
+//MODDD - named ammo indeces so that they don't have to be re-found every single time TabulateAmmo is called
+// Globals and set once at startup, since where what ammotype is in the array of ammo types never changes.
+int AmmoIndex_9mm;
+int AmmoIndex_357;
+int AmmoIndex_ARgrenades;
+int AmmoIndex_bolts;
+int AmmoIndex_buckshot;
+int AmmoIndex_rockets;
+int AmmoIndex_uranium;
+int AmmoIndex_Hornets;
+// and some new ones.  Not all ammo types used to have these.
+int AmmoIndex_HandGrenade;
+int AmmoIndex_SatchelCharge;
+int AmmoIndex_Snarks;
+int AmmoIndex_TripMine;
+int AmmoIndex_ChumToads;
+
+
 
 // Also from weapons.cpp, since we can refer to these in both client/server now.
 // These are implementations of CBasePlayerItem's two static arrays.
@@ -416,7 +434,9 @@ int MaxAmmoCarry_ItemID(int iID)
 // Precaches the ammo and queues the ammo info for sending to clients
 //MODDD - Accepts weapon taking the ammos for saving to CBasePlayerItem::AmmoTypeCacheArray[#].
 // Also, variants created for primary/secondary ammo to know which one to use in AmmoTypeCacheArray[#].
-void AddAmmoNameToAmmoRegistry_Primary(int iId, const char* szAmmoname)
+// And now accepts max-ammo for that type of ammo too, although nothing refers to type through
+// AmmoInfoArray yet.
+void AddAmmoNameToAmmoRegistry_Primary(int iId, const char* szAmmoname, int iAmmoMax)
 {
 	// make sure it's not already in the registry
 	for (int i = 0; i < MAX_AMMO_SLOTS; i++)
@@ -448,6 +468,7 @@ void AddAmmoNameToAmmoRegistry_Primary(int iId, const char* szAmmoname)
 
 	CBasePlayerItem::AmmoInfoArray[giAmmoIndex].pszName = szAmmoname;
 	CBasePlayerItem::AmmoInfoArray[giAmmoIndex].iId = giAmmoIndex;   // yes, this info is redundant
+	CBasePlayerItem::AmmoInfoArray[giAmmoIndex].iAmmoMax = iAmmoMax;
 
 	//MODDD - and save as the ammo type for this weapon.
 	CBasePlayerItem::AmmoTypeCacheArray[iId].iPrimaryAmmoType = giAmmoIndex;
@@ -455,7 +476,7 @@ void AddAmmoNameToAmmoRegistry_Primary(int iId, const char* szAmmoname)
 	//giAmmoIndex++;
 }//END OF AddAmmoNameToAmmoRegistry_Primary
 
-void AddAmmoNameToAmmoRegistry_Secondary(int iId, const char* szAmmoname)
+void AddAmmoNameToAmmoRegistry_Secondary(int iId, const char* szAmmoname, int iAmmoMax)
 {
 	// make sure it's not already in the registry
 	for (int i = 0; i < MAX_AMMO_SLOTS; i++)
@@ -480,6 +501,7 @@ void AddAmmoNameToAmmoRegistry_Secondary(int iId, const char* szAmmoname)
 
 	CBasePlayerItem::AmmoInfoArray[giAmmoIndex].pszName = szAmmoname;
 	CBasePlayerItem::AmmoInfoArray[giAmmoIndex].iId = giAmmoIndex;   // yes, this info is redundant
+	CBasePlayerItem::AmmoInfoArray[giAmmoIndex].iAmmoMax = iAmmoMax;
 
 	//MODDD
 	CBasePlayerItem::AmmoTypeCacheArray[iId].iSecondaryAmmoType = giAmmoIndex;
@@ -491,7 +513,8 @@ void AddAmmoNameToAmmoRegistry_Secondary(int iId, const char* szAmmoname)
 
 
 
-
+// Call this on each weapon in the game clientside and serverside to get some basic info about each
+// weapon cached, especially the ammo-types.
 void RegisterWeapon(CBasePlayerWeapon* pWeapon, CBasePlayerWeapon* pAryWeaponStore[]) {
 	ItemInfo tempInfo;
 	//easyForcePrintLine("HELP HUD_PrepEntity!!! %s %d %s", pEntity->getClassname(), tempInfo.iId, tempInfo.pszAmmo1);
@@ -524,13 +547,13 @@ void RegisterWeapon(CBasePlayerWeapon* pWeapon, CBasePlayerWeapon* pAryWeaponSto
 
 		//MODDD - and if there isn't an ammo-type, tell the ammo type cache this.
 		if (tempInfo.pszAmmo1 && *tempInfo.pszAmmo1){
-			AddAmmoNameToAmmoRegistry_Primary(tempInfo.iId, tempInfo.pszAmmo1);
+			AddAmmoNameToAmmoRegistry_Primary(tempInfo.iId, tempInfo.pszAmmo1, tempInfo.iMaxAmmo1);
 		}else {
 			CBasePlayerItem::AmmoTypeCacheArray[tempInfo.iId].iPrimaryAmmoType = -1;
 		}
 
 		if (tempInfo.pszAmmo2 && *tempInfo.pszAmmo2){
-			AddAmmoNameToAmmoRegistry_Secondary(tempInfo.iId, tempInfo.pszAmmo2);
+			AddAmmoNameToAmmoRegistry_Secondary(tempInfo.iId, tempInfo.pszAmmo2, tempInfo.iMaxAmmo2);
 		}else {
 			CBasePlayerItem::AmmoTypeCacheArray[tempInfo.iId].iSecondaryAmmoType = -1;
 		}
@@ -539,9 +562,33 @@ void RegisterWeapon(CBasePlayerWeapon* pWeapon, CBasePlayerWeapon* pAryWeaponSto
 		//memset(&tempInfo, 0, sizeof tempInfo);
 	}//END OF GetItemInfo pass check
 
-}//END OF registerWeapon
+}//registerWeapon
 
 
+//MODDD - After 'registerWeapon' has been called for all weapons, all possible ammo-types have also been registered.
+// Use them to fill the cached ammo indeces.
+void PostWeaponRegistry(void) {
+
+	// No references to snark/squeak ammo in there, eh?  Interesting.  Seems these really aren't that necessary.
+	// Don't see what these do that a weapon's own PrimaryAmmoIndex() method can't do.
+	// Could replace calls for ammo-type by string name throughout other files though.
+
+	AmmoIndex_9mm = GetAmmoIndex("9mm");
+	AmmoIndex_357 = GetAmmoIndex("357");
+	AmmoIndex_ARgrenades = GetAmmoIndex("ARgrenades");
+	AmmoIndex_bolts = GetAmmoIndex("bolts");
+	AmmoIndex_buckshot = GetAmmoIndex("buckshot");
+	AmmoIndex_rockets = GetAmmoIndex("rockets");
+	AmmoIndex_uranium = GetAmmoIndex("uranium");
+	AmmoIndex_Hornets = GetAmmoIndex("Hornets");
+	// NEW. Here they are if ever needed anyway.
+	AmmoIndex_HandGrenade = GetAmmoIndex("Hand Grenade");
+	AmmoIndex_SatchelCharge = GetAmmoIndex("Satchel Charge");
+	AmmoIndex_Snarks = GetAmmoIndex("Snarks");
+	AmmoIndex_TripMine = GetAmmoIndex("Trip Mine");
+	AmmoIndex_ChumToads = GetAmmoIndex("Chum Toads");
+
+}//PostWeaponRegistry
 
 
 

@@ -404,6 +404,9 @@
     <ClCompile Include="..\game_shared\voice_gamemgr.cpp">
       <Filter>Source Files\Shared</Filter>
     </ClCompile>
+    <ClCompile Include="entity\gib.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="activity.h">
@@ -645,6 +648,9 @@
     </ClInclude>
     <ClInclude Include="..\game_shared\util\util_version.h">
       <Filter>Header Files\Shared</Filter>
+    </ClInclude>
+    <ClInclude Include="entity\gib.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

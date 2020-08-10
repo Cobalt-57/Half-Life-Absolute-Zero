@@ -11,11 +11,15 @@
 #include "ammohistory.h"
 #include "vgui_TeamFortressViewport.h"
 
+#include "hl/hl_weapons.h"
+#include "dlls/entity/player.h"
+#include "dlls/weapons.h"
 
 
 EASY_CVAR_EXTERN(hud_swapFirstTwoBuckets)
 
 extern int g_weaponselect;
+
 
 
 
@@ -366,9 +370,14 @@ void WeaponsResource::SelectSlot(int iSlot, int fAdvance, int iDirection)
 	WEAPON* p = NULL;
 	BOOL fastSwitch = CVAR_GET_FLOAT("hud_fastswitch") != 0;
 
-	if ((gpActiveSel == NULL) || (gpActiveSel == (WEAPON*)1) || (iSlot != filterSlot(gpActiveSel->iSlot))  )
+
+
+	// First time opening the menu instead of going through slots while already open? Note that
+	BOOL openSinceClose = (gpActiveSel == NULL);
+
+	if (openSinceClose || (gpActiveSel == (WEAPON*)1) || (iSlot != filterSlot(gpActiveSel->iSlot))  )
 	{
-		PlaySound("common/wpn_hudon.wav", 1);
+		//MODDD - play the wpn_hudon.wav sound only if the sound wasn't absorbed by fastswitch playing wpn_select.wav now instead.
 		p = GetFirstPos(iSlot);
 
 		if (p && fastSwitch) // check for fast weapon switch mode
@@ -380,9 +389,30 @@ void WeaponsResource::SelectSlot(int iSlot, int fAdvance, int iDirection)
 			{	// only one active item in bucket, so change directly to weapon
 				ServerCmd(p->szName);
 				g_weaponselect = p->iId;
+
+				//MODDD - new line.  why keep weapon select up when we decided to equip a weapon?
+				gpActiveSel = NULL;
+				// ALSO, play this sound instead, as though the weapon were clicked while weapon select was open
+				PlaySound("common/wpn_select.wav", 1);
+
 				return;
 			}
 		}
+
+		if (p) {
+
+			if (openSinceClose) {
+				//MODDD -  hud_fastwtich wasn't on or didn't work (0 or many items in slot)?  Play for the open menu.
+				// AND only if the menu was opened at all. Slots without any items don't open the menu.
+				// AND only since opening since a close.  Otherwise...
+				PlaySound("common/wpn_hudon.wav", 1);
+			}
+			else {
+				// yep.
+				gHUD.playWeaponSelectMoveSound();
+			}
+		}
+
 	}
 	else
 	{
@@ -397,13 +427,164 @@ void WeaponsResource::SelectSlot(int iSlot, int fAdvance, int iDirection)
 	if (!p)  // no selection found
 	{
 		// just display the weapon list, unless fastswitch is on just ignore it
-		if (!fastSwitch)
+
+		//MODDD - why refuse to show the menu for an empty slot when  fastSwitch is on?
+		// Seems like odd behavior irrelevant to the point of fastSwitch.
+		//if (!fastSwitch){
 			gpActiveSel = (WEAPON*)1;
-		else
-			gpActiveSel = NULL;
+		//}else{
+		//	gpActiveSel = NULL;
+		//}
 	}
-	else
+	else {
 		gpActiveSel = p;
+	}
 }
+
+
+
+// NEW. stop showing weapon-select, don't commit the current selection.
+// Play the close-menu sound if it was open.
+// Oh.  Mostly copied from CHudAmmo::UserCmd_Close(void) actually.
+// Without the "escape" call in there, I have no idea what that was.
+// And... funny I named it this, I didn't even see that UserCmd_Close was
+// linked by console text 'cancelselect'.
+void WeaponsResource::CancelSelection(void) {
+	if (gpActiveSel != NULL)
+	{
+		gpLastSel = gpActiveSel;
+		gpActiveSel = NULL;
+		if (gpActiveSel != (WEAPON*)1) {
+			PlaySound("common/wpn_hudoff.wav", 1);
+		}
+	}
+}
+
+
+// NEW.  This is not tied to any engine events or overridable method,
+// this must be called by gHUD.m_Ammo (ammo.cpp)'s Think method, used to be there in fact.
+void WeaponsResource::Think(void) {
+
+	//MODDD - still okay to do weapon selection during death, IF the option is on.
+	//if ( gHUD.m_fPlayerDead )
+	if (EASY_CVAR_GET(canShowWeaponSelectAtDeath) == 0 && gHUD.m_fPlayerDead) {
+		return;
+	}
+
+	if (gHUD.m_iWeaponBits != iOldWeaponBits)
+	{
+		iOldWeaponBits = gHUD.m_iWeaponBits;
+
+		for (int i = MAX_WEAPONS - 1; i > 0; i--)
+		{
+			WEAPON* p = GetWeapon(i);
+
+			if (p)
+			{
+				if (gHUD.m_iWeaponBits & (1 << p->iId))
+					PickupWeapon(p);
+				else
+					DropWeapon(p);
+			}
+		}
+	}
+
+	if (!gpActiveSel)
+		return;
+
+	
+	
+
+	// has the player selected one?
+	// (this is a mouse-click to close the menu with whatever is picked in mind)
+	if (gHUD.m_iKeyBits & IN_ATTACK)
+	{
+		//MODDD - player must also not be dead to make a selection (in case weapons menu is still enabled)
+		//MODDD - new condition...?
+		//if(!gHUD.m_fPlayerDead ){
+
+
+		//MODDD - convoluted attempt to see if the same weapon has already been selected
+		// from looking at the mostly dummied clientside copy of the player.
+		// That isnt' very smart though, it is better to keep track of the existing
+		// selected weapon (gHUD.m_Ammo.m_pWeapon?) before making the change.    But this is a thing I suppose.
+		/*
+		BOOL isAlreadySelected = FALSE;
+
+		if (
+			gpActiveSel != NULL &&
+			gpActiveSel != (WEAPON*)1 &&
+			localPlayer.m_pActiveItem != NULL
+			) {
+
+			// test?
+			const char* a = STRING(localPlayer.m_pActiveItem->pev->classname);
+			const char* b = gpActiveSel->szName;
+
+			// so strcmp does not like NULL strings...    okay.
+
+			if (a != NULL && b != NULL) {
+				isAlreadySelected = (strcmp(a, b) == 0);
+
+				if (isAlreadySelected) {
+					int x = 4;
+				}
+				int x = 4;
+			}
+		}
+		else {
+			int x = 4;
+		}
+		*/
+
+		if (gpActiveSel != (WEAPON*)1)
+		{
+			ServerCmd(gpActiveSel->szName);
+			g_weaponselect = gpActiveSel->iId;
+
+			if (gHUD.m_Ammo.m_pWeapon != gpActiveSel) {
+				//MODDD - before, sound was played anytime the current selection was 'picked' (even if nothing was selected; empty slot).
+				// Also not played on selecting the same weapon.  Call still sent to the server for safety in case it isn't in synch.
+				PlaySound("common/wpn_select.wav", 1);
+			}
+			else {
+				// off it goes, mundanely.
+				PlaySound("common/wpn_hudoff.wav", 1);
+			}
+		}
+		//}
+
+
+
+		//Misunderstood something, nevermind this.
+		/*
+		if(CVAR_GET_FLOAT("deployingWeaponPlaysOtherSound") == 1){
+			PlaySound("items/gunpickup4.wav", 1);
+		}else{
+			PlaySound("common/wpn_select.wav", 1);
+		}
+		*/
+
+
+		gHUD.m_iKeyBits &= ~IN_ATTACK;
+
+		gpLastSel = gpActiveSel;
+		gpActiveSel = NULL;
+	}//END OF click check
+
+
+
+	if (gHUD.m_iKeyBits & IN_ATTACK2) {
+
+
+		CancelSelection();
+
+		gHUD.m_iKeyBits &= ~IN_ATTACK2;
+	}
+
+
+}//Think
+
+
 
 

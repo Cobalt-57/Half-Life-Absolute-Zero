@@ -40,6 +40,7 @@
 #include "basemonster.h"
 #include "weapons.h"
 #include "effects.h"
+#include "gib.h"
 
 //MODDD
 EASY_CVAR_EXTERN(sparksTurretDeathMulti)

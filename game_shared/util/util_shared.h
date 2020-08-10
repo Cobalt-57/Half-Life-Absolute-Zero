@@ -346,7 +346,25 @@ extern DLL_GLOBAL const Vector VECTOR_CONE_20DEGREES;
 /////////////////////////////////////////////////////////////////////////////////////////////
 
 extern DLL_GLOBAL const Vector g_vecZero;
+
 extern int giAmmoIndex;
+
+
+extern int AmmoIndex_9mm;
+extern int AmmoIndex_357;
+extern int AmmoIndex_ARgrenades;
+extern int AmmoIndex_bolts;
+extern int AmmoIndex_buckshot;
+extern int AmmoIndex_rockets;
+extern int AmmoIndex_uranium;
+extern int AmmoIndex_Hornets;
+extern int AmmoIndex_HandGrenade;
+extern int AmmoIndex_SatchelCharge;
+extern int AmmoIndex_Snarks;
+extern int AmmoIndex_TripMine;
+extern int AmmoIndex_ChumToads;
+
+
 extern BOOL globalflag_muteDeploySound;
 
 
@@ -443,10 +461,10 @@ float UTIL_SharedRandomFloat(unsigned int seed, float low, float high);
 extern int GetAmmoIndex(const char* psz);
 extern int MaxAmmoCarry(const char* psz);
 //MODDD NEW - prototype so that other places can call this method too.
-extern void AddAmmoNameToAmmoRegistry_Primary(int iId, const char* szAmmoname);
-extern void AddAmmoNameToAmmoRegistry_Secondary(int iId, const char* szAmmoname);
+extern void AddAmmoNameToAmmoRegistry_Primary(int iId, const char* szAmmoname, int iAmmoMax);
+extern void AddAmmoNameToAmmoRegistry_Secondary(int iId, const char* szAmmoname, int iAmmoMax);
 extern void RegisterWeapon(CBasePlayerWeapon* pWeapon, CBasePlayerWeapon* pAryWeaponStore[]);
-
+extern void PostWeaponRegistry(void);
 
 
 

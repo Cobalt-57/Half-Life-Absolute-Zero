@@ -482,6 +482,11 @@ void HUD_InitClientWeapons( void )
 	HUD_PrepEntity( &localPlayer	, NULL );
 
 	// Allocate slot(s) for each weapon that we are going to be predicting
+	//MODDD - order changed to reflect the serverside ordering as to not break people's save files,
+	// but still keep the ammotype indices in cached arrays consistent between client and serverside.
+	// Doesn't really matter if they are different, but it is to make future debugging less of a headache.
+	// Maybe.  Doesn't hurt to match, certainly.
+	/*
 	HUD_PrepEntity( &g_Glock	, &localPlayer );
 	HUD_PrepEntity( &g_Crowbar	, &localPlayer );
 	HUD_PrepEntity( &g_Python	, &localPlayer );
@@ -496,9 +501,65 @@ void HUD_InitClientWeapons( void )
 	HUD_PrepEntity( &g_Satchel	, &localPlayer );
 	HUD_PrepEntity( &g_Tripmine	, &localPlayer );
 	HUD_PrepEntity( &g_Snark	, &localPlayer );
-	//MODDD - new 
+	// new
 	HUD_PrepEntity( &g_ChumToadWeapon	, &localPlayer );
+	*/
 
+	HUD_PrepEntity(&g_Shotgun, &localPlayer);
+	HUD_PrepEntity(&g_Crowbar, &localPlayer);
+	HUD_PrepEntity(&g_Glock, &localPlayer);
+	HUD_PrepEntity(&g_Mp5, &localPlayer);
+	HUD_PrepEntity(&g_Python, &localPlayer);
+	HUD_PrepEntity(&g_Gauss, &localPlayer);
+	HUD_PrepEntity(&g_Rpg, &localPlayer);
+	HUD_PrepEntity(&g_Crossbow, &localPlayer);
+	HUD_PrepEntity(&g_Egon, &localPlayer);
+	HUD_PrepEntity(&g_Tripmine, &localPlayer);
+	HUD_PrepEntity(&g_Satchel, &localPlayer);
+	HUD_PrepEntity(&g_HandGren, &localPlayer);
+	HUD_PrepEntity(&g_Snark, &localPlayer);
+	HUD_PrepEntity(&g_ChumToadWeapon, &localPlayer);
+	HUD_PrepEntity(&g_HGun, &localPlayer);
+
+	/*
+	// summary of serverside precache statements:
+	UTIL_PrecacheOtherWeapon("weapon_shotgun");
+	UTIL_PrecacheOtherWeapon("weapon_crowbar");
+	UTIL_PrecacheOtherWeapon("weapon_9mmhandgun");
+	UTIL_PrecacheOtherWeapon("weapon_9mmAR");
+	UTIL_PrecacheOtherWeapon("weapon_357");
+	UTIL_PrecacheOtherWeapon("weapon_gauss");
+	UTIL_PrecacheOtherWeapon("weapon_rpg");
+	UTIL_PrecacheOtherWeapon("weapon_crossbow");
+	UTIL_PrecacheOtherWeapon("weapon_egon");
+	UTIL_PrecacheOtherWeapon("weapon_tripmine");
+	UTIL_PrecacheOtherWeapon("weapon_satchel");
+	UTIL_PrecacheOtherWeapon("weapon_handgrenade");
+	UTIL_PrecacheOtherWeapon("weapon_snark");
+	UTIL_PrecacheOtherWeapon("weapon_chumtoad");
+	UTIL_PrecacheOtherWeapon("weapon_hornetgun");
+	*/
+	/*
+	readout of ammo-types from serverside printout post weapon registry.
+	0
+	1  buckshot
+	2   9mm
+	3   ARgren
+	4   357
+	5   uranium
+	6   rockets
+	7   bolts
+	8   tripm
+	9   satch
+	10  handgren
+	11  snar
+	12  chumtoads
+	13   hornets
+	*/
+
+
+	//MODDD - and finally after all weapons have been registered, call this.
+	PostWeaponRegistry();
 
 }
 

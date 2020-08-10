@@ -2,8 +2,6 @@
 #ifndef EGON_H
 #define EGON_H
 
-
-#include "extdll.h"
 #include "weapons.h"
 
 

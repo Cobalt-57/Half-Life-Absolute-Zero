@@ -803,6 +803,11 @@ void command_lastinv(void) {
 	CBasePlayerItem* thingy = localPlayer.m_pLastItem;
 	
 
+	// Close the weapon select menu if it is open.
+	// This does not check whether there is an item to be swapped to though (nothing would happen).
+	gHUD.m_Ammo.gWR.CancelSelection();
+
+
 	
 	//if (!IsMultiplayer()) {
 	//	localPlayer.SelectLastItem();
