@@ -390,10 +390,21 @@ void WeaponsResource::SelectSlot(int iSlot, int fAdvance, int iDirection)
 				ServerCmd(p->szName);
 				g_weaponselect = p->iId;
 
-				//MODDD - new line.  why keep weapon select up when we decided to equip a weapon?
-				gpActiveSel = NULL;
-				// ALSO, play this sound instead, as though the weapon were clicked while weapon select was open
-				PlaySound("common/wpn_select.wav", 1);
+				//MODDD
+				// play this sound instead, as though the weapon were clicked while weapon select was open
+
+				if (gHUD.m_Ammo.m_pWeapon != p) {
+					// changed weapon?
+					PlaySound("common/wpn_select.wav", 1);
+
+					// why keep weapon select up when we decided to equip a weapon?
+					gpActiveSel = NULL;
+				}
+				else {
+					// weapon-select wasn't even open for this, don't make any noise
+					// ...unless it was?
+					CancelSelection();
+				}
 
 				return;
 			}
