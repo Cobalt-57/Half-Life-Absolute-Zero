@@ -807,6 +807,7 @@ void CBasePlayerWeapon::ItemPostFrame( void )
 		}
 
 		// Doubt this is necessary anymore, but verify.  Improvements for ammo, boundary checking in lots of places.
+		// Verified!
 		/*
 		if(EASY_CVAR_GET(cheat_infiniteammo) == 1){
 			//MODDD - this was a nasty bug.

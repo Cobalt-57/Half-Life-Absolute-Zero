@@ -231,7 +231,6 @@ Weapon-select changes:
 -Selecting a slot without any weapons no longer makes a noise.  Still shows the menu without any focused items.
 -hud_fastswitch closes the weaponselect menu on making a selection when the slot-key is pressed (only 1 item in that slot for this to happen).  Also plays the weapon-select sound instead, not the one for opening the menu.
 -hud_fastswitch does not make a noise if it did not change the weapon (already has crowbar out).
--Making a selection without anything picked (empty slot) no longer makes a noise
 -Selecting the same weapon as what's already equipped only plays the hud-close sound.
 -the menu-open sound only plays on opening the menu since a close (not picking different slots by number keys while open).  Go figure.
 -Right-click cancels the weapon-select menu.

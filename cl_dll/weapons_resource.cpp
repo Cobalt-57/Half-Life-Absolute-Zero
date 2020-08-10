@@ -563,7 +563,12 @@ void WeaponsResource::Think(void) {
 				PlaySound("common/wpn_hudoff.wav", 1);
 			}
 		}
-		//}
+		else {
+			// for an empty slot too now
+			PlaySound("common/wpn_hudoff.wav", 1);
+		}
+
+		//} gHUD.m_fPlayerDead check
 
 
 

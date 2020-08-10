@@ -204,9 +204,11 @@ BOOL CBasePlayerWeapon::CanDeploy(void)
 	// Swap to another weapon, and back.  Deploy will play over itself once.
 	// Tested with cl_holster 0 but still happens with 1.
 
+	
 	return TRUE;
 
 
+	/*
 
 	//easyPrintLine("MESSAGE4");
 	BOOL bHasAmmo = 0;
@@ -249,6 +251,7 @@ BOOL CBasePlayerWeapon::CanDeploy(void)
 	}
 
 	return TRUE;
+	*/
 }
 
 /*
@@ -754,7 +757,7 @@ void CBasePlayerWeapon::ItemPostFrame()
 	//MODDD - the 0.0 here is the same 0'd current time to check for given by UTIL_WeaponTimeBase() for being clientside.
 	// So it checks out
 
-	if ((m_fInReload) && (m_pPlayer->m_flNextAttackCLIENTHISTORY <= 0.0))
+	if ((m_fInReload) && (m_pPlayer->m_flNextAttack <= 0.0))
 	{
 		//MODDD - NOTE.  Oh dear, a note left as-is.  Or don't fix what ain't broken?
 		// I don't know what ingame issue this is referring to.
@@ -770,7 +773,11 @@ void CBasePlayerWeapon::ItemPostFrame()
 #else	
 		//MODDD - ok.  I'll just paste a bunch of stuff from dlls/weapons.cpp here then, looks like other
 		// aspects of client ammo have been fixed anyway.
-		//m_iClip += 10;
+		// ...strangely doesn't seem to make a difference,  leaving it out in case of causing any oddities.
+		// Goldsource just falls apart if you try to go too far in emulating serverside logic clientside,
+		// it will fight tooth and nail to throw your mangled lifeless corpse into a vortex of sorrow and agony.
+		// And then it will spit on it.
+
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
 		/*
@@ -806,9 +813,11 @@ void CBasePlayerWeapon::ItemPostFrame()
 
 #endif
 		//MODDD - old leftovers as a bare minimum before the weapons.cpp restoration above.
-		
-		this->OnReloadApply();
+		// Comment these out if above is uncommented.
 
+		// from the as-is codebase, only enabled lines.  Except for OnReloadApply(), that's new.
+		m_iClip += 10;
+		this->OnReloadApply();
 		m_fInReload = FALSE;
 		
 

@@ -6980,6 +6980,14 @@ void CBasePlayer::setActiveItem_HolsterCheck(CBasePlayerItem* argItem) {
 	*/
 	///////////////////////////////////////////////////////////////////////////
 
+
+	//MODDD - if the weapon isn't selectable, why bother?   BAIL.
+	if (!argItem->CanDeploy())
+	{
+		return;
+	}
+
+
 	if (m_pActiveItem) {
 		//easyForcePrintLine("OH yeah AM I HOLSTERIN ALREADY %d", m_bHolstering);
 
@@ -7011,7 +7019,7 @@ void CBasePlayer::setActiveItem_HolsterCheck(CBasePlayerItem* argItem) {
 
 
 
-
+// equips the previously equipped weapon.  "lastinv" in console;  q key by default
 void CBasePlayer::SelectLastItem(void)
 {
 	if (!m_pLastItem)
@@ -9469,11 +9477,6 @@ BOOL CBasePlayer :: SwitchWeapon( CBasePlayerItem *pWeapon )
 
 	return TRUE;
 	*/
-
-	if (!pWeapon->CanDeploy())
-	{
-		return FALSE;
-	}
 
 	ResetAutoaim();
 

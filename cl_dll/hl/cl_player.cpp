@@ -176,6 +176,14 @@ void CBasePlayer::setActiveItem_HolsterCheck(CBasePlayerItem* argItem) {
 	*/
 	///////////////////////////////////////////////////////////////////////////
 
+
+	//MODDD - if the weapon isn't selectable, why bother?   BAIL.
+	if (!argItem->CanDeploy())
+	{
+		return;
+	}
+
+
 	if (m_pActiveItemCLIENTHISTORY) {
 		//easyForcePrintLine("OH yeah AM I HOLSTERIN ALREADY %d", m_bHolstering);
 
