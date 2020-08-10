@@ -1567,6 +1567,11 @@ void CBasePlayer::RemoveAllItems( BOOL removeSuit )
 		m_pActiveItem = NULL;
 	}
 
+	//MODDD - reset holstering too.
+	m_pQueuedActiveItem = NULL;
+	m_bHolstering = FALSE;
+
+
 	m_pLastItem = NULL;
 
 	int i;

@@ -578,7 +578,7 @@ void CChumToadWeapon::PrimaryAttack()
 
 			forceBlockLooping();
 			//bypass??
-			SendWeaponAnim( CHUMTOADWEAPON_THROW | 0 );
+			SendWeaponAnimBypass( CHUMTOADWEAPON_THROW | 0 );
 			// player "shoot" animation
 			m_pPlayer->SetAnimation( PLAYER_ATTACK1 );
 
@@ -589,7 +589,7 @@ void CChumToadWeapon::PrimaryAttack()
 
 			//MODDD 
 			if(m_pPlayer->cheat_minimumfiredelayMem == 0){
-				m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + CHUMTOAD_THROW_DELAY + 0.5f;
+				m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + CHUMTOAD_THROW_DELAY + 1.4f;
 				//chumtoadThrowReverseDelay = m_flNextPrimaryAttack - CHUMTOAD_THROW_DELAY;  //time to throw the chumtoad, counting backwards.
 				pev->fuser1 = UTIL_WeaponTimeBase() + CHUMTOAD_THROW_DELAY;
 			}else{
@@ -600,7 +600,7 @@ void CChumToadWeapon::PrimaryAttack()
 			}
 			//NOTE: this ends up being the delay before doing the re-draw animation (can still fire before then, unaffected by the time of the "throw" animation that hides the hands)
 			//To be clear, the "(# / #)" part is still just animation frames divided by animation framerate.
-			m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + (16.0/ 24.0) + 0.7f;
+			m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + (16.0/ 24.0) + 0.1f;
 
 
 
@@ -744,6 +744,12 @@ void CChumToadWeapon::WeaponIdle( void )
 	if ( m_flTimeWeaponIdle > UTIL_WeaponTimeBase() )
 		return;
 
+
+
+	if (PlayerPrimaryAmmoCount() <= 0) {
+		// no.  No idle delays, they just make ammo pickups take longer to take effect with the empty viewmodel still up.
+		return;
+	}
 
 
 	//Now that there isn't a static delay for living throwables, the odds of a unique idle anim have been slightly reduced.

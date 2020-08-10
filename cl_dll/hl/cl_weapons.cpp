@@ -573,14 +573,14 @@ void CBasePlayerWeapon::SendWeaponAnimMessageFromServer(int iAnim, int body) {
 
 //MODDD - all new, clones.
 void CBasePlayerWeapon::setchargeReady(int arg) {
-	int mem = m_chargeReady & 64;
-	m_chargeReady = arg;
-	if (mem) {
-		m_chargeReady |= 64;
-	}
+	// Replace the first few bits with 'arg', don't go past 32 for safety.
+	// Should only need 0 to 2 anyway.
+	// This adds back in bits 64 and/or 128, if present already.
+	m_chargeReady = arg | (m_chargeReady & (64 | 128));
 }
 int CBasePlayerWeapon::getchargeReady(void) {
-	return m_chargeReady & ~64;
+	// Get without the extra bits.
+	return m_chargeReady & ~(64 | 128);
 }
 void CBasePlayerWeapon::forceBlockLooping(void) {
 	m_chargeReady |= 64;
@@ -589,20 +589,8 @@ void CBasePlayerWeapon::stopBlockLooping(void) {
 	m_chargeReady &= ~64;
 }
 
-//................................................
-/*
-void CGlock::setExtraBulletFalse(void){
-	m_chargeReady &= ~32;
-}
-void CGlock::setExtraBulletTrue(void){
-	m_chargeReady |= 32;
-}
-BOOL CGlock::getExtraBullet(void){
-	return (m_chargeReady & 32) != 0;
-}
-*/
 
-///////////////////////////////////////////////
+
 
 
 //MODDD - also new.
@@ -621,73 +609,6 @@ float CBasePlayerWeapon::randomIdleAnimationDelay(void) {
 }//END OF randomIdleAnimationDelay
 
 
-
-//MODDD - new, now called.
-void CBasePlayerWeapon::ItemPostFrameThink() {
-
-	/*
-	//MODDD - should be a good place to check for deplying the next weapon.
-	if(m_pActiveItem && m_bHolstering && gpGlobals->time >= m_flNextAttackCLIENTHISTORY){
-		//done holstering? complete the switch to the picked weapon. Deploy that one.
-
-		m_bHolstering = FALSE;
-		setActiveItem(m_pQueuedActiveItem);
-		m_pQueuedActiveItem = FALSE;
-	}
-	*/
-
-	//Surprisingly no, don't do this, this never even happens nor should it. Deploy should only be called by the server
-	//and its results are echoed to the client.
-
-
-
-	if (queuecall_lastinv == TRUE) {
-		queuecall_lastinv = FALSE;
-		localPlayer.SelectLastItem();
-		return;
-	}
-
-
-	// HOLSTER - SWAPPO DISABLE.
-	// or both disable.
-	// MODDD - MAJOR TODO.
-	// Supporting this client-side would be great and all, but there's a major problem.
-	// SelectLastItem is never getting called clientside, so interrupting a LastItem call through
-	// a normal number selection (4 twice, click, etc.) interrupts that clientside and interrupts
-	// the deploy animation soon after by repeating itself.  Client-server synch issues are weird.
-	// Does it make sense to let "lastinv" work clientside, like interpret console input right there?
-	// maybe if it were a client command that send the same thing to the server....
-	
-	//easyForcePrintLine("HOLS:%d HOLSTIM:%.2f NEXTATTA:%.2f TIME:%.2f",m_pPlayer->m_bHolstering, m_pPlayer->m_fCustomHolsterWaitTime, m_pPlayer->m_flNextAttackCLIENTHISTORY, gpGlobals->time);
-	//MODDD - should be a good place to check for deplying the next weapon.
-	if (m_pPlayer->m_bHolstering && gpGlobals->time >= m_pPlayer->m_fCustomHolsterWaitTime) { //m_pPlayer->m_flNextAttackCLIENTHISTORY <= 0.0){
-		//done holstering? complete the switch to the picked weapon. Deploy that one.
-
-		//!!!!!!
-		//RESIST
-		//resistTime = gpGlobals->time + 0.01;
-
-		m_pPlayer->m_bHolstering = FALSE;
-		m_chargeReady &= ~128;
-		//blockUntilModelChange = FALSE;       pointless.
-
-		if (m_pPlayer->m_pQueuedActiveItem != NULL) {
-			m_pPlayer->m_pQueuedActiveItem->m_chargeReady &= ~128;
-			m_pPlayer->setActiveItem(m_pPlayer->m_pQueuedActiveItem);
-			m_pPlayer->m_pQueuedActiveItem = NULL;
-		}
-
-		m_pPlayer->m_fCustomHolsterWaitTime = -1;
-	}
-	
-
-
-
-	//easyForcePrintLine("AFTR HOLS:%d HOLSTIM:%.2f NEXTATTA:%.2f TIME:%.2f",m_pPlayer->m_bHolstering, m_pPlayer->m_fCustomHolsterWaitTime, m_pPlayer->m_flNextAttackCLIENTHISTORY, gpGlobals->time);
-
-
-	CBasePlayerItem::ItemPostFrameThink();
-}//END OF ItemPostFrameThink
 
 
 //MODDD - added.  Doubt it will work
@@ -920,7 +841,76 @@ void CBasePlayerWeapon::ItemPostFrame()
 	{
 		WeaponIdle();
 	}
-}
+}//ItemPostFrame
+
+
+
+//MODDD - new, now called.
+void CBasePlayerWeapon::ItemPostFrameThink() {
+
+	/*
+	//MODDD - should be a good place to check for deplying the next weapon.
+	if(m_pActiveItem && m_bHolstering && gpGlobals->time >= m_flNextAttackCLIENTHISTORY){
+		//done holstering? complete the switch to the picked weapon. Deploy that one.
+
+		m_bHolstering = FALSE;
+		setActiveItem(m_pQueuedActiveItem);
+		m_pQueuedActiveItem = FALSE;
+	}
+	*/
+
+	//Surprisingly no, don't do this, this never even happens nor should it. Deploy should only be called by the server
+	//and its results are echoed to the client.
+
+
+
+	if (queuecall_lastinv == TRUE) {
+		queuecall_lastinv = FALSE;
+		localPlayer.SelectLastItem();
+		return;
+	}
+
+
+	// HOLSTER - SWAPPO DISABLE.
+	// or both disable.
+	// MODDD - MAJOR TODO.
+	// Supporting this client-side would be great and all, but there's a major problem.
+	// SelectLastItem is never getting called clientside, so interrupting a LastItem call through
+	// a normal number selection (4 twice, click, etc.) interrupts that clientside and interrupts
+	// the deploy animation soon after by repeating itself.  Client-server synch issues are weird.
+	// Does it make sense to let "lastinv" work clientside, like interpret console input right there?
+	// maybe if it were a client command that send the same thing to the server....
+
+	//easyForcePrintLine("HOLS:%d HOLSTIM:%.2f NEXTATTA:%.2f TIME:%.2f",m_pPlayer->m_bHolstering, m_pPlayer->m_fCustomHolsterWaitTime, m_pPlayer->m_flNextAttackCLIENTHISTORY, gpGlobals->time);
+	//MODDD - should be a good place to check for deplying the next weapon.
+	if (m_pPlayer->m_bHolstering && gpGlobals->time >= m_pPlayer->m_fCustomHolsterWaitTime) { //m_pPlayer->m_flNextAttackCLIENTHISTORY <= 0.0){
+		//done holstering? complete the switch to the picked weapon. Deploy that one.
+
+		//!!!!!!
+		//RESIST
+		//resistTime = gpGlobals->time + 0.01;
+
+		m_pPlayer->m_bHolstering = FALSE;
+		m_chargeReady &= ~128;
+		//blockUntilModelChange = FALSE;       pointless.
+
+		if (m_pPlayer->m_pQueuedActiveItem != NULL) {
+			m_pPlayer->m_pQueuedActiveItem->m_chargeReady &= ~128;
+			m_pPlayer->setActiveItem(m_pPlayer->m_pQueuedActiveItem);
+			m_pPlayer->m_pQueuedActiveItem = NULL;
+		}
+
+		m_pPlayer->m_fCustomHolsterWaitTime = -1;
+	}
+
+
+
+
+	//easyForcePrintLine("AFTR HOLS:%d HOLSTIM:%.2f NEXTATTA:%.2f TIME:%.2f",m_pPlayer->m_bHolstering, m_pPlayer->m_fCustomHolsterWaitTime, m_pPlayer->m_flNextAttackCLIENTHISTORY, gpGlobals->time);
+
+
+	CBasePlayerItem::ItemPostFrameThink();
+}//ItemPostFrameThink
 
 
 

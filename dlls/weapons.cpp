@@ -449,14 +449,14 @@ BOOL CanAttack( float attack_time, float curtime, BOOL isPredicted )
 
 
 void CBasePlayerWeapon::setchargeReady(int arg){
-	int mem = m_chargeReady & 64;
-	m_chargeReady = arg;
-	if(mem){
-		m_chargeReady |= 64;
-	}
+	// Replace the first few bits with 'arg', don't go past 32 for safety.
+	// Should only need 0 to 2 anyway.
+	// This adds back in bits 64 and/or 128, if present already.
+	m_chargeReady = arg | (m_chargeReady & (64 | 128));
 }
 int CBasePlayerWeapon::getchargeReady(void){
-	return m_chargeReady & ~64;
+	// Get without the extra bits.
+	return m_chargeReady & ~(64 | 128);
 }
 void CBasePlayerWeapon::forceBlockLooping(void){
 	m_chargeReady |= 64;
@@ -496,40 +496,6 @@ float CBasePlayerWeapon::randomIdleAnimationDelay(void){
 }//END OF randomIdleAnimationDelay
 
 
-
-//MODDD - new.
-void CBasePlayerWeapon::ItemPostFrameThink(){
-	/*
-	//MODDD - should be a good place to check for deplying the next weapon.
-	if(m_pActiveItem && m_bHolstering && gpGlobals->time >= m_flNextAttack){
-	    //done holstering? complete the switch to the picked weapon. Deploy that one.
-
-		m_bHolstering = FALSE;
-		setActiveItem(m_pQueuedActiveItem);
-		m_pQueuedActiveItem = FALSE;
-	}
-	*/
-
-	// HOLSTER - SWAPPO DISABLE.
-	//MODDD - should be a good place to check for deplying the next weapon.
-	if(m_pPlayer->m_bHolstering && gpGlobals->time >= m_pPlayer->m_fCustomHolsterWaitTime){  //m_pPlayer->m_flNextAttack <= 0.0){
-	    // done holstering? complete the switch to the picked weapon. Deploy that one.
-		m_pPlayer->m_bHolstering = FALSE;
-		m_chargeReady &= ~128;
-
-		if (m_pPlayer->m_pQueuedActiveItem != NULL) {
-			m_pPlayer->m_pQueuedActiveItem->m_chargeReady &= ~128;
-			m_pPlayer->setActiveItem(m_pPlayer->m_pQueuedActiveItem);
-
-			m_pPlayer->m_pQueuedActiveItem = NULL;
-		}
-
-		m_pPlayer->m_fCustomHolsterWaitTime = -1;
-	}
-	
-
-	CBasePlayerItem::ItemPostFrameThink();
-}//END OF ItemPostFrameThink
 
 
 
@@ -872,7 +838,49 @@ void CBasePlayerWeapon::ItemPostFrame( void )
 		WeaponIdle();
 	}
 
-}
+}//ItemPostFrame
+
+
+//MODDD - new.
+void CBasePlayerWeapon::ItemPostFrameThink() {
+	/*
+	//MODDD - should be a good place to check for deplying the next weapon.
+	if(m_pActiveItem && m_bHolstering && gpGlobals->time >= m_flNextAttack){
+		//done holstering? complete the switch to the picked weapon. Deploy that one.
+
+		m_bHolstering = FALSE;
+		setActiveItem(m_pQueuedActiveItem);
+		m_pQueuedActiveItem = FALSE;
+	}
+	*/
+
+	// HOLSTER - SWAPPO DISABLE.
+	//MODDD - should be a good place to check for deplying the next weapon.
+	if (m_pPlayer->m_bHolstering && gpGlobals->time >= m_pPlayer->m_fCustomHolsterWaitTime) {  //m_pPlayer->m_flNextAttack <= 0.0){
+		// done holstering? complete the switch to the picked weapon. Deploy that one.
+		m_pPlayer->m_bHolstering = FALSE;
+		m_chargeReady &= ~128;
+
+		if (m_pPlayer->m_pQueuedActiveItem != NULL) {
+			m_pPlayer->m_pQueuedActiveItem->m_chargeReady &= ~128;
+			m_pPlayer->setActiveItem(m_pPlayer->m_pQueuedActiveItem);
+
+			m_pPlayer->m_pQueuedActiveItem = NULL;
+		}
+
+		m_pPlayer->m_fCustomHolsterWaitTime = -1;
+	}
+
+
+	CBasePlayerItem::ItemPostFrameThink();
+}//ItemPostFrameThink
+
+
+
+
+
+
+
 
 void CBasePlayerItem::DestroyItem( void )
 {

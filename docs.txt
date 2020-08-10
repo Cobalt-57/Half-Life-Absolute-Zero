@@ -1006,6 +1006,10 @@ disablepathtrack # - adds the SF_PATH_DISABLED spawn flag.
 ~blocks a train that tries to pass this path_track.
 
 
+removeItems - Removes everything, including the suit from item_suit (or most other cheat commands).
+removeWeapons - Removes all equipable items (weapon select menu shows all empty slots).
+removeSuit - remove only the item_suit.
+
 
 
 

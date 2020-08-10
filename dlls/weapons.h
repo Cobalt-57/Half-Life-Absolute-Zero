@@ -615,14 +615,15 @@ public:
 
 	int DefaultReload( int iClipSize, int iAnim, float fDelay, int body = 0 );
 
-	//MODDD - new.
-	virtual void ItemPostFrameThink(void);
-
 	//MODDD - added so that "hl_weapons.cpp" in clientside may override it.  But it will have to be called over there to do anything.
 	virtual void ItemPreFrame( void );
 
 	virtual void ItemPostFrame( void );	// called each frame by the player PostThink
 	// called by CBasePlayerWeapons ItemPostFrame()
+
+	//MODDD - new.
+	virtual void ItemPostFrameThink(void);
+
 	
 	//MODDD
 	virtual void customAttachToPlayer(CBasePlayer *pPlayer ) {};

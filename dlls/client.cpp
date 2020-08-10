@@ -4868,6 +4868,43 @@ void ClientCommand( edict_t *pEntity )
 		easyForcePrintClient(tempplayer->edict(), "***Printing your weapons***");
 		tempplayer->printOutWeapons();
 	}
+	else if (FStrEq(pcmdRefinedRef, "removeallitems") || FStrEq(pcmdRefinedRef, "removeitems")) {
+		if (g_flWeaponCheat == 0.0) {
+			easyForcePrintLineClient(pEntity, "Need cheats for that... weirdly.");
+			return;
+		}
+		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer*)pev);
+
+		tempplayer->RemoveAllItems(TRUE);
+	}else if ( FStrEq(pcmdRefinedRef, "removeallweapons") || (FStrEq(pcmdRefinedRef, "removeweapons") ) || FStrEq(pcmdRefinedRef, "strip") || FStrEq(pcmdRefinedRef, "stripme")) {
+		if (g_flWeaponCheat == 0.0) {
+			easyForcePrintLineClient(pEntity, "Need cheats for that... weirdly.");
+			return;
+		}
+		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer*)pev);
+
+		// not the suit this time.
+		tempplayer->RemoveAllItems(FALSE);
+	}else if (FStrEq(pcmdRefinedRef, "removesuit") ) {
+		if (g_flWeaponCheat == 0.0) {
+			easyForcePrintLineClient(pEntity, "Need cheats for that... weirdly.");
+			return;
+		}
+		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer*)pev);
+
+		tempplayer->pev->weapons &= ~(1 << WEAPON_SUIT);
+		//tempplayer->UpdateClientData();  //and let clientside know
+	}
+
+
+
+
+
+
+
+	
+
+
 
 
 	// NEW things HERE MAYBE

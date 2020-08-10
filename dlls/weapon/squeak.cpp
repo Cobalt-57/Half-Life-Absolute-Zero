@@ -535,8 +535,6 @@ void CSqueak::Spawn( )
 	pev->sequence = 1;
 	pev->animtime = gpGlobals->time;
 	pev->framerate = 1.0;
-
-
 }
 
 
@@ -893,7 +891,6 @@ void CSqueak::ItemPostFrameThink(void) {
 
 
 
-
 #ifndef CLIENT_DLL
 	// Queued up a throw?  Let's go then
 	if (m_flReleaseThrow != -1 && gpGlobals->time >= m_flReleaseThrow) {
@@ -914,9 +911,6 @@ void CSqueak::ItemPostFrameThink(void) {
 void CSqueak::WeaponIdle( void )
 {
 
-
-
-
 	if ( m_flTimeWeaponIdle > UTIL_WeaponTimeBase() )
 		return;
 
@@ -932,6 +926,10 @@ void CSqueak::WeaponIdle( void )
 		}
 	}
 
+	if (PlayerPrimaryAmmoCount() <= 0) {
+		// no.  No idle delays, they just make ammo pickups take longer to take effect with the empty viewmodel still up
+		return;
+	}
 
 
 	//Now that there isn't a static delay for living throwables, the odds of a unique idle anim have been slightly reduced.

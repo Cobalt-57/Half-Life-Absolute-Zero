@@ -162,7 +162,7 @@ BOOL CHandGrenade::CanHolster( void )
 	return ( m_flStartThrow == 0 );
 }
 
-void CHandGrenade::ItemPreFrame(){
+void CHandGrenade::ItemPreFrame(void){
 	CBasePlayerWeapon::ItemPreFrame();
 
 	//if(m_pPlayer->cheat_minimumfiredelayMem == 1){
@@ -175,6 +175,28 @@ void CHandGrenade::ItemPreFrame(){
 		}
 	}
 }
+
+
+void CHandGrenade::ItemPostFrame(void) {
+
+
+
+	CBasePlayerWeapon::ItemPostFrame();
+}
+
+void CHandGrenade::ItemPostFrameThink(void) {
+
+
+
+	CBasePlayerWeapon::ItemPostFrameThink();
+}
+
+
+
+
+
+
+
 
 void CHandGrenade::Holster( int skiplocal /* = 0 */ )
 {
@@ -215,7 +237,16 @@ void CHandGrenade::SecondaryAttack()
 // Regardless of what key is used, pull the pin all the same and start holding down.
 // What is released influences the thrown grenade path (typical throw or toss)
 void CHandGrenade::EitherAttack() {
+
+	// wait.  No ammo check?      really?
+	if (PlayerPrimaryAmmoCount() <= 0) {
+		return;
+	}
+
+
+
 	m_fInAttack &= (~1);
+
 
 	//if the player is not cheating:
 	if (m_fireState != -500) {
@@ -321,7 +352,7 @@ void CHandGrenade::WeaponIdle( void )
 
 
 
-	//schedule to show the draw anim following throwing a grenade.
+	// schedule to show the draw anim following throwing a grenade.
 	if (PlayerPrimaryAmmoCount() > 0 ){
 		if(m_fInAttack & 1){
 			SendWeaponAnim( HANDGRENADE_DRAW );
@@ -329,6 +360,12 @@ void CHandGrenade::WeaponIdle( void )
 			m_fInAttack &= (~1);
 			return;
 		}
+	}
+	else {
+		// No ammo?  No idletime.  Better response times for picking up ammo with the empty viewmodel on.
+		// No need for that actually, so long as nothing else tries to set m_flTimeWeaponIdle past the
+		// current time very far.
+		//m_flTimeWeaponIdle = 0;
 	}
 	
 

@@ -371,8 +371,9 @@ BOOL CSatchel::Deploy( )
 
 	//easyPrintLine("DEPLOYYYYY %d", m_chargeReady);
 
+	int chargeReadyVal = getchargeReady();
 	
-	if ( getchargeReady() ){
+	if ( chargeReadyVal ){
 		return DefaultDeploy( "models/v_satchel_radio.mdl", "models/p_satchel_radio.mdl", SATCHEL_RADIO_DRAW, "hive", 0, 0, (19.0/30.0), (12.0/30.0)  );
 	}else{
 		return DefaultDeploy( "models/v_satchel.mdl", "models/p_satchel.mdl", SATCHEL_DRAW, "trip", 0, 0, (61.0/30.0), (24.0/30.0) );

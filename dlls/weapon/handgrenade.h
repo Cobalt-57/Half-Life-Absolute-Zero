@@ -56,6 +56,9 @@ public:
 	//MODDD - new.
 	CHandGrenade(void);
 	void ItemPreFrame(void);
+	void ItemPostFrame(void);
+	void ItemPostFrameThink(void);
+
 
 	virtual BOOL UseDecrement(void)
 	{

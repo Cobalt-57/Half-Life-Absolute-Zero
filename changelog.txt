@@ -222,6 +222,7 @@ Pressing reload is more responsive; the order is remembered and applied as soon 
 AI is alerted by all weapons at greater ranges now.  RPGs and shotguns (especially double-fire) have the greatest boosts.
 
 Snark throw animation throws the snark at the time suggested by the new animation instead of instantly.
+Chumtoad viewmodel anim/logic sync also improved, requires chumtoad to be visible before re-throwing
 
 Explosive damage can now deal knockback, see CVar "sv_explosionknockback".
 
