@@ -1826,7 +1826,7 @@ GENERATE_KILLED_IMPLEMENTATION(CBasePlayer)
 
 
 
-
+	// Does it look like we have a good shot at reviving with adrenaline?
 	if (recentlyGibbed) {
 		declareRevivelessDead();
 
@@ -1857,7 +1857,7 @@ GENERATE_KILLED_IMPLEMENTATION(CBasePlayer)
 		//SetSuitUpdate("!HEV_E3", FALSE, SUIT_REPEAT_OK, 4.2f);
 		DeathSound(FALSE);
 	}
-	else if (m_rgItems[ITEM_ADRENALINE] > 0) {
+	else if (playerHasSuit() && m_rgItems[ITEM_ADRENALINE] > 0) {
 		// For now, if the player has adrenaline and hasn't been gibbed, tell "DeathSound" this.
 		if(EASY_CVAR_GET(batteryDrainsAtAdrenalineMode) == 1){
 			SetAndUpdateBattery(0);
@@ -2558,7 +2558,7 @@ void CBasePlayer::PlayerDeathThink(void)
 		if (recoveryIndex == 0) {
 			// only bother with any of this, if not dead from fall impact.
 			// And has a suit, not sitting in a insta-death trigger, and has adrenaline.
-			if ( (pev->weapons & (1 << WEAPON_SUIT)) && !recentMajorTriggerDamage && this->m_rgItems[ITEM_ADRENALINE] > 0) {
+			if (playerHasSuit() && !recentMajorTriggerDamage && this->m_rgItems[ITEM_ADRENALINE] > 0) {
 
 				// note that, if the player is not on the ground BUT otherwise meets conditions to recover,
 				// the respawn will still be stalled until the player hits the ground (where the timer starts and
@@ -5949,7 +5949,7 @@ void CBasePlayer::giveMaxAmmo(){
 
 
 BOOL CBasePlayer::playerHasSuit(){
-	return pev->weapons & (1<<WEAPON_SUIT);
+	return (pev->weapons & (1<<WEAPON_SUIT));
 }
 BOOL CBasePlayer::playerHasLongJump(){
 	return m_fLongJump;
@@ -9419,6 +9419,7 @@ BOOL CBasePlayer :: SwitchWeapon( CBasePlayerItem *pWeapon )
 
 //MODDD - SOME NEW PLAYER METHODS
 void CBasePlayer::consumeAntidote(){
+	antidoteQueued = FALSE;
 
 	if (m_rgItems[ITEM_ANTIDOTE] <= 0) {
 		return;  //what
@@ -9430,8 +9431,6 @@ void CBasePlayer::consumeAntidote(){
 	removeTimedDamage(itbd_Poison, &m_bitsDamageType);
 	m_rgItems[ITEM_ANTIDOTE]--;
 
-	antidoteQueued = FALSE;
-
 	MESSAGE_BEGIN( MSG_ONE, gmsgHUDItemFlash, NULL, pev );
 		WRITE_BYTE( 0 );
 	MESSAGE_END();
@@ -9440,11 +9439,15 @@ void CBasePlayer::consumeAntidote(){
 }//END OF consumeAntidote
 
 void CBasePlayer::consumeRadiation(){
+	radiationQueued = FALSE;
+
+	if (m_rgItems[ITEM_RADIATION] <= 0) {
+		return;  //what
+	}
+
 	removeTimedDamage(itbd_Radiation, &m_bitsDamageType);
 	m_rgItems[ITEM_RADIATION]--;
 
-	radiationQueued = FALSE;
-	
 	MESSAGE_BEGIN( MSG_ONE, gmsgHUDItemFlash, NULL, pev );
 		WRITE_BYTE( 1 );
 	MESSAGE_END();
@@ -9452,6 +9455,15 @@ void CBasePlayer::consumeRadiation(){
 }//END OF consumeRadiation
 
 void CBasePlayer::consumeAdrenaline(){
+	if (m_rgItems[ITEM_ADRENALINE] <= 0) {
+		if (recoveryIndex == 1) {
+			declareRevivelessDead();  // assumption?
+			m_flSuitUpdate = gpGlobals->time;  //say the next line now!
+			SetSuitUpdate("!HEV_E3", FALSE, SUIT_REPEAT_OK, 4.2f);
+		}
+		return;  //what
+	}
+
 	recentRevivedTime = gpGlobals->time;
 
 	m_rgItems[ITEM_ADRENALINE]--;
