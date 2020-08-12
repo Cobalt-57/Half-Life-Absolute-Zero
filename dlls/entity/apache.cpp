@@ -236,7 +236,7 @@ void CApache::Precache( void )
 
 void CApache::NullThink( void )
 {
-	StudioFrameAdvance( );
+	StudioFrameAdvance_SIMPLE( );
 	pev->nextthink = gpGlobals->time + 0.5;
 }
 
@@ -294,7 +294,7 @@ void CApache::onDelete(void){
 
 void CApache :: DyingThink( void )
 {
-	StudioFrameAdvance( );
+	StudioFrameAdvance_SIMPLE( );
 	pev->nextthink = gpGlobals->time + 0.1;
 
 	pev->avelocity = pev->avelocity * 1.02;
@@ -497,7 +497,7 @@ GENERATE_GIBMONSTER_IMPLEMENTATION(CApache)
 
 void CApache :: HuntThink( void )
 {
-	StudioFrameAdvance( );
+	StudioFrameAdvance_SIMPLE( );
 	pev->nextthink = gpGlobals->time + 0.1;
 
 	ShowDamage( );

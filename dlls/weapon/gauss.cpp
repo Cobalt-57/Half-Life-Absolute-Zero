@@ -27,6 +27,8 @@
 #include "shake.h"
 #include "gamerules.h"
 
+#include "util_debugdraw.h"
+
 
 // Bunch of stuff moved to gauss.h for including things needed by here and ev_hldm.
 
@@ -994,18 +996,30 @@ void CGauss::Fire( Vector vecOrigSrc, Vector vecDir, float flDamage )
 //	ALERT( at_console, "%f %f\n", tr.flFraction, flMaxFrac );
 
 
-	
 
-//NOTE: on any changes, sync me up with a similar looking area in the client-side event in ev_hldm.cpp for gauss firing (EV_FireGauss)!
+
+
+
+//NOTE: on any changes, sync me with a similar looking area in the client-side event in ev_hldm.cpp for gauss firing (EV_FireGauss)!
 #ifndef CLIENT_DLL
+	//DebugLine_ClearAll();
+	int reflecto = 0;
+	int loops = 0;
+	int thingsHurt = 0;
+
 	while (flDamage > 10 && nMaxHits > 0)
 	{
+		//if (fFirstBeam) {
+		//	DebugLine_Setup(0, vecSrc, vecDest, 255, 0, 0);
+		//}
+
 
 		nMaxHits--;
 
 		// ALERT( at_console, "." );
 		UTIL_TraceLine(vecSrc, vecDest, dont_ignore_monsters, pentIgnore, &tr);
-		
+
+
 		if (tr.fAllSolid) {
 			break;
 		}
@@ -1044,7 +1058,10 @@ void CGauss::Fire( Vector vecOrigSrc, Vector vecDir, float flDamage )
 			// TODO - egon can get this too, probably.
 			attemptSendBulletSound(tr.vecEndPos, m_pPlayer->pev);
 
+			const char* theName = pEntity->getClassname();
+
 			pEntity->TraceAttack( m_pPlayer->pev, flDamage, vecDir, &tr, DMG_BULLET, DMG_GAUSS, TRUE, &useBulletHitSound);
+			thingsHurt++;  // probably
 
 			//MODDD - Play a texture-hit sound, it is a bullet after all.
 			// And just force a bullet type to MP5 here, point is it's not the crowbar
@@ -1055,7 +1072,18 @@ void CGauss::Fire( Vector vecOrigSrc, Vector vecDir, float flDamage )
 				TEXTURETYPE_PlaySound(&tr, vecSrc, vecDest, BULLET_PLAYER_MP5);
 				DecalGunshot(&tr, BULLET_PLAYER_MP5);
 			}
-			
+
+			/*
+			if (FClassnameIs(pEntity->pev, "player")) {
+				DebugLine_Setup(vecSrc, vecDest, 255, 0, 255);
+
+				DebugLine_SetupPoint(vecSrc, 255, 255, 255);
+			}
+			else {
+
+				DebugLine_Setup(vecSrc, vecDest, 0, 255, 0);
+			}
+			*/
 
 			ApplyMultiDamage(m_pPlayer->pev, m_pPlayer->pev);
 			//easyPrintLine("GAUSSLASER: HIT an enemy?? %d", nMaxHits);
@@ -1072,14 +1100,17 @@ void CGauss::Fire( Vector vecOrigSrc, Vector vecDir, float flDamage )
 		//as expected) is also a good sign of this idea.
 		//...Can block the reflection this early, preventing the "punch through" (go through a wall), or allow that much.
 
-
 		if ( pEntity->ReflectGauss() )
 		{
 			float n;
 
-			pentIgnore = NULL;
+			//MODDD - easy there!  Don't set pentIgnore to NULL so soon, do it if the surface hit warrants a reflection
+			// (hit coming at enough of an angle).  Otherwise, the punch-through check that runs instead will
+			// find the player at the start of the trace and go 'Oh look, something to punch through.  DAMGE.'
+			//pentIgnore = NULL;
 
 			n = -DotProduct(tr.vecPlaneNormal, vecDir);
+
 
 
 			BOOL reflectCheckPossible = FALSE;
@@ -1089,6 +1120,11 @@ void CGauss::Fire( Vector vecOrigSrc, Vector vecDir, float flDamage )
 			//MODDD - involving "reflectCheckPossible"
 			if (reflectCheckPossible && n < 0.5) // 60 degrees
 			{
+				reflecto++;
+
+				//MODDD - should be safe now
+				pentIgnore = NULL;
+
 				// ALERT( at_console, "reflect %f\n", n );
 				// reflect
 				Vector r;
@@ -1098,13 +1134,17 @@ void CGauss::Fire( Vector vecOrigSrc, Vector vecDir, float flDamage )
 				vecDir = r;
 				vecSrc = tr.vecEndPos + vecDir * 8;
 				vecDest = vecSrc + vecDir * 8192;
+				
+
 
 				// explode a bit
 				//MODDD NOTE - why was this "m_pPlayer->RadiusDamage"? No need to be specific to the player in the call,
 				//             we already send our own PEV and the player's PEV as arguments.
-				//No difference in just "RadiusDamage( ... )" alone.
+				// No difference in just "RadiusDamage( ... )" alone.
 				//m_pPlayer->RadiusDamage(...)
-				RadiusDamageAutoRadius( tr.vecEndPos, pev, m_pPlayer->pev, flDamage * n, CLASS_NONE, DMG_BLAST, DMG_GAUSS );
+				// Also, Damange no longer depends on the reflection angle, was 'flDamage * n'.
+				// 
+				RadiusDamage( tr.vecEndPos, pev, m_pPlayer->pev, flDamage * 0.45, flDamage * 1.6, CLASS_NONE, DMG_BLAST, DMG_GAUSS );
 
 				nTotal += 34;
 				
@@ -1117,6 +1157,14 @@ void CGauss::Fire( Vector vecOrigSrc, Vector vecDir, float flDamage )
 			}
 			else
 			{
+				const char* theIgnoreName;
+				if (pentIgnore) {
+					theIgnoreName = STRING(pentIgnore->v.classname);
+				}
+				else {
+					theIgnoreName = "NULL";
+				}
+
 				//easyPrintLine("GAUSSLASER: last hit?? %d", nMaxHits);
 				nTotal += 13;
 
@@ -1149,6 +1197,9 @@ void CGauss::Fire( Vector vecOrigSrc, Vector vecDir, float flDamage )
 							// ALERT( at_console, "punch %f\n", n );
 							nTotal += 21;
 
+
+							//MODDD - redone.
+							/*
 							// exit blast damage
 							//m_pPlayer->RadiusDamage( beam_tr.vecEndPos + vecDir * 8, pev, m_pPlayer->pev, flDamage, CLASS_NONE, DMG_BLAST );
 							float damage_radius;
@@ -1164,12 +1215,25 @@ void CGauss::Fire( Vector vecOrigSrc, Vector vecDir, float flDamage )
 							}
 
 							::RadiusDamage( beam_tr.vecEndPos + vecDir * 8, pev, m_pPlayer->pev, flDamage, damage_radius, CLASS_NONE, DMG_BLAST, DMG_GAUSS );
+							*/
+							::RadiusDamage(beam_tr.vecEndPos + vecDir * 8, pev, m_pPlayer->pev, flDamage * 0.40, flDamage * 1.7, CLASS_NONE, DMG_BLAST, DMG_GAUSS);
+
+
 
 							CSoundEnt::InsertSound ( bits_SOUND_COMBAT, pev->origin, NORMAL_EXPLOSION_VOLUME, 3.0 );
 
 							nTotal += 53;
 
 							vecSrc = beam_tr.vecEndPos + vecDir;
+						}
+						else {
+							//MODDD - NEW.
+							// So couldn't punch through something in the way.  Why do the loop again?
+							// Nothing about vecSrc nor vecDest changed, so the same trace is being done again.
+							// Except this time, with a NULL pentIgnore.  Redoing the trace from the player's weapon
+							// to where the player is looking is likely to register a hit on the player from occuring 
+							// within the player's bounds without being told to ignore that.
+							flDamage = 0;
 						}
 					}
 					else
@@ -1185,12 +1249,14 @@ void CGauss::Fire( Vector vecOrigSrc, Vector vecDir, float flDamage )
 					flDamage = 0;
 				}
 
+				//MODDD - now it is safe to turn this off.
+				pentIgnore = NULL;
 			}
 		}
 		else
 		{
 			
-			//This is at penetrating an enemy and preparting to make the beam go through.  It is possible to block this by CVars.
+			// This is at penetrating an enemy and preparing to make the beam go through.  It is possible to block this by CVars.
 			BOOL canPierce = FALSE;
 			if( (m_fPrimaryFire==TRUE && EASY_CVAR_GET(gauss_primarypierces)!=0 ) || (m_fPrimaryFire==FALSE && EASY_CVAR_GET(gauss_secondarypierces)!=0)   ){
 				canPierce = TRUE;
@@ -1204,6 +1270,8 @@ void CGauss::Fire( Vector vecOrigSrc, Vector vecDir, float flDamage )
 			vecSrc = tr.vecEndPos + vecDir;
 			pentIgnore = ENT( pEntity->pev );
 		}
+
+		loops++;
 	}
 #endif
 	// ALERT( at_console, "%d bytes\n", nTotal );

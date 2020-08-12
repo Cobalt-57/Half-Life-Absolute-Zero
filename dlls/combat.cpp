@@ -2656,9 +2656,6 @@ BOOL CBaseEntity::CheckTracer(const Vector& vecSrc, const Vector& vecEnd, const 
 				WRITE_COORD( vecEnd.x );  //WRITE_COORD( tr.vecEndPos.x );
 				WRITE_COORD( vecEnd.y );  //WRITE_COORD( tr.vecEndPos.y );
 				WRITE_COORD( vecEnd.z );  //WRITE_COORD( tr.vecEndPos.z );
-				
-				
-				
 			MESSAGE_END();
 			break;
 		}

@@ -207,6 +207,7 @@ public:
 	float healNPCCheckDelay;
 	// Yes, a cooldown just for screaming, separate from the general talk one.
 	float screamCooldown;
+	float nextRandomSpeakCheck;
 
 	//MODDD - the wounded NPC to seek out.
 	// ...or not using this var anymore, whoops
@@ -289,6 +290,7 @@ public:
 
 	void DeathSound( void );
 	void PainSound( void );
+	void PainSound_Play(void);
 
 	void TalkInit( void );
 
@@ -315,6 +317,7 @@ public:
 	void SayIdleToPlayer(CBaseEntity* argPlayerTalkTo);
 	void SayQuestion(CTalkMonster* argTalkTo);
 	void SayProvoked(void);
+	void SayStopShooting(void);
 	void SaySuspicious(void);
 	void SayLeaderDied(void);
 	void SayNearPassive(void);
@@ -479,6 +482,7 @@ Schedule_t slAngryScientistChaseEnemyFailed[] =
 // Chase enemy schedule
 Task_t tlAngryScientistChaseEnemy[] = 
 {
+	{ TASK_SCREAM, (float)0 },
 	{ TASK_SET_FAIL_SCHEDULE,	(float)SCHED_SCIENTIST_ANGRY_CHASE_ENEMY_FAILED	},
 	//{ TASK_GET_PATH_TO_ENEMY,	(float)0		},
 	//{ TASK_RUN_PATH,			(float)0		},
@@ -681,7 +685,10 @@ Task_t	tlSciPanic[] =
 	{ TASK_STOP_MOVING,			(float)0		},
 	{ TASK_FACE_ENEMY,			(float)0		},
 	//MODDD - intervention.
+
 	//{ TASK_SCREAM,				(float)0		},
+	{ TASK_SAY_FEAR, (float)0 },
+
 	{ TASK_SCIENTIST_FIGHT_OR_FLIGHT,  (float)1  },    //NOTICE - this "1" means he is more likely to attack the monster, since Panic is picked when we're cornered (no cover, no choice)
 	{ TASK_PLAY_SEQUENCE_FACE_ENEMY,		(float)ACT_EXCITED	},	// This is really fear-stricken excitement
 	{ TASK_SET_ACTIVITY,		(float)ACT_IDLE	},
@@ -903,9 +910,12 @@ void CScientist::SayHello(CBaseEntity* argPlayerTalkTo) {
 			) {
 				PlaySentenceSingular("SC_HELLO6", 4, VOL_NORM, ATTN_NORM);  // new HEV suit, that should be very useful
 				g_scientist_PredisasterSuitMentionAllowedTime = gpGlobals->time + 16;
+				return;
 			}
-			return;
 		}//END OF suit check
+
+		// 'c1a0_sci_gm1' is already in sentences.txt as a SC_PHELLO choice now.
+
 	}
 
 	CTalkMonster::SayHello(argPlayerTalkTo);
@@ -930,7 +940,7 @@ void CScientist::SayIdleToPlayer(CBaseEntity* argPlayerTalkTo) {
 	}
 	else {
 		// even after the disaster, might whine about ties... rarely.
-		if (RANDOM_FLOAT(0, 1) < 0.06) {
+		if (RANDOM_FLOAT(0, 1) < 0.065) {
 			PlaySentenceSingular("SC_PIDLE1", 4.6, VOL_NORM, ATTN_NORM);  // weartie
 			return;
 		}
@@ -947,7 +957,7 @@ void CScientist::SayQuestion(CTalkMonster* argTalkTo) {
 	}
 	else {
 		// even after the disaster, might whine about something
-		if (RANDOM_FLOAT(0, 1) < 0.025) {
+		if (RANDOM_FLOAT(0, 1) < 0.032) {
 			PlaySentenceSingular("SC_PQUEST15", 2.9, VOL_NORM, ATTN_NORM);  // hungryyet
 			return;
 		}
@@ -961,14 +971,29 @@ void CScientist::SayQuestion(CTalkMonster* argTalkTo) {
 
 
 void CScientist::SayProvoked(void){
+
 	if(EASY_CVAR_GET(pissedNPCs) != 1 || !globalPSEUDO_iCanHazMemez){
-		switch(RANDOM_LONG(0, 4)){
-			case 0:UTIL_PlaySound( ENT(pev), CHAN_VOICE, "scientist/sci_pain2.wav", 1, ATTN_NORM, 0, GetVoicePitch());break;
-			case 1:PlaySentenceSingular( "SC_FEAR3", 6, VOL_NORM, ATTN_NORM );break;
-			case 2:PlaySentenceSingular( "SC_PLFEAR3", 6, VOL_NORM, ATTN_NORM );break;
-			case 3:PlaySentenceSingular( "SCI_EXTRAPROVOKED", 6, VOL_NORM, ATTN_NORM );break;
-			case 4:PlaySentence( "SC_SCREAM_TRU", 6, VOL_NORM, ATTN_NORM );break;
-		}//END OF decision
+		float randomVal = RANDOM_FLOAT(0, 1);
+		if (randomVal < 0.6) {
+			PlaySentence("SC_PLFEAR", 6, VOL_NORM, ATTN_NORM);
+		}
+		else if (randomVal < 0.72) {
+			PlaySentence("SC_SCREAM_TRU", 6, VOL_NORM, ATTN_NORM);
+		}
+		else if (randomVal < 0.76) {
+			PlaySentence("SC_SCREAM", 6, VOL_NORM, ATTN_NORM);
+		}
+		else if (randomVal < 0.80) {
+			PlaySentence("SC_FEAR", 6, VOL_NORM, ATTN_NORM);
+		}
+		else {
+			// SC_PLFEAR3 was included above already now
+			switch (RANDOM_LONG(0, 2)) {
+			case 0:UTIL_PlaySound(ENT(pev), CHAN_VOICE, "scientist/sci_pain2.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
+			case 1:PlaySentenceSingular("SC_FEAR3", 6, VOL_NORM, ATTN_NORM); break;
+			case 2:PlaySentenceSingular("SCI_EXTRAPROVOKED", 6, VOL_NORM, ATTN_NORM); break;
+			}//END OF decision
+		}
 
 	}else{
 		PlaySentence( "BA_POKE_D", 8, VOL_NORM, ATTN_NORM );
@@ -987,26 +1012,55 @@ void CScientist::SayProvoked(void){
 
 	}
 }
+void CScientist::SayStopShooting(void) {
+
+	if (EASY_CVAR_GET(pissedNPCs) < 1 || !globalPSEUDO_iCanHazMemez) {
+		float randomVal = RANDOM_FLOAT(0, 1);
+		if (randomVal < 0.333) {
+			// old SC_SCARED0.
+			PlaySentenceSingular("SC_PLFEAR0", RANDOM_FLOAT(2.8, 3.2), VOL_NORM, ATTN_NORM);
+			return;
+		}
+	}
+
+	CTalkMonster::SayStopShooting();
+}
 
 
 void CScientist::SaySuspicious(void){
 	if(EASY_CVAR_GET(pissedNPCs) != 1 || !globalPSEUDO_iCanHazMemez){
-		switch(RANDOM_LONG(0, 7)){
-			case 0:
-			case 1:
-			case 2:
-			case 3:
-			case 4:
-			case 5:PlaySentence( "SC_SCREAM", 4, VOL_NORM, ATTN_NORM );break; //ends up tying to the sci_fear sounds.
-			case 6:PlaySentenceSingular( "SC_PLFEAR3", 4, VOL_NORM, ATTN_NORM );break; //scientist/noplease
-			case 7:PlaySentenceSingular( "SC_FEAR0", 4, VOL_NORM, ATTN_NORM );break; //nooo
-		}//END OF switch
+		
+		float randomVal = RANDOM_FLOAT(0, 1);
+
+		if (randomVal < 0.4) {
+			PlaySentence("SC_SCREAM", 4, VOL_NORM, ATTN_NORM); //ends up tying to the sci_fear sounds.
+		}
+		else if (randomVal < 0.6) {
+			switch (RANDOM_LONG(0, 1)) {
+			case 0:PlaySentenceSingular("SC_PLFEAR1", 4, VOL_NORM, ATTN_NORM); break; //scientist/canttakemore
+			case 1:PlaySentenceSingular("SC_PLFEAR3", 4, VOL_NORM, ATTN_NORM); break; //scientist/noplease
+			}
+		}
+		else {
+			switch (RANDOM_LONG(0, 8)) {
+			case 0:PlaySentenceSingular("SC_FEAR0", 4, VOL_NORM, ATTN_NORM); break; //nooo
+			case 1:PlaySentenceSingular("SC_FEAR5", 4, VOL_NORM, ATTN_NORM); break;
+			case 2:PlaySentenceSingular("SC_FEAR6", 4, VOL_NORM, ATTN_NORM); break;
+			case 3:PlaySentenceSingular("SC_FEAR7", 4, VOL_NORM, ATTN_NORM); break;
+			case 4:PlaySentenceSingular("SC_FEAR8", 4, VOL_NORM, ATTN_NORM); break;
+			case 5:PlaySentenceSingular("SC_FEAR9", 4, VOL_NORM, ATTN_NORM); break;
+			case 6:PlaySentenceSingular("SC_FEAR10", 4, VOL_NORM, ATTN_NORM); break;
+			case 7:PlaySentenceSingular("SC_FEAR11", 4, VOL_NORM, ATTN_NORM); break;
+			case 8:PlaySentenceSingular("SC_FEAR12", 4, VOL_NORM, ATTN_NORM); break;
+			}//END OF switch
+		}
+
 	}else{
 		PlaySentence( "BA_POKE_C", 6, VOL_NORM, ATTN_NORM );
 	}
 }
 void CScientist::SayLeaderDied(void){
-	switch(RANDOM_LONG(0, 7)){
+	switch(RANDOM_LONG(4, 7)){
 		case 0:
 		case 1:
 		case 2:
@@ -1077,16 +1131,47 @@ void CScientist::SayNearCautious(void){
 	}//END OF switch
 
 }//END OF SayNearCautious
-	
 
 
 void CScientist::DeclineFollowing( void )
 {
+	recentDeclines++;
+	if (recentDeclines < 30) {
+		recentDeclinesForgetTime = gpGlobals->time + 8;
+	}
+	else {
+		recentDeclinesForgetTime = gpGlobals->time + 50;
+	}
+
+
 	//MODDD
 	if(EASY_CVAR_GET(pissedNPCs) < 1){
 		//Talk( 10 );   pointless. PlaySentence already sets the same thing.
 		m_hTalkTarget = m_hEnemy;
-		PlaySentence( "SC_POK", 4, VOL_NORM, ATTN_NORM );
+
+		if (recentDeclines < 30) {
+			// normal.
+			PlaySentence("SC_POK", 4, VOL_NORM, ATTN_NORM);
+		}
+		else {
+			float randomVal = RANDOM_FLOAT(0, 1);
+			if (randomVal < 0.25) {
+				PainSound_Play();
+			}
+			else if (randomVal < 0.75) {
+				switch (RANDOM_LONG(0, 5)) {
+					case 0:PlaySentenceSingular("SC_PLFEAR1", 4, VOL_NORM, ATTN_NORM); break; //scientist/canttakemore
+					case 1:PlaySentenceSingular("SC_PLFEAR3", 4, VOL_NORM, ATTN_NORM); break; //scientist/noplease
+					case 2:PlaySentenceSingular("SC_PLFEAR4", 4, VOL_NORM, ATTN_NORM); break; //getoutofhere
+					case 3:PlaySentenceSingular("SC_SCREAM_TRU14", 4, VOL_NORM, ATTN_NORM); break; //GORDON
+					case 4:PlaySentenceSingular("SC_PLFEAR0", 4, VOL_NORM, ATTN_NORM); break; //what are you doing
+					case 5:PlaySentenceSingular("SC_ANNOYED", 4, VOL_NORM, ATTN_NORM); break; //are you insane	
+				}
+			}
+			else {
+				PlaySentence("SC_SCREAM_TRU", 4, VOL_NORM, ATTN_NORM);
+			}
+		}
 
 	}else{
 
@@ -1371,18 +1456,36 @@ void CScientist :: StartTask( Task_t *pTask )
 		TaskComplete();
 	break;
 	case TASK_RANDOM_SCREAM:
-		if ( RANDOM_FLOAT( 0, 1 ) < pTask->flData )
+		if (RANDOM_FLOAT(0, 1) < pTask->flData) {
 			Scream();
+		}
 		TaskComplete();
 	break;
 	case TASK_SAY_FEAR:
-		if ( FOkToSpeak() )
+
+		//no, go ahead!
+		//if ( FOkToSpeak() )
 		{
 			m_hTalkTarget = m_hEnemy;
-			if ( m_hEnemy->IsPlayer() )
-				PlaySentence( "SC_PLFEAR", 5, VOL_NORM, ATTN_NORM );
-			else
-				PlaySentence( "SC_FEAR", 5, VOL_NORM, ATTN_NORM );
+			if (m_hEnemy != NULL && m_hEnemy->IsPlayer()) {
+				//PlaySentence("SC_PLFEAR", 5, VOL_NORM, ATTN_NORM);
+				//MODDD - call upon this, more variety
+				SayProvoked();
+			}
+			else {
+				//PlaySentence("SC_FEAR", 5, VOL_NORM, ASC_SCREAMTTN_NORM);
+				//MODDD - same
+				float randomVal = RANDOM_FLOAT(0, 1);
+				if (randomVal < 0.7) {
+					PlaySentence("SC_FEAR", 5, VOL_NORM, ATTN_NORM);
+				}
+				else if(randomVal < 0.9){
+					PlaySentence("SC_SCREAM", 5, VOL_NORM, ATTN_NORM);
+				}
+				else {
+					PlaySentence("SC_SCREAM_TRU", 4, VOL_NORM, ATTN_NORM);  //OH NO YOU FOUND ME.
+				}
+			}
 		}
 		TaskComplete();
 	break;
@@ -1587,6 +1690,26 @@ void CScientist :: RunTask( Task_t *pTask )
 			ChangeYaw( pev->yaw_speed );
 		}
 		break;
+
+	case TASK_WAIT_FOR_SCRIPT:
+		//MODDD - small chance of FIdleSpeak each frame.
+
+		// MONSTERSTATE_SCRIPT, assumption?
+		if (m_pCine != NULL && m_pCine->CanInterrupt()) {
+			if (gpGlobals->time >= nextRandomSpeakCheck) {
+
+				if (RANDOM_LONG(0, 120) < 2) {
+					// It may not sound like much, but that's a little under 2% chance every half-second, 4% a second.
+					// 10 seconds, 40%.  20 seconds, 80%.
+					FIdleSpeak();
+				}
+				nextRandomSpeakCheck = gpGlobals->time + 0.5;
+			}
+		}
+		CTalkMonster::RunTask(pTask);
+	break;
+
+
 	default:
 		CTalkMonster::RunTask( pTask );
 		break;
@@ -1782,6 +1905,7 @@ void CScientist :: Activate( void ){
 CScientist::CScientist(void){
 	//givenModelBody = -1;
 
+	nextRandomSpeakCheck = -1;
 	screamCooldown = -1;
 
 	explodeDelay = -1;
@@ -2248,21 +2372,7 @@ void CScientist :: PainSound ( void )
 		}
 		else {
 
-
-			switch (RANDOM_LONG(0, 9))
-			{
-			case 0: UTIL_PlaySound(ENT(pev), CHAN_VOICE, "scientist/sci_pain1.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
-			case 1: UTIL_PlaySound(ENT(pev), CHAN_VOICE, "scientist/sci_pain2.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
-			case 2: UTIL_PlaySound(ENT(pev), CHAN_VOICE, "scientist/sci_pain3.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
-			case 3: UTIL_PlaySound(ENT(pev), CHAN_VOICE, "scientist/sci_pain4.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
-			case 4: UTIL_PlaySound(ENT(pev), CHAN_VOICE, "scientist/sci_pain5.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
-				//MODDD - new
-			case 5: UTIL_PlaySound(ENT(pev), CHAN_VOICE, "scientist/sci_pain6.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
-			case 6: UTIL_PlaySound(ENT(pev), CHAN_VOICE, "scientist/sci_pain7.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
-			case 7: UTIL_PlaySound(ENT(pev), CHAN_VOICE, "scientist/sci_pain8.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
-			case 8: UTIL_PlaySound(ENT(pev), CHAN_VOICE, "scientist/sci_pain9.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
-			case 9: UTIL_PlaySound(ENT(pev), CHAN_VOICE, "scientist/sci_pain10.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
-			}
+			PainSound_Play();
 		}
 	}
 	else {
@@ -2278,6 +2388,26 @@ void CScientist :: PainSound ( void )
 		}
 	}
 
+}
+
+
+// for the audio to have its own method.  This has no other conditions.
+void CScientist::PainSound_Play(void) {
+
+	switch (RANDOM_LONG(0, 9))
+	{
+	case 0: UTIL_PlaySound(ENT(pev), CHAN_VOICE, "scientist/sci_pain1.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
+	case 1: UTIL_PlaySound(ENT(pev), CHAN_VOICE, "scientist/sci_pain2.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
+	case 2: UTIL_PlaySound(ENT(pev), CHAN_VOICE, "scientist/sci_pain3.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
+	case 3: UTIL_PlaySound(ENT(pev), CHAN_VOICE, "scientist/sci_pain4.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
+	case 4: UTIL_PlaySound(ENT(pev), CHAN_VOICE, "scientist/sci_pain5.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
+		//MODDD - new
+	case 5: UTIL_PlaySound(ENT(pev), CHAN_VOICE, "scientist/sci_pain6.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
+	case 6: UTIL_PlaySound(ENT(pev), CHAN_VOICE, "scientist/sci_pain7.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
+	case 7: UTIL_PlaySound(ENT(pev), CHAN_VOICE, "scientist/sci_pain8.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
+	case 8: UTIL_PlaySound(ENT(pev), CHAN_VOICE, "scientist/sci_pain9.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
+	case 9: UTIL_PlaySound(ENT(pev), CHAN_VOICE, "scientist/sci_pain10.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
+	}
 }
 
 
@@ -3689,6 +3819,15 @@ void CSittingScientist :: Spawn( )
 	//MonsterInit();
 	SetUse( &CTalkMonster::FollowerUse );
 
+
+
+	if (monsterID == -1) {
+		//MODDD - must do manually since init is skipped.
+		monsterID = monsterIDLatest;
+		monsterIDLatest++;
+	}
+	pev->flags |= FL_MONSTER;  //why not.
+
 }
 
 void CSittingScientist :: Precache( void )
@@ -3723,7 +3862,7 @@ void CSittingScientist :: SittingThink( void )
 {
 	CBaseEntity *pent;
 
-	StudioFrameAdvance( );
+	StudioFrameAdvance_SIMPLE( );
 
 	// try to greet player
 	if (FIdleHello())
@@ -3853,13 +3992,19 @@ int CSittingScientist :: FIdleSpeak ( void )
 	// try to talk to any standing or sitting scientists nearby
 	CBaseEntity *pentFriend = FindNearestFriend(FALSE);
 
+
+
+
+
+	//MODDD - and why were these using SENTENCEG_PlayRndSz anyway?  It's a more raw form called
+	// by PlaySentence.  PlaySentence also calls "Talk()" for you, so may as well use this one.
 	if (pentFriend && RANDOM_LONG(0,1))
 	{
 		CTalkMonster *pTalkMonster = GetClassPtr((CTalkMonster *)pentFriend->pev);
 		pTalkMonster->SetAnswerQuestion( this );
 
 		IdleHeadTurn(pentFriend->pev->origin);
-		SENTENCEG_PlayRndSz( ENT(pev), m_szGrp[TLK_PQUESTION], 1.0, ATTN_IDLE, 0, pitch );
+		PlaySentence(m_szGrp[TLK_PQUESTION], 5, 1.0, ATTN_IDLE, pitch);
 		// set global min delay for next conversation
 		CTalkMonster::g_talkWaitTime = gpGlobals->time + RANDOM_FLOAT(4.8, 5.2);
 		return TRUE;
@@ -3868,7 +4013,7 @@ int CSittingScientist :: FIdleSpeak ( void )
 	// otherwise, play an idle statement
 	if (RANDOM_LONG(0,1))
 	{
-		SENTENCEG_PlayRndSz( ENT(pev), m_szGrp[TLK_PIDLE], 1.0, ATTN_IDLE, 0, pitch );
+		PlaySentence(m_szGrp[TLK_PIDLE], 5, 1.0, ATTN_IDLE, pitch);
 		// set global min delay for next conversation
 		CTalkMonster::g_talkWaitTime = gpGlobals->time + RANDOM_FLOAT(4.8, 5.2);
 		return TRUE;

@@ -26,8 +26,22 @@ class CBaseAnimating : public CBaseDelay
 {
 public:
 
-	//MODDD - constructor
-	CBaseAnimating(void);
+	// animation needs
+	float			m_flFrameRate;		// computed FPS for current sequence
+	float			m_flGroundSpeed;	// computed linear movement rate for current sequence
+	float			m_flLastEventCheck;	// last time the event list was checked
+	BOOL			m_fSequenceFinished;// flag set when StudioAdvanceFrame moves across a frame boundry
+	BOOL			m_fSequenceLoops;	// true if the sequence loops
+	
+	//MODDD - NEW. Stays on even after the animation loops around, only turned off on changing animation.
+	//(properly with Reset that is)
+	BOOL			m_fSequenceFinishedSinceLoop;// flag set when StudioAdvanceFrame moves across a frame boundry
+
+
+	//MODDD - new, record the flInterval determined in by DetermineInterval calls for use throughout the rest of the methods,
+	// presumably in the same frame of the monster's own think logic.
+	float m_flInterval;
+
 
 
 	float animFrameStart;
@@ -74,6 +88,16 @@ public:
 	float queuedAnimFrameRate[8];
 	float queuedAnimFrameRateSuggestion[8];
 	
+	//MODDD
+	float m_flFramerateSuggestion;
+	float m_iForceLoops;  //when negative one, ignore. Otherwise, 0 is false and 1 is true.
+
+
+
+
+	//MODDD - constructor
+	CBaseAnimating(void);
+
 
 
 
@@ -108,19 +132,31 @@ public:
 	static	TYPEDESCRIPTION m_SaveData[];
 
 	// Basic Monster Animation functions
-	float StudioFrameAdvance( float flInterval = 0.0 ); // accumulate animation frame time from last time called until now
-	int  GetSequenceFlags( void );
+
+	//MODDD - NEW, flInterval-determining script ripped from StudioFrameAdvance, it requires an interval to be given
+	// and does not return one now.
+	float DetermineInterval(void);
+	float DetermineInterval(float flInterval);
+	float DetermineInterval_SAFE(void);
+	float DetermineInterval_SAFE(float flInterval);
+	
+
+	//float StudioFrameAdvance( float flInterval = 0.0 ); // accumulate animation frame time from last time called until now
+	void StudioFrameAdvance(float flInterval);
+	// New versions of StudioFrameAdvance to act more like retail in one call, see notes in animating.cpp
+	float StudioFrameAdvance_SIMPLE(void);
+	float StudioFrameAdvance_SIMPLE(float flInterval);
+
+
+
+	int GetSequenceFlags( void );
 	
 	//MODDD - virtual.  Able to be intercepted by a class whose model is missing the ACT linkups.
-	virtual int  LookupActivity ( int activity );
-	virtual int  LookupActivityHeaviest ( int activity );
-
-	//MODDD
-	float m_flFramerateSuggestion;
-	float m_iForceLoops;  //when negative one, ignore. Otherwise, 0 is false and 1 is true.
+	virtual int LookupActivity ( int activity );
+	virtual int LookupActivityHeaviest ( int activity );
 
 
-	int  LookupSequence ( const char *label );
+	int LookupSequence ( const char *label );
 	void ResetSequenceInfo ( );
 	
 	//MODDD
@@ -164,17 +200,6 @@ public:
 	int ExtractBbox( int sequence, float *mins, float *maxs );
 	void SetSequenceBox( void );
 
-	// animation needs
-	float			m_flFrameRate;		// computed FPS for current sequence
-	float			m_flGroundSpeed;	// computed linear movement rate for current sequence
-	float			m_flLastEventCheck;	// last time the event list was checked
-	BOOL				m_fSequenceFinished;// flag set when StudioAdvanceFrame moves across a frame boundry
-	BOOL				m_fSequenceLoops;	// true if the sequence loops
-	
-	//MODDD - NEW. Stays on even after the animation loops around, only turned off on changing animation.
-	//(properly with Reset that is)
-	BOOL				m_fSequenceFinishedSinceLoop;// flag set when StudioAdvanceFrame moves across a frame boundry
-	
 };
 
 #endif //END OF ANIMATING_H

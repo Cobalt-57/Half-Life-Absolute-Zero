@@ -1598,7 +1598,7 @@ void CHoundeye :: RunTask ( Task_t *pTask )
 
 		
 		if(this->crazyPrintout){
-			easyForcePrintLine("RUNTASK, TASK_FACE_IDEAL.  THE FUUUK yawspd: %.2f FacingIdeal? %d, ydelta: %.2f, yIdeal: %.2f", pev->yaw_speed, FacingIdeal(), FlYawDiff(), pev->ideal_yaw   );
+			easyForcePrintLine("RUNTASK, TASK_FACE_IDEAL. yawspd: %.2f FacingIdeal? %d, ydelta: %.2f, yIdeal: %.2f", pev->yaw_speed, FacingIdeal(), FlYawDiff(), pev->ideal_yaw   );
 		
 		
 			if(crazyPrintout){

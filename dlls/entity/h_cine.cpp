@@ -183,7 +183,7 @@ void CLegacyCineMonster :: CineThink( void )
 		return;
 	}
 
-	StudioFrameAdvance ( );
+	StudioFrameAdvance_SIMPLE( );
 }
 
 //

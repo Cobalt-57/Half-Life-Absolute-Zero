@@ -1937,7 +1937,8 @@ int CChangeLevel::ChangeList( LEVELLIST *pLevelList, int maxList )
 
 	//ENGINE_SET_PVS(Vector(2639.43, -743.85, -251.64));
 	
-
+	
+	// That is the first player, assuming this is single player (only player).
 	pEdicttt = g_engfuncs.pfnPEntityOfEntIndex( 1 );
 
 	if ( pEdicttt ){

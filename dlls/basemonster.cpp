@@ -90,6 +90,14 @@ EASY_CVAR_EXTERN(barnacleGrabNoInterpolation)
 #define USE_MOVEMENT_BOUND_FIX_ALT
 
 
+//=========================================================
+// Move - take a single step towards the next ROUTE location
+//=========================================================
+//MODDD - changed from 200 to 300, check out a little further.
+#define DIST_TO_CHECK	300
+
+
+
 
 //extern DLL_GLOBAL	BOOL	g_fDrawLines;
 extern DLL_GLOBAL short g_sModelIndexLaser;// holds the index for the laser beam
@@ -206,6 +214,7 @@ TYPEDESCRIPTION	CBaseMonster::m_SaveData[] =
 
 	//MODDD - is this a good idea?
 	DEFINE_FIELD( CBaseMonster, monsterID, FIELD_INTEGER ),
+	DEFINE_FIELD( CBaseMonster, strictNodeTolerance, FIELD_BOOLEAN),
 
 };
 
@@ -434,6 +443,8 @@ CBaseMonster::CBaseMonster(){
 	// default.
 	m_flFramerateSuggestion = 1;
 	fApplyTempVelocity = FALSE;
+
+	strictNodeTolerance = FALSE;
 	
 }
 
@@ -1889,6 +1900,23 @@ void CBaseMonster :: MonsterThink ( void )
 	pev->nextthink = gpGlobals->time + 0.1;// keep monster thinking.
 	
 
+
+	//MODDD - Instead of sending this interval 500 different places, keep it here too for now.
+	// For this think-method these two values are identical, m_flInterval is just available outside this method for CBaseMonster.
+	// And it can be determined separately from StudioFrameAdvance to make the interval available for logic that runs before
+	// the rest of StudioFrameAdvance runs.
+	// Moved to CBaseAnimating and done inside any DetermineInterval call instead now!
+	//UNFORTUNATELY, either setting the pev->animtime (not done in the _SAFE varient) or using this interval
+	// instead of one determined right before StudioFrameAdvance (like it was in retail, early in the method)
+	// can cause issues with anim events near/at the start of a sequence like the barney's firing animation.
+	// It is still fine to do this to have a somewhat accurate m_flInterval value, but best to do retail's
+	// way of handling StudioFrameAdvance because of how sensitive it is.
+	//float flInterval = DetermineInterval_SAFE();
+	DetermineInterval_SAFE();
+	//m_flInterval = flInterval;
+
+
+
 	if(forgetSmallFlinchTime != -1 && gpGlobals->time >= forgetSmallFlinchTime){
 		forgetSmallFlinchTime = -1;
 		this->Forget(bits_MEMORY_FLINCHED);
@@ -2006,8 +2034,16 @@ void CBaseMonster :: MonsterThink ( void )
 		CheckTimeBasedDamage();
 	}
 	
-	//float flInterval = 0;
-	float flInterval = StudioFrameAdvance( ); // animate
+	//MODDD - workings of StudioFrameAdvance changed.  Find the flInterval above through a different call.
+	//float flInterval = StudioFrameAdvance( ); // animate
+	
+	//NOPE, See notes above, it is better to replicate retail even more directly.  Very very sensitive.
+	// the _SIMPLE version is now that.
+	//StudioFrameAdvance(flInterval);
+	float flInterval = StudioFrameAdvance_SIMPLE();
+
+
+
 	//MODDD MAJOR MAJOR MAJOR NOTE - is using the same interval from animation across the rest of logic bad?
 	//Should gpGlobals->frametime be used instead?  This has seemed reliable 99% of the time in any case.
 	//Seems changing the animation way too often (every think frame) could reset the anim time, forcing an interval of 0 which
@@ -2396,9 +2432,19 @@ BOOL CBaseMonster :: FRouteClear ( void )
 
 
 //MODDD - new. Clone of FRefreshRoute that better incorporates the method calls done in "CHASE_ENEMY"'s schedule.
+// This ends up being similar to a call to MoveToEnemy followed by FRefreshRoute.
 BOOL CBaseMonster::FRefreshRouteChaseEnemySmart(void){
 	//WHUT
 	//return FRefreshRoute();
+
+	BOOL m1 = disableEnemyAutoNode;
+	Activity m2 = m_movementActivity;
+	float m3 = m_moveWaitTime;
+	int m4 = m_movementGoal;
+	Vector m5 = m_vecMoveGoal;
+
+
+
 	
 	BOOL returnCode;
 	
@@ -2468,6 +2514,70 @@ BOOL CBaseMonster::FRefreshRouteChaseEnemySmart(void){
 		//TaskFail();
 		returnCode = FALSE;
 	}
+
+
+
+
+
+	//MODDD - NEW.
+	// - in case a revert is needed
+	// Nevermind, let outside methods handle this.  by... maybe not setting m_movementActivity or waittimes if
+	// FRefreshRoute fails...?
+	//Activity oldMoveAct = m_movementActivity;
+	//float oldMoveWaitTime = m_moveWaitTime;
+
+	// Don't keep that move activity change if trying to move a single frame on this route would fail.
+	// It might be possible to integrate this check into any "FRefreshRoute" call too, if necessary.
+	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	
+	
+	if (returnCode != FALSE) {
+		// unused, but expected by the method anyway
+
+		// Success? try a pre-move on that new route then.
+		// And interval.   uhhh.   assume 0.1 here?
+		// Ahah!  We have m_flInterval now, even set before AI calls.
+
+		int maxTimes = 2;
+		while (maxTimes > 0) {
+			maxTimes--;
+
+			float flWaypointDist;
+			float flCheckDist;
+			float flDist;
+			Vector vecDir;
+			CBaseEntity* pTargetEnt;
+
+			float flInterval = m_flInterval;
+			int localMovePass = MovePRE(flInterval, flWaypointDist, flCheckDist, flDist, vecDir, pTargetEnt);
+
+			// A value of -1 is also possible to signify failure.  a "thing == 0" or FALSE check isn't good enough.
+
+			if (localMovePass != 1) {
+				//revert these
+				disableEnemyAutoNode = m1;
+				m_movementActivity = m2;
+				m_moveWaitTime = m3;
+				m_movementGoal = m4;
+				m_vecMoveGoal = m5;
+				return FALSE;
+			}
+
+			BOOL shouldItAgain = ShouldAdvanceRoute(flWaypointDist, flInterval);
+
+			if (shouldItAgain) {
+				// do it again! 
+				AdvanceRoute(flWaypointDist, flInterval);
+			}
+			else {
+				// Route left to go?  get out the loop then
+				break;
+			}
+		}//END OF while loop
+
+	}
+	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 
 	return returnCode;
 }//END OF FRefreshRouteChaseEnemySmart
@@ -2581,60 +2691,177 @@ BOOL CBaseMonster :: FRefreshRoute ( void )
 			break;
 	}
 
+
+
+
+	//MODDD - NEW.
+	// - in case a revert is needed
+	// Nevermind, let outside methods handle this.  by... maybe not setting m_movementActivity or waittimes if
+	// FRefreshRoute fails...?
+	//Activity oldMoveAct = m_movementActivity;
+	//float oldMoveWaitTime = m_moveWaitTime;
+
+	// Don't keep that move activity change if trying to move a single frame on this route would fail.
+	// It might be possible to integrate this check into any "FRefreshRoute" call too, if necessary.
+	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	if (returnCode != FALSE) {
+
+		int maxTimes = 2;
+		while (maxTimes > 0) {
+			maxTimes--;
+			
+
+			// unused, but expected by the method anyway
+			float flWaypointDist;
+			float flCheckDist;
+			float flDist;
+			Vector vecDir;
+			CBaseEntity* pTargetEnt;
+
+			// Success? try a pre-move on that new route then.
+			// And interval.   uhhh.   assume 0.1 here?
+			// Ahah!  We have m_flInterval now, even set before AI calls.
+			float flInterval = m_flInterval;
+
+			////////////////////////////////////////////////////////////////////////////////////
+			//MODDD - TODO.  Should this all be surrounded ba "!IsMovementComplete" check?
+			// That way an odd case of a route saying 'you're already there' is handled early, if that can happen.
+			// Maybe if IsMovementComplete passes here, instead return a special code that
+			// calls for the outside context to restore its vars and percolate up to the calling
+			// script in schedule.cpp (probably) to say TaskComplete.
+			// There is also right after the "AdvanceRoute" call further down.  I don't know.
+			// ...  maybe later.
+			////////////////////////////////////////////////////////////////////////////////////
+
+
+			int localMovePass = MovePRE(flInterval, flWaypointDist, flCheckDist, flDist, vecDir, pTargetEnt);
+
+			// A value of -1 is also possible to signify failure.  a "thing == 0" or FALSE check isn't good enough.
+			if (localMovePass != 1) {
+				// oh dear.  Revert and stop.  (whatever outside context that saved something should handle that)
+				//m_movementActivity = oldMoveAct;
+				//m_moveWaitTime = m_moveWaitTime;
+				return FALSE;
+			}
+
+			// Now, see if we're near the end of the route.  If so, redo this check.
+			// This can end very odd small routes that say "You can go!", only for 1 frame to pass,
+			// advance that node in place, and then go "Oh nevermind."  ugly oscillation between stand and move activities.
+			BOOL shouldItAgain = ShouldAdvanceRoute(flWaypointDist, flInterval);
+
+			if (shouldItAgain) {
+				// do it again! 
+				AdvanceRoute(flWaypointDist, flInterval);
+
+			}
+			else {
+				// Route left to go?  get out the loop then
+				break;
+			}
+		}//END OF while loop
+	}
+	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
 	return returnCode;
-}
+}//FRefreshRoute
 
 
 BOOL CBaseMonster::MoveToEnemy( Activity movementAct, float waitTime )
 {
+	Activity m1 = m_movementActivity;
+	float m2 = m_moveWaitTime;
+	int m3 = m_movementGoal;
+
 	m_movementActivity = movementAct;
 	m_moveWaitTime = waitTime;
-	
 	m_movementGoal = MOVEGOAL_ENEMY;
-	return FRefreshRoute();
+
+	//MODDD - only keep movement activity if this passes
+	BOOL theResult = FRefreshRoute();
+	if (!theResult) {
+		m_movementActivity = m1;
+		m_moveWaitTime = m2;
+		m_movementGoal = m3;
+	}
+	return theResult;
 }
 
 
 BOOL CBaseMonster::MoveToLocation( Activity movementAct, float waitTime, const Vector &goal )
 {
+	Activity m1 = m_movementActivity;
+	float m2 = m_moveWaitTime;
+	int m3 = m_movementGoal;
+	Vector m4 = m_vecMoveGoal;
+
 	m_movementActivity = movementAct;
 	m_moveWaitTime = waitTime;
-	
 	m_movementGoal = MOVEGOAL_LOCATION;
 	m_vecMoveGoal = goal;
-	return FRefreshRoute();
+
+	//MODDD - only keep movement activity if this passes
+	BOOL theResult = FRefreshRoute();
+	if (!theResult) {
+		m_movementActivity = m1;
+		m_moveWaitTime = m2;
+		m_movementGoal = m3;
+		m_vecMoveGoal = m4;
+	}
+	return theResult;
 }
 
 
 BOOL CBaseMonster::MoveToTarget( Activity movementAct, float waitTime )
 {
-	if (movementAct == ACT_WALK) {
-		int x = 45;
-	}
+	Activity m1 = m_movementActivity;
+	float m2 = m_moveWaitTime;
+	int m3 = m_movementGoal;
 
 	m_movementActivity = movementAct;
 	m_moveWaitTime = waitTime;
-	
 	m_movementGoal = MOVEGOAL_TARGETENT;
-	return FRefreshRoute();
+
+	//MODDD - only keep movement activity if this passes
+	BOOL theResult = FRefreshRoute();
+	if (!theResult) {
+		m_movementActivity = m1;
+		m_moveWaitTime = m2;
+		m_movementGoal = m3;
+	}
+	return theResult;
 }
 
 
 BOOL CBaseMonster::MoveToNode( Activity movementAct, float waitTime, const Vector &goal )
 {
+	Activity m1 = m_movementActivity;
+	float m2 = m_moveWaitTime;
+	int m3 = m_movementGoal;
+	Vector m4 = m_vecMoveGoal;
+
 	m_movementActivity = movementAct;
 	m_moveWaitTime = waitTime;
-
 	m_movementGoal = MOVEGOAL_NODE;
 	m_vecMoveGoal = goal;
-	return FRefreshRoute();
+
+
+	//MODDD - only keep movement activity if this passes
+	BOOL theResult = FRefreshRoute();
+	if (!theResult) {
+		m_movementActivity = m1;
+		m_moveWaitTime = m2;
+		m_movementGoal = m3;
+		m_vecMoveGoal = m4;
+	}
+	return theResult;
 }
 
 
 
 void CBaseMonster::DrawRoute( entvars_t *pev, WayPoint_t *m_Route, int m_iRouteIndex, int r, int g, int b )
 {
-	int		i;
+	int i;
 
 	if ( m_Route[m_iRouteIndex].iType == 0 )
 	{
@@ -3795,6 +4022,8 @@ int CBaseMonster::CheckLocalMoveHull(const Vector &vecStart, const Vector &vecEn
 #define LOCAL_STEP_SIZE	16
 int CBaseMonster :: CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, CBaseEntity *pTarget, float *pflDist )
 {
+	pTarget = NULL;
+
 	Vector	vecStartPos;// record monster's position before trying the move
 	float flYaw;
 	float flDist;
@@ -4002,6 +4231,11 @@ int CBaseMonster :: CheckLocalMove ( const Vector &vecStart, const Vector &vecEn
 
 	// since we've moved the monster during the check, undo the move.
 	UTIL_SetOrigin( pev, vecStartPos );
+
+	if (iReturn == LOCALMOVE_VALID) {
+		// breakpoint
+		int x = 45;
+	}
 
 	return iReturn;
 }
@@ -4754,24 +4988,35 @@ BOOL CBaseMonster :: FTriangulate ( const Vector &vecStart , const Vector &vecEn
 
 
 
-//=========================================================
-// Move - take a single step towards the next ROUTE location
-//=========================================================
-#define DIST_TO_CHECK	200
 
-void CBaseMonster :: Move ( float flInterval ) 
-{
-	if(drawPathConstant){
-		DrawRoute( pev, m_Route, m_iRouteIndex, 0, 0, 176 );
+
+//MODDD - beginning portion of the as-is 'Move' method below moved here for methods to see whether the path
+// will still be valid in one move from now.
+// If not, setting the idealActivity to WALK or RUN will give an awkward flinching effect since the monster
+// calls Move and goes  'oh wait I can't do that'.  When it should've realized that before deciding to look
+// like it's moving.
+// Also expects references to variables expected to be filled by the Move call this is likely to come before.
+// NOTICE - this can also return a special code, '-1', which means to stop the rest of the Move method.
+// Don't even bother with any "If failure do this" logic, just 'return', end the Move method right there.
+int CBaseMonster::MovePRE(float flInterval, float& flWaypointDist, float& flCheckDist, float& flDist, Vector& vecDir, CBaseEntity*& pTargetEnt ) {
+
+	if (drawPathConstant) {
+		DrawRoute(pev, m_Route, m_iRouteIndex, 0, 0, 176);
 	}
 
 
-	float	flWaypointDist;
-	float	flCheckDist;
-	float	flDist;// how far the lookahead check got before hitting an object.
-	Vector		vecDir;
-	Vector		vecApex;
-	CBaseEntity	*pTargetEnt;
+
+	/*
+	// OLD WAY.
+	// For a version 99% accurate to retail, see this.  Only modified the end slightly to send the result of CheckLocalMove to be returned by here
+	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// vars disabled, supplied by the parameter list for setting.
+	//float		flWaypointDist;
+	//float		flCheckDist;
+	//float		flDist;// how far the lookahead check got before hitting an object.
+	//Vector		vecDir;
+	//Vector		vecApex;
+	//CBaseEntity	*pTargetEnt;
 
 	// Don't move if no valid route
 	if ( FRouteClear() )
@@ -4782,12 +5027,12 @@ void CBaseMonster :: Move ( float flInterval )
 		{
 			ALERT( at_aiconsole, "Tried to move with no route!\n" );
 			TaskFail();
-			return;
+			return -1;
 		}
 	}
-	
+
 	if ( m_flMoveWaitFinished > gpGlobals->time )
-		return;
+		return -1;
 
 // Debug, test movement code
 #if 0
@@ -4797,6 +5042,101 @@ void CBaseMonster :: Move ( float flInterval )
 			RouteSimplify( m_hEnemy );
 		else
 			RouteSimplify( m_hTargetEnt );
+		FRefreshRoute();
+		return -1;
+	}
+#else
+// Debug, draw the route
+//	DrawRoute( pev, m_Route, m_iRouteIndex, 0, 200, 0 );
+#endif
+
+	// if the monster is moving directly towards an entity (enemy for instance), we'll set this pointer
+	// to that entity for the CheckLocalMove and Triangulate functions.
+	pTargetEnt = NULL;
+
+	// local move to waypoint.
+	vecDir = ( m_Route[ m_iRouteIndex ].vecLocation - pev->origin ).Normalize();
+	flWaypointDist = ( m_Route[ m_iRouteIndex ].vecLocation - pev->origin ).Length2D();
+
+	MakeIdealYaw ( m_Route[ m_iRouteIndex ].vecLocation );
+	ChangeYaw ( pev->yaw_speed );
+
+	// if the waypoint is closer than CheckDist, CheckDist is the dist to waypoint
+	if ( flWaypointDist < DIST_TO_CHECK )
+	{
+		flCheckDist = flWaypointDist;
+	}
+	else
+	{
+		flCheckDist = DIST_TO_CHECK;
+	}
+
+	if ( (m_Route[ m_iRouteIndex ].iType & (~bits_MF_NOT_TO_MASK)) == bits_MF_TO_ENEMY )
+	{
+		// only on a PURE move to enemy ( i.e., ONLY MF_TO_ENEMY set, not MF_TO_ENEMY and DETOUR )
+		pTargetEnt = m_hEnemy;
+	}
+	else if ( (m_Route[ m_iRouteIndex ].iType & ~bits_MF_NOT_TO_MASK) == bits_MF_TO_TARGETENT )
+	{
+		pTargetEnt = m_hTargetEnt;
+	}
+
+	// !!!BUGBUG - CheckDist should be derived from ground speed.
+	// If this fails, it should be because of some dynamic entity blocking this guy.
+	// We've already checked this path, so we should wait and time out if the entity doesn't move
+	flDist = 0;
+	
+	// !!! redirect to return!  was if(...)
+	BOOL localMoveResult = (CheckLocalMove ( pev->origin, pev->origin + vecDir * flCheckDist, pTargetEnt, &flDist ) == LOCALMOVE_VALID);
+
+	return localMoveResult;
+	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	*/
+
+
+
+
+	// NEW WAY
+	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	//MODDD - these are now provided by the one calling the method, in case this is to be continued by the
+	// Move call below (expects these to have been filled)
+	//float	flWaypointDist;
+	//float	flCheckDist;
+	//float	flDist;// how far the lookahead check got before hitting an object.
+	//Vector		vecDir;
+	////Vector		vecApex;
+	//CBaseEntity* pTargetEnt;
+
+
+	// Don't move if no valid route
+	if (FRouteClear())
+	{
+		// If we still have a movement goal, then this is probably a route truncated by SimplifyRoute()
+		// so refresh it.
+		if (m_movementGoal == MOVEGOAL_NONE || !FRefreshRoute())
+		{
+			ALERT(at_aiconsole, "Tried to move with no route!\n");
+			TaskFail();
+			return -1;
+		}
+	}
+
+	if (m_flMoveWaitFinished > gpGlobals->time) {
+		// Wait.  Is this the same as 'abandon route' failure or just deciding not to do move logic this frame?
+		return -1;
+	}
+
+
+
+	// Debug, test movement code
+#if 0
+//	if ( CVAR_GET_FLOAT("stopmove" ) != 0 )
+	{
+		if (m_movementGoal == MOVEGOAL_ENEMY)
+			RouteSimplify(m_hEnemy);
+		else
+			RouteSimplify(m_hTargetEnt);
 		FRefreshRoute();
 		return;
 	}
@@ -4810,32 +5150,33 @@ void CBaseMonster :: Move ( float flInterval )
 	pTargetEnt = NULL;
 
 	// local move to waypoint.
-	vecDir = ( m_Route[ m_iRouteIndex ].vecLocation - pev->origin ).Normalize();
+	vecDir = (m_Route[m_iRouteIndex].vecLocation - pev->origin).Normalize();
 
 	//MODDD - HOLD ON!  Why is this always "Length2D()"?  Even for flyers? 
 	//        When would flyers call for Length2D instead of typical Length (includes Z axis)?
 	//flWaypointDist = ( m_Route[ m_iRouteIndex ].vecLocation - pev->origin ).Length2D();
 
-	if( !isMovetypeFlying()){
+	if (!isMovetypeFlying()) {
 		//not a flyer? Default behavior.
-		flWaypointDist = ( m_Route[ m_iRouteIndex ].vecLocation - pev->origin ).Length2D();
-	}else{
+		flWaypointDist = (m_Route[m_iRouteIndex].vecLocation - pev->origin).Length2D();
+	}
+	else {
 		//Otherwise, use 3D distance instead.  If there's ever a time the Length2D is still preferred... eh. why?
-		flWaypointDist = ( m_Route[ m_iRouteIndex ].vecLocation - pev->origin ).Length();
+		flWaypointDist = (m_Route[m_iRouteIndex].vecLocation - pev->origin).Length();
 	}
 
-	
-	MakeIdealYaw ( m_Route[ m_iRouteIndex ].vecLocation );
-	ChangeYaw ( pev->yaw_speed );
 
-	if(m_movementGoal == MOVEGOAL_NONE){
+	MakeIdealYaw(m_Route[m_iRouteIndex].vecLocation);
+	ChangeYaw(pev->yaw_speed);
+
+	if (m_movementGoal == MOVEGOAL_NONE) {
 		//MODDD - YEAH
 		//no more! Cheap trick to interrupt the movement method if ChangeYaw decides to clear the route.
-		return; 
+		return -1;
 	}
 
 	// if the waypoint is closer than CheckDist, CheckDist is the dist to waypoint
-	if ( flWaypointDist < DIST_TO_CHECK )
+	if (flWaypointDist < DIST_TO_CHECK)
 	{
 		flCheckDist = flWaypointDist;
 	}
@@ -4843,33 +5184,38 @@ void CBaseMonster :: Move ( float flInterval )
 	{
 		flCheckDist = DIST_TO_CHECK;
 	}
-	
+
 	//MODDD - bit checks instead now.
 	//if ( (m_Route[ m_iRouteIndex ].iType & (~bits_MF_NOT_TO_MASK)) == bits_MF_TO_ENEMY )
-	if ( (m_Route[ m_iRouteIndex ].iType & (~bits_MF_NOT_TO_MASK)) & bits_MF_TO_ENEMY )
+	if ((m_Route[m_iRouteIndex].iType & (~bits_MF_NOT_TO_MASK)) & bits_MF_TO_ENEMY)
 	{
 		// only on a PURE move to enemy ( i.e., ONLY MF_TO_ENEMY set, not MF_TO_ENEMY and DETOUR )
 		pTargetEnt = m_hEnemy;
 	}
 	//else if ( (m_Route[ m_iRouteIndex ].iType & ~bits_MF_NOT_TO_MASK) == bits_MF_TO_TARGETENT )
-	else if ( (m_Route[ m_iRouteIndex ].iType & ~bits_MF_NOT_TO_MASK) & bits_MF_TO_TARGETENT )
+	else if ((m_Route[m_iRouteIndex].iType & ~bits_MF_NOT_TO_MASK) & bits_MF_TO_TARGETENT)
 	{
 		pTargetEnt = m_hTargetEnt;
 	}
 
 
-	if(EASY_CVAR_GET(crazyMonsterPrintouts) == 1){
-		if(pTargetEnt == NULL){
-			easyPrintLine("I AM OBNOXIOUS: NULL : %d", m_Route[ m_iRouteIndex ].iType);
-		}else{
-			easyPrintLine("I AM OBNOXIOUS: %s %d", STRING(pTargetEnt->pev->classname), m_Route[ m_iRouteIndex ].iType );
+
+
+	//MODDD - Below is completely new!!!
+
+	if (EASY_CVAR_GET(crazyMonsterPrintouts) == 1) {
+		if (pTargetEnt == NULL) {
+			easyPrintLine("I AM OBNOXIOUS: NULL : %d", m_Route[m_iRouteIndex].iType);
+		}
+		else {
+			easyPrintLine("I AM OBNOXIOUS: %s %d", STRING(pTargetEnt->pev->classname), m_Route[m_iRouteIndex].iType);
 		}
 	}
 
-	if( EASY_CVAR_GET(applyLKPPathFixToAll) == 1 || hasSeeEnemyFix() && !(m_Route[ m_iRouteIndex].iType & bits_MF_TO_ENEMY) && HasConditions(bits_COND_SEE_ENEMY) ){
+	if (EASY_CVAR_GET(applyLKPPathFixToAll) == 1 || hasSeeEnemyFix() && !(m_Route[m_iRouteIndex].iType & bits_MF_TO_ENEMY) && HasConditions(bits_COND_SEE_ENEMY)) {
 		//this is a fix to make the enemy re-route in case of seeing the enemy while taking a path not necessarily to the enemy (such as, on its way to a last known location).
 		this->MovementComplete();
-		return;
+		return -1;
 	}
 
 
@@ -4880,47 +5226,201 @@ void CBaseMonster :: Move ( float flInterval )
 
 
 	//BOOL localMovePass = (CheckLocalMove ( pev->origin, pev->origin + vecDir * flWaypointDist, pTargetEnt, &flDist ) == LOCALMOVE_VALID);
-	
+
 	BOOL localMovePass;
 
 	//If using a RAMPFIX or NODE type of node, use "CheckLocalMoveHull" instead. It's a bit less strict.
 	int useHullCheckMask = bits_MF_RAMPFIX;
-	if(EASY_CVAR_GET(pathfindLooseMapNodes) == 1){
+	if (EASY_CVAR_GET(pathfindLooseMapNodes) == 1) {
 		useHullCheckMask |= bits_MF_TO_NODE;
 	}
-	
-	if( (m_Route[ m_iRouteIndex ].iType & ~bits_MF_NOT_TO_MASK) & (useHullCheckMask) ){
-		//for now...
-		localMovePass = (CheckLocalMoveHull ( pev->origin, pev->origin + vecDir * flCheckDist, pTargetEnt, &flDist ) == LOCALMOVE_VALID);
-		//localMovePass = TRUE;
-		if(!localMovePass){
-			EASY_CVAR_PRINTIF_PRE(pathfindPrintout, easyForcePrintLine("%s:ID%d Move: CheckLocalMoveHull Failed!!!", getClassnameShort(), monsterID) );
-		}
-	}else{
-		localMovePass = (CheckLocalMove ( pev->origin, pev->origin + vecDir * flCheckDist, pTargetEnt, &flDist ) == LOCALMOVE_VALID);
 
-		if(localMovePass){
+	if ((m_Route[m_iRouteIndex].iType & ~bits_MF_NOT_TO_MASK) & (useHullCheckMask)) {
+		//for now...
+		localMovePass = (CheckLocalMoveHull(pev->origin, pev->origin + vecDir * flCheckDist, pTargetEnt, &flDist) == LOCALMOVE_VALID);
+		//localMovePass = TRUE;
+
+		//DebugLine_Setup(0, pev->origin, pev->origin + vecDir * flCheckDist, 0, 255, 0);
+
+
+
+		if (!localMovePass) {
+			EASY_CVAR_PRINTIF_PRE(pathfindPrintout, easyForcePrintLine("%s:ID%d Move: CheckLocalMoveHull Failed!!!", getClassnameShort(), monsterID));
+		}
+	}
+	else {
+		localMovePass = (CheckLocalMove(pev->origin, pev->origin + vecDir * flCheckDist, pTargetEnt, &flDist) == LOCALMOVE_VALID);
+
+		/*
+		if (localMovePass == 1) {
+			DebugLine_Setup(0, pev->origin, pev->origin + vecDir * flCheckDist, 0, 255, 0);
+		}
+		else {
+			DebugLine_Setup(0, pev->origin, pev->origin + vecDir * flCheckDist, 255, 0, 0);
+		}
+		*/
+
+
+		if (localMovePass) {
 			//if it passed, likely didn't bother writing anything to flDist. Just go ahead and assume it was full, that is what passing means.
 			flDist = flCheckDist;
 		}
 
-		if(drawPathConstant){
+		if (drawPathConstant) {
 			//Show the result of the recent localMove?
-			::DebugLine_Setup(0, pev->origin, pev->origin + vecDir * flCheckDist, (flDist / flCheckDist) );
+			::DebugLine_Setup(0, pev->origin, pev->origin + vecDir * flCheckDist, (flDist / flCheckDist));
 		}
 
-		if(!localMovePass){
-			EASY_CVAR_PRINTIF_PRE(pathfindPrintout, easyForcePrintLine("%s:ID%d Move: CheckLocalMove Failed!", getClassnameShort(), monsterID) ) ;
+		if (!localMovePass) {
+			EASY_CVAR_PRINTIF_PRE(pathfindPrintout, easyForcePrintLine("%s:ID%d Move: CheckLocalMove Failed!", getClassnameShort(), monsterID));
+		}
+	}
+
+	return localMovePass;
+	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+}//MovePRE
+
+
+
+
+
+void CBaseMonster :: Move ( float flInterval ) 
+{
+	Vector vecApex;
+
+	float flWaypointDist;
+	float flCheckDist;
+	float flDist;
+	Vector vecDir;
+	CBaseEntity* pTargetEnt;
+
+	//MODDD - section moved to its own method, MovePRE, as a simple way to see if a route looks promising at other points.
+	// Jumping to a movement activity only to give up the next frame causes twiching between moving/standing anims.
+	int localMovePass = MovePRE(flInterval, flWaypointDist, flCheckDist, flDist, vecDir, pTargetEnt);
+
+	if (localMovePass == -1) {
+		// Signal to end very early.  Retail never returned this from any script that would've been there so it is safe
+		// to trust this was given intentionally if testing retail script (end early, even for old logic below).
+		return;
+	}
+
+
+	/*
+	// OLD WAY
+	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// !!! cange to tie into the new modular form
+	//if (CheckLocalMove(pev->origin, pev->origin + vecDir * flCheckDist, pTargetEnt, &flDist) != LOCALMOVE_VALID)
+	if(localMovePass != 1)
+	{
+		CBaseEntity* pBlocker;
+
+		// Can't move, stop
+		Stop();
+		// Blocking entity is in global trace_ent
+		pBlocker = CBaseEntity::Instance(gpGlobals->trace_ent);
+		if (pBlocker)
+		{
+			DispatchBlocked(edict(), pBlocker->edict());
+		}
+
+		if (pBlocker && m_moveWaitTime > 0 && pBlocker->IsMoving() && !pBlocker->IsPlayer() && (gpGlobals->time - m_flMoveWaitFinished) > 3.0)
+		{
+			// Can we still move toward our target?
+			if (flDist < m_flGroundSpeed)
+			{
+				// No, Wait for a second
+				m_flMoveWaitFinished = gpGlobals->time + m_moveWaitTime;
+				return;
+			}
+			// Ok, still enough room to take a step
+		}
+		else
+		{
+			// try to triangulate around whatever is in the way.
+			if (FTriangulate(pev->origin, m_Route[m_iRouteIndex].vecLocation, flDist, pTargetEnt, &vecApex))
+			{
+				InsertWaypoint(vecApex, bits_MF_TO_DETOUR);
+				RouteSimplify(pTargetEnt);
+			}
+			else
+			{
+				//				ALERT ( at_aiconsole, "Couldn't Triangulate\n" );
+				Stop();
+				// Only do this once until your route is cleared
+				if (m_moveWaitTime > 0 && !(m_afMemory & bits_MEMORY_MOVE_FAILED))
+				{
+					FRefreshRoute();
+					if (FRouteClear())
+					{
+						TaskFail();
+					}
+					else
+					{
+						// Don't get stuck
+						if ((gpGlobals->time - m_flMoveWaitFinished) < 0.2)
+							Remember(bits_MEMORY_MOVE_FAILED);
+
+						m_flMoveWaitFinished = gpGlobals->time + 0.1;
+					}
+				}
+				else
+				{
+					TaskFail();
+					ALERT(at_aiconsole, "%s Failed to move (%d)!\n", STRING(pev->classname), HasMemory(bits_MEMORY_MOVE_FAILED));
+					//ALERT( at_aiconsole, "%f, %f, %f\n", pev->origin.z, (pev->origin + (vecDir * flCheckDist)).z, m_Route[m_iRouteIndex].vecLocation.z );
+				}
+				return;
+			}
 		}
 	}
 	
-	//careful now!
-	//localMovePass = TRUE;
+
+	//MODDD - ShouldAdvanceRoute and AdvanceRoute now take flInterval too.
+	// close enough to the target, now advance to the next target. This is done before actually reaching
+	// the target so that we get a nice natural turn while moving.
+	if (ShouldAdvanceRoute(flWaypointDist, flInterval))///!!!BUGBUG- magic number
+	{
+		AdvanceRoute(flWaypointDist, flInterval);
+	}
+
+	// Might be waiting for a door
+	if (m_flMoveWaitFinished > gpGlobals->time)
+	{
+		Stop();
+		return;
+	}
+
+	// UNDONE: this is a hack to quit moving farther than it has looked ahead.
+	if (flCheckDist < m_flGroundSpeed * flInterval)
+	{
+		flInterval = flCheckDist / m_flGroundSpeed;
+		// ALERT( at_console, "%.02f\n", flInterval );
+	}
+	MoveExecute(pTargetEnt, vecDir, flInterval);
+
+	if (MovementIsComplete())
+	{
+		Stop();
+		RouteClear();
+	}
+
+	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	*/
 
 
-	//MODDD
+
+
+	
+	//MODDD - new way!
+	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	//if ( CheckLocalMove ( pev->origin, pev->origin + vecDir * flCheckDist, pTargetEnt, &flDist ) != LOCALMOVE_VALID )
-	if( !localMovePass )
+	if( localMovePass != 1 )
 	{
 		CBaseEntity *pBlocker;
 
@@ -4991,32 +5491,33 @@ void CBaseMonster :: Move ( float flInterval )
 //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-						if ( (gpGlobals->time - m_flMoveWaitFinished) < EASY_CVAR_GET(pathfindFidgetFailTime) )
-							Remember( bits_MEMORY_MOVE_FAILED );
+						if ((gpGlobals->time - m_flMoveWaitFinished) < EASY_CVAR_GET(pathfindFidgetFailTime)) {
+							Remember(bits_MEMORY_MOVE_FAILED);
+						}
 
 						m_flMoveWaitFinished = gpGlobals->time + 0.1;
 					}
 				}
 				else
 				{
+					//MODDD - this area is for failure, but if close enough call it success instead.
+					if(strictNodeTolerance == FALSE && EASY_CVAR_GET(pathfindEdgeCheck) == 1){
 
-					if(EASY_CVAR_GET(pathfindEdgeCheck) == 1){
-
-						//Before admitting failure, do a check. Are we close enough to the goal to let this count as success?
+						// Before admitting failure, do a check. Are we close enough to the goal to let this count as success?
 					
 						//m_iRouteIndex
 						WayPoint_t* waypointGoalRef = NULL;
 
-						/*
-						if(m_Route[ 0 ].iType & bits_MF_IS_GOAL){
-							waypointGoalRef = &m_Route[ 0 ];
-						}else if(m_Route[ 1 ].iType & bits_MF_IS_GOAL){
-							waypointGoalRef = &m_Route[ 1 ];
-							//is our current destination waypoint not 0 or 1 but the goal? 0 and 1 have already been tried of course.
-						}else if(m_iRouteIndex != 0 && m_iRouteIndex != 1 && (m_Route[ m_iRouteIndex ].iType & bits_MF_IS_GOAL)){
-							waypointGoalRef = &m_Route[ m_iRouteIndex ];
-						}
-						*/
+						
+						//if(m_Route[ 0 ].iType & bits_MF_IS_GOAL){
+						//	waypointGoalRef = &m_Route[ 0 ];
+						//}else if(m_Route[ 1 ].iType & bits_MF_IS_GOAL){
+						//	waypointGoalRef = &m_Route[ 1 ];
+						//	//is our current destination waypoint not 0 or 1 but the goal? 0 and 1 have already been tried of course.
+						//}else if(m_iRouteIndex != 0 && m_iRouteIndex != 1 && (m_Route[ m_iRouteIndex ].iType & bits_MF_IS_GOAL)){
+						//	waypointGoalRef = &m_Route[ m_iRouteIndex ];
+						//}
+						
 
 						waypointGoalRef = GetGoalNode();
 
@@ -5026,6 +5527,34 @@ void CBaseMonster :: Move ( float flInterval )
 
 							float distanceee = (waypointGoalRef->vecLocation - pev->origin ).Length();
 							
+							////////////////////////////////////////////////////////////
+							//MODDD - important change!!!  This is what lets pathfinding declare finishing a little early,
+							// and could be causeing the scripted-seuqences to begin playing from blindly thinking being close
+							// enough to the target point is good enough.
+
+							// How does pathfinding want to go outwards a ways on blocking the scientist when it gets close
+							// to a vending machine?  that's just weird, look around for what sets nodes like that.
+							
+							// Anyway, try with pathfindEdgeCheck set to 0 too.
+							// And how about the player still checks for being close enough to the target
+							// point to see if it makes sense to snap to it, or admit failure (pause & try
+							// again soon, maybe even pathfind randomly away?  dunno about that).
+
+							// So look at AdvanceRoute, here and as-is.  As-is essentialy does this if approaching
+							// a goal node:
+							//if (distance < m_flGroundSpeed * 0.2)
+							//	{
+							//		MovementComplete();
+							//	}
+							//}
+
+							// Anyway, handled now.  Any task that needs to go somewhere within pin-point tolerance like retail
+							// will set strictNodeTolerance to TRUE to ignore pathfindEdgeCheck
+							////////////////////////////////////////////////////////////
+
+
+
+
 							//NOTICE - this allowed distance is very floaty. It is the expected distance to move in a frame times a number to go a bit further.
 							//...no, our movement speed is unimportant. Use a constant distance instead, possibly factor in this monster's own size later.
 							// ... < (m_flGroundSpeed * pev->framerate * EASY_CVAR_GET(animationFramerateMulti) * flInterval * 5)
@@ -5071,7 +5600,12 @@ void CBaseMonster :: Move ( float flInterval )
 			}
 		}
 	}
+	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+
+	
 
 	BOOL skipMoveExecute = FALSE;
 	
@@ -5082,18 +5616,40 @@ void CBaseMonster :: Move ( float flInterval )
 	///!!!BUGBUG- magic number
 	if ( ShouldAdvanceRoute( flWaypointDist, flInterval ) )
 	{
-		/*
-		//MODDD - no need. Notice the script below, "flCheckDist < distExpectedToCover". This will end up moving the monster
-		//        the right amount of distance to cover the point anyways.
-		if(EASY_CVAR_GET(pathfindSnapToNode) == 1){
-			//MODDD - if it returns true, snap to that position. Don't move this frame, this is good enough.
-			pev->origin = m_Route[ m_iRouteIndex ].vecLocation;
-			skipMoveExecute = TRUE;
-		}
-		*/
+		
+		////MODDD - no need. Notice the script below, "flCheckDist < distExpectedToCover". This will end up moving the monster
+		////        the right amount of distance to cover the point anyways.
+		//if(EASY_CVAR_GET(pathfindSnapToNode) == 1){
+		//	//MODDD - if it returns true, snap to that position. Don't move this frame, this is good enough.
+		//	pev->origin = m_Route[ m_iRouteIndex ].vecLocation;
+		//	skipMoveExecute = TRUE;
+		//}
+		
 
 		EASY_CVAR_PRINTIF_PRE(pathfindPrintout, easyPrintLine("%s:ID%d Pathfinding: ROUTE Z", getClassnameShort(), monsterID) );
 		AdvanceRoute( flWaypointDist, flInterval );
+
+
+		//MODDD - and, do a check since advancing the route.  Is the point after ok to traverse from?
+		/////////////////////////////////////////////////////////////////////////////////////////////////
+		// Only if we're done moving though!  If already at the goal this won't work well.
+		// Can we prove if this area even makes a difference?   See the other ShouldAdvanceRoute checks
+		// in FRefreshRoute now, they seem to make the difference in stopping oscillation, maybe all of it.
+		if (!MovementIsComplete()) {
+			int localMovePassTest = MovePRE(flInterval, flWaypointDist, flCheckDist, flDist, vecDir, pTargetEnt);
+
+			if (localMovePassTest != 1) {
+				// nope!
+				Stop();
+				TaskFail();
+				return;
+			}
+
+			//int shouldItAgain = ShouldAdvanceRoute(flWaypointDist, flInterval);
+			//int x = 45;
+		}
+		/////////////////////////////////////////////////////////////////////////////////////////////////
+
 	}else{
 
 	}
@@ -5158,7 +5714,7 @@ void CBaseMonster :: Move ( float flInterval )
 	if(!movementCanAutoTurn || facingNextNode){
 		MoveExecute( pTargetEnt, vecDir, flInterval );
 	}else{
-		//try to face it?
+		// try to face it?
 		if(m_IdealActivity == ACT_RUN || m_IdealActivity == ACT_WALK || m_IdealActivity == ACT_HOVER || m_IdealActivity == ACT_FLY){
 			Stop();
 		}
@@ -5182,7 +5738,12 @@ void CBaseMonster :: Move ( float flInterval )
 		Stop();
 		RouteClear();
 	}
-}
+
+	// END OF THE NEW WAY.
+	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+}//END OF Move
 
 
 
@@ -5578,6 +6139,16 @@ void CBaseMonster :: StartMonster ( void )
 }
 
 
+void CBaseMonster::TaskComplete(void) {
+
+	if (monsterID == 11) {
+		int x = 45;
+	}
+
+	if (!HasConditions(bits_COND_TASK_FAILED)) {
+		m_iTaskStatus = TASKSTATUS_COMPLETE;
+	}
+}
 
 // Note that this alone can no longer complete the currently running task.
 // Any movement-related tasks typically checked for "MovementIsComplete" and then
@@ -6285,14 +6856,16 @@ void CBaseMonster :: HandleAnimEvent( MonsterEvent_t *pEvent )
 		// from sequences expected to be played in that monster while scripted anyway.
 		// Otherwise (not scripted), assume soundsentencesave can catch the sound
 		BOOL useSoundSentenceSave = (m_MonsterState != MONSTERSTATE_SCRIPT);
-		UTIL_PlaySound(edict(), CHAN_BODY, pEvent->options, 1.0, ATTN_IDLE, 0, 100, useSoundSentenceSave);
+		// MODDD - scripted sounds now carry further.  Lower attenuation.  Was ATTN_IDLE (2).
+		UTIL_PlaySound(edict(), CHAN_BODY, pEvent->options, 1.0, 0.9, 0, 100, useSoundSentenceSave);
 	}
 	break;
 
 	case SCRIPT_EVENT_SOUND_VOICE: {
-		//MODDD - you too
+		//MODDD - you too.
+		// And a smaller attenuation change (was also ATTN_IDLE)
 		BOOL useSoundSentenceSave = (m_MonsterState != MONSTERSTATE_SCRIPT);
-		UTIL_PlaySound(edict(), CHAN_VOICE, pEvent->options, 1.0, ATTN_IDLE, 0, 100, useSoundSentenceSave);
+		UTIL_PlaySound(edict(), CHAN_VOICE, pEvent->options, 1.0, 1.1, 0, 100, useSoundSentenceSave);
 	}break;
 
 	case SCRIPT_EVENT_SENTENCE_RND1:		// Play a named sentence group 33% of the time
@@ -6485,6 +7058,13 @@ BOOL CBaseMonster :: FGetNodeRoute ( Vector vecDest )
 	iSrcNode = WorldGraph.FindNearestNode ( pev->origin, this );
 	iDestNode = WorldGraph.FindNearestNode ( vecDest, this );
 
+
+	//iSrcNode = 71;
+	//iDestNode = 71;
+
+
+	//easyForcePrintLine("MY GOD   WHAT ARE YOU DOING %d %d", iSrcNode, iDestNode);
+
 	if ( iSrcNode == -1 )
 	{
 		// no node nearest self
@@ -6505,6 +7085,7 @@ BOOL CBaseMonster :: FGetNodeRoute ( Vector vecDest )
 	TRACE_MONSTER_HULL(edict(), pev->origin + pev->view_ofs, theStartNode.m_vecOrigin + pev->view_ofs, dont_ignore_monsters, edict(), &tr);
 	if (tr.flFraction < 1.0) {
 		// oh dear.  Abort.  We picked a source node we can not even reach.
+		//DebugLine_Setup(0, pev->origin + pev->view_ofs, theStartNode.m_vecOrigin + pev->view_ofs, tr.flFraction);
 		return FALSE;
 	}
 	
@@ -6520,7 +7101,9 @@ BOOL CBaseMonster :: FGetNodeRoute ( Vector vecDest )
 	iResult = WorldGraph.FindShortestPath ( iPath, iSrcNode, iDestNode, iNodeHull, m_afCapability );
 
 
-	if(iResult==2 && iPath[0] == iPath[1]){
+	//MODDD - NEW SECTION
+	///////////////////////////////////////////////////////////////////////////////////////////////////////////
+	if( iResult==2 && iPath[0] == iPath[1]){
 		//MODDD TODO - 
 		//That is, if the # of nodes returned is 2 and they are exactly equal, it means we returned our own position.
 		//---Should we set some flag to do something about this...? Ranged AI can just try another nearby node also close to the enemy
@@ -6533,16 +7116,26 @@ BOOL CBaseMonster :: FGetNodeRoute ( Vector vecDest )
 			goalEnt = m_hEnemy.GetEntity();
 		}
 
-		if(this->CheckLocalMove(pev->origin, m_vecMoveGoal, goalEnt, NULL)){
-			//it is okay apparently.
+		// NO.  Checking m_vecMoveGoal is a bad idea!  That's where we wanted to go to begin with, which of
+		// course we can't go to, that was the whole point of trying to use a route.
+		// instead, go towards the dest node we picked.
+
+
+		CNode& thatNode = WorldGraph.Node(iDestNode);
+		Vector currentNodeLoc = thatNode.m_vecOrigin + pev->view_ofs;
+		//if(this->CheckLocalMove(pev->origin, m_vecMoveGoal, goalEnt, NULL)){
+		if(this->CheckLocalMove(pev->origin + pev->view_ofs, currentNodeLoc, goalEnt, NULL)){
+			// ok, do it
 			int x = 45;
 		}else{
 			//No!
+			//DebugLine_Setup(0, pev->origin + Vector(0,0,5), m_vecMoveGoal + Vector(0, 0, 5), 0, 0, 255);
+
 			return FALSE;
 		}
 
 	}
-
+	///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	if ( !iResult )
 	{

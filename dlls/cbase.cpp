@@ -997,7 +997,7 @@ BOOL CBaseEntity::getIsBarnacleVictimException(void){
 
 //MODDD
 //just return "True" if this is of class "CBreakable" or a subclass of it.  (also known as func_breakable)
-BOOL CBaseEntity::isBreakableOrchild(void){
+BOOL CBaseEntity::isBreakableOrChild(void){
     return FALSE;
 }
 //MODDD

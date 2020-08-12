@@ -22,6 +22,7 @@
 #include "scripted.h"
 #include "soundent.h"
 #include "util_model.h"
+#include "util_debugdraw.h"
 
 
 
@@ -714,11 +715,7 @@ void CTalkMonster :: StartTask( Task_t *pTask )
 
 	case TASK_TLK_STOPSHOOTING:
 		// tell player to stop shooting
-		if(EASY_CVAR_GET(pissedNPCs) < 1  || !globalPSEUDO_iCanHazMemez){
-			PlaySentence( m_szGrp[TLK_NOSHOOT], RANDOM_FLOAT(2.8, 3.2), VOL_NORM, ATTN_NORM );
-		}else{
-			PlaySentence( "BA_POKE_C", 7, VOL_NORM, ATTN_NORM );
-		}
+		SayStopShooting();
 
 		TaskComplete();
 		break;
@@ -1298,11 +1295,11 @@ void CTalkMonster :: TalkInit( void )
 // nearest player
 //=========================================================
 //MODDD - returns a CBaseMonster instead of a CBaseEntity.
-CBaseMonster*CTalkMonster :: FindNearestFriend(BOOL fPlayer)
+CBaseMonster* CTalkMonster :: FindNearestFriend(BOOL fPlayer)
 {
 	CBaseEntity *pFriend = NULL;
 
-	CBaseEntity *pNearest = NULL;
+	CBaseMonster *pNearest = NULL;
 	
 	//MODDD - a pointer to pNearest but as a Monster pointer (since it must be to get anywhere
 	// near being returned).
@@ -1325,7 +1322,16 @@ CBaseMonster*CTalkMonster :: FindNearestFriend(BOOL fPlayer)
 
 	// for each type of friend...
 
-	for (i = cfriends-1; i > -1; i--)
+
+	if (monsterID == 11) {
+		int x = 45;
+	}
+
+
+
+
+
+	for (i = cfriends - 1; i > -1; i--)
 	{
 		if (fPlayer)
 			pszFriend = "player";
@@ -1336,20 +1342,36 @@ CBaseMonster*CTalkMonster :: FindNearestFriend(BOOL fPlayer)
 			continue;
 
 		// for each friend in this bsp...
-		while (pFriend = UTIL_FindEntityByClassname( pFriend, pszFriend ))
+		while (pFriend = UTIL_FindEntityByClassname(pFriend, pszFriend))
 		{
-			if (pFriend == this || !pFriend->IsAlive() || entityHidden(pFriend) )
+			//MODDD - added entityHidden condition.  Don't talk to AI-defying players.
+			if (pFriend == this || !pFriend->IsAlive() || entityHidden(pFriend))
 				// don't talk to self or dead people
 				continue;
 
-			CBaseMonster *pMonster = pFriend->MyMonsterPointer();
+			CBaseMonster* pMonster = pFriend->MyMonsterPointer();
 
 			// If not a monster for some reason, or in a script, or prone
-			if ( !pMonster || pMonster->m_MonsterState == MONSTERSTATE_SCRIPT || pMonster->m_MonsterState == MONSTERSTATE_PRONE )
-				continue;
+			//MODDD - how about allowing SCRIPTED's that are marked interruptable?
+			// Any other checks for talk-related things allow that
+			BOOL scriptedBlock = (pMonster->m_MonsterState == MONSTERSTATE_SCRIPT && (pMonster->m_pCine != NULL && !pMonster->m_pCine->CanInterrupt()));
 
-			vecCheck = pFriend->pev->origin;
-			vecCheck.z = pFriend->pev->absmax.z;
+
+			// DEBUG!!! Turn off later.  the 'continue' part at least
+			if (!((this->monsterID == 10 || this->monsterID == 11) && (pMonster->monsterID == 10 || pMonster->monsterID == 11))) {
+				int x = 45;
+				//continue;
+			}
+
+			//if ( !pMonster || pMonster->m_MonsterState == MONSTERSTATE_SCRIPT || pMonster->m_MonsterState == MONSTERSTATE_PRONE )
+			if (!pMonster || scriptedBlock || pMonster->m_MonsterState == MONSTERSTATE_PRONE) {
+				continue;
+			}
+
+
+
+			vecCheck = pMonster->pev->origin;
+			vecCheck.z = pMonster->pev->absmax.z;
 
 			// if closer than previous friend, and in range, see if he's visible
 
@@ -1362,18 +1384,16 @@ CBaseMonster*CTalkMonster :: FindNearestFriend(BOOL fPlayer)
 					// visible and in range, this is the new nearest scientist
 					if ((vecStart - vecCheck).Length() < TALKRANGE_MIN)
 					{
-						pNearest = pFriend;
-						//MODDD - if this one is picked, use that "pMonster" pointer I got earlier.
-						pNearestMonsterRef = pMonster;
-
+						pNearest = pMonster;
 						range = (vecStart - vecCheck).Length();
 					}
 				}
 			}
 		}
 	}
-	//MODDD - yes, that one.
-	return pNearestMonsterRef;
+
+
+	return pNearest;
 }
 
 int CTalkMonster :: GetVoicePitch( void )
@@ -1546,7 +1566,7 @@ int CTalkMonster::CanPlaySentence( BOOL fDisregardState )
 int CTalkMonster :: FIdleStare( void )
 {
 	//MODDD.
-	if (m_MonsterState == MONSTERSTATE_SCRIPT) {
+	if (m_MonsterState == MONSTERSTATE_SCRIPT && (m_pCine != NULL && !m_pCine->CanInterrupt()) ) {
 		// in script, ignore.
 		return FALSE;
 	}
@@ -1583,7 +1603,7 @@ int CTalkMonster :: FIdleHello( void )
 	//	return FALSE;
 	//}
 	//MODDD.
-	if (m_MonsterState == MONSTERSTATE_SCRIPT) {
+	if (m_MonsterState == MONSTERSTATE_SCRIPT && (m_pCine != NULL && !m_pCine->CanInterrupt()) ) {
 		// in script, ignore.
 		return FALSE;
 	}
@@ -1647,7 +1667,20 @@ void CTalkMonster :: IdleHeadTurn( Vector &vecFriend )
 int CTalkMonster :: FIdleSpeak ( void )
 {
 	//MODDD.
-	if (m_MonsterState == MONSTERSTATE_SCRIPT) {
+
+	if (monsterID == 11) {
+		int x = 4;
+	}
+
+	BOOL canInterruptVal = TRUE;
+	
+	if (m_pCine != NULL) {
+		canInterruptVal = m_pCine->CanInterrupt();
+	}
+
+	//if(m_pCine->CanInterrupt())
+
+	if (m_MonsterState == MONSTERSTATE_SCRIPT && !canInterruptVal) {
 		// in script, ignore.
 		return FALSE;
 	}
@@ -1725,8 +1758,28 @@ int CTalkMonster :: FIdleSpeak ( void )
 	// if there is a friend nearby to speak to, play sentence, set friend's response time, return
 	CBaseEntity *pFriend = FindNearestFriend(FALSE);
 
-	if (pFriend && !(pFriend->IsMoving()) && (RANDOM_LONG(0,99) < 75))
+
+	//MODDD - possible to talk to a moving 'friend', just a lower chance.
+	int talkChance;
+	if (pFriend) {
+		if (pFriend->IsMoving()) {
+			talkChance = 65;
+		}
+		else {
+			talkChance = 82;
+		}
+	}
+	else {
+		// wat
+		talkChance = 0;
+	}
+
+	//if (pFriend && !(pFriend->IsMoving()) && (RANDOM_LONG(0,99) < 75))
+	if(talkChance > 0 && RANDOM_LONG(0, 99) < talkChance)
 	{
+		if (monsterID == 10 || monsterID == 11) {
+			int x = 45;
+		}
 
 		// force friend to answer
 		CTalkMonster *pTalkMonster = (CTalkMonster *)pFriend;
@@ -1830,6 +1883,12 @@ void CTalkMonster::ForgetEnemy(void) {
 }//END OF ForgetEnemy
 
 
+void CTalkMonster::OnForgiveDeclineSpam(void) {
+	recentDeclinesForgetTime = -1;
+	recentDeclines = 0;
+}
+
+
 
 void CTalkMonster::PlaySentenceUninterruptable(const char *pszSentence, float duration, float volume, float attenuation, BOOL bConcurrent){
 	PlaySentenceUninterruptable(pszSentence, duration, volume, attenuation, GetVoicePitch(), bConcurrent);
@@ -1917,6 +1976,9 @@ void CTalkMonster::PlaySentence( const char *pszSentence, float duration, float 
 {
 	//easyPrintLine("PLAYING SENTENC %s", pszSentence);
 
+	if (this->monsterID == 10) {
+		int x = 45;
+	}
 	
 	if ( !pszSentence )
 		return;
@@ -1929,6 +1991,10 @@ void CTalkMonster::PlaySentence( const char *pszSentence, float duration, float 
 	}else{
 		SENTENCEG_PlayRndSz( edict(), pszSentence, volume, attenuation, 0, pitch );
 	}
+
+
+	// Saying anything before the intended response forgets it.
+	beginIdleResponseTime = -1;
 
 	// If you say anything, don't greet the player - you may have already spoken to them
 	SetBits(m_bitsSaid, bit_saidHelloPlayer);
@@ -1991,11 +2057,24 @@ void CTalkMonster :: Talk( float flDuration )
 // Prepare this talking monster to answer question
 void CTalkMonster :: SetAnswerQuestion( CTalkMonster *pSpeaker )
 {
-	if ( !m_pCine )
-		ChangeSchedule( slIdleResponse );
+	if (!m_pCine) {
+		ChangeSchedule(slIdleResponse);
+	}
+	else {
+		//MODDD - NEW.
+		// have an m_pCine?  Surely I can make a response without needing the scheduel then
+		if (pSpeaker != NULL) {
+			// HACK, see when the speaker is going to stop talking and say something after that.
+			beginIdleResponseTime = pSpeaker->m_flStopTalkTime + RANDOM_FLOAT(0.2, 0.8);
+
+			if (monsterID == 10 && pSpeaker->monsterID == 11) {
+				int x = 45;
+			}
+
+		}
+	}
 	m_hTalkTarget = (CBaseMonster *)pSpeaker;
 }
-
 
 
 
@@ -2033,6 +2112,7 @@ void CTalkMonster::SayIdleToPlayer(CBaseEntity* argPlayerTalkTo) {
 
 	PlaySentence(szIdleGroup, duration, VOL_NORM, ATTN_IDLE);
 }
+
 // FIdleSpeak, talking to another NPC
 void CTalkMonster::SayQuestion(CTalkMonster* argTalkTo) {
 	const char* szQuestionGroup;
@@ -2052,6 +2132,16 @@ void CTalkMonster::SayQuestion(CTalkMonster* argTalkTo) {
 		duration = RANDOM_FLOAT(2.8, 3.2);
 	}
 
+	if (monsterID == 10 || monsterID == 11) {
+		int x = 45;
+	}
+
+	if (argTalkTo->monsterID == 11 && monsterID != 10) {
+		//?????
+		int x = 45;
+		//DebugLine_Setup(0, this->Center(), argTalkTo->Center(), 0, 255, 0);
+	}
+
 	PlaySentence(szQuestionGroup, duration, VOL_NORM, ATTN_IDLE);
 	//SENTENCEG_PlayRndSz( ENT(pev), szQuestionGroup, 1.0, ATTN_IDLE, 0, pitch );
 }
@@ -2060,6 +2150,15 @@ void CTalkMonster::SayQuestion(CTalkMonster* argTalkTo) {
 //Provoked: this monster has turned on the player from too much or too direct friendly fire.
 void CTalkMonster::SayProvoked(void){
 	
+}
+// On seeing friendlies take friendly fire.  "Stop attacking, he's a friend!"
+void CTalkMonster::SayStopShooting(void) {
+	if (EASY_CVAR_GET(pissedNPCs) < 1 || !globalPSEUDO_iCanHazMemez) {
+		PlaySentence(m_szGrp[TLK_NOSHOOT], RANDOM_FLOAT(2.8, 3.2), VOL_NORM, ATTN_NORM);
+	}
+	else {
+		PlaySentence("BA_POKE_C", 7, VOL_NORM, ATTN_NORM);
+	}
 }
 //Suspicious: this monster is warning the player not to make that friendly fire mistake again.
 void CTalkMonster::SaySuspicious(void){
@@ -2171,6 +2270,7 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CTalkMonster)
 				//No more forgiveness.
 				forgiveSuspiciousTime = -1;
 				forgiveSomePlayerDamageTime = -1;
+				recentDeclines = 0;  // this time is personal
 			}
 			else
 			{
@@ -2210,6 +2310,7 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CTalkMonster)
 				//No more forgiveness.
 				forgiveSuspiciousTime = -1;
 				forgiveSomePlayerDamageTime = -1;
+				recentDeclines = 0;  // this time is personal
 			}
 			else
 			{
@@ -2306,7 +2407,7 @@ Schedule_t* CTalkMonster :: GetScheduleOfType ( int Type )
 			if (!FBitSet(m_bitsSaid, bit_saidHelloPlayer))
 			{
 				//MODDD - can't be in the SCRIPT state to say hello.
-				if (m_MonsterState == MONSTERSTATE_SCRIPT) {
+				if (m_MonsterState == MONSTERSTATE_SCRIPT && (m_pCine != NULL && !m_pCine->CanInterrupt())) {
 					//in script, ignore already.
 				}
 				else {
@@ -2481,7 +2582,13 @@ CTalkMonster::CTalkMonster(void){
 	consecutiveFollowFails = -1;
 	followResetFailTime = -1;
 
-}
+	beginIdleResponseTime = -1;
+
+	recentDeclines = 0;
+	recentDeclinesForgetTime = -1;
+
+
+}//CTalkMonster constructor
 
 
 
@@ -2497,6 +2604,24 @@ void CTalkMonster::MonsterThink(void){
 			UTIL_generateFreakyLight(pev->origin);
 
 			nextMadEffect = gpGlobals->time + EASY_CVAR_GET(raveEffectSpawnInterval);
+		}
+	}
+
+	// This is for making an idleresponse without the schedule (slIdleResponse),
+	// such as wanting a casually talking scripted entity (marked 'interruptable)
+	// to be the respond-er.
+	if (beginIdleResponseTime != -1) {
+		if (gpGlobals->time >= beginIdleResponseTime) {
+
+			if (monsterID == 10 || monsterID == 11) {
+				int x = 45;
+			}
+
+			// Having a talktarget is nice, but don't need it.
+			//if (m_hTalkTarget != NULL) {
+				IdleRespond();
+			//}
+			beginIdleResponseTime = -1;
 		}
 	}
 
@@ -2641,6 +2766,14 @@ void CTalkMonster::MonsterThink(void){
 	//Even if the NPC picked up is NULL (none), it is ok. this clears the memory then.
 	closestCautiousNPC_memory = closestCautiousNPC;
 	closestPassiveNPC_memory = closestPassiveNPC;
+
+
+
+	if (recentDeclinesForgetTime != -1 && gpGlobals->time >= recentDeclinesForgetTime) {
+		// forgive it
+		OnForgiveDeclineSpam();
+	}
+
 
 }//END OF monsterThink
 
@@ -2866,7 +2999,8 @@ BOOL CTalkMonster::CanFollow( void )
 
 	if ( m_MonsterState == MONSTERSTATE_SCRIPT )
 	{
-		if ( !m_pCine->CanInterrupt() )
+		//MODDD - NULL check for safety, not that m_pCine should be NULL under a SCRIPT state
+		if (m_pCine!=NULL && !m_pCine->CanInterrupt() )
 			return FALSE;
 	}
 	

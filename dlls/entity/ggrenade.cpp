@@ -293,7 +293,7 @@ void StaticExplode(Vector rawExplodeOrigin, float rawDamage, float flRange, CBas
 	if (EASY_CVAR_GET(explosionDebrisSoundVolume) > 0) {
 		int randDebrisSound = RANDOM_LONG(0, 2);
 
-		float debrisVolumeChoice = clamp(EASY_CVAR_GET(explosionDebrisSoundVolume), 0, 1);
+		float debrisVolumeChoice = UTIL_clamp(EASY_CVAR_GET(explosionDebrisSoundVolume), 0, 1);
 
 		switch (randDebrisSound)
 		{
@@ -537,7 +537,7 @@ void CGrenade :: TumbleThink( void )
 		return;
 	}
 
-	StudioFrameAdvance( );
+	StudioFrameAdvance_SIMPLE( );
 	pev->nextthink = gpGlobals->time + 0.1;
 
 	if (pev->dmgtime - 1 < gpGlobals->time)

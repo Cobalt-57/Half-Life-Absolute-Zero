@@ -882,7 +882,7 @@ BOOL CBreakable :: IsBreakable( void )
 }
 
 //MODDD
-BOOL CBreakable::isBreakableOrchild(void){
+BOOL CBreakable::isBreakableOrChild(void){
     return TRUE;
 }
 //MODDD
@@ -930,7 +930,7 @@ public:
 
 	//MODDD
 	virtual BOOL IsBreakable(void);
-	virtual BOOL isBreakableOrchild(void);
+	virtual BOOL isBreakableOrChild(void);
 	virtual BOOL isDestructibleInanimate(void);
 
 	virtual float massInfluence(void);
@@ -1427,7 +1427,7 @@ BOOL CPushable::IsBreakable(){
 }
 
 //MODDD
-BOOL CPushable::isBreakableOrchild(void){
+BOOL CPushable::isBreakableOrChild(void){
     return TRUE;
 }
 //MODDD

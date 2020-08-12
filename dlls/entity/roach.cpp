@@ -228,7 +228,7 @@ void CRoach :: MonsterThink( void  )
 	else
 		pev->nextthink = gpGlobals->time + 0.1;// keep monster thinking
 
-	float flInterval = StudioFrameAdvance( ); // animate
+	float flInterval = StudioFrameAdvance_SIMPLE( ); // animate
 
 	if ( !m_fLightHacked )
 	{

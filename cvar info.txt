@@ -186,7 +186,12 @@ hideNodeGraphRebuildNotice (1) - BOOLEAN.  If on, hides the yellow "Node Graph o
 
 
 
-ignoreIsolatedNodes (1) - BOOLEAN.  If 1, nodes that have no outgoing connections will be ignored by pathfinding approximations (trying to tie in current start / destination points to path nodes to tie into the flow).
+ignoreIsolatedNodes (1) - BOOLEAN.  If 1, nodes that have no outgoing connections will be ignored by pathfinding node-mapping (trying to map current start / destination points to path nodes for forming a route between).
+~May require a map-restart or load-game to take effect!  Pathfinding caches points under the assumption nothing would change between calls under some circumstances and skips where this CVar would have made a difference.
+ Or use 'clearnodecache' in console after setting the CVar to avoid the out-of-date cache.
+ This applies to most node-related CVars.  In some cases node rebuilds may even be necesssary (saved to a file; unaffected by game or map restarts).
+ To force a node rebuild, enter 'buildnodegraph' in console.
+
 
 drawNodeAll (0) - BOOLEAN - ADJUSTABLE. Whether to draw all nodes on the map as single RED vertical lines that pass through the node's origin (generally snapped to the ground).
 ~Set to a value above 10 to become the minimum range for drawing nodes instead to preserve drawing (too much can crash the game)
@@ -1530,6 +1535,8 @@ sv_explosionknockback (1) - FLOAT (adjustable).  1 is the default amount of knoc
 ~0 is none.
 ~Uses the same procedure as 'monsterKilledToss' set to 2 to determine knockback.  Larger monsters are affected by the same damage less.
 
+cl_gaussfollowattachment (1) - BOOL.  Retail behavior is 1.  If on, the gauss laser follows the end of the gauss as it fires.
+~If 0, it stays at the firing origin and disappears faster to not look too weird while moving.
 
 
 

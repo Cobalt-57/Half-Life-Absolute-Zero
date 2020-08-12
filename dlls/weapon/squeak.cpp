@@ -278,7 +278,7 @@ void CSqueakGrenade::HuntThink( void )
 		return;
 	}
 	
-	StudioFrameAdvance( );
+	StudioFrameAdvance_SIMPLE( );
 	pev->nextthink = gpGlobals->time + 0.1;
 
 	// explode when ready
@@ -691,7 +691,6 @@ void CSqueak::PrimaryAttack()
 //#ifndef CLIENT_DLL
 	//if (m_flReleaseThrow == -1) {
 	// Nevermind this check, throwing already sets m_flNextPrimaryAttack which blocks interrupting a throw
-	if(1 == 1){
 		// start throw only
 		UTIL_MakeVectors(m_pPlayer->pev->v_angle);
 		TraceResult tr;
@@ -756,10 +755,10 @@ void CSqueak::PrimaryAttack()
 		}// END OF trace success (nothing in the way) check
 #endif
 
-	}// END OF m_flReleaseThrow check... maybe
+	//}// END OF m_flReleaseThrow check... maybe
 //#endif
 
-}
+}//PrimaryAttack
 
 
 void CSqueak::SecondaryAttack( void )

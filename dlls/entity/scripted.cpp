@@ -309,8 +309,12 @@ int CCineMonster::FindEntity(void)
 		if (FBitSet(VARS(pentTarget)->flags, FL_MONSTER))
 		{
 			pTarget = GetMonsterPointer(pentTarget);
+
 			//MODDD - no change, but this was the site of the first accidental edit left in the build of March 13 2017...
-			if (pTarget && pTarget->CanPlaySequence(FCanOverrideState(), SS_INTERRUPT_BY_NAME))
+
+			//MODDD - TEST!   Come back to this later, why does the airlock barney in a1a0 say "Found but can't play"?
+			//if (pTarget && (1||pTarget->CanPlaySequence(FCanOverrideState(), SS_INTERRUPT_BY_NAME))  )
+			if (pTarget && (pTarget->CanPlaySequence(FCanOverrideState(), SS_INTERRUPT_BY_NAME)))
 			{
 				m_hTargetEnt = pTarget;
 				return TRUE;
@@ -1336,6 +1340,13 @@ BOOL CScriptedSentence::StartSentence(CBaseMonster* pTarget)
 
 
 
+
+
+
+
+
+//MODDD -  Uuuuuuhhh.  What is this from the as-is codebase?  Why is it here in scripted.cpp?
+// Shouldn't this be in cbase.cpp or subs.cpp with other junk or logic-less entities?
 
 //=========================================================
 // Furniture - this is the cool comment I cut-and-pasted

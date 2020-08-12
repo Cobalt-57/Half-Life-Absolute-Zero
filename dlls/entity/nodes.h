@@ -13,13 +13,29 @@
 *
 ****/
 
-//MODDD - WHY NOT???
 #ifndef NODES_H
 #define NODES_H
 
-//just good ideas. Dependencies.
+// just good ideas. Dependencies.
 #include "util.h"
 #include "cbase.h"
+
+
+
+// ORGANIZATIONAL NOTE:
+// Only CNodeEnt and CNodeViewer, and CTestHull are child classes of CBaseEntity.
+// The rest are data-only.  Consider moving the exceptions to a file, nodeEnt.h / nodeEnt.cpp, 
+// and move this file (entity/nodes.h, entity/nodes.cpp) to the root of serverside (dlls) instead.
+// Something similar might be able to be done for Sound.h/.cpp, although there is SoundEnt.h/.cpp, eh.
+// I forget what that situation is.
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+
+
 
 
 //MODDD
@@ -240,9 +256,6 @@ public:
 	// A dynamic query means we're asking about it RIGHT NOW.  So we should query the current state
 	int	HandleLinkEnt(int iNode, entvars_t* pevLinkEnt, int afCapMask, NODEQUERY queryType);
 	entvars_t* LinkEntForLink(CLink* pLink, CNode* pNode);
-
-	//MODDD
-	void ShowNodeConnectionsFrame(int iNode);
 
 	void ShowNodeConnections(int iNode);
 	void InitGraph(void);

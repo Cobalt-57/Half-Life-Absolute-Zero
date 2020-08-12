@@ -725,17 +725,41 @@ Task_t	tlCombatStand1[] =
 	{ TASK_WAIT_INDEFINITE,		(float)0		},
 };
 
+
+
+
+//MODDD - hassault relies on this, clone if the old way was better.
+// (lacked things below the 'why' line).
 Schedule_t	slCombatStand[] =
 {
-	{ 
+	{
 		tlCombatStand1,
 		ARRAYSIZE ( tlCombatStand1 ), 
 		bits_COND_NEW_ENEMY			|
 		bits_COND_ENEMY_DEAD		|
 		bits_COND_LIGHT_DAMAGE		|
 		bits_COND_HEAVY_DAMAGE		|
-		bits_COND_CAN_ATTACK, 
-		0,
+		bits_COND_CAN_ATTACK |
+		// why wasn't sound included?  So stand forever when a player runs behind your back?
+		bits_COND_SMELL_FOOD |
+		bits_COND_HEAR_SOUND |
+		bits_COND_SEE_ENEMY |
+		bits_COND_SEE_FEAR,
+
+	// sound flags
+	// Seems if a monster hears COMBAT, it may stop to look at the position it most recently fired its own weapon
+	// at, which may register as right behind it at times.     ........................      Lovely.
+	// It might make more sense for monsters to be able to ignore AI Sound of COMBAT type made by themselves or
+	// allies, that's not helpful info.
+		//bits_SOUND_COMBAT |
+		bits_SOUND_WORLD |
+		bits_SOUND_PLAYER |
+		bits_SOUND_DANGER |
+		bits_SOUND_MEAT |// scent flags
+		bits_SOUND_CARCASS |
+		bits_SOUND_GARBAGE |
+		//MODDD - new
+		bits_SOUND_BAIT,
 		"Combat Stand"
 	},
 };
@@ -1501,7 +1525,17 @@ Schedule_t	slError[] =
 Task_t tlScriptedWalk[] = 
 {
 	{ TASK_WALK_TO_TARGET,		(float)TARGET_MOVE_SCRIPTED },
-	{ TASK_WAIT_FOR_MOVEMENT,	(float)0		},
+
+
+	{ TASK_WAIT_FOR_MOVEMENT, (float)0 },
+
+	//MODDD - IDEA.  how about this.  check retail for what the old strictness was. in logic.
+	// or whatever m_flGroundSpeed * 0.2 would be.
+	//{ TASK_WAIT_FOR_MOVEMENT_RANGE , (float) 5},
+	// No, won't work.  Pathfinding would still see it's close enough.
+	// How about strict-mode for pathfinding?  Ignores pathfindEdgeCheck that added the higher tolerance.
+
+
 	{ TASK_PLANT_ON_SCRIPT,		(float)0		},
 	{ TASK_FACE_SCRIPT,			(float)0		},
 	{ TASK_FACE_IDEAL,			(float)0		},

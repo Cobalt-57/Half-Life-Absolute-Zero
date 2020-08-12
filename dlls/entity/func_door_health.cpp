@@ -22,16 +22,11 @@ EASY_CVAR_EXTERN(wallHealthDoor_closeDelay)
 
 
 
-
-
-
 LINK_ENTITY_TO_CLASS(func_door_health, CHealthDoor);
+
 #if FORCE_ROTDOOR_TO_HEALTHDOOR == 1
 LINK_ENTITY_TO_CLASS(func_door_rotating, CHealthDoor);
 #endif
-
-
-
 
 
 
@@ -536,7 +531,9 @@ void CHealthDoor::Spawn(void) {
 		*/
 		//SF_DOOR_SILENT?  exclude it.
 		//pev->spawnflags = (pev->spawnflags | (SF_DOOR_PASSABLE | SF_DOOR_ONEWAY | SF_DOOR_USE_ONLY | SF_DOOR_NOMONSTERS)) & ~(SF_DOOR_START_OPEN | SF_DOOR_ROTATE_BACKWARDS | SF_DOOR_NO_AUTO_RETURN | SF_DOOR_ROTATE_Z | SF_DOOR_ROTATE_X);
+		
 
+		// Enforce these spawnflags for best behavior from the CBaseDoor class I assume?
 		int test = (pev->spawnflags | (SF_DOOR_PASSABLE | SF_DOOR_ONEWAY | SF_DOOR_USE_ONLY | SF_DOOR_NOMONSTERS)) & ~(SF_DOOR_START_OPEN | SF_DOOR_ROTATE_BACKWARDS | SF_DOOR_NO_AUTO_RETURN | SF_DOOR_ROTATE_Z | SF_DOOR_ROTATE_X);
 		//int test2 = ( (SF_DOOR_PASSABLE | SF_DOOR_ONEWAY | SF_DOOR_USE_ONLY | SF_DOOR_NOMONSTERS)) & ~(SF_DOOR_START_OPEN | SF_DOOR_ROTATE_BACKWARDS | SF_DOOR_NO_AUTO_RETURN | SF_DOOR_ROTATE_Z | SF_DOOR_ROTATE_X);
 

@@ -126,6 +126,14 @@ float changeLevelQueuedTime = -1;
 
 
 
+
+
+
+
+
+
+
+
 //test for what crashes.
 class CrashTest{
 	public:
@@ -155,7 +163,6 @@ void debugNodeModeOff(void){
 }
 
 
-
 BOOL attemptParseStringToInt(edict_t* pEntity, int* toStoreResult, const char* toRead, const char* errorMsg_badInput, const char* errorMsg_noInput){
 	
 	if(toRead != NULL && !isStringEmpty(toRead)){
@@ -176,51 +183,6 @@ BOOL attemptParseStringToInt(edict_t* pEntity, int* toStoreResult, const char* t
 	return FALSE;  //how could this be reached??
 }//END OF attemptParseStringToInt
 
-
-
-
-
-
-
-
-// For a given entity, print at least its name.  If a monster, give its MonsterID.  If it has a netname, give that too.
-// And this is NOT a 'printline' call, the caller can print something before and after this as needed
-// (most likely a newline character).
-// Caller accepted, but unused, sicne the server printout is used instead (to avoid buffer overflows).
-void printBasicInfo(edict_t* theCaller, CBaseEntity* entRef) {
-
-	CBaseMonster* monsterTest = entRef->GetMonsterPointer();
-	if (monsterTest != NULL) {
-		easyForcePrint("%s:%d", entRef->getClassname(), monsterTest->monsterID);
-	}
-	else {
-		easyForcePrint("%s", entRef->getClassname());
-	}
-
-	// FStringNull ?
-	if (entRef->pev->netname != NULL) {
-		const char* stuff = STRING(entRef->pev->netname);
-		if (stuff != NULL && stuff[0] != '\0') {
-			//ok, print it too.
-			easyForcePrint(" netname:%s", stuff);
-		}
-	}
-	if (entRef->pev->targetname != NULL) {
-		const char* stuff = STRING(entRef->pev->targetname);
-		if (stuff != NULL && stuff[0] != '\0') {
-			//ok, print it too.
-			easyForcePrint(" targetname:%s", stuff);
-		}
-	}
-	if (entRef->pev->globalname != NULL) {
-		const char* stuff = STRING(entRef->pev->globalname);
-		if (stuff != NULL && stuff[0] != '\0') {
-			//ok, print it too.
-			easyForcePrint(" globalname:%s", stuff);
-		}
-	}
-
-}//END OF printBasicInfo
 
 
 
@@ -327,7 +289,7 @@ void reviveAllMonsters(edict_t* theCaller) {
 
 			easyForcePrintStarter();
 			easyForcePrint("*REVIVED ");
-			printBasicInfo(theCaller, pTempEntity);
+			printBasicEntityInfo(theCaller, pTempEntity);
 			easyForcePrintLine();  // new line
 
 			tempMonster->startReanimation();
@@ -362,7 +324,7 @@ void removeAllMonsters(edict_t* theCaller) {
 
 		easyForcePrintStarter();
 		easyForcePrint("*REMOVED ");
-		printBasicInfo(theCaller, pTempEntity);
+		printBasicEntityInfo(theCaller, pTempEntity);
 		easyForcePrintLine();  // new line
 
 		//made it here? Remove it.
@@ -388,6 +350,11 @@ void removeAllMonstersExcept(edict_t* theCaller, int excludeID) {
 			int x = 66; //?
 		}
 
+		// drop this requirement!  CSittingScientist lacks FL_MONSTER even though it is a CBaseMonster.
+		// No idea if that was intentional.  But the "MyMonsterPointer" being non-NULL below is fine,
+		// it is for them too
+		// ...nevermind, restored.  CSittingScientist was the only weird one and several others
+		// that should not be removed (scripted_sequence) were being included by removing this check.
 		if (!(pEdict->v.flags & (FL_CLIENT | FL_MONSTER)))	// Not a client/monster ?
 			continue;
 
@@ -406,7 +373,7 @@ void removeAllMonstersExcept(edict_t* theCaller, int excludeID) {
 
 		easyForcePrintStarter();
 		easyForcePrint("*REMOVED ");
-		printBasicInfo(theCaller, pTempEntity);
+		printBasicEntityInfo(theCaller, pTempEntity);
 		easyForcePrintLine();  // new line
 
 		//made it here? Remove it.
@@ -437,7 +404,7 @@ void removeAllEntities(edict_t* theCaller) {
 		
 		easyForcePrintStarter();
 		easyForcePrint("*REMOVED ");
-		printBasicInfo(theCaller, pTempEntity);
+		printBasicEntityInfo(theCaller, pTempEntity);
 		easyForcePrintLine();  // new line
 
 		//made it here? Remove it.
@@ -457,6 +424,10 @@ void listAllEntities(edict_t* theCaller) {
 	CBaseEntity* pTempEntity;
 	if (!pEdict)
 		return;
+
+	// Wait.  "pEdict++" really grabs the next entity just fine?  No need for say
+	//     pEdict = g_engfuncs.pfnPEntityOfEntIndex(i)
+	// each time?     huh.  imagine that.
 	for (int i = 1; i < gpGlobals->maxEntities; i++, pEdict++)
 	{
 		if (pEdict->free)	// Not in use
@@ -467,15 +438,18 @@ void listAllEntities(edict_t* theCaller) {
 			continue;
 
 		// exclude the world and the players, not helpful
-		if (FClassnameIs(pTempEntity->pev, "worldspawn") || FClassnameIs(pTempEntity->pev, "player")) {
-			continue;
-		}
+		// no, be complete here.
+		//if (FClassnameIs(pTempEntity->pev, "worldspawn") || FClassnameIs(pTempEntity->pev, "player")) {
+		//	continue;
+		//}
 
 		// NOTICE!  Printing a huge volume of information this way just leads to buffer overflows and drops the player.
 		// It's a debug feature anyway so just use the server print.
 		easyForcePrintStarter();
+		// ID
+		easyForcePrint("%03d:", ENTINDEX(pEdict));
 		//easyForcePrint("*Info: ");   no need
-		printBasicInfo(theCaller, pTempEntity);
+		printBasicEntityInfo(theCaller, pTempEntity);
 		easyForcePrintLine();  // new line
 
 	}//END OF list through all entities.
@@ -497,8 +471,10 @@ void listAllMonsters(edict_t* theCaller) {
 			int x = 66; //?
 		}
 
-		if (!(pEdict->v.flags & (FL_CLIENT | FL_MONSTER)))	// Not a client/monster ?
-			continue;
+		// Nevermind this restriction, some monsters still lack FL_MONSTER.
+		// Let the MyMonsterPointer being non-NULL be a better sign.
+		//if (!(pEdict->v.flags & (FL_CLIENT | FL_MONSTER)))	// Not a client/monster ?
+		//	continue;
 
 		pTempEntity = CBaseEntity::Instance(pEdict);
 		if (!pTempEntity)
@@ -510,8 +486,10 @@ void listAllMonsters(edict_t* theCaller) {
 		}
 
 		easyForcePrintStarter();
+		// ID
+		easyForcePrint("%03d:", ENTINDEX(pEdict));
 		//easyForcePrint("*Info: ");   no need
-		printBasicInfo(theCaller, pTempEntity);
+		printBasicEntityInfo(theCaller, pTempEntity);
 		easyForcePrintLine();  // new line
 
 	}//END OF list through all entities.
@@ -1908,7 +1886,7 @@ void ClientCommand( edict_t *pEntity )
 			}
 		}
 		
-	}else if( FStrEq(pcmdRefinedRef, "myorigin") || FStrEq(pcmdRefinedRef, "playerorigin") || FStrEq(pcmdRefinedRef, "mycoords") || FStrEq(pcmdRefinedRef, "playercoords")){
+	}else if( FStrEq(pcmdRefinedRef, "myorigin") || FStrEq(pcmdRefinedRef, "getmyorigin") || FStrEq(pcmdRefinedRef, "playerorigin") || FStrEq(pcmdRefinedRef, "mycoords") || FStrEq(pcmdRefinedRef, "getmycoords") || FStrEq(pcmdRefinedRef, "playercoords")){
 		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev) ;
 		
 		if(tempplayer){
@@ -3149,7 +3127,7 @@ void ClientCommand( edict_t *pEntity )
 		}
 		*/
 
-		UTIL_TraceLine ( pev->origin + pev->view_ofs, pev->origin + pev->view_ofs + gpGlobals->v_forward * 128, ignore_monsters, ENT(pev), & tr);
+		UTIL_TraceLine ( pev->origin + pev->view_ofs, pev->origin + pev->view_ofs + gpGlobals->v_forward * 128, ignore_monsters, ENT(pev), &tr);
 		UTIL_TraceLine( playerRef->GetGunPosition(), vecDest, dont_ignore_monsters, pentIgnore, &tr );
 		//tr.vecEndPos();
 
@@ -3201,8 +3179,6 @@ void ClientCommand( edict_t *pEntity )
 			easyForcePrintLineClient(pEntity, "Hm. No.");
 			return;
 		}
-
-
 
 		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev);
 		edict_t		*pentIgnore;
@@ -3442,10 +3418,10 @@ void ClientCommand( edict_t *pEntity )
 			::DebugLine_Setup(0, vecStart, vecEnd, (distReg / fullLength));
 		}
 
-
+	}
 
 	/*
-	}else if( FStrEq(pcmdRefinedRef, "debugcine1")){
+	else if( FStrEq(pcmdRefinedRef, "debugcine1")){
 		CBaseEntity *pEntity = NULL;
 		int searchRadius = 1024;
 
@@ -3540,9 +3516,12 @@ void ClientCommand( edict_t *pEntity )
 
 			}//END OF loop
 		}
-
+	}
 	*/
-	}else if(  FStrEq(pcmdRefinedRef, "tracehull") || FStrEq(pcmdRefinedRef, "hulltrace") ){
+	
+	else if(  FStrEq(pcmdRefinedRef, "tracehull") || FStrEq(pcmdRefinedRef, "hulltrace") ){
+		// Takes 1 parameter, give it a hull choice to use.  Implies 1 if none is given.
+
 		//typedef enum { point_hull=0, human_hull=1, large_hull=2, head_hull=3 };
 		//HULL TRACE STYLE.
 		//0: point_hull: (0, 0, 0), (0, 0, 0) ?
@@ -3564,32 +3543,74 @@ void ClientCommand( edict_t *pEntity )
 		Vector vecEnd = tempplayer->pev->origin + tempplayer->pev->view_ofs + tempForward * 200;
 
 		const char* arg1ref = CMD_ARGV(1);
-
+		
 		if(arg1ref == NULL || isStringEmpty(arg1ref)){
-			//easyForcePrintLineClient(pEntity, "No arg!  Need a distance to go for the check...");
+			easyForcePrintLineClient(pEntity, "***Can specify a hull-type, implying 1.  Choices are integers 0 through 3.");
 			//return;
 			arg1ref = "1";
 		}
 		int argHullType = atoi(arg1ref);
 
-		tempplayer->debugPoint1 = vecStart;
-		tempplayer->debugPoint1Given = TRUE;
-		tempplayer->debugPoint2 = vecEnd;
-		tempplayer->debugPoint2Given = TRUE;
+		debugPoint1 = vecStart;
+		debugPoint1Given = TRUE;
+		debugPoint2 = vecEnd;
+		debugPoint2Given = TRUE;
 
 		//UTIL_SetSize(tempplayer->pev, Vector(-32, -32, 0), Vector(32, 32, 64) );
 		
-		//typedef enum { point_hull=0, human_hull=1, large_hull=2, head_hull=3 };
-		UTIL_TraceHull( vecStart, vecEnd, dont_ignore_monsters, argHullType, ENT(pev), &tr);
+		// could use ENT(tempplayer->pev) instead of templayer->edict(), but... why?
+
+		UTIL_TraceHull( vecStart, vecEnd, dont_ignore_monsters, argHullType, tempplayer->edict(), &tr);
 		//UTIL_MakeVectors(tempplayer->pev->v_angle + tempplayer->pev->punchangle);
 
-		easyForcePrintLineClient(pEntity, "Fract? %.2f", tr.flFraction);
-		if(tr.fAllSolid){ tr.flFraction = 0; easyForcePrintLineClient(pEntity, "SOLID"); }
+		easyForcePrintStarter();
+		//easyForcePrint("Trace info: ");
+		printBasicTraceInfo(pEntity, tr);
+		easyForcePrintLine();
 
-		//'tempplayer->debugPoint3 = pev->origin + pev->view_ofs + gpGlobals->v_forward * (5) + (gpGlobals->v_forward * (200 - 5) * (1  - tr.flFraction) );
-		tempplayer->debugPoint3Given = TRUE;
-		tempplayer->debugPoint3 = vecStart * (1 + -tr.flFraction) + vecEnd * tr.flFraction;
-		//tempplayer->debugPoint3 = pev->origin + pev->view_ofs + tempForward * 180;
+		//debugPoint3 = pev->origin + pev->view_ofs + gpGlobals->v_forward * (5) + (gpGlobals->v_forward * (200 - 5) * (1  - tr.flFraction) );
+		debugPoint3Given = TRUE;
+		debugPoint3 = vecStart * (1 + -tr.flFraction) + vecEnd * tr.flFraction;
+		//debugPoint3 = pev->origin + pev->view_ofs + tempForward * 180;
+
+	}else if( FStrEq(pcmdRefinedRef, "tracemonsterhull") || FStrEq(pcmdRefinedRef, "monsterhulltrace") ){
+		// Takes no parameters, implies hull choice from the monster given.
+		// I have no idea if it uses the exact size of the monste, or just approximates it to one of the
+		// hull choices (0, 1, 2, 3) from tracehull automatically from that.  If so this isn't really any
+		// more precise or helpful.
+		// Might borrow hull choice from some part of 'pev' vars too, if that is ever set somewhere in there.
+		
+		if (CMD_ARGC() > 1) {
+			easyForcePrintLineClient(pEntity, "***tracemonsterhull does not take a hull-type, any parmeter(s) ignored.");
+		}
+
+
+		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev) ;
+		TraceResult tr;
+		
+		UTIL_MakeVectors(tempplayer->pev->v_angle + tempplayer->pev->punchangle);
+
+		const Vector tempForward = gpGlobals->v_forward;
+		Vector vecStart = tempplayer->pev->origin + tempplayer->pev->view_ofs + tempForward * -10;
+		Vector vecEnd = tempplayer->pev->origin + tempplayer->pev->view_ofs + tempForward * 200;
+
+		debugPoint1 = vecStart;
+		debugPoint1Given = TRUE;
+		debugPoint2 = vecEnd;
+		debugPoint2Given = TRUE;
+
+
+		TRACE_MONSTER_HULL(tempplayer->edict(), vecStart, vecEnd, dont_ignore_monsters, tempplayer->edict(), &tr);
+
+		easyForcePrintStarter();
+		//easyForcePrint("Trace info: ");
+		printBasicTraceInfo(pEntity, tr);
+		easyForcePrintLine();
+
+		//debugPoint3 = pev->origin + pev->view_ofs + gpGlobals->v_forward * (5) + (gpGlobals->v_forward * (200 - 5) * (1  - tr.flFraction) );
+		debugPoint3Given = TRUE;
+		debugPoint3 = vecStart * (1 + -tr.flFraction) + vecEnd * tr.flFraction;
+		//debugPoint3 = pev->origin + pev->view_ofs + tempForward * 180;
 
 	}else if( FStrEq(pcmdRefinedRef, "getorigin") ){
 		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *) pev);
@@ -3611,7 +3632,7 @@ void ClientCommand( edict_t *pEntity )
 				forwardEnt->pev->origin.x,
 				forwardEnt->pev->origin.y,
 				forwardEnt->pev->origin.z
-				);
+			);
 		}
 
 	}else if( FStrEq(pcmdRefinedRef, "setorigin") ){
@@ -3642,7 +3663,6 @@ void ClientCommand( edict_t *pEntity )
 		}else{
 			
 			try{
-			
 				float xVal = tryStringToFloat(arg1ref);
 
 				float yVal = tryStringToFloat(arg2ref);
@@ -4041,87 +4061,82 @@ void ClientCommand( edict_t *pEntity )
 			easyForcePrintLineClient(pEntity, "~no air nodes.");
 		}
 		
-	}else if(FStrEq(pcmdRefinedRef, "listofentities") || FStrEq(pcmdRefinedRef, "listentities") ){
-		
-		int i = 0;
-		CBaseEntity *pList[500];
-
-		//FL_CLIENT|FL_MONSTER
-		int count = UTIL_EntitiesInBox( pList, 500, Vector(-99999999,-99999999,-99999999), Vector(99999999,99999999,99999999), 0 );
-		
-		if(count > 0){
-			easyForcePrintLineClient(pEntity, "***ENTITY LIST***");
-			for ( i = 0; i < count; i++){
-				CBaseEntity* ent = pList[i];
-				easyForcePrintLineClient(pEntity, "#%d classname:%s netname:%s target:%s targetname:%s",
-					i,
-					ent->pev->classname!=NULL?STRING(ent->pev->classname):"_",
-					ent->pev->netname!=NULL?STRING(ent->pev->netname):"_",
-					ent->pev->target!=NULL?STRING(ent->pev->target):"_",
-					ent->pev->targetname!=NULL?STRING(ent->pev->targetname):"_"
-				
-				
-				);
-			}//END
-		}else{
-			easyForcePrintLineClient(pEntity, "*No entities found!... that can\'t be right.");
-		}
-
-
 	}else if( FStrEq(pcmdRefinedRef, "healcheck") || FStrEq(pcmdRefinedRef, "healers") || FStrEq(pcmdRefinedRef, "wallhealthdoor") || FStrEq(pcmdRefinedRef, "wallhealthdoorcheck") || FStrEq(pcmdRefinedRef, "heallist") || FStrEq(pcmdRefinedRef, "wallhealthdoorlist")  ){
-		
-		int i = 0;
-		CBaseEntity *pList[500];
+		// I have no idea how horribly out of date this call might be a this point,
+		// CHealthDoor, or func_door_health, is now its own entity (used to be a hijacked 'func_door_rotating' that 
+		// took healing behavior on seeing the right spawnflag, but it got hard to separate out from garbage/unused
+		// spawnflags on old maps).
 
+		// The FORCE_ROTDOOR_TO_HEALTHDOOR constant is a thing, but this is just some debug call
+
+
+		int i = 0;
 		//FL_CLIENT|FL_MONSTER
-		int count = UTIL_EntitiesInBox( pList, 500, Vector(-99999999,-99999999,-99999999), Vector(99999999,99999999,99999999), 0 );
 		BOOL anyYet = FALSE;
 
-		if(count > 0){
-			easyForcePrintLineClient(pEntity, "***HEALER LIST... bits 13 to 30 now***");
-			for ( i = 0; i < count; i++){
-				int flagFound = -1;
-				CBaseEntity* ent = pList[i];
+		easyForcePrintLine("***HEALER LIST.  Bits 13 to 30 were used to detect healdoors from func_door_rotating, this is no longer done but this list printout will still include func_door_rotating\'s that have any of these spawnflags.***");
+			
 
-				//that is SF_DOOR_HEAL.
+		//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		edict_t* pEdict = g_engfuncs.pfnPEntityOfEntIndex(1);
+		CBaseEntity* pTempEntity;
+		if (!pEdict)
+			return;  // ???
 
-				//(1<<10)   (1<<11) | (1<<12) |
-				if(FClassnameIs(ent->pev, "func_door_rotating") && (ent->pev->spawnflags & ( (1<<10) | (1<<11) | (1<<12) | (1<<13) | (1<<14) | (1<<15) | (1<<16) | (1<<17) | (1<<18) | (1<<19) | (1<<20) | (1<<21) | (1<<22) | (1<<23) | (1<<24) | (1<<25) | (1<<26) | (1<<27) | (1<<28) | (1<<29) | (1<<30) ) ) ){
+		// Wait.  "pEdict++" really grabs the next entity just fine?  No need for say
+		//     pEdict = g_engfuncs.pfnPEntityOfEntIndex(i)
+		// each time?     huh.  imagine that.
+		for (i = 1; i < gpGlobals->maxEntities; i++, pEdict++)
+		{
+			if (pEdict->free)	// Not in use
+				continue;
 
-					anyYet = TRUE;
+			pTempEntity = CBaseEntity::Instance(pEdict);
+			if (!pTempEntity)
+				continue;
 
-					easyForcePrintClient(pEntity, "HELLO func_door_rotating YOU HAVE STRANGE SPAWNFLAGS #%d classname:%s netname:%s target:%s targetname:%s origin:(%.2f, %.2f, %.2f) spawnflags:",
-						i,
-						ent->pev->classname!=NULL?STRING(ent->pev->classname):"_",
-						ent->pev->netname!=NULL?STRING(ent->pev->netname):"_",
-						ent->pev->target!=NULL?STRING(ent->pev->target):"_",
-						ent->pev->targetname!=NULL?STRING(ent->pev->targetname):"_",
-						ent->pev->origin.x, ent->pev->origin.y, ent->pev->origin.z
-					);
-					printIntAsBinaryClient(pEntity, (unsigned int) ent->pev->spawnflags, 32u);
-					easyForcePrintLineClient(pEntity);
-				}
-			}//END
 
-			if(!anyYet){
-				easyForcePrintLineClient(pEntity, "*No wallDoorHealth\'s or like-flagged things found!");
+			int flagFound = -1;
+
+			//that is SF_DOOR_HEAL.
+
+			//(1<<10)   (1<<11) | (1<<12) |
+			if (FClassnameIs(pTempEntity->pev, "func_door_health")) {
+				easyForcePrint("Oh look, a func_door_health.  Well that was easy.");
+				anyYet = TRUE;
+
+			}else if(
+				FClassnameIs(pTempEntity->pev, "func_door_rotating") &&
+				(pTempEntity->pev->spawnflags & ( (1<<10) | (1<<11) | (1<<12) | (1<<13) | (1<<14) | (1<<15) | (1<<16) | (1<<17) | (1<<18) | (1<<19) | (1<<20) | (1<<21) | (1<<22) | (1<<23) | (1<<24) | (1<<25) | (1<<26) | (1<<27) | (1<<28) | (1<<29) | (1<<30) ) )
+			)
+			{
+				anyYet = TRUE;
+
+				easyForcePrint("HELLO func_door_rotating YOU HAVE STRANGE SPAWNFLAGS #%d classname:%s netname:%s target:%s targetname:%s origin:(%.2f, %.2f, %.2f) spawnflags:",
+					i,
+					pTempEntity->pev->classname!=NULL?STRING(pTempEntity->pev->classname):"_",
+					pTempEntity->pev->netname!=NULL?STRING(pTempEntity->pev->netname):"_",
+					pTempEntity->pev->target!=NULL?STRING(pTempEntity->pev->target):"_",
+					pTempEntity->pev->targetname!=NULL?STRING(pTempEntity->pev->targetname):"_",
+					pTempEntity->pev->origin.x, pTempEntity->pev->origin.y, pTempEntity->pev->origin.z
+				);
+				printIntAsBinary((unsigned int)pTempEntity->pev->spawnflags, 32u);
+				easyForcePrintLine();
 			}
+		}//END
+		//////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		}else{
-			easyForcePrintLineClient(pEntity, "No entities found to begin with? what?");
+		if(!anyYet){
+			easyForcePrintLine("*No wallDoorHealth\'s or like-flagged things found!");
 		}
 
 
-
-	}else if(FStrEq(pcmdRefinedRef, "forcenodeupdate")){
-		
+	}else if(FStrEq(pcmdRefinedRef, "forcenodeupdate") || FStrEq(pcmdRefinedRef, "rebuildgraph") || FStrEq(pcmdRefinedRef, "rebuildnodegraph") || FStrEq(pcmdRefinedRef, "buildgraph") || FStrEq(pcmdRefinedRef, "buildnodegraph") || FStrEq(pcmdRefinedRef, "buildnodes") || FStrEq(pcmdRefinedRef, "rebuildnodes")){
 		int i;
-
 		if(g_flWeaponCheat == 0.0){
 			easyForcePrintLineClient(pEntity, "Enable cheats first. \"scheduleNodeUpdate\" does not require cheats.");
 			return;
 		}
-
 
 		if(WorldGraph.m_cNodes > 0){
 			//Need to keep track of created nodes for calling their ->spawn's.
@@ -4150,37 +4165,44 @@ void ClientCommand( edict_t *pEntity )
 			
 				thisNode->m_sHintType = WorldGraph.m_pNodes[ i ].m_sHintType;
 				thisNode->m_sHintActivity = WorldGraph.m_pNodes[ i ].m_sHintActivity;
-
 			}//END OF for
 
-			
-
-			//Clear the graph to signify it needs rebuilding.
+			// Clear the graph to signify it needs rebuilding.
 			WorldGraph.InitGraph();
 			WorldGraph.AllocNodes();
 			
-			//Now call each created node's Spawn.
+			// Now call each created node's Spawn.
 			for(i = 0; i < nodeCount; i++){
 				aryNodeEnt[i]->Spawn();
 			}
 			
-			//Any air nodes? need to let the world know.
-			//...oh this has to be difficult.
-			
+			// Any air nodes? need to let the world know.
+			// ...oh this has to be difficult.
 			
 			CWorld* theWorld = getWorld();
 			if(theWorld != NULL){
 				theWorld->getCustomMapSettingsFromGlobal();
 			}
 			
-
 			delete[] aryNodeEnt;
 
+			// It may be tempting to call WorldGraph.BuildNodeGraph, but don't.
+			// This is called by the TestHull generated by the first spawned node noticing that the graph has been blanked.
+			// The TestHull waits a frame (assumes all other nodes have spawned in the previous frame), and calls
+			// BuildNodeGraph itself.  But prove with a breakpoint if you want.
 
 			easyForcePrintLineClient(pEntity, "Nodes rebuilding...");
 		}else{
 			easyForcePrintLineClient(pEntity, "ERROR: no nodes present or building in progress.");
 		}
+
+	}else if( FStrEq(pcmdRefinedRef, "clearnodecache") || FStrEq(pcmdRefinedRef, "resetnodecache")){
+
+		// Weaker call than rebuilding all nodes.  Force the node cache to reset in case of changing pathfinding-related CVars related
+		// to shortest-path like ignoreIsolatedNodes.
+
+		memset(WorldGraph.m_Cache, 0, sizeof(WorldGraph.m_Cache));
+		easyForcePrintLineClient(pEntity, "***Node cache cleared.");
 
 	}else if ( FStrEq(pcmdRefinedRef, "fov" ) )
 	{
@@ -4360,17 +4382,17 @@ void ClientCommand( edict_t *pEntity )
 	else if (FStrEq(pcmdRefinedRef, "debug1")) {
 		//YEAH
 		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer*)pev);
-		tempplayer->DebugCall1();
+		DebugCall1(tempplayer);
 	}
 	else if (FStrEq(pcmdRefinedRef, "debug2")) {
 		//YEAH
 		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer*)pev);
-		tempplayer->DebugCall2();
+		DebugCall2(tempplayer);
 	}
 	else if (FStrEq(pcmdRefinedRef, "debug3")) {
 		//YEAH
 		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer*)pev);
-		tempplayer->DebugCall3();
+		DebugCall3(tempplayer);
 	}
 	else if (FStrEq(pcmdRefinedRef, "getnormalvector") || FStrEq(pcmdRefinedRef, "getnormal") || FStrEq(pcmdRefinedRef, "normalvector") || FStrEq(pcmdRefinedRef, "normal")) {
 		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer*)pev);
@@ -4510,6 +4532,103 @@ void ClientCommand( edict_t *pEntity )
 		}
 		listAllMonsters(pEntity);
 	}
+	else if (FStrEq(pcmdRefinedRef, "basicentityinfo")) {
+		// Is this redundant with listallentities above?  Although this shows a little more
+		if (g_flWeaponCheat == 0.0) {
+			easyForcePrintLineClient(pEntity, "Woa hey.  You need cheats.");
+			return;
+		}
+		int i;
+		int highextUsedEntityIndex = -1;
+		easyForcePrintLine("---------------------------------------------------------");
+
+		// first count from maxentities down.  What is the greatest entity index that's ever used?
+		// No need to print out 800 lines of NULL entity info.
+		for (i = gpGlobals->maxEntities-1; i >= 0; i--) {
+			edict_t* pEdi = g_engfuncs.pfnPEntityOfEntIndex(i);
+			if (pEdi != NULL) {
+				// ok.
+				highextUsedEntityIndex = i;
+				break;
+			}
+		}
+
+		// go one beeyond, if allowed.
+		if (highextUsedEntityIndex < gpGlobals->maxEntities - 1) {
+			highextUsedEntityIndex++;
+		}
+
+
+		for (i = 0;  i <= highextUsedEntityIndex; i++) {
+			edict_t* pEdi = g_engfuncs.pfnPEntityOfEntIndex(i);
+			easyForcePrintStarter();
+			if (pEdi != NULL) {
+				easyForcePrint("%d Null? NO free?%d entindex:%i eoffset:%i", i, pEdi->free, ENTINDEX(pEdi), OFFSET(pEdi) );
+
+				if (pEdi->v.netname != NULL) {
+					easyForcePrint(" netname:%s", STRING(pEdi->v.netname));
+				}
+				if (pEdi->v.target != NULL) {
+					easyForcePrint(" target:%s", STRING(pEdi->v.target));
+				}
+				if (pEdi->v.targetname != NULL) {
+					easyForcePrint(" targetname:%s", STRING(pEdi->v.targetname));
+				}
+				if (pEdi->v.owner != NULL) {
+					easyForcePrint(" owner:%s", STRING(pEdi->v.owner->v.classname));
+				}
+				
+
+				CBaseEntity* tempEnt = CBaseEntity::Instance(pEdi);
+				if (tempEnt != NULL) {
+					easyForcePrint(" class:%s deadflag:%d", tempEnt->getClassname(), tempEnt->pev->deadflag);
+				}
+				// tempEnt->entindex(), or ENTINDEX(pEdi)
+				// tempEnt->eoffset(), or OFFSET(pEdi)
+			}
+			else {
+				easyForcePrint("%d Null? YES", i);
+			}
+			easyForcePrintLine();
+		}
+		if (highextUsedEntityIndex < gpGlobals->maxEntities - 1) {
+			// some entities skipped?  make note of that.
+			easyForcePrintLine("...");
+		}
+		easyForcePrintLine("---------------------------------------------------------");
+
+	}
+	
+	/*
+	else if (FStrEq(pcmdRefinedRef, "basicentityinfooffset")) {
+		
+		//NOTICE!!! Not a wise thing to even try.
+		// Looks like offset is related to how much memory the pentity takes up and still starting
+		// from the first entity... or wherever edicts are stored in memory probably.
+		// Anyway, offsets are in increments of 804, but not really a point when getting by index (1, 2, 3)
+		// works perfectly fine.
+		
+		easyForcePrintLine("---------------------------------------------------------");
+		for (int i = 0; i < gpGlobals->maxEntities; i++) {
+			edict_t* pEdi = g_engfuncs.pfnPEntityOfEntOffset(i);
+			easyForcePrintStarter();
+			if (pEdi != NULL) {
+				easyForcePrint("%d Null? NO free?%d entindex:%i eoffset:%i ", i, pEdi->free, ENTINDEX(pEdi), OFFSET(pEdi));
+				// garbage, for... some... reason.   No freakin clue.
+				//CBaseEntity* tempEnt = CBaseEntity::Instance(pEdi);
+				//if (tempEnt != NULL) {
+				//	...
+				//}
+			}
+			else {
+				easyForcePrint("%d Null? YES", i);
+			}
+			easyForcePrintLine();
+		}
+		easyForcePrintLine("---------------------------------------------------------");
+		
+	}
+	*/
 	else if (FStrEq(pcmdRefinedRef, "testalt")) {
 		
 		const char* arg1ref = CMD_ARGV(1);
@@ -4755,102 +4874,7 @@ void ClientCommand( edict_t *pEntity )
 			//CHANGE_LEVEL(booty1, booty2);
 		}
 	}
-	else if (FStrEq(pcmdRefinedRef, "basicentityinfo")) {
-		if (g_flWeaponCheat == 0.0) {
-			easyForcePrintLineClient(pEntity, "Woa hey.  You need cheats.");
-			return;
-		}
-		int i;
-		int highextUsedEntityIndex = -1;
-		easyForcePrintLine("---------------------------------------------------------");
-
-		// first count from maxentities down.  What is the greatest entity index that's ever used?
-		// No need to print out 800 lines of NULL entity info.
-		for (i = gpGlobals->maxEntities-1; i >= 0; i--) {
-			edict_t* pEdi = g_engfuncs.pfnPEntityOfEntIndex(i);
-			if (pEdi != NULL) {
-				// ok.
-				highextUsedEntityIndex = i;
-				break;
-			}
-		}
-
-		// go one beeyond, if allowed.
-		if (highextUsedEntityIndex < gpGlobals->maxEntities - 1) {
-			highextUsedEntityIndex++;
-		}
-
-
-		for (i = 0;  i <= highextUsedEntityIndex; i++) {
-			edict_t* pEdi = g_engfuncs.pfnPEntityOfEntIndex(i);
-			easyForcePrintStarter();
-			if (pEdi != NULL) {
-				easyForcePrint("%d Null? NO free?%d entindex:%i eoffset:%i", i, pEdi->free, ENTINDEX(pEdi), OFFSET(pEdi) );
-
-				if (pEdi->v.netname != NULL) {
-					easyForcePrint(" netname:%s", STRING(pEdi->v.netname));
-				}
-				if (pEdi->v.target != NULL) {
-					easyForcePrint(" target:%s", STRING(pEdi->v.target));
-				}
-				if (pEdi->v.targetname != NULL) {
-					easyForcePrint(" targetname:%s", STRING(pEdi->v.targetname));
-				}
-				if (pEdi->v.owner != NULL) {
-					easyForcePrint(" owner:%s", STRING(pEdi->v.owner->v.classname));
-				}
-				
-
-				CBaseEntity* tempEnt = CBaseEntity::Instance(pEdi);
-				if (tempEnt != NULL) {
-					easyForcePrint(" class:%s deadflag:%d", tempEnt->getClassname(), tempEnt->pev->deadflag);
-				}
-				// tempEnt->entindex(), or ENTINDEX(pEdi)
-				// tempEnt->eoffset(), or OFFSET(pEdi)
-			}
-			else {
-				easyForcePrint("%d Null? YES", i);
-			}
-			easyForcePrintLine();
-		}
-		if (highextUsedEntityIndex < gpGlobals->maxEntities - 1) {
-			// some entities skipped?  make note of that.
-			easyForcePrintLine("...");
-		}
-		easyForcePrintLine("---------------------------------------------------------");
-
-	}
 	
-	/*
-	else if (FStrEq(pcmdRefinedRef, "basicentityinfooffset")) {
-		
-		//NOTICE!!! Not a wise thing to even try.
-		// Looks like offset is related to how much memory the pentity takes up and still starting
-		// from the first entity... or wherever edicts are stored in memory probably.
-		// Anyway, offsets are in increments of 804, but not really a point when getting by index (1, 2, 3)
-		// works perfectly fine.
-		
-		easyForcePrintLine("---------------------------------------------------------");
-		for (int i = 0; i < gpGlobals->maxEntities; i++) {
-			edict_t* pEdi = g_engfuncs.pfnPEntityOfEntOffset(i);
-			easyForcePrintStarter();
-			if (pEdi != NULL) {
-				easyForcePrint("%d Null? NO free?%d entindex:%i eoffset:%i ", i, pEdi->free, ENTINDEX(pEdi), OFFSET(pEdi));
-				// garbage, for... some... reason.   No freakin clue.
-				//CBaseEntity* tempEnt = CBaseEntity::Instance(pEdi);
-				//if (tempEnt != NULL) {
-				//	...
-				//}
-			}
-			else {
-				easyForcePrint("%d Null? YES", i);
-			}
-			easyForcePrintLine();
-		}
-		easyForcePrintLine("---------------------------------------------------------");
-		
-	}
-	*/
 	
 	else if (FStrEq(pcmdRefinedRef, "motd_show")) {
 		// the command "motd" is hardcoded, strangely enough, and doesn't show the MOTD again like startup does (connected to server).
@@ -4894,6 +4918,21 @@ void ClientCommand( edict_t *pEntity )
 
 		tempplayer->pev->weapons &= ~(1 << WEAPON_SUIT);
 		//tempplayer->UpdateClientData();  //and let clientside know
+	}
+	else if (FStrEq(pcmdRefinedRef, "removepowercanisters") || FStrEq(pcmdRefinedRef, "removesyringes") || FStrEq(pcmdRefinedRef, "removesidebar")) {
+		if (g_flWeaponCheat == 0.0) {
+			easyForcePrintLineClient(pEntity, "Need cheats for that... weirdly.");
+			return;
+		}
+		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer*)pev);
+		int i;
+		for (i = 0; i < MAX_ITEMS; i++) {
+			tempplayer->m_rgItems[i] = 0;
+		}
+		// may as well
+		tempplayer->airTankAirTime = 0;
+		tempplayer->longJumpCharge = 0;
+
 	}
 
 
@@ -5376,7 +5415,6 @@ void ParmsChangeLevel( void )
 
 
 
-
 void StartFrame( void )
 {
 	//NOTE - this does not automatically play sounds though the soundSentenceSave system.
@@ -5410,14 +5448,8 @@ void StartFrame( void )
 	//playerCanThink2 = TRUE;
 
 
-	if(gpGlobals->time >= DebugLine_drawTime){
-		//::debugLine_setup(1, 
-		//::debugLine_setupFract(0, 118, 759, 38, 118, 759, 600, fabs(sin(gpGlobals->time*0.8)) );
-		DebugLine_RenderAll();
-		//::UTIL_drawLineFrame(118.48, 759.76, 37.03, 500, 500, 500, 12, 255, 0, 0);
-		DebugLine_drawTime = gpGlobals->time + 0.09;
-	}
-	
+
+
 	// And sending gmsgUpdateClientCVar messages in the first frame causes "PF_MessageEnd_I:  Unknown User Msg 119" messages
 	// beeeeecccccccccaaaaaaaaauuuuuuuusssssssseeeeeee?
 	// as in, yes, even the first time "StartFrame" here is called, which runs every frame.  SPOOKY.
@@ -5432,6 +5464,51 @@ void StartFrame( void )
 
 	if ( g_pGameRules )
 		g_pGameRules->Think();
+
+
+
+
+
+
+
+
+
+
+	if (gpGlobals->time >= DebugLine_drawTime) {
+		//::debugLine_setup(1, 
+		//::debugLine_setupFract(0, 118, 759, 38, 118, 759, 600, fabs(sin(gpGlobals->time*0.8)) );
+		DebugLine_RenderAll();
+		//::UTIL_drawLineFrame(118.48, 759.76, 37.03, 500, 500, 500, 12, 255, 0, 0);
+		DebugLine_drawTime = gpGlobals->time + 0.09;
+	}
+
+
+	/*
+	//MODDD - TEST.  Use some CVar to change my blood.  See what looks good.
+	static float nextBloodGen = 0;
+
+	if (gpGlobals->time > nextBloodGen) {
+		// BLOOD TEST.
+		Vector bloodSpawnOrigin = Vector(105.33, 598.49, 80);
+		UTIL_SpawnBlood(bloodSpawnOrigin, (int)EASY_CVAR_GET(hyperBarney), 1);
+		nextBloodGen = gpGlobals->time + 0.08;
+	}
+	*/
+
+	// draws the old debug stuff the old way for compatability.  Not from retail.
+	// See lower portions of util_debugdraw.cpp
+	drawOldDebugStuff();
+
+
+
+
+
+
+
+
+
+
+
 
 
 	if (changeLevelQueuedTime != -1 && gpGlobals->time >= changeLevelQueuedTime) {
@@ -5453,26 +5530,14 @@ void StartFrame( void )
 	}
 
 
-
-	/*
-	//MODDD - TEST.  Use some CVar to change my blood.  See what looks good.
-	static float nextBloodGen = 0;
-
-	if (gpGlobals->time > nextBloodGen) {
-		// BLOOD TEST.
-		Vector bloodSpawnOrigin = Vector(105.33, 598.49, 80);
-		UTIL_SpawnBlood(bloodSpawnOrigin, (int)EASY_CVAR_GET(hyperBarney), 1);
-		nextBloodGen = gpGlobals->time + 0.08;
-	}
-	*/
-
-
 	if ( g_fGameOver )
 		return;
 
 	gpGlobals->teamplay = teamplay.value;
 	g_ulFrameCount++;
 }
+
+
 
 
 /*

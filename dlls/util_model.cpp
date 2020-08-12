@@ -409,6 +409,9 @@ void GetSequenceInfo( void *pmodel, entvars_t *pev, float *pflFrameRate, float *
 		// -0.00 109.08 0.00
 		//0.08 0.00 0.0
 
+		//MODDD - Hacky!
+		//pflGroundSpeed = 0;
+
 
 		//easyPrintLineANIMATION("YOU MANGY LITTLE animation  %.2f %.2f %.2f", pseqdesc->linearmovement[0], pseqdesc->linearmovement[1], pseqdesc->linearmovement[2]); 
 	}

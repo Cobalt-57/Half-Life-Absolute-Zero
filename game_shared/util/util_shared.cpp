@@ -1862,7 +1862,7 @@ void UTIL_StringToIntArray( int *pVector, int count, const char *pString )
 }
 
 
-float clamp(float argTest, float argMin, float argMax){
+float UTIL_clamp(float argTest, float argMin, float argMax){
 	if(argTest < argMin) return argMin;
 	else if(argTest > argMax) return argMax;
 	else return argTest;

@@ -492,7 +492,7 @@ void CTentacle :: Test( void )
 {
 	pev->sequence = TENTACLE_ANIM_Floor_Strike;
 	pev->framerate = 0;
-	StudioFrameAdvance( );
+	StudioFrameAdvance_SIMPLE( );
 	pev->nextthink = gpGlobals->time + 0.1;
 }
 
@@ -519,7 +519,7 @@ void CTentacle :: Cycle( void )
 	}
 
 	DispatchAnimEvents( );
-	StudioFrameAdvance( );
+	StudioFrameAdvance_SIMPLE( );
 
 	ChangeYaw( pev->yaw_speed );
 
@@ -789,7 +789,7 @@ void CTentacle :: DieThink( void )
 	pev->nextthink = gpGlobals-> time + 0.1;
 
 	DispatchAnimEvents( );
-	StudioFrameAdvance( );
+	StudioFrameAdvance_SIMPLE( );
 
 	ChangeYaw( 24 );
 

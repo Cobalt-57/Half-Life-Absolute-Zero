@@ -3754,10 +3754,10 @@ BOOL CKingpin::AlreadyReflectingEntity(CBaseEntity* arg_check){
 //Only one laser in one call though.
 void CKingpin::fireElectricBarrageLaser(void){
 	const float distToEnemy = (m_vecEnemyLKP - pev->origin).Length();
-	const float distToEnemyFraction = clamp(distToEnemy / 1300.0f, 0.0f, 1.0f);
-	//const float inaccuracyAmount = clamp(distToEnemy / 1300.0f, 0.5f, 1.0f);
-	const float inaccuracyAmount = clamp(distToEnemyFraction, 0.1f, 0.7f);
-	//const float damageFraction = clamp( 1.0f - distToEnemyFraction, 0.7f, 1.0f);
+	const float distToEnemyFraction = UTIL_clamp(distToEnemy / 1300.0f, 0.0f, 1.0f);
+	//const float inaccuracyAmount = UTIL_clamp(distToEnemy / 1300.0f, 0.5f, 1.0f);
+	const float inaccuracyAmount = UTIL_clamp(distToEnemyFraction, 0.1f, 0.7f);
+	//const float damageFraction = UTIL_clamp( 1.0f - distToEnemyFraction, 0.7f, 1.0f);
 	float damageFraction;
 
 	if(distToEnemyFraction <= 0.6f){
@@ -4456,7 +4456,7 @@ void CKingpin::administerShocker(void){
 	{
 		if ( pEntity->pev->takedamage != DAMAGE_NO )
 		{
-			BOOL isBreakable = pEntity->isBreakableOrchild();
+			BOOL isBreakable = pEntity->isBreakableOrChild();
 
 			//No, do a check for allies in general.  We is smart.
 			//if ( !FClassnameIs(pEntity->pev, "monster_houndeye") )

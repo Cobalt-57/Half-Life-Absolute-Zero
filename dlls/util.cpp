@@ -97,6 +97,12 @@ EASY_CVAR_EXTERN(soundSentenceSave)
 EASY_CVAR_EXTERN(pissedNPCs)
 
 
+
+
+
+
+
+
 //extern int giPrecacheGrunt;
 //extern DLL_GLOBAL short g_sModelIndexBubbles;// holds the index for the bubbles model
 extern DLL_GLOBAL int g_iSkillLevel;
@@ -1175,14 +1181,13 @@ meleeDrawBloodModeB - Mode variable, for drawing blood when "checkTraceHullAttac
 
 				if(arg_entDest->IsPlayer()){
 					//easyPrintLine("BUT WHATT  %s", STRING(arg_entDest->pev->classname) );
-					CBasePlayer* playa = static_cast<CBasePlayer*>(arg_entDest);
-					playa->debugDrawVect = *arg_suggestedTraceHullVecEndPos - (vecFromToDir * EASY_CVAR_GET(meleeDrawBloodModeAOffset) );
-					playa->debugDrawVect2 = *arg_suggestedTraceHullStart;
-					playa->debugDrawVect3 = *arg_suggestedTraceHullEnd;
-					playa->debugDrawVect4 = Vector(0,0,0);
-					playa->debugDrawVect5 = Vector(0,0,0);
+					//CBasePlayer* playa = static_cast<CBasePlayer*>(arg_entDest);
+					debugDrawVect = *arg_suggestedTraceHullVecEndPos - (vecFromToDir * EASY_CVAR_GET(meleeDrawBloodModeAOffset) );
+					debugDrawVect2 = *arg_suggestedTraceHullStart;
+					debugDrawVect3 = *arg_suggestedTraceHullEnd;
+					debugDrawVect4 = Vector(0,0,0);
+					debugDrawVect5 = Vector(0,0,0);
 				}
-
 
 
 				return;
@@ -1197,12 +1202,13 @@ meleeDrawBloodModeB - Mode variable, for drawing blood when "checkTraceHullAttac
 
 					if(arg_entDest->IsPlayer()){
 						//easyPrintLine("BUT WHATT  %s", STRING(arg_entDest->pev->classname) );
-						CBasePlayer* playa = static_cast<CBasePlayer*>(arg_entDest);
+
+						//CBasePlayer* playa = static_cast<CBasePlayer*>(arg_entDest);
 						//playa->debugDrawVect = tr.vecEndPos;
-						playa->debugDrawVect2 = vecStart;
-						playa->debugDrawVect3 = vecEnd;
-						playa->debugDrawVect4 = vecStart2;
-						playa->debugDrawVect5 = vecEnd2;
+						debugDrawVect2 = vecStart;
+						debugDrawVect3 = vecEnd;
+						debugDrawVect4 = vecStart2;
+						debugDrawVect5 = vecEnd2;
 					}
 
 			break;
@@ -1272,12 +1278,12 @@ meleeDrawBloodModeB - Mode variable, for drawing blood when "checkTraceHullAttac
 
 					if(arg_entDest->IsPlayer()){
 						//easyPrintLine("BUT WHAT %.2f  %s", tr.flFraction, STRING(tr.pHit->v.classname) );
-						CBasePlayer* playa = static_cast<CBasePlayer*>(arg_entDest);
-						playa->debugDrawVect = tr.vecEndPos - (vecFromToDir * EASY_CVAR_GET(meleeDrawBloodModeBOffset) );
-						playa->debugDrawVect2 = vecStart;
-						playa->debugDrawVect3 = vecEnd;
-						playa->debugDrawVect4 = Vector(0,0,0);
-						playa->debugDrawVect5 = Vector(0,0,0);
+						//CBasePlayer* playa = static_cast<CBasePlayer*>(arg_entDest);
+						debugDrawVect = tr.vecEndPos - (vecFromToDir * EASY_CVAR_GET(meleeDrawBloodModeBOffset) );
+						debugDrawVect2 = vecStart;
+						debugDrawVect3 = vecEnd;
+						debugDrawVect4 = Vector(0,0,0);
+						debugDrawVect5 = Vector(0,0,0);
 					}
 				}
 
@@ -1355,18 +1361,18 @@ meleeDrawBloodModeB - Mode variable, for drawing blood when "checkTraceHullAttac
 	}
 
 	if(arg_entDest->IsPlayer()){
-		CBasePlayer* playa = static_cast<CBasePlayer*>(arg_entDest);
+		//CBasePlayer* playa = static_cast<CBasePlayer*>(arg_entDest);
 		
 		if(checkTraceHullAttackUsed){
-			playa->debugDrawVect = tr.vecEndPos - (vecFromToDir * EASY_CVAR_GET(meleeDrawBloodModeAOffset));
+			debugDrawVect = tr.vecEndPos - (vecFromToDir * EASY_CVAR_GET(meleeDrawBloodModeAOffset));
 		}else{
-			playa->debugDrawVect = tr.vecEndPos - (vecFromToDir * EASY_CVAR_GET(meleeDrawBloodModeBOffset));
+			debugDrawVect = tr.vecEndPos - (vecFromToDir * EASY_CVAR_GET(meleeDrawBloodModeBOffset));
 		}
 		
-		playa->debugDrawVect2 = vecStart;
-		playa->debugDrawVect3 = vecEnd;
-		playa->debugDrawVect4 = vecStart2;
-		playa->debugDrawVect5 = vecEnd2;
+		debugDrawVect2 = vecStart;
+		debugDrawVect3 = vecEnd;
+		debugDrawVect4 = vecStart2;
+		debugDrawVect5 = vecEnd2;
 	}
 }//END OF UTIL_fromToBlood
 
@@ -2181,7 +2187,7 @@ void EMIT_SOUND_SUIT(edict_t* entity, const char* pszName)
 	// Bizarre, setting the "HEV suit volume" slider in the Audio settings
 	// sets suitvolume to 2 (over 1), crashing the game just like in retail.
 	// Valid audio range is 0 to 1.
-	fvol = clamp(CVAR_GET_FLOAT("suitvolume")/2, 0, 1);
+	fvol = UTIL_clamp(CVAR_GET_FLOAT("suitvolume")/2, 0, 1);
 
 	if (RANDOM_LONG(0,1))
 		pitch = RANDOM_LONG(0,6) + 98;
@@ -2215,7 +2221,7 @@ void EMIT_GROUPID_SUIT(edict_t* entity, int isentenceg)
 	float fvol;
 	int pitch = PITCH_NORM;
 	
-	fvol = clamp(CVAR_GET_FLOAT("suitvolume")/2, 0, 1);
+	fvol = UTIL_clamp(CVAR_GET_FLOAT("suitvolume")/2, 0, 1);
 	if (RANDOM_LONG(0,1))
 		pitch = RANDOM_LONG(0,6) + 98;
 
@@ -2229,7 +2235,7 @@ void EMIT_GROUPNAME_SUIT(edict_t* entity, const char* groupname)
 	float fvol;
 	int pitch = PITCH_NORM;
 	
-	fvol = clamp(CVAR_GET_FLOAT("suitvolume")/2, 0, 1);
+	fvol = UTIL_clamp(CVAR_GET_FLOAT("suitvolume")/2, 0, 1);
 	if (RANDOM_LONG(0,1))
 		pitch = RANDOM_LONG(0,6) + 98;
 
@@ -4208,14 +4214,76 @@ void UTIL_drawLineFrameBoxAround3(float x1, float y1, float z1, int width, int b
 
 
 
+//MODDD - TODO, major.  For debug tools at least.
+// Any coord below -4096 or at/above 4096 is not sent properly by WriteCoord (DebugLine's use those).
+// -4096 exactly and 4095.9999 are ok though.
+// Even overflow logic is weird, you would think 4096 exactly plus that borderline-okay amount (4095.9999) would
+// put the coord at the exact same place but, nope.  It messes up the other coords too, goes kinda vaguely right
+// sometimes and completely off the others, even with the other two coords perfectly valid.
+// Seems to be more of a world-limit thing than data-limit thing, any checks for being in the world tend to involve
+// +- 4096.  Still weird to not tolerate it anyway.
+// It also appears it is a bound issue, and not a difference one.  Even a line from -4096 to 4095.9999 should be ok,
+// but that is difficult to test exactly (lines with both points stuck in the map refuse to draw it seems).
+// Although a line over 4096 in length could be drawn, so that should be all that matters.
+
+// SO.   Check.  If any coord is over 4096, take the higest one and adjust the size so that it reaches 4095 at most
+// (no one cares about precision up to but not including 4096 like 4095.9999, why risk rounding being weird and going
+// up anyway).
 
 
 void UTIL_TE_BeamPoints(const Vector& vec1, const Vector& vec2, int frameStart, int frameRate, int life, int width, int noise, int r, int g, int b, int brightness, int speed ){
 	UTIL_TE_BeamPoints(vec1.x, vec1.y, vec1.z, vec2.x, vec2.y, vec2.z, frameStart, frameRate, life, width, noise, r, g, b, brightness, speed);
 }
-
-
 void UTIL_TE_BeamPoints(float x1, float y1, float z1, float x2, float y2, float z2, int frameStart, int frameRate, int life, int width, int noise, int r, int g, int b, int brightness, int speed){
+
+	/*
+	x1 = UTIL_clamp(x1, -4095, 4095);
+	y1 = UTIL_clamp(y1, -4095, 4095);
+	z1 = UTIL_clamp(z1, -4095, 4095);
+	x2 = UTIL_clamp(x2, -4095, 4095);
+	y2 = UTIL_clamp(y2, -4095, 4095);
+	z2 = UTIL_clamp(z2, -4095, 4095);
+	*/
+
+
+	/*
+	int* offendingCoord1 = NULL;
+	int* offendingCoord2 = NULL;
+
+	if (x1 < -4095) {
+
+	}
+	*/
+
+
+	if (
+		x1 < -4095 || x1 > 4095 ||
+		y1 < -4095 || y1 > 4095 ||
+		z1 < -4095 || z1 > 4095 ||
+		x2 < -4095 || x2 > 4095 ||
+		y2 < -4095 || y2 > 4095 ||
+		z2 < -4095 || z2 > 4095
+	){
+		//LAZY. just cut the end point in half, but maintain the direction from vec1.
+
+		// This is also assuming the 2nd point is the problem one, should work out as the most common issue would be
+		// some weapon with a ridiculous end-point (like gauss) easily going out of map bounds, but the first point still 
+		// being in-bounds (player origin).
+		const Vector vec1 = Vector(x1, y1, z1);
+		const Vector vec2 = Vector(x2, y2, z2);
+		const Vector vecDelta = (vec2 - vec1);
+		const Vector vecDir = vecDelta.Normalize();
+		float daLength = vecDelta.Length();
+
+		const Vector vecFinal2 = vec2 - vecDir * (daLength / 2);
+
+		// and apply.
+		x2 = vecFinal2.x;
+		y2 = vecFinal2.y;
+		z2 = vecFinal2.z;
+	}
+
+
 
 
 	MESSAGE_BEGIN( MSG_BROADCAST, SVC_TEMPENTITY );
@@ -7003,6 +7071,84 @@ Vector VecCheckThrow ( entvars_t *pev, const Vector &vecSpot1, Vector vecSpot2, 
 
 	return vecGrenadeVel;
 }
+
+
+
+// For a given entity, print at least its name.  If a monster, give its MonsterID.  If it has a netname, give that too.
+// And this is NOT a 'printline' call, the caller can print something before and after this as needed
+// (most likely a newline character).
+// Caller accepted, but unused, sicne the server printout is used instead (to avoid buffer overflows).
+
+//TODO - support printing out info about the linked m_pcine entity, if applicable and requested?
+
+
+void printBasicEntityInfo(CBaseEntity* entRef) {
+	printBasicEntityInfo(NULL, entRef);
+}
+void printBasicEntityInfo(edict_t* theCaller, CBaseEntity* entRef) {
+
+	if (entRef == NULL) {
+		// ?????  No more information to give
+		easyForcePrint("NULLENT");
+		return;
+	}
+
+	CBaseMonster* monsterTest = entRef->GetMonsterPointer();
+	if (monsterTest != NULL) {
+		easyForcePrint("%s:%d", entRef->getClassname(), monsterTest->monsterID);
+	}
+	else {
+		easyForcePrint("%s", entRef->getClassname());
+	}
+
+	// FStringNull ?
+	if (entRef->pev->netname != NULL) {
+		const char* stuff = STRING(entRef->pev->netname);
+		if (stuff != NULL && stuff[0] != '\0') {
+			//ok, print it too.
+			easyForcePrint(" netname:%s", stuff);
+		}
+	}
+	if (entRef->pev->target != NULL) {
+		const char* stuff = STRING(entRef->pev->target);
+		if (stuff != NULL && stuff[0] != '\0') {
+			//ok, print it too.
+			easyForcePrint(" target:%s", stuff);
+		}
+	}
+	if (entRef->pev->targetname != NULL) {
+		const char* stuff = STRING(entRef->pev->targetname);
+		if (stuff != NULL && stuff[0] != '\0') {
+			//ok, print it too.
+			easyForcePrint(" targetname:%s", stuff);
+		}
+	}
+	if (entRef->pev->globalname != NULL) {
+		const char* stuff = STRING(entRef->pev->globalname);
+		if (stuff != NULL && stuff[0] != '\0') {
+			//ok, print it too.
+			easyForcePrint(" globalname:%s", stuff);
+		}
+	}
+
+}//printBasicEntityInfo
+
+// This does print out to the client though, the debug methods that use this don't spam this.
+void printBasicTraceInfo(edict_t* theCaller, const TraceResult& tr) {
+	easyForcePrintClient(theCaller, "fract:%.2f startSol:%d allSol:%d inOpen:%d inWat:%d ", tr.flFraction, tr.fStartSolid, tr.fAllSolid, tr.fInOpen, tr.fInWater);
+	if (tr.pHit != NULL) {
+		easyForcePrintClient(theCaller, "Hit:%s hitgr:%d", STRING(tr.pHit->v.classname), tr.iHitgroup);
+	}
+	else {
+		easyForcePrintClient(theCaller, "pHit:none");
+	}
+	//if(tr.fAllSolid){ tr.flFraction = 0; easyForcePrintLineClient(pEntity, "SOLID"); }
+
+}//printBasicTraceInfo
+
+
+
+
 
 
 

@@ -929,6 +929,11 @@ Vector VecCheckToss ( entvars_t *pev, const Vector &vecSpot1, Vector vecSpot2, f
 Vector VecCheckThrow ( entvars_t *pev, const Vector &vecSpot1, Vector vecSpot2, float flSpeed, float flGravityAdj = 1.0 );
 /////////////////////////////////////////
 
+extern void printBasicEntityInfo(CBaseEntity* entRef);
+extern void printBasicEntityInfo(edict_t* theCaller, CBaseEntity* entRef);
+extern void printBasicTraceInfo(edict_t* theCaller, const TraceResult& tr);
+
+
 
 //MODDD - moved from weapons.h
 // changed a bit though.

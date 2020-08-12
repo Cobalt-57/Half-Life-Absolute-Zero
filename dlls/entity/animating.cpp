@@ -90,6 +90,8 @@ int CBaseAnimating::Restore( CRestore &restore )
 CBaseAnimating::CBaseAnimating(void){
 	//anim to jump to when this is done (disregarded by any animation change / stop).
 
+	// should be set early on through a DetermineInterval before any think-logic sees it anyway.
+	m_flInterval = 0.1;
 
 	animationFPS = -1;
 	animationFrames = -1;
@@ -481,31 +483,100 @@ void CBaseAnimating::animEventQueuePush(float arg_timeFromStart, float arg_event
 
 
 
+
+//MODDD - interval now determined in its own method to give more control to the caller.   Call this early on in a think method.
+// Now split into parameter-less and parameter versions.  Same net behavior as retail to avoid any chances of unintended behavior.
+
+// No parameter version, will determine flInterval (as though 0 were given, and was the default used when StudioFrameAdvance was
+// called without an interval).
+float CBaseAnimating::DetermineInterval(void) {
+	float flInterval;
+
+	flInterval = (gpGlobals->time - pev->animtime);
+	if (flInterval <= 0.001)
+	{
+		pev->animtime = gpGlobals->time;
+		m_flInterval = 0.0;
+		return 0.0;
+	}
+
+	if (!pev->animtime) {
+		flInterval = 0.0;
+	}
+
+	m_flInterval = flInterval;
+	return flInterval;
+}//DetermineInterval
+
+
+// If an interval is given, only re-determine it if it is 0.  (but still do the !pev->animtime otherwise).
+float CBaseAnimating::DetermineInterval(float flInterval) {
+	if (flInterval == 0.0)
+	{
+		// includes the '!pev->animtime' check.  Also sets m_flInterval.
+		flInterval = DetermineInterval();
+		return flInterval;
+	}else {
+		// Do this check, retail would have.  And set m_flInterval.
+		if (!pev->animtime) {
+			flInterval = 0.0;
+		}
+		m_flInterval = flInterval;
+		return flInterval;
+	}
+}//DetermineInterval
+
+
+
+// Like above, but can't set pev->animtime.
+float CBaseAnimating::DetermineInterval_SAFE(void) {
+	float flInterval;
+
+	flInterval = (gpGlobals->time - pev->animtime);
+	if (flInterval <= 0.001)
+	{
+		//pev->animtime = gpGlobals->time;
+		m_flInterval = 0.0;
+		return 0.0;
+	}
+	if (!pev->animtime) {
+		flInterval = 0.0;
+	}
+	m_flInterval = flInterval;
+	return flInterval;
+}//DetermineInterval_SAFE
+float CBaseAnimating::DetermineInterval_SAFE(float flInterval) {
+	if (flInterval == 0.0)
+	{
+		// includes the '!pev->animtime' check.  Also sets m_flInterval.
+		flInterval = DetermineInterval_SAFE();
+		return flInterval;
+	}else {
+		// Do this check, retail would have.  And set m_flInterval.
+		if (!pev->animtime) {
+			flInterval = 0.0;
+		}
+		m_flInterval = flInterval;
+		return flInterval;
+	}
+}//DetermineInterval_SAFE
+
+
+
+
+
 //=========================================================
 // StudioFrameAdvance - advance the animation frame up to the current time
 // if an flInterval is passed in, only advance animation that number of seconds
 //=========================================================
-float CBaseAnimating :: StudioFrameAdvance ( float flInterval )
+// ALSO, no longer returns anything.  Cakk DetermineInterval and send that here for the same effect.
+void CBaseAnimating :: StudioFrameAdvance ( float flInterval )
 {
 	//const char* whut = STRING(pev->classname); //whut.
 
+	
+	//MODDD - old flInterval-on-0 determining script was here
 
-	if (flInterval == 0.0)
-	{
-		flInterval = (gpGlobals->time - pev->animtime);
-		if (flInterval <= 0.001)
-		{
-			
-			if(this->crazyPrintout == TRUE){
-				//easyForcePrintLine("STUDIOFRAMEADVANCE::: well I doubt that is normal: interv:%.2f %.2f %.2f", flInterval, pev->animtime, gpGlobals->time);
-			}
-			pev->animtime = gpGlobals->time;
-			//if(FClassnameIs(pev,"monster_zombie"))easyForcePrintLine("pev->animtime set A %.2f", pev->animtime);
-			return 0.0;
-		}
-	}
-	if (! pev->animtime)
-		flInterval = 0.0;
 
 	//MODDD NOTE - "m_flFrameRate" is unused, or supposed to be. "m_flFrameRateSuggestion" is a bit more flexible and is independent of it,, being the new
 	//             value for "pev->framerate" at the start of the next called anim. Check first for any updates / replacements, but consider removal.
@@ -538,8 +609,33 @@ float CBaseAnimating :: StudioFrameAdvance ( float flInterval )
 
 	checkEndOfAnimation();
 
+	//MODDD - method no longer gives interval, call DetermineInterval above before calling StudioFrameAdvance and give the interval from
+	// that for the same effect.
+	//return flInterval;
+}
+
+
+
+//MODDD - and new versions of StudioFrameAdvance that act more directly like retail.
+// Both assume flInterval has to be checked by DetermineInterval, so no need to do that
+// in the classes that use these forms.
+// But still, it is better to call DetermineInterval separately early on in a think cycle
+// for the benefit of other monsterthink logic that might need to see m_flInterval ahead of
+// time.
+// Returns it too.
+// SHORT VERSION:   use this in place of calls to StudioFrameAdvance that don't have a value supplied from DetermineInterval.
+// Even calls given constants like 'StudioFrameAdvance( 0.1 )' in barnacle.cpp or aflock.cpp. They don't set m_flFrame at all then.
+float CBaseAnimating::StudioFrameAdvance_SIMPLE(void) {
+	float flInterval = DetermineInterval();
+	StudioFrameAdvance(flInterval);
 	return flInterval;
 }
+float CBaseAnimating::StudioFrameAdvance_SIMPLE(float flInterval) {
+	flInterval = DetermineInterval(flInterval);
+	StudioFrameAdvance(flInterval);
+	return flInterval;
+}
+
 
 
 
@@ -840,7 +936,7 @@ BOOL CBaseAnimating :: GetSequenceFlags( )
 //=========================================================
 void CBaseAnimating :: DispatchAnimEvents ( float flInterval )
 {
-	//return;
+
 	MonsterEvent_t	event;
 
 	void *pmodel = GET_MODEL_PTR( ENT(pev) );

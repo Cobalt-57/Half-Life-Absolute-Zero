@@ -536,7 +536,7 @@ void CHornet :: TrackTarget ( void )
 
 	if(!timeBlock){
 
-		StudioFrameAdvance( );
+		StudioFrameAdvance_SIMPLE( );
 
 		if (gpGlobals->time > m_flStopAttack)
 		{

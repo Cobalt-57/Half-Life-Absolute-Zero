@@ -135,6 +135,7 @@ public:
 	float	m_flLastSaidSmelled;// last time we talked about something that stinks
 	float	m_flStopTalkTime;// when in the future that I'll be done saying this sentence.
 
+
 	//MODDD
 	//BOOL goneMad;
 	float madYaw;
@@ -166,6 +167,11 @@ public:
 	float forgiveSuspiciousTime;
 	float forgiveSomePlayerDamageTime;
 
+	float beginIdleResponseTime;
+
+	int recentDeclines;
+	float recentDeclinesForgetTime;
+
 
 	//MODDD
 	const char* madSentences[5];
@@ -175,7 +181,6 @@ public:
 	//...each child will define "madInterSentences" instead, and use "madInterSentencesLocation" to refer to its own one.
 	//int*				madInterSentencesMaxLocation;
 	const char** madInterSentencesLocation;
-
 
 
 
@@ -321,6 +326,7 @@ public:
 	virtual void SayIdleToPlayer(CBaseEntity* argPlayerTalkTo);
 	virtual void SayQuestion(CTalkMonster* argTalkTo);
 	virtual void SayProvoked(void);
+	virtual void SayStopShooting(void);
 	virtual void SaySuspicious(void);
 	virtual void SayLeaderDied(void);
 	virtual void SayNearPassive(void);
@@ -333,6 +339,9 @@ public:
 
 	//MODDD - NEW, from CBaseMonster.
 	virtual void ForgetEnemy(void);
+
+	virtual void OnForgiveDeclineSpam(void);
+
 	
 	GENERATE_TRACEATTACK_PROTOTYPE_VIRTUAL
 	GENERATE_TAKEDAMAGE_PROTOTYPE_VIRTUAL

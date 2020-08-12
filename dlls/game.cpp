@@ -17,6 +17,7 @@
 #include "eiface.h"
 #include "util.h"
 #include "game.h"
+#include "util_debugdraw.h"
 #include "util_version.h"
 
 
@@ -760,6 +761,9 @@ extern int gmsgUpdateClientCVar;
 void GameDLLInit( void )
 {
 	InitShared();
+
+	initOldDebugStuff();
+
 
 	easyForcePrintLine("!!!!!! GameDLLInit");
 

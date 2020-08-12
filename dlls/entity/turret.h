@@ -86,19 +86,16 @@ public:
 	//MODDD - IMPORTANT NOTE.    These were the only "virtual EXPORT's" as of retail.
 	//  I... have no idea why they're even EXPORTs, they're never tied to any engine events
 	// events like 'think' or 'touch'.
-	// Removing the 'virtual', see if this has any side-effects!
+	// Removing the EXPORT's then, keep virtual.
+	// If both virtual and EXPORT were needed, they would need to be separate methods like how
+	// CBaseMonster handles CallMonsterThink and MonsterThink.
+	// CallMonsterThink is not virtual but has export, and calls MonsterThink
+	// (virtual but not export;  implemented per class and calls the parent MonsterThink).
 	//virtual void EXPORT SpinDownCall(void) { m_iSpin = 0; }
 	//virtual void EXPORT SpinUpCall(void) { m_iSpin = 1; }
-	void EXPORT SpinDownCall(void) { m_iSpin = 0; }
-	void EXPORT SpinUpCall(void) { m_iSpin = 1; }
+	virtual void SpinDownCall(void) { m_iSpin = 0; }
+	virtual void SpinUpCall(void) { m_iSpin = 1; }
 	
-
-	// void SpinDown(void);
-	// float EXPORT SpinDownCall( void ) { return SpinDown(); }
-
-	// virtual float SpinDown(void) { return 0;}
-	// virtual float Retire(void) { return 0;}
-
 	void EXPORT Deploy(void);
 	void EXPORT Retire(void);
 	

@@ -93,7 +93,7 @@ int CBaseEntity::GetProjectileType(void){return 0;}
 Vector CBaseEntity::GetVelocityLogical(void){return Vector(); }   //blank vector?  most unorthodox.
 void CBaseEntity::SetVelocityLogical(const Vector& arg_newVelocity){}
 
-void CBaseEntity::OnDeflected(CBaseEntity* arg_entDeflector){};
+void CBaseEntity::OnDeflected(CBaseEntity* arg_entDeflector){}
 
 
 //Yes, player has this too.
@@ -115,7 +115,7 @@ int CBaseEntity::getNumberOfSkins(void){return 0;}
 void CBaseEntity::onDelete(void){}
 
 
-void CBasePlayer::OnFirstAppearance(void){};
+void CBasePlayer::OnFirstAppearance(void){}
 
 void CBaseEntity::Spawn(void){}
 //MODDD
@@ -166,7 +166,7 @@ BOOL CBaseEntity::isProvokable(void){return FALSE;}
 BOOL CBaseEntity::isProvoked(void){return FALSE;}
 
 
-BOOL CBaseEntity::isBreakableOrchild(void){return FALSE;}
+BOOL CBaseEntity::isBreakableOrChild(void){return FALSE;}
 BOOL CBaseEntity::isDestructibleInanimate(void){ return FALSE;}
 
 const char* CBaseEntity::getClassname(void){return NULL;}
@@ -189,7 +189,7 @@ void UTIL_ScreenShake( const Vector &center, float amplitude, float frequency, f
 CBaseEntity *CBaseEntity::GetNextTarget( void ) { return NULL; }
 int CBaseEntity::Save( CSave &save ) { return 1; }
 int CBaseEntity::Restore( CRestore &restore ) { return 1; }
-void CBaseEntity::PostRestore(){};
+void CBaseEntity::PostRestore(){}
 
 void CBaseEntity::playMetallicHitSound(int arg_channel, float arg_volume){}
 
@@ -256,7 +256,7 @@ float CBaseMonster::hitgroupDamage(float flDamage, int bitsDamageType, int bitsD
 void CBaseDelay :: KeyValue( struct KeyValueData_s * ) { }
 int CBaseDelay::Restore( class CRestore & ) { return 1; }
 int CBaseDelay::Save( class CSave & ) { return 1; }
-void CBaseDelay::PostRestore(void){};
+void CBaseDelay::PostRestore(void){}
 
 // CBaseAnimating Stubs
 int CBaseAnimating::Restore( class CRestore & ) { return 1; }
@@ -288,8 +288,8 @@ void CBaseToggle::PostRestore() { }
 void CBaseToggle :: KeyValue( struct KeyValueData_s * ) { }
 
 //MODDD - required niw that they are virtual
-void CBaseToggle::LinearMove( Vector	vecDest, float flSpeed ){};
-void CBaseToggle::AngularMove( Vector vecDestAngle, float flSpeed ){};
+void CBaseToggle::LinearMove( Vector	vecDest, float flSpeed ){}
+void CBaseToggle::AngularMove( Vector vecDestAngle, float flSpeed ){}
 
 
 
@@ -350,7 +350,20 @@ void CBaseMonster :: Look ( float flDistance ) { }
 int CBaseMonster :: ISoundMask ( void ) { return 0; }
 CSound* CBaseMonster :: PBestSound ( void ) { return NULL; }
 CSound* CBaseMonster :: PBestScent ( void ) { return NULL; } 
-float CBaseAnimating :: StudioFrameAdvance ( float flInterval ) { return 0.0; }
+
+
+
+float DetermineInterval(void) {return 0;}
+float DetermineInterval(float flInterval) { return 0; }
+float DetermineInterval_SAFE(void) { return 0; }
+float DetermineInterval_SAFE(float flInterval) { return 0; }
+//MODDD - method edited.  and new versions.
+//float CBaseAnimating :: StudioFrameAdvance ( float flInterval ) { return 0.0; }
+float CBaseAnimating::StudioFrameAdvance_SIMPLE(void) { return 0.0; }
+float CBaseAnimating::StudioFrameAdvance_SIMPLE(float flInterval) { return 0.0; }
+void CBaseAnimating::StudioFrameAdvance(float flInterval) { }
+
+
 
 void CBaseMonster::CallMonsterThink(void) {}
 void CBaseMonster :: MonsterThink ( void ) { }
@@ -509,11 +522,13 @@ void CBaseMonster::wanderAway(const Vector& toWalkAwayFrom){}
 void CBaseMonster :: InsertWaypoint ( Vector vecLocation, int afMoveFlags ) { }
 BOOL CBaseMonster :: FTriangulate ( const Vector &vecStart , const Vector &vecEnd, float flDist, CBaseEntity *pTargetEnt, Vector *pApex ) { return FALSE; }
 void CBaseMonster :: Move ( float flInterval ) { }
+int CBaseMonster::MovePRE(float flInterval, float& flWaypointDist, float& flCheckDist, float& flDist, Vector& vecDir, CBaseEntity*& pTargetEnt) { return FALSE; }
 BOOL CBaseMonster:: ShouldAdvanceRoute( float flWaypointDist, float flInterval ) { return FALSE; }
 void CBaseMonster::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, float flInterval ) { }
 void CBaseMonster :: MonsterInit ( void ) { }
 void CBaseMonster :: MonsterInitThink ( void ) { }
 void CBaseMonster :: StartMonster ( void ) { }
+void CBaseMonster::TaskComplete(void) {}
 void CBaseMonster :: MovementComplete( void ) { }
 
 //MODDD - new, moved outside of basemonster.h so it must show up implemented (dummied) here.
@@ -748,15 +763,11 @@ void CBasePlayer::declareRevivelessDead(void) {}
 
 int CBaseMonster :: TakeHealth (float flHealth, int bitsDamageType) { return 0; }
 
-void CBasePlayer::DebugCall1(){}
-void CBasePlayer::DebugCall2(){}
-void CBasePlayer::DebugCall3(){}
-
 CBaseMonster::CBaseMonster(void){}
 BOOL CBaseMonster::usesSoundSentenceSave(void){return FALSE;}
 
 int CBaseMonster::convert_itbd_to_damage(int i){ return 0;}
-BYTE CBaseMonster::parse_itbd_duration(int i) { return 0; };
+BYTE CBaseMonster::parse_itbd_duration(int i) { return 0; }
 void CBaseMonster::parse_itbd(int i) {}
 void CBaseMonster::timedDamage_nonFirstFrame(int i, int* m_bitsDamageTypeRef) {}
 void CBaseMonster::CheckTimeBasedDamage(void){}
@@ -998,7 +1009,7 @@ void CBasePlayerWeapon::RetireWeapon( void ) { }
 CBaseEntity* CBasePlayerWeapon::pickupWalkerReplaceCheck(void){return 0;}
 const char* CBasePlayerWeapon::GetPickupWalkerName(void){return 0;}
 //MODDD - new event, called alongside a reload changing the ammo counts.
-void CBasePlayerWeapon::OnReloadApply(void) {};
+void CBasePlayerWeapon::OnReloadApply(void) {}
 
 // Aha - don't dummy me!  I'm still important clientside, weapons
 // refer to me and expect something better than worthless.

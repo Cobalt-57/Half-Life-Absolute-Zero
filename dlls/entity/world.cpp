@@ -582,6 +582,9 @@ void CWorld :: Spawn( void )
 
 //MODDD NOTE - what are the "room_type" and "waterroom_type" CVars for? are they dummied out?
 // same for "v_dark" ?
+// Nope, v_dark is used, but only applies on loading a map, not restored games.  Even before 
+// spawnflags were cleared after map startup (For loaded games, it was set to 1 but still had
+// no effect.  Odd.).
 
 void CWorld :: Precache( void )
 {
@@ -759,10 +762,12 @@ void CWorld :: Precache( void )
 		}
 	}
 
-	if ( pev->speed > 0 )
-		CVAR_SET_FLOAT( "sv_zmax", pev->speed );
-	else
-		CVAR_SET_FLOAT( "sv_zmax", 4096 );
+	if (pev->speed > 0) {
+		CVAR_SET_FLOAT("sv_zmax", pev->speed);
+	}
+	else {
+		CVAR_SET_FLOAT("sv_zmax", 4096);
+	}
 
 	if ( pev->netname )
 	{
@@ -778,15 +783,23 @@ void CWorld :: Precache( void )
 		}
 	}
 
-	if ( pev->spawnflags & SF_WORLD_DARK )
-		CVAR_SET_FLOAT( "v_dark", 1.0 );
-	else
-		CVAR_SET_FLOAT( "v_dark", 0.0 );
+	if (pev->spawnflags & SF_WORLD_DARK) {
+		CVAR_SET_FLOAT("v_dark", 1.0);
+	}
+	else {
+		CVAR_SET_FLOAT("v_dark", 0.0);
+	}
 
-	if ( pev->spawnflags & SF_WORLD_TITLE )
+	if (pev->spawnflags & SF_WORLD_TITLE) {
 		gDisplayTitle = TRUE;		// display the game title if this key is set
-	else
+	}
+	else {
 		gDisplayTitle = FALSE;
+	}
+
+	//MODDD - no need for games saved on this map to show the title again.
+	pev->spawnflags &= ~(SF_WORLD_DARK | SF_WORLD_TITLE);
+
 
 	if ( pev->spawnflags & SF_WORLD_FORCETEAM )
 	{

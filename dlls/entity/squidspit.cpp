@@ -117,7 +117,7 @@ void CSquidSpit::Animate( void )
 
 	if(EASY_CVAR_GET(bullsquidSpitUseAlphaModel) == 1){
 		
-		StudioFrameAdvance( );
+		StudioFrameAdvance_SIMPLE( );
 		pev->angles = UTIL_velocityToAngles(pev->velocity);
 	}else{
 		

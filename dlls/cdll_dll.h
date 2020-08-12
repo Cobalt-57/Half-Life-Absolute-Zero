@@ -58,9 +58,6 @@
 
 #define MAX_ITEM_TYPES			6	// hud item selection slots
 
-//MODDD - changed so that there is a max of 7 (two new power canisters that were not present ingame).
-//#define MAX_ITEMS				5	// hard coded item types
-#define MAX_ITEMS				7	// hard coded item types
 
 #define HIDEHUD_WEAPONS		( 1<<0 )
 #define HIDEHUD_FLASHLIGHT	( 1<<1 )

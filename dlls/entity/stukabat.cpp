@@ -1621,7 +1621,6 @@ void CStukaBat:: getPathToEnemyCustom(){
 
 	if ( !enemyPresent )
 	{
-		//easyPrintLineGroup2("YOU FAIL DEEEE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
 		
 		//???
 		EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyPrintLine("FAIL TO GET PATH 1") );
@@ -1629,7 +1628,7 @@ void CStukaBat:: getPathToEnemyCustom(){
 
 		return;
 	}else{
-		//easyPrintLineGroup2("ASSSSSSSSSSSSS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+		
 	}
 			
 	

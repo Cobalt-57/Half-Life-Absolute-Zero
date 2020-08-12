@@ -497,7 +497,7 @@ public:
 
 	//Even though the relationship may disallow it, I can be caught by the barnacle anyways (if true).
 	virtual BOOL getIsBarnacleVictimException(void);
-	virtual BOOL isBreakableOrchild(void);
+	virtual BOOL isBreakableOrChild(void);
 	virtual BOOL isDestructibleInanimate(void);
 	virtual BOOL isTalkMonster(void);
 	virtual BOOL isProvokable(void);

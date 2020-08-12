@@ -3005,8 +3005,6 @@ int CStudioModelRenderer::StudioDrawModel( int flags )
 		//canReflect = FALSE;
 	}
 
-	// that ok?
-	//if ((canReflect && gHUD.numMirrors>0 && (gEngfuncs.GetViewModel() != m_pCurrentEntity)))
 	if ((canReflect && gHUD.numMirrors>0 && (g_drawType != DRAWTYPE_VIEWMODEL)))
 	{
 		for (int ic = 0; ic < gHUD.numMirrors; ic++)
@@ -3660,7 +3658,7 @@ void CStudioModelRenderer::StudioCalcAttachments( void )
 	for (i = 0; i < m_pStudioHeader->numattachments; i++)
 	{
 		//checkpoint6
-		//MODDD - PAY ATTENTION TO ME!!!
+		//MODDD - PAY ATTENTION TO ME!
 		//VectorTransform( pattachment[i].org, (*m_plighttransform)[pattachment[i].bone],  m_pCurrentEntity->attachment[i] );
 		VectorTransform( pattachment[i].org, (m_plighttransformMOD)[pattachment[i].bone],  m_pCurrentEntity->attachment[i] );
 	}
@@ -3846,8 +3844,7 @@ void CStudioModelRenderer::StudioRenderFinal_Hardware( void )
 
 			//MODDD TODO - we also have a viewmodel check too, but regardless.
 			
-			// that ok?
-			//if (EASY_CVAR_GET(r_shadows) == 1 && gEngfuncs.GetViewModel() != m_pCurrentEntity) // FIX : Avoid view model
+
 			if (EASY_CVAR_GET(r_shadows) == 1 && g_drawType != DRAWTYPE_VIEWMODEL) // FIX : Avoid view model
 			{
 				//DropShadows();

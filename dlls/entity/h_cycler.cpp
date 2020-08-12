@@ -156,7 +156,7 @@ void CCycler :: Think( void )
 
 	if (m_animate)
 	{
-		StudioFrameAdvance ( );
+		StudioFrameAdvance_SIMPLE( );
 	}
 	if (m_fSequenceFinished && !m_fSequenceLoops)
 	{
@@ -455,7 +455,7 @@ void CWreckage::Precache( )
 
 void CWreckage::Think( void )
 {
-	StudioFrameAdvance( );
+	StudioFrameAdvance_SIMPLE( );
 	pev->nextthink = gpGlobals->time + 0.2;
 
 	if (pev->dmgtime)

@@ -15,7 +15,9 @@
 #ifndef PLAYER_H
 #define PLAYER_H
 
+
 #include "pm_materials.h"
+#include "weapons.h"
 #include "friendly.h"
 
 
@@ -161,8 +163,6 @@ public:
 	//the player will be unkillable up to this time (implied to be set & since revive).
 	float reviveSafetyTime;
 
-	int nextSpecialNode;
-	float nextSpecialNodeAlternateTime;
 
 	BOOL iWasFrozenToday;
 
@@ -199,7 +199,9 @@ public:
 
 	float			m_flFallVelocity;
 	
+	//MODDD NOTE - holds one-use items (adrenaline, antidote, radiation)
 	int				m_rgItems[MAX_ITEMS];
+
 	int				m_fKnownItem;		// True when a new item needs to be added
 	int				m_fNewAmmo;			// True when a new item has been added
 
@@ -284,7 +286,9 @@ public:
 	int		m_iClientHideHUD;
 	int		m_iFOV;			// field of view
 	int		m_iClientFOV;	// client's known FOV
+
 	// usable player items 
+	//MODDD - NOTE.  Holds permanent pickups like CBasePlayerItem/Weapon instances.
 	CBasePlayerItem	*m_rgpPlayerItems[MAX_ITEM_TYPES];
 	CBasePlayerItem *m_pActiveItem;
 	CBasePlayerItem *m_pClientActiveItem;  // client version of the active item
@@ -789,37 +793,6 @@ public:
 	void set_fvoxEnabled(BOOL argNew, BOOL setSilent);
 	void set_cl_ladder_choice(float argNew);
 
-
-	//MODDD - phase these out.
-	///////////////////////////////////////////////////////////////////////////
-	///////////////////////////////////////////////////////////////////////////
-	//MODDD - new.
-	void DebugCall1(void);
-	void DebugCall2(void);
-	void DebugCall3(void);
-	
-	BOOL debugPoint1Given;
-	BOOL debugPoint2Given;
-	BOOL debugPoint3Given;
-	Vector debugPoint1;
-	Vector debugPoint2;
-	Vector debugPoint3;
-
-	
-	//MODDD
-	Vector debugDrawVect;
-	Vector debugDrawVectB;
-	Vector debugDrawVect2;
-	Vector debugDrawVect3;
-	Vector debugDrawVect4;
-	Vector debugDrawVect5;
-
-	Vector debugDrawVectRecentGive1;
-	Vector debugDrawVectRecentGive2;
-
-
-	///////////////////////////////////////////////////////////////////////////
-	///////////////////////////////////////////////////////////////////////////
 
 	void InitStatusBar( void );
 	void UpdateStatusBar( void );

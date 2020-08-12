@@ -25,7 +25,7 @@ class CBreakable : public CBaseDelay
 public:
 	//MODDD - new
 	CBreakable();
-	virtual BOOL isBreakableOrchild(void);
+	virtual BOOL isBreakableOrChild(void);
 	virtual BOOL isDestructibleInanimate(void);
 
 	char* m_idShardText;

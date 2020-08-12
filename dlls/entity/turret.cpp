@@ -285,6 +285,13 @@ void CBaseTurret::Spawn()
 	
 	pev->max_health		= pev->health;
 
+	// No need for other turrets to do this, all others call this parent spawn method and reach here.
+	if (monsterID == -1) {
+		//MODDD - must do manually since init is skipped.
+		monsterID = monsterIDLatest;
+		monsterIDLatest++;
+	}
+
 }
 
 
@@ -520,7 +527,7 @@ void CBaseTurret::ActiveThink(void)
 	Vector vecDirToEnemy;
 
 	pev->nextthink = gpGlobals->time + 0.1;
-	StudioFrameAdvance( );
+	StudioFrameAdvance_SIMPLE( );
 
 	if ((!m_iOn) || (m_hEnemy == NULL))
 	{
@@ -695,7 +702,7 @@ void CMiniTurret::Shoot(Vector &vecSrc, Vector &vecDirToEnemy)
 void CBaseTurret::Deploy(void)
 {
 	pev->nextthink = gpGlobals->time + 0.1;
-	StudioFrameAdvance( );
+	StudioFrameAdvance_SIMPLE( );
 
 	if (pev->sequence != TURRET_ANIM_DEPLOY)
 	{
@@ -738,7 +745,7 @@ void CBaseTurret::Retire(void)
 
 	pev->nextthink = gpGlobals->time + 0.1;
 
-	StudioFrameAdvance( );
+	StudioFrameAdvance_SIMPLE( );
 
 	EyeOff( );
 
@@ -780,7 +787,7 @@ void CBaseTurret::Retire(void)
 
 void CTurret::SpinUpCall(void)
 {
-	StudioFrameAdvance( );
+	StudioFrameAdvance_SIMPLE( );
 	pev->nextthink = gpGlobals->time + 0.1;
 
 	// Are we already spun up? If not start the two stage process.
@@ -881,7 +888,7 @@ void CBaseTurret::SearchThink(void)
 {
 	// ensure rethink
 	SetTurretAnim(TURRET_ANIM_SPIN);
-	StudioFrameAdvance( );
+	StudioFrameAdvance_SIMPLE( );
 	pev->nextthink = gpGlobals->time + 0.1;
 
 	if (m_flSpinUpTime == 0 && m_flMaxSpin)
@@ -942,7 +949,7 @@ void CBaseTurret::SearchThink(void)
 void CBaseTurret::AutoSearchThink(void)
 {
 	// ensure rethink
-	StudioFrameAdvance( );
+	StudioFrameAdvance_SIMPLE( );
 	pev->nextthink = gpGlobals->time + 0.3;
 
 	// If we have a target and we're still healthy
@@ -973,7 +980,7 @@ void CBaseTurret ::	TurretDeath( void )
 {
 	BOOL iActive = FALSE;
 
-	StudioFrameAdvance( );
+	StudioFrameAdvance_SIMPLE( );
 	pev->nextthink = gpGlobals->time + 0.1;
 
 	if (pev->deadflag != DEAD_DEAD)
@@ -1521,6 +1528,7 @@ void CSentry::Spawn()
 	m_flMaxSpin	= SENTRY_MAXSPIN;
 
 	CBaseTurret::Spawn();
+	//NOTE - this includes the monsterID giving call
 
 
 	pev->movetype = MOVETYPE_FLY;
@@ -1677,7 +1685,7 @@ void CSentry ::	SentryDeath( void )
 {
 	BOOL iActive = FALSE;
 
-	StudioFrameAdvance( );
+	StudioFrameAdvance_SIMPLE( );
 	pev->nextthink = gpGlobals->time + 0.1;
 
 	if (pev->deadflag != DEAD_DEAD)

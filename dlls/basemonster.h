@@ -521,6 +521,10 @@ public:
 	BOOL canRangedAttack1;
 	BOOL canRangedAttack2;
 
+	BOOL strictNodeTolerance;
+
+
+
 
 
 	//MODDD - new
@@ -666,7 +670,8 @@ public:
 
 // monster use function
 	void EXPORT MonsterUse( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value );
-	void EXPORT CorpseUse( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value );
+	// Never implemented, as-is?  Whoops.
+	//void EXPORT CorpseUse( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value );
 
 // overrideable Monster member functions
 	
@@ -739,6 +744,7 @@ public:
 	
 	
 	virtual void Move( float flInterval = 0.1 );
+	virtual int MovePRE(float flInterval, float& flWaypointDist, float& flCheckDist, float& flDist, Vector& vecDir, CBaseEntity*& pTargetEnt );
 
 	virtual void MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, float flInterval );
 	virtual BOOL ShouldAdvanceRoute( float flWaypointDist, float flInterval );
@@ -842,11 +848,7 @@ public:
 	
 	//MODDD - not inline as of now.  I need my breakpoints.
 	//inline
-	void TaskComplete( void ) {
-		if ( !HasConditions(bits_COND_TASK_FAILED) ){
-			m_iTaskStatus = TASKSTATUS_COMPLETE;
-		}
-	}
+	void TaskComplete(void);
 	void MovementComplete( void );
 	
 

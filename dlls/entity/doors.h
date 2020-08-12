@@ -138,9 +138,17 @@ public:
 	virtual void OnDoorHitTop(void);
 	virtual void OnDoorGoDown(void);
 	virtual void OnDoorHitBottom(void);
-	
+
+
+	//MODDD - m_bHealthValue can probably be removed at some point, retail never used doors for healing as far as
+	// I can tell, had their own class that doesn't even inherit from CBaseDoor (CWallHealth, or func_healthcharger).
+	// And a version that behaves like a door and heals has already been made separately without invoving this var
+	// at all: CHealthDoor, or func_door_health (can be forced to any func_door_rotating for old maps for testing
+	// before the new entity name was a choice).
 	BYTE	m_bHealthValue;// some doors are medi-kit doors, they give players health
+	////////////////////////////////////////////////////////////////////////////////////
 	
+
 	BYTE	m_bMoveSnd;			// sound a door makes while moving
 	BYTE	m_bStopSnd;			// sound a door makes when it stops
 

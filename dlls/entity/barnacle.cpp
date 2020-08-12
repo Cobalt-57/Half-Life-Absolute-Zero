@@ -758,7 +758,7 @@ void CBarnacle :: BarnacleThink ( void )
 
 	// ALERT( at_console, "tounge %f\n", m_flAltitude + m_flTongueAdj );
 	SetBoneController( 0, -(m_flAltitude + m_flTongueAdj) );
-	StudioFrameAdvance( 0.1 );
+	StudioFrameAdvance_SIMPLE( 0.1 );
 
 }//END OF BarnacleThink
 
@@ -891,7 +891,7 @@ GENERATE_KILLED_IMPLEMENTATION(CBarnacle)
 	SetActivity ( ACT_DIESIMPLE );
 	SetBoneController( 0, 0 );
 
-	StudioFrameAdvance( 0.1 );
+	StudioFrameAdvance_SIMPLE( 0.1 );
 
 	pev->nextthink = gpGlobals->time + 0.1;
 	SetThink ( &CBarnacle::WaitTillDead );
@@ -903,7 +903,7 @@ void CBarnacle :: WaitTillDead ( void )
 {
 	pev->nextthink = gpGlobals->time + 0.1;
 
-	float flInterval = StudioFrameAdvance( 0.1 );
+	float flInterval = StudioFrameAdvance_SIMPLE( 0.1 );
 	DispatchAnimEvents ( flInterval );
 
 	if ( m_fSequenceFinished )

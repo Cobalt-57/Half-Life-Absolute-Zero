@@ -91,7 +91,7 @@ CGraph WorldGraph;
 
 
 extern DLL_GLOBAL edict_t* g_pBodyQueueHead;
-extern short g_sModelIndexLaser;
+extern DLL_GLOBAL short g_sModelIndexLaser;
 extern BOOL gTouchDisabled;
 
 
@@ -783,6 +783,9 @@ int CGraph::FindShortestPath(int* piPath, int iStart, int iDest, int iHull, int 
 	}
 
 
+
+	//MODDD - NEW SECTION
+	////////////////////////////////////////////////////////////////////////////////////////////////////////
 	if (iStart == iDest)
 	{
 
@@ -798,6 +801,8 @@ int CGraph::FindShortestPath(int* piPath, int iStart, int iDest, int iHull, int 
 
 		return 2;
 	}
+	////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 
 	// Is routing information present.
 	//
@@ -1065,7 +1070,11 @@ void CGraph::CheckNode(Vector vecOrigin, int iNode)
 
 	float flDist = (vecOrigin - m_pNodes[iNode].m_vecOriginPeek).Length();
 
-	//MODDD - is this node dead?  If so, it can go <enjoy the warm embrace of> a porcupine.
+	//MODDD - is this node dead?
+	// NOTICE!!!   This is the cause of the scientist at the vending machine, a1a0, not backing up
+	// on having a path to the machines interrupted.   This isn't really behavior worth preserving
+	// for what could weaken other pathfind checks into thinking a route that leads nowhere could 
+	// really work.
 	if (EASY_CVAR_GET(ignoreIsolatedNodes) && m_pNodes[iNode].m_cNumLinks < 1) {
 		//BAM!  Class dismissed for you.
 		return;
@@ -1389,39 +1398,6 @@ void CGraph::ShowNodeConnections(int iNode)
 	}
 	easyPrintLine("***END OF CONNECTIONS***");
 }
-
-
-//MODDD - new.  uses calls to "UTIL_drawLineFrame" to draw a line this frame for easier updates.
-void CGraph::ShowNodeConnectionsFrame(int iNode) {
-
-	int i = 0;
-	Vector	vecSpot;
-	CNode* pNode;
-	CNode* pLinkNode;
-	if (iNode < 0 || iNode >= this->m_cNodes)
-	{
-		//out of bounds!
-		return;
-	}
-
-	pNode = &m_pNodes[iNode];
-
-	for (i = 0; i < pNode->m_cNumLinks; i++)
-	{
-		pLinkNode = &Node(NodeLink(iNode, i).m_iDestNode);
-		vecSpot = pLinkNode->m_vecOrigin;
-
-
-		UTIL_drawLineFrame(m_pNodes[iNode].m_vecOrigin.x,
-			m_pNodes[iNode].m_vecOrigin.y,
-			m_pNodes[iNode].m_vecOrigin.z + node_linktest_height,
-			vecSpot.x,
-			vecSpot.y,
-			vecSpot.z + node_linktest_height, 7, 255, 0, 100);
-
-	}
-}
-
 
 
 

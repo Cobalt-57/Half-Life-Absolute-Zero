@@ -49,9 +49,9 @@
 #include "gib.h"
 #include "effects.h"
 #include "customentity.h"
-
-//MODDD - temporary for debugging.
+// temporary for debugging.
 #include "player.h"
+#include "util_debugdraw.h"
 
 EASY_CVAR_EXTERN(hgruntBrassEjectForwardOffset)
 EASY_CVAR_EXTERN(gruntsCanHaveMP5Grenade)
@@ -75,6 +75,8 @@ EASY_CVAR_EXTERN(hgruntStrafeAnimSpeedMulti)
 EASY_CVAR_EXTERN(hgruntRunAndGunAnimSpeedMulti)
 extern BOOL globalPSEUDO_germanModel_hgruntFound;
 EASY_CVAR_EXTERN(hgruntAllowGrenades)
+
+
 
 
 //=========================================================
@@ -1457,11 +1459,10 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CHGrunt)
 
 			if(m_hEnemy->IsPlayer()){
 				//CBasePlayer* tempPlayer = static_cast<CBasePlayer*>(m_hEnemy.Get()->pvPrivateData-> );
-				CBaseEntity* thing;
 				//CBasePlayer* tempPlayer = (CBaseEntity::Instance(m_hEnemy)) ;
-				CBasePlayer* tempPlayer = GetClassPtr((CBasePlayer *)m_hEnemy->pev) ;
-				tempPlayer->debugDrawVectRecentGive1 = pev->origin + Vector(0, 0, 10);
-				tempPlayer->debugDrawVectRecentGive2 = m_vecMoveGoal + Vector(0, 0, 10);
+				//CBasePlayer* tempPlayer = GetClassPtr((CBasePlayer *)m_hEnemy->pev) ;
+				debugDrawVectRecentGive1 = pev->origin + Vector(0, 0, 10);
+				debugDrawVectRecentGive2 = m_vecMoveGoal + Vector(0, 0, 10);
 
 				//EASY_CVAR_PRINTIF_PRE(hgruntPrintout, easyForcePrintLine("OW!!!@@@@@@@@@@@@@@@@@@@@@@ %.2f %d", lengthGoneWith, pathOkay) );
 
@@ -2543,7 +2544,7 @@ void CHGrunt :: HandleAnimEvent( MonsterEvent_t *pEvent )
 			}
 
 
-			//easyForcePrintLine("ASSSSSSSSSS %d %d %d %d", hgruntAllowStrafeFire() == FALSE, !strafeCanFire, outOfAmmoStrafeFireBlock(), friendlyFireStrafeBlock);
+			//easyForcePrintLine("strafe stats again %d %d %d %d", hgruntAllowStrafeFire() == FALSE, !strafeCanFire, outOfAmmoStrafeFireBlock(), friendlyFireStrafeBlock);
 			if(hgruntAllowStrafeFire() == FALSE || !strafeCanFire || outOfAmmoStrafeFireBlock() || friendlyFireStrafeBlock){
 				//no firing if out of ammo or obligated not to.
 

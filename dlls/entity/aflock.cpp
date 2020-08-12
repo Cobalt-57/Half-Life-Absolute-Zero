@@ -391,7 +391,7 @@ void CFlockingFlyer :: BoidAdvanceFrame ( )
 	pev->avelocity.z = - (pev->angles.z + pev->avelocity.y);
 
 	// pev->framerate		= flapspeed;
-	StudioFrameAdvance( 0.1 );
+	StudioFrameAdvance_SIMPLE( 0.1 );
 }
 
 //=========================================================

@@ -22,18 +22,15 @@
 #include "usercmd.h"
 #include "pm_defs.h"
 #include "pm_materials.h"
-
 #include "eventscripts.h"
 #include "ev_hldm.h"
-
 #include "r_efx.h"
 #include "event_api.h"
 #include "event_args.h"
-
-#include <string.h>
-
 #include "r_studioint.h"
 #include "com_model.h"
+
+#include "com_weapons.h"
 
 //MODDD - new include.
 // See the note at the top of ev_hldm.h about several removals in here (now in dlls/<specific weapon.h files>
@@ -128,6 +125,18 @@ EASY_CVAR_EXTERN(myRocketsAreBarney)
 EASY_CVAR_EXTERN(muteCrowbarSounds)
 EASY_CVAR_EXTERN(forceAllowServersideTextureSounds)
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(viewModelPrintouts)
+EASY_CVAR_EXTERN(cl_gaussfollowattachment)
+
+
+//MODDD - from in_camera.cpp 
+extern "C"
+{
+	void DLLEXPORT CAM_Think(void);
+	int DLLEXPORT CL_IsThirdPerson(void);
+	void DLLEXPORT CL_CameraOffset(float* ofs);
+}
+
+
 
 
 extern engine_studio_api_t IEngineStudio;
@@ -245,6 +254,8 @@ float EV_HLDM_PlayTextureSound(int idx, pmtrace_t* ptr, float* vecSrc, float* ve
 		//TODO - for now, assume anything without the ISNPC flag is world-affiliated, or whatever.
 		// Later go in ad ad ISWORLDAFFILIATED to all stuff with say Class == CLASS_NONE or indeed, that IsWorldAffiliated() as TRUE.
 		// No idea why serverside didn't check for that too.
+		// There is also a check for pEntity->solid == SOLID_BSP that can be done (curstate.renderfx, or get a physent if possible
+		// and do pe->solid?  If it's the same result, just checking).  Would any non-map entities be SOLID_BSP?
 		//isEntityWorld = (entityIndex == 0 || cEntRefAlt->curstate.renderfx & ISWORLDAFFILIATED);
 		isEntityWorld = (entityIndex == 0 || !(cEntRefAlt->curstate.renderfx & ISNPC) );
 
@@ -751,7 +762,7 @@ void EV_HLDM_FireBullets(int idx, float* forward, float* right, float* up, int c
 }
 
 
-//INVESTIGATE ME!!!!!!!!!!!!!!!!!
+
 //======================
 //	    GLOCK START
 //======================
@@ -1324,6 +1335,9 @@ void EV_FireGauss(event_args_t* args)
 	physent_t* pEntity;
 	int m_iBeam, m_iGlow, m_iBalls;
 	vec3_t up, right, forward;
+	//MODDD - new vars
+	Vector gunOrig;
+	Vector gunDir;
 
 	idx = args->entindex;
 	VectorCopy_f(args->origin, origin);
@@ -1338,11 +1352,13 @@ void EV_FireGauss(event_args_t* args)
 
 	//	Con_Printf( "Firing gauss with %f\n", flDamage );
 	EV_GetGunPosition(args, vecSrc, origin);
+	gunOrig = vecSrc;
 
 	m_iBeam = gEngfuncs.pEventAPI->EV_FindModelIndex("sprites/smoke.spr");
 	m_iBalls = m_iGlow = gEngfuncs.pEventAPI->EV_FindModelIndex("sprites/hotglow.spr");
 
 	AngleVectors(angles, forward, right, up);
+	gunDir = forward;
 
 	VectorMA(vecSrc, 8192, forward, vecDest);
 
@@ -1388,6 +1404,50 @@ void EV_FireGauss(event_args_t* args)
 	}//END OF mutePlayerWeaponFirecheck
 
 
+
+
+	//MODDD - reget this each time in case of changes.
+	float dmgFracto;
+	float beamColor_r;
+	float beamColor_g;
+	float beamColor_b;
+	float beamWidth;  //default:  m_fPrimaryFire ? 1.0 : 2.5
+	float beamBrightness;  //default: (m_fPrimaryFire ? 128.0 : flDamage) / 255.0f
+	float beamLife;
+
+
+	if (EASY_CVAR_GET(cl_gaussfollowattachment) == 1) {
+		// Retail default is 0.10.
+		// Start point follows the gauss as it fires and the player moves... odd as that is to say out loud.
+		beamLife = 0.08;
+	}else {
+		// Decay faster to not look too weird on firing while moving.
+		beamLife = 0.029;
+	}
+
+
+	if (m_fPrimaryFire) {
+		dmgFracto = min(flDamage, 20.0f) * (1.0f / 20.0f);
+		beamColor_r = 1.0f;
+		beamColor_g = 0.5f;
+		beamColor_b = 0.0f;
+		beamWidth = 0.8f + dmgFracto * 0.45f;
+		beamBrightness = 0.6f + dmgFracto * 0.17f;
+	}else {
+		dmgFracto = min(flDamage, 200.0f) * (1.0f / 200.0f);
+		beamColor_r = 1.0f;
+		beamColor_g = 1.0f;
+		beamColor_b = 1.0f;
+		beamWidth = 1.5f + dmgFracto * 2.0f;
+		beamBrightness = 0.65f + dmgFracto * 0.35f;
+	}
+
+
+
+
+
+
+
 //NOTE: on any changes, sync me up with gauss.cpp (server-side)'s "Fire" method with a similar loop.
 	while (flDamage > 10 && nMaxHits > 0)
 	{
@@ -1407,38 +1467,12 @@ void EV_FireGauss(event_args_t* args)
 
 		gEngfuncs.pEventAPI->EV_PopPMStates();
 
-		if (tr.allsolid)
+		if (tr.allsolid) {
 			break;
-
-
-		//MODDD - reget this each time in case of changes.
-		float dmgFracto;
-		float beamColor_r;
-		float beamColor_g;
-		float beamColor_b;
-		float beamWidth;  //default:  m_fPrimaryFire ? 1.0 : 2.5
-		float beamBrightness;  //default: (m_fPrimaryFire ? 128.0 : flDamage) / 255.0f
-
-		if (m_fPrimaryFire) {
-			dmgFracto = min(flDamage, 20.0f) * (1.0f / 20.0f);
-			beamColor_r = 1.0f;
-			beamColor_g = 0.5f;
-			beamColor_b = 0.0f;
-			beamWidth = 0.8f + dmgFracto * 0.45f;
-			beamBrightness = 0.6f + dmgFracto * 0.17f;
-		}
-		else {
-			dmgFracto = min(flDamage, 200.0f) * (1.0f / 200.0f);
-			beamColor_r = 1.0f;
-			beamColor_g = 1.0f;
-			beamColor_b = 1.0f;
-			beamWidth = 1.5f + dmgFracto * 2.0f;
-			beamBrightness = 0.65f + dmgFracto * 0.35f;
 		}
 
 
-		if (fFirstBeam)
-		{
+		if (fFirstBeam){
 			if (EV_IsLocal(idx))
 			{
 				// Add muzzle flash to current weapon model
@@ -1451,43 +1485,78 @@ void EV_FireGauss(event_args_t* args)
 			// not a byte/int from 0 to 255 as found here).
 			// Thanks Nikita Butorin / @vasiavasiavasia95 !
 
-			gEngfuncs.pEfxAPI->R_BeamEntPoint(
-				idx | 0x1000,
-				tr.endpos,
-				m_iBeam,
-				0.1,
-				beamWidth,
-				0.0,
-				beamBrightness,
-				0,
-				0,
-				0,
-				beamColor_r,
-				beamColor_g,
-				beamColor_b
-			);
-		}
-		else
-		{
-			gEngfuncs.pEfxAPI->R_BeamPoints(vecSrc,
-				tr.endpos,
-				m_iBeam,
-				0.1,
-				beamWidth,
-				0.0,
-				beamBrightness,
-				0,
-				0,
-				0,
-				beamColor_r,
-				beamColor_g,
-				beamColor_b
-			);
+			if (EASY_CVAR_GET(cl_gaussFollowAttachment) == 1) {
+				gEngfuncs.pEfxAPI->R_BeamEntPoint(idx | 0x1000, tr.endpos, m_iBeam, 0.1, beamWidth, 0.0, beamBrightness, 0, 0, 0, beamColor_r, beamColor_g, beamColor_b);
+
+			}else{
+				// not wise.
+				//gEngfuncs.pEfxAPI->R_BeamPoints(gunOrig, tr.endpos, m_iBeam, 0.1, beamWidth, 0.0, beamBrightness, 0, 0, 0, beamColor_r, beamColor_g, beamColor_b);
+
+				//cl_entity_t* viewModelRef = GetViewEntity();
+				//if (viewModelRef != NULL) {
+					// Use attachment 0 for the muzzle of the weapon, even though it's bound to go out of date in seconds.
+					// Attachmenst 1 to 3 are the same ('doom mode'), as though they're defaults, might match the model origin.
+					// Idea: See the direction from attachment 0 to the end point and back up into the weapon a bit to show up while it recoils.
+					// Are viewmodel angles worth anything?  Doubt it.
+
+					// gunDir?  no, not as accurate to the attachment
+
+					// viewModelRef->attachment[0]
+
+					// Using a hardcoded offset instead, relative to the angles.
+					// attachment[0] is usually fine, but it is still out of date when firing quickly.
+					// As the anim puts the attachment back and right aways due to the recoil (what is read as the attachment[0] point),
+					// the instant it changes back to frame 0 visually the beam is out of place.
+
+
+					//Vector fireOrigin = vecSrc + EASY_CVAR_GET(ctt1) * forward  + EASY_CVAR_GET(ctt2) * right + EASY_CVAR_GET(ctt3) * up;
+
+					Vector fireOrigin;
+					
+					if (EV_IsLocal(idx) && !CL_IsThirdPerson() ) {
+						// got a viewmodel to match to.
+						fireOrigin = vecSrc + 22 * forward + 5.6 * right + -4.8 * up;
+					}
+					else {
+						// rendering a player model of a different player from the local one.
+						// wait.  this isn't working?   Getting the player's third-person model, attachment 0?
+						// How did R_BeamEntPoint even work then in this case?  Is the hex in 'idx | 0x1000' a reference to 'attachment 0' for the player,
+						// or is 'idx | 0x1000' a separate entity completley?
+
+						//cl_entity_t* pl = gEngfuncs.GetEntityByIndex(idx);
+						//if (pl != NULL) {
+						//	fireOrigin = pl->attachment[0];
+						//}else {
+						//	// what???
+						//	fireOrigin = vecSrc + 22 * forward + 5.6 * right + -4.8 * up;
+						//}
+
+						// BETTER: just use the gun origin at this point dangit.
+						// Or not even it maps to the barrel.  Oooookay.
+						//fireOrigin = gunOrig;
+						int i = 0;
+						fireOrigin = vecSrc + 16 * forward + 8 * right + -12 * up;
+					}
+
+					//Vector fireOrigin = viewModelRef->attachment[0];
+
+					Vector vecDir = (tr.endpos - fireOrigin).Normalize();
+
+					gEngfuncs.pEfxAPI->R_BeamPoints(fireOrigin - (vecDir * 8), tr.endpos, m_iBeam, beamLife, beamWidth, 0.0, beamBrightness, 0, 0, 0, beamColor_r, beamColor_g, beamColor_b);
+				//}//viewModelRef check
+			}// cl_gaussFollowAttachment check
+
+		}else{
+			gEngfuncs.pEfxAPI->R_BeamPoints(vecSrc, tr.endpos, m_iBeam, beamLife, beamWidth, 0.0, beamBrightness, 0, 0, 0, beamColor_r, beamColor_g, beamColor_b);
 		}
 
+
+
+
 		pEntity = gEngfuncs.pEventAPI->EV_GetPhysent(tr.ent);
-		if (pEntity == NULL)
+		if (pEntity == NULL) {
 			break;
+		}
 
 		if (pEntity->solid == SOLID_BSP)
 		{
@@ -2075,6 +2144,8 @@ void EV_EgonFire(event_args_t* args)
 
 				AngleVectors(angles, forward, right, up);
 
+				//MODDD - NOTE.  Interesting not to use the sent 'origin' like most, if not all other wepaons would here.
+				// instead of 'pl->origin'
 				EV_GetGunPosition(args, vecSrc, pl->origin);
 
 				VectorMA(vecSrc, 2048, forward, vecEnd);

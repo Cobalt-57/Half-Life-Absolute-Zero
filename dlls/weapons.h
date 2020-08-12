@@ -32,16 +32,23 @@
 #endif
 
 
+//MODDD - changed so that there is a max of 7 (two new power canisters that were not present ingame).
+#define MAX_ITEMS				7	// hard coded item types
+
+
+//MODDD - NOTE.   ugh.  Should've changed this ages ago but now it would mess with people's save files.
+// No sense in ITEM_HEALTHKIT or ITEM_BATTERY.  Never used.
+// ITEM_SECURITY has some collection logic in items.cpp but nothing ever depends on it being there.
 
 // constant items
 #define ITEM_HEALTHKIT		1
 #define ITEM_ANTIDOTE		2
 #define ITEM_SECURITY		3
 #define ITEM_BATTERY		4
-
-//MODDD - added for new syringes
+//MODDD - other power canisters
 #define ITEM_ADRENALINE		5
 #define ITEM_RADIATION		6
+
 
 #define WEAPON_NONE				0
 #define WEAPON_CROWBAR			1

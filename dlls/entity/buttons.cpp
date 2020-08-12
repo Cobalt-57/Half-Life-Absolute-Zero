@@ -223,11 +223,13 @@ void CMultiSource::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE 
 	// 
 	if ( IsTriggered( pActivator ) )
 	{
+		//MODDD - odd to have the same name as something above scope, name 'useType' below changed for clarity.
 		ALERT( at_aiconsole, "Multisource %s enabled (%d inputs)\n", STRING(pev->targetname), m_iTotal );
-		USE_TYPE useType = USE_TOGGLE;
-		if ( m_globalstate )
-			useType = USE_ON;
-		SUB_UseTargets( NULL, useType, 0 );
+		USE_TYPE TEMPVAR_useType = USE_TOGGLE;
+		if (m_globalstate) {
+			TEMPVAR_useType = USE_ON;
+		}
+		SUB_UseTargets( NULL, TEMPVAR_useType, 0 );
 	}
 }
 

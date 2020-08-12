@@ -19,24 +19,13 @@
 */
 
 #include "extdll.h"
-
 #include "doors.h"
-
 #include "util.h"
-
-
 #include "basetoggle.h"
 #include "basebutton.h"
-
 #include "player.h"
-
-
 #include "healthmodule.h"
 #include "lights.h"
-
-
-//last? what?
-//#include "doors.h"
 
 
 

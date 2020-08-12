@@ -472,7 +472,7 @@ void CLeech::DeadThink( void )
 			SetActivity(ACT_DIEFORWARD);
 		}
 	}
-	StudioFrameAdvance();
+	StudioFrameAdvance_SIMPLE();
 	pev->nextthink = gpGlobals->time + 0.1;
 
 	// Apply damage velocity, but keep out of the walls
@@ -564,7 +564,7 @@ void CLeech::UpdateMotion( void )
 	{
 		SetActivity ( m_IdealActivity );
 	}
-	float flInterval = StudioFrameAdvance();
+	float flInterval = StudioFrameAdvance_SIMPLE();
 	DispatchAnimEvents ( flInterval );
 
 #if DEBUG_BEAMS

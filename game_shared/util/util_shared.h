@@ -548,7 +548,7 @@ extern void convertIntToBinary(char* buffer, unsigned int arg, unsigned int bina
 extern void UTIL_StringToVector( float *pVector, const char *pString );
 extern void UTIL_StringToIntArray( int *pVector, int count, const char *pString );
 //simple version for just one number.
-extern float clamp(float argTest, float argMin, float argMax);
+extern float UTIL_clamp(float argTest, float argMin, float argMax);
 //MODDD - version that skips normalization offered.
 extern Vector UTIL_ClampVectorToBox( const Vector &input, const Vector &clampSize );
 extern Vector UTIL_ClampVectorToBoxNonNormalized( const Vector &input, const Vector &clampSize );

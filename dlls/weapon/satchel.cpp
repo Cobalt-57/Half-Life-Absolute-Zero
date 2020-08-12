@@ -121,6 +121,10 @@ void CSatchelCharge::SatchelSlide( CBaseEntity *pOther )
 	if ( pOther->edict() == pev->owner )
 		return;
 
+
+	float flInterval = DetermineInterval();
+
+
 	// pev->avelocity = Vector (300, 300, 300);
 	pev->gravity = 1;// normal gravity now
 
@@ -139,13 +143,19 @@ void CSatchelCharge::SatchelSlide( CBaseEntity *pOther )
 	{
 		BounceSound();
 	}
-	StudioFrameAdvance( );
+
+
+	//MODDD - workings of StudioFrameAdvance changed.
+	// Default calls to StudioFrameAdvance are still ok, but ones that happen late in think methods should be replaced
+	// with a DetermineInterval step further above, and give its flInterval to StudioFrameAdvance in the same place it was.
+	//StudioFrameAdvance( );
+	StudioFrameAdvance(flInterval);
 }
 
 
 void CSatchelCharge :: SatchelThink( void )
 {
-	StudioFrameAdvance( );
+	StudioFrameAdvance_SIMPLE( );
 	pev->nextthink = gpGlobals->time + 0.1;
 
 	if (!IsInWorld())

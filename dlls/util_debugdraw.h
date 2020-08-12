@@ -14,11 +14,8 @@
 #ifndef UTIL_DEBUGDRAW_H
 #define UTIL_DEBUGDRAW_H
 
-
 #include "util_shared.h"  //includes util_printout.h
-
 #include "cbase.h"
-#include "trains.h"
 
 class CPathTrack;
 
@@ -107,10 +104,60 @@ extern void DebugLine_ColorSuccess(int argID);
 extern void DebugLine_ColorFail(int argID);
 extern void DebugLine_ColorBool(int argID, BOOL argPass);
 
+extern void ShowNodeConnectionsFrame(int iNode);
+
+
+
+
+// OLD DEBUG STUFF, phase out at some point
+////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
+extern void DebugCall1(CBasePlayer* somePlayer);
+extern void DebugCall2(CBasePlayer* somePlayer);
+extern void DebugCall3(CBasePlayer* somePlayer);
+
+extern void initOldDebugStuff(void);
+extern void drawOldDebugStuff(void);
+
+
+extern BOOL debugPoint1Given;
+extern BOOL debugPoint2Given;
+extern BOOL debugPoint3Given;
+extern Vector debugPoint1;
+extern Vector debugPoint2;
+extern Vector debugPoint3;
+
+extern Vector debugDrawVect;
+extern Vector debugDrawVectB;
+extern Vector debugDrawVect2;
+extern Vector debugDrawVect3;
+extern Vector debugDrawVect4;
+extern Vector debugDrawVect5;
+
+extern Vector debugDrawVectRecentGive1;
+extern Vector debugDrawVectRecentGive2;
+
+// these might be ok though
+extern int nextSpecialNode;
+extern float nextSpecialNodeAlternateTime;
+////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
 
 
 
 #endif //END OF UTIL_DEBUGDRAW_H
+
+
+
+
+
+
+
+
+
+
 
 
 

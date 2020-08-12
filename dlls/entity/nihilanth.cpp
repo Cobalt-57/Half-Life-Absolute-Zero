@@ -420,7 +420,7 @@ void CNihilanth :: DeathSound( void )
 
 void CNihilanth::NullThink( void )
 {
-	StudioFrameAdvance( );
+	StudioFrameAdvance_SIMPLE( );
 	pev->nextthink = gpGlobals->time + 0.5;
 }
 
@@ -474,7 +474,7 @@ void CNihilanth :: DyingThink( void )
 {
 	pev->nextthink = gpGlobals->time + 0.1;
 	DispatchAnimEvents( );
-	StudioFrameAdvance( );
+	StudioFrameAdvance_SIMPLE( );
 
 	if (pev->deadflag == DEAD_NO)
 	{
@@ -890,7 +890,7 @@ void CNihilanth :: HuntThink( void )
 {
 	pev->nextthink = gpGlobals->time + 0.1;
 	DispatchAnimEvents( );
-	StudioFrameAdvance( );
+	StudioFrameAdvance_SIMPLE( );
 
 	ShootBalls( );
 

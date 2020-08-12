@@ -470,7 +470,7 @@ void COsprey::UpdateGoal( )
 
 void COsprey::FlyThink( void )
 {
-	StudioFrameAdvance( );
+	StudioFrameAdvance_SIMPLE( );
 	pev->nextthink = gpGlobals->time + 0.1;
 	
 	if ( m_pGoalEnt == NULL && !FStringNull(pev->target) )// this monster has a target
@@ -646,7 +646,7 @@ void COsprey::CrashTouch( CBaseEntity *pOther )
 
 void COsprey :: DyingThink( void )
 {
-	StudioFrameAdvance( );
+	StudioFrameAdvance_SIMPLE( );
 	pev->nextthink = gpGlobals->time + 0.1;
 
 	pev->avelocity = pev->avelocity * 1.02;

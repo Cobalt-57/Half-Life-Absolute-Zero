@@ -120,7 +120,7 @@ void CXenPLight :: Precache( void )
 
 void CXenPLight :: Think( void )
 {
-	StudioFrameAdvance();
+	StudioFrameAdvance_SIMPLE();
 	pev->nextthink = gpGlobals->time + 0.1;
 
 	switch( GetActivity() )
@@ -217,7 +217,7 @@ void CXenHair::Spawn( void )
 
 void CXenHair::Think( void )
 {
-	StudioFrameAdvance();
+	StudioFrameAdvance_SIMPLE();
 	pev->nextthink = gpGlobals->time + 0.5;
 }
 
@@ -411,7 +411,7 @@ void CXenTree :: HandleAnimEvent( MonsterEvent_t *pEvent )
 
 void CXenTree :: Think( void )
 {
-	float flInterval = StudioFrameAdvance();
+	float flInterval = StudioFrameAdvance_SIMPLE();
 	pev->nextthink = gpGlobals->time + 0.1;
 	DispatchAnimEvents( flInterval );
 
@@ -589,7 +589,7 @@ void CXenSpore :: Touch( CBaseEntity *pOther )
 
 void CXenSpore :: Think( void )
 {
-	float flInterval = StudioFrameAdvance();
+	float flInterval = StudioFrameAdvance_SIMPLE();
 	pev->nextthink = gpGlobals->time + 0.1;
 
 #if 0

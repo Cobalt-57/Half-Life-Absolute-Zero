@@ -152,6 +152,9 @@ void CBaseMonster :: ChangeSchedule ( Schedule_t *pNewSchedule )
 	//        Don't want to feel obliged to stick with an animation that may no longer be fitting.
 	this->usingCustomSequence = FALSE;
 
+	// if this was turned on, forget.
+	strictNodeTolerance = FALSE;
+
 
 	m_pSchedule = pNewSchedule;
 	m_iScheduleIndex = 0;
@@ -838,7 +841,11 @@ void CBaseMonster :: RunTask ( Task_t *pTask )
 	case TASK_FACE_BEST_SOUND:
 		{
 
-			if(pTask->iTask == TASK_FACE_TARGET && this->m_hTargetEnt == NULL){TaskFail();break;}  //if we are told to face a target that does not / no longer exists, stop.
+			if(pTask->iTask == TASK_FACE_TARGET && this->m_hTargetEnt == NULL){
+				// if told to face a target that does not / no longer exists, stop.
+				TaskFail();
+				break;
+			}  
 
 
 			ChangeYaw( pev->yaw_speed );
@@ -2205,6 +2212,8 @@ void CBaseMonster :: StartTask ( Task_t *pTask )
 			//if ( pSound && MoveToLocation( m_movementActivity, 2, pSound->m_vecOrigin ) )
 			if(pSound)
 			{
+				//DebugLine_SetupPoint(pSound->m_vecOrigin, 0, 255, 0);
+
 				MakeIdealYaw(pSound->m_vecOrigin);
 
 				//MODDD - added, if we can complete early we can move on with thinking in the same frame
@@ -2469,33 +2478,50 @@ void CBaseMonster :: StartTask ( Task_t *pTask )
 	case TASK_RUN_TO_TARGET:
 	case TASK_WALK_TO_TARGET:
 		{
+			// Expcected to be used by scripted's only, I think, to route to a pre-determined point.  Or entity with that pre-determined point.
+
 			Activity newActivity;
 
 			if(m_hTargetEnt == NULL){
-				//easyForcePrintLine("I WILL PLAY JUMPROPE WITH YOUR INTESTINES YOU WORTHLESS SCUMyayER %d", monsterID);
-				easyForcePrintLine("I\'m not feeling so fantastic.. (null target)  %s:%d", getClassname(), monsterID);
+				easyForcePrintLine("I\'m not feeling so fantastic. (null target)  %s:%d", getClassname(), monsterID);
 				TaskFail();
 				break;
 			}
 
-			if ( (m_hTargetEnt->pev->origin - pev->origin).Length() < 1 )
+			if ((m_hTargetEnt->pev->origin - pev->origin).Length() < 1) {
 				TaskComplete();
+			}
 			else
 			{
 
 				//MODDD - if this monster lacks a run act, this won't work out too well.
 
-				if ( pTask->iTask == TASK_WALK_TO_TARGET )
+				if (pTask->iTask == TASK_WALK_TO_TARGET) {
 					newActivity = ACT_WALK;
-				else
+				}
+				else {
 					newActivity = ACT_RUN;
+				}
+
+
+				// Want that strictness
+				strictNodeTolerance = TRUE;
 
 
 
 				// This monster can't do this!
-				if ( LookupActivity( newActivity ) == ACTIVITY_NOT_AVAILABLE )
+				if (LookupActivity(newActivity) == ACTIVITY_NOT_AVAILABLE) {
+					// Let's have a descriptive error message if you please!
+					easyForcePrintStarter();
+					easyForcePrint("WARNING!  Monster in TASK_WALK_TO_TARGET could not find requested activity #%d (WALK or RUN).\n", newActivity);
+					easyForcePrintStarter();
+					easyForcePrint("Entity info: ");
+					printBasicEntityInfo(this);
+					easyForcePrintLine();
+
 					TaskComplete();
-				else 
+				}
+				else
 				{
 					if ( m_hTargetEnt == NULL || !MoveToTarget( newActivity, 2 ) )
 					{
@@ -3039,6 +3065,21 @@ void CBaseMonster :: StartTask ( Task_t *pTask )
 		}
 	case TASK_ENABLE_SCRIPT:
 		{
+			//MODDD - for safety, force facing the exact right direction here.
+			// TASK_ENABLE_SCRIPT should only be called sometime after a task that sets pev->ideal_yaw to face
+			// the scripted sequence.
+			// In fact re-doing even that for safty now.
+			if (m_hTargetEnt != NULL) {
+				pev->ideal_yaw = UTIL_AngleMod(m_hTargetEnt->pev->angles.y);
+				pev->angles.y = pev->ideal_yaw;
+			}
+			else {
+				easyForcePrintLine("?????????");
+				TaskFail();
+				return;
+			}
+			///////////////////////////////////////////////////
+
 			m_pCine->DelayStart( 0 );
 			TaskComplete();
 			break;
@@ -3047,7 +3088,53 @@ void CBaseMonster :: StartTask ( Task_t *pTask )
 		{
 			if ( m_hTargetEnt != NULL )
 			{
-				pev->origin = m_hTargetEnt->pev->origin;	// Plant on target
+				CBaseEntity* theList[32];
+
+				Vector livingSizeMins = VEC_HUMAN_HULL_MIN + Vector(-0.5, -0.5, 0);
+				Vector livingSizeMaxs = VEC_HUMAN_HULL_MAX + Vector(0.5, 0.5, -1);
+
+				Vector targetSpot = m_hTargetEnt->pev->origin;
+				
+				BOOL pass = TRUE;
+				int theListSoftMax = UTIL_EntitiesInBox(theList, 32, targetSpot + livingSizeMins, targetSpot + livingSizeMaxs, 0);
+
+				//if (monsterID == 10) {
+				//	UTIL_drawBoxFrame(targetSpot + livingSizeMins, targetSpot + livingSizeMaxs, 8, 0, 255, 0);
+				//	int x = 45;
+				//}
+
+				
+				for (int i = 0; i < theListSoftMax; i++) {
+					CBaseEntity* ent = theList[i];
+
+					//ent->pev->solid == SOLID_BSP || ent->pev->movetype == MOVETYPE_PUSH || ent->pev->movetype == MOVETYPE_NONE
+
+					if (
+						ent->pev->solid == SOLID_NOT || ent->pev->solid == SOLID_TRIGGER
+						|| (ent->IsWorldOrAffiliated() && !ent->isBreakableOrChild())
+					) {
+						// not collidable, or part of the map?  Skip it.
+						continue;
+					}
+					
+					// "&& ent->MyMonsterPointer() != NULL" check?  unsure if that's a good idea.
+					if (ent != this && !UTIL_IsDeadEntity(ent)) {
+						
+						pass = FALSE;
+						break;
+					}
+
+				}//for-loop
+				
+
+
+				if (pass) {
+					pev->origin = m_hTargetEnt->pev->origin;	// Plant on target
+				}
+				else {
+					// obstruction?  no.
+					TaskFail(); 
+				}
 			}
 
 			TaskComplete();
@@ -3058,6 +3145,11 @@ void CBaseMonster :: StartTask ( Task_t *pTask )
 			if ( m_hTargetEnt != NULL )
 			{
 				pev->ideal_yaw = UTIL_AngleMod( m_hTargetEnt->pev->angles.y );
+
+				//MODDD - for safety, how about just forcing the angles then.
+				// No, later.  Give some time to try to face the right way manually.
+				// On starting the script the angles get enforced.
+				//pev->angles.y = pev->ideal_yaw;
 			}
 
 			TaskComplete();
@@ -3068,9 +3160,6 @@ void CBaseMonster :: StartTask ( Task_t *pTask )
 
 	case TASK_SUGGEST_STATE:
 		{
-			if(FClassnameIs(pev, "monster_gargantua")){
-				int xxx = 666;
-			}
 
 			m_IdealMonsterState = (MONSTERSTATE)(int)pTask->flData;
 			TaskComplete();

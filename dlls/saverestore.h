@@ -16,6 +16,7 @@
 #ifndef SAVERESTORE_H
 #define SAVERESTORE_H
 
+#include "eiface.h"
 #include "util_entity.h"
 
 

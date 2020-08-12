@@ -441,6 +441,7 @@ void CISlave::MonsterThink(void){
 		if(gpGlobals->time > selfReviveTime){
 
 			if(okayToRevive()){
+
 				selfReviveTime = -1;
 				this->riseFromTheGrave();
 			}else{
@@ -1309,6 +1310,8 @@ void CISlave :: StartTask ( Task_t *pTask )
 				bestChoiceYet->monsterTryingToReviveMeEHANDLE = this;
 				
 				bestChoiceYet->beingRevived = 1;
+
+				// don't let anything obstruct my target
 				UTIL_SetSize(bestChoiceYet->pev, VEC_HUMAN_HULL_MIN, VEC_HUMAN_HULL_MAX);
 
 			}else{
@@ -1436,6 +1439,10 @@ void CISlave::riseFromTheGrave(void){
 }
 
 void CISlave::startReanimation(){
+
+	// Don't let me be obstructed during this animation
+	UTIL_SetSize(this->pev, VEC_HUMAN_HULL_MIN, VEC_HUMAN_HULL_MAX);
+
 	
 	selfReviveTime = -1;
 	if(monsterTryingToReviveMeEHANDLE != NULL){
@@ -1537,21 +1544,33 @@ void CISlave::forgetReviveTarget(void){
 //is the area right above my corpse empty?  If so, there's space for me to stand on being revived.
 BOOL CISlave::okayToRevive(void){
 	CBaseEntity *ent = NULL;
-	Vector spot = pev->origin + (0, 0, 20);
+	// ... what
+	//Vector spot = pev->origin + (0, 0, 20);
 
 	CBaseEntity* theList[32];
 	
 	// maybe not yet...
 	//UTIL_SetSize(pev, VEC_HUMAN_HULL_MIN, VEC_HUMAN_HULL_MAX);
 	Vector livingSizeMins = VEC_HUMAN_HULL_MIN + Vector(-12, -12, 0);
-	Vector livingSizeMaxs = VEC_HUMAN_HULL_MAX + Vector(12, 12, 60);
+	//MODDD - z-coord here was 60, isn't that a tad excessive?  Why any change really, VEC_HUMAN_HULL_MAX has the correct Z
+	Vector livingSizeMaxs = VEC_HUMAN_HULL_MAX + Vector(12, 12, 2);
 
 	int theListSoftMax = UTIL_EntitiesInBox( theList, 32, pev->origin + livingSizeMins, pev->origin + livingSizeMaxs, 0 );
 
 
 	for(int i = 0; i < theListSoftMax; i++){
 		ent = theList[i];
-		if ( !UTIL_IsDeadEntity(ent) && ent != this && ent->MyMonsterPointer() != NULL ){
+
+		if (ent->pev->solid == SOLID_NOT || ent->pev->solid == SOLID_TRIGGER) {
+			// not collidable?  Skip it.
+			continue;
+		}
+
+		// "&& ent->MyMonsterPointer() != NULL" check?  unsure if that's a good idea.
+		if (
+			ent == this || UTIL_IsDeadEntity(ent)
+			||  (ent->IsWorldOrAffiliated() && !ent->isBreakableOrChild())
+		){
 			//easyPrintLine("WHAT THE heck IS YOUR darn ID %d", ent->MyMonsterPointer()->monsterID);
 			if(UTIL_IsAliveEntity(ent) && IRelationship(ent) <= R_NO ){
 				// maybe send some "scramble position" advisory to get off of me, if friendly?
@@ -1560,10 +1579,11 @@ BOOL CISlave::okayToRevive(void){
 			return FALSE;
 		}
 	}
-	//ok?
-	UTIL_SetSize(pev, VEC_HUMAN_HULL_MIN, VEC_HUMAN_HULL_MAX);
-	return TRUE;
+	
+	// this is just a test, don't make any changes yet.
+	//UTIL_SetSize(pev, VEC_HUMAN_HULL_MIN, VEC_HUMAN_HULL_MAX);
 
+	return TRUE;
 }
 
 
@@ -2031,6 +2051,10 @@ Schedule_t *CISlave :: GetSchedule( void )
 				bestChoiceYet->monsterTryingToReviveMe = this;
 				bestChoiceYet->monsterTryingToReviveMeEHANDLE = this;
 				targetIsDeadException = TRUE;
+
+
+				// don't let anything obstruct my target
+				UTIL_SetSize(bestChoiceYet->pev, VEC_HUMAN_HULL_MIN, VEC_HUMAN_HULL_MAX);
 
 				//???
 				ClearBeams();

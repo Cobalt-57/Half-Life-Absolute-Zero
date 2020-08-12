@@ -207,7 +207,8 @@ New CVar:  'cl_interp_viewmodel'.  Simulates lack of interpolation to add choppi
 Ricochet effect on agrunt armor & hgrunt/barney helmets uses the 'normal' of whatever surface it hit instead of going roughly in the direction of where it came from unconditionally.
 It also... is used correctly.  Didn't receive the end-point correctly in retail, does now.  Engine often hides the effect up-close however.
 
-recent-weapon-switching ('q' key by default) no longer ignores cl_holster.  Possible slight client/server synch issue with cl_holster in general fixed too.
+recent-weapon-switching ('q' key by default) now involves cl_holster.  Possible slight client/server synch issue with cl_holster in general fixed too.
+Also applies to orders to change weapons from picking up a new weapon.
 
 Issue fixed with deploy animation replaying if killed/revived while a holster was in progress.
 
@@ -236,3 +237,35 @@ Weapon-select changes:
 -the menu-open sound only plays on opening the menu since a close (not picking different slots by number keys while open).  Go figure.
 -Right-click cancels the weapon-select menu.
 -Using recent-weapon-swap (q key by default) closes the weapon-select menu with the close sound if open.
+
+Loaded games on maps that show the title (a1a0) no longer re-show the title on loaded games.
+~Strangely requires loading another game or going to another map first since starting the game for the issue to appear.  Straight to loading the game shows nothing, even before the fix.
+
+VOX announcer (global announcements heard throughout the facility) lines slightly less frequent, especially on minimum bound (less likely to get messages play as close together).
+
+Scientist in interruptable scripted sequences/schedules (able to talk with a response still like looking inquisitive at walls or vending machines) can now make idle chatter like in retail.  Whoops.
+
+Scientists in scripted schedules no longer decide to play scripted sequences if doing so would intersect with the player.  Also whoops. Also stricter pathfinding requirements more like retail, ignores pathfindEdgeCheck
+
+Talkmonsters in custom-talkable scripted states (like above) are more likely to converse.
+
+Talkmonsters should also not have a chance of... conversing with others behind solid walls.    Not sure what I was smoking.
+
+Attenuations for scripted sounds and sentences (especially sounds such as footsteps and the scientist pushing buttons and banging on the vending machine) reduced.  That is, they can be heard from further away.
+
+Don't try to talk to NPC's pre-disaster 30 times in rapid succession.  Especially Barney. Things may get ugly.  Muhahahah.
+
+The USE entity-finding further improved.  Will pick an entity that is closer of two in view if they are similarly in the right direction.
+
+Obscure pathfinding bugs fixed, should not flinch rapidly anymore in certain cases.
+
+Secondary gauss hits on certain map geometry (any range, not at an angle to reflect), no longer damages the player.
+Radius damage from charged hits also changed:
+-From point hit on reflected surfaces: no longer dependent on the angle of a reflection, deals a flat 45% with less range.
+-From exit points of pierced map geometry: 40% of damage, less range.
+
+Added support for a gauss beam that no longer follows the weapon after firing (cl_gaussfollowattachment of 0; not on by default).
+
+Failing to revive, despite having adrenaline+suit, after dying shortly after loading a map fixed.
+
+

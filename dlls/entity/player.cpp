@@ -1560,6 +1560,7 @@ void CBasePlayer::PackDeadPlayerItems( void )
 
 void CBasePlayer::RemoveAllItems( BOOL removeSuit )
 {
+	int i;
 	if (m_pActiveItem)
 	{
 		ResetAutoaim( );
@@ -1567,14 +1568,23 @@ void CBasePlayer::RemoveAllItems( BOOL removeSuit )
 		m_pActiveItem = NULL;
 	}
 
+	//MODDD - and power canisters.
+	for (i = 0; i < MAX_ITEMS; i++) {
+		m_rgItems[i] = 0;
+	}
+	// why not.
+	airTankAirTime = 0;
+	longJumpCharge = 0;
+
+
 	//MODDD - reset holstering too.
 	m_pQueuedActiveItem = NULL;
 	m_bHolstering = FALSE;
 
 
+
 	m_pLastItem = NULL;
 
-	int i;
 	CBasePlayerItem *pPendingItem;
 	for (i = 0; i < MAX_ITEM_TYPES; i++)
 	{
@@ -2185,59 +2195,6 @@ void CBasePlayer::set_cl_ladder_choice(float argNew) {
 
 
 
-void CBasePlayer::DebugCall1(){
-	debugPoint1 = pev->origin;
-	debugPoint1.z += 2;
-	debugPoint1Given = TRUE;
-	debugPoint3Given = FALSE;
-}
-void CBasePlayer::DebugCall2(){
-	debugPoint2 = pev->origin;
-	debugPoint2.z += 2;
-	debugPoint2Given = TRUE;
-	debugPoint3Given = FALSE;
-}
-void CBasePlayer::DebugCall3(){
-	//try a local move.
-	
-	debugPoint3Given = FALSE;
-
-
-	float distReg;
-
-	UTIL_MakeVectors(this->pev->v_angle + this->pev->punchangle);
-		
-	Vector vecStart = debugPoint1;
-	Vector vecEnd = debugPoint2;
-
-	//BOOL success = this->CheckLocalMove(vecStart, vecStart + gpGlobals->v_forward * dist, NULL, &distReg);
-	BOOL success = this->CheckLocalMove(vecStart, vecEnd, NULL, &distReg);
-	//UTIL_TraceLine(tempplayer->pev->origin + tempplayer->pev->view_ofs + gpGlobals->v_forward * 5,pMe->pev->origin + pMe->pev->view_ofs + gpGlobals->v_forward * 2048,dont_ignore_monsters, pMe->edict(), &tr );
-	
-	if(success){
-		easyForcePrintLine("SUCCESS!  CLEAR!");
-		debugPoint3 = vecEnd;
-		debugPoint3Given = TRUE;
-	}else{
-		
-		float totalDist = (vecEnd - vecStart).Length();
-		easyForcePrintLine("Stopped this far: %.2f OUT OF %.2f", distReg, totalDist);
-		debugPoint3Given = TRUE;
-		Vector tempDir = (vecEnd - vecStart).Normalize();
-
-		//debugPoint3 = vecStart + (tempDir * (distReg ));
-		//debugPoint3 = vecStart + (vecEnd - vecStart) * (distReg / totalDist);
-		float fracto = distReg / totalDist;
-		debugPoint3 = vecStart * (1 + -fracto) + vecEnd * fracto;
-
-		//UTIL_printVector("vecStart", vecStart);
-		//UTIL_printVector("tempDir", tempDir);
-		//UTIL_printVector("debugPoint3", debugPoint3);
-		//UTIL_printVector("vecEnd", vecEnd);
-	}
-}//END OF DebugCall3()
-
-
 //MODDD - player constructor.
 CBasePlayer::CBasePlayer(void){
 
@@ -2266,19 +2223,12 @@ CBasePlayer::CBasePlayer(void){
 	horrorPlayTimePreDelay = -1;
 	horrorPlayTime = -1;
 
-	debugPoint1Given = FALSE;
-	debugPoint2Given = FALSE;
-	debugPoint3Given = FALSE;
-
 	m_flStartCharge = -1;  //okay?
 	m_flStartChargeAnim = -1;
 	m_flStartChargePreSuperDuper = -1;
 	reviveSafetyTime = -1;
 	grabbedByBarnacle = FALSE;
 	grabbedByBarnacleMem = FALSE;
-
-	nextSpecialNode = -1;
-	nextSpecialNodeAlternateTime = -1;
 
 	recentlyGrantedGlockSilencer = FALSE;
 	recentlySaidBattery = -1;  //do not save, meant to relate to what was recently said in-game yet.
@@ -2530,7 +2480,7 @@ void CBasePlayer::PlayerDeathThink(void)
 	//MODDD NOTE - This area blocks turning the DEAD_DEAD flag on until the player death anim has finished or taken too long.
 	if (pev->modelindex && (!m_fSequenceFinished) && (pev->deadflag == DEAD_DYING))
 	{
-		StudioFrameAdvance( );
+		StudioFrameAdvance_SIMPLE( );
 
 		m_iRespawnFrames++;				// Note, these aren't necessarily real "frames", so behavior is dependent on # of client movement commands
 		if ( m_iRespawnFrames < 120 )   // Animations should be no longer than this
@@ -2605,10 +2555,10 @@ void CBasePlayer::PlayerDeathThink(void)
 		}// END OF fall velocity check
 
 
-
 		if (recoveryIndex == 0) {
 			// only bother with any of this, if not dead from fall impact.
-			if (!recentMajorTriggerDamage && this->m_rgItems[ITEM_ADRENALINE] > 0) {
+			// And has a suit, not sitting in a insta-death trigger, and has adrenaline.
+			if ( (pev->weapons & (1 << WEAPON_SUIT)) && !recentMajorTriggerDamage && this->m_rgItems[ITEM_ADRENALINE] > 0) {
 
 				// note that, if the player is not on the ground BUT otherwise meets conditions to recover,
 				// the respawn will still be stalled until the player hits the ground (where the timer starts and
@@ -2855,6 +2805,8 @@ void CBasePlayer::StartObserver( Vector vecPosition, Vector vecViewAngle )
 // PlayerUse - handles USE keypress
 //
 
+
+
 void CBasePlayer::PlayerUse ( void )
 {
 	// Was use pressed or released?
@@ -2897,25 +2849,51 @@ void CBasePlayer::PlayerUse ( void )
 		}
 	}
 
-	CBaseEntity *pObject = NULL;
-	CBaseEntity *pClosest = NULL;
-	Vector		vecLOS;
-	
+	//MODDD - Keep the closest object in mind too, of the dotproducts are not significantly different,
+	// the distance may be a better indicator.
+
+	CBaseEntity* pToUseOn = NULL;
+	Vector ToUse_LOS;
+
+	CBaseEntity* pObject = NULL;
+	Vector vecLOS;
+
+	CBaseEntity* pClosestLOS = NULL;
+	Vector closestLOS;
+
+	CBaseEntity* pClosestDistance = NULL;
+	Vector closestDistance_LOS;
+	float closestDistance_Dot;
+
+
 	//MODDD - VIEW_FIELD_NARROW is 0.7  (+- 45 degrees).
 	//float flMaxDot = VIEW_FIELD_NARROW;
 	//float flMaxDot = (float)0.94;
 	//float flMaxDot = (float)0.905;
 	float flMaxDot = (float)0.78;
+
+	// anything should satisfy this default
+	float closestDistance = PLAYER_USE_SEARCH_RADIUS + 10;
 	
+
 	float flDot;
+	float thisDistance;
+
+
 
 	UTIL_MakeVectors ( pev->v_angle );// so we know which way we are facing
+	Vector2D vecForward2D = gpGlobals->v_forward.Make2D();
 
-	Vector closestLOS;
-	
+
+
+	if (EASY_CVAR_GET(playerUseDrawDebug) == 2) {
+		DebugLine_ClearAll();
+	}
 
 	// We want the object we pick to the the one we are looking the most directly at.
 	// After all, why would the user be looking it?
+	// HOWEVER.  There are times this still tries to pick up something in the background when we meant for 
+	// something up close.  If the dot products between the top two items are similar, use distance instead.
 
 	//MODDD - slight adjustment. Go forwards a bit to search instead... UNDONE.
 	while ((pObject = UTIL_FindEntityInSphere( pObject, pev->origin, PLAYER_USE_SEARCH_RADIUS )) != NULL)
@@ -2934,6 +2912,11 @@ void CBasePlayer::PlayerUse ( void )
 			// This essentially moves the origin of the target to the corner nearest the player to test to see 
 			// if it's "hull" is in the view cone
 			vecLOS = UTIL_ClampVectorToBoxNonNormalized( vecLOS, pObject->pev->size * 0.5 );
+
+			Vector closestPointOnBox = pev->origin + pev->view_ofs + vecLOS;
+			if (EASY_CVAR_GET(playerUseDrawDebug) == 2) {
+				DebugLine_SetupPoint(closestPointOnBox, 0, 0, 255);
+			}
 			
 			Vector vecLOSNorm = vecLOS.Normalize();
 
@@ -2963,11 +2946,10 @@ void CBasePlayer::PlayerUse ( void )
 			// pointless.
 
 			Vector2D vecLOS2D = vecLOSNorm.Make2D();
-			Vector2D vecForward2D = gpGlobals->v_forward.Make2D();
 			// CHECK.  Lines going straight up/down (0,0,+-1) will cause
 			// the X and Y of the resulting 2D vector be 0 just fine.
 			// Made a mistake, they were "NaN" because the divide lines below
-			// were dividing by that "0" length.  FUCK.
+			// were dividing by that "0" length.
 
 
 			float vecLOS2D_prevLength = vecLOS2D.Length();
@@ -3017,32 +2999,118 @@ void CBasePlayer::PlayerUse ( void )
 				vecLOSNorm.z * gpGlobals->v_forward.z * weightZ;
 
 			
-			if (EASY_CVAR_GET(playerUseDrawDebug)) {
+			if (EASY_CVAR_GET(playerUseDrawDebug) == 1) {
 				// the normal way, for comparison.
 				float flDotAlt = DotProduct (vecLOSNorm , gpGlobals->v_forward);
 
 				// For a spectacular error, use the first version.
 				//easyForcePrintLine("playeruse: DOTPROD TO OBJ? %s: %.2f", flDot, pObject->getClassname());
-				easyForcePrintLine("playeruse: DOTPROD TO OBJ? %s: %.2f oldway: %.2f", pObject->getClassname(), flDot, flDotAlt);
+				CBaseMonster* monTest = pObject->GetMonsterPointer();
+				if (monTest != NULL) {
+					easyForcePrintLine("playeruse: DOTPROD TO OBJ? %s:%d: %.2f oldway: %.2f", monTest->getClassname(), monTest->monsterID, flDot, flDotAlt);
+				}
+				else {
+					easyForcePrintLine("playeruse: DOTPROD TO OBJ? %s: %.2f oldway: %.2f", pObject->getClassname(), flDot, flDotAlt);
+				}
 			}
+
+
+			//closestPointOnBox
+			//thisDistance = Distance(pev->origin, pObject->pev->origin);
+			thisDistance = Distance(pev->origin + pev->view_ofs, closestPointOnBox);
+
+			// Must also be looking at it enough.
+			if (flDot > 0.73 && thisDistance < closestDistance) {
+				//ok
+				pClosestDistance = pObject;
+				closestDistance = thisDistance;
+				// in case the distance-closer object gets picked, or the FOS rather for seeing if it should be.
+				closestDistance_LOS = vecLOS;
+				closestDistance_Dot = flDot;
+
+				// TODO : debug printouts for the next best-distance object?
+			}
+
+
+
 
 			if (flDot > flMaxDot )
 			{// only if the item is in front of the user
-				pClosest = pObject;
+				pClosestLOS = pObject;
 				closestLOS = vecLOS; //MODDD - new.
 				flMaxDot = flDot;
 //				ALERT( at_console, "%s : %f\n", STRING( pObject->pev->classname ), flDot );
 			}
 //			ALERT( at_console, "%s : %f\n", STRING( pObject->pev->classname ), flDot );
 		}
+	}//END OF loop through entities to check for using
+
+
+
+
+	//OLD WAY, pClosestLOS was the only choice.
+	//pToUseOn = pClosestLOS;
+	//ToUse_LOS = closestLOS
+
+	// Now to choose between pClosestLOS and pClosestDistance.
+	// Or if either/both are NULL, it isn't much of a decision.
+
+
+
+	if (pClosestDistance != NULL && pClosestLOS != NULL) {
+		// the decision.
+
+		if (pClosestDistance == pClosestLOS) {
+			// They are equal?  It's all the same then.
+			pToUseOn = pClosestLOS;
+			ToUse_LOS = closestLOS;
+		}
+		else {
+			// Different and non-null?
+
+			// should never be negative, but I'm paranoid.
+			//flMaxDot >= 0.96 ||
+			if ( fabs(flMaxDot - closestDistance_Dot) >= 0.22) {
+				// pick the most aimed at
+				pToUseOn = pClosestLOS;
+				ToUse_LOS = closestLOS;
+			}
+			else {
+				// pick the closest.
+				pToUseOn = pClosestDistance;
+				ToUse_LOS = closestDistance_LOS;
+			}
+		}
+
 	}
-	pObject = pClosest;
+	else {
+		if (pClosestLOS == NULL) {
+			if (pClosestDistance == NULL) {
+				// both null
+			}
+			else {
+				pToUseOn = pClosestDistance;
+				ToUse_LOS = closestDistance_LOS;
+			}
+		}else if (pClosestDistance == NULL) {
+			if (pClosestLOS == NULL) {
+				// both null
+			}
+			else {
+				pToUseOn = pClosestLOS;
+				ToUse_LOS = closestLOS;
+			}
+		}
+	}
+
+
+
 
 
 	//DEBUG.
 	/*
-	if(pObject){
-		easyForcePrintLine("PLAYER USE: %s", pObject->getClassname());
+	if(pToUseOn){
+		easyForcePrintLine("PLAYER USE: %s", pToUseOn->getClassname());
 	}else{
 		easyForcePrintLine("PLAYER USE: nothing.");
 	}
@@ -3051,13 +3119,13 @@ void CBasePlayer::PlayerUse ( void )
 
 	BOOL flUseSuccess = FALSE;
 	
-	//easyForcePrintLine("aaaaaaaaAAAaaaa %d", pObject==NULL);
+	//easyForcePrintLine("aaaaaaaaAAAaaaa %d", pToUseOn==NULL);
 
 	// Found an object
-	if (pObject )
+	if (pToUseOn )
 	{
 		if (EASY_CVAR_GET(playerUseDrawDebug) == 1) {
-			easyForcePrintLine("playeruse: WHAT IS OBJECT I PICK?? %s", pObject->getClassname());
+			easyForcePrintLine("playeruse: WHAT IS OBJECT I PICK?? %s", pToUseOn->getClassname());
 		}
 		//!!!!!!!!!!
 		//!!!UNDONE: traceline here to prevent USEing buttons through walls		
@@ -3067,11 +3135,11 @@ void CBasePlayer::PlayerUse ( void )
 		pentIgnore = this->edict();
 		UTIL_MakeVectors(pev->v_angle);// + pev->punchangle);
 		
-		//Vector vecDirTowardsClosest = (pObject->pev->origin - this->pev->origin).Normalize();
-		Vector vecDirTowardsClosest = closestLOS;
+		//Vector vecDirTowardsClosest = (pToUseOn->pev->origin - this->pev->origin).Normalize();
+		Vector vecDirTowardsClosest = ToUse_LOS;
 
 		//(vecDirTowardsClosest - this->pev->origin).Length(); 
-		//float distToClosest = (pObject->pev->origin - this->pev->origin).Length();
+		//float distToClosest = (pToUseOn->pev->origin - this->pev->origin).Length();
 		float distToClosest = vecDirTowardsClosest.Length();
 		
 
@@ -3082,12 +3150,13 @@ void CBasePlayer::PlayerUse ( void )
 		Vector vecDest = pev->origin + pev->view_ofs + vecDirTowardsClosest * 1.1;//(0+distToClosest+1); //(0+PLAYER_USE_SEARCH_RADIUS);
 
 		//nah, precision for while ducking not necessary.
-		/*
-		Vector playerEyePos = Vector(tempplayer->body;
-		if(pev->flags & FL_DUCKING){
+		
 
+		if(pev->flags & FL_DUCKING){
+			vecSrc.z -= 1;
+			vecDest.z -= 1;
 		}
-		*/
+		
 
 		
 	
@@ -3107,13 +3176,13 @@ void CBasePlayer::PlayerUse ( void )
 		*/
 		
 		//debugVect1Draw = TRUE;
-		if(EASY_CVAR_GET(playerUseDrawDebug)){
+		if(EASY_CVAR_GET(playerUseDrawDebug) == 1){
 			::DebugLine_ClearAll();
 		}
 		
 		//debugVect1End
 
-		if(EASY_CVAR_GET(playerUseDrawDebug))DebugLine_Setup(0, vecSrc, vecSrc+vecDirTowardsClosest, tr.flFraction);
+		if(EASY_CVAR_GET(playerUseDrawDebug) == 1)DebugLine_Setup(0, vecSrc, vecSrc+vecDirTowardsClosest, tr.flFraction);
 
 
 		//tr.flFraction is in case it goes too far by a bit.
@@ -3126,19 +3195,19 @@ void CBasePlayer::PlayerUse ( void )
 			//easyForcePrintLine("HIT SOMETHING? %s fract:%.2f distoff:%.2f", STRING(tr.pHit->v.classname), (tr.flFraction), distToPointHit*(1 - (tr.flFraction)) );
 
 			//may hit worldspawn, which does not block. Not sure why it even counts as hit if so (flFraction stays 1)
-			if( (hitEntity != NULL && hitEntity->pev == pObject->pev) || distToPointHit<=5 || distToPointHit*(1 - (tr.flFraction)) <= 10 ){
+			if( (hitEntity != NULL && hitEntity->pev == pToUseOn->pev) || distToPointHit<=5 || distToPointHit*(1 - (tr.flFraction)) <= 10 ){
 				//the trace-hit entity matches the entity selected to "use" on? this is valid.
 				flUseSuccess = TRUE;
 				if (EASY_CVAR_GET(playerUseDrawDebug) == 1) {
-					easyForcePrintLine("playeruse: That was easy. %s", pObject->getClassname());
+					easyForcePrintLine("playeruse: That was easy. %s", pToUseOn->getClassname());
 				}
 			}else{
 
 				if( hitEntity != NULL && ::FClassnameIs(hitEntity->pev, "worldspawn")  ){
 					//possible exception. See if this is the case.
 					if(tr.flFraction>=1.0){
-						if (EASY_CVAR_GET(playerUseDrawDebug)) {
-							easyForcePrintLine("playeruse: weird flag A (success) %s", pObject->getClassname());
+						if (EASY_CVAR_GET(playerUseDrawDebug) == 1) {
+							easyForcePrintLine("playeruse: weird flag A (success) %s", pToUseOn->getClassname());
 						}
 						//missed touching anything? just count it.
 						flUseSuccess = TRUE;
@@ -3147,14 +3216,14 @@ void CBasePlayer::PlayerUse ( void )
 						//Try from the view point of the player to the target instead.
 						Vector vecSrc2 = pev->origin + pev->view_ofs;
 
-						Vector vecDest2 = VecBModelOrigin(pObject->pev);
+						Vector vecDest2 = VecBModelOrigin(pToUseOn->pev);
 
 						TraceResult tr2;
 						UTIL_TraceLine( vecSrc2, vecDest2, dont_ignore_monsters, pentIgnore, &tr2 );
 						
 						float distToPointHit2 = (vecDest2 - (vecSrc2)).Length();
 						
-						if(EASY_CVAR_GET(playerUseDrawDebug))DebugLine_Setup(0, vecSrc2, vecDest2, tr2.flFraction);
+						if(EASY_CVAR_GET(playerUseDrawDebug) == 1)DebugLine_Setup(0, vecSrc2, vecDest2, tr2.flFraction);
 
 
 						//debugVect1End =  vecDest2;
@@ -3163,21 +3232,21 @@ void CBasePlayer::PlayerUse ( void )
 						
 						if(tr2.pHit != NULL){
 							CBaseEntity* hitEntity2 = CBaseEntity::Instance(tr2.pHit);
-							if( (hitEntity2 != NULL && hitEntity2->pev == pObject->pev) || distToPointHit2<=5 || distToPointHit2*(1 - (tr2.flFraction)) <= 10){
+							if( (hitEntity2 != NULL && hitEntity2->pev == pToUseOn->pev) || distToPointHit2<=5 || distToPointHit2*(1 - (tr2.flFraction)) <= 10){
 								//it's good!
-								if (EASY_CVAR_GET(playerUseDrawDebug)) {
-									easyForcePrintLine("playeruse: weird flag B (success) %s", pObject->getClassname());
+								if (EASY_CVAR_GET(playerUseDrawDebug) == 1) {
+									easyForcePrintLine("playeruse: weird flag B (success) %s", pToUseOn->getClassname());
 								}
 								flUseSuccess = TRUE;
 							}else{
-								if (EASY_CVAR_GET(playerUseDrawDebug)) {
-									easyForcePrintLine("playeruse: weird flag C (fail) %s", pObject->getClassname());
+								if (EASY_CVAR_GET(playerUseDrawDebug) == 1) {
+									easyForcePrintLine("playeruse: weird flag C (fail) %s", pToUseOn->getClassname());
 								}
 								flUseSuccess = FALSE;
 							}
 						}else{
-							if (EASY_CVAR_GET(playerUseDrawDebug)) {
-								easyForcePrintLine("playeruse: weird flag D (success) %s", pObject->getClassname());
+							if (EASY_CVAR_GET(playerUseDrawDebug) == 1) {
+								easyForcePrintLine("playeruse: weird flag D (success) %s", pToUseOn->getClassname());
 							}
 							flUseSuccess = TRUE;
 						}
@@ -3185,8 +3254,8 @@ void CBasePlayer::PlayerUse ( void )
 					}//END OF inner center test
 				}else{
 					//mismatch? not ok.
-					if (EASY_CVAR_GET(playerUseDrawDebug)) {
-						easyForcePrintLine("playeruse: weird flag E (fail) %s", pObject->getClassname());
+					if (EASY_CVAR_GET(playerUseDrawDebug) == 1) {
+						easyForcePrintLine("playeruse: weird flag E (fail) %s", pToUseOn->getClassname());
 					}
 					flUseSuccess = FALSE;
 				}
@@ -3194,17 +3263,17 @@ void CBasePlayer::PlayerUse ( void )
 			
 
 		}else{
-			if (EASY_CVAR_GET(playerUseDrawDebug)) {
-				easyForcePrintLine("playeruse: weird flag F (success) %s", pObject->getClassname());
+			if (EASY_CVAR_GET(playerUseDrawDebug) == 1) {
+				easyForcePrintLine("playeruse: weird flag F (success) %s", pToUseOn->getClassname());
 			}
 			//hit nothing? Just assume it worked.
 			flUseSuccess = TRUE;
 		}
 
 
-		//if(EASY_CVAR_GET(playerUseDrawDebug))aryDebugLines[0].setSuccess(flUseSuccess);
+		//if(EASY_CVAR_GET(playerUseDrawDebug) == 1)aryDebugLines[0].setSuccess(flUseSuccess);
 
-		if (EASY_CVAR_GET(playerUseDrawDebug)) {
+		if (EASY_CVAR_GET(playerUseDrawDebug) == 1) {
 			//if successful, force it all green.
 			if (flUseSuccess) { DebugLine_ColorSuccess(0); };
 		}
@@ -3220,7 +3289,7 @@ void CBasePlayer::PlayerUse ( void )
 		//no object touched? stop.
 		flUseSuccess = FALSE;
 
-		if(EASY_CVAR_GET(playerUseDrawDebug)){
+		if(EASY_CVAR_GET(playerUseDrawDebug) == 1){
 			::DebugLine_ClearAll();
 		}
 	}
@@ -3232,7 +3301,7 @@ void CBasePlayer::PlayerUse ( void )
 
 	if(flUseSuccess == TRUE){
 		
-		int caps = pObject->ObjectCaps();
+		int caps = pToUseOn->ObjectCaps();
 
 		if ( m_afButtonPressed & IN_USE ){
 			UTIL_PlaySound( ENT(pev), CHAN_ITEM, "common/wpn_select.wav", 0.4, ATTN_NORM, 0, 100, FALSE);
@@ -3244,12 +3313,12 @@ void CBasePlayer::PlayerUse ( void )
 			if ( caps & FCAP_CONTINUOUS_USE )
 				m_afPhysicsFlags |= PFLAG_USING;
 
-			pObject->Use( this, this, USE_SET, 1 );
+			pToUseOn->Use( this, this, USE_SET, 1 );
 		}
 		// UNDONE: Send different USE codes for ON/OFF.  Cache last ONOFF_USE object to send 'off' if you turn away
-		else if ( (m_afButtonReleased & IN_USE) && (pObject->ObjectCaps() & FCAP_ONOFF_USE) )	// BUGBUG This is an "off" use
+		else if ( (m_afButtonReleased & IN_USE) && (pToUseOn->ObjectCaps() & FCAP_ONOFF_USE) )	// BUGBUG This is an "off" use
 		{
-			pObject->Use( this, this, USE_SET, 0 );
+			pToUseOn->Use( this, this, USE_SET, 0 );
 		}
 	}
 	else
@@ -3582,19 +3651,6 @@ void CBasePlayer::PreThink(void)
 	*/
 
 
-	if(debugPoint1Given){
-		UTIL_drawLineFrame(debugPoint1 - Vector(0,0,3), debugPoint1 + Vector(0,0,3), 9, 0, 255, 0);
-	}
-	if(debugPoint2Given){
-		UTIL_drawLineFrame(debugPoint2 - Vector(0,0,3), debugPoint2 + Vector(0,0,3), 9, 55, 225, 70);
-	}
-	if(debugPoint3Given){
-		UTIL_drawLineFrame(debugPoint1, debugPoint3, 15, 0, 255, 0);
-		UTIL_drawLineFrame(debugPoint3, debugPoint2, 15, 255, 0, 0);
-	}else if(debugPoint1Given && debugPoint2Given){
-		UTIL_drawLineFrame(debugPoint1, debugPoint2, 12, 255, 255, 255);
-	}
-
 	//horrorSelected
 
 
@@ -3692,145 +3748,6 @@ void CBasePlayer::PreThink(void)
 		}
 
 	}//END OF closestFriendly check
-
-
-	//MODDD
-	if(EASY_CVAR_GET(drawDebugBloodTrace) == 1){
-		UTIL_drawLineFrameBoxAround(debugDrawVect, 9, 30, 255, 0, 0);
-		//UTIL_drawLineFrameBoxAround(debugDrawVectB, 9, 30, 255, 255, 255);
-		
-		UTIL_drawLineFrame(debugDrawVect2, debugDrawVect3, 9, 0, 255, 0);
-		UTIL_drawLineFrame(debugDrawVect4, debugDrawVect5, 9, 0, 0, 255);
-		
-		UTIL_drawLineFrame(debugDrawVectRecentGive1, debugDrawVectRecentGive2, 9, 255, 255, 255);
-		
-	}
-
-
-	int specialNode = -1;
-	if(EASY_CVAR_GET(drawNodeAlternateTime) > 0){
-		if(gpGlobals->time > 3 && gpGlobals->time > nextSpecialNodeAlternateTime){
-			//easyPrintLine("IM A DURR %d", nextSpecialNode);
-			nextSpecialNode++;
-			if(nextSpecialNode >= WorldGraph.m_cNodes){
-				nextSpecialNode = 0;
-			}
-			nextSpecialNodeAlternateTime = gpGlobals->time + EASY_CVAR_GET(drawNodeAlternateTime);
-			easyForcePrintLine("SPECIAL NODE: %d", nextSpecialNode);
-		}
-		specialNode = nextSpecialNode;
-	}else{
-		nextSpecialNode = -1;
-		if(EASY_CVAR_GET(drawNodeSpecial) >= 0 && EASY_CVAR_GET(drawNodeSpecial) < WorldGraph.m_cNodes){
-			specialNode = (int)EASY_CVAR_GET(drawNodeSpecial);
-		}
-	}
-
-
-	if(EASY_CVAR_GET(drawNodeAll) >= 1 || EASY_CVAR_GET(drawNodeConnections) >= 2){
-		//easyPrintLine("NODEZ: %d", WorldGraph.m_cNodes);
-
-		for(int i = 0; i < WorldGraph.m_cNodes; i++){
-			CNode thisNode = WorldGraph.m_pNodes[i];
-			//thisNode.m_afNodeInfo
-			//UTIL_drawLineFrameBoxAround(thisNode.m_vecOrigin, 9, 30, 255, 255, 0);
-			
-			if(specialNode != i){
-
-				float nodeDist = (WorldGraph.m_pNodes[i].m_vecOrigin - this->pev->origin).Length();
-
-				if(EASY_CVAR_GET(drawNodeAll) == 1){
-					UTIL_drawLineFrame(thisNode.m_vecOrigin.x, thisNode.m_vecOrigin.y, thisNode.m_vecOrigin.z + 20, thisNode.m_vecOrigin.x, thisNode.m_vecOrigin.y, thisNode.m_vecOrigin.z - 20, 9, 255, 0, 0);
-					if(EASY_CVAR_GET(drawNodeConnections) == 2){
-						//special node connections!
-						WorldGraph.ShowNodeConnectionsFrame(i);
-					}
-				}else if(EASY_CVAR_GET(drawNodeAll) >= 10){
-					if( nodeDist < EASY_CVAR_GET(drawNodeAll) ){
-						UTIL_drawLineFrame(thisNode.m_vecOrigin.x, thisNode.m_vecOrigin.y, thisNode.m_vecOrigin.z + 20, thisNode.m_vecOrigin.x, thisNode.m_vecOrigin.y, thisNode.m_vecOrigin.z - 20, 9, 255, 0, 0);
-						if(EASY_CVAR_GET(drawNodeConnections) == 2){
-							//special node connections!
-							WorldGraph.ShowNodeConnectionsFrame(i);
-						}
-					};
-				}
-				/*
-				if(EASY_CVAR_GET(drawNodeConnections) == 2){
-					//special node connections!
-					WorldGraph.ShowNodeConnectionsFrame(i);
-				}else if(EASY_CVAR_GET(drawNodeConnections) >= 10){
-					//require the node itself to be close enough to the player first, to limit drawing.
-					
-					if( nodeDist < EASY_CVAR_GET(drawNodeConnections)){
-						WorldGraph.ShowNodeConnectionsFrame(i);
-					};
-				}
-				*/
-			}else{
-				UTIL_drawLineFrame(thisNode.m_vecOrigin.x, thisNode.m_vecOrigin.y, thisNode.m_vecOrigin.z + 20, thisNode.m_vecOrigin.x, thisNode.m_vecOrigin.y, thisNode.m_vecOrigin.z - 20, 9, 255, 255, 255);
-				if(EASY_CVAR_GET(drawNodeConnections) >= 1){
-					//special node connections!
-					WorldGraph.ShowNodeConnectionsFrame(specialNode);
-				}
-			}
-			
-			//easyPrintLine("WHERE BE I?? %.2f %.2f %.2f", thisNode.m_vecOrigin.x, thisNode.m_vecOrigin.y, thisNode.m_vecOrigin.z);
-		}
-			//WorldGraph.m_pNodes[i].m_vecOriginPeek.z = 
-			//	WorldGraph.m_pNodes[i].m_vecOrigin.z = tr.vecEndPos.z + NODE_HEIGHT
-
-	}else{
-		if(specialNode != -1){
-			CNode thisNode = WorldGraph.m_pNodes[specialNode];
-			//still a special node to draw at least.
-			UTIL_drawLineFrame(thisNode.m_vecOrigin.x, thisNode.m_vecOrigin.y, thisNode.m_vecOrigin.z + 15, thisNode.m_vecOrigin.x, thisNode.m_vecOrigin.y, thisNode.m_vecOrigin.z - 15, 7, 255, 255, 255);
-			if(EASY_CVAR_GET(drawNodeConnections) >= 1){
-				//special node connections!
-				WorldGraph.ShowNodeConnectionsFrame(specialNode);
-			}
-		}
-	}
-
-	//NOTE::: it appears that the end of retail ends the game by making the client's "pev->flags" add "FL_FROZEN".
-	//easyPrintLine("MY DETAILZ %d %d %d %d %s", pev->deadflag, pev->effects, pev->flags, pev->renderfx, m_pActiveItem!=NULL?STRING(m_pActiveItem->pev->classname):"NULL");
-	
-
-	//bla bla bla, draw scene stuff.
-	if(EASY_CVAR_GET(drawDebugCine) == 1)
-	{
-		edict_t		*pEdicttt;
-		CBaseEntity *pEntityyy;
-
-		//ENGINE_SET_PVS(Vector(2639.43, -743.85, -251.64));
-		
-		pEdicttt = g_engfuncs.pfnPEntityOfEntIndex( 1 );
-		pEntityyy;
-		if ( pEdicttt ){
-			for ( int i = 1; i < gpGlobals->maxEntities; i++, pEdicttt++ ){
-				if ( pEdicttt->free )	// Not in use
-				continue;
-		
-				pEntityyy = CBaseEntity::Instance(pEdicttt);
-				if ( !pEntityyy )
-					continue;
-
-				//pEntityyy->alreadySaved = FALSE;
-
-
-				CBaseMonster* tempmon = NULL;
-				//if(  (tempmon = pEntityyy->GetMonsterPointer()) != NULL && tempmon->m_pCine != NULL){
-					////tempmon->m_pCine->pev->origin = tempmon->pev->origin + Vector(0,0, 6);
-				//}
-
-				if(FClassnameIs(pEntityyy->pev,"scripted_sequence") || FClassnameIs(pEntityyy->pev,"aiscripted_sequence") || FClassnameIs(pEntityyy->pev,"scripted_sentence")   ){
-					UTIL_drawLineFrame(pEntityyy->pev->origin.x, pEntityyy->pev->origin.y, pEntityyy->pev->origin.z + 15, pEntityyy->pev->origin.x, pEntityyy->pev->origin.y, pEntityyy->pev->origin.z - 15, 7, 0, 255, 12);
-
-				}
-
-			}//END OF loop
-		}//END OF if(pEdicttt (first)  )
-
-	}//END OF draw cine's check
 
 
 	
@@ -5651,7 +5568,7 @@ void CBasePlayer::PostThink()
 			SetAnimation( PLAYER_WALK );
 	}
 
-	StudioFrameAdvance( );
+	StudioFrameAdvance_SIMPLE( );
 	CheckPowerups(pev);
 
 	UpdatePlayerSound();
@@ -6339,7 +6256,12 @@ void CBasePlayer::Spawn( BOOL revived ){
 	pev->classname = MAKE_STRING("player");
 	if(!revived){
 
-		recentRevivedTime = -1;  //safe to reset this then
+		// safe to reset this then
+		// Set to a very low negative number so that comparisons with gpGlobals->time shortly after loading
+		// the map still work (killed 6 seconds after beginning a map forgets you have adrenaline because
+		// 6 is indeed less than a usual time default (like -1) + 10.
+		// .......   who keeps running into this stuff
+		recentRevivedTime = -100;
 		
 		drowning = FALSE;
 
@@ -6687,7 +6609,7 @@ void CBasePlayer :: Precache( void )
 	superDuperDelay = -2;
 	commonReset();
 
-	recentRevivedTime = -1;  //is a reset here fine then?
+	recentRevivedTime = -100;  //is a reset here fine then?
 	// PENDING:  let commonReset be told whether it's for a player revive or not ('not' being a clean spawn, game restore or map transition)
 
 	m_iTrain = TRAIN_NEW;
@@ -8637,6 +8559,9 @@ void CBasePlayer :: UpdateClientData( void )
 
 
 	//MODDD - the next four if-then's are new.
+	//MODDD - TODO.  Why not have a "m_rgClientItems" array for detectnig changes
+	// in any m_rgItems member, and then update m_rgClientItems[#] and send off the
+	// new value?  Ammo reserve array does it that way I think.
 	if (m_rgItems[ITEM_ANTIDOTE] != m_iClientAntidote)
 	{
 		m_iClientAntidote = m_rgItems[ITEM_ANTIDOTE];
@@ -9494,6 +9419,11 @@ BOOL CBasePlayer :: SwitchWeapon( CBasePlayerItem *pWeapon )
 
 //MODDD - SOME NEW PLAYER METHODS
 void CBasePlayer::consumeAntidote(){
+
+	if (m_rgItems[ITEM_ANTIDOTE] <= 0) {
+		return;  //what
+	}
+
 	//m_rgbTimeBasedDamage[itbd_NerveGas] = 0;
 	//m_rgbTimeBasedDamage[itbd_Poison] = 0;
 	removeTimedDamage(itbd_NerveGas, &m_bitsDamageType);

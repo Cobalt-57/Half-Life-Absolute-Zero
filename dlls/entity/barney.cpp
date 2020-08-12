@@ -29,6 +29,7 @@
 #include "soundent.h"
 #include "glock.h"
 #include "util_model.h"
+#include "defaultai.h"
 #include "util_debugdraw.h"
 
 EASY_CVAR_EXTERN(sv_germancensorship)
@@ -91,7 +92,8 @@ enum
 
 enum
 {
-	TASK_SAY_HEAL = LAST_TALKMONSTER_TASK + 1,
+	TASK_RESTORE_SPAM = LAST_TALKMONSTER_TASK + 1,
+	
 };
 
 
@@ -118,6 +120,28 @@ public:
 	BOOL m_lastAttackCheck;
 
 	float reloadSoundTime;
+
+
+
+
+	Schedule_t* OLD_m_pSchedule;
+	int OLD_m_iScheduleIndex;
+	int OLD_m_iTaskStatus;
+	MONSTERSTATE OLD_m_MonsterState;
+	MONSTERSTATE OLD_m_IdealMonsterState;
+	int OLD_sequence;
+	int OLD_body;
+	Vector OLD_origin;
+	Vector OLD_angles;
+	EHANDLE OLD_m_hEnemy;
+	EHANDLE OLD_m_hTargetEnt;
+	CCineMonster* OLD_m_pCine;
+	Activity OLD_m_Activity;
+	Activity OLD_m_IdealActivity;
+	Activity OLD_m_movementActivity;
+	int OLD_m_movementGoal;
+
+
 
 
 
@@ -196,6 +220,10 @@ public:
 	void talkAboutKilledEnemy(void);
 	void onEnemyDead(CBaseEntity* pRecentEnemy);
 
+	void SaveState(void);
+	void RestoreState(void);
+	void OnForgiveDeclineSpam(void);
+
 	
 	virtual int	Save( CSave &save );
 	virtual int	Restore( CRestore &restore );
@@ -213,6 +241,7 @@ public:
 	
 	void DeclineFollowingProvoked(CBaseEntity* pCaller);
 	void SayProvoked(void);
+	void SayStopShooting(void);
 	void SaySuspicious(void);
 	void SayLeaderDied(void);
 	void SayNearPassive(void);
@@ -424,6 +453,25 @@ Schedule_t slBarneyUnDraw[] =
 };
 
 
+Task_t	tlBarneyUnDrawForgiveSpam[] =
+{
+	{ TASK_STOP_MOVING, 0 },
+	{ TASK_PLAY_SEQUENCE, (float)ACT_DISARM },
+	{ TASK_RESTORE_SPAM, 0 },
+};
+
+Schedule_t slBarneyUnDrawForgiveSpam[] =
+{
+	{
+		tlBarneyUnDrawForgiveSpam,
+		ARRAYSIZE(tlBarneyUnDrawForgiveSpam),
+		0,
+		0,
+		"Barney Enemy UnDraw"
+	}
+};
+
+
 Task_t	tlBaFaceTarget[] =
 {
 	{ TASK_SET_ACTIVITY,		(float)ACT_IDLE },
@@ -506,7 +554,8 @@ void CBarney::DeclineFollowingProvoked(CBaseEntity* pCaller) {
 	//...or will he? MUHAHAHA.
 
 	if (EASY_CVAR_GET(pissedNPCs) != 1 || !globalPSEUDO_iCanHazMemez) {
-		PlaySentence("BA_PISSED", 3, VOL_NORM, ATTN_NORM);
+		//PlaySentence("BA_PISSED", 3, VOL_NORM, ATTN_NORM);
+		SayProvoked();
 	}
 	else {
 		PlaySentence("BA_POKE_D", 8, VOL_NORM, ATTN_NORM);
@@ -516,13 +565,26 @@ void CBarney::DeclineFollowingProvoked(CBaseEntity* pCaller) {
 }
 void CBarney::SayProvoked(void) {
 
+	// Don't interrupt this angsty message at the player with an alert message.
+	g_barneyAlertTalkWaitTime = gpGlobals->time + 6;
+
 	if (EASY_CVAR_GET(pissedNPCs) != 1 || !globalPSEUDO_iCanHazMemez) {
-		PlaySentence("BA_MAD", 4, VOL_NORM, ATTN_NORM);
+		if (RANDOM_FLOAT(0, 1) < 0.23) {
+			PlaySentence("BA_PISSED", 3, VOL_NORM, ATTN_NORM);
+		}else {
+			PlaySentence("BA_MAD", 4, VOL_NORM, ATTN_NORM);
+		}
 	}
 	else {
 		PlaySentence("BA_POKE_D", 8, VOL_NORM, ATTN_NORM);
 	}
 }
+
+void CBarney::SayStopShooting(void) {
+
+	CTalkMonster::SayStopShooting();
+}
+
 void CBarney::SaySuspicious(void) {
 	if (EASY_CVAR_GET(pissedNPCs) != 1 || !globalPSEUDO_iCanHazMemez) {
 		PlaySentence("BA_SHOT", 4, VOL_NORM, ATTN_NORM);
@@ -617,6 +679,12 @@ void CBarney :: StartTask( Task_t *pTask )
 	{
 		case TASK_RELOAD:
 			m_IdealActivity = ACT_RELOAD;
+		break;
+		case TASK_RESTORE_SPAM:
+			// calling RestoreState changes the current schedule, task, and task status.
+			// Don't call TaskComplete after this.
+			RestoreState();
+			return;
 		break;
 	}
 	///////////////////////////////////////////////////////////////////////
@@ -751,7 +819,7 @@ void CBarney :: AlertSound( void )
 				long randoRange;
 
 
-				if (RANDOM_FLOAT(0, 1) < 0.9) {
+				if (RANDOM_FLOAT(0, 1) < 0.09) {
 					// angry barney
 					switch (RANDOM_LONG(0, 2)) {
 						case 0:PlaySentenceSingular("BA_ATTACK6", 4, VOL_NORM, ATTN_NORM);break;
@@ -891,6 +959,13 @@ void CBarney :: SetYawSpeed ( void )
 //=========================================================
 BOOL CBarney :: CheckRangeAttack1 ( float flDot, float flDist )
 {
+
+	if (recentDeclinesForgetTime != -1 && recentDeclines < 32 && m_hEnemy != NULL && m_hEnemy->IsPlayer()) {
+		// not yet.   Go on, try me.
+		return FALSE;
+	}
+
+
 	if ( flDist <= 1024 && flDot >= 0.5 )
 	{
 		if ( gpGlobals->time > m_checkAttackTime )
@@ -1006,6 +1081,7 @@ void CBarney :: MonsterThink(void){
 	
 		}
 	}
+
 
 }//END OF MonsterThink
 
@@ -1160,16 +1236,18 @@ void CBarney :: Spawn()
 	}
 
 
-	m_afCapability		= bits_CAP_HEAR | bits_CAP_TURN_HEAD | bits_CAP_DOORS_GROUP;
+	m_afCapability = bits_CAP_HEAR | bits_CAP_TURN_HEAD | bits_CAP_DOORS_GROUP;
 
 	MonsterInit();
 
 	SetUse( &CTalkMonster::FollowerUse );
 
+	/**
 	if(pev->spawnflags & 8){
 		//for testing
 		pev->health = pev->max_health * 0.35;
 	}
+	*/
 
 	//MODDD new. This is a lot neater to use.
 	m_HackedGunPos = Vector( 0, 0, 55 );
@@ -1240,7 +1318,7 @@ void CBarney :: TalkInit()
 	m_szGrp[TLK_ANSWER]  =	"BA_ANSWER";
 	m_szGrp[TLK_QUESTION] =	"BA_QUESTION";
 	m_szGrp[TLK_IDLE] =		"BA_IDLE";
-	m_szGrp[TLK_STARE] =		"BA_STARE";
+	m_szGrp[TLK_STARE] =	"BA_STARE";
 	m_szGrp[TLK_USE] =		"BA_OK";
 	m_szGrp[TLK_UNUSE] =	"BA_WAIT";
 	m_szGrp[TLK_STOP] =		"BA_STOP";
@@ -1674,6 +1752,39 @@ Schedule_t *CBarney :: GetSchedule ( void )
 				return GetScheduleOfType( SCHED_ARM_WEAPON );
 			}
 
+
+			if (recentDeclines >= 30) {
+				// no movement-related schedules, just see if we can shoot
+
+				if (HasConditions(bits_COND_CAN_RANGE_ATTACK1)) {
+
+					if (recentDeclinesForgetTime - gpGlobals->time < 30) {
+						//force it up
+						recentDeclinesForgetTime = gpGlobals->time + 30;
+					}
+
+					return GetScheduleOfType(SCHED_RANGE_ATTACK1);
+				}
+				else {
+					if (HasConditions(bits_COND_HEAR_SOUND)) {
+						return slCombatFaceSound;
+					}
+
+					//if (!HasConditions(bits_COND_ENEMY_OCCLUDED)) {
+					if(HasConditions(bits_COND_SEE_ENEMY)){
+						// I can face them.
+						return GetScheduleOfType(SCHED_COMBAT_FACE);
+					}
+					else {
+						// oh
+						return GetScheduleOfType(SCHED_COMBAT_STAND);
+					}
+				}
+
+
+			}
+
+
 			if ( HasConditions( bits_COND_HEAVY_DAMAGE ) )
 				return GetScheduleOfType( SCHED_TAKE_COVER_FROM_ENEMY );
 		}
@@ -1759,9 +1870,51 @@ MONSTERSTATE CBarney :: GetIdealState ( void )
 
 void CBarney::DeclineFollowing( void )
 {
+	recentDeclines++;
+	if (recentDeclines < 30) {
+		recentDeclinesForgetTime = gpGlobals->time + 8;
+	}
+	else if(recentDeclines < 32){
+		recentDeclinesForgetTime = gpGlobals->time + 30;
+	}
+	else {
+		recentDeclinesForgetTime = gpGlobals->time + 50;
+	}
+
+	if (recentDeclines == 30) {
+		// ...   hold my beer.
+		//edict_t* pentPlayer = FIND_CLIENT_IN_PVS(this->edict());
+
+
+		//if (pentPlayer != NULL) {
+			Remember(bits_MEMORY_PROVOKED);
+			SaveState();
+			m_IdealMonsterState = MONSTERSTATE_COMBAT;
+			//CBaseEntity* test = CBaseEntity::Instance(pentPlayer);
+			//m_hEnemy = test;
+		//}
+	}
+	else if (recentDeclines > 30) {
+		// end of the line for you
+	}
+
+
+
 	//MODDD
 	if(EASY_CVAR_GET(pissedNPCs) < 1){
-		PlaySentence( "BA_POK", 2, VOL_NORM, ATTN_NORM );
+
+		if (recentDeclines < 30) {
+			PlaySentence("BA_POK", 2, VOL_NORM, ATTN_NORM);
+		}
+		else {
+			float randomVal = RANDOM_FLOAT(0, 1);
+			if (randomVal < 0.05) {
+				PlaySentenceSingular("BA_SCARED0", 2, VOL_NORM, ATTN_NORM);
+			}
+			else {
+				SayProvoked();
+			}
+		}
 	}else{
 		playPissed();
 	}
@@ -2236,7 +2389,80 @@ void CBarney::onEnemyDead(CBaseEntity* pRecentEnemy) {
 
 
 
+void CBarney::SaveState(void) {
 
+	//queuedMonsterState  ???
+	OLD_m_pSchedule = m_pSchedule;
+	OLD_m_iScheduleIndex = m_iScheduleIndex;
+	OLD_m_iTaskStatus = m_iTaskStatus;
+	OLD_m_MonsterState = m_MonsterState;
+	OLD_m_IdealMonsterState = m_IdealMonsterState;
+	OLD_sequence = pev->sequence;
+	OLD_body = pev->body;
+	OLD_origin = pev->origin;
+	OLD_angles = pev->angles;
+	OLD_m_hEnemy = m_hEnemy;
+	OLD_m_hTargetEnt = m_hTargetEnt;
+	OLD_m_pCine = m_pCine;
+	OLD_m_Activity = m_Activity;
+	OLD_m_IdealActivity = m_IdealActivity;
+	OLD_m_movementActivity = m_movementActivity;
+	OLD_m_movementGoal = m_movementGoal;
+
+}
+
+void CBarney::RestoreState(void) {
+
+	m_pSchedule = OLD_m_pSchedule;
+	m_iScheduleIndex = OLD_m_iScheduleIndex;
+	m_iTaskStatus = OLD_m_iTaskStatus;
+	m_MonsterState = OLD_m_MonsterState;
+	m_IdealMonsterState = OLD_m_IdealMonsterState;
+	pev->sequence = OLD_sequence;
+	pev->body = OLD_body;
+	pev->origin = OLD_origin;
+	pev->angles = OLD_angles;
+	m_hEnemy = OLD_m_hEnemy;
+	m_hTargetEnt = OLD_m_hTargetEnt;
+	m_pCine = OLD_m_pCine;
+	m_Activity = OLD_m_Activity;
+	m_IdealActivity = OLD_m_IdealActivity;
+	m_movementActivity = OLD_m_movementActivity;
+	m_movementGoal = OLD_m_movementGoal;
+
+	pev->frame = 0;
+	pev->framerate = 1;
+	m_flFramerateSuggestion = 1;
+
+
+	ResetSequenceInfo();  // with the existing sequence from OLD_sequence already applied to pev->sequence
+	SetYawSpeed();
+
+	m_fGunDrawn = FALSE;
+	if (EASY_CVAR_GET(glockOldReloadLogicBarney) == 0) {
+		//not using old reload logic?  Barney just has 12 rounds.
+		m_cAmmoLoaded = BARNEY_WEAPON_CLIP_SIZE - 1;
+	}
+	else {
+		//Firing chamber has one.  Extra (13 total).
+		m_cAmmoLoaded = BARNEY_WEAPON_CLIP_SIZE;
+	}
+
+}
+
+
+void CBarney::OnForgiveDeclineSpam(void) {
+
+	if (m_fGunDrawn) {
+		// undraw it
+		ChangeSchedule(slBarneyUnDrawForgiveSpam);
+	}
+	else {
+		// skip to here
+		RestoreState();
+	}
+	CTalkMonster::OnForgiveDeclineSpam();
+}
 
 
 
@@ -2290,6 +2516,7 @@ void CBarney::womboCombo(void) {
 		PlaySentence("BA_POKE_B", 6, VOL_NORM, ATTN_NORM);
 	}
 }
+
 
 
 

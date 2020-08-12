@@ -45,8 +45,9 @@ EASY_CVAR_EXTERN(forceAllowServersideTextureSounds)
 #define CSENTENCEG_MAX 200					// max number of sentence groups
 // globals
 
-#define ANNOUNCE_MINUTES_MIN	0.25	 
-#define ANNOUNCE_MINUTES_MAX	2.25
+//MODDD - less frequent, was 0.25 to 2.25 minutes.
+#define ANNOUNCE_MINUTES_MIN	0.64
+#define ANNOUNCE_MINUTES_MAX	2.38
 
 
 
