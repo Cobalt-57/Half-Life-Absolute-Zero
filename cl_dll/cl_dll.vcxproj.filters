@@ -28,6 +28,9 @@
     <Filter Include="Header Files\hl">
       <UniqueIdentifier>{388a0ea5-8bc5-4115-b4b2-c21438ff1ff2}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\weapon">
+      <UniqueIdentifier>{cd9158a0-f243-47dd-8314-6c343f74fb10}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="cdll_int.cpp">
@@ -201,12 +204,6 @@
     <ClCompile Include="..\game_shared\util\util_version.cpp">
       <Filter>Source Files\Shared</Filter>
     </ClCompile>
-    <ClCompile Include="..\dlls\weapon\chumtoadweapon.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\dlls\weapon\glock.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="hud\ammo.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -252,42 +249,6 @@
     <ClCompile Include="hud\train.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\dlls\weapon\crossbow.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\dlls\weapon\crowbar.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\dlls\weapon\egon.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\dlls\weapon\gauss.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\dlls\weapon\handgrenade.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\dlls\weapon\hornetgun.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\dlls\weapon\mp5.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\dlls\weapon\python.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\dlls\weapon\rpg.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\dlls\weapon\satchel.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\dlls\weapon\shotgun.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\dlls\weapon\tripmine.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\common\vector.cpp">
       <Filter>Source Files\common</Filter>
     </ClCompile>
@@ -295,9 +256,6 @@
       <Filter>Source Files\_root</Filter>
     </ClCompile>
     <ClCompile Include="weapons_resource.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\dlls\weapon\squeak.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="hud\pain.cpp">
@@ -308,6 +266,51 @@
     </ClCompile>
     <ClCompile Include="hl\cl_player.cpp">
       <Filter>Source Files\hl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\dlls\weapon\gauss.cpp">
+      <Filter>Source Files\weapon</Filter>
+    </ClCompile>
+    <ClCompile Include="..\dlls\weapon\python.cpp">
+      <Filter>Source Files\weapon</Filter>
+    </ClCompile>
+    <ClCompile Include="..\dlls\weapon\rpg.cpp">
+      <Filter>Source Files\weapon</Filter>
+    </ClCompile>
+    <ClCompile Include="..\dlls\weapon\satchel.cpp">
+      <Filter>Source Files\weapon</Filter>
+    </ClCompile>
+    <ClCompile Include="..\dlls\weapon\crossbow.cpp">
+      <Filter>Source Files\weapon</Filter>
+    </ClCompile>
+    <ClCompile Include="..\dlls\weapon\crowbar.cpp">
+      <Filter>Source Files\weapon</Filter>
+    </ClCompile>
+    <ClCompile Include="..\dlls\weapon\egon.cpp">
+      <Filter>Source Files\weapon</Filter>
+    </ClCompile>
+    <ClCompile Include="..\dlls\weapon\glock.cpp">
+      <Filter>Source Files\weapon</Filter>
+    </ClCompile>
+    <ClCompile Include="..\dlls\weapon\shotgun.cpp">
+      <Filter>Source Files\weapon</Filter>
+    </ClCompile>
+    <ClCompile Include="..\dlls\weapon\squeak.cpp">
+      <Filter>Source Files\weapon</Filter>
+    </ClCompile>
+    <ClCompile Include="..\dlls\weapon\tripmine.cpp">
+      <Filter>Source Files\weapon</Filter>
+    </ClCompile>
+    <ClCompile Include="..\dlls\weapon\mp5.cpp">
+      <Filter>Source Files\weapon</Filter>
+    </ClCompile>
+    <ClCompile Include="..\dlls\weapon\handgrenade.cpp">
+      <Filter>Source Files\weapon</Filter>
+    </ClCompile>
+    <ClCompile Include="..\dlls\weapon\hornetgun.cpp">
+      <Filter>Source Files\weapon</Filter>
+    </ClCompile>
+    <ClCompile Include="..\dlls\weapon\chumtoadweapon.cpp">
+      <Filter>Source Files\weapon</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

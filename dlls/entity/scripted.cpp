@@ -47,6 +47,17 @@ EASY_CVAR_EXTERN(cineChangelevelFix)
 
 
 
+
+//MODDD - NEW.  Like monsterIDLatest, but for CCineMonster and child classes (CCineAI) only.
+// They still re-use the monsterID var that all monsters have.
+// In fact come to think of it I don't know why these even are of the Monster class.
+// Could just be entities?  Invisible.
+// Anyway, this counts up independently of CCineMonster.  Scripted #7 is not necessarily related
+// to monster #7 at all.
+int CCineMonster::scriptedIDLatest = 0;
+
+
+
 //TODO - if there were any complains of scripted monsters
 // animating crudely (not smoothly frame to frame),
 // it may be because the EF_NOINTERP pev->flags bit is set.
@@ -178,6 +189,13 @@ void CCineMonster::Spawn(void)
 	else
 		m_interruptable = TRUE;
 
+
+	if (monsterID == -1) {
+		//MODDD - unique ID just for me
+		// And remember, scriptedIDLatest.  Independent of monsterID.
+		monsterID = scriptedIDLatest;
+		scriptedIDLatest++;
+	}
 }
 
 //=========================================================
@@ -844,7 +862,6 @@ void CCineMonster::DelayStart(int state)
 // Find an entity that I'm interested in and precache the sounds he'll need in the sequence.
 void CCineMonster::Activate(void)
 {
-
 	edict_t* pentTarget;
 	CBaseMonster* pTarget;
 

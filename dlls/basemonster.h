@@ -782,8 +782,8 @@ public:
 	virtual void ScheduleChange( void ); //MODDD - a little default behavior now, see defaultai.cpp.
 	virtual Schedule_t* GetStumpedWaitSchedule(void);
 	// virtual int CanPlaySequence( void ) { return ((m_pCine == NULL) && (m_MonsterState == MONSTERSTATE_NONE || m_MonsterState == MONSTERSTATE_IDLE || m_IdealMonsterState == MONSTERSTATE_IDLE)); }
+	virtual int CanPlaySentence(BOOL fDisregardState);
 	virtual int CanPlaySequence( BOOL fDisregardState, int interruptLevel );
-	virtual int CanPlaySentence( BOOL fDisregardState ) { return IsAlive(); }
 	virtual void PlaySentence( const char *pszSentence, float duration, float volume, float attenuation );
 	virtual void PlayScriptedSentence( const char *pszSentence, float duration, float volume, float attenuation, BOOL bConcurrent, CBaseEntity *pListener );
 

@@ -1696,9 +1696,9 @@ void CScientist :: RunTask( Task_t *pTask )
 		//MODDD - small chance of FIdleSpeak each frame.
 
 		// MONSTERSTATE_SCRIPT, assumption?
-		if (m_pCine != NULL && m_pCine->CanInterrupt()) {
-			if (gpGlobals->time >= nextRandomSpeakCheck) {
+		if (m_pCine == NULL || m_pCine->CanInterrupt()) {
 
+			if (gpGlobals->time >= nextRandomSpeakCheck) {
 				if (RANDOM_LONG(0, 120) < 2) {
 					// It may not sound like much, but that's a little under 2% chance every half-second, 4% a second.
 					// 10 seconds, 40%.  20 seconds, 80%.

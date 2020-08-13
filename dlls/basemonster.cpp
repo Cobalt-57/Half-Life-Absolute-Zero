@@ -2757,7 +2757,11 @@ BOOL CBaseMonster :: FRefreshRoute ( void )
 				if (shouldItAgain) {
 					// do it again! 
 					AdvanceRoute(flWaypointDist, flInterval);
-
+				
+					if (MovementIsComplete()) {
+						// looks like we're already where we want to be?
+						break;
+					}
 				}
 				else {
 					// Route left to go?  get out the loop then
@@ -2827,6 +2831,12 @@ BOOL CBaseMonster::MoveToTarget( Activity movementAct, float waitTime )
 	m_movementActivity = movementAct;
 	m_moveWaitTime = waitTime;
 	m_movementGoal = MOVEGOAL_TARGETENT;
+
+
+	if (monsterID == 14) {
+		int x = 4;
+	}
+
 
 	//MODDD - only keep movement activity if this passes
 	BOOL theResult = FRefreshRoute();
@@ -4993,9 +5003,6 @@ BOOL CBaseMonster :: FTriangulate ( const Vector &vecStart , const Vector &vecEn
 
 
 
-
-
-
 // NOTICE - monsters can opt in or out of the segmented move feature.
 // Ones that rely on the Move method as it is (or just cuch call the parent CBaseMonster::Move without
 // doing much else, like CFlyingMonster) can keep this True.
@@ -5117,7 +5124,6 @@ int CBaseMonster::MovePRE(float flInterval, float& flWaypointDist, float& flChec
 	return localMoveResult;
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	*/
-
 
 
 
@@ -5276,14 +5282,14 @@ int CBaseMonster::MovePRE(float flInterval, float& flWaypointDist, float& flChec
 	else {
 		localMovePass = (CheckLocalMove(pev->origin, pev->origin + vecDir * flCheckDist, pTargetEnt, &flDist) == LOCALMOVE_VALID);
 
-		/*
-		if (localMovePass == 1) {
-			DebugLine_Setup(0, pev->origin, pev->origin + vecDir * flCheckDist, 0, 255, 0);
-		}
-		else {
-			DebugLine_Setup(0, pev->origin, pev->origin + vecDir * flCheckDist, 255, 0, 0);
-		}
-		*/
+		
+		//if (localMovePass == 1) {
+		//	DebugLine_Setup(0, pev->origin, pev->origin + vecDir * flCheckDist, 0, 255, 0);
+		//}
+		//else {
+		//	DebugLine_Setup(0, pev->origin, pev->origin + vecDir * flCheckDist, 255, 0, 0);
+		//}
+		
 
 
 		if (localMovePass) {
@@ -5303,7 +5309,7 @@ int CBaseMonster::MovePRE(float flInterval, float& flWaypointDist, float& flChec
 
 	return localMovePass;
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
+	
 
 }//MovePRE
 
@@ -5655,25 +5661,28 @@ void CBaseMonster :: Move ( float flInterval )
 		AdvanceRoute( flWaypointDist, flInterval );
 
 
-		//MODDD - and, do a check since advancing the route.  Is the point after ok to traverse from?
-		/////////////////////////////////////////////////////////////////////////////////////////////////
-		// Only if we're done moving though!  If already at the goal this won't work well.
-		// Can we prove if this area even makes a difference?   See the other ShouldAdvanceRoute checks
-		// in FRefreshRoute now, they seem to make the difference in stopping oscillation, maybe all of it.
-		if (!MovementIsComplete()) {
-			int localMovePassTest = MovePRE(flInterval, flWaypointDist, flCheckDist, flDist, vecDir, pTargetEnt);
 
-			if (localMovePassTest != 1) {
-				// nope!
-				Stop();
-				TaskFail();
-				return;
-			}
-
-			//int shouldItAgain = ShouldAdvanceRoute(flWaypointDist, flInterval);
-			//int x = 45;
-		}
+		
+		////MODDD - and, do a check since advancing the route.  Is the point after ok to traverse from?
+		///////////////////////////////////////////////////////////////////////////////////////////////////
+		//// Only if we're done moving though!  If already at the goal this won't work well.
+		//// Can we prove if this area even makes a difference?   See the other ShouldAdvanceRoute checks
+		////// in FRefreshRoute now, they seem to make the difference in stopping oscillation, maybe all of it.
+		//if (!MovementIsComplete()) {
+		//	int localMovePassTest = MovePRE(flInterval, flWaypointDist, flCheckDist, flDist, vecDir, pTargetEnt);
+		//
+		//	if (localMovePassTest != 1) {
+		//		// nope!
+		//		Stop();
+		//		TaskFail();
+		//		return;
+		//	}
+		//
+		//	//int shouldItAgain = ShouldAdvanceRoute(flWaypointDist, flInterval);
+		//	//int x = 45;
+		//}
 		/////////////////////////////////////////////////////////////////////////////////////////////////
+		
 
 	}else{
 
@@ -5766,7 +5775,7 @@ void CBaseMonster :: Move ( float flInterval )
 
 	// END OF THE NEW WAY.
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
+	
 
 }//END OF Move
 
@@ -6224,7 +6233,7 @@ void CBaseMonster::TaskFail(void)
 		int x = 45;
 	}
 	
-	if(monsterID == 1){
+	if(monsterID == 14){
 		int x = 4;
 	}
 
@@ -7704,6 +7713,10 @@ BOOL CBaseMonster :: FCheckAITrigger ( void )
 // will be sucked into the script no matter what state it is
 // in. ONLY Scripted AI ents should allow this.
 //=========================================================	
+int CBaseMonster::CanPlaySentence(BOOL fDisregardState)
+{
+	return IsAlive();
+}
 int CBaseMonster :: CanPlaySequence( BOOL fDisregardMonsterState, int interruptLevel )
 {
 	//MODDD - it is possible for "EASY_CVAR_GET(cineAllowSequenceOverwrite)" to block "m_pCine" already being occupied to stop this from having influence.

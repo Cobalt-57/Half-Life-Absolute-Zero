@@ -743,14 +743,14 @@ void CSqueak::PrimaryAttack()
 
 			//MODDD 
 			if (m_pPlayer->cheat_minimumfiredelayMem == 0) {
-				m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + (31.0f / 30.0f) + 0.4f;
+				m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + (31.0f / 30.0f) + 0.8f;
 			}
 			else {
-				m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + m_pPlayer->cheat_minimumfiredelaycustomMem + 0.03f;
+				m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + m_pPlayer->cheat_minimumfiredelaycustomMem + 0.015f;
 			}
 			//NOTE: this ends up being the delay before doing the re-draw animation
 			// (can still fire before then, unaffected by the time of the "throw" animation that hides the hands)
-			m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + (44.0 / 30.0) + 0.4f;
+			m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + (44.0 / 30.0) + -0.1f;
 
 		}// END OF trace success (nothing in the way) check
 #endif

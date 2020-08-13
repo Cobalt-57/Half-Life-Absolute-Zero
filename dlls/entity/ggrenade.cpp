@@ -54,6 +54,16 @@ LINK_ENTITY_TO_CLASS(grenade, CGrenade);
 
 
 
+
+CGrenade::CGrenade(void) {
+	dropped = FALSE;
+	firstGroundContactYet = FALSE;
+
+}
+
+
+
+
 GENERATE_TRACEATTACK_IMPLEMENTATION(CGrenade)
 {
 	//MODDD - class update, was CBaseMonster.
@@ -467,18 +477,67 @@ void CGrenade::BounceTouch( CBaseEntity *pOther )
 		// add a bit of static friction
 		pev->velocity = pev->velocity * 0.8;
 
-		pev->sequence = RANDOM_LONG( 1, 1 );
+
+
+		//MODDD - grenades placed on the ground should not do this, they'll just clip
+		if (!dropped){
+			// Also, only happen the first time since touching the ground.
+			// It's most important not to do the angle shift multiple times.
+
+
+			if (!firstGroundContactYet) {
+
+				// no weirdness from that.  both might be redundant though.
+				pev->effects |= EF_NOINTERP;
+				pev->renderfx |= STOPINTR;
+
+				// needs to be specified now that it animates properly.
+				//   imagine that.
+				pev->sequence = 1;   //laying on the ground.
+				pev->frame = 0;
+				pev->framerate = 0;
+
+				// and hit those angles.
+				// No pitch, and need to rotate a ways
+				//pev->angles = g_vecZero;
+				
+
+				pev->angles.x = 0;
+				//pev->angles.x = RANDOM_FLOAT(-150, 150);
+				//if (pev->angles.x < -180) pev->angles.x += 360;
+				//if (pev->angles.x > 180) pev->angles.x -= 360;
+
+				pev->angles.y += -90;
+				if (pev->angles.y < -180) pev->angles.y += 360;
+				if (pev->angles.y > 180) pev->angles.y -= 360;
+				
+				pev->angles.z = 0;
+				//pev->angles.z = pev->angles.z + RANDOM_FLOAT(-150, 150);
+				//if (pev->angles.z < -180) pev->angles.z += 360;
+				//if (pev->angles.z > 180) pev->angles.z -= 360;
+				
+
+				firstGroundContactYet = TRUE;
+			}
+		}//dropped check
+
+
 	}
 	else
 	{
 		// play bounce sound
 		BounceSound();
 	}
+
+
+	//MODDD - ??? what was this even trying to do.
+	/*
 	pev->framerate = pev->velocity.Length() / 200.0;
 	if (pev->framerate > 1.0)
 		pev->framerate = 1;
 	else if (pev->framerate < 0.5)
 		pev->framerate = 0;
+	*/
 
 }
 
@@ -537,6 +596,11 @@ void CGrenade :: TumbleThink( void )
 		return;
 	}
 
+	//int mySeq = pev->sequence;
+	//float myFram = pev->frame;
+	//float myFramrat = pev->framerate;
+
+
 	StudioFrameAdvance_SIMPLE( );
 	pev->nextthink = gpGlobals->time + 0.1;
 
@@ -552,7 +616,11 @@ void CGrenade :: TumbleThink( void )
 	if (pev->waterlevel != 0)
 	{
 		pev->velocity = pev->velocity * 0.5;
-		pev->framerate = 0.2;
+
+		//MODDD - only not on touching the ground yet
+		if (!firstGroundContactYet) {
+			pev->framerate = 0.2;
+		}
 	}
 }
 
@@ -637,8 +705,54 @@ CGrenade *CGrenade::ShootContact( entvars_t *pevOwner, Vector vecStart, Vector v
 
 
 //MODDD - wasn't a way to specify damage in the call?  Why?
-CGrenade * CGrenade:: ShootTimed( entvars_t *pevOwner, Vector vecStart, Vector vecVelocity, float flDamage, float flDetonateTime )
+CGrenade * CGrenade::ShootTimed( entvars_t *pevOwner, Vector vecStart, Vector vecVelocity, float flDamage, float flDetonateTime )
 {
+
+	/*
+	// OLD SCRIPT
+
+	CGrenade* pGrenade = GetClassPtr((CGrenade*)NULL);
+	pGrenade->Spawn();
+	UTIL_SetOrigin(pGrenade->pev, vecStart);
+	pGrenade->pev->velocity = vecVelocity;
+	pGrenade->pev->angles = UTIL_VecToAngles(pGrenade->pev->velocity);
+	pGrenade->pev->owner = ENT(pevOwner);
+
+	pGrenade->SetTouch(&CGrenade::BounceTouch);	// Bounce if touched
+
+	// Take one second off of the desired detonation time and set the think to PreDetonate. PreDetonate
+	// will insert a DANGER sound into the world sound list and delay detonation for one second so that 
+	// the grenade explodes after the exact amount of time specified in the call to ShootTimed(). 
+
+	pGrenade->pev->dmgtime = gpGlobals->time + flDetonateTime;
+	pGrenade->SetThink(&CGrenade::TumbleThink);
+	pGrenade->pev->nextthink = gpGlobals->time + 0.1;
+	if (flDetonateTime < 0.1)
+	{
+		pGrenade->pev->nextthink = gpGlobals->time;
+		pGrenade->pev->velocity = Vector(0, 0, 0);
+	}
+
+	pGrenade->pev->sequence = RANDOM_LONG(3, 6);
+	pGrenade->pev->framerate = 1.0;
+
+	// Tumble through the air
+	// pGrenade->pev->avelocity.x = -400;
+
+	pGrenade->pev->gravity = 0.5;
+	pGrenade->pev->friction = 0.8;
+
+	SET_MODEL(ENT(pGrenade->pev), "models/w_grenade.mdl");
+	pGrenade->pev->dmg = 100;
+
+	return pGrenade;
+	*/
+
+
+
+
+
+
 	CGrenade *pGrenade = GetClassPtr( (CGrenade *)NULL );
 	pGrenade->Spawn();
 
@@ -688,10 +802,9 @@ CGrenade * CGrenade:: ShootTimed( entvars_t *pevOwner, Vector vecStart, Vector v
 
 	// HeYyyyyyy!! Set this too you fool!
 	pGrenade->pev->frame = 0;
+	pGrenade->pev->framerate = 1.0;
 	pGrenade->ResetSequenceInfo();
 
-
-	pGrenade->pev->framerate = 1.0;
 
 	// Tumble through the air
 	// pGrenade->pev->avelocity.x = -400;
@@ -707,7 +820,33 @@ CGrenade * CGrenade:: ShootTimed( entvars_t *pevOwner, Vector vecStart, Vector v
 	pGrenade->pev->dmg = flDamage;
 
 	return pGrenade;
+	
 }
+
+
+// similar to ShootTimed but best for grenades that are placed on/near the ground instead.
+CGrenade* CGrenade::ShootTimedDropped(entvars_t* pevOwner, Vector vecStart, Vector vecVelocity, float flDamage, float flDetonateTime) {
+	CGrenade* result = CGrenade::ShootTimed(pevOwner, vecStart, vecVelocity, flDamage, flDetonateTime);
+
+	result->pev->sequence = 0;
+	result->pev->framerate = 0;
+	result->dropped = TRUE;
+
+	result->pev->angles = g_vecZero;
+
+	return result;
+}
+
+
+
+
+
+
+
+
+
+
+
 
 
 //MODDD - methods "ShootSatchelCharge" and "UseSatchelCharges" removed.

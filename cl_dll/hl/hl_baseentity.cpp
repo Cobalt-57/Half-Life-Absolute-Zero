@@ -315,8 +315,10 @@ GENERATE_KILLED_IMPLEMENTATION_DUMMY_CLIENT(CGrenade)
 BOOL CGrenade::isOrganic(){return FALSE;}
 BOOL CGrenade::usesSoundSentenceSave(){return FALSE;}
 
+CGrenade::CGrenade(void) {}
 void CGrenade::Spawn( void ) { }
 CGrenade * CGrenade:: ShootTimed( entvars_t *pevOwner, Vector vecStart, Vector vecVelocity, float flDamage, float flDetonateTime){ return 0; }
+CGrenade* CGrenade::ShootTimedDropped(entvars_t* pevOwner, Vector vecStart, Vector vecVelocity, float flDamage, float flDetonateTime) { return 0; }
 CGrenade *CGrenade::ShootContact( entvars_t *pevOwner, Vector vecStart, Vector vecVelocity, float flDamage){ return 0; }
 void CGrenade::DetonateUse( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value ){ }
 
@@ -649,7 +651,9 @@ BOOL CBaseMonster :: FCheckAITrigger ( void ) { return FALSE; }
 BOOL CBaseMonster::NoFriendlyFire(void) { return FALSE; }
 
 
+int CBaseMonster::CanPlaySentence(BOOL fDisregardState){return FALSE;}
 int CBaseMonster :: CanPlaySequence( BOOL fDisregardMonsterState, int interruptLevel ) { return FALSE; }
+
 BOOL CBaseMonster :: FindLateralCover ( const Vector &vecThreat, const Vector &vecViewOffset ) { return FALSE; }
 Vector CBaseMonster :: ShootAtEnemy( const Vector &shootOrigin ) { return g_vecZero; }
 Vector CBaseMonster :: ShootAtEnemyMod( const Vector &shootOrigin ) { return g_vecZero; }

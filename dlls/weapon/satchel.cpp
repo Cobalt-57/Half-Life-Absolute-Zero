@@ -618,7 +618,7 @@ void CSatchel::ItemPostFrameThink(void) {
 #endif
 
 
-	return CBasePlayerWeapon::ItemPostFrameThink();
+	CBasePlayerWeapon::ItemPostFrameThink();
 }
 
 

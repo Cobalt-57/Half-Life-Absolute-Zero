@@ -722,7 +722,7 @@
 #define DEFAULT_cl_interp_viewmodel 1
 #define DEFAULT_sv_explosionknockback 1
 #define DEFAULT_cl_gaussfollowattachment 1
-#define DEFAULT_cl_breakholster 1
+#define DEFAULT_cl_breakholster 0
 
 
 

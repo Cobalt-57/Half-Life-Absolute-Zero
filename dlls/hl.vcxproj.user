@@ -20,4 +20,7 @@
     <LocalDebuggerCommandArguments>-nomaster -dev -game AbsoluteZero</LocalDebuggerCommandArguments>
     <LocalDebuggerWorkingDirectory>C:\Program Files (x86)\Valve\Half-Life NGHLv3</LocalDebuggerWorkingDirectory>
   </PropertyGroup>
+  <PropertyGroup>
+    <ShowAllFiles>false</ShowAllFiles>
+  </PropertyGroup>
 </Project>

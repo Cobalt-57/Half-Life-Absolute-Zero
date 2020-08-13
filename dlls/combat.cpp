@@ -1583,6 +1583,8 @@ void CBaseEntity::SpawnBlood(const Vector& vecSpot, float flDamage) {
 		return;
 	}
 
+	float healthEstimate = pev->health - gMultiDamage.amount;
+
 	if (EASY_CVAR_GET(sv_bloodparticlemode) == 1 || EASY_CVAR_GET(sv_bloodparticlemode) == 2) {
 		// NOTE - ignores bloodDir and uses random blood vectors in each place
 		int drawBloodVersionValue = 0;
@@ -1591,32 +1593,33 @@ void CBaseEntity::SpawnBlood(const Vector& vecSpot, float flDamage) {
 		// any damage over a limit does not contribute to extra blood.
 		float extraBloodFactor = (min(flDamage, 30) / 30);
 
+
 		if (pev->deadflag == DEAD_NO) {
 
-			if (pev->health <= flDamage) {
+			if (healthEstimate <= flDamage) {
 				// killing blow?
-				UTIL_BloodStream(vecSpot, UTIL_RandomBloodVector(), theBlood, RANDOM_LONG(20, 28) + (int)(22 * extraBloodFactor));
-				UTIL_BloodStream(vecSpot, UTIL_RandomBloodVector(), theBlood, RANDOM_LONG(20, 28) + (int)(22 * extraBloodFactor));
-				UTIL_BloodStream(vecSpot, UTIL_RandomBloodVector(), theBlood, RANDOM_LONG(20, 28) + (int)(22 * extraBloodFactor));
+				UTIL_BloodStream(vecSpot, UTIL_RandomBloodVector(), theBlood, (int)RANDOM_LONG(74, 95) + (int)(30 * extraBloodFactor));
+				UTIL_BloodStream(vecSpot, UTIL_RandomBloodVector(), theBlood, (int)RANDOM_LONG(74, 95) + (int)(30 * extraBloodFactor));
+				UTIL_BloodStream(vecSpot, UTIL_RandomBloodVector(), theBlood, (int)RANDOM_LONG(74, 95) + (int)(30 * extraBloodFactor));
 			}
 			else {
 				// normal
-				UTIL_BloodStream(vecSpot, UTIL_RandomBloodVector(), theBlood, RANDOM_LONG(2, 4) + (int)(RANDOM_FLOAT(4, 6) * extraBloodFactor));
-				UTIL_BloodStream(vecSpot, UTIL_RandomBloodVector(), theBlood, RANDOM_LONG(2, 4) + (int)(RANDOM_FLOAT(4, 6) * extraBloodFactor));
-				UTIL_BloodStream(vecSpot, UTIL_RandomBloodVector(), theBlood, RANDOM_LONG(2, 4) + (int)(RANDOM_FLOAT(4, 6) * extraBloodFactor));
+				UTIL_BloodStream(vecSpot, UTIL_RandomBloodVector(), theBlood, RANDOM_LONG(5, 8) + (int)(RANDOM_FLOAT(4, 8) * extraBloodFactor));
+				UTIL_BloodStream(vecSpot, UTIL_RandomBloodVector(), theBlood, RANDOM_LONG(5, 8) + (int)(RANDOM_FLOAT(4, 8) * extraBloodFactor));
+				UTIL_BloodStream(vecSpot, UTIL_RandomBloodVector(), theBlood, RANDOM_LONG(5, 8) + (int)(RANDOM_FLOAT(4, 8) * extraBloodFactor));
 			}
 		}
-		else if (pev->deadflag == DEAD_DYING) {
+		else if (healthEstimate == DEAD_DYING) {
 			// dying
-			UTIL_BloodStream(vecSpot, UTIL_RandomBloodVector(), theBlood, RANDOM_LONG(9, 14) + (int)(18 * extraBloodFactor));
-			UTIL_BloodStream(vecSpot, UTIL_RandomBloodVector(), theBlood, RANDOM_LONG(9, 14) + (int)(18 * extraBloodFactor));
-			UTIL_BloodStream(vecSpot, UTIL_RandomBloodVector(), theBlood, RANDOM_LONG(9, 14) + (int)(18 * extraBloodFactor));
+			UTIL_BloodStream(vecSpot, UTIL_RandomBloodVector(), theBlood, RANDOM_LONG(15, 21) + (int)(18 * extraBloodFactor));
+			UTIL_BloodStream(vecSpot, UTIL_RandomBloodVector(), theBlood, RANDOM_LONG(15, 21) + (int)(18 * extraBloodFactor));
+			UTIL_BloodStream(vecSpot, UTIL_RandomBloodVector(), theBlood, RANDOM_LONG(15, 21) + (int)(18 * extraBloodFactor));
 		}
 		else {
 			// DEAD.  Similar, but spray it further up to be more noticeable.
-			UTIL_BloodStream(vecSpot, UTIL_RandomBloodVectorHigh(), theBlood, RANDOM_LONG(7, 10) + (int)(15 * extraBloodFactor));
-			UTIL_BloodStream(vecSpot, UTIL_RandomBloodVectorHigh(), theBlood, RANDOM_LONG(7, 10) + (int)(15 * extraBloodFactor));
-			UTIL_BloodStream(vecSpot, UTIL_RandomBloodVectorHigh(), theBlood, RANDOM_LONG(7, 10) + (int)(15 * extraBloodFactor));
+			UTIL_BloodStream(vecSpot, UTIL_RandomBloodVectorHigh(), theBlood, RANDOM_LONG(12, 18) + (int)(15 * extraBloodFactor));
+			UTIL_BloodStream(vecSpot, UTIL_RandomBloodVectorHigh(), theBlood, RANDOM_LONG(12, 18) + (int)(15 * extraBloodFactor));
+			UTIL_BloodStream(vecSpot, UTIL_RandomBloodVectorHigh(), theBlood, RANDOM_LONG(12, 18) + (int)(15 * extraBloodFactor));
 		}
 
 	}//END OF alpha check

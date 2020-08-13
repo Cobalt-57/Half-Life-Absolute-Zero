@@ -883,6 +883,11 @@ void V_CalcNormalRefdef(struct ref_params_s* pparams)
 	}
 	*/
 
+
+	// retail is 150, tested with 140.
+#define STEPPER 150
+#define STEPPERFAST 190
+
 	float safeSimZ = pparams->simorg[2];   // - pparams->viewheight[2]
 	
 	//MODDD - between games/maps, forget any differences, interp from that is just silly.
@@ -950,10 +955,10 @@ void V_CalcNormalRefdef(struct ref_params_s* pparams)
 				}
 
 				if (pparams->onground) {
-					oldViewHeight += steptime * 140;
+					oldViewHeight += steptime * STEPPER;
 				}
 				else {
-					oldViewHeight += steptime * 170;
+					oldViewHeight += steptime * STEPPERFAST;
 				}
 				if (oldViewHeight > filteredViewheight) {
 					oldViewHeight = filteredViewheight;
@@ -977,9 +982,9 @@ void V_CalcNormalRefdef(struct ref_params_s* pparams)
 				}
 
 				if (pparams->onground) {
-					oldViewHeight -= steptime * 140;
+					oldViewHeight -= steptime * STEPPER;
 				}else {
-					oldViewHeight -= steptime * 170;
+					oldViewHeight -= steptime * STEPPERFAST;
 				}
 				if (oldViewHeight < filteredViewheight) {
 					oldViewHeight = filteredViewheight;
@@ -1023,7 +1028,7 @@ void V_CalcNormalRefdef(struct ref_params_s* pparams)
 					steptime = 0;
 				}
 
-				oldz += steptime * 140;
+				oldz += steptime * STEPPER;
 				if (oldz > safeSimZ) {
 					oldz = safeSimZ;
 				}
@@ -1052,7 +1057,7 @@ void V_CalcNormalRefdef(struct ref_params_s* pparams)
 					steptime = 0;
 				}
 
-				oldz -= steptime * 140;
+				oldz -= steptime * STEPPER;
 				if (oldz < safeSimZ) {
 					oldz = safeSimZ;
 				}

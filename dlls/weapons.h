@@ -367,16 +367,33 @@ extern MULTIDAMAGE gMultiDamage;
 class CGrenade : public CBaseAnimating
 {
 public:
+	//MODDD - whoops, unused as-is.  Odd place for it as there is a satchel.cpp.
+	//typedef enum { SATCHEL_DETONATE = 0, SATCHEL_RELEASE } SATCHELCODE;
+
+	BOOL dropped;
+	BOOL firstGroundContactYet;
+
+	BOOL m_fRegisteredSound;// whether or not this grenade has issued its DANGER sound to the world sound list yet.
+
+	//MODDD - NEW.  Since we're no longer inheriting from CBaseMonster, we lack m_flNextAttack.
+	// Although it was just being used as a simple time variable without any behavior just from
+	// being part of CBaseMonster anyway, may as well be replaced with a more fitting name here.
+	float m_flBounceDamageCooldown;
+
+public:
+
+
+	CGrenade(void);
+
 	//MODDD - added for compatibility.
 	// not necessary.
 	//void Activate( void );
 
 	void Spawn( void );
 
-	typedef enum { SATCHEL_DETONATE = 0, SATCHEL_RELEASE } SATCHELCODE;
-
 	//MODDD - supports damage to deal in the call.
 	static CGrenade *ShootTimed( entvars_t *pevOwner, Vector vecStart, Vector vecVelocity, float flDamage, float flDetonateTime );
+	static CGrenade* ShootTimedDropped(entvars_t* pevOwner, Vector vecStart, Vector vecVelocity, float flDamage, float flDetonateTime);
 	static CGrenade *ShootContact( entvars_t *pevOwner, Vector vecStart, Vector vecVelocity, float flDamage );
 
 
@@ -421,14 +438,6 @@ public:
 	virtual BOOL isOrganic(void);
 	virtual BOOL usesSoundSentenceSave(void);
 
-
-
-	BOOL m_fRegisteredSound;// whether or not this grenade has issued its DANGER sound to the world sound list yet.
-
-	//MODDD - NEW.  Since we're no longer inheriting from CBaseMonster, we lack m_flNextAttack.
-	// Although it was just being used as a simple time variable without any behavior just from
-	// being part of CBaseMonster anyway, may as well be replaced with a more fitting name here.
-	float m_flBounceDamageCooldown;
 
 };
 

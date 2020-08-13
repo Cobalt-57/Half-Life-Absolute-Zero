@@ -105,6 +105,9 @@ public:
 	void AllowInterrupt( BOOL fAllow );
 	int	IgnoreConditions( void );
 
+	//MODDD - NEW.
+	static int scriptedIDLatest;
+
 	int m_iszIdle;		// string index for idle animation
 	int m_iszPlay;		// string index for scripted animation
 	int m_iszEntity;	// entity that is wanted for this script

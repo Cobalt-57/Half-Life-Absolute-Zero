@@ -1153,7 +1153,8 @@ GENERATE_TRACEATTACK_IMPLEMENTATION(CHGrunt)
 			// tiny damage really gets soaked up.  mp5, shotgun shells not effective here.
 			if (flDamage <= 5) {
 				flDamage *= 0.7;
-				useBloodEffect = FALSE;
+				// UNDONE!  Need to test blood effects.
+				//useBloodEffect = FALSE;
 			}
 			else {
 				flDamage *= 0.85;
@@ -2663,18 +2664,17 @@ void CHGrunt :: HandleAnimEvent( MonsterEvent_t *pEvent )
 
 		case HGRUNT_AE_GREN_DROP:
 		{
+			//MODDD - using ShootTimedDropped instead, puts the grenade upright like it was likely intended
 			UTIL_MakeVectors( pev->angles );
-			CGrenade::ShootTimed( pev, pev->origin + gpGlobals->v_forward * 17 - gpGlobals->v_right * 27 + gpGlobals->v_up * 6, g_vecZero, gSkillData.plrDmgHandGrenade, 3 );
+			CGrenade::ShootTimedDropped( pev, pev->origin + gpGlobals->v_forward * 17 - gpGlobals->v_right * 27 + gpGlobals->v_up * 6, g_vecZero, gSkillData.plrDmgHandGrenade, 3 );
 
 		}
 		break;
 
 		case HGRUNT_AE_BURST1:
 		{
-
 			//easyForcePrintLine("HGRUNT%d WHAT IS THIS TOMfoolery A. sched:%s task:%d seq:%d frame:%.2f", monsterID, this->getScheduleName(), this->getTaskNumber(), pev->sequence, pev->frame);
-
-
+			
 #if FORCE_MP5 == 1
 
 			//Assume mp5.

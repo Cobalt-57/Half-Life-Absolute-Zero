@@ -299,6 +299,9 @@ public:
 
 	void womboCombo(void);
 
+	int CanPlaySentence(BOOL fDisregardState);
+	int CanPlaySequence(BOOL fDisregardMonsterState, int interruptLevel);
+
 	CUSTOM_SCHEDULES;
 };
 
@@ -415,7 +418,7 @@ int CBarney::Save(CSave& save)
 		SetYawSpeed();
 	}
 
-
+	
 	//if (!CTalkMonster::Save(save)) {
 	//	return 0;
 	//}
@@ -1997,7 +2000,7 @@ void CBarney::DeclineFollowing( void )
 		// ...   hold my beer.
 		//edict_t* pentPlayer = FIND_CLIENT_IN_PVS(this->edict());
 
-		/*
+		
 		//if (pentPlayer != NULL) {
 			beforeSpamRampageState.Save(this);
 			Remember(bits_MEMORY_PROVOKED);
@@ -2008,7 +2011,7 @@ void CBarney::DeclineFollowing( void )
 			//CBaseEntity* test = CBaseEntity::Instance(pentPlayer);
 			//m_hEnemy = test;
 		//}
-			*/
+			
 	}
 	else if (recentDeclines > 30) {
 		// end of the line for you
@@ -2602,6 +2605,25 @@ void CBarney::womboCombo(void) {
 		PlaySentence("BA_POKE_B", 6, VOL_NORM, ATTN_NORM);
 	}
 }
+
+
+
+
+int CBarney::CanPlaySentence(BOOL fDisregardState)
+{
+	return IsAlive();
+}
+int CBarney::CanPlaySequence(BOOL fDisregardMonsterState, int interruptLevel)
+{
+	// doesn't seem to really work, but eh.
+	if (forgiveMeForWhatIMustDo) {
+		// deny.
+		return FALSE;
+	}
+
+	return CTalkMonster::CanPlaySequence(fDisregardMonsterState, interruptLevel);
+}
+
 
 
 
