@@ -46,6 +46,7 @@ public:
 	void Precache( void );
 	void SetYawSpeed( void );
 	void EXPORT MonsterThink ( void );
+	BOOL usesSegmentedMove(void);
 	void Move ( float flInterval );
 	void PickNewDest ( int iCondition );
 	void EXPORT Touch ( CBaseEntity *pOther );
@@ -59,7 +60,7 @@ public:
 	int	ISoundMask ( void );
 	
 	// UNDONE: These don't necessarily need to be save/restored, but if we add more data, it may
-	BOOL	m_fLightHacked;
+	BOOL m_fLightHacked;
 	int	m_iMode;
 	// -----------------------------
 };
@@ -379,6 +380,13 @@ void CRoach :: PickNewDest ( int iCondition )
 		UTIL_PlaySound(ENT(pev), CHAN_BODY, "roach/rch_walk.wav", 1, ATTN_NORM, 0, 80 + RANDOM_LONG(0,39) );
 	}
 }
+
+
+BOOL CRoach::usesSegmentedMove(void) {
+	// safety
+	return FALSE;
+}
+
 
 //=========================================================
 // roach's move function

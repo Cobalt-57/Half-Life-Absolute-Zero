@@ -1464,7 +1464,8 @@ void CScientist :: StartTask( Task_t *pTask )
 	case TASK_SAY_FEAR:
 
 		//no, go ahead!
-		//if ( FOkToSpeak() )
+		// yea no, this is too spammy
+		if ( FOkToSpeak() )
 		{
 			m_hTalkTarget = m_hEnemy;
 			if (m_hEnemy != NULL && m_hEnemy->IsPlayer()) {
@@ -2657,6 +2658,12 @@ Schedule_t *CScientist :: GetSchedule ( void )
 		m_fearTime = gpGlobals->time; // Update last fear... why not?
 	}
 
+
+
+	// It's possible to get new enemies really really fast and spam these lines, be careful.
+	// And it is correct behavior, bits_COND_NEW_ENEMY is only set in basemonster.cpp on the frame a monster
+	// has a different enemy.
+
 	if (HasConditions(bits_COND_NEW_ENEMY) ) {
 
 		if (m_hEnemy != NULL) {
@@ -2675,21 +2682,22 @@ Schedule_t *CScientist :: GetSchedule ( void )
 			}
 			else {
 				// any other enemy? check size
+				if (FOkToSpeakAllowCombat(CTalkMonster::g_talkWaitTime)) {
 
+					Vector tempEnBoundDelta = (m_hEnemy->pev->absmax - m_hEnemy->pev->absmin);
+					float tempEnSize = tempEnBoundDelta.x * tempEnBoundDelta.y * tempEnBoundDelta.z;
 
-				Vector tempEnBoundDelta = (m_hEnemy->pev->absmax - m_hEnemy->pev->absmin);
-				float tempEnSize = tempEnBoundDelta.x * tempEnBoundDelta.y * tempEnBoundDelta.z;
-
-				if (tempEnSize < 16000) {  //headcrab size: 13824
-					// no sounds.
-				}
-				else if (tempEnSize <= 500000) {  //size of agrunt: about 348160
-					// fear
-					PlaySentence("SC_FEAR", 5, VOL_NORM, ATTN_NORM);
-				}
-				else {
-					// OH GOD ITS HUGE
-					PlaySentence("SC_SCREAM_TRU", 5, VOL_NORM, ATTN_NORM);
+					if (tempEnSize < 16000) {  //headcrab size: 13824
+						// no sounds.
+					}
+					else if (tempEnSize <= 500000) {  //size of agrunt: about 348160
+						// fear
+						PlaySentence("SC_FEAR", 5, VOL_NORM, ATTN_NORM);
+					}
+					else {
+						// OH GOD ITS HUGE
+						PlaySentence("SC_SCREAM_TRU", 5, VOL_NORM, ATTN_NORM);
+					}
 				}
 			}//END OF other monster size check
 			

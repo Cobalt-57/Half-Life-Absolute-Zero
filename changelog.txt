@@ -173,7 +173,7 @@ Machines (mainly sentries) play metal-sounds when hit with bullets.
 
 Snarks can now gib with alpha blood, not forced to retail.
 
-Speed while crouched increased.
+Step sound while crouched reduced slightly (35% to 30%)
 
 Viewpunch (recoil / getting knocked by melee hits, alpha ladder effect) decays more smoothly and slightly faster.
 Viewpunch of alpha ladders reduced slightly on top of this.
@@ -268,4 +268,11 @@ Added support for a gauss beam that no longer follows the weapon after firing (c
 
 Failing to revive, despite having adrenaline+suit, after dying shortly after loading a map fixed.
 
+Crossbow between-shot delay increased from 0.75 seconds to 1.1.
 
+Controller pathfinding in intended maps fixed (retail-like).  Just proof of pathfinding's stablity for other places.
+
+Fixed cause of rare slowdowns during pathfinding due to bad addition(s).
+
+NEW CVAR: cl_breakholster.  Controls holstering for quick-swap (q key) and picking up a new weapon instead.  1 disallows holstering, 0 allows it for these cases.
+cl_holster still controls typical weapon select (number keys or mouse wheel + click).

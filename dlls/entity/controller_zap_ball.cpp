@@ -50,6 +50,11 @@ void CControllerZapBall :: Precache( void )
 	global_useSentenceSave = FALSE;
 }
 
+BOOL CControllerZapBall::usesSegmentedMove(void){
+	// play it safe
+	return FALSE;
+}
+
 
 void CControllerZapBall :: AnimateThink( void  )
 {

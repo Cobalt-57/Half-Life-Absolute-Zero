@@ -49,6 +49,20 @@
 
 
 
+
+
+// Was testing with 0.48, but reverted.
+#define DUCK_SPEED_MULTI 0.333
+
+// 35% volume if ducking
+// MODDD - 30% now.
+// Unaffected by ladder-steps, that's cut in half instead
+#define DUCK_STEPVOLUME_MULTI 0.3
+
+
+
+
+
 // Ducking time
 #define TIME_TO_DUCK	0.4
 
@@ -773,13 +787,12 @@ void PM_UpdateStepSound( void )
 		
 		pmove->flTimeStepSound += flduck; // slower step time if ducking
 
+
+
 		// play the sound
-		// 35% volume if ducking
-		// MODDD - 45% now.
 		if ( pmove->flags & FL_DUCKING )
 		{
-			//fvol *= 0.35;
-			fvol *= 0.45;
+			fvol *= DUCK_STEPVOLUME_MULTI;
 		}
 
 		PM_PlayStepSound( step, fvol );
@@ -2480,12 +2493,9 @@ void PM_Duck( void )
 	if ( pmove->flags & FL_DUCKING )
 	{
 		//MODDD - how about reducing the move speed penalties a little.
-		//pmove->cmd.forwardmove *= 0.333;
-		//pmove->cmd.sidemove    *= 0.333;
-		//pmove->cmd.upmove      *= 0.333;
-		pmove->cmd.forwardmove *= 0.48;
-		pmove->cmd.sidemove    *= 0.48;
-		pmove->cmd.upmove      *= 0.48;
+		pmove->cmd.forwardmove *= DUCK_SPEED_MULTI;
+		pmove->cmd.sidemove    *= DUCK_SPEED_MULTI;
+		pmove->cmd.upmove      *= DUCK_SPEED_MULTI;
 	}
 
 	if ( ( pmove->cmd.buttons & IN_DUCK ) || ( pmove->bInDuck ) || ( pmove->flags & FL_DUCKING ) )

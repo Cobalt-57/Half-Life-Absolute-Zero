@@ -63,6 +63,7 @@ float global2PSEUDO_grabbedByBarancle = 0;
 float global2PSEUDO_cl_fvox = -1;
 // Ditto.
 float global2PSEUDO_cl_holster = -1;
+float global2PSEUDO_cl_breakholster = -1;
 float global2PSEUDO_cl_ladder = -1;
 float globalPSEUDO_m_rawinputMem = -1;
 float global2PSEUDO_default_fov = -1;
@@ -93,6 +94,13 @@ void lateCVarInit(void){
 		easyClientCommand("_cl_holster 0");
 	}else {
 		easyClientCommand("_cl_holster 1");
+	}
+
+	global2PSEUDO_cl_breakholster = EASY_CVAR_GET(cl_breakholster);
+	if (global2PSEUDO_cl_breakholster == 0) {
+		easyClientCommand("_cl_breakholster 0");
+	}else {
+		easyClientCommand("_cl_breakholster 1");
 	}
 
 	global2PSEUDO_cl_ladder = EASY_CVAR_GET(cl_ladder);
@@ -145,9 +153,16 @@ void updateClientCVarRefs(void){
 		global2PSEUDO_cl_holster = EASY_CVAR_GET(cl_holster);
 		if (global2PSEUDO_cl_holster == 0) {
 			easyClientCommand("_cl_holster 0");
-		}
-		else {
+		}else {
 			easyClientCommand("_cl_holster 1");
+		}
+	}
+	if (EASY_CVAR_GET(cl_breakholster) != global2PSEUDO_cl_breakholster) {
+		global2PSEUDO_cl_breakholster = EASY_CVAR_GET(cl_breakholster);
+		if (global2PSEUDO_cl_breakholster == 0) {
+			easyClientCommand("_cl_breakholster 0");
+		}else {
+			easyClientCommand("_cl_breakholster 1");
 		}
 	}
 	if (EASY_CVAR_GET(cl_ladder) != global2PSEUDO_cl_ladder) {

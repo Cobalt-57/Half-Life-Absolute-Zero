@@ -931,6 +931,7 @@ Vector VecCheckThrow ( entvars_t *pev, const Vector &vecSpot1, Vector vecSpot2, 
 
 extern void printBasicEntityInfo(CBaseEntity* entRef);
 extern void printBasicEntityInfo(edict_t* theCaller, CBaseEntity* entRef);
+extern void printBasicTraceInfo(const TraceResult& tr);
 extern void printBasicTraceInfo(edict_t* theCaller, const TraceResult& tr);
 
 

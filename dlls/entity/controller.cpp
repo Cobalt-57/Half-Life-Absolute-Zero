@@ -40,7 +40,8 @@
 EASY_CVAR_EXTERN(animationFramerateMulti)
 
 
-
+// DEBUG.  Stop the controller from spawning balls.
+#define CONTROLLER_MAKE_BALLS 1
 
 
 //Sequences, in the order they appear in the model. Some sequences have the same display name and so should just
@@ -87,6 +88,33 @@ enum controller_sequence{  //key: frames, FPS
 
 class CController : public CSquadMonster
 {
+
+public:
+
+	static const char* pAttackSounds[];
+	static const char* pIdleSounds[];
+	static const char* pAlertSounds[];
+	static const char* pPainSounds[];
+	static const char* pDeathSounds[];
+
+
+	CSprite* m_pBall[2];	// hand balls
+	int m_iBall[2];			// how bright it should be
+	float m_iBallTime[2];	// when it should be that color
+	int m_iBallCurrent[2];	// current brightness
+
+	Vector m_vecEstVelocity;
+
+	Vector m_velocity;
+	int m_fInCombat;
+
+	//MODDD - unused as-is variable, too bad.
+	//float m_flNextFlinch;
+
+	float m_flShootTime;
+	float m_flShootEnd;
+
+
 public:
 	CController(void);
 
@@ -127,6 +155,8 @@ public:
 	CUSTOM_SCHEDULES;
 
 	void Stop( void );
+	BOOL usesSegmentedMove(void);
+	int MovePRE(float flInterval, float& flWaypointDist, float& flCheckDist, float& flDist, Vector& vecDir, CBaseEntity*& pTargetEnt);
 	void Move ( float flInterval );
 	int  CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, CBaseEntity *pTarget, float *pflDist );
 	void MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, float flInterval );
@@ -134,23 +164,12 @@ public:
 	BOOL ShouldAdvanceRoute( float flWaypointDist, float flInterval );
 	int LookupFloat( );
 
-	//MODDD - unused as-is variable, too bad.
-	//float m_flNextFlinch;
-
-	float m_flShootTime;
-	float m_flShootEnd;
 
 	void PainSound( void );
 	void AlertSound( void );
 	void IdleSound( void );
 	void AttackSound( void );
 	void DeathSound( void );
-
-	static const char *pAttackSounds[];
-	static const char *pIdleSounds[];
-	static const char *pAlertSounds[];
-	static const char *pPainSounds[];
-	static const char *pDeathSounds[];
 
 	
 	GENERATE_TRACEATTACK_PROTOTYPE
@@ -164,21 +183,12 @@ public:
 	int getLoopingDeathSequence(void);
 	
 
-	CSprite *m_pBall[2];	// hand balls
-	int m_iBall[2];			// how bright it should be
-	float m_iBallTime[2];	// when it should be that color
-	int m_iBallCurrent[2];	// current brightness
-
-	Vector m_vecEstVelocity;
-
-	Vector m_velocity;
-	int m_fInCombat;
 };
+
 
 #if REMOVE_ORIGINAL_NAMES != 1
 	LINK_ENTITY_TO_CLASS( monster_alien_controller, CController );
 #endif
-
 
 #if EXTRA_NAMES > 0
 	LINK_ENTITY_TO_CLASS( controller, CController );
@@ -187,8 +197,8 @@ public:
 		LINK_ENTITY_TO_CLASS( monster_controller, CController );
 		LINK_ENTITY_TO_CLASS( alien_controller, CController );
 	#endif
-
 #endif
+
 
 
 
@@ -415,10 +425,12 @@ void CController :: HandleAnimEvent( MonsterEvent_t *pEvent )
 				WRITE_COORD( 32 ); // decay
 			MESSAGE_END();
 
+#if CONTROLLER_MAKE_BALLS == 1
 			CBaseMonster *pBall = (CBaseMonster*)Create( "controller_head_ball", vecStart, pev->angles, edict() );
 
 			pBall->pev->velocity = Vector( 0, 0, 32 );
 			pBall->m_hEnemy = m_hEnemy;
+#endif
 
 			m_iBall[0] = 0;
 			m_iBall[1] = 0;
@@ -632,11 +644,17 @@ void CController :: StartTask ( Task_t *pTask )
 				enemyTest = NULL;
 			}
 
+
+
 			//MODDD NOTE - the interesting (new? different? unique?) thing here is sending the distance between the enemyLKP and my origin... not that, the PLUS 1024 here.
 			//             why isn't that elsewhere? isn't there some possibility of a route needing to go outwards or out of the way a bit? Must not come up much.
 			//             Is this kind of situation more likely for flyers then?  Questions questions.
 			//  Anyways, we are sending along the moveflag (TO_ENEMY) and a reference to the enemy, if it exists. The more information the merrier for pathfinding.
-			if (BuildNearestRoute( m_vecEnemyLKP, pev->view_ofs, pTask->flData, (m_vecEnemyLKP - pev->origin).Length() + 1024, bits_MF_TO_ENEMY, enemyTest ))
+			// !!!!!!!
+			// NOPE.  Bad.  Makes the controller dive-bomb towards the player, which wasn't intended.  Keep them off.
+			// Maybe dropping those alone makes the controller want to route around the player instead of allow a path directly towards?  Don't know.
+			//if (BuildNearestRoute( m_vecEnemyLKP, pev->view_ofs, pTask->flData, (m_vecEnemyLKP - pev->origin).Length() + 1024, bits_MF_TO_ENEMY, enemyTest ))
+			if (BuildNearestRoute( m_vecEnemyLKP, pev->view_ofs, pTask->flData, (m_vecEnemyLKP - pev->origin).Length() + 1024 ))
 			{
 				TaskComplete();
 			}
@@ -658,8 +676,9 @@ void CController :: StartTask ( Task_t *pTask )
 				return;
 			}
 
-			//MODDD - like above, sending more info. Moveflag and enemy reference which looks to be guaranteed (task fails if we don't have one or it expired)
-			if (BuildNearestRoute( pEnemy->pev->origin, pEnemy->pev->view_ofs, pTask->flData, (pEnemy->pev->origin - pev->origin).Length() + 1024, bits_MF_TO_ENEMY, pEnemy ))
+
+			// Nope!  Had this at the end for the broken version:    MF_TO_ENEMY, pEnemy
+			if (BuildNearestRoute(pEnemy->pev->origin, pEnemy->pev->view_ofs, pTask->flData, (pEnemy->pev->origin - pev->origin).Length() + 1024))
 			{
 				TaskComplete();
 			}
@@ -669,6 +688,8 @@ void CController :: StartTask ( Task_t *pTask )
 				ALERT ( at_aiconsole, "GetPathToEnemy failed!!\n" );
 				TaskFail();
 			}
+
+
 			break;
 		}
 		
@@ -769,8 +790,11 @@ void CController :: RunTask ( Task_t *pTask )
 				vecDir = vecDir + Vector( RANDOM_FLOAT( -delta, delta ), RANDOM_FLOAT( -delta, delta ), RANDOM_FLOAT( -delta, delta ) ) * gSkillData.controllerSpeedBall;
 
 				vecSrc = vecSrc + vecDir * (gpGlobals->time - m_flShootTime);
+
+#if CONTROLLER_MAKE_BALLS == 1
 				CBaseMonster *pBall = (CBaseMonster*)Create( "controller_energy_ball", vecSrc, pev->angles, edict() );
 				pBall->pev->velocity = vecDir;
+#endif
 			}
 			m_flShootTime += 0.2;
 		}
@@ -1050,36 +1074,135 @@ void CController::Stop( void )
 }
 
 
-#define DIST_TO_CHECK	200
+
+#define DIST_TO_CHECK 200
+
+
+
+
+// You know what FUCK IT
+BOOL CController::usesSegmentedMove(void) {
+	return FALSE;
+}
+
+
+//MODDD - support for MovePRE.
+// Little complex of a case here since the CController has some movement script meant to run at first and does
+// several CheckLocalMove calls in a do-while loop in Move.
+// Lazy approach:  all script up tp the first CheckLocalMove pasted in anyway.  Just dropped the bounding for-loop.
+// WARNING!  This laziness turns out to be pretty bad.  flWaypointDist isn't touched even though a check shortly after
+// MovePRE in FRefreshRoute (basemonster.cpp) refers to it when checking to see if the route should be advanced,
+// and just seeing it unset makes it think it should.    So the monster ends pathfinding far earlier.
+int CController::MovePRE(float flInterval, float& flWaypointDist, float& flCheckDist, float& flDist, Vector& vecDir, CBaseEntity*& pTargetEnt) {
+	// it is ok for this var to be re-calculated in Move and MovePRE.
+	float flMoveDist;
+
+	int localMoveResult;
+
+	localMoveResult = 1;
+
+
+	// !!! The section "used to be in MovePRE" should be moved here if restoring MovePRE
+
+
+
+	/*
+
+	//do
+	//{
+		// local move to waypoint.
+		vecDir = (m_Route[m_iRouteIndex].vecLocation - pev->origin).Normalize();
+		flWaypointDist = (m_Route[m_iRouteIndex].vecLocation - pev->origin).Length();
+
+		// MakeIdealYaw ( m_Route[ m_iRouteIndex ].vecLocation );
+		// ChangeYaw ( pev->yaw_speed );
+
+		// if the waypoint is closer than CheckDist, CheckDist is the dist to waypoint
+		if (flWaypointDist < DIST_TO_CHECK)
+		{
+			flCheckDist = flWaypointDist;
+		}
+		else
+		{
+			flCheckDist = DIST_TO_CHECK;
+		}
+
+		if ((m_Route[m_iRouteIndex].iType & (~bits_MF_NOT_TO_MASK)) == bits_MF_TO_ENEMY)
+		{
+			// only on a PURE move to enemy ( i.e., ONLY MF_TO_ENEMY set, not MF_TO_ENEMY and DETOUR )
+			pTargetEnt = m_hEnemy;
+		}
+		else if ((m_Route[m_iRouteIndex].iType & ~bits_MF_NOT_TO_MASK) == bits_MF_TO_TARGETENT)
+		{
+			pTargetEnt = m_hTargetEnt;
+		}
+
+		// !!!BUGBUG - CheckDist should be derived from ground speed.
+		// If this fails, it should be because of some dynamic entity blocking this guy.
+		// We've already checked this path, so we should wait and time out if the entity doesn't move
+		flDist = 0;
+		//if (CheckLocalMove(pev->origin, pev->origin + vecDir * flCheckDist, pTargetEnt, &flDist) != LOCALMOVE_VALID)
+		localMoveResult = (CheckLocalMove(pev->origin, pev->origin + vecDir * flCheckDist, pTargetEnt, &flDist) == LOCALMOVE_VALID);
+	// ...
+	*/
+
+	return localMoveResult;
+}//END OF MovePRE
+
+
 void CController :: Move ( float flInterval ) 
 {
-	float	flWaypointDist;
-	float	flCheckDist;
-	float	flDist;// how far the lookahead check got before hitting an object.
-	float	flMoveDist;
-	Vector		vecDir;
-	Vector		vecApex;
-	CBaseEntity	*pTargetEnt;
+	float flMoveDist;
+	Vector vecApex;
 
+	float flWaypointDist;
+	float flCheckDist;
+	float flDist;// how far the lookahead check got before hitting an object.
+	Vector vecDir;
+	CBaseEntity *pTargetEnt;
+
+	//MODDD - NEW.  MovePRE integration.
+	// A good chunk below moved to MovePRE above.
+	int localMovePass = MovePRE(flInterval, flWaypointDist, flCheckDist, flDist, vecDir, pTargetEnt);
+
+	if (localMovePass == -1) {
+		// Signal to end very early.  Retail never returned this from any script that would've been there so it is safe
+		// to trust this was given intentionally if testing retail script (end early, even for old logic below).
+		return;
+	}
+
+
+	/*
+	//MODDD - if MovePRE is brought back, this needs to re-initialize flMoveDist
+	flMoveDist = m_flGroundSpeed * pev->framerate * EASY_CVAR_GET(animationFramerateMulti) * flInterval;
+	*/
+
+
+
+
+	// SCRIPT USED TO BE IN MOVEPRE (exclusively)
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// Don't move if no valid route
-	if ( FRouteClear() )
+	if (FRouteClear())
 	{
-		ALERT( at_aiconsole, "Tried to move with no route!\n" );
+		ALERT(at_aiconsole, "Tried to move with no route!\n");
 		TaskFail();
 		return;
 	}
-	
-	if ( m_flMoveWaitFinished > gpGlobals->time )
+
+	if (m_flMoveWaitFinished > gpGlobals->time)
 		return;
 
-// Debug, test movement code
+	// Debug, test movement code
 #if 0
 //	if ( CVAR_GET_FLOAT("stopmove" ) != 0 )
 	{
-		if ( m_movementGoal == MOVEGOAL_ENEMY )
-			RouteSimplify( m_hEnemy );
+		if (m_movementGoal == MOVEGOAL_ENEMY)
+			RouteSimplify(m_hEnemy);
 		else
-			RouteSimplify( m_hTargetEnt );
+			RouteSimplify(m_hTargetEnt);
 		FRefreshRoute();
 		return;
 	}
@@ -1102,6 +1225,17 @@ void CController :: Move ( float flInterval )
 
 	//MODDD - added pev->framerate and the CVar.
 	flMoveDist = m_flGroundSpeed * pev->framerate * EASY_CVAR_GET(animationFramerateMulti) * flInterval;
+
+	//END
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+	//MODDD - script moved to MovePRE above, except for where the do-while loop below begins.
+	// Some of that overlaps with what was moved to MovePRE (not removed from here anyway).
+	// That is OK.
 
 	do 
 	{
@@ -1136,6 +1270,7 @@ void CController :: Move ( float flInterval )
 		// If this fails, it should be because of some dynamic entity blocking this guy.
 		// We've already checked this path, so we should wait and time out if the entity doesn't move
 		flDist = 0;
+		//MODDD - !!!    Anytnything above is in MovePRE as well for one initial try.
 		if ( CheckLocalMove ( pev->origin, pev->origin + vecDir * flCheckDist, pTargetEnt, &flDist ) != LOCALMOVE_VALID )
 		{
 			CBaseEntity *pBlocker;

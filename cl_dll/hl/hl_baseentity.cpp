@@ -521,8 +521,9 @@ void CBaseMonster::wanderAway(const Vector& toWalkAwayFrom){}
 
 void CBaseMonster :: InsertWaypoint ( Vector vecLocation, int afMoveFlags ) { }
 BOOL CBaseMonster :: FTriangulate ( const Vector &vecStart , const Vector &vecEnd, float flDist, CBaseEntity *pTargetEnt, Vector *pApex ) { return FALSE; }
-void CBaseMonster :: Move ( float flInterval ) { }
+BOOL CBaseMonster::usesSegmentedMove(void) {return FALSE;}
 int CBaseMonster::MovePRE(float flInterval, float& flWaypointDist, float& flCheckDist, float& flDist, Vector& vecDir, CBaseEntity*& pTargetEnt) { return FALSE; }
+void CBaseMonster :: Move ( float flInterval ) { }
 BOOL CBaseMonster:: ShouldAdvanceRoute( float flWaypointDist, float flInterval ) { return FALSE; }
 void CBaseMonster::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, float flInterval ) { }
 void CBaseMonster :: MonsterInit ( void ) { }

@@ -4708,7 +4708,6 @@ void ClientCommand( edict_t *pEntity )
 		else {
 			tempRef->set_fvoxEnabled(TRUE, setSilent);
 		}
-
 	}
 	else if (FStrEq(pcmdRefinedRef, "_cl_holster")) {
 		if (CMD_ARGC() <= 1) {
@@ -4724,7 +4723,21 @@ void ClientCommand( edict_t *pEntity )
 		}else {
 			tempRef->fHolsterAnimsEnabled = TRUE;
 		}
+	}
+	else if (FStrEq(pcmdRefinedRef, "_cl_breakholster")) {
+		if (CMD_ARGC() <= 1) {
+			// doesn't make sense to do this if so.  And yes, "1" because that's the lowest possible for just the console
+			// command term itself.  First argument starts at CMD_ARGV(1).
+			return;
+		}
+		const char* arg1ref = CMD_ARGV(1);
+		CBasePlayer* tempRef = GetClassPtr((CBasePlayer*)pev);
 
+		if (FStrEq(arg1ref, "0")) {
+			tempRef->fBreakHolster = FALSE;
+		}else {
+			tempRef->fBreakHolster = TRUE;
+		}
 	}
 	else if (FStrEq(pcmdRefinedRef, "_cl_ladder")) {
 		if (CMD_ARGC() <= 1) {

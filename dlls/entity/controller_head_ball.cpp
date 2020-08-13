@@ -157,6 +157,11 @@ void CControllerHeadBall :: DieThink( void  )
 }
 
 
+BOOL CControllerHeadBall::usesSegmentedMove(void) {
+	// play it safe
+	return FALSE;
+}
+
 void CControllerHeadBall :: MovetoTarget( Vector vecTarget )
 {
 	// accelerate

@@ -36,6 +36,13 @@ EASY_CVAR_EXTERN(crossbowInheritsPlayerVelocity)
 EASY_CVAR_EXTERN(crossbowReloadSoundDelay)
 
 
+
+// delay between shots boosted, was 0.75
+// (this is not reload time, delay between firing clip).
+#define CROSSBOW_LOADBOLT_TIME 1.10
+
+
+
 // MODDD - NOTICE: class CCrossbowBolt has been moved to its own file pair,
 // crossbowbolt.h/.cpp.  As stated above, it is serverside only.
 
@@ -185,12 +192,14 @@ void CCrossbow::PrimaryAttack( void )
 	FireBolt();
 }
 
+
+
 // this function only gets called in multiplayer
 void CCrossbow::FireSniperBolt(){
 
 	//MODDD
 	if(m_pPlayer->cheat_minimumfiredelayMem == 0){
-		m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 0.75;
+		m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + CROSSBOW_LOADBOLT_TIME;
 	}else{
 		m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + m_pPlayer->cheat_minimumfiredelaycustomMem;
 	}
@@ -379,8 +388,8 @@ void CCrossbow::FireBolt()
 	//MODDD
 	// also removed the NextSecondaryAttack sets.  What's the point of affecting when we can zoom again?
 	if(m_pPlayer->cheat_minimumfiredelayMem == 0){
-		m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 0.75;
-		//m_flNextSecondaryAttack = UTIL_WeaponTimeBase() + 0.75;
+		m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + CROSSBOW_LOADBOLT_TIME;
+		//m_flNextSecondaryAttack = UTIL_WeaponTimeBase() + CROSSBOW_LOADBOLT_TIME;
 	}else{
 		m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + m_pPlayer->cheat_minimumfiredelaycustomMem;
 		//m_flNextSecondaryAttack = UTIL_WeaponTimeBase() + m_pPlayer->cheat_minimumfiredelaycustomMem;

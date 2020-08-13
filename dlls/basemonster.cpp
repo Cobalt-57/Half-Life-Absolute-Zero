@@ -20,6 +20,9 @@
 
 */
 
+
+
+
 //MODDD TODO MAJOR - in BestVisibleEnemy, could distance be a scalable priotity alongside relationship, instead of relationship being
 //                   100% overpowering?
 //                   for instance, a monster 3 miles away that's a nemesis that is sighted would draw more attention
@@ -2530,51 +2533,52 @@ BOOL CBaseMonster::FRefreshRouteChaseEnemySmart(void){
 	// It might be possible to integrate this check into any "FRefreshRoute" call too, if necessary.
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-	
-	if (returnCode != FALSE) {
-		// unused, but expected by the method anyway
+	if (usesSegmentedMove()) {
+		if (returnCode != FALSE) {
+			// unused, but expected by the method anyway
 
-		// Success? try a pre-move on that new route then.
-		// And interval.   uhhh.   assume 0.1 here?
-		// Ahah!  We have m_flInterval now, even set before AI calls.
+			// Success? try a pre-move on that new route then.
+			// And interval.   uhhh.   assume 0.1 here?
+			// Ahah!  We have m_flInterval now, even set before AI calls.
 
-		int maxTimes = 2;
-		while (maxTimes > 0) {
-			maxTimes--;
+			int maxTimes = 2;
+			while (maxTimes > 0) {
+				maxTimes--;
 
-			float flWaypointDist;
-			float flCheckDist;
-			float flDist;
-			Vector vecDir;
-			CBaseEntity* pTargetEnt;
+				float flWaypointDist;
+				float flCheckDist;
+				float flDist;
+				Vector vecDir;
+				CBaseEntity* pTargetEnt;
 
-			float flInterval = m_flInterval;
-			int localMovePass = MovePRE(flInterval, flWaypointDist, flCheckDist, flDist, vecDir, pTargetEnt);
+				float flInterval = m_flInterval;
+				int localMovePass = MovePRE(flInterval, flWaypointDist, flCheckDist, flDist, vecDir, pTargetEnt);
 
-			// A value of -1 is also possible to signify failure.  a "thing == 0" or FALSE check isn't good enough.
+				// A value of -1 is also possible to signify failure.  a "thing == 0" or FALSE check isn't good enough.
 
-			if (localMovePass != 1) {
-				//revert these
-				disableEnemyAutoNode = m1;
-				m_movementActivity = m2;
-				m_moveWaitTime = m3;
-				m_movementGoal = m4;
-				m_vecMoveGoal = m5;
-				return FALSE;
-			}
+				if (localMovePass != 1) {
+					//revert these
+					disableEnemyAutoNode = m1;
+					m_movementActivity = m2;
+					m_moveWaitTime = m3;
+					m_movementGoal = m4;
+					m_vecMoveGoal = m5;
+					return FALSE;
+				}
 
-			BOOL shouldItAgain = ShouldAdvanceRoute(flWaypointDist, flInterval);
+				BOOL shouldItAgain = ShouldAdvanceRoute(flWaypointDist, flInterval);
 
-			if (shouldItAgain) {
-				// do it again! 
-				AdvanceRoute(flWaypointDist, flInterval);
-			}
-			else {
-				// Route left to go?  get out the loop then
-				break;
-			}
-		}//END OF while loop
+				if (shouldItAgain) {
+					// do it again! 
+					AdvanceRoute(flWaypointDist, flInterval);
+				}
+				else {
+					// Route left to go?  get out the loop then
+					break;
+				}
+			}//END OF while loop
 
+		}
 	}
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -2704,61 +2708,63 @@ BOOL CBaseMonster :: FRefreshRoute ( void )
 	// Don't keep that move activity change if trying to move a single frame on this route would fail.
 	// It might be possible to integrate this check into any "FRefreshRoute" call too, if necessary.
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	if (returnCode != FALSE) {
+	if (usesSegmentedMove()) {
+		if (returnCode != FALSE) {
 
-		int maxTimes = 2;
-		while (maxTimes > 0) {
-			maxTimes--;
-			
-
-			// unused, but expected by the method anyway
-			float flWaypointDist;
-			float flCheckDist;
-			float flDist;
-			Vector vecDir;
-			CBaseEntity* pTargetEnt;
-
-			// Success? try a pre-move on that new route then.
-			// And interval.   uhhh.   assume 0.1 here?
-			// Ahah!  We have m_flInterval now, even set before AI calls.
-			float flInterval = m_flInterval;
-
-			////////////////////////////////////////////////////////////////////////////////////
-			//MODDD - TODO.  Should this all be surrounded ba "!IsMovementComplete" check?
-			// That way an odd case of a route saying 'you're already there' is handled early, if that can happen.
-			// Maybe if IsMovementComplete passes here, instead return a special code that
-			// calls for the outside context to restore its vars and percolate up to the calling
-			// script in schedule.cpp (probably) to say TaskComplete.
-			// There is also right after the "AdvanceRoute" call further down.  I don't know.
-			// ...  maybe later.
-			////////////////////////////////////////////////////////////////////////////////////
+			int maxTimes = 2;
+			while (maxTimes > 0) {
+				maxTimes--;
 
 
-			int localMovePass = MovePRE(flInterval, flWaypointDist, flCheckDist, flDist, vecDir, pTargetEnt);
+				// unused, but expected by the method anyway
+				float flWaypointDist;
+				float flCheckDist;
+				float flDist;
+				Vector vecDir;
+				CBaseEntity* pTargetEnt;
 
-			// A value of -1 is also possible to signify failure.  a "thing == 0" or FALSE check isn't good enough.
-			if (localMovePass != 1) {
-				// oh dear.  Revert and stop.  (whatever outside context that saved something should handle that)
-				//m_movementActivity = oldMoveAct;
-				//m_moveWaitTime = m_moveWaitTime;
-				return FALSE;
-			}
+				// Success? try a pre-move on that new route then.
+				// And interval.   uhhh.   assume 0.1 here?
+				// Ahah!  We have m_flInterval now, even set before AI calls.
+				float flInterval = m_flInterval;
 
-			// Now, see if we're near the end of the route.  If so, redo this check.
-			// This can end very odd small routes that say "You can go!", only for 1 frame to pass,
-			// advance that node in place, and then go "Oh nevermind."  ugly oscillation between stand and move activities.
-			BOOL shouldItAgain = ShouldAdvanceRoute(flWaypointDist, flInterval);
+				////////////////////////////////////////////////////////////////////////////////////
+				//MODDD - TODO.  Should this all be surrounded ba "!IsMovementComplete" check?
+				// That way an odd case of a route saying 'you're already there' is handled early, if that can happen.
+				// Maybe if IsMovementComplete passes here, instead return a special code that
+				// calls for the outside context to restore its vars and percolate up to the calling
+				// script in schedule.cpp (probably) to say TaskComplete.
+				// There is also right after the "AdvanceRoute" call further down.  I don't know.
+				// ...  maybe later.
+				////////////////////////////////////////////////////////////////////////////////////
 
-			if (shouldItAgain) {
-				// do it again! 
-				AdvanceRoute(flWaypointDist, flInterval);
 
-			}
-			else {
-				// Route left to go?  get out the loop then
-				break;
-			}
-		}//END OF while loop
+				int localMovePass = MovePRE(flInterval, flWaypointDist, flCheckDist, flDist, vecDir, pTargetEnt);
+
+				// A value of -1 is also possible to signify failure.  a "thing == 0" or FALSE check isn't good enough.
+				if (localMovePass != 1) {
+					// oh dear.  Revert and stop.  (whatever outside context that saved something should handle that)
+					//m_movementActivity = oldMoveAct;
+					//m_moveWaitTime = m_moveWaitTime;
+					return FALSE;
+				}
+
+				// Now, see if we're near the end of the route.  If so, redo this check.
+				// This can end very odd small routes that say "You can go!", only for 1 frame to pass,
+				// advance that node in place, and then go "Oh nevermind."  ugly oscillation between stand and move activities.
+				BOOL shouldItAgain = ShouldAdvanceRoute(flWaypointDist, flInterval);
+
+				if (shouldItAgain) {
+					// do it again! 
+					AdvanceRoute(flWaypointDist, flInterval);
+
+				}
+				else {
+					// Route left to go?  get out the loop then
+					break;
+				}
+			}//END OF while loop
+		}
 	}
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -4990,6 +4996,15 @@ BOOL CBaseMonster :: FTriangulate ( const Vector &vecStart , const Vector &vecEn
 
 
 
+// NOTICE - monsters can opt in or out of the segmented move feature.
+// Ones that rely on the Move method as it is (or just cuch call the parent CBaseMonster::Move without
+// doing much else, like CFlyingMonster) can keep this True.
+// Ones that replace it completely are harder to figure out.  Just say FALSE to stop other calls put in
+// FRefreshRoute that usually wouldn't occur.
+BOOL CBaseMonster::usesSegmentedMove(void) {
+	return TRUE;
+}
+
 //MODDD - beginning portion of the as-is 'Move' method below moved here for methods to see whether the path
 // will still be valid in one move from now.
 // If not, setting the idealActivity to WALK or RUN will give an awkward flinching effect since the monster
@@ -4998,6 +5013,16 @@ BOOL CBaseMonster :: FTriangulate ( const Vector &vecStart , const Vector &vecEn
 // Also expects references to variables expected to be filled by the Move call this is likely to come before.
 // NOTICE - this can also return a special code, '-1', which means to stop the rest of the Move method.
 // Don't even bother with any "If failure do this" logic, just 'return', end the Move method right there.
+
+// ALSO, for monsters that implemented their own versions of Move as-is.
+// Implementing MovePRE is up to choice, but for monsters with very custom Move script (like CController),
+// especially to the point of not even calling the parent CBaseMonster::Move, it may be best to completely 
+// redo MovePRE without any reference to CBaseMonster::MovePRE.  Even if it's as simple as "return TRUE;" to
+// let pre-pathfinding checks just work like they did in retail (no need to call it in the monster's Move method
+// if it's that useless), best for safety for now unless there's a reason
+// to do otherwise.
+// For monsters that don't do much else beyond call CBaseMonster::Move in theirs (like CFlyingMonster or whichever),
+// it should be fine to leave MovePRE as the default.  After all, that class relied on defaults too.
 int CBaseMonster::MovePRE(float flInterval, float& flWaypointDist, float& flCheckDist, float& flDist, Vector& vecDir, CBaseEntity*& pTargetEnt ) {
 
 	if (drawPathConstant) {
@@ -6195,6 +6220,9 @@ void CBaseMonster::TaskFail(void)
 	//easyForcePrintLine("I PHAIL %.2f sched:%s task:%d", gpGlobals->time, getScheduleName(), getTaskNumber());
 	SetConditions(bits_COND_TASK_FAILED);
 
+	if (FClassnameIs(pev, "monster_alien_controller")) {
+		int x = 45;
+	}
 	
 	if(monsterID == 1){
 		int x = 4;
@@ -6458,6 +6486,11 @@ BOOL CBaseMonster :: BuildNearestRoute ( Vector vecThreat, Vector vecViewOffset,
 
 	vecLookersOffset = vecThreat + vecViewOffset;// calculate location of enemy's eyes
 
+
+
+	//DebugLine_ClearAll();
+
+
 	// we'll do a rough sample to find nodes that are relatively nearby
 	for ( i = 0 ; i < WorldGraph.m_cNodes ; i++ )
 	{
@@ -6474,21 +6507,90 @@ BOOL CBaseMonster :: BuildNearestRoute ( Vector vecThreat, Vector vecViewOffset,
 			// is it close?
 			if ( flDist > flMinDist && flDist < flMaxDist)
 			{
+
 				// can I see where I want to be from there?
 				//MODDD  - WARNING!!!  A TraceLine call will go through simple thin blocking objects like fences, fooling us into thinking
 				// that a route from point A to B through a fence is valid, just because a bullet can go through it.
 				// How about a trace-hull check instead?
-				//UTIL_TraceLine( node.m_vecOrigin + pev->view_ofs, vecLookersOffset, ignore_monsters, edict(), &tr );
+				//CHANGE.
+				// That might sound like a good idea, but some AI seems to expect this to still work the way it does.
+				// The controller will fail a lot more if we use TRACE_MONSTER_HULL here, but doing that anyway and
+				// giving a target like m_hEnemy on the BuildNearestRoute calls isn't good either.
+				// Then it goes straight for the player instead of picking routes around the map to move like it should.
+				// Really weird stuff.
+				UTIL_TraceLine( node.m_vecOrigin + pev->view_ofs, vecLookersOffset, ignore_monsters, edict(), &tr );
 
-				// One of these too, yea.
+				// One of these too ?
 				//UTIL_TraceHull(vecFrom, vecPos, ignore_monsters, large_hull, m_hEnemy->edict(), &tr);
 				//TRACE_MONSTER_HULL(edict(), pev->origin, Probe, dont_ignore_monsters, edict(), &tr);
 
-				//	int		(*pfnTraceMonsterHull)		(edict_t *pEdict, const float *v1, const float *v2, int fNoMonsters, edict_t *pentToSkip, TraceResult *ptr);
-				TRACE_MONSTER_HULL(edict(), node.m_vecOrigin + pev->view_ofs, vecLookersOffset, dont_ignore_monsters, edict(), &tr);
 
+				/*
+				// This is the most accurate TRACE_MONSTER_HULL way at least.
+				// LEFT FOR DEBUGGING, what causes the differences can be interesting
+				TraceResult tr2;
+				TRACE_MONSTER_HULL(edict(), node.m_vecOrigin + pev->view_ofs, vecLookersOffset, dont_ignore_monsters, edict(), &tr2);
 
-				if (tr.flFraction == 1.0)
+				if (FClassnameIs(pev, "monster_alien_controller")) {
+
+					if (tr.pHit != tr2.pHit) {
+						// WHAT NOW
+						CBaseEntity* daHit1 = NULL;
+						CBaseEntity* daHit2 = NULL;
+						const char* classname1 = "NULL";
+						const char* classname2 = "NULL";
+						if (tr.pHit != NULL) {
+							daHit1 = CBaseEntity::Instance(tr.pHit);
+						}
+						if (tr2.pHit != NULL) {
+							daHit2 = CBaseEntity::Instance(tr2.pHit);
+						}
+						if(daHit1!=NULL)classname1 = daHit1->getClassname();
+						if(daHit2!=NULL)classname2 = daHit2->getClassname();
+						int x = 45;
+						DebugLine_Setup(node.m_vecOrigin + pev->view_ofs, tr.vecEndPos, tr.flFraction);
+						DebugLine_Setup(node.m_vecOrigin + pev->view_ofs + Vector(0,0,20), tr2.vecEndPos + Vector(0, 0, 20), tr2.flFraction);
+
+						easyForcePrintLine("TRACE PAIR");
+						printBasicTraceInfo(tr);
+						easyForcePrintLine();
+						printBasicTraceInfo(tr2);
+						easyForcePrintLine();
+
+					}
+
+				}
+				*/
+
+				BOOL unobscurred = FALSE;
+
+				// breakpoint stuff
+				const char* daClassname = "NULL";
+
+				if (tr.flFraction >= 1.0) {
+					// nothing in the way?  well, yeah.
+					unobscurred = TRUE;
+				}else {
+					// hit something?
+					if (tr.pHit != NULL) {
+
+						if (pTarget != NULL) {
+							// If we have a target and what was hit matches that...  yeah.  That's kind of the point.
+							unobscurred = (tr.pHit == pTarget->edict());
+						}
+
+						// DEBUG
+						CBaseEntity* daHit = CBaseEntity::Instance(tr.pHit);
+						if (daHit != NULL) {
+							daClassname = daHit->getClassname();
+						}
+					}
+				}
+				
+				
+
+				//MODDD - was "tr.flFraction == 1.0", included above too.
+				if (unobscurred)
 				{
 					// try to get there
 					//MODDD - involve the now parameterized "iMoveFlag" and "pTarget".
@@ -7045,7 +7147,6 @@ void CBaseMonster::lookAtEnemy_pitch(void){
 //=========================================================
 BOOL CBaseMonster :: FGetNodeRoute ( Vector vecDest )
 {
-	// Interesting to disable this for testing?
 	//return FALSE;
 
 	TraceResult tr;
@@ -7079,6 +7180,13 @@ BOOL CBaseMonster :: FGetNodeRoute ( Vector vecDest )
 	}
 
 
+
+	//MODDD - NEW SECTION.  Disabling for testing.
+	// Seems something about one of the NEW sections here in FGetNodeRoute can cause slowdowns at random,
+	// probably being called too often for traces to be worthwhile or a trace-hull method going a ridiculous distance
+	// (like controllers across the entire map on a route).   Should be possible to check only up to so far like 400 units though,
+	// try retesting c4a1a at a high framerate (host_framerate 0.5) and waiting for lagginess with that.
+	/*
 	// oh.  WorldGraph.Node is just a layer for m_pNodes, ok.
 	CNode& theStartNode = WorldGraph.Node(iSrcNode);
 	//MODDD - HOLD ON!  Can we even get to the iSrcNode?  Let's be safe.
@@ -7088,7 +7196,7 @@ BOOL CBaseMonster :: FGetNodeRoute ( Vector vecDest )
 		//DebugLine_Setup(0, pev->origin + pev->view_ofs, theStartNode.m_vecOrigin + pev->view_ofs, tr.flFraction);
 		return FALSE;
 	}
-	
+	*/
 
 
 	// valid src and dest nodes were found, so it's safe to proceed with
@@ -7101,7 +7209,11 @@ BOOL CBaseMonster :: FGetNodeRoute ( Vector vecDest )
 	iResult = WorldGraph.FindShortestPath ( iPath, iSrcNode, iDestNode, iNodeHull, m_afCapability );
 
 
-	//MODDD - NEW SECTION
+
+
+	/*
+	//MODDD - NEW SECTION.
+	// Disabled, see notes above.   Don't know which of these sections is the greater cause yet.
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////
 	if( iResult==2 && iPath[0] == iPath[1]){
 		//MODDD TODO - 
@@ -7136,6 +7248,9 @@ BOOL CBaseMonster :: FGetNodeRoute ( Vector vecDest )
 
 	}
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////
+	*/
+
+
 
 	if ( !iResult )
 	{
@@ -7597,6 +7712,10 @@ int CBaseMonster :: CanPlaySequence( BOOL fDisregardMonsterState, int interruptL
 		// monster is already running a scripted sequence or dead!
 		return FALSE;
 	}
+
+	if (monsterID == 70) {
+		int x = 45;
+	}
 	
 	if ( fDisregardMonsterState )
 	{
@@ -7959,6 +8078,8 @@ BOOL CBaseMonster :: GetEnemy (BOOL arg_forceWork )
 	{
 		pNewEnemy = BestVisibleEnemy();
 
+
+
 		if ( pNewEnemy != m_hEnemy && pNewEnemy != NULL)
 		{
 			// DO NOT mess with the monster's m_hEnemy pointer unless the schedule the monster is currently running will be interrupted
@@ -7978,7 +8099,31 @@ BOOL CBaseMonster :: GetEnemy (BOOL arg_forceWork )
 				//if ( m_pSchedule->iInterruptMask & bits_COND_NEW_ENEMY )
 				if ( m_pSchedule->iInterruptMask & bits_COND_NEW_ENEMY || arg_forceWork || getForceAllowNewEnemy(pNewEnemy) )
 				{
+					// DEBUG STUFF
+					/*
+					CBaseEntity* enemyRef = (m_hEnemy !=NULL)?m_hEnemy.GetEntity():NULL;
+					CBaseMonster* monRef = NULL;
+					if(enemyRef !=NULL) monRef = enemyRef->GetMonsterPointer();
+					CBaseMonster* newMonRef = pNewEnemy->GetMonsterPointer();
+					int oldMonsterID = -1;
+					int newMonsterID = -1;
+
+					if (monRef != NULL) {
+						oldMonsterID = monRef->monsterID;
+					}
+					if (newMonRef != NULL) {
+						newMonsterID = newMonRef->monsterID;
+					}
+					*/
+
+
 					PushEnemy( m_hEnemy, m_vecEnemyLKP );
+
+					//MODDD TODO, idea.  Should there be some kind of cooldown on reacting to a new enemy? It might
+					// be unsafe to avoid setting this condition anyway, it's likely what lets things like long-duration ranged
+					// attacks change their mind mid-sequence (kinda stupid looking to continue firing at something obscurred while 
+					// something closer is tearing into them).
+
 					SetConditions(bits_COND_NEW_ENEMY);
 					m_hEnemy = pNewEnemy;
 					

@@ -311,8 +311,6 @@ void CShotgun::ItemPostFrame( void )
 				}
 
 
-
-
 				SendWeaponAnimServerOnly(iAnim);
 			}
 		}
@@ -646,6 +644,16 @@ BOOL CShotgun::reloadBlockFireCheck(BOOL isPrimary){
 	if(TRUE){
 		if (m_fInSpecialReload > 0){
 
+			// HOWEVER, one other check.  Don't count if the click comes while the shotgun isn't
+			// even loading ammo yet (and empty clip).
+			if (m_iClip == 0 && m_fInSpecialReload < 2) {
+				// too early!
+				return 0;
+			}
+			else {
+				// proceed
+			}
+
 			if ((isPrimary || m_iClip >= 2)) {
 				if (m_iClip != 0) {
 					pev->iuser1 |= SHOTGUN_BIT4;  //queue a pump next time.
@@ -781,9 +789,7 @@ void CShotgun::reloadFinishPump(){
 
 		}
 	}
-
 }
-
 
 
 
@@ -810,13 +816,10 @@ BOOL CShotgun::reloadSemi(){
 			}
 
 			reloadLogic( );
-
 		}
 		else
 		{
-
 			reloadFinishPump();
-
 		}
 	}else{
 		return FALSE;

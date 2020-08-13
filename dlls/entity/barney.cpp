@@ -74,9 +74,8 @@ EASY_CVAR_EXTERN(hyperBarney)
 
 //Yes, need to know this ahead of time.
 extern Schedule_t slBarneyEnemyDraw[];
-
-
 static float g_sayBulletHitCooldown = -1;
+
 
 
 
@@ -97,6 +96,69 @@ enum
 };
 
 
+
+class SimpleMonsterSaveState {
+public:
+	Schedule_t* OLD_m_pSchedule;
+	int OLD_m_iScheduleIndex;
+	int OLD_m_iTaskStatus;
+	MONSTERSTATE OLD_m_MonsterState;
+	MONSTERSTATE OLD_m_IdealMonsterState;
+	int OLD_sequence;
+	int OLD_body;
+	Vector OLD_origin;
+	Vector OLD_angles;
+	EHANDLE OLD_m_hEnemy;
+	EHANDLE OLD_m_hTargetEnt;
+	CCineMonster* OLD_m_pCine;
+	Activity OLD_m_Activity;
+	Activity OLD_m_IdealActivity;
+	Activity OLD_m_movementActivity;
+	int OLD_m_movementGoal;
+
+	SimpleMonsterSaveState(void) {
+
+	}
+	void Save(CBaseMonster* toRead) {
+		// queuedMonsterState  ?
+		OLD_m_pSchedule = toRead->m_pSchedule;
+		OLD_m_iScheduleIndex = toRead->m_iScheduleIndex;
+		OLD_m_iTaskStatus = toRead->m_iTaskStatus;
+		OLD_m_MonsterState = toRead->m_MonsterState;
+		OLD_m_IdealMonsterState = toRead->m_IdealMonsterState;
+		OLD_sequence = toRead->pev->sequence;
+		OLD_body = toRead->pev->body;
+		OLD_origin = toRead->pev->origin;
+		OLD_angles = toRead->pev->angles;
+		OLD_m_hEnemy = toRead->m_hEnemy;
+		OLD_m_hTargetEnt = toRead->m_hTargetEnt;
+		OLD_m_pCine = toRead->m_pCine;
+		OLD_m_Activity = toRead->m_Activity;
+		OLD_m_IdealActivity = toRead->m_IdealActivity;
+		OLD_m_movementActivity = toRead->m_movementActivity;
+		OLD_m_movementGoal = toRead->m_movementGoal;
+	}
+	void Restore(CBaseMonster* toReceive) {
+		toReceive->m_pSchedule = OLD_m_pSchedule;
+		toReceive->m_iScheduleIndex = OLD_m_iScheduleIndex;
+		toReceive->m_iTaskStatus = OLD_m_iTaskStatus;
+		toReceive->m_MonsterState = OLD_m_MonsterState;
+		toReceive->m_IdealMonsterState = OLD_m_IdealMonsterState;
+		toReceive->pev->sequence = OLD_sequence;
+		toReceive->pev->body = OLD_body;
+		toReceive->pev->origin = OLD_origin;
+		toReceive->pev->angles = OLD_angles;
+		toReceive->m_hEnemy = OLD_m_hEnemy;
+		toReceive->m_hTargetEnt = OLD_m_hTargetEnt;
+		toReceive->m_pCine = OLD_m_pCine;
+		toReceive->m_Activity = OLD_m_Activity;
+		toReceive->m_IdealActivity = OLD_m_IdealActivity;
+		toReceive->m_movementActivity = OLD_m_movementActivity;
+		toReceive->m_movementGoal = OLD_m_movementGoal;
+	}
+
+};
+SimpleMonsterSaveState g_duringSpamRampageState;
 
 
 class CBarney : public CTalkMonster
@@ -122,26 +184,9 @@ public:
 	float reloadSoundTime;
 
 
+	SimpleMonsterSaveState beforeSpamRampageState;
 
-
-	Schedule_t* OLD_m_pSchedule;
-	int OLD_m_iScheduleIndex;
-	int OLD_m_iTaskStatus;
-	MONSTERSTATE OLD_m_MonsterState;
-	MONSTERSTATE OLD_m_IdealMonsterState;
-	int OLD_sequence;
-	int OLD_body;
-	Vector OLD_origin;
-	Vector OLD_angles;
-	EHANDLE OLD_m_hEnemy;
-	EHANDLE OLD_m_hTargetEnt;
-	CCineMonster* OLD_m_pCine;
-	Activity OLD_m_Activity;
-	Activity OLD_m_IdealActivity;
-	Activity OLD_m_movementActivity;
-	int OLD_m_movementGoal;
-
-
+	BOOL forgiveMeForWhatIMustDo;
 
 
 
@@ -220,10 +265,9 @@ public:
 	void talkAboutKilledEnemy(void);
 	void onEnemyDead(CBaseEntity* pRecentEnemy);
 
-	void SaveState(void);
-	void RestoreState(void);
+	void CompleteRestoreState(void);
 	void OnForgiveDeclineSpam(void);
-
+	
 	
 	virtual int	Save( CSave &save );
 	virtual int	Restore( CRestore &restore );
@@ -348,10 +392,75 @@ TYPEDESCRIPTION	CBarney::m_SaveData[] =
 	DEFINE_FIELD( CBarney, m_painTime, FIELD_TIME ),
 	DEFINE_FIELD( CBarney, m_checkAttackTime, FIELD_TIME ),
 	DEFINE_FIELD( CBarney, m_lastAttackCheck, FIELD_BOOLEAN ),
-
+	
 };
 
-IMPLEMENT_SAVERESTORE( CBarney, CTalkMonster );
+//IMPLEMENT_SAVERESTORE( CBarney, CTalkMonster );
+
+
+
+int CBarney::Save(CSave& save)
+{
+
+	if (forgiveMeForWhatIMustDo) {
+		g_duringSpamRampageState.Save(this);
+		// safe stats before all that madness.
+		beforeSpamRampageState.Restore(this);
+
+		pev->frame = 0;
+		pev->framerate = 1;
+		m_flFramerateSuggestion = 1;
+
+		ResetSequenceInfo();
+		SetYawSpeed();
+	}
+
+
+	//if (!CTalkMonster::Save(save)) {
+	//	return 0;
+	//}
+	BOOL baseClassSaveSuccess = CTalkMonster::Save(save);
+
+	int iWriteFieldsResult;
+	if (baseClassSaveSuccess) {
+		iWriteFieldsResult = save.WriteFields("CBarney", this, m_SaveData, ARRAYSIZE(m_SaveData));
+	}
+	else {
+		// ???
+		iWriteFieldsResult = 0;
+	}
+
+
+	if (forgiveMeForWhatIMustDo) {
+		// back in action!
+		g_duringSpamRampageState.Restore(this);
+
+		pev->frame = 0;
+		pev->framerate = 1;
+		m_flFramerateSuggestion = 1;
+
+		ResetSequenceInfo();
+		SetYawSpeed();
+	}
+
+
+	return iWriteFieldsResult;
+}
+
+
+
+int CBarney::Restore(CRestore& restore)
+{
+	if (!CTalkMonster::Restore(restore)) {
+		return 0;
+	}
+	int iReadFieldsResult = restore.ReadFields("CBarney", this, m_SaveData, ARRAYSIZE(m_SaveData));
+
+	return iReadFieldsResult;
+}
+
+
+
 
 //=========================================================
 // AI Schedules Specific to this monster
@@ -683,7 +792,8 @@ void CBarney :: StartTask( Task_t *pTask )
 		case TASK_RESTORE_SPAM:
 			// calling RestoreState changes the current schedule, task, and task status.
 			// Don't call TaskComplete after this.
-			RestoreState();
+			CompleteRestoreState();
+			forgiveMeForWhatIMustDo = FALSE;
 			return;
 		break;
 	}
@@ -960,7 +1070,7 @@ void CBarney :: SetYawSpeed ( void )
 BOOL CBarney :: CheckRangeAttack1 ( float flDot, float flDist )
 {
 
-	if (recentDeclinesForgetTime != -1 && recentDeclines < 32 && m_hEnemy != NULL && m_hEnemy->IsPlayer()) {
+	if (recentDeclinesForgetTime != -1 && recentDeclines < 35 && m_hEnemy != NULL && m_hEnemy->IsPlayer()) {
 		// not yet.   Go on, try me.
 		return FALSE;
 	}
@@ -1185,6 +1295,8 @@ CBarney::CBarney(void){
 	recentDeadEnemyClass = CLASS_NONE;  //safe default?  (value: 0)
 
 	madInterSentencesLocation = madInterSentences;
+
+	forgiveMeForWhatIMustDo = FALSE;
 	//madInterSentencesMaxLocation = &madInterSentencesMax;
 }
 //=========================================================
@@ -1874,7 +1986,7 @@ void CBarney::DeclineFollowing( void )
 	if (recentDeclines < 30) {
 		recentDeclinesForgetTime = gpGlobals->time + 8;
 	}
-	else if(recentDeclines < 32){
+	else if(recentDeclines < 35){
 		recentDeclinesForgetTime = gpGlobals->time + 30;
 	}
 	else {
@@ -1885,14 +1997,18 @@ void CBarney::DeclineFollowing( void )
 		// ...   hold my beer.
 		//edict_t* pentPlayer = FIND_CLIENT_IN_PVS(this->edict());
 
-
+		/*
 		//if (pentPlayer != NULL) {
+			beforeSpamRampageState.Save(this);
 			Remember(bits_MEMORY_PROVOKED);
-			SaveState();
 			m_IdealMonsterState = MONSTERSTATE_COMBAT;
+
+			forgiveMeForWhatIMustDo = TRUE;
+
 			//CBaseEntity* test = CBaseEntity::Instance(pentPlayer);
 			//m_hEnemy = test;
 		//}
+			*/
 	}
 	else if (recentDeclines > 30) {
 		// end of the line for you
@@ -2389,51 +2505,14 @@ void CBarney::onEnemyDead(CBaseEntity* pRecentEnemy) {
 
 
 
-void CBarney::SaveState(void) {
 
-	//queuedMonsterState  ???
-	OLD_m_pSchedule = m_pSchedule;
-	OLD_m_iScheduleIndex = m_iScheduleIndex;
-	OLD_m_iTaskStatus = m_iTaskStatus;
-	OLD_m_MonsterState = m_MonsterState;
-	OLD_m_IdealMonsterState = m_IdealMonsterState;
-	OLD_sequence = pev->sequence;
-	OLD_body = pev->body;
-	OLD_origin = pev->origin;
-	OLD_angles = pev->angles;
-	OLD_m_hEnemy = m_hEnemy;
-	OLD_m_hTargetEnt = m_hTargetEnt;
-	OLD_m_pCine = m_pCine;
-	OLD_m_Activity = m_Activity;
-	OLD_m_IdealActivity = m_IdealActivity;
-	OLD_m_movementActivity = m_movementActivity;
-	OLD_m_movementGoal = m_movementGoal;
+void CBarney::CompleteRestoreState(void) {
 
-}
-
-void CBarney::RestoreState(void) {
-
-	m_pSchedule = OLD_m_pSchedule;
-	m_iScheduleIndex = OLD_m_iScheduleIndex;
-	m_iTaskStatus = OLD_m_iTaskStatus;
-	m_MonsterState = OLD_m_MonsterState;
-	m_IdealMonsterState = OLD_m_IdealMonsterState;
-	pev->sequence = OLD_sequence;
-	pev->body = OLD_body;
-	pev->origin = OLD_origin;
-	pev->angles = OLD_angles;
-	m_hEnemy = OLD_m_hEnemy;
-	m_hTargetEnt = OLD_m_hTargetEnt;
-	m_pCine = OLD_m_pCine;
-	m_Activity = OLD_m_Activity;
-	m_IdealActivity = OLD_m_IdealActivity;
-	m_movementActivity = OLD_m_movementActivity;
-	m_movementGoal = OLD_m_movementGoal;
+	beforeSpamRampageState.Restore(this);
 
 	pev->frame = 0;
 	pev->framerate = 1;
 	m_flFramerateSuggestion = 1;
-
 
 	ResetSequenceInfo();  // with the existing sequence from OLD_sequence already applied to pev->sequence
 	SetYawSpeed();
@@ -2453,14 +2532,21 @@ void CBarney::RestoreState(void) {
 
 void CBarney::OnForgiveDeclineSpam(void) {
 
-	if (m_fGunDrawn) {
-		// undraw it
-		ChangeSchedule(slBarneyUnDrawForgiveSpam);
+	// used the save-state feature? Bring it back.
+	if (forgiveMeForWhatIMustDo) {
+
+		if (m_fGunDrawn) {
+			// undraw it
+			ChangeSchedule(slBarneyUnDrawForgiveSpam);
+		}
+		else {
+			// skip to here
+			CompleteRestoreState();
+			forgiveMeForWhatIMustDo = FALSE;
+		}
 	}
-	else {
-		// skip to here
-		RestoreState();
-	}
+
+
 	CTalkMonster::OnForgiveDeclineSpam();
 }
 

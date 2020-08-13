@@ -410,6 +410,7 @@ public:
 #ifndef CLIENT_DLL
 	BOOL fvoxEnabled;
 	BOOL fHolsterAnimsEnabled;
+	BOOL fBreakHolster;
 	float cl_ladder_choice;
 #endif
 
@@ -660,6 +661,7 @@ public:
 
 	void setActiveItem(CBasePlayerItem* argItem);
 	void setActiveItem_HolsterCheck(CBasePlayerItem* argItem);
+	void setActiveItem_HolsterCheck(CBasePlayerItem* argItem, int forceHolster);
 	
 	void ItemPreFrame( void );
 	void ItemPostFrame( void );

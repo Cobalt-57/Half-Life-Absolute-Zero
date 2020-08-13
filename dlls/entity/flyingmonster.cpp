@@ -23,7 +23,7 @@
 #define FLYING_AE_FLAPSOUND	(9)
 
 
-extern DLL_GLOBAL edict_t		*g_pBodyQueueHead;
+extern DLL_GLOBAL edict_t* g_pBodyQueueHead;
 
 
 

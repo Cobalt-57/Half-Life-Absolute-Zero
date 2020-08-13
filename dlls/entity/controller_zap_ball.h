@@ -20,6 +20,9 @@ public:
 
 	void Spawn( void );
 	void Precache( void );
+
+	virtual BOOL usesSegmentedMove(void);
+
 	void EXPORT AnimateThink( void );
 	void EXPORT ExplodeTouch( CBaseEntity *pOther );
 

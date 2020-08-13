@@ -1096,8 +1096,12 @@ bullsquidSpitAlphaScale (0.8) - DISABLED, NOT WORKING - the scale to apply to th
 ----------------------------------------------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------------------------------------
 
-cl_holster (0) - whether the player plays holster animations for unloading the current weapon before picking the selected one on changing weapons.
+cl_holster (0) - for standard weapon-select (opening weapon select and firing (often left-click) to pick a weapon), whether to play the holster animations before deploying the selection.
+Otherwise, skipped like retail.
+~Also applies to equips made by hud_fastswitch.
 
+cl_breakholster (1) - for quickswap (q key by default) or automatic equips from picking up a new weapon, whether to avoid playing unholster animations.
+~That is, 0 plays holster animations for these cases but 1 skips them.
 
 friendlyPianoFollowVolume (0.7) - ADJUSTABLE. Volume to play the Mr. Friendly's piano music while following the player. 0 mutes.
 friendlyPianoOtherVolume (1.0) - ADJUSTABLE. Volume to play the Mr. Friendly piano music for getting startled or killed by the player. 0 mutes.

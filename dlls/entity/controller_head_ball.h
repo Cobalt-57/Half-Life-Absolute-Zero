@@ -24,6 +24,8 @@ public:
 	void EXPORT DieThink( void );
 	void EXPORT BounceTouch( CBaseEntity *pOther );
 
+	virtual BOOL usesSegmentedMove(void);
+
 	virtual void MovetoTarget( Vector vecTarget );
 
 	virtual void Crawl( void );

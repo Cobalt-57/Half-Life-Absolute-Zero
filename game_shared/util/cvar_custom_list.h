@@ -722,6 +722,7 @@
 #define DEFAULT_cl_interp_viewmodel 1
 #define DEFAULT_sv_explosionknockback 1
 #define DEFAULT_cl_gaussfollowattachment 1
+#define DEFAULT_cl_breakholster 1
 
 
 
@@ -2827,6 +2828,7 @@
 	EASY_CVAR_DECLARATION_SERVER(cl_interp_viewmodel)\
 	EASY_CVAR_DECLARATION_SERVER(sv_explosionknockback)\
 	EASY_CVAR_DECLARATION_SERVER(cl_gaussfollowattachment)\
+	EASY_CVAR_DECLARATION_SERVER(cl_breakholster)\
 	DUMMY
 
 
@@ -3340,6 +3342,7 @@
 	EASY_CVAR_DECLARATION_CLIENT(cl_interp_viewmodel)\
 	EASY_CVAR_DECLARATION_CLIENT(sv_explosionknockback)\
 	EASY_CVAR_DECLARATION_CLIENT(cl_gaussfollowattachment)\
+	EASY_CVAR_DECLARATION_CLIENT(cl_breakholster)\
 	DUMMY
 
 #define EASY_CVAR_UPDATE_SERVER_MASS\
@@ -3850,6 +3853,7 @@
 	EASY_CVAR_UPDATE_SERVER(cl_interp_viewmodel)\
 	EASY_CVAR_UPDATE_SERVER(sv_explosionknockback)\
 	EASY_CVAR_UPDATE_SERVER(cl_gaussfollowattachment)\
+	EASY_CVAR_UPDATE_SERVER(cl_breakholster)\
 	DUMMY
 
 #define EASY_CVAR_UPDATE_CLIENT_MASS\
@@ -4360,6 +4364,7 @@
 	EASY_CVAR_UPDATE_CLIENT(cl_interp_viewmodel)\
 	EASY_CVAR_UPDATE_CLIENT(sv_explosionknockback)\
 	EASY_CVAR_UPDATE_CLIENT(cl_gaussfollowattachment)\
+	EASY_CVAR_UPDATE_CLIENT(cl_breakholster)\
 	DUMMY
 
 #define EASY_CVAR_CREATE_SERVER_SETUP_MASS\
@@ -4870,6 +4875,7 @@
 	EASY_CVAR_CREATE_SERVER_SETUP_A_CLIENTONLY(cl_interp_viewmodel)\
 	EASY_CVAR_CREATE_SERVER_SETUP_A_SERVERONLY(sv_explosionknockback)\
 	EASY_CVAR_CREATE_SERVER_SETUP_A_CLIENTONLY(cl_gaussfollowattachment)\
+	EASY_CVAR_CREATE_SERVER_SETUP_A_CLIENTONLY(cl_breakholster)\
 	DUMMY
 
 #define EASY_CVAR_CREATE_SERVER_MASS\
@@ -5380,6 +5386,7 @@
 	EASY_CVAR_CREATE_SERVER_A_CLIENTONLY(cl_interp_viewmodel)\
 	EASY_CVAR_CREATE_SERVER_A_SERVERONLY(sv_explosionknockback)\
 	EASY_CVAR_CREATE_SERVER_A_CLIENTONLY(cl_gaussfollowattachment)\
+	EASY_CVAR_CREATE_SERVER_A_CLIENTONLY(cl_breakholster)\
 	DUMMY
 
 
@@ -5891,7 +5898,9 @@
 	EASY_CVAR_CREATE_CLIENT_A_CLIENTONLY(cl_interp_viewmodel)\
 	EASY_CVAR_CREATE_CLIENT_A_SERVERONLY(sv_explosionknockback)\
 	EASY_CVAR_CREATE_CLIENT_A_CLIENTONLY(cl_gaussfollowattachment)\
+	EASY_CVAR_CREATE_CLIENT_A_CLIENTONLY(cl_breakholster)\
 	DUMMY
+
 
 #define EASY_CVAR_RESET_MASS\
 	EASY_CVAR_RESET_DEBUGONLY(gruntsCanHaveMP5Grenade)\
@@ -6400,7 +6409,9 @@
 	EASY_CVAR_RESET(cl_interp_viewmodel)\
 	EASY_CVAR_RESET(sv_explosionknockback)\
 	EASY_CVAR_RESET(cl_gaussfollowattachment)\
+	EASY_CVAR_RESET(cl_breakholster)\
 	DUMMY
+
 
 #define EASY_CVAR_EXTERN_MASS\
 	EASY_CVAR_EXTERN_DEBUGONLY(gruntsCanHaveMP5Grenade)\
@@ -6910,5 +6921,6 @@
 	EASY_CVAR_EXTERN(cl_interp_viewmodel)\
 	EASY_CVAR_EXTERN(sv_explosionknockback)\
 	EASY_CVAR_EXTERN(cl_gaussfollowattachment)\
+	EASY_CVAR_EXTERN(cl_breakholster)\
 	DUMMY
 

@@ -521,7 +521,9 @@ IMPLEMENT_MESSAGE(RstClientC){
 	EASY_CVAR_SET(hud_logo, DEFAULT_hud_logo);
 	EASY_CVAR_SET(cl_fvox, DEFAULT_cl_fvox);
 	EASY_CVAR_SET(cl_holster, DEFAULT_cl_holster);
+	EASY_CVAR_SET(cl_breakholster, DEFAULT_cl_breakholster);
 	EASY_CVAR_SET(cl_ladder, DEFAULT_cl_ladder);
+	
 	
 #else
 	resetModCVarsClientOnly();

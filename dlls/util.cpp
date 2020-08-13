@@ -7133,6 +7133,21 @@ void printBasicEntityInfo(edict_t* theCaller, CBaseEntity* entRef) {
 
 }//printBasicEntityInfo
 
+
+
+// or from the server.
+void printBasicTraceInfo(const TraceResult& tr) {
+	easyForcePrint("fract:%.2f startSol:%d allSol:%d inOpen:%d inWat:%d ", tr.flFraction, tr.fStartSolid, tr.fAllSolid, tr.fInOpen, tr.fInWater);
+	if (tr.pHit != NULL) {
+		easyForcePrint("Hit:%s hitgr:%d", STRING(tr.pHit->v.classname), tr.iHitgroup);
+	}
+	else {
+		easyForcePrint("pHit:none");
+	}
+	//if(tr.fAllSolid){ tr.flFraction = 0; easyForcePrintLineClient(pEntity, "SOLID"); }
+
+}//printBasicTraceInfo
+
 // This does print out to the client though, the debug methods that use this don't spam this.
 void printBasicTraceInfo(edict_t* theCaller, const TraceResult& tr) {
 	easyForcePrintClient(theCaller, "fract:%.2f startSol:%d allSol:%d inOpen:%d inWat:%d ", tr.flFraction, tr.fStartSolid, tr.fAllSolid, tr.fInOpen, tr.fInWater);
