@@ -141,6 +141,7 @@ typedef struct
 {
 	vec3_t		boxmins, boxmaxs;// enclose the test object along entire move
 	float	*mins, *maxs;	// size of the moving object
+	//MODDD - NOTE.  Haha, you guys made that 'monster' typo too
 	vec3_t		mins2, maxs2;	// size when clipping against mosnters
 	float	*start, *end;
 	trace_t		trace;

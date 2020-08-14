@@ -282,7 +282,7 @@ int CBaseMonster::iEnemy[14][14] =
 /*HUMANPASSIVE*/{ R_NO	,R_DL	,R_AL	,R_AL	,R_HT	,R_FR	,R_NO	,R_HT	,R_DL	,R_FR	,R_NO	,R_AL,	R_NO,	R_NO	},
 /*HUMANMILITAR*/{ R_NO	,R_NO	,R_HT	,R_DL	,R_NO	,R_HT	,R_DL	,R_DL	,R_DL	,R_DL	,R_NO	,R_HT,	R_NO,	R_NO	},
 /*ALIENMILITAR*/{ R_NO	,R_DL	,R_HT	,R_DL	,R_HT	,R_NO	,R_NO	,R_NO	,R_NO	,R_NO	,R_NO	,R_DL,	R_NO,	R_NO	},
-/*ALIENPASSIVE*/{ R_NO	,R_DL,R_NO	,R_NO	,R_NO	,R_NO	,R_NO	,R_NO	,R_NO	,R_NO	,R_NO	,R_NO,	R_NO,	R_NO	},
+/*ALIENPASSIVE*/{ R_NO	,R_DL	,R_NO	,R_NO	,R_NO	,R_NO	,R_NO	,R_NO	,R_NO	,R_NO	,R_NO	,R_NO,	R_NO,	R_NO	},
 /*ALIENMONSTER*/{ R_NO	,R_DL	,R_DL	,R_DL	,R_DL	,R_NO	,R_NO	,R_NO	,R_NO	,R_NO	,R_NO	,R_DL,	R_NO,	R_NO	},
 /*ALIENPREY   */{ R_NO	,R_DL	,R_DL	,R_DL	,R_DL	,R_NO	,R_NO	,R_NO	,R_NO	,R_FR	,R_NO	,R_DL,	R_NO,	R_NO	},
 /*ALIENPREDATO*/{ R_NO	,R_DL	,R_DL	,R_DL	,R_DL	,R_NO	,R_NO	,R_NO	,R_HT	,R_DL	,R_NO	,R_DL,	R_NO,	R_NO	},
@@ -2320,6 +2320,21 @@ void CBaseMonster :: MonsterUse ( CBaseEntity *pActivator, CBaseEntity *pCaller,
 	// If they hate the monster that called USE that is.
 	//m_IdealMonsterState = MONSTERSTATE_ALERT;
 
+
+
+	if (m_MonsterState == MONSTERSTATE_SCRIPT){
+		if (m_pCine != NULL) {
+			if (m_pCine->CanInterrupt()) {
+				// allowed.
+			}
+			else {
+				// No.
+				return;
+			}
+		}
+	}
+
+
 	if (pActivator != NULL) {
 		// If not already in view, turn to look at em'
 		if (!FInViewCone(pActivator)){
@@ -3286,7 +3301,7 @@ int CBaseMonster :: CheckEnemy ( CBaseEntity *pEnemy )
 	//easyPrintLine("HEY WHO IS THAT ENEMY!? %s:: %d %d", pEnemy->getClassname(), pEnemy->IsAlive(), pEnemy->pev->deadflag);
 	//m_hEnemy!=NULL?easyPrintLine("HEY WHO IS MY ENEMY!? %s:: %d %d", m_hEnemy->getClassname(), m_hEnemy->IsAlive(), m_hEnemy->pev->deadflag):easyPrintLine("NOOEEE");
 	
-		//IsAlive_FromAI takes "this" mosnter as a parameter. It already knows what itself is.
+		//IsAlive_FromAI takes "this" monster as a parameter. It already knows what itself is.
 
 	if(FClassnameIs(pev, "monster_barney")){
 		int x = 666;
@@ -3478,7 +3493,7 @@ void CBaseMonster::refreshStack() {
 
 	for(int i = m_intOldEnemyNextIndex - 1; i >= 0; i--){
 
-		//IsAlive_FromAI takes "this" mosnter as a parameter. It already knows what itself is.
+		//IsAlive_FromAI takes "this" monster as a parameter. It already knows what itself is.
 		if (m_hOldEnemy[i] != NULL && m_hOldEnemy[i]->IsAlive_FromAI(this))
 		{
 			//this is okay.
@@ -6684,18 +6699,86 @@ CBaseEntity *CBaseMonster :: BestVisibleEnemy ( void )
 			easyForcePrintLine("HERE WE GO %s", pNextEnt->getClassname() );
 		}
 		*/
-		
-		//IsAlive_FromAI takes "this" mosnter as a parameter. It already knows what itself is.
+
+		//hgrunt
+		//          player  (hates less)
+		//          garg   (hates more)
+
+		// sees...  garg, then player
+		// sees...  player, then garg.
+
+
+
+		//IsAlive_FromAI takes "this" monster as a parameter. It already knows what itself is.
 		if ( pNextEnt->IsAlive_FromAI(this) )
 		{
-
 			const int relationshipWithNextEnt = IRelationship( pNextEnt);
+
+			BOOL is_pReturn_Enemy = FALSE;
+			BOOL is_pNextEnt_Enemy = FALSE;
+			if (m_hEnemy != NULL) {
+				if (pReturn != NULL) {
+					is_pReturn_Enemy = (m_hEnemy->edict() == pReturn->edict());
+				}
+				is_pNextEnt_Enemy = (m_hEnemy->edict() == pNextEnt->edict());
+			}
+
+			//MODDD
+			// The return or nextEnt being the enemy plays a role in the distance tested against.
+			// That is, against two monsters in sight where one is the enemy, equally hated by this monster,
+			// we're going to pick the one that is already the enemy, even at slightly further distance.
+			// This stops oscillating between multiple monsters of similar hate-ness coming in and out of being
+			// the 'closest' monster screwing with new-enemy responses.
+			// 'Oh no, a new enemy!'   'Oh no, a new enemy!'    'Oh no, a new enemy!'.  etc.
+			// Relationship still plays the greatest role, but is also no longer an infinitely high priority.
+			// Monsters of less relationship that are drastically closer can still be picked, being the existing
+			// enemy or not is more negligible.  A hated new monster will probably get picked over a less hated enemy
+			// unless it is drastically closer.
+
+			float extraDistanceMulti;
+
+			if (is_pReturn_Enemy && is_pNextEnt_Enemy) {
+				// both the enemy?  same ent...?
+				extraDistanceMulti = 1;
+			}
+			else if (is_pReturn_Enemy) {
+				// the one I already have in mind is the enemy?  Require more distance to break that.
+				extraDistanceMulti = 1.15;
+			}
+			else if (is_pNextEnt_Enemy) {
+				// the one we're looking at is the enemy?  More easily breaks this one in the check
+				// (that's 1 / #)
+				extraDistanceMulti = 0.87;
+			}
+			else {
+				// fair check then.
+				extraDistanceMulti = 1;
+			}
+
+
+
+
+			const char* classname_BestYet = "NULL";
+			const char* classname_ToTry = "NULL";
+
+			if (pReturn != NULL)classname_BestYet = pReturn->getClassname();
+			if (pNextEnt != NULL)classname_ToTry = pNextEnt->getClassname();
+
+			if (monsterID == 1) {
+				int x = 45;
+			}
+
+
 
 			if(relationshipWithNextEnt == R_FR){
 				
 				flDist = ( pNextEnt->pev->origin - pev->origin ).Length();
+
+				float flDistTest = flDist * extraDistanceMulti;
+
 				//If I fear this one and he's the closest, he's the best enemy yet.
-				if ( flDist <= flFearNearest )
+				//MODDD - with the extra padding in the check of course.
+				if (flDistTest <= flFearNearest )
 				{
 					flFearNearest = flDist;
 					pFearReturn = pNextEnt;
@@ -6707,8 +6790,10 @@ CBaseEntity *CBaseMonster :: BestVisibleEnemy ( void )
 				// this entity is disliked MORE than the entity that we 
 				// currently think is the best visible enemy. No need to do 
 				// a distance check, just get mad at this one for now.
+				
+				//MODDD - CHANGED.  Relationship is a big factor, but not all there is.  See below.
 
-
+				/*
 				iBestRelationship = relationshipWithNextEnt;
 				flNearest = ( pNextEnt->pev->origin - pev->origin ).Length();
 				pReturn = pNextEnt;
@@ -6716,22 +6801,104 @@ CBaseEntity *CBaseMonster :: BestVisibleEnemy ( void )
 				if(flNearest < flNormalNearest){
 					flNormalNearest = flNearest; //just keeping track of the closest "Dislike - Nemesis" range enemy.
 				}
+				*/
+
+				//MODDD
+				// Rather, an entity hated is given more priority at a further distance.
+
 				
+				flDist = (pNextEnt->pev->origin - pev->origin).Length();
+
+				float flDistTest;
+				int iRelationshipDifference = min(relationshipWithNextEnt - iBestRelationship, 3);
+				//flDistTest = flDist * (0.6 / iRelationshipDifference);
+				flDistTest = flDist * extraDistanceMulti * (0.65 - iRelationshipDifference*0.1 );
+				//0.65  0.55  0.45  0.35
+
+				//if (monsterID == 1) {
+				//	int x = 45;
+				//	if (pNextEnt->IsPlayer()) {
+				//		int x = 45;
+				//	}
+				//}
+				if (flDistTest <= flNearest)
+				{
+					//if (monsterID == 1) {
+					//	int x = 45;
+					//	if (pNextEnt->IsPlayer()) {
+					//		int x = 45;
+					//	}
+					//}
+					flNearest = flDist;
+					iBestRelationship = relationshipWithNextEnt;
+					pReturn = pNextEnt;
+				}
+				if (flDistTest < flNormalNearest) {
+					flNormalNearest = flDist; //just keeping track of the closest "Dislike - Nemesis" range enemy.
+				}
+
+				
+			}
+			else if (relationshipWithNextEnt < iBestRelationship)
+			{
+				//MODDD - NEW SECTION.
+				// One with a lesser relationship can overtake the current one, provided it is an enemy.
+
+				flDist = (pNextEnt->pev->origin - pev->origin).Length();
+
+				float flDistTest;
+				int iRelationshipDifference = min(iBestRelationship - relationshipWithNextEnt, 3);
+				//flDistTest = flDist * (1.67 * iRelationshipDifference);
+				
+				//flDistTest = flDist * (1.45 + (iRelationshipDifference*0.1) );
+				//1.54  1.81  2.22  2.857
+				//    0.27  0.41   0.637
+				//  UHHhhhhhhhhhhhh nevermind coming up with a formula for that.
+
+				if (iRelationshipDifference == 1) {
+					flDistTest = flDist * extraDistanceMulti * 1.81;
+				}
+				else if (iRelationshipDifference == 2) {
+					flDistTest = flDist * extraDistanceMulti * 2.22;
+				}
+				else {
+					flDistTest = flDist * extraDistanceMulti * 2.857;
+				}
+
+
+
+				if (flDistTest <= flNearest)
+				{
+					flNearest = flDist;
+					iBestRelationship = relationshipWithNextEnt;
+					pReturn = pNextEnt;
+				}
+				if (flDistTest < flNormalNearest) {
+					flNormalNearest = flDist; //just keeping track of the closest "Dislike - Nemesis" range enemy.
+				}
+
+
 			}
 			else if ( relationshipWithNextEnt == iBestRelationship )
 			{
 				// this entity is disliked just as much as the entity that
 				// we currently think is the best visible enemy, so we only
 				// get mad at it if it is closer.
+				//MODDD - CHANGE.  A monster of equal relathionship becomes the new enemy IF 
+				// it is the same distance + some percent of that distance of the other one
 				flDist = ( pNextEnt->pev->origin - pev->origin ).Length();
-				
-				if ( flDist <= flNearest )
+
+				float flDistTest;
+				flDistTest = flDist * extraDistanceMulti;
+
+
+				if (flDistTest <= flNearest )
 				{
 					flNearest = flDist;
 					iBestRelationship = relationshipWithNextEnt;
 					pReturn = pNextEnt;
 				}
-				if(flDist < flNormalNearest){
+				if(flDistTest < flNormalNearest){
 					flNormalNearest = flDist; //just keeping track of the closest "Dislike - Nemesis" range enemy.
 				}
 
@@ -6775,8 +6942,6 @@ CBaseEntity *CBaseMonster :: BestVisibleEnemy ( void )
 //=========================================================
 void CBaseMonster :: MakeIdealYaw( Vector vecTarget )
 {
-	
-
 	//MODDD - this kind of immitation "Strafe" is too crude and causes issues with the AI sometimes, like fiddling-around near the end point of a path..
 	// strafing monster needs to face 90 degrees away from its goal
 	if ( m_movementActivity == ACT_STRAFE_LEFT )
@@ -7515,7 +7680,7 @@ void CBaseMonster::ReportAIState( void )
 	
 		for(int i = 0; i < m_intOldEnemyNextIndex; i++){
 			
-			//IsAlive_FromAI takes "this" mosnter as a parameter. It already knows what itself is.
+			//IsAlive_FromAI takes "this" monster as a parameter. It already knows what itself is.
 			if (m_hOldEnemy[i] != NULL && m_hOldEnemy[i]->IsAlive_FromAI(this))
 			{
 				//this is okay.
@@ -8073,7 +8238,7 @@ BOOL CBaseMonster :: GetEnemy (BOOL arg_forceWork )
 
 
 	if(EASY_CVAR_GET(peaceOut) == 1){
-		//like, no way, man. Let's just smoke a fat blunt and sit on the couch all day.
+		// no enemy detection.
 		return FALSE;
 	}
 
@@ -8527,10 +8692,42 @@ void CBaseMonster::OnTakeDamageSetConditions(entvars_t *pevInflictor, entvars_t 
 	//Also count being in a non-combat state to force looking in that direction.  But maybe at least 0 damage should be a requirement too, even in cases where the minimum damage for LIGHT is above 0?
 	if (m_MonsterState == MONSTERSTATE_IDLE || m_MonsterState == MONSTERSTATE_ALERT || flDamage > 0 )
 	{
-		SetConditions(bits_COND_LIGHT_DAMAGE);
 
-		//MODDD NEW - set a timer to forget a flinch-preventing memory bit.
-		forgetSmallFlinchTime = gpGlobals->time + DEFAULT_FORGET_SMALL_FLINCH_TIME;
+
+		
+		if (bitsDamageType & DMG_CRUSH || bitsDamageTypeMod & DMG_MAP_BLOCKED) {
+			// MODDD - WEIRD BUG.  for whatever reason, some 'func_door' can cause the hgrunts in a2a1 to flinch and then face
+			// the direction the player's coming from, and does odd things to the interactions with a gargantua they should
+			// be focused on instead.
+
+			// but... what's causing this??
+			const char* classnameInflictor = "NULL";
+			const char* classnameAttacker = "NULL";
+			Vector inflictorOrigin = g_vecZero;
+			Vector attackerOrigin = g_vecZero;
+
+			CBaseEntity* inflictorTest = NULL;
+			CBaseEntity* attackerTest = NULL;
+			if (pevInflictor != NULL)inflictorTest = CBaseEntity::Instance(pevInflictor);
+			if (pevAttacker != NULL)attackerTest = CBaseEntity::Instance(pevAttacker);
+			if (inflictorTest != NULL) {
+				classnameInflictor = inflictorTest->getClassname();
+				inflictorOrigin = inflictorTest->GetAbsOrigin();
+			}
+			if (attackerTest != NULL) {
+				classnameAttacker = attackerTest->getClassname();
+				attackerOrigin = attackerTest->GetAbsOrigin();
+			}
+			int x = 45;
+			easyPrintLine("HURT DEBUG: Hit by crushable.  Classname: %s Origin:(%.2f,%.2f,%.2f).", classnameInflictor, inflictorOrigin);
+		}
+		else {
+
+			SetConditions(bits_COND_LIGHT_DAMAGE);
+
+			//MODDD NEW - set a timer to forget a flinch-preventing memory bit.
+			forgetSmallFlinchTime = gpGlobals->time + DEFAULT_FORGET_SMALL_FLINCH_TIME;
+		}
 	}
 
 
@@ -8984,7 +9181,7 @@ BOOL CBaseMonster::violentDeathClear_BackwardsCheck(float argDistance){
 		return FALSE;
 	}
 
-	//Pretty good distance. would that make us fall either? Is there ground at this place "vecEnd"?
+	// Pretty good distance. would that make us fall either? Is there ground at this place "vecEnd"?
 	//UTIL_TraceLine or UTIL_TraceLine?
 	UTIL_TraceLine ( vecGroundEnd, vecGroundEnd + Vector(0, 0, -4), dont_ignore_monsters, edict(), &tr );
 	float zDelta = abs(tr.vecEndPos.z - pev->origin.z);
@@ -9003,17 +9200,17 @@ void CBaseMonster::lookAtEnemyLKP(void){
 	ChangeYaw ( pev->yaw_speed );
 }
 
-//Is this montser able to predict re-picking the same activity in the next frame?
-//If so, and the conditions for it are met, this can be set to do so.
-//BUT not all monsters play nicely with this. Some fidget for a moment on the same animation for a frame and stop
-//if it does not get picked.
+// Is this monster able to predict re-picking the same activity in the next frame?
+// If so, and the conditions for it are met, this can be set to do so.
+// BUT not all monsters play nicely with this. Some fidget for a moment on the same animation for a frame and stop
+// if it does not get picked.
 void CBaseMonster::predictActRepeat(int arg_bits_cond){
 	if(HasConditions(arg_bits_cond)){
 		m_Activity = ACT_RESET;
 	}
 }
 
-//Am I able to use the "predictActRepeat" check above at all? Defaults to TRUE, set differently when problematic.
+// Am I able to use the "predictActRepeat" check above at all? Defaults to TRUE, set differently when problematic.
 BOOL CBaseMonster::canPredictActRepeat(void){
 	return TRUE;
 }//END OF canPredictActRepeat

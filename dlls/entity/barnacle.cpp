@@ -135,7 +135,7 @@ onDeathAnimationEnd
 
 void CBarnacle::EndOfRevive(int preReviveSequence){
 	
-	//LEAVE THIS OUT. I don't do what most mosnters do.
+	//LEAVE THIS OUT. I don't do what most monsters do.
 	/*
 	SetThink( &CBaseMonster::MonsterInitThink );
 	//SetThink ( &CBaseMonster::CallMonsterThink );

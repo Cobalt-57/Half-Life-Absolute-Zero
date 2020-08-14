@@ -1127,9 +1127,26 @@ void EV_FireMP5(event_args_t* args)
 		//gEngfuncs.pEventAPI->EV_WeaponAnimation( MP5_FIRE1 + gEngfuncs.pfnRandomLong(0,2), 2 );
 		gEngfuncs.pEventAPI->EV_WeaponAnimation(MP5_FIRE1 + fireAnim, 2);
 
+		//MODDD - don't allow very low values anymore, kind of odd when the point is recoil to ever be given those.
+		// ... on CVar setting that is.
+		if (EASY_CVAR_GET(cl_mp5_kickback) == 1) {
+			int ranDir = gEngfuncs.pfnRandomLong(0, 1);
 
-		V_PunchAxis(0, gEngfuncs.pfnRandomFloat(-2, 2));
-	}
+			if (ranDir == 0) {
+				// neg
+				V_PunchAxis(0, gEngfuncs.pfnRandomFloat(-2.6, -1.7));
+			}
+			else {
+				// pos
+				V_PunchAxis(0, gEngfuncs.pfnRandomFloat(1.7, 2.6));
+			}
+		}
+		else {
+			// retail
+			V_PunchAxis(0, gEngfuncs.pfnRandomFloat(-2, 2));
+		}
+
+	}// END OF IsLocal check
 
 	EV_GetDefaultShellInfo(args, origin, velocity, ShellVelocity, ShellOrigin, forward, right, up, 20, -12, 4);
 

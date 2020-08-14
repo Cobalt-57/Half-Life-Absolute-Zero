@@ -200,7 +200,7 @@ GENERATE_KILLED_IMPLEMENTATION(CFlyingMonster)
 	//Question: why does tis issue only happen sometimes? Why does the movetype somtimes end up TOSS anyways, and sometiems become STEP?
 	//Because "Killed" can be called if a monster runs out of health again WHILE in the DEAD_DYING pev->dead choice.
 	//And that time, it goes here but the monster's base KILLED method that would force the movetype to TOSS anyways is skipped this time.
-	//Typically, the first time a mosnter is killed (pev->dead of DEAD_NO becoming DEAD_DYING), the base Killed call below will
+	//Typically, the first time a monster is killed (pev->dead of DEAD_NO becoming DEAD_DYING), the base Killed call below will
 	//force the movetype to MOVETYPE_TOSS (properly) in the BecomeDead call.
 	//When in DEAD_DYTING while this is called, that never happens. So MOVETYPE_STEP is left. Eh.
 	pev->movetype = MOVETYPE_STEP;

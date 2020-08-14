@@ -16,6 +16,16 @@
 // headcrab.cpp - tiny, jumpy alien parasite
 //=========================================================
 
+
+
+// TODO - try to pathfind (TRACE_MONSTER_HULL) and see if a jump from Here to THere looks promising
+// before picking the leap on SCHED_RANGE_ATTACK1 or whatever.
+// If it isn't, add a delay like 'recentPreLeapTraceFail = gpGlobals->time + 3'
+// and during that time CheckRangeAttack2 returns 'false', to try other follow methods instead.
+// Watch out if it has false-positives though, it would look dumb to fail when it should have passed.
+// Done, I think.
+
+
 #include "extdll.h"
 #include "util.h"
 #include "cbase.h"
@@ -72,9 +82,10 @@ public:
 	float leapStartTime;
 	BOOL leapEarlyFail;
 	float nextLeapAllowedTime;
+	float recentPreLeapTraceFail;
 
 	//MODDD
-	CHeadCrab();
+	CHeadCrab(void);
 
 	void Spawn( void );
 	void Precache( void );
@@ -277,10 +288,11 @@ const char *CHeadCrab::pBiteSounds[] =
 
 
 
-CHeadCrab::CHeadCrab() {
+CHeadCrab::CHeadCrab(void) {
 	leapStartTime = -1;
 	leapEarlyFail = FALSE;
 	nextLeapAllowedTime = -1;
+	recentPreLeapTraceFail = -1;
 
 }
 
@@ -626,9 +638,32 @@ BOOL CHeadCrab::CheckMeleeAttack2(float flDot, float flDist) {
 //=========================================================
 BOOL CHeadCrab :: CheckRangeAttack1 ( float flDot, float flDist )
 {
-	//MODDD - distance for a jump allowed slightly increased, was 256
-	if ( FBitSet( pev->flags, FL_ONGROUND ) && flDist <= 320 && flDot >= 0.65 )
+
+	if(gpGlobals->time >= recentPreLeapTraceFail){
+		// acceptable
+	}else {
+		// nope.
+		return FALSE;
+	}
+
+	//MODDD - distance now depends on difficulty, retail was 256.
+	// And with faster turn-rates, flDot requirement tightened below (was 0.65)
+	float jumpAllowRange;
+	if (g_iSkillLevel == SKILL_HARD) {
+		jumpAllowRange = 300;
+	}
+	else if (g_iSkillLevel == SKILL_MEDIUM) {
+		jumpAllowRange = 340;
+	}
+	else {
+		jumpAllowRange = 390;
+	}
+
+
+
+	if ( FBitSet( pev->flags, FL_ONGROUND ) && flDist <= jumpAllowRange && flDot >= 0.72 )
 	{
+
 		return TRUE;
 	}
 	return FALSE;
@@ -777,6 +812,57 @@ Schedule_t* CHeadCrab :: GetScheduleOfType ( int Type )
 		{
 			//MODDD - don't go straight to a leap if it's been too soon.
 			if (gpGlobals->time >= nextLeapAllowedTime) {
+
+
+				//MODDD - one more check.
+				// Is there a clear path from me to them for the leap?
+				if (m_hEnemy) {
+
+					BOOL passPreTrace = FALSE;
+					Vector traceStart = Center();
+					TraceResult tr;
+					TRACE_MONSTER_HULL(edict(), traceStart, m_hEnemy->BodyTargetMod(traceStart), dont_ignore_monsters, edict(), &tr);
+
+					if (tr.fAllSolid) {
+						// what
+					}else if (tr.flFraction >= 1.0) {
+						// proceed.
+						passPreTrace = TRUE;
+					}
+					else {
+						// wha..?
+						if (tr.pHit != NULL) {
+							CBaseEntity* getIt = CBaseEntity::Instance(tr.pHit);
+							if (getIt != NULL) {
+
+								if (getIt->edict() == m_hEnemy.Get()) {
+									// hey, worth a shot.
+									passPreTrace = TRUE;
+								}
+
+								CBaseMonster* monTest = getIt->GetMonsterPointer();
+								if (monTest != NULL) {
+									if (monTest->Classify() > R_NO) {
+										// ok, go ahead anyway then.
+										passPreTrace = TRUE;
+									}
+								}
+							}
+
+						}
+					}
+
+					if (!passPreTrace) {
+						// fail?  Let the rest know.
+						recentPreLeapTraceFail = gpGlobals->time + 3;
+
+						// Try getting another schedule now that range-attack is blocked
+						ClearConditions(bits_COND_CAN_RANGE_ATTACK1);
+						return GetSchedule();
+					}
+				}//END OF enemy check
+
+
 				return &slHCRangeAttack1[0];
 			}else {
 				return &slHCWaitForAttack[0];

@@ -2130,9 +2130,12 @@ void V_DropPunchAngle(float frametime, float* arg_ev_punchangle)
 	float	len;
 
 	len = VectorNormalize(arg_ev_punchangle);
+
 	//MODDD - little touchup
-	//len -= (10.0 + len * 0.5) * frametime;
-	len -= (11.0 + len * 0.67) * frametime;
+	// UNDONE, let's be careful about changes, even small ones.
+	len -= (10.0 + len * 0.5) * frametime;
+	//len -= (11.0 + len * 0.67) * frametime;
+
 	len = max(len, 0.0);
 	VectorScale(arg_ev_punchangle, len, arg_ev_punchangle);
 }

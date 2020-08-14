@@ -151,11 +151,8 @@ TYPEDESCRIPTION	CCineMonster::m_SaveData[] =
 };
 
 IMPLEMENT_SAVERESTORE(CCineMonster, CBaseMonster);
-
 LINK_ENTITY_TO_CLASS(CCineMonster_CLASSNAME, CCineMonster);
-
 LINK_ENTITY_TO_CLASS(aiscripted_sequence, CCineAI);
-
 
 
 CCineMonster::CCineMonster(void) {
@@ -316,6 +313,27 @@ void CCineMonster::Pain(void)
 // find a viable entity
 int CCineMonster::FindEntity(void)
 {
+	// DEBUG.  Kill scripted's.
+	//return FALSE;
+
+
+	/*
+	const char* theTargetName = STRING(m_iszEntity);
+
+	if (theTargetName != NULL) {
+
+		easyForcePrintLine("cine searcher info ");
+		printBasicEntityInfo(this);
+		easyForcePrintLine("\n");
+
+		if (strcmp(theTargetName, "victim1") == 0 || strcmp(theTargetName, "victim2") == 0) {
+			int x = 45;
+		}
+		easyForcePrintLine("cine search?? %s", theTargetName);
+	}
+	*/
+
+
 	edict_t* pentTarget;
 
 	pentTarget = FIND_ENTITY_BY_TARGETNAME(NULL, STRING(m_iszEntity));
@@ -393,6 +411,13 @@ void CCineMonster::PossessEntity(void)
 		}
 #endif
 
+
+
+		if (pTarget->monsterID == 0 || pTarget->monsterID == 1) {
+			int x = 45;
+		}
+
+
 		pTarget->m_pGoalEnt = this;
 		pTarget->m_pCine = this;
 		pTarget->m_hTargetEnt = this;
@@ -463,6 +488,10 @@ void CCineAI::PossessEntity(void)
 
 	if (pTarget)
 	{
+		if (pTarget->monsterID == 0 || pTarget->monsterID == 1) {
+			int x = 45;
+		}
+
 		if (!pTarget->CanPlaySequence(FCanOverrideState(), SS_INTERRUPT_AI))
 		{
 			ALERT(at_aiconsole, "(AI)Can't possess entity %s\n", STRING(pTarget->pev->classname));

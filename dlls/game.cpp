@@ -24,15 +24,19 @@
 
 EASY_CVAR_CREATE_SERVER_SETUP_MASS
 
-//MODDD - extern
-extern BOOL globalPSEUDO_iCanHazMemez;
+
 EASY_CVAR_EXTERN(hiddenMemPrintout)
 EASY_CVAR_EXTERN(emergencyFix)
 EASY_CVAR_EXTERN(soundSentenceSave)
 
+
+//MODDD - extern
+extern BOOL globalPSEUDO_iCanHazMemez;
+extern float globalPSEUDO_cl_bullsquidspit;
+
+
+
 extern cvar_t* cvar_sv_cheats;
-
-
 extern void resetModCVars(CBasePlayer* arg_plyRef, BOOL isEmergency);
 
 
@@ -820,6 +824,15 @@ void GameDLLInit( void )
 	// seen on 'developer 2', if updateCVarRefs() is done this early.  Seems to be from the 
 	// gmsgUpdateClientCVar messages (although any message sent this early is problematic).
 	updateCVarRefs(TRUE);
+	
+	
+	// NOTE!  Do this to avoid changing up other CVars just from noticing a discrepency in cl_bullsquidspit choice
+	// since changing the game.  Maybe someone wanted other specifics controlled by cl_bullsquidspit to stay
+	// the way they are.
+	globalPSEUDO_cl_bullsquidspit = EASY_CVAR_GET(cl_bullsquidspit);
+	
+	
+	
 
 
 	//MODDD - Deemed best place for initializing CVars (first update, necessary for spawn-script so that it may see CVars in their intended form).

@@ -780,6 +780,9 @@ GENERATE_KILLED_IMPLEMENTATION(CBaseMonster)
 	// Make sure this condition is fired too (TakeDamage breaks out before this happens on death)
 	SetConditions(bits_COND_LIGHT_DAMAGE);
 
+	if (monsterID == 0 || monsterID == 1) {
+		int x = 45;
+	}
 
 	// tell owner ( if any ) that we're dead.This is mostly for MonsterMaker functionality.
 	CBaseEntity* pOwner = CBaseEntity::Instance(pev->owner);
@@ -1413,7 +1416,7 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBaseEntity)
 
 
 //NEW METHOD.  How far should a monster be pushed?
-// Larger montsers are affected less by the same force.
+// Larger monsters are affected less by the same force.
 //NOTE: zombie does its own knockback from several other damage sources separately.
 void CBaseEntity::Knockback(const int knockbackAmount, const Vector& knockbackDir) {
 
@@ -1955,6 +1958,11 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBaseMonster){
 	if ( m_MonsterState == MONSTERSTATE_SCRIPT )
 	{
 		if(  (!m_pCine || m_pCine->CanInterrupt())  ) {
+
+			if (monsterID == 0 || monsterID == 1) {
+				int x = 45;
+			}
+
 			SetConditions( bits_COND_LIGHT_DAMAGE );
 		}
 		g_rawDamageCumula = 0;  //whoopsie
@@ -2042,6 +2050,12 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBaseMonster){
 					setEnemyLKP_Investigate(pev->origin + ( g_vecAttackDir * 64 ));
 					updatedEnemyLKP = TRUE;
 				}
+
+				if (monsterID == 0 || monsterID == 1) {
+					int x = 45;
+				}
+
+
 
 				//MODDD - If we didn't change the LKP, why look in its direction?
 				//...undone, perhaps we should look at the enemy if they damaged us? whatever, err on defalt behavior.

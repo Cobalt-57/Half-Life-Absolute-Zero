@@ -3166,6 +3166,28 @@ void CHGrunt :: Spawn()
 	
 	SetUse(&CHGrunt::hgruntUse);
 
+
+
+	/*
+	clearAllConditions();
+
+	UTIL_MakeVectors(pev->angles);
+
+	Vector vecStart = pev->origin + Vector(0, 0, 20);
+	Vector vecLookDir = gpGlobals->v_forward;
+	DebugLine_Setup(vecStart, vecStart + vecLookDir * 200, 0, 255, 0);
+	*/
+
+	/*
+	float yMem = pev->angles.y;
+	pev->angles.y = pev->ideal_yaw;
+	UTIL_MakeVectors(pev->angles);
+	pev->angles.y = yMem;
+
+	Vector vecStart = pev->origin + Vector(0, 0, 20);
+	Vector vecLookDir = gpGlobals->v_forward;
+	DebugLine_Setup(vecStart, vecStart + vecLookDir * 200, 0, 255, 0);
+	*/
 }
 
 
@@ -4019,10 +4041,12 @@ Schedule_t	slGruntFail[] =
 	{
 		tlGruntFail,
 		ARRAYSIZE ( tlGruntFail ),
+		//MODDD - no new enemy one?  why not?
 		bits_COND_CAN_RANGE_ATTACK1 |
 		bits_COND_CAN_RANGE_ATTACK2 |
 		bits_COND_CAN_MELEE_ATTACK1 |
-		bits_COND_CAN_MELEE_ATTACK2,
+		bits_COND_CAN_MELEE_ATTACK2 |
+		bits_COND_NEW_ENEMY,
 		0,
 		"Grunt Fail"
 	},
@@ -4044,8 +4068,13 @@ Schedule_t	slGruntCombatFail[] =
 	{
 		tlGruntCombatFail,
 		ARRAYSIZE ( tlGruntCombatFail ),
-		bits_COND_CAN_RANGE_ATTACK1	|
-		bits_COND_CAN_RANGE_ATTACK2,
+		//MODDD - why drop the MELEE_ATTACK conditions that slGruntFail had?
+		// And also no new enemy one??
+		bits_COND_CAN_RANGE_ATTACK1 |
+		bits_COND_CAN_RANGE_ATTACK2 |
+		bits_COND_CAN_MELEE_ATTACK1 |
+		bits_COND_CAN_MELEE_ATTACK2 |
+		bits_COND_NEW_ENEMY,
 		0,
 		"Grunt Combat Fail"
 	},
@@ -4868,6 +4897,13 @@ Schedule_t *CHGrunt :: GetSchedule( void )
 {
 
 
+
+	if (monsterID == 0 || monsterID == 1) {
+		if (HasConditions(bits_COND_HEAR_SOUND)) {
+			return 0;
+		}
+	}
+
 	//return CBaseMonster::GetSchedule();
 
 	// clear old sentence
@@ -5138,9 +5174,17 @@ Schedule_t *CHGrunt :: GetSchedule( void )
 				}
 			}
 
+
+			BOOL testo = HasConditions(bits_COND_NEW_ENEMY);
+			const char* daName = "NULL";
+			if (m_hEnemy != NULL) { daName = m_hEnemy->getClassname(); }
+
+
 			if(monsterID==1){
 				easyForcePrintLine("I AM YEAH %d : %d", HasConditions( bits_COND_SEE_ENEMY ), HasConditions ( bits_COND_CAN_RANGE_ATTACK1 ) );
 			}
+
+
 
 			// Don't you mean, not occluded but I 'could' see if I wanted to?
 			// Although keep the bits_COND_SEE_ENEMY, don't want magical 'eyes-in-the-back-of-the-head' vision
@@ -5168,9 +5212,31 @@ Schedule_t* CHGrunt :: GetScheduleOfType ( int Type )
 {
 	EASY_CVAR_PRINTIF_PRE(hgruntPrintout, easyForcePrintLine("HGRUNT%d GetSchedOfType: %d", monsterID, Type));
 
-	if(monsterID == 1){
+
+	/*
+	if(monsterID == 0 || monsterID == 1){
+
+		if (HasConditions(bits_COND_LIGHT_DAMAGE | bits_COND_HEAVY_DAMAGE)) {
+			// ??????
+			//m_MonsterState == MONSTERSTATE_SC
+
+			float yMem = pev->angles.y;
+			pev->angles.y = pev->ideal_yaw;
+			UTIL_MakeVectors(pev->angles);
+			pev->angles.y = yMem;
+
+			Vector vecStart = pev->origin + Vector(0, 0, 20);
+			Vector vecLookDir = gpGlobals->v_forward;
+			DebugLine_Setup(vecStart, vecStart + vecLookDir * 200, 0, 255, 0);
+
+		}
 		int x = 4;
 	}
+	*/
+
+
+
+
 
 	//MODDD - new schedule?  Forget the touch method.
 	this->SetTouch(NULL);

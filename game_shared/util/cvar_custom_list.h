@@ -534,8 +534,8 @@
 #define DEFAULT_bullsquidSpitGravityMulti 1
 #define DEFAULT_cl_bullsquidspit 0
 #define DEFAULT_cl_bullsquidspitarc 0
-#define DEFAULT_bullsquidSpitUseAlphaModel 1
-#define DEFAULT_bullsquidSpitUseAlphaEffect 1
+#define DEFAULT_bullsquidSpitUseAlphaModel 0
+#define DEFAULT_bullsquidSpitUseAlphaEffect 0
 #define DEFAULT_bullsquidSpitEffectSpread 0.37
 #define DEFAULT_bullsquidSpitEffectMin 90
 #define DEFAULT_bullsquidSpitEffectMax 120
@@ -718,7 +718,7 @@
 #define DEFAULT_monsterKilledToss 2
 #define DEFAULT_interpolation_movetypestep_mindelta 0.06
 #define DEFAULT_sv_bloodparticlemode 1
-#define DEFAULT_cl_interp_view_extra 2
+#define DEFAULT_cl_interp_view_extra 1
 #define DEFAULT_cl_interp_viewmodel 1
 #define DEFAULT_sv_explosionknockback 1
 #define DEFAULT_cl_gaussfollowattachment 1

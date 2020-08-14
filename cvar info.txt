@@ -1542,6 +1542,7 @@ sv_explosionknockback (1) - FLOAT (adjustable).  1 is the default amount of knoc
 cl_gaussfollowattachment (1) - BOOL.  Retail behavior is 1.  If on, the gauss laser follows the end of the gauss as it fires.
 ~If 0, it stays at the firing origin and disappears faster to not look too weird while moving.
 
+cl_mp5_kickback (0) - BOOL.  When on, mp5 random kickback no longer includes very low ranges, slightly higher on average and more consistent.
 
 
 
