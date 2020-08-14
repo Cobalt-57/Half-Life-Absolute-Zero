@@ -58,7 +58,7 @@ LINK_ENTITY_TO_CLASS(grenade, CGrenade);
 CGrenade::CGrenade(void) {
 	dropped = FALSE;
 	firstGroundContactYet = FALSE;
-
+	nextBounceSoundAllowed = -1;
 }
 
 
@@ -472,6 +472,8 @@ void CGrenade::BounceTouch( CBaseEntity *pOther )
 		m_fRegisteredSound = TRUE;
 	}
 
+
+
 	if (pev->flags & FL_ONGROUND)
 	{
 		// add a bit of static friction
@@ -502,19 +504,13 @@ void CGrenade::BounceTouch( CBaseEntity *pOther )
 				//pev->angles = g_vecZero;
 				
 
-				pev->angles.x = 0;
-				//pev->angles.x = RANDOM_FLOAT(-150, 150);
-				//if (pev->angles.x < -180) pev->angles.x += 360;
-				//if (pev->angles.x > 180) pev->angles.x -= 360;
+				SetAngleX(0);
+				//SetAngleX(RANDOM_FLOAT(-150, 150));
 
-				pev->angles.y += -90;
-				if (pev->angles.y < -180) pev->angles.y += 360;
-				if (pev->angles.y > 180) pev->angles.y -= 360;
-				
-				pev->angles.z = 0;
-				//pev->angles.z = pev->angles.z + RANDOM_FLOAT(-150, 150);
-				//if (pev->angles.z < -180) pev->angles.z += 360;
-				//if (pev->angles.z > 180) pev->angles.z -= 360;
+				ChangeAngleY(-90);
+
+				SetAngleZ(0);
+				//SetAngleZ(RANDOM_FLOAT(-150, 150));
 				
 
 				firstGroundContactYet = TRUE;
@@ -568,6 +564,18 @@ void CGrenade::SlideTouch( CBaseEntity *pOther )
 
 void CGrenade :: BounceSound( void )
 {
+
+	//MODDD - don't spam bounce sounds!
+	if (gpGlobals->time >= nextBounceSoundAllowed) {
+		// okay.
+	}
+	else {
+		// oh.
+		return;
+	}
+
+	nextBounceSoundAllowed = gpGlobals->time + 0.26;
+
 	//MODDD - refer to CVar.
 	if(EASY_CVAR_GET(handGrenadesUseOldBounceSound) != 1){
 		switch ( RANDOM_LONG( 0, 2 ) )

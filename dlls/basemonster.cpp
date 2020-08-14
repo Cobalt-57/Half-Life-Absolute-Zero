@@ -2545,6 +2545,12 @@ BOOL CBaseMonster::FRefreshRouteChaseEnemySmart(void){
 			while (maxTimes > 0) {
 				maxTimes--;
 
+				if (MovementIsComplete()) {
+					// looks like we're already where we want to be?
+					break;
+				}
+
+
 				float flWaypointDist;
 				float flCheckDist;
 				float flDist;
@@ -2571,6 +2577,7 @@ BOOL CBaseMonster::FRefreshRouteChaseEnemySmart(void){
 				if (shouldItAgain) {
 					// do it again! 
 					AdvanceRoute(flWaypointDist, flInterval);
+
 				}
 				else {
 					// Route left to go?  get out the loop then
@@ -2715,6 +2722,11 @@ BOOL CBaseMonster :: FRefreshRoute ( void )
 			while (maxTimes > 0) {
 				maxTimes--;
 
+				if (MovementIsComplete()) {
+					// looks like we're already where we want to be?
+					break;
+				}
+
 
 				// unused, but expected by the method anyway
 				float flWaypointDist;
@@ -2758,10 +2770,8 @@ BOOL CBaseMonster :: FRefreshRoute ( void )
 					// do it again! 
 					AdvanceRoute(flWaypointDist, flInterval);
 				
-					if (MovementIsComplete()) {
-						// looks like we're already where we want to be?
-						break;
-					}
+					// MovementIsComplete() could go here, or at the beginning of this while loop.
+					// In case it's already 'done' before even one check.
 				}
 				else {
 					// Route left to go?  get out the loop then
@@ -4020,8 +4030,6 @@ int CBaseMonster::CheckLocalMoveHull(const Vector &vecStart, const Vector &vecEn
 
 
 
-//MODDD MASSREVERT- CheckLocalMove 
-
 //=========================================================
 // CheckLocalMove - returns TRUE if the caller can walk a 
 // straight line from its current origin to the given 
@@ -4816,16 +4824,7 @@ void CBaseMonster :: InsertWaypoint ( Vector vecLocation, int afMoveFlags )
 
 
 
-//=========================================================
-// FTriangulate - tries to overcome local obstacles by 
-// triangulating a path around them.
-//
-// iApexDist is how far the obstruction that we are trying
-// to triangulate around is from the monster.
-//=========================================================
 
-
-//MODDD DREVERT - major
 
 //=========================================================
 // FTriangulate - tries to overcome local obstacles by 

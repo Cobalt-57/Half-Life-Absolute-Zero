@@ -279,3 +279,8 @@ cl_holster still controls typical weapon select (number keys or mouse wheel + cl
 
 Greandes placed on the ground by hgrunts now stand upright and don't clip through the ground.
 Thrown grenades should no longer appear to float above the ground when it is reached, nor should they suddenly face sideways.
+
+Final greater blood effect much more likely to appear for low-damage-per-shot weapons such as the shotgun.
+
+Headcrab jumps have a slight cooldown between jumps, mainly to avoid spamming jump-attempts in place.  Shorter on harder difficulties.
+Headcrabs also turn faster in general, but even faster with higher difficulty.

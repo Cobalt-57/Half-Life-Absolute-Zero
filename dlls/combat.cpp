@@ -1583,6 +1583,13 @@ void CBaseEntity::SpawnBlood(const Vector& vecSpot, float flDamage) {
 		return;
 	}
 
+	// NOTICE: pev->health alone isn't enough of an accurate sign as to whether this shot will kill the monster
+	// (increased blood effect).
+	// gMultiDamage could be holding damage being stored up for the TakeDamage call coming up, so let that
+	// be subtracted from health to see whether any other accumulated damage also leads to this being the killing
+	// blow.  Keep in mind this allows other shots in the same frame (like one shotgun blast) to all be killing shots
+	// with stupid amounts of blood each, which might be ok.  If not, some flag in gMultiDamage like 'deadBloodSpawned'
+	// that gets reset in 'ClearMultiDamage' would be fine.
 	float healthEstimate = pev->health - gMultiDamage.amount;
 
 	if (EASY_CVAR_GET(sv_bloodparticlemode) == 1 || EASY_CVAR_GET(sv_bloodparticlemode) == 2) {
@@ -2439,7 +2446,7 @@ void RadiusDamage( Vector vecSrc, entvars_t *pevInflictor, entvars_t *pevAttacke
 	}
 
 	if(EASY_CVAR_GET(RadiusDamageDrawDebug) == 2){
-		//pipe it to here instead
+		// pipe it to here instead
 		RadiusDamageTest(vecSrc, pevInflictor, pevAttacker, flDamage, flRadius, iClassIgnore, bitsDamageType, bitsDamageTypeMod);
 		return;
 	}
@@ -2573,23 +2580,29 @@ void RadiusDamage( Vector vecSrc, entvars_t *pevInflictor, entvars_t *pevAttacke
 				// If nothing in the way just call it a hit all the same, close enough to the explosion
 				// and unobstructed to even reach this point (blocked by any other object forbids reaching
 				// this point)
+				// True, but I think the point is to count damage without a trace, even though we have one that didn't hit anything for whatever reason,
+				// even given the bodytarget of the entity.  The point of the hit was to deal damage, even if no point of the monster was hit in some
+				// freak accident.  But it's best not to call TraceAttack with a trace that didn't hit anything.
+				// Using another equivalent, "TraceAttack_Traceless" for things that expect the same cumulative damage from TraceAttack anyway.
+				// Hitgroup can't factor into damage that way, but then again if damage can be dealth without a hit (missing the bodygroup point),
+				// did hitgroup really matter to begin with?  BLAST damage or HITBOX_EQUAL marks damage to ignore bitbox-damages anyway.
 
-				//if (tr.flFraction != 1.0)
-				//{
+				if (tr.flFraction != 1.0)
+				{
 					ClearMultiDamage( );
 					// TODO - why do you put player blood at the blast center sometimes when the player & a baddie are hit at the same time???
 					// Fixed now... I think.
 					// And, marked not to do enhanced damage for hitting a particular sub hitbox (headshots?).  That can't be consistent.
 					pEntity->TraceAttack( pevInflictor, flAdjustedDamage, (tr.vecEndPos - vecSrc).Normalize( ), &tr, bitsDamageType, bitsDamageTypeMod | DMG_HITBOX_EQUAL );
 					ApplyMultiDamage( pevInflictor, pevAttacker );
-				//}
-				//else
-				//{
-				//	// MODDD - !!!  A  TakeDamage call without a TraceAttack prior, eh?  That is high treason missy!
-				//	// Call this alternate method then, sometimes cumulative damage needs to be added in an entity's own way.
-				//	pEntity->TraceAttack_Traceless(pevInflictor, flAdjustedDamage, (tr.vecEndPos - vecSrc).Normalize(), bitsDamageType, bitsDamageTypeMod | DMG_HITBOX_EQUAL);
-				//	pEntity->TakeDamage ( pevInflictor, pevAttacker, flAdjustedDamage, bitsDamageType, bitsDamageTypeMod );
-				//}
+				}
+				else
+				{
+					// MODDD - !!!  A  TakeDamage call without a TraceAttack prior, eh?  That is high treason missy!
+					// Call this alternate method then, sometimes cumulative damage needs to be added in an entity's own way.
+					pEntity->TraceAttack_Traceless(pevInflictor, flAdjustedDamage, (tr.vecEndPos - vecSrc).Normalize(), bitsDamageType, bitsDamageTypeMod | DMG_HITBOX_EQUAL);
+					pEntity->TakeDamage ( pevInflictor, pevAttacker, flAdjustedDamage, bitsDamageType, bitsDamageTypeMod | DMG_HITBOX_EQUAL);
+				}
 			}
 		}
 	}

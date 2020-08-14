@@ -441,6 +441,13 @@ public:
 	Vector GetAbsAngles(void);
 	void SetAbsAngles(const Vector& arg_newOrigin);
 
+	void ChangeAngleX(const float changeBy);
+	void ChangeAngleY(const float changeBy);
+	void ChangeAngleZ(const float changeBy);
+	void SetAngleX(const float newVal);
+	void SetAngleY(const float newVal);
+	void SetAngleZ(const float newVal);
+	
 	
 	virtual BOOL isBasePlayerWeapon(void){return FALSE;}
 

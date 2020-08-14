@@ -1697,7 +1697,9 @@ void CBaseMonster :: SetTurnActivity ( void ){
 	flYD = FlYawDiff();
 	
 	//MODDD - new. Remember the old activity before turning. Not that this is used in many places yet.
-	//Might not need it at all.
+	// Might not need it at all.
+	// Also this assumption is kindof bad, could very well already be in the TURN_LEFT or TURN_RIGHT
+	// activities before calling SetTurnActivity.  A remembered TURN_LEFT/RIGHT is not very helpful.
 	//m_IdealActivityBeforeTurn = m_IdealActivity;
 
 	if ( flYD <= -45 && LookupActivity ( ACT_TURN_RIGHT ) != ACTIVITY_NOT_AVAILABLE )
@@ -1707,10 +1709,6 @@ void CBaseMonster :: SetTurnActivity ( void ){
 	else if ( flYD > 45 && LookupActivity ( ACT_TURN_LEFT ) != ACTIVITY_NOT_AVAILABLE )
 	{// big left turn
 		m_IdealActivity = ACT_TURN_LEFT;
-	}
-
-	if(FClassnameIs(pev, "monster_houndeye") && LookupActivity ( ACT_TURN_RIGHT ) == ACTIVITY_NOT_AVAILABLE && LookupActivity ( ACT_TURN_LEFT ) == ACTIVITY_NOT_AVAILABLE ){
-		easyForcePrintLine("HOUNDEYE ISSUE::: SETTURNACTIVITY BETTER BE DOING STUFF...... yawdelta: %.2f resulting act: %d", flYD, m_IdealActivity );
 	}
 
 }//END OF SetTurnActivity

@@ -181,8 +181,7 @@ int g_fGruntQuestion;				// true if an idle grunt asked a question. Cleared when
 
 
 
-//sequences in the model. Some sequences have the same display name and so should just be referenced by order
-//(numbered index).
+// sequences in the model.
 enum hgrunt_sequence{  //key: frames, FPS
 	SEQ_HGRUNT_WALK1,
 	SEQ_HGRUNT_WALK2,
@@ -355,8 +354,8 @@ public:
 	GENERATE_KILLED_PROTOTYPE
 
 	BOOL usesAdvancedAnimSystem(void);
-	int LookupActivityHard(int activity);
 	int tryActivitySubstitute(int activity);
+	int LookupActivityHard(int activity);
 	void MakeIdealYaw( Vector vecTarget );
 	void startReanimation(void);
 
@@ -3503,6 +3502,60 @@ void CHGrunt::onAnimationLoop(void){
 }
 
 
+
+int CHGrunt::tryActivitySubstitute(int activity){
+
+	switch(activity){
+		case ACT_STRAFE_LEFT:
+		case ACT_STRAFE_RIGHT:
+			//are we strafing?  If so, substitute!
+
+			//return CBaseAnimating::LookupActivity(ACT_RUN);
+
+			switch(strafeMode){
+				case 0:
+					//return LookupSequence("straferight");
+					return LookupSequence("strafeleft");
+				break;
+				case 1:
+					return LookupSequence("strafeleft_fire");
+				break;
+				case 2:
+					//return LookupSequence("strafeleft");
+					return LookupSequence("straferight");
+				break;
+				case 3:
+					return LookupSequence("straferight_fire");
+				break;
+				default:
+					//???
+					EASY_CVAR_PRINTIF_PRE(hgruntPrintout, easyForcePrintLine("HGRUNT SEVERE ERROR A: Strafe failed to fetch anim!"));
+					return CBaseAnimating::LookupActivity(activity);
+				break;
+			}
+
+		break;
+		case ACT_RUN:
+
+			//return LookupSequence("strafeleft");
+			//return LookupSequence("strafeleft");
+
+			if(runAndGun == TRUE){
+				return LookupSequence("runandgun");
+			}
+
+			return CBaseAnimating::LookupActivity(activity);
+		break;
+		case ACT_DIE_HEADSHOT:
+			return LookupSequence("dieheadshot");
+		break;
+	}
+
+	
+	return CBaseAnimating::LookupActivity(activity);
+}//END OF tryActivitySubstitute
+
+
 int CHGrunt::LookupActivityHard(int activity){
 
 	pev->framerate = 1;
@@ -3626,60 +3679,14 @@ int CHGrunt::LookupActivityHard(int activity){
 
 			return CBaseAnimating::LookupActivity(activity);
 		break;
+		case ACT_DIE_HEADSHOT:
+			return LookupSequence("dieheadshot");
+		break;
 	}
 
 	return CBaseAnimating::LookupActivity(activity);
 }//END OF LookupActivityHard
 
-
-int CHGrunt::tryActivitySubstitute(int activity){
-
-	switch(activity){
-		case ACT_STRAFE_LEFT:
-		case ACT_STRAFE_RIGHT:
-			//are we strafing?  If so, substitute!
-
-			//return CBaseAnimating::LookupActivity(ACT_RUN);
-
-			switch(strafeMode){
-				case 0:
-					//return LookupSequence("straferight");
-					return LookupSequence("strafeleft");
-				break;
-				case 1:
-					return LookupSequence("strafeleft_fire");
-				break;
-				case 2:
-					//return LookupSequence("strafeleft");
-					return LookupSequence("straferight");
-				break;
-				case 3:
-					return LookupSequence("straferight_fire");
-				break;
-				default:
-					//???
-					EASY_CVAR_PRINTIF_PRE(hgruntPrintout, easyForcePrintLine("HGRUNT SEVERE ERROR A: Strafe failed to fetch anim!"));
-					return CBaseAnimating::LookupActivity(activity);
-				break;
-			}
-
-		break;
-		case ACT_RUN:
-
-			//return LookupSequence("strafeleft");
-			//return LookupSequence("strafeleft");
-
-			if(runAndGun == TRUE){
-				return LookupSequence("runandgun");
-			}
-
-			return CBaseAnimating::LookupActivity(activity);
-		break;
-	}
-
-	
-	return CBaseAnimating::LookupActivity(activity);
-}//END OF tryActivitySubstitute
 
 
 

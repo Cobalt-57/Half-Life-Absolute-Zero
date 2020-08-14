@@ -886,7 +886,12 @@ void CTemplateMonster::SetActivity( Activity NewActivity ){
 //           * Monster's LookupActivity, deciding to call the...
 //           * Child class's LookupActivityHard for a possible substitution, falling back to...
 //           Repeat the last two ad infinitum. Crash.
-
+// It is also possible to get an activity from a name through a string like most places:  LookupSequence("runandgun")
+// Note that tryActivitySubstitute doesn't usually do anything with a particular sequence given, but verifies that there
+// is one at all.  It is not wise to do framerate changesor add anim-queue events for a sequence that may not even get
+// picked.
+// See LookupActivityHard below for when a sequence to get is most likely to be committed (makes more sense to do the 
+// mentioned finer adjustments).
 int CTemplateMonster::tryActivitySubstitute(int activity){
 	int i = 0;
 
@@ -902,6 +907,7 @@ int CTemplateMonster::tryActivitySubstitute(int activity){
 	return CBaseAnimating::LookupActivity(activity);
 }//END OF tryActivitySubstitute
 
+// 
 int CTemplateMonster::LookupActivityHard(int activity){
 	int i = 0;
 	m_flFramerateSuggestion = 1;

@@ -332,6 +332,8 @@ public:
 	virtual void SayNearPassive(void);
 	virtual void OnNearCautious(void);
 	virtual void SayNearCautious(void);
+	virtual void BecomeProvoked(CBaseEntity* recentAttacker);
+	virtual void BecomeSuspicious(float arg_forgiveSuspiciousTime);
 
 	//MODDD - also new. Not implementable.
 	BOOL FNearCautiousSpeak(void);

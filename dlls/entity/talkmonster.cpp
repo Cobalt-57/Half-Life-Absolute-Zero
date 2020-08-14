@@ -87,15 +87,23 @@ int CTalkMonster::Save( CSave &save )
 int CTalkMonster::Restore( CRestore &restore )
 {
 	//setModelCustom();
+	BOOL baseRestoreResult = CBaseMonster::Restore(restore);
+	BOOL myRestoreResult;
 
-	if ( !CBaseMonster::Restore(restore) )
-		return 0;
+	if (baseRestoreResult) {
+		myRestoreResult = restore.ReadFields("CTalkMonster", this, m_SaveData, ARRAYSIZE(m_SaveData));
+	}
+	else {
+		// ???
+		myRestoreResult = FALSE;
+	}
 	
-	if(this->m_flPlayerDamage > 0 && forgiveSomePlayerDamageTime == -1){
+	// Start forgiving player damage then.
+	if(this->m_flPlayerDamage > 0 && forgiveSomePlayerDamageTime < 0){
 		forgiveSomePlayerDamageTime = gpGlobals->time + 5;
 	}
 
-	return restore.ReadFields( "CTalkMonster", this, m_SaveData, ARRAYSIZE(m_SaveData) );
+	return myRestoreResult;
 }
 
 
@@ -2181,6 +2189,36 @@ void CTalkMonster::SayNearCautious(void){
 	
 }
 
+// Alright, now I'm pissed!
+void CTalkMonster::BecomeProvoked(CBaseEntity* recentAttacker) {
+	//MODDD - now, pissing off a talker makes friends pissed too.
+				// Player would probably kill the attacking talker and trigger
+				// AlertFriends from that one dying anyway.
+	AlertFriends();
+
+	SayProvoked();
+	Remember(bits_MEMORY_PROVOKED);
+	StopFollowing(TRUE);
+
+	LimitFollowers(recentAttacker, 0);
+
+	//No more forgiveness.
+	forgiveSuspiciousTime = -1;
+	forgiveSomePlayerDamageTime = -1;
+	recentDeclines = 0;  // this time is personal
+
+}//END OF BecomeProvoked
+
+
+// Hey, be careful with that
+void CTalkMonster::BecomeSuspicious(float arg_forgiveSuspiciousTime) {
+	SaySuspicious();
+	Remember(bits_MEMORY_SUSPICIOUS);
+	forgiveSuspiciousTime = gpGlobals->time + arg_forgiveSuspiciousTime;
+	// forgive a point of damage no sooner than 5 seconds, but can be later.
+	forgiveSomePlayerDamageTime = gpGlobals->time + max(arg_forgiveSuspiciousTime/5, 5);
+}//END OF BecomeProvoked
+
 
 
 GENERATE_TRACEATTACK_IMPLEMENTATION(CTalkMonster)
@@ -2190,6 +2228,12 @@ GENERATE_TRACEATTACK_IMPLEMENTATION(CTalkMonster)
 
 GENERATE_TAKEDAMAGE_IMPLEMENTATION(CTalkMonster)
 {
+
+	//SAFETY.  Not that this should be remotely possible.
+	if (pevAttacker == NULL) {
+		return 0;
+	}
+
 	int ret = GENERATE_TAKEDAMAGE_PARENT_CALL(CBaseMonster);
 	if ( !IsAlive() ){
 		//End early - no sense in response logic if we're unable to do anything.
@@ -2254,33 +2298,11 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CTalkMonster)
 				UTIL_IsFacing( pevAttacker, pev->origin, 0.05) && m_flPlayerDamage > 4 //Facing me when he did it with a lower damage tolerance? Pissed.
 				) 
 			{
-
-				//MODDD - now, pissing off a talker makes friends pissed too.
-				// Player would probably kill the attacking talker and trigger
-				// AlertFriends from that one dying anyway.
-				AlertFriends();
-
-				this->SayProvoked();
-				// Alright, now I'm pissed!
-				Remember( bits_MEMORY_PROVOKED );
-				StopFollowing( TRUE );
-
-				LimitFollowers(CBaseEntity::Instance(pevAttacker), 0);
-
-				//No more forgiveness.
-				forgiveSuspiciousTime = -1;
-				forgiveSomePlayerDamageTime = -1;
-				recentDeclines = 0;  // this time is personal
+				BecomeProvoked(CBaseEntity::Instance(pevAttacker));
 			}
 			else
 			{
-				// Hey, be careful with that
-				this->SaySuspicious();
-				Remember( bits_MEMORY_SUSPICIOUS );
-				//After almost a minute of being suspicious, forget about it.
-				//Can't afford to hold a grudge in these times.
-				forgiveSuspiciousTime = gpGlobals->time + 50;
-				forgiveSomePlayerDamageTime = gpGlobals->time + 5;
+				BecomeSuspicious(50);
 			}
 		}
 		else if ( !(m_hEnemy->IsPlayer()) )
@@ -2294,32 +2316,12 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CTalkMonster)
 				UTIL_IsFacing( pevAttacker, pev->origin, 0.05) && m_flPlayerDamage > 5 //Facing me when he did it with a lower damage tolerance? Pissed.
 				) 
 			{
-
-				//MODDD - now, pissing off a talker makes friends pissed too.
-				// Player would probably kill the attacking talker and trigger
-				// AlertFriends from that one dying anyway.
-				AlertFriends();
-
-				this->SayProvoked();
-				// Alright, now I'm pissed!
-				Remember( bits_MEMORY_PROVOKED );
-				StopFollowing( TRUE );
-
-				LimitFollowers(CBaseEntity::Instance(pevAttacker), 0);
-
-				//No more forgiveness.
-				forgiveSuspiciousTime = -1;
-				forgiveSomePlayerDamageTime = -1;
-				recentDeclines = 0;  // this time is personal
+				BecomeProvoked(CBaseEntity::Instance(pevAttacker));
 			}
 			else
 			{
-				// Hey, be careful with that
-				this->SaySuspicious();
-				Remember( bits_MEMORY_SUSPICIOUS );
 				// Times shortened.  Damage in the middle of combat is more excusable.
-				forgiveSuspiciousTime = gpGlobals->time + 25;
-				forgiveSomePlayerDamageTime = gpGlobals->time + 5;
+				BecomeSuspicious(25);
 			}
 		}
 	}

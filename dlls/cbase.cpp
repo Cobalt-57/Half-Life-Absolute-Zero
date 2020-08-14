@@ -1296,6 +1296,86 @@ void CBaseEntity::SetAbsAngles(const Vector& arg_newAngles){
 }
 
 
+//MODDD - NEW.  Filtered angle-change methods for one coord at a time.
+// These methods assume any change isn't over +-360 degrees and that
+// any result angle isn't over +-twice 360 degrees.  Otherwise the range
+// checks here wouldn't catch that.  This keeps the computation cheap.
+// For the more secure version, consider involving UTIL_AngleMod and
+// UTIL_AngleDiff.  Or use those instead to begin with.
+
+void CBaseEntity::ChangeAngleX(const float changeBy) {
+	pev->angles.x += changeBy;
+
+	if (changeBy >= 0) {
+		if (pev->angles.x >= 180) {
+			pev->angles.x += -360;
+		}
+	}else {
+		if (pev->angles.x <= -180) {
+			pev->angles.x += 360;
+		}
+	}
+}
+void CBaseEntity::ChangeAngleY(const float changeBy) {
+	pev->angles.y += changeBy;
+
+	if (changeBy >= 0) {
+		if (pev->angles.y >= 180) {
+			pev->angles.y += -360;
+		}
+	}else {
+		if (pev->angles.y <= -180) {
+			pev->angles.y += 360;
+		}
+	}
+}
+void CBaseEntity::ChangeAngleZ(const float changeBy) {
+	pev->angles.z += changeBy;
+
+	if (changeBy >= 0) {
+		if (pev->angles.z >= 180) {
+			pev->angles.z += -360;
+		}
+	}
+	else {
+		if (pev->angles.z <= -180) {
+			pev->angles.z += 360;
+		}
+	}
+}
+
+void CBaseEntity::SetAngleX(const float newVal) {
+	pev->angles.x = newVal;
+
+	if (pev->angles.x >= 180) {
+		pev->angles.x += -360;
+	}
+	else if (pev->angles.x <= -180) {
+		pev->angles.x += 360;
+	}
+}
+void CBaseEntity::SetAngleY(const float newVal) {
+	pev->angles.y = newVal;
+
+	if (pev->angles.y >= 180) {
+		pev->angles.y += -360;
+	}
+	else if (pev->angles.y <= -180) {
+		pev->angles.y += 360;
+	}
+}
+void CBaseEntity::SetAngleZ(const float newVal) {
+	pev->angles.z = newVal;
+
+	if (pev->angles.z >= 180) {
+		pev->angles.z += -360;
+	}
+	else if (pev->angles.z <= -180) {
+		pev->angles.z += 360;
+	}
+}
+
+
 //Does this entity resist the effects of physical attacks?
 //By default no.
 BOOL CBaseEntity::blocksImpact(void){

@@ -28,6 +28,132 @@
 //=========================================================
 #define HC_AE_JUMPATTACK	( 2 )
 
+
+
+/*
+// is it really worth filling this out?
+enum headcrab_sequence {  //key: frames, FPS
+	SEQ_HEADCRAB_...
+};
+*/
+
+
+
+
+// none needed yet
+/*
+enum
+{
+	SCHED_HEADCRAB_??? = LAST_COMMON_SCHEDULE + 1,
+	SCHED_HEADCRAB_???
+};
+*/
+
+enum
+{
+	TASK_HEADCRAB_WAIT_FOR_LEAP = LAST_COMMON_TASK + 1,
+	//TASK_HEADCRAB_...
+};
+
+
+
+
+class CHeadCrab : public CBaseMonster
+{
+public:
+
+	static const char *pIdleSounds[];
+	static const char *pAlertSounds[];
+	static const char *pPainSounds[];
+	static const char *pAttackSounds[];
+	static const char *pDeathSounds[];
+	static const char *pBiteSounds[];
+
+	float leapStartTime;
+	BOOL leapEarlyFail;
+	float nextLeapAllowedTime;
+
+	//MODDD
+	CHeadCrab();
+
+	void Spawn( void );
+	void Precache( void );
+	void RunTask ( Task_t *pTask );
+	void StartTask ( Task_t *pTask );
+	void SetYawSpeed ( void );
+	void EXPORT LeapTouch ( CBaseEntity *pOther );
+	Vector Center( void );
+	Vector BodyTarget( const Vector &posSrc );
+	//MODDD
+	Vector BodyTargetMod( const Vector &posSrc );
+	void PainSound( void );
+	void DeathSound( void );
+	void IdleSound( void );
+	void AlertSound( void );
+	void PrescheduleThink( void );
+	int  Classify ( void );
+	void HandleAnimEvent( MonsterEvent_t *pEvent );
+
+	BOOL CheckMeleeAttack1(float flDot, float flDist);
+	BOOL CheckMeleeAttack2(float flDot, float flDist);
+	BOOL CheckRangeAttack1 ( float flDot, float flDist );
+	BOOL CheckRangeAttack2 ( float flDot, float flDist );
+
+	void StartLeap(void);
+
+	//MODDD - IMPORTANT. Make these virtual if child-classes (CBabyHeadcrab) need to override these.
+	GENERATE_TRACEATTACK_PROTOTYPE
+	GENERATE_TAKEDAMAGE_PROTOTYPE
+
+
+	virtual float GetDamageAmount( void ) { return gSkillData.headcrabDmgBite; }
+	virtual int GetVoicePitch( void ) { return 100; }
+	virtual float GetSoundVolue( void ) { return 1.0; }
+	Schedule_t* GetScheduleOfType ( int Type );
+
+
+	//MODD - NEW.  advanced anim stuff.
+	BOOL getMonsterBlockIdleAutoUpdate(void);
+	BOOL forceIdleFrameReset(void);
+	BOOL canPredictActRepeat(void);
+	BOOL usesAdvancedAnimSystem(void);
+
+	void SetActivity(Activity NewActivity);
+
+	int tryActivitySubstitute(int activity);
+	int LookupActivityHard(int activity);
+
+	void HandleEventQueueEvent(int arg_eventID);
+	///////////////////////////////////////////////
+
+
+
+
+	CUSTOM_SCHEDULES;
+
+};
+
+
+#if REMOVE_ORIGINAL_NAMES != 1
+	LINK_ENTITY_TO_CLASS( monster_headcrab, CHeadCrab );
+#endif
+
+#if EXTRA_NAMES > 0
+	LINK_ENTITY_TO_CLASS( headcrab, CHeadCrab );
+	
+	//no extras.
+
+#endif
+
+
+	
+
+
+	
+
+
+
+
 Task_t	tlHCRangeAttack1[] =
 {
 	{ TASK_STOP_MOVING,			(float)0		},
@@ -35,7 +161,8 @@ Task_t	tlHCRangeAttack1[] =
 	{ TASK_RANGE_ATTACK1,		(float)0		},
 	{ TASK_SET_ACTIVITY,		(float)ACT_IDLE	},
 	{ TASK_FACE_IDEAL,			(float)0		},
-	{ TASK_WAIT_RANDOM,			(float)0.5		},
+	//MODDD - removed, already an enforced cooldown between jumps
+	//{ TASK_WAIT_RANDOM,			(float)0.5		},
 };
 
 Schedule_t	slHCRangeAttack1[] =
@@ -70,69 +197,45 @@ Schedule_t	slHCRangeAttack1Fast[] =
 	},
 };
 
-class CHeadCrab : public CBaseMonster
+
+
+
+//MODDD - NEW.  Pick this schedule if it is possible to leap but
+// the leap-cooldown says not to.  This finishes as soon as it is possible to,
+// or the range-attack condition expires for whatever reason.  Or the enemy is
+// occluded which should cause that anyway.
+Task_t	tlHCWaitForAttack[] =
 {
-public:
-	//MODDD
-	CHeadCrab();
+	{ TASK_STOP_MOVING, (float)0 },
+	{ TASK_HEADCRAB_WAIT_FOR_LEAP, (float)0 },
+};
 
-	void Spawn( void );
-	void Precache( void );
-	void RunTask ( Task_t *pTask );
-	void StartTask ( Task_t *pTask );
-	void SetYawSpeed ( void );
-	void EXPORT LeapTouch ( CBaseEntity *pOther );
-	Vector Center( void );
-	Vector BodyTarget( const Vector &posSrc );
-	//MODDD
-	Vector BodyTargetMod( const Vector &posSrc );
-	void PainSound( void );
-	void DeathSound( void );
-	void IdleSound( void );
-	void AlertSound( void );
-	void PrescheduleThink( void );
-	int  Classify ( void );
-	void HandleAnimEvent( MonsterEvent_t *pEvent );
-	BOOL CheckRangeAttack1 ( float flDot, float flDist );
-	BOOL CheckRangeAttack2 ( float flDot, float flDist );
-
-	//MODDD - IMPORTANT. Make these virtual if child-classes (CBabyHeadcrab) need to override these.
-	GENERATE_TRACEATTACK_PROTOTYPE
-	GENERATE_TAKEDAMAGE_PROTOTYPE
-
-
-	virtual float GetDamageAmount( void ) { return gSkillData.headcrabDmgBite; }
-	virtual int GetVoicePitch( void ) { return 100; }
-	virtual float GetSoundVolue( void ) { return 1.0; }
-	Schedule_t* GetScheduleOfType ( int Type );
-
-	CUSTOM_SCHEDULES;
-
-	static const char *pIdleSounds[];
-	static const char *pAlertSounds[];
-	static const char *pPainSounds[];
-	static const char *pAttackSounds[];
-	static const char *pDeathSounds[];
-	static const char *pBiteSounds[];
+Schedule_t	slHCWaitForAttack[] =
+{
+	{
+		tlHCWaitForAttack,
+		ARRAYSIZE(tlHCWaitForAttack),
+		bits_COND_ENEMY_OCCLUDED | bits_COND_NEW_ENEMY,
+		0,
+		"HCWaitForAttk"
+	},
 };
 
 
-#if REMOVE_ORIGINAL_NAMES != 1
-	LINK_ENTITY_TO_CLASS( monster_headcrab, CHeadCrab );
-#endif
 
-#if EXTRA_NAMES > 0
-	LINK_ENTITY_TO_CLASS( headcrab, CHeadCrab );
-	
-	//no extras.
 
-#endif
+
+
+
+
+
 
 
 DEFINE_CUSTOM_SCHEDULES( CHeadCrab )
 {
 	slHCRangeAttack1,
 	slHCRangeAttack1Fast,
+	slHCWaitForAttack
 };
 
 IMPLEMENT_CUSTOM_SCHEDULES( CHeadCrab, CBaseMonster );
@@ -170,6 +273,17 @@ const char *CHeadCrab::pBiteSounds[] =
 {
 	"headcrab/hc_headbite.wav",
 };
+
+
+
+
+CHeadCrab::CHeadCrab() {
+	leapStartTime = -1;
+	leapEarlyFail = FALSE;
+	nextLeapAllowedTime = -1;
+
+}
+
 
 //=========================================================
 // Classify - indicates this monster's place in the 
@@ -209,6 +323,19 @@ Vector CHeadCrab :: BodyTargetMod( const Vector &posSrc )
 //=========================================================
 void CHeadCrab :: SetYawSpeed ( void )
 {
+	//MODDD - overal sped up a bit, especially at higher difficulties.
+	float turnSpeedMulti;
+	if (g_iSkillLevel == SKILL_MEDIUM) {
+		turnSpeedMulti = 1.8;
+	}
+	else if (g_iSkillLevel == SKILL_HARD) {
+		turnSpeedMulti = 2.3;
+	}
+	else {
+		// easy?
+		turnSpeedMulti = 1.4;
+	}
+
 	int ys;
 
 	switch ( m_Activity )
@@ -232,8 +359,10 @@ void CHeadCrab :: SetYawSpeed ( void )
 		break;
 	}
 
-	pev->yaw_speed = ys;
+	pev->yaw_speed = ys * turnSpeedMulti;
 }
+
+
 
 //=========================================================
 // HandleAnimEvent - catches the monster-specific messages
@@ -245,51 +374,24 @@ void CHeadCrab :: HandleAnimEvent( MonsterEvent_t *pEvent )
 	{
 		case HC_AE_JUMPATTACK:
 		{
-			ClearBits( pev->flags, FL_ONGROUND );
+			//MODDD - begin with angles forced to ideal, safety.
+			SetAngleY(pev->ideal_yaw);
 
-			UTIL_SetOrigin (pev, pev->origin + Vector ( 0 , 0 , 1) );// take him off ground so engine doesn't instantly reset onground 
-			UTIL_MakeVectors ( pev->angles );
+			StartLeap();
+			// TEST
 
-			Vector vecJumpDir;
-			if (m_hEnemy != NULL)
-			{
-				float gravity = g_psv_gravity->value;
-				if (gravity <= 1)
-					gravity = 1;
-
-				// How fast does the headcrab need to travel to reach that height given gravity?
-				float height = (m_hEnemy->pev->origin.z + m_hEnemy->pev->view_ofs.z - pev->origin.z);
-				if (height < 16)
-					height = 16;
-				float speed = sqrt( 2 * gravity * height );
-				float time = speed / gravity;
-
-				// Scale the sideways velocity to get there at the right time
-				vecJumpDir = (m_hEnemy->pev->origin + m_hEnemy->pev->view_ofs - pev->origin);
-				vecJumpDir = vecJumpDir * ( 1.0 / time );
-
-				// Speed to offset gravity at the desired height
-				vecJumpDir.z = speed;
-
-				// Don't jump too far/fast
-				float distance = vecJumpDir.Length();
-				
-				if (distance > 650)
-				{
-					vecJumpDir = vecJumpDir * ( 650.0 / distance );
-				}
+			if (g_iSkillLevel == SKILL_HARD) {
+				nextLeapAllowedTime = gpGlobals->time + RANDOM_FLOAT(0.8, 1.3);
 			}
-			else
-			{
-				// jump hop, don't care where
-				vecJumpDir = Vector( gpGlobals->v_forward.x, gpGlobals->v_forward.y, gpGlobals->v_up.z ) * 350;
+			else if (g_iSkillLevel == SKILL_MEDIUM) {
+				nextLeapAllowedTime = gpGlobals->time + RANDOM_FLOAT(1.1, 1.9);
+			}
+			else {
+				// easy?
+				nextLeapAllowedTime = gpGlobals->time + RANDOM_FLOAT(1.5, 2.5);
 			}
 
-			int iSound = RANDOM_LONG(0,2);
-			if ( iSound != 0 )
-				UTIL_PlaySound( edict(), CHAN_VOICE, pAttackSounds[iSound], GetSoundVolue(), ATTN_IDLE, 0, GetVoicePitch() );
-
-			pev->velocity = vecJumpDir;
+			//nextLeapAllowedTime = gpGlobals->time + 5.0f;
 			
 			//MODDD - oh look, the variable we nor CBaseMonster ever uses.  Goodbye.
 			//m_flNextAttack = gpGlobals->time + 2;
@@ -300,11 +402,6 @@ void CHeadCrab :: HandleAnimEvent( MonsterEvent_t *pEvent )
 			CBaseMonster::HandleAnimEvent( pEvent );
 			break;
 	}
-}
-
-
-CHeadCrab::CHeadCrab(){
-
 }
 
 //=========================================================
@@ -332,9 +429,7 @@ void CHeadCrab :: Spawn()
 	MonsterInit();
 
 
-
 	//pev->renderfx |= DONOTDRAWSHADOW;
-
 
 }
 
@@ -377,6 +472,48 @@ void CHeadCrab :: RunTask ( Task_t *pTask )
 			}
 			break;
 		}
+	//MODDD - NEW.
+	case TASK_HEADCRAB_WAIT_FOR_LEAP:
+	{
+
+		if (gpGlobals->time >= nextLeapAllowedTime) {
+			// move on!
+			TaskComplete(); 
+			break;
+		}
+		else {
+
+			if (!HasConditions(bits_COND_CAN_RANGE_ATTACK1)) {
+				// no longer able to range-attack?  Stop, pick any other schedule.
+				TaskComplete();
+				break;
+			}
+
+		}
+
+		// In the meantime, try facing ideal angles.  Likely have some by this point, or so
+		// assumes the orginary attack method anyway.
+
+		if (!FacingIdeal()) {
+			// back to turning, or keep at it
+			SetTurnActivity();
+			ChangeYaw(pev->yaw_speed);
+		}
+		else {
+			if (m_IdealActivity == ACT_TURN_LEFT || m_IdealActivity == ACT_TURN_RIGHT) {
+				// stop turning then.
+				m_IdealActivity = ACT_IDLE;
+			}
+		}
+
+		//if (FacingIdeal())
+		//{
+		//	TaskComplete();
+		//}
+	
+
+		break;
+	}
 	default:
 		{
 			CBaseMonster :: RunTask(pTask);
@@ -392,6 +529,11 @@ void CHeadCrab :: LeapTouch ( CBaseEntity *pOther )
 {
 	if ( !pOther->pev->takedamage )
 	{
+		//MODDD - NEW.  On a jump failing very early, increase the delay moreso next time.
+		if (!leapEarlyFail && ((gpGlobals->time - leapStartTime) < 0.3) ) {
+			leapEarlyFail = TRUE;
+			nextLeapAllowedTime = gpGlobals->time + RANDOM_FLOAT(2.6, 3.6);
+		}
 		return;
 	}
 
@@ -408,12 +550,14 @@ void CHeadCrab :: LeapTouch ( CBaseEntity *pOther )
 		UTIL_PlaySound( edict(), CHAN_WEAPON, RANDOM_SOUND_ARRAY(pBiteSounds), GetSoundVolue(), ATTN_IDLE, 0, GetVoicePitch() );
 		
 
-		pOther->TakeDamage( pev, pev, GetDamageAmount(), DMG_SLASH );
+		//MODDD - send TraceAttack_Traceless too for things building cumulative damage to see it anyway.
+		// the direction sent isn't paid attention too in that case, debating whether to even have it available there at all.
+		pOther->TraceAttack_Traceless(pev, GetDamageAmount(), g_vecZero, DMG_SLASH, 0);
+
+		pOther->TakeDamage( pev, pev, GetDamageAmount(), DMG_SLASH, 0 );
 		UTIL_fromToBlood(this, pOther, GetDamageAmount());
 
 		//CheckTraceHullAttack(256, 60, DMG_SLASH);
-
-
 	}
 
 	SetTouch( NULL );
@@ -429,13 +573,30 @@ void CHeadCrab :: PrescheduleThink ( void )
 	{
 		IdleSound();
 	}
+
 }
+
+
 
 void CHeadCrab :: StartTask ( Task_t *pTask )
 {
 
 	switch ( pTask->iTask )
 	{
+	//MODDD - NEW.  Copy/paste of TASK_FACE_IDEAL, but able to be interrupted by the leap-cooldown expiring (can attack),
+	// or no longer being able to attack since it was called for.
+	case TASK_HEADCRAB_WAIT_FOR_LEAP:
+	{
+		if (FacingIdeal())
+		{
+			TaskComplete();
+			return;
+		}
+
+		SetTurnActivity();
+		break;
+	}
+
 	case TASK_RANGE_ATTACK1:
 		{
 			UTIL_PlaySound( edict(), CHAN_WEAPON, pAttackSounds[0], GetSoundVolue(), ATTN_IDLE, 0, GetVoicePitch() );
@@ -451,12 +612,22 @@ void CHeadCrab :: StartTask ( Task_t *pTask )
 }
 
 
+
+BOOL CHeadCrab::CheckMeleeAttack1(float flDot, float flDist) {
+	return FALSE;
+}
+BOOL CHeadCrab::CheckMeleeAttack2(float flDot, float flDist) {
+	return FALSE;
+}
+
+
 //=========================================================
 // CheckRangeAttack1
 //=========================================================
 BOOL CHeadCrab :: CheckRangeAttack1 ( float flDot, float flDist )
 {
-	if ( FBitSet( pev->flags, FL_ONGROUND ) && flDist <= 256 && flDot >= 0.65 )
+	//MODDD - distance for a jump allowed slightly increased, was 256
+	if ( FBitSet( pev->flags, FL_ONGROUND ) && flDist <= 320 && flDot >= 0.65 )
 	{
 		return TRUE;
 	}
@@ -482,6 +653,61 @@ BOOL CHeadCrab :: CheckRangeAttack2 ( float flDot, float flDist )
 
 
 
+void CHeadCrab::StartLeap(void) {
+	ClearBits(pev->flags, FL_ONGROUND);
+
+	//MODDD - isn't this supposed to be here too?
+	pev->groundentity = NULL;
+	// Also setting these.
+	leapStartTime = gpGlobals->time;
+	leapEarlyFail = FALSE;
+	////////////////////////////////////
+
+	UTIL_SetOrigin(pev, pev->origin + Vector(0, 0, 1));// take him off ground so engine doesn't instantly reset onground 
+	UTIL_MakeVectors(pev->angles);
+
+	Vector vecJumpDir;
+	if (m_hEnemy != NULL)
+	{
+		float gravity = g_psv_gravity->value;
+		if (gravity <= 1)
+			gravity = 1;
+
+		// How fast does the headcrab need to travel to reach that height given gravity?
+		float height = (m_hEnemy->pev->origin.z + m_hEnemy->pev->view_ofs.z - pev->origin.z);
+		if (height < 16)
+			height = 16;
+		float speed = sqrt(2 * gravity * height);
+		float time = speed / gravity;
+
+		// Scale the sideways velocity to get there at the right time
+		vecJumpDir = (m_hEnemy->pev->origin + m_hEnemy->pev->view_ofs - pev->origin);
+		vecJumpDir = vecJumpDir * (1.0 / time);
+
+		// Speed to offset gravity at the desired height
+		vecJumpDir.z = speed;
+
+		// Don't jump too far/fast
+		float distance = vecJumpDir.Length();
+
+		if (distance > 650)
+		{
+			vecJumpDir = vecJumpDir * (650.0 / distance);
+		}
+	}
+	else
+	{
+		// jump hop, don't care where
+		vecJumpDir = Vector(gpGlobals->v_forward.x, gpGlobals->v_forward.y, gpGlobals->v_up.z) * 350;
+	}
+
+	int iSound = RANDOM_LONG(0, 2);
+	if (iSound != 0)
+		UTIL_PlaySound(edict(), CHAN_VOICE, pAttackSounds[iSound], GetSoundVolue(), ATTN_IDLE, 0, GetVoicePitch());
+
+	pev->velocity = vecJumpDir;
+
+}
 
 
 
@@ -549,13 +775,122 @@ Schedule_t* CHeadCrab :: GetScheduleOfType ( int Type )
 	{
 		case SCHED_RANGE_ATTACK1:
 		{
-			return &slHCRangeAttack1[ 0 ];
+			//MODDD - don't go straight to a leap if it's been too soon.
+			if (gpGlobals->time >= nextLeapAllowedTime) {
+				return &slHCRangeAttack1[0];
+			}else {
+				return &slHCWaitForAttack[0];
+			}
 		}
 		break;
 	}
 
 	return CBaseMonster::GetScheduleOfType( Type );
 }
+
+
+
+//MODDD - NEW.  advanced anim stuff
+
+
+BOOL CHeadCrab::getMonsterBlockIdleAutoUpdate(void) {
+	return FALSE;
+}
+BOOL CHeadCrab::forceIdleFrameReset(void) {
+	return FALSE;
+}
+// Whether this monster can re-pick the same animation before the next frame starts if it anticipates it getting picked.
+// This is subtly retail behavior, but may not always play well.
+BOOL CHeadCrab::canPredictActRepeat(void) {
+	return TRUE;
+}
+BOOL CHeadCrab::usesAdvancedAnimSystem(void) {
+	return TRUE;
+}
+void CHeadCrab::SetActivity(Activity NewActivity) {
+	CBaseMonster::SetActivity(NewActivity);
+}
+
+
+
+
+int CHeadCrab::tryActivitySubstitute(int activity) {
+	int i = 0;
+
+	// no need for default, just falls back to the normal activity lookup.
+	switch (activity) {
+		case ACT_WALK: {
+
+
+		break; }
+		case ACT_RUN: {
+			if (g_iSkillLevel == SKILL_HARD) {
+				return LookupSequence("run2");
+			}
+
+		break; }
+	}//END OF switch
+
+
+	// not handled by above? Rely on the model's anim for this activity if there is one.
+	return CBaseAnimating::LookupActivity(activity);
+}//END OF tryActivitySubstitute
+
+int CHeadCrab::LookupActivityHard(int activity) {
+	int i = 0;
+	m_flFramerateSuggestion = 1;
+	pev->framerate = 1;
+	// any animation events in progress?  Clear it.
+	resetEventQueue();
+
+	//no need for default, just falls back to the normal activity lookup.
+	switch (activity) {
+		case ACT_WALK: {
+
+
+		break; }
+		case ACT_RUN: {
+			if (g_iSkillLevel == SKILL_HARD) {
+				return LookupSequence("run2");
+			}
+
+		break; }
+	}//END OF switch
+
+	// not handled by above?  try the real deal.
+	return CBaseAnimating::LookupActivity(activity);
+}//END OF LookupActivityHard
+
+
+
+// Handles custom events sent from "LookupActivityHard", which sends events as timed delays along with picking an animation in script.
+// So this handles script-provided events, not model ones.
+void CHeadCrab::HandleEventQueueEvent(int arg_eventID) {
+
+	switch (arg_eventID) {
+	case 0: {
+
+
+		break; }
+	case 1: {
+
+
+		break; }
+	}//END OF switch
+
+}//END OF HandleEventQueueEvent
+
+
+
+
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
 
 
 class CBabyCrab : public CHeadCrab
@@ -642,16 +977,32 @@ Schedule_t* CBabyCrab :: GetScheduleOfType ( int Type )
 	switch( Type )
 	{
 		case SCHED_FAIL:	// If you fail, try to jump!
-			if ( m_hEnemy != NULL )
-				return slHCRangeAttack1Fast;
+			if (m_hEnemy != NULL) {
+				//MODDD - also only from the allowed delay
+				//return slHCRangeAttack1Fast;
+				if (gpGlobals->time >= nextLeapAllowedTime) {
+					return slHCRangeAttack1Fast;
+				}
+				else {
+					return &slHCWaitForAttack[0];
+				}
+			}
 		break;
 
 		case SCHED_RANGE_ATTACK1:
 		{
-			return slHCRangeAttack1Fast;
+			//MODDD - don't go straight to a leap if it's been too soon.
+			if (gpGlobals->time >= nextLeapAllowedTime) {
+				return slHCRangeAttack1Fast;
+			}
+			else {
+				return &slHCWaitForAttack[0];
+			}
 		}
 		break;
 	}
 
 	return CHeadCrab::GetScheduleOfType( Type );
 }
+
+

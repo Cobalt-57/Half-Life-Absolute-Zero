@@ -379,6 +379,8 @@ public:
 	// Although it was just being used as a simple time variable without any behavior just from
 	// being part of CBaseMonster anyway, may as well be replaced with a more fitting name here.
 	float m_flBounceDamageCooldown;
+	// and don't spam bounce sounds.
+	float nextBounceSoundAllowed;
 
 public:
 

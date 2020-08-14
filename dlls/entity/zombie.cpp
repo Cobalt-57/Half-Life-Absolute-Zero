@@ -338,17 +338,13 @@ void CZombie :: SetYawSpeed ( void )
 
 GENERATE_TRACEATTACK_IMPLEMENTATION(CZombie)
 {
-
 	GENERATE_TRACEATTACK_PARENT_CALL(CBaseMonster);
 }
 
 void CZombie::TraceAttack_Traceless(entvars_t* pevAttacker, float flDamage, Vector vecDir, int bitsDamageType, int bitsDamageTypeMod) {
-
 	// ... what?
 	flPushbackForceDamage += flDamage;
-
 	CBaseMonster::TraceAttack_Traceless(pevAttacker, flDamage, vecDir, bitsDamageType, bitsDamageTypeMod);
-
 }//TraceAttack_Traceless
 
 GENERATE_TAKEDAMAGE_IMPLEMENTATION(CZombie)
