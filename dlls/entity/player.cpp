@@ -4090,6 +4090,35 @@ void CBasePlayer::PreThink(void)
 
 
 
+
+
+
+float CBasePlayer::TimedDamageBuddhaFilter(float dmgIntent) {
+	if (dmgIntent >= pev->health && gSkillData.tdmg_playerbuddha == 1) {
+		dmgIntent = pev->health - 1;
+		if (dmgIntent < 0) dmgIntent = 0;  // no healing from this!
+	}
+
+	return dmgIntent;
+}
+
+
+
+// at the end of a frame, if a monster has 1 health and buddha mode, cancel the timed damage.
+void CBasePlayer::TimedDamagePostBuddhaCheck(void) {
+	
+	if (pev->health <= 1 && gSkillData.tdmg_playerbuddha == 1) {
+		// show on the UI another frame anyway
+		m_bitsDamageTypeForceShow |= m_bitsDamageType;
+		m_bitsDamageTypeModForceShow |= m_bitsDamageTypeMod;
+
+		// ok, don't allow another frame.
+		attemptResetTimedDamage(TRUE);
+	}
+
+}
+
+
 BYTE CBasePlayer::parse_itbd_duration(int i) {
 
 	switch (i)
@@ -4123,7 +4152,7 @@ void CBasePlayer::parse_itbd(int i) {
 
 	switch (i){
 	//NOTE - PLAYER ONLY.
-	case itbd_DrownRecover:
+	case itbd_DrownRecover: {
 		// NOTE: this hack is actually used to RESTORE health
 		// after the player has been drowning and finally takes a breath
 		if (m_idrowndmg > m_idrownrestored)
@@ -4133,12 +4162,13 @@ void CBasePlayer::parse_itbd(int i) {
 			TakeHealth(idif, DMG_GENERIC);
 			m_idrownrestored += idif;
 		}
-	break;
+	}break;
 	// Overwriting this one compltely to use UTIL_MakeVectors instead of UTIL_MakeAimVectors.
 	// Yes, the player uses MakeVectors and monsters use MakeAimVectors.   Go.   Figure.
-	case itbd_Bleeding:
+	case itbd_Bleeding: {
+
 		// this will always ignore the armor (hence DMG_TIMEDEFFECT).
-		TakeDamage(pev, pev, BLEEDING_DAMAGE, 0, damageType | DMG_TIMEDEFFECTIGNORE);
+		TakeDamage(pev, pev, TimedDamageBuddhaFilter(BLEEDING_DAMAGE), 0, damageType | DMG_TIMEDEFFECTIGNORE);
 
 		UTIL_MakeVectors(pev->v_angle);
 		//pev->origin + pev->view_ofs
@@ -4149,7 +4179,7 @@ void CBasePlayer::parse_itbd(int i) {
 			BloodColor(),
 			RANDOM_LONG(8, 15)
 		);
-	break;
+	}break;
 	default:
 		// Unhandled?  Let the monster class handle it instead
 		CBaseMonster::parse_itbd(i);

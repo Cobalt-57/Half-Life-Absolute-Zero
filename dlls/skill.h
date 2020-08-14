@@ -248,6 +248,9 @@ struct skilldata_t
 	float npc_drop_weapon;
 
 
+	float tdmg_buddha;
+	float tdmg_playerbuddha;
+
 
 	float tdmg_paralyze_duration;
 

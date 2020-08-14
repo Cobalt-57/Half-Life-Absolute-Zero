@@ -3422,11 +3422,27 @@ Schedule_t *CBaseMonster :: GetSchedule ( void )
 		m_pSchedule == NULL &&
 		m_pCine == NULL &&
 		// m_MonsterState != MONSTERSTATE_SCRIPT && 
-		m_IdealMonsterState != MONSTERSTATE_SCRIPT &&
-		gpGlobals->time < waitForScriptedTime
-		) {
-		// STALL IT
-		return NULL;
+		m_IdealMonsterState != MONSTERSTATE_SCRIPT
+	){
+
+		if (
+			gpGlobals->time < waitForScriptedTime
+		){
+			// STALL IT.  The  != -1  check lets it work for at least one frame.
+
+			easyPrintLine("!!! Script debug: Here I is! curtime:%.2f waitForScrTime:%.2f", gpGlobals->time, waitForScriptedTime);
+			return NULL;
+		}
+		
+		if (waitForScriptedTime != -1) {
+			//easyPrintLine("Script debug: Here I is! surpassed frame. curtime:%.2f waitForScrTime:%.2f", gpGlobals->time, waitForScriptedTime);
+			easyPrintLine("!!! Surpassed frame!");
+			waitForScriptedTime = -1;
+
+			return NULL;
+		}
+
+
 	}
 	//////////////////////////////////////////////////////////////////
 

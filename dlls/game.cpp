@@ -684,6 +684,14 @@ cvar_t	npc_drop_weapon2 = { "sk_npc_drop_weapon2", "1" };
 cvar_t	npc_drop_weapon3 = { "sk_npc_drop_weapon3", "1" };
 
 
+cvar_t  tdmg_buddha1 = { "tdmg_buddha1", "1" };
+cvar_t  tdmg_buddha2 = { "tdmg_buddha2", "1" };
+cvar_t  tdmg_buddha3 = { "tdmg_buddha3", "1" };
+cvar_t  tdmg_playerbuddha1 = { "tdmg_playerbuddha1", "1" };
+cvar_t  tdmg_playerbuddha2 = { "tdmg_playerbuddha2", "1" };
+cvar_t  tdmg_playerbuddha3 = { "tdmg_playerbuddha3", "1" };
+
+
 cvar_t	tdmg_paralyze_duration1 = { "tdmg_paralyze_duration1", "1" };
 cvar_t	tdmg_paralyze_duration2 = { "tdmg_paralyze_duration2", "1" };
 cvar_t	tdmg_paralyze_duration3 = { "tdmg_paralyze_duration3", "1" };
@@ -1472,7 +1480,13 @@ void GameDLLInit( void )
 	CVAR_REGISTER(&npc_drop_weapon2);
 	CVAR_REGISTER(&npc_drop_weapon3);
 
-
+	
+	CVAR_REGISTER(&tdmg_buddha1);
+	CVAR_REGISTER(&tdmg_buddha2);
+	CVAR_REGISTER(&tdmg_buddha3);
+	CVAR_REGISTER(&tdmg_playerbuddha1);
+	CVAR_REGISTER(&tdmg_playerbuddha2);
+	CVAR_REGISTER(&tdmg_playerbuddha3);
 
 	CVAR_REGISTER(&tdmg_paralyze_duration1);
 	CVAR_REGISTER(&tdmg_paralyze_duration2);

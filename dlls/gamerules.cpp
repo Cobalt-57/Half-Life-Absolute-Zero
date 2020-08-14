@@ -469,6 +469,9 @@ void CGameRules::RefreshSkillData ( void )
 	gSkillData.player_revive_health = GetSkillCvar("sk_player_revive_health");
 	gSkillData.scientist_can_heal = GetSkillCvar("sk_scientist_can_heal");
 	gSkillData.npc_drop_weapon = GetSkillCvar("sk_npc_drop_weapon");
+	
+	gSkillData.tdmg_buddha = GetSkillCvar("tdmg_buddha");
+	gSkillData.tdmg_playerbuddha = GetSkillCvar("tdmg_playerbuddha");
 
 	gSkillData.tdmg_paralyze_duration = GetSkillCvar("tdmg_paralyze_duration");
 

@@ -286,7 +286,18 @@ Headcrab jumps have a slight cooldown between jumps, mainly to avoid spamming ju
 Headcrab jumps slightly longer, even moreso with higher difficulty.
 Headcrabs also turn faster, and moreso with difficulty.
 
-a1a2 hgrunt sequence breaking, even in WON, fixed!   I, think?
+a1a2 hgrunt vs. gargantua sequence breaking, even in WON, fixed!   I, think?
 
 By CVAR: cl_mp5_kickback, defaults to 0 (off).  When on, mp5 random kickback no longer includes very low ranges, slightly higher on average and more consistent.
+
+---------------------------------------------------------------------------------------------
+
+2.0_O4
+~recent broken-ness in vents caused by a paranoid pre-jump-check fixed.  Whoops.
+~Homicidal barnies from recent update fixed.  Homicidal everything really.
+~Large pathfinidng bug caused by accidental debug shortcut.  Oops.
+
+Timed Damage buddha mode implemented, only active in easy difficulty by default (see 'tdmg_buddha' in skill.cfg).  Affects monsters and players.
+~Does not allow timed damage to kill, leaves health at 1.
+
 

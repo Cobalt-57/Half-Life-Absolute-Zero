@@ -812,8 +812,9 @@ Schedule_t* CHeadCrab :: GetScheduleOfType ( int Type )
 		{
 			//MODDD - don't go straight to a leap if it's been too soon.
 			if (gpGlobals->time >= nextLeapAllowedTime) {
-
-
+				
+				// False positives?  Yay!  This can thoroughly burn in hell.
+				/*
 				//MODDD - one more check.
 				// Is there a clear path from me to them for the leap?
 				if (m_hEnemy) {
@@ -861,7 +862,7 @@ Schedule_t* CHeadCrab :: GetScheduleOfType ( int Type )
 						return GetSchedule();
 					}
 				}//END OF enemy check
-
+				*/
 
 				return &slHCRangeAttack1[0];
 			}else {

@@ -649,6 +649,8 @@ public:
 	virtual BYTE parse_itbd_duration(int i);
 	virtual void parse_itbd(int i);
 	virtual void timedDamage_nonFirstFrame(int i, int* m_bitsDamageTypeRef);
+	virtual float TimedDamageBuddhaFilter(float dmgIntent);
+	virtual void TimedDamagePostBuddhaCheck(void);
 	virtual void CheckTimeBasedDamage(void);
 	//void PreThink(void);
 	//virtual void Think(void);

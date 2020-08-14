@@ -1471,6 +1471,37 @@ void CBaseMonster::wanderAway(const Vector& toWalkAwayFrom){
 
 
 
+
+
+//MODDD - NEW.  Test the damage given.  If it would kill this monster/player, don't allow it to.
+// Set the damage so that it leaves the health at most 1 instead, but don't force decimals between
+// 0 and 1 to 1, that's slight healing (kinda weird to happen).  
+// Like at 0.3 out of 50 health, getting negative 0.7 damage would make that 1 out of 50 health.
+// Weird.
+float CBaseMonster::TimedDamageBuddhaFilter(float dmgIntent) {
+	if (dmgIntent >= pev->health && gSkillData.tdmg_buddha == 1) {
+		dmgIntent = pev->health - 1;
+		if (dmgIntent < 0) dmgIntent = 0;  // no healing from this!
+	}
+
+	return dmgIntent;
+}
+
+
+// at the end of a frame, if a monster has 1 health and buddha mode, cancel the timed damage.
+void CBaseMonster::TimedDamagePostBuddhaCheck(void) {
+	if (pev->health <= 1 && gSkillData.tdmg_buddha == 1) {
+		
+		// ok, don't allow another frame.
+		attemptResetTimedDamage(TRUE);
+	}
+}
+
+
+
+
+
+
 //Easy way to convert new damage types without adjusting existing constants.
 //That may be okay, but I'm not taking risks just yet.
 int CBaseMonster::convert_itbd_to_damage(int i){
@@ -1596,39 +1627,39 @@ void CBaseMonster::parse_itbd(int i) {
 	break;
 	case itbd_NerveGas:
 		//MODDD - comment undone.
-		TakeDamage(pev, pev, NERVEGAS_DAMAGE, 0, damageType);
+		TakeDamage(pev, pev, TimedDamageBuddhaFilter(NERVEGAS_DAMAGE), 0, damageType);
 	break;
 	case itbd_Poison:
-		TakeDamage(pev, pev, POISON_DAMAGE, 0, damageType | DMG_TIMEDEFFECTIGNORE);
+		TakeDamage(pev, pev, TimedDamageBuddhaFilter(POISON_DAMAGE), 0, damageType | DMG_TIMEDEFFECTIGNORE);
 	break;
 	case itbd_Radiation:
 		//MODDD - comment on "TakeDamage" undone.
-		TakeDamage(pev, pev, RADIATION_DAMAGE, 0, damageType | DMG_TIMEDEFFECTIGNORE);
+		TakeDamage(pev, pev, TimedDamageBuddhaFilter(RADIATION_DAMAGE), 0, damageType | DMG_TIMEDEFFECTIGNORE);
 	break;
 	//case itbd_DrownRecover:
 	// ...
 	//break;
 	case itbd_Acid:
 		//MODDD - comment undone.
-		TakeDamage(pev, pev, ACID_DAMAGE, 0, damageType);
+		TakeDamage(pev, pev, TimedDamageBuddhaFilter(ACID_DAMAGE), 0, damageType);
 		//MODDD - see above.
 	break;
 	case itbd_SlowBurn:
 		//MODDD - comment undone.
-		TakeDamage(pev, pev, SLOWBURN_DAMAGE, 0, damageType);
+		TakeDamage(pev, pev, TimedDamageBuddhaFilter(SLOWBURN_DAMAGE), 0, damageType);
 		//MODDD - see above.
 	break;
 	case itbd_SlowFreeze:
 		//easyPrintLine("DO YOU EVER TAKE FREEZE DAMAGE?");
 		//this won't be called, as the map's called freeze effect never starts like this.
 		//MODDD - comment undone.
-		TakeDamage(pev, pev, SLOWFREEZE_DAMAGE, 0, damageType);
+		TakeDamage(pev, pev, TimedDamageBuddhaFilter(SLOWFREEZE_DAMAGE), 0, damageType);
 		//MODDD - see above.
 	break;
 	//MODDD - new.
 	case itbd_Bleeding:
 		// this will always ignore the armor (hence DMG_TIMEDEFFECT).
-		TakeDamage(pev, pev, BLEEDING_DAMAGE, 0, damageType | DMG_TIMEDEFFECTIGNORE);
+		TakeDamage(pev, pev, TimedDamageBuddhaFilter(BLEEDING_DAMAGE), 0, damageType | DMG_TIMEDEFFECTIGNORE);
 
 		UTIL_MakeAimVectors(pev->angles);
 		//pev->origin + pev->view_ofs
@@ -1688,8 +1719,6 @@ void CBaseMonster::timedDamage_nonFirstFrame(int i, int* m_bitsDamageTypeRef) {
 	}
 
 }
-
-
 
 
 
@@ -1785,6 +1814,7 @@ void CBaseMonster::CheckTimeBasedDamage(void)
 					m_rgbTimeBasedFirstFrame[i] = FALSE;
 				}
 				else {
+
 					// don't come back!
 					removeTimedDamage(i, m_bitsDamageTypeRef);
 					if (bDuration == 0) {
@@ -1801,10 +1831,15 @@ void CBaseMonster::CheckTimeBasedDamage(void)
 
 				}//END OF duration checks
 			}//END OF firstFrame check
-
 		}
 	}//END OF loop through all damage types
+
+
+	TimedDamagePostBuddhaCheck();
+
 }//END OF CheckTimeBasedDamage
+
+
 
 
 
@@ -4061,7 +4096,6 @@ int CBaseMonster::CheckLocalMoveHull(const Vector &vecStart, const Vector &vecEn
 #define LOCAL_STEP_SIZE	16
 int CBaseMonster :: CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, CBaseEntity *pTarget, float *pflDist )
 {
-	pTarget = NULL;
 
 	Vector	vecStartPos;// record monster's position before trying the move
 	float flYaw;
@@ -6548,13 +6582,14 @@ BOOL CBaseMonster :: BuildNearestRoute ( Vector vecThreat, Vector vecViewOffset,
 				//TRACE_MONSTER_HULL(edict(), pev->origin, Probe, dont_ignore_monsters, edict(), &tr);
 
 
-				/*
+				
 				// This is the most accurate TRACE_MONSTER_HULL way at least.
 				// LEFT FOR DEBUGGING, what causes the differences can be interesting
 				TraceResult tr2;
 				TRACE_MONSTER_HULL(edict(), node.m_vecOrigin + pev->view_ofs, vecLookersOffset, dont_ignore_monsters, edict(), &tr2);
 
-				if (FClassnameIs(pev, "monster_alien_controller")) {
+				//if (FClassnameIs(pev, "monster_alien_controller"))
+				{
 
 					if (tr.pHit != tr2.pHit) {
 						// WHAT NOW
@@ -6583,7 +6618,7 @@ BOOL CBaseMonster :: BuildNearestRoute ( Vector vecThreat, Vector vecViewOffset,
 					}
 
 				}
-				*/
+				
 
 				BOOL unobscurred = FALSE;
 
@@ -6768,9 +6803,14 @@ CBaseEntity *CBaseMonster :: BestVisibleEnemy ( void )
 				int x = 45;
 			}
 
+			
+			if (relationshipWithNextEnt < R_FR) {
+				//MODDD - new group/
+				// -1, R_FR, is handled.  For any below this,  don't let them be pick-able as an enemy.
+				// Would otherwise be possible with the allowance of relationships below the current one,
+				// without this catch.
 
-
-			if(relationshipWithNextEnt == R_FR){
+			}else if(relationshipWithNextEnt == R_FR){
 				
 				flDist = ( pNextEnt->pev->origin - pev->origin ).Length();
 

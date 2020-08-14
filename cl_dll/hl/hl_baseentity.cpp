@@ -771,6 +771,9 @@ int CBaseMonster :: TakeHealth (float flHealth, int bitsDamageType) { return 0; 
 CBaseMonster::CBaseMonster(void){}
 BOOL CBaseMonster::usesSoundSentenceSave(void){return FALSE;}
 
+
+float CBaseMonster::TimedDamageBuddhaFilter(float dmgIntent) { return 0; }
+void CBaseMonster::TimedDamagePostBuddhaCheck(void) {};
 int CBaseMonster::convert_itbd_to_damage(int i){ return 0;}
 BYTE CBaseMonster::parse_itbd_duration(int i) { return 0; }
 void CBaseMonster::parse_itbd(int i) {}
@@ -887,9 +890,12 @@ int  CBasePlayer::Classify ( void ) { return 0; }
 void CBasePlayer::PreThink(void) { }
 
 
+float CBasePlayer::TimedDamageBuddhaFilter(float dmgIntent) { return 0; }
+void CBasePlayer::TimedDamagePostBuddhaCheck(void) {};
 void CBasePlayer::parse_itbd(int i) {}
 BYTE CBasePlayer::parse_itbd_duration(int i) { return 0; }
 void CBasePlayer::timedDamage_nonFirstFrame(int i, int* m_bitsDamageTypeRef) {}
+
 
 void CBasePlayer :: UpdateGeigerCounter( void ) { }
 void CBasePlayer::CheckSuitUpdate() { }

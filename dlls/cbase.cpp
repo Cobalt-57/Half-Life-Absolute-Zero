@@ -587,7 +587,7 @@ CBaseEntity::CBaseEntity(void){
 	//assume not spawned dynamically (by "give" commands in-game, not at a map / boundary's first load)
 	spawnedDynamically = FALSE;
 
-	waitForScriptedTime = 0;
+	waitForScriptedTime = -1;
 	//barnacleVictimException = FALSE; ???
 
 }
