@@ -73,6 +73,15 @@ void DebugLine_RenderAll(){
 	DebugLine_Setup(2, Vector(66.78, 805.35, 36.36), Vector(66.78, 805.35, 36.36) + Vector(-40, 200, 40), fracto );
 	
 	*/
+
+	if (CVAR_GET_FLOAT("developer") >= 1) {
+		// proceed
+	}else{
+		// no!
+		return;
+	}
+
+
 	
 	for(i = 0; i < DEBUG_PATHTRACK_DRAW_MAX; i++){
 		aryDebugLines_pathTrack[i].checkDrawLines();
@@ -85,6 +94,9 @@ void DebugLine_RenderAll(){
 
 
 void DebugDrawable_pathTrack::checkDrawLines(){
+
+
+
 	if(canDraw){
 		if(m_hSafeRef == NULL){
 			//the path referred to disappeared? STOP!

@@ -6582,7 +6582,7 @@ BOOL CBaseMonster :: BuildNearestRoute ( Vector vecThreat, Vector vecViewOffset,
 				//TRACE_MONSTER_HULL(edict(), pev->origin, Probe, dont_ignore_monsters, edict(), &tr);
 
 
-				
+				/*
 				// This is the most accurate TRACE_MONSTER_HULL way at least.
 				// LEFT FOR DEBUGGING, what causes the differences can be interesting
 				TraceResult tr2;
@@ -6618,7 +6618,7 @@ BOOL CBaseMonster :: BuildNearestRoute ( Vector vecThreat, Vector vecViewOffset,
 					}
 
 				}
-				
+				*/
 
 				BOOL unobscurred = FALSE;
 
