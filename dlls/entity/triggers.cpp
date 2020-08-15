@@ -1296,7 +1296,7 @@ void CBaseTrigger :: HurtTouch ( CBaseEntity *pOther )
 		pOther->TakeHealth(-fldmg, m_bitsDamageInflict);
 	}
 	else {
-		fldmg = 0;   // DEBUG
+		//fldmg = 0;   // DEBUG
 		pOther->TakeDamage(pev, pev, fldmg, m_bitsDamageInflict, DMG_MAP_TRIGGER);
 		//easyPrintLine("trigger: hurt %s, dmg: %.2f", pOther->getClassname(), fldmg);
 	}

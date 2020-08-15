@@ -314,6 +314,7 @@ CVar 'disablePauseSinglePlayer' re-enabled.
 
 New CVars, 'pausecorrection1' and 'pausecorrection2', related to denying certain logic on noticing the game is paused (ESC menu or console is up), avoids oddities with viewmodels or console complaints about overflowing queued sounds that can happen while paused.
 For single-player only.  The defaults of '1' each should be fine.  pausecorrection2 has two modes, '1' and '2'.  Both 0 is retail handling (no extra checks).
+pausecorrection2 at setting '2' may be better for very low host_framerate choices.
 
 Taking multiple hits from the same trigger_hurt while the game is paused while the player is standing inside one (green water, etc.) should no longer be possible.
 
