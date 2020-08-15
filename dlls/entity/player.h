@@ -471,7 +471,7 @@ public:
 
 	char recentlyPlayedSound[CBSENTENCENAME_MAX];
 
-	BOOL recentMajorTriggerDamage;
+	int recentMajorTriggerDamage;
 	float lastBlockDamageAttemptReceived;
 	float recentRevivedTime;
 
@@ -769,6 +769,7 @@ public:
 
 	virtual float TimedDamageBuddhaFilter(float dmgIntent);
 	virtual void TimedDamagePostBuddhaCheck(void);
+	virtual void removeTimedDamageImmediate(int arg_type, int* m_bitsDamageTypeRef, BYTE bDuration);
 	virtual BYTE parse_itbd_duration(int i);
 	virtual void parse_itbd(int i);
 	virtual void timedDamage_nonFirstFrame(int i, int* m_bitsDamageTypeRef);

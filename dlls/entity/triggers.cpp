@@ -1156,6 +1156,9 @@ void CBaseTrigger :: HurtTouch ( CBaseEntity *pOther )
 
 
 
+extern BOOL g_gamePaused;
+
+
 void CBaseTrigger :: HurtTouch ( CBaseEntity *pOther )
 {
 	float fldmg;
@@ -1169,6 +1172,10 @@ void CBaseTrigger :: HurtTouch ( CBaseEntity *pOther )
 		return;
 	}
 
+	if (g_gamePaused) {
+		// game is paused?  Don't stack up a bunch of touch calls!... this might not work
+		return;
+	}
 
 	//MODDD CRITICAL... sortof.
 	//Well. Even I have to give up.
@@ -1289,8 +1296,9 @@ void CBaseTrigger :: HurtTouch ( CBaseEntity *pOther )
 		pOther->TakeHealth(-fldmg, m_bitsDamageInflict);
 	}
 	else {
+		fldmg = 0;   // DEBUG
 		pOther->TakeDamage(pev, pev, fldmg, m_bitsDamageInflict, DMG_MAP_TRIGGER);
-		easyPrintLine("trigger: hurt %s, dmg: %.2f", pOther->getClassname(), fldmg);
+		//easyPrintLine("trigger: hurt %s, dmg: %.2f", pOther->getClassname(), fldmg);
 	}
 
 	// Store pain time so we can get all of the other entities on this frame

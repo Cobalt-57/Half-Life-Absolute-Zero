@@ -140,6 +140,10 @@ void CBaseMonster :: ChangeSchedule ( Schedule_t *pNewSchedule )
 
 	ASSERT( pNewSchedule != NULL );
 
+	if (monsterID == 0) {
+		int x = 345;
+	}
+
 	//MODDD - for now, let's count failing to change to a new schedule as a TaskFail() but be sure to talk
 	//        about it in printouts, don't want to miss this happening.
 	if(pNewSchedule == NULL){
@@ -3147,7 +3151,10 @@ void CBaseMonster :: StartTask ( Task_t *pTask )
 				//MODDD - for safety, how about just forcing the angles then.
 				// No, later.  Give some time to try to face the right way manually.
 				// On starting the script the angles get enforced.
-				//pev->angles.y = pev->ideal_yaw;
+				// ...unless this is schedule 'slFaceScript'.  Then timing seems more important in some cases
+				// like a2a1.   But verify assuming an insta-force-direction like this is a good thing 
+				// for this schedule always!
+				pev->angles.y = pev->ideal_yaw;
 			}
 
 			TaskComplete();

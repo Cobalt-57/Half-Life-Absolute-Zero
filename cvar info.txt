@@ -423,7 +423,7 @@ playerCrossbowMode (1) - MODEVAR. When non-zero, forces the crossbow to behave l
 
 tripmineAnimWaitsForFinish - BOOL.  If on, the delay between placing tripmines will be long enough to show the whole animation (new segment added + the old).
 
-disablePauseSinglePlayer (0) - BOOL. If 1, pausing in single player immediately unpauses the game engine to mimic a multiplayer pause (game still runs behind the console / menu).
+disablePauseSinglePlayer (0) - BOOL. If 1, pausing in single player immediately unpauses the game engine to mimic a multiplayer pause (game and sound still runs behind the console / menu).
 
 itemBatteryPrerequisite - BOOL.  If on, canisters (except adrenaline) and long jump require at least one battery charge (suit / HEV battery, armor battery, same idea) to function at all.  No charge is removed, it is just required.
 
@@ -1513,7 +1513,6 @@ sv_bloodparticlemode (0) - MODEVAR.  Affects the blood particle created when nea
 ==============================================================================
 INTERPOLATION-RELATED CVARs
 ==============================================================================
-
 Interpolation is the smoothness between frames to simulate continuous movement from one 'frame' to the next, typically with longer inbetween times from server lag or even think-times in single-player.
 Most server think logic runs every 0.1 seconds (10 fps), which is slower than a typical client's framerate (60 fps).
 Disabling interpolation causes the affected thing's animations to look choppy, as only changes made every 0.1 seconds are seen.
@@ -1532,7 +1531,6 @@ cl_interp_view_extra (2) - MODEVAR.  View camera smoothness for crouching to loo
 0: Nothing extra (retail), besides the smoothness for going down inclines/stairs.
 1: Only on uncrouching before finishing a full crouch (releasing CTRL too early), similar smoothness to uncrouching from a full crouch.
 2: In addition to #1, interp while crouching/uncrouching to any extent through the air.
-
 -------------------------------------------------------------------------------
 
 sv_explosionknockback (1) - FLOAT (adjustable).  1 is the default amount of knockback from explosions for all non-player monsters (player is already knocked back by most damage sources including explosions).
@@ -1543,6 +1541,26 @@ cl_gaussfollowattachment (1) - BOOL.  Retail behavior is 1.  If on, the gauss la
 ~If 0, it stays at the firing origin and disappears faster to not look too weird while moving.
 
 cl_mp5_kickback (0) - BOOL.  When on, mp5 random kickback no longer includes very low ranges, slightly higher on average and more consistent.
+
+
+
+==============================================================================
+PAUSE CORRECTION
+==============================================================================
+NOTE - either 'pausecorrection' choice only works in singleplayer.
+-------------------------------------------------------------------------------
+pausecorrection1 (1) - BOOL.  The clientside variant of the pause-fix.
+0: off.
+1: Blocks updates to mainly weapon logic if between-frame time is too low (paused).
+
+pausecorrection2 (1) - MODEVAR.  The serverside variant of the pause-fix.
+0: off.
+1: Blocks player think calls if between-frame time is too low (paused).
+2: Blocks player think calls if 'StartFrame' (serverside think logic) hasn't been called since the recent player think call.  StartFrame is not run when paused.
+-------------------------------------------------------------------------------
+
+
+
 
 
 

@@ -357,26 +357,7 @@ public:
 	static Schedule_t* m_scheduleList[];
 
 
-	//new
-	BOOL disableEnemyAutoNode;
-	BOOL waitForMovementTimed_Start;
-		
-	BOOL investigatingAltLKP;
-	Vector m_vecEnemyLKP_Real;
-		
-	BOOL canSetAnim;
-	BOOL m_fNewScheduleThisFrame;
-
-	BOOL canDrawDebugSurface;
-
-	static int monsterIDLatest;
-	int monsterID;
-
 	Vector m_vecEnemyLKP_prev;
-
-	BOOL signalActivityUpdate;
-	BOOL forceFlyInterpretation;
-
 
 
 	// these fields have been added in the process of reworking the state machine. (sjb)
@@ -469,6 +450,28 @@ public:
 	CCineMonster* m_pCine;
 
 
+
+
+
+	//new
+	BOOL disableEnemyAutoNode;
+	BOOL waitForMovementTimed_Start;
+
+	BOOL investigatingAltLKP;
+	Vector m_vecEnemyLKP_Real;
+
+	BOOL canSetAnim;
+	BOOL m_fNewScheduleThisFrame;
+
+	BOOL canDrawDebugSurface;
+
+	BOOL signalActivityUpdate;
+
+	static int monsterIDLatest;
+	int monsterID;
+
+
+
 	//MODDD - new
 	BOOL hardSetFailSchedule;
 	BOOL scheduleSurvivesStateChange;
@@ -522,6 +525,7 @@ public:
 	BOOL canRangedAttack2;
 
 	BOOL strictNodeTolerance;
+	BOOL recentTimedTriggerDamage;
 
 
 
@@ -644,17 +648,19 @@ public:
 	virtual BOOL skipSpawnStuckCheck(void){return FALSE;}
 
 
+	virtual float TimedDamageBuddhaFilter(float dmgIntent);
+	virtual void TimedDamagePostBuddhaCheck(void);
 	int convert_itbd_to_damage(int i);
-	void removeTimedDamage(int arg_type, int* m_bitsDamageTypeRef);
+	virtual void removeTimedDamage(int arg_type, int* m_bitsDamageTypeRef);
+	virtual void removeTimedDamageImmediate(int arg_type, int* m_bitsDamageTypeRef, BYTE bDuration);
 	virtual BYTE parse_itbd_duration(int i);
 	virtual void parse_itbd(int i);
 	virtual void timedDamage_nonFirstFrame(int i, int* m_bitsDamageTypeRef);
-	virtual float TimedDamageBuddhaFilter(float dmgIntent);
-	virtual void TimedDamagePostBuddhaCheck(void);
 	virtual void CheckTimeBasedDamage(void);
 	//void PreThink(void);
 	//virtual void Think(void);
 
+	void setTimedDamageDuration(int i, int* m_bitsDamageTypeRef);
 	void attemptResetTimedDamage(BOOL forceReset);
 	void applyNewTimedDamage(int arg_bitsDamageType, int arg_bitsDamageTypeMod);
 	

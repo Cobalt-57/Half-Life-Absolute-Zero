@@ -772,14 +772,19 @@ CBaseMonster::CBaseMonster(void){}
 BOOL CBaseMonster::usesSoundSentenceSave(void){return FALSE;}
 
 
+
+
 float CBaseMonster::TimedDamageBuddhaFilter(float dmgIntent) { return 0; }
 void CBaseMonster::TimedDamagePostBuddhaCheck(void) {};
 int CBaseMonster::convert_itbd_to_damage(int i){ return 0;}
+void CBaseMonster::removeTimedDamage(int arg_type, int* m_bitsDamageTypeRef) {}
+void CBaseMonster::removeTimedDamageImmediate(int arg_type, int* m_bitsDamageTypeRef, BYTE bDuration) {}
 BYTE CBaseMonster::parse_itbd_duration(int i) { return 0; }
 void CBaseMonster::parse_itbd(int i) {}
 void CBaseMonster::timedDamage_nonFirstFrame(int i, int* m_bitsDamageTypeRef) {}
 void CBaseMonster::CheckTimeBasedDamage(void){}
 
+void CBaseMonster::setTimedDamageDuration(int i, int* m_bitsDamageTypeRef) {};
 void CBaseMonster::attemptResetTimedDamage(BOOL forceReset) {}
 void CBaseMonster::applyNewTimedDamage(int arg_bitsDamageType, int arg_bitsDamageTypeMod) {}
 
@@ -892,6 +897,7 @@ void CBasePlayer::PreThink(void) { }
 
 float CBasePlayer::TimedDamageBuddhaFilter(float dmgIntent) { return 0; }
 void CBasePlayer::TimedDamagePostBuddhaCheck(void) {};
+void CBasePlayer::removeTimedDamageImmediate(int arg_type, int* m_bitsDamageTypeRef, BYTE bDuration) {}
 void CBasePlayer::parse_itbd(int i) {}
 BYTE CBasePlayer::parse_itbd_duration(int i) { return 0; }
 void CBasePlayer::timedDamage_nonFirstFrame(int i, int* m_bitsDamageTypeRef) {}

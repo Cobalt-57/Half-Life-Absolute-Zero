@@ -203,16 +203,23 @@ to a server.  Reinitializes all
 the hud variables.
 ==========================
 */
-
+extern float sp_ClientPreviousTime;
 EASY_CVAR_EXTERN_MASS
 EASY_CVAR_DECLARE_HASH_ARRAY
 
 void DLLEXPORT HUD_Init( void )
 {
+	// Is this a good idea?
+	// No, gpGlobals->time has not even been establiched.  Look in hl_weapons.cpp.
+	//if (sp_ClientPreviousTime == -1){sp_ClientPreviousTime = gpGlobals->time;}
+	
+	
 	EASY_CVAR_HASH_MASS
 
 
 	InitShared();
+	
+	
 
 	determineHiddenMemPath();
 	

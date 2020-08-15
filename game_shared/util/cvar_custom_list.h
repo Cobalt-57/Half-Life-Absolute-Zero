@@ -204,7 +204,7 @@
 //           WilL.
 //                          haPpen.
 //                                                          Thanks.
-#define CVAR_CLIENTSENDOFF_COUNT 179
+#define CVAR_CLIENTSENDOFF_COUNT 180
 
 
 
@@ -723,6 +723,8 @@
 #define DEFAULT_sv_explosionknockback 1
 #define DEFAULT_cl_gaussfollowattachment 1
 #define DEFAULT_cl_breakholster 0
+#define DEFAULT_pausecorrection1 1
+#define DEFAULT_pausecorrection2 1
 
 
 
@@ -2829,6 +2831,8 @@
 	EASY_CVAR_DECLARATION_SERVER(sv_explosionknockback)\
 	EASY_CVAR_DECLARATION_SERVER(cl_gaussfollowattachment)\
 	EASY_CVAR_DECLARATION_SERVER(cl_breakholster)\
+	EASY_CVAR_DECLARATION_SERVER(pausecorrection1)\
+	EASY_CVAR_DECLARATION_SERVER(pausecorrection2)\
 	DUMMY
 
 
@@ -3343,7 +3347,10 @@
 	EASY_CVAR_DECLARATION_CLIENT(sv_explosionknockback)\
 	EASY_CVAR_DECLARATION_CLIENT(cl_gaussfollowattachment)\
 	EASY_CVAR_DECLARATION_CLIENT(cl_breakholster)\
+	EASY_CVAR_DECLARATION_CLIENT(pausecorrection1)\
+	EASY_CVAR_DECLARATION_CLIENT(pausecorrection2)\
 	DUMMY
+
 
 #define EASY_CVAR_UPDATE_SERVER_MASS\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(gruntsCanHaveMP5Grenade)\
@@ -3854,6 +3861,8 @@
 	EASY_CVAR_UPDATE_SERVER(sv_explosionknockback)\
 	EASY_CVAR_UPDATE_SERVER(cl_gaussfollowattachment)\
 	EASY_CVAR_UPDATE_SERVER(cl_breakholster)\
+	EASY_CVAR_UPDATE_SERVER(pausecorrection1)\
+	EASY_CVAR_UPDATE_SERVER(pausecorrection2)\
 	DUMMY
 
 #define EASY_CVAR_UPDATE_CLIENT_MASS\
@@ -4365,6 +4374,8 @@
 	EASY_CVAR_UPDATE_CLIENT(sv_explosionknockback)\
 	EASY_CVAR_UPDATE_CLIENT(cl_gaussfollowattachment)\
 	EASY_CVAR_UPDATE_CLIENT(cl_breakholster)\
+	EASY_CVAR_UPDATE_CLIENT(pausecorrection1)\
+	EASY_CVAR_UPDATE_CLIENT(pausecorrection2)\
 	DUMMY
 
 #define EASY_CVAR_CREATE_SERVER_SETUP_MASS\
@@ -4876,6 +4887,8 @@
 	EASY_CVAR_CREATE_SERVER_SETUP_A_SERVERONLY(sv_explosionknockback)\
 	EASY_CVAR_CREATE_SERVER_SETUP_A_CLIENTONLY(cl_gaussfollowattachment)\
 	EASY_CVAR_CREATE_SERVER_SETUP_A_CLIENTONLY(cl_breakholster)\
+	EASY_CVAR_CREATE_SERVER_SETUP_A_CLIENTONLY(pausecorrection1)\
+	EASY_CVAR_CREATE_SERVER_SETUP_A_SERVERONLY(pausecorrection2)\
 	DUMMY
 
 #define EASY_CVAR_CREATE_SERVER_MASS\
@@ -5387,6 +5400,8 @@
 	EASY_CVAR_CREATE_SERVER_A_SERVERONLY(sv_explosionknockback)\
 	EASY_CVAR_CREATE_SERVER_A_CLIENTONLY(cl_gaussfollowattachment)\
 	EASY_CVAR_CREATE_SERVER_A_CLIENTONLY(cl_breakholster)\
+	EASY_CVAR_CREATE_SERVER_A_CLIENTONLY(pausecorrection1)\
+	EASY_CVAR_CREATE_SERVER_A_SERVERONLY(pausecorrection2)\
 	DUMMY
 
 
@@ -5899,6 +5914,8 @@
 	EASY_CVAR_CREATE_CLIENT_A_SERVERONLY(sv_explosionknockback)\
 	EASY_CVAR_CREATE_CLIENT_A_CLIENTONLY(cl_gaussfollowattachment)\
 	EASY_CVAR_CREATE_CLIENT_A_CLIENTONLY(cl_breakholster)\
+	EASY_CVAR_CREATE_CLIENT_A_CLIENTONLY(pausecorrection1)\
+	EASY_CVAR_CREATE_CLIENT_A_SERVERONLY(pausecorrection2)\
 	DUMMY
 
 
@@ -6410,6 +6427,8 @@
 	EASY_CVAR_RESET(sv_explosionknockback)\
 	EASY_CVAR_RESET(cl_gaussfollowattachment)\
 	EASY_CVAR_RESET(cl_breakholster)\
+	EASY_CVAR_RESET(pausecorrection1)\
+	EASY_CVAR_RESET(pausecorrection2)\
 	DUMMY
 
 
@@ -6922,5 +6941,7 @@
 	EASY_CVAR_EXTERN(sv_explosionknockback)\
 	EASY_CVAR_EXTERN(cl_gaussfollowattachment)\
 	EASY_CVAR_EXTERN(cl_breakholster)\
+	EASY_CVAR_EXTERN(pausecorrection1)\
+	EASY_CVAR_EXTERN(pausecorrection2)\
 	DUMMY
 

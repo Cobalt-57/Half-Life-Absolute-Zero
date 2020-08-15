@@ -1630,9 +1630,6 @@ void CStukaBat:: getPathToEnemyCustom(){
 	}else{
 		
 	}
-			
-	
-	forceFlyInterpretation = TRUE;
 	
 
 	//Vector vecDest = m_hEnemy->pev->origin;
@@ -1660,8 +1657,6 @@ void CStukaBat:: getPathToEnemyCustom(){
 		//no, say stumped.
 		TaskComplete();
 	}
-
-	forceFlyInterpretation = FALSE;
 
 }
 

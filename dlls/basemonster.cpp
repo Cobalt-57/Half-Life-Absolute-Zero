@@ -420,8 +420,6 @@ CBaseMonster::CBaseMonster(){
 	buddhaMode = FALSE;
 	blockTimedDamage = FALSE;
 
-	forceFlyInterpretation = FALSE;
-
 	drawPathConstant = FALSE;
 	drawFieldOfVisionConstant = FALSE;
 
@@ -448,6 +446,7 @@ CBaseMonster::CBaseMonster(){
 	fApplyTempVelocity = FALSE;
 
 	strictNodeTolerance = FALSE;
+	recentTimedTriggerDamage = FALSE;
 	
 }
 
@@ -1479,7 +1478,7 @@ void CBaseMonster::wanderAway(const Vector& toWalkAwayFrom){
 // Like at 0.3 out of 50 health, getting negative 0.7 damage would make that 1 out of 50 health.
 // Weird.
 float CBaseMonster::TimedDamageBuddhaFilter(float dmgIntent) {
-	if (dmgIntent >= pev->health && gSkillData.tdmg_buddha == 1) {
+	if (dmgIntent >= pev->health && gSkillData.tdmg_buddha == 1 && !recentTimedTriggerDamage) {
 		dmgIntent = pev->health - 1;
 		if (dmgIntent < 0) dmgIntent = 0;  // no healing from this!
 	}
@@ -1490,14 +1489,13 @@ float CBaseMonster::TimedDamageBuddhaFilter(float dmgIntent) {
 
 // at the end of a frame, if a monster has 1 health and buddha mode, cancel the timed damage.
 void CBaseMonster::TimedDamagePostBuddhaCheck(void) {
-	if (pev->health <= 1 && gSkillData.tdmg_buddha == 1) {
-		
+	if (pev->health <= 1 && gSkillData.tdmg_buddha == 1 && !recentTimedTriggerDamage) {
 		// ok, don't allow another frame.
 		attemptResetTimedDamage(TRUE);
 	}
+
+	recentTimedTriggerDamage = FALSE;
 }
-
-
 
 
 
@@ -1551,7 +1549,16 @@ void CBaseMonster::removeTimedDamage(int arg_type, int* m_bitsDamageTypeRef) {
 	// if we're done, clear damage bits
 	//m_bitsDamageType &= ~(DMG_PARALYZE << i);	
 	(*m_bitsDamageTypeRef) &= ~(convert_itbd_to_damage(arg_type));
-}//END OF removeTimedDamage(...)
+}//END OF removeTimedDamage
+
+
+// Similar to removeTimedDamage, but only called on removing a timed damage very early on.
+// The player has special behavior for this.
+void CBaseMonster::removeTimedDamageImmediate(int arg_type, int* m_bitsDamageTypeRef, BYTE bDuration) {
+	removeTimedDamage(arg_type, m_bitsDamageTypeRef);
+}
+
+
 
 
 // Get the duration of a type of timed damage, now a separate method.  Mysterious that it wasn't always.
@@ -1727,21 +1734,31 @@ void CBaseMonster::CheckTimeBasedDamage(void)
 {
 	static float gtbdPrev = 0.0;
 	int i;
-	BYTE bDuration;
 
 	// no timed damage for 
 	if (pev->health <= 0 || pev->deadflag != DEAD_NO) {
 		return;
 	}
 
+
+	//if (IsPlayer()) {
+	//	easyForcePrintLine("TIME TILL DAMAGE CHECK: %.2f abs: %.2f", (gpGlobals->time - m_tbdPrev), fabs(gpGlobals->time - m_tbdPrev));
+	//}
+
 	// only check for time based damage approx. every 2 seconds
-	if (abs(gpGlobals->time - m_tbdPrev) < 2.0)
+	//MODDD - why the 'abs' that was here?  What did that add?
+	// in fact that's kinda dangerous cuz uh...   "abs" can mean integer-abs, makes whatever it gets a whole number.
+	// Use fabs instead anyway!
+	//if (fabs(gpGlobals->time - m_tbdPrev) < 2.0) {
+	if ((gpGlobals->time - m_tbdPrev) < 2.0) {
 		return;
+	}
 
 	//MODDD - check other too!
 	//if (!(m_bitsDamageType & DMG_TIMEBASED))
-	if (!(m_bitsDamageType & DMG_TIMEBASED) && !(m_bitsDamageTypeMod & (DMG_TIMEBASEDMOD))  )
+	if (!(m_bitsDamageType & DMG_TIMEBASED) && !(m_bitsDamageTypeMod & (DMG_TIMEBASEDMOD))) {
 		return;
+	}
 
 	m_tbdPrev = gpGlobals->time;
 	
@@ -1807,29 +1824,7 @@ void CBaseMonster::CheckTimeBasedDamage(void)
 				// 255 is the stand-in for "-1", a special choice to mean this damage type should not appear in any form, not even
 				// the small damage icon that disappears soon without any timed damage.
 
-				bDuration = parse_itbd_duration(i);
-
-				if (bDuration > 0 && bDuration != 255) {
-					m_rgbTimeBasedDamage[i] = bDuration;
-					m_rgbTimeBasedFirstFrame[i] = FALSE;
-				}
-				else {
-
-					// don't come back!
-					removeTimedDamage(i, m_bitsDamageTypeRef);
-					if (bDuration == 0) {
-						// still let the damage indicator icon show up.
-						if (this->IsPlayer()) {
-							CBasePlayer* selfRef = static_cast<CBasePlayer*>(this);
-							if (i < itbd_BITMASK2_FIRST) {
-								selfRef->m_bitsDamageTypeForceShow |= damageBit;
-							}else {
-								selfRef->m_bitsDamageTypeModForceShow |= damageBit;
-							}
-						}
-					}
-
-				}//END OF duration checks
+				setTimedDamageDuration(i, m_bitsDamageTypeRef);
 			}//END OF firstFrame check
 		}
 	}//END OF loop through all damage types
@@ -1841,7 +1836,18 @@ void CBaseMonster::CheckTimeBasedDamage(void)
 
 
 
+void CBaseMonster::setTimedDamageDuration(int i, int* m_bitsDamageTypeRef) {
+	BYTE bDuration = parse_itbd_duration(i);
 
+	if (bDuration > 0 && bDuration != 255) {
+		m_rgbTimeBasedDamage[i] = bDuration;
+		m_rgbTimeBasedFirstFrame[i] = FALSE;
+	}
+	else {
+		// don't come back!
+		removeTimedDamageImmediate(i, m_bitsDamageTypeRef, bDuration);
+	}//END OF duration checks
+}
 
 
 void CBaseMonster::attemptResetTimedDamage(BOOL forceReset) {
@@ -1872,18 +1878,41 @@ void CBaseMonster::applyNewTimedDamage(int arg_bitsDamageType, int arg_bitsDamag
 
 		int* m_bitsDamageTypeRef = 0;
 		if (i < itbd_BITMASK2_FIRST) {
-			//use the old bitmask.
+			// use the old bitmask.
 			m_bitsDamageTypeRef = &arg_bitsDamageType;
 		}else {
-			//use the new bitmask.
+			// use the new bitmask.
 			m_bitsDamageTypeRef = &arg_bitsDamageTypeMod;
 		}
 
 		//
 		if ((*m_bitsDamageTypeRef) & (convert_itbd_to_damage(i))) {
-			m_rgbTimeBasedDamage[i] = 0;
-			//MODDD - next frame this is brought up will be the first one again.
-			m_rgbTimeBasedFirstFrame[i] = TRUE;
+			
+			// New damage being requested?  ok.
+			// No need to reset everything about it, if this damage has
+			// already been applied it will be reset and continue ticking down.
+			// This way, continuously applied timed damage (such as from sitting
+			// in a trigger_hurt that gives radiation damage) will still deal damage.
+			// Sitting in a 0-dmg trigger no longer stops the timed damage from happening.
+
+			//m_rgbTimeBasedDamage[i] = 0;
+			//m_rgbTimeBasedFirstFrame[i] = TRUE;
+
+			if (m_rgbTimeBasedFirstFrame[i] == FALSE) {
+				// reset my duration now then.
+				BYTE bDuration = parse_itbd_duration(i);
+				int damageBit = convert_itbd_to_damage(i);
+
+				if (bDuration > 0 && bDuration != 255) {
+					m_rgbTimeBasedDamage[i] = bDuration;
+					m_rgbTimeBasedFirstFrame[i] = FALSE;
+				}
+				else {
+					// don't come back!
+					removeTimedDamageImmediate(i, m_bitsDamageTypeRef, bDuration);
+				}//END OF duration checks
+			}
+
 		}
 
 	}//END OF for through itbd's
@@ -2067,7 +2096,9 @@ void CBaseMonster :: MonsterThink ( void )
 
 	if(EASY_CVAR_GET(animationPrintouts) == 1 && monsterID >= -1)easyForcePrintLine("%s:%d Anim info B frame:%.2f done:%d", getClassname(), monsterID, pev->frame, m_fSequenceFinished);
 	
-	//hey WELL.
+
+	// NOTICE: Player calls CheckTimeBasedDamage in its 'PreThink' method instead, player never calls MonsterThink.
+	// Player implements some things about timed damage differently to work as expected there.
 	if(EASY_CVAR_GET(timedDamageAffectsMonsters) == 1){
 		CheckTimeBasedDamage();
 	}
@@ -6092,6 +6123,10 @@ void CBaseMonster :: MonsterInit ( void )
 	pev->nextthink = gpGlobals->time + 0.1;
 	SetUse ( &CBaseMonster::MonsterUse );
 
+
+	//MODDD - is this a good idea to do at init?
+	attemptResetTimedDamage(TRUE);
+
 }
 
 
@@ -8733,12 +8768,18 @@ void CBaseMonster::OnTakeDamageSetConditions(entvars_t *pevInflictor, entvars_t 
 	if (m_MonsterState == MONSTERSTATE_IDLE || m_MonsterState == MONSTERSTATE_ALERT || flDamage > 0 )
 	{
 
-
-		
-		if (bitsDamageType & DMG_CRUSH || bitsDamageTypeMod & DMG_MAP_BLOCKED) {
+		if (m_pSchedule == slIdleTrigger && ((bitsDamageType & DMG_CRUSH) || (bitsDamageTypeMod & DMG_MAP_BLOCKED)) ) {
 			// MODDD - WEIRD BUG.  for whatever reason, some 'func_door' can cause the hgrunts in a2a1 to flinch and then face
 			// the direction the player's coming from, and does odd things to the interactions with a gargantua they should
 			// be focused on instead.
+			// APPARENTLY, that part of it wasn't the bug.  Turning to face the door is the bug, but it's just some way to 
+			// break the hgrunts out of the starting 'slIdleTrigger' schedule set by StartMonster on noticing an entity
+			// has a non-blank target name.
+			// So, solution:  If this monster is in that state WHILE taking damage from map-source'd damage,
+			// just force the schedule to change.  Skip the LIGHT_DAMAGE indirect nonsense.
+			// Make your entities face the right way to begin with dangit, which... the hgrunts in a2a1 were already.
+			// Confusing.
+
 
 			// but... what's causing this??
 			const char* classnameInflictor = "NULL";
@@ -8760,6 +8801,10 @@ void CBaseMonster::OnTakeDamageSetConditions(entvars_t *pevInflictor, entvars_t 
 			}
 			int x = 45;
 			easyPrintLine("HURT DEBUG: Hit by crushable.  Classname: %s Origin:(%.2f,%.2f,%.2f).", classnameInflictor, inflictorOrigin);
+
+			// Finally.  Just pick a new schedule and get out of this 'IdleTrigger' one, clearly this was a sign just to snap out of it.
+			ChangeSchedule(GetSchedule());
+
 		}
 		else {
 
@@ -9224,7 +9269,8 @@ BOOL CBaseMonster::violentDeathClear_BackwardsCheck(float argDistance){
 	// Pretty good distance. would that make us fall either? Is there ground at this place "vecEnd"?
 	//UTIL_TraceLine or UTIL_TraceLine?
 	UTIL_TraceLine ( vecGroundEnd, vecGroundEnd + Vector(0, 0, -4), dont_ignore_monsters, edict(), &tr );
-	float zDelta = abs(tr.vecEndPos.z - pev->origin.z);
+
+	float zDelta = fabs(tr.vecEndPos.z - pev->origin.z);
 	if(!tr.fStartSolid && !tr.fAllSolid && tr.flFraction < 1.0 && zDelta < 3){
 		//it is good!
 		return TRUE;

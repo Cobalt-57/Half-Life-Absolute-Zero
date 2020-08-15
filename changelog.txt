@@ -1,3 +1,5 @@
+---------------------------------------------------------------------------------------------
+<unversioned>
 
 Previously mentioned zombie pushback change was incomplete.  Headshot damage no longer deals extra pushback.  Pushback damage also has diminishing returns with increasingly high damage in one frame: weak sources of damage (glock, mp5) deal full pushback while close-range shotgun blasts are cut by 25%, fully-charged gauss shots by half.
 -ALSO, crossbow bolts no longer deal pushback, but still take bullet reduction percentages.
@@ -92,7 +94,6 @@ Various scripted-sequence breaking problems done, tested with a1a2's garg vs. hg
 More unused scientist sounds added and tiny chance of a few pre-disaster ones to show up after disaster ('wear ties' and hungry ones.  They are whiny nerds after all)
 
 ---------------------------------------------------------------------------------------------
-
 2.0_M 
 
 Ladder logic changed, faster overall for alpha (cl_ladder 0), slower for retail-style (cl_ladder 1).
@@ -103,7 +104,6 @@ That is, 0 to 10% should make a difference in the appearance of the battery, not
 space below the battery (no change in appearance).
 
 ---------------------------------------------------------------------------------------------
-
 2.0_N
 
 NPC walker interp glitch (jitter while moving) fixed.
@@ -119,7 +119,6 @@ on top of the duration times damage (15*1 on medium).  This also means damage du
 ***able to get stuck in scientists at a vending machine & inspecting machines, TODO...***
 
 ---------------------------------------------------------------------------------------------
-
 2.0_O
 
 Hits to Barney's helmet no longer cause blood or hit sounds, just like hgrunt and agrunt helmet/armor hits
@@ -300,4 +299,27 @@ By CVAR: cl_mp5_kickback, defaults to 0 (off).  When on, mp5 random kickback no 
 Timed Damage buddha mode implemented, only active in easy difficulty by default (see 'tdmg_buddha' in skill.cfg).  Affects monsters and players.
 ~Does not allow timed damage to kill, leaves health at 1.
 
+---------------------------------------------------------------------------------------------
+2.0_O5  (whoops, forgot to include this in the changelog before a sendout)
+~visible debug trace-lines removed.  Whoops.  Better system in place to stop this from happening in the future, any debug trace-lines using this feature require a CVar of 
+
+
+---------------------------------------------------------------------------------------------
+2.0_P (upcoming)
+
+Breakable destroyed-sounds better factor in overkill and carry over a further distance than most other sounds, especially from more overkill.
+(the change no one asked for, yay).
+
+CVar 'disablePauseSinglePlayer' re-enabled.
+
+New CVars, 'pausecorrection1' and 'pausecorrection2', related to denying certain logic on noticing the game is paused (ESC menu or console is up), avoids oddities with viewmodels or console complaints about overflowing queued sounds that can happen while paused.
+For single-player only.  The defaults of '1' each should be fine.  pausecorrection2 has two modes, '1' and '2'.  Both 0 is retail handling (no extra checks).
+
+Taking multiple hits from the same trigger_hurt while the game is paused while the player is standing inside one (green water, etc.) should no longer be possible.
+
+Timed damage now ticks while standing in a trigger_hurt.  Before, a trigger_hurt dealing 0 direct damage would stall the timed damage indefinitely (despite showing up on the HUD) until the player leaves the trigger.
+
+Verified: buddha timed damage is ignored if standing in a source of the timed damage (so that standing in a pool of green water that does 0 direct damage wouldn't make the player seem immune to damage).
+
+a1a2 hgrunt vs. garg sequence last fix: no longer an unintentional 5 second delay of dead hgrunt AI, obvious on running into the sequence as soon as the map loads (general scripted fix).
 

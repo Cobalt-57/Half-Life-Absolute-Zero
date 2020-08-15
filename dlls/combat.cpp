@@ -1856,6 +1856,16 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBaseMonster){
 				bitsDamageType |= DMG_POISON;  // let it be so
 			}
 
+			if (bitsDamageTypeMod & DMG_MAP_TRIGGER) {
+				// Recently inflicted trigger damage, eh?  Did this same source of damage happen to give any timed damage?
+				// If so, this defies buddha mode for this same turn.  This makes sure that standing in a trigger dealing
+				// 0 direct damage but timed damage doesn't let you exploit the buddha timed damage mode to never die
+				// while standing in a pool of radiation.
+				if ((bitsDamageType & DMG_TIMEBASED) || (bitsDamageTypeMod & DMG_TIMEBASEDMOD)) {
+					recentTimedTriggerDamage = TRUE;
+				}
+			}
+
 			applyNewTimedDamage(bitsDamageType, bitsDamageTypeMod);
 
 			// set damage type sustained
@@ -1874,6 +1884,17 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBaseMonster){
 			// no pain sound during death animation.
 			PainSound();// "Ouch!"
 		//}
+
+
+		//MODDD - SAFETY.  Reset the damage bits, no reason to keep them around when applyNewTimedDamage
+		// handled them and put them in other arrays if needed.
+		// Should anything at a later point need to read these, put this reset later or those other places
+		// earlier.  If any weird bugs happen consider these resets, retail kept the bits damages set to
+		// whatever recent damage was inflicted.
+		// ...nevermind, don't do this reset.  Messes with player hud showing the damages I bet, but untested.
+		//m_bitsDamageType = 0;
+		//m_bitsDamageTypeMod = 0;
+
 
 	}else{
 		// dead?  can't take any timed damages.

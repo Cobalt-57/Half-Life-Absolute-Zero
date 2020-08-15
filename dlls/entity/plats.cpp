@@ -1119,10 +1119,12 @@ void CFuncTrackTrain :: UpdateSound( void )
 {
 	float flpitch;
 	
-	if (!pev->noise)
+	if (!pev->noise) {
 		return;
+	}
 
-	flpitch = TRAIN_STARTPITCH + (abs(pev->speed) * (TRAIN_MAXPITCH - TRAIN_STARTPITCH) / TRAIN_MAXSPEED);
+	//MODDD - use fabs for floats dangit!
+	flpitch = TRAIN_STARTPITCH + (fabs(pev->speed) * (TRAIN_MAXPITCH - TRAIN_STARTPITCH) / TRAIN_MAXSPEED);
 
 	if (!m_soundPlaying)
 	{

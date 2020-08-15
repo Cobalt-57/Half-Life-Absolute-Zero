@@ -59,6 +59,7 @@ EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(viewModelPrintouts)
 EASY_CVAR_EXTERN(viewModelSyncFixPrintouts)
 EASY_CVAR_EXTERN(cl_holster)
 EASY_CVAR_EXTERN(wpn_glocksilencer)
+EASY_CVAR_EXTERN(pausecorrection1)
 
 
 
@@ -74,7 +75,8 @@ EASY_CVAR_EXTERN(wpn_glocksilencer)
 
 
 // BEWARE - gpGlobals is said to be a 'dummy' object clientside!  gpGlobals->time seems to still work though,
-// but a lot of times are based on 0 and count down towards that instead for whatever reason clientside
+// but a lot of times are based on 0 and count down towards that instead for whatever reason clientside.
+// gpGlobals->time works because it's set by every HUD_PostRunCmd call.
 
 // !!!!!!!!!!
 // Also, CHECK!  What is g_iUser1?  Is that the check for menu/VGUI/console being open while ingame that might block
@@ -156,6 +158,11 @@ float seqPlayDelay = -1;
 int seqPlay = 0;
 BOOL queuecall_lastinv = FALSE;
 int g_currentanim = -1;
+
+
+
+float sp_ClientPreviousTime = -1;
+
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -453,7 +460,15 @@ void HUD_InitClientWeapons( void )
 
 	// Fill in current time ( probably not needed )
 	gpGlobals->time = gEngfuncs.GetClientTime();
-	
+
+	//MODDD - is this a good idea?
+	// ONLY APPLIES IF THE CLIENTSIDE PAUSE-CORRECTION IS TURNED ON ('pausecorrection1' cvar).
+	// This blocks the think-calls in HUD_PostRunCmd very early on for the first frame,
+	// since it seems to be called the same time as client initialization
+	// (this exact given gpGlobals->time is spotted and so that frame is skipped).
+	// Going to err on caution and not do that, left as -1 sp_ClientPreviousTime will
+	// let the first frame run like it usually would.
+	//if (sp_ClientPreviousTime == -1){sp_ClientPreviousTime = gpGlobals->time;}
 
 
 	// Fake functions
@@ -1628,6 +1643,8 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
 
 
 
+
+
 /*
 =====================
 HUD_PostRunCmd
@@ -1639,22 +1656,23 @@ runfuncs is 1 if this is the first time we've predicted this command.  If so, so
 be ignored
 =====================
 */
-void DLLEXPORT HUD_PostRunCmd(struct local_state_s* from, struct local_state_s* to, struct usercmd_s* cmd, int runfuncs, double time, unsigned int random_seed)
+void DLLEXPORT HUD_PostRunCmd(struct local_state_s* from, struct local_state_s* to, struct usercmd_s* cmd, int runfuncs, double arg_time, unsigned int random_seed)
 {
 	//MODDD - new. Must keep track of the time between method calls to know when it is ok to do an eye-check.
-	static float previousTime = -1; //to guarantee the first time always happens.
-
+	
 	g_runfuncs = runfuncs;
 
 	//MODDD - moved to here from HUD_WeaponsPostThink.
 	HUD_InitClientWeapons();
-	gpGlobals->time = time;
+	gpGlobals->time = arg_time;
+
+	//MODDD - curious about other places, any point of using 'gEngfuncs.GetClientTime()' instead of relying on the time
+	// supplied by these HUD_PostRunCmd calls (the 'time' parameter)?
 
 
 	//MODDD - for now, these are unused.  Who knows if they'd ever be useful.
 	//recentDuckVal = to->client.bInDuck;
 	//recentDuckTime = to->client.flDuckTime;
-
 
 	//////////////////////////////////////////////////////////////////////////
 	//MODDD - should we keep doing this??
@@ -1662,12 +1680,16 @@ void DLLEXPORT HUD_PostRunCmd(struct local_state_s* from, struct local_state_s* 
 	// (EV_ calls don't make it from server to client; nothing shows up at all, no view anims / clientside event if the glitch happens)
 	// That's not a frustrating problem to run into at all!
 	if (!IsMultiplayer()) {
-		if (gpGlobals->time - previousTime == 0) {
-			//If no time has passed since the last client-reported time, assume we're paused. Don't try any logic.
-			//easyForcePrintLine("HUD_PostRunCmd: paused. time:%.2f", gpGlobals->time);
-			return;
+		float pausecorrection_val = EASY_CVAR_GET(pausecorrection1);
+		// CLIENT PAUSE CORRECTION FIX.  Block think logic if there isn't any time since the previous frame.
+		if (pausecorrection_val != 0) {
+			if(gpGlobals->time - sp_ClientPreviousTime == 0){
+				//If no time has passed since the last client-reported time, assume we're paused. Don't try any logic.
+				//easyForcePrintLine("HUD_PostRunCmd: paused. time:%.2f", gpGlobals->time);
+				return;
+			}
 		}
-		previousTime = gpGlobals->time;
+		sp_ClientPreviousTime = gpGlobals->time;
 	}
 	//////////////////////////////////////////////////////////////////////////
 
@@ -1714,7 +1736,7 @@ void DLLEXPORT HUD_PostRunCmd(struct local_state_s* from, struct local_state_s* 
 
 	if (cl_lw && cl_lw->value)
 	{
-		HUD_WeaponsPostThink(from, to, cmd, time, random_seed);
+		HUD_WeaponsPostThink(from, to, cmd, arg_time, random_seed);
 	}
 	else
 #endif

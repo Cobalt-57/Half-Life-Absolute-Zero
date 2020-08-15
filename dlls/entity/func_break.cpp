@@ -651,6 +651,7 @@ void CBreakable::Die( void )
 	char cFlag = 0;
 	int pitch;
 	float fvol;
+	float fattn;
 	
 	pitch = 95 + RANDOM_LONG(0,29);
 
@@ -660,10 +661,29 @@ void CBreakable::Die( void )
 	// The more negative pev->health, the louder
 	// the sound should be.
 
-	fvol = RANDOM_FLOAT(0.85, 1.0) + (abs(pev->health) / 100.0);
 
-	if (fvol > 1.0)
-		fvol = 1.0;
+
+	//MODDD - achieve higher volumes at lower damages now, barely anything will peak at 100,
+	// not even direct explosives (some lost from distance to the origin, like 95 to 98 at best).
+	// There's fully-charged gauss hits doing a bit over 200 but eh.  Overkill always was overkill.
+	// Also using fabs now.
+	// Wait, come to think if it wasn't this kinda pointless?  Already a random added from 0.85 to 1.0.
+	// That means even at minimum, the volume starts at 0.85, and very rarely that close.
+	// A reasonable average of 0.92 to 0.93 does not leave much room for overkill to make much of a 
+	// difference.  CHANGED.
+	// How about affecting attenuation too.
+	//fvol = RANDOM_FLOAT(0.85, 1.0) + (abs(pev->health) / 100.0);
+	
+	// don't exceed 1!
+	float overkillVolumeMulti = min(fabs(pev->health), 60.0f) / 60.0f;
+	
+	fvol = RANDOM_FLOAT(0.74f, 0.82f) + overkillVolumeMulti * 0.26f;
+	// ATTN_NORM is 0.8.  Lower it is, further the sound carries, can create the illusion of loudness.
+	fattn = 0.75f + -(overkillVolumeMulti * 0.20f);
+
+	if (fvol > 1.0f){
+		fvol = 1.0f;
+	}
 
 
 	switch (m_Material)
@@ -671,9 +691,9 @@ void CBreakable::Die( void )
 	case matGlass:
 		switch ( RANDOM_LONG(0,1) )
 		{
-		case 0:	EMIT_SOUND_DYN(ENT(pev), CHAN_VOICE, "debris/bustglass1.wav", fvol, ATTN_NORM, 0, pitch);	
+		case 0:	EMIT_SOUND_DYN(ENT(pev), CHAN_VOICE, "debris/bustglass1.wav", fvol, fattn, 0, pitch);	
 			break;
-		case 1:	EMIT_SOUND_DYN(ENT(pev), CHAN_VOICE, "debris/bustglass2.wav", fvol, ATTN_NORM, 0, pitch);	
+		case 1:	EMIT_SOUND_DYN(ENT(pev), CHAN_VOICE, "debris/bustglass2.wav", fvol, fattn, 0, pitch);	
 			break;
 		}
 		cFlag = BREAK_GLASS;
@@ -682,9 +702,9 @@ void CBreakable::Die( void )
 	case matWood:
 		switch ( RANDOM_LONG(0,1) )
 		{
-		case 0:	EMIT_SOUND_DYN(ENT(pev), CHAN_VOICE, "debris/bustcrate1.wav", fvol, ATTN_NORM, 0, pitch);	
+		case 0:	EMIT_SOUND_DYN(ENT(pev), CHAN_VOICE, "debris/bustcrate1.wav", fvol, fattn, 0, pitch);	
 			break;
-		case 1:	EMIT_SOUND_DYN(ENT(pev), CHAN_VOICE, "debris/bustcrate2.wav", fvol, ATTN_NORM, 0, pitch);	
+		case 1:	EMIT_SOUND_DYN(ENT(pev), CHAN_VOICE, "debris/bustcrate2.wav", fvol, fattn, 0, pitch);	
 			break;
 		}
 		cFlag = BREAK_WOOD;
@@ -694,9 +714,9 @@ void CBreakable::Die( void )
 	case matMetal:
 		switch ( RANDOM_LONG(0,1) )
 		{
-		case 0:	EMIT_SOUND_DYN(ENT(pev), CHAN_VOICE, "debris/bustmetal1.wav", fvol, ATTN_NORM, 0, pitch);	
+		case 0:	EMIT_SOUND_DYN(ENT(pev), CHAN_VOICE, "debris/bustmetal1.wav", fvol, fattn, 0, pitch);	
 			break;
-		case 1:	EMIT_SOUND_DYN(ENT(pev), CHAN_VOICE, "debris/bustmetal2.wav", fvol, ATTN_NORM, 0, pitch);	
+		case 1:	EMIT_SOUND_DYN(ENT(pev), CHAN_VOICE, "debris/bustmetal2.wav", fvol, fattn, 0, pitch);	
 			break;
 		}
 		cFlag = BREAK_METAL;
@@ -708,9 +728,9 @@ void CBreakable::Die( void )
 	case matFlesh:
 		switch ( RANDOM_LONG(0,1) )
 		{
-		case 0:	EMIT_SOUND_DYN(ENT(pev), CHAN_VOICE, "debris/bustflesh1.wav", fvol, ATTN_NORM, 0, pitch);	
+		case 0:	EMIT_SOUND_DYN(ENT(pev), CHAN_VOICE, "debris/bustflesh1.wav", fvol, fattn, 0, pitch);	
 			break;
-		case 1:	EMIT_SOUND_DYN(ENT(pev), CHAN_VOICE, "debris/bustflesh2.wav", fvol, ATTN_NORM, 0, pitch);	
+		case 1:	EMIT_SOUND_DYN(ENT(pev), CHAN_VOICE, "debris/bustflesh2.wav", fvol, fattn, 0, pitch);	
 			break;
 		}
 		cFlag = BREAK_FLESH;
@@ -720,16 +740,16 @@ void CBreakable::Die( void )
 	case matCinderBlock:
 		switch ( RANDOM_LONG(0,1) )
 		{
-		case 0:	EMIT_SOUND_DYN(ENT(pev), CHAN_VOICE, "debris/bustconcrete1.wav", fvol, ATTN_NORM, 0, pitch);	
+		case 0:	EMIT_SOUND_DYN(ENT(pev), CHAN_VOICE, "debris/bustconcrete1.wav", fvol, fattn, 0, pitch);	
 			break;
-		case 1:	EMIT_SOUND_DYN(ENT(pev), CHAN_VOICE, "debris/bustconcrete2.wav", fvol, ATTN_NORM, 0, pitch);	
+		case 1:	EMIT_SOUND_DYN(ENT(pev), CHAN_VOICE, "debris/bustconcrete2.wav", fvol, fattn, 0, pitch);	
 			break;
 		}
 		cFlag = BREAK_CONCRETE;
 		break;
 
 	case matCeilingTile:
-		EMIT_SOUND_DYN(ENT(pev), CHAN_VOICE, "debris/bustceiling.wav", fvol, ATTN_NORM, 0, pitch);
+		EMIT_SOUND_DYN(ENT(pev), CHAN_VOICE, "debris/bustceiling.wav", fvol, fattn, 0, pitch);
 		break;
 	}
     

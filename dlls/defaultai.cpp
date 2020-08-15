@@ -2061,6 +2061,9 @@ Schedule_t* CBaseMonster :: GetScheduleOfType ( int Type )
 		{
 			return &slIdleWalk[ 0 ];
 		}
+	//MODDD - NOTE.  Careful about overriding this, for now.
+	// If monsters need custom behavior for "start in a nearly uninterruptable state for 5 seconds", best to make a var
+	// named something like "notScriptedButTargetNameWait".  Not sure what else to call this.
 	case SCHED_WAIT_TRIGGER:
 		{
 			return &slIdleTrigger[ 0 ];

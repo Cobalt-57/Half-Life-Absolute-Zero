@@ -180,10 +180,8 @@ BOOL globalPSEUDO_germanModel_hassaultFound = FALSE;
 //MODDD - moved from player.
 int giPrecacheGrunt = 0;
 
-BOOL loadedGame = FALSE;
-
-//float previousFrameTime;
-BOOL gamePaused = FALSE;
+BOOL g_gameLoaded = FALSE;
+BOOL g_gamePaused = FALSE;
 
 cvar_t* cvar_skill = NULL;
 //HEY, already have something like this: g_iSkillLevel!!!
@@ -6782,7 +6780,7 @@ void UTIL_playMetalGibSound(entvars_t* pevSoundSource){
 //Right before a CHANGE_LEVEL call to move to another map from the current one. Not loading a new map on the player's demand.
 void OnBeforeChangeLevelTransition(){
 	//For all intents and purposes, this is like loading a game. Don't reset the counters.
-	loadedGame = TRUE;
+	g_gameLoaded = TRUE;
 
 	
 	//just to be safe.
@@ -6807,7 +6805,7 @@ void OnMapLoadStart(){
 
 	DebugLine_ClearAll();
 
-	if(!loadedGame){
+	if(!g_gameLoaded){
 		//If we loaded a game or came from a transition, these values have already been loaded from save data or are cumulative with
 		//soon-to-be new entities for this map, possibly. Don't overwrite them with 0's.
 		ResetDynamicStaticIDs();
@@ -6821,7 +6819,7 @@ void OnMapLoadStart(){
 	CBarnacle::s_iStandardGibID = -1;
 	
 	//Next time, will force these off in case there isn't a loaded game.
-	loadedGame = FALSE;
+	g_gameLoaded = FALSE;
 
 	// is that okay?
 	// Nevermind.
@@ -6881,7 +6879,7 @@ void RestoreDynamicIDs(CGlobalState* argGS){
 	CPathTrack::PathTrackIDLatest = argGS->m_i_PathTrackIDLatest;
 	
 	// Make sure these are not overwritten by World's precache calling OnMapLoadStart.
-	loadedGame = TRUE;
+	g_gameLoaded = TRUE;
 
 }//END OF RestoreGlobalState
 

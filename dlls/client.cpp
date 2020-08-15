@@ -60,7 +60,11 @@ extern BOOL queueYMG_stopSend;
 extern cvar_t* global_test_cvar_ref;
 
 
+EASY_CVAR_EXTERN(pausecorrection2)
+
+
 extern CGraph WorldGraph;
+
 
 
 //MODDD - cheat CVAR storage.
@@ -107,9 +111,6 @@ int crashableEntityReferMode = 0;
 float globalPSEUDO_minimumfiredelaymem = -1;
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-//BOOL playerCanThink1 = FALSE;
-//BOOL playerCanThink2 = FALSE;
-
 //MODDD TODO - this should just get copied to methods that need it, may only just be one. Or just put it in each one and make it static? eh.
 char queuedSound[127];
 BOOL playQueued = FALSE;
@@ -125,6 +126,11 @@ float changeLevelQueuedTime = -1;
 
 
 
+
+float sp_previousFrameTime;
+// Only referred to for detecting single-player pauses, not multiplayer.
+BOOL sp_playerCanPreThink = FALSE;
+BOOL sp_playerCanPostThink = FALSE;
 
 
 
@@ -5244,37 +5250,77 @@ void PlayerPreThink( edict_t *pEntity )
 	//d:0.01669312
 
 	//MODDD NOTE:
-	//HOO BOY is this hacky as Hell. But it works. Tell if the game is paused or not.
-	//For reasons that remain unexplained by modern Science, the current time and previousFrameTime will vary by a very small
-	//amount even while paused and nothing else happens. Some tiny ammount gets added / subtracted. No clue.
+	// HOO BOY is this hacky as Hell. But it works. Tell if the game is paused or not.
+	// For reasons that remain unexplained by modern Science, the current time and previousFrameTime will vary by a very small
+	// amount even while paused and nothing else happens. Some tiny ammount gets added / subtracted. No clue.
+	// CHANGE, let StartFrame tell whether the game is paused instead maybe?    Nevermind, it isn't called when paused,
+	// but PlayerPreThink still is.
 	
-	//gamePaused = ((gpGlobals->time - previousFrameTime) <= 0.005);
-	//easyForcePrintLineClient(pEntity, "WHAT THE heckin heck %.8f %.8f d:%.8f %d", gpGlobals->time, previousFrameTime, (gpGlobals->time - previousFrameTime), gamePaused);
-	//previousFrameTime = gpGlobals->time;
 
 
 	//easyForcePrintLineClient(pEntity, "??A %d", playerCanThink1);
 
-	/*
-	if(!playerCanThink1){
-		//If somewhere want to know, "gamePaused".
-		gamePaused = TRUE;
+	if (!IsMultiplayer()) {
+		BOOL stopMethod = FALSE;
+		// NOTICE!  Counting these in PlayerPreThink is only useful when not in multiplayer.
+		// Otherwise every player is calling this PlayerPreThink, not wise to rely on it from this method.
+		float pausecorrection_val = EASY_CVAR_GET(pausecorrection2);
 
-		//This client message call has been cut. Turns out serverside can issue an unpause order just fine.
-		//	submitUnpauseRequest(&pEntity->v);
-		
-		if(!IsMultiplayer() && EASY_CVAR_GET(disablePauseSinglePlayer) ){
-			SERVER_COMMAND("unpause\n");
+		// And no, this isn't blocking frames with a tiny amount of change, even completely paused there is a very tiny difference
+		// at all times.  Weird.
+		g_gamePaused = ((gpGlobals->time - sp_previousFrameTime) <= 0.005);
+
+		//easyForcePrintLineClient(pEntity, "WHAT THE heck %.8f %.8f d:%.8f %d", gpGlobals->time, previousFrameTime, (gpGlobals->time - previousFrameTime), g_gamePaused);
+		sp_previousFrameTime = gpGlobals->time;
+
+
+		if (pausecorrection_val == 0) {
+			// always allow
+			sp_playerCanPreThink = TRUE;
+			sp_playerCanPostThink = TRUE;
+		}else if (pausecorrection_val == 1 ) {
+			// SERVER PAUSE CORRECTION FIX #1.  Block think logic if there isn't enough time since the previous frame.
+			if (g_gamePaused) {
+				sp_playerCanPreThink = FALSE;
+				sp_playerCanPostThink = FALSE;
+			}
+			else {
+				sp_playerCanPreThink = TRUE;
+				sp_playerCanPostThink = TRUE;
+			}
 		}
-		//easyForcePrintLineClient(pEntity, "!!! UNPAUSE REQUEST");
-		return;
-	}
 
-	//must be turned back on by StartFrame.
-	playerCanThink1 = FALSE;
-	*/
 
-	gamePaused = FALSE;
+		if (!sp_playerCanPreThink) {
+			// If somewhere wants to know.
+			g_gamePaused = TRUE;
+			// This client message call has been cut. Serverside can issue the unpause order.
+			//submitUnpauseRequest(&pEntity->v);
+			if (EASY_CVAR_GET(disablePauseSinglePlayer) == 1) {
+				SERVER_COMMAND("unpause\n");
+			}
+			//easyForcePrintLineClient(pEntity, "!!! UNPAUSE REQUEST");
+			//return;
+			stopMethod = TRUE;
+		}
+		// must be turned back on by StartFrame.  Again, ignored in multiplayer.
+		
+		if (pausecorrection_val == 2 ) {
+			// SERVER PAUSE CORRECTION FIX #2.  Block think logic next time if StartFrame hasn't run to re-allow another think frame.
+			sp_playerCanPreThink = FALSE;
+			//sp_playerCanPostThink = FALSE;
+		}
+
+		if (stopMethod) {
+			// a late return.
+			return;
+		}
+
+	}//END OF multiplayer check
+
+
+	
+	g_gamePaused = FALSE;
 
 	entvars_t *pev = &pEntity->v;
 	CBasePlayer *pPlayer = (CBasePlayer *)GET_PRIVATE(pEntity);
@@ -5282,6 +5328,7 @@ void PlayerPreThink( edict_t *pEntity )
 	if (pPlayer)  //already factored in above; the whole method ends further above if "pPlayer" is null.
 	pPlayer->PreThink( );
 }
+
 
 /*
 ================
@@ -5294,14 +5341,24 @@ void PlayerPostThink( edict_t *pEntity )
 {
 	
 	//easyForcePrintLineClient(pEntity, "??B %d", playerCanThink2);
-	/*
-	if(!playerCanThink2){
-		return;
+	
+	if (!IsMultiplayer()) {
+		if (!sp_playerCanPostThink) {
+			return;
+		}
+		float pausecorrection_val = EASY_CVAR_GET(pausecorrection2);
+		// must be turned back on by StartFrame.
+		// Nevermind, the pre-think check is good enough.  I think.
+		// NNNNNNNNN-no.   Nope, that's a horrible idea.
+
+		if (pausecorrection_val == 2) {
+			// SERVER PAUSE CORRECTION FIX #2.  Block think logic next time if StartFrame hasn't run to re-allow another think frame.
+			//sp_playerCanPreThink = FALSE;
+			sp_playerCanPostThink = FALSE;
+		}
 	}
 
-	//must be turned back on by StartFrame.
-	playerCanThink2 = FALSE;
-	*/
+	
 
 	//For organization's sake, we're going to not involve things that have nothing to do with the sent "pEntity" up there.
 	
@@ -5456,9 +5513,17 @@ void StartFrame( void )
 	
 	
 	//easyForcePrintLine("!!");
-	//let the player think since there is a frame of logic this time around.
-	//playerCanThink1 = TRUE;
-	//playerCanThink2 = TRUE;
+	// let the player think since there is a frame of logic this time around.
+	// multiplayer ignores these.
+	// Should 'pausecorrection2' choice influence whether these are reset to TRUE here or not?  Hard to say.
+
+	float pausecorrection_val = EASY_CVAR_GET(pausecorrection2);
+
+	if (pausecorrection_val == 2) {
+		// StartFrame running resets them then.
+		sp_playerCanPreThink = TRUE;
+		sp_playerCanPostThink = TRUE;
+	}
 
 
 
@@ -5467,7 +5532,8 @@ void StartFrame( void )
 	// beeeeecccccccccaaaaaaaaauuuuuuuusssssssseeeeeee?
 	// as in, yes, even the first time "StartFrame" here is called, which runs every frame.  SPOOKY.
 	// Skipping the first two frames just to be safe.
-	if (g_ulFrameCount > 2) {
+
+	if (g_ulFrameCount > 2 && g_gameLoaded) {
 		updateCVarRefs(FALSE);
 	}
 	else {
@@ -5480,9 +5546,9 @@ void StartFrame( void )
 
 
 
-
-
-
+	// NOTICE - StartFrame can't detect whether the game is paused in real time.
+	// It is not called when the game is paused (console or menu up in singleplayer).
+	// Not worth checking here.
 
 
 

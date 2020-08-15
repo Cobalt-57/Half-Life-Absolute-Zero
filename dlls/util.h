@@ -258,8 +258,8 @@ extern int giPrecacheGrunt;
 extern int global_useSentenceSave;
 
 extern float previousFrameTime;
-extern BOOL gamePaused;
-extern BOOL loadedGame;
+extern BOOL g_gamePaused;
+extern BOOL g_gameLoaded;
 
 extern int g_groupmask;
 extern int g_groupop;

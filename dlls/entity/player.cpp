@@ -687,6 +687,7 @@ void CBasePlayer::startRevive(void) {
 		// If revived, send the signal to reset falling velocity.
 	g_engfuncs.pfnSetPhysicsKeyValue(edict(), "res", "1");
 	//}
+
 }
 
 // For having planned a revive, but deciding against it (fell too far on hitting the ground, stuck in geometry)
@@ -886,6 +887,7 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBasePlayer)
 				reviveSafetyTime = -1;
 				buddhaMode = FALSE;
 				blockDamage = FALSE;
+				blockTimedDamage = FALSE;
 			}
 		}
 
@@ -929,18 +931,28 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBasePlayer)
 	}//END OF if(IsAlive)
 	
 
+
 	
-	if( (bitsDamageTypeMod & (DMG_MAP_TRIGGER)) && flDamage >= 5){
-		// died in a trigger? don't recover
-		recentMajorTriggerDamage = TRUE;
-	}else if ((bitsDamageTypeMod & (DMG_MAP_BLOCKED)) && flDamage >= 60) {
-		// too much damage from a crush? no chance.
-		recentMajorTriggerDamage = TRUE;
+
+	if ((bitsDamageTypeMod & (DMG_MAP_TRIGGER)) && flDamage >= 5) {
+		recentMajorTriggerDamage = 7;
 	}
 	else {
-		// forget it.
-		// TODO - forget with a small timer first.
+		recentMajorTriggerDamage &= ~2;
+		// How about this:  recentMajorTriggerDamage will be a bitmask.
+		// Bit #1 (1) means damage during this very frame.  So don't reset it on taking damage another
+		// time that isn't trigger damage, reset it at the end of this frame.
+		// Bit #2 (2) however, will reset on taking damage from any other source that isn't a trigger.
+		// Bit #3 (4) means damage since the last timed-damage-dealing cycle.  It is reset after that.
+	}
+
+
+	if ((bitsDamageTypeMod & (DMG_MAP_BLOCKED)) && flDamage >= 60) {
+		// too much damage from a crush? no chance.
+		recentMajorTriggerDamage = 7;
+	}else {
 		lastBlockDamageAttemptReceived = FALSE;
+		
 	}
 
 	if (bitsDamageTypeMod & DMG_MAP_BLOCKED) {
@@ -981,8 +993,10 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBasePlayer)
 
 
 	// Already dead
-	if ( !IsAlive() )
+	if (!IsAlive()) {
+		recentMajorTriggerDamage &= ~1;
 		return 0;
+	}
 	// go take the damage first
 
 	
@@ -992,6 +1006,7 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBasePlayer)
 	if ( pAttacker != NULL && !g_pGameRules->FPlayerCanTakeDamage( this, pAttacker ) )
 	{
 		// Refuse the damage
+		recentMajorTriggerDamage &= ~1;
 		return 0;
 	}
 
@@ -1130,17 +1145,29 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBasePlayer)
 	m_bitsHUDDamage = -1;  // make sure the damage bits get resent
 	m_bitsModHUDDamage = -1;
 
+
+
+	recentMajorTriggerDamage &= ~1;
+
+	//MODDD - wait a second.  If this player was killed by the recent hit (TakeDamage call), shouldn't the rest
+	// of this method be skipped?
+	if (!UTIL_IsAliveEntity(this)) {
+		return fTookDamage;
+	}
+
+
+
 	if(EASY_CVAR_GET(hideDamage) >= 1){
 		//If so, skip the rest of this method.  It's only about making fvox chatter on taking damage.
 		return fTookDamage;
 	}
 
 	//MODDD - NOTE
-	//freeze damage is checked here instead, since "fTookDamage" isn't called for freeze damage.
-	//It is sent from the map, indifferent to SLOWFREEZE's damage (seems to be for the unused
-	//instigator of continual freeze damage, even though ordinary freeze damage doesn't seem
-	//to be timed).  The map uses its own damage (0.1), which affects armor but not health
-	//(b/c damage done to health is truncated first).
+	// freeze damage is checked here instead, since "fTookDamage" isn't called for freeze damage.
+	// It is sent from the map, indifferent to SLOWFREEZE's damage (seems to be for the unused
+	// instigator of continual freeze damage, even though ordinary freeze damage doesn't seem
+	// to be timed).  The map uses its own damage (0.1), which affects armor but not health
+	// (b/c damage done to health is truncated first)... that truncation may no longer be the case.
 	if (bitsDamage & DMG_FREEZE){
 		SetSuitUpdateAndForceBlock("!HEV_FREEZE", FALSE, SUIT_NEXT_IN_30SEC);	
 		bitsDamage &= ~DMG_FREEZE;
@@ -1840,9 +1867,8 @@ GENERATE_KILLED_IMPLEMENTATION(CBasePlayer)
 		m_flSuitUpdate = gpGlobals->time;  //say the next line now!
 		// "critical failure"
 		SetSuitUpdate("!HEV_E2", FALSE, SUIT_REPEAT_OK, 4.2f);
-
 	}
-	else if (recentMajorTriggerDamage) {
+	else if (recentMajorTriggerDamage & 1) {
 		// gonna die.
 		declareRevivelessDead();
 
@@ -2462,10 +2488,12 @@ void CBasePlayer::PlayerDeathThink(void)
 	if (FBitSet(pev->flags, FL_ONGROUND))
 	{
 		flForward = pev->velocity.Length() - 20;
-		if (flForward <= 0)
+		if (flForward <= 0) {
 			pev->velocity = g_vecZero;
-		else    
+		}
+		else {
 			pev->velocity = flForward * pev->velocity.Normalize();
+		}
 	}
 
 	if ( HasWeapons() )
@@ -2490,12 +2518,14 @@ void CBasePlayer::PlayerDeathThink(void)
 	
 	// once we're done animating our death and we're on the ground, we want to set movetype to None so our dead body won't do collisions and stuff anymore
 	// this prevents a bug where the dead body would go to a player's head if he walked over it while the dead player was clicking their button to respawn
-	if ( pev->movetype != MOVETYPE_NONE && FBitSet(pev->flags, FL_ONGROUND) )
+	if (pev->movetype != MOVETYPE_NONE && FBitSet(pev->flags, FL_ONGROUND)) {
 		pev->movetype = MOVETYPE_NONE;
+	}
 
 
-	if (pev->deadflag == DEAD_DYING)
+	if (pev->deadflag == DEAD_DYING) {
 		pev->deadflag = DEAD_DEAD;
+	}
 	
 	StopAnimation();
 
@@ -2558,7 +2588,7 @@ void CBasePlayer::PlayerDeathThink(void)
 		if (recoveryIndex == 0) {
 			// only bother with any of this, if not dead from fall impact.
 			// And has a suit, not sitting in a insta-death trigger, and has adrenaline.
-			if (playerHasSuit() && !recentMajorTriggerDamage && this->m_rgItems[ITEM_ADRENALINE] > 0) {
+			if (playerHasSuit() && !(recentMajorTriggerDamage & 2) && this->m_rgItems[ITEM_ADRENALINE] > 0) {
 
 				// note that, if the player is not on the ground BUT otherwise meets conditions to recover,
 				// the respawn will still be stalled until the player hits the ground (where the timer starts and
@@ -2605,7 +2635,11 @@ void CBasePlayer::PlayerDeathThink(void)
 			else {
 				// Some condition went bad during this time?
 				// Can not recover.  Let ordinary respawning handle this situation.
-				m_flSuitUpdate = gpGlobals->time;
+
+				// WAIT, don't force this one instant, maybe this is coming after a 'successful' revive sound
+				// that turned out to fail.  Playing at the same time as it is just... weird.
+				//m_flSuitUpdate = gpGlobals->time;
+				
 				SetSuitUpdate("!HEV_E3", FALSE, SUIT_REPEAT_OK, 4.2f);
 				declareRevivelessDead();
 			}
@@ -4094,7 +4128,8 @@ void CBasePlayer::PreThink(void)
 
 
 float CBasePlayer::TimedDamageBuddhaFilter(float dmgIntent) {
-	if (dmgIntent >= pev->health && gSkillData.tdmg_playerbuddha == 1) {
+
+	if (dmgIntent >= pev->health && gSkillData.tdmg_playerbuddha == 1 && !recentTimedTriggerDamage) {
 		dmgIntent = pev->health - 1;
 		if (dmgIntent < 0) dmgIntent = 0;  // no healing from this!
 	}
@@ -4104,10 +4139,12 @@ float CBasePlayer::TimedDamageBuddhaFilter(float dmgIntent) {
 
 
 
+
 // at the end of a frame, if a monster has 1 health and buddha mode, cancel the timed damage.
 void CBasePlayer::TimedDamagePostBuddhaCheck(void) {
 	
-	if (pev->health <= 1 && gSkillData.tdmg_playerbuddha == 1) {
+	if (pev->health <= 1 && gSkillData.tdmg_playerbuddha == 1 && !recentTimedTriggerDamage) {
+
 		// show on the UI another frame anyway
 		m_bitsDamageTypeForceShow |= m_bitsDamageType;
 		m_bitsDamageTypeModForceShow |= m_bitsDamageTypeMod;
@@ -4116,6 +4153,28 @@ void CBasePlayer::TimedDamagePostBuddhaCheck(void) {
 		attemptResetTimedDamage(TRUE);
 	}
 
+	recentTimedTriggerDamage = FALSE;
+	//m_bitsDamageTypeMod &= ~DMG_MAP_TRIGGER;
+	recentMajorTriggerDamage &= ~4;
+}
+
+
+void CBasePlayer::removeTimedDamageImmediate(int arg_type, int* m_bitsDamageTypeRef, BYTE bDuration) {
+	// in addition to what any monster does (actually remove the timed damage)...
+	CBaseMonster::removeTimedDamageImmediate(arg_type, m_bitsDamageTypeRef, bDuration);
+
+	// Is the duration given 0?  A duration of 255 in this case (-1) means it doesn't
+	// even make it to the HUD.
+	if (bDuration == 0) {
+		int damageBit = convert_itbd_to_damage(arg_type);
+		// still let the damage indicator icon show up.
+		if (arg_type < itbd_BITMASK2_FIRST) {
+			m_bitsDamageTypeForceShow |= damageBit;
+		}
+		else {
+			m_bitsDamageTypeModForceShow |= damageBit;
+		}
+	}
 }
 
 
@@ -6284,6 +6343,7 @@ void CBasePlayer::Spawn( BOOL revived ){
 
 	//PRECACHE_MODEL("models/player/gman/Gman.mdl");
 
+
 	pev->classname = MAKE_STRING("player");
 	if(!revived){
 
@@ -6313,10 +6373,11 @@ void CBasePlayer::Spawn( BOOL revived ){
 		pev->armorvalue		= 0;
 
 		//MODDD - moved here.  Always occurs at a true spawn.
-		m_bitsDamageType = 0;
-		//MODDD
-		m_bitsDamageTypeMod = 0;
-		
+		//m_bitsDamageType = 0;
+		//m_bitsDamageTypeMod = 0;
+		//MODDD - how about this while we're at it?  Already does the above two sets.
+		attemptResetTimedDamage(TRUE);
+
 	}else{
 		//m_bitsDamageType = 0;
 		//m_bitsDamageTypeMod = 0;
@@ -6630,6 +6691,7 @@ void CBasePlayer :: Precache( void )
 	//m_igeigerRangePrev = 1000;   //Moved to common reset.  Seems safe.
 
 	//MODDD - NOTE::: only done on spawn now.  Damages should be remembered between maps.
+	// Although this was probably harmless as timed damages are committed to other arrays right in TakeDamage?   huh.
 	//m_bitsDamageType = 0;  //NOTE::: should this be done in common reset too?
 	//m_bitsDamageTypeMod = 0;
 
