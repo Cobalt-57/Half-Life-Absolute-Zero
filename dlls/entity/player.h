@@ -301,8 +301,8 @@ public:
 #endif
 
 	// shared ammo slots
-	int m_rgAmmo[MAX_AMMO_SLOTS];
-	int m_rgAmmoLast[MAX_AMMO_SLOTS];
+	int m_rgAmmo[MAX_AMMO_TYPES];
+	int m_rgAmmoLast[MAX_AMMO_TYPES];
 
 	Vector			m_vecAutoAim;
 	BOOL			m_fOnTarget;
@@ -592,6 +592,7 @@ public:
 
 	void RenewItems(void);
 	void PackDeadPlayerItems( void );
+	void RemoveAllAmmo(void);
 	void RemoveAllItems( BOOL removeSuit );
 	BOOL SwitchWeapon( CBasePlayerItem *pWeapon );
 

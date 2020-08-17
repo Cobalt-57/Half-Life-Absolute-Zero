@@ -446,14 +446,8 @@ void CPython::Reload( void )
 
 
 void CPython::ItemPostFrameThink(){
-
-
-
-
 	//MODDD - SecondaryAttack script moved here.
 	if ((m_pPlayer->m_afButtonPressed & IN_ATTACK2)) {
-		
-
 		const int zoomedFOV = (int)roundf(getPlayerBaseFOV() * 0.4444f);
 
 		if (m_pPlayer->pev->fov != 0)
@@ -504,8 +498,6 @@ void CPython::ItemPostFrameThink(){
 
 
 
-
-
 	#ifndef CLIENT_DLL
 		
 	if(m_flSoundDelay != 0 && m_flSoundDelay <= gpGlobals->time)
@@ -523,7 +515,6 @@ void CPython::ItemPostFrameThink(){
 		
 		m_flSoundDelay = 0;
 	}
-	
 	#endif
 
 
@@ -532,7 +523,6 @@ void CPython::ItemPostFrameThink(){
 	if (!m_pPlayer->m_bHolstering) {
 		UpdateSpot();
 	}
-
 
 	CBasePlayerWeapon::ItemPostFrameThink();
 }//END OF ItemPostFrameThink()

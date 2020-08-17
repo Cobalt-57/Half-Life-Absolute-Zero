@@ -36,6 +36,7 @@
 #include "hltv.h"
 #include "gib.h"
 #include "util_debugdraw.h"
+#include "satchel.h"
 // only included to see what some default AI schedules are such as "slSmallFlinsh" for another
 // monster.
 #include "defaultai.h"
@@ -170,6 +171,9 @@ extern edict_t *EntSelectSpawnPoint( CBaseEntity *pPlayer );
 
 // the world node graph
 extern CGraph WorldGraph;
+extern DLL_GLOBAL ULONG g_ulFrameCount;
+extern BOOL g_firstPlayerEntered;
+
 
 
 int gEvilImpulse101;
@@ -351,7 +355,7 @@ TYPEDESCRIPTION	CBasePlayer::m_playerSaveData[] =
 	DEFINE_FIELD(CBasePlayer, m_pActiveItem, FIELD_CLASSPTR),
 	DEFINE_FIELD(CBasePlayer, m_pLastItem, FIELD_CLASSPTR),
 
-	DEFINE_ARRAY(CBasePlayer, m_rgAmmo, FIELD_INTEGER, MAX_AMMO_SLOTS),
+	DEFINE_ARRAY(CBasePlayer, m_rgAmmo, FIELD_INTEGER, MAX_AMMO_TYPES),
 	DEFINE_FIELD(CBasePlayer, m_idrowndmg, FIELD_INTEGER),
 	DEFINE_FIELD(CBasePlayer, m_idrownrestored, FIELD_INTEGER),
 	DEFINE_FIELD(CBasePlayer, m_tSneaking, FIELD_TIME),
@@ -434,7 +438,7 @@ TYPEDESCRIPTION	CBasePlayer::m_playerSaveData[] =
 	//DEFINE_FIELD( CBasePlayer, m_fWeapon, FIELD_BOOLEAN ),  // Don't restore, client needs reset
 	//DEFINE_FIELD( CBasePlayer, m_nCustomSprayFrames, FIELD_INTEGER ), // Don't restore, depends on server message after spawning and only matters in multiplayer
 	//DEFINE_FIELD( CBasePlayer, m_vecAutoAim, FIELD_VECTOR ), // Don't save/restore - this is recomputed
-	//DEFINE_ARRAY( CBasePlayer, m_rgAmmoLast, FIELD_INTEGER, MAX_AMMO_SLOTS ), // Don't need to restore
+	//DEFINE_ARRAY( CBasePlayer, m_rgAmmoLast, FIELD_INTEGER, MAX_AMMO_TYPES ), // Don't need to restore
 	//DEFINE_FIELD( CBasePlayer, m_fOnTarget, FIELD_BOOLEAN ), // Don't need to restore
 	//DEFINE_FIELD( CBasePlayer, m_nCustomSprayFrames, FIELD_INTEGER ), // Don't need to restore
 };
@@ -735,7 +739,7 @@ GENERATE_TRACEATTACK_IMPLEMENTATION(CBasePlayer)
 	/*
 	easyPrint("Yes.......%d\n", 0);
 	int eye = 0;
-	for (eye = 1; eye < MAX_AMMO_SLOTS; eye++)
+	for (eye = 1; eye < MAX_AMMO_TYPES; eye++)
 	{
 		easyPrint("HELP %s\n", CBasePlayerItem::AmmoInfoArray[eye].pszName);
 
@@ -1432,7 +1436,7 @@ void CBasePlayer::PackDeadPlayerItems( void )
 	int iAmmoRules;
 	int i;
 	CBasePlayerWeapon *rgpPackWeapons[ 20 ];// 20 hardcoded for now. How to determine exactly how many weapons we have?
-	int iPackAmmo[ MAX_AMMO_SLOTS + 1];
+	int iPackAmmo[ MAX_AMMO_TYPES + 1];
 	int iPW = 0;// index into packweapons array
 	int iPA = 0;// index into packammo array
 
@@ -1508,7 +1512,7 @@ void CBasePlayer::PackDeadPlayerItems( void )
 // now go through ammo and make a list of which types to pack.
 	if ( iAmmoRules != GR_PLR_DROP_AMMO_NO )
 	{
-		for ( i = 0 ; i < MAX_AMMO_SLOTS ; i++ )
+		for ( i = 0 ; i < MAX_AMMO_TYPES ; i++ )
 		{
 			if ( m_rgAmmo[ i ] > 0 )
 			{
@@ -1585,6 +1589,97 @@ void CBasePlayer::PackDeadPlayerItems( void )
 	//RemoveAllItems( TRUE );// now strip off everything that wasn't handled by the code above.
 }
 
+
+//MODDD - NEW.  No need to call from RemoveAllItems, doing that removes the need for several checks in here.
+void CBasePlayer::RemoveAllAmmo(void) {
+
+	for (int i = 0; i < MAX_AMMO_TYPES; i++) {
+		m_rgAmmo[i] = 0;
+	}
+	TabulateAmmo();  //safety?
+
+		
+	// Go through all weapons.  Any exhaustible weapons (grenades, snarks, etc.) need to be deleted
+	// on running out of ammo.
+	// Satchel has an exception: do not destroy if there are still charges out.  It must be selectable
+	// to get to the remote and set them off.
+	for (int i = 0; i < MAX_ITEM_TYPES; i++)
+	{
+		if (m_rgpPlayerItems[i])
+		{
+			CBasePlayerItem* pPlayerItem = m_rgpPlayerItems[i];
+
+			while (pPlayerItem)
+			{
+				CBasePlayerWeapon* gun;
+
+				gun = (CBasePlayerWeapon*)pPlayerItem->GetWeaponPtr();
+
+				if (gun) {
+
+					if (FClassnameIs(gun->pev, "weapon_satchel")) {
+						CSatchel* tempSatch = static_cast<CSatchel*>(gun);
+						// hacky!  Bundle this setting into CheckOutOfAmmo if this is ever used again for any other weap
+						tempSatch->alreadySentOutOfAmmoNotice = FALSE;
+						tempSatch->CheckOutOfAmmo();
+
+						// Allow this to be unselectable (no charges out while out of ammo)?  Delete.
+						if (tempSatch->alreadySentOutOfAmmoNotice) {
+							//if (m_pActiveItem == gun)m_pActiveItem = NULL;
+							//gun->Drop();
+							pev->weapons &= ~(1 << gun->m_iId);// take item off hud
+							gun->DestroyItem();
+							//this->RemovePlayerItem(gun);
+						}
+
+					}
+					else {
+						if (gun->iFlags() & ITEM_FLAG_EXHAUSTIBLE) {
+							// No need to blank m_pActiveItem, RemovePlayerItem (called by DestroyItem of a player item,
+							// actually)  already blanks the current m_pActiveItem, sets its viewmodel to NULL, and 
+							// handles other cleanup.
+							//if (m_pActiveItem == gun)m_pActiveItem = NULL;
+							//gun->Drop();
+							pev->weapons &= ~(1 << gun->m_iId);// take item off hud
+							gun->DestroyItem();
+							//this->RemovePlayerItem(gun);
+						}
+					}
+
+
+				}
+
+				if (ITEM_FLAG_EXHAUSTIBLE) {
+
+				}
+
+				pPlayerItem = pPlayerItem->m_pNext;
+			}//weapons in slot
+		}// this slot has a weapon?
+	}//loop thru slots
+
+
+
+	/*
+	// If doing the 'pick a better weapon' thing, GetNextBestWeapon would have
+	// to support a NULL weapon a that 2nd parameter (the current weapon to compare
+	// against, I think).
+
+	if(m_pActiveItem == NULL){
+		BOOL getNextSuccess = g_pGameRules->GetNextBestWeapon(this, pWeapon);
+
+		// m_pActiveItem == NULL
+		if (!getNextSuccess || pWeapon == m_pActiveItem) {
+			//send a signal to clear the currently equipped weapon.
+			MESSAGE_BEGIN(MSG_ONE, gmsgClearWeapon, NULL, pev);
+			MESSAGE_END();
+		}
+	}
+	*/
+
+
+}//RemoveAllAmmo
+
 void CBasePlayer::RemoveAllItems( BOOL removeSuit )
 {
 	int i;
@@ -1637,7 +1732,7 @@ void CBasePlayer::RemoveAllItems( BOOL removeSuit )
 		pev->weapons &= ~WEAPON_ALLWEAPONS;
 	}
 
-	for ( i = 0; i < MAX_AMMO_SLOTS;i++)
+	for ( i = 0; i < MAX_AMMO_TYPES;i++)
 		m_rgAmmo[i] = 0;
 
 
@@ -5504,10 +5599,14 @@ void CBasePlayer::PostThink()
 	//easyPrintLine("MY VIEW ANGLES: %.2f, %.2f, %.2f", pev->angles.x, pev->angles.y, pev->angles.z);
 
 
-	if (queueFirstAppearanceMessageSend) {
+	if (!g_mapLoadedEver) {
+		easyPrintLine("!!!NOTICE:  Player think called before any map loaded? frame:%lu", g_ulFrameCount);
+	}
+
+	if (g_mapLoadedEver && queueFirstAppearanceMessageSend) {
 		queueFirstAppearanceMessageSend = FALSE;
 
-		easyPrintLineClient(this->edict(), "PLAYER: OnFirstAppearance");
+		easyPrintLineClient(this->edict(), "PLAYER: OnFirstAppearance, sent first message");
 		
 		// fvox, holster, ladder given to the server player from the client by a response from this call.
 		MESSAGE_BEGIN(MSG_ONE, gmsgOnFirstAppearance, NULL, pev);
@@ -6262,11 +6361,11 @@ void CBasePlayer::turnOffSneaky(void){
 }
 
 
-
 // MODDD - you better believe it.
 // Called to signify the 'first appearance' of this player in a given game.
-// Called by Client.cpp's "ClientPutInServer" (also calls Spawn for the first time),
-// OR called by the "Restore" method here on loading a game.
+// Called by Client.cpp's "ClientPutInServer" (which also calls Spawn for the first time) for starting a new game
+// or connecting to a server (gee imagine that),
+// OR called by Restore calling precache (which calls onFirstAppearance) on loading a game.
 // This only needs to run once on starting/joining a server/game to load the server's broadcasted CVars into
 // the connected client's cache.
 // Because lacking FCVAR_REPLICATED is a bitch.
@@ -6274,7 +6373,8 @@ void CBasePlayer::OnFirstAppearance(void) {
 	//NOTICE - this is happening on coming from map transitions too (Restore call), but not sure what can be done about that.
 	// Not that it's a big problem though.
 
-	// Can't send messages this early, becaaaaaaaaause???
+	// Single or multiplayer, this works fine.
+	g_firstPlayerEntered = TRUE;
 	queueFirstAppearanceMessageSend = TRUE;
 
 }//END OF OnFirstAppearance
@@ -6614,14 +6714,17 @@ void CBasePlayer::Spawn( BOOL revived ){
 	//MODDD - only reset ammo on a true spawn, not a revive.
 	if(!revived){
 		// reset all ammo values to 0
-		for ( int i = 0; i < MAX_AMMO_SLOTS; i++ )
+		for ( int i = 0; i < MAX_AMMO_TYPES; i++ )
 		{
+			// so setting both to 0 doesn't get ammo out of synch until ammo numbers are changed at some point?
+			// Suppose not.   (idea was to not set AmmoLost, so that the HUD sees something out of synch if that
+			// is the case... not important if ammo numbers are force-updated somewhere else)
 			m_rgAmmo[i] = 0;
 			m_rgAmmoLast[i] = 0;  // client ammo values also have to be reset  (the death hud clear messages does on the client side)
 		}
 	}else{
 		// I think this just forces all ammo valus to be updated clientside?
-		for ( int i = 0; i < MAX_AMMO_SLOTS; i++ )
+		for ( int i = 0; i < MAX_AMMO_TYPES; i++ )
 		{
 			m_rgAmmoLast[i] = 0;  // client ammo values also have to be reset  (the death hud clear messages does on the client side)
 		}
@@ -6724,9 +6827,6 @@ void CBasePlayer :: Precache( void )
 
 
 
-	// going to need some updates soon enough!
-	queueFirstAppearanceMessageSend = TRUE;
-
 }
 
 
@@ -6755,6 +6855,9 @@ int CBasePlayer::Restore( CRestore &restore )
 	// can cause this error:
 	//     "SZ_GetSpace:  Tried to write to an uninitialized sizebuf_t: ???"
 	// So that's <pretty> great.
+
+
+	easyPrintLine("***Player Restored");
 	OnFirstAppearance();
 
 	friendlyCheckTime = 0;  //can check again.
@@ -8086,7 +8189,7 @@ int CBasePlayer :: GiveAmmo( int iCount, const char* szName, int iMax )
 	//MODDD - Nothing about 'i' nor szName changes between now and WRITE_BYTE below?  Just send 'i' then!
 	const int i = GetAmmoIndex( szName );
 
-	if ( i < 0 || i >= MAX_AMMO_SLOTS )
+	if ( i < 0 || i >= MAX_AMMO_TYPES )
 		return -1;
 
 	int iAdd = min( iCount, iMax - m_rgAmmo[i] );
@@ -8297,7 +8400,7 @@ int CBasePlayer::AmmoInventory( int iAmmoIndex )
 // makes sure the client has all the necessary ammo info,  if values have changed
 void CBasePlayer::SendAmmoUpdate(void)
 {
-	for (int i=0; i < MAX_AMMO_SLOTS;i++)
+	for (int i=0; i < MAX_AMMO_TYPES;i++)
 	{
 
 		//2 is the glock ID.
@@ -9285,6 +9388,83 @@ int CBasePlayer :: GetCustomDecalFrames( void )
 }
 
 
+
+
+
+
+/*
+//MODDD - clone of DropPlayerItem, only no resulting drop.
+// Wait.  There's already a "RemovePlayerItem" that takes a reference to the object instead.
+// And that's already availble in the scenario I have.   ...     oops.
+void CBasePlayer::RemovePlayerItemClassname(char* pszItemName)
+{
+	if (!strlen(pszItemName))
+	{
+		// if this string has no length, the client didn't type a name!
+		// assume player wants to drop the active item.
+		// make the string null to make future operations in this function easier
+		pszItemName = NULL;
+	}
+
+	CBasePlayerItem* pWeapon;
+	int i;
+
+	for (i = 0; i < MAX_ITEM_TYPES; i++)
+	{
+		pWeapon = m_rgpPlayerItems[i];
+
+		while (pWeapon)
+		{
+			if (pszItemName)
+			{
+				// try to match by name. 
+				if (!strcmp(pszItemName, STRING(pWeapon->pev->classname)))
+				{
+					// match! 
+					break;
+				}
+			}
+			else
+			{
+				// trying to drop active item
+				if (pWeapon == m_pActiveItem)
+				{
+					// active item!
+					break;
+				}
+			}
+
+			pWeapon = pWeapon->m_pNext;
+		}
+
+
+		// if we land here with a valid pWeapon pointer, that's because we found the 
+		// item we want to drop and hit a BREAK;  pWeapon is the item.
+		if (pWeapon)
+		{
+			BOOL getNextSuccess = g_pGameRules->GetNextBestWeapon(this, pWeapon);
+
+			// m_pActiveItem == NULL
+			if (!getNextSuccess || pWeapon == m_pActiveItem) {
+				//send a signal to clear the currently equipped weapon.
+				MESSAGE_BEGIN(MSG_ONE, gmsgClearWeapon, NULL, pev);
+				MESSAGE_END();
+			}
+
+			pev->weapons &= ~(1 << pWeapon->m_iId);// take item off hud
+			
+			// Tricky tricky!  The weapon box would have called 'PackWeapon' and involved this weapon.
+			// That also included the 'RemovePlayerItem' to delete the weapon entity itself.  So do so here.
+			RemovePlayerItem(pWeapon);
+
+			return;// we're done, so stop searching with the FOR loop.
+		}
+	}
+}
+*/
+
+
+
 //=========================================================
 // DropPlayerItem - drop the named item, or if no name,
 // the active item. 
@@ -9526,7 +9706,10 @@ BOOL CBasePlayer :: SwitchWeapon( CBasePlayerItem *pWeapon )
 
 	ResetAutoaim();
 	
-	setActiveItem_HolsterCheck(pWeapon, (fBreakHolster != TRUE) );
+	// NOTICE - on being told to switch weapons from receiving one in the middle of a stream of
+	// received weapons (multiplayer spawn, or cheat grants), disable holster anims.  Just akward
+	// to do that for getting subsequent weapons after getting a new one already.
+	setActiveItem_HolsterCheck(pWeapon, !globalflag_muteDeploySound && (fBreakHolster != TRUE) );
 	return TRUE;
 	
 }

@@ -294,10 +294,11 @@ void CHandGrenade::EitherAttack() {
 
 		float flVel = 220 + 6 * 140;
 		Vector angThrow = m_pPlayer->pev->v_angle + m_pPlayer->pev->punchangle;
-		if (angThrow.x < 0)
+		if (angThrow.x < 0) {
 			angThrow.x = -10 + angThrow.x * ((90 - 10) / 90.0);
-		else
+		}else {
 			angThrow.x = -10 + angThrow.x * ((90 + 10) / 90.0);
+		}
 
 		//MODDD NOOOOOOOOOOOOOOOOOOOOOOOO
 		//if ( flVel > 500 )

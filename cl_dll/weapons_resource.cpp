@@ -84,10 +84,27 @@ int WeaponsResource::HasAmmo(WEAPON* p)
 
 	BOOL hasAnyReserveAmmo = (CountAmmo(p->iAmmoType) > 0 || CountAmmo(p->iAmmo2Type) > 0);
 
+	/*
 	if (hasAnyReserveAmmo) {
 		// new ammo since?  Flick this flag off.
 		p->fForceNoSelectOnEmpty = FALSE;
+
+		if (FStrEq(p->szName, "weapon_satchel")) {
+			int x = 45;
+		}
 	}
+	*/
+
+
+
+	if (FStrEq(p->szName, "weapon_satchel")) {
+		BOOL hasflag = (p->iFlags & ITEM_FLAG_SELECTONEMPTY);
+		BOOL noselectOnEmpty = p->fForceNoSelectOnEmpty;
+		BOOL combo = hasflag && !noselectOnEmpty;
+		int x = 45;
+	}
+
+
 
 	//MODDD - fForceNoSelectOnEmpty created so that, if the satchel is out of deployed charges
 	// and has no ammo, this can be detected and shown on the client as red.
@@ -410,15 +427,16 @@ void WeaponsResource::SelectSlot(int iSlot, int fAdvance, int iDirection)
 			}
 		}
 
-		if (p) {
 
-			if (openSinceClose) {
-				//MODDD -  hud_fastwtich wasn't on or didn't work (0 or many items in slot)?  Play for the open menu.
-				// AND only if the menu was opened at all. Slots without any items don't open the menu.
-				// AND only since opening since a close.  Otherwise...
-				PlaySound("common/wpn_hudon.wav", 1);
-			}
-			else {
+		if (openSinceClose) {
+			//MODDD -  hud_fastwtich wasn't on or didn't work (0 or many items in slot)?  Play for the open menu.
+			// AND only if the menu was opened at all. Slots without any items don't open the menu.
+			// AND only since opening since a close.  Otherwise...
+			PlaySound("common/wpn_hudon.wav", 1);
+		}
+
+		if (p) {
+			if(!openSinceClose){
 				// yep.
 				gHUD.playWeaponSelectMoveSound();
 			}

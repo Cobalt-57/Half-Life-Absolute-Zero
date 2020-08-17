@@ -127,12 +127,17 @@ float changeLevelQueuedTime = -1;
 
 
 
+// sp, for "singleplayer".  Linked to the previous time 'PlayerPreThink' was called.
 float sp_previousFrameTime;
 // Only referred to for detecting single-player pauses, not multiplayer.
 BOOL sp_playerCanPreThink = FALSE;
 BOOL sp_playerCanPostThink = FALSE;
 
 
+BOOL g_alreadyShownGameloadedMessage = FALSE;
+BOOL g_firstPlayerEntered = FALSE;
+// For the whole server.  Linked to the previous time 'StartFrame' was called.
+float g_previousFrameTime;
 
 
 
@@ -992,9 +997,8 @@ void ClientPutInServer( edict_t *pEntity )
 
 	// This is the 'first appearance' of this player in this game.
 	pPlayer->OnFirstAppearance();
-
-
-	easyPrintLine("ClientPutInServer:: Finished.");
+	
+	easyPrintLine("***Player entered the game (ClientPutInServer)");
 }
 
 
@@ -4893,8 +4897,6 @@ void ClientCommand( edict_t *pEntity )
 			//CHANGE_LEVEL(booty1, booty2);
 		}
 	}
-	
-	
 	else if (FStrEq(pcmdRefinedRef, "motd_show")) {
 		// the command "motd" is hardcoded, strangely enough, and doesn't show the MOTD again like startup does (connected to server).
 		// so how about this
@@ -4928,7 +4930,21 @@ void ClientCommand( edict_t *pEntity )
 
 		// not the suit this time.
 		tempplayer->RemoveAllItems(FALSE);
-	}else if (FStrEq(pcmdRefinedRef, "removesuit") ) {
+	}
+	else if (FStrEq(pcmdRefinedRef, "removeallammo") || (FStrEq(pcmdRefinedRef, "removeammo")) ) {
+		if (g_flWeaponCheat == 0.0) {
+			easyForcePrintLineClient(pEntity, "Need cheats for that... weirdly.");
+			return;
+		}
+		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer*)pev);
+
+		// only remove all ammo's.
+
+		tempplayer->RemoveAllAmmo();
+
+		
+	}
+	else if (FStrEq(pcmdRefinedRef, "removesuit") ) {
 		if (g_flWeaponCheat == 0.0) {
 			easyForcePrintLineClient(pEntity, "Need cheats for that... weirdly.");
 			return;
@@ -5533,10 +5549,52 @@ void StartFrame( void )
 	// as in, yes, even the first time "StartFrame" here is called, which runs every frame.  SPOOKY.
 	// Skipping the first two frames just to be safe.
 
-	if (g_ulFrameCount > 2 && g_gameLoaded) {
+
+	// does the 'g_ulFrameCount > 2' requirement even make sense?
+	// Maybe do neither of these in such a case it fails?  Maybe not, don't know.
+	
+
+
+	// NOTE!  Beware of loaded games!  They set gpGlobals->time!   I don't know if in the codebase or if that's up to the engine though.
+	// Somewhere a "g_previousFrameTime = gpGlobals->time" right after a restore would be smart, if suddenly seeing "gpGlobals->time" at 800
+	// compared to a prevTime of 0 is an issue.
+	// Same for sp_previousFrameTime, maybe?
+
+	BOOL tempPauseCheck = ((gpGlobals->time - g_previousFrameTime) <= 0.005);
+	//gEngfuncs.GetMaxClients(
+	g_previousFrameTime = gpGlobals->time;
+
+
+
+
+	//if(g_ulFrameCount <= 20 || !g_mapLoadedEver || !g_alreadyShownGameloadedMessage) {
+	//	easyPrintLine("??? mapLE:%d LoadedMess:%d playerCon:%d time:%.2f prevtime:%.2f : ispaus?%d   frame:%lu playercount:%d", g_mapLoadedEver, g_alreadyShownGameloadedMessage, g_firstPlayerEntered, gpGlobals->time, g_previousFrameTime, tempPauseCheck, g_ulFrameCount, gpGlobals->maxClients);
+	//}
+	//
+
+	// g_ulFrameCount >= 1 && ?
+	// g_mapLoadedEver ?
+	
+	// The 'at least 1st frame' requirement stops "PF_MessageEnd_I:  Unknown User Msg 119" messages on restoring games.
+	// 'g_firstPlayerEntered"' is better than a flat frame check because time to load a brand new map can go between 1
+	// and 20 frames (pre-steam HL is done on the 2nd, WON takes many more frames).
+	// In any case, waiting until the first player has called 'spawn' looks to work.
+	// TEST: are broadcast messages for broadcasted/synch'd/replicated (synonyms) Cvars valid in a dedicated server
+	// with 0 players?  Just checking for the cause of some error messages like this 119 one, either being called too early
+	// or having no clients to send a message to yet (I doubt the latter).
+	// Starting a non-dedicated server (automatically join it after creation) takes about 30 frames in pre-steam.
+	// In WON, about 40 frames.
+
+	if(g_ulFrameCount >= 1 && g_firstPlayerEntered){
+		if (!g_alreadyShownGameloadedMessage) {
+			g_alreadyShownGameloadedMessage = TRUE;
+			easyPrintLine("!!!Called for CVar updates with a map loaded for the first time, frame:%lu", g_ulFrameCount);
+		}
 		updateCVarRefs(FALSE);
 	}
 	else {
+		easyPrintLine("!!!Called for CVar updates without any map having loaded, frame: %lu mle:%d fpe:%d", g_ulFrameCount, g_mapLoadedEver, g_firstPlayerEntered);
+		
 		updateCVarRefs(TRUE);
 	}
 

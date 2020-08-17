@@ -83,8 +83,8 @@ void UpdateStats( CBasePlayer *pPlayer )
 {
 	int i;
 
-	int ammoCount[ MAX_AMMO_SLOTS ];
-	memcpy( ammoCount, pPlayer->m_rgAmmo, MAX_AMMO_SLOTS * sizeof(int) );
+	int ammoCount[ MAX_AMMO_TYPES ];
+	memcpy( ammoCount, pPlayer->m_rgAmmo, MAX_AMMO_TYPES * sizeof(int) );
 
 	// Keep a running time, so the graph doesn't overlap
 	
@@ -116,7 +116,7 @@ void UpdateStats( CBasePlayer *pPlayer )
 	}
 
 	float ammo = 0;
-	for (i = 1; i < MAX_AMMO_SLOTS; i++)
+	for (i = 1; i < MAX_AMMO_TYPES; i++)
 	{
 		ammo += ammoCount[i] * AmmoDamage( CBasePlayerItem::AmmoInfoArray[i].pszName );
 	}

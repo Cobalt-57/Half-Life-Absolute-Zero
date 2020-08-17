@@ -431,6 +431,46 @@ void CGrenade::DangerSoundThink( void )
 }
 
 
+//MODDD - NEW.  Method to be called when a 'touch' method detects the ground.
+void CGrenade::groundContact(void) {
+
+	//MODDD - grenades placed on the ground should not do the sequence change, they're
+	// already upright.
+	if (!dropped) {
+		// Also, only happen the first time since touching the ground.
+		// It's most important not to do the angle shift multiple times.
+
+		if (!firstGroundContactYet) {
+			// no weirdness from that.  both might be redundant though.
+			pev->effects |= EF_NOINTERP;
+			pev->renderfx |= STOPINTR;
+
+			// needs to be specified now that it animates properly.
+			//   imagine that.
+			pev->sequence = 1;   //laying on the ground.
+			pev->frame = 0;
+			pev->framerate = 0;
+
+			// and hit those angles.
+			// No pitch, and need to rotate a ways
+			//pev->angles = g_vecZero;
+
+
+			SetAngleX(0);
+			//SetAngleX(RANDOM_FLOAT(-150, 150));
+
+			ChangeAngleY(-90);
+
+			SetAngleZ(0);
+			//SetAngleZ(RANDOM_FLOAT(-150, 150));
+
+			firstGroundContactYet = TRUE;
+		}
+	}//dropped check
+}
+
+
+
 void CGrenade::BounceTouch( CBaseEntity *pOther )
 {
 	// don't hit the guy that launched this grenade
@@ -474,53 +514,39 @@ void CGrenade::BounceTouch( CBaseEntity *pOther )
 
 
 
+	//BOOL isThatNull = (pev->groundentity == NULL);
+
 	if (pev->flags & FL_ONGROUND)
 	{
 		// add a bit of static friction
 		pev->velocity = pev->velocity * 0.8;
 
-
-
-		//MODDD - grenades placed on the ground should not do this, they'll just clip
-		if (!dropped){
-			// Also, only happen the first time since touching the ground.
-			// It's most important not to do the angle shift multiple times.
-
-
-			if (!firstGroundContactYet) {
-
-				// no weirdness from that.  both might be redundant though.
-				pev->effects |= EF_NOINTERP;
-				pev->renderfx |= STOPINTR;
-
-				// needs to be specified now that it animates properly.
-				//   imagine that.
-				pev->sequence = 1;   //laying on the ground.
-				pev->frame = 0;
-				pev->framerate = 0;
-
-				// and hit those angles.
-				// No pitch, and need to rotate a ways
-				//pev->angles = g_vecZero;
-				
-
-				SetAngleX(0);
-				//SetAngleX(RANDOM_FLOAT(-150, 150));
-
-				ChangeAngleY(-90);
-
-				SetAngleZ(0);
-				//SetAngleZ(RANDOM_FLOAT(-150, 150));
-				
-
-				firstGroundContactYet = TRUE;
-			}
-		}//dropped check
-
-
+		groundContact();
 	}
 	else
 	{
+		//if (pOther->pev->solid == SOLID_BSP) {
+			//MODDD - hit some part of the map?  NOW anything.
+			// Sliding on an incline strangely doesn't count as 'FL_ONGROUND' until it's moving very slowly along it.
+			// You know what fine, trace-line.  Because this engine sure can't send us the point of contact now can it.
+		
+			TraceResult tr;
+			//Vector vecStart = Center();
+			// we have 0 size, just be the origin.
+			Vector vecStart = pev->origin;
+			UTIL_TraceLine(vecStart, vecStart + Vector(0, 0, -4), dont_ignore_monsters, ENT(pev), &tr);
+
+			if (tr.fStartSolid || tr.fAllSolid || tr.flFraction < 1.0) {
+				// this will also be ground contact.
+
+				// add a bit of static friction (more so, likely going up a ramp)
+				pev->velocity = pev->velocity * 0.55;
+
+				groundContact();
+			}
+
+		//}
+
 		// play bounce sound
 		BounceSound();
 	}
@@ -564,7 +590,6 @@ void CGrenade::SlideTouch( CBaseEntity *pOther )
 
 void CGrenade :: BounceSound( void )
 {
-
 	//MODDD - don't spam bounce sounds!
 	if (gpGlobals->time >= nextBounceSoundAllowed) {
 		// okay.
@@ -573,8 +598,7 @@ void CGrenade :: BounceSound( void )
 		// oh.
 		return;
 	}
-
-	nextBounceSoundAllowed = gpGlobals->time + 0.26;
+	nextBounceSoundAllowed = gpGlobals->time + 0.22;
 
 	//MODDD - refer to CVar.
 	if(EASY_CVAR_GET(handGrenadesUseOldBounceSound) != 1){
@@ -758,21 +782,11 @@ CGrenade * CGrenade::ShootTimed( entvars_t *pevOwner, Vector vecStart, Vector ve
 
 
 
-
-
-
 	CGrenade *pGrenade = GetClassPtr( (CGrenade *)NULL );
 	pGrenade->Spawn();
 
 
-
-	// WOA HOLD UP DEVS.
-	// YOU FUCKED AROUND WITH THE SEQUENCE
-	// BEFORE SETTING THE MODEL.
-	// NO.    NO.           NO.        NO.                                           NO.
-	//                                                
-	//                           
-	//                                        NOOOOOOOOOOOOOOOOOOOOOO.
+	//MODDD - CHANGE: Let's not set the sequence before setting the model, yes?
 
 	SET_MODEL(ENT(pGrenade->pev), "models/w_grenade.mdl");
 
@@ -801,7 +815,7 @@ CGrenade * CGrenade::ShootTimed( entvars_t *pevOwner, Vector vecStart, Vector ve
 
 
 
-	//MODDD - THANKS FOR NOT SAYING A single WORD ABOUT THIS significant line THAT'S DRIVEN ME rather INSANE FOR YEARS.
+	//MODDD
 	// Randomizes an animation for the grenade.
 	// ALSO, old range was 3 to 6.  Now 3 to 5.  What is with #6 anyway, it's still jittering too weird even
 	// when it plays correctly, it's just weeeiird.
@@ -828,7 +842,6 @@ CGrenade * CGrenade::ShootTimed( entvars_t *pevOwner, Vector vecStart, Vector ve
 	pGrenade->pev->dmg = flDamage;
 
 	return pGrenade;
-	
 }
 
 
@@ -848,28 +861,13 @@ CGrenade* CGrenade::ShootTimedDropped(entvars_t* pevOwner, Vector vecStart, Vect
 
 
 
-
-
-
-
-
-
-
-
-
-//MODDD - methods "ShootSatchelCharge" and "UseSatchelCharges" removed.
-// The Satchel class handled theses ideas without those methods.
-
+//MODDD - methods "ShootSatchelCharge" and "UseSatchelCharges" removed.  Unused here.
 
 float CGrenade::massInfluence(void){
 	return 0.12f;
 }
-
-
 int CGrenade::GetProjectileType(void){
 	return PROJECTILE_GRENADE;
 }
 
-
 //======================end grenade
-

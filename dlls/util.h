@@ -260,6 +260,8 @@ extern int global_useSentenceSave;
 extern float previousFrameTime;
 extern BOOL g_gamePaused;
 extern BOOL g_gameLoaded;
+extern BOOL g_mapLoaded;
+extern BOOL g_mapLoadedEver;
 
 extern int g_groupmask;
 extern int g_groupop;

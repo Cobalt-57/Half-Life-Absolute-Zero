@@ -468,7 +468,18 @@ IMPLEMENT_MESSAGE(UpdClientC){
 	//????????????????
 
 	*(aryCVarHash[argID]) = arg;
+
+
+	// Strangely, the developer-requiriing printout method for clientside just isn't working in WON,
+	// so non-forced calls don't show up at all.   Weird.
+	// Either replace it or,  'eh'.   I don't really test on WON very often though.
+	//easyForcePrintLine("AHA THIS MESSAGE IS FORCED dev:%.2f", CVAR_GET_FLOAT("developer"));
+	
 	easyPrintLine("CVAR DEBUG: Client: found ID %d. Set CVar %s to %.2f", argID, aryCVarHashName[argID], arg);
+	
+	//if (argID == 0) {
+	//	gEngfuncs.pfnClientCmd("tcs_init_link");
+	//}
 
 #else
 	//Need to update hidden CVars meant to be broadcasted to clients. Receive the new value(s) here.
@@ -637,11 +648,13 @@ IMPLEMENT_MESSAGE(CWFNSOE) {
 
 	int iId = READ_CHAR();
 	WEAPON* pWeapon = gHUD.m_Ammo.gWR.GetWeapon(iId);
-	
+
+	int resultVal = READ_BYTE();
+
 	if (!pWeapon)
 		return 0;
 
-	pWeapon->fForceNoSelectOnEmpty = TRUE;
+	pWeapon->fForceNoSelectOnEmpty = resultVal;
 
 	return 1;
 }

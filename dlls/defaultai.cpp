@@ -208,7 +208,10 @@ Schedule_t	slFail[] =
 	{
 		tlFail,
 		ARRAYSIZE ( tlFail ),
-		bits_COND_CAN_ATTACK,
+		bits_COND_CAN_ATTACK |
+		//MODDD - new?  Retrying methods to get to an enemy when pathfinding fails despite a better enemy being closer isn't great.
+		bits_COND_NEW_ENEMY
+		,
 		0,
 		"Fail"
 	},

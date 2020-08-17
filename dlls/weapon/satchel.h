@@ -66,8 +66,11 @@ public:
 	void WeaponIdle(void);
 	void Throw(void);
 
+	void CheckOutOfAmmo(void);
 	// there is also ItemPostFrame, it runs when m_flNextAttack is off.
 	void ItemPostFrameThink(void);
+
+	void ReDeploySatchel(void);
 
 	virtual BOOL UseDecrement(void)
 	{
@@ -87,6 +90,10 @@ public:
 
 class CSatchelCharge : public CGrenade
 {
+public:
+	float nextBounceSoundAllowed;
+
+
 	void Spawn(void);
 	void Precache(void);
 	void BounceSound(void);

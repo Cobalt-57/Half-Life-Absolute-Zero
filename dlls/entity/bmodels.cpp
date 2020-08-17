@@ -288,8 +288,13 @@ LINK_ENTITY_TO_CLASS( func_monsterclip, CFuncMonsterClip );
 void CFuncMonsterClip::Spawn( void )
 {
 	CFuncWall::Spawn();
-	if ( EASY_CVAR_GET(showtriggers) == 0 )
+	if (EASY_CVAR_GET(showtriggers) == 0) {
 		pev->effects = EF_NODRAW;
+	}
+	else {
+		//MODDD - this 'else' area is new, doesn't hurt to be explicit
+		pev->effects &= ~EF_NODRAW;
+	}
 	pev->flags |= FL_MONSTERCLIP;
 }
 

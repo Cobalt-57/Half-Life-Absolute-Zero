@@ -287,7 +287,7 @@ Headcrabs also turn faster, and moreso with difficulty.
 
 a1a2 hgrunt vs. gargantua sequence breaking, even in WON, fixed!   I, think?
 
-By CVAR: cl_mp5_kickback, defaults to 0 (off).  When on, mp5 random kickback no longer includes very low ranges, slightly higher on average and more consistent.
+By CVAR: cl_mp5_kickbackmode, defaults to 0 (off).  When on, mp5 random kickback no longer includes very low ranges, slightly higher on average and more consistent.
 
 ---------------------------------------------------------------------------------------------
 
@@ -313,8 +313,8 @@ Breakable destroyed-sounds better factor in overkill and carry over a further di
 CVar 'disablePauseSinglePlayer' re-enabled.
 
 New CVars, 'pausecorrection1' and 'pausecorrection2', related to denying certain logic on noticing the game is paused (ESC menu or console is up), avoids oddities with viewmodels or console complaints about overflowing queued sounds that can happen while paused.
-For single-player only.  The defaults of '1' each should be fine.  pausecorrection2 has two modes, '1' and '2'.  Both 0 is retail handling (no extra checks).
-pausecorrection2 at setting '2' may be better for very low host_framerate choices.
+For single-player only.  The defaults should be fine.  pausecorrection2 has two modes, '1' and '2'.  Both 0 is retail handling (no extra checks).
+pausecorrection2 at setting '2' is better for very low host_framerate choices.
 
 Taking multiple hits from the same trigger_hurt while the game is paused while the player is standing inside one (green water, etc.) should no longer be possible.
 
@@ -323,4 +323,21 @@ Timed damage now ticks while standing in a trigger_hurt.  Before, a trigger_hurt
 Verified: buddha timed damage is ignored if standing in a source of the timed damage (so that standing in a pool of green water that does 0 direct damage wouldn't make the player seem immune to damage).
 
 a1a2 hgrunt vs. garg sequence last fix: no longer an unintentional 5 second delay of dead hgrunt AI, obvious on running into the sequence as soon as the map loads (general scripted fix).
+Also, garg should have a better time moving around after the sequence ends (blocked by a func_monsterclip).  The garg is still unable to move over the tracks (dip in the floor) but this is an engine thing.
 
+grenades no longer travel as far up ramps compared to even ground, and change to the on-ground animation frame on the start of contact with the ground (not a near-complete stop).
+
+hud_rpg_alpha_ammo is finally a CVar, woohoo.  Able to turn off RPG ammo clip+reserve being combined.
+
+hornet gun updates the ammo counter anytime it is out, not only outside of fire-delays and deploy/holster animations.
+
+Cause of 'PF_MessageEnd_I: Unknown User Msg 119' console spam should be fixed, even for for WON, for loading, starting, or creating servers/connecting to games.
+
+Enemies can jump to another enemy while in a 'failed' task, such as a headcrab on a counter in a1a2.bsp.  (Always waits for a chance to attack its first enemy: the scientist further away, even thouugh this is not possible, even if the player is much closer).
+-short version: enemies more likely to re-pick enemies on failing to reach an enemy repeatedly.
+
+CVar cl_mp5_kickbackmode actually added to the game.  Whoops.
+
+Few other revisions to the satchel for odd cases, such as changing weapons immediately after detonating deployed satchels with satchel ammo left.
+
+Even better fix for viewmodel animations, particularly holstering sometimes not playing but freezing the model as though it did.  Probably.

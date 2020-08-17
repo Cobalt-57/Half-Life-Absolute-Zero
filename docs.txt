@@ -1008,6 +1008,7 @@ disablepathtrack # - adds the SF_PATH_DISABLED spawn flag.
 
 removeItems - Removes everything, including the suit from item_suit (or most other cheat commands).  Includes power canisters.
 removeWeapons - Removes all equipable items (weapon select menu shows all empty slots).  Includes power canisters.
+removeAmmo - remove all ammo in reserve for all ammo types (does not affect weapon clip ammo).
 removeSuit - Remove only the item_suit.
 removepowercanisters - Power canisters.  Really everything in the right-sidebar open during weapon select (longjumpcharge and air tank time too).
 
@@ -1502,6 +1503,16 @@ r_drawentities (1) - int; can draw models differently to emphasize hitboxes with
 
 When bulletholeAlertStukaOnly is set to 0,   scientists will flee if shots occur close to them.   Otherwise they won't even flinch at long enough of a distance
 (only respond to the AI sounds made by being near the scientist when firing).   Not a problem, just mentioning it.
+
+
+
+
+If running the mod in WON half-life and there is a black bar along the bottom or also along the sides/top of the screen, see the "viewsize" CVar.
+This is also able to be set in the video options as a slider (move 'video size' all the way to the right), or go to console and enter
+    viewsize 120
+
+Should AZ go aheand and default to this instead?  Looks like non-WON doesn't pay any attention to viewsize.
+
 
 
 

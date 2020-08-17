@@ -1346,6 +1346,15 @@ BOOL CBasePlayerWeapon :: CanDeploy( void )
 		return TRUE;
 	}
 
+
+	//MODDD - if this weapon doesn't require ammo, also allow.
+	if (iFlags() & ITEM_FLAG_SELECTONEMPTY) {
+		// also allow unconditionally.
+		return TRUE;
+	}
+
+
+
 	if ( pszAmmo1() )
 	{
 		int ammoIndex = getPrimaryAmmoType();
@@ -1422,7 +1431,11 @@ BOOL CBasePlayerWeapon :: DefaultDeploy( char *szViewModel, char *szWeaponModel,
 
 	m_pPlayer->m_flNextAttack = UTIL_WeaponTimeBase() + fireDelayTime; //0.5;
 	//m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + deployAnimTime; //used to be "... + 1.0", now depends on optional parameter (defaults to "1.0");
-	m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + deployAnimTime + randomIdleAnimationDelay(); //used to be "... + 1.0", now depends on optional parameter (defaults to "1.0");
+	
+	// MODDD - "+ randomIdleAnimationDelay()" removed.  Leave that up to the weapons themselves instead.
+	// Some like the satchel need to return to WeaponIdle to see if a satchel needs to be re-deployed
+	// (creates an akward time of holding the remote where left and right-click do nothing after switching out from recently detonating with ammo left).
+	m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + deployAnimTime; //used to be "... + 1.0", now depends on optional parameter (defaults to "1.0");
 
 	
 	forceBlockLooping();
@@ -1457,13 +1470,14 @@ void CBasePlayerWeapon::DefaultHolster( int iAnim, int skiplocal /* = 0 */, int 
 	// Let this handle the time it takes to change anims instead, not transmitted to the client by default.
 	m_pPlayer->m_fCustomHolsterWaitTime = gpGlobals->time + holsterAnimTime;
 
-	//Don't want to risk setting idle animations while holstering, set this to an impossible value.
+	// Don't want to risk setting idle animations while holstering, set this to an impossible value.
 	m_pPlayer->m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + holsterAnimTime + 5;
 
 
 	m_chargeReady |= 128;
 
-	SendWeaponAnim( iAnim );
+	//MODDD - doing Bypass instead of normal.
+	SendWeaponAnimBypass( iAnim );
 
 
 }//END OF DefaultHolster
@@ -1779,7 +1793,7 @@ BOOL CBasePlayerWeapon::ExtractClipAmmo( CBasePlayerWeapon *pWeapon )
 	}
 	else {
 		// oh
-		easyForcePrintLine("!!! Report this!  FAILURE minor");
+		easyForcePrintLine("!!! Report this!  ExtractClipAmmo FAILURE minor, weaponname:%s ammoindex:%d ammoname:%s pickupamount:%d", pszName(), myPrimaryAmmotype, pszAmmo1(), iAmmo);
 		return (pWeapon->m_pPlayer->GiveAmmo(iAmmo, (const char*)pszAmmo1(), iMaxAmmo1()) > 0);
 	}
 
@@ -1806,8 +1820,8 @@ LINK_ENTITY_TO_CLASS( weaponbox, CWeaponBox );
 
 TYPEDESCRIPTION	CWeaponBox::m_SaveData[] = 
 {
-	DEFINE_ARRAY( CWeaponBox, m_rgAmmo, FIELD_INTEGER, MAX_AMMO_SLOTS ),
-	DEFINE_ARRAY( CWeaponBox, m_rgiszAmmo, FIELD_STRING, MAX_AMMO_SLOTS ),
+	DEFINE_ARRAY( CWeaponBox, m_rgAmmo, FIELD_INTEGER, MAX_AMMO_TYPES ),
+	DEFINE_ARRAY( CWeaponBox, m_rgiszAmmo, FIELD_STRING, MAX_AMMO_TYPES ),
 	DEFINE_ARRAY( CWeaponBox, m_rgpPlayerItems, FIELD_CLASSPTR, MAX_ITEM_TYPES ),
 	DEFINE_FIELD( CWeaponBox, m_cAmmoTypes, FIELD_INTEGER ),
 };
@@ -1826,7 +1840,7 @@ void CWeaponBox::Precache( void )
 //=========================================================
 void CWeaponBox :: KeyValue( KeyValueData *pkvd )
 {
-	if ( m_cAmmoTypes < MAX_AMMO_SLOTS )
+	if ( m_cAmmoTypes < MAX_AMMO_TYPES )
 	{
 		PackAmmo( ALLOC_STRING(pkvd->szKeyName), atoi(pkvd->szValue) );
 		m_cAmmoTypes++;// count this new ammo type.
@@ -1835,7 +1849,7 @@ void CWeaponBox :: KeyValue( KeyValueData *pkvd )
 	}
 	else
 	{
-		ALERT ( at_console, "WeaponBox too full! only %d ammotypes allowed\n", MAX_AMMO_SLOTS );
+		ALERT ( at_console, "WeaponBox too full! only %d ammotypes allowed\n", MAX_AMMO_TYPES );
 	}
 }
 
@@ -1907,7 +1921,7 @@ void CWeaponBox::Touch( CBaseEntity *pOther )
 	int i;
 
 // dole out ammo
-	for ( i = 0 ; i < MAX_AMMO_SLOTS ; i++ )
+	for ( i = 0 ; i < MAX_AMMO_TYPES ; i++ )
 	{
 		if ( !FStringNull( m_rgiszAmmo[ i ] ) )
 		{
@@ -2043,7 +2057,7 @@ int CWeaponBox::GiveAmmo( int iCount, const char* szName, int iMax, int *pIndex/
 {
 	int i;
 
-	for (i = 1; i < MAX_AMMO_SLOTS && !FStringNull( m_rgiszAmmo[i] ); i++)
+	for (i = 1; i < MAX_AMMO_TYPES && !FStringNull( m_rgiszAmmo[i] ); i++)
 	{
 		if (stricmp( szName, STRING( m_rgiszAmmo[i])) == 0)
 		{
@@ -2060,7 +2074,7 @@ int CWeaponBox::GiveAmmo( int iCount, const char* szName, int iMax, int *pIndex/
 			return -1;
 		}
 	}
-	if (i < MAX_AMMO_SLOTS)
+	if (i < MAX_AMMO_TYPES)
 	{
 		if (pIndex)
 			*pIndex = i;
@@ -2109,7 +2123,7 @@ BOOL CWeaponBox::IsEmpty( void )
 		}
 	}
 
-	for ( i = 0 ; i < MAX_AMMO_SLOTS ; i++ )
+	for ( i = 0 ; i < MAX_AMMO_TYPES ; i++ )
 	{
 		if ( !FStringNull( m_rgiszAmmo[ i ] ) )
 		{

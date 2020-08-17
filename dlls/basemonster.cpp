@@ -4203,6 +4203,8 @@ int CBaseMonster :: CheckLocalMove ( const Vector &vecStart, const Vector &vecEn
 
 #ifdef USE_MOVEMENT_BOUND_FIX_ALT
 			if( EASY_CVAR_GET(pathfindLargeBoundFix) == 1 && needsMovementBoundFix() ){
+				// A... NULL trace_ent is valid to take the Instance of?
+				// Guess so, look so the the 'World' itself.
 				CBaseEntity* whut = CBaseEntity::Instance(gpGlobals->trace_ent);
 
 				if(whut != NULL){
@@ -4264,6 +4266,8 @@ int CBaseMonster :: CheckLocalMove ( const Vector &vecStart, const Vector &vecEn
 			}
 			else
 			{
+				//DebugLine_Setup(vecStart, vecEnd, 255, 0, 0);
+
 				// any other info on it?
 				if (gpGlobals->trace_ent != NULL) {
 					CBaseEntity* testRef = CBaseEntity::Instance(gpGlobals->trace_ent);
@@ -4271,6 +4275,30 @@ int CBaseMonster :: CheckLocalMove ( const Vector &vecStart, const Vector &vecEn
 						const char* mahName = testRef->getClassname();
 					}
 				}
+
+
+				/*
+				// TEST, not a fantatic idea.
+				// Now wait just a minute.
+				TraceResult temp_tr;
+				Vector vecStartah = pev->origin + Vector(0, 0, 2);
+				Vector vecEndah = vecStartah + (vecEnd - vecStart).Normalize() * LOCAL_STEP_SIZE;
+				UTIL_TraceLine(vecStartah, vecEndah, dont_ignore_monsters, ENT(pev), &temp_tr);
+
+				if (!temp_tr.fAllSolid && !temp_tr.fStartSolid && temp_tr.flFraction >= 1.0) {
+					// yay.
+					iReturn = LOCALMOVE_VALID;
+					break;
+				}
+				else {
+					// what???
+					CBaseEntity* hittTester = CBaseEntity::Instance(temp_tr.pHit);
+					const char* classYetAgain = hittTester!=NULL?hittTester->getClassname():"NULL";
+					int x = 45;
+
+					UTIL_drawLineFrame(vecStartah, vecEndah, 255, 0, 0);
+				}
+				*/
 
 				// If we're going toward an entity, and we're almost getting there, it's OK.
 //				if ( pTarget && fabs( flDist - iStep ) < LOCAL_STEP_SIZE )
@@ -5926,6 +5954,8 @@ void CBaseMonster::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, f
 		if( !(EASY_CVAR_GET(pathfindLargeBoundFix) == 1 && needsMovementBoundFix() ) ){
 			//Normal way!
 			UTIL_MoveToOrigin ( ENT(pev), m_Route[ m_iRouteIndex ].vecLocation, flStep, MOVE_NORMAL );
+
+			//pev->origin = pev->origin + (m_Route[m_iRouteIndex].vecLocation - pev->origin).Normalize() * flStep;
 		}else{
 		//ALTERNATE.
 		/////////////////////////////////////////////////////////////////////////////////////
@@ -6078,8 +6108,21 @@ void CBaseMonster :: MonsterInit ( void )
 	m_IdealActivity = ACT_IDLE;
 
 	SetBits (pev->flags, FL_MONSTER);
-	if ( pev->spawnflags & SF_MONSTER_HITMONSTERCLIP )
-		pev->flags |= FL_MONSTERCLIP;
+
+
+	if (pev->spawnflags & SF_MONSTER_HITMONSTERCLIP) {
+
+		if (FClassnameIs(pev, "monster_gargantua")) {
+			//MODDD - 
+			// haha, nope!  No MONSTERCLIP for you.
+			// Tell some mapper of a2a1 about this.
+		}else{
+			pev->flags |= FL_MONSTERCLIP;
+		}
+	}
+
+
+
 	
 	ClearSchedule();
 	RouteClear();

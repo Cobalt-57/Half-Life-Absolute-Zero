@@ -64,8 +64,9 @@
 #define HIDEHUD_ALL			( 1<<2 )
 #define HIDEHUD_HEALTH		( 1<<3 )
 
-#define MAX_AMMO_TYPES	32		// ???
-#define MAX_AMMO_SLOTS  32		// not really slots
+//MODDD - MAX_AMMO_SLOTS constant removed, any references replaced with MAX_AMMO_TYPES.
+// 'SLOTS' isn't a fitting way to refer to different ammo choices anyway.
+#define MAX_AMMO_TYPES	32
 
 #define HUD_PRINTNOTIFY		1
 #define HUD_PRINTCONSOLE	2

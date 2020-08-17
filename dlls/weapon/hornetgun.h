@@ -46,6 +46,7 @@ public:
 	BOOL IsUseable(void);
 	void Holster(int skiplocal = 0);
 	void Reload(void);
+	void ItemPostFrameThink(void);
 	void WeaponIdle(void);
 	float m_flNextAnimTime;
 

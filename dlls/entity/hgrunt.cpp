@@ -5180,9 +5180,9 @@ Schedule_t *CHGrunt :: GetSchedule( void )
 			if (m_hEnemy != NULL) { daName = m_hEnemy->getClassname(); }
 
 
-			if(monsterID==1){
-				easyForcePrintLine("I AM YEAH %d : %d", HasConditions( bits_COND_SEE_ENEMY ), HasConditions ( bits_COND_CAN_RANGE_ATTACK1 ) );
-			}
+			//if(monsterID==1){
+			//	easyForcePrintLine("I AM YEAH %d : %d", HasConditions( bits_COND_SEE_ENEMY ), HasConditions ( bits_COND_CAN_RANGE_ATTACK1 ) );
+			//}
 
 
 

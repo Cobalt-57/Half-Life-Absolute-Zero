@@ -582,8 +582,13 @@ void CBaseTrigger::InitTrigger( )
 	pev->solid = SOLID_TRIGGER;
 	pev->movetype = MOVETYPE_NONE;
 	setModel(STRING(pev->model));    // set size and link into world
-	if ( EASY_CVAR_GET(showtriggers) == 0 )
-		SetBits( pev->effects, EF_NODRAW );
+	if (EASY_CVAR_GET(showtriggers) == 0) {
+		//MODDD - NOTE.  And then add-in EF_NODRAW early on startup if not showing triggers?
+		// Wh-... why not leave the only check for this in precache?
+		// maybe only some triggers call InitTrigger to reach this check...?
+		// What trigger wants to be drawn by default (showtriggers of 0) anyway?
+		SetBits(pev->effects, EF_NODRAW);
+	}
 }
 
 
@@ -1166,6 +1171,13 @@ void CBaseTrigger :: HurtTouch ( CBaseEntity *pOther )
 	if ( !pOther->pev->takedamage )
 		return;
 
+
+	/*
+	if (FClassnameIs(pOther->pev, "monster_headcrab")) {
+		int x = 45;
+	}
+	*/
+
 	
 	//MODDD - can block the trigger too. Only players from using it.
 	if(EASY_CVAR_GET(blockHurtTrigger) == 1 && (pOther != NULL && pOther->IsPlayer()) ){
@@ -1173,7 +1185,14 @@ void CBaseTrigger :: HurtTouch ( CBaseEntity *pOther )
 	}
 
 	if (g_gamePaused) {
-		// game is paused?  Don't stack up a bunch of touch calls!... this might not work
+
+		/*
+		if (FClassnameIs(pOther->pev, "monster_headcrab")) {
+			// ????
+			int x = 45;
+		}
+		*/
+		// game is paused?  Don't stack up a bunch of touch calls!
 		return;
 	}
 
@@ -2225,6 +2244,7 @@ void CLadder :: Precache( void )
 		pev->rendermode = kRenderTransTexture;
 		pev->renderamt = 0;
 	}
+	// wait.  Why is this here?  Why unconditionally remove "EF_NODRAW"?
 	pev->effects &= ~EF_NODRAW;
 	
 }

@@ -229,22 +229,27 @@ void CMP5::PrimaryAttack()
 	}
 
 
-	//MODDD - no idea why the last 2 lines are there or what they do differently, just 
-	//going with that.
+	//MODDD -Uhhhhhh...  I don't know what the 'if primAttack < weaponTimeBase' thing is, looks like something
+	// similar to what was in the hornetgun.
+	// Although notice a crucial difference: this starts with NextPrimaryAttack set to UTIL_WeaponTimeBase() + a constant.
+	// hornet did NextPrimaryAttack set to NextPrimaryAttack + a constant.
+	// In the mp5's case here, that condition could never even work.  But it could for the hornetgun (and only caused issues).
+	// so BYE.
 	if(m_pPlayer->cheat_minimumfiredelayMem == 0){
+		/*
 		m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 0.1;
+		if (m_flNextPrimaryAttack < UTIL_WeaponTimeBase()) {
+		    m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 0.1;
+		}
+		*/
 
-		if ( m_flNextPrimaryAttack < UTIL_WeaponTimeBase() )
-			m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 0.1;
-
+		// ...also, set secondaryAttack delay too
+		m_flNextPrimaryAttack = m_flNextSecondaryAttack = UTIL_WeaponTimeBase() + 0.1;
 	}else{
 		m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + m_pPlayer->cheat_minimumfiredelaycustomMem;
 	}
 
 
-	
-
-	
 	//m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + UTIL_SharedRandomFloat( m_pPlayer->random_seed, 10, 15 );
 }
 

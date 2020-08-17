@@ -418,6 +418,14 @@ int DispatchRestore( edict_t *pent, SAVERESTOREDATA *pSaveData, int globalEntity
 #endif
 
 		// Is this an overriding global entity (coming over the transition), or one restoring in a level
+		//MODDD - NOTE.  So is it always the case that on a transition, some entity sets the 'globalEntity' flag to TRUE
+		// while coming in?  But on loading a game, one (maybe several) can ride the "pEntity->pev->globalname" in the
+		// else-if instead?
+		// Main problem is, the player is loaded before any entity with this 'globalEntity' flag set happens.
+		// So it isn't possible to tell whether this is a transition or a loaded game causing the "Restore" calls.
+		// Not without some awkward framework to record all loaded entities and then call Restore like here with any
+		// entity having globalEntity set in mind (transition if yes, loaded game if not).
+		// NNNNNNNNnnnnnnnnn-no thanks.
 		if ( globalEntity )
 		{
 //			ALERT( at_console, "After: %f %f %f %s\n", pEntity->pev->origin.x, pEntity->pev->origin.y, pEntity->pev->origin.z, STRING(pEntity->pev->model) );

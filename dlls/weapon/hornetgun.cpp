@@ -209,17 +209,22 @@ void CHgun::PrimaryAttack()
 	m_pPlayer->SetAnimation( PLAYER_ATTACK1 );
 
 
-	//MODDD - again, no idea what the extra three lines are for, just going
-	//with that.
 	if(m_pPlayer->cheat_minimumfiredelayMem == 0){
+		//MODDD - uh...   ??  what?  Just have a fire delay like any other weapon?
+		// And set the secondary attack delay too, why not really.
+		// Seems doing fire-delay logic the normal way fixed sometimes firing two hornets in rapid succession
+		// (sometimes so rapid that they spawn in nearly the same place and crash).  Whoops.
+		/*
 		m_flNextPrimaryAttack = m_flNextPrimaryAttack + 0.25;
-
 		if (m_flNextPrimaryAttack < UTIL_WeaponTimeBase() )
 		{
 			m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 0.25;
 		}
+		*/
+
+		m_flNextPrimaryAttack = m_flNextSecondaryAttack = UTIL_WeaponTimeBase() + 0.25;
 	}else{
-		//little extra, because the primary attack seems to fail if it is too low; hornets hit each other and fall.
+		// little extra, because the primary attack seems to fail if it is too low; hornets hit each other and fall.
 		m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + m_pPlayer->cheat_minimumfiredelaycustomMem + 0.03f;
 	}
 
@@ -333,7 +338,8 @@ void CHgun::SecondaryAttack( void )
 
 	//MODDD 
 	if(m_pPlayer->cheat_minimumfiredelayMem == 0){
-		m_flNextPrimaryAttack = m_flNextSecondaryAttack = UTIL_WeaponTimeBase() + 0.1;
+		//MODDD - slightly increased between-attack delay,was 0.10.
+		m_flNextPrimaryAttack = m_flNextSecondaryAttack = UTIL_WeaponTimeBase() + 0.115;
 	}else{
 		m_flNextPrimaryAttack = m_flNextSecondaryAttack = UTIL_WeaponTimeBase() + m_pPlayer->cheat_minimumfiredelaycustomMem;
 	}
@@ -343,20 +349,35 @@ void CHgun::SecondaryAttack( void )
 }
 
 
+
+
 void CHgun::Reload( void )
 {
-	if (PlayerPrimaryAmmoCount() >= HORNET_MAX_CARRY)
-		return;
+	//MODDD - hornet-loading logic moved to PostItemFrameThink, so it doesn't depend on 
+	// having the weapon finished deploying (why wait until the weapon finishes deploying
+	// to show the updated hornet count from the elapsed time?).
+}
 
-	//MODDD NOTE.    wait...  what is this trying to do.  Mabe between putting the weapon away see how much
-	// time has passed without think logic running on this weapon to put more hornets in?
-	// Like putting 3 hornets back in the instant the player puts this weapon back on after having it off a while?
-	// Anything glitchy about that?
-	while (PlayerPrimaryAmmoCount() < HORNET_MAX_CARRY && m_flRechargeTime < gpGlobals->time)
-	{
-		ChangePlayerPrimaryAmmoCount(1);
-		m_flRechargeTime += 0.5;
+
+
+
+void CHgun::ItemPostFrameThink(void) {
+
+
+	//MODDD - moved from 'Reload' below, see notes there
+	if (PlayerPrimaryAmmoCount() < HORNET_MAX_CARRY) {
+		// This adds a hornet for every add-1-hornet-interval that passed between the last time
+		// the weapon was out and now to account for frames that think logic couldn't run
+		// (as it's only run on the currently equipped player weapon).
+		while (PlayerPrimaryAmmoCount() < HORNET_MAX_CARRY && m_flRechargeTime < gpGlobals->time)
+		{
+			ChangePlayerPrimaryAmmoCount(1);
+			m_flRechargeTime += 0.5;
+		}
 	}
+
+
+	CBasePlayerWeapon::ItemPostFrameThink();
 }
 
 

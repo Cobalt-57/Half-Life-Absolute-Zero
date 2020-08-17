@@ -440,6 +440,8 @@ public:
 	virtual BOOL isOrganic(void);
 	virtual BOOL usesSoundSentenceSave(void);
 
+	virtual void groundContact(void);
+
 
 };
 
@@ -520,7 +522,7 @@ public:
 	//MODDD - NEW.
 	static AmmoTypeCache AmmoTypeCacheArray[MAX_WEAPONS];
 
-	static AmmoInfo AmmoInfoArray[MAX_AMMO_SLOTS];
+	static AmmoInfo AmmoInfoArray[MAX_AMMO_TYPES];
 
 	CBasePlayer	*m_pPlayer;
 	CBasePlayerItem *m_pNext;
@@ -782,8 +784,8 @@ public:
 	
 	CBasePlayerItem	*m_rgpPlayerItems[MAX_ITEM_TYPES];// one slot for each 
 
-	int m_rgiszAmmo[MAX_AMMO_SLOTS];// ammo names
-	int m_rgAmmo[MAX_AMMO_SLOTS];// ammo quantities
+	int m_rgiszAmmo[MAX_AMMO_TYPES];// ammo names
+	int m_rgAmmo[MAX_AMMO_TYPES];// ammo quantities
 
 	int m_cAmmoTypes;// how many ammo types packed into this box (if packed by a level designer)
 };

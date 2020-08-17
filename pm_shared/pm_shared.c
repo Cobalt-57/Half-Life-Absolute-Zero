@@ -44,6 +44,20 @@
 
 
 
+// Note about pmove->multiplayer.  It looks like it stays on (1) after running multiplayer,
+// even after disconnecting and running/loading a singleplayer game.  Odd.
+// Unsure but it looks like it's forced to 0 or 1 in some areas, unsure.
+
+// pmove->movevars->footsteps is set by built-in CVar "mp_footsteps" (serverside CVar,
+// must have been ingame at least once since booting the game up to see it).
+
+
+
+
+
+
+
+
 //MODDD - debug constant.  set to "1" (yes) to print out information during a fall concerning how far the player fell.
 #define DEBUG_PRINTFALL 0
 
@@ -432,23 +446,24 @@ void PM_PlayStepSound( int step, float fvol )
 	}
 
 	// FIXME mp_footsteps needs to be a movevar
+	//MODDD - wait.  But...  isn't 'pmove->movevars->footsteps' "mp_footsteps" as a move-var then?
+	// Change mp_footsteps, and movevars->footsteps reflects the change.  I guess that comment
+	// was out of date even as-is?
 	if (pmove->multiplayer && !pmove->movevars->footsteps) {
 		return;
 	}
 
+	VectorCopy_f( pmove->velocity, hvel );
+	hvel[2] = 0.0;
+
 	if (pmove->multiplayer && (!g_onladder && Length(hvel) <= 220)) {
-		return;
+ 		return;
 	}
 
 
 	// alternate.
 	pmove->iStepLeft = !pmove->iStepLeft;
 	
-	VectorCopy_f( pmove->velocity, hvel );
-	hvel[2] = 0.0;
-
-
-
 	irand = pmove->RandomLong(0, 1) + (iStepLeftFrame * 2);
 
 	// irand - 0,1 for right foot, 2,3 for left foot

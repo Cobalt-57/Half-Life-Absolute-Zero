@@ -312,8 +312,6 @@ void CGrenade::Explode(TraceResult* pTrace, float rawDamage, float flRange, int 
 GENERATE_KILLED_IMPLEMENTATION_DUMMY_CLIENT(CGrenade)
 //void CGrenade::Killed( entvars_t *, int ) { }
 
-BOOL CGrenade::isOrganic(){return FALSE;}
-BOOL CGrenade::usesSoundSentenceSave(){return FALSE;}
 
 CGrenade::CGrenade(void) {}
 void CGrenade::Spawn( void ) { }
@@ -321,6 +319,13 @@ CGrenade * CGrenade:: ShootTimed( entvars_t *pevOwner, Vector vecStart, Vector v
 CGrenade* CGrenade::ShootTimedDropped(entvars_t* pevOwner, Vector vecStart, Vector vecVelocity, float flDamage, float flDetonateTime) { return 0; }
 CGrenade *CGrenade::ShootContact( entvars_t *pevOwner, Vector vecStart, Vector vecVelocity, float flDamage){ return 0; }
 void CGrenade::DetonateUse( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value ){ }
+
+BOOL CGrenade::isOrganic(){return FALSE;}
+BOOL CGrenade::usesSoundSentenceSave(){return FALSE;}
+void CGrenade::groundContact(void) {};
+
+
+
 
 void UTIL_Remove( CBaseEntity *pEntity ){ }
 struct skilldata_t  gSkillData;
@@ -877,6 +882,7 @@ GENERATE_GIBMONSTER_IMPLEMENTATION_DUMMY_CLIENT(CBasePlayer)
 
 
 void CBasePlayer::PackDeadPlayerItems( void ) { }
+void CBasePlayer::RemoveAllAmmo(void) {};
 void CBasePlayer::RemoveAllItems( BOOL removeSuit ) { }
 void CBasePlayer::SetAndUpdateBattery(int argNewBattery) {}
 

@@ -136,8 +136,11 @@ void DebugLine_Setup(int argID, Vector vecStart, Vector vecEnd, int r, int g, in
 
 	if(argID == -1){
 		if(nextDebugLineID >= DEBUG_LINES_MAX){
-			easyForcePrintLine("ERROR: Too many lines or invalid ID given! Tried to create debug line of ID %d, max is %d", argID, DEBUG_LINES_MAX);
-			return; //too many lines, don't.
+			//easyForcePrintLine("ERROR: Too many lines or invalid ID given! Tried to create debug line of ID %d, max is %d", argID, DEBUG_LINES_MAX);
+			// start over at 0.  jeez.
+			//return; //too many lines, don't.
+
+			nextDebugLineID = 0;
 		}
 		argID = nextDebugLineID;
 		nextDebugLineID++;

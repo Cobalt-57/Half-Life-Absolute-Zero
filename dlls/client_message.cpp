@@ -223,7 +223,7 @@ void LinkUserMessages( void )
 	//gmsgTimeWeaponIdleUpdate = REG_USER_MSG("UpdTWI", 2);
 	//gmsgJustThrownUpdate = REG_USER_MSG("UpdJT", 1);
 
-	gmsgCurWeaponForceNoSelectOnEmpty = REG_USER_MSG("CWFNSOE", 1);
+	gmsgCurWeaponForceNoSelectOnEmpty = REG_USER_MSG("CWFNSOE", 2);
 
 
 

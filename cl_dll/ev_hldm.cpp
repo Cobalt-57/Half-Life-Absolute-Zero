@@ -1129,7 +1129,7 @@ void EV_FireMP5(event_args_t* args)
 
 		//MODDD - don't allow very low values anymore, kind of odd when the point is recoil to ever be given those.
 		// ... on CVar setting that is.
-		if (EASY_CVAR_GET(cl_mp5_kickback) == 1) {
+		if (EASY_CVAR_GET(cl_mp5_kickbackmode) == 1) {
 			int ranDir = gEngfuncs.pfnRandomLong(0, 1);
 
 			if (ranDir == 0) {

@@ -772,12 +772,14 @@ extern int gmsgUpdateClientCVar;
 // This gets called one time when the game is initialied
 void GameDLLInit( void )
 {
-	InitShared();
-
-	initOldDebugStuff();
-
-
 	easyForcePrintLine("!!!!!! GameDLLInit");
+	
+	// well gee, I think so
+	g_gameLoaded = TRUE;
+
+	InitShared();
+	initOldDebugStuff();
+	
 
 
 	//MODDD - new

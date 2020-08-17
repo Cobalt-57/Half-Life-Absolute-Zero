@@ -58,6 +58,7 @@ EASY_CVAR_EXTERN(weaponSelectSoundPlayOnMousewheel)
 EASY_CVAR_EXTERN(drawViewModel)
 EASY_CVAR_EXTERN(drawHUD)
 EASY_CVAR_EXTERN(cl_drawExtraZeros)
+EASY_CVAR_EXTERN(hud_rpg_alpha_ammo)
 
 
 
@@ -401,37 +402,6 @@ CHudAmmo::CHudAmmo(){
 
 
 }
-
-
-
-
-bool checkEqualStrings(char* input1, char* input2, char limit){
-	int i = 0;
-	bool match = FALSE;
-	while(TRUE){
-		
-
-		if(input1[i] != input2[i]){
-			break;
-		}
-		if(input1[i] == '\0' && input2[i] == '\0'){
-			match = TRUE;
-			break;
-		}
-
-
-		if(i > limit){
-			match = TRUE;
-			break;
-		}
-
-		i += 1;
-	}
-	return match;
-}
-
-
-
 
 
 
@@ -1016,7 +986,7 @@ int CHudAmmo::Draw(float flTime)
 	int a, x, y, r, g, b;
 	int AmmoWidth;
 
-	BOOL isRPG = FALSE;
+	BOOL ammoClipReserveBlend = FALSE;
 	int ammoDrawPrimary = 0;    //Likely to be the primary ammo clip.
 	int ammoDrawSecondary = 0;   //Likely to be the total primary ammo. Side by side with ammoDrawPrimary.
 	int ammoDrawTertiary = 0;  //Likely to be the total secondary ammo. A separate line from Primary and Secondary.
@@ -1257,8 +1227,9 @@ int CHudAmmo::Draw(float flTime)
 	}//END OF gHUD.canDrawSidebar()
 
 
-	if (!m_pWeapon)
+	if (!m_pWeapon) {
 		return 0;
+	}
 	///////////////////////////////////////////////////////////////
 
 
@@ -1338,8 +1309,9 @@ int CHudAmmo::Draw(float flTime)
 
 	a = (int) max( MIN_ALPHA, m_fFade );
 
-	if (m_fFade > 0)
+	if (m_fFade > 0) {
 		m_fFade -= (gHUD.m_flTimeDelta * 20);
+	}
 
 	//MODDD - CHANGE COLOR - use green instead.
 	//UnpackRGB(r,g,b, RGB_YELLOWISH);
@@ -1353,9 +1325,11 @@ int CHudAmmo::Draw(float flTime)
 	//y = ScreenHeight - gHUD.m_iFontHeight - gHUD.m_iFontHeight/2;
 
 
-	//MODDD - this is how we check to see if the currently equipped weapon is the rpg:
-	if(checkEqualStrings(m_pWeapon->szName, "weapon_rpg", 10)){
-		isRPG = TRUE;
+	//MODDD - this is how we check to see if the currently equipped weapon is the rpg.
+	// NOTICE - this check is only for drawing the alpha "clip and total ammo" combined trick,
+	// no other weapon does this.  Turned into a CVar since that defaults to 'on' to allow this.
+	if(EASY_CVAR_GET(hud_rpg_alpha_ammo) == 1 && FStrEq(m_pWeapon->szName, "weapon_rpg")){
+		ammoClipReserveBlend = TRUE;
 	}
 
 	//In either HUD there are three possible places to draw numbers. Those places will be determined by HUD version.
@@ -1390,15 +1364,14 @@ int CHudAmmo::Draw(float flTime)
 		if(m_pWeapon->iAmmoType > 0){
 
 			if(m_pWeapon->iAmmoType > 0){
-				//most weapons in general with any kind of ammo (not the crowbar)
-				
+				// most weapons in general with any kind of ammo (not the crowbar)
 				if(primaryAmmoClip >= 0){
-					if(isRPG){
-						//the RPG gets special rules.
+					if(ammoClipReserveBlend){
+						// the RPG gets special rules.
 						ammoDrawTertiary_draw = TRUE;
 						ammoDrawTertiary = primaryAmmoClip + primaryAmmoTotal;
 					}else{
-						//Weapons with a clip and total ammo count to draw from when reloading.
+						// Weapons with a clip and total ammo count to draw from when reloading.
 						ammoDrawPrimary_draw = TRUE;
 						ammoDrawPrimary = primaryAmmoClip;
 						
@@ -1412,13 +1385,13 @@ int CHudAmmo::Draw(float flTime)
 						}
 					}
 				}else{
-					//clipless weapons that only count and draw from total ammo.
+					// clipless weapons that only count and draw from total ammo.
 					ammoDrawTertiary_draw = TRUE;
 					ammoDrawTertiary = primaryAmmoTotal;
 				}
 			}
 		}else{
-			//no primary ammo type? is there a secondary ammo count though?
+			// no primary ammo type? is there a secondary ammo count though?
 			if(pw->iAmmo2Type > 0){
 				ammoDrawTertiary_draw = TRUE;
 				ammoDrawTertiary = secondaryAmmoTotal;
@@ -1432,23 +1405,21 @@ int CHudAmmo::Draw(float flTime)
 		if(ammoDrawPrimary_draw){
 			x = gHUD.DrawHudNumber(x, y, iFlags | DHN_3DIGITS, ammoDrawPrimary, r, g, b, 0, 1);
 		}else{
-			//advance the x anyways.
+			// advance the x anyways.
 			x += gHUD.DrawHUDNumber_widthOnly(iFlags | DHN_3DIGITS, ammoDrawPrimary, 0);
 		}
 
 
 		if(ammoDrawPrimary_draw && ammoDrawSecondary_draw){
-			//only draw a slash if there are two numbers to be seprated (primary & secondary)
+			// only draw a slash if there are two numbers to be seprated (primary & secondary)
 			gHUD.drawAdditiveFilter( gHUD.GetSprite(m_HUD_slash), r, g, b, 0, x, y, &gHUD.GetSpriteRect(m_HUD_slash), 1);
 		}
-		//advance the X regardless of drawing the bar.
+		// advance the X regardless of drawing the bar.
 		int iBarWidth = gHUD.GetSpriteRect(m_HUD_slash).right - gHUD.GetSpriteRect(m_HUD_slash).left;
 		x += iBarWidth;
 
 
 		if(ammoDrawSecondary_draw){
-			//IMPORTANT!!! This depends on the existing X being set. So it will still be in the primary ammo's spot if that is not drawn.
-			//outdated, now handled ok.
 			x = gHUD.DrawHudNumber(x, y, iFlags | DHN_3DIGITS, ammoDrawSecondary, r, g, b, 0, 1);
 		}
 
@@ -1464,15 +1435,14 @@ int CHudAmmo::Draw(float flTime)
 		if(m_pWeapon->iAmmoType > 0){
 
 			if(m_pWeapon->iAmmoType > 0){
-				//most weapons in general with any kind of ammo (not the crowbar)
-
+				// most weapons in general with any kind of ammo (not the crowbar)
 				if(primaryAmmoClip >= 0){
-					if(isRPG){
-						//the RPG gets special rules.
+					if(ammoClipReserveBlend){
+						// the RPG gets special rules.
 						ammoDrawSecondary_draw = TRUE;
 						ammoDrawSecondary = primaryAmmoClip + primaryAmmoTotal;
 					}else{
-						//Weapons with a clip and total ammo count to draw from when reloading.
+						// Weapons with a clip and total ammo count to draw from when reloading.
 						ammoDrawPrimary_draw = TRUE;
 						ammoDrawPrimary = primaryAmmoClip;
 						

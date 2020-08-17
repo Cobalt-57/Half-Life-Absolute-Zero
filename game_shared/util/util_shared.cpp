@@ -171,7 +171,7 @@ ItemInfo CBasePlayerItem::ItemInfoArray[MAX_WEAPONS];
 // so they may as well store that for future reference per weapon too.
 AmmoTypeCache CBasePlayerItem::AmmoTypeCacheArray[MAX_WEAPONS];
 
-AmmoInfo CBasePlayerItem::AmmoInfoArray[MAX_AMMO_SLOTS];
+AmmoInfo CBasePlayerItem::AmmoInfoArray[MAX_AMMO_TYPES];
 
 
 
@@ -357,7 +357,7 @@ int GetAmmoIndex(const char* psz)
 		return -1;
 
 
-	for (i = 1; i < MAX_AMMO_SLOTS; i++)
+	for (i = 1; i < MAX_AMMO_TYPES; i++)
 	{
 
 		if (!CBasePlayerItem::AmmoInfoArray[i].pszName)
@@ -439,7 +439,7 @@ int MaxAmmoCarry_ItemID(int iID)
 void AddAmmoNameToAmmoRegistry_Primary(int iId, const char* szAmmoname, int iAmmoMax)
 {
 	// make sure it's not already in the registry
-	for (int i = 0; i < MAX_AMMO_SLOTS; i++)
+	for (int i = 0; i < MAX_AMMO_TYPES; i++)
 	{
 		if (!CBasePlayerItem::AmmoInfoArray[i].pszName) {
 			continue;
@@ -460,8 +460,8 @@ void AddAmmoNameToAmmoRegistry_Primary(int iId, const char* szAmmoname, int iAmm
 	// always happens at game startup, so be prepared for lots of crying.
 	giAmmoIndex++;
 
-	ASSERT(giAmmoIndex < MAX_AMMO_SLOTS);
-	if (giAmmoIndex >= MAX_AMMO_SLOTS) {
+	ASSERT(giAmmoIndex < MAX_AMMO_TYPES);
+	if (giAmmoIndex >= MAX_AMMO_TYPES) {
 		easyForcePrintLine("ERROR!!! Too many ammo types, overflowed into #0!");
 		giAmmoIndex = 0;
 	}
@@ -479,7 +479,7 @@ void AddAmmoNameToAmmoRegistry_Primary(int iId, const char* szAmmoname, int iAmm
 void AddAmmoNameToAmmoRegistry_Secondary(int iId, const char* szAmmoname, int iAmmoMax)
 {
 	// make sure it's not already in the registry
-	for (int i = 0; i < MAX_AMMO_SLOTS; i++)
+	for (int i = 0; i < MAX_AMMO_TYPES; i++)
 	{
 		if (!CBasePlayerItem::AmmoInfoArray[i].pszName) {
 			continue;
@@ -493,8 +493,8 @@ void AddAmmoNameToAmmoRegistry_Secondary(int iId, const char* szAmmoname, int iA
 
 	giAmmoIndex++;
 
-	ASSERT(giAmmoIndex < MAX_AMMO_SLOTS);
-	if (giAmmoIndex >= MAX_AMMO_SLOTS) {
+	ASSERT(giAmmoIndex < MAX_AMMO_TYPES);
+	if (giAmmoIndex >= MAX_AMMO_TYPES) {
 		easyForcePrintLine("ERROR!!! Too many ammo types, overflowed into #0!");
 		giAmmoIndex = 0;
 	}

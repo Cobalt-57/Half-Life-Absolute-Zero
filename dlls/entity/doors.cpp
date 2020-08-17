@@ -1035,7 +1035,7 @@ void CRotDoor::Spawn(void)
 
 void CRotDoor::Precache()
 {
-	easyPrintLine("CRotDoor: So what were my moveSnd and stopSnd values? %d %d", m_bMoveSnd, m_bStopSnd);
+	//easyPrintLine("CRotDoor: So what were my moveSnd and stopSnd values? %d %d", m_bMoveSnd, m_bStopSnd);
 	
 		
 	CBaseDoor::Precache();  //likely had something in mind?

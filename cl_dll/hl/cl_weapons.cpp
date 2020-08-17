@@ -319,8 +319,14 @@ BOOL CBasePlayerWeapon::DefaultDeploy(char* szViewModel, char* szWeaponModel, in
 
 	resistTime = gpGlobals->time + 0.50;  //0.01 ?
 
-	// TEST.
-	g_currentanim = iAnim; 
+	// TEST.     ...this may not be wise?
+	//           To disable it or keep it?  UUuuuuuuuuuuuuuuuuuggghhh don't know
+	//g_currentanim = iAnim; 
+
+	// IDEA!   Holster anims do the same SendWeaponAnim calls that serverside does maybe??  Something about serverside still sends something
+	// that updates g_curretanim?   the multiplayer   'die with crowbar equipped,  deploy with glock happens twice' issue???
+
+
 
 	//seqPlayDelay = gpGlobals->time + 0.02;
 	//seqPlay = iAnim;
