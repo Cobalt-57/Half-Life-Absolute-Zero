@@ -26,6 +26,10 @@
 #include "gamerules.h"
 
 
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelay)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelaycustom)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteclip)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteammo)
 EASY_CVAR_EXTERN(revolverLaserScope)
 
 
@@ -341,7 +345,7 @@ void CPython::PrimaryAttack()
 	m_pPlayer->m_iWeaponVolume = LOUD_GUN_VOLUME;
 	m_pPlayer->m_iWeaponFlash = BRIGHT_GUN_FLASH;
 
-	if(m_pPlayer->cheat_infiniteclipMem == 0){
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteclip) == 0){
 		m_iClip --;
 	}
 
@@ -382,11 +386,12 @@ void CPython::PrimaryAttack()
 		// HEV suit - indicate out of ammo condition
 		m_pPlayer->SetSuitUpdate("!HEV_AMO0", FALSE, 0);
 
-	//MODDD
-	if(m_pPlayer->cheat_minimumfiredelayMem == 0){
-		m_flNextPrimaryAttack = 0.75;
+	//MODDD.
+	// Wait, no UTIL_WeaponTimeBase? ...  ?        what?                     what?
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelay) == 0){
+		m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 0.75;
 	}else{
-		m_flNextPrimaryAttack = m_pPlayer->cheat_minimumfiredelaycustomMem;
+		m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelaycustom);
 		//m_pPlayer->pev->punchangle = Vector(0, 0, 0);   not necessary, I think.
 	}
 
@@ -487,11 +492,11 @@ void CPython::ItemPostFrameThink(){
 		spotDeleteCheck();
 
 		//MODDD
-		//if(m_pPlayer->cheat_minimumfiredelayMem == 0){
+		//if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelay) == 0){
 		// NOPE NOT EVEN YOU.
 		//	m_flNextSecondaryAttack = 0.5;
 		//}else{
-		//	m_flNextSecondaryAttack = m_pPlayer->cheat_minimumfiredelaycustomMem;
+		//	m_flNextSecondaryAttack = EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelaycustom);
 		//}
 
 	}//END OF IN_ATTACK2 check

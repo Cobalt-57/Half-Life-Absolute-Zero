@@ -2226,6 +2226,11 @@ int CBarney::LookupActivityHard(int activity){
 				// Bow before your new God
 				m_flFramerateSuggestion = 8;
 			}
+
+
+			// TEST!!!
+			//m_flFramerateSuggestion = -1;
+
 			//animFrameCutoffSuggestion = 220;
 			return CBaseAnimating::LookupActivity(activity);
 		break;

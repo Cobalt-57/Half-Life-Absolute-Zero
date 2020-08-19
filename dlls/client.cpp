@@ -670,19 +670,6 @@ void resetModCVars(CBasePlayer* arg_plyRef, BOOL isEmergency){
 		minimumFireDelayWasOn = TRUE;
 	}
 	
-	//"nocheat"
-	/*
-	EASY_CVAR_SET_DEBUGONLY(cheat_infiniteclip, 0 );
-	EASY_CVAR_SET_DEBUGONLY(cheat_infiniteammo, 0 );
-	EASY_CVAR_SET_DEBUGONLY(cheat_minimumfiredelay, 0 );
-	EASY_CVAR_SET_DEBUGONLY(cheat_nogaussrecoil, 0);
-	EASY_CVAR_SET_DEBUGONLY(gaussRecoilSendsUpInSP, 0);
-	//minimumfiredelaycustom
-	EASY_CVAR_SET_DEBUGONLY(infiniteLongJumpCharge, 0);
-	EASY_CVAR_SET_DEBUGONLY(cheat_touchNeverExplodes, 0);
-	*/
-
-	//EASY_CVAR_SET_DEBUGONLY(IGNOREminimumfiredelaymem, 0);
 	globalPSEUDO_minimumfiredelaymem = 0;
 
 	if(arg_plyRef != NULL){
@@ -1200,7 +1187,6 @@ void ClientCommand( edict_t *pEntity )
 	//If the minimumfiredelay mem's  value does NOT match minimumfiredelay, it must have been changed.
 	//Force an RPG re-update to be safe.
 	if(globalPSEUDO_minimumfiredelaymem != EASY_CVAR_GET(cheat_minimumfiredelay) ){
-		//CVAR_SET_FLOAT("IGNOREminimumfiredelaymem", global_cheat_minimumfiredelay);
 		globalPSEUDO_minimumfiredelaymem = EASY_CVAR_GET(cheat_minimumfiredelay);
 		
 		//MODDD - section copied from 'Host_Say' further down, turn into a more general utility if possible/needed.
@@ -1414,17 +1400,16 @@ void ClientCommand( edict_t *pEntity )
 	}else if ( FStrEq(pcmdRefinedRef, "supergun") || FStrEq(pcmdRefinedRef, "neverrunout") ){
 		if ( g_flWeaponCheat != 0.0)
 		{
-		EASY_CVAR_SET_DEBUGONLY(cheat_infiniteclip, 1 );
-		EASY_CVAR_SET_DEBUGONLY(cheat_infiniteammo, 1 );
+		EASY_CVAR_SET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteclip, 1 );
+		EASY_CVAR_SET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteammo, 1 );
 		}
 
 	}else if ( FStrEq(pcmdRefinedRef, "allcheats") || FStrEq(pcmdRefinedRef, "allcheat") || FStrEq(pcmdRefinedRef, "cheats") || FStrEq(pcmdRefinedRef, "cheat") || FStrEq(pcmdRefinedRef, "cheatersalwayswin") || FStrEq(pcmdRefinedRef, "fuckeverything") || FStrEq(pcmdRefinedRef, "iamshivagodofdeath")  ){
 		if ( g_flWeaponCheat != 0.0)
 		{
-		EASY_CVAR_SET_DEBUGONLY(cheat_infiniteclip, 1 );
-		EASY_CVAR_SET_DEBUGONLY(cheat_infiniteammo, 1 );
-		EASY_CVAR_SET_DEBUGONLY(cheat_minimumfiredelay, 1 );
-		//EASY_CVAR_SET("IGNOREminimumfiredelaymem", 1);
+		EASY_CVAR_SET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteclip, 1 );
+		EASY_CVAR_SET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteammo, 1 );
+		EASY_CVAR_SET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelay, 1 );
 		globalPSEUDO_minimumfiredelaymem = 1;
 
 		CBasePlayer* playerRef = GetClassPtr((CBasePlayer *)pev);
@@ -1443,20 +1428,19 @@ void ClientCommand( edict_t *pEntity )
 	}else if ( FStrEq(pcmdRefinedRef, "infiniteclip") ){
 		if ( g_flWeaponCheat != 0.0)
 		{
-		EASY_CVAR_SET_DEBUGONLY(cheat_infiniteclip, EASY_CVAR_GET(cheat_infiniteclip)==0?1:0 );
+		EASY_CVAR_SET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteclip, EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteclip)==0?1:0 );
 		}
 
 	}else if ( FStrEq(pcmdRefinedRef, "infiniteammo") ){
 		if ( g_flWeaponCheat != 0.0)
 		{
-			EASY_CVAR_SET_DEBUGONLY(cheat_infiniteammo, EASY_CVAR_GET(cheat_infiniteammo)==0?1:0 );
+			EASY_CVAR_SET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteammo, EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteammo)==0?1:0 );
 		}
 	}else if (  FStrEq(pcmdRefinedRef, "minimumfiredelay") || FStrEq(pcmdRefinedRef, "minimumdelay") || FStrEq(pcmdRefinedRef, "firedelay") || FStrEq(pcmdRefinedRef, "dakkadakkadakka")|| FStrEq(pcmdRefinedRef, "dakka") ||FStrEq(pcmdRefinedRef, "dakadakadaka") || FStrEq(pcmdRefinedRef, "daka") || FStrEq(pcmdRefinedRef, "needsmoredaka") || FStrEq(pcmdRefinedRef, "needsmoardaka") || FStrEq(pcmdRefinedRef, "needsmoredakka") || FStrEq(pcmdRefinedRef, "needsmoardakka") || FStrEq(pcmdRefinedRef, "notenoughdaka") || FStrEq(pcmdRefinedRef, "notenoughdakka") || FStrEq(pcmdRefinedRef, "notenuffdaka") || FStrEq(pcmdRefinedRef, "notenuffdakka") || FStrEq(pcmdRefinedRef, "notenufdaka") || FStrEq(pcmdRefinedRef, "notenufdakka")   || FStrEq(pcmdRefinedRef, "neverenoughdaka") || FStrEq(pcmdRefinedRef, "neverenoughdakka") || FStrEq(pcmdRefinedRef, "neverenuffdaka") || FStrEq(pcmdRefinedRef, "neverenuffdakka") || FStrEq(pcmdRefinedRef, "neverenufdaka") || FStrEq(pcmdRefinedRef, "neverenufdakka")   || FStrEq(pcmdRefinedRef, "nevaenoughdaka") || FStrEq(pcmdRefinedRef, "nevaenoughdakka") || FStrEq(pcmdRefinedRef, "nevaenuffdaka") || FStrEq(pcmdRefinedRef, "nevaenuffdakka") || FStrEq(pcmdRefinedRef, "nevaenufdaka") || FStrEq(pcmdRefinedRef, "nevaenufdakka")          ){
 
 		if ( g_flWeaponCheat != 0.0)
 		{
 			EASY_CVAR_SET_DEBUGONLY(cheat_minimumfiredelay, EASY_CVAR_GET(cheat_minimumfiredelay)==0?1:0 );
-			//CVAR_SET_FLOAT("IGNOREminimumfiredelaymem", CVAR_GET_FLOAT("cheat_minimumfiredelay"));
 			globalPSEUDO_minimumfiredelaymem = EASY_CVAR_GET(cheat_minimumfiredelay);
 			resetPlayerRPGRockets( GetClassPtr((CBasePlayer *)pev) );
 		}
@@ -1480,12 +1464,19 @@ void ClientCommand( edict_t *pEntity )
 
 		CBasePlayer* playerRef = GetClassPtr((CBasePlayer *)pev);
 		
-		EASY_CVAR_SET_DEBUGONLY(cheat_infiniteclip, 0 );
-		EASY_CVAR_SET_DEBUGONLY(cheat_infiniteammo, 0 );
-		EASY_CVAR_SET_DEBUGONLY(cheat_minimumfiredelay, 0 );
+		EASY_CVAR_SET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteclip, 0 );
+		EASY_CVAR_SET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteammo, 0 );
+		EASY_CVAR_SET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelay, 0 );
 		globalPSEUDO_minimumfiredelaymem = 0;
-		EASY_CVAR_SET_DEBUGONLY(cheat_nogaussrecoil, 0);
+		EASY_CVAR_SET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_nogaussrecoil, 0);
 		resetPlayerRPGRockets( playerRef );
+		
+		/*
+		EASY_CVAR_SET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gaussRecoilSendsUpInSP, 0);
+		EASY_CVAR_SET(sv_longjump_chargemode, 0);
+		EASY_CVAR_SET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_touchNeverExplodes, 0);
+		*/
+		
 
 		//if the barnacle cheat is on, turn it of.
 		if(cheat_barnacleEatsEverything == 1){

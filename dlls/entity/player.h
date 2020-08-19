@@ -298,6 +298,7 @@ public:
 	// And this version is for clientside only, ignores serverside issues for holstering to work better
 	float m_flNextAttackCLIENTHISTORY;
 	CBasePlayerItem* m_pActiveItemCLIENTHISTORY;
+	int m_rgAmmoCLIENTHISTORY[MAX_AMMO_TYPES];
 #endif
 
 	// shared ammo slots
@@ -372,14 +373,6 @@ public:
 
 	BOOL recentlyGrantedGlockSilencer;
 
-
-	float cheat_infiniteclipMem;
-	float cheat_infiniteammoMem;
-	float cheat_minimumfiredelayMem;
-	float cheat_minimumfiredelaycustomMem;
-
-	float cheat_nogaussrecoilMem;
-	float gaussRecoilSendsUpInSPMem;
 
 	BOOL recentlyGibbed;
 

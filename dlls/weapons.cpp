@@ -45,12 +45,14 @@
 #include "pickupwalker.h"
 
 
-EASY_CVAR_EXTERN(cheat_infiniteammo)
-EASY_CVAR_EXTERN(cheat_infiniteclip)
-EASY_CVAR_EXTERN(firstPersonIdleDelayMin)
-EASY_CVAR_EXTERN(firstPersonIdleDelayMax)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteammo)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteclip)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(firstPersonIdleDelayMin)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(firstPersonIdleDelayMax)
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(viewModelPrintouts)
-
+//EASY_CVAR_EXTERN(viewModelSyncFixPrintouts)
+//EASY_CVAR_EXTERN(cl_holster)
+//EASY_CVAR_EXTERN(wpn_glocksilencer)
 
 
 DLL_GLOBAL short g_sModelIndexLaser;// holds the index for the laser beam
@@ -484,10 +486,10 @@ CBasePlayerWeapon::CBasePlayerWeapon(){
 
 //MODDD
 float CBasePlayerWeapon::randomIdleAnimationDelay(void){
-	if( EASY_CVAR_GET(firstPersonIdleDelayMin) > 0 && EASY_CVAR_GET(firstPersonIdleDelayMax) > 0){
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(firstPersonIdleDelayMin) > 0 && EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(firstPersonIdleDelayMax) > 0){
 		//let's go.
 		//float rand = RANDOM_FLOAT(EASY_CVAR_GET(firstPersonIdleDelayMin), EASY_CVAR_GET(firstPersonIdleDelayMax));
-		float rand = UTIL_SharedRandomFloat(m_pPlayer->random_seed, EASY_CVAR_GET(firstPersonIdleDelayMin), EASY_CVAR_GET(firstPersonIdleDelayMax) );
+		float rand = UTIL_SharedRandomFloat(m_pPlayer->random_seed, EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(firstPersonIdleDelayMin), EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(firstPersonIdleDelayMax) );
 		//easyPrintLine("OK server server %.2f", rand);
 		return rand;
 	}else{
@@ -599,7 +601,7 @@ void CBasePlayerWeapon::ItemPostFrame( void )
 			m_iClip += j;
 
 			//MODDD - cheat intervention, if available.  With this cheat, reloading does not consume total ammo.
-			if (EASY_CVAR_GET(cheat_infiniteammo) == 0) {
+			if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteammo) == 0) {
 				m_pPlayer->m_rgAmmo[myPrimaryAmmoType] -= j;
 			}
 			else {
@@ -724,7 +726,7 @@ void CBasePlayerWeapon::ItemPostFrame( void )
 	if(canCallSecondary && secondaryHeld)
 	{
 		//MODD - cheat intervention.  This check is only done if the infinite ammo & clip cheats are off (secondary weaps don't use clips).
-		if(EASY_CVAR_GET(cheat_infiniteammo) == 0 && EASY_CVAR_GET(cheat_infiniteclip) == 0){
+		if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteammo) == 0 && EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteclip) == 0){
 			if ( pszAmmo2() && PlayerSecondaryAmmoCount() <= 0 )
 			{
 				m_fFireOnEmpty = TRUE;
@@ -754,7 +756,7 @@ void CBasePlayerWeapon::ItemPostFrame( void )
 	else if (canCallPrimary && primaryHeld )
 	{
 		//MODDD - cheat intervention.
-		if(EASY_CVAR_GET(cheat_infiniteclip) == 0){
+		if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteclip) == 0){
 			if ( (m_iClip == 0 && pszAmmo1()) || (iMaxClip() == -1 && PrimaryAmmoIndex()!=-1 && PlayerPrimaryAmmoCount() <= 0 ) )
 			{
 				m_fFireOnEmpty = TRUE;
@@ -775,7 +777,7 @@ void CBasePlayerWeapon::ItemPostFrame( void )
 		// Doubt this is necessary anymore, but verify.  Improvements for ammo, boundary checking in lots of places.
 		// Verified!
 		/*
-		if(EASY_CVAR_GET(cheat_infiniteammo) == 1){
+		if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteammo) == 1){
 			//MODDD - this was a nasty bug.
 			//(crash by going through the glass-door near the end of the laser room, where you get the 1st crowbar to beat it with & walk through WHILE cheat_infiniteammo is on, solved by this)
 			
@@ -818,7 +820,7 @@ void CBasePlayerWeapon::ItemPostFrame( void )
 			if ( m_iClip == 0 && !(iFlags() & ITEM_FLAG_NOAUTORELOAD) && m_flNextPrimaryAttack < ( UseDecrement() ? 0.0 : gpGlobals->time ) )
 			{
 				//MODDD - cheat intervention.
-				if(EASY_CVAR_GET(cheat_infiniteclip) != 1){
+				if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteclip) != 1){
 					Reload();
 				}else{
 					m_iClip = 1;
@@ -1075,6 +1077,11 @@ int CBasePlayerWeapon::UpdateClientData( CBasePlayer *pPlayer )
 
 void CBasePlayerWeapon::SendWeaponAnim( int iAnim, int skiplocal, int body )
 {
+	//MODDD - that does it.  Screw this.
+	SendWeaponAnimBypass(iAnim, body);
+	return;
+
+
 	if ( UseDecrement() )
 		skiplocal = 1;
 	else
@@ -1107,6 +1114,11 @@ void CBasePlayerWeapon::SendWeaponAnim( int iAnim, int skiplocal, int body )
 
 void CBasePlayerWeapon::SendWeaponAnimReverse( int iAnim, int skiplocal, int body )
 {
+	//MODDD - that does it.  Screw this.
+	SendWeaponAnimBypassReverse(iAnim, body);
+	return;
+
+
 	if ( UseDecrement() )
 		skiplocal = 1;
 	else
@@ -1435,7 +1447,8 @@ BOOL CBasePlayerWeapon :: DefaultDeploy( char *szViewModel, char *szWeaponModel,
 	// MODDD - "+ randomIdleAnimationDelay()" removed.  Leave that up to the weapons themselves instead.
 	// Some like the satchel need to return to WeaponIdle to see if a satchel needs to be re-deployed
 	// (creates an akward time of holding the remote where left and right-click do nothing after switching out from recently detonating with ammo left).
-	m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + deployAnimTime; //used to be "... + 1.0", now depends on optional parameter (defaults to "1.0");
+	// REVERTED.  Satchel's handled now.
+	m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + deployAnimTime + randomIdleAnimationDelay(); //used to be "... + 1.0", now depends on optional parameter (defaults to "1.0");
 
 	
 	forceBlockLooping();
@@ -1500,7 +1513,7 @@ BOOL CBasePlayerWeapon :: DefaultReload( int iClipSize, int iAnim, float fDelay,
 
 
 	//MODDD - cheat intervention.  Can only fail to reload if the infiniteAmmo cheat is off.
-	if(EASY_CVAR_GET(cheat_infiniteammo) != 1){
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteammo) != 1){
 		if (m_pPlayer->m_rgAmmo[myPrimaryAmmoType] <= 0)
 			return FALSE;
 
@@ -1539,7 +1552,6 @@ BOOL CBasePlayerWeapon :: DefaultReload( int iClipSize, int iAnim, float fDelay,
 	//MODDD - this will now always be at the end of this reload anim instead.
 	//m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 3;
 	m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + fDelay + this->randomIdleAnimationDelay();
-	
 	
 	return TRUE;
 }

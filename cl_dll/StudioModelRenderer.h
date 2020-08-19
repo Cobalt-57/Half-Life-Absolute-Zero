@@ -12,6 +12,17 @@
 #endif
 
 
+
+// and these weren't included in this file beeeccccccaaaaauuuuuusssseee?
+#include "engine/studio.h"
+#include "common/com_model.h"
+
+// ooookay then
+//typedef struct MonsterEvent_t;
+#include "dlls/monsterevent.h"
+
+
+
 //MODDD - new.  Good to easily keep track of drawing special cases when there is a clear sign that
 // can be determined early on in a draw call.
 // See GameStudioModelRenderer.cpp where "drawType" is set as the entry points to here are called.
@@ -20,6 +31,8 @@ enum drawtype_e {
 	DRAWTYPE_PLAYER,
 	DRAWTYPE_VIEWMODEL
 };
+
+
 
 
 /*
@@ -40,7 +53,8 @@ public:
 
 public:  
 	// Public Interfaces
-	virtual int StudioDrawReflection(int flags);
+	virtual int StudioDrawModelReflection(int flags);
+	virtual int StudioDrawPlayerReflection(int flags, entity_state_t* pplayer);
 	virtual int StudioDrawModel ( int flags );
 	// that's 'entity_state_t' in the implementation.  You sneaky bastard.
 	virtual int StudioDrawPlayer ( int flags, struct entity_state_s *pplayer );
@@ -123,6 +137,14 @@ public:
 
 	// Process movement of player
 	virtual void StudioProcessGait ( entity_state_t *pplayer );
+
+
+	virtual void CUSTOM_StudioClientEvents(void);
+	virtual void CUSTOM_HUD_StudioEvent(MonsterEvent_t* pMonsterEvent, const struct cl_entity_s* entity);
+	virtual int CUSTOM_GetAnimationEvent(int CUSTOM_sequence, float CUSTOM_framerate, MonsterEvent_t* pMonsterEvent, float flStart, float flEnd, int index);
+	virtual int CUSTOM_GetAnimationEvent(int CUSTOM_sequence, float CUSTOM_framerate, MonsterEvent_t* pMonsterEvent, float flStart, float flEnd, int index, int argLoops);
+
+
 
 public:
 

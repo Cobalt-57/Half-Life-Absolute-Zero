@@ -40,6 +40,31 @@ EASY_CVAR_EXTERN(drawHUD);
 
 
 
+// NOTICE - the as-is descriptions of the init methods are kinda out of touch with how they really work it seems.
+
+// Initialize - very first event, called on booting the game up only (so much as the menu shown).  Never twice, I think.
+// HUD_Init - called shortly after Initialize.  Also likely never twice.
+// HUD_VidInit - Unsure if it's actually called on changing display modes (game just seems to crash but remember settings
+// between runs anyway),   but this method reall runs anytime the player goes ingame.  New game, loaded game, or created/
+// joined server.
+
+
+
+
+extern BOOL g_cl_HUD_Frame_ran;
+extern BOOL g_cl_HUD_UpdateClientData_ran;
+extern BOOL g_HUD_Redraw_ran;
+extern int g_currentanim;
+extern int g_cl_frameCount;
+extern BOOL resetNormalRefDefVars;
+
+extern float ary_g_prevTime[1024];
+extern float ary_g_prevFrame[1024];
+extern float ary_g_LastEventCheck[1024];
+extern float ary_g_LastEventCheckEXACT[1024];
+
+
+
 
 cl_enginefunc_t gEngfuncs;
 CHud gHUD;
@@ -170,6 +195,8 @@ int DLLEXPORT Initialize( cl_enginefunc_t *pEnginefuncs, int iVersion )
 }
 
 
+//#include "GameStudioModelRenderer.h"
+
 /*
 ==========================
 	HUD_VidInit
@@ -179,11 +206,30 @@ and whenever the vid_mode is changed
 so the HUD can reinitialize itself.
 ==========================
 */
-
 int DLLEXPORT HUD_VidInit( void )
 {
+	// safety
+	g_cl_frameCount = 0;
+	g_cl_HUD_Frame_ran = FALSE;
+	g_cl_HUD_UpdateClientData_ran = FALSE;
+	g_HUD_Redraw_ran = FALSE;
+	g_currentanim = -1;
+
+
+	//extern CGameStudioModelRenderer g_StudioRenderer;
+	//MODDD - from studioModelRenderer.cpp, initialize to the current game global time.
+	// ...nope, always still 0.    ugh.
+	for (int i = 0; i < 1024; i++) {
+		// NOTE - gpGlobals->time is unavailable, has to be dummied and routinely set to gEngfuncs.GetClientTime().
+		// So get it from the source then.
+		ary_g_prevTime[i] = 0; //g_StudioRenderer.m_clTime; //gEngfuncs.GetClientTime();
+		ary_g_prevFrame[i] = 0;
+		ary_g_LastEventCheck[i] = 0; //g_StudioRenderer.m_clTime; //gEngfuncs.GetClientTime();
+		ary_g_LastEventCheckEXACT[i] = 0;
+	}
+
+
 	//MODDD
-	extern BOOL resetNormalRefDefVars;
 	resetNormalRefDefVars = TRUE;  //does this work
 
 
@@ -249,10 +295,9 @@ redraw the HUD.
 */
 
 
-
 int DLLEXPORT HUD_Redraw( float time, int intermission )
 {
-
+	g_HUD_Redraw_ran = TRUE;
 
 	if(globalPSEUDO_drawHUDMem != EASY_CVAR_GET(drawHUD)){
 		gHUD.m_Ammo.updateCrosshair();
@@ -288,12 +333,10 @@ returns 1 if anything has been changed, 0 otherwise.
 ==========================
 */
 
-
-
 int DLLEXPORT HUD_UpdateClientData(client_data_t *pcldata, float flTime )
 {
 	IN_Commands();
-
+	g_cl_HUD_UpdateClientData_ran = TRUE;
 
 	return gHUD.UpdateClientData(pcldata, flTime );
 }
@@ -311,6 +354,7 @@ void DLLEXPORT HUD_Reset( void )
 	gHUD.VidInit();
 }
 
+
 /*
 ==========================
 HUD_Frame
@@ -322,6 +366,7 @@ Called by engine every frame that client .dll is loaded
 void DLLEXPORT HUD_Frame( double time )
 {
 	ServersThink( time );
+	g_cl_HUD_Frame_ran = TRUE;
 
 	GetClientVoiceMgr()->Frame(time);
 }

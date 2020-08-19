@@ -2076,19 +2076,6 @@ void CHGrunt :: MonsterThink ( void ){
 	//Tried this, surprisingly unaffected by the player flashlight. Probably by any dynamic light sources (not constant from the map).
 	//easyForcePrintLine("MY LIGHT LEVEL: %d", GETENTITYILLUM( ENT( pev ) ) );
 
-	/*
-	pev->iuser1 = 5;
-	pev->iuser1 = 6;
-	pev->iuser1 = 7;
-	pev->iuser1 = 8;
-	
-	pev->fuser1 = 25.2f;
-	pev->fuser2 = 26.2f;
-	pev->fuser3 = 27.2f;
-	pev->fuser4 = 28.2f;
-
-	*/
-
 
 		if(EASY_CVAR_GET(thatWasntPunch) == 1 && this->m_fSequenceFinished){
 

@@ -33,6 +33,16 @@
 #include "gamerules.h"
 
 
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelay)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelaycustom)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteclip)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteammo)
+EASY_CVAR_EXTERN(egonEffectsMode);
+EASY_CVAR_EXTERN(egonHitCloud);
+
+
+
+
 //MODDD - several things moved to the new egon.h for commonly including client/serverside
 // (less redundancy in ev_hldm.cpp)
 
@@ -43,9 +53,6 @@
 LINK_ENTITY_TO_CLASS( weapon_egon, CEgon );
 
 
-
-EASY_CVAR_EXTERN(egonEffectsMode);
-EASY_CVAR_EXTERN(egonHitCloud);
 
 
 
@@ -178,20 +185,20 @@ int CEgon::GetItemInfo(ItemInfo *p)
 float CEgon::GetPulseInterval( void )
 {
 	//MODDD
-	if(m_pPlayer->cheat_minimumfiredelayMem == 0){
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelay) == 0){
 		return EGON_PULSE_INTERVAL;
 	}else{
-		return m_pPlayer->cheat_minimumfiredelaycustomMem;
+		return EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelaycustom);
 	}
 }
 
 float CEgon::GetDischargeInterval( void )
 {
 	//MODDD
-	if(m_pPlayer->cheat_minimumfiredelayMem == 0){
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelay) == 0){
 		return EGON_DISCHARGE_INTERVAL;
 	}else{
-		return m_pPlayer->cheat_minimumfiredelaycustomMem;
+		return EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelaycustom);
 	}
 }
 
@@ -220,7 +227,7 @@ void CEgon::UseAmmo( int count )
 {
 	//MODDD - could the "infinite ammo cheat" be useful here?
 	//So yea, only use ammo if the cheat is off.  Other weapon-related behavior should happen still.
-	if(m_pPlayer->cheat_infiniteammoMem == 0){
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteammo) == 0){
 		if (PlayerPrimaryAmmoCount() >= count) {
 			//m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] -= count;
 			ChangePlayerPrimaryAmmoCount(-count);

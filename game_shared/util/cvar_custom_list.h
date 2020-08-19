@@ -204,7 +204,7 @@
 //           WilL.
 //                          haPpen.
 //                                                          Thanks.
-#define CVAR_CLIENTSENDOFF_COUNT 180
+#define CVAR_CLIENTSENDOFF_COUNT 179
 
 
 
@@ -363,7 +363,7 @@
 #define DEFAULT_E3ShowsDamageIcons 1
 #define DEFAULT_playerCrossbowMode 1
 #define DEFAULT_hassassinCrossbowMode 1
-#define DEFAULT_tripmineAnimWaitsForFinish 0
+#define DEFAULT_tripmineAnimWaitsForFinish 1
 #define DEFAULT_revolverLaserScope 1
 //#define DEFAULT_python_zoomfov 0
 //#define DEFAULT_crossbow_zoomfov 0
@@ -376,7 +376,7 @@
 #define DEFAULT_cheat_minimumfiredelaycustom 0.048
 #define DEFAULT_cheat_nogaussrecoil 0
 #define DEFAULT_autoSneaky 0
-#define DEFAULT_infiniteLongJumpCharge 0
+#define DEFAULT_sv_longjump_chargemode 0
 #define DEFAULT_cheat_touchNeverExplodes 0
 #define DEFAULT_gaussRecoilSendsUpInSP 0
 #define DEFAULT_drawDebugPathfinding 0
@@ -727,6 +727,7 @@
 #define DEFAULT_pausecorrection1 1
 #define DEFAULT_pausecorrection2 2
 #define DEFAULT_hud_rpg_alpha_ammo 1
+#define DEFAULT_cl_viewmodel_fidget 2
 
 
 
@@ -1075,7 +1076,7 @@
 	EASY_CVAR_HIDDEN_ACCESS_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelaycustom, cheat_minimumfiredelaycustom, 83)\
 	EASY_CVAR_HIDDEN_ACCESS_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_nogaussrecoil, cheat_nogaussrecoil, 84)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(autoSneaky, autosneaky)\
-	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(infiniteLongJumpCharge, infinitelongjumpcharge)\
+	DUMMY\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(cheat_touchNeverExplodes, cheat_touchneverexplodes)\
 	EASY_CVAR_HIDDEN_ACCESS_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gaussRecoilSendsUpInSP, gaussrecoilsendsupinsp, 85)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(drawDebugPathfinding, drawdebugpathfinding)\
@@ -1544,7 +1545,7 @@
 	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(cheat_minimumfiredelaycustom)\
 	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(cheat_nogaussrecoil)\
 	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(autoSneaky)\
-	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(infiniteLongJumpCharge)\
+	DUMMY\
 	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(cheat_touchNeverExplodes)\
 	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(gaussRecoilSendsUpInSP)\
 	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(drawDebugPathfinding)\
@@ -2012,7 +2013,7 @@
 	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(cheat_minimumfiredelaycustom, cheat_minimumfiredelaycustom)\
 	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(cheat_nogaussrecoil, cheat_nogaussrecoil)\
 	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(autoSneaky, autosneaky)\
-	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(infiniteLongJumpCharge, infinitelongjumpcharge)\
+	DUMMY\
 	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(cheat_touchNeverExplodes, cheat_touchneverexplodes)\
 	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(gaussRecoilSendsUpInSP, gaussrecoilsendsupinsp)\
 	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(drawDebugPathfinding, drawdebugpathfinding)\
@@ -2489,7 +2490,7 @@
 	EASY_CVAR_DECLARATION_SERVER_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelaycustom)\
 	EASY_CVAR_DECLARATION_SERVER_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_nogaussrecoil)\
 	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY(autoSneaky)\
-	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY(infiniteLongJumpCharge)\
+	EASY_CVAR_DECLARATION_SERVER(sv_longjump_chargemode)\
 	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY(cheat_touchNeverExplodes)\
 	EASY_CVAR_DECLARATION_SERVER_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gaussRecoilSendsUpInSP)\
 	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY(drawDebugPathfinding)\
@@ -2837,6 +2838,7 @@
 	EASY_CVAR_DECLARATION_SERVER(pausecorrection1)\
 	EASY_CVAR_DECLARATION_SERVER(pausecorrection2)\
 	EASY_CVAR_DECLARATION_SERVER(hud_rpg_alpha_ammo)\
+	EASY_CVAR_DECLARATION_SERVER(cl_viewmodel_fidget)\
 	DUMMY
 
 
@@ -3007,7 +3009,7 @@
 	EASY_CVAR_DECLARATION_CLIENT_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelaycustom)\
 	EASY_CVAR_DECLARATION_CLIENT_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_nogaussrecoil)\
 	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY(autoSneaky)\
-	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY(infiniteLongJumpCharge)\
+	EASY_CVAR_DECLARATION_CLIENT(sv_longjump_chargemode)\
 	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY(cheat_touchNeverExplodes)\
 	EASY_CVAR_DECLARATION_CLIENT_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gaussRecoilSendsUpInSP)\
 	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY(drawDebugPathfinding)\
@@ -3355,6 +3357,7 @@
 	EASY_CVAR_DECLARATION_CLIENT(pausecorrection1)\
 	EASY_CVAR_DECLARATION_CLIENT(pausecorrection2)\
 	EASY_CVAR_DECLARATION_CLIENT(hud_rpg_alpha_ammo)\
+	EASY_CVAR_DECLARATION_CLIENT(cl_viewmodel_fidget)\
 	DUMMY
 
 
@@ -3523,7 +3526,7 @@
 	EASY_CVAR_UPDATE_SERVER_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelaycustom, 83)\
 	EASY_CVAR_UPDATE_SERVER_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_nogaussrecoil, 84)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(autoSneaky)\
-	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(infiniteLongJumpCharge)\
+	EASY_CVAR_UPDATE_SERVER(sv_longjump_chargemode)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(cheat_touchNeverExplodes)\
 	EASY_CVAR_UPDATE_SERVER_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gaussRecoilSendsUpInSP, 85)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(drawDebugPathfinding)\
@@ -3871,6 +3874,7 @@
 	EASY_CVAR_UPDATE_SERVER(pausecorrection1)\
 	EASY_CVAR_UPDATE_SERVER(pausecorrection2)\
 	EASY_CVAR_UPDATE_SERVER(hud_rpg_alpha_ammo)\
+	EASY_CVAR_UPDATE_SERVER(cl_viewmodel_fidget)\
 	DUMMY
 
 
@@ -4039,7 +4043,7 @@
 	EASY_CVAR_UPDATE_CLIENT_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelaycustom)\
 	EASY_CVAR_UPDATE_CLIENT_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_nogaussrecoil)\
 	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY(autoSneaky)\
-	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY(infiniteLongJumpCharge)\
+	EASY_CVAR_UPDATE_CLIENT(sv_longjump_chargemode)\
 	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY(cheat_touchNeverExplodes)\
 	EASY_CVAR_UPDATE_CLIENT_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gaussRecoilSendsUpInSP)\
 	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY(drawDebugPathfinding)\
@@ -4387,6 +4391,7 @@
 	EASY_CVAR_UPDATE_CLIENT(pausecorrection1)\
 	EASY_CVAR_UPDATE_CLIENT(pausecorrection2)\
 	EASY_CVAR_UPDATE_CLIENT(hud_rpg_alpha_ammo)\
+	EASY_CVAR_UPDATE_CLIENT(cl_viewmodel_fidget)\
 	DUMMY
 
 
@@ -4555,7 +4560,7 @@
 	EASY_CVAR_CREATE_SERVER_SETUP_A_SERVERONLY_DEBUGONLY(cheat_minimumfiredelaycustom)\
 	EASY_CVAR_CREATE_SERVER_SETUP_A_SERVERONLY_DEBUGONLY(cheat_nogaussrecoil)\
 	EASY_CVAR_CREATE_SERVER_SETUP_A_SERVERONLY_DEBUGONLY(autoSneaky)\
-	EASY_CVAR_CREATE_SERVER_SETUP_A_SERVERONLY_DEBUGONLY(infiniteLongJumpCharge)\
+	EASY_CVAR_CREATE_SERVER_SETUP_A_SERVERONLY(sv_longjump_chargemode)\
 	EASY_CVAR_CREATE_SERVER_SETUP_A_SERVERONLY_DEBUGONLY(cheat_touchNeverExplodes)\
 	EASY_CVAR_CREATE_SERVER_SETUP_A_SERVERONLY_DEBUGONLY(gaussRecoilSendsUpInSP)\
 	EASY_CVAR_CREATE_SERVER_SETUP_A_SERVERONLY_DEBUGONLY(drawDebugPathfinding)\
@@ -4903,6 +4908,7 @@
 	EASY_CVAR_CREATE_SERVER_SETUP_A_CLIENTONLY(pausecorrection1)\
 	EASY_CVAR_CREATE_SERVER_SETUP_A_SERVERONLY(pausecorrection2)\
 	EASY_CVAR_CREATE_SERVER_SETUP_A_CLIENTONLY(hud_rpg_alpha_ammo)\
+	EASY_CVAR_CREATE_SERVER_SETUP_A_CLIENTONLY(cl_viewmodel_fidget)\
 	DUMMY
 
 
@@ -5071,7 +5077,7 @@
 	EASY_CVAR_CREATE_SERVER_A_SERVERONLY_DEBUGONLY(cheat_minimumfiredelaycustom)\
 	EASY_CVAR_CREATE_SERVER_A_SERVERONLY_DEBUGONLY(cheat_nogaussrecoil)\
 	EASY_CVAR_CREATE_SERVER_A_SERVERONLY_DEBUGONLY(autoSneaky)\
-	EASY_CVAR_CREATE_SERVER_A_SERVERONLY_DEBUGONLY(infiniteLongJumpCharge)\
+	EASY_CVAR_CREATE_SERVER_A_SERVERONLY(sv_longjump_chargemode)\
 	EASY_CVAR_CREATE_SERVER_A_SERVERONLY_DEBUGONLY(cheat_touchNeverExplodes)\
 	EASY_CVAR_CREATE_SERVER_A_SERVERONLY_DEBUGONLY(gaussRecoilSendsUpInSP)\
 	EASY_CVAR_CREATE_SERVER_A_SERVERONLY_DEBUGONLY(drawDebugPathfinding)\
@@ -5419,6 +5425,7 @@
 	EASY_CVAR_CREATE_SERVER_A_CLIENTONLY(pausecorrection1)\
 	EASY_CVAR_CREATE_SERVER_A_SERVERONLY(pausecorrection2)\
 	EASY_CVAR_CREATE_SERVER_A_CLIENTONLY(hud_rpg_alpha_ammo)\
+	EASY_CVAR_CREATE_SERVER_A_CLIENTONLY(cl_viewmodel_fidget)\
 	DUMMY
 
 
@@ -5587,7 +5594,7 @@
 	EASY_CVAR_CREATE_CLIENT_A_SERVERONLY_DEBUGONLY(cheat_minimumfiredelaycustom)\
 	EASY_CVAR_CREATE_CLIENT_A_SERVERONLY_DEBUGONLY(cheat_nogaussrecoil)\
 	EASY_CVAR_CREATE_CLIENT_A_SERVERONLY_DEBUGONLY(autoSneaky)\
-	EASY_CVAR_CREATE_CLIENT_A_SERVERONLY_DEBUGONLY(infiniteLongJumpCharge)\
+	EASY_CVAR_CREATE_CLIENT_A_SERVERONLY(sv_longjump_chargemode)\
 	EASY_CVAR_CREATE_CLIENT_A_SERVERONLY_DEBUGONLY(cheat_touchNeverExplodes)\
 	EASY_CVAR_CREATE_CLIENT_A_SERVERONLY_DEBUGONLY(gaussRecoilSendsUpInSP)\
 	EASY_CVAR_CREATE_CLIENT_A_SERVERONLY_DEBUGONLY(drawDebugPathfinding)\
@@ -5935,6 +5942,7 @@
 	EASY_CVAR_CREATE_CLIENT_A_CLIENTONLY(pausecorrection1)\
 	EASY_CVAR_CREATE_CLIENT_A_SERVERONLY(pausecorrection2)\
 	EASY_CVAR_CREATE_CLIENT_A_CLIENTONLY(hud_rpg_alpha_ammo)\
+	EASY_CVAR_CREATE_CLIENT_A_CLIENTONLY(cl_viewmodel_fidget)\
 	DUMMY
 
 
@@ -6103,7 +6111,7 @@
 	EASY_CVAR_RESET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelaycustom)\
 	EASY_CVAR_RESET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_nogaussrecoil)\
 	EASY_CVAR_RESET_DEBUGONLY(autoSneaky)\
-	EASY_CVAR_RESET_DEBUGONLY(infiniteLongJumpCharge)\
+	EASY_CVAR_RESET(sv_longjump_chargemode)\
 	EASY_CVAR_RESET_DEBUGONLY(cheat_touchNeverExplodes)\
 	EASY_CVAR_RESET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gaussRecoilSendsUpInSP)\
 	EASY_CVAR_RESET_DEBUGONLY(drawDebugPathfinding)\
@@ -6450,6 +6458,7 @@
 	EASY_CVAR_RESET(pausecorrection1)\
 	EASY_CVAR_RESET(pausecorrection2)\
 	EASY_CVAR_RESET(hud_rpg_alpha_ammo)\
+	EASY_CVAR_RESET(cl_viewmodel_fidget)\
 	DUMMY
 
 
@@ -6618,7 +6627,7 @@
 	EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelaycustom)\
 	EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_nogaussrecoil)\
 	EASY_CVAR_EXTERN_DEBUGONLY(autoSneaky)\
-	EASY_CVAR_EXTERN_DEBUGONLY(infiniteLongJumpCharge)\
+	EASY_CVAR_EXTERN(sv_longjump_chargemode)\
 	EASY_CVAR_EXTERN_DEBUGONLY(cheat_touchNeverExplodes)\
 	EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gaussRecoilSendsUpInSP)\
 	EASY_CVAR_EXTERN_DEBUGONLY(drawDebugPathfinding)\
@@ -6966,5 +6975,6 @@
 	EASY_CVAR_EXTERN(pausecorrection1)\
 	EASY_CVAR_EXTERN(pausecorrection2)\
 	EASY_CVAR_EXTERN(hud_rpg_alpha_ammo)\
+	EASY_CVAR_EXTERN(cl_viewmodel_fidget)\
 	DUMMY
 

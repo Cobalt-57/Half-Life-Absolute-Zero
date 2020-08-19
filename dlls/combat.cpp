@@ -201,6 +201,11 @@ GENERATE_GIBMONSTERGIB_IMPLEMENTATION(CBaseMonster){
 	//             this monster's type, or german censorship not allowing gibs for humans or even robot replacements (germanRobotGibs of 0).
 
 
+
+	//MODDD - for monsters who involve the last-hit-hitbox for how to gib a monster.
+	// Precision for this makes no sense, so do whatever the default would be.  This is RED blood for zombies (most of the creature is the scientist).
+	m_LastHitGroup = HITGROUP_GENERIC;
+
 	// only humans throw skulls !!!UNDONE - eventually monsters will have their own sets of gibs
 	if ( HasHumanGibs() )
 	{
@@ -253,6 +258,7 @@ GENERATE_GIBMONSTERGIB_IMPLEMENTATION(CBaseMonster){
 		{
 			Vector temp = this->pev->absmax - this->pev->absmin;
 			
+
 			int gibSpawnCount;
 			int myBlood = BloodColor();
 			int gibChoiceID;
@@ -270,6 +276,20 @@ GENERATE_GIBMONSTERGIB_IMPLEMENTATION(CBaseMonster){
 			}
 			else if (myBlood == BLOOD_COLOR_GREEN) {
 				gibChoiceID = GIB_ALIEN_GREEN_ID;
+			}
+			else if (myBlood == BLOOD_COLOR_RED) {
+				// the zombie?  Spawn a mixture of both gibs then.  And end early.
+				
+
+				// MODDD - don't know how german censorship will handle zombies, not doing anything for the human-gib portion for now
+				if (EASY_CVAR_GET(sv_germancensorship) == 0) {
+					if (CVAR_GET_FLOAT("violence_hgibs") != 0) {
+						CGib::SpawnRandomGibs(pev, 3, GIB_HUMAN_ID, fGibSpawnsDecal);	// Throw human gibs
+					}
+				}
+
+				CGib::SpawnRandomGibs(pev, 3, GIB_ALIEN_GREEN_ID, fGibSpawnsDecal);	// Throw alien gibs
+				return TRUE;
 			}
 			else {
 				// ???  unknown color for aliens
@@ -1685,8 +1705,15 @@ GENERATE_TRACEATTACK_IMPLEMENTATION(CBaseMonster)
 {
 	if ( pev->takedamage )
 	{
-		// Let logic in other places deal with this in the same frame
-		m_LastHitGroup = ptr->iHitgroup;
+
+		if ( !((bitsDamageType & DMG_BLAST) || (bitsDamageTypeMod & DMG_HITBOX_EQUAL) )) {
+			// Let logic in other places deal with this in the same frame
+			m_LastHitGroup = ptr->iHitgroup;
+		}
+		else {
+			// has DMG_BLAST or HITBOX_EQUAL?  No precision, force the hitgroup to GENERIC.
+			m_LastHitGroup = HITGROUP_GENERIC;
+		}
 
 		// And, let monsters change up damage values per place if desired
 		flDamage = hitgroupDamage(flDamage, bitsDamageType, bitsDamageTypeMod, ptr->iHitgroup);

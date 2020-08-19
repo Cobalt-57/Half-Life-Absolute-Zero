@@ -22,7 +22,10 @@
 #include "player.h"
 
 //MODDD - extern
-EASY_CVAR_EXTERN(cheat_minimumfiredelay)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelay)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelaycustom)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteclip)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteammo)
 EASY_CVAR_EXTERN(handGrenadePickupYieldsOne);
 
 LINK_ENTITY_TO_CLASS( weapon_handgrenade, CHandGrenade );
@@ -165,8 +168,7 @@ BOOL CHandGrenade::CanHolster( void )
 void CHandGrenade::ItemPreFrame(void){
 	CBasePlayerWeapon::ItemPreFrame();
 
-	//if(m_pPlayer->cheat_minimumfiredelayMem == 1){
-	if(EASY_CVAR_GET(cheat_minimumfiredelay) == 1){
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelay) == 1){
 		//cheating.
 		m_fireState = -500;
 	}else{
@@ -190,8 +192,6 @@ void CHandGrenade::ItemPostFrameThink(void) {
 
 	CBasePlayerWeapon::ItemPostFrameThink();
 }
-
-
 
 
 
@@ -285,11 +285,15 @@ void CHandGrenade::EitherAttack() {
 			//MODDD NOTE: does this really warrant a " + randomIdleAnimationDelay()" ?
 			m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 0.5;
 		}
+
+		// The grenade-shoot will happen in WeaponIdle (detected release for a certain area to be reached there)
+
 	}
 	else {
 		// CHEATING.
-		m_flNextSecondaryAttack = m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + m_pPlayer->cheat_minimumfiredelaycustomMem;// ensure that the animation can finish playing
 
+		SetAttackDelays(UTIL_WeaponTimeBase() + EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelaycustom));
+		
 		//m_flTimeWeaponIdle = m_flNextSecondaryAttack = m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 0.5;// ensure that the animation can finish playing
 
 		float flVel = 220 + 6 * 140;
@@ -461,7 +465,12 @@ void CHandGrenade::WeaponIdle( void )
 			Vector vecSrc = m_pPlayer->pev->origin + m_pPlayer->pev->view_ofs + gpGlobals->v_forward * 16;
 			Vector vecThrow = gpGlobals->v_forward * flVel + m_pPlayer->pev->velocity;
 
-			CGrenade::ShootTimed(m_pPlayer->pev, vecSrc, vecThrow, gSkillData.plrDmgHandGrenade, timeUntilBoom);
+			CGrenade* grenRef = CGrenade::ShootTimed(m_pPlayer->pev, vecSrc, vecThrow, gSkillData.plrDmgHandGrenade, timeUntilBoom);
+			//MODDD - rolled?  Randomize between sequeneces 1 and 2, use that instead.  That's the 'roll' sequences.
+			// They're identical to each other though.  oh well.
+			if (grenRef != NULL) {
+				grenRef->pev->sequence = RANDOM_LONG(1, 2);
+			}
 
 		}//END OF primaryThrow check
 
@@ -512,14 +521,14 @@ void CHandGrenade::WeaponIdle( void )
 		m_flReleaseThrow = 0;
 		m_flStartThrow = 0;
 		//m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 0.5;
-		m_flTimeWeaponIdle = m_flNextSecondaryAttack = m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 0.5;// ensure that the animation can finish playing
+		SetAttackDelays(UTIL_WeaponTimeBase() + 0.8);// ensure that the animation can finish playing
 
 
 		//MODDD - handle idle-delay above depending on the chosen anim's time.
 		//m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 0.5;
 
 		//MODDD - cheat check.
-		if(m_pPlayer->cheat_infiniteclipMem == 0 && m_pPlayer->cheat_infiniteammoMem == 0){
+		if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteclip) == 0 && EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteammo) == 0){
 			ChangePlayerPrimaryAmmoCount(-1);
 		}
 

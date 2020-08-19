@@ -48,14 +48,7 @@ EASY_CVAR_EXTERN(mutePlayerPainSounds)
 EASY_CVAR_EXTERN(geigerChannel)
 EASY_CVAR_EXTERN(drawDebugBloodTrace)
 EASY_CVAR_EXTERN(autoSneaky)
-EASY_CVAR_EXTERN(infiniteLongJumpCharge)
-EASY_CVAR_EXTERN(cheat_infiniteclip)
-EASY_CVAR_EXTERN(cheat_infiniteammo)
-EASY_CVAR_EXTERN(cheat_minimumfiredelay)
-EASY_CVAR_EXTERN(cheat_minimumfiredelaycustom)
-EASY_CVAR_EXTERN(cheat_nogaussrecoil)
-EASY_CVAR_EXTERN(gaussRecoilSendsUpInSP)
-EASY_CVAR_EXTERN(cheat_touchNeverExplodes)
+EASY_CVAR_EXTERN(sv_longjump_chargemode)
 EASY_CVAR_EXTERN(endlessFlashlightBattery)
 EASY_CVAR_EXTERN(normalSpeedMulti)
 EASY_CVAR_EXTERN(noclipSpeedMulti)
@@ -4047,11 +4040,11 @@ void CBasePlayer::PreThink(void)
 #if LONGJUMPUSESDELAY == 0
 		// continual re-charge for infinigeLongJumpCharge choices of 2 and 3.
 		if (longJumpCharge < PLAYER_LONGJUMPCHARGE_MAX) {
-			if (EASY_CVAR_GET(infiniteLongJumpCharge) == 2) {
+			if (EASY_CVAR_GET(sv_longjump_chargemode) == 2) {
 				// every 2 minutes, one additional longjump
 				longJumpCharge += timeDelta * (25.0f/120.0f);
 			}
-			else if (EASY_CVAR_GET(infiniteLongJumpCharge) == 3) {
+			else if (EASY_CVAR_GET(sv_longjump_chargemode) == 3) {
 				// every 30 seconds, one additional longjump
 				longJumpCharge += timeDelta * (25.0f/30.0f);
 			}
@@ -4111,7 +4104,7 @@ void CBasePlayer::PreThink(void)
 		}
 
 
-		if ((longJumpDelay <= 0 && (EASY_CVAR_GET(infiniteLongJumpCharge) == 1 || longJumpCharge >= LONGJUMP_CHARGEUSE) && pev->button & IN_DUCK) &&
+		if ((longJumpDelay <= 0 && (EASY_CVAR_GET(sv_longjump_chargemode) == 1 || longJumpCharge >= LONGJUMP_CHARGEUSE) && pev->button & IN_DUCK) &&
 			( pev->flDuckTime >= 0 ) &&
 			//pev->velocity.Length() > 0 &&
 			//!pev->button & IN_JUMP &&
@@ -4145,18 +4138,18 @@ void CBasePlayer::PreThink(void)
 				if(pev->oldbuttons & IN_JUMP && lastDuckVelocityLength > 7 ){
 					//easyPrint("pev->velocity? %.3f\n", lastDuckVelocityLength);
 
-					if(EASY_CVAR_GET(infiniteLongJumpCharge) != 1){
+					if(EASY_CVAR_GET(sv_longjump_chargemode) != 1){
 						longJumpCharge -= LONGJUMP_CHARGEUSE;
 					}
 
 					longJumpDelay = PLAYER_LONGJUMP_DELAY;
 					longJumpChargeNeedsUpdate = TRUE;
 					
-					// that is, if the charge has run out BUT "infiniteLongJumpCharge" is 1, don't play this message (spammy)
+					// that is, if the charge has run out BUT "sv_longjump_chargemode" is 1, don't play this message (spammy)
 					// And if regeneration is on, that's covered too.  Point of the message is to let the player know
 					// long-jumping after this one isn't immediately possible (having 4 charge left with 25 required
 					// may not be 0 charge left, but should clearly still play this message or else it virtually never will)
-					if(longJumpCharge < LONGJUMP_CHARGEUSE && EASY_CVAR_GET(infiniteLongJumpCharge) != 1){
+					if(longJumpCharge < LONGJUMP_CHARGEUSE && EASY_CVAR_GET(sv_longjump_chargemode) != 1){
 						//play the out of ammo message.
 						SetSuitUpdate("!HEV_LJDEPLETED", FALSE, 0);
 					}
@@ -6272,17 +6265,6 @@ void CBasePlayer::commonReset(void){
 	
 
 
-	cheat_infiniteclipMem = -1;
-	cheat_infiniteammoMem = -1;
-	cheat_minimumfiredelayMem = -1;
-	cheat_minimumfiredelaycustomMem = -1;
-
-
-
-	cheat_nogaussrecoilMem = -1;
-	gaussRecoilSendsUpInSPMem = -1;
-
-
 
 	//MODDD
 	// only spawn does this below.  proceed?
@@ -7839,7 +7821,7 @@ void CBasePlayer::CheatImpulseCommands( int iImpulse )
 			break;
 		}
 
-
+		
 	case 101:
 		gEvilImpulse101 = TRUE;
 		GiveNamedItem( "item_suit" );
@@ -8752,26 +8734,6 @@ void CBasePlayer :: UpdateClientData( void )
 		MESSAGE_BEGIN( MSG_ONE, gmsgUpdatePlayerAlive, NULL, pev );
 			WRITE_SHORT( IsAlive() );
 		MESSAGE_END();
-	}
-
-	//MODDD - update cheat vars.
-	if(cheat_infiniteclipMem != EASY_CVAR_GET(cheat_infiniteclip) ){
-		cheat_infiniteclipMem = EASY_CVAR_GET(cheat_infiniteclip);
-	}
-	if(cheat_infiniteammoMem != EASY_CVAR_GET(cheat_infiniteammo)){
-		cheat_infiniteammoMem = EASY_CVAR_GET(cheat_infiniteammo);
-	}
-	if(cheat_minimumfiredelayMem != EASY_CVAR_GET(cheat_minimumfiredelay)){
-		cheat_minimumfiredelayMem = EASY_CVAR_GET(cheat_minimumfiredelay);
-	}
-	if(cheat_minimumfiredelaycustomMem != EASY_CVAR_GET(cheat_minimumfiredelaycustom)){
-		cheat_minimumfiredelaycustomMem = EASY_CVAR_GET(cheat_minimumfiredelaycustom);
-	}
-	if(cheat_nogaussrecoilMem != EASY_CVAR_GET(cheat_nogaussrecoil)){
-		cheat_nogaussrecoilMem = EASY_CVAR_GET(cheat_nogaussrecoil);
-	}
-	if(gaussRecoilSendsUpInSPMem != EASY_CVAR_GET(gaussRecoilSendsUpInSP)){
-		gaussRecoilSendsUpInSPMem = EASY_CVAR_GET(gaussRecoilSendsUpInSP);
 	}
 
 	

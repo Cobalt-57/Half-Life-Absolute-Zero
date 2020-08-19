@@ -32,7 +32,7 @@
 //MODDD - important
 //EASY_CVAR_EXTERN_CLIENT_MASS
 
-EASY_CVAR_EXTERN(cheat_minimumfiredelay)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelay)
 EASY_CVAR_EXTERN(myCameraSucks)
 EASY_CVAR_EXTERN(cameraPosFixedX)
 EASY_CVAR_EXTERN(cameraPosFixedY)
@@ -63,12 +63,16 @@ EASY_CVAR_EXTERN(cl_viewroll)
 //MODDD - important point before.
 //extern globalvars_t* gpGlobals;
 
+//extern BOOL g_recentDuckVal;
 
 extern float global2PSEUDO_IGNOREcameraMode;
 extern float global2PSEUDO_grabbedByBarancle;
 
+
 extern void command_updateCameraPerspectiveF(void);
 extern void command_updateCameraPerspectiveT(void);
+
+
 
 
 typedef struct
@@ -547,9 +551,13 @@ V_CalcRefdef
 // ...or just change them with a variable set by elsewhere in-method instead, makes more sense that way.
 BOOL resetNormalRefDefVars = FALSE;
 static float oldz = 0;
+static float oldRawz = 0;
 //MODDD - NEW for cl_interp_view_extra
 static float oldViewHeight = 0;
 static int oldHull = 0;
+static float prevOriginZ = 0;
+static float deltaOriginZ_cumula = 0;
+
 
 
 
@@ -829,7 +837,7 @@ void V_CalcNormalRefdef(struct ref_params_s* pparams)
 	// ALSO, ev_punchangle seems to come from 'events' in ev_hldm (weapon recoil most often, if not always).
 	// See V_PunchAxis which sets it).   pparms->punchangle  above looks to come from serverside entities
 	// inflicting it on the player by setting 'pev->punchangle', usually melee attacks throwing the camera off.
-	if (EASY_CVAR_GET(cheat_minimumfiredelay) != 1 && EASY_CVAR_GET(cl_viewpunch) > 0) {
+	if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelay) != 1 && EASY_CVAR_GET(cl_viewpunch) > 0) {
 		VectorAdd_f(pparams->viewangles, (float*)&ev_punchangle, pparams->viewangles);
 	}
 	else {
@@ -896,7 +904,11 @@ void V_CalcNormalRefdef(struct ref_params_s* pparams)
 		oldz = safeSimZ;
 		oldViewHeight = pparams->viewheight[2];
 		oldHull = ent->curstate.usehull;
+		prevOriginZ = ent->curstate.origin.z;
+		deltaOriginZ_cumula = 0;
 	}
+
+
 
 	//if (!pparams->smoothing && pparams->onground && safeSimZ - oldz > 0)
 	if (!pparams->smoothing)
@@ -905,6 +917,19 @@ void V_CalcNormalRefdef(struct ref_params_s* pparams)
 		// depending on cl_interp_view_extra.
 		
 		//easyForcePrintLine("the what H:%d %.2f %.2f :: %.2f   %.2f %.2f :: %.2f", ent->curstate.usehull, pparams->viewheight[2], oldViewHeight, pparams->viewheight[2] - oldViewHeight + (safeSimZ - oldz), safeSimZ, oldz, (safeSimZ - oldz));
+
+
+
+
+
+		float deltaOriginZ = ent->curstate.origin.z - prevOriginZ;
+		prevOriginZ = ent->curstate.origin.z;
+		// same thing
+		//float deltaSimZ = safeSimZ - oldRawz;
+		//oldRawz = safeSimZ;
+
+
+
 
 		// On the hull changing, correct the observed change in Z.
 		// It doesn't need to play a role in view changes, this is already handled elsewhere and would
@@ -920,6 +945,8 @@ void V_CalcNormalRefdef(struct ref_params_s* pparams)
 					oldViewHeight = pparams->viewheight[2] - 0;
 					oldz -= 16;
 				}
+				// Don't count the change in hull-size in deltaOriginZ either
+				deltaOriginZ -= 18;
 			}
 			else if (ent->curstate.usehull == 1) {
 				// Going to 1 (ducking)?
@@ -929,6 +956,8 @@ void V_CalcNormalRefdef(struct ref_params_s* pparams)
 					oldViewHeight = pparams->viewheight[2];
 					oldz = safeSimZ;
 				}
+				// Don't count the change in hull-size in deltaOriginZ either
+				deltaOriginZ += 18;
 			}
 			else {
 				// ????
@@ -937,8 +966,24 @@ void V_CalcNormalRefdef(struct ref_params_s* pparams)
 			oldHull = ent->curstate.usehull;
 		}//END OF hull change check
 
+
+		deltaOriginZ_cumula += deltaOriginZ;
+		easyForcePrintLine("here comes honey %.2f : %.2f", deltaOriginZ_cumula, deltaOriginZ);
+		//easyForcePrintLine("here comes honey %.2f : %.2f", deltaOriginZ);
+
+
 		// can we count falling velocity?  Don't think we need it though, if that's what this is?
 		//    pparams->cmd->upmove
+
+		//MODDD - TODO?  maybe?  low priority.
+		// As great of an idea as ignoring changes in Z origin outside of hull-changes is,
+		// it means stairs are no longer affected by interp (really jumpy-looking going up/down).
+		// Sadly I don't see a way to tell whether a change in Z is from going up a surface
+		// (when pm_shared does that) or being taken higher/lower by going up/down stairs.
+		// If there were some way for pm_shared to give the difference in height that is allowed
+		// to be interpolated, that would be nice.
+		//oldz += deltaOriginZ;
+
 
 		if (EASY_CVAR_GET(cl_interp_view_extra) == 2 || (EASY_CVAR_GET(cl_interp_view_extra) == 1 && pparams->onground)) {
 			// unmodified now, no need for changes.
@@ -1032,11 +1077,46 @@ void V_CalcNormalRefdef(struct ref_params_s* pparams)
 				if (oldz > safeSimZ) {
 					oldz = safeSimZ;
 				}
+
+
+				
+
+				deltaOriginZ_cumula -= steptime * STEPPER;
+				if (deltaOriginZ_cumula < 0) deltaOriginZ_cumula = 0;
+
 				//MODDD - tolerance changed from 18 to allow for the difference
 				// between the duck and standing hulls.  I think.
-				if (safeSimZ - oldz > 34) {
-					oldz = safeSimZ - 34;
-				}
+				
+				//if (ent->curstate.usehull == 1) {
+					// going up?  don't allow as much push-down from duck lest we look through the floor of a rising platform.
+					// Unfortunately there isn't enough information to tell whether a change in camera origin is from
+					// going from standing to crouch or from going up/down a platform.
+					// If so, the '34' below could shift to stop the player from looking below a platform that's
+					// ascending fast enough by going from stand to crouch while ascending.  Oh well.
+					// ent->curstate.maxs, ent->curstate.mins to help make that judgement?  do they change during
+					// stand/crouch changes?  Doubt it, stand to crouch changes the hull at the very end, crouch to stand
+					// at the very beginning.
+				    // CHANGE SINCE!!!
+				    // Can judge the change in origin (minus one from a change in hull-size that can be offset
+				    // in detecting a change in ducking/standing) to affect the amount of interp allowed.
+				    // Moving high enough, no interp from below to up is allowed (forced exact), and vice versa.
+				    // Can give some tolerance too (the 'max' below's 2nd parameter, from 8 to 18-ish).
+				//	if (safeSimZ - oldz > 18) {
+				//		oldz = safeSimZ - 18;
+				//	}
+				//}
+				//else {
+				float stepTester = (max(34 - deltaOriginZ_cumula, 0));
+					if (safeSimZ - oldz > stepTester) {
+						oldz = safeSimZ - stepTester;
+					}
+				//}
+				
+				//if (safeSimZ - oldz > 34) {
+				//    oldz = safeSimZ - 34;
+				//}
+
+
 				pparams->vieworg[2] += oldz - (safeSimZ);
 				view->origin[2] += oldz - (safeSimZ);
 
@@ -1061,9 +1141,29 @@ void V_CalcNormalRefdef(struct ref_params_s* pparams)
 				if (oldz < safeSimZ) {
 					oldz = safeSimZ;
 				}
-				if (-safeSimZ + oldz > 34) {
-					oldz = safeSimZ + 34;
-				}
+
+
+				
+				deltaOriginZ_cumula += steptime * STEPPER;
+				if (deltaOriginZ_cumula > 0) deltaOriginZ_cumula = 0;
+
+				//if (ent->curstate.usehull == 1) {
+				//	if (-safeSimZ + oldz > 18) {
+				//		oldz = safeSimZ + 18;
+				//	}
+				//}
+				//else {
+				float stepTester = (max(34 + deltaOriginZ_cumula, 0));
+					if (-safeSimZ + oldz > stepTester) {
+						oldz = safeSimZ + stepTester;
+					}
+				//}
+				
+				//if (-safeSimZ + oldz > 34) {
+				//	oldz = safeSimZ + 34;
+				//}
+
+
 				pparams->vieworg[2] -= -oldz + (safeSimZ);
 				view->origin[2] -= -oldz + (safeSimZ);
 				
@@ -1071,6 +1171,7 @@ void V_CalcNormalRefdef(struct ref_params_s* pparams)
 			else{
 				// oh
 				oldz = safeSimZ;
+				deltaOriginZ_cumula = 0;
 			}
 
 			//if (safeSimZ - oldz != 0) {
@@ -1080,10 +1181,12 @@ void V_CalcNormalRefdef(struct ref_params_s* pparams)
 		}// END OF onground check
 		else{
 			oldz = safeSimZ;
+			deltaOriginZ_cumula = 0;
 		}
 	}// END OF smoothing check
 	else{
 		oldz = safeSimZ;
+		deltaOriginZ_cumula = 0;
 	}
 
 

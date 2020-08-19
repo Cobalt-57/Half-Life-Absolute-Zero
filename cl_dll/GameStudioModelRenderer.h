@@ -11,6 +11,9 @@
 #pragma once
 #endif
 
+// ??? why not?
+#include "StudioModelRenderer.h"
+
 /*
 ====================
 CGameStudioModelRenderer

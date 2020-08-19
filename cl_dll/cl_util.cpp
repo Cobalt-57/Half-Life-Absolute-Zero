@@ -70,6 +70,10 @@ float global2PSEUDO_default_fov = -1;
 float global2PSEUDO_auto_adjust_fov = -1;
 
 
+
+BOOL g_lateCVarInit_called = FALSE;
+
+
 //is this accessible everywhere?
 EASY_CVAR_DECLARATION_CLIENT_MASS
 
@@ -125,10 +129,17 @@ void lateCVarInit(void){
 	updateAutoFOV();  //do we even need to do this here?
 	easyClientCommand("_auto_determined_fov %f", globalPSEUDO_autoDeterminedFOV);
 	
+	g_lateCVarInit_called = TRUE;
+
 }//END OF lateCVarInit
 
 
 void updateClientCVarRefs(void){
+
+	if (!g_lateCVarInit_called) {
+		// not allowed to run until all CVars have been hooked up to starting defaults, particulary broadcasted  ones.
+		return;
+	}
 
 	EASY_CVAR_UPDATE_CLIENT_MASS
 

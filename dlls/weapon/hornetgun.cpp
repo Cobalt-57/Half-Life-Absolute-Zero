@@ -27,10 +27,20 @@
 #include "gamerules.h"
 
 
-//EXTERN
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelay)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelaycustom)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteclip)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteammo)
 EASY_CVAR_EXTERN(fastHornetsInheritsPlayerVelocity);
 
 
+// HACKY - redirect any references to the old 'RechargeTime' to a better synched var.
+#define m_flRechargeTime m_flReleaseThrow
+
+#ifdef CLIENT_DLL
+BOOL atLeastOneHornet = FALSE;
+float HGUN_prevRechargeTime = -1;
+#endif
 
 
 LINK_ENTITY_TO_CLASS( weapon_hornetgun, CHgun );
@@ -161,13 +171,35 @@ void CHgun::Holster( int skiplocal /* = 0 */ )
 
 void CHgun::PrimaryAttack()
 {
-
 	Reload( );
+	
+	easyForcePrintLine("aaa %.2f", m_flRechargeTime - gpGlobals->time);
+	
 
+#ifdef CLIENT_DLL
+
+	//easyPrintLine("HEYYYAH %.2f", (m_flRechargeTime - HGUN_prevRechargeTime));
+	//(atLeastOneHornet || (m_flRechargeTime - HGUN_prevRechargeTime > 0.2) )
+
+	if (PlayerPrimaryAmmoCount() <= 0  ) {
+		ChangePlayerPrimaryAmmoCount(1);
+		m_pPlayer->m_rgAmmoCLIENTHISTORY[getPrimaryAmmoType()] += 1;
+		atLeastOneHornet = FALSE;
+	}
+	HGUN_prevRechargeTime = m_flRechargeTime;
+
+#endif
+
+
+#ifdef CLIENT_DLL
+	if(m_pPlayer->m_rgAmmoCLIENTHISTORY[ getPrimaryAmmoType() ] <= 0)
+#else
 	if (PlayerPrimaryAmmoCount() <= 0)
+#endif
 	{
 		return;
 	}
+	//easyForcePrintLine("Well gee I tried glob:%.2f, rech:%.2f ammo:%d", gpGlobals->time, m_flRechargeTime, PlayerPrimaryAmmoCount());
 
 #ifndef CLIENT_DLL
 	UTIL_MakeVectors( m_pPlayer->pev->v_angle );
@@ -183,14 +215,28 @@ void CHgun::PrimaryAttack()
 	//pHornet->pev->velocity = gpGlobals->v_forward * 300 + UTIL_GetProjectileVelocityExtra(m_pPlayer->pev->velocity, m_pPlayer->someotherhornetstuffhere);
 
 
-
-	m_flRechargeTime = gpGlobals->time + 0.5;
 #endif
+
 	
 	//MODDD
-	if(m_pPlayer->cheat_infiniteclipMem == 0 && m_pPlayer->cheat_infiniteammoMem == 0){
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteclip) == 0 && EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteammo) == 0){
 		ChangePlayerPrimaryAmmoCount(-1);
 	}
+
+	//MODDD - if it's the last hit, give the client a little lee-way this frame.  For clientside.
+#ifdef CLIENT_DLL
+	if (PlayerPrimaryAmmoCount() <= 0) {
+		m_flRechargeTime = gpGlobals->time + 0.40;
+	}
+	else {
+		m_flRechargeTime = gpGlobals->time + 0.5;
+	}
+#else
+	m_flRechargeTime = gpGlobals->time + 0.5;
+#endif
+
+
+
 	m_pPlayer->m_iWeaponVolume = QUIET_GUN_VOLUME;
 	m_pPlayer->m_iWeaponFlash = DIM_GUN_FLASH;
 
@@ -201,6 +247,8 @@ void CHgun::PrimaryAttack()
 	flags = 0;
 #endif
 
+	//SendWeaponAnimBypass(HGUN_SHOOT);
+
 	PLAYBACK_EVENT_FULL( flags, m_pPlayer->edict(), m_usHornetFire, 0.0, (float *)&g_vecZero, (float *)&g_vecZero, 0.0, 0.0, FIREMODE_TRACK, 0, 0, 0 );
 	m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + (11.0/24.0) + randomIdleAnimationDelay();
 	
@@ -209,7 +257,7 @@ void CHgun::PrimaryAttack()
 	m_pPlayer->SetAnimation( PLAYER_ATTACK1 );
 
 
-	if(m_pPlayer->cheat_minimumfiredelayMem == 0){
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelay) == 0){
 		//MODDD - uh...   ??  what?  Just have a fire delay like any other weapon?
 		// And set the secondary attack delay too, why not really.
 		// Seems doing fire-delay logic the normal way fixed sometimes firing two hornets in rapid succession
@@ -222,10 +270,10 @@ void CHgun::PrimaryAttack()
 		}
 		*/
 
-		m_flNextPrimaryAttack = m_flNextSecondaryAttack = UTIL_WeaponTimeBase() + 0.25;
+		SetAttackDelays(UTIL_WeaponTimeBase() + 0.25);
 	}else{
 		// little extra, because the primary attack seems to fail if it is too low; hornets hit each other and fall.
-		m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + m_pPlayer->cheat_minimumfiredelaycustomMem + 0.03f;
+		SetAttackDelays(UTIL_WeaponTimeBase() + EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelaycustom) + 0.03f);
 	}
 
 
@@ -239,7 +287,7 @@ void CHgun::PrimaryAttack()
 void CHgun::SecondaryAttack( void )
 {
 
-	if(m_pPlayer->cheat_infiniteammoMem == 1){
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteammo) == 1){
 		if ( pszAmmo1() && PlayerPrimaryAmmoCount() < 8 )
 		{
 			SetPlayerPrimaryAmmoCount(8);
@@ -308,8 +356,21 @@ void CHgun::SecondaryAttack( void )
 
 	pHornet->SetThink( &CHornet::StartDart );
 
+#endif
+
+
+	//MODDD - if it's the last hit, give the client a little lee-way this frame.  For clientside.
+#ifdef CLIENT_DLL
+	if (PlayerPrimaryAmmoCount() <= 0) {
+		m_flRechargeTime = gpGlobals->time + 0.40;
+	}
+	else {
+		m_flRechargeTime = gpGlobals->time + 0.5;
+	}
+#else
 	m_flRechargeTime = gpGlobals->time + 0.5;
 #endif
+
 
 	int flags;
 #if defined( CLIENT_WEAPONS )
@@ -322,7 +383,7 @@ void CHgun::SecondaryAttack( void )
 
 
 	//MODDD
-	if(m_pPlayer->cheat_infiniteclipMem == 0 && m_pPlayer->cheat_infiniteammoMem == 0){
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteclip) == 0 && EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteammo) == 0){
 		ChangePlayerPrimaryAmmoCount(-1);
 	}
 
@@ -337,11 +398,11 @@ void CHgun::SecondaryAttack( void )
 
 
 	//MODDD 
-	if(m_pPlayer->cheat_minimumfiredelayMem == 0){
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelay) == 0){
 		//MODDD - slightly increased between-attack delay,was 0.10.
-		m_flNextPrimaryAttack = m_flNextSecondaryAttack = UTIL_WeaponTimeBase() + 0.115;
+		SetAttackDelays(UTIL_WeaponTimeBase() + 0.115);
 	}else{
-		m_flNextPrimaryAttack = m_flNextSecondaryAttack = UTIL_WeaponTimeBase() + m_pPlayer->cheat_minimumfiredelaycustomMem;
+		SetAttackDelays(UTIL_WeaponTimeBase() + EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelaycustom));
 	}
 	
 
@@ -360,10 +421,9 @@ void CHgun::Reload( void )
 
 
 
-
 void CHgun::ItemPostFrameThink(void) {
 
-
+	
 	//MODDD - moved from 'Reload' below, see notes there
 	if (PlayerPrimaryAmmoCount() < HORNET_MAX_CARRY) {
 		// This adds a hornet for every add-1-hornet-interval that passed between the last time
@@ -371,8 +431,22 @@ void CHgun::ItemPostFrameThink(void) {
 		// (as it's only run on the currently equipped player weapon).
 		while (PlayerPrimaryAmmoCount() < HORNET_MAX_CARRY && m_flRechargeTime < gpGlobals->time)
 		{
-			ChangePlayerPrimaryAmmoCount(1);
+#ifdef CLIENT_DLL
+
+			if (PlayerPrimaryAmmoCount() == 0) {
+				easyForcePrintLine("SAVOH");
+				atLeastOneHornet = TRUE;
+				m_flRechargeTime += 0.4;
+			}
+			else {
+				m_flRechargeTime += 0.5;
+			}
+#else
 			m_flRechargeTime += 0.5;
+#endif
+			ChangePlayerPrimaryAmmoCount(1);
+			easyForcePrintLine("yay? %d", PlayerPrimaryAmmoCount());
+
 		}
 	}
 

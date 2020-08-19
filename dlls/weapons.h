@@ -576,8 +576,8 @@ public:
 	BOOL isBasePlayerWeapon(void){return TRUE;};
 
 
-	//MODDD - new.  Get the time to add to an idle animation's delay (beyondthe bare minimum to finish the current anim of course)
-	//Made virtual. For the lazy ass in you, go overwrite this to add 0 seconds for no static delays for things not meant to be lifeless like snarks or chumtoads.
+	//MODDD - new.  Get the time to add to an idle animation's delay (beyond the bare minimum to finish the current anim of course)
+	// Made virtual. For the lazy ass in you, go overwrite this to add 0 seconds for no static delays for things not meant to be lifeless like snarks or chumtoads.
 	virtual float randomIdleAnimationDelay(void);
 
 
@@ -695,6 +695,11 @@ public:
 
 	virtual CBasePlayerItem *GetWeaponPtr( void ) { return (CBasePlayerItem *)this; };
 
+	//MODDD - NEW. Convenience method, set both attack delays.
+	inline void SetAttackDelays(float targetTime) {
+		m_flNextPrimaryAttack = targetTime;
+		m_flNextSecondaryAttack = targetTime;
+	}
 
 
 

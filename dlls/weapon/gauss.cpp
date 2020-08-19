@@ -41,28 +41,32 @@
 //     (tap) and secondary (hold down) attacks.
 
 
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelay)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelaycustom)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteclip)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteammo)
 
-//EASY_CVAR_GET
-EASY_CVAR_EXTERN(gauss_mode)
-EASY_CVAR_EXTERN(gauss_primaryonly)
-EASY_CVAR_EXTERN(gauss_reflectdealsdamage)
-EASY_CVAR_EXTERN(gauss_chargeanimdelay)
-EASY_CVAR_EXTERN(gauss_chargeworkdelay)
-EASY_CVAR_EXTERN(gauss_secondarychargetimereq)
-EASY_CVAR_EXTERN(gauss_primaryreflects)
-EASY_CVAR_EXTERN(gauss_primarypierces)
-EASY_CVAR_EXTERN(gauss_secondaryreflects)
-EASY_CVAR_EXTERN(gauss_secondarypierces)
-EASY_CVAR_EXTERN(gauss_primarypunchthrough)
-EASY_CVAR_EXTERN(gauss_secondarypunchthrough)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_nogaussrecoil)
 
+EASY_CVAR_EXTERN(gauss_mode)  // ?
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_primaryonly)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_reflectdealsdamage)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_chargeanimdelay)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_chargeworkdelay)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_secondarychargetimereq)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_primaryreflects)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_primarypierces)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_secondaryreflects)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_secondarypierces)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_primarypunchthrough)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_secondarypunchthrough)
 
-EASY_CVAR_EXTERN(gauss_betweenattackdelay)
-EASY_CVAR_EXTERN(gauss_secondarychargemindelay)
-EASY_CVAR_EXTERN(gauss_chargeMaxAmmo_SP)
-EASY_CVAR_EXTERN(gauss_chargeMaxAmmo_MP)
-EASY_CVAR_EXTERN(gauss_chargeInterval_SP)
-EASY_CVAR_EXTERN(gauss_chargeInterval_MP)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_betweenattackdelay)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_secondarychargemindelay)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_chargeMaxAmmo_SP)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_chargeMaxAmmo_MP)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_chargeInterval_SP)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_chargeInterval_MP)
 
 
 
@@ -104,11 +108,11 @@ float CGauss::GetFullChargeTime( void )
 	{
 		//MODDD - TIME TIMES THEY ARE A CHANGIN'
 		//return 1.5;
-		return EASY_CVAR_GET(gauss_chargeMaxAmmo_MP) * EASY_CVAR_GET(gauss_chargeInterval_MP) ;
+		return EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_chargeMaxAmmo_MP) * EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_chargeInterval_MP) ;
 	}
 
 	//return 4;
-	return EASY_CVAR_GET(gauss_chargeMaxAmmo_SP) * EASY_CVAR_GET(gauss_chargeInterval_SP) ;
+	return EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_chargeMaxAmmo_SP) * EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_chargeInterval_SP) ;
 }
 
 #ifdef CLIENT_DLL
@@ -255,7 +259,7 @@ void CGauss::PrimaryAttack()
 	
 
 	//MODDD
-	if(EASY_CVAR_GET(gauss_primaryonly) == 1){
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_primaryonly) == 1){
 		chargeWork();
 		//chargeGauss();
 		//postChargeAnimCheck();
@@ -300,7 +304,7 @@ void CGauss::attemptFirePrimary(){
 	m_fPrimaryFire = TRUE;
 
 	//MODDD - only reduce ammo if cheats are off.
-	if(m_pPlayer->cheat_infiniteclipMem == 0 && m_pPlayer->cheat_infiniteammoMem == 0){
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteclip) == 0 && EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteammo) == 0){
 		ChangePlayerPrimaryAmmoCount(-2);
 	}
 
@@ -314,16 +318,14 @@ void CGauss::attemptFirePrimary(){
 
 
 	//MODDD
-	if(m_pPlayer->cheat_minimumfiredelayMem == 0){
-		m_pPlayer->m_flNextAttack = UTIL_WeaponTimeBase() + EASY_CVAR_GET(gauss_betweenattackdelay) ;
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelay) == 0){
+		m_pPlayer->m_flNextAttack = UTIL_WeaponTimeBase() + EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_betweenattackdelay) ;
 	}else{
-		m_pPlayer->m_flNextAttack = UTIL_WeaponTimeBase() + m_pPlayer->cheat_minimumfiredelaycustomMem;
+		m_pPlayer->m_flNextAttack = UTIL_WeaponTimeBase() + EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelaycustom);
 	}
 }
 
 
-
-EASY_CVAR_EXTERN(cheat_minimumfiredelay);
 
 void CGauss::ItemPreFrame(){
 	
@@ -333,7 +335,7 @@ void CGauss::ItemPreFrame(){
 	//MODDD - OBSOLETE: this no longer needs to be done.
 	//MODDD - done better to sync b/w the server and client for this cheat.
 	/*
-	if((m_pPlayer->cheat_minimumfiredelayMem == 1) ){
+	if((EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelay) == 1) ){
 		//m_fInAttack |= 4;
 		m_fireState = 1;
 	}else{
@@ -369,7 +371,7 @@ void CGauss::ItemPostFrame(){
 
 void CGauss::SecondaryAttack()
 {
-	if(EASY_CVAR_GET(gauss_primaryonly) == 1){
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_primaryonly) == 1){
 		
 		//chargeGauss();
 		//postChargeAnimCheck();
@@ -457,7 +459,7 @@ void CGauss::chargeWork(){
 
 		
 
-		m_flStartThrow = gpGlobals->time + EASY_CVAR_GET(gauss_chargeworkdelay);
+		m_flStartThrow = gpGlobals->time + EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_chargeworkdelay);
 		///??   yes... bizarrely, startThrow uses fixed time, not relative to 0.
 
 		
@@ -495,7 +497,7 @@ void CGauss::chargeWork(){
 			m_fInAttack = 2;
 				
 			//MOVED DOWN
-			//m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + EASY_CVAR_GET(gauss_secondarychargemindelay);   //TODO!!!! todo
+			//m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_secondarychargemindelay);   //TODO!!!! todo
 		}
 
 
@@ -510,13 +512,13 @@ void CGauss::chargeWork(){
 			//easyForcePrintLine("OH SHIT I DID THE SHIT DO YOU SEE THIS SHIT DAMN");
 			
 
-			if(EASY_CVAR_GET(gauss_primaryonly) != 1){
+			if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_primaryonly) != 1){
 				//only allow when primary fire is disallowed.
-				m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + EASY_CVAR_GET(gauss_secondarychargemindelay);   //TODO!!!! todo
+				m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_secondarychargemindelay);   //TODO!!!! todo
 				m_pPlayer->m_flNextAmmoBurn = UTIL_WeaponTimeBase();
 			}else{
 				//is that okay?
-				this->pev->fuser1 = UTIL_WeaponTimeBase() + EASY_CVAR_GET(gauss_secondarychargemindelay);
+				this->pev->fuser1 = UTIL_WeaponTimeBase() + EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_secondarychargemindelay);
 				m_pPlayer->m_flNextAmmoBurn = UTIL_WeaponTimeBase() + getAmmoChargeInterval();   // + 0.1
 			}
 
@@ -535,7 +537,7 @@ void CGauss::chargeWork(){
 
 		BOOL moveToNextPhase = FALSE;
 
-		if(EASY_CVAR_GET(gauss_primaryonly) != 1){
+		if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_primaryonly) != 1){
 			moveToNextPhase = (m_flTimeWeaponIdle <= UTIL_WeaponTimeBase());
 		}else{
 			moveToNextPhase = (pev->fuser1 <= UTIL_WeaponTimeBase());
@@ -670,7 +672,7 @@ void CGauss::postChargeAnimCheck(){
 
 		//send delay!
 
-		m_flReleaseThrow = gpGlobals->time + EASY_CVAR_GET(gauss_chargeanimdelay);
+		m_flReleaseThrow = gpGlobals->time + EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_chargeanimdelay);
 		m_fireState = 1;
 
 	}else if(m_fireState == 1){
@@ -806,12 +808,12 @@ void CGauss::StartFireDecision( void ){
 
 	
 
-	if(EASY_CVAR_GET(gauss_primaryonly) == 1){
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_primaryonly) == 1){
 		float timePassed = gpGlobals->time - m_pPlayer->m_flStartChargePreSuperDuper;
 		//easyForcePrintLine("TimePassed!! : %.2f : %.2f", timePassed, EASY_CVAR_GET(gauss_secondarychargetimereq)  );
 
 		easyForcePrintLine("AW no MAN %.2f", timePassed);
-		if(m_fInAttack > 1 && timePassed > EASY_CVAR_GET(gauss_secondarychargetimereq) ){
+		if(m_fInAttack > 1 && timePassed > EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_secondarychargetimereq) ){
 			//proceed with defaults: secondary attack.
 			m_fPrimaryFire = FALSE;
 		}else{
@@ -855,7 +857,7 @@ void CGauss::StartFire( void )
 	
 
 
-	if(m_pPlayer->cheat_minimumfiredelayMem == 0){
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelay) == 0){
 		if ( gpGlobals->time - m_pPlayer->m_flStartCharge > GetFullChargeTime() )
 		{
 			flDamage = 200;
@@ -893,12 +895,12 @@ void CGauss::StartFire( void )
 		if ( !m_fPrimaryFire )
 		{
 			//MODDD - a cheat may disable the recoil force.
-			if(m_pPlayer->cheat_nogaussrecoilMem == 0){
+			if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_nogaussrecoil) == 0){
 				m_pPlayer->pev->velocity = m_pPlayer->pev->velocity - gpGlobals->v_forward * flDamage * 5;
 			}
 		}
 		//MODDD - the 2nd condition is extra, from a new CVar.  Could allow z-force.
-		if ( !IsMultiplayer() && m_pPlayer->gaussRecoilSendsUpInSPMem == 0)
+		if ( !IsMultiplayer() && EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gaussRecoilSendsUpInSP) == 0)
 
 		{
 			// in deathmatch, gauss can pop you up into the air. Not in single play.
@@ -1114,7 +1116,7 @@ void CGauss::Fire( Vector vecOrigSrc, Vector vecDir, float flDamage )
 
 
 			BOOL reflectCheckPossible = FALSE;
-			if( (m_fPrimaryFire==TRUE && EASY_CVAR_GET(gauss_primaryreflects)!=0 ) || (m_fPrimaryFire==FALSE && EASY_CVAR_GET(gauss_secondaryreflects)!=0)   ){
+			if( (m_fPrimaryFire==TRUE && EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_primaryreflects)!=0 ) || (m_fPrimaryFire==FALSE && EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_secondaryreflects)!=0)   ){
 				reflectCheckPossible = TRUE;
 			}
 			//MODDD - involving "reflectCheckPossible"
@@ -1177,7 +1179,7 @@ void CGauss::Fire( Vector vecOrigSrc, Vector vecDir, float flDamage )
 				// try punching through wall if secondary attack (primary is incapable of breaking through)
 				//if ( !m_fPrimaryFire )
 				BOOL punchAttempt = FALSE;
-				if( (m_fPrimaryFire==TRUE && EASY_CVAR_GET(gauss_primarypunchthrough)!=0 ) || (m_fPrimaryFire==FALSE && EASY_CVAR_GET(gauss_secondarypunchthrough)!=0)   ){
+				if( (m_fPrimaryFire==TRUE && EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_primarypunchthrough)!=0 ) || (m_fPrimaryFire==FALSE && EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_secondarypunchthrough)!=0)   ){
 					punchAttempt = TRUE;
 				}
 				if(punchAttempt == TRUE){
@@ -1258,7 +1260,7 @@ void CGauss::Fire( Vector vecOrigSrc, Vector vecDir, float flDamage )
 			
 			// This is at penetrating an enemy and preparing to make the beam go through.  It is possible to block this by CVars.
 			BOOL canPierce = FALSE;
-			if( (m_fPrimaryFire==TRUE && EASY_CVAR_GET(gauss_primarypierces)!=0 ) || (m_fPrimaryFire==FALSE && EASY_CVAR_GET(gauss_secondarypierces)!=0)   ){
+			if( (m_fPrimaryFire==TRUE && EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_primarypierces)!=0 ) || (m_fPrimaryFire==FALSE && EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_secondarypierces)!=0)   ){
 				canPierce = TRUE;
 			}
 
@@ -1285,11 +1287,11 @@ float CGauss::getAmmoChargeInterval(void){
 	
 	if(IsMultiplayer())
 	{
-		return EASY_CVAR_GET(gauss_chargeInterval_MP);
+		return EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_chargeInterval_MP);
 	}
 	else
 	{
-		return EASY_CVAR_GET(gauss_chargeInterval_SP);
+		return EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_chargeInterval_SP);
 	}
 }//END OF getAmmoChargeInterval
 

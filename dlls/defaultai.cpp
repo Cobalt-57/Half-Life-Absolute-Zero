@@ -937,6 +937,11 @@ Task_t	tlRangeAttack1[] =
 	{ TASK_RANGE_ATTACK1,		(float)0		},
 };
 
+
+// NOTICE - being interruptable by bits_COND_NO_AMMO_LOADED will cause this schedule to end as soon
+// as the last shot is fired, even if there is recoil in the animation left (barney is an obvious example).
+// Not that it really matters, the blend between sequence changes makes it look like a fast move into a reload
+// anim which is fine really.
 Schedule_t	slRangeAttack1[] =
 {
 	{ 

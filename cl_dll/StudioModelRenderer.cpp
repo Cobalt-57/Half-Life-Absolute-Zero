@@ -67,6 +67,10 @@ extern float global2PSEUDO_IGNOREcameraMode;
 // still happen without rendering.
 #define STUDIO_NO_RENDERING 0
 
+// Will entity.cpp's "HUD_StudioEvent" and this file's "IEngineStudio.StudioClientEvents();" which lead to that
+// be replaced with logic similar to dlls/entity/animating.pcp and dlls/util_model.cpp?"
+#define CLIENT_EVENT_CUSTOM_HANDLING 1
+
 
 
 
@@ -99,14 +103,37 @@ cl_entity_s* g_viewModelRef = NULL;
 // freak coincidence.
 float ary_g_prevTime[1024];
 float ary_g_prevFrame[1024];
-
+float ary_g_LastEventCheck[1024];
+float ary_g_LastEventCheckEXACT[1024];
+float ary_g_recentInterpEstimate[1024];
+float ary_g_recentInterpEstimatePrev[1024];
 
 //static float g_prevTime;
 //static float g_prevFrame;
-static float g_OLDprevTime;
-static float g_debugPrevTime;
+float g_OLDprevTime = 0;
+float g_debugPrevTime = 0;
+
+BOOL g_freshRenderFrame = TRUE;
 
 
+
+
+
+
+
+
+
+
+
+
+
+#include "dlls/monsterevent.h"
+
+//extern void DLLEXPORT HUD_StudioEvent(const struct mstudioevent_s* event, const struct cl_entity_s* entity);
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 
@@ -146,8 +173,17 @@ void CStudioModelRenderer::Init( void )
 	for (int i = 0; i < 1024; i++) {
 		ary_g_prevTime[i] = 0;
 		ary_g_prevFrame[i] = 0;
+		ary_g_LastEventCheck[i] = 0;
+		ary_g_LastEventCheckEXACT[i] = 0;
+		ary_g_recentInterpEstimate[i] = 0;
+		ary_g_recentInterpEstimatePrev[i] = 0;
+		// ...actually m_clTime at this point (booting up the game to menu) is pointless, 
+		// it is still 0.  Some event on loading the game might be nice though.
+		// How about HUD_VidInit (cdll_int.cpp)?
 	}
 
+	g_freshRenderFrame = TRUE;
+	m_nCachedFrameCount = -1;  //refresh soon.  I think this is fine?
 }
 
 /*
@@ -1488,6 +1524,24 @@ float CStudioModelRenderer::StudioEstimateFrame( mstudioseqdesc_t *pseqdesc )
 	}
 	DEBUG_old_f = f;
 
+	
+	if (m_pCurrentEntity->curstate.framerate >= 0) {
+		if (m_pCurrentEntity->curstate.frame == 0 && (ary_g_recentInterpEstimatePrev[m_pCurrentEntity->index] > ary_g_recentInterpEstimate[m_pCurrentEntity->index])) {
+			ary_g_recentInterpEstimatePrev[m_pCurrentEntity->index] = 0;
+		}
+		else {
+			ary_g_recentInterpEstimatePrev[m_pCurrentEntity->index] = ary_g_recentInterpEstimate[m_pCurrentEntity->index];
+		}
+	}
+	else {
+		if (m_pCurrentEntity->curstate.frame >= 255 && (ary_g_recentInterpEstimatePrev[m_pCurrentEntity->index] < ary_g_recentInterpEstimate[m_pCurrentEntity->index])) {
+			ary_g_recentInterpEstimatePrev[m_pCurrentEntity->index] = 255;
+		}
+		else {
+			ary_g_recentInterpEstimatePrev[m_pCurrentEntity->index] = ary_g_recentInterpEstimate[m_pCurrentEntity->index];
+		}
+	}
+
 	f += dfdt;
 
 	//MODDD - viewmodel idle anims may be forced not to loop, to remain static until a new anim is called.
@@ -1597,7 +1651,8 @@ CLIENTFR: 160 14.
 		//easyPrintLine("CLIENT FRAME: %.2f %.2f %.2f :: %d %.2f", f, m_pCurrentEntity->curstate.frame, currentFrame, pseqdesc->numframes, dfdt );
 		//easyPrintLine("CLIENTFR: %d %.2f %d", m_pCurrentEntity->curstate.renderfx, f, pseqdesc->numframes);
 
-		//easyPrintLineDummy("RENDER: id:%d ai:%d seq:%d f:%.2f n:%d BACKWARDS: %d", m_pCurrentEntity->index, pseqdesc->animindex, m_pCurrentEntity->curstate.sequence, f, pseqdesc->numframes, animateBackwards );
+		//easyPrintLine("RENDER: id:%d ai:%d seq:%d f:%.2f n:%d BACKWARDS: %d", m_pCurrentEntity->index, pseqdesc->animindex, m_pCurrentEntity->curstate.sequence, f, pseqdesc->numframes, animateBackwards );
+		//easyPrintLine("RENDERV: f:%.2f latched:%.2f framecount:%d", f, m_pCurrentEntity->latched.prevframe, pseqdesc->numframes);
 	}
 
 
@@ -1622,7 +1677,8 @@ CLIENTFR: 160 14.
 	}
 	*/
 
-	
+	//MODDD - save?
+	ary_g_recentInterpEstimate[m_pCurrentEntity->index] = f;
 
 	return f;
 }
@@ -1909,6 +1965,12 @@ void CStudioModelRenderer::StudioSetupBones ( byte isReflection )
 
 	f = StudioEstimateFrame( pseqdesc );
 
+	// That 'f' seems pretty danged important.   We don't save it somewhere
+	// beeccccaaaauuuuuusssseeeeee?
+	// done in studioestimateframe instead
+
+
+
 	if (m_pCurrentEntity->latched.prevframe > f)
 	{
 		//Con_DPrintf("%f %f\n", m_pCurrentEntity->prevframe, f );
@@ -2002,6 +2064,11 @@ void CStudioModelRenderer::StudioSetupBones ( byte isReflection )
 	}
 	else
 	{
+
+		//if (g_drawType == DRAWTYPE_VIEWMODEL) {
+		//	int x = 4;
+		//}
+
 		//Con_DPrintf("prevframe = %4.2f\n", f);
 		m_pCurrentEntity->latched.prevframe = f;
 	}
@@ -2380,7 +2447,7 @@ void CStudioModelRenderer::StudioMergeBones ( model_t *m_pSubModel, byte isRefle
 
 //MODDDMIRROR.  no duh.
 
-int CStudioModelRenderer::StudioDrawReflection(int flags)
+int CStudioModelRenderer::StudioDrawModelReflection(int flags)
 {
 	alight_t lighting;
 	vec3_t dir;
@@ -2445,7 +2512,12 @@ int CStudioModelRenderer::StudioDrawReflection(int flags)
 	if (flags & STUDIO_EVENTS)
 	{
 		StudioCalcAttachments();
+
+#if CLIENT_EVENT_CUSTOM_HANDLING == 0
 		IEngineStudio.StudioClientEvents();
+#else
+		CUSTOM_StudioClientEvents();
+#endif
 		// copy attachments into global entity array
 
 		if (m_pCurrentEntity->index > 0)
@@ -2456,7 +2528,9 @@ int CStudioModelRenderer::StudioDrawReflection(int flags)
 	}
 	if (flags & STUDIO_RENDER)
 	{
+		// NOTICE - plightvec is being given a vector to DRAW too, not taking values from garbage memory!
 		lighting.plightvec = dir;
+
 		IEngineStudio.StudioDynamicLight(m_pCurrentEntity, &lighting);
 
 		IEngineStudio.StudioEntityLight(&lighting);
@@ -2476,7 +2550,173 @@ int CStudioModelRenderer::StudioDrawReflection(int flags)
 	gEngfuncs.pTriAPI->CullFace(TRI_NONE);
 
 	return 1;
-}
+}//StudioDrawModelReflection
+
+
+
+
+
+// NOTICE - not sure if this is the place or before this call over in StudioDrawPlayer,
+// but the reflection will not have the pitch of the player factored in unless the third-person
+// model is on.   Or maybe even the playermarker generated just for this in player.cpp would be 
+// more helpful?    I'm kinda done with this though.
+int CStudioModelRenderer::StudioDrawPlayerReflection(int flags, entity_state_t* pplayer) {
+	alight_t lighting;
+	vec3_t dir;
+
+
+	gEngfuncs.pTriAPI->CullFace(TRI_NONE);
+
+	if (pplayer->gaitsequence)
+	{
+		vec3_t orig_angles;
+		m_pPlayerInfo = IEngineStudio.PlayerInfo(m_nPlayerIndex);
+
+		VectorCopy_f(m_pCurrentEntity->angles, orig_angles);
+		StudioProcessGait(pplayer);
+
+		m_pPlayerInfo->gaitsequence = pplayer->gaitsequence;
+		m_pPlayerInfo = NULL;
+
+		//StudioSetUpTransform( 0 );
+		VectorCopy_f(orig_angles, m_pCurrentEntity->angles);
+	}
+	else //player in jump (or duck)
+	{
+		m_pCurrentEntity->curstate.controller[0] = 127;
+		m_pCurrentEntity->curstate.controller[1] = 127;
+		m_pCurrentEntity->curstate.controller[2] = 127;
+		m_pCurrentEntity->curstate.controller[3] = 127;
+		m_pCurrentEntity->latched.prevcontroller[0] = m_pCurrentEntity->curstate.controller[0];
+		m_pCurrentEntity->latched.prevcontroller[1] = m_pCurrentEntity->curstate.controller[1];
+		m_pCurrentEntity->latched.prevcontroller[2] = m_pCurrentEntity->curstate.controller[2];
+		m_pCurrentEntity->latched.prevcontroller[3] = m_pCurrentEntity->curstate.controller[3];
+
+		m_pPlayerInfo = IEngineStudio.PlayerInfo(m_nPlayerIndex);
+		m_pPlayerInfo->gaitsequence = 0;
+
+		//StudioSetUpTransform( 0 );
+	}
+	if (flags & STUDIO_RENDER)
+	{
+		// see if the bounding box lets us trivially reject, also sets
+		if (!IEngineStudio.StudioCheckBBox()) {
+			return 0;
+			//MODDD - just try the next mirror.
+			//continue;
+		}
+
+		(*m_pModelsDrawn)++;
+		(*m_pStudioModelCount)++; // render data cache cookie
+
+		if (m_pStudioHeader->numbodyparts == 0) {
+			return 1;
+			//MODDD - just try the next mirror.
+			//continue;
+		}
+	}
+
+	m_pPlayerInfo = IEngineStudio.PlayerInfo(m_nPlayerIndex);
+	StudioSetupBones();
+	StudioSaveBones();
+	m_pPlayerInfo->renderframe = m_nFrameCount;
+
+	m_pPlayerInfo = NULL;
+
+	//MODDD - ATTACHMENT - sets the attachment start to the reflection's weapon point, for BOTH first-person & third-person.
+	//HACKY SOLUTION: disable updating the studio attachments here, or else we override the player's usual.
+	// !!! Now with custom client events, maybe that can change
+	/*
+	if (flags & STUDIO_EVENTS)
+	{
+		StudioCalcAttachments( );
+#if CLIENT_EVENT_CUSTOM_HANDLING == 0
+				IEngineStudio.StudioClientEvents();
+#else
+				CUSTOM_StudioClientEvents();
+#endif
+				// copy attachments into global entity array
+				if ( m_pCurrentEntity->index > 0 )
+				{
+					cl_entity_t *ent = gEngfuncs.GetEntityByIndex( m_pCurrentEntity->index );
+					memcpy( ent->attachment, m_pCurrentEntity->attachment, sizeof( vec3_t ) * 4 );
+				}
+			}
+			*/
+
+	if (flags & STUDIO_RENDER)
+	{
+		if (m_pCvarHiModels->value && m_pRenderModel != m_pCurrentEntity->model)
+		{
+			// show highest resolution multiplayer model
+			m_pCurrentEntity->curstate.body = 255;
+		}
+
+		if (!(m_pCvarDeveloper->value == 0 && !IsMultiplayer()) && (m_pRenderModel == m_pCurrentEntity->model))
+		{
+			m_pCurrentEntity->curstate.body = 1; // force helmet
+		}
+
+		// NOTICE - plightvec is being given a vector to DRAW too, not taking values from garbage memory!
+		lighting.plightvec = dir;
+
+		IEngineStudio.StudioDynamicLight(m_pCurrentEntity, &lighting);
+
+		IEngineStudio.StudioEntityLight(&lighting);
+
+		// model and frame independant
+		IEngineStudio.StudioSetupLighting(&lighting);
+
+		m_pPlayerInfo = IEngineStudio.PlayerInfo(m_nPlayerIndex);
+
+		// get remap colors
+		m_nTopColor = m_pPlayerInfo->topcolor;
+		m_nBottomColor = m_pPlayerInfo->bottomcolor;
+		if (m_nTopColor < 0)
+			m_nTopColor = 0;
+		if (m_nTopColor > 360)
+			m_nTopColor = 360;
+		if (m_nBottomColor < 0)
+			m_nBottomColor = 0;
+		if (m_nBottomColor > 360)
+			m_nBottomColor = 360;
+
+		IEngineStudio.StudioSetRemapColors(m_nTopColor, m_nBottomColor);
+
+		StudioRenderModel();
+		m_pPlayerInfo = NULL;
+
+		if (pplayer->weaponmodel)
+		{
+			cl_entity_t saveent = *m_pCurrentEntity;
+			model_t* pweaponmodel = IEngineStudio.GetModelByIndex(pplayer->weaponmodel);
+
+			m_pStudioHeader = (studiohdr_t*)IEngineStudio.Mod_Extradata(pweaponmodel);
+			IEngineStudio.StudioSetHeader(m_pStudioHeader);
+
+			StudioMergeBones(pweaponmodel);
+			IEngineStudio.StudioSetupLighting(&lighting);
+
+			StudioRenderModel();
+			StudioCalcAttachments();
+			*m_pCurrentEntity = saveent;
+		}
+	}
+
+
+	// MODDD - was still TRI_FRONT???
+	//gEngfuncs.pTriAPI->CullFace( TRI_FRONT );
+	gEngfuncs.pTriAPI->CullFace(TRI_NONE);
+
+	return 1;
+}//StudioDrawPlayerReflection
+
+
+
+
+
+
+
 
 
 
@@ -2510,6 +2750,7 @@ int CStudioModelRenderer::StudioDrawModel( int flags )
 	// resort to.    Thanks though Spirit of HL.
 	if (m_nCachedFrameCount != m_nFrameCount)
 	{
+		g_freshRenderFrame = TRUE;
 		b_PlayerMarkerParsed = false;
 		m_nCachedFrameCount = m_nFrameCount;
 
@@ -2518,6 +2759,10 @@ int CStudioModelRenderer::StudioDrawModel( int flags )
 		g_viewModelRef = gEngfuncs.GetViewModel();
 
 	}//END OF frameCount checks
+	else {
+		g_freshRenderFrame = FALSE;
+	}
+
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	//if (!strcmp(m_pCurrentEntity->model->name,"models/null.mdl"))
@@ -2768,7 +3013,11 @@ int CStudioModelRenderer::StudioDrawModel( int flags )
 	if (flags & STUDIO_EVENTS)
 	{
 		StudioCalcAttachments( );
-		IEngineStudio.StudioClientEvents( );
+#if CLIENT_EVENT_CUSTOM_HANDLING == 0
+		IEngineStudio.StudioClientEvents();
+#else
+		CUSTOM_StudioClientEvents();
+#endif
 		// copy attachments into global entity array
 
 		if ( m_pCurrentEntity->index > 0 )
@@ -2907,10 +3156,10 @@ int CStudioModelRenderer::StudioDrawModel( int flags )
 
 	//MODDD - ATTACHMENTS - This seems to include the player's first-person effect start point.
 	//MODDD - IMPORTANT WARNING.
-	//This alsocalls events for even serverside entities sent over, like monster models.
-	//Unfortunately StudioClientEvents() is hardcoded so it looks impossible.
-	//to tell it to behave differently with interpolation turned off. Oh well.
-		
+	// This also calls events for even serverside entities sent over, like monster models.
+	// Unfortunately StudioClientEvents() is hardcoded so it looks impossible.
+	// to tell it to behave differently with interpolation turned off. Oh well.
+	// Custom event handling implemented since!  Not sure if this is still worthwhile though.
 
 
 	if (flags & STUDIO_EVENTS)
@@ -2930,7 +3179,12 @@ int CStudioModelRenderer::StudioDrawModel( int flags )
 		StudioCalcAttachments( );
 		//m_pCurrentEntity->curstate.framerate = oldFramerate;
 
-		IEngineStudio.StudioClientEvents( );
+#if CLIENT_EVENT_CUSTOM_HANDLING == 0
+		IEngineStudio.StudioClientEvents();
+#else
+		CUSTOM_StudioClientEvents();
+#endif
+
 		// copy attachments into global entity array
 		if ( m_pCurrentEntity->index > 0 )
 		{
@@ -2949,7 +3203,9 @@ int CStudioModelRenderer::StudioDrawModel( int flags )
 		//DISABLE BLOCK FOR silhouette MODE!
 		//////////////////////////////////////////////////////////////////////
 
+		// NOTICE - plightvec is being given a vector to DRAW too, not taking values from garbage memory!
 		lighting.plightvec = dir;
+
 		IEngineStudio.StudioDynamicLight(m_pCurrentEntity, &lighting);
 
 		IEngineStudio.StudioEntityLight(&lighting);
@@ -3017,9 +3273,9 @@ int CStudioModelRenderer::StudioDrawModel( int flags )
 
 			/*
 			m_pRenderModel = m_pCurrentEntity->model;
-			m_pStudioHeader = (studiohdr_t *)IEngineStudio.Mod_Extradata (m_pRenderModel);
-			IEngineStudio.StudioSetHeader( m_pStudioHeader );
-			IEngineStudio.SetRenderModel( m_pRenderModel );
+			m_pStudioHeader = (studiohdr_t*)IEngineStudio.Mod_Extradata(m_pRenderModel);
+			IEngineStudio.StudioSetHeader(m_pStudioHeader);
+			IEngineStudio.SetRenderModel(m_pRenderModel);
 			*/
 
 			vec3_t delta;
@@ -3037,8 +3293,8 @@ int CStudioModelRenderer::StudioDrawModel( int flags )
 
 			mirror_id = ic;
 			
-			StudioDrawReflection(flags);
-		}
+			StudioDrawModelReflection(flags);
+		}//for
 
 	}//END OF mirror check.
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -3322,140 +3578,147 @@ int CStudioModelRenderer::StudioDrawPlayer( int flags, entity_state_t *pplayer )
 		IEngineStudio.SetRenderModel( m_pRenderModel );
 		//////////////////////////////////////////////////////////////////////////////////////////
 
-	if (pplayer->gaitsequence)
-	{
-		vec3_t orig_angles;
-		m_pPlayerInfo = IEngineStudio.PlayerInfo( m_nPlayerIndex );
+		if (pplayer->gaitsequence)
+		{
+			vec3_t orig_angles;
+			m_pPlayerInfo = IEngineStudio.PlayerInfo( m_nPlayerIndex );
 
-		VectorCopy_f( m_pCurrentEntity->angles, orig_angles );
+			VectorCopy_f( m_pCurrentEntity->angles, orig_angles );
 	
-		StudioProcessGait( pplayer );
+			StudioProcessGait( pplayer );
 
-		m_pPlayerInfo->gaitsequence = pplayer->gaitsequence;
+			m_pPlayerInfo->gaitsequence = pplayer->gaitsequence;
+			m_pPlayerInfo = NULL;
+
+			StudioSetUpTransform( 0 );
+			VectorCopy_f( orig_angles, m_pCurrentEntity->angles );
+		}
+		else
+		{
+			m_pCurrentEntity->curstate.controller[0] = 127;
+			m_pCurrentEntity->curstate.controller[1] = 127;
+			m_pCurrentEntity->curstate.controller[2] = 127;
+			m_pCurrentEntity->curstate.controller[3] = 127;
+			m_pCurrentEntity->latched.prevcontroller[0] = m_pCurrentEntity->curstate.controller[0];
+			m_pCurrentEntity->latched.prevcontroller[1] = m_pCurrentEntity->curstate.controller[1];
+			m_pCurrentEntity->latched.prevcontroller[2] = m_pCurrentEntity->curstate.controller[2];
+			m_pCurrentEntity->latched.prevcontroller[3] = m_pCurrentEntity->curstate.controller[3];
+		
+			m_pPlayerInfo = IEngineStudio.PlayerInfo( m_nPlayerIndex );
+			m_pPlayerInfo->gaitsequence = 0;
+
+			StudioSetUpTransform( 0 );
+		}
+
+		if (flags & STUDIO_RENDER)
+		{
+			// see if the bounding box lets us trivially reject, also sets
+			if (!IEngineStudio.StudioCheckBBox ())
+				return 0;
+
+			(*m_pModelsDrawn)++;
+			(*m_pStudioModelCount)++; // render data cache cookie
+
+			if (m_pStudioHeader->numbodyparts == 0)
+				return 1;
+		}
+
+		m_pPlayerInfo = IEngineStudio.PlayerInfo( m_nPlayerIndex );
+		StudioSetupBones( );
+		StudioSaveBones( );
+		m_pPlayerInfo->renderframe = m_nFrameCount;
+
 		m_pPlayerInfo = NULL;
 
-		StudioSetUpTransform( 0 );
-		VectorCopy_f( orig_angles, m_pCurrentEntity->angles );
-	}
-	else
-	{
-		m_pCurrentEntity->curstate.controller[0] = 127;
-		m_pCurrentEntity->curstate.controller[1] = 127;
-		m_pCurrentEntity->curstate.controller[2] = 127;
-		m_pCurrentEntity->curstate.controller[3] = 127;
-		m_pCurrentEntity->latched.prevcontroller[0] = m_pCurrentEntity->curstate.controller[0];
-		m_pCurrentEntity->latched.prevcontroller[1] = m_pCurrentEntity->curstate.controller[1];
-		m_pCurrentEntity->latched.prevcontroller[2] = m_pCurrentEntity->curstate.controller[2];
-		m_pCurrentEntity->latched.prevcontroller[3] = m_pCurrentEntity->curstate.controller[3];
+		//MODDD - ATTACHMENT - puts effects on the third person model (not the reflection, the original).
+		if (flags & STUDIO_EVENTS)
+		{
+			StudioCalcAttachments( );
+
+	#if CLIENT_EVENT_CUSTOM_HANDLING == 0
+			IEngineStudio.StudioClientEvents();
+	#else
+			CUSTOM_StudioClientEvents();
+	#endif
+			// copy attachments into global entity array
+			if ( m_pCurrentEntity->index > 0 )
+			{
+				cl_entity_t *ent = gEngfuncs.GetEntityByIndex( m_pCurrentEntity->index );
+
+				memcpy( ent->attachment, m_pCurrentEntity->attachment, sizeof( vec3_t ) * 4 );
+			}
+		}
+
+		if (flags & STUDIO_RENDER)
+		{
+			if (m_pCvarHiModels->value && m_pRenderModel != m_pCurrentEntity->model  )
+			{
+				// show highest resolution multiplayer model
+				m_pCurrentEntity->curstate.body = 255;
+			}
+
+			if (!(m_pCvarDeveloper->value == 0 && !IsMultiplayer() ) && ( m_pRenderModel == m_pCurrentEntity->model ) )
+			{
+				m_pCurrentEntity->curstate.body = 1; // force helmet
+			}
+
+			// NOTICE - plightvec is being given a vector to DRAW too, not taking values from garbage memory!
+			lighting.plightvec = dir;
+
+			IEngineStudio.StudioDynamicLight(m_pCurrentEntity, &lighting );
+
+			IEngineStudio.StudioEntityLight( &lighting );
+
+			// model and frame independant
+			IEngineStudio.StudioSetupLighting (&lighting);
 		
-		m_pPlayerInfo = IEngineStudio.PlayerInfo( m_nPlayerIndex );
-		m_pPlayerInfo->gaitsequence = 0;
-
-		StudioSetUpTransform( 0 );
-	}
-
-	if (flags & STUDIO_RENDER)
-	{
-		// see if the bounding box lets us trivially reject, also sets
-		if (!IEngineStudio.StudioCheckBBox ())
-			return 0;
-
-		(*m_pModelsDrawn)++;
-		(*m_pStudioModelCount)++; // render data cache cookie
-
-		if (m_pStudioHeader->numbodyparts == 0)
-			return 1;
-	}
-
-	m_pPlayerInfo = IEngineStudio.PlayerInfo( m_nPlayerIndex );
-	StudioSetupBones( );
-	StudioSaveBones( );
-	m_pPlayerInfo->renderframe = m_nFrameCount;
-
-	m_pPlayerInfo = NULL;
-
-	//MODDD - ATTACHMENT - puts effects on the third person model (not the reflection, the original).
-	if (flags & STUDIO_EVENTS)
-	{
-		StudioCalcAttachments( );
-		IEngineStudio.StudioClientEvents( );
-		// copy attachments into global entity array
-		if ( m_pCurrentEntity->index > 0 )
-		{
-			cl_entity_t *ent = gEngfuncs.GetEntityByIndex( m_pCurrentEntity->index );
-
-			memcpy( ent->attachment, m_pCurrentEntity->attachment, sizeof( vec3_t ) * 4 );
-		}
-	}
-
-	if (flags & STUDIO_RENDER)
-	{
-		if (m_pCvarHiModels->value && m_pRenderModel != m_pCurrentEntity->model  )
-		{
-			// show highest resolution multiplayer model
-			m_pCurrentEntity->curstate.body = 255;
-		}
-
-		if (!(m_pCvarDeveloper->value == 0 && !IsMultiplayer() ) && ( m_pRenderModel == m_pCurrentEntity->model ) )
-		{
-			m_pCurrentEntity->curstate.body = 1; // force helmet
-		}
-
-		lighting.plightvec = dir;
-		IEngineStudio.StudioDynamicLight(m_pCurrentEntity, &lighting );
-
-		IEngineStudio.StudioEntityLight( &lighting );
-
-		// model and frame independant
-		IEngineStudio.StudioSetupLighting (&lighting);
-		
-		//MODDD - don't mind me, just screwing around.		
-		/*
-				lighting.plightvec = Vector(45, 45, 45);
-				//lighting.shadelight = 24;   //no idea what this is.  Or "ambientLight".
-		*/
+			//MODDD - don't mind me, just screwing around.		
+			/*
+					lighting.plightvec = Vector(45, 45, 45);
+					//lighting.shadelight = 24;   //no idea what this is.  Or "ambientLight".
+			*/
 
 
 				
-		m_pPlayerInfo = IEngineStudio.PlayerInfo( m_nPlayerIndex );
+			m_pPlayerInfo = IEngineStudio.PlayerInfo( m_nPlayerIndex );
 
-		// get remap colors
-		m_nTopColor = m_pPlayerInfo->topcolor;
-		m_nBottomColor = m_pPlayerInfo->bottomcolor;
-		if (m_nTopColor < 0)
-			m_nTopColor = 0;
-		if (m_nTopColor > 360)
-			m_nTopColor = 360;
-		if (m_nBottomColor < 0)
-			m_nBottomColor = 0;
-		if (m_nBottomColor > 360)
-			m_nBottomColor = 360;
+			// get remap colors
+			m_nTopColor = m_pPlayerInfo->topcolor;
+			m_nBottomColor = m_pPlayerInfo->bottomcolor;
+			if (m_nTopColor < 0)
+				m_nTopColor = 0;
+			if (m_nTopColor > 360)
+				m_nTopColor = 360;
+			if (m_nBottomColor < 0)
+				m_nBottomColor = 0;
+			if (m_nBottomColor > 360)
+				m_nBottomColor = 360;
 
-		IEngineStudio.StudioSetRemapColors( m_nTopColor, m_nBottomColor );
-
-		StudioRenderModel( );
-		m_pPlayerInfo = NULL;
-
-		if (pplayer->weaponmodel)
-		{
-			cl_entity_t saveent = *m_pCurrentEntity;
-
-			model_t *pweaponmodel = IEngineStudio.GetModelByIndex( pplayer->weaponmodel );
-
-			m_pStudioHeader = (studiohdr_t *)IEngineStudio.Mod_Extradata (pweaponmodel);
-			IEngineStudio.StudioSetHeader( m_pStudioHeader );
-
-			StudioMergeBones( pweaponmodel);
-
-			IEngineStudio.StudioSetupLighting (&lighting);
+			IEngineStudio.StudioSetRemapColors( m_nTopColor, m_nBottomColor );
 
 			StudioRenderModel( );
+			m_pPlayerInfo = NULL;
 
-			StudioCalcAttachments( );
+			if (pplayer->weaponmodel)
+			{
+				cl_entity_t saveent = *m_pCurrentEntity;
 
-			*m_pCurrentEntity = saveent;
+				model_t *pweaponmodel = IEngineStudio.GetModelByIndex( pplayer->weaponmodel );
+
+				m_pStudioHeader = (studiohdr_t *)IEngineStudio.Mod_Extradata (pweaponmodel);
+				IEngineStudio.StudioSetHeader( m_pStudioHeader );
+
+				StudioMergeBones( pweaponmodel);
+
+				IEngineStudio.StudioSetupLighting (&lighting);
+
+				StudioRenderModel( );
+
+				StudioCalcAttachments( );
+
+				*m_pCurrentEntity = saveent;
+			}
 		}
-	}
 	
 	}//MODDDMIRROR
 
@@ -3468,21 +3731,26 @@ int CStudioModelRenderer::StudioDrawPlayer( int flags, entity_state_t *pplayer )
 		
 		for (int ic = 0; ic < gHUD.numMirrors; ic++)
 		{
+
+			//MODDD - StudioDrawModel's reflection didn't need this, so why would player's?
+			// ... well we do, to be able to draw the 3rd person model and the reflected
+			// version at the same time. EEEEEeeeeehhhhhh.
 			m_pStudioHeader = (studiohdr_t *)IEngineStudio.Mod_Extradata (m_pRenderModel);
 			IEngineStudio.StudioSetHeader( m_pStudioHeader );
 			IEngineStudio.SetRenderModel( m_pRenderModel );
+			
 
+
+			//Parsing mirror
 			if (!gHUD.Mirrors[ic].enabled)
 			{
 				continue;
 			}
 
-			//Parsing mirror
-			StudioSetUpTransform( 1024 + ic );
 
 			vec3_t delta;
 			float dist;
-			VectorSubtract_f(gHUD.Mirrors[ic].origin,m_pCurrentEntity->origin,delta);
+			VectorSubtract_f(gHUD.Mirrors[ic].origin, m_pCurrentEntity->origin, delta);
 			dist = Length(delta);
 
 			if (gHUD.Mirrors[ic].radius < dist)
@@ -3490,143 +3758,15 @@ int CStudioModelRenderer::StudioDrawPlayer( int flags, entity_state_t *pplayer )
 				continue;
 			}
 
+			StudioSetUpTransform( 1024 + ic );
+
 			mirror_id = ic;
 
-			gEngfuncs.pTriAPI->CullFace( TRI_NONE ); 
- 
-			if (pplayer->gaitsequence)
-			{
-	         	vec3_t orig_angles;
-				m_pPlayerInfo = IEngineStudio.PlayerInfo( m_nPlayerIndex );
+			// !!!!
+			StudioDrawPlayerReflection(flags, pplayer);
 
-				VectorCopy_f( m_pCurrentEntity->angles, orig_angles );
-				StudioProcessGait( pplayer );
-
-				m_pPlayerInfo->gaitsequence = pplayer->gaitsequence;
-				m_pPlayerInfo = NULL;
-
-				//StudioSetUpTransform( 0 );
-	          	VectorCopy_f( orig_angles, m_pCurrentEntity->angles );
-			}
-         	else //player in jump (or duck)
-			{
-				m_pCurrentEntity->curstate.controller[0] = 127;
-				m_pCurrentEntity->curstate.controller[1] = 127;
-				m_pCurrentEntity->curstate.controller[2] = 127;
-				m_pCurrentEntity->curstate.controller[3] = 127;
-				m_pCurrentEntity->latched.prevcontroller[0] = m_pCurrentEntity->curstate.controller[0];
-				m_pCurrentEntity->latched.prevcontroller[1] = m_pCurrentEntity->curstate.controller[1];
-				m_pCurrentEntity->latched.prevcontroller[2] = m_pCurrentEntity->curstate.controller[2];
-				m_pCurrentEntity->latched.prevcontroller[3] = m_pCurrentEntity->curstate.controller[3];
-		
-				m_pPlayerInfo = IEngineStudio.PlayerInfo( m_nPlayerIndex );
-				m_pPlayerInfo->gaitsequence = 0;
-
-				//StudioSetUpTransform( 0 );
-			}
-          	if (flags & STUDIO_RENDER)
-			{
-				// see if the bounding box lets us trivially reject, also sets
-				if (!IEngineStudio.StudioCheckBBox ()){
-					//return 0;
-					//MODDD - just try the next mirror.
-					continue;
-				}
-
-				(*m_pModelsDrawn)++;
-				(*m_pStudioModelCount)++; // render data cache cookie
-
-				if (m_pStudioHeader->numbodyparts == 0){
-					//return 1;
-					//MODDD - just try the next mirror.
-					continue;
-				}
-			}
-
-			m_pPlayerInfo = IEngineStudio.PlayerInfo( m_nPlayerIndex );
-			StudioSetupBones( );
-			StudioSaveBones( );
-			m_pPlayerInfo->renderframe = m_nFrameCount;
-
-			m_pPlayerInfo = NULL;
-
-			//MODDD - ATTACHMENT - sets the attachment start to the reflection's weapon point, for BOTH first-person & third-person.
-			//HACKY SOLUTION: disable updating the studio attachments here, or else we override the player's usual.
-			/*
-			if (flags & STUDIO_EVENTS)
-			{
-				StudioCalcAttachments( );
-				IEngineStudio.StudioClientEvents( );
-				// copy attachments into global entity array
-				if ( m_pCurrentEntity->index > 0 )
-				{
-					cl_entity_t *ent = gEngfuncs.GetEntityByIndex( m_pCurrentEntity->index );
-					memcpy( ent->attachment, m_pCurrentEntity->attachment, sizeof( vec3_t ) * 4 );
-				}
-			}
-			*/
-
-			if (flags & STUDIO_RENDER)
-			{
-				if (m_pCvarHiModels->value && m_pRenderModel != m_pCurrentEntity->model  )
-				{
-					// show highest resolution multiplayer model
-					m_pCurrentEntity->curstate.body = 255;
-				}
-
-				if (!(m_pCvarDeveloper->value == 0 && !IsMultiplayer() ) && ( m_pRenderModel == m_pCurrentEntity->model ) )
-				{
-					m_pCurrentEntity->curstate.body = 1; // force helmet
-				}
-
-	         	lighting.plightvec = dir;
-				IEngineStudio.StudioDynamicLight(m_pCurrentEntity, &lighting );
-
-				IEngineStudio.StudioEntityLight( &lighting );
-
-				// model and frame independant
-				IEngineStudio.StudioSetupLighting (&lighting);
-
-				m_pPlayerInfo = IEngineStudio.PlayerInfo( m_nPlayerIndex );
-
-				// get remap colors
-				m_nTopColor = m_pPlayerInfo->topcolor;
-				m_nBottomColor = m_pPlayerInfo->bottomcolor;
-				if (m_nTopColor < 0)
-					m_nTopColor = 0;
-				if (m_nTopColor > 360)
-					m_nTopColor = 360;
-				if (m_nBottomColor < 0)
-		         			m_nBottomColor = 0;
-				if (m_nBottomColor > 360)
-					m_nBottomColor = 360;
-
-				IEngineStudio.StudioSetRemapColors( m_nTopColor, m_nBottomColor );
-
-				StudioRenderModel( );
-				m_pPlayerInfo = NULL;
-				
-				if (pplayer->weaponmodel)
-				{
-					cl_entity_t saveent = *m_pCurrentEntity;
-					model_t *pweaponmodel = IEngineStudio.GetModelByIndex( pplayer->weaponmodel );
-
-					m_pStudioHeader = (studiohdr_t *)IEngineStudio.Mod_Extradata (pweaponmodel);
-					IEngineStudio.StudioSetHeader( m_pStudioHeader );
-
-					StudioMergeBones( pweaponmodel);
-          				IEngineStudio.StudioSetupLighting (&lighting);
-
-					StudioRenderModel( );
-					StudioCalcAttachments( );
-					*m_pCurrentEntity = saveent;
-				}
-			}
 		} //end for
 
-		// MODDD - was still TRI_FRONT???
-		//gEngfuncs.pTriAPI->CullFace( TRI_FRONT );
-		gEngfuncs.pTriAPI->CullFace(TRI_NONE);
 	}
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -3885,4 +4025,481 @@ void CStudioModelRenderer::StudioRenderFinal(void)
 		StudioRenderFinal_Software();
 	}
 }
+
+
+
+
+
+
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+BOOL canPrintout = FALSE;
+
+
+void CStudioModelRenderer::CUSTOM_StudioClientEvents(void) {
+
+
+	// g_freshRenderFrame ???
+
+
+	/**
+	studiohdr_t* pstudiohdr;
+
+	pstudiohdr = (studiohdr_t*)pmodel;
+	//if (!pstudiohdr || pev->sequence >= pstudiohdr->numseq)
+	//	return 0;
+
+	mstudioseqdesc_t* pseqdesc;
+	pseqdesc = (mstudioseqdesc_t*)((byte*)pstudiohdr + pstudiohdr->seqindex) + (int)pev->sequence;
+
+	//return pseqdesc->flags;
+	*/
+
+	MonsterEvent_t event;
+	int index = 0;
+	const cl_entity_t* ent = m_pCurrentEntity;
+	int myIndex = m_pCurrentEntity->index;
+
+
+	mstudioseqdesc_t* pseqdesc;
+	pseqdesc = (mstudioseqdesc_t*)((byte*)m_pStudioHeader + m_pStudioHeader->seqindex) + ent->curstate.sequence;
+
+
+	// what?? well which one
+	int sequence = m_pCurrentEntity->curstate.sequence;
+	float m_flFrameRate = pseqdesc->fps;  //from the sequence
+	float framerate = m_pCurrentEntity->curstate.framerate;   //pev->framerate, codebase-set preference
+
+	// how about this.
+	//float frame = m_pCurrentEntity->curstate.frame;
+	float animtime = m_pCurrentEntity->curstate.animtime;
+	int frameCount = pseqdesc->numframes;
+	int m_fSequenceLoops = ((pseqdesc->flags & STUDIO_LOOPING) != 0);
+
+
+
+	float frame;
+	float flInterval;
+	float flStart;
+	float flEnd;
+
+	canPrintout = FALSE;
+
+
+	//MODDD - would be nice if there were a way to tell what entities
+	// are given updates from the server on frames (curstae.animtime gets set),
+	// because at least viewmodels don't except on animation change.
+	// Any animation is from interpolation judging how much time passed since the
+	// server (or client decided to change anyway) the sequence.
+
+
+	if (g_drawType != DRAWTYPE_VIEWMODEL) {
+
+
+		if ((m_pCurrentEntity->curstate.renderfx & ISNPC) && m_clTime > ary_g_LastEventCheckEXACT[myIndex]) {
+			canPrintout = TRUE;
+		}
+
+		
+		// ?????
+		flInterval = (m_clTime - m_clOldTime);
+
+		// no, just use it straight.
+		//float& m_flLastEventCheck = ary_g_LastEventCheck[myIndex];
+
+
+		// || m_pCurrentEntity->curstate.frame == 0
+		//if (animtime == m_clTime ) {
+		//	// fresh value this frame? use that.
+		//	frame = m_pCurrentEntity->curstate.frame;
+		//}
+		//else {
+		//	// use the interp
+			frame = ary_g_recentInterpEstimate[myIndex];
+		//}
+
+
+		/*
+		if (ary_g_recentInterpEstimatePrev[myIndex] == 0) {
+			flStart = 0;
+			flEnd = 0 + flInterval * m_flFrameRate * framerate; //* EASY_CVAR_GET(animationFramerateMulti);
+		}
+		else {
+			flStart = frame; //* EASY_CVAR_GET(animationFramerateMulti);
+			flEnd = frame + flInterval * m_flFrameRate * framerate; //* EASY_CVAR_GET(animationFramerateMulti);
+
+		}
+		*/
+
+		//flStart = frame; //* EASY_CVAR_GET(animationFramerateMulti);
+		//flEnd = frame + flInterval * m_flFrameRate * framerate; //* EASY_CVAR_GET(animationFramerateMulti);
+		
+
+
+		flStart = ary_g_recentInterpEstimatePrev[myIndex];
+		flEnd = ary_g_recentInterpEstimate[myIndex]; //* EASY_CVAR_GET(animationFramerateMulti);
+
+
+		/*
+		if (ary_g_recentInterpEstimatePrev[myIndex] == 0) {
+			// no change
+		}
+		else {
+			// change
+			ary_g_recentInterpEstimatePrev[myIndex] = ary_g_recentInterpEstimate[myIndex];
+		}
+		*/
+
+
+
+		//flStart = UTIL_clamp(flStart, 0, 255);
+		//flEnd = UTIL_clamp(flEnd, 0, 255);
+
+		ary_g_LastEventCheck[myIndex] = animtime + flInterval;
+
+
+
+
+
+		/*
+		// ?????
+		flInterval = (m_clTime - animtime);
+
+		// no, just use it straight.
+		//float& m_flLastEventCheck = ary_g_LastEventCheck[myIndex];
+
+		flStart = frame + (ary_g_LastEventCheck[myIndex] - animtime) * m_flFrameRate * framerate; //* EASY_CVAR_GET(animationFramerateMulti);
+		flEnd = frame + flInterval * m_flFrameRate * framerate; //* EASY_CVAR_GET(animationFramerateMulti);
+
+
+		//flStart = UTIL_clamp(flStart, 0, 255);
+		//flEnd = UTIL_clamp(flEnd, 0, 255);
+
+		ary_g_LastEventCheck[myIndex] = animtime + flInterval;
+		*/
+
+
+		if ((m_pCurrentEntity->curstate.renderfx & ISNPC) && m_clTime > ary_g_LastEventCheckEXACT[myIndex]) {
+			canPrintout = TRUE;
+		}
+
+	}
+	else {
+		frame = m_pCurrentEntity->curstate.frame;
+
+		flInterval = (m_clTime - animtime);
+
+
+		// no, just use it straight.
+		//float& m_flLastEventCheck = ary_g_LastEventCheck[myIndex];
+
+		flStart = frame + (ary_g_LastEventCheck[myIndex] - animtime) * m_flFrameRate * framerate; //* EASY_CVAR_GET(animationFramerateMulti);
+		flEnd = frame + flInterval * m_flFrameRate * framerate; //* EASY_CVAR_GET(animationFramerateMulti);
+
+		ary_g_LastEventCheck[myIndex] = animtime + flInterval;
+		
+		int x = 45;
+
+
+		/*
+		float diffo = m_clTime - m_clOldTime;
+
+		flInterval = (m_clTime - ary_g_LastEventCheckEXACT[myIndex]);
+
+		flStart = frame + (ary_g_LastEventCheckEXACT[myIndex] - animtime) * m_flFrameRate * framerate; //* EASY_CVAR_GET(animationFramerateMulti);
+		//flEnd = frame + flInterval * m_flFrameRate * framerate; //* EASY_CVAR_GET(animationFramerateMulti);
+		flEnd = flStart + flInterval;
+
+		ary_g_LastEventCheck[myIndex] = animtime + flInterval;
+		ary_g_LastEventCheckEXACT[myIndex] = m_clTime;
+		*/
+
+
+
+
+		/*
+		flInterval = (m_clTime - ary_g_LastEventCheck[myIndex]);
+
+		flStart = frame + (m_clTime - ary_g_LastEventCheck[myIndex]) * m_flFrameRate * framerate; //* EASY_CVAR_GET(animationFramerateMulti);
+		flEnd = frame + flInterval * m_flFrameRate * framerate; //* EASY_CVAR_GET(animationFramerateMulti);
+
+		ary_g_LastEventCheck[myIndex] = m_clTime;
+		*/
+
+
+	}
+
+	ary_g_LastEventCheckEXACT[myIndex] = m_clTime;
+
+	if (canPrintout) {
+	//	easyPrintLine("seq:%d fr:%.2f framcnt:%d intP:%.2f int:%.2f  ???  st:%.2f en:%.2f", sequence, frame, frameCount, ary_g_LastEventCheck[myIndex] - animtime, flInterval, flStart, flEnd);
+	}
+
+	if (g_drawType == DRAWTYPE_VIEWMODEL) {
+		int x = 45;
+	}
+
+
+	if (g_drawType == DRAWTYPE_VIEWMODEL) {
+		int x = 45;
+	}
+
+	//MODDD - now sends along "m_fSequenceLoops", which may have been forced by script compared to what the model states to be.
+	while ((index = CUSTOM_GetAnimationEvent(sequence, framerate, &event, flStart, flEnd, index, m_fSequenceLoops)) != 0)
+	{
+		//HandleAnimEvent(&event);
+		CUSTOM_HUD_StudioEvent(&event, ent);
+	}
+
+}
+
+
+extern "C"
+{
+	void DLLEXPORT HUD_StudioEvent(const struct mstudioevent_s* event, const struct cl_entity_s* entity);
+}
+
+void CStudioModelRenderer::CUSTOM_HUD_StudioEvent(MonsterEvent_t* pMonsterEvent, const struct cl_entity_s* entity) {
+	// strncpy_s vs. strncpy?  Any reason strncpy_s is never used?
+	// might not be around in VS6.  For whatever reason default visual studio projects sometime
+	// after VS6 complain about using strncpy instead of strncpy_s, this still doesn't though
+	mstudioevent_s tempEv;
+	tempEv.frame = 0;
+	tempEv.event = pMonsterEvent->event;
+	tempEv.type = 0;
+	strncpy(tempEv.options, pMonsterEvent->options, 64);
+	tempEv.options[63] = '\0';
+
+	HUD_StudioEvent(&tempEv, entity);
+}
+
+
+
+int CStudioModelRenderer::CUSTOM_GetAnimationEvent(int CUSTOM_sequence, float CUSTOM_framerate, MonsterEvent_t* pMonsterEvent, float flStart, float flEnd, int index) {
+	//no argLoops value provied? Will determine from the sequence on the model.
+	return CUSTOM_GetAnimationEvent(CUSTOM_sequence, CUSTOM_framerate, pMonsterEvent, flStart, flEnd, index, -1);
+}
+
+int CStudioModelRenderer::CUSTOM_GetAnimationEvent(int CUSTOM_sequence, float CUSTOM_framerate, MonsterEvent_t* pMonsterEvent, float flStart, float flEnd, int index, int argLoops)
+{
+	studiohdr_t* pstudiohdr;
+	BOOL loopPass;
+	BOOL ordinaryPass;
+
+	//pstudiohdr = (studiohdr_t*)pmodel;
+	pstudiohdr = m_pStudioHeader;
+
+	if (!pstudiohdr || CUSTOM_sequence >= pstudiohdr->numseq || !pMonsterEvent)
+		return 0;
+
+
+	int events = 0;
+
+	mstudioseqdesc_t* pseqdesc;
+	mstudioevent_t* pevent;
+
+	pseqdesc = (mstudioseqdesc_t*)((byte*)pstudiohdr + pstudiohdr->seqindex) + (int)CUSTOM_sequence;
+	pevent = (mstudioevent_t*)((byte*)pstudiohdr + pseqdesc->eventindex);
+
+	if (pseqdesc->numevents == 0 || index > pseqdesc->numevents)
+		return 0;
+
+	if (pseqdesc->numframes > 1)
+	{
+
+		if (g_drawType != DRAWTYPE_VIEWMODEL) {
+			if (canPrintout) {
+				int x = 45;
+			}
+			//flStart *= (pseqdesc->numframes - 1) / 256.0f;
+			//flEnd *= (pseqdesc->numframes - 1) / 256.0f;
+			
+		}
+		else {
+			//MODDD - it's all floats right?
+			// UHhhhh.  why's this math differet?
+			//flStart *= (pseqdesc->numframes - 1) / 256.0f;
+			//flEnd *= (pseqdesc->numframes - 1) / 256.0f;
+
+			//flStart = flStart / (pseqdesc->numframes - 1) * 256.0f;
+			//flEnd = flEnd / (pseqdesc->numframes - 1) * 256.0f;
+		}
+	}
+	else
+	{
+		flStart = 0;
+		flEnd = 1.0;
+	}
+
+	if (canPrintout) {
+		int x = 45;
+	}
+
+	if (argLoops == -1) {
+		//that means up to what this model's sequence defaults to.
+		argLoops = ((pseqdesc->flags & STUDIO_LOOPING) != 0);
+	}
+
+
+
+	//until proven otherwise, this didn't loop around. And only looping animations (argLoops) can even do that.
+	//otherwise, an anim sits frozen at the end (frame 256, out of 256).
+	loopPass = FALSE;
+
+
+
+	if (argLoops) {
+		//ex: anim is 9 frames long.
+		//we're at frame 8 (start).
+		//ev: 2
+		//rs: 8
+		//re: 11
+		//SV: I AM A good fellow: ind:0 evFrame:2 rs:8.00 re:11.00 numf-1:8 diff:3.00
+
+		//end - len
+
+		//2 < 11 - 9 + 1
+		//2 < 3
+
+		//ex: BACKWARDS.
+		//anim  is 9 frames long.
+		//ev: 8
+		// rs: 1
+		// re: -2
+		// numf-1: 8
+		//diff:  (-2 +9 - 1)
+		//diff:  (6)
+
+		//end + len
+		//8 > -2 + 9
+		//8 > 7
+		//
+
+
+		if (CUSTOM_framerate >= 0) {
+			//loopPass = (flEnd >= pseqdesc->numframes - 1 && pevent[index].frame < flEnd - pseqdesc->numframes + 1) ;
+			if (flEnd >= pseqdesc->numframes - 1) {
+				loopPass = TRUE;
+				//too high? We think the loop happened.
+				flEnd -= (pseqdesc->numframes - 1);
+				//nope, let an event pass if it went above the leftover flStart, since we skipped those end frames!
+				//flStart = 0;
+			}
+		}
+		else {
+			//loopPass = (flEnd <= 0                       && pevent[index].frame > flEnd + pseqdesc->numframes - 1) ;
+
+			if (flEnd < 0) {
+				loopPass = TRUE;
+				//too low?
+				flEnd += (pseqdesc->numframes - 1);
+				//nope, let an event pass if it went below the leftover flStart
+				//flStart = (pseqdesc->numframes - 1 );
+			}
+		}
+	}
+
+	for (; index < pseqdesc->numevents; index++)
+	{
+		// Don't send client-side events to the server AI
+
+
+		if (pevent[index].event >= EVENT_CLIENT) {
+			// WRONG!  I am the client.
+			//continue;
+		}
+		else {
+			// Instead, now I do nothing.
+			continue;
+		}
+
+		//?????
+
+		/*
+		if(pevent[index].event == 10 || pevent[index].event == 11){
+			int x = pevent[index].event;
+			int te1 = pevent[index].frame;
+			int te2 = pevent[index].type;
+			char what = pevent[index].options[0];
+			int breakme = 666;
+		}
+		*/
+
+
+		//by default. Loop pass will be TRUE For looping anims that would have had an event
+		//between the frames skipped by the (assumed?) jump from the very end back to this point.
+		//loopPass = FALSE;
+		//...but in the middle of checking events? why?
+
+		//Need to let backwards animations trigger a wrap-around too. The one now is just for positive framerates.
+		//argLoops = TRUE;
+
+
+		/*
+		if(index == 0){
+			easyForcePrintLine("ARE YOU intoxicated in:%d rs:%.2f, re:%.2f ev:%d PASS1:%d PASS2:%d", index, flStart, flEnd, pevent[index].frame, (pevent[index].frame >= flStart), (pevent[index].frame < flEnd) );
+		}
+		*/
+
+
+		if (CUSTOM_framerate >= 0) {
+			float relativeFrame = pevent[index].frame;
+
+			if (!loopPass) {
+				//nothing special.
+				ordinaryPass = (relativeFrame >= flStart && relativeFrame < flEnd);
+			}
+			else {
+				//If our event was skipped from the leftover flStart to the last frame possible,
+				//or between the first frame possible (0) and flEnd's new place, count it.
+				ordinaryPass = (relativeFrame >= flStart || relativeFrame < flEnd);
+			}
+
+		}
+		else {
+			//MODDD - hopefully this has no side-effects.  Lets the 'thud' sounds on bodies hitting the floor
+			// in reversed death anims be played in the right place.
+			//float relativeFrame =  ( ( pseqdesc->numframes - 1) - pevent[index].frame);
+			float relativeFrame = pevent[index].frame;
+
+			//easyForcePrintLine("absfr:%.2f relfr%.2f res:%.2f ree:%.2f", pevent[index].frame, relativeFrame, flStart, flEnd);
+			if (!loopPass) {
+				//nothing special.
+				ordinaryPass = (relativeFrame >= flEnd && relativeFrame < flStart);
+			}
+			else {
+				//If our event was skipped from the leftover flStart to the last frame possible,
+				//or between the first frame possible (0) and flEnd's new place, count it.
+				ordinaryPass = (relativeFrame >= flEnd || relativeFrame < flStart);
+			}
+
+		}
+
+		//if ( (pevent[index].frame >= flStart && pevent[index].frame < flEnd) || 
+		//	((pseqdesc->flags & STUDIO_LOOPING) && flEnd >= pseqdesc->numframes - 1 && pevent[index].frame < flEnd - pseqdesc->numframes + 1) )
+
+
+		//if ( (pevent[index].frame >= flStart && pevent[index].frame < flEnd) || 
+		//	loopPass)
+
+		if (ordinaryPass)
+		{
+			//easyForcePrintLine("I AM A good fellow: ind:%d evFrame:%d rs:%.2f re:%.2f numf-1:%d diff:%.2f", index, pevent[index].frame, flStart, flEnd, (pseqdesc->numframes - 1),  flEnd - pseqdesc->numframes + 1   );
+
+			pMonsterEvent->event = pevent[index].event;
+			pMonsterEvent->options = pevent[index].options;
+			return index + 1;
+		}
+	}
+	return 0;
+}
+
+
+
 

@@ -27,6 +27,10 @@
 //             Not necessarily an issue but just pointing that out.
 
 
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelay)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelaycustom)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteclip)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteammo)
 //EASY_CVAR_EXTERN(testVar)
 EASY_CVAR_EXTERN(multiplayerCrowbarHitSoundMode)
 EASY_CVAR_EXTERN(muteCrowbarSounds)
@@ -751,11 +755,11 @@ int CCrowbar::Swing( int fFirst )
 			 break;
 			}
 //#endif
-			if(m_pPlayer->cheat_minimumfiredelayMem == 0){
+			if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelay) == 0){
 				// miss
 				m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 0.5;
 			}else{
-				m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + m_pPlayer->cheat_minimumfiredelaycustomMem;
+				m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelaycustom);
 			}
 
 			// player "shoot" animation
@@ -781,15 +785,15 @@ int CCrowbar::Swing( int fFirst )
 		switch( m_fireState )
 		{
 		case 0:
-			SendWeaponAnim( CROWBAR_ATTACK1HIT );
+			SendWeaponAnimBypass( CROWBAR_ATTACK1HIT );
 			m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + (11.0/22.0) + randomIdleAnimationDelay();
 			 break;
 		case 1:
-			SendWeaponAnim( CROWBAR_ATTACK2HIT );
+			SendWeaponAnimBypass( CROWBAR_ATTACK2HIT );
 			m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + (14.0/22.0) + randomIdleAnimationDelay();
 			 break;
 		case 2:
-			SendWeaponAnim( CROWBAR_ATTACK3HIT );
+			SendWeaponAnimBypass( CROWBAR_ATTACK3HIT );
 			m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + (19.0/24.0) + randomIdleAnimationDelay();
 			 break;
 		}
@@ -802,7 +806,7 @@ int CCrowbar::Swing( int fFirst )
 
 		// player "shoot" animation
 		m_pPlayer->SetAnimation( PLAYER_ATTACK1 );
-		//at least do these things?
+		// at least do these things?
 		m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 0.25;
 
 		//easyPrintLine("efefefefefef");
@@ -811,10 +815,10 @@ int CCrowbar::Swing( int fFirst )
 
 
 		//MODDD
-		if(m_pPlayer->cheat_minimumfiredelayMem == 0){
+		if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelay) == 0){
 			m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 0.25;
 		}else{
-			m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + m_pPlayer->cheat_minimumfiredelaycustomMem;
+			m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelaycustom);
 		}
 
 		SetThink( &CCrowbar::Smack );
@@ -824,7 +828,12 @@ int CCrowbar::Swing( int fFirst )
 	return fDidHit;
 }
 
+
+
 //MODDD - added.
+// I think idle2 or idle3 loops, so that time it should've been static at the end doesn't happen
+// (replays the anim), so re-picking an idle causes a sudden jump in the crowbar.
+// Not a huge deal but eh.
 void CCrowbar::WeaponIdle( void )
 {
 	//ResetEmptySound( );

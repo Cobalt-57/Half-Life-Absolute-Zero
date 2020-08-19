@@ -67,6 +67,10 @@
 //extern:
 extern unsigned short g_sTrailRA;
 
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelay)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelaycustom)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteclip)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteammo)
 EASY_CVAR_EXTERN(cl_rockettrail)
 EASY_CVAR_EXTERN(rocketSkipIgnite)
 EASY_CVAR_EXTERN(myRocketsAreBarney)
@@ -904,14 +908,14 @@ void CRpg::PrimaryAttack()
 		PLAYBACK_EVENT( flags, m_pPlayer->edict(), m_usRpg );
 
 		//MODDD
-		if(m_pPlayer->cheat_infiniteclipMem == 0){
+		if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteclip) == 0){
 			m_iClip--; 
 		}
 				
-		if(m_pPlayer->cheat_minimumfiredelayMem == 0){
+		if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelay) == 0){
 			m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 1.5;
 		}else{
-			m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + m_pPlayer->cheat_minimumfiredelaycustomMem;
+			m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelaycustom);
 		}
 		
 		//MODDD

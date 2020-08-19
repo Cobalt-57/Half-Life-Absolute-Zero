@@ -341,3 +341,24 @@ CVar cl_mp5_kickbackmode actually added to the game.  Whoops.
 Few other revisions to the satchel for odd cases, such as changing weapons immediately after detonating deployed satchels with satchel ammo left.
 
 Even better fix for viewmodel animations, particularly holstering sometimes not playing but freezing the model as though it did.  Probably.
+
+General clientside animation-event fix.  Should be no more cases of muzzle flashes or sounds called for by models clientside getting skipped or played multiple times in rapid succession (mostly viewmodels, such as reload sounds).
+Clientside events like these on monsters may also be slightly more accurate in timing.
+
+Gibbed zombies spawn human and alien gibs now.  Fixed bug of spawning no gibs sometimes.
+
+Grenades tossed (secondary-throw) use the grenade roll animations, and land sideways instead of longways.
+
+NEW CVAR: cl_viewmodel_fidget (defaults to 2).  This causes fidget animations for certain weapons to only play on demand (secondary fire; right-click) instead.  1 is retail behavior (randomly at idle), 0 is never.
+
+CVar infiniteLongJumpCharge renamed to sv_longjump_chargemode
+
+Chumtoad idle behavior unbroken - was supposed to randomly pick a new nearby location about every 15 seconds.  Whoops.
+
+Slightly more delay between firing mp5 grenades, less delay before being able to return to primary fire.
+
+General viewmodel fix for slight duplication of events restored (two shotgun shells from single-fire).
+
+Squad "alert friends of enemy" behavior restored.
+
+Movement up/down fast moving platforms will have less extrme shifts in view compared to where the player actually is.

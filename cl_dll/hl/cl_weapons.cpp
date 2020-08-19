@@ -21,12 +21,14 @@
 #include "../com_weapons.h"
 
 
-EASY_CVAR_EXTERN(firstPersonIdleDelayMin)
-EASY_CVAR_EXTERN(firstPersonIdleDelayMax)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteammo)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteclip)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(firstPersonIdleDelayMin)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(firstPersonIdleDelayMax)
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(viewModelPrintouts)
-EASY_CVAR_EXTERN(viewModelSyncFixPrintouts)
-EASY_CVAR_EXTERN(cl_holster)
-EASY_CVAR_EXTERN(wpn_glocksilencer)
+//EASY_CVAR_EXTERN(viewModelSyncFixPrintouts)
+//EASY_CVAR_EXTERN(cl_holster)
+//EASY_CVAR_EXTERN(wpn_glocksilencer)
 
 
 //MODDD - ????      This file seems to need re-implementations of several (including newly added) CBasePlayerWeapon methods from weapons.h
@@ -145,7 +147,7 @@ BOOL CBasePlayerWeapon::DefaultReload(int iClipSize, int iAnim, float fDelay, in
 	}
 
 
-	if (m_pPlayer->cheat_infiniteammoMem != 1) {
+	if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteammo) != 1) {
 		if (m_pPlayer->m_rgAmmo[myPrimaryAmmoType] <= 0)
 			return FALSE;
 
@@ -180,7 +182,8 @@ BOOL CBasePlayerWeapon::DefaultReload(int iClipSize, int iAnim, float fDelay, in
 	m_fInReload = TRUE;
 	reloadBlocker = FALSE;
 
-	m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 3;
+	// MODDD - you have a 'fDelay', why not use it?   (was a flat 3 in its place)
+	m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + fDelay + randomIdleAnimationDelay();
 	return TRUE;
 }
 
@@ -351,7 +354,7 @@ BOOL CBasePlayerWeapon::DefaultDeploy(char* szViewModel, char* szWeaponModel, in
 	m_pPlayer->m_flNextAttackCLIENTHISTORY = fireDelayTime;
 
 	//m_flTimeWeaponIdle = 1.0;
-	m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + deployAnimTime; //used to be "1.0", now depends on optional parameter (defaults to "1.0");
+	m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + deployAnimTime + randomIdleAnimationDelay(); //used to be "1.0", now depends on optional parameter (defaults to "1.0");
 
 	return TRUE;
 }
@@ -600,12 +603,11 @@ void CBasePlayerWeapon::stopBlockLooping(void) {
 
 
 //MODDD - also new.
-// WE'RE ONLY INCLUDED CLIENTSIDE DAMMIT.
-// Check dlls/weapons.cpp for the serverside equivalent.  Only server-exclusive file of weapons-specific files, funny enough.
+// Check dlls/weapons.cpp for the serverside equivalent.
 float CBasePlayerWeapon::randomIdleAnimationDelay(void) {
-	if (EASY_CVAR_GET(firstPersonIdleDelayMin) > 0 && EASY_CVAR_GET(firstPersonIdleDelayMax) > 0) {
+	if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(firstPersonIdleDelayMin) > 0 && EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(firstPersonIdleDelayMax) > 0) {
 		//let's go.
-		float rand = UTIL_SharedRandomFloat(m_pPlayer->random_seed, EASY_CVAR_GET(firstPersonIdleDelayMin), EASY_CVAR_GET(firstPersonIdleDelayMax));
+		float rand = UTIL_SharedRandomFloat(m_pPlayer->random_seed, EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(firstPersonIdleDelayMin), EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(firstPersonIdleDelayMax));
 		//easyPrintLine("OK client client %.2f", rand);
 		return rand;
 	}
@@ -717,7 +719,7 @@ void CBasePlayerWeapon::ItemPostFrame()
 			m_iClip += j;
 
 			//MODDD - cheat intervention, if available.  With this cheat, reloading does not consume total ammo.
-			if (EASY_CVAR_GET(cheat_infiniteammo) == 0) {
+			if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteammo) == 0) {
 				m_pPlayer->m_rgAmmo[myPrimaryAmmoType] -= j;
 			}
 			else {

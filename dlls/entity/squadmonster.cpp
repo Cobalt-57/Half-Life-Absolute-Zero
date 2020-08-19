@@ -299,6 +299,8 @@ void CSquadMonster :: SquadMakeEnemy ( CBaseEntity *pEnemy )
 		CSquadMonster *pMember = pSquadLeader->MySquadMember(i);
 		if (pMember)
 		{
+			int myID = monsterID;
+			int theirID = pMember->monsterID;
 			// reset members who aren't activly engaged in fighting
 			if (pMember->m_hEnemy != pEnemy && !pMember->HasConditions( bits_COND_SEE_ENEMY))
 			{
@@ -313,7 +315,19 @@ void CSquadMonster :: SquadMakeEnemy ( CBaseEntity *pEnemy )
 				//pMember->m_vecEnemyLKP = pEnemy->pev->origin;
 				pMember->setEnemyLKP(pEnemy->pev->origin);
 				
-				pMember->SetConditions ( bits_COND_NEW_ENEMY );
+				//MODDD NOTICE - need a special marker to keep the condition from getting
+				// forgotten between frames.  At the start of the next frame the other monster
+				// will see this condition and be able to act on it.
+				// Ooooorrrr how about this.   If their current schedule is interruptable by
+				// seeing a new enemy, do a GetSchedule() on it right now.
+				//pMember->SetConditionsPersistent ( bits_COND_NEW_ENEMY );
+
+				if (pMember->m_pSchedule->iInterruptMask & bits_COND_NEW_ENEMY) {
+					pMember->SetConditions(bits_COND_NEW_ENEMY);
+					pMember->SetState(MONSTERSTATE_COMBAT);
+					pMember->ChangeSchedule(GetSchedule());
+				}
+
 			}
 		}
 	}
@@ -554,9 +568,14 @@ int CSquadMonster :: CheckEnemy ( CBaseEntity *pEnemy )
 {
 	int iUpdatedLKP;
 
+	if (MySquadLeader()->m_hEnemy == NULL) {
+		return 0;  //don't proceed
+	}
+
 	//MODDD - m_hEnemy -> pEnemy replacement.
 	iUpdatedLKP = CBaseMonster :: CheckEnemy ( pEnemy );
-	
+
+
 	// communicate with squad members about the enemy IF this individual has the same enemy as the squad leader.
 	//MODDD - use the parameter you got, dangit!
 	// Even though it will always end up being m_hEnemy anyway.

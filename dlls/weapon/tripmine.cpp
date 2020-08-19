@@ -26,6 +26,10 @@
 
 EASY_CVAR_EXTERN(tripmineAnimWaitsForFinish)
 
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelay)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelaycustom)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteclip)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteammo)
 
 
 //MODDD - for the viewmodel and worldmodel, same v_tripmine.mdl model used.
@@ -528,6 +532,7 @@ void CTripmine::Holster( int skiplocal /* = 0 */ )
 	EMIT_SOUND(ENT(m_pPlayer->pev), CHAN_WEAPON, "common/null.wav", 1.0, ATTN_NORM);
 }
 
+
 void CTripmine::PrimaryAttack( void )
 {
 	if (PlayerPrimaryAmmoCount() <= 0) {
@@ -556,7 +561,7 @@ void CTripmine::PrimaryAttack( void )
 		//success.  play animation.
 		m_flReleaseThrow = 0;
 		m_flStartThrow = gpGlobals->time + holdingSecondaryTarget1;
-		SendWeaponAnim( TRIPMINE_ARM2 );
+		SendWeaponAnimBypass( TRIPMINE_ARM2 );
 		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + (11.0 / 30.0) + randomIdleAnimationDelay();
 
 		CBaseEntity *pEntity = CBaseEntity::Instance( tr.pHit );
@@ -567,7 +572,7 @@ void CTripmine::PrimaryAttack( void )
 			CBaseEntity *pEnt = CBaseEntity::Create( "monster_tripmine", tr.vecEndPos + tr.vecPlaneNormal * 8, angles, SF_MONSTER_DYNAMIC, m_pPlayer->edict() );
 
 			//MODDD - cheat check.			
-			if(m_pPlayer->cheat_infiniteclipMem == 0 && m_pPlayer->cheat_infiniteammoMem == 0){
+			if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteclip) == 0 && EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteammo) == 0){
 				ChangePlayerPrimaryAmmoCount(-1);
 			}
 
@@ -592,29 +597,63 @@ void CTripmine::PrimaryAttack( void )
 
 	}
 	
-	if(m_pPlayer->cheat_minimumfiredelayMem == 0){
-
-		//see "ItemPreFrame" for assignment.  "m_fireState" relies on the "tripmineAnimWaitsForFinish" cvar.
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelay) == 0){
+		// see "ItemPreFrame" for assignment.  "m_fireState" relies on the "tripmineAnimWaitsForFinish" cvar.
+		// CHANGED: times were 0.3 and 0.9.
 		if(m_fireState == 0){
-			m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 0.3;
+			SetAttackDelays(UTIL_WeaponTimeBase() + 0.3);
 		}else{
 			//this delay allows the place and deploy anims to finish.
-			m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 0.9;
+			SetAttackDelays(UTIL_WeaponTimeBase() + 0.9);
 		}
-
 	}else{
-		m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + m_pPlayer->cheat_minimumfiredelaycustomMem;
-	
+		SetAttackDelays(UTIL_WeaponTimeBase() + EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelaycustom));
 	}
 
 	//m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + UTIL_SharedRandomFloat( m_pPlayer->random_seed, 10, 15 );
 }
 
 
+
+void CTripmine::SecondaryAttack(void)
+{
+
+	if (EASY_CVAR_GET(cl_viewmodel_fidget) == 2) {
+		//float flRand;
+		int iAnim;
+
+		//flRand = UTIL_SharedRandomFloat(m_pPlayer->random_seed, 0, 1);
+		//if (flRand <= 0.5)
+		//{
+			iAnim = TRIPMINE_FIDGET;
+			m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 100.0 / 30.0;
+		//}
+		
+		SetAttackDelays(m_flTimeWeaponIdle);
+		m_flTimeWeaponIdle += randomIdleAnimationDelay();
+		SendWeaponAnim(iAnim);
+	}//CVar check
+
+}
+
+
+
+
+
 //MODDD - new.
 void CTripmine::ItemPreFrame( void ){
 
 	CBasePlayerWeapon::ItemPreFrame();
+}
+
+
+void CTripmine::ItemPostFrame(void) {
+
+	CBasePlayerWeapon::ItemPostFrame();
+}
+
+//MODDD - new.
+void CTripmine::ItemPostFrameThink( void ){
 
 
 	if(EASY_CVAR_GET(tripmineAnimWaitsForFinish) == 1){
@@ -636,7 +675,7 @@ void CTripmine::ItemPreFrame( void ){
 			}else{
 				m_flReleaseThrow = 1;
 				m_flStartThrow = gpGlobals->time + holdingSecondaryTarget2;
-				SendWeaponAnim( TRIPMINE_DRAW );
+				SendWeaponAnimBypass( TRIPMINE_DRAW );
 				m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + (11.0/30.0) + randomIdleAnimationDelay();
 
 				//m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + randomIdleAnimationDelay() + 10;
@@ -649,13 +688,9 @@ void CTripmine::ItemPreFrame( void ){
 			//m_flTimeWeaponIdle = 0;  //call for idle animation, nothing else to do.
 		}
 	}
-}
 
-//MODDD - new.
-void CTripmine::ItemPostFrame( void ){
 
-	CBasePlayerWeapon::ItemPostFrame();
-
+	CBasePlayerWeapon::ItemPostFrameThink();
 }
 
 
@@ -711,7 +746,16 @@ void CTripmine::WeaponIdle( void )
 	}
 
 	int iAnim;
-	float flRand = UTIL_SharedRandomFloat( m_pPlayer->random_seed, 0, 1 );
+	float flRand = 0;
+	
+	if (EASY_CVAR_GET(cl_viewmodel_fidget) == 1) {
+		flRand = UTIL_SharedRandomFloat(m_pPlayer->random_seed, 0, 1);
+	}
+	else {
+		// never play fidget this way.
+		flRand = UTIL_SharedRandomFloat(m_pPlayer->random_seed, 0, 0.75);
+	}
+
 	if (flRand <= 0.25)
 	{
 		iAnim = TRIPMINE_IDLE1;

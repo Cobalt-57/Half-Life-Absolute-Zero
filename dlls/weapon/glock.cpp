@@ -24,6 +24,21 @@
 
 
 
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelay)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelaycustom)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteclip)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteammo)
+
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(glockOldReloadLogic)
+EASY_CVAR_EXTERN(glockUseLastBulletAnim)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST(wpn_glocksilencer)
+//EASY_CVAR_EXTERN(testVar)
+
+
+
+
+
+
 LINK_ENTITY_TO_CLASS( weapon_glock, CGlock );
 LINK_ENTITY_TO_CLASS( weapon_9mmhandgun, CGlock );
 
@@ -32,12 +47,6 @@ LINK_ENTITY_TO_CLASS( weapon_glocksilencer, CGlock );
 LINK_ENTITY_TO_CLASS( weapon_9mmhandgunsilencer, CGlock );
 
 
-
-
-EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(glockOldReloadLogic)
-EASY_CVAR_EXTERN(glockUseLastBulletAnim)
-EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST(wpn_glocksilencer)
-//EASY_CVAR_EXTERN(testVar)
 
 
 #ifndef CLIENT_DLL
@@ -886,16 +895,15 @@ void CGlock::ItemPostFrame(){
 
 }
 
-
 //MODDD - Secondary fire removed altogether.  Can only apply the silencer when right-clicking.
 void CGlock::SecondaryAttack( void )
 {
 	//no silencer available?  we're doing retail's rapid-fire then.
 	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST(wpn_glocksilencer) == 0){
-		if(m_pPlayer->cheat_minimumfiredelayMem == 0){
+		if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelay) == 0){
 			GlockFire( 0.1, 0.2, FALSE );
 		}else{
-			GlockFire( 0.1, m_pPlayer->cheat_minimumfiredelaycustomMem, FALSE );
+			GlockFire( 0.1, EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelaycustom), FALSE );
 		}
 	}
 }
@@ -912,13 +920,12 @@ void CGlock::PrimaryAttack( void )
 	//easyPrintLine("PRIMARY2");
 
 	//MODDD
-	if(m_pPlayer->cheat_minimumfiredelayMem == 0){
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelay) == 0){
 		GlockFire( 0.01, 0.3, TRUE );
 	}else{
-		GlockFire( 0.01, m_pPlayer->cheat_minimumfiredelaycustomMem, TRUE );
+		GlockFire( 0.01, EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelaycustom), TRUE );
 	}
 }
-
 
 void CGlock::GlockFire( float flSpread , float flCycleTime, BOOL fUseAutoAim )
 {
@@ -933,7 +940,7 @@ void CGlock::GlockFire( float flSpread , float flCycleTime, BOOL fUseAutoAim )
 		return;
 	}
 
-	if(m_pPlayer->cheat_infiniteclipMem == 0){
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteclip) == 0){
 		m_iClip --;
 	}
 
@@ -1081,6 +1088,7 @@ void CGlock::Reload( void )
 
 void CGlock::WeaponIdle( void )
 {
+	return;
 
 
 	ResetEmptySound( );

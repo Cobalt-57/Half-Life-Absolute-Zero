@@ -1088,11 +1088,14 @@ Schedule_t *CChumToad::GetSchedule ( void )
 				return GetScheduleOfType( SCHED_TOAD_ALERT_FACE );
 			}
 
+
 			//eh.. why not have the option?
 			else if ( FRouteClear() )
 			{
 				// no valid route!
-				return GetScheduleOfType( SCHED_IDLE_STAND );
+				// Try to do an idle wait + hop + croak later?
+				//return GetScheduleOfType( SCHED_IDLE_STAND );
+				return GetScheduleOfType(SCHED_TOAD_IDLE_WAIT);
 			}
 			else
 			{
@@ -1100,13 +1103,6 @@ Schedule_t *CChumToad::GetSchedule ( void )
 				return GetScheduleOfType( SCHED_IDLE_WALK );
 			}
 			
-
-
-			//Try to do an idle wait + hop + croak later?
-
-			return GetScheduleOfType( SCHED_TOAD_IDLE_WAIT);
-
-
 			break;
 		}
 	case MONSTERSTATE_ALERT:
@@ -1119,10 +1115,8 @@ Schedule_t *CChumToad::GetSchedule ( void )
 				m_hEnemy = NULL;
 				return GetSchedule();
 
-
 				//return GetScheduleOfType ( SCHED_VICTORY_DANCE );
 				//
-
 			}
 			
 			

@@ -31,6 +31,10 @@
 #endif
 
 
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelay)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelaycustom)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteclip)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteammo)
 EASY_CVAR_EXTERN(playerCrossbowMode)
 EASY_CVAR_EXTERN(crossbowInheritsPlayerVelocity)
 EASY_CVAR_EXTERN(crossbowReloadSoundDelay)
@@ -39,7 +43,7 @@ EASY_CVAR_EXTERN(crossbowReloadSoundDelay)
 
 // delay between shots boosted, was 0.75
 // (this is not reload time, delay between firing clip).
-#define CROSSBOW_LOADBOLT_TIME 1.10
+#define CROSSBOW_LOADBOLT_TIME 1.20
 
 
 
@@ -197,13 +201,6 @@ void CCrossbow::PrimaryAttack( void )
 // this function only gets called in multiplayer
 void CCrossbow::FireSniperBolt(){
 
-	//MODDD
-	if(m_pPlayer->cheat_minimumfiredelayMem == 0){
-		m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + CROSSBOW_LOADBOLT_TIME;
-	}else{
-		m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + m_pPlayer->cheat_minimumfiredelaycustomMem;
-	}
-
 	if (m_iClip == 0)
 	{
 		//MODDD - why play an empty sound?  This isn't a gun.
@@ -216,8 +213,22 @@ void CCrossbow::FireSniperBolt(){
 	m_pPlayer->m_iWeaponVolume = QUIET_GUN_VOLUME;
 
 	//MODDD
-	if(m_pPlayer->cheat_infiniteclipMem == 0){
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteclip) == 0){
 		m_iClip --;
+	}
+
+	//MODDD
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelay) == 0){
+
+		if (m_iClip > 0) {
+			m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + CROSSBOW_LOADBOLT_TIME;
+		}
+		else {
+			// reloading next time?  Have a shorter delay.
+			m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 0.6;
+		}
+	}else{
+		m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelaycustom);
 	}
 
 	int flags;
@@ -307,7 +318,7 @@ void CCrossbow::FireBolt()
 	m_pPlayer->m_iWeaponVolume = QUIET_GUN_VOLUME;
 
 	//MODDD
-	if(m_pPlayer->cheat_infiniteclipMem == 0){
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteclip) == 0){
 		m_iClip --;
 	}
 
@@ -387,12 +398,19 @@ void CCrossbow::FireBolt()
 
 	//MODDD
 	// also removed the NextSecondaryAttack sets.  What's the point of affecting when we can zoom again?
-	if(m_pPlayer->cheat_minimumfiredelayMem == 0){
-		m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + CROSSBOW_LOADBOLT_TIME;
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelay) == 0){
+
+		if (m_iClip > 0) {
+			m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + CROSSBOW_LOADBOLT_TIME;
+		}
+		else {
+			// reloading next time?  Have a shorter delay.
+			m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 0.6;
+		}
 		//m_flNextSecondaryAttack = UTIL_WeaponTimeBase() + CROSSBOW_LOADBOLT_TIME;
 	}else{
-		m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + m_pPlayer->cheat_minimumfiredelaycustomMem;
-		//m_flNextSecondaryAttack = UTIL_WeaponTimeBase() + m_pPlayer->cheat_minimumfiredelaycustomMem;
+		m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelaycustom);
+		//m_flNextSecondaryAttack = UTIL_WeaponTimeBase() + EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelaycustom);
 	}
 
 	
@@ -445,11 +463,11 @@ void CCrossbow::SecondaryAttack()
 	
 	pev->nextthink = UTIL_WeaponTimeBase() + 0.1;
 
-	//if(m_pPlayer->cheat_minimumfiredelayMem == 0){
+	//if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelay) == 0){
 	//MODDD - NOPE! Not even you now.  Outclassed.
 	//	m_flNextSecondaryAttack = UTIL_WeaponTimeBase() + 1.0;
 	//}else{
-	//	m_flNextSecondaryAttack = UTIL_WeaponTimeBase() + m_pPlayer->cheat_minimumfiredelaycustomMem;
+	//	m_flNextSecondaryAttack = UTIL_WeaponTimeBase() + EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelaycustom);
 	//}
 
 }

@@ -423,7 +423,7 @@ playerCrossbowMode (1) - MODEVAR. When non-zero, forces the crossbow to behave l
 2 - forces multiplayer. Sniper fire when zoomed in, explosions when zoomed out.
 
 
-tripmineAnimWaitsForFinish - BOOL.  If on, the delay between placing tripmines will be long enough to show the whole animation (new segment added + the old).
+tripmineAnimWaitsForFinish (1) - BOOL.  If on, the delay between placing tripmines will be long enough to show the whole animation (new segment added + the old).
 
 disablePauseSinglePlayer (0) - BOOL. If 1, pausing in single player immediately unpauses the game engine to mimic a multiplayer pause (game and sound still runs behind the console / menu).
 -does not work in WON half-life; relies on the "unpause" command that WON lacks.
@@ -735,7 +735,7 @@ egonHitCloud - boolean.  If 1, a blue cloud appears where the egon strikes (disp
 
 painFlashSuitless - boolean.  If 1, pain arrows & flash can be rendered without a suit too.
 
-infiniteLongJumpCharge - MODE VAR.
+sv_longjump_chargemode - MODE VAR.
 0: no effect.  Long jumps require charges and do not regenerate.
 1: Long jumps do not require a charge.
 2: Charges required, but regenerate every 2 minutes.
@@ -1553,6 +1553,7 @@ PAUSE CORRECTION
 NOTE - either 'pausecorrection' choice only works in singleplayer.
 -------------------------------------------------------------------------------
 pausecorrection1 (1) - BOOL.  The clientside variant of the pause-fix.  Least intrusive.
+~Has issues detecting a pause consistently with host_framerate values over 0.051.  Could have a hacky fix but, eh.  Who's doing that anyway.
 0: off.
 1: Blocks updates to mainly weapon logic if between-frame time is too low (paused).
 
@@ -1562,11 +1563,13 @@ pausecorrection2 (2) - MODEVAR.  The serverside variant of the pause-fix.  Bewar
    -BAD for very low framerates or slow logic times, stops player think logic.
 2: Blocks player think calls if 'StartFrame' (serverside think logic) hasn't been called since the recent player think call.  StartFrame is not run when paused.
    -BAD for very high framerates or fast logic times, causes time to still act as though it were normal speed in some logic (such as the delay before loading another RPG rocket after firing).
+   -Also at higher framerates, can cause events to play twice (such as seeing two shells ejected for one single-shotgun fire).
 -------------------------------------------------------------------------------
 
 
-
-
-
+cl_viewmodel_fidget (2) - MODEVAR.  Affects how/when fidget animations for certain weapons will play.
+0: Never.
+1: Randomly while idle (retail).  Does not block firing.
+2: Right-click to trigger them, blocks firing.
 
 

@@ -456,9 +456,14 @@ void PM_PlayStepSound( int step, float fvol )
 	VectorCopy_f( pmove->velocity, hvel );
 	hvel[2] = 0.0;
 
-	if (pmove->multiplayer && (!g_onladder && Length(hvel) <= 220)) {
- 		return;
-	}
+	//MODDD - why was this block even a thing?  Now with pl_jump sounds introduced elsewhere,
+	// those get played regardless of this section anyway.
+	// To be consistent, those sounds also shouldn't be played if this gets blocked (this would block
+	// the jump sounds caused by doubling step-sound on jumping, which still happens).
+	// When on, and without pl_jump sounds being played, this caused jumping in place to be silent.
+	//if (pmove->multiplayer && (!g_onladder && Length(hvel) <= 220)) {
+ 	//	return;
+	//}
 
 
 	// alternate.

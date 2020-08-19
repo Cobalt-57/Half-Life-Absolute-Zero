@@ -30,10 +30,16 @@ LINK_ENTITY_TO_CLASS( weapon_9mmAR, CMP5 );
 
 
 
-//Note that this CVar is serverside only. The client should never use it.
-EASY_CVAR_EXTERN(mp5GrenadeInheritsPlayerVelocity)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelay)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelaycustom)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteclip)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteammo)
 
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST(playerWeaponSpreadMode)
+
+// this CVar is serverside only. The client should never use it.
+EASY_CVAR_EXTERN(mp5GrenadeInheritsPlayerVelocity)
+
 
 
 //MODDD
@@ -160,7 +166,7 @@ void CMP5::PrimaryAttack()
 
 
 	//MODDD
-	if(m_pPlayer->cheat_infiniteclipMem == 0){
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteclip) == 0){
 		m_iClip --;
 	}
 
@@ -235,7 +241,7 @@ void CMP5::PrimaryAttack()
 	// hornet did NextPrimaryAttack set to NextPrimaryAttack + a constant.
 	// In the mp5's case here, that condition could never even work.  But it could for the hornetgun (and only caused issues).
 	// so BYE.
-	if(m_pPlayer->cheat_minimumfiredelayMem == 0){
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelay) == 0){
 		/*
 		m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 0.1;
 		if (m_flNextPrimaryAttack < UTIL_WeaponTimeBase()) {
@@ -244,9 +250,10 @@ void CMP5::PrimaryAttack()
 		*/
 
 		// ...also, set secondaryAttack delay too
-		m_flNextPrimaryAttack = m_flNextSecondaryAttack = UTIL_WeaponTimeBase() + 0.1;
+		m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 0.1;
+		m_flNextSecondaryAttack = UTIL_WeaponTimeBase() + 0.3;
 	}else{
-		m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + m_pPlayer->cheat_minimumfiredelaycustomMem;
+		SetAttackDelays(UTIL_WeaponTimeBase() + EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelaycustom));
 	}
 
 
@@ -278,7 +285,7 @@ void CMP5::SecondaryAttack( void )
 	m_pPlayer->m_flStopExtraSoundTime = UTIL_WeaponTimeBase() + 0.2;
 		
 	//MODDD - cheat check.
-	if(m_pPlayer->cheat_infiniteammoMem == 0 && m_pPlayer->cheat_infiniteclipMem == 0){
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteammo) == 0 && EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteclip) == 0){
 		ChangePlayerSecondaryAmmoCount(-1);
 	}
 
@@ -321,13 +328,13 @@ void CMP5::SecondaryAttack( void )
 	//only one anim:
 	m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + (34.0 / 30.0) + randomIdleAnimationDelay();
 
-	//MODDD
-	if(m_pPlayer->cheat_minimumfiredelayMem == 0){
-		m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 1;
-		m_flNextSecondaryAttack = UTIL_WeaponTimeBase() + 1;
+	//MODDD - slightly more delay between mp5 grenade firing
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelay) == 0){
+		m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 0.8;
+		m_flNextSecondaryAttack = UTIL_WeaponTimeBase() + 1 + 0.2;
 	}else{
-		m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + m_pPlayer->cheat_minimumfiredelaycustomMem;
-		m_flNextSecondaryAttack = UTIL_WeaponTimeBase() + m_pPlayer->cheat_minimumfiredelaycustomMem;
+		m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelaycustom);
+		m_flNextSecondaryAttack = UTIL_WeaponTimeBase() + EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelaycustom);
 	}
 
 

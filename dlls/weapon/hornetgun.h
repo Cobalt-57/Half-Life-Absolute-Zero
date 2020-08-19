@@ -50,6 +50,7 @@ public:
 	void WeaponIdle(void);
 	float m_flNextAnimTime;
 
+	//MODDD - replcaed with a better synch'd var.  or, not?
 	float m_flRechargeTime;
 
 	int m_iFirePhase;// don't save me.

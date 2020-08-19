@@ -33,7 +33,7 @@
 
 EASY_CVAR_EXTERN(cl_explosion)
 EASY_CVAR_EXTERN(explosionDebrisSoundVolume)
-EASY_CVAR_EXTERN(cheat_touchNeverExplodes)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_touchNeverExplodes)
 EASY_CVAR_EXTERN(handGrenadesUseOldBounceSound)
 EASY_CVAR_EXTERN(trailTypeTest)
 
@@ -389,7 +389,7 @@ void CGrenade::Detonate( void )
 // 
 void CGrenade::ExplodeTouch( CBaseEntity *pOther )
 {
-	if(EASY_CVAR_GET(cheat_touchNeverExplodes) != 1){
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_touchNeverExplodes) != 1){
 		TraceResult tr;
 		Vector		vecSpot;// trace starts here!
 
@@ -447,7 +447,6 @@ void CGrenade::groundContact(void) {
 
 			// needs to be specified now that it animates properly.
 			//   imagine that.
-			pev->sequence = 1;   //laying on the ground.
 			pev->frame = 0;
 			pev->framerate = 0;
 
@@ -455,14 +454,23 @@ void CGrenade::groundContact(void) {
 			// No pitch, and need to rotate a ways
 			//pev->angles = g_vecZero;
 
-
-			SetAngleX(0);
-			//SetAngleX(RANDOM_FLOAT(-150, 150));
-
-			ChangeAngleY(-90);
-
-			SetAngleZ(0);
-			//SetAngleZ(RANDOM_FLOAT(-150, 150));
+			// What was the sequence I was thrown with?  Longways or sideways?
+			if (pev->sequence >= 3 && pev->sequence <= 5) {
+				pev->sequence = 1;   //laying on the ground.
+				// standard throw anim?  Land long-ways
+				SetAngleX(0);
+				//SetAngleX(RANDOM_FLOAT(-150, 150));
+				ChangeAngleY(-90);
+				SetAngleZ(0);
+				//SetAngleZ(RANDOM_FLOAT(-150, 150));
+			}
+			else if(pev->sequence == 1 || pev->sequence == 2){
+				pev->sequence = 1;   //laying on the ground.
+				// toss throw anim?  Land sideways.
+				SetAngleX(0);
+				//ChangeAngleY(0);
+				SetAngleZ(0);
+			}
 
 			firstGroundContactYet = TRUE;
 		}

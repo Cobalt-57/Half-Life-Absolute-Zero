@@ -14,7 +14,7 @@ enum tripmine_e {
 	TRIPMINE_IDLE1 = 0,
 	TRIPMINE_IDLE2,
 	TRIPMINE_ARM1,
-	TRIPMINE_ARM2,
+	TRIPMINE_ARM2,  //now named 'place' in-model
 	TRIPMINE_FIDGET,
 	TRIPMINE_HOLSTER,
 	TRIPMINE_DRAW,
@@ -53,8 +53,11 @@ public:
 	CTripmine();
 	void ItemPreFrame(void);
 	void ItemPostFrame(void);
+	void ItemPostFrameThink(void);
 
 	void PrimaryAttack(void);
+	void SecondaryAttack(void);
+	
 	BOOL Deploy(void);
 	void Holster(int skiplocal = 0);
 	void WeaponIdle(void);

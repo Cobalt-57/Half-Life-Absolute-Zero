@@ -90,7 +90,7 @@ void COM_Log( char *pszFile, char *fmt, ...)
 
 
 
-
+//#include "crowbar.h"
 
 /*
 =====================
@@ -103,6 +103,15 @@ void HUD_SendWeaponAnim( int iAnim, int body, int force )
 {
 
 
+	if (iAnim == -1) {
+		// not a sequence, ignore
+		return;
+	}
+
+
+	//if (iAnim == CROWBAR_ATTACK1HIT || iAnim == CROWBAR_ATTACK2HIT || iAnim == CROWBAR_ATTACK3HIT) {
+	//	int x = 45;
+	//}
 
 	//RESIST
 	//resistTime = gpGlobals->time + 0.01;
@@ -116,6 +125,7 @@ void HUD_SendWeaponAnim( int iAnim, int body, int force )
 		//just remove it.
 		iAnim &= ~64;
 	}
+
 
 	// MOVED ABOVE  ... or not, maybe don't
 	g_currentanim = iAnim;

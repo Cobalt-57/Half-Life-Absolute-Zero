@@ -742,11 +742,11 @@ void CSqueak::PrimaryAttack()
 			m_chargeReady |= 32;
 
 			//MODDD 
-			if (m_pPlayer->cheat_minimumfiredelayMem == 0) {
-				m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + (31.0f / 30.0f) + 0.8f;
+			if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelay) == 0) {
+				SetAttackDelays(UTIL_WeaponTimeBase() + (31.0f / 30.0f) + 0.8f);
 			}
 			else {
-				m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + m_pPlayer->cheat_minimumfiredelaycustomMem + 0.015f;
+				SetAttackDelays(UTIL_WeaponTimeBase() + EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelaycustom) + 0.015f);
 			}
 			//NOTE: this ends up being the delay before doing the re-draw animation
 			// (can still fire before then, unaffected by the time of the "throw" animation that hides the hands)
@@ -763,8 +763,30 @@ void CSqueak::PrimaryAttack()
 
 void CSqueak::SecondaryAttack( void )
 {
+	//MODDD - fidget on demand?
 
-}
+	if (EASY_CVAR_GET(cl_viewmodel_fidget) == 2) {
+		float flRand;
+		int iAnim;
+		
+		flRand = UTIL_SharedRandomFloat(m_pPlayer->random_seed, 0, 1);
+		if (flRand <= 0.5)
+		{
+			iAnim = SQUEAK_FIDGETFIT;
+			m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 70.0 / 16.0;
+		}
+		else
+		{
+			iAnim = SQUEAK_FIDGETNIP;
+			m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 80.0 / 16.0;
+		}
+		SetAttackDelays(m_flTimeWeaponIdle);
+		m_flTimeWeaponIdle += randomIdleAnimationDelay();
+		SendWeaponAnim(iAnim);
+	}//CVar check
+	
+	
+}//SecondaryAttack
 
 
 //should only be called by the server.
@@ -820,7 +842,7 @@ void CSqueak::Throw(void) {
 		m_pPlayer->m_iWeaponVolume = QUIET_GUN_VOLUME + 200;
 
 		//MODDD - cheat check
-		if (m_pPlayer->cheat_infiniteclipMem == 0 && m_pPlayer->cheat_infiniteammoMem == 0) {
+		if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteclip) == 0 && EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteammo) == 0) {
 			ChangePlayerPrimaryAmmoCount(-1);
 		}
 
@@ -889,7 +911,6 @@ void CSqueak::ItemPostFrameThink(void) {
 	}
 
 
-
 #ifndef CLIENT_DLL
 	// Queued up a throw?  Let's go then
 	if (m_flReleaseThrow != -1 && gpGlobals->time >= m_flReleaseThrow) {
@@ -937,7 +958,16 @@ void CSqueak::WeaponIdle( void )
 	//... else  flRand <= 0.875
 
 	int iAnim;
-	float flRand = UTIL_SharedRandomFloat( m_pPlayer->random_seed, 0, 1 );
+	float flRand;
+
+	if (EASY_CVAR_GET(cl_viewmodel_fidget) == 1) {
+		flRand = UTIL_SharedRandomFloat(m_pPlayer->random_seed, 0, 1);
+	}
+	else {
+		// never play others this way.
+		flRand = 0;
+	}
+
 	if (flRand <= 0.82)
 	{
 		iAnim = SQUEAK_IDLE1;

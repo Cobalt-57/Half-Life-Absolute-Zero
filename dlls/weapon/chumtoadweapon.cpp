@@ -3,7 +3,10 @@
 #include "util_debugdraw.h"
 
 
-//EASY_CVAR_EXTERN(testVar);
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelay)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelaycustom)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteclip)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteammo)
 EASY_CVAR_EXTERN(playerChumtoadThrowDrawDebug)
 EASY_CVAR_EXTERN(chumtoadInheritsPlayerVelocity)
 
@@ -547,7 +550,7 @@ void CChumToadWeapon::ThrowChumtoad(Vector vecSpawnPoint){
 	}
 #endif
 	//MODDD - cheat check
-	if(m_pPlayer->cheat_infiniteclipMem == 0 && m_pPlayer->cheat_infiniteammoMem == 0){
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteclip) == 0 && EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteammo) == 0){
 		ChangePlayerPrimaryAmmoCount(-1);
 	}
 
@@ -588,16 +591,17 @@ void CChumToadWeapon::PrimaryAttack()
 			//sendJustThrown( ENT(m_pPlayer->pev), m_fJustThrown);
 
 			//MODDD 
-			if(m_pPlayer->cheat_minimumfiredelayMem == 0){
-				m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + CHUMTOAD_THROW_DELAY + 1.4f;
+			if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelay) == 0){
+				SetAttackDelays(UTIL_WeaponTimeBase() + CHUMTOAD_THROW_DELAY + 1.4f);
 				//chumtoadThrowReverseDelay = m_flNextPrimaryAttack - CHUMTOAD_THROW_DELAY;  //time to throw the chumtoad, counting backwards.
 				pev->fuser1 = UTIL_WeaponTimeBase() + CHUMTOAD_THROW_DELAY;
 			}else{
 				//extra delay so that the things don't just collide with each other and... start defying gravity I guess.
-				m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + m_pPlayer->cheat_minimumfiredelaycustomMem + 0.03f;
+				SetAttackDelays(UTIL_WeaponTimeBase() + EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelaycustom) + 0.03f);
 				//chumtoadThrowReverseDelay = m_flNextPrimaryAttack - 0.1f;
 				pev->fuser1 = UTIL_WeaponTimeBase() + 0.03f;
 			}
+
 			//NOTE: this ends up being the delay before doing the re-draw animation (can still fire before then, unaffected by the time of the "throw" animation that hides the hands)
 			//To be clear, the "(# / #)" part is still just animation frames divided by animation framerate.
 			m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + (16.0/ 24.0) + 0.1f;
@@ -622,7 +626,27 @@ void CChumToadWeapon::PrimaryAttack()
 
 void CChumToadWeapon::SecondaryAttack( void )
 {
-	//none.
+
+	if (EASY_CVAR_GET(cl_viewmodel_fidget) == 2) {
+		float flRand;
+		int iAnim;
+
+		flRand = UTIL_SharedRandomFloat(m_pPlayer->random_seed, 0, 1);
+		if (flRand <= 0.5)
+		{
+			iAnim = CHUMTOADWEAPON_FIDGETLICK;
+			m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 30.0 / 16.0;
+		}
+		else
+		{
+			iAnim = CHUMTOADWEAPON_FIDGETCROAK;
+			m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 50.0 / 16.0;
+		}
+		SetAttackDelays(m_flTimeWeaponIdle);
+		m_flTimeWeaponIdle += randomIdleAnimationDelay();
+		SendWeaponAnim(iAnim);
+	}//CVar check
+
 }
 
 
@@ -759,7 +783,16 @@ void CChumToadWeapon::WeaponIdle( void )
 
 	//MODDD TODO - animations here.
 	int iAnim;
-	float flRand = UTIL_SharedRandomFloat( m_pPlayer->random_seed, 0, 1 );
+	float flRand;
+	
+	if (EASY_CVAR_GET(cl_viewmodel_fidget) == 1) {
+		flRand = UTIL_SharedRandomFloat(m_pPlayer->random_seed, 0, 1);
+	}
+	else {
+		// never play others this way.
+		flRand = 0;
+	}
+	
 	if (flRand <= 0.82)
 	{
 		iAnim = CHUMTOADWEAPON_IDLE1;

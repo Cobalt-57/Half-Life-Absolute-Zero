@@ -1252,7 +1252,7 @@ void EV_FirePython(event_args_t* args)
 		gEngfuncs.pEventAPI->EV_WeaponAnimation(PYTHON_FIRE1, pythonModel);
 
 		//Nah, just disable all punches when the minimumfiredelay cheat is on (see view.cpp).
-		//if(EASY_CVAR_GET(cheat_minimumfiredelay) == 0 ){
+		//if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelay) == 0 ){
 		V_PunchAxis(0, -10.0);
 		//}else{
 		//	V_PunchAxis( 0, 0 );
@@ -1760,6 +1760,7 @@ void EV_FireGauss(event_args_t* args)
 //======================
 
 //int g_iSwing = 0;
+//#include "GameStudioModelRenderer.h"
 
 //Only predict the miss sounds, hit sounds are still played 
 //server side, so players don't get the wrong idea.
@@ -1791,15 +1792,53 @@ void EV_Crowbar(event_args_t* args)
 		
 		//MODDD - handle by parameter now.
 		//switch( (g_iSwing++) % 3 )
-		switch (swingMissChoice)
+		
+
+
+		//NOTE - this didn't turn out so well.  Would involving sequence info in any other ev_hldm method be helpful?
+		////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		/*
+		int theAnim = HUD_GetWeaponAnim();
+		cl_entity_t* ent = GetViewEntity();
+		extern engine_studio_api_t IEngineStudio;
+		extern CGameStudioModelRenderer g_StudioRenderer;
+		mstudioseqdesc_t* pseqdesc;
+		pseqdesc = (mstudioseqdesc_t*)((byte*)g_StudioRenderer.m_pStudioHeader + g_StudioRenderer.m_pStudioHeader->seqindex) + ent->curstate.sequence;
+		*/
+		
+		/*
+		float fEstimate = ent->latched.prevframe * ent->curstate.framerate * pseqdesc->fps;
+		if (fEstimate >= pseqdesc->numframes - 1.001)
 		{
-		case 0:
-			gEngfuncs.pEventAPI->EV_WeaponAnimation(CROWBAR_ATTACK1MISS, 1); break;
-		case 1:
-			gEngfuncs.pEventAPI->EV_WeaponAnimation(CROWBAR_ATTACK2MISS, 1); break;
-		case 2:
-			gEngfuncs.pEventAPI->EV_WeaponAnimation(CROWBAR_ATTACK3MISS, 1); break;
+			fEstimate = pseqdesc->numframes - 1.001;
 		}
+		if (fEstimate < 0.0)
+		{
+			fEstimate = 0.0;
+		}
+		*/
+
+		//float portionDone = ent->latched.prevframe / ((float)(pseqdesc->numframes - 1));
+		//easyForcePrintLine("SWING please %.2f", portionDone);
+
+		// .frame > 200? no.  Viewmodels don't count curstate.frame at all.
+		//
+
+		//if ( (gpGlobals->time - ent->curstate.animtime > 0.25) || !(theAnim == CROWBAR_ATTACK1HIT || theAnim == CROWBAR_ATTACK2HIT || theAnim == CROWBAR_ATTACK3HIT)  ) {
+		//if ((portionDone > 0.2) || !(theAnim == CROWBAR_ATTACK1HIT || theAnim == CROWBAR_ATTACK2HIT || theAnim == CROWBAR_ATTACK3HIT)) {
+		////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+			switch (swingMissChoice)
+			{
+			case 0:
+				gEngfuncs.pEventAPI->EV_WeaponAnimation(CROWBAR_ATTACK1MISS, 1); break;
+			case 1:
+				gEngfuncs.pEventAPI->EV_WeaponAnimation(CROWBAR_ATTACK2MISS, 1); break;
+			case 2:
+				gEngfuncs.pEventAPI->EV_WeaponAnimation(CROWBAR_ATTACK3MISS, 1); break;
+			}
+		//}
+		
 
 	}
 
@@ -1825,7 +1864,7 @@ void EV_BoltCallback(struct tempent_s* ent, float frametime, float currenttime)
 	ent->entity.angles = ent->entity.baseline.vuser2;
 }
 
-
+// Firing sniper bolts only
 void EV_FireCrossbow2(event_args_t* args)
 {
 	vec3_t vecSrc, vecEnd;
@@ -1993,6 +2032,7 @@ void EV_FireCrossbow2(event_args_t* args)
 }
 
 //TODO: Fully predict the fliying bolt.
+// Firing non-sniper bolts only
 void EV_FireCrossbow(event_args_t* args)
 {
 	int idx;
@@ -2378,7 +2418,7 @@ void EV_SnarkFire(event_args_t* args)
 	gEngfuncs.pEventAPI->EV_SetTraceHull(FILLIN_TRACE_HULL);
 	gEngfuncs.pEventAPI->EV_PlayerTrace(vecSrc + forward * 20, vecSrc + forward * 64, FILLIN_TRACEFLAGS_NORMAL, -1, &tr);
 
-	//Find space to drop the thing.
+	// Find space to drop the thing.
 	if (tr.allsolid == 0 && tr.startsolid == 0 && tr.fraction > 0.25)
 		gEngfuncs.pEventAPI->EV_WeaponAnimation(SQUEAK_THROW, 0);
 

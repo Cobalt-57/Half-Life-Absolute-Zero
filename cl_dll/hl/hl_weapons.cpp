@@ -53,14 +53,16 @@
 #include "../demo.h"
 
 
-EASY_CVAR_EXTERN(firstPersonIdleDelayMin)
-EASY_CVAR_EXTERN(firstPersonIdleDelayMax)
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(viewModelPrintouts)
-EASY_CVAR_EXTERN(viewModelSyncFixPrintouts)
-EASY_CVAR_EXTERN(cl_holster)
-EASY_CVAR_EXTERN(wpn_glocksilencer)
+//EASY_CVAR_EXTERN(viewModelSyncFixPrintouts)
+//EASY_CVAR_EXTERN(cl_holster)
+//EASY_CVAR_EXTERN(wpn_glocksilencer)
 EASY_CVAR_EXTERN(pausecorrection1)
 
+
+BOOL g_cl_HUD_Frame_ran = FALSE;
+BOOL g_cl_HUD_UpdateClientData_ran = FALSE;
+BOOL g_HUD_Redraw_ran = FALSE;
 
 
 // Implementations for methods usually found in dlls/weapons.cpp and dlls/player.cpp moved to their own files clientside:
@@ -88,8 +90,7 @@ extern float stored_m_flTimeWeaponIdle;
 extern int flag_apply_m_fJustThrown;
 extern int stored_m_fJustThrown;
 
-// Same.  In fact already out.
-//BOOL recentDuckVal = FALSE;
+//BOOL g_recentDuckVal = FALSE;
 //int recentDuckTime = 0;
 
 
@@ -151,7 +152,7 @@ BOOL blockUntilModelChange = FALSE;
 int oldModel = -1;
 int queuedBlockedModelAnim = -1;
 
-float forgetBlockUntilModelChangeTime = 0;
+float forgetBlockUntilModelChangeTime = -1;
 float resistTime = -1;
 
 float seqPlayDelay = -1;
@@ -162,6 +163,8 @@ int g_currentanim = -1;
 
 
 float sp_ClientPreviousTime = -1;
+int g_cl_frameCount = 0;
+
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -622,19 +625,19 @@ Run Weapon firing code on client
 =====================
 */
 
-void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cmd, double time, unsigned int random_seed )
+void HUD_WeaponsPostThink(local_state_s* from, local_state_s* to, usercmd_t* cmd, double time, unsigned int random_seed)
 {
 
 	int i;
 	int buttonsChanged;
-	CBasePlayerWeapon *pWeapon = NULL;
-	CBasePlayerWeapon *pCurrent;
-	weapon_data_t nulldata, *pfrom, *pto;
+	CBasePlayerWeapon* pWeapon = NULL;
+	CBasePlayerWeapon* pCurrent;
+	weapon_data_t nulldata, * pfrom, * pto;
 	static int lasthealth;
 	// MODDD - new.
 	static float nextBlinkLogicFrame = -1;
 
-	memset( &nulldata, 0, sizeof( nulldata ) );
+	memset(&nulldata, 0, sizeof(nulldata));
 
 	//MODDD - why can't this be done at the start of HUD_PostRunCMD, which calls this HUD_WeaponsPostThink method anyways?
 	//HUD_InitClientWeapons();
@@ -645,7 +648,7 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
 
 	// Fill in data based on selected weapon
 	// FIXME, make this a method in each weapon?  where you pass in an entity_state_t *?
-	
+
 
 	//MODDD - number of frames (skin values) for different stages of eye blinking. Just hardcoding since everything else player-model related is.
 	//Default of 0, weapons with blinkable eyes should specify this.
@@ -653,72 +656,72 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
 	//And in a 1 out of X chance every 0.1 seconds (one frame for NPC think logic), the blink will occur.
 	int blinkChancePerFrame = 127;
 
-	switch ( from->client.m_iId )
+	switch (from->client.m_iId)
 	{
-		case WEAPON_CROWBAR:
-			pWeapon = &g_Crowbar;
-			break;
-		
-		case WEAPON_GLOCK:
-			pWeapon = &g_Glock;
-			break;
-		
-		case WEAPON_PYTHON:
-			pWeapon = &g_Python;
-			break;
-			
-		case WEAPON_MP5:
-			pWeapon = &g_Mp5;
-			break;
+	case WEAPON_CROWBAR:
+		pWeapon = &g_Crowbar;
+		break;
 
-		case WEAPON_CROSSBOW:
-			pWeapon = &g_Crossbow;
-			break;
+	case WEAPON_GLOCK:
+		pWeapon = &g_Glock;
+		break;
 
-		case WEAPON_SHOTGUN:
-			pWeapon = &g_Shotgun;
-			break;
+	case WEAPON_PYTHON:
+		pWeapon = &g_Python;
+		break;
 
-		case WEAPON_RPG:
-			pWeapon = &g_Rpg;
-			break;
+	case WEAPON_MP5:
+		pWeapon = &g_Mp5;
+		break;
 
-		case WEAPON_GAUSS:
-			pWeapon = &g_Gauss;
-			break;
+	case WEAPON_CROSSBOW:
+		pWeapon = &g_Crossbow;
+		break;
 
-		case WEAPON_EGON:
-			pWeapon = &g_Egon;
-			break;
+	case WEAPON_SHOTGUN:
+		pWeapon = &g_Shotgun;
+		break;
 
-		case WEAPON_HORNETGUN:
-			pWeapon = &g_HGun;
-			break;
+	case WEAPON_RPG:
+		pWeapon = &g_Rpg;
+		break;
 
-		case WEAPON_HANDGRENADE:
-			pWeapon = &g_HandGren;
-			break;
+	case WEAPON_GAUSS:
+		pWeapon = &g_Gauss;
+		break;
 
-		case WEAPON_SATCHEL:
-			pWeapon = &g_Satchel;
-			break;
+	case WEAPON_EGON:
+		pWeapon = &g_Egon;
+		break;
 
-		case WEAPON_TRIPMINE:
-			pWeapon = &g_Tripmine;
-			break;
+	case WEAPON_HORNETGUN:
+		pWeapon = &g_HGun;
+		break;
 
-		case WEAPON_SNARK:
-			numberOfEyeSkins = 3;
-			blinkChancePerFrame = 33;
-			pWeapon = &g_Snark;
-			break;
+	case WEAPON_HANDGRENADE:
+		pWeapon = &g_HandGren;
+		break;
+
+	case WEAPON_SATCHEL:
+		pWeapon = &g_Satchel;
+		break;
+
+	case WEAPON_TRIPMINE:
+		pWeapon = &g_Tripmine;
+		break;
+
+	case WEAPON_SNARK:
+		numberOfEyeSkins = 3;
+		blinkChancePerFrame = 33;
+		pWeapon = &g_Snark;
+		break;
 		//MODDD - new
-		case WEAPON_CHUMTOAD:
-			numberOfEyeSkins = 3;
-			blinkChancePerFrame = 50;
-			pWeapon = &g_ChumToadWeapon;
-			break;
-			
+	case WEAPON_CHUMTOAD:
+		numberOfEyeSkins = 3;
+		blinkChancePerFrame = 50;
+		pWeapon = &g_ChumToadWeapon;
+		break;
+
 	}//END OF weapon ID link
 
 	// Store pointer to our destination entity_state_t so we can get our origin, etc. from it
@@ -728,14 +731,14 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
 	// If we are running events/etc. go ahead and see if we
 	//  managed to die between last frame and this one
 	// If so, run the appropriate player killed or spawn function
-	if ( g_runfuncs )
+	if (g_runfuncs)
 	{
-		if ( to->client.health <= 0 && lasthealth > 0 )
+		if (to->client.health <= 0 && lasthealth > 0)
 		{
-			localPlayer.Killed( NULL, 0 );
-			
+			localPlayer.Killed(NULL, 0);
+
 		}
-		else if ( to->client.health > 0 && lasthealth <= 0 )
+		else if (to->client.health > 0 && lasthealth <= 0)
 		{
 			localPlayer.Spawn();
 		}
@@ -744,18 +747,18 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
 	}
 
 	// We are not predicting the current weapon, just bow out here.
-	if ( !pWeapon )
+	if (!pWeapon)
 		return;
 
 
-	
+
 	// Nope, no need.  The viewmodel can be accessed this same way in studiomodelrenderer.cpp so there is no point in this
 	// renderflag telling what it is.
 	//gEngfuncs.GetViewModel()->curstate.renderfx |= ISVIEWMODEL;
 
 	//gEngfuncs.GetViewModel()->curstate.renderfx &= ~ANIMATEBACKWARDS;
 
-	
+
 	/*
 	if(localPlayer.forceNoWeaponLoop == TRUE){
 		gEngfuncs.GetViewModel()->curstate.renderfx |= FORCE_NOLOOP;
@@ -770,17 +773,18 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
 
 	//MODDD
 	//"pWeapon" is the currently equipped weapon here... I think.
-	if(pWeapon->m_chargeReady & 64){
+	if (pWeapon->m_chargeReady & 64) {
 		pWeapon->m_chargeReady &= ~64;
-		
+
 		gEngfuncs.GetViewModel()->curstate.renderfx |= FORCE_NOLOOP;
-	}else{
+	}
+	else {
 		//pWeapon->m_chargeReady &= ~64;  //unnecessary?
 		gEngfuncs.GetViewModel()->curstate.renderfx &= ~FORCE_NOLOOP;
 	}
-	
+
 	//easyPrintLine("LOOOOOOP %d", localPlayer.forceNoWeaponLoop);
-	
+
 
 
 	//MODDD - moved from below, see the old ItmePostFrame call location there.
@@ -791,51 +795,52 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
 
 	BOOL letsNotNameThingsLikeThat = FALSE;
 
-	for ( i = 0; i < 32; i++ )
+	for (i = 0; i < 32; i++)
 	{
-		pCurrent = g_pWpns[ i ];
+		pCurrent = g_pWpns[i];
 
-		if ( !pCurrent )
+		if (!pCurrent)
 		{
 			continue;
 		}
 
-		pfrom = &from->weapondata[ i ];
+		pfrom = &from->weapondata[i];
 
 
-		pCurrent->m_fInReload			= pfrom->m_fInReload;
-		pCurrent->m_fInSpecialReload	= pfrom->m_fInSpecialReload;
-//		pCurrent->m_flPumpTime			= pfrom->m_flPumpTime;
-		pCurrent->m_iClip				= pfrom->m_iClip;
+		pCurrent->m_fInReload = pfrom->m_fInReload;
+		pCurrent->m_fInSpecialReload = pfrom->m_fInSpecialReload;
+		//		pCurrent->m_flPumpTime			= pfrom->m_flPumpTime;
+		pCurrent->m_iClip = pfrom->m_iClip;
 
-		if(pCurrent->m_iId == WEAPON_SHOTGUN){
+		if (pCurrent->m_iId == WEAPON_SHOTGUN) {
 			//easyForcePrintLine("UPDATE A: %.2f -> %.2f", pCurrent->m_flNextPrimaryAttack, pfrom->m_flNextPrimaryAttack);
 		}
 
 		//If the new value would be less than 0 but our next primary attack is noticably above 0, this is too much chance in one frame. Deny the transfer this time.
-		// CHANGE!!!    Nevermind this.
 		// Anything relying on this needs to be checked.  denying significant differences causes 
 		// retail snark throws to fail, even though it's perfectly sound.
 		// Although...  they shouldn't have set m_flNextPrimaryAttack as though a snark was thrown just because the serverside
 		// traces are dummied (called in PrimaryAttack in snark.cpp;  the ev_hldm ones worked fine).
 		// So.   eh.  whichever makes the most sense.
-		// Getting a signal from the server is still best.  Keep values accurate.
-		//if( !(pfrom->m_flNextPrimaryAttack <= 0 && pCurrent->m_flNextPrimaryAttack >= 0.1) ){
-			pCurrent->m_flNextPrimaryAttack	= pfrom->m_flNextPrimaryAttack;
-		//}
-		//if( !(pfrom->m_flNextSecondaryAttack <= 0 && pCurrent->m_flNextSecondaryAttack >= 0.1) ){
-			pCurrent->m_flNextSecondaryAttack = pfrom->m_flNextSecondaryAttack;
-		//}
-		//if( !(pfrom->m_flTimeWeaponIdle <= 0 && pCurrent->m_flTimeWeaponIdle >= 0.1) ){
-			pCurrent->m_flTimeWeaponIdle = pfrom->m_flTimeWeaponIdle;
-		//}else{
+		// YES KEEP THIS.  I stared at this for 5+ hours to say... yes.  This gives better than retail behavior.
+		// Without this check, some clientside weapon-fires happen twice, especially with nextAttack's that are uneven
+		// (like + 0.82 instead of 0.75 on the singlefire shotgun).  Why?   BECAUSE THE GODS WERE NOT PLEASED WITH 0.82.
+		if( !(pfrom->m_flNextPrimaryAttack <= 0 && pCurrent->m_flNextPrimaryAttack >= 0.1) ){
+		pCurrent->m_flNextPrimaryAttack = pfrom->m_flNextPrimaryAttack;
+		}
+		if( !(pfrom->m_flNextSecondaryAttack <= 0 && pCurrent->m_flNextSecondaryAttack >= 0.1) ){
+		pCurrent->m_flNextSecondaryAttack = pfrom->m_flNextSecondaryAttack;
+		}
+		if( !(pfrom->m_flTimeWeaponIdle <= 0 && pCurrent->m_flTimeWeaponIdle >= 0.1) ){
+		pCurrent->m_flTimeWeaponIdle = pfrom->m_flTimeWeaponIdle;
+		}else{
 		//	if(EASY_CVAR_GET(viewModelSyncFixPrintouts)==1) easyForcePrintLine("*****VIEWMODEL SYNCH FIX APPLIED.");
-		//}
+		}
 
 
-		pCurrent->pev->fuser1			= pfrom->fuser1;
-		pCurrent->m_flStartThrow		= pfrom->fuser2;
-		pCurrent->m_flReleaseThrow		= pfrom->fuser3;
+		pCurrent->pev->fuser1 = pfrom->fuser1;
+		pCurrent->m_flStartThrow = pfrom->fuser2;
+		pCurrent->m_flReleaseThrow = pfrom->fuser3;
 
 
 
@@ -848,9 +853,9 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
 		pCurrent->fuser8				= pfrom->fuser8;
 		*/
 
-		pCurrent->m_chargeReady			= pfrom->iuser1;
-		pCurrent->m_fInAttack			= pfrom->iuser2;
-		pCurrent->m_fireState			= pfrom->iuser3;
+		pCurrent->m_chargeReady = pfrom->iuser1;
+		pCurrent->m_fInAttack = pfrom->iuser2;
+		pCurrent->m_fireState = pfrom->iuser3;
 
 
 		if (pfrom->iuser1 & 128) {
@@ -874,31 +879,37 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
 		//   CURSE YOU C/C++ AND YOUR LACK OF BOUNDARY CHECKING!
 		//   ...yes I know, It's c++, but it's <definitely> called    \..~$----->>>>debug<<<<-----$~../   mode for a <heckin>' reason
 
-		if (IS_AMMOTYPE_VALID(myPrimaryAmmoType)) {
-			localPlayer.m_rgAmmo[myPrimaryAmmoType] = (int)from->client.vuser4[1];
-		}
-		if (IS_AMMOTYPE_VALID(mySecondaryAmmoType)) {
-			localPlayer.m_rgAmmo[mySecondaryAmmoType] = (int)from->client.vuser4[2];
+
+		//MODDD - wait.  We only get ammo for the equippe weapon this way.
+		// This is just pasting the ammo value of the currently equiped weapon to all ammo types.
+		// Ehhhhhh..?   Adding this if-then.
+		if (pCurrent == pWeapon) {
+			if (IS_AMMOTYPE_VALID(myPrimaryAmmoType)) {
+				localPlayer.m_rgAmmo[myPrimaryAmmoType] = (int)from->client.vuser4[1];
+			}
+			if (IS_AMMOTYPE_VALID(mySecondaryAmmoType)) {
+				localPlayer.m_rgAmmo[mySecondaryAmmoType] = (int)from->client.vuser4[2];
+			}
 		}
 
 
 		//This stuff used to be above. Isn't this area better?
 
-		if(pWeapon->m_iId == pCurrent->m_iId){
-		
-			if(pWeapon->m_iId == WEAPON_EGON && pfrom->m_iId == WEAPON_EGON && pCurrent->m_iId == WEAPON_EGON){
+		if (pWeapon->m_iId == pCurrent->m_iId) {
+
+			if (pWeapon->m_iId == WEAPON_EGON && pfrom->m_iId == WEAPON_EGON && pCurrent->m_iId == WEAPON_EGON) {
 				//easyPrintLine("SYNC TEST EGON: %.8f, %.8f, %0.2f", pCurrent->m_flStartThrow, pfrom->fuser2, gpGlobals->time);
 				//easyPrintLine("SYNC TEST EGON 2: %df, %d, %0.2f", pCurrent->m_fInAttack, pfrom->iuser2, gpGlobals->time);
 			}
-			if( (pWeapon->m_iId == WEAPON_GLOCK && pfrom->m_iId == WEAPON_GLOCK || pCurrent->m_iId == WEAPON_GLOCK) ||
+			if ((pWeapon->m_iId == WEAPON_GLOCK && pfrom->m_iId == WEAPON_GLOCK || pCurrent->m_iId == WEAPON_GLOCK) ||
 				(pWeapon->m_iId == WEAPON_SHOTGUN && pfrom->m_iId == WEAPON_SHOTGUN || pCurrent->m_iId == WEAPON_SHOTGUN)
-				){
+				) {
 				//easyPrintLine("SYNC TEST GLOCK: %d, %d, %.2f", pCurrent->m_fireState, pfrom->iuser3, gpGlobals->time);
 
 				//pWeapon == &g_Glock
 
 				//m_fireState
-				
+
 
 				/*
 				if(pfrom->iuser3 & 128){
@@ -911,7 +922,7 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
 		}
 	}//END OF yet another weapons loop.
 
-	
+
 
 	// For random weapon events, use this seed to seed random # generator
 	localPlayer.random_seed = random_seed;
@@ -921,10 +932,10 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
 
 	// Which buttsons chave changed
 	buttonsChanged = (localPlayer.m_afButtonLast ^ cmd->buttons);	// These buttons have changed this frame
-	
+
 	// Debounced button codes for pressed/released
 	// The changed ones still down are "pressed"
-	localPlayer.m_afButtonPressed =  buttonsChanged & cmd->buttons;	
+	localPlayer.m_afButtonPressed = buttonsChanged & cmd->buttons;
 	// The ones not down are "released"
 	localPlayer.m_afButtonReleased = buttonsChanged & (~cmd->buttons);
 
@@ -940,7 +951,7 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
 
 	localPlayer.pev->deadflag = from->client.deadflag;
 	localPlayer.pev->waterlevel = from->client.waterlevel;
-	localPlayer.pev->maxspeed    = from->client.maxspeed;
+	localPlayer.pev->maxspeed = from->client.maxspeed;
 	localPlayer.pev->fov = from->client.fov;
 
 	//IS THAT OKAY???
@@ -954,7 +965,7 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
 	//localPlayer.pev->weaponanim
 
 
-	
+
 	/*
 	gEngfuncs.GetViewModel()->curstate.renderfx |= ISVIEWMODEL;
 
@@ -975,7 +986,7 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
 	}
 	*/
 
-	if(pWeapon == &g_Glock){
+	if (pWeapon == &g_Glock) {
 		//DIE.  DIE HARD.
 
 	}
@@ -991,7 +1002,7 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
 	// of this method.  That is to be used in cl_weapons.cpp instead.   (and cl_player.cpp if it showed up there)
 	// Might not need anything like this regardless but it doesn't appear to hurt.
 	//if (localPlayer.m_flNextAttack == flNextAttackChangeMem) {
-		localPlayer.m_flNextAttack = from->client.m_flNextAttack;
+	localPlayer.m_flNextAttack = from->client.m_flNextAttack;
 	//}
 	//flNextAttackChangeMem = localPlayer.m_flNextAttack;
 
@@ -1000,34 +1011,34 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
 	localPlayer.m_flAmmoStartCharge = from->client.fuser3;
 
 	//Stores all our ammo info, so the client side weapons can use them.
-	localPlayer.ammo_9mm			= (int)from->client.vuser1[0];
-	localPlayer.ammo_357			= (int)from->client.vuser1[1];
-	localPlayer.ammo_argrens		= (int)from->client.vuser1[2];
-	localPlayer.ammo_bolts		= (int)from->client.ammo_nails; //is an int anyways...
-	localPlayer.ammo_buckshot	= (int)from->client.ammo_shells; 
-	localPlayer.ammo_uranium		= (int)from->client.ammo_cells;
-	localPlayer.ammo_hornets		= (int)from->client.vuser2[0];
-	localPlayer.ammo_rockets		= (int)from->client.ammo_rockets;
+	localPlayer.ammo_9mm = (int)from->client.vuser1[0];
+	localPlayer.ammo_357 = (int)from->client.vuser1[1];
+	localPlayer.ammo_argrens = (int)from->client.vuser1[2];
+	localPlayer.ammo_bolts = (int)from->client.ammo_nails; //is an int anyways...
+	localPlayer.ammo_buckshot = (int)from->client.ammo_shells;
+	localPlayer.ammo_uranium = (int)from->client.ammo_cells;
+	localPlayer.ammo_hornets = (int)from->client.vuser2[0];
+	localPlayer.ammo_rockets = (int)from->client.ammo_rockets;
 
-	
+
 	// Point to current weapon object
-	if ( from->client.m_iId )
+	if (from->client.m_iId)
 	{
 		// OOoooooooo you motherfucker you
-		localPlayer.m_pActiveItem = g_pWpns[ from->client.m_iId ];
+		localPlayer.m_pActiveItem = g_pWpns[from->client.m_iId];
 	}
 
 	//easyForcePrintLine("AW snao D %.2f", localPlayer.m_flNextAttack);
 
 
-	if ( localPlayer.m_pActiveItem->m_iId == WEAPON_RPG )
+	if (localPlayer.m_pActiveItem->m_iId == WEAPON_RPG)
 	{
-		 ( ( CRpg * )localPlayer.m_pActiveItem)->m_fSpotActive = (int)from->client.vuser2[ 1 ];
-		 ( ( CRpg * )localPlayer.m_pActiveItem)->m_cActiveRockets = (int)from->client.vuser2[ 2 ];
+		((CRpg*)localPlayer.m_pActiveItem)->m_fSpotActive = (int)from->client.vuser2[1];
+		((CRpg*)localPlayer.m_pActiveItem)->m_cActiveRockets = (int)from->client.vuser2[2];
 	}
 	//MODDD - added.
-	else if(localPlayer.m_pActiveItem->m_iId == WEAPON_PYTHON){
-		( ( CPython * )localPlayer.m_pActiveItem)->m_fSpotActive = (int)from->client.vuser2[ 1 ];
+	else if (localPlayer.m_pActiveItem->m_iId == WEAPON_PYTHON) {
+		((CPython*)localPlayer.m_pActiveItem)->m_fSpotActive = (int)from->client.vuser2[1];
 	}
 
 	//MODDD
@@ -1036,12 +1047,12 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
 	/*
 	//it's all in interpretation...  (only things trying to use this will ever get this right)
 	if( !(pWeapon->m_fireState & 128)){
-		
+
 		gEngfuncs.GetViewModel()->curstate.renderfx |= ISVIEWMODEL;
 		gEngfuncs.GetViewModel()->curstate.renderfx &= ~ANIMATEBACKWARDS;
 
 	}else{
-		
+
 		gEngfuncs.GetViewModel()->curstate.renderfx |= ISVIEWMODEL;
 		gEngfuncs.GetViewModel()->curstate.renderfx |= ANIMATEBACKWARDS;
 	}
@@ -1049,7 +1060,7 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
 
 
 	//easyPrintLine("WHAT??? %d %d %d", gEngfuncs.GetViewModel()->curstate.renderfx,  (DONOTDRAWSHADOW | ISPLAYER), ISVIEWMODEL);
-	
+
 
 
 	/*
@@ -1078,32 +1089,32 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
 
 
 	//MODDD - OLD LOCATION OF ItemPostFrame() CALLS.  Moved to back here, some issues with the new location.
-	if ( ( localPlayer.pev->deadflag != ( DEAD_DISCARDBODY + 1 ) ) && 
-		 !CL_IsDead() && localPlayer.pev->viewmodel && !g_iUser1 )
+	if ((localPlayer.pev->deadflag != (DEAD_DISCARDBODY + 1)) &&
+		!CL_IsDead() && localPlayer.pev->viewmodel && !g_iUser1)
 	{
 		//MODDD - just like the player does, call this too.		
-		pWeapon->ItemPostFrameThink( );
-			
+		pWeapon->ItemPostFrameThink();
 
 
-		if ( localPlayer.m_flNextAttack <= 0 )
+
+		if (localPlayer.m_flNextAttack <= 0)
 		{
 			pWeapon->ItemPostFrame();
 		}
 	}
-	
+
 	// Assume that we are not going to switch weapons
-	to->client.m_iId					= from->client.m_iId;
+	to->client.m_iId = from->client.m_iId;
 
 	// Now see if we issued a changeweapon command ( and we're not dead )
-	if ( cmd->weaponselect && ( localPlayer.pev->deadflag != ( DEAD_DISCARDBODY + 1 ) ) )
+	if (cmd->weaponselect && (localPlayer.pev->deadflag != (DEAD_DISCARDBODY + 1)))
 	{
 		// Switched to a different weapon?
-		if ( from->weapondata[ cmd->weaponselect ].m_iId == cmd->weaponselect )
+		if (from->weapondata[cmd->weaponselect].m_iId == cmd->weaponselect)
 		{
 
-			
-			CBasePlayerWeapon *pNew = g_pWpns[ cmd->weaponselect ];
+
+			CBasePlayerWeapon* pNew = g_pWpns[cmd->weaponselect];
 
 			//MODDD NOTICE - unlike the player's (player.cpp) own script that works similary to this in the SelectItem method, serverside only there,
 			//               this does nothing at all if pNew turns out to be NULL. SelectItem will still set the current item to NULL at least,
@@ -1111,8 +1122,8 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
 			//               Is it okay this way? TODO - test this sometime.
 			//               NEVERMIND - my understanding is a little off. The player's currently equipped weapon to holster there, is m_pActiveItem (and here)
 			//               so it will be ok to change weaps even if it is null.  pNew is what to change to, which must not be null. this is ok, I think.
-			
-			if ( pNew && ( pNew != pWeapon )
+
+			if (pNew && (pNew != pWeapon)
 				//MODDD - new condition to mirror the player's change. If queueing up a weapon during the holster anim,
 				//        it can be the same as you started with.
 				|| (localPlayer.m_pQueuedActiveItem != NULL && pNew != localPlayer.m_pQueuedActiveItem)
@@ -1124,7 +1135,7 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
 				// Put away old weapon
 				if (localPlayer.m_pActiveItem)
 					localPlayer.m_pActiveItem->Holster( );
-				
+
 				localPlayer.m_pLastItem = localPlayer.m_pActiveItem;
 				localPlayer.m_pActiveItem = pNew;
 
@@ -1142,7 +1153,7 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
 				//MODDD - NEW.
 				localPlayer.setActiveItem_HolsterCheck(pNew);
 
-				
+
 				//MODDD - See if the requested weapon (pnew) become the one equipped (active).
 				// That happens when not using holster (instantly applied instead of unholstering the current and queueing the one wanted)
 				if (localPlayer.m_pActiveItemCLIENTHISTORY == pNew) {
@@ -1156,33 +1167,33 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
 	}
 
 	// Copy in results of prediction code
-	to->client.viewmodel				= localPlayer.pev->viewmodel;
-	to->client.fov						= localPlayer.pev->fov;
-	to->client.weaponanim				= localPlayer.pev->weaponanim;
-	to->client.m_flNextAttack			= localPlayer.m_flNextAttack;
-	to->client.fuser2					= localPlayer.m_flNextAmmoBurn;
-	to->client.fuser3					= localPlayer.m_flAmmoStartCharge;
-	to->client.maxspeed					= localPlayer.pev->maxspeed;
+	to->client.viewmodel = localPlayer.pev->viewmodel;
+	to->client.fov = localPlayer.pev->fov;
+	to->client.weaponanim = localPlayer.pev->weaponanim;
+	to->client.m_flNextAttack = localPlayer.m_flNextAttack;
+	to->client.fuser2 = localPlayer.m_flNextAmmoBurn;
+	to->client.fuser3 = localPlayer.m_flAmmoStartCharge;
+	to->client.maxspeed = localPlayer.pev->maxspeed;
 
 	//HL Weapons
-	to->client.vuser1[0]				= localPlayer.ammo_9mm;
-	to->client.vuser1[1]				= localPlayer.ammo_357;
-	to->client.vuser1[2]				= localPlayer.ammo_argrens;
+	to->client.vuser1[0] = localPlayer.ammo_9mm;
+	to->client.vuser1[1] = localPlayer.ammo_357;
+	to->client.vuser1[2] = localPlayer.ammo_argrens;
 
-	to->client.ammo_nails				= localPlayer.ammo_bolts;
-	to->client.ammo_shells				= localPlayer.ammo_buckshot;
-	to->client.ammo_cells				= localPlayer.ammo_uranium;
-	to->client.vuser2[0]				= localPlayer.ammo_hornets;
-	to->client.ammo_rockets				= localPlayer.ammo_rockets;
+	to->client.ammo_nails = localPlayer.ammo_bolts;
+	to->client.ammo_shells = localPlayer.ammo_buckshot;
+	to->client.ammo_cells = localPlayer.ammo_uranium;
+	to->client.vuser2[0] = localPlayer.ammo_hornets;
+	to->client.ammo_rockets = localPlayer.ammo_rockets;
 
-	if ( localPlayer.m_pActiveItem->m_iId == WEAPON_RPG )
+	if (localPlayer.m_pActiveItem->m_iId == WEAPON_RPG)
 	{
-		 from->client.vuser2[ 1 ] = ( ( CRpg * )localPlayer.m_pActiveItem)->m_fSpotActive;
-		 from->client.vuser2[ 2 ] = ( ( CRpg * )localPlayer.m_pActiveItem)->m_cActiveRockets;
+		from->client.vuser2[1] = ((CRpg*)localPlayer.m_pActiveItem)->m_fSpotActive;
+		from->client.vuser2[2] = ((CRpg*)localPlayer.m_pActiveItem)->m_cActiveRockets;
 	}
 	//MODDD - addition
-	else if(localPlayer.m_pActiveItem->m_iId == WEAPON_PYTHON){
-		from->client.vuser2[ 1 ] = ( ( CPython * )localPlayer.m_pActiveItem)->m_fSpotActive;
+	else if (localPlayer.m_pActiveItem->m_iId == WEAPON_PYTHON) {
+		from->client.vuser2[1] = ((CPython*)localPlayer.m_pActiveItem)->m_fSpotActive;
 		//??
 	}
 
@@ -1195,10 +1206,10 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
 
 
 	//easyForcePrintLine("WHAT THE FUCK c:%d f:%d t:%d pw:%d pr:%d", HUD_GetWeaponAnim(), from->client.weaponanim, to->client.weaponanim, pWeapon->m_pPlayer->pev->weaponanim, pWeapon->pev->sequence);
-	
+
 
 	int tempthingy = to->client.weaponanim;
-	if (to->client.weaponanim == ANIM_NO_UPDATE){
+	if (to->client.weaponanim == ANIM_NO_UPDATE) {
 		int xxx = 4;
 	}
 	if (to->client.weaponanim == 9) {
@@ -1208,7 +1219,7 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
 
 
 
-	
+
 	// OOOOOOOOOooooooooooooooooooooooookay.  So maybe don't do this, random crash ahoy.
 	// Just check m_chargeReady straightaway.    Sheesh.
 	/*
@@ -1219,7 +1230,7 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
 		localPlayer.m_bHolstering = FALSE;
 	}
 	*/
-	
+
 
 
 	int themodeltemp = gEngfuncs.GetViewModel()->curstate.modelindex;
@@ -1274,9 +1285,41 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
 	//MODDD - MAJOR MAJOR MAJOR.
 	// is that a good idea?
 	// Removing the ability of g_currentanim being set differently to cause changes in animations.
-	g_currentanim = to->client.weaponanim;
+
+
+	int debugger = HUD_GetWeaponAnim();
+
+
+	//BOOL tempo1 = g_cl_HUD_Frame_ran;
+	//BOOL tempo2 = g_cl_HUD_UpdateClientData_ran;
+	//BOOL tempo3 = g_HUD_Redraw_ran;
+
+
+	if (g_cl_frameCount > 4) {
+		if (pWeapon == &g_Crowbar) {
+			if (to->client.weaponanim == CROWBAR_ATTACK1HIT || to->client.weaponanim == CROWBAR_ATTACK2HIT || to->client.weaponanim == CROWBAR_ATTACK3HIT) {
+				// go ahead and allow below.
+				int x = 45;
+			}
+			else {
+				// oh.
+				g_currentanim = to->client.weaponanim;
+			}
+		}
+		else {
+			g_currentanim = to->client.weaponanim;
+		}
+	}
+
+	// The game is really running when HUD_Redraw has been called since joining a game / starting one / etc.
+	// Yes, really.  That kind of check.     Anyway, this starts bumping frames up.
+	if (g_HUD_Redraw_ran) {
+		g_cl_frameCount++;
+	}
+
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 
 	//MODDD - added check for "254".  That's a special code for, "the serverside anim request got cleared".
 	// This probably happened from becoming irrelevant and we don't want to make the client play an
@@ -1405,6 +1448,7 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
 		if(pCurrent->m_iId == WEAPON_SHOTGUN){
 			//easyForcePrintLine("UPDATE B: %.2f -> %.2f", pto->m_flNextPrimaryAttack, pCurrent->m_flNextPrimaryAttack);
 		}
+
 
 		pto->m_flNextPrimaryAttack		= pCurrent->m_flNextPrimaryAttack;
 		pto->m_flNextSecondaryAttack	= pCurrent->m_flNextSecondaryAttack;
@@ -1646,6 +1690,13 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
 	// And keep this in synch in case of changes the client didn't replicate.
 	localPlayer.m_pActiveItemCLIENTHISTORY = localPlayer.m_pActiveItem;
 	localPlayer.m_flNextAttackCLIENTHISTORY = localPlayer.m_flNextAttack;
+	//if (pWeapon != NULL) {
+	//	pWeapon->m_flNextPrimaryAttackCLIENTHISTORY = pWeapon->m_flNextPrimaryAttack;
+	//}
+	
+	for (i = 0; i < MAX_AMMO_TYPES; i++) {
+		localPlayer.m_rgAmmoCLIENTHISTORY[i] = localPlayer.m_rgAmmo[i];
+	}
 	
 }//END OF HUD_WeaponsPostThink
 
@@ -1680,7 +1731,8 @@ void DLLEXPORT HUD_PostRunCmd(struct local_state_s* from, struct local_state_s* 
 
 
 	//MODDD - for now, these are unused.  Who knows if they'd ever be useful.
-	//recentDuckVal = to->client.bInDuck;
+	// unfortunately to->client.bInDuck doesn't seem to work.  view.cpp has 'ent->curstate.usehull' at least.
+	//g_recentDuckVal = to->client.bInDuck;
 	//recentDuckTime = to->client.flDuckTime;
 
 	//////////////////////////////////////////////////////////////////////////
@@ -1688,17 +1740,34 @@ void DLLEXPORT HUD_PostRunCmd(struct local_state_s* from, struct local_state_s* 
 	// ok, but ONLY for singleplayer!  In multiplayer it breaks viewmodel animations.  They often, randomly break.
 	// (EV_ calls don't make it from server to client; nothing shows up at all, no view anims / clientside event if the glitch happens)
 	// That's not a frustrating problem to run into at all!
+
+	// NOTE - the difference between current time and previous becomes negative if paused
+	// with high host_framerate values (somewhere above 0.02).  I have no clue.
+
+	// ALSO, at high enough host_framerate choices (above 0.051), the time will go forwards a bit and repeatedly
+	// snap back to its old place, so that some frames register as paused frames (delta <= 0) and other times don't,
+	// it's weird.
+	// INTERESTING.  This looks to be related to the client running multiple times when above 0.051 for each time
+	// the server runs (from a breakpoint on the equipped weapon's WeaponIdle).
+	// A fix would involve checking host_framerate to see what counts as that, but who's really
+	// using high host_framerate's like that anyway.  Not worth risking mistaking unpaused frames for paused at 
+	// high speeds, working as intended when unpaused is really the point there.
+	BOOL g_cl_isPaused = (gpGlobals->time - sp_ClientPreviousTime) <= 0;
+	sp_ClientPreviousTime = gpGlobals->time;
+
+
+	//easyForcePrintLine("paused? %d delta? %.2f cur? %.2f", g_cl_isPaused, (gpGlobals->time - sp_ClientPreviousTime), gpGlobals->time);
+
 	if (!IsMultiplayer()) {
 		float pausecorrection_val = EASY_CVAR_GET(pausecorrection1);
 		// CLIENT PAUSE CORRECTION FIX.  Block think logic if there isn't any time since the previous frame.
 		if (pausecorrection_val != 0) {
-			if(gpGlobals->time - sp_ClientPreviousTime == 0){
+			if(g_cl_isPaused){
 				//If no time has passed since the last client-reported time, assume we're paused. Don't try any logic.
 				//easyForcePrintLine("HUD_PostRunCmd: paused. time:%.2f", gpGlobals->time);
 				return;
 			}
 		}
-		sp_ClientPreviousTime = gpGlobals->time;
 	}
 	//////////////////////////////////////////////////////////////////////////
 

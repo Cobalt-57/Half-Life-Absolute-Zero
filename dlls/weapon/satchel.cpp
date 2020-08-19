@@ -27,6 +27,13 @@
 #include "gamerules.h"
 
 
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelay)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelaycustom)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteclip)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteammo)
+
+
+
 // "ChargeReady" values, get through accessor/setters named like that, are as follows:
 // 0: ready to toss a satchel, left or right-click
 // 1: satchel(s) deployed, left click to detonate ones deployed or right click to toss another (if there is ammo)
@@ -562,8 +569,7 @@ void CSatchel::PrimaryAttack()
 
 		// NOTE - 'setchargeReady(2)' can get overridden by the PlayerPrimaryAmmoCount() check below being 0, and that is fine.
 		setchargeReady(2);
-		m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 0.5;
-		m_flNextSecondaryAttack = UTIL_WeaponTimeBase() + 0.5;
+		SetAttackDelays(UTIL_WeaponTimeBase() + 0.5);
 
 		//MODDD - match anim time
 		//m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 0.5;
@@ -595,7 +601,37 @@ void CSatchel::PrimaryAttack()
 
 void CSatchel::SecondaryAttack( void )
 {
-	if ( getchargeReady() != 2 )
+	int theChargeReady = getchargeReady();
+
+
+
+	if (theChargeReady == 0) {
+
+
+		if (EASY_CVAR_GET(cl_viewmodel_fidget) == 2) {
+			if (PlayerPrimaryAmmoCount() > 0) {
+				//float flRand;
+				int iAnim;
+
+				//flRand = UTIL_SharedRandomFloat(m_pPlayer->random_seed, 0, 1);
+				//if (flRand <= 0.5)
+				//{
+				iAnim = SATCHEL_FIDGET1;
+				m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 61.0 / 30.0;
+				//}
+
+				SetAttackDelays(m_flTimeWeaponIdle);
+				m_flTimeWeaponIdle += randomIdleAnimationDelay();
+				SendWeaponAnim(iAnim);
+			}
+		}
+		else {
+			// not 2?  go ahead and throw here too.
+			Throw();
+		}//CVar check
+
+
+	}else if (theChargeReady == 1)
 	{
 		Throw( );
 		// why nextattack delays here?  Throw handles that
@@ -641,7 +677,7 @@ void CSatchel::Throw( void )
 		
 		
 		//MODDD - cheat check.			
-		if(m_pPlayer->cheat_infiniteclipMem == 0 && m_pPlayer->cheat_infiniteammoMem == 0){
+		if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteclip) == 0 && EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteammo) == 0){
 			ChangePlayerPrimaryAmmoCount(-1);
 		}
 
@@ -649,13 +685,12 @@ void CSatchel::Throw( void )
 		//NOTE: Primary fire isn't affected here since this may be the first charge (holding any longer would make it blow up
 		// in the player's face)... no longer the case, just check for solid key-presses instead.
 		// also, times changed a bit.  Used to be 1.0 and 0.5.
-		if(m_pPlayer->cheat_minimumfiredelayMem == 0){
-			m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 0.5;
-			m_flNextSecondaryAttack = UTIL_WeaponTimeBase() + 0.5;
+		if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelay) == 0){
+			SetAttackDelays(UTIL_WeaponTimeBase() + 0.5);
 		}else{
 			m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 0.5;
 			//they stick together sometimes, so they get an extra delay.
-			m_flNextSecondaryAttack = UTIL_WeaponTimeBase() + m_pPlayer->cheat_minimumfiredelaycustomMem + 0.03f;
+			m_flNextSecondaryAttack = UTIL_WeaponTimeBase() + EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelaycustom) + 0.03f;
 		}
 
 	}//END OF ammo check
@@ -746,7 +781,14 @@ void CSatchel::WeaponIdle( void )
 	case 0:
 
 		if (PlayerPrimaryAmmoCount() > 0) {
-			randomAnim = RANDOM_LONG(0, 1);
+
+			if (EASY_CVAR_GET(cl_viewmodel_fidget) == 1) {
+				randomAnim = RANDOM_LONG(0, 1);
+			}
+			else {
+				// never play fidget this way.
+				randomAnim = 0;
+			}
 
 			if (randomAnim == 0) {
 				SendWeaponAnim(SATCHEL_IDLE1);
@@ -770,7 +812,7 @@ void CSatchel::WeaponIdle( void )
 //#ifndef CLIENT_DLL
 			if (!sentOutOfAmmoHolster) {
 				//this->Holster();
-				SendWeaponAnim(SATCHEL_RADIO_HOLSTER);
+				SendWeaponAnimBypass(SATCHEL_RADIO_HOLSTER);
 				sentOutOfAmmoHolster = TRUE;
 			}
 //#endif
@@ -831,8 +873,7 @@ void CSatchel::ReDeploySatchel(void) {
 	// use tripmine animations
 	strcpy(m_pPlayer->m_szAnimExtention, "trip");
 
-	m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 0.5;
-	m_flNextSecondaryAttack = UTIL_WeaponTimeBase() + 0.5;
+	SetAttackDelays(UTIL_WeaponTimeBase() + 0.5);
 	setchargeReady(0);
 	//MODDD - addition.
 	m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 61.0 / 30.0 + randomIdleAnimationDelay();

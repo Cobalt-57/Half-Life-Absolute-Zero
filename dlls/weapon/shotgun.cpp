@@ -24,12 +24,18 @@
 #include "gamerules.h"
 
 
-EASY_CVAR_EXTERN(cheat_infiniteclip)
-EASY_CVAR_EXTERN(cheat_infiniteammo)
-EASY_CVAR_EXTERN(cheat_minimumfiredelay)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelay)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelaycustom)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteclip)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteammo)
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST(playerWeaponSpreadMode)
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(viewModelPrintouts)
 
+
+
+// NOTE - all cases of pev->iuser1 replaced with m_fInAttack.
+// Never change pev->iuser# values in weapons, don't really understand what odd hardcoded behavior or bugs
+// that can cause.
 
 #define SHOTGUN_BIT1 1
 #define SHOTGUN_BIT2 2
@@ -88,7 +94,7 @@ void CShotgun::Spawn( )
 	m_iDefaultAmmo = SHOTGUN_DEFAULT_GIVE;
 
 	// start with it
-	pev->iuser1 |= (SHOTGUN_BIT5);
+	m_fInAttack |= (SHOTGUN_BIT5);
 
 	FallInit();// get ready to fall
 }
@@ -163,7 +169,8 @@ int CShotgun::GetItemInfo(ItemInfo *p)
 
 //MODDD - new.
 void CShotgun::Holster( int skiplocal /* = 0 */ )
-{ 
+{
+	m_flReleaseThrow = -1;  //interrupt cock sound delay
 
 	this->m_fireState &= ~128;  //nope.
 
@@ -184,7 +191,9 @@ EASY_CVAR_EXTERN(soundSentenceSave)
 BOOL CShotgun::Deploy( )
 {
 	this->m_fireState &= ~128;  //nope.
-	
+
+	m_flReleaseThrow = -1;
+
 	//MODDD TODO: CHANGE SOUNDS!!!
 	//if ( flRndSound <= 0.5 )
 
@@ -214,7 +223,7 @@ BOOL CShotgun::Deploy( )
 void CShotgun::ItemPreFrame(){
 	CBasePlayerWeapon::ItemPreFrame();
 
-	if(EASY_CVAR_GET(cheat_infiniteclip) == 1){
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteclip) == 1){
 		//cheating.
 		m_chargeReady |= SHOTGUN_BIT1;
 	}else{
@@ -223,7 +232,7 @@ void CShotgun::ItemPreFrame(){
 		}
 	}
 
-	if(EASY_CVAR_GET(cheat_infiniteammo) == 1){
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteammo) == 1){
 		//cheating.
 		m_chargeReady |= SHOTGUN_BIT2;
 	}else{
@@ -232,7 +241,7 @@ void CShotgun::ItemPreFrame(){
 		}
 	}
 
-	if(EASY_CVAR_GET(cheat_minimumfiredelay) == 1){
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelay) == 1){
 		//cheating.
 		m_chargeReady |= SHOTGUN_BIT3;
 	}else{
@@ -260,10 +269,10 @@ void CShotgun::ItemPostFrame( void )
 		m_flPumpTime = 0;
 
 		if(m_iClip == 1){
-			pev->iuser1 |= SHOTGUN_BIT5; //signify we've put one bullet in.
+			m_fInAttack |= SHOTGUN_BIT5; //signify we've put one bullet in.
 		}else if(m_iClip > 1){
-			pev->iuser1 |= SHOTGUN_BIT5; //signify we've put one bullet in.
-			pev->iuser1 |= SHOTGUN_BIT6; //two bullets availabe at the time of pump, two bullets ready for double-fire.
+			m_fInAttack |= SHOTGUN_BIT5; //signify we've put one bullet in.
+			m_fInAttack |= SHOTGUN_BIT6; //two bullets availabe at the time of pump, two bullets ready for double-fire.
 		}
 	}
 
@@ -319,9 +328,9 @@ void CShotgun::ItemPostFrame( void )
 
 
 	
-	if(pev->iuser1 & SHOTGUN_BIT7){
+	if(m_fInAttack & SHOTGUN_BIT7){
 		if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(viewModelPrintouts)==1)easyForcePrintLine("I SAW THE WHOLE THING");
-		pev->iuser1 &= ~SHOTGUN_BIT7;
+		m_fInAttack &= ~SHOTGUN_BIT7;
 		//SendWeaponAnimServerOnlyReverse( SHOTGUN_START_RELOAD );
 		//CBasePlayerWeapon::SendWeaponAnimServerOnlyReverse(SHOTGUN_START_RELOAD, 1, 0);
 
@@ -338,6 +347,10 @@ void CShotgun::ItemPostFrame( void )
 
 void CShotgun::ItemPostFrameThink(void) {
 
+	if (m_flReleaseThrow != -1 && gpGlobals->time > m_flReleaseThrow) {
+		m_flReleaseThrow = -1;
+		EMIT_SOUND_DYN(ENT(m_pPlayer->pev), CHAN_ITEM, "weapons/scock1.wav", 1, ATTN_NORM, 0, 95 + RANDOM_LONG(0, 0x1f));
+	}
 
 	if (PlayerPrimaryAmmoCount() > 0 && m_iClip < SHOTGUN_MAX_CLIP) {
 		// Close enough since wanting to?
@@ -364,6 +377,14 @@ void CShotgun::ItemPostFrameThink(void) {
 
 
 
+/*
+#ifdef CLIENT_DLL
+int cl_totalFires = 0;
+#else
+int sv_totalFires = 0;
+#endif
+*/
+
 
 
 
@@ -373,12 +394,12 @@ void CShotgun::PrimaryAttack()
 }
 
 
+
+
 void CShotgun::SecondaryAttack( void )
 {
 	FireShotgun(FALSE);
 }
-
-
 
 
 void CShotgun::FireShotgun(BOOL isPrimary) {
@@ -417,8 +438,15 @@ void CShotgun::FireShotgun(BOOL isPrimary) {
 	}
 
 	// why was SHOTGUN_BIT5 here ?!
-	pev->iuser1 &= ~(SHOTGUN_BIT6);
+	m_fInAttack &= ~(SHOTGUN_BIT6);
 
+	/*
+#ifdef CLIENT_DLL
+	cl_totalFires++;
+#else
+	sv_totalFires++;
+#endif
+	*/
 
 	//MODDD - little different behavior between primary/secondary.
 	// And even louder (for alerting AI) with double
@@ -430,6 +458,9 @@ void CShotgun::FireShotgun(BOOL isPrimary) {
 		m_pPlayer->m_iWeaponVolume = LOUDEST_GUN_VOLUME;  //louder
 		m_pPlayer->m_iWeaponFlash = NORMAL_GUN_FLASH + 128;  //brighter
 	}
+
+
+
 
 	//MODDD - cheat check.
 	if (!(m_chargeReady & SHOTGUN_BIT1)) {
@@ -444,7 +475,7 @@ void CShotgun::FireShotgun(BOOL isPrimary) {
 
 	if (m_iClip == 0) {
 		// next reload will need the pump.
-		pev->iuser1 &= ~(SHOTGUN_BIT5);
+		m_fInAttack &= ~(SHOTGUN_BIT5);
 	}
 
 
@@ -542,14 +573,14 @@ void CShotgun::FireShotgun(BOOL isPrimary) {
 		//MODDD - WRONG.   if we were out of ammo, execution wouldn't have even reached this point to begin with!
 		// this just causes the last visible reload pump of the shotgun (before auto-reloading) to make no noise.
 		//if (m_iClip != 0){
-		m_flPumpTime = gpGlobals->time + 0.95;
+		m_flPumpTime = gpGlobals->time + 0.85;
 
 		if (m_iClip == 1) {
 			// wait why do this??!
-			//pev->iuser1 |= SHOTGUN_BIT5; //signify we've put one bullet in.
+			//m_fInAttack |= SHOTGUN_BIT5; //signify we've put one bullet in.
 		}
 		else {
-			pev->iuser1 |= SHOTGUN_BIT6; //two bullets availabe at the time of pump, two bullets ready for double-fire.
+			m_fInAttack |= SHOTGUN_BIT6; //two bullets availabe at the time of pump, two bullets ready for double-fire.
 		}
 		//}
 
@@ -580,8 +611,8 @@ void CShotgun::FireShotgun(BOOL isPrimary) {
 
 	}
 	else {
-		m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + m_pPlayer->cheat_minimumfiredelaycustomMem;
-		m_flNextSecondaryAttack = UTIL_WeaponTimeBase() + m_pPlayer->cheat_minimumfiredelaycustomMem;
+		m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelaycustom);
+		m_flNextSecondaryAttack = UTIL_WeaponTimeBase() + EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelaycustom);
 	}
 
 
@@ -646,20 +677,23 @@ BOOL CShotgun::reloadBlockFireCheck(BOOL isPrimary){
 
 			// HOWEVER, one other check.  Don't count if the click comes while the shotgun isn't
 			// even loading ammo yet (and empty clip).
+			// NEVERMIND, better way below now (isPrimary alongside clip being at least 1).
+			/*
 			if (m_iClip == 0 && m_fInSpecialReload < 2) {
 				// too early!
-				return 0;
+				//return 0;
 			}
 			else {
 				// proceed
 			}
+			*/
 
-			if ((isPrimary || m_iClip >= 2)) {
+			if (( (isPrimary && m_iClip > 0) || m_iClip >= 2)) {
 				if (m_iClip != 0) {
-					pev->iuser1 |= SHOTGUN_BIT4;  //queue a pump next time.
+					m_fInAttack |= SHOTGUN_BIT4;  //queue a pump next time.
 				}
 				else {
-					pev->iuser1 |= SHOTGUN_BIT8;  //queue a pump after reloading once
+					m_fInAttack |= SHOTGUN_BIT8;  //queue a pump after reloading once
 				}
 
 				if (m_flTimeWeaponIdle < UTIL_WeaponTimeBase()) {
@@ -689,7 +723,7 @@ BOOL CShotgun::reloadBlockFireCheck(BOOL isPrimary){
 void CShotgun::reloadFinishPump(){
 	
 	// no need to do this again. Flag is only set if ending early.
-	pev->iuser1 &= (~SHOTGUN_BIT4);
+	m_fInAttack &= (~SHOTGUN_BIT4);
 
 	// reload debounce has timed out
 	//MODDD - ALSO, BYPASS NOW
@@ -697,7 +731,7 @@ void CShotgun::reloadFinishPump(){
 	BOOL usePumpAnim = FALSE;
 
 
-	if (pev->iuser1 & (SHOTGUN_BIT5)) {
+	if (m_fInAttack & (SHOTGUN_BIT5)) {
 		// no pump
 	}
 	else {
@@ -706,15 +740,15 @@ void CShotgun::reloadFinishPump(){
 	}
 
 	/*
-	if( (pev->iuser1 & (SHOTGUN_BIT5 | SHOTGUN_BIT6 )) == (SHOTGUN_BIT5 | SHOTGUN_BIT6) ){
+	if( (m_fInAttack & (SHOTGUN_BIT5 | SHOTGUN_BIT6 )) == (SHOTGUN_BIT5 | SHOTGUN_BIT6) ){
 		// Both pump bits? No possible need for a pump.
 
-	}else if( pev->iuser1 & (SHOTGUN_BIT5 ) ){
+	}else if( m_fInAttack & (SHOTGUN_BIT5 ) ){
 		// only for 1-bullet? See if we have more than 1 bullet to make a 2nd pump worthwhile (enable doublefire on a whim).
 		if(m_iClip > 1){
 			usePumpAnim = TRUE;
 		}
-	}else if( pev->iuser1 & (SHOTGUN_BIT6) ){
+	}else if( m_fInAttack & (SHOTGUN_BIT6) ){
 		// only for 2-bullets? inclusive of the first, deny.
 
 	}else{ //neither.
@@ -725,19 +759,18 @@ void CShotgun::reloadFinishPump(){
 				
 
 	if(usePumpAnim == TRUE){
-
 		SendWeaponAnimServerOnly( SHOTGUN_PUMP );
 
-		//MODDD - no delay needed for this? neat.
-		// play cocking sound
-		EMIT_SOUND_DYN(ENT(m_pPlayer->pev), CHAN_ITEM, "weapons/scock1.wav", 1, ATTN_NORM, 0, 95 + RANDOM_LONG(0,0x1f));
+		//MODDD - no delay needed for this? neat.      .......  oh.
+		// play cocking sound, later.
+		m_flReleaseThrow = gpGlobals->time + 0.32;
 
 	
 		if(m_iClip == 1){
-			pev->iuser1 |= SHOTGUN_BIT5; //signify we've put one bullet in.
+			m_fInAttack |= SHOTGUN_BIT5; //signify we've put one bullet in.
 		}else if(m_iClip > 1){
-			pev->iuser1 |= SHOTGUN_BIT5; //signify we've put one bullet in.
-			pev->iuser1 |= SHOTGUN_BIT6; //two bullets availabe at the time of pump, two bullets ready for double-fire.
+			m_fInAttack |= SHOTGUN_BIT5; //signify we've put one bullet in.
+			m_fInAttack |= SHOTGUN_BIT6; //two bullets availabe at the time of pump, two bullets ready for double-fire.
 		}
 
 
@@ -750,12 +783,12 @@ void CShotgun::reloadFinishPump(){
 		m_fInSpecialReload = 0;
 				
 		//m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 1.5;
-		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + (11.0 / 13.0) + randomIdleAnimationDelay();
+		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + (12.0 / 12.0) + randomIdleAnimationDelay();
 
 
 		if(TRUE){
 			//m_flPumpTime = gpGlobals->time + 0.5;
-			m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 0.75;
+			m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 0.85;
 			m_flNextSecondaryAttack = m_flNextPrimaryAttack;
 		}
 
@@ -765,7 +798,7 @@ void CShotgun::reloadFinishPump(){
 		
 
 		if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(viewModelPrintouts)==1)easyForcePrintLine("ILL hahaha");
-		pev->iuser1 |= SHOTGUN_BIT7;
+		m_fInAttack |= SHOTGUN_BIT7;
 
 
 		if (m_fInSpecialReload == 3) {
@@ -805,12 +838,12 @@ BOOL CShotgun::reloadSemi(){
 		{
 			/*
 			makeNoise = TRUE;
-			if (m_iClip > 0 && (pev->iuser1 & SHOTGUN_BIT4)) {
+			if (m_iClip > 0 && (m_fInAttack & SHOTGUN_BIT4)) {
 				makeNoise = FALSE;
 			}
 			*/
 
-			if (m_iClip > 0 && (pev->iuser1 & SHOTGUN_BIT4)) {
+			if (m_iClip > 0 && (m_fInAttack & SHOTGUN_BIT4)) {
 				// force the pump!
 				reloadFinishPump();
 			}
@@ -888,9 +921,9 @@ void CShotgun::reloadLogic(void) {
 
 
 		// drop #8, pick up #4.  Queue a pump after this shell is in.
-		if (pev->iuser1 & SHOTGUN_BIT8) {
-			pev->iuser1 &= ~SHOTGUN_BIT8;
-			pev->iuser1 |= SHOTGUN_BIT4;
+		if (m_fInAttack & SHOTGUN_BIT8) {
+			m_fInAttack &= ~SHOTGUN_BIT8;
+			m_fInAttack |= SHOTGUN_BIT4;
 		}
 
 		//MODDD - beware.  Altering the "m_flTimeWeaponIdle" to be different will affect "m_flNextReload" as well, since
