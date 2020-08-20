@@ -2317,6 +2317,16 @@ CBasePlayer::CBasePlayer(void){
 	// We want a lot of the exact same things for CBasePlayer creation and resetting between map transitions.
 	_commonReset();
 
+
+	// This will be changed soon after the player spawns
+	fvoxEnabled = 0;
+	// same.
+	fHolsterAnimsEnabled = 0;
+	fBreakHolster = 0;
+	cl_ladder_choice = 0;
+
+
+
 	m_pLastItem = NULL;
 	m_pActiveItem = NULL;
 	m_pQueuedActiveItem = NULL;
@@ -6185,13 +6195,6 @@ void CBasePlayer::commonReset(void){
 	//recentRevivedTime = -1;
 
 
-	// This will be changed soon after the player joins a server if their setting differs.
-	fvoxEnabled = 0;
-	// same.
-	fHolsterAnimsEnabled = 0;
-	fBreakHolster = 0;
-	cl_ladder_choice = 0;
-	
 	
 	iWasFrozenToday = -1;
 

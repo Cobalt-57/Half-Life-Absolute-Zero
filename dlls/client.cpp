@@ -5292,12 +5292,7 @@ void PlayerPreThink( edict_t *pEntity )
 		//easyForcePrintLineClient(pEntity, "WHAT THE heck %.8f %.8f d:%.8f %d", gpGlobals->time, previousFrameTime, (gpGlobals->time - previousFrameTime), g_gamePaused);
 		sp_previousFrameTime = gpGlobals->time;
 
-
-		if (pausecorrection_val == 0) {
-			// always allow
-			sp_playerCanPreThink = TRUE;
-			sp_playerCanPostThink = TRUE;
-		}else if (pausecorrection_val == 1 ) {
+		if (pausecorrection_val == 1 ) {
 			// SERVER PAUSE CORRECTION FIX #1.  Block think logic if there isn't enough time since the previous frame.
 			if (g_gamePaused) {
 				sp_playerCanPreThink = FALSE;
@@ -5307,6 +5302,11 @@ void PlayerPreThink( edict_t *pEntity )
 				sp_playerCanPreThink = TRUE;
 				sp_playerCanPostThink = TRUE;
 			}
+		}
+		else if (pausecorrection_val != 2) {
+			// 0? always allow
+			sp_playerCanPreThink = TRUE;
+			sp_playerCanPostThink = TRUE;
 		}
 
 

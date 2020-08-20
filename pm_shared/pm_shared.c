@@ -3171,9 +3171,9 @@ void PM_LadderMove( physent_t *pLadder )
 		//pmove->punchangle[2] = 20; //!!!  TEST
 
 		if(playerLadderMovement == 0){
-			ladderSpeed = MAX_CLIMB_SPEED_RETAIL;
+			ladderSpeed = MAX_CLIMB_SPEED_RETAIL * 1.28; //1.414;
 		}else{
-			ladderSpeed = MAX_CLIMB_SPEED_ALPHA;
+			ladderSpeed = MAX_CLIMB_SPEED_ALPHA * 1.28;
 		}
 		
 
@@ -3255,6 +3255,8 @@ void PM_LadderMove( physent_t *pLadder )
 			{
 				vec3_t velocity, perp, cross, lateral, tmp;
 				float normal;
+				float lateralLength;
+				float ladderTravelLength;
 
 				//ALERT(at_console, "pev %.2f %.2f %.2f - ",
 				//	pev->velocity.x, pev->velocity.y, pev->velocity.z);
@@ -3262,6 +3264,9 @@ void PM_LadderMove( physent_t *pLadder )
 				//Vector velocity = (forward * gpGlobals->v_forward) + (right * gpGlobals->v_right);
 				VectorScale( vpn, forward, velocity );
 				VectorMA( velocity, right, v_right, velocity );
+
+				easyForcePrintLine("ang:%.2f %.2f %.2f for:%.2f %.2f %.2f", pmove->angles[0], pmove->angles[1], pmove->angles[2], vpn[0], vpn[1], vpn[2]);
+				easyForcePrintLine("earlyvel:%.2f %.2f %.2f", velocity[0], velocity[1], velocity[2]);
 
 				
 				// Perpendicular in the ladder plane
@@ -3282,6 +3287,7 @@ void PM_LadderMove( physent_t *pLadder )
 				// This is the player's additional velocity
 				VectorSubtract_f( velocity, cross, lateral );
 
+
 				// This turns the velocity into the face of the ladder into velocity that
 				// is roughly vertically perpendicular to the face of the ladder.
 				// NOTE: It IS possible to face up and move down or face down and move up
@@ -3289,9 +3295,97 @@ void PM_LadderMove( physent_t *pLadder )
 				// velocity through the face of the ladder -- by design.
 				CrossProduct( trace.plane.normal, perp, tmp );
 
+
+				/*
+				lateralLength = Length(lateral);
+				ladderTravelLength = getSafeSqureRoot(lateralLength * lateralLength + normal * normal);
+
+				if (ladderTravelLength > ladderSpeed) {
+					float lengthModMulti = ladderSpeed / ladderTravelLength;
+					// scale them down
+					lateralLength *= lengthModMulti;
+					normal *= lengthModMulti;
+					VectorScale(lateral, lengthModMulti, lateral);
+				}
+
+				ladderTravelLength = getSafeSqureRoot(lateralLength * lateralLength + normal * normal);
+				*/
+
+
+				//MODDD - little issue. If the player looks at the ladder moreso diagonally (pitch-wise, like a 45 degree angle above straight at the ladder),
+				// the player will go up faster instead of facing straight up.  Kinda odd.
+				// I think it's kind of like how going in two directions at the same speed (4 right, 4 up in a 2D setup) has a net higher speed than moving
+				// only 4 right or only 4 up.  Similarly, the lateral and -normal * tmp below make a pmove->Velocity over the planned MAX_CLIMB_SPEED.
+				// So, idea.  Scale them if necessary.
+
+
+
+
+
+
+				//easyForcePrintLine("testah prevel:%.2f %.2f %.2f  L:%.2f %.2f %.2f  tmp:%.2f %.2f %.2f", velocity[0], velocity[1], velocity[2], lateral[0], lateral[1], lateral[2], tmp[0], tmp[1], tmp[2]);
 				
+
+				//////////////////////////////////////////////////////////////////////////////////////////////////////
+				//MODDD - change, origina lway.
 				//!!!  VITAL APPLY
+				//VectorMA( lateral, -normal, tmp, pmove->velocity );
+
+
+
+
+				// 2nd way
+				/*
+				lateral[0] = lateral[0];
+				lateral[1] = lateral[1];
+				lateral[2] = lateral[2];
+
+				vec3_t normalVec;
+				normalVec[0] = (-normal * tmp[0]);
+				normalVec[1] = (-normal * tmp[1]);
+				normalVec[2] = (-normal * tmp[2]);
+
+				vec3_t finalSum;
+				finalSum[0] = sqrt(lateral[0] * lateral[0] + normalVec[0] * normalVec[0]);
+				finalSum[1] = sqrt(lateral[1] * lateral[1] + normalVec[1] * normalVec[1]);
+				finalSum[2] = sqrt(lateral[2] * lateral[2] + normalVec[2] * normalVec[2]);
+
+				vec3_t plainSum;
+				plainSum[0] = lateral[0] + normalVec[0];
+				plainSum[1] = lateral[1] + normalVec[1];
+				plainSum[2] = lateral[2] + normalVec[2];
+
+				if (plainSum[0] < 0) finalSum[0] *= -1;
+				if (plainSum[1] < 0) finalSum[1] *= -1;
+				if (plainSum[2] < 0) finalSum[2] *= -1;
+
+				VectorCopy_f(finalSum, pmove->velocity);
+				*/
+
+
+				// 3rd way.
+				//!!!  VITAL APPLY
+				//VectorCopy_f( lateral, pmove->velocity );
+				
+
+
+				
+				// 4th way
 				VectorMA( lateral, -normal, tmp, pmove->velocity );
+
+				float velLength = Length(pmove->velocity);
+				if (velLength > ladderSpeed) {
+					float lengthModMulti = ladderSpeed / velLength;
+					VectorScale(pmove->velocity, lengthModMulti, pmove->velocity);
+				}
+				
+				//////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+				//easyForcePrintLine("finalvel: %.2f %.2f %.2f", pmove->velocity[0], pmove->velocity[1], pmove->velocity[2]);
+
+
 				//pmove->iuser4 += 3.0f;
 
 				//How to print in here!

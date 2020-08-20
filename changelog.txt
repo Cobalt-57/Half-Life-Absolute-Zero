@@ -376,6 +376,11 @@ CVAR: sv_player_midair_fix, 0 for retail, 1 for the following:
 -Support for an extension of midair logic that does similar slope-checks as walking.  That is, jumping 'up' stairs is possible without losing momentum.
 -As a side-effect, reaching the top of several objects that were difficult to reach through even crouch-jumping (often some barrels and boxes) is much easier; reach of jumps slightly improved.
 
-Going up/down fast-moving platforms no longer causes the interp-smoothness to awkwardly lag behind the position of where the player actually is.
+Going up/down fast-moving platforms no longer causes the interp-smoothness to awkwardly lag behind the position of where the player actually is.  (best fix singleplayer, still improved otherwise)
 
+Friendly sounds, uh, work.
 
+CVars that previously couldn't be saved now can be (must quit from quitting normally ingame, not hitting the 'x' on a window or forcing the game to close in an unusual way, although this was always the case for any CVar saving).
+-These CVars may also be set before a game begins.
+
+Going up ladders while looking partially upward is no longer faster than while looking all the way upward (bypassed intended ladder speed).  Base ladder speed boosted to compensate.

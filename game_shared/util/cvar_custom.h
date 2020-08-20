@@ -504,18 +504,21 @@ Also, need to extern (all?) CVars in dlls/client.cpp.
 
 
 
-
+// NOTICE - it may seem strange for 'SERVERONLY' vars to get registered clientside, but this looks to be exactly
+// what retail does for several built-in variables.  sv_cheats is serverside, yet it can be set before a game begins.
+// This is likely how (FCVAR_SERVER flag given manually).
+// Dedicated servers need to register these anyway in dlls/game.cpp since they skip the client dll.
 #define EASY_CVAR_CREATE_CLIENT_SERVERONLY(CVarName)\
-	DUMMY
+	CALL_EASY_CVAR_CREATE_CLIENT(CVarName, FCVAR_SERVER);
 #define EASY_CVAR_CREATE_CLIENT_A_SERVERONLY(CVarName)\
-	DUMMY
+	CALL_EASY_CVAR_CREATE_CLIENT(CVarName, FCVAR_ARCHIVE | FCVAR_SERVER);
 
 
 #ifdef _DEBUG
 #define EASY_CVAR_CREATE_CLIENT_SERVERONLY_DEBUGONLY(CVarName)\
-		DUMMY
+	CALL_EASY_CVAR_CREATE_CLIENT(CVarName, FCVAR_SERVER);
 #define EASY_CVAR_CREATE_CLIENT_A_SERVERONLY_DEBUGONLY(CVarName)\
-		DUMMY
+	CALL_EASY_CVAR_CREATE_CLIENT(CVarName, FCVAR_ARCHIVE | FCVAR_SERVER);
 #else
 //RELEASE
 #define EASY_CVAR_CREATE_CLIENT_SERVERONLY_DEBUGONLY(CVarName)\

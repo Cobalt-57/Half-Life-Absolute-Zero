@@ -816,7 +816,16 @@ void GameDLLInit( void )
 
 
 
-	EASY_CVAR_CREATE_SERVER_MASS
+	if (IS_DEDICATED_SERVER()) {
+		CVAR_REGISTER(&pregame_server_cvar);
+
+		EASY_CVAR_CREATE_SERVER_MASS
+	}
+
+
+
+
+
 
 
 
@@ -920,14 +929,6 @@ void GameDLLInit( void )
 	CVAR_REGISTER (&allowmonsters);
 
 	CVAR_REGISTER (&mp_chattime);
-
-
-
-	if(IS_DEDICATED_SERVER()){
-		CVAR_REGISTER(&pregame_server_cvar);
-	}
-
-
 
 
 

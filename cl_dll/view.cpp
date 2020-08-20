@@ -983,9 +983,19 @@ void V_CalcNormalRefdef(struct ref_params_s* pparams)
 		// If there were some way for pm_shared to give the difference in height that is allowed
 		// to be interpolated, that would be nice.
 		// GOT IT!  g_interp_z is set by pm_shared to give the amount of change explained by interp-fix.
-		oldz += deltaOriginZ - g_interp_z;
+		// Sadly this is inadequate for multiplayer, anything but singleplayer or the player running a 
+		// non-dedicated server will get some awkward lag from this.
+		// For this to be better, we'd need some synched variable accessible from cl_dll/entity.cpp that's
+		// better handled over multiplayer latency, or tied better to clientside really.
+		// Could it be some global that both C (pm_shared.c) and C++ (here) can read?  Would that even
+		// make sense?  The devs never did anything like that.  So, no clue.
+		// There is still an improvement compared to the way it was before, dropping this.
+		if (!IsMultiplayer()) {
+			oldz += deltaOriginZ - g_interp_z;
+		}
 
 
+		
 		if (EASY_CVAR_GET(cl_interp_view_extra) == 2 || (EASY_CVAR_GET(cl_interp_view_extra) == 1 && pparams->onground)) {
 			// unmodified now, no need for changes.
 			const float filteredViewheight = pparams->viewheight[2];
