@@ -3861,10 +3861,10 @@ void CBasePlayer::PreThink(void)
 					//easyForcePrintLine("WHERE ELSE SUCKAH %.2f", tempVol);
 
 					// ATTN_STATIC ?
-					//UTIL_PlaySound( edict(), CHAN_VOICE, "friendly/friendly_horror.wav", 1.0, 1.8, 0, 100 );
+					//UTIL_PlaySound( edict(), CHAN_VOICE, "friendly/friendly_horror.wav", 1.0, 1.8, 0, 100, TRUE );
 					// Now with higher attenuation!  Want to play just for the intended target.
 					// Attenuation is the number after the volume (tempVol).  Old attn: 1.8
-					UTIL_PlaySound( this->edict(), CHAN_STATIC, "friendly/friendly_horror.wav", tempVol, 4.0, 0, 100 );
+					UTIL_PlaySound( this->edict(), CHAN_STATIC, "friendly/friendly_horror.wav", tempVol, 4.0, 0, 100, TRUE );
 				}
 
 			}
