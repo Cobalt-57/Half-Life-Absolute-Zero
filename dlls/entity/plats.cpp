@@ -1691,7 +1691,9 @@ void CFuncTrackChange :: Spawn( void )
 	//Bump this global count by 1 for the next one that spawns to keep the ID handed out unique.
 	FuncTrackChangeIDLatest++;
 
-	easyForcePrintLine("CFuncTrackChange%d:Spawn. called. Classname:%s Starting Origin:(%.2f,%.2f,%.2f)", FuncTrackChangeID, STRING(pev->classname), pev->origin.x, pev->origin.y, pev->origin.z);
+	if (EASY_CVAR_GET(trackchangePrintouts) == 1) {
+		easyForcePrintLine("CFuncTrackChange%d:Spawn. called. Classname:%s Starting Origin:(%.2f,%.2f,%.2f)", FuncTrackChangeID, STRING(pev->classname), pev->origin.x, pev->origin.y, pev->origin.z);
+	}
 
 	Setup();
 	if ( FBitSet( pev->spawnflags, SF_TRACK_DONT_MOVE ) )
@@ -1700,15 +1702,17 @@ void CFuncTrackChange :: Spawn( void )
 	SetupRotation();
 
 
-	if(EASY_CVAR_GET(trackchangePrintouts)==1)easyForcePrintLine("CFuncTrackChange%d:Spawn. SPAWNFLAGS: ActivateTrain:%d Relink:%d Rotmove:%d StartBottom:%d DontMove:%d",
-		FuncTrackChangeID, 
-		(pev->spawnflags&SF_TRACK_ACTIVATETRAIN)!=0,
-		(pev->spawnflags&SF_TRACK_RELINK)!=0,
-		(pev->spawnflags&SF_TRACK_ROTMOVE)!=0,
-		(pev->spawnflags&SF_TRACK_STARTBOTTOM)!=0,
-		(pev->spawnflags&SF_TRACK_DONT_MOVE)!=0
-		
+	if (EASY_CVAR_GET(trackchangePrintouts) == 1) {
+		easyForcePrintLine("CFuncTrackChange%d:Spawn. SPAWNFLAGS: ActivateTrain:%d Relink:%d Rotmove:%d StartBottom:%d DontMove:%d",
+			FuncTrackChangeID,
+			(pev->spawnflags & SF_TRACK_ACTIVATETRAIN) != 0,
+			(pev->spawnflags & SF_TRACK_RELINK) != 0,
+			(pev->spawnflags & SF_TRACK_ROTMOVE) != 0,
+			(pev->spawnflags & SF_TRACK_STARTBOTTOM) != 0,
+			(pev->spawnflags & SF_TRACK_DONT_MOVE) != 0
+
 		);
+	}
 
 
 	if ( FBitSet( pev->spawnflags, SF_TRACK_STARTBOTTOM ) )
@@ -1717,7 +1721,9 @@ void CFuncTrackChange :: Spawn( void )
 		m_toggle_state = TS_AT_BOTTOM;
 		pev->angles = m_start;
 		m_targetState = TS_AT_TOP;
-		easyForcePrintLine("CFuncTrackChange%d:Spawn. Starting at bottom. ToggleState is TS_AT_BOTTOM, TargetState is TS_AT_TOP. New origin: (%.2f,%.2f,%.2f)", FuncTrackChangeID, pev->origin.x, pev->origin.y, pev->origin.z);
+		if (EASY_CVAR_GET(trackchangePrintouts) == 1) {
+			easyForcePrintLine("CFuncTrackChange%d:Spawn. Starting at bottom. ToggleState is TS_AT_BOTTOM, TargetState is TS_AT_TOP. New origin: (%.2f,%.2f,%.2f)", FuncTrackChangeID, pev->origin.x, pev->origin.y, pev->origin.z);
+		}
 	}
 	else
 	{
@@ -1725,7 +1731,9 @@ void CFuncTrackChange :: Spawn( void )
 		m_toggle_state = TS_AT_TOP;
 		pev->angles = m_end;
 		m_targetState = TS_AT_BOTTOM;
-		easyForcePrintLine("CFuncTrackChange%d:Spawn. Starting at top. ToggleState is TS_AT_TOP, TargetState is TS_AT_BOTTOM. New origin: (%.2f,%.2f,%.2f)", FuncTrackChangeID, pev->origin.x, pev->origin.y, pev->origin.z);
+		if (EASY_CVAR_GET(trackchangePrintouts) == 1) {
+			easyForcePrintLine("CFuncTrackChange%d:Spawn. Starting at top. ToggleState is TS_AT_TOP, TargetState is TS_AT_BOTTOM. New origin: (%.2f,%.2f,%.2f)", FuncTrackChangeID, pev->origin.x, pev->origin.y, pev->origin.z);
+		}
 	}
 
 	EnableUse();
@@ -2219,7 +2227,9 @@ void CFuncTrackAuto :: UpdateAutoTargets( int toggleState )
 	}
 
 	if ( pNextTarget ){
-		easyForcePrintLine("CFuncTrackAuto%d:UpdateAutoTargets. Has next target. Turning its spawnflag PathDisabled bit on.", FuncTrackChangeID);
+		if (EASY_CVAR_GET(trackchangePrintouts) == 1) {
+			easyForcePrintLine("CFuncTrackAuto%d:UpdateAutoTargets. Has next target. Turning its spawnflag PathDisabled bit on.", FuncTrackChangeID);
+		}
 		SetBits( pNextTarget->pev->spawnflags, SF_PATH_DISABLED );
 	}
 

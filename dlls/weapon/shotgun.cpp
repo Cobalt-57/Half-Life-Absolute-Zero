@@ -33,6 +33,10 @@ EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(viewModelPrintouts)
 
 
 
+
+#define SHOTGUN_RELOAD_CUTIN_TIME 0.06
+
+
 // NOTE - all cases of pev->iuser1 replaced with m_fInAttack.
 // Never change pev->iuser# values in weapons, don't really understand what odd hardcoded behavior or bugs
 // that can cause.
@@ -342,9 +346,6 @@ void CShotgun::ItemPostFrame( void )
 
 
 
-
-
-
 void CShotgun::ItemPostFrameThink(void) {
 
 	if (m_flReleaseThrow != -1 && gpGlobals->time > m_flReleaseThrow) {
@@ -354,12 +355,12 @@ void CShotgun::ItemPostFrameThink(void) {
 
 	if (PlayerPrimaryAmmoCount() > 0 && m_iClip < SHOTGUN_MAX_CLIP) {
 		// Close enough since wanting to?
-		if (m_flNextPrimaryAttack - 0.25 <= UTIL_WeaponTimeBase()) {
+		if (m_flNextPrimaryAttack - SHOTGUN_RELOAD_CUTIN_TIME <= UTIL_WeaponTimeBase()) {
 
 			if (queueReload) {
 				// yay!
-				reloadLogic();
-				queueReload = FALSE;
+			//	reloadLogic();
+			//	queueReload = FALSE;
 			}
 		}
 		else {
@@ -408,8 +409,7 @@ void CShotgun::FireShotgun(BOOL isPrimary) {
 	if (m_pPlayer->pev->waterlevel == 3)
 	{
 		PlayEmptySound();
-		m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 0.4;
-		m_flNextSecondaryAttack = m_flNextPrimaryAttack;
+		SetAttackDelays(UTIL_WeaponTimeBase() + 0.4);
 		return;
 	}
 
@@ -594,25 +594,20 @@ void CShotgun::FireShotgun(BOOL isPrimary) {
 		//MODDD - little tighter now, people want responsiveness.
 		if (isPrimary) {
 			//MODDD - now enough for the full anim, or almost. Real anim time is 1.00 seconds
-			m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 0.90 - 0.08;
-			m_flNextSecondaryAttack = UTIL_WeaponTimeBase() + 0.90 - 0.08;
+			SetAttackDelays(UTIL_WeaponTimeBase() + 0.90 - 0.08);
 
-			//m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 0.75;
-			//m_flNextSecondaryAttack = UTIL_WeaponTimeBase() + 0.75;
+			//SetAttackDelays(UTIL_WeaponTimeBase() + 0.75);
 		}
 		else {
 			//MODDD - enough for full anim. Or almost. Real time is ~1.615 seconds.
-			m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 1.5 - 0.09;  //nah default is good here.
-			m_flNextSecondaryAttack = UTIL_WeaponTimeBase() + 1.5 - 0.09;
+			SetAttackDelays(UTIL_WeaponTimeBase() + 1.5 - 0.09);  //nah default is good here.
 
-			//m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 1.5;
-			//m_flNextSecondaryAttack = UTIL_WeaponTimeBase() + 1.5;
+			//SetAttackDelays(UTIL_WeaponTimeBase() + 1.5);
 		}
 
 	}
 	else {
-		m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelaycustom);
-		m_flNextSecondaryAttack = UTIL_WeaponTimeBase() + EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelaycustom);
+		SetAttackDelays(UTIL_WeaponTimeBase() + EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelaycustom));
 	}
 
 
@@ -651,8 +646,8 @@ void CShotgun::Reload( void ){
 	//MODDD - majority of contents moved to 'reloadLogic', see that method.
 	// This is now the only entry point into reload logic from outside the class for neatness.
 
-	// MODDD - little more flexibility though for ease of use (0.25 sec away is ok to start anyway)
-	if (m_flNextPrimaryAttack - 0.25 > UTIL_WeaponTimeBase()) {
+	// MODDD - little more flexibility though for ease of use
+	if (m_flNextPrimaryAttack - SHOTGUN_RELOAD_CUTIN_TIME > UTIL_WeaponTimeBase()) {
 
 		// NOTICE!  Only count the intent if the player actually held down reload, this 'Reload' method can be called
 		// by other shotgun-related logic too!  This check is good enough though.
@@ -788,8 +783,9 @@ void CShotgun::reloadFinishPump(){
 
 		if(TRUE){
 			//m_flPumpTime = gpGlobals->time + 0.5;
-			m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 0.85;
-			m_flNextSecondaryAttack = m_flNextPrimaryAttack;
+
+			//MODDD - reduced the fire-delay a bit, was 0.85
+			SetAttackDelays(UTIL_WeaponTimeBase() + 0.65);
 		}
 
 	}else{
@@ -815,8 +811,10 @@ void CShotgun::reloadFinishPump(){
 
 		if(TRUE){
 			//m_flPumpTime = gpGlobals->time + 0.5;
-			m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 0.75;
-			m_flNextSecondaryAttack = m_flNextPrimaryAttack;
+
+			//MODDD - reduced the fire-delay a bit, was 0.75
+			SetAttackDelays(UTIL_WeaponTimeBase() + 0.44);
+
 			//MODDD NOTE - shouldn't primary and secondary be affected the same??
 			// Why yes, yes they sohuld.
 
@@ -871,8 +869,8 @@ void CShotgun::reloadLogic(void) {
 		return;
 
 	// don't reload until recoil is done
-	// MODDD - little more flexibility though for ease of use (0.25 sec away is ok to start anyway)
-	if (m_flNextPrimaryAttack - 0.25 > UTIL_WeaponTimeBase()) {
+	// MODDD - little more flexibility though for ease of use
+	if (m_flNextPrimaryAttack - SHOTGUN_RELOAD_CUTIN_TIME > UTIL_WeaponTimeBase()) {
 		return;
 	}
 
@@ -884,11 +882,12 @@ void CShotgun::reloadLogic(void) {
 		//
 		m_fInSpecialReload = 1;
 		//m_pPlayer->m_flNextAttack = UTIL_WeaponTimeBase() + 0.6;
-		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 0.75; //this is the animation length.
+
+		//MODDD - cut in a little more, was 0.75
+		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 0.58;
 
 
-		//m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 0.6; //why 1?
-		//m_flNextSecondaryAttack = UTIL_WeaponTimeBase() + 0.6;
+		//SetAttackDelays(UTIL_WeaponTimeBase() + 0.6); //why 1?
 
 		return;
 	}

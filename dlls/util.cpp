@@ -84,7 +84,6 @@ EASY_CVAR_EXTERN(houndeyePrintout)
 
 EASY_CVAR_EXTERN(canDropInSinglePlayer)
 EASY_CVAR_EXTERN(useAlphaSparks)
-EASY_CVAR_EXTERN(weaponSelectUsesReloadSounds)
 EASY_CVAR_EXTERN(cl_bullsquidspit)
 EASY_CVAR_EXTERN(cl_hornetspiral)
 EASY_CVAR_EXTERN(mutePlayerPainSounds)
@@ -5633,19 +5632,6 @@ void method_precacheAll(void){
 
 	globalPSEUDO_allowGermanModelsMem = EASY_CVAR_GET(allowGermanModels);
 	//globalPSEUDO_germanCensorshipMem = EASY_CVAR_GET(sv_germancensorship);
-
-	// these are so likely to be called, just precache them unconditionally.
-	/*
-	if(!soundSentenceSaveVar){
-		if(EASY_CVAR_GET(weaponSelectUsesReloadSounds) != 1){
-			//normal.
-		}else{
-			PRECACHE_SOUND("weapons/reload1.wav");
-			PRECACHE_SOUND("weapons/reload2.wav");
-			PRECACHE_SOUND("weapons/reload3.wav");
-		}
-	}//END OF if(!soundSentenceSaveVar)
-	*/
 	
 
 

@@ -980,6 +980,43 @@ if(EASY_CVAR_GET(requirementName) == 1){\
 
 
 
+
+
+
+
+
+
+
+
+
+
+#define CALL_EASY_CVAR_SYNCH_SERVER_TO_CLIENT(arg_cvar, arg_ent_pev)\
+	MESSAGE_BEGIN(MSG_ONE, gmsgUpdateClientCVar, NULL, arg_ent_pev);\
+		WRITE_SHORT(arg_cvar##_ID);\
+		WRITE_SHORT(EASY_CVAR_GET(arg_cvar) * 100);\
+	MESSAGE_END();
+
+#define EASY_CVAR_SYNCH_SERVER_TO_CLIENT(arg_cvar, arg_ent_pev)\
+	CALL_EASY_CVAR_SYNCH_SERVER_TO_CLIENT(arg_cvar, arg_ent_pev)
+
+// same?
+#define EASY_CVAR_SYNCH_SERVER_TO_CLIENT_DEBUGONLY(arg_cvar, arg_ent_pev)\
+	CALL_EASY_CVAR_SYNCH_SERVER_TO_CLIENT(arg_cvar, arg_ent_pev)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 #ifdef CLIENT_DLL
 
 #define EASY_CVAR_HIDDEN_SAVE(CVarName)\

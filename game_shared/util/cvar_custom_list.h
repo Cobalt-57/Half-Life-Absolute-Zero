@@ -115,9 +115,9 @@
 //#define enableModPrintouts_ID 96
 #define handGrenadePickupYieldsOne_ID 97
 //#define skipTFDamageTextures_ID 98
-#define weaponSelectSoundPlayOnMousewheel_ID 99
+//#define hud_moveselect_mousewheelsound_ID 99
 #define timedDamageDeathRemoveMode_ID 100
-#define weaponSelectUsesReloadSounds_ID 101
+//#define hud_moveselect_sound_ID 101
 #define glockUseLastBulletAnim_ID 102
 #define playerBarnacleVictimViewOffset_ID 103
 #define trailTypeTest_ID 104
@@ -459,9 +459,9 @@
 #define DEFAULT_handGrenadePickupYieldsOne 1
 #define DEFAULT_handGrenadesUseOldBounceSound 1
 //#define DEFAULT_skipTFDamageTextures 1
-#define DEFAULT_weaponSelectSoundPlayOnMousewheel 1
+#define DEFAULT_hud_moveselect_mousewheelsound 1
 #define DEFAULT_timedDamageDeathRemoveMode 1
-#define DEFAULT_weaponSelectUsesReloadSounds 0
+#define DEFAULT_hud_moveselect_sound 1
 #define DEFAULT_barnacleCanGib 0
 #define DEFAULT_sentryCanGib 0
 #define DEFAULT_miniturretCanGib 0
@@ -728,6 +728,7 @@
 #define DEFAULT_pausecorrection2 2
 #define DEFAULT_hud_rpg_alpha_ammo 1
 #define DEFAULT_cl_viewmodel_fidget 2
+#define DEFAULT_sv_player_midair_fix 1
 
 
 
@@ -832,9 +833,9 @@
 	DUMMY\
 	EASY_CVAR_HASH(handGrenadePickupYieldsOne, 97)\
 	DUMMY\
-	EASY_CVAR_HASH(weaponSelectSoundPlayOnMousewheel, 99)\
+	DUMMY\
 	EASY_CVAR_HASH(timedDamageDeathRemoveMode, 100)\
-	EASY_CVAR_HASH(weaponSelectUsesReloadSounds, 101)\
+	DUMMY\
 	EASY_CVAR_HASH(glockUseLastBulletAnim, 102)\
 	EASY_CVAR_HASH(playerBarnacleVictimViewOffset, 103)\
 	EASY_CVAR_HASH(trailTypeTest, 104)\
@@ -1159,9 +1160,9 @@
 	EASY_CVAR_HIDDEN_ACCESS_CLIENTSENDOFF_BROADCAST_DEBUGONLY(handGrenadePickupYieldsOne, handgrenadepickupyieldsone, 97)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(handGrenadesUseOldBounceSound, handgrenadesuseoldbouncesound)\
 	DUMMY\
-	EASY_CVAR_HIDDEN_ACCESS_CLIENTSENDOFF_BROADCAST_DEBUGONLY(weaponSelectSoundPlayOnMousewheel, weaponselectsoundplayonmousewheel, 99)\
+	DUMMY\
 	EASY_CVAR_HIDDEN_ACCESS_CLIENTSENDOFF_BROADCAST_DEBUGONLY(timedDamageDeathRemoveMode, timeddamagedeathremovemode, 100)\
-	EASY_CVAR_HIDDEN_ACCESS_CLIENTSENDOFF_BROADCAST_DEBUGONLY(weaponSelectUsesReloadSounds, weaponselectusesreloadsounds, 101)\
+	DUMMY\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(barnacleCanGib, barnaclecangib)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(sentryCanGib, sentrycangib)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(miniturretCanGib, miniturretcangib)\
@@ -1628,9 +1629,9 @@
 	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(handGrenadePickupYieldsOne)\
 	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(handGrenadesUseOldBounceSound)\
 	DUMMY\
-	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(weaponSelectSoundPlayOnMousewheel)\
+	DUMMY\
 	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(timedDamageDeathRemoveMode)\
-	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(weaponSelectUsesReloadSounds)\
+	DUMMY\
 	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(barnacleCanGib)\
 	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(sentryCanGib)\
 	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(miniturretCanGib)\
@@ -2096,9 +2097,9 @@
 	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(handGrenadePickupYieldsOne, handgrenadepickupyieldsone)\
 	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(handGrenadesUseOldBounceSound, handgrenadesuseoldbouncesound)\
 	DUMMY\
-	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(weaponSelectSoundPlayOnMousewheel, weaponselectsoundplayonmousewheel)\
+	DUMMY\
 	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(timedDamageDeathRemoveMode, timeddamagedeathremovemode)\
-	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(weaponSelectUsesReloadSounds, weaponselectusesreloadsounds)\
+	DUMMY\
 	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(barnacleCanGib, barnaclecangib)\
 	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(sentryCanGib, sentrycangib)\
 	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(miniturretCanGib, miniturretcangib)\
@@ -2574,9 +2575,9 @@
 	EASY_CVAR_DECLARATION_SERVER_CLIENTSENDOFF_BROADCAST_DEBUGONLY(handGrenadePickupYieldsOne)\
 	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY(handGrenadesUseOldBounceSound)\
 	DUMMY\
-	EASY_CVAR_DECLARATION_SERVER_CLIENTSENDOFF_BROADCAST_DEBUGONLY(weaponSelectSoundPlayOnMousewheel)\
+	EASY_CVAR_DECLARATION_SERVER(hud_moveselect_mousewheelsound)\
 	EASY_CVAR_DECLARATION_SERVER_CLIENTSENDOFF_BROADCAST_DEBUGONLY(timedDamageDeathRemoveMode)\
-	EASY_CVAR_DECLARATION_SERVER_CLIENTSENDOFF_BROADCAST_DEBUGONLY(weaponSelectUsesReloadSounds)\
+	EASY_CVAR_DECLARATION_SERVER(hud_moveselect_sound)\
 	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY(barnacleCanGib)\
 	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY(sentryCanGib)\
 	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY(miniturretCanGib)\
@@ -2839,6 +2840,7 @@
 	EASY_CVAR_DECLARATION_SERVER(pausecorrection2)\
 	EASY_CVAR_DECLARATION_SERVER(hud_rpg_alpha_ammo)\
 	EASY_CVAR_DECLARATION_SERVER(cl_viewmodel_fidget)\
+	EASY_CVAR_DECLARATION_SERVER(sv_player_midair_fix)\
 	DUMMY
 
 
@@ -3093,9 +3095,9 @@
 	EASY_CVAR_DECLARATION_CLIENT_CLIENTSENDOFF_BROADCAST_DEBUGONLY(handGrenadePickupYieldsOne)\
 	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY(handGrenadesUseOldBounceSound)\
 	DUMMY\
-	EASY_CVAR_DECLARATION_CLIENT_CLIENTSENDOFF_BROADCAST_DEBUGONLY(weaponSelectSoundPlayOnMousewheel)\
+	EASY_CVAR_DECLARATION_CLIENT(hud_moveselect_mousewheelsound)\
 	EASY_CVAR_DECLARATION_CLIENT_CLIENTSENDOFF_BROADCAST_DEBUGONLY(timedDamageDeathRemoveMode)\
-	EASY_CVAR_DECLARATION_CLIENT_CLIENTSENDOFF_BROADCAST_DEBUGONLY(weaponSelectUsesReloadSounds)\
+	EASY_CVAR_DECLARATION_CLIENT(hud_moveselect_sound)\
 	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY(barnacleCanGib)\
 	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY(sentryCanGib)\
 	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY(miniturretCanGib)\
@@ -3358,6 +3360,7 @@
 	EASY_CVAR_DECLARATION_CLIENT(pausecorrection2)\
 	EASY_CVAR_DECLARATION_CLIENT(hud_rpg_alpha_ammo)\
 	EASY_CVAR_DECLARATION_CLIENT(cl_viewmodel_fidget)\
+	EASY_CVAR_DECLARATION_CLIENT(sv_player_midair_fix)\
 	DUMMY
 
 
@@ -3610,9 +3613,9 @@
 	EASY_CVAR_UPDATE_SERVER_CLIENTSENDOFF_BROADCAST_DEBUGONLY(handGrenadePickupYieldsOne, 97)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(handGrenadesUseOldBounceSound)\
 	DUMMY\
-	EASY_CVAR_UPDATE_SERVER_CLIENTSENDOFF_BROADCAST_DEBUGONLY(weaponSelectSoundPlayOnMousewheel, 99)\
+	EASY_CVAR_UPDATE_SERVER(hud_moveselect_mousewheelsound)\
 	EASY_CVAR_UPDATE_SERVER_CLIENTSENDOFF_BROADCAST_DEBUGONLY(timedDamageDeathRemoveMode, 100)\
-	EASY_CVAR_UPDATE_SERVER_CLIENTSENDOFF_BROADCAST_DEBUGONLY(weaponSelectUsesReloadSounds, 101)\
+	EASY_CVAR_UPDATE_SERVER(hud_moveselect_sound)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(barnacleCanGib)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(sentryCanGib)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(miniturretCanGib)\
@@ -3875,6 +3878,7 @@
 	EASY_CVAR_UPDATE_SERVER(pausecorrection2)\
 	EASY_CVAR_UPDATE_SERVER(hud_rpg_alpha_ammo)\
 	EASY_CVAR_UPDATE_SERVER(cl_viewmodel_fidget)\
+	EASY_CVAR_UPDATE_SERVER(sv_player_midair_fix)\
 	DUMMY
 
 
@@ -4127,9 +4131,9 @@
 	EASY_CVAR_UPDATE_CLIENT_CLIENTSENDOFF_BROADCAST_DEBUGONLY(handGrenadePickupYieldsOne)\
 	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY(handGrenadesUseOldBounceSound)\
 	DUMMY\
-	EASY_CVAR_UPDATE_CLIENT_CLIENTSENDOFF_BROADCAST_DEBUGONLY(weaponSelectSoundPlayOnMousewheel)\
+	EASY_CVAR_UPDATE_CLIENT(hud_moveselect_mousewheelsound)\
 	EASY_CVAR_UPDATE_CLIENT_CLIENTSENDOFF_BROADCAST_DEBUGONLY(timedDamageDeathRemoveMode)\
-	EASY_CVAR_UPDATE_CLIENT_CLIENTSENDOFF_BROADCAST_DEBUGONLY(weaponSelectUsesReloadSounds)\
+	EASY_CVAR_UPDATE_CLIENT(hud_moveselect_sound)\
 	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY(barnacleCanGib)\
 	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY(sentryCanGib)\
 	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY(miniturretCanGib)\
@@ -4392,6 +4396,7 @@
 	EASY_CVAR_UPDATE_CLIENT(pausecorrection2)\
 	EASY_CVAR_UPDATE_CLIENT(hud_rpg_alpha_ammo)\
 	EASY_CVAR_UPDATE_CLIENT(cl_viewmodel_fidget)\
+	EASY_CVAR_UPDATE_CLIENT(sv_player_midair_fix)\
 	DUMMY
 
 
@@ -4644,9 +4649,9 @@
 	EASY_CVAR_CREATE_SERVER_SETUP_A_SERVERONLY_DEBUGONLY(handGrenadePickupYieldsOne)\
 	EASY_CVAR_CREATE_SERVER_SETUP_A_SERVERONLY_DEBUGONLY(handGrenadesUseOldBounceSound)\
 	DUMMY\
-	EASY_CVAR_CREATE_SERVER_SETUP_A_SERVERONLY_DEBUGONLY(weaponSelectSoundPlayOnMousewheel)\
+	EASY_CVAR_CREATE_SERVER_SETUP_A_CLIENTONLY(hud_moveselect_mousewheelsound)\
 	EASY_CVAR_CREATE_SERVER_SETUP_A_SERVERONLY_DEBUGONLY(timedDamageDeathRemoveMode)\
-	EASY_CVAR_CREATE_SERVER_SETUP_A_SERVERONLY_DEBUGONLY(weaponSelectUsesReloadSounds)\
+	EASY_CVAR_CREATE_SERVER_SETUP_A_CLIENTONLY(hud_moveselect_sound)\
 	EASY_CVAR_CREATE_SERVER_SETUP_A_SERVERONLY_DEBUGONLY(barnacleCanGib)\
 	EASY_CVAR_CREATE_SERVER_SETUP_A_SERVERONLY_DEBUGONLY(sentryCanGib)\
 	EASY_CVAR_CREATE_SERVER_SETUP_A_SERVERONLY_DEBUGONLY(miniturretCanGib)\
@@ -4909,6 +4914,7 @@
 	EASY_CVAR_CREATE_SERVER_SETUP_A_SERVERONLY(pausecorrection2)\
 	EASY_CVAR_CREATE_SERVER_SETUP_A_CLIENTONLY(hud_rpg_alpha_ammo)\
 	EASY_CVAR_CREATE_SERVER_SETUP_A_CLIENTONLY(cl_viewmodel_fidget)\
+	EASY_CVAR_CREATE_SERVER_SETUP_A_SERVERONLY(sv_player_midair_fix)\
 	DUMMY
 
 
@@ -5161,9 +5167,9 @@
 	EASY_CVAR_CREATE_SERVER_A_SERVERONLY_DEBUGONLY(handGrenadePickupYieldsOne)\
 	EASY_CVAR_CREATE_SERVER_A_SERVERONLY_DEBUGONLY(handGrenadesUseOldBounceSound)\
 	DUMMY\
-	EASY_CVAR_CREATE_SERVER_A_SERVERONLY_DEBUGONLY(weaponSelectSoundPlayOnMousewheel)\
+	EASY_CVAR_CREATE_SERVER_A_CLIENTONLY(hud_moveselect_mousewheelsound)\
 	EASY_CVAR_CREATE_SERVER_A_SERVERONLY_DEBUGONLY(timedDamageDeathRemoveMode)\
-	EASY_CVAR_CREATE_SERVER_A_SERVERONLY_DEBUGONLY(weaponSelectUsesReloadSounds)\
+	EASY_CVAR_CREATE_SERVER_A_CLIENTONLY(hud_moveselect_sound)\
 	EASY_CVAR_CREATE_SERVER_A_SERVERONLY_DEBUGONLY(barnacleCanGib)\
 	EASY_CVAR_CREATE_SERVER_A_SERVERONLY_DEBUGONLY(sentryCanGib)\
 	EASY_CVAR_CREATE_SERVER_A_SERVERONLY_DEBUGONLY(miniturretCanGib)\
@@ -5426,6 +5432,7 @@
 	EASY_CVAR_CREATE_SERVER_A_SERVERONLY(pausecorrection2)\
 	EASY_CVAR_CREATE_SERVER_A_CLIENTONLY(hud_rpg_alpha_ammo)\
 	EASY_CVAR_CREATE_SERVER_A_CLIENTONLY(cl_viewmodel_fidget)\
+	EASY_CVAR_CREATE_SERVER_A_SERVERONLY(sv_player_midair_fix)\
 	DUMMY
 
 
@@ -5678,9 +5685,9 @@
 	EASY_CVAR_CREATE_CLIENT_A_SERVERONLY_DEBUGONLY(handGrenadePickupYieldsOne)\
 	EASY_CVAR_CREATE_CLIENT_A_SERVERONLY_DEBUGONLY(handGrenadesUseOldBounceSound)\
 	DUMMY\
-	EASY_CVAR_CREATE_CLIENT_A_SERVERONLY_DEBUGONLY(weaponSelectSoundPlayOnMousewheel)\
+	EASY_CVAR_CREATE_CLIENT_A_CLIENTONLY(hud_moveselect_mousewheelsound)\
 	EASY_CVAR_CREATE_CLIENT_A_SERVERONLY_DEBUGONLY(timedDamageDeathRemoveMode)\
-	EASY_CVAR_CREATE_CLIENT_A_SERVERONLY_DEBUGONLY(weaponSelectUsesReloadSounds)\
+	EASY_CVAR_CREATE_CLIENT_A_CLIENTONLY(hud_moveselect_sound)\
 	EASY_CVAR_CREATE_CLIENT_A_SERVERONLY_DEBUGONLY(barnacleCanGib)\
 	EASY_CVAR_CREATE_CLIENT_A_SERVERONLY_DEBUGONLY(sentryCanGib)\
 	EASY_CVAR_CREATE_CLIENT_A_SERVERONLY_DEBUGONLY(miniturretCanGib)\
@@ -5943,6 +5950,7 @@
 	EASY_CVAR_CREATE_CLIENT_A_SERVERONLY(pausecorrection2)\
 	EASY_CVAR_CREATE_CLIENT_A_CLIENTONLY(hud_rpg_alpha_ammo)\
 	EASY_CVAR_CREATE_CLIENT_A_CLIENTONLY(cl_viewmodel_fidget)\
+	EASY_CVAR_CREATE_CLIENT_A_SERVERONLY(sv_player_midair_fix)\
 	DUMMY
 
 
@@ -6195,9 +6203,9 @@
 	EASY_CVAR_RESET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(handGrenadePickupYieldsOne)\
 	EASY_CVAR_RESET_DEBUGONLY(handGrenadesUseOldBounceSound)\
 	DUMMY\
-	EASY_CVAR_RESET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(weaponSelectSoundPlayOnMousewheel)\
+	EASY_CVAR_RESET(hud_moveselect_mousewheelsound)\
 	EASY_CVAR_RESET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(timedDamageDeathRemoveMode)\
-	EASY_CVAR_RESET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(weaponSelectUsesReloadSounds)\
+	EASY_CVAR_RESET(hud_moveselect_sound)\
 	EASY_CVAR_RESET_DEBUGONLY(barnacleCanGib)\
 	EASY_CVAR_RESET_DEBUGONLY(sentryCanGib)\
 	EASY_CVAR_RESET_DEBUGONLY(miniturretCanGib)\
@@ -6459,6 +6467,7 @@
 	EASY_CVAR_RESET(pausecorrection2)\
 	EASY_CVAR_RESET(hud_rpg_alpha_ammo)\
 	EASY_CVAR_RESET(cl_viewmodel_fidget)\
+	EASY_CVAR_RESET(sv_player_midair_fix)\
 	DUMMY
 
 
@@ -6711,9 +6720,9 @@
 	EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(handGrenadePickupYieldsOne)\
 	EASY_CVAR_EXTERN_DEBUGONLY(handGrenadesUseOldBounceSound)\
 	DUMMY\
-	EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(weaponSelectSoundPlayOnMousewheel)\
+	EASY_CVAR_EXTERN(hud_moveselect_mousewheelsound)\
 	EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(timedDamageDeathRemoveMode)\
-	EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(weaponSelectUsesReloadSounds)\
+	EASY_CVAR_EXTERN(hud_moveselect_sound)\
 	EASY_CVAR_EXTERN_DEBUGONLY(barnacleCanGib)\
 	EASY_CVAR_EXTERN_DEBUGONLY(sentryCanGib)\
 	EASY_CVAR_EXTERN_DEBUGONLY(miniturretCanGib)\
@@ -6976,5 +6985,6 @@
 	EASY_CVAR_EXTERN(pausecorrection2)\
 	EASY_CVAR_EXTERN(hud_rpg_alpha_ammo)\
 	EASY_CVAR_EXTERN(cl_viewmodel_fidget)\
+	EASY_CVAR_EXTERN(sv_player_midair_fix)\
 	DUMMY
 

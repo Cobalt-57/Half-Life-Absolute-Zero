@@ -5023,6 +5023,18 @@ void ClientCommand( edict_t *pEntity )
 			easyForcePrintLineClient(pEntity, "***ERROR: test_cvar struct call did not work.");
 		}
 	}
+	else if (FStrEq(pcmdRefinedRef, "test1")) {
+		float theRes = EASY_CVAR_GET(pregame_server_cvar);
+		easyForcePrintLine("pregame_server_cvar is %.2f", theRes);
+	}
+	else if (FStrEq(pcmdRefinedRef, "test2")) {
+		EASY_CVAR_SET(pregame_server_cvar, 24);
+		easyForcePrintLine("pregame_server_cvar set?");
+	}
+
+
+
+	
 	else {
 		caughtByFirst = FALSE;
 	}
@@ -5584,7 +5596,11 @@ void StartFrame( void )
 		updateCVarRefs(FALSE);
 	}
 	else {
-		easyPrintLine("!!!Called for CVar updates without any map having loaded, frame: %lu mle:%d fpe:%d", g_ulFrameCount, g_mapLoadedEver, g_firstPlayerEntered);
+		// This printout has no point if this is a dedicated server.  There will likely be good
+		// periods of time before the first player ever joins.
+		if(!IS_DEDICATED_SERVER()){
+			easyPrintLine("!!!Called for CVar updates without a player present yet, frame: %lu mle:%d fpe:%d", g_ulFrameCount, g_mapLoadedEver, g_firstPlayerEntered);
+		}
 		
 		updateCVarRefs(TRUE);
 	}

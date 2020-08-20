@@ -39,9 +39,10 @@ EASY_CVAR_EXTERN(fastHornetsInheritsPlayerVelocity);
 
 #ifdef CLIENT_DLL
 BOOL atLeastOneHornet = FALSE;
-float HGUN_prevRechargeTime = -1;
 #endif
 
+float HGUN_prevRechargeTime = -1;
+float HGUN_prevRechargeTimeTo = -1;
 
 LINK_ENTITY_TO_CLASS( weapon_hornetgun, CHgun );
 
@@ -172,33 +173,21 @@ void CHgun::Holster( int skiplocal /* = 0 */ )
 void CHgun::PrimaryAttack()
 {
 	Reload( );
-	
-	easyForcePrintLine("aaa %.2f", m_flRechargeTime - gpGlobals->time);
-	
-
-#ifdef CLIENT_DLL
-
-	//easyPrintLine("HEYYYAH %.2f", (m_flRechargeTime - HGUN_prevRechargeTime));
-	//(atLeastOneHornet || (m_flRechargeTime - HGUN_prevRechargeTime > 0.2) )
-
-	if (PlayerPrimaryAmmoCount() <= 0  ) {
-		ChangePlayerPrimaryAmmoCount(1);
-		m_pPlayer->m_rgAmmoCLIENTHISTORY[getPrimaryAmmoType()] += 1;
-		atLeastOneHornet = FALSE;
-	}
-	HGUN_prevRechargeTime = m_flRechargeTime;
-
-#endif
 
 
-#ifdef CLIENT_DLL
-	if(m_pPlayer->m_rgAmmoCLIENTHISTORY[ getPrimaryAmmoType() ] <= 0)
-#else
+	easyForcePrintLine("A I FIIIIIRRRRRRREEEEEDDDD #1");
 	if (PlayerPrimaryAmmoCount() <= 0)
-#endif
 	{
 		return;
 	}
+	easyForcePrintLine("A I FIIIIIRRRRRRREEEEEDDDD #2");
+
+#ifdef CLIENT_DLL
+	// absurdly high, prevent a HGUN_prevRechargeTimeTo from the next frame since firing took place
+	HGUN_prevRechargeTimeTo = 99999999;
+#endif
+
+
 	//easyForcePrintLine("Well gee I tried glob:%.2f, rech:%.2f ammo:%d", gpGlobals->time, m_flRechargeTime, PlayerPrimaryAmmoCount());
 
 #ifndef CLIENT_DLL
@@ -214,8 +203,9 @@ void CHgun::PrimaryAttack()
 
 	//pHornet->pev->velocity = gpGlobals->v_forward * 300 + UTIL_GetProjectileVelocityExtra(m_pPlayer->pev->velocity, m_pPlayer->someotherhornetstuffhere);
 
-
 #endif
+
+
 
 	
 	//MODDD
@@ -298,10 +288,20 @@ void CHgun::SecondaryAttack( void )
 
 	Reload();
 
+
+	easyForcePrintLine("B I FIIIIIRRRRRRREEEEEDDDD #1");
 	if (PlayerPrimaryAmmoCount() <= 0)
 	{
 		return;
 	}
+	easyForcePrintLine("B I FIIIIIRRRRRRREEEEEDDDD #2");
+
+#ifdef CLIENT_DLL
+	// absurdly high, prevent a HGUN_prevRechargeTimeTo from the next frame since firing took place
+	HGUN_prevRechargeTimeTo = 99999999;
+#endif
+
+
 
 	//Wouldn't be a bad idea to completely predict these, since they fly so fast...
 #ifndef CLIENT_DLL
@@ -423,18 +423,113 @@ void CHgun::Reload( void )
 
 void CHgun::ItemPostFrameThink(void) {
 
+
+
+
+	/*
+	BOOL primaryHeld = ((m_pPlayer->pev->button & IN_ATTACK) ); //&& CanAttack(m_flNextPrimaryAttack, gpGlobals->time, UseDecrement()));
+
+		float HGUN_currentRechargeTimeTo = (m_flRechargeTime - gpGlobals->time);
+		//
+		
+		easyForcePrintLine("aaa  pres:%dcrt:%.2f prt:%.2f", primaryHeld, HGUN_currentRechargeTimeTo, HGUN_prevRechargeTimeTo);
+
+	if (primaryHeld) {
+
+
+#ifdef CLIENT_DLL
+
+
+		//easyPrintLine("HEYYYAH %.2f", (m_flRechargeTime - HGUN_prevRechargeTime));
+		//(atLeastOneHornet || (m_flRechargeTime - HGUN_prevRechargeTime > 0.2) )
+
+		if (PlayerPrimaryAmmoCount() <= 0 && (HGUN_prevRechargeTimeTo <= 0.12 && HGUN_prevRechargeTimeTo < HGUN_currentRechargeTimeTo) ) {
+			ChangePlayerPrimaryAmmoCount(1);
+			m_pPlayer->m_rgAmmoCLIENTHISTORY[getPrimaryAmmoType()] += 1;
+			atLeastOneHornet = FALSE;
+			PrimaryAttack();  // FORCE IT
+		}
+
+#endif
+		HGUN_prevRechargeTimeTo = HGUN_currentRechargeTimeTo;
+		HGUN_prevRechargeTime = m_flRechargeTime;
+	}
+
+
+	*/
+
+
+
+
+	BOOL primaryHeld = ((m_pPlayer->pev->button & IN_ATTACK)); //&& CanAttack(m_flNextPrimaryAttack, gpGlobals->time, UseDecrement()));
+	BOOL secondaryHeld = ((m_pPlayer->pev->button & IN_ATTACK));
+
+
+	//if (primaryHeld) {
+	//	easyForcePrintLine("IM HELD DOWN");
+	//}
+
 	
 	//MODDD - moved from 'Reload' below, see notes there
 	if (PlayerPrimaryAmmoCount() < HORNET_MAX_CARRY) {
 		// This adds a hornet for every add-1-hornet-interval that passed between the last time
 		// the weapon was out and now to account for frames that think logic couldn't run
 		// (as it's only run on the currently equipped player weapon).
+
+
+		float HGUN_currentRechargeTimeTo = (m_flRechargeTime - gpGlobals->time);
+		//
+
+		
+		//  pres:1 primam:0 prt:0.01 crt:0.49 <=0.12?1 p<c?1
+		//if (primaryHeld) {
+
+#ifdef CLIENT_DLL
+		//if (!IsMultiplayer()) {
+			//(atLeastOneHornet || (m_flRechargeTime - HGUN_prevRechargeTime > 0.2) )
+			if (PlayerPrimaryAmmoCount() <= 1 && (HGUN_prevRechargeTimeTo <= 0.12 && HGUN_prevRechargeTimeTo < HGUN_currentRechargeTimeTo)) {
+				//easyForcePrintLine("hey yah");
+
+
+				easyForcePrintLine("aaa  pres:%d,%d primam:%d prt:%.2f crt:%.2f <=0.12?%d p<c?%d", primaryHeld, secondaryHeld, PlayerPrimaryAmmoCount(), HGUN_prevRechargeTimeTo, HGUN_currentRechargeTimeTo, (HGUN_prevRechargeTimeTo <= 0.12), (HGUN_prevRechargeTimeTo < HGUN_currentRechargeTimeTo));
+
+				// fiah nao
+				if (PlayerPrimaryAmmoCount() <= 0) {
+					ChangePlayerPrimaryAmmoCount(1);
+					m_pPlayer->m_rgAmmoCLIENTHISTORY[getPrimaryAmmoType()] += 1;
+				}
+				//m_flNextPrimaryAttack = 0;
+				//m_flNextSecondaryAttack = 0;
+
+				atLeastOneHornet = FALSE;
+
+				if (secondaryHeld) {
+					SecondaryAttack();  // FORCE IT
+				}
+				else if (primaryHeld) {
+					PrimaryAttack();  // FORCE IT
+				}
+				else {
+					// ???
+					m_flNextPrimaryAttack = 0;
+					m_flNextSecondaryAttack = 0;
+				}
+			}
+		//}
+#endif
+
+		HGUN_prevRechargeTimeTo = HGUN_currentRechargeTimeTo;
+		HGUN_prevRechargeTime = m_flRechargeTime;
+		//}
+
+
+
+
 		while (PlayerPrimaryAmmoCount() < HORNET_MAX_CARRY && m_flRechargeTime < gpGlobals->time)
 		{
 #ifdef CLIENT_DLL
 
 			if (PlayerPrimaryAmmoCount() == 0) {
-				easyForcePrintLine("SAVOH");
 				atLeastOneHornet = TRUE;
 				m_flRechargeTime += 0.4;
 			}
@@ -445,10 +540,16 @@ void CHgun::ItemPostFrameThink(void) {
 			m_flRechargeTime += 0.5;
 #endif
 			ChangePlayerPrimaryAmmoCount(1);
-			easyForcePrintLine("yay? %d", PlayerPrimaryAmmoCount());
+			//easyForcePrintLine("yay? %d", PlayerPrimaryAmmoCount());
 
-		}
-	}
+		}//END OF while loop
+
+
+
+
+
+
+	}//END OF ammo under max check
 
 
 	CBasePlayerWeapon::ItemPostFrameThink();

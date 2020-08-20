@@ -439,7 +439,8 @@ playerExtraPainSoundsMode (2) - MODEVAR. Only applies if mutePlayerPainSound is 
 	2/5 chance of playing nothing.
 2 - only "PainChance" works, "PainSound" turned off. Makes more sense.
 
-weaponSelectSoundPlayOnMousewheel - BOOL.  If on, the weapon-select sound for scrolling through weapons of an open category plays for any new selection  when using the mouse wheel (usually silent).
+hud_moveselect_mousewheelsound (1) - BOOL.  If on, the weapon-select sound for scrolling through weapons of an open category plays for any new selection  when using the mouse wheel (usually silent).
+~Requires hud_moveselect_sound to be non-zero, plays the same sound suggested by that.
 
 timedDamageDisableViewPunch - BOOL.  If on, timed damage's continued pulsing damage will never punch the view (cause the sudden offset that softly goes back to normal).
 
@@ -641,7 +642,12 @@ announcerIsAJerk - BOOL. That vox announcer guy? He has it out for Freeman's ass
 
 
 weaponPickupPlaysAnyReloadSounds - BOOL.  If 1, plays reload sounds "reload#" 1, 2, and 3 at random instead of "9mmclip1".
-weaponSelectUsesReloadSounds - BOOL.  If 1, moving over weapons in weapon select plays "reload#" 1, 2, 3 at random instead.
+
+hud_moveselect_sound (1) - MODEVAR.  Controls the sound made changing the selected weapon in the weapon select menu while already open.
+0: no sound.
+1: common/wpn_moveselect.wav (default)
+2: weapons/reload#.wav, 1 to 3.
+
 
 mirrorsReflectOnlyNPCs - BOOL.  If 1, mirrors only reflect NPCs (generally, living enemies and friendlies).
 mirrorsDoNotReflectPlayer - BOOL.  If 1, the player (first or third person) is an exception to rendering in the mirror (being shown in the reflection).
@@ -1512,6 +1518,16 @@ sv_bloodparticlemode (0) - MODEVAR.  Affects the blood particle created when nea
 1: alpha (solid-colored dots)
 2: both at the same time
 
+sv_explosionknockback (1) - FLOAT (adjustable).  1 is the default amount of knockback from explosions for all non-player monsters (player is already knocked back by most damage sources including explosions).
+~0 is none.
+~Uses the same procedure as 'monsterKilledToss' set to 2 to determine knockback.  Larger monsters are affected by the same damage less.
+
+cl_gaussfollowattachment (1) - BOOL.  Retail behavior is 1.  If on, the gauss laser follows the end of the gauss as it fires.
+~If 0, it stays at the firing origin and disappears faster to not look too weird while moving.
+
+cl_mp5_kickbackmode (0) - BOOL.  When on, mp5 random kickback no longer includes very low ranges, slightly higher on average and more consistent.
+
+
 
 ==============================================================================
 INTERPOLATION-RELATED CVARs
@@ -1535,15 +1551,6 @@ cl_interp_view_extra (2) - MODEVAR.  View camera smoothness for crouching to loo
 1: Only on uncrouching before finishing a full crouch (releasing CTRL too early), similar smoothness to uncrouching from a full crouch.
 2: In addition to #1, interp while crouching/uncrouching to any extent through the air.
 -------------------------------------------------------------------------------
-
-sv_explosionknockback (1) - FLOAT (adjustable).  1 is the default amount of knockback from explosions for all non-player monsters (player is already knocked back by most damage sources including explosions).
-~0 is none.
-~Uses the same procedure as 'monsterKilledToss' set to 2 to determine knockback.  Larger monsters are affected by the same damage less.
-
-cl_gaussfollowattachment (1) - BOOL.  Retail behavior is 1.  If on, the gauss laser follows the end of the gauss as it fires.
-~If 0, it stays at the firing origin and disappears faster to not look too weird while moving.
-
-cl_mp5_kickbackmode (0) - BOOL.  When on, mp5 random kickback no longer includes very low ranges, slightly higher on average and more consistent.
 
 
 
@@ -1571,5 +1578,10 @@ cl_viewmodel_fidget (2) - MODEVAR.  Affects how/when fidget animations for certa
 0: Never.
 1: Randomly while idle (retail).  Does not block firing.
 2: Right-click to trigger them, blocks firing.
+
+sv_player_midair_fix (1) - BOOL.  When on, support for an extension of midair logic that does similar slope-checks as walking.  That is, jumping 'up' stairs is possible without losing momentum.
+-As a side-effect, reaching the top of several objects that were difficult to reach through even crouch-jumping (often some barrels and boxes) is much easier; reach of jumps slightly improved.
+
+
 
 

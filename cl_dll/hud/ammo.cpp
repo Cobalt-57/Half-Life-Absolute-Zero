@@ -54,7 +54,7 @@ EASY_CVAR_EXTERN(allowAlphaCrosshairWithoutGuns)
 EASY_CVAR_EXTERN(alphaCrosshairBlockedOnFrozen)
 EASY_CVAR_EXTERN(hud_drawammobar)
 EASY_CVAR_EXTERN(hud_weaponselecthideslower)
-EASY_CVAR_EXTERN(weaponSelectSoundPlayOnMousewheel)
+EASY_CVAR_EXTERN(hud_moveselect_mousewheelsound)
 EASY_CVAR_EXTERN(drawViewModel)
 EASY_CVAR_EXTERN(drawHUD)
 EASY_CVAR_EXTERN(cl_drawExtraZeros)
@@ -907,7 +907,7 @@ void CHudAmmo::UserCmd_NextWeapon(void)
 					gWR.gpActiveSel = wsp;
 
 					//MODDD - if this CVar is on, play the weapon-select sound on mousewheeling through.
-					if(EASY_CVAR_GET(weaponSelectSoundPlayOnMousewheel) == 1){
+					if(EASY_CVAR_GET(hud_moveselect_mousewheelsound) == 1){
 						gHUD.playWeaponSelectMoveSound();
 						
 					}
@@ -957,7 +957,7 @@ void CHudAmmo::UserCmd_PrevWeapon(void)
 					gWR.gpActiveSel = wsp;
 
 					//MODDD - if this CVar is on, play the weapon-select sound on mousewheeling through.
-					if(EASY_CVAR_GET(weaponSelectSoundPlayOnMousewheel) == 1){
+					if(EASY_CVAR_GET(hud_moveselect_mousewheelsound) == 1){
 						gHUD.playWeaponSelectMoveSound();
 					}
 

@@ -31,7 +31,13 @@ EASY_CVAR_EXTERN(trailTypeTest)
 EASY_CVAR_EXTERN(muteTempEntityGroundHitSound)
 
 
+
 extern vec3_t v_origin;
+
+//MODDD - new
+extern float g_interp_z;
+
+
 
 void Game_AddObjects( void );
 
@@ -253,6 +259,12 @@ void DLLEXPORT HUD_TxferPredictionData ( struct entity_state_s *ps, const struct
 
 
 
+
+	//if (ppcd->vuser4[0] != 0) {
+	//	easyForcePrintLine("vuser4?? gp:%.2f  %.2f", gpGlobals->time, ppcd->vuser4[0]);
+	//}
+
+	g_interp_z = ppcd->vuser4[0];
 
 	//MODDD - and just why weren't these mentioned in any way???
 	// Doesn't seem helpful to even attempt to receive them, so goodbye

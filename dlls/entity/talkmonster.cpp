@@ -1878,6 +1878,27 @@ BOOL CTalkMonster::FNearPassiveSpeak(void){
 }
 
 
+
+
+int CTalkMonster::IgnoreConditions(void) {
+	int baseCond = CBaseMonster::IgnoreConditions();
+
+
+	if (HasMemory(bits_COND_PROVOKED) || recentDeclines >= 30) {
+		// I don't really care if the player tries to push me now.
+		return baseCond | bits_COND_CLIENT_PUSH;
+	}
+	else {
+		// nothing special
+		return baseCond;
+	}
+}
+
+
+
+
+
+
 //MODDD - NEW. Give extra details for things related to the player(s) we're pissed off at.
 void CTalkMonster::ForgetEnemy(void) {
 
@@ -2154,6 +2175,24 @@ void CTalkMonster::SayQuestion(CTalkMonster* argTalkTo) {
 	//SENTENCEG_PlayRndSz( ENT(pev), szQuestionGroup, 1.0, ATTN_IDLE, 0, pitch );
 }
 
+
+
+// called by AlertSound if some cooldown doesn't block it.
+// Provided this way to be manually called by other places without the cooldown check.
+void CTalkMonster::SayAlert(void) {
+
+}
+
+// convenience method, called with DeclineFollowing.
+// Block when the nextUseSentenceAllowed cooldown is active to stop sentence spam.
+void CTalkMonster::SayDeclineFollowing(void) {
+
+}
+// Same, for trying to 'use' while they hate you.
+// Does not count the spam-pissed easter egg 
+void CTalkMonster::SayDeclineFollowingProvoked(void) {
+
+}
 
 //Provoked: this monster has turned on the player from too much or too direct friendly fire.
 void CTalkMonster::SayProvoked(void){
@@ -2589,6 +2628,8 @@ CTalkMonster::CTalkMonster(void){
 	recentDeclines = 0;
 	recentDeclinesForgetTime = -1;
 
+	nextUseSentenceAllowed = -1;
+
 
 }//CTalkMonster constructor
 
@@ -2885,14 +2926,16 @@ void CTalkMonster::StopFollowing( BOOL clearSchedule, BOOL playUnuseSentence )
 
 		if ( !(m_afMemory & bits_MEMORY_PROVOKED) )
 		{
-			//MODDD
-			if(playUnuseSentence == TRUE){
-				if(EASY_CVAR_GET(pissedNPCs) < 1){
-					PlaySentence( m_szGrp[TLK_UNUSE], RANDOM_FLOAT(2.8, 3.2), VOL_NORM, ATTN_IDLE );
-				}else{
-					playPissed();
+			if (gpGlobals->time >= nextUseSentenceAllowed) {
+				if (playUnuseSentence == TRUE) {
+					if (EASY_CVAR_GET(pissedNPCs) < 1) {
+						PlaySentence(m_szGrp[TLK_UNUSE], RANDOM_FLOAT(2.8, 3.2), VOL_NORM, ATTN_IDLE);
+					}
+					else {
+						playPissed();
+					}
 				}
-			}
+			}//nextUseSentenceAllowed
 			
 			m_hTalkTarget = m_hTargetEnt;
 		}
@@ -2923,12 +2966,16 @@ void CTalkMonster::StartFollowing( CBaseEntity *pLeader )
 		m_IdealMonsterState = MONSTERSTATE_ALERT;
 
 	m_hTargetEnt = pLeader;
-	//MODDD
-	if(EASY_CVAR_GET(pissedNPCs) < 1){
-		PlaySentence( m_szGrp[TLK_USE], RANDOM_FLOAT(2.8, 3.2), VOL_NORM, ATTN_IDLE );
-	}else{
-		playPissed();
+	
+	if (gpGlobals->time >= nextUseSentenceAllowed) {
+		if (EASY_CVAR_GET(pissedNPCs) < 1) {
+			PlaySentence(m_szGrp[TLK_USE], RANDOM_FLOAT(2.8, 3.2), VOL_NORM, ATTN_IDLE);
+		}
+		else {
+			playPissed();
+		}
 	}
+
 	m_hTalkTarget = m_hTargetEnt;
 	ClearConditions( bits_COND_CLIENT_PUSH );
 	ClearSchedule();
@@ -3019,9 +3066,6 @@ void CTalkMonster :: FollowerUse( CBaseEntity *pActivator, CBaseEntity *pCaller,
 	if ( m_useTime > gpGlobals->time )
 		return;
 
-	//easyPrintLine("TALK DEBUG 1???");
-
-
 	if ( pCaller != NULL && pCaller->IsPlayer() )
 	{
 		//easyPrintLine("TALK DEBUG 2???");
@@ -3030,6 +3074,10 @@ void CTalkMonster :: FollowerUse( CBaseEntity *pActivator, CBaseEntity *pCaller,
 		{
 			//easyPrintLine("TALK DEBUG 3a???");
 			DeclineFollowing();
+			// always play the declines when spam-pissed though
+			if (recentDeclines >= 30 || gpGlobals->time >= nextUseSentenceAllowed) {
+				SayDeclineFollowing();
+			}
 		}
 		else if ( CanFollow() )
 		{
@@ -3040,9 +3088,13 @@ void CTalkMonster :: FollowerUse( CBaseEntity *pActivator, CBaseEntity *pCaller,
 			LimitFollowers( pCaller , EASY_CVAR_GET(playerFollowerMax)-1 );
 
 			if ( m_afMemory & bits_MEMORY_PROVOKED ){
-				ALERT( at_console, "I'm not following you, you evil person!\n" );
+				//ALERT( at_console, "I'm not following you, you evil person!\n" );
 				//MODDD - we can do even better than just a console printout.  
+				
 				DeclineFollowingProvoked(pCaller);
+				if (gpGlobals->time >= nextUseSentenceAllowed) {
+					SayDeclineFollowingProvoked();
+				}
 			}
 			else
 			{
@@ -3055,6 +3107,12 @@ void CTalkMonster :: FollowerUse( CBaseEntity *pActivator, CBaseEntity *pCaller,
 		{
 			StopFollowing( TRUE );
 		}
+
+		//MODDD - don't allow another sentence for this long, the rest of the logic from a call can work though.
+		if (gpGlobals->time >= nextUseSentenceAllowed) {
+			nextUseSentenceAllowed = gpGlobals->time + RANDOM_FLOAT(1.8, 2.6);
+		}
+
 	}
 }
 
@@ -3107,9 +3165,6 @@ void CTalkMonster::ReportAIState(){
 void CTalkMonster::initiateAss(){
 	//default: no behavior?
 }
-
-
-
 
 
 

@@ -33,7 +33,7 @@ EASY_CVAR_EXTERN(timedDamage_debug)
 EASY_CVAR_EXTERN(hud_version)
 EASY_CVAR_EXTERN(preE3ShowsDamageIcons)
 EASY_CVAR_EXTERN(E3ShowsDamageIcons)
-EASY_CVAR_EXTERN(timedDamageDeathRemoveMode)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(timedDamageDeathRemoveMode)
 EASY_CVAR_EXTERN(hud_weaponselecthideslower)
 EASY_CVAR_EXTERN(itemFlashCumulativeJump)
 EASY_CVAR_EXTERN(itemFlashDrawOpacityMax)
@@ -498,7 +498,7 @@ int CHudHealth::DrawDamage(float flTime)
 
 
 	//MODDD
-	if (gHUD.m_fPlayerDead && EASY_CVAR_GET(timedDamageDeathRemoveMode) == 1) {
+	if (gHUD.m_fPlayerDead && EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(timedDamageDeathRemoveMode) == 1) {
 		//do not render anymore.
 		return 1;
 	}

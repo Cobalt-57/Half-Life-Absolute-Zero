@@ -359,6 +359,23 @@ Slightly more delay between firing mp5 grenades, less delay before being able to
 
 General viewmodel fix for slight duplication of events restored (two shotgun shells from single-fire).
 
+Hornet gun animation-less firing happens much less often.
+
 Squad "alert friends of enemy" behavior restored.
 
 Movement up/down fast moving platforms will have less extrme shifts in view compared to where the player actually is.
+
+CVar weaponSelectSoundPlayOnMousewheel renamed to hud_moveselect_mousewheelsound.
+CVar weaponSelectUsesReloadSounds renamed to hud_moveselect_sound.  Now 0, 1, or 2 instead of 0 or 1   (and is now 1 by default for the same behavior).
+
+Spamming 'use' on NPC's no longer starts sentences every time, cooldown of about 2 seconds between use-related sentences.  Underlying logic still happens.
+
+Downward-incline smoothness slightly further improved.
+
+CVAR: sv_player_midair_fix, 0 for retail, 1 for the following:
+-Support for an extension of midair logic that does similar slope-checks as walking.  That is, jumping 'up' stairs is possible without losing momentum.
+-As a side-effect, reaching the top of several objects that were difficult to reach through even crouch-jumping (often some barrels and boxes) is much easier; reach of jumps slightly improved.
+
+Going up/down fast-moving platforms no longer causes the interp-smoothness to awkwardly lag behind the position of where the player actually is.
+
+

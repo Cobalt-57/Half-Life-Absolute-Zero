@@ -172,6 +172,8 @@ public:
 	int recentDeclines;
 	float recentDeclinesForgetTime;
 
+	float nextUseSentenceAllowed;
+
 
 	//MODDD
 	const char* madSentences[5];
@@ -325,6 +327,10 @@ public:
 	virtual void SayHello(CBaseEntity* argPlayerTalkTo);
 	virtual void SayIdleToPlayer(CBaseEntity* argPlayerTalkTo);
 	virtual void SayQuestion(CTalkMonster* argTalkTo);
+
+	virtual void SayAlert(void);
+	virtual void SayDeclineFollowing(void);
+	virtual void SayDeclineFollowingProvoked(void);
 	virtual void SayProvoked(void);
 	virtual void SayStopShooting(void);
 	virtual void SaySuspicious(void);
@@ -339,9 +345,10 @@ public:
 	BOOL FNearCautiousSpeak(void);
 	BOOL FNearPassiveSpeak(void);
 
+	int IgnoreConditions(void);
+
 	//MODDD - NEW, from CBaseMonster.
 	virtual void ForgetEnemy(void);
-
 	virtual void OnForgiveDeclineSpam(void);
 
 	

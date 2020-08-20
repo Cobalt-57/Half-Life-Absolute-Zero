@@ -75,6 +75,7 @@ extern void command_updateCameraPerspectiveT(void);
 
 
 
+
 typedef struct
 {
 	float Origins[ORIGIN_BACKUP][3];
@@ -557,7 +558,7 @@ static float oldViewHeight = 0;
 static int oldHull = 0;
 static float prevOriginZ = 0;
 static float deltaOriginZ_cumula = 0;
-
+float g_interp_z = 0; // Set by an outside source!
 
 
 
@@ -921,7 +922,6 @@ void V_CalcNormalRefdef(struct ref_params_s* pparams)
 
 
 
-
 		float deltaOriginZ = ent->curstate.origin.z - prevOriginZ;
 		prevOriginZ = ent->curstate.origin.z;
 		// same thing
@@ -968,7 +968,7 @@ void V_CalcNormalRefdef(struct ref_params_s* pparams)
 
 
 		deltaOriginZ_cumula += deltaOriginZ;
-		easyForcePrintLine("here comes honey %.2f : %.2f", deltaOriginZ_cumula, deltaOriginZ);
+		//easyForcePrintLine("here comes honey %.2f : %.2f", deltaOriginZ_cumula, deltaOriginZ);
 		//easyForcePrintLine("here comes honey %.2f : %.2f", deltaOriginZ);
 
 
@@ -982,7 +982,8 @@ void V_CalcNormalRefdef(struct ref_params_s* pparams)
 		// (when pm_shared does that) or being taken higher/lower by going up/down stairs.
 		// If there were some way for pm_shared to give the difference in height that is allowed
 		// to be interpolated, that would be nice.
-		//oldz += deltaOriginZ;
+		// GOT IT!  g_interp_z is set by pm_shared to give the amount of change explained by interp-fix.
+		oldz += deltaOriginZ - g_interp_z;
 
 
 		if (EASY_CVAR_GET(cl_interp_view_extra) == 2 || (EASY_CVAR_GET(cl_interp_view_extra) == 1 && pparams->onground)) {

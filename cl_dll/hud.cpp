@@ -39,7 +39,7 @@
 EASY_CVAR_EXTERN(hud_version)
 EASY_CVAR_EXTERN(preE3UsesFailColors)
 EASY_CVAR_EXTERN(E3UsesFailColors)
-EASY_CVAR_EXTERN(weaponSelectUsesReloadSounds)
+EASY_CVAR_EXTERN(hud_moveselect_sound)
 EASY_CVAR_EXTERN(hud_drawsidebarmode)
 EASY_CVAR_EXTERN(cl_interp_entity)
 EASY_CVAR_EXTERN(hud_brokentrans)
@@ -549,10 +549,9 @@ void CHud::attemptDrawBrokenTransLightAndWhite(int arg_startx, int arg_starty, i
 //MODDD - new.
 void CHud::playWeaponSelectMoveSound(){
 
-	if(EASY_CVAR_GET(weaponSelectUsesReloadSounds) != 1){
+	if(EASY_CVAR_GET(hud_moveselect_sound) == 1){
 		PlaySound("common/wpn_moveselect.wav", 1);
-	}else{
-
+	}else if(EASY_CVAR_GET(hud_moveselect_sound) == 2){
 		long rand = gEngfuncs.pfnRandomLong(0,2);
 		switch(rand){
 		case 0:
@@ -834,6 +833,15 @@ void command_lastinv(void) {
 
 
 
+void command_test3(void) {
+	float theRes = EASY_CVAR_GET(pregame_server_cvar);
+	easyForcePrintLine("pregame_server_cvar is %.2f", theRes);
+}
+void command_test4(void) {
+	EASY_CVAR_SET(pregame_server_cvar, 16);
+	easyForcePrintLine("pregame_server_cvar set?");
+}
+
 
 
 // This is called every time the DLL is loaded
@@ -889,11 +897,6 @@ void CHud :: Init( void )
 	
 
 
-	//weaponSelectSoundPlayOnMousewheel = gEngfuncs.pfnRegisterVariable("weaponSelectSoundPlayOnMousewheel", "1", FCVAR_CLIENTDLL | FCVAR_ARCHIVE);
-	//timedDamageDeathRemoveMode = CVAR_CREATE("timedDamageDeathRemoveMode", "1", FCVAR_CLIENTDLL | FCVAR_ARCHIVE);
-	//weaponSelectUsesReloadSounds = CVAR_CREATE("weaponSelectUsesReloadSounds", "0", FCVAR_ARCHIVE);
-	
-
 	//CVar_cameraMode = CVAR_CREATE("IGNOREcameraMode", "0", FCVAR_CLIENTDLL);
 	//CVar_cameraModeMem = 0;
 
@@ -909,6 +912,22 @@ void CHud :: Init( void )
 	gEngfuncs.pfnAddCommand("mod_version_client", method_mod_version_client);
 	gEngfuncs.pfnAddCommand("mod_version_server", method_mod_version_server);
 	
+
+	
+
+	gEngfuncs.pfnAddCommand("test3", command_test3);
+	gEngfuncs.pfnAddCommand("test4", command_test4);
+
+
+
+
+
+	//TEST!!!
+	CVAR_CREATE("pregame_server_cvar", "0", FCVAR_ARCHIVE | FCVAR_SERVER);
+
+
+
+
 
 
 	//MODDD - CVAR TEST
@@ -979,9 +998,6 @@ void CHud :: Init( void )
 	
 
 
-	//TEST!!!
-	CVAR_CREATE("pregame_server_cvar", "0", FCVAR_ARCHIVE | FCVAR_SERVER);
-	
 	
 	/*
 	CVAR_CREATE("_sv_aim", "0", FCVAR_ARCHIVE);

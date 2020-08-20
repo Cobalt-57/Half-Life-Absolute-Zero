@@ -1060,31 +1060,6 @@ BOOL getGermanModelsAllowed(void){return FALSE;}
 	
 
 
-/*
-
-//MODDD
-CChumToadWeapon::CChumToadWeapon(void) { }
-
-void CChumToadWeapon::Spawn( void ) { }
-void CChumToadWeapon::Precache( void ) { }
-//int CChumToadWeapon::iItemSlot( void ) { return 0; }
-int CChumToadWeapon::GetItemInfo(ItemInfo *p) {  return 0; }
-
-//MODDD
-void CChumToadWeapon::customAttachToPlayer(CBasePlayer *pPlayer ) { }
-
-
-void CChumToadWeapon::PrimaryAttack( void ) { }
-void CChumToadWeapon::SecondaryAttack( void ) { }
-BOOL CChumToadWeapon::Deploy( void ) { return FALSE; }
-void CChumToadWeapon::Holster( int skiplocal ) { }
-void CChumToadWeapon::WeaponIdle( void ) { }
-
-//int CChumToadWeapon::UseDecrement( void ){return FALSE; }
-*/
-
-
-
 
 // util_debugdraw.h methods, dummied.
 ///////////////////////////////////////////////////////////////////////////////////////////////////////

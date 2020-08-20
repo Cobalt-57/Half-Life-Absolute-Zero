@@ -344,6 +344,37 @@ float UTIL_SharedRandomFloat(unsigned int seed, float low, float high)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
+// global method copied from weapons.cpp, now supported clientside too
+BOOL CanAttack(float attack_time, float curtime, BOOL isPredicted)
+{
+
+#ifdef CLIENT_DLL
+	// clientside
+	return (attack_time <= 0) ? TRUE : FALSE;
+
+#else
+	// serverside
+#if defined( CLIENT_WEAPONS )
+	if (!isPredicted)
+#else
+	if (1)
+#endif
+	{
+		return (attack_time <= curtime) ? TRUE : FALSE;
+	}
+	else
+	{
+		return (attack_time <= 0.0) ? TRUE : FALSE;
+	}
+
+	//END OF normal behavior w/o the cheat.
+	//}else{
+	//	//with cheats, can always attack.
+	//	return TRUE;
+	//}
+#endif
+}//CanAttack
+
 
 
 

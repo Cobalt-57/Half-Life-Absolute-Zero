@@ -294,6 +294,8 @@ public:
 
 	void TalkInit( void );
 
+	void AlertSound(void);
+
 	GENERATE_KILLED_PROTOTYPE
 
 	virtual int	Save( CSave &save );
@@ -316,6 +318,11 @@ public:
 	void SayHello(CBaseEntity* argPlayerTalkTo);
 	void SayIdleToPlayer(CBaseEntity* argPlayerTalkTo);
 	void SayQuestion(CTalkMonster* argTalkTo);
+
+	void SayAlert(void);
+	void SayDeclineFollowing(void);
+	void SayDeclineFollowingProvoked(void);
+	void SayFear(void);
 	void SayProvoked(void);
 	void SayStopShooting(void);
 	void SaySuspicious(void);
@@ -871,15 +878,40 @@ DEFINE_CUSTOM_SCHEDULES( CScientist )
 IMPLEMENT_CUSTOM_SCHEDULES( CScientist, CTalkMonster );
 
 
-	
+
+
+CScientist::CScientist(void) {
+	//givenModelBody = -1;
+
+	nextRandomSpeakCheck = -1;
+	screamCooldown = -1;
+
+	explodeDelay = -1;
+
+	aggroOrigin = Vector(0, 0, 0); //???
+
+	aggroCooldown = -1;
+	aggro = 0;
+
+	playFearAnimCooldown = -1;
+
+	trueBody = -1;
+
+	healNPCChosen = FALSE;
+	healNPCCheckDelay = -1;
+
+	//On a restore, if never seen before, this is loaded as "0" instead.  Beware of that.
+
+
+	madInterSentencesLocation = madInterSentences;
+	//madInterSentencesMaxLocation = &madInterSentencesMax;
+
+	//are parent constructors called automatically in CScientist?
+	//CTalkMonster::CTalkMonster();
+}
+
 void CScientist::DeclineFollowingProvoked(CBaseEntity* pCaller){
 	
-	if(EASY_CVAR_GET(pissedNPCs) != 1 || !globalPSEUDO_iCanHazMemez){
-		PlaySentence( "SC_SCREAM_TRU", 4, VOL_NORM, ATTN_NORM );  //OH NO YOU FOUND ME.
-	}else{
-		PlaySentence( "BA_POKE_D", 8, VOL_NORM, ATTN_NORM );
-	}
-
 	if(this->m_pSchedule == slScientistCover || this->m_pSchedule == slSciPanic){
 		//no reaction, already running.
 
@@ -968,7 +1000,111 @@ void CScientist::SayQuestion(CTalkMonster* argTalkTo) {
 
 
 
+void CScientist::SayAlert(void) {
 
+	if (m_hEnemy != NULL) {
+		Vector tempEnBoundDelta = (m_hEnemy->pev->absmax - m_hEnemy->pev->absmin);
+		float tempEnSize = tempEnBoundDelta.x * tempEnBoundDelta.y * tempEnBoundDelta.z;
+
+		if (tempEnSize < 16000) {  //headcrab size: 13824
+			// play 60% of the time
+			float someRand = RANDOM_FLOAT(0, 1);
+			if (someRand < 0.6) {
+				PlaySentence("SC_FEAR", 5, VOL_NORM, ATTN_NORM);
+			}
+		}
+		else if (tempEnSize <= 500000) {  //size of agrunt: about 348160
+			// fear
+			PlaySentence("SC_FEAR", 5, VOL_NORM, ATTN_NORM);
+		}
+		else {
+			// OH GOD ITS HUGE
+			PlaySentence("SC_SCREAM_TRU", 5, VOL_NORM, ATTN_NORM);
+		}
+	}
+	else {
+		// forced to play the alert sound anyway?  ok.
+		PlaySentence("SC_FEAR", 5, VOL_NORM, ATTN_NORM);
+	}
+
+
+}//SayAlert
+
+
+void CScientist::SayDeclineFollowing(void) {
+	//MODDD
+	if (EASY_CVAR_GET(pissedNPCs) < 1) {
+		//Talk( 10 );   pointless. PlaySentence already sets the same thing.
+		m_hTalkTarget = m_hEnemy;
+
+		if (recentDeclines < 30) {
+			// normal.
+			PlaySentence("SC_POK", 4, VOL_NORM, ATTN_NORM);
+		}
+		else {
+			float randomVal = RANDOM_FLOAT(0, 1);
+			if (randomVal < 0.25) {
+				PainSound_Play();
+			}
+			else if (randomVal < 0.75) {
+				switch (RANDOM_LONG(0, 5)) {
+				case 0:PlaySentenceSingular("SC_PLFEAR1", 4, VOL_NORM, ATTN_NORM); break; //scientist/canttakemore
+				case 1:PlaySentenceSingular("SC_PLFEAR3", 4, VOL_NORM, ATTN_NORM); break; //scientist/noplease
+				case 2:PlaySentenceSingular("SC_PLFEAR4", 4, VOL_NORM, ATTN_NORM); break; //getoutofhere
+				case 3:PlaySentenceSingular("SC_SCREAM_TRU14", 4, VOL_NORM, ATTN_NORM); break; //GORDON
+				case 4:PlaySentenceSingular("SC_PLFEAR0", 4, VOL_NORM, ATTN_NORM); break; //what are you doing
+				case 5:PlaySentenceSingular("SC_ANNOYED", 4, VOL_NORM, ATTN_NORM); break; //are you insane	
+				}
+			}
+			else {
+				PlaySentence("SC_SCREAM_TRU", 4, VOL_NORM, ATTN_NORM);
+			}
+		}
+
+	}
+	else {
+
+		playPissed();
+	}
+}//SayDeclineFollowing
+
+void CScientist::SayDeclineFollowingProvoked(void) {
+
+	if (EASY_CVAR_GET(pissedNPCs) != 1 || !globalPSEUDO_iCanHazMemez) {
+		PlaySentence("SC_SCREAM_TRU", 4, VOL_NORM, ATTN_NORM);  //OH NO YOU FOUND ME.
+	}
+	else {
+		PlaySentence("BA_POKE_D", 8, VOL_NORM, ATTN_NORM);
+	}
+
+}
+
+
+
+
+// Custom Say method for the scientist, convenience.
+void CScientist::SayFear(void) {
+	m_hTalkTarget = m_hEnemy;   // it is ok for m_hTalkTarget to be NULL.
+	if (m_hEnemy != NULL && m_hEnemy->IsPlayer()) {
+		//PlaySentence("SC_PLFEAR", 5, VOL_NORM, ATTN_NORM);
+		//MODDD - call upon this, more variety
+		SayProvoked();
+	}
+	else {
+		// Enemy and talk target may be NULL here!
+		//MODDD - same
+		float randomVal = RANDOM_FLOAT(0, 1);
+		if (randomVal < 0.7) {
+			PlaySentence("SC_FEAR", 5, VOL_NORM, ATTN_NORM);
+		}
+		else if (randomVal < 0.9) {
+			PlaySentence("SC_SCREAM", 5, VOL_NORM, ATTN_NORM);
+		}
+		else {
+			PlaySentence("SC_SCREAM_TRU", 4, VOL_NORM, ATTN_NORM);  //OH NO YOU FOUND ME.
+		}
+	}
+}//SayFear
 
 void CScientist::SayProvoked(void){
 
@@ -1012,6 +1148,7 @@ void CScientist::SayProvoked(void){
 
 	}
 }
+
 void CScientist::SayStopShooting(void) {
 
 	if (EASY_CVAR_GET(pissedNPCs) < 1 || !globalPSEUDO_iCanHazMemez) {
@@ -1137,46 +1274,12 @@ void CScientist::DeclineFollowing( void )
 {
 	recentDeclines++;
 	if (recentDeclines < 30) {
-		recentDeclinesForgetTime = gpGlobals->time + 8;
+		recentDeclinesForgetTime = gpGlobals->time + 12;
 	}
 	else {
 		recentDeclinesForgetTime = gpGlobals->time + 50;
 	}
 
-
-	//MODDD
-	if(EASY_CVAR_GET(pissedNPCs) < 1){
-		//Talk( 10 );   pointless. PlaySentence already sets the same thing.
-		m_hTalkTarget = m_hEnemy;
-
-		if (recentDeclines < 30) {
-			// normal.
-			PlaySentence("SC_POK", 4, VOL_NORM, ATTN_NORM);
-		}
-		else {
-			float randomVal = RANDOM_FLOAT(0, 1);
-			if (randomVal < 0.25) {
-				PainSound_Play();
-			}
-			else if (randomVal < 0.75) {
-				switch (RANDOM_LONG(0, 5)) {
-					case 0:PlaySentenceSingular("SC_PLFEAR1", 4, VOL_NORM, ATTN_NORM); break; //scientist/canttakemore
-					case 1:PlaySentenceSingular("SC_PLFEAR3", 4, VOL_NORM, ATTN_NORM); break; //scientist/noplease
-					case 2:PlaySentenceSingular("SC_PLFEAR4", 4, VOL_NORM, ATTN_NORM); break; //getoutofhere
-					case 3:PlaySentenceSingular("SC_SCREAM_TRU14", 4, VOL_NORM, ATTN_NORM); break; //GORDON
-					case 4:PlaySentenceSingular("SC_PLFEAR0", 4, VOL_NORM, ATTN_NORM); break; //what are you doing
-					case 5:PlaySentenceSingular("SC_ANNOYED", 4, VOL_NORM, ATTN_NORM); break; //are you insane	
-				}
-			}
-			else {
-				PlaySentence("SC_SCREAM_TRU", 4, VOL_NORM, ATTN_NORM);
-			}
-		}
-
-	}else{
-
-		playPissed();
-	}
 }
 
 
@@ -1467,26 +1570,7 @@ void CScientist :: StartTask( Task_t *pTask )
 		// yea no, this is too spammy
 		if ( FOkToSpeak() )
 		{
-			m_hTalkTarget = m_hEnemy;
-			if (m_hEnemy != NULL && m_hEnemy->IsPlayer()) {
-				//PlaySentence("SC_PLFEAR", 5, VOL_NORM, ATTN_NORM);
-				//MODDD - call upon this, more variety
-				SayProvoked();
-			}
-			else {
-				//PlaySentence("SC_FEAR", 5, VOL_NORM, ASC_SCREAMTTN_NORM);
-				//MODDD - same
-				float randomVal = RANDOM_FLOAT(0, 1);
-				if (randomVal < 0.7) {
-					PlaySentence("SC_FEAR", 5, VOL_NORM, ATTN_NORM);
-				}
-				else if(randomVal < 0.9){
-					PlaySentence("SC_SCREAM", 5, VOL_NORM, ATTN_NORM);
-				}
-				else {
-					PlaySentence("SC_SCREAM_TRU", 4, VOL_NORM, ATTN_NORM);  //OH NO YOU FOUND ME.
-				}
-			}
+			SayFear();
 		}
 		TaskComplete();
 	break;
@@ -1903,36 +1987,6 @@ void CScientist :: Activate( void ){
 	CTalkMonster::Activate();
 }
 
-CScientist::CScientist(void){
-	//givenModelBody = -1;
-
-	nextRandomSpeakCheck = -1;
-	screamCooldown = -1;
-
-	explodeDelay = -1;
-
-	aggroOrigin = Vector(0,0,0); //???
-
-	aggroCooldown = -1;
-	aggro = 0;
-
-	playFearAnimCooldown = -1;
-
-	trueBody = -1;
-
-	healNPCChosen = FALSE;
-	healNPCCheckDelay = -1;
-
-	//On a restore, if never seen before, this is loaded as "0" instead.  Beware of that.
-
-	
-	madInterSentencesLocation = madInterSentences;
-	//madInterSentencesMaxLocation = &madInterSentencesMax;
-
-	//are parent constructors called automatically in CScientist?
-	//CTalkMonster::CTalkMonster();
-}
-
 //=========================================================
 // Spawn
 //=========================================================
@@ -2241,6 +2295,42 @@ void CScientist :: TalkInit()
 	}
 
 }
+
+
+
+
+
+void CScientist::AlertSound(void) {
+
+	if (m_hEnemy != NULL) {
+		if (FClassnameIs(m_hEnemy->pev, "monster_headcrab")) {
+			if (
+				(
+				(g_scientist_HeadcrabMentionAllowedTime == -1 && FOkToSpeakAllowCombat(CTalkMonster::g_talkWaitTime)) ||
+					(FOkToSpeakAllowCombat(g_scientist_HeadcrabMentionAllowedTime) && RANDOM_FLOAT(0, 1) <= 0.87)
+					)
+				) {
+				PlaySentenceSingular("SC_MONST0", 4, VOL_NORM, ATTN_NORM);
+				g_scientist_HeadcrabMentionAllowedTime = gpGlobals->time + 40;
+				return;
+			}
+			//else if (gpGlobals->time >= CTalkMonster::g_talkWaitTime && FOkToSpeakAllowCombat(g_scientist_HeadcrabMentionAllowedTime - 20)) {
+			//	PlaySentence("SC_FEAR", 5, VOL_NORM, ATTN_NORM);
+			//}
+		}
+		
+
+		// not a headcrab or was, but blocked by the headcrab mention allowed time cooldown?  Proceed.
+		
+		// any other enemy? check size
+		if (FOkToSpeakAllowCombat(CTalkMonster::g_talkWaitTime)) {
+			SayAlert();
+		}
+	}
+
+}//AlertSound
+
+
 
 
 GENERATE_TRACEATTACK_IMPLEMENTATION(CScientist)
@@ -2664,45 +2754,11 @@ Schedule_t *CScientist :: GetSchedule ( void )
 	// And it is correct behavior, bits_COND_NEW_ENEMY is only set in basemonster.cpp on the frame a monster
 	// has a different enemy.
 
+
+	// Be like Barney.  Just have an AlertSound, thanks.
 	if (HasConditions(bits_COND_NEW_ENEMY) ) {
-
-		if (m_hEnemy != NULL) {
-			if (FClassnameIs(m_hEnemy->pev, "monster_headcrab")) {
-				if (
-					(
-					(g_scientist_HeadcrabMentionAllowedTime == -1 && FOkToSpeakAllowCombat( CTalkMonster::g_talkWaitTime )) ||
-						(FOkToSpeakAllowCombat(g_scientist_HeadcrabMentionAllowedTime) && RANDOM_FLOAT(0, 1) <= 0.87)
-						)
-					) {
-					PlaySentenceSingular("SC_MONST0", 4, VOL_NORM, ATTN_NORM);
-					g_scientist_HeadcrabMentionAllowedTime = gpGlobals->time + 40;
-				}else if ( gpGlobals->time >= CTalkMonster::g_talkWaitTime && FOkToSpeakAllowCombat(g_scientist_HeadcrabMentionAllowedTime - 20)) {
-					PlaySentence("SC_FEAR", 5, VOL_NORM, ATTN_NORM);
-				}
-			}
-			else {
-				// any other enemy? check size
-				if (FOkToSpeakAllowCombat(CTalkMonster::g_talkWaitTime)) {
-
-					Vector tempEnBoundDelta = (m_hEnemy->pev->absmax - m_hEnemy->pev->absmin);
-					float tempEnSize = tempEnBoundDelta.x * tempEnBoundDelta.y * tempEnBoundDelta.z;
-
-					if (tempEnSize < 16000) {  //headcrab size: 13824
-						// no sounds.
-					}
-					else if (tempEnSize <= 500000) {  //size of agrunt: about 348160
-						// fear
-						PlaySentence("SC_FEAR", 5, VOL_NORM, ATTN_NORM);
-					}
-					else {
-						// OH GOD ITS HUGE
-						PlaySentence("SC_SCREAM_TRU", 5, VOL_NORM, ATTN_NORM);
-					}
-				}
-			}//END OF other monster size check
-			
-		}
-	}//END OF new enemy AND is a headcrab check
+		AlertSound();
+	}
 
 
 	while(TRUE){

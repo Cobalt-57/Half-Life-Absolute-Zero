@@ -451,11 +451,11 @@ typedef enum { point_hull = 0, human_hull = 1, large_hull = 2, head_hull = 3 } H
 ////////////////////////////////////////////////////////////////////////////////////////
 
 
-float UTIL_WeaponTimeBase(void);
-int UTIL_SharedRandomLong(unsigned int seed, int low, int high);
-float UTIL_SharedRandomFloat(unsigned int seed, float low, float high);
+extern float UTIL_WeaponTimeBase(void);
+extern int UTIL_SharedRandomLong(unsigned int seed, int low, int high);
+extern float UTIL_SharedRandomFloat(unsigned int seed, float low, float high);
 
-
+extern BOOL CanAttack(float attack_time, float curtime, BOOL isPredicted);
 
 
 extern int GetAmmoIndex(const char* psz);

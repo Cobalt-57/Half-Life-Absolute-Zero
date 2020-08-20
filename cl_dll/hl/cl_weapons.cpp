@@ -668,7 +668,8 @@ void CBasePlayerWeapon::ItemPostFrame()
 	*/
 	
 
-
+	
+	// Does support CanAttack now, but it does the exact same thing as the 'Next___Attack <= 0.0' checks here for client.
 	BOOL secondaryHeld = ((m_pPlayer->pev->button & IN_ATTACK2) && m_flNextSecondaryAttack <= 0.0);
 	BOOL primaryHeld = ((m_pPlayer->pev->button & IN_ATTACK) && m_flNextPrimaryAttack <= 0.0);
 

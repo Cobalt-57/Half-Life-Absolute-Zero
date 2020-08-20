@@ -12,9 +12,6 @@
 *   use or distribution of this code by or to any unlicensed person is illegal.
 *
 ****/
-//=========================================================
-// monster template
-//=========================================================
 // UNDONE: Holster weapon?
 
 #include "extdll.h"
@@ -284,6 +281,9 @@ public:
 	int LookupActivityHard(int activity);
 	
 	void DeclineFollowingProvoked(CBaseEntity* pCaller);
+	void SayAlert(void);
+	void SayDeclineFollowing(void);
+	void SayDeclineFollowingProvoked(void);
 	void SayProvoked(void);
 	void SayStopShooting(void);
 	void SaySuspicious(void);
@@ -662,9 +662,177 @@ IMPLEMENT_CUSTOM_SCHEDULES( CBarney, CTalkMonster );
 
 
 void CBarney::DeclineFollowingProvoked(CBaseEntity* pCaller) {
-	//Barney won't say anything, he's too busy shooting you.
-	//...or will he? MUHAHAHA.
+	// no extra action needed
+}
 
+
+void CBarney::SayAlert(void) {
+	//easyForcePrintLine("BARNEYS ALERT RAN!");
+
+	//MODDD - this doesn't appear to work.  It expects a single sentence named exactly "BA_ATTACK", I think, not, say, picking "BA_ATTACK0", "1", "2", ...
+	//PlaySentence( "BA_ATTACK", RANDOM_FLOAT(2.8, 3.2), VOL_NORM, ATTN_IDLE );
+
+	if (EASY_CVAR_GET(pissedNPCs) != 1 || !globalPSEUDO_iCanHazMemez) {
+
+		// MODDD - little intervention.
+		// Some lines for some foes don't make sense like 
+		// "Aim for the head if you can find it" against robotic or human foes.
+		int enemyClassify;
+		
+		if (m_hEnemy != NULL) {
+			enemyClassify = m_hEnemy->Classify();
+		}
+		else if (recentDeclinesForgetTime != -1 && recentDeclines >= 30) {
+			// assume it's the player.
+			enemyClassify = CLASS_PLAYER;
+		}
+		else {
+			// what.
+			enemyClassify = CLASS_NONE;
+		}
+
+
+		long randoRange;
+
+
+		if (RANDOM_FLOAT(0, 1) < 0.09) {
+			// angry barney
+			switch (RANDOM_LONG(0, 2)) {
+			case 0:PlaySentenceSingular("BA_ATTACK6", 4, VOL_NORM, ATTN_NORM); break;
+			case 1:PlaySentenceSingular("BA_ATTACK7", 4, VOL_NORM, ATTN_NORM); break;
+			case 2:PlaySentenceSingular("BA_ATTACK8", 4, VOL_NORM, ATTN_NORM); break;
+			}
+		}
+		else if (enemyClassify == CLASS_NONE) {
+			// ???
+			PlaySentence("BA_ATTACK", RANDOM_FLOAT(2.8, 3.2), VOL_NORM, ATTN_IDLE);
+		}
+		else if (enemyClassify == CLASS_PLAYER) {
+			// if the enemy is the player, any line can be said except the
+			// "open fire, Gordon!" one.  That doesn't make a whole lot of sense now.
+
+			switch (RANDOM_LONG(0, 3)) {
+			case 0:PlaySentence("BA_PISSED", 3, VOL_NORM, ATTN_NORM); break;
+			case 1:PlaySentenceSingular("BA_ATTACK1", 4, VOL_NORM, ATTN_NORM); break;
+			case 2:PlaySentenceSingular("BA_ATTACK5", 4, VOL_NORM, ATTN_NORM); break;
+			//case 3:PlaySentenceSingular("BA_ATTACK2", 4, VOL_NORM, ATTN_NORM); break;   // 'stand back'?  To who?
+			case 3: {
+				// another shot at these instead.  Hear my rage.
+				switch (RANDOM_LONG(0, 2)) {
+				case 0:PlaySentenceSingular("BA_ATTACK6", 4, VOL_NORM, ATTN_NORM); break;
+				case 1:PlaySentenceSingular("BA_ATTACK7", 4, VOL_NORM, ATTN_NORM); break;
+				case 2:PlaySentenceSingular("BA_ATTACK8", 4, VOL_NORM, ATTN_NORM); break;
+				}
+			}break;
+			}//switch
+		}
+		else if (
+			enemyClassify == CLASS_ALIEN_MILITARY ||
+			enemyClassify == CLASS_ALIEN_PASSIVE ||
+			enemyClassify == CLASS_ALIEN_MONSTER
+			) {
+			//MODDD - you can say any line (Retail behavior).
+			//SENTENCEG_PlayRndSz(ENT(pev), "BA_ATTACK", VOL_NORM, ATTN_NORM, 0, m_voicePitch);
+			// ...nevermind.  Want to exclude the "open fire gordon" if we hate the player.
+			// And "Freeze!" doesn't make sense for animal-like aliens.
+			// Although this section will be the less animal-like ones, so it works.
+
+			randoRange = 6;
+			if (HasMemory(bits_COND_PROVOKED)) {
+				// We dare not speak his name of we're pissed off at him.
+				randoRange -= 1;
+			}
+
+			switch (RANDOM_LONG(0, randoRange)) {
+			case 0:PlaySentenceSingular("BA_ATTACK1", 4, VOL_NORM, ATTN_NORM); break;
+			case 1:PlaySentenceSingular("BA_ATTACK2", 4, VOL_NORM, ATTN_NORM); break;
+			case 2:PlaySentenceSingular("BA_IDLE0", 4, VOL_NORM, ATTN_NORM); break;
+			case 3:PlaySentenceSingular("BA_ATTACK3", 4, VOL_NORM, ATTN_NORM); break;
+			case 4:PlaySentenceSingular("BA_ATTACK4", 4, VOL_NORM, ATTN_NORM); break;
+			case 5:PlaySentenceSingular("BA_ATTACK5", 4, VOL_NORM, ATTN_NORM); break;
+			case 6:PlaySentenceSingular("BA_ATTACK0", 4, VOL_NORM, ATTN_NORM); break;
+			}
+
+		}
+		else if (
+			enemyClassify == CLASS_ALIEN_PREY ||
+			enemyClassify == CLASS_ALIEN_PREDATOR ||
+			enemyClassify == CLASS_BARNACLE ||
+			enemyClassify == CLASS_ALIEN_BIOWEAPON ||
+			enemyClassify == CLASS_PLAYER_BIOWEAPON
+			) {
+
+			randoRange = 5;
+			if (HasMemory(bits_COND_PROVOKED)) {
+				// We dare not speak his name of we're pissed off at him.
+				randoRange -= 1;
+			}
+
+			switch (RANDOM_LONG(0, randoRange)) {
+			case 0:PlaySentenceSingular("BA_ATTACK1", 4, VOL_NORM, ATTN_NORM); break;
+			case 1:PlaySentenceSingular("BA_ATTACK2", 4, VOL_NORM, ATTN_NORM); break;
+			case 2:PlaySentenceSingular("BA_IDLE0", 4, VOL_NORM, ATTN_NORM); break;
+			case 3:PlaySentenceSingular("BA_ATTACK3", 4, VOL_NORM, ATTN_NORM); break;
+			case 4:PlaySentenceSingular("BA_ATTACK4", 4, VOL_NORM, ATTN_NORM); break;
+			case 5:PlaySentenceSingular("BA_ATTACK0", 4, VOL_NORM, ATTN_NORM); break;
+			}
+
+		}
+		else {
+			// human or robotic?
+
+			randoRange = 3;
+			if (HasMemory(bits_COND_PROVOKED)) {
+				// We dare not speak his name of we're pissed off at him.
+				randoRange -= 1;
+			}
+
+			switch (RANDOM_LONG(0, randoRange)) {
+			case 0:PlaySentenceSingular("BA_ATTACK1", 4, VOL_NORM, ATTN_NORM); break;
+			case 1:PlaySentenceSingular("BA_ATTACK2", 4, VOL_NORM, ATTN_NORM); break;
+			case 2:PlaySentenceSingular("BA_ATTACK5", 4, VOL_NORM, ATTN_NORM); break;
+			case 3:PlaySentenceSingular("BA_ATTACK0", 4, VOL_NORM, ATTN_NORM); break;
+			}
+		}
+	}
+	else {
+		SENTENCEG_PlayRndSz(ENT(pev), "BA_POKE_A", VOL_NORM, ATTN_NORM, 0, m_voicePitch);
+	}
+
+	// minimum delay
+	CBarney::g_barneyAlertTalkWaitTime = gpGlobals->time + 6;
+	// Also make all NPCs wait a bit to let this "battle cry" finish.
+	CTalkMonster::g_talkWaitTime = gpGlobals->time + 1.9f;
+}//SayAlert
+
+void CBarney::SayDeclineFollowing(void) {
+
+
+	if (EASY_CVAR_GET(pissedNPCs) < 1) {
+
+		if (recentDeclines < 30) {
+			PlaySentence("BA_POK", 2, VOL_NORM, ATTN_NORM);
+		}
+		else if (recentDeclines == 35) {
+			SayAlert();  //bypass some usual cooldowns?
+		}
+		else {
+			// not 35, 30 to 34 or over 36?  Same.
+			float randomVal = RANDOM_FLOAT(0, 1);
+			if (randomVal < 0.05) {
+				PlaySentenceSingular("BA_SCARED0", 2, VOL_NORM, ATTN_NORM);
+			}
+			else {
+				SayProvoked();
+			}
+		}
+	}
+	else {
+		playPissed();
+	}
+}//SayDeclineFollowing
+
+void CBarney::SayDeclineFollowingProvoked(void) {
 	if (EASY_CVAR_GET(pissedNPCs) != 1 || !globalPSEUDO_iCanHazMemez) {
 		//PlaySentence("BA_PISSED", 3, VOL_NORM, ATTN_NORM);
 		SayProvoked();
@@ -672,9 +840,10 @@ void CBarney::DeclineFollowingProvoked(CBaseEntity* pCaller) {
 	else {
 		PlaySentence("BA_POKE_D", 8, VOL_NORM, ATTN_NORM);
 	}
-
-
 }
+
+
+
 void CBarney::SayProvoked(void) {
 
 	// Don't interrupt this angsty message at the player with an alert message.
@@ -861,13 +1030,28 @@ void CBarney :: RunTask( Task_t *pTask )
 //=========================================================
 int CBarney :: ISoundMask ( void) 
 {
-	return	bits_SOUND_WORLD	|
-			bits_SOUND_COMBAT	|
-			bits_SOUND_CARCASS	|
-			bits_SOUND_MEAT		|
-			bits_SOUND_GARBAGE	|
-			bits_SOUND_DANGER	|
+
+	//MODDD - when allied, I don't react to player sounds.
+	if(HasMemory(bits_COND_PROVOKED || recentDeclines >= 30)){
+		// I will react to player sounds.
+		return	bits_SOUND_WORLD |
+			bits_SOUND_COMBAT |
+			bits_SOUND_CARCASS |
+			bits_SOUND_MEAT |
+			bits_SOUND_GARBAGE |
+			bits_SOUND_DANGER |
 			bits_SOUND_PLAYER;
+	}
+	else {
+		// friendly.
+		return	bits_SOUND_WORLD |
+			bits_SOUND_COMBAT |
+			bits_SOUND_CARCASS |
+			bits_SOUND_MEAT |
+			bits_SOUND_GARBAGE |
+			bits_SOUND_DANGER;
+	}
+	
 }
 
 //=========================================================
@@ -908,125 +1092,20 @@ int CBarney::IRelationship( CBaseEntity *pTarget )
 
 
 //=========================================================
-// ALertSound - barney says "Freeze!"
+// AlertSound - barney says "Freeze!"
 //=========================================================
 void CBarney :: AlertSound( void )
 {
 	if ( m_hEnemy != NULL )
 	{
+		// don't do the alert sound this way
+		if (recentDeclines >= 30 && recentDeclines <= 34 && m_hEnemy->IsPlayer())return;
+
 		//MODDD - probably had to enter combat to say this, so make that an exception this once.
 		//if ( FOkToSpeak() )
 		if ( FOkToSpeakAllowCombat(CBarney::g_barneyAlertTalkWaitTime) )
 		{
-			//easyForcePrintLine("BARNEYS ALERT RAN!");
-
-			//MODDD - this doesn't appear to work.  It expects a single sentence named exactly "BA_ATTACK", I think, not, say, picking "BA_ATTACK0", "1", "2", ...
-			//PlaySentence( "BA_ATTACK", RANDOM_FLOAT(2.8, 3.2), VOL_NORM, ATTN_IDLE );
-			
-			if(EASY_CVAR_GET(pissedNPCs) != 1 || !globalPSEUDO_iCanHazMemez){
-				
-				// MODDD - little intervention.
-				// Some lines for some foes don't make sense like 
-				// "Aim for the head if you can find it" against robotic or human foes.
-				int enemyClassify = m_hEnemy->Classify();
-				long randoRange;
-
-
-				if (RANDOM_FLOAT(0, 1) < 0.09) {
-					// angry barney
-					switch (RANDOM_LONG(0, 2)) {
-						case 0:PlaySentenceSingular("BA_ATTACK6", 4, VOL_NORM, ATTN_NORM);break;
-						case 1:PlaySentenceSingular("BA_ATTACK7", 4, VOL_NORM, ATTN_NORM);break;
-						case 2:PlaySentenceSingular("BA_ATTACK8", 4, VOL_NORM, ATTN_NORM);break;
-					}
-				}else if (enemyClassify == CLASS_NONE) {
-					// ???
-					PlaySentence("BA_ATTACK", RANDOM_FLOAT(2.8, 3.2), VOL_NORM, ATTN_IDLE);
-				}else if (enemyClassify == CLASS_PLAYER) {
-					// if the enemy is the player, any line can be said except the
-					// "open fire, Gordon!" one.  That doesn't make a whole lot of sense now.
-					
-					switch (RANDOM_LONG(0, 3)) {
-						case 0:PlaySentence("BA_PISSED", 3, VOL_NORM, ATTN_NORM);break;
-						case 1:PlaySentenceSingular("BA_ATTACK1", 4, VOL_NORM, ATTN_NORM);break;
-						case 2:PlaySentenceSingular("BA_ATTACK2", 4, VOL_NORM, ATTN_NORM);break;
-						case 3:PlaySentenceSingular("BA_ATTACK5", 4, VOL_NORM, ATTN_NORM);break;
-					}
-				}else if(
-					enemyClassify == CLASS_ALIEN_MILITARY ||
-					enemyClassify == CLASS_ALIEN_PASSIVE ||
-					enemyClassify == CLASS_ALIEN_MONSTER
-					) {
-					//MODDD - you can say any line (Retail behavior).
-					//SENTENCEG_PlayRndSz(ENT(pev), "BA_ATTACK", VOL_NORM, ATTN_NORM, 0, m_voicePitch);
-					// ...nevermind.  Want to exclude the "open fire gordon" if we hate the player.
-					// And "Freeze!" doesn't make sense for animal-like aliens.
-					// Although this section will be the less animal-like ones, so it works.
-
-					randoRange = 6;
-					if (HasMemory(bits_COND_PROVOKED)) {
-						// We dare not speak his name of we're pissed off at him.
-						randoRange -= 1;
-					}
-
-					switch (RANDOM_LONG(0, randoRange)) {
-					case 0:PlaySentenceSingular("BA_ATTACK1", 4, VOL_NORM, ATTN_NORM);break;
-					case 1:PlaySentenceSingular("BA_ATTACK2", 4, VOL_NORM, ATTN_NORM);break;
-					case 2:PlaySentenceSingular("BA_IDLE0", 4, VOL_NORM, ATTN_NORM);break;
-					case 3:PlaySentenceSingular("BA_ATTACK3", 4, VOL_NORM, ATTN_NORM);break;
-					case 4:PlaySentenceSingular("BA_ATTACK4", 4, VOL_NORM, ATTN_NORM);break;
-					case 5:PlaySentenceSingular("BA_ATTACK5", 4, VOL_NORM, ATTN_NORM);break;
-					case 6:PlaySentenceSingular("BA_ATTACK0", 4, VOL_NORM, ATTN_NORM);break;
-					}
-
-				}
-				else if (
-					enemyClassify == CLASS_ALIEN_PREY ||
-					enemyClassify == CLASS_ALIEN_PREDATOR ||
-					enemyClassify == CLASS_BARNACLE ||
-					enemyClassify == CLASS_ALIEN_BIOWEAPON ||
-					enemyClassify == CLASS_PLAYER_BIOWEAPON
-					) {
-
-					randoRange = 5;
-					if (HasMemory(bits_COND_PROVOKED)) {
-						// We dare not speak his name of we're pissed off at him.
-						randoRange -= 1;
-					}
-
-					switch (RANDOM_LONG(0, randoRange)) {
-					case 0:PlaySentenceSingular("BA_ATTACK1", 4, VOL_NORM, ATTN_NORM);break;
-					case 1:PlaySentenceSingular("BA_ATTACK2", 4, VOL_NORM, ATTN_NORM);break;
-					case 2:PlaySentenceSingular("BA_IDLE0", 4, VOL_NORM, ATTN_NORM);break;
-					case 3:PlaySentenceSingular("BA_ATTACK3", 4, VOL_NORM, ATTN_NORM);break;
-					case 4:PlaySentenceSingular("BA_ATTACK4", 4, VOL_NORM, ATTN_NORM);break;
-					case 5:PlaySentenceSingular("BA_ATTACK0", 4, VOL_NORM, ATTN_NORM);break;
-					}
-
-				}else {
-					// human or robotic?
-
-					randoRange = 3;
-					if (HasMemory(bits_COND_PROVOKED)) {
-						// We dare not speak his name of we're pissed off at him.
-						randoRange -= 1;
-					}
-
-					switch (RANDOM_LONG(0, randoRange)) {
-					case 0:PlaySentenceSingular("BA_ATTACK1", 4, VOL_NORM, ATTN_NORM);break;
-					case 1:PlaySentenceSingular("BA_ATTACK2", 4, VOL_NORM, ATTN_NORM);break;
-					case 2:PlaySentenceSingular("BA_ATTACK5", 4, VOL_NORM, ATTN_NORM);break;
-					case 3:PlaySentenceSingular("BA_ATTACK0", 4, VOL_NORM, ATTN_NORM);break;
-					}
-				}
-			}else{
-				SENTENCEG_PlayRndSz( ENT(pev), "BA_POKE_A", VOL_NORM, ATTN_NORM, 0, m_voicePitch);
-			}
-
-			//minimum delay of 5 seconds.
-			CBarney::g_barneyAlertTalkWaitTime = gpGlobals->time + 5;
-			//Also make all NPCs wait a bit to let this "battle cry" finish.
-			CTalkMonster::g_talkWaitTime = gpGlobals->time + 2.2f;
+			SayAlert();
 		}
 	}
 }
@@ -1987,10 +2066,14 @@ void CBarney::DeclineFollowing( void )
 {
 	recentDeclines++;
 	if (recentDeclines < 30) {
-		recentDeclinesForgetTime = gpGlobals->time + 8;
+		recentDeclinesForgetTime = gpGlobals->time + 12;
 	}
 	else if(recentDeclines < 35){
 		recentDeclinesForgetTime = gpGlobals->time + 30;
+	}
+	else if (recentDeclines == 35) {
+		// no, do the alert sound in SayDeclineFollowing instead
+		recentDeclinesForgetTime = gpGlobals->time + 50;
 	}
 	else {
 		recentDeclinesForgetTime = gpGlobals->time + 50;
@@ -2013,30 +2096,7 @@ void CBarney::DeclineFollowing( void )
 		//}
 			
 	}
-	else if (recentDeclines > 30) {
-		// end of the line for you
-	}
 
-
-
-	//MODDD
-	if(EASY_CVAR_GET(pissedNPCs) < 1){
-
-		if (recentDeclines < 30) {
-			PlaySentence("BA_POK", 2, VOL_NORM, ATTN_NORM);
-		}
-		else {
-			float randomVal = RANDOM_FLOAT(0, 1);
-			if (randomVal < 0.05) {
-				PlaySentenceSingular("BA_SCARED0", 2, VOL_NORM, ATTN_NORM);
-			}
-			else {
-				SayProvoked();
-			}
-		}
-	}else{
-		playPissed();
-	}
 }
 
 
@@ -2628,7 +2688,6 @@ int CBarney::CanPlaySequence(BOOL fDisregardMonsterState, int interruptLevel)
 
 	return CTalkMonster::CanPlaySequence(fDisregardMonsterState, interruptLevel);
 }
-
 
 
 

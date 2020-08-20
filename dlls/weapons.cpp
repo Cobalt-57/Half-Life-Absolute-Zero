@@ -427,27 +427,6 @@ void CBasePlayerItem::DefaultTouch( CBaseEntity *pOther )
 	SUB_UseTargets( pOther, USE_TOGGLE, 0 ); // UNDONE: when should this happen?
 }
 
-BOOL CanAttack( float attack_time, float curtime, BOOL isPredicted )
-{	
-#if defined( CLIENT_WEAPONS )
-	if ( !isPredicted )
-#else
-	if ( 1 )
-#endif
-	{
-		return ( attack_time <= curtime ) ? TRUE : FALSE;
-	}
-	else
-	{
-		return ( attack_time <= 0.0 ) ? TRUE : FALSE;
-	}
-
-	//END OF normal behavior w/o the cheat.
-	//}else{
-	//	//with cheats, can always attack.
-	//	return TRUE;
-	//}
-}
 
 
 void CBasePlayerWeapon::setchargeReady(int arg){

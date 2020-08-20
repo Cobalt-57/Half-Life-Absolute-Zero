@@ -59,7 +59,7 @@ EASY_CVAR_EXTERN(drawNodeSpecial)
 EASY_CVAR_EXTERN(drawNodeConnections)
 EASY_CVAR_EXTERN(drawNodeAlternateTime)
 EASY_CVAR_EXTERN(nodeSearchStartVerticalOffset)
-EASY_CVAR_EXTERN(timedDamageDeathRemoveMode)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(timedDamageDeathRemoveMode)
 extern float globalPSEUDO_cameraMode;
 EASY_CVAR_EXTERN(mirrorsDoNotReflectPlayer)
 EASY_CVAR_EXTERN(barnacleCanGib)
@@ -98,6 +98,7 @@ EASY_CVAR_EXTERN(minimumRespawnDelay)
 EASY_CVAR_EXTERN(monsterToPlayerHitgroupSpecial)
 EASY_CVAR_EXTERN(precacheAll)
 EASY_CVAR_EXTERN(blastExtraArmorDamageMode)
+EASY_CVAR_EXTERN(sv_player_midair_fixMem)
 
 
 
@@ -690,7 +691,7 @@ void CBasePlayer::startRevive(void) {
 // For having planned a revive, but deciding against it (fell too far on hitting the ground, stuck in geometry)
 void CBasePlayer::declareRevivelessDead(void) {
 	recoveryIndex = 3;
-	if (EASY_CVAR_GET(timedDamageDeathRemoveMode) > 0) {
+	if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(timedDamageDeathRemoveMode) > 0) {
 		attemptResetTimedDamage(TRUE);
 	}
 	if (EASY_CVAR_GET(batteryDrainsAtDeath) == 1) {
@@ -5605,22 +5606,29 @@ void CBasePlayer::PostThink()
 		MESSAGE_BEGIN(MSG_ONE, gmsgOnFirstAppearance, NULL, pev);
 		MESSAGE_END();
 		
-		//!!! IMPORTANT  Any broadcast CVars should show up here!!
-		// Let the client (per player) know of the defaults in its cache.
 
 		MESSAGE_BEGIN(MSG_ONE, gmsgServerDLL_Info, NULL, pev);
 			WRITE_STRING(globalbuffer_sv_mod_version);
 			WRITE_STRING(globalbuffer_sv_mod_date);
 		MESSAGE_END();
 		//MESSAGE_BEGIN(MSG_ALL, gmsgUpdateClientCVar, NULL);
-		MESSAGE_BEGIN(MSG_ONE, gmsgUpdateClientCVar, NULL, pev);
-			WRITE_SHORT(wpn_glocksilencer_ID);
-			WRITE_SHORT(EASY_CVAR_GET(wpn_glocksilencer) * 100);
-		MESSAGE_END();
-		MESSAGE_BEGIN(MSG_ONE, gmsgUpdateClientCVar, NULL, pev);
-			WRITE_SHORT(viewModelPrintouts_ID);
-			WRITE_SHORT(EASY_CVAR_GET(viewModelPrintouts) * 100);
-		MESSAGE_END();
+
+
+		//!!! IMPORTANT  Any broadcast CVars should show up here!!
+		// Let any newly connected player get a fresh copy to replace the likely unhelpful clientside defaults.
+
+		//EASY_CVAR_SYNCH_SERVER_TO_CLIENT(wpn_glocksilencer, wpn_glocksilencer_ID, pev);
+		EASY_CVAR_SYNCH_SERVER_TO_CLIENT(wpn_glocksilencer, pev);
+		EASY_CVAR_SYNCH_SERVER_TO_CLIENT_DEBUGONLY(viewModelPrintouts, pev);
+
+		EASY_CVAR_SYNCH_SERVER_TO_CLIENT_DEBUGONLY(cheat_infiniteclip, pev);
+		EASY_CVAR_SYNCH_SERVER_TO_CLIENT_DEBUGONLY(cheat_infiniteammo, pev);
+		EASY_CVAR_SYNCH_SERVER_TO_CLIENT_DEBUGONLY(cheat_minimumfiredelay, pev);
+		EASY_CVAR_SYNCH_SERVER_TO_CLIENT_DEBUGONLY(cheat_minimumfiredelaycustom, pev);
+		EASY_CVAR_SYNCH_SERVER_TO_CLIENT_DEBUGONLY(cheat_nogaussrecoil, pev);
+		EASY_CVAR_SYNCH_SERVER_TO_CLIENT_DEBUGONLY(gaussRecoilSendsUpInSP, pev);
+		EASY_CVAR_SYNCH_SERVER_TO_CLIENT_DEBUGONLY(timedDamageDeathRemoveMode, pev);
+		
 	}//END OF queueFirstAppearanceMessageSend check
 
 	
@@ -6196,6 +6204,7 @@ void CBasePlayer::commonReset(void){
 	jumpForceMultiMem = -1;
 	ladderCycleMultiMem = -1;
 	ladderSpeedMultiMem = -1;
+	sv_player_midair_fixMem = -1;
 
 	//not for a CVar.
 	clearWeaponFlag = -1;
@@ -8256,8 +8265,8 @@ void CBasePlayer::ItemPreFrame()
 	//if(EASY_CVAR_GET(testVar) == -1)return;
 
 
-	//Even though ItemPostFrame() turns this off faster, it turns it off too fast. At least one full frame must run
-	//with the "res" physics flag left on to send to the client to be effective and block the jump-land sound.
+	// Even though ItemPostFrame() turns this off faster, it turns it off too fast. At least one full frame must run
+	// with the "res" physics flag left on to send to the client to be effective and block the jump-land sound.
 	if(pev->iuser4 & FLAG_RESET_RECEIVED){
 		pev->iuser4 &= ~FLAG_RESET_RECEIVED;
 		g_engfuncs.pfnSetPhysicsKeyValue( edict(), "res", "0" );
@@ -8519,10 +8528,8 @@ void CBasePlayer :: UpdateClientData( void )
 		noclipSpeedMultiMem = EASY_CVAR_GET(noclipSpeedMulti);
 		
 		if(noclipSpeedMultiMem != 0){
-
 			char buffer[13];
 			tryFloatToStringBuffer(buffer, EASY_CVAR_GET(noclipSpeedMulti) );
-
 			g_engfuncs.pfnSetPhysicsKeyValue( edict(), "ncm", buffer );
 		}else{
 			g_engfuncs.pfnSetPhysicsKeyValue( edict(), "ncm", "0" );
@@ -8544,10 +8551,8 @@ void CBasePlayer :: UpdateClientData( void )
 		jumpForceMultiMem = EASY_CVAR_GET(jumpForceMulti);
 		//keep this CVar in sync with pm_shared...
 		if(jumpForceMultiMem != 0){
-
 			char buffer[13];
 			tryFloatToStringBuffer(buffer, EASY_CVAR_GET(jumpForceMulti) );
-			
 			g_engfuncs.pfnSetPhysicsKeyValue( edict(), "jfm", buffer );
 		}else{
 			g_engfuncs.pfnSetPhysicsKeyValue( edict(), "jfm", "0" );
@@ -8558,10 +8563,8 @@ void CBasePlayer :: UpdateClientData( void )
 		ladderCycleMultiMem = EASY_CVAR_GET(ladderCycleMulti);
 		//keep this CVar in sync with pm_shared...
 		if(ladderCycleMultiMem != 0){
-
 			char buffer[13];
 			tryFloatToStringBuffer(buffer, EASY_CVAR_GET(ladderCycleMulti));
-			
 			g_engfuncs.pfnSetPhysicsKeyValue( edict(), "lcm", buffer );
 		}else{
 			g_engfuncs.pfnSetPhysicsKeyValue( edict(), "lcm", "0" );
@@ -8571,13 +8574,24 @@ void CBasePlayer :: UpdateClientData( void )
 		ladderSpeedMultiMem = EASY_CVAR_GET(ladderSpeedMulti);
 		//keep this CVar in sync with pm_shared...
 		if(ladderCycleMultiMem != 0){
-
 			char buffer[13];
 			tryFloatToStringBuffer(buffer, EASY_CVAR_GET(ladderSpeedMulti));
-			
 			g_engfuncs.pfnSetPhysicsKeyValue( edict(), "lsm", buffer );
 		}else{
 			g_engfuncs.pfnSetPhysicsKeyValue( edict(), "lsm", "0" );
+		}
+	}
+	if (sv_player_midair_fixMem != EASY_CVAR_GET(sv_player_midair_fix)) {
+		sv_player_midair_fixMem = EASY_CVAR_GET(sv_player_midair_fix);
+		//keep this CVar in sync with pm_shared...
+		if (sv_player_midair_fixMem != 0) {
+			// nope, this is just a 'yes-or-no' thing.  Imply "1".
+			//char buffer[13];
+			//tryFloatToStringBuffer(buffer, EASY_CVAR_GET(sv_player_midair_fix));
+			g_engfuncs.pfnSetPhysicsKeyValue(edict(), "maf", "1");
+		}
+		else {
+			g_engfuncs.pfnSetPhysicsKeyValue(edict(), "maf", "0");
 		}
 	}
 	
