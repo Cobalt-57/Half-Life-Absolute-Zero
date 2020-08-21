@@ -550,7 +550,7 @@ public:
 				return Center() + pev->view_ofs;
 			}else{
 				/*
-				if(EASY_CVAR_GET(testVar) == 1){
+				if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(testVar) == 1){
 					return pev->origin + Vector(0, 0, VEC_DUCK_HULL_MAX.z);
 				}else{
 					//old way

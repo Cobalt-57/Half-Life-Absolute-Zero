@@ -1246,7 +1246,7 @@ Schedule_t *CChumToad::GetSchedule ( void )
 			else if (HasConditions(bits_COND_LIGHT_DAMAGE)  )
 			{
 				//CHANGE. We're running away whether or not we're due for a flinch animation yet.
-				if(!HasMemory( bits_MEMORY_FLINCHED) && !(EASY_CVAR_GET(noFlinchOnHard)==1 && g_iSkillLevel==SKILL_HARD)){
+				if(!HasMemory( bits_MEMORY_FLINCHED) && !(EASY_CVAR_GET_DEBUGONLY(noFlinchOnHard)==1 && g_iSkillLevel==SKILL_HARD)){
 					
 					//For the chumtoad, this  has a chance of playing dead?
 					//...which will be handled separately by TakeDamage as usual.
@@ -1732,7 +1732,7 @@ void CChumToad :: StartTask ( Task_t *pTask )
 
 			//***IMPORTANT***
 			//determine the chance of fooling anyone who gets close.
-			this->playDeadSuccessful = (RANDOM_FLOAT(0, 1) < EASY_CVAR_GET(chumtoadPlayDeadFoolChance) );
+			this->playDeadSuccessful = (RANDOM_FLOAT(0, 1) < EASY_CVAR_GET_DEBUGONLY(chumtoadPlayDeadFoolChance) );
 			
 			EASY_CVAR_PRINTIF_PRE(chumtoadPrintout, easyPrintLine("PLAYDEAD SUCCESS? %d", playDeadSuccessful) );
 			
@@ -2941,7 +2941,7 @@ void CChumToad::OnTakeDamageSetConditions(entvars_t *pevInflictor, entvars_t *pe
 	}
 
 /*
-	if(EASY_CVAR_GET(testVar) == 10){
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(testVar) == 10){
 		//any damage causes me now.
 		SetConditions(bits_COND_HEAVY_DAMAGE);
 	}

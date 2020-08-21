@@ -24,7 +24,7 @@
 #include "gamerules.h"
 
 
-EASY_CVAR_EXTERN(tripmineAnimWaitsForFinish)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(tripmineAnimWaitsForFinish)
 
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelay)
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelaycustom)
@@ -656,7 +656,7 @@ void CTripmine::ItemPostFrame(void) {
 void CTripmine::ItemPostFrameThink( void ){
 
 
-	if(EASY_CVAR_GET(tripmineAnimWaitsForFinish) == 1){
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(tripmineAnimWaitsForFinish) == 1){
 		m_fireState = 1;
 	}else{
 		m_fireState = 0;

@@ -31,28 +31,28 @@
 
 
 
-EASY_CVAR_EXTERN(trailTypeTest)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(trailTypeTest)
 
 
 
-EASY_CVAR_EXTERN(hornetTrail)
-EASY_CVAR_EXTERN(hornetTrailSolidColor)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(hornetTrail)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(hornetTrailSolidColor)
 
-EASY_CVAR_EXTERN(hornetDeathModEasy)
-EASY_CVAR_EXTERN(hornetDeathModMedium)
-EASY_CVAR_EXTERN(hornetDeathModHard)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(hornetDeathModEasy)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(hornetDeathModMedium)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(hornetDeathModHard)
 
-EASY_CVAR_EXTERN(hornetZoomPuff)
-EASY_CVAR_EXTERN(hornetSpiral)
-EASY_CVAR_EXTERN(hornetSpeedMulti)
-EASY_CVAR_EXTERN(hornetSpeedDartMulti)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(hornetZoomPuff)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(hornetSpiral)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(hornetSpeedMulti)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(hornetSpeedDartMulti)
 
-EASY_CVAR_EXTERN(agruntHornetRandomness)
+EASY_CVAR_EXTERN_DEBUGONLY(agruntHornetRandomness)
 
 
-EASY_CVAR_EXTERN(agruntHornetRandomness)
-EASY_CVAR_EXTERN(hornetSpiralPeriod)
-EASY_CVAR_EXTERN(hornetSpiralAmplitude)
+EASY_CVAR_EXTERN_DEBUGONLY(agruntHornetRandomness)
+EASY_CVAR_EXTERN_DEBUGONLY(hornetSpiralPeriod)
+EASY_CVAR_EXTERN_DEBUGONLY(hornetSpiralAmplitude)
 
 
 
@@ -115,7 +115,7 @@ IMPLEMENT_SAVERESTORE( CHornet, CBaseMonster );
 
 
 BOOL CHornet::useSpiral(void){
-	if(EASY_CVAR_GET(hornetSpiral) == 1 || (EASY_CVAR_GET(hornetSpiral) == 2 && g_iSkillLevel == SKILL_HARD) ){
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(hornetSpiral) == 1 || (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(hornetSpiral) == 2 && g_iSkillLevel == SKILL_HARD) ){
 		return TRUE;
 	}else{
 		return FALSE;
@@ -126,16 +126,16 @@ BOOL CHornet::useSpiral(void){
 float CHornet::getDifficultyMod(void){
 	switch(g_iSkillLevel){
 	case SKILL_EASY:
-		return EASY_CVAR_GET(hornetDeathModEasy);
+		return EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(hornetDeathModEasy);
 	break;
 	case SKILL_MEDIUM:
-		return EASY_CVAR_GET(hornetDeathModMedium);
+		return EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(hornetDeathModMedium);
 	break;
 	case SKILL_HARD:
-		return EASY_CVAR_GET(hornetDeathModHard);
+		return EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(hornetDeathModHard);
 	break;
 	default:  //???
-		return EASY_CVAR_GET(hornetDeathModEasy);
+		return EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(hornetDeathModEasy);
 	break;
 	};
 }
@@ -219,12 +219,12 @@ void CHornet :: Spawn( void )
 	if ( RANDOM_LONG ( 1, 5 ) <= 2 )
 	{
 		m_iHornetType = HORNET_TYPE_RED;
-		m_flFlySpeed = HORNET_RED_SPEED * EASY_CVAR_GET(hornetSpeedMulti);
+		m_flFlySpeed = HORNET_RED_SPEED * EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(hornetSpeedMulti);
 	}
 	else
 	{
 		m_iHornetType = HORNET_TYPE_ORANGE;
-		m_flFlySpeed = HORNET_ORANGE_SPEED * EASY_CVAR_GET(hornetSpeedMulti);
+		m_flFlySpeed = HORNET_ORANGE_SPEED * EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(hornetSpeedMulti);
 	}
 
 
@@ -386,7 +386,7 @@ old colors
 
 
 	//MODDD - quake dot trail?
-	//easyForcePrintLine("YOU STUPID lover %d %d", (int)EASY_CVAR_GET(trailTypeTest), (int)EASY_CVAR_GET(hornetTrail) );
+	//easyForcePrintLine("YOU STUPID lover %d %d", (int)EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(trailTypeTest), (int)EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(hornetTrail) );
 
 
 	/*
@@ -396,17 +396,17 @@ old colors
 
 	}else */
 	
-	if(EASY_CVAR_GET(trailTypeTest) == -3){
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(trailTypeTest) == -3){
 		//SPECIAL: test the immitation7.
 		PLAYBACK_EVENT_FULL (FEV_GLOBAL, this->edict(), g_sImitation7, 0.0, (float *)&this->pev->origin, (float *)&this->pev->angles, 0.7, 0.0, this->entindex(), 0, 0, 0);
-	}else if(EASY_CVAR_GET(trailTypeTest) == -2){
+	}else if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(trailTypeTest) == -2){
 		//This was just for a test.  Enable (along with some other things in place), and this should make mp5 grenades fly with a trail of grey dots.
 		PLAYBACK_EVENT_FULL (FEV_GLOBAL, this->edict(), g_sTrailRA, 0.0, (float *)&this->pev->origin, (float *)&this->pev->angles, 0.7, 0.0, this->entindex(), 0, 0, 0);
-	}else if(EASY_CVAR_GET(trailTypeTest) > -1){
+	}else if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(trailTypeTest) > -1){
 		//This was just for a test.  Enable (along with some other things in place), and this should make mp5 grenades fly with a trail of grey dots.
-		//PLAYBACK_EVENT_FULL (FEV_GLOBAL, this->edict(), g_sTrail, 0.0, (float *)&this->pev->origin, (float *)&this->pev->angles, 0.7, 0.0, this->entindex(), (int)EASY_CVAR_GET(trailTypeTest), 0, 0);
-		PLAYBACK_EVENT_FULL (FEV_GLOBAL, this->edict(), g_sTrailEngineChoice, 0.0, (float *)&this->pev->origin, (float *)&this->pev->angles, 0.7, 0.0, this->entindex(), (int)EASY_CVAR_GET(trailTypeTest), 0, 0);
-	}else if(EASY_CVAR_GET(hornetTrail) == 1 || EASY_CVAR_GET(hornetTrail) == 2){
+		//PLAYBACK_EVENT_FULL (FEV_GLOBAL, this->edict(), g_sTrail, 0.0, (float *)&this->pev->origin, (float *)&this->pev->angles, 0.7, 0.0, this->entindex(), (int)EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(trailTypeTest), 0, 0);
+		PLAYBACK_EVENT_FULL (FEV_GLOBAL, this->edict(), g_sTrailEngineChoice, 0.0, (float *)&this->pev->origin, (float *)&this->pev->angles, 0.7, 0.0, this->entindex(), (int)EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(trailTypeTest), 0, 0);
+	}else if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(hornetTrail) == 1 || EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(hornetTrail) == 2){
 
 		//NOTE: particle type is "6", 3rd to last parameter here.
 		PLAYBACK_EVENT_FULL (FEV_GLOBAL, this->edict(), g_sTrail, 0.0, (float *)&this->pev->origin, (float *)&this->pev->angles, 0.7, 0.0, this->entindex(), 6, 0, 0);
@@ -414,13 +414,13 @@ old colors
 	
 	
 
-	//Don't do this unless EASY_CVAR_GET(trailTypeTest) is -1. Any trailTypeTest'ing likely doesn't want to be bothered by transparent line trail graphics.
-	if( EASY_CVAR_GET(trailTypeTest) == -1 && (EASY_CVAR_GET(hornetTrail) == 0 || EASY_CVAR_GET(hornetTrail) == 2) ){
+	//Don't do this unless EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(trailTypeTest) is -1. Any trailTypeTest'ing likely doesn't want to be bothered by transparent line trail graphics.
+	if( EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(trailTypeTest) == -1 && (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(hornetTrail) == 0 || EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(hornetTrail) == 2) ){
 
 
 	int clrChoice1[3];
 	int clrChoice2[3];
-	switch( (int)EASY_CVAR_GET(hornetTrailSolidColor) ){
+	switch( (int)EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(hornetTrailSolidColor) ){
 	case 0:
 		//retail
 		clrChoice1[0] = 179;
@@ -490,8 +490,8 @@ old colors
 	MESSAGE_END();
 
 
-	}//END OF if(EASY_CVAR_GET(hornetTrail) is 0 or 2)
-	//NOTE: EASY_CVAR_GET(hornetTrail) of 3 (or anything else really too) means no trail.
+	}//END OF if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(hornetTrail) is 0 or 2)
+	//NOTE: EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(hornetTrail) of 3 (or anything else really too) means no trail.
 
 
 }
@@ -652,10 +652,10 @@ void CHornet :: TrackTarget ( void )
 	
 
 
-	if ( (EASY_CVAR_GET(agruntHornetRandomness) > 0) && (pev->owner && (pev->owner->v.flags & FL_MONSTER)) )
+	if ( (EASY_CVAR_GET_DEBUGONLY(agruntHornetRandomness) > 0) && (pev->owner && (pev->owner->v.flags & FL_MONSTER)) )
 	{
 		//SWEET GOD JUST CACHE THIS.
-		float theRandomness = EASY_CVAR_GET(agruntHornetRandomness);
+		float theRandomness = EASY_CVAR_GET_DEBUGONLY(agruntHornetRandomness);
 		// random pattern only applies to hornets fired by monsters, not players. 
 
 		//pev->velocity.x += RANDOM_FLOAT ( -0.10, 0.10 );// scramble the flight dir a bit.
@@ -712,7 +712,7 @@ void CHornet :: TrackTarget ( void )
 		if ( flDelta >= 0.4 && ( pev->origin - m_vecEnemyLKP ).Length() <= 300 )
 		{
 
-			if(EASY_CVAR_GET(hornetZoomPuff) == 1){
+			if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(hornetZoomPuff) == 1){
 				MESSAGE_BEGIN( MSG_PVS, SVC_TEMPENTITY, pev->origin );
 					WRITE_BYTE( TE_SPRITE );
 					WRITE_COORD( pev->origin.x);	// pos
@@ -732,8 +732,8 @@ void CHornet :: TrackTarget ( void )
 			case 2:	UTIL_PlaySound( ENT(pev), CHAN_VOICE, "hornet/ag_buzz3.wav", HORNET_BUZZ_VOLUME, ATTN_NORM);	break;
 			}
 			
-			//pev->velocity = pev->velocity * EASY_CVAR_GET(hornetSpeedDartMulti);
-			vecFlightDirTrue = vecFlightDirTrue * EASY_CVAR_GET(hornetSpeedDartMulti);
+			//pev->velocity = pev->velocity * EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(hornetSpeedDartMulti);
+			vecFlightDirTrue = vecFlightDirTrue * EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(hornetSpeedDartMulti);
 			
 			pev->nextthink = gpGlobals->time + 1.0;
 			// don't attack again
@@ -758,10 +758,10 @@ void CHornet :: TrackTarget ( void )
 		
 		float timeVal = spiralStartTime - gpGlobals->time;
 
-		float xShift = cos(timeVal / EASY_CVAR_GET(hornetSpiralPeriod) );
-		float yShift = sin(timeVal / EASY_CVAR_GET(hornetSpiralPeriod) );
+		float xShift = cos(timeVal / EASY_CVAR_GET_DEBUGONLY(hornetSpiralPeriod) );
+		float yShift = sin(timeVal / EASY_CVAR_GET_DEBUGONLY(hornetSpiralPeriod) );
 
-		float len = EASY_CVAR_GET(hornetSpiralAmplitude);
+		float len = EASY_CVAR_GET_DEBUGONLY(hornetSpiralAmplitude);
 		
 
 		//get vector perpendicular to vecFlightDir ...

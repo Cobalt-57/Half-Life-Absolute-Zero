@@ -29,7 +29,7 @@
 #include "explode.h"
 
 //MODDD
-EASY_CVAR_EXTERN(sparksExplosionMulti)
+EASY_CVAR_EXTERN_DEBUGONLY(sparksExplosionMulti)
 EASY_CVAR_EXTERN(cl_explosion)
 
 // Spark Shower
@@ -67,7 +67,7 @@ void CShower::Spawn( void )
 
 void CShower::Think( void )
 {
-	UTIL_Sparks( pev->origin, DEFAULT_SPARK_BALLS, EASY_CVAR_GET(sparksExplosionMulti) );
+	UTIL_Sparks( pev->origin, DEFAULT_SPARK_BALLS, EASY_CVAR_GET_DEBUGONLY(sparksExplosionMulti) );
 	
 	pev->speed -= 0.1;
 	if ( pev->speed > 0 )

@@ -44,16 +44,16 @@
 
 // would MOVETYPE_BOUNCEMISSILE help more?
 
-EASY_CVAR_EXTERN(noFlinchOnHard)
-EASY_CVAR_EXTERN(animationFramerateMulti)
-EASY_CVAR_EXTERN(drawDebugPathfinding)
-EASY_CVAR_EXTERN(drawDebugPathfinding2)
-EASY_CVAR_EXTERN(STUrepelMulti)
-EASY_CVAR_EXTERN(STUcheckDistV)
-EASY_CVAR_EXTERN(STUcheckDistH)
-EASY_CVAR_EXTERN(STUcheckDistD)
-EASY_CVAR_EXTERN(STUSpeedMulti)
-EASY_CVAR_EXTERN(floaterDummy)
+EASY_CVAR_EXTERN_DEBUGONLY(noFlinchOnHard)
+EASY_CVAR_EXTERN_DEBUGONLY(animationFramerateMulti)
+EASY_CVAR_EXTERN_DEBUGONLY(drawDebugPathfinding)
+EASY_CVAR_EXTERN_DEBUGONLY(drawDebugPathfinding2)
+EASY_CVAR_EXTERN_DEBUGONLY(STUrepelMulti)
+EASY_CVAR_EXTERN_DEBUGONLY(STUcheckDistV)
+EASY_CVAR_EXTERN_DEBUGONLY(STUcheckDistH)
+EASY_CVAR_EXTERN_DEBUGONLY(STUcheckDistD)
+EASY_CVAR_EXTERN_DEBUGONLY(STUSpeedMulti)
+EASY_CVAR_EXTERN_DEBUGONLY(floaterDummy)
 
 /*
 //TODO. spawn balls of death as ranaged attack.
@@ -481,7 +481,7 @@ int CFloater :: CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, C
 	tracesSolid = (trTopLeft.fAllSolid != 0 || trTopRight.fAllSolid != 0 || trBottomLeft.fAllSolid != 0 || trBottomRight.fAllSolid != 0); //|| trCenter.fAllSolid != 0);
 	tracesStartSolid = (trTopLeft.fStartSolid != 0 || trTopRight.fStartSolid != 0 || trBottomLeft.fStartSolid != 0 || trBottomRight.fStartSolid != 0); //|| trCenter.fStartSolid != 0);
 
-	if ( (tracesSolid == FALSE && tracesStartSolid == FALSE && minFraction >= 1.0)  ) //|| EASY_CVAR_GET(testVar) == 2)
+	if ( (tracesSolid == FALSE && tracesStartSolid == FALSE && minFraction >= 1.0)  ) //|| EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(testVar) == 2)
 	//if ( tr.fAllSolid == 0 && tr.fStartSolid == 0 && tr.flFraction >= 1.0)
 	{
 		//if(minFractionStore != NULL){ *minFractionStore = minFraction; }  //on success, the caller wants to know the minimum fraction seen, if a place to put it is provided.
@@ -538,7 +538,7 @@ int CFloater :: CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, C
 	}
 	
 	
-	if( EASY_CVAR_GET(drawDebugPathfinding) == 1){
+	if( EASY_CVAR_GET_DEBUGONLY(drawDebugPathfinding) == 1){
 		switch(iReturn){
 			case LOCALMOVE_INVALID:
 				//ORANGE
@@ -604,8 +604,8 @@ void CFloater::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, float
 
 	/*
 	Vector vecSuggestedDir = (m_Route[m_iRouteIndex].vecLocation - pev->origin).Normalize();
-	//float velMag = flStep * EASY_CVAR_GET(STUSpeedMulti);
-	float velMag = m_flGroundSpeed * EASY_CVAR_GET(STUSpeedMulti);
+	//float velMag = flStep * EASY_CVAR_GET_DEBUGONLY(STUSpeedMulti);
+	float velMag = m_flGroundSpeed * EASY_CVAR_GET_DEBUGONLY(STUSpeedMulti);
 
 	CFlyingMonster::MoveExecute(pTargetEnt, vecDir, flInterval);
 	*/
@@ -628,13 +628,13 @@ void CFloater::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, float
 	//m_flGroundSpeed = 200;
 
 	float flTotal = 0;
-	float flStepTimefactored = m_flGroundSpeed * pev->framerate * EASY_CVAR_GET(animationFramerateMulti) * flInterval;
+	float flStepTimefactored = m_flGroundSpeed * pev->framerate * EASY_CVAR_GET_DEBUGONLY(animationFramerateMulti) * flInterval;
 	float flStep = m_flGroundSpeed * 1 * 1;
 	
 	
-	float velMag = flStep * EASY_CVAR_GET(STUSpeedMulti);
-	float timeAdjust = (pev->framerate * EASY_CVAR_GET(animationFramerateMulti) * flInterval);
-	float distOneFrame = velMag * pev->framerate * EASY_CVAR_GET(animationFramerateMulti) * flInterval;
+	float velMag = flStep * EASY_CVAR_GET_DEBUGONLY(STUSpeedMulti);
+	float timeAdjust = (pev->framerate * EASY_CVAR_GET_DEBUGONLY(animationFramerateMulti) * flInterval);
+	float distOneFrame = velMag * pev->framerate * EASY_CVAR_GET_DEBUGONLY(animationFramerateMulti) * flInterval;
 	
 	Vector dest = m_Route[ m_iRouteIndex ].vecLocation;
 	Vector vectBetween = (dest - pev->origin);
@@ -819,7 +819,7 @@ Schedule_t* CFloater::GetSchedule ( void )
 				return GetScheduleOfType ( SCHED_WAKE_ANGRY );
 			}
 			//MODDD - other condition.  If "noFlinchOnHard" is on and the skill is hard, don't flinch from getting hit.
-			else if (HasConditions(bits_COND_LIGHT_DAMAGE) && !HasMemory( bits_MEMORY_FLINCHED) && !(EASY_CVAR_GET(noFlinchOnHard)==1 && g_iSkillLevel==SKILL_HARD)  )
+			else if (HasConditions(bits_COND_LIGHT_DAMAGE) && !HasMemory( bits_MEMORY_FLINCHED) && !(EASY_CVAR_GET_DEBUGONLY(noFlinchOnHard)==1 && g_iSkillLevel==SKILL_HARD)  )
 			{
 				return GetScheduleOfType( SCHED_SMALL_FLINCH );
 			}
@@ -1052,7 +1052,7 @@ void CFloater::CustomTouch( CBaseEntity *pOther ){
 
 
 void CFloater::MonsterThink(){
-	if(EASY_CVAR_GET(floaterDummy) == 1){
+	if(EASY_CVAR_GET_DEBUGONLY(floaterDummy) == 1){
 		//no thought for you.
 		pev->nextthink = gpGlobals->time + 0.1;
 		return;
@@ -1474,7 +1474,7 @@ void CFloater::checkTraceLine(const Vector& vecSuggestedDir, const float& travel
 			float toMove = moveDist - dist;
 			//pev->origin = pev->origin + -toMove*vecRelativeEnd;
 		
-			float timeAdjust = (pev->framerate * EASY_CVAR_GET(animationFramerateMulti) * flInterval);
+			float timeAdjust = (pev->framerate * EASY_CVAR_GET_DEBUGONLY(animationFramerateMulti) * flInterval);
 			
 			Vector vecMoveParallel = UTIL_projectionComponent(vecSuggestedDir, tr.vecPlaneNormal).Normalize() * (travelMag * 1);
 			//Vector vecMoveParallel = Vector(0,0,0);
@@ -1486,7 +1486,7 @@ void CFloater::checkTraceLine(const Vector& vecSuggestedDir, const float& travel
 				//...
 			}
 
-			Vector vecMoveRepel = (tr.vecPlaneNormal*toMove*EASY_CVAR_GET(STUrepelMulti))/1;
+			Vector vecMoveRepel = (tr.vecPlaneNormal*toMove*EASY_CVAR_GET_DEBUGONLY(STUrepelMulti))/1;
 			
 			//pev->origin = pev->origin + vecMoveParallel;
 			////UTIL_MoveToOrigin ( ENT(pev), pev->origin + -toMove*vecRelativeEnd + vecMoveParallel , travelMag, MOVE_STRAFE );
@@ -1533,7 +1533,7 @@ void CFloater::checkTraceLine(const Vector& vecSuggestedDir, const float& travel
 		}//END OF if(tr.flFraction < 1.0)
 	}//END OF if(!tempCheckTraceLineBlock)
 	
-	if(EASY_CVAR_GET(drawDebugPathfinding2) == 1){
+	if(EASY_CVAR_GET_DEBUGONLY(drawDebugPathfinding2) == 1){
 		UTIL_drawLineFrame(vecStart, vecStart + vecRelativeEndScale, 16, 0, 255, 0);
 	}
 }
@@ -1571,7 +1571,7 @@ void CFloater::checkTraceLineTest(const Vector& vecSuggestedDir, const float& tr
 			float toMove = moveDist - dist;
 			//pev->origin = pev->origin + -toMove*vecRelativeEnd;
 		
-			float timeAdjust = (pev->framerate * EASY_CVAR_GET(animationFramerateMulti) * flInterval);
+			float timeAdjust = (pev->framerate * EASY_CVAR_GET_DEBUGONLY(animationFramerateMulti) * flInterval);
 			
 			Vector vecMoveParallel = UTIL_projectionComponent(vecSuggestedDir, tr.vecPlaneNormal).Normalize() * (travelMag * 1);
 			//Vector vecMoveParallel = Vector(0,0,0);
@@ -1583,7 +1583,7 @@ void CFloater::checkTraceLineTest(const Vector& vecSuggestedDir, const float& tr
 				//...
 			}
 
-			Vector vecMoveRepel = (tr.vecPlaneNormal*toMove*EASY_CVAR_GET(STUrepelMulti))/1;
+			Vector vecMoveRepel = (tr.vecPlaneNormal*toMove*EASY_CVAR_GET_DEBUGONLY(STUrepelMulti))/1;
 			
 			//pev->origin = pev->origin + vecMoveParallel;
 			////UTIL_MoveToOrigin ( ENT(pev), pev->origin + -toMove*vecRelativeEnd + vecMoveParallel , travelMag, MOVE_STRAFE );
@@ -1637,7 +1637,7 @@ void CFloater::checkTraceLineTest(const Vector& vecSuggestedDir, const float& tr
 		}//END OF if(tr.flFraction < 1.0)
 	}//END OF if(!tempCheckTraceLineBlock)
 	
-	if(EASY_CVAR_GET(drawDebugPathfinding2) == 1){
+	if(EASY_CVAR_GET_DEBUGONLY(drawDebugPathfinding2) == 1){
 		UTIL_drawLineFrame(vecStart, vecStart + vecRelativeEndScale, 16, 0, 255, 0);
 	}
 
@@ -1660,7 +1660,7 @@ void CFloater::checkFloor(const Vector& vecSuggestedDir, const float& travelMag,
 	}
 	*/
 	//UTIL_drawBoxFrame(pev->absmin, pev->absmax, 16, 0, 0, 255);
-	if(EASY_CVAR_GET(drawDebugPathfinding2) == 1){
+	if(EASY_CVAR_GET_DEBUGONLY(drawDebugPathfinding2) == 1){
 		UTIL_drawBoxFrame(pev->origin + pev->mins, pev->origin + pev->maxs, 16, 0, 0, 255);
 	}
 	int maxX = pev->maxs.x;
@@ -1697,9 +1697,9 @@ void CFloater::checkFloor(const Vector& vecSuggestedDir, const float& travelMag,
 	int checkDistD = 38;
 	*/
 
-	int checkDist = EASY_CVAR_GET(STUcheckDistH);
-	int checkDistV = EASY_CVAR_GET(STUcheckDistV);
-	int checkDistD = EASY_CVAR_GET(STUcheckDistD);
+	int checkDist = EASY_CVAR_GET_DEBUGONLY(STUcheckDistH);
+	int checkDistV = EASY_CVAR_GET_DEBUGONLY(STUcheckDistV);
+	int checkDistD = EASY_CVAR_GET_DEBUGONLY(STUcheckDistD);
 
 
 	//float Vector push;

@@ -26,12 +26,12 @@
 #include "doors.h"
 #include "weapons.h"
 
-EASY_CVAR_EXTERN(pathfindPrintout)
-EASY_CVAR_EXTERN(nodeSearchStartVerticalOffset)
-EASY_CVAR_EXTERN(ignoreIsolatedNodes)
-EASY_CVAR_EXTERN(hideNodeGraphRebuildNotice)
-EASY_CVAR_EXTERN(nodeConnectionBreakableCheck)
-EASY_CVAR_EXTERN(nodeDetailPrintout)
+EASY_CVAR_EXTERN_DEBUGONLY(pathfindPrintout)
+EASY_CVAR_EXTERN_DEBUGONLY(nodeSearchStartVerticalOffset)
+EASY_CVAR_EXTERN_DEBUGONLY(ignoreIsolatedNodes)
+EASY_CVAR_EXTERN_DEBUGONLY(hideNodeGraphRebuildNotice)
+EASY_CVAR_EXTERN_DEBUGONLY(nodeConnectionBreakableCheck)
+EASY_CVAR_EXTERN_DEBUGONLY(nodeDetailPrintout)
 
 
 //MODDD - retail behavior HULL_STEP_SIZE is 16!
@@ -379,7 +379,7 @@ int CGraph::HandleLinkEnt(int iNode, entvars_t* pevLinkEnt, int afCapMask, NODEQ
 		//return TRUE;
 		//return FALSE;
 
-		return (EASY_CVAR_GET(nodeConnectionBreakableCheck) == 1 || EASY_CVAR_GET(nodeConnectionBreakableCheck) == 3);
+		return (EASY_CVAR_GET_DEBUGONLY(nodeConnectionBreakableCheck) == 1 || EASY_CVAR_GET_DEBUGONLY(nodeConnectionBreakableCheck) == 3);
 	}
 	else
 	{
@@ -700,7 +700,7 @@ int CGraph::NextNodeInRoute(int iCurrentNode, int iDest, int iHull, int iCap)
 			if (nCount <= ch)
 			{
 				//MODDD - checks first.
-				if (EASY_CVAR_GET(nodeConnectionBreakableCheck) <= 1 || pathBetweenClear(iCurrentNode, iDest)) {
+				if (EASY_CVAR_GET_DEBUGONLY(nodeConnectionBreakableCheck) <= 1 || pathBetweenClear(iCurrentNode, iDest)) {
 					iNext = iDest;
 				}//...
 
@@ -732,7 +732,7 @@ int CGraph::NextNodeInRoute(int iCurrentNode, int iDest, int iHull, int iCap)
 
 
 				//MODDD - intervention again..
-				if (EASY_CVAR_GET(nodeConnectionBreakableCheck) <= 1 || pathBetweenClear(iCurrentNode, iNext)) {
+				if (EASY_CVAR_GET_DEBUGONLY(nodeConnectionBreakableCheck) <= 1 || pathBetweenClear(iCurrentNode, iNext)) {
 					//is this valid?  if so, proceed.  
 
 				}//END OF new if...
@@ -789,7 +789,7 @@ int CGraph::FindShortestPath(int* piPath, int iStart, int iDest, int iHull, int 
 	if (iStart == iDest)
 	{
 
-		if (EASY_CVAR_GET(pathfindPrintout) == 1) {
+		if (EASY_CVAR_GET_DEBUGONLY(pathfindPrintout) == 1) {
 			easyForcePrintLine("WARNING!!! FindShortestPath reports the start and end nodes are exactly the same. Returning start position, satisfied!");
 		}
 
@@ -1075,7 +1075,7 @@ void CGraph::CheckNode(Vector vecOrigin, int iNode)
 	// on having a path to the machines interrupted.   This isn't really behavior worth preserving
 	// for what could weaken other pathfind checks into thinking a route that leads nowhere could 
 	// really work.
-	if (EASY_CVAR_GET(ignoreIsolatedNodes) && m_pNodes[iNode].m_cNumLinks < 1) {
+	if (EASY_CVAR_GET_DEBUGONLY(ignoreIsolatedNodes) && m_pNodes[iNode].m_cNumLinks < 1) {
 		//BAM!  Class dismissed for you.
 		return;
 	}
@@ -1087,7 +1087,7 @@ void CGraph::CheckNode(Vector vecOrigin, int iNode)
 		// make sure that vecOrigin can trace to this node!
 		//MODDD - involving nodeSearchStartVerticalOFfset now.
 		//UTIL_TraceLine ( vecOrigin, m_pNodes[ iNode ].m_vecOriginPeek, ignore_monsters, 0, &tr );
-		UTIL_TraceLine(vecOrigin + Vector(0, 0, EASY_CVAR_GET(nodeSearchStartVerticalOffset)), m_pNodes[iNode].m_vecOriginPeek, ignore_monsters, 0, &tr);
+		UTIL_TraceLine(vecOrigin + Vector(0, 0, EASY_CVAR_GET_DEBUGONLY(nodeSearchStartVerticalOffset)), m_pNodes[iNode].m_vecOriginPeek, ignore_monsters, 0, &tr);
 
 
 		if (tr.flFraction == 1.0)
@@ -1551,7 +1551,7 @@ int CGraph::LinkVisibleNodes(CLink* pLinkPool, FILE* file, int* piBadNode)
 				if (tr.pHit == pTraceEnt && !FClassnameIs(tr.pHit, "worldspawn"))
 				{
 
-					if (EASY_CVAR_GET(nodeDetailPrintout) == 1) {
+					if (EASY_CVAR_GET_DEBUGONLY(nodeDetailPrintout) == 1) {
 						easyForcePrintLine("OOOOOHOOOOOOOOOOOOOOOOOOO: %s", STRING(tr.pHit->v.classname));
 					}
 
@@ -1801,7 +1801,7 @@ void CTestHull::Spawn(entvars_t* pevMasterNode)
 void CTestHull::DropDelay(void)
 {
 	//MODDD - can hide this text.
-	if (EASY_CVAR_GET(hideNodeGraphRebuildNotice) != 1) {
+	if (EASY_CVAR_GET_DEBUGONLY(hideNodeGraphRebuildNotice) != 1) {
 		CenterPrintAll("Node Graph out of Date. Rebuilding...");
 	}
 

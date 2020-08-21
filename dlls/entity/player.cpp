@@ -44,61 +44,61 @@
 #include "cvar_custom_info.h"
 
 
-EASY_CVAR_EXTERN(myStrobe)
-EASY_CVAR_EXTERN(raveEffectSpawnInterval)
-EASY_CVAR_EXTERN(sv_germancensorship)
-EASY_CVAR_EXTERN(mutePlayerPainSounds)
-EASY_CVAR_EXTERN(geigerChannel)
-EASY_CVAR_EXTERN(drawDebugBloodTrace)
-EASY_CVAR_EXTERN(autoSneaky)
+EASY_CVAR_EXTERN_DEBUGONLY(myStrobe)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(raveEffectSpawnInterval)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(sv_germancensorship)
+EASY_CVAR_EXTERN_DEBUGONLY(mutePlayerPainSounds)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(geigerChannel)
+EASY_CVAR_EXTERN_DEBUGONLY(drawDebugBloodTrace)
+EASY_CVAR_EXTERN_DEBUGONLY(autoSneaky)
 EASY_CVAR_EXTERN(sv_longjump_chargemode)
-EASY_CVAR_EXTERN(endlessFlashlightBattery)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(endlessFlashlightBattery)
 EASY_CVAR_EXTERN_DEBUGONLY(normalSpeedMulti)
-EASY_CVAR_EXTERN(noclipSpeedMulti)
-EASY_CVAR_EXTERN(jumpForceMulti)
-EASY_CVAR_EXTERN(timedDamageEndlessOnHard)
-EASY_CVAR_EXTERN(drawNodeAll)
-EASY_CVAR_EXTERN(drawNodeSpecial)
-EASY_CVAR_EXTERN(drawNodeConnections)
-EASY_CVAR_EXTERN(drawNodeAlternateTime)
-EASY_CVAR_EXTERN(nodeSearchStartVerticalOffset)
+EASY_CVAR_EXTERN_DEBUGONLY(noclipSpeedMulti)
+EASY_CVAR_EXTERN_DEBUGONLY(jumpForceMulti)
+EASY_CVAR_EXTERN_DEBUGONLY(timedDamageEndlessOnHard)
+EASY_CVAR_EXTERN_DEBUGONLY(drawNodeAll)
+EASY_CVAR_EXTERN_DEBUGONLY(drawNodeSpecial)
+EASY_CVAR_EXTERN_DEBUGONLY(drawNodeConnections)
+EASY_CVAR_EXTERN_DEBUGONLY(drawNodeAlternateTime)
+EASY_CVAR_EXTERN_DEBUGONLY(nodeSearchStartVerticalOffset)
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(timedDamageDeathRemoveMode)
 extern float globalPSEUDO_cameraMode;
-EASY_CVAR_EXTERN(mirrorsDoNotReflectPlayer)
-EASY_CVAR_EXTERN(barnacleCanGib)
-EASY_CVAR_EXTERN(canDropInSinglePlayer)
-EASY_CVAR_EXTERN(timedDamageIgnoresArmor)
-EASY_CVAR_EXTERN(itemBatteryPrerequisite)
-EASY_CVAR_EXTERN(timedDamageDisableViewPunch)
-EASY_CVAR_EXTERN(batteryDrainsAtDeath)
-EASY_CVAR_EXTERN(batteryDrainsAtAdrenalineMode)
-EASY_CVAR_EXTERN(printOutCommonTimables)
-EASY_CVAR_EXTERN(playerBrightLight)
-EASY_CVAR_EXTERN(disablePainPunchAutomatic)
-EASY_CVAR_EXTERN(timedDamageReviveRemoveMode)
-EASY_CVAR_EXTERN(playerExtraPainSoundsMode)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(mirrorsDoNotReflectPlayer)
+EASY_CVAR_EXTERN_DEBUGONLY(barnacleCanGib)
+EASY_CVAR_EXTERN_DEBUGONLY(canDropInSinglePlayer)
+EASY_CVAR_EXTERN_DEBUGONLY(timedDamageIgnoresArmor)
+EASY_CVAR_EXTERN_DEBUGONLY(itemBatteryPrerequisite)
+EASY_CVAR_EXTERN_DEBUGONLY(timedDamageDisableViewPunch)
+EASY_CVAR_EXTERN_DEBUGONLY(batteryDrainsAtDeath)
+EASY_CVAR_EXTERN_DEBUGONLY(batteryDrainsAtAdrenalineMode)
+EASY_CVAR_EXTERN_DEBUGONLY(printOutCommonTimables)
+EASY_CVAR_EXTERN_DEBUGONLY(playerBrightLight)
+EASY_CVAR_EXTERN_DEBUGONLY(disablePainPunchAutomatic)
+EASY_CVAR_EXTERN_DEBUGONLY(timedDamageReviveRemoveMode)
+EASY_CVAR_EXTERN_DEBUGONLY(playerExtraPainSoundsMode)
 
 //MASS!  Try to remove those that are not used in here..
 ///////////////////////////////////////////////////////////////////////////////////
-EASY_CVAR_EXTERN(weaponPickupPlaysAnyReloadSounds)
-EASY_CVAR_EXTERN(playerReviveInvincibilityTime)
-EASY_CVAR_EXTERN(playerReviveBuddhaMode)
-EASY_CVAR_EXTERN(playerReviveTimeBlocksTimedDamage)
-EASY_CVAR_EXTERN(drawDebugCine)
-EASY_CVAR_EXTERN(wpn_glocksilencer)
-EASY_CVAR_EXTERN(nothingHurts)
-EASY_CVAR_EXTERN(RadiusDamageDrawDebug)
-EASY_CVAR_EXTERN(customLogoSprayMode)
-EASY_CVAR_EXTERN(ladderCycleMulti)
-EASY_CVAR_EXTERN(ladderSpeedMulti)
-EASY_CVAR_EXTERN(friendlyPianoFollowVolume)
-EASY_CVAR_EXTERN(playerUseDrawDebug)
-EASY_CVAR_EXTERN(playerFadeOutRate)
+EASY_CVAR_EXTERN_DEBUGONLY(weaponPickupPlaysAnyReloadSounds)
+EASY_CVAR_EXTERN_DEBUGONLY(playerReviveInvincibilityTime)
+EASY_CVAR_EXTERN_DEBUGONLY(playerReviveBuddhaMode)
+EASY_CVAR_EXTERN_DEBUGONLY(playerReviveTimeBlocksTimedDamage)
+EASY_CVAR_EXTERN_DEBUGONLY(drawDebugCine)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST(wpn_glocksilencer)
+EASY_CVAR_EXTERN_DEBUGONLY(nothingHurts)
+EASY_CVAR_EXTERN_DEBUGONLY(RadiusDamageDrawDebug)
+EASY_CVAR_EXTERN_DEBUGONLY(customLogoSprayMode)
+EASY_CVAR_EXTERN_DEBUGONLY(ladderCycleMulti)
+EASY_CVAR_EXTERN_DEBUGONLY(ladderSpeedMulti)
+EASY_CVAR_EXTERN_DEBUGONLY(friendlyPianoFollowVolume)
+EASY_CVAR_EXTERN_DEBUGONLY(playerUseDrawDebug)
+EASY_CVAR_EXTERN_DEBUGONLY(playerFadeOutRate)
 //EASY_CVAR_EXTERN(cl_holster)
 //EASY_CVAR_EXTERN(cl_ladder)
-EASY_CVAR_EXTERN(hideDamage)
-EASY_CVAR_EXTERN(minimumRespawnDelay)
-EASY_CVAR_EXTERN(monsterToPlayerHitgroupSpecial)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(hideDamage)
+EASY_CVAR_EXTERN_DEBUGONLY(minimumRespawnDelay)
+EASY_CVAR_EXTERN_DEBUGONLY(monsterToPlayerHitgroupSpecial)
 EASY_CVAR_EXTERN(precacheAll)
 EASY_CVAR_EXTERN(blastExtraArmorDamageMode)
 EASY_CVAR_EXTERN(sv_player_midair_fixMem)
@@ -466,7 +466,7 @@ void CBasePlayer :: PainSound( void )
 	float flRndSound;//sound randomizer
 
 	//disallow making noise if this CVar is on.
-	if(EASY_CVAR_GET(hideDamage) >= 1 || EASY_CVAR_GET(mutePlayerPainSounds) == 1 || EASY_CVAR_GET(playerExtraPainSoundsMode) == 2){
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(hideDamage) >= 1 || EASY_CVAR_GET_DEBUGONLY(mutePlayerPainSounds) == 1 || EASY_CVAR_GET_DEBUGONLY(playerExtraPainSoundsMode) == 2){
 		//playerExtraPainSoundsMode of 2 suggets that we don't want to use the default PainSound method at all.
 		return;
 	}
@@ -488,7 +488,7 @@ void CBasePlayer :: PainChance( void )
 {
 
 	//disallow making noise if this CVar is on.
-	if(EASY_CVAR_GET(hideDamage) >= 1 || EASY_CVAR_GET(mutePlayerPainSounds) == 1){
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(hideDamage) >= 1 || EASY_CVAR_GET_DEBUGONLY(mutePlayerPainSounds) == 1){
 		return;
 	}
 
@@ -697,7 +697,7 @@ void CBasePlayer::declareRevivelessDead(void) {
 	if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(timedDamageDeathRemoveMode) > 0) {
 		attemptResetTimedDamage(TRUE);
 	}
-	if (EASY_CVAR_GET(batteryDrainsAtDeath) == 1) {
+	if (EASY_CVAR_GET_DEBUGONLY(batteryDrainsAtDeath) == 1) {
 		SetAndUpdateBattery(0);
 	}
 }
@@ -785,7 +785,7 @@ GENERATE_TRACEATTACK_IMPLEMENTATION(CBasePlayer)
 		//1: on. Monsters can do enhanced or reduced damage depending on the hitgroup hit, such as triple damage for headshots.
 		//2: semi. Monsters can potentially do reduced damage if any area reduces damage instead (as of retail skill.cfg settings, likely unchanged, nowhere), but never enhanced damage such as from headshots.
 		//   In other words, damage modifiers are possible from what hitgroup was touched, but it can't go above 100% of intended damage like triple.
-		if( (isAttackerPlayer || EASY_CVAR_GET(monsterToPlayerHitgroupSpecial) > 0) && !(bitsDamageTypeMod & DMG_HITBOX_EQUAL) ){
+		if( (isAttackerPlayer || EASY_CVAR_GET_DEBUGONLY(monsterToPlayerHitgroupSpecial) > 0) && !(bitsDamageTypeMod & DMG_HITBOX_EQUAL) ){
 			float damageModifier = 1.0f;
 			
 			switch ( ptr->iHitgroup )
@@ -814,7 +814,7 @@ GENERATE_TRACEATTACK_IMPLEMENTATION(CBasePlayer)
 				break;
 			}
 
-			if(!isAttackerPlayer && EASY_CVAR_GET(monsterToPlayerHitgroupSpecial) == 2){
+			if(!isAttackerPlayer && EASY_CVAR_GET_DEBUGONLY(monsterToPlayerHitgroupSpecial) == 2){
 				// Don't let the modifier picked exceed 100% for player-induced damage.
 				if(damageModifier > 1.0f){
 					damageModifier = 1.0f;
@@ -834,10 +834,10 @@ GENERATE_TRACEATTACK_IMPLEMENTATION(CBasePlayer)
 		//SpawnBlood(ptr->vecEndPos, BloodColor(), flDamage);// a little surface blood.
 
 
-		if(EASY_CVAR_GET(RadiusDamageDrawDebug) == 1)DebugLine_Setup(1, ptr->vecEndPos + Vector(0, 0, -20), ptr->vecEndPos + Vector(0, 0, 20), 0, 0, 255);
+		if(EASY_CVAR_GET_DEBUGONLY(RadiusDamageDrawDebug) == 1)DebugLine_Setup(1, ptr->vecEndPos + Vector(0, 0, -20), ptr->vecEndPos + Vector(0, 0, 20), 0, 0, 255);
 		
 		//NEVERMIND THIS REDUCTION. Other places don't disable bleeding per this Var so it's a lost cause. Just leave this, not too jarring or distracting.
-		//if(EASY_CVAR_GET(hideDamage) <= 0){
+		//if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(hideDamage) <= 0){
 			SpawnBlood(ptr->vecEndPos, flDamage);
 
 			//already seems to play?  Verify!
@@ -876,12 +876,12 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBasePlayer)
 		if (!(bitsDamageTypeMod & DMG_MAP_BLOCKED)) {
 		
 			if(reviveSafetyTime >= gpGlobals->time){
-				if(EASY_CVAR_GET(playerReviveBuddhaMode) == 1){
+				if(EASY_CVAR_GET_DEBUGONLY(playerReviveBuddhaMode) == 1){
 					buddhaMode = TRUE;
 				}else{
 					blockDamage = TRUE;
 				}
-				if(EASY_CVAR_GET(playerReviveTimeBlocksTimedDamage) == 1){
+				if(EASY_CVAR_GET_DEBUGONLY(playerReviveTimeBlocksTimedDamage) == 1){
 					blockTimedDamage = TRUE;
 				}
 			}else{
@@ -904,22 +904,22 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBasePlayer)
 		BOOL pass = FALSE;
 
 		//no chance at passing if hit sounds are muted.
-		if(EASY_CVAR_GET(mutePlayerPainSounds) != 1){
+		if(EASY_CVAR_GET_DEBUGONLY(mutePlayerPainSounds) != 1){
 
-			if(EASY_CVAR_GET(playerExtraPainSoundsMode) == 0){
+			if(EASY_CVAR_GET_DEBUGONLY(playerExtraPainSoundsMode) == 0){
 				//no extra pain sounds.
 				
-			}/*else if(EASY_CVAR_GET(playerExtraPainSoundsMode) == 1){
+			}/*else if(EASY_CVAR_GET_DEBUGONLY(playerExtraPainSoundsMode) == 1){
 				if(bitsDamageType & (DMG_FALL) ){
 					pass = TRUE;
 				}
 				
 			}*/
-			else if(EASY_CVAR_GET(playerExtraPainSoundsMode) == 1 || EASY_CVAR_GET(playerExtraPainSoundsMode) == 2 ){
+			else if(EASY_CVAR_GET_DEBUGONLY(playerExtraPainSoundsMode) == 1 || EASY_CVAR_GET_DEBUGONLY(playerExtraPainSoundsMode) == 2 ){
 				pass = TRUE;
 			}
 			
-		}//END OF if(EASY_CVAR_GET(mutePlayerPainSounds) != 1))
+		}//END OF if(EASY_CVAR_GET_DEBUGONLY(mutePlayerPainSounds) != 1))
 
 		if(pass){
 			//AMD889 ADDED THIS, is it the old landing stuff?
@@ -1037,7 +1037,7 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBasePlayer)
 
 	if (pev->armorvalue && !(bitsDamageType & (DMG_FALL | DMG_DROWN)) && 
 		!(bitsDamage & DMG_ARMORBLOCKEXCEPTION || bitsDamageMod & DMG_ARMORBLOCKEXCEPTIONMOD || bitsDamageMod & DMG_MAP_TRIGGER) &&
-		(  !(bitsDamageMod & DMG_TIMEDEFFECTIGNORE)   &&   (EASY_CVAR_GET(timedDamageIgnoresArmor) == 0 || !(bitsDamageMod & (DMG_TIMEDEFFECT) ) ))
+		(  !(bitsDamageMod & DMG_TIMEDEFFECTIGNORE)   &&   (EASY_CVAR_GET_DEBUGONLY(timedDamageIgnoresArmor) == 0 || !(bitsDamageMod & (DMG_TIMEDEFFECT) ) ))
 		
 	)  // armor doesn't protect against fall or drown damage!  ... or "DMG_TIMEDEFFECTIGNORE".
 	{
@@ -1079,7 +1079,7 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBasePlayer)
 		flDamage = flNewHealthDamage;
 	}
 
-	if (EASY_CVAR_GET(nothingHurts) > 0) {
+	if (EASY_CVAR_GET_DEBUGONLY(nothingHurts) > 0) {
 		//nothing hurts, the player does not take damage with this cheat on.
 		flDamage = 0;
 	}
@@ -1158,7 +1158,7 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBasePlayer)
 
 
 
-	if(EASY_CVAR_GET(hideDamage) >= 1){
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(hideDamage) >= 1){
 		//If so, skip the rest of this method.  It's only about making fvox chatter on taking damage.
 		return fTookDamage;
 	}
@@ -1179,8 +1179,8 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBasePlayer)
 	//including "bitsDamageMod".  It has its own mask for its timed damages.
 	
 
-	//if "EASY_CVAR_GET(playerReviveTimeBlocksTimedDamage)" is 2, we're blocking notifications about new timed damage as well.
-	BOOL blockTimedDamageUpdates = (blockTimedDamage && EASY_CVAR_GET(playerReviveTimeBlocksTimedDamage) == 2);
+	//if "EASY_CVAR_GET_DEBUGONLY(playerReviveTimeBlocksTimedDamage)" is 2, we're blocking notifications about new timed damage as well.
+	BOOL blockTimedDamageUpdates = (blockTimedDamage && EASY_CVAR_GET_DEBUGONLY(playerReviveTimeBlocksTimedDamage) == 2);
 
 	//...These are just statuses & removals of non-timed damage for handling them.  No issue to still just report these.  (in regards to revive-invincibility-post-delay)
 	while (fTookDamage && (!ftrivial || (bitsDamage & (DMG_BURN | DMG_SHOCK) || bitsDamage & DMG_TIMEBASED) || (bitsDamageMod & DMG_TIMEBASEDMOD)  ) && ffound && bitsDamage)
@@ -1335,8 +1335,8 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBasePlayer)
 	//MODDD - if "timedDamageDisableViewPunch" is on, timed damage will not throw the view off for a moment.
 	//... not this "!(bitsDamageType & DMG_TIMEBASED || bitsDamageTypeMod & DMG_TIMEBASEDMOD)", because that is for starting timed damage.
 	//That is okay anyways.  The continued effects (DMG_TIMEDEFFECT) are what this CVar is concerned with.
-	if(EASY_CVAR_GET(disablePainPunchAutomatic) != 1){
-		if(EASY_CVAR_GET(timedDamageDisableViewPunch) == 0 || !(bitsDamageTypeMod & (DMG_TIMEDEFFECT | DMG_TIMEDEFFECTIGNORE) )   ){
+	if(EASY_CVAR_GET_DEBUGONLY(disablePainPunchAutomatic) != 1){
+		if(EASY_CVAR_GET_DEBUGONLY(timedDamageDisableViewPunch) == 0 || !(bitsDamageTypeMod & (DMG_TIMEDEFFECT | DMG_TIMEDEFFECTIGNORE) )   ){
 			pev->punchangle.x = -2;
 		}
 	}
@@ -1380,7 +1380,7 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBasePlayer)
 
 		//easyPrintLine("RANDO STATUS %d %d %d    %d ", bitsDamageTypeMod, DMG_TIMEBASEDMOD, bitsDamageTypeMod & DMG_TIMEBASEDMOD,    bitsDamageType & DMG_TIMEBASED  );
 	
-		if(EASY_CVAR_GET(printOutCommonTimables) == 1){
+		if(EASY_CVAR_GET_DEBUGONLY(printOutCommonTimables) == 1){
 			easyPrintLine("RAD TIME: %d  BLEED TIME %d  POISON TIME %d ", m_rgbTimeBasedDamage[itbd_Radiation], m_rgbTimeBasedDamage[itbd_Bleeding], m_rgbTimeBasedDamage[itbd_Poison]);
 		}
 
@@ -1977,10 +1977,10 @@ GENERATE_KILLED_IMPLEMENTATION(CBasePlayer)
 	}
 	else if (playerHasSuit() && m_rgItems[ITEM_ADRENALINE] > 0) {
 		// For now, if the player has adrenaline and hasn't been gibbed, tell "DeathSound" this.
-		if(EASY_CVAR_GET(batteryDrainsAtAdrenalineMode) == 1){
+		if(EASY_CVAR_GET_DEBUGONLY(batteryDrainsAtAdrenalineMode) == 1){
 			SetAndUpdateBattery(0);
 		}
-		if(EASY_CVAR_GET(timedDamageReviveRemoveMode) == 1){
+		if(EASY_CVAR_GET_DEBUGONLY(timedDamageReviveRemoveMode) == 1){
 			attemptResetTimedDamage(TRUE);
 		}
 
@@ -2016,7 +2016,7 @@ GENERATE_KILLED_IMPLEMENTATION(CBasePlayer)
 	}
 
 	//MODDD - set this.  Does not get seen if reviving by adrenaline.
-	minimumRespawnDelay = gpGlobals->time + EASY_CVAR_GET(minimumRespawnDelay);
+	minimumRespawnDelay = gpGlobals->time + EASY_CVAR_GET_DEBUGONLY(minimumRespawnDelay);
 	
 }
 
@@ -2434,7 +2434,7 @@ void CBasePlayer::WaterMove()
 
 	//MODDD
 	//If not in the water, OR is in the water, but has air left in the air tank... (also requires at least one battery charge, if that cvar is on)
-	if (pev->waterlevel != 3 || (pev->waterlevel == 3 && airTankAirTime > 0 && (EASY_CVAR_GET(itemBatteryPrerequisite) == 0 || pev->armorvalue > 0 ) ) )
+	if (pev->waterlevel != 3 || (pev->waterlevel == 3 && airTankAirTime > 0 && (EASY_CVAR_GET_DEBUGONLY(itemBatteryPrerequisite) == 0 || pev->armorvalue > 0 ) ) )
 	{
 		//MODDD
 		//If underwater, use some air (implied we have some from the above if-statement's second condition)
@@ -2757,8 +2757,8 @@ void CBasePlayer::PlayerDeathThink(void)
 		GetClassPtr( (CBasePlayer *)pev)->Spawn( TRUE );
 
 		//invincibility delay?
-		if(EASY_CVAR_GET(playerReviveInvincibilityTime) > 0){
-			reviveSafetyTime = gpGlobals->time + EASY_CVAR_GET(playerReviveInvincibilityTime);
+		if(EASY_CVAR_GET_DEBUGONLY(playerReviveInvincibilityTime) > 0){
+			reviveSafetyTime = gpGlobals->time + EASY_CVAR_GET_DEBUGONLY(playerReviveInvincibilityTime);
 		}
 		return;
 	}
@@ -2797,8 +2797,8 @@ void CBasePlayer::PlayerDeathThink(void)
 			pev->rendermode = kRenderTransTexture;
 		}else{
 			
-			//pev->renderamt = max(pev->renderamt - gpGlobals->frametime * EASY_CVAR_GET(playerFadeOutRate) , 0) ;
-			pev->renderamt -= gpGlobals->frametime * EASY_CVAR_GET(playerFadeOutRate);
+			//pev->renderamt = max(pev->renderamt - gpGlobals->frametime * EASY_CVAR_GET_DEBUGONLY(playerFadeOutRate) , 0) ;
+			pev->renderamt -= gpGlobals->frametime * EASY_CVAR_GET_DEBUGONLY(playerFadeOutRate);
 
 			if(pev->renderamt <= 0){
 				//stop the transparency, just go straight to normally opaque but invisible with EF_NODRAW as expected.
@@ -3022,7 +3022,7 @@ void CBasePlayer::PlayerUse ( void )
 
 
 
-	if (EASY_CVAR_GET(playerUseDrawDebug) == 2) {
+	if (EASY_CVAR_GET_DEBUGONLY(playerUseDrawDebug) == 2) {
 		DebugLine_ClearAll();
 	}
 
@@ -3050,7 +3050,7 @@ void CBasePlayer::PlayerUse ( void )
 			vecLOS = UTIL_ClampVectorToBoxNonNormalized( vecLOS, pObject->pev->size * 0.5 );
 
 			Vector closestPointOnBox = pev->origin + pev->view_ofs + vecLOS;
-			if (EASY_CVAR_GET(playerUseDrawDebug) == 2) {
+			if (EASY_CVAR_GET_DEBUGONLY(playerUseDrawDebug) == 2) {
 				DebugLine_SetupPoint(closestPointOnBox, 0, 0, 255);
 			}
 			
@@ -3135,7 +3135,7 @@ void CBasePlayer::PlayerUse ( void )
 				vecLOSNorm.z * gpGlobals->v_forward.z * weightZ;
 
 			
-			if (EASY_CVAR_GET(playerUseDrawDebug) == 1) {
+			if (EASY_CVAR_GET_DEBUGONLY(playerUseDrawDebug) == 1) {
 				// the normal way, for comparison.
 				float flDotAlt = DotProduct (vecLOSNorm , gpGlobals->v_forward);
 
@@ -3260,7 +3260,7 @@ void CBasePlayer::PlayerUse ( void )
 	// Found an object
 	if (pToUseOn )
 	{
-		if (EASY_CVAR_GET(playerUseDrawDebug) == 1) {
+		if (EASY_CVAR_GET_DEBUGONLY(playerUseDrawDebug) == 1) {
 			easyForcePrintLine("playeruse: WHAT IS OBJECT I PICK?? %s", pToUseOn->getClassname());
 		}
 		//!!!!!!!!!!
@@ -3312,13 +3312,13 @@ void CBasePlayer::PlayerUse ( void )
 		*/
 		
 		//debugVect1Draw = TRUE;
-		if(EASY_CVAR_GET(playerUseDrawDebug) == 1){
+		if(EASY_CVAR_GET_DEBUGONLY(playerUseDrawDebug) == 1){
 			::DebugLine_ClearAll();
 		}
 		
 		//debugVect1End
 
-		if(EASY_CVAR_GET(playerUseDrawDebug) == 1)DebugLine_Setup(0, vecSrc, vecSrc+vecDirTowardsClosest, tr.flFraction);
+		if(EASY_CVAR_GET_DEBUGONLY(playerUseDrawDebug) == 1)DebugLine_Setup(0, vecSrc, vecSrc+vecDirTowardsClosest, tr.flFraction);
 
 
 		//tr.flFraction is in case it goes too far by a bit.
@@ -3334,7 +3334,7 @@ void CBasePlayer::PlayerUse ( void )
 			if( (hitEntity != NULL && hitEntity->pev == pToUseOn->pev) || distToPointHit<=5 || distToPointHit*(1 - (tr.flFraction)) <= 10 ){
 				//the trace-hit entity matches the entity selected to "use" on? this is valid.
 				flUseSuccess = TRUE;
-				if (EASY_CVAR_GET(playerUseDrawDebug) == 1) {
+				if (EASY_CVAR_GET_DEBUGONLY(playerUseDrawDebug) == 1) {
 					easyForcePrintLine("playeruse: That was easy. %s", pToUseOn->getClassname());
 				}
 			}else{
@@ -3342,7 +3342,7 @@ void CBasePlayer::PlayerUse ( void )
 				if( hitEntity != NULL && ::FClassnameIs(hitEntity->pev, "worldspawn")  ){
 					//possible exception. See if this is the case.
 					if(tr.flFraction>=1.0){
-						if (EASY_CVAR_GET(playerUseDrawDebug) == 1) {
+						if (EASY_CVAR_GET_DEBUGONLY(playerUseDrawDebug) == 1) {
 							easyForcePrintLine("playeruse: weird flag A (success) %s", pToUseOn->getClassname());
 						}
 						//missed touching anything? just count it.
@@ -3359,7 +3359,7 @@ void CBasePlayer::PlayerUse ( void )
 						
 						float distToPointHit2 = (vecDest2 - (vecSrc2)).Length();
 						
-						if(EASY_CVAR_GET(playerUseDrawDebug) == 1)DebugLine_Setup(0, vecSrc2, vecDest2, tr2.flFraction);
+						if(EASY_CVAR_GET_DEBUGONLY(playerUseDrawDebug) == 1)DebugLine_Setup(0, vecSrc2, vecDest2, tr2.flFraction);
 
 
 						//debugVect1End =  vecDest2;
@@ -3370,18 +3370,18 @@ void CBasePlayer::PlayerUse ( void )
 							CBaseEntity* hitEntity2 = CBaseEntity::Instance(tr2.pHit);
 							if( (hitEntity2 != NULL && hitEntity2->pev == pToUseOn->pev) || distToPointHit2<=5 || distToPointHit2*(1 - (tr2.flFraction)) <= 10){
 								//it's good!
-								if (EASY_CVAR_GET(playerUseDrawDebug) == 1) {
+								if (EASY_CVAR_GET_DEBUGONLY(playerUseDrawDebug) == 1) {
 									easyForcePrintLine("playeruse: weird flag B (success) %s", pToUseOn->getClassname());
 								}
 								flUseSuccess = TRUE;
 							}else{
-								if (EASY_CVAR_GET(playerUseDrawDebug) == 1) {
+								if (EASY_CVAR_GET_DEBUGONLY(playerUseDrawDebug) == 1) {
 									easyForcePrintLine("playeruse: weird flag C (fail) %s", pToUseOn->getClassname());
 								}
 								flUseSuccess = FALSE;
 							}
 						}else{
-							if (EASY_CVAR_GET(playerUseDrawDebug) == 1) {
+							if (EASY_CVAR_GET_DEBUGONLY(playerUseDrawDebug) == 1) {
 								easyForcePrintLine("playeruse: weird flag D (success) %s", pToUseOn->getClassname());
 							}
 							flUseSuccess = TRUE;
@@ -3390,7 +3390,7 @@ void CBasePlayer::PlayerUse ( void )
 					}//END OF inner center test
 				}else{
 					//mismatch? not ok.
-					if (EASY_CVAR_GET(playerUseDrawDebug) == 1) {
+					if (EASY_CVAR_GET_DEBUGONLY(playerUseDrawDebug) == 1) {
 						easyForcePrintLine("playeruse: weird flag E (fail) %s", pToUseOn->getClassname());
 					}
 					flUseSuccess = FALSE;
@@ -3399,7 +3399,7 @@ void CBasePlayer::PlayerUse ( void )
 			
 
 		}else{
-			if (EASY_CVAR_GET(playerUseDrawDebug) == 1) {
+			if (EASY_CVAR_GET_DEBUGONLY(playerUseDrawDebug) == 1) {
 				easyForcePrintLine("playeruse: weird flag F (success) %s", pToUseOn->getClassname());
 			}
 			//hit nothing? Just assume it worked.
@@ -3407,9 +3407,9 @@ void CBasePlayer::PlayerUse ( void )
 		}
 
 
-		//if(EASY_CVAR_GET(playerUseDrawDebug) == 1)aryDebugLines[0].setSuccess(flUseSuccess);
+		//if(EASY_CVAR_GET_DEBUGONLY(playerUseDrawDebug) == 1)aryDebugLines[0].setSuccess(flUseSuccess);
 
-		if (EASY_CVAR_GET(playerUseDrawDebug) == 1) {
+		if (EASY_CVAR_GET_DEBUGONLY(playerUseDrawDebug) == 1) {
 			//if successful, force it all green.
 			if (flUseSuccess) { DebugLine_ColorSuccess(0); };
 		}
@@ -3418,14 +3418,14 @@ void CBasePlayer::PlayerUse ( void )
 		tempplayer->GiveNamedItem( CMD_ARGV(1),  attemptInterpretSpawnFlag(CMD_ARGV(2)),
 									tr.vecEndPos.x,
 									tr.vecEndPos.y,
-									tr.vecEndPos.z + EASY_CVAR_GET(offsetgivelookvertical),
+									tr.vecEndPos.z + EASY_CVAR_GET_DEBUGONLY(offsetgivelookvertical),
 									TRUE, &tr);
 		*/
 	}else{
 		//no object touched? stop.
 		flUseSuccess = FALSE;
 
-		if(EASY_CVAR_GET(playerUseDrawDebug) == 1){
+		if(EASY_CVAR_GET_DEBUGONLY(playerUseDrawDebug) == 1){
 			::DebugLine_ClearAll();
 		}
 	}
@@ -3534,7 +3534,7 @@ void CBasePlayer::Jump()
 	}
 #else
 	//easyPrint("yes anim? %.2f\n", (lastDuckVelocityLength)  );
-	if (m_fLongJump && longJump_waitForRelease && lastDuckVelocityLength > 7 && (EASY_CVAR_GET(itemBatteryPrerequisite) || pev->armorvalue > 0 ))
+	if (m_fLongJump && longJump_waitForRelease && lastDuckVelocityLength > 7 && (EASY_CVAR_GET_DEBUGONLY(itemBatteryPrerequisite) || pev->armorvalue > 0 ))
 	{
 		SetAnimation( PLAYER_SUPERJUMP );
 	}
@@ -3751,7 +3751,7 @@ void CBasePlayer::UpdateStatusBar()
 void CBasePlayer::PreThink(void)
 {
 	
-	//if(EASY_CVAR_GET(testVar) == -1)
+	//if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(testVar) == -1)
 	//	return;
 	
 
@@ -3775,8 +3775,8 @@ void CBasePlayer::PreThink(void)
 	}
 
 	/*
-	EASY_CVAR_EXTERN(testVar)
-	if(EASY_CVAR_GET(testVar) == 2){
+	EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(testVar)
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(testVar) == 2){
 		EASY_CVAR_SET_DEBUGONLY(testVar, 1);
 		UTIL_printLineVector("MIN", pev->mins);
 		UTIL_printLineVector("MAX", pev->maxs);
@@ -3848,7 +3848,7 @@ void CBasePlayer::PreThink(void)
 	}
 
 
-	if(closestFriendlyMemEHANDLE!=NULL && (pev->deadflag == DEAD_NO) && EASY_CVAR_GET(friendlyPianoFollowVolume) > 0 ){
+	if(closestFriendlyMemEHANDLE!=NULL && (pev->deadflag == DEAD_NO) && EASY_CVAR_GET_DEBUGONLY(friendlyPianoFollowVolume) > 0 ){
 
 		if(horrorPlayTimePreDelay != -1 && horrorPlayTimePreDelay < gpGlobals->time){
 			horrorPlayTimePreDelay = -1;
@@ -3864,12 +3864,12 @@ void CBasePlayer::PreThink(void)
 				//CHECK: only play if I'm the closest to the player? plus a general distance check too?
 				horrorPlayTime = gpGlobals->time + 0.558;
 				
-				float tempVol = ( ((-(this->pev->origin - closestFriendlyMemEHANDLE->pev->origin).Length()) / 3000) + EASY_CVAR_GET(friendlyPianoFollowVolume)+0.1 );
+				float tempVol = ( ((-(this->pev->origin - closestFriendlyMemEHANDLE->pev->origin).Length()) / 3000) + EASY_CVAR_GET_DEBUGONLY(friendlyPianoFollowVolume)+0.1 );
 
 				if(tempVol < 0){
 					//don't play? no point.
 				}else{
-					if(tempVol > EASY_CVAR_GET(friendlyPianoFollowVolume) ){tempVol = EASY_CVAR_GET(friendlyPianoFollowVolume);}
+					if(tempVol > EASY_CVAR_GET_DEBUGONLY(friendlyPianoFollowVolume) ){tempVol = EASY_CVAR_GET_DEBUGONLY(friendlyPianoFollowVolume);}
 
 					//easyForcePrintLine("WHERE ELSE SUCKAH %.2f", tempVol);
 
@@ -4069,7 +4069,7 @@ void CBasePlayer::PreThink(void)
 		}//END OF longJumpCharge check
 #endif
 
-		if((EASY_CVAR_GET(itemBatteryPrerequisite) == 0 || pev->armorvalue > 0 )){
+		if((EASY_CVAR_GET_DEBUGONLY(itemBatteryPrerequisite) == 0 || pev->armorvalue > 0 )){
 
 #if LONGJUMPUSESDELAY == 1
 
@@ -4178,7 +4178,7 @@ void CBasePlayer::PreThink(void)
 
 #endif
 
-		}//END OF if((EASY_CVAR_GET(itemBatteryPrerequisite) == 0 || pev->armorvalue > 0 ))
+		}//END OF if((EASY_CVAR_GET_DEBUGONLY(itemBatteryPrerequisite) == 0 || pev->armorvalue > 0 ))
 
 	}//END OF if(m_fLongJump)
 
@@ -4359,7 +4359,7 @@ void CBasePlayer::timedDamage_nonFirstFrame(int i, int* m_bitsDamageTypeRef) {
 		((i == itbd_Poison) && (m_rgbTimeBasedDamage[i] < gSkillData.tdmg_poison_duration))
 	)
 	{
-		if (!antidoteQueued && m_rgItems[ITEM_ANTIDOTE] && (EASY_CVAR_GET(itemBatteryPrerequisite) == 0 || pev->armorvalue > 0))
+		if (!antidoteQueued && m_rgItems[ITEM_ANTIDOTE] && (EASY_CVAR_GET_DEBUGONLY(itemBatteryPrerequisite) == 0 || pev->armorvalue > 0))
 		{
 			antidoteQueued = TRUE;
 			//not yet!  Wait for the hissing sound.
@@ -4376,7 +4376,7 @@ void CBasePlayer::timedDamage_nonFirstFrame(int i, int* m_bitsDamageTypeRef) {
 	//MODDD - for the radiation instead.
 	if (((i == itbd_Radiation) && (m_rgbTimeBasedDamage[i] < gSkillData.tdmg_radiation_duration)))
 	{
-		if (!radiationQueued && m_rgItems[ITEM_RADIATION] && (EASY_CVAR_GET(itemBatteryPrerequisite) == 0 || pev->armorvalue > 0))
+		if (!radiationQueued && m_rgItems[ITEM_RADIATION] && (EASY_CVAR_GET_DEBUGONLY(itemBatteryPrerequisite) == 0 || pev->armorvalue > 0))
 		{
 			radiationQueued = TRUE;
 
@@ -4400,7 +4400,7 @@ void CBasePlayer::timedDamage_nonFirstFrame(int i, int* m_bitsDamageTypeRef) {
 // if in range of radiation source, ping geiger counter
 
 int CBasePlayer::getGeigerChannel(){
-	return EASY_CVAR_GET(geigerChannel);
+	return EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(geigerChannel);
 }
 
 
@@ -5600,7 +5600,7 @@ void CBasePlayer :: UpdatePlayerSound ( void )
 
 void CBasePlayer::PostThink()
 {
-	//if(EASY_CVAR_GET(testVar) == -1)return;
+	//if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(testVar) == -1)return;
 	//CBasePlayer* tempplayerTTT = this;
 	//easyPrintLine("VIEW ANGLES?! %.2f %.2f %.2f", tempplayerTTT->pev->v_angle.x, tempplayerTTT->pev->v_angle.y, tempplayerTTT->pev->v_angle.z);
 	//easyPrintLine("MY VIEW ANGLES: %.2f, %.2f, %.2f", pev->angles.x, pev->angles.y, pev->angles.z);
@@ -5645,12 +5645,12 @@ void CBasePlayer::PostThink()
 	}//END OF queueFirstAppearanceMessageSend check
 
 	
-	if(EASY_CVAR_GET(myStrobe) == 1){
+	if(EASY_CVAR_GET_DEBUGONLY(myStrobe) == 1){
 		if(nextMadEffect <= gpGlobals->time){
 			//send effect!
 			UTIL_generateFreakyLight(pev->origin);
 
-			nextMadEffect = gpGlobals->time + EASY_CVAR_GET(raveEffectSpawnInterval);
+			nextMadEffect = gpGlobals->time + EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(raveEffectSpawnInterval);
 		}
 	}
 
@@ -6337,7 +6337,7 @@ void CBasePlayer::commonReset(void){
 
 
 void CBasePlayer::autoSneakyCheck(void){
-	float autoSneakyValue = EASY_CVAR_GET(autoSneaky);
+	float autoSneakyValue = EASY_CVAR_GET_DEBUGONLY(autoSneaky);
 
 	if(autoSneakyValue == 1){
 		turnOnSneaky();
@@ -6386,7 +6386,7 @@ void CBasePlayer::Spawn( void ){
 //The hideDamage CVar makes the player unaffected by punches.
 //It is still up to individual cases to check for this "blocksImpact" feature of any entity and know not to do the camera punch + movement force if it is on.
 BOOL CBasePlayer::blocksImpact(void){
-	if(EASY_CVAR_GET(hideDamage) <= 0){
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(hideDamage) <= 0){
 		return FALSE;
 	}else{
 		return TRUE;
@@ -6399,7 +6399,7 @@ void CBasePlayer::Spawn( BOOL revived ){
 	//pev->friction		= 1.0;  //multiplayer requires this to be set to move. Why? dunno
 	
 	pev->takedamage		= DAMAGE_AIM;
-	//pev->solid			= (int)EASY_CVAR_GET(testVar);
+	//pev->solid			= (int)EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(testVar);
 	//pev->movetype		= MOVETYPE_STEP;  //FORCED!!!
 	pev->solid			= SOLID_SLIDEBOX;
 	pev->movetype		= MOVETYPE_BOUNCE;
@@ -6489,10 +6489,10 @@ void CBasePlayer::Spawn( BOOL revived ){
 		m_idrowndmg = 0;
 		pev->health = gSkillData.player_revive_health;
 
-		if(EASY_CVAR_GET(batteryDrainsAtAdrenalineMode) == 3){
+		if(EASY_CVAR_GET_DEBUGONLY(batteryDrainsAtAdrenalineMode) == 3){
 			pev->armorvalue		= 0;
 		}
-		if(EASY_CVAR_GET(timedDamageReviveRemoveMode) == 3){
+		if(EASY_CVAR_GET_DEBUGONLY(timedDamageReviveRemoveMode) == 3){
 			attemptResetTimedDamage(TRUE);
 		}
 	}//END OF if(!revived)
@@ -7289,7 +7289,7 @@ void CSprayCan::Think( void )
 	UTIL_TraceLine ( pev->origin, pev->origin + gpGlobals->v_forward * 128, ignore_monsters, pev->owner, & tr);
 
 
-	switch( (int)EASY_CVAR_GET(customLogoSprayMode) ){
+	switch( (int)EASY_CVAR_GET_DEBUGONLY(customLogoSprayMode) ){
 		case 1:{
 			nFrames = 6;
 			//easyForcePrintLine("MY NUMBERS %d", playernum);
@@ -8268,7 +8268,7 @@ Called every frame by the player PreThink
 */
 void CBasePlayer::ItemPreFrame()
 {
-	//if(EASY_CVAR_GET(testVar) == -1)return;
+	//if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(testVar) == -1)return;
 
 
 	// Even though ItemPostFrame() turns this off faster, it turns it off too fast. At least one full frame must run
@@ -8530,12 +8530,12 @@ void CBasePlayer :: UpdateClientData( void )
 	}
 
 	
-	if(noclipSpeedMultiMem != EASY_CVAR_GET(noclipSpeedMulti)){
-		noclipSpeedMultiMem = EASY_CVAR_GET(noclipSpeedMulti);
+	if(noclipSpeedMultiMem != EASY_CVAR_GET_DEBUGONLY(noclipSpeedMulti)){
+		noclipSpeedMultiMem = EASY_CVAR_GET_DEBUGONLY(noclipSpeedMulti);
 		
 		if(noclipSpeedMultiMem != 0){
 			char buffer[13];
-			tryFloatToStringBuffer(buffer, EASY_CVAR_GET(noclipSpeedMulti) );
+			tryFloatToStringBuffer(buffer, EASY_CVAR_GET_DEBUGONLY(noclipSpeedMulti) );
 			g_engfuncs.pfnSetPhysicsKeyValue( edict(), "ncm", buffer );
 		}else{
 			g_engfuncs.pfnSetPhysicsKeyValue( edict(), "ncm", "0" );
@@ -8553,35 +8553,35 @@ void CBasePlayer :: UpdateClientData( void )
 			g_engfuncs.pfnSetPhysicsKeyValue( edict(), "nsm", "0" );
 		}
 	}
-	if(jumpForceMultiMem != EASY_CVAR_GET(jumpForceMulti) ){
-		jumpForceMultiMem = EASY_CVAR_GET(jumpForceMulti);
+	if(jumpForceMultiMem != EASY_CVAR_GET_DEBUGONLY(jumpForceMulti) ){
+		jumpForceMultiMem = EASY_CVAR_GET_DEBUGONLY(jumpForceMulti);
 		//keep this CVar in sync with pm_shared...
 		if(jumpForceMultiMem != 0){
 			char buffer[13];
-			tryFloatToStringBuffer(buffer, EASY_CVAR_GET(jumpForceMulti) );
+			tryFloatToStringBuffer(buffer, EASY_CVAR_GET_DEBUGONLY(jumpForceMulti) );
 			g_engfuncs.pfnSetPhysicsKeyValue( edict(), "jfm", buffer );
 		}else{
 			g_engfuncs.pfnSetPhysicsKeyValue( edict(), "jfm", "0" );
 		}
 	}
 
-	if(ladderCycleMultiMem != EASY_CVAR_GET(ladderCycleMulti) ){
-		ladderCycleMultiMem = EASY_CVAR_GET(ladderCycleMulti);
+	if(ladderCycleMultiMem != EASY_CVAR_GET_DEBUGONLY(ladderCycleMulti) ){
+		ladderCycleMultiMem = EASY_CVAR_GET_DEBUGONLY(ladderCycleMulti);
 		//keep this CVar in sync with pm_shared...
 		if(ladderCycleMultiMem != 0){
 			char buffer[13];
-			tryFloatToStringBuffer(buffer, EASY_CVAR_GET(ladderCycleMulti));
+			tryFloatToStringBuffer(buffer, EASY_CVAR_GET_DEBUGONLY(ladderCycleMulti));
 			g_engfuncs.pfnSetPhysicsKeyValue( edict(), "lcm", buffer );
 		}else{
 			g_engfuncs.pfnSetPhysicsKeyValue( edict(), "lcm", "0" );
 		}
 	}
-	if(ladderSpeedMultiMem != EASY_CVAR_GET(ladderSpeedMulti) ){
-		ladderSpeedMultiMem = EASY_CVAR_GET(ladderSpeedMulti);
+	if(ladderSpeedMultiMem != EASY_CVAR_GET_DEBUGONLY(ladderSpeedMulti) ){
+		ladderSpeedMultiMem = EASY_CVAR_GET_DEBUGONLY(ladderSpeedMulti);
 		//keep this CVar in sync with pm_shared...
 		if(ladderCycleMultiMem != 0){
 			char buffer[13];
-			tryFloatToStringBuffer(buffer, EASY_CVAR_GET(ladderSpeedMulti));
+			tryFloatToStringBuffer(buffer, EASY_CVAR_GET_DEBUGONLY(ladderSpeedMulti));
 			g_engfuncs.pfnSetPhysicsKeyValue( edict(), "lsm", buffer );
 		}else{
 			g_engfuncs.pfnSetPhysicsKeyValue( edict(), "lsm", "0" );
@@ -8609,16 +8609,16 @@ void CBasePlayer :: UpdateClientData( void )
 		clearWeaponFlag = 1;
 	}
 
-	if(autoSneakyMem != EASY_CVAR_GET(autoSneaky) ){
-		autoSneakyMem = EASY_CVAR_GET(autoSneaky) ;
+	if(autoSneakyMem != EASY_CVAR_GET_DEBUGONLY(autoSneaky) ){
+		autoSneakyMem = EASY_CVAR_GET_DEBUGONLY(autoSneaky) ;
 		autoSneakyCheck();
 	}
 
 
 	//MODDDMIRROR.  Mostly disabled.  I think?
-	if(cameraModeMem != globalPSEUDO_cameraMode || mirrorsDoNotReflectPlayerMem != EASY_CVAR_GET(mirrorsDoNotReflectPlayer) ){
+	if(cameraModeMem != globalPSEUDO_cameraMode || mirrorsDoNotReflectPlayerMem != EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(mirrorsDoNotReflectPlayer) ){
 		cameraModeMem = globalPSEUDO_cameraMode;
-		mirrorsDoNotReflectPlayerMem = EASY_CVAR_GET(mirrorsDoNotReflectPlayer);
+		mirrorsDoNotReflectPlayerMem = EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(mirrorsDoNotReflectPlayer);
 
 		BOOL allowPlayerMarker = FALSE;
 		CBaseEntity *pEntityTemp = NULL;
@@ -8681,8 +8681,8 @@ void CBasePlayer :: UpdateClientData( void )
 		MESSAGE_END();
 	}
 
-	if(playerBrightLightMem != EASY_CVAR_GET(playerBrightLight) ){
-		playerBrightLightMem = EASY_CVAR_GET(playerBrightLight);
+	if(playerBrightLightMem != EASY_CVAR_GET_DEBUGONLY(playerBrightLight) ){
+		playerBrightLightMem = EASY_CVAR_GET_DEBUGONLY(playerBrightLight);
 		if(playerBrightLightMem != 1){
 			pev->effects &= ~EF_BRIGHTLIGHT;
 		}else{
@@ -8837,7 +8837,7 @@ void CBasePlayer :: UpdateClientData( void )
 		MESSAGE_END();
 	}
 
-	int hasGlockSilencerTEST = ( !(EASY_CVAR_GET(wpn_glocksilencer)==0) && (hasGlockSilencer || EASY_CVAR_GET(wpn_glocksilencer)==2 ));
+	int hasGlockSilencerTEST = ( !(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST(wpn_glocksilencer)==0) && (hasGlockSilencer || EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST(wpn_glocksilencer)==2 ));
 	//easyForcePrintLine("disregardIN WHAT %d");
 	if ( hasGlockSilencerTEST != hasGlockSilencerMem)
 	{
@@ -8918,7 +8918,7 @@ void CBasePlayer :: UpdateClientData( void )
 	{
 
 		//This only appleis if the endlessFlashlightBattery CVar is 0 (off).
-		if(EASY_CVAR_GET(endlessFlashlightBattery) == 0){
+		if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(endlessFlashlightBattery) == 0){
 			if (FlashlightIsOn())
 			{
 				if (m_iFlashBattery)
@@ -9455,7 +9455,7 @@ void CBasePlayer::DropPlayerItem ( char *pszItemName )
 {
 	//MODDD - new cvar.
 	//if ( !IsMultiplayer() || (weaponstay.value > 0) )
-	if ( EASY_CVAR_GET(canDropInSinglePlayer) == 0 && (!IsMultiplayer() || (weaponstay.value > 0)) )
+	if ( EASY_CVAR_GET_DEBUGONLY(canDropInSinglePlayer) == 0 && (!IsMultiplayer() || (weaponstay.value > 0)) )
 	{
 		// no dropping in single player.
 		return;
@@ -9755,10 +9755,10 @@ void CBasePlayer::consumeAdrenaline(){
 	//m_rgItems[ITEM_ADRENALINE] --;
 	//SetSuitUpdate("!HEV_ADR_USE", FALSE, SUIT_REPEAT_OK);
 
-	if(EASY_CVAR_GET(batteryDrainsAtAdrenalineMode) == 2){
+	if(EASY_CVAR_GET_DEBUGONLY(batteryDrainsAtAdrenalineMode) == 2){
 		SetAndUpdateBattery(0);
 	}
-	if (EASY_CVAR_GET(timedDamageReviveRemoveMode) == 2) {
+	if (EASY_CVAR_GET_DEBUGONLY(timedDamageReviveRemoveMode) == 2) {
 		attemptResetTimedDamage(TRUE);
 	}
 	

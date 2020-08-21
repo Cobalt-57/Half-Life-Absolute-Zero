@@ -22,9 +22,9 @@
 //#include "windows.h"
 #include "glInclude.h"
 
-EASY_CVAR_EXTERN(fogNear)
-EASY_CVAR_EXTERN(fogFar)
-EASY_CVAR_EXTERN(fogTest)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(fogNear)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(fogFar)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(fogTest)
 
 //EASY_CVAR_EXTERN_CLIENT_MASS
 
@@ -49,7 +49,7 @@ void RenderFog ( float currentTime )
 {
 	//float g_fFogColor[4] = { FogColor.x, FogColor.y, FogColor.z, 1.0 };
 	//bool bFog = g_iWaterLevel < 2 && g_fStartDist > 0 && g_fEndDist > 0;
-	float fogTestVar = EASY_CVAR_GET(fogTest);
+	float fogTestVar = EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(fogTest);
 
 	//easyPrintLine("CURRENTTIMEZ %.2f %,2f", currentTime, nextFogColorChange);
 
@@ -90,8 +90,8 @@ void RenderFog ( float currentTime )
 		//glFogf(GL_FOG_DENSITY, 0.0025);
 		glFogi(GL_FOG_MODE, GL_LINEAR);
 		glFogfv(GL_FOG_COLOR, g_fFogColor );
-		glFogf(GL_FOG_START, EASY_CVAR_GET(fogNear));
-		glFogf(GL_FOG_END, EASY_CVAR_GET(fogFar));
+		glFogf(GL_FOG_START, EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(fogNear));
+		glFogf(GL_FOG_END, EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(fogFar));
 		glHint(GL_FOG_HINT, GL_NICEST);
 	}
 	

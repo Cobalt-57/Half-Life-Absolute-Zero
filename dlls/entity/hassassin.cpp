@@ -48,9 +48,9 @@
 
 
 //#define HASSASSIN_CROSSBOW_RELOAD_APPLY_DELAY 1.1
-EASY_CVAR_EXTERN(hassassinCrossbowReloadSoundDelay)
-EASY_CVAR_EXTERN(thatWasntPunch)
-EASY_CVAR_EXTERN(hassassinCrossbowDebug)
+EASY_CVAR_EXTERN_DEBUGONLY(hassassinCrossbowReloadSoundDelay)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(thatWasntPunch)
+EASY_CVAR_EXTERN_DEBUGONLY(hassassinCrossbowDebug)
 
 
 extern DLL_GLOBAL int g_iSkillLevel;
@@ -842,7 +842,7 @@ void CHAssassin::MonsterThink(){
 
 	//easyForcePrintLine("AMMO??? %d", m_cAmmoLoaded);
 
-	if(EASY_CVAR_GET(thatWasntPunch) == 1 && this->m_fSequenceFinished){
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(thatWasntPunch) == 1 && this->m_fSequenceFinished){
 
 			switch(RANDOM_LONG(0, 20)){
 			case 0:SetSequenceByName("idle2");break;
@@ -877,7 +877,7 @@ void CHAssassin::MonsterThink(){
 
 int CHAssassin::IRelationship ( CBaseEntity *pTarget )
 {
-	if(EASY_CVAR_GET(thatWasntPunch) == 1){
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(thatWasntPunch) == 1){
 		//I just don't give a damn man
 		return R_NO;
 	}
@@ -1064,7 +1064,7 @@ void CHAssassin :: HandleAnimEvent( MonsterEvent_t *pEvent )
 {
 	//easyForcePrintLine("WHAT THE heck IS THiS stuff event:%d seq:%d fr:%.2f", pEvent->event, pev->sequence, pev->frame);
 
-	if(EASY_CVAR_GET(thatWasntPunch) == 1){
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(thatWasntPunch) == 1){
 		//Best not to.
 		return;
 	}
@@ -1399,7 +1399,7 @@ void CHAssassin :: RunAI( void )
 	// always visible is not on hard
 
 	//MODDD - also, this cheat CVar being on means we're definitely visible.
-	if (EASY_CVAR_GET(thatWasntPunch) == 1 || (g_iSkillLevel != SKILL_HARD || m_hEnemy == NULL || pev->deadflag != DEAD_NO || m_Activity == ACT_RUN || m_Activity == ACT_WALK || !(pev->flags & FL_ONGROUND) )  )
+	if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(thatWasntPunch) == 1 || (g_iSkillLevel != SKILL_HARD || m_hEnemy == NULL || pev->deadflag != DEAD_NO || m_Activity == ACT_RUN || m_Activity == ACT_WALK || !(pev->flags & FL_ONGROUND) )  )
 		m_iTargetRanderamt = 255;
 	else
 		m_iTargetRanderamt = 20;
@@ -1482,7 +1482,7 @@ void CHAssassin :: StartTask ( Task_t *pTask )
 				//MODDD - interesting... why was this sequence ever marked to loop if the hassassin can only fire one shot
 				//        before reloading (changing anims)?
 				
-				if(EASY_CVAR_GET(hassassinCrossbowDebug) != 1){
+				if(EASY_CVAR_GET_DEBUGONLY(hassassinCrossbowDebug) != 1){
 					m_fSequenceLoops = FALSE;
 				}
 
@@ -1499,7 +1499,7 @@ void CHAssassin :: StartTask ( Task_t *pTask )
 
 		//this->SetSequenceByName(HASSASSIN_CROSSBOW_RELOAD_ANIM);
 
-		reloadApplyTime = gpGlobals->time + EASY_CVAR_GET(hassassinCrossbowReloadSoundDelay);
+		reloadApplyTime = gpGlobals->time + EASY_CVAR_GET_DEBUGONLY(hassassinCrossbowReloadSoundDelay);
 
 		CBaseMonster::StartTask(pTask);
 
@@ -1619,7 +1619,7 @@ void CHAssassin :: RunTask ( Task_t *pTask )
 	case TASK_RANGE_ATTACK1:
 
 		
-		if(EASY_CVAR_GET(hassassinCrossbowDebug) != 1){
+		if(EASY_CVAR_GET_DEBUGONLY(hassassinCrossbowDebug) != 1){
 			if(m_fSequenceFinished == TRUE){
 				//done.
 				SetActivity(ACT_COMBAT_IDLE);
@@ -2181,7 +2181,7 @@ int CHAssassin::LookupActivityHard(int activity){
 			//m_flFramerateSuggestion = -1;
 
 
-			if(EASY_CVAR_GET(hassassinCrossbowDebug) != 1){
+			if(EASY_CVAR_GET_DEBUGONLY(hassassinCrossbowDebug) != 1){
 				m_iForceLoops = 0; //no loopping.
 			}
 

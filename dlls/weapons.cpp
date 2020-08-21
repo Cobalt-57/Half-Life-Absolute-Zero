@@ -50,9 +50,9 @@ EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteclip)
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(firstPersonIdleDelayMin)
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(firstPersonIdleDelayMax)
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(viewModelPrintouts)
-//EASY_CVAR_EXTERN(viewModelSyncFixPrintouts)
+//EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(viewModelSyncFixPrintouts)
 //EASY_CVAR_EXTERN(cl_holster)
-//EASY_CVAR_EXTERN(wpn_glocksilencer)
+//EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST(wpn_glocksilencer)
 
 
 DLL_GLOBAL short g_sModelIndexLaser;// holds the index for the laser beam
@@ -467,7 +467,7 @@ CBasePlayerWeapon::CBasePlayerWeapon(){
 float CBasePlayerWeapon::randomIdleAnimationDelay(void){
 	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(firstPersonIdleDelayMin) > 0 && EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(firstPersonIdleDelayMax) > 0){
 		//let's go.
-		//float rand = RANDOM_FLOAT(EASY_CVAR_GET(firstPersonIdleDelayMin), EASY_CVAR_GET(firstPersonIdleDelayMax));
+		//float rand = RANDOM_FLOAT(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(firstPersonIdleDelayMin), EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(firstPersonIdleDelayMax));
 		float rand = UTIL_SharedRandomFloat(m_pPlayer->random_seed, EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(firstPersonIdleDelayMin), EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(firstPersonIdleDelayMax) );
 		//easyPrintLine("OK server server %.2f", rand);
 		return rand;

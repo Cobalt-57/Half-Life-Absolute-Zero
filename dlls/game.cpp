@@ -27,7 +27,7 @@
 EASY_CVAR_CREATE_SERVER_SETUP_MASS
 
 
-EASY_CVAR_EXTERN(hiddenMemPrintout)
+EASY_CVAR_EXTERN_DEBUGONLY(hiddenMemPrintout)
 EASY_CVAR_EXTERN_DEBUGONLY(emergencyFix)
 EASY_CVAR_EXTERN(soundSentenceSave)
 
@@ -834,7 +834,7 @@ void GameDLLInit( void )
 	determineHiddenMemPath();
 
 	globalPSEUDO_iCanHazMemez = checkSubDirectoryExistence("sound\\memez");
-	if (EASY_CVAR_GET(hiddenMemPrintout) == 1) {
+	if (EASY_CVAR_GET_DEBUGONLY(hiddenMemPrintout) == 1) {
 		easyForcePrintLine("MEMEZ FOUND??: %d", (globalPSEUDO_iCanHazMemez == 1));
 	}
 

@@ -10,7 +10,7 @@
 #include "decals.h"
 
 
-EASY_CVAR_EXTERN(noFlinchOnHard)
+EASY_CVAR_EXTERN_DEBUGONLY(noFlinchOnHard)
 
 
 
@@ -427,7 +427,7 @@ Schedule_t* CTemplateMonster::GetSchedule( void ){
 				return GetScheduleOfType ( SCHED_WAKE_ANGRY );
 			}
 			//MODDD - other condition.  If "noFlinchOnHard" is on and the skill is hard, don't flinch from getting hit.
-			else if (HasConditions(bits_COND_LIGHT_DAMAGE) && !HasMemory( bits_MEMORY_FLINCHED) && !(EASY_CVAR_GET(noFlinchOnHard)==1 && g_iSkillLevel==SKILL_HARD)  )
+			else if (HasConditions(bits_COND_LIGHT_DAMAGE) && !HasMemory( bits_MEMORY_FLINCHED) && !(EASY_CVAR_GET_DEBUGONLY(noFlinchOnHard)==1 && g_iSkillLevel==SKILL_HARD)  )
 			{
 				return GetScheduleOfType( SCHED_SMALL_FLINCH );
 			}

@@ -24,31 +24,31 @@
 #include "cl_util.h"
 #include "parsemsg.h"
 
-EASY_CVAR_EXTERN(timedDamage_brightnessMax)
-EASY_CVAR_EXTERN(timedDamage_brightnessMin)
-EASY_CVAR_EXTERN(timedDamage_brightnessCap)
-EASY_CVAR_EXTERN(timedDamage_brightnessFloor)
-EASY_CVAR_EXTERN(timedDamage_flashSpeed)
-EASY_CVAR_EXTERN(timedDamage_debug)
+EASY_CVAR_EXTERN_CLIENTONLY_DEBUGONLY(timedDamage_brightnessMax)
+EASY_CVAR_EXTERN_CLIENTONLY_DEBUGONLY(timedDamage_brightnessMin)
+EASY_CVAR_EXTERN_CLIENTONLY_DEBUGONLY(timedDamage_brightnessCap)
+EASY_CVAR_EXTERN_CLIENTONLY_DEBUGONLY(timedDamage_brightnessFloor)
+EASY_CVAR_EXTERN_CLIENTONLY_DEBUGONLY(timedDamage_flashSpeed)
+EASY_CVAR_EXTERN_CLIENTONLY_DEBUGONLY(timedDamage_debug)
 EASY_CVAR_EXTERN(hud_version)
-EASY_CVAR_EXTERN(preE3ShowsDamageIcons)
-EASY_CVAR_EXTERN(E3ShowsDamageIcons)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(preE3ShowsDamageIcons)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(E3ShowsDamageIcons)
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(timedDamageDeathRemoveMode)
 EASY_CVAR_EXTERN(hud_weaponselecthideslower)
-EASY_CVAR_EXTERN(itemFlashCumulativeJump)
-EASY_CVAR_EXTERN(itemFlashDrawOpacityMax)
-EASY_CVAR_EXTERN(itemFlashDrawOpacityMin)
-EASY_CVAR_EXTERN(itemFlashFadeMult)
-EASY_CVAR_EXTERN(healthcolor_fullRedMin)
-EASY_CVAR_EXTERN(healthcolor_brightness)
-EASY_CVAR_EXTERN(healthcolor_yellowMark)
-EASY_CVAR_EXTERN(hideDamage)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(itemFlashCumulativeJump)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(itemFlashDrawOpacityMax)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(itemFlashDrawOpacityMin)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(itemFlashFadeMult)
+EASY_CVAR_EXTERN_CLIENTONLY_DEBUGONLY(healthcolor_fullRedMin)
+EASY_CVAR_EXTERN_CLIENTONLY_DEBUGONLY(healthcolor_brightness)
+EASY_CVAR_EXTERN_CLIENTONLY_DEBUGONLY(healthcolor_yellowMark)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(hideDamage)
 EASY_CVAR_EXTERN(timedDamage_extraBrightness)
 
-EASY_CVAR_EXTERN(painFlashPrintouts)
-EASY_CVAR_EXTERN(painFlashArmorBlock)
-EASY_CVAR_EXTERN(painFlashDrownMode)
-EASY_CVAR_EXTERN(painFlashDirTolerance)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(painFlashPrintouts)
+EASY_CVAR_EXTERN_CLIENTONLY_DEBUGONLY(painFlashArmorBlock)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(painFlashDrownMode)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(painFlashDirTolerance)
 
 
 
@@ -178,7 +178,7 @@ int CHudHealth::MsgFunc_HUDItemFsh(const char* pszName, int iSize, void* pbuf)
 		itemFlashColorStartG = 255;
 		itemFlashColorStartB = 0;
 		itemFlashGiven = 1;
-		itemFlashCumulative = EASY_CVAR_GET(itemFlashCumulativeJump);
+		itemFlashCumulative = EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(itemFlashCumulativeJump);
 
 	}else if(determiner == 1){
 		//radiation. green. (lime; bright?)
@@ -186,7 +186,7 @@ int CHudHealth::MsgFunc_HUDItemFsh(const char* pszName, int iSize, void* pbuf)
 		itemFlashColorStartG = 255;
 		itemFlashColorStartB = 0;
 		itemFlashGiven = 1;
-		itemFlashCumulative = EASY_CVAR_GET(itemFlashCumulativeJump);
+		itemFlashCumulative = EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(itemFlashCumulativeJump);
 
 	}else if(determiner == 2){
 		//adrenaline. orange (red?)
@@ -194,7 +194,7 @@ int CHudHealth::MsgFunc_HUDItemFsh(const char* pszName, int iSize, void* pbuf)
 		itemFlashColorStartG = 127;
 		itemFlashColorStartB = 0;
 		itemFlashGiven = 1;
-		itemFlashCumulative = EASY_CVAR_GET(itemFlashCumulativeJump);
+		itemFlashCumulative = EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(itemFlashCumulativeJump);
 	}
 	*/
 
@@ -204,7 +204,7 @@ int CHudHealth::MsgFunc_HUDItemFsh(const char* pszName, int iSize, void* pbuf)
 		itemFlashColorStartG = 255;
 		itemFlashColorStartB = 255;
 		itemFlashGiven = 1;
-		itemFlashCumulative = EASY_CVAR_GET(itemFlashCumulativeJump);
+		itemFlashCumulative = EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(itemFlashCumulativeJump);
 	}
 
 
@@ -300,7 +300,7 @@ int CHudHealth::Draw(float flTime)
 			int HealthHeight = gHUD.m_iFontHeightAlt;
 
 			if (EASY_CVAR_GET(hud_version) < 3) {
-				if (EASY_CVAR_GET(timedDamage_debug) <= 0 || EASY_CVAR_GET(timedDamage_debug) == 1 || EASY_CVAR_GET(timedDamage_debug) == 3 || EASY_CVAR_GET(timedDamage_debug) == 4 || EASY_CVAR_GET(timedDamage_debug) == 6) {
+				if (EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(timedDamage_debug) <= 0 || EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(timedDamage_debug) == 1 || EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(timedDamage_debug) == 3 || EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(timedDamage_debug) == 4 || EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(timedDamage_debug) == 6) {
 					//MODDD - say "true" for "useBoxedNumbers".  Also, set x to HealthWidth / 2 (commented out above) and set y properly.
 					x = HealthWidth / 2;
 					//MODDD - higher
@@ -311,7 +311,7 @@ int CHudHealth::Draw(float flTime)
 
 					x += HealthWidth / 2;
 				}
-				else if (EASY_CVAR_GET(timedDamage_debug) == 2 || EASY_CVAR_GET(timedDamage_debug) == 5) {
+				else if (EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(timedDamage_debug) == 2 || EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(timedDamage_debug) == 5) {
 					drawTimedDamageIcon(0, giDmgWidth / 8, ScreenHeight - giDmgHeight * 2 + giDmgHeight * 1.5, r, g, b);
 				}
 			}
@@ -361,12 +361,12 @@ int CHudHealth::DrawItemFlash(float flTime) {
 	b = itemFlashColorStartB;
 	a = 255;
 
-	const float fFade = gHUD.m_flTimeDelta * EASY_CVAR_GET(itemFlashFadeMult);
+	const float fFade = gHUD.m_flTimeDelta * EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(itemFlashFadeMult);
 
 	//if(itemFlashCumulative > 0.00){
 		//maxAttackFade += 0.2;
 		//GetPainColor(r,g,b);
-		//getPainColorMode((int)EASY_CVAR_GET(painFlashColorMode), r, g, b);
+		//getPainColorMode((int)EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(painFlashColorMode), r, g, b);
 
 		//Clip cumulativeFade to 1.00, as you can't shade anymore intensely than 255, opaque.
 		//(as opaque as the engine will allow, it seems)
@@ -376,7 +376,7 @@ int CHudHealth::DrawItemFlash(float flTime) {
 			//draw it.
 
 			//WAS 1.0 on the right!!
-	shade = a * max(min(itemFlashCumulative * EASY_CVAR_GET(itemFlashDrawOpacityMax), EASY_CVAR_GET(itemFlashDrawOpacityMax)), EASY_CVAR_GET(itemFlashDrawOpacityMin));
+	shade = a * max(min(itemFlashCumulative * EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(itemFlashDrawOpacityMax), EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(itemFlashDrawOpacityMax)), EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(itemFlashDrawOpacityMin));
 	//!!!!!
 
 	//shade = a * 1;
@@ -411,9 +411,9 @@ void CHudHealth::deriveColorFromHealth(int& r, int& g, int& b, int& a) {
 		//At what point is the GUI going from green to yellow? Measure of health (0 - 100)
 		//const float yellowMark = 70 + fullRedMin;
 
-		const float fullRedMin = EASY_CVAR_GET(healthcolor_fullRedMin);
-		const float brightness = EASY_CVAR_GET(healthcolor_brightness);
-		const float yellowMark = EASY_CVAR_GET(healthcolor_yellowMark);
+		const float fullRedMin = EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(healthcolor_fullRedMin);
+		const float brightness = EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(healthcolor_brightness);
+		const float yellowMark = EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(healthcolor_yellowMark);
 
 		if (m_iHealth >= yellowMark) {
 			//r = (int) (( ( -m_iHealth +yellowMark+100  ) /((float)yellowMark)) *175 );
@@ -443,9 +443,9 @@ void CHudHealth::deriveColorFromHealth(int& r, int& g, int& b) {
 	if (EASY_CVAR_GET(hud_version) < 3) {
 		//NOTICE: not involving the "a" value (for scaling colors) in Pre E3.
 
-		const float fullRedMin = EASY_CVAR_GET(healthcolor_fullRedMin);
-		const float brightness = EASY_CVAR_GET(healthcolor_brightness);
-		const float yellowMark = EASY_CVAR_GET(healthcolor_yellowMark);
+		const float fullRedMin = EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(healthcolor_fullRedMin);
+		const float brightness = EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(healthcolor_brightness);
+		const float yellowMark = EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(healthcolor_yellowMark);
 
 		if (m_iHealth >= yellowMark) {
 			//r = (int) (( ( -m_iHealth +yellowMark+100  ) /((float)yellowMark)) *175 );
@@ -478,7 +478,7 @@ int CHudHealth::DrawDamage(float flTime)
 
 	//... nevermind, status indicators aren't too distracting and it's good to be aware of these going on.
 	//We'd practically hide the GUI if we didn't want this.  ONLY if 2 instead now.
-	if (EASY_CVAR_GET(timedDamage_debug) <= 0 && EASY_CVAR_GET(hideDamage) >= 2) {
+	if (EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(timedDamage_debug) <= 0 && EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(hideDamage) >= 2) {
 		//don't do it.  If we're debugging clearly we want to see it though (above 0)
 		return 1;
 	}
@@ -491,7 +491,7 @@ int CHudHealth::DrawDamage(float flTime)
 	//if (!m_bitsDamage)
 
 
-	if (EASY_CVAR_GET(timedDamage_debug) <= 0) {
+	if (EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(timedDamage_debug) <= 0) {
 		if (!m_bitsDamage && !m_bitsDamageMod)
 			return 1;
 	}
@@ -511,7 +511,7 @@ int CHudHealth::DrawDamage(float flTime)
 	// Draw all the items
 	int i;
 
-	if ((EASY_CVAR_GET(hud_version) == 3 && EASY_CVAR_GET(E3ShowsDamageIcons) == 1) || (EASY_CVAR_GET(hud_version) < 3 && EASY_CVAR_GET(preE3ShowsDamageIcons) == 1)) {
+	if ((EASY_CVAR_GET(hud_version) == 3 && EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(E3ShowsDamageIcons) == 1) || (EASY_CVAR_GET(hud_version) < 3 && EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(preE3ShowsDamageIcons) == 1)) {
 		
 
 		//UnpackRGB(r,g,b, RGB_YELLOWISH);
@@ -520,25 +520,25 @@ int CHudHealth::DrawDamage(float flTime)
 		//gHUD.getGenericOrangeColor(r, g, b);
 		deriveColorFromHealth(r, g, b);
 
-		if (EASY_CVAR_GET(timedDamage_debug) <= 0 || EASY_CVAR_GET(timedDamage_debug) == 4 || EASY_CVAR_GET(timedDamage_debug) == 5 || EASY_CVAR_GET(timedDamage_debug) == 6) {
+		if (EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(timedDamage_debug) <= 0 || EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(timedDamage_debug) == 4 || EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(timedDamage_debug) == 5 || EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(timedDamage_debug) == 6) {
 			//MODDD - customizable.
 			//a = (int)( fabs(sin(flTime*2)) * 256.0);
-			float const brightnessRange = EASY_CVAR_GET(timedDamage_brightnessMax) - EASY_CVAR_GET(timedDamage_brightnessMin);
-			a = (int)(fabs(sin(flTime * EASY_CVAR_GET(timedDamage_flashSpeed))) * brightnessRange + EASY_CVAR_GET(timedDamage_brightnessMin));
+			float const brightnessRange = EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(timedDamage_brightnessMax) - EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(timedDamage_brightnessMin);
+			a = (int)(fabs(sin(flTime * EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(timedDamage_flashSpeed))) * brightnessRange + EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(timedDamage_brightnessMin));
 
-			if (EASY_CVAR_GET(timedDamage_brightnessCap) >= 0) {
+			if (EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(timedDamage_brightnessCap) >= 0) {
 				//if "a" is smaller than the cap, it stays. If "a" is greater, it is forced to the cap.
-				a = min(a, EASY_CVAR_GET(timedDamage_brightnessCap));
+				a = min(a, EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(timedDamage_brightnessCap));
 			}
-			if (EASY_CVAR_GET(timedDamage_brightnessFloor) >= 0) {
+			if (EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(timedDamage_brightnessFloor) >= 0) {
 				//if "a" is greater than the floor, it stays. If "a" is less, it is forced to the floor.
-				a = max(a, EASY_CVAR_GET(timedDamage_brightnessFloor));
+				a = max(a, EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(timedDamage_brightnessFloor));
 			}
 
 			ScaleColors(r, g, b, a);
 		}
 
-		if (EASY_CVAR_GET(timedDamage_debug) <= 0) {
+		if (EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(timedDamage_debug) <= 0) {
 
 			for (i = 0; i < DMGICO_NUM_DMG_TYPES; i++) {
 				int* m_rgbTimeBasedDamageRef = NULL;
@@ -559,10 +559,10 @@ int CHudHealth::DrawDamage(float flTime)
 			}//END OF for loop through damage types.
 
 		}//END OF timedDamage_debug check
-		else if (EASY_CVAR_GET(timedDamage_debug) == 1 || EASY_CVAR_GET(timedDamage_debug) == 2 || EASY_CVAR_GET(timedDamage_debug) == 4 || EASY_CVAR_GET(timedDamage_debug) == 5) {
+		else if (EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(timedDamage_debug) == 1 || EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(timedDamage_debug) == 2 || EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(timedDamage_debug) == 4 || EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(timedDamage_debug) == 5) {
 			drawTimedDamageIcon(0, giDmgWidth / 8, ScreenHeight - giDmgHeight * 2, r, g, b);
 		}
-		else if (EASY_CVAR_GET(timedDamage_debug) == 3 || EASY_CVAR_GET(timedDamage_debug) == 6) {
+		else if (EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(timedDamage_debug) == 3 || EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(timedDamage_debug) == 6) {
 			//draw the health number in this place instead!
 			int HealthWidth = gHUD.m_iFontWidthAlt;
 			int HealthHeight = gHUD.m_iFontHeightAlt;

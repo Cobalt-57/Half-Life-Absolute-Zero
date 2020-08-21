@@ -27,7 +27,7 @@
 #include "soundent.h"
 
 
-EASY_CVAR_EXTERN(crazyMonsterPrintouts)
+EASY_CVAR_EXTERN_DEBUGONLY(crazyMonsterPrintouts)
 
 
 //=========================================================
@@ -144,7 +144,7 @@ void CBaseMonster :: RunAI ( void )
 		// UPDATE: We now let COMBAT state monsters think and act fully outside of player PVS. This allows the player to leave 
 		// an area where monsters are fighting, and the fight will continue.
 		
-		if(EASY_CVAR_GET(crazyMonsterPrintouts)){
+		if(EASY_CVAR_GET_DEBUGONLY(crazyMonsterPrintouts)){
 			easyForcePrintLine("%s: Can I look and listen?! (%d || %d) %.2f", this->getClassname(), !FNullEnt( FIND_CLIENT_IN_PVS( edict() ) ),  ( m_MonsterState == MONSTERSTATE_COMBAT ), m_flDistLook );
 		}
 
@@ -204,14 +204,14 @@ void CBaseMonster :: RunAI ( void )
 	
 	PrescheduleThink();
 
-	if(EASY_CVAR_GET(crazyMonsterPrintouts) == 1){
+	if(EASY_CVAR_GET_DEBUGONLY(crazyMonsterPrintouts) == 1){
 		easyForcePrintLine("SHUUUT1 %d", HasConditions(bits_COND_CAN_MELEE_ATTACK1));
 	}
 	
 	//     : )
 	MaintainSchedule();
 
-	if(EASY_CVAR_GET(crazyMonsterPrintouts) == 1){
+	if(EASY_CVAR_GET_DEBUGONLY(crazyMonsterPrintouts) == 1){
 		easyForcePrintLine("SHUUUT2 %d", HasConditions(bits_COND_CAN_MELEE_ATTACK1));
 	}
 
@@ -228,11 +228,11 @@ void CBaseMonster :: RunAI ( void )
 	
 	
 
-	if(EASY_CVAR_GET(crazyMonsterPrintouts) == 1){
+	if(EASY_CVAR_GET_DEBUGONLY(crazyMonsterPrintouts) == 1){
 		easyForcePrintLine("SHUUUT3 %d", HasConditions(bits_COND_CAN_MELEE_ATTACK1));
 	}
 	
-	if(EASY_CVAR_GET(crazyMonsterPrintouts) == 1){
+	if(EASY_CVAR_GET_DEBUGONLY(crazyMonsterPrintouts) == 1){
 		easyForcePrintLine("IM SO flamin\' amazing %d", HasConditions(bits_COND_CAN_MELEE_ATTACK1));
 	}
 }

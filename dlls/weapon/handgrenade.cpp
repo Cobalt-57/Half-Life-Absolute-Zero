@@ -26,7 +26,7 @@ EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelay)
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelaycustom)
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteclip)
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteammo)
-EASY_CVAR_EXTERN(handGrenadePickupYieldsOne);
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(handGrenadePickupYieldsOne);
 
 LINK_ENTITY_TO_CLASS( weapon_handgrenade, CHandGrenade );
 
@@ -68,7 +68,7 @@ void CHandGrenade::Spawn( )
 #endif
 	*/
 	
-	//if(EASY_CVAR_GET(handGrenadePickupYieldsOne) == 1)
+	//if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(handGrenadePickupYieldsOne) == 1)
 
 
 	// Make "m_iDefaultAmmo" non-zero so that it works like other pickups.  Ones with a defaultAmmo of 0
@@ -104,7 +104,7 @@ BOOL CHandGrenade::AddPrimaryAmmo( int iCount, char *szName, int iMaxClip, int i
 	// (11 or 15 grenades from a weaponbox that had 10)
 	if (iCount > 0) {
 		//This is the real intervention.  The grenade gives only "one" grenade if the CVar is being used ( = 1), and 5 otherwise (retail value).
-		if (m_pPlayer && EASY_CVAR_GET(handGrenadePickupYieldsOne) == 1) {
+		if (m_pPlayer && EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(handGrenadePickupYieldsOne) == 1) {
 			iCount = 1;
 		}
 		else {

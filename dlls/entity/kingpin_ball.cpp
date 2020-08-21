@@ -8,8 +8,8 @@ extern CGraph WorldGraph;
 
 
 
-EASY_CVAR_EXTERN(pathfindNodeToleranceMulti)
-EASY_CVAR_EXTERN(drawDebugPathfinding)
+EASY_CVAR_EXTERN_DEBUGONLY(pathfindNodeToleranceMulti)
+EASY_CVAR_EXTERN_DEBUGONLY(drawDebugPathfinding)
 
 
 LINK_ENTITY_TO_CLASS( kingpin_ball, CKingpinBall );
@@ -339,7 +339,7 @@ BOOL CKingpinBall::ShouldAdvanceRoute( float flWaypointDist, float flInterval ){
 	const float velocityLength = pev->velocity.Length();
 	const float anticipatedMovement = velocityLength * flInterval * 1.6f;
 
-	const float moveTolerance = max(anticipatedMovement * EASY_CVAR_GET(pathfindNodeToleranceMulti), 20.0f);
+	const float moveTolerance = max(anticipatedMovement * EASY_CVAR_GET_DEBUGONLY(pathfindNodeToleranceMulti), 20.0f);
 
 	
 	if(flWaypointDist <= moveTolerance )
@@ -350,7 +350,7 @@ BOOL CKingpinBall::ShouldAdvanceRoute( float flWaypointDist, float flInterval ){
 	return FALSE;
 
 
-	//const float moveDistTest = rawMoveSpeedPerSec * EASY_CVAR_GET(pathfindNodeToleranceMulti);  //defaults to 1 for no effect.
+	//const float moveDistTest = rawMoveSpeedPerSec * EASY_CVAR_GET_DEBUGONLY(pathfindNodeToleranceMulti);  //defaults to 1 for no effect.
 	//const float moveDistTol = max(moveDistTest, 8);  //must be at least 8.
 
 
@@ -419,7 +419,7 @@ int CKingpinBall::CheckLocalMove( const Vector& vecStart, const Vector& vecEnd, 
 	}
 	
 	
-	if( EASY_CVAR_GET(drawDebugPathfinding) == 1){
+	if( EASY_CVAR_GET_DEBUGONLY(drawDebugPathfinding) == 1){
 		switch(iReturn){
 			case LOCALMOVE_INVALID:
 				//ORANGE

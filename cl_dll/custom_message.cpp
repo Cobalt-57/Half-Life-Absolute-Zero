@@ -42,7 +42,7 @@ EASY_CVAR_EXTERN_MASS
 
 
 
-//EASY_CVAR_EXTERN(canShowWeaponSelectAtDeath)
+//EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(canShowWeaponSelectAtDeath)
 extern BEAM *pBeam;
 extern BEAM *pBeam2;
 
@@ -350,15 +350,15 @@ int CHud::MsgFunc_Damage(const char* pszName, int iSize, void* pbuf)
 
 	if (bitsDamage & DMG_DROWN) {
 		//if this is "drown" damage, get how to draw pain differnetly (default is nothing at all)
-		if (EASY_CVAR_GET(painFlashDrownMode) == 2) {
+		if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(painFlashDrownMode) == 2) {
 			//just do this.
 			gHUD.m_Pain.cumulativeFadeDrown = 1.0f;
 			//return 1;
 		}
-		else if (EASY_CVAR_GET(painFlashDrownMode) == 3) {
+		else if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(painFlashDrownMode) == 3) {
 			//m_fAttackFront = m_fAttackRear = m_fAttackRight = m_fAttackLeft = 1;
 			//MODDD TODO - ditto.
-			const float damageFlashModTotal = damageTaken + damageBlockedByArmor * EASY_CVAR_GET(painFlashArmorBlock);
+			const float damageFlashModTotal = damageTaken + damageBlockedByArmor * EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(painFlashArmorBlock);
 
 			gHUD.m_Pain.m_fAttackFront = gHUD.m_Pain.m_fAttackRear = gHUD.m_Pain.m_fAttackRight = gHUD.m_Pain.m_fAttackLeft = 0.5;
 			gHUD.m_Pain.setUniformDamage(damageFlashModTotal);
@@ -369,10 +369,10 @@ int CHud::MsgFunc_Damage(const char* pszName, int iSize, void* pbuf)
 	//...is "armor" unused?  It comes from "pev->dmg_save". Does it have any purpose than to
 	//trigger a damage draw on any "takeDamage" event, even if the damage is 0?
 
-	if (EASY_CVAR_GET(painFlashPrintouts) == 1)easyForcePrintLine("RAW DAMAGE %d %d", armor, damageTaken);
+	if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(painFlashPrintouts) == 1)easyForcePrintLine("RAW DAMAGE %d %d", armor, damageTaken);
 	// took damage
 	//if ( damageTaken > 0 || armor > 0 )
-	if (damageTaken > 0 || (EASY_CVAR_GET(painFlashArmorBlock) > 0 && damageBlockedByArmor > 0) || armor > 0)
+	if (damageTaken > 0 || (EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(painFlashArmorBlock) > 0 && damageBlockedByArmor > 0) || armor > 0)
 		gHUD.m_Pain.CalcDamageDirection(vecFrom, damageTaken, rawDamageTaken);
 
 	return 1;
@@ -496,11 +496,14 @@ IMPLEMENT_MESSAGE(UpdClientC){
 	//????????????????
 
 
-	//if(EASY_CVAR_GET(hiddenMemPrintout) == 1)easyPrintLine("CVAR DEBUG: Client: Received ID %d, newval %.2f", argID, arg);
+	//if(EASY_CVAR_GET_DEBUGONLY(hiddenMemPrintout) == 1)easyPrintLine("CVAR DEBUG: Client: Received ID %d, newval %.2f", argID, arg);
 
 
 	*(aryCVarHash[argID]) = arg;
-	if(EASY_CVAR_GET(hiddenMemPrintout)==1)easyPrintLine("CVAR DEBUG: Client: found ID %d. Set CVar %s to %.2f", argID, aryCVarHashName[argID], arg);
+
+	// no need for the hiddenMemPrintout check, having "developer" on or off shows enough intent.
+	//if(EASY_CVAR_GET_DEBUGONLY(hiddenMemPrintout)==1)
+	easyPrintLine("CVAR DEBUG: Client: found ID %d. Set CVar %s to %.2f", argID, aryCVarHashName[argID], arg);
 	
 
 	//Save. Is this ok?
@@ -592,7 +595,7 @@ IMPLEMENT_MESSAGE(UpdPlyA){
 
 
 	//if dead, and cannot show weapon select... force it off just in case.
-	if(gHUD.m_fPlayerDead && EASY_CVAR_GET(canShowWeaponSelectAtDeath) == 0){
+	if(gHUD.m_fPlayerDead && EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(canShowWeaponSelectAtDeath) == 0){
 		gHUD.m_Ammo.gWR.gpLastSel = gHUD.m_Ammo.gWR.gpActiveSel;
 		gHUD.m_Ammo.gWR.gpActiveSel = NULL;
 	}

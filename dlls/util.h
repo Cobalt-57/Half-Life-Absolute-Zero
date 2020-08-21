@@ -31,8 +31,8 @@
 #include "saverestore.h"
 
 //MODDD - referred to in here, yes.
-EASY_CVAR_EXTERN(soundAttenuationStuka)
-EASY_CVAR_EXTERN(soundVolumeStuka)
+EASY_CVAR_EXTERN_DEBUGONLY(soundAttenuationStuka)
+EASY_CVAR_EXTERN_DEBUGONLY(soundVolumeStuka)
 
 
 // Keep in synch with the array if more entries are added!
@@ -209,7 +209,7 @@ EASY_CVAR_EXTERN(soundVolumeStuka)
 	UTIL_PlaySound( ENT(pev), chan , arg_array [ RANDOM_LONG(0,ARRAYSIZE( arg_array )-1) ], 1.0, ATTN_NORM, 0, RANDOM_LONG(95,105) ); 
 
 #define EMIT_SOUND_ARRAY_STUKA_FILTERED( chan, arg_array ) \
-	UTIL_PlaySound( ENT(pev), chan , arg_array [ RANDOM_LONG(0,ARRAYSIZE( arg_array )-1) ], EASY_CVAR_GET(soundVolumeStuka), EASY_CVAR_GET(soundAttenuationStuka), 0, RANDOM_LONG(m_voicePitch - 5,m_voicePitch + 5) ); 
+	UTIL_PlaySound( ENT(pev), chan , arg_array [ RANDOM_LONG(0,ARRAYSIZE( arg_array )-1) ], EASY_CVAR_GET_DEBUGONLY(soundVolumeStuka), EASY_CVAR_GET_DEBUGONLY(soundAttenuationStuka), 0, RANDOM_LONG(m_voicePitch - 5,m_voicePitch + 5) ); 
 
 //OLD WAY:
 	//UTIL_PlaySound( ENT(pev), chan , arg_array [ RANDOM_LONG(0,ARRAYSIZE( arg_array )-1) ], 1.0, ATTN_NORM, 0, RANDOM_LONG(95,105) ); 

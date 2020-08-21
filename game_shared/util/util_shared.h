@@ -62,7 +62,7 @@
 #endif
 */
 
-EASY_CVAR_EXTERN(hiddenMemPrintout)
+EASY_CVAR_EXTERN_DEBUGONLY(hiddenMemPrintout)
 
 
 

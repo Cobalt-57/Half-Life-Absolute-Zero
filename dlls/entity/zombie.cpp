@@ -352,7 +352,7 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CZombie)
 	// damagetype checks moved to TraceAttack to check each time damage is taken before it is all applied at once (calls TakeDamage here).
 	if(
 		flPushbackForceDamage > 0 &&
-		EASY_CVAR_GET(zombieBulletPushback) != 0 &&
+		EASY_CVAR_GET_DEBUGONLY(zombieBulletPushback) != 0 &&
 		m_MonsterState != MONSTERSTATE_SCRIPT &&
 		pev->movetype != MOVETYPE_FLY &&
 		IsAlive_FromAI(NULL)  //counts being into the DEAD_DYING deadflag somewhat
@@ -541,7 +541,7 @@ float CZombie::hitgroupDamage(float flDamage, int bitsDamageType, int bitsDamage
 
 	//MODDD - (comment below found as-is)
 	// Take 30% damage from bullets
-	if(EASY_CVAR_GET(zombieBulletResistance) == 1 && (dmgIsPureBullet))
+	if(EASY_CVAR_GET_DEBUGONLY(zombieBulletResistance) == 1 && (dmgIsPureBullet))
 	{
 		//flDamage *= 0.3;
 

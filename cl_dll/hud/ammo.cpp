@@ -49,15 +49,15 @@
 
 extern int global2PSEUDO_playerHasGlockSilencer;
 EASY_CVAR_EXTERN(hud_version)
-EASY_CVAR_EXTERN(canShowWeaponSelectAtDeath)
-EASY_CVAR_EXTERN(allowAlphaCrosshairWithoutGuns)
-EASY_CVAR_EXTERN(alphaCrosshairBlockedOnFrozen)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(canShowWeaponSelectAtDeath)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(allowAlphaCrosshairWithoutGuns)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(alphaCrosshairBlockedOnFrozen)
 EASY_CVAR_EXTERN(hud_drawammobar)
 EASY_CVAR_EXTERN(hud_weaponselecthideslower)
 EASY_CVAR_EXTERN(hud_moveselect_mousewheelsound)
-EASY_CVAR_EXTERN(drawViewModel)
-EASY_CVAR_EXTERN(drawHUD)
-EASY_CVAR_EXTERN(cl_drawExtraZeros)
+EASY_CVAR_EXTERN_CLIENTONLY_DEBUGONLY(drawViewModel)
+EASY_CVAR_EXTERN_CLIENTONLY_DEBUGONLY(drawHUD)
+EASY_CVAR_EXTERN_CLIENTONLY_DEBUGONLY(cl_drawExtraZeros)
 EASY_CVAR_EXTERN(hud_rpg_alpha_ammo)
 
 
@@ -682,16 +682,16 @@ void CHudAmmo::updateCrosshair(void){
 		//easyPrintLine("CROSSHAIRUPDATE: GUN NAME: %s", m_pWeapon->szName);
 	}else{
 
-		if(CVAR_GET_FLOAT("crosshair") == 1 && EASY_CVAR_GET(allowAlphaCrosshairWithoutGuns) == TRUE ){
+		if(CVAR_GET_FLOAT("crosshair") == 1 && EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(allowAlphaCrosshairWithoutGuns) == TRUE ){
 			allowCrosshairUpdate = TRUE;
 		}
 	}
 
-	if(EASY_CVAR_GET(alphaCrosshairBlockedOnFrozen)==TRUE && gHUD.frozenMem == TRUE){
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(alphaCrosshairBlockedOnFrozen)==TRUE && gHUD.frozenMem == TRUE){
 		allowCrosshairUpdate = FALSE;
 	}
 
-	if(EASY_CVAR_GET(drawHUD) != 0 && EASY_CVAR_GET(drawHUD) != 1){
+	if(EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(drawHUD) != 0 && EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(drawHUD) != 1){
 		allowCrosshairUpdate = FALSE;
 	}
 
@@ -732,7 +732,7 @@ void CHudAmmo::updateCrosshair(void){
 	// update these, no sense calling this method over and over
 	// without a change since.
 	gHUD.crosshairMem = CVAR_GET_FLOAT("crosshair");
-	gHUD.allowAlphaCrosshairWithoutGunsMem = EASY_CVAR_GET(allowAlphaCrosshairWithoutGuns);
+	gHUD.allowAlphaCrosshairWithoutGunsMem = EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(allowAlphaCrosshairWithoutGuns);
 
 }//updateCrosshair
 
@@ -782,7 +782,7 @@ void CHudAmmo::SlotInput( int iSlot )
 
 		gWR.SelectSlot(iSlot, FALSE, 1);
 	}else{
-		if(EASY_CVAR_GET(canShowWeaponSelectAtDeath) == 1 ){
+		if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(canShowWeaponSelectAtDeath) == 1 ){
 			if ( gViewPort && gViewPort->SlotInput(iSlot) ){
 				return;
 			}
@@ -797,7 +797,7 @@ void CHudAmmo::SlotInput( int iSlot )
 	
 	//gWR.SelectSlot(iSlot, FALSE, 1);
 	/*
-	if(EASY_CVAR_GET(canShowWeaponSelectAtDeath) == 1 || !gHUD.m_fPlayerDead){
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(canShowWeaponSelectAtDeath) == 1 || !gHUD.m_fPlayerDead){
 		// Let the Viewport use it first, for menus
 		if ( gViewPort && gViewPort->SlotInput( iSlot ) ){
 			return;
@@ -879,7 +879,7 @@ void CHudAmmo::UserCmd_Close(void)
 void CHudAmmo::UserCmd_NextWeapon(void)
 {
 	//if ( gHUD.m_fPlayerDead || (gHUD.m_iHideHUDDisplay & (HIDEHUD_WEAPONS | HIDEHUD_ALL)) )
-	if ( (EASY_CVAR_GET(canShowWeaponSelectAtDeath) == 0 && gHUD.m_fPlayerDead) || (gHUD.m_iHideHUDDisplay & (HIDEHUD_WEAPONS | HIDEHUD_ALL)) )
+	if ( (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(canShowWeaponSelectAtDeath) == 0 && gHUD.m_fPlayerDead) || (gHUD.m_iHideHUDDisplay & (HIDEHUD_WEAPONS | HIDEHUD_ALL)) )
 		return;
 
 	if ( !gWR.gpActiveSel || gWR.gpActiveSel == (WEAPON*)1 )
@@ -928,7 +928,7 @@ void CHudAmmo::UserCmd_PrevWeapon(void)
 {
 
 	//if ( gHUD.m_fPlayerDead || (gHUD.m_iHideHUDDisplay & (HIDEHUD_WEAPONS | HIDEHUD_ALL)) )
-	if ((EASY_CVAR_GET(canShowWeaponSelectAtDeath) == 0 && gHUD.m_fPlayerDead) || (gHUD.m_iHideHUDDisplay & (HIDEHUD_WEAPONS | HIDEHUD_ALL))) {
+	if ((EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(canShowWeaponSelectAtDeath) == 0 && gHUD.m_fPlayerDead) || (gHUD.m_iHideHUDDisplay & (HIDEHUD_WEAPONS | HIDEHUD_ALL))) {
 		return;
 	}
 
@@ -1022,7 +1022,7 @@ int CHudAmmo::Draw(float flTime)
 	//Can depend on "hud_version" too, I think the E3 (yellow) may just never draw the ammo at death or something.
 	if(gHUD.m_fPlayerDead){
 		
-		if(EASY_CVAR_GET(canShowWeaponSelectAtDeath) == 1){
+		if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(canShowWeaponSelectAtDeath) == 1){
 			//If the weapon select screen can be shown, just show 0 for ammo.
 			forceShowZero = TRUE;
 		}else{
@@ -1342,13 +1342,13 @@ int CHudAmmo::Draw(float flTime)
 	ammoDrawTertiary_draw = FALSE;
 
 
-	if(EASY_CVAR_GET(cl_drawExtraZeros) == 1){
+	if(EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(cl_drawExtraZeros) == 1){
 		//draw all number places, even if it stays to the default of 0.
 		//ammoDrawPrimary_draw = TRUE;
 		//but not you... strangely.
 		ammoDrawSecondary_draw = TRUE;
 		ammoDrawTertiary_draw = TRUE;
-	}else if(EASY_CVAR_GET(cl_drawExtraZeros) == 2){
+	}else if(EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(cl_drawExtraZeros) == 2){
 		//all three.
 		ammoDrawPrimary_draw = TRUE;
 		ammoDrawSecondary_draw = TRUE;
@@ -1605,7 +1605,7 @@ int CHudAmmo::DrawWList(float flTime)
 
 
 	//MODDD - added.  Force the selected weapon null if the player is dead and cannot see the weapon menu.
-	if(gHUD.m_fPlayerDead && EASY_CVAR_GET(canShowWeaponSelectAtDeath) == 0){
+	if(gHUD.m_fPlayerDead && EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(canShowWeaponSelectAtDeath) == 0){
 		gWR.gpLastSel = gWR.gpActiveSel;
 		gWR.gpActiveSel = NULL;
 		//can't select a weapon in this state.

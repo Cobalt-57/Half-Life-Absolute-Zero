@@ -53,29 +53,31 @@
 #include "player.h"
 #include "util_debugdraw.h"
 
-EASY_CVAR_EXTERN(hgruntBrassEjectForwardOffset)
-EASY_CVAR_EXTERN(gruntsCanHaveMP5Grenade)
-EASY_CVAR_EXTERN(animationFramerateMulti)
-EASY_CVAR_EXTERN(noFlinchOnHard)
-EASY_CVAR_EXTERN(hgruntSpeedMulti)
-EASY_CVAR_EXTERN(hgruntForceStrafeFireAnim)
-EASY_CVAR_EXTERN(hgruntLockRunAndGunTime)
-EASY_CVAR_EXTERN(sv_germancensorship)
-EASY_CVAR_EXTERN(hgruntAllowStrafeFire)
-EASY_CVAR_EXTERN(hgruntTinyClip)
-EASY_CVAR_EXTERN(hgruntStrafeAlwaysHasAmmo)
-EASY_CVAR_EXTERN(hgruntRunAndGunDistance)
-EASY_CVAR_EXTERN(thatWasntPunch)
-EASY_CVAR_EXTERN(hgruntPrintout)
-EASY_CVAR_EXTERN(hgruntRunAndGunDotMin)
-//EASY_CVAR_EXTERN(testVar)
-EASY_CVAR_EXTERN(hgruntLockStrafeTime)
-EASY_CVAR_EXTERN(hgruntMovementDeltaCheck)
-EASY_CVAR_EXTERN(hgruntStrafeAnimSpeedMulti)
-EASY_CVAR_EXTERN(hgruntRunAndGunAnimSpeedMulti)
+EASY_CVAR_EXTERN_DEBUGONLY(hgruntBrassEjectForwardOffset)
+EASY_CVAR_EXTERN_DEBUGONLY(gruntsCanHaveMP5Grenade)
+EASY_CVAR_EXTERN_DEBUGONLY(animationFramerateMulti)
+EASY_CVAR_EXTERN_DEBUGONLY(noFlinchOnHard)
+EASY_CVAR_EXTERN_DEBUGONLY(hgruntSpeedMulti)
+EASY_CVAR_EXTERN_DEBUGONLY(hgruntForceStrafeFireAnim)
+EASY_CVAR_EXTERN_DEBUGONLY(hgruntLockRunAndGunTime)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(sv_germancensorship)
+EASY_CVAR_EXTERN_DEBUGONLY(hgruntAllowStrafeFire)
+EASY_CVAR_EXTERN_DEBUGONLY(hgruntTinyClip)
+EASY_CVAR_EXTERN_DEBUGONLY(hgruntStrafeAlwaysHasAmmo)
+EASY_CVAR_EXTERN_DEBUGONLY(hgruntRunAndGunDistance)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(thatWasntPunch)
+EASY_CVAR_EXTERN_DEBUGONLY(hgruntPrintout)
+EASY_CVAR_EXTERN_DEBUGONLY(hgruntRunAndGunDotMin)
+//EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(testVar)
+EASY_CVAR_EXTERN_DEBUGONLY(hgruntLockStrafeTime)
+EASY_CVAR_EXTERN_DEBUGONLY(hgruntMovementDeltaCheck)
+EASY_CVAR_EXTERN_DEBUGONLY(hgruntStrafeAnimSpeedMulti)
+EASY_CVAR_EXTERN_DEBUGONLY(hgruntRunAndGunAnimSpeedMulti)
 extern BOOL globalPSEUDO_germanModel_hgruntFound;
-EASY_CVAR_EXTERN(hgruntAllowGrenades)
-
+EASY_CVAR_EXTERN_DEBUGONLY(hgruntAllowGrenades)
+EASY_CVAR_EXTERN_DEBUGONLY(altSquadRulesRuntime)
+EASY_CVAR_EXTERN_DEBUGONLY(leaderlessSquadAllowed)
+EASY_CVAR_EXTERN_DEBUGONLY(monsterSpawnPrintout)
 
 
 
@@ -540,8 +542,8 @@ const char *CHGrunt::pAttackHitSounds[] =
 
 void CHGrunt::hgruntUse( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
 {
-	//easyForcePrintLine("????? %d %d %d", EASY_CVAR_GET(thatWasntPunch), pCaller, pCaller!=NULL?pCaller->IsPlayer():-1 );
-	if ( EASY_CVAR_GET(thatWasntPunch) == 1  )
+	//easyForcePrintLine("????? %d %d %d", EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(thatWasntPunch), pCaller, pCaller!=NULL?pCaller->IsPlayer():-1 );
+	if ( EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(thatWasntPunch) == 1  )
 	{
 		if (pActivator != NULL && pActivator->IsPlayer()) {
 			//sentence.
@@ -576,7 +578,7 @@ void CHGrunt::hgruntUse( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE
 
 int CHGrunt::getClipSize(void){
 
-	if(EASY_CVAR_GET(hgruntTinyClip) != 1){
+	if(EASY_CVAR_GET_DEBUGONLY(hgruntTinyClip) != 1){
 		return GRUNT_CLIP_SIZE;
 	}else{
 		return 3;
@@ -673,7 +675,7 @@ void CHGrunt :: SpeakSentence( void )
 //=========================================================
 int CHGrunt::IRelationship ( CBaseEntity *pTarget )
 {
-	if(EASY_CVAR_GET(thatWasntPunch) == 1){
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(thatWasntPunch) == 1){
 		//I just don't give a damn man
 		return R_NO;
 	}
@@ -734,7 +736,7 @@ GENERATE_GIBMONSTER_IMPLEMENTATION(CHGrunt)
 #if FORCE_MP5 == 1
 		// don't do anything here.  Never drop ARgrenades if we can never have them equipped.
 		// ...unless we allowed "mp5grenades" (same as ARgrenades) again.
-		if(EASY_CVAR_GET(gruntsCanHaveMP5Grenade) == 1){
+		if(EASY_CVAR_GET_DEBUGONLY(gruntsCanHaveMP5Grenade) == 1){
 #endif
 			if (FBitSet( pev->weapons, HGRUNT_GRENADELAUNCHER ))
 			{
@@ -928,12 +930,12 @@ BOOL CHGrunt :: CheckRangeAttack2 ( float flDot, float flDist )
 	}
 
 
-	if(EASY_CVAR_GET(hgruntAllowGrenades) == 0){
+	if(EASY_CVAR_GET_DEBUGONLY(hgruntAllowGrenades) == 0){
 		return FALSE;
 	}
 
 #if FORCE_MP5 == 1
-	if(EASY_CVAR_GET(gruntsCanHaveMP5Grenade) == 1){
+	if(EASY_CVAR_GET_DEBUGONLY(gruntsCanHaveMP5Grenade) == 1){
 #endif
 		if (! FBitSet(pev->weapons, (HGRUNT_HANDGRENADE | HGRUNT_GRENADELAUNCHER)))
 		{
@@ -1932,7 +1934,7 @@ void CHGrunt :: Shoot ( void )
 	Vector	vecShellVelocity = gpGlobals->v_right * RANDOM_FLOAT(40,90) + gpGlobals->v_up * RANDOM_FLOAT(75,200) + gpGlobals->v_forward * RANDOM_FLOAT(-40, 40);
 
 	//MODDD NOTE - this pushed the point of brass ejection back by a constant 24 in the past. Letting this CVar handle it instead.
-	EjectBrass ( vecShootOrigin + vecShootDir * EASY_CVAR_GET(hgruntBrassEjectForwardOffset), vecShellVelocity, pev->angles.y, m_iBrassShell, TE_BOUNCE_SHELL);
+	EjectBrass ( vecShootOrigin + vecShootDir * EASY_CVAR_GET_DEBUGONLY(hgruntBrassEjectForwardOffset), vecShellVelocity, pev->angles.y, m_iBrassShell, TE_BOUNCE_SHELL);
 	FireBullets(1, vecShootOrigin, vecShootDir, VECTOR_CONE_10DEGREES, 2048, BULLET_MONSTER_MP5 ); // shoot +-5 degrees
 
 	pev->effects |= EF_MUZZLEFLASH;
@@ -1990,7 +1992,7 @@ void CHGrunt :: Shotgun ( void )
 
 BOOL CHGrunt::outOfAmmoStrafeFireBlock(void){
 
-	if(EASY_CVAR_GET(hgruntStrafeAlwaysHasAmmo) == 1){
+	if(EASY_CVAR_GET_DEBUGONLY(hgruntStrafeAlwaysHasAmmo) == 1){
 		//can't block.
 		return FALSE;
 	}
@@ -2018,11 +2020,11 @@ BOOL CHGrunt::hgruntAllowStrafe(void){
 BOOL CHGrunt::hgruntAllowStrafeFire(void){
 
 	//CVAR:
-	//EASY_CVAR_GET(hgruntAllowStrafeFire)
+	//EASY_CVAR_GET_DEBUGONLY(hgruntAllowStrafeFire)
 
 	/*
-	if(EASY_CVAR_GET(hgruntAllowStrafeFire) != -1){
-		EASY_CVAR_GET(hgruntAllowStrafeFire) == 1;
+	if(EASY_CVAR_GET_DEBUGONLY(hgruntAllowStrafeFire) != -1){
+		EASY_CVAR_GET_DEBUGONLY(hgruntAllowStrafeFire) == 1;
 	}
 	*/
 
@@ -2053,7 +2055,7 @@ BOOL CHGrunt::getIsStrafeLocked(void){
 	//EASY_CVAR_GET(hgruntLockStrafe)
 
 	//that schedule locks the strafe.
-	if(m_pSchedule == slhgruntStrafeToLocation || (EASY_CVAR_GET(hgruntLockStrafeTime) != 0 && (EASY_CVAR_GET(hgruntLockStrafeTime) <= 0 || ( strafeFailTime != -1 && gpGlobals->time <= strafeFailTime  ) )  ) ){
+	if(m_pSchedule == slhgruntStrafeToLocation || (EASY_CVAR_GET_DEBUGONLY(hgruntLockStrafeTime) != 0 && (EASY_CVAR_GET_DEBUGONLY(hgruntLockStrafeTime) <= 0 || ( strafeFailTime != -1 && gpGlobals->time <= strafeFailTime  ) )  ) ){
 		return TRUE;
 	}else{
 		return FALSE;
@@ -2077,7 +2079,7 @@ void CHGrunt :: MonsterThink ( void ){
 	//easyForcePrintLine("MY LIGHT LEVEL: %d", GETENTITYILLUM( ENT( pev ) ) );
 
 
-		if(EASY_CVAR_GET(thatWasntPunch) == 1 && this->m_fSequenceFinished){
+		if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(thatWasntPunch) == 1 && this->m_fSequenceFinished){
 
 			switch(RANDOM_LONG(0, 32)){
 			case 0:this->SetSequenceByName("converse1");break;
@@ -2174,17 +2176,17 @@ void CHGrunt :: MonsterThink ( void ){
 		float distanceToEnemy2D = (pev->origin - m_hEnemy->pev->origin).Length2D();
 		float dotProductStraight = DotProduct ( vecDirToPointNorm, vecTowardEnemyNorm);
 
-		BOOL isFacingEnemy = UTIL_IsFacing(this->pev, m_hEnemy->pev->origin, 1-EASY_CVAR_GET(hgruntRunAndGunDotMin));
+		BOOL isFacingEnemy = UTIL_IsFacing(this->pev, m_hEnemy->pev->origin, 1-EASY_CVAR_GET_DEBUGONLY(hgruntRunAndGunDotMin));
 		
-		//easyForcePrintLine("COND CHECK::: %d && (%.2f > %.2f),,, isFacing? %d", HasConditions(bits_COND_SEE_ENEMY), dotProductStraight, EASY_CVAR_GET(hgruntRunAndGunDotMin), isFacingEnemy);
+		//easyForcePrintLine("COND CHECK::: %d && (%.2f > %.2f),,, isFacing? %d", HasConditions(bits_COND_SEE_ENEMY), dotProductStraight, EASY_CVAR_GET_DEBUGONLY(hgruntRunAndGunDotMin), isFacingEnemy);
 
 		//if(UTIL_IsFacing(this->pev, m_hEnemy->pev->origin, 0.1  ) ){
 		if(this->m_pSchedule != slhgruntStrafeToLocation &&
-			(EASY_CVAR_GET(hgruntRunAndGunDistance) != -1) && 
+			(EASY_CVAR_GET_DEBUGONLY(hgruntRunAndGunDistance) != -1) && 
 			m_movementActivity == ACT_RUN &&
-			distanceToEnemy2D > EASY_CVAR_GET(hgruntRunAndGunDistance) &&
+			distanceToEnemy2D > EASY_CVAR_GET_DEBUGONLY(hgruntRunAndGunDistance) &&
 			HasConditions(bits_COND_SEE_ENEMY) &&
-			dotProductStraight > EASY_CVAR_GET(hgruntRunAndGunDotMin)
+			dotProductStraight > EASY_CVAR_GET_DEBUGONLY(hgruntRunAndGunDotMin)
 
 			//???
 
@@ -2199,7 +2201,7 @@ void CHGrunt :: MonsterThink ( void ){
 			strafeMode = -1;
 			runAndGun = TRUE;
 
-			runAndGunFailTime = gpGlobals->time + EASY_CVAR_GET(hgruntLockRunAndGunTime);
+			runAndGunFailTime = gpGlobals->time + EASY_CVAR_GET_DEBUGONLY(hgruntLockRunAndGunTime);
 
 
 			//running and gunning gets priority... for now.
@@ -2214,12 +2216,12 @@ void CHGrunt :: MonsterThink ( void ){
 			}
 
 			/*
-			if(EASY_CVAR_GET(testVar) == 1){
+			if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(testVar) == 1){
 				easyForcePrintLine("***hgrunt-%d: NO RUN&GUN:  actIsRun:%d, cvar_run&gundist:%.2f, cvar_run&gundot: %.2f, distance2d:%.2f, dotprod:%.2f",
 				monsterID,
 				m_movementActivity == ACT_RUN,
-				EASY_CVAR_GET(hgruntRunAndGunDistance),
-				EASY_CVAR_GET(hgruntRunAndGunDotMin),
+				EASY_CVAR_GET_DEBUGONLY(hgruntRunAndGunDistance),
+				EASY_CVAR_GET_DEBUGONLY(hgruntRunAndGunDotMin),
 				distanceToEnemy2D,
 				dotProductStraight
 				);
@@ -2232,7 +2234,7 @@ void CHGrunt :: MonsterThink ( void ){
 		
 		/*
 		if(runAndGun){
-			if(dotProductStraight > EASY_CVAR_GET(hgruntRunAndGunDotMin) && HasConditions(bits_COND_SEE_ENEMY) ){
+			if(dotProductStraight > EASY_CVAR_GET_DEBUGONLY(hgruntRunAndGunDotMin) && HasConditions(bits_COND_SEE_ENEMY) ){
 				//just reusing this var.
 				hgruntMoveAndShootDotProductPass = TRUE;
 			}else{
@@ -2303,14 +2305,14 @@ void CHGrunt :: MonsterThink ( void ){
 
 
 			/*
-			if(EASY_CVAR_GET(testVar) == 24){
-				//(EASY_CVAR_GET(hgruntRunAndGunDistance) != -1) &&  m_movementActivity == ACT_RUN && distanceToEnemy2D > EASY_CVAR_GET(hgruntRunAndGunDistance) && dotProductStraight > EASY_CVAR_GET(hgruntRunAndGunDotMin)
+			if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(testVar) == 24){
+				//(EASY_CVAR_GET_DEBUGONLY(hgruntRunAndGunDistance) != -1) &&  m_movementActivity == ACT_RUN && distanceToEnemy2D > EASY_CVAR_GET_DEBUGONLY(hgruntRunAndGunDistance) && dotProductStraight > EASY_CVAR_GET_DEBUGONLY(hgruntRunAndGunDotMin)
 
 				EASY_CVAR_PRINTIF_PRE(hgruntPrintout, easyForcePrintLine("***HGRUNT PRINTOUT24::: movementact:%d, canDoOppStrafe:%d, cvar_ragdis:%.2f, cvar_ragdot:%.2f, distance2D:%.2f, dotproductstr:%.2f, dotproductnorm:%.2f ",
 					canDoOpportunisticStrafe(),
 					m_movementActivity,
-					EASY_CVAR_GET(hgruntRunAndGunDistance),
-					EASY_CVAR_GET(hgruntRunAndGunDotMin),
+					EASY_CVAR_GET_DEBUGONLY(hgruntRunAndGunDistance),
+					EASY_CVAR_GET_DEBUGONLY(hgruntRunAndGunDotMin),
 					distanceToEnemy2D,
 					dotProductStraight,
 					dotProduct));
@@ -2345,7 +2347,7 @@ void CHGrunt :: MonsterThink ( void ){
 				}else if ( dotProduct > 0.9 )
 				{
 
-					strafeFailTime = gpGlobals->time + EASY_CVAR_GET(hgruntLockStrafeTime);
+					strafeFailTime = gpGlobals->time + EASY_CVAR_GET_DEBUGONLY(hgruntLockStrafeTime);
 
 
 					mayStrafeFire = TRUE;
@@ -2369,7 +2371,7 @@ void CHGrunt :: MonsterThink ( void ){
 
 					mayStrafeFire = TRUE;
 				
-					strafeFailTime = gpGlobals->time + EASY_CVAR_GET(hgruntLockStrafeTime);
+					strafeFailTime = gpGlobals->time + EASY_CVAR_GET_DEBUGONLY(hgruntLockStrafeTime);
 
 					// strafe left
 					//m_IdealActivity = ACT_STRAFE_LEFT;
@@ -2420,7 +2422,7 @@ void CHGrunt :: MonsterThink ( void ){
 		else{
 
 			/*
-			if(EASY_CVAR_GET(testVar) == 24){
+			if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(testVar) == 24){
 
 				EASY_CVAR_PRINTIF_PRE(hgruntPrintout, easyForcePrintLine("***!hgrunt NOSTRAFEFORYOU??? schedCheck:%d, skillLevelPass:%d, movegoalpass: %d", m_pSchedule != slhgruntStrafeToLocation, g_iSkillLevel >= 2, m_movementGoal == MOVEGOAL_ENEMY || m_movementGoal == MOVEGOAL_TARGETENT));
 			}
@@ -2443,7 +2445,7 @@ void CHGrunt :: MonsterThink ( void ){
 		*/
 
 		/*
-		if(EASY_CVAR_GET(testVar) == 1){
+		if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(testVar) == 1){
 			easyForcePrintLine("***!hgrunt-%d: INVALID PRE??? hasEnemy:%d, actPass:%d, idealAct:%d, moveAct:%d",
 				monsterID,
 				m_hEnemy!=NULL,
@@ -2490,7 +2492,7 @@ void CHGrunt::HandleEventQueueEvent(int arg_eventID){
 //=========================================================
 void CHGrunt :: HandleAnimEvent( MonsterEvent_t *pEvent )
 {
-	if(EASY_CVAR_GET(thatWasntPunch) == 1){
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(thatWasntPunch) == 1){
 		return;
 	}
 	//pev->renderfx |= 128;
@@ -2583,7 +2585,7 @@ void CHGrunt :: HandleAnimEvent( MonsterEvent_t *pEvent )
 					SetBodygroup(BODYGROUP_GUN, GUN_NONE);
 				}
 
-				if(EASY_CVAR_GET(gruntsCanHaveMP5Grenade) == 1){
+				if(EASY_CVAR_GET_DEBUGONLY(gruntsCanHaveMP5Grenade) == 1){
 					if (FBitSet( pev->weapons, HGRUNT_GRENADELAUNCHER ))
 					{
 						DropItem( "ammo_ARgrenades", BodyTarget( pev->origin ), vecGunAngles );
@@ -2631,7 +2633,7 @@ void CHGrunt :: HandleAnimEvent( MonsterEvent_t *pEvent )
 
 #if FORCE_MP5 == 1
 			// Under FORCE_MP5, no mp5 grenades unless they are allowed.
-			if(EASY_CVAR_GET(gruntsCanHaveMP5Grenade) == 1){
+			if(EASY_CVAR_GET_DEBUGONLY(gruntsCanHaveMP5Grenade) == 1){
 #endif
 				UTIL_PlaySound(ENT(pev), CHAN_WEAPON, "weapons/glauncher.wav", 0.8, ATTN_NORM, 0, 100, FALSE);
 				CGrenade::ShootContact( pev, GetGunPosition(), m_vecTossVelocity, gSkillData.plrDmgM203Grenade );
@@ -2793,14 +2795,14 @@ void CHGrunt::StartMonster( void )
 		if ( !FStringNull( pev->netname ) )
 		{
 			BOOL possibleExceptionToRule = FALSE;
-			if(EASY_CVAR_GET(leaderlessSquadAllowed) == 1 && !this->alreadyDoneNetnameLeaderCheck){
+			if(EASY_CVAR_GET_DEBUGONLY(leaderlessSquadAllowed) == 1 && !this->alreadyDoneNetnameLeaderCheck){
 				alreadyDoneNetnameLeaderCheck = TRUE;
 				//or will have soon...
 				//Check all of netname.
 				possibleExceptionToRule = checkLeaderlessSquadByNetname();
 			}
 			//MODDD - do a check.   See if any member has the "SF_SQUADMONSTER_LEADER" flag set.
-			//EASY_CVAR_GET(leaderlessSquadAllowed) == 0
+			//EASY_CVAR_GET_DEBUGONLY(leaderlessSquadAllowed) == 0
 			// if I have a groupname, I can only recruit if I'm flagged as leader
 			//NOTE::: joining is now possible, but the old behavior is probably okay.
 			if ( !possibleExceptionToRule && !( pev->spawnflags & SF_SQUADMONSTER_LEADER ) )
@@ -2823,12 +2825,12 @@ void CHGrunt::StartMonster( void )
 		  ALERT ( at_aiconsole, "Squad of %d %s formed\n", iSquadSize, STRING( pev->classname ) );
 		}
 
-		//easyForcePrintLine("ARE YOU bros SERIOUS RIGHT NOW %.2f %d %d", EASY_CVAR_GET(altSquadRulesRuntime), FStringNull(pev->netname), iSquadSize);
+		//easyForcePrintLine("ARE YOU bros SERIOUS RIGHT NOW %.2f %d %d", EASY_CVAR_GET_DEBUGONLY(altSquadRulesRuntime), FStringNull(pev->netname), iSquadSize);
 		//If "altSquadRule" is something (1 or 2), and is either 2 OR, if 1, also spawned in real-time (not coming from the map), try joining a squad.
-		if( EASY_CVAR_GET(altSquadRulesRuntime) > 0 && (EASY_CVAR_GET(altSquadRulesRuntime) == 2 || FStringNull( pev->netname ) ) ){
+		if( EASY_CVAR_GET_DEBUGONLY(altSquadRulesRuntime) > 0 && (EASY_CVAR_GET_DEBUGONLY(altSquadRulesRuntime) == 2 || FStringNull( pev->netname ) ) ){
 			if(iSquadSize == 1){
 				
-				if(EASY_CVAR_GET(monsterSpawnPrintout) == 1){
+				if(EASY_CVAR_GET_DEBUGONLY(monsterSpawnPrintout) == 1){
 				easyForcePrintLine("ITS MONDAY my acquaintance!  Get myself a squad... %s:%d", this->getClassname(), this->monsterID);
 				}
 				//found no other unassigned members to start a squad with.  Try joining instead?
@@ -2853,7 +2855,7 @@ void CHGrunt::StartMonster( void )
 		//////////////////////////////////////////////////////////////////////////////////////////////
 		CSquadMonster* testLeader = MySquadLeader();
 
-		if(EASY_CVAR_GET(monsterSpawnPrintout) == 1){
+		if(EASY_CVAR_GET_DEBUGONLY(monsterSpawnPrintout) == 1){
 			EASY_CVAR_PRINTIF_PRE(squadmonsterPrintout, easyForcePrintLine("STARTMONSTER for SQUADMONSTER CALLED: info? %s %d %d", STRING(pev->classname), this->SquadCount(), testLeader != NULL));
 		}
 		
@@ -3061,7 +3063,7 @@ void CHGrunt :: Spawn()
 			// Replace with mp5 and grenades.
 			pev->weapons = HGRUNT_9MMAR | HGRUNT_HANDGRENADE;
 		}
-		if(EASY_CVAR_GET(gruntsCanHaveMP5Grenade) == 0){
+		if(EASY_CVAR_GET_DEBUGONLY(gruntsCanHaveMP5Grenade) == 0){
 			if(pev->weapons & HGRUNT_GRENADELAUNCHER){
 				// remove it then!
 				pev->weapons &= ~HGRUNT_GRENADELAUNCHER;
@@ -3432,7 +3434,7 @@ void CHGrunt::updateStrafeStatus(void){
 
 
 
-	if(EASY_CVAR_GET(hgruntForceStrafeFireAnim) == 1){
+	if(EASY_CVAR_GET_DEBUGONLY(hgruntForceStrafeFireAnim) == 1){
 		if(idealStrafeMode == 0){
 			idealStrafeMode = 1;
 			//strafeMode = 1;
@@ -3621,24 +3623,24 @@ int CHGrunt::LookupActivityHard(int activity){
 			switch(strafeMode){
 				case 0:
 					//return LookupSequence("straferight");
-					m_flFramerateSuggestion = EASY_CVAR_GET(hgruntStrafeAnimSpeedMulti);
+					m_flFramerateSuggestion = EASY_CVAR_GET_DEBUGONLY(hgruntStrafeAnimSpeedMulti);
 					return LookupSequence("straferight");
 				break;
 				case 1:
 					//this->animEventQueuePush(3.0f / 30.0f, 0);
 					//this->animEventQueuePush(7.5f / 30.0f, 1);
 					//this->animEventQueuePush(11.0f / 30.0f, 2);
-					m_flFramerateSuggestion = EASY_CVAR_GET(hgruntStrafeAnimSpeedMulti);
+					m_flFramerateSuggestion = EASY_CVAR_GET_DEBUGONLY(hgruntStrafeAnimSpeedMulti);
 					return LookupSequence("straferight_fire");
 				break;
 				case 2:
 					//return LookupSequence("strafeleft");
-					m_flFramerateSuggestion = EASY_CVAR_GET(hgruntStrafeAnimSpeedMulti);
+					m_flFramerateSuggestion = EASY_CVAR_GET_DEBUGONLY(hgruntStrafeAnimSpeedMulti);
 					return LookupSequence("strafeleft");
 				break;
 				case 3:
 					//this->animEventQueuePush(7.0f / 30.0f, 0);
-					m_flFramerateSuggestion = EASY_CVAR_GET(hgruntStrafeAnimSpeedMulti);
+					m_flFramerateSuggestion = EASY_CVAR_GET_DEBUGONLY(hgruntStrafeAnimSpeedMulti);
 					return LookupSequence("strafeleft_fire");
 				break;
 				default:
@@ -3677,7 +3679,7 @@ int CHGrunt::LookupActivityHard(int activity){
 					this->animEventQueuePush(11.0f / 30.0f, 1);
 					*/
 
-					m_flFramerateSuggestion = EASY_CVAR_GET(hgruntRunAndGunAnimSpeedMulti);
+					m_flFramerateSuggestion = EASY_CVAR_GET_DEBUGONLY(hgruntRunAndGunAnimSpeedMulti);
 					return LookupSequence("runandgun");
 				}
 			}
@@ -3813,7 +3815,7 @@ void CHGrunt :: RunTask ( Task_t *pTask )
 		
 
 
-		if(EASY_CVAR_GET(hgruntMovementDeltaCheck) == 1){
+		if(EASY_CVAR_GET_DEBUGONLY(hgruntMovementDeltaCheck) == 1){
 			if(nextPositionCheckTime == -1){
 				nextPositionCheckTime = gpGlobals->time + 1.0f;
 			}else{
@@ -3822,7 +3824,7 @@ void CHGrunt :: RunTask ( Task_t *pTask )
 
 					float delta = (vecPrevOrigin - pev->origin).Length() ;
 					EASY_CVAR_PRINTIF_PRE(hgruntPrintout, easyForcePrintLine("DELTA IS?? %.2f", delta));
-					if(delta > 1){ //|| EASY_CVAR_GET(hgruntSpeedMulti) <= 0.3f){
+					if(delta > 1){ //|| EASY_CVAR_GET_DEBUGONLY(hgruntSpeedMulti) <= 0.3f){
 						//pass.  Just keep going.
 						nextPositionCheckTime = gpGlobals->time + 1.0f;
 					}else{
@@ -3833,7 +3835,7 @@ void CHGrunt :: RunTask ( Task_t *pTask )
 					}
 				}
 			}
-		}//END OF EASY_CVAR_GET(hgruntMovementDeltaCheck) ...
+		}//END OF EASY_CVAR_GET_DEBUGONLY(hgruntMovementDeltaCheck) ...
 
 
 		vecPrevOrigin = pev->origin;
@@ -3881,10 +3883,10 @@ void CHGrunt::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, float 
 
 
 
-	float flTotal = m_flGroundSpeed * pev->framerate * EASY_CVAR_GET(animationFramerateMulti) * flInterval * EASY_CVAR_GET(hgruntSpeedMulti);
+	float flTotal = m_flGroundSpeed * pev->framerate * EASY_CVAR_GET_DEBUGONLY(animationFramerateMulti) * flInterval * EASY_CVAR_GET_DEBUGONLY(hgruntSpeedMulti);
 	float flStep;
 
-	//EASY_CVAR_PRINTIF_PRE(hgruntPrintout, easyForcePrintLine("WHAT IS THIS junk??? %.2f %.2f %.2f %.2f %d", m_flGroundSpeed, pev->framerate, flInterval, EASY_CVAR_GET(hgruntSpeedMulti), strafeMode));
+	//EASY_CVAR_PRINTIF_PRE(hgruntPrintout, easyForcePrintLine("WHAT IS THIS junk??? %.2f %.2f %.2f %.2f %d", m_flGroundSpeed, pev->framerate, flInterval, EASY_CVAR_GET_DEBUGONLY(hgruntSpeedMulti), strafeMode));
 
 	while (flTotal > 0.001)
 	{
@@ -4786,7 +4788,7 @@ void CHGrunt :: SetActivity ( Activity NewActivity )
 
 #if FORCE_MP5 == 1
 		// can launch hand grenade at least, I think?
-		if(EASY_CVAR_GET(gruntsCanHaveMP5Grenade) == 1 ){
+		if(EASY_CVAR_GET_DEBUGONLY(gruntsCanHaveMP5Grenade) == 1 ){
 #endif
 			if ( pev->weapons & HGRUNT_HANDGRENADE )
 			{
@@ -5062,7 +5064,7 @@ Schedule_t *CHGrunt :: GetSchedule( void )
 					return GetScheduleOfType( SCHED_TAKE_COVER_FROM_ENEMY );
 				}
 				//MODDD - condition required before flinching (or rather, specifically forbidden).
-				else if(!(EASY_CVAR_GET(noFlinchOnHard)==1 && g_iSkillLevel==SKILL_HARD))
+				else if(!(EASY_CVAR_GET_DEBUGONLY(noFlinchOnHard)==1 && g_iSkillLevel==SKILL_HARD))
 				{
 					return GetScheduleOfType( SCHED_SMALL_FLINCH );
 				}
@@ -5075,7 +5077,7 @@ Schedule_t *CHGrunt :: GetSchedule( void )
 // can grenade launch
 #if FORCE_MP5 == 1
 			//can't use mp5 grenades if FORCE_MP5 is on... unless the cvar "gruntsCanHaveMP5Grenade" says so.
-			else if (EASY_CVAR_GET(gruntsCanHaveMP5Grenade) == 1 && FBitSet( pev->weapons, HGRUNT_GRENADELAUNCHER) && HasConditions ( bits_COND_CAN_RANGE_ATTACK2 ) && OccupySlot( bits_SLOTS_HGRUNT_GRENADE ) )
+			else if (EASY_CVAR_GET_DEBUGONLY(gruntsCanHaveMP5Grenade) == 1 && FBitSet( pev->weapons, HGRUNT_GRENADELAUNCHER) && HasConditions ( bits_COND_CAN_RANGE_ATTACK2 ) && OccupySlot( bits_SLOTS_HGRUNT_GRENADE ) )
 			{
 				// shoot a grenade if you can
 				return GetScheduleOfType( SCHED_RANGE_ATTACK2 );
@@ -5256,7 +5258,7 @@ Schedule_t* CHGrunt :: GetScheduleOfType ( int Type )
 			else
 			{
 				//an AllowGrenades value of 0 guarantees just taking cover instead.
-				if ( EASY_CVAR_GET(hgruntAllowGrenades) == 0 || RANDOM_LONG(0,1) )
+				if ( EASY_CVAR_GET_DEBUGONLY(hgruntAllowGrenades) == 0 || RANDOM_LONG(0,1) )
 				{
 					return &slGruntTakeCover[ 0 ];
 				}
@@ -5696,7 +5698,7 @@ void CHGrunt::checkHeadGore(int iGib ){
 
 	if(m_LastHitGroup == HITGROUP_HEAD || m_LastHitGroup == HITGROUP_HGRUNT_HELMET){
 		//Took enough damage on last trace-hit?
-		if(missingHeadPossible && EASY_CVAR_GET(sv_germancensorship) != 1 && GetBodygroup(BODYGROUP_HEAD) != HEAD_GORE){
+		if(missingHeadPossible && EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(sv_germancensorship) != 1 && GetBodygroup(BODYGROUP_HEAD) != HEAD_GORE){
 			//missing head!... if german censorship isn't on.
 			//that is, heads --> Headless
 			SetBodygroup( BODYGROUP_HEAD, HEAD_GORE );

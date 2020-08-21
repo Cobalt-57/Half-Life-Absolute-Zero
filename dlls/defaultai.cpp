@@ -26,9 +26,9 @@
 #include "scripted.h"
 
 
-EASY_CVAR_EXTERN(pathfindStumpedMode)
-EASY_CVAR_EXTERN(pathfindStumpedWaitTime)
-EASY_CVAR_EXTERN(pathfindStumpedForgetEnemy)
+EASY_CVAR_EXTERN_DEBUGONLY(pathfindStumpedMode)
+EASY_CVAR_EXTERN_DEBUGONLY(pathfindStumpedWaitTime)
+EASY_CVAR_EXTERN_DEBUGONLY(pathfindStumpedForgetEnemy)
 
 Task_t tlWaitForSequence[] =
 {
@@ -2282,7 +2282,7 @@ void CBaseMonster::ScheduleChange(void){
 
 	if(endedSchedule == GetStumpedWaitSchedule() ){
 
-		if(EASY_CVAR_GET(pathfindStumpedMode) == 2){
+		if(EASY_CVAR_GET_DEBUGONLY(pathfindStumpedMode) == 2){
 			//reget this to keep it up to date!
 			if(m_hEnemy != NULL){
 				//m_vecEnemyLKP = m_hEnemy->pev->origin;
@@ -2290,7 +2290,7 @@ void CBaseMonster::ScheduleChange(void){
 			}
 		}
 		
-		if(EASY_CVAR_GET(pathfindStumpedForgetEnemy) == 1){
+		if(EASY_CVAR_GET_DEBUGONLY(pathfindStumpedForgetEnemy) == 1){
 			//after going to this LKP, we are unable to re-query the enemy's position out of nowhere.
 			//TODO, distant future... pick a random location throughout the map to wander too up to so much of a distance in a search?
 			m_hEnemy = NULL;

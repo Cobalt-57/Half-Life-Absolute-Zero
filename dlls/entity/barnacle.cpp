@@ -27,14 +27,14 @@
 
 extern BOOL globalPSEUDO_germanModel_hgibFound;
 extern float cheat_barnacleEatsEverything;
-EASY_CVAR_EXTERN(drawBarnacleDebug)
-EASY_CVAR_EXTERN(barnacleCanGib)
-EASY_CVAR_EXTERN(barnaclePrintout)
-EASY_CVAR_EXTERN(barnacleTongueRetractDelay)
-EASY_CVAR_EXTERN(sv_germancensorship)
-EASY_CVAR_EXTERN(allowGermanModels)
-EASY_CVAR_EXTERN(germanRobotGibs)
-EASY_CVAR_EXTERN(germanRobotGibsDecal)
+EASY_CVAR_EXTERN_DEBUGONLY(drawBarnacleDebug)
+EASY_CVAR_EXTERN_DEBUGONLY(barnacleCanGib)
+EASY_CVAR_EXTERN_DEBUGONLY(barnaclePrintout)
+EASY_CVAR_EXTERN_DEBUGONLY(barnacleTongueRetractDelay)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(sv_germancensorship)
+EASY_CVAR_EXTERN_DEBUGONLY(allowGermanModels)
+EASY_CVAR_EXTERN_DEBUGONLY(germanRobotGibs)
+EASY_CVAR_EXTERN_DEBUGONLY(germanRobotGibsDecal)
 
 
 
@@ -169,14 +169,14 @@ int CBarnacle::BarnacleGetStandardGibSpawnID(){
 		return GIB_DUMMY_ID;
 	}
 
-	if(EASY_CVAR_GET(sv_germancensorship) != 1){
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(sv_germancensorship) != 1){
 		// german censorship is off? this will depend on this CVar.
 		if(CVAR_GET_FLOAT("violence_hgibs") != 0){
 			return GIB_HUMAN_ID;
 		}
 	}else{
 		// german censorship is on? This will depend on whether robot models are allowed and use gears instead if so.
-		if(EASY_CVAR_GET(allowGermanModels)==1 && EASY_CVAR_GET(germanRobotGibs)==1 && globalPSEUDO_germanModel_hgibFound==TRUE){
+		if(EASY_CVAR_GET_DEBUGONLY(allowGermanModels)==1 && EASY_CVAR_GET_DEBUGONLY(germanRobotGibs)==1 && globalPSEUDO_germanModel_hgibFound==TRUE){
 			return GIB_GERMAN_ID;
 		}
 	}
@@ -576,12 +576,12 @@ void CBarnacle :: BarnacleThink ( void )
 			smallerTest = FALSE;
 			pTouchEnt = TongueTouchEnt( &flLength, &flLengthMinimal );
 
-			triggered = ((pTouchEnt!=NULL) || ( retractDelay != -1 && EASY_CVAR_GET(barnacleTongueRetractDelay) > 0 && retractDelay > gpGlobals->time ) );
+			triggered = ((pTouchEnt!=NULL) || ( retractDelay != -1 && EASY_CVAR_GET_DEBUGONLY(barnacleTongueRetractDelay) > 0 && retractDelay > gpGlobals->time ) );
 
 			if(pTouchEnt != NULL){
-				if(EASY_CVAR_GET(barnacleTongueRetractDelay) > 0){
+				if(EASY_CVAR_GET_DEBUGONLY(barnacleTongueRetractDelay) > 0){
 					retractedPreviously = FALSE;
-					retractDelay = gpGlobals->time + EASY_CVAR_GET(barnacleTongueRetractDelay);
+					retractDelay = gpGlobals->time + EASY_CVAR_GET_DEBUGONLY(barnacleTongueRetractDelay);
 				}
 			}
 
@@ -807,7 +807,7 @@ GENERATE_KILLED_IMPLEMENTATION(CBarnacle)
 	CBaseMonster *pVictim;
 
 	//MODDD - barnacle corpse is now immortal (like in retail) ONLY if this CVar is off.
-	if(EASY_CVAR_GET(barnacleCanGib) == 0){
+	if(EASY_CVAR_GET_DEBUGONLY(barnacleCanGib) == 0){
 		pev->solid = SOLID_NOT;
 		pev->takedamage = DAMAGE_NO;
 	}
@@ -854,7 +854,7 @@ GENERATE_KILLED_IMPLEMENTATION(CBarnacle)
 
 	//MODDD - any references to CallGibMonster replaced with GibMonster. No need for that separation.
 
-	if(EASY_CVAR_GET(barnacleCanGib) == 1){
+	if(EASY_CVAR_GET_DEBUGONLY(barnacleCanGib) == 1){
 	//if ( HasMemory( bits_MEMORY_KILLED ) ){
 		
 		if ( ShouldGibMonster( iGib ) ){
@@ -864,7 +864,7 @@ GENERATE_KILLED_IMPLEMENTATION(CBarnacle)
 		}else if(barnacleDeathActivitySet == TRUE){
 			return;  //also return, since this means the death anim has already been triggered.
 		}
-	}else if(EASY_CVAR_GET(barnacleCanGib) == 2){
+	}else if(EASY_CVAR_GET_DEBUGONLY(barnacleCanGib) == 2){
 		//harder to gib, but still may be.
 
 		if(pev->deadflag == DEAD_NO){
@@ -935,7 +935,7 @@ void CBarnacle :: Precache()
 
 		if(CBarnacle::s_iStandardGibID == GIB_GERMAN_ID){
 			//extra check.
-			if(EASY_CVAR_GET(germanRobotGibsDecal)==0){
+			if(EASY_CVAR_GET_DEBUGONLY(germanRobotGibsDecal)==0){
 				//this disallows robot gib decals made on hitting the ground.
 				CBarnacle::s_fStandardGibDecal = FALSE;
 			}
@@ -1017,7 +1017,7 @@ CBaseEntity *CBarnacle :: TongueTouchEnt ( float *pflLength, float *pflLengthMin
 	mins.z -= length;
 
 
-	if(EASY_CVAR_GET(drawBarnacleDebug) == 1){
+	if(EASY_CVAR_GET_DEBUGONLY(drawBarnacleDebug) == 1){
 		if(smallerTest){
 			UTIL_drawBoxFrame(mins, maxs, 3, 255, 255, 0);
 		}else{

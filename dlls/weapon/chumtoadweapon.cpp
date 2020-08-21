@@ -7,8 +7,8 @@ EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelay)
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelaycustom)
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteclip)
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteammo)
-EASY_CVAR_EXTERN(playerChumtoadThrowDrawDebug)
-EASY_CVAR_EXTERN(chumtoadInheritsPlayerVelocity)
+EASY_CVAR_EXTERN_DEBUGONLY(playerChumtoadThrowDrawDebug)
+EASY_CVAR_EXTERN_DEBUGONLY(chumtoadInheritsPlayerVelocity)
 
 	
 int CChumToadWeapon::numberOfEyeSkins = -1;
@@ -404,7 +404,7 @@ BOOL CChumToadWeapon::checkThrowValid(Vector trace_origin, float* minFractionSto
 
 		
 #ifndef CLIENT_DLL
-	if(EASY_CVAR_GET(playerChumtoadThrowDrawDebug)){
+	if(EASY_CVAR_GET_DEBUGONLY(playerChumtoadThrowDrawDebug)){
 
 		easyForcePrintLine("flFraction: %.2f %.2f %.2f %.2f %.2f ::: %.2f", trLeft.flFraction, trCenter.flFraction, trRight.flFraction, trUp.flFraction, trDown.flFraction, minFraction);
 		easyForcePrintLine("fAllSolid: %d %d %d %d %d ::: %d", trLeft.fAllSolid, trCenter.fAllSolid, trRight.fAllSolid, trUp.fAllSolid, trDown.fAllSolid, tracesSolid);
@@ -516,7 +516,7 @@ BOOL CChumToadWeapon::checkThrowValid(Vector trace_origin, float* minFractionSto
 	//MODDD NOTE - watch the required and thorw distance above (gpGlobals->forward * #) and flFraction! If it is too small, chumtoads can be thrown "through" walls, like map walls, and clip through. Looks weird and the toad leaves this universe.
 	
 
-	// ... || EASY_CVAR_GET(testVar) == 2
+	// ... || EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(testVar) == 2
 	if ( (tracesSolid == FALSE && tracesStartSolid == FALSE && minFraction >= 1.0))
 	//if ( tr.fAllSolid == 0 && tr.fStartSolid == 0 && tr.flFraction >= 1.0)
 	{
@@ -546,7 +546,7 @@ void CChumToadWeapon::ThrowChumtoad(Vector vecSpawnPoint){
 	CBaseEntity *pChumToad = CBaseEntity::Create( "monster_chumtoad", toadSpawnPoint, Vector(0, m_pPlayer->pev->v_angle.y, 0), SF_MONSTER_THROWN, m_pPlayer->edict() );
 		
 	if (pChumToad != NULL) {
-		pChumToad->pev->velocity = gpGlobals->v_forward * 200 + UTIL_GetProjectileVelocityExtra(m_pPlayer->pev->velocity, EASY_CVAR_GET(chumtoadInheritsPlayerVelocity));
+		pChumToad->pev->velocity = gpGlobals->v_forward * 200 + UTIL_GetProjectileVelocityExtra(m_pPlayer->pev->velocity, EASY_CVAR_GET_DEBUGONLY(chumtoadInheritsPlayerVelocity));
 	}
 #endif
 	//MODDD - cheat check

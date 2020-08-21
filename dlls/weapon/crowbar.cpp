@@ -31,10 +31,10 @@ EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelay)
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelaycustom)
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteclip)
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteammo)
-//EASY_CVAR_EXTERN(testVar)
-EASY_CVAR_EXTERN(multiplayerCrowbarHitSoundMode)
-EASY_CVAR_EXTERN(muteCrowbarSounds)
-EASY_CVAR_EXTERN(drawDebugCrowbar)
+//EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(testVar)
+EASY_CVAR_EXTERN_DEBUGONLY(multiplayerCrowbarHitSoundMode)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(muteCrowbarSounds)
+EASY_CVAR_EXTERN_DEBUGONLY(drawDebugCrowbar)
 
 
 //MODDD - some things moved to the new crowbar.h.
@@ -153,7 +153,7 @@ BOOL FindHullIntersection( const Vector &vecSrc, const Vector &vecEnd, TraceResu
 				//DebugLine_ClearAll();
 				//DebugLine_Setup(debugOffIndex, vecSrc, (tr.vecEndPos + (tr.vecEndPos - vecSrc) * 4), tr.flFraction);
 				//DebugLine_Setup(debugOffIndex+1, vecSrc, vecSrc + (vecEndTarget - vecSrc) * 2, tr.flFraction);
-				if (EASY_CVAR_GET(drawDebugCrowbar) == 1) {
+				if (EASY_CVAR_GET_DEBUGONLY(drawDebugCrowbar) == 1) {
 					DebugLine_Setup(vecSrc, vecEndTarget, tr.flFraction);
 				}
 				//debugOffIndex += 2;
@@ -310,7 +310,7 @@ Vector FireBulletsPlayerEh ( ULONG cShots, Vector vecSrc, Vector vecDirShooting,
 				//if ( FNullEnt(tr.pHit))
 				{
 					//IF REVERTING TO THIS, try to use global_muteRicochetSound instead!
-					if(EASY_CVAR_GET(muteRicochetSound) != 2){
+					if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(muteRicochetSound) != 2){
 						MESSAGE_BEGIN( MSG_PAS, SVC_TEMPENTITY, tr.vecEndPos );
 							WRITE_BYTE( TE_GUNSHOT );
 							WRITE_COORD( tr.vecEndPos.x );
@@ -342,7 +342,7 @@ int CCrowbar::Swing( int fFirst )
 {
 #ifndef CLIENT_DLL
 	//if muteCrowbarSounds is 0 or 1, we didn't hute hit sounds.
-	const BOOL canPlayHitSound = (EASY_CVAR_GET(muteCrowbarSounds) != 2 && EASY_CVAR_GET(muteCrowbarSounds) != 3);
+	const BOOL canPlayHitSound = (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(muteCrowbarSounds) != 2 && EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(muteCrowbarSounds) != 3);
 #endif
 
 	BOOL specialMiss = FALSE;
@@ -366,7 +366,7 @@ int CCrowbar::Swing( int fFirst )
 
 #ifndef CLIENT_DLL
 
-	if (EASY_CVAR_GET(drawDebugCrowbar) == 1) {
+	if (EASY_CVAR_GET_DEBUGONLY(drawDebugCrowbar) == 1) {
 		DebugLine_ClearAll();
 	}
 
@@ -498,7 +498,7 @@ int CCrowbar::Swing( int fFirst )
 		*/
 
 
-		if (EASY_CVAR_GET(drawDebugCrowbar) == 1) {
+		if (EASY_CVAR_GET_DEBUGONLY(drawDebugCrowbar) == 1) {
 			//::DebugLine_ClearAll();
 			::DebugLine_Setup(vecSrc, (tr.vecEndPos + (tr.vecEndPos - vecSrc) * 4), tr.flFraction);
 			::DebugLine_Setup(vecSrc, vecSrc + (vecEnd - vecSrc) * 2, tr.flFraction);
@@ -614,7 +614,7 @@ int CCrowbar::Swing( int fFirst )
 					// and fvolbar is going to be 0 from the above call.
 
 
-					switch ((int)EASY_CVAR_GET(multiplayerCrowbarHitSoundMode)) {
+					switch ((int)EASY_CVAR_GET_DEBUGONLY(multiplayerCrowbarHitSoundMode)) {
 					case 0:
 						//nothing.
 						fvolbar = 0;

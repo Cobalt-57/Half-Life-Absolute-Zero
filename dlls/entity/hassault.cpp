@@ -37,34 +37,34 @@
 #include "cvar_custom_info.h"
 
 
-EASY_CVAR_EXTERN(hassaultSpinMovement)
-EASY_CVAR_EXTERN(hassaultFriendlyFire)
-EASY_CVAR_EXTERN(drawDebugPathfinding2)
-EASY_CVAR_EXTERN(hassaultIdleSpinSound)
-EASY_CVAR_EXTERN(hassaultFireSound)
-EASY_CVAR_EXTERN(hassaultIdleSpinSoundChannel)
-EASY_CVAR_EXTERN(hassaultFireSoundChannel)
-EASY_CVAR_EXTERN(hassaultSpinUpDownSoundChannel)
-EASY_CVAR_EXTERN(hassaultWaitTime)
-EASY_CVAR_EXTERN(hassaultSpinupRemainTime)
-EASY_CVAR_EXTERN(hassaultResidualAttackTime)
-EASY_CVAR_EXTERN(hassaultSpinupStartTime)
-EASY_CVAR_EXTERN(hassaultVoicePitchMin)
-EASY_CVAR_EXTERN(hassaultVoicePitchMax)
-EASY_CVAR_EXTERN(hassaultFireSpread)
-EASY_CVAR_EXTERN(noFlinchOnHard)
-EASY_CVAR_EXTERN(hassaultDrawLKP)
-EASY_CVAR_EXTERN(thatWasntPunch)
-EASY_CVAR_EXTERN(hassaultPrintout)
-EASY_CVAR_EXTERN(hassaultExtraMuzzleFlashRadius)
-EASY_CVAR_EXTERN(hassaultExtraMuzzleFlashBrightness)
-EASY_CVAR_EXTERN(hassaultExtraMuzzleFlashForward)
-EASY_CVAR_EXTERN(hassaultBulletDamageMulti)
-EASY_CVAR_EXTERN(hassaultBulletsPerShot)
-EASY_CVAR_EXTERN(hassaultFireAnimSpeedMulti)
-EASY_CVAR_EXTERN(hassaultMeleeAnimSpeedMulti)
-EASY_CVAR_EXTERN(hassaultMeleeAttackEnabled)
-EASY_CVAR_EXTERN(sv_germancensorship)
+EASY_CVAR_EXTERN_DEBUGONLY(hassaultSpinMovement)
+EASY_CVAR_EXTERN_DEBUGONLY(hassaultFriendlyFire)
+EASY_CVAR_EXTERN_DEBUGONLY(drawDebugPathfinding2)
+EASY_CVAR_EXTERN_DEBUGONLY(hassaultIdleSpinSound)
+EASY_CVAR_EXTERN_DEBUGONLY(hassaultFireSound)
+EASY_CVAR_EXTERN_DEBUGONLY(hassaultIdleSpinSoundChannel)
+EASY_CVAR_EXTERN_DEBUGONLY(hassaultFireSoundChannel)
+EASY_CVAR_EXTERN_DEBUGONLY(hassaultSpinUpDownSoundChannel)
+EASY_CVAR_EXTERN_DEBUGONLY(hassaultWaitTime)
+EASY_CVAR_EXTERN_DEBUGONLY(hassaultSpinupRemainTime)
+EASY_CVAR_EXTERN_DEBUGONLY(hassaultResidualAttackTime)
+EASY_CVAR_EXTERN_DEBUGONLY(hassaultSpinupStartTime)
+EASY_CVAR_EXTERN_DEBUGONLY(hassaultVoicePitchMin)
+EASY_CVAR_EXTERN_DEBUGONLY(hassaultVoicePitchMax)
+EASY_CVAR_EXTERN_DEBUGONLY(hassaultFireSpread)
+EASY_CVAR_EXTERN_DEBUGONLY(noFlinchOnHard)
+EASY_CVAR_EXTERN_DEBUGONLY(hassaultDrawLKP)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(thatWasntPunch)
+EASY_CVAR_EXTERN_DEBUGONLY(hassaultPrintout)
+EASY_CVAR_EXTERN_DEBUGONLY(hassaultExtraMuzzleFlashRadius)
+EASY_CVAR_EXTERN_DEBUGONLY(hassaultExtraMuzzleFlashBrightness)
+EASY_CVAR_EXTERN_DEBUGONLY(hassaultExtraMuzzleFlashForward)
+EASY_CVAR_EXTERN_DEBUGONLY(hassaultBulletDamageMulti)
+EASY_CVAR_EXTERN_DEBUGONLY(hassaultBulletsPerShot)
+EASY_CVAR_EXTERN_DEBUGONLY(hassaultFireAnimSpeedMulti)
+EASY_CVAR_EXTERN_DEBUGONLY(hassaultMeleeAnimSpeedMulti)
+EASY_CVAR_EXTERN_DEBUGONLY(hassaultMeleeAttackEnabled)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(sv_germancensorship)
 extern BOOL globalPSEUDO_germanModel_hassaultFound;
 
 
@@ -827,7 +827,7 @@ void CHAssault::AimAtEnemy(Vector& refVecShootOrigin, Vector& refVecShootDir ){
 
 int CHAssault::IRelationship ( CBaseEntity *pTarget )
 {
-	if(EASY_CVAR_GET(thatWasntPunch) == 1){
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(thatWasntPunch) == 1){
 		//I just don't give a damn man
 		return R_NO;
 	}
@@ -920,7 +920,7 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CHAssault)
 	//Anytime I take damage, if spun up, it resets the spinup timer. Not unspinning now.
 
 	if(spinuptimeremain != -1 && gpGlobals->time < spinuptimeremain){
-		spinuptimeremain = gpGlobals->time + EASY_CVAR_GET(hassaultSpinupRemainTime);
+		spinuptimeremain = gpGlobals->time + EASY_CVAR_GET_DEBUGONLY(hassaultSpinupRemainTime);
 	}
 
 	//taking damage makes the hassault walk faster while following.
@@ -1122,7 +1122,7 @@ void CHAssault :: HandleAnimEvent( MonsterEvent_t *pEvent )
 				pev->renderfx &= ~NOMUZZLEFLASH;
 
 
-				pev->framerate = EASY_CVAR_GET(hassaultFireAnimSpeedMulti);
+				pev->framerate = EASY_CVAR_GET_DEBUGONLY(hassaultFireAnimSpeedMulti);
 
 				if(m_pSchedule != slHAssault_forceFireAtTarget){
 					Shoot();
@@ -1217,7 +1217,7 @@ void CHAssault :: Spawn()
 	
 	//m_flFieldOfView		= VIEW_FIELD_FULL;//0.5;// indicates the width of this monster's forward view cone ( as a dotproduct result )
 	m_flFieldOfView = 0.24;
-	//m_flFieldOfView		= EASY_CVAR_GET(testVar);
+	//m_flFieldOfView		= EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(testVar);
 
 	//MODDD - grunt seems to lack this line in spawn (or anywhere), disabling?
 	//nah, let's try with this on again.
@@ -1231,7 +1231,7 @@ void CHAssault :: Spawn()
 	m_afCapability		= bits_CAP_SQUAD | bits_CAP_HEAR | bits_CAP_DOORS_GROUP;
 	
 	// get voice pitch at the start.
-	m_voicePitch = randomValueInt((int)EASY_CVAR_GET(hassaultVoicePitchMin), (int)EASY_CVAR_GET(hassaultVoicePitchMax));
+	m_voicePitch = randomValueInt((int)EASY_CVAR_GET_DEBUGONLY(hassaultVoicePitchMin), (int)EASY_CVAR_GET_DEBUGONLY(hassaultVoicePitchMax));
 	
 
 	//| bits_CAP_RANGE_ATTACK1;
@@ -1415,16 +1415,16 @@ void CHAssault :: Shoot ( void )
 		//ALSO TRIED CONE_1DEGREES!
 		//FireBullets(1, vecShootOrigin, vecShootDir, VECTOR_CONE_5DEGREES, 2048, BULLET_MONSTER_MP5 ); // shoot +-5 degrees
 
-		if(EASY_CVAR_GET(hassaultBulletsPerShot) >= 1){
+		if(EASY_CVAR_GET_DEBUGONLY(hassaultBulletsPerShot) >= 1){
 			int tracerFreq;
-			float filteredBulletsPerShot = EASY_CVAR_GET(hassaultBulletsPerShot);
+			float filteredBulletsPerShot = EASY_CVAR_GET_DEBUGONLY(hassaultBulletsPerShot);
 			if(filteredBulletsPerShot <= 0){
 				//not allowed, enforce default.
 				filteredBulletsPerShot = DEFAULT_hassaultBulletsPerShot;
 			}
 			
 			tracerFreq = (int) (4 * (1 / filteredBulletsPerShot ));
-			FireBullets((int)EASY_CVAR_GET(hassaultBulletsPerShot), vecShootOrigin, vecShootDir, Vector(EASY_CVAR_GET(hassaultFireSpread),EASY_CVAR_GET(hassaultFireSpread),EASY_CVAR_GET(hassaultFireSpread) ), 2048, BULLET_MONSTER_MP5, tracerFreq , EASY_CVAR_GET(hassaultBulletDamageMulti) ); // shoot +-5 degrees
+			FireBullets((int)EASY_CVAR_GET_DEBUGONLY(hassaultBulletsPerShot), vecShootOrigin, vecShootDir, Vector(EASY_CVAR_GET_DEBUGONLY(hassaultFireSpread),EASY_CVAR_GET_DEBUGONLY(hassaultFireSpread),EASY_CVAR_GET_DEBUGONLY(hassaultFireSpread) ), 2048, BULLET_MONSTER_MP5, tracerFreq , EASY_CVAR_GET_DEBUGONLY(hassaultBulletDamageMulti) ); // shoot +-5 degrees
 		}
 
 //	}
@@ -1439,7 +1439,7 @@ void CHAssault :: Shoot ( void )
 //	Vector angDir = UTIL_VecToAngles( vecShootDir );
 //	SafeSetBlending( 0, angDir.x );
 	
-	if(EASY_CVAR_GET(hassaultFireSound) == 1){
+	if(EASY_CVAR_GET_DEBUGONLY(hassaultFireSound) == 1){
 		switch(RANDOM_LONG(0,2))
 		{
 			case 0:
@@ -1457,7 +1457,7 @@ void CHAssault :: Shoot ( void )
 			attemptStopIdleSpinSound();
 
 		}
-	}else if(EASY_CVAR_GET(hassaultFireSound) == 2){
+	}else if(EASY_CVAR_GET_DEBUGONLY(hassaultFireSound) == 2){
 		if(chainFireSoundDelay == -1 || chainFireSoundDelay <= gpGlobals->time){
 			//chainFireSoundDelay = gpGlobals->time + 2.385;
 			chainFireSoundDelay = gpGlobals->time + 2.07;
@@ -1465,22 +1465,22 @@ void CHAssault :: Shoot ( void )
 			UTIL_PlaySound(ENT(pev), getChainFireChannel(), "hassault/hw_gun4.wav", 1, ATTN_NORM, 0, 100 );
 			attemptStopIdleSpinSound();
 		}
-	}else if(EASY_CVAR_GET(hassaultFireSound) == 3){
+	}else if(EASY_CVAR_GET_DEBUGONLY(hassaultFireSound) == 3){
 		UTIL_PlaySound( ENT(pev), getChainFireChannel(), "hassault/hw_gun4.wav", 1, ATTN_NORM, 0, 100 );
 		attemptStopIdleSpinSound();
 	}
 
-	if(EASY_CVAR_GET(hassaultExtraMuzzleFlashRadius)){
-		Vector extraFlashOrigin = vecShootOrigin + vecShootDir * EASY_CVAR_GET(hassaultExtraMuzzleFlashForward);
+	if(EASY_CVAR_GET_DEBUGONLY(hassaultExtraMuzzleFlashRadius)){
+		Vector extraFlashOrigin = vecShootOrigin + vecShootDir * EASY_CVAR_GET_DEBUGONLY(hassaultExtraMuzzleFlashForward);
 	
-		float brightness = (EASY_CVAR_GET(hassaultExtraMuzzleFlashBrightness)*255);
+		float brightness = (EASY_CVAR_GET_DEBUGONLY(hassaultExtraMuzzleFlashBrightness)*255);
 
 		MESSAGE_BEGIN( MSG_PVS, SVC_TEMPENTITY, extraFlashOrigin );
 			WRITE_BYTE(TE_DLIGHT);
 			WRITE_COORD(extraFlashOrigin.x);	// X
 			WRITE_COORD(extraFlashOrigin.y);	// Y
 			WRITE_COORD(extraFlashOrigin.z);	// Z
-			WRITE_BYTE( (int)(EASY_CVAR_GET(hassaultExtraMuzzleFlashRadius)*10) );		// radius * 0.1
+			WRITE_BYTE( (int)(EASY_CVAR_GET_DEBUGONLY(hassaultExtraMuzzleFlashRadius)*10) );		// radius * 0.1
 			WRITE_BYTE( brightness );		// r
 			WRITE_BYTE( brightness );		// g
 			WRITE_BYTE( brightness );		// b
@@ -1520,9 +1520,9 @@ void CHAssault :: ShootAtForceFireTarget ( void )
 		////vecShootDir = gpGlobals->v_forward;
 		////vecShootDir.z = ShootAtEnemyMod( vecShootOrigin ).z;
 		
-	if(EASY_CVAR_GET(hassaultBulletsPerShot) >= 1){
+	if(EASY_CVAR_GET_DEBUGONLY(hassaultBulletsPerShot) >= 1){
 		int tracerFreq;
-		float filteredBulletsPerShot = EASY_CVAR_GET(hassaultBulletsPerShot);
+		float filteredBulletsPerShot = EASY_CVAR_GET_DEBUGONLY(hassaultBulletsPerShot);
 		if(filteredBulletsPerShot <= 0){
 			//not allowed, enforce default.
 			filteredBulletsPerShot = DEFAULT_hassaultBulletsPerShot;
@@ -1531,7 +1531,7 @@ void CHAssault :: ShootAtForceFireTarget ( void )
 		tracerFreq = (int) (4 * (1 / filteredBulletsPerShot ));
 		
 		
-		FireBullets((int)EASY_CVAR_GET(hassaultBulletsPerShot), vecShootOrigin, vecShootDir, Vector(EASY_CVAR_GET(hassaultFireSpread),EASY_CVAR_GET(hassaultFireSpread),EASY_CVAR_GET(hassaultFireSpread) ), 2048, BULLET_MONSTER_MP5, tracerFreq , EASY_CVAR_GET(hassaultBulletDamageMulti) ); // shoot +-5 degrees
+		FireBullets((int)EASY_CVAR_GET_DEBUGONLY(hassaultBulletsPerShot), vecShootOrigin, vecShootDir, Vector(EASY_CVAR_GET_DEBUGONLY(hassaultFireSpread),EASY_CVAR_GET_DEBUGONLY(hassaultFireSpread),EASY_CVAR_GET_DEBUGONLY(hassaultFireSpread) ), 2048, BULLET_MONSTER_MP5, tracerFreq , EASY_CVAR_GET_DEBUGONLY(hassaultBulletDamageMulti) ); // shoot +-5 degrees
 	}
 	//if(RANDOM_FLOAT(0, 1) <= EASY_CVAR_GET(hassaultMuzzleFlashChance)){
 		pev->effects |= EF_MUZZLEFLASH;
@@ -1542,7 +1542,7 @@ void CHAssault :: ShootAtForceFireTarget ( void )
 //	Vector angDir = UTIL_VecToAngles( vecShootDir );
 //	SafeSetBlending( 0, angDir.x );
 	
-	if(EASY_CVAR_GET(hassaultFireSound) == 1){
+	if(EASY_CVAR_GET_DEBUGONLY(hassaultFireSound) == 1){
 		switch(RANDOM_LONG(0,2))
 		{
 			case 0:
@@ -1560,7 +1560,7 @@ void CHAssault :: ShootAtForceFireTarget ( void )
 			attemptStopIdleSpinSound();
 
 		}
-	}else if(EASY_CVAR_GET(hassaultFireSound) == 2){
+	}else if(EASY_CVAR_GET_DEBUGONLY(hassaultFireSound) == 2){
 		if(chainFireSoundDelay == -1 || chainFireSoundDelay <= gpGlobals->time){
 			//chainFireSoundDelay = gpGlobals->time + 2.385;
 			chainFireSoundDelay = gpGlobals->time + 2.07;
@@ -1568,15 +1568,15 @@ void CHAssault :: ShootAtForceFireTarget ( void )
 			UTIL_PlaySound(ENT(pev), getChainFireChannel(), "hassault/hw_gun4.wav", 1, ATTN_NORM, 0, 100 );
 			attemptStopIdleSpinSound();
 		}
-	}else if(EASY_CVAR_GET(hassaultFireSound) == 3){
+	}else if(EASY_CVAR_GET_DEBUGONLY(hassaultFireSound) == 3){
 		UTIL_PlaySound( ENT(pev), getChainFireChannel(), "hassault/hw_gun4.wav", 1, ATTN_NORM, 0, 100 );
 		attemptStopIdleSpinSound();
 	}
 	
-	if(EASY_CVAR_GET(hassaultExtraMuzzleFlashRadius)){
-		Vector extraFlashOrigin = vecShootOrigin + vecShootDir * EASY_CVAR_GET(hassaultExtraMuzzleFlashForward);
+	if(EASY_CVAR_GET_DEBUGONLY(hassaultExtraMuzzleFlashRadius)){
+		Vector extraFlashOrigin = vecShootOrigin + vecShootDir * EASY_CVAR_GET_DEBUGONLY(hassaultExtraMuzzleFlashForward);
 	
-		float brightness = (EASY_CVAR_GET(hassaultExtraMuzzleFlashBrightness)*255);
+		float brightness = (EASY_CVAR_GET_DEBUGONLY(hassaultExtraMuzzleFlashBrightness)*255);
 
 		//default radius was just 12... wow.  1.2 is surpsinginy big I guess.
 		MESSAGE_BEGIN( MSG_PVS, SVC_TEMPENTITY, extraFlashOrigin );
@@ -1584,7 +1584,7 @@ void CHAssault :: ShootAtForceFireTarget ( void )
 			WRITE_COORD(extraFlashOrigin.x);	// X
 			WRITE_COORD(extraFlashOrigin.y);	// Y
 			WRITE_COORD(extraFlashOrigin.z);	// Z
-			WRITE_BYTE( (int)(EASY_CVAR_GET(hassaultExtraMuzzleFlashRadius)*10) );		// radius * 0.1
+			WRITE_BYTE( (int)(EASY_CVAR_GET_DEBUGONLY(hassaultExtraMuzzleFlashRadius)*10) );		// radius * 0.1
 			WRITE_BYTE( brightness );		// r
 			WRITE_BYTE( brightness );		// g
 			WRITE_BYTE( brightness );		// b
@@ -1604,13 +1604,13 @@ void CHAssault :: ShootAtForceFireTarget ( void )
 
 
 int CHAssault::getIdleSpinChannel(void){
-	return (int)EASY_CVAR_GET(hassaultIdleSpinSoundChannel);
+	return (int)EASY_CVAR_GET_DEBUGONLY(hassaultIdleSpinSoundChannel);
 }
 int CHAssault::getSpinUpDownChannel(void){
-	return (int)EASY_CVAR_GET(hassaultSpinUpDownSoundChannel);
+	return (int)EASY_CVAR_GET_DEBUGONLY(hassaultSpinUpDownSoundChannel);
 }
 int CHAssault::getChainFireChannel(void){
-	return (int)EASY_CVAR_GET(hassaultFireSoundChannel);
+	return (int)EASY_CVAR_GET_DEBUGONLY(hassaultFireSoundChannel);
 }
 
 
@@ -1626,7 +1626,7 @@ void CHAssault::attemptStopIdleSpinSound(void){
 }
 
 void CHAssault::attemptStopIdleSpinSound(BOOL forceStop){
-	if(EASY_CVAR_GET(hassaultIdleSpinSound) > 0 && idleSpinSoundDelay != -1 && ((EASY_CVAR_GET(hassaultIdleSpinSound) >= 3)||forceStop) ){
+	if(EASY_CVAR_GET_DEBUGONLY(hassaultIdleSpinSound) > 0 && idleSpinSoundDelay != -1 && ((EASY_CVAR_GET_DEBUGONLY(hassaultIdleSpinSound) >= 3)||forceStop) ){
 		//be safe...
 		idleSpinSoundDelay = -1;
 		UTIL_StopSound(ENT(pev), getIdleSpinChannel(), "hassault/hw_spin.wav");
@@ -1646,7 +1646,7 @@ void CHAssault::SetTurnActivity(void){
 
 
 void CHAssault::SetActivity(Activity NewActivity){
-	if(m_pSchedule != slHAssault_residualFire && NewActivity != ACT_RANGE_ATTACK1 && EASY_CVAR_GET(hassaultFireSound) >= 2){
+	if(m_pSchedule != slHAssault_residualFire && NewActivity != ACT_RANGE_ATTACK1 && EASY_CVAR_GET_DEBUGONLY(hassaultFireSound) >= 2){
 			
 		resetChainFireSound();
 	}
@@ -1746,20 +1746,20 @@ BOOL CHAssault :: CheckRangeAttack1 ( float flDot, float flDist )
 		flDot,
 		 m_hEnemy ->Classify() != CLASS_ALIEN_BIOWEAPON,
 		 m_hEnemy ->Classify() != CLASS_PLAYER_BIOWEAPON,
-	 (EASY_CVAR_GET(hassaultFriendlyFire) != 0 || NoFriendlyFireImp(vecShootOrigin, m_hEnemy->BodyTargetMod(vecShootOrigin)  ) ) 
+	 (EASY_CVAR_GET_DEBUGONLY(hassaultFriendlyFire) != 0 || NoFriendlyFireImp(vecShootOrigin, m_hEnemy->BodyTargetMod(vecShootOrigin)  ) ) 
 	 ));
 
 
 	//make the range larger in the future, seems like they are still fairly accurate further away than this.
 	if ( !HasConditions( bits_COND_ENEMY_OCCLUDED ) && flDist <= m_flDistTooFar &&
 	 m_hEnemy->Classify() != CLASS_ALIEN_BIOWEAPON &&
-	 m_hEnemy->Classify() != CLASS_PLAYER_BIOWEAPON && (EASY_CVAR_GET(hassaultFriendlyFire) != 0 || NoFriendlyFireImp(vecShootOrigin, m_hEnemy->BodyTargetMod(vecShootOrigin)  ) ) )
+	 m_hEnemy->Classify() != CLASS_PLAYER_BIOWEAPON && (EASY_CVAR_GET_DEBUGONLY(hassaultFriendlyFire) != 0 || NoFriendlyFireImp(vecShootOrigin, m_hEnemy->BodyTargetMod(vecShootOrigin)  ) ) )
 	{
 		TraceResult	tr;
 		Vector vecSrc = vecShootOrigin;
 		UTIL_TraceLine( vecSrc, m_hEnemy->BodyTargetMod(vecSrc), ignore_monsters, ignore_glass, ENT(pev), &tr);
 
-		if(EASY_CVAR_GET(drawDebugPathfinding2) == 1){
+		if(EASY_CVAR_GET_DEBUGONLY(drawDebugPathfinding2) == 1){
 			UTIL_drawLineFrame(vecSrc, m_hEnemy->BodyTargetMod(vecSrc), 7, 0, 255, 125);
 		}
 
@@ -1919,7 +1919,7 @@ void CHAssault :: StartTask ( Task_t *pTask ){
 		CBaseMonster :: StartTask( pTask );
 	break;
 	case TASK_HASSAULT_RESIDUAL_FIRE:
-		residualFireTime = gpGlobals->time + EASY_CVAR_GET(hassaultResidualAttackTime);
+		residualFireTime = gpGlobals->time + EASY_CVAR_GET_DEBUGONLY(hassaultResidualAttackTime);
 		residualFireTimeBehindCheck = gpGlobals->time + 0.26;
 		m_IdealActivity = ACT_RANGE_ATTACK1;
 
@@ -1941,15 +1941,15 @@ void CHAssault :: StartTask ( Task_t *pTask ){
 			//factor = animDuration / requiredDuration
 
 
-			targetFrameRate = EASY_CVAR_GET(hassaultSpinupStartTime) / (16.0f/15.0f);
+			targetFrameRate = EASY_CVAR_GET_DEBUGONLY(hassaultSpinupStartTime) / (16.0f/15.0f);
 
 			//default time: (16/15) seconds. Scale to take as long as hassaultSpinupStartTime.
 			this->SetSequenceByName("spinup", targetFrameRate);
 
 
 			//only assign "spinuptime" if it hasn't been set yet.
-			waittime = gpGlobals->time + EASY_CVAR_GET(hassaultWaitTime);
-			spinuptime = gpGlobals->time + EASY_CVAR_GET(hassaultSpinupStartTime);
+			waittime = gpGlobals->time + EASY_CVAR_GET_DEBUGONLY(hassaultWaitTime);
+			spinuptime = gpGlobals->time + EASY_CVAR_GET_DEBUGONLY(hassaultSpinupStartTime);
 			spinuptimeIdleSoundDelay = gpGlobals->time + 1.151;
 		}else if(spinuptime > gpGlobals->time){
 
@@ -1961,9 +1961,9 @@ void CHAssault :: StartTask ( Task_t *pTask ){
 			if(spinuptimeremain != -1){
 				//we're already spun up.  Reset the bored timer.
 
-				waittime = gpGlobals->time + EASY_CVAR_GET(hassaultWaitTime);
+				waittime = gpGlobals->time + EASY_CVAR_GET_DEBUGONLY(hassaultWaitTime);
 
-				spinuptimeremain = gpGlobals->time + EASY_CVAR_GET(hassaultSpinupRemainTime);
+				spinuptimeremain = gpGlobals->time + EASY_CVAR_GET_DEBUGONLY(hassaultSpinupRemainTime);
 				TaskComplete();
 				return;
 			}
@@ -2026,7 +2026,7 @@ void CHAssault :: StartTask ( Task_t *pTask ){
 			}
 		}
 
-		if(!(EASY_CVAR_GET(hassaultFriendlyFire) != 0 || NoFriendlyFireImp(shootOrigin, m_hEnemy->BodyTargetMod(shootOrigin)  ) )    ){
+		if(!(EASY_CVAR_GET_DEBUGONLY(hassaultFriendlyFire) != 0 || NoFriendlyFireImp(shootOrigin, m_hEnemy->BodyTargetMod(shootOrigin)  ) )    ){
 			SetConditions(bits_COND_SPECIAL1);
 		}else{
 			//MODDD - NOTE: is this necessary?
@@ -2096,8 +2096,8 @@ void CHAssault :: RunTask ( Task_t *pTask )
 
 		if(spinuptimeremain != -1){
 			//if spun-up, definitely staying that way in the heat of combat.
-			waittime = gpGlobals->time + EASY_CVAR_GET(hassaultWaitTime);
-			spinuptimeremain = gpGlobals->time + EASY_CVAR_GET(hassaultSpinupRemainTime);
+			waittime = gpGlobals->time + EASY_CVAR_GET_DEBUGONLY(hassaultWaitTime);
+			spinuptimeremain = gpGlobals->time + EASY_CVAR_GET_DEBUGONLY(hassaultSpinupRemainTime);
 			//TaskComplete();
 			//return;
 		}
@@ -2157,8 +2157,8 @@ void CHAssault :: RunTask ( Task_t *pTask )
 	case TASK_HASSAULT_WAIT_FOR_SPIN_FINISH:    //piggy back off of the script below.
 	case TASK_HASSAULT_SPIN:
 
-		spinuptimeremain = gpGlobals->time + EASY_CVAR_GET(hassaultSpinupRemainTime);
-		waittime = gpGlobals->time + EASY_CVAR_GET(hassaultWaitTime);
+		spinuptimeremain = gpGlobals->time + EASY_CVAR_GET_DEBUGONLY(hassaultSpinupRemainTime);
+		waittime = gpGlobals->time + EASY_CVAR_GET_DEBUGONLY(hassaultWaitTime);
 		//certainly not bored now.
 		
 
@@ -2229,8 +2229,8 @@ void CHAssault :: RunTask ( Task_t *pTask )
 		//yep.
 		firing = TRUE;
 		
-		spinuptimeremain = gpGlobals->time + EASY_CVAR_GET(hassaultSpinupRemainTime);
-		waittime = gpGlobals->time + EASY_CVAR_GET(hassaultWaitTime);
+		spinuptimeremain = gpGlobals->time + EASY_CVAR_GET_DEBUGONLY(hassaultSpinupRemainTime);
+		waittime = gpGlobals->time + EASY_CVAR_GET_DEBUGONLY(hassaultWaitTime);
 
 
 		//CheckAttacks(m_hEnemy,  (pev->origin - m_hEnemy->pev->origin).Length() );
@@ -2337,8 +2337,8 @@ void CHAssault :: RunTask ( Task_t *pTask )
 	case TASK_HASSAULT_RESIDUAL_FIRE:
 		firing = TRUE;
 
-		spinuptimeremain = gpGlobals->time + EASY_CVAR_GET(hassaultSpinupRemainTime);
-		waittime = gpGlobals->time + EASY_CVAR_GET(hassaultWaitTime);
+		spinuptimeremain = gpGlobals->time + EASY_CVAR_GET_DEBUGONLY(hassaultSpinupRemainTime);
+		waittime = gpGlobals->time + EASY_CVAR_GET_DEBUGONLY(hassaultWaitTime);
 
 		EASY_CVAR_PRINTIF_PRE(hassaultPrintout, easyPrintLine( "Residual fire."));
 
@@ -2658,7 +2658,7 @@ Schedule_t* CHAssault::GetSchedule(){
 				return GetScheduleOfType ( SCHED_WAKE_ANGRY );
 			}
 			//MODDD - other condition.  If "noFlinchOnHard" is on and the skill is hard, don't flinch from getting hit.
-			else if (HasConditions(bits_COND_LIGHT_DAMAGE) && !HasMemory( bits_MEMORY_FLINCHED) && !(EASY_CVAR_GET(noFlinchOnHard)==1 && g_iSkillLevel==SKILL_HARD)  )
+			else if (HasConditions(bits_COND_LIGHT_DAMAGE) && !HasMemory( bits_MEMORY_FLINCHED) && !(EASY_CVAR_GET_DEBUGONLY(noFlinchOnHard)==1 && g_iSkillLevel==SKILL_HARD)  )
 			{
 				return GetScheduleOfType( SCHED_SMALL_FLINCH );
 			}
@@ -2993,7 +2993,7 @@ GENERATE_KILLED_IMPLEMENTATION(CHAssault){
 		UTIL_StopSound(ENT(pev), getIdleSpinChannel(), "hassault/hw_spin.wav");
 		UTIL_StopSound(ENT(pev), getIdleSpinChannel(), "hassault/hw_spindown.wav");
 		UTIL_StopSound(ENT(pev), getIdleSpinChannel(), "hassault/hw_spinup.wav");
-		if(EASY_CVAR_GET(hassaultFireSound) >= 2){
+		if(EASY_CVAR_GET_DEBUGONLY(hassaultFireSound) >= 2){
 			resetChainFireSound();
 		}
 		spinuptimeremain = -1;
@@ -3005,7 +3005,7 @@ GENERATE_KILLED_IMPLEMENTATION(CHAssault){
 		//stopIdleSpinSoundForever = TRUE;
 		UTIL_StopSound(ENT(pev), getIdleSpinChannel(), "hassault/hw_spin.wav");
 
-		if(EASY_CVAR_GET(hassaultFireSound) >= 2){
+		if(EASY_CVAR_GET_DEBUGONLY(hassaultFireSound) >= 2){
 			resetChainFireSound();
 		}
 	}
@@ -3053,14 +3053,14 @@ void CHAssault :: MonsterThink ( void )
 	}
 
 	//is that okay.
-	if(EASY_CVAR_GET(hassaultDrawLKP) == 1){
+	if(EASY_CVAR_GET_DEBUGONLY(hassaultDrawLKP) == 1){
 		UTIL_drawLineFrameBoxAround(debugDrawVect, 9, 30, 255, 0, 0);
-	}else if(EASY_CVAR_GET(hassaultDrawLKP) == 2){
+	}else if(EASY_CVAR_GET_DEBUGONLY(hassaultDrawLKP) == 2){
 		UTIL_drawLineFrameBoxAround(m_vecEnemyLKP, 9, 30, 255, 0, 0);
 	}
 	//easyPrintLine("HASSAULT::: whut %s %d  %d", this->getScheduleName(), this->getTaskNumber(), this->HasConditions(bits_COND_ENEMY_DEAD));
 	
-	if(EASY_CVAR_GET(thatWasntPunch) == 1 && this->m_fSequenceFinished){
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(thatWasntPunch) == 1 && this->m_fSequenceFinished){
 
 		switch(RANDOM_LONG(0, 24)){
 
@@ -3212,19 +3212,19 @@ void CHAssault :: MonsterThink ( void )
 				//...apparently we are sticking to calling this ACT_WALK now.
 				if(m_IdealActivity == ACT_WALK){
 					//Spinup finished while walking? We may be able to run now, do a check.
-					if(EASY_CVAR_GET(hassaultSpinMovement) != 2){
+					if(EASY_CVAR_GET_DEBUGONLY(hassaultSpinMovement) != 2){
 						this->signalActivityUpdate = TRUE;
 						SetActivity(ACT_WALK); //keep it as ACT_WALK regardless or else we'll get hell pretty soon.
 					}
 				}
 		}else{
 			//if in the middle of spinning up, forget about the idle spinning.
-			if(spinuptimeIdleSoundDelay == -1 || spinuptimeIdleSoundDelay <= gpGlobals->time && EASY_CVAR_GET(hassaultFireSound) != 3){
+			if(spinuptimeIdleSoundDelay == -1 || spinuptimeIdleSoundDelay <= gpGlobals->time && EASY_CVAR_GET_DEBUGONLY(hassaultFireSound) != 3){
 
 				//still spinning? play idle spinning sound.
-				if(EASY_CVAR_GET(hassaultIdleSpinSound) == 0){
+				if(EASY_CVAR_GET_DEBUGONLY(hassaultIdleSpinSound) == 0){
 					
-				}else if(EASY_CVAR_GET(hassaultIdleSpinSound) == 1){
+				}else if(EASY_CVAR_GET_DEBUGONLY(hassaultIdleSpinSound) == 1){
 					if(idleSpinSoundDelay == -1 || idleSpinSoundDelay <= gpGlobals->time){
 						idleSpinSoundDelay = gpGlobals->time + 0.214;
 					//if(idleSpinSound == FALSE){
@@ -3235,9 +3235,9 @@ void CHAssault :: MonsterThink ( void )
 						UTIL_PlaySound(ENT(pev), getIdleSpinChannel(), "hassault/hw_spin.wav", 1, ATTN_NORM, 0, 100 );
 					}
 					//}
-				}else if(EASY_CVAR_GET(hassaultIdleSpinSound) == 2){
+				}else if(EASY_CVAR_GET_DEBUGONLY(hassaultIdleSpinSound) == 2){
 					UTIL_PlaySound(ENT(pev), getIdleSpinChannel(), "hassault/hw_spin.wav", 1, ATTN_NORM, 0, 100 );
-				}else if(EASY_CVAR_GET(hassaultIdleSpinSound) == 3){
+				}else if(EASY_CVAR_GET_DEBUGONLY(hassaultIdleSpinSound) == 3){
 					
 					if(chainFireSoundDelay <= gpGlobals->time){
 						if(idleSpinSoundDelay == -1 || idleSpinSoundDelay <= gpGlobals->time){
@@ -3246,7 +3246,7 @@ void CHAssault :: MonsterThink ( void )
 							UTIL_PlaySound(ENT(pev), getIdleSpinChannel(), "hassault/hw_spin.wav", 1, ATTN_NORM, 0, 100 );
 						}
 					}
-				}else if(EASY_CVAR_GET(hassaultIdleSpinSound) == 4){
+				}else if(EASY_CVAR_GET_DEBUGONLY(hassaultIdleSpinSound) == 4){
 					if(chainFireSoundDelay <= gpGlobals->time){
 						UTIL_PlaySound(ENT(pev), getIdleSpinChannel(), "hassault/hw_spin.wav", 1, ATTN_NORM, 0, 100 );
 					}
@@ -3300,7 +3300,7 @@ int CHAssault::LookupActivityHard(int activity){
 	/*
 	if(iSelectedActivity == ACT_RUN && spinuptimeremain != -1 && gpGlobals->time <= spinuptimeremain){
 		//Let the hassaultSpinMovement tell us which movement anim to use.
-		switch( (int)EASY_CVAR_GET(hassaultSpinMovement) ){
+		switch( (int)EASY_CVAR_GET_DEBUGONLY(hassaultSpinMovement) ){
 			case 0:
 				//nothing, stay standing.
 				iSelectedActivity = ACT_IDLE;
@@ -3321,7 +3321,7 @@ int CHAssault::LookupActivityHard(int activity){
 	if(iSelectedActivity == ACT_WALK){
 		if(stillSpinning){
 			//Let the hassaultSpinMovement tell us which movement anim to use.
-			switch( (int)EASY_CVAR_GET(hassaultSpinMovement) ){
+			switch( (int)EASY_CVAR_GET_DEBUGONLY(hassaultSpinMovement) ){
 				case 0:
 					//nothing, stay standing.
 					iSelectedActivity = ACT_IDLE;
@@ -3422,10 +3422,10 @@ int CHAssault::LookupActivityHard(int activity){
 			EASY_CVAR_PRINTIF_PRE(hassaultPrintout, easyPrintLine( "YEEE"));
 
 	
-			m_flFramerateSuggestion = EASY_CVAR_GET(hassaultMeleeAnimSpeedMulti);
+			m_flFramerateSuggestion = EASY_CVAR_GET_DEBUGONLY(hassaultMeleeAnimSpeedMulti);
 
 			//?
-			pev->framerate = EASY_CVAR_GET(hassaultMeleeAnimSpeedMulti);
+			pev->framerate = EASY_CVAR_GET_DEBUGONLY(hassaultMeleeAnimSpeedMulti);
 
 			//pev->renderfx |= STOPINTR;
 			//pev->framerate = 1.2;

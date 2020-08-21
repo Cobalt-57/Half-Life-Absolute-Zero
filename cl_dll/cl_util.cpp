@@ -128,7 +128,7 @@ void lateCVarInit(void){
 	//gEngfuncs.pfnClientCmd("_default_fov %f", global2PSEUDO_default_fov);
 	easyClientCommand("_default_fov %f", global2PSEUDO_default_fov);
 
-	global2PSEUDO_auto_adjust_fov = EASY_CVAR_GET(auto_adjust_fov);
+	global2PSEUDO_auto_adjust_fov = EASY_CVAR_GET_CLIENTONLY(auto_adjust_fov);
 	easyClientCommand("_auto_adjust_fov %f", global2PSEUDO_auto_adjust_fov);
 	
 	updateAutoFOV();  //do we even need to do this here?
@@ -208,8 +208,8 @@ void updateClientCVarRefs(void){
 		easyClientCommand("_auto_determined_fov %f", globalPSEUDO_autoDeterminedFOV);
 	}
 	
-	if(EASY_CVAR_GET(auto_adjust_fov) != global2PSEUDO_auto_adjust_fov){
-		global2PSEUDO_auto_adjust_fov = EASY_CVAR_GET(auto_adjust_fov);
+	if(EASY_CVAR_GET_CLIENTONLY(auto_adjust_fov) != global2PSEUDO_auto_adjust_fov){
+		global2PSEUDO_auto_adjust_fov = EASY_CVAR_GET_CLIENTONLY(auto_adjust_fov);
 		easyClientCommand("_auto_adjust_fov %f", global2PSEUDO_auto_adjust_fov);
 	}
 	

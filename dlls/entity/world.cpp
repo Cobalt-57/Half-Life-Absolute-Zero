@@ -35,7 +35,7 @@
 #include "teamplay_gamerules.h"
 
 
-EASY_CVAR_EXTERN(sv_germancensorship)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(sv_germancensorship)
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST(playerBulletHitEffectForceServer)
 
 
@@ -158,7 +158,7 @@ void CDecal :: StaticDecal( void )
 
 //DOOMMARINE23 If we're in censorship mode, replace all dynamic blood placed by the level designer with censored versions.
 //WELCOME TO IF/ELSE HELL
-		if (EASY_CVAR_GET(sv_germancensorship))
+		if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(sv_germancensorship))
 		{	
 			if ((int)pev->skin >= 230 && (int)pev->skin <= 237)	//Dynamic Human Blood {blood1 through {blood 8
 				{
@@ -727,7 +727,7 @@ void CWorld :: Precache( void )
 	for ( int i = 0; i < DLL_DECALLIST_SIZE; i++ ){
 		gDecals[i].index = DECAL_INDEX( gDecals[i].name );
 
-		if(EASY_CVAR_GET(hiddenMemPrintout) == 1){
+		if(EASY_CVAR_GET_DEBUGONLY(hiddenMemPrintout) == 1){
 			easyForcePrintLine("DECAL DERIVATION: %s %d", gDecals[i].name, gDecals[i].index);
 		}
 	}

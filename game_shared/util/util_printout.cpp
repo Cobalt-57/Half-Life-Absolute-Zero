@@ -49,13 +49,13 @@
 //http://stackoverflow.com/questions/7031116/how-to-create-function-like-printf-variable-argument
 //http://stackoverflow.com/questions/3530771/passing-variable-arguments-to-another-function-that-accepts-a-variable-argument
 //
-EASY_CVAR_EXTERN(hgruntPrintout)
-EASY_CVAR_EXTERN(panthereyePrintout)
-EASY_CVAR_EXTERN(squadmonsterPrintout)
-EASY_CVAR_EXTERN(hassaultPrintout)
-EASY_CVAR_EXTERN(gargantuaPrintout)
-EASY_CVAR_EXTERN(barnaclePrintout)
-EASY_CVAR_EXTERN(houndeyePrintout)
+EASY_CVAR_EXTERN_DEBUGONLY(hgruntPrintout)
+EASY_CVAR_EXTERN_DEBUGONLY(panthereyePrintout)
+EASY_CVAR_EXTERN_DEBUGONLY(squadmonsterPrintout)
+EASY_CVAR_EXTERN_DEBUGONLY(hassaultPrintout)
+EASY_CVAR_EXTERN_DEBUGONLY(gargantuaPrintout)
+EASY_CVAR_EXTERN_DEBUGONLY(barnaclePrintout)
+EASY_CVAR_EXTERN_DEBUGONLY(houndeyePrintout)
 
 extern int gmsgTextMsg;
 extern int gmsgSayText;

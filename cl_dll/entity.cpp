@@ -21,14 +21,14 @@
 
 //MODDD - externs.
 EASY_CVAR_EXTERN(cl_muzzleflash)
-EASY_CVAR_EXTERN(event5011Allowed)
-EASY_CVAR_EXTERN(event5021Allowed)
-EASY_CVAR_EXTERN(event5031Allowed)
-EASY_CVAR_EXTERN(event5002Allowed)
-EASY_CVAR_EXTERN(event5004Allowed)
-EASY_CVAR_EXTERN(eventsAreFabulous)
-EASY_CVAR_EXTERN(trailTypeTest)
-EASY_CVAR_EXTERN(muteTempEntityGroundHitSound)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(event5011Allowed)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(event5021Allowed)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(event5031Allowed)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(event5002Allowed)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(event5004Allowed)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(eventsAreFabulous)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(trailTypeTest)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(muteTempEntityGroundHitSound)
 
 
 
@@ -626,7 +626,7 @@ void DLLEXPORT HUD_StudioEvent( const struct mstudioevent_s *event, const struct
 	
 	//easyPrintLine("What? %d", entity->curstate.iuser1 );
 
-	if(EASY_CVAR_GET(eventsAreFabulous) == 1){
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(eventsAreFabulous) == 1){
 		gEngfuncs.pEfxAPI->R_SparkEffect( (float *)&entity->attachment[0], 25, -100, 100 );
 		gEngfuncs.pEfxAPI->R_SparkEffect( (float *)&entity->attachment[0], 25, -100, 100 );
 		gEngfuncs.pEfxAPI->R_SparkEffect( (float *)&entity->attachment[0], 25, -100, 100 );
@@ -714,7 +714,7 @@ void DLLEXPORT HUD_StudioEvent( const struct mstudioevent_s *event, const struct
 		break;
 	case 5011:
 		
-		if(EASY_CVAR_GET(event5011Allowed) == 0){
+		if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(event5011Allowed) == 0){
 			return;
 		}
 
@@ -729,19 +729,19 @@ void DLLEXPORT HUD_StudioEvent( const struct mstudioevent_s *event, const struct
 
 
 
-		if(EASY_CVAR_GET(event5021Allowed) == 0){
+		if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(event5021Allowed) == 0){
 			return;
 		}
 		gEngfuncs.pEfxAPI->R_MuzzleFlash( (float *)&entity->attachment[2], atoi( event->options) );
 		break;
 	case 5031:
-		if(EASY_CVAR_GET(event5031Allowed) == 0){
+		if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(event5031Allowed) == 0){
 			return;
 		}
 		gEngfuncs.pEfxAPI->R_MuzzleFlash( (float *)&entity->attachment[3], atoi( event->options) );
 		break;
 	case 5002:
-		if(EASY_CVAR_GET(event5002Allowed) == 0){
+		if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(event5002Allowed) == 0){
 			return;
 		}
 		gEngfuncs.pEfxAPI->R_SparkEffect( (float *)&entity->attachment[0], atoi( event->options), -100, 100 );
@@ -749,8 +749,8 @@ void DLLEXPORT HUD_StudioEvent( const struct mstudioevent_s *event, const struct
 	// Client side sound
 	
 	case 5004:
-		//easyForcePrintLine("HUD_StudioEvent, 5004 extra info: %s : can?%.1f", (char*)event->options, EASY_CVAR_GET(event5004Allowed));
-		if(EASY_CVAR_GET(event5004Allowed) == 0){
+		//easyForcePrintLine("HUD_StudioEvent, 5004 extra info: %s : can?%.1f", (char*)event->options, EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(event5004Allowed));
+		if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(event5004Allowed) == 0){
 			return;
 		}
 		gEngfuncs.pfnPlaySoundByNameAtLocation( (char *)event->options, 1.0, (float *)&entity->attachment[0] );
@@ -1079,7 +1079,7 @@ void DLLEXPORT HUD_TempEntUpdate (
 					if (pTemp->hitSound)
 					{
 						//easyPrintLine("WHAT IS HITSOUND %d", pTemp->hitSound);
-						if(EASY_CVAR_GET(muteTempEntityGroundHitSound) != 1){
+						if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(muteTempEntityGroundHitSound) != 1){
 							Callback_TempEntPlaySound(pTemp, damp);
 						}
 					}
@@ -1138,12 +1138,12 @@ void DLLEXPORT HUD_TempEntUpdate (
 
 
 
-			if(EASY_CVAR_GET(trailTypeTest) != -1){
+			if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(trailTypeTest) != -1){
 				//we will use "trailTypeTest" as the trail type.
 				//if ( (pTemp->flags & FTENT_SMOKETRAIL) )
 				{
 					//DEFAULT IS 1!!!
-				//	gEngfuncs.pEfxAPI->R_RocketTrail (pTemp->entity.prevstate.origin, pTemp->entity.origin, (int)EASY_CVAR_GET(trailTypeTest) );
+				//	gEngfuncs.pEfxAPI->R_RocketTrail (pTemp->entity.prevstate.origin, pTemp->entity.origin, (int)EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(trailTypeTest) );
 				}
 
 			}else{
@@ -1160,7 +1160,7 @@ void DLLEXPORT HUD_TempEntUpdate (
 				/*
 				if ( (pTemp->flags & FTENT_TESTTRAIL) )
 				{
-					gEngfuncs.pEfxAPI->R_RocketTrail (pTemp->entity.prevstate.origin, pTemp->entity.origin, (int)EASY_CVAR_GET(testVar));
+					gEngfuncs.pEfxAPI->R_RocketTrail (pTemp->entity.prevstate.origin, pTemp->entity.origin, (int)EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(testVar));
 				}
 				*/
 			}

@@ -37,7 +37,7 @@
 #include "r_efx.h"
 #include "util_debugdraw.h"
 
-EASY_CVAR_EXTERN(sparksComputerHitMulti)
+EASY_CVAR_EXTERN_DEBUGONLY(sparksComputerHitMulti)
 
 extern DLL_GLOBAL Vector g_vecAttackDir;
 
@@ -564,7 +564,7 @@ GENERATE_TRACEATTACK_IMPLEMENTATION(CBreakable)
 			case matComputer:
 			{
 				//MODDD!
-				//UTIL_Sparks( ptr->vecEndPos, DEFAULT_SPARK_BALLS, EASY_CVAR_GET(sparksComputerHitMulti) );
+				//UTIL_Sparks( ptr->vecEndPos, DEFAULT_SPARK_BALLS, EASY_CVAR_GET_DEBUGONLY(sparksComputerHitMulti) );
 
 				float flVolume = RANDOM_FLOAT ( 0.7 , 1.0 );//random volume range
 				switch ( RANDOM_LONG(0,1) )

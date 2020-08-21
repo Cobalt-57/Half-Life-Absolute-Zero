@@ -25,12 +25,12 @@
 #include "gamerules.h"
 
 //MODDD
-EASY_CVAR_EXTERN(sparksComputerHitMulti)
-EASY_CVAR_EXTERN(muteBulletHitSounds)
+EASY_CVAR_EXTERN_DEBUGONLY(sparksComputerHitMulti)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(muteBulletHitSounds)
 
-EASY_CVAR_EXTERN(announcerIsAJerk)
-EASY_CVAR_EXTERN(textureHitSoundPrintouts)
-EASY_CVAR_EXTERN(forceAllowServersideTextureSounds)
+EASY_CVAR_EXTERN_DEBUGONLY(announcerIsAJerk)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(textureHitSoundPrintouts)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(forceAllowServersideTextureSounds)
 
 
 
@@ -1747,14 +1747,14 @@ float TEXTURETYPE_PlaySound(TraceResult *ptr,  Vector vecSrc, Vector vecEnd, int
 	float fattn = ATTN_NORM;
 
 
-	if(EASY_CVAR_GET(muteBulletHitSounds) == 1){
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(muteBulletHitSounds) == 1){
 		return 0;
 	}
 
 	//MODDD - if CVar forceAllowServersideTextureSounds is 1, deny this early termination.
 	//MODDD - different approach altogheter.  Sometimes we still rely on the "fvolbar" returned regardless
 	//        of whether we mean to play a sound or not.  So handle these at the end instead.
-	//if (EASY_CVAR_GET(forceAllowServersideTextureSounds) < 1 && !g_pGameRules->PlayTextureSounds() )
+	//if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(forceAllowServersideTextureSounds) < 1 && !g_pGameRules->PlayTextureSounds() )
 	//	return 0.0;
 
 	chTextureType = 0;
@@ -1844,7 +1844,7 @@ float TEXTURETYPE_PlaySound(TraceResult *ptr,  Vector vecSrc, Vector vecEnd, int
 	}//END OF world check
 
 	
-	if(EASY_CVAR_GET(textureHitSoundPrintouts)==1)easyForcePrintLine("SND PLAY TEXTURE SOUND: %d, %c", (int)chTextureType, chTextureType);
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(textureHitSoundPrintouts)==1)easyForcePrintLine("SND PLAY TEXTURE SOUND: %d, %c", (int)chTextureType, chTextureType);
 
 	switch (chTextureType)
 	{
@@ -1942,7 +1942,7 @@ float TEXTURETYPE_PlaySound(TraceResult *ptr,  Vector vecSrc, Vector vecEnd, int
 
 			//MODDD!
 			//UTIL_Sparks( ptr->vecEndPos );
-			UTIL_Sparks( ptr->vecEndPos, DEFAULT_SPARK_BALLS, EASY_CVAR_GET(sparksComputerHitMulti) );
+			UTIL_Sparks( ptr->vecEndPos, DEFAULT_SPARK_BALLS, EASY_CVAR_GET_DEBUGONLY(sparksComputerHitMulti) );
 
 
 			float flVolume = RANDOM_FLOAT ( 0.7 , 1.0 );//random volume range
@@ -1957,7 +1957,7 @@ float TEXTURETYPE_PlaySound(TraceResult *ptr,  Vector vecSrc, Vector vecEnd, int
 	}
 	
 	//MODDD - down here, actually play the sound if we want to.
-	if (EASY_CVAR_GET(forceAllowServersideTextureSounds) >= 1 || g_pGameRules->PlayTextureSounds() ){
+	if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(forceAllowServersideTextureSounds) >= 1 || g_pGameRules->PlayTextureSounds() ){
 		if(cnt > 0){
 			// play material hit sound
 			EMIT_AMBIENT_SOUND(ENT(0), ptr->vecEndPos, rgsz[RANDOM_LONG(0,cnt-1)], fvol, fattn, 0, 96 + RANDOM_LONG(0,0xf));
@@ -2008,7 +2008,7 @@ void CSpeaker :: Spawn( void )
 	char* szSoundFile = (char*) STRING(pev->message);
 
 	//if this CVar is on, don't care about this early stop.
-	if ( EASY_CVAR_GET(announcerIsAJerk) <= 0 &&     (!m_preset && (FStringNull( pev->message ) || strlen( szSoundFile ) < 1 ))   )
+	if ( EASY_CVAR_GET_DEBUGONLY(announcerIsAJerk) <= 0 &&     (!m_preset && (FStringNull( pev->message ) || strlen( szSoundFile ) < 1 ))   )
 	{
 		ALERT( at_error, "SPEAKER with no Level/Sentence! at: %f, %f, %f\n", pev->origin.x, pev->origin.y, pev->origin.z );
 		pev->nextthink = gpGlobals->time + 0.1;
@@ -2020,7 +2020,7 @@ void CSpeaker :: Spawn( void )
 
 	
 	SetThink(&CSpeaker::SpeakerThink);
-	if(EASY_CVAR_GET(announcerIsAJerk) > 0){
+	if(EASY_CVAR_GET_DEBUGONLY(announcerIsAJerk) > 0){
 		pev->nextthink = gpGlobals->time + 5;
 	}else{
 		pev->nextthink = 0.0;
@@ -2037,7 +2037,7 @@ void CSpeaker :: Spawn( void )
 void CSpeaker :: Precache( void )
 {
 
-	if( EASY_CVAR_GET(announcerIsAJerk) > 0){
+	if( EASY_CVAR_GET_DEBUGONLY(announcerIsAJerk) > 0){
 		pev->nextthink = gpGlobals->time + 5;
 		return;
 	}
@@ -2055,7 +2055,7 @@ void CSpeaker :: SpeakerThink( void )
 	int pitch = 100;
 
 
-	if( EASY_CVAR_GET(announcerIsAJerk) > 0){
+	if( EASY_CVAR_GET_DEBUGONLY(announcerIsAJerk) > 0){
 		pev->nextthink = gpGlobals->time + RANDOM_FLOAT(11, 16);
 		flvolume = 1.0;
 		SENTENCEG_PlayRndSz_Ambient ( ENT(pev), pev->origin, "voxjerk", flvolume, flattenuation, flags, pitch);
@@ -2130,7 +2130,7 @@ void CSpeaker :: ToggleUse ( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_
 	int fActive = (pev->nextthink > 0.0);
 
 
-	if(EASY_CVAR_GET(announcerIsAJerk) > 0){
+	if(EASY_CVAR_GET_DEBUGONLY(announcerIsAJerk) > 0){
 		//return. No damns given.
 		return;
 	}

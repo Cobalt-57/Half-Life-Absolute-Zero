@@ -30,8 +30,8 @@
 #include "saverestore.h"
 #include "util_debugdraw.h"
 
-EASY_CVAR_EXTERN(trackchangePrintouts)
-EASY_CVAR_EXTERN(trackTrainPrintouts)
+EASY_CVAR_EXTERN_DEBUGONLY(trackchangePrintouts)
+EASY_CVAR_EXTERN_DEBUGONLY(trackTrainPrintouts)
 
 
 
@@ -1198,7 +1198,7 @@ void CFuncTrackTrain :: Next( void )
 	
 	//trackchangePrintouts
 
-	if(EASY_CVAR_GET(trackTrainPrintouts)){
+	if(EASY_CVAR_GET_DEBUGONLY(trackTrainPrintouts)){
 		if(pnext != NULL){
 			easyForcePrintLine("TRAIN: Current path:%s, ID:%d. LookAhead\'s next is: %s, ID:%d.", m_ppath->pev->targetname!=NULL?STRING(m_ppath->pev->targetname):"NULL", m_ppath->PathTrackID,    pnext->pev->targetname!=NULL?STRING(pnext->pev->targetname):"NULL", pnext->PathTrackID);
 		}else{
@@ -1691,7 +1691,7 @@ void CFuncTrackChange :: Spawn( void )
 	//Bump this global count by 1 for the next one that spawns to keep the ID handed out unique.
 	FuncTrackChangeIDLatest++;
 
-	if (EASY_CVAR_GET(trackchangePrintouts) == 1) {
+	if (EASY_CVAR_GET_DEBUGONLY(trackchangePrintouts) == 1) {
 		easyForcePrintLine("CFuncTrackChange%d:Spawn. called. Classname:%s Starting Origin:(%.2f,%.2f,%.2f)", FuncTrackChangeID, STRING(pev->classname), pev->origin.x, pev->origin.y, pev->origin.z);
 	}
 
@@ -1702,7 +1702,7 @@ void CFuncTrackChange :: Spawn( void )
 	SetupRotation();
 
 
-	if (EASY_CVAR_GET(trackchangePrintouts) == 1) {
+	if (EASY_CVAR_GET_DEBUGONLY(trackchangePrintouts) == 1) {
 		easyForcePrintLine("CFuncTrackChange%d:Spawn. SPAWNFLAGS: ActivateTrain:%d Relink:%d Rotmove:%d StartBottom:%d DontMove:%d",
 			FuncTrackChangeID,
 			(pev->spawnflags & SF_TRACK_ACTIVATETRAIN) != 0,
@@ -1721,7 +1721,7 @@ void CFuncTrackChange :: Spawn( void )
 		m_toggle_state = TS_AT_BOTTOM;
 		pev->angles = m_start;
 		m_targetState = TS_AT_TOP;
-		if (EASY_CVAR_GET(trackchangePrintouts) == 1) {
+		if (EASY_CVAR_GET_DEBUGONLY(trackchangePrintouts) == 1) {
 			easyForcePrintLine("CFuncTrackChange%d:Spawn. Starting at bottom. ToggleState is TS_AT_BOTTOM, TargetState is TS_AT_TOP. New origin: (%.2f,%.2f,%.2f)", FuncTrackChangeID, pev->origin.x, pev->origin.y, pev->origin.z);
 		}
 	}
@@ -1731,7 +1731,7 @@ void CFuncTrackChange :: Spawn( void )
 		m_toggle_state = TS_AT_TOP;
 		pev->angles = m_end;
 		m_targetState = TS_AT_BOTTOM;
-		if (EASY_CVAR_GET(trackchangePrintouts) == 1) {
+		if (EASY_CVAR_GET_DEBUGONLY(trackchangePrintouts) == 1) {
 			easyForcePrintLine("CFuncTrackChange%d:Spawn. Starting at top. ToggleState is TS_AT_TOP, TargetState is TS_AT_BOTTOM. New origin: (%.2f,%.2f,%.2f)", FuncTrackChangeID, pev->origin.x, pev->origin.y, pev->origin.z);
 		}
 	}
@@ -1786,9 +1786,9 @@ void CFuncTrackChange :: KeyValue( KeyValueData *pkvd )
 
 	if(pkvd->fHandled){
 		//print out now because we only want our own custom vars to be printed out
-		if(EASY_CVAR_GET(trackchangePrintouts)==1)easyForcePrintLine("CFuncTrackChange%d:KeyValue. Term:%s value:%s", FuncTrackChangeID, pkvd->szKeyName, pkvd->szValue );
+		if(EASY_CVAR_GET_DEBUGONLY(trackchangePrintouts)==1)easyForcePrintLine("CFuncTrackChange%d:KeyValue. Term:%s value:%s", FuncTrackChangeID, pkvd->szKeyName, pkvd->szValue );
 	}else{
-		if(EASY_CVAR_GET(trackchangePrintouts)==1)easyForcePrintLine("CFuncTrackChange%d:GENERIC KeyValue. Term:%s value:%s", FuncTrackChangeID, pkvd->szKeyName, pkvd->szValue );
+		if(EASY_CVAR_GET_DEBUGONLY(trackchangePrintouts)==1)easyForcePrintLine("CFuncTrackChange%d:GENERIC KeyValue. Term:%s value:%s", FuncTrackChangeID, pkvd->szKeyName, pkvd->szValue );
 	}
 
 }
@@ -1809,7 +1809,7 @@ void CFuncTrackChange::OverrideReset( void )
 //             old way was called ALERT.
 void CFuncTrackChange :: Find( void )
 {
-	if(EASY_CVAR_GET(trackchangePrintouts)==1)easyForcePrintLine("CFuncTrackChange%d:Find. trainName:%s trackBottomName:%s trackTopName:%s", FuncTrackChangeID, STRING(m_trainName), STRING(m_trackBottomName), STRING(m_trackTopName) );
+	if(EASY_CVAR_GET_DEBUGONLY(trackchangePrintouts)==1)easyForcePrintLine("CFuncTrackChange%d:Find. trainName:%s trackBottomName:%s trackTopName:%s", FuncTrackChangeID, STRING(m_trainName), STRING(m_trackBottomName), STRING(m_trackTopName) );
 	// Find track entities
 	edict_t *target;
 
@@ -1827,7 +1827,7 @@ void CFuncTrackChange :: Find( void )
 				m_train = CFuncTrackTrain::Instance( FIND_ENTITY_BY_TARGETNAME( NULL, STRING(m_trainName) ) );
 				if ( !m_train )
 				{
-					if(EASY_CVAR_GET(trackchangePrintouts)==1)easyForcePrintLine("Can't find train for track change! %s\n", STRING(m_trainName) );
+					if(EASY_CVAR_GET_DEBUGONLY(trackchangePrintouts)==1)easyForcePrintLine("Can't find train for track change! %s\n", STRING(m_trainName) );
 					return;
 				}
 				Vector center = (pev->absmin + pev->absmax) * 0.5;
@@ -1839,16 +1839,16 @@ void CFuncTrackChange :: Find( void )
 			}
 			else
 			{
-				if(EASY_CVAR_GET(trackchangePrintouts)==1)easyForcePrintLine("Can't find train for track change! %s\n", STRING(m_trainName) );
+				if(EASY_CVAR_GET_DEBUGONLY(trackchangePrintouts)==1)easyForcePrintLine("Can't find train for track change! %s\n", STRING(m_trainName) );
 				target = FIND_ENTITY_BY_TARGETNAME( NULL, STRING(m_trainName) );
 			}
 		}
 		else{
-			if(EASY_CVAR_GET(trackchangePrintouts)==1)easyForcePrintLine("Can't find bottom track for track change! %s\n", STRING(m_trackBottomName) );
+			if(EASY_CVAR_GET_DEBUGONLY(trackchangePrintouts)==1)easyForcePrintLine("Can't find bottom track for track change! %s\n", STRING(m_trackBottomName) );
 		}
 	}
 	else{
-		if(EASY_CVAR_GET(trackchangePrintouts)==1)easyForcePrintLine("Can't find top track for track change! %s\n", STRING(m_trackTopName) );
+		if(EASY_CVAR_GET_DEBUGONLY(trackchangePrintouts)==1)easyForcePrintLine("Can't find top track for track change! %s\n", STRING(m_trackTopName) );
 	}
 }
 
@@ -1859,7 +1859,7 @@ TRAIN_CODE CFuncTrackChange :: EvaluateTrain( CPathTrack *pcurrent )
 
 	// Go ahead and work, we don't have anything to switch, so just be an elevator
 	if ( !pcurrent || !m_train ){
-		if(EASY_CVAR_GET(trackchangePrintouts)==1)easyForcePrintLine("CFuncTrackChange%d:EvaluateTrain. called. pcurrent and m_train are null. Returned TRAIN_SAFE", FuncTrackChangeID);
+		if(EASY_CVAR_GET_DEBUGONLY(trackchangePrintouts)==1)easyForcePrintLine("CFuncTrackChange%d:EvaluateTrain. called. pcurrent and m_train are null. Returned TRAIN_SAFE", FuncTrackChangeID);
 		return TRAIN_SAFE;
 	}
 
@@ -1867,32 +1867,32 @@ TRAIN_CODE CFuncTrackChange :: EvaluateTrain( CPathTrack *pcurrent )
 		 (pcurrent->m_pnext && m_train->m_ppath == pcurrent->m_pnext) )
 	{
 		if ( m_train->pev->speed != 0 ){
-			if(EASY_CVAR_GET(trackchangePrintouts)==1)easyForcePrintLine("CFuncTrackChange%d:EvaluateTrain. called. m_train speed is not 0. Returned TRAIN_BLOCKING", FuncTrackChangeID);
+			if(EASY_CVAR_GET_DEBUGONLY(trackchangePrintouts)==1)easyForcePrintLine("CFuncTrackChange%d:EvaluateTrain. called. m_train speed is not 0. Returned TRAIN_BLOCKING", FuncTrackChangeID);
 			return TRAIN_BLOCKING;
 		}
 
 		Vector dist = pev->origin - m_train->pev->origin;
 		float length = dist.Length2D();
 		if ( length < m_train->m_length ){		// Empirically determined close distance
-			if(EASY_CVAR_GET(trackchangePrintouts)==1)easyForcePrintLine("CFuncTrackChange%d:EvaluateTrain. called. distance from me to train is less than m_train\'s m_length. Returned TRAIN_FOLLOWING", FuncTrackChangeID);
+			if(EASY_CVAR_GET_DEBUGONLY(trackchangePrintouts)==1)easyForcePrintLine("CFuncTrackChange%d:EvaluateTrain. called. distance from me to train is less than m_train\'s m_length. Returned TRAIN_FOLLOWING", FuncTrackChangeID);
 			return TRAIN_FOLLOWING;
 		}else if ( length > (150 + m_train->m_length) ){
-			if(EASY_CVAR_GET(trackchangePrintouts)==1)easyForcePrintLine("CFuncTrackChange%d:EvaluateTrain. called. length greater than 150 above m_train\'s length. Returned TRAIN_SAFE", FuncTrackChangeID);
+			if(EASY_CVAR_GET_DEBUGONLY(trackchangePrintouts)==1)easyForcePrintLine("CFuncTrackChange%d:EvaluateTrain. called. length greater than 150 above m_train\'s length. Returned TRAIN_SAFE", FuncTrackChangeID);
 			return TRAIN_SAFE;
 		}
 		
-		if(EASY_CVAR_GET(trackchangePrintouts)==1)easyForcePrintLine("CFuncTrackChange%d:EvaluateTrain. called. Fall-thru: Returned TRAIN_BLOCKING", FuncTrackChangeID);
+		if(EASY_CVAR_GET_DEBUGONLY(trackchangePrintouts)==1)easyForcePrintLine("CFuncTrackChange%d:EvaluateTrain. called. Fall-thru: Returned TRAIN_BLOCKING", FuncTrackChangeID);
 		return TRAIN_BLOCKING;
 	}
 	
-	if(EASY_CVAR_GET(trackchangePrintouts)==1)easyForcePrintLine("CFuncTrackChange%d:EvaluateTrain. called. Fall-thru: Returned TRAIN_SAFE", FuncTrackChangeID);
+	if(EASY_CVAR_GET_DEBUGONLY(trackchangePrintouts)==1)easyForcePrintLine("CFuncTrackChange%d:EvaluateTrain. called. Fall-thru: Returned TRAIN_SAFE", FuncTrackChangeID);
 	return TRAIN_SAFE;
 }
 
 
 void CFuncTrackChange :: UpdateTrain( Vector &dest )
 {
-	if(EASY_CVAR_GET(trackchangePrintouts)==1)easyForcePrintLine("CFuncTrackChange%d:UpdateTrain. called.", FuncTrackChangeID);
+	if(EASY_CVAR_GET_DEBUGONLY(trackchangePrintouts)==1)easyForcePrintLine("CFuncTrackChange%d:UpdateTrain. called.", FuncTrackChangeID);
 
 	float time = (pev->nextthink - pev->ltime);
 
@@ -1904,7 +1904,7 @@ void CFuncTrackChange :: UpdateTrain( Vector &dest )
 
 	// Attempt at getting the train to rotate properly around the origin of the trackchange
 	if ( time <= 0 ){
-		if(EASY_CVAR_GET(trackchangePrintouts)==1)easyForcePrintLine("CFuncTrackChange%d:UpdateTrain. BLOCKED by time <= 0.", FuncTrackChangeID);
+		if(EASY_CVAR_GET_DEBUGONLY(trackchangePrintouts)==1)easyForcePrintLine("CFuncTrackChange%d:UpdateTrain. BLOCKED by time <= 0.", FuncTrackChangeID);
 		return;
 	}
 
@@ -1923,7 +1923,7 @@ void CFuncTrackChange :: UpdateTrain( Vector &dest )
 
 void CFuncTrackChange :: GoDown( void )
 {
-	if(EASY_CVAR_GET(trackchangePrintouts)==1)easyForcePrintLine("CFuncTrackChange%d:GoDown. called. m_code:%s", FuncTrackChangeID, TRAIN_CODE_STR[m_code]);
+	if(EASY_CVAR_GET_DEBUGONLY(trackchangePrintouts)==1)easyForcePrintLine("CFuncTrackChange%d:GoDown. called. m_code:%s", FuncTrackChangeID, TRAIN_CODE_STR[m_code]);
 
 	if ( m_code == TRAIN_BLOCKING )
 		return;
@@ -1961,7 +1961,7 @@ void CFuncTrackChange :: GoDown( void )
 //
 void CFuncTrackChange :: GoUp( void )
 {
-	if(EASY_CVAR_GET(trackchangePrintouts)==1)easyForcePrintLine("CFuncTrackChange%d:GoUp. called. m_code:%s", FuncTrackChangeID, TRAIN_CODE_STR[m_code]);
+	if(EASY_CVAR_GET_DEBUGONLY(trackchangePrintouts)==1)easyForcePrintLine("CFuncTrackChange%d:GoUp. called. m_code:%s", FuncTrackChangeID, TRAIN_CODE_STR[m_code]);
 
 	if ( m_code == TRAIN_BLOCKING )
 		return;
@@ -1999,27 +1999,27 @@ void CFuncTrackChange :: GoUp( void )
 void CFuncTrackChange :: UpdateAutoTargets( int toggleState )
 {
 	
-	if(EASY_CVAR_GET(trackchangePrintouts)==1)easyForcePrintLine("CFuncTrackChange%d:UpdateAutoTargets. called. m_trackTopNotNull?%d m_trackBottomNotNull?%d togglestate:%s", FuncTrackChangeID, m_trackTop!=NULL, m_trackBottom!=NULL, TOGGLE_STATE_STR_Safe(toggleState) );
+	if(EASY_CVAR_GET_DEBUGONLY(trackchangePrintouts)==1)easyForcePrintLine("CFuncTrackChange%d:UpdateAutoTargets. called. m_trackTopNotNull?%d m_trackBottomNotNull?%d togglestate:%s", FuncTrackChangeID, m_trackTop!=NULL, m_trackBottom!=NULL, TOGGLE_STATE_STR_Safe(toggleState) );
 
 
 	if ( !m_trackTop || !m_trackBottom ){
-		if(EASY_CVAR_GET(trackchangePrintouts)==1)easyForcePrintLine("CFuncTrackChange%d:UpdateAutoTargets. BLOCKED: both trackTop and trackBottom are null.", FuncTrackChangeID) ;
+		if(EASY_CVAR_GET_DEBUGONLY(trackchangePrintouts)==1)easyForcePrintLine("CFuncTrackChange%d:UpdateAutoTargets. BLOCKED: both trackTop and trackBottom are null.", FuncTrackChangeID) ;
 		return;
 	}
 
 	if ( toggleState == TS_AT_TOP ){
-		if(EASY_CVAR_GET(trackchangePrintouts)==1)easyForcePrintLine("CFuncTrackChange%d:UpdateAutoTargets. toggleState is TS_AT_TOP: Cleared bit SF_PATH_DISABLED", FuncTrackChangeID);
+		if(EASY_CVAR_GET_DEBUGONLY(trackchangePrintouts)==1)easyForcePrintLine("CFuncTrackChange%d:UpdateAutoTargets. toggleState is TS_AT_TOP: Cleared bit SF_PATH_DISABLED", FuncTrackChangeID);
 		ClearBits( m_trackTop->pev->spawnflags, SF_PATH_DISABLED );
 	}else{
-		if(EASY_CVAR_GET(trackchangePrintouts)==1)easyForcePrintLine("CFuncTrackChange%d:UpdateAutoTargets. toggleState not TS_AT_TOP: Set bit SF_PATH_DISABLED", FuncTrackChangeID);
+		if(EASY_CVAR_GET_DEBUGONLY(trackchangePrintouts)==1)easyForcePrintLine("CFuncTrackChange%d:UpdateAutoTargets. toggleState not TS_AT_TOP: Set bit SF_PATH_DISABLED", FuncTrackChangeID);
 		SetBits( m_trackTop->pev->spawnflags, SF_PATH_DISABLED );
 	}
 	
 	if ( toggleState == TS_AT_BOTTOM ){
-		if(EASY_CVAR_GET(trackchangePrintouts)==1)easyForcePrintLine("CFuncTrackChange%d:UpdateAutoTargets. toggleState is TS_AT_BOTTOM: Cleared bit SF_PATH_DISABLED", FuncTrackChangeID);
+		if(EASY_CVAR_GET_DEBUGONLY(trackchangePrintouts)==1)easyForcePrintLine("CFuncTrackChange%d:UpdateAutoTargets. toggleState is TS_AT_BOTTOM: Cleared bit SF_PATH_DISABLED", FuncTrackChangeID);
 		ClearBits( m_trackBottom->pev->spawnflags, SF_PATH_DISABLED );
 	}else{
-		if(EASY_CVAR_GET(trackchangePrintouts)==1)easyForcePrintLine("CFuncTrackChange%d:UpdateAutoTargets. toggleState not TS_AT_BOTTOM: Set bit SF_PATH_DISABLED", FuncTrackChangeID);
+		if(EASY_CVAR_GET_DEBUGONLY(trackchangePrintouts)==1)easyForcePrintLine("CFuncTrackChange%d:UpdateAutoTargets. toggleState not TS_AT_BOTTOM: Set bit SF_PATH_DISABLED", FuncTrackChangeID);
 		SetBits( m_trackBottom->pev->spawnflags, SF_PATH_DISABLED );
 	}
 }
@@ -2027,10 +2027,10 @@ void CFuncTrackChange :: UpdateAutoTargets( int toggleState )
 
 void CFuncTrackChange :: Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
 {
-	if(EASY_CVAR_GET(trackchangePrintouts)==1)easyForcePrintLine("CFuncTrackChange%d:Use. called. m_code:%s", FuncTrackChangeID, TRAIN_CODE_STR[m_code]);
+	if(EASY_CVAR_GET_DEBUGONLY(trackchangePrintouts)==1)easyForcePrintLine("CFuncTrackChange%d:Use. called. m_code:%s", FuncTrackChangeID, TRAIN_CODE_STR[m_code]);
 
 	if ( m_toggle_state != TS_AT_TOP && m_toggle_state != TS_AT_BOTTOM ){
-		if(EASY_CVAR_GET(trackchangePrintouts)==1)easyForcePrintLine("CFuncTrackChange%d:Use. BLOCKED by m_toggle_state of %d.", FuncTrackChangeID, (int)m_toggle_state);
+		if(EASY_CVAR_GET_DEBUGONLY(trackchangePrintouts)==1)easyForcePrintLine("CFuncTrackChange%d:Use. BLOCKED by m_toggle_state of %d.", FuncTrackChangeID, (int)m_toggle_state);
 		return;
 	}
 
@@ -2046,7 +2046,7 @@ void CFuncTrackChange :: Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE
 
 	if ( m_code == TRAIN_BLOCKING )
 	{
-		if(EASY_CVAR_GET(trackchangePrintouts)==1)easyForcePrintLine("CFuncTrackChange%d:Use. BLOCKED by m_code of TRAIN_BLOCKING.", FuncTrackChangeID);
+		if(EASY_CVAR_GET_DEBUGONLY(trackchangePrintouts)==1)easyForcePrintLine("CFuncTrackChange%d:Use. BLOCKED by m_code of TRAIN_BLOCKING.", FuncTrackChangeID);
 		// Play alarm and return
 		EMIT_SOUND(ENT(pev), CHAN_VOICE, "buttons/button11.wav", 1, ATTN_NORM);
 		return;
@@ -2101,7 +2101,7 @@ void CFuncTrackChange::ReportGeneric(){
 //
 void CFuncTrackChange :: HitBottom( void )
 {
-	if(EASY_CVAR_GET(trackchangePrintouts)==1)easyForcePrintLine("CFuncTrackChange%d:HitBottom. m_code:%s", FuncTrackChangeID, TRAIN_CODE_STR[m_code] );
+	if(EASY_CVAR_GET_DEBUGONLY(trackchangePrintouts)==1)easyForcePrintLine("CFuncTrackChange%d:HitBottom. m_code:%s", FuncTrackChangeID, TRAIN_CODE_STR[m_code] );
 	CFuncPlatRot :: HitBottom();
 	if ( m_code == TRAIN_FOLLOWING )
 	{
@@ -2144,7 +2144,7 @@ void CFuncTrackChange :: HitTop( void )
 	//return;
 	
 
-	if(EASY_CVAR_GET(trackchangePrintouts)==1)easyForcePrintLine("CFuncTrackChange%d:HitTop. m_code:%s", FuncTrackChangeID, TRAIN_CODE_STR[m_code] );
+	if(EASY_CVAR_GET_DEBUGONLY(trackchangePrintouts)==1)easyForcePrintLine("CFuncTrackChange%d:HitTop. m_code:%s", FuncTrackChangeID, TRAIN_CODE_STR[m_code] );
 	CFuncPlatRot :: HitTop();
 
 	//MODDD - does that make the train go forwards??
@@ -2191,7 +2191,7 @@ LINK_ENTITY_TO_CLASS( func_trackautochange, CFuncTrackAuto );
 // Auto track change
 void CFuncTrackAuto :: UpdateAutoTargets( int toggleState )
 {
-	if(EASY_CVAR_GET(trackchangePrintouts)==1)easyForcePrintLine("CFuncTrackAuto%d:UpdateAutoTargets. called.", FuncTrackChangeID);
+	if(EASY_CVAR_GET_DEBUGONLY(trackchangePrintouts)==1)easyForcePrintLine("CFuncTrackAuto%d:UpdateAutoTargets. called.", FuncTrackChangeID);
 	CPathTrack *pTarget, *pNextTarget;
 
 	if ( !m_trackTop || !m_trackBottom )
@@ -2199,20 +2199,20 @@ void CFuncTrackAuto :: UpdateAutoTargets( int toggleState )
 
 	if ( m_targetState == TS_AT_TOP )
 	{
-		if(EASY_CVAR_GET(trackchangePrintouts)==1)easyForcePrintLine("CFuncTrackAuto%d:UpdateAutoTargets. Target is TOP.", FuncTrackChangeID);
+		if(EASY_CVAR_GET_DEBUGONLY(trackchangePrintouts)==1)easyForcePrintLine("CFuncTrackAuto%d:UpdateAutoTargets. Target is TOP.", FuncTrackChangeID);
 		pTarget = m_trackTop->GetNext();
 		pNextTarget = m_trackBottom->GetNext();
 	}
 	else
 	{
-		if(EASY_CVAR_GET(trackchangePrintouts)==1)easyForcePrintLine("CFuncTrackAuto%d:UpdateAutoTargets. Target is BOTTOM.", FuncTrackChangeID);
+		if(EASY_CVAR_GET_DEBUGONLY(trackchangePrintouts)==1)easyForcePrintLine("CFuncTrackAuto%d:UpdateAutoTargets. Target is BOTTOM.", FuncTrackChangeID);
 		pTarget = m_trackBottom->GetNext();
 		
 		pNextTarget = m_trackTop->GetNext();
 	}
 	if ( pTarget )
 	{
-		if(EASY_CVAR_GET(trackchangePrintouts)==1){
+		if(EASY_CVAR_GET_DEBUGONLY(trackchangePrintouts)==1){
 			easyForcePrintLine("CFuncTrackAuto%d:UpdateAutoTargets. TARGET ORIGIN DRAWN.", FuncTrackChangeID);
 			if(pTarget != NULL)DebugLine_SetupPoint(3, m_trackBottom->pev->origin, 0, 0, 255);
 		}
@@ -2222,12 +2222,12 @@ void CFuncTrackAuto :: UpdateAutoTargets( int toggleState )
 			m_train->Use( this, this, USE_ON, 0 );
 	}
 
-	if(EASY_CVAR_GET(trackchangePrintouts)==1 && pTarget == NULL){
+	if(EASY_CVAR_GET_DEBUGONLY(trackchangePrintouts)==1 && pTarget == NULL){
 		DebugLine_ClearLine(3);
 	}
 
 	if ( pNextTarget ){
-		if (EASY_CVAR_GET(trackchangePrintouts) == 1) {
+		if (EASY_CVAR_GET_DEBUGONLY(trackchangePrintouts) == 1) {
 			easyForcePrintLine("CFuncTrackAuto%d:UpdateAutoTargets. Has next target. Turning its spawnflag PathDisabled bit on.", FuncTrackChangeID);
 		}
 		SetBits( pNextTarget->pev->spawnflags, SF_PATH_DISABLED );
@@ -2238,23 +2238,23 @@ void CFuncTrackAuto :: UpdateAutoTargets( int toggleState )
 
 void CFuncTrackAuto :: Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
 {
-	if(EASY_CVAR_GET(trackchangePrintouts)==1)easyForcePrintLine("CFuncTrackAuto%d:Use. called.", FuncTrackChangeID);
+	if(EASY_CVAR_GET_DEBUGONLY(trackchangePrintouts)==1)easyForcePrintLine("CFuncTrackAuto%d:Use. called.", FuncTrackChangeID);
 	CPathTrack *pTarget;
 
 	if ( !UseEnabled() )
 		return;
 
 	if ( m_toggle_state == TS_AT_TOP ){
-		if(EASY_CVAR_GET(trackchangePrintouts)==1)easyForcePrintLine("CFuncTrackAuto%d:Use. Target is TOP", FuncTrackChangeID);
+		if(EASY_CVAR_GET_DEBUGONLY(trackchangePrintouts)==1)easyForcePrintLine("CFuncTrackAuto%d:Use. Target is TOP", FuncTrackChangeID);
 		pTarget = m_trackTop;
 	}else if ( m_toggle_state == TS_AT_BOTTOM ){
-		if(EASY_CVAR_GET(trackchangePrintouts)==1)easyForcePrintLine("CFuncTrackAuto%d:Use. Target is BOTTOM", FuncTrackChangeID);
+		if(EASY_CVAR_GET_DEBUGONLY(trackchangePrintouts)==1)easyForcePrintLine("CFuncTrackAuto%d:Use. Target is BOTTOM", FuncTrackChangeID);
 		pTarget = m_trackBottom;
 	}else{
 		pTarget = NULL;
 	}
 
-	if(EASY_CVAR_GET(trackchangePrintouts)==1){
+	if(EASY_CVAR_GET_DEBUGONLY(trackchangePrintouts)==1){
 		if(pTarget != NULL){
 			easyForcePrintLine("CFuncTrackAuto%d:Use. TARGET ORIGIN DRAWN.", FuncTrackChangeID);
 			if(pTarget != NULL)DebugLine_SetupPoint(3, m_trackBottom->pev->origin, 0, 0, 255);
@@ -2266,7 +2266,7 @@ void CFuncTrackAuto :: Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_T
 
 	if ( FClassnameIs( pActivator->pev, "func_tracktrain" ) )
 	{
-		if(EASY_CVAR_GET(trackchangePrintouts)==1)easyForcePrintLine("CFuncTrackAuto%d:Use. My class is func_tracktrain", FuncTrackChangeID);
+		if(EASY_CVAR_GET_DEBUGONLY(trackchangePrintouts)==1)easyForcePrintLine("CFuncTrackAuto%d:Use. My class is func_tracktrain", FuncTrackChangeID);
 		m_code = EvaluateTrain( pTarget );
 		// Safe to fire?
 		if ( m_code == TRAIN_FOLLOWING && m_toggle_state != m_targetState )
@@ -2280,7 +2280,7 @@ void CFuncTrackAuto :: Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_T
 	}
 	else
 	{
-		if(EASY_CVAR_GET(trackchangePrintouts)==1)easyForcePrintLine("CFuncTrackAuto%d:Use. My class is %s", FuncTrackChangeID, getClassname() );
+		if(EASY_CVAR_GET_DEBUGONLY(trackchangePrintouts)==1)easyForcePrintLine("CFuncTrackAuto%d:Use. My class is %s", FuncTrackChangeID, getClassname() );
 		if ( pTarget )
 			pTarget = pTarget->GetNext();
 		if ( pTarget && m_train->m_ppath != pTarget && ShouldToggle( useType, m_targetState ) )

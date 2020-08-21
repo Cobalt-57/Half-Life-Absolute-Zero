@@ -29,18 +29,18 @@
 #include "defaultai.h"
 #include "util_debugdraw.h"
 
-EASY_CVAR_EXTERN(sv_germancensorship)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(sv_germancensorship)
 extern BOOL globalPSEUDO_germanModel_barneyFound;
 extern BOOL globalPSEUDO_iCanHazMemez;
-EASY_CVAR_EXTERN(barneyDummy)
-EASY_CVAR_EXTERN(monsterSpawnPrintout)
+EASY_CVAR_EXTERN_DEBUGONLY(barneyDummy)
+EASY_CVAR_EXTERN_DEBUGONLY(monsterSpawnPrintout)
 EASY_CVAR_EXTERN(pissedNPCs)
-EASY_CVAR_EXTERN(barneyPrintouts)
-EASY_CVAR_EXTERN(glockOldReloadLogicBarney)
-EASY_CVAR_EXTERN(barneyDroppedGlockAmmoCap)
-EASY_CVAR_EXTERN(barneyUnholsterTime)
-EASY_CVAR_EXTERN(barneyUnholsterAnimChoice)
-EASY_CVAR_EXTERN(hyperBarney)
+EASY_CVAR_EXTERN_DEBUGONLY(barneyPrintouts)
+EASY_CVAR_EXTERN_DEBUGONLY(glockOldReloadLogicBarney)
+EASY_CVAR_EXTERN_DEBUGONLY(barneyDroppedGlockAmmoCap)
+EASY_CVAR_EXTERN_DEBUGONLY(barneyUnholsterTime)
+EASY_CVAR_EXTERN_DEBUGONLY(barneyUnholsterAnimChoice)
+EASY_CVAR_EXTERN_DEBUGONLY(hyperBarney)
 
 
 
@@ -900,7 +900,7 @@ void CBarney::OnNearCautious(void) {
 		ChangeSchedule(slBarneyEnemyDraw);
 	}
 
-	unholsterTimer = gpGlobals->time + EASY_CVAR_GET(barneyUnholsterTime);
+	unholsterTimer = gpGlobals->time + EASY_CVAR_GET_DEBUGONLY(barneyUnholsterTime);
 }//END OF onNearCautious
 
 
@@ -1229,7 +1229,7 @@ void CBarney :: MonsterThink(void){
 	
 	//easyForcePrintLine("IM SUPER %d : seq:%d fr:%.2f fin:%d", HasConditions( bits_COND_ENEMY_DEAD ), pev->sequence, pev->frame, this->m_fSequenceFinished);
 
-	if(EASY_CVAR_GET(barneyDummy)){
+	if(EASY_CVAR_GET_DEBUGONLY(barneyDummy)){
 		//DUMMY BARNEY.
 		pev->nextthink = gpGlobals->time + 0.1;
 		return;
@@ -1246,7 +1246,7 @@ void CBarney :: MonsterThink(void){
 
 	if(reloadSoundTime != -1 && gpGlobals->time >= reloadSoundTime){
 
-		if(EASY_CVAR_GET(glockOldReloadLogicBarney) == 0 || m_cAmmoLoaded == 0 ){
+		if(EASY_CVAR_GET_DEBUGONLY(glockOldReloadLogicBarney) == 0 || m_cAmmoLoaded == 0 ){
 			m_cAmmoLoaded = BARNEY_WEAPON_CLIP_SIZE - 1;
 		}else{
 			m_cAmmoLoaded = BARNEY_WEAPON_CLIP_SIZE;
@@ -1259,7 +1259,7 @@ void CBarney :: MonsterThink(void){
 
 	CTalkMonster::MonsterThink();
 
-	if(EASY_CVAR_GET(barneyPrintouts) == 1){
+	if(EASY_CVAR_GET_DEBUGONLY(barneyPrintouts) == 1){
 		if(m_hEnemy != NULL && m_hTargetEnt != NULL){
 			easyForcePrintLine("I AM A BARNEY AND MY ENEMY IS %s TARG: %s", STRING(m_hEnemy->pev->classname), STRING(m_hTargetEnt->pev->classname) );
 		}else if(m_hEnemy != NULL){
@@ -1386,7 +1386,7 @@ CBarney::CBarney(void){
 //=========================================================
 void CBarney :: Spawn()
 {
-	if(EASY_CVAR_GET(monsterSpawnPrintout)){
+	if(EASY_CVAR_GET_DEBUGONLY(monsterSpawnPrintout)){
 		easyForcePrintLine("IM BARNEY, MY SPAWN FLAG BE : %d", pev->spawnflags);
 	}
 
@@ -1421,7 +1421,7 @@ void CBarney :: Spawn()
 
 
 
-	if(EASY_CVAR_GET(glockOldReloadLogicBarney) == 0 ){
+	if(EASY_CVAR_GET_DEBUGONLY(glockOldReloadLogicBarney) == 0 ){
 		//not using old reload logic?  Barney just has 12 rounds.
 		m_cAmmoLoaded = BARNEY_WEAPON_CLIP_SIZE - 1;
 	}else{
@@ -1750,12 +1750,12 @@ GENERATE_KILLED_IMPLEMENTATION(CBarney)
 			if(g != NULL){
 				//use this if you have to.
 				//CGlock::getUsingGlockOldReloadLogic()
-				if(EASY_CVAR_GET(barneyDroppedGlockAmmoCap) == -2){
+				if(EASY_CVAR_GET_DEBUGONLY(barneyDroppedGlockAmmoCap) == -2){
 					g->m_iDefaultAmmo = BARNEY_WEAPON_CLIP_SIZE;
-				}else if(EASY_CVAR_GET(barneyDroppedGlockAmmoCap) == -1){
+				}else if(EASY_CVAR_GET_DEBUGONLY(barneyDroppedGlockAmmoCap) == -1){
 					g->m_iDefaultAmmo = BARNEY_WEAPON_CLIP_SIZE - 1;
 				}else{
-					g->m_iDefaultAmmo = min((int)EASY_CVAR_GET(barneyDroppedGlockAmmoCap), m_cAmmoLoaded);
+					g->m_iDefaultAmmo = min((int)EASY_CVAR_GET_DEBUGONLY(barneyDroppedGlockAmmoCap), m_cAmmoLoaded);
 				}
 			}
 		}//END OF if(pGun != NULL)
@@ -1786,8 +1786,8 @@ Schedule_t* CBarney :: GetScheduleOfType ( int Type )
 	case SCHED_ARM_WEAPON:
 		if ( m_hEnemy != NULL )
 		{
-			if(EASY_CVAR_GET(barneyUnholsterTime) != -1){
-				unholsterTimer = gpGlobals->time + EASY_CVAR_GET(barneyUnholsterTime);
+			if(EASY_CVAR_GET_DEBUGONLY(barneyUnholsterTime) != -1){
+				unholsterTimer = gpGlobals->time + EASY_CVAR_GET_DEBUGONLY(barneyUnholsterTime);
 			}
 			// face enemy, then draw.
 			return slBarneyEnemyDraw;
@@ -1882,10 +1882,10 @@ Schedule_t *CBarney :: GetSchedule ( void )
 	//easyForcePrintLine("MY timer %d    %d %d %d ::: %.2f %.2f", m_fGunDrawn, HasConditions( bits_COND_HEAR_SOUND ), HasConditions(bits_COND_SEE_ENEMY), HasConditions(bits_COND_NEW_ENEMY), gpGlobals->time, unholsterTimer);
 
 	canUnholster=FALSE; // until proven otherwise
-	if(EASY_CVAR_GET(barneyUnholsterTime) != -1 && m_fGunDrawn){
+	if(EASY_CVAR_GET_DEBUGONLY(barneyUnholsterTime) != -1 && m_fGunDrawn){
 		if( (HasConditions( bits_COND_HEAR_SOUND ) || HasConditions(bits_COND_SEE_ENEMY) || HasConditions(bits_COND_NEW_ENEMY)) ){
 			//set the timer...  keep it up.
-			unholsterTimer = gpGlobals->time + EASY_CVAR_GET(barneyUnholsterTime);
+			unholsterTimer = gpGlobals->time + EASY_CVAR_GET_DEBUGONLY(barneyUnholsterTime);
 		}
 		//been too long since hearing anything or seeing any hostiles?  unholster when convenient.
 		if(unholsterTimer != -1 && gpGlobals->time >= unholsterTimer){
@@ -2274,7 +2274,7 @@ int CBarney::LookupActivityHard(int activity){
 	//uh... why?  nevermind then.
 	switch(activity){
 		case ACT_RANGE_ATTACK1:
-			if (EASY_CVAR_GET(hyperBarney) != 1) {
+			if (EASY_CVAR_GET_DEBUGONLY(hyperBarney) != 1) {
 				if (g_iSkillLevel == SKILL_EASY) {
 					// bigger boost
 					m_flFramerateSuggestion = 1.20;
@@ -2295,7 +2295,7 @@ int CBarney::LookupActivityHard(int activity){
 			return CBaseAnimating::LookupActivity(activity);
 		break;
 		case ACT_RELOAD:
-			if (EASY_CVAR_GET(hyperBarney) != 1) {
+			if (EASY_CVAR_GET_DEBUGONLY(hyperBarney) != 1) {
 				if (g_iSkillLevel == SKILL_EASY) {
 					// bigger boost
 					m_flFramerateSuggestion = 1.23;
@@ -2314,7 +2314,7 @@ int CBarney::LookupActivityHard(int activity){
 			//m_flFramerateSuggestion = 1.3;
 			//this->animEventQueuePush(6.7f / 30.0f, 0);
 
-			if(EASY_CVAR_GET(barneyUnholsterAnimChoice) == 0){
+			if(EASY_CVAR_GET_DEBUGONLY(barneyUnholsterAnimChoice) == 0){
 				//reverse draw.
 				//m_flFramerateSuggestion = -0.62;
 				this->animFrameStartSuggestion = 254;
@@ -2324,7 +2324,7 @@ int CBarney::LookupActivityHard(int activity){
 				m_flFramerateSuggestion = -0.67;
 				//pev->framerate = -1;
 				return LookupSequence("draw");
-			}else if(EASY_CVAR_GET(barneyUnholsterAnimChoice) == 1){
+			}else if(EASY_CVAR_GET_DEBUGONLY(barneyUnholsterAnimChoice) == 1){
 				//just the disarm animation.
 				m_flFramerateSuggestion = 1.07;
 				return LookupSequence("disarm");
@@ -2409,11 +2409,11 @@ int CBarney::tryActivitySubstitute(int activity){
 	//no need for default, just falls back to the normal activity lookup.
 	switch(activity){
 		case ACT_DISARM:
-			if(EASY_CVAR_GET(barneyUnholsterAnimChoice) == 0){
+			if(EASY_CVAR_GET_DEBUGONLY(barneyUnholsterAnimChoice) == 0){
 				//reverse draw.
 				//m_flFramerateSuggestion = -1;
 				return LookupSequence("draw");
-			}else if(EASY_CVAR_GET(barneyUnholsterAnimChoice) == 1){
+			}else if(EASY_CVAR_GET_DEBUGONLY(barneyUnholsterAnimChoice) == 1){
 				//just the disarm animation.
 				return LookupSequence("disarm");
 			}else{
@@ -2546,7 +2546,7 @@ void CBarney::talkAboutKilledEnemy(void) {
 		}//END OF enemy classify check
 
 
-		if (EASY_CVAR_GET(barneyUnholsterTime) != -1 && unholsterTimer != -1) {
+		if (EASY_CVAR_GET_DEBUGONLY(barneyUnholsterTime) != -1 && unholsterTimer != -1) {
 			//MODDD - go ahead and add some randomness to the unholster timer... can't hurt.
 			unholsterTimer += RANDOM_FLOAT(0, 3);
 		}
@@ -2586,7 +2586,7 @@ void CBarney::CompleteRestoreState(void) {
 	SetYawSpeed();
 
 	m_fGunDrawn = FALSE;
-	if (EASY_CVAR_GET(glockOldReloadLogicBarney) == 0) {
+	if (EASY_CVAR_GET_DEBUGONLY(glockOldReloadLogicBarney) == 0) {
 		//not using old reload logic?  Barney just has 12 rounds.
 		m_cAmmoLoaded = BARNEY_WEAPON_CLIP_SIZE - 1;
 	}

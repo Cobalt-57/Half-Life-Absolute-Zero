@@ -34,7 +34,7 @@
 #include "defaultai.h"
 
 //MODDD
-EASY_CVAR_EXTERN(cineChangelevelFix)
+EASY_CVAR_EXTERN_DEBUGONLY(cineChangelevelFix)
 
 
 #define CCineMonster_CLASSNAME scripted_sequence
@@ -938,7 +938,7 @@ void CCineMonster::Activate(void)
 			//FStrEq( STRING(m_iszEntity), "airlockwalkersci" ) &&
 
 			//wasAttached
-			if (wasAttached >= TRUE && (EASY_CVAR_GET(cineChangelevelFix) == 2 || EASY_CVAR_GET(cineChangelevelFix) == 3)) {
+			if (wasAttached >= TRUE && (EASY_CVAR_GET_DEBUGONLY(cineChangelevelFix) == 2 || EASY_CVAR_GET_DEBUGONLY(cineChangelevelFix) == 3)) {
 
 
 				pTarget->m_pCine = this;

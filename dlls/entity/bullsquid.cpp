@@ -31,7 +31,7 @@
 #include "zombie.h"
 
 //MODDD
-EASY_CVAR_EXTERN(bullsquidRangeDisabled)
+EASY_CVAR_EXTERN_DEBUGONLY(bullsquidRangeDisabled)
 
 
 #define SQUID_SPRINT_DIST	256 // how close the squid has to get before starting to sprint and refusing to swerve
@@ -1141,7 +1141,7 @@ Schedule_t* CBullsquid :: GetScheduleOfType ( int Type )
 
 	case SCHED_BULLSQUID_TRY_RANGE_ATTACK_1:
 		//This is a filter.   Is it legal to do a RANGE_ATTACK   here  ?
-		if(EASY_CVAR_GET(bullsquidRangeDisabled) != 1){
+		if(EASY_CVAR_GET_DEBUGONLY(bullsquidRangeDisabled) != 1){
 			//easyForcePrintLine("????????  %.2f %.2f   %d", gpGlobals->time, m_flNextSpitTime,  HasConditions(bits_COND_SEE_ENEMY));
 			
 			if(gpGlobals->time >= m_flNextSpitTime && this->HasConditions(bits_COND_SEE_ENEMY) ){
@@ -1168,7 +1168,7 @@ Schedule_t* CBullsquid :: GetScheduleOfType ( int Type )
 		
 		//
 
-		if(EASY_CVAR_GET(bullsquidRangeDisabled) != 1){
+		if(EASY_CVAR_GET_DEBUGONLY(bullsquidRangeDisabled) != 1){
 			//easyForcePrintLine("????????  %.2f %.2f   %d", gpGlobals->time, m_flNextSpitTime,  HasConditions(bits_COND_SEE_ENEMY));
 			
 			

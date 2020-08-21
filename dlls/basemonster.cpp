@@ -49,38 +49,38 @@
 #include "player.h"      //HERESY
 	
 	
-EASY_CVAR_EXTERN(sv_germancensorship)
-EASY_CVAR_EXTERN(seeMonsterHealth)
-EASY_CVAR_EXTERN(applyLKPPathFixToAll)
-EASY_CVAR_EXTERN(crazyMonsterPrintouts)
-EASY_CVAR_EXTERN(monsterSpawnPrintout)
-EASY_CVAR_EXTERN(timedDamageAffectsMonsters)
-EASY_CVAR_EXTERN(STUextraTriangH)
-EASY_CVAR_EXTERN(STUextraTriangV)
-EASY_CVAR_EXTERN(timedDamageEndlessOnHard)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(sv_germancensorship)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(seeMonsterHealth)
+EASY_CVAR_EXTERN_DEBUGONLY(applyLKPPathFixToAll)
+EASY_CVAR_EXTERN_DEBUGONLY(crazyMonsterPrintouts)
+EASY_CVAR_EXTERN_DEBUGONLY(monsterSpawnPrintout)
+EASY_CVAR_EXTERN_DEBUGONLY(timedDamageAffectsMonsters)
+EASY_CVAR_EXTERN_DEBUGONLY(STUextraTriangH)
+EASY_CVAR_EXTERN_DEBUGONLY(STUextraTriangV)
+EASY_CVAR_EXTERN_DEBUGONLY(timedDamageEndlessOnHard)
 extern float globalPSEUDO_canApplyGermanCensorship;
-EASY_CVAR_EXTERN(allowGermanModels)
-EASY_CVAR_EXTERN(cineAllowSequenceOverwrite)
-EASY_CVAR_EXTERN(pathfindPrintout)
-EASY_CVAR_EXTERN(pathfindFidgetFailTime)
-EASY_CVAR_EXTERN(pathfindTopRampFixDistance)
-EASY_CVAR_EXTERN(pathfindTopRampFixDraw)
-EASY_CVAR_EXTERN(pathfindLooseMapNodes)
-EASY_CVAR_EXTERN(pathfindRampFix)
-EASY_CVAR_EXTERN(pathfindNodeToleranceMulti)
+EASY_CVAR_EXTERN_DEBUGONLY(allowGermanModels)
+EASY_CVAR_EXTERN_DEBUGONLY(cineAllowSequenceOverwrite)
+EASY_CVAR_EXTERN_DEBUGONLY(pathfindPrintout)
+EASY_CVAR_EXTERN_DEBUGONLY(pathfindFidgetFailTime)
+EASY_CVAR_EXTERN_DEBUGONLY(pathfindTopRampFixDistance)
+EASY_CVAR_EXTERN_DEBUGONLY(pathfindTopRampFixDraw)
+EASY_CVAR_EXTERN_DEBUGONLY(pathfindLooseMapNodes)
+EASY_CVAR_EXTERN_DEBUGONLY(pathfindRampFix)
+EASY_CVAR_EXTERN_DEBUGONLY(pathfindNodeToleranceMulti)
 EASY_CVAR_EXTERN(pathfindSnapToNode)
-EASY_CVAR_EXTERN(animationFramerateMulti)
-EASY_CVAR_EXTERN(peaceOut)
-EASY_CVAR_EXTERN(monsterAIForceFindDistance)
-EASY_CVAR_EXTERN(movementIsCompletePrintout)
-EASY_CVAR_EXTERN(animationPrintouts)
-EASY_CVAR_EXTERN(pathfindEdgeCheck)
-EASY_CVAR_EXTERN(thoroughHitBoxUpdates)
-EASY_CVAR_EXTERN(animationKilledBoundsRemoval)
-EASY_CVAR_EXTERN(drawDebugEnemyLKP)
-EASY_CVAR_EXTERN(pathfindLargeBoundFix)
-EASY_CVAR_EXTERN(flyerKilledFallingLoop)
-EASY_CVAR_EXTERN(barnacleGrabNoInterpolation)
+EASY_CVAR_EXTERN_DEBUGONLY(animationFramerateMulti)
+EASY_CVAR_EXTERN_DEBUGONLY(peaceOut)
+EASY_CVAR_EXTERN_DEBUGONLY(monsterAIForceFindDistance)
+EASY_CVAR_EXTERN_DEBUGONLY(movementIsCompletePrintout)
+EASY_CVAR_EXTERN_DEBUGONLY(animationPrintouts)
+EASY_CVAR_EXTERN_DEBUGONLY(pathfindEdgeCheck)
+EASY_CVAR_EXTERN_DEBUGONLY(thoroughHitBoxUpdates)
+EASY_CVAR_EXTERN_DEBUGONLY(animationKilledBoundsRemoval)
+EASY_CVAR_EXTERN_DEBUGONLY(drawDebugEnemyLKP)
+EASY_CVAR_EXTERN_DEBUGONLY(pathfindLargeBoundFix)
+EASY_CVAR_EXTERN_DEBUGONLY(flyerKilledFallingLoop)
+EASY_CVAR_EXTERN_DEBUGONLY(barnacleGrabNoInterpolation)
 
 
 
@@ -759,7 +759,7 @@ void CBaseMonster :: BarnacleVictimReleased ( void )
 
 	
 	//MODDD - turn interpolation back on when released
-	if(EASY_CVAR_GET(barnacleGrabNoInterpolation) == 1){
+	if(EASY_CVAR_GET_DEBUGONLY(barnacleGrabNoInterpolation) == 1){
 		pev->effects &= ~EF_NOINTERP;
 	}
 
@@ -1040,7 +1040,7 @@ void CBaseMonster :: Look ( float flDistance )
 
 
 	
-	if(EASY_CVAR_GET(peaceOut) == 1){
+	if(EASY_CVAR_GET_DEBUGONLY(peaceOut) == 1){
 		//like, no way, man. Let's just smoke a fat blunt and sit on the couch all day.
 		return;
 	}
@@ -1159,7 +1159,7 @@ void CBaseMonster :: Look ( float flDistance )
 				
 				if ( IRelationship( pSightEnt ) != R_NO && FInViewCone( pSightEnt ) && !FBitSet( pSightEnt->pev->flags, FL_NOTARGET ) && FVisible( pSightEnt ) )
 				{
-					if(EASY_CVAR_GET(crazyMonsterPrintouts)){
+					if(EASY_CVAR_GET_DEBUGONLY(crazyMonsterPrintouts)){
 						easyPrintLine("FLAGGER 64 1");
 					}
 					if ( pSightEnt->IsPlayer() )
@@ -1185,13 +1185,13 @@ void CBaseMonster :: Look ( float flDistance )
 						// if we see a client, remember that (mostly for scripted AI)
 						iSighted |= bits_COND_SEE_CLIENT;
 					}
-					if(EASY_CVAR_GET(crazyMonsterPrintouts)){
+					if(EASY_CVAR_GET_DEBUGONLY(crazyMonsterPrintouts)){
 						easyPrintLine("FLAGGER 64 2");
 					}
 					pSightEnt->m_pLink = m_pLink;
 					m_pLink = pSightEnt;
 					
-					if(EASY_CVAR_GET(crazyMonsterPrintouts)){
+					if(EASY_CVAR_GET_DEBUGONLY(crazyMonsterPrintouts)){
 						easyPrintLine("FLAGGER 64 3::? (%d) %s %s", (pSightEnt == m_hEnemy), FClassname(pSightEnt), FClassname(m_hEnemy)  );
 					}
 
@@ -1381,7 +1381,7 @@ CSound* CBaseMonster :: PBestScent ( void )
 
 
 //MODDD - by default, most monsters will do the usual "takeDamage" script's reaction to investigating the source of damage.
-//Note that even this method getting called requires "EASY_CVAR_GET(bulletholeAlertRange)" to be above 0 (the distance the bullet-hit sound triggers enemies by calling this)
+//Note that even this method getting called requires "EASY_CVAR_GET_DEBUGONLY(bulletholeAlertRange)" to be above 0 (the distance the bullet-hit sound triggers enemies by calling this)
 void CBaseMonster::heardBulletHit(entvars_t* pevShooter){
 
 	//I heard it.
@@ -1689,7 +1689,7 @@ void CBaseMonster::parse_itbd(int i) {
 // If this is not the first frame we're taking this damage type,
 void CBaseMonster::timedDamage_nonFirstFrame(int i, int* m_bitsDamageTypeRef) {
 
-	if (g_iSkillLevel == 3 && EASY_CVAR_GET(timedDamageEndlessOnHard) == 1) {
+	if (g_iSkillLevel == 3 && EASY_CVAR_GET_DEBUGONLY(timedDamageEndlessOnHard) == 1) {
 		// Hard mode is on, and "timedDamageEndlessOnHard" is on...
 		// Do NOT decrement non-curable durations.
 		// However, still decrement only ONCE on curables to satisfy the one-second-passing rule for canisters to work.
@@ -1996,7 +1996,7 @@ void CBaseMonster :: MonsterThink ( void )
 
 	//TODO - test frame. is 255 or 256 the last??
 	/*
-	pev->frame = EASY_CVAR_GET(testVar);
+	pev->frame = EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(testVar);
 	pev->framerate = 0;
 
 	return;
@@ -2006,12 +2006,12 @@ void CBaseMonster :: MonsterThink ( void )
 
 	
 	/*
-	if(EASY_CVAR_GET(testVar) == 1){
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(testVar) == 1){
 		//BLOCKER
 		return;
 	}
 
-	if(EASY_CVAR_GET(testVar) == 2){
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(testVar) == 2){
 		this->m_fSequenceLoops = FALSE;
 	}
 	*/
@@ -2020,7 +2020,7 @@ void CBaseMonster :: MonsterThink ( void )
 	//pev->renderfx |= STOPINTR;
 
 	
-	pev->sequence = EASY_CVAR_GET(testVar);
+	pev->sequence = EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(testVar);
 	pev->framerate = 1;
 
 	return;
@@ -2041,7 +2041,7 @@ void CBaseMonster :: MonsterThink ( void )
 	int clrG = 0;
 	int clrB = 0;
 
-	if(EASY_CVAR_GET(pathfindTopRampFixDraw)==1 && debugVectorsSet){
+	if(EASY_CVAR_GET_DEBUGONLY(pathfindTopRampFixDraw)==1 && debugVectorsSet){
 		
 		if(debugVectorMode == 0){
 
@@ -2087,19 +2087,19 @@ void CBaseMonster :: MonsterThink ( void )
 	
 
 	
-	if(EASY_CVAR_GET(animationPrintouts) == 1 && monsterID >= -1)easyForcePrintLine("%s:%d Anim info A? frame:%.2f done:%d", getClassname(), monsterID, pev->frame, m_fSequenceFinished);
+	if(EASY_CVAR_GET_DEBUGONLY(animationPrintouts) == 1 && monsterID >= -1)easyForcePrintLine("%s:%d Anim info A? frame:%.2f done:%d", getClassname(), monsterID, pev->frame, m_fSequenceFinished);
 	
 	//if (!terminated) {
 		RunAI();
 	//}
 
 
-	if(EASY_CVAR_GET(animationPrintouts) == 1 && monsterID >= -1)easyForcePrintLine("%s:%d Anim info B frame:%.2f done:%d", getClassname(), monsterID, pev->frame, m_fSequenceFinished);
+	if(EASY_CVAR_GET_DEBUGONLY(animationPrintouts) == 1 && monsterID >= -1)easyForcePrintLine("%s:%d Anim info B frame:%.2f done:%d", getClassname(), monsterID, pev->frame, m_fSequenceFinished);
 	
 
 	// NOTICE: Player calls CheckTimeBasedDamage in its 'PreThink' method instead, player never calls MonsterThink.
 	// Player implements some things about timed damage differently to work as expected there.
-	if(EASY_CVAR_GET(timedDamageAffectsMonsters) == 1){
+	if(EASY_CVAR_GET_DEBUGONLY(timedDamageAffectsMonsters) == 1){
 		CheckTimeBasedDamage();
 	}
 	
@@ -2119,7 +2119,7 @@ void CBaseMonster :: MonsterThink ( void )
 	//breaks the tolerance checks for advancing path nodes.  But for that... don't set animations that often then.
 
 
-	if(EASY_CVAR_GET(animationPrintouts) == 1 && monsterID >= -1)easyForcePrintLine("%s:%d Anim info C? frame:%.2f done:%d", getClassname(), monsterID, pev->frame, m_fSequenceFinished);
+	if(EASY_CVAR_GET_DEBUGONLY(animationPrintouts) == 1 && monsterID >= -1)easyForcePrintLine("%s:%d Anim info C? frame:%.2f done:%d", getClassname(), monsterID, pev->frame, m_fSequenceFinished);
 
 
 // start or end a fidget
@@ -2139,7 +2139,7 @@ void CBaseMonster :: MonsterThink ( void )
 
 
 
-	if (EASY_CVAR_GET(animationPrintouts) == 1 && monsterID >= -1) {
+	if (EASY_CVAR_GET_DEBUGONLY(animationPrintouts) == 1 && monsterID >= -1) {
 		easyForcePrintLine(
 			"%s:%d Anim info IDLE RESET check?: custo:%d autoblock:%d stateForbid:%d idle?%d seqfin?%d - frame:%.2f done:%d",
 			getClassname(), monsterID,
@@ -2174,7 +2174,7 @@ void CBaseMonster :: MonsterThink ( void )
 		{
 			// animation does loop, which means we're playing subtle idle. Might need to 
 			// fidget.
-			if(EASY_CVAR_GET(animationPrintouts) == 1 && monsterID >= -1)easyForcePrintLine("%s:%d Anim info IDLE RESET #1? frame:%.2f done:%d", getClassname(), monsterID, pev->frame, m_fSequenceFinished);
+			if(EASY_CVAR_GET_DEBUGONLY(animationPrintouts) == 1 && monsterID >= -1)easyForcePrintLine("%s:%d Anim info IDLE RESET #1? frame:%.2f done:%d", getClassname(), monsterID, pev->frame, m_fSequenceFinished);
 
 			if(usesAdvancedAnimSystem()){
 				iSequence = LookupActivityHard ( m_Activity );
@@ -2185,7 +2185,7 @@ void CBaseMonster :: MonsterThink ( void )
 		}
 		else
 		{
-			if(EASY_CVAR_GET(animationPrintouts) == 1 && monsterID >= -1)easyForcePrintLine("%s:%d Anim info IDLE RESET #2? frame:%.2f done:%d", getClassname(), monsterID, pev->frame, m_fSequenceFinished);
+			if(EASY_CVAR_GET_DEBUGONLY(animationPrintouts) == 1 && monsterID >= -1)easyForcePrintLine("%s:%d Anim info IDLE RESET #2? frame:%.2f done:%d", getClassname(), monsterID, pev->frame, m_fSequenceFinished);
 
 			// animation that just ended doesn't loop! That means we just finished a fidget
 			// and should return to our heaviest weighted idle (the subtle one)
@@ -2227,9 +2227,9 @@ void CBaseMonster :: MonsterThink ( void )
 		}
 	}
 
-	if(EASY_CVAR_GET(animationPrintouts) == 1 && monsterID >= -1)easyForcePrintLine("%s:%d Anim info D? frame:%.2f done:%d", getClassname(), monsterID, pev->frame, m_fSequenceFinished);
+	if(EASY_CVAR_GET_DEBUGONLY(animationPrintouts) == 1 && monsterID >= -1)easyForcePrintLine("%s:%d Anim info D? frame:%.2f done:%d", getClassname(), monsterID, pev->frame, m_fSequenceFinished);
 	DispatchAnimEvents( flInterval );
-	if(EASY_CVAR_GET(animationPrintouts) == 1 && monsterID >= -1)easyForcePrintLine("%s:%d Anim info E? frame:%.2f done:%d", getClassname(), monsterID, pev->frame, m_fSequenceFinished);
+	if(EASY_CVAR_GET_DEBUGONLY(animationPrintouts) == 1 && monsterID >= -1)easyForcePrintLine("%s:%d Anim info E? frame:%.2f done:%d", getClassname(), monsterID, pev->frame, m_fSequenceFinished);
 
 	if ( !MovementIsComplete() )
 	{
@@ -2258,7 +2258,7 @@ void CBaseMonster :: MonsterThink ( void )
 
 
 	
-	if(EASY_CVAR_GET(peaceOut) == 1){
+	if(EASY_CVAR_GET_DEBUGONLY(peaceOut) == 1){
 
 		if(m_hEnemy != NULL){
 			//all is forgiven.
@@ -2271,7 +2271,7 @@ void CBaseMonster :: MonsterThink ( void )
 		}
 	}
 
-	if(EASY_CVAR_GET(drawDebugEnemyLKP)){
+	if(EASY_CVAR_GET_DEBUGONLY(drawDebugEnemyLKP)){
 		//::DebugLine_Setup(2, m_vecEnemyLKP + Vector(0, 0, 8), m_vecEnemyLKP + Vector(0, 0, -8), 0, 0, 255);
 		//no... just draw it this frame only.
 		::UTIL_drawPointFrame(m_vecEnemyLKP + Vector(0, 0, 8), DEBUG_LINE_WIDTH, 255, 255, 0);
@@ -2340,13 +2340,13 @@ void CBaseMonster::setModel(const char* m){
 
 
 		// NOTICE: not sure what to do if  "getGermanModelRequirement()"  fails.  Crash?  Invisible model?    For now, just relying on retail's version.
-		if(EASY_CVAR_GET(sv_germancensorship) == 0 || EASY_CVAR_GET(allowGermanModels) != 1 || globalPSEUDO_canApplyGermanCensorship == 0 || getGermanModelRequirement() == FALSE){
+		if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(sv_germancensorship) == 0 || EASY_CVAR_GET_DEBUGONLY(allowGermanModels) != 1 || globalPSEUDO_canApplyGermanCensorship == 0 || getGermanModelRequirement() == FALSE){
 			// but we're using the german model...
 			//if(usingGermanModel){
 				SET_MODEL(ENT(pev), normalModelPath);
 			//}
 			//if german censorship is on
-		}else if(EASY_CVAR_GET(sv_germancensorship) == 1 && EASY_CVAR_GET(allowGermanModels) == 1 && globalPSEUDO_canApplyGermanCensorship == 1){
+		}else if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(sv_germancensorship) == 1 && EASY_CVAR_GET_DEBUGONLY(allowGermanModels) == 1 && globalPSEUDO_canApplyGermanCensorship == 1){
 			// but we're not using the german model (and have one)
 			//if(hasGermanModel && !usingGermanModel){
 			//if(hasGermanModel){   //REDUNDANT.
@@ -3182,7 +3182,7 @@ BOOL CBaseMonster :: FBecomeProne ( void )
 	
 	
 	//MODDD - turn off interpolation when bitten.
-	if(EASY_CVAR_GET(barnacleGrabNoInterpolation) == 1){
+	if(EASY_CVAR_GET_DEBUGONLY(barnacleGrabNoInterpolation) == 1){
 		pev->effects |= EF_NOINTERP;
 	}
 	
@@ -3345,7 +3345,7 @@ int CBaseMonster :: CheckEnemy ( CBaseEntity *pEnemy )
 	iUpdatedLKP = FALSE;
 	ClearConditions ( bits_COND_ENEMY_FACING_ME );
 	
-	if(EASY_CVAR_GET(crazyMonsterPrintouts) == 1){
+	if(EASY_CVAR_GET_DEBUGONLY(crazyMonsterPrintouts) == 1){
 	easyPrintLine("CanAttack1? %d", HasConditions(bits_COND_CAN_MELEE_ATTACK1));
 	}
 	if ( !FVisible( pEnemy ) )
@@ -3357,7 +3357,7 @@ int CBaseMonster :: CheckEnemy ( CBaseEntity *pEnemy )
 		ClearConditions( bits_COND_ENEMY_OCCLUDED );
 	}
 	
-	if(EASY_CVAR_GET(crazyMonsterPrintouts) == 1){
+	if(EASY_CVAR_GET_DEBUGONLY(crazyMonsterPrintouts) == 1){
 	easyPrintLine("CanAttack2? %d", HasConditions(bits_COND_CAN_MELEE_ATTACK1));
 	}
 	
@@ -3392,7 +3392,7 @@ int CBaseMonster :: CheckEnemy ( CBaseEntity *pEnemy )
 	vecEnemyPos.z += pEnemy->pev->size.z * 0.5;
 
 	// distance to enemy's head
-	if(EASY_CVAR_GET(crazyMonsterPrintouts) == 1){
+	if(EASY_CVAR_GET_DEBUGONLY(crazyMonsterPrintouts) == 1){
 		easyPrintLine("CanAttack3? %d", HasConditions(bits_COND_CAN_MELEE_ATTACK1));
 	}
 
@@ -3408,7 +3408,7 @@ int CBaseMonster :: CheckEnemy ( CBaseEntity *pEnemy )
 			flDistToEnemy = flDistToEnemy2;
 	}
 	
-	if(EASY_CVAR_GET(crazyMonsterPrintouts) == 1){
+	if(EASY_CVAR_GET_DEBUGONLY(crazyMonsterPrintouts) == 1){
 		easyPrintLine("CanAttack4? %d", HasConditions(bits_COND_CAN_MELEE_ATTACK1));
 	}
 
@@ -3449,7 +3449,7 @@ int CBaseMonster :: CheckEnemy ( CBaseEntity *pEnemy )
 	//MODDD - POINT OF FRUSTRATION
 	//MODDD - alteration.
 	//else if ( !HasConditions(bits_COND_ENEMY_OCCLUDED|bits_COND_SEE_ENEMY) && ( flDistToEnemy <= 256 ) )
-	else if ( !HasConditions(bits_COND_ENEMY_OCCLUDED|bits_COND_SEE_ENEMY) && ( flDistToEnemy <= EASY_CVAR_GET(monsterAIForceFindDistance) ) )
+	else if ( !HasConditions(bits_COND_ENEMY_OCCLUDED|bits_COND_SEE_ENEMY) && ( flDistToEnemy <= EASY_CVAR_GET_DEBUGONLY(monsterAIForceFindDistance) ) )
 	{
 		// if the enemy is not occluded, and unseen, that means it is behind or beside the monster.
 		// if the enemy is near enough the monster, we go ahead and let the monster know where the
@@ -3461,7 +3461,7 @@ int CBaseMonster :: CheckEnemy ( CBaseEntity *pEnemy )
 		
 	}
 	
-	if(EASY_CVAR_GET(crazyMonsterPrintouts) == 1){
+	if(EASY_CVAR_GET_DEBUGONLY(crazyMonsterPrintouts) == 1){
 	easyPrintLine("CanAttack5? %d", HasConditions(bits_COND_CAN_MELEE_ATTACK1));
 	}
 	if ( flDistToEnemy >= m_flDistTooFar )
@@ -3472,12 +3472,12 @@ int CBaseMonster :: CheckEnemy ( CBaseEntity *pEnemy )
 	else
 		ClearConditions( bits_COND_ENEMY_TOOFAR );
 
-	if(EASY_CVAR_GET(crazyMonsterPrintouts) == 1){
+	if(EASY_CVAR_GET_DEBUGONLY(crazyMonsterPrintouts) == 1){
 	easyPrintLine("Can I Check Attacks? %d", FCanCheckAttacks());
 	}
 
 
-	if(EASY_CVAR_GET(crazyMonsterPrintouts) == 1)easyForcePrintLine("ALRIGHT HOTSHOT %d %d", HasConditions(bits_COND_SEE_ENEMY), !HasConditions( bits_COND_ENEMY_TOOFAR ) );
+	if(EASY_CVAR_GET_DEBUGONLY(crazyMonsterPrintouts) == 1)easyForcePrintLine("ALRIGHT HOTSHOT %d %d", HasConditions(bits_COND_SEE_ENEMY), !HasConditions( bits_COND_ENEMY_TOOFAR ) );
 	
 	if ( FCanCheckAttacks() )	
 	{
@@ -3518,7 +3518,7 @@ int CBaseMonster :: CheckEnemy ( CBaseEntity *pEnemy )
 		}
 	}
 	
-	if(EASY_CVAR_GET(crazyMonsterPrintouts) == 1){
+	if(EASY_CVAR_GET_DEBUGONLY(crazyMonsterPrintouts) == 1){
 	easyPrintLine("CanAttack6 %d", HasConditions(bits_COND_CAN_MELEE_ATTACK1));
 	}
 
@@ -4065,7 +4065,7 @@ BOOL CBaseMonster::getHasPathFindingMod(){
 #define LOCAL_STEP_SIZE_MOD 10
 
 //MODDD - ref
-EASY_CVAR_EXTERN(drawDebugPathfinding)
+EASY_CVAR_EXTERN_DEBUGONLY(drawDebugPathfinding)
 
 
 
@@ -4202,7 +4202,7 @@ int CBaseMonster :: CheckLocalMove ( const Vector &vecStart, const Vector &vecEn
 
 
 #ifdef USE_MOVEMENT_BOUND_FIX_ALT
-			if( EASY_CVAR_GET(pathfindLargeBoundFix) == 1 && needsMovementBoundFix() ){
+			if( EASY_CVAR_GET_DEBUGONLY(pathfindLargeBoundFix) == 1 && needsMovementBoundFix() ){
 				// A... NULL trace_ent is valid to take the Instance of?
 				// Guess so, look so the the 'World' itself.
 				CBaseEntity* whut = CBaseEntity::Instance(gpGlobals->trace_ent);
@@ -4340,7 +4340,7 @@ int CBaseMonster :: CheckLocalMove ( const Vector &vecStart, const Vector &vecEn
 	*/
 
 
-	if( EASY_CVAR_GET(drawDebugPathfinding) == 1){
+	if( EASY_CVAR_GET_DEBUGONLY(drawDebugPathfinding) == 1){
 		switch(iReturn){
 			case LOCALMOVE_INVALID:
 				//ORANGE
@@ -4488,11 +4488,11 @@ void CBaseMonster :: AdvanceRoute ( float distance, float flInterval )
 			//I got nothing.
 
 			/*
-			const float rawMoveSpeedPerSec = (m_flGroundSpeed * pev->framerate * EASY_CVAR_GET(animationFramerateMulti) * flInterval );
-			const float moveDistTest = rawMoveSpeedPerSec * EASY_CVAR_GET(pathfindNodeToleranceMulti);  //defaults to 1 for no effect.
+			const float rawMoveSpeedPerSec = (m_flGroundSpeed * pev->framerate * EASY_CVAR_GET_DEBUGONLY(animationFramerateMulti) * flInterval );
+			const float moveDistTest = rawMoveSpeedPerSec * EASY_CVAR_GET_DEBUGONLY(pathfindNodeToleranceMulti);  //defaults to 1 for no effect.
 			const float moveDistTol = max(moveDistTest, 8);  //must be at least 8.
 
-			if(EASY_CVAR_GET(pathfindPrintout)==1)easyForcePrintLine("MovementComplete Call 456: dist:%.2f spd:%.2f req:%.2f", distance, rawMoveSpeedPerSec, moveDistTol );
+			if(EASY_CVAR_GET_DEBUGONLY(pathfindPrintout)==1)easyForcePrintLine("MovementComplete Call 456: dist:%.2f spd:%.2f req:%.2f", distance, rawMoveSpeedPerSec, moveDistTol );
 			//BETTER FIX!
 			//if ( distance < m_flGroundSpeed * 0.2  ) // FIX
 			if( distance < moveDistTol)
@@ -4642,7 +4642,7 @@ BOOL CBaseMonster :: BuildRoute ( const Vector &vecGoal, int iMoveFlag, CBaseEnt
 	debugFailColor = FALSE;
 
 
-	if(EASY_CVAR_GET(pathfindRampFix) == 1){
+	if(EASY_CVAR_GET_DEBUGONLY(pathfindRampFix) == 1){
 	//if( !localMovePass ){
 		//still a shot...?
 		
@@ -5341,7 +5341,7 @@ int CBaseMonster::MovePRE(float flInterval, float& flWaypointDist, float& flChec
 
 	//MODDD - Below is completely new!!!
 
-	if (EASY_CVAR_GET(crazyMonsterPrintouts) == 1) {
+	if (EASY_CVAR_GET_DEBUGONLY(crazyMonsterPrintouts) == 1) {
 		if (pTargetEnt == NULL) {
 			easyPrintLine("I AM OBNOXIOUS: NULL : %d", m_Route[m_iRouteIndex].iType);
 		}
@@ -5350,7 +5350,7 @@ int CBaseMonster::MovePRE(float flInterval, float& flWaypointDist, float& flChec
 		}
 	}
 
-	if (EASY_CVAR_GET(applyLKPPathFixToAll) == 1 || hasSeeEnemyFix() && !(m_Route[m_iRouteIndex].iType & bits_MF_TO_ENEMY) && HasConditions(bits_COND_SEE_ENEMY)) {
+	if (EASY_CVAR_GET_DEBUGONLY(applyLKPPathFixToAll) == 1 || hasSeeEnemyFix() && !(m_Route[m_iRouteIndex].iType & bits_MF_TO_ENEMY) && HasConditions(bits_COND_SEE_ENEMY)) {
 		//this is a fix to make the enemy re-route in case of seeing the enemy while taking a path not necessarily to the enemy (such as, on its way to a last known location).
 		this->MovementComplete();
 		return -1;
@@ -5369,7 +5369,7 @@ int CBaseMonster::MovePRE(float flInterval, float& flWaypointDist, float& flChec
 
 	//If using a RAMPFIX or NODE type of node, use "CheckLocalMoveHull" instead. It's a bit less strict.
 	int useHullCheckMask = bits_MF_RAMPFIX;
-	if (EASY_CVAR_GET(pathfindLooseMapNodes) == 1) {
+	if (EASY_CVAR_GET_DEBUGONLY(pathfindLooseMapNodes) == 1) {
 		useHullCheckMask |= bits_MF_TO_NODE;
 	}
 
@@ -5629,7 +5629,7 @@ void CBaseMonster :: Move ( float flInterval )
 //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-						if ((gpGlobals->time - m_flMoveWaitFinished) < EASY_CVAR_GET(pathfindFidgetFailTime)) {
+						if ((gpGlobals->time - m_flMoveWaitFinished) < EASY_CVAR_GET_DEBUGONLY(pathfindFidgetFailTime)) {
 							Remember(bits_MEMORY_MOVE_FAILED);
 						}
 
@@ -5639,7 +5639,7 @@ void CBaseMonster :: Move ( float flInterval )
 				else
 				{
 					//MODDD - this area is for failure, but if close enough call it success instead.
-					if(strictNodeTolerance == FALSE && EASY_CVAR_GET(pathfindEdgeCheck) == 1){
+					if(strictNodeTolerance == FALSE && EASY_CVAR_GET_DEBUGONLY(pathfindEdgeCheck) == 1){
 
 						// Before admitting failure, do a check. Are we close enough to the goal to let this count as success?
 					
@@ -5695,7 +5695,7 @@ void CBaseMonster :: Move ( float flInterval )
 
 							//NOTICE - this allowed distance is very floaty. It is the expected distance to move in a frame times a number to go a bit further.
 							//...no, our movement speed is unimportant. Use a constant distance instead, possibly factor in this monster's own size later.
-							// ... < (m_flGroundSpeed * pev->framerate * EASY_CVAR_GET(animationFramerateMulti) * flInterval * 5)
+							// ... < (m_flGroundSpeed * pev->framerate * EASY_CVAR_GET_DEBUGONLY(animationFramerateMulti) * flInterval * 5)
 
 							float maxDist = (pev->size.y/2.0f) + 50.0f;
 							EASY_CVAR_PRINTIF_PRE(pathfindPrintout,easyForcePrintLine("PathfindEdgeCheck: DISTANCE TO GOAL: %.2f MAX ALLOWED: %.2f", distanceee, maxDist));
@@ -5802,7 +5802,7 @@ void CBaseMonster :: Move ( float flInterval )
 		return;
 	}
 
-	const float distExpectedToCover = m_flGroundSpeed * pev->framerate * EASY_CVAR_GET(animationFramerateMulti) * 1;
+	const float distExpectedToCover = m_flGroundSpeed * pev->framerate * EASY_CVAR_GET_DEBUGONLY(animationFramerateMulti) * 1;
 
 	//flCheckDist: 6    (just to waypoint w/ a cap of 200)
 	//flCheckDist: 70
@@ -5893,8 +5893,8 @@ void CBaseMonster :: Move ( float flInterval )
 //        without ever satisfying the " < 8" distance requirement. Base it off of the potential distance traveled in this frame and it can't fail.
 BOOL CBaseMonster:: ShouldAdvanceRoute( float flWaypointDist, float flInterval )
 {
-	const float rawMoveSpeedPerSec = (m_flGroundSpeed * pev->framerate * EASY_CVAR_GET(animationFramerateMulti) * flInterval );
-	const float moveDistTest = rawMoveSpeedPerSec * EASY_CVAR_GET(pathfindNodeToleranceMulti);  //defaults to 1 for no effect.
+	const float rawMoveSpeedPerSec = (m_flGroundSpeed * pev->framerate * EASY_CVAR_GET_DEBUGONLY(animationFramerateMulti) * flInterval );
+	const float moveDistTest = rawMoveSpeedPerSec * EASY_CVAR_GET_DEBUGONLY(pathfindNodeToleranceMulti);  //defaults to 1 for no effect.
 	const float moveDistTol = max(moveDistTest, 8);  //must be at least 8.
 
 	EASY_CVAR_PRINTIF_PRE(pathfindPrintout, easyForcePrintLine("%s:%d SHOULD I ADVANCE KIND SIR? d:%.2f rm:%.2f tol:%.2f pass:%d", FClassname(this), monsterID, (flWaypointDist), rawMoveSpeedPerSec, moveDistTol, (flWaypointDist <= moveDistTol) ) );
@@ -5938,7 +5938,7 @@ void CBaseMonster::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, f
 	flYaw = UTIL_VecToYaw ( m_Route[ m_iRouteIndex ].vecLocation - pev->origin );
 #endif
 
-	float flTotal = m_flGroundSpeed * pev->framerate * EASY_CVAR_GET(animationFramerateMulti) * flInterval;
+	float flTotal = m_flGroundSpeed * pev->framerate * EASY_CVAR_GET_DEBUGONLY(animationFramerateMulti) * flInterval;
 	float flStep;
 	while (flTotal > 0.001)
 	{
@@ -5951,7 +5951,7 @@ void CBaseMonster::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, f
 
 #else
 
-		if( !(EASY_CVAR_GET(pathfindLargeBoundFix) == 1 && needsMovementBoundFix() ) ){
+		if( !(EASY_CVAR_GET_DEBUGONLY(pathfindLargeBoundFix) == 1 && needsMovementBoundFix() ) ){
 			//Normal way!
 			UTIL_MoveToOrigin ( ENT(pev), m_Route[ m_iRouteIndex ].vecLocation, flStep, MOVE_NORMAL );
 
@@ -6151,7 +6151,7 @@ void CBaseMonster :: MonsterInit ( void )
 		pev->renderfx |= ISMETALNPC;
 	}
 
-	if(EASY_CVAR_GET(monsterSpawnPrintout) == 1){
+	if(EASY_CVAR_GET_DEBUGONLY(monsterSpawnPrintout) == 1){
 		easyPrintLine("I SPAWNED::: %s flags:%d", STRING(pev->classname), pev->spawnflags);
 	}
 
@@ -6215,7 +6215,7 @@ void CBaseMonster :: StartMonster ( void )
 	//MODDD NOTE - Oddly enough? missing "SF_MONSTER_FALL_TO_GROUND" causes the monster to fall to the ground.
 	if ( !isMovetypeFlying() && !FBitSet( pev->spawnflags, SF_MONSTER_FALL_TO_GROUND ) )
 	{
-		if(EASY_CVAR_GET(crazyMonsterPrintouts))easyForcePrintLine("YOU amazing piece of work");
+		if(EASY_CVAR_GET_DEBUGONLY(crazyMonsterPrintouts))easyForcePrintLine("YOU amazing piece of work");
 
 		pev->origin.z += 1;
 		DROP_TO_FLOOR ( ENT(pev) );
@@ -6315,7 +6315,7 @@ void CBaseMonster::TaskComplete(void) {
 // call "TaskComplete" themselves.
 void CBaseMonster :: MovementComplete( void ) 
 { 
-	if(EASY_CVAR_GET(movementIsCompletePrintout)==1)easyForcePrintLine("MovementComplete: %s:%d WHO CALLED THIS", getClassname(), monsterID);
+	if(EASY_CVAR_GET_DEBUGONLY(movementIsCompletePrintout)==1)easyForcePrintLine("MovementComplete: %s:%d WHO CALLED THIS", getClassname(), monsterID);
 
 	switch( m_iTaskStatus )
 	{
@@ -6612,7 +6612,7 @@ BOOL CBaseMonster :: BuildNearestRoute ( Vector vecThreat, Vector vecViewOffset,
 
 	if ( iMyNode == NO_NODE )
 	{
-		if(EASY_CVAR_GET(pathfindPrintout)==1)easyForcePrintLine("Path %s:%d Here ye here ye, I could not find a nearby node! I suck!", getClassname(), monsterID);
+		if(EASY_CVAR_GET_DEBUGONLY(pathfindPrintout)==1)easyForcePrintLine("Path %s:%d Here ye here ye, I could not find a nearby node! I suck!", getClassname(), monsterID);
 			
 		
 		ALERT ( at_aiconsole, "BuildNearestRoute() - %s has no nearest node!\n", STRING(pev->classname));
@@ -8001,8 +8001,8 @@ int CBaseMonster::CanPlaySentence(BOOL fDisregardState)
 }
 int CBaseMonster :: CanPlaySequence( BOOL fDisregardMonsterState, int interruptLevel )
 {
-	//MODDD - it is possible for "EASY_CVAR_GET(cineAllowSequenceOverwrite)" to block "m_pCine" already being occupied to stop this from having influence.
-	if ( (m_pCine && EASY_CVAR_GET(cineAllowSequenceOverwrite) != 1) || !IsAlive() || m_MonsterState == MONSTERSTATE_PRONE )
+	//MODDD - it is possible for "EASY_CVAR_GET_DEBUGONLY(cineAllowSequenceOverwrite)" to block "m_pCine" already being occupied to stop this from having influence.
+	if ( (m_pCine && EASY_CVAR_GET_DEBUGONLY(cineAllowSequenceOverwrite) != 1) || !IsAlive() || m_MonsterState == MONSTERSTATE_PRONE )
 	{
 		// monster is already running a scripted sequence or dead!
 		return FALSE;
@@ -8355,7 +8355,7 @@ BOOL CBaseMonster :: GetEnemy (BOOL arg_forceWork )
 	CBaseEntity *pNewEnemy;
 
 
-	if(EASY_CVAR_GET(peaceOut) == 1){
+	if(EASY_CVAR_GET_DEBUGONLY(peaceOut) == 1){
 		// no enemy detection.
 		return FALSE;
 	}
@@ -8573,13 +8573,13 @@ void CBaseMonster::DeathAnimationStart(){
 	}
 
 
-	//easyPrintLine("ARE YOU SOME KIND OF insecure person??? %.2f %d", EASY_CVAR_GET(thoroughHitBoxUpdates), pev->deadflag );
+	//easyPrintLine("ARE YOU SOME KIND OF insecure person??? %.2f %d", EASY_CVAR_GET_DEBUGONLY(thoroughHitBoxUpdates), pev->deadflag );
 	//MODDD
-	if(EASY_CVAR_GET(thoroughHitBoxUpdates) == 1){
+	if(EASY_CVAR_GET_DEBUGONLY(thoroughHitBoxUpdates) == 1){
 		//update the collision box now,
 		this->SetObjectCollisionBox();
 	}
-	if(EASY_CVAR_GET(animationKilledBoundsRemoval) == 1){
+	if(EASY_CVAR_GET_DEBUGONLY(animationKilledBoundsRemoval) == 1){
 		setPhysicalHitboxForDeath();
 	}
 }//END OF DeathAnimationStart
@@ -8603,7 +8603,7 @@ void CBaseMonster::DeathAnimationEnd(){
 
 	//easyPrintLine("DEAD: boxFlat?   %d", (BBoxFlat()));
 
-	if(EASY_CVAR_GET(animationKilledBoundsRemoval) == 2){
+	if(EASY_CVAR_GET_DEBUGONLY(animationKilledBoundsRemoval) == 2){
 		setPhysicalHitboxForDeath();
 	}
 
@@ -8860,7 +8860,7 @@ void CBaseMonster::OnTakeDamageSetConditions(entvars_t *pevInflictor, entvars_t 
 
 
 /*
-	if(EASY_CVAR_GET(testVar) == 10){
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(testVar) == 10){
 		//any damage causes me now.
 		SetConditions(bits_COND_HEAVY_DAMAGE);
 	}
@@ -9131,7 +9131,7 @@ int CBaseMonster::getLoopingDeathSequence(void){
 // Depending on the value of CVar flyerKilledFallingLoop, pick the schedule that uses the looping animation or don't.
 Schedule_t* CBaseMonster::flyerDeathSchedule(void){
 	
-	if(EASY_CVAR_GET(flyerKilledFallingLoop) == 1){
+	if(EASY_CVAR_GET_DEBUGONLY(flyerKilledFallingLoop) == 1){
 		// First a check. If we are very close or virtually on the ground, just skip to the typical die method to do the "hitting the ground" animation.
 
 		TraceResult tr;

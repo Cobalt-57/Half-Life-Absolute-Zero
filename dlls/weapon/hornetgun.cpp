@@ -31,7 +31,7 @@ EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelay)
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelaycustom)
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteclip)
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteammo)
-EASY_CVAR_EXTERN(fastHornetsInheritsPlayerVelocity);
+EASY_CVAR_EXTERN_DEBUGONLY(fastHornetsInheritsPlayerVelocity);
 
 
 // HACKY - redirect any references to the old 'RechargeTime' to a better synched var.
@@ -350,7 +350,7 @@ void CHgun::SecondaryAttack( void )
 	
 	//MODDD
 	//pHornet->pev->velocity = gpGlobals->v_forward * 1200;
-	pHornet->pev->velocity = gpGlobals->v_forward * 1200 + UTIL_GetProjectileVelocityExtra(m_pPlayer->pev->velocity, EASY_CVAR_GET(fastHornetsInheritsPlayerVelocity) );
+	pHornet->pev->velocity = gpGlobals->v_forward * 1200 + UTIL_GetProjectileVelocityExtra(m_pPlayer->pev->velocity, EASY_CVAR_GET_DEBUGONLY(fastHornetsInheritsPlayerVelocity) );
 
 	pHornet->pev->angles = UTIL_VecToAngles( pHornet->pev->velocity );
 

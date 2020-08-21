@@ -726,7 +726,7 @@ public:
 	//MODDD - ALSO, complementary method to go along player.h's "getBaseFOV", using our raw
 	// access to the player's CVars instead of the player's serverside info.
 	inline float getPlayerBaseFOV(void) {
-		if (EASY_CVAR_GET(auto_adjust_fov) == 0) {
+		if (EASY_CVAR_GET_CLIENTONLY(auto_adjust_fov) == 0) {
 			// don't use the auto one then.
 			return EASY_CVAR_GET(default_fov);
 		}

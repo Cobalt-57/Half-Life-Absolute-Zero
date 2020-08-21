@@ -20,15 +20,15 @@
 //             probably not, and this is kinda easily fixable if so.
 
 
-EASY_CVAR_EXTERN(noFlinchOnHard)
-EASY_CVAR_EXTERN(animationFramerateMulti)
-EASY_CVAR_EXTERN(drawDebugPathfinding)
-EASY_CVAR_EXTERN(drawDebugPathfinding2)
-EASY_CVAR_EXTERN(STUrepelMulti)
-EASY_CVAR_EXTERN(STUcheckDistV)
-EASY_CVAR_EXTERN(STUcheckDistH)
-EASY_CVAR_EXTERN(STUcheckDistD)
-EASY_CVAR_EXTERN(STUSpeedMulti)
+EASY_CVAR_EXTERN_DEBUGONLY(noFlinchOnHard)
+EASY_CVAR_EXTERN_DEBUGONLY(animationFramerateMulti)
+EASY_CVAR_EXTERN_DEBUGONLY(drawDebugPathfinding)
+EASY_CVAR_EXTERN_DEBUGONLY(drawDebugPathfinding2)
+EASY_CVAR_EXTERN_DEBUGONLY(STUrepelMulti)
+EASY_CVAR_EXTERN_DEBUGONLY(STUcheckDistV)
+EASY_CVAR_EXTERN_DEBUGONLY(STUcheckDistH)
+EASY_CVAR_EXTERN_DEBUGONLY(STUcheckDistD)
+EASY_CVAR_EXTERN_DEBUGONLY(STUSpeedMulti)
 
 
 //I would prefer to be this far off of the waterlevel if I intend to touch the surface.
@@ -671,7 +671,7 @@ int CArcher :: CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, CB
 
 	
 	
-	if ( (tracesSolid == FALSE && tracesStartSolid == FALSE && minFraction >= 1.0)  ) //|| EASY_CVAR_GET(testVar) == 2)
+	if ( (tracesSolid == FALSE && tracesStartSolid == FALSE && minFraction >= 1.0)  ) //|| EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(testVar) == 2)
 	//if ( tr.fAllSolid == 0 && tr.fStartSolid == 0 && tr.flFraction >= 1.0)
 	{
 		//if(minFractionStore != NULL){ *minFractionStore = minFraction; }  //on success, the caller wants to know the minimum fraction seen, if a place to put it is provided.
@@ -737,7 +737,7 @@ int CArcher :: CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, CB
 
 
 
-	if( EASY_CVAR_GET(drawDebugPathfinding) == 1){
+	if( EASY_CVAR_GET_DEBUGONLY(drawDebugPathfinding) == 1){
 		switch(iReturn){
 			case LOCALMOVE_INVALID:
 				//ORANGE
@@ -883,15 +883,15 @@ void CArcher::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, float 
 		//m_flGroundSpeed = 200;
 
 		float flTotal = 0;
-		float flStepTimefactored = m_flGroundSpeed * pev->framerate * EASY_CVAR_GET(animationFramerateMulti) * flInterval;
+		float flStepTimefactored = m_flGroundSpeed * pev->framerate * EASY_CVAR_GET_DEBUGONLY(animationFramerateMulti) * flInterval;
 		float flStep = m_flGroundSpeed * 1 * 1;
 	
 
 
-		float velMag = flStep * EASY_CVAR_GET(STUSpeedMulti);
+		float velMag = flStep * EASY_CVAR_GET_DEBUGONLY(STUSpeedMulti);
 
-		float timeAdjust = (pev->framerate * EASY_CVAR_GET(animationFramerateMulti) * flInterval);
-		float distOneFrame = velMag * pev->framerate * EASY_CVAR_GET(animationFramerateMulti) * flInterval;
+		float timeAdjust = (pev->framerate * EASY_CVAR_GET_DEBUGONLY(animationFramerateMulti) * flInterval);
+		float distOneFrame = velMag * pev->framerate * EASY_CVAR_GET_DEBUGONLY(animationFramerateMulti) * flInterval;
 	
 		Vector dest = m_Route[ m_iRouteIndex ].vecLocation;
 		Vector vectBetween = (dest - pev->origin);
@@ -1167,7 +1167,7 @@ Schedule_t* CArcher::GetSchedule ( void )
 				return GetScheduleOfType ( SCHED_WAKE_ANGRY );
 			}
 			//MODDD - other condition.  If "noFlinchOnHard" is on and the skill is hard, don't flinch from getting hit.
-			else if (HasConditions(bits_COND_LIGHT_DAMAGE) && !HasMemory( bits_MEMORY_FLINCHED) && !(EASY_CVAR_GET(noFlinchOnHard)==1 && g_iSkillLevel==SKILL_HARD)  )
+			else if (HasConditions(bits_COND_LIGHT_DAMAGE) && !HasMemory( bits_MEMORY_FLINCHED) && !(EASY_CVAR_GET_DEBUGONLY(noFlinchOnHard)==1 && g_iSkillLevel==SKILL_HARD)  )
 			{
 				return GetScheduleOfType( SCHED_SMALL_FLINCH );
 			}
@@ -1683,7 +1683,7 @@ void CArcher::RunTask( Task_t *pTask ){
 
 		case TASK_ARCHER_WAIT_FOR_MOVEMENT_STRICT:{
 			/*
-			if(EASY_CVAR_GET(movementIsCompletePrintout) == 1){
+			if(EASY_CVAR_GET_DEBUGONLY(movementIsCompletePrintout) == 1){
 				easyPrintLine("%s:%d: IS MOVEMENT COMPLETE?: %d", getClassname(), monsterID, MovementIsComplete());
 				easyPrintLine("MOVEGOAL: %d", this->m_movementGoal);
 
@@ -2336,7 +2336,7 @@ void CArcher::checkTraceLine(const Vector& vecSuggestedDir, const float& travelM
 			float toMove = moveDist - dist;
 			//pev->origin = pev->origin + -toMove*vecRelativeEnd;
 		
-			float timeAdjust = (pev->framerate * EASY_CVAR_GET(animationFramerateMulti) * flInterval);
+			float timeAdjust = (pev->framerate * EASY_CVAR_GET_DEBUGONLY(animationFramerateMulti) * flInterval);
 			
 			Vector vecMoveParallel = UTIL_projectionComponent(vecSuggestedDir, tr.vecPlaneNormal).Normalize() * (travelMag * 1);
 			//Vector vecMoveParallel = Vector(0,0,0);
@@ -2348,7 +2348,7 @@ void CArcher::checkTraceLine(const Vector& vecSuggestedDir, const float& travelM
 				//...
 			}
 
-			Vector vecMoveRepel = (tr.vecPlaneNormal*toMove*EASY_CVAR_GET(STUrepelMulti))/1;
+			Vector vecMoveRepel = (tr.vecPlaneNormal*toMove*EASY_CVAR_GET_DEBUGONLY(STUrepelMulti))/1;
 			
 			//pev->origin = pev->origin + vecMoveParallel;
 			////UTIL_MoveToOrigin ( ENT(pev), pev->origin + -toMove*vecRelativeEnd + vecMoveParallel , travelMag, MOVE_STRAFE );
@@ -2397,7 +2397,7 @@ void CArcher::checkTraceLine(const Vector& vecSuggestedDir, const float& travelM
 		}//END OF if(tr.flFraction < 1.0)
 	}//END OF if(!tempCheckTraceLineBlock)
 	
-	if(EASY_CVAR_GET(drawDebugPathfinding2) == 1){
+	if(EASY_CVAR_GET_DEBUGONLY(drawDebugPathfinding2) == 1){
 		UTIL_drawLineFrame(vecStart, vecStart + vecRelativeEndScale, 16, 0, 255, 0);
 	}
 
@@ -2438,7 +2438,7 @@ void CArcher::checkTraceLineTest(const Vector& vecSuggestedDir, const float& tra
 			float toMove = moveDist - dist;
 			//pev->origin = pev->origin + -toMove*vecRelativeEnd;
 		
-			float timeAdjust = (pev->framerate * EASY_CVAR_GET(animationFramerateMulti) * flInterval);
+			float timeAdjust = (pev->framerate * EASY_CVAR_GET_DEBUGONLY(animationFramerateMulti) * flInterval);
 			
 			Vector vecMoveParallel = UTIL_projectionComponent(vecSuggestedDir, tr.vecPlaneNormal).Normalize() * (travelMag * 1);
 			//Vector vecMoveParallel = Vector(0,0,0);
@@ -2450,7 +2450,7 @@ void CArcher::checkTraceLineTest(const Vector& vecSuggestedDir, const float& tra
 				//...
 			}
 
-			Vector vecMoveRepel = (tr.vecPlaneNormal*toMove*EASY_CVAR_GET(STUrepelMulti))/1;
+			Vector vecMoveRepel = (tr.vecPlaneNormal*toMove*EASY_CVAR_GET_DEBUGONLY(STUrepelMulti))/1;
 			
 			//pev->origin = pev->origin + vecMoveParallel;
 			////UTIL_MoveToOrigin ( ENT(pev), pev->origin + -toMove*vecRelativeEnd + vecMoveParallel , travelMag, MOVE_STRAFE );
@@ -2507,7 +2507,7 @@ void CArcher::checkTraceLineTest(const Vector& vecSuggestedDir, const float& tra
 		}//END OF if(tr.flFraction < 1.0)
 	}//END OF if(!tempCheckTraceLineBlock)
 	
-	if(EASY_CVAR_GET(drawDebugPathfinding2) == 1){
+	if(EASY_CVAR_GET_DEBUGONLY(drawDebugPathfinding2) == 1){
 		UTIL_drawLineFrame(vecStart, vecStart + vecRelativeEndScale, 16, 0, 255, 0);
 	}
 
@@ -2528,7 +2528,7 @@ void CArcher::checkFloor(const Vector& vecSuggestedDir, const float& travelMag, 
 	}
 	*/
 	//UTIL_drawBoxFrame(pev->absmin, pev->absmax, 16, 0, 0, 255);
-	if(EASY_CVAR_GET(drawDebugPathfinding2) == 1){
+	if(EASY_CVAR_GET_DEBUGONLY(drawDebugPathfinding2) == 1){
 		UTIL_drawBoxFrame(pev->origin + pev->mins, pev->origin + pev->maxs, 16, 0, 0, 255);
 	}
 	
@@ -2569,10 +2569,10 @@ void CArcher::checkFloor(const Vector& vecSuggestedDir, const float& travelMag, 
 	int checkDistD = 38;
 	*/
 
-	int checkDist = EASY_CVAR_GET(STUcheckDistH);
-	int checkDistV = EASY_CVAR_GET(STUcheckDistV);
+	int checkDist = EASY_CVAR_GET_DEBUGONLY(STUcheckDistH);
+	int checkDistV = EASY_CVAR_GET_DEBUGONLY(STUcheckDistV);
 	
-	int checkDistD = EASY_CVAR_GET(STUcheckDistD);
+	int checkDistD = EASY_CVAR_GET_DEBUGONLY(STUcheckDistD);
 
 
 	//float Vector push;

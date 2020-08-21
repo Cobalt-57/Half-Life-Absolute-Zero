@@ -36,14 +36,14 @@
 #include "nodes.h"
 
 
-EASY_CVAR_EXTERN(islaveReviveFriendMode)
-EASY_CVAR_EXTERN(islaveReviveFriendChance)
-EASY_CVAR_EXTERN(islaveReviveFriendRange)
-EASY_CVAR_EXTERN(islaveReviveSelfMinDelay)
-EASY_CVAR_EXTERN(islaveReviveSelfMaxDelay)
-EASY_CVAR_EXTERN(islaveReviveSelfChance)
-EASY_CVAR_EXTERN(noFlinchOnHard)
-EASY_CVAR_EXTERN(thatWasntPunch)
+EASY_CVAR_EXTERN_DEBUGONLY(islaveReviveFriendMode)
+EASY_CVAR_EXTERN_DEBUGONLY(islaveReviveFriendChance)
+EASY_CVAR_EXTERN_DEBUGONLY(islaveReviveFriendRange)
+EASY_CVAR_EXTERN_DEBUGONLY(islaveReviveSelfMinDelay)
+EASY_CVAR_EXTERN_DEBUGONLY(islaveReviveSelfMaxDelay)
+EASY_CVAR_EXTERN_DEBUGONLY(islaveReviveSelfChance)
+EASY_CVAR_EXTERN_DEBUGONLY(noFlinchOnHard)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(thatWasntPunch)
 
 
 //MODDD - anything above its real declaration need to know about it?
@@ -452,7 +452,7 @@ void CISlave::MonsterThink(void){
 	}//END OF revive check
 
 
-	if(EASY_CVAR_GET(thatWasntPunch) == 1 && this->m_fSequenceFinished){
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(thatWasntPunch) == 1 && this->m_fSequenceFinished){
 
 		switch(RANDOM_LONG(0, 60)){
 
@@ -668,7 +668,7 @@ BOOL CISlave::isProvoked(void){
 int CISlave::IRelationship( CBaseEntity *pTarget )
 {
 	
-	if(EASY_CVAR_GET(thatWasntPunch) == 1){
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(thatWasntPunch) == 1){
 		return R_NO;
 	}
 
@@ -798,10 +798,10 @@ void CISlave::onDeathAnimationEnd(void){
 	//If I plan on fading though, ignore all this and just let me fade out. No chance of self-revive to avoid spam.
 
 	if(!this->ShouldFadeOnDeath()){
-		BOOL canRevive = (EASY_CVAR_GET(islaveReviveSelfChance) > 0 && RANDOM_FLOAT(0, 1) <= EASY_CVAR_GET(islaveReviveSelfChance) );
+		BOOL canRevive = (EASY_CVAR_GET_DEBUGONLY(islaveReviveSelfChance) > 0 && RANDOM_FLOAT(0, 1) <= EASY_CVAR_GET_DEBUGONLY(islaveReviveSelfChance) );
 
 		if(canRevive){
-			selfReviveTime = gpGlobals->time + RANDOM_LONG(EASY_CVAR_GET(islaveReviveSelfMinDelay), EASY_CVAR_GET(islaveReviveSelfMaxDelay) );
+			selfReviveTime = gpGlobals->time + RANDOM_LONG(EASY_CVAR_GET_DEBUGONLY(islaveReviveSelfMinDelay), EASY_CVAR_GET_DEBUGONLY(islaveReviveSelfMaxDelay) );
 			//note that we omitt the think unlink if we plan on reviving.  Need something to count the time left until a self-revive.
 		}else{
 			//kill the "think" linkup like in normal death.
@@ -887,7 +887,7 @@ void CISlave :: SetYawSpeed ( void )
 void CISlave :: HandleAnimEvent( MonsterEvent_t *pEvent )
 {
 
-	if(EASY_CVAR_GET(thatWasntPunch) == 1){
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(thatWasntPunch) == 1){
 		return;
 	}
 
@@ -1115,12 +1115,12 @@ BOOL CISlave :: CheckRangeAttack2 ( float flDot, float flDist )
 	//MODDD - AHHHHHH.  HOW DID I MISS THIS?!  disabled.
 	//return FALSE;
 
-	if(EASY_CVAR_GET(islaveReviveFriendMode) == 0 || EASY_CVAR_GET(islaveReviveFriendMode) == 2){
+	if(EASY_CVAR_GET_DEBUGONLY(islaveReviveFriendMode) == 0 || EASY_CVAR_GET_DEBUGONLY(islaveReviveFriendMode) == 2){
 		//try by for a chance.
 		
 		//the chance won't happen here, it will occur in GetSchedule (when looking for something new to do) so that it doesn't happen 20 times every second.
 		/*
-		BOOL canReviveFriend = (EASY_CVAR_GET(islaveReviveFriendChance) > 0 && RANDOM_FLOAT(0, 1) <= EASY_CVAR_GET(islaveReviveFriendChance));
+		BOOL canReviveFriend = (EASY_CVAR_GET_DEBUGONLY(islaveReviveFriendChance) > 0 && RANDOM_FLOAT(0, 1) <= EASY_CVAR_GET_DEBUGONLY(islaveReviveFriendChance));
 		if(!canReviveFriend){
 			return FALSE;
 		}
@@ -1153,7 +1153,7 @@ CISlave* CISlave::findISlaveToRevive(BOOL requireLineTrace, float argStartMaxDis
 
 
 	/*
-			while ((pEntityScan = UTIL_FindEntityInSphere( pEntityScan, pev->origin, EASY_CVAR_GET(islaveReviveFriendRange) )) != NULL)
+			while ((pEntityScan = UTIL_FindEntityInSphere( pEntityScan, pev->origin, EASY_CVAR_GET_DEBUGONLY(islaveReviveFriendRange) )) != NULL)
 			{
 				testMon = pEntityScan->MyMonsterPointer();
 				//if(testMon != NULL && testMon->pev != this->pev && ( FClassnameIs(testMon->pev, "monster_scientist") || FClassnameIs(testMon->pev, "monster_barney")  ) ){
@@ -1286,7 +1286,7 @@ void CISlave :: StartTask ( Task_t *pTask )
 		//m_iBravery = 0;
 
 
-		if(canReviveFriend && !reviveTargetChosen && EASY_CVAR_GET(islaveReviveFriendMode) == 0 || EASY_CVAR_GET(islaveReviveFriendMode) == 2){
+		if(canReviveFriend && !reviveTargetChosen && EASY_CVAR_GET_DEBUGONLY(islaveReviveFriendMode) == 0 || EASY_CVAR_GET_DEBUGONLY(islaveReviveFriendMode) == 2){
 
 			CBaseEntity *pEntity = NULL;
 			float flDist; 
@@ -2037,12 +2037,12 @@ Schedule_t *CISlave :: GetSchedule( void )
 		//}
 		canReviveFriend = FALSE;
 		if(!reviveTargetChosen){
-			canReviveFriend = (EASY_CVAR_GET(islaveReviveFriendChance) > 0 && RANDOM_FLOAT(0, 1) <= EASY_CVAR_GET(islaveReviveFriendChance) );
+			canReviveFriend = (EASY_CVAR_GET_DEBUGONLY(islaveReviveFriendChance) > 0 && RANDOM_FLOAT(0, 1) <= EASY_CVAR_GET_DEBUGONLY(islaveReviveFriendChance) );
 		}
 
-		if(EASY_CVAR_GET(islaveReviveFriendMode) == 1 || EASY_CVAR_GET(islaveReviveFriendMode) == 2 && canReviveFriend && !reviveTargetChosen){
+		if(EASY_CVAR_GET_DEBUGONLY(islaveReviveFriendMode) == 1 || EASY_CVAR_GET_DEBUGONLY(islaveReviveFriendMode) == 2 && canReviveFriend && !reviveTargetChosen){
 
-			bestChoiceYet = findISlaveToRevive(FALSE, EASY_CVAR_GET(islaveReviveFriendRange) );
+			bestChoiceYet = findISlaveToRevive(FALSE, EASY_CVAR_GET_DEBUGONLY(islaveReviveFriendRange) );
 			m_hTargetEnt = m_hDead;
 
 			if(reviveTargetChosen && bestChoiceYet->okayToRevive() ){
@@ -2139,7 +2139,7 @@ Schedule_t *CISlave :: GetSchedule( void )
 			return GetScheduleOfType(SCHED_BIG_FLINCH);
 		}
 		//MODDD - other condition.  If "noFlinchOnHard" is on and the skill is hard, don't flinch from getting hit.
-		else if (HasConditions(bits_COND_LIGHT_DAMAGE) && !HasMemory( bits_MEMORY_FLINCHED) && !(EASY_CVAR_GET(noFlinchOnHard)==1 && g_iSkillLevel==SKILL_HARD)  )
+		else if (HasConditions(bits_COND_LIGHT_DAMAGE) && !HasMemory( bits_MEMORY_FLINCHED) && !(EASY_CVAR_GET_DEBUGONLY(noFlinchOnHard)==1 && g_iSkillLevel==SKILL_HARD)  )
 		{
 			return GetScheduleOfType( SCHED_SMALL_FLINCH );
 		}

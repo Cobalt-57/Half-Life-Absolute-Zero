@@ -25,7 +25,7 @@
 
 EASY_CVAR_EXTERN(cl_explosion)
 EASY_CVAR_EXTERN(soundSentenceSave)
-EASY_CVAR_EXTERN(weaponPickupPlaysAnyReloadSounds);
+EASY_CVAR_EXTERN_DEBUGONLY(weaponPickupPlaysAnyReloadSounds);
 
 
 extern "C" void PM_Move ( struct playermove_s *ppmove, int server );
@@ -813,7 +813,7 @@ void CBaseEntity::playAmmoPickupSound(entvars_t* sentPev){
 	}else{
 		pevToUse = pev;
 	}
-	if(EASY_CVAR_GET(weaponPickupPlaysAnyReloadSounds) != 1){
+	if(EASY_CVAR_GET_DEBUGONLY(weaponPickupPlaysAnyReloadSounds) != 1){
 		//normal.
 		UTIL_PlaySound(ENT(pevToUse), CHAN_ITEM, "items/9mmclip1.wav", 1, ATTN_NORM, 0, 100, FALSE);
 	}else{
@@ -861,7 +861,7 @@ void CBaseEntity::playGunPickupSound(entvars_t* sentPev){
 
 void CBaseEntity::precacheAmmoPickupSound(){
 
-	if(EASY_CVAR_GET(weaponPickupPlaysAnyReloadSounds) != 1){
+	if(EASY_CVAR_GET_DEBUGONLY(weaponPickupPlaysAnyReloadSounds) != 1){
 		// normal.
 		PRECACHE_SOUND("items/9mmclip1.wav", TRUE);
 	}else{

@@ -40,7 +40,7 @@ extern "C"
 #include "cvar_custom_list.h"
 
 
-EASY_CVAR_EXTERN(drawHUD);
+EASY_CVAR_EXTERN_CLIENTONLY_DEBUGONLY(drawHUD);
 
 
 
@@ -303,14 +303,14 @@ int DLLEXPORT HUD_Redraw( float time, int intermission )
 {
 	g_HUD_Redraw_ran = TRUE;
 
-	if(globalPSEUDO_drawHUDMem != EASY_CVAR_GET(drawHUD)){
+	if(globalPSEUDO_drawHUDMem != EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(drawHUD)){
 		gHUD.m_Ammo.updateCrosshair();
-		globalPSEUDO_drawHUDMem = EASY_CVAR_GET(drawHUD);
+		globalPSEUDO_drawHUDMem = EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(drawHUD);
 	}
 
 
 	//MODDD - the ultamite blocker!
-	if(EASY_CVAR_GET(drawHUD) != 1 && EASY_CVAR_GET(drawHUD) != 2){
+	if(EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(drawHUD) != 1 && EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(drawHUD) != 2){
 		return 1;
 	}
 

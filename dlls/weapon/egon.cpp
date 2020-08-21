@@ -37,8 +37,8 @@ EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelay)
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelaycustom)
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteclip)
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteammo)
-EASY_CVAR_EXTERN(egonEffectsMode);
-EASY_CVAR_EXTERN(egonHitCloud);
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(egonEffectsMode);
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(egonHitCloud);
 
 
 
@@ -941,8 +941,8 @@ void CEgon::UpdateEffect( const Vector &startPoint, const Vector &endPoint, floa
 	
 	
 #ifndef CLIENT_DLL
-	float egonEffectsModeVar = EASY_CVAR_GET(egonEffectsMode);
-	float egonHitCloudVar = EASY_CVAR_GET(egonHitCloud);
+	float egonEffectsModeVar = EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(egonEffectsMode);
+	float egonHitCloudVar = EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(egonHitCloud);
 
 
 	//if ( !m_pBeam )
@@ -1059,8 +1059,8 @@ void CEgon::CreateEffect( void )
 
 	//INDEXENT???
 	
-	float egonEffectsModeVar = EASY_CVAR_GET(egonEffectsMode);
-	float egonHitCloudVar = EASY_CVAR_GET(egonHitCloud);
+	float egonEffectsModeVar = EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(egonEffectsMode);
+	float egonHitCloudVar = EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(egonHitCloud);
 
 	
 	//ripped from rpg right before creating the rocket at the tip of the weapon.

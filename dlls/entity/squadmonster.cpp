@@ -26,11 +26,11 @@
 #include "plane.h"
 
 
-EASY_CVAR_EXTERN(monsterSpawnPrintout)
-EASY_CVAR_EXTERN(altSquadRulesRuntime)
-EASY_CVAR_EXTERN(squadmonsterPrintout)
+EASY_CVAR_EXTERN_DEBUGONLY(monsterSpawnPrintout)
+EASY_CVAR_EXTERN_DEBUGONLY(altSquadRulesRuntime)
+EASY_CVAR_EXTERN_DEBUGONLY(squadmonsterPrintout)
 
-EASY_CVAR_EXTERN(leaderlessSquadAllowed)
+EASY_CVAR_EXTERN_DEBUGONLY(leaderlessSquadAllowed)
 
 
 extern Schedule_t	slChaseEnemyFailed[];
@@ -674,14 +674,14 @@ void CSquadMonster :: StartMonster( void )
 		if ( !FStringNull( pev->netname ) )
 		{
 			BOOL possibleExceptionToRule = FALSE;
-			if(EASY_CVAR_GET(leaderlessSquadAllowed) == 1 && !this->alreadyDoneNetnameLeaderCheck){
+			if(EASY_CVAR_GET_DEBUGONLY(leaderlessSquadAllowed) == 1 && !this->alreadyDoneNetnameLeaderCheck){
 				alreadyDoneNetnameLeaderCheck = TRUE;
 				//or will have soon...
 				//Check all of netname.
 				possibleExceptionToRule = checkLeaderlessSquadByNetname();
 			}
 			//MODDD - do a check.   See if any member has the "SF_SQUADMONSTER_LEADER" flag set.
-			//EASY_CVAR_GET(leaderlessSquadAllowed) == 0
+			//EASY_CVAR_GET_DEBUGONLY(leaderlessSquadAllowed) == 0
 			// if I have a groupname, I can only recruit if I'm flagged as leader
 			//NOTE::: joining is now possible, but the old behavior is probably okay.
 			if ( !possibleExceptionToRule && !( pev->spawnflags & SF_SQUADMONSTER_LEADER ) )
@@ -704,12 +704,12 @@ void CSquadMonster :: StartMonster( void )
 		  ALERT ( at_aiconsole, "Squad of %d %s formed\n", iSquadSize, STRING( pev->classname ) );
 		}
 
-		//easyForcePrintLine("ARE YOU bros SERIOUS RIGHT NOW %.2f %d %d", EASY_CVAR_GET(altSquadRulesRuntime), FStringNull(pev->netname), iSquadSize);
+		//easyForcePrintLine("ARE YOU bros SERIOUS RIGHT NOW %.2f %d %d", EASY_CVAR_GET_DEBUGONLY(altSquadRulesRuntime), FStringNull(pev->netname), iSquadSize);
 		//If "altSquadRule" is something (1 or 2), and is either 2 OR, if 1, also spawned in real-time (not coming from the map), try joining a squad.
-		if( EASY_CVAR_GET(altSquadRulesRuntime) > 0 && (EASY_CVAR_GET(altSquadRulesRuntime) == 2 || FStringNull( pev->netname ) ) ){
+		if( EASY_CVAR_GET_DEBUGONLY(altSquadRulesRuntime) > 0 && (EASY_CVAR_GET_DEBUGONLY(altSquadRulesRuntime) == 2 || FStringNull( pev->netname ) ) ){
 			if(iSquadSize == 1){
 				
-				if(EASY_CVAR_GET(monsterSpawnPrintout) == 1){
+				if(EASY_CVAR_GET_DEBUGONLY(monsterSpawnPrintout) == 1){
 				easyForcePrintLine("ITS MONDAY my acquaintance!  Get myself a squad... %s:%d", this->getClassname(), this->monsterID);
 				}
 				//found no other unassigned members to start a squad with.  Try joining instead?

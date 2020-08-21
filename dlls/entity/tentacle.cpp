@@ -30,9 +30,9 @@
 #include "soundent.h"
 
 
-EASY_CVAR_EXTERN(tentacleAlertSound)
-EASY_CVAR_EXTERN(tentacleSwingSound1)
-EASY_CVAR_EXTERN(tentacleSwingSound2)
+EASY_CVAR_EXTERN_DEBUGONLY(tentacleAlertSound)
+EASY_CVAR_EXTERN_DEBUGONLY(tentacleSwingSound1)
+EASY_CVAR_EXTERN_DEBUGONLY(tentacleSwingSound2)
 
 
 // Wait. Custom activities in the model?  Why is that idea barely used elsewhere?
@@ -568,7 +568,7 @@ void CTentacle :: Cycle( void )
 			case 1: sound = "tentacle/te_alert2.wav"; break;
 			}
 			
-			if(EASY_CVAR_GET(tentacleAlertSound) >= 0){
+			if(EASY_CVAR_GET_DEBUGONLY(tentacleAlertSound) >= 0){
 				UTIL_EmitAmbientSound(ENT(pev), pev->origin + Vector( 0, 0, MyHeight()), sound, 1.0, ATTN_NORM, 0, RANDOM_LONG(96, 102), TRUE);
 			}
 		}
@@ -894,7 +894,7 @@ void CTentacle :: HandleAnimEvent( MonsterEvent_t *pEvent )
 
 	case 3: // start killing swing
 		m_iHitDmg = 200;
-		if(EASY_CVAR_GET(tentacleSwingSound1) >= 0){
+		if(EASY_CVAR_GET_DEBUGONLY(tentacleSwingSound1) >= 0){
 			UTIL_EmitAmbientSound(ENT(pev), pev->origin + Vector( 0, 0, MyHeight()), "tentacle/te_swing1.wav", 1.0, ATTN_NORM, 0, RANDOM_LONG(97, 101), TRUE);
 		}
 		break;
@@ -904,7 +904,7 @@ void CTentacle :: HandleAnimEvent( MonsterEvent_t *pEvent )
 		break;
 
 	case 5: // just "whoosh" sound
-		if(EASY_CVAR_GET(tentacleSwingSound2) >= 0){
+		if(EASY_CVAR_GET_DEBUGONLY(tentacleSwingSound2) >= 0){
 			UTIL_EmitAmbientSound(ENT(pev), pev->origin + Vector( 0, 0, MyHeight()), "tentacle/te_swing2.wav", 1.0, ATTN_NORM, 0, RANDOM_LONG(97, 101), TRUE);
 		}
 		break;

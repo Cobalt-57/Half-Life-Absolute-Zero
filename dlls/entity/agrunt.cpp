@@ -579,7 +579,7 @@ IMPLEMENT_CUSTOM_SCHEDULES( CAGrunt, CSquadMonster );
 void CAGrunt::MonsterThink(void){
 
 
-	if(EASY_CVAR_GET(thatWasntPunch) == 1 && this->m_fSequenceFinished){
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(thatWasntPunch) == 1 && this->m_fSequenceFinished){
 
 		switch(RANDOM_LONG(0, 33)){
 
@@ -897,7 +897,7 @@ void CAGrunt::setPoweredUpOn(CBaseMonster* argPoweredUpCauseEnt, float argHowLon
 int CAGrunt::IRelationship ( CBaseEntity *pTarget )
 {
 
-	if(EASY_CVAR_GET(thatWasntPunch) == 1){
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(thatWasntPunch) == 1){
 		return R_NO;
 	}
 
@@ -1208,7 +1208,7 @@ void CAGrunt :: SetYawSpeed ( void )
 void CAGrunt :: HandleAnimEvent( MonsterEvent_t *pEvent )
 {
 
-	if(EASY_CVAR_GET(thatWasntPunch) == 1){
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(thatWasntPunch) == 1){
 		return;
 	}
 
@@ -1235,7 +1235,7 @@ void CAGrunt :: HandleAnimEvent( MonsterEvent_t *pEvent )
 				vecDirToEnemy = gpGlobals->v_forward;
 			}
 
-			if(EASY_CVAR_GET(agrunt_muzzleflash) != 0){
+			if(EASY_CVAR_GET_DEBUGONLY(agrunt_muzzleflash) != 0){
 				pev->effects = EF_MUZZLEFLASH;
 			}
 
@@ -1251,7 +1251,7 @@ void CAGrunt :: HandleAnimEvent( MonsterEvent_t *pEvent )
 			Vector vecHornetSpawnPos = vecArmPos + vecDirToEnemy * 12;
 
 
-			if(EASY_CVAR_GET(agrunt_muzzleflash) != 0){
+			if(EASY_CVAR_GET_DEBUGONLY(agrunt_muzzleflash) != 0){
 				MESSAGE_BEGIN( MSG_PVS, SVC_TEMPENTITY, vecArmPos );
 					WRITE_BYTE( TE_SPRITE );
 					WRITE_COORD(vecArmMuzzlePos.x );	// pos
@@ -1731,7 +1731,7 @@ Schedule_t *CAGrunt :: GetSchedule ( void )
 			//  ALSO, moved here from below.  If flinching is possible, do that.
 			//  And added back the MEMORY_FLINCHED check seen in a lot of other areas.
 			//if ( HasConditions ( bits_COND_HEAVY_DAMAGE ) && (!(global_noFlinchOnHard==1 && g_iSkillLevel==SKILL_HARD)) )
-			if ( HasConditions ( bits_COND_LIGHT_DAMAGE ) && !HasMemory( bits_MEMORY_FLINCHED) && (!(EASY_CVAR_GET(noFlinchOnHard)==1 && g_iSkillLevel==SKILL_HARD)) )
+			if ( HasConditions ( bits_COND_LIGHT_DAMAGE ) && !HasMemory( bits_MEMORY_FLINCHED) && (!(EASY_CVAR_GET_DEBUGONLY(noFlinchOnHard)==1 && g_iSkillLevel==SKILL_HARD)) )
 			{
  				return GetScheduleOfType( SCHED_SMALL_FLINCH );
 			}
@@ -2250,7 +2250,7 @@ void CAGrunt::OnTakeDamageSetConditions(entvars_t *pevInflictor, entvars_t *pevA
 	}
 
 /*
-	if(EASY_CVAR_GET(testVar) == 10){
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(testVar) == 10){
 		//any damage causes me now.
 		SetConditions(bits_COND_HEAVY_DAMAGE);
 	}

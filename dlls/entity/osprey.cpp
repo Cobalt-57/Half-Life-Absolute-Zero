@@ -26,8 +26,8 @@
 
 //MODDD -
 EASY_CVAR_EXTERN(cl_explosion)
-EASY_CVAR_EXTERN(sparksOspreyHitMulti)
-EASY_CVAR_EXTERN(ospreyIgnoresGruntCount)
+EASY_CVAR_EXTERN_DEBUGONLY(sparksOspreyHitMulti)
+EASY_CVAR_EXTERN_DEBUGONLY(ospreyIgnoresGruntCount)
 
 
 // oh look, a struct that's used... absolutely... nowhere.
@@ -272,7 +272,7 @@ void COsprey :: FindAllThink( void )
 
 	
 	//MODDD - involving this cvar.
-	if (EASY_CVAR_GET(ospreyIgnoresGruntCount) != 1 && m_iUnits == 0)
+	if (EASY_CVAR_GET_DEBUGONLY(ospreyIgnoresGruntCount) != 1 && m_iUnits == 0)
 	{
 		ALERT( at_console, "osprey error: no grunts to resupply\n");
 		UTIL_Remove( this );
@@ -864,7 +864,7 @@ GENERATE_TRACEATTACK_IMPLEMENTATION(COsprey)
 	else
 	{
 		//UTIL_Sparks
-		UTIL_Sparks( ptr->vecEndPos, DEFAULT_SPARK_BALLS, EASY_CVAR_GET(sparksOspreyHitMulti) );
+		UTIL_Sparks( ptr->vecEndPos, DEFAULT_SPARK_BALLS, EASY_CVAR_GET_DEBUGONLY(sparksOspreyHitMulti) );
 	}
 }
 

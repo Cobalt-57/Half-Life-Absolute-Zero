@@ -30,9 +30,9 @@ EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteclip)
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteammo)
 
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(glockOldReloadLogic)
-EASY_CVAR_EXTERN(glockUseLastBulletAnim)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(glockUseLastBulletAnim)
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST(wpn_glocksilencer)
-//EASY_CVAR_EXTERN(testVar)
+//EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(testVar)
 
 
 extern float global2_wpn_glocksilencer;
@@ -1014,7 +1014,7 @@ void CGlock::GlockFire( float flSpread , float flCycleTime, BOOL fUseAutoAim )
 
 
 	//MODDD - the "shoot_empty" anim condition also requires "glockUseLastBulletAnim" to be true.
-	PLAYBACK_EVENT_FULL( flags, m_pPlayer->edict(), fUseAutoAim ? m_usFireGlock1 : m_usFireGlock2, 0.0, (float *)&g_vecZero, (float *)&g_vecZero, vecDir.x, vecDir.y, m_fInAttack, 0, ( m_iClip == 0 && EASY_CVAR_GET(glockUseLastBulletAnim) == 1 ) ? 1 : 0, 0 );
+	PLAYBACK_EVENT_FULL( flags, m_pPlayer->edict(), fUseAutoAim ? m_usFireGlock1 : m_usFireGlock2, 0.0, (float *)&g_vecZero, (float *)&g_vecZero, vecDir.x, vecDir.y, m_fInAttack, 0, ( m_iClip == 0 && EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(glockUseLastBulletAnim) == 1 ) ? 1 : 0, 0 );
 
 	// well gee, we fired, didn't we?
 	setFiredSinceReloadTrue();

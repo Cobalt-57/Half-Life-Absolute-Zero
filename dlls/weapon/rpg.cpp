@@ -72,8 +72,8 @@ EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelaycustom)
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteclip)
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteammo)
 EASY_CVAR_EXTERN(cl_rockettrail)
-EASY_CVAR_EXTERN(rocketSkipIgnite)
-EASY_CVAR_EXTERN(myRocketsAreBarney)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(rocketSkipIgnite)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(myRocketsAreBarney)
 
 
 //MODDD - don't ask.
@@ -181,7 +181,7 @@ CRpgRocket *CRpgRocket::CreateRpgRocket( Vector vecOrigin, Vector vecAngles, Vec
 	//MODDD - fine, but make sure we set vecMoveDirectionMemory to that.
 	pRocket->pev->angles = vecAngles;
 
-	if(EASY_CVAR_GET(myRocketsAreBarney) == 1){
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(myRocketsAreBarney) == 1){
 		pRocket->pev->angles.x -= 90;
 	}
 
@@ -193,7 +193,7 @@ CRpgRocket *CRpgRocket::CreateRpgRocket( Vector vecOrigin, Vector vecAngles, Vec
 	pRocket->m_pLauncher->m_cActiveRockets++;// register this missile as active for the launcher
 	pRocket->pev->owner = pOwner->edict();
 
-	if(EASY_CVAR_GET(myRocketsAreBarney) == 1){
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(myRocketsAreBarney) == 1){
 		//say something witty I guess.
 		saySomethingBarneyRocket(pRocket);
 	}
@@ -315,7 +315,7 @@ void CRpgRocket :: Spawn( void )
 	pev->solid = SOLID_BBOX;
 
 
-	if(EASY_CVAR_GET(myRocketsAreBarney) != 1){
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(myRocketsAreBarney) != 1){
 		SET_MODEL(ENT(pev), "models/rpgrocket.mdl");
 	}else{
 		SET_MODEL(ENT(pev), "models/barney.mdl");
@@ -331,9 +331,9 @@ void CRpgRocket :: Spawn( void )
 	SetTouch( &CGrenade::ExplodeTouch );
 
 
-	if(EASY_CVAR_GET(rocketSkipIgnite) != 1){
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(rocketSkipIgnite) != 1){
 
-		if(EASY_CVAR_GET(myRocketsAreBarney) != 1){
+		if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(myRocketsAreBarney) != 1){
 			pev->angles.x -= 30;
 			UTIL_MakeVectors( pev->angles );
 			pev->angles.x = -(pev->angles.x + 30);
@@ -453,7 +453,7 @@ void CRpgRocket :: Precache( void )
 	m_iTrail = PRECACHE_MODEL("sprites/smoke.spr");
 	PRECACHE_SOUND ("weapons/rocket1.wav");
 
-	if(EASY_CVAR_GET(myRocketsAreBarney) == 1){
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(myRocketsAreBarney) == 1){
 		PRECACHE_MODEL("models/barney.mdl");
 		PRECACHE_SOUND("barney/c1a4_ba_octo2.wav");
 		PRECACHE_SOUND("barney/c1a4_ba_octo3.wav");
@@ -473,7 +473,7 @@ void CRpgRocket :: IgniteThink( void  )
 	}
 	ignited = TRUE;
 
-	if(EASY_CVAR_GET(myRocketsAreBarney) != 1){
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(myRocketsAreBarney) != 1){
 		// make rocket sound
 		EMIT_SOUND( ENT(pev), CHAN_VOICE, "weapons/rocket1.wav", 1, 0.5 );
 	}else{
@@ -482,7 +482,7 @@ void CRpgRocket :: IgniteThink( void  )
 
 
 	if(EASY_CVAR_GET(cl_rockettrail) == 0){
-		//EASY_CVAR_GET(myRocketsAreBarney) == 1
+		//EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(myRocketsAreBarney) == 1
 
 		//MODDD - can we make the end of the trail disappear right at the moment of impact so it doesn't teleport to the explosion's inevitable offset away from the hit surface?
 		// it may be better to make it so the explosion just happens at an offset of the rocket's hit place and the rocket itself does not teleport to that offset at all.
@@ -568,7 +568,7 @@ void CRpgRocket :: FollowThink( void  )
 	//pev->angles = UTIL_VecToAngles( vecTarget );
 	pev->angles = UTIL_VecToAngles( vecMoveDirectionMemory );
 
-	if(EASY_CVAR_GET(myRocketsAreBarney) == 1){
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(myRocketsAreBarney) == 1){
 		pev->angles.x -= 90;
 	}
 
@@ -592,7 +592,7 @@ void CRpgRocket :: FollowThink( void  )
 		{
 			float maxSpeed = 2000;
 
-			if(EASY_CVAR_GET(myRocketsAreBarney) == 1){
+			if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(myRocketsAreBarney) == 1){
 				//reduce it instead, we need to make sure we don't miss the glory of barney.
 				maxSpeed = 450;
 			}
@@ -608,7 +608,7 @@ void CRpgRocket :: FollowThink( void  )
 		float aboveToNotExplodeVelocity = 1500;
 		float velocityPreserveMulti = 0.798f;
 
-		if(EASY_CVAR_GET(myRocketsAreBarney) == 1){
+		if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(myRocketsAreBarney) == 1){
 			aboveToNotExplodeVelocity = 240;
 			velocityPreserveMulti = 0.801f;
 		}

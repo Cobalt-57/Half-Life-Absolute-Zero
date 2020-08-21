@@ -28,9 +28,9 @@
 #include "game.h"
 
 
-EASY_CVAR_EXTERN(houndeyeAttackMode)
-EASY_CVAR_EXTERN(houndeyePrintout)
-EASY_CVAR_EXTERN(houndeye_attack_canGib)
+EASY_CVAR_EXTERN_DEBUGONLY(houndeyeAttackMode)
+EASY_CVAR_EXTERN_DEBUGONLY(houndeyePrintout)
+EASY_CVAR_EXTERN_DEBUGONLY(houndeye_attack_canGib)
 
 
 
@@ -708,7 +708,7 @@ void CHoundeye :: SetActivity ( Activity NewActivity )
 	else
 	{
 
-		if(NewActivity == ACT_SPECIAL_ATTACK1 && EASY_CVAR_GET(houndeyeAttackMode) == 1){
+		if(NewActivity == ACT_SPECIAL_ATTACK1 && EASY_CVAR_GET_DEBUGONLY(houndeyeAttackMode) == 1){
 			//if this is 1, we want the retail-charge animation to apply instead.  This is why.
 			m_Activity = NewActivity;
 
@@ -775,7 +775,7 @@ void CHoundeye :: HandleAnimEvent( MonsterEvent_t *pEvent )
 		case HOUND_AE_THUMP:
 			// emit the shockwaves
 			//!!!
-			if(EASY_CVAR_GET(houndeyeAttackMode) == 0){
+			if(EASY_CVAR_GET_DEBUGONLY(houndeyeAttackMode) == 0){
 				//why?  if tempp == 1, we ONLY play the shock in a different place.
 				//NOTE: at 2, this never even seems to happen.  Ah well, no loss.
 				SonicAttack();
@@ -1267,7 +1267,7 @@ void CHoundeye :: SonicAttack (BOOL useAlt )
 				if (flAdjustedDamage > 0 )
 				{
 					int damageType = DMG_SONIC;
-					if(EASY_CVAR_GET(houndeye_attack_canGib)){
+					if(EASY_CVAR_GET_DEBUGONLY(houndeye_attack_canGib)){
 						damageType |= DMG_ALWAYSGIB;
 					}
 
@@ -1435,7 +1435,7 @@ void CHoundeye :: StartTask ( Task_t *pTask )
 				//firstSpecialAttackFrame = TRUE;
 			*/
 
-			if( EASY_CVAR_GET(houndeyeAttackMode) == 2){
+			if( EASY_CVAR_GET_DEBUGONLY(houndeyeAttackMode) == 2){
 				//provide the warm-up sound, the usual source isn't there.
 				WarmUpSound();
 			}
@@ -2055,7 +2055,7 @@ Schedule_t *CHoundeye :: GetSchedule( void )
 				if ( OccupySlot ( bits_SLOTS_HOUND_ATTACK ) )
 				{
 					//???
-					if(EASY_CVAR_GET(houndeyeAttackMode) == 1 || EASY_CVAR_GET(houndeyeAttackMode) == 2 || EASY_CVAR_GET(houndeyeAttackMode) == 3){
+					if(EASY_CVAR_GET_DEBUGONLY(houndeyeAttackMode) == 1 || EASY_CVAR_GET_DEBUGONLY(houndeyeAttackMode) == 2 || EASY_CVAR_GET_DEBUGONLY(houndeyeAttackMode) == 3){
 						return GetScheduleOfType ( SCHED_SPECIAL_ATTACK1 );
 					}else{
 						return GetScheduleOfType ( SCHED_RANGE_ATTACK1 );

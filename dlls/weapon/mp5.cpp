@@ -38,7 +38,7 @@ EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteammo)
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST(playerWeaponSpreadMode)
 
 // this CVar is serverside only. The client should never use it.
-EASY_CVAR_EXTERN(mp5GrenadeInheritsPlayerVelocity)
+EASY_CVAR_EXTERN_DEBUGONLY(mp5GrenadeInheritsPlayerVelocity)
 
 
 
@@ -304,7 +304,7 @@ void CMP5::SecondaryAttack( void )
 
 	//Script that generates an entity should be serverside only.
 #ifndef CLIENT_DLL
-	Vector extraStart = UTIL_GetProjectileVelocityExtra(m_pPlayer->pev->velocity, EASY_CVAR_GET(mp5GrenadeInheritsPlayerVelocity) );
+	Vector extraStart = UTIL_GetProjectileVelocityExtra(m_pPlayer->pev->velocity, EASY_CVAR_GET_DEBUGONLY(mp5GrenadeInheritsPlayerVelocity) );
 
 	//MODDD - supply the damage to deal in this call.
 	CGrenade::ShootContact( m_pPlayer->pev, 

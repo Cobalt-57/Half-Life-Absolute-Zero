@@ -35,9 +35,9 @@ EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelay)
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelaycustom)
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteclip)
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteammo)
-EASY_CVAR_EXTERN(playerCrossbowMode)
-EASY_CVAR_EXTERN(crossbowInheritsPlayerVelocity)
-EASY_CVAR_EXTERN(crossbowReloadSoundDelay)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(playerCrossbowMode)
+EASY_CVAR_EXTERN_DEBUGONLY(crossbowInheritsPlayerVelocity)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(crossbowReloadSoundDelay)
 
 
 
@@ -182,7 +182,7 @@ void CCrossbow::PrimaryAttack( void )
 
 	if(m_fInZoom){
 		//If zoomed in, do a check for which mode to use.
-		if(EASY_CVAR_GET(playerCrossbowMode)!=2 && (EASY_CVAR_GET(playerCrossbowMode)==1 || !IsMultiplayer()) )
+		if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(playerCrossbowMode)!=2 && (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(playerCrossbowMode)==1 || !IsMultiplayer()) )
 		{
 			//single player? no difference, fall to the usual FireBolt below.
 
@@ -367,7 +367,7 @@ void CCrossbow::FireBolt()
 	{
 		//MODDd - SEE BELOW.
 		//pBolt->pev->velocity = vecDir * BOLT_WATER_VELOCITY;
-		arrowVelocity = vecDir * BOLT_WATER_VELOCITY + UTIL_GetProjectileVelocityExtra(m_pPlayer->pev->velocity, EASY_CVAR_GET(crossbowInheritsPlayerVelocity) );
+		arrowVelocity = vecDir * BOLT_WATER_VELOCITY + UTIL_GetProjectileVelocityExtra(m_pPlayer->pev->velocity, EASY_CVAR_GET_DEBUGONLY(crossbowInheritsPlayerVelocity) );
 
 
 		arrowSpeed = BOLT_WATER_VELOCITY;
@@ -376,7 +376,7 @@ void CCrossbow::FireBolt()
 	{
 		//MODDD - allow to be affected by "affectedByPlayerVelocity"
 		//pBolt->pev->velocity = vecDir * BOLT_AIR_VELOCITY;
-		arrowVelocity = vecDir * BOLT_AIR_VELOCITY + UTIL_GetProjectileVelocityExtra(m_pPlayer->pev->velocity, EASY_CVAR_GET(crossbowInheritsPlayerVelocity) );
+		arrowVelocity = vecDir * BOLT_AIR_VELOCITY + UTIL_GetProjectileVelocityExtra(m_pPlayer->pev->velocity, EASY_CVAR_GET_DEBUGONLY(crossbowInheritsPlayerVelocity) );
 
 		arrowSpeed = BOLT_AIR_VELOCITY;
 	}
@@ -533,8 +533,8 @@ void CCrossbow::Reload( void )
 		#ifndef CLIENT_DLL
 		//UTIL_WeaponTimeBase() ???
 
-		if(EASY_CVAR_GET(crossbowReloadSoundDelay) >= 0){
-			crossbowReloadSoundTimer = gpGlobals->time + EASY_CVAR_GET(crossbowReloadSoundDelay);
+		if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(crossbowReloadSoundDelay) >= 0){
+			crossbowReloadSoundTimer = gpGlobals->time + EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(crossbowReloadSoundDelay);
 		}
 		 
 		//MODDD - moved the sound effect to ItemPostFrame for playing later.

@@ -30,8 +30,8 @@
 #include "saverestore.h"
 
 
-EASY_CVAR_EXTERN(animationFramerateMulti)
-EASY_CVAR_EXTERN(animationPrintouts)
+EASY_CVAR_EXTERN_DEBUGONLY(animationFramerateMulti)
+EASY_CVAR_EXTERN_DEBUGONLY(animationPrintouts)
 
 
 
@@ -358,7 +358,7 @@ void CBaseAnimating::checkEndOfAnimation(void){
 	//}
 
 
-	if(EASY_CVAR_GET(animationPrintouts) == 1){
+	if(EASY_CVAR_GET_DEBUGONLY(animationPrintouts) == 1){
 		CBaseMonster* tempMon = this->GetMonsterPointer();
 		if(tempMon != NULL && tempMon->monsterID >= -1){
 			easyForcePrintLine("%s:%d checkEndOfAnimation. Finished? %d", tempMon->getClassname(), tempMon->monsterID, m_fSequenceFinished);
@@ -582,7 +582,7 @@ void CBaseAnimating :: StudioFrameAdvance ( float flInterval )
 	//             value for "pev->framerate" at the start of the next called anim. Check first for any updates / replacements, but consider removal.
 
 	//keep this for reference. ... TODO if we bother to do this.
-	float recentFrameAdvance = flInterval * m_flFrameRate * pev->framerate * EASY_CVAR_GET(animationFramerateMulti);
+	float recentFrameAdvance = flInterval * m_flFrameRate * pev->framerate * EASY_CVAR_GET_DEBUGONLY(animationFramerateMulti);
 	
 	/*
 	if(FClassnameIs(this->pev, "monster_panthereye")){
@@ -596,7 +596,7 @@ void CBaseAnimating :: StudioFrameAdvance ( float flInterval )
 	pev->animtime = gpGlobals->time;
 	//if (FClassnameIs(pev, "monster_zombie"))easyForcePrintLine("pev->animtime set B %.2f", pev->animtime);
 	
-	if(EASY_CVAR_GET(animationPrintouts) == 1){
+	if(EASY_CVAR_GET_DEBUGONLY(animationPrintouts) == 1){
 		CBaseMonster* tempMon = this->GetMonsterPointer();
 		if(tempMon != NULL && tempMon->monsterID >= -1){
 			easyForcePrintLine("%s:%d StudioFrameAdvance. Frame change: %.2f", tempMon->getClassname(), tempMon->monsterID, recentFrameAdvance);
@@ -700,7 +700,7 @@ int CBaseAnimating :: LookupSequence ( const char *label )
 //=========================================================
 void CBaseAnimating :: ResetSequenceInfo ( )
 {
-	if(EASY_CVAR_GET(animationPrintouts) == 1){
+	if(EASY_CVAR_GET_DEBUGONLY(animationPrintouts) == 1){
 		CBaseMonster* tempMon = this->GetMonsterPointer();
 		if(tempMon != NULL && tempMon->monsterID >= -1){
 			easyForcePrintLine("%s:%d ResetSequenceInfo.", tempMon->getClassname(), tempMon->monsterID);
@@ -850,7 +850,7 @@ BOOL CBaseAnimating::canResetBlend2(void){
 
 void CBaseAnimating :: ResetSequenceInfoSafe ( )
 {
-	if(EASY_CVAR_GET(animationPrintouts) == 1){
+	if(EASY_CVAR_GET_DEBUGONLY(animationPrintouts) == 1){
 		CBaseMonster* tempMon = this->GetMonsterPointer();
 		if(tempMon != NULL && tempMon->monsterID >= -1){
 			easyForcePrintLine("%s:%d ResetSequenceInfoSafe.", tempMon->getClassname(), tempMon->monsterID);
@@ -973,8 +973,8 @@ void CBaseAnimating :: DispatchAnimEvents ( float flInterval )
 	*/
 
 	// FIX: this still sometimes hits events twice
-	float flStart = pev->frame + (m_flLastEventCheck - pev->animtime) * m_flFrameRate * pev->framerate * EASY_CVAR_GET(animationFramerateMulti);
-	float flEnd = pev->frame + flInterval * m_flFrameRate * pev->framerate * EASY_CVAR_GET(animationFramerateMulti);
+	float flStart = pev->frame + (m_flLastEventCheck - pev->animtime) * m_flFrameRate * pev->framerate * EASY_CVAR_GET_DEBUGONLY(animationFramerateMulti);
+	float flEnd = pev->frame + flInterval * m_flFrameRate * pev->framerate * EASY_CVAR_GET_DEBUGONLY(animationFramerateMulti);
 
 
 	m_flLastEventCheck = pev->animtime + flInterval;
@@ -991,7 +991,7 @@ void CBaseAnimating :: DispatchAnimEvents ( float flInterval )
 	}
 
 	
-	if(EASY_CVAR_GET(animationPrintouts) == 1){
+	if(EASY_CVAR_GET_DEBUGONLY(animationPrintouts) == 1){
 		CBaseMonster* tempMon = this->GetMonsterPointer();
 		if(tempMon != NULL && tempMon->monsterID >= -1){
 			easyForcePrintLine("%s:%d DispatchAnimEvents. Setting m_fSequenceFinished to false and re-checking.", tempMon->getClassname(), tempMon->monsterID);

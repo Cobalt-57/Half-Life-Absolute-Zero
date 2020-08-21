@@ -725,7 +725,7 @@ Schedule_t* CFriendly::GetSchedule ( void )
 				return GetScheduleOfType ( SCHED_WAKE_ANGRY );
 			}
 			//MODDD - other condition.  If "noFlinchOnHard" is on and the skill is hard, don't flinch from getting hit.
-			else if (HasConditions(bits_COND_LIGHT_DAMAGE) && !HasMemory( bits_MEMORY_FLINCHED) && !(EASY_CVAR_GET(noFlinchOnHard)==1 && g_iSkillLevel==SKILL_HARD)  )
+			else if (HasConditions(bits_COND_LIGHT_DAMAGE) && !HasMemory( bits_MEMORY_FLINCHED) && !(EASY_CVAR_GET_DEBUGONLY(noFlinchOnHard)==1 && g_iSkillLevel==SKILL_HARD)  )
 			{
 				return GetScheduleOfType( SCHED_SMALL_FLINCH );
 			}
@@ -1683,8 +1683,8 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CFriendly)
 				//horror
 				//horrorPlayTime = gpGlobals->time; //play now!.. not this way.
 				if(m_hEnemy != NULL){
-					if(EASY_CVAR_GET(friendlyPianoOtherVolume) > 0){
-						UTIL_PlaySound( m_hEnemy->edict(), CHAN_STATIC, "friendly/friendly_horror_start.wav", EASY_CVAR_GET(friendlyPianoOtherVolume), 1.8, 0, 100, TRUE );
+					if(EASY_CVAR_GET_DEBUGONLY(friendlyPianoOtherVolume) > 0){
+						UTIL_PlaySound( m_hEnemy->edict(), CHAN_STATIC, "friendly/friendly_horror_start.wav", EASY_CVAR_GET_DEBUGONLY(friendlyPianoOtherVolume), 1.8, 0, 100, TRUE );
 					}
 
 					CBaseEntity* entTest = CBaseEntity::Instance(m_hEnemy.Get() );
@@ -1739,8 +1739,8 @@ GENERATE_KILLED_IMPLEMENTATION(CFriendly){
 
 				//easyForcePrintLine("WELL?!! %d : %d", m_hEnemy!=NULL, (m_hEnemy!=NULL)?m_hEnemy->IsPlayer():-1 );
 				
-				if(EASY_CVAR_GET(friendlyPianoOtherVolume) > 0){
-					UTIL_PlaySound( m_hEnemy->edict(), CHAN_STATIC, "friendly/friendly_horror_end.wav", EASY_CVAR_GET(friendlyPianoOtherVolume), 1.8, 0, 100, TRUE );
+				if(EASY_CVAR_GET_DEBUGONLY(friendlyPianoOtherVolume) > 0){
+					UTIL_PlaySound( m_hEnemy->edict(), CHAN_STATIC, "friendly/friendly_horror_end.wav", EASY_CVAR_GET_DEBUGONLY(friendlyPianoOtherVolume), 1.8, 0, 100, TRUE );
 				}
 			}//END OF entTest (player) null check
 		}//END OF enemy and isPlayer check

@@ -30,7 +30,7 @@ DECLARE_MESSAGE(m_Battery, Battery)
 
 //MODDD - externs
 EASY_CVAR_EXTERN(hud_version)
-EASY_CVAR_EXTERN(forceDrawBatteryNumber)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(forceDrawBatteryNumber)
 EASY_CVAR_EXTERN(hud_batterydraw)
 EASY_CVAR_EXTERN(hud_weaponselecthideslower)
 EASY_CVAR_EXTERN(blastExtraArmorDamageMode)
@@ -196,7 +196,7 @@ int CHudBattery::Draw(float flTime)
 
 
 		//MODDD - for debugging the battery's real value with a bit more accuracy than "about 1/3".
-		if(EASY_CVAR_GET(forceDrawBatteryNumber) == 1){
+		if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(forceDrawBatteryNumber) == 1){
 			y = ScreenHeight - ((int)(BatteryHeight*4)) + 3 - 28;
 			x = (gHUD.m_iFontWidthAlt)/2 + 5;
 			gHUD.DrawHudNumber(x, y, DHN_3DIGITS | DHN_DRAWZERO, m_iBat, r, g, b, 0, 1);
@@ -270,7 +270,7 @@ int CHudBattery::Draw(float flTime)
 		iOffset = 0;
 
 		//MODDD - for debugging the battery's real value with a bit more accuracy than "about 1/3".
-		if(EASY_CVAR_GET(forceDrawBatteryNumber) == 1){
+		if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(forceDrawBatteryNumber) == 1){
 
 			//gHUD.m_Health.deriveColorFromHealth(r, g, b, a);
 			gHUD.getGenericOrangeColor(r, g, b);

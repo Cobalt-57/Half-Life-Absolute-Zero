@@ -25,12 +25,12 @@
 #include "game.h"
 #include "util_debugdraw.h"
 
-EASY_CVAR_EXTERN(noFlinchOnHard)
-EASY_CVAR_EXTERN(panthereyeHasCloakingAbility)
-EASY_CVAR_EXTERN(panthereyeJumpDotTol)
-EASY_CVAR_EXTERN(panthereyePrintout)
-EASY_CVAR_EXTERN(animationFramerateMulti)
-EASY_CVAR_EXTERN(drawDebugPathfinding2)
+EASY_CVAR_EXTERN_DEBUGONLY(noFlinchOnHard)
+EASY_CVAR_EXTERN_DEBUGONLY(panthereyeHasCloakingAbility)
+EASY_CVAR_EXTERN_DEBUGONLY(panthereyeJumpDotTol)
+EASY_CVAR_EXTERN_DEBUGONLY(panthereyePrintout)
+EASY_CVAR_EXTERN_DEBUGONLY(animationFramerateMulti)
+EASY_CVAR_EXTERN_DEBUGONLY(drawDebugPathfinding2)
 
 extern DLL_GLOBAL int g_iSkillLevel;
 
@@ -583,7 +583,7 @@ BOOL CPantherEye::testLeapNoBlock(void){
 		TRACE_MONSTER_HULL(edict(), vTestStart, vTestEnd, dont_ignore_monsters, edict(), &tr);
 		//is this a better check for seeing if jumping is still okay?
 
-		if(EASY_CVAR_GET(drawDebugPathfinding2) == 1)DebugLine_Setup(0, vTestStart, vTestEnd, tr.flFraction);
+		if(EASY_CVAR_GET_DEBUGONLY(drawDebugPathfinding2) == 1)DebugLine_Setup(0, vTestStart, vTestEnd, tr.flFraction);
 
 		//don't do the "!tr.fAllSolid" check.  ?
 		//and !tr.fStartSolid ?  Why is that always true even if on the ground and the origin is bumped up? ugh.
@@ -1626,11 +1626,11 @@ void CPantherEye::MonsterThink ( void )
 		//RIPPED FROM hassassin.
 
 		//m_Activity == ACT_RUN || m_Activity == ACT_WALK 
-		if (EASY_CVAR_GET(panthereyeHasCloakingAbility) <= 0 || m_hEnemy == NULL || pev->deadflag != DEAD_NO || !(pev->flags & FL_ONGROUND) || sneakMode == -1 || (m_hEnemy->pev->origin - pev->origin).Length() < 170 )
+		if (EASY_CVAR_GET_DEBUGONLY(panthereyeHasCloakingAbility) <= 0 || m_hEnemy == NULL || pev->deadflag != DEAD_NO || !(pev->flags & FL_ONGROUND) || sneakMode == -1 || (m_hEnemy->pev->origin - pev->origin).Length() < 170 )
 			m_iTargetRanderamt = 255;
 		else{
 			//m_iTargetRanderamt = 20;
-			m_iTargetRanderamt = min(EASY_CVAR_GET(panthereyeHasCloakingAbility), 1) * 255;
+			m_iTargetRanderamt = min(EASY_CVAR_GET_DEBUGONLY(panthereyeHasCloakingAbility), 1) * 255;
 		}
 		if (pev->renderamt > m_iTargetRanderamt)
 		{
@@ -1866,7 +1866,7 @@ Schedule_t *CPantherEye::GetSchedule ( void )
 				return GetScheduleOfType(SCHED_BIG_FLINCH);
 			}
 			//MODDD - other condition.  If "noFlinchOnHard" is on and the skill is hard, don't flinch from getting hit.
-			else if (HasConditions(bits_COND_LIGHT_DAMAGE) && !HasMemory( bits_MEMORY_FLINCHED) && !(EASY_CVAR_GET(noFlinchOnHard)==1 && g_iSkillLevel==SKILL_HARD)  )
+			else if (HasConditions(bits_COND_LIGHT_DAMAGE) && !HasMemory( bits_MEMORY_FLINCHED) && !(EASY_CVAR_GET_DEBUGONLY(noFlinchOnHard)==1 && g_iSkillLevel==SKILL_HARD)  )
 			{
 				return GetScheduleOfType( SCHED_SMALL_FLINCH );
 			}
@@ -2367,7 +2367,7 @@ void CPantherEye::RunTask ( Task_t *pTask ){
 					}else{
 						//this close?  Just attack already.
 						//EASY_CVAR_PRINTIF_PRE(panthereyePrintout, easyPrintLine("WELL DDDD %d", UTIL_IsFacingAway(m_hEnemy->pev, pev->origin, 0.3) )); 
-						if(UTIL_IsFacingAway(m_hEnemy->pev, pev->origin, EASY_CVAR_GET(panthereyeJumpDotTol)) ){
+						if(UTIL_IsFacingAway(m_hEnemy->pev, pev->origin, EASY_CVAR_GET_DEBUGONLY(panthereyeJumpDotTol)) ){
 							//can jump...?
 							if(distanceFromEnemy < 360 * 20){
 
@@ -2774,7 +2774,7 @@ void CPantherEye::OnTakeDamageSetConditions(entvars_t *pevInflictor, entvars_t *
 	}
 
 /*
-	if(EASY_CVAR_GET(testVar) == 10){
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(testVar) == 10){
 		//any damage causes me now.
 		SetConditions(bits_COND_HEAVY_DAMAGE);
 	}

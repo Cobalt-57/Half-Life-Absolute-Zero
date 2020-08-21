@@ -1450,7 +1450,7 @@ void determineHiddenMemPath(void){
 		//???
 	}
 
-	if(EASY_CVAR_GET(hiddenMemPrintout) == 1){
+	if(EASY_CVAR_GET_DEBUGONLY(hiddenMemPrintout) == 1){
 		easyForcePrintLine("HALF LIFE PATH: %s", globalPSEUDO_halflifePath);
 		easyForcePrintLine("GAME PATH: %s", globalPSEUDO_gamePath);
 		easyForcePrintLine("HIDDEN MEM PATH: %s", globalPSEUDO_hiddenMemPath);
@@ -1568,7 +1568,7 @@ BOOL checkSubDirectoryExistence(const char* arg_subdir){
 
 void processLoadHiddenCVarLine(const char* aryChrLineBuffer){
 
-	if(EASY_CVAR_GET(hiddenMemPrintout) == 1){
+	if(EASY_CVAR_GET_DEBUGONLY(hiddenMemPrintout) == 1){
 		easyForcePrintLine("RAW INPUT LINE: %s", aryChrLineBuffer);
 	}
 
@@ -1581,7 +1581,7 @@ void processLoadHiddenCVarLine(const char* aryChrLineBuffer){
 	int spacePos = UTIL_findCharFirstPos(aryChrLineBuffer, ' ');
 
 	if(spacePos == -1){
-		if(EASY_CVAR_GET(hiddenMemPrintout) == 1){
+		if(EASY_CVAR_GET_DEBUGONLY(hiddenMemPrintout) == 1){
 			easyForcePrintLine("ISSUE; NO SPACE");
 		}
 		//try another line?
@@ -1602,7 +1602,7 @@ void processLoadHiddenCVarLine(const char* aryChrLineBuffer){
 	try{
 		value = tryStringToFloat(valueRaw);
 	}catch(int){
-		if(EASY_CVAR_GET(hiddenMemPrintout) == 1){
+		if(EASY_CVAR_GET_DEBUGONLY(hiddenMemPrintout) == 1){
 			easyForcePrintLine("ISSUE; CANT FIND NUMBER");
 		}
 		easyForcePrintLine("Error loading %s : \"%s\" could not be converted to a decimal.", identifier, valueRaw);
@@ -1615,7 +1615,7 @@ void processLoadHiddenCVarLine(const char* aryChrLineBuffer){
 			
 	//easyForcePrintLine("are you serial    %s", line.c_str() );
 			
-	if(EASY_CVAR_GET(hiddenMemPrintout) == 1){
+	if(EASY_CVAR_GET_DEBUGONLY(hiddenMemPrintout) == 1){
 		easyForcePrintLine("IDENTITY VALUE PAIR: %s %.2f", identifier, value);
 	}
 	
@@ -1739,11 +1739,11 @@ void saveHiddenCVars(void){
 		EASY_CVAR_HIDDEN_SAVE_MASS;
 
 		fclose(myFile);
-		if(EASY_CVAR_GET(hiddenMemPrintout) == 1){
+		if(EASY_CVAR_GET_DEBUGONLY(hiddenMemPrintout) == 1){
 			easyForcePrintLine("File generation okay?"); 
 		}
 	}else{
-		if(EASY_CVAR_GET(hiddenMemPrintout) == 1){
+		if(EASY_CVAR_GET_DEBUGONLY(hiddenMemPrintout) == 1){
 			easyForcePrintLine("File generation failed?"); 
 		}
 	}
@@ -1965,13 +1965,13 @@ void UTIL_Sparks(const Vector& position){
 
 	//If this is somehow called again, please say so.
 	//easyPrintLine("!!!!!!!!! SPARK CREATION UNSOURCED 2!!!!!!!!!");
-	UTIL_Sparks(position, DEFAULT_SPARK_BALLS, EASY_CVAR_GET(sparksEnvMulti));
+	UTIL_Sparks(position, DEFAULT_SPARK_BALLS, EASY_CVAR_GET_DEBUGONLY(sparksEnvMulti));
 
 }//END OF Util_Sparks(...)
 
 void UTIL_Sparks(const Vector& position, int arg_ballsToSpawn, float arg_extraSparkMulti){
 
-	if (EASY_CVAR_GET(useAlphaSparks) == 0) {
+	if (EASY_CVAR_GET_DEBUGONLY(useAlphaSparks) == 0) {
 		//use retail then.
 
 #ifdef CLIENT_DLL
@@ -1999,7 +1999,7 @@ void UTIL_Sparks(const Vector& position, int arg_ballsToSpawn, float arg_extraSp
 
 	int ballsToSpawn;
 
-	float multToUse = arg_extraSparkMulti * EASY_CVAR_GET(sparksAllMulti);
+	float multToUse = arg_extraSparkMulti * EASY_CVAR_GET_DEBUGONLY(sparksAllMulti);
 
 	/*
 	float multToUse = arg_extraSparkMulti;

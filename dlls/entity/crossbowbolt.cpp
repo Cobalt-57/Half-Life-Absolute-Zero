@@ -14,12 +14,12 @@
 #include "soundent.h"
 #include "func_break.h"
 
-EASY_CVAR_EXTERN(playerCrossbowMode)
-EASY_CVAR_EXTERN(hassassinCrossbowMode)
-EASY_CVAR_EXTERN(crossbowInheritsPlayerVelocity)
-EASY_CVAR_EXTERN(crossbowBoltDirectionAffectedByWater)
-EASY_CVAR_EXTERN(sparksPlayerCrossbowMulti)
-//EASY_CVAR_EXTERN(crossbowReloadSoundDelay)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(playerCrossbowMode)
+EASY_CVAR_EXTERN_DEBUGONLY(hassassinCrossbowMode)
+EASY_CVAR_EXTERN_DEBUGONLY(crossbowInheritsPlayerVelocity)
+EASY_CVAR_EXTERN_DEBUGONLY(crossbowBoltDirectionAffectedByWater)
+EASY_CVAR_EXTERN_DEBUGONLY(sparksPlayerCrossbowMulti)
+//EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(crossbowReloadSoundDelay)
 
 
 
@@ -200,7 +200,7 @@ void CCrossbowBolt::BoltTouch( CBaseEntity *pOther )
 	//if( pev->owner != NULL){
 	const char* ownerClassName = STRING(pev->owner->v.classname);
 	if( !strcmp(ownerClassName, "player")){
-		crossbowMode = EASY_CVAR_GET(playerCrossbowMode);
+		crossbowMode = EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(playerCrossbowMode);
 		if (pOther->IsPlayer()) {
 			// Player attacking a player.
 			damageToDeal = gSkillData.plrDmgCrossbowClient;
@@ -211,7 +211,7 @@ void CCrossbowBolt::BoltTouch( CBaseEntity *pOther )
 		}
 			
 	}else if(!strcmp(ownerClassName, "monster_human_assassin")){
-		crossbowMode = EASY_CVAR_GET(hassassinCrossbowMode);
+		crossbowMode = EASY_CVAR_GET_DEBUGONLY(hassassinCrossbowMode);
 		if (pOther->IsPlayer()) {
 			// hassassin attacking a player.
 			damageToDeal = gSkillData.hassassinDmgCrossbowClient;
@@ -325,7 +325,7 @@ void CCrossbowBolt::BoltTouch( CBaseEntity *pOther )
 			EMIT_SOUND_DYN(ENT(pev), CHAN_BODY, "weapons/xbow_hit1.wav", RANDOM_FLOAT(0.98, 1.0), ATTN_NORM - 0.1, 0, 107 + RANDOM_LONG(0, 4));
 			if (UTIL_PointContents(pev->origin) != CONTENTS_WATER)
 			{
-				UTIL_Sparks(pev->origin, DEFAULT_SPARK_BALLS, EASY_CVAR_GET(sparksPlayerCrossbowMulti));
+				UTIL_Sparks(pev->origin, DEFAULT_SPARK_BALLS, EASY_CVAR_GET_DEBUGONLY(sparksPlayerCrossbowMulti));
 			}
 		}//END OF pOther organic check
 
@@ -381,7 +381,7 @@ void CCrossbowBolt::BoltTouch( CBaseEntity *pOther )
 
 		if (UTIL_PointContents(pev->origin) != CONTENTS_WATER)
 		{
-			UTIL_Sparks( pev->origin, DEFAULT_SPARK_BALLS, EASY_CVAR_GET(sparksPlayerCrossbowMulti) );
+			UTIL_Sparks( pev->origin, DEFAULT_SPARK_BALLS, EASY_CVAR_GET_DEBUGONLY(sparksPlayerCrossbowMulti) );
 		}
 	}
 
@@ -404,7 +404,7 @@ void CCrossbowBolt::BoltThink( void )
 	//think every single frame of game logic, but only run the retail logic every 0.1 seconds for the same behavior there.
 	pev->nextthink = gpGlobals->time;
 		
-	if(EASY_CVAR_GET(crossbowBoltDirectionAffectedByWater) != 1){
+	if(EASY_CVAR_GET_DEBUGONLY(crossbowBoltDirectionAffectedByWater) != 1){
 		//forcing velocity to the one that fired me's intention every frame can preserve direction underwater.
 		pev->velocity = m_velocity;
 	}

@@ -50,12 +50,12 @@ __declspec(naked) void DropShadows(void)
 
 //MODDD - extern
 EASY_CVAR_EXTERN(chromeEffect)
-EASY_CVAR_EXTERN(mirrorsReflectOnlyNPCs)
-EASY_CVAR_EXTERN(mirrorsDoNotReflectPlayer)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(mirrorsReflectOnlyNPCs)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(mirrorsDoNotReflectPlayer)
 EASY_CVAR_EXTERN(r_shadows)
 EASY_CVAR_EXTERN(cl_interp_entity)
 EASY_CVAR_EXTERN(cl_interp_viewmodel)
-EASY_CVAR_EXTERN(drawViewModel)
+EASY_CVAR_EXTERN_CLIENTONLY_DEBUGONLY(drawViewModel)
 EASY_CVAR_EXTERN(r_glowshell_debug)
 
 extern float global2PSEUDO_IGNOREcameraMode;
@@ -2771,8 +2771,8 @@ int CStudioModelRenderer::StudioDrawModel( int flags )
 	//(g_drawType == DRAWTYPE_PLAYER)   no, to determine whether to make the first-person reflection, we don't need the actual player on hand.
 	
 
-	//easyPrintLineDummy("OH no MY friend %.2f %.2f", global2PSEUDO_IGNOREcameraMode, EASY_CVAR_GET(mirrorsDoNotReflectPlayer));
-	if(  global2PSEUDO_IGNOREcameraMode == 0 && EASY_CVAR_GET(mirrorsDoNotReflectPlayer) != 1)
+	//easyPrintLineDummy("OH no MY friend %.2f %.2f", global2PSEUDO_IGNOREcameraMode, EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(mirrorsDoNotReflectPlayer));
+	if(  global2PSEUDO_IGNOREcameraMode == 0 && EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(mirrorsDoNotReflectPlayer) != 1)
 	{
 		if (!b_PlayerMarkerParsed)
 		{
@@ -2858,7 +2858,7 @@ int CStudioModelRenderer::StudioDrawModel( int flags )
 	}
 
 	//MODDD - if this is the model, the user turned it off for some reason. Don't draw.
-	if(EASY_CVAR_GET(drawViewModel) <= 0 && g_drawType == DRAWTYPE_VIEWMODEL ){
+	if(EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(drawViewModel) <= 0 && g_drawType == DRAWTYPE_VIEWMODEL ){
 		return 0;
 	}
 
@@ -3247,7 +3247,7 @@ int CStudioModelRenderer::StudioDrawModel( int flags )
 	//if ((gHUD.numMirrors>0 && !(m_pCurrentEntity->model->name[7]=='v' && m_pCurrentEntity->model->name[8]=='_')))
 	
 	int canReflect = TRUE;
-	if(EASY_CVAR_GET(mirrorsReflectOnlyNPCs) == 1 && !(m_pCurrentEntity->curstate.renderfx & ISNPC) && !(g_drawType == DRAWTYPE_PLAYER)  ){
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(mirrorsReflectOnlyNPCs) == 1 && !(m_pCurrentEntity->curstate.renderfx & ISNPC) && !(g_drawType == DRAWTYPE_PLAYER)  ){
 		// if this CVar is on and this entity is not an npc, skip drawing to mirror.
 		// Player models not included (still reflected).  Players may or may not use the ISNPC flag, it gives no new information there.
 		canReflect = FALSE;
@@ -3559,10 +3559,10 @@ int CStudioModelRenderer::StudioDrawPlayer( int flags, entity_state_t *pplayer )
 	//(CVAR_GET_FLOAT("mirrorsDoNotReflectPlayer") == 1) &&
 	//if(  (m_pCurrentEntity->curstate.renderfx & NOREFLECT) ){
 
-	//if(g_drawType == DRAWTYPE_PLAYER)easyPrintLineDummy("MY friendAA %.2f %.2f", global2PSEUDO_IGNOREcameraMode, EASY_CVAR_GET(mirrorsDoNotReflectPlayer));
+	//if(g_drawType == DRAWTYPE_PLAYER)easyPrintLineDummy("MY friendAA %.2f %.2f", global2PSEUDO_IGNOREcameraMode, EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(mirrorsDoNotReflectPlayer));
 
 	//in third person and we're told not to reflect the player? Don't do that then.
-	if( (g_drawType == DRAWTYPE_PLAYER) && global2PSEUDO_IGNOREcameraMode == 1 && EASY_CVAR_GET(mirrorsDoNotReflectPlayer) == 1) {
+	if( (g_drawType == DRAWTYPE_PLAYER) && global2PSEUDO_IGNOREcameraMode == 1 && EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(mirrorsDoNotReflectPlayer) == 1) {
 		//easyPrintLine("STATUS: %d %d", (int)CVAR_GET_FLOAT("IGNOREcameraMode"), (int)CVAR_GET_FLOAT("mirrorsDoNotReflectPlayer"));
 		canReflect = FALSE;
 	}
@@ -4128,22 +4128,22 @@ void CStudioModelRenderer::CUSTOM_StudioClientEvents(void) {
 		/*
 		if (ary_g_recentInterpEstimatePrev[myIndex] == 0) {
 			flStart = 0;
-			flEnd = 0 + flInterval * m_flFrameRate * framerate; //* EASY_CVAR_GET(animationFramerateMulti);
+			flEnd = 0 + flInterval * m_flFrameRate * framerate; //* EASY_CVAR_GET_DEBUGONLY(animationFramerateMulti);
 		}
 		else {
-			flStart = frame; //* EASY_CVAR_GET(animationFramerateMulti);
-			flEnd = frame + flInterval * m_flFrameRate * framerate; //* EASY_CVAR_GET(animationFramerateMulti);
+			flStart = frame; //* EASY_CVAR_GET_DEBUGONLY(animationFramerateMulti);
+			flEnd = frame + flInterval * m_flFrameRate * framerate; //* EASY_CVAR_GET_DEBUGONLY(animationFramerateMulti);
 
 		}
 		*/
 
-		//flStart = frame; //* EASY_CVAR_GET(animationFramerateMulti);
-		//flEnd = frame + flInterval * m_flFrameRate * framerate; //* EASY_CVAR_GET(animationFramerateMulti);
+		//flStart = frame; //* EASY_CVAR_GET_DEBUGONLY(animationFramerateMulti);
+		//flEnd = frame + flInterval * m_flFrameRate * framerate; //* EASY_CVAR_GET_DEBUGONLY(animationFramerateMulti);
 		
 
 
 		flStart = ary_g_recentInterpEstimatePrev[myIndex];
-		flEnd = ary_g_recentInterpEstimate[myIndex]; //* EASY_CVAR_GET(animationFramerateMulti);
+		flEnd = ary_g_recentInterpEstimate[myIndex]; //* EASY_CVAR_GET_DEBUGONLY(animationFramerateMulti);
 
 
 		/*
@@ -4174,8 +4174,8 @@ void CStudioModelRenderer::CUSTOM_StudioClientEvents(void) {
 		// no, just use it straight.
 		//float& m_flLastEventCheck = ary_g_LastEventCheck[myIndex];
 
-		flStart = frame + (ary_g_LastEventCheck[myIndex] - animtime) * m_flFrameRate * framerate; //* EASY_CVAR_GET(animationFramerateMulti);
-		flEnd = frame + flInterval * m_flFrameRate * framerate; //* EASY_CVAR_GET(animationFramerateMulti);
+		flStart = frame + (ary_g_LastEventCheck[myIndex] - animtime) * m_flFrameRate * framerate; //* EASY_CVAR_GET_DEBUGONLY(animationFramerateMulti);
+		flEnd = frame + flInterval * m_flFrameRate * framerate; //* EASY_CVAR_GET_DEBUGONLY(animationFramerateMulti);
 
 
 		//flStart = UTIL_clamp(flStart, 0, 255);
@@ -4199,8 +4199,8 @@ void CStudioModelRenderer::CUSTOM_StudioClientEvents(void) {
 		// no, just use it straight.
 		//float& m_flLastEventCheck = ary_g_LastEventCheck[myIndex];
 
-		flStart = frame + (ary_g_LastEventCheck[myIndex] - animtime) * m_flFrameRate * framerate; //* EASY_CVAR_GET(animationFramerateMulti);
-		flEnd = frame + flInterval * m_flFrameRate * framerate; //* EASY_CVAR_GET(animationFramerateMulti);
+		flStart = frame + (ary_g_LastEventCheck[myIndex] - animtime) * m_flFrameRate * framerate; //* EASY_CVAR_GET_DEBUGONLY(animationFramerateMulti);
+		flEnd = frame + flInterval * m_flFrameRate * framerate; //* EASY_CVAR_GET_DEBUGONLY(animationFramerateMulti);
 
 		ary_g_LastEventCheck[myIndex] = animtime + flInterval;
 		
@@ -4212,8 +4212,8 @@ void CStudioModelRenderer::CUSTOM_StudioClientEvents(void) {
 
 		flInterval = (m_clTime - ary_g_LastEventCheckEXACT[myIndex]);
 
-		flStart = frame + (ary_g_LastEventCheckEXACT[myIndex] - animtime) * m_flFrameRate * framerate; //* EASY_CVAR_GET(animationFramerateMulti);
-		//flEnd = frame + flInterval * m_flFrameRate * framerate; //* EASY_CVAR_GET(animationFramerateMulti);
+		flStart = frame + (ary_g_LastEventCheckEXACT[myIndex] - animtime) * m_flFrameRate * framerate; //* EASY_CVAR_GET_DEBUGONLY(animationFramerateMulti);
+		//flEnd = frame + flInterval * m_flFrameRate * framerate; //* EASY_CVAR_GET_DEBUGONLY(animationFramerateMulti);
 		flEnd = flStart + flInterval;
 
 		ary_g_LastEventCheck[myIndex] = animtime + flInterval;
@@ -4226,8 +4226,8 @@ void CStudioModelRenderer::CUSTOM_StudioClientEvents(void) {
 		/*
 		flInterval = (m_clTime - ary_g_LastEventCheck[myIndex]);
 
-		flStart = frame + (m_clTime - ary_g_LastEventCheck[myIndex]) * m_flFrameRate * framerate; //* EASY_CVAR_GET(animationFramerateMulti);
-		flEnd = frame + flInterval * m_flFrameRate * framerate; //* EASY_CVAR_GET(animationFramerateMulti);
+		flStart = frame + (m_clTime - ary_g_LastEventCheck[myIndex]) * m_flFrameRate * framerate; //* EASY_CVAR_GET_DEBUGONLY(animationFramerateMulti);
+		flEnd = frame + flInterval * m_flFrameRate * framerate; //* EASY_CVAR_GET_DEBUGONLY(animationFramerateMulti);
 
 		ary_g_LastEventCheck[myIndex] = m_clTime;
 		*/

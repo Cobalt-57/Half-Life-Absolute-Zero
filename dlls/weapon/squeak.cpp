@@ -36,7 +36,7 @@
 #include "soundent.h"
 #include "gamerules.h"
 
-EASY_CVAR_EXTERN(snarkInheritsPlayerVelocity)
+EASY_CVAR_EXTERN_DEBUGONLY(snarkInheritsPlayerVelocity)
 
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelay)
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelaycustom)
@@ -829,7 +829,7 @@ void CSqueak::Throw(void) {
 		CBaseEntity* pSqueak = CBaseEntity::Create("monster_snark", tr.vecEndPos, m_pPlayer->pev->v_angle, SF_MONSTER_THROWN, m_pPlayer->edict());
 
 		//MODDD - now the generated snark inherits a factor of the player's velocity instead of all of it, such as 12%. Set by CVar.
-		pSqueak->pev->velocity = gpGlobals->v_forward * 200 + UTIL_GetProjectileVelocityExtra(m_pPlayer->pev->velocity, EASY_CVAR_GET(snarkInheritsPlayerVelocity));
+		pSqueak->pev->velocity = gpGlobals->v_forward * 200 + UTIL_GetProjectileVelocityExtra(m_pPlayer->pev->velocity, EASY_CVAR_GET_DEBUGONLY(snarkInheritsPlayerVelocity));
 #endif
 
 		// play hunt sound

@@ -671,7 +671,7 @@ void resetModCVars(CBasePlayer* arg_plyRef, BOOL isEmergency){
 
 
 	BOOL minimumFireDelayWasOn = FALSE;
-	if(EASY_CVAR_GET(cheat_minimumfiredelaycustom) == 1){
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelaycustom) == 1){
 		minimumFireDelayWasOn = TRUE;
 	}
 	
@@ -695,7 +695,7 @@ void resetModCVars(CBasePlayer* arg_plyRef, BOOL isEmergency){
 
 
 	if(!isEmergency){
-		easyForcePrintLineClient(pEntity, "***Remember to restart if a precache error has happend during this launch of the game***");
+		easyForcePrintLineClient(pEntity, "*** Remember to restart if a precache error has happend during this launch of the game***");
 	}
 	/*
 	if(EASY_CVAR_GET(precacheAll) == 1){
@@ -707,17 +707,17 @@ void resetModCVars(CBasePlayer* arg_plyRef, BOOL isEmergency){
 	if(arg_plyRef!=NULL && ( (arg_plyRef->pev->flags & FL_NOTARGET) || arg_plyRef->m_fNoPlayerSound == TRUE) ) {
 		arg_plyRef->turnOffSneaky();
 
-		if(EASY_CVAR_GET(autoSneaky) != 0){
+		if(EASY_CVAR_GET_DEBUGONLY(autoSneaky) != 0){
 			EASY_CVAR_SET_DEBUGONLY(autoSneaky, 0);
-			easyForcePrintLineClient(pEntity, "***AI cheats (notarget / nosound) detected and turned off.  autoSneaky reset to 0.***");
+			easyForcePrintLineClient(pEntity, "*** AI cheats (notarget / nosound) detected and turned off.  autoSneaky reset to 0.***");
 		}else{
-			easyForcePrintLineClient(pEntity, "***AI cheats (notarget / nosound)  detected and turned off.***");
+			easyForcePrintLineClient(pEntity, "*** AI cheats (notarget / nosound)  detected and turned off.***");
 		}
 	}
 
-	if(EASY_CVAR_GET(itemBatteryPrerequisite) == 1){
+	if(EASY_CVAR_GET_DEBUGONLY(itemBatteryPrerequisite) == 1){
 		//if(!isEmergency){
-			easyForcePrintLineClient(pEntity, "***\"itemBatteryPrerequisite\" is on.  Remember to have at least one battery charge before expecting longjump, injectibles (besides adrenaline), and a few other things to work.***");
+			easyForcePrintLineClient(pEntity, "*** \"itemBatteryPrerequisite\" is on.  Remember to have at least one battery charge before expecting longjump, injectibles (besides adrenaline), and a few other things to work.***");
 		//}
 	}
 
@@ -728,16 +728,16 @@ void resetModCVars(CBasePlayer* arg_plyRef, BOOL isEmergency){
 	float temppppp2 = EASY_CVAR_GET(precacheAll);
 
 	if(temppppp == 1 && temppppp2 != 1){
-		easyForcePrintLineClient(pEntity, "***~ soundSentenceSave is most effective when paired with \"precacheAll = 1\".***");
+		easyForcePrintLineClient(pEntity, "*** ~soundSentenceSave is most effective when paired with \"precacheAll = 1\".***");
 	}
 	if(temppppp != 1 && temppppp2 == 1){
-		easyForcePrintLineClient(pEntity, "***~ precacheAll is most effective when paired with \"soundSentenceSave = 1\".***");
+		easyForcePrintLineClient(pEntity, "*** ~precacheAll is most effective when paired with \"soundSentenceSave = 1\".***");
 	}
-	easyForcePrintLineClient(pEntity, "***use \'fixprecache\' to turn both of these on.***");
+	easyForcePrintLineClient(pEntity, "*** use \'fixprecache\' to turn both of these on.***");
 
 		
 	if(minimumFireDelayWasOn){
-		easyForcePrintLineClient(pEntity, "***Minimum fire turned off, corresponding custom fire rate unaffected.  To control the fire rate of all weapons with \"minimum fire\", adjust \"cheat_minimumfiredelaycustom\"***");
+		easyForcePrintLineClient(pEntity, "*** Minimum fire turned off, corresponding custom fire rate unaffected.  To control the fire rate of all weapons with \"minimum fire\", adjust \"cheat_minimumfiredelaycustom\"***");
 	}
 
 	if(isEmergency){
@@ -1191,8 +1191,8 @@ void ClientCommand( edict_t *pEntity )
 	//MODDD
 	//If the minimumfiredelay mem's  value does NOT match minimumfiredelay, it must have been changed.
 	//Force an RPG re-update to be safe.
-	if(globalPSEUDO_minimumfiredelaymem != EASY_CVAR_GET(cheat_minimumfiredelay) ){
-		globalPSEUDO_minimumfiredelaymem = EASY_CVAR_GET(cheat_minimumfiredelay);
+	if(globalPSEUDO_minimumfiredelaymem != EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelay) ){
+		globalPSEUDO_minimumfiredelaymem = EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelay);
 		
 		//MODDD - section copied from 'Host_Say' further down, turn into a more general utility if possible/needed.
 		// Loop through all players and call "resetPlayerRPGRockets" on each.
@@ -1261,7 +1261,7 @@ void ClientCommand( edict_t *pEntity )
 
 			//For CBasePlayer, "pev->origin + pev->view_ofs" is the same as "GetGunPosition()"
 
-			Vector vecDest = pev->origin + pev->view_ofs + gpGlobals->v_forward * EASY_CVAR_GET(offsetgivedistance);
+			Vector vecDest = pev->origin + pev->view_ofs + gpGlobals->v_forward * EASY_CVAR_GET_DEBUGONLY(offsetgivedistance);
 
 			/*
 			//TEST - make a breakable.  Tested in c3a2.
@@ -1333,7 +1333,7 @@ void ClientCommand( edict_t *pEntity )
 			tempplayer->GiveNamedItem( CMD_ARGV(1),  attemptInterpretSpawnFlag(CMD_ARGV(2)),
 									 tr.vecEndPos.x,
 									 tr.vecEndPos.y,
-									 tr.vecEndPos.z + EASY_CVAR_GET(offsetgivelookvertical),
+									 tr.vecEndPos.z + EASY_CVAR_GET_DEBUGONLY(offsetgivelookvertical),
 									 TRUE, &tr);
 		}
 	}
@@ -1445,8 +1445,8 @@ void ClientCommand( edict_t *pEntity )
 
 		if ( g_flWeaponCheat != 0.0)
 		{
-			EASY_CVAR_SET_DEBUGONLY(cheat_minimumfiredelay, EASY_CVAR_GET(cheat_minimumfiredelay)==0?1:0 );
-			globalPSEUDO_minimumfiredelaymem = EASY_CVAR_GET(cheat_minimumfiredelay);
+			EASY_CVAR_SET_DEBUGONLY(cheat_minimumfiredelay, EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelay)==0?1:0 );
+			globalPSEUDO_minimumfiredelaymem = EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelay);
 			resetPlayerRPGRockets( GetClassPtr((CBasePlayer *)pev) );
 		}
 
@@ -2603,7 +2603,7 @@ void ClientCommand( edict_t *pEntity )
 	}else if( FStrEq(pcmdRefinedRef, "pleasedontcrash") || FStrEq(pcmdRefinedRef, "pleasedonotcrash") || FStrEq(pcmdRefinedRef, "dontcrash") || FStrEq(pcmdRefinedRef, "donotcrash")){
 		
 		
-		EASY_CVAR_SET(explosionShrapnelMulti, 0);
+		EASY_CVAR_SET_DEBUGONLY(explosionShrapnelMulti, 0);
 		EASY_CVAR_SET_DEBUGONLY(sparksAllMulti, 0);
 
 
@@ -4027,7 +4027,7 @@ void ClientCommand( edict_t *pEntity )
 			tempplayer->GiveNamedItem( CMD_ARGV(1),  CMD_ARGV(2),
 									 tr.vecEndPos.x,
 									 tr.vecEndPos.y,
-									 tr.vecEndPos.z + EASY_CVAR_GET(offsetgivelookvertical),
+									 tr.vecEndPos.z + EASY_CVAR_GET_DEBUGONLY(offsetgivelookvertical),
 									 TRUE, &tr);
 			*/
 
@@ -5320,7 +5320,7 @@ void PlayerPreThink( edict_t *pEntity )
 			g_gamePaused = TRUE;
 			// This client message call has been cut. Serverside can issue the unpause order.
 			//submitUnpauseRequest(&pEntity->v);
-			if (EASY_CVAR_GET(disablePauseSinglePlayer) == 1) {
+			if (EASY_CVAR_GET_DEBUGONLY(disablePauseSinglePlayer) == 1) {
 				SERVER_COMMAND("unpause\n");
 			}
 			//easyForcePrintLineClient(pEntity, "!!! UNPAUSE REQUEST");
@@ -5639,7 +5639,7 @@ void StartFrame( void )
 	if (gpGlobals->time > nextBloodGen) {
 		// BLOOD TEST.
 		Vector bloodSpawnOrigin = Vector(105.33, 598.49, 80);
-		UTIL_SpawnBlood(bloodSpawnOrigin, (int)EASY_CVAR_GET(hyperBarney), 1);
+		UTIL_SpawnBlood(bloodSpawnOrigin, (int)EASY_CVAR_GET_DEBUGONLY(hyperBarney), 1);
 		nextBloodGen = gpGlobals->time + 0.08;
 	}
 	*/

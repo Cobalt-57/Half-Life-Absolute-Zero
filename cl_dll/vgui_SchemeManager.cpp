@@ -27,7 +27,7 @@
 #include "util_printout.h"
 
 //just include this.
-EASY_CVAR_EXTERN(hiddenMemPrintout)
+EASY_CVAR_EXTERN_DEBUGONLY(hiddenMemPrintout)
 
 
 
@@ -406,7 +406,7 @@ buildDefaultFont:
 				
 				sprintf(fontFilename, "gfx\\vgui\\fonts\\%d_%s.tga", m_xRes, m_pSchemeList[i].schemeName);
 
-				if(EASY_CVAR_GET(hiddenMemPrintout) == 1){easyForcePrintLine("fontFileName: %s",  fontFilename);}
+				if(EASY_CVAR_GET_DEBUGONLY(hiddenMemPrintout) == 1){easyForcePrintLine("fontFileName: %s",  fontFilename);}
 
 				pFontData = gEngfuncs.COM_LoadFile( fontFilename, 5, &fontFileLength );
 				if(!pFontData)

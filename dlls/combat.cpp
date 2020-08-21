@@ -41,29 +41,29 @@
 #include "scripted.h"
 #include "util_debugdraw.h"
 
-EASY_CVAR_EXTERN(sv_germancensorship)
-EASY_CVAR_EXTERN(muteRicochetSound)
-EASY_CVAR_EXTERN(bulletholeAlertRange)
-EASY_CVAR_EXTERN(nothingHurts)
-EASY_CVAR_EXTERN(timedDamageAffectsMonsters)
-EASY_CVAR_EXTERN(bulletHoleAlertPrintout)
-EASY_CVAR_EXTERN(bulletholeAlertStukaOnly)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(sv_germancensorship)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(muteRicochetSound)
+EASY_CVAR_EXTERN_DEBUGONLY(bulletholeAlertRange)
+EASY_CVAR_EXTERN_DEBUGONLY(nothingHurts)
+EASY_CVAR_EXTERN_DEBUGONLY(timedDamageAffectsMonsters)
+EASY_CVAR_EXTERN_DEBUGONLY(bulletHoleAlertPrintout)
+EASY_CVAR_EXTERN_DEBUGONLY(bulletholeAlertStukaOnly)
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST(playerBulletHitEffectForceServer)
-EASY_CVAR_EXTERN(baseEntityDamagePushNormalMulti)
-EASY_CVAR_EXTERN(baseEntityDamagePushVerticalBoost)
-EASY_CVAR_EXTERN(baseEntityDamagePushVerticalMulti)
-EASY_CVAR_EXTERN(baseEntityDamagePushVerticalMinimum)
-EASY_CVAR_EXTERN(RadiusDamageDrawDebug)
-EASY_CVAR_EXTERN(AlienRadiationImmunity)
-EASY_CVAR_EXTERN(germanRobotGibs)
-EASY_CVAR_EXTERN(germanRobotBleedsOil)
-EASY_CVAR_EXTERN(germanRobotDamageDecal)
-EASY_CVAR_EXTERN(germanRobotGibsDecal)
-EASY_CVAR_EXTERN(monsterFadeOutRate)
+EASY_CVAR_EXTERN_DEBUGONLY(baseEntityDamagePushNormalMulti)
+EASY_CVAR_EXTERN_DEBUGONLY(baseEntityDamagePushVerticalBoost)
+EASY_CVAR_EXTERN_DEBUGONLY(baseEntityDamagePushVerticalMulti)
+EASY_CVAR_EXTERN_DEBUGONLY(baseEntityDamagePushVerticalMinimum)
+EASY_CVAR_EXTERN_DEBUGONLY(RadiusDamageDrawDebug)
+EASY_CVAR_EXTERN_DEBUGONLY(AlienRadiationImmunity)
+EASY_CVAR_EXTERN_DEBUGONLY(germanRobotGibs)
+EASY_CVAR_EXTERN_DEBUGONLY(germanRobotBleedsOil)
+EASY_CVAR_EXTERN_DEBUGONLY(germanRobotDamageDecal)
+EASY_CVAR_EXTERN_DEBUGONLY(germanRobotGibsDecal)
+EASY_CVAR_EXTERN_DEBUGONLY(monsterFadeOutRate)
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST(playerWeaponTracerMode)
-EASY_CVAR_EXTERN(monsterWeaponTracerMode)
-EASY_CVAR_EXTERN(decalTracerExclusivity)
-EASY_CVAR_EXTERN(cheat_iwantguts)
+EASY_CVAR_EXTERN_DEBUGONLY(monsterWeaponTracerMode)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(decalTracerExclusivity)
+EASY_CVAR_EXTERN_DEBUGONLY(cheat_iwantguts)
 
 
 
@@ -211,12 +211,12 @@ GENERATE_GIBMONSTERGIB_IMPLEMENTATION(CBaseMonster){
 	{
 		
 		//Old check... mostly.
-		//if ( EASY_CVAR_GET(sv_germancensorship) == 1 || CVAR_GET_FLOAT("violence_hgibs") != 0 )	// Only the player will ever get here   ...Why was this comment here as-is? only the player? what?
+		//if ( EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(sv_germancensorship) == 1 || CVAR_GET_FLOAT("violence_hgibs") != 0 )	// Only the player will ever get here   ...Why was this comment here as-is? only the player? what?
 		
 		
 		//MODDD - Little intervention here when spawning human gibs. Check to see if german censorship is on.
 
-		if(EASY_CVAR_GET(sv_germancensorship)==0){
+		if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(sv_germancensorship)==0){
 			//turned off? usual behavior, only require violence_hgibs to be off.
 			if(CVAR_GET_FLOAT("violence_hgibs") != 0){
 				BOOL spawnHeadBlock = this->DetermineGibHeadBlock();
@@ -230,14 +230,14 @@ GENERATE_GIBMONSTERGIB_IMPLEMENTATION(CBaseMonster){
 		}else{
 			//with german censorship on, a call for human gibs gets replaced with robot gibs only if we're allowed to use german models (separate CVar), robot gibs are allowed and the robot gib model was found.
 			//Notice that german censorship ignores the "violence_hgibs", and would already disallow spawning gibs.
-			if( CanUseGermanModel() && EASY_CVAR_GET(germanRobotGibs)==1 && globalPSEUDO_germanModel_hgibFound==1 )
+			if( CanUseGermanModel() && EASY_CVAR_GET_DEBUGONLY(germanRobotGibs)==1 && globalPSEUDO_germanModel_hgibFound==1 )
 			{
 				//robots do not have a head gib.
 				//if(!spawnHeadBlock){
 				//	CGib::SpawnHeadGib( pev, gibsSpawnDecal );
 				//}
 
-				if(EASY_CVAR_GET(germanRobotGibsDecal)==0){
+				if(EASY_CVAR_GET_DEBUGONLY(germanRobotGibsDecal)==0){
 					//this disallows robot gib decals made on hitting the ground.
 					fGibSpawnsDecal = FALSE;
 				}
@@ -251,7 +251,7 @@ GENERATE_GIBMONSTERGIB_IMPLEMENTATION(CBaseMonster){
 	else if ( HasAlienGibs() )
 	{
 		//NOTE: using real alien gibs.  If "agibs" are banned, then don't show.
-		//if ( EASY_CVAR_GET(sv_germancensorship) == 1 || CVAR_GET_FLOAT("violence_agibs") != 0 )	// Should never get here, but someone might call it directly
+		//if ( EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(sv_germancensorship) == 1 || CVAR_GET_FLOAT("violence_agibs") != 0 )	// Should never get here, but someone might call it directly
 
 		//MODDD - no involvement from germancensorship, keep to using violence_agibs.
 		if(CVAR_GET_FLOAT("violence_agibs") != 0)
@@ -282,7 +282,7 @@ GENERATE_GIBMONSTERGIB_IMPLEMENTATION(CBaseMonster){
 				
 
 				// MODDD - don't know how german censorship will handle zombies, not doing anything for the human-gib portion for now
-				if (EASY_CVAR_GET(sv_germancensorship) == 0) {
+				if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(sv_germancensorship) == 0) {
 					if (CVAR_GET_FLOAT("violence_hgibs") != 0) {
 						CGib::SpawnRandomGibs(pev, 3, GIB_HUMAN_ID, fGibSpawnsDecal);	// Throw human gibs
 					}
@@ -720,7 +720,7 @@ void CBaseMonster::BecomeDead(void)
 BOOL CBaseMonster::ShouldGibMonster( int iGib )
 {
 
-	if(EASY_CVAR_GET(cheat_iwantguts) >= 1){
+	if(EASY_CVAR_GET_DEBUGONLY(cheat_iwantguts) >= 1){
 		//VIOLENCE!  BLOOD AND GUTS!!!
 		return TRUE;
 	}
@@ -756,7 +756,7 @@ GENERATE_KILLED_IMPLEMENTATION(CBaseMonster)
 	//Determined in GibMonster itself intead now.
 	BOOL gibsSpawnDecals = !(iGib == GIB_ALWAYS_NODECAL);
 
-	if(CanUseGermanModel() && EASY_CVAR_GET(germanRobotGibsDecal)==0){
+	if(CanUseGermanModel() && EASY_CVAR_GET_DEBUGONLY(germanRobotGibsDecal)==0){
 		//If german censorship is on and the oil decal for robot gibs is disabled (assuming robot gibs are enabled), the spawned gibs will not make decals.
 		gibsSpawnDecals = FALSE;
 	}
@@ -893,7 +893,7 @@ void CBaseEntity :: SUB_FadeOut ( void  )
 	//Multiply the fade by 0.1 because that's how long this think method is expected to delay before getting called again.
 	//That effectively means with each second, the monster's opacity (renderamt) drops by an amount of "monsterFadeOutRate".
 	
-	const float fadeMoveAmount = EASY_CVAR_GET(monsterFadeOutRate)*0.1;
+	const float fadeMoveAmount = EASY_CVAR_GET_DEBUGONLY(monsterFadeOutRate)*0.1;
 
 	if ( pev->renderamt > fadeMoveAmount )
 	{
@@ -1361,7 +1361,7 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBaseEntity)
 
 	//the "(pev->movetype == MOVETYPE_TOSS && pev->flags & FL_ONGROUND)" condition was added in case this monster is a tossable that is against the ground. If so it can also be pushed.
 	
-	if(EASY_CVAR_GET(baseEntityDamagePushNormalMulti) != 0 || EASY_CVAR_GET(baseEntityDamagePushVerticalBoost) != 0 || EASY_CVAR_GET(baseEntityDamagePushVerticalMulti) ){
+	if(EASY_CVAR_GET_DEBUGONLY(baseEntityDamagePushNormalMulti) != 0 || EASY_CVAR_GET_DEBUGONLY(baseEntityDamagePushVerticalBoost) != 0 || EASY_CVAR_GET_DEBUGONLY(baseEntityDamagePushVerticalMulti) ){
 		if ((!FNullEnt(pevInflictor)) && (pev->movetype == MOVETYPE_WALK || pev->movetype == MOVETYPE_STEP || (pev->movetype == MOVETYPE_TOSS && pev->flags & FL_ONGROUND)) && (pevAttacker->solid != SOLID_TRIGGER) )
 		{
 			Vector vecDir = pev->origin - (pevInflictor->absmin + pevInflictor->absmax) * 0.5;
@@ -1373,7 +1373,7 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBaseEntity)
 			
 			//float flForce = flDamage * ((32 * 32 * 72.0) / (pev->size.x * pev->size.y * pev->size.z)) * 5;
 			float sizeFactor = ((32 * 32 * 72.0) / (pev->size.x * pev->size.y * pev->size.z));
-			float flForce = flDamage * sizeFactor * EASY_CVAR_GET(baseEntityDamagePushNormalMulti);
+			float flForce = flDamage * sizeFactor * EASY_CVAR_GET_DEBUGONLY(baseEntityDamagePushNormalMulti);
 			
 
 			
@@ -1382,12 +1382,12 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBaseEntity)
 			//pev->velocity = pev->velocity + vecDir * flForce;
 
 
-			Vector newVelocity = pev->velocity + vecDir * flForce + Vector(0, 0, EASY_CVAR_GET(baseEntityDamagePushVerticalBoost) + EASY_CVAR_GET(baseEntityDamagePushVerticalMulti)*sizeFactor   );
+			Vector newVelocity = pev->velocity + vecDir * flForce + Vector(0, 0, EASY_CVAR_GET_DEBUGONLY(baseEntityDamagePushVerticalBoost) + EASY_CVAR_GET_DEBUGONLY(baseEntityDamagePushVerticalMulti)*sizeFactor   );
 
 			
-			if(newVelocity.z < EASY_CVAR_GET(baseEntityDamagePushVerticalMinimum)){
+			if(newVelocity.z < EASY_CVAR_GET_DEBUGONLY(baseEntityDamagePushVerticalMinimum)){
 				//A push less than this in the Z coord is not allowed.
-				newVelocity.z = EASY_CVAR_GET(baseEntityDamagePushVerticalMinimum);
+				newVelocity.z = EASY_CVAR_GET_DEBUGONLY(baseEntityDamagePushVerticalMinimum);
 			}
 			
 			//vector / oldlength = normal
@@ -1483,12 +1483,12 @@ void CBaseEntity::Knockback(const int knockbackAmount, const Vector& knockbackDi
 BOOL CBaseEntity::ChangeHealthFiltered(entvars_t* pevAttacker, float flDamage) {
 	BOOL canDoDmg = FALSE;
 
-	if (EASY_CVAR_GET(nothingHurts) == 0) {
+	if (EASY_CVAR_GET_DEBUGONLY(nothingHurts) == 0) {
 		canDoDmg = TRUE;
 	}
-	else if (EASY_CVAR_GET(nothingHurts) == 1) {
+	else if (EASY_CVAR_GET_DEBUGONLY(nothingHurts) == 1) {
 		canDoDmg = FALSE;
-	}else if (EASY_CVAR_GET(nothingHurts) == 2) {
+	}else if (EASY_CVAR_GET_DEBUGONLY(nothingHurts) == 2) {
 		// only the player can deal damage.
 		CBaseEntity* attacka;
 		if (pevAttacker != NULL) {
@@ -1519,13 +1519,13 @@ BOOL CBaseEntity::ChangeHealthFiltered(entvars_t* pevAttacker, float flDamage) {
 BOOL CBaseMonster::ChangeHealthFiltered(entvars_t* pevAttacker, float flDamage) {
 	BOOL canDoDmg = FALSE;
 
-	if (EASY_CVAR_GET(nothingHurts) == 0) {
+	if (EASY_CVAR_GET_DEBUGONLY(nothingHurts) == 0) {
 		canDoDmg = TRUE;
 	}
-	else if (EASY_CVAR_GET(nothingHurts) == 1) {
+	else if (EASY_CVAR_GET_DEBUGONLY(nothingHurts) == 1) {
 		canDoDmg = FALSE;
 	}
-	else if (EASY_CVAR_GET(nothingHurts) == 2) {
+	else if (EASY_CVAR_GET_DEBUGONLY(nothingHurts) == 2) {
 		// only the player can deal damage.
 		CBaseEntity* attacka;
 		if (pevAttacker != NULL) {
@@ -1722,7 +1722,7 @@ GENERATE_TRACEATTACK_IMPLEMENTATION(CBaseMonster)
 
 		
 		//MODDD - similar case below, robot requires this CVar to emit black oil blood.
-		if( !(this->CanUseGermanModel() && EASY_CVAR_GET(germanRobotBleedsOil)==0 ) && useBloodEffect){
+		if( !(this->CanUseGermanModel() && EASY_CVAR_GET_DEBUGONLY(germanRobotBleedsOil)==0 ) && useBloodEffect){
 			Vector vecBloodOrigin = ptr->vecEndPos - vecDir * 4;
 			SpawnBlood(vecBloodOrigin, flDamage);// a little surface blood.
 		}
@@ -1747,7 +1747,7 @@ GENERATE_TRACEATTACK_IMPLEMENTATION(CBaseMonster)
 		// If this monster has a german model replacement but this CVar is off, block the TraceBleed request.
 		// Note that "CanUseGermanModel" is always false when GermanCensorship is turned off.
 		// If TraceBleed is called with a monster with red blood (no german robot model provided), this will get denied anyways.
-		if( !(this->CanUseGermanModel() && EASY_CVAR_GET(germanRobotDamageDecal)==0 ) && useBloodEffect){
+		if( !(this->CanUseGermanModel() && EASY_CVAR_GET_DEBUGONLY(germanRobotDamageDecal)==0 ) && useBloodEffect){
 			TraceBleed( flDamage, vecDir, ptr, bitsDamageType, bitsDamageTypeMod );
 		}
 
@@ -1854,7 +1854,7 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBaseMonster){
 				// because apaches are HUMAN_MILITARY, not MACHINE, but taking poison is zany.
 				myClassify == CLASS_MACHINE || (!isOrganic()) ||
 				(
-					EASY_CVAR_GET(AlienRadiationImmunity) == 1 &&
+					EASY_CVAR_GET_DEBUGONLY(AlienRadiationImmunity) == 1 &&
 					(
 						myClassify == CLASS_ALIEN_MILITARY ||
 						myClassify == CLASS_ALIEN_PASSIVE ||
@@ -2207,7 +2207,7 @@ void CBaseMonster::Think(void)
 	////MODDD: REVERTMOD
 	//uh.  this is bad it seems.
 	//
-	//if(EASY_CVAR_GET(timedDamageAffectsMonsters) == 1){
+	//if(EASY_CVAR_GET_DEBUGONLY(timedDamageAffectsMonsters) == 1){
 	//	CheckTimeBasedDamage();
 	//}
 	//
@@ -2502,12 +2502,12 @@ void RadiusDamage( Vector vecSrc, entvars_t *pevInflictor, entvars_t *pevAttacke
 void RadiusDamage( Vector vecSrc, entvars_t *pevInflictor, entvars_t *pevAttacker, float flDamage, float flRadius, int iClassIgnore, int bitsDamageType, int bitsDamageTypeMod )
 {
 
-	if (EASY_CVAR_GET(RadiusDamageDrawDebug) == 1) {
+	if (EASY_CVAR_GET_DEBUGONLY(RadiusDamageDrawDebug) == 1) {
 		// Draw lines for existing damage calls instead
 		DebugLine_ClearAll();
 	}
 
-	if(EASY_CVAR_GET(RadiusDamageDrawDebug) == 2){
+	if(EASY_CVAR_GET_DEBUGONLY(RadiusDamageDrawDebug) == 2){
 		// pipe it to here instead
 		RadiusDamageTest(vecSrc, pevInflictor, pevAttacker, flDamage, flRadius, iClassIgnore, bitsDamageType, bitsDamageTypeMod);
 		return;
@@ -2594,7 +2594,7 @@ void RadiusDamage( Vector vecSrc, entvars_t *pevInflictor, entvars_t *pevAttacke
 			*/
 
 
-			if (EASY_CVAR_GET(RadiusDamageDrawDebug) == 1) {
+			if (EASY_CVAR_GET_DEBUGONLY(RadiusDamageDrawDebug) == 1) {
 				DebugLine_Setup(vecSrc, vecSpot, tr.flFraction);
 			}
 
@@ -2793,7 +2793,7 @@ void CBaseEntity::FireBullets(ULONG cShots, Vector vecSrc, Vector vecDirShooting
 
 
 		//MODDD - tracers added for the player, serverside, depending on playerWeaponTracerMode choice.
-		switch( (int)EASY_CVAR_GET(monsterWeaponTracerMode)  ){
+		switch( (int)EASY_CVAR_GET_DEBUGONLY(monsterWeaponTracerMode)  ){
 		case 0:
 			//nothing.
 			iTracerFreq = 0;
@@ -2857,7 +2857,7 @@ void CBaseEntity::FireBullets(ULONG cShots, Vector vecSrc, Vector vecDirShooting
 				case BULLET_MONSTER_12MM:		
 					pEntity->TraceAttack(pevAttacker, gSkillData.monDmg12MM, vecDir, &tr, DMG_BULLET, 0, TRUE, &useBulletHitSound);
 
-					if ( EASY_CVAR_GET(decalTracerExclusivity) != 1 || !disableBulletHitDecal )
+					if ( EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(decalTracerExclusivity) != 1 || !disableBulletHitDecal )
 					{
 						//TEXTURETYPE_PlaySound(&tr, vecSrc, vecEnd, iBulletType);
 						//DecalGunshot( &tr, iBulletType );
@@ -2897,7 +2897,7 @@ void CBaseEntity::FireBullets(ULONG cShots, Vector vecSrc, Vector vecDirShooting
 					//if ( FNullEnt(tr.pHit))
 					{
 
-						if(EASY_CVAR_GET(muteRicochetSound) < 1){
+						if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(muteRicochetSound) < 1){
 							MESSAGE_BEGIN( MSG_PAS, SVC_TEMPENTITY, tr.vecEndPos );
 								WRITE_BYTE( TE_GUNSHOT );
 								WRITE_COORD( tr.vecEndPos.x );
@@ -3136,7 +3136,7 @@ Vector CBaseEntity::FireBulletsPlayer ( ULONG cShots, Vector vecSrc, Vector vecD
 					
 					//if ( FNullEnt(tr.pHit))
 					{
-						if(EASY_CVAR_GET(muteRicochetSound) < 1){
+						if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(muteRicochetSound) < 1){
 							MESSAGE_BEGIN( MSG_PAS, SVC_TEMPENTITY, tr.vecEndPos );
 								WRITE_BYTE( TE_GUNSHOT );
 								WRITE_COORD( tr.vecEndPos.x );

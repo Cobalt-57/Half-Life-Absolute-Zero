@@ -54,9 +54,9 @@
 
 
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(viewModelPrintouts)
-//EASY_CVAR_EXTERN(viewModelSyncFixPrintouts)
+//EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(viewModelSyncFixPrintouts)
 //EASY_CVAR_EXTERN(cl_holster)
-//EASY_CVAR_EXTERN(wpn_glocksilencer)
+//EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST(wpn_glocksilencer)
 EASY_CVAR_EXTERN(pausecorrection1)
 
 
@@ -834,7 +834,7 @@ void HUD_WeaponsPostThink(local_state_s* from, local_state_s* to, usercmd_t* cmd
 		if( !(pfrom->m_flTimeWeaponIdle <= 0 && pCurrent->m_flTimeWeaponIdle >= 0.1) ){
 		pCurrent->m_flTimeWeaponIdle = pfrom->m_flTimeWeaponIdle;
 		}else{
-		//	if(EASY_CVAR_GET(viewModelSyncFixPrintouts)==1) easyForcePrintLine("*****VIEWMODEL SYNCH FIX APPLIED.");
+		//	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(viewModelSyncFixPrintouts)==1) easyForcePrintLine("*****VIEWMODEL SYNCH FIX APPLIED.");
 		}
 
 
@@ -972,14 +972,14 @@ void HUD_WeaponsPostThink(local_state_s* from, local_state_s* to, usercmd_t* cmd
 
 	if(from->client.weaponanim & 128){
 
-		if(EASY_CVAR_GET(testVar)==1){
+		if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(testVar)==1){
 			easyPrintLine("BACKWARDS!!!! %d : %d", from->client.weaponanim & ~128, from->client.weaponanim);
 		}
 
 		from->client.weaponanim &= ~128;
 		gEngfuncs.GetViewModel()->curstate.renderfx |= ANIMATEBACKWARDS;
 	}else{
-		if(EASY_CVAR_GET(testVar)==1){
+		if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(testVar)==1){
 			easyPrintLine("NOOOOOT BACKWARDS!!!! %d", from->client.weaponanim);
 		}
 		gEngfuncs.GetViewModel()->curstate.renderfx &= ~ANIMATEBACKWARDS;

@@ -27,14 +27,14 @@
 
 
 //MODDD
-EASY_CVAR_EXTERN(peopleStrobe)
-EASY_CVAR_EXTERN(wildHeads)
-EASY_CVAR_EXTERN(raveEffectSpawnInterval)
+EASY_CVAR_EXTERN_DEBUGONLY(peopleStrobe)
+EASY_CVAR_EXTERN_DEBUGONLY(wildHeads)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(raveEffectSpawnInterval)
 EASY_CVAR_EXTERN(pissedNPCs)
-EASY_CVAR_EXTERN(thatWasntPunch)
-EASY_CVAR_EXTERN(NPCsTalkMore)
-EASY_CVAR_EXTERN(barneyPrintouts)
-EASY_CVAR_EXTERN(playerFollowerMax)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(thatWasntPunch)
+EASY_CVAR_EXTERN_DEBUGONLY(NPCsTalkMore)
+EASY_CVAR_EXTERN_DEBUGONLY(barneyPrintouts)
+EASY_CVAR_EXTERN_DEBUGONLY(playerFollowerMax)
 extern BOOL globalPSEUDO_iCanHazMemez;
 
 extern unsigned short g_sFreakyLight;
@@ -1034,7 +1034,7 @@ void CTalkMonster :: RunTask( Task_t *pTask )
 		}
 		else
 		{
-			if(EASY_CVAR_GET(wildHeads) != 1){
+			if(EASY_CVAR_GET_DEBUGONLY(wildHeads) != 1){
 				SetBoneController( 0, 0 );
 			}
 		}
@@ -1502,7 +1502,7 @@ int CTalkMonster :: FOkToSpeakAllowCombat( float waitTime )
 	// if in the grip of a barnacle, don't speak
 	if ( m_MonsterState == MONSTERSTATE_PRONE || m_IdealMonsterState == MONSTERSTATE_PRONE )
 	{
-		if(EASY_CVAR_GET(barneyPrintouts)==1){
+		if(EASY_CVAR_GET_DEBUGONLY(barneyPrintouts)==1){
 		easyPrintLine("BARNEY ALERT FAIL 1");
 		}
 		return FALSE;
@@ -1511,7 +1511,7 @@ int CTalkMonster :: FOkToSpeakAllowCombat( float waitTime )
 	// if not alive, certainly don't speak
 	if ( pev->deadflag != DEAD_NO )
 	{
-		if(EASY_CVAR_GET(barneyPrintouts)==1){
+		if(EASY_CVAR_GET_DEBUGONLY(barneyPrintouts)==1){
 		easyPrintLine("BARNEY ALERT FAIL 2");
 		}
 		return FALSE;
@@ -1521,14 +1521,14 @@ int CTalkMonster :: FOkToSpeakAllowCombat( float waitTime )
 	//MODDD - now uses a custom wait time.
 	//if (gpGlobals->time <= CTalkMonster::g_talkWaitTime){
 	if (gpGlobals->time <= waitTime){
-		if(EASY_CVAR_GET(barneyPrintouts)==1){
+		if(EASY_CVAR_GET_DEBUGONLY(barneyPrintouts)==1){
 		easyPrintLine("BARNEY ALERT FAIL 3 %.2f, %.2f, %.2f", gpGlobals->time, waitTime, waitTime - gpGlobals->time);
 		}
 		return FALSE;
 	}
 
 	if ( pev->spawnflags & SF_MONSTER_GAG ){
-		if(EASY_CVAR_GET(barneyPrintouts)==1){
+		if(EASY_CVAR_GET_DEBUGONLY(barneyPrintouts)==1){
 		easyPrintLine("BARNEY ALERT FAIL 4");
 		}
 		return FALSE;
@@ -1538,7 +1538,7 @@ int CTalkMonster :: FOkToSpeakAllowCombat( float waitTime )
 	// what.  why did we check for PRONE again.  what is the point of this.
 	/*
 	if ( m_MonsterState == MONSTERSTATE_PRONE ){
-		if(EASY_CVAR_GET(barneyPrintouts)==1){
+		if(EASY_CVAR_GET_DEBUGONLY(barneyPrintouts)==1){
 		easyPrintLine("BARNEY ALERT FAIL 5");
 		}
 		return FALSE;
@@ -1547,7 +1547,7 @@ int CTalkMonster :: FOkToSpeakAllowCombat( float waitTime )
 
 	// if player is not in pvs, don't speak
 	if (!IsAlive() || FNullEnt(FIND_CLIENT_IN_PVS(edict()))){
-		if(EASY_CVAR_GET(barneyPrintouts)==1){
+		if(EASY_CVAR_GET_DEBUGONLY(barneyPrintouts)==1){
 		easyPrintLine("BARNEY ALERT FAIL 6");
 		}
 		return FALSE;
@@ -1662,7 +1662,7 @@ void CTalkMonster :: IdleHeadTurn( Vector &vecFriend )
 		if (yaw < -180) yaw += 360;
 
 		// turn towards vector
-		if(EASY_CVAR_GET(wildHeads) != 1){
+		if(EASY_CVAR_GET_DEBUGONLY(wildHeads) != 1){
 			SetBoneController( 0, yaw );
 		}
 	}
@@ -2414,7 +2414,7 @@ Schedule_t* CTalkMonster :: GetScheduleOfType ( int Type )
 
 
 		//MODDD
-		if(EASY_CVAR_GET(NPCsTalkMore) != 1 ){
+		if(EASY_CVAR_GET_DEBUGONLY(NPCsTalkMore) != 1 ){
 			passCondition = (RANDOM_LONG(0,99) < 2);
 		}else{
 			passCondition = TRUE;
@@ -2641,12 +2641,12 @@ CTalkMonster::CTalkMonster(void){
 void CTalkMonster::MonsterThink(void){
 
 
-	if(EASY_CVAR_GET(peopleStrobe) == 1){
+	if(EASY_CVAR_GET_DEBUGONLY(peopleStrobe) == 1){
 		if(nextMadEffect <= gpGlobals->time){
 			//send effect!
 			UTIL_generateFreakyLight(pev->origin);
 
-			nextMadEffect = gpGlobals->time + EASY_CVAR_GET(raveEffectSpawnInterval);
+			nextMadEffect = gpGlobals->time + EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(raveEffectSpawnInterval);
 		}
 	}
 
@@ -2671,7 +2671,7 @@ void CTalkMonster::MonsterThink(void){
 
 
 
-	if(EASY_CVAR_GET(wildHeads) == 1){
+	if(EASY_CVAR_GET_DEBUGONLY(wildHeads) == 1){
 		
 		//easyPrintLine("GGGG %.2f", madYaw);
 
@@ -2729,7 +2729,7 @@ void CTalkMonster::MonsterThink(void){
 		//spawn effects every so often?
 
 
-	}//END OF if(EASY_CVAR_GET(wildHeads))
+	}//END OF if(EASY_CVAR_GET_DEBUGONLY(wildHeads))
 
 
 	if(this->m_pSchedule == NULL){
@@ -2742,7 +2742,7 @@ void CTalkMonster::MonsterThink(void){
 	//sitting scientist should not attempt this.  either doesn't work or just... weirder than usual.
 	if(canGoRavingMad && !FClassnameIs(pev, "monster_sitting_scientist") ){
 
-		if(EASY_CVAR_GET(thatWasntPunch) == 1){
+		if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(thatWasntPunch) == 1){
 			//pev->angles[0] 
 			//UTIL_printLineVector("STUFFFFF", pev->angles);
 
@@ -3042,7 +3042,7 @@ void CTalkMonster::playInterPissed(){
 BOOL CTalkMonster::CanFollow( void )
 {
 
-	if(EASY_CVAR_GET(playerFollowerMax) <= 0){
+	if(EASY_CVAR_GET_DEBUGONLY(playerFollowerMax) <= 0){
 		return FALSE; //follower limit non-positive? Can't do it.
 	}
 
@@ -3085,7 +3085,7 @@ void CTalkMonster :: FollowerUse( CBaseEntity *pActivator, CBaseEntity *pCaller,
 			//why minus 1? Because this is BEFORE letting the new NPC follow the player. So at a max value of "1", it's treated as a real max of 2.
 			//Why? because before letting a new NPC follow the player, if one is following, the count is still 1. Then we add the new follower without doing the check again.
 			//This guarantees that the most recent follow request gets to follow the player (without getting unfollowed right after) no matter what.
-			LimitFollowers( pCaller , EASY_CVAR_GET(playerFollowerMax)-1 );
+			LimitFollowers( pCaller , EASY_CVAR_GET_DEBUGONLY(playerFollowerMax)-1 );
 
 			if ( m_afMemory & bits_MEMORY_PROVOKED ){
 				//ALERT( at_console, "I'm not following you, you evil person!\n" );

@@ -453,7 +453,7 @@ void CGauss::chargeWork(){
 		//m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 0.5;
 		
 		
-		//m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + EASY_CVAR_GET(gauss_secondarychargemindelay);   //TODO!!!! todo
+		//m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_secondarychargemindelay);   //TODO!!!! todo
 		
 		
 		m_flTimeWeaponIdle = 0;
@@ -811,7 +811,7 @@ void CGauss::StartFireDecision( void ){
 
 	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_primaryonly) == 1){
 		float timePassed = gpGlobals->time - m_pPlayer->m_flStartChargePreSuperDuper;
-		//easyForcePrintLine("TimePassed!! : %.2f : %.2f", timePassed, EASY_CVAR_GET(gauss_secondarychargetimereq)  );
+		//easyForcePrintLine("TimePassed!! : %.2f : %.2f", timePassed, EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_secondarychargetimereq)  );
 
 		easyForcePrintLine("AW no MAN %.2f", timePassed);
 		if(m_fInAttack > 1 && timePassed > EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_secondarychargetimereq) ){
@@ -928,7 +928,7 @@ void CGauss::StartFire( void )
 		return;
 	}
 	
-	m_pPlayer->m_flNextAttack = UTIL_WeaponTimeBase() + EASY_CVAR_GET(gauss_betweenattackdelay);
+	m_pPlayer->m_flNextAttack = UTIL_WeaponTimeBase() + EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_betweenattackdelay);
 	*/
 	
 

@@ -43,13 +43,15 @@
 #include "gib.h"
 
 //MODDD
-EASY_CVAR_EXTERN(sparksTurretDeathMulti)
-EASY_CVAR_EXTERN(turretCanGib)
-EASY_CVAR_EXTERN(miniturretCanGib)
-EASY_CVAR_EXTERN(sentryCanGib)
-EASY_CVAR_EXTERN(turretBleedsOil)
-EASY_CVAR_EXTERN(turretDamageDecal)
-EASY_CVAR_EXTERN(turretGibDecal)
+EASY_CVAR_EXTERN_DEBUGONLY(sparksTurretDeathMulti)
+EASY_CVAR_EXTERN_DEBUGONLY(turretCanGib)
+EASY_CVAR_EXTERN_DEBUGONLY(miniturretCanGib)
+EASY_CVAR_EXTERN_DEBUGONLY(sentryCanGib)
+EASY_CVAR_EXTERN_DEBUGONLY(turretBleedsOil)
+EASY_CVAR_EXTERN_DEBUGONLY(turretDamageDecal)
+EASY_CVAR_EXTERN_DEBUGONLY(turretGibDecal)
+EASY_CVAR_EXTERN_DEBUGONLY(crazyMonsterPrintouts)
+
 
 extern DLL_GLOBAL float g_rawDamageCumula;
 
@@ -109,7 +111,7 @@ static GibInfo_t* getTurretGibInfo(float cvarRef){
 
 static int TurretBloodColorBlackFilter(){
 	/*
-	if(EASY_CVAR_GET(turretBleedsOil) == 1){
+	if(EASY_CVAR_GET_DEBUGONLY(turretBleedsOil) == 1){
 		return BLOOD_COLOR_BLACK;
 	}else{
 		return DONT_BLEED;
@@ -317,7 +319,7 @@ void CBaseTurret::Precache( )
 
 
 float CTurret::getGibCVar(){
-	return EASY_CVAR_GET(turretCanGib);
+	return EASY_CVAR_GET_DEBUGONLY(turretCanGib);
 }
 
 void CTurret::Spawn()
@@ -363,7 +365,7 @@ void CTurret::Precache()
 
 
 float CMiniTurret::getGibCVar(){
-	return EASY_CVAR_GET(miniturretCanGib);
+	return EASY_CVAR_GET_DEBUGONLY(miniturretCanGib);
 }
 
 void CMiniTurret::Spawn()
@@ -1029,7 +1031,7 @@ void CBaseTurret ::	TurretDeath( void )
 			vecSrc = vecSrc + Vector( 0, 0, RANDOM_FLOAT( pev->absmin.z, pev->origin.z ) );
 
 		//UTIL_Sparks( vecSrc );
-		UTIL_Sparks( vecSrc, DEFAULT_SPARK_BALLS, EASY_CVAR_GET(sparksTurretDeathMulti) );
+		UTIL_Sparks( vecSrc, DEFAULT_SPARK_BALLS, EASY_CVAR_GET_DEBUGONLY(sparksTurretDeathMulti) );
 
 	}
 
@@ -1059,7 +1061,7 @@ GENERATE_TRACEATTACK_IMPLEMENTATION(CBaseTurret)
 		return;
 
 	//MODDD NEW - can draw blood.
-	if(useBloodEffect && EASY_CVAR_GET(turretBleedsOil) != 0 ){
+	if(useBloodEffect && EASY_CVAR_GET_DEBUGONLY(turretBleedsOil) != 0 ){
 		//MODDD!!!!!!
 		Vector vecBloodOrigin = ptr->vecEndPos - vecDir * 4;
 		SpawnBlood(vecBloodOrigin, flDamage);// a little surface blood.   ...  oil.  yeah.
@@ -1067,7 +1069,7 @@ GENERATE_TRACEATTACK_IMPLEMENTATION(CBaseTurret)
 
 	AddMultiDamage( pevAttacker, this, flDamage, bitsDamageType, bitsDamageTypeMod );
 
-	if(EASY_CVAR_GET(turretDamageDecal) != 0){
+	if(EASY_CVAR_GET_DEBUGONLY(turretDamageDecal) != 0){
 		//MODDD - also new, from base monster blood drawing for oil.
 		TraceBleed( flDamage, vecDir, ptr, bitsDamageType, bitsDamageTypeMod );
 	}
@@ -1161,7 +1163,7 @@ BOOL CBaseTurret::TurretDeathCheck(entvars_t* pevInflictor, entvars_t* pevAttack
 
 				if	( ShouldGibMonster( gibFlag ) )
 				{
-					GibMonster(EASY_CVAR_GET(turretGibDecal)!=0);
+					GibMonster(EASY_CVAR_GET_DEBUGONLY(turretGibDecal)!=0);
 					return 0;
 				}
 				else if ( pev->flags & FL_MONSTER )
@@ -1213,7 +1215,7 @@ BOOL CBaseTurret::TurretDeathCheck(entvars_t* pevInflictor, entvars_t* pevAttack
 				{
 					pev->health = -50;
 					//Killed( pevAttacker, GIB_ALWAYS );
-					GibMonster(EASY_CVAR_GET(turretGibDecal)!=0 );
+					GibMonster(EASY_CVAR_GET_DEBUGONLY(turretGibDecal)!=0 );
 					return 0;
 				}
 				// Accumulate corpse gibbing damage, so you can gib with multiple hits
@@ -1508,7 +1510,7 @@ void CSentry::Precache()
 }
 
 float CSentry::getGibCVar(){
-	return EASY_CVAR_GET(sentryCanGib);
+	return EASY_CVAR_GET_DEBUGONLY(sentryCanGib);
 }
 
 
@@ -1570,7 +1572,7 @@ void CSentry::PreInit(void) {
 	// Snap to the ground, this turret does look like a small turret on stands after all.
 	if (!FBitSet(pev->spawnflags, SF_MONSTER_FALL_TO_GROUND))
 	{
-		if (EASY_CVAR_GET(crazyMonsterPrintouts))easyForcePrintLine("YOU amazing piece of work");
+		if (EASY_CVAR_GET_DEBUGONLY(crazyMonsterPrintouts))easyForcePrintLine("YOU amazing piece of work");
 
 		//pev->solid = SOLID_SLIDEBOX;
 
@@ -1737,7 +1739,7 @@ void CSentry ::	SentryDeath( void )
 	if (pev->dmgtime + RANDOM_FLOAT( 0, 8 ) > gpGlobals->time)
 	{
 		//UTIL_Sparks(...)
-		UTIL_Sparks( vecSrc, DEFAULT_SPARK_BALLS, EASY_CVAR_GET(sparksTurretDeathMulti) );
+		UTIL_Sparks( vecSrc, DEFAULT_SPARK_BALLS, EASY_CVAR_GET_DEBUGONLY(sparksTurretDeathMulti) );
 	}
 
 	if (m_fSequenceFinished && pev->dmgtime + 5 < gpGlobals->time)

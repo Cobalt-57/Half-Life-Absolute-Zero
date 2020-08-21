@@ -26,9 +26,9 @@ EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteclip)
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(firstPersonIdleDelayMin)
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(firstPersonIdleDelayMax)
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(viewModelPrintouts)
-//EASY_CVAR_EXTERN(viewModelSyncFixPrintouts)
+//EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(viewModelSyncFixPrintouts)
 //EASY_CVAR_EXTERN(cl_holster)
-//EASY_CVAR_EXTERN(wpn_glocksilencer)
+//EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST(wpn_glocksilencer)
 
 
 //MODDD - ????      This file seems to need re-implementations of several (including newly added) CBasePlayerWeapon methods from weapons.h

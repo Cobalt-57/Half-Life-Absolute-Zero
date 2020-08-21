@@ -30,14 +30,14 @@
 
 
 
-EASY_CVAR_EXTERN(animationKilledBoundsRemoval)
-EASY_CVAR_EXTERN(thoroughHitBoxUpdates)
+EASY_CVAR_EXTERN_DEBUGONLY(animationKilledBoundsRemoval)
+EASY_CVAR_EXTERN_DEBUGONLY(thoroughHitBoxUpdates)
 
-EASY_CVAR_EXTERN(noFlinchOnHard)
+EASY_CVAR_EXTERN_DEBUGONLY(noFlinchOnHard)
 
-EASY_CVAR_EXTERN(houndeye_attack_canGib)
-EASY_CVAR_EXTERN(kingpinDebug)
-//EASY_CVAR_EXTERN(testVar)
+EASY_CVAR_EXTERN_DEBUGONLY(houndeye_attack_canGib)
+EASY_CVAR_EXTERN_DEBUGONLY(kingpinDebug)
+//EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(testVar)
 
 //???
 extern short g_sBallForceFieldSprite;
@@ -1040,7 +1040,7 @@ void CKingpin::Spawn( void )
 
 
 	//MODDD - CVar me?
-	//m_voicePitch = randomValueInt((int)EASY_CVAR_GET(hassaultVoicePitchMin), (int)EASY_CVAR_GET(hassaultVoicePitchMax) );
+	//m_voicePitch = randomValueInt((int)EASY_CVAR_GET_DEBUGONLY(hassaultVoicePitchMin), (int)EASY_CVAR_GET_DEBUGONLY(hassaultVoicePitchMax) );
 
 	m_voicePitch = randomValueInt(66, 76);
 
@@ -1185,7 +1185,7 @@ Schedule_t* CKingpin::GetSchedule ( void )
 				return GetScheduleOfType ( SCHED_WAKE_ANGRY );
 			}
 			//MODDD - other condition.  If "noFlinchOnHard" is on and the skill is hard, don't flinch from getting hit.
-			else if (HasConditions(bits_COND_LIGHT_DAMAGE) && !HasMemory( bits_MEMORY_FLINCHED) && !(EASY_CVAR_GET(noFlinchOnHard)==1 && g_iSkillLevel==SKILL_HARD)  )
+			else if (HasConditions(bits_COND_LIGHT_DAMAGE) && !HasMemory( bits_MEMORY_FLINCHED) && !(EASY_CVAR_GET_DEBUGONLY(noFlinchOnHard)==1 && g_iSkillLevel==SKILL_HARD)  )
 			{
 				return GetScheduleOfType( SCHED_SMALL_FLINCH );
 			}
@@ -1252,7 +1252,7 @@ Schedule_t* CKingpin::GetSchedule ( void )
 					//pick one regardless of distance if we forced one with KinpginDebug.
 
 
-					switch( (int)(EASY_CVAR_GET(kingpinDebug)) ){
+					switch( (int)(EASY_CVAR_GET_DEBUGONLY(kingpinDebug)) ){
 					case 1:
 						return slChaseEnemySmart_StopSight;
 					break;
@@ -4570,7 +4570,7 @@ void CKingpin::administerShocker(void){
 					int damageType = DMG_SONIC;
 
 					//sure, let this CVar filter apply to the kingpin shocker I guess.
-					if(EASY_CVAR_GET(houndeye_attack_canGib)){
+					if(EASY_CVAR_GET_DEBUGONLY(houndeye_attack_canGib)){
 						damageType |= DMG_ALWAYSGIB;
 					}
 

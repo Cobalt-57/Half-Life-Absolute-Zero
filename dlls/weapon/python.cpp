@@ -30,7 +30,7 @@ EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelay)
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelaycustom)
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteclip)
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteammo)
-EASY_CVAR_EXTERN(revolverLaserScope)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(revolverLaserScope)
 
 
 
@@ -457,7 +457,7 @@ void CPython::ItemPostFrameThink(){
 
 		if (m_pPlayer->pev->fov != 0)
 		{
-			if (EASY_CVAR_GET(revolverLaserScope) == 1) {
+			if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(revolverLaserScope) == 1) {
 				m_fSpotActive = FALSE;
 			}
 			m_fInZoom = FALSE;
@@ -468,7 +468,7 @@ void CPython::ItemPostFrameThink(){
 		else if (m_pPlayer->pev->fov != zoomedFOV)
 		{
 			//"m_fireState == 1" means the block isn't on.
-			if (m_fireState == 1 && EASY_CVAR_GET(revolverLaserScope) == 1) {
+			if (m_fireState == 1 && EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(revolverLaserScope) == 1) {
 				m_fSpotActive = TRUE;
 			}
 			else {
@@ -555,7 +555,7 @@ void CPython::ItemPreFrame(){
 
 	//easyPrintLine("PYTHON FIRESTATE %d \n", m_fireState );
 
-	if(EASY_CVAR_GET(revolverLaserScope) == 0){
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(revolverLaserScope) == 0){
 		if(m_fSpotActive){
 			m_fSpotActive = FALSE;
 			spotDeleteCheck();
@@ -598,7 +598,7 @@ void CPython::updateModel(){
 	//MODDD - the python used to have two body values. Now the scope is always attached and part of the only default body value of 0. No need for this.
 	//The revolverLaserScope CVar is still checked for enabling / disabling the laser pointer that shows up on zooming in.
 	/*
-	if(EASY_CVAR_GET(revolverLaserScope) == 0){
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(revolverLaserScope) == 0){
 		// scope not allowed?  Retail behavior is still to be toggled on for
 		// multiplayer only (maybe?).
 		m_fInAttack = IsMultiplayer();    // 0 or 1.

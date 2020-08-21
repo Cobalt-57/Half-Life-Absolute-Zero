@@ -37,8 +37,8 @@ extern int gmsgRadiationP;
 extern int gmsgUpdateAirTankAirTime;
 
 //MODDD
-EASY_CVAR_EXTERN(wpn_glocksilencer)
-//EASY_CVAR_EXTERN(canTakeLongJump)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST(wpn_glocksilencer)
+//EASY_CVAR_EXTERN_DEBUGONLY(canTakeLongJump)
 
 
 
@@ -579,8 +579,8 @@ class CItemLongJump : public CItem
 		//Note that "canTakeLongJumpMem" being 2 means it can be picked up any time, even if picked up before (to restore all long jump charge).
 		
 		//if ( pPlayer->m_fLongJump )
-		//if(pPlayer->m_fLongJump && !(EASY_CVAR_GET(canTakeLongJump) == 2) && (EASY_CVAR_GET(canTakeLongJump) == 0 || (EASY_CVAR_GET(canTakeLongJump) == 1 && pPlayer->hasLongJumpItem) ) )
-		float canTakeLongJumpVal = EASY_CVAR_GET(canTakeLongJump);
+		//if(pPlayer->m_fLongJump && !(EASY_CVAR_GET_DEBUGONLY(canTakeLongJump) == 2) && (EASY_CVAR_GET_DEBUGONLY(canTakeLongJump) == 0 || (EASY_CVAR_GET_DEBUGONLY(canTakeLongJump) == 1 && pPlayer->hasLongJumpItem) ) )
+		float canTakeLongJumpVal = EASY_CVAR_GET_DEBUGONLY(canTakeLongJump);
 
 		if (pPlayer->m_fLongJump) {
 			// If the player has the longjump module (although having ever picked up "item_longjump"
@@ -678,7 +678,7 @@ class CItemLongJump : public CItem
 
 			// CVAR NOW INEFFECTIVE.
 			/*
-			float canTakeLongJumpVal = EASY_CVAR_GET(canTakeLongJump);
+			float canTakeLongJumpVal = EASY_CVAR_GET_DEBUGONLY(canTakeLongJump);
 			// hm...
 			if (canTakeLongJumpVal == 0) {
 				// Take longjumpcharges whenever.  Picking up item_longjump is impossible.
@@ -756,7 +756,7 @@ class CItemGlockSilencer : public CItem
 			MESSAGE_END();
 			*/
 
-			if(EASY_CVAR_GET(wpn_glocksilencer) == 1){
+			if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST(wpn_glocksilencer) == 1){
 				pPlayer->SetSuitUpdate("!HEV_SILENCER", FALSE, SUIT_NEXT_IN_30MIN);
 			}
 			pPlayer->hasGlockSilencer = 1;

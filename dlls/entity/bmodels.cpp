@@ -26,7 +26,7 @@
 #include "doors.h"
 
 //MODDD - referred to throughout and restored.
-EASY_CVAR_EXTERN(showtriggers)
+EASY_CVAR_EXTERN_DEBUGONLY(showtriggers)
 
 
 #define SF_BRUSH_ACCDCC 16// brush should accelerate and decelerate when toggled
@@ -288,7 +288,7 @@ LINK_ENTITY_TO_CLASS( func_monsterclip, CFuncMonsterClip );
 void CFuncMonsterClip::Spawn( void )
 {
 	CFuncWall::Spawn();
-	if (EASY_CVAR_GET(showtriggers) == 0) {
+	if (EASY_CVAR_GET_DEBUGONLY(showtriggers) == 0) {
 		pev->effects = EF_NODRAW;
 	}
 	else {

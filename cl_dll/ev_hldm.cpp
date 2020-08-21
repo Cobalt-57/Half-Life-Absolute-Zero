@@ -61,72 +61,72 @@
 //#include "enginecallback.h"
 //should be acceptable.
 
-EASY_CVAR_EXTERN(strobeDurationMin)
-EASY_CVAR_EXTERN(strobeDurationMax)
-EASY_CVAR_EXTERN(strobeRadiusMin)
-EASY_CVAR_EXTERN(strobeRadiusMax)
-EASY_CVAR_EXTERN(strobeSpawnDistHori)
-EASY_CVAR_EXTERN(strobeSpawnDistVertMin)
-EASY_CVAR_EXTERN(strobeSpawnDistVertMax)
-EASY_CVAR_EXTERN(strobeMultiColor)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(strobeDurationMin)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(strobeDurationMax)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(strobeRadiusMin)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(strobeRadiusMax)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(strobeSpawnDistHori)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(strobeSpawnDistVertMin)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(strobeSpawnDistVertMax)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(strobeMultiColor)
 
 EASY_CVAR_EXTERN(ravelaserlength)
 
-EASY_CVAR_EXTERN(raveLaserSpawnDistHoriMin)
-EASY_CVAR_EXTERN(raveLaserSpawnDistHoriMax)
-EASY_CVAR_EXTERN(raveLaserSpawnDistHoriMin)
-EASY_CVAR_EXTERN(raveLaserSpawnDistHoriMax)
-EASY_CVAR_EXTERN(raveLaserSpawnDistVertMin)
-EASY_CVAR_EXTERN(raveLaserSpawnDistVertMax)
-EASY_CVAR_EXTERN(raveLaserSpawnDistVertMin)
-EASY_CVAR_EXTERN(raveLaserSpawnDistVertMax)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(raveLaserSpawnDistHoriMin)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(raveLaserSpawnDistHoriMax)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(raveLaserSpawnDistHoriMin)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(raveLaserSpawnDistHoriMax)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(raveLaserSpawnDistVertMin)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(raveLaserSpawnDistVertMax)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(raveLaserSpawnDistVertMin)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(raveLaserSpawnDistVertMax)
 
-EASY_CVAR_EXTERN(raveLaserDurationMin)
-EASY_CVAR_EXTERN(raveLaserDurationMax)
-EASY_CVAR_EXTERN(raveLaserThicknessMin)
-EASY_CVAR_EXTERN(raveLaserThicknessMax)
-EASY_CVAR_EXTERN(raveLaserNoiseMin)
-EASY_CVAR_EXTERN(raveLaserNoiseMax)
-EASY_CVAR_EXTERN(raveLaserBrightnessMin)
-EASY_CVAR_EXTERN(raveLaserBrightnessMax)
-EASY_CVAR_EXTERN(raveLaserFrameRateMin)
-EASY_CVAR_EXTERN(raveLaserFrameRateMax)
-EASY_CVAR_EXTERN(raveLaserMultiColor)
-EASY_CVAR_EXTERN(raveLaserEnabled)
-EASY_CVAR_EXTERN(raveLaserLength)
-EASY_CVAR_EXTERN(raveLaserSpawnFreq)
-EASY_CVAR_EXTERN(muteRicochetSound)
-EASY_CVAR_EXTERN(muteBulletHitSounds)
-EASY_CVAR_EXTERN(rocketTrailAlphaInterval)
-EASY_CVAR_EXTERN(rocketTrailAlphaScale)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(raveLaserDurationMin)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(raveLaserDurationMax)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(raveLaserThicknessMin)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(raveLaserThicknessMax)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(raveLaserNoiseMin)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(raveLaserNoiseMax)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(raveLaserBrightnessMin)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(raveLaserBrightnessMax)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(raveLaserFrameRateMin)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(raveLaserFrameRateMax)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(raveLaserMultiColor)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(raveLaserEnabled)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(raveLaserLength)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(raveLaserSpawnFreq)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(muteRicochetSound)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(muteBulletHitSounds)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(rocketTrailAlphaInterval)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(rocketTrailAlphaScale)
 
 EASY_CVAR_EXTERN(gauss_mode)
-EASY_CVAR_EXTERN(gauss_primaryonly)
-EASY_CVAR_EXTERN(gauss_reflectdealsdamage)
-EASY_CVAR_EXTERN(gauss_chargeanimdelay)
-EASY_CVAR_EXTERN(gauss_chargeworkdelay)
-EASY_CVAR_EXTERN(gauss_secondarychargetimereq)
-EASY_CVAR_EXTERN(gauss_primaryreflects)
-EASY_CVAR_EXTERN(gauss_primarypierces)
-EASY_CVAR_EXTERN(gauss_secondaryreflects)
-EASY_CVAR_EXTERN(gauss_secondarypierces)
-EASY_CVAR_EXTERN(gauss_primarypunchthrough)
-EASY_CVAR_EXTERN(gauss_secondarypunchthrough)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_primaryonly)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_reflectdealsdamage)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_chargeanimdelay)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_chargeworkdelay)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_secondarychargetimereq)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_primaryreflects)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_primarypierces)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_secondaryreflects)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_secondarypierces)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_primarypunchthrough)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_secondarypunchthrough)
 
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST(playerWeaponSpreadMode)
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST(playerBulletHitEffectForceServer)
-EASY_CVAR_EXTERN(mutePlayerWeaponFire)
-EASY_CVAR_EXTERN(crossbowFirePlaysReloadSound)
-EASY_CVAR_EXTERN(textureHitSoundPrintouts)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(mutePlayerWeaponFire)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(crossbowFirePlaysReloadSound)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(textureHitSoundPrintouts)
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST(playerWeaponTracerMode)
-EASY_CVAR_EXTERN(decalTracerExclusivity)
-EASY_CVAR_EXTERN(egonEffectsMode)
-EASY_CVAR_EXTERN(myRocketsAreBarney)
-EASY_CVAR_EXTERN(muteCrowbarSounds)
-EASY_CVAR_EXTERN(forceAllowServersideTextureSounds)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(decalTracerExclusivity)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(egonEffectsMode)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(myRocketsAreBarney)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(muteCrowbarSounds)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(forceAllowServersideTextureSounds)
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(viewModelPrintouts)
 EASY_CVAR_EXTERN(cl_gaussfollowattachment)
-
+EASY_CVAR_EXTERN_DEBUGONLY(sparksPlayerCrossbowMulti)
 
 //MODDD - from in_camera.cpp 
 extern "C"
@@ -230,7 +230,7 @@ float EV_HLDM_PlayTextureSound(int idx, pmtrace_t* ptr, float* vecSrc, float* ve
 
 	//MODDD - the above was not written by me, appeared as-is.  Dunno what a "movevar" is. pm_shared.c thing? huh?
 	//Anyhow, mutes these sounds if "muteBulletHitSounds" is on, or the forceAllowServersideTextureSounds choice of 2 (only serverside allowed).
-	if (EASY_CVAR_GET(muteBulletHitSounds) == 1 || EASY_CVAR_GET(forceAllowServersideTextureSounds) == 2) {
+	if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(muteBulletHitSounds) == 1 || EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(forceAllowServersideTextureSounds) == 2) {
 		return 0;
 	}
 
@@ -376,7 +376,7 @@ float EV_HLDM_PlayTextureSound(int idx, pmtrace_t* ptr, float* vecSrc, float* ve
 
 
 
-	if (EASY_CVAR_GET(textureHitSoundPrintouts) == 1)easyPrintLine("EV PLAY TEXTURE SOUND: %d, %c", (int)chTextureType, chTextureType);
+	if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(textureHitSoundPrintouts) == 1)easyPrintLine("EV PLAY TEXTURE SOUND: %d, %c", (int)chTextureType, chTextureType);
 
 	//MODDD - healthy default, just in case nothing was picked?
 	cnt = 0;
@@ -492,7 +492,7 @@ void EV_HLDM_GunshotDecalTrace(pmtrace_t* pTrace, char* decalName)
 	//MODDD - Bullet effects disabled!
 	//gEngfuncs.pEfxAPI->R_BulletImpactParticles( pTrace->endpos );
 
-	if (EASY_CVAR_GET(muteRicochetSound) < 1) {
+	if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(muteRicochetSound) < 1) {
 
 		// redundant with TE_GUNSHOT now used instead. It automatically plays a ricochet sound.
 		/*
@@ -737,7 +737,7 @@ void EV_HLDM_FireBullets(int idx, float* forward, float* right, float* up, int c
 				//             and do this regardless of CVar "playerWeaponTracerMode"?
 				//             This seems to mirror the same "tracer" variable also local to fireBullets methods serverside (in dlls/combat.cpp).
 				//             It has been renamed to "disableBulletHitDecal" here as well.
-				if (EASY_CVAR_GET(decalTracerExclusivity) != 1 || !disableBulletHitDecal)
+				if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(decalTracerExclusivity) != 1 || !disableBulletHitDecal)
 				{
 					EV_HLDM_PlayTextureSound(idx, &tr, vecSrc, vecEnd, iBulletType);
 					EV_HLDM_DecalGunshot(&tr, iBulletType);
@@ -834,7 +834,7 @@ void EV_FireGlock1(event_args_t* args)
 	EV_EjectBrass(ShellOrigin, ShellVelocity, angles[YAW], shell, TE_BOUNCE_SHELL);
 
 
-	if (EASY_CVAR_GET(mutePlayerWeaponFire) != 1) {
+	if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(mutePlayerWeaponFire) != 1) {
 		if (!silencerOn) {
 			gEngfuncs.pEventAPI->EV_PlaySound(idx, origin, CHAN_WEAPON, "weapons/pl_gun3.wav", gEngfuncs.pfnRandomFloat(0.92, 1.0), ATTN_NORM, 0, 98 + gEngfuncs.pfnRandomLong(0, 3));
 		}
@@ -934,7 +934,7 @@ void EV_FireGlock2(event_args_t* args)
 	//MODDD - why were these commented?
 	EV_EjectBrass(ShellOrigin, ShellVelocity, angles[YAW], shell, TE_BOUNCE_SHELL);
 
-	if (EASY_CVAR_GET(mutePlayerWeaponFire) != 1) {
+	if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(mutePlayerWeaponFire) != 1) {
 		if (!silencerOn) {
 			gEngfuncs.pEventAPI->EV_PlaySound(idx, origin, CHAN_WEAPON, "weapons/pl_gun3.wav", gEngfuncs.pfnRandomFloat(0.92, 1.0), ATTN_NORM, 0, 98 + gEngfuncs.pfnRandomLong(0, 3));
 		}
@@ -1006,7 +1006,7 @@ void EV_FireShotGunDouble(event_args_t* args)
 		EV_EjectBrass(ShellOrigin, ShellVelocity, angles[YAW], shell, TE_BOUNCE_SHOTSHELL);
 	}
 
-	if (EASY_CVAR_GET(mutePlayerWeaponFire) != 1) {
+	if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(mutePlayerWeaponFire) != 1) {
 		gEngfuncs.pEventAPI->EV_PlaySound(idx, origin, CHAN_WEAPON, "weapons/dbarrel1.wav", gEngfuncs.pfnRandomFloat(0.98, 1.0), ATTN_NORM, 0, 85 + gEngfuncs.pfnRandomLong(0, 0x1f));
 	}
 
@@ -1068,7 +1068,7 @@ void EV_FireShotGunSingle(event_args_t* args)
 
 	EV_EjectBrass(ShellOrigin, ShellVelocity, angles[YAW], shell, TE_BOUNCE_SHOTSHELL);
 
-	if (EASY_CVAR_GET(mutePlayerWeaponFire) != 1) {
+	if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(mutePlayerWeaponFire) != 1) {
 		gEngfuncs.pEventAPI->EV_PlaySound(idx, origin, CHAN_WEAPON, "weapons/sbarrel1.wav", gEngfuncs.pfnRandomFloat(0.95, 1.0), ATTN_NORM, 0, 93 + gEngfuncs.pfnRandomLong(0, 0x1f));
 	}
 
@@ -1152,7 +1152,7 @@ void EV_FireMP5(event_args_t* args)
 
 	EV_EjectBrass(ShellOrigin, ShellVelocity, angles[YAW], shell, TE_BOUNCE_SHELL);
 
-	if (EASY_CVAR_GET(mutePlayerWeaponFire) != 1) {
+	if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(mutePlayerWeaponFire) != 1) {
 		switch (gEngfuncs.pfnRandomLong(0, 1))
 		{
 		case 0:
@@ -1195,7 +1195,7 @@ void EV_FireMP52(event_args_t* args)
 		V_PunchAxis(0, -10);
 	}
 
-	if (EASY_CVAR_GET(mutePlayerWeaponFire) != 1) {
+	if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(mutePlayerWeaponFire) != 1) {
 		switch (gEngfuncs.pfnRandomLong(0, 1))
 		{
 		case 0:
@@ -1261,7 +1261,7 @@ void EV_FirePython(event_args_t* args)
 	}
 
 
-	if (EASY_CVAR_GET(mutePlayerWeaponFire) != 1) {
+	if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(mutePlayerWeaponFire) != 1) {
 		switch (gEngfuncs.pfnRandomLong(0, 1))
 		{
 		case 0:
@@ -1389,7 +1389,7 @@ void EV_FireGauss(event_args_t* args)
 		}
 	}
 
-	if (EASY_CVAR_GET(mutePlayerWeaponFire) != 1) {
+	if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(mutePlayerWeaponFire) != 1) {
 		// original line
 		//gEngfuncs.pEventAPI->EV_PlaySound( idx, origin, CHAN_WEAPON, "weapons/gauss2.wav", 0.5 + flDamage * (1.0 / 400.0), ATTN_NORM, 0, 85 + gEngfuncs.pfnRandomLong( 0, 0x1f ) );
 		float flVol;
@@ -1585,7 +1585,7 @@ void EV_FireGauss(event_args_t* args)
 
 
 			int reflectCheckPossible = FALSE;
-			if ((m_fPrimaryFire == TRUE && EASY_CVAR_GET(gauss_primaryreflects) != 0) || (m_fPrimaryFire == FALSE && EASY_CVAR_GET(gauss_secondaryreflects) != 0)) {
+			if ((m_fPrimaryFire == TRUE && EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_primaryreflects) != 0) || (m_fPrimaryFire == FALSE && EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_secondaryreflects) != 0)) {
 				reflectCheckPossible = TRUE;
 			}
 			//MODDD - involved "reflectCheckPossible"
@@ -1639,7 +1639,7 @@ void EV_FireGauss(event_args_t* args)
 				//MODDD - see mirrored portion of serverside's gauss.cpp.
 				//if ( !m_fPrimaryFire )
 				int punchAttempt = FALSE;
-				if ((m_fPrimaryFire == TRUE && EASY_CVAR_GET(gauss_primarypunchthrough) != 0) || (m_fPrimaryFire == FALSE && EASY_CVAR_GET(gauss_secondarypunchthrough) != 0)) {
+				if ((m_fPrimaryFire == TRUE && EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_primarypunchthrough) != 0) || (m_fPrimaryFire == FALSE && EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_secondarypunchthrough) != 0)) {
 					punchAttempt = TRUE;
 				}
 				// try punching through wall if secondary attack (primary is incapable of breaking through)
@@ -1735,7 +1735,7 @@ void EV_FireGauss(event_args_t* args)
 		{
 			//MODDD
 			int canPierce = FALSE;
-			if ((m_fPrimaryFire == TRUE && EASY_CVAR_GET(gauss_primarypierces) != 0) || (m_fPrimaryFire == FALSE && EASY_CVAR_GET(gauss_secondarypierces) != 0)) {
+			if ((m_fPrimaryFire == TRUE && EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_primarypierces) != 0) || (m_fPrimaryFire == FALSE && EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_secondarypierces) != 0)) {
 				canPierce = TRUE;
 			}
 
@@ -1776,7 +1776,7 @@ void EV_Crowbar(event_args_t* args)
 
 	//Play Swing sound
 	//MODDD - if the canPlayHitSound CVar permits.
-	if (EASY_CVAR_GET(muteCrowbarSounds) != 1 && EASY_CVAR_GET(muteCrowbarSounds) != 3) {
+	if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(muteCrowbarSounds) != 1 && EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(muteCrowbarSounds) != 3) {
 		gEngfuncs.pEventAPI->EV_PlaySound(idx, origin, CHAN_WEAPON, "weapons/cbar_miss1.wav", 1, ATTN_NORM, 0, PITCH_NORM);
 	}
 
@@ -1889,10 +1889,10 @@ void EV_FireCrossbow2(event_args_t* args)
 	VectorMA(vecSrc, 8192, forward, vecEnd);
 
 
-	if (EASY_CVAR_GET(mutePlayerWeaponFire) != 1) {
+	if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(mutePlayerWeaponFire) != 1) {
 		gEngfuncs.pEventAPI->EV_PlaySound(idx, origin, CHAN_WEAPON, "weapons/xbow_fire1.wav", 1, ATTN_NORM, 0, 93 + gEngfuncs.pfnRandomLong(0, 0xF));
 
-		if (EASY_CVAR_GET(crossbowFirePlaysReloadSound) > 0) {
+		if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(crossbowFirePlaysReloadSound) > 0) {
 			gEngfuncs.pEventAPI->EV_PlaySound(idx, origin, CHAN_ITEM, "weapons/xbow_reload1.wav", gEngfuncs.pfnRandomFloat(0.95, 1.0), ATTN_NORM, 0, 93 + gEngfuncs.pfnRandomLong(0, 0xF));
 		}
 	}
@@ -1963,7 +1963,7 @@ void EV_FireCrossbow2(event_args_t* args)
 				//if(gEngfuncs.PM_PointContents(cEntRef->origin, NULL) != CONTENTS_WATER)
 				if (gEngfuncs.PM_PointContents(tr.endpos, NULL) != CONTENTS_WATER)
 				{
-					UTIL_Sparks(tr.endpos, DEFAULT_SPARK_BALLS, EASY_CVAR_GET(sparksPlayerCrossbowMulti));
+					UTIL_Sparks(tr.endpos, DEFAULT_SPARK_BALLS, EASY_CVAR_GET_DEBUGONLY(sparksPlayerCrossbowMulti));
 				}
 				else {
 					// A blend of pushed away from the surface collided with, and away from the direction I was moving in.
@@ -2042,10 +2042,10 @@ void EV_FireCrossbow(event_args_t* args)
 	VectorCopy_f(args->origin, origin);
 
 
-	if (EASY_CVAR_GET(mutePlayerWeaponFire) != 1) {
+	if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(mutePlayerWeaponFire) != 1) {
 		gEngfuncs.pEventAPI->EV_PlaySound(idx, origin, CHAN_WEAPON, "weapons/xbow_fire1.wav", 1, ATTN_NORM, 0, 93 + gEngfuncs.pfnRandomLong(0, 0xF));
 
-		if (EASY_CVAR_GET(crossbowFirePlaysReloadSound) > 0) {
+		if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(crossbowFirePlaysReloadSound) > 0) {
 			gEngfuncs.pEventAPI->EV_PlaySound(idx, origin, CHAN_ITEM, "weapons/xbow_reload1.wav", gEngfuncs.pfnRandomFloat(0.95, 1.0), ATTN_NORM, 0, 93 + gEngfuncs.pfnRandomLong(0, 0xF));
 		}
 	}
@@ -2077,8 +2077,8 @@ void EV_FireRpg(event_args_t* args)
 	VectorCopy_f(args->origin, origin);
 
 
-	if (EASY_CVAR_GET(mutePlayerWeaponFire) != 1) {
-		if (EASY_CVAR_GET(myRocketsAreBarney) != 1) {
+	if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(mutePlayerWeaponFire) != 1) {
+		if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(myRocketsAreBarney) != 1) {
 			//ordinary
 			//MODDD - little less attenuation for RPG's, it is a danged rocket going off after all
 			gEngfuncs.pEventAPI->EV_PlaySound(idx, origin, CHAN_WEAPON, "weapons/rocketfire1.wav", 0.9, ATTN_NORM - 0.14, 0, PITCH_NORM);
@@ -2139,7 +2139,7 @@ void EV_EgonFire(event_args_t* args)
 		hasSpiralBeam = TRUE;
 	}
 
-	if (EASY_CVAR_GET(mutePlayerWeaponFire) != 1) {
+	if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(mutePlayerWeaponFire) != 1) {
 		if (iStartup)
 		{
 			if (iFireMode == FIRE_WIDE)
@@ -2320,7 +2320,7 @@ void EV_HornetGunFire(event_args_t* args)
 		gEngfuncs.pEventAPI->EV_WeaponAnimation(HGUN_SHOOT, 1);
 	}
 
-	if (EASY_CVAR_GET(mutePlayerWeaponFire) != 1) {
+	if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(mutePlayerWeaponFire) != 1) {
 		switch (gEngfuncs.pfnRandomLong(0, 2))
 		{
 		case 0:	gEngfuncs.pEventAPI->EV_PlaySound(idx, origin, CHAN_WEAPON, "agrunt/ag_fire1.wav", 1, ATTN_NORM, 0, 100);	break;
@@ -2852,17 +2852,17 @@ void generateFreakyLight(const Vector& arg_origin) {
 	float spawnDistVertMax = 75;
 	int multiColor = TRUE;
 	*/
-	float durationMin = EASY_CVAR_GET(strobeDurationMin);
-	float durationMax = EASY_CVAR_GET(strobeDurationMax);
-	float radiusMin = EASY_CVAR_GET(strobeRadiusMin);
-	float radiusMax = EASY_CVAR_GET(strobeRadiusMax);
-	float spawnDistHori = EASY_CVAR_GET(strobeSpawnDistHori);
-	float spawnDistVertMin = EASY_CVAR_GET(strobeSpawnDistVertMin);
-	float spawnDistVertMax = EASY_CVAR_GET(strobeSpawnDistVertMax);
+	float durationMin = EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(strobeDurationMin);
+	float durationMax = EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(strobeDurationMax);
+	float radiusMin = EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(strobeRadiusMin);
+	float radiusMax = EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(strobeRadiusMax);
+	float spawnDistHori = EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(strobeSpawnDistHori);
+	float spawnDistVertMin = EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(strobeSpawnDistVertMin);
+	float spawnDistVertMax = EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(strobeSpawnDistVertMax);
 
 
 	int multiColor;
-	if (EASY_CVAR_GET(strobeMultiColor) == 1) {
+	if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(strobeMultiColor) == 1) {
 		multiColor = TRUE;
 	}
 	else {
@@ -2945,7 +2945,7 @@ void generateFreakyLaser(const Vector& arg_origin) {
 	float randOrigin2[3];
 
 	//range??
-	float mag = randomValue(EASY_CVAR_GET(raveLaserLength), EASY_CVAR_GET(raveLaserLength));
+	float mag = randomValue(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(raveLaserLength), EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(raveLaserLength));
 
 	float fltDeg = randomValue(0, M_2PI);
 	if (fltDeg >= M_2PI) {
@@ -2967,10 +2967,10 @@ void generateFreakyLaser(const Vector& arg_origin) {
 	float x2 = cos(fltDeg) * mag;
 	float y2 = sin(fltDeg) * mag;
 
-	float randomShiftX = randomAbsoluteValue(EASY_CVAR_GET(raveLaserSpawnDistHoriMin), EASY_CVAR_GET(raveLaserSpawnDistHoriMax));
-	float randomShiftY = randomAbsoluteValue(EASY_CVAR_GET(raveLaserSpawnDistHoriMin), EASY_CVAR_GET(raveLaserSpawnDistHoriMax));
-	float randomShiftZ = randomAbsoluteValue(EASY_CVAR_GET(raveLaserSpawnDistVertMin), EASY_CVAR_GET(raveLaserSpawnDistVertMax));
-	float randomShiftZ2 = randomAbsoluteValue(EASY_CVAR_GET(raveLaserSpawnDistVertMin), EASY_CVAR_GET(raveLaserSpawnDistVertMax));
+	float randomShiftX = randomAbsoluteValue(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(raveLaserSpawnDistHoriMin), EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(raveLaserSpawnDistHoriMax));
+	float randomShiftY = randomAbsoluteValue(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(raveLaserSpawnDistHoriMin), EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(raveLaserSpawnDistHoriMax));
+	float randomShiftZ = randomAbsoluteValue(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(raveLaserSpawnDistVertMin), EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(raveLaserSpawnDistVertMax));
+	float randomShiftZ2 = randomAbsoluteValue(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(raveLaserSpawnDistVertMin), EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(raveLaserSpawnDistVertMax));
 
 	randOrigin1[0] = origin[0] + x + randomShiftX;
 	randOrigin1[1] = origin[1] + y + randomShiftY;
@@ -2982,15 +2982,15 @@ void generateFreakyLaser(const Vector& arg_origin) {
 	randOrigin2[2] = origin[2] + randomShiftZ2;
 
 
-	float randLife = gEngfuncs.pfnRandomFloat(EASY_CVAR_GET(raveLaserDurationMin), EASY_CVAR_GET(raveLaserDurationMax));
-	float randWidth = gEngfuncs.pfnRandomFloat(EASY_CVAR_GET(raveLaserThicknessMin), EASY_CVAR_GET(raveLaserThicknessMax));
+	float randLife = gEngfuncs.pfnRandomFloat(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(raveLaserDurationMin), EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(raveLaserDurationMax));
+	float randWidth = gEngfuncs.pfnRandomFloat(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(raveLaserThicknessMin), EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(raveLaserThicknessMax));
 
-	float randAmp = gEngfuncs.pfnRandomFloat(EASY_CVAR_GET(raveLaserNoiseMin), EASY_CVAR_GET(raveLaserNoiseMax));
+	float randAmp = gEngfuncs.pfnRandomFloat(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(raveLaserNoiseMin), EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(raveLaserNoiseMax));
 
 	// and don't multiply brightness by 255!  Not necessary, just has to be divided out in the color to get the same point across
-	float randBrightness = gEngfuncs.pfnRandomFloat(EASY_CVAR_GET(raveLaserBrightnessMin), EASY_CVAR_GET(raveLaserBrightnessMax));
+	float randBrightness = gEngfuncs.pfnRandomFloat(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(raveLaserBrightnessMin), EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(raveLaserBrightnessMax));
 	//INTERPRET FROM 0 - 1, like  0.8 - 1.0!
-	float frameRate = gEngfuncs.pfnRandomFloat(EASY_CVAR_GET(raveLaserFrameRateMin), EASY_CVAR_GET(raveLaserFrameRateMax));
+	float frameRate = gEngfuncs.pfnRandomFloat(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(raveLaserFrameRateMin), EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(raveLaserFrameRateMax));
 
 	float speed = 1;
 	float startFrame = 0;
@@ -2999,7 +2999,7 @@ void generateFreakyLaser(const Vector& arg_origin) {
 
 	int colorReceive[3];
 
-	if (EASY_CVAR_GET(raveLaserMultiColor) != 0) {
+	if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(raveLaserMultiColor) != 0) {
 		generateColor(colorReceive);
 	}
 	else {
@@ -3055,13 +3055,13 @@ void EV_FreakyLight(event_args_t* args) {
 
 	generateFreakyLight((float*)&args->origin);
 
-	if (EASY_CVAR_GET(raveLaserEnabled) == 1) {
+	if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(raveLaserEnabled) == 1) {
 
 		//if there is a decimal in raveLaserSpawnFreq, guarantee spawning of the first whole number lasers (like in 2.4, spawn 2 lasers).
 		//Treat the 0.4 decimal as a "40%" chance of producing another laser.  Rounds out nice and evenly when it happens a lot.
-		int toGen = (int)EASY_CVAR_GET(raveLaserSpawnFreq);   //truncate.
+		int toGen = (int)EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(raveLaserSpawnFreq);   //truncate.
 		//roundoff?
-		float roundoff = ((int)(EASY_CVAR_GET(raveLaserSpawnFreq) * 10) % 10) / 10.0f;
+		float roundoff = ((int)(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(raveLaserSpawnFreq) * 10) % 10) / 10.0f;
 		if (roundoff != 0 && gEngfuncs.pfnRandomLong(0, 1) <= roundoff) {
 			//extra.
 			toGen++;
@@ -3069,7 +3069,7 @@ void EV_FreakyLight(event_args_t* args) {
 		for (i = 0; i < toGen; i++) {
 			generateFreakyLaser((float*)&args->origin);
 		}
-	}//END OF if(EASY_CVAR_GET(raveLaserEnabled) == 1)
+	}//END OF if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(raveLaserEnabled) == 1)
 
 }
 
@@ -3784,9 +3784,9 @@ void EV_imitation7_think(struct tempent_s* ent, float frametime, float currentti
 	int eckz = gEngfuncs.pEventAPI->EV_FindModelIndex( "sprites/explode1.spr" );
 
 	//not sure if "life" is necessary, seems to expire at the end of the last frame without any looping and/or cycle tags.  (framerate is 10, I assume,  10 frames per second:  9 frames, so  9 / 10 = 0.9 seconds to finish the anim.
-	TEMPENTITY* eh = gEngfuncs.pEfxAPI->R_TempSprite( ent->entity.origin, vec3_origin, EASY_CVAR_GET(rocketTrailAlphaScale), eckz, kRenderGlow, kRenderFxNoDissipation, 250.0 / 255.0, 0.91f, FTENT_SPRANIMATE );
+	TEMPENTITY* eh = gEngfuncs.pEfxAPI->R_TempSprite( ent->entity.origin, vec3_origin, EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(rocketTrailAlphaScale), eckz, kRenderGlow, kRenderFxNoDissipation, 250.0 / 255.0, 0.91f, FTENT_SPRANIMATE );
 	//eh->fadeSpeed = 3.3f;  ???
-	//eh->entity.curstate.scale = EASY_CVAR_GET(rocketTrailAlphaScale);
+	//eh->entity.curstate.scale = EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(rocketTrailAlphaScale);
 	*/
 
 
@@ -4092,13 +4092,13 @@ void EV_rocketAlphaTrailThink(struct tempent_s* ent, float frametime, float curr
 	int eckz = gEngfuncs.pEventAPI->EV_FindModelIndex("sprites/explode1.spr");
 
 	//not sure if "life" is necessary, seems to expire at the end of the last frame without any looping and/or cycle tags.  (framerate is 10, I assume,  10 frames per second:  9 frames, so  9 / 10 = 0.9 seconds to finish the anim.
-	TEMPENTITY* eh = gEngfuncs.pEfxAPI->R_TempSprite(ent->entity.origin, vec3_origin, EASY_CVAR_GET(rocketTrailAlphaScale), eckz, kRenderGlow, kRenderFxNoDissipation, 250.0 / 255.0, 0.91f, FTENT_SPRANIMATE);
+	TEMPENTITY* eh = gEngfuncs.pEfxAPI->R_TempSprite(ent->entity.origin, vec3_origin, EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(rocketTrailAlphaScale), eckz, kRenderGlow, kRenderFxNoDissipation, 250.0 / 255.0, 0.91f, FTENT_SPRANIMATE);
 	if (eh != NULL) {
 		//eh->fadeSpeed = 3.3f;  ???
-		//eh->entity.curstate.scale = EASY_CVAR_GET(rocketTrailAlphaScale);
+		//eh->entity.curstate.scale = EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(rocketTrailAlphaScale);
 	}
 
-	ent->entity.baseline.fuser1 = gEngfuncs.GetClientTime() + EASY_CVAR_GET(rocketTrailAlphaInterval);
+	ent->entity.baseline.fuser1 = gEngfuncs.GetClientTime() + EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(rocketTrailAlphaInterval);
 }
 
 
@@ -4140,7 +4140,7 @@ void EV_rocketAlphaTrail(event_args_t* args)
 
 		pTrailSpawner->die = gEngfuncs.GetClientTime() + 10; // Just in case
 
-		pTrailSpawner->entity.baseline.fuser1 = gEngfuncs.GetClientTime() + EASY_CVAR_GET(rocketTrailAlphaInterval); // Don't try to die till 500ms ahead
+		pTrailSpawner->entity.baseline.fuser1 = gEngfuncs.GetClientTime() + EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(rocketTrailAlphaInterval); // Don't try to die till 500ms ahead
 	}
 
 }

@@ -37,16 +37,16 @@
 
 
 //MODDD - extern
-EASY_CVAR_EXTERN(drawCollisionBoundsAtDeath)
-EASY_CVAR_EXTERN(drawHitBoundsAtDeath)
-EASY_CVAR_EXTERN(thoroughHitBoxUpdates)
-EASY_CVAR_EXTERN(thatWasntPunch)
-EASY_CVAR_EXTERN(gargantuaPrintout)
-EASY_CVAR_EXTERN(gargantuaCorpseDeath)
-EASY_CVAR_EXTERN(gargantuaFallSound)
-EASY_CVAR_EXTERN(gargantuaBleeds)
-EASY_CVAR_EXTERN(animationKilledBoundsRemoval)
-EASY_CVAR_EXTERN(gargantuaKilledBoundsAssist)
+EASY_CVAR_EXTERN_DEBUGONLY(drawCollisionBoundsAtDeath)
+EASY_CVAR_EXTERN_DEBUGONLY(drawHitBoundsAtDeath)
+EASY_CVAR_EXTERN_DEBUGONLY(thoroughHitBoxUpdates)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(thatWasntPunch)
+EASY_CVAR_EXTERN_DEBUGONLY(gargantuaPrintout)
+EASY_CVAR_EXTERN_DEBUGONLY(gargantuaCorpseDeath)
+EASY_CVAR_EXTERN_DEBUGONLY(gargantuaFallSound)
+EASY_CVAR_EXTERN_DEBUGONLY(gargantuaBleeds)
+EASY_CVAR_EXTERN_DEBUGONLY(animationKilledBoundsRemoval)
+EASY_CVAR_EXTERN_DEBUGONLY(gargantuaKilledBoundsAssist)
 
 
 
@@ -582,7 +582,7 @@ void CGargantua::DeathSound(void){
 int CGargantua::IRelationship( CBaseEntity *pTarget )
 {
 	
-	if(EASY_CVAR_GET(thatWasntPunch) == 1){
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(thatWasntPunch) == 1){
 		return R_NO;
 	}
 
@@ -596,7 +596,7 @@ int CGargantua::IRelationship( CBaseEntity *pTarget )
 void CGargantua::MonsterThink(void){
 
 	
-	if(EASY_CVAR_GET(thatWasntPunch) == 1 && this->m_fSequenceFinished){
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(thatWasntPunch) == 1 && this->m_fSequenceFinished){
 
 		switch(RANDOM_LONG(0, 45)){
 
@@ -1171,7 +1171,7 @@ GENERATE_TRACEATTACK_IMPLEMENTATION(CGargantua){
 		painSoundPass = TRUE;
 	}else if(pev->deadflag == DEAD_DYING){
 
-		if( (EASY_CVAR_GET(gargantuaCorpseDeath) == 2 || EASY_CVAR_GET(gargantuaCorpseDeath) == 5)){
+		if( (EASY_CVAR_GET_DEBUGONLY(gargantuaCorpseDeath) == 2 || EASY_CVAR_GET_DEBUGONLY(gargantuaCorpseDeath) == 5)){
 			painSoundPass = TRUE;
 		}
 
@@ -1207,7 +1207,7 @@ GENERATE_TRACEATTACK_IMPLEMENTATION(CGargantua){
 	{
 		if ( pev->dmgtime != gpGlobals->time || (RANDOM_LONG(0,100) < 20) )
 		{
-			float gargantuaBleedsVar = EASY_CVAR_GET(gargantuaBleeds);
+			float gargantuaBleedsVar = EASY_CVAR_GET_DEBUGONLY(gargantuaBleeds);
 
 			//MODDD - options for hit effect.
 			if(gargantuaBleedsVar == 0){
@@ -1301,7 +1301,7 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CGargantua)
 
 	}
 
-	float valueOf = EASY_CVAR_GET(gargantuaCorpseDeath);
+	float valueOf = EASY_CVAR_GET_DEBUGONLY(gargantuaCorpseDeath);
 
 	if( (valueOf == 1 || valueOf == 4) && pev->deadflag == DEAD_DYING){
 		EASY_CVAR_PRINTIF_PRE(gargantuaPrintout, easyPrintLine( "DAMAGE BLOCKED!"));
@@ -1364,7 +1364,7 @@ GENERATE_KILLED_IMPLEMENTATION(CGargantua)
 		FlameDestroy(TRUE);
 
 	int gibFlag = 0;
-	float valueOf = EASY_CVAR_GET(gargantuaCorpseDeath);
+	float valueOf = EASY_CVAR_GET_DEBUGONLY(gargantuaCorpseDeath);
 
 	EASY_CVAR_PRINTIF_PRE(gargantuaPrintout, easyPrintLine( "DEAD FLAG: %d", pev->deadflag));
 
@@ -1517,7 +1517,7 @@ void CGargantua::HandleAnimEvent(MonsterEvent_t *pEvent)
 {
 
 
-	if(EASY_CVAR_GET(thatWasntPunch) == 1){
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(thatWasntPunch) == 1){
 		return;
 	}
 
@@ -1675,7 +1675,7 @@ void CGargantua::StartTask( Task_t *pTask )
 		
 
 		//Actually, no.
-		valueOf = EASY_CVAR_GET(gargantuaCorpseDeath);
+		valueOf = EASY_CVAR_GET_DEBUGONLY(gargantuaCorpseDeath);
 		time = -1;
 		if(valueOf == 0){
 			time = 1.6;
@@ -1702,13 +1702,13 @@ void CGargantua::StartTask( Task_t *pTask )
 		RouteClear();
 		m_IdealActivity = GetDeathActivity();
 		pev->deadflag = DEAD_DYING;
-		//easyPrintLine("ARE YOU SOME KIND OF insecure person??? %.2f %d", EASY_CVAR_GET(thoroughHitBoxUpdates), pev->deadflag );
+		//easyPrintLine("ARE YOU SOME KIND OF insecure person??? %.2f %d", EASY_CVAR_GET_DEBUGONLY(thoroughHitBoxUpdates), pev->deadflag );
 		//MODDD
-		if(EASY_CVAR_GET(thoroughHitBoxUpdates) == 1){
+		if(EASY_CVAR_GET_DEBUGONLY(thoroughHitBoxUpdates) == 1){
 			//update the collision box now,
 			this->SetObjectCollisionBox();
 		}
-		if(EASY_CVAR_GET(gargantuaKilledBoundsAssist) == 0 &&EASY_CVAR_GET(animationKilledBoundsRemoval) == 1){
+		if(EASY_CVAR_GET_DEBUGONLY(gargantuaKilledBoundsAssist) == 0 &&EASY_CVAR_GET_DEBUGONLY(animationKilledBoundsRemoval) == 1){
 			setPhysicalHitboxForDeath();
 		}
 
@@ -1737,8 +1737,8 @@ void CGargantua::RunTask( Task_t *pTask )
 	{
 	case TASK_DIE:
 		//MODDD - This is the transform-effect.  Removed, fall and become a gib-able corpse like the rest.
-		valueOf = EASY_CVAR_GET(gargantuaCorpseDeath);
-		valueOf2 = EASY_CVAR_GET(gargantuaFallSound);
+		valueOf = EASY_CVAR_GET_DEBUGONLY(gargantuaCorpseDeath);
+		valueOf2 = EASY_CVAR_GET_DEBUGONLY(gargantuaFallSound);
 		
 		
 
@@ -1842,7 +1842,7 @@ void CGargantua::RunTask( Task_t *pTask )
 				//includes the usual way... no.
 				//CBaseMonster::RunTask(pTask);
 				
-			if(!gargDeadBoundChangeYet && EASY_CVAR_GET(gargantuaKilledBoundsAssist)==1 && pev->frame >= ((60.0/75.0)*255)){
+			if(!gargDeadBoundChangeYet && EASY_CVAR_GET_DEBUGONLY(gargantuaKilledBoundsAssist)==1 && pev->frame >= ((60.0/75.0)*255)){
 				gargDeadBoundChangeYet = TRUE;
 
 
@@ -1932,10 +1932,10 @@ void CGargantua::RunTask( Task_t *pTask )
 				pev->health = 180;
 
 				//MODDD - FOR DEBUGGING
-				if(EASY_CVAR_GET(drawCollisionBoundsAtDeath) == 1){
+				if(EASY_CVAR_GET_DEBUGONLY(drawCollisionBoundsAtDeath) == 1){
 					UTIL_drawBox(pev->origin + pev->mins, pev->origin + pev->maxs);
 				}
-				if(EASY_CVAR_GET(drawHitBoundsAtDeath) == 1){
+				if(EASY_CVAR_GET_DEBUGONLY(drawHitBoundsAtDeath) == 1){
 					UTIL_drawBox(pev->absmin, pev->absmax);
 				}
 					
@@ -1943,9 +1943,9 @@ void CGargantua::RunTask( Task_t *pTask )
 				pev->deadflag = DEAD_DEAD;
 				StopAnimation();
 				//easyPrintLine("DEAD: boxFlat?   %d", (BBoxFlat()));
-				if(EASY_CVAR_GET(gargantuaKilledBoundsAssist) == 0){
+				if(EASY_CVAR_GET_DEBUGONLY(gargantuaKilledBoundsAssist) == 0){
 						
-					if(EASY_CVAR_GET(animationKilledBoundsRemoval) == 2){
+					if(EASY_CVAR_GET_DEBUGONLY(animationKilledBoundsRemoval) == 2){
 						setPhysicalHitboxForDeath();
 					}
 					
@@ -2198,7 +2198,7 @@ void CGargantua::OnTakeDamageSetConditions(entvars_t *pevInflictor, entvars_t *p
 	}
 
 /*
-	if(EASY_CVAR_GET(testVar) == 10){
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(testVar) == 10){
 		//any damage causes me now.
 		SetConditions(bits_COND_HEAVY_DAMAGE);
 	}

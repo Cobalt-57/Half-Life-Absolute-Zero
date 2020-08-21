@@ -52,17 +52,17 @@
 extern DLL_GLOBAL BOOL		g_fGameOver;
 
 //MODDD - custom extern
-EASY_CVAR_EXTERN(blockChangeLevelTrigger)
-EASY_CVAR_EXTERN(blockAutosaveTrigger)
-EASY_CVAR_EXTERN(blockMultiTrigger)
-EASY_CVAR_EXTERN(blockMusicTrigger)
-EASY_CVAR_EXTERN(blockTeleportTrigger)
-EASY_CVAR_EXTERN(blockHurtTrigger)
-EASY_CVAR_EXTERN(animationKilledBoundsRemoval)
+EASY_CVAR_EXTERN_DEBUGONLY(blockChangeLevelTrigger)
+EASY_CVAR_EXTERN_DEBUGONLY(blockAutosaveTrigger)
+EASY_CVAR_EXTERN_DEBUGONLY(blockMultiTrigger)
+EASY_CVAR_EXTERN_DEBUGONLY(blockMusicTrigger)
+EASY_CVAR_EXTERN_DEBUGONLY(blockTeleportTrigger)
+EASY_CVAR_EXTERN_DEBUGONLY(blockHurtTrigger)
+EASY_CVAR_EXTERN_DEBUGONLY(animationKilledBoundsRemoval)
 
 
 //MODDD - referred to throughout and restored.
-EASY_CVAR_EXTERN(showtriggers)
+EASY_CVAR_EXTERN_DEBUGONLY(showtriggers)
 
 
 
@@ -582,7 +582,7 @@ void CBaseTrigger::InitTrigger( )
 	pev->solid = SOLID_TRIGGER;
 	pev->movetype = MOVETYPE_NONE;
 	setModel(STRING(pev->model));    // set size and link into world
-	if (EASY_CVAR_GET(showtriggers) == 0) {
+	if (EASY_CVAR_GET_DEBUGONLY(showtriggers) == 0) {
 		//MODDD - NOTE.  And then add-in EF_NODRAW early on startup if not showing triggers?
 		// Wh-... why not leave the only check for this in precache?
 		// maybe only some triggers call InitTrigger to reach this check...?
@@ -712,7 +712,7 @@ LINK_ENTITY_TO_CLASS( trigger_cdaudio, CTriggerCDAudio );
 void CTriggerCDAudio :: Touch ( CBaseEntity *pOther )
 {
 
-	if(EASY_CVAR_GET(blockMusicTrigger) == 1){
+	if(EASY_CVAR_GET_DEBUGONLY(blockMusicTrigger) == 1){
 		return;
 	}
 
@@ -732,7 +732,7 @@ void CTriggerCDAudio :: Spawn( void )
 
 void CTriggerCDAudio::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
 {
-	if(EASY_CVAR_GET(blockMusicTrigger) == 1){
+	if(EASY_CVAR_GET_DEBUGONLY(blockMusicTrigger) == 1){
 		return;
 	}
 	PlayTrack();
@@ -815,7 +815,7 @@ void CTargetCDAudio :: Spawn( void )
 
 void CTargetCDAudio::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
 {
-	if(EASY_CVAR_GET(blockMusicTrigger) == 1){
+	if(EASY_CVAR_GET_DEBUGONLY(blockMusicTrigger) == 1){
 		return;
 	}
 	Play();
@@ -831,7 +831,7 @@ void CTargetCDAudio::Think( void )
 	//MODDD - moved think up to here. Why give up thinking just because of a client that's not connected or getting blocked?
 	pev->nextthink = gpGlobals->time + 0.5;
 
-	if(EASY_CVAR_GET(blockMusicTrigger) == 1){
+	if(EASY_CVAR_GET_DEBUGONLY(blockMusicTrigger) == 1){
 		//NOTICE - blocking doesn't remove me like calling "Play" would have done. Not that this is very important if it never plays I imagine.
 		return;
 	}
@@ -1180,7 +1180,7 @@ void CBaseTrigger :: HurtTouch ( CBaseEntity *pOther )
 
 	
 	//MODDD - can block the trigger too. Only players from using it.
-	if(EASY_CVAR_GET(blockHurtTrigger) == 1 && (pOther != NULL && pOther->IsPlayer()) ){
+	if(EASY_CVAR_GET_DEBUGONLY(blockHurtTrigger) == 1 && (pOther != NULL && pOther->IsPlayer()) ){
 		return;
 	}
 
@@ -1468,7 +1468,7 @@ void CBaseTrigger :: ActivateMultiTrigger( CBaseEntity *pActivator )
 {
 
 	//MODDD - can block the multi trigger too. Only players from using it.
-	if(EASY_CVAR_GET(blockMultiTrigger) == 1 && (pActivator != NULL && pActivator->IsPlayer()) ){
+	if(EASY_CVAR_GET_DEBUGONLY(blockMultiTrigger) == 1 && (pActivator != NULL && pActivator->IsPlayer()) ){
 		return;
 	}
 
@@ -1794,7 +1794,7 @@ edict_t *CChangeLevel :: FindLandmark( const char *pLandmarkName )
 //=========================================================
 void CChangeLevel :: UseChangeLevel ( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
 {
-	if(EASY_CVAR_GET(blockChangeLevelTrigger) == 1){
+	if(EASY_CVAR_GET_DEBUGONLY(blockChangeLevelTrigger) == 1){
 		easyForcePrintLine("***NOTICE: blocked a changeLevel request to map %s to its location %s.", st_szNextMap, st_szNextSpot);
 		return;
 	}
@@ -1868,7 +1868,7 @@ void CChangeLevel :: ChangeLevelNow( CBaseEntity *pActivator )
 void CChangeLevel :: TouchChangeLevel( CBaseEntity *pOther )
 {
 	//MODDD - can block a changelevel now!
-	if(EASY_CVAR_GET(blockChangeLevelTrigger) == 1){
+	if(EASY_CVAR_GET_DEBUGONLY(blockChangeLevelTrigger) == 1){
 		return;
 	}
 
@@ -2239,7 +2239,7 @@ void CLadder :: Precache( void )
 	pev->solid = SOLID_NOT;
 	pev->skin = CONTENTS_LADDER;
 	
-	if ( EASY_CVAR_GET(showtriggers) == 0 )
+	if ( EASY_CVAR_GET_DEBUGONLY(showtriggers) == 0 )
 	{
 		pev->rendermode = kRenderTransTexture;
 		pev->renderamt = 0;
@@ -2352,7 +2352,7 @@ void CBaseTrigger :: TeleportTouch( CBaseEntity *pOther )
 
 	
 	//MODDD - can block the trigger too. Only players from using it.
-	if(EASY_CVAR_GET(blockTeleportTrigger) == 1 && (pOther != NULL && pOther->IsPlayer()) ){
+	if(EASY_CVAR_GET_DEBUGONLY(blockTeleportTrigger) == 1 && (pOther != NULL && pOther->IsPlayer()) ){
 		return;
 	}
 
@@ -2452,7 +2452,7 @@ void CTriggerSave::Spawn( void )
 void CTriggerSave::SaveTouch( CBaseEntity *pOther )
 {
 	//MODDD - block autosaves with this.
-	if(EASY_CVAR_GET(blockAutosaveTrigger) == 1){
+	if(EASY_CVAR_GET_DEBUGONLY(blockAutosaveTrigger) == 1){
 		return;
 	}
 

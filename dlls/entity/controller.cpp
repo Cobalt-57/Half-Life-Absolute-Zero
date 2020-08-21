@@ -37,7 +37,7 @@
 #include "defaultai.h"
 
 
-EASY_CVAR_EXTERN(animationFramerateMulti)
+EASY_CVAR_EXTERN_DEBUGONLY(animationFramerateMulti)
 
 
 // DEBUG.  Stop the controller from spawning balls.
@@ -1174,7 +1174,7 @@ void CController :: Move ( float flInterval )
 
 	/*
 	//MODDD - if MovePRE is brought back, this needs to re-initialize flMoveDist
-	flMoveDist = m_flGroundSpeed * pev->framerate * EASY_CVAR_GET(animationFramerateMulti) * flInterval;
+	flMoveDist = m_flGroundSpeed * pev->framerate * EASY_CVAR_GET_DEBUGONLY(animationFramerateMulti) * flInterval;
 	*/
 
 
@@ -1224,7 +1224,7 @@ void CController :: Move ( float flInterval )
 
 
 	//MODDD - added pev->framerate and the CVar.
-	flMoveDist = m_flGroundSpeed * pev->framerate * EASY_CVAR_GET(animationFramerateMulti) * flInterval;
+	flMoveDist = m_flGroundSpeed * pev->framerate * EASY_CVAR_GET_DEBUGONLY(animationFramerateMulti) * flInterval;
 
 	//END
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -24,9 +24,9 @@
 #include "effects.h"
 
 EASY_CVAR_EXTERN(cl_explosion)
-EASY_CVAR_EXTERN(apacheForceCinBounds)
-EASY_CVAR_EXTERN(apacheBottomBoundAdj)
-EASY_CVAR_EXTERN(apacheInfluence)
+EASY_CVAR_EXTERN_DEBUGONLY(apacheForceCinBounds)
+EASY_CVAR_EXTERN_DEBUGONLY(apacheBottomBoundAdj)
+EASY_CVAR_EXTERN_DEBUGONLY(apacheInfluence)
 EASY_CVAR_EXTERN(cl_rockettrail)
 
 
@@ -162,11 +162,11 @@ void CApache :: Spawn( void )
 	SET_MODEL(ENT(pev), "models/apache.mdl");
 
 	//MODDD - a flag can now influence the collision-bounds.
-	if(!(pev->spawnflags & SF_MONSTER_APACHE_CINBOUNDS) && EASY_CVAR_GET(apacheForceCinBounds) != 1  ){
+	if(!(pev->spawnflags & SF_MONSTER_APACHE_CINBOUNDS) && EASY_CVAR_GET_DEBUGONLY(apacheForceCinBounds) != 1  ){
 		UTIL_SetSize( pev, Vector( -32, -32, -64 ), Vector( 32, 32, 0 ) );
 	}else{
 		// has the spawnflag, OR apacheForceCinBounds is on?
-		UTIL_SetSize( pev, Vector( -64.0, -64.0, -162.0+EASY_CVAR_GET(apacheBottomBoundAdj)), Vector( 64, 64, 6) );
+		UTIL_SetSize( pev, Vector( -64.0, -64.0, -162.0+EASY_CVAR_GET_DEBUGONLY(apacheBottomBoundAdj)), Vector( 64, 64, 6) );
 	}
 
 	
@@ -301,7 +301,7 @@ void CApache :: DyingThink( void )
 
 	//easyPrintLine("APACHE DYING %.2f %.2f", m_flNextRocket, gpGlobals->time);
 
-	float tempVal = EASY_CVAR_GET(apacheInfluence);
+	float tempVal = EASY_CVAR_GET_DEBUGONLY(apacheInfluence);
 	if(tempVal == 1){
 		m_flNextRocket = 9999999;
 	}else if(tempVal == 2){

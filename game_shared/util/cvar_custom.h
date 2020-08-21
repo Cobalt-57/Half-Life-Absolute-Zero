@@ -153,9 +153,16 @@ Also, need to extern (all?) CVars in dlls/client.cpp.
 #define EASY_CVAR_GET(CVarName)\
 	CVAR_GET_FLOAT( #CVarName )
 
+// whut
+//#define EASY_CVAR_GET_CLIENTONLY(CVarName)\
+//	DUMMY
+
 #else
 	//client.
 #define EASY_CVAR_GET(CVarName)\
+	CVAR_GET_FLOAT( #CVarName )
+
+#define EASY_CVAR_GET_CLIENTONLY(CVarName)\
 	CVAR_GET_FLOAT( #CVarName )
 #endif
 
@@ -230,7 +237,7 @@ Also, need to extern (all?) CVars in dlls/client.cpp.
 		#define EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(CVarName)\
 			global2_##CVarName
 		// CLIENTONLY? DEBUGONLY?  Still a CVAR in debug.
-		#define EASY_CVAR_GET_CLIENTONLY_DEBUGONLY\
+		#define EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(CVarName)\
 			EASY_CVAR_GET(CVarName)
 		
 		#define EASY_CVAR_SET_CLIENTONLY_DEBUGONLY(CVarName, valueV)\
@@ -243,7 +250,7 @@ Also, need to extern (all?) CVars in dlls/client.cpp.
 		#define EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(CVarName)\
 			global2_##CVarName
 		// CLIENTONLY? DEBUGONLY?  Now a var
-		#define EASY_CVAR_GET_CLIENTONLY_DEBUGONLY\
+		#define EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(CVarName)\
 			global2_##CVarName
 
 
@@ -691,6 +698,13 @@ Also, need to extern (all?) CVars in dlls/client.cpp.
 
 #else
 //RELEASE
+
+// Don't dummy it out, leave it as it is.
+// This only gets called when using a dedicated server, which, with debug or release
+// mode, has no way to set CVars through the hidden system.  So ditch it in such
+// a case, work the same way.
+// Keep this in mind for any other references.  FFFFFFffffffffuuuuuuuunnnnnnn.
+/*
 	#define CALL_EASY_CVAR_CREATE_SERVER_DEBUGONLY(CVarName, argFlags)\
 		DUMMY
 	#define EASY_CVAR_CREATE_SERVER_CLIENTONLY_DEBUGONLY(CVarName)\
@@ -713,6 +727,31 @@ Also, need to extern (all?) CVars in dlls/client.cpp.
 		DUMMY
 	#define EASY_CVAR_CREATE_SERVER_SETUP_A_SERVERONLY_DEBUGONLY(CVarName)\
 		DUMMY
+*/
+
+#define CALL_EASY_CVAR_CREATE_SERVER_DEBUGONLY(CVarName, argFlags)\
+			CALL_EASY_CVAR_CREATE_SERVER(CVarName, argFlags)
+#define EASY_CVAR_CREATE_SERVER_CLIENTONLY_DEBUGONLY(CVarName)\
+			DUMMY
+#define EASY_CVAR_CREATE_SERVER_A_CLIENTONLY_DEBUGONLY(CVarName)\
+			DUMMY
+#define EASY_CVAR_CREATE_SERVER_SERVERONLY_DEBUGONLY(CVarName)\
+			CALL_EASY_CVAR_CREATE_SERVER_DEBUGONLY(CVarName, 0);
+#define EASY_CVAR_CREATE_SERVER_A_SERVERONLY_DEBUGONLY(CVarName)\
+			CALL_EASY_CVAR_CREATE_SERVER_DEBUGONLY(CVarName, FCVAR_ARCHIVE);
+
+
+#define CALL_EASY_CVAR_CREATE_SERVER_SETUP_DEBUGONLY(CVarName, argFlags)\
+			CALL_EASY_CVAR_CREATE_SERVER_SETUP(CVarName, argFlags)
+#define EASY_CVAR_CREATE_SERVER_SETUP_CLIENTONLY_DEBUGONLY(CVarName)\
+			DUMMY
+#define EASY_CVAR_CREATE_SERVER_SETUP_A_CLIENTONLY_DEBUGONLY(CVarName)\
+			DUMMY
+#define EASY_CVAR_CREATE_SERVER_SETUP_SERVERONLY_DEBUGONLY(CVarName)\
+		CALL_EASY_CVAR_CREATE_SERVER_SETUP_DEBUGONLY(CVarName, 0);
+#define EASY_CVAR_CREATE_SERVER_SETUP_A_SERVERONLY_DEBUGONLY(CVarName)\
+		CALL_EASY_CVAR_CREATE_SERVER_SETUP_DEBUGONLY(CVarName, FCVAR_ARCHIVE);
+
 
 #endif
 

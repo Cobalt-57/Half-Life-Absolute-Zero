@@ -27,17 +27,17 @@
 #include "soundent.h"
 #include "util_debugdraw.h"
 
-EASY_CVAR_EXTERN(sparksAIFailMulti)
-EASY_CVAR_EXTERN(crazyMonsterPrintouts)
-EASY_CVAR_EXTERN(movementIsCompletePrintout)
-EASY_CVAR_EXTERN(noFlinchOnHard)
-EASY_CVAR_EXTERN(drawCollisionBoundsAtDeath)
-EASY_CVAR_EXTERN(drawHitBoundsAtDeath)
-EASY_CVAR_EXTERN(scheduleInterruptPrintouts)
-EASY_CVAR_EXTERN(pathfindStumpedMode)
-EASY_CVAR_EXTERN(pathfindStumpedWaitTime)
-EASY_CVAR_EXTERN(pathfindStumpedForgetEnemy)
-
+EASY_CVAR_EXTERN_DEBUGONLY(sparksAIFailMulti)
+EASY_CVAR_EXTERN_DEBUGONLY(crazyMonsterPrintouts)
+EASY_CVAR_EXTERN_DEBUGONLY(movementIsCompletePrintout)
+EASY_CVAR_EXTERN_DEBUGONLY(noFlinchOnHard)
+EASY_CVAR_EXTERN_DEBUGONLY(drawCollisionBoundsAtDeath)
+EASY_CVAR_EXTERN_DEBUGONLY(drawHitBoundsAtDeath)
+EASY_CVAR_EXTERN_DEBUGONLY(scheduleInterruptPrintouts)
+EASY_CVAR_EXTERN_DEBUGONLY(pathfindStumpedMode)
+EASY_CVAR_EXTERN_DEBUGONLY(pathfindStumpedWaitTime)
+EASY_CVAR_EXTERN_DEBUGONLY(pathfindStumpedForgetEnemy)
+EASY_CVAR_EXTERN_DEBUGONLY(animationFramerateMulti)
 
 extern CGraph WorldGraph;
 
@@ -136,7 +136,7 @@ BOOL CBaseMonster :: FScheduleDone ( void )
 //=========================================================
 void CBaseMonster :: ChangeSchedule ( Schedule_t *pNewSchedule )
 {
-	if(EASY_CVAR_GET(crazyMonsterPrintouts))easyForcePrintLine("YOU despicable person %s %d", pNewSchedule->pName, pNewSchedule->iInterruptMask);
+	if(EASY_CVAR_GET_DEBUGONLY(crazyMonsterPrintouts))easyForcePrintLine("YOU despicable person %s %d", pNewSchedule->pName, pNewSchedule->iInterruptMask);
 
 	ASSERT( pNewSchedule != NULL );
 
@@ -295,7 +295,7 @@ BOOL CBaseMonster :: FScheduleValid ( void )
 {
 	if ( m_pSchedule == NULL )
 	{
-		if(EASY_CVAR_GET(crazyMonsterPrintouts))easyForcePrintLine("FScheduleValid: fail A");
+		if(EASY_CVAR_GET_DEBUGONLY(crazyMonsterPrintouts))easyForcePrintLine("FScheduleValid: fail A");
 		// schedule is empty, and therefore not valid.
 		return FALSE;
 	}
@@ -322,7 +322,7 @@ BOOL CBaseMonster :: FScheduleValid ( void )
 	if ( HasConditions( m_pSchedule->iInterruptMask | bits_COND_SCHEDULE_DONE | bits_COND_TASK_FAILED ) )
 	{
 
-		if(EASY_CVAR_GET(crazyMonsterPrintouts))easyForcePrintLine("FScheduleValid: fail B: %s %d ::: %d %d %d", m_pSchedule->pName, m_pSchedule->iInterruptMask, (m_afConditions & m_pSchedule->iInterruptMask), (m_afConditions & bits_COND_SCHEDULE_DONE), (m_afConditions & bits_COND_TASK_FAILED) );
+		if(EASY_CVAR_GET_DEBUGONLY(crazyMonsterPrintouts))easyForcePrintLine("FScheduleValid: fail B: %s %d ::: %d %d %d", m_pSchedule->pName, m_pSchedule->iInterruptMask, (m_afConditions & m_pSchedule->iInterruptMask), (m_afConditions & bits_COND_SCHEDULE_DONE), (m_afConditions & bits_COND_TASK_FAILED) );
 		
 
 		//This is a table of all conditions, whether the interrupt mask has them (counts for interrupt), and whether we happen to
@@ -334,7 +334,7 @@ BOOL CBaseMonster :: FScheduleValid ( void )
 
 		
 		//if(FClassnameIs(this->pev, "monster_scientist"))
-		if(EASY_CVAR_GET(scheduleInterruptPrintouts) == 1)
+		if(EASY_CVAR_GET_DEBUGONLY(scheduleInterruptPrintouts) == 1)
 			easyForcePrintLine("%s:%d SCHEDULE INTERRUPTED. Name:%s task:%d taskindex:%d\n"
 			"%s: %d : %d %d\n"
 			"%s: %d : %d %d\n"
@@ -405,7 +405,7 @@ BOOL CBaseMonster :: FScheduleValid ( void )
 
 			//MODDD
 			//UTIL_Sparks( tmp );
-			UTIL_Sparks( tmp, DEFAULT_SPARK_BALLS, EASY_CVAR_GET(sparksAIFailMulti) );
+			UTIL_Sparks( tmp, DEFAULT_SPARK_BALLS, EASY_CVAR_GET_DEBUGONLY(sparksAIFailMulti) );
 		}
 #endif // DEBUG
 
@@ -436,7 +436,7 @@ void CBaseMonster :: MaintainSchedule ( void )
 
 
 
-	if(EASY_CVAR_GET(crazyMonsterPrintouts) == 1){
+	if(EASY_CVAR_GET_DEBUGONLY(crazyMonsterPrintouts) == 1){
 		easyPrintLine("DOCKS1 %d", HasConditions(bits_COND_CAN_MELEE_ATTACK1));
 	}
 
@@ -451,7 +451,7 @@ void CBaseMonster :: MaintainSchedule ( void )
 		}
 
 
-		if(EASY_CVAR_GET(crazyMonsterPrintouts) == 1){
+		if(EASY_CVAR_GET_DEBUGONLY(crazyMonsterPrintouts) == 1){
 			easyPrintLine("OOPS A PLENTY 1 %d ::: %d %d ::: %d %d", HasConditions(bits_COND_CAN_MELEE_ATTACK1), !FScheduleValid(), m_MonsterState != m_IdealMonsterState,  m_MonsterState, m_IdealMonsterState );
 		}
 	// validate existing schedule 
@@ -464,7 +464,7 @@ void CBaseMonster :: MaintainSchedule ( void )
 			(!scheduleSurvivesStateChange && m_MonsterState != m_IdealMonsterState)
 		)
 		{
-			if(EASY_CVAR_GET(crazyMonsterPrintouts))easyForcePrintLine("MaintainSchedule: INVALID A %d %d %d", FScheduleValid(), m_MonsterState, m_IdealMonsterState);
+			if(EASY_CVAR_GET_DEBUGONLY(crazyMonsterPrintouts))easyForcePrintLine("MaintainSchedule: INVALID A %d %d %d", FScheduleValid(), m_MonsterState, m_IdealMonsterState);
 
 
 			// if we come into this block of code, the schedule is going to have to be changed.
@@ -476,7 +476,7 @@ void CBaseMonster :: MaintainSchedule ( void )
 			ScheduleChange();
 			
 
-			if(EASY_CVAR_GET(crazyMonsterPrintouts) == 1){
+			if(EASY_CVAR_GET_DEBUGONLY(crazyMonsterPrintouts) == 1){
 				easyPrintLine("OOPS A PLENTY 2 %d", HasConditions(bits_COND_CAN_MELEE_ATTACK1));
 			}
 			// Call GetIdealState if we're not dead and one or more of the following...
@@ -498,7 +498,7 @@ void CBaseMonster :: MaintainSchedule ( void )
 					(m_pSchedule && (m_pSchedule->iInterruptMask & bits_COND_SCHEDULE_DONE)) ||
 					((m_MonsterState == MONSTERSTATE_COMBAT) && (m_hEnemy == NULL))	)
 				{
-					if(EASY_CVAR_GET(crazyMonsterPrintouts) == 1){
+					if(EASY_CVAR_GET_DEBUGONLY(crazyMonsterPrintouts) == 1){
 						easyPrintLine("OOPS A PLENTY 3 %d", HasConditions(bits_COND_CAN_MELEE_ATTACK1));
 					}
 					
@@ -510,7 +510,7 @@ void CBaseMonster :: MaintainSchedule ( void )
 					//GetIdealState();
 					m_IdealMonsterState = GetIdealState();
 
-					if(EASY_CVAR_GET(crazyMonsterPrintouts) == 1){
+					if(EASY_CVAR_GET_DEBUGONLY(crazyMonsterPrintouts) == 1){
 						easyPrintLine("OOPS A PLENTY 4 %d", HasConditions(bits_COND_CAN_MELEE_ATTACK1));
 					}
 				}
@@ -525,7 +525,7 @@ void CBaseMonster :: MaintainSchedule ( void )
 				//Keep track of whether this was set by a hard fail schedule or not. The schedule changes below can do some freaky things.
 				BOOL wasSetByHardFail = hardSetFailSchedule;
 
-				if(EASY_CVAR_GET(crazyMonsterPrintouts) == 1){
+				if(EASY_CVAR_GET_DEBUGONLY(crazyMonsterPrintouts) == 1){
 					easyPrintLine("OOPS A PLENTY 5 %d", HasConditions(bits_COND_CAN_MELEE_ATTACK1));
 				}
 				if ( m_failSchedule != SCHED_NONE ){
@@ -537,11 +537,11 @@ void CBaseMonster :: MaintainSchedule ( void )
 
 				// schedule was invalid because the current task failed to start or complete
 				ALERT ( at_aiconsole, "Schedule Failed at %d!\n", m_iScheduleIndex );
-				if(EASY_CVAR_GET(crazyMonsterPrintouts) == 1){
+				if(EASY_CVAR_GET_DEBUGONLY(crazyMonsterPrintouts) == 1){
 					easyPrintLine("OOPS A PLENTY 6 %d", HasConditions(bits_COND_CAN_MELEE_ATTACK1));
 				}
 				ChangeSchedule( pNewSchedule );
-				if(EASY_CVAR_GET(crazyMonsterPrintouts) == 1){
+				if(EASY_CVAR_GET_DEBUGONLY(crazyMonsterPrintouts) == 1){
 					easyPrintLine("OOPS A PLENTY 7 %d", HasConditions(bits_COND_CAN_MELEE_ATTACK1));
 				}
 
@@ -557,18 +557,18 @@ void CBaseMonster :: MaintainSchedule ( void )
 			}
 			else
 			{
-				if(EASY_CVAR_GET(crazyMonsterPrintouts) == 1){
+				if(EASY_CVAR_GET_DEBUGONLY(crazyMonsterPrintouts) == 1){
 					easyPrintLine("OOPS A PLENTY 8 %d ::: %d, %d ::: %d %d", HasConditions(bits_COND_CAN_MELEE_ATTACK1),  m_MonsterState == MONSTERSTATE_SCRIPT,  m_MonsterState == MONSTERSTATE_DEAD,    m_MonsterState == MONSTERSTATE_SCRIPT, m_MonsterState == MONSTERSTATE_DEAD  );
 				}
 				SetState( m_IdealMonsterState );
 				if ( m_MonsterState == MONSTERSTATE_SCRIPT || m_MonsterState == MONSTERSTATE_DEAD ){
 					pNewSchedule = CBaseMonster::GetSchedule();
-					if(EASY_CVAR_GET(crazyMonsterPrintouts))easyForcePrintLine("MaintainSchedule: INVALID B1. Schedule was: %s", getScheduleName());
+					if(EASY_CVAR_GET_DEBUGONLY(crazyMonsterPrintouts))easyForcePrintLine("MaintainSchedule: INVALID B1. Schedule was: %s", getScheduleName());
 				}
 				else{
 					//easyForcePrintLine("%s:%d MY SCHEDULE WAS INTERRUPTED. IT WAS %s", getClassname(), monsterID, getScheduleName());
 					pNewSchedule = GetSchedule();
-					if(EASY_CVAR_GET(crazyMonsterPrintouts))easyForcePrintLine("MaintainSchedule: INVALID B2. Schedule was: %s", getScheduleName());
+					if(EASY_CVAR_GET_DEBUGONLY(crazyMonsterPrintouts))easyForcePrintLine("MaintainSchedule: INVALID B2. Schedule was: %s", getScheduleName());
 				}
 
 				if (pNewSchedule == NULL) {
@@ -577,21 +577,21 @@ void CBaseMonster :: MaintainSchedule ( void )
 				}
 
 
-				if(EASY_CVAR_GET(crazyMonsterPrintouts) == 1){
+				if(EASY_CVAR_GET_DEBUGONLY(crazyMonsterPrintouts) == 1){
 					easyPrintLine("OOPS A PLENTY 9 %d::: new sched: %s", HasConditions(bits_COND_CAN_MELEE_ATTACK1), pNewSchedule->pName);
 				}
 				//YOU STUPID LITTLE man, I WILL OBLITERATE YOUR VERY WILL TO LIVE AND PLAY IN THE ASHES.
 				//~what is this, Dilbert?    Damn, the rage is real yo.
 				
-				if(EASY_CVAR_GET(crazyMonsterPrintouts))easyForcePrintLine("MaintainSchedule: NEW SCHEDULE WILL BE %s", pNewSchedule->pName);
+				if(EASY_CVAR_GET_DEBUGONLY(crazyMonsterPrintouts))easyForcePrintLine("MaintainSchedule: NEW SCHEDULE WILL BE %s", pNewSchedule->pName);
 
 				ChangeSchedule( pNewSchedule );
-				if(EASY_CVAR_GET(crazyMonsterPrintouts) == 1){
+				if(EASY_CVAR_GET_DEBUGONLY(crazyMonsterPrintouts) == 1){
 					easyPrintLine("OOPS A PLENTY 10 %d", HasConditions(bits_COND_CAN_MELEE_ATTACK1));
 				}
 			}
 
-		if(EASY_CVAR_GET(crazyMonsterPrintouts) == 1){
+		if(EASY_CVAR_GET_DEBUGONLY(crazyMonsterPrintouts) == 1){
 			easyPrintLine("OOPS A PLENTY 11 %d", HasConditions(bits_COND_CAN_MELEE_ATTACK1));
 		}
 		}//END OF valid check
@@ -639,7 +639,7 @@ void CBaseMonster :: MaintainSchedule ( void )
 
 
 
-		if(EASY_CVAR_GET(crazyMonsterPrintouts) == 1){
+		if(EASY_CVAR_GET_DEBUGONLY(crazyMonsterPrintouts) == 1){
 			easyPrintLine("OOPS A PLENTY 12 %d", HasConditions(bits_COND_CAN_MELEE_ATTACK1));
 		}
 		// UNDONE: Twice?!!!
@@ -649,7 +649,7 @@ void CBaseMonster :: MaintainSchedule ( void )
 		{
 			SetActivity ( m_IdealActivity );
 		}
-		if(EASY_CVAR_GET(crazyMonsterPrintouts) == 1){
+		if(EASY_CVAR_GET_DEBUGONLY(crazyMonsterPrintouts) == 1){
 			easyPrintLine("OOPS A PLENTY 13 %d", HasConditions(bits_COND_CAN_MELEE_ATTACK1));
 		}
 		
@@ -725,7 +725,7 @@ void CBaseMonster :: MaintainSchedule ( void )
 
 		}//END OF TASKSTATUS_RUNNING check
 			
-		if(EASY_CVAR_GET(crazyMonsterPrintouts) == 1){
+		if(EASY_CVAR_GET_DEBUGONLY(crazyMonsterPrintouts) == 1){
 			easyPrintLine("OOPS A PLENTY 14 %d", HasConditions(bits_COND_CAN_MELEE_ATTACK1));
 		}
 
@@ -754,7 +754,7 @@ void CBaseMonster :: MaintainSchedule ( void )
 	}
 
 
-	if(EASY_CVAR_GET(crazyMonsterPrintouts) == 1){
+	if(EASY_CVAR_GET_DEBUGONLY(crazyMonsterPrintouts) == 1){
 		easyPrintLine("CAN I MELEE COND1? %d", HasConditions(bits_COND_CAN_MELEE_ATTACK1));
 	}
 }
@@ -966,7 +966,7 @@ void CBaseMonster :: RunTask ( Task_t *pTask )
 
 				
 				//"(distance < pTask->flData)" ? wouldn't that already end the method soon? Even with the distance changing a little bit?
-				if(EASY_CVAR_GET(movementIsCompletePrintout))easyForcePrintLine("RunTask TASK_MOVE_TO_TARGET_RANGE. I am %s:%d sched:%s myDistToGoal: %.2f myDistToGoalReq: %.2f myDistToTargetEnt: %.2f targetDistToGoal:%.2f reqToChange:%.2f",
+				if(EASY_CVAR_GET_DEBUGONLY(movementIsCompletePrintout))easyForcePrintLine("RunTask TASK_MOVE_TO_TARGET_RANGE. I am %s:%d sched:%s myDistToGoal: %.2f myDistToGoalReq: %.2f myDistToTargetEnt: %.2f targetDistToGoal:%.2f reqToChange:%.2f",
 					getClassname(),
 					monsterID,
 					getScheduleName(),
@@ -978,7 +978,7 @@ void CBaseMonster :: RunTask ( Task_t *pTask )
 
 				if ( (FALSE) || (targetDistToGoal > targetDistToGoal_ChangeReq) )
 				{
-					if(EASY_CVAR_GET(movementIsCompletePrintout))easyForcePrintLine("REEEEEROUTED");
+					if(EASY_CVAR_GET_DEBUGONLY(movementIsCompletePrintout))easyForcePrintLine("REEEEEROUTED");
 					m_vecMoveGoal = m_hTargetEnt->pev->origin;
 					
 					//distance = ( m_vecMoveGoal - pev->origin ).Length2D();
@@ -994,7 +994,7 @@ void CBaseMonster :: RunTask ( Task_t *pTask )
 				//if ( distance < pTask->flData || myDistToTargetEnt < pTask->flData )
 				if(myDistToTargetEnt < pTask->flData)
 				{
-					if(EASY_CVAR_GET(movementIsCompletePrintout))easyForcePrintLine("FINISH!!!");
+					if(EASY_CVAR_GET_DEBUGONLY(movementIsCompletePrintout))easyForcePrintLine("FINISH!!!");
 					TaskComplete();
 					RouteClear();		// Stop moving
 					return;
@@ -1045,11 +1045,11 @@ void CBaseMonster :: RunTask ( Task_t *pTask )
 
 				//No, just TaskComplete() as usual...
 				//BOOL test = FRefreshRoute();
-				//if(!test){if(EASY_CVAR_GET(movementIsCompletePrintout))easyForcePrintLine("TASK_MOVE_TO_ENEMY_RANGE: FAILURE 2"); TaskFail();}else{if(EASY_CVAR_GET(movementIsCompletePrintout))easyForcePrintLine("TASK_MOVE_TO_ENEMY_RANGE: SUCCESS 2");};
+				//if(!test){if(EASY_CVAR_GET_DEBUGONLY(movementIsCompletePrintout))easyForcePrintLine("TASK_MOVE_TO_ENEMY_RANGE: FAILURE 2"); TaskFail();}else{if(EASY_CVAR_GET_DEBUGONLY(movementIsCompletePrintout))easyForcePrintLine("TASK_MOVE_TO_ENEMY_RANGE: SUCCESS 2");};
 
 				//break; //is stopping this early this frame here necessary?
 
-				if(EASY_CVAR_GET(movementIsCompletePrintout))easyPrintLine("TASK_MOVE_TO_ENEMY_RANGE success??? My ID: %d", this->monsterID);
+				if(EASY_CVAR_GET_DEBUGONLY(movementIsCompletePrintout))easyPrintLine("TASK_MOVE_TO_ENEMY_RANGE success??? My ID: %d", this->monsterID);
 				
 				TaskComplete();
 				return;
@@ -1060,7 +1060,7 @@ void CBaseMonster :: RunTask ( Task_t *pTask )
 			//float distance;
 
 			if ( m_hEnemy == NULL ){
-				if(EASY_CVAR_GET(movementIsCompletePrintout))easyPrintLine("TASK_MOVE_TO_ENEMY_RANGE FAILED THE EMPRAH. null enemy. My ID: %d", this->monsterID);
+				if(EASY_CVAR_GET_DEBUGONLY(movementIsCompletePrintout))easyPrintLine("TASK_MOVE_TO_ENEMY_RANGE FAILED THE EMPRAH. null enemy. My ID: %d", this->monsterID);
 				TaskFail();
 			}else
 			{
@@ -1103,7 +1103,7 @@ void CBaseMonster :: RunTask ( Task_t *pTask )
 
 					//MODDD NOTE - should we check to see there is a clear line of sight with the enemy, regardless of facing direction, before forcing a reroute? ){
 
-					if(EASY_CVAR_GET(movementIsCompletePrintout)){
+					if(EASY_CVAR_GET_DEBUGONLY(movementIsCompletePrintout)){
 						//include it. Clearly we care.
 						::DebugLine_Setup(0, m_vecMoveGoal - Vector(0,0,8), m_vecMoveGoal+Vector(0, 0, 8), 0, 255, 0);
 						::DebugLine_Setup(1, vecDestination - Vector(0,0,8), vecDestination+Vector(0, 0, 8), 255, 0, 0);
@@ -1188,7 +1188,7 @@ void CBaseMonster :: RunTask ( Task_t *pTask )
 					//  ...  FRefreshRouteChaseEnemySmart
 					BOOL test = FRefreshRouteChaseEnemySmart();
 					
-					if(!test){if(EASY_CVAR_GET(movementIsCompletePrintout))easyForcePrintLine("TASK_MOVE_TO_ENEMY_RANGE: FAILURE 3"); TaskFail();}else{if(EASY_CVAR_GET(movementIsCompletePrintout))easyForcePrintLine("TASK_MOVE_TO_ENEMY_RANGE: SUCCESS 3");};
+					if(!test){if(EASY_CVAR_GET_DEBUGONLY(movementIsCompletePrintout))easyForcePrintLine("TASK_MOVE_TO_ENEMY_RANGE: FAILURE 3"); TaskFail();}else{if(EASY_CVAR_GET_DEBUGONLY(movementIsCompletePrintout))easyForcePrintLine("TASK_MOVE_TO_ENEMY_RANGE: SUCCESS 3");};
 				}
 
 				
@@ -1262,7 +1262,7 @@ void CBaseMonster :: RunTask ( Task_t *pTask )
 		}
 	case TASK_WAIT_FOR_MOVEMENT:
 		{
-			if(EASY_CVAR_GET(movementIsCompletePrintout) == 1){
+			if(EASY_CVAR_GET_DEBUGONLY(movementIsCompletePrintout) == 1){
 				easyPrintLine("%s:%d: IS MOVEMENT COMPLETE?: %d", getClassname(), monsterID, MovementIsComplete());
 				easyPrintLine("MOVEGOAL: %d", this->m_movementGoal);
 
@@ -1333,10 +1333,10 @@ void CBaseMonster :: RunTask ( Task_t *pTask )
 		if ( m_fSequenceFinished && pev->frame >= 255 )
 		{
 			//MODDD - FOR DEBUGGING
-			if(EASY_CVAR_GET(drawCollisionBoundsAtDeath) == 1){
+			if(EASY_CVAR_GET_DEBUGONLY(drawCollisionBoundsAtDeath) == 1){
 				UTIL_drawBox(pev->origin + pev->mins, pev->origin + pev->maxs);
 			}
-			if(EASY_CVAR_GET(drawHitBoundsAtDeath) == 1){
+			if(EASY_CVAR_GET_DEBUGONLY(drawHitBoundsAtDeath) == 1){
 				UTIL_drawBox(pev->absmin, pev->absmax);
 			}
 			//MODDD - does not seem effective, scrapped.
@@ -1478,7 +1478,7 @@ void CBaseMonster :: RunTask ( Task_t *pTask )
 		) {
 
 			float flInterval = 0.1;  //mock interval, resembles think times.
-			float recentFrameAdvancePrediction = flInterval * m_flFrameRate * pev->framerate * EASY_CVAR_GET(animationFramerateMulti);
+			float recentFrameAdvancePrediction = flInterval * m_flFrameRate * pev->framerate * EASY_CVAR_GET_DEBUGONLY(animationFramerateMulti);
 			float tempCutoff;
 			if (animFrameCutoff != -1) {
 				tempCutoff = animFrameCutoff;
@@ -1564,7 +1564,7 @@ void CBaseMonster :: RunTask ( Task_t *pTask )
 		) {
 
 			float flInterval = 0.1;  //mock interval, resembles think times.
-			float recentFrameAdvancePrediction = flInterval * m_flFrameRate * pev->framerate * EASY_CVAR_GET(animationFramerateMulti);
+			float recentFrameAdvancePrediction = flInterval * m_flFrameRate * pev->framerate * EASY_CVAR_GET_DEBUGONLY(animationFramerateMulti);
 			float tempCutoff;
 			if (animFrameCutoff != -1) {
 				tempCutoff = animFrameCutoff;
@@ -2148,7 +2148,7 @@ void CBaseMonster :: StartTask ( Task_t *pTask )
 			//  if we're going to just route to the enemy's modern position anyways and skip the rest of this schedule.
 
 			//...we should probably still do this pathFindStumpedMode == 3 check in case something that doesn't use FACE_PREV_LKP checks for being stumped.
-			if(EASY_CVAR_GET(pathfindStumpedMode) == 3){
+			if(EASY_CVAR_GET_DEBUGONLY(pathfindStumpedMode) == 3){
 				//is this okay?
 				//m_vecEnemyLKP = ...
 				setEnemyLKP(m_hEnemy->pev->origin);
@@ -2265,7 +2265,7 @@ void CBaseMonster :: StartTask ( Task_t *pTask )
 				}
 
 
-				if(EASY_CVAR_GET(pathfindStumpedMode) == 0){
+				if(EASY_CVAR_GET_DEBUGONLY(pathfindStumpedMode) == 0){
 					//Forget the enemy, we lost sight. Will pick up on an old remembered enemy pushed into memory in a stack
 					//if there is one there.
 					m_hEnemy = NULL;
@@ -2275,7 +2275,7 @@ void CBaseMonster :: StartTask ( Task_t *pTask )
 				}
 
 				//Skip to re-routing towards the enemy, most likely.
-				if(EASY_CVAR_GET(pathfindStumpedMode) == 3){
+				if(EASY_CVAR_GET_DEBUGONLY(pathfindStumpedMode) == 3){
 					//is this okay?
 					//m_vecEnemyLKP = ...
 					setEnemyLKP(m_hEnemy->pev->origin);
@@ -2340,7 +2340,7 @@ void CBaseMonster :: StartTask ( Task_t *pTask )
 		}
 	case TASK_WAIT_STUMPED:
 		{
-			m_flWaitFinished = gpGlobals->time + EASY_CVAR_GET(pathfindStumpedWaitTime);
+			m_flWaitFinished = gpGlobals->time + EASY_CVAR_GET_DEBUGONLY(pathfindStumpedWaitTime);
 			break;
 		}
 	case TASK_MOVE_TO_TARGET_RANGE:
@@ -3565,7 +3565,7 @@ Schedule_t *CBaseMonster :: GetSchedule ( void )
 				return GetScheduleOfType(SCHED_BIG_FLINCH);
 			}
 			//MODDD - other condition.  If "noFlinchOnHard" is on and the skill is hard, don't flinch from getting hit.
-			else if (HasConditions(bits_COND_LIGHT_DAMAGE) && !HasMemory( bits_MEMORY_FLINCHED) && !(EASY_CVAR_GET(noFlinchOnHard)==1 && g_iSkillLevel==SKILL_HARD)  )
+			else if (HasConditions(bits_COND_LIGHT_DAMAGE) && !HasMemory( bits_MEMORY_FLINCHED) && !(EASY_CVAR_GET_DEBUGONLY(noFlinchOnHard)==1 && g_iSkillLevel==SKILL_HARD)  )
 			{
 				return GetScheduleOfType( SCHED_SMALL_FLINCH );
 			}

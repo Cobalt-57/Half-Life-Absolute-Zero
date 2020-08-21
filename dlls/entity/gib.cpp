@@ -13,10 +13,11 @@
 #include "game.h"
 #include "player.h"
 
+EASY_CVAR_EXTERN_DEBUGONLY(cheat_iwantguts)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(sv_germancensorship)
 
 extern float globalPSEUDO_canApplyGermanCensorship;
 extern BOOL globalPSEUDO_germanModel_hgibFound;
-
 
 
 
@@ -167,7 +168,7 @@ void CGib::SpawnStickyGibs(entvars_t* pevVictim, Vector vecOrigin, int cGibs, BO
 	int i;
 
 	//if ( g_Language == LANGUAGE_GERMAN )
-	if (EASY_CVAR_GET(sv_germancensorship) == 1)
+	if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(sv_germancensorship) == 1)
 	{
 		// no sticky gibs in germany right now!
 		//MODDD TODO - above comment found as-is.  Can re-enable and just use german gibs instead.
@@ -190,7 +191,7 @@ void CGib::SpawnStickyGibs(entvars_t* pevVictim, Vector vecOrigin, int cGibs, BO
 
 
 			edict_t* pentPlayer;
-			if (EASY_CVAR_GET(cheat_iwantguts) && ((pentPlayer = FIND_CLIENT_IN_PVS(pGib->edict())) != NULL))
+			if (EASY_CVAR_GET_DEBUGONLY(cheat_iwantguts) && ((pentPlayer = FIND_CLIENT_IN_PVS(pGib->edict())) != NULL))
 			{
 				// 5% chance head will be thrown at player's face.
 				entvars_t* pevPlayer;
@@ -229,7 +230,7 @@ void CGib::SpawnStickyGibs(entvars_t* pevVictim, Vector vecOrigin, int cGibs, BO
 
 
 			//DONT THROW OFF THE EMPEROR'S GROVE
-			if (EASY_CVAR_GET(cheat_iwantguts) < 1) {
+			if (EASY_CVAR_GET_DEBUGONLY(cheat_iwantguts) < 1) {
 				if (pevVictim->health > -50)
 				{
 					pGib->pev->velocity = pGib->pev->velocity * 0.7;
@@ -277,7 +278,7 @@ void CGib::SpawnHeadGib(entvars_t* pevVictim, const Vector gibSpawnOrigin, BOOL 
 	CGib* pGib = GetClassPtr((CGib*)NULL);
 
 	//if ( g_Language == LANGUAGE_GERMAN )
-	if (EASY_CVAR_GET(sv_germancensorship) == FALSE) {
+	if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(sv_germancensorship) == FALSE) {
 		pGib->Spawn("models/hgibs.mdl", spawnDecals);// throw one head
 		pGib->pev->body = 0;
 	}
@@ -298,13 +299,13 @@ void CGib::SpawnHeadGib(entvars_t* pevVictim, const Vector gibSpawnOrigin, BOOL 
 
 		edict_t* pentPlayer = FIND_CLIENT_IN_PVS(pGib->edict());
 
-		if ((RANDOM_LONG(0, 100) <= 5 || (EASY_CVAR_GET(cheat_iwantguts) >= 1)) && pentPlayer)
+		if ((RANDOM_LONG(0, 100) <= 5 || (EASY_CVAR_GET_DEBUGONLY(cheat_iwantguts) >= 1)) && pentPlayer)
 		{
 			// 5% chance head will be thrown at player's face.
 			entvars_t* pevPlayer;
 			pevPlayer = VARS(pentPlayer);
 
-			if (EASY_CVAR_GET(cheat_iwantguts) == 0) {
+			if (EASY_CVAR_GET_DEBUGONLY(cheat_iwantguts) == 0) {
 				//ordinary.
 				pGib->pev->velocity = ((pevPlayer->origin + pevPlayer->view_ofs) - pGib->pev->origin).Normalize() * 300;
 				pGib->pev->velocity.z += 100;
@@ -332,7 +333,7 @@ void CGib::SpawnHeadGib(entvars_t* pevVictim, const Vector gibSpawnOrigin, BOOL 
 
 
 		// DONT THROW OFF THE EMPEROR'S GROVE
-		if (EASY_CVAR_GET(cheat_iwantguts) < 1) {
+		if (EASY_CVAR_GET_DEBUGONLY(cheat_iwantguts) < 1) {
 			if (pevVictim->health > -50)
 			{
 				pGib->pev->velocity = pGib->pev->velocity * 0.7;
@@ -423,7 +424,7 @@ void CGib::SpawnRandomGibs(entvars_t* pevVictim, int cGibs, const char* argGibPa
 
 
 			edict_t* pentPlayer;
-			if (EASY_CVAR_GET(cheat_iwantguts) && ((pentPlayer = FIND_CLIENT_IN_PVS(pGib->edict())) != NULL))
+			if (EASY_CVAR_GET_DEBUGONLY(cheat_iwantguts) && ((pentPlayer = FIND_CLIENT_IN_PVS(pGib->edict())) != NULL))
 			{
 				// 5% chance head will be thrown at player's face.
 				entvars_t* pevPlayer;
@@ -478,7 +479,7 @@ void CGib::SpawnRandomGibs(entvars_t* pevVictim, int cGibs, const char* argGibPa
 
 
 			//DONT THROW OFF THE EMPEROR'S GROVE
-			if (EASY_CVAR_GET(cheat_iwantguts) < 1) {
+			if (EASY_CVAR_GET_DEBUGONLY(cheat_iwantguts) < 1) {
 				if (pevVictim->health > -50)
 				{
 					pGib->pev->velocity = pGib->pev->velocity * 0.7;

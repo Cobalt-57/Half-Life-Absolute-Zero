@@ -17,7 +17,7 @@
 
 
 
-EASY_CVAR_EXTERN(wallHealthDoor_closeDelay)
+EASY_CVAR_EXTERN_DEBUGONLY(wallHealthDoor_closeDelay)
 
 
 
@@ -547,7 +547,7 @@ void CHealthDoor::Spawn(void) {
 
 		//also, THIS must be something. Defaulting to this CVar's # of seconds if not provided properly from KeyValues.
 		if (m_flWait < 0) {
-			m_flWait = EASY_CVAR_GET(wallHealthDoor_closeDelay);
+			m_flWait = EASY_CVAR_GET_DEBUGONLY(wallHealthDoor_closeDelay);
 		}
 
 		//UTIL_MakeVectors( pev->angles );

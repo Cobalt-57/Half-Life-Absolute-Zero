@@ -32,10 +32,10 @@
 //===================grenade
 
 EASY_CVAR_EXTERN(cl_explosion)
-EASY_CVAR_EXTERN(explosionDebrisSoundVolume)
+EASY_CVAR_EXTERN_DEBUGONLY(explosionDebrisSoundVolume)
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_touchNeverExplodes)
-EASY_CVAR_EXTERN(handGrenadesUseOldBounceSound)
-EASY_CVAR_EXTERN(trailTypeTest)
+EASY_CVAR_EXTERN_DEBUGONLY(handGrenadesUseOldBounceSound)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(trailTypeTest)
 
 
 // Grenades flagged with this will be triggered when the owner calls detonateSatchelCharges
@@ -300,10 +300,10 @@ void StaticExplode(Vector rawExplodeOrigin, float rawDamage, float flRange, CBas
 	//randDebrisSound = 1;
 	//easyPrintLine("DEBRIS SOUND: %d", randDebrisSound);
 
-	if (EASY_CVAR_GET(explosionDebrisSoundVolume) > 0) {
+	if (EASY_CVAR_GET_DEBUGONLY(explosionDebrisSoundVolume) > 0) {
 		int randDebrisSound = RANDOM_LONG(0, 2);
 
-		float debrisVolumeChoice = UTIL_clamp(EASY_CVAR_GET(explosionDebrisSoundVolume), 0, 1);
+		float debrisVolumeChoice = UTIL_clamp(EASY_CVAR_GET_DEBUGONLY(explosionDebrisSoundVolume), 0, 1);
 
 		switch (randDebrisSound)
 		{
@@ -609,7 +609,7 @@ void CGrenade :: BounceSound( void )
 	nextBounceSoundAllowed = gpGlobals->time + 0.22;
 
 	//MODDD - refer to CVar.
-	if(EASY_CVAR_GET(handGrenadesUseOldBounceSound) != 1){
+	if(EASY_CVAR_GET_DEBUGONLY(handGrenadesUseOldBounceSound) != 1){
 		switch ( RANDOM_LONG( 0, 2 ) )
 		{
 		case 0:	UTIL_PlaySound(ENT(pev), CHAN_VOICE, "weapons/grenade_hit1.wav", 0.25, ATTN_NORM, 0, 100, FALSE);	break;
@@ -730,11 +730,11 @@ CGrenade *CGrenade::ShootContact( entvars_t *pevOwner, Vector vecStart, Vector v
 	//For a reference.
 	//PLAYBACK_EVENT_FULL( flags, m_pPlayer->edict(), fUseAutoAim ? m_usFireGlock1 : m_usFireGlock2, 0.0, (float *)&g_vecZero, (float *)&g_vecZero, vecDir.x, vecDir.y, m_fInAttack, 0, ( m_iClip == 0 ) ? 1 : 0, 0 );
 	
-	if(EASY_CVAR_GET(trailTypeTest) > -1){
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(trailTypeTest) > -1){
 		//This was just for a test.  Enable (along with some other things in place), and this should make mp5 grenades fly with a trail of grey dots.
 		PLAYBACK_EVENT_FULL (FEV_GLOBAL, pGrenade->edict(), g_sTrail, 0.0, 
-		(float *)&pGrenade->pev->origin, (float *)&pGrenade->pev->angles, 0.7, 0.0, pGrenade->entindex(), (int)EASY_CVAR_GET(trailTypeTest), 0, 0);
-	}else if(EASY_CVAR_GET(trailTypeTest) == -2){
+		(float *)&pGrenade->pev->origin, (float *)&pGrenade->pev->angles, 0.7, 0.0, pGrenade->entindex(), (int)EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(trailTypeTest), 0, 0);
+	}else if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(trailTypeTest) == -2){
 		PLAYBACK_EVENT_FULL (FEV_GLOBAL, pGrenade->edict(), g_sTrailRA, 0.0, 
 		(float *)&pGrenade->pev->origin, (float *)&pGrenade->pev->angles, 0.7, 0.0, pGrenade->entindex(), 0, 0, 0);
 	

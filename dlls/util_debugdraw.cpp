@@ -11,6 +11,13 @@
 #include "trains.h"
 
 
+EASY_CVAR_EXTERN_DEBUGONLY(drawDebugBloodTrace)
+EASY_CVAR_EXTERN_DEBUGONLY(drawNodeAlternateTime)
+EASY_CVAR_EXTERN_DEBUGONLY(drawNodeSpecial)
+EASY_CVAR_EXTERN_DEBUGONLY(drawNodeAll)
+EASY_CVAR_EXTERN_DEBUGONLY(drawNodeConnections)
+EASY_CVAR_EXTERN_DEBUGONLY(drawDebugCine)
+
 
 // or "always the first time"
 int DebugLine_drawTime = -1;
@@ -408,12 +415,12 @@ void initOldDebugStuff(void) {
 //MODDD - NEW.  For organization.   Should be able to be drawn independently of any player.  Except the first.
 // Because laziness. Most features tied to the player like that aren't used anymore though.
 void drawOldDebugStuff(void) {
-	float drawDebugBloodTrace_val = EASY_CVAR_GET(drawDebugBloodTrace);
-	float drawNodeAlternateTime_val = EASY_CVAR_GET(drawNodeAlternateTime);
-	float drawNodeSpecial_val = EASY_CVAR_GET(drawNodeSpecial);
-	float drawNodeAll_val = EASY_CVAR_GET(drawNodeAll);
-	float drawNodeConnections_val = EASY_CVAR_GET(drawNodeConnections);
-	float drawDebugCine_val = EASY_CVAR_GET(drawDebugCine);
+	float drawDebugBloodTrace_val = EASY_CVAR_GET_DEBUGONLY(drawDebugBloodTrace);
+	float drawNodeAlternateTime_val = EASY_CVAR_GET_DEBUGONLY(drawNodeAlternateTime);
+	float drawNodeSpecial_val = EASY_CVAR_GET_DEBUGONLY(drawNodeSpecial);
+	float drawNodeAll_val = EASY_CVAR_GET_DEBUGONLY(drawNodeAll);
+	float drawNodeConnections_val = EASY_CVAR_GET_DEBUGONLY(drawNodeConnections);
+	float drawDebugCine_val = EASY_CVAR_GET_DEBUGONLY(drawDebugCine);
 
 
 

@@ -35,9 +35,9 @@
 // Lightning target, just alias landmark
 LINK_ENTITY_TO_CLASS( info_target, CPointEntity );
 
-EASY_CVAR_EXTERN(sv_germancensorship)
-EASY_CVAR_EXTERN(sparksBeamMulti)
-EASY_CVAR_EXTERN(mirrorsDoNotReflectPlayer)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(sv_germancensorship)
+EASY_CVAR_EXTERN_DEBUGONLY(sparksBeamMulti)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(mirrorsDoNotReflectPlayer)
 
 extern float globalPSEUDO_canApplyGermanCensorship;
 extern float globalPSEUDO_cameraMode;
@@ -391,11 +391,11 @@ void CBeam::DoSparks( const Vector &start, const Vector &end )
 		if ( pev->spawnflags & SF_BEAM_SPARKSTART )
 		{
 			//MODDD HERE AND DOWN TOO
-			UTIL_Sparks( start, ballsToSpawn, EASY_CVAR_GET(sparksBeamMulti) );
+			UTIL_Sparks( start, ballsToSpawn, EASY_CVAR_GET_DEBUGONLY(sparksBeamMulti) );
 		}
 		if ( pev->spawnflags & SF_BEAM_SPARKEND )
 		{
-			UTIL_Sparks( end, ballsToSpawn, EASY_CVAR_GET(sparksBeamMulti) );
+			UTIL_Sparks( end, ballsToSpawn, EASY_CVAR_GET_DEBUGONLY(sparksBeamMulti) );
 		}
 	}
 }
@@ -2674,7 +2674,7 @@ void CEnvMirror :: Spawn( void )
 
 		BOOL allowPlayerMarker;
 
-		if(globalPSEUDO_cameraMode == 0 && EASY_CVAR_GET(mirrorsDoNotReflectPlayer) != 1){
+		if(globalPSEUDO_cameraMode == 0 && EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(mirrorsDoNotReflectPlayer) != 1){
 			allowPlayerMarker = TRUE;
 		}else{
 			allowPlayerMarker = FALSE;

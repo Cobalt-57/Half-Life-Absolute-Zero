@@ -55,18 +55,18 @@ SC_HEAR2 scientist/whatissound
 
 
 //MODDD
-EASY_CVAR_EXTERN(wildHeads)
-EASY_CVAR_EXTERN(sv_germancensorship)
-EASY_CVAR_EXTERN(scientistHealNPCDebug)
-EASY_CVAR_EXTERN(scientistHealNPC)
-EASY_CVAR_EXTERN(thatWasntPunch)
-EASY_CVAR_EXTERN(scientistHealNPCFract)
-EASY_CVAR_EXTERN(scientistHealCooldown)
-EASY_CVAR_EXTERN(monsterSpawnPrintout)
+EASY_CVAR_EXTERN_DEBUGONLY(wildHeads)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(sv_germancensorship)
+EASY_CVAR_EXTERN_DEBUGONLY(scientistHealNPCDebug)
+EASY_CVAR_EXTERN_DEBUGONLY(scientistHealNPC)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(thatWasntPunch)
+EASY_CVAR_EXTERN_DEBUGONLY(scientistHealNPCFract)
+EASY_CVAR_EXTERN_DEBUGONLY(scientistHealCooldown)
+EASY_CVAR_EXTERN_DEBUGONLY(monsterSpawnPrintout)
 extern BOOL globalPSEUDO_iCanHazMemez;
 //was this model found in the client's folder too?
 extern BOOL globalPSEUDO_germanModel_scientistFound;
-EASY_CVAR_EXTERN(scientistBravery)
+EASY_CVAR_EXTERN_DEBUGONLY(scientistBravery)
 EASY_CVAR_EXTERN(pissedNPCs)
 
 
@@ -1437,7 +1437,7 @@ void CScientist :: StartTask( Task_t *pTask )
 			Scream();
 		}
 
-		if(EASY_CVAR_GET(scientistBravery) > 0){
+		if(EASY_CVAR_GET_DEBUGONLY(scientistBravery) > 0){
 
 			decidedToFight = FALSE;
 			decidedToRun = FALSE;
@@ -2047,18 +2047,18 @@ void CScientist :: Spawn( void )
 
 	pev->skin = 0; //default.
 
-	//if( (pev->spawnflags & SF_MONSTER_TALKMONSTER_BLOODY) && EASY_CVAR_GET(sv_germancensorship) != 1 && EASY_CVAR_GET(scientistModel) < 2){
-	if( (pev->spawnflags & SF_MONSTER_TALKMONSTER_BLOODY) && EASY_CVAR_GET(sv_germancensorship) != 1){
+	//if( (pev->spawnflags & SF_MONSTER_TALKMONSTER_BLOODY) && EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(sv_germancensorship) != 1 && EASY_CVAR_GET(scientistModel) < 2){
+	if( (pev->spawnflags & SF_MONSTER_TALKMONSTER_BLOODY) && EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(sv_germancensorship) != 1){
 		pev->skin = 1;
 		
-		if(EASY_CVAR_GET(monsterSpawnPrintout) == 1){
+		if(EASY_CVAR_GET_DEBUGONLY(monsterSpawnPrintout) == 1){
 			easyPrintLine("SCIHEAD: BLOODY CORPSE FLAG UNDERSTOOD!!!");
 		}
 
 		//if this spawn flag is set, start with the bloody skin.
 	}
 
-	if(EASY_CVAR_GET(monsterSpawnPrintout) == 1){
+	if(EASY_CVAR_GET_DEBUGONLY(monsterSpawnPrintout) == 1){
 		easyPrintLine("SCIHEAD: FINAL BODY: %d SKIN: %d", pev->body, pev->skin);
 		easyPrintLine("SCIHEAD: COUNTPOST: %d", getNumberOfBodyParts( ) );
 	}
@@ -2829,7 +2829,7 @@ Schedule_t *CScientist :: GetSchedule ( void )
 	case MONSTERSTATE_IDLE:
 
 		//Scream if the party is going hard.
-		if(EASY_CVAR_GET(thatWasntPunch)){
+		if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(thatWasntPunch)){
 			if ( RANDOM_FLOAT( 0, 1 ) < 0.4 ){
 			//PlaySentence( "SC_SCREAM_TRU", 2, VOL_NORM, ATTN_NORM );
 			SENTENCEG_PlayRndSz( edict(), "SC_SCREAM_TRU", VOL_NORM, ATTN_IDLE, 0, GetVoicePitch() );
@@ -2887,7 +2887,7 @@ Schedule_t *CScientist :: GetSchedule ( void )
 
 
 		//TASK_FACE_TARGET
-		if(healNPCCheckDelay < gpGlobals->time && m_hTargetEnt == NULL && EASY_CVAR_GET(scientistHealNPC) != 0 && m_healTime <= gpGlobals->time){
+		if(healNPCCheckDelay < gpGlobals->time && m_hTargetEnt == NULL && EASY_CVAR_GET_DEBUGONLY(scientistHealNPC) != 0 && m_healTime <= gpGlobals->time){
 			//before even doing any checks, require the heal timer to not be in place (delay between healing again, a minute as of writing)
 			leastDistanceYet = 999999;  //large, so that the first distance at all is the "best".
 
@@ -2935,7 +2935,7 @@ Schedule_t *CScientist :: GetSchedule ( void )
 		// Behavior for following the player... OR tracking down an NPC to heal them.
 		if ( m_hTargetEnt != NULL && (IsFollowing() || healNPCChosen == TRUE) )
 		{
-			if(EASY_CVAR_GET(scientistHealNPCDebug) == 1){
+			if(EASY_CVAR_GET_DEBUGONLY(scientistHealNPCDebug) == 1){
 				/*
 				if(m_hTargetEnt == NULL){
 					easyPrintLine("SCI: TARGET ENT: NULL");
@@ -3164,7 +3164,7 @@ BOOL CScientist::CanHeal( CBaseMonster* arg_monsterTry ){
 	}
 
 	//NPCs can have up to 70% of their health to be eligible for healing, since they're weaker.
-	if ( (m_healTime > gpGlobals->time) || (arg_monsterTry == NULL) || (arg_monsterTry->pev->health > (arg_monsterTry->pev->max_health * EASY_CVAR_GET(scientistHealNPCFract)) ) && ( !(arg_monsterTry->m_bitsDamageType & DMG_TIMEBASED || arg_monsterTry->m_bitsDamageTypeMod & DMG_TIMEBASEDMOD))  )
+	if ( (m_healTime > gpGlobals->time) || (arg_monsterTry == NULL) || (arg_monsterTry->pev->health > (arg_monsterTry->pev->max_health * EASY_CVAR_GET_DEBUGONLY(scientistHealNPCFract)) ) && ( !(arg_monsterTry->m_bitsDamageType & DMG_TIMEBASED || arg_monsterTry->m_bitsDamageTypeMod & DMG_TIMEBASEDMOD))  )
 		return FALSE;
 
 	return TRUE;
@@ -3204,7 +3204,7 @@ BOOL CScientist::CanHeal( void )
 
 	float percentage = 0.5;
 	if(healNPCChosen){
-		percentage = EASY_CVAR_GET(scientistHealNPCFract);
+		percentage = EASY_CVAR_GET_DEBUGONLY(scientistHealNPCFract);
 	}
 
 	if ( (m_healTime > gpGlobals->time) || (m_hTargetEnt == NULL) || (m_hTargetEnt->pev->health > (m_hTargetEnt->pev->max_health * percentage) ) && ( !(monsterAttempt->m_bitsDamageType & DMG_TIMEBASED || monsterAttempt->m_bitsDamageTypeMod & DMG_TIMEBASEDMOD))  )
@@ -3251,7 +3251,7 @@ void CScientist::Heal( void )
 	
 	float percentage = 0.5;
 	if(healNPCChosen){
-		percentage = EASY_CVAR_GET(scientistHealNPCFract);
+		percentage = EASY_CVAR_GET_DEBUGONLY(scientistHealNPCFract);
 	}
 	//MODDD - added this check.  Now, healing does not add health if over 50% health (before, could abuse the timed-damage-heal-trigger by taking timed damage over and over again to get enough healing to reach max health, when this was not possible before.
 	// Note that if the player isn't healing for timed damage, this check is ignored (safe to assume that is just the result of multiple scientists healing at the same time, legal in the base game)
@@ -3260,7 +3260,7 @@ void CScientist::Heal( void )
 	}
 	
 	// Don't heal again for 1 minute
-	m_healTime = gpGlobals->time + EASY_CVAR_GET(scientistHealCooldown);
+	m_healTime = gpGlobals->time + EASY_CVAR_GET_DEBUGONLY(scientistHealCooldown);
 	
 }//Heal
 
@@ -3349,7 +3349,7 @@ void CScientist::MonsterThink(void){
 	*/
 
 
-	if(EASY_CVAR_GET(scientistHealNPCDebug) == 1){
+	if(EASY_CVAR_GET_DEBUGONLY(scientistHealNPCDebug) == 1){
 
 
 		if(m_healTime > gpGlobals->time){
@@ -3595,7 +3595,7 @@ void CDeadScientist :: Spawn( )
 	PRECACHE_MODEL("models/scientist.mdl");
 
 
-	if(EASY_CVAR_GET(monsterSpawnPrintout) == 1){
+	if(EASY_CVAR_GET_DEBUGONLY(monsterSpawnPrintout) == 1){
 		easyPrintLine("MY <dead scientist> BODYH??? %d %d", spawnedDynamically, pev->body);
 	}
 
@@ -3655,7 +3655,7 @@ void CDeadScientist :: Spawn( )
 
 	//MOVED TO "setModelCustom" for the dead scientist.
 	/*
-	if(EASY_CVAR_GET(sv_germancensorship) != 1 && EASY_CVAR_GET(scientistModel) > 0){
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(sv_germancensorship) != 1 && EASY_CVAR_GET(scientistModel) > 0){
 		//MODDD - uncommented out, used to be commented out.
 		//pev->skin += 2; // use bloody skin -- UNDONE: Turn this back on when we have a bloody skin again!
 		pev->skin = 2;
@@ -3669,8 +3669,8 @@ void CDeadScientist :: Spawn( )
 
 
 	pev->skin = 0; //default
-	//if(EASY_CVAR_GET(sv_germancensorship) != 1 && EASY_CVAR_GET(scientistModel) < 2){
-	if(EASY_CVAR_GET(sv_germancensorship) != 1){
+	//if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(sv_germancensorship) != 1 && EASY_CVAR_GET(scientistModel) < 2){
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(sv_germancensorship) != 1){
 		//MODDD - uncommented out, used to be commented out.
 		//pev->skin += 2; // use bloody skin -- UNDONE: Turn this back on when we have a bloody skin again!
 		pev->skin = 2;
@@ -3947,7 +3947,7 @@ void CSittingScientist :: SittingThink( void )
 		ResetSequenceInfo( );
 		pev->frame = 0;
 
-		if(EASY_CVAR_GET(wildHeads) != 1){
+		if(EASY_CVAR_GET_DEBUGONLY(wildHeads) != 1){
 			SetBoneController( 0, 0 );
 		}
 
@@ -4019,7 +4019,7 @@ void CSittingScientist :: SittingThink( void )
 
 		ResetSequenceInfo( );
 		pev->frame = 0;
-		if(EASY_CVAR_GET(wildHeads) != 1){
+		if(EASY_CVAR_GET_DEBUGONLY(wildHeads) != 1){
 			SetBoneController( 0, m_headTurn );
 		}
 	}
