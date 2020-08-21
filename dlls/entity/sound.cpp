@@ -1787,6 +1787,7 @@ float TEXTURETYPE_PlaySound(TraceResult *ptr,  Vector vecSrc, Vector vecEnd, int
 		// !!!
 		// possible to check for ptr->iHitgroup?  Doubt it's necessary.
 
+		// Neither section should atch breakables, being not 'isEntityWorld' should do that.
 		if (pEntity->isOrganic()) {
 			// hit body
 			chTextureType = CHAR_TEX_FLESH;
@@ -1798,7 +1799,28 @@ float TEXTURETYPE_PlaySound(TraceResult *ptr,  Vector vecSrc, Vector vecEnd, int
 			//   pTextureName = TRACE_TEXTURE(ENT(pEntity->pev), rgfl1, rgfl2);
 			// ...and turn determining 'chTextureType' from that into a method (further below).
 			// For now, just assuming METAL texture.
-			chTextureType = CHAR_TEX_METAL;
+
+			// CHANGE, custom sound behavior.  Use all the metal sounds, some are used by func_breakable vents, seems fitting for hitting
+			// a sentry.
+			//chTextureType = CHAR_TEX_METAL;
+
+
+			// NOTE - is sending the entity instead of the world  ( ENT(0) ) ok?  No idea.
+			// organic sounds will still use it from relying on normal texture logic below though.
+			const int randomSound = RANDOM_LONG(0, 5);
+			const float metalVol = 0.57;
+			const float metalAttn = ATTN_NORM - 0.02;
+			switch (randomSound) {
+			case 0:EMIT_AMBIENT_SOUND(pEntity->edict(), ptr->vecEndPos, "debris/metal1.wav", metalVol - 0.15, metalAttn, 0, 92 + RANDOM_LONG(0, 5)); break;
+			case 1:EMIT_AMBIENT_SOUND(pEntity->edict(), ptr->vecEndPos, "debris/metal2.wav", metalVol, metalAttn, 0, 94 + RANDOM_LONG(0, 5)); break;
+			case 2:EMIT_AMBIENT_SOUND(pEntity->edict(), ptr->vecEndPos, "debris/metal3.wav", metalVol, metalAttn, 0, 94 + RANDOM_LONG(0, 5)); break;
+			case 3:EMIT_AMBIENT_SOUND(pEntity->edict(), ptr->vecEndPos, "debris/metal4.wav", metalVol - 0.1, metalAttn, 0, 90 + RANDOM_LONG(0, 5)); break;
+			case 4:EMIT_AMBIENT_SOUND(pEntity->edict(), ptr->vecEndPos, "debris/metal5.wav", metalVol - 0.08, metalAttn, 0, 92 + RANDOM_LONG(0, 5)); break;
+			case 5:EMIT_AMBIENT_SOUND(pEntity->edict(), ptr->vecEndPos, "debris/metal6.wav", metalVol, metalAttn, 0, 94 + RANDOM_LONG(0, 5)); break;
+			}//switch
+
+			fvolbar = 0.45;
+			return fvolbar;  //and done.
 		}
 	}
 	else

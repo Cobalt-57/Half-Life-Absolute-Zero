@@ -204,12 +204,14 @@ Also, need to extern (all?) CVars in dlls/client.cpp.
 	#ifdef _DEBUG
 		#define EASY_CVAR_GET_DEBUGONLY(CVarName)\
 			CVAR_GET_FLOAT( #CVarName )
+
 		#define EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(CVarName)\
 			EASY_CVAR_GET(CVarName)
 
 		// is that okay?  Implied only for the server (global_...).
 		#define EASY_CVAR_SET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(CVarName, valueV)\
 			CVAR_SET_FLOAT(#CVarName, valueV);
+
 		#define EASY_CVAR_SET_CLIENTONLY_DEBUGONLY(CVarName, valueV)\
 			DUMMY
 
@@ -217,13 +219,16 @@ Also, need to extern (all?) CVars in dlls/client.cpp.
 		//release
 		#define EASY_CVAR_GET_DEBUGONLY(CVarName)\
 			global_##CVarName
+
 		#define EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(CVarName)\
 			global_##CVarName
 
 
 		// is that okay?  Implied only for the server (global_...).
 		#define EASY_CVAR_SET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(CVarName, valueV)\
-			global_##CVarName = valueV;
+			global_##CVarName = valueV;\
+			CALL_EASY_CVAR_SYNCH_SERVER_TO_CLIENT_BROADCAST_DEBUGONLY(CVarName)
+
 		#define EASY_CVAR_SET_CLIENTONLY_DEBUGONLY(CVarName, valueV)\
 			DUMMY
 
@@ -280,24 +285,24 @@ Also, need to extern (all?) CVars in dlls/client.cpp.
 		CVAR_SET_FLOAT(#CVarName, DEFAULT_##CVarName);
 
 #else
+	//RELEASE
+	#ifndef CLIENT_DLL
+		// SERVER
+		#define EASY_CVAR_SET_DEBUGONLY(CVarName, valueV)\
+			global_##CVarName = valueV;
 
+		#define EASY_CVAR_RESET_DEBUGONLY(CVarName)\
+			global_##CVarName = DEFAULT_##CVarName;
+	#else
+		// CLIENT
+		#define EASY_CVAR_SET_DEBUGONLY(CVarName, valueV)\
+			global2_##CVarName = valueV;
+		#define EASY_CVAR_RESET_DEBUGONLY(CVarName)\
+			global2_##CVarName = DEFAULT_##CVarName;
+	#endif
 
-//RELEASE
-#ifndef CLIENT_DLL
-	// SERVER
-	#define EASY_CVAR_SET_DEBUGONLY(CVarName, valueV)\
-		global_##CVarName = valueV;
-	#define EASY_CVAR_RESET_DEBUGONLY(CVarName)\
-		global_##CVarName = DEFAULT_##CVarName;
-#else
-	// CLIENT
-	#define EASY_CVAR_SET_DEBUGONLY(CVarName, valueV)\
-		global2_##CVarName = valueV;
-	#define EASY_CVAR_RESET_DEBUGONLY(CVarName)\
-		global2_##CVarName = DEFAULT_##CVarName;
 #endif
 
-#endif
 
 
 
@@ -412,23 +417,35 @@ Also, need to extern (all?) CVars in dlls/client.cpp.
 
 
 
+
+
+#define CALL_EASY_CVAR_UPDATE_SERVER_CLIENTSENDOFF_BROADCAST(CVarName)\
+	if(EASY_CVAR_GET(CVarName) != global_##CVarName){\
+		global_##CVarName = EASY_CVAR_GET(CVarName);\
+		CALL_EASY_CVAR_SYNCH_SERVER_TO_CLIENT_BROADCAST_DEBUGONLY(CVarName)\
+	}
+
+
+
+
+
 #ifdef _DEBUG
 
-	#define EASY_CVAR_UPDATE_SERVER_CLIENTSENDOFF_BROADCAST_DEBUGONLY(CVarName, ID)\
-		CALL_EASY_CVAR_UPDATE_SERVER_CLIENTSENDOFF_BROADCAST(CVarName, ID)
+	#define EASY_CVAR_UPDATE_SERVER_CLIENTSENDOFF_BROADCAST_DEBUGONLY(CVarName)\
+		CALL_EASY_CVAR_UPDATE_SERVER_CLIENTSENDOFF_BROADCAST(CVarName)
 
-	#define EASY_CVAR_UPDATE_SERVER_CLIENTONLY_DEBUGONLY(CVarName, ID)\
+	#define EASY_CVAR_UPDATE_SERVER_CLIENTONLY_DEBUGONLY(CVarName)\
 		DUMMY
 	//no CVAR creation redos.
 
 #else
 
 	//CHANGED. NOTICE: is the 2nd NULL in the MESAGE_BEGIN for PEV ok, yes or no?!
-	#define EASY_CVAR_UPDATE_SERVER_CLIENTSENDOFF_BROADCAST_DEBUGONLY(CVarName, ID)\
+	#define EASY_CVAR_UPDATE_SERVER_CLIENTSENDOFF_BROADCAST_DEBUGONLY(CVarName)\
 		DUMMY
 
 	//TEST - dummying the default one out.
-	#define EASY_CVAR_UPDATE_SERVER_CLIENTONLY_DEBUGONLY(CVarName, ID)\
+	#define EASY_CVAR_UPDATE_SERVER_CLIENTONLY_DEBUGONLY(CVarName)\
 		DUMMY
 
 
@@ -436,18 +453,9 @@ Also, need to extern (all?) CVars in dlls/client.cpp.
 
 
 
-#define CALL_EASY_CVAR_UPDATE_SERVER_CLIENTSENDOFF_BROADCAST(CVarName, ID)\
-	if(EASY_CVAR_GET(CVarName) != global_##CVarName){\
-		global_##CVarName = EASY_CVAR_GET(CVarName);\
-		MESSAGE_BEGIN( MSG_ALL, gmsgUpdateClientCVar, NULL);\
-			WRITE_SHORT( ID);\
-			WRITE_SHORT( global_##CVarName*100);\
-		MESSAGE_END();\
-	}
-
 // Do checks.  Has our CVar changed?  We need to tell the client.
-#define EASY_CVAR_UPDATE_SERVER_CLIENTSENDOFF_BROADCAST(CVarName, ID)\
-	CALL_EASY_CVAR_UPDATE_SERVER_CLIENTSENDOFF_BROADCAST(CVarName, ID)
+#define EASY_CVAR_UPDATE_SERVER_CLIENTSENDOFF_BROADCAST(CVarName)\
+	CALL_EASY_CVAR_UPDATE_SERVER_CLIENTSENDOFF_BROADCAST(CVarName)
 
 //#define EASY_CVAR_CREATE_SERVER_SETUP_A_SERVERONLY(CVarName)\
 //	DUMMY
@@ -770,7 +778,7 @@ Also, need to extern (all?) CVars in dlls/client.cpp.
 //MSG_ONE or MSG_ALL ???
 #define EASY_CVAR_RESET_MASS_CLIENT_SIGNAL\
 	if(pev != NULL){\
-		MESSAGE_BEGIN( MSG_ONE, gmsgResetClientCVar, NULL, pev );\
+		MESSAGE_BEGIN( MSG_ALL, gmsgResetClientCVar, NULL, pev );\
 		MESSAGE_END();\
 	}
 
@@ -839,9 +847,78 @@ Also, need to extern (all?) CVars in dlls/client.cpp.
 
 // TODO TODO TODO THEN
 
-#define EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(CVarName, CVarNameLower)
-#define EASY_CVAR_HIDDEN_ACCESS_CLIENTSENDOFF_BROADCAST_DEBUGONLY(CVarName, CVarNameLower, ID)
-#define EASY_CVAR_HIDDEN_ACCESS_CLIENTONLY_DEBUGONLY(CVarName, CVarNameLower, ID)
+
+#define EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(CVarName, CVarNameLower)\
+if( FStrEq(pcmdRefinedRef, #CVarNameLower)  ){\
+	CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev);\
+	int argCount = CMD_ARGC();\
+	if(argCount > 2){easyForcePrintLine("WARNING: only one term after a CVar allowed, further terms ignored.");}\
+	if(argCount == 1){\
+		easyForcePrintLine("\"%s\" is %g",#CVarName,global_##CVarName);\
+	}else{\
+		const char* arg1ref = CMD_ARGV(1);\
+		float tempF = 0;\
+		try{\
+			tempF = tryStringToFloat(arg1ref);\
+			global_##CVarName = tempF;\
+			saveHiddenCVars();\
+		}catch(int){\
+			easyForcePrintLine("ERROR: Bad input. No effect.");\
+		}\
+	}\
+	return;\
+}
+
+
+#define EASY_CVAR_HIDDEN_ACCESS_CLIENTSENDOFF_BROADCAST_DEBUGONLY(CVarName, CVarNameLower, ID)\
+if( FStrEq(pcmdRefinedRef, #CVarNameLower) ){\
+	CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev);\
+	int argCount = CMD_ARGC();\
+	if(argCount > 2){easyForcePrintLine("WARNING: only one term after a CVar allowed, further terms ignored.");}\
+	if(argCount == 1){\
+		easyForcePrintLine("\"%s\" is %g",#CVarName,global_##CVarName);\
+	}else{\
+		const char* arg1ref = CMD_ARGV(1);\
+		float tempF = 0;\
+		try{\
+			tempF = tryStringToFloat(arg1ref);\
+			global_##CVarName = tempF;\
+			CALL_EASY_CVAR_SYNCH_SERVER_TO_CLIENT_BROADCAST_DEBUGONLY(CVarName)\
+			saveHiddenCVars();\
+		}catch(int){\
+			easyForcePrintLine("ERROR: Bad input. No effect.");\
+		}\
+	}\
+	return;\
+}
+
+
+
+
+#define EASY_CVAR_HIDDEN_ACCESS_CLIENTONLY_DEBUGONLY(CVarName, CVarNameLower, ID)\
+if( FStrEq(pcmdRefinedRef, #CVarNameLower) ){\
+	CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev);\
+	int argCount = CMD_ARGC();\
+	if(argCount > 2){easyForcePrintLine("WARNING: only one term after a CVar allowed, further terms ignored.");}\
+	if(argCount == 1){\
+		EASY_CVAR_PRINT_CLIENTONLY(ID)\
+	}else{\
+		const char* arg1ref = CMD_ARGV(1);\
+		float tempF = 0;\
+		try{\
+			tempF = tryStringToFloat(arg1ref);\
+			CUSTOM_CLIENT_CALL(ID, tempF)\
+		}catch(int){\
+			easyForcePrintLine("ERROR: Bad input. No effect.");\
+		}\
+	}\
+	return;\
+}
+
+
+
+
+
 
 
 
@@ -854,75 +931,6 @@ Also, need to extern (all?) CVars in dlls/client.cpp.
 
 //EASY_CVAR_SET_DEBUGONLY(CVarName, tempF)\
 
-#define EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(CVarName, CVarNameLower)\
-if( FStrEq(pcmdRefinedRef, #CVarNameLower)  ){\
-	CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev);\
-	const char* arg1ref = CMD_ARGV(1);\
-	const char* arg2ref = CMD_ARGV(2);\
-	if(!isStringEmpty(arg2ref)){\
-		easyForcePrintLine("ERROR: Only one arg accepted following the CVar. No more than 1 space total.");\
-	}if(!isStringEmpty(arg1ref)){\
-		float tempF = 0;\
-		try{\
-			tempF = tryStringToFloat(arg1ref);\
-			global_##CVarName = tempF;\
-			saveHiddenCVars();\
-		}catch(int){\
-			easyForcePrintLine("ERROR: Bad input. No effect.");\
-		}\
-	}else{\
-		easyForcePrintLine("\"%s\" is %g",#CVarName,global_##CVarName);\
-	}\
-	return;\
-}
-
-
-#define EASY_CVAR_HIDDEN_ACCESS_CLIENTSENDOFF_BROADCAST_DEBUGONLY(CVarName, CVarNameLower, ID)\
-if( FStrEq(pcmdRefinedRef, #CVarNameLower)  ){\
-	CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev);\
-	const char* arg1ref = CMD_ARGV(1);\
-	const char* arg2ref = CMD_ARGV(2);\
-	if(!isStringEmpty(arg2ref)){\
-		easyForcePrintLine("ERROR: Only one arg accepted following the CVar. No more than 1 space total.");\
-	}if(!isStringEmpty(arg1ref)){\
-		float tempF = 0;\
-		try{\
-			tempF = tryStringToFloat(arg1ref);\
-			global_##CVarName = tempF;\
-			EASY_CVAR_UPDATE_SERVER_CLIENTSENDOFF_BROADCAST_DEBUGONLY(CVarName, ID)\
-			saveHiddenCVars();\
-		}catch(int){\
-			easyForcePrintLine("ERROR: Bad input. No effect.");\
-		}\
-	}else{\
-		easyForcePrintLine("\"%s\" is %g",#CVarName,global_##CVarName);\
-	}\
-	return;\
-}
-
-
-
-//NOTE - that call used to be EASY_CVAR_UPDATE_SERVER_CLIENTONLY_DEBUGONLY.
-#define EASY_CVAR_HIDDEN_ACCESS_CLIENTONLY_DEBUGONLY(CVarName, CVarNameLower, ID)\
-if( FStrEq(pcmdRefinedRef, #CVarNameLower)  ){\
-	CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev);\
-	const char* arg1ref = CMD_ARGV(1);\
-	const char* arg2ref = CMD_ARGV(2);\
-	if(!isStringEmpty(arg2ref)){\
-		easyForcePrintLine("ERROR: Only one arg accepted following the CVar. No more than 1 space total.");\
-	}if(!isStringEmpty(arg1ref)){\
-		float tempF = 0;\
-		try{\
-			tempF = tryStringToFloat(arg1ref);\
-			CUSTOM_CLIENT_CALL(ID, tempF)\
-		}catch(int){\
-			easyForcePrintLine("ERROR: Bad input. No effect.");\
-		}\
-	}else{\
-		EASY_CVAR_PRINT_CLIENTONLY(ID)\
-	}\
-	return;\
-}
 
 */
 
@@ -1065,7 +1073,19 @@ if(EASY_CVAR_GET(requirementName) == 1){\
 
 
 
+#ifndef CLIENT_DLL
+	// server
+	#ifdef _DEBUG
 
+	#else
+		//release
+		#define CALL_EASY_CVAR_SYNCH_SERVER_TO_CLIENT_BROADCAST_DEBUGONLY(CVarName)\
+			MESSAGE_BEGIN(MSG_ALL, gmsgUpdateClientCVar, NULL); \
+				WRITE_SHORT(CVarName##_ID); \
+				WRITE_SHORT( global_##CVarName*100);\
+			MESSAGE_END();
+	#endif
+#endif
 
 
 
@@ -1075,12 +1095,19 @@ if(EASY_CVAR_GET(requirementName) == 1){\
 		WRITE_SHORT(EASY_CVAR_GET(arg_cvar) * 100);\
 	MESSAGE_END();
 
+#define CALL_EASY_CVAR_SYNCH_SERVER_TO_CLIENT_DEBUGONLY(arg_cvar, arg_ent_pev)\
+	MESSAGE_BEGIN(MSG_ONE, gmsgUpdateClientCVar, NULL, arg_ent_pev);\
+		WRITE_SHORT(arg_cvar##_ID);\
+		WRITE_SHORT(global_##arg_cvar * 100);\
+	MESSAGE_END();
+
+
 #define EASY_CVAR_SYNCH_SERVER_TO_CLIENT(arg_cvar, arg_ent_pev)\
 	CALL_EASY_CVAR_SYNCH_SERVER_TO_CLIENT(arg_cvar, arg_ent_pev)
 
 // same?
 #define EASY_CVAR_SYNCH_SERVER_TO_CLIENT_DEBUGONLY(arg_cvar, arg_ent_pev)\
-	CALL_EASY_CVAR_SYNCH_SERVER_TO_CLIENT(arg_cvar, arg_ent_pev)
+	CALL_EASY_CVAR_SYNCH_SERVER_TO_CLIENT_DEBUGONLY(arg_cvar, arg_ent_pev)
 
 
 
@@ -1131,10 +1158,10 @@ if(EASY_CVAR_GET(requirementName) == 1){\
 
 //!!!!
 #define EASY_CVAR_HIDDEN_LOAD(CVarName, CVarNameLower)\
-	//if(strcmp(identifier, QUOTE(CVarNameLower) ) == 0){\
-	//	global2_##CVarName = value;\
-	//	return;\
-	//}
+	if(strcmp(identifier, QUOTE(CVarNameLower) ) == 0){\
+		global2_##CVarName = value;\
+		return;\
+	}
 
 #define EASY_CVAR_HIDDEN_LOAD_CLIENTONLY(CVarName, CVarNameLower) EASY_CVAR_HIDDEN_LOAD(CVarName, CVarNameLower)
 #define EASY_CVAR_HIDDEN_LOAD_SERVERONLY(CVarName, CVarNameLower)
@@ -1143,10 +1170,10 @@ if(EASY_CVAR_GET(requirementName) == 1){\
 
 //!!!!
 #define EASY_CVAR_HIDDEN_LOAD(CVarName, CVarNameLower)\
-	//if(strcmp(identifier, QUOTE(CVarNameLower) ) == 0){\
-	//	global_##CVarName = value;\
-	//	return;\
-	//}
+	if(strcmp(identifier, QUOTE(CVarNameLower) ) == 0){\
+		global_##CVarName = value;\
+		return;\
+	}
 
 #define EASY_CVAR_HIDDEN_LOAD_CLIENTONLY(CVarName, CVarNameLower)
 #define EASY_CVAR_HIDDEN_LOAD_SERVERONLY(CVarName, CVarNameLower) EASY_CVAR_HIDDEN_LOAD(CVarName, CVarNameLower)

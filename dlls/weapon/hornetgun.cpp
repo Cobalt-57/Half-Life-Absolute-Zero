@@ -175,12 +175,12 @@ void CHgun::PrimaryAttack()
 	Reload( );
 
 
-	easyForcePrintLine("A I FIIIIIRRRRRRREEEEEDDDD #1");
+	//easyForcePrintLine("A I FIIIIIRRRRRRREEEEEDDDD #1");
 	if (PlayerPrimaryAmmoCount() <= 0)
 	{
 		return;
 	}
-	easyForcePrintLine("A I FIIIIIRRRRRRREEEEEDDDD #2");
+	//easyForcePrintLine("A I FIIIIIRRRRRRREEEEEDDDD #2");
 
 #ifdef CLIENT_DLL
 	// absurdly high, prevent a HGUN_prevRechargeTimeTo from the next frame since firing took place
@@ -289,12 +289,12 @@ void CHgun::SecondaryAttack( void )
 	Reload();
 
 
-	easyForcePrintLine("B I FIIIIIRRRRRRREEEEEDDDD #1");
+	//easyForcePrintLine("B I FIIIIIRRRRRRREEEEEDDDD #1");
 	if (PlayerPrimaryAmmoCount() <= 0)
 	{
 		return;
 	}
-	easyForcePrintLine("B I FIIIIIRRRRRRREEEEEDDDD #2");
+	//easyForcePrintLine("B I FIIIIIRRRRRRREEEEEDDDD #2");
 
 #ifdef CLIENT_DLL
 	// absurdly high, prevent a HGUN_prevRechargeTimeTo from the next frame since firing took place
@@ -491,7 +491,7 @@ void CHgun::ItemPostFrameThink(void) {
 				//easyForcePrintLine("hey yah");
 
 
-				easyForcePrintLine("aaa  pres:%d,%d primam:%d prt:%.2f crt:%.2f <=0.12?%d p<c?%d", primaryHeld, secondaryHeld, PlayerPrimaryAmmoCount(), HGUN_prevRechargeTimeTo, HGUN_currentRechargeTimeTo, (HGUN_prevRechargeTimeTo <= 0.12), (HGUN_prevRechargeTimeTo < HGUN_currentRechargeTimeTo));
+				//easyForcePrintLine("aaa  pres:%d,%d primam:%d prt:%.2f crt:%.2f <=0.12?%d p<c?%d", primaryHeld, secondaryHeld, PlayerPrimaryAmmoCount(), HGUN_prevRechargeTimeTo, HGUN_currentRechargeTimeTo, (HGUN_prevRechargeTimeTo <= 0.12), (HGUN_prevRechargeTimeTo < HGUN_currentRechargeTimeTo));
 
 				// fiah nao
 				if (PlayerPrimaryAmmoCount() <= 0) {

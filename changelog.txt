@@ -384,3 +384,8 @@ CVars that previously couldn't be saved now can be (must quit from quitting norm
 -These CVars may also be set before a game begins.
 
 Going up ladders while looking partially upward is no longer faster than while looking all the way upward (bypassed intended ladder speed).  Base ladder speed boosted to compensate.
+
+Metal-hit sounds for metal NPCs (mainly sentries) changed.  Instead of player/pl_metal sounds, using debris/metal1 through 6.
+
+Hornet hit-sound volumes reduced on hitting non-organic enemies or breakables, more of the material sound shows through.
+

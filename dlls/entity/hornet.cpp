@@ -874,12 +874,43 @@ void CHornet::DieTouch ( CBaseEntity *pOther )
 {
 	if ( pOther && pOther->pev->takedamage )
 	{// do the damage
+		float hitSoundVol;
+		float hitSoundAttn;
 
-		switch (RANDOM_LONG(0,2))
+		//MODDD - hold on!  Sounds a little fleshy, how about for hitting organic things primarily?
+		if (pOther->isOrganic()) {
+			// max volume
+			hitSoundVol = 1.0;
+			hitSoundAttn = ATTN_NORM + 0.1;
+		}
+		else if (pOther->IsWorldOrAffiliated()) {
+			// turn down sound a bit, rely on whatever's hit to deliver other parts of it.
+			hitSoundVol = 0.45;
+			hitSoundAttn = ATTN_NORM;
+		}
+		else {
+			// not world, but not organic?  Assume metal NPC.  Blend of hitsound and metal.
+			hitSoundVol = 0.55;
+			hitSoundAttn = ATTN_NORM + 0.12;
+
+			const int randomSound = RANDOM_LONG(0, 5);
+			const float metalVol = 0.52;
+			const float metalAttn = ATTN_NORM - 0.02;
+			switch (randomSound) {
+			case 0:	UTIL_PlaySound(ENT(pev), CHAN_STATIC, "debris/metal1.wav", metalVol - 0.15, metalAttn, 0, 92 + RANDOM_LONG(0, 5), FALSE); break;
+			case 1:	UTIL_PlaySound(ENT(pev), CHAN_STATIC, "debris/metal2.wav", metalVol, metalAttn, 0, 94 + RANDOM_LONG(0, 5), FALSE); break;
+			case 2:	UTIL_PlaySound(ENT(pev), CHAN_STATIC, "debris/metal3.wav", metalVol, metalAttn, 0, 94 + RANDOM_LONG(0, 5), FALSE); break;
+			case 3:	UTIL_PlaySound(ENT(pev), CHAN_STATIC, "debris/metal4.wav", metalVol - 0.1, metalAttn, 0, 90 + RANDOM_LONG(0, 5), FALSE); break;
+			case 4:	UTIL_PlaySound(ENT(pev), CHAN_STATIC, "debris/metal5.wav", metalVol - 0.08, metalAttn, 0, 92 + RANDOM_LONG(0, 5), FALSE); break;
+			case 5:	UTIL_PlaySound(ENT(pev), CHAN_STATIC, "debris/metal6.wav", metalVol, metalAttn, 0, 94 + RANDOM_LONG(0, 5), FALSE); break;
+			}//switch
+		}
+
+		switch (RANDOM_LONG(0, 2))
 		{// buzz when you plug someone
-			case 0:	UTIL_PlaySound( ENT(pev), CHAN_VOICE, "hornet/ag_hornethit1.wav", 1, ATTN_NORM);	break;
-			case 1:	UTIL_PlaySound( ENT(pev), CHAN_VOICE, "hornet/ag_hornethit2.wav", 1, ATTN_NORM);	break;
-			case 2:	UTIL_PlaySound( ENT(pev), CHAN_VOICE, "hornet/ag_hornethit3.wav", 1, ATTN_NORM);	break;
+		case 0:	UTIL_PlaySound(ENT(pev), CHAN_VOICE, "hornet/ag_hornethit1.wav", hitSoundVol, hitSoundAttn);	break;
+		case 1:	UTIL_PlaySound(ENT(pev), CHAN_VOICE, "hornet/ag_hornethit2.wav", hitSoundVol, hitSoundAttn);	break;
+		case 2:	UTIL_PlaySound(ENT(pev), CHAN_VOICE, "hornet/ag_hornethit3.wav", hitSoundVol, hitSoundAttn);	break;
 		}
 		
 		//MODDD - perhaps only allow hitbox based damage (lacking DMG_HITBOX_EQUAL for the 2nd damage bitmask)

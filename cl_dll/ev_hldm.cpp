@@ -292,7 +292,29 @@ float EV_HLDM_PlayTextureSound(int idx, pmtrace_t* ptr, float* vecSrc, float* ve
 				// metal.
 				// Come to think of it, odd that retail behavior on serverside would have tried to trace the texture of a non-organic entity (also non-world) anyway,
 				// but clientside never did, required that strict 'entityIntex == 0' check to do that.
-				chTextureType = CHAR_TEX_METAL;
+				
+					// CHANGE, custom sound behavior.  Use all the metal sounds, some are used by func_breakable vents, seems fitting for hitting
+				// a sentry.
+				//chTextureType = CHAR_TEX_METAL;
+
+				// NOTE - is sending the entityIndex instead of the world index (0) ok?  No idea.
+				// organic sounds will still use it from relying on normal texture logic below though.
+				const int randomSound = gEngfuncs.pfnRandomLong(0, 5);
+				const float metalVol = 0.57;
+				const float metalAttn = ATTN_NORM - 0.02;
+				switch (randomSound) {
+				case 0:gEngfuncs.pEventAPI->EV_PlaySound(entityIndex, ptr->endpos, CHAN_STATIC, "debris/metal1.wav", metalVol - 0.15, metalAttn, 0, 92 + gEngfuncs.pfnRandomLong(0, 5));
+				case 1:gEngfuncs.pEventAPI->EV_PlaySound(entityIndex, ptr->endpos, CHAN_STATIC, "debris/metal2.wav", metalVol, metalAttn, 0, 94 + gEngfuncs.pfnRandomLong(0, 5));
+				case 2:gEngfuncs.pEventAPI->EV_PlaySound(entityIndex, ptr->endpos, CHAN_STATIC, "debris/metal3.wav", metalVol, metalAttn, 0, 94 + gEngfuncs.pfnRandomLong(0, 5));
+				case 3:gEngfuncs.pEventAPI->EV_PlaySound(entityIndex, ptr->endpos, CHAN_STATIC, "debris/metal4.wav", metalVol - 0.1, metalAttn, 0, 90 + gEngfuncs.pfnRandomLong(0, 5));
+				case 4:gEngfuncs.pEventAPI->EV_PlaySound(entityIndex, ptr->endpos, CHAN_STATIC, "debris/metal5.wav", metalVol - 0.08, metalAttn, 0, 92 + gEngfuncs.pfnRandomLong(0, 5));
+				case 5:gEngfuncs.pEventAPI->EV_PlaySound(entityIndex, ptr->endpos, CHAN_STATIC, "debris/metal6.wav", metalVol, metalAttn, 0, 94 + gEngfuncs.pfnRandomLong(0, 5));
+				}//switch
+
+				fvolbar = 0.45;
+				return fvolbar;  //and done.
+
+
 			}else {
 				// hit body
 				chTextureType = CHAR_TEX_FLESH;
@@ -459,6 +481,8 @@ float EV_HLDM_PlayTextureSound(int idx, pmtrace_t* ptr, float* vecSrc, float* ve
 	}
 	return fvolbar;
 }
+
+
 
 char* EV_HLDM_DamageDecal(physent_t* pe)
 {
@@ -1958,7 +1982,7 @@ void EV_FireCrossbow2(event_args_t* args)
 			}
 			else {
 				// not organic?  Slightly modified xbow_hit.wav
-				gEngfuncs.pEventAPI->EV_PlaySound(idx, origin, CHAN_BODY, "weapons/xbow_hit1.wav", RANDOM_FLOAT(0.98, 1.0), ATTN_NORM - 0.1, 0, 107 + RANDOM_LONG(0, 4));
+				gEngfuncs.pEventAPI->EV_PlaySound(idx, origin, CHAN_BODY, "weapons/xbow_hit1.wav", gEngfuncs.pfnRandomFloat(0.98, 1.0), ATTN_NORM - 0.1, 0, 107 + gEngfuncs.pfnRandomLong(0, 4));
 				//if (UTIL_PointContents(pev->origin) != CONTENTS_WATER)
 				//if(gEngfuncs.PM_PointContents(cEntRef->origin, NULL) != CONTENTS_WATER)
 				if (gEngfuncs.PM_PointContents(tr.endpos, NULL) != CONTENTS_WATER)

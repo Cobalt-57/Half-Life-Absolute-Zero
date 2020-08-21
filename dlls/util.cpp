@@ -5356,6 +5356,9 @@ void ClientPrecache( void ){
 	// for the garg fall.  But really just be forced at this point.
 	PRECACHE_SOUND("debris/metal6.wav");
 
+	//MODDD - NEW.  Used by various metal-hit sounds now.  Not the breakable though but that could be changed.
+	PRECACHE_SOUND("debris/metal1.wav");
+	PRECACHE_SOUND("debris/metal3.wav");
 
 	PRECACHE_SOUND( SOUND_FLASHLIGHT_ON );
 	PRECACHE_SOUND( SOUND_FLASHLIGHT_OFF );
@@ -7269,19 +7272,19 @@ void UTIL_playOrganicGibSound(entvars_t* pevSoundSource){
 void UTIL_playMetalGibSound(entvars_t* pevSoundSource){
 	switch(RANDOM_LONG(0, 4)){
 	case 0:
-		UTIL_PlaySound(ENT(pevSoundSource), CHAN_STATIC, "debris/bustmetal1.wav", 1, ATTN_NORM - 0.12, FALSE);
+		UTIL_PlaySound(ENT(pevSoundSource), CHAN_STATIC, "debris/bustmetal1.wav", 1, ATTN_NORM - 0.17, FALSE);
 	break;
 	case 1:
-		UTIL_PlaySound(ENT(pevSoundSource), CHAN_STATIC, "debris/bustmetal2.wav", 1, ATTN_NORM - 0.12, FALSE);
+		UTIL_PlaySound(ENT(pevSoundSource), CHAN_STATIC, "debris/bustmetal2.wav", 1, ATTN_NORM - 0.17, FALSE);
 	break;
 	case 2:
-		UTIL_PlaySound(ENT(pevSoundSource), CHAN_STATIC, "debris/metal2.wav", 1, ATTN_NORM - 0.12, FALSE);
+		UTIL_PlaySound(ENT(pevSoundSource), CHAN_STATIC, "debris/metal2.wav", 1, ATTN_NORM - 0.17, FALSE);
 	break;
 	case 3:
-		UTIL_PlaySound(ENT(pevSoundSource), CHAN_STATIC, "debris/metal4.wav", 1, ATTN_NORM - 0.12, FALSE);
+		UTIL_PlaySound(ENT(pevSoundSource), CHAN_STATIC, "debris/metal4.wav", 1, ATTN_NORM - 0.17, FALSE);
 	break;
 	case 4:
-		UTIL_PlaySound(ENT(pevSoundSource), CHAN_STATIC, "debris/metal5.wav", 1, ATTN_NORM - 0.12, FALSE);
+		UTIL_PlaySound(ENT(pevSoundSource), CHAN_STATIC, "debris/metal5.wav", 1, ATTN_NORM - 0.17, FALSE);
 	break;
 	}//END OF switch
 }//END OF UTIL_playMetalGibSound

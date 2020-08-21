@@ -3370,6 +3370,9 @@ void PM_LadderMove( physent_t *pLadder )
 
 
 				
+				// Seems even in the original,  -normal * tmp is biased towards moving up.
+				// Why is this?  Is it normal, however that's calculated, or tmp's fault?
+				// does tmp even change depending on whether the player is looking mostly up or down?
 				// 4th way
 				VectorMA( lateral, -normal, tmp, pmove->velocity );
 
