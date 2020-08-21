@@ -667,8 +667,10 @@ const char* CBaseEntity::getClassname(void){
 		return test;
 	}
 }
+
+
 const char* CBaseEntity::getClassnameShort(void){
-	char charBuffer[127];
+	//char charBuffer[127];
 	const char* test = STRING(pev->classname);
 	if(test == NULL){
 		return "";
@@ -676,17 +678,20 @@ const char* CBaseEntity::getClassnameShort(void){
 		//shorten it. If it starts with monster_, remove that.
 
 		if(stringStartsWith(test, "monster_")){
+
+			// BETTER WAY.
+			return &test[8];
+
 			//cut!
 			//::strcpy(&charBuffer[0], test);
-			UTIL_substring(&charBuffer[0], test, 8, -1);
-
+			//UTIL_substring(&charBuffer[0], test, 8, -1);
 
 			// This part:
 			//   STRING(MAKE_STRING( ...  ))
 			// may look weird, but it effectively clones the char array to be treated as a single value and sent back, unlike localvar "charBuffer" which loses scope as this method ends.
 			// It's just a neat tool.
 
-			return STRING(MAKE_STRING(charBuffer));
+			//return STRING(MAKE_STRING(charBuffer));
 		}else{
 			//unsafe to assume any part can be cut.
 			return test;

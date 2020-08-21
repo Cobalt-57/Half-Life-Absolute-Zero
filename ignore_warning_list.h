@@ -26,9 +26,9 @@
 #pragma warning(disable : 4514)		// unreferenced inline function removed
 #pragma warning(disable : 4100)		// unreferenced formal parameter
 
-// a new one from utils/common/mathlib.c, a file that isn't compiled?
-// eh, why not.
-#pragma warning( disable : 4237 )
+
+
+
 
 
 
@@ -54,11 +54,26 @@
 #pragma warning(disable : 4065)
 #pragma warning(disable : 4091)
 #pragma warning(disable : 4101)		// unreferenced local variable
-// nope, a good one.  We want to know about bad formatting symbols.
-//#pragma warning(disable : 4477)
+
+// Keep this one.
+//Warning	C4172	returning address of local variable or temporary: charBuffer
+//#pragma warning(disable : 4172)
+
+// a new one from utils/common/mathlib.c, a file that isn't compiled?
+// eh, why not.
+#pragma warning( disable : 4237 )
+
 #pragma warning(disable : 4407)
 
+// nope, a good one.  We want to know about bad formatting symbols.
+//#pragma warning(disable : 4477)
 
+
+
+
+// and this one.   Wait.    What is this?
+//Warning	C4353	nonstandard extension used : constant 0 as function expression.Use '__noop' function intrinsic instead
+//#pragma warning(disable : 4353)
 
 
 //NOTICE - out of the 4001 - 4999 range?  Then it isn't for VS6.

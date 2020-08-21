@@ -14,7 +14,10 @@
 // Moved to util_shared.h if anywhere even uses this.
 //#define MAX_CLIENTS 32
 
-#include <string.h>
+//#include <string.h>
+
+#include "cvar_custom_info.h"
+#include "cvar_custom_list.h"
 
 /*
 #include "STDIO.H"

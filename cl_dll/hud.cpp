@@ -35,6 +35,9 @@
 #include "hl/hl_weapons.h"
 
 
+#include "cvar_custom_info.h"
+#include "cvar_custom_list.h"
+
 //MODDD - externs
 EASY_CVAR_EXTERN(hud_version)
 EASY_CVAR_EXTERN(preE3UsesFailColors)

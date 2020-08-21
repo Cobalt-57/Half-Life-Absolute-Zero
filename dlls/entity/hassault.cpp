@@ -34,6 +34,7 @@
 #include "util_model.h"
 #include "soundent.h"
 
+#include "cvar_custom_info.h"
 
 
 EASY_CVAR_EXTERN(hassaultSpinMovement)

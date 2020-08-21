@@ -36,6 +36,10 @@ extern "C"
 //MODD - show me what ya got.
 #include "utils/vgui/include/VGUI_Panel.h"
 
+#include "cvar_custom_info.h"
+#include "cvar_custom_list.h"
+
+
 EASY_CVAR_EXTERN(drawHUD);
 
 

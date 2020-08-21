@@ -26,7 +26,12 @@
 
 #include "hud.h"
 #include "cl_util.h"
-#include <string.h>
+//#include <string.h>
+
+
+#include "cvar_custom_info.h"
+#include "cvar_custom_list.h"
+
 
 
 cvar_t* cl_lw = NULL;

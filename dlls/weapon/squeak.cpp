@@ -38,6 +38,10 @@
 
 EASY_CVAR_EXTERN(snarkInheritsPlayerVelocity)
 
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelay)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelaycustom)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteclip)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteammo)
 
 #define SQUEEK_DETONATE_DELAY 15.0
 
@@ -737,7 +741,6 @@ void CSqueak::PrimaryAttack()
 
 			// player "shoot" animation
 			m_pPlayer->SetAnimation(PLAYER_ATTACK1);
-
 
 			m_chargeReady |= 32;
 

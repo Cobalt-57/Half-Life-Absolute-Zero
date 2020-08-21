@@ -74,13 +74,13 @@ Also, need to extern (all?) CVars in dlls/client.cpp.
 	DUMMY
 
 
-
+// Is starting out at defaults ok?  Was -1.
 #define EASY_CVAR_DECLARATION_CLIENT_CLIENTSENDOFF_BROADCAST(CVarName)\
-	float global2_##CVarName = -1;
+	float global2_##CVarName = DEFAULT_##CVarName;
 
 // May already have access to the CVar serverside, but need to keep track of when it is changed.
 #define EASY_CVAR_DECLARATION_SERVER_CLIENTSENDOFF_BROADCAST(CVarName)\
-	float global_##CVarName = -1;
+	float global_##CVarName = DEFAULT_##CVarName;
 
 
 // no cache needed then.  Always a CVar.
@@ -108,11 +108,11 @@ Also, need to extern (all?) CVars in dlls/client.cpp.
 #ifdef _DEBUG
 
 	#define EASY_CVAR_DECLARATION_SERVER_CLIENTSENDOFF_BROADCAST_DEBUGONLY(CVarName)\
-		float global_##CVarName = -1;
+		float global_##CVarName = DEFAULT_##CVarName;
 	#define EASY_CVAR_DECLARATION_SERVER_CLIENTONLY_DEBUGONLY(CVarName)\
 		DUMMY
 	#define EASY_CVAR_DECLARATION_CLIENT_CLIENTSENDOFF_BROADCAST_DEBUGONLY(CVarName)\
-		float global2_##CVarName = -1;
+		float global2_##CVarName = DEFAULT_##CVarName;
 
 	#define EASY_CVAR_DECLARATION_CLIENT_CLIENTONLY_DEBUGONLY(CVarName)\
 		DUMMY
@@ -121,7 +121,7 @@ Also, need to extern (all?) CVars in dlls/client.cpp.
 #else
 //RELEASE
 	#define EASY_CVAR_DECLARATION_SERVER_CLIENTSENDOFF_BROADCAST_DEBUGONLY(CVarName)\
-		float global_##CVarName = -1;
+		float global_##CVarName = DEFAULT_##CVarName;
 // clientonly? not on the server at all.
 	#define EASY_CVAR_DECLARATION_SERVER_CLIENTONLY_DEBUGONLY(CVarName)\
 		DUMMY
@@ -129,10 +129,10 @@ Also, need to extern (all?) CVars in dlls/client.cpp.
 // Yea, not possible because there's one server and possibly several clients.
 // Doesn't make sense to store anything serverside for this.
 	#define EASY_CVAR_DECLARATION_CLIENT_CLIENTSENDOFF_BROADCAST_DEBUGONLY(CVarName)\
-		float global2_##CVarName = -1;
+		float global2_##CVarName = DEFAULT_##CVarName;
 // need to be cached to get past autocomplete.
 	#define EASY_CVAR_DECLARATION_CLIENT_CLIENTONLY_DEBUGONLY(CVarName)\
-		float global2_##CVarName = -1;
+		float global2_##CVarName = DEFAULT_##CVarName;
 
 
 #endif
@@ -162,51 +162,97 @@ Also, need to extern (all?) CVars in dlls/client.cpp.
 
 
 
-
 #ifdef CLIENT_DLL
 	// client? Get it through the cached var (updated as the real server CVar is changed)
 #define EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST(CVarName)\
 		global2_##CVarName
-
 #else
 	// server? Just get it the ordinary way, since we have it onboard.
 #define EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST(CVarName)\
 		EASY_CVAR_GET(CVarName)
-
 #endif
 
 
-#ifdef _DEBUG
 
-	#ifdef CLIENT_DLL
-		// client?
+
+// NEW!  Get plain DEBUGONLY CVars through the global_/global2_ constants only!
+
+
+/*
+#define EASY_CVAR_EXTERN_DEBUGONLY(CVarName)\
+			extern float global_##CVarName;
+#define EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(CVarName)\
+			extern float global_##CVarName;
+#define EASY_CVAR_EXTERN_CLIENTONLY_DEBUGONLY(CVarName)\
+			DUMMY
+*/
+
+
+
+
+
+
+#ifndef CLIENT_DLL
+	// SERVER
+	#ifdef _DEBUG
+		#define EASY_CVAR_GET_DEBUGONLY(CVarName)\
+			CVAR_GET_FLOAT( #CVarName )
+		#define EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(CVarName)\
+			EASY_CVAR_GET(CVarName)
+
+		// is that okay?  Implied only for the server (global_...).
+		#define EASY_CVAR_SET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(CVarName, valueV)\
+			CVAR_SET_FLOAT(#CVarName, valueV);
+		#define EASY_CVAR_SET_CLIENTONLY_DEBUGONLY(CVarName, valueV)\
+			DUMMY
+
+	#else
+		//release
+		#define EASY_CVAR_GET_DEBUGONLY(CVarName)\
+			global_##CVarName
+		#define EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(CVarName)\
+			global_##CVarName
+
+
+		// is that okay?  Implied only for the server (global_...).
+		#define EASY_CVAR_SET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(CVarName, valueV)\
+			global_##CVarName = valueV;
+		#define EASY_CVAR_SET_CLIENTONLY_DEBUGONLY(CVarName, valueV)\
+			DUMMY
+
+	#endif
+#else
+	// CLIENT
+	#ifdef _DEBUG
+		#define EASY_CVAR_GET_DEBUGONLY(CVarName)\
+			CVAR_GET_FLOAT( #CVarName )
+
 		#define EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(CVarName)\
 			global2_##CVarName
 		// CLIENTONLY? DEBUGONLY?  Still a CVAR in debug.
 		#define EASY_CVAR_GET_CLIENTONLY_DEBUGONLY\
 			EASY_CVAR_GET(CVarName)
+		
+		#define EASY_CVAR_SET_CLIENTONLY_DEBUGONLY(CVarName, valueV)\
+			CVAR_SET_FLOAT(#CVarName, valueV);
 	#else
-		// server?
-		#define EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(CVarName)\
-			EASY_CVAR_GET(CVarName)
-	#endif
+		//release
+		#define EASY_CVAR_GET_DEBUGONLY(CVarName)\
+			global2_##CVarName
 
-#else
-//RELEASE
-	#ifdef CLIENT_DLL
-		// client?
 		#define EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(CVarName)\
 			global2_##CVarName
 		// CLIENTONLY? DEBUGONLY?  Now a var
 		#define EASY_CVAR_GET_CLIENTONLY_DEBUGONLY\
 			global2_##CVarName
-	#else
-		// server?
-		#define EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(CVarName)\
-			global_##CVarName
-	#endif
 
+
+		#define EASY_CVAR_SET_CLIENTONLY_DEBUGONLY(CVarName, valueV)\
+			global_##CVarName = valueV;
+	#endif
 #endif
+
+
 
 
 
@@ -221,27 +267,30 @@ Also, need to extern (all?) CVars in dlls/client.cpp.
 
 
 #ifdef _DEBUG
-#define EASY_CVAR_SET_DEBUGONLY(CVarName, valueV)\
+	#define EASY_CVAR_SET_DEBUGONLY(CVarName, valueV)\
 		CVAR_SET_FLOAT(#CVarName, valueV);
-#define EASY_CVAR_RESET_DEBUGONLY(CVarName)\
+	#define EASY_CVAR_RESET_DEBUGONLY(CVarName)\
 		CVAR_SET_FLOAT(#CVarName, DEFAULT_##CVarName);
 
 #else
-//RELEASE
-#define EASY_CVAR_SET_DEBUGONLY(CVarName, valueV)\
-		CVAR_SET_FLOAT(#CVarName, valueV);
-#define EASY_CVAR_RESET_DEBUGONLY(CVarName)\
-		CVAR_SET_FLOAT(#CVarName, DEFAULT_##CVarName);
 
+
+//RELEASE
+#ifndef CLIENT_DLL
+	// SERVER
+	#define EASY_CVAR_SET_DEBUGONLY(CVarName, valueV)\
+		global_##CVarName = valueV;
+	#define EASY_CVAR_RESET_DEBUGONLY(CVarName)\
+		global_##CVarName = DEFAULT_##CVarName;
+#else
+	// CLIENT
+	#define EASY_CVAR_SET_DEBUGONLY(CVarName, valueV)\
+		global2_##CVarName = valueV;
+	#define EASY_CVAR_RESET_DEBUGONLY(CVarName)\
+		global2_##CVarName = DEFAULT_##CVarName;
 #endif
 
-
-
-//is that okay?  Implied only for the server (global_...).
-#define EASY_CVAR_SET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(CVarName, valueV)\
-	CVAR_SET_FLOAT(#CVarName, valueV);
-#define EASY_CVAR_SET_CLIENTONLY_DEBUGONLY(CVarName, valueV)\
-	CVAR_SET_FLOAT(#CVarName, valueV);
+#endif
 
 
 
@@ -253,6 +302,7 @@ Also, need to extern (all?) CVars in dlls/client.cpp.
 		CVAR_SET_FLOAT(#CVarName, DEFAULT_##CVarName);
 		
 
+	// no need, will be reset by broadcasts soon enough either way.
 	#ifdef _DEBUG
 		#define EASY_CVAR_RESET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(CVarName)\
 			DUMMY
@@ -275,7 +325,7 @@ Also, need to extern (all?) CVars in dlls/client.cpp.
 			CVAR_SET_FLOAT(#CVarName, DEFAULT_##CVarName);
 	#else
 		#define EASY_CVAR_RESET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(CVarName)\
-			global_##CVarName = DEFAULT_##CVarName
+			global_##CVarName = DEFAULT_##CVarName;
 	#endif
 		// Should this also force a message to the clients?
 		// Probably not, should already be handled soon by logic watching
@@ -411,49 +461,96 @@ Also, need to extern (all?) CVars in dlls/client.cpp.
 	DUMMY
 
 
-#ifdef CLIENT_DLL
+#ifndef CLIENT_DLL
+	// SERVER
 	#define EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST(CVarName)\
-		extern float global2_##CVarName;
+		extern float global_##CVarName;
 
 	#ifdef _DEBUG
+
+		#define EASY_CVAR_DECLARATION_SERVER_DEBUGONLY(CVarName)\
+			DUMMY
+		#define EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY(CVarName)\
+			DUMMY
+		#define EASY_CVAR_UPDATE_SERVER_DEBUGONLY(CVarName)\
+			DUMMY
+		#define EASY_CVAR_UPDATE_CLIENT_DEBUGONLY(CVarName)\
+			DUMMY
+
 		#define EASY_CVAR_EXTERN_DEBUGONLY(CVarName)\
 			DUMMY
 		#define EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(CVarName)\
-			extern float global2_##CVarName;
+			extern float global_##CVarName;
 		#define EASY_CVAR_EXTERN_CLIENTONLY_DEBUGONLY(CVarName)\
 			DUMMY
 		//client?  Refer to the cached variable
 	#else
-		#define EASY_CVAR_EXTERN_DEBUGONLY(CVarName)\
+		//RELEASE
+
+		#define EASY_CVAR_DECLARATION_SERVER_DEBUGONLY(CVarName)\
+			float global_##CVarName = DEFAULT_##CVarName;
+		#define EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY(CVarName)\
 			DUMMY
+		#define EASY_CVAR_UPDATE_SERVER_DEBUGONLY(CVarName)\
+			DUMMY
+		#define EASY_CVAR_UPDATE_CLIENT_DEBUGONLY(CVarName)\
+			DUMMY
+
+		#define EASY_CVAR_EXTERN_DEBUGONLY(CVarName)\
+			extern float global_##CVarName;
 		#define EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(CVarName)\
-			extern float global2_##CVarName;
+			extern float global_##CVarName;
 		#define EASY_CVAR_EXTERN_CLIENTONLY_DEBUGONLY(CVarName)\
-			extern float global2_##CVarName;
+			DUMMY
 	#endif
 #else
+	// CLIENT
 	#define EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST(CVarName)\
-		DUMMY
+		extern float global2_##CVarName;
 
 	#ifdef _DEBUG
+
+		#define EASY_CVAR_DECLARATION_SERVER_DEBUGONLY(CVarName)\
+			DUMMY
+		#define EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY(CVarName)\
+			DUMMY
+		#define EASY_CVAR_UPDATE_SERVER_DEBUGONLY(CVarName)\
+			DUMMY
+		#define EASY_CVAR_UPDATE_CLIENT_DEBUGONLY(CVarName)\
+			DUMMY
+
 		#define EASY_CVAR_EXTERN_DEBUGONLY(CVarName)\
 			DUMMY
 		#define EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(CVarName)\
-			DUMMY
+			extern float global2_##CVarName;
 		#define EASY_CVAR_EXTERN_CLIENTONLY_DEBUGONLY(CVarName)\
 			DUMMY
 	#else
-		#define EASY_CVAR_EXTERN_DEBUGONLY(CVarName)\
-			extern float global_##CVarName;
-		#define EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(CVarName)\
-			extern float global_##CVarName;
-		#define EASY_CVAR_EXTERN_CLIENTONLY_DEBUGONLY(CVarName)\
+		//RELEASE
+		#define EASY_CVAR_DECLARATION_SERVER_DEBUGONLY(CVarName)\
 			DUMMY
+		#define EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY(CVarName)\
+			float global2_##CVarName = DEFAULT_##CVarName;
+		#define EASY_CVAR_UPDATE_SERVER_DEBUGONLY(CVarName)\
+			DUMMY
+		#define EASY_CVAR_UPDATE_CLIENT_DEBUGONLY(CVarName)\
+			DUMMY
+
+		#define EASY_CVAR_EXTERN_DEBUGONLY(CVarName)\
+			extern float global2_##CVarName;
+		#define EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(CVarName)\
+			extern float global2_##CVarName;
+		#define EASY_CVAR_EXTERN_CLIENTONLY_DEBUGONLY(CVarName)\
+			extern float global2_##CVarName;
 		
 	#endif
 
 
 #endif
+
+
+
+
 
 
 
@@ -493,11 +590,11 @@ Also, need to extern (all?) CVars in dlls/client.cpp.
 #else
 //RELEASE
 #define CALL_EASY_CVAR_CREATE_CLIENT_DEBUGONLY(CVarName, flags)\
-		CALL_EASY_CVAR_CREATE_CLIENT(CVarName, flags)
+		DUMMY
 #define EASY_CVAR_CREATE_CLIENT_CLIENTONLY_DEBUGONLY(CVarName)\
-		CALL_EASY_CVAR_CREATE_CLIENT(CVarName, 0);
+		DUMMY
 #define EASY_CVAR_CREATE_CLIENT_A_CLIENTONLY_DEBUGONLY(CVarName)\
-		CALL_EASY_CVAR_CREATE_CLIENT(CVarName, FCVAR_ARCHIVE);
+		DUMMY
 
 
 #endif
@@ -544,9 +641,9 @@ Also, need to extern (all?) CVars in dlls/client.cpp.
 
 
 #define EASY_CVAR_CREATE_SERVER_CLIENTONLY(CVarName)\
-	DUMMY;
+	DUMMY
 #define EASY_CVAR_CREATE_SERVER_A_CLIENTONLY(CVarName)\
-	DUMMY;
+	DUMMY
 
 #define EASY_CVAR_CREATE_SERVER_SERVERONLY(CVarName)\
 	CALL_EASY_CVAR_CREATE_SERVER(CVarName, 0);
@@ -557,9 +654,9 @@ Also, need to extern (all?) CVars in dlls/client.cpp.
 
 
 #define EASY_CVAR_CREATE_SERVER_SETUP_CLIENTONLY(CVarName)\
-		DUMMY;
+		DUMMY
 #define EASY_CVAR_CREATE_SERVER_SETUP_A_CLIENTONLY(CVarName)\
-		DUMMY;
+		DUMMY
 #define EASY_CVAR_CREATE_SERVER_SETUP_SERVERONLY(CVarName)\
 		CALL_EASY_CVAR_CREATE_SERVER_SETUP(CVarName, 0);
 #define EASY_CVAR_CREATE_SERVER_SETUP_A_SERVERONLY(CVarName)\
@@ -570,11 +667,10 @@ Also, need to extern (all?) CVars in dlls/client.cpp.
 #ifdef _DEBUG
 	#define CALL_EASY_CVAR_CREATE_SERVER_DEBUGONLY(CVarName, argFlags)\
 			CALL_EASY_CVAR_CREATE_SERVER(CVarName, argFlags)
-
 	#define EASY_CVAR_CREATE_SERVER_CLIENTONLY_DEBUGONLY(CVarName)\
-			DUMMY;
+			DUMMY
 	#define EASY_CVAR_CREATE_SERVER_A_CLIENTONLY_DEBUGONLY(CVarName)\
-			DUMMY;
+			DUMMY
 	#define EASY_CVAR_CREATE_SERVER_SERVERONLY_DEBUGONLY(CVarName)\
 			CALL_EASY_CVAR_CREATE_SERVER_DEBUGONLY(CVarName, 0);
 	#define EASY_CVAR_CREATE_SERVER_A_SERVERONLY_DEBUGONLY(CVarName)\
@@ -584,9 +680,9 @@ Also, need to extern (all?) CVars in dlls/client.cpp.
 	#define CALL_EASY_CVAR_CREATE_SERVER_SETUP_DEBUGONLY(CVarName, argFlags)\
 			CALL_EASY_CVAR_CREATE_SERVER_SETUP(CVarName, argFlags)
 	#define EASY_CVAR_CREATE_SERVER_SETUP_CLIENTONLY_DEBUGONLY(CVarName)\
-			DUMMY;
+			DUMMY
 	#define EASY_CVAR_CREATE_SERVER_SETUP_A_CLIENTONLY_DEBUGONLY(CVarName)\
-			DUMMY;
+			DUMMY
 	#define EASY_CVAR_CREATE_SERVER_SETUP_SERVERONLY_DEBUGONLY(CVarName)\
 		CALL_EASY_CVAR_CREATE_SERVER_SETUP_DEBUGONLY(CVarName, 0);
 	#define EASY_CVAR_CREATE_SERVER_SETUP_A_SERVERONLY_DEBUGONLY(CVarName)\
@@ -596,36 +692,29 @@ Also, need to extern (all?) CVars in dlls/client.cpp.
 #else
 //RELEASE
 	#define CALL_EASY_CVAR_CREATE_SERVER_DEBUGONLY(CVarName, argFlags)\
-			CALL_EASY_CVAR_CREATE_SERVER(CVarName, argFlags)
-
+		DUMMY
 	#define EASY_CVAR_CREATE_SERVER_CLIENTONLY_DEBUGONLY(CVarName)\
-			DUMMY;
+		DUMMY
 	#define EASY_CVAR_CREATE_SERVER_A_CLIENTONLY_DEBUGONLY(CVarName)\
-			DUMMY;
+		DUMMY
 	#define EASY_CVAR_CREATE_SERVER_SERVERONLY_DEBUGONLY(CVarName)\
-			CALL_EASY_CVAR_CREATE_SERVER_DEBUGONLY(CVarName, 0);
+		DUMMY
 	#define EASY_CVAR_CREATE_SERVER_A_SERVERONLY_DEBUGONLY(CVarName)\
-			CALL_EASY_CVAR_CREATE_SERVER_DEBUGONLY(CVarName, FCVAR_ARCHIVE);
+		DUMMY
 
 
 	#define CALL_EASY_CVAR_CREATE_SERVER_SETUP_DEBUGONLY(CVarName, argFlags)\
-			CALL_EASY_CVAR_CREATE_SERVER_SETUP(CVarName, argFlags)
+		DUMMY
 	#define EASY_CVAR_CREATE_SERVER_SETUP_CLIENTONLY_DEBUGONLY(CVarName)\
-			DUMMY;
+		DUMMY
 	#define EASY_CVAR_CREATE_SERVER_SETUP_A_CLIENTONLY_DEBUGONLY(CVarName)\
-			DUMMY;
+		DUMMY
 	#define EASY_CVAR_CREATE_SERVER_SETUP_SERVERONLY_DEBUGONLY(CVarName)\
-		CALL_EASY_CVAR_CREATE_SERVER_SETUP_DEBUGONLY(CVarName, 0);
+		DUMMY
 	#define EASY_CVAR_CREATE_SERVER_SETUP_A_SERVERONLY_DEBUGONLY(CVarName)\
-		CALL_EASY_CVAR_CREATE_SERVER_SETUP_DEBUGONLY(CVarName, FCVAR_ARCHIVE);
+		DUMMY
 
 #endif
-
-
-
-
-
-
 
 
 
@@ -694,57 +783,6 @@ Also, need to extern (all?) CVars in dlls/client.cpp.
 
 
 
-#ifdef _DEBUG
-	#define EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY(CVarName)\
-		DUMMY
-
-#else
-//RELEASE
-	#define EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY(CVarName)\
-		DUMMY
-
-#endif
-
-
-#ifdef _DEBUG
-	#define EASY_CVAR_UPDATE_CLIENT_DEBUGONLY(CVarName)\
-		DUMMY
-
-#else
-//RELEASE
-	#define EASY_CVAR_UPDATE_CLIENT_DEBUGONLY(CVarName)\
-		DUMMY
-
-#endif
-
-
-
-#ifdef _DEBUG
-	#define EASY_CVAR_DECLARATION_SERVER_DEBUGONLY(CVarName)\
-		DUMMY
-
-#else
-//RELEASE
-	#define EASY_CVAR_DECLARATION_SERVER_DEBUGONLY(CVarName)\
-		float global_##CVarName = -1;
-
-#endif
-
-
-
-#ifdef _DEBUG
-	#define EASY_CVAR_UPDATE_SERVER_DEBUGONLY(CVarName)\
-		DUMMY
-
-#else
-//RELEASE
-	#define EASY_CVAR_UPDATE_SERVER_DEBUGONLY(CVarName)\
-		DUMMY
-
-#endif
-
-
-
 
 
 
@@ -760,8 +798,7 @@ Also, need to extern (all?) CVars in dlls/client.cpp.
 
 
 
-
-//!!! DUMMY TEST!!!!
+// TODO TODO TODO THEN
 
 #define EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(CVarName, CVarNameLower)
 #define EASY_CVAR_HIDDEN_ACCESS_CLIENTSENDOFF_BROADCAST_DEBUGONLY(CVarName, CVarNameLower, ID)
@@ -1079,13 +1116,6 @@ if(EASY_CVAR_GET(requirementName) == 1){\
 //COMPILE COMPATABILITY: is a blank #define like this okay?
 #define DUMMY
 
-
-
-//some info needed first like the size of the array.
-#include "cvar_custom_info.h"
-
-//The CVar calls themselves. Not to be edited by hand by the faint of heart. Or by anyone really.
-#include "cvar_custom_list.h"
 
 
 

@@ -20,13 +20,15 @@
 #include "util_debugdraw.h"
 #include "util_version.h"
 
+#include "cvar_custom_info.h"
+#include "cvar_custom_list.h"
 
 
 EASY_CVAR_CREATE_SERVER_SETUP_MASS
 
 
 EASY_CVAR_EXTERN(hiddenMemPrintout)
-EASY_CVAR_EXTERN(emergencyFix)
+EASY_CVAR_EXTERN_DEBUGONLY(emergencyFix)
 EASY_CVAR_EXTERN(soundSentenceSave)
 
 
@@ -861,11 +863,11 @@ void GameDLLInit( void )
 	if (EASY_CVAR_GET(soundSentenceSave) == -1) {
 
 		//global_soundSentenceSave = (int)EASY_CVAR_GET(soundSentenceSave);
-		EASY_CVAR_SET_DEBUGONLY(soundSentenceSave, EASY_CVAR_GET(soundSentenceSave));
+		EASY_CVAR_SET(soundSentenceSave, EASY_CVAR_GET(soundSentenceSave));
 
 	}
 	//MODDD -.
-	if (EASY_CVAR_GET(emergencyFix) == 1) {
+	if (EASY_CVAR_GET_DEBUGONLY(emergencyFix) == 1) {
 		//MODDD - TODO - is it a good idea to EASY_CVAR_SET_DEBUGONLY this??
 		//global_emergencyFix = 0;
 		//"gets the point across"

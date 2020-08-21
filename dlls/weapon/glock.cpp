@@ -35,6 +35,7 @@ EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST(wpn_glocksilencer)
 //EASY_CVAR_EXTERN(testVar)
 
 
+extern float global2_wpn_glocksilencer;
 
 
 

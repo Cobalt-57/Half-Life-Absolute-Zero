@@ -3265,8 +3265,8 @@ void PM_LadderMove( physent_t *pLadder )
 				VectorScale( vpn, forward, velocity );
 				VectorMA( velocity, right, v_right, velocity );
 
-				easyForcePrintLine("ang:%.2f %.2f %.2f for:%.2f %.2f %.2f", pmove->angles[0], pmove->angles[1], pmove->angles[2], vpn[0], vpn[1], vpn[2]);
-				easyForcePrintLine("earlyvel:%.2f %.2f %.2f", velocity[0], velocity[1], velocity[2]);
+				//easyForcePrintLine("ang:%.2f %.2f %.2f for:%.2f %.2f %.2f", pmove->angles[0], pmove->angles[1], pmove->angles[2], vpn[0], vpn[1], vpn[2]);
+				//easyForcePrintLine("earlyvel:%.2f %.2f %.2f", velocity[0], velocity[1], velocity[2]);
 
 				
 				// Perpendicular in the ladder plane
@@ -3327,7 +3327,7 @@ void PM_LadderMove( physent_t *pLadder )
 				
 
 				//////////////////////////////////////////////////////////////////////////////////////////////////////
-				//MODDD - change, origina lway.
+				//MODDD - change, original way.
 				//!!!  VITAL APPLY
 				//VectorMA( lateral, -normal, tmp, pmove->velocity );
 

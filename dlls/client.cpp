@@ -51,6 +51,11 @@
 #include "talkmonster.h"
 #include "util_version.h"
 
+
+#include "cvar_custom_info.h"
+#include "cvar_custom_list.h"
+
+
 //MODDD
 extern float cheat_barnacleEatsEverything;
 extern float globalPSEUDO_cameraMode;

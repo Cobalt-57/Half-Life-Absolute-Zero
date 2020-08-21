@@ -41,6 +41,9 @@
 // monster.
 #include "defaultai.h"
 
+#include "cvar_custom_info.h"
+
+
 EASY_CVAR_EXTERN(myStrobe)
 EASY_CVAR_EXTERN(raveEffectSpawnInterval)
 EASY_CVAR_EXTERN(sv_germancensorship)
@@ -50,7 +53,7 @@ EASY_CVAR_EXTERN(drawDebugBloodTrace)
 EASY_CVAR_EXTERN(autoSneaky)
 EASY_CVAR_EXTERN(sv_longjump_chargemode)
 EASY_CVAR_EXTERN(endlessFlashlightBattery)
-EASY_CVAR_EXTERN(normalSpeedMulti)
+EASY_CVAR_EXTERN_DEBUGONLY(normalSpeedMulti)
 EASY_CVAR_EXTERN(noclipSpeedMulti)
 EASY_CVAR_EXTERN(jumpForceMulti)
 EASY_CVAR_EXTERN(timedDamageEndlessOnHard)
@@ -8539,12 +8542,12 @@ void CBasePlayer :: UpdateClientData( void )
 		}
 	}
 	
-	if(normalSpeedMultiMem != EASY_CVAR_GET(normalSpeedMulti) ){
-		normalSpeedMultiMem = EASY_CVAR_GET(normalSpeedMulti);
+	if(normalSpeedMultiMem != EASY_CVAR_GET_DEBUGONLY(normalSpeedMulti) ){
+		normalSpeedMultiMem = EASY_CVAR_GET_DEBUGONLY(normalSpeedMulti);
 		//keep this CVar in sync with pm_shared...
 		if(normalSpeedMultiMem != 0){
 			char buffer[13];
-			tryFloatToStringBuffer(buffer, EASY_CVAR_GET(normalSpeedMulti) );
+			tryFloatToStringBuffer(buffer, EASY_CVAR_GET_DEBUGONLY(normalSpeedMulti) );
 			g_engfuncs.pfnSetPhysicsKeyValue( edict(), "nsm", buffer );
 		}else{
 			g_engfuncs.pfnSetPhysicsKeyValue( edict(), "nsm", "0" );

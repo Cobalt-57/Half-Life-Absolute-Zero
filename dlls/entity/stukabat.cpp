@@ -1056,7 +1056,6 @@ void CStukaBat :: CallForHelp( char *szClassname, float flDist, EHANDLE hEnemy, 
 			{
 				pMonster->m_afMemory |= bits_MEMORY_PROVOKED;
 				pMonster->PushEnemy( hEnemy, vecLocation );
-				//EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyPrintLine("IM A jolly fellow!!!! %s", STRING(pev->classname) ) );
 				if(FClassnameIs(pMonster->pev, "monster_stukabat")){
 					//???
 					//CStukaBat* tempStuka = (CStukaBat*)(pMonster);

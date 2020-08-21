@@ -46,6 +46,7 @@
 #include "weapons.h"
 #include "util_version.h"
 
+#include "cvar_custom_list.h"
 
 //MODDD - includes for file-related things moved to external_lib_include.h
 EASY_CVAR_EXTERN_CLIENTONLY(cl_hornetspiral)
