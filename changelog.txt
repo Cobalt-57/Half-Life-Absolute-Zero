@@ -362,13 +362,14 @@ General viewmodel fix for slight duplication of events restored (two shotgun she
 Hornet gun animation-less firing happens much less often.
 
 Squad "alert friends of enemy" behavior restored.
+Slight AI reorganization, test around.
 
 Movement up/down fast moving platforms will have less extrme shifts in view compared to where the player actually is.
 
 CVar weaponSelectSoundPlayOnMousewheel renamed to hud_moveselect_mousewheelsound.
 CVar weaponSelectUsesReloadSounds renamed to hud_moveselect_sound.  Now 0, 1, or 2 instead of 0 or 1   (and is now 1 by default for the same behavior).
 
-Spamming 'use' on NPC's no longer starts sentences every time, cooldown of about 2 seconds between use-related sentences.  Underlying logic still happens.
+Spamming 'use' on NPC's no longer starts sentences every time, cooldown of about 2 seconds between use-related sentences.  Underlying logic otherwise, if any (pre-disaster spam annoyance or following/unfollowing) still happens.
 
 Downward-incline smoothness slightly further improved.
 
@@ -380,12 +381,17 @@ Going up/down fast-moving platforms no longer causes the interp-smoothness to aw
 
 Friendly sounds, uh, work.
 
-CVars that previously couldn't be saved now can be (must quit from quitting normally ingame, not hitting the 'x' on a window or forcing the game to close in an unusual way, although this was always the case for any CVar saving).
--These CVars may also be set before a game begins.
-
 Going up ladders while looking partially upward is no longer faster than while looking all the way upward (bypassed intended ladder speed).  Base ladder speed boosted to compensate.
 
 Metal-hit sounds for metal NPCs (mainly sentries) changed.  Instead of player/pl_metal sounds, using debris/metal1 through 6.
 
 Hornet hit-sound volumes reduced on hitting non-organic enemies or breakables, more of the material sound shows through.
+
+CVars that previously couldn't be saved now can be (must quit from quitting normally ingame, not hitting the 'x' on a window or forcing the game to close in an unusual way, although this was always the case for any CVar saving).
+-These CVars may also be set before a game begins.
+
+This build and future builds will now be in 'release' mode.  Go figure!
+CVars marked 'debugonly' will not show up in console autocomplete but can still be edited and set in the same way, case insensitive.
+
+Kingpins no longer spam close-range shock blast attacks when close.  They will move in for melee during a cooldown.
 

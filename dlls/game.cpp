@@ -819,6 +819,7 @@ void GameDLLInit( void )
 
 
 	if (IS_DEDICATED_SERVER()) {
+		// just a test
 		CVAR_REGISTER(&pregame_server_cvar);
 
 		EASY_CVAR_CREATE_SERVER_MASS

@@ -528,24 +528,16 @@ IMPLEMENT_MESSAGE(UpdClientC){
 
 
 IMPLEMENT_MESSAGE(RstClientC){
-	// wait.  Shouldn't have to do this.
-	// Already handled by resetModCVarsClintOnly.
-	// Unfortunately that's not happening yet, see below.
-	// DEBUG mode needs this at least?
-	
-#ifdef _DEBUG
 
 	EASY_CVAR_SET(hud_logo, DEFAULT_hud_logo);
 	EASY_CVAR_SET(cl_fvox, DEFAULT_cl_fvox);
 	EASY_CVAR_SET(cl_holster, DEFAULT_cl_holster);
 	EASY_CVAR_SET(cl_breakholster, DEFAULT_cl_breakholster);
 	EASY_CVAR_SET(cl_ladder, DEFAULT_cl_ladder);
-	
-	
-#else
-	resetModCVarsClientOnly();
-#endif
 
+	// still needed.
+	resetModCVarsClientOnly();
+	
 	return 1;
 }//END OF MsgFunc_RstClientC
 

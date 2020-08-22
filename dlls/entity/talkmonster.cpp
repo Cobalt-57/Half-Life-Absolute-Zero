@@ -1436,7 +1436,7 @@ void CTalkMonster :: Touch( CBaseEntity *pOther )
 		float speed = fabs(pOther->pev->velocity.x) + fabs(pOther->pev->velocity.y);
 		if ( speed > 50 )
 		{
-			SetConditions( bits_COND_CLIENT_PUSH );
+			SetNextFrameConditions( bits_COND_CLIENT_PUSH );
 			MakeIdealYaw( pOther->pev->origin );
 		}
 	}

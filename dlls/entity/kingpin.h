@@ -31,7 +31,6 @@ public:
 	static const char* pPainSounds[];
 	static const char* pAttackSounds[];
 
-	//NEW!!!
 	static const char* pElectricBarrageHitSounds[];
 	static const char* pElectricBarrageFireSounds[];
 	static const char* pElectricBarrageEndSounds[];
@@ -44,7 +43,7 @@ public:
 
 
 	
-	//save info
+	// save info
 	//////////////////////////////////////////////////////////////////////////////////
 	static TYPEDESCRIPTION m_SaveData[];
 	virtual int Save( CSave &save ); 
@@ -53,7 +52,10 @@ public:
 	void PostRestore();
 
 
-	//nah, don't keep track of this.
+	int m_voicePitch;
+	int m_iSpriteTexture;
+
+	// nah, don't keep track of this.
 	//CBaseMonster* aryPoweredupCommandList[10];
 	
 	float powerUpNearbyMonstersCooldown;
@@ -62,18 +64,17 @@ public:
 	float forgetRecentInflictingMonsterCooldown;
 	EHANDLE recentInflictingMonster;
 
-	int m_voicePitch;
 	
-	//thanks islave.
+	// thanks islave.
 	CBeam* m_pBeam[KINGPIN_MAX_BEAMS];
 	int m_iBeams;  //this is the soft max, or how many beams there are currently.
-	//Can also be thought of as what ID is empty and next in line for making a beam of.
-	//We're going to allow it to wrap around back to 0 if it reaches the hard max, KINGPIN_MAX_BEAMS. The max itself is not an available index.
-	//example: a KINGPIN_MAX_BEAMS of 6 allows indexes 0 through 5 but not 6.  So if m_iBeams reaches 6, reset it to 0 to start from the beginning.
-	//         Won't cause an issue unless a beam is already in that place, but they expire fast.
+	// Can also be thought of as what ID is empty and next in line for making a beam of.
+	// We're going to allow it to wrap around back to 0 if it reaches the hard max, KINGPIN_MAX_BEAMS. The max itself is not an available index.
+	// example: a KINGPIN_MAX_BEAMS of 6 allows indexes 0 through 5 but not 6.  So if m_iBeams reaches 6, reset it to 0 to start from the beginning.
+	//     Won't cause an issue unless a beam is already in that place, but they expire fast.
 
-	//And this is new. At what time should a beam expire?  Needed since they don't remove themselves automatically.
-	//ISlave's never did, they are manually cleared by "ClearBeams" each time there.
+	// And this is new. At what time should a beam expire?  Needed since they don't remove themselves automatically.
+	// ISlave's never did, they are manually cleared by "ClearBeams" each time there.
 	float m_flBeamExpireTime[KINGPIN_MAX_BEAMS];
 	
 	CSprite* chargeEffect;
@@ -101,9 +102,8 @@ public:
 
 
 	float accumulatedDamageTaken;
-
-
-	int m_iSpriteTexture;
+	float shockerCooldown;
+	BOOL blockAttackShockerCooldown;
 
 	BOOL enemyNullTimeSet;
 
@@ -194,12 +194,11 @@ public:
 	
 	void SetObjectCollisionBox( void ){
 		if(pev->deadflag != DEAD_NO){
-			//no need to do anything special anymore I think.
+			// no need to do anything special anymore I think.
 			//CBaseMonster::SetObjectCollisionBox();
 			pev->absmin = pev->origin + Vector(-64, -64, 0);
 			pev->absmax = pev->origin + Vector(64, 64, 60);
 		}else{
-			// = DEAD_NO
 			pev->absmin = pev->origin + Vector(-32, -32, 0);
 			pev->absmax = pev->origin + Vector(32, 32, 110);
 		}

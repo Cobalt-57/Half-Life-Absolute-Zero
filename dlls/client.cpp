@@ -138,9 +138,11 @@ float sp_previousFrameTime;
 BOOL sp_playerCanPreThink = FALSE;
 BOOL sp_playerCanPostThink = FALSE;
 
-
 BOOL g_alreadyShownGameloadedMessage = FALSE;
-BOOL g_firstPlayerEntered = FALSE;
+
+
+
+extern BOOL g_firstPlayerEntered;
 // For the whole server.  Linked to the previous time 'StartFrame' was called.
 float g_previousFrameTime;
 
@@ -5599,6 +5601,21 @@ void StartFrame( void )
 			easyPrintLine("!!!Called for CVar updates with a map loaded for the first time, frame:%lu", g_ulFrameCount);
 		}
 		updateCVarRefs(FALSE);
+
+
+		if (gpGlobals->time >= DebugLine_drawTime) {
+			//::debugLine_setup(1, 
+			//::debugLine_setupFract(0, 118, 759, 38, 118, 759, 600, fabs(sin(gpGlobals->time*0.8)) );
+			DebugLine_RenderAll();
+			//::UTIL_drawLineFrame(118.48, 759.76, 37.03, 500, 500, 500, 12, 255, 0, 0);
+			DebugLine_drawTime = gpGlobals->time + 0.09;
+
+			// draws the old debug stuff the old way for compatability.  Not from retail.
+			// See lower portions of util_debugdraw.cpp
+			drawOldDebugStuff();
+		}//DebugLine_drawTime check
+
+
 	}
 	else {
 		// This printout has no point if this is a dedicated server.  There will likely be good
@@ -5615,21 +5632,33 @@ void StartFrame( void )
 		g_pGameRules->Think();
 
 
-
 	// NOTICE - StartFrame can't detect whether the game is paused in real time.
 	// It is not called when the game is paused (console or menu up in singleplayer).
 	// Not worth checking here.
 
 
-
-
-	if (gpGlobals->time >= DebugLine_drawTime) {
-		//::debugLine_setup(1, 
-		//::debugLine_setupFract(0, 118, 759, 38, 118, 759, 600, fabs(sin(gpGlobals->time*0.8)) );
-		DebugLine_RenderAll();
-		//::UTIL_drawLineFrame(118.48, 759.76, 37.03, 500, 500, 500, 12, 255, 0, 0);
-		DebugLine_drawTime = gpGlobals->time + 0.09;
+	/*
+	// EARLY TEST.
+	// Causes a crash in release mode on creating a multiplayer server.
+	// Errrrr.   okay?  Wait until the map has loaded and the first client connected and this is ok.
+	edict_t* thePlayerEd = g_engfuncs.pfnPEntityOfEntIndex(1);
+	CBasePlayer* tempplayer;
+	if (thePlayerEd != NULL) {
+		if (FNullEnt(thePlayerEd) || thePlayerEd->free) {
+			easyForcePrintLine("oh dear too early of access %d %d", FNullEnt(thePlayerEd), thePlayerEd->free);
+		}
+		else {
+			tempplayer = GetClassPtr((CBasePlayer*)&thePlayerEd->v);
+		}
 	}
+	else {
+		// ??????
+		tempplayer = NULL;
+	}
+	*/
+
+
+
 
 
 	/*
@@ -5643,10 +5672,6 @@ void StartFrame( void )
 		nextBloodGen = gpGlobals->time + 0.08;
 	}
 	*/
-
-	// draws the old debug stuff the old way for compatability.  Not from retail.
-	// See lower portions of util_debugdraw.cpp
-	drawOldDebugStuff();
 
 
 

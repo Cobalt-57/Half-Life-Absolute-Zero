@@ -313,8 +313,6 @@ float EV_HLDM_PlayTextureSound(int idx, pmtrace_t* ptr, float* vecSrc, float* ve
 
 				fvolbar = 0.45;
 				return fvolbar;  //and done.
-
-
 			}else {
 				// hit body
 				chTextureType = CHAR_TEX_FLESH;

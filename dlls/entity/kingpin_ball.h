@@ -51,6 +51,9 @@ public:
 
 
 
+	GENERATE_KILLED_PROTOTYPE
+
+
 };
 
 

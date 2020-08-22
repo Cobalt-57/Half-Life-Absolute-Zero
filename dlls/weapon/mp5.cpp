@@ -331,7 +331,7 @@ void CMP5::SecondaryAttack( void )
 	//MODDD - slightly more delay between mp5 grenade firing
 	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelay) == 0){
 		m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 0.8;
-		m_flNextSecondaryAttack = UTIL_WeaponTimeBase() + 1 + 0.2;
+		m_flNextSecondaryAttack = UTIL_WeaponTimeBase() + 1 + 0.05;
 	}else{
 		m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelaycustom);
 		m_flNextSecondaryAttack = UTIL_WeaponTimeBase() + EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelaycustom);

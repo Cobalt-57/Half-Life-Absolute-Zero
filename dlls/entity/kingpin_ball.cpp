@@ -26,7 +26,12 @@ void CKingpinBall :: Spawn( void ){
 
 	CControllerHeadBall::Spawn();
 
-	
+
+	UTIL_SetSize(pev, Vector(-8, -8, -8), Vector(8, 8, 8));
+
+	pev->takedamage = DAMAGE_AIM;
+	pev->health = 10;
+
 	//MODDD - in any case do these instead.
 	//SetThink( &CKingpinBall::HuntThink );
 	SetTouch( &CKingpinBall::BounceTouch );
@@ -38,7 +43,6 @@ void CKingpinBall :: Spawn( void ){
 
 	if(map_anyAirNodes){
 		//Use a different type of think to mimic 
-		
 		if(m_hEnemy != NULL){
 			//this once.
 			m_vecEnemyLKP = m_hEnemy->pev->origin;
@@ -389,7 +393,7 @@ int CKingpinBall::CheckLocalMove( const Vector& vecStart, const Vector& vecEnd, 
 	//UTIL_TraceHull( vecStart + Vector( 0, 0, 32 ), vecEnd + Vector( 0, 0, 32 ), dont_ignore_monsters, large_hull, edict(), &tr );
 
 	//MODDD - large_hull is probably the safest for flyers in general.  point_hull if using the bounce system. or maybe head_hull?
-	UTIL_TraceHull( vecStartTrace, vecEnd + Vector( 0, 0, 0), dont_ignore_monsters, point_hull, edict(), &tr );
+	UTIL_TraceHull( vecStartTrace, vecEnd + Vector( 0, 0, 0), dont_ignore_monsters, head_hull, edict(), &tr );
 	
 	// ALERT( at_console, "%.0f %.0f %.0f : ", vecStart.x, vecStart.y, vecStart.z );
 	// ALERT( at_console, "%.0f %.0f %.0f\n", vecEnd.x, vecEnd.y, vecEnd.z );
@@ -449,4 +453,12 @@ float CKingpinBall::getFadeOutAmount(void){
 	return 2.6;
 }
 
+
+
+
+
+GENERATE_KILLED_IMPLEMENTATION(CKingpinBall) {
+
+	UTIL_Remove(this);
+}
 

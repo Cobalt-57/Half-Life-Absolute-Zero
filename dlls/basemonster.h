@@ -310,9 +310,9 @@ class CBaseMonster : public CBaseToggle
 private:
 	int m_afConditions;
 
-	//MODDD - new, for the m_afConditionsFrame instead. This var is similar to m_afConditions but retains conditions throughout one frame of gamelogic.
-	//        That is, schedule changes don't reset this. But the starting "RunTask" call in monsterstate.cpp "MaintainSchedule" resets this.
-	int m_afConditionsFrame;
+	//MODDD - for being set by methods that often occur after ai has been run this frame (like touch methods, or even during schedules).
+	// Set at the start of the next frame and cleared.
+	int m_afConditionsNextFrame;
 
 public:
 	typedef enum
@@ -917,35 +917,59 @@ public:
 
 
 
-	//MODDD - any calls to set / clear conditions now also apply to m_afConditionsFrame. It is reset per frame instead of per schedule change.
 	inline void SetConditions( int iConditions ) {
 		m_afConditions |= iConditions;
-		m_afConditionsFrame |= iConditions;
+		m_afConditionsNextFrame |= iConditions;
+	}
+	inline void SetNextFrameConditions(int iConditions) {
+		m_afConditions |= iConditions;
+		m_afConditionsNextFrame |= iConditions;
 	}
 	inline void ClearConditions( int iConditions ) {
 		m_afConditions &= ~iConditions;
-		m_afConditionsFrame &= ~iConditions;
+		m_afConditionsNextFrame &= ~iConditions;
+		// include m_afConditionsNextFrame, yes or no ?
+	}
+	inline void ClearConditions_ThisFrame(int iConditions) {
+		m_afConditions &= ~iConditions;
+	}
+	inline void ClearConditions_NextFrame(int iConditions) {
+		m_afConditionsNextFrame &= ~iConditions;
 	}
 
-	//MODDD!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-	// DANGEROUS TEST.  Was m_afConditions.
-	inline BOOL HasConditions( int iConditions ) { if (m_afConditionsFrame & iConditions ) return TRUE; return FALSE; }
-	inline BOOL HasAllConditions( int iConditions ) { if ( (m_afConditionsFrame & iConditions) == iConditions ) return TRUE; return FALSE; }
 
-	//MODDD - new
-	inline BOOL HasConditionsFrame( int iConditions ) { if ( m_afConditionsFrame & iConditions ) return TRUE; return FALSE; }
-	inline BOOL HasAllConditionsFrame( int iConditions ) { if ( (m_afConditionsFrame & iConditions) == iConditions ) return TRUE; return FALSE; }
+	inline BOOL HasConditions( int iConditions ) { if (m_afConditions & iConditions ) return TRUE; return FALSE; }
+	inline BOOL HasAllConditions( int iConditions ) { if ( (m_afConditions & iConditions) == iConditions ) return TRUE; return FALSE; }
+
+	inline BOOL HasConditions_NextFrame(int iConditions) { if (m_afConditionsNextFrame & iConditions) return TRUE; return FALSE; }
+	inline BOOL HasAllConditions_NextFrame(int iConditions) { if ((m_afConditionsNextFrame & iConditions) == iConditions) return TRUE; return FALSE; }
+
+	
+	inline BOOL HasConditionsEither(int iConditions) { if ((m_afConditions & iConditions) || (m_afConditionsNextFrame & iConditions) ) return TRUE; return FALSE; }
+	inline BOOL HasAllConditionsEither(int iConditions) { if ((m_afConditions & iConditions) == iConditions || (m_afConditionsNextFrame & iConditions) == iConditions) return TRUE; return FALSE; }
+
 
 	// For easier breakpoints.
-	inline void clearAllConditions_NonFrame(void) {
+	inline void ClearAllConditions(void) {
+		m_afConditions = 0;
+		m_afConditionsNextFrame = 0;
+	}
+	inline void ClearAllConditions_ThisFrame(void) {
 		m_afConditions = 0;
 	}
-	inline void clearAllConditions_Frame(void) {
-		m_afConditionsFrame = 0;
+	inline void ClearAllConditions_NextFrame(void) {
+		m_afConditionsNextFrame = 0;
 	}
-	inline void clearAllConditions(void){
-		m_afConditions = 0;
-		m_afConditionsFrame = 0;
+
+	inline void ClearAllConditionsExcept(int iConditions) {
+		m_afConditions &= iConditions;
+		m_afConditionsNextFrame &= iConditions;
+	}
+	inline void ClearAllConditionsExcept_ThisFrame(int iConditions) {
+		m_afConditions &= iConditions;
+	}
+	inline void ClearAllConditionsExcept_NextFrame(int iConditions) {
+		m_afConditionsNextFrame &= iConditions;
 	}
 
 

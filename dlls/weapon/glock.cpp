@@ -899,6 +899,7 @@ void CGlock::ItemPostFrame(){
 //MODDD - Secondary fire removed altogether.  Can only apply the silencer when right-clicking.
 void CGlock::SecondaryAttack( void )
 {
+
 	//no silencer available?  we're doing retail's rapid-fire then.
 	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST(wpn_glocksilencer) == 0){
 		if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelay) == 0){

@@ -427,8 +427,17 @@ void drawOldDebugStuff(void) {
 	edict_t* thePlayerEd = g_engfuncs.pfnPEntityOfEntIndex(1);
 	CBasePlayer* tempplayer;
 
-	if (thePlayerEd != NULL) {
-		tempplayer = GetClassPtr((CBasePlayer*)&thePlayerEd->v);
+	if (!FNullEnt(thePlayerEd) && !thePlayerEd->free) {
+
+		//entvars_t* someEntvarsTest = &thePlayerEd->v;
+		//tempplayer = GetClassPtr((CBasePlayer*)someEntvarsTest);
+
+		// how about this instead
+		CBaseEntity* entTest = CBaseEntity::Instance(thePlayerEd);
+		if (entTest != NULL) {
+			tempplayer = static_cast<CBasePlayer*>(entTest);
+		}
+
 	}
 	else {
 		// ??????

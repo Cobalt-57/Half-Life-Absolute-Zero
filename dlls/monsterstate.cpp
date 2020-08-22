@@ -93,15 +93,15 @@ void CBaseMonster :: RunAI ( void )
 
 
 	//these conditions are reset each frame for safety now that schedules rememeber conditions after being set.
-	//this->m_afConditions &= ~(bits_COND_NEW_ENEMY);
+	//ClearConditions(bits_COND_NEW_ENEMY);
 	
 
 	//MODDD TODO - this might still be flimsy? and why don't bits_COND_LIGHT_DAMAGE and HEAVY_DAMAGE (or LIGHT if that's all that's used) get remembered? takedamage calls
 	//occur earlier than this perhaps and get overwritten here and so never seen by scheduling logic below?
 	
 	
-	//m_afConditions &= (bits_COND_TASK_FAILED | bits_COND_SCHEDULE_DONE | bits_COND_LIGHT_DAMAGE | bits_COND_HEAVY_DAMAGE | bits_COND_SEE_ENEMY | bits_COND_ENEMY_OCCLUDED);
-	//m_afConditions = 0;
+	//ClearConditionsExcept_ThisFrame(bits_COND_TASK_FAILED | bits_COND_SCHEDULE_DONE | bits_COND_LIGHT_DAMAGE | bits_COND_HEAVY_DAMAGE | bits_COND_SEE_ENEMY | bits_COND_ENEMY_OCCLUDED);
+	//ClearAllConditionsExcept_ThisFrame();
 
 
 	//MODDD - new. This mostly copy of the conditions will be maintained throughout this frame.
@@ -119,7 +119,14 @@ void CBaseMonster :: RunAI ( void )
 	// wait, can't we just do this then?
 	//m_afConditionsFrame &= ~(0xFFFFFFFF & ~(bits_COND_TASK_FAILED | bits_COND_SCHEDULE_DONE | bits_COND_LIGHT_DAMAGE | bits_COND_HEAVY_DAMAGE));
 	// keep ONLY these bits, all others not mentioned get reset.
-	m_afConditionsFrame &= (bits_COND_TASK_FAILED | bits_COND_SCHEDULE_DONE | bits_COND_LIGHT_DAMAGE | bits_COND_HEAVY_DAMAGE);
+	ClearAllConditionsExcept_ThisFrame(bits_COND_TASK_FAILED | bits_COND_SCHEDULE_DONE | bits_COND_LIGHT_DAMAGE | bits_COND_HEAVY_DAMAGE);
+
+	
+	// apply any set manually last frame, in case they didn't make it.
+	SetConditions(m_afConditionsNextFrame);
+	ClearAllConditions_NextFrame();
+
+
 
 	// to test model's eye height
 	//UTIL_ParticleEffect ( pev->origin + pev->view_ofs, g_vecZero, 255, 10 );
@@ -218,12 +225,7 @@ void CBaseMonster :: RunAI ( void )
 	// if the monster didn't use these conditions during the above call to MaintainSchedule() or CheckAITrigger()
 	// we throw them out cause we don't want them sitting around through the lifespan of a schedule
 	// that doesn't use them.
-	//m_afConditions &= ~( bits_COND_LIGHT_DAMAGE | bits_COND_HEAVY_DAMAGE );
-	//MODDD!!!!!!!!!!!!!!!!
-	// DANGEROUS.  This will apply to m_afConditionsFrame too!
-	// Dummying out, fuck it
-	// NOPE, cleared above so out they go here then, now that they've had a chance to get interpreted once
-	// (if set in the previous frame).
+
 	ClearConditions( bits_COND_LIGHT_DAMAGE | bits_COND_HEAVY_DAMAGE);
 	
 	

@@ -268,6 +268,17 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
+
+
+// Special sequence number for animations to use to force no update on the client.  Still using this?
+// If a sequence number ever reaches 63 (doubtful), this won't make sense.
+#define ANIM_NO_UPDATE 63
+
+
+
+
+
+
 // some pretty danged important things.
 typedef int BOOL;
 typedef int func_t;

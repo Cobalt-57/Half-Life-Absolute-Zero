@@ -197,7 +197,8 @@ enum
 	//SCHED_KINGPIN_ZZZ,
 
 
-	SCHED_KINGPIN_ELECTRIC_BARRAGE = LAST_COMMON_SCHEDULE + 1,
+	SCHED_KINGPIN_SHOCKER = LAST_COMMON_SCHEDULE + 1,
+	SCHED_KINGPIN_ELECTRIC_BARRAGE,
 	SCHED_KINGPIN_SPEED_MISSILE,
 	SCHED_KINGPIN_ELECTRIC_LASER,
 	SCHED_KINGPIN_SUPERBALL,
@@ -366,7 +367,10 @@ const char* CKingpin::pAttackMissSounds[] =
 
 TYPEDESCRIPTION	CKingpin::m_SaveData[] = 
 {
-	
+	// why does the houndeye save spritetexture? who knows just do it too.
+	DEFINE_FIELD(CKingpin, m_iSpriteTexture, FIELD_INTEGER),
+	DEFINE_FIELD( CKingpin, m_voicePitch, FIELD_INTEGER),
+
 	DEFINE_FIELD( CKingpin, chargeEffect, FIELD_CLASSPTR),
 	
 	DEFINE_ARRAY( CKingpin, m_pBeam, FIELD_CLASSPTR, KINGPIN_MAX_BEAMS ),
@@ -382,9 +386,6 @@ TYPEDESCRIPTION	CKingpin::m_SaveData[] =
 	DEFINE_FIELD( CKingpin, m_iReflectEffect, FIELD_INTEGER ),
 
 	
-
-
-	DEFINE_FIELD( CKingpin, m_voicePitch, FIELD_INTEGER),
 	
 	DEFINE_FIELD( CKingpin, electricBarrageShotsFired, FIELD_INTEGER ),
 
@@ -401,9 +402,8 @@ TYPEDESCRIPTION	CKingpin::m_SaveData[] =
 	DEFINE_FIELD( CKingpin, giveUpChaseTime, FIELD_TIME ),
 	
 	DEFINE_FIELD( CKingpin, accumulatedDamageTaken, FIELD_FLOAT ),
+	DEFINE_FIELD(CKingpin, shockerCooldown, FIELD_FLOAT),
 	
-	//why does the houndeye save this? who knows just do it too.
-	DEFINE_FIELD( CKingpin, m_iSpriteTexture, FIELD_INTEGER ),
 	
 };
 
@@ -460,6 +460,9 @@ CKingpin::CKingpin(void){
 	accumulatedDamageTaken = 0;
 
 	chargeEffect = NULL;
+
+	shockerCooldown = -1;
+	blockAttackShockerCooldown = FALSE;
 
 	//don't need to save this one.  Not much of an influence and re-picking up on it is no big deal.
 	enemyNullTimeSet = FALSE;
@@ -933,7 +936,7 @@ void CKingpin::Precache( void )
 	PRECACHE_SOUND_ARRAY(pAttackMissSounds);
 
 
-	//for now...
+	// for now...
 	PRECACHE_SOUND("houndeye/he_blast1.wav");
 	PRECACHE_SOUND("houndeye/he_blast2.wav");
 	PRECACHE_SOUND("houndeye/he_blast3.wav");
@@ -955,11 +958,11 @@ void CKingpin::Precache( void )
 	PRECACHE_SOUND("x/x_shoot1.wav");
 	//PRECACHE_SOUND("debris/beamstart4.wav");
 	
-	//OH YEAH.
+	// OH YEAH.
 	PRECACHE_MODEL ("sprites/hotglow_ff.spr");
 
 
-	//For the KingpinBall.
+	// For the KingpinBall.
 	/////////////////////////////////////////////////////////
 	PRECACHE_MODEL("sprites/xspark1.spr");
 	PRECACHE_MODEL("sprites/xspark4.spr");
@@ -971,8 +974,8 @@ void CKingpin::Precache( void )
 	/////////////////////////////////////////////////////////
 
 
-	//For the charge ball effect.  or looping electric barrage?
-	//whatever, just have a bunch of stuff nihilanth uses.
+	// For the charge ball effect.  or looping electric barrage?
+	// whatever, just have a bunch of stuff nihilanth uses.
 	/////////////////////////////////////////////////////////
 	PRECACHE_MODEL("sprites/xspark4.spr");
 	PRECACHE_MODEL("sprites/xspark1.spr");
@@ -984,7 +987,7 @@ void CKingpin::Precache( void )
 	PRECACHE_MODEL("sprites/muzzleflash3.spr");
 
 	
-	//and from the houndeye.
+	// and from the houndeye.
 	m_iSpriteTexture = PRECACHE_MODEL( "sprites/shockwave.spr" );
 
 
@@ -1226,16 +1229,16 @@ Schedule_t* CKingpin::GetSchedule ( void )
 
 
 
-				//because sometimes from interrupting an existing schedule, the conditions get cleared.
-				//The check in "pickChaseOrStaySchedule" will probably be the only pracitcal one but whatever.
-				if ( HasConditionsFrame(bits_COND_CAN_RANGE_ATTACK2) )
+				// because sometimes from interrupting an existing schedule, the conditions get cleared.
+				// The check in "pickChaseOrStaySchedule" will probably be the only pracitcal one but whatever.
+				if ( HasConditionsEither(bits_COND_CAN_RANGE_ATTACK2) )
 				{
 					//Come taste my super balls!  ...oh kill me now.
 					return slKingpinSuperBall;
 				}
 				
 
-				if ( HasConditionsFrame(bits_COND_CAN_RANGE_ATTACK1) )
+				if ( HasConditionsEither(bits_COND_CAN_RANGE_ATTACK1) )
 				{
 					float flDist;
 					if(m_hEnemy == NULL){
@@ -1279,11 +1282,10 @@ Schedule_t* CKingpin::GetSchedule ( void )
 					}//END OF switch of CVar kingpinDebug.
 
 
-					
 					if(flDist <= 300.0f){
-						//100% chance shocker
-						return slKingpinShocker;
 
+						// 100% chance shocker
+						return GetScheduleOfType(SCHED_KINGPIN_SHOCKER);
 					}else if(flDist <= 450.0f){
 						//80% shocker.
 						//20% electric barrage.
@@ -1374,7 +1376,6 @@ Schedule_t* CKingpin::GetSchedule ( void )
 
 
 
-
 				//MODDD - NOTE - is that intentional?  range1 & melee1,  and not say,  melee1 & melee2???
 				if ( !HasConditions(bits_COND_CAN_RANGE_ATTACK1 | bits_COND_CAN_MELEE_ATTACK1) )
 				{
@@ -1383,8 +1384,9 @@ Schedule_t* CKingpin::GetSchedule ( void )
 
 					//if the enemy is too far away we do want to try to get closer though.  Or if the enemy has hidden for way too long.
 					
-					return pickChaseOrStaySchedule();
-					
+					//return pickChaseOrStaySchedule();
+
+					return GetScheduleOfType(SCHED_CHASE_ENEMY);
 				}
 				else if ( !FacingIdeal() )
 				{
@@ -1439,7 +1441,7 @@ Schedule_t* CKingpin::GetSchedule ( void )
 Schedule_t* CKingpin::pickChaseOrStaySchedule(void){
 
 	//First, if I'm due for RANGED_ATTACK2 (enemy was behind cover for too long) to send a super ball, do so.
-	if ( HasConditionsFrame(bits_COND_CAN_RANGE_ATTACK2) )
+	if ( HasConditionsEither(bits_COND_CAN_RANGE_ATTACK2) )
 	{
 		//Come taste my super balls!  ...oh kill me now.
 		return slKingpinSuperBall;
@@ -1492,7 +1494,7 @@ Schedule_t* CKingpin::GetScheduleOfType( int Type){
 		
 		case SCHED_CHASE_ENEMY_STOP_SIGHT:
 		case SCHED_CHASE_ENEMY_SMART_STOP_SIGHT:
-			//also, record when to give up a chase and allow an attack regardless of distance.
+			// also, record when to give up a chase and allow an attack regardless of distance.
 			giveUpChaseTime = gpGlobals->time + RANDOM_FLOAT(3.5f, 4.6f);
 			
 			//!!is this a good idea too?
@@ -1501,12 +1503,12 @@ Schedule_t* CKingpin::GetScheduleOfType( int Type){
 			return slChaseEnemySmart_StopSight;
 		break;
 		case SCHED_CHASE_ENEMY_SMART_STOP_SIGHT_SHOCKER_FOLLOWUP:
-			//Same as ChaseEnemySmart_StopSight, but jumps to an Electric Barrage if pathfinding fails during it.
-			//Ordinary pathfind failure repicks from schedules in an ordinary fashion.  Following a shockwave attack,
-			//failure to do any melee from declaring failure to reach the enemy should result in the next best thing:
-			//electric barrage.
-			//More importantly, this doesn't stop at just seeing the enemy. It keeps going to do melee attacks, presumably
-			//while they are disoriented by the short-range intense shockwave that came right before this.
+			// Same as ChaseEnemySmart_StopSight, but jumps to an Electric Barrage if pathfinding fails during it.
+			// Ordinary pathfind failure repicks from schedules in an ordinary fashion.  Following a shockwave attack,
+			// failure to do any melee from declaring failure to reach the enemy should result in the next best thing:
+			// electric barrage.
+			// More importantly, this doesn't stop at just seeing the enemy. It keeps going to do melee attacks, presumably
+			// while they are disoriented by the short-range intense shockwave that came right before this.
 			giveUpChaseTime = gpGlobals->time + RANDOM_FLOAT(3.5f, 4.6f);
 			return slChaseEnemySmart_ShockerFollowup;
 		break;
@@ -1518,6 +1520,18 @@ Schedule_t* CKingpin::GetScheduleOfType( int Type){
 			//......wat.  never call this directly, pick something else if the range attack condition  is met.
 
 			//return slKingpinRangeAttack1;
+		break;
+		case SCHED_KINGPIN_SHOCKER:
+			if (gpGlobals->time >= shockerCooldown) {
+				shockerCooldown = gpGlobals->time + RANDOM_FLOAT(3.8, 7);
+				return slKingpinShocker;
+			}
+			else {
+				// Try chasing then for melee?  SCHED_COMBAT_FACE may work too?
+				//return pickChaseOrStaySchedule();
+				blockAttackShockerCooldown = TRUE;
+				return GetScheduleOfType(SCHED_CHASE_ENEMY);
+			}
 		break;
 
 		case SCHED_KINGPIN_ELECTRIC_BARRAGE:
@@ -2275,11 +2289,16 @@ BOOL CKingpin::CheckRangeAttack1( float flDot, float flDist ){
 	//When picking an attack method, make sure the actual range is fitting for a given attack.
 	// electricBarrage is relatively short-range for instance.
 	
+	if (blockAttackShockerCooldown && gpGlobals->time < shockerCooldown && flDist < 400) {
+		// shocker cooldown is up?  Only interrupt if out of range or the cooldown expires.
+		return FALSE;
+	}
 
+	blockAttackShockerCooldown = FALSE;  // assumption?  Or do this in GetSchedule at the very start?
 
 	if(this->m_pSchedule == slChaseEnemySmart_StopSight || this->m_pSchedule == slChaseEnemySmart_ShockerFollowup){
-		//HOLD ON.  Allowing a ranged attack  will interrupt this schedule.
-		//If the enemy got far away enough that is ok, or if this it taking too long.
+		// HOLD ON.  Allowing a ranged attack  will interrupt this schedule.
+		// If the enemy got far away enough that is ok, or if this it taking too long.
 		if( (flDist > 520.0f) || gpGlobals->time >= giveUpChaseTime){
 			//return TRUE;
 			//the check below chould still fail.  If the enemy is too far away or occluded the chase can continue.
@@ -2562,8 +2581,8 @@ void CKingpin::MonsterThink( void ){
 
 		CBaseMonster::MonsterThink();
 
-		//if(this->HasConditionsFrame(bits_COND_SEE_ENEMY) && !this->HasConditionsFrame(bits_COND_ENEMY_OCCLUDED) ){
-		if (this->HasConditionsFrame(bits_COND_SEE_ENEMY)) {
+		//if(this->HasConditionsEither(bits_COND_SEE_ENEMY) && !this->HasConditionsEither(bits_COND_ENEMY_OCCLUDED) ){
+		if (this->HasConditionsEither(bits_COND_SEE_ENEMY)) {
 			//can see the enemy? not occluded?  Then reset the hidden time.
 
 			enemyHiddenResponseTime = gpGlobals->time + 12.0f;
@@ -3444,11 +3463,11 @@ void CKingpin::playElectricLaserHitSound(CBaseEntity* arg_target, const Vector& 
 	}
 
 
-	UTIL_EmitAmbientSound( toSend, arg_location, "garg/gar_stomp1.wav", 1.0, ATTN_NORM - 0.34f, 0, pitch );
+	UTIL_EmitAmbientSound( toSend, arg_location, "garg/gar_stomp1.wav", 1.0, ATTN_NORM - 0.34f, 0, pitch, TRUE );
 
+	//precached by the client always, so don't use the soundSentenceSave system for this one.
 	switch(RANDOM_LONG(0, 2)){
 	case 0:
-		//precached by the client always, so don't use the soundSentenceSave system for this one.
 		UTIL_EmitAmbientSound( toSend, arg_location, "weapons/electro4.wav", 1.0, ATTN_NORM, 0, pitch, FALSE );
 	break;
 	case 1:
@@ -4302,7 +4321,7 @@ void CKingpin::playShockerFireSound(CBaseEntity* arg_target, const Vector& arg_l
 		toSend = edict();
 	}
 
-	UTIL_EmitAmbientSound( toSend, arg_location, RANDOM_SOUND_ARRAY(pShockerFireSounds), 1.0, ATTN_NORM, 0, pitch );
+	UTIL_EmitAmbientSound( toSend, arg_location, RANDOM_SOUND_ARRAY(pShockerFireSounds), 1.0, ATTN_NORM, 0, pitch, TRUE );
 }
 
 

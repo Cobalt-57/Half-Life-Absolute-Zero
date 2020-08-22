@@ -165,7 +165,7 @@ TYPEDESCRIPTION	CBaseMonster::m_SaveData[] =
 	DEFINE_FIELD( CBaseMonster, m_iScheduleIndex, FIELD_INTEGER ),
 	DEFINE_FIELD( CBaseMonster, m_afConditions, FIELD_INTEGER ),
 	//MODDD - new
-	DEFINE_FIELD( CBaseMonster, m_afConditionsFrame, FIELD_INTEGER ),
+	DEFINE_FIELD( CBaseMonster, m_afConditionsNextFrame, FIELD_INTEGER ),
 	
 	//WayPoint_t			m_Route[ ROUTE_SIZE ];
 //	DEFINE_FIELD( CBaseMonster, m_movementGoal, FIELD_INTEGER ),
@@ -253,7 +253,7 @@ int CBaseMonster::Restore(CRestore& restore)
 
 	// If we don't have an enemy, clear conditions like see enemy, etc.
 	if (m_hEnemy == NULL) {
-		clearAllConditions();
+		ClearAllConditionsExcept(bits_COND_TASK_FAILED | bits_COND_SCHEDULE_DONE);
 	}
 	
 	PostRestore();
@@ -8847,7 +8847,7 @@ void CBaseMonster::OnTakeDamageSetConditions(entvars_t *pevInflictor, entvars_t 
 
 			// Finally.  Just pick a new schedule and get out of this 'IdleTrigger' one, clearly this was a sign just to snap out of it.
 			ChangeSchedule(GetSchedule());
-
+			
 		}
 		else {
 

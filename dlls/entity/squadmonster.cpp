@@ -318,15 +318,15 @@ void CSquadMonster :: SquadMakeEnemy ( CBaseEntity *pEnemy )
 				//MODDD NOTICE - need a special marker to keep the condition from getting
 				// forgotten between frames.  At the start of the next frame the other monster
 				// will see this condition and be able to act on it.
-				// Ooooorrrr how about this.   If their current schedule is interruptable by
-				// seeing a new enemy, do a GetSchedule() on it right now.
-				//pMember->SetConditionsPersistent ( bits_COND_NEW_ENEMY );
+				
+				pMember->SetNextFrameConditions(bits_COND_NEW_ENEMY);
 
-				if (pMember->m_pSchedule->iInterruptMask & bits_COND_NEW_ENEMY) {
-					pMember->SetConditions(bits_COND_NEW_ENEMY);
-					pMember->SetState(MONSTERSTATE_COMBAT);
-					pMember->ChangeSchedule(GetSchedule());
-				}
+				// No need for this hackiness anymore. (that was me another time)
+				//if (pMember->m_pSchedule->iInterruptMask & bits_COND_NEW_ENEMY) {
+				//	pMember->SetConditions(bits_COND_NEW_ENEMY);
+				//	pMember->SetState(MONSTERSTATE_COMBAT);
+				//	pMember->ChangeSchedule(GetSchedule());
+				//}
 
 			}
 		}

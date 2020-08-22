@@ -44,7 +44,7 @@ extern CGraph WorldGraph;
 
 //MODDD!!!!!!!!!!!!!!!!!!!!! 
 // Was m_afConditions
-#define CONDITIONS_BITMASK_USE m_afConditionsFrame
+#define CONDITIONS_BITMASK_USE m_afConditions
 
 
 
@@ -139,7 +139,7 @@ void CBaseMonster :: ChangeSchedule ( Schedule_t *pNewSchedule )
 	if(EASY_CVAR_GET_DEBUGONLY(crazyMonsterPrintouts))easyForcePrintLine("YOU despicable person %s %d", pNewSchedule->pName, pNewSchedule->iInterruptMask);
 
 	ASSERT( pNewSchedule != NULL );
-
+	
 	if (monsterID == 0) {
 		int x = 345;
 	}
@@ -171,17 +171,21 @@ void CBaseMonster :: ChangeSchedule ( Schedule_t *pNewSchedule )
 	//MODDD NOTE - don't get slick.  Just clear all conditions.
 	// also, DAMMIT MAN.  We have clearAllConditions for a reason!!  Breakpoints.  DAMN.
 	//m_afConditions = 0;// clear all of the conditions
-	clearAllConditions_NonFrame();
-
+	
+	// DANGEROUS!  Was ClearAllConditionsExcept_ThisFrame  (default includes that and NextFrame).
+	//ClearAllConditionsExcept_ThisFrame(bits_COND_TASK_FAILED | bits_COND_SCHEDULE_DONE | bits_COND_NEW_ENEMY);
+	ClearAllConditions_ThisFrame();
+	ClearConditions_NextFrame(bits_COND_TASK_FAILED | bits_COND_SCHEDULE_DONE);
 
 	//weren't these good ideas though, sorta?
 	//////////////////////////////////////////////////////////////
 	//m_afConditions &= ~(bits_COND_TASK_FAILED | bits_COND_SCHEDULE_DONE);
 	//m_afConditions &= (bits_COND_CAN_RANGE_ATTACK1 | bits_COND_CAN_MELEE_ATTACK1 | bits_COND_CAN_RANGE_ATTACK2 | bits_COND_CAN_MELEE_ATTACK2);
 	//////////////////////////////////////////////////////////////
-	//MODDD!!!!!!!!!!!!!!!!!!!!! 
-	m_afConditions &= ~(bits_COND_TASK_FAILED | bits_COND_SCHEDULE_DONE | bits_COND_NEW_ENEMY);
-	m_afConditionsFrame &= ~(bits_COND_TASK_FAILED | bits_COND_SCHEDULE_DONE | bits_COND_NEW_ENEMY);
+	//MODDD!!!!!!!!!!!!!!!!!!!!!
+
+
+	//m_afConditionsNextFrame &= ~(bits_COND_TASK_FAILED | bits_COND_SCHEDULE_DONE | bits_COND_NEW_ENEMY);
 
 
 
@@ -280,11 +284,11 @@ int CBaseMonster :: IScheduleFlags ( void )
 
 //#bitToCheck
 #define CHEAPO(nickname, bitToCheck) ,\
-	#nickname, (m_pSchedule->iInterruptMask & bits_COND_##bitToCheck)!=0, (m_afConditions & bits_COND_##bitToCheck)!=0, (m_afConditionsFrame & bits_COND_##bitToCheck)!=0
+	#nickname, (m_pSchedule->iInterruptMask & bits_COND_##bitToCheck)!=0, (m_afConditions & bits_COND_##bitToCheck)!=0, (m_afConditionsNextFrame & bits_COND_##bitToCheck)!=0
 
 
 #define CHEAPO2(nickname, bitToCheck) ,\
-	#nickname, 9, (m_afConditions & bits_COND_##bitToCheck)!=0, (m_afConditionsFrame & bits_COND_##bitToCheck)!=0
+	#nickname, 9, (m_afConditions & bits_COND_##bitToCheck)!=0, (m_afConditionsNextFrame & bits_COND_##bitToCheck)!=0
 
 //=========================================================
 // FScheduleValid - returns TRUE as long as the current

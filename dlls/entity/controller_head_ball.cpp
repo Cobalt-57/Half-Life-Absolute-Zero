@@ -96,7 +96,8 @@ void CControllerHeadBall :: HuntThink( void  )
 
 		MovetoTarget( m_hEnemy->Center( ) );
 
-		if ((m_hEnemy->Center() - pev->origin).Length() < 64)
+		//MODDD - was a distance of 64 required, now 40~ instead
+		if ((m_hEnemy->Center() - pev->origin).Length() < 42)
 		{
 			TraceResult tr;
 
@@ -403,20 +404,20 @@ int CControllerHeadBall::GetProjectileType(void){
 
 
 
-//Implement to change the damage I do when close (before disappearing soon after)
-//Defaults to the controller head ball's damage.
+// Implement to change the damage I do when close (before disappearing soon after)
+// Defaults to the controller head ball's damage.
 float CControllerHeadBall::nearZapDamage(void){
 	return gSkillData.controllerDmgZap;
 }//END OF nearZapDamage
 
 
-//How much opacity do I lose per think cycle (0.1 seconds)?  Slow it down to last longer.
+// How much opacity do I lose per think cycle (0.1 seconds)?  Slow it down to last longer.
 float CControllerHeadBall::getFadeOutAmount(void){
 	return 5;
 }
 
 
-//not really meant to be overridden, just a common utility that can change slightly with a different "maxSpeed" choice.
+// not really meant to be overridden, just a common utility that can change slightly with a different "maxSpeed" choice.
 void CControllerHeadBall::velocityCheck(const float& arg_maxSpeed){
 	
 	float flSpeed = m_vecIdeal.Length();

@@ -1566,6 +1566,10 @@ BOOL checkSubDirectoryExistence(const char* arg_subdir){
 
 
 
+
+
+#ifndef _DEBUG
+
 void processLoadHiddenCVarLine(const char* aryChrLineBuffer){
 
 	if(EASY_CVAR_GET_DEBUGONLY(hiddenMemPrintout) == 1){
@@ -1619,12 +1623,15 @@ void processLoadHiddenCVarLine(const char* aryChrLineBuffer){
 		easyForcePrintLine("IDENTITY VALUE PAIR: %s %.2f", identifier, value);
 	}
 	
+	
 	EASY_CVAR_HIDDEN_LOAD_MASS;
 
 	//if we reach here, it means the loaded name wasn't matched to a CVar we know of.
 	easyForcePrintLine("WARNING: absMem entry \"%s\" not linked to a known CVar. Value discarded.", identifier);
 
 }
+
+#endif
 
 
 
@@ -1723,7 +1730,7 @@ void loadHiddenCVars(void){
 	//TODO: do something like this with the gaussmode CVar?
 #endif
 
-}
+}//loadHiddenCVars
 
 
 void saveHiddenCVars(void){
@@ -1770,7 +1777,7 @@ void saveHiddenCVars(void){
 	}
 #endif
 	*/
-}//END OF saveHiddenCVars
+}//saveHiddenCVars
 
 
 //Provided character buffer (character array) must be binaryDigits+1 large to account for all digits and the terminating '/0', or 0-valued null character.

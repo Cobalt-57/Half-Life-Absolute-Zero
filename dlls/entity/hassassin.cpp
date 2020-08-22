@@ -1238,7 +1238,7 @@ BOOL CHAssassin :: CheckMeleeAttack1 ( float flDot, float flDist )
 	//Any melee attack should also reset the jump cooldown to possibly allow that immediately after.
 	//And being unable to jump bypasses the melee cooldown. If it's all we can do it's better than standing and
 	//looking stupid.
-	if(gpGlobals->time < meleeAttackCooldown && !(this->HasConditionsFrame(bits_COND_CAN_MELEE_ATTACK2)) ){
+	if(gpGlobals->time < meleeAttackCooldown && !(this->HasConditions(bits_COND_CAN_MELEE_ATTACK2)) ){
 		return FALSE;
 	}
 

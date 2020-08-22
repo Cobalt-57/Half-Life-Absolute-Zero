@@ -42,6 +42,10 @@
 #include "defaultai.h"
 
 #include "cvar_custom_info.h"
+#include "cvar_custom_list.h"
+
+
+EASY_CVAR_EXTERN_MASS
 
 
 EASY_CVAR_EXTERN_DEBUGONLY(myStrobe)
@@ -5642,17 +5646,9 @@ void CBasePlayer::PostThink()
 		// Let any newly connected player get a fresh copy to replace the likely unhelpful clientside defaults.
 
 		//EASY_CVAR_SYNCH_SERVER_TO_CLIENT(wpn_glocksilencer, wpn_glocksilencer_ID, pev);
-		EASY_CVAR_SYNCH_SERVER_TO_CLIENT(wpn_glocksilencer, pev);
-		EASY_CVAR_SYNCH_SERVER_TO_CLIENT_DEBUGONLY(viewModelPrintouts, pev);
-
-		EASY_CVAR_SYNCH_SERVER_TO_CLIENT_DEBUGONLY(cheat_infiniteclip, pev);
-		EASY_CVAR_SYNCH_SERVER_TO_CLIENT_DEBUGONLY(cheat_infiniteammo, pev);
-		EASY_CVAR_SYNCH_SERVER_TO_CLIENT_DEBUGONLY(cheat_minimumfiredelay, pev);
-		EASY_CVAR_SYNCH_SERVER_TO_CLIENT_DEBUGONLY(cheat_minimumfiredelaycustom, pev);
-		EASY_CVAR_SYNCH_SERVER_TO_CLIENT_DEBUGONLY(cheat_nogaussrecoil, pev);
-		EASY_CVAR_SYNCH_SERVER_TO_CLIENT_DEBUGONLY(gaussRecoilSendsUpInSP, pev);
-		EASY_CVAR_SYNCH_SERVER_TO_CLIENT_DEBUGONLY(timedDamageDeathRemoveMode, pev);
 		
+		EASY_CVAR_SYNCH_SERVER_MASS
+
 	}//END OF queueFirstAppearanceMessageSend check
 
 	

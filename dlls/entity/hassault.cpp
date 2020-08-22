@@ -2127,7 +2127,7 @@ void CHAssault :: RunTask ( Task_t *pTask )
 			EASY_CVAR_PRINTIF_PRE(hassaultPrintout, easyPrintLine( "MAMA MIA!!! %d %.2f", HasConditions(bits_COND_CAN_MELEE_ATTACK1), (m_hEnemy->pev->origin - pev->origin).Length()));
 		}
 
-		if(!HasConditionsFrame(bits_COND_CAN_MELEE_ATTACK1)){
+		if(!HasConditionsEither(bits_COND_CAN_MELEE_ATTACK1)){
 
 			if(couldMeleeAttack1){
 				//then face them!
@@ -2236,7 +2236,7 @@ void CHAssault :: RunTask ( Task_t *pTask )
 		//CheckAttacks(m_hEnemy,  (pev->origin - m_hEnemy->pev->origin).Length() );
 
 		//should we stop firing?
-		if(!HasConditionsFrame(bits_COND_CAN_RANGE_ATTACK1) ){
+		if(!HasConditionsEither(bits_COND_CAN_RANGE_ATTACK1) ){
 		//if(!HasConditionsSetThisFrame(bits_COND_CAN_RANGE_ATTACK1) ){
 
 			//MODD - check for """could""" to just stop shooting but turn to look maybe?
@@ -2346,7 +2346,7 @@ void CHAssault :: RunTask ( Task_t *pTask )
 			//can see the enemy just fine?   What are you waiting for?!
 
 			//if we can't "range attack", then it's not good enough of a place to stop.
-			if(  HasConditionsFrame(bits_COND_CAN_RANGE_ATTACK1)   ){
+			if(  HasConditionsEither(bits_COND_CAN_RANGE_ATTACK1)   ){
 				ChangeSchedule(slHAssault_fire);
 				//TaskFail();
 				return;
@@ -2753,7 +2753,7 @@ Schedule_t* CHAssault::GetSchedule(){
 				}
 				
 				//SLIGHTLY DIFFERENT ORDER.  priotize melee attacks.
-				if ( HasConditionsFrame(bits_COND_CAN_MELEE_ATTACK1) )
+				if ( HasConditionsEither(bits_COND_CAN_MELEE_ATTACK1) )
 				{
 					
 					//return GetScheduleOfType( SCHED_MELEE_ATTACK1 );
@@ -3140,7 +3140,7 @@ void CHAssault :: MonsterThink ( void )
 			break;
 		}
 	}
-	//EASY_CVAR_PRINTIF_PRE(hassaultPrintout, easyPrintLine( "MOVEMENT WAIT COND: %d %d %d" , HasConditions(bits_COND_SEE_ENEMY), !HasConditions(bits_COND_ENEMY_OCCLUDED), HasConditions(HasConditionsFrame(bits_COND_CAN_RANGE_ATTACK1) ) ));
+	//EASY_CVAR_PRINTIF_PRE(hassaultPrintout, easyPrintLine( "MOVEMENT WAIT COND: %d %d %d" , HasConditions(bits_COND_SEE_ENEMY), !HasConditions(bits_COND_ENEMY_OCCLUDED), HasConditions(HasConditionsEither(bits_COND_CAN_RANGE_ATTACK1) ) ));
 	
 	//UTIL_drawLineFrameBoxAround(pev->origin, 3, 326, 255, 255, 0);
 	

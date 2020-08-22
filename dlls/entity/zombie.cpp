@@ -1161,7 +1161,7 @@ void CZombie::StartTask(Task_t* pTask){
 void CZombie::RunTask(Task_t* pTask){
 
 	//bits_COND_HEAR_SOUND...? careful.
-	if(!this->HasConditionsFrame(bits_COND_NEW_ENEMY | bits_COND_SEE_HATE | bits_COND_SEE_FEAR | bits_COND_SEE_DISLIKE | bits_COND_SEE_ENEMY | bits_COND_LIGHT_DAMAGE | bits_COND_HEAVY_DAMAGE | bits_COND_CAN_ATTACK)){
+	if(!this->HasConditionsEither(bits_COND_NEW_ENEMY | bits_COND_SEE_HATE | bits_COND_SEE_FEAR | bits_COND_SEE_DISLIKE | bits_COND_SEE_ENEMY | bits_COND_LIGHT_DAMAGE | bits_COND_HEAVY_DAMAGE | bits_COND_CAN_ATTACK)){
 		if(m_MonsterState == MONSTERSTATE_IDLE || m_MonsterState == MONSTERSTATE_ALERT && pev->deadflag == DEAD_NO){
 		
 			if(gpGlobals->time <= lookForCorpseTime){
