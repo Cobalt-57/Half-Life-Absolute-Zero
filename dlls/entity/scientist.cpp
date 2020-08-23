@@ -75,6 +75,8 @@ static float g_scientist_PredisasterSuitMentionAllowedTime = -1;
 static float g_scientist_HeadcrabMentionAllowedTime = -1;
 static float g_scientist_sayGetItOffCooldown = -1;
 
+static int g_scientist_crouchstand_sequenceID = -1;
+
 
 
 // yes, the physical is best under the allowed.  Very odd.
@@ -1976,6 +1978,11 @@ void CScientist::setModel(const char* m){
 
 	// It is a bad idea to depend on saved things in here like "trueBody". It might not have loaded yet and so isn't reliable, it would be better to hook this at the end of Restore.
 	//scientistHeadFilter(*this, numberOfModelBodyParts, &trueBody);
+
+	if (g_scientist_crouchstand_sequenceID == -1) {
+		g_scientist_crouchstand_sequenceID = LookupSequence("crouchstand");
+	}
+
 }
 
 
@@ -2163,6 +2170,7 @@ extern int global_useSentenceSave;
 //=========================================================
 void CScientist :: Precache( void )
 {
+
 	//MODDD - LAZY RESETS.  Proper would be in world's precache!
 	g_scientist_PredisasterSuitMentionAllowedTime = -1;
 	g_scientist_HeadcrabMentionAllowedTime = -1;
@@ -2196,9 +2204,6 @@ void CScientist :: Precache( void )
 	//Just do TalkInit() in spawn.
 	//Wait... why were we doing it that way instead of in Preacache like how the Barney does it?
 	//Just do it in both places then.
-
-
-	//MODDD - note that "CSittingScientist" calls this same method.
 
 	CTalkMonster::Precache();
 }
@@ -3526,6 +3531,17 @@ void CScientist::MonsterThink(void){
 
 
 	/*
+	if (m_fSequenceFinished && pev->sequence == g_scientist_crouchstand_sequenceID) {
+		//SAFETY.   If done with the crouch-to-stand animation and at the end, get a new animation.
+		// should be unnecessary, base monster script should pick an animation when any sequence while in ACT_IDLE
+		// is finished.
+		m_Activity = ACT_RESET;
+		SetActivity(ACT_IDLE);
+	}
+	*/
+
+
+	/*
 	if(explodeDelay > -1 && gpGlobals->time >= explodeDelay){
 		pev->renderfx = kRenderFxImplode;
 		pev->rendercolor.x = 255;
@@ -4405,6 +4421,12 @@ int CScientist::LookupActivityHard(int activity){
 			return LookupSequence("punch");
 		break;}
 		case ACT_IDLE:{
+
+			// if no enemy and crouching, can go to standing more smoothly.
+			if (m_hEnemy == NULL && (m_Activity == ACT_CROUCH || m_Activity == ACT_CROUCHIDLE) ) {
+				return g_scientist_crouchstand_sequenceID;
+			}
+
 			//First off, are we talking right now?
 			if(IsTalking()){
 				//Limit the animations we can choose from a little more.

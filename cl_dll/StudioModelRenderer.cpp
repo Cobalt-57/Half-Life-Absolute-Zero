@@ -61,6 +61,15 @@ EASY_CVAR_EXTERN(r_glowshell_debug)
 extern float global2PSEUDO_IGNOREcameraMode;
 
 
+//MODDD - from in_camera.cpp 
+extern "C"
+{
+	void DLLEXPORT CAM_Think(void);
+	int DLLEXPORT CL_IsThirdPerson(void);
+	void DLLEXPORT CL_CameraOffset(float* ofs);
+}
+
+
 
 //MODDD - Turn on to avoid rendering anything.  Debug ahoy!
 // Going off of reload sounds not called by script still playing, events (entity.cpp)
@@ -4093,14 +4102,45 @@ void CStudioModelRenderer::CUSTOM_StudioClientEvents(void) {
 
 
 	//MODDD - would be nice if there were a way to tell what entities
-	// are given updates from the server on frames (curstae.animtime gets set),
+	// are given updates from the server on frames (curstate.animtime gets set),
 	// because at least viewmodels don't except on animation change.
 	// Any animation is from interpolation judging how much time passed since the
 	// server (or client decided to change anyway) the sequence.
 
 
-	if (g_drawType != DRAWTYPE_VIEWMODEL) {
+	// !!! NEW NOTES.
+	// Strangely, the player-model (third person) using the glock still shows
+	// the muzzle flash for too long, yet the mp5 and shotgun have improvements
+	// with this setup (shotgun single-fire muzzleflash works at all now, mp5
+	// does not show the muzzle flash twice for firing once... unless that was
+	// intentional?  Check the model for muzzle flash events).
 
+	// Anyway, it is worth keeping in mind that the 
+	// 'g_drawType != DRAWTYPE_VIEWMODEL' check excludes drawing in 3rd person
+	// (that leads to DRAWTYPE_PLAYER here).  Or check with CL_IsThirdPerson to be
+	// safe.  Anyway, even with the glock working better with that case excluded:
+	//   ... || !(g_drawType == DRAWTYPE_PLAYER && CL_IsThirdPerson())
+	// the glock-firing still randomly doesn't show up, especially when holding down
+	// the fire button.  I really, really don't know here, maybe do printouts of
+	// that anim curtime?
+	
+	// Or even give up and say "if it's third person, do the hardcoded 
+	// IEngineStudio.StudioClientEvents(); way".  Or if third person and the 
+	// glock.   But does CL_IsThirdPerson apply to rendering other players?
+	// If not,  "CL_IsThirdPerson() || g_drawType == DRAWTYPE_PLAYER" may be
+	// more wise to include both.  Or just drop the 3rd person check.  Eh.
+	// Best would be to look at the glock, why does it work differently?
+	// is it an event at some extreme like the very first frame?  No clue.
+
+	// ALTHOUGH this is low priority, mod isn't really multiplayer focused and
+	// the player wouldn't normally be in 3rd person anyway.
+
+
+	if (CL_IsThirdPerson()) {
+		int x = 45;
+	}
+
+	if (g_drawType != DRAWTYPE_VIEWMODEL) {
 
 		if ((m_pCurrentEntity->curstate.renderfx & ISNPC) && m_clTime > ary_g_LastEventCheckEXACT[myIndex]) {
 			canPrintout = TRUE;
@@ -4194,6 +4234,7 @@ void CStudioModelRenderer::CUSTOM_StudioClientEvents(void) {
 		frame = m_pCurrentEntity->curstate.frame;
 
 		flInterval = (m_clTime - animtime);
+
 
 
 		// no, just use it straight.

@@ -1,4 +1,7 @@
 
+// NOTICE - often need to modify this file and save (change a character and backspace, save, compile)
+// to re-fetch the date sometimes.  Besides a full rebuild.
+
 // should increment between noticeable releases.
 #define MODINFO_Version "2.0_P"
 
@@ -7,7 +10,7 @@
 #define MODINFO_Date __DATE__
 
 // Version of visual studio used to compile.
-// To determine automatically, leave this commented out.4
+// To determine automatically, leave this commented out.
 //#define MODINFO_VS "vs?"
 
 

@@ -395,3 +395,8 @@ CVars marked 'debugonly' will not show up in console autocomplete but can still 
 
 Kingpins no longer spam close-range shock blast attacks when close.  They will move in for melee during a cooldown.
 
+Hitting certain flying monsters (ospreys) with explosives while sv_explosionknockback is above 0 will no longer cause interp issues (choppy movement).
+
+Explosive projectiles that reach any edge of a skybox will no longer explode, only disappear.
+
+CVar 'gaussRecoilSendsUpInSP' changed from 0 to 1.

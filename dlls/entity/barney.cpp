@@ -96,9 +96,12 @@ enum
 
 class SimpleMonsterSaveState {
 public:
+	int OLD_m_afMemory;
 	Schedule_t* OLD_m_pSchedule;
 	int OLD_m_iScheduleIndex;
 	int OLD_m_iTaskStatus;
+	int OLD_m_afConditions;
+	int OLD_m_afConditionsNextFrame;
 	MONSTERSTATE OLD_m_MonsterState;
 	MONSTERSTATE OLD_m_IdealMonsterState;
 	int OLD_sequence;
@@ -118,9 +121,12 @@ public:
 	}
 	void Save(CBaseMonster* toRead) {
 		// queuedMonsterState  ?
+		OLD_m_afMemory = toRead->m_afMemory;
 		OLD_m_pSchedule = toRead->m_pSchedule;
 		OLD_m_iScheduleIndex = toRead->m_iScheduleIndex;
 		OLD_m_iTaskStatus = toRead->m_iTaskStatus;
+		OLD_m_afConditions = toRead->m_afConditions & ~(bits_COND_NEW_ENEMY);
+		OLD_m_afConditionsNextFrame = toRead->m_afConditionsNextFrame & ~(bits_COND_NEW_ENEMY);
 		OLD_m_MonsterState = toRead->m_MonsterState;
 		OLD_m_IdealMonsterState = toRead->m_IdealMonsterState;
 		OLD_sequence = toRead->pev->sequence;
@@ -136,9 +142,12 @@ public:
 		OLD_m_movementGoal = toRead->m_movementGoal;
 	}
 	void Restore(CBaseMonster* toReceive) {
+		toReceive->m_afMemory = OLD_m_afMemory;
 		toReceive->m_pSchedule = OLD_m_pSchedule;
 		toReceive->m_iScheduleIndex = OLD_m_iScheduleIndex;
 		toReceive->m_iTaskStatus = OLD_m_iTaskStatus;
+		toReceive->m_afConditions = OLD_m_afConditions;
+		toReceive->m_afConditionsNextFrame = OLD_m_afConditionsNextFrame;
 		toReceive->m_MonsterState = OLD_m_MonsterState;
 		toReceive->m_IdealMonsterState = OLD_m_IdealMonsterState;
 		toReceive->pev->sequence = OLD_sequence;

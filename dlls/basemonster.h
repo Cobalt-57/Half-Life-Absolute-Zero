@@ -307,14 +307,14 @@ enum
 //
 class CBaseMonster : public CBaseToggle
 {
-private:
+public:
 	int m_afConditions;
-
 	//MODDD - for being set by methods that often occur after ai has been run this frame (like touch methods, or even during schedules).
 	// Set at the start of the next frame and cleared.
 	int m_afConditionsNextFrame;
 
-public:
+
+
 	typedef enum
 	{
 		SCRIPT_PLAYING = 0,		// Playing the sequence

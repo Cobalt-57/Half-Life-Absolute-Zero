@@ -167,7 +167,6 @@ float globalPSEUDO_cameraMode = -1;
 float globalPSEUDO_canApplyGermanCensorship = 0;
 float globalPSEUDO_allowGermanModelsMem = -1;
 float globalPSEUDO_germanCensorshipMem = -1;
-float globalPSEUDO_gaussmodeMem = 0;
 
 float globalPSEUDO_cl_bullsquidspit = -1;
 float globalPSEUDO_cl_hornetspiral = -1;
@@ -4798,55 +4797,6 @@ void updateCVarRefs(BOOL isEarly){
 	}//END OF barnacleCanGib CVar check
 
 
-
-
-
-
-	if(globalPSEUDO_gaussmodeMem != EASY_CVAR_GET(gaussmode)){
-
-		if(EASY_CVAR_GET(gaussmode) == 0){
-			//easyForcePrintLine("***Gauss Mode: CUSTOM***");
-		}if(EASY_CVAR_GET(gaussmode) == 1){
-			easyForcePrintLine("***Gauss Mode: RETAIL***");
-			EASY_CVAR_SET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_primaryonly, 0);
-			EASY_CVAR_SET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_reflectdealsdamage, 1);
-			EASY_CVAR_SET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_chargeanimdelay, 0);
-			EASY_CVAR_SET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_chargeworkdelay, 0);
-			EASY_CVAR_SET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_secondarychargetimereq, 0.5);
-			EASY_CVAR_SET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_primaryreflects, 1);
-			EASY_CVAR_SET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_primarypierces, 1);
-			EASY_CVAR_SET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_secondaryreflects, 1);
-			EASY_CVAR_SET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_secondarypierces, 1);
-			EASY_CVAR_SET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_primarypunchthrough, 0);
-			EASY_CVAR_SET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_secondarypunchthrough, 1);
-
-		}else if(EASY_CVAR_GET(gaussmode) == 2){
-			easyForcePrintLine("***Gauss Mode: QUAKE***");
-			EASY_CVAR_SET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_primaryonly, 1);
-			EASY_CVAR_SET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_reflectdealsdamage, 1);
-			EASY_CVAR_SET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_chargeanimdelay, 1.0);
-			EASY_CVAR_SET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_chargeworkdelay, 3.0);
-			EASY_CVAR_SET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_secondarychargetimereq, 0.8);
-			EASY_CVAR_SET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_primaryreflects, 1);
-			EASY_CVAR_SET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_primarypierces, 0);
-			EASY_CVAR_SET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_secondaryreflects, 0);
-			EASY_CVAR_SET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_secondarypierces, 1);
-			EASY_CVAR_SET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_primarypunchthrough, 0);
-			EASY_CVAR_SET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_secondarypunchthrough, 1);
-
-		}else{
-
-		}
-
-
-		//force back to 0. All that mattered is we know what the intention was.
-		//"hope that gets the point across"
-		//...uh.  What was the point of this if it's set to 0 by EASY_CVAR_SET further below.
-		//global_gaussmode = 0;
-
-		globalPSEUDO_gaussmodeMem = 0;
-		EASY_CVAR_SET(gaussMode, 0);
-	}//END OF if(globalPSEUDO_gaussmodeMem != global_gaussmode)
 
 
 

@@ -175,9 +175,8 @@ void CBaseMonster :: ChangeSchedule ( Schedule_t *pNewSchedule )
 	// DANGEROUS!  Was ClearAllConditionsExcept_ThisFrame  (default includes that and NextFrame).
 	//ClearAllConditionsExcept_ThisFrame(bits_COND_TASK_FAILED | bits_COND_SCHEDULE_DONE | bits_COND_NEW_ENEMY);
 	//ClearAllConditionsExcept_ThisFrame(bits_COND_HEAR_SOUND | bits_COND_SEE_HATE | bits_COND_SEE_DISLIKE | bits_COND_SEE_ENEMY | bits_COND_SEE_FEAR | bits_COND_SEE_NEMESIS | bits_COND_SEE_CLIENT | bits_COND_ENEMY_OCCLUDED);
-	ClearConditions(bits_COND_ENEMY_DEAD | bits_COND_TASK_FAILED | bits_COND_SCHEDULE_DONE);
-	ClearConditions_NextFrame(bits_COND_ENEMY_DEAD | bits_COND_TASK_FAILED | bits_COND_SCHEDULE_DONE);
-
+	ClearConditions(bits_COND_NEW_ENEMY | bits_COND_ENEMY_DEAD | bits_COND_TASK_FAILED | bits_COND_SCHEDULE_DONE);
+	
 	//weren't these good ideas though, sorta?
 	//////////////////////////////////////////////////////////////
 	//m_afConditions &= ~(bits_COND_TASK_FAILED | bits_COND_SCHEDULE_DONE);
@@ -3159,7 +3158,14 @@ void CBaseMonster :: StartTask ( Task_t *pTask )
 				// ...unless this is schedule 'slFaceScript'.  Then timing seems more important in some cases
 				// like a2a1.   But verify assuming an insta-force-direction like this is a good thing 
 				// for this schedule always!
-				pev->angles.y = pev->ideal_yaw;
+				// Nope, a1a0.  The barney after hitting the panel looks weird instantly facing the player.
+				// SSSSSSSssssssssiiiiggggggghhh.
+				// Some flag for scripted's to force facing instantly, or maybe even wait for two things
+				// to face each other before playing if coordinated like the garg throwing an agrunt,
+				// would be nice.  No idea if that can be detected.
+				// Point is, going to have to avoid this force-fix without some flag to say when it's
+				// ok or not, per scripted-ent or sequence-order or however those are given.
+				//pev->angles.y = pev->ideal_yaw;
 			}
 
 			TaskComplete();

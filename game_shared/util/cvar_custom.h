@@ -222,6 +222,11 @@ Also, need to extern (all?) CVars in dlls/client.cpp.
 			WRITE_STRING(UTIL_VarArgs(#arg_NAME" %g", (float)argVal ) );\
 		MESSAGE_END();
 
+#define CUSTOM_CLIENT_CALL_NAME_FORCEBROADCAST(arg_NAME, argVal)\
+		MESSAGE_BEGIN( MSG_ALL, gmsgJukeboxRequest, NULL );\
+			WRITE_STRING(UTIL_VarArgs(#arg_NAME" %g", (float)argVal ) );\
+		MESSAGE_END();
+
 		//g_engfuncs.pfnClientCommand(pEntity, #arg_NAME" %.3f", argVal);
 
 // SERVER ONLY, ANY CUSTOM_CLIENT_CALL !!!
@@ -244,7 +249,7 @@ Also, need to extern (all?) CVars in dlls/client.cpp.
 			WRITE_SHORT( argVal*100);\
 		MESSAGE_END();
 	
-	#define CUSTOM_CLIENT_CALL_NAME_DEBUGONLY(arg_NAME, argVal)\
+	#define CUSTOM_CLIENT_CALL_NAME_DEBUGONLY_FORCEBROADCAST(arg_NAME, argVal)\
 		MESSAGE_BEGIN( MSG_ALL, gmsgUpdateClientCVar, NULL );\
 			WRITE_SHORT( arg_NAME##_ID);\
 			WRITE_SHORT( argVal*100);\

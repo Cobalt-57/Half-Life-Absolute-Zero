@@ -1220,62 +1220,10 @@ CHANGE: this CVar only works for hud_version 2 now, or hud_version 3 for above 6
 
 
 
-EXTA GAUSS CVARS
----PENDING DELETION.  WAY TOO MUCH SHIT---
-----------------------------------------------------------------------------------------------------------------------------------
-----------------------------------------------------------------------------------------------------------------------------------
-----------------------------------------------------------------------------------------------------------------------------------
-
-gaussmode (0) - MODEVAR. Resets back to 0 when changed to 1 or 2 (but sets other gauss-related CVars).
-----------------------------------------------------
-0: no effect.
-
-1: RETAIL settings for gauss CVars. Sets these...
-gauss_primaryonly 0
-gauss_reflectdealsdamage 1
-gauss_chargeanimdelay 0
-gauss_chargeworkdelay 0
-gauss_secondarychargetimereq 0.5
-gauss_primaryreflects 1
-gauss_primarypierces 1
-gauss_secondaryreflects 1
-gauss_secondarypierces 1
-gauss_primarypunchthrough 0
-gauss_secondarypunchthrough 1
-
-2: QUAKE settings for gauss CVars. Sets these...
-gauss_primaryonly 1
-gauss_reflectdealsdamage 1
-gauss_chargeanimdelay 1.0
-gauss_chargeworkdelay 3.0
-gauss_secondarychargetimereq 0.8
-gauss_primaryreflects 1
-gauss_primarypierces 0
-gauss_secondaryreflects 0
-gauss_secondarypierces 1
-gauss_primarypunchthrough 0
-gauss_secondarypunchthrough 1
-
-----------------------------------------------------
-
---CVARs:
-gauss_primaryonly (1) - BOOL.  When on, the primary fire button now handles secondary fire (white lasers) as well.  Tap for primary fire, hold down for secondary fire.  The secondary fire button does nothing.
-gauss_reflectdealsdamage (1) - BOOL. any reflected gauss strikes generate an area of damage just like retail.
-gauss_chargeanimdelay (1.0) - DECIMAL. the seconds required to start playing its spinup animation.
-gauss_chargeworkdelay (3.0) - DECIMAL. the seconds required for the charge to start turning ammo into "charge" for more damage on release (pracitcally "work")
-gauss_secondarychargetimereq (0.8 ) - DECIMAL. the seconds required to count this as primary fire instead of secondary fire.  Advisiable to keep less than "gaussquake_chargeworkdelay".
-gauss_primaryreflects (1) - BOOL. determines whether primary fire can reflect off surfaces.
-gauss_primarypierces (0) - BOOL. determines whether primary fire can continue through an enemy.
-gauss_secondaryreflects (0) - BOOL. determines whether secondary fire can reflect off surfaces.
-gauss_secondarypierces (1) - BOOL. determines whether primary fire can continue through an enemy.
-gauss_primarypunchthrough (0) - BOOL. determines whether primary fire can travel some distance through walls on a hit it can't reflect off of.
-gauss_secondarypunchthrough (1) - BOOL. determines whether secondary fire can travel some distance through walls on a hit it can't reflect off of.
-
-----------------------------------------------------------------------------------------------------------------------------------
-----------------------------------------------------------------------------------------------------------------------------------
-----------------------------------------------------------------------------------------------------------------------------------
-
-
+gauss_mode (1) - MODEVAR.  What type of gauss logic to use.
+0: retail logic.
+1: alpha, as roughly described.  Primary fire used 5 energy cell ammo and charge used ammo in increments of 5 instead of 1, up to 12 times.
+   Needless to say, a fully charged gauss shot is monstrous here.
 
 
 

@@ -123,10 +123,19 @@ void CGrenade::Explode(TraceResult* pTrace, float rawDamage, float flRange, int 
 	}
 	pev->owner = NULL; // can't traceline attack owner if this is set
 
-	StaticExplode(pev->origin, rawDamage, flRange, this, pevOwner, pTrace, bitsDamageType, bitsDamageTypeMod, shrapMod);
 
-	// The Smoke method soon leads to this entity's deletion. The "StaticExplode" call above already makes it invisible.
-	SetThink(&CGrenade::Smoke);
+
+
+	if (UTIL_PointContents(pev->origin) == CONTENTS_SKY) {
+		// If we hit the sky, HALT!  No explosion, no sticking out, no sparks.
+		// Just end.
+	}
+	else {
+		// The Smoke method soon leads to this entity's deletion. The "StaticExplode" call above already makes it invisible.
+		SetThink(&CGrenade::Smoke);
+		StaticExplode(pev->origin, rawDamage, flRange, this, pevOwner, pTrace, bitsDamageType, bitsDamageTypeMod, shrapMod);
+	}
+
 	pev->velocity = g_vecZero;
 	pev->nextthink = gpGlobals->time + 0.3;
 }

@@ -205,7 +205,6 @@ void LinkUserMessages( void )
 	gmsgPrintClient = REG_USER_MSG("PrintCl", -1);
 	
 	
-	//MODDD EXPERIMENTAL.  Is the -1 size okay?
 	gmsgJukeboxRequest = REG_USER_MSG("JBoxReq", -1);
 	gmsgJukeboxOff = REG_USER_MSG("JBoxOff", 0);
 	gmsgAutoMus = REG_USER_MSG("AutoMus", 0);

@@ -1985,7 +1985,14 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBaseMonster){
 	else {
 		// Anything else?  Can be knocked back by explosive damage, if a CVar permits.
 		if (EASY_CVAR_GET(sv_explosionknockback) > 0) {
-			if (pev->deadflag < DEAD_DEAD && pev->movetype != MOVETYPE_NONE) {
+			// ALSO, don't affect gravity-less movetypes, they might behave oddly with this.
+			if (
+				pev->deadflag < DEAD_DEAD &&
+				//(pev->movetype != MOVETYPE_NONE && pev->movetype != MOVETYPE_FLY && pev->movetype != MOVETYPE_FLYMISSILE)
+				// ...nevermind, only affect MOVETYPE_STEP to be safe.  Players (MOVETYPE_WALK) are already affected separately,
+				// and exempt from reaching this point anyway (this is in the 'else', of a 'IsPlayer' check).
+				(pev->movetype == MOVETYPE_STEP)
+			){
 				if (bitsDamageType & DMG_BLAST) {
 					Knockback(g_rawDamageCumula * 0.28 * EASY_CVAR_GET(sv_explosionknockback), -g_vecAttackDir);
 				}

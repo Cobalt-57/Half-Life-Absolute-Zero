@@ -123,23 +123,8 @@
 #define rocketTrailAlphaInterval_ID 114
 #define rocketTrailAlphaScale_ID 115
 #define rocketSkipIgnite_ID 116
-#define gauss_primaryonly_ID 117
-#define gauss_reflectdealsdamage_ID 118
-#define gauss_chargeanimdelay_ID 119
-#define gauss_chargeworkdelay_ID 120
-#define gauss_secondarychargetimereq_ID 121
-#define gauss_primaryreflects_ID 122
-#define gauss_primarypierces_ID 123
-#define gauss_secondaryreflects_ID 124
-#define gauss_secondarypierces_ID 125
-#define gauss_primarypunchthrough_ID 126
-#define gauss_secondarypunchthrough_ID 127
-#define gauss_betweenattackdelay_ID 128
-#define gauss_secondarychargemindelay_ID 129
-#define gauss_chargeMaxAmmo_SP_ID 130
-#define gauss_chargeMaxAmmo_MP_ID 131
-#define gauss_chargeInterval_SP_ID 132
-#define gauss_chargeInterval_MP_ID 133
+#define gauss_mode_ID 117
+
 #define painFlashDmgMin_ID 134
 #define painFlashDmgExMult_ID 135
 #define painFlashCumulativeMinDrowning_ID 136
@@ -368,7 +353,7 @@
 #define DEFAULT_autoSneaky 0
 #define DEFAULT_sv_longjump_chargemode 0
 #define DEFAULT_cheat_touchNeverExplodes 0
-#define DEFAULT_gaussRecoilSendsUpInSP 0
+#define DEFAULT_gaussRecoilSendsUpInSP 1
 #define DEFAULT_drawDebugPathfinding 0
 #define DEFAULT_STUcheckDistH 18
 #define DEFAULT_STUcheckDistV 32
@@ -560,7 +545,7 @@
 #define DEFAULT_hud_drawammobar 0
 #define DEFAULT_hud_weaponselecthideslower 1
 #define DEFAULT_hud_drawsidebarmode 0
-#define DEFAULT_gaussmode 0
+#define DEFAULT_gauss_mode 1
 #define DEFAULT_gauss_primaryonly 0
 #define DEFAULT_gauss_reflectdealsdamage 1
 #define DEFAULT_gauss_chargeanimdelay 0

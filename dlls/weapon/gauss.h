@@ -26,67 +26,44 @@ enum gauss_e {
 class CGauss : public CBasePlayerWeapon
 {
 public:
+	unsigned short m_usGaussFire;
+	unsigned short m_usGaussSpin;
+	int m_iBalls;
+	int m_iGlow;
+	int m_iBeam;
+	int m_iSoundState; // don't save this
+	// was this weapon just fired primary or secondary?
+	// we need to know so we can pick the right set of effects. 
+	BOOL m_fPrimaryFire;
 
-	int ohMySon;
-	int ohDearSonny;
-
-	//MOTHERappreciater HOW DO YOU NOT HAVE THIS
-	CGauss(void);
 
 #ifndef CLIENT_DLL
-	int	Save(CSave& save);
-	int	Restore(CRestore& restore);
+	int		Save(CSave& save);
+	int		Restore(CRestore& restore);
 	static	TYPEDESCRIPTION m_SaveData[];
 #endif
+
+	CGauss(void);
+
+	void customAttachToPlayer(CBasePlayer* pPlayer);
 
 	void Spawn(void);
 	void Precache(void);
 	int iItemSlot(void) { return 4; }
 	int GetItemInfo(ItemInfo* p);
-
-	//MODDD
-	void customAttachToPlayer(CBasePlayer* pPlayer);
-
 	int AddToPlayer(CBasePlayer* pPlayer);
 
 	BOOL Deploy(void);
 	void Holster(int skiplocal = 0);
 
-
-	//MODDD - new.
-	void ItemPreFrame(void);
-	void ItemPostFrame(void);
-
 	void PrimaryAttack(void);
 	void SecondaryAttack(void);
-
-
-	//MODDD - new
-	void chargeGauss(void);
-	float getNextAmmoBurnDelay(void);
-	void determineNextAmmoBurnAndUse(void);
-	void chargeWork(void);
-	void postChargeAnimCheck(void);
-	void attemptFirePrimary(void);
-
-	float getAmmoChargeInterval(void);
-
 	void WeaponIdle(void);
-
-	//MODDD - new
-	void StartFireDecision(void);
 
 	void StartFire(void);
 	void Fire(Vector vecOrigSrc, Vector vecDirShooting, float flDamage);
 	float GetFullChargeTime(void);
-	int m_iBalls;
-	int m_iGlow;
-	int m_iBeam;
-	int m_iSoundState; // don't save this
 
-	// was this weapon just fired primary or secondary?
-	// we need to know so we can pick the right set of effects. 
-	BOOL m_fPrimaryFire;
 
 	virtual BOOL UseDecrement(void)
 	{
@@ -97,9 +74,6 @@ public:
 #endif
 	}
 
-private:
-	unsigned short m_usGaussFire;
-	unsigned short m_usGaussSpin;
 };
 
 

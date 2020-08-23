@@ -1727,7 +1727,6 @@ void loadHiddenCVars(void){
 	EASY_CVAR_SET(cl_hornetspiral, EASY_CVAR_GET(cl_hornetspiral));
 	
 
-	//TODO: do something like this with the gaussmode CVar?
 #endif
 
 }//loadHiddenCVars

@@ -100,18 +100,8 @@ EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(muteBulletHitSounds)
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(rocketTrailAlphaInterval)
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(rocketTrailAlphaScale)
 
-EASY_CVAR_EXTERN(gauss_mode)
-EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_primaryonly)
-EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_reflectdealsdamage)
-EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_chargeanimdelay)
-EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_chargeworkdelay)
-EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_secondarychargetimereq)
-EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_primaryreflects)
-EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_primarypierces)
-EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_secondaryreflects)
-EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_secondarypierces)
-EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_primarypunchthrough)
-EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_secondarypunchthrough)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST(gauss_mode)
+
 
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST(playerWeaponSpreadMode)
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST(playerBulletHitEffectForceServer)
@@ -1368,8 +1358,8 @@ void EV_FireGauss(event_args_t* args)
 	pmtrace_t tr, beam_tr;
 	float flMaxFrac = 1.0;
 	int nTotal = 0;
-	int fHasPunched = 0;
-	int fFirstBeam = 1;
+	BOOL fHasPunched = 0;
+	BOOL fFirstBeam = TRUE;
 	int nMaxHits = 10;
 	physent_t* pEntity;
 	int m_iBeam, m_iGlow, m_iBalls;
@@ -1517,7 +1507,7 @@ void EV_FireGauss(event_args_t* args)
 				// Add muzzle flash to current weapon model
 				EV_MuzzleFlash();
 			}
-			fFirstBeam = 0;
+			fFirstBeam = FALSE;
 
 			//MODDD - beam color touchups due to hastily pasted serverside script, believed to be from early in development
 			// when client prediction was implemented (clientside-effects methods often expect color as a float from 0 to 1,
@@ -1606,10 +1596,8 @@ void EV_FireGauss(event_args_t* args)
 			n = -DotProduct(tr.plane.normal, forward);
 
 
-			int reflectCheckPossible = FALSE;
-			if ((m_fPrimaryFire == TRUE && EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_primaryreflects) != 0) || (m_fPrimaryFire == FALSE && EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_secondaryreflects) != 0)) {
-				reflectCheckPossible = TRUE;
-			}
+			BOOL reflectCheckPossible = TRUE;
+			
 			//MODDD - involved "reflectCheckPossible"
 			if (reflectCheckPossible && n < 0.5) // 60 degrees	
 			{
@@ -1655,17 +1643,15 @@ void EV_FireGauss(event_args_t* args)
 				{
 					break;
 				}
-				fHasPunched = 1;
+				fHasPunched = TRUE;
 
 
 				//MODDD - see mirrored portion of serverside's gauss.cpp.
 				//if ( !m_fPrimaryFire )
-				int punchAttempt = FALSE;
-				if ((m_fPrimaryFire == TRUE && EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_primarypunchthrough) != 0) || (m_fPrimaryFire == FALSE && EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_secondarypunchthrough) != 0)) {
-					punchAttempt = TRUE;
-				}
+				BOOL punchAttempt = (!m_fPrimaryFire);
+
 				// try punching through wall if secondary attack (primary is incapable of breaking through)
-				if (punchAttempt == TRUE)
+				if (punchAttempt)
 				{
 					vec3_t start;
 
@@ -1708,6 +1694,7 @@ void EV_FireGauss(event_args_t* args)
 									255, 100);
 							}
 
+							//MODDD - oh, an as-is comment.  Anyway that's an AI sound you dolt, not audible. Nothing clientside is concerned with.
 							//////////////////////////////////// WHAT TO DO HERE
 													// CSoundEnt::InsertSound ( bits_SOUND_COMBAT, pev->origin, NORMAL_EXPLOSION_VOLUME, 3.0 );
 
@@ -1744,7 +1731,8 @@ void EV_FireGauss(event_args_t* args)
 						{
 							vec3_t fwd;
 							VectorAdd_f(tr.endpos, tr.plane.normal, fwd);
-							gEngfuncs.pEfxAPI->R_Sprite_Trail(TE_SPRITETRAIL, tr.endpos, fwd, m_iBalls, 8, 0.6, gEngfuncs.pfnRandomFloat(10, 20) / 100.0, 100,
+							//MODDD - more consistent ball sizes, was a range of 10 to 20 (pfnRandomFloat)
+							gEngfuncs.pEfxAPI->R_Sprite_Trail(TE_SPRITETRAIL, tr.endpos, fwd, m_iBalls, 8, 0.6, gEngfuncs.pfnRandomFloat(14, 20) / 100.0, 100,
 								255, 200);
 						}
 					}
@@ -1756,18 +1744,15 @@ void EV_FireGauss(event_args_t* args)
 		else
 		{
 			//MODDD
-			int canPierce = FALSE;
-			if ((m_fPrimaryFire == TRUE && EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_primarypierces) != 0) || (m_fPrimaryFire == FALSE && EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_secondarypierces) != 0)) {
-				canPierce = TRUE;
-			}
+			BOOL canPierce = TRUE;
 
-			if (!canPierce) {
+
+			if (canPierce) {
+				VectorAdd_f(tr.endpos, forward, vecSrc);
+			}else{
 				break;
 			}
 
-
-
-			VectorAdd_f(tr.endpos, forward, vecSrc);
 		}
 	}//END OF while(...)
 }
