@@ -187,6 +187,8 @@ BOOL g_gameLoaded = FALSE;
 BOOL g_mapLoaded = FALSE;
 BOOL g_mapLoadedEver = FALSE;
 BOOL g_firstPlayerEntered = FALSE;
+float g_nextCVarUpdate = -1;
+
 
 cvar_t* cvar_skill = NULL;
 //HEY, already have something like this: g_iSkillLevel!!!
@@ -4928,16 +4930,20 @@ void updateCVarRefs(BOOL isEarly){
 		//these are to be sent to the player.
 		//~Initial time calls with null pev (start of game).  This is ok.
 	
-	if (!isEarly) {
-		EASY_CVAR_UPDATE_SERVER_MASS
 
-		// if in release mode and a dedicated server, using the 
+	if (gpGlobals->time >= g_nextCVarUpdate) {
+		g_nextCVarUpdate = gpGlobals->time + 1;
+		if (!isEarly) {
+			EASY_CVAR_UPDATE_SERVER_MASS
+
+				// if in release mode and a dedicated server, using the 
 #ifndef _DEBUG
-		if (IS_DEDICATED_SERVER()) {
-			EASY_CVAR_UPDATE_SERVER_DEDICATED_MASS
-		}
+				if (IS_DEDICATED_SERVER()) {
+					EASY_CVAR_UPDATE_SERVER_DEDICATED_MASS
+				}
 #endif
-	}//isEarly check
+		}//isEarly check
+	}//g_nextCVarUpdate check
 
 
 
@@ -6666,6 +6672,9 @@ Vector getRotatedVectorAboutZAxis(const Vector& arg_vec, const float& arg_deg){
 
 
 void UTIL_ServerMassCVarReset(entvars_t* pev){
+
+	edict_t* pEntity = ENT(pev);
+
 	EASY_CVAR_RESET_MASS
 	EASY_CVAR_RESET_MASS_CLIENT_SIGNAL
 }

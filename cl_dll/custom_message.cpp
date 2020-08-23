@@ -42,7 +42,7 @@ EASY_CVAR_EXTERN_MASS
 
 
 
-//EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(canShowWeaponSelectAtDeath)
+//EASY_CVAR_EXTERN_CLIENTONLY_DEBUGONLY(canShowWeaponSelectAtDeath)
 extern BEAM *pBeam;
 extern BEAM *pBeam2;
 
@@ -350,12 +350,12 @@ int CHud::MsgFunc_Damage(const char* pszName, int iSize, void* pbuf)
 
 	if (bitsDamage & DMG_DROWN) {
 		//if this is "drown" damage, get how to draw pain differnetly (default is nothing at all)
-		if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(painFlashDrownMode) == 2) {
+		if (EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(painFlashDrownMode) == 2) {
 			//just do this.
 			gHUD.m_Pain.cumulativeFadeDrown = 1.0f;
 			//return 1;
 		}
-		else if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(painFlashDrownMode) == 3) {
+		else if (EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(painFlashDrownMode) == 3) {
 			//m_fAttackFront = m_fAttackRear = m_fAttackRight = m_fAttackLeft = 1;
 			//MODDD TODO - ditto.
 			const float damageFlashModTotal = damageTaken + damageBlockedByArmor * EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(painFlashArmorBlock);
@@ -369,7 +369,7 @@ int CHud::MsgFunc_Damage(const char* pszName, int iSize, void* pbuf)
 	//...is "armor" unused?  It comes from "pev->dmg_save". Does it have any purpose than to
 	//trigger a damage draw on any "takeDamage" event, even if the damage is 0?
 
-	if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(painFlashPrintouts) == 1)easyForcePrintLine("RAW DAMAGE %d %d", armor, damageTaken);
+	if (EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(painFlashPrintouts) == 1)easyForcePrintLine("RAW DAMAGE %d %d", armor, damageTaken);
 	// took damage
 	//if ( damageTaken > 0 || armor > 0 )
 	if (damageTaken > 0 || (EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(painFlashArmorBlock) > 0 && damageBlockedByArmor > 0) || armor > 0)
@@ -405,6 +405,9 @@ IMPLEMENT_MESSAGE(JBoxReq){
 	BEGIN_READ( pbuf, iSize );
 	char* strReceive = READ_STRING();
 	//Do the jukebox!
+
+	easyPrintLine("DEBUG: JBoxReq received: %s", strReceive);
+
 	//CLIENT_COMMAND(tempEd, "mp3 play media/Half-Life11.mp3");
 	//gEngfuncs.pfnClientCmd("mp3 play media/Half-Life11.mp3");
 	gEngfuncs.pfnClientCmd(strReceive);
@@ -453,6 +456,7 @@ IMPLEMENT_MESSAGE(FirstAppr){
 
 IMPLEMENT_MESSAGE(UpdClientC){
 #ifdef _DEBUG
+// !!! This comment may be out of date.
 //nothing to do here. This should never be called, this feature is unused for Debug mode.
 //It already treats everything as ordinary CVars.
 //CHANGE.  Even CVars have to be broadcasted from the server to the client for multipalyer to work right for
@@ -587,7 +591,7 @@ IMPLEMENT_MESSAGE(UpdPlyA){
 
 
 	//if dead, and cannot show weapon select... force it off just in case.
-	if(gHUD.m_fPlayerDead && EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(canShowWeaponSelectAtDeath) == 0){
+	if(gHUD.m_fPlayerDead && EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(canShowWeaponSelectAtDeath) == 0){
 		gHUD.m_Ammo.gWR.gpLastSel = gHUD.m_Ammo.gWR.gpActiveSel;
 		gHUD.m_Ammo.gWR.gpActiveSel = NULL;
 	}

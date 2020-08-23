@@ -56,7 +56,7 @@ EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(geigerChannel)
 EASY_CVAR_EXTERN_DEBUGONLY(drawDebugBloodTrace)
 EASY_CVAR_EXTERN_DEBUGONLY(autoSneaky)
 EASY_CVAR_EXTERN(sv_longjump_chargemode)
-EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(endlessFlashlightBattery)
+EASY_CVAR_EXTERN_DEBUGONLY(endlessFlashlightBattery)
 EASY_CVAR_EXTERN_DEBUGONLY(normalSpeedMulti)
 EASY_CVAR_EXTERN_DEBUGONLY(noclipSpeedMulti)
 EASY_CVAR_EXTERN_DEBUGONLY(jumpForceMulti)
@@ -8925,7 +8925,7 @@ void CBasePlayer :: UpdateClientData( void )
 	{
 
 		//This only appleis if the endlessFlashlightBattery CVar is 0 (off).
-		if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(endlessFlashlightBattery) == 0){
+		if(EASY_CVAR_GET_DEBUGONLY(endlessFlashlightBattery) == 0){
 			if (FlashlightIsOn())
 			{
 				if (m_iFlashBattery)

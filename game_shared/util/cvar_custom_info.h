@@ -73,7 +73,7 @@
 #define firstPersonIdleDelayMax_ID 64
 #define forceDrawBatteryNumber_ID 65
 #define canShowWeaponSelectAtDeath_ID 66
-#define endlessFlashlightBattery_ID 67
+//#define endlessFlashlightBattery_ID 67
 #define preE3UsesFailColors_ID 68
 #define E3UsesFailColors_ID 69
 #define preE3ShowsDamageIcons_ID 70

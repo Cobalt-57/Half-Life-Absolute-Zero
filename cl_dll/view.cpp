@@ -33,19 +33,19 @@
 //EASY_CVAR_EXTERN_CLIENT_MASS
 
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelay)
-EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(myCameraSucks)
-EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cameraPosFixedX)
-EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cameraPosFixedY)
-EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cameraPosFixedZ)
-EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cameraRotFixedX)
-EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cameraRotFixedY)
-EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cameraRotFixedZ)
-EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cameraPosOffX)
-EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cameraPosOffY)
-EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cameraPosOffZ)
-EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cameraRotOffX)
-EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cameraRotOffY)
-EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cameraRotOffZ)
+EASY_CVAR_EXTERN_CLIENTONLY_DEBUGONLY(myCameraSucks)
+EASY_CVAR_EXTERN_CLIENTONLY_DEBUGONLY(cameraPosFixedX)
+EASY_CVAR_EXTERN_CLIENTONLY_DEBUGONLY(cameraPosFixedY)
+EASY_CVAR_EXTERN_CLIENTONLY_DEBUGONLY(cameraPosFixedZ)
+EASY_CVAR_EXTERN_CLIENTONLY_DEBUGONLY(cameraRotFixedX)
+EASY_CVAR_EXTERN_CLIENTONLY_DEBUGONLY(cameraRotFixedY)
+EASY_CVAR_EXTERN_CLIENTONLY_DEBUGONLY(cameraRotFixedZ)
+EASY_CVAR_EXTERN_CLIENTONLY_DEBUGONLY(cameraPosOffX)
+EASY_CVAR_EXTERN_CLIENTONLY_DEBUGONLY(cameraPosOffY)
+EASY_CVAR_EXTERN_CLIENTONLY_DEBUGONLY(cameraPosOffZ)
+EASY_CVAR_EXTERN_CLIENTONLY_DEBUGONLY(cameraRotOffX)
+EASY_CVAR_EXTERN_CLIENTONLY_DEBUGONLY(cameraRotOffY)
+EASY_CVAR_EXTERN_CLIENTONLY_DEBUGONLY(cameraRotOffZ)
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(playerBarnacleVictimViewOffset)
 EASY_CVAR_EXTERN(cl_viewpunch)
 EASY_CVAR_EXTERN(cl_viewroll)
@@ -569,7 +569,7 @@ void V_CalcNormalRefdef(struct ref_params_s* pparams)
 	//When moved to "UpdateClientData" of hud_update.cpp, it works.
 	//RenderFog();
 
-	if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(myCameraSucks) == 1) {
+	if (EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(myCameraSucks) == 1) {
 		return;
 	}
 	cl_entity_t* ent;
@@ -1310,49 +1310,49 @@ void V_CalcNormalRefdef(struct ref_params_s* pparams)
 	}
 
 
-	if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(myCameraSucks) == 2 || EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(myCameraSucks) == 4) {
+	if (EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(myCameraSucks) == 2 || EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(myCameraSucks) == 4) {
 		//let's rely on the CVars for the camera's position.
 
-		if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cameraPosFixedX) == -1) {
-			pparams->vieworg[0] = ent->origin[0] + EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cameraPosOffX);
+		if (EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(cameraPosFixedX) == -1) {
+			pparams->vieworg[0] = ent->origin[0] + EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(cameraPosOffX);
 		}
 		else {
-			pparams->vieworg[0] = EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cameraPosFixedX);
+			pparams->vieworg[0] = EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(cameraPosFixedX);
 		}
-		if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cameraPosFixedY) == -1) {
-			pparams->vieworg[1] = ent->origin[1] + EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cameraPosOffY);
-		}
-		else {
-			pparams->vieworg[1] = EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cameraPosFixedY);
-		}
-		if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cameraPosFixedZ) == -1) {
-			pparams->vieworg[2] = ent->origin[2] + EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cameraPosOffZ);
+		if (EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(cameraPosFixedY) == -1) {
+			pparams->vieworg[1] = ent->origin[1] + EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(cameraPosOffY);
 		}
 		else {
-			pparams->vieworg[2] = EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cameraPosFixedZ);
+			pparams->vieworg[1] = EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(cameraPosFixedY);
 		}
-		if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cameraRotFixedX) == -1) {
-			pparams->viewangles[0] = ent->angles[0] + EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cameraRotOffX);
-		}
-		else {
-			pparams->viewangles[0] = EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cameraRotFixedX);
-		}
-		if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cameraRotFixedY) == -1) {
-			pparams->viewangles[1] = ent->angles[1] + EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cameraRotOffY);
+		if (EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(cameraPosFixedZ) == -1) {
+			pparams->vieworg[2] = ent->origin[2] + EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(cameraPosOffZ);
 		}
 		else {
-			pparams->viewangles[1] = EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cameraRotFixedY);
+			pparams->vieworg[2] = EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(cameraPosFixedZ);
 		}
-		if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cameraRotFixedZ) == -1) {
-			pparams->viewangles[2] = ent->angles[2] + EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cameraRotOffZ);
+		if (EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(cameraRotFixedX) == -1) {
+			pparams->viewangles[0] = ent->angles[0] + EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(cameraRotOffX);
 		}
 		else {
-			pparams->viewangles[2] = EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cameraRotFixedZ);
+			pparams->viewangles[0] = EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(cameraRotFixedX);
+		}
+		if (EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(cameraRotFixedY) == -1) {
+			pparams->viewangles[1] = ent->angles[1] + EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(cameraRotOffY);
+		}
+		else {
+			pparams->viewangles[1] = EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(cameraRotFixedY);
+		}
+		if (EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(cameraRotFixedZ) == -1) {
+			pparams->viewangles[2] = ent->angles[2] + EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(cameraRotOffZ);
+		}
+		else {
+			pparams->viewangles[2] = EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(cameraRotFixedZ);
 		}
 	}
 
 	/*
-	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(myCameraSucks) == 2){
+	if(EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(myCameraSucks) == 2){
 		//Top-down time!
 		//up / down?
 		pparams->viewangles[0] = 90;
@@ -1362,7 +1362,7 @@ void V_CalcNormalRefdef(struct ref_params_s* pparams)
 		pparams->viewangles[2] = 0;
 		pparams->vieworg[2] = ent->origin[2] + 260;
 	}
-	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(myCameraSucks) == 3){
+	if(EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(myCameraSucks) == 3){
 		//Top-down time, but rotate so that the top of the screen is where the player is facing.
 		//up / down?
 		pparams->viewangles[0] = 90;
@@ -1373,7 +1373,7 @@ void V_CalcNormalRefdef(struct ref_params_s* pparams)
 		//easyPrintLine("PRINTOUT SON! %.2f %.2f %.2f", pparams->viewangles[0], pparams->viewangles[1], pparams->viewangles[2]);
 		pparams->vieworg[2] = ent->origin[2] + 260;
 	}
-	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(myCameraSucks) == 4){
+	if(EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(myCameraSucks) == 4){
 		//Top-down time, but rotate so that the top of the screen is where the player is facing.
 		//up / down?
 		pparams->viewangles[0] = 90;
@@ -1386,7 +1386,7 @@ void V_CalcNormalRefdef(struct ref_params_s* pparams)
 	}
 	*/
 
-	if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(myCameraSucks) == 3 || EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(myCameraSucks) == 4) {
+	if (EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(myCameraSucks) == 3 || EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(myCameraSucks) == 4) {
 		easyPrintLine("PRINTOUT SON! %.2f %.2f %.2f", pparams->viewangles[0], pparams->viewangles[1], pparams->viewangles[2]);
 	}
 

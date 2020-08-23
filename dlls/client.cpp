@@ -791,6 +791,9 @@ void partyStart(CBasePlayer* playerRef){
 
 void partyOff(CBasePlayer* playerRef){
 
+	entvars_t* pev = playerRef->pev;
+	edict_t* pEntity = playerRef->edict();
+
 	EASY_CVAR_SET_DEBUGONLY(myStrobe, 0)
 	EASY_CVAR_SET_DEBUGONLY(peopleStrobe, 0)
 	EASY_CVAR_SET_DEBUGONLY(forceWorldLightOff, 0)
@@ -799,9 +802,9 @@ void partyOff(CBasePlayer* playerRef){
 		
 	EASY_CVAR_SET_DEBUGONLY(myStrobe, 0)
 	EASY_CVAR_SET_DEBUGONLY(peopleStrobe, 0)
-	EASY_CVAR_SET_DEBUGONLY(fogTest, 0)
-	EASY_CVAR_SET_DEBUGONLY(imAllFuckedUp, 0)
-	EASY_CVAR_SET_DEBUGONLY(thatWasntGrass, 0)
+	EASY_CVAR_SET_CLIENTONLY_DEBUGONLY_FORCEBROADCAST(fogTest, 0)
+	EASY_CVAR_SET_CLIENTONLY_DEBUGONLY_FORCEBROADCAST(imAllFuckedUp, 0)
+	EASY_CVAR_SET_CLIENTONLY_DEBUGONLY_FORCEBROADCAST(thatWasntGrass, 0)
 	EASY_CVAR_SET_DEBUGONLY(thatWasntPunch, 0)
 
 
@@ -1535,33 +1538,33 @@ void ClientCommand( edict_t *pEntity )
 	}else if ( FStrEq(pcmdRefinedRef, "partyfix") || FStrEq(pcmdRefinedRef, "fixparty") || FStrEq(pcmdRefinedRef, "resetparty") || FStrEq(pcmdRefinedRef, "partyreset") ){
 
 		EASY_CVAR_SET_DEBUGONLY(raveEffectSpawnInterval, 0.22)
-		EASY_CVAR_SET_DEBUGONLY(strobeDurationMin, 0.08)
-		EASY_CVAR_SET_DEBUGONLY(strobeDurationMax, 0.14)
-		EASY_CVAR_SET_DEBUGONLY(strobeRadiusMin, 280)
-		EASY_CVAR_SET_DEBUGONLY(strobeRadiusMax, 410)
-		EASY_CVAR_SET_DEBUGONLY(strobeSpawnDistHori, 180)
-		EASY_CVAR_SET_DEBUGONLY(strobeSpawnDistVertMin, 25)
-		EASY_CVAR_SET_DEBUGONLY(strobeSpawnDistVertMax, 75)
-		EASY_CVAR_SET_DEBUGONLY(strobeMultiColor, 1)
-		EASY_CVAR_SET_DEBUGONLY(raveLaserEnabled, 1)
-		EASY_CVAR_SET_DEBUGONLY(raveLaserSpawnFreq, 2.3)
-		EASY_CVAR_SET_DEBUGONLY(raveLaserLength, 180)
-		EASY_CVAR_SET_DEBUGONLY(raveLaserSpawnDistHoriMin, 50)
-		EASY_CVAR_SET_DEBUGONLY(raveLaserSpawnDistHoriMax, 110)
-		EASY_CVAR_SET_DEBUGONLY(raveLaserSpawnDistVertMin, -5)
-		EASY_CVAR_SET_DEBUGONLY(raveLaserSpawnDistVertMax, 45)
-		EASY_CVAR_SET_DEBUGONLY(raveLaserBrightnessMin, 1.0)
-		EASY_CVAR_SET_DEBUGONLY(raveLaserBrightnessMax, 1.0)
-		EASY_CVAR_SET_DEBUGONLY(raveLaserDurationMin, 0.06)
-		EASY_CVAR_SET_DEBUGONLY(raveLaserDurationMax, 0.12)
-		EASY_CVAR_SET_DEBUGONLY(raveLaserThicknessMin, 0.8)
-		EASY_CVAR_SET_DEBUGONLY(raveLaserThicknessMax, 2.6)
-		EASY_CVAR_SET_DEBUGONLY(raveLaserNoiseMin, 0)
-		EASY_CVAR_SET_DEBUGONLY(raveLaserNoiseMax, 0)
-		EASY_CVAR_SET_DEBUGONLY(raveLaserFrameRateMin, 10)
-		EASY_CVAR_SET_DEBUGONLY(raveLaserFrameRateMax, 10)
-		EASY_CVAR_SET_DEBUGONLY(raveLaserMultiColor, 1)
-		EASY_CVAR_SET_DEBUGONLY(thatWasntGrass, 0)
+		EASY_CVAR_SET_CLIENTONLY_DEBUGONLY_FORCEBROADCAST(strobeDurationMin, 0.08)
+		EASY_CVAR_SET_CLIENTONLY_DEBUGONLY_FORCEBROADCAST(strobeDurationMax, 0.14)
+		EASY_CVAR_SET_CLIENTONLY_DEBUGONLY_FORCEBROADCAST(strobeRadiusMin, 280)
+		EASY_CVAR_SET_CLIENTONLY_DEBUGONLY_FORCEBROADCAST(strobeRadiusMax, 410)
+		EASY_CVAR_SET_CLIENTONLY_DEBUGONLY_FORCEBROADCAST(strobeSpawnDistHori, 180)
+		EASY_CVAR_SET_CLIENTONLY_DEBUGONLY_FORCEBROADCAST(strobeSpawnDistVertMin, 25)
+		EASY_CVAR_SET_CLIENTONLY_DEBUGONLY_FORCEBROADCAST(strobeSpawnDistVertMax, 75)
+		EASY_CVAR_SET_CLIENTONLY_DEBUGONLY_FORCEBROADCAST(strobeMultiColor, 1)
+		EASY_CVAR_SET_CLIENTONLY_DEBUGONLY_FORCEBROADCAST(raveLaserEnabled, 1)
+		EASY_CVAR_SET_CLIENTONLY_DEBUGONLY_FORCEBROADCAST(raveLaserSpawnFreq, 2.3)
+		EASY_CVAR_SET_CLIENTONLY_DEBUGONLY_FORCEBROADCAST(raveLaserLength, 180)
+		EASY_CVAR_SET_CLIENTONLY_DEBUGONLY_FORCEBROADCAST(raveLaserSpawnDistHoriMin, 50)
+		EASY_CVAR_SET_CLIENTONLY_DEBUGONLY_FORCEBROADCAST(raveLaserSpawnDistHoriMax, 110)
+		EASY_CVAR_SET_CLIENTONLY_DEBUGONLY_FORCEBROADCAST(raveLaserSpawnDistVertMin, -5)
+		EASY_CVAR_SET_CLIENTONLY_DEBUGONLY_FORCEBROADCAST(raveLaserSpawnDistVertMax, 45)
+		EASY_CVAR_SET_CLIENTONLY_DEBUGONLY_FORCEBROADCAST(raveLaserBrightnessMin, 1.0)
+		EASY_CVAR_SET_CLIENTONLY_DEBUGONLY_FORCEBROADCAST(raveLaserBrightnessMax, 1.0)
+		EASY_CVAR_SET_CLIENTONLY_DEBUGONLY_FORCEBROADCAST(raveLaserDurationMin, 0.06)
+		EASY_CVAR_SET_CLIENTONLY_DEBUGONLY_FORCEBROADCAST(raveLaserDurationMax, 0.12)
+		EASY_CVAR_SET_CLIENTONLY_DEBUGONLY_FORCEBROADCAST(raveLaserThicknessMin, 0.8)
+		EASY_CVAR_SET_CLIENTONLY_DEBUGONLY_FORCEBROADCAST(raveLaserThicknessMax, 2.6)
+		EASY_CVAR_SET_CLIENTONLY_DEBUGONLY_FORCEBROADCAST(raveLaserNoiseMin, 0)
+		EASY_CVAR_SET_CLIENTONLY_DEBUGONLY_FORCEBROADCAST(raveLaserNoiseMax, 0)
+		EASY_CVAR_SET_CLIENTONLY_DEBUGONLY_FORCEBROADCAST(raveLaserFrameRateMin, 10)
+		EASY_CVAR_SET_CLIENTONLY_DEBUGONLY_FORCEBROADCAST(raveLaserFrameRateMax, 10)
+		EASY_CVAR_SET_CLIENTONLY_DEBUGONLY_FORCEBROADCAST(raveLaserMultiColor, 1)
+		EASY_CVAR_SET_CLIENTONLY_DEBUGONLY_FORCEBROADCAST(thatWasntGrass, 0)
 		EASY_CVAR_SET_DEBUGONLY(thatWasntPunch, 0)
 
 	}else if( FStrEq(pcmdRefinedRef, "resetSparks") || FStrEq(pcmdRefinedRef, "tooManySparks")   ){
@@ -1595,43 +1598,43 @@ void ClientCommand( edict_t *pEntity )
 		partyStart(tempplayer);
 
 		EASY_CVAR_SET_DEBUGONLY(raveEffectSpawnInterval, 0.1)
-		EASY_CVAR_SET_DEBUGONLY(strobeDurationMin, 0.06)
-		EASY_CVAR_SET_DEBUGONLY(strobeDurationMax, 0.08)
-		EASY_CVAR_SET_DEBUGONLY(raveLaserSpawnFreq, 2.3)
+		EASY_CVAR_SET_CLIENTONLY_DEBUGONLY_FORCEBROADCAST(strobeDurationMin, 0.06)
+		EASY_CVAR_SET_CLIENTONLY_DEBUGONLY_FORCEBROADCAST(strobeDurationMax, 0.08)
+		EASY_CVAR_SET_CLIENTONLY_DEBUGONLY_FORCEBROADCAST(raveLaserSpawnFreq, 2.3)
 		//only difference: no crazy text.
-		EASY_CVAR_SET_DEBUGONLY(imAllFuckedUp, 0)
-		EASY_CVAR_SET_DEBUGONLY(thatWasntGrass, 1)
+		EASY_CVAR_SET_CLIENTONLY_DEBUGONLY_FORCEBROADCAST(imAllFuckedUp, 0)
+		EASY_CVAR_SET_CLIENTONLY_DEBUGONLY_FORCEBROADCAST(thatWasntGrass, 1)
 		EASY_CVAR_SET_DEBUGONLY(thatWasntPunch, 1)
-		EASY_CVAR_SET_DEBUGONLY(fogTest, 2)
+		EASY_CVAR_SET_CLIENTONLY_DEBUGONLY_FORCEBROADCAST(fogTest, 2)
 
 	}else if(  FStrEq(pcmdRefinedRef, "hyperrave") || FStrEq(pcmdRefinedRef, "hyperave") || FStrEq(pcmdRefinedRef, "hardcore")   ){
 		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev) ;
 		partyStart(tempplayer);
 
 		EASY_CVAR_SET_DEBUGONLY(raveEffectSpawnInterval, 0.1)
-		EASY_CVAR_SET_DEBUGONLY(strobeDurationMin, 0.06)
-		EASY_CVAR_SET_DEBUGONLY(strobeDurationMax, 0.08)
-		EASY_CVAR_SET_DEBUGONLY(raveLaserSpawnFreq, 2.3)
-		EASY_CVAR_SET_DEBUGONLY(imAllFuckedUp, 1)
-		EASY_CVAR_SET_DEBUGONLY(thatWasntGrass, 1)
+		EASY_CVAR_SET_CLIENTONLY_DEBUGONLY_FORCEBROADCAST(strobeDurationMin, 0.06)
+		EASY_CVAR_SET_CLIENTONLY_DEBUGONLY_FORCEBROADCAST(strobeDurationMax, 0.08)
+		EASY_CVAR_SET_CLIENTONLY_DEBUGONLY_FORCEBROADCAST(raveLaserSpawnFreq, 2.3)
+		EASY_CVAR_SET_CLIENTONLY_DEBUGONLY_FORCEBROADCAST(imAllFuckedUp, 1)
+		EASY_CVAR_SET_CLIENTONLY_DEBUGONLY_FORCEBROADCAST(thatWasntGrass, 1)
 		EASY_CVAR_SET_DEBUGONLY(thatWasntPunch, 1)
-		EASY_CVAR_SET_DEBUGONLY(fogTest, 2)
+		EASY_CVAR_SET_CLIENTONLY_DEBUGONLY_FORCEBROADCAST(fogTest, 2)
 
 	}else if(  FStrEq(pcmdRefinedRef, "fixCamera") || FStrEq(pcmdRefinedRef, "camerafix") || FStrEq(pcmdRefinedRef, "cameraReset") || FStrEq(pcmdRefinedRef, "cameraReset")    ){
 	
-		EASY_CVAR_SET_DEBUGONLY(myCameraSucks, 0)
-		EASY_CVAR_SET_DEBUGONLY(cameraPosFixedX, -1)
-		EASY_CVAR_SET_DEBUGONLY(cameraPosFixedY, -1)
-		EASY_CVAR_SET_DEBUGONLY(cameraPosFixedZ, -1)
-		EASY_CVAR_SET_DEBUGONLY(cameraPosOffX, 0)
-		EASY_CVAR_SET_DEBUGONLY(cameraPosOffY, 0)
-		EASY_CVAR_SET_DEBUGONLY(cameraPosOffZ, 260)
-		EASY_CVAR_SET_DEBUGONLY(cameraRotFixedX, 90)
-		EASY_CVAR_SET_DEBUGONLY(cameraRotFixedY, -1)
-		EASY_CVAR_SET_DEBUGONLY(cameraRotFixedZ, -1)
-		EASY_CVAR_SET_DEBUGONLY(cameraRotOffX, 0)
-		EASY_CVAR_SET_DEBUGONLY(cameraRotOffY, 0)
-		EASY_CVAR_SET_DEBUGONLY(cameraRotOffZ, 0)
+		EASY_CVAR_SET_CLIENTONLY_DEBUGONLY_FORCEBROADCAST(myCameraSucks, 0)
+		EASY_CVAR_SET_CLIENTONLY_DEBUGONLY_FORCEBROADCAST(cameraPosFixedX, -1)
+		EASY_CVAR_SET_CLIENTONLY_DEBUGONLY_FORCEBROADCAST(cameraPosFixedY, -1)
+		EASY_CVAR_SET_CLIENTONLY_DEBUGONLY_FORCEBROADCAST(cameraPosFixedZ, -1)
+		EASY_CVAR_SET_CLIENTONLY_DEBUGONLY_FORCEBROADCAST(cameraPosOffX, 0)
+		EASY_CVAR_SET_CLIENTONLY_DEBUGONLY_FORCEBROADCAST(cameraPosOffY, 0)
+		EASY_CVAR_SET_CLIENTONLY_DEBUGONLY_FORCEBROADCAST(cameraPosOffZ, 260)
+		EASY_CVAR_SET_CLIENTONLY_DEBUGONLY_FORCEBROADCAST(cameraRotFixedX, 90)
+		EASY_CVAR_SET_CLIENTONLY_DEBUGONLY_FORCEBROADCAST(cameraRotFixedY, -1)
+		EASY_CVAR_SET_CLIENTONLY_DEBUGONLY_FORCEBROADCAST(cameraRotFixedZ, -1)
+		EASY_CVAR_SET_CLIENTONLY_DEBUGONLY_FORCEBROADCAST(cameraRotOffX, 0)
+		EASY_CVAR_SET_CLIENTONLY_DEBUGONLY_FORCEBROADCAST(cameraRotOffY, 0)
+		EASY_CVAR_SET_CLIENTONLY_DEBUGONLY_FORCEBROADCAST(cameraRotOffZ, 0)
 
 	}else if ( FStrEq(pcmdRefinedRef, "fixprecache" ) || FStrEq(pcmdRefinedRef, "fixcache" ) || FStrEq(pcmdRefinedRef, "cachefix"   ) || FStrEq(pcmdRefinedRef, "precachefix")  ){
 
@@ -3889,12 +3892,12 @@ void ClientCommand( edict_t *pEntity )
 
 	}else if( FStrEq(pcmdRefinedRef, "hidemyshit") || FStrEq(pcmdRefinedRef, "hideall") || FStrEq(pcmdRefinedRef, "hidefp") ){
 
-		EASY_CVAR_SET_CLIENTONLY_DEBUGONLY(drawHUD, -1);
-		EASY_CVAR_SET_CLIENTONLY_DEBUGONLY(drawViewModel, 0);
+		EASY_CVAR_SET_CLIENTONLY_DEBUGONLY_FORCEBROADCAST(drawHUD, -1);
+		EASY_CVAR_SET_CLIENTONLY_DEBUGONLY_FORCEBROADCAST(drawViewModel, 0);
 		
 	}else if( FStrEq(pcmdRefinedRef, "showmyshit") || FStrEq(pcmdRefinedRef, "showall") || FStrEq(pcmdRefinedRef, "showfp") ){
-		EASY_CVAR_SET_CLIENTONLY_DEBUGONLY(drawHUD, 1);
-		EASY_CVAR_SET_CLIENTONLY_DEBUGONLY(drawViewModel, 1);
+		EASY_CVAR_SET_CLIENTONLY_DEBUGONLY_FORCEBROADCAST(drawHUD, 1);
+		EASY_CVAR_SET_CLIENTONLY_DEBUGONLY_FORCEBROADCAST(drawViewModel, 1);
 		
 	}else if( FStrEq(pcmdRefinedRef, "setsequence") || FStrEq(pcmdRefinedRef, "sequence") || FStrEq(pcmdRefinedRef, "setanimation") ){
 		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev);

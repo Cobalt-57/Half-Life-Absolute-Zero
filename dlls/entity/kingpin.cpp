@@ -1993,9 +1993,6 @@ void CKingpin::RunTask( Task_t *pTask ){
 				TaskComplete();
 			}
 		break;}
-
-
-		
 		case TASK_KINGPIN_ELECTRIC_BARRAGE_CHARGE_INTERRUPTED:{
 			if(m_fSequenceFinishedSinceLoop){
 				setPrimaryAttackCooldown();
@@ -2008,7 +2005,6 @@ void CKingpin::RunTask( Task_t *pTask ){
 				TaskComplete();
 			}
 		break;}
-		
 		case TASK_KINGPIN_ELECTRIC_BARRAGE_START:{
 			if(m_fSequenceFinishedSinceLoop){
 				TaskComplete();

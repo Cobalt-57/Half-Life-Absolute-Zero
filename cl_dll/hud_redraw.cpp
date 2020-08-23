@@ -22,9 +22,9 @@
 
 //MODDD - nice
 //EASY_CVAR_EXTERN_CLIENT_MASS
-EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(thatWasntGrass)
-EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(allowAlphaCrosshairWithoutGuns)
-EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(imAllFuckedUp)
+EASY_CVAR_EXTERN_CLIENTONLY_DEBUGONLY(thatWasntGrass)
+EASY_CVAR_EXTERN_CLIENTONLY_DEBUGONLY(allowAlphaCrosshairWithoutGuns)
+EASY_CVAR_EXTERN_CLIENTONLY_DEBUGONLY(imAllFuckedUp)
 EASY_CVAR_EXTERN(hud_logo)
 
 
@@ -82,13 +82,13 @@ void CHud::Think(void)
 
 	if (nextPrintTime == 0 || gHUD.recentTime >= nextPrintTime) {
 		nextPrintTime = gHUD.recentTime + 2;
-		if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(canShowWeaponSelectAtDeath) == 0) {
+		if (EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(canShowWeaponSelectAtDeath) == 0) {
 			gEngfuncs.pfnConsolePrint("Atest print\n");
 		}
-		else if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(canShowWeaponSelectAtDeath) == 1) {
+		else if (EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(canShowWeaponSelectAtDeath) == 1) {
 			gEngfuncs.Con_Printf("Btest print %i %d %f %s end\n", 4, 4, 4.2f, "X");
 		}
-		else if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(canShowWeaponSelectAtDeath) == 2) {
+		else if (EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(canShowWeaponSelectAtDeath) == 2) {
 			gEngfuncs.Con_DPrintf("Ctest print %i %d %f %s end\n", 4, 4, 4.2f, "X");
 		}
 	}
@@ -156,14 +156,14 @@ void CHud::Think(void)
 	}
 	
 
-	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(thatWasntGrass) == 1){
+	if(EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(thatWasntGrass) == 1){
 		//gHUD.m_iPlayerFOV = getTimePeriodAndBackSmooth(recentTime, 0.7f, 87, 110);
 		gHUD.m_iPlayerFOV = getTimePeriodAndBackSmooth(recentTime, 0.23f, 0.23f, 94, 110);
 	}
 	
 	if(
 		CVAR_GET_FLOAT("crosshair") != gHUD.crosshairMem ||
-		EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(allowAlphaCrosshairWithoutGuns) != gHUD.allowAlphaCrosshairWithoutGunsMem
+		EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(allowAlphaCrosshairWithoutGuns) != gHUD.allowAlphaCrosshairWithoutGunsMem
 	){
 		// includes updates to the MEM vars.
 		gHUD.m_Ammo.updateCrosshair();
@@ -211,7 +211,7 @@ int CHud::Redraw(float flTime, int intermission)
 {
 	//easyForcePrintLine("CLIENT GUI: Redraw: %.2f %d", flTime, intermission);
 
-	if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(imAllFuckedUp) == 1) {
+	if (EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(imAllFuckedUp) == 1) {
 		drawCrazyShit(flTime);
 	}
 

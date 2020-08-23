@@ -174,8 +174,9 @@ void CBaseMonster :: ChangeSchedule ( Schedule_t *pNewSchedule )
 	
 	// DANGEROUS!  Was ClearAllConditionsExcept_ThisFrame  (default includes that and NextFrame).
 	//ClearAllConditionsExcept_ThisFrame(bits_COND_TASK_FAILED | bits_COND_SCHEDULE_DONE | bits_COND_NEW_ENEMY);
-	ClearAllConditions_ThisFrame();
-	ClearConditions_NextFrame(bits_COND_TASK_FAILED | bits_COND_SCHEDULE_DONE);
+	//ClearAllConditionsExcept_ThisFrame(bits_COND_HEAR_SOUND | bits_COND_SEE_HATE | bits_COND_SEE_DISLIKE | bits_COND_SEE_ENEMY | bits_COND_SEE_FEAR | bits_COND_SEE_NEMESIS | bits_COND_SEE_CLIENT | bits_COND_ENEMY_OCCLUDED);
+	ClearConditions(bits_COND_ENEMY_DEAD | bits_COND_TASK_FAILED | bits_COND_SCHEDULE_DONE);
+	ClearConditions_NextFrame(bits_COND_ENEMY_DEAD | bits_COND_TASK_FAILED | bits_COND_SCHEDULE_DONE);
 
 	//weren't these good ideas though, sorta?
 	//////////////////////////////////////////////////////////////

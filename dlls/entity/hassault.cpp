@@ -3060,84 +3060,35 @@ void CHAssault :: MonsterThink ( void )
 	}
 	//easyPrintLine("HASSAULT::: whut %s %d  %d", this->getScheduleName(), this->getTaskNumber(), this->HasConditions(bits_COND_ENEMY_DEAD));
 	
-	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(thatWasntPunch) == 1 && this->m_fSequenceFinished){
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(thatWasntPunch) == 1 && (this->m_fSequenceFinished || pev->frame >= 245)){
 
-		switch(RANDOM_LONG(0, 24)){
+		switch(RANDOM_LONG(0, 26)){
 
-			case 0:
-				this->SetSequenceByName("idle");
-			break;
-			case 1:
-				this->SetSequenceByName("idle");
-			break;
-			case 2:
-				this->SetSequenceByName("idle1");
-			break;
-			case 3:
-				this->SetSequenceByName("idle1");
-			break;
-			case 4:
-				this->SetSequenceByName("turn_left");
-			break;
-			case 5:
-				this->SetSequenceByName("turn_left");
-			break;
-			case 6:
-				this->SetSequenceByName("turn_right");
-			break;
-			case 7:
-				this->SetSequenceByName("turn_right");
-			break;
-			case 8:
-				this->SetSequenceByName("melee");
-			break;
-			case 9:
-				this->SetSequenceByName("melee");
-			break;
-			case 10:
-				this->SetSequenceByName("melee1");
-			break;
-			case 12:
-				this->SetSequenceByName("melee1");
-			break;
+			case 0:this->SetSequenceByName("idle");break;
+			case 1:this->SetSequenceByName("idle");break;case 2:this->SetSequenceByName("idle1");break;
+			case 3:this->SetSequenceByName("idle1");break;
+			case 4:this->SetSequenceByName("turn_left");break;case 5:this->SetSequenceByName("turn_left");break;
+			case 6:this->SetSequenceByName("turn_right");break;
+			case 7:this->SetSequenceByName("turn_right");break;
+			case 8:this->SetSequenceByName("melee");break;
+			case 9:this->SetSequenceByName("melee");break;
+			case 10:this->SetSequenceByName("melee1");break;
+			case 12:this->SetSequenceByName("melee1");break;
 
-			case 13:
-				this->SetSequenceByName("small_pain");
-			break;
-			case 14:
-				this->SetSequenceByName("small_pain");
-			break;
-			case 15:
-				this->SetSequenceByName("small_pain");
-			break;
-			case 16:
-				this->SetSequenceByName("small_pain");
-			break;
-			case 17:
-				this->SetSequenceByName("small_pain2");
-			break;
-			case 18:
-				this->SetSequenceByName("small_pain2");
-			break;
-			case 19:
-				this->SetSequenceByName("small_pain2");
-			break;
-			case 20:
-				this->SetSequenceByName("small_pain2");
-			break;
-
-			case 21:
-				this->SetSequenceByName("barnacled1");
-			break;
-			case 22:
-				this->SetSequenceByName("barnacled2");
-			break;
-			case 23:
-				this->SetSequenceByName("barnacled3");
-			break;
-			case 24:
-				this->SetSequenceByName("barnacled4");
-			break;
+			case 13:this->SetSequenceByName("small_pain");break;
+			case 14:this->SetSequenceByName("small_pain");break;
+			case 15:this->SetSequenceByName("small_pain");break;
+			case 16:this->SetSequenceByName("small_pain");break;
+			case 17:this->SetSequenceByName("small_pain2");break;
+			case 18:this->SetSequenceByName("small_pain2");break;
+			case 19:this->SetSequenceByName("small_pain2");break;
+			case 20:this->SetSequenceByName("small_pain2");break;
+			case 21:this->SetSequenceByName("barnacled1");break;
+			case 22:this->SetSequenceByName("barnacled2");break;
+			case 23:this->SetSequenceByName("barnacled3");break;
+			case 24:this->SetSequenceByName("barnacled4");break;
+			case 25:this->SetSequenceByName("die_backwards"); break;
+			case 26:this->SetSequenceByName("throwgrenade"); break;
 		}
 	}
 	//EASY_CVAR_PRINTIF_PRE(hassaultPrintout, easyPrintLine( "MOVEMENT WAIT COND: %d %d %d" , HasConditions(bits_COND_SEE_ENEMY), !HasConditions(bits_COND_ENEMY_OCCLUDED), HasConditions(HasConditionsEither(bits_COND_CAN_RANGE_ATTACK1) ) ));
@@ -3342,6 +3293,9 @@ int CHAssault::LookupActivityHard(int activity){
 
 	// let's do m_IdealActivity??
 	switch(iSelectedActivity){
+		case ACT_RANGE_ATTACK2:
+			return LookupSequence("throwgrenade");
+		break;
 		case ACT_IDLE:
 			if(
 				//(waittime != -1 && waittime > gpGlobals->time) &&
@@ -3483,8 +3437,12 @@ int CHAssault::LookupActivityHard(int activity){
 int CHAssault::tryActivitySubstitute(int activity){
 	//no need for default, just falls back to the normal activity lookup.
 	switch(activity){
+		
 		case ACT_RANGE_ATTACK1:
 			return CBaseAnimating::LookupActivity(activity);
+		break;
+		case ACT_RANGE_ATTACK2:
+			return LookupSequence("throwgrenade");
 		break;
 		case ACT_WALK:
 			return CBaseAnimating::LookupActivity(activity);

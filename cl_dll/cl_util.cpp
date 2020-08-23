@@ -74,6 +74,8 @@ float globalPSEUDO_m_rawinputMem = -1;
 float global2PSEUDO_default_fov = -1;
 float global2PSEUDO_auto_adjust_fov = -1;
 
+float g_cl_nextCVarUpdate = -1;
+
 
 
 BOOL g_lateCVarInit_called = FALSE;
@@ -145,8 +147,13 @@ void updateClientCVarRefs(void){
 		// not allowed to run until all CVars have been hooked up to starting defaults, particulary broadcasted  ones.
 		return;
 	}
+	
 
-	EASY_CVAR_UPDATE_CLIENT_MASS
+
+	if (gEngfuncs.GetClientTime() >= g_cl_nextCVarUpdate) {
+		g_cl_nextCVarUpdate = gEngfuncs.GetClientTime() + 1;
+		EASY_CVAR_UPDATE_CLIENT_MASS
+	}//g_cl_nextCVarUpdate check
 
 	//nope, this is what EASY_CVAR should be doing.  Or something better.
 	//if(cvar2_cl_interp_entity != NULL && cvar2_cl_interp_entity->value != global2_cl_interp_entity){\

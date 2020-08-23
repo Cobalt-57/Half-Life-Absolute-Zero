@@ -2742,14 +2742,16 @@ void CTalkMonster::MonsterThink(void){
 	//sitting scientist should not attempt this.  either doesn't work or just... weirder than usual.
 	if(canGoRavingMad && !FClassnameIs(pev, "monster_sitting_scientist") ){
 
+		// nevermind, barnies/scientists now have dance moves too.
+		/*
 		if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(thatWasntPunch) == 1){
 			//pev->angles[0] 
 			//UTIL_printLineVector("STUFFFFF", pev->angles);
-
 			pev->angles[0] = RANDOM_LONG(-30, 30);
 			pev->angles[1] = RANDOM_LONG(0, 359);
 			//pev->angles[2] = RANDOM_LONG(0, 359);
 		}
+		*/
 
 	}else{
 		//nah, gonna bleep with ya.  Leave em' slanted funny.
@@ -2868,12 +2870,15 @@ int CTalkMonster::IRelationship( CBaseEntity *pTarget )
 		return R_NO;
 	}
 
+	// breakpoint stuff
+	/*
 	if(FClassnameIs(pTarget->pev, "monster_stukabat")){
 		
 		BOOL isProAble = pTarget->isProvokable();
 		BOOL isProv = pTarget->isProvoked();
 		int x = 4;
 	}
+	*/
 
 	//MODDD TODO - for provokable but unprovoked things, maybe make Barnies point their guns and stare at it when not following, or scientist do a fear anim while staring at it?
 	if(pTarget->isProvokable() && !pTarget->isProvoked() ){
@@ -2890,11 +2895,11 @@ int CTalkMonster::IRelationship( CBaseEntity *pTarget )
 	}
 
 	if(FClassnameIs(pTarget->pev, "monster_chumtoad")){
-		//don't be mean to chumtoads.
+		// don't be mean to chumtoads.
 
 		if( (pev->origin - pTarget->pev->origin).Length() < closestPassiveNPC_distance){
-			//this is now the closest non-intimidating thing.
-			//To look at every so often.
+			// this is now the closest non-intimidating thing.
+			// To look at every so often.
 			closestPassiveNPC = pTarget;
 		}
 

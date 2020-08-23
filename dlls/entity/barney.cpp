@@ -41,7 +41,7 @@ EASY_CVAR_EXTERN_DEBUGONLY(barneyDroppedGlockAmmoCap)
 EASY_CVAR_EXTERN_DEBUGONLY(barneyUnholsterTime)
 EASY_CVAR_EXTERN_DEBUGONLY(barneyUnholsterAnimChoice)
 EASY_CVAR_EXTERN_DEBUGONLY(hyperBarney)
-
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(thatWasntPunch)
 
 
 
@@ -1077,6 +1077,11 @@ const char* CBarney::getNormalModel(void){
 
 int CBarney::IRelationship( CBaseEntity *pTarget )
 {
+	if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(thatWasntPunch) == 1) {
+		// no damns given
+		return R_NO;
+	}
+
 	/*
 	//Moved to TalkMonster's.
 	//MODDD TODO - for provokable but unprovoked things, maybe make Barnies point their guns and stare at it when not following, or scientist do a fear anim while staring at it?
@@ -1234,6 +1239,47 @@ void CBarney :: MonsterThink(void){
 		pev->nextthink = gpGlobals->time + 0.1;
 		return;
 	}
+
+	if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(thatWasntPunch) == 1 && (this->m_fSequenceFinished || pev->frame >= 245)) {
+
+		switch (RANDOM_LONG(0, 32)) {
+		case 0:this->SetSequenceByName("idle4"); break;
+		case 1:this->SetSequenceByName("turnleft"); break;
+		case 2:this->SetSequenceByName("turnright"); break;
+		case 3:this->SetSequenceByName("smlflinch"); break;
+		case 4:this->SetSequenceByName("locked_door"); break;
+		case 5:this->SetSequenceByName("fall_loop"); break;
+		case 6:this->SetSequenceByName("barn_wave"); break;
+		case 7:this->SetSequenceByName("beat_grunt"); break;
+		case 8:this->SetSequenceByName("beat_gruntidle"); break;
+		case 9:this->SetSequenceByName("flashlight"); break;
+		case 10:this->SetSequenceByName("diesimple"); break;
+		case 11:this->SetSequenceByName("barnaclehit"); break;
+		case 12:this->SetSequenceByName("barnaclepull"); break;
+		case 13:this->SetSequenceByName("barnaclecrunch"); break;
+		case 14:this->SetSequenceByName("barnaclechew"); break;
+		case 15:this->SetSequenceByName("barneyfallidle"); break;
+		case 16:this->SetSequenceByName("standing_halt"); break;
+		case 17:this->SetSequenceByName("c1a0_lean_idle"); break;
+		case 18:this->SetSequenceByName("c1a0_lean"); break;
+		case 19:this->SetSequenceByName("intropush"); break;
+		case 20:this->SetSequenceByName("fence"); break;
+		case 21:this->SetSequenceByName("almost"); break;
+		case 22:this->SetSequenceByName("barney_fight"); break;
+		case 23:this->SetSequenceByName("stuka_warn"); break;
+		case 24:this->SetSequenceByName("train_assist"); break;
+		case 25:this->SetSequenceByName("train_flung"); break;
+		case 26:this->SetSequenceByName("pepsiswing"); break;
+		case 27:this->SetSequenceByName("pepsipush"); break;
+		case 28:this->SetSequenceByName("hambone"); break;
+
+		case 29:this->SetSequenceByName("barn_wave"); break;
+		case 30:this->SetSequenceByName("barn_wave"); break;
+		case 31:this->SetSequenceByName("stuka_warn"); break;
+		case 32:this->SetSequenceByName("stuka_warn"); break;
+		}//END OF switch
+	}
+
 
 	if( (m_pSchedule == slBaFollow || m_pSchedule == slBaFaceTarget) &&
 		(m_hTargetEnt == NULL || (m_hTargetEnt != NULL && !m_hTargetEnt->IsAlive()) )

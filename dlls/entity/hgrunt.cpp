@@ -2079,7 +2079,7 @@ void CHGrunt :: MonsterThink ( void ){
 	//easyForcePrintLine("MY LIGHT LEVEL: %d", GETENTITYILLUM( ENT( pev ) ) );
 
 
-		if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(thatWasntPunch) == 1 && this->m_fSequenceFinished){
+		if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(thatWasntPunch) == 1 && (this->m_fSequenceFinished || pev->frame >= 245)){
 
 			switch(RANDOM_LONG(0, 32)){
 			case 0:this->SetSequenceByName("converse1");break;

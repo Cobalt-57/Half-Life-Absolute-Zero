@@ -112,6 +112,8 @@ static int num_ents = 0;
 CBasePlayer localPlayer;
 
 // Local version of game .dll global variables ( time, etc. )
+// (gpGlobals->time uses this as a dummy for most fields, but some like gpGlobals->time are still updated clientside
+// to keep shared weapon script (glock.cpp, etc.) from breaking)
 static globalvars_t Globals; 
 
 static CBasePlayerWeapon* g_pWpns[ 32 ];

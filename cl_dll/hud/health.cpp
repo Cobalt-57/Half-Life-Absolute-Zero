@@ -31,24 +31,24 @@ EASY_CVAR_EXTERN_CLIENTONLY_DEBUGONLY(timedDamage_brightnessFloor)
 EASY_CVAR_EXTERN_CLIENTONLY_DEBUGONLY(timedDamage_flashSpeed)
 EASY_CVAR_EXTERN_CLIENTONLY_DEBUGONLY(timedDamage_debug)
 EASY_CVAR_EXTERN(hud_version)
-EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(preE3ShowsDamageIcons)
-EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(E3ShowsDamageIcons)
+EASY_CVAR_EXTERN_CLIENTONLY_DEBUGONLY(preE3ShowsDamageIcons)
+EASY_CVAR_EXTERN_CLIENTONLY_DEBUGONLY(E3ShowsDamageIcons)
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(timedDamageDeathRemoveMode)
 EASY_CVAR_EXTERN(hud_weaponselecthideslower)
-EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(itemFlashCumulativeJump)
-EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(itemFlashDrawOpacityMax)
-EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(itemFlashDrawOpacityMin)
-EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(itemFlashFadeMult)
+EASY_CVAR_EXTERN_CLIENTONLY_DEBUGONLY(itemFlashCumulativeJump)
+EASY_CVAR_EXTERN_CLIENTONLY_DEBUGONLY(itemFlashDrawOpacityMax)
+EASY_CVAR_EXTERN_CLIENTONLY_DEBUGONLY(itemFlashDrawOpacityMin)
+EASY_CVAR_EXTERN_CLIENTONLY_DEBUGONLY(itemFlashFadeMult)
 EASY_CVAR_EXTERN_CLIENTONLY_DEBUGONLY(healthcolor_fullRedMin)
 EASY_CVAR_EXTERN_CLIENTONLY_DEBUGONLY(healthcolor_brightness)
 EASY_CVAR_EXTERN_CLIENTONLY_DEBUGONLY(healthcolor_yellowMark)
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(hideDamage)
 EASY_CVAR_EXTERN(timedDamage_extraBrightness)
 
-EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(painFlashPrintouts)
+EASY_CVAR_EXTERN_CLIENTONLY_DEBUGONLY(painFlashPrintouts)
 EASY_CVAR_EXTERN_CLIENTONLY_DEBUGONLY(painFlashArmorBlock)
-EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(painFlashDrownMode)
-EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(painFlashDirTolerance)
+EASY_CVAR_EXTERN_CLIENTONLY_DEBUGONLY(painFlashDrownMode)
+EASY_CVAR_EXTERN_CLIENTONLY_DEBUGONLY(painFlashDirTolerance)
 
 
 
@@ -178,7 +178,7 @@ int CHudHealth::MsgFunc_HUDItemFsh(const char* pszName, int iSize, void* pbuf)
 		itemFlashColorStartG = 255;
 		itemFlashColorStartB = 0;
 		itemFlashGiven = 1;
-		itemFlashCumulative = EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(itemFlashCumulativeJump);
+		itemFlashCumulative = EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(itemFlashCumulativeJump);
 
 	}else if(determiner == 1){
 		//radiation. green. (lime; bright?)
@@ -186,7 +186,7 @@ int CHudHealth::MsgFunc_HUDItemFsh(const char* pszName, int iSize, void* pbuf)
 		itemFlashColorStartG = 255;
 		itemFlashColorStartB = 0;
 		itemFlashGiven = 1;
-		itemFlashCumulative = EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(itemFlashCumulativeJump);
+		itemFlashCumulative = EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(itemFlashCumulativeJump);
 
 	}else if(determiner == 2){
 		//adrenaline. orange (red?)
@@ -194,7 +194,7 @@ int CHudHealth::MsgFunc_HUDItemFsh(const char* pszName, int iSize, void* pbuf)
 		itemFlashColorStartG = 127;
 		itemFlashColorStartB = 0;
 		itemFlashGiven = 1;
-		itemFlashCumulative = EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(itemFlashCumulativeJump);
+		itemFlashCumulative = EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(itemFlashCumulativeJump);
 	}
 	*/
 
@@ -204,7 +204,7 @@ int CHudHealth::MsgFunc_HUDItemFsh(const char* pszName, int iSize, void* pbuf)
 		itemFlashColorStartG = 255;
 		itemFlashColorStartB = 255;
 		itemFlashGiven = 1;
-		itemFlashCumulative = EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(itemFlashCumulativeJump);
+		itemFlashCumulative = EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(itemFlashCumulativeJump);
 	}
 
 
@@ -361,12 +361,12 @@ int CHudHealth::DrawItemFlash(float flTime) {
 	b = itemFlashColorStartB;
 	a = 255;
 
-	const float fFade = gHUD.m_flTimeDelta * EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(itemFlashFadeMult);
+	const float fFade = gHUD.m_flTimeDelta * EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(itemFlashFadeMult);
 
 	//if(itemFlashCumulative > 0.00){
 		//maxAttackFade += 0.2;
 		//GetPainColor(r,g,b);
-		//getPainColorMode((int)EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(painFlashColorMode), r, g, b);
+		//getPainColorMode((int)EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(painFlashColorMode), r, g, b);
 
 		//Clip cumulativeFade to 1.00, as you can't shade anymore intensely than 255, opaque.
 		//(as opaque as the engine will allow, it seems)
@@ -376,7 +376,7 @@ int CHudHealth::DrawItemFlash(float flTime) {
 			//draw it.
 
 			//WAS 1.0 on the right!!
-	shade = a * max(min(itemFlashCumulative * EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(itemFlashDrawOpacityMax), EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(itemFlashDrawOpacityMax)), EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(itemFlashDrawOpacityMin));
+	shade = a * max(min(itemFlashCumulative * EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(itemFlashDrawOpacityMax), EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(itemFlashDrawOpacityMax)), EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(itemFlashDrawOpacityMin));
 	//!!!!!
 
 	//shade = a * 1;
@@ -511,7 +511,7 @@ int CHudHealth::DrawDamage(float flTime)
 	// Draw all the items
 	int i;
 
-	if ((EASY_CVAR_GET(hud_version) == 3 && EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(E3ShowsDamageIcons) == 1) || (EASY_CVAR_GET(hud_version) < 3 && EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(preE3ShowsDamageIcons) == 1)) {
+	if ((EASY_CVAR_GET(hud_version) == 3 && EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(E3ShowsDamageIcons) == 1) || (EASY_CVAR_GET(hud_version) < 3 && EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(preE3ShowsDamageIcons) == 1)) {
 		
 
 		//UnpackRGB(r,g,b, RGB_YELLOWISH);

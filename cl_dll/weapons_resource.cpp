@@ -17,7 +17,7 @@
 
 
 EASY_CVAR_EXTERN(hud_swapFirstTwoBuckets)
-EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(canShowWeaponSelectAtDeath)
+EASY_CVAR_EXTERN_CLIENTONLY_DEBUGONLY(canShowWeaponSelectAtDeath)
 
 extern int g_weaponselect;
 
@@ -376,7 +376,7 @@ void WeaponsResource::SelectSlot(int iSlot, int fAdvance, int iDirection)
 
 	//MODDD
 	//if ( gHUD.m_fPlayerDead || gHUD.m_iHideHUDDisplay & ( HIDEHUD_WEAPONS | HIDEHUD_ALL ) )
-	if ((EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(canShowWeaponSelectAtDeath) == 0 && gHUD.m_fPlayerDead) || gHUD.m_iHideHUDDisplay & (HIDEHUD_WEAPONS | HIDEHUD_ALL))
+	if ((EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(canShowWeaponSelectAtDeath) == 0 && gHUD.m_fPlayerDead) || gHUD.m_iHideHUDDisplay & (HIDEHUD_WEAPONS | HIDEHUD_ALL))
 		return;
 
 	if (!(gHUD.m_iWeaponBits & (1 << (WEAPON_SUIT))))
@@ -497,7 +497,7 @@ void WeaponsResource::Think(void) {
 
 	//MODDD - still okay to do weapon selection during death, IF the option is on.
 	//if ( gHUD.m_fPlayerDead )
-	if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(canShowWeaponSelectAtDeath) == 0 && gHUD.m_fPlayerDead) {
+	if (EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(canShowWeaponSelectAtDeath) == 0 && gHUD.m_fPlayerDead) {
 		return;
 	}
 

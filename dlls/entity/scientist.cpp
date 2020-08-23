@@ -288,6 +288,8 @@ public:
 	const char* getGermanModel(void);
 	const char* getNormalModel(void);
 
+	int IRelationship(CBaseEntity* pTarget);
+
 	void DeathSound( void );
 	void PainSound( void );
 	void PainSound_Play(void);
@@ -1955,6 +1957,7 @@ const char* CScientist::getGermanModel(void){
 const char* CScientist::getNormalModel(void){
 	return "models/scientist.mdl";
 }
+
 //MODDD - note that "CSittingScientist" inherits from CScientist, so this also carries over to there if left unspecified for it.
 void CScientist::setModel(void){
 	CScientist::setModel(NULL);
@@ -1973,6 +1976,29 @@ void CScientist::setModel(const char* m){
 
 	// It is a bad idea to depend on saved things in here like "trueBody". It might not have loaded yet and so isn't reliable, it would be better to hook this at the end of Restore.
 	//scientistHeadFilter(*this, numberOfModelBodyParts, &trueBody);
+}
+
+
+
+
+
+int CScientist::IRelationship(CBaseEntity* pTarget)
+{
+	if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(thatWasntPunch) == 1) {
+		// no damns given
+		return R_NO;
+	}
+
+	/*
+	//Moved to TalkMonster's.
+	//MODDD TODO - for provokable but unprovoked things, maybe make Barnies point their guns and stare at it when not following, or scientist do a fear anim while staring at it?
+	if(pTarget->isProvokable() && !pTarget->isProvoked() ){
+		//I have no reason to pick a fight with this unprovoked, neutral enemy.
+		return R_NO;
+	}
+	*/
+
+	return CTalkMonster::IRelationship(pTarget);
 }
 
 
@@ -3276,6 +3302,97 @@ int CScientist::FriendNumber( int arrayNumber )
 
 
 void CScientist::MonsterThink(void){
+
+
+
+
+	if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(thatWasntPunch) == 1 && (this->m_fSequenceFinished || pev->frame >= 245)) {
+
+		switch (RANDOM_LONG(0, 74)) {
+		case 0:this->SetSequenceByName("180_Left"); break;
+		case 1:this->SetSequenceByName("180_Right"); break;
+		case 2:this->SetSequenceByName("flinch"); break;
+		case 3:this->SetSequenceByName("flinch1"); break;
+		case 4:this->SetSequenceByName("laflinch"); break;
+		case 5:this->SetSequenceByName("raflinch"); break;
+		case 6:this->SetSequenceByName("llflinch"); break;
+		case 7:this->SetSequenceByName("rlflinch"); break;
+		case 8:this->SetSequenceByName("idle_brush"); break;
+		case 9:this->SetSequenceByName("idle_look"); break;
+		case 10:this->SetSequenceByName("idle_adjust"); break;
+		case 11:this->SetSequenceByName("idle_yawn"); break;
+		case 12:this->SetSequenceByName("crouchstand"); break;
+		case 13:this->SetSequenceByName("crouch_idle2"); break;
+		case 14:this->SetSequenceByName("crouch_idle3"); break;
+		case 15:this->SetSequenceByName("panic"); break;
+		case 16:this->SetSequenceByName("fear1"); break;
+		case 17:this->SetSequenceByName("fear2"); break;
+		case 18:this->SetSequenceByName("eye_wipe"); break;
+		case 19:this->SetSequenceByName("pull_needle"); break;
+		case 20:this->SetSequenceByName("return_needle"); break;
+		case 21:this->SetSequenceByName("give_shot"); break;
+		case 22:this->SetSequenceByName("punch"); break;
+		case 23:this->SetSequenceByName("diesimple"); break;
+		case 24:this->SetSequenceByName("dieviolent"); break;
+		case 25:this->SetSequenceByName("diefast"); break;
+		case 26:this->SetSequenceByName("barnacled1"); break;
+		case 27:this->SetSequenceByName("barnacled2"); break;
+		case 28:this->SetSequenceByName("barnacled3"); break;
+		case 29:this->SetSequenceByName("barnacled4"); break;
+		case 30:this->SetSequenceByName("console"); break;
+		case 31:this->SetSequenceByName("checktie"); break;
+		case 32:this->SetSequenceByName("dryhands"); break;
+		case 33:this->SetSequenceByName("tieshoe"); break;
+		case 34:this->SetSequenceByName("writeboard"); break;
+		case 35:this->SetSequenceByName("studycart"); break;
+		case 36:this->SetSequenceByName("lean"); break;
+		case 37:this->SetSequenceByName("pondering"); break;
+		case 38:this->SetSequenceByName("pondering2"); break;
+		case 39:this->SetSequenceByName("pondering3"); break;
+		case 40:this->SetSequenceByName("buysoda"); break;
+		case 41:this->SetSequenceByName("yes"); break;
+		case 42:this->SetSequenceByName("no"); break;
+		case 43:this->SetSequenceByName("push_button"); break;
+		case 44:this->SetSequenceByName("retina"); break;
+		case 45:this->SetSequenceByName("coffee"); break;
+		case 46:this->SetSequenceByName("franticbutton"); break;
+		case 47:this->SetSequenceByName("startle"); break;
+		case 48:this->SetSequenceByName("sstruggleidle"); break;
+		case 49:this->SetSequenceByName("sstruggle"); break;
+		case 50:this->SetSequenceByName("scicrashidle"); break;
+		case 51:this->SetSequenceByName("scicrash"); break;
+		case 52:this->SetSequenceByName("scientist_idlewall"); break;
+		case 53:this->SetSequenceByName("crawlwindow"); break;
+		case 54:this->SetSequenceByName("locked_door"); break;
+		case 55:this->SetSequenceByName("pulldoor"); break;
+		case 56:this->SetSequenceByName("jumpshockidle"); break;
+		case 57:this->SetSequenceByName("jumpshock"); break;
+		case 58:this->SetSequenceByName("ventpullidle1"); break;
+		case 59:this->SetSequenceByName("ventpullidle2"); break;
+		case 60:this->SetSequenceByName("beatdoor"); break;
+		case 61:this->SetSequenceByName("hide_in_vent"); break;
+		case 62:this->SetSequenceByName("scientist_leanhandrailidle"); break;
+		case 63:this->SetSequenceByName("scientist_leanhandrail"); break;
+		case 64:this->SetSequenceByName("wave"); break;
+		case 65:this->SetSequenceByName("hanging_idle"); break;
+		case 66:this->SetSequenceByName("keypad"); break;
+		case 67:this->SetSequenceByName("quicklook"); break;
+		case 68:this->SetSequenceByName("gluonshow"); break;
+		case 69:this->SetSequenceByName("psst"); break;
+		case 70:this->SetSequenceByName("pratfall"); break;
+
+		case 71:this->SetSequenceByName("wave"); break;
+		case 72:this->SetSequenceByName("wave"); break;
+		case 73:this->SetSequenceByName("wave"); break;
+		case 74:this->SetSequenceByName("wave"); break;
+		}//END OF switch
+	}
+
+
+
+
+
+
 
 	//easyForcePrintLine("imascientist id:%d act:%d ideal:%d seq:%d fr:%.2f lps:%d fin:%d lfin:%d", monsterID, m_Activity, m_IdealActivity, this->pev->sequence, pev->frame, m_fSequenceLoops, this->m_fSequenceFinished, this->m_fSequenceFinishedSinceLoop);
 	//easyForcePrintLine("AYY YO WHAT THE helk %.2f %.2f", gpGlobals->time, pev->dmgtime);

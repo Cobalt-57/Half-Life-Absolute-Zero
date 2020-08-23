@@ -40,8 +40,8 @@
 
 //MODDD - externs
 EASY_CVAR_EXTERN(hud_version)
-EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(preE3UsesFailColors)
-EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(E3UsesFailColors)
+EASY_CVAR_EXTERN_CLIENTONLY_DEBUGONLY(preE3UsesFailColors)
+EASY_CVAR_EXTERN_CLIENTONLY_DEBUGONLY(E3UsesFailColors)
 EASY_CVAR_EXTERN(hud_moveselect_sound)
 EASY_CVAR_EXTERN(hud_drawsidebarmode)
 EASY_CVAR_EXTERN(cl_interp_entity)
@@ -1117,7 +1117,7 @@ void CHud::getGenericEmptyColor(int &r, int &g, int &b){
 	
 	if(EASY_CVAR_GET(hud_version) < 3){
 		// pre E3 (green-based; prototype)
-		if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(preE3UsesFailColors) == 1){
+		if(EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(preE3UsesFailColors) == 1){
 			getGenericRedColor(r,g,b);
 		}else{
 			getGenericGreenColor(r, g, b);
@@ -1125,7 +1125,7 @@ void CHud::getGenericEmptyColor(int &r, int &g, int &b){
 
 	}else{
 		// E3 (yellow-based; closer to retail)
-		if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(E3UsesFailColors) == 1){
+		if(EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(E3UsesFailColors) == 1){
 			getGenericRedColor(r,g,b);
 		}else{
 			getGenericOrangeColor(r, g, b);

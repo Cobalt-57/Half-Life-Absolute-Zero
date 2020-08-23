@@ -213,8 +213,53 @@ Also, need to extern (all?) CVars in dlls/client.cpp.
 
 
 
+//easyForcePrintLine("TEST1a: %s %.2f", #arg_NAME, argVal);
+//g_engfuncs.pfnClientCommand(pEntity, #arg_NAME" %g", argVal);
+
+// always this way
+#define CUSTOM_CLIENT_CALL_NAME(arg_NAME, argVal)\
+		MESSAGE_BEGIN( MSG_ONE, gmsgJukeboxRequest, NULL, pev );\
+			WRITE_STRING(UTIL_VarArgs(#arg_NAME" %g", (float)argVal ) );\
+		MESSAGE_END();
+
+		//g_engfuncs.pfnClientCommand(pEntity, #arg_NAME" %.3f", argVal);
+
+// SERVER ONLY, ANY CUSTOM_CLIENT_CALL !!!
+#ifdef _DEBUG
+	#define CUSTOM_CLIENT_CALL_NAME_DEBUGONLY(arg_NAME, argVal)\
+		MESSAGE_BEGIN( MSG_ONE, gmsgJukeboxRequest, NULL, pev );\
+			WRITE_STRING(UTIL_VarArgs(#arg_NAME" %g", (float)argVal ) );\
+		MESSAGE_END();
+
+	#define CUSTOM_CLIENT_CALL_NAME_DEBUGONLY_FORCEBROADCAST(arg_NAME, argVal)\
+		MESSAGE_BEGIN( MSG_ALL, gmsgJukeboxRequest, NULL );\
+			WRITE_STRING(UTIL_VarArgs(#arg_NAME" %g", (float)argVal ) );\
+		MESSAGE_END();
+
+#else
+	//RELEASE
+	#define CUSTOM_CLIENT_CALL_NAME_DEBUGONLY(arg_NAME, argVal)\
+		MESSAGE_BEGIN( MSG_ONE, gmsgUpdateClientCVar, NULL, pev );\
+			WRITE_SHORT( arg_NAME##_ID);\
+			WRITE_SHORT( argVal*100);\
+		MESSAGE_END();
+	
+	#define CUSTOM_CLIENT_CALL_NAME_DEBUGONLY(arg_NAME, argVal)\
+		MESSAGE_BEGIN( MSG_ALL, gmsgUpdateClientCVar, NULL );\
+			WRITE_SHORT( arg_NAME##_ID);\
+			WRITE_SHORT( argVal*100);\
+		MESSAGE_END();
+#endif
 
 
+// RELEASE MODE ONLY!
+#define CUSTOM_CLIENT_CALL(ID, argVal)\
+	if(pev != NULL){\
+		MESSAGE_BEGIN( MSG_ONE, gmsgUpdateClientCVar, NULL, pev );\
+			WRITE_SHORT( ID);\
+			WRITE_SHORT( argVal*100);\
+		MESSAGE_END();\
+	}
 
 
 
@@ -300,6 +345,11 @@ Also, need to extern (all?) CVars in dlls/client.cpp.
 
 #ifndef CLIENT_DLL
 	// SERVER
+
+
+	#define EASY_CVAR_SET_CLIENTONLY(CVarName, valueV)\
+		CUSTOM_CLIENT_CALL_NAME(CVarName, valueV)
+
 	#ifdef _DEBUG
 		#define EASY_CVAR_GET_DEBUGONLY(CVarName)\
 			CVAR_GET_FLOAT( #CVarName )
@@ -311,8 +361,11 @@ Also, need to extern (all?) CVars in dlls/client.cpp.
 		#define EASY_CVAR_SET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(CVarName, valueV)\
 			CVAR_SET_FLOAT(#CVarName, valueV);
 
+		// send a call to change it for one client?
 		#define EASY_CVAR_SET_CLIENTONLY_DEBUGONLY(CVarName, valueV)\
-			DUMMY
+			CUSTOM_CLIENT_CALL_NAME_DEBUGONLY(CVarName, valueV)
+		#define EASY_CVAR_SET_CLIENTONLY_DEBUGONLY_FORCEBROADCAST(CVarName, valueV)\
+			CUSTOM_CLIENT_CALL_NAME_DEBUGONLY_FORCEBROADCAST(CVarName, valueV)
 
 	#else
 		//release
@@ -334,12 +387,20 @@ Also, need to extern (all?) CVars in dlls/client.cpp.
 				CALL_EASY_CVAR_SYNCH_SERVER_TO_CLIENT_BROADCAST_DEBUGONLY(CVarName)\
 			}
 
+		// send a call to change it for one client?
 		#define EASY_CVAR_SET_CLIENTONLY_DEBUGONLY(CVarName, valueV)\
-			DUMMY
+			CUSTOM_CLIENT_CALL_NAME_DEBUGONLY(CVarName, valueV)
+		#define EASY_CVAR_SET_CLIENTONLY_DEBUGONLY_FORCEBROADCAST(CVarName, valueV)\
+			CUSTOM_CLIENT_CALL_NAME_DEBUGONLY_FORCEBROADCAST(CVarName, valueV)
 
 	#endif
 #else
 	// CLIENT
+
+
+	#define EASY_CVAR_SET_CLIENTONLY(CVarName, valueV)\
+			CVAR_SET_FLOAT(#CVarName, valueV);
+
 	#ifdef _DEBUG
 		#define EASY_CVAR_GET_DEBUGONLY(CVarName)\
 			CVAR_GET_FLOAT( #CVarName )
@@ -379,7 +440,7 @@ Also, need to extern (all?) CVars in dlls/client.cpp.
 	// SERVER
 
 	#define EASY_CVAR_RESET_CLIENTONLY(CVarName)\
-			DUMMY
+			CUSTOM_CLIENT_CALL_NAME(CVarName, DEFAULT_##CVarName)
 
 
 	#ifdef _DEBUG
@@ -392,8 +453,9 @@ Also, need to extern (all?) CVars in dlls/client.cpp.
 		#define EASY_CVAR_RESET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(CVarName)\
 			CVAR_SET_FLOAT(#CVarName, DEFAULT_##CVarName);
 
-		#define EASY_CVAR_RESET_CLIENTONLY_DEBUGONLY(CVarName)\
-			DUMMY
+		// No need, the call to clientside will handle this on its own.
+		#define EASY_CVAR_RESET_CLIENTONLY_DEBUGONLY(CVarName) DUMMY
+		//	CUSTOM_CLIENT_CALL_NAME_DEBUGONLY(CVarName, DEFAULT_##CVarName)
 	#else
 		#define EASY_CVAR_SET_DEBUGONLY(CVarName, valueV)\
 			if(IS_DEDICATED_SERVER()){\
@@ -419,8 +481,8 @@ Also, need to extern (all?) CVars in dlls/client.cpp.
 			}
 
 			
-		#define EASY_CVAR_RESET_CLIENTONLY_DEBUGONLY(CVarName)\
-			DUMMY
+		#define EASY_CVAR_RESET_CLIENTONLY_DEBUGONLY(CVarName) DUMMY
+		//	CUSTOM_CLIENT_CALL_NAME_DEBUGONLY(CVarName, DEFAULT_##CVarName)
 
 	#endif
 		// Should this also force a message to the clients?
@@ -920,7 +982,7 @@ Also, need to extern (all?) CVars in dlls/client.cpp.
 // NOTE - if doing MSG_ALL, remove the 'pev'.  Game doesn't like MSG_ALL with a pev in mind. (4th parameter in MESSAGE_BEGIN)
 #define EASY_CVAR_RESET_MASS_CLIENT_SIGNAL\
 	if(pev != NULL){\
-		MESSAGE_BEGIN( MSG_ONE, gmsgResetClientCVar, NULL, pev );\
+		MESSAGE_BEGIN( MSG_ALL, gmsgResetClientCVar, NULL );\
 		MESSAGE_END();\
 	}
 
@@ -1113,15 +1175,6 @@ if( FStrEq(pcmdRefinedRef, #CVarNameLower) ){\
 		}\
 	}
 */
-
-
-#define CUSTOM_CLIENT_CALL(ID, argVal)\
-	if(pev != NULL){\
-		MESSAGE_BEGIN( MSG_ONE, gmsgUpdateClientCVar, NULL, pev );\
-			WRITE_SHORT( ID);\
-			WRITE_SHORT( argVal*100);\
-		MESSAGE_END();\
-	}
 
 
 /*

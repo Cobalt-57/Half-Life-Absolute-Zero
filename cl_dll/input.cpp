@@ -143,7 +143,7 @@ typedef struct kblist_s
 kblist_t *g_kbkeys = NULL;
 
 
-EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(iHaveAscended)
+EASY_CVAR_EXTERN_CLIENTONLY_DEBUGONLY(iHaveAscended)
 
 
 /*
@@ -693,7 +693,7 @@ void DLLEXPORT CL_CreateMove ( float frametime, struct usercmd_s *cmd, int activ
 		//MODDD - ???
 		//gEngfuncs.SetViewAngles( (float *)viewangles );
 
-		if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(iHaveAscended) != 1){
+		if(EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(iHaveAscended) != 1){
 			gEngfuncs.SetViewAngles( (float *)viewangles );
 		}else{
 			gEngfuncs.SetViewAngles( (float *)Vector(gEngfuncs.pfnRandomFloat(-50, 50), gEngfuncs.pfnRandomFloat(0, 360), gEngfuncs.pfnRandomFloat(-150, 150)  )  );
