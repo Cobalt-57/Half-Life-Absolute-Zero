@@ -1341,6 +1341,11 @@ void EV_StopPreviousGauss(int idx)
 }
 
 
+
+// debugging
+#define DISABLE_GAUSS_GLOW 0
+
+
 void EV_FireGauss(event_args_t* args)
 {
 	int idx;
@@ -1401,13 +1406,38 @@ void EV_FireGauss(event_args_t* args)
 		}
 	}
 
+	float dmgFracto;
+	float sndFracto;
+	
+
+	if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST(gauss_mode) != 1) {
+		// retail-based
+		if (m_fPrimaryFire) {
+			sndFracto = 0.04; //0.23;
+			dmgFracto = 0.33; //min(flDamage, 20.0f) * (1.0f / 20.0f);
+		}else {
+			sndFracto = min(flDamage, 600.0f) * (1.0f / 600.0f);
+			dmgFracto = min(flDamage, 600.0f) * (1.0f / 600.0f);
+		}
+	}else {
+		// pre-release description.
+		// Max damage is 600, but can still be plenty bright up to that point.
+		if (m_fPrimaryFire) {
+			sndFracto = 0.12; //0.28;
+			dmgFracto = 0.6;
+		}else {
+			sndFracto = min(flDamage, 600.0f) * (1.0f / 600.0f);
+			dmgFracto = min(flDamage, 600.0f) * (1.0f / 600.0f);
+		}
+	}
+
 	if (EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(mutePlayerWeaponFire) != 1) {
 		// original line
 		//gEngfuncs.pEventAPI->EV_PlaySound( idx, origin, CHAN_WEAPON, "weapons/gauss2.wav", 0.5 + flDamage * (1.0 / 400.0), ATTN_NORM, 0, 85 + gEngfuncs.pfnRandomLong( 0, 0x1f ) );
 		float flVol;
 		float flAttn;
 		int iPitch;
-		float dmgFracto = min(flDamage, 200.0f) * (1.0f / 200.0f);
+
 		//MODDD - little safety filter for damage, if over 200 cap it's influence on volume.
 		// Paranoid but just being safe.
 		// Attenuation is less for higher damages too (sound carries further).
@@ -1416,18 +1446,17 @@ void EV_FireGauss(event_args_t* args)
 		// secondary min: 27.3719196
 		// secondary max: 200
 
-		if (m_fPrimaryFire) {
-			flVol = 0.7;
-			flAttn = ATTN_NORM - 0.05;
+		//if (m_fPrimaryFire) {
+			//flVol = 0.7 + min(sndFracto * 3, 1) * 0.3;
+			//flAttn = ATTN_NORM - (0.05 + 0.1 * sndFracto);
+			//// original pitch range was 85 to 116.
+			//iPitch = gEngfuncs.pfnRandomLong(90, 112);
+		//}else {
+			flVol = 0.7 + min(sndFracto * 3, 1) * 0.3;
+			flAttn = ATTN_NORM - (0.05 + 0.58 * sndFracto);
 			// original pitch range was 85 to 116.
-			iPitch = gEngfuncs.pfnRandomLong(90, 112);
-		}
-		else {
-			flVol = 0.7 + dmgFracto * 0.3;
-			flAttn = ATTN_NORM - (0.05 + 0.25 * dmgFracto);
-			// original pitch range was 85 to 116.
-			iPitch = gEngfuncs.pfnRandomLong(92 - (long)(dmgFracto * 10), 115 - (long)(dmgFracto * 18));
-		}
+			iPitch = gEngfuncs.pfnRandomLong(92 - (long)(sndFracto * 10), 115 - (long)(sndFracto * 18));
+		//}
 
 		gEngfuncs.pEventAPI->EV_PlaySound(idx, origin, CHAN_WEAPON, "weapons/gauss2.wav", flVol, flAttn, 0, iPitch);
 	}//END OF mutePlayerWeaponFirecheck
@@ -1436,7 +1465,6 @@ void EV_FireGauss(event_args_t* args)
 
 
 	//MODDD - reget this each time in case of changes.
-	float dmgFracto;
 	float beamColor_r;
 	float beamColor_g;
 	float beamColor_b;
@@ -1455,20 +1483,19 @@ void EV_FireGauss(event_args_t* args)
 	}
 
 
+	// beamLife affected by these too?   maybe not.
 	if (m_fPrimaryFire) {
-		dmgFracto = min(flDamage, 20.0f) * (1.0f / 20.0f);
 		beamColor_r = 1.0f;
 		beamColor_g = 0.5f;
 		beamColor_b = 0.0f;
-		beamWidth = 0.8f + dmgFracto * 0.45f;
-		beamBrightness = 0.6f + dmgFracto * 0.17f;
+		beamWidth = 0.65f + dmgFracto * 0.55f * 3;
+		beamBrightness = 0.6f + dmgFracto * 0.17f * 1.8;
 	}else {
-		dmgFracto = min(flDamage, 200.0f) * (1.0f / 200.0f);
 		beamColor_r = 1.0f;
 		beamColor_g = 1.0f;
 		beamColor_b = 1.0f;
-		beamWidth = 1.5f + dmgFracto * 2.0f;
-		beamBrightness = 0.65f + dmgFracto * 0.35f;
+		beamWidth = 1.5f + dmgFracto * 1.65f * 3;
+		beamBrightness = 0.65f + min(dmgFracto*3, 1) * 0.35f;
 	}
 
 
@@ -1478,7 +1505,7 @@ void EV_FireGauss(event_args_t* args)
 
 
 //NOTE: on any changes, sync me up with gauss.cpp (server-side)'s "Fire" method with a similar loop.
-	while (flDamage > 10 && nMaxHits > 0)
+	while (fFirstBeam || flDamage >= 10 && nMaxHits > 0)
 	{
 
 		nMaxHits--;
@@ -1614,13 +1641,16 @@ void EV_FireGauss(event_args_t* args)
 				VectorMA(tr.endpos, 8.0, forward, vecSrc);
 				VectorMA(vecSrc, 8192.0, forward, vecDest);
 
-				gEngfuncs.pEfxAPI->R_TempSprite(tr.endpos, vec3_origin, 0.2, m_iGlow, kRenderGlow, kRenderFxNoDissipation, flDamage * n / 255.0, flDamage * n * 0.5 * 0.1, FTENT_FADEOUT);
 
+//MODDD - smaller glow sprite?  DISABLED, same reason as the other disabled R_TempSprite call further below.
+//#if DISABLE_GAUSS_GLOW != 1
+//				gEngfuncs.pEfxAPI->R_TempSprite(tr.endpos, vec3_origin, 0.2, m_iGlow, kRenderGlow, kRenderFxNoDissipation, flDamage * n / 255.0, flDamage * n * 0.5 * 0.1, FTENT_FADEOUT);
+//#endif
 				vec3_t fwd;
 				VectorAdd_f(tr.endpos, tr.plane.normal, fwd);
 
-				gEngfuncs.pEfxAPI->R_Sprite_Trail(TE_SPRITETRAIL, tr.endpos, fwd, m_iBalls, 3, 0.1, gEngfuncs.pfnRandomFloat(10, 20) / 100.0, 100,
-					255, 100);
+//MODDD - disabled.   Also prone to getting stuck in the object.
+				//gEngfuncs.pEfxAPI->R_Sprite_Trail(TE_SPRITETRAIL, tr.endpos, fwd, m_iBalls, 3, 0.1, gEngfuncs.pfnRandomFloat(14, 20) / 100.0, 100, 255, 100);
 
 				// lose energy
 				if (n == 0)
@@ -1633,11 +1663,27 @@ void EV_FireGauss(event_args_t* args)
 			}
 			else
 			{
+				//MODDD - factors in the max damage of 600 now, if that comes up.
+				float glowEffectOpacity;
+				// used to be this:    flDamage / 255.0
+				if (flDamage <= 10) {
+					glowEffectOpacity = 0.2;
+				}
+				else if (flDamage <= 180) {
+					glowEffectOpacity = 0.2 + (flDamage - 10)/(180.0-10.0) * 0.53;
+				}
+				else {
+					// deminishing returns towards 1.0
+					glowEffectOpacity = min(0.2 + (180.0 - 10)/ (180.0 - 10.0) * 0.53 + (flDamage - 180)/(600.0-180.0) * 0.27, 1);
+				}
+
+
 				// tunnel
 				EV_HLDM_DecalGunshot(&tr, BULLET_MONSTER_12MM);
 
-				gEngfuncs.pEfxAPI->R_TempSprite(tr.endpos, vec3_origin, 1.0, m_iGlow, kRenderGlow, kRenderFxNoDissipation, flDamage / 255.0, 6.0, FTENT_FADEOUT);
-
+#if DISABLE_GAUSS_GLOW != 1
+				gEngfuncs.pEfxAPI->R_TempSprite(tr.endpos, vec3_origin, 1.0, m_iGlow, kRenderGlow, kRenderFxNoDissipation, glowEffectOpacity, 6.0, FTENT_FADEOUT);
+#endif
 				// limit it to one hole punch
 				if (fHasPunched)
 				{
@@ -1666,6 +1712,38 @@ void EV_FireGauss(event_args_t* args)
 					gEngfuncs.pEventAPI->EV_SetTraceHull(FILLIN_TRACE_HULL);
 					gEngfuncs.pEventAPI->EV_PlayerTrace(start, vecDest, FILLIN_TRACEFLAGS_STUDIO_BOX, -1, &beam_tr);
 
+
+
+					// MODDD - NOTE - draw these regardless of piercing an object now.
+					// And don't draw a static 3.  Let this reflect the damage too.
+					// absorption balls
+					// MODDD - also, last a little longer (half a second before fading, old life was 0.1)
+					{
+						//MODDD - factor in the new max of 600, should it come up
+						int flyingBalls;
+						
+						// minimum balls.
+						if (flDamage <= 10) {
+							flyingBalls = 5;
+						}
+						else if (flDamage <= 180) {
+							// Most additional balls in this range.
+							flyingBalls = 5 + (flDamage - 10) * 0.115;
+						}
+						else {
+							// deminishing returns, don't get too spammy.
+							flyingBalls = 5 + (180 - 10) * 0.11 + (flDamage - 180) * 0.075;
+						}
+
+						//easyForcePrintLine("MY BALLS %d", flyingBalls);
+
+						vec3_t fwd;
+						VectorSubtract_f(tr.endpos, forward, fwd);
+						gEngfuncs.pEfxAPI->R_Sprite_Trail(TE_SPRITETRAIL, tr.endpos, fwd, m_iBalls, flyingBalls, 0.5, gEngfuncs.pfnRandomFloat(14, 20) / 100.0, 100, 255, 100);
+					}
+
+
+
 					if (!beam_tr.allsolid)
 					{
 						vec3_t delta;
@@ -1680,19 +1758,15 @@ void EV_FireGauss(event_args_t* args)
 
 						m = Length(delta);
 
+
 						if (m < flDamage)
 						{
 							if (m == 0)
 								m = 1;
 							flDamage -= m;
 
-							// absorption balls
-							{
-								vec3_t fwd;
-								VectorSubtract_f(tr.endpos, forward, fwd);
-								gEngfuncs.pEfxAPI->R_Sprite_Trail(TE_SPRITETRAIL, tr.endpos, fwd, m_iBalls, 3, 0.1, gEngfuncs.pfnRandomFloat(10, 20) / 100.0, 100,
-									255, 100);
-							}
+
+							// !!! OLD LOC OF 1st 'absorption balls' area
 
 							//MODDD - oh, an as-is comment.  Anyway that's an AI sound you dolt, not audible. Nothing clientside is concerned with.
 							//////////////////////////////////// WHAT TO DO HERE
@@ -1700,17 +1774,31 @@ void EV_FireGauss(event_args_t* args)
 
 							EV_HLDM_DecalGunshot(&beam_tr, BULLET_MONSTER_12MM);
 
-							gEngfuncs.pEfxAPI->R_TempSprite(beam_tr.endpos, vec3_origin, 0.1, m_iGlow, kRenderGlow, kRenderFxNoDissipation, flDamage / 255.0, 6.0, FTENT_FADEOUT);
+
+							//MODDD - A tiny persistent glow here, same size as the ones that are meant to fly off?
+							//        Why?  This seems more like a mistake.  DISABLED.
+//#if DISABLE_GAUSS_GLOW != 1
+//							gEngfuncs.pEfxAPI->R_TempSprite(beam_tr.endpos, vec3_origin, 0.1, m_iGlow, kRenderGlow, kRenderFxNoDissipation, flDamage / 255.0, 6.0, FTENT_FADEOUT);
+//#endif
 
 							// balls
 							{
+								//MODDD - amount reduced since the earlier ball-generation factors in flDamage too (more likely to be more than 3).
+								// Old way here was 'flDamage * 0.3'.
+								// ACTUALLY, DISABLED.  Seems like this has a higher chance of generating a punch of balls
+								// into the object stuck, so there's an unintended annoyingly bright spot where they all overlap at.
+								/*
 								vec3_t fwd;
 								VectorSubtract_f(beam_tr.endpos, forward, fwd);
-								gEngfuncs.pEfxAPI->R_Sprite_Trail(TE_SPRITETRAIL, beam_tr.endpos, fwd, m_iBalls, (int)(flDamage * 0.3), 0.1, gEngfuncs.pfnRandomFloat(10, 20) / 100.0, 200,
-									255, 40);
+								gEngfuncs.pEfxAPI->R_Sprite_Trail(TE_SPRITETRAIL, beam_tr.endpos, fwd, m_iBalls, (int)(flDamage * 0.10), 0.1, gEngfuncs.pfnRandomFloat(14, 20) / 100.0, 200, 255, 40);
+								*/
 							}
 
 							VectorAdd_f(beam_tr.endpos, forward, vecSrc);
+						}
+						else {
+
+
 						}
 					}
 					else
@@ -1722,18 +1810,19 @@ void EV_FireGauss(event_args_t* args)
 				}
 				else
 				{
-					if (m_fPrimaryFire)
+					//NOTE - punch is already only for secondary, so this point must be reached if not.
+					//if (m_fPrimaryFire)
 					{
+#if DISABLE_GAUSS_GLOW != 1
 						// slug doesn't punch through ever with primary 
 						// fire, so leave a little glowy bit and make some balls
 						gEngfuncs.pEfxAPI->R_TempSprite(tr.endpos, vec3_origin, 0.2, m_iGlow, kRenderGlow, kRenderFxNoDissipation, 200.0 / 255.0, 0.3, FTENT_FADEOUT);
-
+#endif
 						{
 							vec3_t fwd;
 							VectorAdd_f(tr.endpos, tr.plane.normal, fwd);
 							//MODDD - more consistent ball sizes, was a range of 10 to 20 (pfnRandomFloat)
-							gEngfuncs.pEfxAPI->R_Sprite_Trail(TE_SPRITETRAIL, tr.endpos, fwd, m_iBalls, 8, 0.6, gEngfuncs.pfnRandomFloat(14, 20) / 100.0, 100,
-								255, 200);
+							gEngfuncs.pEfxAPI->R_Sprite_Trail(TE_SPRITETRAIL, tr.endpos, fwd, m_iBalls, 8, 0.6, gEngfuncs.pfnRandomFloat(14, 20) / 100.0, 100, 255, 200);
 						}
 					}
 
@@ -3326,12 +3415,10 @@ void EV_ShowBalls(event_args_t* args)
 	//VectorAdd_f( tr.endpos, tr.plane.normal, fwd );
 
 
-	//gEngfuncs.pEfxAPI->R_Sprite_Trail( TE_SPRITETRAIL, tr.endpos, fwd, m_iBalls, 8, 0.6, gEngfuncs.pfnRandomFloat( 10, 20 ) / 100.0, 100,
-	//		255, 200 );
+	//gEngfuncs.pEfxAPI->R_Sprite_Trail( TE_SPRITETRAIL, tr.endpos, fwd, m_iBalls, 8, 0.6, gEngfuncs.pfnRandomFloat( 10, 20 ) / 100.0, 100, 255, 200 );
 
 	//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-	//gEngfuncs.pEfxAPI->R_Sprite_Trail( TE_SPRITETRAIL, origin, origin, m_iBalls, 8, 0.1f, gEngfuncs.pfnRandomFloat( 10, 20 ) / 100.0, 100,
-	//		255, 40 );
+	//gEngfuncs.pEfxAPI->R_Sprite_Trail( TE_SPRITETRAIL, origin, origin, m_iBalls, 8, 0.1f, gEngfuncs.pfnRandomFloat( 10, 20 ) / 100.0, 100, 255, 40 );
 	//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 	//...( float *pos, float speed, float life, int count, int modelIndex );
@@ -3358,8 +3445,7 @@ void EV_ShowBalls(event_args_t* args)
 
 	//gEngfuncs.pEfxAPI->R_SparkShower( tr.endpos );
 
-	//gEngfuncs.pEfxAPI->R_Sprite_Trail( TE_SPRITETRAIL, tr.endpos, fwd, m_iBalls, 8, 0.6, gEngfuncs.pfnRandomFloat( 10, 20 ) / 100.0, 100,
-	//							255, 200 );
+	//gEngfuncs.pEfxAPI->R_Sprite_Trail( TE_SPRITETRAIL, tr.endpos, fwd, m_iBalls, 8, 0.6, gEngfuncs.pfnRandomFloat( 10, 20 ) / 100.0, 100, 255, 200 );
 
 	//int type, float * start, float * end, int modelIndex, int count, float life, float size, float amplitude, int renderamt, float speed 
 }
@@ -3404,12 +3490,10 @@ void EV_ShowBallsPowerup(event_args_t* args)
 	//VectorAdd_f( tr.endpos, tr.plane.normal, fwd );
 
 
-	//gEngfuncs.pEfxAPI->R_Sprite_Trail( TE_SPRITETRAIL, tr.endpos, fwd, m_iBalls, 8, 0.6, gEngfuncs.pfnRandomFloat( 10, 20 ) / 100.0, 100,
-	//		255, 200 );
+	//gEngfuncs.pEfxAPI->R_Sprite_Trail( TE_SPRITETRAIL, tr.endpos, fwd, m_iBalls, 8, 0.6, gEngfuncs.pfnRandomFloat( 10, 20 ) / 100.0, 100, 255, 200 );
 
 	//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-	//gEngfuncs.pEfxAPI->R_Sprite_Trail( TE_SPRITETRAIL, origin, origin, m_iBalls, 8, 0.1f, gEngfuncs.pfnRandomFloat( 10, 20 ) / 100.0, 100,
-	//		255, 40 );
+	//gEngfuncs.pEfxAPI->R_Sprite_Trail( TE_SPRITETRAIL, origin, origin, m_iBalls, 8, 0.1f, gEngfuncs.pfnRandomFloat( 10, 20 ) / 100.0, 100, 255, 40 );
 	//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 	//...( float *pos, float speed, float life, int count, int modelIndex );
@@ -3436,8 +3520,7 @@ void EV_ShowBallsPowerup(event_args_t* args)
 
 	//gEngfuncs.pEfxAPI->R_SparkShower( tr.endpos );
 
-	//gEngfuncs.pEfxAPI->R_Sprite_Trail( TE_SPRITETRAIL, tr.endpos, fwd, m_iBalls, 8, 0.6, gEngfuncs.pfnRandomFloat( 10, 20 ) / 100.0, 100,
-	//							255, 200 );
+	//gEngfuncs.pEfxAPI->R_Sprite_Trail( TE_SPRITETRAIL, tr.endpos, fwd, m_iBalls, 8, 0.6, gEngfuncs.pfnRandomFloat( 10, 20 ) / 100.0, 100, 255, 200 );
 
 	//int type, float * start, float * end, int modelIndex, int count, float life, float size, float amplitude, int renderamt, float speed 
 }
@@ -3784,8 +3867,7 @@ void EV_imitation7_think(struct tempent_s* ent, float frametime, float currentti
 				//vec3_t fwd;
 				//VectorAdd_f( tr.endpos, tr.plane.normal, fwd );
 
-				//gEngfuncs.pEfxAPI->R_Sprite_Trail( TE_SPRITETRAIL, tr.endpos, fwd, m_iBalls, 3, 0.1, gEngfuncs.pfnRandomFloat( 10, 20 ) / 100.0, 100,
-				//					255, 100 );
+				//gEngfuncs.pEfxAPI->R_Sprite_Trail( TE_SPRITETRAIL, tr.endpos, fwd, m_iBalls, 3, 0.1, gEngfuncs.pfnRandomFloat( 10, 20 ) / 100.0, 100, 255, 100 );
 
 	/*
 	int eckz = gEngfuncs.pEventAPI->EV_FindModelIndex( "sprites/explode1.spr" );
@@ -4093,8 +4175,7 @@ void EV_rocketAlphaTrailThink(struct tempent_s* ent, float frametime, float curr
 				//vec3_t fwd;
 				//VectorAdd_f( tr.endpos, tr.plane.normal, fwd );
 
-				//gEngfuncs.pEfxAPI->R_Sprite_Trail( TE_SPRITETRAIL, tr.endpos, fwd, m_iBalls, 3, 0.1, gEngfuncs.pfnRandomFloat( 10, 20 ) / 100.0, 100,
-				//					255, 100 );
+				//gEngfuncs.pEfxAPI->R_Sprite_Trail( TE_SPRITETRAIL, tr.endpos, fwd, m_iBalls, 3, 0.1, gEngfuncs.pfnRandomFloat( 10, 20 ) / 100.0, 100, 255, 100 );
 
 	int eckz = gEngfuncs.pEventAPI->EV_FindModelIndex("sprites/explode1.spr");
 

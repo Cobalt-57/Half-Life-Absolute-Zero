@@ -855,6 +855,7 @@ void CEgon::Fire( const Vector &vecOrigSrc, const Vector &vecDir )
 			else
 			{
 				// single player, use 3 ammo/second
+				//MODDD - NOTE.  Above is an as-is comment, this is really 6 per second.
 				if ( gpGlobals->time >= m_flAmmoUseTime )
 				{
 					UseAmmo( 1 );

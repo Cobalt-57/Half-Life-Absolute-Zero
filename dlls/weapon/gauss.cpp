@@ -87,15 +87,31 @@ IMPLEMENT_SAVERESTORE(CGauss, CBasePlayerWeapon);
 
 
 
-
+//MODDD - beware, damage-dealt is determined by ammo used, not time passed since starting a charge.
+// This can still be used to tell when to do the auto-discharge maybe, so don't ignore it completely.
+// And the pitch, this is used for how to scale the pitch snce starting a charge.
+// Point is, good to keep in synch with when the most ammo that could possibly be used has been added
+// to the charge.
 float CGauss::GetFullChargeTime(void)
 {
-	if(IsMultiplayer())
-	{
-		return 1.5;
-	}
+	if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_mode) != 1) {
+		if (IsMultiplayer())
+		{
+			return 1.5;
+		}
 
-	return 4;
+		return 4;
+	}
+	else {
+		// ALPHA: any differences for multipalyer unknown.  How about 30% less time?
+		if (IsMultiplayer())
+		{
+			return 0.8*12*0.7;
+		}
+
+		return 0.8*12;
+	}
+	
 }
 
 
@@ -202,6 +218,15 @@ void CGauss::Holster(int skiplocal /* = 0 */)
 
 void CGauss::PrimaryAttack()
 {
+	float primaryAmmoUsage;
+	if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_mode) != 1) {
+		primaryAmmoUsage = 2;  //retail
+	}
+	else {
+		primaryAmmoUsage = 5;
+	}
+
+
 	// don't fire underwater
 	if (m_pPlayer->pev->waterlevel == 3)
 	{
@@ -211,7 +236,7 @@ void CGauss::PrimaryAttack()
 		return;
 	}
 
-	if (PlayerPrimaryAmmoCount() < 2)
+	if (PlayerPrimaryAmmoCount() < primaryAmmoUsage)
 	{
 		PlayEmptySound();
 		m_pPlayer->m_flNextAttack = UTIL_WeaponTimeBase() + 0.5;
@@ -223,14 +248,7 @@ void CGauss::PrimaryAttack()
 
 	//MODDD - only reduce ammo if cheats are off.
 	if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteclip) == 0 && EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteammo) == 0) {
-
-		if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST(gauss_mode) != 1) {
-			ChangePlayerPrimaryAmmoCount(-2);
-		}
-		else{
-			// pre-release mode.  adjust damage to compensate later.
-			ChangePlayerPrimaryAmmoCount(-5);
-		}
+		ChangePlayerPrimaryAmmoCount(-primaryAmmoUsage);
 	}
 
 
@@ -253,6 +271,29 @@ void CGauss::PrimaryAttack()
 
 void CGauss::SecondaryAttack()
 {
+	float chargeAmmoUsage;
+	float chargeAmmoStoredMax;
+	float chargeAmmoUsageDelay;
+	if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_mode) != 1) {
+		chargeAmmoUsage = 1;  //retail
+		chargeAmmoStoredMax = 13;
+		if (IsMultiplayer()){
+			chargeAmmoUsageDelay = 0.1;
+		}else{
+			chargeAmmoUsageDelay = 0.3;
+		}
+	}
+	else {
+		chargeAmmoUsage = 5;
+		chargeAmmoStoredMax = 12;
+		if (IsMultiplayer()){
+			chargeAmmoUsageDelay = 0.8*0.7;
+		}else{
+			chargeAmmoUsageDelay = 0.8;
+		}
+	}
+
+
 	// don't fire underwater
 	if (m_pPlayer->pev->waterlevel == 3)
 	{
@@ -273,7 +314,7 @@ void CGauss::SecondaryAttack()
 
 	if (m_fInAttack == 0)
 	{
-		if (PlayerPrimaryAmmoCount() <= 0)
+		if (PlayerPrimaryAmmoCount() < chargeAmmoUsage)
 		{
 			EMIT_SOUND(ENT(m_pPlayer->pev), CHAN_WEAPON, "weapons/357_cock1.wav", 0.8, ATTN_NORM);
 			m_pPlayer->m_flNextAttack = UTIL_WeaponTimeBase() + 0.5;
@@ -283,13 +324,10 @@ void CGauss::SecondaryAttack()
 
 
 
-
-
-
 		m_fPrimaryFire = FALSE;
 
 		if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteclip) == 0 && EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteammo) == 0) {
-			ChangePlayerPrimaryAmmoCount(-1);// take one ammo just to start the spin
+			ChangePlayerPrimaryAmmoCount(-chargeAmmoUsage);// take one ammo just to start the spin
 		}
 
 
@@ -303,7 +341,9 @@ void CGauss::SecondaryAttack()
 		}
 		else {
 			// fire now, max damage!
-			m_pPlayer->m_flStartCharge = -20;  //make it think this is always a full charge.
+			//m_pPlayer->m_flStartCharge = -20;  //make it think this is always a full charge.
+			// ineffective, this way now
+			m_fireState = chargeAmmoStoredMax-1;
 
 			StartFire();
 			m_fInAttack = 0;
@@ -315,11 +355,7 @@ void CGauss::SecondaryAttack()
 
 
 
-
-
-
-
-		m_pPlayer->m_flNextAmmoBurn = UTIL_WeaponTimeBase();
+		m_pPlayer->m_flNextAmmoBurn = UTIL_WeaponTimeBase() + chargeAmmoUsageDelay;
 
 		// spin up
 		m_pPlayer->m_iWeaponVolume = GAUSS_PRIMARY_CHARGE_VOLUME;
@@ -328,7 +364,15 @@ void CGauss::SecondaryAttack()
 		m_fInAttack = 1;
 		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 0.5;
 		m_pPlayer->m_flStartCharge = gpGlobals->time;
-		m_pPlayer->m_flAmmoStartCharge = UTIL_WeaponTimeBase() + GetFullChargeTime();
+
+		//MODDD - changing the purpose of this var.  Instead of when to stop adding further ammo
+		// (yes, despite the name), count how much ammo has been used separately by charging
+		// since the first shot.
+		// ...re-using m_flAmmoStartCharge for this isn't wise, the fuser2 that this is tied to on sending
+		// between server/client tries to count down with frametime (tick down by milliseconds), which we really
+		// don't want for a solid counter like this.  Use m_fireState instead.
+		//m_pPlayer->m_flAmmoStartCharge = UTIL_WeaponTimeBase() + GetFullChargeTime();
+		m_fireState = 0;
 
 		PLAYBACK_EVENT_FULL(FEV_NOTHOST, m_pPlayer->edict(), m_usGaussSpin, 0.0, (float*)&g_vecZero, (float*)&g_vecZero, 0.0, 0.0, 110, 0, 0, 0);
 
@@ -347,19 +391,12 @@ void CGauss::SecondaryAttack()
 		// during the charging process, eat one bit of ammo every once in a while
 		if (UTIL_WeaponTimeBase() >= m_pPlayer->m_flNextAmmoBurn && m_pPlayer->m_flNextAmmoBurn != 1000)
 		{
-			if(IsMultiplayer())
-			{
-				ChangePlayerPrimaryAmmoCount(-1);
-				m_pPlayer->m_flNextAmmoBurn = UTIL_WeaponTimeBase() + 0.1;
-			}
-			else
-			{
-				ChangePlayerPrimaryAmmoCount(-1);
-				m_pPlayer->m_flNextAmmoBurn = UTIL_WeaponTimeBase() + 0.3;
-			}
+			ChangePlayerPrimaryAmmoCount(-chargeAmmoUsage);
+			m_fireState++;
+			m_pPlayer->m_flNextAmmoBurn = UTIL_WeaponTimeBase() + chargeAmmoUsageDelay;
 		}
 
-		if (PlayerPrimaryAmmoCount() <= 0)
+		if (PlayerPrimaryAmmoCount() < chargeAmmoUsage)
 		{
 			// out of ammo! force the gun to fire
 			StartFire();
@@ -373,11 +410,20 @@ void CGauss::SecondaryAttack()
 			return;
 		}
 
+		//MODDD - purpose of m_flAmmoStartCharge changed, counts ammo used by the charge, not
+		// time to stop charging.
+		/*
 		if (UTIL_WeaponTimeBase() >= m_pPlayer->m_flAmmoStartCharge)
 		{
 			// don't eat any more ammo after gun is fully charged.
 			m_pPlayer->m_flNextAmmoBurn = 1000;
 		}
+		*/
+		if (m_fireState >= chargeAmmoStoredMax-1) {
+			// This is 13 used total, add 1 for starting the charge
+			m_pPlayer->m_flNextAmmoBurn = 1000;
+		}
+
 
 		int pitch = (gpGlobals->time - m_pPlayer->m_flStartCharge) * (150 / GetFullChargeTime()) + 100;
 		if (pitch > 250)
@@ -393,9 +439,9 @@ void CGauss::SecondaryAttack()
 		m_iSoundState = SND_CHANGE_PITCH; // hack for going through level transitions
 
 		m_pPlayer->m_iWeaponVolume = GAUSS_PRIMARY_CHARGE_VOLUME;
-
+		
 		// m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 0.1;
-		if (m_pPlayer->m_flStartCharge < gpGlobals->time - 10)
+		if (gpGlobals->time > m_pPlayer->m_flStartCharge + GetFullChargeTime() * 1.3 + 3)
 		{
 			// Player charged up too long. Zap him.
 			EMIT_SOUND_DYN(ENT(m_pPlayer->pev), CHAN_WEAPON, "weapons/electro4.wav", 1.0, ATTN_NORM, 0, 80 + RANDOM_LONG(0, 0x3f));
@@ -431,46 +477,131 @@ void CGauss::StartFire(void)
 	Vector vecAiming = gpGlobals->v_forward;
 	Vector vecSrc = m_pPlayer->GetGunPosition(); // + gpGlobals->v_up * -8 + gpGlobals->v_right * 8;
 
-	if (gpGlobals->time - m_pPlayer->m_flStartCharge > GetFullChargeTime())
-	{
-		flDamage = 200;
+	// How much damage will one primary-fire gauss shot do?  Useful for charged damage logic too.
+	// gauss_mode affects this (2.5 times as much).
+	// And clientside will use hardcoded forms for now, mostly for appearance info there anyway.
+	float damagePerShot;
+
+	if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST(gauss_mode) != 1) {
+#ifdef CLIENT_DLL
+		damagePerShot = 20.0f;
+#else 
+		damagePerShot = gSkillData.plrDmgGauss;
+#endif
+	}
+	else {
+		// ALPHA
+#ifdef CLIENT_DLL
+		damagePerShot = 20.0f * 2.5;
+#else 
+		damagePerShot = gSkillData.plrDmgGauss * 2.5;
+#endif
+	}
+
+
+
+	if (!m_fPrimaryFire) {
+		
+		if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST(gauss_mode) != 1) {
+			// Retail.
+			//MODDD - changes here too.  Do damage in solid increments depending on how
+			// much ammo was used instead, also starting at 10 damage for 1 ammo used.
+			// Maxes changed too, formula goes:
+			// 10 + (ammo used while charging - 1) * 14
+			// so max damage is now closer to 170.  Also involve gSkillData.plrDmgGauss as a basis for that serverside at least.
+
+
+			// clientside doesn't get skills.txt, use a fixed one, only used for beam appearance.
+
+			flDamage = damagePerShot * (0.4f + 0.695f * ((float)m_fireState));
+
+			/*
+			if (gpGlobals->time - m_pPlayer->m_flStartCharge > GetFullChargeTime())
+			{
+				flDamage = 200;
+			}
+			else
+			{
+				flDamage = 200 * ((gpGlobals->time - m_pPlayer->m_flStartCharge) / GetFullChargeTime());
+			}
+			*/
+		}
+		else {
+			flDamage = damagePerShot * (1.0f + 1.0f * ((float)m_fireState));
+		}
 	}
 	else
 	{
-		flDamage = 200 * ((gpGlobals->time - m_pPlayer->m_flStartCharge) / GetFullChargeTime());
+		// PRIMARY FIRE
+		flDamage = damagePerShot;
+		
 	}
 
-
-
-	if (m_fPrimaryFire)
-	{
-		// fixed damage on primary attack
-#ifdef CLIENT_DLL
-		flDamage = 20;
-#else 
-		flDamage = gSkillData.plrDmgGauss;
-#endif
-	}
 
 	if (m_fInAttack != 3)
 	{
 		//ALERT ( at_console, "Time:%f Damage:%f\n", gpGlobals->time - m_pPlayer->m_flStartCharge, flDamage );
 
 #ifndef CLIENT_DLL
-		float flZVel = m_pPlayer->pev->velocity.z;
+		// whether to include Z or not comes later.
+		float knockbackAmount = 0;
 
-		if (!m_fPrimaryFire)
-		{
-			//MODDD - a cheat may disable the recoil force.
-			if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_nogaussrecoil) == 0) {
-				m_pPlayer->pev->velocity = m_pPlayer->pev->velocity - gpGlobals->v_forward * flDamage * 5;
-			}
+		//MODDD - a cheat may disable the recoil force.
+		if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_nogaussrecoil) == 1) {
+			knockbackAmount = 0;
 		}
-		//MODDD - the 2nd condition is extra, from a new CVar.  Could allow z-force.
-		if (!IsMultiplayer() && EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gaussRecoilSendsUpInSP) == 0)
+		else {
+			// knockback allowed?  From what?  How to decide.
+			if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST(gauss_mode) != 1) {
+				// retail: secondary does knockback
+				if (!m_fPrimaryFire) {
+					// CHANGED, scale a little less for higher damages.
+					//knockbackAmount = flDamage * 5;
+					if (flDamage <= 20) {
+						knockbackAmount = flDamage * (4.8);
+					}
+					else if (flDamage <= 100) {
+						knockbackAmount = 20 * 5 + (flDamage - 20) * 3.8;
+					}
+					else {
+						knockbackAmount = 20 * 5 + (100 - 20) * 4 + (flDamage - 100) * 2.7;
+					}
+				}
+				else {
+					knockbackAmount = 0;
+				}
+			}else {
+				// alpha: primary does knockback.  Should be several 'feet' according to details.
+				if (m_fPrimaryFire) {
+					knockbackAmount = 50 * 12;
+				}
+				else {
+					knockbackAmount = 0;
+				}
+			}
+
+		}//END OF cheat_nogaussrecoil check
+
+
+		// was !m_fPrimaryFire
+		if (knockbackAmount > 0)
 		{
-			// in deathmatch, gauss can pop you up into the air. Not in single play.
-			m_pPlayer->pev->velocity.z = flZVel;
+			Vector knockBackVec;
+			knockBackVec = m_pPlayer->pev->velocity - gpGlobals->v_forward * knockbackAmount;
+
+			//MODDD - the 2nd condition is extra, from a new CVar.  Could allow z-force.
+			if (!IsMultiplayer() && EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gaussRecoilSendsUpInSP) == 0)
+			{
+				// in deathmatch, gauss can pop you up into the air. Not in single play.
+				// (only x & y)
+				m_pPlayer->pev->velocity.x = knockBackVec.x;
+				m_pPlayer->pev->velocity.y = knockBackVec.y;
+			}
+			else {
+				// allow all knockback, including Z.
+				m_pPlayer->pev->velocity = knockBackVec;
+			}
+
 		}
 #endif
 		// player "shoot" animation
@@ -498,8 +629,8 @@ void CGauss::Fire(Vector vecOrigSrc, Vector vecDir, float flDamage)
 	TraceResult tr, beam_tr;
 	float flMaxFrac = 1.0;
 	int	nTotal = 0;
-	int fHasPunched = 0;
-	int fFirstBeam = 1;
+	BOOL fHasPunched = FALSE;
+	BOOL fFirstBeam = TRUE;
 	int	nMaxHits = 10;
 
 	pentIgnore = ENT(m_pPlayer->pev);
@@ -527,7 +658,8 @@ void CGauss::Fire(Vector vecOrigSrc, Vector vecDir, float flDamage)
 		//	ALERT( at_console, "%f %f\n", tr.flFraction, flMaxFrac );
 
 #ifndef CLIENT_DLL
-	while (flDamage > 10 && nMaxHits > 0)
+	//MODDD - force allow first shot to have a beam (loop run-thru), doing nothing would look odd.
+	while ( (fFirstBeam || flDamage >= 10) && nMaxHits > 0)
 	{
 		nMaxHits--;
 
@@ -544,7 +676,7 @@ void CGauss::Fire(Vector vecOrigSrc, Vector vecDir, float flDamage)
 		if (fFirstBeam)
 		{
 			m_pPlayer->pev->effects |= EF_MUZZLEFLASH;
-			fFirstBeam = 0;
+			fFirstBeam = FALSE;
 
 			nTotal += 26;
 		}
@@ -638,13 +770,27 @@ void CGauss::Fire(Vector vecOrigSrc, Vector vecDir, float flDamage)
 				vecDest = vecSrc + vecDir * 8192;
 
 				// explode a bit
-			//MODDD NOTE - why was this "m_pPlayer->RadiusDamage"? No need to be specific to the player in the call,
-			//             we already send our own PEV and the player's PEV as arguments.
-			// No difference in just "RadiusDamage( ... )" alone.
-			//m_pPlayer->RadiusDamage(...)
-			// Also, Damange no longer depends on the reflection angle, was 'flDamage * n'.
-			// 
-				RadiusDamage(tr.vecEndPos, pev, m_pPlayer->pev, flDamage * 0.42, flDamage * 1.4, CLASS_NONE, DMG_BLAST, DMG_GAUSS);
+				//MODDD NOTE - why was this "m_pPlayer->RadiusDamage"? No need to be specific to the player in the call,
+				//             we already send our own PEV and the player's PEV as arguments.
+				// No difference in just "RadiusDamage( ... )" alone.
+				//m_pPlayer->RadiusDamage(...)
+				// Also, Damange no longer depends on the reflection angle, was 'flDamage * n'.
+				// 
+
+				// also diminishing returns for extreme damage.
+				float radDmg;
+				float radRange;
+
+				if (flDamage <= 140) {
+					radDmg = flDamage * 0.42;
+					radRange = flDamage * 1.4;
+				}else {
+					radDmg = (140 * 0.42) + (flDamage - 140) * 0.21;
+					radRange = (140 * 1.4) + (flDamage - 140) * 0.60;
+				}
+
+
+				RadiusDamage(tr.vecEndPos, pev, m_pPlayer->pev, radDmg, flDamage, CLASS_NONE, DMG_BLAST, DMG_GAUSS);
 
 				nTotal += 34;
 
@@ -659,7 +805,7 @@ void CGauss::Fire(Vector vecOrigSrc, Vector vecDir, float flDamage)
 				// limit it to one hole punch
 				if (fHasPunched)
 					break;
-				fHasPunched = 1;
+				fHasPunched = TRUE;
 
 
 				BOOL punchAttempt = !m_fPrimaryFire;
@@ -667,6 +813,8 @@ void CGauss::Fire(Vector vecOrigSrc, Vector vecDir, float flDamage)
 				// try punching through wall if secondary attack (primary is incapable of breaking through)
 				if (punchAttempt)
 				{
+					BOOL doDirectHitRadDamage = FALSE;
+
 					UTIL_TraceLine(tr.vecEndPos + vecDir * 8, vecDest, dont_ignore_monsters, pentIgnore, &beam_tr);
 					if (!beam_tr.fAllSolid)
 					{
@@ -701,7 +849,21 @@ void CGauss::Fire(Vector vecOrigSrc, Vector vecDir, float flDamage)
 
 							::RadiusDamage( beam_tr.vecEndPos + vecDir * 8, pev, m_pPlayer->pev, flDamage, damage_radius, CLASS_NONE, DMG_BLAST, DMG_GAUSS );
 							*/
-							::RadiusDamage(beam_tr.vecEndPos + vecDir * 8, pev, m_pPlayer->pev, flDamage * 0.38, flDamage * 1.4, CLASS_NONE, DMG_BLAST, DMG_GAUSS);
+
+
+							float radDmg;
+							float radRange;
+
+							if (flDamage <= 140) {
+								radDmg = flDamage * 0.38;
+								radRange = flDamage * 1.4;
+							}
+							else {
+								radDmg = (140 * 0.38) + (flDamage - 140) * 0.17;
+								radRange = (140 * 1.4) + (flDamage - 140) * 0.60;
+							}
+
+							::RadiusDamage(beam_tr.vecEndPos + vecDir * 8, pev, m_pPlayer->pev, radDmg, radRange, CLASS_NONE, DMG_BLAST, DMG_GAUSS);
 
 
 							CSoundEnt::InsertSound(bits_SOUND_COMBAT, pev->origin, NORMAL_EXPLOSION_VOLUME, 3.0);
@@ -717,14 +879,37 @@ void CGauss::Fire(Vector vecOrigSrc, Vector vecDir, float flDamage)
 							// Except this time, with a NULL pentIgnore.  Redoing the trace from the player's weapon
 							// to where the player is looking is likely to register a hit on the player from occuring 
 							// within the player's bounds without being told to ignore that.
-							flDamage = 0;
+							doDirectHitRadDamage = TRUE;
 						}
 					}
 					else
 					{
 						//ALERT( at_console, "blocked %f\n", n );
-						flDamage = 0;
+						doDirectHitRadDamage = TRUE;
 					}
+
+					//MODDD - NEW.  Only happen if a reflection or pierce hasn't already done this by this point.
+					if (doDirectHitRadDamage) {
+
+						float radDmg;
+						float radRange;
+
+						if (flDamage <= 140) {
+							radDmg = flDamage * 0.21;
+							radRange = flDamage * 1.1;
+						}
+						else {
+							radDmg = (140 * 0.21) + (flDamage - 140) * 0.10;
+							radRange = (140 * 1.1) + (flDamage - 140) * 0.38;
+						}
+
+						::RadiusDamage(tr.vecEndPos + vecDir * 8, pev, m_pPlayer->pev, radDmg, radRange, CLASS_NONE, DMG_BLAST, DMG_GAUSS);
+
+						// And lastly, remove all damage.  doDirectHitRadDamage was only set to TRUE in places that reset this.
+						flDamage = 0;
+					}//END OF doDirectHitRadDamage check
+
+
 				}
 				else
 				{

@@ -399,4 +399,27 @@ Hitting certain flying monsters (ospreys) with explosives while sv_explosionknoc
 
 Explosive projectiles that reach any edge of a skybox will no longer explode, only disappear.
 
-CVar 'gaussRecoilSendsUpInSP' changed from 0 to 1.
+
+GAUSS
+NEW CVAR: gauss_mode, defaults to 1.  0 is retail-based, 1 is pre-release/alpha based, from a rough description.
+~ Most of these changes apply to either gauss_mode choice.
+- Secondary/charged damage determining changed.  Increases the final damage evenly each time ammo is depleted intead of increasing smoothly between ammo-usage.
+- Max charge damage changed from 200 to ~175, scaled for lesser charges.
+- Slightly longer delay between primary shots.
+- Slightly greater chance of reflecting off surfaces, damage left in beam required for reflection changed from 10 to 8.
+- Charged values also tied to skill values for gauss damage.
+- Glow effect no longer stacks stuck balls in entry/exit points of map geometry hit.
+- Smaller glow-effects that can be confused for stuck balls no longer generate either.
+- Knockback for all gauss weapons increases less for more charge.  That is, 160 gauss damage gives less than twice the knockback of 80 gauss damage.  Knockback reduced overall.
+- CVar 'gaussRecoilSendsUpInSP' default changed from 0 to 1.  If wanted, this can depend on CVar gauss_mode instead.
+- Reflection-less and pierce-less secondary fire will also deal radial damage (like an explosion), but less so than the default ones for the same charge.
+
+GAUSS MODE 0:
+- Minimum ammo used for charge (1) no longer surpasses primary fire damage (20).  Instead, a charged shot of 1 ammo deals only 8 damage but becomes increasingly more efficient with more ammo used (already better than primary slightly at 2).
+
+GAUSS MODE 1:
+- Primary fire uses 5 ammo instead of 2, does more damage to compensate.  Delay between firing also increased.
+- Secondary charges in increments of 5 ammo (single primary shot usage) instead of 1.  Longer delay between ammo-usage cycles for this reason.
+  Charged damage is each ammo-usage cycle (5 ammo; primary shot) times primary damage.
+  This means, charging is always as efficient as primary fire.
+
