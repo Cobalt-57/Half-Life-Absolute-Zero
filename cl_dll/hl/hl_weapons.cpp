@@ -1289,7 +1289,10 @@ void HUD_WeaponsPostThink(local_state_s* from, local_state_s* to, usercmd_t* cmd
 	// Removing the ability of g_currentanim being set differently to cause changes in animations.
 
 
-	int debugger = HUD_GetWeaponAnim();
+	// for a breakpoint only.
+	{
+		int clientWeaponAnim = HUD_GetWeaponAnim();
+	}
 
 
 	//BOOL tempo1 = g_cl_HUD_Frame_ran;

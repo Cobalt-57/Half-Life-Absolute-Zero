@@ -292,6 +292,9 @@ hud_swapFirstTwoBuckets (0) - BOOLEAN.
 
 hud_rpg_alpha_ammo (1) - BOOL.  If on, RPG clip and reserve are blended into one ammo count instead.
 
+sv_rpg_alpha_ammo (1) - BOOL.  If on, RPG reserve ammo will be clip-less.  That is, reloading is still needed before firing, but the ammo pool + clip can never exceed the ammo max (5).
+
+
 ignoreMultiplayerSkillOverride (1) - BOOLEAN.
 0: no effect (retail).  In multiplayer, weapons will use hard-coded choices for player weapons and some item values.
 1: In multiplayer, weapons will use the same skill.cfg values that singleplayer does.
@@ -1529,7 +1532,8 @@ cl_viewmodel_fidget (2) - MODEVAR.  Affects how/when fidget animations for certa
 
 sv_player_midair_fix (1) - BOOL.  When on, support for an extension of midair logic that does similar slope-checks as walking.  That is, jumping 'up' stairs is possible without losing momentum.
 -As a side-effect, reaching the top of several objects that were difficult to reach through even crouch-jumping (often some barrels and boxes) is much easier; reach of jumps slightly improved.
-
+-This may also stop getting stuck in certain terrain, such as tracks in a2a1.
+-Slight jumpiness one frame (very fast) when crouch-jumping against something, helped by cl_interp_view_extra set to 2.
 
 
 

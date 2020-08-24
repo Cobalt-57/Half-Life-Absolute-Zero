@@ -376,6 +376,7 @@ Downward-incline smoothness slightly further improved.
 CVAR: sv_player_midair_fix, 0 for retail, 1 for the following:
 -Support for an extension of midair logic that does similar slope-checks as walking.  That is, jumping 'up' stairs is possible without losing momentum.
 -As a side-effect, reaching the top of several objects that were difficult to reach through even crouch-jumping (often some barrels and boxes) is much easier; reach of jumps slightly improved.
+-This may also stop getting stuck in certain terrain, such as tracks in a2a1
 
 Going up/down fast-moving platforms no longer causes the interp-smoothness to awkwardly lag behind the position of where the player actually is.  (best fix singleplayer, still improved otherwise)
 
@@ -422,4 +423,19 @@ GAUSS MODE 1:
 - Secondary charges in increments of 5 ammo (single primary shot usage) instead of 1.  Longer delay between ammo-usage cycles for this reason.
   Charged damage is each ammo-usage cycle (5 ammo; primary shot) times primary damage.
   This means, charging is always as efficient as primary fire.
+
+Map spawned dead-barnies no longer have mouths open.
+
+Egon finally has the spiral-effect off on wide (secondary) fire under CVar egonEffectsMode set to 3 (the default), as intended.
+
+New FVox line (armor_compromised.wav) played on taking significant damage to battery/armor.
+Generic line (hev_damage.wav) may be played if no other queued methods are present on taking non-timed damage.
+
+New CVar: sv_rpg_alpha_ammo (defaults to 1).  More RPG alpha logic when on, logic 'clipless' mode, complement for hud_rpg_alpha_ammo.
+
+Chumtoads no longer granted by cheat commands (impulse 101, 'everything') in multiplayer.     Uh.  okay.
+
+cheat commands (impulse 101, 'everything') now give power canisters (injectables) too.
+
+
 

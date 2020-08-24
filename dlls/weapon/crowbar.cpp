@@ -48,6 +48,7 @@ void CCrowbar::Spawn( )
 	Precache( );
 	m_iId = WEAPON_CROWBAR;
 	SET_MODEL(ENT(pev), "models/w_crowbar.mdl");
+
 	m_iClip = -1;
 
 	FallInit();// get ready to fall down.

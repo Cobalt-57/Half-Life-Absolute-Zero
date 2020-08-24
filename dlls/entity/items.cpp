@@ -36,6 +36,8 @@ extern int gmsgAdrenalineP;
 extern int gmsgRadiationP;
 extern int gmsgUpdateAirTankAirTime;
 
+
+
 //MODDD
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST(wpn_glocksilencer)
 //EASY_CVAR_EXTERN_DEBUGONLY(canTakeLongJump)
@@ -368,7 +370,7 @@ class CItemAntidote : public CItem
 		
 
 		//Max of 5 antidotes (or any type of power canister).
-		if(pPlayer->m_rgItems[ITEM_ANTIDOTE] < 5){
+		if(pPlayer->m_rgItems[ITEM_ANTIDOTE] < ITEM_ANTIDOTE_MAX){
 
 			EMIT_SOUND( pPlayer->edict(), CHAN_ITEM, "items/gunpickup2.wav", 1, ATTN_NORM );
 
@@ -431,7 +433,7 @@ class CItemAdrenaline : public CItem
 		}
 
 		//Max of 5 adrenalines (or any type of power canister).
-		if(pPlayer->m_rgItems[ITEM_ADRENALINE] < 5){
+		if(pPlayer->m_rgItems[ITEM_ADRENALINE] < ITEM_ADRENALINE_MAX){
 
 			EMIT_SOUND( pPlayer->edict(), CHAN_ITEM, "items/gunpickup2.wav", 1, ATTN_NORM );
 
@@ -496,7 +498,7 @@ class CItemRadiation : public CItem
 		}
 
 		//Max of 5 antidotes (or any type of power canister).
-		if(pPlayer->m_rgItems[ITEM_RADIATION] < 5){
+		if(pPlayer->m_rgItems[ITEM_RADIATION] < ITEM_RADIATION_MAX){
 
 			EMIT_SOUND( pPlayer->edict(), CHAN_ITEM, "items/gunpickup2.wav", 1, ATTN_NORM );
 

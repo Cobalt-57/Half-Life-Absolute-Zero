@@ -2259,7 +2259,8 @@ void CDeadBarney :: Spawn( )
 
 	//MODDD - see scientist.cpp, this lets the mouth stay open.
 	// Hard to prove if it was meant to be this way for barnies too, but eh, why not.
-	SetBoneController(4, 15);
+	// Changed our mind, gone.
+	//SetBoneController(4, 15);
 
 	// TEST!!!     Is this readable in studiomodelrenderer?
 	// no.  it is not.     dam.

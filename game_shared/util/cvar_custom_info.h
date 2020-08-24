@@ -170,6 +170,7 @@
 #define timedDamage_debug_ID 176
 #define myRocketsAreBarney_ID 177
 #define wpn_glocksilencer_ID 178
+#define sv_rpg_alpha_ammo_ID 179
 
 
 
@@ -179,7 +180,7 @@
 //           WilL.
 //                          haPpen.
 //                                                          Thanks.
-#define CVAR_CLIENTSENDOFF_COUNT 179
+#define CVAR_CLIENTSENDOFF_COUNT 180
 
 
 
@@ -702,6 +703,7 @@
 #define DEFAULT_pausecorrection1 1
 #define DEFAULT_pausecorrection2 2
 #define DEFAULT_hud_rpg_alpha_ammo 1
+#define DEFAULT_sv_rpg_alpha_ammo 1
 #define DEFAULT_cl_viewmodel_fidget 2
 #define DEFAULT_sv_player_midair_fix 1
 

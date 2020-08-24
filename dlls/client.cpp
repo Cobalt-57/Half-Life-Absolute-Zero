@@ -1346,6 +1346,8 @@ void ClientCommand( edict_t *pEntity )
 
 		if ( g_flWeaponCheat != 0.0)
 		{
+			int i;
+
 			CBasePlayer* playerRef = GetClassPtr((CBasePlayer *)pev);
 			if(playerRef){
 				playerRef->reviveIfDead();
@@ -1357,6 +1359,13 @@ void ClientCommand( edict_t *pEntity )
 				playerRef->attemptResetTimedDamage(TRUE);
 				//playerRef->pev->flags |= FL_GODMODE;
 				//playerRef->pev->flags |= MOVETYPE_NOCLIP;
+
+
+				playerRef->m_rgItems[ITEM_ANTIDOTE] = ITEM_ANTIDOTE_MAX;
+				playerRef->m_rgItems[ITEM_ADRENALINE] = ITEM_ADRENALINE_MAX;
+				playerRef->m_rgItems[ITEM_RADIATION] = ITEM_RADIATION_MAX;
+				playerRef->airTankAirTime = PLAYER_AIRTANK_TIME_MAX;
+
 			}
 		}else {
 			easyForcePrintLineClient(pEntity, "You need sv_cheats on for that!");

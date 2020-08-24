@@ -47,6 +47,9 @@
 */
 
 
+// ALSO NOTE:  Using the synched var 'm_fInAttack' to represent 'mockClip'. Keeps trakc of whether the weapon has
+// been reloaded for firing logic to work even in clipless (sv_rpg_alpha_ammo = 1).
+
 
 
 
@@ -74,7 +77,8 @@ EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteammo)
 EASY_CVAR_EXTERN(cl_rockettrail)
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(rocketSkipIgnite)
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(myRocketsAreBarney)
-
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(myRocketsAreBarney)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(sv_rpg_alpha_ammo)
 
 //MODDD - don't ask.
 void saySomethingBarneyRocket(CBaseEntity* entRef);
@@ -648,6 +652,7 @@ CRpg::CRpg(void) {
 #ifndef CLIENT_DLL
 	forceHideSpotTime = -1;
 #endif
+	m_fInAttack = 0;
 
 }//END OF CRpg constructor
 
@@ -665,11 +670,104 @@ IMPLEMENT_SAVERESTORE(CRpg, CBasePlayerWeapon);
 
 
 
+
+int CRpg::GetClip(void) {
+	if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST(sv_rpg_alpha_ammo) != 1) {
+		return m_iClip;
+	}else {
+		return m_fInAttack;
+	}
+}
+int CRpg::GetClipMax(void) {
+	if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST(sv_rpg_alpha_ammo) != 1) {
+		return RPG_MAX_CLIP;
+	}
+	else {
+		return 0;
+	}
+}
+
+void CRpg::OnReloadApply(void) {
+	m_fInAttack = 1;  // count it
+}
+void CRpg::OnAddPrimaryAmmoAsNewWeapon(void) {
+	// come ready to fire
+	m_fInAttack = 1;
+}
+
+
+
+
+// NEVERMIND, delete later, probably.
+BOOL CRpg::RPGReload(int iClipSize, int iAnim, float fDelay, int body)
+{
+	// !!!
+	// return DefaultReload(iClipSize, iAnim, fDelay, body);
+
+
+	int myPrimaryAmmoType = getPrimaryAmmoType();
+	if (IS_AMMOTYPE_VALID(myPrimaryAmmoType)) {
+		// ok.
+	}
+	else {
+		// oh.
+		return FALSE;
+	}
+
+
+	//MODDD - cheat intervention.  Can only fail to reload if the infiniteAmmo cheat is off.
+	if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteammo) != 1) {
+		if (m_pPlayer->m_rgAmmo[myPrimaryAmmoType] <= 0)
+			return FALSE;
+
+		int j = min(iClipSize - m_fInAttack, m_pPlayer->m_rgAmmo[myPrimaryAmmoType]);
+
+		//MODDD - is this edit ok?  To help with things that mess with the max-count like the glock with old reload logic.
+		//if (j == 0)
+		if (j <= 0)
+			return FALSE;
+	}
+	else {
+		if (m_pPlayer->m_rgAmmo[myPrimaryAmmoType] <= 0)
+			m_pPlayer->m_rgAmmo[myPrimaryAmmoType] = 1;
+
+		int j = min(iClipSize - m_iClip, m_pPlayer->m_rgAmmo[myPrimaryAmmoType]);
+		if (j <= 0)
+			m_pPlayer->m_rgAmmo[myPrimaryAmmoType] = 1;
+
+		return TRUE;
+	}
+
+	m_pPlayer->m_flNextAttack = UTIL_WeaponTimeBase() + fDelay;
+
+	//!!UNDONE -- reload sound goes here !!!
+	//SendWeaponAnim( iAnim, UseDecrement() ? 1 : 0 );
+
+	//MODDD - reload animation must happen at all costs!  Force that sucker!
+	//...this may no logner be necessary, can check.
+	//For that matter, even above, why didn't we send the "body"? It was effectively ignored then, at least from this DefaultReload call.
+	this->SendWeaponAnimBypass(iAnim, body);
+	m_fInReload = TRUE;
+
+
+	//MODDD - eh, why not.
+	forceBlockLooping();
+
+	//MODDD - this will now always be at the end of this reload anim instead.
+	//m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 3;
+	m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + fDelay + this->randomIdleAnimationDelay();
+
+	return TRUE;
+}
+
+
+
+
 void CRpg::Reload( void )
 {
 	int iResult;
 
-	if ( m_iClip == 1 )
+	if (GetClip() == 1 )
 	{
 		// don't bother with any of this if don't need to reload.
 		return;
@@ -717,9 +815,21 @@ void CRpg::Reload( void )
 
 #endif
 
-	if ( m_iClip == 0 )
+	if (GetClip() == 0) {
 		//iResult = DefaultReload( RPG_MAX_CLIP, RPG_RELOAD, 2 );
-		iResult = DefaultReload( RPG_MAX_CLIP, RPG_RELOAD, (61.0/30.0) );
+		//iResult = RPGReload(GetClipMax(), RPG_RELOAD, (61.0 / 30.0));
+
+		if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST(sv_rpg_alpha_ammo) != 1) {
+			iResult = DefaultReload(1, RPG_RELOAD, (61.0 / 30.0));
+		}
+		else {
+			// hacky hacky hacky
+			m_iClip = m_fInAttack;
+			iResult = DefaultReload(1, RPG_RELOAD, (61.0 / 30.0));
+			m_iClip = 0;
+		}
+		
+	}
 	
 
 	//MODDD - Not necessary.  "DefaultReload" now gives the correct idle time (length of anim)
@@ -727,6 +837,7 @@ void CRpg::Reload( void )
 	//	m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + UTIL_SharedRandomFloat( m_pPlayer->random_seed, 10, 15 );
 	
 }
+
 
 //MODDD
 void CRpg::customAttachToPlayer(CBasePlayer *pPlayer ){
@@ -782,7 +893,10 @@ int CRpg::GetItemInfo(ItemInfo *p)
 	p->iMaxAmmo1 = ROCKET_MAX_CARRY;
 	p->pszAmmo2 = NULL;
 	p->iMaxAmmo2 = -1;
-	p->iMaxClip = RPG_MAX_CLIP;
+
+	// !!!
+	//p->iMaxClip = RPG_MAX_CLIP;
+	p->iMaxClip = GetClipMax();
 
 	//MODDD - used to be...
 	/*
@@ -818,7 +932,7 @@ BOOL CRpg::Deploy( )
 	forceHideSpotTime = -1;
 #endif
 
-	if ( m_iClip == 0 )
+	if ( GetClip() == 0 )
 	{
 		return DefaultDeploy( "models/v_rpg.mdl", "models/p_rpg.mdl", RPG_DRAW_UL, "rpg", 0, 0, (16.0/30.0), -1 );
 	}
@@ -859,7 +973,7 @@ void CRpg::Holster( int skiplocal /* = 0 */ )
 
 	//MODDD - also going to involve whether the RPG is loaded while holstered (HOLSTER1) or not (HOLSTER2).
 	//
-	if(m_iClip){
+	if(GetClip()){
 		holsterAnimToSend = RPG_HOLSTER1;
 	}else{
 		holsterAnimToSend = RPG_HOLSTER2;
@@ -877,7 +991,9 @@ void CRpg::Holster( int skiplocal /* = 0 */ )
 
 void CRpg::PrimaryAttack()
 {
-	if ( m_iClip )
+	// in case moving b/w CVars, force include m_iClip.
+	// Or have a "GetClipEither" method.    eh.
+	if (GetClip() || m_iClip > 0)
 	{
 		m_pPlayer->m_iWeaponVolume = LOUDEST_GUN_VOLUME; //MODDD - louder, for alerting AI that is.
 		m_pPlayer->m_iWeaponFlash = BRIGHT_GUN_FLASH;
@@ -909,9 +1025,18 @@ void CRpg::PrimaryAttack()
 
 		//MODDD
 		if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteclip) == 0){
-			m_iClip--; 
+			
+			if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST(sv_rpg_alpha_ammo) != 1) {
+				if (m_iClip > 0)m_iClip--;
+				if (m_fInAttack > 0)m_fInAttack--;
+			}
+			else {
+				if (m_iClip > 0)m_iClip--;
+				if (m_fInAttack > 0)m_fInAttack--;
+				ChangePlayerPrimaryAmmoCount(-1);
+			}
 		}
-				
+
 		if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelay) == 0){
 			m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 1.5;
 		}else{
@@ -1001,10 +1126,11 @@ void CRpg::WeaponIdle( void )
 		float flRand = UTIL_SharedRandomFloat( m_pPlayer->random_seed, 0, 1 );
 		if (flRand <= 0.75 || m_fSpotActive)
 		{
-			if ( m_iClip == 0 )
+			if (GetClip() == 0) {
 				iAnim = RPG_IDLE_UL;
-			else
+			}else{
 				iAnim = RPG_IDLE;
+			}
 
 			m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 90.0 / 15.0 + randomIdleAnimationDelay();
 		}
@@ -1019,10 +1145,12 @@ void CRpg::WeaponIdle( void )
 				iAnim = RPG_FIDGET;
 			*/
 
-			if ( m_iClip == 0 )
+			if (GetClip() == 0) {
 				iAnim = RPG_FIDGET;
-			else
+			}
+			else {
 				iAnim = RPG_FIDGET;    //Or pick RPG_IDLE instead if unloaded?
+			}
 
 
 

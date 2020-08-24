@@ -3257,6 +3257,7 @@ void PM_LadderMove( physent_t *pLadder )
 				float normal;
 				float lateralLength;
 				float ladderTravelLength;
+				float velLength;
 
 				//ALERT(at_console, "pev %.2f %.2f %.2f - ",
 				//	pev->velocity.x, pev->velocity.y, pev->velocity.z);
@@ -3376,7 +3377,7 @@ void PM_LadderMove( physent_t *pLadder )
 				// 4th way
 				VectorMA( lateral, -normal, tmp, pmove->velocity );
 
-				float velLength = Length(pmove->velocity);
+				velLength = Length(pmove->velocity);
 				if (velLength > ladderSpeed) {
 					float lengthModMulti = ladderSpeed / velLength;
 					VectorScale(pmove->velocity, lengthModMulti, pmove->velocity);

@@ -18,13 +18,9 @@
 
 #include "cbase.h"  //why not?!
 #include "animating.h"
-
 #include "basemonster.h"
-
 #include "effects.h"
-
 #include "util_shared.h"
-
 
 //MODDD - to get the gHUD instance for getting an accurate FOV reading clientside, player data is garbage there.
 #ifdef CLIENT_DLL
@@ -48,6 +44,14 @@
 //MODDD - other power canisters
 #define ITEM_ADRENALINE		5
 #define ITEM_RADIATION		6
+
+
+// inventory max's for power canisters.
+// Should clientside (cl_dll/ammo.cpp) involve these too?
+#define ITEM_ANTIDOTE_MAX 5
+#define ITEM_ADRENALINE_MAX 5
+#define ITEM_RADIATION_MAX 5
+
 
 
 #define WEAPON_NONE				0
@@ -685,6 +689,7 @@ public:
 	virtual CBaseEntity* pickupWalkerReplaceCheck();
 	//MODDD - new event, called alongside a reload changing the ammo counts.
 	virtual void OnReloadApply(void);
+	virtual void OnAddPrimaryAmmoAsNewWeapon(void);
 
 	//MODDD - new general event for easy compatability with a commonly wanted feature (getting the player's
 	// FOV choice given a possible influencing CVar).

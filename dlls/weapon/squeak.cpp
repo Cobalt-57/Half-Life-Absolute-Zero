@@ -534,6 +534,7 @@ void CSqueak::Spawn( )
 	//for now, it will be instant if a replacement is decided. The replacement monster snaps to the ground anyways.
 	FallInit();//get ready to fall down.
 
+	m_iClip = -1;
 	m_iDefaultAmmo = SNARK_DEFAULT_GIVE;
 		
 	pev->sequence = 1;

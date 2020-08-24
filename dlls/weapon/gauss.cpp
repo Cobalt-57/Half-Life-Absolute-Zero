@@ -127,6 +127,7 @@ void CGauss::Spawn()
 	m_iId = WEAPON_GAUSS;
 	SET_MODEL(ENT(pev), "models/w_gauss.mdl");
 
+	m_iClip = -1;
 	m_iDefaultAmmo = GAUSS_DEFAULT_GIVE;
 
 	FallInit();// get ready to fall down.
@@ -219,11 +220,17 @@ void CGauss::Holster(int skiplocal /* = 0 */)
 void CGauss::PrimaryAttack()
 {
 	float primaryAmmoUsage;
+	float attackAgainDelay;
+	float attackAgainSecDelay;
 	if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_mode) != 1) {
 		primaryAmmoUsage = 2;  //retail
+		attackAgainDelay = 0.25;   // was 0.2, changed.
+		attackAgainSecDelay = 0.45;
 	}
 	else {
 		primaryAmmoUsage = 5;
+		attackAgainDelay = 0.55;
+		attackAgainSecDelay = 0.55;
 	}
 
 
@@ -259,10 +266,10 @@ void CGauss::PrimaryAttack()
 
 	if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelay) == 0) {
 		// And, time between primary attacks changed from 0.2 to 0.25.  Time to secondary lengthened further.
-		m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 0.25f;
-		m_flNextSecondaryAttack = UTIL_WeaponTimeBase() + 0.45f;
+		m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + attackAgainDelay;
+		m_flNextSecondaryAttack = UTIL_WeaponTimeBase() + attackAgainSecDelay;
 
-		m_pPlayer->m_flNextAttack = UTIL_WeaponTimeBase() + 0.25;
+		m_pPlayer->m_flNextAttack = UTIL_WeaponTimeBase() + attackAgainDelay;
 	}
 	else {
 		m_pPlayer->m_flNextAttack = UTIL_WeaponTimeBase() + EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelaycustom);
@@ -537,6 +544,11 @@ void CGauss::StartFire(void)
 		
 	}
 
+	// SAFETY.  Reset m_fireState (ammo cycles passed while charging) now that damage has been decided
+	m_fireState = 0;
+
+
+
 
 	if (m_fInAttack != 3)
 	{
@@ -554,29 +566,37 @@ void CGauss::StartFire(void)
 			// knockback allowed?  From what?  How to decide.
 			if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST(gauss_mode) != 1) {
 				// retail: secondary does knockback
-				if (!m_fPrimaryFire) {
+				if (m_fPrimaryFire) {
+					knockbackAmount = 0;
+				}
+				else {
 					// CHANGED, scale a little less for higher damages.
 					//knockbackAmount = flDamage * 5;
 					if (flDamage <= 20) {
-						knockbackAmount = flDamage * (4.8);
+						knockbackAmount = flDamage * (4.4);
 					}
 					else if (flDamage <= 100) {
-						knockbackAmount = 20 * 5 + (flDamage - 20) * 3.8;
+						knockbackAmount = 20 * 4.4 + (flDamage - 20) * 3.2;
 					}
 					else {
-						knockbackAmount = 20 * 5 + (100 - 20) * 4 + (flDamage - 100) * 2.7;
+						knockbackAmount = 20 * 4.4 + (100 - 20) * 3.2 + (flDamage - 100) * 2.0;
 					}
 				}
-				else {
-					knockbackAmount = 0;
-				}
 			}else {
-				// alpha: primary does knockback.  Should be several 'feet' according to details.
+				// alpha: primary does knockback.  Should be 'several feet' according to a source.
 				if (m_fPrimaryFire) {
-					knockbackAmount = 50 * 12;
+					knockbackAmount = 50 * 4.6;
 				}
 				else {
-					knockbackAmount = 0;
+					if (flDamage <= 40) {
+						knockbackAmount = flDamage * (4.2);
+					}
+					else if (flDamage <= 150) {
+						knockbackAmount = 40 * 4.2 + (flDamage - 40) * 2.8;
+					}
+					else {
+						knockbackAmount = 40 * 4.2 + (150 - 40) * 2.5 + (flDamage - 150) * 0.65;
+					}
 				}
 			}
 
@@ -599,7 +619,9 @@ void CGauss::StartFire(void)
 			}
 			else {
 				// allow all knockback, including Z.
-				m_pPlayer->pev->velocity = knockBackVec;
+				m_pPlayer->pev->velocity.x = knockBackVec.x;
+				m_pPlayer->pev->velocity.y = knockBackVec.y;
+				m_pPlayer->pev->velocity.z = knockBackVec.z * 0.6;  // less-so though
 			}
 
 		}

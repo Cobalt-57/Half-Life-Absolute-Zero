@@ -59,6 +59,7 @@ void CHgun::Spawn( )
 	m_iId = WEAPON_HORNETGUN;
 	SET_MODEL(ENT(pev), "models/w_hgun.mdl");
 
+	m_iClip = -1;
 	m_iDefaultAmmo = HIVEHAND_DEFAULT_GIVE;
 	m_iFirePhase = 0;
 

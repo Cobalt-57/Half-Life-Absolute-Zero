@@ -21,6 +21,8 @@
 #include "friendly.h"
 
 
+// can remember the skin of up to 10 chumtoads, the ammo the game ships with anyway
+#define CHUMTOAD_SKIN_MEM_MAX 10
 
 //MODDD - new const
 //Player always has long jump.  Forces "m_flongjump" to true whenever possible, generally from loading a game or spawning.
@@ -70,7 +72,9 @@
 //-----------------------------------------------------
 //This is Half-Life player entity
 //-----------------------------------------------------
-#define CSUITPLAYLIST	4		// max of 4 suit sentences queued up at any time
+
+//MODDD - changed, was 4.
+#define CSUITPLAYLIST	6		// max of # suit sentences queued up at any time
 
 #define SUIT_GROUP			TRUE
 #define SUIT_SENTENCE		FALSE
@@ -468,6 +472,17 @@ public:
 	int recentMajorTriggerDamage;
 	float lastBlockDamageAttemptReceived;
 	float recentRevivedTime;
+
+	
+	//MODDD - TODO.  Keep in synch with the client.  That's gonna be fun.
+	// How about a message to set each one at startup/spawn, and another
+	// to set skins one at a time, given an index (what [#] to set) and the
+	// skin itself.
+	// Idea is, viewmodel shows the skin of the most recently picked up chumtoad,
+	// and shows the next one picked up after that one is thrown.
+	// Yes, we crazy.
+	// Looking like this is getting scrapped though
+	//int chumToadSkinMem[CHUMTOAD_SKIN_MEM_MAX];
 
 
 

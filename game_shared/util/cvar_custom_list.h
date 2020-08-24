@@ -181,6 +181,7 @@
 	EASY_CVAR_HASH_CLIENTONLY(timedDamage_debug, 176)\
 	EASY_CVAR_HASH(myRocketsAreBarney, 177)\
 	EASY_CVAR_HASH(wpn_glocksilencer, wpn_glocksilencer_ID)\
+	EASY_CVAR_HASH(sv_rpg_alpha_ammo, sv_rpg_alpha_ammo_ID)\
 	DUMMY
 
 
@@ -2042,6 +2043,7 @@
 	EASY_CVAR_DECLARATION_SERVER(pausecorrection1)\
 	EASY_CVAR_DECLARATION_SERVER(pausecorrection2)\
 	EASY_CVAR_DECLARATION_SERVER(hud_rpg_alpha_ammo)\
+	EASY_CVAR_DECLARATION_SERVER_CLIENTSENDOFF_BROADCAST(sv_rpg_alpha_ammo)\
 	EASY_CVAR_DECLARATION_SERVER(cl_viewmodel_fidget)\
 	EASY_CVAR_DECLARATION_SERVER(sv_player_midair_fix)\
 	DUMMY
@@ -2545,6 +2547,7 @@
 	EASY_CVAR_DECLARATION_CLIENT(pausecorrection1)\
 	EASY_CVAR_DECLARATION_CLIENT(pausecorrection2)\
 	EASY_CVAR_DECLARATION_CLIENT(hud_rpg_alpha_ammo)\
+	EASY_CVAR_DECLARATION_CLIENT_CLIENTSENDOFF_BROADCAST(sv_rpg_alpha_ammo)\
 	EASY_CVAR_DECLARATION_CLIENT(cl_viewmodel_fidget)\
 	EASY_CVAR_DECLARATION_CLIENT(sv_player_midair_fix)\
 	DUMMY
@@ -3046,6 +3049,7 @@
 	EASY_CVAR_UPDATE_SERVER(pausecorrection1)\
 	EASY_CVAR_UPDATE_SERVER(pausecorrection2)\
 	EASY_CVAR_UPDATE_SERVER(hud_rpg_alpha_ammo)\
+	EASY_CVAR_UPDATE_SERVER_CLIENTSENDOFF_BROADCAST(sv_rpg_alpha_ammo)\
 	EASY_CVAR_UPDATE_SERVER(cl_viewmodel_fidget)\
 	EASY_CVAR_UPDATE_SERVER(sv_player_midair_fix)\
 	DUMMY
@@ -3551,6 +3555,7 @@
 	EASY_CVAR_UPDATE_SERVER_DEDICATED(pausecorrection1)\
 	EASY_CVAR_UPDATE_SERVER_DEDICATED(pausecorrection2)\
 	EASY_CVAR_UPDATE_SERVER_DEDICATED(hud_rpg_alpha_ammo)\
+	EASY_CVAR_UPDATE_SERVER_DEDICATED_CLIENTSENDOFF_BROADCAST(sv_rpg_alpha_ammo)\
 	EASY_CVAR_UPDATE_SERVER_DEDICATED(cl_viewmodel_fidget)\
 	EASY_CVAR_UPDATE_SERVER_DEDICATED(sv_player_midair_fix)\
 	DUMMY
@@ -4055,6 +4060,7 @@
 	EASY_CVAR_UPDATE_CLIENT(pausecorrection1)\
 	EASY_CVAR_UPDATE_CLIENT(pausecorrection2)\
 	EASY_CVAR_UPDATE_CLIENT(hud_rpg_alpha_ammo)\
+	EASY_CVAR_UPDATE_CLIENT_CLIENTSENDOFF_BROADCAST(sv_rpg_alpha_ammo)\
 	EASY_CVAR_UPDATE_CLIENT(cl_viewmodel_fidget)\
 	EASY_CVAR_UPDATE_CLIENT(sv_player_midair_fix)\
 	DUMMY
@@ -4556,6 +4562,7 @@
 	EASY_CVAR_CREATE_SERVER_SETUP_A_CLIENTONLY(pausecorrection1)\
 	EASY_CVAR_CREATE_SERVER_SETUP_A_SERVERONLY(pausecorrection2)\
 	EASY_CVAR_CREATE_SERVER_SETUP_A_CLIENTONLY(hud_rpg_alpha_ammo)\
+	EASY_CVAR_CREATE_SERVER_SETUP_A_SERVERONLY(sv_rpg_alpha_ammo)\
 	EASY_CVAR_CREATE_SERVER_SETUP_A_CLIENTONLY(cl_viewmodel_fidget)\
 	EASY_CVAR_CREATE_SERVER_SETUP_A_SERVERONLY(sv_player_midair_fix)\
 	DUMMY
@@ -5057,6 +5064,7 @@
 	EASY_CVAR_CREATE_SERVER_A_CLIENTONLY(pausecorrection1)\
 	EASY_CVAR_CREATE_SERVER_A_SERVERONLY(pausecorrection2)\
 	EASY_CVAR_CREATE_SERVER_A_CLIENTONLY(hud_rpg_alpha_ammo)\
+	EASY_CVAR_CREATE_SERVER_A_SERVERONLY(sv_rpg_alpha_ammo)\
 	EASY_CVAR_CREATE_SERVER_A_CLIENTONLY(cl_viewmodel_fidget)\
 	EASY_CVAR_CREATE_SERVER_A_SERVERONLY(sv_player_midair_fix)\
 	DUMMY
@@ -5558,6 +5566,7 @@
 	EASY_CVAR_CREATE_CLIENT_A_CLIENTONLY(pausecorrection1)\
 	EASY_CVAR_CREATE_CLIENT_A_SERVERONLY(pausecorrection2)\
 	EASY_CVAR_CREATE_CLIENT_A_CLIENTONLY(hud_rpg_alpha_ammo)\
+	EASY_CVAR_CREATE_CLIENT_A_SERVERONLY(sv_rpg_alpha_ammo)\
 	EASY_CVAR_CREATE_CLIENT_A_CLIENTONLY(cl_viewmodel_fidget)\
 	EASY_CVAR_CREATE_CLIENT_A_SERVERONLY(sv_player_midair_fix)\
 	DUMMY
@@ -6058,6 +6067,7 @@
 	EASY_CVAR_RESET(pausecorrection1)\
 	EASY_CVAR_RESET(pausecorrection2)\
 	EASY_CVAR_RESET(hud_rpg_alpha_ammo)\
+	EASY_CVAR_RESET_CLIENTSENDOFF_BROADCAST(sv_rpg_alpha_ammo)\
 	EASY_CVAR_RESET(cl_viewmodel_fidget)\
 	EASY_CVAR_RESET(sv_player_midair_fix)\
 	DUMMY
@@ -6559,6 +6569,7 @@
 	EASY_CVAR_EXTERN(pausecorrection1)\
 	EASY_CVAR_EXTERN(pausecorrection2)\
 	EASY_CVAR_EXTERN(hud_rpg_alpha_ammo)\
+	EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST(sv_rpg_alpha_ammo)\
 	EASY_CVAR_EXTERN(cl_viewmodel_fidget)\
 	EASY_CVAR_EXTERN(sv_player_midair_fix)\
 	DUMMY
@@ -7065,6 +7076,7 @@
 	EASY_CVAR_SYNCH_SERVER(pausecorrection1)\
 	EASY_CVAR_SYNCH_SERVER(pausecorrection2)\
 	EASY_CVAR_SYNCH_SERVER(hud_rpg_alpha_ammo)\
+	EASY_CVAR_SYNCH_SERVER_CLIENTSENDOFF_BROADCAST(sv_rpg_alpha_ammo)\
 	EASY_CVAR_SYNCH_SERVER(cl_viewmodel_fidget)\
 	EASY_CVAR_SYNCH_SERVER(sv_player_midair_fix)\
 	DUMMY

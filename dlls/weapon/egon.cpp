@@ -72,6 +72,7 @@ void CEgon::Spawn( )
 	m_iId = WEAPON_EGON;
 	SET_MODEL(ENT(pev), "models/w_egon.mdl");
 
+	m_iClip = -1;
 	m_iDefaultAmmo = EGON_DEFAULT_GIVE;
 
 	//MODDD - set default firemode

@@ -2226,7 +2226,7 @@ void EV_EgonFire(event_args_t* args)
 	int hasSpiralBeam;
 
 
-	if (EASY_CVAR_GET(egonEffectsMode == 3)) {
+	if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(egonEffectsMode) == 3) {
 		//only the narrow beam gets it.
 		hasSpiralBeam = (iFireMode == FIRE_NARROW);
 	}
@@ -2234,6 +2234,9 @@ void EV_EgonFire(event_args_t* args)
 		//otherwise, alsways has it.
 		hasSpiralBeam = TRUE;
 	}
+
+
+
 
 	if (EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(mutePlayerWeaponFire) != 1) {
 		if (iStartup)
@@ -2270,10 +2273,9 @@ void EV_EgonFire(event_args_t* args)
 	}
 
 
-	//hasSpiralBeam = FALSE;
 
-	//if ( hasSpiralBeam ){
-	if (1) {
+	if ( hasSpiralBeam ){
+	//if (1) {
 		//gets the spiral.
 
 		if (iStartup == 1 && EV_IsLocal(idx) && !pBeam && !pBeam2 && cl_lw->value) //Adrian: Added the cl_lw check for those lital people that hate weapon prediction.

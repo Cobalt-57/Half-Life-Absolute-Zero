@@ -33,12 +33,11 @@ public:
 	CLaserSpot* m_pSpot;
 	int m_fSpotActive;
 	int m_cActiveRockets;// how many missiles in flight from this launcher right now?
-
 	unsigned short m_usRpg;
-
 #ifndef CLIENT_DLL
 	float forceHideSpotTime;
 #endif
+
 
 public:
 	//MODDD - constructor.
@@ -49,6 +48,12 @@ public:
 	int	Restore(CRestore& restore);
 	static	TYPEDESCRIPTION m_SaveData[];
 #endif
+
+	int GetClip(void);
+	int GetClipMax(void);
+	void OnReloadApply(void);
+	void OnAddPrimaryAmmoAsNewWeapon(void);
+	BOOL RPGReload(int iClipSize, int iAnim, float fDelay, int body = 0);
 
 	void Spawn(void);
 	void Precache(void);

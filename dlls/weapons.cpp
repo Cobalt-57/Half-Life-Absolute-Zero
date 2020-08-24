@@ -1224,10 +1224,19 @@ BOOL CBasePlayerWeapon :: AddPrimaryAmmo( int iCount, char *szName, int iMaxClip
 	//easyPrintLine("PLAYER NULL 3??? %d", m_pPlayer == NULL);
 	int myPrimaryAmmoType = getPrimaryAmmoType();
 
+	if (g_isNewWeapon) {
+		// let the weapon know
+		OnAddPrimaryAmmoAsNewWeapon();
+	}
+
+
 	//MODDD - sending myPrimaryAmmoType instead of szName throughout, consider changing the whole method sometime
 	if (iMaxClip < 1)
 	{
-		m_iClip = -1;
+		//MODDD - ...  why here?  Leave this up to the weapon in spawn.
+		// Reload logic doesn't play well with this when it's still needed regardless (rpg clipless logic hack).
+		//m_iClip = -1;
+
 		iIdAmmo = m_pPlayer->GiveAmmoID( iCount, myPrimaryAmmoType, iMaxCarry );
 	}
 	//MODDD - nope!  Ammo to an existing weapon always goes straight to the pool.
@@ -2205,6 +2214,9 @@ CBaseEntity* CBasePlayerWeapon::pickupWalkerReplaceCheck(void){
 // blank by default, re-define for weapons that need to do something the moment
 // a reload animation finishes and ammo is taken from the ammo pool to the clip.
 void CBasePlayerWeapon::OnReloadApply(void) {
+
+}
+void CBasePlayerWeapon::OnAddPrimaryAmmoAsNewWeapon(void) {
 
 }
 

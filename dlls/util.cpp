@@ -371,6 +371,7 @@ TYPEDESCRIPTION	gEntvarsDescription[] =
 
 	DEFINE_ENTITY_FIELD( max_health, FIELD_FLOAT ),
 	DEFINE_ENTITY_FIELD( teleport_time, FIELD_TIME ),
+	//MODDD - NOTE.    wat.  armortype is never referred to in the code base.  Oh well.
 	DEFINE_ENTITY_FIELD( armortype, FIELD_FLOAT ),
 	DEFINE_ENTITY_FIELD( armorvalue, FIELD_FLOAT ),
 	DEFINE_ENTITY_FIELD( waterlevel, FIELD_INTEGER ),

@@ -358,9 +358,14 @@ TYPEDESCRIPTION	CBasePlayer::m_playerSaveData[] =
 
 	DEFINE_FIELD(CBasePlayer, m_flSuitUpdate, FIELD_TIME),
 	DEFINE_ARRAY(CBasePlayer, m_rgSuitPlayList, FIELD_INTEGER, CSUITPLAYLIST),
+
+	DEFINE_ARRAY(CBasePlayer, m_rgSuitPlayListDuration, FIELD_FLOAT, CSUITPLAYLIST),
+
 	DEFINE_FIELD(CBasePlayer, m_iSuitPlayNext, FIELD_INTEGER),
 	DEFINE_ARRAY(CBasePlayer, m_rgiSuitNoRepeat, FIELD_INTEGER, CSUITNOREPEAT),
 	DEFINE_ARRAY(CBasePlayer, m_rgflSuitNoRepeatTime, FIELD_TIME, CSUITNOREPEAT),
+
+
 	DEFINE_FIELD(CBasePlayer, m_lastDamageAmount, FIELD_INTEGER),
 
 	DEFINE_ARRAY(CBasePlayer, m_rgpPlayerItems, FIELD_CLASSPTR, MAX_ITEM_TYPES),
@@ -406,8 +411,6 @@ TYPEDESCRIPTION	CBasePlayer::m_playerSaveData[] =
 	DEFINE_FIELD(CBasePlayer, recentlyGibbed, FIELD_BOOLEAN),
 	DEFINE_FIELD(CBasePlayer, airTankWaitingStart, FIELD_BOOLEAN),
 	DEFINE_FIELD(CBasePlayer, hasLongJumpItem, FIELD_BOOLEAN),
-
-	DEFINE_ARRAY(CBasePlayer, m_rgSuitPlayListDuration, FIELD_FLOAT, CSUITPLAYLIST),
 
 	DEFINE_FIELD(CBasePlayer, foundRadiation, FIELD_BOOLEAN),
 	
@@ -1050,6 +1053,11 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBasePlayer)
 	//Warning	C6313	Incorrect operator:  zero - valued flag cannot be tested with bitwise - and .Use an equality test to check for zero - valued flags.
 	// ALSO, adding DMG_MAP_TRIGGER to armor exceptions.
 
+	// Did I used to have armor before the damage-absorb logic that might run below?
+	BOOL hadArmor = (pev->armorvalue > 0);
+	float flArmorDamage = 0;
+
+
 	if (pev->armorvalue && !(bitsDamageType & (DMG_FALL | DMG_DROWN)) && 
 		!(bitsDamage & DMG_ARMORBLOCKEXCEPTION || bitsDamageMod & DMG_ARMORBLOCKEXCEPTIONMOD || bitsDamageMod & DMG_MAP_TRIGGER) &&
 		(  !(bitsDamageMod & DMG_TIMEDEFFECTIGNORE)   &&   (EASY_CVAR_GET_DEBUGONLY(timedDamageIgnoresArmor) == 0 || !(bitsDamageMod & (DMG_TIMEDEFFECT) ) ))
@@ -1057,8 +1065,7 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBasePlayer)
 	)  // armor doesn't protect against fall or drown damage!  ... or "DMG_TIMEDEFFECTIGNORE".
 	{
 		float flNewHealthDamage = flDamage * flRatio;
-		float flArmorDamage;
-
+		
 		flArmorDamage = (flDamage - flNewHealthDamage) * flBonus;
 
 
@@ -1415,6 +1422,32 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBasePlayer)
 		}
 	}//END OF (if NOT during post-invincibility-delay)
 
+
+	// Made it this far?  No queued messages?  Can play this (generic, hev_damage)
+	// Not for taking timed damage though.
+	// !((bitsDamage & DMG_TIMEBASED) || (bitsDamageMod & DMG_TIMEBASEDMOD)) 
+	if ( !(bitsDamage & DMG_TIMEDEFFECT) ) {
+		// If all m_rgSuitPlayList members are 0, that might be ok too?  unsure if that is the case after all queued
+		// suit sounds are over.    This should work though,
+		if (m_flSuitUpdate == 0) {
+
+			// Lost armor, or a recent attack did a lot of damage to armor?  Say something.
+			if ((hadArmor && pev->armorvalue <= 0) || (flArmorDamage >= 30) ) {
+				SetSuitUpdate("!HEV_E6", FALSE, 180);
+			}
+
+			if (m_flSuitUpdate == 0) {
+				// Still available?  Generic damage message.
+				SetSuitUpdate("!HEV_E4", FALSE, 150);
+			}
+		}
+		else if (hadArmor && pev->armorvalue <= 0) {
+			// had armor but lost it?  Definitely queue this.
+			SetSuitUpdate("!HEV_E6", FALSE, 180);
+		}
+	}//END OF DMG_TIMEBASED and MOD.
+	
+
 	return fTookDamage;
 }//END OF takeDamage
 
@@ -1604,8 +1637,8 @@ void CBasePlayer::PackDeadPlayerItems( void )
 
 //MODDD - NEW.  No need to call from RemoveAllItems, doing that removes the need for several checks in here.
 void CBasePlayer::RemoveAllAmmo(void) {
-
-	for (int i = 0; i < MAX_AMMO_TYPES; i++) {
+	int i;
+	for (i = 0; i < MAX_AMMO_TYPES; i++) {
 		m_rgAmmo[i] = 0;
 	}
 	TabulateAmmo();  //safety?
@@ -1615,7 +1648,7 @@ void CBasePlayer::RemoveAllAmmo(void) {
 	// on running out of ammo.
 	// Satchel has an exception: do not destroy if there are still charges out.  It must be selectable
 	// to get to the remote and set them off.
-	for (int i = 0; i < MAX_ITEM_TYPES; i++)
+	for (i = 0; i < MAX_ITEM_TYPES; i++)
 	{
 		if (m_rgpPlayerItems[i])
 		{
@@ -2330,10 +2363,16 @@ void CBasePlayer::set_cl_ladder_choice(float argNew) {
 
 //MODDD - player constructor.
 CBasePlayer::CBasePlayer(void){
+	int i;
+
 
 	// turning this into a method for how much is otherwise just duplicated at this point.
 	// We want a lot of the exact same things for CBasePlayer creation and resetting between map transitions.
 	_commonReset();
+
+	//for (i = 0; i < CHUMTOAD_SKIN_MEM_MAX; i++) {
+	//	chumToadSkinMem[i] = 0;
+	//}
 
 
 	// This will be changed soon after the player spawns
@@ -2387,7 +2426,7 @@ CBasePlayer::CBasePlayer(void){
 	antidoteQueued = FALSE;
 	radiationQueued = FALSE;
 
-	for(int i = 0; i < CSUITPLAYLIST; i++){
+	for(i = 0; i < CSUITPLAYLIST; i++){
 		m_rgSuitPlayListEvent[i] = NULL;
 		m_rgSuitPlayListEventDelay[i] = -1;
 		m_rgSuitPlayListFVoxCutoff[i] = -1;
@@ -4665,7 +4704,8 @@ void CBasePlayer::CheckSuitUpdate()
 			// play a sentence off of the end of the queue
 			for (i = 0; i < CSUITPLAYLIST; i++)
 			{
-				if (isentence = m_rgSuitPlayList[isearch])
+				isentence = m_rgSuitPlayList[isearch];
+				if (isentence != 0)
 					break;
 			
 				if (++isearch == CSUITPLAYLIST)
@@ -4985,9 +5025,10 @@ void CBasePlayer::CheckSuitUpdate()
 		//NOTICE: line moved above, per the "if-else" scopes for more control each time.
 		//m_flSuitUpdate = gpGlobals->time + m_rgSuitPlayListDuration[isearch];
 		}
-		else
+		else {
 			// queue is empty, don't check 
 			m_flSuitUpdate = 0;
+		}
 	}
 }
 
@@ -5065,6 +5106,8 @@ BOOL CBasePlayer::SetSuitUpdatePRE(char *name, int fgroup, int& isentence, BOOL 
 
 	if (!name)
 	{
+		m_flSuitUpdate = 0;  //MODDD - NEW.  that's wise, right?
+
 		for (i = 0; i < CSUITPLAYLIST; i++)
 			m_rgSuitPlayList[i] = 0;
 		return FALSE;
@@ -6102,7 +6145,13 @@ void CBasePlayer::grantAllItems(){
 		GiveNamedItemIfLacking( "weapon_shotgun" );
 		GiveNamedItemIfLacking( "weapon_handgrenade" );
 		GiveNamedItemIfLacking( "weapon_snark" );
-		GiveNamedItemIfLacking( "weapon_chumtoad" );
+
+		// Don't give chumtoads through cheat commands in multiplayer.
+		// Don't really serve a purpose there.
+		// Beats me what someone is doing using cheats in multiplayer anyway.  Garrysmod 1998 anyone.
+		if (!IsMultiplayer()) {
+			GiveNamedItemIfLacking("weapon_chumtoad");
+		}
 
 		//Deploy this instead.
 		GiveNamedItemIfLacking( "weapon_crossbow" );
@@ -7844,41 +7893,64 @@ void CBasePlayer::CheatImpulseCommands( int iImpulse )
 		}
 
 		
-	case 101:
+	case 101: {
+		//int i;
+
 		gEvilImpulse101 = TRUE;
-		GiveNamedItem( "item_suit" );
-		GiveNamedItem( "item_battery" );
-		GiveNamedItem( "weapon_crowbar" );
-		GiveNamedItem( "weapon_9mmhandgun" );
-		GiveNamedItem( "ammo_9mmclip" );
-		GiveNamedItem( "weapon_shotgun" );
-		GiveNamedItem( "ammo_buckshot" );
-		GiveNamedItem( "weapon_9mmAR" );
-		GiveNamedItem( "ammo_9mmAR" );
-		GiveNamedItem( "ammo_ARgrenades" );
-		GiveNamedItem( "weapon_handgrenade" );
-		GiveNamedItem( "weapon_tripmine" );
-		GiveNamedItem( "weapon_357" );
-		GiveNamedItem( "ammo_357" );
-		GiveNamedItem( "weapon_crossbow" );
-		GiveNamedItem( "ammo_crossbow" );
-		GiveNamedItem( "weapon_egon" );
-		GiveNamedItem( "weapon_gauss" );
-		GiveNamedItem( "ammo_gaussclip" );
-		GiveNamedItem( "weapon_rpg" );
-		GiveNamedItem( "ammo_rpgclip" );
-		GiveNamedItem( "weapon_satchel" );
-		GiveNamedItem( "weapon_snark" );
-		GiveNamedItem( "weapon_hornetgun" );
-		GiveNamedItem( "weapon_chumtoad" );
+		GiveNamedItem("item_suit");
+		GiveNamedItem("item_battery");
+		GiveNamedItem("weapon_crowbar");
+		GiveNamedItem("weapon_9mmhandgun");
+		GiveNamedItem("ammo_9mmclip");
+		GiveNamedItem("weapon_shotgun");
+		GiveNamedItem("ammo_buckshot");
+		GiveNamedItem("weapon_9mmAR");
+		GiveNamedItem("ammo_9mmAR");
+		GiveNamedItem("ammo_ARgrenades");
+		GiveNamedItem("weapon_handgrenade");
+		GiveNamedItem("weapon_tripmine");
+		GiveNamedItem("weapon_357");
+		GiveNamedItem("ammo_357");
+		GiveNamedItem("weapon_crossbow");
+		GiveNamedItem("ammo_crossbow");
+		GiveNamedItem("weapon_egon");
+		GiveNamedItem("weapon_gauss");
+		GiveNamedItem("ammo_gaussclip");
+		GiveNamedItem("weapon_rpg");
+		GiveNamedItem("ammo_rpgclip");
+		GiveNamedItem("weapon_satchel");
+		GiveNamedItem("weapon_snark");
+		GiveNamedItem("weapon_hornetgun");
+
+		if (!IsMultiplayer()) {
+			GiveNamedItem("weapon_chumtoad");
+		}
+
+		GiveNamedItem("item_antidote");
+		GiveNamedItem("item_adrenaline");
+		GiveNamedItem("item_radiation");
+
+			
+			
+		//MODDD - NEW.  Have some perks of 'everything'.
+		setHealth(100);
+		setArmorBattery(100);
+		airTankAirTime = PLAYER_AIRTANK_TIME_MAX;
 		
-		if(m_fLongJump != TRUE){
+		//for (i = 0; i < MAX_ITEMS; i++) {
+		///	m_rgItems[?] = ?;
+		//}
+
+
+
+		if (m_fLongJump != TRUE) {
 			longJumpChargeNeedsUpdate = TRUE;
 		}
 		m_fLongJump = TRUE;
 		longJumpCharge = PLAYER_LONGJUMPCHARGE_MAX;
-		
+
 		gEvilImpulse101 = FALSE;
+	}
 		break;
 
 	case 102:

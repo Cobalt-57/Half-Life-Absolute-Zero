@@ -62,6 +62,8 @@ const char* CChumToadWeapon::GetPickupWalkerName(void){
 
 void CChumToadWeapon::Spawn( )
 {
+	// TODO!  Replace with a normal chumtoad instead, not the pickupwalker?
+
 	if(pickupWalkerReplaceCheck()){
 		return;
 	}
@@ -75,6 +77,7 @@ void CChumToadWeapon::Spawn( )
 
 	FallInit();//get ready to fall down.
 
+	m_iClip = -1;
 	m_iDefaultAmmo = CHUMTOAD_DEFAULT_GIVE;
 	
 	//MODDD - for now, manually set size.

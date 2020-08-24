@@ -68,9 +68,11 @@ void CHandGrenade::Spawn( )
 #endif
 	*/
 	
+
+
+	m_iClip = -1;
+
 	//if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(handGrenadePickupYieldsOne) == 1)
-
-
 	// Make "m_iDefaultAmmo" non-zero so that it works like other pickups.  Ones with a defaultAmmo of 0
 	// go a different route (ExtractClipAmmo).
 	// Handle what to give in the grenade's own AddPrimaryAmmo (CVar makes it 1 or retail default, 5).
