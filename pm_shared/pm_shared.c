@@ -1606,10 +1606,13 @@ void PM_InclineCheck(void) {
 		//  over to the origin.
 		//MODDD NOTE - this might be what places us exactly at the ramp.
 		// And if the fraction is way too small, that's a sign we're either going along flat-ground or an upward incline/stairs.
+		// Strange it isn't an issue more often than it is, but it can happen in the stairs near the start of retail t0a0.bsp
+		// (Not the stairs up to the suit,  the stairs down.  Try going back up after going down those with a _ForwardDown fraction
+		// of > 0 allowed).  0.01 seems to fix it though, mighteven allow smaller.
 		if (
 			//clip == 0 &&
 			pmove->origin[2] <= original[2] &&
-			traceInclineDetection_ForwardDown.fraction > 0.00 && traceInclineDetection_ForwardDown.fraction < 1.0 &&
+			traceInclineDetection_ForwardDown.fraction > 0.01 && traceInclineDetection_ForwardDown.fraction < 1.0 &&
 			!traceInclineDetection_ForwardDown.startsolid && !traceInclineDetection_ForwardDown.allsolid
 			//traceInclineDetection_ForwardDown.endpos[2] < pmove->origin[2]
 			)
@@ -1618,7 +1621,7 @@ void PM_InclineCheck(void) {
 			// Already even have 'downvel' here for pmove->velocity.  Did not touch the velocity so it stays as it is.
 
 			// TEST!
-			if (1) {
+			if (1 == 1) {
 				pmove->vuser4[0] = traceInclineDetection_ForwardDown.endpos[2] - pmove->origin[2];
 
 				VectorCopy_f(traceInclineDetection_ForwardDown.endpos, pmove->origin);

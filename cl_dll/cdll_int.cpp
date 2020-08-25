@@ -36,6 +36,8 @@ extern "C"
 //MODD - show me what ya got.
 #include "utils/vgui/include/VGUI_Panel.h"
 
+#include "hl/hl_weapons.h"
+
 #include "cvar_custom_info.h"
 #include "cvar_custom_list.h"
 
@@ -61,6 +63,7 @@ extern BOOL g_HUD_Redraw_ran;
 extern int g_currentanim;
 extern int g_cl_frameCount;
 extern BOOL resetNormalRefDefVars;
+extern float sp_ClientPreviousTime;
 
 extern float ary_g_prevTime[1024];
 extern float ary_g_prevFrame[1024];
@@ -213,11 +216,35 @@ so the HUD can reinitialize itself.
 int DLLEXPORT HUD_VidInit( void )
 {
 	// safety
-	g_cl_frameCount = 0;
 	g_cl_HUD_Frame_ran = FALSE;
 	g_cl_HUD_UpdateClientData_ran = FALSE;
 	g_HUD_Redraw_ran = FALSE;
+
+
+
+
+	//clientside only variable.
+	reloadBlocker = FALSE;
+
+	// TEST.
+	blockUntilModelChange = FALSE;
+	oldModel = -1;
+	queuedBlockedModelAnim = -1;
+
+	forgetBlockUntilModelChangeTime = -1;
+	resistTime = -1;
+
+	seqPlayDelay = -1;
+	seqPlay = 0;
+	queuecall_lastinv = FALSE;
 	g_currentanim = -1;
+
+	sp_ClientPreviousTime = -1;
+	g_cl_frameCount = 0;
+
+
+
+
 
 
 	//extern CGameStudioModelRenderer g_StudioRenderer;
@@ -253,7 +280,6 @@ to a server.  Reinitializes all
 the hud variables.
 ==========================
 */
-extern float sp_ClientPreviousTime;
 EASY_CVAR_EXTERN_MASS
 EASY_CVAR_DECLARE_HASH_ARRAY
 

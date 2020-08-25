@@ -41,6 +41,7 @@
 #include "weapons.h"
 #include "effects.h"
 #include "gib.h"
+#include "util_debugdraw.h"
 
 //MODDD
 EASY_CVAR_EXTERN_DEBUGONLY(sparksTurretDeathMulti)
@@ -540,7 +541,8 @@ void CBaseTurret::ActiveThink(void)
 	}
 	
 	// if it's dead, look for something new
-	if ( !m_hEnemy->IsAlive() )
+	// MODDD - don't count chumtoads playing dead!
+	if ( !m_hEnemy->IsAlive_FromAI(this) )
 	{
 		if (!m_flLastSight)
 		{
@@ -603,24 +605,56 @@ void CBaseTurret::ActiveThink(void)
 	Vector vecLOS = vecDirToEnemy; //vecMid - m_vecLastSight;
 	vecLOS = vecLOS.Normalize();
 
+	float theDotProd = DotProduct(vecLOS, gpGlobals->v_forward);
+
 	// Is the Gun looking at the target
-	if (DotProduct(vecLOS, gpGlobals->v_forward) <= 0.866) // 30 degree slop
+	if (theDotProd <= 0.866) // 30 degree slop
 		fAttack = FALSE;
 	else
 		fAttack = TRUE;
 
+
+	easyForcePrintLine("AH YEA %.2f", theDotProd);
+
 	// fire the gun
-	if (m_iSpin && ((fAttack) || (m_fBeserk)))
-	{
-		Vector vecSrc, vecAng;
-		GetAttachment( 0, vecSrc, vecAng );
-		SetTurretAnim(TURRET_ANIM_FIRE);
-		Shoot(vecSrc, gpGlobals->v_forward );
-	} 
-	else
-	{
+	if (m_iSpin) {
+
+		if (fAttack) {
+			Vector vecSrc, vecAng;
+			GetAttachment(0, vecSrc, vecAng);
+			SetTurretAnim(TURRET_ANIM_FIRE);
+
+			//MODDD - NEW.  At a high enough dot product, have even better aim.
+			if (theDotProd > 0.993) {
+				Shoot(vecSrc, (vecMidEnemy - vecSrc).Normalize() );
+			}
+			else {
+				// default way (would miss small targets like chumtoads, even standing still)
+				Shoot(vecSrc, gpGlobals->v_forward);
+			}
+
+
+			//Shoot(vecSrc, ((vecMidEnemy - vecMid).Normalize()));
+
+			//DebugLine_Setup(0, vecSrc, vecMidEnemy, 0, 255, 0);
+			//DebugLine_Setup(1, vecSrc, vecSrc + gpGlobals->v_forward * 800, 255, 0, 0);
+			//DebugLine_Setup(1, vecSrc, vecSrc + ((vecMidEnemy - vecSrc).Normalize()) * 800, 255, 0, 0);
+		}
+		else if (m_fBeserk) {
+			Vector vecSrc, vecAng;
+			GetAttachment(0, vecSrc, vecAng);
+			SetTurretAnim(TURRET_ANIM_FIRE);
+			Shoot(vecSrc, gpGlobals->v_forward);
+		}
+		else {
+			// retail fallback still then.
+			SetTurretAnim(TURRET_ANIM_SPIN);
+		}
+	}else{
 		SetTurretAnim(TURRET_ANIM_SPIN);
 	}
+
+
 
 	//move the gun
 	if (m_fBeserk)
@@ -629,7 +663,13 @@ void CBaseTurret::ActiveThink(void)
 		{
 			m_vecGoalAngles.y = RANDOM_FLOAT(0,360);
 			m_vecGoalAngles.x = RANDOM_FLOAT(0,90) - 90 * m_iOrientation;
-			TakeDamage(pev,pev,1, DMG_GENERIC); // don't beserk forever
+
+			//MODDD - takes longer to be destroyed from this
+			if (RANDOM_LONG(0, 8) == 0) {
+				TakeDamage(pev, pev, 1, DMG_GENERIC); // don't beserk forever
+			}
+
+
 			return;
 		}
 	} 
@@ -901,7 +941,8 @@ void CBaseTurret::SearchThink(void)
 	// If we have a target and we're still healthy
 	if (m_hEnemy != NULL)
 	{
-		if (!m_hEnemy->IsAlive() )
+		//MODDD - don't count chumtoads playing dead!
+		if (!m_hEnemy->IsAlive_FromAI(this))
 			m_hEnemy = NULL;// Dead enemy forces a search for new one
 	}
 
@@ -958,7 +999,8 @@ void CBaseTurret::AutoSearchThink(void)
 
 	if (m_hEnemy != NULL)
 	{
-		if (!m_hEnemy->IsAlive() )
+		//MODDD - don't count chumtoads plaing dead!
+		if (!m_hEnemy->IsAlive_FromAI(this))
 			m_hEnemy = NULL;// Dead enemy forces a search for new one
 	}
 
@@ -1269,7 +1311,10 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBaseTurret)
 
 
 	if(pev->deadflag == DEAD_NO){
-		if (pev->health <= 10)
+
+		//MODDD - condition changed, go beserk at under half health.
+		//if (pev->health <= 10)
+		if(pev->health < pev->max_health*0.5)
 		{
 			//MODDD
 			// what?  The random check 'RANDOM_LONG(0, 0x7FFF) > 800' that used to be here was completly ignored.

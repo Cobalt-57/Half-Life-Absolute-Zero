@@ -64,6 +64,7 @@ public:
 
 	void EXPORT FallThinkCustom ( void );
 	const char* GetPickupWalkerName(void);
+	CBaseEntity* pickupWalkerReplaceCheck(void);
 	virtual void Spawn( void );
 	//void AttachToPlayer ( CBasePlayer *pPlayer );
 	void FallInit( void );

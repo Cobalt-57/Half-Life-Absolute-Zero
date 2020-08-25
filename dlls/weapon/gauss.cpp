@@ -281,9 +281,12 @@ void CGauss::SecondaryAttack()
 	float chargeAmmoUsage;
 	float chargeAmmoStoredMax;
 	float chargeAmmoUsageDelay;
+	float chargeInitialDelay;
 	if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_mode) != 1) {
-		chargeAmmoUsage = 1;  //retail
+		//retail
+		chargeAmmoUsage = 1;
 		chargeAmmoStoredMax = 13;
+		chargeInitialDelay = 0.5;
 		if (IsMultiplayer()){
 			chargeAmmoUsageDelay = 0.1;
 		}else{
@@ -293,6 +296,7 @@ void CGauss::SecondaryAttack()
 	else {
 		chargeAmmoUsage = 5;
 		chargeAmmoStoredMax = 12;
+		chargeInitialDelay = 1.1;
 		if (IsMultiplayer()){
 			chargeAmmoUsageDelay = 0.8*0.7;
 		}else{
@@ -334,7 +338,8 @@ void CGauss::SecondaryAttack()
 		m_fPrimaryFire = FALSE;
 
 		if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteclip) == 0 && EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteammo) == 0) {
-			ChangePlayerPrimaryAmmoCount(-chargeAmmoUsage);// take one ammo just to start the spin
+			// take one ammo just to start the spin
+			ChangePlayerPrimaryAmmoCount(-chargeAmmoUsage);
 		}
 
 
@@ -369,7 +374,7 @@ void CGauss::SecondaryAttack()
 
 		SendWeaponAnim(GAUSS_SPINUP);
 		m_fInAttack = 1;
-		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 0.5;
+		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + chargeInitialDelay;
 		m_pPlayer->m_flStartCharge = gpGlobals->time;
 
 		//MODDD - changing the purpose of this var.  Instead of when to stop adding further ammo
@@ -398,24 +403,30 @@ void CGauss::SecondaryAttack()
 		// during the charging process, eat one bit of ammo every once in a while
 		if (UTIL_WeaponTimeBase() >= m_pPlayer->m_flNextAmmoBurn && m_pPlayer->m_flNextAmmoBurn != 1000)
 		{
+
+			//MODDD - moved here, was below this 'nextAmmoBurn' check.
+			// Now runs at the time of the next ammo-burn cycle instead.
+			if (m_fireState < chargeAmmoStoredMax - 1 && PlayerPrimaryAmmoCount() < chargeAmmoUsage)
+			{
+				// out of ammo! force the gun to fire
+				StartFire();
+				m_fInAttack = 0;
+				m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 1.0;
+				m_pPlayer->m_flNextAttack = UTIL_WeaponTimeBase() + 1;
+
+				//MODDD - why not?
+				SetAttackDelays(UTIL_WeaponTimeBase() + 1);
+
+				return;
+			}
+
+
 			ChangePlayerPrimaryAmmoCount(-chargeAmmoUsage);
 			m_fireState++;
 			m_pPlayer->m_flNextAmmoBurn = UTIL_WeaponTimeBase() + chargeAmmoUsageDelay;
 		}
 
-		if (PlayerPrimaryAmmoCount() < chargeAmmoUsage)
-		{
-			// out of ammo! force the gun to fire
-			StartFire();
-			m_fInAttack = 0;
-			m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 1.0;
-			m_pPlayer->m_flNextAttack = UTIL_WeaponTimeBase() + 1;
-
-			//MODDD - why not?
-			SetAttackDelays(UTIL_WeaponTimeBase() + 1);
-
-			return;
-		}
+		
 
 		//MODDD - purpose of m_flAmmoStartCharge changed, counts ammo used by the charge, not
 		// time to stop charging.
@@ -427,7 +438,6 @@ void CGauss::SecondaryAttack()
 		}
 		*/
 		if (m_fireState >= chargeAmmoStoredMax-1) {
-			// This is 13 used total, add 1 for starting the charge
 			m_pPlayer->m_flNextAmmoBurn = 1000;
 		}
 
@@ -573,29 +583,29 @@ void CGauss::StartFire(void)
 					// CHANGED, scale a little less for higher damages.
 					//knockbackAmount = flDamage * 5;
 					if (flDamage <= 20) {
-						knockbackAmount = flDamage * (4.4);
+						knockbackAmount = flDamage * (4.7);
 					}
 					else if (flDamage <= 100) {
-						knockbackAmount = 20 * 4.4 + (flDamage - 20) * 3.2;
+						knockbackAmount = 20 * 4.7 + (flDamage - 20) * 4.1;
 					}
 					else {
-						knockbackAmount = 20 * 4.4 + (100 - 20) * 3.2 + (flDamage - 100) * 2.0;
+						knockbackAmount = 20 * 4.7 + (100 - 20) * 4.1 + (flDamage - 100) * 3.5;
 					}
 				}
 			}else {
 				// alpha: primary does knockback.  Should be 'several feet' according to a source.
 				if (m_fPrimaryFire) {
-					knockbackAmount = 50 * 4.6;
+					knockbackAmount = 50 * 5.1;
 				}
 				else {
 					if (flDamage <= 40) {
-						knockbackAmount = flDamage * (4.2);
+						knockbackAmount = flDamage * 4.5;
 					}
 					else if (flDamage <= 150) {
-						knockbackAmount = 40 * 4.2 + (flDamage - 40) * 2.8;
+						knockbackAmount = 40 * 4.5 + (flDamage - 40) * 3.5;
 					}
 					else {
-						knockbackAmount = 40 * 4.2 + (150 - 40) * 2.5 + (flDamage - 150) * 0.65;
+						knockbackAmount = 40 * 4.5 + (150 - 40) * 3.5 + (flDamage - 150) * 0.87;
 					}
 				}
 			}

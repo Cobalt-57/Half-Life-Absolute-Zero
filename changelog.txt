@@ -414,6 +414,8 @@ NEW CVAR: gauss_mode, defaults to 1.  0 is retail-based, 1 is pre-release/alpha 
 - Knockback for all gauss weapons increases less for more charge.  That is, 160 gauss damage gives less than twice the knockback of 80 gauss damage.  Knockback reduced overall.
 - CVar 'gaussRecoilSendsUpInSP' default changed from 0 to 1.  If wanted, this can depend on CVar gauss_mode instead.
 - Reflection-less and pierce-less secondary fire will also deal radial damage (like an explosion), but less so than the default ones for the same charge.
+- Gauss charge force-fire no longer happens on running out of ammo at the moment of a full charge (starting a charge with retail gauss with 13 ammo maintains the charge when 0 ammo is reached).
+- Gauss charge force-fire from running out of charge happens at the next ammo-usage cycle that sees there isn't enough ammo instead of the instant the ammo runs out (more noticeable in gauss mode #1).
 
 GAUSS MODE 0:
 - Minimum ammo used for charge (1) no longer surpasses primary fire damage (20).  Instead, a charged shot of 1 ammo deals only 8 damage but becomes increasingly more efficient with more ammo used (already better than primary slightly at 2).
@@ -437,5 +439,21 @@ Chumtoads no longer granted by cheat commands (impulse 101, 'everything') in mul
 
 cheat commands (impulse 101, 'everything') now give power canisters (injectables) too.
 
+Pausing the game while a visual client model event is playing (muzzle flash) will not spawn the effect repeatedly.
 
+Improvement to the client event fix for the player model (as seen in 3rd person or other players in multiplayer).
+-Glock muzzle flash no longer stays for too long. 
+-mp5 muzzle flash does not happen twice for firing once (fix most accurate in SP).
+
+Chumtoads playing dead now fool turrents (ceiling turrets (miniturrrets) and sentries).
+
+Turrets have slightly better aim, better at hitting very small targets like chumtoads and snarks.
+Turrets go 'beserk' at under half health instead of a static 10 or less.  Also take longer to damage themselves into deactivating while beserk.
+
+It takes less damage to make turrets/sentries go berserk, seemed hard to run into during normal gameplay otherwise.
+
+TODO
+Barnies will target snarks that have the player or other friendly NPCs targeted.  They will still get pissed at the player if a player-thrown snark damages them.
+
+TODO - chumtoad, crouch + touch = pickup.
 

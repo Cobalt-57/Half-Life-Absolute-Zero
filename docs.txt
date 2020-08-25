@@ -3,16 +3,6 @@ ABSOLUTE ZERO DOCUMENTATION
 Ingame: To see what map you're on, go in console, type "status".  Look at "Map  :"...
 
 
-Do this to fix the 'thirdperson camera-is-to-the-side' issue.
-  thirdperson
-  cam_idealyaw 0 (or 1?)
-
-  
-PostRestore method
-!!! CRITICAL!!!   This method is not guaranteed to always be called for all entities.
-Must either use the default IMPLEMENT_SAVERESTORE, or copy its ::Restore method at least
-and get the part that calls "PostRestore"  (any copies from a while ago will be missing
-that part).
 
 
 
@@ -74,7 +64,87 @@ To set a monster's think method to be called instantly, just set pev->nextthink 
 MONSTER THINK LOGIC:
 For monster think logic, the core is "MonsterThink()" as seen in monsters.cpp. It calls RunAI() which can be seen in monsterstate.cpp. RunAI then calls FCheckAITrigger() (see if something about this monster satisfies a map condition, such as the agrunts dying in one map to signify spawning more and opening a door), PrescheduleThink() (has no logic in the base monster class, to be used or not in child classes), and then MaintainSchedule() (general logic to continue this schedule task by task or pick a new one).
 
-Many existing monsters override PrescheduleThink(), but I override MonsterThink() instead. More control this way, but understand the monster is braindead and animationless if CBaseMonster::MonsterThink() (or whatever the parent class is in front) goes uncalled.
+Many existing monsters override PrescheduleThink(), but I override MonsterThink() instead. More control this way, but understand the monster is braindead and animationless if CBaseMonster::MonsterThink() (or whatever parent class) goes uncalled.
+
+
+
+Do this to fix the 'thirdperson camera-is-to-the-side' issue.
+  thirdperson
+  cam_idealyaw 0 (or 1?)
+
+  
+PostRestore method
+!!! CRITICAL!!!   This method is not guaranteed to always be called for all entities.
+Must either use the default IMPLEMENT_SAVERESTORE, or copy its ::Restore method at least
+and get the part that calls "PostRestore"  (any copies from a while ago will be missing
+that part).
+
+
+
+
+
+===================================================================================================================================================
+SOME IMPORTANT NOTES ON gpGlobals->time:::
+
+Clientside can still refer to gpGlobals->time.  UTIL_WeaponTimeBase() takes an amount of time but treats it as relative to 'now',
+since it's expected to be used with existing synched vars that count down automatically (reduced by milliseconds in
+cl_dll/hl/hl_weapons.cpp).  Anything tied to server logic only (rpg rockets) should still use gpGlobals->time, a relative time is not
+as helpful.
+
+BETWEEN MAPS:
+On going between transitions or loading an existing game, gpGlobals->time is always '1' in the middle of precache methods, including
+the 'OnMapLoadStart' event.  Some unknown operation later between the last precache and server frame and/or player think logic, it is set
+to the remembered value from loading a game, or from the previous time this map was visited (if it is not new during this run).
+It is reset to 0 on going to a never-visited map by transition or starting a fresh game with a map, and is rememembered/restored per map at this time.
+
+Few examples:
+* Starting a game, say on map 'A'.  Time begins at 0 and counts up while on the map.
+* 10 seconds pass. Save the game and load the same game.  The time will be what it was when the game was saved (10 seconds).
+* A minute passes, reach a transition and go to map 'B'.  70 seconds was the time on leaving map A, so that is saved to map A.
+  Since Map B is new this run (never visited), it begins with the time at 0 and counts up.
+* 30 seconds pass, the player goes back to map A.  Map B remembers 30 seconds as the time.
+  Map A has been visited, so gpGlobals->time is restored to that 70 seconds from when it was exited.
+* 10 seconds pass.  Go to map B again (map A saved with 80 seconds as gpGlobals->time).  Time restored to what it was when map
+  B was exited: 30 seconds.
+* 10 seconds pass.  Save the game and load it.  The time is again 30 seconds from being that way when map B was saved, and visiting
+  map A would show the time of 80 seconds.
+
+It is important to keep in mind, the time is remembered per map and not preserved going through transitions, assume it starts over
+at 0 (new map), but revisiting an existing map from a differnet point would leave the time as it was at the time, which may be less
+or higher than the current time.
+
+Why care about this?  Because global timers or time-vars can get screwy with these time changes if they're not updated on map changes.
+Say there is a timer, 'nextUpdate', set to gpGlobals->time (now 300) + 10, so nextUpdate = 310 (intended to be reached in 10 seconds).
+If, 6 seconds later (4 seconds left to go othrwise), the player loads a game or takes a transition to get to a map with an earlier
+remembered time (say 80 seconds), the gpGlobals->time of 80 will have to count all the way back up for nextUpdate's 310 to be reached,
+back when it was set at a gpGlobals->time of 300.  That's certianly further away than 4 seconds!
+
+If a map with a later time were loaded or taken by transition (say 800), the nextUpdate would be reached instantly instead: 800 > 310,
+reached.  This is not usuall a problem but it is worth looking into if it ever were.
+
+Broadest solution that often works fine is to set any global times to -1 or 0 in VidInit (clientside) or OnMapLoadStart (serverside),
+bount to register as 'over' in any map visited.
+
+It might be possible to handle the time difference during the first think-frame since changing maps (would pick-up on the time
+difference with some other var keeping track of the time at map change for shifting times between the maps).
+But again, I can't think of when that owuld be necessary.
+===================================================================================================================================================
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

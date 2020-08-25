@@ -107,6 +107,10 @@ void HealthModule::KeyValue(KeyValueData* pkvd){
 }//END OF KeyValue
 
 
+BOOL HealthModule::IsWorldAffiliated(void) {
+	return TRUE;  // yeah?
+}
+
 
 
 void HealthModule::CustomThink(void){

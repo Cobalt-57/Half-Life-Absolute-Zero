@@ -22,6 +22,7 @@
 
 //#include "weapons.h"
 //#include "items.h"
+class CBaseMonster;
 class CBasePlayerItem;
 class CBasePlayer;
 class CItem;
@@ -130,10 +131,15 @@ public:
 	virtual Vector VecWeaponRespawnSpot( CBasePlayerItem *pWeapon ) = 0;// where in the world should this weapon respawn?
 
 //MODDD - NEW. Methods for pickupwalkers.
-	virtual int PickupWalkerShouldRespawn(CPickupWalker* pWeapon) = 0;// should this weapon respawn?
-	virtual float FlPickupWalkerRespawnTime(CPickupWalker* pWeapon) = 0;// when may this weapon respawn?
-	virtual float FlPickupWalkerTryRespawn(CPickupWalker* pWeapon) = 0; // can i respawn now,  and if not, when should i try again?
-	virtual Vector VecPickupWalkerRespawnSpot(CPickupWalker* pWeapon) = 0;// where in the world should this weapon respawn?
+	virtual int PickupWalkerShouldRespawn(CPickupWalker* pWeapon) = 0;
+	virtual float FlPickupWalkerRespawnTime(CPickupWalker* pWeapon) = 0;
+	virtual float FlPickupWalkerTryRespawn(CPickupWalker* pWeapon) = 0;
+	virtual Vector VecPickupWalkerRespawnSpot(CPickupWalker* pWeapon) = 0;
+
+	virtual float FlMonsterRespawnTime(CBaseMonster* pWeapon) = 0;
+	virtual float FlMonsterTryRespawn(CBaseMonster* pWeapon) = 0;
+	virtual Vector VecMonsterRespawnSpot(CBaseMonster* pWeapon, const Vector& arg_respawnSuggestionSpot) = 0;
+	virtual int MonsterShouldRespawn(CBaseMonster* pWeapon) = 0;
 
 
 // Item retrieval
@@ -250,6 +256,13 @@ public:
 	virtual float FlPickupWalkerTryRespawn(CPickupWalker* pWeapon);
 	virtual Vector VecPickupWalkerRespawnSpot(CPickupWalker* pWeapon);
 
+//MODDD
+	float FlMonsterRespawnTime(CBaseMonster* pWeapon);
+	float FlMonsterTryRespawn(CBaseMonster* pWeapon);
+	Vector VecMonsterRespawnSpot(CBaseMonster* pWeapon, const Vector& arg_respawnSuggestionSpot);
+	int MonsterShouldRespawn(CBaseMonster* pWeapon);
+
+
 
 // Item retrieval
 	virtual BOOL CanHaveItem( CBasePlayer *pPlayer, CItem *pItem );
@@ -355,6 +368,12 @@ public:
 	virtual float FlPickupWalkerRespawnTime(CPickupWalker* pWeapon);
 	virtual float FlPickupWalkerTryRespawn(CPickupWalker* pWeapon);
 	virtual Vector VecPickupWalkerRespawnSpot(CPickupWalker* pWeapon);
+
+//MODDD
+	float FlMonsterRespawnTime(CBaseMonster* pWeapon);
+	float FlMonsterTryRespawn(CBaseMonster* pWeapon);
+	Vector VecMonsterRespawnSpot(CBaseMonster* pWeapon, const Vector& arg_respawnSuggestionSpot);
+	int MonsterShouldRespawn(CBaseMonster* pWeapon);
 
 
 // Item retrieval

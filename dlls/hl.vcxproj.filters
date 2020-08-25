@@ -407,6 +407,9 @@
     <ClCompile Include="entity\gib.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="monstersavestate.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="activity.h">
@@ -650,6 +653,15 @@
       <Filter>Header Files\Shared</Filter>
     </ClInclude>
     <ClInclude Include="entity\gib.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="entity\scientist.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="entity\barney.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="monstersavestate.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

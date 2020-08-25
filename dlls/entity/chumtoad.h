@@ -32,8 +32,7 @@ chumtoad small walking npc that flees from preys, should attract bullsquids and 
 //or a parent of "CGrenade" like the CSqueakGrenade does?
 
 class CChumToad : public CBaseMonster{
-	
-	
+
 
 	/*
 	void SetObjectCollisionBox( void )
@@ -50,6 +49,46 @@ class CChumToad : public CBaseMonster{
 
 	float testTimer;
 	EHANDLE m_hEntitySittingOn;
+
+
+	static const char* pDeathSounds[];
+	static const char* pAlertSounds[];
+	static const char* pIdleSounds[];
+	static const char* pPainSounds[];
+
+
+
+	Vector vecHopDest;
+
+	BOOL initFall;
+	BOOL generalFall;
+	float previousZ;
+
+
+	float forceStopInitFallTimer;
+	float landTimer;
+	float stopHopDelay;
+	float delayTimer;
+	float passiveCroakDelay;
+	float playDeadForbiddenTimer;
+	float panicTimer;
+
+	float toadPlayDeadTimer;
+	float toadPlayDeadAnimationTimer;
+
+	float playDeadSendoffTimer;
+
+
+	int m_iMyClass;
+	static int numberOfEyeSkins;
+
+	EHANDLE m_hOwner;
+
+	BOOL playerFriend;
+	BOOL playerAllyFriend;
+
+	BOOL playDeadSuccessful;
+
 
 
     CChumToad(void);
@@ -87,7 +126,6 @@ class CChumToad : public CBaseMonster{
 	void aimlessHop(void);
 	void randomDelay(void);
 
-	BOOL playDeadSuccessful;
 	BOOL playDeadFooling(CBaseEntity* whoWantsToKnow);
 
 
@@ -137,13 +175,6 @@ class CChumToad : public CBaseMonster{
 	void PainSound ( void );
 
 	
-	static const char *pDeathSounds[];
-	static const char *pAlertSounds[];
-	static const char *pIdleSounds[];
-	static const char *pPainSounds[];
-
-
-	
 
 	void setAnimationSmart(const char* arg_animName);
 	void setAnimationSmart(const char* arg_animName, float arg_frameRate);
@@ -155,8 +186,6 @@ class CChumToad : public CBaseMonster{
 	
 	GENERATE_TRACEATTACK_PROTOTYPE
 	GENERATE_TAKEDAMAGE_PROTOTYPE
-
-
 
 
 	
@@ -189,7 +218,6 @@ class CChumToad : public CBaseMonster{
 	BOOL bypassAllowMonstersSpawnCheck(void);
 
 
-
 	
 	CUSTOM_SCHEDULES;
 
@@ -200,66 +228,18 @@ class CChumToad : public CBaseMonster{
 	GENERATE_KILLED_PROTOTYPE
 
 
-	Vector vecHopDest;
-
-	BOOL initFall;
-	BOOL generalFall;
-	float previousZ;
-
-
-	float forceStopInitFallTimer;
-	float landTimer;
-	float stopHopDelay;
-	float delayTimer;
-	float passiveCroakDelay;
-	float playDeadForbiddenTimer;
-	float panicTimer;
-
-	float toadPlayDeadTimer;
-	float toadPlayDeadAnimationTimer;
-
-	float playDeadSendoffTimer;
-
-
-	int m_iMyClass;
-	static int numberOfEyeSkins;
-	
-	EHANDLE m_hOwner;
-	
-	BOOL playerFriend;
-	BOOL playerAllyFriend;
-
 
 };//END OF CChumToad
 
 
 
+class CChumToadRespawnable : public CChumToad, public CRespawnable {
+public:
+	CChumToadRespawnable::CChumToadRespawnable(void);
+	void Spawn(void);
 
-const char *CChumToad::pDeathSounds[] = 
-{
-	"chumtoad/cht_croak_short.wav",
-};
-const char *CChumToad::pAlertSounds[] = 
-{
-	"chumtoad/cht_croak_short.wav",
-	"chumtoad/cht_croak_medium.wav",
-};
-const char *CChumToad::pPainSounds[] = 
-{
-	"chumtoad/cht_croak_short.wav",
-	"chumtoad/cht_croak_medium.wav",
-};
-
-const char *CChumToad::pIdleSounds[] = 
-{
-	"chumtoad/cht_croak_medium.wav",
-	"chumtoad/cht_croak_long.wav",
 
 };
-
-
-
-
 
 
 

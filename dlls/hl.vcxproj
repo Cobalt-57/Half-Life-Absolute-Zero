@@ -303,6 +303,7 @@ copy ".\$(configuration)\hl.pdb" "C:\Program Files (x86)\Valve\Half-Life NGHLv3\
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="entity\gib.cpp" />
+    <ClCompile Include="monstersavestate.cpp" />
     <ClCompile Include="util_model.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -1058,7 +1059,10 @@ copy ".\$(configuration)\hl.pdb" "C:\Program Files (x86)\Valve\Half-Life NGHLv3\
     <ClInclude Include="activity.h" />
     <ClInclude Include="activitymap.h" />
     <ClInclude Include="entity\animating.h" />
+    <ClInclude Include="entity\barney.h" />
     <ClInclude Include="entity\gib.h" />
+    <ClInclude Include="entity\scientist.h" />
+    <ClInclude Include="monstersavestate.h" />
     <ClInclude Include="util_model.h" />
     <ClInclude Include="entity\archer.h" />
     <ClInclude Include="entity\archer_ball.h" />

@@ -61,6 +61,12 @@ SERVERSIDE (dlls)
 
 -entity/gib.h/.cpp - gib classes and implementations moved from other files to here for neatness.
 
+-barney.h, scientist.h.  It's about time.
+
+-monstersavestate.h, monstersavestate.cpp - moved outside barney.cpp
+
+-singleplay_gamerules.cpp, multiplay_gamerules.cpp, teamplay_gamerules.h/.cpp renamed to have 'gamerules' in front...    nah.  nevermind.  no one cares.
+
 
 SHARED (game_shared)
 -files stored in a new 'util' subfolder for neatness, keep this in mind for new visual studio environments. Add this game_shared/NEW as a search path.

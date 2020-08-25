@@ -27,9 +27,27 @@
 // can be determined early on in a draw call.
 // See GameStudioModelRenderer.cpp where "drawType" is set as the entry points to here are called.
 enum drawtype_e {
+	
+	// anything sent from server to here to be rendered, not part of map geometry.
+	// Most things should be given stats by dlls/entity/animating.cpp but interp fills in the time
+	// between server-client updates.
 	DRAWTYPE_ENTITY = 0,
+
+	// The third person player model to be rendered, local if viewing self in third person or other
+	// player models in multiplayer.
 	DRAWTYPE_PLAYER,
+
+	// The static weapon model attached to the third person model.
+	// Does not include placed weapons in the world, those fall under DRAWTYPE_ENTITY.
+	// Also does not include the viewmodel, see below.
+	DRAWTYPE_PLAYER_WEAPON,
+
+	// Viewmodel, drawn for the local player if viewing in first person only.
+	// Doing this does not draw the player model nor the weapon it would have called for
+	// (DRAWTYPE_PLAYER and DRAWTYPE_PLAYER_WEAPON).  Other players may still be drawn 
+	// that way in multiplayer.
 	DRAWTYPE_VIEWMODEL
+
 };
 
 

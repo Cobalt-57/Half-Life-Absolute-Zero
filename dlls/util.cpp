@@ -35,6 +35,8 @@
 #include "turret.h" //to call the turret class's static model references for a possible re-precache at a map/level change.
 #include "barnacle.h" //to reset its static standard gib var.
 #include "squidspit.h" //precache its model in a way that stores its index to a static integer. Like retail did.
+#include "talkmonster.h"
+#include "barney.h"
 
 #include "trains.h"
 #include "util_debugdraw.h"
@@ -178,8 +180,6 @@ BOOL globalPSEUDO_germanModel_barneyFound = FALSE;
 BOOL globalPSEUDO_germanModel_hgruntFound = FALSE;
 BOOL globalPSEUDO_germanModel_hassaultFound = FALSE;
 
-//MODDD - moved from player.
-int giPrecacheGrunt = 0;
 
 BOOL g_gamePaused = FALSE;
 BOOL g_gameLoaded = FALSE;
@@ -197,6 +197,11 @@ BOOL queueSkillUpdate = FALSE;
 
 BOOL queueYMG_stopSend = FALSE;
 
+
+
+
+//MODDD - moved from player.
+int giPrecacheGrunt = 0;
 
 int g_groupmask = 0;
 int g_groupop = 0;
@@ -222,6 +227,37 @@ GibInfo_t aryGibInfo[aryGibInfo_MAX_SIZE] = {
 	{"models/metalgibs.mdl", 1, 5, BLOOD_COLOR_BLACK},
 	{"models/shrapnel.mdl", 0, 2, BLOOD_COLOR_BLACK},
 };
+
+
+
+
+extern float g_scientist_PredisasterSuitMentionAllowedTime;
+extern float g_scientist_HeadcrabMentionAllowedTime;
+extern float g_scientist_sayGetItOffCooldown;
+// barney
+extern float g_sayBulletHitCooldown;
+
+// Reset global var times to avoid taking a long time to be reached on unusual transition or game-load combos
+// (that is, going to a map that has a far higher gpGlobals->time saved will require that to be reached before
+// these vars expire).
+void resetGlobalVars(void) {
+
+	g_nextCVarUpdate = -1;
+
+	g_scientist_PredisasterSuitMentionAllowedTime = -1;
+	g_scientist_HeadcrabMentionAllowedTime = -1;
+	g_scientist_sayGetItOffCooldown = -1;
+
+	g_sayBulletHitCooldown = -1;
+
+	CTalkMonster::g_talkWaitTime = 0;
+	CBarney::g_barneyAlertTalkWaitTime = 0;
+
+}//resetGlobalVars
+
+
+
+
 
 
 
@@ -6752,10 +6788,10 @@ void OnBeforeChangeLevelTransition(){
 
 
 //MODDD - another new event, even earlier than OnMapLoadStart.  Called by Engine-called method "ResetGlobalState".
-//Possibly as early as it gets, even earlier than a Map instance being made. The Map (CWorld constructor being called) happens after this.
-//More importantly, not only is this called before ANY spawn/precache methods, but also before even any KeyValue reads, otherwise thought
-//to be the earliest possible until this was found.
-//BUT BEWARE - this does not get called on going between transitions!
+// Possibly as early as it gets, even earlier than a Map instance being made. The Map (CWorld constructor being called) happens after this.
+// More importantly, not only is this called before ANY spawn/precache methods, but also before even any KeyValue reads, otherwise thought
+// to be the earliest possible until this was found.
+// BUT BEWARE - this does not get called on going between transitions!
 void OnMapLoadPreStart(){
 	
 
@@ -6765,6 +6801,8 @@ void OnMapLoadPreStart(){
 //MODDD - new event, called by CWorld's precache method (first thing precached since starting a map or calling changelevel, transition or not).
 void OnMapLoadStart(){
 	easyForcePrintLine("!!!!!! OnMapLoadStart !!!");
+
+	resetGlobalVars();
 
 	// Reset this in case the game ended between calls, the player calling precache or actually spawning (new game) will
 	// soon cause this to be TRUE again.
@@ -6778,7 +6816,7 @@ void OnMapLoadStart(){
 		ResetDynamicStaticIDs();
 	}
 
-	//Reset these gibmodel references to re-get them when these turrets are precached again.
+	// Reset these gibmodel references to re-get them when these turrets are precached again.
 	CTurret::gibModelRef = NULL;
 	CMiniTurret::gibModelRef = NULL;
 	CSentry::gibModelRef = NULL;

@@ -9,9 +9,9 @@
 
 
 
-//A class that a parent of a HealthModule (in the sense of having a HealthModule instance at all) should take to guarantee some event methods.
-//And implement those of course.
-//C does multi-inheritence, not sure if there's any possible difference for that if this is more of an "Interface" like in Java than a parent class.
+// A class that a parent of a HealthModule (in the sense of having a HealthModule instance at all) should take to guarantee some event methods.
+// And implement those of course.
+// C does multi-inheritence, not sure if there's any possible difference for that if this is more of an "Interface" like in Java than a parent class.
 class I_HealthModule_Parent{
 public:
 	//MODDD - NOTICE!  If the  " = 0;"  (pure virtual) breaks VS6 compatability,
@@ -45,8 +45,16 @@ public:
 
 	BOOL firstUseSinceEnd;  //is this a continuous "use" or the first in a while?
 
-	//I need a way to hook into the engine for some features liky playing sounds. Some Entity to do that from.
-	//I need to know it as both an entity (for its own entity variables and pev->...) and a HealthModule_Parent for sending events to.
+
+	float m_flNextCharge;
+	int	m_iReactivate; // DeathMatch Delay until reactvated
+	int	m_iJuice;
+	int	m_iOn;			// 0 = off, 1 = startup, 2 = going
+	float   m_flSoundTime;
+
+
+	// I need a way to hook into the engine for some features liky playing sounds. Some Entity to do that from.
+	// I need to know it as both an entity (for its own entity variables and pev->...) and a HealthModule_Parent for sending events to.
 	CBaseEntity* parentEntity_entity;
 	I_HealthModule_Parent* parentEntity_event;
 
@@ -54,7 +62,7 @@ public:
 	
 	HealthModule(void);
 
-	//Yes sending the exact same thing twice is ugly but I don't know how else to say "I expect one object that is a subclass of 'this' and 'that'".
+	// Yes sending the exact same thing twice is ugly but I don't know how else to say "I expect one object that is a subclass of 'this' and 'that'".
 	void setupSpawn(CBaseEntity* arg_parentEntity_entity, I_HealthModule_Parent* arg_parentEntity_event);
 	void setupRestore(CBaseEntity* arg_parentEntity_entity, I_HealthModule_Parent* arg_parentEntity_event);
 	
@@ -88,12 +96,5 @@ public:
 	void stopSounds(void);
 
 
-
-	
-	float m_flNextCharge; 
-	int	m_iReactivate ; // DeathMatch Delay until reactvated
-	int	m_iJuice;
-	int	m_iOn;			// 0 = off, 1 = startup, 2 = going
-	float   m_flSoundTime;
 
 };

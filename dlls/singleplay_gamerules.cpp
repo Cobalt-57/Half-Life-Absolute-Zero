@@ -225,29 +225,16 @@ int CHalfLifeRules :: WeaponShouldRespawn( CBasePlayerItem *pWeapon )
 
 
 
-//=========================================================
-// FlWeaponRespawnTime - what is the time in the future
-// at which this weapon may spawn?
-//=========================================================
 float CHalfLifeRules::FlPickupWalkerRespawnTime(CPickupWalker* pWeapon)
 {
 	return -1;
 }
 
-//=========================================================
-// FlWeaponRespawnTime - Returns 0 if the weapon can respawn 
-// now,  otherwise it returns the time at which it can try
-// to spawn again.
-//=========================================================
 float CHalfLifeRules::FlPickupWalkerTryRespawn(CPickupWalker* pWeapon)
 {
 	return 0;
 }
 
-//=========================================================
-// VecWeaponRespawnSpot - where should this weapon spawn?
-// Some game variations may choose to randomize spawn locations
-//=========================================================
 Vector CHalfLifeRules::VecPickupWalkerRespawnSpot(CPickupWalker* pWeapon)
 {
 	// Easy there!  Might've wandered off, so be sure to use this instead
@@ -255,16 +242,35 @@ Vector CHalfLifeRules::VecPickupWalkerRespawnSpot(CPickupWalker* pWeapon)
 	return pWeapon->respawn_origin;
 }
 
-//=========================================================
-// WeaponShouldRespawn - any conditions inhibiting the
-// respawning of this weapon?
-//=========================================================
 int CHalfLifeRules::PickupWalkerShouldRespawn(CPickupWalker* pWeapon)
 {
 	return GR_WEAPON_RESPAWN_NO;
 }
 
 
+
+float CHalfLifeRules::FlMonsterRespawnTime(CBaseMonster* pWeapon)
+{
+	return -1;
+}
+
+float CHalfLifeRules::FlMonsterTryRespawn(CBaseMonster* pWeapon)
+{
+	return 0;
+}
+
+Vector CHalfLifeRules::VecMonsterRespawnSpot(CBaseMonster* pWeapon, const Vector& arg_respawnSuggestionSpot)
+{
+	// For something as generic as an Monster, supply the point to use yourself.
+	// Suppose the game rules could intervene if they need to, but I don't see how besides some shift,
+	// not that this codebase ever does that.
+	return arg_respawnSuggestionSpot;
+}
+
+int CHalfLifeRules::MonsterShouldRespawn(CBaseMonster* pWeapon)
+{
+	return GR_WEAPON_RESPAWN_NO;
+}
 
 
 

@@ -1,5 +1,6 @@
 
 #include "chumtoadweapon.h"
+#include "chumtoad.h"
 #include "util_debugdraw.h"
 
 
@@ -56,13 +57,100 @@ void CChumToadWeapon::customAttachToPlayer(CBasePlayer *pPlayer ){
 }
 
 
-const char* CChumToadWeapon::GetPickupWalkerName(void){
-	return "monster_chumtoadpickupwalker";
+
+// IMPORTANT!  Just dummy this out for clientside, it is meaningless there.
+// Spawn call is just for calling the precache method, nothing more.
+#ifndef CLIENT_DLL
+
+// Returns whether the check passed (replacing this entity) or failed (not replacing it).
+CBaseEntity* CChumToadWeapon::pickupWalkerReplaceCheck(void) {
+
+	const char* pickupNameTest = "monster_chumtoad"; //GetPickupWalkerName();
+
+	// No need to make it lowercase, classnames already can be trusted to be.
+	//char tempClassname[127];
+	//strcpy(&tempClassname[0], this->getClassname());
+	//lowercase(tempClassname);
+
+	if (!isStringEmpty(pickupNameTest) &&
+		!(pev->spawnflags & SF_PICKUP_NOREPLACE) &&
+		!stringEndsWith(this->getClassname(), "_noreplace")) {
+		// lacking the NOREPLACE flag? replace with my spawnnable.
+
+		//char pickupWalkerName[128];
+		//sprintf(pickupWalkerName, "monster_%spickupwalker", baseclassname);
+
+		//CBaseEntity::Create(pickupWalkerName, pev->origin, pev->angles);
+		CBaseEntity* generated = CBaseEntity::Create(pickupNameTest, pev->origin, pev->angles);
+
+		// By default, all entities made with "Create" get the SF_NORESPAWN flag.
+		// This pickupwalker replaces this entity, so it should get that same flag only if the weapon it replaces had it too.
+		if (pev->spawnflags & SF_NORESPAWN) {
+			generated->pev->spawnflags |= SF_NORESPAWN;
+		}
+		else {
+			generated->pev->spawnflags &= ~SF_NORESPAWN;
+		}
+
+		// And tell the generated pickupwalker that its current coords are the ones to use for respawning, regardless
+		// of where it wanders off too.
+		CChumToadRespawnable* tempWalk = static_cast<CChumToadRespawnable*>(generated);
+		tempWalk->respawn_origin = pev->origin;
+		tempWalk->respawn_angles = pev->angles;
+
+
+		UTIL_Remove(this);
+
+		//easyForcePrintLine("pickupWalkerReplaceCheck TRUE");
+		return generated;
+	}
+	//easyForcePrintLine("pickupWalkerReplaceCheck FALSE");
+	return NULL;
 }
+const char* CChumToadWeapon::GetPickupWalkerName(void) {
+	//MODDD - turn into monster_chumtoad instead, not using the pickup walker variant for chumtoads anymore.
+	// Although the pickupwalker-replacement system isn't quite enough, monster_chumtoad itself is not
+	// a subclass of CPickupWalker.   Need our own custom replacement method for that anyway.
+	// IN SHORT, no behavior implied from this, drop it (empty string).
+	// Although just have a name anyway, helps 'give' commands recognize this as something that wants 
+	// to be replaced for turning that off (replacing something that had no collision, weapon_chumtoad, with
+	// something that does, monster_chumtoad, that's going to the player origin, is just awkward).
+	//return "monster_chumtoadpickupwalker";
+	return "ass";
+}
+#else
+
+CBaseEntity* CChumToadWeapon::pickupWalkerReplaceCheck(void) {
+	return FALSE;
+}
+const char* CChumToadWeapon::GetPickupWalkerName(void) {
+	//MODDD - turn into monster_chumtoad instead, not using the pickup walker variant for chumtoads anymore.
+	// Although the pickupwalker-replacement system isn't quite enough, monster_chumtoad itself is not
+	// a subclass of CPickupWalker.   Need our own custom replacement method for that anyway.
+	// IN SHORT, no behavior implied from this, drop it (empty string).
+	//return "monster_chumtoadpickupwalker";
+	return "\0";
+}
+
+#endif
+
+
+
+
 
 void CChumToadWeapon::Spawn( )
 {
 	// TODO!  Replace with a normal chumtoad instead, not the pickupwalker?
+
+	//pev->classname = MAKE_STRING("weapon_chumtoad");
+
+	const char* whut = NULL;
+
+	if (pev->classname != 0) {
+		whut = STRING(whut);
+	}
+
+
 
 	if(pickupWalkerReplaceCheck()){
 		return;
@@ -71,7 +159,6 @@ void CChumToadWeapon::Spawn( )
 	Precache( );
 	m_iId = WEAPON_CHUMTOAD;
 	
-	pev->classname = MAKE_STRING("weapon_chumtoad");
     //MODDD - yes, this is the ammo pickup-able. Really using just the same chum toad "spawnable" (thrown) model?
 	setModel("models/chumtoad.mdl");
 

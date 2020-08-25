@@ -318,9 +318,20 @@ BOOL CBasePlayerWeapon::DefaultDeploy(char* szViewModel, char* szWeaponModel, in
 
 	//!!!!!!
 	/////////////////
+	
+	// fuku gooby
+	/*
 	forgetBlockUntilModelChangeTime = gpGlobals->time + 0.3;
-
 	resistTime = gpGlobals->time + 0.50;  //0.01 ?
+	*/
+	
+	
+	
+	
+	
+	
+	
+	
 
 	// TEST.     ...this may not be wise?
 	//           To disable it or keep it?  UUuuuuuuuuuuuuuuuuuggghhh don't know

@@ -185,7 +185,7 @@ Schedule_t	slToadInitFallSlide[] =
 
 Task_t	tlToadLand[] =
 {
-	{ TASK_TOAD_LAND_START,				0				},
+	{ TASK_TOAD_LAND_START,			0				},
 	//{ TASK_WAIT_PVS,				0				},
 };
 Schedule_t	slToadLand[] =
@@ -557,6 +557,31 @@ IMPLEMENT_CUSTOM_SCHEDULES( CChumToad, CBaseMonster );
 
 
 
+
+const char* CChumToad::pDeathSounds[] =
+{
+	"chumtoad/cht_croak_short.wav",
+};
+const char* CChumToad::pAlertSounds[] =
+{
+	"chumtoad/cht_croak_short.wav",
+	"chumtoad/cht_croak_medium.wav",
+};
+const char* CChumToad::pPainSounds[] =
+{
+	"chumtoad/cht_croak_short.wav",
+	"chumtoad/cht_croak_medium.wav",
+};
+
+const char* CChumToad::pIdleSounds[] =
+{
+	"chumtoad/cht_croak_medium.wav",
+	"chumtoad/cht_croak_long.wav",
+
+};
+
+
+
 CChumToad::CChumToad(void){
 	testTimer = -1;
 	m_hEntitySittingOn = NULL;
@@ -848,13 +873,15 @@ void CChumToad::Spawn( void )
 }//END OF Spawn(...);
 
 #if REMOVE_ORIGINAL_NAMES != 1
-	LINK_ENTITY_TO_CLASS( monster_chumtoad, CChumToad );
+	LINK_ENTITY_TO_CLASS( monster_chumtoad, CChumToadRespawnable );
 #endif
 
 #if EXTRA_NAMES > 0
-	LINK_ENTITY_TO_CLASS( chumtoad, CChumToad );
+	LINK_ENTITY_TO_CLASS( chumtoad, CChumToadRespawnable);
 	//no extras.
 #endif
+
+
 
 
 void CChumToad::ChumToadTouch( CBaseEntity *pOther ){
@@ -929,17 +956,26 @@ void CChumToad::PickupUse(CBaseEntity* pActivator, CBaseEntity* pCaller, USE_TYP
 
 	//pPlayer->GiveNamedItem("weapon_chumtoad");
 	edict_t* thing = pPlayer->GiveNamedItem("weapon_chumtoad", SF_PICKUP_NOREPLACE, pPlayer->pev->origin);
-	CBasePlayerWeapon* generatedRef = static_cast<CBasePlayerWeapon*>(CBaseEntity::Instance(thing));
-	//generatedRef->setModel("");
-	generatedRef->pev->effects = EF_NODRAW;
-	generatedRef->pev->solid = SOLID_NOT;
-	generatedRef->m_iDefaultAmmo = 1;
-
-	//Because this is the default, sending to the origin, call "DispatchTouch" too.
 	if (thing != NULL) {
+		CBasePlayerWeapon* generatedRef = static_cast<CBasePlayerWeapon*>(CBaseEntity::Instance(thing));
+
+		if (generatedRef != NULL) {
+			//generatedRef->setModel("");
+			generatedRef->pev->effects = EF_NODRAW;
+			generatedRef->pev->solid = SOLID_NOT;
+			generatedRef->m_iDefaultAmmo = 1;
+		}
+
+		//Because this is the default, sending to the origin, call "DispatchTouch" too.
 		DispatchTouch(thing, ENT(pPlayer->pev));
+		
+		// Can this be respawned?
+		CBaseMonster::CheckRespawn();
+
 		UTIL_Remove(this);
 	}
+
+
 	//CBaseEntity* generated = CBaseEntity::Create(pickupNameTest, pev->origin, pev->angles);
 	
 
@@ -2954,4 +2990,21 @@ int CChumToad::getHullIndexForNodes(void){
     return NODE_SMALL_HULL;  //safe?
 }
 
+
+
+CChumToadRespawnable::CChumToadRespawnable(void) {
+
+}//END OF constructor
+
+// already done?
+//LINK_ENTITY_TO_CLASS(monster_chumtoad_respawnable, CChumToadRespawnable);
+
+
+void CChumToadRespawnable::Spawn(void) {
+	CChumToad::Spawn();
+
+	// after that call, may as well lose anything special about the name. If there was anything.
+	// May be unnecessary here.
+	pev->classname = MAKE_STRING("monster_chumtoad");
+}
 

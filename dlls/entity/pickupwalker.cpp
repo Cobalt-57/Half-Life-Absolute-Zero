@@ -87,7 +87,7 @@ void CPickupWalker::Spawn( void )
 	pev->classname = MAKE_STRING("monster_pickupwalker");
 	return;
 
-
+	/*
 	//TEMPLATE
 	Precache( );
 
@@ -107,7 +107,7 @@ void CPickupWalker::Spawn( void )
 	m_MonsterState		= MONSTERSTATE_NONE;
 
 	MonsterInit();
-
+	*/
 
 }//END OF Spawn(...);
 
@@ -119,7 +119,6 @@ void CPickupWalker::Spawn( void )
 Schedule_t* CPickupWalker::GetSchedule ( void )
 {
 	//NO, WE THINK NOT.
-
 	//just wait. it is all you may do.
 
 	return GetScheduleOfType(SCHED_PICKUPWALKER_IDLE_WAIT);
@@ -555,26 +554,28 @@ void CPickupWalker::PickupWalkerTouch( CBaseEntity *pOther )
 	}
 	*/
 
-}//END OF PickupWalkerTouch(...)
+}//END OF PickupWalkerTouch
 
 void CPickupWalker::MonsterThink ( void )
 {
     CBaseMonster::MonsterThink();
     return;
-}//END OF MonsterThink(...)
+}//END OF MonsterThink
 
 
 
 GENERATE_TRACEATTACK_IMPLEMENTATION(CPickupWalker)
 {
 	return;   //no damns given.
-	GENERATE_TRACEATTACK_PARENT_CALL(CBaseMonster);
+	
+	//GENERATE_TRACEATTACK_PARENT_CALL(CBaseMonster);
 }
 
 GENERATE_TAKEDAMAGE_IMPLEMENTATION(CPickupWalker)
 {
 	return 0;  //no damns given.
-	return GENERATE_TAKEDAMAGE_PARENT_CALL(CBaseMonster);
+
+	//return GENERATE_TAKEDAMAGE_PARENT_CALL(CBaseMonster);
 }
 
 GENERATE_DEADTAKEDAMAGE_IMPLEMENTATION(CPickupWalker)
@@ -582,14 +583,14 @@ GENERATE_DEADTAKEDAMAGE_IMPLEMENTATION(CPickupWalker)
 	//what?
 	return 0;
 
-	return GENERATE_DEADTAKEDAMAGE_PARENT_CALL(CBaseMonster);
+	//return GENERATE_DEADTAKEDAMAGE_PARENT_CALL(CBaseMonster);
 }
 GENERATE_KILLED_IMPLEMENTATION(CPickupWalker){
 
 	//what?
 	return;
 
-	GENERATE_KILLED_PARENT_CALL(CBaseMonster);
+	//GENERATE_KILLED_PARENT_CALL(CBaseMonster);
 }
 
 

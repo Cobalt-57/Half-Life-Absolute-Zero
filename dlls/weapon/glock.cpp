@@ -1090,7 +1090,6 @@ void CGlock::Reload( void )
 
 void CGlock::WeaponIdle( void )
 {
-	return;
 
 
 	ResetEmptySound( );

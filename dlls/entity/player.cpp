@@ -7386,6 +7386,8 @@ void CSprayCan::Think( void )
 //==============================================
 
 
+BOOL g_giveWithoutTargetLocation = FALSE;
+
 void CBasePlayer::GiveNamedItemIfLacking( const char *pszName ){
 	if(!HasNamedPlayerItem(pszName)){
 		GiveNamedItem(pszName);
@@ -7393,7 +7395,7 @@ void CBasePlayer::GiveNamedItemIfLacking( const char *pszName ){
 }
 
 edict_t* CBasePlayer::GiveNamedItem( const char *pszName ){
-	return GiveNamedItem(pszName, NULL);
+	return GiveNamedItem(pszName, 0);
 }
 
 //send right to the player's origin like the retail "give" command does (which likely referred to this method now)
@@ -7437,13 +7439,18 @@ edict_t* CBasePlayer::GiveNamedItem( const char *pszName, int pszSpawnFlags  )
 	}//END OF if(EASY_CVAR_GET(precacheAll) == 0)
 
 
+	// Let this know that a spawned item should not be replaced by something that has physical bounds
+	// (like chumtoads now).
+	g_giveWithoutTargetLocation = TRUE;
 	edict_t* thing = GiveNamedItem(pszName, pszSpawnFlags, pev->origin);
-	//Because this is the default, sending to the origin, call "DispatchTouch" too.
+	g_giveWithoutTargetLocation = FALSE;
+
+	// Because this is the default, sending to the origin, call "DispatchTouch" too.
 	if(thing != NULL){
 		DispatchTouch( thing, ENT( pev ) );
 	}
 
-	//spawn flag checking is already done in the above "GiveNamedItem".
+	// spawn flag checking is already done in the above "GiveNamedItem".
 
 	return thing;
 }
@@ -7484,6 +7491,7 @@ edict_t* CBasePlayer::GiveNamedItem( const char *pszName, int pszSpawnFlags, flo
 	return GiveNamedItem(pszName, pszSpawnFlags, Vector(xCoord, yCoord, zCoord), factorSpawnSize, tr);
 }
 
+// NOTE - the 'TraceResult* tr' is now unused?  whoops.
 edict_t* CBasePlayer::GiveNamedItem( const char *pszName, int pszSpawnFlags, const Vector& coord, BOOL factorSpawnSize, TraceResult* tr )
 {
 	edict_t	*pent;
@@ -7653,30 +7661,56 @@ edict_t* CBasePlayer::GiveNamedItem( const char *pszName, int pszSpawnFlags, con
 
 	//virtual BOOL isBasePlayerWeapon(void){return FALSE;};
 	
-	if(temptest->isBasePlayerWeapon()){
-		CBasePlayerWeapon* tempWeap = static_cast<CBasePlayerWeapon*>(temptest);
-		//If the thing we called for can spawn a pickupWalker, just skip to doing that instead.
-		const char* pickupWalkerNameTest = tempWeap->GetPickupWalkerName();
-		if(::isStringEmpty(pickupWalkerNameTest)){
-			// no walker? nothing unusual.
-			// don't ignore this flag. though.
-		}else if( !(temptest->pev->spawnflags & SF_PICKUP_NOREPLACE) ){
-			// there is a walker! Just skip to spawning that instead.
-			CBaseEntity* newWalker = tempWeap->pickupWalkerReplaceCheck();
-			// Unless there is any other intervention like ending in "_noReplace".
-			if(newWalker != NULL){
-				//send the walker instead.
-				::UTIL_Remove(temptest);
-				edict_t* myEd = ENT(newWalker->pev);
-				DispatchSpawn(myEd);
-				return myEd;
-			}
 
-			//...or call giveNamedItem, using the walker name instead?  Choices, choices!
+	if (!g_giveWithoutTargetLocation) {
+		if (temptest->isBasePlayerWeapon()) {
+			CBasePlayerWeapon* tempWeap = static_cast<CBasePlayerWeapon*>(temptest);
+			//If the thing we called for can spawn a pickupWalker, just skip to doing that instead.
+			const char* pickupWalkerNameTest = tempWeap->GetPickupWalkerName();
+			if (::isStringEmpty(pickupWalkerNameTest)) {
+				// no walker? nothing unusual.
+				// don't ignore this flag. though.
+			}
+			else if (!(temptest->pev->spawnflags & SF_PICKUP_NOREPLACE)) {
+				// there is a walker! Just skip to spawning that instead.
+				CBaseEntity* newWalker = tempWeap->pickupWalkerReplaceCheck();
+				// Unless there is any other intervention like ending in "_noReplace".
+				if (newWalker != NULL) {
+					//send the walker instead.
+					::UTIL_Remove(temptest);
+					edict_t* myEd = ENT(newWalker->pev);
+					DispatchSpawn(myEd);
+					return myEd;
+				}
+
+				//...or call giveNamedItem, using the walker name instead?  Choices, choices!
+			}
 		}
+
+		DispatchSpawn(pent);
 	}
-	
-	DispatchSpawn( pent );
+	else {
+
+
+		if (temptest->isBasePlayerWeapon()) {
+			CBasePlayerWeapon* tempWeap = static_cast<CBasePlayerWeapon*>(temptest);
+			//If the thing we called for can spawn a pickupWalker, just skip to doing that instead.
+			const char* pickupWalkerNameTest = tempWeap->GetPickupWalkerName();
+			if (::isStringEmpty(pickupWalkerNameTest)) {
+				// no walker? nothing unusual.
+				// don't ignore this flag. though.
+			}
+			else {
+				// ok
+				temptest->pev->spawnflags |= SF_PICKUP_NOREPLACE;
+			}
+		}
+		DispatchSpawn(pent);
+
+	}//END OF g_giveWithoutTargetLocation check
+
+
+
 	return pent;
 }
 

@@ -9458,3 +9458,126 @@ BOOL CBaseMonster::predictRangeAttackEnd(void) {
 }
 
 
+
+
+
+
+
+BOOL CBaseMonster::isRespawnable(void) {
+	return FALSE;  //by default, no.  Only things inheriting from CRespawnable too should override this.
+}
+
+// from weapons.cpp.
+void CBaseMonster::CheckRespawn(void)
+{
+
+	if (!isRespawnable()) {
+		// nope!
+		return;
+	}
+
+	switch (g_pGameRules->MonsterShouldRespawn(this))
+	{
+	case GR_WEAPON_RESPAWN_YES:
+		Respawn();
+		break;
+	case GR_WEAPON_RESPAWN_NO:
+		return;
+		break;
+	}
+}
+
+
+// A modified clone of weapons.cpp's "Respawn" method for handling a AI monstser that should stay dormant during that time and go to the first place this was seen on the map.
+// WARNING - only call for things that inherit from the 'CRespawnable' class as well as CBaseMonster (basemonster.h).
+CBaseEntity* CBaseMonster::Respawn(void)
+{
+	// WARNING - reinterpret_cast can be evil.
+	CRespawnable* selfRespawnableRef = reinterpret_cast<CRespawnable*>(this);
+
+
+	// make a copy of this weapon that is invisible and inaccessible to players (no touch function). The weapon spawn/respawn code
+	// will decide when to make the weapon visible and touchable.
+	CBaseEntity* someEnt = CBaseEntity::Create((char*)STRING(pev->classname), g_pGameRules->VecMonsterRespawnSpot(this, selfRespawnableRef->respawn_origin), selfRespawnableRef->respawn_angles, pev->owner);
+	//CPickupWalker* pNewWeapon = static_cast<CPickupWalker*>(someEnt);
+	CBaseEntity* pNewWeapon = someEnt;  //no casting
+
+	if (pNewWeapon)
+	{
+		// MODDD - TODO.  wait, shouldn't we also set pev->solid to SOLID_NOT ??
+		// then again it doesn't matter, what else is SOLID_TRIGGER with a NULL TOUCH method anyway?  No impact.
+
+		pNewWeapon->pev->spawnflags &= ~SF_NORESPAWN;
+
+		// pass on my respawn_ info:
+		selfRespawnableRef->respawn_origin = selfRespawnableRef->respawn_origin;
+		selfRespawnableRef->respawn_angles = selfRespawnableRef->respawn_angles;
+
+		pNewWeapon->pev->effects |= EF_NODRAW;// invisible for now
+		pNewWeapon->SetTouch(NULL);// no touch
+		pNewWeapon->SetThink(&CBaseMonster::AttemptToMaterialize);
+
+		DROP_TO_FLOOR(ENT(pev));
+
+		// not a typo! We want to know when the weapon the player just picked up should respawn! This new entity we created is the replacement,
+		// but when it should respawn is based on conditions belonging to the weapon that was taken.
+		pNewWeapon->pev->nextthink = g_pGameRules->FlMonsterRespawnTime(this);
+	}
+	else
+	{
+		ALERT(at_console, "Respawn failed to create %s!\n", STRING(pev->classname));
+	}
+
+	return pNewWeapon;
+}
+
+
+
+
+void CBaseMonster::AttemptToMaterialize(void)
+{
+	float time = g_pGameRules->FlMonsterTryRespawn(this);
+
+	if (time == 0)
+	{
+		Materialize();
+		return;
+	}
+
+	pev->nextthink = gpGlobals->time + time;
+}
+
+void CBaseMonster::Materialize(void)
+{
+	if (pev->effects & EF_NODRAW)
+	{
+		// changing from invisible state to visible.
+		UTIL_PlaySound(ENT(pev), CHAN_WEAPON, "items/suitchargeok1.wav", 1, ATTN_NORM, 0, 150, FALSE);
+		pev->effects &= ~EF_NODRAW;
+		pev->effects |= EF_MUZZLEFLASH;
+	}
+
+	pev->solid = SOLID_TRIGGER;
+
+	UTIL_SetOrigin(pev, pev->origin);// link into world.
+
+	//SetTouch(&CPickupWalker::DefaultTouch);
+	//SetThink(NULL);
+
+
+	//SetTouch(&CPickupWalker::PickupWalkerTouch);
+	//MonsterInit();
+	//SetTouch(&CPickupWalker::PickupWalkerTouch);
+	//pev->solid = SOLID_TRIGGER;
+
+	// Now then, since I was so rudely interrupted.  Maybe.
+
+	SetThink(&CBaseMonster::MonsterInitThink);
+	//SetTouch(&CPickupWalker::PickupWalkerTouch);
+	pev->nextthink = gpGlobals->time + 0.1;
+
+}
+
+
+
+

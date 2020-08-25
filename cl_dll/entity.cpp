@@ -712,9 +712,11 @@ void DLLEXPORT HUD_StudioEvent( const struct mstudioevent_s *event, const struct
 		//}
 		
 		break;
-	case 5011:
-		
-		if(EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(event5011Allowed) == 0){
+	case 5011: {
+		int optio = atoi(event->options);
+		//int optio = 31;
+
+		if (EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(event5011Allowed) == 0) {
 			return;
 		}
 
@@ -722,9 +724,10 @@ void DLLEXPORT HUD_StudioEvent( const struct mstudioevent_s *event, const struct
 		//the muzzle effect.
 		//easyPrintLine("HOW DO I FEW? %d %d %d ", (entity->curstate.renderfx), entity->curstate.iuser1, entity->curstate.body);
 		//if( !(entity->curstate.renderfx & 128) ){
-			gEngfuncs.pEfxAPI->R_MuzzleFlash( (float *)&entity->attachment[1], atoi( event->options) );
+		gEngfuncs.pEfxAPI->R_MuzzleFlash((float*)&entity->attachment[1], optio);
 		//}
 		break;
+	}
 	case 5021:
 
 

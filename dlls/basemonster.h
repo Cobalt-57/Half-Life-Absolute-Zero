@@ -1187,7 +1187,33 @@ public:
 
 	virtual BOOL predictRangeAttackEnd(void);
 
+	// NEW.  Only 'isRespawnable' is virtual, any more respawn details should be left up to a class's own cloned methods.
+	virtual BOOL isRespawnable(void);
+	void CheckRespawn(void);
+	CBaseEntity* Respawn(void);
+	void AttemptToMaterialize(void);
+	void Materialize(void);
+
+
 
 };
+
+
+
+
+//MODDD - never inherit from only, inherit from CBaseMonster or some child class too, and inherit from CResawpanble as a 2nd choice.
+// Could be any entity though, but CBaseMonster's respawn methods, well, expect a CBaseMonster of some kind for the MonsterInit call.
+class CRespawnable {
+public:
+	Vector respawn_origin;
+	Vector respawn_angles;
+
+	BOOL isRespawnable(void) {
+		return TRUE;  // is that safe?
+	}
+};
+
+
+
 
 #endif // BASEMONSTER_H

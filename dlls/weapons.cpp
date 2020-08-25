@@ -2161,6 +2161,7 @@ void CBasePlayerWeapon::PrintState( void )
 
 
 
+// by default, doesn't use this.  Override and specify for things that do.
 const char* CBasePlayerWeapon::GetPickupWalkerName(void){
 	return "\0";
 }

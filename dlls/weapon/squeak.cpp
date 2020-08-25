@@ -522,6 +522,8 @@ const char* CSqueak::GetPickupWalkerName(void){
 
 void CSqueak::Spawn( )
 {
+	//pev->classname = MAKE_STRING("weapon_snark");
+
 	if(pickupWalkerReplaceCheck()){
 		return;
 	}

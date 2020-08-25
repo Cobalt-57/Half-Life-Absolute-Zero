@@ -997,11 +997,6 @@ int CHalfLifeMultiplay :: WeaponShouldRespawn( CBasePlayerItem *pWeapon )
 
 
 
-
-//=========================================================
-// FlWeaponRespawnTime - what is the time in the future
-// at which this weapon may spawn?
-//=========================================================
 float CHalfLifeMultiplay::FlPickupWalkerRespawnTime(CPickupWalker* pWeapon)
 {
 	if (weaponstay.value > 0)
@@ -1017,11 +1012,6 @@ float CHalfLifeMultiplay::FlPickupWalkerRespawnTime(CPickupWalker* pWeapon)
 	return gpGlobals->time + WEAPON_RESPAWN_TIME;
 }
 
-//=========================================================
-// FlWeaponRespawnTime - Returns 0 if the weapon can respawn 
-// now,  otherwise it returns the time at which it can try
-// to spawn again.
-//=========================================================
 float CHalfLifeMultiplay::FlPickupWalkerTryRespawn(CPickupWalker* pWeapon)
 {
 	// pickup walkers don't have m_iId or iFlags.  Let's just as though they had both.
@@ -1038,10 +1028,6 @@ float CHalfLifeMultiplay::FlPickupWalkerTryRespawn(CPickupWalker* pWeapon)
 	return 0;
 }
 
-//=========================================================
-// VecWeaponRespawnSpot - where should this weapon spawn?
-// Some game variations may choose to randomize spawn locations
-//=========================================================
 Vector CHalfLifeMultiplay::VecPickupWalkerRespawnSpot(CPickupWalker* pWeapon)
 {
 	// Easy there!  Might've wandered off, so be sure to use this instead
@@ -1049,10 +1035,6 @@ Vector CHalfLifeMultiplay::VecPickupWalkerRespawnSpot(CPickupWalker* pWeapon)
 	return pWeapon->respawn_origin;
 }
 
-//=========================================================
-// WeaponShouldRespawn - any conditions inhibiting the
-// respawning of this weapon?
-//=========================================================
 int CHalfLifeMultiplay::PickupWalkerShouldRespawn(CPickupWalker* pWeapon)
 {
 	if (pWeapon->pev->spawnflags & SF_NORESPAWN)
@@ -1062,6 +1044,62 @@ int CHalfLifeMultiplay::PickupWalkerShouldRespawn(CPickupWalker* pWeapon)
 
 	return GR_WEAPON_RESPAWN_YES;
 }
+
+
+
+
+
+
+float CHalfLifeMultiplay::FlMonsterRespawnTime(CBaseMonster* pWeapon)
+{
+	if (weaponstay.value > 0)
+	{
+		// make sure it's only certain weapons
+		//MODDD - don't have the flag, run unconditionally.
+		//if (!(pWeapon->iFlags() & ITEM_FLAG_LIMITINWORLD))
+		{
+			return gpGlobals->time + 0;		// weapon respawns almost instantly
+		}
+	}
+
+	return gpGlobals->time + WEAPON_RESPAWN_TIME;
+}
+
+float CHalfLifeMultiplay::FlMonsterTryRespawn(CBaseMonster* pWeapon)
+{
+	// pickup walkers don't have m_iId or iFlags.  Let's just as though they had both.
+	//if (pWeapon && pWeapon->m_iId && (pWeapon->iFlags() & ITEM_FLAG_LIMITINWORLD))
+	if (pWeapon)
+	{
+		if (NUMBER_OF_ENTITIES() < (gpGlobals->maxEntities - ENTITY_INTOLERANCE))
+			return 0;
+
+		// we're past the Monster tolerance level,  so delay the respawn
+		return FlMonsterRespawnTime(pWeapon);
+	}
+
+	return 0;
+}
+
+Vector CHalfLifeMultiplay::VecMonsterRespawnSpot(CBaseMonster* pWeapon, const Vector& arg_respawnSuggestionSpot)
+{
+	// For something as generic as a monster, supply the point to use yourself.
+	// Suppose the game rules could intervene if they need to, but I don't see how besides some shift,
+	// not that this codebase ever does that.
+	return arg_respawnSuggestionSpot;
+}
+
+int CHalfLifeMultiplay::MonsterShouldRespawn(CBaseMonster* pWeapon)
+{
+	if (pWeapon->pev->spawnflags & SF_NORESPAWN)
+	{
+		return GR_WEAPON_RESPAWN_NO;
+	}
+
+	return GR_WEAPON_RESPAWN_YES;
+}
+
+
 
 
 

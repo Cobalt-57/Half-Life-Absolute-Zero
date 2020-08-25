@@ -118,7 +118,7 @@ public:
 	int	ReadFields( const char *pname, void *pBaseData, TYPEDESCRIPTION *pFields, int fieldCount );
 	int	ReadField( void *pBaseData, TYPEDESCRIPTION *pFields, int fieldCount, int startField, int size, char *pName, void *pData );
 	int	ReadInt( void );
-	short	ReadShort( void );
+	short ReadShort( void );
 	int	ReadNamedInt( const char *pName );
 	char	*ReadNamedString( const char *pName );
 	int	Empty( void ) { return (m_pdata == NULL) || ((m_pdata->pCurrentData-m_pdata->pBaseData)>=m_pdata->bufferSize); }
@@ -126,7 +126,7 @@ public:
 	void PrecacheMode( BOOL mode ) { m_precache = mode; }
 
 private:
-	char	*BufferPointer( void );
+	char *BufferPointer( void );
 	void BufferReadBytes( char *pOutput, int size );
 	void BufferSkipBytes( int bytes );
 	int	BufferSkipZString( void );
@@ -137,7 +137,7 @@ private:
 	void BufferReadHeader( HEADER *pheader );
 
 	int	m_global;		// Restoring a global entity?
-	BOOL	m_precache;
+	BOOL m_precache;
 };
 
 

@@ -486,7 +486,7 @@ void RestoreGlobalState( SAVERESTOREDATA *pSaveData )
 }
 
 
-//BEWARE! This does not get called on going between map transitions.
+// BEWARE! This does not get called on going between map transitions.
 void ResetGlobalState( void )
 {
 	gGlobalState.ClearStates();

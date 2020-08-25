@@ -15,6 +15,7 @@
 // UNDONE: Holster weapon?
 
 #include "extdll.h"
+#include "barney.h"
 #include "util.h"
 #include "cbase.h"
 #include "basemonster.h"
@@ -71,7 +72,11 @@ EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(thatWasntPunch)
 
 //Yes, need to know this ahead of time.
 extern Schedule_t slBarneyEnemyDraw[];
-static float g_sayBulletHitCooldown = -1;
+
+
+float g_sayBulletHitCooldown = -1;
+
+SimpleMonsterSaveState g_duringSpamRampageState;
 
 
 
@@ -93,226 +98,7 @@ enum
 };
 
 
-
-class SimpleMonsterSaveState {
-public:
-	int OLD_m_afMemory;
-	Schedule_t* OLD_m_pSchedule;
-	int OLD_m_iScheduleIndex;
-	int OLD_m_iTaskStatus;
-	int OLD_m_afConditions;
-	int OLD_m_afConditionsNextFrame;
-	MONSTERSTATE OLD_m_MonsterState;
-	MONSTERSTATE OLD_m_IdealMonsterState;
-	int OLD_sequence;
-	int OLD_body;
-	Vector OLD_origin;
-	Vector OLD_angles;
-	EHANDLE OLD_m_hEnemy;
-	EHANDLE OLD_m_hTargetEnt;
-	CCineMonster* OLD_m_pCine;
-	Activity OLD_m_Activity;
-	Activity OLD_m_IdealActivity;
-	Activity OLD_m_movementActivity;
-	int OLD_m_movementGoal;
-
-	SimpleMonsterSaveState(void) {
-
-	}
-	void Save(CBaseMonster* toRead) {
-		// queuedMonsterState  ?
-		OLD_m_afMemory = toRead->m_afMemory;
-		OLD_m_pSchedule = toRead->m_pSchedule;
-		OLD_m_iScheduleIndex = toRead->m_iScheduleIndex;
-		OLD_m_iTaskStatus = toRead->m_iTaskStatus;
-		OLD_m_afConditions = toRead->m_afConditions & ~(bits_COND_NEW_ENEMY);
-		OLD_m_afConditionsNextFrame = toRead->m_afConditionsNextFrame & ~(bits_COND_NEW_ENEMY);
-		OLD_m_MonsterState = toRead->m_MonsterState;
-		OLD_m_IdealMonsterState = toRead->m_IdealMonsterState;
-		OLD_sequence = toRead->pev->sequence;
-		OLD_body = toRead->pev->body;
-		OLD_origin = toRead->pev->origin;
-		OLD_angles = toRead->pev->angles;
-		OLD_m_hEnemy = toRead->m_hEnemy;
-		OLD_m_hTargetEnt = toRead->m_hTargetEnt;
-		OLD_m_pCine = toRead->m_pCine;
-		OLD_m_Activity = toRead->m_Activity;
-		OLD_m_IdealActivity = toRead->m_IdealActivity;
-		OLD_m_movementActivity = toRead->m_movementActivity;
-		OLD_m_movementGoal = toRead->m_movementGoal;
-	}
-	void Restore(CBaseMonster* toReceive) {
-		toReceive->m_afMemory = OLD_m_afMemory;
-		toReceive->m_pSchedule = OLD_m_pSchedule;
-		toReceive->m_iScheduleIndex = OLD_m_iScheduleIndex;
-		toReceive->m_iTaskStatus = OLD_m_iTaskStatus;
-		toReceive->m_afConditions = OLD_m_afConditions;
-		toReceive->m_afConditionsNextFrame = OLD_m_afConditionsNextFrame;
-		toReceive->m_MonsterState = OLD_m_MonsterState;
-		toReceive->m_IdealMonsterState = OLD_m_IdealMonsterState;
-		toReceive->pev->sequence = OLD_sequence;
-		toReceive->pev->body = OLD_body;
-		toReceive->pev->origin = OLD_origin;
-		toReceive->pev->angles = OLD_angles;
-		toReceive->m_hEnemy = OLD_m_hEnemy;
-		toReceive->m_hTargetEnt = OLD_m_hTargetEnt;
-		toReceive->m_pCine = OLD_m_pCine;
-		toReceive->m_Activity = OLD_m_Activity;
-		toReceive->m_IdealActivity = OLD_m_IdealActivity;
-		toReceive->m_movementActivity = OLD_m_movementActivity;
-		toReceive->m_movementGoal = OLD_m_movementGoal;
-	}
-
-};
-SimpleMonsterSaveState g_duringSpamRampageState;
-
-
-class CBarney : public CTalkMonster
-{
-public:
-
-	//MODDD - for checking to play barney's alert, in case other sounds take precedence for some reason.
-	static float g_barneyAlertTalkWaitTime;
-
-	static const char* madInterSentences[];
-	static int madInterSentencesMax;
-
-
-	BOOL canUnholster;
-	float unholsterTimer;
-	int recentDeadEnemyClass;
-
-	BOOL m_fGunDrawn;
-	float m_painTime;
-	float m_checkAttackTime;
-	BOOL m_lastAttackCheck;
-
-	float reloadSoundTime;
-
-
-	SimpleMonsterSaveState beforeSpamRampageState;
-
-	BOOL forgiveMeForWhatIMustDo;
-
-
-
-	CBarney(void);
-
-	void ReportAIState(void);
-
-
-	int getMadSentencesMax(void);
-	int getMadInterSentencesMax(void);
-
-	
-	void MonsterThink(void);
-	int  IRelationship( CBaseEntity *pTarget );
-	
-	void Spawn( void );
-	void Precache( void );
-	void SetYawSpeed( void );
-	int  ISoundMask( void );
-	void BarneyFirePistol( void );
-	void AlertSound( void );
-	int  Classify ( void );
-	BOOL isOrganic(void){return !CanUseGermanModel();}
-
-	BOOL getGermanModelRequirement(void);
-	const char* getGermanModel(void);
-	const char* getNormalModel(void);
-
-	void HandleAnimEvent( MonsterEvent_t *pEvent );
-	
-	void RunTask( Task_t *pTask );
-	void StartTask( Task_t *pTask );
-	virtual int ObjectCaps( void ) { return CTalkMonster :: ObjectCaps() | FCAP_IMPULSE_USE; }
-	
-	
-	BOOL CheckRangeAttack1 ( float flDot, float flDist );
-	
-	void DeclineFollowing( void );
-
-	// Override these to set behavior
-	Schedule_t *GetScheduleOfType ( int Type );
-	Schedule_t *GetSchedule ( void );
-	MONSTERSTATE GetIdealState ( void );
-
-	//MODDD - new.
-	void SetObjectCollisionBox( void )
-	{
-		if(pev->deadflag != DEAD_NO){
-			pev->absmin = pev->origin + Vector(-65, -65, 0);
-			pev->absmax = pev->origin + Vector(65, 65, 72);
-		}else{
-			CBaseMonster::SetObjectCollisionBox();
-		}
-	}
-
-
-	void DeathSound( void );
-	void PainSound( void );
-	void PainSound(BOOL bypassCooldown);  //MODDD - new version that bypasses the usual forced delay before playing another pain sound.
-	
-	void TalkInit( void );
-
-	//MODDD
-	GENERATE_TRACEATTACK_PROTOTYPE
-	GENERATE_TAKEDAMAGE_PROTOTYPE
-
-	void OnAlerted(BOOL alerterWasKilled);
-	
-	GENERATE_KILLED_PROTOTYPE
-
-	
-	BOOL violentDeathAllowed(void);
-	BOOL violentDeathClear(void);
-	int violentDeathPriority(void);
-
-	void talkAboutKilledEnemy(void);
-	void onEnemyDead(CBaseEntity* pRecentEnemy);
-
-	void CompleteRestoreState(void);
-	void OnForgiveDeclineSpam(void);
-	
-	
-	virtual int	Save( CSave &save );
-	virtual int	Restore( CRestore &restore );
-	static TYPEDESCRIPTION m_SaveData[];
-
-	//void Think(void);
-	void CheckAmmo(void);
-	void SetActivity(Activity NewActivity);
-
-	//MODDD - new anim stuff.
-	void HandleEventQueueEvent(int arg_eventID);
-	BOOL usesAdvancedAnimSystem(void);
-	int tryActivitySubstitute(int activity);
-	int LookupActivityHard(int activity);
-	
-	void DeclineFollowingProvoked(CBaseEntity* pCaller);
-	void SayAlert(void);
-	void SayDeclineFollowing(void);
-	void SayDeclineFollowingProvoked(void);
-	void SayProvoked(void);
-	void SayStopShooting(void);
-	void SaySuspicious(void);
-	void SayLeaderDied(void);
-	void SayNearPassive(void);
-
-	void OnNearCautious(void);
-	void SayNearCautious(void);
-
-	
-	BOOL canResetBlend0(void);
-	BOOL onResetBlend0(void);
-
-	void womboCombo(void);
-
-	int CanPlaySentence(BOOL fDisregardState);
-	int CanPlaySequence(BOOL fDisregardMonsterState, int interruptLevel);
-
-	CUSTOM_SCHEDULES;
-};
+//MODDD - class moved to barney.h
 
 //MODDD - "implementation".  yea, static vars have a prototype and implementation.
 float CBarney::g_barneyAlertTalkWaitTime = 0;

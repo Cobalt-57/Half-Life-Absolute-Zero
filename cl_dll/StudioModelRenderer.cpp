@@ -133,9 +133,6 @@ BOOL g_freshRenderFrame = TRUE;
 
 
 
-
-
-
 #include "dlls/monsterevent.h"
 
 //extern void DLLEXPORT HUD_StudioEvent(const struct mstudioevent_s* event, const struct cl_entity_s* entity);
@@ -1346,6 +1343,8 @@ float CStudioModelRenderer::StudioEstimateFrame( mstudioseqdesc_t *pseqdesc )
 	//}
 
 
+	// HACKY HACKY!   Test.
+	//pseqdesc->flags &= ~STUDIO_LOOPING;
 
 
 	// NOPE.  This is a bad idea actually.
@@ -1422,8 +1421,6 @@ float CStudioModelRenderer::StudioEstimateFrame( mstudioseqdesc_t *pseqdesc )
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
 
 
 	//MODDD - interp physics issue
@@ -1503,6 +1500,8 @@ float CStudioModelRenderer::StudioEstimateFrame( mstudioseqdesc_t *pseqdesc )
 
 
 
+
+
 	/*
 	if((m_pCurrentEntity->curstate.renderfx & ISNPC) && !( g_drawType == DRAWTYPE_VIEWMODEL)   ){
 		//Check these?
@@ -1522,6 +1521,16 @@ float CStudioModelRenderer::StudioEstimateFrame( mstudioseqdesc_t *pseqdesc )
 
 	//dfdt = 0;
 	//if(!strcmp(m_pCurrentEntity->curstate->
+
+
+	if (g_drawType == DRAWTYPE_PLAYER) {
+		// WHUT 
+		int x = 45;
+	}
+	if (g_drawType == DRAWTYPE_VIEWMODEL) {
+		// WHUT 
+		int x = 45;
+	}
 	
 	if (pseqdesc->numframes <= 1)
 	{
@@ -1533,29 +1542,54 @@ float CStudioModelRenderer::StudioEstimateFrame( mstudioseqdesc_t *pseqdesc )
 	}
 	DEBUG_old_f = f;
 
-	
-	if (m_pCurrentEntity->curstate.framerate >= 0) {
-		if (m_pCurrentEntity->curstate.frame == 0 && (ary_g_recentInterpEstimatePrev[m_pCurrentEntity->index] > ary_g_recentInterpEstimate[m_pCurrentEntity->index])) {
-			ary_g_recentInterpEstimatePrev[m_pCurrentEntity->index] = 0;
+
+	// MARKER123
+	if (g_drawType == DRAWTYPE_ENTITY) {
+
+		if (m_pCurrentEntity->curstate.framerate >= 0) {
+			if (m_pCurrentEntity->curstate.frame == 0 && (ary_g_recentInterpEstimatePrev[m_pCurrentEntity->index] > ary_g_recentInterpEstimate[m_pCurrentEntity->index])) {
+				ary_g_recentInterpEstimatePrev[m_pCurrentEntity->index] = 0;
+			}
+			else {
+				ary_g_recentInterpEstimatePrev[m_pCurrentEntity->index] = ary_g_recentInterpEstimate[m_pCurrentEntity->index];
+			}
 		}
 		else {
-			ary_g_recentInterpEstimatePrev[m_pCurrentEntity->index] = ary_g_recentInterpEstimate[m_pCurrentEntity->index];
+			if (m_pCurrentEntity->curstate.frame >= 255 && (ary_g_recentInterpEstimatePrev[m_pCurrentEntity->index] < ary_g_recentInterpEstimate[m_pCurrentEntity->index])) {
+				ary_g_recentInterpEstimatePrev[m_pCurrentEntity->index] = 255;
+			}
+			else {
+				ary_g_recentInterpEstimatePrev[m_pCurrentEntity->index] = ary_g_recentInterpEstimate[m_pCurrentEntity->index];
+			}
 		}
 	}
-	else {
-		if (m_pCurrentEntity->curstate.frame >= 255 && (ary_g_recentInterpEstimatePrev[m_pCurrentEntity->index] < ary_g_recentInterpEstimate[m_pCurrentEntity->index])) {
-			ary_g_recentInterpEstimatePrev[m_pCurrentEntity->index] = 255;
+	else if (g_drawType == DRAWTYPE_PLAYER) {
+		// same as DRAWTYPE_ENTITY, but having the right curstate.frame (0 or 255) is no longer required.
+		// Would comparing curstate.frame to InterpEstimate or InterpEstimatePrev be better?  Unsure.
+		if (m_pCurrentEntity->curstate.framerate >= 0) {
+			if ((ary_g_recentInterpEstimatePrev[m_pCurrentEntity->index] > ary_g_recentInterpEstimate[m_pCurrentEntity->index])) {
+				ary_g_recentInterpEstimatePrev[m_pCurrentEntity->index] = 0;
+			}
+			else {
+				ary_g_recentInterpEstimatePrev[m_pCurrentEntity->index] = ary_g_recentInterpEstimate[m_pCurrentEntity->index];
+			}
 		}
 		else {
-			ary_g_recentInterpEstimatePrev[m_pCurrentEntity->index] = ary_g_recentInterpEstimate[m_pCurrentEntity->index];
+			if ( (ary_g_recentInterpEstimatePrev[m_pCurrentEntity->index] < ary_g_recentInterpEstimate[m_pCurrentEntity->index])) {
+				ary_g_recentInterpEstimatePrev[m_pCurrentEntity->index] = 255;
+			}
+			else {
+				ary_g_recentInterpEstimatePrev[m_pCurrentEntity->index] = ary_g_recentInterpEstimate[m_pCurrentEntity->index];
+			}
 		}
 	}
+
 
 	f += dfdt;
 
 	//MODDD - viewmodel idle anims may be forced not to loop, to remain static until a new anim is called.
 	
-	
+	// Special check needed for viewmodels to do anims in reverse since their framerate can't be set serverside (no entity to link from)
 	BOOL animateBackwards = ( g_drawType == DRAWTYPE_VIEWMODEL && (m_pCurrentEntity->curstate.iuser1 == 200)  );
 	//animateBackwards = FALSE;
 	/*
@@ -1579,7 +1613,11 @@ float CStudioModelRenderer::StudioEstimateFrame( mstudioseqdesc_t *pseqdesc )
 		//easyPrintLineDummy("ILL CUT YER NUTS OFF s:%d f:%.2f mf:%d b?%d", m_pCurrentEntity->curstate.sequence, f, pseqdesc->numframes, animateBackwards);
 	}
 
-	if (pseqdesc->flags & STUDIO_LOOPING &&  !( g_drawType == DRAWTYPE_VIEWMODEL && (m_pCurrentEntity->curstate.renderfx & FORCE_NOLOOP)) )
+	// MARKER123
+	//MODDD -  the !(g_drawType == DRAWTYPE_PLAYER) fixes the mp5 muzzle flash playing twice on the third perosn model.
+	// If it looks like every so often a muzzle flash isn't playing, that's just from the player refusing to restart the animation
+	// since it hasn't finished when firing continuously (see logic or that in player.cpp, ACT_RANGE_ATTACK1).
+	if (pseqdesc->flags & STUDIO_LOOPING &&  !(g_drawType == DRAWTYPE_PLAYER) && !( g_drawType == DRAWTYPE_VIEWMODEL && (m_pCurrentEntity->curstate.renderfx & FORCE_NOLOOP)) )
 	//if (pseqdesc->flags & STUDIO_LOOPING) 
 	{
 		if (pseqdesc->numframes > 1)
@@ -1669,25 +1707,33 @@ CLIENTFR: 160 14.
 	// Best with only one NPC on the map, kill in slow motion with CVars set to put it in the air a tiny bit (monsterKilledToss set to 1 or 2),
 	// with a low host_frametime (like 0.001) and watch how these printouts change.  Compare to the printouts during just an idle animation,
 	// without the headcrab in combat or anything (spawn with 'autosneaky 1') to see interp working correctly without the fix running nor needed.
+
+	//MODDD - save?
+	// Don't commit if this is set!
+	if (g_drawType == DRAWTYPE_ENTITY || g_drawType == DRAWTYPE_PLAYER) {
+		ary_g_recentInterpEstimate[m_pCurrentEntity->index] = f;
+	}
+
 	
-	/*
 	if (g_debugPrevTime != m_clTime) {
 		
-		if (m_pCurrentEntity->curstate.renderfx & ISNPC) {
+		//if (m_pCurrentEntity->curstate.renderfx & ISNPC) {
+		if(g_drawType == DRAWTYPE_VIEWMODEL || g_drawType == DRAWTYPE_PLAYER){
+			
+			/*
 			if (!DEBUG_NeededFix) {
-				easyForcePrintLine("nofix recframe:%.3f times:%.3f,%.3f d:%.3f final:%.2f F:%.2f->%.2f", m_pCurrentEntity->curstate.frame, m_clTime, m_pCurrentEntity->curstate.animtime, (m_clTime - m_pCurrentEntity->curstate.animtime), dfdt, DEBUG_old_f, f);
+				easyForcePrintLine("nofix recframe:%.3f times:%.3f,%.3f d:%.3f final:%.2f F:%.2f->%.2f DENDE %.2f %.2f", m_pCurrentEntity->curstate.frame, m_clTime, m_pCurrentEntity->curstate.animtime, (m_clTime - m_pCurrentEntity->curstate.animtime), dfdt, DEBUG_old_f, f, ary_g_recentInterpEstimatePrev[m_pCurrentEntity->index], ary_g_recentInterpEstimate[m_pCurrentEntity->index]);
 			}
 			else {
 				easyForcePrintLine("yefix recframe:%.3f times:%.3f,%.3f d:%.3f final:%.2f F:%.2f->%.2f", m_pCurrentEntity->curstate.frame, m_clTime, g_OLDprevTime, (m_clTime - g_OLDprevTime), dfdt, DEBUG_old_f, f);
 			}
+			*/
+			
 			g_debugPrevTime = m_clTime;
 			//easyForcePrintLine("MY INDEX: %d isnpc:%d", m_pCurrentEntity->index, (m_pCurrentEntity->curstate.renderfx & ISNPC) == ISNPC);
 		}
 	}
-	*/
-
-	//MODDD - save?
-	ary_g_recentInterpEstimate[m_pCurrentEntity->index] = f;
+	
 
 	return f;
 }
@@ -3710,12 +3756,32 @@ int CStudioModelRenderer::StudioDrawPlayer( int flags, entity_state_t *pplayer )
 
 			if (pplayer->weaponmodel)
 			{
+				// MARKER123, all these tags.
+
+
 				cl_entity_t saveent = *m_pCurrentEntity;
+				//MODDD
+				drawtype_e oldDrawType = g_drawType;
 
 				model_t *pweaponmodel = IEngineStudio.GetModelByIndex( pplayer->weaponmodel );
 
 				m_pStudioHeader = (studiohdr_t *)IEngineStudio.Mod_Extradata (pweaponmodel);
 				IEngineStudio.StudioSetHeader( m_pStudioHeader );
+
+				//MODDD
+				//////////////////////////////////////////////////////////////////////////////////
+				// weapon models (things attached to the third person player model)
+				// only have one sequence: #0.  Enforce this in m_pCurrentEntity.
+				// Also, do NOT let this affect interpolation vars on the player model, it only
+				// causes problems.
+				m_pCurrentEntity->curstate.sequence = 0;
+				// ALSO, let the rest of rendering know this is the PLAYER_WEAPON and not
+				// the PLAYER.  The exact same entity index is being sent and spots in 
+				// some new global arrays could get overridden by useless information.
+				// The weapon model, even attached like this, does not hold events or animation.
+				g_drawType = DRAWTYPE_PLAYER_WEAPON;
+				//////////////////////////////////////////////////////////////////////////////////
+
 
 				StudioMergeBones( pweaponmodel);
 
@@ -3726,6 +3792,9 @@ int CStudioModelRenderer::StudioDrawPlayer( int flags, entity_state_t *pplayer )
 				StudioCalcAttachments( );
 
 				*m_pCurrentEntity = saveent;
+				//MODDD
+				g_drawType = oldDrawType;
+
 			}
 		}
 	
@@ -4049,10 +4118,29 @@ void CStudioModelRenderer::StudioRenderFinal(void)
 
 
 BOOL canPrintout = FALSE;
-
+float g_eventPrevTime = 0;
+BOOL eventsPaused = FALSE;
 
 void CStudioModelRenderer::CUSTOM_StudioClientEvents(void) {
+	
 
+	if (g_freshRenderFrame) {
+		// At the start of a render frame, see if the time has changed since the
+		// most recent frame.  If not, skip these events.
+		// The will not disappear, causing them to overlap in place over and over and even
+		// trigger the 'over 500 temporary ents' console warning while paused for a while.
+		if (g_eventPrevTime == m_clTime) {
+			// call this a pause then
+			eventsPaused = TRUE;
+		}
+		else {
+			eventsPaused = FALSE;
+		}
+		g_eventPrevTime = m_clTime;
+	}
+
+
+	if (eventsPaused)return;
 
 	// g_freshRenderFrame ???
 
@@ -4134,13 +4222,39 @@ void CStudioModelRenderer::CUSTOM_StudioClientEvents(void) {
 
 	// ALTHOUGH this is low priority, mod isn't really multiplayer focused and
 	// the player wouldn't normally be in 3rd person anyway.
+	
+	// UPDATE - look where the g_drawType is set to DRAWTYPE_PLAYER_WEAPON now,
+	// looks like this was from doing interp-logic on the player weapon attached
+	// to the 3rd person model causing info in the interp array to be overridden
+	// for the same index (doesn't get a new one).  Whoops, no longer happens.
 
+	// In the current setup, only the mp5 playing the event twice when firing still happens.
+	// Although it kinda looks fitting on holding fire down and retail had it, so eh.
+	// Let's just leave it.  But to fix, it would probably take checking flStart and
+	// flEnd and adjusting if flStart (like 2.9) exceeds flEnd (like 0.2).
+	// nope, didn't do it.  Could be the animation looping, maybe retry with looping forced
+	// off and don't play events at all on a frame that should have looped over when the animation
+	// is planned to end? if that can be done?
+	// GOT IT.  Check the DRAWTYPE_PLAYER check near the STUDIO_LOOPING check in StudioEstimateFrame,
+	// loop flag ignored for the player.
+	
+		
 
 	if (CL_IsThirdPerson()) {
 		int x = 45;
 	}
 
-	if (g_drawType != DRAWTYPE_VIEWMODEL) {
+
+
+	if (g_drawType == DRAWTYPE_PLAYER_WEAPON) {
+		// TEST
+		int x = 45;
+	}
+
+
+
+	// MARKER123
+	if (g_drawType == DRAWTYPE_ENTITY || g_drawType == DRAWTYPE_PLAYER) {
 
 		if ((m_pCurrentEntity->curstate.renderfx & ISNPC) && m_clTime > ary_g_LastEventCheckEXACT[myIndex]) {
 			canPrintout = TRUE;
@@ -4184,6 +4298,25 @@ void CStudioModelRenderer::CUSTOM_StudioClientEvents(void) {
 
 		flStart = ary_g_recentInterpEstimatePrev[myIndex];
 		flEnd = ary_g_recentInterpEstimate[myIndex]; //* EASY_CVAR_GET_DEBUGONLY(animationFramerateMulti);
+
+
+		/*
+		// no, doesn't fix the mp5 muzzle flash playing twice.
+		if (g_drawType == DRAWTYPE_PLAYER) {
+			if (framerate >= 0) {
+				if (flStart > flEnd) {
+					// hm.
+					flStart = 0;
+				}
+			}
+			else {
+				if (flStart < flEnd) {
+					flStart = frameCount - 1;  // is that safe?
+				}
+			}
+		}
+		*/
+
 
 
 		/*
@@ -4231,6 +4364,7 @@ void CStudioModelRenderer::CUSTOM_StudioClientEvents(void) {
 
 	}
 	else {
+
 		frame = m_pCurrentEntity->curstate.frame;
 
 		flInterval = (m_clTime - animtime);
@@ -4246,6 +4380,10 @@ void CStudioModelRenderer::CUSTOM_StudioClientEvents(void) {
 		ary_g_LastEventCheck[myIndex] = animtime + flInterval;
 		
 		int x = 45;
+
+		if (g_eventPrevTime != m_clTime) {
+		//	easyForcePrintLine("HEYY there %.2f %.2f", flStart, flEnd);
+		}
 
 
 		/*
@@ -4287,7 +4425,7 @@ void CStudioModelRenderer::CUSTOM_StudioClientEvents(void) {
 	}
 
 
-	if (g_drawType == DRAWTYPE_VIEWMODEL) {
+	if (g_drawType == DRAWTYPE_PLAYER) {
 		int x = 45;
 	}
 
