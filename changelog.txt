@@ -373,7 +373,9 @@ Spamming 'use' on NPC's no longer starts sentences every time, cooldown of about
 
 Downward-incline smoothness slightly further improved.
 
-CVAR: sv_player_midair_fix, 0 for retail, 1 for the following:
+NEW CVAR: cl_interp_view_standard, compare to cl_interp_view_extra.  Default grants no changes, but set to 2 is an alternate mid-air fix for crouching mid-air that may have a differnet feel.
+
+NEW CVAR: sv_player_midair_fix, 0 for retail, 1 for the following:
 -Support for an extension of midair logic that does similar slope-checks as walking.  That is, jumping 'up' stairs is possible without losing momentum.
 -As a side-effect, reaching the top of several objects that were difficult to reach through even crouch-jumping (often some barrels and boxes) is much easier; reach of jumps slightly improved.
 -This may also stop getting stuck in certain terrain, such as tracks in a2a1
@@ -445,12 +447,16 @@ Improvement to the client event fix for the player model (as seen in 3rd person 
 -Glock muzzle flash no longer stays for too long. 
 -mp5 muzzle flash does not happen twice for firing once (fix most accurate in SP).
 
-Chumtoads playing dead now fool turrents (ceiling turrets (miniturrrets) and sentries).
+TURRETS (mainly mounted ceiling turrets, not the ones on stands (sentries))
+Chumtoads playing dead now fool turrets.
+All turrets have slightly better aim, better at hitting very small targets like chumtoads and snarks.
+Non-sentry turrets go 'beserk' at 38% health (15 with a max health of 40) instead of a static 10 or less.  Also take longer to damage themselves into deactivating while beserk, and change direction more often while beserk.
+Non-sentry turrets have a more involved post-death sequence.  They will spin around and fire quickly and generate explosion effects until stopping after a few seconds.
+Non-sentry turrets no longer appear to jitter their aim while firing at something standing still.
 
-Turrets have slightly better aim, better at hitting very small targets like chumtoads and snarks.
-Turrets go 'beserk' at under half health instead of a static 10 or less.  Also take longer to damage themselves into deactivating while beserk.
 
-It takes less damage to make turrets/sentries go berserk, seemed hard to run into during normal gameplay otherwise.
+Ladder logic jump-off logic altered.  Only clean jump-presses can jump off, not holding it down.
+Also, added a delay before getting back on the same ladder (avoid sticking to the ladder while jumping off).
 
 TODO
 Barnies will target snarks that have the player or other friendly NPCs targeted.  They will still get pissed at the player if a player-thrown snark damages them.

@@ -778,32 +778,32 @@ public:
 	// Ugly code to lookup all functions to make sure they are exported when set.
 #ifdef _DEBUG
 	void FunctionCheck( void *pFunction, char *name ) 
-	{ 
+	{
 		if (pFunction && !NAME_FOR_FUNCTION((unsigned long)(pFunction)) )
 			ALERT( at_error, "No EXPORT: %s:%s (%08lx)\n", STRING(pev->classname), name, (unsigned long)pFunction );
 	}
 
 	BASEPTR	ThinkSet( BASEPTR func, char *name ) 
-	{ 
+	{
 		m_pfnThink = func; 
 		FunctionCheck( (void *)*((int *)((char *)this + ( offsetof(CBaseEntity,m_pfnThink)))), name ); 
 		return func;
 	}
 	ENTITYFUNCPTR TouchSet( ENTITYFUNCPTR func, char *name ) 
-	{ 
+	{
 		m_pfnTouch = func; 
 		FunctionCheck( (void *)*((int *)((char *)this + ( offsetof(CBaseEntity,m_pfnTouch)))), name ); 
 		return func;
 	}
 	USEPTR	UseSet( USEPTR func, char *name ) 
-	{ 
+	{
 		//easyPrintLine("UseSet NAME: %s", name);
 		m_pfnUse = func; 
 		FunctionCheck( (void *)*((int *)((char *)this + ( offsetof(CBaseEntity,m_pfnUse)))), name ); 
 		return func;
 	}
 	ENTITYFUNCPTR	BlockedSet( ENTITYFUNCPTR func, char *name ) 
-	{ 
+	{
 		m_pfnBlocked = func; 
 		FunctionCheck( (void *)*((int *)((char *)this + ( offsetof(CBaseEntity,m_pfnBlocked)))), name ); 
 		return func;

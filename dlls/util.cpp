@@ -2688,6 +2688,9 @@ void UTIL_Smoke(int msg_dest, const float* pMsgOrigin, const Vector& location, f
 	UTIL_Smoke(msg_dest, pMsgOrigin, NULL, location, offsetx, offsety, offsetz, sprite, scale, framerate);
 }
 void UTIL_Smoke(int msg_dest, const float* pMsgOrigin, edict_t* ed, const Vector& location, float offsetx, float offsety, float offsetz, short sprite, float scale, int framerate){
+	
+	return;  //TEST
+
 	MESSAGE_BEGIN(msg_dest, SVC_TEMPENTITY, pMsgOrigin, ed);
 		WRITE_BYTE( TE_SMOKE );
 		WRITE_COORD( location.x + offsetx);
@@ -6955,6 +6958,47 @@ BOOL FBoxVisible ( entvars_t *pevLooker, entvars_t *pevTarget, Vector &vecTarget
 	}
 	return FALSE;// Line of sight is not established
 }
+
+
+
+//MODDD - clone that doesn't take vecTargetOrigin.
+BOOL FBoxVisible(entvars_t* pevLooker, entvars_t* pevTarget, float flSize)
+{
+	// don't look through water
+	if (
+		(pevLooker->waterlevel != 3 && pevTarget->waterlevel == 3)
+		|| (pevLooker->waterlevel == 3 && pevTarget->waterlevel == 0)
+		) {
+		return FALSE;
+	}
+
+	TraceResult tr;
+	Vector	vecLookerOrigin = pevLooker->origin + pevLooker->view_ofs;//look through the monster's 'eyes'
+	for (int i = 0; i < 5; i++)
+	{
+		Vector vecTarget = pevTarget->origin;
+		vecTarget.x += RANDOM_FLOAT(pevTarget->mins.x + flSize, pevTarget->maxs.x - flSize);
+		vecTarget.y += RANDOM_FLOAT(pevTarget->mins.y + flSize, pevTarget->maxs.y - flSize);
+		vecTarget.z += RANDOM_FLOAT(pevTarget->mins.z + flSize, pevTarget->maxs.z - flSize);
+
+		UTIL_TraceLine(vecLookerOrigin, vecTarget, ignore_monsters, ignore_glass, ENT(pevLooker)/*pentIgnore*/, &tr);
+
+		if (tr.flFraction == 1.0)
+		{
+			return TRUE;// line of sight is valid.
+		}
+	}
+	return FALSE;// Line of sight is not established
+}
+
+
+
+
+
+
+
+
+
 
 //
 // VecCheckToss - returns the velocity at which an object should be lobbed from vecspot1 to land near vecspot2.

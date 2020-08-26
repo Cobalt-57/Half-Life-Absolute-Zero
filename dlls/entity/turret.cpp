@@ -60,7 +60,8 @@ extern DLL_GLOBAL float g_rawDamageCumula;
 
 
 #define TURRET_SHOTS	2
-#define TURRET_RANGE	(100 * 12)
+//MODDD - more turret range, was 100 * 12.
+#define TURRET_RANGE	(130 * 12)
 #define TURRET_SPREAD	Vector( 0, 0, 0 )
 #define TURRET_TURNRATE	30		//angles per 0.1 second
 
@@ -238,7 +239,8 @@ void CBaseTurret::KeyValue( KeyValueData *pkvd )
 }
 
 CBaseTurret::CBaseTurret(){
-
+	postDeathEndTime = -1;
+	nextDeathExplosionTime = -1;
 }
 
 
@@ -524,9 +526,59 @@ void CBaseTurret::EyeOff( )
 }
 
 
+void CBaseTurret::BeserkAimLogic(void) {
+
+	//MODDD - random aim cycles will happen more often
+	float randoVal = RANDOM_FLOAT(0, 1);
+	//if (randoVal < 0.60)
+	{
+
+		//if (pev->deadflag != DEAD_DEAD) {
+			m_vecGoalAngles.y = RANDOM_FLOAT(0, 360);
+		//}
+		//else {
+		//	m_vecGoalAngles.y = m_vecGoalAngles.y + RANDOM_FLOAT(30, 42);
+		//}
+
+		//m_vecGoalAngles.y += RANDOM_FLOAT(-30, 30);
+		//m_vecGoalAngles.y += 20;
+
+		/*
+		if (m_vecGoalAngles.y >= 0) {
+			if (m_vecGoalAngles.y >= 180) {
+				m_vecGoalAngles.y += -360;
+			}
+		}
+		else {
+			if (m_vecGoalAngles.y <= -180) {
+				m_vecGoalAngles.y += 360;
+			}
+		}
+		*/
+
+
+
+
+		//MODDD - range changed, aiming straight down is not very exciting, remove
+		// extremely low random choices (range used to be 0 to 90 in the random)
+		m_vecGoalAngles.x = RANDOM_FLOAT(30 - 2, 78 + 8) - 90 * m_iOrientation;
+
+		//MODDD - takes longer to be destroyed from this
+		if (randoVal < 0.055) {
+			TakeDamage(pev, pev, 1, DMG_GENERIC); // don't beserk forever
+		}
+
+		// Why???
+		//return;
+	}
+
+}//END OF BeserkAimLogic
+
+
 void CBaseTurret::ActiveThink(void)
 {
 	int fAttack = 0;
+	Vector vecDeltaToEnemy;
 	Vector vecDirToEnemy;
 
 	pev->nextthink = gpGlobals->time + 0.1;
@@ -561,15 +613,28 @@ void CBaseTurret::ActiveThink(void)
 	}
 
 	Vector vecMid = pev->origin + pev->view_ofs;
-	Vector vecMidEnemy = m_hEnemy->BodyTarget( vecMid );
+
+
+	Vector vecMidEnemy = m_hEnemy->BodyTargetMod( vecMid );
+	//Vector vecMidEnemyRough = m_hEnemy->BodyTarget(vecMid);
+	// no, use this to be filled instead.
+	Vector vecMidEnemyRough;
 
 	// Look for our current enemy
-	int fEnemyVisible = FBoxVisible(pev, m_hEnemy->pev, vecMidEnemy );	
+	//MODDD - NOTE!!!    OK SO.   FBoxVisible can modify the third parameter, vecMidEnemy.
+	// It's existing value is not used by the method, so it would make more sense to send
+	// it a blank vector to be filled instead.
 
-	vecDirToEnemy = vecMidEnemy - vecMid;	// calculate dir and dist to enemy
-	float flDistToEnemy = vecDirToEnemy.Length();
+	//int fEnemyVisible = FBoxVisible(pev, m_hEnemy->pev, vecMidEnemy );
+	int fEnemyVisible = FBoxVisible(pev, m_hEnemy->pev, vecMidEnemyRough);
 
-	Vector vec = UTIL_VecToAngles(vecMidEnemy - vecMid);	
+	vecDeltaToEnemy = vecMidEnemy - vecMid;	// calculate dir and dist to enemy
+	vecDirToEnemy = vecDeltaToEnemy.Normalize();
+	float flDistToEnemy = vecDeltaToEnemy.Length();
+
+	Vector vec = UTIL_VecToAngles(vecDirToEnemy );
+
+	//DebugLine_Setup(0, vecMid, pTesto, 255, 0, 255);
 
 	// Current enmey is not visible.
 	if (!fEnemyVisible || (flDistToEnemy > TURRET_RANGE))
@@ -614,7 +679,7 @@ void CBaseTurret::ActiveThink(void)
 		fAttack = TRUE;
 
 
-	easyForcePrintLine("AH YEA %.2f", theDotProd);
+	//easyForcePrintLine("AH YEA %.2f", theDotProd);
 
 	// fire the gun
 	if (m_iSpin) {
@@ -626,7 +691,7 @@ void CBaseTurret::ActiveThink(void)
 
 			//MODDD - NEW.  At a high enough dot product, have even better aim.
 			if (theDotProd > 0.993) {
-				Shoot(vecSrc, (vecMidEnemy - vecSrc).Normalize() );
+				Shoot(vecSrc, (vecMidEnemyRough - vecSrc).Normalize() );
 			}
 			else {
 				// default way (would miss small targets like chumtoads, even standing still)
@@ -640,7 +705,7 @@ void CBaseTurret::ActiveThink(void)
 			//DebugLine_Setup(1, vecSrc, vecSrc + gpGlobals->v_forward * 800, 255, 0, 0);
 			//DebugLine_Setup(1, vecSrc, vecSrc + ((vecMidEnemy - vecSrc).Normalize()) * 800, 255, 0, 0);
 		}
-		else if (m_fBeserk) {
+		else if (m_fBeserk == 1) {
 			Vector vecSrc, vecAng;
 			GetAttachment(0, vecSrc, vecAng);
 			SetTurretAnim(TURRET_ANIM_FIRE);
@@ -655,23 +720,12 @@ void CBaseTurret::ActiveThink(void)
 	}
 
 
-
+	// NOTICE - only things that call CBaseTurret TakeDamage logic (like CMiniTurret, the ceiling ones)
+	// can trigger m_fBeserk.  Sentries skip that and never do.
 	//move the gun
-	if (m_fBeserk)
+	if (m_fBeserk == 1)
 	{
-		if (RANDOM_LONG(0,9) == 0)
-		{
-			m_vecGoalAngles.y = RANDOM_FLOAT(0,360);
-			m_vecGoalAngles.x = RANDOM_FLOAT(0,90) - 90 * m_iOrientation;
-
-			//MODDD - takes longer to be destroyed from this
-			if (RANDOM_LONG(0, 8) == 0) {
-				TakeDamage(pev, pev, 1, DMG_GENERIC); // don't beserk forever
-			}
-
-
-			return;
-		}
+		BeserkAimLogic();
 	} 
 	else if (fEnemyVisible)
 	{
@@ -1020,41 +1074,153 @@ void CBaseTurret::AutoSearchThink(void)
 }
 
 
+
+
+void CBaseTurret::TurretDeathEnd(void) {
+
+	// don't allow the turret turn speedups after this point of death,
+	// they mess up coming back to a resting state
+	// (special value: -1 to slow down turret speed)
+	m_fBeserk = -1;
+
+	if (m_iOrientation == 0)
+		m_vecGoalAngles.x = -15;
+	else
+		m_vecGoalAngles.x = -90;
+
+	SetTurretAnim(TURRET_ANIM_DIE);
+	EyeOn();
+
+
+
+	float flRndSound = RANDOM_FLOAT(0, 1);
+
+	if (flRndSound <= 0.33)
+		UTIL_PlaySound(ENT(pev), CHAN_BODY, "turret/tu_die.wav", 1.0, ATTN_NORM);
+	else if (flRndSound <= 0.66)
+		UTIL_PlaySound(ENT(pev), CHAN_BODY, "turret/tu_die2.wav", 1.0, ATTN_NORM);
+	else
+		UTIL_PlaySound(ENT(pev), CHAN_BODY, "turret/tu_die3.wav", 1.0, ATTN_NORM);
+
+
+	Vector tempVec;
+	tempVec.x = RANDOM_FLOAT(pev->absmin.x, pev->absmax.x);
+	tempVec.y = RANDOM_FLOAT(pev->absmin.y, pev->absmax.y);
+	tempVec.z = pev->origin.z - m_iOrientation * 64;
+	// lots of smoke
+	UTIL_Smoke(MSG_BROADCAST, NULL, NULL, tempVec, 0, 0, 0, g_sModelIndexSmoke, 25, 10 - m_iOrientation * 5);
+
+
+}//END OF TurretDeathEnd
+
+
+//MODDD - NOTE.  This gets called continuously after losing all health until the
+// turret finally stops moving and/or the anim is finished.
+// In fact this becomes the new think method, that's why.
+// The pev->deadflag != DEAD_DEAD check sees if this is the first call though.
 void CBaseTurret ::	TurretDeath( void )
 {
 	BOOL iActive = FALSE;
+	BOOL postDeathEndTimeReached = FALSE;
+
+	//MODDD - changed, was 2 and 5.
+	const float lotsaSmokeTimeRandoMax = 3.5;
+	const float smokeTimeRandoMax = 7;
 
 	StudioFrameAdvance_SIMPLE( );
-	pev->nextthink = gpGlobals->time + 0.1;
+
+	// think faster!  More dramatic.
+	pev->nextthink = gpGlobals->time + 0.045;
+
 
 	if (pev->deadflag != DEAD_DEAD)
 	{
 		pev->deadflag = DEAD_DEAD;
+		
+		
 
-		float flRndSound = RANDOM_FLOAT ( 0 , 1 );
+		postDeathEndTime = -1;
+		TurretDeathEnd();
+		
+		if (m_iSpin) {
+			// if spinning at death, go haywire.
+			postDeathEndTime = gpGlobals->time + RANDOM_FLOAT(5.8, 7.6);
+			nextDeathExplosionTime = gpGlobals->time + RANDOM_FLOAT(0.92, 1.15);
+		}
+		else {
+			// mundane death
+			postDeathEndTime = -1;
+			TurretDeathEnd();
+		}
 
-		if ( flRndSound <= 0.33 )
-			UTIL_PlaySound(ENT(pev), CHAN_BODY, "turret/tu_die.wav", 1.0, ATTN_NORM);
-		else if ( flRndSound <= 0.66 )
-			UTIL_PlaySound(ENT(pev), CHAN_BODY, "turret/tu_die2.wav", 1.0, ATTN_NORM);
-		else 
-			UTIL_PlaySound(ENT(pev), CHAN_BODY, "turret/tu_die3.wav", 1.0, ATTN_NORM);
 
+		//MODDD - death sound moved to below too
+		
 		UTIL_PlaySound(ENT(pev), CHAN_STATIC, "turret/tu_active2.wav", 0, 0, SND_STOP, 100);
 
-		if (m_iOrientation == 0)
-			m_vecGoalAngles.x = -15;
-		else
-			m_vecGoalAngles.x = -90;
+		//MODDD - several lines moved to the postDeathEndTimeReached check below
 
-		SetTurretAnim(TURRET_ANIM_DIE); 
+	}//END OF deadflag != DEAD_DEAD check
 
-		EyeOn( );	
+	if (gpGlobals->time >= postDeathEndTime) {
+		postDeathEndTimeReached = TRUE;
 	}
 
-	EyeOff( );
 
-	if (pev->dmgtime + RANDOM_FLOAT( 0, 2 ) > gpGlobals->time)
+	if (postDeathEndTime != -1) {
+
+
+		if (postDeathEndTimeReached) {
+			postDeathEndTime = -1;
+			TurretDeathEnd();
+		}
+		else {
+
+			Vector tempVec;
+			tempVec.x = RANDOM_FLOAT(pev->absmin.x, pev->absmax.x);
+			tempVec.y = RANDOM_FLOAT(pev->absmin.y, pev->absmax.y);
+			tempVec.z = pev->origin.z - m_iOrientation * 64;
+
+			if (gpGlobals->time >= nextDeathExplosionTime && nextDeathExplosionTime != -2) {
+
+				Vector expVec;
+				expVec.x = RANDOM_FLOAT(pev->origin.x + pev->mins.x * 0.4, pev->origin.x + pev->maxs.x * 0.4);
+				expVec.y = RANDOM_FLOAT(pev->origin.y + pev->mins.y * 0.4, pev->origin.y + pev->maxs.y * 0.4);
+				expVec.z = pev->origin.z - m_iOrientation * 28 + RANDOM_FLOAT(-6, 6);
+
+				UTIL_Explosion(MSG_PVS, expVec, NULL, pev, expVec, 0, 0, 0, g_sModelIndexFireball, RANDOM_LONG(26, 32), 18, TE_EXPLFLAG_NONE, 0.4);
+				//easyForcePrintLine("1 explosion, yes? %.2f", gpGlobals->time);
+				// further than so man so many seconds away?  go ahead, do it again
+				if (nextDeathExplosionTime < postDeathEndTime - 1.2) {
+					nextDeathExplosionTime = gpGlobals->time + RANDOM_FLOAT(0.85, 1.15);
+				}
+				else {
+					nextDeathExplosionTime = -2;
+				}
+			}
+
+			// GO MAD FOR A BIT
+			m_fBeserk = 1;
+
+			Vector vecSrc, vecAng;
+			GetAttachment(0, vecSrc, vecAng);
+			SetTurretAnim(TURRET_ANIM_FIRE);
+
+			UTIL_MakeAimVectors(m_vecCurAngles);
+
+			Shoot(vecSrc, gpGlobals->v_forward);
+			//BeserkAimLogic();
+
+			//SpinUpCall();
+			//MoveTurret();
+		}
+	}//postDeathEndTime != -1 check
+
+
+	//MODDD- why was this here?  That makes the EyeOn call at initial killed above pointless?
+	//EyeOff( );
+
+	if (pev->dmgtime + RANDOM_FLOAT( 0, lotsaSmokeTimeRandoMax) > gpGlobals->time)
 	{
 		Vector tempVec;
 		tempVec.x = RANDOM_FLOAT( pev->absmin.x, pev->absmax.x );
@@ -1064,7 +1230,7 @@ void CBaseTurret ::	TurretDeath( void )
 		UTIL_Smoke(MSG_BROADCAST, NULL, NULL, tempVec, 0, 0, 0, g_sModelIndexSmoke, 25, 10 - m_iOrientation * 5);
 	}
 	
-	if (pev->dmgtime + RANDOM_FLOAT( 0, 5 ) > gpGlobals->time)
+	if (pev->dmgtime + RANDOM_FLOAT( 0, smokeTimeRandoMax ) > gpGlobals->time)
 	{
 		Vector vecSrc = Vector( RANDOM_FLOAT( pev->absmin.x, pev->absmax.x ), RANDOM_FLOAT( pev->absmin.y, pev->absmax.y ), 0 );
 		if (m_iOrientation == 0)
@@ -1077,8 +1243,36 @@ void CBaseTurret ::	TurretDeath( void )
 
 	}
 
-	if (m_fSequenceFinished && !MoveTurret( ) && pev->dmgtime + 5 < gpGlobals->time)
+	//MODDD - moved outside the if-then below.  Conditions before that failing (timeReached, sequenceFinished)
+	// would cause MoveTurret to never get called when it may have been the intention to.
+	BOOL turretDoneMoving;
+	
+	if (!m_fSequenceFinished) {
+		turretDoneMoving = !MoveTurret();
+	}
+	else {
+		// force a stop if done animating.
+		turretDoneMoving = TRUE;
+	}
+
+	//MODDD - postDeathEndTimeReached added.
+	if (postDeathEndTimeReached && m_fSequenceFinished && turretDoneMoving && pev->dmgtime + 5 < gpGlobals->time)
 	{
+
+
+		Vector expVec;
+		expVec.x = RANDOM_FLOAT(pev->origin.x + pev->mins.x * 0.6, pev->origin.x + pev->maxs.x * 0.6);
+		expVec.y = RANDOM_FLOAT(pev->origin.y + pev->mins.y * 0.6, pev->origin.y + pev->maxs.y * 0.6);
+		expVec.z = pev->origin.z - m_iOrientation * 28 + RANDOM_FLOAT(-12, 12);
+
+		
+		UTIL_Explosion(MSG_PVS, expVec, NULL, pev, expVec, 0, 0, 0, g_sModelIndexFireball, RANDOM_LONG(44, 52), 14, TE_EXPLFLAG_NONE, 0.7);
+
+
+
+		//MODDD - new place for eye thing, whatever this does.
+		EyeOff();
+
 		pev->framerate = 0;
 		SetThink( NULL );
 	}
@@ -1153,6 +1347,7 @@ BOOL CBaseTurret::TurretDeathCheck(entvars_t* pevInflictor, entvars_t* pevAttack
 
 	if (pev->health <= 0)
 	{
+
 		/*
 		DeadTakeDamage
 
@@ -1312,9 +1507,9 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBaseTurret)
 
 	if(pev->deadflag == DEAD_NO){
 
-		//MODDD - condition changed, go beserk at under half health.
+		//MODDD - condition changed, go beserk at a percentage of health
 		//if (pev->health <= 10)
-		if(pev->health < pev->max_health*0.5)
+		if(pev->health < pev->max_health*0.38)
 		{
 			//MODDD
 			// what?  The random check 'RANDOM_LONG(0, 0x7FFF) > 800' that used to be here was completly ignored.
@@ -1334,75 +1529,211 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBaseTurret)
 int CBaseTurret::MoveTurret(void)
 {
 	int state = 0;
-	// any x movement?
-	
-	if (m_vecCurAngles.x != m_vecGoalAngles.x)
-	{
-		float flDir = m_vecGoalAngles.x > m_vecCurAngles.x ? 1 : -1 ;
 
-		m_vecCurAngles.x += 0.1 * m_fTurnRate * flDir;
 
-		// if we started below the goal, and now we're past, peg to goal
-		if (flDir == 1)
-		{
-			if (m_vecCurAngles.x > m_vecGoalAngles.x)
-				m_vecCurAngles.x = m_vecGoalAngles.x;
-		} 
-		else
-		{
-			if (m_vecCurAngles.x < m_vecGoalAngles.x)
-				m_vecCurAngles.x = m_vecGoalAngles.x;
+	float finalTurnRate;
+
+	if (m_fBeserk == 0) {
+		finalTurnRate = m_fTurnRate;
+	}
+	else if(m_fBeserk == 1){
+		// faster!
+		if (pev->deadflag != DEAD_DEAD) {
+			finalTurnRate = m_fTurnRate * 2.2;
 		}
-
-		if (m_iOrientation == 0)
-			SetBoneController(1, -m_vecCurAngles.x);
-		else
-			SetBoneController(1, m_vecCurAngles.x);
-		state = 1;
+		else {
+			// dead?  even crazier
+			finalTurnRate = m_fTurnRate * 3.8;
+		}
+	}
+	else {
+		// final end animation?  go slower
+		finalTurnRate = m_fTurnRate * 0.45;
 	}
 
-	if (m_vecCurAngles.y != m_vecGoalAngles.y)
-	{
-		float flDir = m_vecGoalAngles.y > m_vecCurAngles.y ? 1 : -1 ;
-		float flDist = fabs(m_vecGoalAngles.y - m_vecCurAngles.y);
-		
-		if (flDist > 180)
-		{
-			flDist = 360 - flDist;
-			flDir = -flDir;
-		}
-		if (flDist > 30)
-		{
-			if (m_fTurnRate < m_iBaseTurnRate * 10)
-			{
-				m_fTurnRate += m_iBaseTurnRate;
-			}
-		}
-		else if (m_fTurnRate > 45)
-		{
-			m_fTurnRate -= m_iBaseTurnRate;
-		}
-		else
-		{
-			m_fTurnRate += m_iBaseTurnRate;
-		}
+	if (finalTurnRate > 450) {
+		// cap it!
+		finalTurnRate = 450;
+	}
 
-		m_vecCurAngles.y += 0.1 * m_fTurnRate * flDir;
+
+	//MODDD - NEW.  When dead and in beserk mode, different behavior.
+	if (pev->deadflag == DEAD_DEAD && m_fBeserk == 1) {
+		static float curAngDir = 0;
+		static int postDeathBeserkDir = -1;
+
+		// just move right
+		//m_vecCurAngles.y += 9.5;
+		m_vecCurAngles.y += RANDOM_FLOAT(0.8, 1) * 16;
 
 		if (m_vecCurAngles.y < 0)
 			m_vecCurAngles.y += 360;
 		else if (m_vecCurAngles.y >= 360)
 			m_vecCurAngles.y -= 360;
 
-		if (flDist < (0.05 * m_iBaseTurnRate))
-			m_vecCurAngles.y = m_vecGoalAngles.y;
-
 		//ALERT(at_console, "%.2f -> %.2f\n", m_vecCurAngles.y, y);
-		if (m_iOrientation == 0)
-			SetBoneController(0, m_vecCurAngles.y - pev->angles.y );
-		else 
-			SetBoneController(0, pev->angles.y - 180 - m_vecCurAngles.y );
 		state = 1;
+
+		if (m_iOrientation == 0)
+			SetBoneController(0, m_vecCurAngles.y - pev->angles.y);
+		else
+			SetBoneController(0, pev->angles.y - 180 - m_vecCurAngles.y);
+
+
+
+		if (postDeathBeserkDir > 0) {
+			// approaching facing sideways
+			float daGoal = 84 - 90 * m_iOrientation;
+			float distToGoal = fabs(m_vecCurAngles.x - daGoal);
+			//easyForcePrintLine("AAAA %.2f", distToGoal);
+			// 7 * 2.2
+			if (distToGoal > (84 - 32) - 19 ) {   //|| distToGoal < 7
+				// go faster
+				m_vecCurAngles.x += RANDOM_FLOAT(0.7, 1) * 7 * postDeathBeserkDir;
+			}
+			else{
+				// TESTO
+				m_vecCurAngles.x += RANDOM_FLOAT(0.7, 1) * 2.1 * postDeathBeserkDir;
+			}
+
+			if (m_vecCurAngles.x >= daGoal) {  //360
+				// go the other way
+				m_vecCurAngles.x = daGoal;
+				postDeathBeserkDir = -1;
+			}
+		}
+		else {
+			// approaching facing straight down/up
+			float daGoal = 32 - 90 * m_iOrientation;
+			float distToGoal = fabs(m_vecCurAngles.x - daGoal);
+			//easyForcePrintLine("BBBB %.2f", distToGoal);
+
+			if (distToGoal < 19) {
+				// go faster
+				m_vecCurAngles.x += RANDOM_FLOAT(0.7, 1) * 7 * postDeathBeserkDir;
+			}
+			else {
+				m_vecCurAngles.x += RANDOM_FLOAT(0.7, 1) * 2.1 * postDeathBeserkDir;
+			}
+
+
+			if (m_vecCurAngles.x <= daGoal) {  //10
+				// go the other way
+				m_vecCurAngles.x = daGoal;
+				postDeathBeserkDir = 1;
+			}
+		}
+
+		if (m_iOrientation == 0)
+			SetBoneController(1, -m_vecCurAngles.x);
+		else
+			SetBoneController(1, m_vecCurAngles.x);
+
+
+	}
+	else {
+		// normal move behavior, get closer to m_vecGoalAngles.
+
+
+		// any x movement?
+		if (m_vecCurAngles.x != m_vecGoalAngles.x)
+		{
+			float flDir = m_vecGoalAngles.x > m_vecCurAngles.x ? 1 : -1;
+
+
+			m_vecCurAngles.x += 0.1 * finalTurnRate * flDir;
+
+			// if we started below the goal, and now we're past, peg to goal
+			if (flDir == 1)
+			{
+				if (m_vecCurAngles.x > m_vecGoalAngles.x)
+					m_vecCurAngles.x = m_vecGoalAngles.x;
+			}
+			else
+			{
+				if (m_vecCurAngles.x < m_vecGoalAngles.x)
+					m_vecCurAngles.x = m_vecGoalAngles.x;
+			}
+
+			state = 1;
+
+			if (m_iOrientation == 0)
+				SetBoneController(1, -m_vecCurAngles.x);
+			else
+				SetBoneController(1, m_vecCurAngles.x);
+
+		}
+
+
+		if (m_vecCurAngles.y != m_vecGoalAngles.y)
+		{
+			float flDir = m_vecGoalAngles.y > m_vecCurAngles.y ? 1 : -1;
+			float flDist = fabs(m_vecGoalAngles.y - m_vecCurAngles.y);
+
+
+			if (flDist > 180)
+			{
+				flDist = 360 - flDist;
+				flDir = -flDir;
+			}
+			if (flDist > 30)
+			{
+				if (m_fTurnRate < m_iBaseTurnRate * 10)
+				{
+					m_fTurnRate += m_iBaseTurnRate;
+				}
+			}
+			else if (m_fTurnRate > 45)
+			{
+				m_fTurnRate -= m_iBaseTurnRate;
+			}
+			else
+			{
+				m_fTurnRate += m_iBaseTurnRate;
+			}
+
+			finalTurnRate = m_fTurnRate;  // let changes above apply now too.
+
+			m_vecCurAngles.y += 0.1 * finalTurnRate * flDir;
+
+
+			//MODDD - and there wasn't something like this here for y angles (was for x),
+			// because?
+			// oh wait, there is that flDist < 0.05 * turnRate thing below, maybe that works fine
+			/*
+			if (flDir == 1)
+			{
+				if (m_vecCurAngles.y > m_vecGoalAngles.y)
+					m_vecCurAngles.y = m_vecGoalAngles.y;
+			}
+			else
+			{
+				if (m_vecCurAngles.y < m_vecGoalAngles.y)
+					m_vecCurAngles.y = m_vecGoalAngles.y;
+			}
+			*/
+
+
+			if (m_vecCurAngles.y < 0)
+				m_vecCurAngles.y += 360;
+			else if (m_vecCurAngles.y >= 360)
+				m_vecCurAngles.y -= 360;
+
+
+			if (flDist < (0.05 * m_iBaseTurnRate))
+				m_vecCurAngles.y = m_vecGoalAngles.y;
+
+
+			//ALERT(at_console, "%.2f -> %.2f\n", m_vecCurAngles.y, y);
+			state = 1;
+
+
+			if (m_iOrientation == 0)
+				SetBoneController(0, m_vecCurAngles.y - pev->angles.y);
+			else
+				SetBoneController(0, pev->angles.y - 180 - m_vecCurAngles.y);
+
+		}
 	}
 
 	if (!state)

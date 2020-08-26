@@ -49,6 +49,9 @@ EASY_CVAR_EXTERN_CLIENTONLY_DEBUGONLY(cameraRotOffZ)
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(playerBarnacleVictimViewOffset)
 EASY_CVAR_EXTERN(cl_viewpunch)
 EASY_CVAR_EXTERN(cl_viewroll)
+EASY_CVAR_EXTERN(cl_interp_view_extra)
+EASY_CVAR_EXTERN(cl_interp_view_standard)
+
 
 
 
@@ -560,6 +563,8 @@ static float prevOriginZ = 0;
 static float deltaOriginZ_cumula = 0;
 float g_interp_z = 0; // Set by an outside source!
 
+static int g_recentCrouchChangeFrames;
+
 
 
 void V_CalcNormalRefdef(struct ref_params_s* pparams)
@@ -907,9 +912,13 @@ void V_CalcNormalRefdef(struct ref_params_s* pparams)
 		oldHull = ent->curstate.usehull;
 		prevOriginZ = ent->curstate.origin.z;
 		deltaOriginZ_cumula = 0;
+		g_recentCrouchChangeFrames = 0;
 	}
 
 
+	if (g_recentCrouchChangeFrames > 0) {
+		g_recentCrouchChangeFrames--;
+	}
 
 	//if (!pparams->smoothing && pparams->onground && safeSimZ - oldz > 0)
 	if (!pparams->smoothing)
@@ -920,14 +929,11 @@ void V_CalcNormalRefdef(struct ref_params_s* pparams)
 		//easyForcePrintLine("the what H:%d %.2f %.2f :: %.2f   %.2f %.2f :: %.2f", ent->curstate.usehull, pparams->viewheight[2], oldViewHeight, pparams->viewheight[2] - oldViewHeight + (safeSimZ - oldz), safeSimZ, oldz, (safeSimZ - oldz));
 
 
-
-
 		float deltaOriginZ = ent->curstate.origin.z - prevOriginZ;
 		prevOriginZ = ent->curstate.origin.z;
 		// same thing
 		//float deltaSimZ = safeSimZ - oldRawz;
 		//oldRawz = safeSimZ;
-
 
 
 
@@ -937,7 +943,7 @@ void V_CalcNormalRefdef(struct ref_params_s* pparams)
 		if (ent->curstate.usehull != oldHull) {
 
 			if (ent->curstate.usehull == 0) {
-				// Going to 0 (standing?
+				// Going to 0 (ducking -> standing)?
 				if (pparams->onground) {
 					// Why is this extra offset on oldZ needed to avoid an upward
 					// jolt at the start of crouching?
@@ -949,12 +955,15 @@ void V_CalcNormalRefdef(struct ref_params_s* pparams)
 				deltaOriginZ -= 18;
 			}
 			else if (ent->curstate.usehull == 1) {
-				// Going to 1 (ducking)?
+				// Going to 1 (standing -> ducking)?
 				if (pparams->onground) {
 					// Ending a duck on the ground?  No further interp logic needed,
 					// pm_shared already makes this go smoothly.  Just call it finished.
 					oldViewHeight = pparams->viewheight[2];
 					oldz = safeSimZ;
+				}
+				else {
+					g_recentCrouchChangeFrames = 4;
 				}
 				// Don't count the change in hull-size in deltaOriginZ either
 				deltaOriginZ += 18;
@@ -991,12 +1000,42 @@ void V_CalcNormalRefdef(struct ref_params_s* pparams)
 		// make sense?  The devs never did anything like that.  So, no clue.
 		// There is still an improvement compared to the way it was before, dropping this.
 		if (!IsMultiplayer()) {
+			//if (g_interp_z != 0) {
+			//	easyForcePrintLine("no %.2f", g_interp_z);
+			//}
 			oldz += deltaOriginZ - g_interp_z;
 		}
 
 
+		BOOL doExtraInterp = FALSE;
+		BOOL doStandardInterp = FALSE;
+
+		if (EASY_CVAR_GET(cl_interp_view_extra) == 2) {
+			// that was easy
+			doExtraInterp = TRUE;
+		}
+		else if (EASY_CVAR_GET(cl_interp_view_extra) == 1){
+			// Doing this on g_recentCrouchChangeFrames lets sv_
+			if (pparams->onground || g_recentCrouchChangeFrames > 0) {
+				doExtraInterp = TRUE;
+			}
+		}
+
+		if (EASY_CVAR_GET(cl_interp_view_standard) == 2) {
+			// that was easy
+			doStandardInterp = TRUE;
+		}
+		else if (EASY_CVAR_GET(cl_interp_view_standard) == 1) {
+			// Doing this on g_recentCrouchChangeFrames lets sv_
+			if (pparams->onground || g_recentCrouchChangeFrames > 0) {
+				doStandardInterp = TRUE;
+			}
+		}
+
+
+
 		
-		if (EASY_CVAR_GET(cl_interp_view_extra) == 2 || (EASY_CVAR_GET(cl_interp_view_extra) == 1 && pparams->onground)) {
+		if (doExtraInterp) {
 			// unmodified now, no need for changes.
 			const float filteredViewheight = pparams->viewheight[2];
 
@@ -1066,7 +1105,8 @@ void V_CalcNormalRefdef(struct ref_params_s* pparams)
 
 		// ONLY interp changes in Z if standing on the ground.
 		// Works for the change from a complete-duck to standing and going up/down stairs & inclines.
-		if (pparams->onground) {
+		if (doStandardInterp)
+		{
 			// Now, changes in veiw height alone (like canceling a duck early) can be recorded.
 
 			// A sudden change in hull-size throws off the viewheight, add in that difference so it has no effect
@@ -1904,12 +1944,14 @@ void V_GetInEyePos(int target, float* origin, float* angles)
 		angles[ROLL] = 80;	// dead view angle
 		origin[2] += PM_DEAD_VIEWHEIGHT; //MODDD  - just use the constant dangit
 	}
-	else if (ent->curstate.usehull == 1)
+	else if (ent->curstate.usehull == 1) {
 		origin[2] += VEC_DUCK_VIEW_Z; //MODDD - constant used, why not.
-	else
+	}
+	else {
 		// exacty eye position can't be caluculated since it depends on
 		// client values like cl_bobcycle, this offset matches the default values
 		origin[2] += DEFAULT_VIEWHEIGHT; //MODDD - constant used, why not.
+	}
 }
 
 void V_GetMapFreePosition(float* cl_angles, float* origin, float* angles)

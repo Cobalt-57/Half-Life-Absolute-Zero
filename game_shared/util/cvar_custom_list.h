@@ -2035,6 +2035,7 @@
 	EASY_CVAR_DECLARATION_SERVER(interpolation_movetypestep_mindelta)\
 	EASY_CVAR_DECLARATION_SERVER(sv_bloodparticlemode)\
 	EASY_CVAR_DECLARATION_SERVER(cl_interp_view_extra)\
+	EASY_CVAR_DECLARATION_SERVER(cl_interp_view_standard)\
 	EASY_CVAR_DECLARATION_SERVER(cl_interp_viewmodel)\
 	EASY_CVAR_DECLARATION_SERVER(sv_explosionknockback)\
 	EASY_CVAR_DECLARATION_SERVER(cl_gaussfollowattachment)\
@@ -2539,6 +2540,7 @@
 	EASY_CVAR_DECLARATION_CLIENT(interpolation_movetypestep_mindelta)\
 	EASY_CVAR_DECLARATION_CLIENT(sv_bloodparticlemode)\
 	EASY_CVAR_DECLARATION_CLIENT(cl_interp_view_extra)\
+	EASY_CVAR_DECLARATION_CLIENT(cl_interp_view_standard)\
 	EASY_CVAR_DECLARATION_CLIENT(cl_interp_viewmodel)\
 	EASY_CVAR_DECLARATION_CLIENT(sv_explosionknockback)\
 	EASY_CVAR_DECLARATION_CLIENT(cl_gaussfollowattachment)\
@@ -3041,6 +3043,7 @@
 	EASY_CVAR_UPDATE_SERVER(interpolation_movetypestep_mindelta)\
 	EASY_CVAR_UPDATE_SERVER(sv_bloodparticlemode)\
 	EASY_CVAR_UPDATE_SERVER(cl_interp_view_extra)\
+	EASY_CVAR_UPDATE_SERVER(cl_interp_view_standard)\
 	EASY_CVAR_UPDATE_SERVER(cl_interp_viewmodel)\
 	EASY_CVAR_UPDATE_SERVER(sv_explosionknockback)\
 	EASY_CVAR_UPDATE_SERVER(cl_gaussfollowattachment)\
@@ -3547,6 +3550,7 @@
 	EASY_CVAR_UPDATE_SERVER_DEDICATED(interpolation_movetypestep_mindelta)\
 	EASY_CVAR_UPDATE_SERVER_DEDICATED(sv_bloodparticlemode)\
 	EASY_CVAR_UPDATE_SERVER_DEDICATED(cl_interp_view_extra)\
+	EASY_CVAR_UPDATE_SERVER_DEDICATED(cl_interp_view_standard)\
 	EASY_CVAR_UPDATE_SERVER_DEDICATED(cl_interp_viewmodel)\
 	EASY_CVAR_UPDATE_SERVER_DEDICATED(sv_explosionknockback)\
 	EASY_CVAR_UPDATE_SERVER_DEDICATED(cl_gaussfollowattachment)\
@@ -4052,6 +4056,7 @@
 	EASY_CVAR_UPDATE_CLIENT(interpolation_movetypestep_mindelta)\
 	EASY_CVAR_UPDATE_CLIENT(sv_bloodparticlemode)\
 	EASY_CVAR_UPDATE_CLIENT(cl_interp_view_extra)\
+	EASY_CVAR_UPDATE_CLIENT(cl_interp_view_standard)\
 	EASY_CVAR_UPDATE_CLIENT(cl_interp_viewmodel)\
 	EASY_CVAR_UPDATE_CLIENT(sv_explosionknockback)\
 	EASY_CVAR_UPDATE_CLIENT(cl_gaussfollowattachment)\
@@ -4554,6 +4559,7 @@
 	EASY_CVAR_CREATE_SERVER_SETUP_A_CLIENTONLY(interpolation_movetypestep_mindelta)\
 	EASY_CVAR_CREATE_SERVER_SETUP_A_SERVERONLY(sv_bloodparticlemode)\
 	EASY_CVAR_CREATE_SERVER_SETUP_A_CLIENTONLY(cl_interp_view_extra)\
+	EASY_CVAR_CREATE_SERVER_SETUP_A_CLIENTONLY(cl_interp_view_standard)\
 	EASY_CVAR_CREATE_SERVER_SETUP_A_CLIENTONLY(cl_interp_viewmodel)\
 	EASY_CVAR_CREATE_SERVER_SETUP_A_SERVERONLY(sv_explosionknockback)\
 	EASY_CVAR_CREATE_SERVER_SETUP_A_CLIENTONLY(cl_gaussfollowattachment)\
@@ -5056,6 +5062,7 @@
 	EASY_CVAR_CREATE_SERVER_A_CLIENTONLY(interpolation_movetypestep_mindelta)\
 	EASY_CVAR_CREATE_SERVER_A_SERVERONLY(sv_bloodparticlemode)\
 	EASY_CVAR_CREATE_SERVER_A_CLIENTONLY(cl_interp_view_extra)\
+	EASY_CVAR_CREATE_SERVER_A_CLIENTONLY(cl_interp_view_standard)\
 	EASY_CVAR_CREATE_SERVER_A_CLIENTONLY(cl_interp_viewmodel)\
 	EASY_CVAR_CREATE_SERVER_A_SERVERONLY(sv_explosionknockback)\
 	EASY_CVAR_CREATE_SERVER_A_CLIENTONLY(cl_gaussfollowattachment)\
@@ -5558,6 +5565,7 @@
 	EASY_CVAR_CREATE_CLIENT_A_CLIENTONLY(interpolation_movetypestep_mindelta)\
 	EASY_CVAR_CREATE_CLIENT_A_SERVERONLY(sv_bloodparticlemode)\
 	EASY_CVAR_CREATE_CLIENT_A_CLIENTONLY(cl_interp_view_extra)\
+	EASY_CVAR_CREATE_CLIENT_A_CLIENTONLY(cl_interp_view_standard)\
 	EASY_CVAR_CREATE_CLIENT_A_CLIENTONLY(cl_interp_viewmodel)\
 	EASY_CVAR_CREATE_CLIENT_A_SERVERONLY(sv_explosionknockback)\
 	EASY_CVAR_CREATE_CLIENT_A_CLIENTONLY(cl_gaussfollowattachment)\
@@ -6059,6 +6067,7 @@
 	EASY_CVAR_RESET(interpolation_movetypestep_mindelta)\
 	EASY_CVAR_RESET(sv_bloodparticlemode)\
 	EASY_CVAR_RESET(cl_interp_view_extra)\
+	EASY_CVAR_RESET(cl_interp_view_standard)\
 	EASY_CVAR_RESET(cl_interp_viewmodel)\
 	EASY_CVAR_RESET(sv_explosionknockback)\
 	EASY_CVAR_RESET(cl_gaussfollowattachment)\
@@ -6561,6 +6570,7 @@
 	EASY_CVAR_EXTERN(interpolation_movetypestep_mindelta)\
 	EASY_CVAR_EXTERN(sv_bloodparticlemode)\
 	EASY_CVAR_EXTERN(cl_interp_view_extra)\
+	EASY_CVAR_EXTERN(cl_interp_view_standard)\
 	EASY_CVAR_EXTERN(cl_interp_viewmodel)\
 	EASY_CVAR_EXTERN(sv_explosionknockback)\
 	EASY_CVAR_EXTERN(cl_gaussfollowattachment)\
@@ -6573,8 +6583,6 @@
 	EASY_CVAR_EXTERN(cl_viewmodel_fidget)\
 	EASY_CVAR_EXTERN(sv_player_midair_fix)\
 	DUMMY
-
-
 
 
 
@@ -7068,6 +7076,7 @@
 	EASY_CVAR_SYNCH_SERVER(interpolation_movetypestep_mindelta)\
 	EASY_CVAR_SYNCH_SERVER(sv_bloodparticlemode)\
 	EASY_CVAR_SYNCH_SERVER(cl_interp_view_extra)\
+	EASY_CVAR_SYNCH_SERVER(cl_interp_view_standard)\
 	EASY_CVAR_SYNCH_SERVER(cl_interp_viewmodel)\
 	EASY_CVAR_SYNCH_SERVER(sv_explosionknockback)\
 	EASY_CVAR_SYNCH_SERVER(cl_gaussfollowattachment)\

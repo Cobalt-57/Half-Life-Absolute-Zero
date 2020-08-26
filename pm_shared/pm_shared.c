@@ -151,6 +151,13 @@ float vJumpAngles[3];
 #endif
 
 
+//MODDD - NEW, per player.
+static int ary_iJumpOffDenyLadderFrames[MAX_CLIENTS];
+static int ary_iDenyLadderFrames[MAX_CLIENTS];
+
+
+
+
 
 
 
@@ -1621,7 +1628,7 @@ void PM_InclineCheck(void) {
 			// Already even have 'downvel' here for pmove->velocity.  Did not touch the velocity so it stays as it is.
 
 			// TEST!
-			if (1 == 1) {
+			if (1) {
 				pmove->vuser4[0] = traceInclineDetection_ForwardDown.endpos[2] - pmove->origin[2];
 
 				VectorCopy_f(traceInclineDetection_ForwardDown.endpos, pmove->origin);
@@ -3053,6 +3060,8 @@ void PM_Duck( void )
 	}
 }
 
+
+
 void PM_LadderMove( physent_t *pLadder )
 {
 	vec3_t		ladderCenter;
@@ -3075,29 +3084,36 @@ void PM_LadderMove( physent_t *pLadder )
 	BOOL cyclePassed = FALSE;
 
 
-
 	//MODDD - control.  Might want to act on jump being tapped (pressed for the first frame), not continuously.
-	//MODDD TODO - make this per-player instead, a static like this is sloppy.
-	// And have frame countdown logic moved to somewhere called every frame, like whatever calls
-	// PM_LadderMove, counting down only from calling PM_LadderMove isn't proper.
 	//////////////////////////////////////////////////////////////////////////////
-	static iJumpOffLadderFrames = 0;
+	//static iJumpOffLadderFrames = 0;
 	int iJumpPressed = 0;
 
+
+	//MODDD - moved earlier.  What's the point of anything else if this will end it?
+	if ( pmove->movetype == MOVETYPE_NOCLIP )
+		return;
+
+
+	//MODDD
 	// sometimes jumping off a ladder only on the tap (first) frame isn't enough.
 	// Allow a few more frames of holding space to jump while touching a ladder.
+	// CHANGE, done earlier by first contact with the ladder instead.
+	//if ((pmove->cmd.buttons & IN_JUMP) && !(pmove->oldbuttons & IN_JUMP)) {
+	//	ary_iJumpOffDenyLadderFrames[pmove->player_index] = 3;
+	//}
+
+	// NOTICE - was > 0 in old logic
+	// ALSO, now allowing only a clean jump-press to jump off, not holding jump down
 	if ((pmove->cmd.buttons & IN_JUMP) && !(pmove->oldbuttons & IN_JUMP)) {
-		iJumpOffLadderFrames = 2;
-	}
+		if (ary_iJumpOffDenyLadderFrames[pmove->player_index] <= 0) {
+			// If jump wasn't held down the previous frame (this is the first in a while),
+			// or we've already jumped off recently,  count this as a button press.
 
-	if (iJumpOffLadderFrames > 0) {
-		// If jump wasn't held down the previous frame (this is the first in a while),
-		// or we've already jumped off recently,  count this as a button press.
-
-		if (pmove->cmd.buttons & IN_JUMP) {
-			iJumpPressed = 1;
+			if (pmove->cmd.buttons & IN_JUMP) {
+				iJumpPressed = 1;
+			}
 		}
-		iJumpOffLadderFrames -= 1;
 	}
 
 
@@ -3122,8 +3138,6 @@ void PM_LadderMove( physent_t *pLadder )
 
 
 	
-	if ( pmove->movetype == MOVETYPE_NOCLIP )
-		return;
 
 	pmove->PM_GetModelBounds( pLadder->model, modelmins, modelmaxs );
 
@@ -3250,6 +3264,9 @@ void PM_LadderMove( physent_t *pLadder )
 			//MODDD - lower ladder jump distance, no need to be obnoxious.
 			// Was 270, see constant.
 			VectorScale( trace.plane.normal, 190, pmove->velocity );
+
+			// Finally, deny going back to the ladder for a few frames.
+			ary_iDenyLadderFrames[pmove->player_index] = 12;
 		}
 		else
 		{
@@ -4502,8 +4519,16 @@ void PM_PlayerMove ( qboolean server )
 	// Don't run ladder code if dead or on a train
 	if ( !pmove->dead && !(pmove->flags & FL_ONTRAIN) )
 	{
-		if ( pLadder )
+		//MODDD - don't stick to a ladder if recently jumped off!
+		if ( pLadder && ary_iDenyLadderFrames[pmove->player_index] <= 0)
 		{
+
+			if (pmove->movetype != MOVETYPE_FLY) {
+				//MODDD - reset this then, don't allow jumping off a ladder too soon since
+				// getting on
+				ary_iJumpOffDenyLadderFrames[pmove->player_index] = 9;
+			}
+
 			PM_LadderMove( pLadder );
 		}
 		//MODDD - little interjection...
@@ -4957,6 +4982,13 @@ void PM_Move ( struct playermove_s *ppmove, int server )
 
 
 
+	//MODDD - count this down if needed
+	if (ary_iJumpOffDenyLadderFrames[pmove->player_index] > 0) {
+		ary_iJumpOffDenyLadderFrames[pmove->player_index] -= 1;
+	}
+	if (ary_iDenyLadderFrames[pmove->player_index] > 0) {
+		ary_iDenyLadderFrames[pmove->player_index] -= 1;
+	}
 	
 	PM_PlayerMove( ( server != 0 ) ? true : false );
 

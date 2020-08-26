@@ -1497,10 +1497,21 @@ cl_interp_entity(1) - BOOL. Whether server-sent entities are subject to interpol
 cl_interp_viewmodel (1) - BOOL.  When off, simulates lack of interpolation to add choppiness to viewmodels.  If off, simulates 0.08 second updates instead.
 They do not normally behave like server-side entities when interpolation is turned off, only freeze at the first frame, likely from not receiving the same updates other serverside entities receive in think logic.
 
-cl_interp_view_extra (2) - MODEVAR.  View camera smoothness for crouching to look more smooth.
-0: Nothing extra (retail), besides the smoothness for going down inclines/stairs.
-1: Only on uncrouching before finishing a full crouch (releasing CTRL too early), similar smoothness to uncrouching from a full crouch.
-2: In addition to #1, interp while crouching/uncrouching to any extent through the air.
+cl_interp_view_extra (1) - MODEVAR.  View camera smoothness for crouching to look more smooth.
+0: Nothing (retail).  This kind of interp was not done in retail.
+1: Works on ground only.  Works on uncrouching before finishing a full crouch (releasing CTRL too early), similar smoothness to uncrouching from a full crouch.
+2: Works mid-air too.  In addition to #1, interp while crouching/uncrouching to any extent through the air.
+
+cl_interp_view_standard (1) - MODEVAR.  View camera smoothness for going up/down stairs; present in retail for going down stairs only.
+0: Nothing.
+1: Works on ground only. (retail). Going up or down inclines, especially stairs, is more smooth.
+2: Works mid-air too.  Similar effect as cl_interp_view_extra set to 2 for mid-air crouch jumps, maybe.  Might have a different feel or work at different times, try it out.
+
+~Unknown what takes precedence for mid-air interp on cl_interp_view_extra and cl_interp_view_standard both set to 2.
+
+
+
+
 -------------------------------------------------------------------------------
 
 
@@ -1533,7 +1544,7 @@ cl_viewmodel_fidget (2) - MODEVAR.  Affects how/when fidget animations for certa
 sv_player_midair_fix (1) - BOOL.  When on, support for an extension of midair logic that does similar slope-checks as walking.  That is, jumping 'up' stairs is possible without losing momentum.
 -As a side-effect, reaching the top of several objects that were difficult to reach through even crouch-jumping (often some barrels and boxes) is much easier; reach of jumps slightly improved.
 -This may also stop getting stuck in certain terrain, such as tracks in a2a1.
--Slight jumpiness one frame (very fast) when crouch-jumping against something, helped by cl_interp_view_extra set to 2.
+-Slight jumpiness one frame (very fast) when crouch-jumping against something, helped by cl_interp_view_extra set to 2.  NEW: fixed for cl_interp_view_extra set to 1 too.
 
 
 

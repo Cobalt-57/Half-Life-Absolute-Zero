@@ -3,9 +3,6 @@
 
 
 
-
-
-
 #define strobeDurationMin_ID 0
 #define strobeDurationMax_ID 1
 #define strobeRadiusMin_ID 2
@@ -695,6 +692,7 @@
 #define DEFAULT_interpolation_movetypestep_mindelta 0.06
 #define DEFAULT_sv_bloodparticlemode 1
 #define DEFAULT_cl_interp_view_extra 1
+#define DEFAULT_cl_interp_view_standard 1
 #define DEFAULT_cl_interp_viewmodel 1
 #define DEFAULT_sv_explosionknockback 1
 #define DEFAULT_cl_gaussfollowattachment 1

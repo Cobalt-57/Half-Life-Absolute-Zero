@@ -30,6 +30,43 @@ class CBaseTurret : public CBaseMonster
 {
 public:
 
+	float m_flMaxSpin;		// Max time to spin the barrel w/o a target
+	int m_iSpin;
+
+	CSprite* m_pEyeGlow;
+	int	m_eyeBrightness;
+
+	int m_iDeployHeight;
+	int m_iRetractHeight;
+	int m_iMinPitch;
+
+	int m_iBaseTurnRate;	// angles per second
+	float m_fTurnRate;		// actual turn rate
+	int m_iOrientation;		// 0 = floor, 1 = Ceiling
+	int m_iOn;
+	int m_fBeserk;			// Sometimes this bitch will just freak out
+	int m_iAutoStart;		// true if the turret auto deploys when a target
+							// enters its range
+
+	Vector m_vecLastSight;
+	float m_flLastSight;	// Last time we saw a target
+	float m_flMaxWait;		// Max time to seach w/o a target
+	int m_iSearchSpeed;		// Not Used!
+
+	// movement
+	float m_flStartYaw;
+	Vector	m_vecCurAngles;
+	Vector	m_vecGoalAngles;
+
+
+	float m_flPingTime;	// Time until the next ping, used when searching
+	float m_flSpinUpTime;	// Amount of time until the barrel should spin down when searching
+
+
+	float postDeathEndTime;
+	BOOL nextDeathExplosionTime;
+
+
 	CBaseTurret(void);
 
 	//Child classes are supposed to have their own spawn methods too. Why wasn't that virtual?
@@ -39,7 +76,6 @@ public:
 	void EXPORT TurretUse( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value );
 	
 	//NOTE: virtual removed, already made virtual in parent classes further above in heirarchy.
-	//also, more ags.
 	//void TraceAttack( entvars_t *pevAttacker, float flDamage, Vector vecDir, TraceResult *ptr, int bitsDamageType);
 	//int  TakeDamage( entvars_t *pevInflictor, entvars_t *pevAttacker, float flDamage, int bitsDamageType );
 	
@@ -76,8 +112,11 @@ public:
 	}
 
 
-	// Think functions
 
+	virtual void BeserkAimLogic(void);
+	virtual void TurretDeathEnd(void);
+
+	// Think functions
 	void EXPORT ActiveThink(void);
 	void EXPORT SearchThink(void);
 	void EXPORT AutoSearchThink(void);
@@ -109,8 +148,7 @@ public:
 
 	virtual int	Save( CSave &save );
 	virtual int	Restore( CRestore &restore );
-	
-	static	TYPEDESCRIPTION m_SaveData[];
+	static TYPEDESCRIPTION m_SaveData[];
 
 	// other functions
 	void SetTurretAnim(TURRET_ANIM anim);
@@ -123,37 +161,6 @@ public:
 	virtual float getGibCVar(void){return 0;}
 
 
-	float m_flMaxSpin;		// Max time to spin the barrel w/o a target
-	int m_iSpin;
-
-	CSprite *m_pEyeGlow;
-	int	m_eyeBrightness;
-
-	int m_iDeployHeight;
-	int m_iRetractHeight;
-	int m_iMinPitch;
-
-	int m_iBaseTurnRate;	// angles per second
-	float m_fTurnRate;		// actual turn rate
-	int m_iOrientation;		// 0 = floor, 1 = Ceiling
-	int m_iOn;
-	int m_fBeserk;			// Sometimes this bitch will just freak out
-	int m_iAutoStart;		// true if the turret auto deploys when a target
-							// enters its range
-
-	Vector m_vecLastSight;
-	float m_flLastSight;	// Last time we saw a target
-	float m_flMaxWait;		// Max time to seach w/o a target
-	int m_iSearchSpeed;		// Not Used!
-
-	// movement
-	float m_flStartYaw;
-	Vector	m_vecCurAngles;
-	Vector	m_vecGoalAngles;
-
-
-	float m_flPingTime;	// Time until the next ping, used when searching
-	float m_flSpinUpTime;	// Amount of time until the barrel should spin down when searching
 };
 
 
@@ -167,6 +174,9 @@ public:
 
 class CTurret : public CBaseTurret
 {
+private:
+	int m_iStartSpin;
+
 public:
 	static GibInfo_t* gibModelRef;
 	GibInfo_t* getGibInfoRef(void){return CTurret::gibModelRef;}
@@ -186,8 +196,6 @@ public:
 	// other functions
 	void Shoot(Vector &vecSrc, Vector &vecDirToEnemy);
 
-private:
-	int m_iStartSpin;
 
 };
 
@@ -219,6 +227,7 @@ class CSentry : public CBaseTurret
 {
 public:
 	float nextTouchCooldown;
+
 
 	static GibInfo_t* gibModelRef;
 	GibInfo_t* getGibInfoRef(void){return CSentry::gibModelRef;}
