@@ -147,8 +147,70 @@ int GetEntityAPI2( DLL_FUNCTIONS *pFunctionTable, int *interfaceVersion )
 
 
 
-//mother<love>er.
-//#include "basemonster.h"
+
+
+
+
+//MODDD - NEW.  Weaker version of DispatchSpawn that only adds the entity to the globalstate.
+// For entities that shouldn't have 'Spawn' called yet, but existing at any point without being part of the 
+// global state is still awkward.  Like monsters to be respawned.
+int DispatchCreated(edict_t* pent) {
+	CBaseEntity* pEntity = (CBaseEntity*)GET_PRIVATE(pent);
+
+
+	if (pEntity)
+	{
+		/*
+		// Initialize these or entities who don't link to the world won't have anything in here
+		pEntity->pev->absmin = pEntity->pev->origin - Vector(1, 1, 1);
+		pEntity->pev->absmax = pEntity->pev->origin + Vector(1, 1, 1);
+		//easyPrintLine("SOME stuff SPAWNED %d", pEntity->pev->spawnflags);
+		pEntity->Spawn();
+
+		//MODDD - if this entity was dynamically spawned, it no longer needs to be told that it was.
+		// Don't want revives changing the head on your scientist, now do we.
+		pEntity->spawnedDynamically = FALSE;
+		*/
+
+		// Try to get the pointer again, in case the spawn function deleted the entity.
+		// UNDONE: Spawn() should really return a code to ask that the entity be deleted, but
+		// that would touch too much code for me to do that right now.
+		//MODDD - that's not how pointers work ya dingus!
+		//pEntity = (CBaseEntity*)GET_PRIVATE(pent);
+
+		if (pEntity)
+		{
+			if (g_pGameRules && !g_pGameRules->IsAllowedToSpawn(pEntity))
+				return -1;	// return that this entity should be deleted
+			if (pEntity->pev->flags & FL_KILLME)
+				return -1;
+		}
+
+		// Handle global stuff here
+		if (pEntity && pEntity->pev->globalname)
+		{
+			const globalentity_t* pGlobal = gGlobalState.EntityFromTable(pEntity->pev->globalname);
+			if (pGlobal)
+			{
+				// Already dead? delete
+				if (pGlobal->state == GLOBAL_DEAD)
+					return -1;
+				else if (!FStrEq(STRING(gpGlobals->mapname), pGlobal->levelName))
+					pEntity->MakeDormant();	// Hasn't been moved to this level yet, wait but stay alive
+				// In this level & not dead, continue on as normal
+			}
+			else
+			{
+				// Spawned entities default to 'On'
+				gGlobalState.EntityAdd(pEntity->pev->globalname, gpGlobals->mapname, GLOBAL_ON);
+				//				ALERT( at_console, "Added global entity %s (%s)\n", STRING(pEntity->pev->classname), STRING(pEntity->pev->globalname) );
+			}
+		}
+
+	}
+
+	return 0;
+}//DispatchCreated
 
 int DispatchSpawn( edict_t *pent )
 {
@@ -185,7 +247,8 @@ int DispatchSpawn( edict_t *pent )
 		// Try to get the pointer again, in case the spawn function deleted the entity.
 		// UNDONE: Spawn() should really return a code to ask that the entity be deleted, but
 		// that would touch too much code for me to do that right now.
-		pEntity = (CBaseEntity *)GET_PRIVATE(pent);
+		//MODDD - that's not how pointers work ya dingus!
+		//pEntity = (CBaseEntity *)GET_PRIVATE(pent);
 
 		if ( pEntity )
 		{
@@ -806,6 +869,10 @@ void CBaseEntity::playAmmoPickupSound(){
 
 }
 
+
+
+static int vagina = 0;
+
 void CBaseEntity::playAmmoPickupSound(entvars_t* sentPev){
 	entvars_t* pevToUse = NULL;
 	if(sentPev != NULL){
@@ -817,7 +884,8 @@ void CBaseEntity::playAmmoPickupSound(entvars_t* sentPev){
 		//normal.
 		UTIL_PlaySound(ENT(pevToUse), CHAN_ITEM, "items/9mmclip1.wav", 1, ATTN_NORM, 0, 100, FALSE);
 	}else{
-		switch(g_engfuncs.pfnRandomLong(0,2)){
+		//switch(g_engfuncs.pfnRandomLong(0,2)){
+		switch(vagina){
 		case 0:
 			UTIL_PlaySound(ENT(pevToUse), CHAN_ITEM, "weapons/reload1.wav", 1, ATTN_NORM, 0, 100, FALSE);
 		break;
@@ -828,6 +896,7 @@ void CBaseEntity::playAmmoPickupSound(entvars_t* sentPev){
 			UTIL_PlaySound(ENT(pevToUse), CHAN_ITEM, "weapons/reload3.wav", 1, ATTN_NORM, 0, 100, FALSE);
 		break;
 		}
+		vagina++;  if (vagina == 3)vagina = 0;
 	}
 }
 
@@ -1212,10 +1281,13 @@ edict_t* CBaseEntity::overyLongComplicatedProcessForCreatingAnEntity(const char*
 //MODDD - CreateManual is a new Create method, more similar to the as-is 'Create' method from
 // the as-is codebase, only it does not call "DispatchSpawn" for you.
 // It is best to use CreateManual instead to specify other things for the entity before calling
-// DispatchSpawn, if needed.  (but don't forget to call DispatchSpawn on it)
+// DispatchSpawn, if needed.  Spawn should be caleld for in some way.
 // The "Create" method now calls CreateManual and DispatchSpawn to match the original behavior.
 // Giving another parameter, "setSpawnFlags", lets the spawned entity act as though the map
 // spawned it with certain spawnflags.
+// "DispatchCreated" is now an equivalent for DispatchSpawn that should be called soon if Spawn
+// will be called at a later time, not good to have any entity out not part of globalstate from
+// lacking either Dispatch.
 CBaseEntity * CBaseEntity::CreateManual( const char *szName, const Vector &vecOrigin, const Vector &vecAngles, edict_t *pentOwner ){
 	edict_t	*pent;
 	CBaseEntity *pEntity;

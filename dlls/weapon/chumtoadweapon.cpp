@@ -74,7 +74,8 @@ CBaseEntity* CChumToadWeapon::pickupWalkerReplaceCheck(void) {
 
 	if (!isStringEmpty(pickupNameTest) &&
 		!(pev->spawnflags & SF_PICKUP_NOREPLACE) &&
-		!stringEndsWith(this->getClassname(), "_noreplace")) {
+		!stringEndsWith(this->getClassname(), "_noreplace"))
+	{
 		// lacking the NOREPLACE flag? replace with my spawnnable.
 
 		//char pickupWalkerName[128];
@@ -90,13 +91,17 @@ CBaseEntity* CChumToadWeapon::pickupWalkerReplaceCheck(void) {
 		}
 		else {
 			generated->pev->spawnflags &= ~SF_NORESPAWN;
+			// also, fade the monster on death.  Don't want to spam the game.
+			generated->pev->spawnflags |= SF_MONSTER_FADECORPSE;
 		}
-
+		
 		// And tell the generated pickupwalker that its current coords are the ones to use for respawning, regardless
 		// of where it wanders off too.
-		CChumToadRespawnable* tempWalk = static_cast<CChumToadRespawnable*>(generated);
-		tempWalk->respawn_origin = pev->origin;
-		tempWalk->respawn_angles = pev->angles;
+		CBaseMonster* tempWalk = generated->GetMonsterPointer();
+		if (tempWalk != NULL) {
+			tempWalk->respawn_origin = pev->origin;
+			tempWalk->respawn_angles = pev->angles;
+		}
 
 
 		UTIL_Remove(this);
@@ -618,7 +623,7 @@ BOOL CChumToadWeapon::checkThrowValid(Vector trace_origin, float* minFractionSto
 }//END OF checkThrowValid
 
 
-//Spawns a chumtoad in front of the player with some velocity to go forwards.
+// Spawns a chumtoad in front of the player with some velocity to go forwards.
 void CChumToadWeapon::ThrowChumtoad(Vector vecSpawnPoint){
 
 	Vector toadSpawnPoint;
@@ -634,7 +639,7 @@ void CChumToadWeapon::ThrowChumtoad(Vector vecSpawnPoint){
 	m_pPlayer->m_iWeaponVolume = QUIET_GUN_VOLUME + 80;
 
 	CBaseEntity *pChumToad = CBaseEntity::Create( "monster_chumtoad", toadSpawnPoint, Vector(0, m_pPlayer->pev->v_angle.y, 0), SF_MONSTER_THROWN, m_pPlayer->edict() );
-		
+	
 	if (pChumToad != NULL) {
 		pChumToad->pev->velocity = gpGlobals->v_forward * 200 + UTIL_GetProjectileVelocityExtra(m_pPlayer->pev->velocity, EASY_CVAR_GET_DEBUGONLY(chumtoadInheritsPlayerVelocity));
 	}

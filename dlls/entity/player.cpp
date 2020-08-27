@@ -6197,7 +6197,10 @@ void CBasePlayer::giveMaxAmmo(){
 	GiveAmmo( 999, "Satchel Charge", SATCHEL_MAX_CARRY );
 	GiveAmmo( 999, "Snarks", SNARK_MAX_CARRY );
 	GiveAmmo( 999, "Trip Mine", TRIPMINE_MAX_CARRY );
-	GiveAmmo( 999, "Chum Toads", CHUMTOAD_MAX_CARRY );
+
+	if (!IsMultiplayer()) {
+		GiveAmmo(999, "Chum Toads", CHUMTOAD_MAX_CARRY);
+	}
 	
 #if LONGJUMPUSESDELAY == 0
 	longJumpCharge = PLAYER_LONGJUMPCHARGE_MAX;
@@ -7679,7 +7682,10 @@ edict_t* CBasePlayer::GiveNamedItem( const char *pszName, int pszSpawnFlags, con
 					//send the walker instead.
 					::UTIL_Remove(temptest);
 					edict_t* myEd = ENT(newWalker->pev);
-					DispatchSpawn(myEd);
+
+					// NOTE - no need to call DispatchSpawn!  The pickupWalkerReplaceCheck already does that.
+					//DispatchSpawn(myEd);
+
 					return myEd;
 				}
 

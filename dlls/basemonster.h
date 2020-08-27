@@ -527,6 +527,8 @@ public:
 	BOOL strictNodeTolerance;
 	BOOL recentTimedTriggerDamage;
 
+	Vector respawn_origin;
+	Vector respawn_angles;
 
 
 
@@ -1059,7 +1061,9 @@ public:
 
 
 	// combat functions
-	float UpdateTarget ( entvars_t *pevTarget );
+	//MODDD - no implementation, as-is?   whoops.
+	//float UpdateTarget ( entvars_t *pevTarget );
+
 	virtual Activity GetDeathActivity ( void );
 	Activity GetSmallFlinchActivity( void );
 
@@ -1187,12 +1191,10 @@ public:
 
 	virtual BOOL predictRangeAttackEnd(void);
 
-	// NEW.  Only 'isRespawnable' is virtual, any more respawn details should be left up to a class's own cloned methods.
-	virtual BOOL isRespawnable(void);
 	void CheckRespawn(void);
 	CBaseEntity* Respawn(void);
-	void AttemptToMaterialize(void);
-	void Materialize(void);
+	void EXPORT AttemptToMaterialize(void);
+	void EXPORT Materialize(void);
 
 
 
@@ -1201,17 +1203,22 @@ public:
 
 
 
+/*
 //MODDD - never inherit from only, inherit from CBaseMonster or some child class too, and inherit from CResawpanble as a 2nd choice.
 // Could be any entity though, but CBaseMonster's respawn methods, well, expect a CBaseMonster of some kind for the MonsterInit call.
+// OOOoooookay.  Fuck this.  Don't do this.   It bad.
 class CRespawnable {
 public:
 	Vector respawn_origin;
 	Vector respawn_angles;
 
-	BOOL isRespawnable(void) {
-		return TRUE;  // is that safe?
-	}
+	// NOPE, this doesn't work, monsters that inherit from CBaseMonster (or some subclass) and CRespawnable still use the
+	// CBaseMonster one (does return FALSE).  No idea how that works.
+	// Just copy this to things inheriting from CRespawnable.
+	//BOOL isRespawnable(void) { return TRUE; }
+	
 };
+*/
 
 
 

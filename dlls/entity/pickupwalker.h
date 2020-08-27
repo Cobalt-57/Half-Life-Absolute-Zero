@@ -47,13 +47,10 @@ extern int gEvilImpulse101;
 
 
 // This is a simple monster meant to wander around and not really react to anything or take damage. It can be picked up by the player.
-// Think living throwables like squeak grenades (Snarks) or Chum toads.  Although chumtoads no longer use this class.
+// Think living throwables like squeak grenades (Snarks) or Chumtoads.  Although chumtoads no longer use this class.
 class CPickupWalker : public CBaseMonster
 {
 public:
-	Vector respawn_origin;
-	Vector respawn_angles;
-	
 	void IdleSound( void );
 	
 	void Precache(void);

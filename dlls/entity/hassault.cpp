@@ -3268,10 +3268,10 @@ int CHAssault::LookupActivityHard(int activity){
 
 	BOOL stillSpinning = (spinuptimeremain != -1 && gpGlobals->time <= spinuptimeremain);
 
-	//still spinning and unable to walk? Don't.
+	// still spinning and unable to walk? Don't.
 	if(iSelectedActivity == ACT_WALK){
 		if(stillSpinning){
-			//Let the hassaultSpinMovement tell us which movement anim to use.
+			// Let the hassaultSpinMovement tell us which movement anim to use.
 			switch( (int)EASY_CVAR_GET_DEBUGONLY(hassaultSpinMovement) ){
 				case 0:
 					//nothing, stay standing.
@@ -3285,7 +3285,7 @@ int CHAssault::LookupActivityHard(int activity){
 				break;
 			}//END OF switch
 		}else{
-			//not spinning? go faster all the time.
+			// not spinning? go faster all the time.
 			iSelectedActivity = ACT_RUN;
 		}
 	}
@@ -3304,8 +3304,8 @@ int CHAssault::LookupActivityHard(int activity){
 			  (spinuptime != -1 && spinuptime > gpGlobals->time)
 			  )
 			){
-				//spinning up or maintaining spin? Just return the firing anim, the logic will know to freeze the anim at this frame.
-				//...don't trust it, just freeze it now.
+				// spinning up or maintaining spin? Just return the firing anim, the logic will know to freeze the anim at this frame.
+				// ...don't trust it, just freeze it now.
 				pev->framerate = 0;
 				m_flFramerateSuggestion = 0;
 				return LookupSequence("attack"); //firing sequence.
@@ -3324,7 +3324,6 @@ int CHAssault::LookupActivityHard(int activity){
 
 			previousAnimationActivity = iSelectedActivity;
 			return CBaseAnimating::LookupActivity(iSelectedActivity);
-
 		break;
 		case ACT_WALK:
 			if(g_iSkillLevel <= SKILL_EASY){
@@ -3335,7 +3334,7 @@ int CHAssault::LookupActivityHard(int activity){
 				m_flFramerateSuggestion = 1.24;
 			}
 			movementBaseFramerate = m_flFramerateSuggestion;
-			//the default "power_walk" is fine to use.
+			// the default "power_walk" is fine to use.
 			previousAnimationActivity = iSelectedActivity;
 			return CBaseAnimating::LookupActivity(iSelectedActivity);
 		break;
@@ -3348,16 +3347,16 @@ int CHAssault::LookupActivityHard(int activity){
 			}else{ //if(g_iSkillLevel == SKILL_HARD){
 				m_flFramerateSuggestion = 0.90;
 			}
-			//the default "power_walk" is fine to use.
+			// the default "power_walk" is fine to use.
 			previousAnimationActivity = iSelectedActivity;
 
-			//WHY DONT YOU WORK???!
+			// WHY DONT YOU WORK???!
 			int testAnim = CBaseAnimating::LookupActivity(iSelectedActivity);
 			if(testAnim == -1){
-				//just make the crawl faster.
+				// just make the crawl faster.
 
 				m_flFramerateSuggestion *= 2.5;
-				//all the ways!!!
+				// all the ways!!!
 
 				this->m_flFrameRate = m_flFramerateSuggestion;
 				this->pev->framerate = m_flFrameRate;
@@ -3365,7 +3364,7 @@ int CHAssault::LookupActivityHard(int activity){
 				movementBaseFramerate = m_flFramerateSuggestion;
 				return CBaseAnimating::LookupActivity(ACT_WALK);
 			}else{
-				//it is fine, we found a ACT_RUN anim from the model. Use it.
+				// it is fine, we found a ACT_RUN anim from the model. Use it.
 				movementBaseFramerate = m_flFramerateSuggestion;
 				return testAnim;
 			}
@@ -3375,7 +3374,7 @@ int CHAssault::LookupActivityHard(int activity){
 		case ACT_MELEE_ATTACK1:
 			EASY_CVAR_PRINTIF_PRE(hassaultPrintout, easyPrintLine( "YEEE"));
 
-	
+			
 			m_flFramerateSuggestion = EASY_CVAR_GET_DEBUGONLY(hassaultMeleeAnimSpeedMulti);
 
 			//?

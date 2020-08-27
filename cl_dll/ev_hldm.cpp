@@ -1344,6 +1344,8 @@ void EV_StopPreviousGauss(int idx)
 
 // debugging
 #define DISABLE_GAUSS_GLOW 0
+#define ALLOW_RISKY_BALLS 1
+#define ALLOW_RISKIEST_BALLS 0
 
 
 void EV_FireGauss(event_args_t* args)
@@ -1483,24 +1485,6 @@ void EV_FireGauss(event_args_t* args)
 	}
 
 
-	// beamLife affected by these too?   maybe not.
-	if (m_fPrimaryFire) {
-		beamColor_r = 1.0f;
-		beamColor_g = 0.5f;
-		beamColor_b = 0.0f;
-		beamWidth = 0.65f + dmgFracto * 0.55f * 3;
-		beamBrightness = 0.6f + dmgFracto * 0.17f * 1.8;
-	}else {
-		beamColor_r = 1.0f;
-		beamColor_g = 1.0f;
-		beamColor_b = 1.0f;
-		beamWidth = 1.5f + dmgFracto * 1.65f * 3;
-		beamBrightness = 0.65f + min(dmgFracto*3, 1) * 0.35f;
-	}
-
-
-
-
 
 
 
@@ -1526,6 +1510,55 @@ void EV_FireGauss(event_args_t* args)
 		if (tr.allsolid) {
 			break;
 		}
+
+
+
+
+
+		//MODDD - stats re-done each time the beam is reflected
+		////////////////////////////////////////////////////////////////////////////////////////////
+		if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST(gauss_mode) != 1) {
+			// retail-based
+			if (m_fPrimaryFire) {
+				sndFracto = 0.04; //0.23;
+				dmgFracto = 0.33; //min(flDamage, 20.0f) * (1.0f / 20.0f);
+			}
+			else {
+				sndFracto = min(flDamage, 600.0f) * (1.0f / 600.0f);
+				dmgFracto = min(flDamage, 600.0f) * (1.0f / 600.0f);
+			}
+		}
+		else {
+			// pre-release description.
+			// Max damage is 600, but can still be plenty bright up to that point.
+			if (m_fPrimaryFire) {
+				sndFracto = 0.12; //0.28;
+				dmgFracto = 0.6;
+			}
+			else {
+				sndFracto = min(flDamage, 600.0f) * (1.0f / 600.0f);
+				dmgFracto = min(flDamage, 600.0f) * (1.0f / 600.0f);
+			}
+		}
+		// beamLife affected by these too?   maybe not.
+		if (m_fPrimaryFire) {
+			beamColor_r = 1.0f;
+			beamColor_g = 0.5f;
+			beamColor_b = 0.0f;
+			beamWidth = 0.68f + dmgFracto * 0.62f * 3;
+			beamBrightness = 0.6f + dmgFracto * 0.17f * 1.8;
+		}
+		else {
+			beamColor_r = 1.0f;
+			beamColor_g = 1.0f;
+			beamColor_b = 1.0f;
+			beamWidth = 1.15f + dmgFracto * 0.90f * 3;
+			beamBrightness = 0.65f + min(dmgFracto * 3, 1) * 0.35f;
+		}
+		////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
 
 
 		if (fFirstBeam){
@@ -1649,8 +1682,12 @@ void EV_FireGauss(event_args_t* args)
 				vec3_t fwd;
 				VectorAdd_f(tr.endpos, tr.plane.normal, fwd);
 
+
+
 //MODDD - disabled.   Also prone to getting stuck in the object.
-				//gEngfuncs.pEfxAPI->R_Sprite_Trail(TE_SPRITETRAIL, tr.endpos, fwd, m_iBalls, 3, 0.1, gEngfuncs.pfnRandomFloat(14, 20) / 100.0, 100, 255, 100);
+#if ALLOW_RISKY_BALLS == 1
+				gEngfuncs.pEfxAPI->R_Sprite_Trail(TE_SPRITETRAIL, tr.endpos, fwd, m_iBalls, 3, 0.1, gEngfuncs.pfnRandomFloat(14, 20) / 100.0, 100, 255, 100);
+#endif
 
 				// lose energy
 				if (n == 0)
@@ -1787,11 +1824,12 @@ void EV_FireGauss(event_args_t* args)
 								// Old way here was 'flDamage * 0.3'.
 								// ACTUALLY, DISABLED.  Seems like this has a higher chance of generating a punch of balls
 								// into the object stuck, so there's an unintended annoyingly bright spot where they all overlap at.
-								/*
+
+#if ALLOW_RISKIEST_BALLS == 1
 								vec3_t fwd;
 								VectorSubtract_f(beam_tr.endpos, forward, fwd);
 								gEngfuncs.pEfxAPI->R_Sprite_Trail(TE_SPRITETRAIL, beam_tr.endpos, fwd, m_iBalls, (int)(flDamage * 0.10), 0.1, gEngfuncs.pfnRandomFloat(14, 20) / 100.0, 200, 255, 40);
-								*/
+#endif
 							}
 
 							VectorAdd_f(beam_tr.endpos, forward, vecSrc);

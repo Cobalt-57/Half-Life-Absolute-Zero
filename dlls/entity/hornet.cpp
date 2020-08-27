@@ -302,6 +302,11 @@ int CHornet::IRelationship ( CBaseEntity *pTarget )
 int CHornet::Classify ( void )
 {
 
+	if (pev->deadflag == DEAD_DEAD) {
+		// most things should not care about me when dead.
+		return CLASS_INSECT;
+	}
+
 	if ( pev->owner && pev->owner->v.flags & FL_CLIENT)
 	{
 		return CLASS_PLAYER_BIOWEAPON;

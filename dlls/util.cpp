@@ -2689,7 +2689,7 @@ void UTIL_Smoke(int msg_dest, const float* pMsgOrigin, const Vector& location, f
 }
 void UTIL_Smoke(int msg_dest, const float* pMsgOrigin, edict_t* ed, const Vector& location, float offsetx, float offsety, float offsetz, short sprite, float scale, int framerate){
 	
-	return;  //TEST
+	//return;  //TEST
 
 	MESSAGE_BEGIN(msg_dest, SVC_TEMPENTITY, pMsgOrigin, ed);
 		WRITE_BYTE( TE_SMOKE );
@@ -4920,22 +4920,19 @@ void updateCVarRefs(BOOL isEarly){
 		//these are to be sent to the player.
 		//~Initial time calls with null pev (start of game).  This is ok.
 	
-
-	if (gpGlobals->time >= g_nextCVarUpdate) {
-		g_nextCVarUpdate = gpGlobals->time + 1;
-		if (!isEarly) {
+	if (!isEarly) {
+		if (gpGlobals->time >= g_nextCVarUpdate) {
+			g_nextCVarUpdate = gpGlobals->time + 1;
 			EASY_CVAR_UPDATE_SERVER_MASS
 
-				// if in release mode and a dedicated server, using the 
+			// if in release mode and a dedicated server, using the 
 #ifndef _DEBUG
-				if (IS_DEDICATED_SERVER()) {
-					EASY_CVAR_UPDATE_SERVER_DEDICATED_MASS
-				}
+			if (IS_DEDICATED_SERVER()) {
+				EASY_CVAR_UPDATE_SERVER_DEDICATED_MASS
+			}
 #endif
-		}//isEarly check
-	}//g_nextCVarUpdate check
-
-
+		}//g_nextCVarUpdate check
+	}//isEarly check
 
 		/*
 		int tempo = EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST(wpn_glocksilencer);

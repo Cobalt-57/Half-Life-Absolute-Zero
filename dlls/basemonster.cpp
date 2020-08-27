@@ -21,13 +21,9 @@
 */
 
 
+// Should 'usingCustomSequence' and 'doNotResetSequence' be saved?  I have no idea.
 
 
-//MODDD TODO MAJOR - in BestVisibleEnemy, could distance be a scalable priotity alongside relationship, instead of relationship being
-//                   100% overpowering?
-//                   for instance, a monster 3 miles away that's a nemesis that is sighted would draw more attention
-//                   than a big hulking agrunt that's 2 feet away slashing at me that's "hated" would.
-//                   It's a bizarre picture.  At least in theory that's how it would work out, but see if it's such a problem it needs fixing.
 
 #include "extdll.h"
 #include "basemonster.h"  //MODDD - is this addition necessary?
@@ -583,6 +579,7 @@ void CBaseMonster::setAnimation(char* animationName, BOOL forceException, BOOL f
 			ResetSequenceInfoSafe();
 		}
 		usingCustomSequence = TRUE;
+
 		SetYawSpeed();
 
 		if(forceLoopsProperty != -1){
@@ -2166,9 +2163,6 @@ void CBaseMonster :: MonsterThink ( void )
 		!getMonsterBlockIdleAutoUpdate() && m_MonsterState != MONSTERSTATE_SCRIPT && m_MonsterState != MONSTERSTATE_DEAD && ( (m_Activity == ACT_IDLE && m_fSequenceFinished) ) ) 
 	{
 		int iSequence;
-		
-		
-		//easyPrintLine("YOU THINK THIS IS A great GAME %d", m_fSequenceFinished);
 		
 		if ( m_fSequenceLoops )
 		{
@@ -3836,6 +3830,11 @@ void CBaseMonster :: SetActivity ( Activity NewActivity )
 	
 	//easyForcePrintLine("SET ACTIVITY: %d I DID THIS: %d", NewActivity, iSequence);
 
+	BOOL allowResetFrame = TRUE;
+	//easyForcePrintLine("OK SO? %d==%d : %d", pev->sequence, iSequence, doNotResetSequence);
+	if (pev->sequence == iSequence && doNotResetSequence) {
+		allowResetFrame = FALSE;
+	}
 
 	// Set to the desired anim, or default anim if the desired is not present
 	if ( iSequence > ACTIVITY_NOT_AVAILABLE )
@@ -3844,7 +3843,8 @@ void CBaseMonster :: SetActivity ( Activity NewActivity )
 
 		//MODDD - added "forceReset"... NO, REVERTED.
 		//if ( forceReset || (pev->sequence != iSequence || !m_fSequenceLoops) )
-		if (  pev->sequence != iSequence || !m_fSequenceLoops )
+		//if (  pev->sequence != iSequence || !m_fSequenceLoops )
+		if (allowResetFrame && (pev->sequence != iSequence || !m_fSequenceLoops) )
 		{
 			// don't reset frame between walk and run
 			if (!(m_Activity == ACT_WALK || m_Activity == ACT_RUN) || !(NewActivity == ACT_WALK || NewActivity == ACT_RUN)) {
@@ -3868,6 +3868,12 @@ void CBaseMonster :: SetActivity ( Activity NewActivity )
 		//pev->framerate = 2;
 		m_fSequenceFinished = FALSE;
 		m_fSequenceFinishedSinceLoop = FALSE;
+
+
+		if (!allowResetFrame) {
+			// keep this set then.
+			doNotResetSequence = FALSE;
+		}
 
 
 		usingCustomSequence = FALSE;  //MODDD - automatically picked.
@@ -6170,6 +6176,15 @@ void CBaseMonster :: MonsterInit ( void )
 	//MODDD - is this a good idea to do at init?
 	attemptResetTimedDamage(TRUE);
 
+
+	//MODDD - potential to respawn? ok.
+	// Could wait until MonsterInitThink happens though, may ease the 'spawned mid-air for a frame' issue.
+	if (!(pev->spawnflags & SF_NORESPAWN)) {
+		pev->spawnflags |= SF_MONSTER_FADECORPSE;
+		respawn_origin = pev->origin;
+		respawn_angles = pev->angles;
+	}
+
 }
 
 
@@ -6697,6 +6712,7 @@ BOOL CBaseMonster :: BuildNearestRoute ( Vector vecThreat, Vector vecViewOffset,
 
 				}
 				*/
+
 
 				BOOL unobscurred = FALSE;
 
@@ -9463,18 +9479,12 @@ BOOL CBaseMonster::predictRangeAttackEnd(void) {
 
 
 
-BOOL CBaseMonster::isRespawnable(void) {
-	return FALSE;  //by default, no.  Only things inheriting from CRespawnable too should override this.
-}
-
 // from weapons.cpp.
 void CBaseMonster::CheckRespawn(void)
 {
-
-	if (!isRespawnable()) {
-		// nope!
-		return;
-	}
+	// TEST
+	//Respawn();
+	//return;
 
 	switch (g_pGameRules->MonsterShouldRespawn(this))
 	{
@@ -9490,45 +9500,62 @@ void CBaseMonster::CheckRespawn(void)
 
 // A modified clone of weapons.cpp's "Respawn" method for handling a AI monstser that should stay dormant during that time and go to the first place this was seen on the map.
 // WARNING - only call for things that inherit from the 'CRespawnable' class as well as CBaseMonster (basemonster.h).
+// NO.  This 'CRespawnable' stuff is diabolical and evil.  Don't.
 CBaseEntity* CBaseMonster::Respawn(void)
 {
 	// WARNING - reinterpret_cast can be evil.
-	CRespawnable* selfRespawnableRef = reinterpret_cast<CRespawnable*>(this);
-
+	//CRespawnable* selfRespawnableRef = reinterpret_cast<CRespawnable*>(this);
+	CBaseMonster* selfRespawnableRef = this;
 
 	// make a copy of this weapon that is invisible and inaccessible to players (no touch function). The weapon spawn/respawn code
 	// will decide when to make the weapon visible and touchable.
-	CBaseEntity* someEnt = CBaseEntity::Create((char*)STRING(pev->classname), g_pGameRules->VecMonsterRespawnSpot(this, selfRespawnableRef->respawn_origin), selfRespawnableRef->respawn_angles, pev->owner);
-	//CPickupWalker* pNewWeapon = static_cast<CPickupWalker*>(someEnt);
-	CBaseEntity* pNewWeapon = someEnt;  //no casting
+	CBaseEntity* someEnt = CBaseEntity::CreateManual((char*)STRING(pev->classname), g_pGameRules->VecMonsterRespawnSpot(this, selfRespawnableRef->respawn_origin), selfRespawnableRef->respawn_angles, pev->owner);
+	//CPickupWalker* pNewMonster = static_cast<CPickupWalker*>(someEnt);
 
-	if (pNewWeapon)
+	if (someEnt == NULL)return NULL;  // ???
+
+	DispatchCreated(someEnt->edict());
+
+	CBaseMonster* pNewMonster = someEnt->GetMonsterPointer();
+	//CRespawnable* newRespawnableRef = reinterpret_cast<CRespawnable*>(someEnt);
+
+	//easyForcePrintLine("KNEEB %.2f %.2f %.2f", selfRespawnableRef->respawn_origin.x, selfRespawnableRef->respawn_origin.y, selfRespawnableRef->respawn_origin.z);
+	if (pNewMonster)
 	{
 		// MODDD - TODO.  wait, shouldn't we also set pev->solid to SOLID_NOT ??
 		// then again it doesn't matter, what else is SOLID_TRIGGER with a NULL TOUCH method anyway?  No impact.
 
-		pNewWeapon->pev->spawnflags &= ~SF_NORESPAWN;
+		pNewMonster->pev->spawnflags &= ~SF_NORESPAWN;
+
+		// also, fade the monster on death.  Don't want to spam the game.
+		pNewMonster->pev->spawnflags |= SF_MONSTER_FADECORPSE;
 
 		// pass on my respawn_ info:
-		selfRespawnableRef->respawn_origin = selfRespawnableRef->respawn_origin;
-		selfRespawnableRef->respawn_angles = selfRespawnableRef->respawn_angles;
+		pNewMonster->respawn_origin = selfRespawnableRef->respawn_origin;
+		pNewMonster->respawn_angles = selfRespawnableRef->respawn_angles;
 
-		pNewWeapon->pev->effects |= EF_NODRAW;// invisible for now
-		pNewWeapon->SetTouch(NULL);// no touch
-		pNewWeapon->SetThink(&CBaseMonster::AttemptToMaterialize);
+		//DebugLine_SetupPoint(0, newRespawnableRef->respawn_origin, 0, 255, 0);
+
+		pNewMonster->pev->takedamage = DAMAGE_NO;
+		pNewMonster->pev->solid = SOLID_NOT;  // safety
+		pNewMonster->pev->effects |= EF_NODRAW;// invisible for now
+		pNewMonster->SetTouch(NULL);// no touch
+		pNewMonster->SetThink(&CBaseMonster::AttemptToMaterialize);
 
 		DROP_TO_FLOOR(ENT(pev));
 
 		// not a typo! We want to know when the weapon the player just picked up should respawn! This new entity we created is the replacement,
 		// but when it should respawn is based on conditions belonging to the weapon that was taken.
-		pNewWeapon->pev->nextthink = g_pGameRules->FlMonsterRespawnTime(this);
+
+		//pNewMonster->pev->nextthink = gpGlobals->time + 6;
+		pNewMonster->pev->nextthink = g_pGameRules->FlMonsterRespawnTime(this);
 	}
 	else
 	{
 		ALERT(at_console, "Respawn failed to create %s!\n", STRING(pev->classname));
 	}
 
-	return pNewWeapon;
+	return pNewMonster;
 }
 
 
@@ -9538,6 +9565,7 @@ void CBaseMonster::AttemptToMaterialize(void)
 {
 	float time = g_pGameRules->FlMonsterTryRespawn(this);
 
+	//DebugLine_SetupPoint(0, pev->origin, 0, 0, 255);
 	if (time == 0)
 	{
 		Materialize();
@@ -9557,7 +9585,7 @@ void CBaseMonster::Materialize(void)
 		pev->effects |= EF_MUZZLEFLASH;
 	}
 
-	pev->solid = SOLID_TRIGGER;
+	//pev->solid = SOLID_TRIGGER;
 
 	UTIL_SetOrigin(pev, pev->origin);// link into world.
 
@@ -9570,11 +9598,16 @@ void CBaseMonster::Materialize(void)
 	//SetTouch(&CPickupWalker::PickupWalkerTouch);
 	//pev->solid = SOLID_TRIGGER;
 
-	// Now then, since I was so rudely interrupted.  Maybe.
+	// No need.  The moneter's own spawn or MonsterInit should handle this.
+	//pNewMonster->pev->takedamage = DAMAGE_NO;
 
-	SetThink(&CBaseMonster::MonsterInitThink);
+	// should call MonsterInitThink.
+	//DispatchSpawn(this->edict());
+	this->Spawn();
+
+	//SetThink(&CBaseMonster::MonsterInitThink);
 	//SetTouch(&CPickupWalker::PickupWalkerTouch);
-	pev->nextthink = gpGlobals->time + 0.1;
+	//pev->nextthink = gpGlobals->time + 0.1;
 
 }
 

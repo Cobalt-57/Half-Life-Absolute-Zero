@@ -1585,4 +1585,15 @@ Should AZ go aheand and default to this instead?  Looks like non-WON doesn't pay
 
 
 
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+DAMNED BE THEE WHO DARES TO SET m_pPlayer->m_flNextAttack YET NEGLECT TO SET m_flNextPrimaryAttack AND/OR m_flNextSecondaryAttack.
+...strangely, setting m_flNextAttack only, especially often when cheat_minimumfiredelay is on it seems, causes 
+the m_flNextPrimary coming in from the server to client at cl_dll/hl/hl_weapons.cpp to randomly shoot up from
+as it looks like it's counting down (0.5, 0.4, 0.3, 0.2, -> 0.5? ).   Absolutely no idea what this is.
+Maybe the server doesn't even like sending really low m_flNextPrimary values to clientside.
+Could test by enforcing a minimum m_flNextPrimary of 0 and try with m_flNextAttack set only again.
+
+
+
+
 

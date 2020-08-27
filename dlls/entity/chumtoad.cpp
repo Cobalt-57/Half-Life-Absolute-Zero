@@ -873,22 +873,43 @@ void CChumToad::Spawn( void )
 }//END OF Spawn(...);
 
 #if REMOVE_ORIGINAL_NAMES != 1
-	LINK_ENTITY_TO_CLASS( monster_chumtoad, CChumToadRespawnable );
+	LINK_ENTITY_TO_CLASS( monster_chumtoad, CChumToad);
 #endif
 
 #if EXTRA_NAMES > 0
-	LINK_ENTITY_TO_CLASS( chumtoad, CChumToadRespawnable);
+	LINK_ENTITY_TO_CLASS( chumtoad, CChumToad);
 	//no extras.
 #endif
 
 
 
+/*
+// above used to refer to 'CChumToadRespawnable' instead
+#if REMOVE_ORIGINAL_NAMES != 1
+	LINK_ENTITY_TO_CLASS(monster_chumtoad_norespawn, CChumToad);
+#endif
+
+#if EXTRA_NAMES > 0
+	LINK_ENTITY_TO_CLASS(chumtoad_norespawn, CChumToad);
+	//no extras.
+#endif
+*/
 
 void CChumToad::ChumToadTouch( CBaseEntity *pOther ){
 
-	//NEVERMIND
+	if (pOther != NULL && pOther->IsPlayer() && FBitSet(pOther->pev->flags, FL_DUCKING)) {
+		// if touched by a player that is ducking, go into the inventory.
+
+		PickupUse(pOther, pOther, USE_SET, 1.0f);
+		return;
+	}
+
+
+
+	// NEVERMIND FURTHER.
 	return;
 
+	/*
 	if(
 		pOther != NULL &&
 		!(pOther->IsWorld()) && pOther != NULL &&
@@ -909,7 +930,7 @@ void CChumToad::ChumToadTouch( CBaseEntity *pOther ){
 		}
 
 	}//END OF if(!(pev->flags & FL_ONGROUND))
-
+	*/
 }//END OF ChumToadTouch
 
 
@@ -948,7 +969,7 @@ void CChumToad::PickupUse(CBaseEntity* pActivator, CBaseEntity* pCaller, USE_TYP
 	}
 
 	// Can we even hold this chumtoad?
-	if (!g_pGameRules->CanHaveAmmo(pPlayer, "chum toads", CHUMTOAD_MAX_CARRY))
+	if (!g_pGameRules->CanHaveAmmo(pPlayer, "Chum Toads", CHUMTOAD_MAX_CARRY))
 	{
 		// game rules say I can't have any more of this ammo type.
 		return;
@@ -972,6 +993,8 @@ void CChumToad::PickupUse(CBaseEntity* pActivator, CBaseEntity* pCaller, USE_TYP
 		// Can this be respawned?
 		CBaseMonster::CheckRespawn();
 
+		// HACK.  Don't allow me to be respawend multiple times in the same place, MEMORY_KILLED is checked.
+		Remember(bits_MEMORY_KILLED);
 		UTIL_Remove(this);
 	}
 
@@ -2764,11 +2787,24 @@ GENERATE_GIBMONSTERGIB_IMPLEMENTATION(CChumToad){
 
 
 GENERATE_KILLED_IMPLEMENTATION(CChumToad){
-	//no longer "playing" dead.
+	// no longer "playing" dead.
 	toadPlayDeadTimer = -1;
 
+	if (!HasMemory(bits_MEMORY_KILLED)) {
+		// Can this be respawned?
+		CBaseMonster::CheckRespawn();
+	}
 
 	GENERATE_KILLED_PARENT_CALL(CBaseMonster);
+}
+
+// Deleted through any other means?  See if this should be respawned
+void CChumToad::onDelete(void) {
+	if (!HasMemory(bits_MEMORY_KILLED)) {
+		// Can this be respawned?   Also, don't allow this again if it already happened.
+		Remember(bits_MEMORY_KILLED);
+		CBaseMonster::CheckRespawn();
+	}
 }
 
 
@@ -2992,6 +3028,7 @@ int CChumToad::getHullIndexForNodes(void){
 
 
 
+/*
 CChumToadRespawnable::CChumToadRespawnable(void) {
 
 }//END OF constructor
@@ -3003,8 +3040,12 @@ CChumToadRespawnable::CChumToadRespawnable(void) {
 void CChumToadRespawnable::Spawn(void) {
 	CChumToad::Spawn();
 
+	// SAFETY
+	this->respawn_origin = pev->origin;
+	this->respawn_angles = pev->angles;
+
 	// after that call, may as well lose anything special about the name. If there was anything.
 	// May be unnecessary here.
 	pev->classname = MAKE_STRING("monster_chumtoad");
 }
-
+*/

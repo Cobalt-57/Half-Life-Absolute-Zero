@@ -92,8 +92,12 @@ int CSqueakGrenade :: Classify ( void )
 			case CLASS_PLAYER:
 			case CLASS_HUMAN_PASSIVE:
 			case CLASS_HUMAN_MILITARY:
+			//MODDD - why no CLASS_PLAYER_ALLY?
+			case CLASS_PLAYER_ALLY:
+			{
 				m_iMyClass = 0;
 				return CLASS_ALIEN_MILITARY; // barney's get mad, grunts get mad at it
+			}
 		}
 		m_iMyClass = 0;
 	}
@@ -689,11 +693,33 @@ void CSqueak::PrimaryAttack()
 	//MODDD - animation has a delay before the visible snark is thrown, show it.
 
 	// time of snark throw:  31/30   (time in the animation the snark is out of the hand)
-
+	
 	if (PlayerPrimaryAmmoCount() <= 0){
 		// forget it
 		return;
 	}
+
+
+
+	if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelay) == 0) {
+		// nothing unusual
+	}
+	else {
+		// RAPID FIRE MODE
+#ifndef CLIENT_DLL
+		Throw();
+#endif
+		SendWeaponAnimBypass(SQUEAK_UP);
+		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + (52.0 / 30.0) + randomIdleAnimationDelay();
+
+		SetAttackDelays(UTIL_WeaponTimeBase() + EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelaycustom) + 0.023f);
+
+		m_flReleaseThrow = -1;
+		m_chargeReady &= ~32;
+		return;
+	}
+
+
 
 //#ifndef CLIENT_DLL
 	//if (m_flReleaseThrow == -1) {
@@ -795,7 +821,7 @@ void CSqueak::SecondaryAttack( void )
 }//SecondaryAttack
 
 
-//should only be called by the server.
+// should only be called by the server.
 void CSqueak::Throw(void) {
 
 	if (PlayerPrimaryAmmoCount() <= 0) {

@@ -2429,16 +2429,6 @@ Schedule_t* CTalkMonster :: GetScheduleOfType ( int Type )
 			return slIdleStand;
 		}
 
-
-
-		/*
-		if (RANDOM_LONG(0,99) < 2)
-			//ALERT ( at_console, "target chase speak\n" );
-			return slIdleSpeakWait;
-		else
-			return slIdleStand;
-		*/
-
 	case SCHED_IDLE_STAND:
 		{
 			canGoRavingMad = TRUE;
@@ -2498,6 +2488,7 @@ Schedule_t* CTalkMonster :: GetScheduleOfType ( int Type )
 			}
 
 
+
 			// talk about world
 			if (FOkToSpeak() && RANDOM_LONG(0,m_nSpeak * 2) == 0)
 			{
@@ -2549,6 +2540,14 @@ Schedule_t* CTalkMonster :: GetScheduleOfType ( int Type )
 
 					return slTlkIdleEyecontact;
 				}else{
+
+
+					if (EASY_CVAR_GET(NPCsTalkMore) == 1) {
+						// fall back to talking then!
+						return slIdleSpeak;
+					}
+
+
 					// regular standing idle
 					return slIdleStand;
 				}
@@ -2629,7 +2628,7 @@ CTalkMonster::CTalkMonster(void){
 	recentDeclinesForgetTime = -1;
 
 	nextUseSentenceAllowed = -1;
-
+	nextIdleFidgetAllowedTime = -1;
 
 }//CTalkMonster constructor
 
@@ -2639,6 +2638,16 @@ CTalkMonster::CTalkMonster(void){
 
 
 void CTalkMonster::MonsterThink(void){
+
+
+	if (m_hTalkTarget) {
+		// If I have a talk target but it goes 'hidden' (no AI detection), drop it as a talk target
+		// and fail the current task, safety.
+		if(entityHidden(m_hTalkTarget)){
+			m_hTalkTarget = NULL;
+			TaskFail();
+		}
+	}
 
 
 	if(EASY_CVAR_GET_DEBUGONLY(peopleStrobe) == 1){
@@ -2906,6 +2915,35 @@ int CTalkMonster::IRelationship( CBaseEntity *pTarget )
 		return R_NO;
 	}
 
+
+	// Whoops, unnecessary.  Barnies already target squeaks, they override their classify's to
+	// mark themselves as enemies to any Talkers or hgrunts if the current enemy is any of those.
+	// Now includes CLASS_PLAYER_ALLY to get the same effect as here.
+	// This would also include hornets, which shooting down looks kindof odd.
+	// A check to ignore a 'thing->massInfluence()' under 0.05 would work for that if ever needed.
+	// Also, something strange if hornets are allowed to be an enemy: the barney soon aims to the side
+	// and starts firing at nothing for a short while after shooting down a hornet or if one flew into him.
+	// My guess is the LKP (last-known-position) setting the barney's LKP to the hornet origin + hornet velocity,
+	// which, being very high, easily puts the hornet much further away from where it is now in 0.1 to 0.5 seconds
+	// from now (assuming it moved in a straight line from that).  But that's a guess.
+	/*
+	int daClass = pTarget->Classify();
+	if (daClass == CLASS_ALIEN_BIOWEAPON || daClass == CLASS_PLAYER_BIOWEAPON) {
+		CBaseMonster* monsterTest = pTarget->GetMonsterPointer();
+		if (monsterTest != NULL) {
+			CBaseEntity* daBioweaponEnemy = monsterTest->m_hEnemy.GetEntity();
+			if (daBioweaponEnemy != NULL) {
+				int daBioweaponEnemyClass = daBioweaponEnemy->Classify();
+				if (daBioweaponEnemyClass == CLASS_PLAYER || daBioweaponEnemyClass == CLASS_PLAYER_ALLY) {
+					// If this bioweapon (most likely snark) is targeting a friendly, I hate it!
+					return R_HT;
+				}
+			}
+		}
+	}
+	*/
+
+
 	if ( pTarget->IsPlayer() )
 		if ( m_afMemory & bits_MEMORY_PROVOKED )
 			return R_HT;
@@ -2969,6 +3007,12 @@ void CTalkMonster::StartFollowing( CBaseEntity *pLeader )
 
 	if ( m_hEnemy != NULL )
 		m_IdealMonsterState = MONSTERSTATE_ALERT;
+
+
+	if (entityHidden(pLeader)) {
+		// stop!  I don't want a leader I can't talk to
+		return;
+	}
 
 	m_hTargetEnt = pLeader;
 	

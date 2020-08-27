@@ -418,6 +418,7 @@ NEW CVAR: gauss_mode, defaults to 1.  0 is retail-based, 1 is pre-release/alpha 
 - Reflection-less and pierce-less secondary fire will also deal radial damage (like an explosion), but less so than the default ones for the same charge.
 - Gauss charge force-fire no longer happens on running out of ammo at the moment of a full charge (starting a charge with retail gauss with 13 ammo maintains the charge when 0 ammo is reached).
 - Gauss charge force-fire from running out of charge happens at the next ammo-usage cycle that sees there isn't enough ammo instead of the instant the ammo runs out (more noticeable in gauss mode #1).
+- Primary fire bounces can no longer gib.
 
 GAUSS MODE 0:
 - Minimum ammo used for charge (1) no longer surpasses primary fire damage (20).  Instead, a charged shot of 1 ammo deals only 8 damage but becomes increasingly more efficient with more ammo used (already better than primary slightly at 2).
@@ -439,6 +440,8 @@ New CVar: sv_rpg_alpha_ammo (defaults to 1).  More RPG alpha logic when on, logi
 
 Chumtoads no longer granted by cheat commands (impulse 101, 'everything') in multiplayer.     Uh.  okay.
 
+Chumtoads may be picked up by touching while crouching, as well as pressing use (e) while near them and looking at them.
+
 cheat commands (impulse 101, 'everything') now give power canisters (injectables) too.
 
 Pausing the game while a visual client model event is playing (muzzle flash) will not spawn the effect repeatedly.
@@ -458,8 +461,9 @@ Non-sentry turrets no longer appear to jitter their aim while firing at somethin
 Ladder logic jump-off logic altered.  Only clean jump-presses can jump off, not holding it down.
 Also, added a delay before getting back on the same ladder (avoid sticking to the ladder while jumping off).
 
-TODO
-Barnies will target snarks that have the player or other friendly NPCs targeted.  They will still get pissed at the player if a player-thrown snark damages them.
+Mirrored player (mirrorsDoNotReflectPlayer 0) has muzzle flash events in first and third person.  Yes, really.
 
-TODO - chumtoad, crouch + touch = pickup.
-
+Friendly talkers (scientist, barney) use less-random custom logic for picking idle anims, similar to a pre-release state.
+- Talkers usually pick from standard idle animations that look the most plain (breathing).
+- If 11 to 15 seconds have passed, a 'fidget' idle will be picked instead, and the timer is reset.
+- Picking any other animation also resets the timer.  Must be 11 to 15 seconds since staying in a neutral activity (idle, turning in place, crouching, etc.).

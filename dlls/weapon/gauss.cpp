@@ -273,6 +273,8 @@ void CGauss::PrimaryAttack()
 	}
 	else {
 		m_pPlayer->m_flNextAttack = UTIL_WeaponTimeBase() + EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelaycustom);
+		m_flNextPrimaryAttack = m_pPlayer->m_flNextAttack;
+		m_flNextSecondaryAttack = m_pPlayer->m_flNextAttack;
 	}
 }
 
@@ -362,6 +364,8 @@ void CGauss::SecondaryAttack()
 			m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 1.0;
 
 			m_pPlayer->m_flNextAttack = UTIL_WeaponTimeBase() + EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelaycustom);
+			m_flNextPrimaryAttack = m_pPlayer->m_flNextAttack;
+			m_flNextSecondaryAttack = m_pPlayer->m_flNextAttack;
 			return;
 		}
 
@@ -516,9 +520,8 @@ void CGauss::StartFire(void)
 	}
 
 
-
 	if (!m_fPrimaryFire) {
-		
+
 		if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST(gauss_mode) != 1) {
 			// Retail.
 			//MODDD - changes here too.  Do damage in solid increments depending on how
@@ -551,7 +554,7 @@ void CGauss::StartFire(void)
 	{
 		// PRIMARY FIRE
 		flDamage = damagePerShot;
-		
+
 	}
 
 	// SAFETY.  Reset m_fireState (ammo cycles passed while charging) now that damage has been decided
@@ -653,6 +656,29 @@ void CGauss::StartFire(void)
 
 void CGauss::Fire(Vector vecOrigSrc, Vector vecDir, float flDamage)
 {
+	int dmgDirectBit;
+	int dmgDirectBitMod;
+	int dmgBlastBit;
+	int dmgBlastBitMod;
+
+
+	if (!m_fPrimaryFire) {
+
+		dmgDirectBit = DMG_BULLET;
+		dmgDirectBitMod = DMG_GAUSS;
+		dmgBlastBit = DMG_BLAST;
+		dmgBlastBitMod = DMG_GAUSS;
+	}
+	else {
+		//MODDD - added DMG_NEVERGIB to primary fire, since alpha gauss logic damage (50) is enough
+		// to gib, yet we don't want it to.
+		dmgDirectBit = DMG_BULLET | DMG_NEVERGIB;
+		dmgDirectBitMod = DMG_GAUSS;
+		dmgBlastBit = DMG_BLAST | DMG_NEVERGIB;
+		dmgBlastBitMod = DMG_GAUSS;
+	}
+
+
 	m_pPlayer->m_iWeaponVolume = GAUSS_PRIMARY_FIRE_VOLUME;
 
 	Vector vecSrc = vecOrigSrc;
@@ -740,7 +766,7 @@ void CGauss::Fire(Vector vecOrigSrc, Vector vecDir, float flDamage)
 
 			const char* theName = pEntity->getClassname();
 
-			pEntity->TraceAttack(m_pPlayer->pev, flDamage, vecDir, &tr, DMG_BULLET, DMG_GAUSS, TRUE, &useBulletHitSound);
+			pEntity->TraceAttack(m_pPlayer->pev, flDamage, vecDir, &tr, dmgDirectBit, dmgDirectBitMod, TRUE, &useBulletHitSound);
 
 
 			//MODDD - Play a texture-hit sound, it is a bullet after all.
@@ -814,15 +840,15 @@ void CGauss::Fire(Vector vecOrigSrc, Vector vecDir, float flDamage)
 				float radRange;
 
 				if (flDamage <= 140) {
-					radDmg = flDamage * 0.42;
-					radRange = flDamage * 1.4;
+					radDmg = flDamage * 0.36;
+					radRange = flDamage * 1.2;
 				}else {
-					radDmg = (140 * 0.42) + (flDamage - 140) * 0.21;
-					radRange = (140 * 1.4) + (flDamage - 140) * 0.60;
+					radDmg = (140 * 0.36) + (flDamage - 140) * 0.16;
+					radRange = (140 * 1.2) + (flDamage - 140) * 0.32;
 				}
 
 
-				RadiusDamage(tr.vecEndPos, pev, m_pPlayer->pev, radDmg, flDamage, CLASS_NONE, DMG_BLAST, DMG_GAUSS);
+				RadiusDamage(tr.vecEndPos, pev, m_pPlayer->pev, radDmg, radRange, CLASS_NONE, dmgBlastBit, dmgBlastBitMod);
 
 				nTotal += 34;
 
@@ -887,15 +913,15 @@ void CGauss::Fire(Vector vecOrigSrc, Vector vecDir, float flDamage)
 							float radRange;
 
 							if (flDamage <= 140) {
-								radDmg = flDamage * 0.38;
-								radRange = flDamage * 1.4;
+								radDmg = flDamage * 0.36;
+								radRange = flDamage * 1.2;
 							}
 							else {
-								radDmg = (140 * 0.38) + (flDamage - 140) * 0.17;
-								radRange = (140 * 1.4) + (flDamage - 140) * 0.60;
+								radDmg = (140 * 0.36) + (flDamage - 140) * 0.16;
+								radRange = (140 * 1.2) + (flDamage - 140) * 0.32;
 							}
 
-							::RadiusDamage(beam_tr.vecEndPos + vecDir * 8, pev, m_pPlayer->pev, radDmg, radRange, CLASS_NONE, DMG_BLAST, DMG_GAUSS);
+							::RadiusDamage(beam_tr.vecEndPos + vecDir * 8, pev, m_pPlayer->pev, radDmg, radRange, CLASS_NONE, dmgBlastBit, dmgBlastBitMod);
 
 
 							CSoundEnt::InsertSound(bits_SOUND_COMBAT, pev->origin, NORMAL_EXPLOSION_VOLUME, 3.0);
@@ -927,15 +953,15 @@ void CGauss::Fire(Vector vecOrigSrc, Vector vecDir, float flDamage)
 						float radRange;
 
 						if (flDamage <= 140) {
-							radDmg = flDamage * 0.21;
-							radRange = flDamage * 1.1;
+							radDmg = flDamage * 0.19;
+							radRange = flDamage * 0.94;
 						}
 						else {
-							radDmg = (140 * 0.21) + (flDamage - 140) * 0.10;
-							radRange = (140 * 1.1) + (flDamage - 140) * 0.38;
+							radDmg = (140 * 0.19) + (flDamage - 140) * 0.13;
+							radRange = (140 * 0.94) + (flDamage - 140) * 0.26;
 						}
 
-						::RadiusDamage(tr.vecEndPos + vecDir * 8, pev, m_pPlayer->pev, radDmg, radRange, CLASS_NONE, DMG_BLAST, DMG_GAUSS);
+						::RadiusDamage(tr.vecEndPos + vecDir * 8, pev, m_pPlayer->pev, radDmg, radRange, CLASS_NONE, dmgBlastBit, dmgBlastBitMod);
 
 						// And lastly, remove all damage.  doDirectHitRadDamage was only set to TRUE in places that reset this.
 						flDamage = 0;

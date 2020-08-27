@@ -718,8 +718,8 @@ void CBaseAnimating :: ResetSequenceInfo ( )
 	//"m_flGroundSpeed" is what will be used to move this monster by X units (location-wise) in the actual world.
 	GetSequenceInfo( pmodel, pev, &m_flFrameRate, &m_flGroundSpeed );
 	//easyPrintLine("A THIS SEQUENCE SAYS SPEED IS %.2f", m_flGroundSpeed);
-	
 
+	
 	if(m_iForceLoops == 0){
 		//force off.
 		m_fSequenceLoops = FALSE;
@@ -820,6 +820,9 @@ void CBaseAnimating :: ResetSequenceInfo ( )
 	//with the intention of keeping the anim past looping during an idle animation, and only AFTER calling this method.
 	//This forced setting to FALSE in ResetSequenceInfo is a safety feature so that animations later are not treated as custom / idle-blocking.
 	usingCustomSequence = FALSE;
+	//MODDD - NEW.  Safety.  If told to reset this sequence to itself (reset frame), the frame-reset
+	// will not happen, if this is on.  By default, OFF.
+	doNotResetSequence = FALSE;
 
 }
 
@@ -918,6 +921,7 @@ void CBaseAnimating :: ResetSequenceInfoSafe ( )
 	applyAnimationQueueSuggestion();
 	//MODDD - see note above about "usingCustomSequence".
 	usingCustomSequence = FALSE;
+	doNotResetSequence = FALSE;
 }
 
 

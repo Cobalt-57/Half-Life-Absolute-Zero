@@ -2274,7 +2274,8 @@ GENERATE_DEADTAKEDAMAGE_IMPLEMENTATION(CBaseMonster)
 #endif
 
 	// kill the corpse if enough damage was done to destroy the corpse and the damage is of a type that is allowed to destroy the corpse.
-	if ( bitsDamageType & DMG_GIB_CORPSE )
+	//MODDD - don't allow gibbing if DMG_NEVERGIB is in there!  Likely deliberate.
+	if (!(bitsDamageType & DMG_NEVERGIB) && bitsDamageType & DMG_GIB_CORPSE )
 	{
 		//MODDD NOTE - the same "Killed" as running out of health the first time while alive?
 		//             That's... an akward design choice. Why not a separate "CorpseKilled" or something?

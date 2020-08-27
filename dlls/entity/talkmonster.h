@@ -173,6 +173,7 @@ public:
 	float recentDeclinesForgetTime;
 
 	float nextUseSentenceAllowed;
+	float nextIdleFidgetAllowedTime;
 
 
 	//MODDD

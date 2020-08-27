@@ -1262,6 +1262,10 @@ BOOL CBasePlayerWeapon :: AddPrimaryAmmo( int iCount, char *szName, int iMaxClip
 		this->playGunPickupSound(m_pPlayer->pev);
 	}
 
+
+	// NOTE - couldn't this just be played by the 'forcePickupSound' check and nothing else?
+	// What's the point of the rest of this?
+	/*
 	if (iIdAmmo > 0 )//|| weaponPlayPickupSoundException(m_pPlayer))
 	{
 		//MODDD - now wait just a moment.
@@ -1285,9 +1289,12 @@ BOOL CBasePlayerWeapon :: AddPrimaryAmmo( int iCount, char *szName, int iMaxClip
 
 		}
 	}
+	*/
+	//MODDD - done.  See if this causes any problems, mainly playing the sound when it shouldn't.
+	if (forcePickupSound == FALSE) {
+		playAmmoPickupSound();
+	}
 
-
-	//easyPrintLine("DOOP %d", iIdAmmo);
 
 	return iIdAmmo > 0 ? TRUE : FALSE;
 }

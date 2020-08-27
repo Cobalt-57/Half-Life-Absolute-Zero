@@ -655,8 +655,8 @@ hud_moveselect_sound (1) - MODEVAR.  Controls the sound made changing the select
 mirrorsReflectOnlyNPCs - BOOL.  If 1, mirrors only reflect NPCs (generally, living enemies and friendlies).
 mirrorsDoNotReflectPlayer - BOOL.  If 1, the player (first or third person) is an exception to rendering in the mirror (being shown in the reflection).
 
-NPCsTalkMore - BOOL.  If 1, NPCs will be more likely to talk.  Beware that some conditions still prevent talking (hard to say what they are at times).
-
+NPCsTalkMore - BOOL.  If 1, NPCs will be more likely to talk.  Beware that some conditions still prevent talking.
+-WARNING: may block some AI like following.
 
 nothingHurts - BOOL (w/ extra mode).  If 1, most things (including the player) can't damage anything else, assuming they deal damage through the usual "takeDamage" method applied to the receiver.
 ~if 2, enemies (NPCs) still can't damage each other or the player, but the player can damage them back.  Use to conveniently pick-off NPCs in "no-target" observation.
@@ -1507,7 +1507,7 @@ cl_interp_view_standard (1) - MODEVAR.  View camera smoothness for going up/down
 1: Works on ground only. (retail). Going up or down inclines, especially stairs, is more smooth.
 2: Works mid-air too.  Similar effect as cl_interp_view_extra set to 2 for mid-air crouch jumps, maybe.  Might have a different feel or work at different times, try it out.
 
-~Unknown what takes precedence for mid-air interp on cl_interp_view_extra and cl_interp_view_standard both set to 2.
+~Unknown what takes precedence for mid-air interp on cl_interp_view_extra and cl_interp_view_standard both set to 2, but it is glitchy compared to only either at 2 for mid-air crouching.
 
 
 

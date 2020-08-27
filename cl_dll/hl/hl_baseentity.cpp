@@ -826,7 +826,6 @@ void CBaseMonster::ReportGeneric(){}
 void CBaseMonster::onEnemyDead(CBaseEntity* pRecentEnemy) {}
 BOOL CBaseMonster::predictRangeAttackEnd(void) { return FALSE; }
 
-BOOL CBaseMonster::isRespawnable(void) { return FALSE; }
 void CBaseMonster::CheckRespawn(void) {}
 CBaseEntity* CBaseMonster::Respawn(void) { return NULL; }
 void CBaseMonster::AttemptToMaterialize(void) {}

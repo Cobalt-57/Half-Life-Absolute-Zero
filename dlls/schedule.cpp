@@ -848,7 +848,7 @@ void CBaseMonster :: RunTask ( Task_t *pTask )
 	case TASK_FACE_PREV_LKP:
 	case TASK_FACE_BEST_SOUND:
 		{
-
+			
 			if(pTask->iTask == TASK_FACE_TARGET && this->m_hTargetEnt == NULL){
 				// if told to face a target that does not / no longer exists, stop.
 				TaskFail();

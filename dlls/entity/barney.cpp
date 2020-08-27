@@ -2100,6 +2100,11 @@ int CBarney::LookupActivityHard(int activity){
 	return LookupSequence("get_bug");
 	*/
 
+	if (!(activity == ACT_IDLE || activity == ACT_CROUCH || activity == ACT_CROUCHIDLE || activity == ACT_TURN_LEFT || activity == ACT_TURN_RIGHT)) {
+		// reset it next time.
+		nextIdleFidgetAllowedTime = -1;
+	}
+
 
 	int iRandChoice = 0;
 	int iRandWeightChoice = 0;
@@ -2177,6 +2182,7 @@ int CBarney::LookupActivityHard(int activity){
 			
 		break;
 		case ACT_IDLE:{
+
 			//First off, are we talking right now?
 			if(IsTalking()){
 				//Limit the animations we can choose from a little more.
@@ -2200,18 +2206,28 @@ int CBarney::LookupActivityHard(int activity){
 					// Idle's 2 and 4 are a little paranoid looking for a non-dangerous situation,
 					// or while talking (see above, even #3 is dropped).
 
-					//Don't allow "idle_look". We have no reason to look scared yet, ordinary day so far.
-					const int animationWeightTotal = 50+10;
-					const int animationWeightChoice = RANDOM_LONG(0, animationWeightTotal-1);
+					if (nextIdleFidgetAllowedTime == -1) {
+						// set it.
+						nextIdleFidgetAllowedTime = gpGlobals->time + RANDOM_FLOAT(11, 15);
+					}
 
-					if(animationWeightChoice < 50){
-						m_flFramerateSuggestion = 0.71f;
+					if (gpGlobals->time < nextIdleFidgetAllowedTime) {
+						// not there yet?  Pick a plain idle
 						return LookupSequence("idle1");
-					}else{ //if(animationWeightChoice < 50+10){
-						m_flFramerateSuggestion = 0.76f;
+					}
+					else {
+						const int animationWeightTotal = 3 + 2 + 2 + 1;
+						const int animationWeightChoice = RANDOM_LONG(0, animationWeightTotal - 1);
+
+						nextIdleFidgetAllowedTime = gpGlobals->time + RANDOM_FLOAT(11, 15);
+
+						// play a fidget
 						return LookupSequence("idle3");
 					}
+
+
 				}else{
+					/*
 					//Just pick from the model, any idle animation is okay right now.
 					int theSeq = CBaseAnimating::LookupActivity(activity);
 
@@ -2224,6 +2240,50 @@ int CBarney::LookupActivityHard(int activity){
 					}
 
 					return theSeq;
+					*/
+
+
+
+					if (nextIdleFidgetAllowedTime == -1) {
+						// set it.
+						nextIdleFidgetAllowedTime = gpGlobals->time + RANDOM_FLOAT(11, 15);
+					}
+
+					if (gpGlobals->time < nextIdleFidgetAllowedTime) {
+						// not there yet?  Pick a plain idle
+						const int animationWeightTotal = 90 + 5;
+						const int animationWeightChoice = RANDOM_LONG(0, animationWeightTotal - 1);
+
+						if (animationWeightChoice < 90) {
+							m_flFramerateSuggestion = 0.84f;
+							return LookupSequence("idle1");
+						}
+						else if (animationWeightChoice < 90 + 5) {
+							m_flFramerateSuggestion = 0.84f;
+							return LookupSequence("idle3");
+						}
+					}
+					else {
+						const int animationWeightTotal = 6 + 4 + 1;
+						const int animationWeightChoice = RANDOM_LONG(0, animationWeightTotal - 1);
+
+						nextIdleFidgetAllowedTime = gpGlobals->time + RANDOM_FLOAT(11, 15);
+
+						// play a fidget
+						if (animationWeightChoice < 6) {
+							m_flFramerateSuggestion = 0.97f;
+							return LookupSequence("idle3");
+						}
+						else if (animationWeightChoice < 6 + 4) {
+							m_flFramerateSuggestion = 0.92f;
+							return LookupSequence("idle2");
+						}
+						else { //if(animationWeightChoice < 6 + 4 + 1){
+							m_flFramerateSuggestion = 0.94f;
+							return LookupSequence("idle4");
+						}
+					}
+
 				}
 				
 			}//END OF IsTalking check
@@ -2248,7 +2308,7 @@ int CBarney::tryActivitySubstitute(int activity){
 	//pev->framerate = 1;
 	int maxRandWeight = 30;
 
-	//no need for default, just falls back to the normal activity lookup.
+	// no need for default, just falls back to the normal activity lookup.
 	switch(activity){
 		case ACT_DISARM:
 			if(EASY_CVAR_GET_DEBUGONLY(barneyUnholsterAnimChoice) == 0){
@@ -2264,7 +2324,7 @@ int CBarney::tryActivitySubstitute(int activity){
 			}
 		break;
 		case ACT_VICTORY_DANCE:
-			// a small portion of the time, allow this stupid little dance.   why not.
+			// a small portion of the time, allow this.   why not.
 			if (RANDOM_FLOAT(0, 1) < 0.04) {
 				return LookupSequence("hambone");
 			}

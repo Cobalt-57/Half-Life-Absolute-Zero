@@ -4,6 +4,9 @@
 
 
 
+// NOTICE!  CChumToadPickupWalker is now unused.  It is skipped, weapon_chumtoad is replaced by
+// monster_chumtoad if placed in-world.  monster_chumtoad is also respawnable in multiplayer,
+// picked up or killed.
 
 
 
@@ -598,6 +601,10 @@ GENERATE_KILLED_IMPLEMENTATION(CPickupWalker){
 // from weapons.cpp.
 void CPickupWalker::CheckRespawn(void)
 {
+	// TEST
+	//Respawn();
+	//return;
+
 	switch (g_pGameRules->PickupWalkerShouldRespawn(this))
 	{
 	case GR_WEAPON_RESPAWN_YES:
@@ -614,7 +621,12 @@ CBaseEntity* CPickupWalker::Respawn(void)
 {
 	// make a copy of this weapon that is invisible and inaccessible to players (no touch function). The weapon spawn/respawn code
 	// will decide when to make the weapon visible and touchable.
-	CBaseEntity* someEnt = CBaseEntity::Create((char*)STRING(pev->classname), g_pGameRules->VecPickupWalkerRespawnSpot(this), this->respawn_angles, pev->owner);
+	CBaseEntity* someEnt = CBaseEntity::CreateManual((char*)STRING(pev->classname), g_pGameRules->VecPickupWalkerRespawnSpot(this), this->respawn_angles, pev->owner);
+	
+	if (someEnt == NULL)return NULL;  // ???
+
+	DispatchCreated(someEnt->edict());
+
 	CPickupWalker* pNewWeapon = static_cast<CPickupWalker*>(someEnt);
 
 	if (pNewWeapon)
@@ -628,6 +640,8 @@ CBaseEntity* CPickupWalker::Respawn(void)
 		pNewWeapon->respawn_origin = this->respawn_origin;
 		pNewWeapon->respawn_angles = this->respawn_angles;
 
+		pNewWeapon->pev->takedamage = DAMAGE_NO;
+		pNewWeapon->pev->solid = SOLID_NOT;  // safety
 		pNewWeapon->pev->effects |= EF_NODRAW;// invisible for now
 		pNewWeapon->SetTouch(NULL);// no touch
 		pNewWeapon->SetThink(&CPickupWalker::AttemptToMaterialize);
@@ -636,7 +650,9 @@ CBaseEntity* CPickupWalker::Respawn(void)
 
 		// not a typo! We want to know when the weapon the player just picked up should respawn! This new entity we created is the replacement,
 		// but when it should respawn is based on conditions belonging to the weapon that was taken.
-		pNewWeapon->pev->nextthink = g_pGameRules->FlPickupWalkerRespawnTime(this);
+
+		pNewWeapon->pev->nextthink = gpGlobals->time + 2;
+		//pNewWeapon->pev->nextthink = g_pGameRules->FlPickupWalkerRespawnTime(this);
 	}
 	else
 	{
@@ -672,8 +688,6 @@ void CPickupWalker::Materialize(void)
 		pev->effects |= EF_MUZZLEFLASH;
 	}
 
-	pev->solid = SOLID_TRIGGER;
-
 	UTIL_SetOrigin(pev, pev->origin);// link into world.
 	
 	//SetTouch(&CPickupWalker::DefaultTouch);
@@ -685,10 +699,16 @@ void CPickupWalker::Materialize(void)
 	//SetTouch(&CPickupWalker::PickupWalkerTouch);
 	//pev->solid = SOLID_TRIGGER;
 
+
+
 	// Now then, since I was so rudely interrupted.
-	SetThink(&CBaseMonster::MonsterInitThink);
-	SetTouch(&CPickupWalker::PickupWalkerTouch);
-	pev->nextthink = gpGlobals->time + 0.1;
+	// no!  Just call spawn
+	//DispatchSpawn(this->edict());
+	Spawn();
+
+	//SetThink(&CBaseMonster::MonsterInitThink);
+	//SetTouch(&CPickupWalker::PickupWalkerTouch);
+	//pev->nextthink = gpGlobals->time + 0.1;
 
 }
 

@@ -64,7 +64,9 @@ public:
 
 
 	float postDeathEndTime;
-	BOOL nextDeathExplosionTime;
+	float nextDeathExplosionTime;
+	float postDeathBeserkDir;
+	BOOL postDeathSequenceStarting;
 
 
 	CBaseTurret(void);
@@ -100,8 +102,8 @@ public:
 	//MODDD - new.
 	void SetObjectCollisionBox( void )
 	{
-		//easyForcePrintLine("I FALLLLLLLLLLLL %d", pev->deadflag);
-		if(pev->deadflag != DEAD_NO){
+		// also, when past the post-death beserk time.
+		if(pev->deadflag != DEAD_NO && gpGlobals->time >= postDeathEndTime){
 			pev->absmin = pev->origin + Vector(-46, -46, 0);
 			pev->absmax = pev->origin + Vector(46, 46, 26);
 			//pev->absmin = pev->origin + Vector(-4, -4, 0);
@@ -112,7 +114,7 @@ public:
 	}
 
 
-
+	virtual void onDelete(void);
 	virtual void BeserkAimLogic(void);
 	virtual void TurretDeathEnd(void);
 

@@ -148,13 +148,16 @@ public:
 
 	// Player specific data
 	// Determine pitch and blending amounts for players
-	virtual void StudioPlayerBlend ( mstudioseqdesc_t *pseqdesc, int *pBlend, float *pPitch );
+	//MODDD - new parameter, whether to invert pitch or not
+	virtual void StudioPlayerBlend ( mstudioseqdesc_t *pseqdesc, int *pBlend, float *pPitch, BOOL fInvertPitch );
 
 	// Estimate gait frame for player
 	virtual void StudioEstimateGait ( entity_state_t *pplayer );
 
 	// Process movement of player
 	virtual void StudioProcessGait ( entity_state_t *pplayer );
+	//MODDD - version to support inverting the blend pitch
+	virtual void StudioProcessGait(entity_state_t* pplayer, BOOL fInvertPitch);
 
 
 	virtual void CUSTOM_StudioClientEvents(void);

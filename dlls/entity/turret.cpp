@@ -241,6 +241,8 @@ void CBaseTurret::KeyValue( KeyValueData *pkvd )
 CBaseTurret::CBaseTurret(){
 	postDeathEndTime = -1;
 	nextDeathExplosionTime = -1;
+	postDeathBeserkDir = -1;
+	postDeathSequenceStarting = FALSE;
 }
 
 
@@ -526,6 +528,15 @@ void CBaseTurret::EyeOff( )
 }
 
 
+void CBaseTurret::onDelete(void) {
+	if (m_pEyeGlow) {
+		EyeOff();  //paranoia
+		// and remove it.
+		UTIL_Remove(m_pEyeGlow);
+		m_pEyeGlow = NULL;
+	}
+}
+
 void CBaseTurret::BeserkAimLogic(void) {
 
 	//MODDD - random aim cycles will happen more often
@@ -726,6 +737,14 @@ void CBaseTurret::ActiveThink(void)
 	if (m_fBeserk == 1)
 	{
 		BeserkAimLogic();
+
+		// NOTICE - beserk logic might kill this turret.
+		// SpinUpCall in the Turret class (not CBaseTurret...  yeah, that's not confusing)
+		// will set the think to ActiveThink, ignoring the think set from TakeDamage (Beserk).
+		//if (pev->deadflag != DEAD_NO) {
+		if(postDeathSequenceStarting){
+			return;
+		}
 	} 
 	else if (fEnemyVisible)
 	{
@@ -1075,7 +1094,8 @@ void CBaseTurret::AutoSearchThink(void)
 
 
 
-
+// Start the TURRET_ANIM_DIE sequence now.  When that finishes playing (detected in TurretDeath think),
+// the turret will really be done (stop thinking).
 void CBaseTurret::TurretDeathEnd(void) {
 
 	// don't allow the turret turn speedups after this point of death,
@@ -1089,8 +1109,9 @@ void CBaseTurret::TurretDeathEnd(void) {
 		m_vecGoalAngles.x = -90;
 
 	SetTurretAnim(TURRET_ANIM_DIE);
-	EyeOn();
-
+	
+	//MODDD - what?  why?
+	//EyeOn();
 
 
 	float flRndSound = RANDOM_FLOAT(0, 1);
@@ -1103,6 +1124,9 @@ void CBaseTurret::TurretDeathEnd(void) {
 		UTIL_PlaySound(ENT(pev), CHAN_BODY, "turret/tu_die3.wav", 1.0, ATTN_NORM);
 
 
+	// just in case.
+	UTIL_PlaySound(ENT(pev), CHAN_STATIC, "turret/tu_active2.wav", 0, 0, SND_STOP, 100);
+
 	Vector tempVec;
 	tempVec.x = RANDOM_FLOAT(pev->absmin.x, pev->absmax.x);
 	tempVec.y = RANDOM_FLOAT(pev->absmin.y, pev->absmax.y);
@@ -1110,6 +1134,8 @@ void CBaseTurret::TurretDeathEnd(void) {
 	// lots of smoke
 	UTIL_Smoke(MSG_BROADCAST, NULL, NULL, tempVec, 0, 0, 0, g_sModelIndexSmoke, 25, 10 - m_iOrientation * 5);
 
+
+	pev->takedamage = DAMAGE_YES;// don't let autoaim aim at corpses.
 
 }//END OF TurretDeathEnd
 
@@ -1138,21 +1164,16 @@ void CBaseTurret ::	TurretDeath( void )
 		pev->deadflag = DEAD_DEAD;
 		
 		
-
-		postDeathEndTime = -1;
-		TurretDeathEnd();
-		
 		if (m_iSpin) {
 			// if spinning at death, go haywire.
 			postDeathEndTime = gpGlobals->time + RANDOM_FLOAT(5.8, 7.6);
-			nextDeathExplosionTime = gpGlobals->time + RANDOM_FLOAT(0.92, 1.15);
+			nextDeathExplosionTime = gpGlobals->time + RANDOM_FLOAT(0.70, 1.50);
 		}
 		else {
 			// mundane death
 			postDeathEndTime = -1;
 			TurretDeathEnd();
 		}
-
 
 		//MODDD - death sound moved to below too
 		
@@ -1184,11 +1205,11 @@ void CBaseTurret ::	TurretDeath( void )
 			if (gpGlobals->time >= nextDeathExplosionTime && nextDeathExplosionTime != -2) {
 
 				Vector expVec;
-				expVec.x = RANDOM_FLOAT(pev->origin.x + pev->mins.x * 0.4, pev->origin.x + pev->maxs.x * 0.4);
-				expVec.y = RANDOM_FLOAT(pev->origin.y + pev->mins.y * 0.4, pev->origin.y + pev->maxs.y * 0.4);
-				expVec.z = pev->origin.z - m_iOrientation * 28 + RANDOM_FLOAT(-6, 6);
+				expVec.x = RANDOM_FLOAT(pev->origin.x + pev->mins.x * 1.5, pev->origin.x + pev->maxs.x * 1.5);
+				expVec.y = RANDOM_FLOAT(pev->origin.y + pev->mins.y * 1.5, pev->origin.y + pev->maxs.y * 1.5);
+				expVec.z = -m_iOrientation * 26 + RANDOM_FLOAT(pev->origin.z + pev->mins.z * 0.7, pev->origin.z + pev->maxs.z * 0.7);
 
-				UTIL_Explosion(MSG_PVS, expVec, NULL, pev, expVec, 0, 0, 0, g_sModelIndexFireball, RANDOM_LONG(26, 32), 18, TE_EXPLFLAG_NONE, 0.4);
+				UTIL_Explosion(MSG_PVS, expVec, NULL, pev, expVec, 0, 0, 0, g_sModelIndexFireball, RANDOM_LONG(17, 28), 18, TE_EXPLFLAG_NONE, 0.4);
 				//easyForcePrintLine("1 explosion, yes? %.2f", gpGlobals->time);
 				// further than so man so many seconds away?  go ahead, do it again
 				if (nextDeathExplosionTime < postDeathEndTime - 1.2) {
@@ -1256,22 +1277,46 @@ void CBaseTurret ::	TurretDeath( void )
 	}
 
 	//MODDD - postDeathEndTimeReached added.
-	if (postDeathEndTimeReached && m_fSequenceFinished && turretDoneMoving && pev->dmgtime + 5 < gpGlobals->time)
-	{
 
+
+	if (postDeathEndTimeReached) {
+		int i;
+		// This needs to be called every frame to reduce the brightness by 30 each time.
+		// EyeOff does not instantly turn it off or lead to that happening alone.
+		// GO.  FIGURE.
+		EyeOff();
+
+
+		// sparks?
+		for (i = 0; i < 2; i++) {
+			Vector vecSrc = Vector(RANDOM_FLOAT(pev->origin.x + pev->mins.x * 0.9, pev->origin.x + pev->maxs.x * 0.9), RANDOM_FLOAT(pev->origin.y + pev->mins.y * 0.9, pev->origin.y + pev->maxs.y * 0.9), 0);
+			if (m_iOrientation == 0)
+				vecSrc.z = RANDOM_FLOAT(pev->origin.z, pev->absmax.z) + RANDOM_FLOAT(18, 26);
+			else
+				vecSrc.z = RANDOM_FLOAT(pev->absmin.z, pev->origin.z) + -RANDOM_FLOAT(18, 26);
+
+			// 2 balls.   haha.
+			UTIL_Sparks(vecSrc, 2, EASY_CVAR_GET_DEBUGONLY(sparksTurretDeathMulti) * 0.5);
+		}
+	}
+
+	//MODDD - condition removed, what was the point of this?    && pev->dmgtime + 5 < gpGlobals->time
+	if (postDeathEndTimeReached && m_fSequenceFinished && turretDoneMoving)
+	{
+		int i;
 
 		Vector expVec;
-		expVec.x = RANDOM_FLOAT(pev->origin.x + pev->mins.x * 0.6, pev->origin.x + pev->maxs.x * 0.6);
-		expVec.y = RANDOM_FLOAT(pev->origin.y + pev->mins.y * 0.6, pev->origin.y + pev->maxs.y * 0.6);
-		expVec.z = pev->origin.z - m_iOrientation * 28 + RANDOM_FLOAT(-12, 12);
+		expVec.x = RANDOM_FLOAT(pev->origin.x + pev->mins.x * 0.9, pev->origin.x + pev->maxs.x * 0.9);
+		expVec.y = RANDOM_FLOAT(pev->origin.y + pev->mins.y * 0.9, pev->origin.y + pev->maxs.y * 0.9);
+		expVec.z = -m_iOrientation * 30 + RANDOM_FLOAT(pev->origin.z + pev->mins.z * 0.5, pev->origin.z + pev->maxs.z * 0.5);
 
 		
-		UTIL_Explosion(MSG_PVS, expVec, NULL, pev, expVec, 0, 0, 0, g_sModelIndexFireball, RANDOM_LONG(44, 52), 14, TE_EXPLFLAG_NONE, 0.7);
+		UTIL_Explosion(MSG_PVS, expVec, NULL, pev, expVec, 0, 0, 0, g_sModelIndexFireball, RANDOM_LONG(32, 37), 14, TE_EXPLFLAG_NONE, 0.7);
 
 
+		// awerewarwea
 
-		//MODDD - new place for eye thing, whatever this does.
-		EyeOff();
+		//EyeOff();
 
 		pev->framerate = 0;
 		SetThink( NULL );
@@ -1317,6 +1362,7 @@ GENERATE_TRACEATTACK_IMPLEMENTATION(CBaseTurret)
 //This returns a boolean: whether to interrupt the (presumably) TakeDamage calling method. It should act on this and block script below to behave like the original
 //when told to block. Returning TRUE (1) means pass, returning FALSE (0) means block.
 BOOL CBaseTurret::TurretDeathCheck(entvars_t* pevInflictor, entvars_t* pevAttacker, float flDamage, int bitsDamageType, int bitsDamageTypeMod, void (CBaseTurret::*eventMethod)() ){
+
 
 	/*
 	if(!IsAlive())
@@ -1366,12 +1412,18 @@ BOOL CBaseTurret::TurretDeathCheck(entvars_t* pevInflictor, entvars_t* pevAttack
 		if(pev->deadflag == DEAD_NO){
 
 			if(this->getGibCVar() <= 0){
-				//retail behavior: invincible, colliosionless corpse.
+				//retail behavior: invincible, collisionless corpse.
 				//
 				pev->health = pev->max_health / 2;
 				pev->max_health = 5;
 				
-				pev->takedamage = DAMAGE_YES;// don't let autoaim aim at corpses.
+
+				// no, leave this up to the first frame of the TurretDeath think method.
+				// If dead without even spinning, it skips to the normal death anim and
+				// handles this.
+				//if (postDeathEndTime != -1 && gpGlobals->time >= postDeathEndTime) {
+				//	pev->takedamage = DAMAGE_YES;// don't let autoaim aim at corpses.
+				//}
 
 				//pev->health = 0;
 				//pev->takedamage = DAMAGE_NO;
@@ -1417,7 +1469,10 @@ BOOL CBaseTurret::TurretDeathCheck(entvars_t* pevInflictor, entvars_t* pevAttack
 
 					//BecomeDead();
 
-					pev->takedamage = DAMAGE_YES;// don't let autoaim aim at corpses.
+					//if (postDeathEndTime != -1 && gpGlobals->time >= postDeathEndTime) {
+					//	pev->takedamage = DAMAGE_YES;// don't let autoaim aim at corpses.
+					//}
+
 					// give the corpse half of the monster's original maximum health. 
 					pev->health = pev->max_health / 2;
 					pev->max_health = 5; // max_health now becomes a counter for how many blood decals the corpse can place.
@@ -1439,12 +1494,28 @@ BOOL CBaseTurret::TurretDeathCheck(entvars_t* pevInflictor, entvars_t* pevAttack
 			SetUse(NULL);
 
 			//SetThink(&CBaseTurret::TurretDeath);
+
+
+			// GOD.
+			postDeathSequenceStarting = TRUE;
+
 			SetThink(eventMethod);
 
 			pev->nextthink = gpGlobals->time + 0.1;
 			
 
 		}else{
+
+			if (gpGlobals->time < postDeathEndTime) {
+				// stop the post-death beserk then.
+				postDeathEndTime = -1;
+				TurretDeathEnd();
+			}
+			if (pev->deadflag != DEAD_NO && this->getGibCVar() <= 0) {
+				// don't proceed, corpse is still invulnerable, that counts gibbing.
+				return 0;
+			}
+
 			// kill the corpse if enough damage was done to destroy the corpse and the damage is of a type that is allowed to destroy the corpse.
 			if ( bitsDamageType & DMG_GIB_CORPSE )
 			{
@@ -1478,8 +1549,16 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBaseTurret)
 	if ( !pev->takedamage )
 		return 0;
 
+
+
+	// allow the post-death beserk time to be interrupted by taking enough damage to get to 0 health again
+	if (pev->deadflag == DEAD_DEAD && gpGlobals->time < postDeathEndTime) {
+		
+	}
+	else
 	if(pev->deadflag != DEAD_NO && this->getGibCVar() <= 0){
-		//if dead and the gib CVar is 0 (retail), this corpse is invlunerable.
+		// if dead and the gib CVar is 0 (retail), this corpse is invlunerable.
+
 		return 0;
 	}
 
@@ -1499,7 +1578,6 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBaseTurret)
 		return 0;
 	}
 	///////////////////////////////////////////////////////////////////////////////////
-
 
 	//SetThink(&CBaseTurret::TurretDeath);
 	if(!TurretDeathCheck(pevInflictor, pevAttacker, flDamage, bitsDamageType, bitsDamageTypeMod, static_cast <void (CBaseTurret::*)(void)>(&CBaseTurret::TurretDeath) ) )return 0; //this can block.
@@ -1559,12 +1637,10 @@ int CBaseTurret::MoveTurret(void)
 
 	//MODDD - NEW.  When dead and in beserk mode, different behavior.
 	if (pev->deadflag == DEAD_DEAD && m_fBeserk == 1) {
-		static float curAngDir = 0;
-		static int postDeathBeserkDir = -1;
-
+		
 		// just move right
 		//m_vecCurAngles.y += 9.5;
-		m_vecCurAngles.y += RANDOM_FLOAT(0.8, 1) * 16;
+		m_vecCurAngles.y += RANDOM_FLOAT(0.8, 1) * 14.5;
 
 		if (m_vecCurAngles.y < 0)
 			m_vecCurAngles.y += 360;
@@ -1580,20 +1656,41 @@ int CBaseTurret::MoveTurret(void)
 			SetBoneController(0, pev->angles.y - 180 - m_vecCurAngles.y);
 
 
+		float highExtent;
+		float lowExtent;
+		const float slowPitchSpeed = 3.2;
+		const float fastPitchSpeed = 7.5;
+
+		if (m_iOrientation == 0) {
+			// floor
+			highExtent = 45;
+			lowExtent = 1;
+		}
+		else {
+			// ceiling
+			highExtent = 84;
+			lowExtent = 32;
+		}
 
 		if (postDeathBeserkDir > 0) {
-			// approaching facing sideways
-			float daGoal = 84 - 90 * m_iOrientation;
+			// ceiling: approaching sideways.
+			// floor: approaching upwards.
+			float daGoal = highExtent - 90 * m_iOrientation;
 			float distToGoal = fabs(m_vecCurAngles.x - daGoal);
 			//easyForcePrintLine("AAAA %.2f", distToGoal);
 			// 7 * 2.2
-			if (distToGoal > (84 - 32) - 19 ) {   //|| distToGoal < 7
+
+
+			BOOL condition = distToGoal > (highExtent - lowExtent) - 19;
+			if (m_iOrientation == 0) condition = !condition;
+
+			if (condition) //|| distToGoal < 7
+			{   
 				// go faster
-				m_vecCurAngles.x += RANDOM_FLOAT(0.7, 1) * 7 * postDeathBeserkDir;
+				m_vecCurAngles.x += RANDOM_FLOAT(0.7, 1) * fastPitchSpeed * postDeathBeserkDir;
 			}
 			else{
-				// TESTO
-				m_vecCurAngles.x += RANDOM_FLOAT(0.7, 1) * 2.1 * postDeathBeserkDir;
+				m_vecCurAngles.x += RANDOM_FLOAT(0.7, 1) * slowPitchSpeed * postDeathBeserkDir;
 			}
 
 			if (m_vecCurAngles.x >= daGoal) {  //360
@@ -1603,17 +1700,22 @@ int CBaseTurret::MoveTurret(void)
 			}
 		}
 		else {
-			// approaching facing straight down/up
-			float daGoal = 32 - 90 * m_iOrientation;
+			// ceiling: straight down/up
+			// floor: approaching sideways.   Go figure.
+			float daGoal = lowExtent - 90 * m_iOrientation;
 			float distToGoal = fabs(m_vecCurAngles.x - daGoal);
 			//easyForcePrintLine("BBBB %.2f", distToGoal);
 
-			if (distToGoal < 19) {
+			BOOL condition = distToGoal < 19;
+			if (m_iOrientation == 0) condition = !condition;
+
+			if (condition)
+			{
 				// go faster
-				m_vecCurAngles.x += RANDOM_FLOAT(0.7, 1) * 7 * postDeathBeserkDir;
+				m_vecCurAngles.x += RANDOM_FLOAT(0.7, 1) * fastPitchSpeed * postDeathBeserkDir;
 			}
 			else {
-				m_vecCurAngles.x += RANDOM_FLOAT(0.7, 1) * 2.1 * postDeathBeserkDir;
+				m_vecCurAngles.x += RANDOM_FLOAT(0.7, 1) * slowPitchSpeed * postDeathBeserkDir;
 			}
 
 

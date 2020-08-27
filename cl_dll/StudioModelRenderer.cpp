@@ -27,6 +27,18 @@
 #include "StudioModelRenderer.h"
 #include "GameStudioModelRenderer.h"
 
+
+
+// MODDD - TODO, low priority:
+// Mirror still doesn't show gauss beams, egon stream or the egon hit cloud.
+// Although that the rest of it's working as well as it is, muzzle flashes in first or third person, view pitch
+// goes the right direction in 1st person now, I'm really done with that.
+// Even by my standards of fooling around with stupid shit.
+
+
+
+
+
 // Global engine <-> studio model rendering code interface
 engine_studio_api_t IEngineStudio;
 
@@ -60,6 +72,7 @@ EASY_CVAR_EXTERN(r_glowshell_debug)
 
 extern float global2PSEUDO_IGNOREcameraMode;
 
+extern int cam_thirdperson;
 
 //MODDD - from in_camera.cpp 
 extern "C"
@@ -106,6 +119,8 @@ cl_entity_s* g_viewModelRef = NULL;
 
 
 
+BOOL g_freshRenderFrame = TRUE;
+
 // Pretty sure the max number of entities is around 1024, but the game crashes at trying to spawn over 900 anyway.
 // Or at least when an index reaches 900.
 // MAX_MAP_ENTITIES ???  that constant was set to 1024.  Close enough to the observed 900 anyway, unless that's some
@@ -116,14 +131,17 @@ float ary_g_LastEventCheck[1024];
 float ary_g_LastEventCheckEXACT[1024];
 float ary_g_recentInterpEstimate[1024];
 float ary_g_recentInterpEstimatePrev[1024];
+BOOL ary_g_recentInterpEstimateHandled[32];
 
 //static float g_prevTime;
 //static float g_prevFrame;
 float g_OLDprevTime = 0;
 float g_debugPrevTime = 0;
 
-BOOL g_freshRenderFrame = TRUE;
+BOOL g_blockUpdateRecentInterpArray = FALSE;
 
+float g_prevRenderTime = 0;
+BOOL g_eventsPaused = FALSE;
 
 
 
@@ -160,6 +178,8 @@ Init
 
 void CStudioModelRenderer::Init( void )
 {
+	int i;
+
 	// Set up some variables shared with engine
 	m_pCvarHiModels			= IEngineStudio.GetCvar( "cl_himodels" );
 	m_pCvarDeveloper		= IEngineStudio.GetCvar( "developer" );
@@ -176,7 +196,7 @@ void CStudioModelRenderer::Init( void )
 	m_protationmatrix		= (float (*)[3][4])IEngineStudio.StudioGetRotationMatrix();
 
 	//MODDD - safety
-	for (int i = 0; i < 1024; i++) {
+	for (i = 0; i < 1024; i++) {
 		ary_g_prevTime[i] = 0;
 		ary_g_prevFrame[i] = 0;
 		ary_g_LastEventCheck[i] = 0;
@@ -187,9 +207,14 @@ void CStudioModelRenderer::Init( void )
 		// it is still 0.  Some event on loading the game might be nice though.
 		// How about HUD_VidInit (cdll_int.cpp)?
 	}
+	for (i = 0; i < 32; i++) {
+		// client indexes supported only!
+		ary_g_recentInterpEstimateHandled[i] = FALSE;
+	}
 
 	g_freshRenderFrame = TRUE;
 	m_nCachedFrameCount = -1;  //refresh soon.  I think this is fine?
+	g_blockUpdateRecentInterpArray = FALSE;
 }
 
 /*
@@ -294,7 +319,7 @@ void CStudioModelRenderer::StudioCalcBoneAdj ( float dadt, float *adj, const byt
 					// properly work.  Thinking this is a sympton of a bigger problem though...
 					value *= -1;
 				}
-			
+				
 			}
 			// Con_DPrintf( "%d %d %f : %f\n", m_pCurrentEntity->curstate.controller[j], m_pCurrentEntity->latched.prevcontroller[j], value, dadt );
 		}
@@ -604,10 +629,17 @@ StudioPlayerBlend
 
 ====================
 */
-void CStudioModelRenderer::StudioPlayerBlend( mstudioseqdesc_t *pseqdesc, int *pBlend, float *pPitch )
+void CStudioModelRenderer::StudioPlayerBlend( mstudioseqdesc_t *pseqdesc, int *pBlend, float *pPitch, BOOL fInvertPitch )
 {
 	// calc up/down pointing
-	*pBlend = (*pPitch * 3);
+	//MODDD - invert away!  maybe
+	if (!fInvertPitch) {
+		*pBlend = (*pPitch * 3);
+	}
+	else {
+		*pBlend = (*pPitch * -3);
+	}
+
 	if (*pBlend < pseqdesc->blendstart[0])
 	{
 		*pPitch -= pseqdesc->blendstart[0] / 3.0;
@@ -1334,6 +1366,21 @@ float CStudioModelRenderer::StudioEstimateFrame( mstudioseqdesc_t *pseqdesc )
 	//return 0;
 	BOOL DEBUG_NeededFix = FALSE;
 	double DEBUG_old_f;
+	int myIndex = m_pCurrentEntity->index;
+
+	BOOL blockUpdateRecentInterpArray = FALSE;
+	BOOL isPlayerIndex = FALSE;
+
+	if (g_blockUpdateRecentInterpArray == TRUE) {
+		blockUpdateRecentInterpArray = TRUE;
+	}else if (myIndex >= 1 && myIndex <= gEngfuncs.GetMaxClients()) {
+		isPlayerIndex = TRUE;
+		// it is a player, can have commits blocked by having already been handled this frame.
+		if (ary_g_recentInterpEstimateHandled[m_pCurrentEntity->index - 1]) {
+			blockUpdateRecentInterpArray = TRUE;
+		}
+	}
+
 
 	//??? StudioEstimateInterpolant
 
@@ -1544,45 +1591,47 @@ float CStudioModelRenderer::StudioEstimateFrame( mstudioseqdesc_t *pseqdesc )
 
 
 	// MARKER123
-	if (g_drawType == DRAWTYPE_ENTITY) {
+	if (!blockUpdateRecentInterpArray ) {
+		if (g_drawType == DRAWTYPE_ENTITY) {
 
-		if (m_pCurrentEntity->curstate.framerate >= 0) {
-			if (m_pCurrentEntity->curstate.frame == 0 && (ary_g_recentInterpEstimatePrev[m_pCurrentEntity->index] > ary_g_recentInterpEstimate[m_pCurrentEntity->index])) {
-				ary_g_recentInterpEstimatePrev[m_pCurrentEntity->index] = 0;
+			if (m_pCurrentEntity->curstate.framerate >= 0) {
+				if (m_pCurrentEntity->curstate.frame == 0 && (ary_g_recentInterpEstimatePrev[m_pCurrentEntity->index] > ary_g_recentInterpEstimate[m_pCurrentEntity->index])) {
+					ary_g_recentInterpEstimatePrev[m_pCurrentEntity->index] = 0;
+				}
+				else {
+					ary_g_recentInterpEstimatePrev[m_pCurrentEntity->index] = ary_g_recentInterpEstimate[m_pCurrentEntity->index];
+				}
 			}
 			else {
-				ary_g_recentInterpEstimatePrev[m_pCurrentEntity->index] = ary_g_recentInterpEstimate[m_pCurrentEntity->index];
+				if (m_pCurrentEntity->curstate.frame >= 255 && (ary_g_recentInterpEstimatePrev[m_pCurrentEntity->index] < ary_g_recentInterpEstimate[m_pCurrentEntity->index])) {
+					ary_g_recentInterpEstimatePrev[m_pCurrentEntity->index] = 255;
+				}
+				else {
+					ary_g_recentInterpEstimatePrev[m_pCurrentEntity->index] = ary_g_recentInterpEstimate[m_pCurrentEntity->index];
+				}
 			}
 		}
-		else {
-			if (m_pCurrentEntity->curstate.frame >= 255 && (ary_g_recentInterpEstimatePrev[m_pCurrentEntity->index] < ary_g_recentInterpEstimate[m_pCurrentEntity->index])) {
-				ary_g_recentInterpEstimatePrev[m_pCurrentEntity->index] = 255;
+		else if (g_drawType == DRAWTYPE_PLAYER) {
+			// same as DRAWTYPE_ENTITY, but having the right curstate.frame (0 or 255) is no longer required.
+			// Would comparing curstate.frame to InterpEstimate or InterpEstimatePrev be better?  Unsure.
+			if (m_pCurrentEntity->curstate.framerate >= 0) {
+				if ((ary_g_recentInterpEstimatePrev[m_pCurrentEntity->index] > ary_g_recentInterpEstimate[m_pCurrentEntity->index])) {
+					ary_g_recentInterpEstimatePrev[m_pCurrentEntity->index] = 0;
+				}
+				else {
+					ary_g_recentInterpEstimatePrev[m_pCurrentEntity->index] = ary_g_recentInterpEstimate[m_pCurrentEntity->index];
+				}
 			}
 			else {
-				ary_g_recentInterpEstimatePrev[m_pCurrentEntity->index] = ary_g_recentInterpEstimate[m_pCurrentEntity->index];
+				if ((ary_g_recentInterpEstimatePrev[m_pCurrentEntity->index] < ary_g_recentInterpEstimate[m_pCurrentEntity->index])) {
+					ary_g_recentInterpEstimatePrev[m_pCurrentEntity->index] = 255;
+				}
+				else {
+					ary_g_recentInterpEstimatePrev[m_pCurrentEntity->index] = ary_g_recentInterpEstimate[m_pCurrentEntity->index];
+				}
 			}
 		}
-	}
-	else if (g_drawType == DRAWTYPE_PLAYER) {
-		// same as DRAWTYPE_ENTITY, but having the right curstate.frame (0 or 255) is no longer required.
-		// Would comparing curstate.frame to InterpEstimate or InterpEstimatePrev be better?  Unsure.
-		if (m_pCurrentEntity->curstate.framerate >= 0) {
-			if ((ary_g_recentInterpEstimatePrev[m_pCurrentEntity->index] > ary_g_recentInterpEstimate[m_pCurrentEntity->index])) {
-				ary_g_recentInterpEstimatePrev[m_pCurrentEntity->index] = 0;
-			}
-			else {
-				ary_g_recentInterpEstimatePrev[m_pCurrentEntity->index] = ary_g_recentInterpEstimate[m_pCurrentEntity->index];
-			}
-		}
-		else {
-			if ( (ary_g_recentInterpEstimatePrev[m_pCurrentEntity->index] < ary_g_recentInterpEstimate[m_pCurrentEntity->index])) {
-				ary_g_recentInterpEstimatePrev[m_pCurrentEntity->index] = 255;
-			}
-			else {
-				ary_g_recentInterpEstimatePrev[m_pCurrentEntity->index] = ary_g_recentInterpEstimate[m_pCurrentEntity->index];
-			}
-		}
-	}
+	}//g_blockUpdateRecentInterpArray
 
 
 	f += dfdt;
@@ -1710,10 +1759,16 @@ CLIENTFR: 160 14.
 
 	//MODDD - save?
 	// Don't commit if this is set!
-	if (g_drawType == DRAWTYPE_ENTITY || g_drawType == DRAWTYPE_PLAYER) {
-		ary_g_recentInterpEstimate[m_pCurrentEntity->index] = f;
+	if (!blockUpdateRecentInterpArray) {
+		if (g_drawType == DRAWTYPE_ENTITY || g_drawType == DRAWTYPE_PLAYER) {
+			ary_g_recentInterpEstimate[m_pCurrentEntity->index] = f;
+		}
 	}
 
+	if (isPlayerIndex) {
+		// don't let this do commits again this same frame in case of reflections.
+		ary_g_recentInterpEstimateHandled[m_pCurrentEntity->index - 1] = TRUE;
+	}
 	
 	if (g_debugPrevTime != m_clTime) {
 		
@@ -2045,6 +2100,18 @@ void CStudioModelRenderer::StudioSetupBones ( byte isReflection )
 		dadt = StudioEstimateInterpolant();
 		s = (m_pCurrentEntity->curstate.blending[0] * dadt + m_pCurrentEntity->latched.prevblending[0] * (1.0 - dadt)) / 255.0;
 
+
+		//MODDD - This gets the pitch right on the visible player model in the reflection when looking at it
+		// while in 1st person view.   Yes.   Really.
+		// Could editing the marker (player.cpp)'s blending serverside help?  no idea.
+		// No clue what sets it in either place really though.
+		// CHANGED, doing this at a much earlier point instead (see calls to StudioProcessGait, can be told whether
+		// to invert the pitch)
+		//if (!CL_IsThirdPerson() && g_drawType == DRAWTYPE_PLAYER && gEngfuncs.GetLocalPlayer()->index == m_pCurrentEntity->index) {
+		//	s = 1 - s;
+		//}
+
+
 		StudioSlerpBones( q, pos, q2, pos2, s );
 
 		if (pseqdesc->numblends == 4)
@@ -2170,7 +2237,16 @@ void CStudioModelRenderer::StudioSetupBones ( byte isReflection )
 		bonematrix[1][3] = pos[i][1];
 		bonematrix[2][3] = pos[i][2];
 
-		
+		//bonematrix[0][0] = 30;
+		//bonematrix[0][1] = 30;
+		//bonematrix[0][2] = 30;
+		//bonematrix[1][0] = 3;
+		//bonematrix[1][1] = 3;
+		//bonematrix[1][2] = 3;
+		//bonematrix[2][0] = 3;
+		//bonematrix[2][1] = 3;
+		//bonematrix[2][2] = 3;
+
 		
 		// WOA THIS ONES FREAKY
 		/*
@@ -2563,9 +2639,13 @@ int CStudioModelRenderer::StudioDrawModelReflection(int flags)
 	}
 	StudioSaveBones();
 
+
+	
 	//MODDD - ATTACHMENTS - seems unconnected to either part of the player?
+	// well yeah.  That's handled in StudioDrawPlayer.
 	if (flags & STUDIO_EVENTS)
 	{
+		cl_entity_t saveent = *m_pCurrentEntity;
 		StudioCalcAttachments();
 
 #if CLIENT_EVENT_CUSTOM_HANDLING == 0
@@ -2580,7 +2660,9 @@ int CStudioModelRenderer::StudioDrawModelReflection(int flags)
 			cl_entity_t* ent = gEngfuncs.GetEntityByIndex(m_pCurrentEntity->index);
 			memcpy(ent->attachment, m_pCurrentEntity->attachment, sizeof(vec3_t) * 4);
 		}
+		*m_pCurrentEntity = saveent;
 	}
+
 	if (flags & STUDIO_RENDER)
 	{
 		// NOTICE - plightvec is being given a vector to DRAW too, not taking values from garbage memory!
@@ -2619,6 +2701,7 @@ int CStudioModelRenderer::StudioDrawPlayerReflection(int flags, entity_state_t* 
 	alight_t lighting;
 	vec3_t dir;
 
+	//return 1;
 
 	gEngfuncs.pTriAPI->CullFace(TRI_NONE);
 
@@ -2628,7 +2711,12 @@ int CStudioModelRenderer::StudioDrawPlayerReflection(int flags, entity_state_t* 
 		m_pPlayerInfo = IEngineStudio.PlayerInfo(m_nPlayerIndex);
 
 		VectorCopy_f(m_pCurrentEntity->angles, orig_angles);
-		StudioProcessGait(pplayer);
+		if (cam_thirdperson == 0 && gEngfuncs.GetLocalPlayer()->index == m_pCurrentEntity->index) {
+			StudioProcessGait(pplayer, TRUE);
+		}
+		else {
+			StudioProcessGait(pplayer, FALSE);
+		}
 
 		m_pPlayerInfo->gaitsequence = pplayer->gaitsequence;
 		m_pPlayerInfo = NULL;
@@ -2681,23 +2769,34 @@ int CStudioModelRenderer::StudioDrawPlayerReflection(int flags, entity_state_t* 
 	//MODDD - ATTACHMENT - sets the attachment start to the reflection's weapon point, for BOTH first-person & third-person.
 	//HACKY SOLUTION: disable updating the studio attachments here, or else we override the player's usual.
 	// !!! Now with custom client events, maybe that can change
-	/*
+	//////////////////////////////////////////////////////////////////////////////////////////////
+	//g_blockUpdateRecentInterpArray = TRUE;
+
+
+
 	if (flags & STUDIO_EVENTS)
 	{
+		//MODDD - don't commit to the original player!
+		cl_entity_t saveent = *m_pCurrentEntity;
 		StudioCalcAttachments( );
 #if CLIENT_EVENT_CUSTOM_HANDLING == 0
-				IEngineStudio.StudioClientEvents();
+		//IEngineStudio.StudioClientEvents();
 #else
-				CUSTOM_StudioClientEvents();
+		CUSTOM_StudioClientEvents();
 #endif
-				// copy attachments into global entity array
-				if ( m_pCurrentEntity->index > 0 )
-				{
-					cl_entity_t *ent = gEngfuncs.GetEntityByIndex( m_pCurrentEntity->index );
-					memcpy( ent->attachment, m_pCurrentEntity->attachment, sizeof( vec3_t ) * 4 );
-				}
-			}
-			*/
+		// copy attachments into global entity array
+		// MODDD NOTE - 
+		//     Is it even wise to do this for the reflected ent?  I can't tell the difference from doing this at least.
+		if ( m_pCurrentEntity->index > 0 )
+		{
+			cl_entity_t *ent = gEngfuncs.GetEntityByIndex( m_pCurrentEntity->index );
+			memcpy( ent->attachment, m_pCurrentEntity->attachment, sizeof( vec3_t ) * 4 );
+		}
+		*m_pCurrentEntity = saveent;
+	}
+	//g_blockUpdateRecentInterpArray = FALSE;
+	//////////////////////////////////////////////////////////////////////////////////////////////
+
 
 	if (flags & STUDIO_RENDER)
 	{
@@ -2809,6 +2908,28 @@ int CStudioModelRenderer::StudioDrawModel( int flags )
 		b_PlayerMarkerParsed = false;
 		m_nCachedFrameCount = m_nFrameCount;
 
+
+		for (int i = 0; i < 32; i++) {
+			ary_g_recentInterpEstimateHandled[i] = FALSE;
+		}
+
+
+		//if (g_freshRenderFrame) {
+			// At the start of a render frame, see if the time has changed since the
+			// most recent frame.  If not, skip these events.
+			// The will not disappear, causing them to overlap in place over and over and even
+			// trigger the 'over 500 temporary ents' console warning while paused for a while.
+			if (g_prevRenderTime == m_clTime) {
+				// call this a pause then
+				g_eventsPaused = TRUE;
+			}
+			else {
+				g_eventsPaused = FALSE;
+			}
+			g_prevRenderTime = m_clTime;
+		//}
+
+
 		//MODDD - while we're at it, refresh g_viewModelRef.  Just safety, and no reason to do after the
 		// start of a frame
 		g_viewModelRef = gEngfuncs.GetViewModel();
@@ -2848,7 +2969,13 @@ int CStudioModelRenderer::StudioDrawModel( int flags )
 			// Ordinarily it would be a good idea to save the g_drawType for restoring after this call,
 			// but it hasn't been set yet for the real current "m_pCurrentEntity".  So no need.
 			// This sets g_drawType to DRAWTYPE_PLAYER for any other calls it makes on its own.
+
+			BOOL oldVal = g_blockUpdateRecentInterpArray;
+
+			//g_blockUpdateRecentInterpArray = TRUE;
 			StudioDrawPlayer( flags, shinyplr );
+			//g_blockUpdateRecentInterpArray = FALSE;
+			//g_blockUpdateRecentInterpArray = oldVal;
 
 			//MODDD - why keep that 2048 bit after the draw call???
 			flags &= ~2048;
@@ -3301,7 +3428,7 @@ int CStudioModelRenderer::StudioDrawModel( int flags )
           //G-Cont. you may choose any check - any nice works ;)
 	//if ((gHUD.numMirrors>0 && !(m_pCurrentEntity->model->name[7]=='v' && m_pCurrentEntity->model->name[8]=='_')))
 	
-	int canReflect = TRUE;
+	BOOL canReflect = TRUE;
 	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(mirrorsReflectOnlyNPCs) == 1 && !(m_pCurrentEntity->curstate.renderfx & ISNPC) && !(g_drawType == DRAWTYPE_PLAYER)  ){
 		// if this CVar is on and this entity is not an npc, skip drawing to mirror.
 		// Player models not included (still reflected).  Players may or may not use the ISNPC flag, it gives no new information there.
@@ -3347,8 +3474,10 @@ int CStudioModelRenderer::StudioDrawModel( int flags )
 			//THIS USED TO GO BEFORE!!!
 
 			mirror_id = ic;
-			
+
+			g_blockUpdateRecentInterpArray = TRUE;
 			StudioDrawModelReflection(flags);
+			g_blockUpdateRecentInterpArray = FALSE;
 		}//for
 
 	}//END OF mirror check.
@@ -3445,9 +3574,12 @@ StudioProcessGait
 
 ====================
 */
-void CStudioModelRenderer::StudioProcessGait( entity_state_t *pplayer )
+void CStudioModelRenderer::StudioProcessGait(entity_state_t* pplayer) {
+	StudioProcessGait(pplayer, FALSE);
+}
+void CStudioModelRenderer::StudioProcessGait( entity_state_t *pplayer, BOOL fInvertPitch)
 {
-	mstudioseqdesc_t	*pseqdesc;
+	mstudioseqdesc_t *pseqdesc;
 	float dt;
 	int iBlend;
 	float flYaw;	 // view direction relative to movement
@@ -3478,7 +3610,7 @@ void CStudioModelRenderer::StudioProcessGait( entity_state_t *pplayer )
 
 	pseqdesc = (mstudioseqdesc_t *)((byte *)m_pStudioHeader + m_pStudioHeader->seqindex) + m_pCurrentEntity->curstate.sequence;
 
-	StudioPlayerBlend( pseqdesc, &iBlend, &m_pCurrentEntity->angles[PITCH] );
+	StudioPlayerBlend( pseqdesc, &iBlend, &m_pCurrentEntity->angles[PITCH], fInvertPitch);
 
 	m_pCurrentEntity->latched.prevangles[PITCH] = m_pCurrentEntity->angles[PITCH];
 	m_pCurrentEntity->curstate.blending[0] = iBlend;
@@ -3610,7 +3742,7 @@ int CStudioModelRenderer::StudioDrawPlayer( int flags, entity_state_t *pplayer )
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	
 	//MODDD
-	int canReflect = TRUE;
+	BOOL canReflect = TRUE;
 	//(CVAR_GET_FLOAT("mirrorsDoNotReflectPlayer") == 1) &&
 	//if(  (m_pCurrentEntity->curstate.renderfx & NOREFLECT) ){
 
@@ -3640,7 +3772,7 @@ int CStudioModelRenderer::StudioDrawPlayer( int flags, entity_state_t *pplayer )
 
 			VectorCopy_f( m_pCurrentEntity->angles, orig_angles );
 	
-			StudioProcessGait( pplayer );
+			StudioProcessGait( pplayer, FALSE );
 
 			m_pPlayerInfo->gaitsequence = pplayer->gaitsequence;
 			m_pPlayerInfo = NULL;
@@ -3841,7 +3973,9 @@ int CStudioModelRenderer::StudioDrawPlayer( int flags, entity_state_t *pplayer )
 			mirror_id = ic;
 
 			// !!!!
+			//g_blockUpdateRecentInterpArray = TRUE;
 			StudioDrawPlayerReflection(flags, pplayer);
+			//g_blockUpdateRecentInterpArray = FALSE;
 
 		} //end for
 
@@ -4118,29 +4252,12 @@ void CStudioModelRenderer::StudioRenderFinal(void)
 
 
 BOOL canPrintout = FALSE;
-float g_eventPrevTime = 0;
-BOOL eventsPaused = FALSE;
+
 
 void CStudioModelRenderer::CUSTOM_StudioClientEvents(void) {
 	
 
-	if (g_freshRenderFrame) {
-		// At the start of a render frame, see if the time has changed since the
-		// most recent frame.  If not, skip these events.
-		// The will not disappear, causing them to overlap in place over and over and even
-		// trigger the 'over 500 temporary ents' console warning while paused for a while.
-		if (g_eventPrevTime == m_clTime) {
-			// call this a pause then
-			eventsPaused = TRUE;
-		}
-		else {
-			eventsPaused = FALSE;
-		}
-		g_eventPrevTime = m_clTime;
-	}
-
-
-	if (eventsPaused)return;
+	if (g_eventsPaused)return;
 
 	// g_freshRenderFrame ???
 
@@ -4275,7 +4392,8 @@ void CStudioModelRenderer::CUSTOM_StudioClientEvents(void) {
 		//}
 		//else {
 		//	// use the interp
-			frame = ary_g_recentInterpEstimate[myIndex];
+		//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! No effect now??
+		//	frame = ary_g_recentInterpEstimate[myIndex];
 		//}
 
 
@@ -4334,7 +4452,9 @@ void CStudioModelRenderer::CUSTOM_StudioClientEvents(void) {
 		//flStart = UTIL_clamp(flStart, 0, 255);
 		//flEnd = UTIL_clamp(flEnd, 0, 255);
 
-		ary_g_LastEventCheck[myIndex] = animtime + flInterval;
+
+		// CURSES
+		//ary_g_LastEventCheck[myIndex] = animtime + flInterval;
 
 
 
@@ -4381,7 +4501,7 @@ void CStudioModelRenderer::CUSTOM_StudioClientEvents(void) {
 		
 		int x = 45;
 
-		if (g_eventPrevTime != m_clTime) {
+		if (g_prevRenderTime != m_clTime) {
 		//	easyForcePrintLine("HEYY there %.2f %.2f", flStart, flEnd);
 		}
 

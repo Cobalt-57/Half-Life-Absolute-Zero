@@ -76,6 +76,7 @@ float g_scientist_PredisasterSuitMentionAllowedTime = -1;
 float g_scientist_HeadcrabMentionAllowedTime = -1;
 float g_scientist_sayGetItOffCooldown = -1;
 int g_scientist_crouchstand_sequenceID = -1;
+int g_scientist_checktie_sequenceID = -1;
 
 
 
@@ -739,14 +740,12 @@ CScientist::CScientist(void) {
 	healNPCChosen = FALSE;
 	healNPCCheckDelay = -1;
 
-	//On a restore, if never seen before, this is loaded as "0" instead.  Beware of that.
+	// On a restore, if never seen before, this is loaded as "0" instead.  Beware of that.
 
 
 	madInterSentencesLocation = madInterSentences;
 	//madInterSentencesMaxLocation = &madInterSentencesMax;
 
-	//are parent constructors called automatically in CScientist?
-	//CTalkMonster::CTalkMonster();
 }
 
 void CScientist::DeclineFollowingProvoked(CBaseEntity* pCaller){
@@ -811,8 +810,18 @@ void CScientist::SayIdleToPlayer(CBaseEntity* argPlayerTalkTo) {
 	}
 	else {
 		// even after the disaster, might whine about ties... rarely.
-		if (RANDOM_FLOAT(0, 1) < 0.065) {
+		//if (RANDOM_FLOAT(0, 1) < 0.065) {
+		if (RANDOM_FLOAT(0, 1) < 0.090) {
+		//if(1){
 			PlaySentenceSingular("SC_PIDLE1", 4.6, VOL_NORM, ATTN_NORM);  // weartie
+
+			if (this->m_IdealActivity == ACT_IDLE && m_MonsterState != MONSTERSTATE_SCRIPT) {
+				// only interrupt the idle activity to do this, and not in SCRIPT.  Just in case.
+				this->SetSequenceByIndex(g_scientist_checktie_sequenceID, 1.0, FALSE);
+				usingCustomSequence = FALSE;  // don't block returning to idle anim
+				doNotResetSequence = TRUE; // don't reset myself.
+			}
+
 			return;
 		}
 	}
@@ -1817,7 +1826,10 @@ void CScientist::setModel(const char* m){
 	if (g_scientist_crouchstand_sequenceID == -1) {
 		g_scientist_crouchstand_sequenceID = LookupSequence("crouchstand");
 	}
-
+	if (g_scientist_checktie_sequenceID == -1) {
+		g_scientist_checktie_sequenceID = LookupSequence("checktie");
+	}
+	
 }
 
 
@@ -4141,17 +4153,26 @@ BOOL CScientist::usesAdvancedAnimSystem(void){
 }
 
 
+
+
 int CScientist::LookupActivityHard(int activity){
 	pev->framerate = 1;
 	resetEventQueue();
 
 	m_flFramerateSuggestion = 1;
 
+
+	if ( !(activity == ACT_IDLE || activity == ACT_CROUCH || activity == ACT_CROUCHIDLE || activity == ACT_TURN_LEFT || activity == ACT_TURN_RIGHT) ) {
+		// reset it next time.
+		nextIdleFidgetAllowedTime = -1;
+	}
+
+
 	//let's do m_IdealActivity??
 	//uh... why?  nevermind then.
 	switch(activity){
 
-		case ACT_ARM:
+		case ACT_ARM:{
 			if (healNPCChosen == FALSE) {
 				// the heal anim for the player gets a slight boost.
 				m_flFramerateSuggestion = 1.7f;
@@ -4161,46 +4182,72 @@ int CScientist::LookupActivityHard(int activity){
 				m_flFramerateSuggestion = 2.1f;
 			}
 			return CBaseAnimating::LookupActivity(activity);
-		break;
-		case ACT_DISARM:
+		}break;
+		case ACT_DISARM:{
 			if (healNPCChosen == FALSE) {
 				m_flFramerateSuggestion = 2.1f;
 			}else {
 				m_flFramerateSuggestion = 2.5f;
 			}
 			return CBaseAnimating::LookupActivity(activity);
-		break;
+		}break;
 		// actual healing animation (syringe goes in), short but eh.
-		case ACT_MELEE_ATTACK1:
+		case ACT_MELEE_ATTACK1:{
 			if (healNPCChosen == FALSE) {
 				m_flFramerateSuggestion = 1.7f;
 			}else {
 				m_flFramerateSuggestion = 2.4f;
 			}
 			return CBaseAnimating::LookupActivity(activity);
-		break;
+		}break;
 		// melee punch.
 		case ACT_MELEE_ATTACK2:{
 			m_flFramerateSuggestion = 1.24;
 			animEventQueuePush(6.7f / 30.0f, 0);
 			animFrameCutoffSuggestion = 240;
 			return LookupSequence("punch");
-		break;}
+		}break;
+
+		case ACT_TURN_LEFT:
+		case ACT_TURN_RIGHT:
+		{
+			//  || pev->sequence == g_scientist_crouchstand_sequenceID
+
+			// if no enemy and crouching, can go to standing more smoothly.
+			if (m_hEnemy == NULL && ((pev->sequence == g_scientist_crouchstand_sequenceID && !m_fSequenceFinished) || m_Activity == ACT_CROUCH || m_Activity == ACT_CROUCHIDLE)) {
+				doNotResetSequence = TRUE;
+				return g_scientist_crouchstand_sequenceID;
+			}
+
+			if (m_hEnemy == NULL && ((pev->sequence == g_scientist_checktie_sequenceID && !m_fSequenceFinished))) {
+				// keep doing it then
+				doNotResetSequence = TRUE;
+				return g_scientist_checktie_sequenceID;
+			}
+
+		}break;
 		case ACT_IDLE:{
 
 			// if no enemy and crouching, can go to standing more smoothly.
 			if (m_hEnemy == NULL && (m_Activity == ACT_CROUCH || m_Activity == ACT_CROUCHIDLE) ) {
+				doNotResetSequence = TRUE;
 				return g_scientist_crouchstand_sequenceID;
 			}
 
-			//First off, are we talking right now?
-			if(IsTalking()){
-				//Limit the animations we can choose from a little more.
-				//Most people don't typically move around too much while looking at someone and talking to them,
-				//compared to just standing around or listening to a long conversation.
-				//BUT, simulare the wold weights.  The sum of all weights of the available animations
-				//(see a scientist.qc file from decompiling the model) is used instead of course.
+			if (m_hEnemy == NULL && ((pev->sequence == g_scientist_checktie_sequenceID && !m_fSequenceFinished))) {
+				// keep doing it then
+				doNotResetSequence = TRUE;
+				return g_scientist_checktie_sequenceID;
+			}
 
+			// First off, are we talking right now?
+			if(IsTalking()){
+				// Limit the animations we can choose from a little more.
+				// Most people don't typically move around too much while looking at someone and talking to them,
+				// compared to just standing around or listening to a long conversation.
+				// BUT, simulare the wold weights.  The sum of all weights of the available animations
+				// (see a scientist.qc file from decompiling the model) is used instead of course.
+				// No fidgets here.
 				const int animationWeightTotal = 90+20;
 				const int animationWeightChoice = RANDOM_LONG(0, animationWeightTotal-1);
 
@@ -4212,31 +4259,56 @@ int CScientist::LookupActivityHard(int activity){
 					return LookupSequence("idle_subtle_alpha");
 				}
 			}else{
-				//Not talking?  One more filter...
-				//Are we in predisaster?
+				// Not talking?  One more filter...
+				// Are we in predisaster?
 				if(FBitSet(pev->spawnflags, SF_MONSTER_PREDISASTER)){
-					//Don't allow "idle_look". We have no reason to look scared yet, ordinary day so far.
-					const int animationWeightTotal = 90+20+3+2+1;
-					const int animationWeightChoice = RANDOM_LONG(0, animationWeightTotal-1);
+					// Don't allow "idle_look". We have no reason to look scared yet, ordinary day so far.
+					//const int animationWeightTotal = 90+20+3+2+1;
+					//const int animationWeightChoice = RANDOM_LONG(0, animationWeightTotal-1);
 
-					if(animationWeightChoice < 90){
-						m_flFramerateSuggestion = 0.64f;
-						return LookupSequence("idle1");
-					}else if(animationWeightChoice < 90+20){
-						m_flFramerateSuggestion = 0.78f;
-						return LookupSequence("idle_subtle_alpha");
-					}else if(animationWeightChoice < 90+20+3){
-						m_flFramerateSuggestion = 0.93f;
-						return LookupSequence("idle_brush");
-						//no idle_look
-					}else if(animationWeightChoice < 90+20+3+2){
-						m_flFramerateSuggestion = 0.87f;
-						return LookupSequence("idle_adjust");
-					}else{ //if(animationWeightChoice < 90+20+3+2+1){
-						m_flFramerateSuggestion = 0.92f;
-						return LookupSequence("idle_yawn");
+					if (nextIdleFidgetAllowedTime == -1) {
+						// set it.
+						nextIdleFidgetAllowedTime = gpGlobals->time + RANDOM_FLOAT(11, 15);
+					}
+
+					if (gpGlobals->time < nextIdleFidgetAllowedTime) {
+						// not there yet?  Pick a plain idle
+						const int animationWeightTotal = 90 + 20;
+						const int animationWeightChoice = RANDOM_LONG(0, animationWeightTotal - 1);
+
+						if (animationWeightChoice < 90) {
+							m_flFramerateSuggestion = 0.64f;
+							return LookupSequence("idle1");
+						}
+						else if (animationWeightChoice < 90 + 20) {
+							m_flFramerateSuggestion = 0.78f;
+							return LookupSequence("idle_subtle_alpha");
+						}
+
+					}
+					else {
+						const int animationWeightTotal = 3 + 2 + 1;
+						const int animationWeightChoice = RANDOM_LONG(0, animationWeightTotal - 1);
+
+						nextIdleFidgetAllowedTime = gpGlobals->time + RANDOM_FLOAT(11, 15);
+
+						// play a fidget
+						if (animationWeightChoice < 3) {
+							m_flFramerateSuggestion = 0.93f;
+							return LookupSequence("idle_brush");
+							//no idle_look
+						}
+						else if (animationWeightChoice < 3 + 2) {
+							m_flFramerateSuggestion = 0.87f;
+							return LookupSequence("idle_adjust");
+						}
+						else { //if(animationWeightChoice < 3 + 2 + 1){
+							m_flFramerateSuggestion = 0.92f;
+							return LookupSequence("idle_yawn");
+						}
 					}
 				}else{
+					/*
 					// Just pick from the model, any idle animation is okay right now.
 					int theSeq = CBaseAnimating::LookupActivity(activity);
 
@@ -4249,10 +4321,93 @@ int CScientist::LookupActivityHard(int activity){
 					}
 
 					return theSeq;
+					*/
+
+
+					if (nextIdleFidgetAllowedTime == -1) {
+						// set it.
+						nextIdleFidgetAllowedTime = gpGlobals->time + RANDOM_FLOAT(11, 15);
+					}
+
+					if (gpGlobals->time < nextIdleFidgetAllowedTime) {
+						// not there yet?  Pick a plain idle
+						const int animationWeightTotal = 90 + 20;
+						const int animationWeightChoice = RANDOM_LONG(0, animationWeightTotal - 1);
+
+						if (animationWeightChoice < 90) {
+							m_flFramerateSuggestion = 0.84f;
+							return LookupSequence("idle1");
+						}
+						else if (animationWeightChoice < 90 + 20) {
+							m_flFramerateSuggestion = 0.84f;
+							return LookupSequence("idle_subtle_alpha");
+						}
+
+					}
+					else {
+						const int animationWeightTotal = 3 + 2 + 2 + 1;
+						const int animationWeightChoice = RANDOM_LONG(0, animationWeightTotal - 1);
+
+						nextIdleFidgetAllowedTime = gpGlobals->time + RANDOM_FLOAT(11, 15);
+
+						// play a fidget
+						if (animationWeightChoice < 3) {
+							m_flFramerateSuggestion = 0.97f;
+							return LookupSequence("idle_brush");
+						}
+						else if (animationWeightChoice < 3 + 2) {
+							m_flFramerateSuggestion = 0.92f;
+							return LookupSequence("idle_look");
+						}
+						else if (animationWeightChoice < 3 + 2 + 2) {
+							m_flFramerateSuggestion = 0.90f;
+							return LookupSequence("idle_adjust");
+						}
+						else { //if(animationWeightChoice < 3 + 2 + 2 + 1){
+							m_flFramerateSuggestion = 0.94f;
+							return LookupSequence("idle_yawn");
+						}
+					}
+
 				}
 			}//END OF IsTalking check
 			
-		break;}
+		}break;
+		// ACT_CROUCH includes crouch_idle2 and crouch_idle3.
+		// ACT_CROUCHIDLE includes crouch_idle.
+		// Idea:  If ACT_CROUCH was picked, let default behavior happen but still mark this as a figet.
+		// ACT_CROUCHIDLE will want to use crouch_idle most often but will use idle2 & 3 as fidgets.
+		case ACT_CROUCH: {
+			nextIdleFidgetAllowedTime = gpGlobals->time + RANDOM_FLOAT(11, 15);
+		}break;
+		case ACT_CROUCHIDLE: {
+
+			if (nextIdleFidgetAllowedTime == -1) {
+				// set it.
+				nextIdleFidgetAllowedTime = gpGlobals->time + RANDOM_FLOAT(11, 15);
+			}
+
+			if (gpGlobals->time < nextIdleFidgetAllowedTime) {
+				// idle
+				return LookupSequence("crouch_idle");
+			}
+			else {
+				const int animationWeightTotal = 1 + 1;
+				const int animationWeightChoice = RANDOM_LONG(0, animationWeightTotal - 1);
+
+				nextIdleFidgetAllowedTime = gpGlobals->time + RANDOM_FLOAT(11, 15);
+
+				// play a fidget
+				if (animationWeightChoice < 1) {
+					return LookupSequence("crouch_idle2");
+				}
+				else { //if(animationWeightChoice < 1 + 1){
+					return LookupSequence("crouch_idle3");
+				}
+			}
+		}break;
+
+
 	}//END OF switch
 	//not handled by above?  try the real deal.
 	return CBaseAnimating::LookupActivity(activity);

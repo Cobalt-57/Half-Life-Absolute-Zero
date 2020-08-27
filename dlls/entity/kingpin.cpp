@@ -4243,9 +4243,7 @@ void CKingpin::updateChargeEffect(void){
 
 void CKingpin::removeChargeEffect(void){
 
-
 	if(chargeEffect != NULL){
-
 		//set it up to remove itself like how the egon does.
 		//That isn't go from scale #1 to #2, that's a scale speed and a fade speed.  Go figure.
 		chargeEffect->Expand( 3, 460 );

@@ -227,20 +227,21 @@ class CChumToad : public CBaseMonster{
 	GENERATE_GIBMONSTERGIB_PROTOTYPE
 	GENERATE_KILLED_PROTOTYPE
 
+	void onDelete(void);
 
 
 };//END OF CChumToad
 
 
-
+/*
 class CChumToadRespawnable : public CChumToad, public CRespawnable {
 public:
 	CChumToadRespawnable::CChumToadRespawnable(void);
 	void Spawn(void);
-
+	BOOL isRespawnable(void) { return TRUE; }
 
 };
-
+*/
 
 
 

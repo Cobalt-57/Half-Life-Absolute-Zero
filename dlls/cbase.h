@@ -296,6 +296,8 @@ typedef void (CBaseEntity::*USEPTR)( CBaseEntity *pActivator, CBaseEntity *pCall
 extern "C" EXPORT int GetEntityAPI( DLL_FUNCTIONS *pFunctionTable, int interfaceVersion );
 extern "C" EXPORT int GetEntityAPI2( DLL_FUNCTIONS *pFunctionTable, int *interfaceVersion );
 
+
+extern int DispatchCreated(edict_t* pent);
 extern int DispatchSpawn( edict_t *pent );
 extern void DispatchKeyValue( edict_t *pentKeyvalue, KeyValueData *pkvd );
 extern void DispatchTouch( edict_t *pentTouched, edict_t *pentOther );
@@ -392,6 +394,7 @@ public:
 
 	//MODDD - new instance var.
 	BOOL usingCustomSequence;
+	BOOL doNotResetSequence;
 
 	// New var to send printouts related to animation.
 	// Turn on for an entity by looking at it ingame and typing "crazyprintout"
