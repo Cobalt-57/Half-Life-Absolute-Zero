@@ -13,7 +13,7 @@
 *
 ****/
 //
-// teamplay_gamerules.cpp
+// gamerules_singleplay.cpp
 //
 #include "extdll.h"
 #include "util.h"

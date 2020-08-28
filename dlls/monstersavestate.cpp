@@ -14,6 +14,8 @@ void SimpleMonsterSaveState::Save(CBaseMonster* toRead) {
 	OLD_m_iTaskStatus = toRead->m_iTaskStatus;
 	OLD_m_afConditions = toRead->m_afConditions & ~(bits_COND_NEW_ENEMY);
 	OLD_m_afConditionsNextFrame = toRead->m_afConditionsNextFrame & ~(bits_COND_NEW_ENEMY);
+	OLD_m_afConditionsMod = toRead->m_afConditionsMod;
+	OLD_m_afConditionsModNextFrame = toRead->m_afConditionsModNextFrame;
 	OLD_m_MonsterState = toRead->m_MonsterState;
 	OLD_m_IdealMonsterState = toRead->m_IdealMonsterState;
 	OLD_sequence = toRead->pev->sequence;
@@ -35,6 +37,8 @@ void SimpleMonsterSaveState::Restore(CBaseMonster* toReceive) {
 	toReceive->m_iTaskStatus = OLD_m_iTaskStatus;
 	toReceive->m_afConditions = OLD_m_afConditions;
 	toReceive->m_afConditionsNextFrame = OLD_m_afConditionsNextFrame;
+	toReceive->m_afConditionsMod = OLD_m_afConditionsMod;
+	toReceive->m_afConditionsModNextFrame = OLD_m_afConditionsModNextFrame;
 	toReceive->m_MonsterState = OLD_m_MonsterState;
 	toReceive->m_IdealMonsterState = OLD_m_IdealMonsterState;
 	toReceive->pev->sequence = OLD_sequence;

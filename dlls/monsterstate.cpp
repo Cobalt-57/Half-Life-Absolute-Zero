@@ -120,11 +120,13 @@ void CBaseMonster :: RunAI ( void )
 	//m_afConditionsFrame &= ~(0xFFFFFFFF & ~(bits_COND_TASK_FAILED | bits_COND_SCHEDULE_DONE | bits_COND_LIGHT_DAMAGE | bits_COND_HEAVY_DAMAGE));
 	// keep ONLY these bits, all others not mentioned get reset.
 	ClearAllConditionsExcept_ThisFrame(bits_COND_TASK_FAILED | bits_COND_SCHEDULE_DONE | bits_COND_LIGHT_DAMAGE | bits_COND_HEAVY_DAMAGE);
-
+	ClearAllConditionsMod_ThisFrame();
 	
 	// apply any set manually last frame, in case they didn't make it.
 	SetConditions(m_afConditionsNextFrame);
+	SetConditionsMod(m_afConditionsModNextFrame);
 	ClearAllConditions_NextFrame();
+	ClearAllConditionsMod_NextFrame();
 
 
 
@@ -167,6 +169,8 @@ void CBaseMonster :: RunAI ( void )
 
 			// now filter conditions.
 			ClearConditions( IgnoreConditions() );
+			// ???  probably not.
+			//ClearConditionsMod(IgnoreConditionsMod());
 
 			GetEnemy();
 		}

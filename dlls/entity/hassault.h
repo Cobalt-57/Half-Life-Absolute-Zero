@@ -17,9 +17,18 @@
 class CHAssault : public CSquadMonster
 {
 public:
-	
-	float SafeSetBlending ( int iBlender, float flValue );
 
+	static const char *pAttackSounds[];
+	//static const char *pIdleSounds[];
+	//static const char *pAlertSounds[];
+	static const char *pPainSounds[];
+
+	static const char* pIdleSounds[];
+	static const char *pAttackHitSounds[];
+	static const char *pAttackMissSounds[];
+
+
+	Vector debugDrawVect;
 
 	float signal1Cooldown;
 	float signal2Cooldown;
@@ -30,40 +39,7 @@ public:
 	int previousAnimationActivity;
 
 	float fireDelay;
-	
-	//MODDD - addition
-	BOOL couldRangedAttack1;
-	BOOL couldRangedAttack2;
-	BOOL couldMeleeAttack1;
-	BOOL couldMeleeAttack2;
-
 	BOOL forceBlockResidual;
-	void ReportAIState( void );
-
-
-	Vector GetGunPosition(void);
-	Vector GetGunPositionAI(void);
-
-
-	int IRelationship ( CBaseEntity *pTarget );
-	
-	float getBarnacleForwardOffset(void);
-	float getBarnaclePulledTopOffset(void);
-	Vector debugDrawVect;
-	void onDelete(void);
-
-	BOOL usesAdvancedAnimSystem(void);
-	int tryActivitySubstitute(int activity);
-	int LookupActivityHard(int activity);
-	
-   
-	
-	virtual int	Restore( CRestore &restore );
-	virtual int	Save( CSave &save );
-	static TYPEDESCRIPTION m_SaveData[];
-
-
-	CHAssault(void);
 
 	float meleeAttackTimeMax;
 	float residualFireTime;
@@ -80,10 +56,61 @@ public:
 
 	//edict_t* forceFireTargetObject;
 	EHANDLE forceFireTargetObject;
-
 	float forceFireGiveUp;
 
 	float alertSoundCooldown;
+	float m_flNextFlinch;
+	int m_voicePitch;
+	int	m_iBrassShell;
+
+	BOOL firing;
+	float spinuptime;
+	float spinuptimeremain;
+
+	float rageTimer;
+	float movementBaseFramerate;
+
+	BOOL soundgiven;
+	//MODDD - new.
+	BOOL spinuptimeSet;
+
+
+
+
+
+
+
+
+
+
+
+	float SafeSetBlending ( int iBlender, float flValue );
+
+	void ReportAIState( void );
+
+
+	Vector GetGunPosition(void);
+	Vector GetGunPositionAI(void);
+
+
+	int IRelationship ( CBaseEntity *pTarget );
+	
+	float getBarnacleForwardOffset(void);
+	float getBarnaclePulledTopOffset(void);
+	void onDelete(void);
+
+	BOOL usesAdvancedAnimSystem(void);
+	int tryActivitySubstitute(int activity);
+	int LookupActivityHard(int activity);
+	
+   
+	
+	virtual int	Restore( CRestore &restore );
+	virtual int	Save( CSave &save );
+	static TYPEDESCRIPTION m_SaveData[];
+
+
+	CHAssault(void);
 
 
 	int getIdleSpinChannel(void );
@@ -111,7 +138,6 @@ public:
 	void HandleAnimEvent( MonsterEvent_t *pEvent );
 //	int IgnoreConditions ( void );
 
-	float m_flNextFlinch;
 	
 	BOOL FCanCheckAttacks();
 	void PainSound( void );
@@ -130,23 +156,14 @@ public:
 	}
 
 
-	static const char *pAttackSounds[];
-	//static const char *pIdleSounds[];
-	//static const char *pAlertSounds[];
-	static const char *pPainSounds[];
-	
-	static const char* pIdleSounds[];
-	static const char *pAttackHitSounds[];
-	static const char *pAttackMissSounds[];
-
 	void MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, float flInterval );
 	
 	GENERATE_KILLED_PROTOTYPE
 
-	BOOL CheckMeleeAttack1 ( float flDot, float flDist );
-	BOOL CheckMeleeAttack2 ( float flDot, float flDist ){return false;};
-	BOOL CheckRangeAttack1 ( float flDot, float flDist );
-	BOOL CheckRangeAttack2 ( float flDot, float flDist );
+	BOOL CheckMeleeAttack1(float flDot, float flDist);
+	BOOL CheckMeleeAttack2(float flDot, float flDist);
+	BOOL CheckRangeAttack1(float flDot, float flDist);
+	BOOL CheckRangeAttack2(float flDot, float flDist);
 
 	void SetActivity(Activity NewActivity);
 	
@@ -155,18 +172,6 @@ public:
 	GENERATE_TRACEATTACK_PROTOTYPE
 	GENERATE_TAKEDAMAGE_PROTOTYPE
 	
-
-	int m_voicePitch;
-
-	BOOL firing;
-	float spinuptime;
-	float spinuptimeremain;
-
-	float rageTimer;
-	float movementBaseFramerate;
-
-	BOOL soundgiven;
-	int	m_iBrassShell;
 	void MonsterThink( void );
 	
 	BOOL FValidateCover ( const Vector &vecCoverLocation );
@@ -179,8 +184,6 @@ public:
 	void StartTask ( Task_t *pTask );
 	void RunTask ( Task_t *pTask );
 
-	//MODDD - new.
-	BOOL spinuptimeSet;
 	int SquadRecruit( int searchRadius, int maxMembers );
 
 	void AimAtEnemy(Vector& refVecShootOrigin, Vector& refVecShootDir);

@@ -68,7 +68,7 @@
 //***Descriptions seen in the server browser for a game running this mod***
 // For CGameRules (gamerules.h).  Was "Half-Life"
 #define GAME_NORMAL_DESCRIPTION "Half-Life: AZ"
-// For CHalfLifeTeamplay (teamplay_gamerules.h).  Was "HL Teamplay"
+// For CHalfLifeTeamplay (gamerules_teamplay.h).  Was "HL Teamplay"
 #define GAME_TEAMPLAY_DESCRIPTION "HL:AZ Teamplay"
 
 

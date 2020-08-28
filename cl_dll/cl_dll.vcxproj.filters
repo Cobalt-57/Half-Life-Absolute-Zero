@@ -31,12 +31,21 @@
     <Filter Include="Source Files\weapon">
       <UniqueIdentifier>{cd9158a0-f243-47dd-8314-6c343f74fb10}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\common">
+      <UniqueIdentifier>{360be56b-844a-400e-80c6-d3e167242918}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\weapon">
+      <UniqueIdentifier>{0fa76b56-73a0-407b-9e32-cf9f1ed297a6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\hud">
+      <UniqueIdentifier>{7d072568-9349-4fc0-95c3-35d028937aa9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\hud">
+      <UniqueIdentifier>{89ba2ec4-8759-4b9c-93bf-2e4fab72a000}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="cdll_int.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="com_weapons.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="demo.cpp">
@@ -61,9 +70,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="hud_servers.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="hud\hud_spectator.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="hud_update.cpp">
@@ -204,51 +210,6 @@
     <ClCompile Include="..\game_shared\util\util_version.cpp">
       <Filter>Source Files\Shared</Filter>
     </ClCompile>
-    <ClCompile Include="hud\ammo.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="hud\ammo_secondary.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="hud\ammohistory.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="hud\battery.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="hud\death.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="hud\flashlight.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="hud\geiger.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="hud\health.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="hud\menu.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="hud\message.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="hud\saytext.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="hud\status_icons.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="hud\statusbar.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="hud\text_message.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="hud\train.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\common\vector.cpp">
       <Filter>Source Files\common</Filter>
     </ClCompile>
@@ -256,9 +217,6 @@
       <Filter>Source Files\_root</Filter>
     </ClCompile>
     <ClCompile Include="weapons_resource.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="hud\pain.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="hl\cl_weapons.cpp">
@@ -312,15 +270,63 @@
     <ClCompile Include="..\dlls\weapon\chumtoadweapon.cpp">
       <Filter>Source Files\weapon</Filter>
     </ClCompile>
+    <ClCompile Include="hud\ammo.cpp">
+      <Filter>Source Files\hud</Filter>
+    </ClCompile>
+    <ClCompile Include="hud\ammo_secondary.cpp">
+      <Filter>Source Files\hud</Filter>
+    </ClCompile>
+    <ClCompile Include="hud\ammohistory.cpp">
+      <Filter>Source Files\hud</Filter>
+    </ClCompile>
+    <ClCompile Include="hud\battery.cpp">
+      <Filter>Source Files\hud</Filter>
+    </ClCompile>
+    <ClCompile Include="hud\death.cpp">
+      <Filter>Source Files\hud</Filter>
+    </ClCompile>
+    <ClCompile Include="hud\flashlight.cpp">
+      <Filter>Source Files\hud</Filter>
+    </ClCompile>
+    <ClCompile Include="hud\geiger.cpp">
+      <Filter>Source Files\hud</Filter>
+    </ClCompile>
+    <ClCompile Include="hud\health.cpp">
+      <Filter>Source Files\hud</Filter>
+    </ClCompile>
+    <ClCompile Include="hud\pain.cpp">
+      <Filter>Source Files\hud</Filter>
+    </ClCompile>
+    <ClCompile Include="hud\hud_spectator.cpp">
+      <Filter>Source Files\hud</Filter>
+    </ClCompile>
+    <ClCompile Include="hud\train.cpp">
+      <Filter>Source Files\hud</Filter>
+    </ClCompile>
+    <ClCompile Include="hud\text_message.cpp">
+      <Filter>Source Files\hud</Filter>
+    </ClCompile>
+    <ClCompile Include="hud\statusbar.cpp">
+      <Filter>Source Files\hud</Filter>
+    </ClCompile>
+    <ClCompile Include="hud\status_icons.cpp">
+      <Filter>Source Files\hud</Filter>
+    </ClCompile>
+    <ClCompile Include="hud\saytext.cpp">
+      <Filter>Source Files\hud</Filter>
+    </ClCompile>
+    <ClCompile Include="hud\message.cpp">
+      <Filter>Source Files\hud</Filter>
+    </ClCompile>
+    <ClCompile Include="hud\menu.cpp">
+      <Filter>Source Files\hud</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="camera.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="cl_dll.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="com_weapons.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="demo.h">
@@ -345,9 +351,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="hud_servers_priv.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="hud\hud_spectator.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\common\itrackeruser.h">
@@ -452,20 +455,71 @@
     <ClInclude Include="..\game_shared\util\util_version.h">
       <Filter>Header Files\Shared</Filter>
     </ClInclude>
-    <ClInclude Include="hud\ammo.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="hud\ammohistory.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="hud\health.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="hud\pain.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="hl\hl_weapons.h">
       <Filter>Header Files\hl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\vector.h">
+      <Filter>Header Files\common</Filter>
+    </ClInclude>
+    <ClInclude Include="hud\ammo.h">
+      <Filter>Header Files\hud</Filter>
+    </ClInclude>
+    <ClInclude Include="hud\ammohistory.h">
+      <Filter>Header Files\hud</Filter>
+    </ClInclude>
+    <ClInclude Include="hud\health.h">
+      <Filter>Header Files\hud</Filter>
+    </ClInclude>
+    <ClInclude Include="hud\hud_spectator.h">
+      <Filter>Header Files\hud</Filter>
+    </ClInclude>
+    <ClInclude Include="hud\pain.h">
+      <Filter>Header Files\hud</Filter>
+    </ClInclude>
+    <ClInclude Include="..\dlls\weapon\tripmine.h">
+      <Filter>Header Files\weapon</Filter>
+    </ClInclude>
+    <ClInclude Include="..\dlls\weapon\squeak.h">
+      <Filter>Header Files\weapon</Filter>
+    </ClInclude>
+    <ClInclude Include="..\dlls\weapon\shotgun.h">
+      <Filter>Header Files\weapon</Filter>
+    </ClInclude>
+    <ClInclude Include="..\dlls\weapon\satchel.h">
+      <Filter>Header Files\weapon</Filter>
+    </ClInclude>
+    <ClInclude Include="..\dlls\weapon\rpg.h">
+      <Filter>Header Files\weapon</Filter>
+    </ClInclude>
+    <ClInclude Include="..\dlls\weapon\python.h">
+      <Filter>Header Files\weapon</Filter>
+    </ClInclude>
+    <ClInclude Include="..\dlls\weapon\mp5.h">
+      <Filter>Header Files\weapon</Filter>
+    </ClInclude>
+    <ClInclude Include="..\dlls\weapon\hornetgun.h">
+      <Filter>Header Files\weapon</Filter>
+    </ClInclude>
+    <ClInclude Include="..\dlls\weapon\handgrenade.h">
+      <Filter>Header Files\weapon</Filter>
+    </ClInclude>
+    <ClInclude Include="..\dlls\weapon\glock.h">
+      <Filter>Header Files\weapon</Filter>
+    </ClInclude>
+    <ClInclude Include="..\dlls\weapon\gauss.h">
+      <Filter>Header Files\weapon</Filter>
+    </ClInclude>
+    <ClInclude Include="..\dlls\weapon\egon.h">
+      <Filter>Header Files\weapon</Filter>
+    </ClInclude>
+    <ClInclude Include="..\dlls\weapon\crowbar.h">
+      <Filter>Header Files\weapon</Filter>
+    </ClInclude>
+    <ClInclude Include="..\dlls\weapon\crossbow.h">
+      <Filter>Header Files\weapon</Filter>
+    </ClInclude>
+    <ClInclude Include="..\dlls\weapon\chumtoadweapon.h">
+      <Filter>Header Files\weapon</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

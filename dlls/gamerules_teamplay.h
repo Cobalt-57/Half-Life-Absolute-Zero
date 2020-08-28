@@ -13,7 +13,7 @@
 *
 ****/
 //
-// teamplay_gamerules.h
+// gamerules_teamplay.h
 //
 
 #define MAX_TEAMNAME_LENGTH	16

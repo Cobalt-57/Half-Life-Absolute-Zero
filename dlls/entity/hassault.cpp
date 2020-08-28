@@ -13,7 +13,7 @@
 *
 ****/
 //=========================================================
-// Hassault- By Osiris / OsirisGodoftheDead / THE_YETI
+// Hassault - started by Osiris / OsirisGodoftheDead / THE_YETI
 //=========================================================
 
 // UNDONE: Don't flinch every time you get hit
@@ -68,11 +68,8 @@ EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(sv_germancensorship)
 extern BOOL globalPSEUDO_germanModel_hassaultFound;
 
 
-
-
-
-#define HASSAULT_SENTENCE_VOLUME (float)0.46
-
+// oh wait nothing uses this.  oops.
+#define HASSAULT_SENTENCE_VOLUME (float)0.56
 
 
 #if REMOVE_ORIGINAL_NAMES != 1
@@ -1152,10 +1149,6 @@ CHAssault::CHAssault(){
 	previousAnimationActivity = -1;
 	fireDelay = -1;
 
-	couldRangedAttack1 = FALSE;
-	couldRangedAttack2 = FALSE;
-	couldMeleeAttack1 = FALSE;
-	couldMeleeAttack2 = FALSE;
 
 	forceBlockResidual = FALSE;
 	meleeAttackTimeMax = -1;
@@ -1686,12 +1679,6 @@ void CHAssault::SetActivity(Activity NewActivity){
 
 BOOL CHAssault :: FCanCheckAttacks ( void )
 {
-	//reset HERE.
-	couldRangedAttack1 = FALSE;
-	couldRangedAttack2 = FALSE;
-	couldMeleeAttack1 = FALSE;
-	couldMeleeAttack2 = FALSE;
-
 	EASY_CVAR_PRINTIF_PRE(hassaultPrintout, easyPrintLine( "WELL DO YA PUNK %d %d", HasConditions(bits_COND_SEE_ENEMY), HasConditions( bits_COND_ENEMY_TOOFAR )));
 	if ( HasConditions(bits_COND_SEE_ENEMY) && !HasConditions( bits_COND_ENEMY_TOOFAR ) )
 	{
@@ -1795,10 +1782,11 @@ BOOL CHAssault :: CheckRangeAttack1 ( float flDot, float flDist )
 			EASY_CVAR_PRINTIF_PRE(hassaultPrintout, easyPrintLine( "Passline Failed"));
 			return FALSE;
 		}
+
 		
-		//in the very least, could attack if turned the right way. And we're looking at them, we aren't psychic after all.
+		// in the very least, could attack if turned the right way. And we're looking at them, we aren't psychic after all.
 		if(HasConditions(bits_COND_SEE_ENEMY)){
-			couldRangedAttack1 = TRUE;
+			SetConditionsMod(bits_COND_COULD_RANGE_ATTACK1);
 		}
 		
 
@@ -1812,9 +1800,9 @@ BOOL CHAssault :: CheckRangeAttack1 ( float flDot, float flDist )
 	}
 
 	EASY_CVAR_PRINTIF_PRE(hassaultPrintout, easyPrintLine( "NOOOO 2 %d", m_hEnemy ->Classify()));
-		//for one reason or another, could not even attack by turning the right way.
-		couldRangedAttack1 = FALSE;
-		return FALSE;
+	//for one reason or another, could not even attack by turning the right way.
+	ClearConditionsMod(bits_COND_COULD_RANGE_ATTACK1);
+	return FALSE;
 }
 
 BOOL CHAssault :: CheckRangeAttack2 ( float flDot, float flDist )
@@ -1838,7 +1826,7 @@ BOOL CHAssault::CheckMeleeAttack1(float flDot, float flDist){
 		return FALSE;
 	}
 
-	couldMeleeAttack1 = TRUE;
+	SetConditionsMod( bits_COND_COULD_MELEE_ATTACK1 );
 
 	if ( m_hEnemy != NULL )
 	{
@@ -1865,8 +1853,13 @@ BOOL CHAssault::CheckMeleeAttack1(float flDot, float flDist){
 		}
 
 	}else{
-		couldMeleeAttack1 = FALSE;
+		ClearConditionsMod( bits_COND_COULD_MELEE_ATTACK1 );
 	}
+	return FALSE;
+}
+
+BOOL CHAssault :: CheckMeleeAttack2 ( float flDot, float flDist )
+{
 	return FALSE;
 }
 
@@ -1878,7 +1871,6 @@ void CHAssault::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, floa
 	}
 	CSquadMonster::MoveExecute(pTargetEnt, vecDir, flInterval);
 }
-
 
 void CHAssault::ReportAIState( void )
 {
@@ -1940,7 +1932,6 @@ void CHAssault :: StartTask ( Task_t *pTask ){
 			//animDuration = requiredDuration * factor
 			//factor = animDuration / requiredDuration
 
-
 			targetFrameRate = EASY_CVAR_GET_DEBUGONLY(hassaultSpinupStartTime) / (16.0f/15.0f);
 
 			//default time: (16/15) seconds. Scale to take as long as hassaultSpinupStartTime.
@@ -1969,10 +1960,6 @@ void CHAssault :: StartTask ( Task_t *pTask ){
 			}
 
 		}
-
-		
-
-
 		
 		spinuptimeSet = TRUE;
 		//Standin'! 
@@ -1982,7 +1969,6 @@ void CHAssault :: StartTask ( Task_t *pTask ){
 			//we were just told to start, so end this task regardless.
 			TaskComplete();
 		}
-
 
 	break;
 	}
@@ -2129,8 +2115,8 @@ void CHAssault :: RunTask ( Task_t *pTask )
 
 		if(!HasConditionsEither(bits_COND_CAN_MELEE_ATTACK1)){
 
-			if(couldMeleeAttack1){
-				//then face them!
+			if( HasConditionsModEither(bits_COND_COULD_MELEE_ATTACK1)){
+				// then face them!  'Either' for COULD makes sense too, right?
 				ChangeSchedule(slCombatFaceNoStump);
 				return;
 			}else{
@@ -2206,7 +2192,7 @@ void CHAssault :: RunTask ( Task_t *pTask )
 				TaskFail();
 				return;
 			}else{
-				if(couldRangedAttack1){
+				if(HasConditionsMod(bits_COND_COULD_RANGE_ATTACK1)){
 					EASY_CVAR_PRINTIF_PRE(hassaultPrintout, easyPrintLine( "dont do that 3"));
 					ChangeSchedule(slCombatFaceNoStump);
 					return;
@@ -2343,7 +2329,7 @@ void CHAssault :: RunTask ( Task_t *pTask )
 		EASY_CVAR_PRINTIF_PRE(hassaultPrintout, easyPrintLine( "Residual fire."));
 
 		if ( HasConditions(bits_COND_SEE_ENEMY) && !HasConditions(bits_COND_ENEMY_OCCLUDED)  ){
-			//can see the enemy just fine?   What are you waiting for?!
+			// can see the enemy just fine?   What are you waiting for?!
 
 			//if we can't "range attack", then it's not good enough of a place to stop.
 			if(  HasConditionsEither(bits_COND_CAN_RANGE_ATTACK1)   ){
@@ -2351,16 +2337,16 @@ void CHAssault :: RunTask ( Task_t *pTask )
 				//TaskFail();
 				return;
 			}else{
-				if(couldRangedAttack1){
+				if(HasConditionsMod(bits_COND_COULD_RANGE_ATTACK1)){
 					ChangeSchedule(slCombatFaceNoStump);
 					return;
 				}else{
-					//keep moving?
+					// keep moving?
 				}
 			}
 		}
 
-		//should we stop firing?
+		// should we stop firing?
 		if(residualFireTime <= gpGlobals->time){
 			residualFireTime = -1;
 			TaskComplete();
@@ -2369,7 +2355,7 @@ void CHAssault :: RunTask ( Task_t *pTask )
 			this->SetSequenceByName("attack");
 			this->pev->frame = 0;
 			this->pev->framerate = 0;
-			//is this a good idea? VERIFY!
+			// is this a good idea? VERIFY!
 			*/
 			return;
 		}

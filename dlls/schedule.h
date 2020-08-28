@@ -381,4 +381,15 @@ struct WayPoint_t
 
 #define bits_COND_CAN_ATTACK			(bits_COND_CAN_RANGE_ATTACK1 | bits_COND_CAN_MELEE_ATTACK1 | bits_COND_CAN_RANGE_ATTACK2 | bits_COND_CAN_MELEE_ATTACK2)
 
+
+///////////////////////////////////////////////////////////////////////////////////////////
+//MODDD - NEW!  Use with the 'conditionsMod' bitmask and set/clear/has methods only!
+
+#define bits_COND_COULD_RANGE_ATTACK1		( 1 << 0)
+#define bits_COND_COULD_MELEE_ATTACK1		( 1 << 1)
+#define bits_COND_COULD_RANGE_ATTACK2		( 1 << 2)
+#define bits_COND_COULD_MELEE_ATTACK2		( 1 << 3)
+
+
+
 #endif	// SCHEDULE_H

@@ -655,8 +655,7 @@ hud_moveselect_sound (1) - MODEVAR.  Controls the sound made changing the select
 mirrorsReflectOnlyNPCs - BOOL.  If 1, mirrors only reflect NPCs (generally, living enemies and friendlies).
 mirrorsDoNotReflectPlayer - BOOL.  If 1, the player (first or third person) is an exception to rendering in the mirror (being shown in the reflection).
 
-NPCsTalkMore - BOOL.  If 1, NPCs will be more likely to talk.  Beware that some conditions still prevent talking.
--WARNING: may block some AI like following.
+NPCsTalkMore - BOOL.  If 1, NPCs will be more likely to talk.
 
 nothingHurts - BOOL (w/ extra mode).  If 1, most things (including the player) can't damage anything else, assuming they deal damage through the usual "takeDamage" method applied to the receiver.
 ~if 2, enemies (NPCs) still can't damage each other or the player, but the player can damage them back.  Use to conveniently pick-off NPCs in "no-target" observation.
@@ -1312,6 +1311,7 @@ pathfindTopRampFixDraw (0) - BOOL. If on, draws the most recent test taken bypat
 
 
 pathfindLooseMapNodes (0) - BOOL. If on, map nodes taken by monsters will skip the "CheckLocalMove" check and use a simpler hull trace check instead, implying a node-to-node traversal will probably be ok. May have side effects of dumb AI thinking it can go somewhere it really can't from time to time.                               
+
 pathfindRampFix (0) - BOOL. If on, the AI should have an easier time using ramps. May be helped by "pathfindLooseMapNodes" being turned on.
 
 
@@ -1320,13 +1320,13 @@ pathfindNodeToleranceMulti (1) - ADJUSTABLE. How much / less distance must be be
 
 
 
-pathfindLargeBoundFix (0) - BOOL. For NPCs that have trouble going up or down inclines, this may help.
-~Re-does straight line path-find checks to see if they would work for typical human-sized bounds, which work properly with ramps.
-~Only applies to monsters selected for trying this extra check, such as panthereyes and agrunts.
+pathfindLargeBoundFix (1) - BOOL. For NPCs that have trouble going up or down inclines, this may help.
+~ Re-does straight line path-find checks to see if they would work for typical human-sized bounds, which work properly with ramps.
+~ Only applies to monsters selected for trying this extra check, such as panthereyes and agrunts.
 
 
 flyerKilledFallingLoop (1) - BOOL. Fliers (flying NPCs/monsters) that have a looping animation for falling while killed mid-air will use this animation instead of skipping straight to a death animation that assumes the ground has been touched.
-~Touching the ground proceeds to the typical death animation.
+~ Touching the ground proceeds to the typical death animation.
 
 NOTICE - there is an as-is command, "interp", that claims to turn interpolation off too.
 It might in a different way.  It seems to cause clientside events like hgrunt muzzle flashes to stay frozen in the whole 1/10th second timeframe they occupy.  Maybe longer? unsure.
@@ -1546,5 +1546,15 @@ sv_player_midair_fix (1) - BOOL.  When on, support for an extension of midair lo
 -This may also stop getting stuck in certain terrain, such as tracks in a2a1.
 -Slight jumpiness one frame (very fast) when crouch-jumping against something, helped by cl_interp_view_extra set to 2.  NEW: fixed for cl_interp_view_extra set to 1 too.
 
+
+pathfindForcePointHull (0) - BOOL.  When on, pathfinding always uses the 'point' hull (no size) for checking whether a path between nodes is valid for a monster.
+- May cause monsters to take an otherwise invalid route (get stuck on part of the map in the way).  Worth knowing if a perfectly valid route was blocked from using the monster's normal hull (why wasn't it allowed then?).
+
+pathfindIgnoreNearestNodeCache (0) - BOOL.  When on, pathfinding will re-determine the nearest node to a given point each time instead of relying on memory to fetch recent values.
+~ Try 'clearnodecache', no quotes, in console to start with a fresh state for recently changed pathfinding CVars.  Nearest Node cache is not saved to a file.
+
+pathfindIgnoreStaticRoutes (0) - BOOL.  When on, pathfinding will re-determine the nearest route between two points each time it is requested, instead of looking up the route in a table.
+~ If this helps, try rebuilding the node graph ('rebuildgraph' or 'rebuildnodegraph' in console).  Give it at least 5 seconds.  The new static routes info should be remembered on saving/loading the game.
+~ (and uh, tell us to rebuild the nodes for that map and ship em' out)
 
 

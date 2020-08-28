@@ -16,7 +16,7 @@ CLIENTSIDE (cl_dll)
 -hud/pain.h & .cpp - pain-related script from health.cpp moved here.
 
 -hl_weapons.h - header file for hl_weapons.cpp, for other new files to access globals from hl_weapons.cpp.
--hl/cl_player.h/.cpp, hl/cl_weapons.h/.cpp - Imlpementations of CBasePlayer and CBasePlayerWeapon methods moved from hl_weapons.cpp for neatness.
+-hl/cl_player.h/.cpp, hl/cl_weapons.h/.cpp - Implementations of CBasePlayer and CBasePlayerWeapon methods moved from hl_weapons.cpp for neatness.
 
 
 SERVERSIDE (dlls)
@@ -65,7 +65,7 @@ SERVERSIDE (dlls)
 
 -monstersavestate.h, monstersavestate.cpp - moved outside barney.cpp
 
--singleplay_gamerules.cpp, multiplay_gamerules.cpp, teamplay_gamerules.h/.cpp renamed to have 'gamerules' in front...    nah.  nevermind.  no one cares.
+-singleplay_gamerules.cpp, multiplay_gamerules.cpp, teamplay_gamerules.h/.cpp renamed to have 'gamerules' in front.
 
 
 SHARED (game_shared)

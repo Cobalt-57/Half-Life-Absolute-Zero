@@ -388,8 +388,9 @@ void CPython::PrimaryAttack()
 
 	//MODDD.
 	// Wait, no UTIL_WeaponTimeBase? ...  ?        what?                     what?
+	// also, fire-rate changed.  Was 0.75, upped to 0.9.
 	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelay) == 0){
-		m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 0.75;
+		m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 0.9;
 	}else{
 		m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelaycustom);
 		//m_pPlayer->pev->punchangle = Vector(0, 0, 0);   not necessary, I think.

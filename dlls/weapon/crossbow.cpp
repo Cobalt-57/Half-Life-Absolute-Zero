@@ -43,7 +43,7 @@ EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(crossbowReloadSoundDelay)
 
 // delay between shots boosted, was 0.75
 // (this is not reload time, delay between firing clip).
-#define CROSSBOW_LOADBOLT_TIME 1.20
+#define CROSSBOW_LOADBOLT_TIME 1.50
 
 
 

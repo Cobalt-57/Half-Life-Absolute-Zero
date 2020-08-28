@@ -313,6 +313,9 @@ public:
 	// Set at the start of the next frame and cleared.
 	int m_afConditionsNextFrame;
 
+	//MODDD - new conditions bitmask.  Sweet mother.
+	int m_afConditionsMod;
+	int m_afConditionsModNextFrame;
 
 
 	typedef enum
@@ -512,7 +515,7 @@ public:
 	//MODDD - new, to block state changes when pulled up.
 	//possible glitch that enemies just stay stuck in a standing animation while pulled up?  This may solve that.
 	BOOL barnacleLocked;
-	MONSTERSTATE		queuedMonsterState;
+	MONSTERSTATE queuedMonsterState;
 
 	float forgetSmallFlinchTime;
 	float forgetBigFlinchTime;
@@ -521,8 +524,6 @@ public:
 
 	BOOL targetIsDeadException;
 
-	BOOL canRangedAttack1;
-	BOOL canRangedAttack2;
 
 	BOOL strictNodeTolerance;
 	BOOL recentTimedTriggerDamage;
@@ -917,7 +918,11 @@ public:
 	
 
 
-
+	// NOTE - SetConditions and ClearConditions assume changes apply to the normal and NextFrame conditions bitmasks.
+	// HasConditions only involves the normal bitmask.
+	// Verify that this 'NextFrame' system is even necessary anymore, one easy point of failure was pushing friendly NPC's
+	// post-disaster not working (kept getting the PUSH condition forgotten before the next frame to affect the schedule).
+	// 'NextFrame' stuff fixed that, or at least did at the time.
 
 	inline void SetConditions( int iConditions ) {
 		m_afConditions |= iConditions;
@@ -939,14 +944,12 @@ public:
 		m_afConditionsNextFrame &= ~iConditions;
 	}
 
-
 	inline BOOL HasConditions( int iConditions ) { if (m_afConditions & iConditions ) return TRUE; return FALSE; }
 	inline BOOL HasAllConditions( int iConditions ) { if ( (m_afConditions & iConditions) == iConditions ) return TRUE; return FALSE; }
 
 	inline BOOL HasConditions_NextFrame(int iConditions) { if (m_afConditionsNextFrame & iConditions) return TRUE; return FALSE; }
 	inline BOOL HasAllConditions_NextFrame(int iConditions) { if ((m_afConditionsNextFrame & iConditions) == iConditions) return TRUE; return FALSE; }
 
-	
 	inline BOOL HasConditionsEither(int iConditions) { if ((m_afConditions & iConditions) || (m_afConditionsNextFrame & iConditions) ) return TRUE; return FALSE; }
 	inline BOOL HasAllConditionsEither(int iConditions) { if ((m_afConditions & iConditions) == iConditions || (m_afConditionsNextFrame & iConditions) == iConditions) return TRUE; return FALSE; }
 
@@ -973,6 +976,68 @@ public:
 	inline void ClearAllConditionsExcept_NextFrame(int iConditions) {
 		m_afConditionsNextFrame &= iConditions;
 	}
+
+
+
+
+
+	//MODDD - cloned for the new conditions bitmask.
+
+	
+	inline void SetConditionsMod( int iConditions ) {
+		m_afConditionsMod |= iConditions;
+		m_afConditionsModNextFrame |= iConditions;
+	}
+	inline void SetNextFrameConditionsMod(int iConditions) {
+		m_afConditionsMod |= iConditions;
+		m_afConditionsModNextFrame |= iConditions;
+	}
+	inline void ClearConditionsMod( int iConditions ) {
+		m_afConditionsMod &= ~iConditions;
+		m_afConditionsModNextFrame &= ~iConditions;
+		// include m_afConditionsModNextFrame, yes or no ?
+	}
+	inline void ClearConditionsMod_ThisFrame(int iConditions) {
+		m_afConditionsMod &= ~iConditions;
+	}
+	inline void ClearConditionsMod_NextFrame(int iConditions) {
+		m_afConditionsModNextFrame &= ~iConditions;
+	}
+
+	inline BOOL HasConditionsMod( int iConditions ) { if (m_afConditionsMod & iConditions ) return TRUE; return FALSE; }
+	inline BOOL HasAllConditionsMod( int iConditions ) { if ( (m_afConditionsMod & iConditions) == iConditions ) return TRUE; return FALSE; }
+
+	inline BOOL HasConditionsMod_NextFrame(int iConditions) { if (m_afConditionsModNextFrame & iConditions) return TRUE; return FALSE; }
+	inline BOOL HasAllConditionsMod_NextFrame(int iConditions) { if ((m_afConditionsModNextFrame & iConditions) == iConditions) return TRUE; return FALSE; }
+
+	inline BOOL HasConditionsModEither(int iConditions) { if ((m_afConditionsMod & iConditions) || (m_afConditionsModNextFrame & iConditions) ) return TRUE; return FALSE; }
+	inline BOOL HasAllConditionsModEither(int iConditions) { if ((m_afConditionsMod & iConditions) == iConditions || (m_afConditionsModNextFrame & iConditions) == iConditions) return TRUE; return FALSE; }
+
+
+	// For easier breakpoints.
+	inline void ClearAllConditionsMod(void) {
+		m_afConditionsMod = 0;
+		m_afConditionsModNextFrame = 0;
+	}
+	inline void ClearAllConditionsMod_ThisFrame(void) {
+		m_afConditionsMod = 0;
+	}
+	inline void ClearAllConditionsMod_NextFrame(void) {
+		m_afConditionsModNextFrame = 0;
+	}
+
+	inline void ClearAllConditionsModExcept(int iConditions) {
+		m_afConditionsMod &= iConditions;
+		m_afConditionsModNextFrame &= iConditions;
+	}
+	inline void ClearAllConditionsModExcept_ThisFrame(int iConditions) {
+		m_afConditionsMod &= iConditions;
+	}
+	inline void ClearAllConditionsModExcept_NextFrame(int iConditions) {
+		m_afConditionsModNextFrame &= iConditions;
+	}
+
+
 
 
 

@@ -267,7 +267,7 @@ Added support for a gauss beam that no longer follows the weapon after firing (c
 
 Failing to revive, despite having adrenaline+suit, after dying shortly after loading a map fixed.
 
-Crossbow between-shot delay increased from 0.75 seconds to 1.1.
+Crossbow between-shot delay increased from 0.75 seconds to 1.50.
 
 Controller pathfinding in intended maps fixed (retail-like).  Just proof of pathfinding's stablity for other places.
 
@@ -453,9 +453,12 @@ Improvement to the client event fix for the player model (as seen in 3rd person 
 TURRETS (mainly mounted ceiling turrets, not the ones on stands (sentries))
 Chumtoads playing dead now fool turrets.
 All turrets have slightly better aim, better at hitting very small targets like chumtoads and snarks.
-Non-sentry turrets go 'beserk' at 38% health (15 with a max health of 40) instead of a static 10 or less.  Also take longer to damage themselves into deactivating while beserk, and change direction more often while beserk.
-Non-sentry turrets have a more involved post-death sequence.  They will spin around and fire quickly and generate explosion effects until stopping after a few seconds.
+Non-sentry turrets go 'beserk' at 15 health or less instead of 10.  Also take longer to damage themselves into deactivating while beserk, and change direction more often while beserk.
 Non-sentry turrets no longer appear to jitter their aim while firing at something standing still.
+Standard turrets with an eye (miniturrets lack this) will no longer freeze brightness on acquiring a target.  It will raise to maximum and stay while there is a target.
+Non-sentry turrets have a more involved post-death sequence.  They will spin around and fire quickly and generate explosion effects until ending on the original death animation after a few seconds.
+-They will make off-pitch pings during post-death beserk and normal beserk.  Far more off-pitch pings on post-death.
+-Turret eye (brightness) in standard turrets will flash on and off during post-death.
 
 
 Ladder logic jump-off logic altered.  Only clean jump-presses can jump off, not holding it down.
@@ -467,3 +470,26 @@ Friendly talkers (scientist, barney) use less-random custom logic for picking id
 - Talkers usually pick from standard idle animations that look the most plain (breathing).
 - If 11 to 15 seconds have passed, a 'fidget' idle will be picked instead, and the timer is reset.
 - Picking any other animation also resets the timer.  Must be 11 to 15 seconds since staying in a neutral activity (idle, turning in place, crouching, etc.).
+
+Headcrabs only use the run animation for movement on hard mode (was undocumented before)
+
+Scientists will use the 'checktie' animation when complaining about ties.
+Scientists will use the 'crouchstand' animation when enemies aren't around to change from crouch to standing more smoothly.
+
+Python (revolver) between-shot delay increased from 0.75 to 0.9.
+
+Friendly: now with pain-sounds.  Sweet dreams!
+
+pathfindLargeBoundFix: set to 1.  The friendly uses a slighty wider hull, less tall (more like the panthereye) and now benefits from this CVar as well.
+- any side-effects or slowdowns caused by 'pathfindLargeBoundFix 1' should be reported, testing this out.
+~ SELF NOTE Also consider CVars 'pathfindRampFix' and 'pathfindLooseMapNodes'.  Both default to off, the latter is more extreme.   pathfindRampFix doesn't appear to help large-bounded things go down ramps at least.
+
+Slight AI performance: picking the same schedule as a previous one that finished in the same frame (ran through all its tasks without waiting for another frame of game logic) stops updating the schedule in that frame.
+The maximum number of schedules able to be re-picked in one frame changed from 25 to 6 (retail is 10).
+
+Slight AI improvement: something facing off from ideal but still able to attack from a place without a direct path to the enemy (like a gargantua across rails) will still be able to turn and face if an attack were possible.
+- Not yet used in many places yet, but a similar idea is already present in sevearl monsters, especially hassault and hgrunt.
+
+NEW CVars: pathfindForcePointHull, pathfindIgnoreNearestNodeCache, pathfindIgnoreStaticRoutes.
+In maps where 'pathfindIgnoreStaticRoutes' being 1 makes a difference in pathfinding through nodes, their node routes should be rebuilt (saved to a file, do it on our end and ship them out).
+

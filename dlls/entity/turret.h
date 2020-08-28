@@ -66,7 +66,7 @@ public:
 	float postDeathEndTime;
 	float nextDeathExplosionTime;
 	float postDeathBeserkDir;
-	BOOL postDeathSequenceStarting;
+	float postDeathEyeBrightnessDir;
 
 
 	CBaseTurret(void);
@@ -81,7 +81,10 @@ public:
 	//void TraceAttack( entvars_t *pevAttacker, float flDamage, Vector vecDir, TraceResult *ptr, int bitsDamageType);
 	//int  TakeDamage( entvars_t *pevInflictor, entvars_t *pevAttacker, float flDamage, int bitsDamageType );
 	
+
+	// NOTE - not overridable!  Should work for any turret subclasses.
 	BOOL TurretDeathCheck(entvars_t* pevInflictor, entvars_t* pevAttacker, float flDamage, int bitsDamageType, int bitsDamageTypeMod, void (CBaseTurret::*eventMethod)() );
+
 
 	GENERATE_TRACEATTACK_PROTOTYPE_VIRTUAL
 	GENERATE_TAKEDAMAGE_PROTOTYPE_VIRTUAL
@@ -116,13 +119,16 @@ public:
 
 	virtual void onDelete(void);
 	virtual void BeserkAimLogic(void);
-	virtual void TurretDeathEnd(void);
+
+	// These are overridable.  At least dummy out for turrets that don't want the parent behavior.
+	virtual void DeathStart(void);
+	virtual void DeathEnd(void);
 
 	// Think functions
 	void EXPORT ActiveThink(void);
 	void EXPORT SearchThink(void);
 	void EXPORT AutoSearchThink(void);
-	void EXPORT TurretDeath(void);
+	void EXPORT TurretDeathThink(void);
 
 	//MODDD - IMPORTANT NOTE.    These were the only "virtual EXPORT's" as of retail.
 	//  I... have no idea why they're even EXPORTs, they're never tied to any engine events
@@ -247,10 +253,12 @@ public:
 	
 	GENERATE_TRACEATTACK_PROTOTYPE
 	GENERATE_TAKEDAMAGE_PROTOTYPE
-	
+
+	virtual void DeathStart(void);
+	virtual void DeathEnd(void);
 
 	void EXPORT SentryTouch( CBaseEntity *pOther );
-	void EXPORT SentryDeath( void );
+	void EXPORT SentryDeathThink( void );
 
 };
 

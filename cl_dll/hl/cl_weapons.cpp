@@ -18,7 +18,6 @@
 #include "pickupwalker.h"
 
 #include "../hud_iface.h"
-#include "../com_weapons.h"
 
 
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteammo)

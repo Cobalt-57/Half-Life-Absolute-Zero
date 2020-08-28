@@ -448,7 +448,9 @@ Schedule_t	slAlertFace[] =
 		//bits_COND_LIGHT_DAMAGE	|
 		//bits_COND_HEAVY_DAMAGE	|
 		bits_COND_PROVOKED |
-		bits_COND_SCHEDULE_DONE,   //NEW. To let the monsterstate change immediaetly at the end of finishing this schedule.
+		bits_COND_SCHEDULE_DONE,   //MODDD -  NEW. To let the monsterstate change immediaetly at the end of finishing
+								   // this schedule.
+	                               // That's still a good idea right?  Should more things do that like idle-related methods?
 		//0,
 		//MODDD - now interruptible by bait?
 		bits_SOUND_BAIT,

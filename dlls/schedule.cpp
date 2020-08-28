@@ -42,8 +42,7 @@ EASY_CVAR_EXTERN_DEBUGONLY(animationFramerateMulti)
 extern CGraph WorldGraph;
 
 
-//MODDD!!!!!!!!!!!!!!!!!!!!! 
-// Was m_afConditions
+//MODDD
 #define CONDITIONS_BITMASK_USE m_afConditions
 
 
@@ -176,7 +175,8 @@ void CBaseMonster :: ChangeSchedule ( Schedule_t *pNewSchedule )
 	//ClearAllConditionsExcept_ThisFrame(bits_COND_TASK_FAILED | bits_COND_SCHEDULE_DONE | bits_COND_NEW_ENEMY);
 	//ClearAllConditionsExcept_ThisFrame(bits_COND_HEAR_SOUND | bits_COND_SEE_HATE | bits_COND_SEE_DISLIKE | bits_COND_SEE_ENEMY | bits_COND_SEE_FEAR | bits_COND_SEE_NEMESIS | bits_COND_SEE_CLIENT | bits_COND_ENEMY_OCCLUDED);
 	ClearConditions(bits_COND_NEW_ENEMY | bits_COND_ENEMY_DEAD | bits_COND_TASK_FAILED | bits_COND_SCHEDULE_DONE);
-	
+	//ClearConditionsMod( );   //oh none.
+
 	//weren't these good ideas though, sorta?
 	//////////////////////////////////////////////////////////////
 	//m_afConditions &= ~(bits_COND_TASK_FAILED | bits_COND_SCHEDULE_DONE);
@@ -277,6 +277,8 @@ int CBaseMonster :: IScheduleFlags ( void )
 	// strip off all bits excepts the ones capable of breaking this schedule.
 	return CONDITIONS_BITMASK_USE & m_pSchedule->iInterruptMask;
 }
+//MODDD - IScheduleFlagsMod?   If we want to give every single schedule in the game a default '0' for that 2nd interrupt bitmask.
+// LLLLllllllllllleeeeeeeettttttttssssss avoid that
 
 
 
@@ -429,7 +431,8 @@ BOOL CBaseMonster :: FScheduleValid ( void )
 //=========================================================
 void CBaseMonster :: MaintainSchedule ( void )
 {
-	Schedule_t	*pNewSchedule;
+	Schedule_t* pNewSchedule;
+	Schedule_t* pPrevSchedule;
 	int		i;
 	
 	/*
@@ -438,17 +441,16 @@ void CBaseMonster :: MaintainSchedule ( void )
 	}
 	*/
 
-
-
 	if(EASY_CVAR_GET_DEBUGONLY(crazyMonsterPrintouts) == 1){
 		easyPrintLine("DOCKS1 %d", HasConditions(bits_COND_CAN_MELEE_ATTACK1));
 	}
 
 	// UNDONE: Tune/fix this 10... This is just here so infinite loops are impossible
-	// MODDD - let's do more!  Upped to 25.
+	// MODDD - let's do more!  Upped to 25.    ...nah.  6 is plenty.
 	//for ( i = 0; i < 10; i++ )
-	for (i = 0; i < 25; i++)
+	for (i = 0; i < 6; i++)
 	{
+
 		if ( m_pSchedule != NULL && TaskIsComplete() )
 		{
 			NextScheduledTask();                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   
@@ -524,10 +526,15 @@ void CBaseMonster :: MaintainSchedule ( void )
 
 			//MODDD - a hard-set fail schedule will run regardless of the monster state matching the ideal or not.  Use if getting out of a schedule MUST do the fail schedule.
 			//        It will even run for any kind of interruption. Typical failure (from say, seeing an enemy in the middle of a schedule marked as interruptable by that) would not do this.
-			if ( hardSetFailSchedule ||  (HasConditions( bits_COND_TASK_FAILED ) && ( m_MonsterState == m_IdealMonsterState)) )
+			// ---CHANGE UP, this might be better.
+			//if ( hardSetFailSchedule ||  (HasConditions( bits_COND_TASK_FAILED ) && ( m_MonsterState == m_IdealMonsterState)) )
+			if ( HasConditions( bits_COND_TASK_FAILED ) && ( hardSetFailSchedule || ( m_MonsterState == m_IdealMonsterState)) )
 			{
 				//Keep track of whether this was set by a hard fail schedule or not. The schedule changes below can do some freaky things.
 				BOOL wasSetByHardFail = hardSetFailSchedule;
+				
+				// remember this
+				pPrevSchedule = m_pSchedule;
 
 				if(EASY_CVAR_GET_DEBUGONLY(crazyMonsterPrintouts) == 1){
 					easyPrintLine("OOPS A PLENTY 5 %d", HasConditions(bits_COND_CAN_MELEE_ATTACK1));
@@ -537,6 +544,12 @@ void CBaseMonster :: MaintainSchedule ( void )
 					//MODDD - new section.
 				}else{
 					pNewSchedule = GetScheduleOfType( SCHED_FAIL );
+				}
+
+				//MODDD - same schedule as the current one?  No more iterations for this loop.
+				if(pNewSchedule == pPrevSchedule){
+					if(EASY_CVAR_GET_DEBUGONLY(scheduleInterruptPrintouts)){easyForcePrintLine("!!! Same schedule picked in the same frame, BLOCKED. <fail>");}
+					i = 999;
 				}
 
 				// schedule was invalid because the current task failed to start or complete
@@ -565,6 +578,10 @@ void CBaseMonster :: MaintainSchedule ( void )
 					easyPrintLine("OOPS A PLENTY 8 %d ::: %d, %d ::: %d %d", HasConditions(bits_COND_CAN_MELEE_ATTACK1),  m_MonsterState == MONSTERSTATE_SCRIPT,  m_MonsterState == MONSTERSTATE_DEAD,    m_MonsterState == MONSTERSTATE_SCRIPT, m_MonsterState == MONSTERSTATE_DEAD  );
 				}
 				SetState( m_IdealMonsterState );
+
+				// remember this
+				pPrevSchedule = m_pSchedule;
+
 				if ( m_MonsterState == MONSTERSTATE_SCRIPT || m_MonsterState == MONSTERSTATE_DEAD ){
 					pNewSchedule = CBaseMonster::GetSchedule();
 					if(EASY_CVAR_GET_DEBUGONLY(crazyMonsterPrintouts))easyForcePrintLine("MaintainSchedule: INVALID B1. Schedule was: %s", getScheduleName());
@@ -578,6 +595,12 @@ void CBaseMonster :: MaintainSchedule ( void )
 				if (pNewSchedule == NULL) {
 					// give up
 					break;
+				}
+
+				//MODDD - yea.
+				if(pNewSchedule == pPrevSchedule){
+					if(EASY_CVAR_GET_DEBUGONLY(scheduleInterruptPrintouts)){easyForcePrintLine("!!! Same schedule picked in the same frame, BLOCKED. <normal>");}
+					i = 999;
 				}
 
 
@@ -736,10 +759,7 @@ void CBaseMonster :: MaintainSchedule ( void )
 	}//END OF THE LOOP.  Come on now, let's not try and hide this.
 
 	
-
 	// OLD LOCATION OF IMPORTANT SECTION
-
-
 
 
 
@@ -3612,10 +3632,7 @@ Schedule_t *CBaseMonster :: GetSchedule ( void )
 			}
 			else  
 			{
-
 				//easyPrintLine("I say, what? %d %d", HasConditions(bits_COND_CAN_RANGE_ATTACK1), HasConditions(bits_COND_CAN_RANGE_ATTACK2) );
-
-
 
 				if(m_hEnemy != NULL && IRelationship(m_hEnemy) == R_FR){
 					if( HasConditions(bits_COND_CAN_MELEE_ATTACK1 | bits_COND_CAN_MELEE_ATTACK2) ){
@@ -3649,10 +3666,13 @@ Schedule_t *CBaseMonster :: GetSchedule ( void )
 				{
 					return GetScheduleOfType( SCHED_MELEE_ATTACK2 );
 				}
+
 				//MODDD - NOTE - is that intentional?  range1 & melee1,  and not say,  melee1 & melee2???
 				//MODDD - ok, this condition is redundant. If all 4 condition checks above failed, each RANGE and MELEE attack, 1 and 2, failed.
 				//        That means RANGE1 and MELEE1 also had to have failed. This is guaranteed true.
-				if ( !HasConditions(bits_COND_CAN_RANGE_ATTACK1 | bits_COND_CAN_MELEE_ATTACK1) )
+				// REPLACED.  How about involving the new CouldAttack conditions here instead?
+				//if ( !HasConditions(bits_COND_CAN_RANGE_ATTACK1 | bits_COND_CAN_MELEE_ATTACK1) )
+				if(!HasConditionsMod(bits_COND_COULD_MELEE_ATTACK1 | bits_COND_COULD_MELEE_ATTACK2 | bits_COND_COULD_RANGE_ATTACK1 | bits_COND_COULD_RANGE_ATTACK2))
 				{
 
 					if(m_hEnemy != NULL && IRelationship(m_hEnemy) == R_FR){
@@ -3670,15 +3690,19 @@ Schedule_t *CBaseMonster :: GetSchedule ( void )
 					return GetScheduleOfType( SCHED_CHASE_ENEMY );
 
 				}
-				else if ( !FacingIdeal() )
+				//else if ( !FacingIdeal() )
+				//MODDD - FacingIdeal() check removed.  Likely didn't update the FacingIdeal from whatever failed pathfinding check to be
+				// the enemy, which is fine.  It probably won't.
+				// From having any of the COULD conditions above to even reach this point, go ahead and face them to change something.
+				else
 				{
 					//turn
 					return GetScheduleOfType( SCHED_COMBAT_FACE );
 				}
-				else
-				{
-					ALERT ( at_aiconsole, "No suitable combat schedule!\n" );
-				}
+				//else
+				//{
+				//	ALERT ( at_aiconsole, "No suitable combat schedule!\n" );
+				//}
 			}
 			break;
 		}

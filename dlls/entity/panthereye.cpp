@@ -13,7 +13,7 @@
 *
 ****/
 //=========================================================
-// Panthereye - By Osiris / OsirisGodoftheDead / THE_YETI
+// Panthereye - started by Osiris / OsirisGodoftheDead / THE_YETI
 //=========================================================
 
 #include "panthereye.h"

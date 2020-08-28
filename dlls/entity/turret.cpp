@@ -242,7 +242,7 @@ CBaseTurret::CBaseTurret(){
 	postDeathEndTime = -1;
 	nextDeathExplosionTime = -1;
 	postDeathBeserkDir = -1;
-	postDeathSequenceStarting = FALSE;
+	postDeathEyeBrightnessDir = -1;
 }
 
 
@@ -391,6 +391,11 @@ void CMiniTurret::Spawn()
 	m_iMinPitch	= -15;
 	UTIL_SetSize(pev, Vector(-16, -16, -m_iRetractHeight), Vector(16, 16, m_iRetractHeight));
 
+
+	// NOTE - miniturret doesn't get an eye (m_pEyeGlow).  See CTurret where it's set up, if
+	// this should get an eye too.   Maybe smaller.
+
+
 	SetThink(&CBaseTurret::Initialize);
 	pev->nextthink = gpGlobals->time + 0.3;
 }
@@ -492,7 +497,13 @@ void CBaseTurret::Ping( void )
 	else if (m_flPingTime <= gpGlobals->time)
 	{
 		m_flPingTime = gpGlobals->time + 1;
-		UTIL_PlaySound(ENT(pev), CHAN_ITEM, "turret/tu_ping.wav", 1, ATTN_NORM);
+		// MODDD - play off-pitch pings in beserk mode.
+		if (m_fBeserk == 0) {
+			UTIL_PlaySound(ENT(pev), CHAN_ITEM, "turret/tu_ping.wav", 1, ATTN_NORM);
+		}else{
+			// off-pitch!
+			UTIL_PlaySound(ENT(pev), CHAN_STATIC, "turret/tu_ping.wav", 1, ATTN_NORM - 0.2, 0, RANDOM_LONG(103, 105));
+		}
 		EyeOn( );
 	}
 	else if (m_eyeBrightness > 0)
@@ -502,6 +513,10 @@ void CBaseTurret::Ping( void )
 }
 
 
+
+// WAIT.  So EyeOn sets the brightness to exactly 255 (max).
+// EyeOff, reduces the brightness by 30 only.
+// MMMMMMmmmmmmmmmaaaaaaaakkkkkkkkeeeeeeeesssssss sssssseeeeeeennnnnnnnssssssseeeeeee ttttttttooooooo mmmmmmmmmmeeeeeeeeeeeeee
 void CBaseTurret::EyeOn( )
 {
 	if (m_pEyeGlow)
@@ -521,7 +536,8 @@ void CBaseTurret::EyeOff( )
 	{
 		if (m_eyeBrightness > 0)
 		{
-			m_eyeBrightness = max( 0, m_eyeBrightness - 30 );
+			//MODDD - brightness reduction each frame changed, was 30
+			m_eyeBrightness = max( 0, m_eyeBrightness - 36 );
 			m_pEyeGlow->SetBrightness( m_eyeBrightness );
 		}
 	}
@@ -530,8 +546,7 @@ void CBaseTurret::EyeOff( )
 
 void CBaseTurret::onDelete(void) {
 	if (m_pEyeGlow) {
-		EyeOff();  //paranoia
-		// and remove it.
+		// remove it.
 		UTIL_Remove(m_pEyeGlow);
 		m_pEyeGlow = NULL;
 	}
@@ -567,15 +582,26 @@ void CBaseTurret::BeserkAimLogic(void) {
 		}
 		*/
 
-
-
+		int pitchLow;
+		int pitchHigh;
 
 		//MODDD - range changed, aiming straight down is not very exciting, remove
 		// extremely low random choices (range used to be 0 to 90 in the random)
-		m_vecGoalAngles.x = RANDOM_FLOAT(30 - 2, 78 + 8) - 90 * m_iOrientation;
+		if (m_iOrientation == 0) {
+			// floor
+			pitchHigh = 48;
+			pitchLow = 0;
+		}
+		else {
+			// ceiling
+			// 25, 85?
+			pitchHigh = 86;
+			pitchLow = 28;
+		}
+		m_vecGoalAngles.x = RANDOM_FLOAT(pitchLow, pitchHigh) - 90 * m_iOrientation;
 
 		//MODDD - takes longer to be destroyed from this
-		if (randoVal < 0.055) {
+		if (randoVal < 0.082) {
 			TakeDamage(pev, pev, 1, DMG_GENERIC); // don't beserk forever
 		}
 
@@ -740,9 +766,8 @@ void CBaseTurret::ActiveThink(void)
 
 		// NOTICE - beserk logic might kill this turret.
 		// SpinUpCall in the Turret class (not CBaseTurret...  yeah, that's not confusing)
-		// will set the think to ActiveThink, ignoring the think set from TakeDamage (Beserk).
-		//if (pev->deadflag != DEAD_NO) {
-		if(postDeathSequenceStarting){
+		// will set the think to ActiveThink, ignoring the think set from TakeDamage.
+		if(pev->deadflag != DEAD_NO){
 			return;
 		}
 	} 
@@ -786,6 +811,18 @@ void CBaseTurret::ActiveThink(void)
 		m_vecGoalAngles.x = vec.x;
 
 	}
+
+
+	//MODDD - NEW.  Turn the eye brightness up if we have a target, but not to full in an instant.
+	
+	if(m_pEyeGlow && m_eyeBrightness < 255){
+		m_eyeBrightness += 40;
+		if (m_eyeBrightness > 255) {
+			m_eyeBrightness = 255;
+		}
+		m_pEyeGlow->SetBrightness(m_eyeBrightness);
+	}
+
 
 	SpinUpCall();
 	MoveTurret();
@@ -1094,9 +1131,54 @@ void CBaseTurret::AutoSearchThink(void)
 
 
 
-// Start the TURRET_ANIM_DIE sequence now.  When that finishes playing (detected in TurretDeath think),
+
+
+
+
+// New starter for turret death.  Happens instantly instead of relying on a think-cycle to see the deadflag
+// as DEADFLAG_NO, less chance of getting interrupted by a further think-set that happens before the flag
+// even got set to DEADFLAG_DEAD.  Example:
+//    TakeDamage(...)     <leaves health at or under 0>
+//      TurretDeathCheck(...)    <sees turret is out of health, deadflag DEAD_NO, sets think to TurretDeathThink but does nothing to deadflag>
+//    if(deadflag == DEAD_NO)    <still passes>
+//      SetThink(Turret::ActiveThink)     <resumes ActiveThink without any deadflag set)
+// This is avoided from calling DeathStart instantly, which can assume this is the first death frame, with the new post death
+// sequence or not.
+void CBaseTurret::DeathStart(void) {
+
+	//if (pev->deadflag != DEAD_DEAD)
+	//{
+	pev->deadflag = DEAD_DEAD;
+
+
+	if (m_iSpin) {
+		// if spinning at death, go haywire.
+		postDeathEndTime = gpGlobals->time + RANDOM_FLOAT(6.5, 8.4);
+		nextDeathExplosionTime = gpGlobals->time + RANDOM_FLOAT(0.70, 1.50);
+
+		// And start doing random pings during that time.
+		m_flPingTime = gpGlobals->time + RANDOM_FLOAT(0.3, 0.4);
+	}
+	else {
+		// mundane death
+		postDeathEndTime = -1;
+		DeathEnd();
+	}
+
+	//MODDD - death sound moved to below too
+
+	UTIL_PlaySound(ENT(pev), CHAN_STATIC, "turret/tu_active2.wav", 0, 0, SND_STOP, 100);
+
+	//MODDD - several lines moved to the postDeathEndTimeReached check below
+
+	//}//END OF deadflag != DEAD_DEAD check
+
+}//DeathStart
+
+
+// Start the TURRET_ANIM_DIE sequence now.  When that finishes playing (detected in TurretDeathThink think),
 // the turret will really be done (stop thinking).
-void CBaseTurret::TurretDeathEnd(void) {
+void CBaseTurret::DeathEnd(void) {
 
 	// don't allow the turret turn speedups after this point of death,
 	// they mess up coming back to a resting state
@@ -1137,14 +1219,14 @@ void CBaseTurret::TurretDeathEnd(void) {
 
 	pev->takedamage = DAMAGE_YES;// don't let autoaim aim at corpses.
 
-}//END OF TurretDeathEnd
+}//END OF DeathEnd
 
 
 //MODDD - NOTE.  This gets called continuously after losing all health until the
-// turret finally stops moving and/or the anim is finished.
+// turret finally stops moving and the anim is finished.
 // In fact this becomes the new think method, that's why.
 // The pev->deadflag != DEAD_DEAD check sees if this is the first call though.
-void CBaseTurret ::	TurretDeath( void )
+void CBaseTurret::TurretDeathThink( void )
 {
 	BOOL iActive = FALSE;
 	BOOL postDeathEndTimeReached = FALSE;
@@ -1156,32 +1238,10 @@ void CBaseTurret ::	TurretDeath( void )
 	StudioFrameAdvance_SIMPLE( );
 
 	// think faster!  More dramatic.
-	pev->nextthink = gpGlobals->time + 0.045;
+	pev->nextthink = gpGlobals->time + 0.052;
 
 
-	if (pev->deadflag != DEAD_DEAD)
-	{
-		pev->deadflag = DEAD_DEAD;
-		
-		
-		if (m_iSpin) {
-			// if spinning at death, go haywire.
-			postDeathEndTime = gpGlobals->time + RANDOM_FLOAT(5.8, 7.6);
-			nextDeathExplosionTime = gpGlobals->time + RANDOM_FLOAT(0.70, 1.50);
-		}
-		else {
-			// mundane death
-			postDeathEndTime = -1;
-			TurretDeathEnd();
-		}
-
-		//MODDD - death sound moved to below too
-		
-		UTIL_PlaySound(ENT(pev), CHAN_STATIC, "turret/tu_active2.wav", 0, 0, SND_STOP, 100);
-
-		//MODDD - several lines moved to the postDeathEndTimeReached check below
-
-	}//END OF deadflag != DEAD_DEAD check
+	//MODDD - some script moved to DeathStart
 
 	if (gpGlobals->time >= postDeathEndTime) {
 		postDeathEndTimeReached = TRUE;
@@ -1190,12 +1250,45 @@ void CBaseTurret ::	TurretDeath( void )
 
 	if (postDeathEndTime != -1) {
 
-
 		if (postDeathEndTimeReached) {
 			postDeathEndTime = -1;
-			TurretDeathEnd();
+			DeathEnd();
 		}
 		else {
+
+			if (m_pEyeGlow){
+				float brightnessChange;
+				if (m_eyeBrightness < 140) {
+					brightnessChange = 48;
+				}else {
+					brightnessChange = 27;
+				}
+				// make the light go back and forth.
+				if (postDeathEyeBrightnessDir < 0) {
+					m_eyeBrightness -= brightnessChange;
+					if (m_eyeBrightness < 0) {
+						m_eyeBrightness = 0;
+						postDeathEyeBrightnessDir = 1;
+					}
+				}else {
+					m_eyeBrightness += brightnessChange;
+					if (m_eyeBrightness > 255) {
+						m_eyeBrightness = 255;
+						postDeathEyeBrightnessDir = -1;
+					}
+				}
+				m_pEyeGlow->SetBrightness(m_eyeBrightness);
+			}//m_pEyeGlow check
+
+
+
+			if (gpGlobals->time >= m_flPingTime) {
+				m_flPingTime = gpGlobals->time + RANDOM_FLOAT(0.32, 0.38);
+				// these pings go further.
+				UTIL_PlaySound(ENT(pev), CHAN_STATIC, "turret/tu_ping.wav", 1, ATTN_NORM - 0.3, 0, RANDOM_LONG(103, 105));
+			}
+
+			// And start doing random pings during that time.
 
 			Vector tempVec;
 			tempVec.x = RANDOM_FLOAT(pev->absmin.x, pev->absmax.x);
@@ -1314,14 +1407,21 @@ void CBaseTurret ::	TurretDeath( void )
 		UTIL_Explosion(MSG_PVS, expVec, NULL, pev, expVec, 0, 0, 0, g_sModelIndexFireball, RANDOM_LONG(32, 37), 14, TE_EXPLFLAG_NONE, 0.7);
 
 
-		// awerewarwea
-
 		//EyeOff();
 
 		pev->framerate = 0;
 		SetThink( NULL );
+
+		// remove eye.
+		if (m_pEyeGlow) {
+			// remove it.
+			UTIL_Remove(m_pEyeGlow);
+			m_pEyeGlow = NULL;
+		}
 	}
-}
+
+
+}// TurretDeathThink
 
 
 GENERATE_TRACEATTACK_IMPLEMENTATION(CBaseTurret)
@@ -1418,7 +1518,7 @@ BOOL CBaseTurret::TurretDeathCheck(entvars_t* pevInflictor, entvars_t* pevAttack
 				pev->max_health = 5;
 				
 
-				// no, leave this up to the first frame of the TurretDeath think method.
+				// no, leave this up to the first frame of the TurretDeathThink think method.
 				// If dead without even spinning, it skips to the normal death anim and
 				// handles this.
 				//if (postDeathEndTime != -1 && gpGlobals->time >= postDeathEndTime) {
@@ -1493,13 +1593,12 @@ BOOL CBaseTurret::TurretDeathCheck(entvars_t* pevInflictor, entvars_t* pevAttack
 
 			SetUse(NULL);
 
-			//SetThink(&CBaseTurret::TurretDeath);
 
-
-			// GOD.
-			postDeathSequenceStarting = TRUE;
-
+			DeathStart();
+			// Then, think continuously with the TurretDeathThink or SentryDeathThink method (whichever is sent)
 			SetThink(eventMethod);
+
+			//SetThink(&CBaseTurret::TurretDeathThink);
 
 			pev->nextthink = gpGlobals->time + 0.1;
 			
@@ -1509,7 +1608,7 @@ BOOL CBaseTurret::TurretDeathCheck(entvars_t* pevInflictor, entvars_t* pevAttack
 			if (gpGlobals->time < postDeathEndTime) {
 				// stop the post-death beserk then.
 				postDeathEndTime = -1;
-				TurretDeathEnd();
+				DeathEnd();
 			}
 			if (pev->deadflag != DEAD_NO && this->getGibCVar() <= 0) {
 				// don't proceed, corpse is still invulnerable, that counts gibbing.
@@ -1579,15 +1678,16 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBaseTurret)
 	}
 	///////////////////////////////////////////////////////////////////////////////////
 
-	//SetThink(&CBaseTurret::TurretDeath);
-	if(!TurretDeathCheck(pevInflictor, pevAttacker, flDamage, bitsDamageType, bitsDamageTypeMod, static_cast <void (CBaseTurret::*)(void)>(&CBaseTurret::TurretDeath) ) )return 0; //this can block.
+	//SetThink(&CBaseTurret::TurretDeathThink);
+	if(!TurretDeathCheck(pevInflictor, pevAttacker, flDamage, bitsDamageType, bitsDamageTypeMod, static_cast <void (CBaseTurret::*)(void)>(&CBaseTurret::TurretDeathThink) ) )return 0; //this can block.
 
 
 	if(pev->deadflag == DEAD_NO){
 
 		//MODDD - condition changed, go beserk at a percentage of health
 		//if (pev->health <= 10)
-		if(pev->health < pev->max_health*0.38)
+		//if(pev->health < pev->max_health*0.38)
+		if (pev->health <= 15)
 		{
 			//MODDD
 			// what?  The random check 'RANDOM_LONG(0, 0x7FFF) > 800' that used to be here was completly ignored.
@@ -1640,7 +1740,7 @@ int CBaseTurret::MoveTurret(void)
 		
 		// just move right
 		//m_vecCurAngles.y += 9.5;
-		m_vecCurAngles.y += RANDOM_FLOAT(0.8, 1) * 14.5;
+		m_vecCurAngles.y += RANDOM_FLOAT(0.8, 1) * 14.2;
 
 		if (m_vecCurAngles.y < 0)
 			m_vecCurAngles.y += 360;
@@ -2142,7 +2242,7 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CSentry)
 
 
 	//void (CBaseTurret::*eventMethod)()
-	if(!TurretDeathCheck(pevInflictor, pevAttacker, flDamage, bitsDamageType, bitsDamageTypeMod, static_cast <void (CBaseTurret::*)(void)>(&CSentry::SentryDeath) ) )return 0; //this can block.
+	if(!TurretDeathCheck(pevInflictor, pevAttacker, flDamage, bitsDamageType, bitsDamageTypeMod, static_cast <void (CBaseTurret::*)(void)>(&CSentry::SentryDeathThink) ) )return 0; //this can block.
 
 
 	return 1;
@@ -2161,47 +2261,67 @@ void CSentry::SentryTouch( CBaseEntity *pOther )
 }
 
 
-void CSentry ::	SentryDeath( void )
+
+void CSentry::DeathStart(void) {
+
+	//if (pev->deadflag != DEAD_DEAD)
+	//{
+		pev->deadflag = DEAD_DEAD;
+
+		float flRndSound = RANDOM_FLOAT(0, 1);
+
+		if (flRndSound <= 0.33)
+			UTIL_PlaySound(ENT(pev), CHAN_BODY, "turret/tu_die.wav", 1.0, ATTN_NORM);
+		else if (flRndSound <= 0.66)
+			UTIL_PlaySound(ENT(pev), CHAN_BODY, "turret/tu_die2.wav", 1.0, ATTN_NORM);
+		else
+			UTIL_PlaySound(ENT(pev), CHAN_BODY, "turret/tu_die3.wav", 1.0, ATTN_NORM);
+
+		UTIL_PlaySound(ENT(pev), CHAN_STATIC, "turret/tu_active2.wav", 0, 0, SND_STOP, 100);
+
+	//}
+
+	// String it together, no post-death sequence for you.
+	DeathEnd();
+
+}//DeathStart
+
+
+void CSentry::DeathEnd(void) {
+
+	//MODDD - Is this necessary?  Snaps the turret back to its default place.  Disabled the Y one at least (other is X; pitch).
+	//SetBoneController(0, 0);
+	SetBoneController(1, 0);
+
+	SetTurretAnim(TURRET_ANIM_DIE);
+
+	if (this->getGibCVar() <= 0) {
+		pev->solid = SOLID_NOT;
+	}
+	else {
+		//we are still kill-able.   ...wait why does this make me fall through the world? WTF?
+		//setPhysicalHitboxForDeath();
+
+		//is that okay??
+		UTIL_SetSize(pev, Vector(pev->mins.x, pev->mins.y, pev->mins.z), Vector(pev->maxs.x, pev->maxs.y, pev->mins.z + 0.2));
+	}
+
+	pev->angles.y = UTIL_AngleMod(pev->angles.y + RANDOM_LONG(0, 2) * 120);
+
+	// ???  why?
+	//EyeOn();
+}//DeathEnd
+
+
+
+void CSentry::SentryDeathThink( void )
 {
 	BOOL iActive = FALSE;
 
 	StudioFrameAdvance_SIMPLE( );
 	pev->nextthink = gpGlobals->time + 0.1;
 
-	if (pev->deadflag != DEAD_DEAD)
-	{
-		pev->deadflag = DEAD_DEAD;
-
-		float flRndSound = RANDOM_FLOAT ( 0 , 1 );
-
-		if ( flRndSound <= 0.33 )
-			UTIL_PlaySound(ENT(pev), CHAN_BODY, "turret/tu_die.wav", 1.0, ATTN_NORM);
-		else if ( flRndSound <= 0.66 )
-			UTIL_PlaySound(ENT(pev), CHAN_BODY, "turret/tu_die2.wav", 1.0, ATTN_NORM);
-		else 
-			UTIL_PlaySound(ENT(pev), CHAN_BODY, "turret/tu_die3.wav", 1.0, ATTN_NORM);
-
-		UTIL_PlaySound(ENT(pev), CHAN_STATIC, "turret/tu_active2.wav", 0, 0, SND_STOP, 100);
-
-		SetBoneController( 0, 0 );
-		SetBoneController( 1, 0 );
-
-		SetTurretAnim(TURRET_ANIM_DIE); 
-
-		if(this->getGibCVar() <= 0){
-			pev->solid = SOLID_NOT;
-		}else{
-			//we are still kill-able.   ...wait why does this make me fall through the world? WTF?
-			//setPhysicalHitboxForDeath();
-
-			//is that okay??
-			UTIL_SetSize ( pev, Vector ( pev->mins.x, pev->mins.y, pev->mins.z ), Vector ( pev->maxs.x, pev->maxs.y, pev->mins.z + 0.2 ) );
-		}
-
-		pev->angles.y = UTIL_AngleMod( pev->angles.y + RANDOM_LONG( 0, 2 ) * 120 );
-
-		EyeOn( );
-	}
+	//MODDD - some script moved to DeathStart
 
 	EyeOff( );
 

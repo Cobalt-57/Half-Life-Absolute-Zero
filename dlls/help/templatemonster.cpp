@@ -272,7 +272,7 @@ void CTemplateMonster::Spawn( void ){
 	// If any capabilities need to be forced or added, add them to m_afCapability.
 	// Example: To open doors and have melee attack 1 (but note that CAP's for melee and ranged attacks 1 and 2 are automatically added if at least one sequence
 	//          was mapped to that ACT_ accordingly. If no sequence is mapped to that ACT, neither naturally in the model nor forced by tryActivitySubstitute / 
-	//          lookupActivityHard, a capability may need to be forced this way as it is needed to even allow "CheckRangedAttack1" and similar methods to be
+	//          lookupActivityHard, a capability may need to be forced this way as it is needed to even allow "CheckRangeAttack1" and similar methods to be
 	//          called.):
 	//m_afCapability		= bits_CAP_MELEE_ATTACK1 | bits_CAP_DOORS_GROUP;
 

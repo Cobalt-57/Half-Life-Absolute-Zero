@@ -82,7 +82,8 @@ EASY_CVAR_EXTERN_DEBUGONLY(gargantuaKilledBoundsAssist)
 #define SPIRAL_INTERVAL 0.1 //025
 #define STOMP_INTERVAL		0.025
 
-const float GARG_ATTACKDIST = 80.0;
+//MODDD - reduced a little, was 80
+const float GARG_MELEEATTACKDIST = 76.0;
 
 // If you wanna get technical these should be static vars of CGargantua buuuuuuuut it doesn't make a difference,
 // so long as these names aren't collided with elsewhere.
@@ -1461,7 +1462,7 @@ BOOL CGargantua::CheckMeleeAttack1( float flDot, float flDist )
 
 	if (flDot >= 0.7)
 	{
-		if (flDist <= GARG_ATTACKDIST)
+		if (flDist <= GARG_MELEEATTACKDIST)
 			return TRUE;
 	}
 	return FALSE;
@@ -1475,11 +1476,31 @@ BOOL CGargantua::CheckMeleeAttack2( float flDot, float flDist )
 
 	if ( gpGlobals->time > m_flameTime )
 	{
-		if (flDot >= 0.8 && flDist > GARG_ATTACKDIST)
+
+		//MODDD - if everything but the dotproduct is right, allow us to turn to face to start the attack.
+		/*
+		if (flDot >= 0.8 && flDist > GARG_MELEEATTACKDIST)
 		{
 			if ( flDist <= GARG_FLAME_LENGTH )
 				return TRUE;
 		}
+		*/
+
+		if (flDist > GARG_MELEEATTACKDIST)
+		{
+			if ( flDist <= GARG_FLAME_LENGTH ){
+
+				if(flDot >= 0.8){
+					// okay!
+					return TRUE;
+				}else{
+					// going to fail.  At least let us know we could have turned to face the right way
+					SetConditionsMod(bits_COND_COULD_MELEE_ATTACK2);
+				}
+
+			}
+		}
+
 	}
 	return FALSE;
 }
@@ -1498,9 +1519,9 @@ BOOL CGargantua::CheckRangeAttack1( float flDot, float flDist )
 {
 	if ( gpGlobals->time > m_seeTime )
 	{
-		if (flDot >= 0.7 && flDist > GARG_ATTACKDIST)
+		if (flDot >= 0.7 && flDist > GARG_MELEEATTACKDIST)
 		{
-				return TRUE;
+			return TRUE;
 		}
 	}
 	return FALSE;
@@ -1528,7 +1549,7 @@ void CGargantua::HandleAnimEvent(MonsterEvent_t *pEvent)
 		{
 			// HACKHACK!!!
 			//MODDD - inflicts bleeding.
-			CBaseEntity *pHurt = GargantuaCheckTraceHullAttack( GARG_ATTACKDIST + 10.0, gSkillData.gargantuaDmgSlash, DMG_SLASH, DMG_BLEEDING );
+			CBaseEntity *pHurt = GargantuaCheckTraceHullAttack( GARG_MELEEATTACKDIST + 10.0, gSkillData.gargantuaDmgSlash, DMG_SLASH, DMG_BLEEDING );
 			if (pHurt)
 			{
 				if ( (pHurt->pev->flags & (FL_MONSTER|FL_CLIENT)) && !pHurt->blocksImpact() )

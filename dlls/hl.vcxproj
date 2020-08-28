@@ -303,6 +303,9 @@ copy ".\$(configuration)\hl.pdb" "C:\Program Files (x86)\Valve\Half-Life NGHLv3\
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="entity\gib.cpp" />
+    <ClCompile Include="gamerules_multiplay.cpp" />
+    <ClCompile Include="gamerules_singleplay.cpp" />
+    <ClCompile Include="gamerules_teamplay.cpp" />
     <ClCompile Include="monstersavestate.cpp" />
     <ClCompile Include="util_model.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -743,14 +746,6 @@ copy ".\$(configuration)\hl.pdb" "C:\Program Files (x86)\Valve\Half-Life NGHLv3\
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
-    <ClCompile Include="multiplay_gamerules.cpp">
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Profile|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Profile|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
-    </ClCompile>
     <ClCompile Include="entity\nihilanth.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -903,14 +898,6 @@ copy ".\$(configuration)\hl.pdb" "C:\Program Files (x86)\Valve\Half-Life NGHLv3\
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
-    <ClCompile Include="singleplay_gamerules.cpp">
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Profile|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Profile|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
-    </ClCompile>
     <ClCompile Include="skill.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -960,14 +947,6 @@ copy ".\$(configuration)\hl.pdb" "C:\Program Files (x86)\Valve\Half-Life NGHLv3\
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="entity\talkmonster.cpp">
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Profile|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Profile|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
-    </ClCompile>
-    <ClCompile Include="teamplay_gamerules.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Profile|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -1051,17 +1030,23 @@ copy ".\$(configuration)\hl.pdb" "C:\Program Files (x86)\Valve\Half-Life NGHLv3\
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\build_settings.h" />
+    <ClInclude Include="..\common\vector.h" />
+    <ClInclude Include="..\external_lib_include.h" />
     <ClInclude Include="..\game_shared\util\util_entity.h" />
     <ClInclude Include="..\game_shared\util\util_printout.h" />
     <ClInclude Include="..\game_shared\util\util_shared.h" />
     <ClInclude Include="..\game_shared\util\util_version.h" />
+    <ClInclude Include="..\ignore_warning_list.h" />
     <ClInclude Include="..\pm_shared\pm_printout.h" />
+    <ClInclude Include="..\version.h" />
     <ClInclude Include="activity.h" />
     <ClInclude Include="activitymap.h" />
     <ClInclude Include="entity\animating.h" />
     <ClInclude Include="entity\barney.h" />
     <ClInclude Include="entity\gib.h" />
     <ClInclude Include="entity\scientist.h" />
+    <ClInclude Include="gamerules_teamplay.h" />
     <ClInclude Include="monstersavestate.h" />
     <ClInclude Include="util_model.h" />
     <ClInclude Include="entity\archer.h" />
@@ -1083,6 +1068,8 @@ copy ".\$(configuration)\hl.pdb" "C:\Program Files (x86)\Valve\Half-Life NGHLv3\
     <ClInclude Include="entity\doors.h" />
     <ClInclude Include="entity\effects.h" />
     <ClInclude Include="..\engine\eiface.h" />
+    <ClInclude Include="weapon\crossbow.h" />
+    <ClInclude Include="weapon\crowbar.h" />
     <ClInclude Include="weapon\egon.h" />
     <ClInclude Include="enginecallback.h" />
     <ClInclude Include="entity\explode.h" />
@@ -1129,12 +1116,21 @@ copy ".\$(configuration)\hl.pdb" "C:\Program Files (x86)\Valve\Half-Life NGHLv3\
     <ClInclude Include="entity\squidspit.h" />
     <ClInclude Include="entity\stukabat.h" />
     <ClInclude Include="entity\talkmonster.h" />
-    <ClInclude Include="teamplay_gamerules.h" />
     <ClInclude Include="entity\trains.h" />
     <ClInclude Include="entity\turret.h" />
     <ClInclude Include="util.h" />
     <ClInclude Include="util_debugdraw.h" />
     <ClInclude Include="weapons.h" />
+    <ClInclude Include="weapon\glock.h" />
+    <ClInclude Include="weapon\handgrenade.h" />
+    <ClInclude Include="weapon\hornetgun.h" />
+    <ClInclude Include="weapon\mp5.h" />
+    <ClInclude Include="weapon\python.h" />
+    <ClInclude Include="weapon\rpg.h" />
+    <ClInclude Include="weapon\satchel.h" />
+    <ClInclude Include="weapon\shotgun.h" />
+    <ClInclude Include="weapon\squeak.h" />
+    <ClInclude Include="weapon\tripmine.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

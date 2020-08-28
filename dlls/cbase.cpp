@@ -871,8 +871,6 @@ void CBaseEntity::playAmmoPickupSound(){
 
 
 
-static int vagina = 0;
-
 void CBaseEntity::playAmmoPickupSound(entvars_t* sentPev){
 	entvars_t* pevToUse = NULL;
 	if(sentPev != NULL){
@@ -884,8 +882,7 @@ void CBaseEntity::playAmmoPickupSound(entvars_t* sentPev){
 		//normal.
 		UTIL_PlaySound(ENT(pevToUse), CHAN_ITEM, "items/9mmclip1.wav", 1, ATTN_NORM, 0, 100, FALSE);
 	}else{
-		//switch(g_engfuncs.pfnRandomLong(0,2)){
-		switch(vagina){
+		switch(g_engfuncs.pfnRandomLong(0,2)){
 		case 0:
 			UTIL_PlaySound(ENT(pevToUse), CHAN_ITEM, "weapons/reload1.wav", 1, ATTN_NORM, 0, 100, FALSE);
 		break;
@@ -896,7 +893,6 @@ void CBaseEntity::playAmmoPickupSound(entvars_t* sentPev){
 			UTIL_PlaySound(ENT(pevToUse), CHAN_ITEM, "weapons/reload3.wav", 1, ATTN_NORM, 0, 100, FALSE);
 		break;
 		}
-		vagina++;  if (vagina == 3)vagina = 0;
 	}
 }
 

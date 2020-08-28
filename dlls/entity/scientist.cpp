@@ -387,7 +387,7 @@ Schedule_t	slScientistPunch[] =
 //=========================================================
 // AI Schedules Specific to this monster
 //=========================================================
-Task_t	tlFollow[] =
+Task_t	tlSciFollow[] =
 {
 	{ TASK_SET_FAIL_SCHEDULE,	(float)SCHED_CANT_FOLLOW },	// If you fail, bail out of follow
 	{ TASK_MOVE_TO_TARGET_RANGE,(float)128		},	// Move within 128 of target ent (client)
@@ -395,18 +395,18 @@ Task_t	tlFollow[] =
 //	{ TASK_SET_SCHEDULE,		(float)SCHED_TARGET_FACE },
 };
 
-Schedule_t	slFollow[] =
+Schedule_t	slSciFollow[] =
 {
 	{
-		tlFollow,
-		ARRAYSIZE ( tlFollow ),
+		tlSciFollow,
+		ARRAYSIZE ( tlSciFollow ),
 		bits_COND_NEW_ENEMY |
 		bits_COND_LIGHT_DAMAGE |
 		bits_COND_HEAVY_DAMAGE |
 		bits_COND_HEAR_SOUND,
 		bits_SOUND_COMBAT |
 		bits_SOUND_DANGER,
-		"Follow"
+		"SciFollow"
 	},
 };
 
@@ -696,7 +696,7 @@ Schedule_t	slSciFear[] =
 
 DEFINE_CUSTOM_SCHEDULES( CScientist )
 {
-	slFollow,
+	slSciFollow,
 	slFaceTarget,
 	slIdleSciStand,
 	slSciFear,
@@ -2549,7 +2549,7 @@ Schedule_t* CScientist :: GetScheduleOfType ( int Type )
 		}
 
 	case SCHED_TARGET_CHASE:
-		return slFollow;
+		return slSciFollow;
 	case SCHED_CANT_FOLLOW:
 		//return slStopFollowing;
 		//MODDD - we're going to do this instead.  CTalkMonster has the common method.
@@ -3251,7 +3251,7 @@ void CScientist::MonsterThink(void){
 	int tempTaskNumber = this->getTaskNumber();
 	if( 
 		(
-			m_pSchedule == slFollow ||
+			m_pSchedule == slSciFollow ||
 			m_pSchedule == slFaceTarget ||
 			(m_pSchedule == slHeal && tempTaskNumber != TASK_HEAL && tempTaskNumber !=  TASK_PLAY_SEQUENCE_FACE_TARGET)
 		) &&

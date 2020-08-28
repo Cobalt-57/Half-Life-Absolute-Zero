@@ -293,10 +293,8 @@ Schedule_t slBaReload[] =
 //MODDD TODO - why do NPCs behave so oddly on trying to reach a dead, especially gibbed, player's location?
 Task_t	tlBaFollow[] =
 {
-
 	//MODDD - the Barney should use his BA_STOP lines.
 	{ TASK_SET_FAIL_SCHEDULE,	(float)SCHED_CANT_FOLLOW },	// If you fail, bail out of follow
-
 	{ TASK_MOVE_TO_TARGET_RANGE,(float)128		},	// Move within 128 of target ent (client)
 	{ TASK_FOLLOW_SUCCESSFUL, (float)0		},
 	//MODDD - scientists dummied out this call as of retail, so shouldn't barnies too?  No need for these schedules to call each other back-and-forth.
@@ -314,7 +312,7 @@ Schedule_t	slBaFollow[] =
 		bits_COND_HEAR_SOUND |
 		bits_COND_PROVOKED,
 		bits_SOUND_DANGER,
-		"Follow"
+		"BaFollow"
 	},
 };
 

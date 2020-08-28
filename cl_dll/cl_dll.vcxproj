@@ -231,12 +231,6 @@ copy ".\$(configuration)\client.pdb" "C:\Program Files (x86)\Valve\Half-Life NGH
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
-    <ClCompile Include="com_weapons.cpp">
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
-    </ClCompile>
     <ClCompile Include="custom_message.cpp" />
     <ClCompile Include="hud\death.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -602,6 +596,22 @@ copy ".\$(configuration)\client.pdb" "C:\Program Files (x86)\Valve\Half-Life NGH
     <ClCompile Include="weapons_resource.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\common\vector.h" />
+    <ClInclude Include="..\dlls\weapon\chumtoadweapon.h" />
+    <ClInclude Include="..\dlls\weapon\crossbow.h" />
+    <ClInclude Include="..\dlls\weapon\crowbar.h" />
+    <ClInclude Include="..\dlls\weapon\egon.h" />
+    <ClInclude Include="..\dlls\weapon\gauss.h" />
+    <ClInclude Include="..\dlls\weapon\glock.h" />
+    <ClInclude Include="..\dlls\weapon\handgrenade.h" />
+    <ClInclude Include="..\dlls\weapon\hornetgun.h" />
+    <ClInclude Include="..\dlls\weapon\mp5.h" />
+    <ClInclude Include="..\dlls\weapon\python.h" />
+    <ClInclude Include="..\dlls\weapon\rpg.h" />
+    <ClInclude Include="..\dlls\weapon\satchel.h" />
+    <ClInclude Include="..\dlls\weapon\shotgun.h" />
+    <ClInclude Include="..\dlls\weapon\squeak.h" />
+    <ClInclude Include="..\dlls\weapon\tripmine.h" />
     <ClInclude Include="..\game_shared\util\util_entity.h" />
     <ClInclude Include="..\game_shared\util\util_printout.h" />
     <ClInclude Include="..\game_shared\util\util_shared.h" />
@@ -615,7 +625,6 @@ copy ".\$(configuration)\client.pdb" "C:\Program Files (x86)\Valve\Half-Life NGH
     <ClInclude Include="hud\ammohistory.h" />
     <ClInclude Include="camera.h" />
     <ClInclude Include="cl_dll.h" />
-    <ClInclude Include="com_weapons.h" />
     <ClInclude Include="demo.h" />
     <ClInclude Include="ev_hldm.h" />
     <ClInclude Include="eventscripts.h" />

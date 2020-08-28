@@ -643,7 +643,7 @@
 #define DEFAULT_healthcolor_brightness 125
 #define DEFAULT_healthcolor_yellowMark 70
 #define DEFAULT_cl_drawExtraZeros 0
-#define DEFAULT_pathfindLargeBoundFix 0
+#define DEFAULT_pathfindLargeBoundFix 1
 #define DEFAULT_flyerKilledFallingLoop 1
 #define DEFAULT_floaterDummy 0
 #define DEFAULT_barneyDummy 0
@@ -704,8 +704,9 @@
 #define DEFAULT_sv_rpg_alpha_ammo 1
 #define DEFAULT_cl_viewmodel_fidget 2
 #define DEFAULT_sv_player_midair_fix 1
-
-
+#define DEFAULT_pathfindIgnoreNearestNodeCache 0
+#define DEFAULT_pathfindIgnoreStaticRoutes 0
+#define DEFAULT_pathfindForcePointHull 0
 
 
 

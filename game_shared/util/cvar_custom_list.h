@@ -636,7 +636,13 @@
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(kingpinDebug, kingpindebug)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(minimumRespawnDelay, minimumrespawndelay)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(drawDebugCrowbar, drawdebugcrowbar)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(pathfindIgnoreNearestNodeCache, pathfindignorenearestnodecache)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(pathfindIgnoreStaticRoutes, pathfindignorestaticroutes)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(pathfindForcePointHull, pathfindforcepointhull)\
 	DUMMY
+
+
+
 
 
 #define EASY_CVAR_HIDDEN_SAVE_MASS\
@@ -1089,7 +1095,12 @@
 	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(kingpinDebug)\
 	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(minimumRespawnDelay)\
 	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(drawDebugCrowbar)\
+	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(pathfindIgnoreNearestNodeCache)\
+	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(pathfindIgnoreStaticRoutes)\
+	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(pathfindForcePointHull)\
 	DUMMY
+
+
 
 #define EASY_CVAR_HIDDEN_LOAD_MASS\
 	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(gruntsCanHaveMP5Grenade, gruntscanhavemp5grenade)\
@@ -1541,6 +1552,9 @@
 	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(kingpinDebug, kingpindebug)\
 	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(minimumRespawnDelay, minimumrespawndelay)\
 	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(drawDebugCrowbar, drawdebugcrowbar)\
+	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(pathfindIgnoreNearestNodeCache, pathfindignorenearestnodecache)\
+	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(pathfindIgnoreStaticRoutes, pathfindignorestaticroutes)\
+	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(pathfindForcePointHull, pathfindforcepointhull)\
 	DUMMY
 
 
@@ -2047,6 +2061,9 @@
 	EASY_CVAR_DECLARATION_SERVER_CLIENTSENDOFF_BROADCAST(sv_rpg_alpha_ammo)\
 	EASY_CVAR_DECLARATION_SERVER(cl_viewmodel_fidget)\
 	EASY_CVAR_DECLARATION_SERVER(sv_player_midair_fix)\
+	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY(pathfindIgnoreNearestNodeCache)\
+	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY(pathfindIgnoreStaticRoutes)\
+	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY(pathfindForcePointHull)\
 	DUMMY
 
 
@@ -2552,6 +2569,9 @@
 	EASY_CVAR_DECLARATION_CLIENT_CLIENTSENDOFF_BROADCAST(sv_rpg_alpha_ammo)\
 	EASY_CVAR_DECLARATION_CLIENT(cl_viewmodel_fidget)\
 	EASY_CVAR_DECLARATION_CLIENT(sv_player_midair_fix)\
+	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY(pathfindIgnoreNearestNodeCache)\
+	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY(pathfindIgnoreStaticRoutes)\
+	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY(pathfindForcePointHull)\
 	DUMMY
 
 
@@ -3055,6 +3075,9 @@
 	EASY_CVAR_UPDATE_SERVER_CLIENTSENDOFF_BROADCAST(sv_rpg_alpha_ammo)\
 	EASY_CVAR_UPDATE_SERVER(cl_viewmodel_fidget)\
 	EASY_CVAR_UPDATE_SERVER(sv_player_midair_fix)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(pathfindIgnoreNearestNodeCache)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(pathfindIgnoreStaticRoutes)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(pathfindForcePointHull)\
 	DUMMY
 
 
@@ -3562,6 +3585,9 @@
 	EASY_CVAR_UPDATE_SERVER_DEDICATED_CLIENTSENDOFF_BROADCAST(sv_rpg_alpha_ammo)\
 	EASY_CVAR_UPDATE_SERVER_DEDICATED(cl_viewmodel_fidget)\
 	EASY_CVAR_UPDATE_SERVER_DEDICATED(sv_player_midair_fix)\
+	EASY_CVAR_UPDATE_SERVER_DEDICATED_DEBUGONLY(pathfindIgnoreNearestNodeCache)\
+	EASY_CVAR_UPDATE_SERVER_DEDICATED_DEBUGONLY(pathfindIgnoreStaticRoutes)\
+	EASY_CVAR_UPDATE_SERVER_DEDICATED_DEBUGONLY(pathfindForcePointHull)\
 	DUMMY
 
 
@@ -4068,6 +4094,9 @@
 	EASY_CVAR_UPDATE_CLIENT_CLIENTSENDOFF_BROADCAST(sv_rpg_alpha_ammo)\
 	EASY_CVAR_UPDATE_CLIENT(cl_viewmodel_fidget)\
 	EASY_CVAR_UPDATE_CLIENT(sv_player_midair_fix)\
+	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY(pathfindIgnoreNearestNodeCache)\
+	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY(pathfindIgnoreStaticRoutes)\
+	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY(pathfindForcePointHull)\
 	DUMMY
 
 
@@ -4571,6 +4600,9 @@
 	EASY_CVAR_CREATE_SERVER_SETUP_A_SERVERONLY(sv_rpg_alpha_ammo)\
 	EASY_CVAR_CREATE_SERVER_SETUP_A_CLIENTONLY(cl_viewmodel_fidget)\
 	EASY_CVAR_CREATE_SERVER_SETUP_A_SERVERONLY(sv_player_midair_fix)\
+	EASY_CVAR_CREATE_SERVER_SETUP_A_SERVERONLY_DEBUGONLY(pathfindIgnoreNearestNodeCache)\
+	EASY_CVAR_CREATE_SERVER_SETUP_A_SERVERONLY_DEBUGONLY(pathfindIgnoreStaticRoutes)\
+	EASY_CVAR_CREATE_SERVER_SETUP_A_SERVERONLY_DEBUGONLY(pathfindForcePointHull)\
 	DUMMY
 
 
@@ -5074,6 +5106,9 @@
 	EASY_CVAR_CREATE_SERVER_A_SERVERONLY(sv_rpg_alpha_ammo)\
 	EASY_CVAR_CREATE_SERVER_A_CLIENTONLY(cl_viewmodel_fidget)\
 	EASY_CVAR_CREATE_SERVER_A_SERVERONLY(sv_player_midair_fix)\
+	EASY_CVAR_CREATE_SERVER_A_SERVERONLY_DEBUGONLY(pathfindIgnoreNearestNodeCache)\
+	EASY_CVAR_CREATE_SERVER_A_SERVERONLY_DEBUGONLY(pathfindIgnoreStaticRoutes)\
+	EASY_CVAR_CREATE_SERVER_A_SERVERONLY_DEBUGONLY(pathfindForcePointHull)\
 	DUMMY
 
 
@@ -5577,6 +5612,9 @@
 	EASY_CVAR_CREATE_CLIENT_A_SERVERONLY(sv_rpg_alpha_ammo)\
 	EASY_CVAR_CREATE_CLIENT_A_CLIENTONLY(cl_viewmodel_fidget)\
 	EASY_CVAR_CREATE_CLIENT_A_SERVERONLY(sv_player_midair_fix)\
+	EASY_CVAR_CREATE_CLIENT_A_SERVERONLY_DEBUGONLY(pathfindIgnoreNearestNodeCache)\
+	EASY_CVAR_CREATE_CLIENT_A_SERVERONLY_DEBUGONLY(pathfindIgnoreStaticRoutes)\
+	EASY_CVAR_CREATE_CLIENT_A_SERVERONLY_DEBUGONLY(pathfindForcePointHull)\
 	DUMMY
 
 
@@ -6079,6 +6117,9 @@
 	EASY_CVAR_RESET_CLIENTSENDOFF_BROADCAST(sv_rpg_alpha_ammo)\
 	EASY_CVAR_RESET(cl_viewmodel_fidget)\
 	EASY_CVAR_RESET(sv_player_midair_fix)\
+	EASY_CVAR_RESET_DEBUGONLY(pathfindIgnoreNearestNodeCache)\
+	EASY_CVAR_RESET_DEBUGONLY(pathfindIgnoreStaticRoutes)\
+	EASY_CVAR_RESET_DEBUGONLY(pathfindForcePointHull)\
 	DUMMY
 
 
@@ -6582,6 +6623,9 @@
 	EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST(sv_rpg_alpha_ammo)\
 	EASY_CVAR_EXTERN(cl_viewmodel_fidget)\
 	EASY_CVAR_EXTERN(sv_player_midair_fix)\
+	EASY_CVAR_EXTERN_DEBUGONLY(pathfindIgnoreNearestNodeCache)\
+	EASY_CVAR_EXTERN_DEBUGONLY(pathfindIgnoreStaticRoutes)\
+	EASY_CVAR_EXTERN_DEBUGONLY(pathfindForcePointHull)\
 	DUMMY
 
 
@@ -7088,6 +7132,9 @@
 	EASY_CVAR_SYNCH_SERVER_CLIENTSENDOFF_BROADCAST(sv_rpg_alpha_ammo)\
 	EASY_CVAR_SYNCH_SERVER(cl_viewmodel_fidget)\
 	EASY_CVAR_SYNCH_SERVER(sv_player_midair_fix)\
+	EASY_CVAR_SYNCH_SERVER_DEBUGONLY(pathfindIgnoreNearestNodeCache)\
+	EASY_CVAR_SYNCH_SERVER_DEBUGONLY(pathfindIgnoreStaticRoutes)\
+	EASY_CVAR_SYNCH_SERVER_DEBUGONLY(pathfindForcePointHull)\
 	DUMMY
 
 

@@ -341,6 +341,7 @@ const char* CFriendly::pAttackSounds[] =
 {
 	"friendly/friendly_attack.wav",
 };
+
 const char* CFriendly::pAttackHitSounds[] = 
 {
 	"zombie/claw_strike1.wav",
@@ -455,46 +456,79 @@ CFriendly::CFriendly(void){
 
 
 	
-	
+// NOTE - the arrays are placeholders, don't try to use.
 void CFriendly::DeathSound( void ){
+	/*
 	int pitch = 95 + RANDOM_LONG(0,9);
 	UTIL_PlaySound( edict(), CHAN_VOICE, RANDOM_SOUND_ARRAY(pDeathSounds), 1.0, ATTN_IDLE, 0, pitch );
+	*/
 }
 void CFriendly::AlertSound( void ){
+	/*
 	int pitch = 95 + RANDOM_LONG(0,9);
 	UTIL_PlaySound( edict(), CHAN_VOICE, RANDOM_SOUND_ARRAY(pAlertSounds), 1.0, ATTN_NORM, 0, pitch );
+	*/
 }
 void CFriendly::IdleSound( void ){
+	/*
 	int pitch = 95 + RANDOM_LONG(0,9);
 	// Play a random idle sound
 	UTIL_PlaySound( edict(), CHAN_VOICE, RANDOM_SOUND_ARRAY(pIdleSounds), 1.0, ATTN_NORM, 0, pitch );
+	*/
 }
 void CFriendly::PainSound( void ){
+	/*
 	int pitch = 95 + RANDOM_LONG(0,9);
 	if (RANDOM_LONG(0,5) < 2){
 		UTIL_PlaySound( edict(), CHAN_VOICE, RANDOM_SOUND_ARRAY(pPainSounds), 1.0, ATTN_NORM, 0, pitch );
 	}
+	*/
+
+	// just play high-pitched scientist pain sentences for now
+
+	int pitch = 40 + RANDOM_LONG(0,8);
+	//const char* targetString = UTIL_VarArgs("!scientist_sci_pain%d", RANDOM_LONG(1, 10));
+	//UTIL_PlaySound( edict(), CHAN_VOICE, targetString, 1.0, ATTN_NORM, 0, pitch );
+	int theChoice = RANDOM_LONG(0, 3);
+
+	//easyForcePrintLine("I PLAID %d", theChoice);
+
+	switch(theChoice){
+		case 0:UTIL_PlaySound( edict(), CHAN_VOICE, "!scientist_sci_pain1", 1.0, ATTN_NORM, 0, pitch );break;
+		case 1:UTIL_PlaySound(edict(), CHAN_VOICE, "!scientist_sci_pain4", 1.0, ATTN_NORM, 0, pitch); break;
+		case 2:UTIL_PlaySound(edict(), CHAN_VOICE, "!scientist_sci_pain5", 1.0, ATTN_NORM, 0, pitch); break;
+		// scientist/sci_fear15.wav
+		case 3:UTIL_PlaySound(edict(), CHAN_VOICE, "!SC_SCREAM14", 1.0, ATTN_NORM, 0, pitch); break;
+
+	}//switch
+
+	
 }
 void CFriendly::AttackSound( void ){
+	/*
 	int pitch = 95 + RANDOM_LONG(0,9);
 	// Play a random attack sound
 	UTIL_PlaySound( edict(), CHAN_VOICE, RANDOM_SOUND_ARRAY(pAttackSounds), 1.0, ATTN_NORM, 0, pitch );
+	*/
 }
+
+
+
+
 
 void CFriendly::VomitSound(void){
 	int pitch = 88 + RANDOM_LONG(0,8);
-	UTIL_PlaySound( ENT(pev), CHAN_WEAPON, RANDOM_SOUND_ARRAY(pVomitSounds), 1.0, ATTN_NORM, 0, pitch );
+	UTIL_PlaySound( ENT(pev), CHAN_WEAPON, RANDOM_SOUND_ARRAY(pVomitSounds), 1.0, ATTN_NORM - 0.2, 0, pitch );
 }
 void CFriendly::VomitVoiceSound(void){
-	int pitch = 32 + RANDOM_LONG(0,14);
+	int pitch = 40 + RANDOM_LONG(0,8);
 	// Play a random attack sound
 	UTIL_PlaySound( edict(), CHAN_VOICE, RANDOM_SOUND_ARRAY(pVomitVoiceSounds), 1.0, ATTN_NORM, 0, pitch );
 }
 void CFriendly::VomitHitSound(edict_t* pevToPlayAt){	
-	int pitch = 90 + RANDOM_LONG(-9, 3);
+	int pitch = 80 + RANDOM_LONG(0, 6);
 	//UTIL_PlaySound( edict(), CHAN_STATIC, RANDOM_SOUND_ARRAY(pVomitHitSounds), 1.0, ATTN_NORM, 0, pitch );
 	
-
 	const int randomSound = RANDOM_LONG(0, ARRAYSIZE(pVomitHitSounds)-1 );
 	
 	// UTIL_EmitAmbientSound ?
@@ -533,9 +567,12 @@ void CFriendly::Precache( void )
 	PRECACHE_SOUND_ARRAY(pIdleSounds);
 	PRECACHE_SOUND_ARRAY(pPainSounds);
 	PRECACHE_SOUND_ARRAY(pAttackSounds);
+	*/
 	PRECACHE_SOUND_ARRAY(pAttackHitSounds);
 	PRECACHE_SOUND_ARRAY(pAttackMissSounds);
-	*/
+
+
+
 	UTIL_PRECACHESOUND_ARRAY(pVomitVoiceSounds, ARRAYSIZE(pVomitVoiceSounds) );
 	UTIL_PRECACHESOUND_ARRAY(pVomitHitSounds, ARRAYSIZE(pVomitHitSounds), TRUE); //don't skip, player precaches these.
 	UTIL_PRECACHESOUND_ARRAY(pChewSounds, ARRAYSIZE(pChewSounds));
@@ -557,7 +594,10 @@ void CFriendly::Spawn( void )
 	SET_MODEL(ENT(pev), "models/friendly.mdl");
 	//UTIL_SetSize(pev, Vector(-12, -12, 0), Vector(12, 12, 24));
 	//UTIL_SetSize(pev, Vector(-32, -32, 0), Vector(32, 32, 64));  //agrunt
-	UTIL_SetSize( pev, VEC_HUMAN_HULL_MIN, VEC_HUMAN_HULL_MAX ); 
+	
+	UTIL_SetSize( pev, VEC_HUMAN_HULL_MIN, VEC_HUMAN_HULL_MAX );
+	//UTIL_SetSize(pev, Vector(-20, -20, 0), Vector(20, 20, 36));
+	
 	//UTIL_SetSize(pev, Vector(-18, -18, 0), Vector(18, 18, 40));
 
 	pev->classname = MAKE_STRING("monster_friendly");
@@ -1908,7 +1948,7 @@ void CFriendly::HandleEventQueueEvent(int arg_eventID){
 
 	switch(arg_eventID){
 	case 0:{
-		//close range melee
+		// close range melee
 		
 		//TODO - custom damage per attacks.
 		CBaseEntity *pHurt = CheckTraceHullAttack( 88, gSkillData.zombieDmgBothSlash, DMG_SLASH );
@@ -2234,5 +2274,8 @@ int CFriendly::getHullIndexForNodes(void){
 }
 
 
+BOOL CFriendly::needsMovementBoundFix(void){
+	return TRUE;
+}
 
 

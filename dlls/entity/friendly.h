@@ -146,6 +146,7 @@ public:
 	void ScheduleChange( void );
 	
 	int getHullIndexForNodes(void);
+	BOOL needsMovementBoundFix(void);
 
 };//END OF class CFriendly
 

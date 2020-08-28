@@ -13,7 +13,7 @@
 *
 ****/
 //
-// teamplay_gamerules.cpp
+// gamerules_teamplay.cpp
 //
 #include "extdll.h"
 #include "util.h"
@@ -21,7 +21,7 @@
 #include "player.h"
 #include "weapons.h"
 #include "gamerules.h"
-#include "teamplay_gamerules.h"
+#include "gamerules_teamplay.h"
 #include "game.h"
 
 #include "voice_gamemgr.h"

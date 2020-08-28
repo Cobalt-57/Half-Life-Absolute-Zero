@@ -26,7 +26,6 @@
 #include "dlls/defaultai.h"
 
 #include "../hud_iface.h"
-#include "../com_weapons.h"
 
 
 

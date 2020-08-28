@@ -2636,9 +2636,9 @@ void CStukaBat :: RunTask ( Task_t *pTask )
 			}
 
 			if(enemyPresent){
-				easyPrintLineGroup1("THE bat ID: %d - rge2: %d ind: %d en: %d df: %d ename: \"%s\" ::: ep: %d, act: %d %d", monsterID, canRangedAttack2, attackIndex, (m_hEnemy==NULL), m_hEnemy->pev->deadflag, STRING(m_hEnemy->pev->classname), enemyPresent, m_Activity, m_IdealActivity  );
+				easyPrintLineGroup1("THE bat ID: %d - ind: %d en: %d df: %d ename: \"%s\" ::: ep: %d, act: %d %d", monsterID, attackIndex, (m_hEnemy==NULL), m_hEnemy->pev->deadflag, STRING(m_hEnemy->pev->classname), enemyPresent, m_Activity, m_IdealActivity  );
 			}else{
-				easyPrintLineGroup1("THE bat ID: %d - rge2: %d ind: %d en: %d ::: ep: %d,  act: %d %d", monsterID, canRangedAttack2, attackIndex, (m_hEnemy==NULL)  , enemyPresent, m_Activity, m_IdealActivity );
+				easyPrintLineGroup1("THE bat ID: %d - ind: %d en: %d ::: ep: %d,  act: %d %d", monsterID, attackIndex, (m_hEnemy==NULL)  , enemyPresent, m_Activity, m_IdealActivity );
 			}
 		
 			if(attackIndex > -1 && !enemyPresent ){

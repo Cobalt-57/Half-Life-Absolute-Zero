@@ -29,27 +29,26 @@
 #include "event_args.h"
 #include "r_studioint.h"
 #include "com_model.h"
-
-#include "com_weapons.h"
+#include "hl/hl_weapons.h"
 
 //MODDD - new include.
 // See the note at the top of ev_hldm.h about several removals in here (now in dlls/<specific weapon.h files>
 // to avoid redundancy).
-#include "chumtoadweapon.h"
-#include "crossbow.h"
-#include "crowbar.h"
-#include "egon.h"
-#include "gauss.h"
-#include "glock.h"
-#include "handgrenade.h"
-#include "hornetgun.h"
-#include "mp5.h"
-#include "python.h"
-#include "rpg.h"
-#include "satchel.h"
-#include "shotgun.h"
-#include "squeak.h"
-#include "tripmine.h"
+#include "dlls/weapon/chumtoadweapon.h"
+#include "dlls/weapon/crossbow.h"
+#include "dlls/weapon/crowbar.h"
+#include "dlls/weapon/egon.h"
+#include "dlls/weapon/gauss.h"
+#include "dlls/weapon/glock.h"
+#include "dlls/weapon/handgrenade.h"
+#include "dlls/weapon/hornetgun.h"
+#include "dlls/weapon/mp5.h"
+#include "dlls/weapon/python.h"
+#include "dlls/weapon/rpg.h"
+#include "dlls/weapon/satchel.h"
+#include "dlls/weapon/shotgun.h"
+#include "dlls/weapon/squeak.h"
+#include "dlls/weapon/tripmine.h"
 
 
 //MODDD - new include.  THESE WERE NEVER ON, deemed unnecessary.

@@ -22,7 +22,7 @@
 #include "player.h"
 #include "weapons.h"
 #include "gamerules.h"
-#include "teamplay_gamerules.h"
+#include "gamerules_teamplay.h"
 #include "skill.h"
 #include "game.h"
 

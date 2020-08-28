@@ -953,9 +953,9 @@ Schedule_t* CController :: GetScheduleOfType ( int Type )
 
 //MODDD NOTE - so why does it pick one or the other with such broad, sometimes
 //             overlapping conditions?
-//  If rangedAttack1 is given the Okay, it runs, period.  That is distance is
+//  If rangeAttack1 is given the Okay, it runs, period.  That is distance is
 //  at least 256.
-//  But if it is not okay, rangedAttack2 gets the chance.
+//  But if it is not okay, rangeAttack2 gets the chance.
 //  It requires a distance of at least 64 instead.
 //  So long story short, attack1 always gets picked if further away than 256.
 //  But between a distance of 64 and 256, Attack2 gets picked instead.

@@ -30,6 +30,8 @@ public:
 	int OLD_m_iTaskStatus;
 	int OLD_m_afConditions;
 	int OLD_m_afConditionsNextFrame;
+	int OLD_m_afConditionsMod;
+	int OLD_m_afConditionsModNextFrame;
 	MONSTERSTATE OLD_m_MonsterState;
 	MONSTERSTATE OLD_m_IdealMonsterState;
 	int OLD_sequence;

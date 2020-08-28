@@ -77,6 +77,7 @@ EASY_CVAR_EXTERN_DEBUGONLY(drawDebugEnemyLKP)
 EASY_CVAR_EXTERN_DEBUGONLY(pathfindLargeBoundFix)
 EASY_CVAR_EXTERN_DEBUGONLY(flyerKilledFallingLoop)
 EASY_CVAR_EXTERN_DEBUGONLY(barnacleGrabNoInterpolation)
+EASY_CVAR_EXTERN_DEBUGONLY(pathfindForcePointHull)
 
 
 
@@ -162,7 +163,12 @@ TYPEDESCRIPTION	CBaseMonster::m_SaveData[] =
 	DEFINE_FIELD( CBaseMonster, m_afConditions, FIELD_INTEGER ),
 	//MODDD - new
 	DEFINE_FIELD( CBaseMonster, m_afConditionsNextFrame, FIELD_INTEGER ),
-	
+
+	//MODDD - new too
+	DEFINE_FIELD( CBaseMonster, m_afConditionsMod, FIELD_INTEGER ),
+	DEFINE_FIELD( CBaseMonster, m_afConditionsModNextFrame, FIELD_INTEGER ),
+
+
 	//WayPoint_t			m_Route[ ROUTE_SIZE ];
 //	DEFINE_FIELD( CBaseMonster, m_movementGoal, FIELD_INTEGER ),
 //	DEFINE_FIELD( CBaseMonster, m_iRouteIndex, FIELD_INTEGER ),
@@ -250,6 +256,7 @@ int CBaseMonster::Restore(CRestore& restore)
 	// If we don't have an enemy, clear conditions like see enemy, etc.
 	if (m_hEnemy == NULL) {
 		ClearAllConditionsExcept(bits_COND_TASK_FAILED | bits_COND_SCHEDULE_DONE);
+		ClearAllConditionsMod();
 	}
 	
 	PostRestore();
@@ -432,8 +439,6 @@ CBaseMonster::CBaseMonster(){
 	queuedMonsterState = MONSTERSTATE_NONE;
 	//by default, can auto set animations from activity changes.
 
-	canRangedAttack1 = FALSE;
-	canRangedAttack2 = FALSE;
 
 	// no by default.
 	canDrawDebugSurface = FALSE;
@@ -2466,6 +2471,10 @@ int CBaseMonster :: IgnoreConditions ( void )
 	return iIgnoreConditions;
 }
 
+// No need for iIgnoreConditionsMod, not many.
+
+
+
 //=========================================================
 // 	RouteClear - zeroes out the monster's route array and goal
 //=========================================================
@@ -3261,9 +3270,14 @@ void CBaseMonster :: CheckAttacks ( CBaseEntity *pTarget, float flDist )
 	
 	// Clear all attack conditions
 	ClearConditions( bits_COND_CAN_RANGE_ATTACK1 | bits_COND_CAN_RANGE_ATTACK2 | bits_COND_CAN_MELEE_ATTACK1 |bits_COND_CAN_MELEE_ATTACK2 );
-	canRangedAttack1 = FALSE;
-	canRangedAttack2 = FALSE;
+	ClearConditionsMod(bits_COND_COULD_RANGE_ATTACK1 | bits_COND_COULD_RANGE_ATTACK2 | bits_COND_COULD_MELEE_ATTACK1 | bits_COND_COULD_MELEE_ATTACK2);
 
+	/*
+	bits_COND_COULD_RANGE_ATTACK1
+	bits_COND_COULD_RANGE_ATTACK2
+	bits_COND_COULD_MELEE_ATTACK1
+	bits_COND_COULD_MELEE_ATTACK2
+	*/
 	//couldRangedAttack1 = FALSE;
 
 
@@ -3271,13 +3285,17 @@ void CBaseMonster :: CheckAttacks ( CBaseEntity *pTarget, float flDist )
 	{
 		if ( CheckRangeAttack1 ( flDot, flDist ) ){
 			SetConditions( bits_COND_CAN_RANGE_ATTACK1 );
-			canRangedAttack1 = TRUE;
+			SetConditionsMod( bits_COND_COULD_RANGE_ATTACK1 );
 		}
 
 		/*
 		//MODDD - new feature.  Could I range attack, IF I were facing the target?
-		//NOTICE: removed.  Deemed most appropriate to work with within "CheckRangeAttack1", just include this when everything BUT the dot-check passes,
-		//then check for the dot-check for total passing (returning TRUE as usual).
+		// NOTICE: removed.  Deemed most appropriate to work with within "CheckRangeAttack1", just include this when everything BUT the dot-check passes,
+		// then check for the dot-check for total passing (returning TRUE as usual).
+		// any Check___Attack method passing will set its can___Attack variable to TRUE for safety,
+		// but CheckRangeAttack methods should set this themselves when everything but the dot product (facing the enemy enough)
+		// is correct so that they think to face the enemy to get a better hit instead of stupidly failing pathfinding over and over,
+		// which can happen for an enemy across an impassible obstacle that's facing the wrong way.
 		if ( CouldRangeAttack1 ( flDot, flDist ) ){
 			
 			couldRangedAttack1 = TRUE;
@@ -3289,7 +3307,7 @@ void CBaseMonster :: CheckAttacks ( CBaseEntity *pTarget, float flDist )
 	{
 		if ( CheckRangeAttack2 ( flDot, flDist ) ){
 			SetConditions( bits_COND_CAN_RANGE_ATTACK2 );
-			canRangedAttack2 = TRUE;
+			SetConditionsMod( bits_COND_COULD_RANGE_ATTACK2 );
 		}
 	}
 	if ( m_afCapability & bits_CAP_MELEE_ATTACK1 )
@@ -3297,14 +3315,14 @@ void CBaseMonster :: CheckAttacks ( CBaseEntity *pTarget, float flDist )
 
 		if ( CheckMeleeAttack1 ( flDot, flDist ) ){
 			SetConditions( bits_COND_CAN_MELEE_ATTACK1 );
-
+			SetConditionsMod( bits_COND_COULD_MELEE_ATTACK1 );
 		}
 	}
 	if ( m_afCapability & bits_CAP_MELEE_ATTACK2 )
 	{
 		if ( CheckMeleeAttack2 ( flDot, flDist ) ){
 			SetConditions( bits_COND_CAN_MELEE_ATTACK2 );
-
+			SetConditionsMod( bits_COND_COULD_MELEE_ATTACK2 );
 		}
 	}
 
@@ -3489,6 +3507,7 @@ int CBaseMonster :: CheckEnemy ( CBaseEntity *pEnemy )
 	}else{
 		//MODDD MAJOR - if unable to check attacks, assume they would have failed anyways. Don't keep memory of attack conditions that now survive schedule changes.
 		ClearConditions( bits_COND_CAN_RANGE_ATTACK1 | bits_COND_CAN_RANGE_ATTACK2 | bits_COND_CAN_MELEE_ATTACK1 |bits_COND_CAN_MELEE_ATTACK2 );
+		ClearConditionsMod(bits_COND_COULD_RANGE_ATTACK1 | bits_COND_COULD_RANGE_ATTACK2 | bits_COND_COULD_MELEE_ATTACK1 | bits_COND_COULD_MELEE_ATTACK2);
 	}
 
 	//the smart pathfinding method does not use this, this is not very smart.
@@ -4634,7 +4653,7 @@ BOOL CBaseMonster :: BuildRoute ( const Vector &vecGoal, int iMoveFlag, CBaseEnt
 	BOOL localMovePass = (CheckLocalMove ( pev->origin, vecGoal, pTarget, &flDist ) == LOCALMOVE_VALID);
 	//BOOL localMovePass = (CheckLocalMove ( pev->origin, pev->origin + vecDir * flWaypointDist, pTargetEnt, &flDist ) == LOCALMOVE_VALID);
 	//BOOL localMovePass = (CheckLocalMove ( pev->origin, pev->origin + vecDir * flCheckDist, pTargetEnt, &flDist ) == LOCALMOVE_VALID);
-	EASY_CVAR_PRINTIF_PRE(pathfindPrintout, easyPrintLine("%s:ID%d Pathfinding: ROUTE FIRST PASS? %d", getClassnameShort(), monsterID, localMovePass) );
+	EASY_CVAR_PRINTIF_PRE(pathfindPrintout, easyForcePrintLine("%s:ID%d Pathfinding: ROUTE FIRST PASS? %d", getClassnameShort(), monsterID, localMovePass) );
 	*/
 			//debugVectorMode = 0;
 			//	debugVector1 = pev->origin;
@@ -4674,7 +4693,7 @@ BOOL CBaseMonster :: BuildRoute ( const Vector &vecGoal, int iMoveFlag, CBaseEnt
 		}
 
 		if(rampFixAttempt != 0){
-			EASY_CVAR_PRINTIF_PRE(pathfindPrintout, easyPrintLine("%s:ID%d Pathfinding: TRYING RAMPFIX...", getClassnameShort(), monsterID) );
+			EASY_CVAR_PRINTIF_PRE(pathfindPrintout, easyForcePrintLine("%s:ID%d Pathfinding: TRYING RAMPFIX...", getClassnameShort(), monsterID) );
 			//first, check the point where the first localMove check failed. Is this a ramp? Check the slope.
 			
 			debugVectorMode = 1;
@@ -4898,13 +4917,13 @@ BOOL CBaseMonster :: BuildRoute ( const Vector &vecGoal, int iMoveFlag, CBaseEnt
 				}//END OF pre move test (from current place to the bottom of the ramp, if not immediately there)
 			}//END OF trace-hit-something check
 		}else{
-			EASY_CVAR_PRINTIF_PRE(pathfindPrintout, easyPrintLine("%s:ID%d Pathfinding: NO RAMP TEST.", getClassnameShort(), monsterID) );
+			EASY_CVAR_PRINTIF_PRE(pathfindPrintout, easyForcePrintLine("%s:ID%d Pathfinding: NO RAMP TEST.", getClassnameShort(), monsterID) );
 		}
 
 	}//END OF first  if( !localMovePass)  check
 
 	
-	EASY_CVAR_PRINTIF_PRE(pathfindPrintout, easyPrintLine("%s:ID%d BuildRoute: TOTAL FAIL!", getClassnameShort(), monsterID) );
+	EASY_CVAR_PRINTIF_PRE(pathfindPrintout, easyForcePrintLine("%s:ID%d BuildRoute: TOTAL FAIL!", getClassnameShort(), monsterID) );
 
 	// b0rk
 	return FALSE;
@@ -5572,7 +5591,7 @@ void CBaseMonster :: Move ( float flInterval )
 		Stop();
 		// Blocking entity is in global trace_ent
 
-		EASY_CVAR_PRINTIF_PRE(pathfindPrintout, easyPrintLine("%s:ID%d Pathfinding: ROUTE A", getClassnameShort(), monsterID) );
+		EASY_CVAR_PRINTIF_PRE(pathfindPrintout, easyForcePrintLine("%s:ID%d Pathfinding: ROUTE A", getClassnameShort(), monsterID) );
 		pBlocker = CBaseEntity::Instance( gpGlobals->trace_ent );
 
 		//easyForcePrintLine("I AM THE BLOCKER AND I SUCK RAISINS %s", pBlocker->getClassname());
@@ -5584,12 +5603,12 @@ void CBaseMonster :: Move ( float flInterval )
 		
 		if ( pBlocker && m_moveWaitTime > 0 && pBlocker->IsMoving() && !pBlocker->IsPlayer() && (gpGlobals->time-m_flMoveWaitFinished) > 3.0 )
 		{
-			EASY_CVAR_PRINTIF_PRE(pathfindPrintout, easyPrintLine("%s:ID%d Pathfinding: ROUTE B1", getClassnameShort(), monsterID) );
+			EASY_CVAR_PRINTIF_PRE(pathfindPrintout, easyForcePrintLine("%s:ID%d Pathfinding: ROUTE B1", getClassnameShort(), monsterID) );
 			// Can we still move toward our target?
 			if ( flDist < m_flGroundSpeed )
 			{
 				// No, Wait for a second
-				EASY_CVAR_PRINTIF_PRE(pathfindPrintout, easyPrintLine("%s:ID%d Pathfinding: B11 FAIL", getClassnameShort(), monsterID) );
+				EASY_CVAR_PRINTIF_PRE(pathfindPrintout, easyForcePrintLine("%s:ID%d Pathfinding: B11 FAIL", getClassnameShort(), monsterID) );
 				m_flMoveWaitFinished = gpGlobals->time + m_moveWaitTime;
 				return;
 			}
@@ -5597,33 +5616,33 @@ void CBaseMonster :: Move ( float flInterval )
 		}
 		else 
 		{
-			EASY_CVAR_PRINTIF_PRE(pathfindPrintout, easyPrintLine("%s:ID%d Pathfinding: ROUTE B2", getClassnameShort(), monsterID) );
+			EASY_CVAR_PRINTIF_PRE(pathfindPrintout, easyForcePrintLine("%s:ID%d Pathfinding: ROUTE B2", getClassnameShort(), monsterID) );
 			// try to triangulate around whatever is in the way.
 			if ( FTriangulate( pev->origin, m_Route[ m_iRouteIndex ].vecLocation, flDist, pTargetEnt, &vecApex ) )
 			{
-				EASY_CVAR_PRINTIF_PRE(pathfindPrintout, easyPrintLine("%s:ID%d Pathfinding: ROUTE C1", getClassnameShort(), monsterID) );
+				EASY_CVAR_PRINTIF_PRE(pathfindPrintout, easyForcePrintLine("%s:ID%d Pathfinding: ROUTE C1", getClassnameShort(), monsterID) );
 				InsertWaypoint( vecApex, bits_MF_TO_DETOUR );
 				RouteSimplify( pTargetEnt );
 			}
 			else
 			{
-				EASY_CVAR_PRINTIF_PRE(pathfindPrintout, easyPrintLine("%s:ID%d Pathfinding: ROUTE C2", getClassnameShort(), monsterID) );
+				EASY_CVAR_PRINTIF_PRE(pathfindPrintout, easyForcePrintLine("%s:ID%d Pathfinding: ROUTE C2", getClassnameShort(), monsterID) );
 //				ALERT ( at_aiconsole, "Couldn't Triangulate\n" );
 				Stop();
 				// Only do this once until your route is cleared
 				if ( m_moveWaitTime > 0 && !(m_afMemory & bits_MEMORY_MOVE_FAILED) )
 				{
-					EASY_CVAR_PRINTIF_PRE(pathfindPrintout, easyPrintLine("%s:ID%d Pathfinding: ROUTE D1", getClassnameShort(), monsterID) );
+					EASY_CVAR_PRINTIF_PRE(pathfindPrintout, easyForcePrintLine("%s:ID%d Pathfinding: ROUTE D1", getClassnameShort(), monsterID) );
 					FRefreshRoute();
 					if ( FRouteClear() )
 					{
-						EASY_CVAR_PRINTIF_PRE(pathfindPrintout, easyPrintLine("%s:ID%d Pathfinding: ROUTE E1 FAIL", getClassnameShort(), monsterID) );
+						EASY_CVAR_PRINTIF_PRE(pathfindPrintout, easyForcePrintLine("%s:ID%d Pathfinding: ROUTE E1 FAIL", getClassnameShort(), monsterID) );
 						TaskFail();
 					}
 					else
 					{	
 						
-						EASY_CVAR_PRINTIF_PRE(pathfindPrintout, easyPrintLine("%s:ID%d Pathfinding: ROUTE E2", getClassnameShort(), monsterID) );
+						EASY_CVAR_PRINTIF_PRE(pathfindPrintout, easyForcePrintLine("%s:ID%d Pathfinding: ROUTE E2", getClassnameShort(), monsterID) );
 						// Don't get stuck
 						
 //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -5704,7 +5723,7 @@ void CBaseMonster :: Move ( float flInterval )
 							// ... < (m_flGroundSpeed * pev->framerate * EASY_CVAR_GET_DEBUGONLY(animationFramerateMulti) * flInterval * 5)
 
 							float maxDist = (pev->size.y/2.0f) + 50.0f;
-							EASY_CVAR_PRINTIF_PRE(pathfindPrintout,easyForcePrintLine("PathfindEdgeCheck: DISTANCE TO GOAL: %.2f MAX ALLOWED: %.2f", distanceee, maxDist));
+							EASY_CVAR_PRINTIF_PRE(pathfindPrintout, easyForcePrintLine("PathfindEdgeCheck: DISTANCE TO GOAL: %.2f MAX ALLOWED: %.2f", distanceee, maxDist));
 							if(distanceee <= maxDist){
 
 								//Is there a straight line from me to the goal?
@@ -5720,7 +5739,7 @@ void CBaseMonster :: Move ( float flInterval )
 									MovementComplete();
 									return;
 								}else{
-									EASY_CVAR_PRINTIF_PRE(pathfindPrintout,easyForcePrintLine("PathfindEdgeCheck: TRACE FAILED?! classname:%s : fract:%.2f", STRING(trTemp.pHit->v.classname), trTemp.flFraction));
+									EASY_CVAR_PRINTIF_PRE(pathfindPrintout, easyForcePrintLine("PathfindEdgeCheck: TRACE FAILED?! classname:%s : fract:%.2f", STRING(trTemp.pHit->v.classname), trTemp.flFraction));
 									
 									
 									if(drawPathConstant){
@@ -5734,7 +5753,7 @@ void CBaseMonster :: Move ( float flInterval )
 					}
 
 
-					EASY_CVAR_PRINTIF_PRE(pathfindPrintout, easyPrintLine("%s:ID%d Pathfinding: ROUTE D2", getClassnameShort(), monsterID) );
+					EASY_CVAR_PRINTIF_PRE(pathfindPrintout, easyForcePrintLine("%s:ID%d Pathfinding: ROUTE D2", getClassnameShort(), monsterID) );
 					TaskFail();
 					ALERT( at_aiconsole, "%s Failed to move (%d)!\n", STRING(pev->classname), HasMemory( bits_MEMORY_MOVE_FAILED ) );
 					//ALERT( at_aiconsole, "%f, %f, %f\n", pev->origin.z, (pev->origin + (vecDir * flCheckDist)).z, m_Route[m_iRouteIndex].vecLocation.z );
@@ -5753,7 +5772,7 @@ void CBaseMonster :: Move ( float flInterval )
 
 	BOOL skipMoveExecute = FALSE;
 	
-	EASY_CVAR_PRINTIF_PRE(pathfindPrintout, easyPrintLine("%s:ID%d Pathfinding: ROUTE X", getClassnameShort(), monsterID) );
+	EASY_CVAR_PRINTIF_PRE(pathfindPrintout, easyForcePrintLine("%s:ID%d Pathfinding: ROUTE X", getClassnameShort(), monsterID) );
 	// close enough to the target, now advance to the next target. This is done before reaching
 	// the target so that we get a nice natural turn while moving.
 
@@ -5770,7 +5789,7 @@ void CBaseMonster :: Move ( float flInterval )
 		//}
 		
 
-		EASY_CVAR_PRINTIF_PRE(pathfindPrintout, easyPrintLine("%s:ID%d Pathfinding: ROUTE Z", getClassnameShort(), monsterID) );
+		EASY_CVAR_PRINTIF_PRE(pathfindPrintout, easyForcePrintLine("%s:ID%d Pathfinding: ROUTE Z", getClassnameShort(), monsterID) );
 		AdvanceRoute( flWaypointDist, flInterval );
 
 
@@ -5881,7 +5900,7 @@ void CBaseMonster :: Move ( float flInterval )
 
 	if ( MovementIsComplete() )
 	{
-		EASY_CVAR_PRINTIF_PRE(pathfindPrintout, easyPrintLine("%s:ID%d Pathfinding: MOVEMENT IS COMPLETE??", getClassnameShort(), monsterID) );
+		EASY_CVAR_PRINTIF_PRE(pathfindPrintout, easyForcePrintLine("%s:ID%d Pathfinding: MOVEMENT IS COMPLETE??", getClassnameShort(), monsterID) );
 		Stop();
 		RouteClear();
 	}
@@ -5995,9 +6014,9 @@ void CBaseMonster::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, f
 				CBaseEntity* whut = CBaseEntity::Instance(gpGlobals->trace_ent);
 
 				if(whut != NULL){
-					easyForcePrintLine("%s:%d MBFme: %s:%d isW:%d", getClassname(), monsterID, whut->getClassname(), 
+					EASY_CVAR_PRINTIF_PRE(pathfindPrintout, easyForcePrintLine("%s:%d in the way of move execute?: %s:%d isW:%d", getClassname(), monsterID, whut->getClassname(), 
 						(whut->GetMonsterPointer() != NULL)?whut->GetMonsterPointer()->monsterID:-1
-						, whut->IsWorld());
+						, whut->IsWorld()));
 				}
 
 				//These "AdvanceRoute" calls. Isn't that a tad drastic of an assumption?
@@ -7508,8 +7527,17 @@ BOOL CBaseMonster :: FGetNodeRoute ( Vector vecDest )
 
 	// valid src and dest nodes were found, so it's safe to proceed with
 	// find shortest path
-	int iNodeHull = WorldGraph.HullIndex( this ); // make this a monster virtual function
-	
+	int iNodeHull;
+
+	if (EASY_CVAR_GET_DEBUGONLY(pathfindForcePointHull) != 1) {
+		// normal way.  Get the Hull from this monster trying to pathfind.
+		// Can be used to tell if some paths between nodes are invalid from this monster's size.
+		iNodeHull = WorldGraph.HullIndex( this ); // make this a monster virtual function
+	}else{
+		// force 0 size.
+		iNodeHull = NODE_POINT_HULL;
+	}
+
 	//MODDD - CHEAT CHEAT CHEAT!
 	//iNodeHull = NODE_POINT_HULL;
 
@@ -9472,9 +9500,6 @@ void CBaseMonster::onEnemyDead(CBaseEntity* pRecentEnemy) {
 BOOL CBaseMonster::predictRangeAttackEnd(void) {
 	return FALSE;
 }
-
-
-
 
 
 

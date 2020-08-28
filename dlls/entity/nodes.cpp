@@ -32,6 +32,9 @@ EASY_CVAR_EXTERN_DEBUGONLY(ignoreIsolatedNodes)
 EASY_CVAR_EXTERN_DEBUGONLY(hideNodeGraphRebuildNotice)
 EASY_CVAR_EXTERN_DEBUGONLY(nodeConnectionBreakableCheck)
 EASY_CVAR_EXTERN_DEBUGONLY(nodeDetailPrintout)
+EASY_CVAR_EXTERN_DEBUGONLY(pathfindIgnoreNearestNodeCache)
+EASY_CVAR_EXTERN_DEBUGONLY(pathfindIgnoreStaticRoutes)
+
 
 
 //MODDD - retail behavior HULL_STEP_SIZE is 16!
@@ -805,8 +808,8 @@ int CGraph::FindShortestPath(int* piPath, int iStart, int iDest, int iHull, int 
 
 
 	// Is routing information present.
-	//
-	if (m_fRoutingComplete)
+	//MODDD - MAJOR.  If pathfindIgnoreStaticRouges is on, forbid using these.  Debug feature.
+	if (EASY_CVAR_GET(pathfindIgnoreStaticRoutes) != 1 && m_fRoutingComplete)
 	{
 		int iCap = CapIndex(afCapMask);
 
@@ -1136,25 +1139,37 @@ int CGraph::FindNearestNode(const Vector& vecOrigin, int afNodeTypes)
 		return -1;
 	}
 
+
+
+
 	// Check with the cache
 	//
-	// MODDD - renamed CACHE_SIZE, as seen in nodes.h.
+	//MODDD - renamed CACHE_SIZE, as seen in nodes.h.
 	// Also to ensure the CACHE_SIZE meant for m_Cache is used.
+	
 	ULONG iHash = (GRAPH_CACHE_SIZE - 1) & Hash((void*)(const float*)vecOrigin, sizeof(vecOrigin));
 
-	//MODDD - extra check.  allowed to return a -1 node?
-	//...then again, memory is memory. If it failed before, it won't change. guess this is ok.
+	//MODDD - MAJOR.  ALSO.  Can skip using nearest-node cache by CVar, debug feature.
+	// Surrounds as-is script.
+	////////////////////////////////////////////////////////////////////////////////////
+	if(EASY_CVAR_GET(pathfindIgnoreNearestNodeCache) != 1){
 
-	//if (m_Cache[iHash].n != -1 && m_Cache[iHash].v == vecOrigin)
-	if (m_Cache[iHash].v == vecOrigin)
-	{
-		//ALERT(at_aiconsole, "Cache Hit.\n");
-		return m_Cache[iHash].n;
-	}
-	else
-	{
-		//ALERT(at_aiconsole, "Cache Miss.\n");
-	}
+		//MODDD - extra check.  allowed to return a -1 node?
+		//...then again, memory is memory. If it failed before, it won't change. guess this is ok.
+
+		//if (m_Cache[iHash].n != -1 && m_Cache[iHash].v == vecOrigin)
+		if (m_Cache[iHash].v == vecOrigin)
+		{
+			//ALERT(at_aiconsole, "Cache Hit.\n");
+			return m_Cache[iHash].n;
+		}
+		else
+		{
+			//ALERT(at_aiconsole, "Cache Miss.\n");
+		}
+
+	}//END OF CVar check
+	////////////////////////////////////////////////////////////////////////////////////
 
 	// Mark all points as unchecked.
 	//
@@ -2877,7 +2892,7 @@ int CGraph::FLoadGraph(char* szMapName)
 		if (length < 0) goto ShortFile;
 		memcpy(m_pRouteInfo, pMemFile, sizeof(char) * m_nRouteInfo);
 		pMemFile += sizeof(char) * m_nRouteInfo;
-		m_fRoutingComplete = TRUE;;
+		m_fRoutingComplete = TRUE;
 
 		// malloc for the hash links
 		//

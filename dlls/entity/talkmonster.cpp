@@ -2414,15 +2414,30 @@ Schedule_t* CTalkMonster :: GetScheduleOfType ( int Type )
 
 
 		//MODDD
-		if(EASY_CVAR_GET_DEBUGONLY(NPCsTalkMore) != 1 ){
-			passCondition = (RANDOM_LONG(0,99) < 2);
+
+		if(!FOkToSpeak()){
+			// If not OK to speak, why bother calling slIdleSpeakWait?  It will only stare at the player
+			// without saying anything anyway.
+			passCondition = FALSE;
 		}else{
-			passCondition = TRUE;
+			// Chance at talking.  Note that following cancels the wait times, which is ok (more responsive to
+			// following the player instead of staying for 2-3 seconds to finish saying something... not a great
+			// idea post-disaster)
+			if(EASY_CVAR_GET_DEBUGONLY(NPCsTalkMore) != 1 ){
+				passCondition = (RANDOM_LONG(0,99) < 2);
+			}else{
+				passCondition = TRUE;
+			}
 		}
-		
+
 		canGoRavingMad = TRUE;
 		
 		if (passCondition){
+			// NOTICE - picking this avoids sending slIdleStand, which is what Scientist and barnies use to know to
+			// call their FaceTarget schedules instead (which can then follow the player).
+			// Calling this constantly causes the talker to stare at the player no matter how far you get after a 
+			// 'follow' order.  UGH.
+			// IDEA - check 'FOkToSpeak' too, that should do it
 			//ALERT ( at_console, "target chase speak\n" );
 			return slIdleSpeakWait;
 		}else{
@@ -2748,25 +2763,27 @@ void CTalkMonster::MonsterThink(void){
 	}
 
 
+
+	/*
 	//sitting scientist should not attempt this.  either doesn't work or just... weirder than usual.
 	if(canGoRavingMad && !FClassnameIs(pev, "monster_sitting_scientist") ){
 
 		// nevermind, barnies/scientists now have dance moves too.
-		/*
-		if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(thatWasntPunch) == 1){
-			//pev->angles[0] 
-			//UTIL_printLineVector("STUFFFFF", pev->angles);
-			pev->angles[0] = RANDOM_LONG(-30, 30);
-			pev->angles[1] = RANDOM_LONG(0, 359);
-			//pev->angles[2] = RANDOM_LONG(0, 359);
-		}
-		*/
+		
+		//if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(thatWasntPunch) == 1){
+		//	//pev->angles[0] 
+		//	//UTIL_printLineVector("STUFFFFF", pev->angles);
+		//	pev->angles[0] = RANDOM_LONG(-30, 30);
+		//	pev->angles[1] = RANDOM_LONG(0, 359);
+		//	//pev->angles[2] = RANDOM_LONG(0, 359);
+		//}
+		
 
 	}else{
 		//nah, gonna bleep with ya.  Leave em' slanted funny.
 		//pev->angles[0] = 0;
 	}
-
+	*/
 
 
 
