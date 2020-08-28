@@ -133,7 +133,7 @@ DeathAnimationEnd
 onDeathAnimationEnd
 */
 
-void CBarnacle::EndOfRevive(int preReviveSequence){
+void CBarnacle::StartReanimationPost(int preReviveSequence){
 	
 	//LEAVE THIS OUT. I don't do what most monsters do.
 	/*
@@ -154,7 +154,7 @@ void CBarnacle::EndOfRevive(int preReviveSequence){
 	SetSequenceByIndex(preReviveSequence, -1, FALSE);
 
 	ChangeSchedule(slWaitForSequence );
-}//END OF EndOfRevive
+}//END OF StartReanimationPost
 
 
 
@@ -239,9 +239,9 @@ IMPLEMENT_SAVERESTORE( CBarnacle, CBaseMonster );
 // Classify - indicates this monster's place in the 
 // relationship table.
 //=========================================================
-int CBarnacle :: Classify ( void )
+int CBarnacle::Classify ( void )
 {
-	//NOTE:::   uh, there is "CLASS_BARNACLE".  Weird that this isn't used instead?
+	//NOTE:::  uh, there is "CLASS_BARNACLE".  Weird that this isn't used instead?
 	//Although nothing (monsters) pays attention to the barnacle ingame because its flags are 0, maybe.
 	//Strangely some Xen creatures use CLASS_BARNACLE to signify being ignored though. No idea.
 
@@ -258,7 +258,7 @@ int CBarnacle :: Classify ( void )
 //
 // Returns number of events handled, 0 if none.
 //=========================================================
-void CBarnacle :: HandleAnimEvent( MonsterEvent_t *pEvent )
+void CBarnacle::HandleAnimEvent( MonsterEvent_t *pEvent )
 {
 	switch( pEvent->event )
 	{
@@ -274,7 +274,7 @@ void CBarnacle :: HandleAnimEvent( MonsterEvent_t *pEvent )
 //=========================================================
 // Spawn
 //=========================================================
-void CBarnacle :: Spawn()
+void CBarnacle::Spawn()
 {
 	Precache( );
 
@@ -359,7 +359,7 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBarnacle)
 
 //=========================================================
 //=========================================================
-void CBarnacle :: BarnacleThink ( void )
+void CBarnacle::BarnacleThink ( void )
 {
 	CBaseEntity *pTouchEnt;
 	CBaseMonster *pVictim;
@@ -899,7 +899,7 @@ GENERATE_KILLED_IMPLEMENTATION(CBarnacle)
 
 //=========================================================
 //=========================================================
-void CBarnacle :: WaitTillDead ( void )
+void CBarnacle::WaitTillDead ( void )
 {
 	pev->nextthink = gpGlobals->time + 0.1;
 
@@ -926,7 +926,7 @@ extern int global_useSentenceSave;
 //=========================================================
 // Precache - precaches all resources this monster needs
 //=========================================================
-void CBarnacle :: Precache()
+void CBarnacle::Precache()
 {
 	//set the gibID at precache time.
 	if(CBarnacle::s_iStandardGibID == -1){
@@ -959,7 +959,7 @@ void CBarnacle :: Precache()
 
 
 //#define BARNACLE_CHECK_SPACING	8    //MOVED!
-CBaseEntity *CBarnacle :: TongueTouchEnt ( float *pflLength )
+CBaseEntity *CBarnacle::TongueTouchEnt ( float *pflLength )
 {
 	return TongueTouchEnt(pflLength, 0);
 }
@@ -970,7 +970,7 @@ CBaseEntity *CBarnacle :: TongueTouchEnt ( float *pflLength )
 // of the trace in the int pointer provided.
 //=========================================================
 #define BARNACLE_CHECK_SPACING	8
-CBaseEntity *CBarnacle :: TongueTouchEnt ( float *pflLength, float *pflLengthMinimal )
+CBaseEntity *CBarnacle::TongueTouchEnt ( float *pflLength, float *pflLengthMinimal )
 {
 	TraceResult	tr;
 	float	length;
@@ -1091,7 +1091,7 @@ CBaseEntity *CBarnacle :: TongueTouchEnt ( float *pflLength, float *pflLengthMin
 				//EASY_CVAR_PRINTIF_PRE(barnaclePrintout, easyPrintLine("WHAT IS THE VOLUME? %.2f", temp.x * temp.y * temp.z));
 
 			}
-			//EASY_CVAR_PRINTIF_PRE(barnaclePrintout, easyPrintLine("I: %d ::: ?: %d", i, passedRelationTest));
+			//EASY_CVAR_PRINTIF_PRE(barnaclePrintout, easyPrintLine("I: %d :::?: %d", i, passedRelationTest));
 			
 			//MODDD - see a bit above too, this can now be circumvented by that CVar above.
 			//if ( pList[i] != this && (IRelationship( pList[i] )  > R_NO ) && pList[ i ]->pev->deadflag == DEAD_NO )	// this ent is one of our enemies. Barnacle tries to eat it.

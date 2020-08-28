@@ -12,7 +12,7 @@
 #include<VGUI_Scheme.h>
 #include<VGUI_Color.h>
 
-//TODO:: needs concept of insets
+//TODO::needs concept of insets
 
 namespace vgui
 {

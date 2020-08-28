@@ -132,7 +132,7 @@ public:
 	virtual int	Restore( CRestore &restore );
 	
 	static	TYPEDESCRIPTION m_SaveData[];
-	virtual int ObjectCaps( void ) { return (CBaseEntity :: ObjectCaps() & ~FCAP_ACROSS_TRANSITION) | FCAP_DIRECTIONAL_USE; }
+	virtual int ObjectCaps( void ) { return (CBaseEntity::ObjectCaps() & ~FCAP_ACROSS_TRANSITION) | FCAP_DIRECTIONAL_USE; }
 
 	virtual void OverrideReset( void );
 

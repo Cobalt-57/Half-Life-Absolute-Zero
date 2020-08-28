@@ -424,7 +424,7 @@ int CBullsquid::IRelationship ( CBaseEntity *pTarget )
 		return R_NO;
 	}
 
-	return CBaseMonster :: IRelationship ( pTarget );
+	return CBaseMonster::IRelationship ( pTarget );
 }
 
 
@@ -472,7 +472,7 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBullsquid)
 //=========================================================
 // CheckRangeAttack1
 //=========================================================
-BOOL CBullsquid :: CheckRangeAttack1 ( float flDot, float flDist )
+BOOL CBullsquid::CheckRangeAttack1 ( float flDot, float flDist )
 {
 
 	if (HasConditions(bits_COND_SEE_ENEMY) && !HasConditions(bits_COND_ENEMY_OCCLUDED)) {
@@ -532,7 +532,7 @@ BOOL CBullsquid :: CheckRangeAttack1 ( float flDot, float flDist )
 // CheckMeleeAttack1 - bullsquid is a big guy, so has a longer
 // melee range than most monsters. This is the tailwhip attack
 //=========================================================
-BOOL CBullsquid :: CheckMeleeAttack1 ( float flDot, float flDist )
+BOOL CBullsquid::CheckMeleeAttack1 ( float flDot, float flDist )
 {
 	if ( m_hEnemy->pev->health <= gSkillData.bullsquidDmgWhip && flDist <= 85 && flDot >= 0.7 )
 	{
@@ -547,7 +547,7 @@ BOOL CBullsquid :: CheckMeleeAttack1 ( float flDot, float flDist )
 // this attack will not be performed if the tailwhip attack
 // is valid.
 //=========================================================
-BOOL CBullsquid :: CheckMeleeAttack2 ( float flDot, float flDist )
+BOOL CBullsquid::CheckMeleeAttack2 ( float flDot, float flDist )
 {
 	if ( flDist <= 85 && flDot >= 0.7 && !HasConditions( bits_COND_CAN_MELEE_ATTACK1 ) )		// The player & bullsquid can be as much as their bboxes 
 	{										// apart (48 * sqrt(3)) and he can still attack (85 is a little more than 48*sqrt(3))
@@ -559,7 +559,7 @@ BOOL CBullsquid :: CheckMeleeAttack2 ( float flDot, float flDist )
 //=========================================================
 //  FValidateHintType 
 //=========================================================
-BOOL CBullsquid :: FValidateHintType ( short sHint )
+BOOL CBullsquid::FValidateHintType ( short sHint )
 {
 	int i;
 
@@ -585,7 +585,7 @@ BOOL CBullsquid :: FValidateHintType ( short sHint )
 // of sounds this monster regards. In the base class implementation,
 // monsters care about all sounds, but no scents.
 //=========================================================
-int CBullsquid :: ISoundMask ( void )
+int CBullsquid::ISoundMask ( void )
 {
 	return	bits_SOUND_WORLD	|
 			bits_SOUND_COMBAT	|
@@ -601,7 +601,7 @@ int CBullsquid :: ISoundMask ( void )
 // Classify - indicates this monster's place in the 
 // relationship table.
 //=========================================================
-int CBullsquid :: Classify ( void )
+int CBullsquid::Classify ( void )
 {
 	return	CLASS_ALIEN_PREDATOR;
 }
@@ -609,7 +609,7 @@ int CBullsquid :: Classify ( void )
 //=========================================================
 // IdleSound 
 //=========================================================
-void CBullsquid :: IdleSound ( void )
+void CBullsquid::IdleSound ( void )
 {
 	switch ( RANDOM_LONG(0,4) )
 	{
@@ -634,7 +634,7 @@ void CBullsquid :: IdleSound ( void )
 //=========================================================
 // PainSound 
 //=========================================================
-void CBullsquid :: PainSound ( void )
+void CBullsquid::PainSound ( void )
 {
 	int iPitch = RANDOM_LONG( 85, 120 );
 
@@ -658,7 +658,7 @@ void CBullsquid :: PainSound ( void )
 //=========================================================
 // AlertSound
 //=========================================================
-void CBullsquid :: AlertSound ( void )
+void CBullsquid::AlertSound ( void )
 {
 	int iPitch = RANDOM_LONG( 140, 160 );
 
@@ -677,7 +677,7 @@ void CBullsquid :: AlertSound ( void )
 // SetYawSpeed - allows each sequence to have a different
 // turn rate associated with it.
 //=========================================================
-void CBullsquid :: SetYawSpeed ( void )
+void CBullsquid::SetYawSpeed ( void )
 {
 	int ys;
 
@@ -711,7 +711,7 @@ void CBullsquid::Think(){
 // HandleAnimEvent - catches the monster-specific messages
 // that occur when tagged animation frames are played.
 //=========================================================
-void CBullsquid :: HandleAnimEvent( MonsterEvent_t *pEvent )
+void CBullsquid::HandleAnimEvent( MonsterEvent_t *pEvent )
 {
 	CBaseMonster* tempMon = NULL;
 
@@ -734,7 +734,7 @@ void CBullsquid :: HandleAnimEvent( MonsterEvent_t *pEvent )
 			
 			vecSpitDir = ( ( m_vecEnemyLKP +  ((m_hEnemy!=NULL)?(m_hEnemy->EyeOffset()):(Vector(0,0,5)))   ) - vecSpitOffset ).Normalize();
 			
-			//easyForcePrintLine("WHATTTTT %.2f %.2f %.2f ::: %.2f %.2f %.2f", m_vecEnemyLKP.x, m_vecEnemyLKP.y, m_vecEnemyLKP.z, m_hEnemy->pev->origin.x, m_hEnemy->pev->origin.y, m_hEnemy->pev->origin.z);
+			//easyForcePrintLine("WHATTTTT %.2f %.2f %.2f :::%.2f %.2f %.2f", m_vecEnemyLKP.x, m_vecEnemyLKP.y, m_vecEnemyLKP.z, m_hEnemy->pev->origin.x, m_hEnemy->pev->origin.y, m_hEnemy->pev->origin.z);
 			//UTIL_printLineVector("HEEEa", vecSpitDirOLD);
 			//UTIL_printLineVector("HEEEr", vecSpitDir);
 
@@ -874,7 +874,7 @@ CBullsquid::CBullsquid(){
 //=========================================================
 // Spawn
 //=========================================================
-void CBullsquid :: Spawn()
+void CBullsquid::Spawn()
 {
 	Precache( );
 
@@ -910,7 +910,7 @@ extern int global_useSentenceSave;
 //=========================================================
 // Precache - precaches all resources this monster needs
 //=========================================================
-void CBullsquid :: Precache()
+void CBullsquid::Precache()
 {
 	PRECACHE_MODEL("models/bullsquid.mdl");
 	
@@ -959,7 +959,7 @@ void CBullsquid :: Precache()
 //=========================================================
 // DeathSound
 //=========================================================
-void CBullsquid :: DeathSound ( void )
+void CBullsquid::DeathSound ( void )
 {
 	switch ( RANDOM_LONG(0,2) )
 	{
@@ -978,7 +978,7 @@ void CBullsquid :: DeathSound ( void )
 //=========================================================
 // AttackSound
 //=========================================================
-void CBullsquid :: AttackSound ( void )
+void CBullsquid::AttackSound ( void )
 {
 	switch ( RANDOM_LONG(0,1) )
 	{
@@ -996,10 +996,10 @@ void CBullsquid :: AttackSound ( void )
 // RunAI - overridden for bullsquid because there are things
 // that need to be checked every think.
 //========================================================
-void CBullsquid :: RunAI ( void )
+void CBullsquid::RunAI ( void )
 {
 	// first, do base class stuff
-	CBaseMonster :: RunAI();
+	CBaseMonster::RunAI();
 
 	if ( pev->skin != 0 )
 	{
@@ -1026,7 +1026,7 @@ void CBullsquid :: RunAI ( void )
 //=========================================================
 // GetSchedule 
 //=========================================================
-Schedule_t *CBullsquid :: GetSchedule( void )
+Schedule_t *CBullsquid::GetSchedule( void )
 {
 	switch	( m_MonsterState )
 	{
@@ -1072,7 +1072,7 @@ Schedule_t *CBullsquid :: GetSchedule( void )
 			if ( HasConditions( bits_COND_ENEMY_DEAD ) )
 			{
 				// call base class, all code to handle dead enemies is centralized there.
-				return CBaseMonster :: GetSchedule();
+				return CBaseMonster::GetSchedule();
 			}
 
 			if ( HasConditions(bits_COND_NEW_ENEMY) )
@@ -1126,13 +1126,13 @@ Schedule_t *CBullsquid :: GetSchedule( void )
 		}
 	}
 
-	return CBaseMonster :: GetSchedule();
+	return CBaseMonster::GetSchedule();
 }
 
 //=========================================================
 // GetScheduleOfType
 //=========================================================
-Schedule_t* CBullsquid :: GetScheduleOfType ( int Type ) 
+Schedule_t* CBullsquid::GetScheduleOfType ( int Type ) 
 {
 	//easyForcePrintLine("GET SCHED? ???    %d" , Type);
 
@@ -1149,7 +1149,7 @@ Schedule_t* CBullsquid :: GetScheduleOfType ( int Type )
 				return &slSquidRangeAttack1[ 0 ];
 			}else{
 				//MODDD - changed from SCHED_ALERT_STAND.  Should no longer forget an enemy-
-				//return CBaseMonster :: GetScheduleOfType ( SCHED_COMBAT_STAND );
+				//return CBaseMonster::GetScheduleOfType ( SCHED_COMBAT_STAND );
 
 				// wait.  Why not just chase.
 				return &slSquidChaseEnemy[0];
@@ -1176,7 +1176,7 @@ Schedule_t* CBullsquid :: GetScheduleOfType ( int Type )
 			//	m_flNextSpitTime = gpGlobals->time + (41.0 / 30.0 );
 				return &slSquidRangeAttack1[ 0 ];
 			//}else{
-			//	return CBaseMonster :: GetScheduleOfType ( SCHED_ALERT_STAND );
+			//	return CBaseMonster::GetScheduleOfType ( SCHED_ALERT_STAND );
 			//}
 		}else{
 			return &slSquidChaseEnemy[ 0 ];
@@ -1203,7 +1203,7 @@ Schedule_t* CBullsquid :: GetScheduleOfType ( int Type )
 		break;
 	}
 
-	return CBaseMonster :: GetScheduleOfType ( Type );
+	return CBaseMonster::GetScheduleOfType ( Type );
 }
 
 //=========================================================
@@ -1213,7 +1213,7 @@ Schedule_t* CBullsquid :: GetScheduleOfType ( int Type )
 // know explicitly when the last attempt to chase the enemy
 // failed, since that impacts its attack choices.
 //=========================================================
-void CBullsquid :: StartTask ( Task_t *pTask )
+void CBullsquid::StartTask ( Task_t *pTask )
 {
 	
 	switch ( pTask->iTask )
@@ -1233,7 +1233,7 @@ void CBullsquid :: StartTask ( Task_t *pTask )
 				break;
 			}
 
-			CBaseMonster :: StartTask ( pTask );
+			CBaseMonster::StartTask ( pTask );
 			break;
 		}
 	case TASK_SQUID_HOPTURN:
@@ -1257,7 +1257,7 @@ void CBullsquid :: StartTask ( Task_t *pTask )
 		}
 	default:
 		{
-			CBaseMonster :: StartTask ( pTask );
+			CBaseMonster::StartTask ( pTask );
 			break;
 		}
 	}
@@ -1266,7 +1266,7 @@ void CBullsquid :: StartTask ( Task_t *pTask )
 //=========================================================
 // RunTask
 //=========================================================
-void CBullsquid :: RunTask ( Task_t *pTask )
+void CBullsquid::RunTask ( Task_t *pTask )
 {
 	switch ( pTask->iTask )
 	{
@@ -1283,7 +1283,7 @@ void CBullsquid :: RunTask ( Task_t *pTask )
 		}
 	default:
 		{
-			CBaseMonster :: RunTask( pTask );
+			CBaseMonster::RunTask( pTask );
 			break;
 		}
 	}
@@ -1300,7 +1300,7 @@ void CBullsquid :: RunTask ( Task_t *pTask )
 // the feature that makes it lose interest in headcrabs for 
 // a while if something injures it. 
 //=========================================================
-MONSTERSTATE CBullsquid :: GetIdealState ( void )
+MONSTERSTATE CBullsquid::GetIdealState ( void )
 {
 	int iConditions;
 
@@ -1337,7 +1337,7 @@ MONSTERSTATE CBullsquid :: GetIdealState ( void )
 	// Unless the ALERT setting was meant to force picking a new enemy in the same frame?  Interesting.
 	// Wait. Base monster GetIdealState can't even change the state from MONSTERSTATE_ALERT in that call.
 	// WELP.  Whatever.
-	//m_IdealMonsterState = CBaseMonster :: GetIdealState();
+	//m_IdealMonsterState = CBaseMonster::GetIdealState();
 	//return m_IdealMonsterState;
 	
 	return CBaseMonster::GetIdealState();

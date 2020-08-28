@@ -460,6 +460,8 @@ Non-sentry turrets have a more involved post-death sequence.  They will spin aro
 -They will make off-pitch pings during post-death beserk and normal beserk.  Far more off-pitch pings on post-death.
 -Turret eye (brightness) in standard turrets will flash on and off during post-death.
 
+Non-sentry turrets take 10% less damage from bullets, 20% less damage from explosions.
+
 
 Ladder logic jump-off logic altered.  Only clean jump-presses can jump off, not holding it down.
 Also, added a delay before getting back on the same ladder (avoid sticking to the ladder while jumping off).
@@ -490,6 +492,6 @@ The maximum number of schedules able to be re-picked in one frame changed from 2
 Slight AI improvement: something facing off from ideal but still able to attack from a place without a direct path to the enemy (like a gargantua across rails) will still be able to turn and face if an attack were possible.
 - Not yet used in many places yet, but a similar idea is already present in sevearl monsters, especially hassault and hgrunt.
 
-NEW CVars: pathfindForcePointHull, pathfindIgnoreNearestNodeCache, pathfindIgnoreStaticRoutes.
+NEW CVars: pathfindForcePointHull, pathfindIgnoreNearestNodeCache, pathfindIgnoreStaticRoutes, pathfindNearestNodeExtra.
 In maps where 'pathfindIgnoreStaticRoutes' being 1 makes a difference in pathfinding through nodes, their node routes should be rebuilt (saved to a file, do it on our end and ship them out).
 

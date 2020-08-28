@@ -209,7 +209,7 @@ int g_cl_frameCount = 0;
 
 /*
 =====================
-CBaseEntity :: Killed
+CBaseEntity::Killed
 
 If weapons code "kills" an entity, just set its effects to EF_NODRAW
 =====================
@@ -1680,7 +1680,7 @@ void HUD_WeaponsPostThink(local_state_s* from, local_state_s* to, usercmd_t* cmd
 		//easyPrintLine("PRINTER START!!!!!!!!!!!!!!!!!!!!!!!!!!");
 		//for(int i = 0; i < 32; i++){
 		//	entvars_t& thisEnt = ev[i];
-		//	easyPrintLine("PRINTER::: %s", thisEnt.classname);
+		//	easyPrintLine("PRINTER:::%s", thisEnt.classname);
 		//}
 		//easyPrintLine("PRINTER END!!!!!!!!!!!!!!!!!!!!!!!!!!");
 		

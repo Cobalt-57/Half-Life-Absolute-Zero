@@ -59,16 +59,16 @@ IMPLEMENT_SAVERESTORE( CSquadMonster, CBaseMonster );
 //FILLER
 
 /*
-void CSquadMonster :: SetActivity( Activity NewActivity){
+void CSquadMonster::SetActivity( Activity NewActivity){
 	CBaseMonster::SetActivity(NewActivity, FALSE);
 }
-void CSquadMonster :: SetActivity ( Activity NewActivity, BOOL forceReset )
+void CSquadMonster::SetActivity ( Activity NewActivity, BOOL forceReset )
 {
 	CBaseMonster::SetActivity(NewActivity, forceReset);
 }
 */
 
-void CSquadMonster :: SetActivity( Activity NewActivity){
+void CSquadMonster::SetActivity( Activity NewActivity){
 	CBaseMonster::SetActivity(NewActivity);
 }
 
@@ -78,7 +78,7 @@ void CSquadMonster :: SetActivity( Activity NewActivity){
 // OccupySlot - if any slots of the passed slots are 
 // available, the monster will be assigned to one.
 //=========================================================
-BOOL CSquadMonster :: OccupySlot( int iDesiredSlots )
+BOOL CSquadMonster::OccupySlot( int iDesiredSlots )
 {
 	int i;
 	int iMask;
@@ -130,7 +130,7 @@ BOOL CSquadMonster :: OccupySlot( int iDesiredSlots )
 //=========================================================
 // VacateSlot 
 //=========================================================
-void CSquadMonster :: VacateSlot()
+void CSquadMonster::VacateSlot()
 {
 	if ( m_iMySlot != bits_NO_SLOT && InSquad() )
 	{
@@ -143,7 +143,7 @@ void CSquadMonster :: VacateSlot()
 //=========================================================
 // ScheduleChange
 //=========================================================
-void CSquadMonster :: ScheduleChange ( void )
+void CSquadMonster::ScheduleChange ( void )
 {
 	VacateSlot();
 	CBaseMonster::ScheduleChange(); //MODDD - call the parent!!
@@ -179,7 +179,7 @@ GENERATE_KILLED_IMPLEMENTATION(CSquadMonster){
 //MODDD NOTE: THERE IS NO "m_pSquadNext", no promotion takes place.  Probably unfinished / planned behavior.
 //
 //=========================================================
-void CSquadMonster :: SquadRemove( CSquadMonster *pRemove )
+void CSquadMonster::SquadRemove( CSquadMonster *pRemove )
 {
 	ASSERT( pRemove!=NULL );
 	ASSERT( this->IsLeader() );
@@ -224,7 +224,7 @@ void CSquadMonster :: SquadRemove( CSquadMonster *pRemove )
 // SquadAdd(), add pAdd to my squad
 //
 //=========================================================
-BOOL CSquadMonster :: SquadAdd( CSquadMonster *pAdd )
+BOOL CSquadMonster::SquadAdd( CSquadMonster *pAdd )
 {
 	ASSERT( pAdd!=NULL );
 	ASSERT( !pAdd->InSquad() );
@@ -252,7 +252,7 @@ BOOL CSquadMonster :: SquadAdd( CSquadMonster *pAdd )
 // members who don't have current info.
 //
 //=========================================================
-void CSquadMonster :: SquadPasteEnemyInfo ( void )
+void CSquadMonster::SquadPasteEnemyInfo ( void )
 {
 	CSquadMonster *pSquadLeader = MySquadLeader( );
 	if (pSquadLeader)
@@ -268,7 +268,7 @@ void CSquadMonster :: SquadPasteEnemyInfo ( void )
 // so the most recent data is always available here.
 //
 //=========================================================
-void CSquadMonster :: SquadCopyEnemyInfo ( void )
+void CSquadMonster::SquadCopyEnemyInfo ( void )
 {
 	CSquadMonster *pSquadLeader = MySquadLeader( );
 	if (pSquadLeader)
@@ -282,7 +282,7 @@ void CSquadMonster :: SquadCopyEnemyInfo ( void )
 // the same entity.
 //
 //=========================================================
-void CSquadMonster :: SquadMakeEnemy ( CBaseEntity *pEnemy )
+void CSquadMonster::SquadMakeEnemy ( CBaseEntity *pEnemy )
 {
 	if (!InSquad())
 		return;
@@ -340,7 +340,7 @@ void CSquadMonster :: SquadMakeEnemy ( CBaseEntity *pEnemy )
 // callable from leaders & followers
 //
 //=========================================================
-int CSquadMonster :: SquadCount( void )
+int CSquadMonster::SquadCount( void )
 {
 	if (!InSquad())
 		return 0;
@@ -365,7 +365,7 @@ int CSquadMonster :: SquadCount( void )
 //=========================================================
 
 //MODDD - implemented (wasn't before)
-void CSquadMonster :: SquadJoin ( int searchRadius, int maxMembers ){
+void CSquadMonster::SquadJoin ( int searchRadius, int maxMembers ){
 
 	int squadCount;
 	int iMyClass = Classify();// cache this monster's class
@@ -438,7 +438,7 @@ void CSquadMonster :: SquadJoin ( int searchRadius, int maxMembers ){
 			//m_afCapability		= bits_CAP_SQUAD
 			if(pRecruit && pRecruit != this && ((iMyClass != CLASS_ALIEN_MONSTER) || FStrEq(STRING(pev->classname), STRING(pRecruit->pev->classname)) && pRecruit->m_afCapability & bits_CAP_SQUAD && pRecruit->SquadCount() < maxMembers   )    ){
 				canPrintOut = TRUE;
-				EASY_CVAR_PRINTIF_PRE(squadmonsterPrintout, easyForcePrintLine("ATTEMPT JOIN, NO NETNAME: (%d && %d  && %d && (%d || %d) && %d ::: %s, %s : hated? %d  ) ", pRecruit->InSquad(), pRecruit->Classify() == iMyClass, pRecruit->SquadCount() < maxMembers, (iMyClass != CLASS_ALIEN_MONSTER), FStrEq(STRING(pev->classname), STRING(pRecruit->pev->classname)),  FStringNull( pRecruit->pev->netname ), STRING(pev->classname), STRING(pRecruit->pev->classname), pRecruit->isForceHated(this)) );
+				EASY_CVAR_PRINTIF_PRE(squadmonsterPrintout, easyForcePrintLine("ATTEMPT JOIN, NO NETNAME: (%d && %d  && %d && (%d || %d) && %d :::%s, %s : hated? %d  ) ", pRecruit->InSquad(), pRecruit->Classify() == iMyClass, pRecruit->SquadCount() < maxMembers, (iMyClass != CLASS_ALIEN_MONSTER), FStrEq(STRING(pev->classname), STRING(pRecruit->pev->classname)),  FStringNull( pRecruit->pev->netname ), STRING(pev->classname), STRING(pRecruit->pev->classname), pRecruit->isForceHated(this)) );
 			}
 			
 			if ( pRecruit && pRecruit != this && pRecruit->IsAlive() && !pRecruit->m_pCine && pRecruit->m_afCapability & bits_CAP_SQUAD && pRecruit->SquadCount() < maxMembers )
@@ -486,7 +486,7 @@ void CSquadMonster :: SquadJoin ( int searchRadius, int maxMembers ){
 
 
 //MODDD - NOTE.  Copied over to hgrunt and hassault for more specifics over there.
-int CSquadMonster :: SquadRecruit( int searchRadius, int maxMembers )
+int CSquadMonster::SquadRecruit( int searchRadius, int maxMembers )
 {
 	int squadCount;
 	int iMyClass = Classify();// cache this monster's class
@@ -564,7 +564,7 @@ int CSquadMonster :: SquadRecruit( int searchRadius, int maxMembers )
 //=========================================================
 // CheckEnemy
 //=========================================================
-int CSquadMonster :: CheckEnemy ( CBaseEntity *pEnemy )
+int CSquadMonster::CheckEnemy ( CBaseEntity *pEnemy )
 {
 	int iUpdatedLKP;
 
@@ -573,7 +573,7 @@ int CSquadMonster :: CheckEnemy ( CBaseEntity *pEnemy )
 	}
 
 	//MODDD - m_hEnemy -> pEnemy replacement.
-	iUpdatedLKP = CBaseMonster :: CheckEnemy ( pEnemy );
+	iUpdatedLKP = CBaseMonster::CheckEnemy ( pEnemy );
 
 
 	// communicate with squad members about the enemy IF this individual has the same enemy as the squad leader.
@@ -663,11 +663,11 @@ BOOL CSquadMonster::checkLeaderlessSquadByNetname(void){
 //=========================================================
 // StartMonster
 //=========================================================
-void CSquadMonster :: StartMonster( void )
+void CSquadMonster::StartMonster( void )
 {
 	//EASY_CVAR_PRINTIF_PRE(squadmonsterPrintout, easyForcePrintLine("START MONSTER?!"));
 	//pev->spawnflags &= ~ SF_SQUADMONSTER_LEADER;
-	CBaseMonster :: StartMonster();
+	CBaseMonster::StartMonster();
 
 	if ( ( m_afCapability & bits_CAP_SQUAD ) && !InSquad() )
 	{
@@ -683,7 +683,7 @@ void CSquadMonster :: StartMonster( void )
 			//MODDD - do a check.   See if any member has the "SF_SQUADMONSTER_LEADER" flag set.
 			//EASY_CVAR_GET_DEBUGONLY(leaderlessSquadAllowed) == 0
 			// if I have a groupname, I can only recruit if I'm flagged as leader
-			//NOTE::: joining is now possible, but the old behavior is probably okay.
+			//NOTE:::joining is now possible, but the old behavior is probably okay.
 			if ( !possibleExceptionToRule && !( pev->spawnflags & SF_SQUADMONSTER_LEADER ) )
 			{
 				return;
@@ -747,7 +747,7 @@ void CSquadMonster :: StartMonster( void )
 // Builds a large box in front of the grunt and checks to see 
 // if any squad members are in that box. 
 //=========================================================
-BOOL CSquadMonster :: NoFriendlyFire( void )
+BOOL CSquadMonster::NoFriendlyFire( void )
 {
 	if ( !InSquad() )
 	{
@@ -814,7 +814,7 @@ BOOL CSquadMonster :: NoFriendlyFire( void )
 // GetIdealState - surveys the Conditions information available
 // and finds the best new state for a monster.
 //=========================================================
-MONSTERSTATE CSquadMonster :: GetIdealState ( void )
+MONSTERSTATE CSquadMonster::GetIdealState ( void )
 {
 	int iConditions;
 
@@ -832,7 +832,7 @@ MONSTERSTATE CSquadMonster :: GetIdealState ( void )
 		break;
 	}
 
-	return CBaseMonster :: GetIdealState();
+	return CBaseMonster::GetIdealState();
 }
 
 //=========================================================
@@ -840,7 +840,7 @@ MONSTERSTATE CSquadMonster :: GetIdealState ( void )
 // cover location is a good one to move to. (currently based
 // on proximity to others in the squad)
 //=========================================================
-BOOL CSquadMonster :: FValidateCover ( const Vector &vecCoverLocation )
+BOOL CSquadMonster::FValidateCover ( const Vector &vecCoverLocation )
 {
 	if ( !InSquad() )
 	{
@@ -860,7 +860,7 @@ BOOL CSquadMonster :: FValidateCover ( const Vector &vecCoverLocation )
 // SquadEnemySplit- returns TRUE if not all squad members
 // are fighting the same enemy. 
 //=========================================================
-BOOL CSquadMonster :: SquadEnemySplit ( void )
+BOOL CSquadMonster::SquadEnemySplit ( void )
 {
 	if (!InSquad())
 		return FALSE;
@@ -884,7 +884,7 @@ BOOL CSquadMonster :: SquadEnemySplit ( void )
 // cover location is a good one to move to. (currently based
 // on proximity to others in the squad)
 //=========================================================
-BOOL CSquadMonster :: SquadMemberInRange ( const Vector &vecLocation, float flDist )
+BOOL CSquadMonster::SquadMemberInRange ( const Vector &vecLocation, float flDist )
 {
 	if (!InSquad())
 		return FALSE;

@@ -18,7 +18,7 @@
 //=========================================================
 // Plane
 //=========================================================
-CPlane :: CPlane ( void )
+CPlane::CPlane ( void )
 {
 	m_fInitialized = FALSE;
 }
@@ -27,7 +27,7 @@ CPlane :: CPlane ( void )
 // InitializePlane - Takes a normal for the plane and a
 // point on the plane and 
 //=========================================================
-void CPlane :: InitializePlane ( const Vector &vecNormal, const Vector &vecPoint )
+void CPlane::InitializePlane ( const Vector &vecNormal, const Vector &vecPoint )
 {
 	m_vecNormal = vecNormal;
 	m_flDist = DotProduct ( m_vecNormal, vecPoint );
@@ -39,7 +39,7 @@ void CPlane :: InitializePlane ( const Vector &vecNormal, const Vector &vecPoint
 // PointInFront - determines whether the given vector is 
 // in front of the plane. 
 //=========================================================
-BOOL CPlane :: PointInFront ( const Vector &vecPoint )
+BOOL CPlane::PointInFront ( const Vector &vecPoint )
 {
 	float flFace;
 

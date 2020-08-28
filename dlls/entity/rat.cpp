@@ -54,7 +54,7 @@ public:
 // Classify - indicates this monster's place in the 
 // relationship table.
 //=========================================================
-int CRat :: Classify ( void )
+int CRat::Classify ( void )
 {
 	return	CLASS_INSECT;
 }
@@ -63,7 +63,7 @@ int CRat :: Classify ( void )
 // SetYawSpeed - allows each sequence to have a different
 // turn rate associated with it.
 //=========================================================
-void CRat :: SetYawSpeed ( void )
+void CRat::SetYawSpeed ( void )
 {
 	int ys;
 
@@ -86,7 +86,7 @@ CRat::CRat(){
 //=========================================================
 // Spawn
 //=========================================================
-void CRat :: Spawn()
+void CRat::Spawn()
 {
 	Precache( );
 
@@ -110,7 +110,7 @@ void CRat :: Spawn()
 //=========================================================
 // Precache - precaches all resources this monster needs
 //=========================================================
-void CRat :: Precache()
+void CRat::Precache()
 {
 	PRECACHE_MODEL("models/bigrat.mdl");
 }	

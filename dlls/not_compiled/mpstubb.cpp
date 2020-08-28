@@ -29,21 +29,21 @@ float CTalkMonster::g_talkWaitTime = 0;		// time delay until it's ok to speak: u
 
 
 CGraph	WorldGraph;
-void CGraph :: InitGraph( void ) { }
-int CGraph :: FLoadGraph ( char *szMapName ) { return FALSE; }
-int CGraph :: AllocNodes ( void ) { return FALSE; }
-int CGraph :: CheckNODFile ( char *szMapName ) { return FALSE; }
-int CGraph :: FSetGraphPointers ( void ) { return 0; }
-void CGraph :: ShowNodeConnections ( int iNode ) { }
-int CGraph :: FindNearestNode ( const Vector &vecOrigin,  int afNodeTypes ) { return 0; }
+void CGraph::InitGraph( void ) { }
+int CGraph::FLoadGraph ( char *szMapName ) { return FALSE; }
+int CGraph::AllocNodes ( void ) { return FALSE; }
+int CGraph::CheckNODFile ( char *szMapName ) { return FALSE; }
+int CGraph::FSetGraphPointers ( void ) { return 0; }
+void CGraph::ShowNodeConnections ( int iNode ) { }
+int CGraph::FindNearestNode ( const Vector &vecOrigin,  int afNodeTypes ) { return 0; }
 
 
 /*********************************************************/
 
 
-void CBaseMonster :: ReportAIState( void ) { }
-float	CBaseMonster :: ChangeYaw ( int speed ) { return 0; }
-void CBaseMonster :: MakeIdealYaw( Vector vecTarget ) { }
+void CBaseMonster::ReportAIState( void ) { }
+float	CBaseMonster::ChangeYaw ( int speed ) { return 0; }
+void CBaseMonster::MakeIdealYaw( Vector vecTarget ) { }
 
 
 void CBaseMonster::CorpseFallThink( void )
@@ -59,7 +59,7 @@ void CBaseMonster::CorpseFallThink( void )
 		pev->nextthink = gpGlobals->time + 0.1;
 }
 // Call after animation/pose is set up
-void CBaseMonster :: MonsterInitDead( void )
+void CBaseMonster::MonsterInitDead( void )
 {
 	InitBoneControllers();
 
@@ -84,17 +84,17 @@ void CBaseMonster :: MonsterInitDead( void )
 }
 
 
-BOOL	CBaseMonster :: ShouldFadeOnDeath( void ) 
+BOOL	CBaseMonster::ShouldFadeOnDeath( void ) 
 { 
 	return FALSE; 
 }
 
-BOOL	CBaseMonster :: FCheckAITrigger ( void ) 
+BOOL	CBaseMonster::FCheckAITrigger ( void ) 
 { 
 	return FALSE; 
 }
 
-void CBaseMonster :: KeyValue( KeyValueData *pkvd ) 
+void CBaseMonster::KeyValue( KeyValueData *pkvd ) 
 {  
 	CBaseToggle::KeyValue( pkvd ); 
 }
@@ -136,7 +136,7 @@ int CBaseMonster::IRelationship ( CBaseEntity *pTarget )
 //
 //=========================================================
 //MODDD - why am I bothering with this? iDistance to flDistance again.
-void CBaseMonster :: Look ( float flDistance )
+void CBaseMonster::Look ( float flDistance )
 {
 	int iSighted = 0;
 
@@ -216,7 +216,7 @@ void CBaseMonster :: Look ( float flDistance )
 // !!!UNDONE - currently, this only returns the closest enemy.
 // we'll want to consider distance, relationship, attack types, back turned, etc.
 //=========================================================
-CBaseEntity *CBaseMonster :: BestVisibleEnemy ( void )
+CBaseEntity *CBaseMonster::BestVisibleEnemy ( void )
 {
 	CBaseEntity	*pReturn;
 	CBaseEntity	*pNextEnt;

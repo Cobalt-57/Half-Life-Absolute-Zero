@@ -33,7 +33,7 @@ EASY_CVAR_EXTERN_DEBUGONLY(crazyMonsterPrintouts)
 //=========================================================
 // SetState
 //=========================================================
-void CBaseMonster :: SetState ( MONSTERSTATE State )
+void CBaseMonster::SetState ( MONSTERSTATE State )
 {
 /*
 	if ( State != m_MonsterState )
@@ -88,7 +88,7 @@ void CBaseMonster :: SetState ( MONSTERSTATE State )
 //=========================================================
 // RunAI
 //=========================================================
-void CBaseMonster :: RunAI ( void )
+void CBaseMonster::RunAI ( void )
 {
 
 
@@ -250,7 +250,7 @@ void CBaseMonster :: RunAI ( void )
 //=========================================================
 // MODDD - now that schedule.cpp's MaintainSchedule uses the returned result of this call (go figure),
 // no need to set 'm_IdealMonsterState' to whatever is about to be returned.
-MONSTERSTATE CBaseMonster :: GetIdealState ( void )
+MONSTERSTATE CBaseMonster::GetIdealState ( void )
 {
 	int iConditions;
 	iConditions = IScheduleFlags();

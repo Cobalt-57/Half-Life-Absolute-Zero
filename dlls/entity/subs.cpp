@@ -38,7 +38,7 @@ extern DLL_GLOBAL int g_iSkillLevel;
 
 
 // Landmark class
-void CPointEntity :: Spawn( void )
+void CPointEntity::Spawn( void )
 {
 	pev->solid = SOLID_NOT;
 //	UTIL_SetSize(pev, g_vecZero, g_vecZero);
@@ -66,7 +66,7 @@ CNullEntity::CNullEntity(){
 
 
 // Null Entity, remove on startup
-void CNullEntity :: Spawn( void )
+void CNullEntity::Spawn( void )
 {
 	REMOVE_ENTITY(ENT(pev));
 }
@@ -130,7 +130,7 @@ void CBaseEntity::UpdateOnRemove( void )
 }
 
 // Convenient way to delay removing oneself
-void CBaseEntity :: SUB_Remove( void )
+void CBaseEntity::SUB_Remove( void )
 {
 	UpdateOnRemove();
 	if (pev->health > 0)
@@ -145,7 +145,7 @@ void CBaseEntity :: SUB_Remove( void )
 
 
 // Convenient way to explicitly do nothing (passed to functions that require a method)
-void CBaseEntity :: SUB_DoNothing( void )
+void CBaseEntity::SUB_DoNothing( void )
 {
 }
 
@@ -164,7 +164,7 @@ void CBaseDelay::PostRestore(){
 }
 
 
-void CBaseDelay :: KeyValue( KeyValueData *pkvd )
+void CBaseDelay::KeyValue( KeyValueData *pkvd )
 {
 	if (FStrEq(pkvd->szKeyName, "delay"))
 	{
@@ -198,7 +198,7 @@ match (string)self.target and call their .use function (if they have one)
 
 ==============================
 */
-void CBaseEntity :: SUB_UseTargets( CBaseEntity *pActivator, USE_TYPE useType, float value )
+void CBaseEntity::SUB_UseTargets( CBaseEntity *pActivator, USE_TYPE useType, float value )
 {
 
 	//
@@ -282,7 +282,7 @@ void FireTargetsTest( const char *targetName, CBaseEntity *pActivator, CBaseEnti
 LINK_ENTITY_TO_CLASS( DelayedUse, CBaseDelay );
 
 
-void CBaseDelay :: SUB_UseTargets( CBaseEntity *pActivator, USE_TYPE useType, float value )
+void CBaseDelay::SUB_UseTargets( CBaseEntity *pActivator, USE_TYPE useType, float value )
 {
 	//
 	// exit immediatly if we don't have a target or kill target
@@ -355,7 +355,7 @@ void CBaseDelay :: SUB_UseTargets( CBaseEntity *pActivator, USE_TYPE useType, fl
 
 
 /*
-void CBaseDelay :: SUB_UseTargetsEntMethod( void )
+void CBaseDelay::SUB_UseTargetsEntMethod( void )
 {
 	SUB_UseTargets(pev);
 }
@@ -441,7 +441,7 @@ calculate pev->velocity and pev->nextthink to reach vecDest from
 pev->origin traveling at flSpeed
 ===============
 */
-void CBaseToggle ::  LinearMove( Vector	vecDest, float flSpeed )
+void CBaseToggle::LinearMove( Vector	vecDest, float flSpeed )
 {
 	ASSERTSZ(flSpeed != 0, "LinearMove:  no speed is defined!");
 //	ASSERTSZ(m_pfnCallWhenMoveDone != NULL, "LinearMove: no post-move function defined");
@@ -475,7 +475,7 @@ void CBaseToggle ::  LinearMove( Vector	vecDest, float flSpeed )
 After moving, set origin to exact final destination, call "move done" function
 ============
 */
-void CBaseToggle :: LinearMoveDone( void )
+void CBaseToggle::LinearMoveDone( void )
 {
 	UTIL_SetOrigin(pev, m_vecFinalDest);
 	pev->velocity = g_vecZero;
@@ -484,7 +484,7 @@ void CBaseToggle :: LinearMoveDone( void )
 		(this->*m_pfnCallWhenMoveDone)();
 }
 
-BOOL CBaseToggle :: IsLockedByMaster( void )
+BOOL CBaseToggle::IsLockedByMaster( void )
 {
 	if (m_sMaster && !UTIL_IsMasterTriggered(m_sMaster, m_hActivator))
 		return TRUE;
@@ -501,7 +501,7 @@ pev->origin traveling at flSpeed
 Just like LinearMove, but rotational.
 ===============
 */
-void CBaseToggle :: AngularMove( Vector vecDestAngle, float flSpeed )
+void CBaseToggle::AngularMove( Vector vecDestAngle, float flSpeed )
 {
 	ASSERTSZ(flSpeed != 0, "AngularMove:  no speed is defined!");
 //	ASSERTSZ(m_pfnCallWhenMoveDone != NULL, "AngularMove: no post-move function defined");
@@ -535,7 +535,7 @@ void CBaseToggle :: AngularMove( Vector vecDestAngle, float flSpeed )
 After rotating, set angle to exact final angle, call "move done" function
 ============
 */
-void CBaseToggle :: AngularMoveDone( void )
+void CBaseToggle::AngularMoveDone( void )
 {
 	pev->angles = m_vecFinalAngle;
 	pev->avelocity = g_vecZero;
@@ -545,7 +545,7 @@ void CBaseToggle :: AngularMoveDone( void )
 }
 
 
-float CBaseToggle :: AxisValue( int flags, const Vector &angles )
+float CBaseToggle::AxisValue( int flags, const Vector &angles )
 {
 	if ( FBitSet(flags, SF_DOOR_ROTATE_Z) )
 		return angles.z;
@@ -556,7 +556,7 @@ float CBaseToggle :: AxisValue( int flags, const Vector &angles )
 }
 
 
-void CBaseToggle :: AxisDir( entvars_t *pev )
+void CBaseToggle::AxisDir( entvars_t *pev )
 {
 	if ( FBitSet(pev->spawnflags, SF_DOOR_ROTATE_Z) )
 		pev->movedir = Vector ( 0, 0, 1 );	// around z-axis
@@ -567,7 +567,7 @@ void CBaseToggle :: AxisDir( entvars_t *pev )
 }
 
 
-float CBaseToggle :: AxisDelta( int flags, const Vector &angle1, const Vector &angle2 )
+float CBaseToggle::AxisDelta( int flags, const Vector &angle1, const Vector &angle2 )
 {
 	if ( FBitSet (flags, SF_DOOR_ROTATE_Z) )
 		return angle1.z - angle2.z;

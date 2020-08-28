@@ -11,7 +11,7 @@ CControllerZapBall::CControllerZapBall(void){
 
 }
 
-void CControllerZapBall :: Spawn( void )
+void CControllerZapBall::Spawn( void )
 {
 	Precache( );
 	// motor
@@ -38,7 +38,7 @@ void CControllerZapBall :: Spawn( void )
 }
 
 extern int global_useSentenceSave;
-void CControllerZapBall :: Precache( void )
+void CControllerZapBall::Precache( void )
 {
 	PRECACHE_MODEL("sprites/xspark4.spr");
 	//NOTE: uh, sounds found marked-out?  whatever, surrounding anyways.
@@ -56,7 +56,7 @@ BOOL CControllerZapBall::usesSegmentedMove(void){
 }
 
 
-void CControllerZapBall :: AnimateThink( void  )
+void CControllerZapBall::AnimateThink( void  )
 {
 	pev->nextthink = gpGlobals->time + 0.1;
 	

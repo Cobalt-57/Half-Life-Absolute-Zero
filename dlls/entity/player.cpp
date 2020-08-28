@@ -366,7 +366,9 @@ TYPEDESCRIPTION	CBasePlayer::m_playerSaveData[] =
 	DEFINE_ARRAY(CBasePlayer, m_rgflSuitNoRepeatTime, FIELD_TIME, CSUITNOREPEAT),
 
 
-	DEFINE_FIELD(CBasePlayer, m_lastDamageAmount, FIELD_INTEGER),
+	//MODDD - no longer only for the player.  The var was not even used outside the 
+	// TakeDamage method in as-is anyway.
+	//DEFINE_FIELD(CBasePlayer, m_lastDamageAmount, FIELD_INTEGER),
 
 	DEFINE_ARRAY(CBasePlayer, m_rgpPlayerItems, FIELD_CLASSPTR, MAX_ITEM_TYPES),
 	DEFINE_FIELD(CBasePlayer, m_pActiveItem, FIELD_CLASSPTR),
@@ -479,7 +481,7 @@ inline void CBasePlayer::resetLongJumpCharge(){
 
 //NOTICE - this is the default "PainSound" method that any Monster has.  It is called by the base monster class's TakeDamage method.
 //Below, PainChance is custom and new for the player, and can only be called by the Player in here.
-void CBasePlayer :: PainSound( void )
+void CBasePlayer::PainSound( void )
 {
 	float flRndSound;//sound randomizer
 
@@ -502,7 +504,7 @@ void CBasePlayer :: PainSound( void )
 
 
 //A chance of 3 / 5 to play pain, 2 / 5 nothing.  Spotted across the script, condensed here for ease of (re)use.
-void CBasePlayer :: PainChance( void )
+void CBasePlayer::PainChance( void )
 {
 
 	//disallow making noise if this CVar is on.
@@ -606,13 +608,13 @@ int TrainSpeed(int iSpeed, int iMax)
 }
 
 //MODDD - DeathSound method that takes no 
-void CBasePlayer :: DeathSound( void ){
+void CBasePlayer::DeathSound( void ){
 	//assume a revive is not planned.
 	DeathSound(FALSE);
 }
 
 
-void CBasePlayer :: DeathSound( BOOL plannedRevive )
+void CBasePlayer::DeathSound( BOOL plannedRevive )
 {
 	// water death sounds
 	if (pev->waterlevel == 3)
@@ -679,9 +681,9 @@ void CBasePlayer :: DeathSound( BOOL plannedRevive )
 
 
 // PARANOIA:  Dummy these methods, player revive logic does not involve this!
-void CBasePlayer::startReanimation() {
+void CBasePlayer::StartReanimation() {
 }
-void CBasePlayer::EndOfRevive(int preReviveSequence) {
+void CBasePlayer::StartReanimationPost(int preReviveSequence) {
 }
 
 // Convenient for cheat methods to revive the player if a cheat is used while the player is dead.
@@ -724,13 +726,13 @@ void CBasePlayer::declareRevivelessDead(void) {
 
 // override takehealth
 // bitsDamageType indicates type of damage healed. 
-int CBasePlayer :: TakeHealth( float flHealth, int bitsDamageType )
+int CBasePlayer::TakeHealth( float flHealth, int bitsDamageType )
 {
-	return CBaseMonster :: TakeHealth (flHealth, bitsDamageType);
+	return CBaseMonster::TakeHealth (flHealth, bitsDamageType);
 
 }
 
-Vector CBasePlayer :: GetGunPosition( )
+Vector CBasePlayer::GetGunPosition( )
 {
 //	UTIL_MakeVectors(pev->v_angle);
 //	m_HackedGunPos = pev->view_ofs;
@@ -951,7 +953,6 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBasePlayer)
 	
 
 
-	
 
 	if ((bitsDamageTypeMod & (DMG_MAP_TRIGGER)) && flDamage >= 5) {
 		recentMajorTriggerDamage = 7;
@@ -1030,7 +1031,7 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBasePlayer)
 	}
 
 	// keep track of amount of damage last sustained
-	m_lastDamageAmount = flDamage;
+	float rawDamageThisFrame = flDamage;
 
 	// Armor. 
 	//MODDD - new if-then includes the possibility of marked "DMG_TIMEBASED" (the whole mask being used, not just one piece) ignoring damage or not.
@@ -1143,8 +1144,8 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBasePlayer)
 
 	// how bad is it, doc?
 
-	ftrivial = (pev->health > 75 || m_lastDamageAmount < 5);
-	fmajor = (m_lastDamageAmount > 25);
+	ftrivial = (pev->health > 75 || rawDamageThisFrame < 5);
+	fmajor = (rawDamageThisFrame > 25);
 	fcritical = (pev->health < 30);
 
 	// handle all bits set in this damage message,
@@ -1258,7 +1259,7 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBasePlayer)
 		if (bitsDamage & DMG_BULLET)
 		{
 			if(!blockTimedDamageUpdates){
-				if (m_lastDamageAmount > 5)
+				if (rawDamageThisFrame > 5)
 					SetSuitUpdate("!HEV_DMG6", FALSE, SUIT_NEXT_IN_30SEC, 3.9f);	// blood loss detected
 				else{
 					//MODDDREMOVE - ?
@@ -1397,7 +1398,7 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBasePlayer)
 		//a feedback loop of permanent duration resetting).  That type has been changed to "DMG_TIMEDEFFECT" for differentiating for
 		//the "timed damage ignores armor" cvar.   TEST WITHOUT THE "DMG_TIMEBASED" IN THERE BELOW.
 		//if (fTookDamage && (bitsDamageType & DMG_TIMEBASED) && flHealthPrev < 75)
-		//NOTICE::: Problem solved.  Apparently,  "DMG_GENERIC" WAS under the mask of "DMG_TIMEBASED".  So, it counted.
+		//NOTICE:::Problem solved.  Apparently,  "DMG_GENERIC" WAS under the mask of "DMG_TIMEBASED".  So, it counted.
 		//Must count "DMG_TIMEDEFFECT" under the new mask to match this.
 
 		//easyPrintLine("RANDO STATUS %d %d %d    %d ", bitsDamageTypeMod, DMG_TIMEBASEDMOD, bitsDamageTypeMod & DMG_TIMEBASEDMOD,    bitsDamageType & DMG_TIMEBASED  );
@@ -4458,7 +4459,7 @@ int CBasePlayer::getGeigerChannel(){
 }
 
 
-void CBasePlayer :: UpdateGeigerCounter( void )
+void CBasePlayer::UpdateGeigerCounter( void )
 {
 	//only the server is calling this.
 	
@@ -5539,13 +5540,13 @@ CheckPowerups(entvars_t *pev)
 // UpdatePlayerSound - updates the position of the player's
 // reserved sound slot in the sound list.
 //=========================================================
-void CBasePlayer :: UpdatePlayerSound ( void )
+void CBasePlayer::UpdatePlayerSound ( void )
 {
 	int iBodyVolume;
 	int iVolume;
 	CSound *pSound;
 
-	pSound = CSoundEnt::SoundPointerForIndex( CSoundEnt :: ClientSoundIndex( edict() ) );
+	pSound = CSoundEnt::SoundPointerForIndex( CSoundEnt::ClientSoundIndex( edict() ) );
 
 	if ( !pSound )
 	{
@@ -5670,6 +5671,17 @@ void CBasePlayer::PostThink()
 
 	if (g_mapLoadedEver && queueFirstAppearanceMessageSend) {
 		queueFirstAppearanceMessageSend = FALSE;
+
+		/*
+		UTIL_StopSound( edict(), CHAN_AUTO, "hgrunt/gr_pain2.wav", TRUE);
+		UTIL_StopSound( edict(), CHAN_WEAPON, "hgrunt/gr_pain2.wav", TRUE);
+		UTIL_StopSound( edict(), CHAN_VOICE, "hgrunt/gr_pain2.wav", TRUE);
+		UTIL_StopSound( edict(), CHAN_ITEM, "hgrunt/gr_pain2.wav", TRUE);
+		UTIL_StopSound( edict(), CHAN_BODY, "hgrunt/gr_pain2.wav", TRUE);
+		UTIL_StopSound( edict(), CHAN_STREAM, "hgrunt/gr_pain2.wav", TRUE);
+		UTIL_StopSound( edict(), CHAN_STATIC, "hgrunt/gr_pain2.wav", TRUE);
+		UTIL_EmitAmbientSound(edict(), pev->origin, "hgrunt/gr_pain2.wav", 0, 0, SND_STOP, PITCH_NORM, TRUE);
+		*/
 
 		easyPrintLineClient(this->edict(), "PLAYER: OnFirstAppearance, sent first message");
 		
@@ -6292,7 +6304,7 @@ void CBasePlayer::commonReset(void){
 	batterySayPhase = -1;
 	obligedCustomSentence = 0;  //reset.
 
-	//NOTICE::: for now, obligedCustomSentence will be reset when loading or entering a new place.
+	//NOTICE:::for now, obligedCustomSentence will be reset when loading or entering a new place.
 	//It doesn't need to be in use for long, and most messages interrupted aren't that important.
 	obligedCustomSentence = 0;
 
@@ -6821,7 +6833,7 @@ void CBasePlayer::Activate(void){
 	CBaseMonster::Activate();
 }
 
-void CBasePlayer :: Precache( void )
+void CBasePlayer::Precache( void )
 {
 	// in the event that the player JUST spawned, and the level node graph
 	// was loaded, fix all of the node graph pointers before the game starts.
@@ -6849,9 +6861,9 @@ void CBasePlayer :: Precache( void )
 	//m_flgeigerRange = 1000;
 	//m_igeigerRangePrev = 1000;   //Moved to common reset.  Seems safe.
 
-	//MODDD - NOTE::: only done on spawn now.  Damages should be remembered between maps.
+	//MODDD - NOTE:::only done on spawn now.  Damages should be remembered between maps.
 	// Although this was probably harmless as timed damages are committed to other arrays right in TakeDamage?   huh.
-	//m_bitsDamageType = 0;  //NOTE::: should this be done in common reset too?
+	//m_bitsDamageType = 0;  //NOTE:::should this be done in common reset too?
 	//m_bitsDamageTypeMod = 0;
 
 	//m_bitsHUDDamage = -1;  done in commonreset.
@@ -6912,6 +6924,12 @@ int CBasePlayer::Restore( CRestore &restore )
 	//     "SZ_GetSpace:  Tried to write to an uninitialized sizebuf_t: ???"
 	// So that's <pretty> great.
 
+
+	// TEST?
+	//UTIL_StopSound( edict(), CHAN_WEAPON, "garg/gar_stomp1.wav", TRUE);
+	//UTIL_StopSound( edict(), CHAN_WEAPON, "hgrunt/gr_pain2.wav", TRUE);
+
+	
 
 	easyPrintLine("***Player Restored");
 	OnFirstAppearance();
@@ -7612,7 +7630,7 @@ edict_t* CBasePlayer::GiveNamedItem( const char *pszName, int pszSpawnFlags, con
 	}//END OF if(<stukabat spawned>)
 	*/
 
-	//easyPrintLine("DAHHH %s ::: %.2f", STRING(pent->v.classname), extraOffset);
+	//easyPrintLine("DAHHH %s :::%.2f", STRING(pent->v.classname), extraOffset);
 
 	pentpev = VARS( pent );
 	
@@ -7723,12 +7741,12 @@ edict_t* CBasePlayer::GiveNamedItem( const char *pszName, int pszSpawnFlags, con
 
 //MODDD - "findEntityForward" has been moved to util.cpp.
 
-BOOL CBasePlayer :: FlashlightIsOn( void )
+BOOL CBasePlayer::FlashlightIsOn( void )
 {
 	return FBitSet(pev->effects, EF_DIMLIGHT);
 }
 
-void CBasePlayer :: FlashlightTurnOn( void )
+void CBasePlayer::FlashlightTurnOn( void )
 {
 	if ( !g_pGameRules->FAllowFlashlight() )
 	{
@@ -7752,7 +7770,7 @@ void CBasePlayer :: FlashlightTurnOn( void )
 }
 
 
-void CBasePlayer :: FlashlightTurnOff( void )
+void CBasePlayer::FlashlightTurnOff( void )
 {
 	//MODDD - channel changed from "CHAN_WEAPON" to "CHAN_STREAM".
 	//MODDD - soundsentencesave
@@ -7776,7 +7794,7 @@ so that the client side .dll can behave correctly.
 Reset stuff so that the state is transmitted.
 ===============
 */
-void CBasePlayer :: ForceClientDllUpdate( void )
+void CBasePlayer::ForceClientDllUpdate( void )
 {
 
 	m_iClientHealth  = -1;
@@ -8288,7 +8306,7 @@ int CBasePlayer::RemovePlayerItem( CBasePlayerItem *pItem )
 //
 // Returns the unique ID for the ammo, or -1 if error
 //
-int CBasePlayer :: GiveAmmo( int iCount, const char* szName, int iMax )
+int CBasePlayer::GiveAmmo( int iCount, const char* szName, int iMax )
 {
 	if ( !szName )
 	{
@@ -8554,7 +8572,7 @@ ForceClientDllUpdate to ensure the demo gets messages
 reflecting all of the HUD state info.
 =========================================================
 */
-void CBasePlayer :: UpdateClientData( void )
+void CBasePlayer::UpdateClientData( void )
 {
 
 	if(this->superDuperDelay == -2){
@@ -9171,7 +9189,7 @@ void CBasePlayer :: UpdateClientData( void )
 // FBecomeProne - Overridden for the player to set the proper
 // physics flags when a barnacle grabs player.
 //=========================================================
-BOOL CBasePlayer :: FBecomeProne ( void )
+BOOL CBasePlayer::FBecomeProne ( void )
 {
 	//MODDD - how convenient!  The red carpet's rolled out all for me.
 	this->grabbedByBarnacle = TRUE;
@@ -9190,7 +9208,7 @@ BOOL CBasePlayer :: FBecomeProne ( void )
 // by Barnacle victims when the barnacle pulls their head
 // into its mouth. For the player, just die.
 //=========================================================
-void CBasePlayer :: BarnacleVictimBitten ( entvars_t *pevBarnacle )
+void CBasePlayer::BarnacleVictimBitten ( entvars_t *pevBarnacle )
 {
 	TakeDamage ( pevBarnacle, pevBarnacle, pev->health + pev->armorvalue, DMG_SLASH | DMG_ALWAYSGIB );
 }
@@ -9199,7 +9217,7 @@ void CBasePlayer :: BarnacleVictimBitten ( entvars_t *pevBarnacle )
 // BarnacleVictimReleased - overridden for player who has
 // physics flags concerns. 
 //=========================================================
-void CBasePlayer :: BarnacleVictimReleased ( void )
+void CBasePlayer::BarnacleVictimReleased ( void )
 {
 	//MODDD - same!
 	this->grabbedByBarnacle = FALSE;
@@ -9217,7 +9235,7 @@ void CBasePlayer :: BarnacleVictimReleased ( void )
 // Illumination 
 // return player light level plus virtual muzzle flash
 //=========================================================
-int CBasePlayer :: Illumination( void )
+int CBasePlayer::Illumination( void )
 {
 	int iIllum = CBaseEntity::Illumination( );
 
@@ -9228,7 +9246,7 @@ int CBasePlayer :: Illumination( void )
 }
 
 
-void CBasePlayer :: EnableControl(BOOL fControl)
+void CBasePlayer::EnableControl(BOOL fControl)
 {
 	if (!fControl)
 		pev->flags |= FL_FROZEN;
@@ -9242,7 +9260,7 @@ void CBasePlayer :: EnableControl(BOOL fControl)
 // Autoaim
 // set crosshair position to point to enemey
 //=========================================================
-Vector CBasePlayer :: GetAutoaimVector( float flDelta )
+Vector CBasePlayer::GetAutoaimVector( float flDelta )
 {
 	//MODDD - NEW!  Also allow 'sv_aim' of 0 to stop this
 	if (g_psv_aim->value == 0 || g_iSkillLevel == SKILL_HARD)
@@ -9325,7 +9343,7 @@ Vector CBasePlayer :: GetAutoaimVector( float flDelta )
 }
 
 
-Vector CBasePlayer :: AutoaimDeflection( Vector &vecSrc, float flDist, float flDelta  )
+Vector CBasePlayer::AutoaimDeflection( Vector &vecSrc, float flDist, float flDelta  )
 {
 	edict_t		*pEdict = g_engfuncs.pfnPEntityOfEntIndex( 1 );
 	CBaseEntity	*pEntity;
@@ -9449,7 +9467,7 @@ Vector CBasePlayer :: AutoaimDeflection( Vector &vecSrc, float flDist, float flD
 }
 
 
-void CBasePlayer :: ResetAutoaim( )
+void CBasePlayer::ResetAutoaim( )
 {
 	if (m_vecAutoAim.x != 0 || m_vecAutoAim.y != 0)
 	{
@@ -9467,7 +9485,7 @@ SetCustomDecalFrames
   Note:  -1 means no custom frames present.
 =============
 */
-void CBasePlayer :: SetCustomDecalFrames( int nFrames )
+void CBasePlayer::SetCustomDecalFrames( int nFrames )
 {
 	if (nFrames > 0 &&
 		nFrames < 8)
@@ -9483,7 +9501,7 @@ GetCustomDecalFrames
   Returns the # of custom frames this player's custom clan logo contains.
 =============
 */
-int CBasePlayer :: GetCustomDecalFrames( void )
+int CBasePlayer::GetCustomDecalFrames( void )
 {
 	return m_nCustomSprayFrames;
 }
@@ -9783,7 +9801,7 @@ CBasePlayerItem* CBasePlayer::FindNamedPlayerItem(const char *pszItemName){
 //MODDD - as-is method, modified to work with holstering.
 // This is called on the player weapon being forced to something else by event, most likely (if not only)
 // picking up a new weapon that wants to deploy.
-BOOL CBasePlayer :: SwitchWeapon( CBasePlayerItem *pWeapon ) 
+BOOL CBasePlayer::SwitchWeapon( CBasePlayerItem *pWeapon ) 
 {
 	// old contents of method, now supports holstering
 	/*
@@ -9963,7 +9981,7 @@ LINK_ENTITY_TO_CLASS( monster_hevsuit_dead, CDeadHEV );
 //=========================================================
 // ********** DeadHEV SPAWN **********
 //=========================================================
-void CDeadHEV :: Spawn( void )
+void CDeadHEV::Spawn( void )
 {
 	PRECACHE_MODEL("models/player.mdl");
 	SET_MODEL(ENT(pev), "models/player.mdl");
@@ -10000,7 +10018,7 @@ private:
 
 LINK_ENTITY_TO_CLASS( player_weaponstrip, CStripWeapons );
 
-void CStripWeapons :: Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
+void CStripWeapons::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
 {
 	CBasePlayer *pPlayer = NULL;
 
@@ -10057,7 +10075,7 @@ TYPEDESCRIPTION	CRevertSaved::m_SaveData[] =
 
 IMPLEMENT_SAVERESTORE( CRevertSaved, CPointEntity );
 
-void CRevertSaved :: KeyValue( KeyValueData *pkvd )
+void CRevertSaved::KeyValue( KeyValueData *pkvd )
 {
 	if (FStrEq(pkvd->szKeyName, "duration"))
 	{
@@ -10083,7 +10101,7 @@ void CRevertSaved :: KeyValue( KeyValueData *pkvd )
 		CPointEntity::KeyValue( pkvd );
 }
 
-void CRevertSaved :: Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
+void CRevertSaved::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
 {
 	UTIL_ScreenFadeAll( pev->rendercolor, Duration(), HoldTime(), pev->renderamt, FFADE_OUT );
 	pev->nextthink = gpGlobals->time + MessageTime();
@@ -10091,7 +10109,7 @@ void CRevertSaved :: Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYP
 }
 
 
-void CRevertSaved :: MessageThink( void )
+void CRevertSaved::MessageThink( void )
 {
 	UTIL_ShowMessageAll( STRING(pev->message) );
 	float nextThink = LoadTime() - MessageTime();
@@ -10105,7 +10123,7 @@ void CRevertSaved :: MessageThink( void )
 }
 
 
-void CRevertSaved :: LoadThink( void )
+void CRevertSaved::LoadThink( void )
 {
 	if ( !gpGlobals->deathmatch )
 	{
@@ -10136,7 +10154,7 @@ public:
 //         In short, null.mdl is no longer required.
 LINK_ENTITY_TO_CLASS( player_marker, CPlayerMarker );
 
-void CPlayerMarker :: Spawn( void )
+void CPlayerMarker::Spawn( void )
 {
 	Precache();
 	//SET_MODEL( ENT(pev), "models/null.mdl" );
@@ -10152,7 +10170,7 @@ void CPlayerMarker :: Spawn( void )
 }
 
 
-void CPlayerMarker :: Precache( void )
+void CPlayerMarker::Precache( void )
 {
 	//PRECACHE_MODEL( "models/null.mdl" );
 }

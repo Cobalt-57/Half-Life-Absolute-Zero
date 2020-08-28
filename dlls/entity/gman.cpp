@@ -79,7 +79,7 @@ IMPLEMENT_SAVERESTORE( CGMan, CBaseMonster );
 // Classify - indicates this monster's place in the 
 // relationship table.
 //=========================================================
-int CGMan :: Classify ( void )
+int CGMan::Classify ( void )
 {
 	return	CLASS_NONE;
 }
@@ -88,7 +88,7 @@ int CGMan :: Classify ( void )
 // SetYawSpeed - allows each sequence to have a different
 // turn rate associated with it.
 //=========================================================
-void CGMan :: SetYawSpeed ( void )
+void CGMan::SetYawSpeed ( void )
 {
 	int ys;
 
@@ -106,7 +106,7 @@ void CGMan :: SetYawSpeed ( void )
 // HandleAnimEvent - catches the monster-specific messages
 // that occur when tagged animation frames are played.
 //=========================================================
-void CGMan :: HandleAnimEvent( MonsterEvent_t *pEvent )
+void CGMan::HandleAnimEvent( MonsterEvent_t *pEvent )
 {
 	switch( pEvent->event )
 	{
@@ -120,7 +120,7 @@ void CGMan :: HandleAnimEvent( MonsterEvent_t *pEvent )
 //=========================================================
 // ISoundMask - generic monster can't hear.
 //=========================================================
-int CGMan :: ISoundMask ( void )
+int CGMan::ISoundMask ( void )
 {
 	return	NULL;
 }
@@ -132,7 +132,7 @@ CGMan::CGMan(){
 //=========================================================
 // Spawn
 //=========================================================
-void CGMan :: Spawn()
+void CGMan::Spawn()
 {
 	Precache();
 
@@ -155,7 +155,7 @@ void CGMan :: Spawn()
 //=========================================================
 // Precache - precaches all resources this monster needs
 //=========================================================
-void CGMan :: Precache()
+void CGMan::Precache()
 {
 	PRECACHE_MODEL( "models/gman.mdl" );
 }	
@@ -166,7 +166,7 @@ void CGMan :: Precache()
 //=========================================================
 
 
-void CGMan :: StartTask( Task_t *pTask )
+void CGMan::StartTask( Task_t *pTask )
 {
 	switch( pTask->iTask )
 	{
@@ -180,7 +180,7 @@ void CGMan :: StartTask( Task_t *pTask )
 	CBaseMonster::StartTask( pTask );
 }
 
-void CGMan :: RunTask( Task_t *pTask )
+void CGMan::RunTask( Task_t *pTask )
 {
 	switch( pTask->iTask )
 	{

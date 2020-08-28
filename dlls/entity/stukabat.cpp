@@ -750,7 +750,7 @@ int CStukaBat::Restore( CRestore &restore )
 // Classify - indicates this monster's place in the 
 // relationship table.
 //=========================================================
-int CStukaBat :: Classify ( void )
+int CStukaBat::Classify ( void )
 {
 	//would something more animal-related, like "prey" or "monster" make more sense here?
 	//return CLASS_ALIEN_MILITARY;
@@ -771,7 +771,7 @@ int CStukaBat :: Classify ( void )
 // turn rate associated with it.
 //=========================================================
 //(for better or worse, Controller's SetYawSpeed method came almost blank too).
-void CStukaBat :: SetYawSpeed ( void )
+void CStukaBat::SetYawSpeed ( void )
 {
 	int ys;
 
@@ -919,7 +919,7 @@ GENERATE_KILLED_IMPLEMENTATION(CStukaBat)
 GENERATE_GIBMONSTER_IMPLEMENTATION_ROUTETOPARENT(CStukaBat, CSquadMonster)
 
 
-void CStukaBat :: PainSound( void )
+void CStukaBat::PainSound( void )
 {
 	if(EASY_CVAR_GET_DEBUGONLY(shutupstuka) != 1){
 		//NOTE: lifted from "Controller".  Is a 1/3 chance of pain okay?
@@ -950,7 +950,7 @@ void CStukaBat::tryDetachFromCeiling(void){
 
 
 
-void CStukaBat :: MakeIdealYaw( Vector vecTarget )
+void CStukaBat::MakeIdealYaw( Vector vecTarget )
 {
 	
 	CSquadMonster::MakeIdealYaw(vecTarget);
@@ -1012,7 +1012,7 @@ float CStukaBat::ChangeYaw ( int yawSpeed )
 
 
 
-void CStukaBat :: ForceMakeIdealYaw( Vector vecTarget )
+void CStukaBat::ForceMakeIdealYaw( Vector vecTarget )
 {
 	
 	CSquadMonster::MakeIdealYaw(vecTarget);
@@ -1032,7 +1032,7 @@ float CStukaBat::ForceChangeYaw ( int yawSpeed )
 //NOTE: should hgrunts / hassaults also have methods similar to "callforelp" (alert nearby AI of
 //the presence of a thread) so that they alert both hgrunts and hassaults nearby, not just those
 //of their exact own class (if it works by using "netname" like this)?
-void CStukaBat :: CallForHelp( char *szClassname, float flDist, EHANDLE hEnemy, Vector &vecLocation )
+void CStukaBat::CallForHelp( char *szClassname, float flDist, EHANDLE hEnemy, Vector &vecLocation )
 {
 	
 	if ( (!snappedToCeiling  ) ){
@@ -1081,7 +1081,7 @@ void CStukaBat :: CallForHelp( char *szClassname, float flDist, EHANDLE hEnemy, 
 
 
 
-void CStukaBat :: AlertSound( void )
+void CStukaBat::AlertSound( void )
 {
 	//EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyPrintLine("YOU SNEEKY errr!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! %d", m_hEnemy==NULL) );
 	if ( m_hEnemy != NULL )
@@ -1096,21 +1096,21 @@ void CStukaBat :: AlertSound( void )
 	}
 }
 
-void CStukaBat :: IdleSound( void )
+void CStukaBat::IdleSound( void )
 {
 	if(EASY_CVAR_GET_DEBUGONLY(shutupstuka) != 1){
 	EMIT_SOUND_ARRAY_STUKA_FILTERED( CHAN_VOICE, pIdleSounds ); 
 	}
 }
 
-void CStukaBat :: AttackSound( void )
+void CStukaBat::AttackSound( void )
 {
 	if(EASY_CVAR_GET_DEBUGONLY(shutupstuka) != 1){
 	EMIT_SOUND_ARRAY_STUKA_FILTERED( CHAN_VOICE, pAttackSounds ); 
 	}
 }
 
-void CStukaBat :: DeathSound( void )
+void CStukaBat::DeathSound( void )
 {
 	if(EASY_CVAR_GET_DEBUGONLY(shutupstuka) != 1){
 	EMIT_SOUND_ARRAY_STUKA_FILTERED( CHAN_VOICE, pDeathSounds ); 
@@ -1121,7 +1121,7 @@ void CStukaBat :: DeathSound( void )
 
 
 
-void CStukaBat :: KeyValue( KeyValueData *pkvd )
+void CStukaBat::KeyValue( KeyValueData *pkvd )
 {
 	/*
 	if (FStrEq(pkvd->szKeyName, "TriggerTarget"))
@@ -1161,7 +1161,7 @@ void CStukaBat :: KeyValue( KeyValueData *pkvd )
 // HandleAnimEvent - catches the monster-specific messages
 // that occur when tagged animation frames are played.
 //=========================================================
-void CStukaBat :: HandleAnimEvent( MonsterEvent_t *pEvent )
+void CStukaBat::HandleAnimEvent( MonsterEvent_t *pEvent )
 {
 	//easyPrintLineGroup2("STUKABAT ANIM: %d", pEvent);
 
@@ -1343,7 +1343,7 @@ int CStukaBat::IRelationship( CBaseEntity *pTarget )
 //=========================================================
 // Spawn
 //=========================================================
-void CStukaBat :: Spawn()
+void CStukaBat::Spawn()
 {
 	Precache( );
 
@@ -1545,7 +1545,7 @@ extern int global_useSentenceSave;
 //=========================================================
 // Precache - precaches all resources this monster needs
 //=========================================================
-void CStukaBat :: Precache()
+void CStukaBat::Precache()
 {	
 	//CHANGENOTICE: also add to "precacheAll" in cbase.cpp.
 	PRECACHE_MODEL("models/stukabat.mdl");
@@ -1603,7 +1603,7 @@ IMPLEMENT_CUSTOM_SCHEDULES( CStukaBat, CSquadMonster );
 
 
 
-void CStukaBat:: getPathToEnemyCustom(){
+void CStukaBat::getPathToEnemyCustom(){
 
 	/*
 	if(queueToggleGround){
@@ -1662,7 +1662,7 @@ void CStukaBat:: getPathToEnemyCustom(){
 //=========================================================
 // StartTask
 //=========================================================
-void CStukaBat :: StartTask ( Task_t *pTask )
+void CStukaBat::StartTask ( Task_t *pTask )
 {
 	//EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyPrintLine("START TASK: %d", pTask->iTask));
 	easyForcePrintLine("STUKA STARTTASK: %s %d", getScheduleName(), pTask->iTask);
@@ -2086,7 +2086,7 @@ void CStukaBat :: StartTask ( Task_t *pTask )
 		
 		ChangeYaw(16);
 
-		CSquadMonster :: StartTask ( pTask );
+		CSquadMonster::StartTask ( pTask );
 		break;
 		//see schedule.cpp for the originals.
 	//OKAY this is horrendous. luckily they are never called. they should at least call the parent,  CSquadMonster::StartTask(pTask)
@@ -2238,15 +2238,15 @@ void CStukaBat :: StartTask ( Task_t *pTask )
 	*/
 	case TASK_RANGE_ATTACK1:
 		//Ranges were blanked. Is that wise? Not even parent calls like "default" below does?
-		//CSquadMonster :: StartTask ( pTask );
+		//CSquadMonster::StartTask ( pTask );
 		break;
 	case TASK_RANGE_ATTACK2:
-		//CSquadMonster :: StartTask ( pTask );
+		//CSquadMonster::StartTask ( pTask );
 		break;
 
 		
 	default:
-		CSquadMonster :: StartTask ( pTask );
+		CSquadMonster::StartTask ( pTask );
 		break;
 	}
 }
@@ -2410,7 +2410,7 @@ void CStukaBat::abortAttack(){
 //=========================================================
 // RunTask 
 //=========================================================
-void CStukaBat :: RunTask ( Task_t *pTask )
+void CStukaBat::RunTask ( Task_t *pTask )
 {
 	//easyForcePrintLine("WHAT? %d", pTask->iTask);
 	//reset, no landBrake unless specified by this task running.
@@ -2636,9 +2636,9 @@ void CStukaBat :: RunTask ( Task_t *pTask )
 			}
 
 			if(enemyPresent){
-				easyPrintLineGroup1("THE bat ID: %d - ind: %d en: %d df: %d ename: \"%s\" ::: ep: %d, act: %d %d", monsterID, attackIndex, (m_hEnemy==NULL), m_hEnemy->pev->deadflag, STRING(m_hEnemy->pev->classname), enemyPresent, m_Activity, m_IdealActivity  );
+				easyPrintLineGroup1("THE bat ID: %d - ind: %d en: %d df: %d ename: \"%s\" :::ep: %d, act: %d %d", monsterID, attackIndex, (m_hEnemy==NULL), m_hEnemy->pev->deadflag, STRING(m_hEnemy->pev->classname), enemyPresent, m_Activity, m_IdealActivity  );
 			}else{
-				easyPrintLineGroup1("THE bat ID: %d - ind: %d en: %d ::: ep: %d,  act: %d %d", monsterID, attackIndex, (m_hEnemy==NULL)  , enemyPresent, m_Activity, m_IdealActivity );
+				easyPrintLineGroup1("THE bat ID: %d - ind: %d en: %d :::ep: %d,  act: %d %d", monsterID, attackIndex, (m_hEnemy==NULL)  , enemyPresent, m_Activity, m_IdealActivity );
 			}
 		
 			if(attackIndex > -1 && !enemyPresent ){
@@ -2939,7 +2939,7 @@ void CStukaBat :: RunTask ( Task_t *pTask )
 
 
 	default: 
-		CSquadMonster :: RunTask ( pTask );
+		CSquadMonster::RunTask ( pTask );
 		break;
 	}
 }
@@ -2948,7 +2948,7 @@ void CStukaBat :: RunTask ( Task_t *pTask )
 
 
 //same as "RadiusDamage", but do reduced damage to friendlies / neutrals.
-void CStukaBat :: RadiusDamageNoFriendly(entvars_t* pevInflictor, entvars_t*	pevAttacker, float flDamage, int iClassIgnore, int bitsDamageType )
+void CStukaBat::RadiusDamageNoFriendly(entvars_t* pevInflictor, entvars_t*	pevAttacker, float flDamage, int iClassIgnore, int bitsDamageType )
 {
 	Vector vecSrc = pev->origin;
 	float flRadius = flDamage * 2.5;
@@ -3050,7 +3050,7 @@ void CStukaBat :: RadiusDamageNoFriendly(entvars_t* pevInflictor, entvars_t*	pev
 // monster's member function to get a pointer to a schedule
 // of the proper type.
 //=========================================================
-Schedule_t *CStukaBat :: GetSchedule ( void )
+Schedule_t *CStukaBat::GetSchedule ( void )
 {
 	/*
 	//IS THAT OKAY?
@@ -3122,7 +3122,7 @@ Schedule_t *CStukaBat :: GetSchedule ( void )
 		PRINTQUEUE_STUKA_SEND(stukaPrint.enemyInfo, "SEE: NULL! %d %d %d", getEnemy()!=NULL, m_hEnemy!=NULL, m_hTargetEnt!=NULL);
 	}
 
-	PRINTQUEUE_STUKA_SEND(stukaPrint.enemyInfo, "ENESTA: %d %d %d %d %d :%d :: F: %d",
+	PRINTQUEUE_STUKA_SEND(stukaPrint.enemyInfo, "ENESTA: %d %d %d %d %d :%d::F: %d",
 			HasConditions(bits_COND_SEE_HATE) != 0,
 			HasConditions(bits_COND_SEE_FEAR) != 0,
 			HasConditions(bits_COND_SEE_DISLIKE) != 0,
@@ -3310,12 +3310,12 @@ Schedule_t *CStukaBat :: GetSchedule ( void )
 	}
 
 	PRINTQUEUE_STUKA_SEND(stukaPrint.getSchedule, "OUTSRC!!!");
-	return CSquadMonster :: GetSchedule();
+	return CSquadMonster::GetSchedule();
 }
 
 //=========================================================
 //=========================================================
-Schedule_t* CStukaBat :: GetScheduleOfType ( int Type ) 
+Schedule_t* CStukaBat::GetScheduleOfType ( int Type ) 
 {
 	//TASK_STRAFE_PATH
 
@@ -3369,7 +3369,7 @@ Schedule_t* CStukaBat :: GetScheduleOfType ( int Type )
 		//ignore!
 		//easyPrintLineGroup2("STUKA SCHED: slStukaBatTakeCover");
 		//return slStukaBatTakeCover;
-		easyPrintLineGroup1("STUKA %d::: HAHAHA THERE IS NO COVER FOR THE WEAK", monsterID);
+		easyPrintLineGroup1("STUKA %d:::HAHAHA THERE IS NO COVER FOR THE WEAK", monsterID);
 		//return &slStukaBatRangeAttack2[0];
 		return &slStukaBatChaseEnemy[0];
 	}
@@ -3426,13 +3426,13 @@ Schedule_t* CStukaBat :: GetScheduleOfType ( int Type )
 	}//END OF switch(...)
 	
 	easyPrintLineGroup1("STUKA %d SCHED: %d", monsterID, Type);
-	return CBaseMonster :: GetScheduleOfType( Type );
+	return CBaseMonster::GetScheduleOfType( Type );
 }
 
 
 
 //NOTE: being done by logic instead of the schedule system.
-BOOL CStukaBat :: CheckRangeAttack1 ( float flDot, float flDist )
+BOOL CStukaBat::CheckRangeAttack1 ( float flDot, float flDist )
 {
 	//make this require being the leader, and make it kind of rare, possibly (or have a delay b/w 'suicides' of squad members)
 	return FALSE;
@@ -3451,13 +3451,13 @@ BOOL CStukaBat :: CheckRangeAttack1 ( float flDot, float flDist )
 	*/
 }
 
-BOOL CStukaBat :: CheckRangeAttack2 ( float flDot, float flDist )
+BOOL CStukaBat::CheckRangeAttack2 ( float flDot, float flDist )
 {
 	return FALSE;
 }
 
 
-BOOL CStukaBat :: CheckMeleeAttack1 ( float flDot, float flDist )
+BOOL CStukaBat::CheckMeleeAttack1 ( float flDot, float flDist )
 {
 	//no activity.  Disabled.
 	return FALSE;
@@ -3483,12 +3483,12 @@ BOOL CStukaBat::allowedToSetActivity(void){
 }
 
 
-void CStukaBat :: SetActivity( Activity NewActivity){
+void CStukaBat::SetActivity( Activity NewActivity){
 
 	SetActivity(NewActivity, FALSE);
 }
 
-void CStukaBat :: SetActivity ( Activity NewActivity, BOOL forceReset )
+void CStukaBat::SetActivity ( Activity NewActivity, BOOL forceReset )
 {
 
 	//CBaseMonster::SetActivity(NewActivity);
@@ -3567,7 +3567,7 @@ void CStukaBat :: SetActivity ( Activity NewActivity, BOOL forceReset )
 			//BOOL someBool = (getEnemy() == NULL);
 			EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyPrintLine("SO WHAT THE yay IS THAT yay %d %d %d", NewActivity, snappedToCeiling, attackIndex));
 
-			//easyPrintLineGroup2("ATTA::::: %d %d %d", attackIndex, m_MonsterState, someBool);
+			//easyPrintLineGroup2("ATTA:::::%d %d %d", attackIndex, m_MonsterState, someBool);
 			if(attackIndex > -1){
 				easyForcePrintLine("I am incredibly 1");
 				return;
@@ -3821,9 +3821,9 @@ void CStukaBat :: SetActivity ( Activity NewActivity, BOOL forceReset )
 //=========================================================
 // RunAI
 //=========================================================
-void CStukaBat :: RunAI( void )
+void CStukaBat::RunAI( void )
 {
-	CBaseMonster :: RunAI();
+	CBaseMonster::RunAI();
 
 	if ( HasMemory( bits_MEMORY_KILLED ) )
 		return;
@@ -3849,11 +3849,11 @@ void CStukaBat::SetTurnActivity(){
 	//CSquadMonster::SetTurnActivity();
 }
 
-//void CStukaBat :: SetTurnActivity ( void )
-void CStukaBat :: SetTurnActivityCustom ( void )
+//void CStukaBat::SetTurnActivity ( void )
+void CStukaBat::SetTurnActivityCustom ( void )
 {
 
-	//easyForcePrintLine("SetTurnActivityCustom::: %d %d %d %d", m_IdealActivity, combatCloseEnough, blockSetActivity, onGround);
+	//easyForcePrintLine("SetTurnActivityCustom:::%d %d %d %d", m_IdealActivity, combatCloseEnough, blockSetActivity, onGround);
 	if(m_IdealActivity == ACT_FLY && !combatCloseEnough  && blockSetActivity == -1 && !onGround){
 
 	}else{
@@ -3921,7 +3921,7 @@ void CStukaBat :: SetTurnActivityCustom ( void )
 	/*
 	easyPrintLineGroup2("STUKA #%d : FLYING yay SON %.2 %df", monsterID, flYD, m_movementActivity);
 	UTIL_printLineVector("ANG", pev->angles);
-	easyPrintLineGroup2("yay?  angle.y: %.2f ideal_yaw:%.2f :::::: flYD:%.2f",  pev->angles.y, pev->ideal_yaw, flYD);
+	easyPrintLineGroup2("yay?  angle.y: %.2f ideal_yaw:%.2f ::::::flYD:%.2f",  pev->angles.y, pev->ideal_yaw, flYD);
 	*/
 
 }
@@ -3970,7 +3970,7 @@ void CStukaBat::Stop( void )
 
 //#define DIST_TO_CHECK	200
 #define DIST_TO_CHECK	3000
-void CStukaBat :: Move ( float flInterval ) 
+void CStukaBat::Move ( float flInterval ) 
 {
 	//CSquadMonster::Move(flInterval);
 	//IS THIS WISE???
@@ -3979,7 +3979,7 @@ void CStukaBat :: Move ( float flInterval )
 
 
 
-BOOL CStukaBat:: ShouldAdvanceRoute( float flWaypointDist, float flInterval )
+BOOL CStukaBat::ShouldAdvanceRoute( float flWaypointDist, float flInterval )
 {
 	//was 32?  yea let's scale this back again.
 	//if ( flWaypointDist <= 500  )
@@ -4002,7 +4002,7 @@ BOOL CStukaBat:: ShouldAdvanceRoute( float flWaypointDist, float flInterval )
 
 
 //Clone of the flyer's CheckLocalMove.
-int CStukaBat :: CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, CBaseEntity *pTarget, float *pflDist )
+int CStukaBat::CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, CBaseEntity *pTarget, float *pflDist )
 {
 	// UNDONE: need to check more than the endpoint
 	if (FBitSet(pev->flags, FL_SWIM) && (UTIL_PointContents(vecEnd) != CONTENTS_WATER))
@@ -4075,7 +4075,7 @@ but obviously can fit through).
 May make them averse to going over floorless / steep gaps (thinks walking monsters can't cross).
 */
 /*
-int CStukaBat :: CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, CBaseEntity *pTarget, float *pflDist )
+int CStukaBat::CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, CBaseEntity *pTarget, float *pflDist )
 {
 	int iReturn = LOCALMOVE_VALID;
 	//MODDD - experimental.  Using a copy of the controller's CheckLocalMove again, but with a different hull type.
@@ -4487,7 +4487,7 @@ void CStukaBat::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, floa
 	if ( m_IdealActivity != m_movementActivity )
 		m_IdealActivity = m_movementActivity;
 
-	//easyPrintLineGroup2("TIMEVAR %.2f :: %.2f", pev->framerate, flInterval);
+	//easyPrintLineGroup2("TIMEVAR %.2f::%.2f", pev->framerate, flInterval);
 
 	float flTotal = 0;
 	float flStepTimefactored = m_flGroundSpeed*EASY_CVAR_GET_DEBUGONLY(STUSpeedMulti) * pev->framerate * EASY_CVAR_GET_DEBUGONLY(animationFramerateMulti) * flInterval;
@@ -4568,7 +4568,7 @@ void CStukaBat::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, floa
 }
 
 
-int CStukaBat :: ISoundMask ( void )
+int CStukaBat::ISoundMask ( void )
 {
 	
 	return	bits_SOUND_WORLD	|
@@ -4633,7 +4633,7 @@ void CStukaBat::MonsterThink(){
 		}
 		//easyPrintLineGroup2("STUKA m_movementActivity: %d", m_movementActivity);
 		//easyPrintLineGroup2("STUKA m_IdealActivity: %d %d", m_IdealActivity, m_Activity);
-		////easyForcePrintLine("BLOCKSET:::: %.2f", blockSetActivity);
+		////easyForcePrintLine("BLOCKSET::::%.2f", blockSetActivity);
 
 		if(pev->deadflag == DEAD_NO && lastVelocityChange != -1 && (gpGlobals->time - lastVelocityChange) > 0.24  ){
 			//no edits to velocity?  Start slowing down a lot.
@@ -4794,7 +4794,7 @@ void CStukaBat::MonsterThink(){
 		}else{
 		
 		}
-		//easyPrintLineGroup2("Debug Test 12345 %.2f ::: %d %d ::: %d %d ::: %d ::: %d", blockSetActivity, onGround, snappedToCeiling, queueToggleGround, queueToggleSnappedToCeiling, m_IdealActivity, seekingFoodOnGround);
+		//easyPrintLineGroup2("Debug Test 12345 %.2f :::%d %d :::%d %d :::%d :::%d", blockSetActivity, onGround, snappedToCeiling, queueToggleGround, queueToggleSnappedToCeiling, m_IdealActivity, seekingFoodOnGround);
 	
 		EHANDLE* tempEnemy = getEnemy();
 	
@@ -5559,7 +5559,7 @@ BOOL CStukaBat::violentDeathAllowed(void){
 
 BOOL CStukaBat::violentDeathDamageRequirement(void){
 	//little more fragile since it's a flyer so easier to knock around from impact?
-	return (lastDamageReceived >= 10);
+	return (m_lastDamageAmount >= 10);
 }
 
 BOOL CStukaBat::violentDeathClear(void){
@@ -5573,7 +5573,7 @@ int CStukaBat::violentDeathPriority(void){
 }//END OF violentDeathPriority
 
 /*
-Activity CBaseMonster :: GetDeathActivity ( void ){
+Activity CBaseMonster::GetDeathActivity ( void ){
 
 	if(violentDeathDamageRequirement()){
 		//Flyers are a little harder to hit in a direction maybe so just go ahead and register if the damage is met.

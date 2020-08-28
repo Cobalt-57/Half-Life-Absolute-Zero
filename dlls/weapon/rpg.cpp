@@ -309,7 +309,7 @@ void saySomethingBarneyRocket(CBaseEntity* entRef){
 
 //=========================================================
 //=========================================================
-void CRpgRocket :: Spawn( void )
+void CRpgRocket::Spawn( void )
 {
 	ignited = FALSE;
 
@@ -380,7 +380,7 @@ void CRpgRocket :: Spawn( void )
 
 //=========================================================
 //=========================================================
-void CRpgRocket :: RocketTouch ( CBaseEntity *pOther )
+void CRpgRocket::RocketTouch ( CBaseEntity *pOther )
 {
 	if( m_pLauncher ){
 		// my launcher is still around, tell it I'm dead.
@@ -451,7 +451,7 @@ void CRpgRocket::OnDeflected(CBaseEntity* arg_entDeflector){
 
 //=========================================================
 //=========================================================
-void CRpgRocket :: Precache( void )
+void CRpgRocket::Precache( void )
 {
 	PRECACHE_MODEL("models/rpgrocket.mdl");
 	m_iTrail = PRECACHE_MODEL("sprites/smoke.spr");
@@ -467,7 +467,7 @@ void CRpgRocket :: Precache( void )
 }
 
 
-void CRpgRocket :: IgniteThink( void  )
+void CRpgRocket::IgniteThink( void  )
 {
 	// pev->movetype = MOVETYPE_TOSS;
 	pev->movetype = MOVETYPE_FLY;
@@ -522,7 +522,7 @@ void CRpgRocket :: IgniteThink( void  )
 }
 
 
-void CRpgRocket :: FollowThink( void  )
+void CRpgRocket::FollowThink( void  )
 {
 	CBaseEntity *pOther = NULL;
 	//Vector vecTarget;

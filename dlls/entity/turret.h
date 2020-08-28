@@ -71,6 +71,9 @@ public:
 
 	CBaseTurret(void);
 
+
+	virtual void StartReanimation(void);
+	virtual void StartReanimationPost(int preReviveSequence);
 	//Child classes are supposed to have their own spawn methods too. Why wasn't that virtual?
 	virtual void Spawn(void);
 	virtual void Precache(void);
@@ -129,6 +132,9 @@ public:
 	void EXPORT SearchThink(void);
 	void EXPORT AutoSearchThink(void);
 	void EXPORT TurretDeathThink(void);
+
+	void EXPORT ReviveThink(void);
+
 
 	//MODDD - IMPORTANT NOTE.    These were the only "virtual EXPORT's" as of retail.
 	//  I... have no idea why they're even EXPORTs, they're never tied to any engine events

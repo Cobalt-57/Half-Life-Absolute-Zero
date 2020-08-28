@@ -68,7 +68,7 @@ IMPLEMENT_SAVERESTORE(CTripmineGrenade,CGrenade);
 
 
 
-void CTripmineGrenade :: Spawn( void )
+void CTripmineGrenade::Spawn( void )
 {
 
 	//MODDD - this is just a precaution to keep "m_pBeam" from being a garbage value.
@@ -151,7 +151,7 @@ void CTripmineGrenade :: Spawn( void )
 }
 
 
-void CTripmineGrenade :: Precache( void )
+void CTripmineGrenade::Precache( void )
 {
 	PRECACHE_MODEL("models/v_tripmine.mdl");
 	PRECACHE_SOUND("weapons/mine_deploy.wav");
@@ -165,7 +165,7 @@ void CTripmineGrenade :: Precache( void )
 
 //MODDD NOTE - this is unused. When would this have happened? To signal that mines that used to be deactivated say at map startup
 //             have now been toggled on?
-void CTripmineGrenade :: WarningThink( void  )
+void CTripmineGrenade::WarningThink( void  )
 {
 	// play warning sound
 	// EMIT_SOUND( ENT(pev), CHAN_VOICE, "buttons/Blip2.wav", 1.0, ATTN_NORM );
@@ -176,7 +176,7 @@ void CTripmineGrenade :: WarningThink( void  )
 }
 
 
-void CTripmineGrenade :: PowerupThink( void  )
+void CTripmineGrenade::PowerupThink( void  )
 {
 	TraceResult tr;
 
@@ -243,7 +243,7 @@ void CTripmineGrenade :: PowerupThink( void  )
 }
 
 
-void CTripmineGrenade :: KillBeam( void )
+void CTripmineGrenade::KillBeam( void )
 {
 	if ( m_pBeam )
 	{
@@ -263,7 +263,7 @@ int CTripmineGrenade::GetProjectileType(void){
 
 
 
-void CTripmineGrenade :: Activate( void ){
+void CTripmineGrenade::Activate( void ){
 	CGrenade::Activate();
 
 	if(m_pBeam){
@@ -289,7 +289,7 @@ void CTripmineGrenade::ActivateMine(BOOL argPlayActivateSound){
 
 
 
-void CTripmineGrenade :: MakeBeam( void )
+void CTripmineGrenade::MakeBeam( void )
 {
 	TraceResult tr;
 
@@ -317,7 +317,7 @@ void CTripmineGrenade :: MakeBeam( void )
 }
 
 
-void CTripmineGrenade :: BeamBreakThink( void  )
+void CTripmineGrenade::BeamBreakThink( void  )
 {
 	BOOL bBlowup = 0;
 

@@ -1650,7 +1650,7 @@ float CStudioModelRenderer::StudioEstimateFrame( mstudioseqdesc_t *pseqdesc )
 	*/
 
 	if( g_drawType == DRAWTYPE_VIEWMODEL ){
-		//easyPrintLine("it is view model? %d ::: %d", m_pCurrentEntity->curstate.renderfx, m_pCurrentEntity->curstate.renderfx & FORCE_NOLOOP);
+		//easyPrintLine("it is view model? %d :::%d", m_pCurrentEntity->curstate.renderfx, m_pCurrentEntity->curstate.renderfx & FORCE_NOLOOP);
 	}
 
 	if(animateBackwards){
@@ -1744,7 +1744,7 @@ CLIENTFR: 160 14.
 	//m_pCurrentEntity->curstate.
 
 	if(g_drawType == DRAWTYPE_VIEWMODEL  ){
-		//easyPrintLine("CLIENT FRAME: %.2f %.2f %.2f :: %d %.2f", f, m_pCurrentEntity->curstate.frame, currentFrame, pseqdesc->numframes, dfdt );
+		//easyPrintLine("CLIENT FRAME: %.2f %.2f %.2f::%d %.2f", f, m_pCurrentEntity->curstate.frame, currentFrame, pseqdesc->numframes, dfdt );
 		//easyPrintLine("CLIENTFR: %d %.2f %d", m_pCurrentEntity->curstate.renderfx, f, pseqdesc->numframes);
 
 		//easyPrintLine("RENDER: id:%d ai:%d seq:%d f:%.2f n:%d BACKWARDS: %d", m_pCurrentEntity->index, pseqdesc->animindex, m_pCurrentEntity->curstate.sequence, f, pseqdesc->numframes, animateBackwards );
@@ -1874,7 +1874,7 @@ float CStudioModelRenderer::StudioEstimateFrameNOINTERP(mstudioseqdesc_t* pseqde
 	*/
 
 	if (g_drawType == DRAWTYPE_VIEWMODEL) {
-		//easyPrintLine("it is view model? %d ::: %d", m_pCurrentEntity->curstate.renderfx, m_pCurrentEntity->curstate.renderfx & FORCE_NOLOOP);
+		//easyPrintLine("it is view model? %d :::%d", m_pCurrentEntity->curstate.renderfx, m_pCurrentEntity->curstate.renderfx & FORCE_NOLOOP);
 	}
 
 	if (animateBackwards) {
@@ -1959,7 +1959,7 @@ CLIENTFR: 160 14.
 //m_pCurrentEntity->curstate.
 
 	if (g_drawType == DRAWTYPE_VIEWMODEL) {
-		//easyPrintLine("CLIENT FRAME: %.2f %.2f %.2f :: %d %.2f", f, m_pCurrentEntity->curstate.frame, currentFrame, pseqdesc->numframes, dfdt );
+		//easyPrintLine("CLIENT FRAME: %.2f %.2f %.2f::%d %.2f", f, m_pCurrentEntity->curstate.frame, currentFrame, pseqdesc->numframes, dfdt );
 		//easyPrintLine("CLIENTFR: %d %.2f %d", m_pCurrentEntity->curstate.renderfx, f, pseqdesc->numframes);
 
 		easyPrintLineDummy("RENDER: id:%d ai:%d seq:%d f:%.2f n:%d BACKWARDS: %d", m_pCurrentEntity->index, pseqdesc->animindex, m_pCurrentEntity->curstate.sequence, f, pseqdesc->numframes, animateBackwards);
@@ -4150,7 +4150,7 @@ void CStudioModelRenderer::StudioRenderFinal_Hardware( void )
 	int i;
 	int rendermode;
 	
-	//easyPrintLine("EFFECTS::: %d, %d", m_pCurrentEntity->curstate.effects, m_pCurrentEntity->curstate.renderfx);
+	//easyPrintLine("EFFECTS:::%d, %d", m_pCurrentEntity->curstate.effects, m_pCurrentEntity->curstate.renderfx);
 	rendermode = IEngineStudio.GetForceFaceFlags() ? kRenderTransAdd : m_pCurrentEntity->curstate.rendermode;
 
 

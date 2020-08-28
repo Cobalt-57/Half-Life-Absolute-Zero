@@ -1573,7 +1573,7 @@ int CGibShooter::getGibModelIndex(){
 }
 
 
-void CGibShooter :: Precache ( void )
+void CGibShooter::Precache ( void )
 {
 
 
@@ -1661,7 +1661,7 @@ void CGibShooter::Spawn( void )
 }
 
 
-CGib *CGibShooter :: CreateGib ( void )
+CGib *CGibShooter::CreateGib ( void )
 {
 	if ( CVAR_GET_FLOAT("violence_hgibs") == 0 )
 		return NULL;
@@ -1681,7 +1681,7 @@ CGib *CGibShooter :: CreateGib ( void )
 }
 
 
-void CGibShooter :: ShootThink ( void )
+void CGibShooter::ShootThink ( void )
 {
 	pev->nextthink = gpGlobals->time + m_flDelay;
 
@@ -1746,7 +1746,7 @@ class CEnvShooter : public CGibShooter
 
 LINK_ENTITY_TO_CLASS( env_shooter, CEnvShooter );
 
-void CEnvShooter :: KeyValue( KeyValueData *pkvd )
+void CEnvShooter::KeyValue( KeyValueData *pkvd )
 {
 	if (FStrEq(pkvd->szKeyName, "shootmodel"))
 	{
@@ -1791,12 +1791,12 @@ BOOL CEnvShooter::IsWorldAffiliated(){
 	return TRUE;
 }
 
-int CEnvShooter :: getGibModelIndex(){
+int CEnvShooter::getGibModelIndex(){
 	//just use the one and only giv index.
 	return m_iGibModelIndex;
 }
 
-void CEnvShooter :: Precache ( void )
+void CEnvShooter::Precache ( void )
 {
 	//custom gib unrelated to the German censorship.
 	m_iGibModelIndex = PRECACHE_MODEL( (char *)STRING(pev->model) );
@@ -1804,7 +1804,7 @@ void CEnvShooter :: Precache ( void )
 }
 
 
-CGib *CEnvShooter :: CreateGib ( void )
+CGib *CEnvShooter::CreateGib ( void )
 {
 	CGib *pGib = GetClassPtr( (CGib *)NULL );
 
@@ -2362,7 +2362,7 @@ public:
 	int	m_iSprite;	// Don't save, precache
 };
 
-void CEnvFunnel :: Precache ( void )
+void CEnvFunnel::Precache ( void )
 {
 	m_iSprite = PRECACHE_MODEL ( "sprites/flare6.spr" );
 }
@@ -2419,7 +2419,7 @@ public:
 	virtual BOOL IsWorldAffiliated(void);
 };
 
-void CEnvBeverage :: Precache ( void )
+void CEnvBeverage::Precache ( void )
 {
 	PRECACHE_MODEL( "models/can.mdl" );
 	PRECACHE_SOUND( "weapons/g_bounce3.wav" );
@@ -2483,7 +2483,7 @@ public:
 	void EXPORT CanTouch ( CBaseEntity *pOther );
 };
 
-void CItemSoda :: Precache ( void )
+void CItemSoda::Precache ( void )
 {
 }
 
@@ -2599,7 +2599,7 @@ public:
 	void Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value );
 	void KeyValue( KeyValueData* pkvd);
 	virtual BOOL IsWorldAffiliated(void);
-	virtual int ObjectCaps( void ) { return CBaseEntity :: ObjectCaps() & ~FCAP_ACROSS_TRANSITION; }
+	virtual int ObjectCaps( void ) { return CBaseEntity::ObjectCaps() & ~FCAP_ACROSS_TRANSITION; }
 	void EXPORT MirrorThink( void );
 	virtual int Save( CSave &save );
 	virtual int Restore( CRestore &restore );
@@ -2626,7 +2626,7 @@ TYPEDESCRIPTION CEnvMirror::m_SaveData[] =
 };
 IMPLEMENT_SAVERESTORE( CEnvMirror, CBaseEntity );
 
-void CEnvMirror :: KeyValue( KeyValueData *pkvd )
+void CEnvMirror::KeyValue( KeyValueData *pkvd )
 {
 	
 	if (FStrEq(pkvd->szKeyName, "radius"))
@@ -2643,7 +2643,7 @@ BOOL CEnvMirror::IsWorldAffiliated(){
 
 LINK_ENTITY_TO_CLASS( env_mirror, CEnvMirror );
 
-void CEnvMirror :: Spawn( void )
+void CEnvMirror::Spawn( void )
 { 
 	// G-Cont. added this for emulate shiny floor (without this flag monsters can't walk on it)
 	//MODDD - "moveWith" vars removed.  They were never set in the limit snippet applied to this mod.
@@ -2664,7 +2664,7 @@ void CEnvMirror :: Spawn( void )
 	Precache();          
 
 	setModel( STRING(pev->model) );
-	SetThink (&CEnvMirror :: MirrorThink);
+	SetThink (&CEnvMirror::MirrorThink);
 
 	
 	//MODDD - no longer creating a player marker. If this causes some issues later, like glitching out when there isn't a normal reason
@@ -2701,14 +2701,14 @@ void CEnvMirror :: Spawn( void )
 	SetNextThink (0.1);
 }
 
-void CEnvMirror :: Precache( void )
+void CEnvMirror::Precache( void )
 {
 	if (canDrawPlayer() ) UTIL_PrecacheOther( "player_marker" );
 	m_usMirror = PRECACHE_EVENT(1,"events/mirror.sc");
 	bSent = FALSE;
 }
 
-void CEnvMirror :: MirrorThink( void )
+void CEnvMirror::MirrorThink( void )
 {
 	if (bSent)
 	{
@@ -2751,7 +2751,7 @@ void CEnvMirror :: MirrorThink( void )
 }
 
 
-void CEnvMirror :: Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
+void CEnvMirror::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
 {
 	if ( ShouldToggle( useType, m_iActive ) )
 		m_iActive = !m_iActive;

@@ -86,7 +86,7 @@ public:
 // of sounds this monster regards. In the base class implementation,
 // monsters care about all sounds, but no scents.
 //=========================================================
-int CRoach :: ISoundMask ( void )
+int CRoach::ISoundMask ( void )
 {
 	return	bits_SOUND_CARCASS | bits_SOUND_MEAT;
 }
@@ -95,7 +95,7 @@ int CRoach :: ISoundMask ( void )
 // Classify - indicates this monster's place in the 
 // relationship table.
 //=========================================================
-int CRoach :: Classify ( void )
+int CRoach::Classify ( void )
 {
 	return CLASS_INSECT;
 }
@@ -103,7 +103,7 @@ int CRoach :: Classify ( void )
 //=========================================================
 // Touch
 //=========================================================
-void CRoach :: Touch ( CBaseEntity *pOther )
+void CRoach::Touch ( CBaseEntity *pOther )
 {
 	Vector		vecSpot;
 	TraceResult	tr;
@@ -126,7 +126,7 @@ void CRoach :: Touch ( CBaseEntity *pOther )
 // SetYawSpeed - allows each sequence to have a different
 // turn rate associated with it.
 //=========================================================
-void CRoach :: SetYawSpeed ( void )
+void CRoach::SetYawSpeed ( void )
 {
 	int ys;
 
@@ -142,7 +142,7 @@ CRoach::CRoach(){
 //=========================================================
 // Spawn
 //=========================================================
-void CRoach :: Spawn()
+void CRoach::Spawn()
 {
 	Precache( );
 
@@ -180,7 +180,7 @@ extern int global_useSentenceSave;
 //=========================================================
 // Precache - precaches all resources this monster needs
 //=========================================================
-void CRoach :: Precache()
+void CRoach::Precache()
 {
 	PRECACHE_MODEL("models/roach.mdl");
 
@@ -222,7 +222,7 @@ GENERATE_KILLED_IMPLEMENTATION(CRoach)
 //=========================================================
 // MonsterThink, overridden for roaches.
 //=========================================================
-void CRoach :: MonsterThink( void  )
+void CRoach::MonsterThink( void  )
 {
 	if ( FNullEnt( FIND_CLIENT_IN_PVS( edict() ) ) )
 		pev->nextthink = gpGlobals->time + RANDOM_FLOAT(1,1.5);
@@ -330,7 +330,7 @@ void CRoach :: MonsterThink( void  )
 //=========================================================
 // Picks a new spot for roach to run to.(
 //=========================================================
-void CRoach :: PickNewDest ( int iCondition )
+void CRoach::PickNewDest ( int iCondition )
 {
 	Vector	vecNewDir;
 	Vector	vecDest;
@@ -391,7 +391,7 @@ BOOL CRoach::usesSegmentedMove(void) {
 //=========================================================
 // roach's move function
 //=========================================================
-void CRoach :: Move ( float flInterval ) 
+void CRoach::Move ( float flInterval ) 
 {
 	float	flWaypointDist;
 	Vector		vecApex;
@@ -445,7 +445,7 @@ void CRoach :: Move ( float flInterval )
 // 360 degrees.
 //=========================================================
 //MODDD - just like the parent method in CBaseMonster.cpp, use a float for the distance parameter (iDistance, now flDistance) instead.
-void CRoach :: Look ( float flDistance )
+void CRoach::Look ( float flDistance )
 {
 	CBaseEntity	*pSightEnt = NULL;// the current visible entity that we're dealing with
 	CBaseEntity	*pPreviousEnt;// the last entity added to the link list 

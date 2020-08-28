@@ -150,7 +150,7 @@ CApache::CApache(){
 
 }
 
-void CApache :: Spawn( void )
+void CApache::Spawn( void )
 {
 	Precache( );
 	// motor
@@ -292,7 +292,7 @@ void CApache::onDelete(void){
 
 
 
-void CApache :: DyingThink( void )
+void CApache::DyingThink( void )
 {
 	StudioFrameAdvance_SIMPLE( );
 	pev->nextthink = gpGlobals->time + 0.1;
@@ -495,7 +495,7 @@ GENERATE_GIBMONSTER_IMPLEMENTATION(CApache)
 //void GibMonster( BOOL spawnHeadBlock, BOOL gibsSpawnDecal );
 
 
-void CApache :: HuntThink( void )
+void CApache::HuntThink( void )
 {
 	StudioFrameAdvance_SIMPLE( );
 	pev->nextthink = gpGlobals->time + 0.1;
@@ -643,7 +643,7 @@ void CApache :: HuntThink( void )
 }
 
 
-void CApache :: Flight( void )
+void CApache::Flight( void )
 {
 	// tilt model 5 degrees
 	Vector vecAdj = Vector( 5.0, 0, 0 );
@@ -798,7 +798,7 @@ void CApache :: Flight( void )
 }
 
 
-void CApache :: FireRocket( void )
+void CApache::FireRocket( void )
 {
 	static float side = 1.0;
 	static int count;
@@ -831,7 +831,7 @@ void CApache :: FireRocket( void )
 
 
 
-BOOL CApache :: FireGun( )
+BOOL CApache::FireGun( )
 {
 	UTIL_MakeAimVectors( pev->angles );
 		
@@ -914,7 +914,7 @@ BOOL CApache :: FireGun( )
 
 
 
-void CApache :: ShowDamage( void )
+void CApache::ShowDamage( void )
 {
 	if (m_iDoSmokePuff > 0 || RANDOM_LONG(0,99) > pev->health)
 	{
@@ -1038,7 +1038,7 @@ BOOL CApacheHVR::usesSoundSentenceSave(void){
 
 
 //hvr_rocket
-void CApacheHVR :: Spawn( void )
+void CApacheHVR::Spawn( void )
 {
 	Precache( );
 	// motor
@@ -1049,7 +1049,7 @@ void CApacheHVR :: Spawn( void )
 	UTIL_SetSize(pev, Vector( 0, 0, 0), Vector(0, 0, 0));
 	UTIL_SetOrigin( pev, pev->origin );
 
-	SetThink(&CApacheHVR:: IgniteThink );
+	SetThink(&CApacheHVR::IgniteThink );
 	//SetTouch( &CGrenade::ExplodeTouch );
 	//MODDD - not good enough!  Need to know to stop the sound...
 	SetTouch( &CApacheHVR::CustomHVRExplodeTouch);
@@ -1066,7 +1066,7 @@ void CApacheHVR :: Spawn( void )
 
 
 //MODDD - new
-void CApacheHVR :: CustomHVRExplodeTouch ( CBaseEntity *pOther )
+void CApacheHVR::CustomHVRExplodeTouch ( CBaseEntity *pOther )
 {
 	/*
 	if ( m_pLauncher )
@@ -1082,7 +1082,7 @@ void CApacheHVR :: CustomHVRExplodeTouch ( CBaseEntity *pOther )
 
 
 extern int global_useSentenceSave;
-void CApacheHVR :: Precache( void )
+void CApacheHVR::Precache( void )
 {
 	PRECACHE_MODEL("models/HVR.mdl");
 	m_iTrail = PRECACHE_MODEL("sprites/smoke.spr");
@@ -1096,7 +1096,7 @@ void CApacheHVR :: Precache( void )
 }
 
 
-void CApacheHVR :: IgniteThink( void  )
+void CApacheHVR::IgniteThink( void  )
 {
 	// pev->movetype = MOVETYPE_TOSS;
 
@@ -1141,7 +1141,7 @@ void CApacheHVR :: IgniteThink( void  )
 }
 
 
-void CApacheHVR :: AccelerateThink( void  )
+void CApacheHVR::AccelerateThink( void  )
 {
 	// check world boundaries
 	if (pev->origin.x < -4096 || pev->origin.x > 4096 || pev->origin.y < -4096 || pev->origin.y > 4096 || pev->origin.z < -4096 || pev->origin.z > 4096)

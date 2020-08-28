@@ -55,7 +55,7 @@ public:
 	void KeyValue( KeyValueData *pkvd );
 	BOOL IsWorldAffiliated(void);
 	void Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value );
-	virtual int ObjectCaps( void ) { return (CBaseToggle :: ObjectCaps() | FCAP_CONTINUOUS_USE) & ~FCAP_ACROSS_TRANSITION; }
+	virtual int ObjectCaps( void ) { return (CBaseToggle::ObjectCaps() | FCAP_CONTINUOUS_USE) & ~FCAP_ACROSS_TRANSITION; }
 	virtual int	Save( CSave &save );
 	virtual int	Restore( CRestore &restore );
 

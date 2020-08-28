@@ -22,7 +22,7 @@ CKingpinBall::CKingpinBall(void){
 }
 
 
-void CKingpinBall :: Spawn( void ){
+void CKingpinBall::Spawn( void ){
 
 	CControllerHeadBall::Spawn();
 
@@ -56,7 +56,7 @@ void CKingpinBall :: Spawn( void ){
 
 }//END OF Spawn
 
-void CKingpinBall :: Precache( void ){
+void CKingpinBall::Precache( void ){
 
 	CControllerHeadBall::Precache();
 
@@ -65,7 +65,7 @@ void CKingpinBall :: Precache( void ){
 
 
 //MODDD - little less reactive to following th enemy.
-void CKingpinBall :: MovetoTarget( Vector vecTarget ){
+void CKingpinBall::MovetoTarget( Vector vecTarget ){
 
 	float distToEnemy = 0;
 

@@ -69,7 +69,7 @@ Vector getParticleDir(const Vector& vecVelDir){
 }
 
 
-void CSquidSpit:: Spawn( void )
+void CSquidSpit::Spawn( void )
 {
 	pev->movetype = MOVETYPE_FLY;
 	pev->classname = MAKE_STRING( "squidspit" );
@@ -348,7 +348,7 @@ void CSquidSpit::Shoot( entvars_t *pevOwner, Vector vecStart, Vector vecDirectio
 
 
 
-void CSquidSpit :: Touch ( CBaseEntity *pOther )
+void CSquidSpit::Touch ( CBaseEntity *pOther )
 {
 	int i = 0;
 	TraceResult tr;

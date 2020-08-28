@@ -39,7 +39,7 @@ IMPLEMENT_SAVERESTORE( CHornetKingpin, CHornet );
 
 
 
-void CHornetKingpin :: Spawn( void ){
+void CHornetKingpin::Spawn( void ){
 	CHornet::Spawn();
 	//do what the parent does.
 	
@@ -60,7 +60,7 @@ void CHornetKingpin :: Spawn( void ){
 
 }//END OF Spawn
 
-void CHornetKingpin :: Precache( void ){
+void CHornetKingpin::Precache( void ){
 	CHornet::Precache();
 	//do what the parent does.
 

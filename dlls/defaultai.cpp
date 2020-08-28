@@ -1987,7 +1987,7 @@ Schedule_t *CBaseMonster::ScheduleFromName( const char *pName )
 }
 
 
-Schedule_t *CBaseMonster :: ScheduleInList( const char *pName, Schedule_t **pList, int listCount )
+Schedule_t *CBaseMonster::ScheduleInList( const char *pName, Schedule_t **pList, int listCount )
 {
 	int i;
 	
@@ -2015,7 +2015,7 @@ Schedule_t *CBaseMonster :: ScheduleInList( const char *pName, Schedule_t **pLis
 // GetScheduleOfType - returns a pointer to one of the 
 // monster's available schedules of the indicated type.
 //=========================================================
-Schedule_t* CBaseMonster :: GetScheduleOfType ( int Type ) 
+Schedule_t* CBaseMonster::GetScheduleOfType ( int Type ) 
 {
 
 
@@ -2040,7 +2040,7 @@ Schedule_t* CBaseMonster :: GetScheduleOfType ( int Type )
 //				ALERT( at_aiconsole, "Starting script %s for %s\n", STRING( m_pCine->m_iszPlay ), STRING(pev->classname) );
 
 			//YOU ARE 1
-			//easyForcePrintLine("what %d ::: %d", monsterID, m_pCine->m_fMoveTo);
+			//easyForcePrintLine("what %d :::%d", monsterID, m_pCine->m_fMoveTo);
 			//return GetScheduleOfType( SCHED_IDLE_STAND );
 
 			switch ( m_pCine->m_fMoveTo )

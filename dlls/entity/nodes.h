@@ -71,7 +71,7 @@ extern BOOL map_anyAirNodes;
 //=========================================================
 #define MAX_STACK_NODES	    100
 #define NO_NODE				-1
-#define MAX_NODE_HULLS		4
+//MODDD - 'MAX_NODE_HULLS' constant moved to cbase.h, along with the rest of the HULL constants
 
 #define bits_NODE_LAND      ( 1 << 0 )  // Land node, so nudge if necessary.
 #define bits_NODE_AIR       ( 1 << 1 )  // Air node, don't nudge.

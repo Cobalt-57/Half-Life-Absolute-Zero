@@ -941,7 +941,7 @@ int CAGrunt::IRelationship ( CBaseEntity *pTarget )
 		return R_NM;
 	}
 	
-	int iRelationship = CSquadMonster :: IRelationship( pTarget );
+	int iRelationship = CSquadMonster::IRelationship( pTarget );
 	//if(canPrint)easyForcePrintLine("IRelationship monsterID%d: excuse me #5 (%d)", monsterID, iRelationship);
 	return iRelationship;
 }
@@ -949,7 +949,7 @@ int CAGrunt::IRelationship ( CBaseEntity *pTarget )
 //=========================================================
 // ISoundMask 
 //=========================================================
-int CAGrunt :: ISoundMask ( void )
+int CAGrunt::ISoundMask ( void )
 {
 	return	bits_SOUND_WORLD	|
 			bits_SOUND_COMBAT	|
@@ -963,7 +963,7 @@ int CAGrunt :: ISoundMask ( void )
 
 GENERATE_TRACEATTACK_IMPLEMENTATION(CAGrunt)
 {
-	//easyForcePrintLine("AGrunt:: TraceAttack says I took %.2f damage.", flDamage);
+	//easyForcePrintLine("AGrunt::TraceAttack says I took %.2f damage.", flDamage);
 	//easyForcePrintLine("agrunt: TraceAttack hitgroup:%d B:%d S:%d C:%d", ptr->iHitgroup, (bitsDamageType & (DMG_BULLET)), (bitsDamageType & (DMG_SLASH)), (bitsDamageType & (DMG_CLUB))   );
 	//easyForcePrintLine("ILL %d %d", (ptr->iHitgroup), (bitsDamageType & (DMG_BULLET | DMG_SLASH | DMG_CLUB)) != 0 );
 
@@ -1036,7 +1036,7 @@ GENERATE_TRACEATTACK_IMPLEMENTATION(CAGrunt)
 
 	
 	
-	//easyForcePrintLine("AGrunt:: TraceAttack ended with %.2f damage.", flDamage);
+	//easyForcePrintLine("AGrunt::TraceAttack ended with %.2f damage.", flDamage);
 	
 	// In as-is, we skipped call to the parent TraceAttack bbbbeeeeeecccccccaaaaaaauuuuuuussssssseeeeee?
 	// The hgrunt doesn't........
@@ -1082,7 +1082,7 @@ BOOL CAGrunt::ShouldSpeak( void )
 //=========================================================
 // PrescheduleThink 
 //=========================================================
-void CAGrunt :: PrescheduleThink ( void )
+void CAGrunt::PrescheduleThink ( void )
 {
 	if ( ShouldSpeak() )
 	{
@@ -1117,7 +1117,7 @@ void CAGrunt :: PrescheduleThink ( void )
 //=========================================================
 // DieSound
 //=========================================================
-void CAGrunt :: DeathSound ( void )
+void CAGrunt::DeathSound ( void )
 {
 	StopTalking();
 
@@ -1127,7 +1127,7 @@ void CAGrunt :: DeathSound ( void )
 //=========================================================
 // AlertSound
 //=========================================================
-void CAGrunt :: AlertSound ( void )
+void CAGrunt::AlertSound ( void )
 {
 	StopTalking();
 	UTIL_PlaySound( ENT(pev), CHAN_VOICE, pAlertSounds[RANDOM_LONG(0,ARRAYSIZE(pAlertSounds)-1)], 1.0, ATTN_NORM );
@@ -1136,7 +1136,7 @@ void CAGrunt :: AlertSound ( void )
 //=========================================================
 // AttackSound
 //=========================================================
-void CAGrunt :: AttackSound ( void )
+void CAGrunt::AttackSound ( void )
 {
 	StopTalking();
 	UTIL_PlaySound( ENT(pev), CHAN_VOICE, pAttackSounds[RANDOM_LONG(0,ARRAYSIZE(pAttackSounds)-1)], 1.0, ATTN_NORM );
@@ -1145,7 +1145,7 @@ void CAGrunt :: AttackSound ( void )
 //=========================================================
 // PainSound
 //=========================================================
-void CAGrunt :: PainSound ( void )
+void CAGrunt::PainSound ( void )
 {
 	if ( m_flNextPainTime > gpGlobals->time )
 	{
@@ -1162,7 +1162,7 @@ void CAGrunt :: PainSound ( void )
 // Classify - indicates this monster's place in the 
 // relationship table.
 //=========================================================
-int CAGrunt :: Classify ( void )
+int CAGrunt::Classify ( void )
 {
 	return	CLASS_ALIEN_MILITARY;
 }
@@ -1174,7 +1174,7 @@ BOOL CAGrunt::isOrganic(void){
 // SetYawSpeed - allows each sequence to have a different
 // turn rate associated with it.
 //=========================================================
-void CAGrunt :: SetYawSpeed ( void )
+void CAGrunt::SetYawSpeed ( void )
 {
 	int ys;
 
@@ -1205,7 +1205,7 @@ void CAGrunt :: SetYawSpeed ( void )
 //
 // Returns number of events handled, 0 if none.
 //=========================================================
-void CAGrunt :: HandleAnimEvent( MonsterEvent_t *pEvent )
+void CAGrunt::HandleAnimEvent( MonsterEvent_t *pEvent )
 {
 
 	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(thatWasntPunch) == 1){
@@ -1402,7 +1402,7 @@ CAGrunt::CAGrunt(){
 //=========================================================
 // Spawn
 //=========================================================
-void CAGrunt :: Spawn()
+void CAGrunt::Spawn()
 {
 	Precache( );
 
@@ -1435,7 +1435,7 @@ extern int global_useSentenceSave;
 //=========================================================
 // Precache - precaches all resources this monster needs
 //=========================================================
-void CAGrunt :: Precache()
+void CAGrunt::Precache()
 {
 	global_useSentenceSave = 1;
 
@@ -1478,7 +1478,7 @@ BOOL CAGrunt::needsMovementBoundFix(void){
 // because they can use their smart weapons against unseen
 // enemies. Base class doesn't attack anyone it can't see.
 //=========================================================
-BOOL CAGrunt :: FCanCheckAttacks ( void )
+BOOL CAGrunt::FCanCheckAttacks ( void )
 {
 	if ( !HasConditions( bits_COND_ENEMY_TOOFAR ) )
 	{
@@ -1494,7 +1494,7 @@ BOOL CAGrunt :: FCanCheckAttacks ( void )
 // CheckMeleeAttack1 - alien grunts zap the crap out of 
 // any enemy that gets too close. 
 //=========================================================
-BOOL CAGrunt :: CheckMeleeAttack1 ( float flDot, float flDist )
+BOOL CAGrunt::CheckMeleeAttack1 ( float flDot, float flDist )
 {
 	if ( HasConditions ( bits_COND_SEE_ENEMY ) && flDist <= AGRUNT_MELEE_DIST && flDot >= 0.6 && m_hEnemy != NULL )
 	{
@@ -1510,7 +1510,7 @@ BOOL CAGrunt :: CheckMeleeAttack1 ( float flDot, float flDist )
 // tracelines are done, so we may not want to do this every
 // server frame. Definitely not while firing. 
 //=========================================================
-BOOL CAGrunt :: CheckRangeAttack1 ( float flDot, float flDist )
+BOOL CAGrunt::CheckRangeAttack1 ( float flDot, float flDist )
 {
 
 	//MODDD
@@ -1561,7 +1561,7 @@ BOOL CAGrunt :: CheckRangeAttack1 ( float flDot, float flDist )
 //=========================================================
 // StartTask
 //=========================================================
-void CAGrunt :: StartTask ( Task_t *pTask )
+void CAGrunt::StartTask ( Task_t *pTask )
 {
 	switch ( pTask->iTask )
 	{
@@ -1654,7 +1654,7 @@ void CAGrunt :: StartTask ( Task_t *pTask )
 		break;
 
 	default:
-		CSquadMonster :: StartTask ( pTask );
+		CSquadMonster::StartTask ( pTask );
 		break;
 	}
 }
@@ -1683,7 +1683,7 @@ void CAGrunt::RunTask( Task_t* pTask ){
 // monster's member function to get a pointer to a schedule
 // of the proper type.
 //=========================================================
-Schedule_t *CAGrunt :: GetSchedule ( void )
+Schedule_t *CAGrunt::GetSchedule ( void )
 {
 	if ( HasConditions(bits_COND_HEAR_SOUND) )
 	{
@@ -1716,7 +1716,7 @@ Schedule_t *CAGrunt :: GetSchedule ( void )
 			if ( HasConditions( bits_COND_ENEMY_DEAD ) )
 			{
 				// call base class, all code to handle dead enemies is centralized there.
-				return CBaseMonster :: GetSchedule();
+				return CBaseMonster::GetSchedule();
 			}
 
 
@@ -1766,12 +1766,12 @@ Schedule_t *CAGrunt :: GetSchedule ( void )
 		}
 	}
 
-	return CSquadMonster :: GetSchedule();
+	return CSquadMonster::GetSchedule();
 }
 
 //=========================================================
 //=========================================================
-Schedule_t* CAGrunt :: GetScheduleOfType ( int Type ) 
+Schedule_t* CAGrunt::GetScheduleOfType ( int Type ) 
 {
 	//easyForcePrintLine("agrunt%d: GetScheduleOfType: %d", monsterID, Type);
 	switch	( Type )
@@ -1828,7 +1828,7 @@ Schedule_t* CAGrunt :: GetScheduleOfType ( int Type )
 
 	}
 
-	return CSquadMonster :: GetScheduleOfType( Type );
+	return CSquadMonster::GetScheduleOfType( Type );
 }
 
 
@@ -1876,7 +1876,7 @@ BOOL CAGrunt::onResetBlend0(void){
 	{
 		angDir.x = angDir.x - 360;
 	}
-	//easyForcePrintLine("YOU GOON %d ::: %.2f", HasConditions( bits_COND_SEE_ENEMY), angDir.x );
+	//easyForcePrintLine("YOU GOON %d :::%.2f", HasConditions( bits_COND_SEE_ENEMY), angDir.x );
 	SetBlending( 0, angDir.x );
 	*/
 
@@ -2038,7 +2038,7 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CAGrunt)
 		}
 	}
 
-	//easyForcePrintLine("AGrunt:: TOOK DAMAGE. Health:%.2f Damage:%.2f Blast:%d Gib:: N:%d A:%d", pev->health, flDamage, (bitsDamageType & DMG_BLAST), (bitsDamageType & DMG_NEVERGIB), (bitsDamageType & DMG_ALWAYSGIB) );
+	//easyForcePrintLine("AGrunt::TOOK DAMAGE. Health:%.2f Damage:%.2f Blast:%d Gib::N:%d A:%d", pev->health, flDamage, (bitsDamageType & DMG_BLAST), (bitsDamageType & DMG_NEVERGIB), (bitsDamageType & DMG_ALWAYSGIB) );
 
 	return GENERATE_TAKEDAMAGE_PARENT_CALL(CSquadMonster);
 }

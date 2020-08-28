@@ -195,7 +195,7 @@ void CChumToadWeapon::AttachToPlayer ( CBasePlayer *pPlayer )
 */
 
 
-void CChumToadWeapon :: FallInit( void )
+void CChumToadWeapon::FallInit( void )
 {
 	
 	pev->movetype = MOVETYPE_TOSS;
@@ -253,7 +253,7 @@ void CChumToadWeapon::FallThinkCustom ( void )
 
 
 
-void CChumToadWeapon :: ItemRotate ( void )
+void CChumToadWeapon::ItemRotate ( void )
 {
 	//easyForcePrintLine("hahaha");
 	this->pev->angles.y += 1.7;
@@ -501,9 +501,9 @@ BOOL CChumToadWeapon::checkThrowValid(Vector trace_origin, float* minFractionSto
 #ifndef CLIENT_DLL
 	if(EASY_CVAR_GET_DEBUGONLY(playerChumtoadThrowDrawDebug)){
 
-		easyForcePrintLine("flFraction: %.2f %.2f %.2f %.2f %.2f ::: %.2f", trLeft.flFraction, trCenter.flFraction, trRight.flFraction, trUp.flFraction, trDown.flFraction, minFraction);
-		easyForcePrintLine("fAllSolid: %d %d %d %d %d ::: %d", trLeft.fAllSolid, trCenter.fAllSolid, trRight.fAllSolid, trUp.fAllSolid, trDown.fAllSolid, tracesSolid);
-		easyForcePrintLine("fStartSolid:  %d %d %d %d %d ::: %d", trLeft.fStartSolid, trCenter.fStartSolid, trRight.fStartSolid, trUp.fStartSolid, trDown.fStartSolid, tracesStartSolid);
+		easyForcePrintLine("flFraction: %.2f %.2f %.2f %.2f %.2f :::%.2f", trLeft.flFraction, trCenter.flFraction, trRight.flFraction, trUp.flFraction, trDown.flFraction, minFraction);
+		easyForcePrintLine("fAllSolid: %d %d %d %d %d :::%d", trLeft.fAllSolid, trCenter.fAllSolid, trRight.fAllSolid, trUp.fAllSolid, trDown.fAllSolid, tracesSolid);
+		easyForcePrintLine("fStartSolid:  %d %d %d %d %d :::%d", trLeft.fStartSolid, trCenter.fStartSolid, trRight.fStartSolid, trUp.fStartSolid, trDown.fStartSolid, tracesStartSolid);
 		easyForcePrintLine("FINAL STATS: minfract:%.2f tracesSolid:%d tracesStartSolid:%d", minFraction, tracesSolid, tracesStartSolid);
 	
 

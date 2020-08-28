@@ -3152,7 +3152,7 @@ void generateFreakyLaser(const Vector& arg_origin) {
 
 
 	//short someShort = gEngfuncs.pEfxAPI->R_LookupColor(colorReceive[0], colorReceive[1], colorReceive[2]);
-	//easyPrintLine("HOWWWWWWWW %d::: <-- %d %d %d", someShort, colorReceive[0], colorReceive[1], colorReceive[2]);
+	//easyPrintLine("HOWWWWWWWW %d:::<-- %d %d %d", someShort, colorReceive[0], colorReceive[1], colorReceive[2]);
 	//what is this??
 
 
@@ -3608,7 +3608,7 @@ void writeColorPickerChoices(void) {
 			r = i;
 			g = 0;
 			b = 0;
-			fprintf(myFile, "%3d, %3d, %3d ::: %3d\n", r, g, b, gEngfuncs.pEfxAPI->R_LookupColor(r, g, b));
+			fprintf(myFile, "%3d, %3d, %3d :::%3d\n", r, g, b, gEngfuncs.pEfxAPI->R_LookupColor(r, g, b));
 		}
 		fclose(myFile);
 	}
@@ -3618,7 +3618,7 @@ void writeColorPickerChoices(void) {
 			r = 0;
 			g = i;
 			b = 0;
-			fprintf(myFile, "%3d, %3d, %3d ::: %3d\n", r, g, b, gEngfuncs.pEfxAPI->R_LookupColor(r, g, b));
+			fprintf(myFile, "%3d, %3d, %3d :::%3d\n", r, g, b, gEngfuncs.pEfxAPI->R_LookupColor(r, g, b));
 		}
 		fclose(myFile);
 	}
@@ -3628,7 +3628,7 @@ void writeColorPickerChoices(void) {
 			r = 0;
 			g = 0;
 			b = i;
-			fprintf(myFile, "%3d, %3d, %3d ::: %3d\n", r, g, b, gEngfuncs.pEfxAPI->R_LookupColor(r, g, b));
+			fprintf(myFile, "%3d, %3d, %3d :::%3d\n", r, g, b, gEngfuncs.pEfxAPI->R_LookupColor(r, g, b));
 		}
 		fclose(myFile);
 	}

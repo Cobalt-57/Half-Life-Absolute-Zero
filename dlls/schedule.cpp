@@ -91,7 +91,7 @@ BOOL CBaseMonster::attemptFindCoverFromEnemy(Task_t* pTask){
 // FHaveSchedule - Returns TRUE if monster's m_pSchedule
 // is anything other than NULL.
 //=========================================================
-BOOL CBaseMonster :: FHaveSchedule( void )
+BOOL CBaseMonster::FHaveSchedule( void )
 {
 	if ( m_pSchedule == NULL )
 	{
@@ -105,7 +105,7 @@ BOOL CBaseMonster :: FHaveSchedule( void )
 // ClearSchedule - blanks out the caller's schedule pointer
 // and index.
 //=========================================================
-void CBaseMonster :: ClearSchedule( void )
+void CBaseMonster::ClearSchedule( void )
 {
 	m_iTaskStatus = TASKSTATUS_NEW;
 	m_pSchedule = NULL;
@@ -116,7 +116,7 @@ void CBaseMonster :: ClearSchedule( void )
 // FScheduleDone - Returns TRUE if the caller is on the
 // last task in the schedule
 //=========================================================
-BOOL CBaseMonster :: FScheduleDone ( void )
+BOOL CBaseMonster::FScheduleDone ( void )
 {
 	ASSERT( m_pSchedule != NULL );
 	
@@ -133,7 +133,7 @@ BOOL CBaseMonster :: FScheduleDone ( void )
 // with the passed pointer, and sets the ScheduleIndex back
 // to 0
 //=========================================================
-void CBaseMonster :: ChangeSchedule ( Schedule_t *pNewSchedule )
+void CBaseMonster::ChangeSchedule ( Schedule_t *pNewSchedule )
 {
 	if(EASY_CVAR_GET_DEBUGONLY(crazyMonsterPrintouts))easyForcePrintLine("YOU despicable person %s %d", pNewSchedule->pName, pNewSchedule->iInterruptMask);
 
@@ -247,7 +247,7 @@ void CBaseMonster :: ChangeSchedule ( Schedule_t *pNewSchedule )
 //=========================================================
 // NextScheduledTask - increments the ScheduleIndex
 //=========================================================
-void CBaseMonster :: NextScheduledTask ( void )
+void CBaseMonster::NextScheduledTask ( void )
 {
 	ASSERT( m_pSchedule != NULL );
 
@@ -267,7 +267,7 @@ void CBaseMonster :: NextScheduledTask ( void )
 // bits that are currently set and also set in the current
 // schedule's Interrupt mask.
 //=========================================================
-int CBaseMonster :: IScheduleFlags ( void )
+int CBaseMonster::IScheduleFlags ( void )
 {
 	if( !m_pSchedule )
 	{
@@ -297,7 +297,7 @@ int CBaseMonster :: IScheduleFlags ( void )
 // schedule is still the proper schedule to be executing,
 // taking into account all conditions
 //=========================================================
-BOOL CBaseMonster :: FScheduleValid ( void )
+BOOL CBaseMonster::FScheduleValid ( void )
 {
 	if ( m_pSchedule == NULL )
 	{
@@ -328,7 +328,7 @@ BOOL CBaseMonster :: FScheduleValid ( void )
 	if ( HasConditions( m_pSchedule->iInterruptMask | bits_COND_SCHEDULE_DONE | bits_COND_TASK_FAILED ) )
 	{
 
-		if(EASY_CVAR_GET_DEBUGONLY(crazyMonsterPrintouts))easyForcePrintLine("FScheduleValid: fail B: %s %d ::: %d %d %d", m_pSchedule->pName, m_pSchedule->iInterruptMask, (m_afConditions & m_pSchedule->iInterruptMask), (m_afConditions & bits_COND_SCHEDULE_DONE), (m_afConditions & bits_COND_TASK_FAILED) );
+		if(EASY_CVAR_GET_DEBUGONLY(crazyMonsterPrintouts))easyForcePrintLine("FScheduleValid: fail B: %s %d :::%d %d %d", m_pSchedule->pName, m_pSchedule->iInterruptMask, (m_afConditions & m_pSchedule->iInterruptMask), (m_afConditions & bits_COND_SCHEDULE_DONE), (m_afConditions & bits_COND_TASK_FAILED) );
 		
 
 		//This is a table of all conditions, whether the interrupt mask has them (counts for interrupt), and whether we happen to
@@ -429,7 +429,7 @@ BOOL CBaseMonster :: FScheduleValid ( void )
 // ensures that the monster leaves this function with a valid
 // schedule!
 //=========================================================
-void CBaseMonster :: MaintainSchedule ( void )
+void CBaseMonster::MaintainSchedule ( void )
 {
 	Schedule_t* pNewSchedule;
 	Schedule_t* pPrevSchedule;
@@ -458,7 +458,7 @@ void CBaseMonster :: MaintainSchedule ( void )
 
 
 		if(EASY_CVAR_GET_DEBUGONLY(crazyMonsterPrintouts) == 1){
-			easyPrintLine("OOPS A PLENTY 1 %d ::: %d %d ::: %d %d", HasConditions(bits_COND_CAN_MELEE_ATTACK1), !FScheduleValid(), m_MonsterState != m_IdealMonsterState,  m_MonsterState, m_IdealMonsterState );
+			easyPrintLine("OOPS A PLENTY 1 %d :::%d %d :::%d %d", HasConditions(bits_COND_CAN_MELEE_ATTACK1), !FScheduleValid(), m_MonsterState != m_IdealMonsterState,  m_MonsterState, m_IdealMonsterState );
 		}
 	// validate existing schedule 
 
@@ -575,7 +575,7 @@ void CBaseMonster :: MaintainSchedule ( void )
 			else
 			{
 				if(EASY_CVAR_GET_DEBUGONLY(crazyMonsterPrintouts) == 1){
-					easyPrintLine("OOPS A PLENTY 8 %d ::: %d, %d ::: %d %d", HasConditions(bits_COND_CAN_MELEE_ATTACK1),  m_MonsterState == MONSTERSTATE_SCRIPT,  m_MonsterState == MONSTERSTATE_DEAD,    m_MonsterState == MONSTERSTATE_SCRIPT, m_MonsterState == MONSTERSTATE_DEAD  );
+					easyPrintLine("OOPS A PLENTY 8 %d :::%d, %d :::%d %d", HasConditions(bits_COND_CAN_MELEE_ATTACK1),  m_MonsterState == MONSTERSTATE_SCRIPT,  m_MonsterState == MONSTERSTATE_DEAD,    m_MonsterState == MONSTERSTATE_SCRIPT, m_MonsterState == MONSTERSTATE_DEAD  );
 				}
 				SetState( m_IdealMonsterState );
 
@@ -605,7 +605,7 @@ void CBaseMonster :: MaintainSchedule ( void )
 
 
 				if(EASY_CVAR_GET_DEBUGONLY(crazyMonsterPrintouts) == 1){
-					easyPrintLine("OOPS A PLENTY 9 %d::: new sched: %s", HasConditions(bits_COND_CAN_MELEE_ATTACK1), pNewSchedule->pName);
+					easyPrintLine("OOPS A PLENTY 9 %d:::new sched: %s", HasConditions(bits_COND_CAN_MELEE_ATTACK1), pNewSchedule->pName);
 				}
 				//YOU STUPID LITTLE man, I WILL OBLITERATE YOUR VERY WILL TO LIVE AND PLAY IN THE ASHES.
 				//~what is this, Dilbert?    Damn, the rage is real yo.
@@ -786,7 +786,7 @@ void CBaseMonster :: MaintainSchedule ( void )
 //=========================================================
 // RunTask 
 //=========================================================
-void CBaseMonster :: RunTask ( Task_t *pTask )
+void CBaseMonster::RunTask ( Task_t *pTask )
 {
 
 	
@@ -1330,7 +1330,7 @@ void CBaseMonster :: RunTask ( Task_t *pTask )
 				
 				/*
 				if(m_iRouteIndex > -1){
-					easyForcePrintLine("TASK_WAIT_FOR_MOVEMENT_RANGE mg:%d ri:%d ::: F:%d g:%d e:%d d:%d", m_movementGoal, m_iRouteIndex, m_Route[m_iRouteIndex].iType, m_Route[m_iRouteIndex].iType&bits_MF_IS_GOAL, m_Route[m_iRouteIndex].iType&bits_MF_TO_ENEMY, m_Route[m_iRouteIndex].iType&bits_MF_TO_DETOUR);
+					easyForcePrintLine("TASK_WAIT_FOR_MOVEMENT_RANGE mg:%d ri:%d :::F:%d g:%d e:%d d:%d", m_movementGoal, m_iRouteIndex, m_Route[m_iRouteIndex].iType, m_Route[m_iRouteIndex].iType&bits_MF_IS_GOAL, m_Route[m_iRouteIndex].iType&bits_MF_TO_ENEMY, m_Route[m_iRouteIndex].iType&bits_MF_TO_DETOUR);
 				}else{
 					easyForcePrintLine("TASK_WAIT_FOR_MOVEMENT_RANGE mg:%d ri:-1", m_movementGoal);
 				}
@@ -1720,7 +1720,7 @@ void CBaseMonster :: RunTask ( Task_t *pTask )
 // the monster is facing and determines whether or not to
 // select one of the 180 turn animations.
 //=========================================================
-void CBaseMonster :: SetTurnActivity ( void ){
+void CBaseMonster::SetTurnActivity ( void ){
 	float flYD;
 	flYD = FlYawDiff();
 	
@@ -1743,7 +1743,7 @@ void CBaseMonster :: SetTurnActivity ( void ){
 
 
 //MODDD - same as above but forces the turn activity.
-void CBaseMonster :: SetTurnActivityForceAct ( void ){
+void CBaseMonster::SetTurnActivityForceAct ( void ){
 	float flYD;
 	flYD = FlYawDiff();
 
@@ -1770,7 +1770,7 @@ void CBaseMonster :: SetTurnActivityForceAct ( void ){
 // any necessary calculations to start the next task on the
 // schedule. 
 //=========================================================
-void CBaseMonster :: StartTask ( Task_t *pTask )
+void CBaseMonster::StartTask ( Task_t *pTask )
 {
 	//easyForcePrintLine("StartTask sched:%s: task:%d index:%d", getScheduleName(), pTask->iTask, m_iScheduleIndex);
 
@@ -3393,7 +3393,7 @@ void CBaseMonster :: StartTask ( Task_t *pTask )
 // GetTask - returns a pointer to the current 
 // scheduled task. NULL if there's a problem.
 //=========================================================
-Task_t	*CBaseMonster :: GetTask ( void ) 
+Task_t	*CBaseMonster::GetTask ( void ) 
 {
 	//MODDD - any random crashes caused by this?  Doubt it, but a null check never hurts.
 	if(m_pSchedule == NULL){
@@ -3440,7 +3440,7 @@ int CBaseMonster::getTaskNumber(void){
 // monster's member function to get a pointer to a schedule
 // of the proper type.
 //=========================================================
-Schedule_t *CBaseMonster :: GetSchedule ( void )
+Schedule_t *CBaseMonster::GetSchedule ( void )
 {
 	//MODDD - safety.
 	//if(pev->deadflag != DEAD_NO){

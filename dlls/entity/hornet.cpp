@@ -177,7 +177,7 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CHornet)
 
 //=========================================================
 //=========================================================
-void CHornet :: Spawn( void )
+void CHornet::Spawn( void )
 {
 	
 	CHornet();
@@ -259,7 +259,7 @@ void CHornet :: Spawn( void )
 
 extern int global_useSentenceSave;
 
-void CHornet :: Precache()
+void CHornet::Precache()
 {
 	PRECACHE_MODEL("models/hornet.mdl");
 
@@ -293,7 +293,7 @@ int CHornet::IRelationship ( CBaseEntity *pTarget )
 		return R_NO;
 	}
 
-	return CBaseMonster :: IRelationship( pTarget );
+	return CBaseMonster::IRelationship( pTarget );
 }
 
 //=========================================================
@@ -318,7 +318,7 @@ int CHornet::Classify ( void )
 //=========================================================
 // StartTrack - starts a hornet out tracking its target
 //=========================================================
-void CHornet :: StartTrack ( void )
+void CHornet::StartTrack ( void )
 {
 	IgniteTrail();
 
@@ -342,7 +342,7 @@ void CHornet :: StartTrack ( void )
 //=========================================================
 // StartDart - starts a hornet out just flying straight.
 //=========================================================
-void CHornet :: StartDart ( void )
+void CHornet::StartDart ( void )
 {
 	IgniteTrail();
 	
@@ -504,7 +504,7 @@ old colors
 //=========================================================
 // Hornet is flying, gently tracking target
 //=========================================================
-void CHornet :: TrackTarget ( void )
+void CHornet::TrackTarget ( void )
 {
 	Vector	vecFlightDir;
 	Vector	vecDirToEnemy;
@@ -830,7 +830,7 @@ void CHornet :: TrackTarget ( void )
 //=========================================================
 // Tracking Hornet hit something
 //=========================================================
-void CHornet :: TrackTouch ( CBaseEntity *pOther )
+void CHornet::TrackTouch ( CBaseEntity *pOther )
 {
 
 
@@ -983,7 +983,7 @@ GENERATE_DEADTAKEDAMAGE_IMPLEMENTATION(CHornet){
 	vecDir = Vector( 0, 0, 0 );
 	if (!FNullEnt( pevInflictor ))
 	{
-		CBaseEntity *pInflictor = CBaseEntity :: Instance( pevInflictor );
+		CBaseEntity *pInflictor = CBaseEntity::Instance( pevInflictor );
 		if (pInflictor)
 		{
 			vecDir = ( pInflictor->Center() - Vector ( 0, 0, 10 ) - Center() ).Normalize();

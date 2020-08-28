@@ -85,7 +85,7 @@ int CHudFlashlight::VidInit(void)
 	return 1;
 };
 
-int CHudFlashlight:: MsgFunc_FlashBat(const char *pszName,  int iSize, void *pbuf )
+int CHudFlashlight::MsgFunc_FlashBat(const char *pszName,  int iSize, void *pbuf )
 {
 
 	
@@ -97,7 +97,7 @@ int CHudFlashlight:: MsgFunc_FlashBat(const char *pszName,  int iSize, void *pbu
 	return 1;
 }
 
-int CHudFlashlight:: MsgFunc_Flashlight(const char *pszName,  int iSize, void *pbuf )
+int CHudFlashlight::MsgFunc_Flashlight(const char *pszName,  int iSize, void *pbuf )
 {
 
 	BEGIN_READ( pbuf, iSize );

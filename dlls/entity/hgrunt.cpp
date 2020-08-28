@@ -359,7 +359,7 @@ public:
 	int tryActivitySubstitute(int activity);
 	int LookupActivityHard(int activity);
 	void MakeIdealYaw( Vector vecTarget );
-	void startReanimation(void);
+	void StartReanimation(void);
 
 	void moveAnimUpdate(void);
 	
@@ -450,7 +450,7 @@ public:
 	//int SquadRecruit( int searchRadius, int maxMembers );
 
 	// OH YOU GREASY LITTLE.  (PlayerUse  uses this to judge whether or not this is worth sending a "touch" to).
-	int ObjectCaps( void ) { return CSquadMonster :: ObjectCaps() | FCAP_IMPULSE_USE; }
+	int ObjectCaps( void ) { return CSquadMonster::ObjectCaps() | FCAP_IMPULSE_USE; }
 
 	BOOL canResetBlend0(void);
 	BOOL onResetBlend0(void);
@@ -654,7 +654,7 @@ Schedule_t slhgruntStrafeToLocation[] =
 // may still fail but in most cases, well after the grunt has
 // started moving.
 //=========================================================
-void CHGrunt :: SpeakSentence( void )
+void CHGrunt::SpeakSentence( void )
 {
 	if ( m_iSentence == HGRUNT_SENT_NONE )
 	{
@@ -763,7 +763,7 @@ GENERATE_GIBMONSTER_IMPLEMENTATION(CHGrunt)
 // hear the DANGER sound that is made by hand grenades and
 // other dangerous items.
 //=========================================================
-int CHGrunt :: ISoundMask ( void )
+int CHGrunt::ISoundMask ( void )
 {
 	return	bits_SOUND_WORLD	|
 			bits_SOUND_COMBAT	|
@@ -776,7 +776,7 @@ int CHGrunt :: ISoundMask ( void )
 //=========================================================
 // someone else is talking - don't speak
 //=========================================================
-BOOL CHGrunt :: FOkToSpeak( void )
+BOOL CHGrunt::FOkToSpeak( void )
 {
 // if someone else is talking, don't speak
 	if (gpGlobals->time <= CTalkMonster::g_talkWaitTime)
@@ -800,7 +800,7 @@ BOOL CHGrunt :: FOkToSpeak( void )
 
 //=========================================================
 //=========================================================
-void CHGrunt :: JustSpoke( void )
+void CHGrunt::JustSpoke( void )
 {
 	CTalkMonster::g_talkWaitTime = gpGlobals->time + RANDOM_FLOAT(1.5, 2.0);
 	m_iSentence = HGRUNT_SENT_NONE;
@@ -810,7 +810,7 @@ void CHGrunt :: JustSpoke( void )
 // PrescheduleThink - this function runs after conditions
 // are collected and before scheduling code is run.
 //=========================================================
-void CHGrunt :: PrescheduleThink ( void )
+void CHGrunt::PrescheduleThink ( void )
 {
 	if ( InSquad() && m_hEnemy != NULL )
 	{
@@ -842,7 +842,7 @@ void CHGrunt :: PrescheduleThink ( void )
 // this is a bad bug. Friendly machine gun fire avoidance
 // will unecessarily prevent the throwing of a grenade as well.
 //=========================================================
-BOOL CHGrunt :: FCanCheckAttacks ( void )
+BOOL CHGrunt::FCanCheckAttacks ( void )
 {
 	if ( !HasConditions( bits_COND_ENEMY_TOOFAR ) )
 	{
@@ -858,7 +858,7 @@ BOOL CHGrunt :: FCanCheckAttacks ( void )
 //=========================================================
 // CheckMeleeAttack1
 //=========================================================
-BOOL CHGrunt :: CheckMeleeAttack1 ( float flDot, float flDist )
+BOOL CHGrunt::CheckMeleeAttack1 ( float flDot, float flDist )
 {
 	CBaseMonster *pEnemy;
 	if ( m_hEnemy != NULL )
@@ -888,7 +888,7 @@ BOOL CHGrunt :: CheckMeleeAttack1 ( float flDot, float flDist )
 // occluded (throw grenade over wall, etc). We must
 // disqualify the machine gun attack if the enemy is occluded.
 //=========================================================
-BOOL CHGrunt :: CheckRangeAttack1 ( float flDot, float flDist )
+BOOL CHGrunt::CheckRangeAttack1 ( float flDot, float flDist )
 {
 
 	//MODDD - no check for SEE_ENEMY ??
@@ -921,7 +921,7 @@ BOOL CHGrunt :: CheckRangeAttack1 ( float flDot, float flDist )
 // CheckRangeAttack2 - this checks the Grunt's grenade
 // attack.
 //=========================================================
-BOOL CHGrunt :: CheckRangeAttack2 ( float flDot, float flDist )
+BOOL CHGrunt::CheckRangeAttack2 ( float flDot, float flDist )
 {
 
 	// enemy, MUST.  be occluded.
@@ -1082,7 +1082,7 @@ GENERATE_TRACEATTACK_IMPLEMENTATION(CHGrunt)
 {
 	//MODDD - hardcoded damage requirement for player damage instead.  Shots over 25 can do headshots then.
 	//const float headshotDamageReq = gSkillData.plrDmg357;
-	//easyForcePrintLine("HGrunt:: TraceAttack says I took %.2f damage.", flDamage);
+	//easyForcePrintLine("HGrunt::TraceAttack says I took %.2f damage.", flDamage);
 
 	if(
 		// Can not go headless from BLAST or equal-hitbox damage, hits to whatever bodygroup is
@@ -1172,7 +1172,7 @@ GENERATE_TRACEATTACK_IMPLEMENTATION(CHGrunt)
 
 	easyPrintLine("hgrunt RECENT HITGROUP: %d", ptr->iHitgroup);
 
-	//easyForcePrintLine("HGrunt:: TraceAttack ended with %.2f damage.", flDamage);
+	//easyForcePrintLine("HGrunt::TraceAttack ended with %.2f damage.", flDamage);
 	GENERATE_TRACEATTACK_PARENT_CALL(CSquadMonster);
 }
 
@@ -1309,7 +1309,7 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CHGrunt)
 	}//END OF blast damage and act_cower (ducking for cover) check.
 
 
-	//EASY_CVAR_PRINTIF_PRE(hgruntPrintout, easyForcePrintLine("WHUT %d :: ACT ideal:%d, cur:%d.", this->m_movementGoal, m_IdealActivity, m_movementActivity));
+	//EASY_CVAR_PRINTIF_PRE(hgruntPrintout, easyForcePrintLine("WHUT %d::ACT ideal:%d, cur:%d.", this->m_movementGoal, m_IdealActivity, m_movementActivity));
 
 	//EASY_CVAR_PRINTIF_PRE(hgruntPrintout, easyForcePrintLine("PASSSSS???? %d %d %d", pev->deadflag == DEAD_NO, m_pSchedule != slhgruntStrafeToLocation, (m_IdealActivity != m_movementActivity || this->m_movementGoal == MOVEGOAL_NONE)) );
 
@@ -1406,7 +1406,7 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CHGrunt)
 				decision = 2;
 			}else{
 				//that just ain't right
-				EASY_CVAR_PRINTIF_PRE(hgruntPrintout, easyForcePrintLine("HGRUNT:::  OMG  WTF  BBQ" ) );
+				EASY_CVAR_PRINTIF_PRE(hgruntPrintout, easyForcePrintLine("HGRUNT::: OMG  WTF  BBQ" ) );
 			}
 
 
@@ -1647,7 +1647,7 @@ void CHGrunt::tempStrafeTouch(CBaseEntity *pOther){
 // SetYawSpeed - allows each sequence to have a different
 // turn rate associated with it.
 //=========================================================
-void CHGrunt :: SetYawSpeed ( void )
+void CHGrunt::SetYawSpeed ( void )
 {
 	int ys;
 
@@ -1696,7 +1696,7 @@ void CHGrunt :: SetYawSpeed ( void )
 	pev->yaw_speed = ys;
 }
 
-void CHGrunt :: IdleSound( void )
+void CHGrunt::IdleSound( void )
 {
 	if (FOkToSpeak() && (g_fGruntQuestion || RANDOM_LONG(0,1)))
 	{
@@ -1741,7 +1741,7 @@ void CHGrunt :: IdleSound( void )
 // CheckAmmo - overridden for the grunt because he actually
 // uses ammo! (base class doesn't)
 //=========================================================
-void CHGrunt :: CheckAmmo ( void )
+void CHGrunt::CheckAmmo ( void )
 {
 	if ( m_cAmmoLoaded <= 0 )
 	{
@@ -1753,7 +1753,7 @@ void CHGrunt :: CheckAmmo ( void )
 // Classify - indicates this monster's place in the
 // relationship table.
 //=========================================================
-int CHGrunt :: Classify ( void )
+int CHGrunt::Classify ( void )
 {
 	return	CLASS_HUMAN_MILITARY;
 }
@@ -1898,7 +1898,7 @@ const char* CHGrunt::getNormalModel(void){
 
 //MODDD NOTE - Strangely the hgrunt doesn't seem to have an attachment just for the end of the gun.
 //Maybe attachments 0 or 1 are ok? 2 says it's the head. Not sure.
-Vector CHGrunt :: GetGunPosition( )
+Vector CHGrunt::GetGunPosition( )
 {
 	if (m_fStanding )
 	{
@@ -1918,7 +1918,7 @@ Vector CHGrunt::GetGunPositionAI(){
 //=========================================================
 // Shoot
 //=========================================================
-void CHGrunt :: Shoot ( void )
+void CHGrunt::Shoot ( void )
 {
 	// No, still shoot, just straight forward then.  Residual shots.
 	//if (m_hEnemy == NULL)
@@ -1956,7 +1956,7 @@ void CHGrunt :: Shoot ( void )
 //=========================================================
 // Shoot
 //=========================================================
-void CHGrunt :: Shotgun ( void )
+void CHGrunt::Shotgun ( void )
 {
 
 #if FORCE_MP5 == 1
@@ -2064,7 +2064,7 @@ BOOL CHGrunt::getIsStrafeLocked(void){
 }
 
 
-void CHGrunt :: MonsterThink ( void ){
+void CHGrunt::MonsterThink ( void ){
 
 	//return;  //no more DERP
 
@@ -2178,7 +2178,7 @@ void CHGrunt :: MonsterThink ( void ){
 
 		BOOL isFacingEnemy = UTIL_IsFacing(this->pev, m_hEnemy->pev->origin, 1-EASY_CVAR_GET_DEBUGONLY(hgruntRunAndGunDotMin));
 		
-		//easyForcePrintLine("COND CHECK::: %d && (%.2f > %.2f),,, isFacing? %d", HasConditions(bits_COND_SEE_ENEMY), dotProductStraight, EASY_CVAR_GET_DEBUGONLY(hgruntRunAndGunDotMin), isFacingEnemy);
+		//easyForcePrintLine("COND CHECK:::%d && (%.2f > %.2f),,, isFacing? %d", HasConditions(bits_COND_SEE_ENEMY), dotProductStraight, EASY_CVAR_GET_DEBUGONLY(hgruntRunAndGunDotMin), isFacingEnemy);
 
 		//if(UTIL_IsFacing(this->pev, m_hEnemy->pev->origin, 0.1  ) ){
 		if(this->m_pSchedule != slhgruntStrafeToLocation &&
@@ -2308,7 +2308,7 @@ void CHGrunt :: MonsterThink ( void ){
 			if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(testVar) == 24){
 				//(EASY_CVAR_GET_DEBUGONLY(hgruntRunAndGunDistance) != -1) &&  m_movementActivity == ACT_RUN && distanceToEnemy2D > EASY_CVAR_GET_DEBUGONLY(hgruntRunAndGunDistance) && dotProductStraight > EASY_CVAR_GET_DEBUGONLY(hgruntRunAndGunDotMin)
 
-				EASY_CVAR_PRINTIF_PRE(hgruntPrintout, easyForcePrintLine("***HGRUNT PRINTOUT24::: movementact:%d, canDoOppStrafe:%d, cvar_ragdis:%.2f, cvar_ragdot:%.2f, distance2D:%.2f, dotproductstr:%.2f, dotproductnorm:%.2f ",
+				EASY_CVAR_PRINTIF_PRE(hgruntPrintout, easyForcePrintLine("***HGRUNT PRINTOUT24:::movementact:%d, canDoOppStrafe:%d, cvar_ragdis:%.2f, cvar_ragdot:%.2f, distance2D:%.2f, dotproductstr:%.2f, dotproductnorm:%.2f ",
 					canDoOpportunisticStrafe(),
 					m_movementActivity,
 					EASY_CVAR_GET_DEBUGONLY(hgruntRunAndGunDistance),
@@ -2490,7 +2490,7 @@ void CHGrunt::HandleEventQueueEvent(int arg_eventID){
 // HandleAnimEvent - catches the monster-specific messages
 // that occur when tagged animation frames are played.
 //=========================================================
-void CHGrunt :: HandleAnimEvent( MonsterEvent_t *pEvent )
+void CHGrunt::HandleAnimEvent( MonsterEvent_t *pEvent )
 {
 	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(thatWasntPunch) == 1){
 		return;
@@ -2788,7 +2788,7 @@ void CHGrunt::StartMonster( void )
 {
 	// And yes, skip CSquadMonster's StartMonster.  The whole point of this is to replace that completely,
 	// don't invoke it.
-	CBaseMonster :: StartMonster();
+	CBaseMonster::StartMonster();
 
 	if ( ( m_afCapability & bits_CAP_SQUAD ) && !InSquad() )
 	{
@@ -2804,7 +2804,7 @@ void CHGrunt::StartMonster( void )
 			//MODDD - do a check.   See if any member has the "SF_SQUADMONSTER_LEADER" flag set.
 			//EASY_CVAR_GET_DEBUGONLY(leaderlessSquadAllowed) == 0
 			// if I have a groupname, I can only recruit if I'm flagged as leader
-			//NOTE::: joining is now possible, but the old behavior is probably okay.
+			//NOTE:::joining is now possible, but the old behavior is probably okay.
 			if ( !possibleExceptionToRule && !( pev->spawnflags & SF_SQUADMONSTER_LEADER ) )
 			{
 				return;
@@ -3016,7 +3016,7 @@ void CHGrunt::StartMonster( void )
 //=========================================================
 // Spawn
 //=========================================================
-void CHGrunt :: Spawn()
+void CHGrunt::Spawn()
 {
 	Precache( );
 
@@ -3186,7 +3186,7 @@ extern int global_useSentenceSave;
 //=========================================================
 // Precache - precaches all resources this monster needs
 //=========================================================
-void CHGrunt :: Precache()
+void CHGrunt::Precache()
 {
 	PRECACHE_MODEL("models/hgrunt.mdl");
 
@@ -3292,7 +3292,7 @@ void CHGrunt :: Precache()
 //=========================================================
 // start task
 //=========================================================
-void CHGrunt :: StartTask ( Task_t *pTask )
+void CHGrunt::StartTask ( Task_t *pTask )
 {
 
 
@@ -3342,7 +3342,7 @@ void CHGrunt :: StartTask ( Task_t *pTask )
 
 	case TASK_FACE_IDEAL:
 	case TASK_FACE_ENEMY:
-		CSquadMonster :: StartTask( pTask );
+		CSquadMonster::StartTask( pTask );
 		if (pev->movetype == MOVETYPE_FLY)
 		{
 			m_IdealActivity = ACT_GLIDE;
@@ -3365,7 +3365,7 @@ void CHGrunt :: StartTask ( Task_t *pTask )
 	break;
 
 	default:
-		CSquadMonster :: StartTask( pTask );
+		CSquadMonster::StartTask( pTask );
 		break;
 	}
 }
@@ -3706,7 +3706,7 @@ int CHGrunt::LookupActivityHard(int activity){
 // face the supplied vector. Value is stuffed into the monster's
 // ideal_yaw
 //=========================================================
-void CHGrunt :: MakeIdealYaw( Vector vecTarget )
+void CHGrunt::MakeIdealYaw( Vector vecTarget )
 {
 	Vector	vecProjection;
 
@@ -3760,15 +3760,15 @@ void CHGrunt :: MakeIdealYaw( Vector vecTarget )
 
 
 
-void CHGrunt::startReanimation(void) {
-	CBaseMonster::startReanimation();
+void CHGrunt::StartReanimation(void) {
+	CBaseMonster::StartReanimation();
 
 
 	//SetBodygroup(BODYGROUP_GUN, GUN_MP5);
 
 
 
-}//END OF startReanimation
+}//END OF StartReanimation
 
 
 
@@ -3788,7 +3788,7 @@ void CHGrunt::startReanimation(void) {
 //=========================================================
 // RunTask
 //=========================================================
-void CHGrunt :: RunTask ( Task_t *pTask )
+void CHGrunt::RunTask ( Task_t *pTask )
 {
 
 	//easyForcePrintLine("IM HGRUNT AND THIS IS %s : %d", this->getScheduleName(), pTask->iTask);
@@ -3856,7 +3856,7 @@ void CHGrunt :: RunTask ( Task_t *pTask )
 		}
 	default:
 		{
-			CSquadMonster :: RunTask( pTask );
+			CSquadMonster::RunTask( pTask );
 			break;
 		}
 	}
@@ -3917,7 +3917,7 @@ void CHGrunt::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, float 
 //=========================================================
 // PainSound
 //=========================================================
-void CHGrunt :: PainSound ( void )
+void CHGrunt::PainSound ( void )
 {
 	if ( gpGlobals->time > m_flNextPainTime )
 	{
@@ -3962,7 +3962,7 @@ void CHGrunt :: PainSound ( void )
 //=========================================================
 // DeathSound
 //=========================================================
-void CHGrunt :: DeathSound ( void )
+void CHGrunt::DeathSound ( void )
 {
 
 
@@ -4715,7 +4715,7 @@ IMPLEMENT_CUSTOM_SCHEDULES( CHGrunt, CSquadMonster );
 //=========================================================
 // SetActivity
 //=========================================================
-void CHGrunt :: SetActivity ( Activity NewActivity )
+void CHGrunt::SetActivity ( Activity NewActivity )
 {
 	//MODDD - good idea?
 	signalActivityUpdate = FALSE;
@@ -4882,7 +4882,7 @@ void CHGrunt :: SetActivity ( Activity NewActivity )
 //=========================================================
 // Get Schedule!
 //=========================================================
-Schedule_t *CHGrunt :: GetSchedule( void )
+Schedule_t *CHGrunt::GetSchedule( void )
 {
 
 
@@ -4978,7 +4978,7 @@ Schedule_t *CHGrunt :: GetSchedule( void )
 			if ( HasConditions( bits_COND_ENEMY_DEAD ) )
 			{
 				// call base class, all code to handle dead enemies is centralized there.
-				return CBaseMonster :: GetSchedule();
+				return CBaseMonster::GetSchedule();
 			}
 
 // new enemy
@@ -5197,7 +5197,7 @@ Schedule_t *CHGrunt :: GetSchedule( void )
 
 //=========================================================
 //=========================================================
-Schedule_t* CHGrunt :: GetScheduleOfType ( int Type )
+Schedule_t* CHGrunt::GetScheduleOfType ( int Type )
 {
 	EASY_CVAR_PRINTIF_PRE(hgruntPrintout, easyForcePrintLine("HGRUNT%d GetSchedOfType: %d", monsterID, Type));
 
@@ -5380,7 +5380,7 @@ Schedule_t* CHGrunt :: GetScheduleOfType ( int Type )
 		}
 	default:
 		{
-			return CSquadMonster :: GetScheduleOfType ( Type );
+			return CSquadMonster::GetScheduleOfType ( Type );
 		}
 	}
 }
@@ -5538,7 +5538,7 @@ void CDeadHGrunt::KeyValue( KeyValueData *pkvd )
 //=========================================================
 // ********** DeadHGrunt SPAWN **********
 //=========================================================
-void CDeadHGrunt :: Spawn( void )
+void CDeadHGrunt::Spawn( void )
 {
 	PRECACHE_MODEL("models/hgrunt.mdl");
 	setModel(); //"models/hgrunt.mdl"  argument unused when there's a german model equivalent.
@@ -5680,7 +5680,7 @@ BOOL CHGrunt::onResetBlend0(void){
 	//UTIL_MakeVectors ( pev->angles );
 
 	Vector angDir = UTIL_VecToAngles( vecShootDir );
-	//easyForcePrintLine("ANG:::: %.2f", angDir.x);
+	//easyForcePrintLine("ANG::::%.2f", angDir.x);
 	
 	SetBlending( 0, angDir.x );
 

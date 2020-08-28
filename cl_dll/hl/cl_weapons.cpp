@@ -130,7 +130,7 @@ BOOL CBasePlayerWeapon::Deploy() {
 }
 /*
 =====================
-CBasePlayerWeapon :: DefaultReload
+CBasePlayerWeapon::DefaultReload
 =====================
 */
 BOOL CBasePlayerWeapon::DefaultReload(int iClipSize, int iAnim, float fDelay, int body)
@@ -188,7 +188,7 @@ BOOL CBasePlayerWeapon::DefaultReload(int iClipSize, int iAnim, float fDelay, in
 
 /*
 =====================
-CBasePlayerWeapon :: CanDeploy
+CBasePlayerWeapon::CanDeploy
 =====================
 */
 BOOL CBasePlayerWeapon::CanDeploy(void)
@@ -258,12 +258,12 @@ BOOL CBasePlayerWeapon::CanDeploy(void)
 
 /*
 =====================
-CBasePlayerWeapon :: DefaultDeploy
+CBasePlayerWeapon::DefaultDeploy
 
 =====================
 */
 //MODDD - additions since.
-//BOOL CBasePlayerWeapon :: DefaultDeploy( char *szViewModel, char *szWeaponModel, int iAnim, char *szAnimExt, int skiplocal, int body )
+//BOOL CBasePlayerWeapon::DefaultDeploy( char *szViewModel, char *szWeaponModel, int iAnim, char *szAnimExt, int skiplocal, int body )
 
 //NOTE: "fireDelayTime" defaults to 0.5, but can also be set to -1 to be forced to "deployAnimTime" instead.
 BOOL CBasePlayerWeapon::DefaultDeploy(char* szViewModel, char* szWeaponModel, int iAnim, char* szAnimExt, int skiplocal /* = 0 */, int body, float deployAnimTime, float fireDelayTime)
@@ -404,7 +404,7 @@ void CBasePlayerWeapon::DefaultHolster(int iAnim, int skiplocal /* = 0 */, int b
 
 /*
 =====================
-CBasePlayerWeapon :: PlayEmptySound
+CBasePlayerWeapon::PlayEmptySound
 
 =====================
 */
@@ -422,7 +422,7 @@ BOOL CBasePlayerWeapon::PlayEmptySound(void)
 
 /*
 =====================
-CBasePlayerWeapon :: ResetEmptySound
+CBasePlayerWeapon::ResetEmptySound
 
 =====================
 */

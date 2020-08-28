@@ -359,7 +359,7 @@ Schedule_t* CPickupWalker::GetScheduleOfType( int Type){
 
 
 
-void CPickupWalker :: StartTask ( Task_t *pTask )
+void CPickupWalker::StartTask ( Task_t *pTask )
 {
 	//Vector vec_forward;
 	//Vector vec_right;
@@ -376,7 +376,7 @@ void CPickupWalker :: StartTask ( Task_t *pTask )
 
 		break;
 		default:
-			CBaseMonster :: StartTask ( pTask );
+			CBaseMonster::StartTask ( pTask );
 		break;
 	}//END OF switch(...)
 

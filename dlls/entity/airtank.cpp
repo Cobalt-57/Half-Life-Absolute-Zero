@@ -55,7 +55,7 @@ TYPEDESCRIPTION	CAirtank::m_SaveData[] =
 IMPLEMENT_SAVERESTORE( CAirtank, CGrenade );
 
 
-void CAirtank :: Spawn( void )
+void CAirtank::Spawn( void )
 {
 	Precache( );
 	// motor

@@ -1028,7 +1028,7 @@ void CChumToad::SetActivity ( Activity NewActivity )
 
 
 
-void CChumToad :: DeathSound( void )
+void CChumToad::DeathSound( void )
 {
 	int pitch = 90 + RANDOM_LONG(0,18);
 
@@ -1037,7 +1037,7 @@ void CChumToad :: DeathSound( void )
 }
 
 
-void CChumToad :: PainSound( void )
+void CChumToad::PainSound( void )
 {
 	int pitch = 99 + RANDOM_LONG(0,5);
 
@@ -1045,7 +1045,7 @@ void CChumToad :: PainSound( void )
 		UTIL_PlaySound( ENT(pev), CHAN_VOICE, pPainSounds[ RANDOM_LONG(0,ARRAYSIZE(pPainSounds)-1) ], 1.0, ATTN_NORM, 0, pitch );
 }
 
-void CChumToad :: AlertSound( void )
+void CChumToad::AlertSound( void )
 {
 	int pitch = 97 + RANDOM_LONG(0,6);
 
@@ -1074,7 +1074,7 @@ BOOL canListenHandle_ChumToad_Bait(CBaseEntity* pOther){
 
 
 
-void CChumToad :: IdleSound( void )
+void CChumToad::IdleSound( void )
 {
 	//can not be playing dead to make the IdleSound.
 	if(this->toadPlayDeadTimer == -1 || gpGlobals->time > this->toadPlayDeadTimer){
@@ -1648,7 +1648,7 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CChumToad)
 
 
 
-void CChumToad :: StartTask ( Task_t *pTask )
+void CChumToad::StartTask ( Task_t *pTask )
 {
 
 	Vector vec_forward;
@@ -1837,7 +1837,7 @@ void CChumToad :: StartTask ( Task_t *pTask )
 		break;
 
 		default:
-			CBaseMonster :: StartTask ( pTask );
+			CBaseMonster::StartTask ( pTask );
 		break;
 	}//END OF switch(...)
 
@@ -1857,7 +1857,7 @@ void CChumToad::RunTask ( Task_t *pTask ){
 		//debug!
 		case TASK_WAIT_FOR_MOVEMENT:
 			//::UTIL_drawPointFrame(vecHopDest, 12, 255, 255, 255);
-			CBaseMonster :: StartTask ( pTask );
+			CBaseMonster::StartTask ( pTask );
 
 		break;
 
@@ -2029,7 +2029,7 @@ void CChumToad::RunTask ( Task_t *pTask ){
 			}
 
 
-			EASY_CVAR_PRINTIF_PRE(chumtoadPrintout, easyPrintLine("CHUMTOAD PLAIN DEAD IDLE::: f:%.2f s?:%d pdt:%.2f tim:%.2f", m_flFieldOfView, HasConditions(bits_COND_SEE_ENEMY), toadPlayDeadTimer, gpGlobals->time) );
+			EASY_CVAR_PRINTIF_PRE(chumtoadPrintout, easyPrintLine("CHUMTOAD PLAIN DEAD IDLE:::f:%.2f s?:%d pdt:%.2f tim:%.2f", m_flFieldOfView, HasConditions(bits_COND_SEE_ENEMY), toadPlayDeadTimer, gpGlobals->time) );
 			
 			if(toadPlayDeadAnimationTimer != -1 && gpGlobals->time > toadPlayDeadAnimationTimer){
 				//stop animating.
@@ -2424,7 +2424,7 @@ int CChumToad::IRelationship ( CBaseEntity *pTarget )
 		return R_HT;  
 	}
 
-	EASY_CVAR_PRINTIF_PRE(chumtoadPrintout, easyPrintLine("ChumToad: IRelationship::: %s :: %d", STRING(pTarget->pev->classname), FClassnameIs(pTarget->pev, "monster_chumtoad" )) );
+	EASY_CVAR_PRINTIF_PRE(chumtoadPrintout, easyPrintLine("ChumToad: IRelationship:::%s::%d", STRING(pTarget->pev->classname), FClassnameIs(pTarget->pev, "monster_chumtoad" )) );
 	
 		//return R_HT;  
 
@@ -2528,7 +2528,7 @@ int CChumToad::IRelationship ( CBaseEntity *pTarget )
 //MODDD TODO.
 //CLASSIFY.  Make it work better for the chumtoad.
 //Or is everyone hating the chumtoad okay?
-int CChumToad :: Classify ( void )
+int CChumToad::Classify ( void )
 {
 
 	//DISREGARD.  NOW RETURNING MONSTER_ALIEN_PREY all the time.

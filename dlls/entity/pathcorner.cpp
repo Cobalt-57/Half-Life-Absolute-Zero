@@ -52,7 +52,7 @@ IMPLEMENT_SAVERESTORE( CPathCorner, CPointEntity );
 //
 // Cache user-entity-field values until spawn is called.
 //
-void CPathCorner :: KeyValue( KeyValueData *pkvd )
+void CPathCorner::KeyValue( KeyValueData *pkvd )
 {
 	if (FStrEq(pkvd->szKeyName, "wait"))
 	{
@@ -67,13 +67,13 @@ BOOL CPathCorner::IsWorldAffiliated(){
 	return TRUE;
 }
 
-void CPathCorner :: Spawn( )
+void CPathCorner::Spawn( )
 {
 	ASSERTSZ(!FStringNull(pev->targetname), "path_corner without a targetname");
 }
 
 #if 0
-void CPathCorner :: Touch( CBaseEntity *pOther )
+void CPathCorner::Touch( CBaseEntity *pOther )
 {
 	entvars_t*		pevToucher = pOther->pev;
 		
@@ -141,7 +141,7 @@ LINK_ENTITY_TO_CLASS( path_track, CPathTrack );
 //
 // Cache user-entity-field values until spawn is called.
 //
-void CPathTrack :: KeyValue( KeyValueData *pkvd )
+void CPathTrack::KeyValue( KeyValueData *pkvd )
 {
 	if (FStrEq(pkvd->szKeyName, "altpath"))
 	{
@@ -156,7 +156,7 @@ BOOL CPathTrack::IsWorldAffiliated(){
 	return TRUE;
 }
 
-void CPathTrack :: Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
+void CPathTrack::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
 {
 	int on;
 
@@ -187,7 +187,7 @@ void CPathTrack :: Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE 
 }
 
 
-void CPathTrack :: Link( void  )
+void CPathTrack::Link( void  )
 {
 	edict_t *pentTarget;
 
@@ -235,7 +235,7 @@ int CPathTrack::PathTrackIDLatest = 0;
 
 
 
-void CPathTrack :: Spawn( void )
+void CPathTrack::Spawn( void )
 {
 	PathTrackID = PathTrackIDLatest;
 	PathTrackIDLatest++;
@@ -261,7 +261,7 @@ void CPathTrack::Activate( void )
 		Link();
 }
 
-CPathTrack	*CPathTrack :: ValidPath( CPathTrack	*ppath, int testFlag )
+CPathTrack	*CPathTrack::ValidPath( CPathTrack	*ppath, int testFlag )
 {
 	if ( !ppath )
 		return NULL;
@@ -273,7 +273,7 @@ CPathTrack	*CPathTrack :: ValidPath( CPathTrack	*ppath, int testFlag )
 }
 
 
-void CPathTrack :: Project( CPathTrack *pstart, CPathTrack *pend, Vector *origin, float dist )
+void CPathTrack::Project( CPathTrack *pstart, CPathTrack *pend, Vector *origin, float dist )
 {
 	if ( pstart && pend )
 	{
@@ -312,7 +312,7 @@ void CPathTrack::SetPrevious( CPathTrack *pprev )
 
 
 // Assumes this is ALWAYS enabled
-CPathTrack *CPathTrack :: LookAhead( Vector *origin, float dist, int move )
+CPathTrack *CPathTrack::LookAhead( Vector *origin, float dist, int move )
 {
 	CPathTrack *pcurrent;
 	float originalDist = dist;
@@ -395,7 +395,7 @@ CPathTrack *CPathTrack :: LookAhead( Vector *origin, float dist, int move )
 
 	
 // Assumes this is ALWAYS enabled
-CPathTrack *CPathTrack :: Nearest( Vector origin )
+CPathTrack *CPathTrack::Nearest( Vector origin )
 {
 	int		deadCount;
 	float	minDist, dist;
@@ -443,7 +443,7 @@ CPathTrack *CPathTrack::Instance( edict_t *pent )
 
 	// DEBUGGING CODE
 #if PATH_SPARKLE_DEBUG
-void CPathTrack :: Sparkle( void )
+void CPathTrack::Sparkle( void )
 {
 
 	pev->nextthink = gpGlobals->time + 0.2;

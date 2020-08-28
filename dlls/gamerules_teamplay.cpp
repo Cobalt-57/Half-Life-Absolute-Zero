@@ -50,7 +50,7 @@ extern CVoiceGameMgr g_VoiceGameMgr;
 
 
 
-CHalfLifeTeamplay :: CHalfLifeTeamplay()
+CHalfLifeTeamplay::CHalfLifeTeamplay()
 {
 	m_DisableDeathMessages = FALSE;
 	m_DisableDeathPenalty = FALSE;
@@ -88,7 +88,7 @@ CHalfLifeTeamplay :: CHalfLifeTeamplay()
 
 
 
-void CHalfLifeTeamplay :: Think ( void )
+void CHalfLifeTeamplay::Think ( void )
 {
 	///// Check game rules /////
 	static int last_frags;
@@ -160,7 +160,7 @@ void CHalfLifeTeamplay :: Think ( void )
 // the user has typed a command which is unrecognized by everything else;
 // this check to see if the gamerules knows anything about the command
 //=========================================================
-BOOL CHalfLifeTeamplay :: ClientCommand( CBasePlayer *pPlayer, const char *pcmd )
+BOOL CHalfLifeTeamplay::ClientCommand( CBasePlayer *pPlayer, const char *pcmd )
 {
 	if(g_VoiceGameMgr.ClientCommand(pPlayer, pcmd))
 		return TRUE;
@@ -180,7 +180,7 @@ BOOL CHalfLifeTeamplay :: ClientCommand( CBasePlayer *pPlayer, const char *pcmd 
 	return FALSE;
 }
 
-void CHalfLifeTeamplay :: UpdateGameMode( CBasePlayer *pPlayer )
+void CHalfLifeTeamplay::UpdateGameMode( CBasePlayer *pPlayer )
 {
 	MESSAGE_BEGIN( MSG_ONE, gmsgGameMode, NULL, pPlayer->edict() );
 		WRITE_BYTE( 1 );  // game mode teamplay
@@ -400,7 +400,7 @@ void CHalfLifeTeamplay::DeathNotice( CBasePlayer *pVictim, entvars_t *pKiller, e
 
 //=========================================================
 //=========================================================
-void CHalfLifeTeamplay :: PlayerKilled( CBasePlayer *pVictim, entvars_t *pKiller, entvars_t *pInflictor )
+void CHalfLifeTeamplay::PlayerKilled( CBasePlayer *pVictim, entvars_t *pKiller, entvars_t *pInflictor )
 {
 	if ( !m_DisableDeathPenalty )
 	{

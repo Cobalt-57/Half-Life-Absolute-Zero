@@ -18,7 +18,7 @@ static void PlatSpawnInsideTrigger(entvars_t* pevPlatform);
 class CBasePlatTrain : public CBaseToggle
 {
 public:
-	virtual int ObjectCaps( void ) { return CBaseEntity :: ObjectCaps() & ~FCAP_ACROSS_TRANSITION; }
+	virtual int ObjectCaps( void ) { return CBaseEntity::ObjectCaps() & ~FCAP_ACROSS_TRANSITION; }
 	void KeyValue( KeyValueData* pkvd);
 
 	virtual BOOL IsWorldAffiliated(void);

@@ -294,7 +294,7 @@ void CBaseDoor::Spawn( )
 }
  
 
-void CBaseDoor :: SetToggleState( int state )
+void CBaseDoor::SetToggleState( int state )
 {
 	if ( state == TS_AT_TOP )
 		UTIL_SetOrigin( pev, m_vecPosition2 );
@@ -500,7 +500,7 @@ void CBaseDoor::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE use
 
 
 
-void CBaseDoor :: AngularMove( Vector vecDestAngle, float flSpeed )
+void CBaseDoor::AngularMove( Vector vecDestAngle, float flSpeed )
 {
 	CBaseToggle::AngularMove(vecDestAngle, flSpeed);
 }//END OF AngularMove
@@ -873,7 +873,7 @@ int CRotDoor::Restore( CRestore &restore )
 
 
 
-void CRotDoor :: AngularMove( Vector vecDestAngle, float flSpeed )
+void CRotDoor::AngularMove( Vector vecDestAngle, float flSpeed )
 {
 	//If not a heal door, nothing unusual.
 	CBaseDoor::AngularMove(vecDestAngle, flSpeed);

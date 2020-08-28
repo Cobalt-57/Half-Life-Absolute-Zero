@@ -1131,7 +1131,7 @@ void CScientist::DeclineFollowing( void )
 }
 
 
-void CScientist :: Scream( void )
+void CScientist::Scream( void )
 {
 	// Nope!  Use the custom cooldown.  Who politely declines screaming because someone else is talking anyway,
 	// if it's something worth screaming at?
@@ -1167,7 +1167,7 @@ Activity CScientist::GetStoppedActivity( void )
 }
 
 
-void CScientist :: StartTask( Task_t *pTask )
+void CScientist::StartTask( Task_t *pTask )
 {
 	float dist;
 	BOOL decidedToFight;
@@ -1184,7 +1184,7 @@ void CScientist :: StartTask( Task_t *pTask )
 		*/
 	//Also I meant to ask about the chumtoad spawning, trying to avoid being able to spawn on walls where it slowly falls through the world. If there's a location where it looks clearly open but won't spawn, see what lines turn red.
 
-	//easyPrintLine("I WILL give a report of the sci sched %s:: %d", m_pSchedule->pName, pTask->iTask);
+	//easyPrintLine("I WILL give a report of the sci sched %s::%d", m_pSchedule->pName, pTask->iTask);
 
 	switch( pTask->iTask )
 	{
@@ -1373,7 +1373,7 @@ void CScientist :: StartTask( Task_t *pTask )
 				decidedToRun = TRUE;
 			}
 
-			//easyPrintLine("MY CHOICE?  aggro:%.2f pTask->flData:%.2f ::: decidedToFight:%d decidedToRun:%d", aggro, pTask->flData, decidedToFight, decidedToRun);
+			//easyPrintLine("MY CHOICE?  aggro:%.2f pTask->flData:%.2f :::decidedToFight:%d decidedToRun:%d", aggro, pTask->flData, decidedToFight, decidedToRun);
 
 
 			// whoops.
@@ -1502,7 +1502,7 @@ void CScientist :: StartTask( Task_t *pTask )
 	}
 }
 
-void CScientist :: RunTask( Task_t *pTask )
+void CScientist::RunTask( Task_t *pTask )
 {
 
 	//MODDD
@@ -1653,7 +1653,7 @@ void CScientist :: RunTask( Task_t *pTask )
 // Classify - indicates this monster's place in the
 // relationship table.
 //=========================================================
-int CScientist :: Classify ( void )
+int CScientist::Classify ( void )
 {
 	return	CLASS_HUMAN_PASSIVE;
 }
@@ -1662,7 +1662,7 @@ int CScientist :: Classify ( void )
 // SetYawSpeed - allows each sequence to have a different
 // turn rate associated with it.
 //=========================================================
-void CScientist :: SetYawSpeed ( void )
+void CScientist::SetYawSpeed ( void )
 {
 	int ys;
 	ys = 90;
@@ -1717,7 +1717,7 @@ void CScientist :: SetYawSpeed ( void )
 // HandleAnimEvent - catches the monster-specific messages
 // that occur when tagged animation frames are played.
 //=========================================================
-void CScientist :: HandleAnimEvent( MonsterEvent_t *pEvent )
+void CScientist::HandleAnimEvent( MonsterEvent_t *pEvent )
 {
 	//MODDD - COUNTREMOVAL.  Count is not consistent across machines.  Scrapped.
 	// Let's try this again sometime.
@@ -1857,7 +1857,7 @@ int CScientist::IRelationship(CBaseEntity* pTarget)
 
 
 //MODDD - new.
-void CScientist :: Activate( void ){
+void CScientist::Activate( void ){
 	/*
 	easyPrintLine("I AMA %d %d", pev->body, trueBody);
 	//!setModelCustom();
@@ -1870,7 +1870,7 @@ void CScientist :: Activate( void ){
 //=========================================================
 // Spawn
 //=========================================================
-void CScientist :: Spawn( void )
+void CScientist::Spawn( void )
 {
 	Precache( );
 
@@ -2015,7 +2015,7 @@ extern int global_useSentenceSave;
 //=========================================================
 // Precache - precaches all resources this monster needs
 //=========================================================
-void CScientist :: Precache( void )
+void CScientist::Precache( void )
 {
 
 	//MODDD - LAZY RESETS.  Proper would be in world's precache!
@@ -2056,7 +2056,7 @@ void CScientist :: Precache( void )
 }
 
 // Init talk data
-void CScientist :: TalkInit()
+void CScientist::TalkInit()
 {
 	//easyPrintLine("TALKINIT S %d %d", pev->body, trueBody);
 
@@ -2307,7 +2307,7 @@ void CScientist::OnAlerted(BOOL alerterWasKilled) {
 // of sounds this monster regards. In the base class implementation,
 // monsters care about all sounds, but no scents.
 //=========================================================
-int CScientist :: ISoundMask ( void )
+int CScientist::ISoundMask ( void )
 {
 	return	bits_SOUND_WORLD	|
 			bits_SOUND_COMBAT	|
@@ -2318,7 +2318,7 @@ int CScientist :: ISoundMask ( void )
 //=========================================================
 // PainSound
 //=========================================================
-void CScientist :: PainSound ( void )
+void CScientist::PainSound ( void )
 {
 	if (gpGlobals->time < m_painTime )
 		return;
@@ -2383,7 +2383,7 @@ void CScientist::PainSound_Play(void) {
 //=========================================================
 // DeathSound
 //=========================================================
-void CScientist :: DeathSound ( void )
+void CScientist::DeathSound ( void )
 {
 	//sci_die1
 	//PainSound();
@@ -2416,7 +2416,7 @@ GENERATE_KILLED_IMPLEMENTATION(CScientist)
 }
 
 
-void CScientist :: SetActivity ( Activity newActivity )
+void CScientist::SetActivity ( Activity newActivity )
 {
 	//int iSequence;
 	//float framerateChoice = 1;
@@ -2451,7 +2451,7 @@ void CScientist::ReportAIState(void){
 }//END OF ReportAIState
 
 
-Schedule_t* CScientist :: GetScheduleOfType ( int Type )
+Schedule_t* CScientist::GetScheduleOfType ( int Type )
 {
 	Schedule_t *psched;
 	//easyForcePrintLine("IM SCIENTIST:%d AND I PICKED SCHED TYPE %d", monsterID, Type);
@@ -2601,7 +2601,7 @@ void CScientist::ScheduleChange(void){
 }
 
 
-Schedule_t *CScientist :: GetSchedule ( void )
+Schedule_t *CScientist::GetSchedule ( void )
 {
 	//MODDD - is this okay?   This says that, on schedule failure, forget healing.
 	forgetHealNPC();
@@ -2952,7 +2952,7 @@ Schedule_t *CScientist :: GetSchedule ( void )
 // Curiously, the base method never even did 'return' anywhere besides the very end of the
 // method (not that the returned value used to be used, had to be set to m_IdealMonsterState
 // in-method).  A few places like that would have stopped the parent GetIdealState calls.
-MONSTERSTATE CScientist :: GetIdealState ( void )
+MONSTERSTATE CScientist::GetIdealState ( void )
 {
 	if(aggro > 0){
 		//AGGRESSIVE!
@@ -3535,7 +3535,7 @@ CDeadScientist::CDeadScientist(void){
 //
 // ********** DeadScientist SPAWN **********
 //
-void CDeadScientist :: Spawn( )
+void CDeadScientist::Spawn( )
 {
 
 	PRECACHE_MODEL("models/scientist.mdl");
@@ -3713,7 +3713,7 @@ CSittingScientist::CSittingScientist(void){
 // ********** Scientist SPAWN **********
 //
 //MODDD NOTE - does not call "CScientist Spawn" as one may expect. Any script in there is not inherited by the SittingScientist then.
-void CSittingScientist :: Spawn( )
+void CSittingScientist::Spawn( )
 {
 	PRECACHE_MODEL("models/scientist.mdl");
 	Precache();
@@ -3805,7 +3805,7 @@ void CSittingScientist :: Spawn( )
 
 }
 
-void CSittingScientist :: Precache( void )
+void CSittingScientist::Precache( void )
 {
 	m_baseSequence = LookupSequence( "sitlookleft" );
 	TalkInit();
@@ -3814,7 +3814,7 @@ void CSittingScientist :: Precache( void )
 //=========================================================
 // ID as a passive human
 //=========================================================
-int CSittingScientist :: Classify ( void )
+int CSittingScientist::Classify ( void )
 {
 	return	CLASS_HUMAN_PASSIVE;
 }
@@ -3833,7 +3833,7 @@ int CSittingScientist::FriendNumber( int arrayNumber )
 //=========================================================
 // sit, do stuff
 //=========================================================
-void CSittingScientist :: SittingThink( void )
+void CSittingScientist::SittingThink( void )
 {
 	CBaseEntity *pent;
 
@@ -3938,7 +3938,7 @@ void CSittingScientist :: SittingThink( void )
 }
 
 // prepare sitting scientist to answer a question
-void CSittingScientist :: SetAnswerQuestion( CTalkMonster *pSpeaker )
+void CSittingScientist::SetAnswerQuestion( CTalkMonster *pSpeaker )
 {
 	m_flResponseDelay = gpGlobals->time + RANDOM_FLOAT(3, 4);
 	m_hTalkTarget = (CBaseMonster *)pSpeaker;
@@ -3949,7 +3949,7 @@ void CSittingScientist :: SetAnswerQuestion( CTalkMonster *pSpeaker )
 // FIdleSpeak
 // ask question of nearby friend, or make statement
 //=========================================================
-int CSittingScientist :: FIdleSpeak ( void )
+int CSittingScientist::FIdleSpeak ( void )
 {
 	// try to start a conversation, or make statement
 	int pitch;

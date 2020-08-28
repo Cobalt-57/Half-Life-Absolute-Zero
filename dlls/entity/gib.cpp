@@ -91,7 +91,7 @@ void EstablishGutLoverGib(CGib* pGib, entvars_t* pevVictim, const Vector gibSpaw
 	Vector velocityFinal = towardsPlayer2D * velocitySpeed;
 	float velocityVertical = (distVertical + 0.5 * gravity * pow(timeToReachDest, 2.0f)) / (timeToReachDest);
 
-	//easyForcePrintLine("WHYYYYYY %.2f :: %.2f %.2f %.2f   %.2f %.2f", velocityVertical, distVertical, gravity, timeToReachDest, towardsPlayer.x, towardsPlayer.y);
+	//easyForcePrintLine("WHYYYYYY %.2f::%.2f %.2f %.2f   %.2f %.2f", velocityVertical, distVertical, gravity, timeToReachDest, towardsPlayer.x, towardsPlayer.y);
 
 	velocityFinal.z = velocityVertical * 1.0f;
 	velocityFinal.x *= 1.0;

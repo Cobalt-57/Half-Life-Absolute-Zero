@@ -84,7 +84,7 @@ int CHudBattery::VidInit(void)
 	return 1;
 };
 
-int CHudBattery:: MsgFunc_Battery(const char *pszName,  int iSize, void *pbuf )
+int CHudBattery::MsgFunc_Battery(const char *pszName,  int iSize, void *pbuf )
 {
 	m_iFlags |= HUD_ACTIVE;
 

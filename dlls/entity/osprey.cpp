@@ -93,7 +93,7 @@ public:
 	int	Save( CSave &save );
 	int	Restore( CRestore &restore );
 	static	TYPEDESCRIPTION m_SaveData[];
-	int	ObjectCaps( void ) { return CBaseMonster :: ObjectCaps() & ~FCAP_ACROSS_TRANSITION; }
+	int	ObjectCaps( void ) { return CBaseMonster::ObjectCaps() & ~FCAP_ACROSS_TRANSITION; }
 	
 	void Spawn( void );
 	void Precache( void );
@@ -181,7 +181,7 @@ COsprey::COsprey(){
 
 }
 
-void COsprey :: Spawn( void )
+void COsprey::Spawn( void )
 {
 	Precache( );
 	// motor
@@ -255,7 +255,7 @@ void COsprey::CommandUse( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYP
 	pev->nextthink = gpGlobals->time + 0.1;
 }
 
-void COsprey :: FindAllThink( void )
+void COsprey::FindAllThink( void )
 {
 	CBaseEntity *pEntity = NULL;
 
@@ -285,7 +285,7 @@ void COsprey :: FindAllThink( void )
 }
 
 
-void COsprey :: DeployThink( void )
+void COsprey::DeployThink( void )
 {
 	UTIL_MakeAimVectors( pev->angles );
 
@@ -316,7 +316,7 @@ void COsprey :: DeployThink( void )
 }
 
 
-BOOL COsprey :: HasDead( )
+BOOL COsprey::HasDead( )
 {
 	for (int i = 0; i < m_iUnits; i++)
 	{
@@ -333,7 +333,7 @@ BOOL COsprey :: HasDead( )
 }
 
 
-CBaseMonster *COsprey :: MakeGrunt( Vector vecSrc )
+CBaseMonster *COsprey::MakeGrunt( Vector vecSrc )
 {
 	CBaseEntity *pEntity;
 	CBaseMonster *pGrunt;
@@ -409,7 +409,7 @@ CBaseMonster *COsprey :: MakeGrunt( Vector vecSrc )
 }
 
 
-void COsprey :: HoverThink( void )
+void COsprey::HoverThink( void )
 {
 	int i;
 	for (i = 0; i < 4; i++)
@@ -644,7 +644,7 @@ void COsprey::CrashTouch( CBaseEntity *pOther )
 }
 
 
-void COsprey :: DyingThink( void )
+void COsprey::DyingThink( void )
 {
 	StudioFrameAdvance_SIMPLE( );
 	pev->nextthink = gpGlobals->time + 0.1;
@@ -800,7 +800,7 @@ void COsprey :: DyingThink( void )
 }
 
 
-void COsprey :: ShowDamage( void )
+void COsprey::ShowDamage( void )
 {
 	if (m_iDoLeftSmokePuff > 0 || RANDOM_LONG(0,99) > m_flLeftHealth)
 	{

@@ -254,7 +254,7 @@ const char *CController::pDeathSounds[] =
 // Classify - indicates this monster's place in the 
 // relationship table.
 //=========================================================
-int CController :: Classify ( void )
+int CController::Classify ( void )
 {
 	return	CLASS_ALIEN_MILITARY;
 }
@@ -263,7 +263,7 @@ int CController :: Classify ( void )
 // SetYawSpeed - allows each sequence to have a different
 // turn rate associated with it.
 //=========================================================
-void CController :: SetYawSpeed ( void )
+void CController::SetYawSpeed ( void )
 {
 	int ys;
 
@@ -343,28 +343,28 @@ GENERATE_GIBMONSTER_IMPLEMENTATION(CController)
 
 
 
-void CController :: PainSound( void )
+void CController::PainSound( void )
 {
 	if (RANDOM_LONG(0,5) < 2)
 		EMIT_SOUND_ARRAY_FILTERED( CHAN_VOICE, pPainSounds ); 
 }	
 
-void CController :: AlertSound( void )
+void CController::AlertSound( void )
 {
 	EMIT_SOUND_ARRAY_FILTERED( CHAN_VOICE, pAlertSounds ); 
 }
 
-void CController :: IdleSound( void )
+void CController::IdleSound( void )
 {
 	EMIT_SOUND_ARRAY_FILTERED( CHAN_VOICE, pIdleSounds ); 
 }
 
-void CController :: AttackSound( void )
+void CController::AttackSound( void )
 {
 	EMIT_SOUND_ARRAY_FILTERED( CHAN_VOICE, pAttackSounds ); 
 }
 
-void CController :: DeathSound( void )
+void CController::DeathSound( void )
 {
 	EMIT_SOUND_ARRAY_FILTERED( CHAN_VOICE, pDeathSounds ); 
 }
@@ -373,7 +373,7 @@ void CController :: DeathSound( void )
 // HandleAnimEvent - catches the monster-specific messages
 // that occur when tagged animation frames are played.
 //=========================================================
-void CController :: HandleAnimEvent( MonsterEvent_t *pEvent )
+void CController::HandleAnimEvent( MonsterEvent_t *pEvent )
 {
 	switch( pEvent->event )
 	{
@@ -474,7 +474,7 @@ CController::CController(){
 //=========================================================
 // Spawn
 //=========================================================
-void CController :: Spawn()
+void CController::Spawn()
 {
 	Precache( );
 
@@ -502,7 +502,7 @@ extern int global_useSentenceSave;
 //=========================================================
 // Precache - precaches all resources this monster needs
 //=========================================================
-void CController :: Precache()
+void CController::Precache()
 {
 	PRECACHE_MODEL("models/controller.mdl");
 
@@ -625,13 +625,13 @@ IMPLEMENT_CUSTOM_SCHEDULES( CController, CSquadMonster );
 //=========================================================
 // StartTask
 //=========================================================
-void CController :: StartTask ( Task_t *pTask )
+void CController::StartTask ( Task_t *pTask )
 {
 	switch ( pTask->iTask )
 	{
 		
 	case TASK_RANGE_ATTACK1:
-		CSquadMonster :: StartTask ( pTask );
+		CSquadMonster::StartTask ( pTask );
 		break;
 	case TASK_GET_PATH_TO_ENEMY_LKP:
 		{
@@ -695,7 +695,7 @@ void CController :: StartTask ( Task_t *pTask )
 		
 	default:
 		{
-		CSquadMonster :: StartTask ( pTask );
+		CSquadMonster::StartTask ( pTask );
 		break;
 		}
 	}
@@ -761,7 +761,7 @@ int CController::LookupFloat( )
 //=========================================================
 // RunTask 
 //=========================================================
-void CController :: RunTask ( Task_t *pTask )
+void CController::RunTask ( Task_t *pTask )
 {
 
 	if (m_flShootEnd > gpGlobals->time)
@@ -825,7 +825,7 @@ void CController :: RunTask ( Task_t *pTask )
 			m_fInCombat = FALSE;
 		}
 
-		CSquadMonster :: RunTask ( pTask );
+		CSquadMonster::RunTask ( pTask );
 
 		if (!m_fInCombat)
 		{
@@ -865,7 +865,7 @@ void CController :: RunTask ( Task_t *pTask )
 
 
 	default: 
-		CSquadMonster :: RunTask ( pTask );
+		CSquadMonster::RunTask ( pTask );
 		break;
 	}
 }
@@ -877,7 +877,7 @@ void CController :: RunTask ( Task_t *pTask )
 // monster's member function to get a pointer to a schedule
 // of the proper type.
 //=========================================================
-Schedule_t *CController :: GetSchedule ( void )
+Schedule_t *CController::GetSchedule ( void )
 {
 	switch	( m_MonsterState )
 	{
@@ -912,14 +912,14 @@ Schedule_t *CController :: GetSchedule ( void )
 
 
 	}//END OF switch
-	return CSquadMonster :: GetSchedule();
+	return CSquadMonster::GetSchedule();
 }
 
 
 
 //=========================================================
 //=========================================================
-Schedule_t* CController :: GetScheduleOfType ( int Type ) 
+Schedule_t* CController::GetScheduleOfType ( int Type ) 
 {
 	// ALERT( at_console, "%d\n", m_iFrustration );
 	switch	( Type )
@@ -943,7 +943,7 @@ Schedule_t* CController :: GetScheduleOfType ( int Type )
 	}//END OF switch
 	
 
-	return CBaseMonster :: GetScheduleOfType( Type );
+	return CBaseMonster::GetScheduleOfType( Type );
 }
 
 
@@ -968,7 +968,7 @@ Schedule_t* CController :: GetScheduleOfType ( int Type )
 // CheckRangeAttack1  - shoot a bigass energy ball out of their head
 //
 //=========================================================
-BOOL CController :: CheckRangeAttack1 ( float flDot, float flDist )
+BOOL CController::CheckRangeAttack1 ( float flDot, float flDist )
 {
 	if ( flDot > 0.5 && flDist > 256 && flDist <= 2048 )
 	{
@@ -978,7 +978,7 @@ BOOL CController :: CheckRangeAttack1 ( float flDot, float flDist )
 }
 
 
-BOOL CController :: CheckRangeAttack2 ( float flDot, float flDist )
+BOOL CController::CheckRangeAttack2 ( float flDot, float flDist )
 {
 	if ( flDot > 0.5 && flDist > 64 && flDist <= 2048 )
 	{
@@ -988,13 +988,13 @@ BOOL CController :: CheckRangeAttack2 ( float flDot, float flDist )
 }
 
 
-BOOL CController :: CheckMeleeAttack1 ( float flDot, float flDist )
+BOOL CController::CheckMeleeAttack1 ( float flDot, float flDist )
 {
 	return FALSE;
 }
 
 
-void CController :: SetActivity ( Activity NewActivity )
+void CController::SetActivity ( Activity NewActivity )
 {
 	CBaseMonster::SetActivity( NewActivity );
 
@@ -1014,9 +1014,9 @@ void CController :: SetActivity ( Activity NewActivity )
 //=========================================================
 // RunAI
 //=========================================================
-void CController :: RunAI( void )
+void CController::RunAI( void )
 {
-	CBaseMonster :: RunAI();
+	CBaseMonster::RunAI();
 	Vector vecStart, angleGun;
 
 	if ( HasMemory( bits_MEMORY_KILLED ) )
@@ -1150,7 +1150,7 @@ int CController::MovePRE(float flInterval, float& flWaypointDist, float& flCheck
 }//END OF MovePRE
 
 
-void CController :: Move ( float flInterval ) 
+void CController::Move ( float flInterval ) 
 {
 	float flMoveDist;
 	Vector vecApex;
@@ -1371,7 +1371,7 @@ void CController :: Move ( float flInterval )
 
 
 //MODDD - added flInterval, but it looks like controllers never really cared about anything too precise here.
-BOOL CController:: ShouldAdvanceRoute( float flWaypointDist, float flInterval )
+BOOL CController::ShouldAdvanceRoute( float flWaypointDist, float flInterval )
 {
 	if ( flWaypointDist <= 32  )
 	{
@@ -1382,7 +1382,7 @@ BOOL CController:: ShouldAdvanceRoute( float flWaypointDist, float flInterval )
 }
 
 
-int CController :: CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, CBaseEntity *pTarget, float *pflDist )
+int CController::CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, CBaseEntity *pTarget, float *pflDist )
 {
 	TraceResult tr;
 

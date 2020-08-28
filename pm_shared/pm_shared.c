@@ -2516,7 +2516,7 @@ void PM_CatagorizePositionBASIC(){
 }
 
 
-//NOTE::: it is possible to imply whether on a ladder or not by this check too:
+//NOTE:::it is possible to imply whether on a ladder or not by this check too:
 //fLadder = ( pmove->movetype == MOVETYPE_FLY );// IsOnLadder();
 //Use this if it is necessary to check for a ladder at all times, unless "MOVETYPE_FLY" is ever used for
 //something other than latters.
@@ -3468,7 +3468,7 @@ void PM_LadderMove( physent_t *pLadder )
 				}
 				
 
-				//NOTE::: this was found commented out!
+				//NOTE:::this was found commented out!
 				//pev->velocity = lateral - (CrossProduct( trace.vecPlaneNormal, perp ) * normal);
 			}
 			else
@@ -3481,12 +3481,12 @@ void PM_LadderMove( physent_t *pLadder )
 		//HOW ABOUT NO
 		/*
 		if(pmove->server){
-			pmove->Con_DPrintf("S1 iuser4:: raw:%d filtered:%d jmpflg:%d \n", pmove->iuser4, filterediuser4, (pmove->iuser4 & FLAG_JUMPED)!=0 );
-			pmove->Con_Printf("S2 iuser4:: raw:%d filtered:%d jmpflg:%d \n", pmove->iuser4, filterediuser4, (pmove->iuser4 & FLAG_JUMPED)!=0 );
+			pmove->Con_DPrintf("S1 iuser4::raw:%d filtered:%d jmpflg:%d \n", pmove->iuser4, filterediuser4, (pmove->iuser4 & FLAG_JUMPED)!=0 );
+			pmove->Con_Printf("S2 iuser4::raw:%d filtered:%d jmpflg:%d \n", pmove->iuser4, filterediuser4, (pmove->iuser4 & FLAG_JUMPED)!=0 );
 
 		}else{
-			pmove->Con_DPrintf("C1 iuser4:: raw:%d filtered:%d jmpflg:%d \n", pmove->iuser4, filterediuser4, (pmove->iuser4 & FLAG_JUMPED)!=0  );
-			pmove->Con_Printf("C2 iuser4:: raw:%d filtered:%d jmpflg:%d \n", pmove->iuser4, filterediuser4, (pmove->iuser4 & FLAG_JUMPED)!=0  );
+			pmove->Con_DPrintf("C1 iuser4::raw:%d filtered:%d jmpflg:%d \n", pmove->iuser4, filterediuser4, (pmove->iuser4 & FLAG_JUMPED)!=0  );
+			pmove->Con_Printf("C2 iuser4::raw:%d filtered:%d jmpflg:%d \n", pmove->iuser4, filterediuser4, (pmove->iuser4 & FLAG_JUMPED)!=0  );
 
 		}
 		*/
@@ -4325,7 +4325,7 @@ PM_CheckParamters
 ==============
 */
 
-//MODDD - TODO::: inspect for the continuous punch - add issue?  Nitpick, but oh well.
+//MODDD - TODO:::inspect for the continuous punch - add issue?  Nitpick, but oh well.
 void PM_CheckParamters( void )
 {
 	float spd;

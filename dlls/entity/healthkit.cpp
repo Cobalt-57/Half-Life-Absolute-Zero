@@ -51,7 +51,7 @@ BOOL CHealthKit::usesSoundSentenceSave(void){
 
 
 
-void CHealthKit :: Spawn( void )
+void CHealthKit::Spawn( void )
 {
 	Precache( );
 	SET_MODEL(ENT(pev), "models/w_medkit.mdl");

@@ -743,7 +743,7 @@ void CBarney::SayNearCautious(void) {
 
 
 
-void CBarney :: StartTask( Task_t *pTask )
+void CBarney::StartTask( Task_t *pTask )
 {
 	//MODDD
 	///////////////////////////////////////////////////////////////////////
@@ -767,7 +767,7 @@ void CBarney :: StartTask( Task_t *pTask )
 }
 
 
-void CBarney :: RunTask( Task_t *pTask )
+void CBarney::RunTask( Task_t *pTask )
 {
 	switch ( pTask->iTask )
 	{
@@ -821,7 +821,7 @@ void CBarney :: RunTask( Task_t *pTask )
 // ISoundMask - returns a bit mask indicating which types
 // of sounds this monster regards. 
 //=========================================================
-int CBarney :: ISoundMask ( void) 
+int CBarney::ISoundMask ( void) 
 {
 
 	//MODDD - when allied, I don't react to player sounds.
@@ -851,7 +851,7 @@ int CBarney :: ISoundMask ( void)
 // Classify - indicates this monster's place in the 
 // relationship table.
 //=========================================================
-int CBarney :: Classify ( void )
+int CBarney::Classify ( void )
 {
 	return	CLASS_PLAYER_ALLY;
 }
@@ -892,7 +892,7 @@ int CBarney::IRelationship( CBaseEntity *pTarget )
 //=========================================================
 // AlertSound - barney says "Freeze!"
 //=========================================================
-void CBarney :: AlertSound( void )
+void CBarney::AlertSound( void )
 {
 	if ( m_hEnemy != NULL )
 	{
@@ -913,7 +913,7 @@ void CBarney :: AlertSound( void )
 // SetYawSpeed - allows each sequence to have a different
 // turn rate associated with it.
 //=========================================================
-void CBarney :: SetYawSpeed ( void )
+void CBarney::SetYawSpeed ( void )
 {
 	int ys = 0;
 	//MODDD - why were the Barney's turn rates so crappy? They are now more in-tune with hgrunt rates.
@@ -947,7 +947,7 @@ void CBarney :: SetYawSpeed ( void )
 //=========================================================
 // CheckRangeAttack1
 //=========================================================
-BOOL CBarney :: CheckRangeAttack1 ( float flDot, float flDist )
+BOOL CBarney::CheckRangeAttack1 ( float flDot, float flDist )
 {
 
 	if (recentDeclinesForgetTime != -1 && recentDeclines < 35 && m_hEnemy != NULL && m_hEnemy->IsPlayer()) {
@@ -986,7 +986,7 @@ BOOL CBarney :: CheckRangeAttack1 ( float flDot, float flDist )
 // BarneyFirePistol - shoots one round from the pistol at
 // the enemy barney is facing.
 //=========================================================
-void CBarney :: BarneyFirePistol ( void )
+void CBarney::BarneyFirePistol ( void )
 {
 	Vector vecShootOrigin;
 
@@ -1023,7 +1023,7 @@ void CBarney :: BarneyFirePistol ( void )
 }
 
 //MODDD - was "think", made "MonsterThink"...
-void CBarney :: MonsterThink(void){
+void CBarney::MonsterThink(void){
 	
 	//easyForcePrintLine("IM SUPER %d : seq:%d fr:%.2f fin:%d", HasConditions( bits_COND_ENEMY_DEAD ), pev->sequence, pev->frame, this->m_fSequenceFinished);
 
@@ -1117,7 +1117,7 @@ void CBarney :: MonsterThink(void){
 }//END OF MonsterThink
 
 //MODDD
-void CBarney :: SetActivity ( Activity NewActivity )
+void CBarney::SetActivity ( Activity NewActivity )
 {
 	int iSequence;
 
@@ -1153,7 +1153,7 @@ void CBarney :: SetActivity ( Activity NewActivity )
 //
 // Returns number of events handled, 0 if none.
 //=========================================================
-void CBarney :: HandleAnimEvent( MonsterEvent_t *pEvent )
+void CBarney::HandleAnimEvent( MonsterEvent_t *pEvent )
 {
 	switch( pEvent->event )
 	{
@@ -1197,7 +1197,7 @@ void CBarney :: HandleAnimEvent( MonsterEvent_t *pEvent )
 }
 
 //MODDD - barney will need to reload every so often.
-void CBarney :: CheckAmmo ( void )
+void CBarney::CheckAmmo ( void )
 {
 	if ( m_cAmmoLoaded <= 0 )
 	{
@@ -1223,7 +1223,7 @@ CBarney::CBarney(void){
 //=========================================================
 // Spawn
 //=========================================================
-void CBarney :: Spawn()
+void CBarney::Spawn()
 {
 	if(EASY_CVAR_GET_DEBUGONLY(monsterSpawnPrintout)){
 		easyForcePrintLine("IM BARNEY, MY SPAWN FLAG BE : %d", pev->spawnflags);
@@ -1295,7 +1295,7 @@ extern int global_useSentenceSave;
 //=========================================================
 // Precache - precaches all resources this monster needs
 //=========================================================
-void CBarney :: Precache()
+void CBarney::Precache()
 {
 	PRECACHE_MODEL("models/barney.mdl");
 
@@ -1326,7 +1326,7 @@ void CBarney :: Precache()
 }	
 
 // Init talk data
-void CBarney :: TalkInit()
+void CBarney::TalkInit()
 {
 	
 	CTalkMonster::TalkInit();
@@ -1411,7 +1411,7 @@ void CBarney::PainSound(void){
 //=========================================================
 // PainSound
 //=========================================================
-void CBarney :: PainSound ( BOOL bypassCooldown )
+void CBarney::PainSound ( BOOL bypassCooldown )
 {
 	if (!bypassCooldown && gpGlobals->time < m_painTime)
 		return;
@@ -1449,7 +1449,7 @@ void CBarney :: PainSound ( BOOL bypassCooldown )
 //=========================================================
 // DeathSound 
 //=========================================================
-void CBarney :: DeathSound ( void )
+void CBarney::DeathSound ( void )
 {
 	switch (RANDOM_LONG(0,2))
 	{
@@ -1609,7 +1609,7 @@ GENERATE_KILLED_IMPLEMENTATION(CBarney)
 // AI Schedules Specific to this monster
 //=========================================================
 
-Schedule_t* CBarney :: GetScheduleOfType ( int Type )
+Schedule_t* CBarney::GetScheduleOfType ( int Type )
 {
 	Schedule_t *psched;
 
@@ -1706,7 +1706,7 @@ Schedule_t* CBarney :: GetScheduleOfType ( int Type )
 // monster's member function to get a pointer to a schedule
 // of the proper type.
 //=========================================================
-Schedule_t *CBarney :: GetSchedule ( void )
+Schedule_t *CBarney::GetSchedule ( void )
 {
 	//MODDD - new block. If the one I was following recently died, get scared.
 	if(leaderRecentlyDied){
@@ -1718,7 +1718,7 @@ Schedule_t *CBarney :: GetSchedule ( void )
 	}
 
 
-	//easyForcePrintLine("MY timer %d    %d %d %d ::: %.2f %.2f", m_fGunDrawn, HasConditions( bits_COND_HEAR_SOUND ), HasConditions(bits_COND_SEE_ENEMY), HasConditions(bits_COND_NEW_ENEMY), gpGlobals->time, unholsterTimer);
+	//easyForcePrintLine("MY timer %d    %d %d %d :::%.2f %.2f", m_fGunDrawn, HasConditions( bits_COND_HEAR_SOUND ), HasConditions(bits_COND_SEE_ENEMY), HasConditions(bits_COND_NEW_ENEMY), gpGlobals->time, unholsterTimer);
 
 	canUnholster=FALSE; // until proven otherwise
 	if(EASY_CVAR_GET_DEBUGONLY(barneyUnholsterTime) != -1 && m_fGunDrawn){
@@ -1758,7 +1758,7 @@ Schedule_t *CBarney :: GetSchedule ( void )
 			if ( HasConditions( bits_COND_ENEMY_DEAD ) )
 			{
 				// call base class, all code to handle dead enemies is centralized there.
-				return CBaseMonster :: GetSchedule();
+				return CBaseMonster::GetSchedule();
 			}
 
 			//MODDD - added.
@@ -1895,7 +1895,7 @@ Schedule_t *CBarney :: GetSchedule ( void )
 	return CTalkMonster::GetSchedule();
 }
 
-MONSTERSTATE CBarney :: GetIdealState ( void )
+MONSTERSTATE CBarney::GetIdealState ( void )
 {
 	return CTalkMonster::GetIdealState();
 }
@@ -2014,7 +2014,7 @@ const char* CDeadBarney::getNormalModel(void){
 //=========================================================
 // ********** DeadBarney SPAWN **********
 //=========================================================
-void CDeadBarney :: Spawn( )
+void CDeadBarney::Spawn( )
 {
 	PRECACHE_MODEL("models/barney.mdl");
 	setModel(); //"models/barney.mdl"  argument unused when there's a german model equivalent.
@@ -2063,7 +2063,7 @@ void CBarney::HandleEventQueueEvent(int arg_eventID){
 	int rand;
 	BOOL pass;
 
-					//easyForcePrintLine("EVETTTT::: %d", arg_eventID);
+					//easyForcePrintLine("EVETTTT:::%d", arg_eventID);
 	switch(arg_eventID){
 		case 0:
 			SetBodygroup(BODYGROUP_GUN, BARNEY_BODY_GUNHOLSTERED);
@@ -2357,7 +2357,7 @@ BOOL CBarney::onResetBlend0(void){
 
 	Vector angDir = UTIL_VecToAngles( vecShootDir );
 	//easyForcePrintLine("YOU BLASTARD %.2f", angDir.x);
-	//easyForcePrintLine("ANG:::: %.2f", angDir.x);
+	//easyForcePrintLine("ANG::::%.2f", angDir.x);
 	
 	
 	//easyPrintLine("THIS IS BARNEY:%d HOW DO YOU DO %.2f", this->monsterID, angDir.x);

@@ -107,7 +107,7 @@ LINK_ENTITY_TO_CLASS( monster_cine3_barney, CCine3Barney );
 // ********** Scientist SPAWN **********
 //
 
-void CLegacyCineMonster :: CineSpawn( char *szModel )
+void CLegacyCineMonster::CineSpawn( char *szModel )
 {
 	PRECACHE_MODEL(szModel);
 	setModel(szModel);
@@ -138,7 +138,7 @@ void CLegacyCineMonster :: CineSpawn( char *szModel )
 //
 // CineStart
 //
-void CLegacyCineMonster :: Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
+void CLegacyCineMonster::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
 {
 	pev->animtime = 0;	// reset the sequence
 	SetThink( &CLegacyCineMonster::CineThink );
@@ -148,7 +148,7 @@ void CLegacyCineMonster :: Use( CBaseEntity *pActivator, CBaseEntity *pCaller, U
 //
 // ********** Scientist DIE **********
 //
-void CLegacyCineMonster :: Die( void )
+void CLegacyCineMonster::Die( void )
 {
 	SetThink( &CBaseEntity::SUB_Remove );
 }
@@ -156,7 +156,7 @@ void CLegacyCineMonster :: Die( void )
 //
 // ********** Scientist PAIN **********
 //
-void CLegacyCineMonster :: Pain( void )
+void CLegacyCineMonster::Pain( void )
 {
 	//MODDD - what? This doesn't exist in the present game.
 	//        the scientist has "scientist/sci_pain3.wav" if that is comparable.
@@ -164,7 +164,7 @@ void CLegacyCineMonster :: Pain( void )
 	//EMIT_SOUND(ENT(pev), CHAN_VOICE, "player/pain3.wav", 1, ATTN_NORM);
 }
 
-void CLegacyCineMonster :: CineThink( void )
+void CLegacyCineMonster::CineThink( void )
 {
 	// DBG_CheckMonsterData(pev);
 	
@@ -201,7 +201,7 @@ public:
 LINK_ENTITY_TO_CLASS( cine_blood, CCineBlood );
 
 
-void CCineBlood :: BloodGush ( void )
+void CCineBlood::BloodGush ( void )
 {
 	Vector	vecSplatDir;
 	TraceResult	tr;
@@ -243,13 +243,13 @@ void CCineBlood :: BloodGush ( void )
 	}
 }
 
-void CCineBlood :: BloodStart ( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
+void CCineBlood::BloodStart ( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
 {
 	SetThink( &CCineBlood::BloodGush );
 	pev->nextthink = gpGlobals->time;// now!
 }
 
-void CCineBlood :: Spawn ( void )
+void CCineBlood::Spawn ( void )
 {
 	pev->solid = SOLID_NOT;
 	SetUse ( &CCineBlood::BloodStart );

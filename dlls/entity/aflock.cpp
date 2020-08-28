@@ -154,7 +154,7 @@ IMPLEMENT_SAVERESTORE( CFlockingFlyer, CBaseMonster );
 
 //=========================================================
 //=========================================================
-void CFlockingFlyerFlock :: KeyValue( KeyValueData *pkvd )
+void CFlockingFlyerFlock::KeyValue( KeyValueData *pkvd )
 {
 	if (FStrEq(pkvd->szKeyName, "iFlockSize"))
 	{
@@ -170,7 +170,7 @@ void CFlockingFlyerFlock :: KeyValue( KeyValueData *pkvd )
 
 //=========================================================
 //=========================================================
-void CFlockingFlyerFlock :: Spawn( )
+void CFlockingFlyerFlock::Spawn( )
 {
 	Precache( );
 	SpawnFlock();
@@ -182,7 +182,7 @@ void CFlockingFlyerFlock :: Spawn( )
 
 //=========================================================
 //=========================================================
-void CFlockingFlyerFlock :: Precache( )
+void CFlockingFlyerFlock::Precache( )
 {
 	//PRECACHE_MODEL("models/aflock.mdl");
 	PRECACHE_MODEL("models/boid.mdl");
@@ -192,7 +192,7 @@ void CFlockingFlyerFlock :: Precache( )
 
 
 extern int global_useSentenceSave;
-void CFlockingFlyerFlock :: PrecacheFlockSounds( void )
+void CFlockingFlyerFlock::PrecacheFlockSounds( void )
 {
 	//MODDD - no, no soundsentencesave for you.  So rarely used, don't bother.
 	//global_useSentenceSave = TRUE;
@@ -208,7 +208,7 @@ void CFlockingFlyerFlock :: PrecacheFlockSounds( void )
 
 //=========================================================
 //=========================================================
-void CFlockingFlyerFlock :: SpawnFlock( void )
+void CFlockingFlyerFlock::SpawnFlock( void )
 {
 	float R = m_flFlockRadius;
 	int iCount;
@@ -244,7 +244,7 @@ void CFlockingFlyerFlock :: SpawnFlock( void )
 		
 		pBoid->pev->frame = 0;
 		pBoid->pev->nextthink = gpGlobals->time + 0.2;
-		pBoid->SetThink( &CFlockingFlyer :: IdleThink );
+		pBoid->SetThink( &CFlockingFlyer::IdleThink );
 
 		if ( pBoid != pLeader ) 
 		{
@@ -255,7 +255,7 @@ void CFlockingFlyerFlock :: SpawnFlock( void )
 
 //=========================================================
 //=========================================================
-void CFlockingFlyer :: Spawn( )
+void CFlockingFlyer::Spawn( )
 {
 	Precache( );
 	SpawnCommonCode();
@@ -269,7 +269,7 @@ void CFlockingFlyer :: Spawn( )
 
 //=========================================================
 //=========================================================
-void CFlockingFlyer :: Precache( )
+void CFlockingFlyer::Precache( )
 {
 	//PRECACHE_MODEL("models/aflock.mdl");
 	PRECACHE_MODEL("models/boid.mdl");
@@ -278,7 +278,7 @@ void CFlockingFlyer :: Precache( )
 
 //=========================================================
 //=========================================================
-void CFlockingFlyer :: MakeSound( void )
+void CFlockingFlyer::MakeSound( void )
 {
 	if ( m_flAlertTime > gpGlobals->time )
 	{
@@ -333,7 +333,7 @@ GENERATE_KILLED_IMPLEMENTATION(CFlockingFlyer)
 	pev->nextthink = gpGlobals->time + 0.1;
 }
 
-void CFlockingFlyer :: FallHack( void )
+void CFlockingFlyer::FallHack( void )
 {
 	if ( pev->flags & FL_ONGROUND )
 	{
@@ -352,7 +352,7 @@ void CFlockingFlyer :: FallHack( void )
 
 //=========================================================
 //=========================================================
-void CFlockingFlyer :: SpawnCommonCode( )
+void CFlockingFlyer::SpawnCommonCode( )
 {
 	pev->deadflag	= DEAD_NO;
 	pev->classname	= MAKE_STRING("monster_flyer");
@@ -373,7 +373,7 @@ void CFlockingFlyer :: SpawnCommonCode( )
 
 //=========================================================
 //=========================================================
-void CFlockingFlyer :: BoidAdvanceFrame ( )
+void CFlockingFlyer::BoidAdvanceFrame ( )
 {
 	float flapspeed = (pev->speed - pev->armorvalue) / AFLOCK_ACCELERATE;
 	pev->armorvalue = pev->armorvalue * .8 + pev->speed * .2;
@@ -396,7 +396,7 @@ void CFlockingFlyer :: BoidAdvanceFrame ( )
 
 //=========================================================
 //=========================================================
-void CFlockingFlyer :: IdleThink( void )
+void CFlockingFlyer::IdleThink( void )
 {
 	pev->nextthink = gpGlobals->time + 0.2;
 
@@ -411,7 +411,7 @@ void CFlockingFlyer :: IdleThink( void )
 //=========================================================
 // Start - player enters the pvs, so get things going.
 //=========================================================
-void CFlockingFlyer :: Start( void )
+void CFlockingFlyer::Start( void )
 {
 	pev->nextthink = gpGlobals->time + 0.1;
 
@@ -448,7 +448,7 @@ void CFlockingFlyer :: Start( void )
 //=========================================================
 // Leader boid calls this to form a flock from surrounding boids
 //=========================================================
-void CFlockingFlyer :: FormFlock( void )
+void CFlockingFlyer::FormFlock( void )
 {
 	if ( !InSquad() )
 	{
@@ -482,7 +482,7 @@ void CFlockingFlyer :: FormFlock( void )
 //=========================================================
 // Searches for boids that are too close and pushes them away
 //=========================================================
-void CFlockingFlyer :: SpreadFlock( )
+void CFlockingFlyer::SpreadFlock( )
 {
 	Vector		vecDir;
 	float	flSpeed;// holds vector magnitude while we fiddle with the direction
@@ -513,7 +513,7 @@ void CFlockingFlyer :: SpreadFlock( )
 //
 // This function should **ONLY** be called when Caller's velocity is normalized!!
 //=========================================================
-void CFlockingFlyer :: SpreadFlock2 ( )
+void CFlockingFlyer::SpreadFlock2 ( )
 {
 	Vector		vecDir;
 	
@@ -535,7 +535,7 @@ void CFlockingFlyer :: SpreadFlock2 ( )
 //=========================================================
 // FBoidPathBlocked - returns TRUE if there is an obstacle ahead
 //=========================================================
-BOOL CFlockingFlyer :: FPathBlocked( )
+BOOL CFlockingFlyer::FPathBlocked( )
 {
 	TraceResult		tr;
 	Vector			vecDist;// used for general measurements
@@ -590,7 +590,7 @@ BOOL CFlockingFlyer :: FPathBlocked( )
 //=========================================================
 // Leader boids use this think every tenth
 //=========================================================
-void CFlockingFlyer :: FlockLeaderThink( void )
+void CFlockingFlyer::FlockLeaderThink( void )
 {
 	TraceResult		tr;
 	Vector			vecDist;// used for general measurements
@@ -697,7 +697,7 @@ void CFlockingFlyer :: FlockLeaderThink( void )
 //=========================================================
 // follower boids execute this code when flocking
 //=========================================================
-void CFlockingFlyer :: FlockFollowerThink( void )	
+void CFlockingFlyer::FlockFollowerThink( void )	
 {
 	TraceResult		tr;
 	Vector			vecDist;
@@ -829,7 +829,7 @@ void CFlockingFlyer :: FlockFollowerThink( void )
 // SquadUnlink(), Unlink the squad pointers.
 //
 //=========================================================
-void CFlockingFlyer :: SquadUnlink( void )
+void CFlockingFlyer::SquadUnlink( void )
 {
 	m_pSquadLeader = NULL;
 	m_pSquadNext	= NULL;
@@ -840,7 +840,7 @@ void CFlockingFlyer :: SquadUnlink( void )
 // SquadAdd(), add pAdd to my squad
 //
 //=========================================================
-void CFlockingFlyer :: SquadAdd( CFlockingFlyer *pAdd )
+void CFlockingFlyer::SquadAdd( CFlockingFlyer *pAdd )
 {
 	ASSERT( pAdd!=NULL );
 	ASSERT( !pAdd->InSquad() );
@@ -856,7 +856,7 @@ void CFlockingFlyer :: SquadAdd( CFlockingFlyer *pAdd )
 // If I am pRemove, promote m_pSquadNext to leader
 //
 //=========================================================
-void CFlockingFlyer :: SquadRemove( CFlockingFlyer *pRemove )
+void CFlockingFlyer::SquadRemove( CFlockingFlyer *pRemove )
 {
 	ASSERT( pRemove!=NULL );
 	ASSERT( this->IsLeader() );
@@ -916,7 +916,7 @@ void CFlockingFlyer :: SquadRemove( CFlockingFlyer *pRemove )
 // callable from leaders & followers
 //
 //=========================================================
-int CFlockingFlyer :: SquadCount( void )
+int CFlockingFlyer::SquadCount( void )
 {
 	CFlockingFlyer *pList = m_pSquadLeader;
 	int squadCount = 0;
@@ -934,7 +934,7 @@ int CFlockingFlyer :: SquadCount( void )
 // SquadDisband(), Unlink all squad members
 //
 //=========================================================
-void CFlockingFlyer :: SquadDisband( void )
+void CFlockingFlyer::SquadDisband( void )
 {
 	CFlockingFlyer *pList = m_pSquadLeader;
 	CFlockingFlyer *pNext;

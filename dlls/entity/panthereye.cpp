@@ -725,7 +725,7 @@ void CPantherEye::panthereye_findCoverFromEnemy( void ){
 // relationship table.
 //=========================================================
 //Note that predators attack other predators on sight.  Panthers will attack other panthers.  Change class to "CLASS_ALIEN_MONSTER" to still make it hostile to non-aliens (to still be hostile to "Prey", may need to make a new one)
-int CPantherEye :: Classify ( void )
+int CPantherEye::Classify ( void )
 {
 	return	CLASS_ALIEN_PREDATOR;
 }
@@ -734,7 +734,7 @@ int CPantherEye :: Classify ( void )
 // SetYawSpeed - allows each sequence to have a different
 // turn rate associated with it.
 //=========================================================
-void CPantherEye :: SetYawSpeed ( void )
+void CPantherEye::SetYawSpeed ( void )
 {
 	int ys;
 
@@ -1038,7 +1038,7 @@ int CPantherEye::tryActivitySubstitute(int activity){
 }
 
 
-void CPantherEye :: PainSound( void )
+void CPantherEye::PainSound( void )
 {
 //	int pitch = 95 + RANDOM_LONG(0,9);
 
@@ -1046,14 +1046,14 @@ void CPantherEye :: PainSound( void )
 //		UTIL_PlaySound( ENT(pev), CHAN_VOICE, pPainSounds[ RANDOM_LONG(0,ARRAYSIZE(pPainSounds)-1) ], 1.0, ATTN_NORM, 0, pitch );
 }
 
-void CPantherEye :: AlertSound( void )
+void CPantherEye::AlertSound( void )
 {
 //	int pitch = 95 + RANDOM_LONG(0,9);
 
 //	UTIL_PlaySound( ENT(pev), CHAN_VOICE, pAlertSounds[ RANDOM_LONG(0,ARRAYSIZE(pAlertSounds)-1) ], 1.0, ATTN_NORM, 0, pitch );
 }
 
-void CPantherEye :: IdleSound( void )
+void CPantherEye::IdleSound( void )
 {
 	int pitch = 95 + RANDOM_LONG(0,9);
 
@@ -1061,7 +1061,7 @@ void CPantherEye :: IdleSound( void )
 	UTIL_PlaySound( ENT(pev), CHAN_VOICE, pIdleSounds[ RANDOM_LONG(0,ARRAYSIZE(pIdleSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
 }
 
-void CPantherEye :: AttackSound( void )
+void CPantherEye::AttackSound( void )
 {
 	// Play a random attack sound
 	UTIL_PlaySound( ENT(pev), CHAN_VOICE, pAttackSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
@@ -1248,7 +1248,7 @@ void CPantherEye::HandleEventQueueEvent(int arg_eventID){
 // HandleAnimEvent - catches the monster-specific messages
 // that occur when tagged animation frames are played.
 //=========================================================
-void CPantherEye :: HandleAnimEvent( MonsterEvent_t *pEvent )
+void CPantherEye::HandleAnimEvent( MonsterEvent_t *pEvent )
 {
 	EASY_CVAR_PRINTIF_PRE(panthereyePrintout, easyPrintLine("BATTA-BING, BATTA-BOOM %d", pEvent->event));
 
@@ -1409,7 +1409,7 @@ extern int global_useSentenceSave;
 //=========================================================
 // Precache - precaches all resources this monster needs
 //=========================================================
-void CPantherEye :: Precache()
+void CPantherEye::Precache()
 {
 	int i;
 
@@ -1436,7 +1436,7 @@ void CPantherEye :: Precache()
 
 
 
-void CPantherEye :: DeathSound ( void )
+void CPantherEye::DeathSound ( void )
 {
 	int pitch = randomValueInt(96, 102);
 
@@ -1450,7 +1450,7 @@ BOOL CPantherEye::CheckMeleeAttack1 ( float flDot, float flDist )
 {
 	/*
 	if(m_hEnemy != NULL){
-		EASY_CVAR_PRINTIF_PRE(panthereyePrintout, easyPrintLine("SO::: %d, %.2f %.2f %d", !HasConditions( bits_COND_ENEMY_OCCLUDED ), flDist, flDot, m_hEnemy ->Classify() ));
+		EASY_CVAR_PRINTIF_PRE(panthereyePrintout, easyPrintLine("SO:::%d, %.2f %.2f %d", !HasConditions( bits_COND_ENEMY_OCCLUDED ), flDist, flDot, m_hEnemy ->Classify() ));
 	}else{
 		EASY_CVAR_PRINTIF_PRE(panthereyePrintout, easyPrintLine("NO ENEMY"));
 	}
@@ -1479,7 +1479,7 @@ BOOL CPantherEye::CheckMeleeAttack2 ( float flDot, float flDist )
 {
 	/*
 	if(m_hEnemy != NULL){
-		EASY_CVAR_PRINTIF_PRE(panthereyePrintout, easyPrintLine("SO::: %d, %.2f %.2f %d", !HasConditions( bits_COND_ENEMY_OCCLUDED ), flDist, flDot, m_hEnemy ->Classify() ));
+		EASY_CVAR_PRINTIF_PRE(panthereyePrintout, easyPrintLine("SO:::%d, %.2f %.2f %d", !HasConditions( bits_COND_ENEMY_OCCLUDED ), flDist, flDot, m_hEnemy ->Classify() ));
 	}else{
 		EASY_CVAR_PRINTIF_PRE(panthereyePrintout, easyPrintLine("NO ENEMY"));
 	}
@@ -1691,7 +1691,7 @@ void CPantherEye::SetActivity ( Activity NewActivity )
 		NewActivity != ACT_DIEFORWARD &&
 		NewActivity != ACT_DIEVIOLENT 
 	){
-		//////easyForcePrintLine("OOOOOOOOOOOOOOOOOOOOOO freakin HOW %d ::: %d %d %d", monsterID, NewActivity, pev->deadflag, m_MonsterState);
+		//////easyForcePrintLine("OOOOOOOOOOOOOOOOOOOOOO freakin HOW %d :::%d %d %d", monsterID, NewActivity, pev->deadflag, m_MonsterState);
 		return;
 	}
 	
@@ -1999,7 +1999,7 @@ Schedule_t* CPantherEye::GetScheduleOfType( int Type){
 
 	
 	if( (pev->deadflag != DEAD_NO) && Type != SCHED_DIE){
-		//////easyForcePrintLine("I WILL eat YOUR WHOLE box of rasinssss %d: %d ::: %d", monsterID, deadSetActivityBlock, Type);
+		//////easyForcePrintLine("I WILL eat YOUR WHOLE box of rasinssss %d: %d :::%d", monsterID, deadSetActivityBlock, Type);
 	}
 
 

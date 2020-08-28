@@ -843,7 +843,7 @@ int CHAssault::IRelationship ( CBaseEntity *pTarget )
 // Classify - indicates this monster's place in the 
 // relationship table.
 //=========================================================
-int CHAssault :: Classify ( void )
+int CHAssault::Classify ( void )
 {
 	return	CLASS_HUMAN_MILITARY;
 }
@@ -864,7 +864,7 @@ const char* CHAssault::getNormalModel(void){
 // PrescheduleThink - this function runs after conditions
 // are collected and before scheduling code is run.
 //=========================================================
-void CHAssault :: PrescheduleThink ( void )
+void CHAssault::PrescheduleThink ( void )
 {
 	if ( InSquad() && m_hEnemy != NULL )
 	{
@@ -889,7 +889,7 @@ void CHAssault :: PrescheduleThink ( void )
 // SetYawSpeed - allows each sequence to have a different
 // turn rate associated with it.
 //=========================================================
-void CHAssault :: SetYawSpeed ( void )
+void CHAssault::SetYawSpeed ( void )
 {
 	int ys;
 
@@ -939,7 +939,7 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CHAssault)
 	return eck;
 }
 
-void CHAssault :: PainSound( void )
+void CHAssault::PainSound( void )
 {
 	//int pitch = 95 + RANDOM_LONG(0,9);
 	int pitch = randomValueInt(m_voicePitch - 4, m_voicePitch + 4);
@@ -948,7 +948,7 @@ void CHAssault :: PainSound( void )
 		UTIL_PlaySound( ENT(pev), CHAN_VOICE, pPainSounds[ RANDOM_LONG(0,ARRAYSIZE(pPainSounds)-1) ], 1.0, ATTN_NORM, 0, pitch );
 }
 
-void CHAssault :: AlertSound( void )
+void CHAssault::AlertSound( void )
 {
 	if(alertSoundCooldown != -1 && gpGlobals->time < alertSoundCooldown){
 		return; //not so soon.
@@ -975,7 +975,7 @@ void CHAssault :: AlertSound( void )
 	}
 }
 
-void CHAssault :: IdleSound( void )
+void CHAssault::IdleSound( void )
 {
 	//int pitch = 95 + RANDOM_LONG(0,9);
 	int pitch = randomValueInt(m_voicePitch - 7, m_voicePitch + 7);
@@ -993,7 +993,7 @@ void CHAssault :: IdleSound( void )
 }
 
 
-void CHAssault :: DeathSound ( void )
+void CHAssault::DeathSound ( void )
 {
 	int pitch = randomValueInt(m_voicePitch - 4, m_voicePitch + 3);
 
@@ -1013,7 +1013,7 @@ void CHAssault :: DeathSound ( void )
 
 
 //well, melee, currently unused.
-void CHAssault :: AttackSound( void )
+void CHAssault::AttackSound( void )
 {
 	// Play a random attack sound
 	UTIL_PlaySound( ENT(pev), CHAN_VOICE, pAttackSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
@@ -1092,7 +1092,7 @@ void CHAssault::HandleEventQueueEvent(int arg_eventID){
 // HandleAnimEvent - catches the monster-specific messages
 // that occur when tagged animation frames are played.
 //=========================================================
-void CHAssault :: HandleAnimEvent( MonsterEvent_t *pEvent )
+void CHAssault::HandleAnimEvent( MonsterEvent_t *pEvent )
 {
 
 	EASY_CVAR_PRINTIF_PRE(hassaultPrintout, easyPrintLine( "OOHHHH ANIM EVENT : %d", pEvent->event) );
@@ -1186,7 +1186,7 @@ float CHAssault::getBarnaclePulledTopOffset(void){
 //=========================================================
 // Spawn
 //=========================================================
-void CHAssault :: Spawn()
+void CHAssault::Spawn()
 {
 	Precache( );
 
@@ -1257,7 +1257,7 @@ extern int global_useSentenceSave;
 //=========================================================
 // Precache - precaches all resources this monster needs
 //=========================================================
-void CHAssault :: Precache()
+void CHAssault::Precache()
 {
 	int i;
 
@@ -1371,7 +1371,7 @@ Vector CHAssault::GetGunPositionAI(void){
 //return pev->origin + Vector( 0, 0, 60 );
 
 
-void CHAssault :: Shoot ( void )
+void CHAssault::Shoot ( void )
 {
 	//return;
 	/*
@@ -1488,7 +1488,7 @@ void CHAssault :: Shoot ( void )
 	//SafeSetBlending( 0, angDir.x );
 }
 
-void CHAssault :: ShootAtForceFireTarget ( void )
+void CHAssault::ShootAtForceFireTarget ( void )
 {
 
 	//EASY_CVAR_PRINTIF_PRE(hassaultPrintout, easyPrintLine( "is forceFireTargetObject free %d", forceFireTargetObject->free));
@@ -1677,7 +1677,7 @@ void CHAssault::SetActivity(Activity NewActivity){
 }
 
 
-BOOL CHAssault :: FCanCheckAttacks ( void )
+BOOL CHAssault::FCanCheckAttacks ( void )
 {
 	EASY_CVAR_PRINTIF_PRE(hassaultPrintout, easyPrintLine( "WELL DO YA PUNK %d %d", HasConditions(bits_COND_SEE_ENEMY), HasConditions( bits_COND_ENEMY_TOOFAR )));
 	if ( HasConditions(bits_COND_SEE_ENEMY) && !HasConditions( bits_COND_ENEMY_TOOFAR ) )
@@ -1687,7 +1687,7 @@ BOOL CHAssault :: FCanCheckAttacks ( void )
 	return FALSE;
 }
 
-BOOL CHAssault :: CheckRangeAttack1 ( float flDot, float flDist )
+BOOL CHAssault::CheckRangeAttack1 ( float flDot, float flDist )
 {
 	//OK. So the sputtering glitch (firing for a little, stopping, firing again) appears to be caused by 
 	//the gun's firing origin shifting based on the frame of the anim (it jostles around a little for recoil).
@@ -1727,7 +1727,7 @@ BOOL CHAssault :: CheckRangeAttack1 ( float flDot, float flDist )
 	//"BodyTargetMod" will not apply the random vertical shift on the player (no idea why its BodyTarget did).
 	//For anything else, no difference, cloned per anything else's own "BodyTarget".
 
-	EASY_CVAR_PRINTIF_PRE(hassaultPrintout, easyPrintLine( "CONDS::: %d %.2f %.2f %d %d %d",
+	EASY_CVAR_PRINTIF_PRE(hassaultPrintout, easyPrintLine( "CONDS:::%d %.2f %.2f %d %d %d",
 		!HasConditions( bits_COND_ENEMY_OCCLUDED ),
 		flDist,
 		flDot,
@@ -1805,7 +1805,7 @@ BOOL CHAssault :: CheckRangeAttack1 ( float flDot, float flDist )
 	return FALSE;
 }
 
-BOOL CHAssault :: CheckRangeAttack2 ( float flDot, float flDist )
+BOOL CHAssault::CheckRangeAttack2 ( float flDot, float flDist )
 {
 	return FALSE;
 }
@@ -1858,7 +1858,7 @@ BOOL CHAssault::CheckMeleeAttack1(float flDot, float flDist){
 	return FALSE;
 }
 
-BOOL CHAssault :: CheckMeleeAttack2 ( float flDot, float flDist )
+BOOL CHAssault::CheckMeleeAttack2 ( float flDot, float flDist )
 {
 	return FALSE;
 }
@@ -1886,7 +1886,7 @@ void CHAssault::ReportAIState( void )
 //=========================================================
 // start task
 //=========================================================
-void CHAssault :: StartTask ( Task_t *pTask ){
+void CHAssault::StartTask ( Task_t *pTask ){
 	TraceResult tr;
 	Vector vecEnd;
 
@@ -1908,7 +1908,7 @@ void CHAssault :: StartTask ( Task_t *pTask ){
 		}
 		*/
 		
-		CBaseMonster :: StartTask( pTask );
+		CBaseMonster::StartTask( pTask );
 	break;
 	case TASK_HASSAULT_RESIDUAL_FIRE:
 		residualFireTime = gpGlobals->time + EASY_CVAR_GET_DEBUGONLY(hassaultResidualAttackTime);
@@ -2022,14 +2022,14 @@ void CHAssault :: StartTask ( Task_t *pTask ){
 	break;
 
 	default: 
-		CBaseMonster :: StartTask( pTask );
+		CBaseMonster::StartTask( pTask );
 	break;
 	}
 
 }
 
 
-BOOL CHAssault :: FValidateCover ( const Vector &vecCoverLocation )
+BOOL CHAssault::FValidateCover ( const Vector &vecCoverLocation )
 {
 	if ( !InSquad() )
 	{
@@ -2052,7 +2052,7 @@ BOOL CHAssault :: FValidateCover ( const Vector &vecCoverLocation )
 // hear the DANGER sound that is made by hand grenades and
 // other dangerous items.
 //=========================================================
-int CHAssault :: ISoundMask ( void )
+int CHAssault::ISoundMask ( void )
 {
 	return	bits_SOUND_WORLD	|
 			bits_SOUND_COMBAT	|
@@ -2066,7 +2066,7 @@ int CHAssault :: ISoundMask ( void )
 //=========================================================
 // RunTask
 //=========================================================
-void CHAssault :: RunTask ( Task_t *pTask )
+void CHAssault::RunTask ( Task_t *pTask )
 {
 	recentSchedule = m_pSchedule;
 
@@ -2204,7 +2204,7 @@ void CHAssault :: RunTask ( Task_t *pTask )
 				//return;
 			}
 		}
-		CSquadMonster :: RunTask( pTask );
+		CSquadMonster::RunTask( pTask );
 
 	break;
 	case TASK_RANGE_ATTACK1:
@@ -2251,7 +2251,7 @@ void CHAssault :: RunTask ( Task_t *pTask )
 		
 		}
 		
-		//CSquadMonster :: RunTask( pTask );
+		//CSquadMonster::RunTask( pTask );
 
 		
 
@@ -2443,10 +2443,10 @@ void CHAssault :: RunTask ( Task_t *pTask )
 				SetTurnActivity(); 
 			}
 		}
-		CSquadMonster :: RunTask( pTask );  //why... why not chec kthis?
+		CSquadMonster::RunTask( pTask );  //why... why not chec kthis?
 	break;
 	default: 
-		CSquadMonster :: RunTask( pTask );
+		CSquadMonster::RunTask( pTask );
 	break;
 	}
 }
@@ -3005,7 +3005,7 @@ Vector giveZ(const Vector2D& arg, const float& myZ){
 }
 
 
-void CHAssault :: MonsterThink ( void )
+void CHAssault::MonsterThink ( void )
 //void CHAssault::HAssaultThink( void ) //Save & Restore only work properly if this is MonsterThink
 {
 	//MODDD - NOTICE.   Nothing in this think method, as of yet, seems to depend on the monster being alive or not.
@@ -3044,7 +3044,7 @@ void CHAssault :: MonsterThink ( void )
 	}else if(EASY_CVAR_GET_DEBUGONLY(hassaultDrawLKP) == 2){
 		UTIL_drawLineFrameBoxAround(m_vecEnemyLKP, 9, 30, 255, 0, 0);
 	}
-	//easyPrintLine("HASSAULT::: whut %s %d  %d", this->getScheduleName(), this->getTaskNumber(), this->HasConditions(bits_COND_ENEMY_DEAD));
+	//easyPrintLine("HASSAULT:::whut %s %d  %d", this->getScheduleName(), this->getTaskNumber(), this->HasConditions(bits_COND_ENEMY_DEAD));
 	
 	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(thatWasntPunch) == 1 && (this->m_fSequenceFinished || pev->frame >= 245)){
 
@@ -3203,7 +3203,7 @@ void CHAssault :: MonsterThink ( void )
 }
 
 
-int CHAssault :: SquadRecruit( int searchRadius, int maxMembers ){
+int CHAssault::SquadRecruit( int searchRadius, int maxMembers ){
 	return CSquadMonster::SquadRecruit(searchRadius, maxMembers);
 }
 

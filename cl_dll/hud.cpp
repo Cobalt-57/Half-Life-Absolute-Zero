@@ -851,7 +851,7 @@ void command_test4(void) {
 // MODDD - NOTE. 
 // See cl_dll/cdll_int.cpp for the HUD_Init call that leads here, although there isn't anything
 // special there.
-void CHud :: Init( void )
+void CHud::Init( void )
 {
 	//MODDD - HOOK_MESSAGE calls for hud_msg.cpp methods moved
 	// to custom_message.cpp, along with the methods themselves.
@@ -1076,7 +1076,7 @@ void CHud :: Init( void )
 
 // CHud destructor
 // cleans up memory allocated for m_rg* arrays
-CHud :: ~CHud()
+CHud::~CHud()
 {
 	delete [] m_rgSpriteHandle_ts;
 	delete [] m_rgrcRects;
@@ -1163,7 +1163,7 @@ void CHud::getGenericGreenColor(int &r, int &g, int &b){
 // searches through the sprite list loaded from hud.txt for a name matching SpriteName
 // returns an index into the gHUD.m_rgSpriteHandle_ts[] array
 // returns 0 if sprite not found
-int CHud :: GetSpriteIndex( const char *SpriteName )
+int CHud::GetSpriteIndex( const char *SpriteName )
 {
 
 	//MODDD - printouts.
@@ -1181,11 +1181,11 @@ int CHud :: GetSpriteIndex( const char *SpriteName )
 	return -1; // invalid sprite
 }
 
-void CHud :: VidInit( void )
+void CHud::VidInit( void )
 {
 
 	//?
-	//easyPrintLine("HUD::: VIDINIT!");
+	//easyPrintLine("HUD:::VIDINIT!");
 
 	m_scrinfo.iSize = sizeof(m_scrinfo);
 	GetScreenInfo(&m_scrinfo);

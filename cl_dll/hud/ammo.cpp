@@ -576,7 +576,7 @@ int CHudAmmo::MsgFunc_WeaponList(const char *pszName, int iSize, void *pbuf )
 
 
 //MODDD - needless to say, the next 3 methods are new.
-int CHudAmmo:: MsgFunc_AntidoteP(const char *pszName,  int iSize, void *pbuf )
+int CHudAmmo::MsgFunc_AntidoteP(const char *pszName,  int iSize, void *pbuf )
 {
 
 	BEGIN_READ( pbuf, iSize );
@@ -595,7 +595,7 @@ int CHudAmmo:: MsgFunc_AntidoteP(const char *pszName,  int iSize, void *pbuf )
 }
 
 
-int CHudAmmo:: MsgFunc_AdrenalineP(const char *pszName,  int iSize, void *pbuf )
+int CHudAmmo::MsgFunc_AdrenalineP(const char *pszName,  int iSize, void *pbuf )
 {
 
 	BEGIN_READ( pbuf, iSize );
@@ -607,7 +607,7 @@ int CHudAmmo:: MsgFunc_AdrenalineP(const char *pszName,  int iSize, void *pbuf )
 }
 
 
-int CHudAmmo:: MsgFunc_RadiationP(const char *pszName,  int iSize, void *pbuf )
+int CHudAmmo::MsgFunc_RadiationP(const char *pszName,  int iSize, void *pbuf )
 {
 
 	BEGIN_READ( pbuf, iSize );
@@ -618,7 +618,7 @@ int CHudAmmo:: MsgFunc_RadiationP(const char *pszName,  int iSize, void *pbuf )
 	return 1;
 }
 
-int CHudAmmo:: MsgFunc_UpdTankTime(const char *pszName,  int iSize, void *pbuf )
+int CHudAmmo::MsgFunc_UpdTankTime(const char *pszName,  int iSize, void *pbuf )
 {
 
 	BEGIN_READ( pbuf, iSize );
@@ -629,7 +629,7 @@ int CHudAmmo:: MsgFunc_UpdTankTime(const char *pszName,  int iSize, void *pbuf )
 	return 1;
 }
 
-int CHudAmmo:: MsgFunc_UpdLJCharge(const char *pszName,  int iSize, void *pbuf )
+int CHudAmmo::MsgFunc_UpdLJCharge(const char *pszName,  int iSize, void *pbuf )
 {
 
 	BEGIN_READ( pbuf, iSize );
@@ -1260,7 +1260,7 @@ int CHudAmmo::Draw(float flTime)
 	}
 
 
-	//easyForcePrintLine("WHO AREREEEEE YOU %d :: %.2f", gHUD.canDrawBottomStats, EASY_CVAR_GET(hud_weaponselecthideslower));
+	//easyForcePrintLine("WHO AREREEEEE YOU %d::%.2f", gHUD.canDrawBottomStats, EASY_CVAR_GET(hud_weaponselecthideslower));
 
 	
 

@@ -353,7 +353,7 @@ class CGameTeamMaster : public CRulePointEntity
 public:
 	void	KeyValue( KeyValueData *pkvd );
 	void	Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value );
-	int		ObjectCaps( void ) { return CRulePointEntity:: ObjectCaps() | FCAP_MASTER; }
+	int		ObjectCaps( void ) { return CRulePointEntity::ObjectCaps() | FCAP_MASTER; }
 
 	BOOL		IsTriggered( CBaseEntity *pActivator );
 	const char	*TeamID( void );

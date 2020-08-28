@@ -829,7 +829,12 @@ void ScriptEntityCancel(edict_t* pentCine)
 			if (pTarget->m_MonsterState == MONSTERSTATE_SCRIPT)
 			{
 				// tell them do die
-				pTarget->m_scriptState = CCineMonster::SCRIPT_CLEANUP;
+				//MODDD - used to be CCineMonster::SCRIPT_CLEANUP.
+				// Sooooo.....    some  globalName::thing    (the globalname::  part) is ok,
+				// if that's some class that has the enum.
+				// But if the enum is global and has its own name.  That isn't ok in VS6.
+				// HHHHHHHHHHHMMMMMMMMMMmmmmmmmmmmmmmmmmmnnnnnnnnnn- ok.    sure.     yeah.
+				pTarget->m_scriptState = SCRIPT_CLEANUP;
 				// do it now
 				pTarget->CineCleanup();
 			}
@@ -929,7 +934,7 @@ void CCineMonster::Activate(void)
 			SequencePrecache(pmodel, STRING(m_iszIdle));
 			SequencePrecache(pmodel, STRING(m_iszPlay));
 		}
-		//easyForcePrintLine("COMPARISON::::: %s %s", STRING(pTarget->pev->targetname), STRING(m_iszEntity));
+		//easyForcePrintLine("COMPARISON:::::%s %s", STRING(pTarget->pev->targetname), STRING(m_iszEntity));
 		if (FStrEq(STRING(pTarget->pev->targetname), STRING(m_iszEntity))) {
 
 

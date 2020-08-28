@@ -94,7 +94,7 @@ BOOL CGameRules::CanHaveAmmo(CBasePlayer* pPlayer, int iAmmoTypeId, int iMaxCarr
 
 //=========================================================
 //=========================================================
-edict_t *CGameRules :: GetPlayerSpawnSpot( CBasePlayer *pPlayer )
+edict_t *CGameRules::GetPlayerSpawnSpot( CBasePlayer *pPlayer )
 {
 	edict_t *pentSpawnSpot = EntSelectSpawnPoint( pPlayer );
 

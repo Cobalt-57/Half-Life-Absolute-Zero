@@ -564,7 +564,7 @@ void drawOldDebugStuff(void) {
 		}
 	}
 
-	//NOTE::: it appears that the end of retail ends the game by making the client's "pev->flags" add "FL_FROZEN".
+	//NOTE:::it appears that the end of retail ends the game by making the client's "pev->flags" add "FL_FROZEN".
 	//easyPrintLine("MY DETAILZ %d %d %d %d %s", pev->deadflag, pev->effects, pev->flags, pev->renderfx, m_pActiveItem!=NULL?STRING(m_pActiveItem->pev->classname):"NULL");
 
 

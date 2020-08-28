@@ -683,7 +683,7 @@ void DLLEXPORT HUD_StudioEvent( const struct mstudioevent_s *event, const struct
 	
 	
 	// SSSSSSSSTTTTTTTTTOOOOOOOOOOOOPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP
-	//easyForcePrintLine("HUD_StudioEvent::: event? %d", event->event);
+	//easyForcePrintLine("HUD_StudioEvent:::event? %d", event->event);
 
 
 
@@ -838,7 +838,7 @@ void DLLEXPORT HUD_TempEntUpdate (
 	{
 		int active;
 
-		//easyPrintLine("TEMP ENTITY::: %d", pTemp->flags);
+		//easyPrintLine("TEMP ENTITY:::%d", pTemp->flags);
 
 
 		active = 1;

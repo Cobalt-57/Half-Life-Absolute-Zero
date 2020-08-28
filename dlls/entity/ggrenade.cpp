@@ -97,7 +97,7 @@ void CGrenade::Explode(void)
 	TraceResult tr;
 	UTIL_TraceLine(pev->origin, pev->origin + Vector(0, 0, -32), ignore_monsters, ENT(pev), &tr);
 
-	//CGrenade::   ???
+	//CGrenade::  ???
 	CGrenade::Explode(&tr, pev->dmg, pev->dmg * 2.5, DMG_BLAST, 0, 1);
 }
 
@@ -605,7 +605,7 @@ void CGrenade::SlideTouch( CBaseEntity *pOther )
 	}
 }
 
-void CGrenade :: BounceSound( void )
+void CGrenade::BounceSound( void )
 {
 	//MODDD - don't spam bounce sounds!
 	if (gpGlobals->time >= nextBounceSoundAllowed) {
@@ -637,7 +637,7 @@ void CGrenade :: BounceSound( void )
 
 }
 
-void CGrenade :: TumbleThink( void )
+void CGrenade::TumbleThink( void )
 {
 	if (!IsInWorld())
 	{
@@ -676,7 +676,7 @@ void CGrenade :: TumbleThink( void )
 /*
 //MODDD - added.
 // not necessary.
-void CGrenade:: Activate( void ){
+void CGrenade::Activate( void ){
 	
 	CBaseMonster::Activate();
 	//Just a bridge for the heirarchy.  Other grenades may implement "Activate".
@@ -687,7 +687,7 @@ void CGrenade:: Activate( void ){
 // A lot of these defaults are never used, like "grenade.mdl".   w_grenade is used for hand grenades!
 // TODO - strip em' out???    Or move to whatever relies on them.
 // ShootContact's grenade seems to keep it for the mp5 grenades though.   In fact, MOVED
-void CGrenade:: Spawn( void )
+void CGrenade::Spawn( void )
 {
 	pev->movetype = MOVETYPE_BOUNCE;
 	pev->classname = MAKE_STRING( "grenade" );

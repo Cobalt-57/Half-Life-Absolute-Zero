@@ -311,7 +311,7 @@ IMPLEMENT_CUSTOM_SCHEDULES( CZombie, CBaseMonster );
 // Classify - indicates this monster's place in the 
 // relationship table.
 //=========================================================
-int CZombie :: Classify ( void )
+int CZombie::Classify ( void )
 {
 	return	CLASS_ALIEN_MONSTER;
 }
@@ -320,7 +320,7 @@ int CZombie :: Classify ( void )
 // SetYawSpeed - allows each sequence to have a different
 // turn rate associated with it.
 //=========================================================
-void CZombie :: SetYawSpeed ( void )
+void CZombie::SetYawSpeed ( void )
 {
 	int ys;
 
@@ -594,7 +594,7 @@ void CZombie::BecomeDead(void)
 
 
 
-void CZombie :: PainSound( void )
+void CZombie::PainSound( void )
 {
 	int pitch = 95 + RANDOM_LONG(0,9);
 
@@ -602,14 +602,14 @@ void CZombie :: PainSound( void )
 		UTIL_PlaySound( ENT(pev), CHAN_VOICE, pPainSounds[ RANDOM_LONG(0,ARRAYSIZE(pPainSounds)-1) ], 1.0, ATTN_NORM, 0, pitch );
 }
 
-void CZombie :: AlertSound( void )
+void CZombie::AlertSound( void )
 {
 	int pitch = 95 + RANDOM_LONG(0,9);
 
 	UTIL_PlaySound( ENT(pev), CHAN_VOICE, pAlertSounds[ RANDOM_LONG(0,ARRAYSIZE(pAlertSounds)-1) ], 1.0, ATTN_NORM, 0, pitch );
 }
 
-void CZombie :: IdleSound( void )
+void CZombie::IdleSound( void )
 {
 	int pitch = 95 + RANDOM_LONG(0,9);
 
@@ -617,7 +617,7 @@ void CZombie :: IdleSound( void )
 	UTIL_PlaySound( ENT(pev), CHAN_VOICE, pIdleSounds[ RANDOM_LONG(0,ARRAYSIZE(pIdleSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
 }
 
-void CZombie :: AttackSound( void )
+void CZombie::AttackSound( void )
 {
 	// Play a random attack sound
 	UTIL_PlaySound( ENT(pev), CHAN_VOICE, pAttackSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
@@ -628,7 +628,7 @@ void CZombie :: AttackSound( void )
 // HandleAnimEvent - catches the monster-specific messages
 // that occur when tagged animation frames are played.
 //=========================================================
-void CZombie :: HandleAnimEvent( MonsterEvent_t *pEvent )
+void CZombie::HandleAnimEvent( MonsterEvent_t *pEvent )
 {
 	switch( pEvent->event )
 	{
@@ -727,7 +727,7 @@ CZombie::CZombie(){
 //=========================================================
 // Spawn
 //=========================================================
-void CZombie :: Spawn()
+void CZombie::Spawn()
 {
 	Precache( );
 
@@ -760,7 +760,7 @@ extern int global_useSentenceSave;
 //=========================================================
 // Precache - precaches all resources this monster needs
 //=========================================================
-void CZombie :: Precache()
+void CZombie::Precache()
 {
 	PRECACHE_MODEL("models/zombie.mdl");
 
@@ -1388,7 +1388,7 @@ void CZombie::HandleEventQueueEvent(int arg_eventID){
 }//END OF HandleEventQueueEvent
 
 
-int CZombie :: CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, CBaseEntity *pTarget, float *pflDist ){
+int CZombie::CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, CBaseEntity *pTarget, float *pflDist ){
 
 	int mahTask = getTaskNumber();
 
@@ -1405,7 +1405,7 @@ int CZombie :: CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, CB
 
 
 //TODO - IIgnore too perhaps for some monsters?
-int CZombie :: ISoundMask ( void )
+int CZombie::ISoundMask ( void )
 {
 	return	bits_SOUND_WORLD	|
 			bits_SOUND_COMBAT	|

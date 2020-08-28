@@ -443,7 +443,7 @@ void CPython::Reload( void )
 		//m_flSoundDelay = 1.5;
 		//m_pPlayer->m_flNextAttack = UTIL_WeaponTimeBase() + 1.5;
 		m_flSoundDelay =  gpGlobals->time + 1.5;
-		//easyPrintLine("DELAYYYYY %.2f :: %.2f", m_flSoundDelay, UTIL_WeaponTimeBase());
+		//easyPrintLine("DELAYYYYY %.2f::%.2f", m_flSoundDelay, UTIL_WeaponTimeBase());
 	#endif
 	}
 
@@ -508,7 +508,7 @@ void CPython::ItemPostFrameThink(){
 		
 	if(m_flSoundDelay != 0 && m_flSoundDelay <= gpGlobals->time)
 	{
-		//easyPrintLine("EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE %.2f ::: %.2f", m_flSoundDelay, gpGlobals->time);
+		//easyPrintLine("EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE %.2f :::%.2f", m_flSoundDelay, gpGlobals->time);
 		for (int i = 0; i < 6; i++)
 		{
 			EjectBrass ( m_pPlayer->pev->origin, 

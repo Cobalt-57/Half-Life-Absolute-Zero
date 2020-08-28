@@ -1101,7 +1101,7 @@ void UTIL_appendToEnd(char* dest, const char* add){
 	//|a| = 4
 	//|b| = 2
 
-	//easyForcePrintLine("LENGTH TO ADD: %s ::: %d", add, lengthOfToAdd);
+	//easyForcePrintLine("LENGTH TO ADD: %s :::%d", add, lengthOfToAdd);
 	strncpy( &dest[lengthOfDest], add, lengthOfToAdd );
 	
 	//OK, c++... I had more faith in you than that.

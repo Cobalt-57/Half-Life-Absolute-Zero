@@ -14,13 +14,13 @@ CArcherBall::CArcherBall(void){
 
 
 
-void CArcherBall :: Spawn( void ){
+void CArcherBall::Spawn( void ){
 	CControllerHeadBall::Spawn();
 
 	SetTouch( &CArcherBall::BounceTouch );
 }//END OF Spawn
 
-void CArcherBall :: Precache( void ){
+void CArcherBall::Precache( void ){
 
 	CControllerHeadBall::Precache();
 
@@ -29,7 +29,7 @@ void CArcherBall :: Precache( void ){
 
 
 //MODDD - little less reactive to following th enemy.
-void CArcherBall :: MovetoTarget( Vector vecTarget ){
+void CArcherBall::MovetoTarget( Vector vecTarget ){
 	// accelerate
 	velocityCheck(420);
 

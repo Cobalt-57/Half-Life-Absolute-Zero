@@ -39,7 +39,7 @@ public:
 	void KeyValue( KeyValueData *pkvd );
 
 	// Bmodels don't go across transitions
-	virtual int ObjectCaps( void ) { return CBaseToggle :: ObjectCaps() & ~FCAP_ACROSS_TRANSITION; }
+	virtual int ObjectCaps( void ) { return CBaseToggle::ObjectCaps() & ~FCAP_ACROSS_TRANSITION; }
 
 	virtual int Save( CSave &save );
 	virtual int Restore( CRestore &restore );
@@ -71,7 +71,7 @@ TYPEDESCRIPTION	CFuncMortarField::m_SaveData[] =
 IMPLEMENT_SAVERESTORE( CFuncMortarField, CBaseToggle );
 
 
-void CFuncMortarField :: KeyValue( KeyValueData *pkvd )
+void CFuncMortarField::KeyValue( KeyValueData *pkvd )
 {
 	if (FStrEq(pkvd->szKeyName, "m_iszXController"))
 	{
@@ -102,7 +102,7 @@ void CFuncMortarField :: KeyValue( KeyValueData *pkvd )
 
 
 // Drop bombs from above
-void CFuncMortarField :: Spawn( void )
+void CFuncMortarField::Spawn( void )
 {
 	pev->solid = SOLID_NOT;
 	SET_MODEL(ENT(pev), STRING(pev->model));    // set size and link into world
@@ -113,7 +113,7 @@ void CFuncMortarField :: Spawn( void )
 }
 
 
-void CFuncMortarField :: Precache( void )
+void CFuncMortarField::Precache( void )
 {
 	PRECACHE_SOUND ("weapons/mortar.wav");
 	PRECACHE_SOUND ("weapons/mortarhit.wav");
@@ -122,7 +122,7 @@ void CFuncMortarField :: Precache( void )
 
 
 // If connected to a table, then use the table controllers, else hit where the trigger is.
-void CFuncMortarField :: FieldUse( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
+void CFuncMortarField::FieldUse( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
 {
 	Vector vecStart;
 

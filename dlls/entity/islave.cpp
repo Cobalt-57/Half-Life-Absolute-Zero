@@ -189,8 +189,8 @@ public:
 	BOOL finishingReviveFriendAnim;
 
 	void riseFromTheGrave(void);
-	void startReanimation(void);
-	void EndOfRevive(int preReviveSequence);
+	void StartReanimation(void);
+	void StartReanimationPost(int preReviveSequence);
 
 	void forgetReviveTarget(void);
 
@@ -650,7 +650,7 @@ void CISlave::MonsterThink(void){
 // Classify - indicates this monster's place in the 
 // relationship table.
 //=========================================================
-int CISlave :: Classify ( void )
+int CISlave::Classify ( void )
 {
 	return	CLASS_ALIEN_MILITARY;
 }
@@ -679,7 +679,7 @@ int CISlave::IRelationship( CBaseEntity *pTarget )
 }
 
 
-void CISlave :: CallForHelp( char *szClassname, float flDist, EHANDLE hEnemy, Vector &vecLocation )
+void CISlave::CallForHelp( char *szClassname, float flDist, EHANDLE hEnemy, Vector &vecLocation )
 {
 	// ALERT( at_aiconsole, "help " );
 
@@ -708,7 +708,7 @@ void CISlave :: CallForHelp( char *szClassname, float flDist, EHANDLE hEnemy, Ve
 //=========================================================
 // ALertSound - scream
 //=========================================================
-void CISlave :: AlertSound( void )
+void CISlave::AlertSound( void )
 {
 	if ( m_hEnemy != NULL )
 	{
@@ -722,7 +722,7 @@ void CISlave :: AlertSound( void )
 //=========================================================
 // IdleSound
 //=========================================================
-void CISlave :: IdleSound( void )
+void CISlave::IdleSound( void )
 {
 	if (RANDOM_LONG( 0, 2 ) == 0)
 	{
@@ -758,7 +758,7 @@ void CISlave :: IdleSound( void )
 //=========================================================
 // PainSound
 //=========================================================
-void CISlave :: PainSound( void )
+void CISlave::PainSound( void )
 {
 	if (RANDOM_LONG( 0, 2 ) == 0)
 	{
@@ -770,7 +770,7 @@ void CISlave :: PainSound( void )
 // DieSound
 //=========================================================
 
-void CISlave :: DeathSound( void )
+void CISlave::DeathSound( void )
 {
 	UTIL_PlaySound( ENT(pev), CHAN_WEAPON, pDeathSounds[ RANDOM_LONG(0,ARRAYSIZE(pDeathSounds)-1) ], 1.0, ATTN_NORM, 0, m_voicePitch );
 }
@@ -780,7 +780,7 @@ void CISlave :: DeathSound( void )
 // ISoundMask - returns a bit mask indicating which types
 // of sounds this monster regards. 
 //=========================================================
-int CISlave :: ISoundMask ( void) 
+int CISlave::ISoundMask ( void) 
 {
 	return	bits_SOUND_WORLD	|
 			bits_SOUND_COMBAT	|
@@ -829,7 +829,7 @@ GENERATE_KILLED_IMPLEMENTATION(CISlave){
 // SetYawSpeed - allows each sequence to have a different
 // turn rate associated with it.
 //=========================================================
-void CISlave :: SetYawSpeed ( void )
+void CISlave::SetYawSpeed ( void )
 {
 	int ys;
 
@@ -884,7 +884,7 @@ void CISlave :: SetYawSpeed ( void )
 //
 // Returns number of events handled, 0 if none.
 //=========================================================
-void CISlave :: HandleAnimEvent( MonsterEvent_t *pEvent )
+void CISlave::HandleAnimEvent( MonsterEvent_t *pEvent )
 {
 
 	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(thatWasntPunch) == 1){
@@ -1078,7 +1078,7 @@ void CISlave :: HandleAnimEvent( MonsterEvent_t *pEvent )
 //=========================================================
 // CheckRangeAttack1 - normal beam attack 
 //=========================================================
-BOOL CISlave :: CheckRangeAttack1 ( float flDot, float flDist )
+BOOL CISlave::CheckRangeAttack1 ( float flDot, float flDist )
 {
 	if (m_flNextAttack > gpGlobals->time)
 	{
@@ -1101,7 +1101,7 @@ BOOL CISlave :: CheckRangeAttack1 ( float flDot, float flDist )
 //=========================================================
 // CheckRangeAttack2 - check bravery and try to resurect dead comrades
 //=========================================================
-BOOL CISlave :: CheckRangeAttack2 ( float flDot, float flDist )
+BOOL CISlave::CheckRangeAttack2 ( float flDot, float flDist )
 {
 	// NO.  We're not doing this as a separate attack, that makes a lot less sense.
 	return FALSE;
@@ -1266,7 +1266,7 @@ CISlave* CISlave::findISlaveToRevive(BOOL requireLineTrace, float argStartMaxDis
 //=========================================================
 // StartTask
 //=========================================================
-void CISlave :: StartTask ( Task_t *pTask )
+void CISlave::StartTask ( Task_t *pTask )
 {
 	ClearBeams( );
 
@@ -1426,7 +1426,7 @@ void CISlave :: StartTask ( Task_t *pTask )
 		}
 	break;
 	default:
-		CSquadMonster :: StartTask ( pTask );
+		CSquadMonster::StartTask ( pTask );
 	break;
 	}//END OF switch(...)
 
@@ -1435,10 +1435,10 @@ void CISlave :: StartTask ( Task_t *pTask )
 
 
 void CISlave::riseFromTheGrave(void){
-	startReanimation();
+	StartReanimation();
 }
 
-void CISlave::startReanimation(){
+void CISlave::StartReanimation(){
 
 	// Don't let me be obstructed during this animation
 	UTIL_SetSize(this->pev, VEC_HUMAN_HULL_MIN, VEC_HUMAN_HULL_MAX);
@@ -1449,16 +1449,16 @@ void CISlave::startReanimation(){
 		/*
 		monsterTryingToReviveMe->reviveTargetChosen = FALSE;
 		monsterTryingToReviveMe->m_hTargetEnt = NULL;
-		monsterTryingToReviveMe->targetIsDeadException = FALSE;
 		monsterTryingToReviveMe = NULL;
 		*/
 		monsterTryingToReviveMe->forgetReviveTarget();
 	}
 	beingRevived = 2;
 
-	CSquadMonster::startReanimation();
-}//END OF startReanimation
-void CISlave::EndOfRevive(int preReviveSequence){
+	// NOTE - parent calls StartReanimationPost.
+	CSquadMonster::StartReanimation();
+}//END OF StartReanimation
+void CISlave::StartReanimationPost(int preReviveSequence){
 	/*
 	pev->sequence = -1; //force reset.
 	SetSequenceByIndex(preReviveSequence, -1, FALSE);
@@ -1471,10 +1471,10 @@ void CISlave::EndOfRevive(int preReviveSequence){
 	m_IdealActivity = ACT_IDLE;
 	m_Activity = ACT_IDLE; //!!! No sequence changing, force the activity to this now.
 
-	//CBaseMonster::startReanimation();
+	//CBaseMonster::StartReanimation();
 	ChangeSchedule(slISlaveReviveSelf );
 
-}//END OF EndOfRevive
+}//END OF StartReanimationPost
 
 
 
@@ -1533,9 +1533,7 @@ void CISlave::forgetReviveTarget(void){
 					makeThingForgetReviveInfo(m_hDead, thisNameSucks);
 				}
 			}
-
 		}
-		targetIsDeadException = FALSE;
 	}
 
 	m_hDead = NULL;
@@ -1587,7 +1585,7 @@ BOOL CISlave::okayToRevive(void){
 }
 
 
-void CISlave :: RunTask( Task_t *pTask )
+void CISlave::RunTask( Task_t *pTask )
 {
 	//easyPrintLine("BOOM BOOM BOOM %s %d", getScheduleName(), getTaskNumber());
 	
@@ -1677,7 +1675,6 @@ void CISlave :: RunTask( Task_t *pTask )
 					//tempSlave->monsterTryingToReviveMe = NULL;
 					//tempSlave->monsterTryingToReviveMeEHANDLE = NULL;
 					//reviveTargetChosen = FALSE;
-					targetIsDeadException = FALSE;
 					tempSlave->riseFromTheGrave();
 					m_hTargetEnt = NULL;
 					finishingReviveFriendAnim = TRUE;
@@ -1821,7 +1818,7 @@ CISlave::CISlave(void){
 //=========================================================
 // Spawn
 //=========================================================
-void CISlave :: Spawn()
+void CISlave::Spawn()
 {
 	Precache( );
 
@@ -1850,7 +1847,7 @@ extern int global_useSentenceSave;
 //=========================================================
 // Precache - precaches all resources this monster needs
 //=========================================================
-void CISlave :: Precache()
+void CISlave::Precache()
 {
 	int i;
 
@@ -1978,7 +1975,7 @@ void CISlave::ScheduleChange(void){
 
 //=========================================================
 //=========================================================
-Schedule_t *CISlave :: GetSchedule( void )
+Schedule_t *CISlave::GetSchedule( void )
 {
 	ClearBeams( );
 
@@ -2028,7 +2025,7 @@ Schedule_t *CISlave :: GetSchedule( void )
 		if ( HasConditions( bits_COND_ENEMY_DEAD ) )
 		{
 			// call base class, all code to handle dead enemies is centralized there.
-			return CBaseMonster :: GetSchedule();
+			return CBaseMonster::GetSchedule();
 		}
 
 		//if(EASY_CVAR_GET(islaveCanRevive) == 1){ 
@@ -2050,8 +2047,7 @@ Schedule_t *CISlave :: GetSchedule( void )
 				//thisNameSucks->monsterTryingToReviveMe = this;
 				bestChoiceYet->monsterTryingToReviveMe = this;
 				bestChoiceYet->monsterTryingToReviveMeEHANDLE = this;
-				targetIsDeadException = TRUE;
-
+				
 
 				// don't let anything obstruct my target
 				UTIL_SetSize(bestChoiceYet->pev, VEC_HUMAN_HULL_MIN, VEC_HUMAN_HULL_MAX);
@@ -2221,14 +2217,14 @@ Schedule_t *CISlave :: GetSchedule( void )
 }
 
 
-Schedule_t *CISlave :: GetScheduleOfType ( int Type ) 
+Schedule_t *CISlave::GetScheduleOfType ( int Type ) 
 {
 	switch	( Type )
 	{
 	case SCHED_FAIL:
 		if (HasConditions( bits_COND_CAN_MELEE_ATTACK1 ))
 		{
-			return CSquadMonster :: GetScheduleOfType( SCHED_MELEE_ATTACK1 ); ;
+			return CSquadMonster::GetScheduleOfType( SCHED_MELEE_ATTACK1 ); ;
 		}
 		break;
 	case SCHED_RANGE_ATTACK1:
@@ -2236,7 +2232,7 @@ Schedule_t *CISlave :: GetScheduleOfType ( int Type )
 	case SCHED_RANGE_ATTACK2:
 		return slSlaveAttack1;
 	}
-	return CSquadMonster :: GetScheduleOfType( Type );
+	return CSquadMonster::GetScheduleOfType( Type );
 }
 
 
@@ -2244,7 +2240,7 @@ Schedule_t *CISlave :: GetScheduleOfType ( int Type )
 // ArmBeam - small beam from arm to nearby geometry
 //=========================================================
 
-void CISlave :: ArmBeam( int side )
+void CISlave::ArmBeam( int side )
 {
 	TraceResult tr;
 	float flDist = 1.0;
@@ -2290,7 +2286,7 @@ void CISlave :: ArmBeam( int side )
 //=========================================================
 // BeamGlow - brighten all beams
 //=========================================================
-void CISlave :: BeamGlow( )
+void CISlave::BeamGlow( )
 {
 	int b = m_iBeams * 32;
 	if (b > 255)
@@ -2309,7 +2305,7 @@ void CISlave :: BeamGlow( )
 //=========================================================
 // WackBeam - regenerate dead colleagues
 //=========================================================
-void CISlave :: WackBeam( int side, CBaseEntity *pEntity )
+void CISlave::WackBeam( int side, CBaseEntity *pEntity )
 {
 	Vector vecDest;
 	float flDist = 1.0;
@@ -2338,7 +2334,7 @@ void CISlave :: WackBeam( int side, CBaseEntity *pEntity )
 //=========================================================
 // ZapBeam - heavy damage directly forward
 //=========================================================
-void CISlave :: ZapBeam( int side )
+void CISlave::ZapBeam( int side )
 {
 	Vector vecSrc, vecAim;
 	TraceResult tr;
@@ -2379,7 +2375,7 @@ void CISlave :: ZapBeam( int side )
 //=========================================================
 // ClearBeams - remove all beams
 //=========================================================
-void CISlave :: ClearBeams( )
+void CISlave::ClearBeams( )
 {
 	for (int i = 0; i < ISLAVE_MAX_BEAMS; i++)
 	{

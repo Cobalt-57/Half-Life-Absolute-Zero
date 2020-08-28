@@ -105,7 +105,7 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CFlyingMonster)
 
 
 
-int CFlyingMonster :: CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, CBaseEntity *pTarget, float *pflDist )
+int CFlyingMonster::CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, CBaseEntity *pTarget, float *pflDist )
 {
 	// UNDONE: need to check more than the endpoint
 	if (FBitSet(pev->flags, FL_SWIM) && (UTIL_PointContents(vecEnd) != CONTENTS_WATER))
@@ -138,13 +138,13 @@ int CFlyingMonster :: CheckLocalMove ( const Vector &vecStart, const Vector &vec
 }
 
 
-BOOL CFlyingMonster :: FTriangulate ( const Vector &vecStart , const Vector &vecEnd, float flDist, CBaseEntity *pTargetEnt, Vector *pApex )
+BOOL CFlyingMonster::FTriangulate ( const Vector &vecStart , const Vector &vecEnd, float flDist, CBaseEntity *pTargetEnt, Vector *pApex )
 {
 	return CBaseMonster::FTriangulate( vecStart, vecEnd, flDist, pTargetEnt, pApex );
 }
 
 
-Activity CFlyingMonster :: GetStoppedActivity( void )
+Activity CFlyingMonster::GetStoppedActivity( void )
 { 
 	if ( !isMovetypeFlying() )		// UNDONE: Ground idle here, IDLE may be something else
 		return ACT_IDLE;
@@ -156,7 +156,7 @@ Activity CFlyingMonster :: GetStoppedActivity( void )
 }
 
 
-void CFlyingMonster :: Stop( void ) 
+void CFlyingMonster::Stop( void ) 
 { 
 	Activity stopped = GetStoppedActivity();
 	if ( m_IdealActivity != stopped )
@@ -170,7 +170,7 @@ void CFlyingMonster :: Stop( void )
 }
 
 
-float CFlyingMonster :: ChangeYaw( int speed )
+float CFlyingMonster::ChangeYaw( int speed )
 {
 	if ( isMovetypeFlying() )
 	{
@@ -217,7 +217,7 @@ GENERATE_KILLED_IMPLEMENTATION(CFlyingMonster)
 }
 
 
-void CFlyingMonster :: HandleAnimEvent( MonsterEvent_t *pEvent )
+void CFlyingMonster::HandleAnimEvent( MonsterEvent_t *pEvent )
 {
 	switch( pEvent->event )
 	{
@@ -238,7 +238,7 @@ void CFlyingMonster :: HandleAnimEvent( MonsterEvent_t *pEvent )
 }
 
 
-void CFlyingMonster :: Move( float flInterval )
+void CFlyingMonster::Move( float flInterval )
 {
 	if ( isMovetypeFlying() )
 		m_flGroundSpeed = m_flightSpeed;
@@ -246,7 +246,7 @@ void CFlyingMonster :: Move( float flInterval )
 }
 
 
-BOOL CFlyingMonster:: ShouldAdvanceRoute( float flWaypointDist, float flInterval )
+BOOL CFlyingMonster::ShouldAdvanceRoute( float flWaypointDist, float flInterval )
 {
 	// Get true 3D distance to the goal so we actually reach the correct height
 	if ( m_Route[ m_iRouteIndex ].iType & bits_MF_IS_GOAL )

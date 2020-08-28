@@ -597,13 +597,13 @@ edict_t * EHANDLE::Set( edict_t *pent )
 };
 
 
-EHANDLE :: operator CBaseEntity *() 
+EHANDLE::operator CBaseEntity *() 
 { 
 	return (CBaseEntity *)GET_PRIVATE( Get( ) ); 
 };
 
 
-CBaseEntity * EHANDLE :: operator = (CBaseEntity *pEntity)
+CBaseEntity * EHANDLE::operator = (CBaseEntity *pEntity)
 {
 	if (pEntity)
 	{
@@ -624,12 +624,12 @@ CBaseEntity * EHANDLE :: operator = (CBaseEntity *pEntity)
 	return pEntity;
 }
 
-EHANDLE :: operator BOOL ()
+EHANDLE::operator BOOL ()
 {
 	return Get() != NULL;
 }
 
-CBaseEntity * EHANDLE :: operator -> ()
+CBaseEntity * EHANDLE::operator -> ()
 {
 	return (CBaseEntity *)GET_PRIVATE( Get( ) ); 
 }
@@ -701,12 +701,12 @@ int CBaseEntity::getHullIndexForNodes(void) const{
 }//END OF getHullIndexForNodes
 
 
-int CBaseEntity :: getNumberOfBodyParts(void){
+int CBaseEntity::getNumberOfBodyParts(void){
 	int siz = ::getNumberOfBodyParts( GET_MODEL_PTR( ENT(pev) ), pev );
 	return siz;
 }
 
-int CBaseEntity :: getNumberOfSkins(void){
+int CBaseEntity::getNumberOfSkins(void){
 	int siz = ::getNumberOfSkins( GET_MODEL_PTR( ENT(pev) ), pev );
 	return siz;
 }
@@ -804,7 +804,7 @@ void CBaseEntity::ForceSpawnFlag(int arg_spawnFlag){
 // This is how we do so.
 //MODDD - simplified greatly!  References to vars never relied on elsewhere / paths never possible
 // to be reached with the rest of that mod missing removed.
-void CBaseEntity :: SetNextThink( float delay, BOOL correctSpeed )
+void CBaseEntity::SetNextThink( float delay, BOOL correctSpeed )
 {
 	if (pev->movetype == MOVETYPE_PUSH)
 	{
@@ -1148,7 +1148,7 @@ SCHEDULE_TYPE CBaseEntity::getHeardBaitSoundSchedule(){
 
 
 
-int CBaseEntity :: Intersects( CBaseEntity *pOther )
+int CBaseEntity::Intersects( CBaseEntity *pOther )
 {
 	if ( pOther->pev->absmin.x > pev->absmax.x ||
 		 pOther->pev->absmin.y > pev->absmax.y ||
@@ -1160,7 +1160,7 @@ int CBaseEntity :: Intersects( CBaseEntity *pOther )
 	return 1;
 }
 
-void CBaseEntity :: MakeDormant( void )
+void CBaseEntity::MakeDormant( void )
 {
 	SetBits( pev->flags, FL_DORMANT );
 	
@@ -1176,12 +1176,12 @@ void CBaseEntity :: MakeDormant( void )
 	UTIL_SetOrigin( pev, pev->origin );
 }
 
-int CBaseEntity :: IsDormant( void )
+int CBaseEntity::IsDormant( void )
 {
 	return FBitSet( pev->flags, FL_DORMANT );
 }
 
-BOOL CBaseEntity :: IsInWorld( void )
+BOOL CBaseEntity::IsInWorld( void )
 {
 	// position 
 	if (pev->origin.x >= 4096) return FALSE;
@@ -1212,12 +1212,12 @@ int CBaseEntity::ShouldToggle( USE_TYPE useType, BOOL currentState )
 }
 
 
-int CBaseEntity :: DamageDecal( int bitsDamageType)
+int CBaseEntity::DamageDecal( int bitsDamageType)
 {
 	return CBaseEntity::DamageDecal(bitsDamageType, 0);
 }
 
-int CBaseEntity :: DamageDecal( int bitsDamageType, int bitsDamageTypeMod )
+int CBaseEntity::DamageDecal( int bitsDamageType, int bitsDamageTypeMod )
 {
 	if ( pev->rendermode == kRenderTransAlpha )
 		return -1;

@@ -34,7 +34,7 @@ EASY_CVAR_EXTERN_DEBUGONLY(nodeConnectionBreakableCheck)
 EASY_CVAR_EXTERN_DEBUGONLY(nodeDetailPrintout)
 EASY_CVAR_EXTERN_DEBUGONLY(pathfindIgnoreNearestNodeCache)
 EASY_CVAR_EXTERN_DEBUGONLY(pathfindIgnoreStaticRoutes)
-
+EASY_CVAR_EXTERN_DEBUGONLY(pathfindNearestNodeExtra)
 
 
 //MODDD - retail behavior HULL_STEP_SIZE is 16!
@@ -43,9 +43,6 @@ EASY_CVAR_EXTERN_DEBUGONLY(pathfindIgnoreStaticRoutes)
 // any given node is allowed to 'see' in the first stage of graph creation "LinkVisibleNodes()".
 #define MAX_NODE_INITIAL_LINKS	128
 #define MAX_NODES               1024
-
-
-
 
 
 
@@ -79,6 +76,9 @@ BOOL node_hulltest_heightswap;
 BOOL map_anyAirNodes;
 
 
+
+// Test!
+CBaseMonster* g_tempMonster = NULL;
 
 
 
@@ -323,7 +323,7 @@ int CGraph::HandleLinkEnt(int iNode, entvars_t* pevLinkEnt, int afCapMask, NODEQ
 		daClassname = "???";
 	}
 
-	easyPrintLine("LINK ENT:::  node: %d  linkedEnt: %s queryType: %d ", iNode, daClassname, queryType);
+	easyPrintLine("LINK ENT::: node: %d  linkedEnt: %s queryType: %d ", iNode, daClassname, queryType);
 
 
 	// func_door
@@ -809,7 +809,13 @@ int CGraph::FindShortestPath(int* piPath, int iStart, int iDest, int iHull, int 
 
 	// Is routing information present.
 	//MODDD - MAJOR.  If pathfindIgnoreStaticRouges is on, forbid using these.  Debug feature.
-	if (EASY_CVAR_GET(pathfindIgnoreStaticRoutes) != 1 && m_fRoutingComplete)
+	// ALSO.  Require a valid iHull choice.  It is used to access the static route table (array)
+	// so it can't be out of range.
+	if (
+		EASY_CVAR_GET(pathfindIgnoreStaticRoutes) != 1 &&
+		m_fRoutingComplete &&
+		iHull >= 0 && iHull < MAX_NODE_HULLS
+	)
 	{
 		int iCap = CapIndex(afCapMask);
 
@@ -1078,7 +1084,7 @@ void CGraph::CheckNode(Vector vecOrigin, int iNode)
 	// on having a path to the machines interrupted.   This isn't really behavior worth preserving
 	// for what could weaken other pathfind checks into thinking a route that leads nowhere could 
 	// really work.
-	if (EASY_CVAR_GET_DEBUGONLY(ignoreIsolatedNodes) && m_pNodes[iNode].m_cNumLinks < 1) {
+	if (EASY_CVAR_GET_DEBUGONLY(ignoreIsolatedNodes) == 1 && m_pNodes[iNode].m_cNumLinks < 1) {
 		//BAM!  Class dismissed for you.
 		return;
 	}
@@ -1086,14 +1092,38 @@ void CGraph::CheckNode(Vector vecOrigin, int iNode)
 	if (flDist < m_flShortest)
 	{
 		TraceResult tr;
+		BOOL passed;
+		
 
-		// make sure that vecOrigin can trace to this node!
-		//MODDD - involving nodeSearchStartVerticalOFfset now.
-		//UTIL_TraceLine ( vecOrigin, m_pNodes[ iNode ].m_vecOriginPeek, ignore_monsters, 0, &tr );
-		UTIL_TraceLine(vecOrigin + Vector(0, 0, EASY_CVAR_GET_DEBUGONLY(nodeSearchStartVerticalOffset)), m_pNodes[iNode].m_vecOriginPeek, ignore_monsters, 0, &tr);
+		// MODDD - TODO!  Would be neat to be able to tell if pathfinding would like the choice from here to there in advance,
+		// like place a sample entity of the given hull size (also sent in this method) and try to see if CheckLocalMove
+		// (or at least WALK_MOVE?) from here to there would have worked.  CheckLocalMove would be as accurate as it gets though.
+		
+		// Letting that happen if pathfindNearestNodeExtra is on.
+		if(EASY_CVAR_GET_DEBUGONLY(pathfindNearestNodeExtra) == 1 && g_tempMonster != NULL ){
+			Vector vecStart = vecOrigin;
+			vecStart.z = EASY_CVAR_GET_DEBUGONLY(nodeSearchStartVerticalOffset);
+			
+			passed = (g_tempMonster->CheckLocalMove(vecStart, m_pNodes[iNode].m_vecOriginPeek, NULL, NULL) == LOCALMOVE_VALID);
+
+		}else{
+			// !!!   AS-IS WAY.   mostly.
+			/////////////////////////////////////////////////////////////////////////////////////////////////
+			// make sure that vecOrigin can trace to this node!
+			//MODDD - involving nodeSearchStartVerticalOffset now.
+			Vector vecStart = vecOrigin;
+			vecStart.z = EASY_CVAR_GET_DEBUGONLY(nodeSearchStartVerticalOffset);
+			//UTIL_TraceLine ( vecOrigin, m_pNodes[ iNode ].m_vecOriginPeek, ignore_monsters, 0, &tr );
+			UTIL_TraceLine(vecStart, m_pNodes[iNode].m_vecOriginPeek, ignore_monsters, 0, &tr);
+
+			passed = (tr.flFraction == 1.0);
+			/////////////////////////////////////////////////////////////////////////////////////////////////			
+		}
+		//WALK_MOVE(testEnt, yaw, dist, iMode);
 
 
-		if (tr.flFraction == 1.0)
+
+		if (passed)
 		{
 			m_iNearest = iNode;
 			m_flShortest = flDist;
@@ -1151,8 +1181,12 @@ int CGraph::FindNearestNode(const Vector& vecOrigin, int afNodeTypes)
 
 	//MODDD - MAJOR.  ALSO.  Can skip using nearest-node cache by CVar, debug feature.
 	// Surrounds as-is script.
+	// ALSO.  If pathfindNearestNodeExtra is on and g_tempMonster isn't NULL (a sign it would be involved in finding the nearest node),
+	// automatically ignore the node cache.  What one entity size calls nearest another may not be able to get to with the size-involved
+	// checks.  Even though retail had no size-checking whatsoever for this, just a point-to-point line trace...
+	// Involving the HULL size (or best fit?) in m_Cache, and cacheing per size type would be ok there.
 	////////////////////////////////////////////////////////////////////////////////////
-	if(EASY_CVAR_GET(pathfindIgnoreNearestNodeCache) != 1){
+	if(EASY_CVAR_GET(pathfindIgnoreNearestNodeCache) != 1 && !(EASY_CVAR_GET_DEBUGONLY(pathfindNearestNodeExtra) == 1 && g_tempMonster != NULL) ){
 
 		//MODDD - extra check.  allowed to return a -1 node?
 		//...then again, memory is memory. If it failed before, it won't change. guess this is ok.
@@ -3959,8 +3993,10 @@ LINK_ENTITY_TO_CLASS(node_viewer_fly, CNodeViewer);
 LINK_ENTITY_TO_CLASS(node_viewer_large, CNodeViewer);
 
 //MODDD - new.
-LINK_ENTITY_TO_CLASS(node_viewer_point, CNodeViewer);
-LINK_ENTITY_TO_CLASS(node_viewer_point_air, CNodeViewer);
+// NO.  Don't do point ones.  It uses a number that's invalid in
+//   the static route table array (-1).  Don't even try.
+//LINK_ENTITY_TO_CLASS(node_viewer_point, CNodeViewer);
+//LINK_ENTITY_TO_CLASS(node_viewer_point_air, CNodeViewer);
 LINK_ENTITY_TO_CLASS(node_viewer_small, CNodeViewer);
 
 
@@ -3975,6 +4011,8 @@ void CNodeViewer::Spawn()
 
 
 	//MODDD - why wasn't there at least SMALL too??
+	// CANNED.  The point ones at least
+	/*
 	if (FClassnameIs(pev, "node_viewer_point"))
 	{
 		m_iHull = NODE_POINT_HULL;
@@ -3987,7 +4025,9 @@ void CNodeViewer::Spawn()
 		m_afNodeType = bits_NODE_AIR;
 		m_vecColor = Vector(255, 255, 255);
 	}
-	else if (FClassnameIs(pev, "node_viewer_small"))
+	else
+	*/
+	if (FClassnameIs(pev, "node_viewer_small"))
 	{
 		m_iHull = NODE_SMALL_HULL;
 		m_afNodeType = bits_NODE_LAND | bits_NODE_WATER;
@@ -4103,6 +4143,10 @@ void CNodeViewer::DrawThink(void)
 	{
 		if (m_iDraw == m_nVisited)
 		{
+			if(m_iDraw == 0){
+				easyForcePrintLine("!!! Nothing could get to here in that hull size !!!");
+			}
+
 			UTIL_Remove(this);
 			return;
 		}
@@ -4117,9 +4161,10 @@ void CNodeViewer::DrawThink(void)
 		WRITE_COORD(WorldGraph.m_pNodes[m_aTo[m_iDraw]].m_vecOrigin.y);
 		WRITE_COORD(WorldGraph.m_pNodes[m_aTo[m_iDraw]].m_vecOrigin.z + node_linktest_height);
 		WRITE_SHORT(g_sModelIndexLaser);
+		WRITE_BYTE(0); // framestart
 		WRITE_BYTE(0); // framerate
-		WRITE_BYTE(0); // framerate
-		WRITE_BYTE(250); // life
+		//MODDD - more life.  Was 250.
+		WRITE_BYTE(3000); // life
 		WRITE_BYTE(40);  // width
 		WRITE_BYTE(0);   // noise
 		WRITE_BYTE(m_vecColor.x);   // r, g, b

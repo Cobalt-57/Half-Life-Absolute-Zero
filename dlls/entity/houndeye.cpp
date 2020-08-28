@@ -148,7 +148,7 @@ public:
 	GENERATE_DEADTAKEDAMAGE_PROTOTYPE
 	void DeathAnimationStart(void);
 	void DeathAnimationEnd(void);
-	void startReanimation(void);
+	void StartReanimation(void);
 
 	//MODDD - new
 	void SonicAttack( void );
@@ -180,7 +180,7 @@ public:
 	BOOL FValidateHintType ( short sHint );
 	BOOL FCanActiveIdle ( void );
 	Schedule_t *GetScheduleOfType ( int Type );
-	Schedule_t *CHoundeye :: GetSchedule( void );
+	Schedule_t *CHoundeye::GetSchedule( void );
 
 	int Save( CSave &save );
 	int Restore( CRestore &restore );
@@ -559,7 +559,7 @@ IMPLEMENT_CUSTOM_SCHEDULES( CHoundeye, CSquadMonster );
 // Classify - indicates this monster's place in the
 // relationship table.
 //=========================================================
-int CHoundeye :: Classify ( void )
+int CHoundeye::Classify ( void )
 {
 	return	CLASS_ALIEN_MONSTER;
 }
@@ -568,7 +568,7 @@ int CHoundeye :: Classify ( void )
 //=========================================================
 //  FValidateHintType
 //=========================================================
-BOOL CHoundeye :: FValidateHintType ( short sHint )
+BOOL CHoundeye::FValidateHintType ( short sHint )
 {
 	int i;
 
@@ -596,7 +596,7 @@ BOOL CHoundeye :: FValidateHintType ( short sHint )
 //=========================================================
 // FCanActiveIdle
 //=========================================================
-BOOL CHoundeye :: FCanActiveIdle ( void )
+BOOL CHoundeye::FCanActiveIdle ( void )
 {
 	if ( InSquad() )
 	{
@@ -625,7 +625,7 @@ BOOL CHoundeye :: FCanActiveIdle ( void )
 // try to get within half of their max attack radius before
 // attacking, so as to increase their chances of doing damage.
 //=========================================================
-BOOL CHoundeye :: CheckRangeAttack1 ( float flDot, float flDist )
+BOOL CHoundeye::CheckRangeAttack1 ( float flDot, float flDist )
 {
 	if ( flDist <= ( HOUNDEYE_MAX_ATTACK_RADIUS * 0.5 ) && flDot >= 0.3 )
 	{
@@ -638,7 +638,7 @@ BOOL CHoundeye :: CheckRangeAttack1 ( float flDot, float flDist )
 // SetYawSpeed - allows each sequence to have a different
 // turn rate associated with it.
 //=========================================================
-void CHoundeye :: SetYawSpeed ( void )
+void CHoundeye::SetYawSpeed ( void )
 {
 	int ys;
 
@@ -674,7 +674,7 @@ void CHoundeye :: SetYawSpeed ( void )
 //=========================================================
 // SetActivity
 //=========================================================
-void CHoundeye :: SetActivity ( Activity NewActivity )
+void CHoundeye::SetActivity ( Activity NewActivity )
 {
 	int iSequence;
 
@@ -729,12 +729,12 @@ void CHoundeye :: SetActivity ( Activity NewActivity )
 			//MODDD IMPORTANT:  THIS USED TO BE canSetAnim == FALSE, which did nothing.
 			//In case that was SOMEHOW better, not doing anything, comment out this line!
 			canSetAnim = FALSE;
-			//CSquadMonster :: SetActivity ( NewActivity );
+			//CSquadMonster::SetActivity ( NewActivity );
 
 
 		}else{
 			//MODDD - this was alone here before.  The rest in the greater "else" block is new.
-			CSquadMonster :: SetActivity ( NewActivity );
+			CSquadMonster::SetActivity ( NewActivity );
 		}
 
 
@@ -746,7 +746,7 @@ void CHoundeye :: SetActivity ( Activity NewActivity )
 // HandleAnimEvent - catches the monster-specific messages
 // that occur when tagged animation frames are played.
 //=========================================================
-void CHoundeye :: HandleAnimEvent( MonsterEvent_t *pEvent )
+void CHoundeye::HandleAnimEvent( MonsterEvent_t *pEvent )
 {
 
 	switch ( pEvent->event )
@@ -844,7 +844,7 @@ void CHoundeye::setModel(const char* m){
 
 //MODDD - doesn't "restore" make more sense?
 // this is ok. But see if the scientist should change.
-void CHoundeye :: Activate(){
+void CHoundeye::Activate(){
 	
 	//easyForcePrintLine("HOUNDEYE RAW SKIN COUNT B: %d", getNumberOfSkins());
 	CSquadMonster::Activate();
@@ -853,7 +853,7 @@ void CHoundeye :: Activate(){
 //=========================================================
 // Spawn
 //=========================================================
-void CHoundeye :: Spawn()
+void CHoundeye::Spawn()
 {
 	Precache( );
 	
@@ -886,7 +886,7 @@ void CHoundeye :: Spawn()
 
 extern int global_useSentenceSave;
 
-void CHoundeye :: Precache()
+void CHoundeye::Precache()
 {
 
 	PRECACHE_MODEL("models/houndeye.mdl");
@@ -950,7 +950,7 @@ void CHoundeye :: Precache()
 //=========================================================
 // IdleSound
 //=========================================================
-void CHoundeye :: IdleSound ( void )
+void CHoundeye::IdleSound ( void )
 {
 	//MODDD - now uses he_idle4.
 	switch ( RANDOM_LONG(0,3) )
@@ -972,7 +972,7 @@ void CHoundeye :: IdleSound ( void )
 //=========================================================
 // IdleSound
 //=========================================================
-void CHoundeye :: WarmUpSound ( void )
+void CHoundeye::WarmUpSound ( void )
 {
 	switch ( RANDOM_LONG(0,2) )
 	{
@@ -991,7 +991,7 @@ void CHoundeye :: WarmUpSound ( void )
 //=========================================================
 // WarnSound
 //=========================================================
-void CHoundeye :: WarnSound ( void )
+void CHoundeye::WarnSound ( void )
 {
 	switch ( RANDOM_LONG(0,3) )
 	{
@@ -1013,7 +1013,7 @@ void CHoundeye :: WarnSound ( void )
 //=========================================================
 // AlertSound
 //=========================================================
-void CHoundeye :: AlertSound ( void )
+void CHoundeye::AlertSound ( void )
 {
 
 	if ( InSquad() && !IsLeader() )
@@ -1038,7 +1038,7 @@ void CHoundeye :: AlertSound ( void )
 //=========================================================
 // DeathSound
 //=========================================================
-void CHoundeye :: DeathSound ( void )
+void CHoundeye::DeathSound ( void )
 {
 	switch ( RANDOM_LONG(0,2) )
 	{
@@ -1057,7 +1057,7 @@ void CHoundeye :: DeathSound ( void )
 //=========================================================
 // PainSound
 //=========================================================
-void CHoundeye :: PainSound ( void )
+void CHoundeye::PainSound ( void )
 {
 	switch ( RANDOM_LONG(0,4) )
 	{
@@ -1081,7 +1081,7 @@ void CHoundeye :: PainSound ( void )
 
 
 //MODDD - new version.
-void CHoundeye :: WriteBeamColor ( ){
+void CHoundeye::WriteBeamColor ( ){
 
 	WriteBeamColor(FALSE);
 
@@ -1091,7 +1091,7 @@ void CHoundeye :: WriteBeamColor ( ){
 // WriteBeamColor - writes a color vector to the network
 // based on the size of the group.
 //=========================================================
-void CHoundeye :: WriteBeamColor ( BOOL useAltcolor )
+void CHoundeye::WriteBeamColor ( BOOL useAltcolor )
 {
 	BYTE	bRed, bGreen, bBlue;
 
@@ -1151,7 +1151,7 @@ void CHoundeye :: WriteBeamColor ( BOOL useAltcolor )
 
 
 //MODDD - new version below.  The parameterless (default) now just sends "FALSE".
-void CHoundeye :: SonicAttack(){
+void CHoundeye::SonicAttack(){
 
 	SonicAttack(FALSE);
 }
@@ -1160,7 +1160,7 @@ void CHoundeye :: SonicAttack(){
 // SonicAttack
 //=========================================================
 //MODDD - now accepts a bool.
-void CHoundeye :: SonicAttack (BOOL useAlt )
+void CHoundeye::SonicAttack (BOOL useAlt )
 {
 	float	flAdjustedDamage;
 	float	flDist;
@@ -1281,7 +1281,7 @@ void CHoundeye :: SonicAttack (BOOL useAlt )
 //=========================================================
 // start task
 //=========================================================
-void CHoundeye :: StartTask ( Task_t *pTask )
+void CHoundeye::StartTask ( Task_t *pTask )
 {
 	
 	switch ( pTask->iTask )
@@ -1345,7 +1345,7 @@ void CHoundeye :: StartTask ( Task_t *pTask )
 			m_IdealActivity = ACT_RANGE_ATTACK1;
 
 			//this is exactly what the base monster (in schedule.cpp) says to do, we're fine.
-			//CSquadMonster :: StartTask(pTask);
+			//CSquadMonster::StartTask(pTask);
 
 			//MODDD - this used to be commented out!
 			if ( InSquad() )
@@ -1464,7 +1464,7 @@ void CHoundeye :: StartTask ( Task_t *pTask )
 		}
 	default:
 		{
-			CSquadMonster :: StartTask(pTask);
+			CSquadMonster::StartTask(pTask);
 			break;
 		}
 	}
@@ -1478,7 +1478,7 @@ void CHoundeye :: StartTask ( Task_t *pTask )
 
 //MODDD - overwrite the original, don't call the original (any parts of the original that should stay are still here; calling that would be redundant with these parts and undermine the efforts to exlude / replace some parts)
 //~This is just a test, really.  Doesn't need changing.
-int CHoundeye :: SquadRecruit( int searchRadius, int maxMembers )
+int CHoundeye::SquadRecruit( int searchRadius, int maxMembers )
 {
 	//EASY_CVAR_PRINTIF_PRE(houndeyePrintout, easyPrintLine( "HOUNDEYE REEEE"));
 	int squadCount;
@@ -1571,7 +1571,7 @@ int CHoundeye :: SquadRecruit( int searchRadius, int maxMembers )
 //=========================================================
 // RunTask
 //=========================================================
-void CHoundeye :: RunTask ( Task_t *pTask )
+void CHoundeye::RunTask ( Task_t *pTask )
 {
 
 	if(pTask->iTask != TASK_SPECIAL_ATTACK1){
@@ -1602,7 +1602,7 @@ void CHoundeye :: RunTask ( Task_t *pTask )
 		
 		
 			if(crazyPrintout){
-				///easyForcePrintLine("FLYawDiff::: current: %.2f ideal: %.2f", flCurrentYaw, pev->ideal_yaw);
+				///easyForcePrintLine("FLYawDiff:::current: %.2f ideal: %.2f", flCurrentYaw, pev->ideal_yaw);
 		
 				Vector vecStart = this->pev->origin + Vector(0, 0, 12);
 
@@ -1767,7 +1767,7 @@ void CHoundeye :: RunTask ( Task_t *pTask )
 
 	default:
 		{
-			CSquadMonster :: RunTask(pTask);
+			CSquadMonster::RunTask(pTask);
 			break;
 		}
 	}
@@ -1813,12 +1813,12 @@ void CHoundeye::DeathAnimationEnd(){
 }
 
 
-void CHoundeye::startReanimation(void) {
+void CHoundeye::StartReanimation(void) {
 	// open.  don't blink during that time (Spawn being called again reset m_fDontBlink)
 	// ...nevermind, just allow blinking.  It opens the eye up just fine.
 	m_fDontBlink = FALSE;
 	//pev->skin = 0;
-	CSquadMonster::startReanimation();
+	CSquadMonster::StartReanimation();
 }
 
 
@@ -1894,7 +1894,7 @@ void CHoundeye::PrescheduleThink ( void )
 //=========================================================
 // GetScheduleOfType
 //=========================================================
-Schedule_t* CHoundeye :: GetScheduleOfType ( int Type )
+Schedule_t* CHoundeye::GetScheduleOfType ( int Type )
 {
 	EASY_CVAR_PRINTIF_PRE(houndeyePrintout, easyPrintLine( "Hound:GETSCHEDOFTYPE: %d", Type));
 	
@@ -1951,7 +1951,7 @@ Schedule_t* CHoundeye :: GetScheduleOfType ( int Type )
 			//MODDD - resume after insertion.
 			else
 			{
-				return CSquadMonster :: GetScheduleOfType( Type );
+				return CSquadMonster::GetScheduleOfType( Type );
 			}
 		}
 	case SCHED_RANGE_ATTACK1:
@@ -1999,12 +1999,12 @@ Schedule_t* CHoundeye :: GetScheduleOfType ( int Type )
 			}
 			else
 			{
-				return CSquadMonster :: GetScheduleOfType ( Type );
+				return CSquadMonster::GetScheduleOfType ( Type );
 			}
 		}
 	default:
 		{
-			return CSquadMonster :: GetScheduleOfType ( Type );
+			return CSquadMonster::GetScheduleOfType ( Type );
 		}
 	}
 }
@@ -2012,7 +2012,7 @@ Schedule_t* CHoundeye :: GetScheduleOfType ( int Type )
 //=========================================================
 // GetSchedule
 //=========================================================
-Schedule_t *CHoundeye :: GetSchedule( void )
+Schedule_t *CHoundeye::GetSchedule( void )
 {
 	//no need for extra bait script, defaults should carry over.
 
@@ -2024,7 +2024,7 @@ Schedule_t *CHoundeye :: GetSchedule( void )
 			if ( HasConditions( bits_COND_ENEMY_DEAD ) )
 			{
 				// call base class, all code to handle dead enemies is centralized there.
-				return CBaseMonster :: GetSchedule();
+				return CBaseMonster::GetSchedule();
 			}
 
 			//MODDD - heavy damage must flinch.
@@ -2070,7 +2070,7 @@ Schedule_t *CHoundeye :: GetSchedule( void )
 	}
 
 	//MODDD - just seeing what was gathered from the parent class.
-	Schedule_t* choice = CSquadMonster :: GetSchedule();;
+	Schedule_t* choice = CSquadMonster::GetSchedule();;
 	EASY_CVAR_PRINTIF_PRE(houndeyePrintout, easyPrintLine( "Houndeye: SCHED OUTSOURCED: %s", choice->pName));
 	
 	return choice;

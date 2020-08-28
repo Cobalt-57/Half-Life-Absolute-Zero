@@ -79,7 +79,7 @@ TYPEDESCRIPTION	CSqueakGrenade::m_SaveData[] =
 IMPLEMENT_SAVERESTORE(CSqueakGrenade, CBaseMonster);
 
 
-int CSqueakGrenade :: Classify ( void )
+int CSqueakGrenade::Classify ( void )
 {
 	if (m_iMyClass != 0)
 		return m_iMyClass; // protect against recursion
@@ -116,7 +116,7 @@ BOOL CSqueakGrenade::usesSoundSentenceSave(void){
 
 
 
-void CSqueakGrenade :: Spawn( void )
+void CSqueakGrenade::Spawn( void )
 {
 	Precache( );
 	// motor

@@ -432,7 +432,7 @@ const char *CBigMomma::pFootSounds[] =
 
 
 
-void CBigMomma :: KeyValue( KeyValueData *pkvd )
+void CBigMomma::KeyValue( KeyValueData *pkvd )
 {
 #if 0
 	if (FStrEq(pkvd->szKeyName, "volume"))
@@ -449,7 +449,7 @@ void CBigMomma :: KeyValue( KeyValueData *pkvd )
 // Classify - indicates this monster's place in the 
 // relationship table.
 //=========================================================
-int CBigMomma :: Classify ( void )
+int CBigMomma::Classify ( void )
 {
 	return	CLASS_ALIEN_MONSTER;
 }
@@ -458,7 +458,7 @@ int CBigMomma :: Classify ( void )
 // SetYawSpeed - allows each sequence to have a different
 // turn rate associated with it.
 //=========================================================
-void CBigMomma :: SetYawSpeed ( void )
+void CBigMomma::SetYawSpeed ( void )
 {
 	int ys;
 
@@ -479,7 +479,7 @@ void CBigMomma :: SetYawSpeed ( void )
 //
 // Returns number of events handled, 0 if none.
 //=========================================================
-void CBigMomma :: HandleAnimEvent( MonsterEvent_t *pEvent )
+void CBigMomma::HandleAnimEvent( MonsterEvent_t *pEvent )
 {
 	switch( pEvent->event )
 	{
@@ -654,7 +654,7 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBigMomma)
 	return GENERATE_TAKEDAMAGE_PARENT_CALL(CBaseMonster);
 }
 
-void CBigMomma :: LayHeadcrab( void )
+void CBigMomma::LayHeadcrab( void )
 {
 	CBaseEntity *pChild = CBaseEntity::Create( BIG_CHILDCLASS, pev->origin, pev->angles, edict() );
 
@@ -714,7 +714,7 @@ CBigMomma::CBigMomma(){
 //=========================================================
 // Spawn
 //=========================================================
-void CBigMomma :: Spawn()
+void CBigMomma::Spawn()
 {
 	Precache( );
 
@@ -741,7 +741,7 @@ extern int global_useSentenceSave;
 //=========================================================
 // Precache - precaches all resources this monster needs
 //=========================================================
-void CBigMomma :: Precache()
+void CBigMomma::Precache()
 {
 	PRECACHE_MODEL("models/big_mom.mdl");
 
@@ -1273,7 +1273,7 @@ void MortarSpray( const Vector &position, const Vector &direction, int spriteMod
 
 
 // UNDONE: right now this is pretty much a copy of the squid spit with minor changes to the way it does damage
-void CBMortar:: Spawn( void )
+void CBMortar::Spawn( void )
 {
 	pev->movetype = MOVETYPE_TOSS;
 	pev->classname = MAKE_STRING( "bmortar" );

@@ -639,6 +639,7 @@
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(pathfindIgnoreNearestNodeCache, pathfindignorenearestnodecache)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(pathfindIgnoreStaticRoutes, pathfindignorestaticroutes)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(pathfindForcePointHull, pathfindforcepointhull)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(pathfindNearestNodeExtra, pathfindnearestnodeextra)\
 	DUMMY
 
 
@@ -1098,6 +1099,7 @@
 	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(pathfindIgnoreNearestNodeCache)\
 	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(pathfindIgnoreStaticRoutes)\
 	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(pathfindForcePointHull)\
+	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(pathfindNearestNodeExtra)\
 	DUMMY
 
 
@@ -1555,6 +1557,7 @@
 	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(pathfindIgnoreNearestNodeCache, pathfindignorenearestnodecache)\
 	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(pathfindIgnoreStaticRoutes, pathfindignorestaticroutes)\
 	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(pathfindForcePointHull, pathfindforcepointhull)\
+	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(pathfindNearestNodeExtra, pathfindnearestnodeextra)\
 	DUMMY
 
 
@@ -2064,6 +2067,7 @@
 	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY(pathfindIgnoreNearestNodeCache)\
 	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY(pathfindIgnoreStaticRoutes)\
 	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY(pathfindForcePointHull)\
+	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY(pathfindNearestNodeExtra)\
 	DUMMY
 
 
@@ -2572,6 +2576,7 @@
 	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY(pathfindIgnoreNearestNodeCache)\
 	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY(pathfindIgnoreStaticRoutes)\
 	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY(pathfindForcePointHull)\
+	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY(pathfindNearestNodeExtra)\
 	DUMMY
 
 
@@ -3078,6 +3083,7 @@
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(pathfindIgnoreNearestNodeCache)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(pathfindIgnoreStaticRoutes)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(pathfindForcePointHull)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(pathfindNearestNodeExtra)\
 	DUMMY
 
 
@@ -3588,6 +3594,7 @@
 	EASY_CVAR_UPDATE_SERVER_DEDICATED_DEBUGONLY(pathfindIgnoreNearestNodeCache)\
 	EASY_CVAR_UPDATE_SERVER_DEDICATED_DEBUGONLY(pathfindIgnoreStaticRoutes)\
 	EASY_CVAR_UPDATE_SERVER_DEDICATED_DEBUGONLY(pathfindForcePointHull)\
+	EASY_CVAR_UPDATE_SERVER_DEDICATED_DEBUGONLY(pathfindNearestNodeExtra)\
 	DUMMY
 
 
@@ -4097,6 +4104,7 @@
 	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY(pathfindIgnoreNearestNodeCache)\
 	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY(pathfindIgnoreStaticRoutes)\
 	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY(pathfindForcePointHull)\
+	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY(pathfindNearestNodeExtra)\
 	DUMMY
 
 
@@ -4603,6 +4611,7 @@
 	EASY_CVAR_CREATE_SERVER_SETUP_A_SERVERONLY_DEBUGONLY(pathfindIgnoreNearestNodeCache)\
 	EASY_CVAR_CREATE_SERVER_SETUP_A_SERVERONLY_DEBUGONLY(pathfindIgnoreStaticRoutes)\
 	EASY_CVAR_CREATE_SERVER_SETUP_A_SERVERONLY_DEBUGONLY(pathfindForcePointHull)\
+	EASY_CVAR_CREATE_SERVER_SETUP_A_SERVERONLY_DEBUGONLY(pathfindNearestNodeExtra)\
 	DUMMY
 
 
@@ -5109,6 +5118,7 @@
 	EASY_CVAR_CREATE_SERVER_A_SERVERONLY_DEBUGONLY(pathfindIgnoreNearestNodeCache)\
 	EASY_CVAR_CREATE_SERVER_A_SERVERONLY_DEBUGONLY(pathfindIgnoreStaticRoutes)\
 	EASY_CVAR_CREATE_SERVER_A_SERVERONLY_DEBUGONLY(pathfindForcePointHull)\
+	EASY_CVAR_CREATE_SERVER_A_SERVERONLY_DEBUGONLY(pathfindNearestNodeExtra)\
 	DUMMY
 
 
@@ -5615,6 +5625,7 @@
 	EASY_CVAR_CREATE_CLIENT_A_SERVERONLY_DEBUGONLY(pathfindIgnoreNearestNodeCache)\
 	EASY_CVAR_CREATE_CLIENT_A_SERVERONLY_DEBUGONLY(pathfindIgnoreStaticRoutes)\
 	EASY_CVAR_CREATE_CLIENT_A_SERVERONLY_DEBUGONLY(pathfindForcePointHull)\
+	EASY_CVAR_CREATE_CLIENT_A_SERVERONLY_DEBUGONLY(pathfindNearestNodeExtra)\
 	DUMMY
 
 
@@ -6120,6 +6131,7 @@
 	EASY_CVAR_RESET_DEBUGONLY(pathfindIgnoreNearestNodeCache)\
 	EASY_CVAR_RESET_DEBUGONLY(pathfindIgnoreStaticRoutes)\
 	EASY_CVAR_RESET_DEBUGONLY(pathfindForcePointHull)\
+	EASY_CVAR_RESET_DEBUGONLY(pathfindNearestNodeExtra)\
 	DUMMY
 
 
@@ -6626,6 +6638,7 @@
 	EASY_CVAR_EXTERN_DEBUGONLY(pathfindIgnoreNearestNodeCache)\
 	EASY_CVAR_EXTERN_DEBUGONLY(pathfindIgnoreStaticRoutes)\
 	EASY_CVAR_EXTERN_DEBUGONLY(pathfindForcePointHull)\
+	EASY_CVAR_EXTERN_DEBUGONLY(pathfindNearestNodeExtra)\
 	DUMMY
 
 
@@ -7135,6 +7148,7 @@
 	EASY_CVAR_SYNCH_SERVER_DEBUGONLY(pathfindIgnoreNearestNodeCache)\
 	EASY_CVAR_SYNCH_SERVER_DEBUGONLY(pathfindIgnoreStaticRoutes)\
 	EASY_CVAR_SYNCH_SERVER_DEBUGONLY(pathfindForcePointHull)\
+	EASY_CVAR_SYNCH_SERVER_DEBUGONLY(pathfindNearestNodeExtra)\
 	DUMMY
 
 

@@ -310,7 +310,7 @@ void reviveAllMonsters(edict_t* theCaller) {
 			printBasicEntityInfo(theCaller, pTempEntity);
 			easyForcePrintLine();  // new line
 
-			tempMonster->startReanimation();
+			tempMonster->StartReanimation();
 		}
 	}//END OF through all entities.
 
@@ -2022,7 +2022,7 @@ void ClientCommand( edict_t *pEntity )
 					easyForcePrintLineClient(pEntity, "That isn\'t dead yet, genius.");
 					return;
 				}
-				tempMon->startReanimation();
+				tempMon->StartReanimation();
 			}else{
 				easyForcePrintLineClient(pEntity, "ERROR: Could not find an entity / monster in crosshairs.");
 			}
@@ -3451,7 +3451,7 @@ void ClientCommand( edict_t *pEntity )
 			if(FClassnameIs(pEntity->pev, "scripted_sequence") ){
 				CBaseMonster* monTest = NULL;
 				if( (monTest = pEntity->GetMonsterPointer()) != NULL){
-					//easyForcePrintLineClient(pEntity, "HEY I EXIST:::: %d", monTest->monsterID );
+					//easyForcePrintLineClient(pEntity, "HEY I EXIST::::%d", monTest->monsterID );
 					monTest->ReportAIState();
 				}
 			}

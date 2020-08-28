@@ -254,6 +254,114 @@ void CBaseTurret::BloodColor(){
 }
 */
 
+
+
+void CBaseTurret::StartReanimation(void){
+	int i;
+
+	// ???????
+	//m_IdealMonsterState = MONSTERSTATE_ALERT;// Assume monster will be alert, having come back from the dead and all.
+	//m_MonsterState = MONSTERSTATE_ALERT; //!!!
+
+	//this->m_Activity = ACT_RESET;
+
+
+	pev->deadflag = DEAD_NO;
+
+	//before spawn or init script may interfere.
+	int oldSeq = pev->sequence;
+	//no recollection of that.
+	m_hEnemy = NULL;
+
+	//And clear the list of old enemies.
+	//or m_intOldEnemyNextIndex - 1 ?
+	for(i = 0; i < MAX_OLD_ENEMIES; i++){
+		m_hOldEnemy[i] = NULL;
+	}
+
+	// don't call spawn yet, do that after revive.
+	//Spawn();
+
+
+	//Most of MonsterInit's script here just to be safe... Nah, assume Spawn calls it if it makes sense to.
+	// The area mentioned ranged from
+	//     pev->effects		= 0;
+	// to
+	//     SetEyePosition();
+
+	StartReanimationPost(oldSeq);
+}//END OF StartReanimation
+
+
+// cloned, a lot about the turret is differnet or stripped-down from most monster AI.
+// No schedule system for starters.
+void CBaseTurret::StartReanimationPost(int preReviveSequence){
+
+	// override the Initialize think!
+	SetThink(&CBaseTurret::ReviveThink);
+	pev->nextthink = gpGlobals->time + 0.1;
+
+	m_afMemory = MEMORY_CLEAR;
+
+	pev->sequence = -1; //force reset.
+	SetSequenceByIndex(preReviveSequence, -1, FALSE);
+
+
+
+	//pev->sequence		= 0;
+	//pev->frame			= 0;
+	//pev->health = 1;
+	//pev->movetype = MOVETYPE_FLY;
+	//pev->solid = SOLID_SLIDEBOX;
+	//pev->fuser1 = 8;
+
+	// oookay then
+	if(FClassnameIs(pev, "monster_sentry")){
+		pev->origin.z += 1;
+	}
+
+	//pev->flags &= ~FL_NO
+	//pev->effects &= ~EF_NODRAW;
+
+
+	// I need more help!... nevermind.
+	//m_iOn = TRUE;
+
+	//ChangeSchedule(slWaitForReviveSequence);
+}//END OF StartReanimationPost
+
+
+void CBaseTurret::ReviveThink(void){
+
+	StudioFrameAdvance_SIMPLE( );
+
+	if(m_fSequenceFinished){
+
+		pev->frame = 0;
+		pev->framerate = 1;
+		m_flFramerateSuggestion = 1;
+
+		Spawn();
+
+		/*
+		if (m_iAutoStart)
+		{
+			m_flLastSight = gpGlobals->time + m_flMaxWait;
+			SetThink(&CBaseTurret::AutoSearchThink);
+			pev->nextthink = gpGlobals->time + .1;
+		}
+		else
+			SetThink(&CBaseEntity::SUB_DoNothing);
+		*/
+		return;
+	}
+
+	SetThink(&CBaseTurret::ReviveThink);
+	pev->nextthink = gpGlobals->time + 0.1;
+}
+
+
+
 void CBaseTurret::Spawn()
 { 
 	//NOTICE - only precache my own things. Other spawn methods call their own precaches already.
@@ -449,7 +557,7 @@ void CBaseTurret::Initialize(void)
 	if (m_iAutoStart)
 	{
 		m_flLastSight = gpGlobals->time + m_flMaxWait;
-		SetThink(&CBaseTurret::AutoSearchThink);		
+		SetThink(&CBaseTurret::AutoSearchThink);
 		pev->nextthink = gpGlobals->time + .1;
 	}
 	else
@@ -1668,6 +1776,16 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBaseTurret)
 	}
 
 
+	if(bitsDamageType & DMG_BULLET){
+		// reduce damage a little.
+		flDamage *= 0.9;
+	}
+	if(bitsDamageType & DMG_BLAST){
+		// reduce damage a little.
+		flDamage *= 0.8;
+	}
+
+
 	//MODDD - bounded pev->health reduction with 'nothing hurts' CVar check
 	//pev->health -= flDamage;
 
@@ -2227,6 +2345,14 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CSentry)
 		}
 	}
 
+
+
+	// some reductions.
+	if(bitsDamageType & DMG_BLAST){
+		flDamage *= 0.8;
+	}else if(bitsDamageType & DMG_BULLET){
+		flDamage *= 0.9;
+	}
 
 
 	//MODDD - bounded pev->health reduction with 'nothing hurts' CVar check

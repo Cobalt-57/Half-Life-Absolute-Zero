@@ -1557,4 +1557,8 @@ pathfindIgnoreStaticRoutes (0) - BOOL.  When on, pathfinding will re-determine t
 ~ If this helps, try rebuilding the node graph ('rebuildgraph' or 'rebuildnodegraph' in console).  Give it at least 5 seconds.  The new static routes info should be remembered on saving/loading the game.
 ~ (and uh, tell us to rebuild the nodes for that map and ship em' out)
 
+pathfindNearestNodeExtra (0) - BOOL.  When on, pathfinding will use better checks for determining whether the node closest to an entity (to start a route) and to its target (to end a route) are good choices.
+- Normal way (when off; 0) is a straight-line check.  This will still pass for nodes over impassible areas, which can give a monster a route that it cannot reach the first or last node of.
+- Improved way (1): will use the same AI (CheckLocalMove) for telling whether there is a valid straight-line path between two places for more accuracy.
+- NOTICE: Forces the nearest node cache to be ignored regardless of pathfindIgnoreNearestNodeCache.  It does not support remembering nodes for different entity or hull sizes.
 

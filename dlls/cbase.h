@@ -101,6 +101,10 @@ CBaseEntity
 //              NODE_POINT_DEFAULT says we're leaving up what NODE HULL this is to retail behavior, the checks in 
 //              NODE_POINT_HULL is to say, pretend like our entity has no size. Just allow if there is a node connection at all.
 //              For debugging route problems to see if the issue is caused by a hull being too big even if a path was found.
+//  ALTHOUGH, these are incompatible with the static table!  DEFAULT_HULL is more of a signal that never gets used in the end, but
+//  POINT_HULL can be.   Unknown why it didn't start at POINT_HULL to begin with.
+//  Careful about changing that though, it would break the existing static route tables in existing maps.  Not a great idea without
+//  some agreement, and nothing seems to use NODE_POINT_HULL anyway (just a debug feature).
 #define NODE_DEFAULT_HULL		-2
 #define NODE_POINT_HULL			-1
 
@@ -109,6 +113,7 @@ CBaseEntity
 #define NODE_LARGE_HULL			2
 #define NODE_FLY_HULL			3
 
+#define MAX_NODE_HULLS			4
 
 
 
@@ -878,7 +883,7 @@ public:
 	//MODDD
 	CPointEntity();
 	void Spawn( void );
-	virtual int ObjectCaps( void ) { return CBaseEntity :: ObjectCaps() & ~FCAP_ACROSS_TRANSITION; }
+	virtual int ObjectCaps( void ) { return CBaseEntity::ObjectCaps() & ~FCAP_ACROSS_TRANSITION; }
 private:
 };
 

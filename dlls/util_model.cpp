@@ -295,11 +295,11 @@ void Sequence_PrintSound(void* pmodel, int index) {
 		{
 			if (!strlen(pevent[i].options))
 			{
-				ALERT(at_error, "Bad sound event %d in sequence %s :: seqIndex:%d, label:%s (sound is \"%s\")\n", pevent[i].event, pstudiohdr->name, index, pseqdesc->label, pevent[i].options);
+				ALERT(at_error, "Bad sound event %d in sequence %s::seqIndex:%d, label:%s (sound is \"%s\")\n", pevent[i].event, pstudiohdr->name, index, pseqdesc->label, pevent[i].options);
 			}
 			else {
 				//MODDD - let me know.
-				ALERT(at_console, "Sound event found %d in sequence %s :: seqIndex:%d, label:%s (sound is \"%s\")\n", pevent[i].event, pstudiohdr->name, index, pseqdesc->label, pevent[i].options);
+				ALERT(at_console, "Sound event found %d in sequence %s::seqIndex:%d, label:%s (sound is \"%s\")\n", pevent[i].event, pstudiohdr->name, index, pseqdesc->label, pevent[i].options);
 			}
 			// don't do anything else, the printout is all
 		}
@@ -334,7 +334,7 @@ void SequencePrecache(void* pmodel, int index) {
 			if (!strlen(pevent[i].options))
 			{
 				//MODDD - does ->label even work?
-				ALERT(at_error, "Bad sound event %d in sequence %s :: seqIndex:%d (sound is \"%s\")\n", pevent[i].event, pstudiohdr->name, index, pevent[i].options);
+				ALERT(at_error, "Bad sound event %d in sequence %s::seqIndex:%d (sound is \"%s\")\n", pevent[i].event, pstudiohdr->name, index, pevent[i].options);
 			}
 
 			PRECACHE_SOUND((char*)(gpGlobals->pStringBase + ALLOC_STRING(pevent[i].options)));
@@ -371,7 +371,7 @@ void SequencePrecache( void *pmodel, const char *pSequenceName ){
 			{
 				if ( !strlen(pevent[i].options) )
 				{
-					ALERT( at_error, "Bad sound event %d in sequence %s :: %s (sound is \"%s\")\n", pevent[i].event, pstudiohdr->name, pSequenceName, pevent[i].options );
+					ALERT( at_error, "Bad sound event %d in sequence %s::%s (sound is \"%s\")\n", pevent[i].event, pstudiohdr->name, pSequenceName, pevent[i].options );
 				}
 
 				PRECACHE_SOUND( (char *)(gpGlobals->pStringBase + ALLOC_STRING(pevent[i].options) ) );
@@ -1025,7 +1025,7 @@ float SetBlending( void *pmodel, entvars_t *pev, int iBlender, float flValue )
 
 	pev->blending[iBlender] = setting;
 
-	//easyPrintLineANIMATION("BLENDAH:::: %d", setting);
+	//easyPrintLineANIMATION("BLENDAH::::%d", setting);
 
 	float temp = setting * (1.0 / 255.0) * (pseqdesc->blendend[iBlender] - pseqdesc->blendstart[iBlender]) + pseqdesc->blendstart[iBlender];
 	

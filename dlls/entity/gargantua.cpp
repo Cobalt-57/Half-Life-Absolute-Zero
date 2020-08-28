@@ -82,8 +82,8 @@ EASY_CVAR_EXTERN_DEBUGONLY(gargantuaKilledBoundsAssist)
 #define SPIRAL_INTERVAL 0.1 //025
 #define STOMP_INTERVAL		0.025
 
-//MODDD - reduced a little, was 80
-const float GARG_MELEEATTACKDIST = 76.0;
+//MODDD - changed a little, was 80
+const float GARG_MELEEATTACKDIST = 90.0;
 
 // If you wanna get technical these should be static vars of CGargantua buuuuuuuut it doesn't make a difference,
 // so long as these names aren't collided with elsewhere.
@@ -798,7 +798,7 @@ void CGargantua::StompAttack( void )
 }
 
 
-void CGargantua :: FlameCreate( void )
+void CGargantua::FlameCreate( void )
 {
 	int		i;
 	Vector		posGun, angleGun;
@@ -839,7 +839,7 @@ void CGargantua :: FlameCreate( void )
 }
 
 
-void CGargantua :: FlameControls( float angleX, float angleY )
+void CGargantua::FlameControls( float angleX, float angleY )
 {
 	if ( angleY < -180 )
 		angleY += 360;
@@ -858,7 +858,7 @@ void CGargantua :: FlameControls( float angleX, float angleY )
 }
 
 
-void CGargantua :: FlameUpdate( void )
+void CGargantua::FlameUpdate( void )
 {
 	int			i;
 	static float offset[2] = { 60, -60 };
@@ -914,7 +914,7 @@ void CGargantua :: FlameUpdate( void )
 
 
 
-void CGargantua :: FlameDamage( Vector vecStart, Vector vecEnd, entvars_t *pevInflictor, entvars_t *pevAttacker, float flDamage, int iClassIgnore, int bitsDamageType )
+void CGargantua::FlameDamage( Vector vecStart, Vector vecEnd, entvars_t *pevInflictor, entvars_t *pevAttacker, float flDamage, int iClassIgnore, int bitsDamageType )
 {
 	CBaseEntity *pEntity = NULL;
 	TraceResult	tr;
@@ -985,7 +985,7 @@ void CGargantua :: FlameDamage( Vector vecStart, Vector vecEnd, entvars_t *pevIn
 
 
 //MODDD - added 'playOffSound' parameter.  Might not want to do that on gibbing/deletion.
-void CGargantua :: FlameDestroy(BOOL playOffSound)
+void CGargantua::FlameDestroy(BOOL playOffSound)
 {
 	int i;
 
@@ -1010,7 +1010,7 @@ void CGargantua :: FlameDestroy(BOOL playOffSound)
 }
 
 
-void CGargantua :: PrescheduleThink( void )
+void CGargantua::PrescheduleThink( void )
 {
 	if ( !HasConditions( bits_COND_SEE_ENEMY ) )
 	{
@@ -1028,7 +1028,7 @@ void CGargantua :: PrescheduleThink( void )
 // Classify - indicates this monster's place in the 
 // relationship table.
 //=========================================================
-int CGargantua :: Classify ( void )
+int CGargantua::Classify ( void )
 {
 	return	CLASS_ALIEN_MONSTER;
 }
@@ -1037,7 +1037,7 @@ int CGargantua :: Classify ( void )
 // SetYawSpeed - allows each sequence to have a different
 // turn rate associated with it.
 //=========================================================
-void CGargantua :: SetYawSpeed ( void )
+void CGargantua::SetYawSpeed ( void )
 {
 	int ys;
 
@@ -1073,7 +1073,7 @@ CGargantua::CGargantua(){
 //=========================================================
 // Spawn
 //=========================================================
-void CGargantua :: Spawn()
+void CGargantua::Spawn()
 {
 	Precache( );
 
@@ -1108,7 +1108,7 @@ extern int global_useSentenceSave;
 //=========================================================
 // Precache - precaches all resources this monster needs
 //=========================================================
-void CGargantua :: Precache()
+void CGargantua::Precache()
 {
 	int i;
 

@@ -240,7 +240,11 @@ public:
 	int				m_iSuitPlayNext;				// next sentence slot for queue storage;
 	int				m_rgiSuitNoRepeat[CSUITNOREPEAT];		// suit sentence no repeat list
 	float			m_rgflSuitNoRepeatTime[CSUITNOREPEAT];	// how long to wait before allowing repeat
-	int				m_lastDamageAmount;		// Last damage taken
+	
+	//MODDD - var removed.  Identical copy in CBaseMonster that went completely unused too.
+	// This was only ever used in the TakeDamage method, no point being a member var here
+	// anyway
+	//int				m_lastDamageAmount;		// Last damage taken
 
 	float			m_flgeigerRange;		// range to nearest radiation source
 	float			m_flgeigerDelay;		// delay per update of range msg to client
@@ -610,7 +614,7 @@ public:
 	
 
 	// Player is moved across the transition by other means
-	virtual int	ObjectCaps( void ) { return CBaseMonster :: ObjectCaps() & ~FCAP_ACROSS_TRANSITION; }
+	virtual int	ObjectCaps( void ) { return CBaseMonster::ObjectCaps() & ~FCAP_ACROSS_TRANSITION; }
 	virtual void Precache( void );
 	BOOL		IsOnLadder( void );
 	BOOL		FlashlightIsOn( void );
@@ -623,8 +627,8 @@ public:
 	//MODDD - new argument possibility, see player.cpp for more info.
 	void DeathSound ( BOOL plannedRevive);
 
-	void startReanimation(void);
-	void EndOfRevive(int preReviveSequence);
+	void StartReanimation(void);
+	void StartReanimationPost(int preReviveSequence);
 
 	void reviveIfDead(void);
 	void startRevive(void);

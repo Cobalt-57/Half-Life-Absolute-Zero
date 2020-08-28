@@ -11,7 +11,7 @@ CControllerHeadBall::CControllerHeadBall(void){
 	nextNormalThinkTime = 0;
 }
 
-void CControllerHeadBall :: Spawn( void )
+void CControllerHeadBall::Spawn( void )
 {
 	Precache( );
 	// motor
@@ -42,7 +42,7 @@ void CControllerHeadBall :: Spawn( void )
 
 
 extern int global_useSentenceSave;
-void CControllerHeadBall :: Precache( void )
+void CControllerHeadBall::Precache( void )
 {
 
 	PRECACHE_MODEL("sprites/xspark1.spr");
@@ -55,7 +55,7 @@ void CControllerHeadBall :: Precache( void )
 }
 
 
-void CControllerHeadBall :: HuntThink( void  )
+void CControllerHeadBall::HuntThink( void  )
 {
 
 	//MODDD - I think twice as fast only to spawn the used-to-be-commented-out lighning effect more often.
@@ -152,7 +152,7 @@ void CControllerHeadBall :: HuntThink( void  )
 }//END OF HuntThink
 
 
-void CControllerHeadBall :: DieThink( void  )
+void CControllerHeadBall::DieThink( void  )
 {
 	UTIL_Remove( this );
 }
@@ -163,7 +163,7 @@ BOOL CControllerHeadBall::usesSegmentedMove(void) {
 	return FALSE;
 }
 
-void CControllerHeadBall :: MovetoTarget( Vector vecTarget )
+void CControllerHeadBall::MovetoTarget( Vector vecTarget )
 {
 	// accelerate
 	velocityCheck(400);
@@ -173,7 +173,7 @@ void CControllerHeadBall :: MovetoTarget( Vector vecTarget )
 
 
 
-void CControllerHeadBall :: Crawl( void  )
+void CControllerHeadBall::Crawl( void  )
 {
 
 	Vector vecAim = Vector( RANDOM_FLOAT( -1, 1 ), RANDOM_FLOAT( -1, 1 ), RANDOM_FLOAT( -1, 1 ) ).Normalize( );

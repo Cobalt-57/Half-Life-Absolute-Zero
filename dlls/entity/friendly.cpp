@@ -1557,7 +1557,7 @@ void CFriendly::MonsterThink( void ){
 				}
 			}
 
-			if(pev->sequence == ::FRIENDLY_VOMIT){
+			if(pev->sequence == FRIENDLY_VOMIT){
 
 				if(
 				pev->frame >= (25.3f/47.0f)*255 && 

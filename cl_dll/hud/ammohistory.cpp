@@ -44,7 +44,7 @@ struct ITEM_INFO
 };
 
 
-void HistoryResource :: AddToHistory( int iType, int iId, int iCount )
+void HistoryResource::AddToHistory( int iType, int iId, int iCount )
 {
 	if ( iType == HISTSLOT_AMMO && !iCount )
 		return;  // no amount, so don't add
@@ -64,7 +64,7 @@ void HistoryResource :: AddToHistory( int iType, int iId, int iCount )
 	freeslot->DisplayTime = gHUD.m_flTime + HISTORY_DRAW_TIME;
 }
 
-void HistoryResource :: AddToHistory( int iType, const char *szName, int iCount )
+void HistoryResource::AddToHistory( int iType, const char *szName, int iCount )
 {
 	if ( iType != HISTSLOT_ITEM )
 		return;
@@ -92,7 +92,7 @@ void HistoryResource :: AddToHistory( int iType, const char *szName, int iCount 
 }
 
 
-void HistoryResource :: CheckClearHistory( void )
+void HistoryResource::CheckClearHistory( void )
 {
 	for ( int i = 0; i < MAX_HISTORY; i++ )
 	{
@@ -107,7 +107,7 @@ void HistoryResource :: CheckClearHistory( void )
 // Draw Ammo pickup history
 //
 //MODDD - what throughout.
-int HistoryResource :: DrawAmmoHistory( float flTime )
+int HistoryResource::DrawAmmoHistory( float flTime )
 {
 	for ( int i = 0; i < MAX_HISTORY; i++ )
 	{

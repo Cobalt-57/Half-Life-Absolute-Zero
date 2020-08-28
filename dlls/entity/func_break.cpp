@@ -896,7 +896,7 @@ void CBreakable::Die( void )
 //MODDD - NOTE - this was here, as-is in retail.  Just checking that the mat isn't matUnbreakableGlass
 //(although, a spawnflag can make this or pushables still impossible to destroy.  See "isDestructibleInanimate" for more accuracy,
 //which the AI may need to not look stupid)
-BOOL CBreakable :: IsBreakable( void ) 
+BOOL CBreakable::IsBreakable( void ) 
 { 
 	return m_Material != matUnbreakableGlass;
 }
@@ -912,11 +912,11 @@ BOOL CBreakable::isDestructibleInanimate(void){
 }
 
 
-int CBreakable :: DamageDecal( int bitsDamageType )
+int CBreakable::DamageDecal( int bitsDamageType )
 {
 	return DamageDecal(bitsDamageType, 0);
 }
-int CBreakable :: DamageDecal( int bitsDamageType, int bitsDamageTypeMod )
+int CBreakable::DamageDecal( int bitsDamageType, int bitsDamageTypeMod )
 {
 	if ( m_Material == matGlass  )
 		return DECAL_GLASSBREAK1 + RANDOM_LONG(0,2);
@@ -971,7 +971,7 @@ public:
 	//             it would suddenly change just by going to a new map.
 	//MODDD - ALSO, added the FCAP_ONOFF_USE cap.  On use being stopped, cancel velocity.
 	// No sense in a pushed obect still sliding, you just would've pushed it further if you wanted it there.
-	virtual int ObjectCaps( void ) { return (CBaseEntity :: ObjectCaps() & ~FCAP_ACROSS_TRANSITION) | FCAP_CONTINUOUS_USE | FCAP_ONOFF_USE; }
+	virtual int ObjectCaps( void ) { return (CBaseEntity::ObjectCaps() & ~FCAP_ACROSS_TRANSITION) | FCAP_CONTINUOUS_USE | FCAP_ONOFF_USE; }
 	virtual int	Save( CSave &save );
 	virtual int	Restore( CRestore &restore );
 
@@ -999,10 +999,10 @@ IMPLEMENT_SAVERESTORE( CPushable, CBreakable );
 
 LINK_ENTITY_TO_CLASS( func_pushable, CPushable );
 
-char *CPushable :: m_soundNames[3] = { "debris/pushbox1.wav", "debris/pushbox2.wav", "debris/pushbox3.wav" };
+char *CPushable::m_soundNames[3] = { "debris/pushbox1.wav", "debris/pushbox2.wav", "debris/pushbox3.wav" };
 
 
-void CPushable :: Spawn( void )
+void CPushable::Spawn( void )
 {
 	if ( pev->spawnflags & SF_PUSH_BREAKABLE )
 		CBreakable::Spawn();
@@ -1047,7 +1047,7 @@ void CPushable :: Spawn( void )
 }
 
 
-void CPushable :: Precache( void )
+void CPushable::Precache( void )
 {
 	for ( int i = 0; i < 3; i++ )
 		PRECACHE_SOUND( m_soundNames[i] );
@@ -1057,7 +1057,7 @@ void CPushable :: Precache( void )
 }
 
 
-void CPushable :: KeyValue( KeyValueData *pkvd )
+void CPushable::KeyValue( KeyValueData *pkvd )
 {
 	if ( FStrEq(pkvd->szKeyName, "size") )
 	{
@@ -1095,7 +1095,7 @@ void CPushable :: KeyValue( KeyValueData *pkvd )
 
 
 // Pull the func_pushable
-void CPushable :: Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
+void CPushable::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
 {
 	if ( !pActivator || !pActivator->IsPlayer() )
 	{
@@ -1109,7 +1109,7 @@ void CPushable :: Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE u
 }
 
 
-void CPushable :: Touch( CBaseEntity *pOther )
+void CPushable::Touch( CBaseEntity *pOther )
 {
 	if (pOther->IsWorld()) return;
 
@@ -1134,7 +1134,7 @@ void CPushable :: Touch( CBaseEntity *pOther )
 // used continually (1) or released (0).
 // Only useful if 'push' is 0, since push = 1 means the use-key isn't
 // the one making this call.
-void CPushable :: Move( CBaseEntity *pOther, int push, int useValue )
+void CPushable::Move( CBaseEntity *pOther, int push, int useValue )
 {
 	entvars_t*	pevToucher = pOther->pev;
 	int playerTouch = 0;

@@ -35,7 +35,7 @@ class CCycler : public CBaseMonster
 {
 public:
 	void GenericCyclerSpawn(char *szModel, Vector vecMin, Vector vecMax);
-	virtual int ObjectCaps( void ) { return (CBaseEntity :: ObjectCaps() | FCAP_IMPULSE_USE); }
+	virtual int ObjectCaps( void ) { return (CBaseEntity::ObjectCaps() | FCAP_IMPULSE_USE); }
 
 	//MODDD NOTE - This is the one that had child classes but didn't make these methods virtual? At least they didn't override the method.
 	GENERATE_TRACEATTACK_PROTOTYPE_VIRTUAL
@@ -87,7 +87,7 @@ public:
 	void Spawn( void );
 };
 LINK_ENTITY_TO_CLASS( cycler_prdroid, CCyclerProbe );
-void CCyclerProbe :: Spawn( void )
+void CCyclerProbe::Spawn( void )
 {
 	pev->origin = pev->origin + Vector ( 0, 0, 16 );
 	GenericCyclerSpawn( "models/prdroid.mdl", Vector(-16,-16,-16), Vector(16,16,16));
@@ -97,7 +97,7 @@ void CCyclerProbe :: Spawn( void )
 
 // Cycler member functions
 
-void CCycler :: GenericCyclerSpawn(char *szModel, Vector vecMin, Vector vecMax)
+void CCycler::GenericCyclerSpawn(char *szModel, Vector vecMin, Vector vecMax)
 {
 	if (!szModel || !*szModel)
 	{
@@ -116,7 +116,7 @@ void CCycler :: GenericCyclerSpawn(char *szModel, Vector vecMin, Vector vecMax)
 }
 
 
-void CCycler :: Spawn( )
+void CCycler::Spawn( )
 {
 	InitBoneControllers();
 	pev->solid			= SOLID_SLIDEBOX;
@@ -150,7 +150,7 @@ void CCycler :: Spawn( )
 //
 // cycler think
 //
-void CCycler :: Think( void )
+void CCycler::Think( void )
 {
 	pev->nextthink = gpGlobals->time + 0.1;
 
@@ -175,7 +175,7 @@ void CCycler :: Think( void )
 //
 // CyclerUse - starts a rotation trend
 //
-void CCycler :: Use ( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
+void CCycler::Use ( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
 {
 	m_animate = !m_animate;
 	if (m_animate)
@@ -191,7 +191,7 @@ BOOL CCycler::IsWorldAffiliated(){
 //
 // CyclerPain , changes sequences when shot
 //
-//void CCycler :: Pain( float flDamage )
+//void CCycler::Pain( float flDamage )
 
 
 GENERATE_TRACEATTACK_IMPLEMENTATION(CCycler)
@@ -234,7 +234,7 @@ public:
 	void Spawn( void );
 	void Think( void );
 	void Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value );
-	virtual int ObjectCaps( void ) { return (CBaseEntity :: ObjectCaps() | FCAP_DONT_SAVE | FCAP_IMPULSE_USE); }
+	virtual int ObjectCaps( void ) { return (CBaseEntity::ObjectCaps() | FCAP_DONT_SAVE | FCAP_IMPULSE_USE); }
  
 	//mODDD - extra damage bitmask added.
 	GENERATE_TRACEATTACK_PROTOTYPE_VIRTUAL

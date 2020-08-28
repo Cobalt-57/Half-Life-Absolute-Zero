@@ -56,9 +56,6 @@
     <ClCompile Include="defaultai.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="entity\effects.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="game.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -427,6 +424,9 @@
     </ClCompile>
     <ClCompile Include="weapon\mp5.cpp">
       <Filter>Source Files\weapon</Filter>
+    </ClCompile>
+    <ClCompile Include="entity\effects.cpp">
+      <Filter>Source Files\entity</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -86,7 +86,7 @@ extern DLL_GLOBAL float g_rawDamageCumula;
 
 
 
-BOOL CBaseMonster :: HasHumanGibs( void )
+BOOL CBaseMonster::HasHumanGibs( void )
 {
 	int myClass = Classify();
 
@@ -109,7 +109,7 @@ BOOL CBaseMonster :: HasHumanGibs( void )
 }
 
 
-BOOL CBaseMonster :: HasAlienGibs( void )
+BOOL CBaseMonster::HasAlienGibs( void )
 {
 	int myClass = Classify();
 
@@ -393,7 +393,7 @@ GENERATE_GIBMONSTEREND_IMPLEMENTATION(CBaseMonster){
 // GetDeathActivity - determines the best type of death
 // anim to play.
 //=========================================================
-Activity CBaseMonster :: GetDeathActivity ( void )
+Activity CBaseMonster::GetDeathActivity ( void )
 {
 	Activity	deathActivity;
 	//BOOL		fTriedDirection;
@@ -537,7 +537,7 @@ Activity CBaseMonster :: GetDeathActivity ( void )
 // GetSmallFlinchActivity - determines the best type of flinch
 // anim to play.
 //=========================================================
-Activity CBaseMonster :: GetSmallFlinchActivity ( void )
+Activity CBaseMonster::GetSmallFlinchActivity ( void )
 {
 	Activity	flinchActivity;
 	BOOL		fTriedDirection;
@@ -743,7 +743,7 @@ BOOL CBaseMonster::ShouldGibMonster( int iGib )
 Killed
 ============
 */
-//void CBaseMonster :: Killed( entvars_t *pevAttacker, int iGib )
+//void CBaseMonster::Killed( entvars_t *pevAttacker, int iGib )
 GENERATE_KILLED_IMPLEMENTATION(CBaseMonster)
 {
 	//m_pfnThink
@@ -873,7 +873,7 @@ GENERATE_KILLED_IMPLEMENTATION(CBaseMonster)
 //but only because the player immediately sets the Think on its own to PlayerDeathThink
 //after calling GibMonster. This overrides the SUB_FadeOut Set Think call below.
 //But the player should still not call this method anyways.
-void CBaseEntity :: SUB_StartFadeOut ( void )
+void CBaseEntity::SUB_StartFadeOut ( void )
 {
 	if (pev->rendermode == kRenderNormal)
 	{
@@ -888,7 +888,7 @@ void CBaseEntity :: SUB_StartFadeOut ( void )
 	SetThink ( &CBaseEntity::SUB_FadeOut );
 }
 
-void CBaseEntity :: SUB_FadeOut ( void  )
+void CBaseEntity::SUB_FadeOut ( void  )
 {
 	//Multiply the fade by 0.1 because that's how long this think method is expected to delay before getting called again.
 	//That effectively means with each second, the monster's opacity (renderamt) drops by an amount of "monsterFadeOutRate".
@@ -949,7 +949,7 @@ CBaseEntity* CBaseMonster::CheckTraceHullAttack( const Vector vecStartOffset, fl
 //TODO - send the entity (monster) calling this method as a paramter and use it to see if the thing hit matches its "m_hEnemy" (if this calling entity has one).
 //       If it does not match the enemy, try separate checks in case something else (crate, friend, etc.) was accidentally hit?
 //       ...right now it just does the re-checks if the world was hit.  BUT can choose to return the world anyways if no other entity is hit by rechecks.
-CBaseEntity* CBaseMonster :: CheckTraceHullAttack( const Vector vecStartOffset, float flDist, int iDamage, int iDmgType, int iDmgTypeMod, TraceResult* out_traceResult )
+CBaseEntity* CBaseMonster::CheckTraceHullAttack( const Vector vecStartOffset, float flDist, int iDamage, int iDmgType, int iDmgTypeMod, TraceResult* out_traceResult )
 {
 	TraceResult tr;
 
@@ -1071,7 +1071,7 @@ CBaseEntity* CBaseMonster :: CheckTraceHullAttack( const Vector vecStartOffset, 
 // the caller's forward view cone. The dot product is performed
 // in 2d, making the view cone infinitely tall. 
 //=========================================================
-BOOL CBaseMonster :: FInViewCone ( CBaseEntity *pEntity )
+BOOL CBaseMonster::FInViewCone ( CBaseEntity *pEntity )
 {
 	//return FALSE;
 
@@ -1102,7 +1102,7 @@ BOOL CBaseMonster :: FInViewCone ( CBaseEntity *pEntity )
 // the caller's forward view cone. The dot product is performed
 // in 2d, making the view cone infinitely tall. 
 //=========================================================
-BOOL CBaseMonster :: FInViewCone ( Vector *pOrigin )
+BOOL CBaseMonster::FInViewCone ( Vector *pOrigin )
 {
 
 
@@ -1130,7 +1130,7 @@ BOOL CBaseMonster :: FInViewCone ( Vector *pOrigin )
 // FVisible - returns true if a line can be traced from
 // the caller's eyes to the target
 //=========================================================
-BOOL CBaseEntity :: FVisible ( CBaseEntity *pEntity )
+BOOL CBaseEntity::FVisible ( CBaseEntity *pEntity )
 {
 	TraceResult tr;
 	Vector		vecLookerOrigin;
@@ -1173,7 +1173,7 @@ BOOL CBaseEntity :: FVisible ( CBaseEntity *pEntity )
 // the caller's eyes to the target vector
 //=========================================================
 //MODDD - NAME YOUR STUFF PEOPLE!  "vecOrigin" for a paramater? Origin of what?!
-BOOL CBaseEntity :: FVisible ( const Vector &vecTargetOrigin )
+BOOL CBaseEntity::FVisible ( const Vector &vecTargetOrigin )
 {
 	TraceResult tr;
 	Vector		vecLookerOrigin;
@@ -1214,7 +1214,7 @@ BOOL CBaseEntity :: FVisible ( const Vector &vecTargetOrigin )
 //                   the waterlevel at the entity's eye point, we need to check that outside of this call before calling it
 //                   (along with the "SeeThroughWaterLine()" exception).
 //                   ...nah, just use the pev->origin of the Looker anyways (pev->waterlevel's for that point), this won't be static.
-BOOL CBaseEntity :: FVisible (const Vector& vecLookerOrigin, CBaseEntity *pEntity )
+BOOL CBaseEntity::FVisible (const Vector& vecLookerOrigin, CBaseEntity *pEntity )
 {
 	TraceResult tr;
 	Vector		vecTargetOrigin;
@@ -1248,7 +1248,7 @@ BOOL CBaseEntity :: FVisible (const Vector& vecLookerOrigin, CBaseEntity *pEntit
 	}
 }//END OF FVisible
 
-BOOL CBaseEntity :: FVisible (const Vector& vecLookerOrigin, const Vector &vecTargetOrigin )
+BOOL CBaseEntity::FVisible (const Vector& vecLookerOrigin, const Vector &vecTargetOrigin )
 {
 	TraceResult tr;
 	
@@ -1935,7 +1935,7 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBaseMonster){
 	vecDir = Vector( 0, 0, 0 );
 	if (!FNullEnt( pevInflictor ))
 	{
-		CBaseEntity *pInflictor = CBaseEntity :: Instance( pevInflictor );
+		CBaseEntity *pInflictor = CBaseEntity::Instance( pevInflictor );
 		if (pInflictor)
 		{
 			// And lower offset for the center!  Was 10.  (that vect's subtracted)
@@ -2000,7 +2000,7 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBaseMonster){
 		}
 	}
 
-	//easyPrintLine("CBaseMonster:: name:%s:%d TOOK DAMAGE. health:%.2f Damage:%.2f Blast:%d Gib:: N:%d A:%d", getClassname(), monsterID, pev->health, flDamage, (bitsDamageType & DMG_BLAST), (bitsDamageType & DMG_NEVERGIB), (bitsDamageType & DMG_ALWAYSGIB) );
+	//easyPrintLine("CBaseMonster::name:%s:%d TOOK DAMAGE. health:%.2f Damage:%.2f Blast:%d Gib::N:%d A:%d", getClassname(), monsterID, pev->health, flDamage, (bitsDamageType & DMG_BLAST), (bitsDamageType & DMG_NEVERGIB), (bitsDamageType & DMG_ALWAYSGIB) );
 	//easyForcePrintLine("TakeDamage. %s:%d health:%.2f gib damge bits: %d %d", this->getClassname(), monsterID, pev->health, (bitsDamageType&DMG_NEVERGIB), (bitsDamageType&DMG_ALWAYSGIB) );
 	
 
@@ -2030,7 +2030,9 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBaseMonster){
 		//MODDD - removing this. We can send the inflictor to killed now.
 		//g_pevLastInflictor = pevInflictor;
 		
-		lastDamageReceived = flDamageTake;
+		// using g_rawDamageCumula instead of flDamageTake.
+		m_lastDamageAmount = g_rawDamageCumula;
+
 		attemptResetTimedDamage(TRUE);
 
 		float MYHEALTH = pev->health;
@@ -2179,7 +2181,7 @@ float CBaseMonster::hitgroupDamage(float flDamage, int bitsDamageType, int bitsD
 
 //MODDD - may incorporate the bitsDamageTypeMod (extra damage bitmask) in the future. For now, just the plain one works.
 // take health
-int CBaseMonster :: TakeHealth (float flHealth, int bitsDamageType)
+int CBaseMonster::TakeHealth (float flHealth, int bitsDamageType)
 {
 	if (!pev->takedamage)
 		return 0;
@@ -2233,7 +2235,7 @@ void CBaseMonster::Think(void)
 // DeadTakeDamage - takedamage function called when a monster's
 // corpse is damaged.
 //=========================================================
-//int CBaseMonster :: DeadTakeDamage( entvars_t *pevInflictor, entvars_t *pevAttacker, float flDamage, int bitsDamageType, int bitsDamageTypeMod )
+//int CBaseMonster::DeadTakeDamage( entvars_t *pevInflictor, entvars_t *pevAttacker, float flDamage, int bitsDamageType, int bitsDamageTypeMod )
 GENERATE_DEADTAKEDAMAGE_IMPLEMENTATION(CBaseMonster)
 {
 	Vector vecDir;
@@ -2250,7 +2252,7 @@ GENERATE_DEADTAKEDAMAGE_IMPLEMENTATION(CBaseMonster)
 	vecDir = Vector( 0, 0, 0 );
 	if (!FNullEnt( pevInflictor ))
 	{
-		CBaseEntity *pInflictor = CBaseEntity :: Instance( pevInflictor );
+		CBaseEntity *pInflictor = CBaseEntity::Instance( pevInflictor );
 		if (pInflictor)
 		{
 			vecDir = ( pInflictor->Center() - Vector ( 0, 0, 10 ) - Center() ).Normalize();
@@ -2287,13 +2289,14 @@ GENERATE_DEADTAKEDAMAGE_IMPLEMENTATION(CBaseMonster)
 			return 0;
 		}
 		// Accumulate corpse gibbing damage, so you can gib with multiple hits
-		pev->health -= flDamage * 0.1;
+		// MODDD - penality reduced, was 0.1.
+		pev->health -= flDamage * 0.18;
 	}
 	
 	return 1;
 }
 
-float CBaseMonster :: DamageForce( float damage )
+float CBaseMonster::DamageForce( float damage )
 { 
 	float force = damage * ((32 * 32 * 72.0) / (pev->size.x * pev->size.y * pev->size.z)) * 5;
 	
@@ -2308,7 +2311,7 @@ float CBaseMonster :: DamageForce( float damage )
 
 /*
 //...Not anymore. Any calls to RadiusDamage, even from RadiusDamageAutoRadius, end up getting redirected to RadiusDamageTest if the RadiusDamageDrawDebug CVar is set.
-void CBaseMonster :: RadiusDamageAutoRadiusTest(entvars_t* pevInflictor, entvars_t*	pevAttacker, float flDamage, int iClassIgnore, int bitsDamageType )
+void CBaseMonster::RadiusDamageAutoRadiusTest(entvars_t* pevInflictor, entvars_t*	pevAttacker, float flDamage, int iClassIgnore, int bitsDamageType )
 {
 	::RadiusDamageTest( pev->origin, pevInflictor, pevAttacker, flDamage, flDamage * 2.5, iClassIgnore, bitsDamageType, 0 );
 }
@@ -2474,11 +2477,11 @@ void RadiusDamageTest( Vector vecSrc, entvars_t *pevInflictor, entvars_t *pevAtt
 
 
 //From CBaseMonster to assume the position of the monster called on (pev->origin).
-void CBaseMonster :: RadiusDamageAutoRadius(entvars_t* pevInflictor, entvars_t*	pevAttacker, float flDamage, int iClassIgnore, int bitsDamageType )
+void CBaseMonster::RadiusDamageAutoRadius(entvars_t* pevInflictor, entvars_t*	pevAttacker, float flDamage, int iClassIgnore, int bitsDamageType )
 {
 	::RadiusDamage( pev->origin, pevInflictor, pevAttacker, flDamage, flDamage * 2.5, iClassIgnore, bitsDamageType, 0 );
 }
-void CBaseMonster :: RadiusDamageAutoRadius(entvars_t* pevInflictor, entvars_t*	pevAttacker, float flDamage, int iClassIgnore, int bitsDamageType, int bitsDamageTypeMod )
+void CBaseMonster::RadiusDamageAutoRadius(entvars_t* pevInflictor, entvars_t*	pevAttacker, float flDamage, int iClassIgnore, int bitsDamageType, int bitsDamageTypeMod )
 {
 	::RadiusDamage( pev->origin, pevInflictor, pevAttacker, flDamage, flDamage * 2.5, iClassIgnore, bitsDamageType, bitsDamageTypeMod );
 }
@@ -3024,7 +3027,7 @@ Vector CBaseEntity::FireBulletsPlayer ( ULONG cShots, Vector vecSrc, Vector vecD
 		//easyPrintLine("IS IT NULL????? %d", (CBaseEntity::Instance(tr.pHit)  == NULL) );
 		if(CBaseEntity::Instance(tr.pHit)  != NULL){
 			CBaseEntity *pEntity = CBaseEntity::Instance(tr.pHit);
-			//easyPrintLine("NAME::: %s", STRING(pEntity->pev->classname) );
+			//easyPrintLine("NAME:::%s", STRING(pEntity->pev->classname) );
 		}
 		*/
 
@@ -3172,13 +3175,13 @@ Vector CBaseEntity::FireBulletsPlayer ( ULONG cShots, Vector vecSrc, Vector vecD
 
 
 
-void CBaseEntity :: TraceBleed( float flDamage, Vector vecDir, TraceResult *ptr, int bitsDamageType )
+void CBaseEntity::TraceBleed( float flDamage, Vector vecDir, TraceResult *ptr, int bitsDamageType )
 {
 	TraceBleed(flDamage, vecDir, ptr, bitsDamageType, 0);
 
 }
 
-void CBaseEntity :: TraceBleed( float flDamage, Vector vecDir, TraceResult *ptr, int bitsDamageType, int bitsDamageTypeMod )
+void CBaseEntity::TraceBleed( float flDamage, Vector vecDir, TraceResult *ptr, int bitsDamageType, int bitsDamageTypeMod )
 {
 	if (!UTIL_ShouldShowBlood(BloodColor())) {
 		return;
@@ -3255,7 +3258,7 @@ void CBaseEntity :: TraceBleed( float flDamage, Vector vecDir, TraceResult *ptr,
 
 //=========================================================
 //=========================================================
-void CBaseMonster :: MakeDamageBloodDecal ( int cCount, float flNoise, TraceResult *ptr, const Vector &vecDir )
+void CBaseMonster::MakeDamageBloodDecal ( int cCount, float flNoise, TraceResult *ptr, const Vector &vecDir )
 {
 	if (!UTIL_ShouldShowBlood(BloodColor())) {
 		return;

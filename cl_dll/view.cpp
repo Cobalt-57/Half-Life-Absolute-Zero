@@ -926,7 +926,7 @@ void V_CalcNormalRefdef(struct ref_params_s* pparams)
 		// allow extra interp for changes in viewheight (most likely ducking/unducking) never, on the ground, or always (+midair)
 		// depending on cl_interp_view_extra.
 		
-		//easyForcePrintLine("the what H:%d %.2f %.2f :: %.2f   %.2f %.2f :: %.2f", ent->curstate.usehull, pparams->viewheight[2], oldViewHeight, pparams->viewheight[2] - oldViewHeight + (safeSimZ - oldz), safeSimZ, oldz, (safeSimZ - oldz));
+		//easyForcePrintLine("the what H:%d %.2f %.2f::%.2f   %.2f %.2f::%.2f", ent->curstate.usehull, pparams->viewheight[2], oldViewHeight, pparams->viewheight[2] - oldViewHeight + (safeSimZ - oldz), safeSimZ, oldz, (safeSimZ - oldz));
 
 
 		float deltaOriginZ = ent->curstate.origin.z - prevOriginZ;
@@ -1064,7 +1064,7 @@ void V_CalcNormalRefdef(struct ref_params_s* pparams)
 
 				pparams->vieworg[2] += (oldViewHeight - (filteredViewheight)) * 1;
 				view->origin[2] += (oldViewHeight - (filteredViewheight)) * 1;
-				//easyForcePrintLine("test %.2f %.2f ::: %.2f", oldViewHeight, filteredViewheight, (oldViewHeight - (filteredViewheight)));
+				//easyForcePrintLine("test %.2f %.2f :::%.2f", oldViewHeight, filteredViewheight, (oldViewHeight - (filteredViewheight)));
 
 			}
 			else if (filteredViewheight - oldViewHeight < 0) {

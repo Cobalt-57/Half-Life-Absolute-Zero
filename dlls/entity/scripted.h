@@ -65,11 +65,11 @@ public:
 	virtual void Touch( CBaseEntity *pOther );
 
 	//MODDD - no; we shall allow this.  (comes with "FCAP_ACROSS_TRANSITION" unless told not to, like the as-is  did)
-	//virtual int  ObjectCaps( void ) { return (CBaseMonster :: ObjectCaps() & ~FCAP_ACROSS_TRANSITION); }
+	//virtual int  ObjectCaps( void ) { return (CBaseMonster::ObjectCaps() & ~FCAP_ACROSS_TRANSITION); }
 	virtual int  ObjectCaps( void ) { 
 		
 		//return CBaseMonster::ObjectCaps() | FCAP_FORCE_TRANSITION;
-		//return (CBaseMonster :: ObjectCaps()|FCAP_ACROSS_TRANSITION ); 
+		//return (CBaseMonster::ObjectCaps()|FCAP_ACROSS_TRANSITION ); 
 		
 		if(EASY_CVAR_GET_DEBUGONLY(cineChangelevelFix) == 1 || EASY_CVAR_GET_DEBUGONLY(cineChangelevelFix) == 3){
 			//return (CBaseMonster::ObjectCaps() ); 

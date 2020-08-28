@@ -246,7 +246,7 @@ Vector FireBulletsPlayerEh ( ULONG cShots, Vector vecSrc, Vector vecDirShooting,
 			CBaseEntity *pEntity = CBaseEntity::Instance(tr.pHit);
 
 			
-			//easyPrintLine("NAME::: %s", STRING(pEntity->pev->classname) );
+			//easyPrintLine("NAME:::%s", STRING(pEntity->pev->classname) );
 		}
 
 		if (tr.flFraction != 1.0)

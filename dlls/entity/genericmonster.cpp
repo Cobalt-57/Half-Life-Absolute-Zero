@@ -44,7 +44,7 @@ LINK_ENTITY_TO_CLASS( monster_generic, CGenericMonster );
 // Classify - indicates this monster's place in the 
 // relationship table.
 //=========================================================
-int CGenericMonster :: Classify ( void )
+int CGenericMonster::Classify ( void )
 {
 	return	CLASS_PLAYER_ALLY;
 }
@@ -53,7 +53,7 @@ int CGenericMonster :: Classify ( void )
 // SetYawSpeed - allows each sequence to have a different
 // turn rate associated with it.
 //=========================================================
-void CGenericMonster :: SetYawSpeed ( void )
+void CGenericMonster::SetYawSpeed ( void )
 {
 	int ys;
 
@@ -71,7 +71,7 @@ void CGenericMonster :: SetYawSpeed ( void )
 // HandleAnimEvent - catches the monster-specific messages
 // that occur when tagged animation frames are played.
 //=========================================================
-void CGenericMonster :: HandleAnimEvent( MonsterEvent_t *pEvent )
+void CGenericMonster::HandleAnimEvent( MonsterEvent_t *pEvent )
 {
 	switch( pEvent->event )
 	{
@@ -85,7 +85,7 @@ void CGenericMonster :: HandleAnimEvent( MonsterEvent_t *pEvent )
 //=========================================================
 // ISoundMask - generic monster can't hear.
 //=========================================================
-int CGenericMonster :: ISoundMask ( void )
+int CGenericMonster::ISoundMask ( void )
 {
 	return	NULL;
 }
@@ -93,7 +93,7 @@ int CGenericMonster :: ISoundMask ( void )
 //=========================================================
 // Spawn
 //=========================================================
-void CGenericMonster :: Spawn()
+void CGenericMonster::Spawn()
 {
 	Precache();
 
@@ -130,7 +130,7 @@ void CGenericMonster :: Spawn()
 //=========================================================
 // Precache - precaches all resources this monster needs
 //=========================================================
-void CGenericMonster :: Precache()
+void CGenericMonster::Precache()
 {
 	PRECACHE_MODEL( (char *)STRING(pev->model) );
 }	

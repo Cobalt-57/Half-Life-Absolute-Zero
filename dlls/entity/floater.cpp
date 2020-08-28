@@ -101,7 +101,7 @@ enum{
 //Original floater sound methods for reference. Just zombie sounds though, still placeholders.
 /*
 
-void CBloater :: PainSound( void )
+void CBloater::PainSound( void )
 {
 #if 0	
 	int pitch = 95 + RANDOM_LONG(0,9);
@@ -120,7 +120,7 @@ void CBloater :: PainSound( void )
 #endif
 }
 
-void CBloater :: AlertSound( void )
+void CBloater::AlertSound( void )
 {
 #if 0
 	int pitch = 95 + RANDOM_LONG(0,9);
@@ -140,7 +140,7 @@ void CBloater :: AlertSound( void )
 #endif
 }
 
-void CBloater :: IdleSound( void )
+void CBloater::IdleSound( void )
 {
 #if 0
 	int pitch = 95 + RANDOM_LONG(0,9);
@@ -160,7 +160,7 @@ void CBloater :: IdleSound( void )
 #endif
 }
 
-void CBloater :: AttackSnd( void )
+void CBloater::AttackSnd( void )
 {
 #if 0
 	int pitch = 95 + RANDOM_LONG(0,9);
@@ -401,7 +401,7 @@ void CFloater::Stop(){
 }
 
 
-int CFloater :: CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, CBaseEntity *pTarget, float *pflDist )
+int CFloater::CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, CBaseEntity *pTarget, float *pflDist )
 {
 	int iReturn;
 

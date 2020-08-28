@@ -554,7 +554,7 @@ IMPLEMENT_CUSTOM_SCHEDULES( CTalkMonster, CBaseMonster );
 
 
 
-void CTalkMonster :: SetActivity ( Activity newActivity )
+void CTalkMonster::SetActivity ( Activity newActivity )
 {
 	if (newActivity == ACT_IDLE && IsTalking() )
 		newActivity = ACT_SIGNAL3;
@@ -566,7 +566,7 @@ void CTalkMonster :: SetActivity ( Activity newActivity )
 }
 
 
-void CTalkMonster :: StartTask( Task_t *pTask )
+void CTalkMonster::StartTask( Task_t *pTask )
 {
 	switch ( pTask->iTask )
 	{
@@ -807,7 +807,7 @@ void CTalkMonster :: StartTask( Task_t *pTask )
 }
 
 
-void CTalkMonster :: RunTask( Task_t *pTask )
+void CTalkMonster::RunTask( Task_t *pTask )
 {
 	switch( pTask->iTask )
 	{
@@ -1260,7 +1260,7 @@ float CTalkMonster::TargetDistance( void )
 // HandleAnimEvent - catches the monster-specific messages
 // that occur when tagged animation frames are played.
 //=========================================================
-void CTalkMonster :: HandleAnimEvent( MonsterEvent_t *pEvent )
+void CTalkMonster::HandleAnimEvent( MonsterEvent_t *pEvent )
 {
 	switch( pEvent->event )
 	{		
@@ -1288,7 +1288,7 @@ void CTalkMonster :: HandleAnimEvent( MonsterEvent_t *pEvent )
 
 // monsters derived from ctalkmonster should call this in precache()
 
-void CTalkMonster :: TalkInit( void )
+void CTalkMonster::TalkInit( void )
 {
 	// every new talking monster must reset this global, otherwise
 	// when a level is loaded, nobody will talk (time is reset to 0)
@@ -1303,7 +1303,7 @@ void CTalkMonster :: TalkInit( void )
 // nearest player
 //=========================================================
 //MODDD - returns a CBaseMonster instead of a CBaseEntity.
-CBaseMonster* CTalkMonster :: FindNearestFriend(BOOL fPlayer)
+CBaseMonster* CTalkMonster::FindNearestFriend(BOOL fPlayer)
 {
 	CBaseEntity *pFriend = NULL;
 
@@ -1404,7 +1404,7 @@ CBaseMonster* CTalkMonster :: FindNearestFriend(BOOL fPlayer)
 	return pNearest;
 }
 
-int CTalkMonster :: GetVoicePitch( void )
+int CTalkMonster::GetVoicePitch( void )
 {
 	//MODDD - check for "pissedNPCs".  If activated, do NOT allow pitch adjustments (only pitch of 100, play the original sound unmodded)
 	if(EASY_CVAR_GET(pissedNPCs) < 1 ){
@@ -1419,7 +1419,7 @@ int CTalkMonster :: GetVoicePitch( void )
 }
 
 
-void CTalkMonster :: Touch( CBaseEntity *pOther )
+void CTalkMonster::Touch( CBaseEntity *pOther )
 {
 	// Did the player touch me?
 	if ( pOther->IsPlayer() )
@@ -1448,7 +1448,7 @@ void CTalkMonster :: Touch( CBaseEntity *pOther )
 // IdleRespond
 // Respond to a previous question
 //=========================================================
-void CTalkMonster :: IdleRespond( void )
+void CTalkMonster::IdleRespond( void )
 {
 	int pitch = GetVoicePitch();
 	
@@ -1460,7 +1460,7 @@ void CTalkMonster :: IdleRespond( void )
 	}
 }
 
-int CTalkMonster :: FOkToSpeak( void )
+int CTalkMonster::FOkToSpeak( void )
 {
 	// if in the grip of a barnacle, don't speak
 	if ( m_MonsterState == MONSTERSTATE_PRONE || m_IdealMonsterState == MONSTERSTATE_PRONE )
@@ -1497,7 +1497,7 @@ int CTalkMonster :: FOkToSpeak( void )
 
 
 //MODDD - this is a version that allows speaking during combat.
-int CTalkMonster :: FOkToSpeakAllowCombat( float waitTime )
+int CTalkMonster::FOkToSpeakAllowCombat( float waitTime )
 {
 	// if in the grip of a barnacle, don't speak
 	if ( m_MonsterState == MONSTERSTATE_PRONE || m_IdealMonsterState == MONSTERSTATE_PRONE )
@@ -1571,7 +1571,7 @@ int CTalkMonster::CanPlaySentence( BOOL fDisregardState )
 //=========================================================
 // FIdleStare
 //=========================================================
-int CTalkMonster :: FIdleStare( void )
+int CTalkMonster::FIdleStare( void )
 {
 	//MODDD.
 	if (m_MonsterState == MONSTERSTATE_SCRIPT && (m_pCine != NULL && !m_pCine->CanInterrupt()) ) {
@@ -1602,7 +1602,7 @@ int CTalkMonster :: FIdleStare( void )
 // IdleHello
 // Try to greet player first time he's seen
 //=========================================================
-int CTalkMonster :: FIdleHello( void )
+int CTalkMonster::FIdleHello( void )
 {
 	//MODDD - no check for this?   Don't say hello while running for your life, it's... a wee bit strange.
 	// Even if in terruptable, there's usually a little much going on.  Just stop if in the SCRIPT state.
@@ -1651,7 +1651,7 @@ int CTalkMonster :: FIdleHello( void )
 
 
 // turn head towards supplied origin
-void CTalkMonster :: IdleHeadTurn( Vector &vecFriend )
+void CTalkMonster::IdleHeadTurn( Vector &vecFriend )
 {
 	 // turn head in desired direction only if ent has a turnable head
 	if (m_afCapability & bits_CAP_TURN_HEAD)
@@ -1672,7 +1672,7 @@ void CTalkMonster :: IdleHeadTurn( Vector &vecFriend )
 // FIdleSpeak
 // ask question of nearby friend, or make statement
 //=========================================================
-int CTalkMonster :: FIdleSpeak ( void )
+int CTalkMonster::FIdleSpeak ( void )
 {
 	//MODDD.
 
@@ -2070,7 +2070,7 @@ void CTalkMonster::PlaySentenceSingular(const char *pszSentence, float duration,
 // Talk - set a timer that tells us when the monster is done
 // talking.
 //=========================================================
-void CTalkMonster :: Talk( float flDuration )
+void CTalkMonster::Talk( float flDuration )
 {
 	if ( flDuration <= 0 )
 	{
@@ -2084,7 +2084,7 @@ void CTalkMonster :: Talk( float flDuration )
 }
 
 // Prepare this talking monster to answer question
-void CTalkMonster :: SetAnswerQuestion( CTalkMonster *pSpeaker )
+void CTalkMonster::SetAnswerQuestion( CTalkMonster *pSpeaker )
 {
 	if (!m_pCine) {
 		ChangeSchedule(slIdleResponse);
@@ -2386,7 +2386,7 @@ Schedule_t* CTalkMonster::GetSchedule(){
 
 
 
-Schedule_t* CTalkMonster :: GetScheduleOfType ( int Type )
+Schedule_t* CTalkMonster::GetScheduleOfType ( int Type )
 {
 	//easyForcePrintLine("%s:%d WHATS GOOD IM CTalkMonster AND I PICKED SCHED TYPE %d", getClassname(), monsterID, Type);
 
@@ -2591,7 +2591,7 @@ Schedule_t* CTalkMonster :: GetScheduleOfType ( int Type )
 //=========================================================
 // IsTalking - am I saying a sentence right now?
 //=========================================================
-BOOL CTalkMonster :: IsTalking( void )
+BOOL CTalkMonster::IsTalking( void )
 {
 	if ( m_flStopTalkTime > gpGlobals->time )
 	{
@@ -2855,7 +2855,7 @@ void CTalkMonster::MonsterThink(void){
 //=========================================================
 // If there's a player around, watch him.
 //=========================================================
-void CTalkMonster :: PrescheduleThink ( void )
+void CTalkMonster::PrescheduleThink ( void )
 {
 
 	if ( !HasConditions ( bits_COND_SEE_CLIENT ) )
@@ -2865,7 +2865,7 @@ void CTalkMonster :: PrescheduleThink ( void )
 }
 
 // try to smell something
-void CTalkMonster :: TrySmellTalk( void )
+void CTalkMonster::TrySmellTalk( void )
 {
 	if ( !FOkToSpeak() )
 		return;
@@ -3097,7 +3097,7 @@ void CTalkMonster::playInterPissed(){
 	int madInterSentencesMax = getMadInterSentencesMax();
 	if(madInterSentencesMax > 0 && madInterSentencesLocation != NULL){
 		long someRand = RANDOM_LONG(0, madInterSentencesMax-1);
-		//easyPrintLine("IM %s, MAH CHOICES: %d :: DID %d", getClassname(), *madInterSentencesMaxLocation, someRand);
+		//easyPrintLine("IM %s, MAH CHOICES: %d::DID %d", getClassname(), *madInterSentencesMaxLocation, someRand);
 		PlaySentence( madInterSentencesLocation[someRand], RANDOM_FLOAT(2.8, 3.2), VOL_NORM, ATTN_IDLE );
 		
 	}
@@ -3126,7 +3126,7 @@ BOOL CTalkMonster::CanFollow( void )
 }
 
 
-void CTalkMonster :: FollowerUse( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
+void CTalkMonster::FollowerUse( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
 {
 	// Don't allow use during a scripted_sentence
 	if ( m_useTime > gpGlobals->time )

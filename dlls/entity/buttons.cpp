@@ -676,7 +676,7 @@ CBaseButton::BUTTON_CODE CBaseButton::ButtonResponseToTouch( void )
 //
 // Touching a button simply "activates" it.
 //
-void CBaseButton:: ButtonTouch( CBaseEntity *pOther )
+void CBaseButton::ButtonTouch( CBaseEntity *pOther )
 {
 	// Ignore touches by anything but players
 	if (!FClassnameIs(pOther->pev, "player"))
@@ -942,7 +942,7 @@ public:
 
 	virtual int ObjectCaps( void ) 
 	{ 
-		int flags = CBaseToggle :: ObjectCaps() & (~FCAP_ACROSS_TRANSITION); 
+		int flags = CBaseToggle::ObjectCaps() & (~FCAP_ACROSS_TRANSITION); 
 		if ( pev->spawnflags & SF_MOMENTARY_DOOR )
 			return flags;
 		return flags | FCAP_CONTINUOUS_USE;
@@ -1388,7 +1388,7 @@ BOOL CButtonTarget::IsWorldAffiliated(){
 }
 
 
-int CButtonTarget :: ObjectCaps( void )
+int CButtonTarget::ObjectCaps( void )
 {
 	int caps = CBaseEntity::ObjectCaps() & ~FCAP_ACROSS_TRANSITION;
 

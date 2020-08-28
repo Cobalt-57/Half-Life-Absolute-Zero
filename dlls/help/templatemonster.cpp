@@ -710,7 +710,7 @@ BOOL CTemplateMonster::violentDeathAllowed(void){
 // Only allow a violent death animation if the last hit solidly did this much damage.
 // Could do checks on m_LastHitGroup too (see method GetDeathActivity of combat.cpp)
 BOOL CTemplateMonster::violentDeathDamageRequirement(void){
-	return (lastDamageReceived >= 20);
+	return (m_lastDamageAmount >= 20);
 }
 
 // This method MUST be overridden to do line traces forwards / backwards to see if there is enough space in whatever

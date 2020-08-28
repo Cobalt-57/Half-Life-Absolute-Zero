@@ -301,6 +301,17 @@ enum
 */
 
 
+//MODDD - moved outside the class, unsure why it was inside to begin with
+typedef enum
+{
+	SCRIPT_PLAYING = 0,		// Playing the sequence
+	SCRIPT_WAIT,				// Waiting on everyone in the script to be ready
+	SCRIPT_CLEANUP,					// Cancelling the script / cleaning up
+	SCRIPT_WALK_TO_MARK,
+	SCRIPT_RUN_TO_MARK,
+} SCRIPTSTATE;
+
+
 
 //
 // generic Monster
@@ -318,15 +329,6 @@ public:
 	int m_afConditionsModNextFrame;
 
 
-	typedef enum
-	{
-		SCRIPT_PLAYING = 0,		// Playing the sequence
-		SCRIPT_WAIT,				// Waiting on everyone in the script to be ready
-		SCRIPT_CLEANUP,					// Cancelling the script / cleaning up
-		SCRIPT_WALK_TO_MARK,
-		SCRIPT_RUN_TO_MARK,
-	} SCRIPTSTATE;
-
 
 	//MODDD - moved outside iRelationship.
 	static int iEnemy[14][14];
@@ -335,33 +337,11 @@ public:
 	static const char *pStandardAttackHitSounds[];
 	static const char *pStandardAttackMissSounds[];
 
-/*
-	static float paralyzeDuration;
-	static float nervegasDuration;
-	static float poisonDuration;
-	static float radiationDuration;
-	static float acidDuration;
-	static float slowburnDuration;
-	static float slowfreezeDuration;
-	static float bleedingDuration;
-*/
-
-	/*
-	//static float paralyzeDamage;
-	static float nervegasDamage;
-	static float poisonDamage;
-	static float radiationDamage;
-	static float acidDamage;
-	static float slowburnDamage;
-	static float slowfreezeDamage;
-	static float bleedingDamage;
-	*/
 
 	static Schedule_t* m_scheduleList[];
 
 
 	Vector m_vecEnemyLKP_prev;
-
 
 	// these fields have been added in the process of reworking the state machine. (sjb)
 	EHANDLE				m_hEnemy;		 // the entity that the monster is fighting.
@@ -430,10 +410,12 @@ public:
 	BYTE			m_rgbTimeBasedDamage[itbd_COUNT];
 	BOOL			m_rgbTimeBasedFirstFrame[itbd_COUNT];
 
+	//MODDD - var is actually used for all monsters now.  And why was it int-type anyway?
+	// NOTICE - only use for determining how much damage the killing blow did against this monster,
+	// regardless of health at the time.  An attack that did 50 damage, even with 49 health left,
+	// will still result in the violent death activity.
+	float			m_lastDamageAmount;// how much damage did monster last take
 
-
-	int				m_lastDamageAmount;// how much damage did monster (player) last take
-											// time based damage counters, decr. 1 per 2 seconds
 	int				m_bloodColor;		// color of blood particless
 
 	int				m_failSchedule;				// Schedule type to choose if current schedule fails
@@ -519,10 +501,6 @@ public:
 
 	float forgetSmallFlinchTime;
 	float forgetBigFlinchTime;
-
-	float lastDamageReceived;
-
-	BOOL targetIsDeadException;
 
 
 	BOOL strictNodeTolerance;
@@ -1240,8 +1218,8 @@ public:
 	virtual void setPoweredUpOn(CBaseMonster* argPoweredUpCauseEnt, float argHowLong );
 	virtual void forgetForcedEnemy(CBaseMonster* argIssuing, BOOL argPassive);
 
-	virtual void startReanimation(void);
-	virtual void EndOfRevive(int preReviveSequence);
+	virtual void StartReanimation(void);
+	virtual void StartReanimationPost(int preReviveSequence);
 
 	virtual float MoveYawDegreeTolerance(void);
 	int BloodColorRedFilter(void);

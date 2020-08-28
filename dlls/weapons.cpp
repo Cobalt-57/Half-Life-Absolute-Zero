@@ -234,7 +234,7 @@ int CBasePlayerWeapon::Restore( CRestore &restore )
 
 
 
-void CBasePlayerItem :: SetObjectCollisionBox( void )
+void CBasePlayerItem::SetObjectCollisionBox( void )
 {
 	pev->absmin = pev->origin + Vector(-24, -24, 0);
 	pev->absmax = pev->origin + Vector(24, 24, 16); 
@@ -244,7 +244,7 @@ void CBasePlayerItem :: SetObjectCollisionBox( void )
 //=========================================================
 // Sets up movetype, size, solidtype for a new weapon. 
 //=========================================================
-void CBasePlayerItem :: FallInit( void )
+void CBasePlayerItem::FallInit( void )
 {
 	pev->movetype = MOVETYPE_TOSS;
 	pev->solid = SOLID_BBOX;
@@ -329,7 +329,7 @@ void CBasePlayerItem::AttemptToMaterialize( void )
 // CheckRespawn - a player is taking this weapon, should 
 // it respawn?
 //=========================================================
-void CBasePlayerItem :: CheckRespawn ( void )
+void CBasePlayerItem::CheckRespawn ( void )
 {
 	switch ( g_pGameRules->WeaponShouldRespawn( this ) )
 	{
@@ -1212,12 +1212,12 @@ void CBasePlayerWeapon::SendWeaponAnimMessageFromServer(int iAnim, int body) {
 //MODDD - new version.
 
 
-BOOL CBasePlayerWeapon :: AddPrimaryAmmo( int iCount, char *szName, int iMaxClip, int iMaxCarry ){
+BOOL CBasePlayerWeapon::AddPrimaryAmmo( int iCount, char *szName, int iMaxClip, int iMaxCarry ){
 	return AddPrimaryAmmo(iCount, szName, iMaxClip, iMaxCarry, 0);
 }
 
 //MODDD - called for either extra weapons OR ammo itself adding the ammunition
-BOOL CBasePlayerWeapon :: AddPrimaryAmmo( int iCount, char *szName, int iMaxClip, int iMaxCarry, int forcePickupSound )
+BOOL CBasePlayerWeapon::AddPrimaryAmmo( int iCount, char *szName, int iMaxClip, int iMaxCarry, int forcePickupSound )
 {
 	int iIdAmmo;
 
@@ -1300,7 +1300,7 @@ BOOL CBasePlayerWeapon :: AddPrimaryAmmo( int iCount, char *szName, int iMaxClip
 }
 
 
-BOOL CBasePlayerWeapon :: AddSecondaryAmmo( int iCount, char *szName, int iMax )
+BOOL CBasePlayerWeapon::AddSecondaryAmmo( int iCount, char *szName, int iMax )
 {
 	int iIdAmmo;
 
@@ -1328,7 +1328,7 @@ BOOL CBasePlayerWeapon :: AddSecondaryAmmo( int iCount, char *szName, int iMax )
 // (does it have ammo loaded? do I have any ammo for the 
 // weapon?, etc)
 //=========================================================
-BOOL CBasePlayerWeapon :: IsUseable( void )
+BOOL CBasePlayerWeapon::IsUseable( void )
 {
 	if ( m_iClip <= 0 )
 	{
@@ -1342,7 +1342,7 @@ BOOL CBasePlayerWeapon :: IsUseable( void )
 	return TRUE;
 }
 
-BOOL CBasePlayerWeapon :: CanDeploy( void )
+BOOL CBasePlayerWeapon::CanDeploy( void )
 {
 	BOOL bHasAmmo = 0;
 
@@ -1397,7 +1397,7 @@ BOOL CBasePlayerWeapon :: CanDeploy( void )
 
 //MODDD - should a weapon NOT have any deploy methods, this default will also undo the player silencer render effect.  Just for safety.
 // ...or not?
-BOOL CBasePlayerWeapon :: Deploy(){
+BOOL CBasePlayerWeapon::Deploy(){
 	
 
 
@@ -1406,7 +1406,7 @@ BOOL CBasePlayerWeapon :: Deploy(){
 }
 
 
-BOOL CBasePlayerWeapon :: DefaultDeploy( char *szViewModel, char *szWeaponModel, int iAnim, char *szAnimExt, int skiplocal /* = 0 */, int body, float deployAnimTime, float fireDelayTime )
+BOOL CBasePlayerWeapon::DefaultDeploy( char *szViewModel, char *szWeaponModel, int iAnim, char *szAnimExt, int skiplocal /* = 0 */, int body, float deployAnimTime, float fireDelayTime )
 {
 	if (!CanDeploy()) {
 		return FALSE;
@@ -1495,7 +1495,7 @@ void CBasePlayerWeapon::DefaultHolster( int iAnim, int skiplocal /* = 0 */, int 
 
 
 
-BOOL CBasePlayerWeapon :: DefaultReload( int iClipSize, int iAnim, float fDelay, int body )
+BOOL CBasePlayerWeapon::DefaultReload( int iClipSize, int iAnim, float fDelay, int body )
 {
 	int myPrimaryAmmoType = getPrimaryAmmoType();
 	if (IS_AMMOTYPE_VALID(myPrimaryAmmoType)) {
@@ -1551,7 +1551,7 @@ BOOL CBasePlayerWeapon :: DefaultReload( int iClipSize, int iAnim, float fDelay,
 	return TRUE;
 }
 
-BOOL CBasePlayerWeapon :: PlayEmptySound( void )
+BOOL CBasePlayerWeapon::PlayEmptySound( void )
 {
 	// wait.  return 0 regardless of... anything?  Hell's the point
 	if (m_iPlayEmptySound)
@@ -1563,7 +1563,7 @@ BOOL CBasePlayerWeapon :: PlayEmptySound( void )
 	return 0;
 }
 
-void CBasePlayerWeapon :: ResetEmptySound( void )
+void CBasePlayerWeapon::ResetEmptySound( void )
 {
 	m_iPlayEmptySound = 1;
 }
@@ -1702,7 +1702,7 @@ void CBasePlayerAmmo::Materialize( void )
 	SetTouch( &CBasePlayerAmmo::DefaultTouch );
 }
 
-void CBasePlayerAmmo :: DefaultTouch( CBaseEntity *pOther )
+void CBasePlayerAmmo::DefaultTouch( CBaseEntity *pOther )
 {
 	if ( !pOther->IsPlayer() )
 	{
@@ -1845,7 +1845,7 @@ void CWeaponBox::Precache( void )
 
 //=========================================================
 //=========================================================
-void CWeaponBox :: KeyValue( KeyValueData *pkvd )
+void CWeaponBox::KeyValue( KeyValueData *pkvd )
 {
 	if ( m_cAmmoTypes < MAX_AMMO_TYPES )
 	{

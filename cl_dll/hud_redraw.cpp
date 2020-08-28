@@ -104,7 +104,7 @@ void CHud::Think(void)
 		pList = pList->pNext;
 	}
 
-	//easyForcePrintLine("IMA lovely person FOV STUFF::: %f %i %f", HUD_GetFOV(), m_iPlayerFOV, gHUD.getPlayerBaseFOV());
+	//easyForcePrintLine("IMA lovely person FOV STUFF:::%f %i %f", HUD_GetFOV(), m_iPlayerFOV, gHUD.getPlayerBaseFOV());
 
 	// MODDD - NOTE.  I have no clue why this one place uses "HUD_GetFOV" instead of the standard
 	// "m_iPlayerFOV" (used to be named m_iFOV).
@@ -476,7 +476,7 @@ void ScaleColors( int &r, int &g, int &b, int a )
 	b = (int)(b * x);
 }
 
-int CHud :: DrawHudString(int xpos, int ypos, int iMaxX, char *szIt, int r, int g, int b )
+int CHud::DrawHudString(int xpos, int ypos, int iMaxX, char *szIt, int r, int g, int b )
 {
 	// draw the string until we hit the null character or a newline character
 	for ( ; *szIt != 0 && *szIt != '\n'; szIt++ )
@@ -492,7 +492,7 @@ int CHud :: DrawHudString(int xpos, int ypos, int iMaxX, char *szIt, int r, int 
 	return xpos;
 }
 
-int CHud :: DrawHudNumberString( int xpos, int ypos, int iMinX, int iNumber, int r, int g, int b )
+int CHud::DrawHudNumberString( int xpos, int ypos, int iMinX, int iNumber, int r, int g, int b )
 {
 	char szString[32];
 	sprintf( szString, "%d", iNumber );
@@ -501,7 +501,7 @@ int CHud :: DrawHudNumberString( int xpos, int ypos, int iMinX, int iNumber, int
 }
 
 // draws a string from right to left (right-aligned)
-int CHud :: DrawHudStringReverse( int xpos, int ypos, int iMinX, char *szString, int r, int g, int b )
+int CHud::DrawHudStringReverse( int xpos, int ypos, int iMinX, char *szString, int r, int g, int b )
 {
 	// find the end of the string
 	char *szIt;
@@ -586,17 +586,17 @@ int CHud::DrawHUDNumber_widthOnly(int iFlags, int iNumber, int fontID){
 
 
 //MODDD - implementation of "DrawHudNumber" without the new last arg.  Imply that it is 0 (plain text).
-int CHud :: DrawHudNumber( int x, int y, int iFlags, int iNumber, const int& r, const int& g, const int& b){
+int CHud::DrawHudNumber( int x, int y, int iFlags, int iNumber, const int& r, const int& g, const int& b){
 	return DrawHudNumber(x, y, iFlags, iNumber, r, g, b, 0, 0);
 }
 
-int CHud :: DrawHudNumber( int x, int y, int iFlags, int iNumber, const int& r, const int& g, const int& b, int fontID){
+int CHud::DrawHudNumber( int x, int y, int iFlags, int iNumber, const int& r, const int& g, const int& b, int fontID){
 	return DrawHudNumber(x, y, iFlags, iNumber, r, g, b, fontID, 0);
 }
 
 //MODDD - first DrawHudNumber has a new argument: "fontID".
 //For fontID, 0 = normal (ammo usually), boxed (health), and tiny (antidote HUD)
-int CHud :: DrawHudNumber( int x, int y, int iFlags, int iNumber, const int& r, const int& g, const int& b, int fontID, const int& canDrawBrokenTrans)
+int CHud::DrawHudNumber( int x, int y, int iFlags, int iNumber, const int& r, const int& g, const int& b, int fontID, const int& canDrawBrokenTrans)
 {
 	int drawAltTransValue = 0;
 	if(canDrawBrokenTrans){

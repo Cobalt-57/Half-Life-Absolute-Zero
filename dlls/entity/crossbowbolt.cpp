@@ -173,7 +173,7 @@ void CCrossbowBolt::Precache( )
 }
 
 
-int CCrossbowBolt :: Classify ( void )
+int CCrossbowBolt::Classify ( void )
 {
 	return	CLASS_NONE;
 }
