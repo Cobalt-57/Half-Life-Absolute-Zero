@@ -379,6 +379,9 @@ void UTIL_TraceLine( const Vector &vecStart, const Vector &vecEnd, IGNORE_MONSTE
 TraceResult	UTIL_GetGlobalTrace(){
 	//MODDD - mimicking how other dummied out versions handle it?
 	TraceResult tr;
+	// Clean the memory.  yea?
+	memset(&tr, 0, sizeof(tr));
+	//tr.fInOpen = 1;   // nevermind, not much (nothing in shared script) checks this.
 	tr.flFraction		= 1.0;
 	return tr;
 }

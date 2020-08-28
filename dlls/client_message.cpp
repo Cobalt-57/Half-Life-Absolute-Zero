@@ -95,6 +95,7 @@ int gmsgUnpause = 0;
 int gmsgOnFirstAppearance = 0;
 
 int gmsgUpdateClientCVar = 0;
+int gmsgUpdateClientCVarNoSave = 0;
 int gmsgResetClientCVar = 0;
 int gmsgPrintClientCVar = 0;
 
@@ -215,6 +216,7 @@ void LinkUserMessages( void )
 	gmsgOnFirstAppearance = REG_USER_MSG("FirstAppr", 0);
 
 	gmsgUpdateClientCVar = REG_USER_MSG("UpdClientC", 4);
+	gmsgUpdateClientCVarNoSave = REG_USER_MSG("UpdClientN", 4);
 	gmsgResetClientCVar = REG_USER_MSG("RstClientC", 0);
 	gmsgPrintClientCVar = REG_USER_MSG("PntClientC", 2);
 

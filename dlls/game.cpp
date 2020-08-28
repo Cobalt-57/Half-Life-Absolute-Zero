@@ -31,12 +31,17 @@ EASY_CVAR_EXTERN_DEBUGONLY(hiddenMemPrintout)
 EASY_CVAR_EXTERN_DEBUGONLY(emergencyFix)
 EASY_CVAR_EXTERN(soundSentenceSave)
 
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(sv_germancensorship)
+EASY_CVAR_EXTERN_DEBUGONLY(allowGermanModels)
+
 
 //MODDD - extern
 extern BOOL globalPSEUDO_iCanHazMemez;
 extern float globalPSEUDO_cl_bullsquidspit;
-
-
+extern float globalPSEUDO_cl_hornettrail;
+extern float globalPSEUDO_cl_hornetspiral;
+extern float globalPSEUDO_germanCensorshipMem;
+extern float globalPSEUDO_allowGermanModelsMem;
 
 extern cvar_t* cvar_sv_cheats;
 extern void resetModCVars(CBasePlayer* arg_plyRef, BOOL isEmergency);
@@ -761,6 +766,7 @@ cvar_t	tdmg_bleeding_damage3 = { "tdmg_bleeding_damage3", "1" };
 
 
 extern int gmsgUpdateClientCVar;
+extern int gmsgUpdateClientCVarNoSave;
 
 
 
@@ -841,6 +847,18 @@ void GameDLLInit( void )
 
 	loadHiddenCVars();
 
+
+	// NOTE!  Do this to avoid changing up other CVars just from noticing a discrepency in cl_bullsquidspit choice
+	// since changing the game.  Maybe someone wanted other specifics controlled by cl_bullsquidspit to stay
+	// the way they are.
+	globalPSEUDO_cl_bullsquidspit = EASY_CVAR_GET(cl_bullsquidspit);
+	globalPSEUDO_cl_hornettrail = EASY_CVAR_GET(cl_hornettrail);
+	globalPSEUDO_cl_hornetspiral = EASY_CVAR_GET(cl_hornetspiral);
+	
+	globalPSEUDO_germanCensorshipMem = EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(sv_germancensorship);
+	globalPSEUDO_allowGermanModelsMem = EASY_CVAR_GET_DEBUGONLY(allowGermanModels);
+
+
 	// Once to go as early as possible
 	// WARNING!!! This early is unacceptable, there's some spam about "PF_MessageEnd_I:  Unknown User Msg 119"
 	// seen on 'developer 2', if updateCVarRefs() is done this early.  Seems to be from the 
@@ -848,10 +866,6 @@ void GameDLLInit( void )
 	updateCVarRefs(TRUE);
 	
 	
-	// NOTE!  Do this to avoid changing up other CVars just from noticing a discrepency in cl_bullsquidspit choice
-	// since changing the game.  Maybe someone wanted other specifics controlled by cl_bullsquidspit to stay
-	// the way they are.
-	globalPSEUDO_cl_bullsquidspit = EASY_CVAR_GET(cl_bullsquidspit);
 	
 	
 	

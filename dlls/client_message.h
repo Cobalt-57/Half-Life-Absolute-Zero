@@ -21,6 +21,7 @@ extern int gmsgUnpause;
 extern int gmsgOnFirstAppearance;
 
 extern int gmsgUpdateClientCVar;
+extern int gmsgUpdateClientCVarNoSave;
 extern int gmsgResetClientCVar;
 extern int gmsgPrintClientCVar;
 

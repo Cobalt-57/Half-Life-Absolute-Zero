@@ -140,7 +140,7 @@ Also, need to extern (all?) CVars in dlls/client.cpp.
 
 
 #define CALL_EASY_CVAR_SYNCH_SERVER_TO_CLIENT_BROADCAST(CVarName)\
-	MESSAGE_BEGIN(MSG_ALL, gmsgUpdateClientCVar, NULL); \
+	MESSAGE_BEGIN(MSG_ALL, gmsgUpdateClientCVarNoSave, NULL); \
 		WRITE_SHORT(CVarName##_ID); \
 		WRITE_SHORT( EASY_CVAR_GET(CVarName)*100);\
 	MESSAGE_END();
@@ -151,14 +151,14 @@ Also, need to extern (all?) CVars in dlls/client.cpp.
 	// server
 #ifdef _DEBUG
 #define CALL_EASY_CVAR_SYNCH_SERVER_TO_CLIENT_BROADCAST_DEBUGONLY(CVarName)\
-			MESSAGE_BEGIN(MSG_ALL, gmsgUpdateClientCVar, NULL); \
+			MESSAGE_BEGIN(MSG_ALL, gmsgUpdateClientCVarNoSave, NULL); \
 				WRITE_SHORT(CVarName##_ID); \
 				WRITE_SHORT( EASY_CVAR_GET(CVarName)*100);\
 			MESSAGE_END();
 #else
 	//release
 #define CALL_EASY_CVAR_SYNCH_SERVER_TO_CLIENT_BROADCAST_DEBUGONLY(CVarName)\
-			MESSAGE_BEGIN(MSG_ALL, gmsgUpdateClientCVar, NULL); \
+			MESSAGE_BEGIN(MSG_ALL, gmsgUpdateClientCVarNoSave, NULL); \
 				WRITE_SHORT(CVarName##_ID); \
 				WRITE_SHORT( global_##CVarName*100);\
 			MESSAGE_END();
@@ -190,13 +190,30 @@ Also, need to extern (all?) CVars in dlls/client.cpp.
 		WRITE_SHORT(global_##arg_cvar * 100);\
 	MESSAGE_END();
 
+
+
+// !!! NOSAVE variants
+#define CALL_EASY_CVAR_SYNCH_NOSAVE_SERVER_TO_CLIENT(arg_cvar, arg_ent_pev)\
+	MESSAGE_BEGIN(MSG_ONE, gmsgUpdateClientCVarNoSave, NULL, arg_ent_pev);\
+		WRITE_SHORT(arg_cvar##_ID);\
+		WRITE_SHORT(EASY_CVAR_GET(arg_cvar) * 100);\
+	MESSAGE_END();
+
+#define CALL_EASY_CVAR_SYNCH_NOSAVE_SERVER_TO_CLIENT_DEBUGONLY(arg_cvar, arg_ent_pev)\
+	MESSAGE_BEGIN(MSG_ONE, gmsgUpdateClientCVarNoSave, NULL, arg_ent_pev);\
+		WRITE_SHORT(arg_cvar##_ID);\
+		WRITE_SHORT(global_##arg_cvar * 100);\
+	MESSAGE_END();
+
+
+
+
+
 #define EASY_CVAR_SYNCH_SERVER_CLIENTSENDOFF_BROADCAST(arg_cvar)\
 	CALL_EASY_CVAR_SYNCH_SERVER_TO_CLIENT(arg_cvar, pev)
 
 #define EASY_CVAR_SYNCH_SERVER_CLIENTSENDOFF_BROADCAST_DEBUGONLY(arg_cvar)\
 	CALL_EASY_CVAR_SYNCH_SERVER_TO_CLIENT_DEBUGONLY(arg_cvar, pev)
-
-
 
 // dummy the rest
 #define EASY_CVAR_SYNCH_SERVER(arg_cvar)
@@ -205,6 +222,20 @@ Also, need to extern (all?) CVars in dlls/client.cpp.
 #define EASY_CVAR_SYNCH_SERVER_CLIENTONLY_DEBUGONLY(arg_cvar)
 
 
+
+
+
+#define EASY_CVAR_SYNCH_NOSAVE_SERVER_CLIENTSENDOFF_BROADCAST(arg_cvar)\
+	CALL_EASY_CVAR_SYNCH_NOSAVE_SERVER_TO_CLIENT(arg_cvar, pev)
+
+#define EASY_CVAR_SYNCH_NOSAVE_SERVER_CLIENTSENDOFF_BROADCAST_DEBUGONLY(arg_cvar)\
+	CALL_EASY_CVAR_SYNCH_NOSAVE_SERVER_TO_CLIENT_DEBUGONLY(arg_cvar, pev)
+
+// dummy the rest
+#define EASY_CVAR_SYNCH_NOSAVE_SERVER(arg_cvar)
+#define EASY_CVAR_SYNCH_NOSAVE_SERVER_CLIENTONLY(arg_cvar)
+#define EASY_CVAR_SYNCH_NOSAVE_SERVER_DEBUGONLY(arg_cvar)
+#define EASY_CVAR_SYNCH_NOSAVE_SERVER_CLIENTONLY_DEBUGONLY(arg_cvar)
 
 
 
@@ -250,7 +281,7 @@ Also, need to extern (all?) CVars in dlls/client.cpp.
 		MESSAGE_END();
 	
 	#define CUSTOM_CLIENT_CALL_NAME_DEBUGONLY_FORCEBROADCAST(arg_NAME, argVal)\
-		MESSAGE_BEGIN( MSG_ALL, gmsgUpdateClientCVar, NULL );\
+		MESSAGE_BEGIN( MSG_ALL, gmsgUpdateClientCVarNoSave, NULL );\
 			WRITE_SHORT( arg_NAME##_ID);\
 			WRITE_SHORT( argVal*100);\
 		MESSAGE_END();
@@ -259,12 +290,10 @@ Also, need to extern (all?) CVars in dlls/client.cpp.
 
 // RELEASE MODE ONLY!
 #define CUSTOM_CLIENT_CALL(ID, argVal)\
-	if(pev != NULL){\
-		MESSAGE_BEGIN( MSG_ONE, gmsgUpdateClientCVar, NULL, pev );\
-			WRITE_SHORT( ID);\
-			WRITE_SHORT( argVal*100);\
-		MESSAGE_END();\
-	}
+	MESSAGE_BEGIN( MSG_ONE, gmsgUpdateClientCVar, NULL, pev );\
+		WRITE_SHORT( ID);\
+		WRITE_SHORT( argVal*100);\
+	MESSAGE_END();
 
 
 
@@ -986,10 +1015,8 @@ Also, need to extern (all?) CVars in dlls/client.cpp.
 //MSG_ONE or MSG_ALL ???
 // NOTE - if doing MSG_ALL, remove the 'pev'.  Game doesn't like MSG_ALL with a pev in mind. (4th parameter in MESSAGE_BEGIN)
 #define EASY_CVAR_RESET_MASS_CLIENT_SIGNAL\
-	if(pev != NULL){\
-		MESSAGE_BEGIN( MSG_ALL, gmsgResetClientCVar, NULL );\
-		MESSAGE_END();\
-	}
+	MESSAGE_BEGIN( MSG_ALL, gmsgResetClientCVar, NULL );\
+	MESSAGE_END();
 
 
 
@@ -1151,11 +1178,9 @@ if( FStrEq(pcmdRefinedRef, #CVarNameLower) ){\
 
 
 #define EASY_CVAR_PRINT_CLIENTONLY(ID)\
-	if(pev != NULL){\
-		MESSAGE_BEGIN( MSG_ONE, gmsgPrintClientCVar, NULL, pev );\
-			WRITE_SHORT( ID );\
-		MESSAGE_END();\
-	}
+	MESSAGE_BEGIN( MSG_ONE, gmsgPrintClientCVar, NULL, pev );\
+		WRITE_SHORT( ID );\
+	MESSAGE_END();
 
 
 

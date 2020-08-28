@@ -88,6 +88,7 @@ PROTOTYPE_MESSAGE(CliTest);
 PROTOTYPE_MESSAGE(FirstAppr);
 
 PROTOTYPE_MESSAGE(UpdClientC);
+PROTOTYPE_MESSAGE(UpdClientN);
 PROTOTYPE_MESSAGE(RstClientC);
 PROTOTYPE_MESSAGE(PntClientC);
 PROTOTYPE_MESSAGE(UpdBnclStat);
@@ -129,6 +130,7 @@ void Init_CustomMessage(void){
 	HOOK_MESSAGE(FirstAppr);
 	
 	HOOK_MESSAGE(UpdClientC);
+	HOOK_MESSAGE(UpdClientN);
 	HOOK_MESSAGE(RstClientC);
 	HOOK_MESSAGE(PntClientC);
 	HOOK_MESSAGE(UpdBnclStat);
@@ -528,6 +530,52 @@ IMPLEMENT_MESSAGE(UpdClientC){
 #endif
 	return 1;
 }//END OF MsgFunc_UpdClientC
+
+
+
+
+
+// Similar, but don't save the CVar to hidden mem.
+// The initial sendoff at startup and broadcasts (debugonly or not) don't warrant saving.
+IMPLEMENT_MESSAGE(UpdClientN){
+#ifdef _DEBUG
+
+	BEGIN_READ(pbuf, iSize);
+
+	int argID = READ_SHORT();
+	int argPRE = READ_SHORT();
+	float arg = ((float)(argPRE)) / 100.0f;
+
+	*(aryCVarHash[argID]) = arg;
+
+	easyPrintLine("CVAR DEBUG: Client, no-save: found ID %d. Set CVar %s to %.2f", argID, aryCVarHashName[argID], arg);
+
+#else
+	//Need to update hidden CVars meant to be broadcasted to clients. Receive the new value(s) here.
+
+	BEGIN_READ( pbuf, iSize );
+
+	int argID = READ_SHORT();
+	int argPRE = READ_SHORT();
+	float arg = ((float)(argPRE)) / 100.0f;
+
+	*(aryCVarHash[argID]) = arg;
+
+	// no need for the hiddenMemPrintout check, having "developer" on or off shows enough intent.
+	//if(EASY_CVAR_GET_DEBUGONLY(hiddenMemPrintout)==1)
+	easyPrintLine("CVAR DEBUG: Client, no-save: found ID %d. Set CVar %s to %.2f", argID, aryCVarHashName[argID], arg);
+
+
+	// Save. Is this ok?
+	// no.
+	//::saveHiddenCVars();
+
+
+#endif
+	return 1;
+}//END OF MsgFunc_UpdClientN
+
+
 
 
 

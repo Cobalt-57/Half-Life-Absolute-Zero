@@ -4856,11 +4856,9 @@ void updateCVarRefs(BOOL isEarly){
 
 
 
-
 	if(globalPSEUDO_germanCensorshipMem != EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(sv_germancensorship) || globalPSEUDO_allowGermanModelsMem != EASY_CVAR_GET_DEBUGONLY(allowGermanModels)){
 
-		globalPSEUDO_allowGermanModelsMem = EASY_CVAR_GET_DEBUGONLY(allowGermanModels);
-
+		
 		//easyForcePrintLine("ARE YOU amazin %.2f %.2f %.2f", globalPSEUDO_canApplyGermanCensorship, EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(sv_germancensorship), EASY_CVAR_GET_DEBUGONLY(allowGermanModels));
 
 		if(globalPSEUDO_canApplyGermanCensorship != 1 && (globalPSEUDO_germanCensorshipMem != -1 && EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(sv_germancensorship) == 1) && EASY_CVAR_GET_DEBUGONLY(allowGermanModels) == 1){
@@ -4871,6 +4869,7 @@ void updateCVarRefs(BOOL isEarly){
 		}
 
 		globalPSEUDO_germanCensorshipMem = EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(sv_germancensorship);
+		globalPSEUDO_allowGermanModelsMem = EASY_CVAR_GET_DEBUGONLY(allowGermanModels);
 
 		if(globalPSEUDO_canApplyGermanCensorship != 1){
 			//can't update.
@@ -4914,7 +4913,6 @@ void updateCVarRefs(BOOL isEarly){
 			saveHiddenCVars();
 		}
 	}
-
 	
 	if(EASY_CVAR_GET(cl_hornettrail) != globalPSEUDO_cl_hornettrail){
 		globalPSEUDO_cl_hornettrail = EASY_CVAR_GET(cl_hornettrail);
