@@ -1562,3 +1562,8 @@ pathfindNearestNodeExtra (0) - BOOL.  When on, pathfinding will use better check
 - Improved way (1): will use the same AI (CheckLocalMove) for telling whether there is a valid straight-line path between two places for more accuracy.
 - NOTICE: Forces the nearest node cache to be ignored regardless of pathfindIgnoreNearestNodeCache.  It does not support remembering nodes for different entity or hull sizes.
 
+sv_turret_postdeath (1) - MODEVAR.  Affects what happens when a mounted turret (not a sentry, the ones on stands) runs out of health.
+0: no change from retail.
+1: More sparks during the death sequence, ends on an explosion effect.
+2: New post-beserk sequence that lasts 6 to 8 seconds.  Turret beeps more, fires in all directions more quickly, and make explosion effects.  Mode #1 applies when post-beserk stops and plays the last animation. Can end early by taking half its original health in damage.
+

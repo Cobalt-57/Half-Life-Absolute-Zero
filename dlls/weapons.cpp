@@ -430,14 +430,14 @@ void CBasePlayerItem::DefaultTouch( CBaseEntity *pOther )
 
 
 void CBasePlayerWeapon::setchargeReady(int arg){
-	// Replace the first few bits with 'arg', don't go past 32 for safety.
+	// Replace the first few bits with 'arg', don't reach or exceed 32 for safety.
 	// Should only need 0 to 2 anyway.
 	// This adds back in bits 64 and/or 128, if present already.
-	m_chargeReady = arg | (m_chargeReady & (64 | 128));
+	m_chargeReady = arg | (m_chargeReady & (32 | 64 | 128));
 }
 int CBasePlayerWeapon::getchargeReady(void){
 	// Get without the extra bits.
-	return m_chargeReady & ~(64 | 128);
+	return m_chargeReady & ~(32 | 64 | 128);
 }
 void CBasePlayerWeapon::forceBlockLooping(void){
 	m_chargeReady |= 64;

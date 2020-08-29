@@ -70,6 +70,7 @@ extern float ary_g_prevFrame[1024];
 extern float ary_g_LastEventCheck[1024];
 extern float ary_g_LastEventCheckEXACT[1024];
 
+extern BOOL g_cl_egonEffectCreatedYet;
 
 
 
@@ -220,10 +221,7 @@ int DLLEXPORT HUD_VidInit( void )
 	g_cl_HUD_UpdateClientData_ran = FALSE;
 	g_HUD_Redraw_ran = FALSE;
 
-
-
-
-	//clientside only variable.
+	// clientside only variable.
 	reloadBlocker = FALSE;
 
 	// TEST.
@@ -242,6 +240,8 @@ int DLLEXPORT HUD_VidInit( void )
 	sp_ClientPreviousTime = -1;
 	g_cl_frameCount = 0;
 
+	// safety?
+	g_cl_egonEffectCreatedYet = FALSE;
 
 
 

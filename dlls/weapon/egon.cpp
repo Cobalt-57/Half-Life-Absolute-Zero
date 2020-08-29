@@ -42,7 +42,6 @@ EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(egonHitCloud);
 
 
 
-
 //MODDD - several things moved to the new egon.h for commonly including client/serverside
 // (less redundancy in ev_hldm.cpp)
 
@@ -55,11 +54,13 @@ LINK_ENTITY_TO_CLASS( weapon_egon, CEgon );
 
 
 
-
-
 //MODDD - IMPORTANT NOTICE.  All mentions of "m_fireMode" have been replaced with "m_fInAttack", as "m_fireMode" is not well synchronized between
 //			the server and client.  "m_fInAttack" was never used in here before, so it may be back-replaced for whatever reason.
 
+
+
+
+//BOOL usedOneAmmo = FALSE;
 
 //MODDD
 void CEgon::customAttachToPlayer(CBasePlayer *pPlayer ){
@@ -142,15 +143,15 @@ void CEgon::Holster( int skiplocal /* = 0 */ )
 	//SendWeaponAnim( EGON_HOLSTER );
 
 	//MODDD - at holster, force to the default position.  Firemode is adjusted at fire time, not needed here.
-	m_flReleaseThrow = -4;
+	
+	setchargeReady(5 + -4);
+
 	m_flStartThrow = -1;
 
 
     EndAttack();
 
-
 	DefaultHolster(EGON_HOLSTER, skiplocal, 0, (16.0f/30.0f) );
-
 }
 
 int CEgon::GetItemInfo(ItemInfo *p)
@@ -206,7 +207,6 @@ float CEgon::GetDischargeInterval( void )
 BOOL CEgon::HasAmmo( void )
 {
 
-	
 	if ( m_pPlayer->ammo_uranium <= 0 )
 		return FALSE;
 		
@@ -220,14 +220,16 @@ BOOL CEgon::HasAmmo( void )
 	*/
 
 
-
 	return TRUE;
 }
 
 void CEgon::UseAmmo( int count )
 {
+	//usedOneAmmo = TRUE;
+	m_chargeReady |= 32;
+
 	//MODDD - could the "infinite ammo cheat" be useful here?
-	//So yea, only use ammo if the cheat is off.  Other weapon-related behavior should happen still.
+	// So yea, only use ammo if the cheat is off.  Other weapon-related behavior should happen still.
 	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteammo) == 0){
 		if (PlayerPrimaryAmmoCount() >= count) {
 			//m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] -= count;
@@ -246,11 +248,18 @@ void CEgon::UseAmmo( int count )
 
 
 
+#ifdef CLIENT_DLL
+// Here are all the remaining fucks I give
+int fuckfuckfuckfuckfuck = 0;
+#endif
+
+
 //MODDD - undone the "UTIL_WeaponTimeBase  --->  gpGlobals->time"   replacements seen before throughout this method.
 //Apparently, this causes a glitch where the egon fire sound does not re-loop when playing for more than several seconds.
 //Perhaps the client does just fine with "UTIL_WeaponTimeBase" or something?
 void CEgon::Attack( void )
 {
+
 	// don't fire underwater
 	if ( m_pPlayer->pev->waterlevel == 3 )
 	{
@@ -262,10 +271,10 @@ void CEgon::Attack( void )
 			switch ( m_fInAttack )
 			{
 			case FIRE_NARROW:
-				m_flReleaseThrow = -2;
+				setchargeReady(5 + -2);
 			break;
 			case FIRE_WIDE:
-				m_flReleaseThrow = -1;
+				setchargeReady(5 + -1);
 			break;
 			}
 
@@ -278,10 +287,24 @@ void CEgon::Attack( void )
 		return;
 	}
 
+
+	BOOL poopyDoop = FALSE;
+
+#ifdef CLIENT_DLL
+
+	if(m_fireState != 1 && lockedFireState){
+		// no changin yet.  Weird-ass server/client synch trying to force it back.
+		m_fireState = 1;
+	}
+
+#endif
+
+
+
 	UTIL_MakeVectors( m_pPlayer->pev->v_angle + m_pPlayer->pev->punchangle );
 	Vector vecAiming = gpGlobals->v_forward;
 	Vector vecSrc	 = m_pPlayer->GetGunPosition( );
-
+	
 	int flags;
 #if defined( CLIENT_WEAPONS )
 	flags = FEV_NOTHOST;
@@ -289,12 +312,29 @@ void CEgon::Attack( void )
 	flags = 0;
 #endif
 
+
+
+	//easyForcePrintLine("egon fs:%d beam?:%d  fuserreq?: %.2f <= %.2f is it? %d has dat ammo? %d amount? %d", m_fireState, (m_pBeam!=NULL), m_flReleaseThrow, UTIL_WeaponTimeBase(), (m_flReleaseThrow <= UTIL_WeaponTimeBase()), HasAmmo(), m_pPlayer->ammo_uranium );
+	//easyForcePrintLine("egon fs:%d beam?:%d  fuserreq?: %.2f <= %.2f is it? %d has dat ammo? %d amount? %d", m_fireState, (m_pBeam!=NULL), pev->fuser1, UTIL_WeaponTimeBase(), (pev->fuser1 <= UTIL_WeaponTimeBase()), HasAmmo(), m_pPlayer->ammo_uranium );
+
+	// FEV_CLIENT?
+	flags |= FEV_GLOBAL | FEV_RELIABLE;
+
+
+#ifdef CLIENT_DLL
+	if(fuckfuckfuckfuckfuck > 0){
+		PLAYBACK_EVENT_FULL( flags, m_pPlayer->edict(), m_usEgonFire, 0.0, (float *)&g_vecZero, (float *)&g_vecZero, 0.0, 0.0, m_fireState, m_fInAttack, 1, 0 );
+		fuckfuckfuckfuckfuck--;
+	}
+#endif
+
+
 	switch( m_fireState )
 	{
 		case FIRE_OFF:
 		{
-			
-			//easyForcePrintLine("IS THIS A JOKE??? %df", m_pPlayer->ammo_uranium);
+			fireExceptionStartTime = gpGlobals->time;
+
 			if ( !HasAmmo() )
 			{
 				//m_flNextPrimaryAttack = m_flNextSecondaryAttack = UTIL_WeaponTimeBase() + 0.25;
@@ -305,25 +345,37 @@ void CEgon::Attack( void )
 				switch ( m_fInAttack )
 				{
 				case FIRE_NARROW:
-					m_flReleaseThrow = -2;
+					setchargeReady(5 + -2);
 				break;
 				case FIRE_WIDE:
-					m_flReleaseThrow = -1;
+					setchargeReady(5 + -1);
 				break;
 				}
 
 				return;
 			}
 
+			lockedFireState = TRUE;
+			
 			m_flAmmoUseTime = gpGlobals->time;// start using ammo ASAP.
 
 			PLAYBACK_EVENT_FULL( flags, m_pPlayer->edict(), m_usEgonFire, 0.0, (float *)&g_vecZero, (float *)&g_vecZero, 0.0, 0.0, m_fireState, m_fInAttack, 1, 0 );
-						
+				
+#ifdef CLIENT_DLL
+			// just send the event clientside 5 times, surely one of them will take.           sweet god this engine.
+			fuckfuckfuckfuckfuck = 5;
+#endif
+
 			m_shakeTime = 0;
 
 			m_pPlayer->m_iWeaponVolume = EGON_PRIMARY_VOLUME;
 			m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 0.1;
-			pev->fuser1	= UTIL_WeaponTimeBase() + 2;
+			
+			// this var does not count down, use gpGlobals->time
+			//m_flReleaseThrow = UTIL_WeaponTimeBase() + 2;
+			//m_flReleaseThrow = gpGlobals->time + 2;
+			pev->fuser1 = UTIL_WeaponTimeBase() + 2;
+
 
 			pev->dmgtime = gpGlobals->time + GetPulseInterval();
 			m_fireState = FIRE_CHARGE;
@@ -345,36 +397,37 @@ void CEgon::Attack( void )
 				m_pPlayer->m_iWeaponVolume = EGON_PRIMARY_VOLUME + 275;
 
 			}
-		
-			if ( pev->fuser1 <= UTIL_WeaponTimeBase() )
+			
+			//if ( m_flReleaseThrow <= UTIL_WeaponTimeBase() )
+			//if(gpGlobals->time >= m_flReleaseThrow)
+			if(pev->fuser1 <= UTIL_WeaponTimeBase())
 			{
 				PLAYBACK_EVENT_FULL( flags, m_pPlayer->edict(), m_usEgonFire, 0, (float *)&g_vecZero, (float *)&g_vecZero, 0.0, 0.0, m_fireState, m_fInAttack, 0, 0 );
-				pev->fuser1 = 1000;
+				//m_flReleaseThrow = 1000;
+				//m_flReleaseThrow = gpGlobals->time + 1000;
+
+				pev->fuser1 = UTIL_WeaponTimeBase() + 1000;
+
 			}
 
 			if ( !HasAmmo() )
 			{
 				EndAttack();
-				//ran out cus' you be out of ammo?  Freeze until the player lets go of the mouse.
+				// ran out cus' you be out of ammo?  Freeze until the player lets go of the mouse.
 				
-				//CHECK!!!!!
-
-				//if(m_flReleaseThrow == 1){
+				//if(getchargeReady() == 5 + 1){
 					
 				//}
 					switch ( m_fInAttack )
 					{
 					case FIRE_NARROW:
-						m_flReleaseThrow = -2;
+						setchargeReady(5 + -2);
 					break;
 					case FIRE_WIDE:
-						m_flReleaseThrow = -1;
+						setchargeReady(5 + -1);
 					break;
 					}
 
-				//MODDD - this means, flag for starting the idle following a stop.
-				//m_flReleaseThrow = -666;
-				//m_flReleaseThrow = -668;
 
 				//m_flNextPrimaryAttack = m_flNextSecondaryAttack = UTIL_WeaponTimeBase() + 1.0;
 				m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 1.0;
@@ -393,28 +446,23 @@ void CEgon::Attack( void )
 
 
 
-
-
-
-
-
-
-
-
-
 //MODDD - new vars
-CEgon::CEgon(){
+CEgon::CEgon(void){
 
 
-	//VARS:
+	// VARS:
 	//---------------------------------------------------------------------------------------------------------------------
 	//m_flReleaseThrow ->  "animationSequence".  Which animation to perform next?
-	//-3 = firing PRIMARY (narrow now).   Resets to -1 when released.
-	//-2 = idle (wait for release; not in effect, so same effect as -1).
-	//-1 = idle (wait to be triggered by mouse press at all)
-	//0 = ALTFIREON.  turn the top lever to the bottom.
-	//1 = ALTFIRECYCLE - attacking.  Firing the "wide" beam (as opposed to the NOW default "narrow"; tradeoff for delay).
-	//2 = ALTFIREOFF.  turn the lever at the bottom back to the top.       After that, resumes at "idle", or -1.
+	// NOTICE - changed to ChargeReady (use accessor methods to work with this).  And start counting up from 1 instead.
+	// m_flReleaseThrow will replace pev->fuser1 instead.     NEEEEeeeeevermind.   It randomly goes to a hideously out-of-date
+	// time, so that's just ggggrrrrrreeeeeaaaaaaaattttt.  Nothing wrong with pev->fuser1.
+	// (add 5 to all these)
+	// -3 = firing PRIMARY (narrow now).   Resets to -1 when released.
+	// -2 = idle (wait for release; not in effect, so same effect as -1).
+	// -1 = idle (wait to be triggered by mouse press at all)
+	//  0 = ALTFIREON.  turn the top lever to the bottom.
+	//  1 = ALTFIRECYCLE - attacking.  Firing the "wide" beam (as opposed to the NOW default "narrow"; tradeoff for delay).
+	//  2 = ALTFIREOFF.  turn the lever at the bottom back to the top.       After that, resumes at "idle", or -1.
 	//---------------------------------------------------------------------------------------------------------------------
 	//m_flStartThrow -> "currentDelay".  When do I "advance" this animation, if applicable?
 	//-1 - non applicable.  Used for idling and firing (not timed).
@@ -425,6 +473,7 @@ CEgon::CEgon(){
 	//close to impossible to mod.  Just working with what I have (and that, well, works).
 
 
+	lockedFireState = FALSE;
 	
 	canStartSecondary = TRUE;
 	secondarySwitched = FALSE;
@@ -468,10 +517,6 @@ CEgon::CEgon(){
 	animationSequence = -1;
 	//for "idle".
 
-
-
-
-
 	//m_chargeReady = -1;  //corresponds to animationSequence, better for sync with the client.
 
 
@@ -479,7 +524,7 @@ CEgon::CEgon(){
 	m_flStartThrow = -1;
 
 	//animation index.
-	m_flReleaseThrow = -4;
+	setchargeReady(5 + -4);
 	//-4: true idle (idle locked).
 	//-3: true idle.  Fire anytime.
 	//-2: locked idle, primary.  Freezes to any idle anim.
@@ -490,8 +535,15 @@ CEgon::CEgon(){
 	//3: turning off (secondary)
 
 	effectsExist = FALSE;
+	recentFireDirection = g_vecZero;
+	recentHitPlaneNormal = g_vecZero;
 
-	//m_flReleaseThrow = FALSE;
+	m_flReleaseThrow = 0;  // ???
+
+
+	fireExceptionPrev = FALSE;
+	fireExceptionStartTime = -1;
+
 }//END OF CEgon constructor
 
 
@@ -528,17 +580,15 @@ int CEgon::Restore(CRestore& restore){
 	//}
 
 	int result = restore.ReadFields("CEgon", this, m_SaveData, ARRAYSIZE(m_SaveData));
-	m_flReleaseThrow = -4;
+	setchargeReady(5 + -4);
 	return result;
 }
 #endif
 
 
 
-
 void CEgon::PrimaryAttack( void )
 {
-
 
 }
 
@@ -546,14 +596,10 @@ void CEgon::PrimaryAttack( void )
 
 void CEgon::PrimaryNotHeld( void ){
 
-
 }
 
 
 void CEgon::NeitherHeld( void ){
-
-
-
 
 }
 
@@ -579,14 +625,10 @@ void CEgon::BothHeld( void ){
 	
 	//PrimaryNotHeld();
 	//SecondaryAttack();
-	
-
 }
 
 void CEgon::SecondaryNotHeld( void ){
 	
-
-
 }
 
 
@@ -598,34 +640,37 @@ void CEgon::SecondaryAttack( void )
 
 
 
-void CEgon::ItemPostFrame(){
+void CEgon::ItemPreFrame( void ){
+
+	CBasePlayerWeapon::ItemPreFrame();
+}
 
 
-	/*
-#ifdef CLIENT_DLL
-	easyPrintLine("YOU EG %.2f", m_flReleaseThrow);
-#else
-	easyPrintLine("YOU EG %.2f", m_flReleaseThrow);
-#endif
-	*/
+
+void CEgon::ItemPostFrame(void){
 
 	BOOL sendFidgetOnOff = TRUE;
 
-	BOOL holdingPrimary = m_pPlayer->pev->button & IN_ATTACK;
-	BOOL holdingSecondary = m_pPlayer->pev->button & IN_ATTACK2;
+	holdingSecondary = ((m_pPlayer->pev->button & IN_ATTACK2) && m_flNextSecondaryAttack <= 0.0);
+	holdingPrimary = ((m_pPlayer->pev->button & IN_ATTACK) && m_flNextPrimaryAttack <= 0.0);
 	
+	BOOL fireException = (m_fireState == FIRE_CHARGE && !(m_chargeReady & 32) && HasAmmo());
+
+	//BOOL fireException = FALSE;
+
 	if(holdingPrimary && holdingSecondary){
 		//m_flTimeWeaponIdle = -1;  ???
 		easyForcePrintLine("IM HOLDING BOTH??? %.2f", gpGlobals->time);
 
-		if(m_flReleaseThrow >= 0){
+
+		if(getchargeReady() >= 5 + 0){
 			switch ( m_fInAttack )
 				{
 				case FIRE_NARROW:
-					m_flReleaseThrow = -2;
+					setchargeReady(5 + -2);
 				break;
 				case FIRE_WIDE:
-					m_flReleaseThrow = -1;
+					setchargeReady(5 + -1);
 				break;
 			}
 
@@ -641,37 +686,50 @@ void CEgon::ItemPostFrame(){
 
 
 
+	// Keep firing until at least one unit of ammo has been used!
+	if(fireException){
+		if(getchargeReady() == 5 + 2){
+			// Firing in secondary?  ok
+			m_fInAttack = FIRE_WIDE;
+			Attack();
+		}else if(getchargeReady() == 5 + 1){
+			// Firing in primary? ok
+			m_fInAttack = FIRE_NARROW;
+			Attack();
+		}else{
+			// ???
+			fireException = FALSE;
+		}
 
-	
-	if(holdingSecondary){
-		if(m_flReleaseThrow == -4 || m_flReleaseThrow == -3){
-			//ready to begin.
-			m_flReleaseThrow = 0;
+	}else
+	// if firing in secondary and haven't used a single ammo, keep firing
+	if(holdingSecondary  ){
+		if(getchargeReady() == 5 + -4 || getchargeReady() == 5 + -3){
+			// ready to begin.
+			setchargeReady(5 + 0);
 			m_flStartThrow = gpGlobals->time;
 			SendWeaponAnimBypass( EGON_ALTFIREON, 1 );
-		}else if(m_flReleaseThrow == 2){
-			//fire!
+		}else if(getchargeReady() == 5 + 2){
+			// fire!
+
 			m_fInAttack = FIRE_WIDE;
 			Attack();
 		
-		//CBasePlayerWeapon::ItemPostFrame();
-		//return;
+			//CBasePlayerWeapon::ItemPostFrame();
+			//return;
 		}
-	
-	
-	}else if(holdingPrimary){
+		
+	}else if(holdingPrimary ){
+		if(getchargeReady() == 5 + -4 || getchargeReady() == 5 + -3){
+			//may fire.
 
-	
-	if(m_flReleaseThrow == -4 || m_flReleaseThrow == -3){
-		//may fire.
-
-		m_flReleaseThrow = 1;
-		m_fInAttack = FIRE_NARROW;
-		Attack();
-	}else if(m_flReleaseThrow == 1){
-		m_fInAttack = FIRE_NARROW;
-		Attack();
-	}
+			setchargeReady(5 + 1);
+			m_fInAttack = FIRE_NARROW;
+			Attack();
+		}else if(getchargeReady() == 5 + 1){
+			m_fInAttack = FIRE_NARROW;
+			Attack();
+		}
 
 	}
 
@@ -681,7 +739,7 @@ void CEgon::ItemPostFrame(){
 	//easyForcePrintLine("IM GONNA no %.2f %.2f", m_flTimeWeaponIdle, UTIL_WeaponTimeBase());
 
 
-	if(m_flReleaseThrow == 0){
+	if(getchargeReady() == 5 + 0){
 
 		if(holdingSecondary == FALSE){
 			//Forget or reverse anim?
@@ -694,12 +752,12 @@ void CEgon::ItemPostFrame(){
 
 			if(timePassed < holdingSecondaryTarget0){
 				//jump back to idling.
-				m_flReleaseThrow = -4;
+				setchargeReady(5 + -4);
 				m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + randomIdleAnimationDelay();
 				//m_pPlayer->forceNoWeaponLoop = TRUE;
 			}else{
 				//too close to the end, skip to the switch back up.
-				m_flReleaseThrow = 3;
+				setchargeReady(5 + 3);
 				m_flStartThrow = gpGlobals->time + holdingSecondaryTarget2;
 				SendWeaponAnimBypass( EGON_ALTFIREOFF, 1 );
 			}
@@ -709,39 +767,52 @@ void CEgon::ItemPostFrame(){
 			//no issue.
 			//... holdingSecondaryTarget1
 
-			
 			float timePassed = gpGlobals->time - m_flStartThrow;
 
 			if(timePassed > holdingSecondaryTarget1 ){
-				m_flReleaseThrow = 2;
+				setchargeReady(5 + 2);
 			}
 		}
 
-	}else if(m_flReleaseThrow == -2){
+	}else if(getchargeReady() == 5 + -2){
 		
 		if(sendFidgetOnOff){
 			SendWeaponAnimBypass( EGON_FIDGET1, 1 );
 		}
 
 		//?
-	}else if(m_flReleaseThrow == -1){
+	}else if(getchargeReady() == 5 + -1){
 		SendWeaponAnimBypass( EGON_ALTFIREOFF, 1 );
 		
-	}else if(m_flReleaseThrow == 1){
+	}else if(getchargeReady() == 5 + 1){
 
 		//?
-	}else if(m_flReleaseThrow == 3){
+	}else if(getchargeReady() == 5 + 3){
 		//... holdingSecondaryTarget2
 		if(gpGlobals->time > m_flStartThrow ){
-			m_flReleaseThrow = -4;
+			setchargeReady(5 + -4);
 			m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + randomIdleAnimationDelay();
 		}
 	}
 
 
-	
-	
-	if ( m_fireState != FIRE_OFF && (!holdingPrimary && !holdingSecondary) ){
+	// PARANOIA
+	if(fireExceptionStartTime != -1 && gpGlobals->time - 5 > fireExceptionStartTime){
+		fireExceptionStartTime = -1;
+		fireException = FALSE;
+		m_chargeReady &= ~32;
+	}
+
+	// IF fireException is currently off but was on the previous frame, that also means the attack needs to end.
+	if ( (!holdingPrimary && !holdingSecondary) && 
+		(!fireException &&
+			(
+				(m_fireState != FIRE_OFF) ||
+				(fireExceptionPrev) ||
+				m_pBeam != NULL
+			)   // dear god I'm tired of this shit
+		)
+	){
 		//easyPrintLine("END O ATTACK!");
 		EndAttack();
 
@@ -750,54 +821,103 @@ void CEgon::ItemPostFrame(){
 		switch ( m_fInAttack )
 		{
 		case FIRE_NARROW:
-			m_flReleaseThrow = -4;
+			setchargeReady(5 + -4);
 			m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + randomIdleAnimationDelay();
 		break;
 		case FIRE_WIDE:
-			m_flReleaseThrow = 3;
+			setchargeReady(5 + 3);
 			m_flStartThrow = gpGlobals->time + holdingSecondaryTarget2;
 			SendWeaponAnimBypass( EGON_ALTFIREOFF, 1 );
 		break;
 		}
-
 	}
 
 
 
 
-	
+	fireExceptionPrev = fireException;
+
+
+
+
 	CBasePlayerWeapon::ItemPostFrame();
-
 }
 
 
-//MODDD - method added.  Taps into the event-method called (virtually) every frame.
-void CEgon::ItemPreFrame( void )
-{
 
-	CBasePlayerWeapon::ItemPreFrame();
-	
+
+void CEgon::ItemPostFrameThink(void){
+
+
+	/*
+	if (!m_pPlayer->m_bHolstering) {
+		// If the player is putting the weapon away, don't do this!
+		UpdateHitCloud();
+	}
+	*/
+
+	CBasePlayerWeapon::ItemPostFrameThink();
 }
+
+
+void CEgon::UpdateHitCloud(void){
+
+	// NEVERMIND, already handled.
+	/*
+#ifndef CLIENT_DLL
+	//MODDD - only restore the spot if forceHideSpotTime is inactive.
+	if (m_pSprite)
+	{
+		// no, not up to you.
+		//if (!m_pSpot){
+		//	m_pSpot = CLaserSpot::CreateSpot();
+		//}
+
+		UTIL_MakeVectors( m_pPlayer->pev->v_angle );
+		Vector vecSrc = m_pPlayer->GetGunPosition( );;
+		Vector vecAiming = gpGlobals->v_forward;
+
+		TraceResult tr;
+		UTIL_TraceLine ( vecSrc, vecSrc + vecAiming * 8192, dont_ignore_monsters, ENT(m_pPlayer->pev), &tr );
+
+		UTIL_SetOrigin( m_pSprite->pev, tr.vecEndPos );
+
+
+		if (UTIL_PointContents(m_pSprite->pev->origin) == CONTENTS_SKY) {
+			// If we hit the sky, go invisible
+			m_pSprite->pev->effects |= EF_NODRAW;
+		}else{
+			m_pSprite->pev->effects &= ~EF_NODRAW;
+		}
+	}
+#endif
+	*/
+}
+
+
 
 
 void CEgon::Fire( const Vector &vecOrigSrc, const Vector &vecDir )
 {
-	
 
 	Vector vecDest = vecOrigSrc + vecDir * 2048;
 	edict_t		*pentIgnore;
 	TraceResult tr;
 
 	pentIgnore = m_pPlayer->edict();
+
+	// ???
 	Vector tmpSrc = vecOrigSrc + gpGlobals->v_up * -8 + gpGlobals->v_right * 3;
 
 	// ALERT( at_console, "." );
 	
 	UTIL_TraceLine( vecOrigSrc, vecDest, dont_ignore_monsters, pentIgnore, &tr );
 
+	recentFireDirection = (vecDest - vecOrigSrc).Normalize();
+	recentHitPlaneNormal = tr.vecPlaneNormal;
 
+	
 	///////tr.vecEndPos();
-
 
 	if (tr.fAllSolid)
 		return;
@@ -808,6 +928,10 @@ void CEgon::Fire( const Vector &vecOrigSrc, const Vector &vecDir )
 	if (pEntity == NULL)
 		return;
 
+
+
+	//MODDD - ...  for what purpose
+	/*
 	if ( IsMultiplayer() )
 	{
 		if ( m_pSprite && pEntity->pev->takedamage )
@@ -821,7 +945,7 @@ void CEgon::Fire( const Vector &vecOrigSrc, const Vector &vecDir )
 			//m_pSprite->pev->effects &= ~EF_NODRAW;
 		}
 	}
-
+	*/
 
 #endif
 
@@ -929,18 +1053,20 @@ void CEgon::Fire( const Vector &vecOrigSrc, const Vector &vecDir )
 		timedist = 1;
 	timedist = 1-timedist;
 
-	UpdateEffect( tmpSrc, tr.vecEndPos, timedist );
-	
+	UpdateEffect( tmpSrc, tr.vecEndPos, timedist );	
 }
 
 
 
-//MODDD - why was this method commented out?  Could've been me though.
+
+
+// WARNING!  Most of what's seen here is only for players other than the local player to look at (from multiplayer).
+// The hitcloud is an exception, it is only in here.  Unknown if it would be a good idea to have a ev_hldm equivalent
+// and then make the hitcloud here skip the local player.
+// They won't show up even in third person, still uses the same as if in first person.   Weird, but, ok.
+// See the egonfire in cl_dll/ev_hldm.cpp.  That shows up for the local plaer only instead.
 void CEgon::UpdateEffect( const Vector &startPoint, const Vector &endPoint, float timeBlend )
 {
-
-	
-	
 	
 #ifndef CLIENT_DLL
 	float egonEffectsModeVar = EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(egonEffectsMode);
@@ -972,8 +1098,6 @@ void CEgon::UpdateEffect( const Vector &startPoint, const Vector &endPoint, floa
 				m_pBeam->SetColor( 60 + (25*timeBlend), 120 + (30*timeBlend), 64 + 80*fabs(sin(gpGlobals->time*10)) );
 
 		}
-
-
 	}
 
 	if(m_pNoise){
@@ -1014,8 +1138,6 @@ void CEgon::UpdateEffect( const Vector &startPoint, const Vector &endPoint, floa
 
 
 
-
-
 	if(egonEffectsModeVar == 4){
 		//CHRISTMAS MODE!  Makes what beam is what for egonEffectsMode #2 easier to spot.
 		if(m_pBeam){
@@ -1029,14 +1151,26 @@ void CEgon::UpdateEffect( const Vector &startPoint, const Vector &endPoint, floa
 
 	if(m_pSprite){
 		UTIL_SetOrigin( m_pSprite->pev, endPoint );
-		m_pSprite->pev->frame += 8 * gpGlobals->frametime;
-		if ( m_pSprite->pev->frame > m_pSprite->Frames() )
-			m_pSprite->pev->frame = 0;
 
+
+		m_pSprite->pev->frame += m_pSprite->pev->framerate * gpGlobals->frametime;
+
+		//MODDD - NOTE. Assuming that being on the exact last frame is acceptable?  Was this way as-is.
+		if ( m_pSprite->pev->frame > m_pSprite->Frames() ){
+			//MODDD - proper loop around.
+			//m_pSprite->pev->frame = 0;
+			m_pSprite->pev->frame -= m_pSprite->Frames();
+		}
+		
+
+		//MODDD - NEW
+		if (UTIL_PointContents(m_pSprite->pev->origin) == CONTENTS_SKY) {
+			// If we hit the sky, go invisible
+			m_pSprite->pev->effects |= EF_NODRAW;
+		}else{
+			m_pSprite->pev->effects &= ~EF_NODRAW;
+		}
 	}
-
-	
-	
 
 
 #endif
@@ -1058,7 +1192,6 @@ void CEgon::CreateEffect( void )
 
 #ifndef CLIENT_DLL
 
-
 	//INDEXENT???
 	
 	float egonEffectsModeVar = EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(egonEffectsMode);
@@ -1076,8 +1209,6 @@ void CEgon::CreateEffect( void )
 	//NOT if 3!
 	if(egonEffectsModeVar >= 1 && egonEffectsModeVar != 3){
 
-
-		
 		m_pBeam = CBeam::BeamCreate( EGON_BEAM_SPRITE, 40 );
 		m_pBeam->PointEntInit( vecSrc, m_pPlayer->entindex()  );
 		//MODDD - commented out.  Causes the beam not to sufficiently shrink when nearing a surface you're firing at, causing the effect to clip backwards into the player & gun.
@@ -1151,20 +1282,20 @@ void CEgon::CreateEffect( void )
 		//For wide only.
 		
 		if ( m_fInAttack == FIRE_WIDE ){
-
-
-			
-			m_pBeam = CBeam::BeamCreate( EGON_BEAM_SPRITE, 40 );
+			m_pBeam = CBeam::BeamCreate( EGON_BEAM_SPRITE, 60 );
 			m_pBeam->PointEntInit( vecSrc, m_pPlayer->entindex()  );
 			//MODDD - commented out.  Causes the beam not to sufficiently shrink when nearing a surface you're firing at, causing the effect to clip backwards into the player & gun.
-			//m_pBeam->SetFlags( BEAM_FSINE );
+			// UHHHH.  That's because this should only be shown to other players looking at the current one or in MP dingus!  AIRJGARWIGJA
+			m_pBeam->SetFlags( BEAM_FSINE );
 			m_pBeam->SetEndAttachment( 1 );
 			m_pBeam->pev->spawnflags |= SF_BEAM_TEMPORARY;	// Flag these to be destroyed on save/restore or level transition
 			//if(testVar == 0 || testVar == 2 ){
-			//	m_pBeam->pev->flags |= FL_SKIPLOCALHOST;
+				m_pBeam->pev->flags |= FL_SKIPLOCALHOST;
 			//}
 			m_pBeam->pev->owner = m_pPlayer->edict();
 
+			m_pBeam->SetBrightness(255);
+			m_pBeam->SetColor( (int)(0.2*255), (int)(0.6*255), (int)(0.8*255) );
 
 
 			//if ( m_fInAttack == FIRE_WIDE )
@@ -1175,28 +1306,24 @@ void CEgon::CreateEffect( void )
 			//else
 			//{
 			//// want narrow mode's features.
-				m_pBeam->SetScrollRate( 110 );
-				m_pBeam->SetNoise( 5 );
+				m_pBeam->SetScrollRate( 140 );
+				m_pBeam->SetNoise( 1 );
 			//}
 
 
 
 
-
-
-
-
-			m_pNoise = CBeam::BeamCreate( EGON_BEAM_SPRITE, 55 );
-			//new?
+			m_pNoise = CBeam::BeamCreate( EGON_BEAM_SPRITE, 40 );
+			//new?   yea... noise never had this
 			//m_pNoise->SetFlags( BEAM_FSINE );
 
 			m_pNoise->PointEntInit( vecSrc, m_pPlayer->entindex() );
 			m_pNoise->SetScrollRate( 25 );
-			m_pNoise->SetBrightness( 100 );
+			m_pNoise->SetBrightness( 90 );
 			m_pNoise->SetEndAttachment( 1 );
 			m_pNoise->pev->spawnflags |= SF_BEAM_TEMPORARY;
 			//if(testVar == 0 || testVar == 1){
-			//	m_pNoise->pev->flags |= FL_SKIPLOCALHOST;
+				m_pNoise->pev->flags |= FL_SKIPLOCALHOST;
 			//}
 			m_pNoise->pev->owner = m_pPlayer->edict();
 
@@ -1209,24 +1336,92 @@ void CEgon::CreateEffect( void )
 			//else
 			//{
 			//// want narrow's features.
-				m_pNoise->SetColor( 80, 120, 255 );
-				m_pNoise->SetNoise( 2 );
+				m_pNoise->SetColor( 80, 160, 255 );
+				m_pNoise->SetNoise( 1 );
 			//}
 
-		}
+		}else{
+			// NARROW?  Just use retail for now
+
+			m_pBeam = CBeam::BeamCreate( EGON_BEAM_SPRITE, 40 );
+			m_pBeam->PointEntInit( pev->origin, m_pPlayer->entindex() );
+			m_pBeam->SetFlags( BEAM_FSINE );
+			m_pBeam->SetEndAttachment( 1 );
+			m_pBeam->pev->spawnflags |= SF_BEAM_TEMPORARY;	// Flag these to be destroyed on save/restore or level transition
+			m_pBeam->pev->flags |= FL_SKIPLOCALHOST;
+			m_pBeam->pev->owner = m_pPlayer->edict();
+
+			m_pNoise = CBeam::BeamCreate( EGON_BEAM_SPRITE, 55 );
+			m_pNoise->PointEntInit( pev->origin, m_pPlayer->entindex() );
+			m_pNoise->SetScrollRate( 25 );
+			m_pNoise->SetBrightness( 100 );
+			m_pNoise->SetEndAttachment( 1 );
+			m_pNoise->pev->spawnflags |= SF_BEAM_TEMPORARY;
+			m_pNoise->pev->flags |= FL_SKIPLOCALHOST;
+			m_pNoise->pev->owner = m_pPlayer->edict();
+
+			/*
+			m_pSprite = CSprite::SpriteCreate( EGON_FLARE_SPRITE, pev->origin, FALSE );
+			m_pSprite->pev->scale = 1.0;
+			m_pSprite->SetTransparency( kRenderGlow, 255, 255, 255, 255, kRenderFxNoDissipation );
+			m_pSprite->pev->spawnflags |= SF_SPRITE_TEMPORARY;
+			m_pSprite->pev->flags |= FL_SKIPLOCALHOST;
+			m_pSprite->pev->owner = m_pPlayer->edict();
+			*/
+
+
+			/*
+			if ( m_fireMode == FIRE_WIDE )
+			{
+				m_pBeam->SetScrollRate( 50 );
+				m_pBeam->SetNoise( 20 );
+				m_pNoise->SetColor( 50, 50, 255 );
+				m_pNoise->SetNoise( 8 );
+			}
+			else
+			*/
+			{
+				m_pBeam->SetScrollRate( 110 );
+				m_pBeam->SetNoise( 5 );
+				m_pNoise->SetColor( 80, 120, 255 );
+				m_pNoise->SetNoise( 2 );
+			}
+
+		}//END OF beam type check
 		
 		//m_pNoise->Point
 	}
 
 
-
-
-
-	
 	if(egonHitCloudVar == 1){
+		//MODDD - take advantage of the ability to animate.
+		// ...nevermind, not as reliable as animating from direct calls from here.  Weird.  Still specifying framerate now.
+		//m_pSprite = CSprite::SpriteCreate( EGON_FLARE_SPRITE, pev->origin, FALSE );
+		// framerate changed (was 8)
+		m_pSprite = CSprite::SpriteCreate( EGON_FLARE_SPRITE, pev->origin, FALSE, 14);
 
-		m_pSprite = CSprite::SpriteCreate( EGON_FLARE_SPRITE, pev->origin, FALSE );
-		m_pSprite->pev->scale = 1.0;
+		// TEST!!!  Copied from RPG lasersight spawn.
+		// Should improve tracking, no need for continuous moving around.
+		// And yes, the only reason the hitcloud still shows up on some skyboxes is from the size of the sprite.
+		// The lasersight sprite, used instead, also doesn't show up on those skyboxes just like the RPGs.
+		//         IIIIIIIIiiiiiiiiiiiiiii     love this engine
+		//////////////////////////////////////////////////////////////////
+		m_pSprite->pev->movetype = MOVETYPE_NONE;
+
+		//SET_MODEL(ENT(m_pSprite->pev), "sprites/laserdot.spr");
+		//UTIL_SetOrigin( m_pSprite->pev, pev->origin );
+		//////////////////////////////////////////////////////////////////
+
+		//MODDD - hit cloud size will varry on wide or narrow fire.
+		//m_pSprite->pev->scale = 1.0;
+
+		if ( m_fInAttack == FIRE_NARROW ){
+			m_pSprite->pev->scale = 2.1;
+		}else{
+			m_pSprite->pev->scale = 3.2;
+		}
+		
+
 		m_pSprite->SetTransparency( kRenderGlow, 255, 255, 255, 255, kRenderFxNoDissipation );
 		m_pSprite->pev->spawnflags |= SF_SPRITE_TEMPORARY;
 		//m_pSprite->pev->flags |= FL_SKIPLOCALHOST;
@@ -1236,7 +1431,6 @@ void CEgon::CreateEffect( void )
 
 	
 	//MODDD - note.  Colors may not matter here if they are updated constantly by "updateEffect".
-	
 	
 	/*
 	m_pNoise->SetColor( 50, 50, 255 );
@@ -1277,10 +1471,32 @@ void CEgon::DestroyEffect( void )
 	}
 	if ( m_pSprite )
 	{
-		if ( m_fInAttack == FIRE_WIDE )
-			m_pSprite->Expand( 10, 500 );
-		else
-			UTIL_Remove( m_pSprite );
+		if ( m_fInAttack == FIRE_WIDE ){
+			//MODDD - move away from the surface a bit to avoid clipping through
+			// the nearby object as it expands
+			m_pSprite->pev->origin =
+				m_pSprite->pev->origin +
+				recentFireDirection * -50 +
+				recentHitPlaneNormal * 12;
+			
+			//MODDD - see multiples
+			m_pSprite->ExpandAnimate( 10 * 0.45, 500 * 0.88 );
+
+		}else{
+			//MODDD - now, even narrow fire can use the expand-out effect to remove its hitcloud.
+			// However it happens more quickly.
+
+			m_pSprite->pev->origin =
+				m_pSprite->pev->origin +
+				recentFireDirection * -35 +
+				recentHitPlaneNormal * 8;
+
+			//MODDD - reduced further.
+			m_pSprite->ExpandAnimate( 10 * 0.28, 500 * 1.42 );
+
+
+			//UTIL_Remove( m_pSprite );
+		}
 		m_pSprite = NULL;
 	}
 #endif
@@ -1291,9 +1507,6 @@ void CEgon::DestroyEffect( void )
 
 void CEgon::WeaponIdle( void )
 {
-	
-
-
 
 	ResetEmptySound( );
 
@@ -1303,31 +1516,37 @@ void CEgon::WeaponIdle( void )
 	//	return;
 
 
-	if(m_flReleaseThrow <= -1){
+	if(getchargeReady() <= 5 + -1){
 		//only allow influence from here for idle animations.
 
 	}else{
 		return;
 	}
-
 	
 	
-	if(m_flReleaseThrow == -2){
+	if(getchargeReady() == 5 + -2){
 		//NO, the point is to release, so this is OK.
-		m_flReleaseThrow = -4;
+		setchargeReady(5 + -4);
 		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + randomIdleAnimationDelay();
 		//return;
 		//TODO: give a random delay here!!!
 	}
 
 
-	if(m_flReleaseThrow == -4){
-		//force anim
-		SendWeaponAnimBypass( EGON_FIDGET1, 1 );
+	if(getchargeReady() == 5 + -4){
+		// force anim
+		// ...why FIDGET1?  IDLE works fine.
+		// Otherwise holding down a press while unable to fire (like primary, then instantly pressing primary again before the delay is up)
+		// will let the figet play a bit and it looks odd.
+		// This will still play a little if the rapid-press-again is done, but it's not as jarring.  No static frame sequence that would be best.
+		// This has to be done at all because, otherwise, the sequence from the most recent attack will continue looping while not firing.
+		// ALSO.  Once the idle-delay expires once since firing, the firestate changes from -4 to -3, which allows normal idle anims to be picked
+		// now that this one forced static no longer needs to be enforced.
+		SendWeaponAnimBypass( EGON_IDLE1, 1 );
 	}
 	
-	if(m_flReleaseThrow == -1){
-		m_flReleaseThrow = 3;
+	if(getchargeReady() == 5 + -1){
+		setchargeReady(5 + 3);
 		m_flStartThrow = gpGlobals->time + holdingSecondaryTarget2;
 		SendWeaponAnimBypass( EGON_ALTFIREOFF, 1 );
 		return;
@@ -1340,9 +1559,9 @@ void CEgon::WeaponIdle( void )
 		return;
 
 	
-	if(m_flReleaseThrow == -4){
+	if(getchargeReady() == 5 + -4){
 		//End.
-		m_flReleaseThrow = -3;
+		setchargeReady(5 + -3);
 		return;
 	}
 
@@ -1353,12 +1572,6 @@ void CEgon::WeaponIdle( void )
 	//m_flStartThrow = 0;
 
 	
-
-
-
-
-
-
 
 
 
@@ -1408,7 +1621,9 @@ void CEgon::WeaponIdle( void )
 
 	
 	forceBlockLooping();
-	SendWeaponAnim( -1, 1, m_fireState );
+
+	//SendWeaponAnim( -1, 1, m_fireState );
+	/// ..... what.  what was that.
 
 
 	lastSentAnim = iAnim;
@@ -1421,15 +1636,21 @@ void CEgon::WeaponIdle( void )
 
 void CEgon::EndAttack( void )
 {
-	bool bMakeNoise = false;
+	BOOL bMakeNoise = FALSE;
 		
 	if ( m_fireState != FIRE_OFF ) //Checking the button just in case!.
-		 bMakeNoise = true;
+		 bMakeNoise = TRUE;
+
+	//usedOneAmmo = FALSE;
+	m_chargeReady &= ~32;
+	fireExceptionStartTime = -1;
 
 	//MODDD - 
 	//if(m_fireState == FIRE_OFF){
 	//	return; //already off?
 	//}
+
+	lockedFireState = FALSE;
 
 	PLAYBACK_EVENT_FULL( FEV_GLOBAL | FEV_RELIABLE, m_pPlayer->edict(), m_usEgonStop, 0, (float *)&m_pPlayer->pev->origin, (float *)&m_pPlayer->pev->angles, 0.0, 0.0, bMakeNoise, 0, 0, 0 );
 
@@ -1439,16 +1660,14 @@ void CEgon::EndAttack( void )
 	//easyPrintLine("TEH ee %.2f", UTIL_WeaponTimeBase());
 
 	//m_flNextPrimaryAttack = m_flNextSecondaryAttack = UTIL_WeaponTimeBase() + 0.5;
-	m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 0.5;
+	//m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 0.5;
 	//m_flNextSecondaryAttack = gpGlobals->time + 0.5;
 	
 
-	//m_flReleaseThrow = -668;
-	
 
-	
-	//m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 2.0;
-	//m_flNextPrimaryAttack = m_flNextSecondaryAttack = gpGlobals->time + 0.5;
+	//MODDD - uh.  why'd we remove that again?
+	m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 2.0;
+	m_flNextPrimaryAttack = m_flNextSecondaryAttack = UTIL_WeaponTimeBase() + 0.5;
 
 	m_fireState = FIRE_OFF;
 

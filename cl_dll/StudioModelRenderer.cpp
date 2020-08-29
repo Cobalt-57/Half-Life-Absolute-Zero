@@ -1373,7 +1373,7 @@ float CStudioModelRenderer::StudioEstimateFrame( mstudioseqdesc_t *pseqdesc )
 
 	if (g_blockUpdateRecentInterpArray == TRUE) {
 		blockUpdateRecentInterpArray = TRUE;
-	}else if (myIndex >= 1 && myIndex <= gEngfuncs.GetMaxClients()) {
+	}else if (myIndex >= 1 && myIndex <= gEngfuncs.GetMaxClients() && myIndex < 32) {
 		isPlayerIndex = TRUE;
 		// it is a player, can have commits blocked by having already been handled this frame.
 		if (ary_g_recentInterpEstimateHandled[m_pCurrentEntity->index - 1]) {

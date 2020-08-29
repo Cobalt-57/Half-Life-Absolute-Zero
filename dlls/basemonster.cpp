@@ -6196,11 +6196,14 @@ void CBaseMonster::MonsterInit ( void )
 
 	//MODDD - potential to respawn? ok.
 	// Could wait until MonsterInitThink happens though, may ease the 'spawned mid-air for a frame' issue.
+
 	if (!(pev->spawnflags & SF_NORESPAWN)) {
-		pev->spawnflags |= SF_MONSTER_FADECORPSE;
+		// NO.  this is baaaaaad.  The maps aren't expecting this to be depended on.
+		//pev->spawnflags |= SF_MONSTER_FADECORPSE;
 		respawn_origin = pev->origin;
 		respawn_angles = pev->angles;
 	}
+	
 
 }
 

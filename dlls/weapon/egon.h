@@ -38,15 +38,31 @@ enum EGON_FIREMODE { FIRE_NARROW, FIRE_WIDE};
 class CEgon : public CBasePlayerWeapon
 {
 public:
-#ifndef CLIENT_DLL
-	int	Save(CSave& save);
-	int	Restore(CRestore& restore);
-	static	TYPEDESCRIPTION m_SaveData[];
-#endif
+	BOOL effectsExist;;
+	Vector recentFireDirection;
+	Vector recentHitPlaneNormal;
 
-	CEgon::CEgon();
+	float m_flAmmoUseTime;// since we use < 1 point of ammo per update, we subtract ammo on a timer.
 
-	int dummy;
+	CBeam* m_pBeam;
+	CBeam* m_pNoise;
+	CSprite* m_pSprite;
+
+	unsigned short m_usEgonStop;
+
+private:
+	float			m_shootTime;
+	EGON_FIREMODE		m_fireMode;
+	float			m_shakeTime;
+	BOOL				m_deployed;
+
+	unsigned short m_usEgonFire;
+
+public:
+
+	BOOL fireExceptionPrev;
+	float fireExceptionStartTime;
+	BOOL lockedFireState;
 
 	BOOL canStartSecondary;
 	BOOL secondarySwitched;
@@ -71,23 +87,40 @@ public:
 	BOOL altFireOn;
 	int animationSequence;
 
-
-
 	float oldTime;
 	float currentTime;
 
 	float timeDelta;
-
 	int lastSentAnim;
 
+
+
+
+#ifndef CLIENT_DLL
+	int	Save(CSave& save);
+	int	Restore(CRestore& restore);
+	static	TYPEDESCRIPTION m_SaveData[];
+#endif
+
+
+
+
+
+	CEgon::CEgon(void);
+
+
+
 	//MODDD - ??
-	void ItemPostFrame(void);
 	void ItemPreFrame(void);
+	void ItemPostFrame(void);
+	void ItemPostFrameThink(void);
+
+	void UpdateHitCloud(void);
+
 	void PrimaryNotHeld(void);
 	void SecondaryNotHeld(void);
 	void NeitherHeld(void);
 	void BothHeld(void);
-	BOOL effectsExist;
 
 	void Spawn(void);
 	void Precache(void);
@@ -115,8 +148,6 @@ public:
 
 	void WeaponIdle(void);
 
-	float m_flAmmoUseTime;// since we use < 1 point of ammo per update, we subtract ammo on a timer.
-
 	float GetPulseInterval(void);
 	float GetDischargeInterval(void);
 
@@ -126,11 +157,6 @@ public:
 
 	void UseAmmo(int count);
 
-	enum EGON_FIREMODE { FIRE_NARROW, FIRE_WIDE };
-
-	CBeam* m_pBeam;
-	CBeam* m_pNoise;
-	CSprite* m_pSprite;
 
 	virtual BOOL UseDecrement(void)
 	{
@@ -141,15 +167,6 @@ public:
 #endif
 	}
 
-	unsigned short m_usEgonStop;
-
-private:
-	float			m_shootTime;
-	EGON_FIREMODE		m_fireMode;
-	float			m_shakeTime;
-	BOOL				m_deployed;
-
-	unsigned short m_usEgonFire;
 };
 
 

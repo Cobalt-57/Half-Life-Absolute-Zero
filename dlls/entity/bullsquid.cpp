@@ -466,6 +466,9 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBullsquid)
 		m_flLastHurtTime = gpGlobals->time;
 	}
 
+	//MODDD - I don't take damage from poison.  Bullsquids fighting each other can't poison each other.
+	m_bitsDamageType &= ~DMG_POISON;
+
 	return GENERATE_TAKEDAMAGE_PARENT_CALL(CBaseMonster);
 }
 

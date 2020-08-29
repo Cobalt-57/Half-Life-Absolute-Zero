@@ -1225,7 +1225,15 @@ TYPEDESCRIPTION	CSprite::m_SaveData[] =
 
 IMPLEMENT_SAVERESTORE( CSprite, CPointEntity );
 
+
+
+
 void CSprite::Spawn( void )
+{
+	Spawn(TRUE);
+}
+//MODDD - optional 'animate' parameter
+void CSprite::Spawn(BOOL animate )
 {
 	pev->solid			= SOLID_NOT;
 	pev->movetype		= MOVETYPE_NONE;
@@ -1236,11 +1244,15 @@ void CSprite::Spawn( void )
 	setModel( STRING(pev->model) );
 
 	m_maxFrame = (float) MODEL_FRAMES( pev->modelindex ) - 1;
-	if ( pev->targetname && !(pev->spawnflags & SF_SPRITE_STARTON) )
-		TurnOff();
-	else
-		TurnOn();
-	
+
+	//MODDD - only bother with on/off stuff if planning to animate
+	if(animate){
+		if ( pev->targetname && !(pev->spawnflags & SF_SPRITE_STARTON) )
+			TurnOff();
+		else
+			TurnOn();
+	}
+
 	// Worldcraft only sets y rotation, copy to Z
 	if ( pev->angles.y != 0 && pev->angles.z == 0 )
 	{
@@ -1248,6 +1260,7 @@ void CSprite::Spawn( void )
 		pev->angles.y = 0;
 	}
 }
+
 
 
 void CSprite::Precache( void )
@@ -1266,22 +1279,59 @@ void CSprite::Precache( void )
 }
 
 
-void CSprite::SpriteInit( const char *pSpriteName, const Vector &origin )
+
+
+void CSprite::SpriteInit( const char *pSpriteName, const Vector &origin ){
+	// default acted as though there was an intent to animate.
+	SpriteInit(pSpriteName, origin, TRUE);
+}
+
+//MODDD - now passes along the 'animate' parameter
+void CSprite::SpriteInit( const char *pSpriteName, const Vector &origin, BOOL animate )
 {
 	pev->model = MAKE_STRING(pSpriteName);
 	pev->origin = origin;
-	Spawn();
+	Spawn(animate);
 }
+
 
 CSprite *CSprite::SpriteCreate( const char *pSpriteName, const Vector &origin, BOOL animate )
 {
 	CSprite *pSprite = GetClassPtr( (CSprite *)NULL );
-	pSprite->SpriteInit( pSpriteName, origin );
+	pSprite->SpriteInit( pSpriteName, origin, animate );
 	pSprite->pev->classname = MAKE_STRING("env_sprite");
 	pSprite->pev->solid = SOLID_NOT;
 	pSprite->pev->movetype = MOVETYPE_NOCLIP;
-	if ( animate )
-		pSprite->TurnOn();
+
+	//MODDD - NOTE.  Hold on.
+	// SpriteInit above calls Spawn, which can call TurnOn or TurnOff.
+	// And, regardless of this 'animate' bool, it will call "TurnOn" since the 
+	// 'pev->targetname && !(pev->spawnflags & SF_SPRITE_STARTON)' condition failing leads to that.
+	// Although it won't do anything if the framerate is 0 (would be in a fresh entity).
+	// CHANGED.  Now the framerate can be above 0 without calling TurnOn/Off, so long as animate is FALSE.
+	// Some like the egon hitcloud effect should be animated from the weapon for faster and more consistent
+	// calls.
+	// Anyway, this bit disabled.
+	//if ( animate )
+	//	pSprite->TurnOn();
+
+	return pSprite;
+}
+
+//MODDD - new version, can specify a framerate.
+CSprite *CSprite::SpriteCreate( const char *pSpriteName, const Vector &origin, BOOL animate, float framerate )
+{
+	CSprite *pSprite = GetClassPtr( (CSprite *)NULL );
+	// IMPORTANT! set before SpriteInit
+	pSprite->pev->framerate = framerate;
+
+	pSprite->SpriteInit( pSpriteName, origin, animate );
+	pSprite->pev->classname = MAKE_STRING("env_sprite");
+	pSprite->pev->solid = SOLID_NOT;
+	pSprite->pev->movetype = MOVETYPE_NOCLIP;
+
+	//if ( animate )
+	//	pSprite->TurnOn();
 
 	return pSprite;
 }
@@ -1289,6 +1339,14 @@ CSprite *CSprite::SpriteCreate( const char *pSpriteName, const Vector &origin, B
 
 void CSprite::AnimateThink( void )
 {
+	//easyForcePrint("%03d:", ENTINDEX(this->edict()));
+	//056:057:063:064:
+
+	//if(ENTINDEX(edict()) > 64){
+	//	int x = 45;
+	//}
+
+	// gpGlobals->frametime ?   no.
 	Animate( pev->framerate * (gpGlobals->time - m_lastTime) );
 
 	pev->nextthink		= gpGlobals->time + 0.1;
@@ -1306,22 +1364,15 @@ void CSprite::AnimateUntilDead( void )
 	}
 }
 
-//MODDD
-void CSprite::Expand_TimeTarget( float arg_targetScale, float arg_duration ){
-	const float arg_scaleDelta = (arg_targetScale - pev->scale);
-	const float arg_opacityDelta = (0 - pev->renderamt);
-
-	
-	Expand( arg_scaleDelta / arg_duration, arg_opacityDelta / arg_duration);
-}//END OF Expand_TimeTarget
 	
 
 void CSprite::Expand( float scaleSpeed, float fadeSpeed )
 {
-
 	//MODDD - isn't this a good idea...?  If it's needed for the effect to work why not do it here?
 	//        If this is bad sometimes keep leaving it up to the caller to "SetTransparency" right I guess.
-	SetTransparency( kRenderTransAdd, 255, 255, 255, 0, kRenderFxNoDissipation );
+	// ... wait.  Why was the alpha set to 0 here?...   just... why.
+	// Sending 'pev->renderamt' so it just gets set to itself (no change).
+	SetTransparency( kRenderTransAdd, 255, 255, 255, pev->renderamt, kRenderFxNoDissipation );
 
 
 	//why absolute value?  Because we're already going to bring this in the right direction in every think frame.
@@ -1332,14 +1383,42 @@ void CSprite::Expand( float scaleSpeed, float fadeSpeed )
 
 	SetThink( &CSprite::ExpandThink );
 
-	pev->nextthink	= gpGlobals->time;
+	//MODDD - why think the same frame?  A frametime of 0 means
+	// losing this in an instant
+	//pev->nextthink	= gpGlobals->time;
+	pev->nextthink	= gpGlobals->time + 0.1;
+
 	m_lastTime		= gpGlobals->time;
 }
+
+//MODDD
+void CSprite::Expand_TimeTarget( float arg_targetScale, float arg_duration ){
+	const float arg_scaleDelta = (arg_targetScale - pev->scale);
+	const float arg_opacityDelta = (0 - pev->renderamt);
+
+
+	Expand( arg_scaleDelta / arg_duration, arg_opacityDelta / arg_duration);
+}//END OF Expand_TimeTarget
+
+ //MODDD - also new.  Same as Expand but animates while expanding.
+ // Assumes that  'TurnOn()' has already happend at some point.
+ // (although the most it does is set pev->effects and pev->frame to 0 and check for m_maxFrame or
+ //  the PLAYONCE spawnflag for being a valid animation to play)
+void CSprite::ExpandAnimate(float scaleSpeed, float fadeSpeed){
+	SetTransparency( kRenderTransAdd, 255, 255, 255, pev->renderamt, kRenderFxNoDissipation );
+	pev->speed = fabs(scaleSpeed);
+	pev->health = fabs(fadeSpeed);
+	SetThink( &CSprite::ExpandAnimateThink );
+	pev->nextthink	= gpGlobals->time + 0.1;
+	m_lastTime		= gpGlobals->time;
+}
+
 
 
 void CSprite::ExpandThink( void )
 {
 	float frametime = gpGlobals->time - m_lastTime;
+
 	pev->scale += pev->speed * frametime;
 	pev->renderamt -= pev->health * frametime;
 	if ( pev->renderamt <= 0 )
@@ -1352,6 +1431,30 @@ void CSprite::ExpandThink( void )
 		pev->nextthink		= gpGlobals->time + 0.1;
 		m_lastTime			= gpGlobals->time;
 	}
+}
+//MODDD - NEW.
+void CSprite::ExpandAnimateThink( void )
+{
+	float frametime = gpGlobals->time - m_lastTime;
+
+	pev->scale += pev->speed * frametime;
+	pev->renderamt -= pev->health * frametime;
+
+	
+	if ( pev->renderamt <= 0 )
+	{
+		pev->renderamt = 0;
+		UTIL_Remove( this );
+	}
+	else
+	{
+		// from AnimateThink
+		Animate( pev->framerate * (frametime) );
+
+		pev->nextthink		= gpGlobals->time + 0.1;
+		m_lastTime			= gpGlobals->time;
+	}
+
 }
 
 
@@ -1459,6 +1562,10 @@ void CSprite::AnimationScaleFadeInThink( void ){
 
 void CSprite::Animate( float frames )
 { 
+	//if(ENTINDEX(edict()) > 64){
+	//	int x = 45;
+	//}
+
 	pev->frame += frames;
 	if ( pev->frame > m_maxFrame )
 	{
@@ -1482,6 +1589,7 @@ void CSprite::TurnOff( void )
 }
 
 
+// BEWARE.  This does not remove the EF_NODRAW set by TurnOff
 void CSprite::TurnOn( void )
 {
 	pev->effects = 0;

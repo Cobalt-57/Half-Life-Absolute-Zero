@@ -5,6 +5,7 @@
 
 #include "extdll.h"
 #include "weapons.h"
+#include "rpg.h"   // for CLaserSpot
 
 
 enum python_e {
@@ -18,21 +19,6 @@ enum python_e {
 	PYTHON_IDLE3
 };
 
-
-
-class CLaserSpotPython : public CBaseEntity
-{
-	void Spawn(void);
-	void Precache(void);
-
-	int ObjectCaps(void) { return FCAP_DONT_SAVE; }
-
-public:
-	void Suspend(float flSuspendTime);
-	void EXPORT Revive(void);
-
-	static CLaserSpotPython* CreateSpot(void);
-};
 
 
 
@@ -70,7 +56,7 @@ public:
 	//MODDD - added.
 	int m_fSpotActive;
 	int m_iShell;
-	CLaserSpotPython* m_pSpot;
+	CLaserSpot* m_pSpot;
 
 
 	BOOL m_fInZoom;// don't save this. 

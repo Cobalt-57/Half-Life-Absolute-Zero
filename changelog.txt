@@ -460,6 +460,8 @@ Non-sentry turrets have a more involved post-death sequence.  They will spin aro
 -They will make off-pitch pings during post-death beserk and normal beserk.  Far more off-pitch pings on post-death.
 -Turret eye (brightness) in standard turrets will flash on and off during post-death.
 
+Turret post-death sequence mentioned above moved to CVar 'sv_turret_postdeath' set to 2.  Set to 1 (default), it is skipped but the extra sparks and ending explosion effect during the normal death animation are still used.
+
 Non-sentry turrets take 10% less damage from bullets, 20% less damage from explosions.
 
 
@@ -494,4 +496,21 @@ Slight AI improvement: something facing off from ideal but still able to attack 
 
 NEW CVars: pathfindForcePointHull, pathfindIgnoreNearestNodeCache, pathfindIgnoreStaticRoutes, pathfindNearestNodeExtra.
 In maps where 'pathfindIgnoreStaticRoutes' being 1 makes a difference in pathfinding through nodes, their node routes should be rebuilt (saved to a file, do it on our end and ship them out).
+
+EGON
+- Both fire-modes show in multiplayer and the beams show much more consistently.
+- Hitcloud occurs as often in multiplayer as often as it does in singleplayer now, and adjusted to have the same tracking as a lasersight in multiplayer (default env_sprite tracking is not as fast).
+- Hitcloud animates faster and is larger in general, moreso for secondary mode.
+- Hitcloud dissipation effect when firing ends restored and placed away from nearby surfaces to reduces clipping like the explosion sprite does.
+- Hitcloud has dissipation effect for primary fire too.
+- Hitcloud animates while dissipating.
+- Hitclouds will no longer appear on skyboxes.  Same for RPG, python lasersights through better checks.
+- Between-primary-fire delay of 0.5 seconds restored.
+- Minimum of 1 ammo must be used before the egon stops firing (showing the beam must use ammo)
+- NOTICE: egonEffectsMode choices other than 3 (the default) may not be supported as well.
+
+Automatic weapon switches from picking up a new weapon no longer occur if picked up while reloading.
+
+bullsquids immune to poison.  Mainly so bullsquids fighting each other don't poison each other (should be immune).
+
 

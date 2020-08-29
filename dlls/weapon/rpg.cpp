@@ -117,6 +117,9 @@ void CLaserSpot::Spawn( void )
 	pev->renderfx = kRenderFxNoDissipation;
 	pev->renderamt = 255;
 
+	//MODDD - good idea, yes or no?  Generic sprites do this, see CSprite as called for by the egon's hitcloud effect
+	pev->spawnflags |= SF_SPRITE_TEMPORARY;
+
 	SET_MODEL(ENT(pev), "sprites/laserdot.spr");
 	UTIL_SetOrigin( pev, pev->origin );
 };
@@ -125,6 +128,29 @@ void CLaserSpot::Precache( void )
 {
 	PRECACHE_MODEL("sprites/laserdot.spr");
 };
+
+
+//=========================================================
+// Suspend- make the laser sight invisible. 
+//=========================================================
+void CLaserSpot::Suspend( float flSuspendTime )
+{
+	pev->effects |= EF_NODRAW;
+
+	SetThink( &CLaserSpot::Revive );
+	pev->nextthink = gpGlobals->time + flSuspendTime;
+}
+
+//=========================================================
+// Revive - bring a suspended laser sight back.
+//=========================================================
+void CLaserSpot::Revive( void )
+{
+	pev->effects &= ~EF_NODRAW;
+
+	SetThink( NULL );
+}
+
 
 LINK_ENTITY_TO_CLASS( rpg_rocket, CRpgRocket );
 
@@ -1178,16 +1204,28 @@ void CRpg::UpdateSpot( void )
 		if (!m_pSpot)
 		{
 			m_pSpot = CLaserSpot::CreateSpot();
+		}else{
+			// TEST - remove and recreate every frame
+			//UTIL_Remove(m_pSpot);
+			//m_pSpot = CLaserSpot::CreateSpot();
 		}
 
 		UTIL_MakeVectors( m_pPlayer->pev->v_angle );
-		Vector vecSrc = m_pPlayer->GetGunPosition( );;
+		Vector vecSrc = m_pPlayer->GetGunPosition( );
 		Vector vecAiming = gpGlobals->v_forward;
 
 		TraceResult tr;
 		UTIL_TraceLine ( vecSrc, vecSrc + vecAiming * 8192, dont_ignore_monsters, ENT(m_pPlayer->pev), &tr );
 		
 		UTIL_SetOrigin( m_pSpot->pev, tr.vecEndPos );
+
+		//MODDD - new
+		if (UTIL_PointContents(m_pSpot->pev->origin) == CONTENTS_SKY) {
+			// If we hit the sky, go invisible
+			m_pSpot->pev->effects |= EF_NODRAW;
+		}else{
+			m_pSpot->pev->effects &= ~EF_NODRAW;
+		}
 	}
 #endif
 

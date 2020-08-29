@@ -96,18 +96,19 @@ public:
 
 
 
-
 // physical entities are serverside-only.
 #ifndef CLIENT_DLL
 
 class CLaserSpot : public CBaseEntity
 {
+public:
 	void Spawn(void);
 	void Precache(void);
 
 	int ObjectCaps(void) { return FCAP_DONT_SAVE; }
 
-public:
+	void Suspend(float flSuspendTime);
+	void EXPORT Revive(void);
 	static CLaserSpot* CreateSpot(void);
 };
 
@@ -115,6 +116,20 @@ public:
 class CRpgRocket : public CGrenade
 {
 public:
+
+	int m_iTrail;
+	float m_flIgniteTime;
+	CRpg* m_pLauncher;// pointer back to the launcher that fired me. 
+
+	BOOL ignited;
+
+	//MODDD - new
+	Vector vecMoveDirectionMemory;
+	BOOL alreadyDeleted;
+	BOOL forceDumb;
+
+
+
 	//MODDD - new
 	CRpgRocket(void);
 
@@ -140,24 +155,9 @@ public:
 	static CRpgRocket* CreateRpgRocket(Vector vecOrigin, Vector vecAngles, CBaseEntity* pOwner, CRpg* pLauncher);
 	static CRpgRocket* CreateRpgRocket(Vector vecOrigin, Vector vecAngles, Vector arg_vecMoveDirection, CBaseEntity* pOwner, CRpg* pLauncher);
 
-	int m_iTrail;
-	float m_flIgniteTime;
-	CRpg* m_pLauncher;// pointer back to the launcher that fired me. 
-
-	BOOL ignited;
-
-
-
-	//MODDD - new
-	Vector vecMoveDirectionMemory;
-	BOOL alreadyDeleted;
-	BOOL forceDumb;
-
 };
 
 #endif
-
-
 
 
 

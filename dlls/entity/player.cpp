@@ -9823,6 +9823,16 @@ BOOL CBasePlayer::SwitchWeapon( CBasePlayerItem *pWeapon )
 	return TRUE;
 	*/
 
+	// Check: is the current weapon in the middle of a reload?
+	if(m_pActiveItem != NULL){
+		CBasePlayerWeapon* tempWeap =  (CBasePlayerWeapon*)m_pActiveItem->GetWeaponPtr();
+		if(tempWeap->m_fInReload || tempWeap->m_fInSpecialReload){
+			// deny changing weapons then!
+			return FALSE;
+		}
+	}
+
+
 	ResetAutoaim();
 	
 	// NOTICE - on being told to switch weapons from receiving one in the middle of a stream of

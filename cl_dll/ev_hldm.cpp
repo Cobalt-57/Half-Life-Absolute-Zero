@@ -2247,9 +2247,14 @@ int g_fireAnims2[] = { EGON_ALTFIRECYCLE };
 BEAM* pBeam;
 BEAM* pBeam2;
 
+BOOL g_cl_egonEffectCreatedYet = FALSE;
+
+
+
 
 void EV_EgonFire(event_args_t* args)
 {
+
 	int idx, iFireState, iFireMode;
 	vec3_t origin;
 
@@ -2278,10 +2283,13 @@ void EV_EgonFire(event_args_t* args)
 	if (EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(mutePlayerWeaponFire) != 1) {
 		if (iStartup)
 		{
-			if (iFireMode == FIRE_WIDE)
-				gEngfuncs.pEventAPI->EV_PlaySound(idx, origin, CHAN_WEAPON, EGON_SOUND_STARTUP, 0.98, ATTN_NORM, 0, 125);
-			else
-				gEngfuncs.pEventAPI->EV_PlaySound(idx, origin, CHAN_WEAPON, EGON_SOUND_STARTUP, 0.9, ATTN_NORM, 0, 100);
+			if(!g_cl_egonEffectCreatedYet){
+				// It does not make sense to make this sound if the beam has already been created in a 'startup' call
+				if (iFireMode == FIRE_WIDE)
+					gEngfuncs.pEventAPI->EV_PlaySound(idx, origin, CHAN_WEAPON, EGON_SOUND_STARTUP, 0.98, ATTN_NORM, 0, 125);
+				else
+					gEngfuncs.pEventAPI->EV_PlaySound(idx, origin, CHAN_WEAPON, EGON_SOUND_STARTUP, 0.9, ATTN_NORM, 0, 100);
+			}
 		}
 		else
 		{
@@ -2310,13 +2318,19 @@ void EV_EgonFire(event_args_t* args)
 	}
 
 
+	//easyForcePrintLine("EV_EgonFire pid: %d  islocal? %d dathing %d othathing: %.2f", idx, EV_IsLocal(idx), iStartup, cl_lw->value );
 
-	if ( hasSpiralBeam ){
+
+	if ( 1 ){
+
 	//if (1) {
 		//gets the spiral.
 
-		if (iStartup == 1 && EV_IsLocal(idx) && !pBeam && !pBeam2 && cl_lw->value) //Adrian: Added the cl_lw check for those lital people that hate weapon prediction.
+		//MODDD - SAFETY.  If for whatever reason the effect has not been created yet, ignore iStartup being 0.
+		if ((iStartup == 1 || !g_cl_egonEffectCreatedYet) && EV_IsLocal(idx) && !pBeam && !pBeam2 && cl_lw->value) //Adrian: Added the cl_lw check for those lital people that hate weapon prediction.
 		{
+			g_cl_egonEffectCreatedYet = TRUE;  // why yes.
+
 			vec3_t vecSrc;
 			vec3_t vecEnd;
 			//MODDD - what.  why.
@@ -2389,9 +2403,60 @@ void EV_EgonFire(event_args_t* args)
 
 				}
 
-				//straight purple beam.
-				pBeam2 = gEngfuncs.pEfxAPI->R_BeamEntPoint(idx | 0x1000, tr.endpos, iBeamModelIndex, 99999, 5.0, 0.08, 0.7, 25, 0, 0, r, g, b);
 
+				/*
+				const float life = 99999;
+				const float width = 5.0;
+				const float amplitude = 0.08;
+				const float brightness = 0.7;
+				const float speed = 25;
+				const float startframe = 0;
+				const float framerate = 0;
+				*/
+
+
+				// TODO - this needs to be for whatever effects var instead
+
+				if(iFireMode == FIRE_NARROW){
+
+					const float life = 99999;
+					const float width = 5.0;
+					const float amplitude = 0.08;
+					const float brightness = 0.7;
+					const float speed = 25;
+					const float startframe = 0;
+					const float framerate = 0;
+					float t_r = r;
+					float t_g = g;
+					float t_b = b;
+
+					//straight purple beam.
+					pBeam2 = gEngfuncs.pEfxAPI->R_BeamEntPoint(idx | 0x1000, tr.endpos, iBeamModelIndex, life, width, amplitude, brightness, speed, startframe, framerate, t_r, t_g, t_b);
+					//pBeam2->freq = 0.2;
+					//easyForcePrintLine("WHAT IS FREQ DEF %.2f", pBeam2->freq);
+
+				}else{
+					// WIDE
+
+					const float life = 99999;
+					const float width = 5.0;
+					const float amplitude = 0.08;
+					const float brightness = 0.9;
+					const float speed = 25;
+					const float startframe = 0;
+					const float framerate = 0;
+					float t_r = 0.2f;
+					float t_g = 0.6f;
+					float t_b = 0.8f;
+
+					//straight purple beam.
+					pBeam2 = gEngfuncs.pEfxAPI->R_BeamEntPoint(idx | 0x1000, tr.endpos, iBeamModelIndex, life, width, amplitude, brightness, speed, startframe, framerate, t_r, t_g, t_b);
+					
+					// so this is found counting up with game time.
+					// oooookay, not gonna touch that
+					//pBeam2->freq = 0.2;
+
+				}//END OF beam type check
 			}
 		}
 
@@ -2403,12 +2468,20 @@ void EV_EgonFire(event_args_t* args)
 
 void EV_EgonStop(event_args_t* args)
 {
-	//easyPrintLine("EGONEVENT STOP???");
 	int idx;
 	vec3_t origin;
 
 	idx = args->entindex;
 	VectorCopy_f(args->origin, origin);
+
+
+	//easyForcePrintLine("EV_EgonStop pid: %d  islocal? %d dathing %d othathing: %.2f", idx, EV_IsLocal(idx), 666, cl_lw->value );
+
+
+	if(g_cl_egonEffectCreatedYet){
+		// no more
+		g_cl_egonEffectCreatedYet = FALSE;
+	}
 
 	gEngfuncs.pEventAPI->EV_StopSound(idx, CHAN_STATIC, EGON_SOUND_RUN);
 

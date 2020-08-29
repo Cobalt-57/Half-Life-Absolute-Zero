@@ -708,6 +708,7 @@
 #define DEFAULT_pathfindIgnoreStaticRoutes 0
 #define DEFAULT_pathfindForcePointHull 0
 #define DEFAULT_pathfindNearestNodeExtra 0
+#define DEFAULT_sv_turret_postdeath 1
 
 
 

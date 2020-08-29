@@ -43,6 +43,7 @@ class CSprite : public CPointEntity
 {
 public:
 	void Spawn( void );
+	void Spawn( BOOL animate );
 	void Precache( void );
 
 	int	ObjectCaps( void )
@@ -54,17 +55,19 @@ public:
 	}
 	void EXPORT AnimateThink( void );
 	void EXPORT ExpandThink( void );
-
+	void EXPORT ExpandAnimateThink( void );
+	
 	//MODDD - new
 	void EXPORT AnimationScaleFadeInThink( void );
 
 	void Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value );
 	void Animate( float frames );
 	
+
+	void Expand( float scaleSpeed, float fadeSpeed );
 	//MODDD - new
 	void Expand_TimeTarget( float arg_targetScale, float arg_duration );
-	
-	void Expand( float scaleSpeed, float fadeSpeed );
+	void ExpandAnimate( float scaleSpeed, float fadeSpeed );
 	
 
 	//MODDD - new
@@ -73,7 +76,8 @@ public:
 
 
 	void SpriteInit( const char *pSpriteName, const Vector &origin );
-
+	void SpriteInit( const char *pSpriteName, const Vector &origin, BOOL animate );
+	
 	inline void SetAttachment( edict_t *pEntity, int attachment )
 	{
 		if ( pEntity )
@@ -115,6 +119,7 @@ public:
 	virtual int	Restore( CRestore &restore );
 	static	TYPEDESCRIPTION m_SaveData[];
 	static CSprite *SpriteCreate( const char *pSpriteName, const Vector &origin, BOOL animate );
+	static CSprite *SpriteCreate( const char *pSpriteName, const Vector &origin, BOOL animate, float framerate );
 
 private:
 

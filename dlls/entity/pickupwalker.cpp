@@ -651,8 +651,8 @@ CBaseEntity* CPickupWalker::Respawn(void)
 		// not a typo! We want to know when the weapon the player just picked up should respawn! This new entity we created is the replacement,
 		// but when it should respawn is based on conditions belonging to the weapon that was taken.
 
-		pNewWeapon->pev->nextthink = gpGlobals->time + 2;
-		//pNewWeapon->pev->nextthink = g_pGameRules->FlPickupWalkerRespawnTime(this);
+		//pNewWeapon->pev->nextthink = gpGlobals->time + 2;
+		pNewWeapon->pev->nextthink = g_pGameRules->FlPickupWalkerRespawnTime(this);
 	}
 	else
 	{

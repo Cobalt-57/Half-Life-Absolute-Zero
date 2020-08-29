@@ -1007,6 +1007,11 @@ void V_CalcNormalRefdef(struct ref_params_s* pparams)
 		}
 
 
+
+		// This 'g_recentCrouchChangeFrames' thing isn't so great.
+		// MODDD TODO - how about pm_shared tells us if a change comes from midair hidding a ledge, and if so,
+		// make that interp smooth ?
+
 		BOOL doExtraInterp = FALSE;
 		BOOL doStandardInterp = FALSE;
 
@@ -1016,7 +1021,8 @@ void V_CalcNormalRefdef(struct ref_params_s* pparams)
 		}
 		else if (EASY_CVAR_GET(cl_interp_view_extra) == 1){
 			// Doing this on g_recentCrouchChangeFrames lets sv_
-			if (pparams->onground || g_recentCrouchChangeFrames > 0) {
+			//if (pparams->onground || g_recentCrouchChangeFrames > 0) {
+			if(pparams->onground){
 				doExtraInterp = TRUE;
 			}
 		}
@@ -1027,7 +1033,8 @@ void V_CalcNormalRefdef(struct ref_params_s* pparams)
 		}
 		else if (EASY_CVAR_GET(cl_interp_view_standard) == 1) {
 			// Doing this on g_recentCrouchChangeFrames lets sv_
-			if (pparams->onground || g_recentCrouchChangeFrames > 0) {
+			//if (pparams->onground || g_recentCrouchChangeFrames > 0) {
+			if(pparams->onground){
 				doStandardInterp = TRUE;
 			}
 		}

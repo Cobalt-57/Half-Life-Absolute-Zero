@@ -58,80 +58,6 @@ CPython::CPython(){
 
 
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////////////////////
-//MODDD - pasting the laser sight from the RPG:
-
-
-LINK_ENTITY_TO_CLASS( laser_spot_python, CLaserSpotPython );
-//should not be necessary?
-
-//=========================================================
-//=========================================================
-CLaserSpotPython *CLaserSpotPython::CreateSpot( void )
-{
-	CLaserSpotPython *pSpot = GetClassPtr( (CLaserSpotPython *)NULL );
-	pSpot->Spawn();
-
-	pSpot->pev->classname = MAKE_STRING("laser_spot");
-
-	return pSpot;
-}
-
-//=========================================================
-//=========================================================
-void CLaserSpotPython::Spawn( void )
-{
-	Precache( );
-	pev->movetype = MOVETYPE_NONE;
-	pev->solid = SOLID_NOT;
-
-	pev->rendermode = kRenderGlow;
-	pev->renderfx = kRenderFxNoDissipation;
-	pev->renderamt = 255;
-
-	SET_MODEL(ENT(pev), "sprites/laserdot.spr");
-	UTIL_SetOrigin( pev, pev->origin );
-};
-
-//=========================================================
-// Suspend- make the laser sight invisible. 
-//=========================================================
-void CLaserSpotPython::Suspend( float flSuspendTime )
-{
-	pev->effects |= EF_NODRAW;
-	
-	SetThink( &CLaserSpotPython::Revive );
-	pev->nextthink = gpGlobals->time + flSuspendTime;
-}
-
-//=========================================================
-// Revive - bring a suspended laser sight back.
-//=========================================================
-void CLaserSpotPython::Revive( void )
-{
-	pev->effects &= ~EF_NODRAW;
-
-	SetThink( NULL );
-}
-
-void CLaserSpotPython::Precache( void )
-{
-	PRECACHE_MODEL("sprites/laserdot.spr");
-};
-
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-
-
-
 
 
 
@@ -718,7 +644,7 @@ void CPython::UpdateSpot( void )
 	{
 		if (!m_pSpot)
 		{
-			m_pSpot = CLaserSpotPython::CreateSpot();
+			m_pSpot = CLaserSpot::CreateSpot();
 		}
 
 		//MODDD TODO - for whatever reason this earlier line that made the laser pointer include the punch angle was commented out.  Restored.
@@ -736,6 +662,14 @@ void CPython::UpdateSpot( void )
 		UTIL_TraceLine ( vecSrc, vecSrc + vecAiming * 8192, dont_ignore_monsters, ENT(m_pPlayer->pev), &tr );
 		
 		UTIL_SetOrigin( m_pSpot->pev, tr.vecEndPos );
+
+		//MODDD - new
+		if (UTIL_PointContents(m_pSpot->pev->origin) == CONTENTS_SKY) {
+			// If we hit the sky, go invisible
+			m_pSpot->pev->effects |= EF_NODRAW;
+		}else{
+			m_pSpot->pev->effects &= ~EF_NODRAW;
+		}
 	}
 #endif
 

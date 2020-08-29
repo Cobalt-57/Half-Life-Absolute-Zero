@@ -52,6 +52,7 @@ EASY_CVAR_EXTERN_DEBUGONLY(turretBleedsOil)
 EASY_CVAR_EXTERN_DEBUGONLY(turretDamageDecal)
 EASY_CVAR_EXTERN_DEBUGONLY(turretGibDecal)
 EASY_CVAR_EXTERN_DEBUGONLY(crazyMonsterPrintouts)
+EASY_CVAR_EXTERN(sv_turret_postdeath)
 
 
 extern DLL_GLOBAL float g_rawDamageCumula;
@@ -1259,7 +1260,7 @@ void CBaseTurret::DeathStart(void) {
 	pev->deadflag = DEAD_DEAD;
 
 
-	if (m_iSpin) {
+	if (m_iSpin && EASY_CVAR_GET(sv_turret_postdeath) == 2) {
 		// if spinning at death, go haywire.
 		postDeathEndTime = gpGlobals->time + RANDOM_FLOAT(6.5, 8.4);
 		nextDeathExplosionTime = gpGlobals->time + RANDOM_FLOAT(0.70, 1.50);
@@ -1487,18 +1488,20 @@ void CBaseTurret::TurretDeathThink( void )
 		// GO.  FIGURE.
 		EyeOff();
 
+		if(EASY_CVAR_GET(sv_turret_postdeath) == 1 || EASY_CVAR_GET(sv_turret_postdeath) == 2){
+			// sparks?
+			for (i = 0; i < 2; i++) {
+				Vector vecSrc = Vector(RANDOM_FLOAT(pev->origin.x + pev->mins.x * 0.9, pev->origin.x + pev->maxs.x * 0.9), RANDOM_FLOAT(pev->origin.y + pev->mins.y * 0.9, pev->origin.y + pev->maxs.y * 0.9), 0);
+				if (m_iOrientation == 0)
+					vecSrc.z = RANDOM_FLOAT(pev->origin.z, pev->absmax.z) + RANDOM_FLOAT(18, 26);
+				else
+					vecSrc.z = RANDOM_FLOAT(pev->absmin.z, pev->origin.z) + -RANDOM_FLOAT(18, 26);
 
-		// sparks?
-		for (i = 0; i < 2; i++) {
-			Vector vecSrc = Vector(RANDOM_FLOAT(pev->origin.x + pev->mins.x * 0.9, pev->origin.x + pev->maxs.x * 0.9), RANDOM_FLOAT(pev->origin.y + pev->mins.y * 0.9, pev->origin.y + pev->maxs.y * 0.9), 0);
-			if (m_iOrientation == 0)
-				vecSrc.z = RANDOM_FLOAT(pev->origin.z, pev->absmax.z) + RANDOM_FLOAT(18, 26);
-			else
-				vecSrc.z = RANDOM_FLOAT(pev->absmin.z, pev->origin.z) + -RANDOM_FLOAT(18, 26);
-
-			// 2 balls.   haha.
-			UTIL_Sparks(vecSrc, 2, EASY_CVAR_GET_DEBUGONLY(sparksTurretDeathMulti) * 0.5);
+				// 2 balls.   haha.
+				UTIL_Sparks(vecSrc, 2, EASY_CVAR_GET_DEBUGONLY(sparksTurretDeathMulti) * 0.5);
+			}
 		}
+
 	}
 
 	//MODDD - condition removed, what was the point of this?    && pev->dmgtime + 5 < gpGlobals->time
@@ -1506,14 +1509,15 @@ void CBaseTurret::TurretDeathThink( void )
 	{
 		int i;
 
-		Vector expVec;
-		expVec.x = RANDOM_FLOAT(pev->origin.x + pev->mins.x * 0.9, pev->origin.x + pev->maxs.x * 0.9);
-		expVec.y = RANDOM_FLOAT(pev->origin.y + pev->mins.y * 0.9, pev->origin.y + pev->maxs.y * 0.9);
-		expVec.z = -m_iOrientation * 30 + RANDOM_FLOAT(pev->origin.z + pev->mins.z * 0.5, pev->origin.z + pev->maxs.z * 0.5);
+		if(EASY_CVAR_GET(sv_turret_postdeath) == 1 || EASY_CVAR_GET(sv_turret_postdeath) == 2){
+			Vector expVec;
+			expVec.x = RANDOM_FLOAT(pev->origin.x + pev->mins.x * 0.9, pev->origin.x + pev->maxs.x * 0.9);
+			expVec.y = RANDOM_FLOAT(pev->origin.y + pev->mins.y * 0.9, pev->origin.y + pev->maxs.y * 0.9);
+			expVec.z = -m_iOrientation * 30 + RANDOM_FLOAT(pev->origin.z + pev->mins.z * 0.5, pev->origin.z + pev->maxs.z * 0.5);
 
 		
-		UTIL_Explosion(MSG_PVS, expVec, NULL, pev, expVec, 0, 0, 0, g_sModelIndexFireball, RANDOM_LONG(32, 37), 14, TE_EXPLFLAG_NONE, 0.7);
-
+			UTIL_Explosion(MSG_PVS, expVec, NULL, pev, expVec, 0, 0, 0, g_sModelIndexFireball, RANDOM_LONG(32, 37), 14, TE_EXPLFLAG_NONE, 0.7);
+		}
 
 		//EyeOff();
 

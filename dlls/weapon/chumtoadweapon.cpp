@@ -96,7 +96,7 @@ CBaseEntity* CChumToadWeapon::pickupWalkerReplaceCheck(void) {
 		}
 		
 		// And tell the generated pickupwalker that its current coords are the ones to use for respawning, regardless
-		// of where it wanders off too.
+		// of where it wanders off too.  (may or may not actually be respawnable)
 		CBaseMonster* tempWalk = generated->GetMonsterPointer();
 		if (tempWalk != NULL) {
 			tempWalk->respawn_origin = pev->origin;
