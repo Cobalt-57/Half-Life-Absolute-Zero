@@ -116,6 +116,9 @@ EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(forceAllowServersideTextureSo
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(viewModelPrintouts)
 EASY_CVAR_EXTERN(cl_gaussfollowattachment)
 EASY_CVAR_EXTERN_DEBUGONLY(sparksPlayerCrossbowMulti)
+EASY_CVAR_EXTERN(cl_mp5_evil_skip)
+
+
 
 //MODDD - from in_camera.cpp 
 extern "C"
@@ -1101,6 +1104,10 @@ void EV_FireShotGunSingle(event_args_t* args)
 //	   SHOTGUN END
 //======================
 
+
+// Var from the mp5, used in the 'ancient SDK'.
+float m_flNextAnimTime;
+
 //======================
 //	    MP5 START
 //======================
@@ -1134,9 +1141,33 @@ void EV_FireMP5(event_args_t* args)
 		// Add muzzle flash to current weapon model
 		EV_MuzzleFlash();
 
-		//MODDD - the fire anim is now picked by the server for more control on that end and sent here as that, instead of being randomized here.
-		//gEngfuncs.pEventAPI->EV_WeaponAnimation( MP5_FIRE1 + gEngfuncs.pfnRandomLong(0,2), 2 );
-		gEngfuncs.pEventAPI->EV_WeaponAnimation(MP5_FIRE1 + fireAnim, 2);
+
+		
+		if(EASY_CVAR_GET(cl_mp5_evil_skip) != 1){
+			// NORMAL WAY
+			//MODDD - the fire anim is now picked by the client/server with a shared float for more control on that end and sent here
+			// as that, instead of being randomized here.
+			//gEngfuncs.pEventAPI->EV_WeaponAnimation( MP5_FIRE1 + gEngfuncs.pfnRandomLong(0,2), 2 );
+			gEngfuncs.pEventAPI->EV_WeaponAnimation(MP5_FIRE1 + fireAnim, 2);
+
+		}else{
+			// EVIL SKIP.
+			if (m_flNextAnimTime < gpGlobals->time)
+			{
+				// old evil way of playing the animation updated to use the events system to meld with this codebase better.
+				//SendWeaponAnim( MP5_FIRE1 + random thing in 0,2);
+				gEngfuncs.pEventAPI->EV_WeaponAnimation(MP5_FIRE1 + fireAnim, 2);
+
+				// ALSO.  Delay changed a little for a better chance of skipping one in two firing frames, instead of two in three.
+				//m_flNextAnimTime = gpGlobals->time + 0.2;
+				m_flNextAnimTime = gpGlobals->time + 0.17;
+			}
+		}
+
+
+
+
+
 
 		//MODDD - don't allow very low values anymore, kind of odd when the point is recoil to ever be given those.
 		// ... on CVar setting that is.
@@ -1638,6 +1669,12 @@ void EV_FireGauss(event_args_t* args)
 			gEngfuncs.pEfxAPI->R_BeamPoints(vecSrc, tr.endpos, m_iBeam, beamLife, beamWidth, 0.0, beamBrightness, 0, 0, 0, beamColor_r, beamColor_g, beamColor_b);
 		}
 
+		//MODDD
+		if (UTIL_PointContents(tr.endpos) == CONTENTS_SKY) {
+			// If we hit the sky, HALT!
+			// Just end.  No reflecting off of that, no persistent glow, no sparks.  None of that makes sense.
+			break;
+		}
 
 
 
@@ -1716,6 +1753,7 @@ void EV_FireGauss(event_args_t* args)
 
 				// tunnel
 				EV_HLDM_DecalGunshot(&tr, BULLET_MONSTER_12MM);
+
 
 #if DISABLE_GAUSS_GLOW != 1
 				gEngfuncs.pEfxAPI->R_TempSprite(tr.endpos, vec3_origin, 1.0, m_iGlow, kRenderGlow, kRenderFxNoDissipation, glowEffectOpacity, 6.0, FTENT_FADEOUT);
@@ -2269,11 +2307,13 @@ void EV_EgonFire(event_args_t* args)
 
 
 	if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(egonEffectsMode) == 3) {
-		//only the narrow beam gets it.
-		hasSpiralBeam = (iFireMode == FIRE_NARROW);
+		// only the narrow beam gets it.
+		//hasSpiralBeam = (iFireMode == FIRE_NARROW);
+		// or... not?  oooookay
+		hasSpiralBeam = TRUE;
 	}
 	else {
-		//otherwise, alsways has it.
+		// otherwise, alsways has it.
 		hasSpiralBeam = TRUE;
 	}
 
@@ -2392,15 +2432,28 @@ void EV_EgonFire(event_args_t* args)
 				b = b * (1 / 255.0f);
 
 
+				
+				if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(egonEffectsMode) == 3 && iFireMode == FIRE_WIDE){
+					// less noticeable, I guess?
+					if (hasSpiralBeam) {
+						//spiral purple beam.
+						pBeam = gEngfuncs.pEfxAPI->R_BeamEntPoint(idx | 0x1000, tr.endpos, iBeamModelIndex, 99999, 3.2, 0.12, 0.8, 90, 0, 0, r, g, b);
 
-				if (hasSpiralBeam) {
-					//spiral purple beam.
-					pBeam = gEngfuncs.pEfxAPI->R_BeamEntPoint(idx | 0x1000, tr.endpos, iBeamModelIndex, 99999, 3.5, 0.2, 0.7, 55, 0, 0, r, g, b);
+						//easyPrintLine("EGONEVENT3 %d", pBeam != 0 );
+						if (pBeam)
+							pBeam->flags |= (FBEAM_SINENOISE);
 
-					//easyPrintLine("EGONEVENT3 %d", pBeam != 0 );
-					if (pBeam)
-						pBeam->flags |= (FBEAM_SINENOISE);
+					}
+				}else{
+					if (hasSpiralBeam) {
+						//spiral purple beam.
+						pBeam = gEngfuncs.pEfxAPI->R_BeamEntPoint(idx | 0x1000, tr.endpos, iBeamModelIndex, 99999, 3.5, 0.2, 0.7, 55, 0, 0, r, g, b);
 
+						//easyPrintLine("EGONEVENT3 %d", pBeam != 0 );
+						if (pBeam)
+							pBeam->flags |= (FBEAM_SINENOISE);
+
+					}
 				}
 
 
@@ -2420,7 +2473,7 @@ void EV_EgonFire(event_args_t* args)
 				if(iFireMode == FIRE_NARROW){
 
 					const float life = 99999;
-					const float width = 5.0;
+					const float width = 4.2;   // was 4.5
 					const float amplitude = 0.08;
 					const float brightness = 0.7;
 					const float speed = 25;
@@ -2439,15 +2492,15 @@ void EV_EgonFire(event_args_t* args)
 					// WIDE
 
 					const float life = 99999;
-					const float width = 5.0;
-					const float amplitude = 0.08;
-					const float brightness = 0.9;
-					const float speed = 25;
+					const float width = 4.8;
+					const float amplitude = 0.06;
+					const float brightness = 0.85;
+					const float speed = 40;
 					const float startframe = 0;
 					const float framerate = 0;
 					float t_r = 0.2f;
-					float t_g = 0.6f;
-					float t_b = 0.8f;
+					float t_g = 0.5f;
+					float t_b = 0.85f;
 
 					//straight purple beam.
 					pBeam2 = gEngfuncs.pEfxAPI->R_BeamEntPoint(idx | 0x1000, tr.endpos, iBeamModelIndex, life, width, amplitude, brightness, speed, startframe, framerate, t_r, t_g, t_b);

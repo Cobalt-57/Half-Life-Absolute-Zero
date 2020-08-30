@@ -39,6 +39,7 @@ class CEgon : public CBasePlayerWeapon
 {
 public:
 	BOOL effectsExist;;
+	int fireStatePrev;
 	Vector recentFireDirection;
 	Vector recentHitPlaneNormal;
 

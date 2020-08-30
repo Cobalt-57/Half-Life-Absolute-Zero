@@ -1897,7 +1897,7 @@ Schedule_t *CPantherEye::GetSchedule ( void )
 					return GetScheduleOfType( SCHED_PANTHEREYE_CHASE_ENEMY );
 				}
 			}
-			else  
+			else
 			{
 				// we can see the enemy
 				if ( HasConditions(bits_COND_CAN_RANGE_ATTACK1) )

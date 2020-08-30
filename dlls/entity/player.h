@@ -416,7 +416,6 @@ public:
 #endif
 
 
-
 	float recentlySaidBattery;
 
 	//void Think(void);
@@ -477,6 +476,8 @@ public:
 	float lastBlockDamageAttemptReceived;
 	float recentRevivedTime;
 
+	BOOL alreadySentSatchelOutOfAmmoNotice;
+
 	
 	//MODDD - TODO.  Keep in synch with the client.  That's gonna be fun.
 	// How about a message to set each one at startup/spawn, and another
@@ -487,6 +488,8 @@ public:
 	// Yes, we crazy.
 	// Looking like this is getting scrapped though
 	//int chumToadSkinMem[CHUMTOAD_SKIN_MEM_MAX];
+
+
 
 
 

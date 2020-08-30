@@ -7312,11 +7312,48 @@ void DecalGunshot( TraceResult *pTrace, int iBulletType )
 			break;
 		}
 
-		//MODDD
-		UTIL_GunshotDecalTraceForceDefault( pTrace, DamageDecal( pEntity, DMG_BULLET ) );
+		//MODDD - what was this supposed to do again
+		//UTIL_GunshotDecalTraceForceDefault( pTrace, DamageDecal( pEntity, DMG_BULLET ) );
 
 	}
 }
+
+//MODDD - repurposed 'DecalGunshot' above to replace bullethit decals (DECAL_GUNSHOT1 through 4)
+// with scorch marks instead.  If the entity hit chooses its own decal's that are different, those
+// will still be used instead.   Unknown if scorch marks should always replace even that.
+// If unknown what iBulletType to use, just use DMG_CLUB, 0.
+// islave did that through calling DecalGunshot with BULLET_PLAYER_CROWBAR for bullettype.
+void DecalSafeScorchMark(TraceResult *pTrace, int bitsDamageType, int bitsDamageTypeMod){
+	if (!UTIL_IsValidEntity(pTrace->pHit)) {
+		return;
+	}
+
+	if ( VARS(pTrace->pHit)->solid == SOLID_BSP || VARS(pTrace->pHit)->movetype == MOVETYPE_PUSHSTEP )
+	{
+		CBaseEntity *pEntity = NULL;
+		// Decal the wall with a gunshot
+		if ( !FNullEnt(pTrace->pHit) )
+			pEntity = CBaseEntity::Instance(pTrace->pHit);
+		
+		//UTIL_DecalTrace( pTrace, DamageDecal( pEntity, DMG_CLUB ) );
+		int decalFromEnt = DamageDecal(pEntity, bitsDamageType, bitsDamageTypeMod);
+
+		if(decalFromEnt >= DECAL_GUNSHOT1 && decalFromEnt <= DECAL_GUNSHOT5){
+			// ok, replace it.
+			int newDecal = DECAL_SMALLSCORCH1 + RANDOM_LONG(0, 2);
+			UTIL_DecalTrace( pTrace, newDecal );
+		}else{
+			// nope, use that.
+			UTIL_DecalTrace( pTrace, decalFromEnt );
+		}
+
+		//MODDD - ???
+		//UTIL_GunshotDecalTraceForceDefault( pTrace, DamageDecal( pEntity, DMG_BULLET ) );
+	}
+}
+
+
+
 
 
 //

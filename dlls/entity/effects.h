@@ -66,9 +66,10 @@ public:
 
 	void Expand( float scaleSpeed, float fadeSpeed );
 	//MODDD - new
+	void ExpandPreserveEffects(float scaleSpeed, float fadeSpeed);
 	void Expand_TimeTarget( float arg_targetScale, float arg_duration );
 	void ExpandAnimate( float scaleSpeed, float fadeSpeed );
-	
+	void ExpandAnimatePreserveEffects(float scaleSpeed, float fadeSpeed);
 
 	//MODDD - new
 	void AnimationScaleFadeIn_TimeTarget(float arg_startScale, float arg_targetScale, float arg_targetOpacity, float arg_duration );

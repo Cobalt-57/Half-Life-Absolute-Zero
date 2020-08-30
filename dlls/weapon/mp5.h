@@ -29,6 +29,10 @@ enum mp5_e
 
 class CMP5 : public CBasePlayerWeapon
 {
+private:
+	unsigned short m_usMP5;
+	unsigned short m_usMP52;
+
 public:
 	//MODDD
 	void customAttachToPlayer(CBasePlayer* pPlayer);
@@ -48,7 +52,8 @@ public:
 
 	void Reload(void);
 	void WeaponIdle(void);
-	float m_flNextAnimTime;
+	//MODDD - UNUSED VAR, removed.
+	//float m_flNextAnimTime;
 	int m_iShell;
 
 	virtual BOOL UseDecrement(void)
@@ -60,9 +65,6 @@ public:
 #endif
 	}
 
-private:
-	unsigned short m_usMP5;
-	unsigned short m_usMP52;
 };
 
 

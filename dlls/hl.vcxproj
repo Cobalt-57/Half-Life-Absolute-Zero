@@ -1045,6 +1045,7 @@ copy ".\$(configuration)\hl.pdb" "C:\Program Files (x86)\Valve\Half-Life NGHLv3\
     <ClInclude Include="entity\animating.h" />
     <ClInclude Include="entity\barney.h" />
     <ClInclude Include="entity\gib.h" />
+    <ClInclude Include="entity\hgrunt.h" />
     <ClInclude Include="entity\scientist.h" />
     <ClInclude Include="gamerules_teamplay.h" />
     <ClInclude Include="monstersavestate.h" />

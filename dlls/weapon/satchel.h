@@ -34,7 +34,6 @@ class CSatchel : public CBasePlayerWeapon
 {
 public:
 
-	BOOL alreadySentOutOfAmmoNotice;
 	BOOL sentOutOfAmmoHolster;
 
 

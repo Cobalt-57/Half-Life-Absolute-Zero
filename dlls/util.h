@@ -951,6 +951,9 @@ extern int DamageDecal( CBaseEntity *pEntity, int bitsDamageType, int bitsDamage
 
 extern void DecalGunshot( TraceResult *pTrace, int iBulletType );
 
+extern void DecalSafeScorchMark(TraceResult* pTrace, int bitsDamageType, int bitsDamageTypeMod);
+
+
 extern void EjectBrass (const Vector &vecOrigin, const Vector &vecVelocity, float rotation, int model, int soundtype );
 //MODDD - the implementation got canned, so why wasn't this too?
 //extern void ExplodeModel( const Vector &vecOrigin, float speed, int model, int count );

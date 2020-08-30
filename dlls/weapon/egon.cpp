@@ -32,6 +32,8 @@
 #include "customentity.h"
 #include "gamerules.h"
 
+#include "decals.h"
+
 
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelay)
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelaycustom)
@@ -39,6 +41,8 @@ EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteclip)
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteammo)
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(egonEffectsMode);
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(egonHitCloud);
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(egonRadiusDamageMode)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(egonFireRateMode)
 
 
 
@@ -341,7 +345,6 @@ void CEgon::Attack( void )
 				m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 0.25;
 				PlayEmptySound( );
 
-
 				switch ( m_fInAttack )
 				{
 				case FIRE_NARROW:
@@ -543,6 +546,7 @@ CEgon::CEgon(void){
 
 	fireExceptionPrev = FALSE;
 	fireExceptionStartTime = -1;
+	fireStatePrev = -1;
 
 }//END OF CEgon constructor
 
@@ -647,7 +651,22 @@ void CEgon::ItemPreFrame( void ){
 
 
 
+
 void CEgon::ItemPostFrame(void){
+
+
+	/*
+	if (!m_pPlayer->m_bHolstering) {
+	// If the player is putting the weapon away, don't do this!
+	UpdateHitCloud();
+	}
+	*/
+
+	CBasePlayerWeapon::ItemPostFrame();
+}
+
+
+void CEgon::ItemPostFrameThink(void){
 
 	BOOL sendFidgetOnOff = TRUE;
 
@@ -657,6 +676,50 @@ void CEgon::ItemPostFrame(void){
 	BOOL fireException = (m_fireState == FIRE_CHARGE && !(m_chargeReady & 32) && HasAmmo());
 
 	//BOOL fireException = FALSE;
+
+
+
+
+	BOOL forceIdle = FALSE;
+
+	if(holdingPrimary && holdingSecondary){
+		// FUCK THIS
+		if(!fireException &&
+			(
+			(m_fireState != FIRE_OFF) ||
+				(fireExceptionPrev) ||
+				m_pBeam != NULL
+				)   // dear god I'm tired of this shit
+			){
+			//easyForcePrintLine("ATTAK END BOTH A");
+			//EndAttack(TRUE);
+
+		}else if(fireException){
+			// USE THAT AMMO
+			//ChangePlayerPrimaryAmmoCount(-1);
+			//m_chargeReady &= ~32;
+			//easyForcePrintLine("ATTAK END BOTH B");
+			//EndAttack(TRUE);
+
+		}
+
+		fireException = FALSE;
+		m_chargeReady &= ~32;
+
+		///WeaponIdle();
+		//return;
+
+		// try me
+		holdingPrimary = FALSE;
+		holdingSecondary = FALSE;
+		forceIdle = TRUE;
+	}
+
+
+
+
+
+	/*
 
 	if(holdingPrimary && holdingSecondary){
 		//m_flTimeWeaponIdle = -1;  ???
@@ -683,7 +746,7 @@ void CEgon::ItemPostFrame(void){
 		//WeaponIdle();
 		//return;   //block!
 	}
-
+	*/
 
 
 	// Keep firing until at least one unit of ammo has been used!
@@ -797,26 +860,41 @@ void CEgon::ItemPostFrame(void){
 
 
 	// PARANOIA
-	if(fireExceptionStartTime != -1 && gpGlobals->time - 5 > fireExceptionStartTime){
+	if(fireExceptionStartTime != -1 && gpGlobals->time - 0.9 > fireExceptionStartTime){
 		fireExceptionStartTime = -1;
 		fireException = FALSE;
 		m_chargeReady &= ~32;
 	}
 
+
+
+	if(m_fireState == FIRE_OFF && fireStatePrev != FIRE_OFF){
+		// Fixes the issue from the beam failing to call EndAttack in clientside while paused.
+		// May be called at unnecessary times but doesn't look like an issue?
+		EndAttack();
+	}
+
+	fireStatePrev = m_fireState;
+
+	int daRecentFireMode = getchargeReady();
+
 	// IF fireException is currently off but was on the previous frame, that also means the attack needs to end.
-	if ( (!holdingPrimary && !holdingSecondary) && 
+	//if ( (!holdingPrimary && !holdingSecondary) && 
+	if( (  (!holdingPrimary && getchargeReady() == 5 + 1) || (!holdingSecondary && getchargeReady() == 5 + 2)  ) &&
 		(!fireException &&
 			(
 				(m_fireState != FIRE_OFF) ||
 				(fireExceptionPrev) ||
-				m_pBeam != NULL
+				m_pBeam != NULL   // || effectsExist   this changes nothing
 			)   // dear god I'm tired of this shit
 		)
 	){
 		//easyPrintLine("END O ATTACK!");
 		EndAttack();
+		fireStatePrev = m_fireState;
 
 		//this is a cease-fire by release.  How to act?
+
 
 		switch ( m_fInAttack )
 		{
@@ -839,25 +917,13 @@ void CEgon::ItemPostFrame(void){
 
 
 
-
-	CBasePlayerWeapon::ItemPostFrame();
-}
-
-
-
-
-void CEgon::ItemPostFrameThink(void){
-
-
-	/*
-	if (!m_pPlayer->m_bHolstering) {
-		// If the player is putting the weapon away, don't do this!
-		UpdateHitCloud();
+	if(forceIdle){
+		WeaponIdle();
+	}else{
+		CBasePlayerWeapon::ItemPostFrameThink();
 	}
-	*/
-
-	CBasePlayerWeapon::ItemPostFrameThink();
 }
+
 
 
 void CEgon::UpdateHitCloud(void){
@@ -895,7 +961,7 @@ void CEgon::UpdateHitCloud(void){
 }
 
 
-
+float nextScorchInterval;
 
 void CEgon::Fire( const Vector &vecOrigSrc, const Vector &vecDir )
 {
@@ -928,7 +994,18 @@ void CEgon::Fire( const Vector &vecOrigSrc, const Vector &vecDir )
 	if (pEntity == NULL)
 		return;
 
+	//MODDD - TODO.  Should this be done in ev_hldm? unsure.
+	if(gpGlobals->time >= nextScorchInterval){
+		if(m_fInAttack == FIRE_NARROW){
+			nextScorchInterval = gpGlobals->time + 0.31;
+			UTIL_DecalTrace(&tr, DECAL_SMALLSCORCH1 + RANDOM_LONG(0, 2) );
+		}else{
+			nextScorchInterval = gpGlobals->time + 0.24;
+			UTIL_DecalTrace(&tr, DECAL_SCORCH1 + RANDOM_LONG(0, 1) );
+		}
+	}
 
+	
 
 	//MODDD - ...  for what purpose
 	/*
@@ -968,13 +1045,21 @@ void CEgon::Fire( const Vector &vecOrigSrc, const Vector &vecDir )
 			}
 			ApplyMultiDamage(m_pPlayer->pev, m_pPlayer->pev);
 
-			if ( IsMultiplayer() )
+
+			
+
+			float egonFireRateMode = EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(egonFireRateMode);
+			if ( egonFireRateMode == 2 || (egonFireRateMode == 0 && IsMultiplayer()) )
+			//if ( IsMultiplayer() )
 			{
 				// multiplayer uses 1 ammo every 1/10th second
+				//MODDD - seems like a mistake, shouldn't run out faster in singleplayer, especially
+				// not as fast as singleplayer's wide-fire.  How about 0.332?
+				// Little high, try 0.22?
 				if ( gpGlobals->time >= m_flAmmoUseTime )
 				{
 					UseAmmo( 1 );
-					m_flAmmoUseTime = gpGlobals->time + 0.1;
+					m_flAmmoUseTime = gpGlobals->time + 0.22; //0.1;
 				}
 			}
 			else
@@ -1007,16 +1092,24 @@ void CEgon::Fire( const Vector &vecOrigSrc, const Vector &vecDir )
 			}
 			ApplyMultiDamage(m_pPlayer->pev, m_pPlayer->pev);
 
-			if ( IsMultiplayer() )
-			{
+			float egonRadiusDamageMode = EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(egonRadiusDamageMode);
+			if (egonRadiusDamageMode == 2 || (egonRadiusDamageMode == 0 && IsMultiplayer())) {
+				// multiplayer mode (yes)
 				// radius damage a little more potent in multiplayer.
+				//MODDD - as-is comment.  I think you mean, 'radius damage is a little more EXISTENT in multiplayer'.  Yeah...?  What else is there?
 				::RadiusDamage( tr.vecEndPos, pev, m_pPlayer->pev, gSkillData.plrDmgEgonWide/4, 128, CLASS_NONE, DMG_ENERGYBEAM | DMG_BLAST | DMG_ALWAYSGIB );
+			}
+			else{
+				// singleplayer mode?  nothing here.
 			}
 
 			if ( !m_pPlayer->IsAlive() )
 				return;
 
-			if ( IsMultiplayer() )
+
+
+			float egonFireRateMode = EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(egonFireRateMode);
+			if ( egonFireRateMode == 2 || (egonFireRateMode == 0 && IsMultiplayer()) )
 			{
 				//multiplayer uses 5 ammo/second
 				if ( gpGlobals->time >= m_flAmmoUseTime )
@@ -1474,25 +1567,29 @@ void CEgon::DestroyEffect( void )
 		if ( m_fInAttack == FIRE_WIDE ){
 			//MODDD - move away from the surface a bit to avoid clipping through
 			// the nearby object as it expands
-			m_pSprite->pev->origin =
-				m_pSprite->pev->origin +
-				recentFireDirection * -50 +
-				recentHitPlaneNormal * 12;
+			
+			// NO NEED FOR THIS NUDGE!  The "m_pSprite->Expand(...)" call was resetting the renderfx,
+			// want glow but it forced it to add.  New variant created that keeps it as it is instead.
+			// Now, it won't try
+			//m_pSprite->pev->origin =
+			//	m_pSprite->pev->origin +
+			//	recentFireDirection * -50 +
+			//	recentHitPlaneNormal * 12;
 			
 			//MODDD - see multiples
-			m_pSprite->ExpandAnimate( 10 * 0.45, 500 * 0.88 );
+			m_pSprite->ExpandAnimatePreserveEffects( 10 * 0.45, 500 * 0.88 );
 
 		}else{
 			//MODDD - now, even narrow fire can use the expand-out effect to remove its hitcloud.
 			// However it happens more quickly.
 
-			m_pSprite->pev->origin =
-				m_pSprite->pev->origin +
-				recentFireDirection * -35 +
-				recentHitPlaneNormal * 8;
+			//m_pSprite->pev->origin =
+			//	m_pSprite->pev->origin +
+			//	recentFireDirection * -35 +
+			//	recentHitPlaneNormal * 8;
 
 			//MODDD - reduced further.
-			m_pSprite->ExpandAnimate( 10 * 0.28, 500 * 1.42 );
+			m_pSprite->ExpandAnimatePreserveEffects( 10 * 0.28, 500 * 1.42 );
 
 
 			//UTIL_Remove( m_pSprite );
@@ -1525,7 +1622,7 @@ void CEgon::WeaponIdle( void )
 	
 	
 	if(getchargeReady() == 5 + -2){
-		//NO, the point is to release, so this is OK.
+		// NO, the point is to release, so this is OK.
 		setchargeReady(5 + -4);
 		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + randomIdleAnimationDelay();
 		//return;

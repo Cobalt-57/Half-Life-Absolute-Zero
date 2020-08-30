@@ -546,6 +546,8 @@ IMPLEMENT_MESSAGE(UpdClientN){
 	int argPRE = READ_SHORT();
 	float arg = ((float)(argPRE)) / 100.0f;
 
+	float* poopee = aryCVarHash[argID-1];
+
 	*(aryCVarHash[argID]) = arg;
 
 	easyPrintLine("CVAR DEBUG: Client, no-save: found ID %d. Set CVar %s to %.2f", argID, aryCVarHashName[argID], arg);

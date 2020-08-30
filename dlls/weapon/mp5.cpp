@@ -43,7 +43,7 @@ EASY_CVAR_EXTERN_DEBUGONLY(mp5GrenadeInheritsPlayerVelocity)
 
 
 //MODDD
-void CMP5::customAttachToPlayer(CBasePlayer *pPlayer ){
+void CMP5::customAttachToPlayer(CBasePlayer* pPlayer){
 	m_pPlayer->SetSuitUpdate("!HEV_ASSAULT", FALSE, SUIT_NEXT_IN_30MIN, 6.9f);
 }
 
@@ -202,10 +202,13 @@ void CMP5::PrimaryAttack()
 
 
 	//MODDD - pre-determine the 
-	int fireAnimChoice = g_engfuncs.pfnRandomLong(0,2);
+	int fireAnimChoice = UTIL_SharedRandomLong(m_pPlayer->random_seed, 0, 2);
+
 
 	PLAYBACK_EVENT_FULL( flags, m_pPlayer->edict(), m_usMP5, 0.0, (float *)&g_vecZero, (float *)&g_vecZero, vecDir.x, vecDir.y, fireAnimChoice, 0, 0, 0 );
-	
+
+
+
 	//MODDD - how long is the picked anim?
 	//uhhhh, oops.  They all take 7/10'ths of a second.  Well, that was needless.
 	switch(fireAnimChoice){
@@ -222,11 +225,6 @@ void CMP5::PrimaryAttack()
 
 
 	
-	//
-
-
-
-
 	if (!m_iClip && PlayerPrimaryAmmoCount() <= 0) {
 		// HEV suit - indicate out of ammo condition
 		// NOTE that this noticing the player is out of ammo after firing, being out of ammo at the moment
@@ -383,8 +381,6 @@ void CMP5::WeaponIdle( void )
 
 	SendWeaponAnim( iAnim );
 
-	//MODDD - why was this random?
-	//m_flTimeWeaponIdle = UTIL_SharedRandomFloat( m_pPlayer->random_seed, 10, 15 ); // how long till we do this again.
 }
 
 

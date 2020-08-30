@@ -84,6 +84,9 @@ BOOL CSquadMonster::OccupySlot( int iDesiredSlots )
 	int iMask;
 	int iSquadSlots;
 
+	//TEST!!! Do anything
+	//return TRUE;
+
 	if ( !InSquad() )
 	{
 		return TRUE;

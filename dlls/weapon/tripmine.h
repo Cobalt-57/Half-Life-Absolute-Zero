@@ -82,6 +82,28 @@ private:
 #ifndef CLIENT_DLL
 class CTripmineGrenade : public CGrenade
 {
+
+	float m_flPowerUp;
+	Vector m_vecDir;
+	Vector m_vecEnd;
+	float m_flBeamLength;
+
+	EHANDLE m_hOwner;
+	CBeam* m_pBeam;
+	Vector m_posOwner;
+	Vector m_angleOwner;
+	edict_t* m_pRealOwner;// tracelines don't hit PEV->OWNER, which means a player couldn't detonate his own trip mine, so we store the owner here.
+
+
+
+	void SetObjectCollisionBox( void )
+	{
+		//MODDD - will this make me more likely to get hit by bullets?
+		pev->absmin = pev->origin + Vector(-12, -12, -12);
+		pev->absmax = pev->origin + Vector(12, 12, 12);
+		//CGrenade::SetObjectCollisionBox();
+	}
+
 	//MODDD - added.
 	void Activate(void);
 
@@ -94,17 +116,17 @@ class CTripmineGrenade : public CGrenade
 	static	TYPEDESCRIPTION m_SaveData[];
 
 	GENERATE_TRACEATTACK_PROTOTYPE
-		GENERATE_TAKEDAMAGE_PROTOTYPE
+	GENERATE_TAKEDAMAGE_PROTOTYPE
 
-		void EXPORT WarningThink(void);
+	void EXPORT WarningThink(void);
 	void EXPORT PowerupThink(void);
 	void EXPORT BeamBreakThink(void);
 	void EXPORT DelayDeathThink(void);
 
 	GENERATE_KILLED_PROTOTYPE
 
-		//Separate from the "Activate" built-in method for all entities(?). This is a quick way to turn the mine on.
-		void ActivateMine(BOOL argPlayActivateSound);
+	//Separate from the "Activate" built-in method for all entities(?). This is a quick way to turn the mine on.
+	void ActivateMine(BOOL argPlayActivateSound);
 
 	void MakeBeam(void);
 	void KillBeam(void);
@@ -112,17 +134,6 @@ class CTripmineGrenade : public CGrenade
 	float massInfluence(void);
 	int GetProjectileType(void);
 
-
-	float	m_flPowerUp;
-	Vector		m_vecDir;
-	Vector		m_vecEnd;
-	float	m_flBeamLength;
-
-	EHANDLE		m_hOwner;
-	CBeam* m_pBeam;
-	Vector		m_posOwner;
-	Vector		m_angleOwner;
-	edict_t* m_pRealOwner;// tracelines don't hit PEV->OWNER, which means a player couldn't detonate his own trip mine, so we store the owner here.
 };
 #endif
 

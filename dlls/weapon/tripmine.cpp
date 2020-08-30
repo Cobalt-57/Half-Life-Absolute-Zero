@@ -557,7 +557,16 @@ void CTripmine::PrimaryAttack( void )
 
 	PLAYBACK_EVENT_FULL( flags, m_pPlayer->edict(), m_usTripFire, 0.0, (float *)&g_vecZero, (float *)&g_vecZero, 0.0, 0.0, 0, 0, 0, 0 );
 
-	if (tr.flFraction < 1.0)
+
+	//MODDD - these traces don't even work clientside (dummies are given that have flFraction forced to 1.0),
+	//        why bother compiling for the client anyway?
+#ifndef CL_DLL
+	//MODDD
+	if (UTIL_PointContents(tr.vecEndPos) == CONTENTS_SKY) {
+		// If we hit the sky, HALT!  Don't put a tripmine on me.
+		// ...wait, how'd you reach this?  CHEATERRRRRRrrrrrrrrrrrr
+		
+	}else if (tr.flFraction < 1.0)
 	{
 		//success.  play animation.
 		m_flReleaseThrow = 0;
@@ -597,6 +606,7 @@ void CTripmine::PrimaryAttack( void )
 	{
 
 	}
+#endif
 	
 	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelay) == 0){
 		// see "ItemPreFrame" for assignment.  "m_fireState" relies on the "tripmineAnimWaitsForFinish" cvar.
@@ -630,7 +640,7 @@ void CTripmine::SecondaryAttack(void)
 			m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 100.0 / 30.0;
 		//}
 		
-		SetAttackDelays(m_flTimeWeaponIdle);
+		//SetAttackDelays(m_flTimeWeaponIdle);
 		m_flTimeWeaponIdle += randomIdleAnimationDelay();
 		SendWeaponAnim(iAnim);
 	}//CVar check

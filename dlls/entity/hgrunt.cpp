@@ -36,6 +36,7 @@
 
 
 #include "extdll.h"
+#include "hgrunt.h"
 #include "plane.h"
 #include "util.h"
 #include "cbase.h"
@@ -52,6 +53,7 @@
 // temporary for debugging.
 #include "player.h"
 #include "util_debugdraw.h"
+
 
 EASY_CVAR_EXTERN_DEBUGONLY(hgruntBrassEjectForwardOffset)
 EASY_CVAR_EXTERN_DEBUGONLY(gruntsCanHaveMP5Grenade)
@@ -85,6 +87,21 @@ EASY_CVAR_EXTERN_DEBUGONLY(monsterSpawnPrintout)
 // monster-specific DEFINE's
 //=========================================================
 
+
+// DEBUG FEATURE.  Good for testing friendly fire or grenade-tossing without the annoyance of the hgrunt moving all over the place.
+#define HGRUNT_NOMOVE 0
+
+
+
+
+
+
+///////////////////////////////////////////////////////////////////////
+
+
+
+
+
 //MODDD - new constant.  Only use one head.
 #define FORCE_ONE_HEAD 1
 //MODDD - new constant.  Force spawning with MP5.
@@ -109,11 +126,12 @@ EASY_CVAR_EXTERN_DEBUGONLY(monsterSpawnPrintout)
 #define HGRUNT_MINIMUM_HEADSHOT_DAMAGE	15 // must do at least this much damage in one shot to head to score a headshot kill
 
 //MODDD - turned up a bit.  Was 0.35.
-#define HGRUNT_SENTENCE_VOLUME			(float)0.45 // volume of grunt sentences
+#define HGRUNT_SENTENCE_VOLUME			(float)0.48 // volume of grunt sentences
 
 //MODDD - unused as-is macro, whoops.
 //#define GRUNT_VOL						0.35		// volume of grunt sounds
-#define GRUNT_ATTN						ATTN_NORM	// attenutation of grunt sentences
+//MODDD - also, attn reduced a little to carry better with distance.  Video game-y.
+#define GRUNT_ATTN						ATTN_NORM - 0.07	// attenutation of grunt sentences
 
 
 // HGrunt weapon bits
@@ -267,197 +285,7 @@ enum
 };
 
 
-
-class CHGrunt : public CSquadMonster
-{
-public:
-
-	static const char* pGruntSentences[];
-
-
-	// checking the feasibility of a grenade toss is kind of costly, so we do it every couple of seconds,
-	// not every server frame.
-	float m_flNextGrenadeCheck;
-	float m_flNextPainTime;
-	float m_flLastEnemySightTime;
-
-	Vector	m_vecTossVelocity;
-	BOOL m_fThrowGrenade;
-	BOOL m_fStanding;
-	BOOL m_fFirstEncounter;// only put on the handsign show in the squad's first encounter.
-	int	m_cClipSize;
-	int m_voicePitch;
-
-	int	m_iBrassShell;
-	int	m_iShotgunShell;
-
-	int	m_iSentence;
-
-	int runAndGunSequenceID;
-	int tempStrafeAct;
-
-	int strafeMode;
-	int idealStrafeMode;
-	//-1 = not strafing.
-	//0 = strafe left.
-	//1 = strafe left + fire.
-	//2 = strafe right.
-	//3 = strafe right + fire.
-
-	BOOL hgruntMoveAndShootDotProductPass;
-	
-	float strafeFailTime;
-	float runAndGunFailTime;
-
-	Vector vecPrevOrigin;
-	float nextPositionCheckTime;
-
-	BOOL runAndGun;
-	Vector lastHeadHit;
-
-	float lastStrafeCoverCheck;
-
-	BOOL missingHeadPossible;
-	BOOL friendlyFireStrafeBlock;
-	BOOL strafeCanFire;
-
-
-
-	CHGrunt(void);
-
-	void EXPORT tempStrafeTouch(CBaseEntity *pOther);
-	void EXPORT hgruntUse( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value );
-	
-	int getClipSize(void);
-
-	void updateStrafeStatus(void);
-	void onNewRouteNode(void);
-
-	BOOL outOfAmmoStrafeFireBlock(void);
-	BOOL hgruntAllowStrafe(void);
-	BOOL hgruntAllowStrafeFire(void);
-	BOOL getIsStrafeLocked(void);
-	BOOL canDoOpportunisticStrafe(void);
-	float findCoverInDirection(const Vector& arg_vecStart, const float& arg_vecDistanceCompete, const Vector& arg_inDir, const float& arg_maxDist, Vector* arg_vecDirFeedback);
-	float findCoverInDirection(const Vector& arg_vecStart, const float& arg_vecDistanceCompete, const Vector& arg_inDir, const float& arg_maxDist, Vector* arg_vecDirFeedback, BOOL canTryAlternateDegrees);
-
-	void onAnimationLoop(void);
-
-	void MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, float flInterval );
-
-	//MODDD
-	static const char *pAttackHitSounds[];
-	//MODDD - override here, for testing.
-	void MonsterThink(void);
-	
-	//MODDD - new. See whether a headshot was dealt to the corpse.
-	GENERATE_DEADTAKEDAMAGE_PROTOTYPE
-	
-	GENERATE_KILLED_PROTOTYPE
-
-	BOOL usesAdvancedAnimSystem(void);
-	int tryActivitySubstitute(int activity);
-	int LookupActivityHard(int activity);
-	void MakeIdealYaw( Vector vecTarget );
-	void StartReanimation(void);
-
-	void moveAnimUpdate(void);
-	
-	//MODDD - NEW.  Overriding 
-	virtual void StartMonster(void);
-	
-	void Spawn( void );
-	void Precache( void );
-	void SetYawSpeed ( void );
-	int  Classify ( void );
-	BOOL isOrganic(void){return !CanUseGermanModel();}
-	Vector EyePosition(void);
-	Vector EyeOffset(void);
-	Vector BodyTarget(const Vector &posSrc);
-	Vector BodyTargetMod(const Vector &posSrc);
-	BOOL getMovementCanAutoTurn(void);
-	
-	BOOL getGermanModelRequirement(void);
-	const char* getGermanModel(void);
-	const char* getNormalModel(void);
-
-	int ISoundMask ( void );
-
-	//MODDD
-	void HandleEventQueueEvent(int arg_eventID);
-
-	void HandleAnimEvent( MonsterEvent_t *pEvent );
-	BOOL FCanCheckAttacks ( void );
-	BOOL CheckMeleeAttack1 ( float flDot, float flDist );
-	BOOL CheckRangeAttack1 ( float flDot, float flDist );
-	BOOL CheckRangeAttack2 ( float flDot, float flDist );
-	void CheckAmmo ( void );
-	void SetActivity ( Activity NewActivity );
-	void StartTask ( Task_t *pTask );
-	void RunTask ( Task_t *pTask );
-	void DeathSound( void );
-	void PainSound( void );
-	void IdleSound ( void );
-	Vector GetGunPosition( void );
-	Vector GetGunPositionAI(void);
-	void Shoot ( void );
-	void Shotgun ( void );
-	void PrescheduleThink ( void );
-	
-	BOOL DetermineGibHeadBlock(void);
-	
-	GENERATE_GIBMONSTER_PROTOTYPE
-
-	void SpeakSentence( void );
-
-	int Save( CSave &save );
-	int Restore( CRestore &restore );
-	static TYPEDESCRIPTION m_SaveData[];
-
-	//MODDD - moved to CBaseMonster and renamed HumanKick to be callable by other monsters.
-	//CBaseEntity	*Kick( void );
-
-	Schedule_t	*GetSchedule( void );
-	Schedule_t  *GetScheduleOfType ( int Type );
-
-	//MODDD
-	
-	GENERATE_TRACEATTACK_PROTOTYPE
-	GENERATE_TAKEDAMAGE_PROTOTYPE
-
-	int IRelationship ( CBaseEntity *pTarget );
-
-	//MODDD - new.
-	void SetObjectCollisionBox( void )
-	{
-		//easyForcePrintLine("I FALLLLLLLLLLLL %d", pev->deadflag);
-		if(pev->deadflag != DEAD_NO){
-			pev->absmin = pev->origin + Vector(-65, -65, 0);
-			pev->absmax = pev->origin + Vector(65, 65, 72);
-			//pev->absmin = pev->origin + Vector(-4, -4, 0);
-			//pev->absmax = pev->origin + Vector(4, 4, 4);
-		}else{
-			CSquadMonster::SetObjectCollisionBox();
-		}
-	}
-
-	BOOL FOkToSpeak( void );
-	void JustSpoke( void );
-
-	CUSTOM_SCHEDULES;
-
-	//MODDD - see comments below at implementation.
-	//int SquadRecruit( int searchRadius, int maxMembers );
-
-	// OH YOU GREASY LITTLE.  (PlayerUse  uses this to judge whether or not this is worth sending a "touch" to).
-	int ObjectCaps( void ) { return CSquadMonster::ObjectCaps() | FCAP_IMPULSE_USE; }
-
-	BOOL canResetBlend0(void);
-	BOOL onResetBlend0(void);
-	void checkHeadGore(void);
-	void checkHeadGore(int iGib );
-
-};
+//MODDD - CHGrunt class moved to hgrunt.h
 
 
 #if REMOVE_ORIGINAL_NAMES != 1
@@ -842,6 +670,11 @@ void CHGrunt::PrescheduleThink ( void )
 // this is a bad bug. Friendly machine gun fire avoidance
 // will unecessarily prevent the throwing of a grenade as well.
 //=========================================================
+//MODDD - NOTE.  I doubt the 2nd comment above is true anymore, even in the state the codebase came in.
+// Tested with two hgrunts lined up from the player, unable to move, removed the 'occluded' requirement.
+// One behind could throw grenades over the hgrunt in front.  Friendly fire in a direct path did not affect
+// that, clearly.
+
 BOOL CHGrunt::FCanCheckAttacks ( void )
 {
 	if ( !HasConditions( bits_COND_ENEMY_TOOFAR ) )
@@ -897,6 +730,10 @@ BOOL CHGrunt::CheckRangeAttack1 ( float flDot, float flDist )
 	{
 		TraceResult	tr;
 
+		//MODDD - NOTE.  Only non-players explicitly cause CheckRangeAttack1 to be FALSE if they're too close?
+		// weird.  My guess is to make players unable to force a hgrunt to oscillate between firing and not-firing by
+		// getting close and back.   Although a minimum stay-in-range-attack delay to forbid changes for this reason
+		// would be plenty effective, hassault does that now.    ehhhhh.
 		if ( !m_hEnemy->IsPlayer() && flDist <= 64 )
 		{
 			// kick nonclients, but don't shoot at them.
@@ -923,11 +760,11 @@ BOOL CHGrunt::CheckRangeAttack1 ( float flDot, float flDist )
 //=========================================================
 BOOL CHGrunt::CheckRangeAttack2 ( float flDot, float flDist )
 {
-
 	// enemy, MUST.  be occluded.
-	if (!HasConditions(bits_COND_ENEMY_OCCLUDED)) {
-		return FALSE;
-	}
+	// uhhhh.  says who?
+	//if (!HasConditions(bits_COND_ENEMY_OCCLUDED)) {
+	//	return FALSE;
+	//}
 
 
 	if(EASY_CVAR_GET_DEBUGONLY(hgruntAllowGrenades) == 0){
@@ -964,13 +801,33 @@ BOOL CHGrunt::CheckRangeAttack2 ( float flDot, float flDist )
 		return m_fThrowGrenade;
 	}
 
-	if ( !FBitSet ( m_hEnemy->pev->flags, FL_ONGROUND ) && m_hEnemy->pev->waterlevel == 0 && m_vecEnemyLKP.z > pev->absmax.z  )
+
+	int daMoveType = m_hEnemy->pev->movetype;
+	// oh... they won't try to hit you while noclipped.   uhh. clever, I think.
+
+	// MODDD - wait, so. It's ok to throw a grenade at something that is off the ground, not in water but below you?...     why that exception?
+	// Changing to the FLY check instead of ONGROUND as stated in the as-is comment below anyway.  In fact just check for MOVETYPE_STEP or WALK.
+	//if ( !FBitSet ( m_hEnemy->pev->flags, FL_ONGROUND ) && m_hEnemy->pev->waterlevel == 0 && m_vecEnemyLKP.z > pev->absmax.z  )
+	if ( !(daMoveType == MOVETYPE_STEP || daMoveType == MOVETYPE_WALK) && m_hEnemy->pev->waterlevel == 0  )
 	{
 		//!!!BUGBUG - we should make this check movetype and make sure it isn't FLY? Players who jump a lot are unlikely to
 		// be grenaded.
 		// don't throw grenades at anything that isn't on the ground!
-		m_fThrowGrenade = FALSE;
-		return m_fThrowGrenade;
+
+		// WAIT!  Do a line-trace.  If the enemy is close to the ground, go ahead and anyway
+		Vector adjustedEnemyCenter = m_hEnemy->Center();
+		adjustedEnemyCenter.z = m_hEnemy->pev->origin.z + m_hEnemy->pev->mins.z;
+
+		TraceResult tr;
+		UTIL_TraceLine(adjustedEnemyCenter, adjustedEnemyCenter - Vector(0, 0, 30), ignore_monsters, ENT(m_hEnemy), &tr);
+
+		if(tr.fAllSolid == FALSE && tr.fStartSolid == FALSE && tr.flFraction < 1.0){
+			// hit something?  alright, it's still ok to proceed
+		}else{
+			// Nothing below?  Nevermind, not worth it
+			m_fThrowGrenade = FALSE;
+			return m_fThrowGrenade;
+		}
 	}
 
 	Vector vecTarget;
@@ -994,6 +851,10 @@ BOOL CHGrunt::CheckRangeAttack2 ( float flDot, float flDist )
 	}
 	else
 	{
+		//MODDD D- oooookay. Awkward not to point this out with some sort of comment.
+		// This must be for MP5 grenades, since lacking buth HGRUNT_HANDGRENADE and HGRUNT_GRENADELAUNCHER from pev->weapons would
+		// mean this method ends early.
+
 		// find target
 		// vecTarget = m_hEnemy->BodyTarget( pev->origin );
 		vecTarget = m_vecEnemyLKP + (m_hEnemy->BodyTarget( pev->origin ) - m_hEnemy->pev->origin);
@@ -1005,7 +866,7 @@ BOOL CHGrunt::CheckRangeAttack2 ( float flDot, float flDist )
 	// are any of my squad members near the intended grenade impact area?
 	if ( InSquad() )
 	{
-		if (SquadMemberInRange( vecTarget, 256 ))
+		if (SquadMemberInRange( vecTarget, GRENADE_SAFETY_MINIMUM ))
 		{
 			// crap, I might blow my own guy up. Don't throw a grenade and don't check again for a while.
 			m_flNextGrenadeCheck = gpGlobals->time + 1; // one full second.
@@ -1013,7 +874,7 @@ BOOL CHGrunt::CheckRangeAttack2 ( float flDot, float flDist )
 		}
 	}
 
-	if ( ( vecTarget - pev->origin ).Length2D() <= 256 )
+	if ( ( vecTarget - pev->origin ).Length2D() <= GRENADE_SAFETY_MINIMUM )
 	{
 		// crap, I don't want to blow myself up
 		m_flNextGrenadeCheck = gpGlobals->time + 1; // one full second.
@@ -1045,6 +906,8 @@ BOOL CHGrunt::CheckRangeAttack2 ( float flDot, float flDist )
 	}
 	else
 	{
+		// MP5 grenades.........
+
 		Vector vecToss = VecCheckThrow( pev, GetGunPositionAI(), vecTarget, gSkillData.hgruntGrenadeSpeed, 0.5 );
 
 		if ( vecToss != g_vecZero )
@@ -1069,8 +932,6 @@ BOOL CHGrunt::CheckRangeAttack2 ( float flDot, float flDist )
 
 	return m_fThrowGrenade;
 }
-
-
 
 
 
@@ -2623,7 +2484,7 @@ void CHGrunt::HandleAnimEvent( MonsterEvent_t *pEvent )
 			CGrenade::ShootTimed( pev, GetGunPosition(), m_vecTossVelocity, gSkillData.plrDmgHandGrenade, 3.5 );
 
 			m_fThrowGrenade = FALSE;
-			m_flNextGrenadeCheck = gpGlobals->time + 6;// wait six seconds before even looking again to see if a grenade can be thrown.
+			m_flNextGrenadeCheck = gpGlobals->time + getAIGrenadeCooldown();// wait X seconds before even looking again to see if a grenade can be thrown.
 			// !!!LATER - when in a group, only try to throw grenade if ordered.
 		}
 		break;
@@ -2638,11 +2499,9 @@ void CHGrunt::HandleAnimEvent( MonsterEvent_t *pEvent )
 				UTIL_PlaySound(ENT(pev), CHAN_WEAPON, "weapons/glauncher.wav", 0.8, ATTN_NORM, 0, 100, FALSE);
 				CGrenade::ShootContact( pev, GetGunPosition(), m_vecTossVelocity, gSkillData.plrDmgM203Grenade );
 				m_fThrowGrenade = FALSE;
-				if (g_iSkillLevel == SKILL_HARD){
-					m_flNextGrenadeCheck = gpGlobals->time + RANDOM_FLOAT( 2, 5 );// wait a random amount of time before shooting again
-				}else{
-					m_flNextGrenadeCheck = gpGlobals->time + 6;// wait six seconds before even looking again to see if a grenade can be thrown.
-				}
+
+				m_flNextGrenadeCheck = gpGlobals->time + getAIMP5GrenadeCooldown();
+
 #if FORCE_MP5 == 1
 			}	
 #endif
@@ -3314,6 +3173,11 @@ void CHGrunt::StartTask ( Task_t *pTask )
 	{
 
 	case TASK_GRUNT_CHECK_FIRE:
+
+		if(monsterID == 21){
+			int x = 45;
+		}
+
 		if ( !NoFriendlyFire() )
 		{
 			SetConditions( bits_COND_GRUNT_NOFIRE );
@@ -3807,6 +3671,14 @@ void CHGrunt::RunTask ( Task_t *pTask )
 	case TASK_RANGE_ATTACK1:
 	case TASK_PLAY_SEQUENCE_FACE_ENEMY:
 	{
+
+		//MODDD
+		//if(!HasConditionsEither(bits_COND_CAN_RANGE_ATTACK1)){
+			// stop attacking then!
+		//	TaskFail();
+		//	return;
+		//}
+
 
 		lookAtEnemy_pitch();
 		CSquadMonster::RunTask(pTask);
@@ -4885,8 +4757,6 @@ void CHGrunt::SetActivity ( Activity NewActivity )
 Schedule_t *CHGrunt::GetSchedule( void )
 {
 
-
-
 	if (monsterID == 0 || monsterID == 1) {
 		if (HasConditions(bits_COND_HEAR_SOUND)) {
 			return 0;
@@ -4946,7 +4816,9 @@ Schedule_t *CHGrunt::GetSchedule( void )
 					SENTENCEG_PlayRndSz( ENT(pev), "HG_GREN", HGRUNT_SENTENCE_VOLUME, GRUNT_ATTN, 0, m_voicePitch);
 					JustSpoke();
 				}
+#if HGRUNT_NOMOVE != 1
 				return GetScheduleOfType( SCHED_TAKE_COVER_FROM_BEST_SOUND );
+#endif
 			}
 			/*
 			if (!HasConditions( bits_COND_SEE_ENEMY ) && ( pSound->m_iType & (bits_SOUND_PLAYER | bits_SOUND_COMBAT) ))
@@ -4974,6 +4846,21 @@ Schedule_t *CHGrunt::GetSchedule( void )
 	{
 	case MONSTERSTATE_COMBAT:
 		{
+
+		//TEST!  Very eager to throw grenades
+		/*
+		if ( HasConditions( bits_COND_CAN_RANGE_ATTACK2 ) && OccupySlot( bits_SLOTS_HGRUNT_GRENADE ) )
+		{
+			//!!!KELLY - this grunt is about to throw or fire a grenade at the player. Great place for "fire in the hole"  "frag out" etc
+			if (FOkToSpeak())
+			{
+				SayGrenadeThrow();
+				JustSpoke();
+			}
+			return GetScheduleOfType( SCHED_RANGE_ATTACK2 );
+		}
+		*/
+
 // dead enemy
 			if ( HasConditions( bits_COND_ENEMY_DEAD ) )
 			{
@@ -4990,7 +4877,9 @@ Schedule_t *CHGrunt::GetSchedule( void )
 
 					if ( !IsLeader() )
 					{
+#if HGRUNT_NOMOVE != 1
 						return GetScheduleOfType ( SCHED_TAKE_COVER_FROM_ENEMY );
+#endif
 					}
 					else
 					{
@@ -5023,7 +4912,9 @@ Schedule_t *CHGrunt::GetSchedule( void )
 						}
 						else
 						{
+#if HGRUNT_NOMOVE != 1
 							return GetScheduleOfType ( SCHED_GRUNT_ESTABLISH_LINE_OF_FIRE );
+#endif
 						}
 					}
 				}
@@ -5034,7 +4925,13 @@ Schedule_t *CHGrunt::GetSchedule( void )
 				//!!!KELLY - this individual just realized he's out of bullet ammo.
 				// He's going to try to find cover to run to and reload, but rarely, if
 				// none is available, he'll drop and reload in the open here.
+
+#if HGRUNT_NOMOVE != 1
 				return GetScheduleOfType ( SCHED_GRUNT_COVER_AND_RELOAD );
+#else
+				// Under this debug feature, skip to reloading in place then.
+				return GetScheduleOfType ( SCHED_RELOAD );
+#endif
 			}
 
 			//MODDD - heavy damage must flinch.
@@ -5061,7 +4958,9 @@ Schedule_t *CHGrunt::GetSchedule( void )
 						m_iSentence = HGRUNT_SENT_COVER;
 						//JustSpoke();
 					}
+#if HGRUNT_NOMOVE != 1
 					return GetScheduleOfType( SCHED_TAKE_COVER_FROM_ENEMY );
+#endif
 				}
 				//MODDD - condition required before flinching (or rather, specifically forbidden).
 				else if(!(EASY_CVAR_GET_DEBUGONLY(noFlinchOnHard)==1 && g_iSkillLevel==SKILL_HARD))
@@ -5088,8 +4987,6 @@ Schedule_t *CHGrunt::GetSchedule( void )
 				// shoot a grenade if you can
 				return GetScheduleOfType( SCHED_RANGE_ATTACK2 );
 			}
-
-
 #endif
 
 // can shoot
@@ -5119,8 +5016,10 @@ Schedule_t *CHGrunt::GetSchedule( void )
 				}
 				else
 				{
+#if HGRUNT_NOMOVE != 1
 					// hide!
 					return GetScheduleOfType( SCHED_TAKE_COVER_FROM_ENEMY );
+#endif
 				}
 			}
 // can't see enemy
@@ -5131,7 +5030,7 @@ Schedule_t *CHGrunt::GetSchedule( void )
 					//!!!KELLY - this grunt is about to throw or fire a grenade at the player. Great place for "fire in the hole"  "frag out" etc
 					if (FOkToSpeak())
 					{
-						SENTENCEG_PlayRndSz( ENT(pev), "HG_THROW", HGRUNT_SENTENCE_VOLUME, GRUNT_ATTN, 0, m_voicePitch);
+						SayGrenadeThrow();
 						JustSpoke();
 					}
 					return GetScheduleOfType( SCHED_RANGE_ATTACK2 );
@@ -5147,7 +5046,9 @@ Schedule_t *CHGrunt::GetSchedule( void )
 						//JustSpoke();
 					}
 
+#if HGRUNT_NOMOVE != 1
 					return GetScheduleOfType( SCHED_GRUNT_ESTABLISH_LINE_OF_FIRE );
+#endif
 				}
 				else
 				{
@@ -5180,11 +5081,19 @@ Schedule_t *CHGrunt::GetSchedule( void )
 			//if ( HasConditions( bits_COND_SEE_ENEMY ) && !HasConditions ( bits_COND_CAN_RANGE_ATTACK1 ) )
 			if ( !HasConditions(bits_COND_ENEMY_OCCLUDED) && HasConditions(bits_COND_SEE_ENEMY) && !HasConditions(bits_COND_CAN_RANGE_ATTACK1))
 			{
+#if HGRUNT_NOMOVE != 1
 				return GetScheduleOfType ( SCHED_GRUNT_ESTABLISH_LINE_OF_FIRE );
+#endif
 			}
 		}
 	}
 
+
+
+#if HGRUNT_NOMOVE == 1
+	// TEST!  Only stand in place if any schedule above couldn't reach here
+	return GetScheduleOfType(SCHED_COMBAT_STAND);
+#endif
 
 
 	// no special cases here, call the base class
@@ -5245,7 +5154,7 @@ Schedule_t* CHGrunt::GetScheduleOfType ( int Type )
 				{
 					if (FOkToSpeak())
 					{
-						SENTENCEG_PlayRndSz( ENT(pev), "HG_THROW", HGRUNT_SENTENCE_VOLUME, GRUNT_ATTN, 0, m_voicePitch);
+						SayGrenadeThrow();
 						JustSpoke();
 					}
 					return slGruntTossGrenadeCover;
@@ -5714,4 +5623,31 @@ void CHGrunt::checkHeadGore(int iGib ){
 
 	}
 }//END OF checkHeadGore()
+
+
+
+void CHGrunt::SayGrenadeThrow(void){
+
+	// Volumes turned up a little, important line.
+	if(InSquad()){
+		// can say the full range as usual.
+		SENTENCEG_PlayRndSz( ENT(pev), "HG_THROW", HGRUNT_SENTENCE_VOLUME + 0.10, GRUNT_ATTN - 0.05, 0, m_voicePitch);
+	}else{
+		// mentioning the '''squad''' does not make as much sense when solo now does it?
+		// At least with alert sentences it's believable he's talking to others further away,
+		// telling a nonexistent 'squad' to be careful about a thrown grenade here is weird.
+
+		switch(RANDOM_LONG(0, 2)){
+		case 0:SENTENCEG_PlaySingular(ENT(pev), CHAN_VOICE, "HG_THROW0", HGRUNT_SENTENCE_VOLUME + 0.10, GRUNT_ATTN - 0.05, 0, m_voicePitch); break;
+		case 1:SENTENCEG_PlaySingular(ENT(pev), CHAN_VOICE, "HG_THROW1", HGRUNT_SENTENCE_VOLUME + 0.10, GRUNT_ATTN - 0.05, 0, m_voicePitch); break;
+		case 2:SENTENCEG_PlaySingular(ENT(pev), CHAN_VOICE, "HG_THROW2", HGRUNT_SENTENCE_VOLUME + 0.10, GRUNT_ATTN - 0.05, 0, m_voicePitch); break;
+		}
+
+	}
+	
+}//SayGrenadeThrow
+
+
+
+
 

@@ -20,11 +20,16 @@
 
 
 //TODO - the condition for hassault being in frozen sequence 0, frame 0 should
-//extend to spinning, period, not necessariy looking at something hostile?
+// extend to spinning, period, not necessariy looking at something hostile?
 
 //NOTICE - ACT_SIGNAL3, the retreat sequence, is completely unused!
 //Also get ACT_SIGNAL1 and ACT_SIGNAL2 (are those hooked up in the modern hassault model?) to play like they do
 //for hgrunts, take into account squad role maybe if they did (hassault is typically leader unless there are multiple hassaults in the squad), etc.
+
+
+
+// TODO - why is VecCheckToss so picky.  Same thing used for hgrunts and hassaults to determine if a point is ok to throw a grenade from.
+
 
 
 #include "hassault.h"
@@ -34,7 +39,10 @@
 #include "util_model.h"
 #include "soundent.h"
 
+#include "hgrunt.h"  // for some common constants, maybe
+
 #include "cvar_custom_info.h"
+
 
 
 EASY_CVAR_EXTERN_DEBUGONLY(hassaultSpinMovement)
@@ -64,12 +72,30 @@ EASY_CVAR_EXTERN_DEBUGONLY(hassaultBulletsPerShot)
 EASY_CVAR_EXTERN_DEBUGONLY(hassaultFireAnimSpeedMulti)
 EASY_CVAR_EXTERN_DEBUGONLY(hassaultMeleeAnimSpeedMulti)
 EASY_CVAR_EXTERN_DEBUGONLY(hassaultMeleeAttackEnabled)
+EASY_CVAR_EXTERN_DEBUGONLY(hassaultAllowGrenades)
+
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(sv_germancensorship)
 extern BOOL globalPSEUDO_germanModel_hassaultFound;
 
 
-// oh wait nothing uses this.  oops.
-#define HASSAULT_SENTENCE_VOLUME (float)0.56
+// Compare to grunt volume (0.48).
+#define HASSAULT_SENTENCE_VOLUME (float)0.58
+
+// hgrunt is now ATTN_NORM - 0.07.   So carry even further.
+#define HASSAULT_ATTN ATTN_NORM - 0.12
+
+
+
+// Where should a grenade be spawned from (times forward, right, up direction vectors)
+// No, it's 'right, forward, up' actually.  EHhhhhhh why.
+const Vector vecHAssaultGrenadeSpawnPos = Vector(-10, 25, 50);
+
+
+
+
+
+
+
 
 
 #if REMOVE_ORIGINAL_NAMES != 1
@@ -96,18 +122,37 @@ extern BOOL globalPSEUDO_germanModel_hassaultFound;
 
 //Try to use these to make some forced sequence work easier to understand?
 enum hassault_sequence{  //key: frames, FPS
+	SEQ_HASSAULT_IDLE,
 	SEQ_HASSAULT_IDLE1,
-	SEQ_HASSAULT_IDLE2,
 	SEQ_HASSAULT_CREEPING_WALK,
 	SEQ_HASSAULT_TURN_LEFT,
 	SEQ_HASSAULT_TURN_RIGHT,
+
+	SEQ_HASSAULT_SPINUP,
+	SEQ_HASSAULT_SPINDOWN,
+
 	SEQ_HASSAULT_ATTACK,
-	SEQ_HASSAULT_SMALL_PAIN1,
+	SEQ_HASSAULT_MELEE,
+	SEQ_HASSAULT_MELEE1,
+
+	SEQ_HASSAULT_SMALL_PAIN,
 	SEQ_HASSAULT_SMALL_PAIN2,
+
+
 	SEQ_HASSAULT_DIE_BACKWARDS,
 	SEQ_HASSAULT_DIE_CRUMPLE,
 	SEQ_HASSAULT_DIE_VIOLENT,
-	SEQ_HASSAULT_HEAVY_AMBUSH
+	SEQ_HASSAULT_C2A3_AMBUSH4,
+
+	SEQ_HASSAULT_BARNACLED1,
+	SEQ_HASSAULT_BARNACLED2,
+	SEQ_HASSAULT_BARNACLED3,
+	SEQ_HASSAULT_BARNACLED4,
+
+	SEQ_HASSAULT_THROWGRENADE,
+	SEQ_HASSAULT_RETREAT_SIGNAL,
+	SEQ_HASSAULT_ADVANCE_SIGNAL,
+	SEQ_HASSAULT_FLANK_SIGNAL
 
 };
 
@@ -128,9 +173,12 @@ enum
 	SCHED_HASSAULT_GENERIC_FAIL,
 	SCHED_HASSAULT_RESIDUAL_FIRE,
 	SCHED_HASSAULT_FORCEFIRE,
+	SCHED_HASSAULT_WAIT_FACE_ENEMY,
 	SCHED_HASSAULT_MELEE1,
 
 };
+
+
 
 //=========================================================
 // monster-specific tasks
@@ -145,8 +193,8 @@ enum
 	TASK_HASSAULT_FACE_FORCEFIRE,
 	TASK_HASSAULT_FORCEFIRE,
 	TASK_HASSAULT_START_SPIN,
-	TASK_HASSAULT_WAIT_FOR_SPIN_FINISH
-
+	TASK_HASSAULT_WAIT_FOR_SPIN_FINISH,
+	TASK_HASSAULT_FACE_TOSS_DIR
 };
 
 
@@ -591,6 +639,57 @@ Schedule_t	slHAssault_forceFireAtTarget[] =
 };
 
 
+// Cloned from hgrunt's grenade-throw schedule
+Task_t	tlHAssaultRangeAttack2[] =
+{
+	{ TASK_STOP_MOVING,				(float)0					},
+	{ TASK_HASSAULT_FACE_TOSS_DIR,		(float)0					},
+	{ TASK_PLAY_SEQUENCE,			(float)ACT_RANGE_ATTACK2	},
+
+	// MODDD - nevermind this.  hgrunt did it but we don't need to, an hassault moves slowly enough anyway
+	// that going towards the destination in that amount of time is safe.
+	//{ TASK_SET_SCHEDULE,			(float)SCHED_HASSAULT_WAIT_FACE_ENEMY	},// don't run immediately after throwing grenade.
+};
+
+Schedule_t	slHAssaultRangeAttack2[] =
+{
+	{
+		tlHAssaultRangeAttack2,
+		ARRAYSIZE ( tlHAssaultRangeAttack2 ),
+		0,
+		0,
+		"slHAssault_nadetoss"
+	},
+};
+
+
+// cloned from hgrunt
+Task_t	tlHAssaultWaitInCover[] =
+{
+	{ TASK_STOP_MOVING,				(float)0					},
+	{ TASK_SET_ACTIVITY,			(float)ACT_IDLE				},
+	{ TASK_WAIT_FACE_ENEMY,			(float)1					},
+};
+
+Schedule_t	slHAssaultWaitInCover[] =
+{
+	{
+		tlHAssaultWaitInCover,
+		ARRAYSIZE ( tlHAssaultWaitInCover ),
+		bits_COND_NEW_ENEMY			|
+		bits_COND_HEAR_SOUND		|
+		bits_COND_CAN_RANGE_ATTACK1	|
+		bits_COND_CAN_RANGE_ATTACK2	|
+		bits_COND_CAN_MELEE_ATTACK1	|
+		bits_COND_CAN_MELEE_ATTACK2,
+
+		bits_SOUND_DANGER,
+		"slHAssaultWaitInCover"
+	},
+};
+
+
+
 
 // primary melee attack
 Task_t	tlHAssault_melee1[] =
@@ -621,6 +720,7 @@ Schedule_t	slHAssault_melee1[] =
 
 
 
+
 DEFINE_CUSTOM_SCHEDULES( CHAssault )
 {
 	slHAssault_spin,
@@ -632,11 +732,17 @@ DEFINE_CUSTOM_SCHEDULES( CHAssault )
 	slHAssaultFireOver,
 	slHAssault_residualFire,
 	slHAssault_forceFireAtTarget,
-	slHAssault_melee1
+	slHAssault_melee1,
+	slHAssaultRangeAttack2,
+	slHAssaultWaitInCover
 
 };
 
 IMPLEMENT_CUSTOM_SCHEDULES( CHAssault, CSquadMonster );
+
+
+
+
 
 
 
@@ -705,14 +811,24 @@ const char *CHAssault::pPainSounds[] =
 
 
 
+//MODDD - TODO.   Should a lot more stuff be saved?  Seems light.
 TYPEDESCRIPTION	CHAssault::m_SaveData[] = 
 {
-	DEFINE_FIELD( CBaseEntity,m_pfnThink , FIELD_FUNCTION),
+	// UHHhhhhh.  why.  CBaseEntity already saves this.
+	//DEFINE_FIELD( CBaseEntity,m_pfnThink , FIELD_FUNCTION),
+
 	DEFINE_FIELD( CHAssault, m_voicePitch, FIELD_INTEGER),
+	//MODDD - grenade stuff
+	DEFINE_FIELD( CHAssault, m_flNextGrenadeCheck, FIELD_TIME ),
+	DEFINE_FIELD( CHAssault, m_vecTossVelocity, FIELD_VECTOR ),
+	DEFINE_FIELD( CHAssault, m_fThrowGrenade, FIELD_BOOLEAN ),
+
 	DEFINE_FIELD( CHAssault, spinuptime, FIELD_TIME),
 	DEFINE_FIELD( CHAssault, spinuptimeremain, FIELD_TIME),
 	
 };
+
+
 //IMPLEMENT_SAVERESTORE( CHAssault, CSquadMonster );    //parent was "CBaseMonster", assuming CSquadMonster is okay though?
 int CHAssault::Save( CSave &save )
 {
@@ -933,7 +1049,7 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CHAssault)
 
 	if (HasConditions(bits_COND_HEAVY_DAMAGE)) {
 		int pitch = randomValueInt(m_voicePitch - 3, m_voicePitch + 5);
-		UTIL_PlaySound(ENT(pev), CHAN_VOICE, "hgrunt/gr_cover2.wav", 1.0, ATTN_NORM - 0.5, 0, pitch);
+		UTIL_PlaySound(ENT(pev), CHAN_VOICE, "hgrunt/gr_cover2.wav", HASSAULT_SENTENCE_VOLUME + 0.03, HASSAULT_ATTN - 0.15, 0, pitch);
 	}
 
 	return eck;
@@ -961,17 +1077,17 @@ void CHAssault::AlertSound( void )
 
 	if (InSquad()) {
 		if (RANDOM_FLOAT(0, 1) <= 0.6) {
-			UTIL_PlaySound(ENT(pev), CHAN_VOICE, "hgrunt/gr_squadform.wav", 1.0, ATTN_NORM - 0.23, 0, pitch);
+			UTIL_PlaySound(ENT(pev), CHAN_VOICE, "hgrunt/gr_squadform.wav", HASSAULT_SENTENCE_VOLUME + 0.08, HASSAULT_ATTN - 0.08, 0, pitch);
 		}
 		else {
 			//same as usual
-			SENTENCEG_PlayRndSz(ENT(pev), "HG_ALERT", 1, ATTN_NORM - 0.23, 0, pitch);
-			//UTIL_PlaySound(ENT(pev), CHAN_VOICE, pAlertSounds[RANDOM_LONG(0, ARRAYSIZE(pAlertSounds) - 1)], 1.0, ATTN_NORM - 0.2, 0, pitch);
+			SENTENCEG_PlayRndSz(ENT(pev), "HG_ALERT", HASSAULT_SENTENCE_VOLUME + 0.04, HASSAULT_ATTN - 0.08, 0, pitch);
+			//UTIL_PlaySound(ENT(pev), CHAN_VOICE, pAlertSounds[RANDOM_LONG(0, ARRAYSIZE(pAlertSounds) - 1)], HASSAULT_SENTENCE_VOLUME, HASSAULT_ATTN - 0.08, 0, pitch);
 		}
 	}
 	else {
-		SENTENCEG_PlayRndSz(ENT(pev), "HG_ALERT", 1, ATTN_NORM - 0.23, 0, pitch);
-		//UTIL_PlaySound( ENT(pev), CHAN_VOICE, pAlertSounds[ RANDOM_LONG(0,ARRAYSIZE(pAlertSounds)-1) ], 1.0, ATTN_NORM-0.2, 0, pitch );
+		SENTENCEG_PlayRndSz(ENT(pev), "HG_ALERT", HASSAULT_SENTENCE_VOLUME + 0.04, HASSAULT_ATTN - 0.08, 0, pitch);
+		//UTIL_PlaySound( ENT(pev), CHAN_VOICE, pAlertSounds[ RANDOM_LONG(0,ARRAYSIZE(pAlertSounds)-1) ], HASSAULT_SENTENCE_VOLUME, HASSAULT_ATTN - 0.08, 0, pitch );
 	}
 }
 
@@ -982,13 +1098,13 @@ void CHAssault::IdleSound( void )
 
 	// Play a random idle sound
 	//...if we add different direct sounds, can randomly choose between this and the HG_IDLE sentence.
-	//UTIL_PlaySound( ENT(pev), CHAN_VOICE, pIdleSounds[ RANDOM_LONG(0,ARRAYSIZE(pIdleSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
+	//UTIL_PlaySound( ENT(pev), CHAN_VOICE, pIdleSounds[ RANDOM_LONG(0,ARRAYSIZE(pIdleSounds)-1) ], HASSAULT_SENTENCE_VOLUME, HASSAULT_ATTN, 0, 100 + RANDOM_LONG(-5,5) );
 
 	//mODDD - this instead??  depend on being in a squad? I don't know.
-	//SENTENCEG_PlayRndSz(ENT(pev), "HG_IDLE", HASSAULT_SENTENCE_VOLUME, ATTN_NORM, 0, pitch);
+	//SENTENCEG_PlayRndSz(ENT(pev), "HG_IDLE", HASSAULT_SENTENCE_VOLUME, HASSAULT_ATTN, 0, pitch);
 	
 	// also less attenuation, go further.
-	UTIL_PlaySound(ENT(pev), CHAN_WEAPON, pIdleSounds[RANDOM_LONG(0, ARRAYSIZE(pIdleSounds) - 1)], 1.0, ATTN_NORM - 0.21, 0, 100 + RANDOM_LONG(-8, 8));
+	UTIL_PlaySound(ENT(pev), CHAN_WEAPON, pIdleSounds[RANDOM_LONG(0, ARRAYSIZE(pIdleSounds) - 1)], HASSAULT_SENTENCE_VOLUME, HASSAULT_ATTN - 0.06, 0, 100 + RANDOM_LONG(-8, 8));
 
 }
 
@@ -1012,10 +1128,9 @@ void CHAssault::DeathSound ( void )
 }
 
 
-//well, melee, currently unused.
 void CHAssault::AttackSound( void )
 {
-	// Play a random attack sound
+	// Play a random attack sound  (melee?)
 	UTIL_PlaySound( ENT(pev), CHAN_VOICE, pAttackSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
 }
 
@@ -1080,10 +1195,26 @@ void CHAssault::HandleEventQueueEvent(int arg_eventID){
 	break;
 	case 3:
 		//harder thud
-						
+		
 		//EVENT REMOVED, model already has them working fine.
 
 	break;
+
+	case 4:
+	//case HGRUNT_AE_GREN_TOSS:
+		// grenade!  Cloned from hgrunt
+	{
+		UTIL_MakeVectors( pev->angles );
+		// CGrenade::ShootTimed( pev, pev->origin + gpGlobals->v_forward * 34 + Vector (0, 0, 32), m_vecTossVelocity, 3.5 );
+		CGrenade::ShootTimed( pev, GetGrenadeSPawnPosition(), m_vecTossVelocity, gSkillData.plrDmgHandGrenade, 3.5 );
+
+		m_fThrowGrenade = FALSE;
+		m_flNextGrenadeCheck = gpGlobals->time + getAIGrenadeCooldown();
+
+	}
+	break;
+
+
 
 	}//END OF SWITCH (animQueueEventID check)
 
@@ -1094,6 +1225,15 @@ void CHAssault::HandleEventQueueEvent(int arg_eventID){
 //=========================================================
 void CHAssault::HandleAnimEvent( MonsterEvent_t *pEvent )
 {
+
+
+	if(pev->sequence == SEQ_HASSAULT_THROWGRENADE){
+		// Don't play events for this!  Tries to fire bullets while playing and the original event time doesn't even 
+		// make sense for launching a grenade (too late after the hand's been away from the throw),
+		// already handle the event with our own anim queue
+		return;
+	}
+
 
 	EASY_CVAR_PRINTIF_PRE(hassaultPrintout, easyPrintLine( "OOHHHH ANIM EVENT : %d", pEvent->event) );
 	switch( pEvent->event )
@@ -1191,7 +1331,7 @@ void CHAssault::Spawn()
 	Precache( );
 
 	//SET_MODEL(ENT(pev), "models/hassault.mdl");
-	setModel(); //german model check?
+	setModel(); // german model check?
 
 	UTIL_SetSize( pev, VEC_HUMAN_HULL_MIN, VEC_HUMAN_HULL_MAX );
 
@@ -1204,8 +1344,8 @@ void CHAssault::Spawn()
 	pev->health			= gSkillData.hassaultHealth;
 
 
-	//MonsterInit() will call SetEyePosition and get this from the model anyways, so...?
-	pev->view_ofs		= VEC_VIEW;// position of the eyes relative to monster's origin.
+	// MonsterInit() will call SetEyePosition and get this from the model anyways, so...?
+	pev->view_ofs = VEC_VIEW;// position of the eyes relative to monster's origin.
 
 	
 	//m_flFieldOfView		= VIEW_FIELD_FULL;//0.5;// indicates the width of this monster's forward view cone ( as a dotproduct result )
@@ -1213,15 +1353,15 @@ void CHAssault::Spawn()
 	//m_flFieldOfView		= EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(testVar);
 
 	//MODDD - grunt seems to lack this line in spawn (or anywhere), disabling?
-	//nah, let's try with this on again.
+	// nah, let's try with this on again.
 	//m_MonsterState		= MONSTERSTATE_COMBAT;
-	//Off now.
+	// Off now.
 
 	
-	//m_afCapability		= bits_CAP_DOORS_GROUP;
-	//m_afCapability		= bits_CAP_HEAR | bits_CAP_TURN_HEAD | bits_CAP_DOORS_GROUP;
+	//m_afCapability = bits_CAP_DOORS_GROUP;
+	//m_afCapability = bits_CAP_HEAR | bits_CAP_TURN_HEAD | bits_CAP_DOORS_GROUP;
 	//MODDD - can join the squad with "hssault".
-	m_afCapability		= bits_CAP_SQUAD | bits_CAP_HEAR | bits_CAP_DOORS_GROUP;
+	m_afCapability = bits_CAP_SQUAD | bits_CAP_HEAR | bits_CAP_DOORS_GROUP;
 	
 	// get voice pitch at the start.
 	m_voicePitch = randomValueInt((int)EASY_CVAR_GET_DEBUGONLY(hassaultVoicePitchMin), (int)EASY_CVAR_GET_DEBUGONLY(hassaultVoicePitchMax));
@@ -1233,18 +1373,23 @@ void CHAssault::Spawn()
 	//spinuptime = 0; ???
 
 	//spinuptime = 999999; //stupidly large, defaults to not being possible until set manually.
-	//nah, just rely on this new var below:
+	// nah, just rely on this new var below:
 	spinuptimeSet = FALSE;
 
+	// from HGrunt
+	m_flNextGrenadeCheck = gpGlobals->time + 1;
 
-	//offset that's forced on the origin for getting the start point for generating bullets.
-	//Should probably be starting a bit outwards in the direction this monster is facing, but other monsters do this so I suppose it is ok.
+
+	// offset that's forced on the origin for getting the start point for generating bullets.
+	// Should probably be starting a bit outwards in the direction this monster is facing, but other monsters do this so I suppose it is ok.
 	//m_HackedGunPos = Vector(0, 0, 48);
-	//More accurate version to an observed average position while the gun is firing.
+	// More accurate version to an observed average position while the gun is firing.  Yes, still relative to the forward, right, up vectors.
 	m_HackedGunPos = Vector(9.594678, 41.80166, 42.344753);
 
 
-	//keep THESE in mind for your monster.
+
+
+	// keep THESE in mind for your monster.
 	m_flDistTooFar		= 1024.0;
 	m_flDistLook		= 2048.0;
 
@@ -1335,7 +1480,7 @@ int CHAssault::IgnoreConditions ( void )
 
 
 Vector CHAssault::GetGunPosition(void){
-	//maybe this would be better?
+	// maybe this would be better?
 	Vector vecGunPos;
 	Vector vecGunAngles;
 	GetAttachment( 0, vecGunPos, vecGunAngles );
@@ -1365,6 +1510,34 @@ Vector CHAssault::GetGunPositionAI(void){
 
 	return vecSrc;
 }//END OF GetGunPositionAI
+
+
+
+// where do I spawn a greande to toss from?  Inexact like the GetGunPositionAI above 
+// (no attachment specifics).
+Vector CHAssault::GetGrenadeSPawnPosition(void){
+	Vector v_forward, v_right, v_up, angle;
+	
+	// just use our own angles now, about to toss the grenade anyway.
+	angle = pev->angles;
+
+	angle.x = 0; //pitch is not a factor here.
+	UTIL_MakeVectorsPrivate( angle, v_forward, v_right, v_up);
+
+	const Vector vecSrc = pev->origin 
+		+ v_forward * vecHAssaultGrenadeSpawnPos.y 
+		+ v_right * vecHAssaultGrenadeSpawnPos.x 
+		+ v_up * vecHAssaultGrenadeSpawnPos.z;
+
+	return vecSrc;
+}
+
+
+
+
+
+
+
 
 //MODDD - ...hgrunt does this. Could we do this constant height and a gpGlobals->forward (after the right call) to go forward a little too?
 //           this would avoid the jitter issue with barely getting behind cover.
@@ -1656,35 +1829,47 @@ void CHAssault::SetActivity(Activity NewActivity){
 
 	if (NewActivity == ACT_SIGNAL1 || NewActivity == ACT_SIGNAL3) {
 		//play the sound with it
-		UTIL_PlaySound(ENT(pev), CHAN_VOICE, "hgrunt/gr_squadform.wav", 1.0, ATTN_NORM - 0.23, 0, pitch);
+		UTIL_PlaySound(ENT(pev), CHAN_VOICE, "hgrunt/gr_squadform.wav", HASSAULT_SENTENCE_VOLUME + 0.08, HASSAULT_ATTN - 0.12, 0, pitch);
 	}
 	else if (NewActivity == ACT_SIGNAL2) {   //flank_signal"
 		//require a 60% chance
 		if (RANDOM_FLOAT(0, 1) <= 0.6) {
-			UTIL_PlaySound(ENT(pev), CHAN_VOICE, "hgrunt/gr_squadform.wav", 1.0, ATTN_NORM - 0.23, 0, pitch);
+			UTIL_PlaySound(ENT(pev), CHAN_VOICE, "hgrunt/gr_squadform.wav", HASSAULT_SENTENCE_VOLUME + 0.08, HASSAULT_ATTN - 0.12, 0, pitch);
 		}
 		else if(RANDOM_FLOAT(0, 1) <= 0.8) {
 			//same as usual
-			SENTENCEG_PlayRndSz(ENT(pev), "HG_ALERT", 1, ATTN_NORM - 0.23, 0, pitch);
-			//UTIL_PlaySound(ENT(pev), CHAN_VOICE, pAlertSounds[RANDOM_LONG(0, ARRAYSIZE(pAlertSounds) - 1)], 1.0, ATTN_NORM - 0.2, 0, pitch);
+			SENTENCEG_PlayRndSz(ENT(pev), "HG_ALERT", HASSAULT_SENTENCE_VOLUME + 0.04, HASSAULT_ATTN - 0.08, 0, pitch);
+			//UTIL_PlaySound(ENT(pev), CHAN_VOICE, pAlertSounds[RANDOM_LONG(0, ARRAYSIZE(pAlertSounds) - 1)], HASSAULT_SENTENCE_VOLUME, HASSAULT_ATTN - 0.08, 0, pitch);
 		}
 	}
 
 	EASY_CVAR_PRINTIF_PRE(hassaultPrintout, easyPrintLine( "HASS ACTIVITY: %d", NewActivity));
 	CSquadMonster::SetActivity(NewActivity);
 
-	int ass = 45;
 }
+
 
 
 BOOL CHAssault::FCanCheckAttacks ( void )
 {
+	//MODDD - now allowing even without the enemy in sight since grenades need that.
+
 	EASY_CVAR_PRINTIF_PRE(hassaultPrintout, easyPrintLine( "WELL DO YA PUNK %d %d", HasConditions(bits_COND_SEE_ENEMY), HasConditions( bits_COND_ENEMY_TOOFAR )));
+	/*
 	if ( HasConditions(bits_COND_SEE_ENEMY) && !HasConditions( bits_COND_ENEMY_TOOFAR ) )
 	{
 		return TRUE;
 	}
+	*/
+
+	if ( !HasConditions( bits_COND_ENEMY_TOOFAR ) )
+	{
+		return TRUE;
+	}
+
 	return FALSE;
+
+
 }
 
 BOOL CHAssault::CheckRangeAttack1 ( float flDot, float flDist )
@@ -1704,6 +1889,12 @@ BOOL CHAssault::CheckRangeAttack1 ( float flDot, float flDist )
 		
 		return FALSE;
 	}
+
+	if(!HasConditions(bits_COND_SEE_ENEMY)){
+		// now possible to reach here, since attacks may be checked even if the enemy isn't visible.
+		return FALSE;
+	}
+
 	
 	const Vector vecShootOrigin = GetGunPositionAI();
 
@@ -1805,20 +1996,142 @@ BOOL CHAssault::CheckRangeAttack1 ( float flDot, float flDist )
 	return FALSE;
 }
 
+
+
+//MODDD - support for throwing grenades.  Clone of HGrunt with pev->weapons checks removed.
+// (can be required to be set again if needed)
 BOOL CHAssault::CheckRangeAttack2 ( float flDot, float flDist )
 {
-	return FALSE;
+	// enemy, MUST.  be occluded.
+	// uhhhh.  says who?
+	//if (!HasConditions(bits_COND_ENEMY_OCCLUDED)) {
+	//	return FALSE;
+	//}
+
+	if(EASY_CVAR_GET_DEBUGONLY(hassaultAllowGrenades) == 0){
+		return FALSE;
+	}
+
+
+	// HAssaults can go ahead and throw even if moving, they spend more time moving.
+	/*
+	if ( m_flGroundSpeed != 0 )
+	{
+		m_fThrowGrenade = FALSE;
+		return m_fThrowGrenade;
+	}
+	*/
+
+	// assume things haven't changed too much since last time
+	if (gpGlobals->time < m_flNextGrenadeCheck )
+	{
+		return m_fThrowGrenade;
+	}
+
+
+	// Always has grenades if enabled by CVar, for now.
+	/*
+	if(!FBitSet( pev->weapons, HGRUNT_HANDGRENADE)){
+		// nope
+		return FALSE;
+	}
+	*/
+
+
+	// MODDD - wait, so. It's ok to throw a grenade at something that is off the ground, not in water but below you?...     why that exception?
+	// Changing to the FLY check instead of ONGROUND as stated in the as-is comment below anyway.  In fact just check for MOVETYPE_STEP or WALK.
+	//if ( !FBitSet ( m_hEnemy->pev->flags, FL_ONGROUND ) && m_hEnemy->pev->waterlevel == 0 && m_vecEnemyLKP.z > pev->absmax.z  )
+	if ( !(m_hEnemy->pev->movetype == MOVETYPE_STEP || m_hEnemy->pev->movetype == MOVETYPE_WALK) && m_hEnemy->pev->waterlevel == 0  )
+	{
+		//!!!BUGBUG - we should make this check movetype and make sure it isn't FLY? Players who jump a lot are unlikely to
+		// be grenaded.
+		// don't throw grenades at anything that isn't on the ground!
+		m_fThrowGrenade = FALSE;
+		return m_fThrowGrenade;
+	}
+
+	Vector vecTarget;
+
+	//if (FBitSet( pev->weapons, HGRUNT_HANDGRENADE))
+	{
+		// find feet
+		if (RANDOM_LONG(0,1))
+		{
+			// magically know where they are
+			vecTarget = Vector( m_hEnemy->pev->origin.x, m_hEnemy->pev->origin.y, m_hEnemy->pev->absmin.z );
+		}
+		else
+		{
+			// toss it to where you last saw them
+			vecTarget = m_vecEnemyLKP;
+		}
+		// vecTarget = m_vecEnemyLKP + (m_hEnemy->BodyTarget( pev->origin ) - m_hEnemy->pev->origin);
+		// estimate position
+		// vecTarget = vecTarget + m_hEnemy->pev->velocity * 2;
+	}
+
+	// are any of my squad members near the intended grenade impact area?
+	if ( InSquad() )
+	{
+		if (SquadMemberInRange( vecTarget, GRENADE_SAFETY_MINIMUM ))
+		{
+			// crap, I might blow my own guy up. Don't throw a grenade and don't check again for a while.
+			m_flNextGrenadeCheck = gpGlobals->time + 1; // one full second.
+			m_fThrowGrenade = FALSE;
+		}
+	}
+
+	if ( ( vecTarget - pev->origin ).Length2D() <= GRENADE_SAFETY_MINIMUM )
+	{
+		// crap, I don't want to blow myself up
+		m_flNextGrenadeCheck = gpGlobals->time + 1; // one full second.
+		m_fThrowGrenade = FALSE;
+		return m_fThrowGrenade;
+	}
+
+
+	//if (FBitSet( pev->weapons, HGRUNT_HANDGRENADE))
+	{
+		Vector vecToss = VecCheckToss( pev, GetGunPositionAI(), vecTarget, 0.5 );
+
+		if ( vecToss != g_vecZero )
+		{
+			m_vecTossVelocity = vecToss;
+
+			// throw a hand grenade
+			m_fThrowGrenade = TRUE;
+			// don't check again for a while.
+			m_flNextGrenadeCheck = gpGlobals->time; // 1/3 second.
+		}
+		else
+		{
+			// don't throw
+			m_fThrowGrenade = FALSE;
+			// don't check again for a while.
+			m_flNextGrenadeCheck = gpGlobals->time + 1; // one full second.
+		}
+	}
+	
+
+	return m_fThrowGrenade;
 }
 
 
 //ripped from HGrunt
 BOOL CHAssault::CheckMeleeAttack1(float flDot, float flDist){
 	CBaseMonster *pEnemy;
-	
+
+
+	if(!HasConditions(bits_COND_SEE_ENEMY)){
+		// now possible to reach here, since attacks may be checked even if the enemy isn't visible.
+		return FALSE;
+	}
+
 	if(EASY_CVAR_GET(hassaultMeleeAttackEnabled	) == 0){
 		//blocked.
 		return FALSE;
 	}
+
 
 	//FIRST A CHECK.
 	if(meleeBlockTime != -1 && gpGlobals->time < meleeBlockTime){
@@ -2021,6 +2334,9 @@ void CHAssault::StartTask ( Task_t *pTask ){
 		TaskComplete();
 	break;
 
+	case TASK_HASSAULT_FACE_TOSS_DIR:
+		break;
+
 	default: 
 		CBaseMonster::StartTask( pTask );
 	break;
@@ -2061,6 +2377,49 @@ int CHAssault::ISoundMask ( void )
 			//MODDD - new
 			bits_SOUND_BAIT;
 }
+
+
+
+//MODDD - more hgrunt clones.  Man oh man, where is multiple inheritence when we need it.
+// (not saying that should happen here, it has its own problems)
+BOOL CHAssault::FOkToSpeak( void )
+{
+	// if someone else is talking, don't speak
+	if (gpGlobals->time <= CTalkMonster::g_talkWaitTime)
+		return FALSE;
+
+	if ( pev->spawnflags & SF_MONSTER_GAG )
+	{
+		if ( m_MonsterState != MONSTERSTATE_COMBAT )
+		{
+			// no talking outside of combat if gagged.
+			return FALSE;
+		}
+	}
+
+	// if player is not in pvs, don't speak
+	//	if (FNullEnt(FIND_CLIENT_IN_PVS(edict())))
+	//		return FALSE;
+
+	return TRUE;
+}
+
+//=========================================================
+//=========================================================
+void CHAssault::JustSpoke( void )
+{
+	CTalkMonster::g_talkWaitTime = gpGlobals->time + RANDOM_FLOAT(1.5, 2.0);
+	//m_iSentence = HGRUNT_SENT_NONE;
+}
+
+
+
+
+
+
+
+
+
 
 
 //=========================================================
@@ -2445,6 +2804,19 @@ void CHAssault::RunTask ( Task_t *pTask )
 		}
 		CSquadMonster::RunTask( pTask );  //why... why not chec kthis?
 	break;
+	//MODDD - clonged from hgrunt
+	case TASK_HASSAULT_FACE_TOSS_DIR:
+	{
+		// project a point along the toss vector and turn to face that point.
+		MakeIdealYaw( pev->origin + m_vecTossVelocity * 64 );
+		ChangeYaw( pev->yaw_speed );
+
+		if ( FacingIdeal() )
+		{
+			m_iTaskStatus = TASKSTATUS_COMPLETE;
+		}
+	}
+	break;
 	default: 
 		CSquadMonster::RunTask( pTask );
 	break;
@@ -2650,6 +3022,22 @@ Schedule_t* CHAssault::GetSchedule(){
 			}
 			else if ( !HasConditions(bits_COND_SEE_ENEMY) )
 			{
+
+				if ( HasConditions( bits_COND_ENEMY_OCCLUDED ) ){
+					//MODDD - Can I toss a grenade?
+					if ( HasConditions(bits_COND_CAN_RANGE_ATTACK2) )
+					{
+						// also from hgrunt
+						if (FOkToSpeak())
+						{
+							SayGrenadeThrow();
+							JustSpoke();
+						}
+
+						return GetScheduleOfType( SCHED_RANGE_ATTACK2 );
+					}
+				}//occluded
+
 				//MODDD - yes?
 				if ( HasConditions ( bits_COND_HEAR_SOUND ) )
 				{
@@ -2772,10 +3160,8 @@ Schedule_t* CHAssault::GetSchedule(){
 				}
 
 
-				if ( HasConditions(bits_COND_CAN_RANGE_ATTACK2) )
-				{
-					return GetScheduleOfType( SCHED_RANGE_ATTACK2 );
-				}
+				// NOTE - RANGE_ATTACK2 moved before the CAN_SEE check to happen remotely when it's supposed to.
+
 				/*
 				if ( HasConditions(bits_COND_CAN_MELEE_ATTACK1) )
 				{
@@ -2868,6 +3254,11 @@ Schedule_t* CHAssault::GetScheduleOfType(int Type){
 	EASY_CVAR_PRINTIF_PRE(hassaultPrintout, ( "HASSAULT GET SCHED TYPE: %d ", Type));
 
 	switch(Type){
+		case SCHED_RANGE_ATTACK2:
+		{
+			//MODDD - grenade time
+			return &slHAssaultRangeAttack2[ 0 ];
+		}
 		case SCHED_HASSAULT_FORCEFIRE:
 			return &slHAssault_forceFireAtTarget[0];
 		break;
@@ -2952,6 +3343,11 @@ Schedule_t* CHAssault::GetScheduleOfType(int Type){
 			
 			//return &slCombatFace[0];
 		break;
+		// cloned from hgrunt
+		case SCHED_HASSAULT_WAIT_FACE_ENEMY:
+		{
+			return &slHAssaultWaitInCover[ 0 ];
+		}
 	}
 	return CSquadMonster::GetScheduleOfType(Type);
 }
@@ -3208,6 +3604,35 @@ int CHAssault::SquadRecruit( int searchRadius, int maxMembers ){
 }
 
 
+
+
+
+void CHAssault::SayGrenadeThrow(void){
+
+	// Volumes turned up a little, important line.
+	if(InSquad()){
+		// can say the full range as usual.
+		SENTENCEG_PlayRndSz( ENT(pev), "HG_THROW", HASSAULT_SENTENCE_VOLUME + 0.10, HASSAULT_ATTN - 0.05, 0, m_voicePitch);
+	}else{
+		// mentioning the '''squad''' does not make as much sense when solo now does it?
+		// At least with alert sentences it's believable he's talking to others further away,
+		// telling a nonexistent 'squad' to be careful about a thrown grenade here is weird.
+
+		switch(RANDOM_LONG(0, 2)){
+		case 0:SENTENCEG_PlaySingular(ENT(pev), CHAN_VOICE, "HG_THROW0", HASSAULT_SENTENCE_VOLUME + 0.10, HASSAULT_ATTN - 0.05, 0, m_voicePitch); break;
+		case 1:SENTENCEG_PlaySingular(ENT(pev), CHAN_VOICE, "HG_THROW1", HASSAULT_SENTENCE_VOLUME + 0.10, HASSAULT_ATTN - 0.05, 0, m_voicePitch); break;
+		case 2:SENTENCEG_PlaySingular(ENT(pev), CHAN_VOICE, "HG_THROW2", HASSAULT_SENTENCE_VOLUME + 0.10, HASSAULT_ATTN - 0.05, 0, m_voicePitch); break;
+		}
+
+	}
+
+}//SayGrenadeThrow
+
+
+
+
+
+
 BOOL CHAssault::usesAdvancedAnimSystem(void){
 	return TRUE;
 }
@@ -3280,6 +3705,9 @@ int CHAssault::LookupActivityHard(int activity){
 	// let's do m_IdealActivity??
 	switch(iSelectedActivity){
 		case ACT_RANGE_ATTACK2:
+			// when to chuck the grenade
+			this->animEventQueuePush(28.0f / 30.0f, 4);
+
 			return LookupSequence("throwgrenade");
 		break;
 		case ACT_IDLE:
@@ -3491,4 +3919,9 @@ BOOL CHAssault::onResetBlend0(void){
 	
 	return TRUE;
 }
+
+
+
+
+
 

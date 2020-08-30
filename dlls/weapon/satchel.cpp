@@ -40,6 +40,7 @@ EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteammo)
 // 2: recently detonated satchels, button-press animation played.  Little delay before Charge goes to 0 IF there is ammo.
 
 
+BOOL daPoopah = FALSE;
 
 
 //MODDD - why wasn't this serverside-only anyway??
@@ -245,9 +246,9 @@ CSatchel::CSatchel() {
 
 	//NOTE: this used to be a custom var named "weaponRetired", but it does not seem to sync too well b/w the server & client.
 	//Now reusing an existing sync'd var.
-	m_fInAttack = FALSE;
+	//daPoopah = FALSE;
 
-	alreadySentOutOfAmmoNotice = FALSE;
+	//alreadySentSatchelOutOfAmmoNotice = FALSE;
 	sentOutOfAmmoHolster = FALSE;
 
 }
@@ -292,7 +293,7 @@ int CSatchel::AddToPlayer( CBasePlayer *pPlayer )
 
 	
 	// just in case it was?
-	alreadySentOutOfAmmoNotice = FALSE;
+	//alreadySentSatchelOutOfAmmoNotice = FALSE;
 	sentOutOfAmmoHolster = FALSE;
 
 	pPlayer->pev->weapons |= (1<<m_iId);
@@ -322,7 +323,7 @@ void CSatchel::Spawn( )
 		
 	FallInit();// get ready to fall down.
 
-	m_fInAttack = FALSE;
+	//daPoopah = FALSE;
 }
 
 
@@ -396,7 +397,8 @@ BOOL CSatchel::CanDeploy( void )
 
 BOOL CSatchel::Deploy( )
 {
-	m_fInAttack = FALSE;
+	// YO
+	//daPoopah = FALSE;
 
 	m_pPlayer->m_flNextAttack = UTIL_WeaponTimeBase() + 1.0;
 	
@@ -424,7 +426,6 @@ BOOL CSatchel::Deploy( )
 #endif
 	*/
 
-
 	extraIdleTime = randomIdleAnimationDelay();
 
 	// Nevermind, just do this.
@@ -449,38 +450,25 @@ BOOL CSatchel::Deploy( )
 		return DefaultDeploy("models/v_satchel_radio.mdl", "models/p_satchel_radio.mdl", SATCHEL_RADIO_DRAW, "hive", 0, 0, (19.0 / 30.0) + extraIdleTime, (12.0 / 30.0));
 	}
 
-
-	
-
-
-	
-	
 	return TRUE;
 }
 
 
 void CSatchel::Holster( int skiplocal /* = 0 */ )
 {
-	m_fInAttack = FALSE;
+	//daPoopah = FALSE;
 	//m_pPlayer->m_flNextAttack = UTIL_WeaponTimeBase() + 0.5;
 	
 
-
 	//MODDD - If the remote isn't out or recently detonated already, put it away then!
-	if (getchargeReady() != 1 && PlayerPrimaryAmmoCount() <= 0)
+	
+	if (PlayerPrimaryAmmoCount() <= 0 && getchargeReady() != 1)
 	{
 		setchargeReady(0);
 		//RetireWeapon();
-		//m_fInAttack = TRUE;
+		//daPoopah = TRUE;
 		//return;
-	}
 
-
-
-
-
-	if (PlayerPrimaryAmmoCount() <= 0 && getchargeReady() != 1)
-	{
 		// Out of satchels, nothing deployed out there to be detonated.
 
 
@@ -594,7 +582,7 @@ void CSatchel::PrimaryAttack()
 		setchargeReady(0);
 		// not yet!  Wait for animation to end
 		//RetireWeapon();
-		m_fInAttack = TRUE;
+		daPoopah = TRUE;
 	}
 
 }
@@ -621,7 +609,7 @@ void CSatchel::SecondaryAttack( void )
 				m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 61.0 / 30.0;
 				//}
 
-				SetAttackDelays(m_flTimeWeaponIdle);
+				//SetAttackDelays(m_flTimeWeaponIdle);
 				m_flTimeWeaponIdle += randomIdleAnimationDelay();
 				SendWeaponAnim(iAnim);
 			}
@@ -672,7 +660,8 @@ void CSatchel::Throw( void )
 
 
 		// safety?  Make sure a notice to stop blocking deployment of the weapon can be sent this way.
-		alreadySentOutOfAmmoNotice = TRUE;
+		// TEST, no.
+		//alreadySentSatchelOutOfAmmoNotice = TRUE;
 		//sentOutOfAmmoHolster = FALSE;
 		setchargeReady(1);
 		
@@ -689,7 +678,7 @@ void CSatchel::Throw( void )
 		if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelay) == 0){
 			SetAttackDelays(UTIL_WeaponTimeBase() + 0.5);
 		}else{
-			m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 0.5;
+			m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelaycustom);
 			//they stick together sometimes, so they get an extra delay.
 			m_flNextSecondaryAttack = UTIL_WeaponTimeBase() + EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelaycustom) + 0.03f;
 		}
@@ -698,25 +687,82 @@ void CSatchel::Throw( void )
 }
 
 
+
+//BOOL ForceNoSelectOnEmptyRecentSendoff = FALSE;
+
 // This method doesn't tell whether this is out of ammo, it does the check within itself and acts on that.
 // This should be called by anything external that could affect whether this weapon is still a valid selection
 // without jumping to equip ('removeammo' command).
 void CSatchel::CheckOutOfAmmo() {
 #ifndef CLIENT_DLL
-	if (m_pPlayer != NULL && (PlayerPrimaryAmmoCount() <= 0 && getchargeReady() != 1)) {
-		if (!alreadySentOutOfAmmoNotice) {
-			// send it!  Let the weapon's place on the HUD's weapon-select know it can turn red, ordinarily it doesn't know to.
-			alreadySentOutOfAmmoNotice = TRUE;
+	if(m_pPlayer != NULL){
+
+		if ((PlayerPrimaryAmmoCount() <= 0 && getchargeReady() != 1)) {
+			if (!m_pPlayer->alreadySentSatchelOutOfAmmoNotice) {
+				// send it!  Let the weapon's place on the HUD's weapon-select know it can turn red, ordinarily it doesn't know to.
+				m_pPlayer->alreadySentSatchelOutOfAmmoNotice = TRUE;
+
+				MESSAGE_BEGIN(MSG_ONE, gmsgCurWeaponForceNoSelectOnEmpty, NULL, m_pPlayer->pev);
+				WRITE_CHAR(m_iId);
+				WRITE_BYTE(TRUE);
+				MESSAGE_END();
+
+				//ForceNoSelectOnEmptyRecentSendoff = TRUE;
+
+			}
+		}else if((PlayerPrimaryAmmoCount() > 0) ){
+			// got some ammo back?  OK
+
+			if(m_pPlayer->alreadySentSatchelOutOfAmmoNotice){
+				m_pPlayer->alreadySentSatchelOutOfAmmoNotice = FALSE;
+
+				MESSAGE_BEGIN(MSG_ONE, gmsgCurWeaponForceNoSelectOnEmpty, NULL, m_pPlayer->pev);
+				WRITE_CHAR(m_iId);
+				WRITE_BYTE(FALSE);
+				MESSAGE_END();
+
+				Deploy();
+
+			}
+			
+		}
+
+
+		/*
+		if ((PlayerPrimaryAmmoCount() <= 0 && getchargeReady() != 1)) {
+			if (!alreadySentSatchelOutOfAmmoNotice) {
+				// send it!  Let the weapon's place on the HUD's weapon-select know it can turn red, ordinarily it doesn't know to.
+				alreadySentSatchelOutOfAmmoNotice = TRUE;
+
+				MESSAGE_BEGIN(MSG_ONE, gmsgCurWeaponForceNoSelectOnEmpty, NULL, m_pPlayer->pev);
+				WRITE_CHAR(m_iId);
+				WRITE_BYTE(TRUE);
+				MESSAGE_END();
+
+				//ForceNoSelectOnEmptyRecentSendoff = TRUE;
+
+			}
+		}else if(daPoopah == TRUE && (PlayerPrimaryAmmoCount() > 0) ){
+			// got some ammo back?  OK
+			daPoopah = FALSE;
+
+			alreadySentSatchelOutOfAmmoNotice = FALSE;
 
 			MESSAGE_BEGIN(MSG_ONE, gmsgCurWeaponForceNoSelectOnEmpty, NULL, m_pPlayer->pev);
 			WRITE_CHAR(m_iId);
-			WRITE_BYTE(TRUE);
+			WRITE_BYTE(FALSE);
 			MESSAGE_END();
 
+			Deploy();
 		}
+		*/
+
 	}
-	else if (alreadySentOutOfAmmoNotice) {
-		alreadySentOutOfAmmoNotice = FALSE;  // can re-send on running out of ammo again.
+	/*
+	//  && ForceNoSelectOnEmptyRecentSendoff != FALSE
+	else if (alreadySentSatchelOutOfAmmoNotice) {
+		
+		alreadySentSatchelOutOfAmmoNotice = FALSE;  // can re-send on running out of ammo again.
 		sentOutOfAmmoHolster = FALSE;
 
 		MESSAGE_BEGIN(MSG_ONE, gmsgCurWeaponForceNoSelectOnEmpty, NULL, m_pPlayer->pev);
@@ -724,9 +770,20 @@ void CSatchel::CheckOutOfAmmo() {
 		WRITE_BYTE(FALSE);
 		MESSAGE_END();
 
-		Deploy(); // show the charge viewmodel again
+		//ForceNoSelectOnEmptyRecentSendoff = FALSE;
+
+		// CHECK: is the viewmodel retired?  Only then deploy!
+		if(daPoopah){
+			Deploy(); // show the charge viewmodel again
+			daPoopah = FALSE;
+		}
 		return;
+	}else{
+		// ???
+		//alreadySentSatchelOutOfAmmoNotice = FALSE;
 	}
+	*/
+
 #endif
 }
 
@@ -751,8 +808,8 @@ void CSatchel::WeaponIdle( void )
 
 	//if the weapon is retired but we pick up ammo, re-deploy it.
 	/*
-	if(m_fInAttack && PlayerPrimaryAmmoCount() > 0){
-		m_fInAttack = FALSE;
+	if(daPoopah && PlayerPrimaryAmmoCount() > 0){
+		daPoopah = FALSE;
 		DefaultDeploy( "models/v_satchel.mdl", "models/p_satchel.mdl", SATCHEL_DRAW, "trip", 0, 0, (99.0/30.0), (24.0/30.0) );
 		return;
 	}
@@ -857,7 +914,7 @@ void CSatchel::ReDeploySatchel(void) {
 	{
 		setchargeReady(0);
 		RetireWeapon();
-		m_fInAttack = TRUE;
+		daPoopah = TRUE;
 		return;
 	}
 	*/

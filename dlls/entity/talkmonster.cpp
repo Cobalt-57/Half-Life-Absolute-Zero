@@ -2045,7 +2045,7 @@ void CTalkMonster::PlaySentenceNoPitchSingular(const char *pszSentence, float du
 	PlaySentenceSingular(pszSentence, duration, volume, attenuation, 100);
 }//END OF PlaySentenceNoPitchSingular
 
-//If not giving a sentence group, use this. No exclamation mark required.
+// If not giving a sentence group, use this. No exclamation mark required.
 void CTalkMonster::PlaySentenceSingular(const char *pszSentence, float duration, float volume, float attenuation, int pitch ){
 	//Just play the sentence given. But the system does require an exclamation mark for whatever reason.
 	static char sentenceToPlay[127];

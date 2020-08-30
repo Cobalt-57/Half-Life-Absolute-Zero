@@ -1362,6 +1362,10 @@ void HUD_WeaponsPostThink(local_state_s* from, local_state_s* to, usercmd_t* cmd
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
+	//if(to->client.weaponanim  == EGON_IDLE1){
+	//	g_currentanim = 666;
+	//}
+
 	//MODDD - added check for "254".  That's a special code for, "the serverside anim request got cleared".
 	// This probably happened from becoming irrelevant and we don't want to make the client play an
 	// irrelevant animation, like putting on/taking off the glock silencer twice.

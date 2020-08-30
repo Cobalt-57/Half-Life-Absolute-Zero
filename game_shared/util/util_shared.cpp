@@ -1066,7 +1066,13 @@ void copyString(const char* src, char* dest){
 
 void copyString(const char* src, char* dest, int size){
 
-	
+	// strncpy takes a size, but copies 0's all the way to the end.
+	// Really unnecessary.  A bounded strcpy that stops at the max if the source exceeds the given size without doing anything
+	// extra if the source is under the size (runs into a '\0' char, end there) would be nice, but oh well.
+	strcpy(dest, src);
+
+	/*
+	//MODDD - why when strcpy does it just fine?
 	BOOL queueBreak = FALSE;
 	int i;
 	for(i = 0; i < size; i++){
@@ -1087,6 +1093,7 @@ void copyString(const char* src, char* dest, int size){
 		dest[size-1] = '\0';
 		//last char will have to clip and say '\0' to terminate.
 	}
+	*/
 
 }
 

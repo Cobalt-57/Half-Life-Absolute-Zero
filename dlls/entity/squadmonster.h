@@ -17,6 +17,13 @@
 // form squads.
 //=========================================================
 
+
+
+#ifndef SQUADMONSTER_H
+#define SQUADMONSTER_H
+
+
+
 #define SF_SQUADMONSTER_LEADER	32
 
 
@@ -173,4 +180,7 @@ public:
 	
 
 };
+
+
+#endif //SQUADMONSTER_H
 

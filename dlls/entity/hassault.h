@@ -27,6 +27,9 @@ public:
 	static const char *pAttackHitSounds[];
 	static const char *pAttackMissSounds[];
 
+	float m_flNextGrenadeCheck;
+	Vector m_vecTossVelocity;
+	BOOL m_fThrowGrenade;
 
 	Vector debugDrawVect;
 
@@ -91,6 +94,8 @@ public:
 
 	Vector GetGunPosition(void);
 	Vector GetGunPositionAI(void);
+
+	Vector GetGrenadeSPawnPosition(void);
 
 
 	int IRelationship ( CBaseEntity *pTarget );
@@ -177,6 +182,9 @@ public:
 	BOOL FValidateCover ( const Vector &vecCoverLocation );
 	int ISoundMask ( void );
 
+	BOOL FOkToSpeak( void );
+	void JustSpoke( void );
+
 	//MODDD - May be a better approach than "monsterThink".
 	Schedule_t *GetSchedule( void );
 	Schedule_t* GetScheduleOfType( int Type);
@@ -188,11 +196,14 @@ public:
 
 	void AimAtEnemy(Vector& refVecShootOrigin, Vector& refVecShootDir);
 	
+	void SayGrenadeThrow(void);
+
 
 	BOOL canResetBlend0(void);
 	BOOL onResetBlend0(void);
 
 	CUSTOM_SCHEDULES;
+	
 
 };
 

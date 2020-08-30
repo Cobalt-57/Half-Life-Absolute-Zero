@@ -1391,6 +1391,24 @@ void CSprite::Expand( float scaleSpeed, float fadeSpeed )
 	m_lastTime		= gpGlobals->time;
 }
 
+
+//MODDD - also new.  Same as Expand but animates while expanding.
+// Assumes that  'TurnOn()' has already happend at some point.
+// (although the most it does is set pev->effects and pev->frame to 0 and check for m_maxFrame or
+//  the PLAYONCE spawnflag for being a valid animation to play)
+void CSprite::ExpandPreserveEffects( float scaleSpeed, float fadeSpeed )
+{
+	SetTransparency( pev->rendermode, 255, 255, 255, pev->renderamt, pev->renderfx );
+	pev->speed = fabs(scaleSpeed);
+	pev->health = fabs(fadeSpeed);
+	SetThink( &CSprite::ExpandThink );
+	pev->nextthink	= gpGlobals->time + 0.1;
+	m_lastTime		= gpGlobals->time;
+}
+
+
+
+
 //MODDD
 void CSprite::Expand_TimeTarget( float arg_targetScale, float arg_duration ){
 	const float arg_scaleDelta = (arg_targetScale - pev->scale);
@@ -1400,10 +1418,11 @@ void CSprite::Expand_TimeTarget( float arg_targetScale, float arg_duration ){
 	Expand( arg_scaleDelta / arg_duration, arg_opacityDelta / arg_duration);
 }//END OF Expand_TimeTarget
 
- //MODDD - also new.  Same as Expand but animates while expanding.
- // Assumes that  'TurnOn()' has already happend at some point.
- // (although the most it does is set pev->effects and pev->frame to 0 and check for m_maxFrame or
- //  the PLAYONCE spawnflag for being a valid animation to play)
+
+
+
+
+
 void CSprite::ExpandAnimate(float scaleSpeed, float fadeSpeed){
 	SetTransparency( kRenderTransAdd, 255, 255, 255, pev->renderamt, kRenderFxNoDissipation );
 	pev->speed = fabs(scaleSpeed);
@@ -1412,6 +1431,21 @@ void CSprite::ExpandAnimate(float scaleSpeed, float fadeSpeed){
 	pev->nextthink	= gpGlobals->time + 0.1;
 	m_lastTime		= gpGlobals->time;
 }
+
+
+//MODDD - NEW.
+// Keeps the rendermode and renderfx to what they were as provided instead of forcing to kRenderTransAdd
+// and kRenderFxNoDissipation.
+void CSprite::ExpandAnimatePreserveEffects(float scaleSpeed, float fadeSpeed){
+	SetTransparency( pev->rendermode, 255, 255, 255, pev->renderamt, pev->renderfx );
+	pev->speed = fabs(scaleSpeed);
+	pev->health = fabs(fadeSpeed);
+	SetThink( &CSprite::ExpandAnimateThink );
+	pev->nextthink	= gpGlobals->time + 0.1;
+	m_lastTime		= gpGlobals->time;
+}
+
+
 
 
 

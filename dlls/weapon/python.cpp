@@ -431,7 +431,11 @@ void CPython::ItemPostFrameThink(){
 
 
 	#ifndef CLIENT_DLL
-		
+	
+	//MODDD - TODO.  wait, why is this done here in python.cpp, and serverside only?
+	// Why not ev_hldm.cpp like other weapons (mp5) do?  Might be a reason.
+	// ...I think I see, this is to drop the shells as tempents while retail
+	// never did this, I think?  Verify (reload python, look down)
 	if(m_flSoundDelay != 0 && m_flSoundDelay <= gpGlobals->time)
 	{
 		//easyPrintLine("EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE %.2f :::%.2f", m_flSoundDelay, gpGlobals->time);

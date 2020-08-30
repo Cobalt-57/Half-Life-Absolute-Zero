@@ -2267,7 +2267,14 @@ void CISlave::ArmBeam( int side )
 	if ( flDist == 1.0 )
 		return;
 
-	DecalGunshot( &tr, BULLET_PLAYER_CROWBAR );
+
+	//MODDD - using Half-Life Source's way instead (put scorch marks).
+	// This will keep the decal imposed by a hit breakable or unusual surface if it wants something other than plain bulletholes though.
+	// (only those get replaced by scorch marks).
+	//DecalGunshot( &tr, BULLET_PLAYER_CROWBAR );
+	DecalSafeScorchMark(&tr, DMG_CLUB, 0);
+
+
 
 	m_pBeam[m_iBeams] = CBeam::BeamCreate( "sprites/lgtning.spr", 30 );
 	if (!m_pBeam[m_iBeams])

@@ -306,7 +306,7 @@ struct Schedule_t
 	// a more specific mask that indicates which TYPES of sounds will interrupt the schedule in the 
 	// event that the schedule is broken by COND_HEAR_SOUND
 	int	iSoundMask;
-	const	char *pName;
+	const char *pName;
 };
 
 // an array of waypoints makes up the monster's route. 

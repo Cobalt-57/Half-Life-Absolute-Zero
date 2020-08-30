@@ -168,7 +168,8 @@
 #define myRocketsAreBarney_ID 177
 #define wpn_glocksilencer_ID 178
 #define sv_rpg_alpha_ammo_ID 179
-
+#define egonRadiusDamageMode_ID 180
+#define egonFireRateMode_ID 181
 
 
 //Please.  Update this on changing the count above.
@@ -177,7 +178,7 @@
 //           WilL.
 //                          haPpen.
 //                                                          Thanks.
-#define CVAR_CLIENTSENDOFF_COUNT 180
+#define CVAR_CLIENTSENDOFF_COUNT 182
 
 
 
@@ -251,6 +252,7 @@
 #define DEFAULT_hassaultVoicePitchMin 86
 #define DEFAULT_hassaultVoicePitchMax 93
 #define DEFAULT_hassaultFireSpread 0.060
+#define DEFAULT_hassaultAllowGrenades 1
 #define DEFAULT_muteTempEntityGroundHitSound 0
 #define DEFAULT_houndeyeAttackMode 1
 #define DEFAULT_muteRicochetSound 0
@@ -709,6 +711,10 @@
 #define DEFAULT_pathfindForcePointHull 0
 #define DEFAULT_pathfindNearestNodeExtra 0
 #define DEFAULT_sv_turret_postdeath 1
+#define DEFAULT_cl_mp5_evil_skip 0
+#define DEFAULT_egonRadiusDamageMode 0
+#define DEFAULT_egonFireRateMode 0
+
 
 
 

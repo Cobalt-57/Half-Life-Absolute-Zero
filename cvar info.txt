@@ -835,6 +835,8 @@ hassaultFireSpread - (0.06) amount of spread for this weapon (simulates inaccura
 15DEGREES	0.13053
 20DEGREES	0.17365
 
+hassaultAllowGrenades (1) - BOOL.  Whether hassaults can throw grenades, like hgrunts.  All hassaults will be able to throw grenades.
+
 
 hassassinCrossbowReloadSoundDelay (1.1) - FLOAT. Delay in seconds to play "weapons/xbow_realod1.wav" after a hassassin starts a reload.
 
@@ -1566,4 +1568,19 @@ sv_turret_postdeath (1) - MODEVAR.  Affects what happens when a mounted turret (
 0: no change from retail.
 1: More sparks during the death sequence, ends on an explosion effect.
 2: New post-beserk sequence that lasts 6 to 8 seconds.  Turret beeps more, fires in all directions more quickly, and make explosion effects.  Mode #1 applies when post-beserk stops and plays the last animation. Can end early by taking half its original health in damage.
+
+cl_mp5_evil_skip (0) - BOOL.  If on, resembles old behavior seen in some demo footage: every second time the mp5 fires while firing continuously or near-continuously, it skips re-starting the firing sequence.
+- The rest of the other effects (muzzle flash, ejected shell, etc.) are unaffected.
+
+
+egonRadiusDamageMode (0) - MODEVAR.  Whether the egon's wide (secondary) fire deals radius damage.
+0: retail (depends on the game being single/multi player)
+1: force single-player: never.
+2: force multi-plaer: always.
+
+egonFireRateMode (0) - MODEVAR.  Affects the fire-rate of the egon, varried between single and multiplayer in retail.
+0: retail (depends on the game being single/multi player)
+1: force single-player (goes through ammo more quickly)
+2: force multi-plaer: (goes through ammo less quickly)
+
 

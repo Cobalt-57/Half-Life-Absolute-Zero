@@ -419,6 +419,7 @@ NEW CVAR: gauss_mode, defaults to 1.  0 is retail-based, 1 is pre-release/alpha 
 - Gauss charge force-fire no longer happens on running out of ammo at the moment of a full charge (starting a charge with retail gauss with 13 ammo maintains the charge when 0 ammo is reached).
 - Gauss charge force-fire from running out of charge happens at the next ammo-usage cycle that sees there isn't enough ammo instead of the instant the ammo runs out (more noticeable in gauss mode #1).
 - Primary fire bounces can no longer gib.
+- Gauss reflect/hit logic stops on hitting the skybox.  Glow effects nor sparks can be made from hitting the skybox, and it can not be reflected off of.
 
 GAUSS MODE 0:
 - Minimum ammo used for charge (1) no longer surpasses primary fire damage (20).  Instead, a charged shot of 1 ammo deals only 8 damage but becomes increasingly more efficient with more ammo used (already better than primary slightly at 2).
@@ -501,16 +502,40 @@ EGON
 - Both fire-modes show in multiplayer and the beams show much more consistently.
 - Hitcloud occurs as often in multiplayer as often as it does in singleplayer now, and adjusted to have the same tracking as a lasersight in multiplayer (default env_sprite tracking is not as fast).
 - Hitcloud animates faster and is larger in general, moreso for secondary mode.
-- Hitcloud dissipation effect when firing ends restored and placed away from nearby surfaces to reduces clipping like the explosion sprite does.
+- Hitcloud effect, when dissipating, does not clip into nearby surfaces just like during normal firing.
 - Hitcloud has dissipation effect for primary fire too.
 - Hitcloud animates while dissipating.
 - Hitclouds will no longer appear on skyboxes.  Same for RPG, python lasersights through better checks.
 - Between-primary-fire delay of 0.5 seconds restored.
 - Minimum of 1 ammo must be used before the egon stops firing (showing the beam must use ammo)
 - NOTICE: egonEffectsMode choices other than 3 (the default) may not be supported as well.
+- In multiplayer, egon primary fire no longer depletes ammo faster than secondary fire.
+- Leaves scorch marks where the egon hits at a regular interval, larger and less frequent in secondary fire.
+
 
 Automatic weapon switches from picking up a new weapon no longer occur if picked up while reloading.
 
 bullsquids immune to poison.  Mainly so bullsquids fighting each other don't poison each other (should be immune).
 
+HAssaults can now throw grenades (CVar hassaultAllowGrenades, defaults to 1).
+
+AI Grenade-decision fix: an enemy (player) jumping often no longer reduces chances of throwing grenades.
+
+Minimum range for hgrunt/hassault grenades increased (what range to refuse to throw in fear of hurting self or friendlies).
+
+AI Cooldown between grenade throws increased in general, closer to the retail 6 seconds at HARD difficulty.
+
+hgrunt/hassault sentences carry a little further distance-wise (attenuation reduced).
+
+hgrunts throwing a grenade while not in a squad no longer mention a non-existent squad.
+
+hassault voice volume better scaled with hgrunts, now only somewhat louder instead of using the max volume used by most sound effects.
+
+Decals created by the islave electricity hitting nearby surfaces while charging an attack changed from bulletholes to larger scorchmarks (Like Half-Life Source) for most surfaces.  Unusual surfaces that want a different decal to be used (like glass) will use their same custom decal.
+
+New CVar: cl_mp5_evil_skip, defaults to 0.  When on, simulates old behavior for the mp5 seen in some old demos (skipping every 2nd firing sequence reset while firing continuously or quickly).
+
+Tripmine hitbox may be slightly more responsive to bullets.
+
+New CVars: egonRadiusDamageMode and egonFireRateMode, for enforcing the multiplayer ranged damage and slower fire-rate of the egon during single player (if 2), or single player behavior (1).  0 leaves this up to the game like retail does.
 

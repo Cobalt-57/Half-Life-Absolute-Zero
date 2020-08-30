@@ -812,7 +812,7 @@ void CSqueak::SecondaryAttack( void )
 			iAnim = SQUEAK_FIDGETNIP;
 			m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 80.0 / 16.0;
 		}
-		SetAttackDelays(m_flTimeWeaponIdle);
+		//SetAttackDelays(m_flTimeWeaponIdle);
 		m_flTimeWeaponIdle += randomIdleAnimationDelay();
 		SendWeaponAnim(iAnim);
 	}//CVar check

@@ -739,6 +739,15 @@ void CGauss::Fire(Vector vecOrigSrc, Vector vecDir, float flDamage)
 			nTotal += 26;
 		}
 
+
+
+		//MODDD
+		if (UTIL_PointContents(tr.vecEndPos) == CONTENTS_SKY) {
+			// If we hit the sky, HALT!
+			// Just end.  No reflecting off of that, no persistent glow, no sparks.  None of that makes sense.
+			break;
+		}
+
 		// MODDD - added check for flFraction like FireBulletsPlayer does.  I assume that had a point.
 		if (tr.flFraction >= 1.0) {
 			break;

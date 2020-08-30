@@ -737,7 +737,7 @@ void CChumToadWeapon::SecondaryAttack( void )
 			iAnim = CHUMTOADWEAPON_FIDGETCROAK;
 			m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 50.0 / 16.0;
 		}
-		SetAttackDelays(m_flTimeWeaponIdle);
+		//SetAttackDelays(m_flTimeWeaponIdle);
 		m_flTimeWeaponIdle += randomIdleAnimationDelay();
 		SendWeaponAnim(iAnim);
 	}//CVar check

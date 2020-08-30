@@ -748,7 +748,7 @@ void CBasePlayerWeapon::ItemPostFrame( void )
 			}*/
 			
 			//-1 means, this weap does not use the "clip" but goes straight to using primary ammo.
-			if(m_iClip < 1 && m_iClip != -1){
+			if(m_iClip < 1 && m_iClip != -1 && (iMaxClip() > 0) ){
 				m_iClip = 1;
 			}
 		}
@@ -802,7 +802,9 @@ void CBasePlayerWeapon::ItemPostFrame( void )
 				if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteclip) != 1){
 					Reload();
 				}else{
-					m_iClip = 1;
+					if(m_iClip < 1 && m_iClip != -1 && (iMaxClip() > 0) ){
+						m_iClip = 1;
+					}
 				}
 				return;
 			}

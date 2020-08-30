@@ -1232,6 +1232,7 @@ int CBaseEntity::DamageDecal( int bitsDamageType, int bitsDamageTypeMod )
 
 
 
+
 //MODDD - from player.cpp, however an entity was made in its give methods.
 // Preserving the intent in case it mattered compared to the usual "CBaseEntity::Create" way 
 // below.

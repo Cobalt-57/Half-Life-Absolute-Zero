@@ -427,6 +427,8 @@ TYPEDESCRIPTION	CBasePlayer::m_playerSaveData[] =
 	DEFINE_FIELD(CBasePlayer, recentMajorTriggerDamage, FIELD_BOOLEAN),
 	DEFINE_FIELD(CBasePlayer, lastBlockDamageAttemptReceived, FIELD_TIME),
 	DEFINE_FIELD(CBasePlayer, recentRevivedTime, FIELD_TIME),
+
+	DEFINE_FIELD(CBasePlayer, alreadySentSatchelOutOfAmmoNotice, FIELD_BOOLEAN),
 	
 	
 	//DEFINE_FIELD( CBasePlayer, m_fDeadTime, FIELD_FLOAT ), // only used in multiplayer games
@@ -1666,11 +1668,12 @@ void CBasePlayer::RemoveAllAmmo(void) {
 					if (FClassnameIs(gun->pev, "weapon_satchel")) {
 						CSatchel* tempSatch = static_cast<CSatchel*>(gun);
 						// hacky!  Bundle this setting into CheckOutOfAmmo if this is ever used again for any other weap
-						tempSatch->alreadySentOutOfAmmoNotice = FALSE;
+
+						alreadySentSatchelOutOfAmmoNotice = FALSE;
 						tempSatch->CheckOutOfAmmo();
 
 						// Allow this to be unselectable (no charges out while out of ammo)?  Delete.
-						if (tempSatch->alreadySentOutOfAmmoNotice) {
+						if (alreadySentSatchelOutOfAmmoNotice) {
 							//if (m_pActiveItem == gun)m_pActiveItem = NULL;
 							//gun->Drop();
 							pev->weapons &= ~(1 << gun->m_iId);// take item off hud
@@ -2447,6 +2450,8 @@ CBasePlayer::CBasePlayer(void){
 	auto_determined_fov = 90;
 
 	recentlyPlayedSound[0] = '\0';
+
+	alreadySentSatchelOutOfAmmoNotice = FALSE;
 
 
 }//END OF CBasePlayer constructor
