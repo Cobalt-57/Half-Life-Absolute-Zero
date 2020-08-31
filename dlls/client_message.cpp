@@ -192,7 +192,11 @@ void LinkUserMessages( void )
 	gmsgHideWeapon = REG_USER_MSG( "HideWeapon", 1 );
 	gmsgSetFOV = REG_USER_MSG( "SetFOV", 1 );
 	gmsgShowMenu = REG_USER_MSG( "ShowMenu", -1 );
+
+	// Yes, even this message's handling on clientside.  No idea if any effects of that are interpreted
+	// or handled codebase (view.cpp?  camera-someting.cpp?)
 	gmsgShake = REG_USER_MSG("ScreenShake", sizeof(ScreenShake));
+
 	gmsgFade = REG_USER_MSG("ScreenFade", sizeof(ScreenFade));
 	gmsgAmmoX = REG_USER_MSG("AmmoX", 2);
 	gmsgTeamNames = REG_USER_MSG( "TeamNames", -1 );

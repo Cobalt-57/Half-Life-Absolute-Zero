@@ -36,7 +36,7 @@ enum squeak_e {
 // ...........what.
 class CSqueak : public CBasePlayerWeapon
 {
-static int numberOfEyeSkins;
+	static int numberOfEyeSkins;
 
 private:
 	unsigned short m_usSnarkFire;
@@ -45,6 +45,12 @@ public:
 	//int m_fJustThrown;
 
 	CSqueak();
+
+#ifndef CLIENT_DLL
+	int	Save(CSave& save);
+	int	Restore(CRestore& restore);
+	static TYPEDESCRIPTION m_SaveData[];
+#endif
 
 	const char* GetPickupWalkerName(void);
 	virtual void Spawn(void);

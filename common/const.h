@@ -1136,7 +1136,7 @@ enum
 //#define NOREFLECT (DONOTDRAWSHADOW | ISNPC | ISPLAYER) //224 (exclusive combo)
 #define ISWORLDAFFILIATED (1 << 7)
 
-#define ISMETALNPC (ISNPC | (1 << 1)) //  (exclusive combo... hopefully.)
+#define ISMETALNPC (ISNPC | (1 << 0)) //  (exclusive combo... hopefully.)
 
 
 

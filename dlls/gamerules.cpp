@@ -186,21 +186,22 @@ void CGameRules::RefreshSkillData ( void )
 {
 	int iSkill;
 
-
 	// set before the bound check below, don't want to keep re-calling RefreshSkillData
 	// just because some bad skill value (9, etc.) was used.
-	cvar_skill_mem = (int)CVAR_GET_FLOAT("skill");
+	iSkill = (int)CVAR_GET_FLOAT("skill");
 
-	iSkill = (int)cvar_skill_mem;
+	// don't call this again repeatedly.
+	cvar_skill_mem = iSkill;
 	queueSkillUpdate = FALSE;
 
-	if ( iSkill < 1 )
+	// Check for a bad skill value, snap it to the range 1 to 3 (EASY, MED, HARD).
+	if ( iSkill < SKILL_EASY )
 	{
-		iSkill = 1;
+		iSkill = SKILL_EASY;
 	}
-	else if ( iSkill > 3 )
+	else if ( iSkill > SKILL_HARD )
 	{
-		iSkill = 3; 
+		iSkill = SKILL_HARD; 
 	}
 
 	//MODDD - and this wasn't below the iSkill bounds checking because...?

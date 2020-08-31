@@ -1006,20 +1006,11 @@ Also, need to extern (all?) CVars in dlls/client.cpp.
 
 
 
-
-
-
-
-
-
 //MSG_ONE or MSG_ALL ???
 // NOTE - if doing MSG_ALL, remove the 'pev'.  Game doesn't like MSG_ALL with a pev in mind. (4th parameter in MESSAGE_BEGIN)
 #define EASY_CVAR_RESET_MASS_CLIENT_SIGNAL\
 	MESSAGE_BEGIN( MSG_ALL, gmsgResetClientCVar, NULL );\
 	MESSAGE_END();
-
-
-
 
 
 

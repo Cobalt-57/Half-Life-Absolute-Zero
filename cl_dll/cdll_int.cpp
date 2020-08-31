@@ -73,6 +73,11 @@ extern float ary_g_LastEventCheckEXACT[1024];
 extern BOOL g_cl_egonEffectCreatedYet;
 
 
+extern BOOL g_firstFrameSinceRestore;
+
+
+
+
 
 cl_enginefunc_t gEngfuncs;
 CHud gHUD;
@@ -243,6 +248,7 @@ int DLLEXPORT HUD_VidInit( void )
 	// safety?
 	g_cl_egonEffectCreatedYet = FALSE;
 
+	g_firstFrameSinceRestore = TRUE;
 
 
 

@@ -1116,11 +1116,9 @@ GENERATE_KILLED_IMPLEMENTATION(CHornet){
 	//NOTICE: natural "killed"'s  "BecomeDead" method will set the movetype to "toss" to make this fall.
 	
 	unsigned int cCount = 0;
-	BOOL			fDone = FALSE;
+	BOOL fDone = FALSE;
 
-	//MODDD - if stuck to a barnacle, not anymore.
-	barnacleLocked = FALSE;
-	
+
 	//easyForcePrintLine("SO DO WE GIB IT %.2f %d", pev->health, iGib);
 
 

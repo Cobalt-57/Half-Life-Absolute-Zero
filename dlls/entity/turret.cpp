@@ -1780,15 +1780,16 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBaseTurret)
 	}
 
 
-	if(bitsDamageType & DMG_BULLET){
-		// reduce damage a little.
+
+	if(bitsDamageType & DMG_ENERGYBEAM){
+		flDamage *= 0.65;
+	}else if(bitsDamageTypeMod & DMG_PROJECTILE){
+		flDamage *= 0.7;
+	}else if(bitsDamageType & DMG_BLAST){
+		flDamage *= 0.8;
+	}else if(bitsDamageType & DMG_BULLET || bitsDamageTypeMod & DMG_GAUSS){
 		flDamage *= 0.9;
 	}
-	if(bitsDamageType & DMG_BLAST){
-		// reduce damage a little.
-		flDamage *= 0.8;
-	}
-
 
 	//MODDD - bounded pev->health reduction with 'nothing hurts' CVar check
 	//pev->health -= flDamage;
@@ -2351,12 +2352,17 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CSentry)
 
 
 
-	// some reductions.
-	if(bitsDamageType & DMG_BLAST){
-		flDamage *= 0.8;
-	}else if(bitsDamageType & DMG_BULLET){
-		flDamage *= 0.9;
+	if(bitsDamageType & DMG_ENERGYBEAM){
+		flDamage *= 0.77;
+	}else if(bitsDamageTypeMod & DMG_PROJECTILE){
+		// less reduction for xbow bolts, much less armor in the way
+		flDamage *= 0.90;
+	}else if(bitsDamageType & DMG_BLAST){
+		flDamage *= 0.87;
+	}else if(bitsDamageType & DMG_BULLET || bitsDamageTypeMod & DMG_GAUSS){
+		flDamage *= 0.92;
 	}
+
 
 
 	//MODDD - bounded pev->health reduction with 'nothing hurts' CVar check

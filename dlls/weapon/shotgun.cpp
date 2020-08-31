@@ -79,11 +79,15 @@ CShotgun::CShotgun(){
 #ifndef CLIENT_DLL
 TYPEDESCRIPTION	CShotgun::m_SaveData[] =
 {
+
+	// is m_fireState even used here?
+	DEFINE_FIELD(CShotgun, m_fInAttack, FIELD_INTEGER),
+
 	DEFINE_FIELD(CShotgun, m_flNextReload, FIELD_TIME),
 	DEFINE_FIELD(CShotgun, m_fInSpecialReload, FIELD_INTEGER),
-	DEFINE_FIELD(CShotgun, m_flNextReload, FIELD_TIME),
 	// DEFINE_FIELD( CShotgun, m_iShell, FIELD_INTEGER ),
 	DEFINE_FIELD(CShotgun, m_flPumpTime, FIELD_TIME),
+
 };
 IMPLEMENT_SAVERESTORE(CShotgun, CBasePlayerWeapon);
 #endif

@@ -81,10 +81,13 @@ cvar_t* clientCheat_minimumfiredelay = 0;
 //cvar_t* cvar_minimumfiredelaymem = 0;
 */
 
-extern cvar_t* cvar_sv_cheats;
+//extern cvar_t* cvar_sv_cheats;
 extern float g_flWeaponCheat;
 //old voice_gamemgr.h include location.
 extern CVoiceGameMgr g_VoiceGameMgr;
+
+extern BOOL queueSkillUpdate;
+extern float cvar_skill_mem;
 
 
 
@@ -93,6 +96,7 @@ extern DLL_GLOBAL BOOL g_fGameOver;
 extern DLL_GLOBAL int g_iSkillLevel;
 extern DLL_GLOBAL ULONG g_ulFrameCount;
 
+extern BOOL g_firstPlayerEntered;
 
 
 extern void CopyToBodyQue(entvars_t* pev);
@@ -142,7 +146,6 @@ BOOL g_alreadyShownGameloadedMessage = FALSE;
 
 
 
-extern BOOL g_firstPlayerEntered;
 // For the whole server.  Linked to the previous time 'StartFrame' was called.
 float g_previousFrameTime;
 
@@ -1179,13 +1182,18 @@ void ClientCommand( edict_t *pEntity )
 	const char* pcmdRefinedRef = pcmdRefined;
 	
 	//MODDD - update "g_flWeaponCheat" to what sv_cheats is.
-	if(cvar_sv_cheats != 0){
-		if(cvar_sv_cheats->value == 1){
-			g_flWeaponCheat = 1;
-		}else{
-			g_flWeaponCheat = 0;
-		}
-	}
+	
+	//if(cvar_sv_cheats != 0){
+	//	if(cvar_sv_cheats->value == 1){
+	//		g_flWeaponCheat = 1;
+	//	}else{
+	//		g_flWeaponCheat = 0;
+	//	}
+	//}
+
+	
+
+
 
 	// Is the client spawned yet?
 	if ( !pEntity->pvPrivateData )
@@ -5382,6 +5390,20 @@ void PlayerPostThink( edict_t *pEntity )
 	
 	if (!IsMultiplayer()) {
 		if (!sp_playerCanPostThink) {
+			// Going to skip PlayerThink?  Process impulse commands anyway like
+			// PlayerThink would have
+			CBasePlayer *pPlayer = (CBasePlayer *)GET_PRIVATE(pEntity);
+
+			// Can all impulse commands be checked (flashlight, etc.)?
+			if(!g_fGameOver && pPlayer->IsAlive()){
+			    pPlayer->ImpulseCommands();
+			}else{
+				// Something forbidding the normal way?  That's fine, skip to
+				// checking for cheat ones.
+				pPlayer->CheatImpulseCommands(pPlayer->pev->impulse);
+				pPlayer->pev->impulse = 0;
+			}
+
 			return;
 		}
 		float pausecorrection_val = EASY_CVAR_GET(pausecorrection2);
@@ -5521,10 +5543,34 @@ void ParmsChangeLevel( void )
 //
 
 
-
-
 void StartFrame( void )
 {
+	// Keep g_flWeaponCheat in synch with sv_cheats.
+	if(CVAR_GET_FLOAT("sv_cheats") == 1){
+		g_flWeaponCheat = 1;
+	}else{
+		g_flWeaponCheat = 0;
+	}
+	
+
+	//if(cvar_skill == NULL){
+	//	cvar_skill = CVAR_GET_POINTER("skill");
+	//}
+
+	//if(cvar_skill != NULL && cvar_skill->value != cvar_skill_mem){
+	if(CVAR_GET_FLOAT("skill") != cvar_skill_mem){
+		// update as soon as we can.
+		queueSkillUpdate = TRUE;
+	}
+
+	if(queueSkillUpdate == TRUE && g_pGameRules != NULL){
+		g_pGameRules->RefreshSkillData();
+	}
+
+
+
+
+
 	//NOTE - this does not automatically play sounds though the soundSentenceSave system.
 	//       Anything not starting with an exclamation mark or from "sentencetest", as opposed to "soundtest",
 	//       is played raw as any other typical sound and needs to be precached first to be played.

@@ -1721,7 +1721,12 @@ Schedule_t *CHAssassin::GetSchedule ( void )
 	case MONSTERSTATE_IDLE:
 	case MONSTERSTATE_ALERT:
 		{
-			if ( HasConditions ( bits_COND_HEAR_SOUND ))
+
+			//MODDD
+			// That's cool and all but uhhh.   If you're damaged 'investigating' the sound should probably be
+			// the least of your worries.
+			// Added check that LIGHT/HEAVY_DAMAGE isn't present.
+			if ( !HasConditionsEither(bits_COND_LIGHT_DAMAGE | bits_COND_HEAVY_DAMAGE) && HasConditions ( bits_COND_HEAR_SOUND ))
 			{
 				CSound *pSound;
 				pSound = PBestSound();

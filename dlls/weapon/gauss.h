@@ -36,6 +36,9 @@ public:
 	// we need to know so we can pick the right set of effects. 
 	BOOL m_fPrimaryFire;
 
+	float fuser1_store;
+	float ignoreIdleTime;
+
 
 #ifndef CLIENT_DLL
 	int		Save(CSave& save);
@@ -58,6 +61,14 @@ public:
 
 	void PrimaryAttack(void);
 	void SecondaryAttack(void);
+
+
+	void onFreshFrame(void);
+
+	void ItemPreFrame(void);
+	void ItemPostFrame(void);
+	void ItemPostFrameThink(void);
+
 	void WeaponIdle(void);
 
 	void StartFire(void);

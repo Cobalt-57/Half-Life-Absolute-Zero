@@ -494,9 +494,7 @@ public:
 	BOOL buddhaMode;
 	BOOL blockTimedDamage;
 
-	//MODDD - new, to block state changes when pulled up.
-	//possible glitch that enemies just stay stuck in a standing animation while pulled up?  This may solve that.
-	BOOL barnacleLocked;
+
 	MONSTERSTATE queuedMonsterState;
 
 	float forgetSmallFlinchTime;

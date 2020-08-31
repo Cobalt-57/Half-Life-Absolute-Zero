@@ -765,8 +765,6 @@ GENERATE_KILLED_IMPLEMENTATION(CBaseMonster)
 	unsigned int cCount = 0;
 	BOOL fDone = FALSE;
 
-	//MODDD - if stuck to a barnacle, not anymore.
-	barnacleLocked = FALSE;
 
 	if (HasMemory(bits_MEMORY_KILLED))
 	{

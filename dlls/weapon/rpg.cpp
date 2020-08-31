@@ -48,9 +48,11 @@
 
 
 // ALSO NOTE:  Using the synched var 'm_fInAttack' to represent 'mockClip'. Keeps trakc of whether the weapon has
-// been reloaded for firing logic to work even in clipless (sv_rpg_alpha_ammo = 1).
+// been reloaded for firing logic to work even in clipless (sv_rpg_clipless = 1).
 
-
+// Wait.  Would... forcing the max-clip of the RPG to -1 have played into the HUD logic to only show ammo reserve,
+// and made reload coopaerate better than this hacky '0 clip but act like it were -1 with hud_rpg_clipless separately' thing?
+// FFFFFFFFfffffffffffffffaaaaaaaannnn-tastic.
 
 
 
@@ -78,7 +80,7 @@ EASY_CVAR_EXTERN(cl_rockettrail)
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(rocketSkipIgnite)
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(myRocketsAreBarney)
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(myRocketsAreBarney)
-EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(sv_rpg_alpha_ammo)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST(sv_rpg_clipless)
 
 //MODDD - don't ask.
 void saySomethingBarneyRocket(CBaseEntity* entRef);
@@ -678,7 +680,7 @@ CRpg::CRpg(void) {
 #ifndef CLIENT_DLL
 	forceHideSpotTime = -1;
 #endif
-	m_fInAttack = 0;
+	//m_fInAttack = 0;
 
 }//END OF CRpg constructor
 
@@ -688,6 +690,9 @@ CRpg::CRpg(void) {
 #ifndef CLIENT_DLL
 TYPEDESCRIPTION	CRpg::m_SaveData[] =
 {
+	//MODDD - new
+	DEFINE_FIELD(CRpg, m_fInAttack, FIELD_INTEGER),
+
 	DEFINE_FIELD(CRpg, m_fSpotActive, FIELD_INTEGER),
 	DEFINE_FIELD(CRpg, m_cActiveRockets, FIELD_INTEGER),
 };
@@ -698,14 +703,14 @@ IMPLEMENT_SAVERESTORE(CRpg, CBasePlayerWeapon);
 
 
 int CRpg::GetClip(void) {
-	if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST(sv_rpg_alpha_ammo) != 1) {
+	if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST(sv_rpg_clipless) != 1) {
 		return m_iClip;
 	}else {
 		return m_fInAttack;
 	}
 }
 int CRpg::GetClipMax(void) {
-	if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST(sv_rpg_alpha_ammo) != 1) {
+	if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST(sv_rpg_clipless) != 1) {
 		return RPG_MAX_CLIP;
 	}
 	else {
@@ -845,7 +850,7 @@ void CRpg::Reload( void )
 		//iResult = DefaultReload( RPG_MAX_CLIP, RPG_RELOAD, 2 );
 		//iResult = RPGReload(GetClipMax(), RPG_RELOAD, (61.0 / 30.0));
 
-		if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST(sv_rpg_alpha_ammo) != 1) {
+		if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST(sv_rpg_clipless) != 1) {
 			iResult = DefaultReload(1, RPG_RELOAD, (61.0 / 30.0));
 		}
 		else {
@@ -1052,7 +1057,7 @@ void CRpg::PrimaryAttack()
 		//MODDD
 		if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteclip) == 0){
 			
-			if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST(sv_rpg_alpha_ammo) != 1) {
+			if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST(sv_rpg_clipless) != 1) {
 				if (m_iClip > 0)m_iClip--;
 				if (m_fInAttack > 0)m_fInAttack--;
 			}

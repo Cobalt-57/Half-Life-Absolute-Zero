@@ -290,9 +290,9 @@ hud_swapFirstTwoBuckets (0) - BOOLEAN.
 0: no effect (retail).
 1: weapons between slots 1 and 2 will be swapped:  2nd slot gets melee, 1st slot gets handguns.  Matches some pre-release builds.
 
-hud_rpg_alpha_ammo (1) - BOOL.  If on, RPG clip and reserve are blended into one ammo count instead.
+hud_rpg_clipless (1) - BOOL.  If on, RPG clip and reserve are blended into one ammo count instead (hud display only; ammo logic unchanged).
 
-sv_rpg_alpha_ammo (1) - BOOL.  If on, RPG reserve ammo will be clip-less.  That is, reloading is still needed before firing, but the ammo pool + clip can never exceed the ammo max (5).
+sv_rpg_clipless (1) - BOOL.  If on, RPG reserve ammo will be clip-less.  That is, reloading is still needed before firing, but the ammo pool + clip can never exceed the ammo max (5).
 
 
 ignoreMultiplayerSkillOverride (1) - BOOLEAN.
@@ -1582,5 +1582,19 @@ egonFireRateMode (0) - MODEVAR.  Affects the fire-rate of the egon, varried betw
 0: retail (depends on the game being single/multi player)
 1: force single-player (goes through ammo more quickly)
 2: force multi-plaer: (goes through ammo less quickly)
+
+
+sv_explosion_shake (0) - BOOL.  When 1, explosions will cause a shake-effect if they occur close enough to players.
+- See the hidden stats for this below (all multiples; 0.5 is half as much, 2 is twice as much, etc.).
+  Above 0 advised for all.  There are hard-maximums that are easy to reach with higher multiples.  Such as, there is no difference between sv_explosion_shake_amp set to 5 or 30.
+sv_explosion_shake_range (1) - ADJUSTABLE.  How far from the source can an explosion affect players?  Larger explosions have more range on top of this.  0 disables explosion shake.
+sv_explosion_shake_amp (1) - ADJUSTABLE.  How intense is the shake-effect?
+sv_explosion_shake_freq (1) - ADJUSTABLE.  How rapidly does the shake-effect occur?
+sv_explosion_shake_duration (1) - ADJUSTABLE.  How long does the shake-effect last?  Higher = intensity decays more slowly.
+
+
+
+
+
 
 

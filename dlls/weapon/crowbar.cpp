@@ -864,6 +864,9 @@ void CCrowbar::WeaponIdle( void )
 	break;
 	}
 
+	//MODDD - that's a good idea, yea?
+	forceBlockLooping();
+
 	SendWeaponAnim( iAnim );
 	//MODDD - why was this random?
 	//m_flTimeWeaponIdle = UTIL_SharedRandomFloat( m_pPlayer->random_seed, 10, 15 ); // how long till we do this again.

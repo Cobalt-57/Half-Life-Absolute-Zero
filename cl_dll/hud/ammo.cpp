@@ -58,7 +58,7 @@ EASY_CVAR_EXTERN(hud_moveselect_mousewheelsound)
 EASY_CVAR_EXTERN_CLIENTONLY_DEBUGONLY(drawViewModel)
 EASY_CVAR_EXTERN_CLIENTONLY_DEBUGONLY(drawHUD)
 EASY_CVAR_EXTERN_CLIENTONLY_DEBUGONLY(cl_drawExtraZeros)
-EASY_CVAR_EXTERN(hud_rpg_alpha_ammo)
+EASY_CVAR_EXTERN(hud_rpg_clipless)
 
 
 
@@ -1328,7 +1328,7 @@ int CHudAmmo::Draw(float flTime)
 	//MODDD - this is how we check to see if the currently equipped weapon is the rpg.
 	// NOTICE - this check is only for drawing the alpha "clip and total ammo" combined trick,
 	// no other weapon does this.  Turned into a CVar since that defaults to 'on' to allow this.
-	if(EASY_CVAR_GET(hud_rpg_alpha_ammo) == 1 && FStrEq(m_pWeapon->szName, "weapon_rpg")){
+	if(EASY_CVAR_GET(hud_rpg_clipless) == 1 && FStrEq(m_pWeapon->szName, "weapon_rpg")){
 		ammoClipReserveBlend = TRUE;
 	}
 

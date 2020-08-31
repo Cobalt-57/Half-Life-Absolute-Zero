@@ -167,7 +167,7 @@
 #define timedDamage_debug_ID 176
 #define myRocketsAreBarney_ID 177
 #define wpn_glocksilencer_ID 178
-#define sv_rpg_alpha_ammo_ID 179
+#define sv_rpg_clipless_ID 179
 #define egonRadiusDamageMode_ID 180
 #define egonFireRateMode_ID 181
 
@@ -702,8 +702,8 @@
 #define DEFAULT_cl_breakholster 0
 #define DEFAULT_pausecorrection1 1
 #define DEFAULT_pausecorrection2 2
-#define DEFAULT_hud_rpg_alpha_ammo 1
-#define DEFAULT_sv_rpg_alpha_ammo 1
+#define DEFAULT_hud_rpg_clipless 1
+#define DEFAULT_sv_rpg_clipless 1
 #define DEFAULT_cl_viewmodel_fidget 2
 #define DEFAULT_sv_player_midair_fix 1
 #define DEFAULT_pathfindIgnoreNearestNodeCache 0
@@ -714,6 +714,13 @@
 #define DEFAULT_cl_mp5_evil_skip 0
 #define DEFAULT_egonRadiusDamageMode 0
 #define DEFAULT_egonFireRateMode 0
+#define DEFAULT_sv_explosion_shake 0
+#define DEFAULT_sv_explosion_shake_range 1
+#define DEFAULT_sv_explosion_shake_amp 1
+#define DEFAULT_sv_explosion_shake_freq 1
+#define DEFAULT_sv_explosion_shake_duration 1
+
+
 
 
 

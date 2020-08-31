@@ -430,7 +430,6 @@ CBaseMonster::CBaseMonster(){
 
 	signalActivityUpdate = FALSE;
 
-	barnacleLocked = FALSE;
 	canSetAnim = TRUE;
 
 	//MODDD TODO - we don't yet restore the queued state if the monster loses the PRONE state. Should we? this may not be very important.
@@ -1984,13 +1983,16 @@ void CBaseMonster::MonsterThink ( void )
 
 
 
+	// you can do the flinches again!
 	if(forgetSmallFlinchTime != -1 && gpGlobals->time >= forgetSmallFlinchTime){
 		forgetSmallFlinchTime = -1;
 		this->Forget(bits_MEMORY_FLINCHED);
 	}
 	if(forgetBigFlinchTime != -1 && gpGlobals->time >= forgetBigFlinchTime){
 		forgetBigFlinchTime = -1;
+		// oh, there isn't a separate BIG_FLINCHED.
 		//this->Forget(bits_MEMORY_BIG_FLINCHED);
+		this->Forget(bits_MEMORY_FLINCHED);
 	}
 
 

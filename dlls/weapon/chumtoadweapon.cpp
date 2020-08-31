@@ -15,23 +15,6 @@ EASY_CVAR_EXTERN_DEBUGONLY(chumtoadInheritsPlayerVelocity)
 int CChumToadWeapon::numberOfEyeSkins = -1;
 
 
-CChumToadWeapon::CChumToadWeapon(void){
-	
-	antiGravityPositionY = -1;
-	
-	//Holy crap, even "pev" stuff needs to be initialized by something. Not doing this here then.
-	//pev->fuser1 = -1;
-	waitingForChumtoadThrow = FALSE;
-
-
-	//m_flReleaseThrow = -1;
-	m_chargeReady &= ~32;
-	
-}
-BOOL CChumToadWeapon::usesSoundSentenceSave(void){
-	return FALSE;
-}
-
 
 LINK_ENTITY_TO_CLASS( weapon_chumtoad, CChumToadWeapon );
 
@@ -45,6 +28,44 @@ LINK_ENTITY_TO_CLASS( weapon_chumtoad, CChumToadWeapon );
 	//no extras.
 #endif
 	*/
+
+
+
+
+CChumToadWeapon::CChumToadWeapon(void){
+	
+	antiGravityPositionY = -1;
+	
+	//Holy crap, even "pev" stuff needs to be initialized by something. Not doing this here then.
+	//pev->fuser1 = -1;
+	waitingForChumtoadThrow = FALSE;
+
+
+	//m_flReleaseThrow = -1;
+	m_chargeReady &= ~32;
+	
+}
+
+
+
+#ifndef CLIENT_DLL
+TYPEDESCRIPTION	CChumToadWeapon::m_SaveData[] =
+{
+	DEFINE_FIELD( CChumToadWeapon, m_chargeReady, FIELD_INTEGER ),
+};
+IMPLEMENT_SAVERESTORE(CChumToadWeapon, CBasePlayerWeapon);
+#endif
+
+
+
+
+
+
+
+
+BOOL CChumToadWeapon::usesSoundSentenceSave(void){
+	return FALSE;
+}
 
 
 
@@ -738,6 +759,7 @@ void CChumToadWeapon::SecondaryAttack( void )
 			m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 50.0 / 16.0;
 		}
 		//SetAttackDelays(m_flTimeWeaponIdle);
+		m_flNextSecondaryAttack = m_flTimeWeaponIdle;
 		m_flTimeWeaponIdle += randomIdleAnimationDelay();
 		SendWeaponAnim(iAnim);
 	}//CVar check

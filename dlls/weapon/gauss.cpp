@@ -54,6 +54,8 @@ EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gaussRecoilSendsUpInSP)
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST(gauss_mode)
 
 
+extern BOOL g_firstFrameSinceRestore;
+
 #ifdef CLIENT_DLL
 extern int g_irunninggausspred;
 #endif
@@ -65,7 +67,16 @@ LINK_ENTITY_TO_CLASS(weapon_gauss, CGauss);
 
 
 
+
 CGauss::CGauss(void) {
+
+	// NOTICE - all mentions of 'm_pPlayer->m_flStartCharge' changed to no longer involve the player
+	// (var of this class instead).
+	// ALSO, m_flStartCharge replaced with pev->fuser1, something that counts down to 0 (0-based timer).
+
+	fuser1_store = -1;
+
+	ignoreIdleTime = -1;
 
 }//END OF CGauss constructor
 
@@ -77,13 +88,67 @@ CGauss::CGauss(void) {
 TYPEDESCRIPTION	CGauss::m_SaveData[] =
 {
 	DEFINE_FIELD(CGauss, m_fInAttack, FIELD_INTEGER),
-	//	DEFINE_FIELD( CGauss, m_flStartCharge, FIELD_TIME ),
+
+	//MODDD - new
+	DEFINE_FIELD(CGauss, m_fireState, FIELD_INTEGER),
+	
+	//MODDD - coming back here
+	DEFINE_FIELD( CGauss, fuser1_store, FIELD_FLOAT ),  // was FIELD_TIME.
+	//DEFINE_FIELD( CGauss, pev->fuser1, FIELD_FLOAT ),
+	
+
 	//	DEFINE_FIELD( CGauss, m_flPlayAftershock, FIELD_TIME ),
 	//	DEFINE_FIELD( CGauss, m_flNextAmmoBurn, FIELD_TIME ),
 	DEFINE_FIELD(CGauss, m_fPrimaryFire, FIELD_BOOLEAN),
+
+
 };
-IMPLEMENT_SAVERESTORE(CGauss, CBasePlayerWeapon);
+//IMPLEMENT_SAVERESTORE(CGauss, CBasePlayerWeapon);
+
+int CGauss::Save(CSave& save){
+	if (!CBasePlayerWeapon::Save(save))
+		return 0;
+
+
+	fuser1_store = pev->fuser1;  //commit it
+
+	return save.WriteFields("CGauss", this, m_SaveData, ARRAYSIZE(m_SaveData));
+}
+
+// REMEMBER!!! Client does not call Restore!
+int CGauss::Restore(CRestore& restore){
+
+	if (!CBasePlayerWeapon::Restore(restore))
+		return 0;
+
+	
+	// TEST!!!   Going between levels?  Forget you created effects, re-do if needed.
+	// Unless this is more of a clientside issue (resend the event to start effects there).
+	// Is weird the sprite still exists when you think about it...?  yea, clientisde probably.
+	//effectsExist = TRUE;
+
+
+	//if(m_pPlayer != NULL){
+	//m_pPlayer->TabulateAmmo();
+	//}
+
+	int result = restore.ReadFields("CGauss", this, m_SaveData, ARRAYSIZE(m_SaveData));
+
+	//easyForcePrintLine("?????????????? %d %d", m_fInAttack, m_fireState);
+
+	pev->fuser1 = fuser1_store;  //take it
+
+	g_firstFrameSinceRestore = TRUE;
+
+
+	return result;
+}
 #endif
+
+
+
+
+
 
 
 
@@ -325,6 +390,12 @@ void CGauss::SecondaryAttack()
 		return;
 	}
 
+
+
+	// the looping charge animation needs this
+	stopBlockLooping();
+
+
 	if (m_fInAttack == 0)
 	{
 		if (PlayerPrimaryAmmoCount() < chargeAmmoUsage)
@@ -355,7 +426,7 @@ void CGauss::SecondaryAttack()
 		}
 		else {
 			// fire now, max damage!
-			//m_pPlayer->m_flStartCharge = -20;  //make it think this is always a full charge.
+			//m_flStartCharge = -20;  //make it think this is always a full charge.
 			// ineffective, this way now
 			m_fireState = chargeAmmoStoredMax-1;
 
@@ -379,7 +450,10 @@ void CGauss::SecondaryAttack()
 		SendWeaponAnim(GAUSS_SPINUP);
 		m_fInAttack = 1;
 		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + chargeInitialDelay;
-		m_pPlayer->m_flStartCharge = gpGlobals->time;
+		
+		// REPLACO
+		//m_flStartCharge = gpGlobals->time;
+		pev->fuser1 = 100;  // keep track of how far down it has counted, knowing it started at 100.
 
 		//MODDD - changing the purpose of this var.  Instead of when to stop adding further ammo
 		// (yes, despite the name), count how much ammo has been used separately by charging
@@ -446,9 +520,22 @@ void CGauss::SecondaryAttack()
 		}
 
 
-		int pitch = (gpGlobals->time - m_pPlayer->m_flStartCharge) * (150 / GetFullChargeTime()) + 100;
-		if (pitch > 250)
+		// REPLACO
+		//int pitch = (gpGlobals->time - m_flStartCharge) * (150 / GetFullChargeTime()) + 100;
+		int pitch = (100 - pev->fuser1) * (150 / GetFullChargeTime()) + 100;
+		
+
+		if(pitch < 50){
+			// WARNING!  Pitch should never go under the starting 100 for 0 charge time!
+			// This is to avoid that annoying glitchy high-pitched caused by a deep negative value in some bug.
+			pitch = 50;
+		}
+
+		if (pitch > 250){
 			pitch = 250;
+		}
+
+		//easyForcePrintLine("PITCHES GET STITCHES %d", pitch);
 
 		// ALERT( at_console, "%d %d %d\n", m_fInAttack, m_iSoundState, pitch );
 
@@ -462,7 +549,10 @@ void CGauss::SecondaryAttack()
 		m_pPlayer->m_iWeaponVolume = GAUSS_PRIMARY_CHARGE_VOLUME;
 		
 		// m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 0.1;
-		if (gpGlobals->time > m_pPlayer->m_flStartCharge + GetFullChargeTime() * 1.3 + 3)
+
+		// REPLACO
+		//if (gpGlobals->time > m_flStartCharge + GetFullChargeTime() * 1.3 + 3)
+		if (100 - pev->fuser1 > GetFullChargeTime() * 1.3 + 3)
 		{
 			// Player charged up too long. Zap him.
 			EMIT_SOUND_DYN(ENT(m_pPlayer->pev), CHAN_WEAPON, "weapons/electro4.wav", 1.0, ATTN_NORM, 0, 80 + RANDOM_LONG(0, 0x3f));
@@ -536,13 +626,13 @@ void CGauss::StartFire(void)
 			flDamage = damagePerShot * (0.4f + 0.695f * ((float)m_fireState));
 
 			/*
-			if (gpGlobals->time - m_pPlayer->m_flStartCharge > GetFullChargeTime())
+			if (gpGlobals->time - m_flStartCharge > GetFullChargeTime())
 			{
 				flDamage = 200;
 			}
 			else
 			{
-				flDamage = 200 * ((gpGlobals->time - m_pPlayer->m_flStartCharge) / GetFullChargeTime());
+				flDamage = 200 * ((gpGlobals->time - m_flStartCharge) / GetFullChargeTime());
 			}
 			*/
 		}
@@ -565,7 +655,7 @@ void CGauss::StartFire(void)
 
 	if (m_fInAttack != 3)
 	{
-		//ALERT ( at_console, "Time:%f Damage:%f\n", gpGlobals->time - m_pPlayer->m_flStartCharge, flDamage );
+		//ALERT ( at_console, "Time:%f Damage:%f\n", gpGlobals->time - m_flStartCharge, flDamage );
 
 #ifndef CLIENT_DLL
 		// whether to include Z or not comes later.
@@ -1012,8 +1102,65 @@ void CGauss::Fire(Vector vecOrigSrc, Vector vecDir, float flDamage)
 
 
 
+void CGauss::onFreshFrame(void){
+
+	ignoreIdleTime = gpGlobals->time + 0.8;
+
+
+
+}
+
+
+void CGauss::ItemPreFrame( void ){
+
+	CBasePlayerWeapon::ItemPreFrame();
+}
+
+
+
+
+void CGauss::ItemPostFrame(void){
+
+
+	/*
+	if (!m_pPlayer->m_bHolstering) {
+	// If the player is putting the weapon away, don't do this!
+	UpdateHitCloud();
+	}
+	*/
+
+	CBasePlayerWeapon::ItemPostFrame();
+}
+
+
+void CGauss::ItemPostFrameThink(void){
+
+	if(g_firstFrameSinceRestore){
+		onFreshFrame();
+	}
+
+	// firestate is how much ammo has been added to a charge in progress
+	// m_fInAttack is what phase charging is in (0: none, 1: startup + one-time delay, 2: charge-loop to further add ammo)
+
+	//easyForcePrintLine("I AM gauss fs:%d ia:%d", m_fireState, m_fInAttack);
+
+
+
+	CBasePlayerWeapon::ItemPostFrameThink();
+}
+
+
+
+
+
 void CGauss::WeaponIdle(void)
 {
+
+	if(gpGlobals->time < ignoreIdleTime){
+		return;  //not yet
+	}
+
+
 	ResetEmptySound();
 
 	// play aftershock static discharge
@@ -1059,9 +1206,12 @@ void CGauss::WeaponIdle(void)
 		else
 		{
 			iAnim = GAUSS_FIDGET;
-			m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + (71.0f + 1.0f) / (30.0f);
+			//MODDD - no, use the normal fidget delay
+			//m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + (71.0f + 1.0f) / (30.0f);
+			m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + UTIL_SharedRandomFloat( m_pPlayer->random_seed, 10, 15 );
 		}
 
+		forceBlockLooping();
 		//MODDD - 'return' found here, as-is.   Always stopped?  Why?
 		//return;
 		SendWeaponAnim(iAnim);

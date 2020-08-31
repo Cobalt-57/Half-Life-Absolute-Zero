@@ -46,6 +46,25 @@ CHandGrenade::CHandGrenade(void){
 	m_fInAttack = 0;
 }
 
+
+#ifndef CLIENT_DLL
+TYPEDESCRIPTION	CHandGrenade::m_SaveData[] =
+{
+	DEFINE_FIELD( CHandGrenade, m_chargeReady, FIELD_INTEGER ),
+	DEFINE_FIELD( CHandGrenade, m_fInAttack, FIELD_INTEGER ),
+};
+IMPLEMENT_SAVERESTORE(CHandGrenade, CBasePlayerWeapon);
+#endif
+
+
+
+
+//
+
+
+
+
+
 //MODDD
 void CHandGrenade::customAttachToPlayer(CBasePlayer *pPlayer ){
 	m_pPlayer->SetSuitUpdate("!HEV_GRENADE", FALSE, SUIT_NEXT_IN_30MIN);

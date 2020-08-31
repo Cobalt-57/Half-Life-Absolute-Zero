@@ -107,8 +107,6 @@ EASY_CVAR_EXTERN(precacheAll)
 EASY_CVAR_EXTERN(blastExtraArmorDamageMode)
 EASY_CVAR_EXTERN(sv_player_midair_fixMem)
 
-
-
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(viewModelPrintouts)
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteclip)
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteammo)
@@ -118,6 +116,7 @@ EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_nogaussrecoil)
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gaussRecoilSendsUpInSP)
 
 
+extern BOOL g_firstFrameSinceRestore;
 
 
 
@@ -165,7 +164,7 @@ EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gaussRecoilSendsUpInSP)
 
 
 
-extern cvar_t* cvar_sv_cheats;
+//extern cvar_t* cvar_sv_cheats;
 //MODDD
 extern unsigned short g_sFreakyLight;
 
@@ -429,6 +428,9 @@ TYPEDESCRIPTION	CBasePlayer::m_playerSaveData[] =
 	DEFINE_FIELD(CBasePlayer, recentRevivedTime, FIELD_TIME),
 
 	DEFINE_FIELD(CBasePlayer, alreadySentSatchelOutOfAmmoNotice, FIELD_BOOLEAN),
+
+	// ?
+	DEFINE_FIELD(CBasePlayer, m_flNextAmmoBurn, FIELD_FLOAT),
 	
 	
 	//DEFINE_FIELD( CBasePlayer, m_fDeadTime, FIELD_FLOAT ), // only used in multiplayer games
@@ -1866,9 +1868,6 @@ GENERATE_KILLED_IMPLEMENTATION(CBasePlayer)
 		}
 	}//END OF while(friendly check)
 
-	barnacleLocked = FALSE;
-	//in case "CBaseMonster::Killed" isn't called.
-
 
 
 	// Holster weapon immediately, to allow it to cleanup
@@ -2409,9 +2408,9 @@ CBasePlayer::CBasePlayer(void){
 	horrorPlayTimePreDelay = -1;
 	horrorPlayTime = -1;
 
-	m_flStartCharge = -1;  //okay?
-	m_flStartChargeAnim = -1;
-	m_flStartChargePreSuperDuper = -1;
+
+	//m_flStartCharge = -1;  //okay?
+
 	reviveSafetyTime = -1;
 	grabbedByBarnacle = FALSE;
 	grabbedByBarnacleMem = FALSE;
@@ -5726,11 +5725,21 @@ void CBasePlayer::PostThink()
 	
 
 
-	if ( g_fGameOver )
-		goto pt_end;         // intermission or finale
+	if ( g_fGameOver || !IsAlive() ){
 
-	if (!IsAlive())
-		goto pt_end;
+		//MODDD - HOLD ON.  Go ahead and check for cheat impulse commands before skipping the rest.
+		// If the player is cheating, who cares about those restrictions?
+		// And may as well reset pev->impulse, no sense being queued up for some revive or 
+		// multiplayer respawn.
+		CheatImpulseCommands(pev->impulse);
+		pev->impulse = 0;
+
+		goto pt_end;         // intermission or finale  (for gameover)
+		// WAIT WHAT.  Really?   g_fGameOver is on during intermissions between levels?
+		// Probaly not, likely means the time between changemaps where no player movement is allowed
+		// (in multiplayer servers typically).
+	}// gameover or IsAlive checks
+
 
 	// Handle Tank controlling
 	if ( m_pTank != NULL )
@@ -5810,20 +5819,11 @@ void CBasePlayer::PostThink()
     }
 
 
-	//MODDD - old m_flFallVelocity reset location
-	if (FBitSet(pev->flags, FL_ONGROUND))
-	{
-		//MODDD - and why multiplayer only anyhow?  I know the sound's just for AI though, probably why.  Doesn't hurt to anyway though.
-		// (this isn't the audible sound of course)
-		// Do require being alive though.
-		//if (m_flFallVelocity > 64 && !IsMultiplayer())
-		if (m_flFallVelocity > 64 && pev->deadflag == DEAD_NO)
-		{
-			CSoundEnt::InsertSound(bits_SOUND_PLAYER, pev->origin, m_flFallVelocity, 0.2);
-			// ALERT( at_console, "fall %f\n", m_flFallVelocity );
-		}
-		m_flFallVelocity = 0;
-	}
+
+
+	//MODDD - AI-sound placement changed to after 'pt_end' instead.
+	// If a dead player slams into the ground, something should still turn to hear it.
+
 
 
 	// select the proper animation for the player character	
@@ -5859,6 +5859,25 @@ void CBasePlayer::PostThink()
 
 
 pt_end:
+
+
+	//MODDD - AI-sound placement moved from above.
+	// old m_flFallVelocity reset location
+	if (FBitSet(pev->flags, FL_ONGROUND))
+	{
+		//MODDD - and why multiplayer only anyhow?  I know the sound's just for AI though, probably why.  Doesn't hurt to anyway though.
+		// (this isn't the audible sound of course)
+		// Do require being alive though.
+		//if (m_flFallVelocity > 64 && !IsMultiplayer())
+		if (m_flFallVelocity > 64 && pev->deadflag == DEAD_NO)
+		{
+			CSoundEnt::InsertSound(bits_SOUND_PLAYER, pev->origin, m_flFallVelocity, 0.2);
+			// ALERT( at_console, "fall %f\n", m_flFallVelocity );
+		}
+		m_flFallVelocity = 0;
+	}
+
+
 #if defined( CLIENT_WEAPONS )
 		// Decay timers on weapons
 	// go through all of the weapons and make a list of the ones to pack
@@ -7917,7 +7936,9 @@ void CBasePlayer::ImpulseCommands( )
 //=========================================================
 void CBasePlayer::CheatImpulseCommands( int iImpulse )
 {
-	//necessary...?  maybe not.
+	/*
+	// necessary...?  maybe not.   Nope, definitely not, only needs to be checked once 
+	// in server logic (client.cpp).
 	if(cvar_sv_cheats == 0){
 		cvar_sv_cheats = CVAR_GET_POINTER( "sv_cheats" );
 	}
@@ -7930,6 +7951,7 @@ void CBasePlayer::CheatImpulseCommands( int iImpulse )
 			g_flWeaponCheat = 0;
 		}
 	}
+	*/
 
 	if ( g_flWeaponCheat == 0.0 )
 	{
@@ -7958,6 +7980,9 @@ void CBasePlayer::CheatImpulseCommands( int iImpulse )
 		
 	case 101: {
 		//int i;
+
+		// EHHhhh why not.
+		globalflag_muteDeploySound = TRUE;
 
 		gEvilImpulse101 = TRUE;
 		GiveNamedItem("item_suit");
@@ -7993,6 +8018,7 @@ void CBasePlayer::CheatImpulseCommands( int iImpulse )
 		GiveNamedItem("item_adrenaline");
 		GiveNamedItem("item_radiation");
 
+		globalflag_muteDeploySound = FALSE;
 			
 			
 		//MODDD - NEW.  Have some perks of 'everything'.
@@ -8490,7 +8516,9 @@ void CBasePlayer::ItemPostFrame()
 	//frame method that does notdepend on "m_flNextAttack" not being used at the moment.
 	if(canCallItemPostFrame){
 		m_pActiveItem->ItemPostFrameThink( );
-	}	
+	}
+
+	g_firstFrameSinceRestore = FALSE;
 
 	//MODDDD - now always done, BUT with a few edits to ensure the same logic.
 	//MODDDD - no, reverted to normal for now...

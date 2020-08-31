@@ -40,11 +40,10 @@ enum chumtoadweapon_e {  //key: frames, FPS
 
 class CChumToadWeapon : public CBasePlayerWeapon{
 
-private:
+public:
 	unsigned short m_usChumToadFire;
 	static int numberOfEyeSkins;
 
-public:
 	BOOL waitingForChumtoadThrow;
 	float chumtoadThrowReverseDelay;
 	int antiGravityPositionY;
@@ -53,9 +52,11 @@ public:
 	//MODDD
 	CChumToadWeapon(void);
 
-	// No need for save/restore stuff it seems?
-	// If ever supported do checks for 'ifndef CLIENT_DLL', since those are serverside only
-	// for all player weapons.
+#ifndef CLIENT_DLL
+	int	Save(CSave& save);
+	int	Restore(CRestore& restore);
+	static TYPEDESCRIPTION m_SaveData[];
+#endif
 
 	BOOL usesSoundSentenceSave(void);
 

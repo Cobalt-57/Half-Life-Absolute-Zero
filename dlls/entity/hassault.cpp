@@ -88,7 +88,7 @@ extern BOOL globalPSEUDO_germanModel_hassaultFound;
 
 // Where should a grenade be spawned from (times forward, right, up direction vectors)
 // No, it's 'right, forward, up' actually.  EHhhhhhh why.
-const Vector vecHAssaultGrenadeSpawnPos = Vector(-10, 25, 50);
+const Vector vecHAssaultGrenadeSpawnPos = Vector(-7.8, 35, 54);
 
 
 

@@ -84,8 +84,6 @@ struct local_state_s *g_finalstate = NULL;
 
 
 
-
-
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(viewModelPrintouts)
 //EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(viewModelSyncFixPrintouts)
 //EASY_CVAR_EXTERN(cl_holster)
@@ -96,6 +94,16 @@ EASY_CVAR_EXTERN(pausecorrection1)
 BOOL g_cl_HUD_Frame_ran = FALSE;
 BOOL g_cl_HUD_UpdateClientData_ran = FALSE;
 BOOL g_HUD_Redraw_ran = FALSE;
+
+
+
+// NOTICE!  Anything mentioning m_flAmmoStartCharge throughout here and client.cpp can be replaced, that var is no longer used.
+// In the least, all references to it can be dummied out, fuser3 is unused now then.
+// Strangely, clientside (would be in this file) is missing the frame-count-down logic (reduce by some number of milliseconds),
+// even though dlls/player.cpp does it (serverside)?   odd.
+// It does get relayed here, but still, no counting down between server-sendoff frames?  Other 0-based timers like
+// the timeWeaponIdle and nextprimary/secondary attack ones do that.
+
 
 
 // Implementations for methods usually found in dlls/weapons.cpp and dlls/player.cpp moved to their own files clientside:
@@ -200,6 +208,7 @@ int g_currentanim = -1;
 float sp_ClientPreviousTime = -1;
 int g_cl_frameCount = 0;
 
+extern BOOL g_firstFrameSinceRestore;
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -863,17 +872,17 @@ void HUD_WeaponsPostThink(local_state_s* from, local_state_s* to, usercmd_t* cmd
 		// YES KEEP THIS.  I stared at this for 5+ hours to say... yes.  This gives better than retail behavior.
 		// Without this check, some clientside weapon-fires happen twice, especially with nextAttack's that are uneven
 		// (like + 0.82 instead of 0.75 on the singlefire shotgun).  Why?   BECAUSE THE GODS WERE NOT PLEASED WITH 0.82.
-		if( !(pfrom->m_flNextPrimaryAttack <= 0 && pCurrent->m_flNextPrimaryAttack >= 0.1) ){
+		//if( !(pfrom->m_flNextPrimaryAttack <= 0 && pCurrent->m_flNextPrimaryAttack >= 0.1) ){
 		pCurrent->m_flNextPrimaryAttack = pfrom->m_flNextPrimaryAttack;
-		}
-		if( !(pfrom->m_flNextSecondaryAttack <= 0 && pCurrent->m_flNextSecondaryAttack >= 0.1) ){
+		//}
+		//if( !(pfrom->m_flNextSecondaryAttack <= 0 && pCurrent->m_flNextSecondaryAttack >= 0.1) ){
 		pCurrent->m_flNextSecondaryAttack = pfrom->m_flNextSecondaryAttack;
-		}
-		if( !(pfrom->m_flTimeWeaponIdle <= 0 && pCurrent->m_flTimeWeaponIdle >= 0.1) ){
+		//}
+		//if( !(pfrom->m_flTimeWeaponIdle <= 0 && pCurrent->m_flTimeWeaponIdle >= 0.1) ){
 		pCurrent->m_flTimeWeaponIdle = pfrom->m_flTimeWeaponIdle;
-		}else{
+		//}else{
 		//	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(viewModelSyncFixPrintouts)==1) easyForcePrintLine("*****VIEWMODEL SYNCH FIX APPLIED.");
-		}
+		//}
 
 
 		pCurrent->pev->fuser1 = pfrom->fuser1;
@@ -1139,6 +1148,7 @@ void HUD_WeaponsPostThink(local_state_s* from, local_state_s* to, usercmd_t* cmd
 		{
 			pWeapon->ItemPostFrame();
 		}
+		g_firstFrameSinceRestore = FALSE;  // turn off
 	}
 
 	// Assume that we are not going to switch weapons

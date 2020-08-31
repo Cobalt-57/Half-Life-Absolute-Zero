@@ -18,6 +18,17 @@
 //IMPORTANT NOTE: most cases of "UTIL_WeaponTimeBase" have been replaced with "gpGlobals->time".
 //"UTIL_WeaponTimeBase" seems to return only 0 here, and that is not helpful for some things.
 
+
+// GENERAL NOTE (although true since retail) - damage is only dealt to what's hit during frames that
+// use ammo.  Any others are just for show.
+
+// The new scorch-mark effect is often drawn during frames that don't use ammo / deal damage.
+// So things that aren't damage are likely to get scorch marks (breakables most often).  If this is a problem,
+// say so.   Although there could be a compromise:  if the thing hit is of BSP geometry but not the map itself
+// (func_breakable or some child class), don't draw a decal UNLESS this frame dealt damage.
+// ya know what that sounds right.
+
+
 #pragma once
 
 #include "extdll.h"
@@ -44,13 +55,35 @@ EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(egonHitCloud);
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(egonRadiusDamageMode)
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(egonFireRateMode)
 
-
+extern BOOL g_firstFrameSinceRestore;
 
 //MODDD - several things moved to the new egon.h for commonly including client/serverside
 // (less redundancy in ev_hldm.cpp)
 
 #define EGON_SWITCH_NARROW_TIME			0.75			// Time it takes to switch fire modes
 #define EGON_SWITCH_WIDE_TIME			1.5
+
+// how often to place scorches while firing?  The delay begins after firing, so firing for the minimum amount of time
+// (enough to use 1 unit of ammo) will not leave a scorch.
+#define EGON_PRIMARY_SCORCH_INTERVAL	0.042 //0.18
+#define EGON_SECONDARY_SCORCH_INTERVAL	0.055 //0.27
+
+
+
+// TEST?
+// nope, unwise to drop that flag.  Go between levels with the egon on, looks fine at first but come back to the previous level...
+// the effect is awkwardly stuck from the muzzle of the play weapon to the place the player was at the time of the transition
+// away from this first level.
+#define SUB_SF_BEAM_TEMPORARY SF_BEAM_TEMPORARY
+//#define SUB_SF_BEAM_TEMPORARY 0
+
+
+
+#ifdef CLIENT_DLL
+// Here are all the remaining fucks I give
+int fuckfuckfuckfuckfuck = 0;
+#endif
+
 
 
 LINK_ENTITY_TO_CLASS( weapon_egon, CEgon );
@@ -252,12 +285,6 @@ void CEgon::UseAmmo( int count )
 
 
 
-#ifdef CLIENT_DLL
-// Here are all the remaining fucks I give
-int fuckfuckfuckfuckfuck = 0;
-#endif
-
-
 //MODDD - undone the "UTIL_WeaponTimeBase  --->  gpGlobals->time"   replacements seen before throughout this method.
 //Apparently, this causes a glitch where the egon fire sound does not re-loop when playing for more than several seconds.
 //Perhaps the client does just fine with "UTIL_WeaponTimeBase" or something?
@@ -327,6 +354,7 @@ void CEgon::Attack( void )
 
 #ifdef CLIENT_DLL
 	if(fuckfuckfuckfuckfuck > 0){
+		//easyForcePrintLine("fuckfuckfuckfuckfuck");
 		PLAYBACK_EVENT_FULL( flags, m_pPlayer->edict(), m_usEgonFire, 0.0, (float *)&g_vecZero, (float *)&g_vecZero, 0.0, 0.0, m_fireState, m_fInAttack, 1, 0 );
 		fuckfuckfuckfuckfuck--;
 	}
@@ -362,6 +390,7 @@ void CEgon::Attack( void )
 			
 			m_flAmmoUseTime = gpGlobals->time;// start using ammo ASAP.
 
+			easyPrintLine("PLAYBACK_EVENT_FULL egstar");
 			PLAYBACK_EVENT_FULL( flags, m_pPlayer->edict(), m_usEgonFire, 0.0, (float *)&g_vecZero, (float *)&g_vecZero, 0.0, 0.0, m_fireState, m_fInAttack, 1, 0 );
 				
 #ifdef CLIENT_DLL
@@ -383,6 +412,17 @@ void CEgon::Attack( void )
 			pev->dmgtime = gpGlobals->time + GetPulseInterval();
 			m_fireState = FIRE_CHARGE;
 			stopBlockLooping();
+
+			// Start the scorch interval so that firing for a single frame doesn't leave a mark.
+			// Also, this will be the first in this stream of firing.
+			previousScorchLocSet = FALSE;
+			recentlyDamagedEntity = NULL;
+			if(m_fInAttack == FIRE_NARROW){
+				nextScorchInterval = gpGlobals->time + EGON_PRIMARY_SCORCH_INTERVAL;
+			}else{
+				nextScorchInterval = gpGlobals->time + EGON_SECONDARY_SCORCH_INTERVAL;
+			}
+
 		}
 		break;
 
@@ -405,6 +445,7 @@ void CEgon::Attack( void )
 			//if(gpGlobals->time >= m_flReleaseThrow)
 			if(pev->fuser1 <= UTIL_WeaponTimeBase())
 			{
+				easyPrintLine("PLAYBACK_EVENT_FULL egloop");
 				PLAYBACK_EVENT_FULL( flags, m_pPlayer->edict(), m_usEgonFire, 0, (float *)&g_vecZero, (float *)&g_vecZero, 0.0, 0.0, m_fireState, m_fInAttack, 0, 0 );
 				//m_flReleaseThrow = 1000;
 				//m_flReleaseThrow = gpGlobals->time + 1000;
@@ -415,6 +456,7 @@ void CEgon::Attack( void )
 
 			if ( !HasAmmo() )
 			{
+				easyForcePrintLine("GONNA GIVE IT YO YA 1");
 				EndAttack();
 				// ran out cus' you be out of ammo?  Freeze until the player lets go of the mouse.
 				
@@ -543,12 +585,18 @@ CEgon::CEgon(void){
 
 	m_flReleaseThrow = 0;  // ???
 
-
 	fireExceptionPrev = FALSE;
 	fireExceptionStartTime = -1;
 	fireStatePrev = -1;
+	nextScorchInterval = -1;
+	previousScorchLocSet = FALSE;
+	recentlyDamagedEntity = NULL;
+	ignoreIdleTime = -1;
 
 }//END OF CEgon constructor
+
+
+
 
 
 
@@ -564,6 +612,17 @@ TYPEDESCRIPTION	CEgon::m_SaveData[] =
 	DEFINE_FIELD(CEgon, m_fireMode, FIELD_INTEGER),
 	DEFINE_FIELD(CEgon, m_shakeTime, FIELD_TIME),
 	DEFINE_FIELD(CEgon, m_flAmmoUseTime, FIELD_TIME),
+	//MODDD - new synched vars used, save them
+	DEFINE_FIELD(CEgon, m_fInAttack, FIELD_INTEGER),
+	DEFINE_FIELD(CEgon, m_chargeReady, FIELD_INTEGER),
+
+	// no, don't save this directly.  Use another var as a temporary place.
+	// No idea why pev-> stuff is cursed when it comes to saving.
+	//DEFINE_FIELD(CEgon, pev->fuser1, FIELD_FLOAT),
+	DEFINE_FIELD(CEgon, fuser1_store, FIELD_FLOAT),
+	
+	// do we care about m_flStartThrow, pev->fuser1?  probably not.
+
 };
 // custom implementations instead, see below.
 //IMPLEMENT_SAVERESTORE( CEgon, CBasePlayerWeapon );
@@ -571,23 +630,99 @@ TYPEDESCRIPTION	CEgon::m_SaveData[] =
 int CEgon::Save(CSave& save){
 	if (!CBasePlayerWeapon::Save(save))
 		return 0;
+
+	fuser1_store = pev->fuser1;
+
 	return save.WriteFields("CEgon", this, m_SaveData, ARRAYSIZE(m_SaveData));
 }
-int CEgon::Restore(CRestore& restore){
 
+// REMEMBER!!! Client does not call Restore!
+int CEgon::Restore(CRestore& restore){
 
 	if (!CBasePlayerWeapon::Restore(restore))
 		return 0;
+
+
+	// TEST!!!   Going between levels?  Forget you created effects, re-do if needed.
+	// Unless this is more of a clientside issue (resend the event to start effects there).
+	// Is weird the sprite still exists when you think about it...?  yea, clientisde probably.
+	//effectsExist = TRUE;
+
 
 	//if(m_pPlayer != NULL){
 		//m_pPlayer->TabulateAmmo();
 	//}
 
 	int result = restore.ReadFields("CEgon", this, m_SaveData, ARRAYSIZE(m_SaveData));
-	setchargeReady(5 + -4);
+	
+	
+	// Value of 0 never used, begin at 1 then.
+	if(getchargeReady() == 5 + -5){
+		setchargeReady(5 + -4);
+	}
+
+	// HACK: is forcing m_fireState to off a good idea to force resending the 'startfire' playback?
+	// TEST THAT
+
+	pev->fuser1 = fuser1_store;
+
+	g_firstFrameSinceRestore = TRUE;
+
+
 	return result;
 }
 #endif
+
+
+void CEgon::onFreshFrame(void){
+
+	ignoreIdleTime = gpGlobals->time + 0.8;
+
+	//easyForcePrintLine("IM rather MAD");
+
+	m_fireState = FIRE_OFF;
+	fireStatePrev = FIRE_OFF;
+	lockedFireState = FALSE;
+
+
+
+	/*
+	effectsExist = FALSE;
+	DestroyEffect();
+
+
+	if(m_pPlayer != NULL){
+	BOOL bMakeNoise = FALSE;
+	if ( m_fireState != FIRE_OFF ) //Checking the button just in case!.
+	bMakeNoise = TRUE;
+	PLAYBACK_EVENT_FULL( FEV_GLOBAL | FEV_RELIABLE, m_pPlayer->edict(), m_usEgonStop, 0, (float *)&m_pPlayer->pev->origin, (float *)&m_pPlayer->pev->angles, 0.0, 0.0, bMakeNoise, 0, 0, 0 );
+	}
+	*/
+
+	if(getchargeReady() == 5 + 1){
+		if(m_pPlayer != NULL){
+			BOOL bMakeNoise = FALSE;
+			if ( m_fireState != FIRE_OFF ) //Checking the button just in case!.
+				bMakeNoise = TRUE;
+
+			int flags;
+#if defined( CLIENT_WEAPONS )
+			flags = FEV_NOTHOST;
+#else
+			flags = 0;
+#endif
+
+#ifdef CLIENT_DLL
+			fuckfuckfuckfuckfuck = 5;
+#endif
+			flags |= FEV_GLOBAL | FEV_RELIABLE;
+			PLAYBACK_EVENT_FULL( flags, m_pPlayer->edict(), m_usEgonFire, 0.0, (float *)&g_vecZero, (float *)&g_vecZero, 0.0, 0.0, m_fireState, m_fInAttack, 1, 0 );
+		}
+	}
+
+
+	m_chargeReady |= 32;  // let me fire damn you
+}
 
 
 
@@ -670,6 +805,15 @@ void CEgon::ItemPostFrameThink(void){
 
 	BOOL sendFidgetOnOff = TRUE;
 
+	if(g_firstFrameSinceRestore){
+		onFreshFrame();
+	}
+
+
+
+
+
+
 	holdingSecondary = ((m_pPlayer->pev->button & IN_ATTACK2) && m_flNextSecondaryAttack <= 0.0);
 	holdingPrimary = ((m_pPlayer->pev->button & IN_ATTACK) && m_flNextPrimaryAttack <= 0.0);
 	
@@ -678,6 +822,11 @@ void CEgon::ItemPostFrameThink(void){
 	//BOOL fireException = FALSE;
 
 
+
+
+
+
+	//easyForcePrintLine("HOW I BE DOIN p?%d:%d s?%d:%d char:%d", (m_pPlayer->pev->button & IN_ATTACK), (m_flNextPrimaryAttack <= 0.0), (m_pPlayer->pev->button & IN_ATTACK2), (m_flNextSecondaryAttack <= 0.0), getchargeReady() );
 
 
 	BOOL forceIdle = FALSE;
@@ -690,7 +839,8 @@ void CEgon::ItemPostFrameThink(void){
 				(fireExceptionPrev) ||
 				m_pBeam != NULL
 				)   // dear god I'm tired of this shit
-			){
+		)
+		{
 			//easyForcePrintLine("ATTAK END BOTH A");
 			//EndAttack(TRUE);
 
@@ -871,6 +1021,7 @@ void CEgon::ItemPostFrameThink(void){
 	if(m_fireState == FIRE_OFF && fireStatePrev != FIRE_OFF){
 		// Fixes the issue from the beam failing to call EndAttack in clientside while paused.
 		// May be called at unnecessary times but doesn't look like an issue?
+		//easyForcePrintLine("GONNA GIVE IT TO YA 2: %d %d", m_fireState, fireStatePrev );
 		EndAttack();
 	}
 
@@ -890,6 +1041,12 @@ void CEgon::ItemPostFrameThink(void){
 		)
 	){
 		//easyPrintLine("END O ATTACK!");
+		//easyForcePrintLine("GONNA GIVE IT TO YA 3 causo1:%d causo2:%d fe:%d fs:%d fsp:%d mp:%d",
+		//	(!holdingPrimary && getchargeReady() == 5 + 1),
+		//	(!holdingSecondary && getchargeReady() == 5 + 2),
+		//	fireException, m_fireState, fireExceptionPrev, (m_pBeam!=NULL)
+		//);
+
 		EndAttack();
 		fireStatePrev = m_fireState;
 
@@ -961,13 +1118,10 @@ void CEgon::UpdateHitCloud(void){
 }
 
 
-float nextScorchInterval;
-
 void CEgon::Fire( const Vector &vecOrigSrc, const Vector &vecDir )
 {
-
 	Vector vecDest = vecOrigSrc + vecDir * 2048;
-	edict_t		*pentIgnore;
+	edict_t* pentIgnore;
 	TraceResult tr;
 
 	pentIgnore = m_pPlayer->edict();
@@ -988,26 +1142,28 @@ void CEgon::Fire( const Vector &vecOrigSrc, const Vector &vecDir )
 	if (tr.fAllSolid)
 		return;
 
+
 #ifndef CLIENT_DLL
-	CBaseEntity *pEntity = CBaseEntity::Instance(tr.pHit);
-
-	if (pEntity == NULL)
-		return;
-
-	//MODDD - TODO.  Should this be done in ev_hldm? unsure.
-	if(gpGlobals->time >= nextScorchInterval){
-		if(m_fInAttack == FIRE_NARROW){
-			nextScorchInterval = gpGlobals->time + 0.31;
-			UTIL_DecalTrace(&tr, DECAL_SMALLSCORCH1 + RANDOM_LONG(0, 2) );
-		}else{
-			nextScorchInterval = gpGlobals->time + 0.24;
-			UTIL_DecalTrace(&tr, DECAL_SCORCH1 + RANDOM_LONG(0, 1) );
-		}
-	}
 
 	
+	CBaseEntity* pEntity;
 
-	//MODDD - ...  for what purpose
+	if(tr.pHit != NULL){
+		pEntity = CBaseEntity::Instance(tr.pHit);
+	}else{
+		pEntity = NULL;
+	}
+	
+	// WAIT!  Isn't ending this early from lacking something to hit weird?
+	// That means just from shooting across a ridiculous distance, no ammo would be used!
+	// Skipping this early skips the ammo-usage logic even though the player is still firing.
+	// Check for nullity before dealing damage to 'pEntity' instead, do the other logic anyway
+	//if (pEntity == NULL){
+	//	return;
+	//}
+
+
+	//MODDD - ...  for what purpose.  (as-is, mostly.  disabled)
 	/*
 	if ( IsMultiplayer() )
 	{
@@ -1036,17 +1192,22 @@ void CEgon::Fire( const Vector &vecOrigSrc, const Vector &vecDir )
 		{
 			// Narrow mode only does damage to the entity it hits
 			ClearMultiDamage();
-			if (pEntity->pev->takedamage)
+			if (pEntity != NULL && pEntity->pev->takedamage)
 			{
 				//MODDD - added args.  Egon does not make the "bodyhit" sound. See above.
 				//        ...it has since been changed how this works. The outside source no longer tells TraceAttack to play the bodyhit sound, but TraceAttack tells the caller whether
 				//        to play the bodyhit and it's up to the caller to respond to that if it wants to. So by default, no bodyhit sound will play.
 				pEntity->TraceAttack( m_pPlayer->pev, gSkillData.plrDmgEgonNarrow, vecDir, &tr, DMG_ENERGYBEAM, 0, TRUE );
+				// AND, keep track of the thing hit that took damage
+				recentlyDamagedEntity = pEntity;
+				//easyForcePrintLine("HERES WHAT TOOK DAMAGE %s", pEntity->getClassname());
+			}else{
+				// force it off then, why remember that for unrelated frames
+				recentlyDamagedEntity = NULL;
 			}
+
 			ApplyMultiDamage(m_pPlayer->pev, m_pPlayer->pev);
 
-
-			
 
 			float egonFireRateMode = EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(egonFireRateMode);
 			if ( egonFireRateMode == 2 || (egonFireRateMode == 0 && IsMultiplayer()) )
@@ -1085,11 +1246,15 @@ void CEgon::Fire( const Vector &vecOrigSrc, const Vector &vecDir )
 		{
 			// wide mode does damage to the ent, and radius damage
 			ClearMultiDamage();
-			if (pEntity->pev->takedamage)
+			if (pEntity != NULL && pEntity->pev->takedamage)
 			{
 				//MODDD - added args.  Egon does not make the "bodyhit" sound. See above.
 				pEntity->TraceAttack( m_pPlayer->pev, gSkillData.plrDmgEgonWide, vecDir, &tr, DMG_ENERGYBEAM | DMG_ALWAYSGIB, 0, TRUE);
+				recentlyDamagedEntity = pEntity;
+			}else{
+				recentlyDamagedEntity = NULL;
 			}
+
 			ApplyMultiDamage(m_pPlayer->pev, m_pPlayer->pev);
 
 			float egonRadiusDamageMode = EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(egonRadiusDamageMode);
@@ -1131,14 +1296,103 @@ void CEgon::Fire( const Vector &vecOrigSrc, const Vector &vecDir )
 			pev->dmgtime = gpGlobals->time + GetDischargeInterval();
 			if ( m_shakeTime < gpGlobals->time )
 			{
-				UTIL_ScreenShake( tr.vecEndPos, 5.0, 150.0, 0.75, 250.0 );
-				m_shakeTime = gpGlobals->time + 1.5;
+				//MODDD - shake behavior altered.  Shake a little less violently but more often, more consistent.
+				//UTIL_ScreenShake( tr.vecEndPos, 5.0, 150.0, 0.75, 250.0 );
+				//m_shakeTime = gpGlobals->time + 1.5;
+				UTIL_ScreenShake( tr.vecEndPos, 5.2, 160.0, 0.6, 380.0 );
+				m_shakeTime = gpGlobals->time + 0.28;
 			}
 		}
 #endif
 		timedist = ( pev->dmgtime - gpGlobals->time ) / GetDischargeInterval();
 		break;
 	}
+
+
+
+
+#ifndef CLIENT_DLL
+	if(pEntity){
+		// If the recentlyDamagedEntity (if one was this frame) meets some conditions
+		// (not the world, takes damage), mark this as an exception to check for a decal sooner
+		BOOL hitEntityTookDamage = FALSE;
+		BOOL canCheckForScorch = FALSE;
+
+		if(pEntity->IsWorld() || pEntity->pev->takedamage == DAMAGE_NO){
+			// Is world or doesn't take damage?
+			// always allow checks so long as the delay is met
+			canCheckForScorch = (gpGlobals->time >= nextScorchInterval);
+		}else{
+			// Not the world and takes damage?
+			// ok if we're firing at the most recently damaged entity, likely set in this same frame but just in case,
+			// another check for that.
+			// (bypasses the nextScorchInterval check too if so)
+			// (tr.pHit is the same as pEntity->edict(), pEntity came from tr.pHit)
+			canCheckForScorch = (recentlyDamagedEntity != NULL && tr.pHit == recentlyDamagedEntity->edict());
+		}
+
+
+		// do we need to keep the check from being done more often from focusing fire on a damagable BSP-ish entity
+		// that takes decals?...  sounds really really specific and most won't last long anyway,  nah.
+
+		//MODDD - TODO.  Should this be done in ev_hldm? unsure.
+		// liiiiitle much logic here now for that to make sense anymore and the one firing will see the
+		// hitcloud in front of whatever decal anyway, nevermind.
+		if(canCheckForScorch){
+			BOOL canDrawScorch = FALSE;
+			float decalDisto;
+			if(m_fInAttack == FIRE_NARROW){
+				nextScorchInterval = gpGlobals->time + EGON_PRIMARY_SCORCH_INTERVAL;
+				decalDisto = 11.25;
+			}else{
+				nextScorchInterval = gpGlobals->time + EGON_SECONDARY_SCORCH_INTERVAL;
+				decalDisto = 37.5;
+			}
+
+			// But, can the scorch actually be drawn?  Don't draw too close to the previously
+			// made one (keep track of where the previous location a draw-call was made, the most
+			// we can really do here)
+			if(tr.flFraction < 1.0 && UTIL_PointContents(tr.vecEndPos) != CONTENTS_SKY ){
+				// hit something?
+				if(!previousScorchLocSet){
+					// good to go
+					canDrawScorch = TRUE;
+				}else{
+					// Check: Is this far enough away from the previously drawn scorch mark?
+					float theDisto = Distance(tr.vecEndPos, previousScorchLoc);
+					if(theDisto >= decalDisto){
+						// proceed, enough distance from the previous draw location
+						canDrawScorch = TRUE;
+					}else{
+						//easyForcePrintLine("FAIL 1");
+					}
+				}
+			}
+
+			if(canDrawScorch){
+				//easyForcePrintLine("OK");
+				// remember where this was drawn for next time
+				previousScorchLocSet = TRUE;
+				previousScorchLoc = tr.vecEndPos;
+				if(m_fInAttack == FIRE_NARROW){
+					UTIL_DecalTrace(&tr, DECAL_SMALLSCORCH1 + RANDOM_LONG(0, 2) );
+				}else{  // WIDE
+					UTIL_DecalTrace(&tr, DECAL_SCORCH1 + RANDOM_LONG(0, 1) );
+				}
+
+				// forget this, no more scorch marks in the same frame since it doesn't come from doing damage without
+				// being freshly updated.
+				recentlyDamagedEntity = NULL;
+			}else{
+				//easyForcePrintLine("THA hay");
+			}
+
+		}//canCheckForScorch check
+	}//pEntity check
+#endif
+
+
+
 
 	if ( timedist < 0 )
 		timedist = 0;
@@ -1169,6 +1423,7 @@ void CEgon::UpdateEffect( const Vector &startPoint, const Vector &endPoint, floa
 	//if ( !m_pBeam )
 	if(!effectsExist)
 	{
+		//easyForcePrintLine("DO THE SHIT");
 		CreateEffect();
 	}
 
@@ -1307,7 +1562,7 @@ void CEgon::CreateEffect( void )
 		//MODDD - commented out.  Causes the beam not to sufficiently shrink when nearing a surface you're firing at, causing the effect to clip backwards into the player & gun.
 		//m_pBeam->SetFlags( BEAM_FSINE );
 		m_pBeam->SetEndAttachment( 1 );
-		m_pBeam->pev->spawnflags |= SF_BEAM_TEMPORARY;	// Flag these to be destroyed on save/restore or level transition
+		m_pBeam->pev->spawnflags |= SUB_SF_BEAM_TEMPORARY;	// Flag these to be destroyed on save/restore or level transition
 		//if(testVar == 0 || testVar == 2 ){
 		//	m_pBeam->pev->flags |= FL_SKIPLOCALHOST;
 		////...does this need to stay commented out?
@@ -1339,7 +1594,7 @@ void CEgon::CreateEffect( void )
 		m_pNoise->SetScrollRate( 25 );
 		m_pNoise->SetBrightness( 100 );
 		m_pNoise->SetEndAttachment( 1 );
-		m_pNoise->pev->spawnflags |= SF_BEAM_TEMPORARY;
+		m_pNoise->pev->spawnflags |= SUB_SF_BEAM_TEMPORARY;
 		//if(testVar == 0 || testVar == 1){
 		//	m_pNoise->pev->flags |= FL_SKIPLOCALHOST;
 		//}
@@ -1381,7 +1636,7 @@ void CEgon::CreateEffect( void )
 			// UHHHH.  That's because this should only be shown to other players looking at the current one or in MP dingus!  AIRJGARWIGJA
 			m_pBeam->SetFlags( BEAM_FSINE );
 			m_pBeam->SetEndAttachment( 1 );
-			m_pBeam->pev->spawnflags |= SF_BEAM_TEMPORARY;	// Flag these to be destroyed on save/restore or level transition
+			m_pBeam->pev->spawnflags |= SUB_SF_BEAM_TEMPORARY;	// Flag these to be destroyed on save/restore or level transition
 			//if(testVar == 0 || testVar == 2 ){
 				m_pBeam->pev->flags |= FL_SKIPLOCALHOST;
 			//}
@@ -1414,7 +1669,7 @@ void CEgon::CreateEffect( void )
 			m_pNoise->SetScrollRate( 25 );
 			m_pNoise->SetBrightness( 90 );
 			m_pNoise->SetEndAttachment( 1 );
-			m_pNoise->pev->spawnflags |= SF_BEAM_TEMPORARY;
+			m_pNoise->pev->spawnflags |= SUB_SF_BEAM_TEMPORARY;
 			//if(testVar == 0 || testVar == 1){
 				m_pNoise->pev->flags |= FL_SKIPLOCALHOST;
 			//}
@@ -1435,12 +1690,11 @@ void CEgon::CreateEffect( void )
 
 		}else{
 			// NARROW?  Just use retail for now
-
 			m_pBeam = CBeam::BeamCreate( EGON_BEAM_SPRITE, 40 );
 			m_pBeam->PointEntInit( pev->origin, m_pPlayer->entindex() );
 			m_pBeam->SetFlags( BEAM_FSINE );
 			m_pBeam->SetEndAttachment( 1 );
-			m_pBeam->pev->spawnflags |= SF_BEAM_TEMPORARY;	// Flag these to be destroyed on save/restore or level transition
+			m_pBeam->pev->spawnflags |= SUB_SF_BEAM_TEMPORARY;	// Flag these to be destroyed on save/restore or level transition
 			m_pBeam->pev->flags |= FL_SKIPLOCALHOST;
 			m_pBeam->pev->owner = m_pPlayer->edict();
 
@@ -1449,7 +1703,7 @@ void CEgon::CreateEffect( void )
 			m_pNoise->SetScrollRate( 25 );
 			m_pNoise->SetBrightness( 100 );
 			m_pNoise->SetEndAttachment( 1 );
-			m_pNoise->pev->spawnflags |= SF_BEAM_TEMPORARY;
+			m_pNoise->pev->spawnflags |= SUB_SF_BEAM_TEMPORARY;
 			m_pNoise->pev->flags |= FL_SKIPLOCALHOST;
 			m_pNoise->pev->owner = m_pPlayer->edict();
 
@@ -1491,7 +1745,7 @@ void CEgon::CreateEffect( void )
 		// ...nevermind, not as reliable as animating from direct calls from here.  Weird.  Still specifying framerate now.
 		//m_pSprite = CSprite::SpriteCreate( EGON_FLARE_SPRITE, pev->origin, FALSE );
 		// framerate changed (was 8)
-		m_pSprite = CSprite::SpriteCreate( EGON_FLARE_SPRITE, pev->origin, FALSE, 14);
+		m_pSprite = CSprite::SpriteCreate( EGON_FLARE_SPRITE, pev->origin, FALSE, 10.5);
 
 		// TEST!!!  Copied from RPG lasersight spawn.
 		// Should improve tracking, no need for continuous moving around.
@@ -1509,9 +1763,9 @@ void CEgon::CreateEffect( void )
 		//m_pSprite->pev->scale = 1.0;
 
 		if ( m_fInAttack == FIRE_NARROW ){
-			m_pSprite->pev->scale = 2.1;
+			m_pSprite->pev->scale = 2.8;
 		}else{
-			m_pSprite->pev->scale = 3.2;
+			m_pSprite->pev->scale = 4.4;
 		}
 		
 
@@ -1604,6 +1858,9 @@ void CEgon::DestroyEffect( void )
 
 void CEgon::WeaponIdle( void )
 {
+	if(gpGlobals->time < ignoreIdleTime){
+		return;  //not yet
+	}
 
 	ResetEmptySound( );
 
@@ -1734,6 +1991,8 @@ void CEgon::WeaponIdle( void )
 void CEgon::EndAttack( void )
 {
 	BOOL bMakeNoise = FALSE;
+
+	//easyForcePrintLine("GONNA GIVE IT TO YA");
 		
 	if ( m_fireState != FIRE_OFF ) //Checking the button just in case!.
 		 bMakeNoise = TRUE;

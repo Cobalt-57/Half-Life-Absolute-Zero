@@ -176,6 +176,10 @@ CGlock::CGlock(){
 TYPEDESCRIPTION	CGlock::m_SaveData[] =
 {
 	DEFINE_FIELD(CGlock, m_fInAttack, FIELD_INTEGER),
+	//MODDD - new
+	DEFINE_FIELD(CGlock, m_fireState, FIELD_INTEGER),
+	// m_flReleaseThrow, m_flStartThrow?  probably not
+
 	DEFINE_FIELD(CGlock, includesGlockSilencer, FIELD_BOOLEAN),
 
 };

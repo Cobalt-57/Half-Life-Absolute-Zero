@@ -52,8 +52,6 @@
 EASY_CVAR_EXTERN_CLIENTONLY(cl_hornetspiral)
 
 
-
-
 // Although PRECACHE_MODEL is valid between client/serverside, it is dummied clientside under the assumption it's unnecessary there.
 // However, if it is meant to work for both, it needs to be re-defined for clientside.
 // To avoid contradictions with lots of other places that expect PRECACHE_MODEL to still be dummied out clientside, made a new one.
@@ -116,6 +114,11 @@ EASY_CVAR_EXTERN_CLIENTONLY(cl_hornetspiral)
 extern char GET_GAME_PATH_VAR[];
 
 EASY_CVAR_EXTERN_MASS
+
+
+BOOL g_firstFrameSinceRestore = FALSE;;
+
+
 
 
 

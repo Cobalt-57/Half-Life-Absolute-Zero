@@ -641,6 +641,7 @@ void CTripmine::SecondaryAttack(void)
 		//}
 		
 		//SetAttackDelays(m_flTimeWeaponIdle);
+		m_flNextSecondaryAttack = m_flTimeWeaponIdle;
 		m_flTimeWeaponIdle += randomIdleAnimationDelay();
 		SendWeaponAnim(iAnim);
 	}//CVar check

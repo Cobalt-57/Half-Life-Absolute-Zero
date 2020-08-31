@@ -42,8 +42,17 @@ public:
 	int fireStatePrev;
 	Vector recentFireDirection;
 	Vector recentHitPlaneNormal;
+	float nextScorchInterval;
+
+	BOOL previousScorchLocSet;
+	Vector previousScorchLoc;
+	CBaseEntity* recentlyDamagedEntity;
+
+	float ignoreIdleTime;
 
 	float m_flAmmoUseTime;// since we use < 1 point of ammo per update, we subtract ammo on a timer.
+
+	float fuser1_store;
 
 	CBeam* m_pBeam;
 	CBeam* m_pNoise;
@@ -103,7 +112,7 @@ public:
 	static	TYPEDESCRIPTION m_SaveData[];
 #endif
 
-
+	void onFreshFrame(void);
 
 
 

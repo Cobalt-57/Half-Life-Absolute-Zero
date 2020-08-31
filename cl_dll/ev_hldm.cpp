@@ -2319,6 +2319,8 @@ void EV_EgonFire(event_args_t* args)
 
 
 
+	easyForcePrintLine("HERE COMECS HONEY BADASS madeyet:%d startup:%d", g_cl_egonEffectCreatedYet, iStartup);
+
 
 	if (EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(mutePlayerWeaponFire) != 1) {
 		if (iStartup)
@@ -2361,14 +2363,30 @@ void EV_EgonFire(event_args_t* args)
 	//easyForcePrintLine("EV_EgonFire pid: %d  islocal? %d dathing %d othathing: %.2f", idx, EV_IsLocal(idx), iStartup, cl_lw->value );
 
 
+
 	if ( 1 ){
 
 	//if (1) {
 		//gets the spiral.
 
 		//MODDD - SAFETY.  If for whatever reason the effect has not been created yet, ignore iStartup being 0.
-		if ((iStartup == 1 || !g_cl_egonEffectCreatedYet) && EV_IsLocal(idx) && !pBeam && !pBeam2 && cl_lw->value) //Adrian: Added the cl_lw check for those lital people that hate weapon prediction.
+
+		//if ((iStartup == 1 || !g_cl_egonEffectCreatedYet) && EV_IsLocal(idx) && !pBeam && !pBeam2 && cl_lw->value) //Adrian: Added the cl_lw check for those lital people that hate weapon prediction.
+		if ((iStartup == 1 || !g_cl_egonEffectCreatedYet) && EV_IsLocal(idx) && cl_lw->value) //Adrian: Added the cl_lw check for those lital people that hate weapon prediction.
 		{
+
+			if (pBeam)
+			{
+				pBeam->die = 0.0;
+				pBeam = NULL;
+			}
+			if (pBeam2)
+			{
+				pBeam2->die = 0.0;
+				pBeam2 = NULL;
+			}
+
+
 			g_cl_egonEffectCreatedYet = TRUE;  // why yes.
 
 			vec3_t vecSrc;

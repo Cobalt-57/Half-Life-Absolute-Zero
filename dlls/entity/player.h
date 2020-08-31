@@ -341,10 +341,6 @@ public:
 
 
 	float m_flStartCharge;
-	//MODDD - new
-	float m_flStartChargeAnim;
-	float m_flStartChargePreSuperDuper;
-
 
 	float m_flAmmoStartCharge;
 	float m_flPlayAftershock;

@@ -327,7 +327,7 @@ Also, garg should have a better time moving around after the sequence ends (bloc
 
 grenades no longer travel as far up ramps compared to even ground, and change to the on-ground animation frame on the start of contact with the ground (not a near-complete stop).
 
-hud_rpg_alpha_ammo is finally a CVar, woohoo.  Able to turn off RPG ammo clip+reserve being combined.
+hud_rpg_clipless is finally a CVar, woohoo.  Able to turn off RPG ammo clip+reserve being combined.
 
 hornet gun updates the ammo counter anytime it is out, not only outside of fire-delays and deploy/holster animations.
 
@@ -437,7 +437,8 @@ Egon finally has the spiral-effect off on wide (secondary) fire under CVar egonE
 New FVox line (armor_compromised.wav) played on taking significant damage to battery/armor.
 Generic line (hev_damage.wav) may be played if no other queued methods are present on taking non-timed damage.
 
-New CVar: sv_rpg_alpha_ammo (defaults to 1).  More RPG alpha logic when on, logic 'clipless' mode, complement for hud_rpg_alpha_ammo.
+CVar 'hud_rpg_alpha_ammo' renamed to 'hud_rpg_clipless
+New CVar: sv_rpg_clipless (defaults to 1).  More RPG alpha logic when on, logic 'clipless' mode, complement for hud_rpg_clipless.
 
 Chumtoads no longer granted by cheat commands (impulse 101, 'everything') in multiplayer.     Uh.  okay.
 
@@ -463,7 +464,8 @@ Non-sentry turrets have a more involved post-death sequence.  They will spin aro
 
 Turret post-death sequence mentioned above moved to CVar 'sv_turret_postdeath' set to 2.  Set to 1 (default), it is skipped but the extra sparks and ending explosion effect during the normal death animation are still used.
 
-Non-sentry turrets take 10% less damage from bullets, 20% less damage from explosions.
+Non-sentry turrets take 10% less damage from bullets, 20% less damage from explosions, 30% less from crossbow bolts, and 35% less from egon fire.
+Sentries have similar but lessened reductions (not nearly 
 
 
 Ladder logic jump-off logic altered.  Only clean jump-presses can jump off, not holding it down.
@@ -501,7 +503,7 @@ In maps where 'pathfindIgnoreStaticRoutes' being 1 makes a difference in pathfin
 EGON
 - Both fire-modes show in multiplayer and the beams show much more consistently.
 - Hitcloud occurs as often in multiplayer as often as it does in singleplayer now, and adjusted to have the same tracking as a lasersight in multiplayer (default env_sprite tracking is not as fast).
-- Hitcloud animates faster and is larger in general, moreso for secondary mode.
+- Hitcloud animates faster and is much larger in general, moreso for secondary mode.
 - Hitcloud effect, when dissipating, does not clip into nearby surfaces just like during normal firing.
 - Hitcloud has dissipation effect for primary fire too.
 - Hitcloud animates while dissipating.
@@ -511,7 +513,10 @@ EGON
 - NOTICE: egonEffectsMode choices other than 3 (the default) may not be supported as well.
 - In multiplayer, egon primary fire no longer depletes ammo faster than secondary fire.
 - Leaves scorch marks where the egon hits at a regular interval, larger and less frequent in secondary fire.
+- Shake-effect on being near where secondary fire hits is slightly lessened but more consistent, range from hit affected also increased.
 
+Egon functions normally while going through map transitions while firing with either fire-mode.
+Gauss functions normally while going through map transitions while charging.
 
 Automatic weapon switches from picking up a new weapon no longer occur if picked up while reloading.
 
@@ -538,4 +543,6 @@ New CVar: cl_mp5_evil_skip, defaults to 0.  When on, simulates old behavior for 
 Tripmine hitbox may be slightly more responsive to bullets.
 
 New CVars: egonRadiusDamageMode and egonFireRateMode, for enforcing the multiplayer ranged damage and slower fire-rate of the egon during single player (if 2), or single player behavior (1).  0 leaves this up to the game like retail does.
+
+
 

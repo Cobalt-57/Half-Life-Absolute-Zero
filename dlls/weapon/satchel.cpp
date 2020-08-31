@@ -40,8 +40,6 @@ EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteammo)
 // 2: recently detonated satchels, button-press animation played.  Little delay before Charge goes to 0 IF there is ammo.
 
 
-BOOL daPoopah = FALSE;
-
 
 //MODDD - why wasn't this serverside-only anyway??
 #ifndef CLIENT_DLL
@@ -582,7 +580,6 @@ void CSatchel::PrimaryAttack()
 		setchargeReady(0);
 		// not yet!  Wait for animation to end
 		//RetireWeapon();
-		daPoopah = TRUE;
 	}
 
 }
@@ -596,7 +593,9 @@ void CSatchel::SecondaryAttack( void )
 
 	if (theChargeReady == 0) {
 
-
+		// NEVERMIND THAT.  no one would like this.
+		// People want to throw the charge, not look at a funny figet.
+		/*
 		if (EASY_CVAR_GET(cl_viewmodel_fidget) == 2) {
 			if (PlayerPrimaryAmmoCount() > 0) {
 				//float flRand;
@@ -610,11 +609,14 @@ void CSatchel::SecondaryAttack( void )
 				//}
 
 				//SetAttackDelays(m_flTimeWeaponIdle);
+				m_flNextSecondaryAttack = m_flTimeWeaponIdle;
 				m_flTimeWeaponIdle += randomIdleAnimationDelay();
 				SendWeaponAnim(iAnim);
 			}
 		}
-		else {
+		else
+		*/
+		{
 			// not 2?  go ahead and throw here too.
 			Throw();
 		}//CVar check

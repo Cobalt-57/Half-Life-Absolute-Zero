@@ -100,8 +100,11 @@ EASY_CVAR_EXTERN_DEBUGONLY(miniturretCanGib)
 EASY_CVAR_EXTERN_DEBUGONLY(turretCanGib)
 EASY_CVAR_EXTERN(soundSentenceSave)
 EASY_CVAR_EXTERN(pissedNPCs)
-
-
+EASY_CVAR_EXTERN(sv_explosion_shake)
+EASY_CVAR_EXTERN_DEBUGONLY(sv_explosion_shake_range)
+EASY_CVAR_EXTERN_DEBUGONLY(sv_explosion_shake_amp)
+EASY_CVAR_EXTERN_DEBUGONLY(sv_explosion_shake_freq)
+EASY_CVAR_EXTERN_DEBUGONLY(sv_explosion_shake_duration)
 
 
 
@@ -189,7 +192,7 @@ BOOL g_firstPlayerEntered = FALSE;
 float g_nextCVarUpdate = -1;
 
 
-cvar_t* cvar_skill = NULL;
+//cvar_t* cvar_skill = NULL;
 //HEY, already have something like this: g_iSkillLevel!!!
 //float global_skill = -1;
 
@@ -2552,6 +2555,17 @@ void UTIL_Explosion(int msg_dest, const float* pMsgOrigin, edict_t * ed, entvars
 	MESSAGE_END();
 	*/
 
+	// How about a shake?
+	// size may come in as '30' in a typical explosion (see ggrenade.cpp's UTIL_Explosion call)
+	// basing moreso on the garg shake's stats.  higher amp, less freq.  Shorter duration though.
+
+	if(EASY_CVAR_GET(sv_explosion_shake) == 1){
+		// size * 12?
+		UTIL_ScreenShake( pev->origin, 11.0 * EASY_CVAR_GET_DEBUGONLY(sv_explosion_shake_amp), 90.0 * EASY_CVAR_GET_DEBUGONLY(sv_explosion_shake_freq), 0.65 * EASY_CVAR_GET_DEBUGONLY(sv_explosion_shake_duration), size * 24 * EASY_CVAR_GET_DEBUGONLY(sv_explosion_shake_range) );
+	}
+	// retail egon shake:
+	//UTIL_ScreenShake( tr.vecEndPos, 5.0, 150.0, 0.75, 250.0 );
+
 	
 	if(EASY_CVAR_GET(cl_explosion) == 0){
 		MESSAGE_BEGIN(msg_dest, SVC_TEMPENTITY, pMsgOrigin, ed );
@@ -2560,6 +2574,7 @@ void UTIL_Explosion(int msg_dest, const float* pMsgOrigin, edict_t * ed, entvars
 			WRITE_COORD( location.y + offsety);
 			WRITE_COORD( location.z + offsetz);
 			WRITE_SHORT( sprite );
+			// NOTICE - any calls from retail to make explosions already factor in the 10-times amount, don't do that here.
 			WRITE_BYTE( (int)size  ); // scale * 10
 			WRITE_BYTE( framerate  ); // framerate
 			WRITE_BYTE( flag );
@@ -4788,19 +4803,8 @@ void turnWorldLightsOff(){
 //const Vector* arg_suggestedOrigin
 void updateCVarRefs(BOOL isEarly){
 
-	if(cvar_skill == NULL){
-		cvar_skill = CVAR_GET_POINTER("skill");
-	}
-
-	if(cvar_skill != NULL && cvar_skill->value != cvar_skill_mem){
-		// update as soon as we can.
-		queueSkillUpdate = TRUE;
-	}
-
-	if(queueSkillUpdate == TRUE && g_pGameRules != NULL){
-		g_pGameRules->RefreshSkillData();
-	}
-
+	// Skill update check moved to client.cpp.  Should not be constrained by the
+	// minimum frame / startup delay.  Probbaly?
 
 	if(EASY_CVAR_GET_DEBUGONLY(forceWorldLightOff) != forceWorldLightOffMem){
 		//easyPrintLine("WHAT THE light %.2f %.2f", cvar_forceWorldLightOff->value, global_forceWorldLightOff);

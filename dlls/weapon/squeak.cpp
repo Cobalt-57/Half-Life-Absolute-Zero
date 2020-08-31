@@ -72,6 +72,7 @@ TYPEDESCRIPTION	CSqueakGrenade::m_SaveData[] =
 	DEFINE_FIELD( CSqueakGrenade, m_flNextHit, FIELD_TIME ),
 	DEFINE_FIELD( CSqueakGrenade, m_posPrev, FIELD_POSITION_VECTOR ),
 	DEFINE_FIELD( CSqueakGrenade, m_hOwner, FIELD_EHANDLE ),
+	
 };
 
 //MODDD - class change. was CGrenade.
@@ -495,7 +496,20 @@ void CSqueakGrenade::SuperBounceTouch( CBaseEntity *pOther )
 }
 #endif
 
+
+
+
+
 LINK_ENTITY_TO_CLASS( weapon_snark, CSqueak );
+
+
+#ifndef CLIENT_DLL
+TYPEDESCRIPTION	CSqueak::m_SaveData[] =
+{
+	DEFINE_FIELD( CSqueak, m_chargeReady, FIELD_INTEGER ),
+};
+IMPLEMENT_SAVERESTORE(CSqueak, CBasePlayerWeapon);
+#endif
 
 
 
@@ -813,6 +827,7 @@ void CSqueak::SecondaryAttack( void )
 			m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 80.0 / 16.0;
 		}
 		//SetAttackDelays(m_flTimeWeaponIdle);
+		m_flNextSecondaryAttack = m_flTimeWeaponIdle;
 		m_flTimeWeaponIdle += randomIdleAnimationDelay();
 		SendWeaponAnim(iAnim);
 	}//CVar check

@@ -32,6 +32,17 @@ class CHandGrenade : public CBasePlayerWeapon
 public:
 
 
+
+	//MODDD - new.
+	CHandGrenade(void);
+
+#ifndef CLIENT_DLL
+	int	Save(CSave& save);
+	int	Restore(CRestore& restore);
+	static TYPEDESCRIPTION m_SaveData[];
+#endif
+
+
 	//MODDD
 	void customAttachToPlayer(CBasePlayer* pPlayer);
 	BOOL ExtractAmmo(CBasePlayerWeapon* pWeapon);
@@ -53,8 +64,7 @@ public:
 	void Holster(int skiplocal = 0);
 	void WeaponIdle(void);
 
-	//MODDD - new.
-	CHandGrenade(void);
+
 	void ItemPreFrame(void);
 	void ItemPostFrame(void);
 	void ItemPostFrameThink(void);

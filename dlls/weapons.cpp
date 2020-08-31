@@ -78,6 +78,14 @@ extern int gEvilImpulse101;
 BOOL g_isNewWeapon = FALSE;
 
 
+
+// oops, not used here. see player.cpp
+extern BOOL g_firstFrameSinceRestore;
+
+
+
+
+
 //MODDD - CBasePlayerItem::ItemInfoArray and CBasePlayerItem::AmmoInfoArray implementations moved
 // to util_shared.cpp.
 // MaxAmmoCarry also moved to util_shared.cpp.

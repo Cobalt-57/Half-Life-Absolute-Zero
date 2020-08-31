@@ -43,7 +43,9 @@ extern float globalPSEUDO_cl_hornetspiral;
 extern float globalPSEUDO_germanCensorshipMem;
 extern float globalPSEUDO_allowGermanModelsMem;
 
-extern cvar_t* cvar_sv_cheats;
+//extern cvar_t* cvar_sv_cheats;
+extern BOOL queueSkillUpdate;
+
 extern void resetModCVars(CBasePlayer* arg_plyRef, BOOL isEmergency);
 
 
@@ -792,7 +794,7 @@ void GameDLLInit( void )
 
 	//MODDD - new
 	//if(sv_cheatsRefClient == 0){
-		cvar_sv_cheats = CVAR_GET_POINTER( "sv_cheats" );
+	//	cvar_sv_cheats = CVAR_GET_POINTER( "sv_cheats" );
 	//}
 
 /*
@@ -1563,6 +1565,10 @@ void GameDLLInit( void )
 
 
 // END REGISTER CVARS FOR SKILL LEVEL STUFF
+
+	// go ahead and apply what's loaded from skill.cfg as soon as possible
+	// Wait.  No need, any gamerules constructor already calls 'RefreshSkillData'.
+	//queueSkillUpdate = TRUE;
 
 	SERVER_COMMAND( "exec skill.cfg\n" );
 

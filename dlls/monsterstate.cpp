@@ -49,7 +49,10 @@ void CBaseMonster::SetState ( MONSTERSTATE State )
 
 	//MODDD - force the state to stay "PRONE" if caught by a barnacle!
 	// Any other state can be picked after this monster is freed.  Or, rather, 'if'.
-	if(barnacleLocked == TRUE){
+	// UNUSED, nothing set barnacleLocked anymore.  Why not check for PRONE anyway.
+	
+	//if(barnacleLocked == TRUE){
+	if(m_MonsterState == MONSTERSTATE_PRONE){
 		//easyForcePrintLine("LOCKED: %d", State);
 
 		switch( State )
