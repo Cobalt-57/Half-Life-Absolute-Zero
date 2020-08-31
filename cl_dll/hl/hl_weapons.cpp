@@ -872,17 +872,17 @@ void HUD_WeaponsPostThink(local_state_s* from, local_state_s* to, usercmd_t* cmd
 		// YES KEEP THIS.  I stared at this for 5+ hours to say... yes.  This gives better than retail behavior.
 		// Without this check, some clientside weapon-fires happen twice, especially with nextAttack's that are uneven
 		// (like + 0.82 instead of 0.75 on the singlefire shotgun).  Why?   BECAUSE THE GODS WERE NOT PLEASED WITH 0.82.
-		//if( !(pfrom->m_flNextPrimaryAttack <= 0 && pCurrent->m_flNextPrimaryAttack >= 0.1) ){
+		if( !(pfrom->m_flNextPrimaryAttack <= 0 && pCurrent->m_flNextPrimaryAttack >= 0.1) ){
 		pCurrent->m_flNextPrimaryAttack = pfrom->m_flNextPrimaryAttack;
-		//}
-		//if( !(pfrom->m_flNextSecondaryAttack <= 0 && pCurrent->m_flNextSecondaryAttack >= 0.1) ){
+		}
+		if( !(pfrom->m_flNextSecondaryAttack <= 0 && pCurrent->m_flNextSecondaryAttack >= 0.1) ){
 		pCurrent->m_flNextSecondaryAttack = pfrom->m_flNextSecondaryAttack;
-		//}
-		//if( !(pfrom->m_flTimeWeaponIdle <= 0 && pCurrent->m_flTimeWeaponIdle >= 0.1) ){
+		}
+		if( !(pfrom->m_flTimeWeaponIdle <= 0 && pCurrent->m_flTimeWeaponIdle >= 0.1) ){
 		pCurrent->m_flTimeWeaponIdle = pfrom->m_flTimeWeaponIdle;
-		//}else{
+		}else{
 		//	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(viewModelSyncFixPrintouts)==1) easyForcePrintLine("*****VIEWMODEL SYNCH FIX APPLIED.");
-		//}
+		}
 
 
 		pCurrent->pev->fuser1 = pfrom->fuser1;

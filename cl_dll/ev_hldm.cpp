@@ -2319,7 +2319,7 @@ void EV_EgonFire(event_args_t* args)
 
 
 
-	easyForcePrintLine("HERE COMECS HONEY BADASS madeyet:%d startup:%d", g_cl_egonEffectCreatedYet, iStartup);
+	//easyForcePrintLine("HERE COMECS HONEY BADASS madeyet:%d startup:%d", g_cl_egonEffectCreatedYet, iStartup);
 
 
 	if (EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(mutePlayerWeaponFire) != 1) {
