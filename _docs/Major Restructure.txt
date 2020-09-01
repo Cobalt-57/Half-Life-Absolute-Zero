@@ -1,6 +1,6 @@
 
 Some changes in organization have been made from the HL SDK:
-- cl_dll folder and any references or project-related files named after it to it changed to 'cl_dlls' to mirror the folder the client.dll goes to in the base game.
+- cl_dll folder and any references or project-related files named after it changed to 'cl_dlls' to mirror the folder the client.dll goes to in the base game.
 - dlls folder project-related files (named hl.*) changed to dlls.*
 - compiled serverside DLL (for example, dlls/Debug/hl.dll) renamed to az.dll, same for other build-related files.
 - debughl and releasehl build folders merged with the Debug and Release build folders, same for the profile build (which isn't a priority; configuration may be removed)

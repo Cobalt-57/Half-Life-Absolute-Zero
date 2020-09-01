@@ -248,7 +248,7 @@ int derivedClass::TakeDamage(entvars_t* pevInflictor, entvars_t* pevAttacker, fl
 	return 0;\
 }
 
-//For whatever reason the dummy stub in cl_dll\hl_baseentity.cpp, clientside, constantly returns 1 instead of 0. Probably doesn't matter but better stay safe here.
+//For whatever reason the dummy stub in cl_dlls/hl/hl_baseentity.cpp, clientside, constantly returns 1 instead of 0. Probably doesn't matter but better stay safe here.
 //...Changed. That's only for CBaseEntity's implementation. The others didn't do that. Assuming it does not matter at all.
 #define GENERATE_TAKEDAMAGE_IMPLEMENTATION_DUMMY_CLIENT(derivedClass) GENERATE_TAKEDAMAGE_IMPLEMENTATION_DUMMY(derivedClass)
 
@@ -300,7 +300,7 @@ int derivedClass::DeadTakeDamage(entvars_t* pevInflictor, entvars_t* pevAttacker
 	return 0;\
 }
 
-//For whatever reason the dummy stub in cl_dll\hl_baseentity.cpp, clientside, constantly returns 1 instead of 0. Probably doesn't matter but better stay safe here.
+//For whatever reason the dummy stub in cl_dlls/hl/hl_baseentity.cpp, clientside, constantly returns 1 instead of 0. Probably doesn't matter but better stay safe here.
 //...Changed. That's only for CBaseEntity's implementation. The others didn't do that. Assuming it does not matter at all.
 #define GENERATE_DEADTAKEDAMAGE_IMPLEMENTATION_DUMMY_CLIENT(derivedClass) GENERATE_DEADTAKEDAMAGE_IMPLEMENTATION_DUMMY(derivedClass)
 
