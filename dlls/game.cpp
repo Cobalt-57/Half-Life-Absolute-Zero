@@ -66,7 +66,7 @@ void test_cvar_create(){
 	CVAR_CREATE(&test_cvar);
 
 	//ALSO, serverside CVars implicitly get the FCVAR_EXTDLL flag.
-	// clientside CVars (registered in cl_dll/hud.cpp typically) get the FCVAR_CLIENTDLL flag.
+	// clientside CVars (registered in cl_dlls/hud.cpp typically) get the FCVAR_CLIENTDLL flag.
 	// I know, go figure.  But it's good for this to be spelled out somewhere.
 	// AHEM.  *COUGH*.   *COUGH*.
 

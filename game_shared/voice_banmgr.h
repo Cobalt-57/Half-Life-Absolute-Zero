@@ -21,13 +21,13 @@ public:
 				~CVoiceBanMgr();	
 
 	// Init loads the list of squelched players from disk.
-	bool		Init(char const *pGameDir);
+	bool	Init(char const *pGameDir);
 	void	Term();
 
 	// Saves the state into voice_squelch.dt.
 	void	SaveState(char const *pGameDir);
 
-	bool		GetPlayerBan(char const playerID[16]);
+	bool	GetPlayerBan(char const playerID[16]);
 	void	SetPlayerBan(char const playerID[16], bool bSquelch);
 
 	// Call your callback for each banned player.

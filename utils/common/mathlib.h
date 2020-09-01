@@ -9,7 +9,7 @@
 ****/
 
 //MODDD - IMPORTANT NOTE!
-// This file is no longer included by the cl_dll or dlls projects.
+// This file is no longer included by the cl_dlls or dlls projects.
 // Instead see common/mathlib.h.
 // The file "pm_shared/pm_math.c" is incuded by the compile, but utils/common/mathlib.c is not.
 

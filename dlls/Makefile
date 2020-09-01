@@ -4,7 +4,7 @@
 # October 2002 by Leon Hartwig (hartwig@valvesoftware.com)
 #
 
-DLLNAME=hl
+DLLNAME=az
 
 ARCH=i386
 

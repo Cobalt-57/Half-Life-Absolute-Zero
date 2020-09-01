@@ -6055,7 +6055,7 @@ int AddToFullPack( struct entity_state_s *state, int e, edict_t *ent, edict_t *h
 
 	// This non-player entity is being moved by the game .dll and not the physics simulation system
 	//  make sure that we interpolate it's position on the client if it moves
-	//MODDD - yet no mention of EFLAG_SLERP in cl_dll/StudioModelRenderer.cpp?  strange
+	//MODDD - yet no mention of EFLAG_SLERP in cl_dlls/StudioModelRenderer.cpp?  strange
 	if ( !player &&
 		 ent->v.animtime &&
 		 ent->v.velocity[ 0 ] == 0 && 

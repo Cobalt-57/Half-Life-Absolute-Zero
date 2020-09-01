@@ -93,7 +93,7 @@ EASY_CVAR_EXTERN_DEBUGONLY(hiddenMemPrintout)
 
 
 
-// From dlls/util.h, may as well be shared since SND_CHANGE_PITCH is needed in cl_dll/ev_hldm.h.
+// From dlls/util.h, may as well be shared since SND_CHANGE_PITCH is needed in cl_dlls/ev_hldm.h.
 #define SND_SPAWNING		(1<<8)		// duplicated in protocol.h we're spawing, used in some cases for ambients 
 #define SND_STOP			(1<<5)		// duplicated in protocol.h stop sound
 #define SND_CHANGE_VOL		(1<<6)		// duplicated in protocol.h change sound vol
@@ -419,7 +419,7 @@ class CBasePlayerWeapon;
 
 
 
-// Originally in cl_dll/hl/ev_hldm.h and dlls/weapons.h.
+// Originally in cl_dlls/hl/ev_hldm.h and dlls/weapons.h.
 // bullet types
 typedef	enum
 {
@@ -556,7 +556,7 @@ extern Vector UTIL_ClampVectorToBoxNonNormalized( const Vector &input, const Vec
 
 
 // Common method for determing whether the current game is multiplayer or not.
-// Behaves like 'bIsMultiplayer' (cl_dll/hl/hl_weapons.cpp) if clientside, and
+// Behaves like 'bIsMultiplayer' (cl_dlls/hl/hl_weapons.cpp) if clientside, and
 // behaves like 'IsMultiplayer' of gamerules for serverside.
 extern BOOL IsMultiplayer(void);
 

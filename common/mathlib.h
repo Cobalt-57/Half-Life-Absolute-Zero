@@ -46,11 +46,11 @@
 //MODDD - NEW!  Testing something.
 // Borrowed from utils/common/mathlib.h
 // ***NEVERMIND!  Do not attempt forcing these to work with method overloading.
-// You get run-time errors of methods in cl_dll sending 'vec3_t' vectors using the Vector
+// You get run-time errors of methods in cl_dlls sending 'vec3_t' vectors using the Vector
 // class that sometimes use one of the pm_math.c methods with C's vec3_t (the array of 3
 // floats), so it's interpreted of NULL.  And that's still a huge guess why parameters
-// from cl_dll methods come to pm_shared.c methods as "NULL", even though they clearly
-// weren't on cl_dll's side.  Either the class difference or a C/C++ difference issue.
+// from cl_dlls methods come to pm_shared.c methods as "NULL", even though they clearly
+// weren't on cl_dlls's side.  Either the class difference or a C/C++ difference issue.
 // Point is, just don't include mathlib.h in C++ files, they have their own methods
 // in the new common/vector.cpp already that go client and serverside now.
 // Although that both pm_shared/pm_math.c and common/vector.cpp are still part of the

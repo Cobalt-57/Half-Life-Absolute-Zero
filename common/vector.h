@@ -24,7 +24,7 @@
 // IMPORTANT - It's probably feasible to remove all the vector-math-related methods in cl_util.c/.hpp,
 // as the game already compiles pm_shared/pm_math.c (most likely header'd by common/mathlib.h).
 // Just gets a little tricky from the math-related files outside the game being C files, but the
-// ones in cl_util.cpp are clearly for C++ like the rest of the cl_dll and the dlls folders.  Weird.
+// ones in cl_util.cpp are clearly for C++ like the rest of the cl_dlls and the dlls folders.  Weird.
 
 // ALSO - no need to worry about where to include mathlib.h anymore, that's handled by
 // this file too at the bottom.  mathlib.h requires this to be included first anyway (or would be
@@ -66,7 +66,7 @@
 
 typedef float vec_t;
 
-// It MIGHT be more accurate to just go through every cl_dll and dlls file and replace every
+// It MIGHT be more accurate to just go through every cl_dlls and dlls file and replace every
 // single mention of "vec3_t" with "Vector".
 // However, other common and util files from other folders also use vec3_t, and a consistent
 // usage there (float array or Vector class) is harder to pin down.
@@ -259,16 +259,16 @@ public:
 inline Vector operator*(float fl, const Vector& v) { return v * fl; }
 inline Vector2D operator*(float fl, const Vector2D& v) { return v * fl; }
 
-// These were found identical in the original cl_dll/util_vector.h and dlls//vector.h.
+// These were found identical in the original cl_dlls/util_vector.h and dlls//vector.h.
 inline Vector CrossProduct(const Vector& a, const Vector& b) { return Vector(a.y * b.z - a.z * b.y, a.z * b.x - a.x * b.z, a.x * b.y - a.y * b.x); }
 inline float DotProduct(const Vector2D& a, const Vector2D& b) { return(a.x * b.x + a.y * b.y); }
 inline float DotProduct(const Vector& a, const Vector& b) { return(a.x * b.x + a.y * b.y + a.z * b.z); }
 
-// this was in cl_dll/cl_util.h, but is more fitting here.
+// this was in cl_dlls/cl_util.h, but is more fitting here.
 inline void VectorClear(float* a) { a[0] = 0.0; a[1] = 0.0; a[2] = 0.0; }
 
 
-// A few externs from cl_dll/view.cpp to pull out ordinarilly C-only functions from common/mathlib.h
+// A few externs from cl_dlls/view.cpp to pull out ordinarilly C-only functions from common/mathlib.h
 // "NormalizeAngles" was also included by hud_spectator.cpp
 extern "C" void InterpolateAngles(vec3_t start, vec3_t end, vec3_t output, float frac);
 extern "C" void NormalizeAngles(vec3_t angles);
@@ -280,11 +280,11 @@ extern "C" void NormalizeAngles(vec3_t angles);
 //extern "C" float Distance2D(const vec3_t v1, const vec3_t v2);
 
 extern "C" float AngleBetweenVectors(const vec3_t v1, const vec3_t v2);
-// And from cl_dll/input.cpp.
+// And from cl_dlls/input.cpp.
 extern "C" float anglemod( float a );
 
 
-// from cl_dll/cl_util.cpp, implemented in common/vector.cpp.  C++ only.
+// from cl_dlls/cl_util.cpp, implemented in common/vector.cpp.  C++ only.
 extern vec3_t vec3_origin;
 extern float Length(const float* v);
 
@@ -323,7 +323,7 @@ void VectorScale(const vec3_t in, vec_t scale, vec3_t out);
 // method above.
 // Overloading does not play nicely with macros, especially not with methods that share the same name
 // at the same time.
-// cl_dll/cl_util.h defined DotProduct, VectorSubtract, VectorAdd, and VectorCopy.
+// cl_dlls/cl_util.h defined DotProduct, VectorSubtract, VectorAdd, and VectorCopy.
 // Unsure why though, they're in the two mathlib.h files too.
 // In short, these can be included client and serverside, as they always were (mathlib files are not
 // client/server specific).
@@ -348,12 +348,12 @@ void VectorScale(const vec3_t in, vec_t scale, vec3_t out);
 // Of all as-is script that's part of the compile, seems to use the "VectorScale" version, no _f.
 // uncertain in what places as-is script called VectorScale_f (define version) for non-compiled.
 // So far it seems nowhere ever used the macro (_f now) version, the "VectorScale" method seen in
-// mathlib.h/pm_math.c files or cl_dll/cl_util.h/.cppcpp seems to be used.
+// mathlib.h/pm_math.c files or cl_dlls/cl_util.h/.cppcpp seems to be used.
 #define VectorScale_f(a,b,c) {(c)[0]=(b)*(a)[0];(c)[1]=(b)*(a)[1];(c)[2]=(b)*(a)[2];}
 
 
 // Only include if we're in the C Lang.  Otherwise there will be issues since C does not support
-// method overloading (similar C++ methods from cl_dll/cl_util.cpp are now in common/vector.cpp).
+// method overloading (similar C++ methods from cl_dlls/cl_util.cpp are now in common/vector.cpp).
 #ifndef __cplusplus
 #include "mathlib.h"
 #endif

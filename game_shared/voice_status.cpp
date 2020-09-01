@@ -6,34 +6,18 @@
 //=============================================================================
 
 // There are hud.h's coming out of the woodwork so this ensures that we get the right one.
-#if defined( DMC_BUILD )
-	#include "../dmc/cl_dll/hud.h"
-	#include "../dmc/cl_dll/cl_util.h"
-#elif defined( RICOCHET_BUILD )
-	#include "../ricochet/cl_dll/hud.h"
-	#include "../ricochet/cl_dll/cl_util.h"
-#else
-	#include "../cl_dll/hud.h"
-	#include "../cl_dll/cl_util.h"
-#endif
+
+//MODDD - references to constants DMC_BUILD, RICOCHET_BUILD removed
+#include "../cl_dlls/hud.h"
+#include "../cl_dlls/cl_util.h"
 
 #include <assert.h>
 #include <string.h>
 #include <stdio.h>
 
-#if defined( DMC_BUILD )
-	#include "../dmc/cl_dll/parsemsg.h"
-	#include "../dmc/cl_dll/hud_servers.h"
-	#include "../dmc/cl_dll/demo.h"
-#elif defined( RICOCHET_BUILD )
-	#include "../ricochet/cl_dll/parsemsg.h"
-	#include "../ricochet/cl_dll/hud_servers.h"
-	#include "../ricochet/cl_dll/demo.h"
-#else
-	#include "../cl_dll/parsemsg.h"
-	#include "../cl_dll/hud_servers.h"
-	#include "../cl_dll/demo.h"
-#endif
+#include "../cl_dlls/parsemsg.h"
+#include "../cl_dlls/hud_servers.h"
+#include "../cl_dlls/demo.h"
 
 #include "demo_api.h"
 #include "voice_status.h"
@@ -441,12 +425,12 @@ void CVoiceStatus::UpdateSpeakerStatus(int entindex, qboolean bTalking)
 				if(pLabel = GetFreeVoiceLabel())
 				{
 					// Get the name from the engine.
-					hud_player_info_t info;
-					memset(&info, 0, sizeof(info));
-					GetPlayerInfo(entindex, &info);
+					hud_player_info_t tempvar_info;
+					memset(&tempvar_info, 0, sizeof(tempvar_info));
+					GetPlayerInfo(entindex, &tempvar_info);
 
 					char paddedName[512];
-					_snprintf(paddedName, sizeof(paddedName), "%s   ", info.name);
+					_snprintf(paddedName, sizeof(paddedName), "%s   ", tempvar_info.name);
 
 					int color[3];
 					m_pHelper->GetPlayerTextColor( entindex, color );
@@ -637,10 +621,11 @@ void CVoiceStatus::HandleVoiceMaskMsg(int iSize, void *pbuf)
 			char str[256];
 			gEngfuncs.pfnConsolePrint("CVoiceStatus::HandleVoiceMaskMsg\n");
 			
-			sprintf(str, "    - m_AudiblePlayers[%d] = %lu\n", dw, m_AudiblePlayers.GetDWord(dw));
+			//MODDD - first %'s were %d, should have been %lu to match 'dw' being unsigned long.
+			sprintf(str, "    - m_AudiblePlayers[%lu] = %lu\n", dw, m_AudiblePlayers.GetDWord(dw));
 			gEngfuncs.pfnConsolePrint(str);
 			
-			sprintf(str, "    - m_ServerBannedPlayers[%d] = %lu\n", dw, m_ServerBannedPlayers.GetDWord(dw));
+			sprintf(str, "    - m_ServerBannedPlayers[%lu] = %lu\n", dw, m_ServerBannedPlayers.GetDWord(dw));
 			gEngfuncs.pfnConsolePrint(str);
 		}
 	}
@@ -865,7 +850,9 @@ void CVoiceStatus::SetPlayerBlockedState(int iPlayer, bool blocked)
 	if (gEngfuncs.pfnGetCvarFloat("voice_clientdebug"))
 	{
 		char str[256];
-		sprintf(str, "CVoiceStatus::SetPlayerBlockedState: setting player %d ban to %d\n", iPlayer, !m_BanMgr.GetPlayerBan(playerID));
+
+		//MODDD - The "!m_BanMgr.Get..." parameter casted to 'int'
+		sprintf(str, "CVoiceStatus::SetPlayerBlockedState: setting player %d ban to %d\n", iPlayer, (int)!m_BanMgr.GetPlayerBan(playerID));
 		gEngfuncs.pfnConsolePrint(str);
 	}
 

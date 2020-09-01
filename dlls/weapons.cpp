@@ -25,11 +25,11 @@
 // Anyway, looks like all specific player weapons (mp5.cpp, crossbow.cpp, etc.) were included server AND clientside.
 // weapons.h is also shared.
 // HOWEVER.  weapons.cpp is only included serverside, NOT clientside.
-// A lot of its methods seem to be implemented separately in cl_dll/hl/hl_weapons.cpp, alongside some other things.
+// A lot of its methods seem to be implemented separately in cl_dlls/hl/hl_weapons.cpp, alongside some other things.
 
 // The point of this is, don't do 'ifdef CLIENT_DLL' checks in here, they are pointless.  They either always pass
 // or never pass, because there's only one reading of weapons.cpp:  serverside.
-// Make separate copies for clientside elsewhere over in cl_dll/hl/hl_weapons.cpp, probably.
+// Make separate copies for clientside elsewhere over in cl_dlls/hl/hl_weapons.cpp, probably.
 // Dummy out anything needed by weapons clientside (like FOV requests) at your own peril!
 
 #include "extdll.h"

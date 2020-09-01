@@ -10,7 +10,7 @@
 /*
 A few important notes:
 
-Still need to extern CVars meant to be received by the client in cl_dll/ammo.cpp (may change what file gets this role at some point).
+Still need to extern CVars meant to be received by the client in cl_dlls/ammo.cpp (may change what file gets this role at some point).
 Also, need to extern (all?) CVars in dlls/client.cpp.
 
 */

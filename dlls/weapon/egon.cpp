@@ -1411,7 +1411,7 @@ void CEgon::Fire( const Vector &vecOrigSrc, const Vector &vecDir )
 // The hitcloud is an exception, it is only in here.  Unknown if it would be a good idea to have a ev_hldm equivalent
 // and then make the hitcloud here skip the local player.
 // They won't show up even in third person, still uses the same as if in first person.   Weird, but, ok.
-// See the egonfire in cl_dll/ev_hldm.cpp.  That shows up for the local plaer only instead.
+// See the egonfire in cl_dlls/ev_hldm.cpp.  That shows up for the local plaer only instead.
 void CEgon::UpdateEffect( const Vector &startPoint, const Vector &endPoint, float timeBlend )
 {
 	

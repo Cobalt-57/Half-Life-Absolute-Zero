@@ -4,11 +4,12 @@
 /.vs
 /enc_temp_folder
 /ipch
-/src_dll.sdf
-/src_dll.suo
-/cl_dll/Debug
-/cl_dll/Release
+/src_vs19.sdf
+/src_vs19.suo
+/cl_dlls/Debug
+/cl_dlls/Release
 /dlls/Debug
+/dlls/Profile
 /dlls/Release
 
 ####################################################

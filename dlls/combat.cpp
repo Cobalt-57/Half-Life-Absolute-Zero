@@ -2684,7 +2684,7 @@ void RadiusDamage( Vector vecSrc, entvars_t *pevInflictor, entvars_t *pevAttacke
 
 
 //MODDD - new method to summarize tracer generating script and returning whether to block drawing a decal, based on whether a tracer was sent this time.
-//        Mirrors EV_HLDM_CheckTracer from clientside cl_dll/ev_hldm.cpp
+//        Mirrors EV_HLDM_CheckTracer from clientside cl_dlls/ev_hldm.cpp
 //        This script used to be sitting in FireBullets (for monsters other than the player) to fire bullets serverside, the only way they can.
 //        Now that the player can fire bullets serverside with some choices of CVar "playerWeaponTracerMode", it makes even more sense to make a method
 //        out of this too.
@@ -2817,7 +2817,7 @@ void CBaseEntity::FireBullets(ULONG cShots, Vector vecSrc, Vector vecDirShooting
 		break;
 		}//END OF switch
 
-		//MODDD - squeaky clean, moved to a method.  Like how cl_dll/ev_hldm.cpp did it.
+		//MODDD - squeaky clean, moved to a method.  Like how cl_dlls/ev_hldm.cpp did it.
 		disableBulletHitDecal = CheckTracer(vecSrc, tr.vecEndPos, gpGlobals->v_forward, gpGlobals->v_right, iBulletType, iTracerFreq, &tracerCount);
 
 
@@ -2936,7 +2936,7 @@ Go to the trouble of combining multiple pellets into a single damage call.
 This version is used by Players, uses the random seed generator to sync client and server side shots.
 
 //MODDD - extra note. Notice that the BULLET_PLAYER... cases below don't do the TEXTURETYPE_PLAYSOUND and DecalGunshot calls. These are both handled by the client instead
-//        (see the EV_HLDM_PlayTextureSound method of cl_dll/ev_hldm.cpp).
+//        (see the EV_HLDM_PlayTextureSound method of cl_dlls/ev_hldm.cpp).
 //        But this can only work for hits on map geometry. Hits on entities, even func_breakable, do not give their texture types for sounds (glass ,etc.).
 //        Playing from the server seems to be enough for them (Notice the breakable plays a sound of their own in TakeDamage).
 //        Looks like the main idea is, map geometry needs something else to play sounds for them (which is why monsters firing bullets, through the plain FireBullets above, 

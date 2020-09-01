@@ -157,26 +157,21 @@ int GetEntityAPI2( DLL_FUNCTIONS *pFunctionTable, int *interfaceVersion )
 int DispatchCreated(edict_t* pent) {
 	CBaseEntity* pEntity = (CBaseEntity*)GET_PRIVATE(pent);
 
-
 	if (pEntity)
 	{
-		/*
 		// Initialize these or entities who don't link to the world won't have anything in here
+		//MODDD - NOTE.  Is this default bound setting still necessary for things that plan on calling Spawn later
+		// (but in doing so skip this altogether if this were disabled here)?  No clue, things that 'think' should set
+		// these soon enough anyway.
 		pEntity->pev->absmin = pEntity->pev->origin - Vector(1, 1, 1);
 		pEntity->pev->absmax = pEntity->pev->origin + Vector(1, 1, 1);
-		//easyPrintLine("SOME stuff SPAWNED %d", pEntity->pev->spawnflags);
-		pEntity->Spawn();
 
-		//MODDD - if this entity was dynamically spawned, it no longer needs to be told that it was.
-		// Don't want revives changing the head on your scientist, now do we.
+		/*
+		pEntity->Spawn();
 		pEntity->spawnedDynamically = FALSE;
 		*/
 
-		// Try to get the pointer again, in case the spawn function deleted the entity.
-		// UNDONE: Spawn() should really return a code to ask that the entity be deleted, but
-		// that would touch too much code for me to do that right now.
-		//MODDD - that's not how pointers work ya dingus!
-		//pEntity = (CBaseEntity*)GET_PRIVATE(pent);
+		pEntity = (CBaseEntity*)GET_PRIVATE(pent);
 
 		if (pEntity)
 		{
@@ -214,7 +209,7 @@ int DispatchCreated(edict_t* pent) {
 
 int DispatchSpawn( edict_t *pent )
 {
-	CBaseEntity *pEntity = (CBaseEntity *)GET_PRIVATE(pent);
+	CBaseEntity *pEntity = (CBaseEntity*)GET_PRIVATE(pent);
 
 	/*
 	//!!! DEBUG
@@ -234,6 +229,8 @@ int DispatchSpawn( edict_t *pent )
 
 	if (pEntity)
 	{
+		//CBaseEntity* oldEntPointer = pEntity;
+
 		// Initialize these or entities who don't link to the world won't have anything in here
 		pEntity->pev->absmin = pEntity->pev->origin - Vector(1,1,1);
 		pEntity->pev->absmax = pEntity->pev->origin + Vector(1,1,1);
@@ -244,11 +241,35 @@ int DispatchSpawn( edict_t *pent )
 		// Don't want revives changing the head on your scientist, now do we.
 		pEntity->spawnedDynamically = FALSE;
 
+
 		// Try to get the pointer again, in case the spawn function deleted the entity.
 		// UNDONE: Spawn() should really return a code to ask that the entity be deleted, but
 		// that would touch too much code for me to do that right now.
+
 		//MODDD - that's not how pointers work ya dingus!
-		//pEntity = (CBaseEntity *)GET_PRIVATE(pent);
+		// HMmm.   No.  Don't comment this out.
+		// So.  This may seem kinda pointless.   But.   uh.   Clearly the memory pEntity is referring to
+		// may go bad after the Spawn() call in some cases.   If so,   GET_PRIVATE will find something
+		// different.
+		// As for how this only happens, and why very inconsistently, and might even cause a version of
+		// the game to crash before being able to even open console and start a map,         no.  clue.
+		pEntity = (CBaseEntity*)GET_PRIVATE(pent);
+
+		// TEST, see what thing's ent-pointer's change between these two calls.  Surprisingly many?
+		/*
+		if(oldEntPointer != pEntity){
+			easyForcePrintLine("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+			easyForcePrintLine("IT IS I");
+			if(oldEntPointer!=NULL){
+			easyForcePrintLine("oldEntPointer classname? %s", oldEntPointer->getClassname());
+			}
+			if(pEntity!=NULL){
+			easyForcePrintLine("new pointer classname? %s", pEntity->getClassname());
+			}
+			easyForcePrintLine("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+		}
+		*/
+
 
 		if ( pEntity )
 		{

@@ -5,9 +5,9 @@
 // $NoKeywords: $
 //=============================================================================
 
-#include "../cl_dll/hud.h"
-#include "../cl_dll/cl_util.h"
-#include "../cl_dll/vgui_teamfortressviewport.h"
+#include "../cl_dlls/hud.h"
+#include "../cl_dlls/cl_util.h"
+#include "../cl_dlls/vgui_teamfortressviewport.h"
 
 
 #include "vgui_actionsignal.h"

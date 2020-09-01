@@ -7,7 +7,7 @@
 #ifdef __cplusplus
 //#ifdef CLIENT_DLL
 
-// cl_dll/cl_util.cpp
+// cl_dlls/cl_util.cpp
 // ...all of this file really.
 vec3_t vec3_origin(0, 0, 0);
 

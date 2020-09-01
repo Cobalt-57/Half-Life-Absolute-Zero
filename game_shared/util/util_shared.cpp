@@ -67,7 +67,7 @@ EASY_CVAR_EXTERN_CLIENTONLY(cl_hornetspiral)
 
 
 #ifdef CLIENT_DLL
-	//from cl_dll/ev_hldm.cpp, needed for clientside UTIL_Sparks to call.
+	//from cl_dlls/ev_hldm.cpp, needed for clientside UTIL_Sparks to call.
 	extern cl_enginefunc_t gEngfuncs;
 #else
 	//SERVER
@@ -215,8 +215,8 @@ int Primes[NUMBER_OF_PRIMES] =
 
 
 // this never needs to be extern'd ?
-// glSeed and seed_table used to be copied between cl_dll/com_weapons.cpp and dlls/util.cpp.
-// (cl_dll/com_weapons.cpp has since been merged into cl_dll/hl/hl_weapons.cpp)
+// glSeed and seed_table used to be copied between cl_dlls/com_weapons.cpp and dlls/util.cpp.
+// (cl_dlls/com_weapons.cpp has since been merged into cl_dlls/hl/hl_weapons.cpp)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

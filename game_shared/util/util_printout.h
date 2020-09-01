@@ -4,7 +4,7 @@
 // General place for printout methods, as being scattered all over the place can be irritating
 // for something so commonly needed.
 // Here all in one place to take advantage of as many engine methods as possible.
-// There is also "cl_dll/cl_util.h/ConsolePrint", but that is just a wrapper for
+// There is also "cl_dlls/cl_util.h/ConsolePrint", but that is just a wrapper for
 // gEngfuncs.pfnConsolePrint that does not even support extra parameters for filling
 // in.  Just use 'easyPrint' / 'easyForcePrint' methods for giving fill-in paramers
 // in the  same call, and they work client/serverside (call the right engine method).
@@ -232,7 +232,7 @@ extern void easyPrintLineDummy(char *szFmt, ...);
 	extern void easyPrintLineGroup3(char* format, ...);
 	extern void easyPrintLineGroup4(char* format, ...);
 
-#endif //END OF main CL_DLL/Server check
+#endif //END OF main cl_dlls/Server check
 
 
 

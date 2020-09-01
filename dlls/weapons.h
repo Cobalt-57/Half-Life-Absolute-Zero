@@ -47,7 +47,7 @@
 
 
 // inventory max's for power canisters.
-// Should clientside (cl_dll/ammo.cpp) involve these too?
+// Should clientside (cl_dlls/ammo.cpp) involve these too?
 #define ITEM_ANTIDOTE_MAX 5
 #define ITEM_ADRENALINE_MAX 5
 #define ITEM_RADIATION_MAX 5
@@ -284,7 +284,7 @@ extern int gmsgWeapPickup;
 // nope, just use "IsMultiplayer" from util_shared.h instead
 //extern bool bIsMultiplayer(void);
 
-//MODDD - NOTE.  Defined in cl_dll/hl/hl_weapons.cpp
+//MODDD - NOTE.  Defined in cl_dlls/hl/hl_weapons.cpp
 extern void LoadVModel(char* szViewModel, CBasePlayer* m_pPlayer);
 #endif
 
@@ -694,7 +694,7 @@ public:
 	//MODDD - new general event for easy compatability with a commonly wanted feature (getting the player's
 	// FOV choice given a possible influencing CVar).
 	// Wanted to make this inline with 'ifdef's for CLIENT_DLL and not, but the player has to be defined at this point.
-	// So see implementations in cl_dll/hl/hl_baseentity.cpp and dlls/weapons.cpp.
+	// So see implementations in cl_dlls/hl/hl_baseentity.cpp and dlls/weapons.cpp.
 	float getPlayerBaseFOV(void);
 
 

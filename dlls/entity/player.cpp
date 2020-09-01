@@ -3954,7 +3954,7 @@ void CBasePlayer::PreThink(void)
 	//  Not used by anything at all in retail for weapons (IN_ATTACK and 2) beeeeeecccccaaaaauuuuussssseee???
 	//  That crossbow "full second delay before rezooming because we can't tell if the user made a fresh click
 	//  this frame" sure seems like a fat load of bullshit now doesn't it.
-	// Anyway, this is also done in cl_dll/hl_weapons.cpp (clientside), so these can be trusted there too.
+	// Anyway, this is also done in cl_dlls/hl/hl_weapons.cpp (clientside), so these can be trusted there too.
 	m_afButtonPressed =  buttonsChanged & pev->button;		// The changed ones still down are "pressed"
 	m_afButtonReleased = buttonsChanged & (~pev->button);	// The ones not down are "released"
 

@@ -4,7 +4,7 @@
 //Some essential things needed practically everywhere serverside - even enginecallback.h - moved from util.h (mostly) and cbase.h to here.
 //Things that can't be repeated or depend on other things themselves (like enginecallback.h) have been implemented in util_entity.cpp instead of inlined.
 
-// Although enginecallback.h was in the dlls folder, this file is in "game_shared" as cl_dll calls for
+// Although enginecallback.h was in the dlls folder, this file is in "game_shared" as cl_dlls calls for
 // player weapon files heavily rely on this too.
 // Player weapons really should be in some game_shared/weapons folder anyway but that isn't too important.
 

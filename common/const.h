@@ -73,17 +73,17 @@
 
 // Not sure why DLLEXPORT was re-defined in so many files:
 //  This was defined the same in the following files (and removed from since):
-//  cl_dll/cdll_int.cpp
-//  cl_dll/demo.cpp
-//  cl_dll/entity.cpp
-//  cl_dll/GameStudioModelRenderer.cpp
-//  cl_dll/in_defs.h
-//  cl_dll/tri.cpp
+//  cl_dlls/cdll_int.cpp
+//  cl_dlls/demo.cpp
+//  cl_dlls/entity.cpp
+//  cl_dlls/GameStudioModelRenderer.cpp
+//  cl_dlls/in_defs.h
+//  cl_dlls/tri.cpp
 // These files rely on that same definition anyway:
-//  cl_dll/input.cpp
-//  cl_dll/inputw32.cpp
-//  cl_dll/in_camera.cpp
-//  cl_dll/view.cpp
+//  cl_dlls/input.cpp
+//  cl_dlls/inputw32.cpp
+//  cl_dlls/in_camera.cpp
+//  cl_dlls/view.cpp
 
 // The version used in those files has been moved here.
 // Every single mention of this is for prototypes in 'extern "c"' space.

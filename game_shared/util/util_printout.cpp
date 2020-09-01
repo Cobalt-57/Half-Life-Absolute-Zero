@@ -888,12 +888,12 @@ void easyServerCommand(char* szFmt, ...){
 // Especially from "ClientPrint" not doing so.
 
 // The "ClientPrint" methods work like easyPrintLineClient calls above (they refer to the server's pfnServerPrint
-// method that leaves the rest up to the engine instead of interpreting this result in cl_dll/text_message.cpp).
+// method that leaves the rest up to the engine instead of interpreting this result in cl_dlls/text_message.cpp).
 // Since the "ClientPrint" methods allow for custom interpretation on the client, that's what allows reading from
 // titles.txt.
 // For anything that doesn't need that feature, may as well use the easyPrintClient ones above, more flexible
 // (does not have a limit of 4 paramters after the message string).
-// See cl_dll/text_message.cpp for the MsgFunc_TextMsg
+// See cl_dlls/text_message.cpp for the MsgFunc_TextMsg
 
 // !!! IMPORTANT.
 // If you don't need any text to be interpreted by clientside text files for its own substitutions

@@ -5,8 +5,8 @@
 // $NoKeywords: $
 //=============================================================================
 
-#include "../cl_dll/wrect.h"
-#include "../cl_dll/cl_dll.h"
+#include "../cl_dlls/wrect.h"
+#include "../cl_dlls/cl_dll.h"
 #include "vgui.h"
 #include "vgui_loadtga.h"
 #include "vgui_inputstream.h"
