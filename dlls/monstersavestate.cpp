@@ -7,7 +7,6 @@ SimpleMonsterSaveState::SimpleMonsterSaveState(void) {
 
 }
 void SimpleMonsterSaveState::Save(CBaseMonster* toRead) {
-	// queuedMonsterState  ?
 	OLD_m_afMemory = toRead->m_afMemory;
 	OLD_m_pSchedule = toRead->m_pSchedule;
 	OLD_m_iScheduleIndex = toRead->m_iScheduleIndex;

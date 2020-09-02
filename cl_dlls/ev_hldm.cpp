@@ -2308,9 +2308,9 @@ void EV_EgonFire(event_args_t* args)
 
 	if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(egonEffectsMode) == 3) {
 		// only the narrow beam gets it.
-		//hasSpiralBeam = (iFireMode == FIRE_NARROW);
+		hasSpiralBeam = (iFireMode == FIRE_NARROW);
 		// or... not?  oooookay
-		hasSpiralBeam = TRUE;
+		//hasSpiralBeam = TRUE;
 	}
 	else {
 		// otherwise, alsways has it.
@@ -2450,7 +2450,7 @@ void EV_EgonFire(event_args_t* args)
 				b = b * (1 / 255.0f);
 
 
-				
+				/*
 				if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(egonEffectsMode) == 3 && iFireMode == FIRE_WIDE){
 					// less noticeable, I guess?
 					if (hasSpiralBeam) {
@@ -2462,7 +2462,9 @@ void EV_EgonFire(event_args_t* args)
 							pBeam->flags |= (FBEAM_SINENOISE);
 
 					}
-				}else{
+				}else
+				*/
+				{
 					if (hasSpiralBeam) {
 						//spiral purple beam.
 						pBeam = gEngfuncs.pEfxAPI->R_BeamEntPoint(idx | 0x1000, tr.endpos, iBeamModelIndex, 99999, 3.5, 0.2, 0.7, 55, 0, 0, r, g, b);
@@ -2509,16 +2511,17 @@ void EV_EgonFire(event_args_t* args)
 				}else{
 					// WIDE
 
+					/*
 					const float life = 99999;
 					const float width = 4.8;
 					const float amplitude = 0.06;
-					const float brightness = 0.85;
+					const float brightness = 0.80;
 					const float speed = 40;
 					const float startframe = 0;
 					const float framerate = 0;
-					float t_r = 0.2f;
-					float t_g = 0.5f;
-					float t_b = 0.85f;
+					float t_r = 0.18f;
+					float t_g = 0.32f;
+					float t_b = 0.74f;
 
 					//straight purple beam.
 					pBeam2 = gEngfuncs.pEfxAPI->R_BeamEntPoint(idx | 0x1000, tr.endpos, iBeamModelIndex, life, width, amplitude, brightness, speed, startframe, framerate, t_r, t_g, t_b);
@@ -2526,13 +2529,128 @@ void EV_EgonFire(event_args_t* args)
 					// so this is found counting up with game time.
 					// oooookay, not gonna touch that
 					//pBeam2->freq = 0.2;
+					*/
+
+
+					// TEST
+
+					// straight purple beam.
+					pBeam2 = gEngfuncs.pEfxAPI->R_BeamEntPoint(idx | 0x1000, tr.endpos, iBeamModelIndex, 99999, 5.3, 0.08, 0.7, 25, 0, 0, r, g, b);
+
+					if(!hasSpiralBeam){
+						r = 40.0f;
+						g = 90.0f;
+						b = 125.0f;
+						r = r * (1 / 255.0f) * 1.0;
+						g = g * (1 / 255.0f) * 2.0;
+						b = b * (1 / 255.0f) * 2.0;
+						pBeam = gEngfuncs.pEfxAPI->R_BeamEntPoint(idx | 0x1000, tr.endpos, iBeamModelIndex, 99999, 4.0, 0.105, 0.92, 70, 0, 0, r, g, b);
+					}
 
 				}//END OF beam type check
 			}
 		}
-
-
 	}//END OF spiral beam check
+
+
+
+	// OLD BEAM SCRAPS, remove later
+
+	/*
+
+	float r = 50.0f;
+	float g = 50.0f;
+	float b = 125.0f;
+
+
+	//MODDD NOTE - ........why is this the only place that checks for IsHardware in all of ev_hldm, even though
+	// there are other places that deal with colors?
+	// And this excludes the 'b' coord?   ...    *Why*
+	
+	//if ( IEngineStudio.IsHardware() )
+	//{
+	//r /= 100.0f;
+	//g /= 100.0f;
+	//}
+	// They'll just be out of 255 instead.
+	r = r * (1 / 255.0f);
+	g = g * (1 / 255.0f);
+	b = b * (1 / 255.0f);
+
+
+
+	if (hasSpiralBeam) {
+		//spiral purple beam.
+		pBeam = gEngfuncs.pEfxAPI->R_BeamEntPoint(idx | 0x1000, tr.endpos, iBeamModelIndex, 99999, 3.5, 0.2, 0.7, 55, 0, 0, r, g, b);
+
+		//easyPrintLine("EGONEVENT3 %d", pBeam != 0 );
+		if (pBeam)
+			pBeam->flags |= (FBEAM_SINENOISE);
+
+	}
+
+	//straight purple beam.
+	pBeam2 = gEngfuncs.pEfxAPI->R_BeamEntPoint(idx | 0x1000, tr.endpos, iBeamModelIndex, 99999, 5.0, 0.08, 0.7, 25, 0, 0, r, g, b);
+
+
+
+
+
+	m_pBeam = CBeam::BeamCreate( EGON_BEAM_SPRITE, 40 );
+	m_pBeam->PointEntInit( vecSrc, m_pPlayer->entindex()  );
+	//MODDD - commented out.  Causes the beam not to sufficiently shrink when nearing a surface you're firing at, causing the effect to clip backwards into the player & gun.
+	//m_pBeam->SetFlags( BEAM_FSINE );
+	m_pBeam->SetEndAttachment( 1 );
+	m_pBeam->pev->spawnflags |= SF_BEAM_TEMPORARY;	// Flag these to be destroyed on save/restore or level transition
+													//if(testVar == 0 || testVar == 2 ){
+													//	m_pBeam->pev->flags |= FL_SKIPLOCALHOST;
+													//}
+	m_pBeam->pev->owner = m_pPlayer->edict();
+
+
+
+	//if ( m_fInAttack == FIRE_WIDE )
+	//{
+	//	m_pBeam->SetScrollRate( 50 );
+	//	m_pBeam->SetNoise( 20 );
+	//}
+	//else
+	//{
+	//// want narrow mode's features.
+	m_pBeam->SetScrollRate( 110 );
+	m_pBeam->SetNoise( 5 );
+	//}
+
+
+
+	m_pNoise = CBeam::BeamCreate( EGON_BEAM_SPRITE, 55 );
+	//new?
+	//m_pNoise->SetFlags( BEAM_FSINE );
+
+	m_pNoise->PointEntInit( vecSrc, m_pPlayer->entindex() );
+	m_pNoise->SetScrollRate( 25 );
+	m_pNoise->SetBrightness( 100 );
+	m_pNoise->SetEndAttachment( 1 );
+	m_pNoise->pev->spawnflags |= SF_BEAM_TEMPORARY;
+	//if(testVar == 0 || testVar == 1){
+	//	m_pNoise->pev->flags |= FL_SKIPLOCALHOST;
+	//}
+	m_pNoise->pev->owner = m_pPlayer->edict();
+
+
+	//if ( m_fInAttack == FIRE_WIDE )
+	//{
+	//	m_pNoise->SetColor( 50, 50, 255 );
+	//	m_pNoise->SetNoise( 8 );
+	//}
+	//else
+	//{
+	//// want narrow's features.
+	m_pNoise->SetColor( 80, 120, 255 );
+	m_pNoise->SetNoise( 2 );
+	//}
+
+	*/
 
 
 }//END OF EV_EgonFire

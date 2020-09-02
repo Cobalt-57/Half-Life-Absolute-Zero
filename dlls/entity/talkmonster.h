@@ -198,6 +198,8 @@ public:
 
 	virtual void forgetHealNPC(void);
 	virtual void ReportAIState(void);
+
+	virtual void OnCineCleanup(CCineMonster* pOldCine);
 	
 	//MODDD - also new.
 	virtual void playPissed();

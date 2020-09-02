@@ -50,7 +50,14 @@ void CBaseMonster::SetState ( MONSTERSTATE State )
 	//MODDD - force the state to stay "PRONE" if caught by a barnacle!
 	// Any other state can be picked after this monster is freed.  Or, rather, 'if'.
 	// UNUSED, nothing set barnacleLocked anymore.  Why not check for PRONE anyway.
-	
+	// NEVERMIND.  Not really possible to want a state queued, no AI running looking for
+	// enemies to change states while barnacle'd.  Assuming any change in activity is from
+	// being freed (apply now) is fine.
+	// Oh.  Although, the queued-state was meant to be saved on getting barnacle'd, like remember
+	// being in the combat state from before being barnacle'd on getting freed.
+	// Ehhh, no need, re-aquired soon enough anyway.  (checking for the target 'State' being
+	// MONSTERSTATE_PRONE, restoring on existing state being MONSTERSTATE_PRONE, would be the proper way anyway)
+	/*
 	//if(barnacleLocked == TRUE){
 	if(m_MonsterState == MONSTERSTATE_PRONE){
 		//easyForcePrintLine("LOCKED: %d", State);
@@ -68,7 +75,7 @@ void CBaseMonster::SetState ( MONSTERSTATE State )
 
 		return;
 	}
-	
+	*/
 	
 	switch( State )
 	{

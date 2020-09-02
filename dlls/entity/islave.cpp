@@ -34,6 +34,7 @@
 //MODDD
 #include "defaultai.h"
 #include "nodes.h"
+#include "decals.h"
 
 
 EASY_CVAR_EXTERN_DEBUGONLY(islaveReviveFriendMode)
@@ -2272,7 +2273,7 @@ void CISlave::ArmBeam( int side )
 	// This will keep the decal imposed by a hit breakable or unusual surface if it wants something other than plain bulletholes though.
 	// (only those get replaced by scorch marks).
 	//DecalGunshot( &tr, BULLET_PLAYER_CROWBAR );
-	DecalSafeScorchMark(&tr, DMG_CLUB, 0);
+	DecalSafeSmallScorchMark(&tr, DMG_CLUB, 0);
 
 
 
@@ -2366,6 +2367,10 @@ void CISlave::ZapBeam( int side )
 	m_pBeam[m_iBeams]->SetBrightness( 255 );
 	m_pBeam[m_iBeams]->SetNoise( 20 );
 	m_iBeams++;
+
+	//MODDD - if this misses, can place a larger scroch mark
+	DecalSafeDecal(&tr, DECAL_SMALLSCORCH1+2, DMG_CLUB, 0);
+
 
 	pEntity = CBaseEntity::Instance(tr.pHit);
 	if (pEntity != NULL && pEntity->pev->takedamage)

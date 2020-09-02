@@ -3228,6 +3228,36 @@ void CTalkMonster::ReportAIState(){
 }
 
 
+void CTalkMonster::OnCineCleanup(CCineMonster* pOldCine){
+	
+	// It's weird for a Scientist to go rushing towards an exploding machine/wall, say a line about it, and then 0.2 seconds later, go 'oh hey nice suit'.
+	// Have some more delay before picking another random line.
+	// Only on important ones ending (that can't be interrupted, seems like an ok assumption).
+	// Running this on stopping say the vending machine sequence just means that scientist will never say anything from going to another scripted
+	// sequence before the 16-22 sec delay ever ends.
+	// ...oh.  they're all marked 'non-interruptable'.   of course.
+	// It would be best for the ones mentioned in a1a0a to have longer durations given by their scripted-sentences in the map, maybe?
+	// Doing a compromise?... of 1 second.   yeah.
+
+	//easyForcePrintLine("its me %d cine canint? %d", monsterID, pOldCine->CanInterrupt());
+	
+	//CTalkMonster::g_talkWaitTime = gpGlobals->time + RANDOM_FLOAT(16, 22);
+
+	// Only do this if we're not already waiting for a longer amount of time.
+	if (CTalkMonster::g_talkWaitTime < gpGlobals->time + 1.7){
+		CTalkMonster::g_talkWaitTime = gpGlobals->time + 1.7;
+		m_flStopTalkTime = gpGlobals->time + 1.7;
+	}
+
+	CBaseMonster::OnCineCleanup(pOldCine);
+
+}//END OF OnCineCleanup
+
+
+
+
+
+
 void CTalkMonster::initiateAss(){
 	//default: no behavior?
 }

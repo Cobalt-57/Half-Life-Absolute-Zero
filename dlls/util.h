@@ -951,7 +951,8 @@ extern int DamageDecal( CBaseEntity *pEntity, int bitsDamageType, int bitsDamage
 
 extern void DecalGunshot( TraceResult *pTrace, int iBulletType );
 
-extern void DecalSafeScorchMark(TraceResult* pTrace, int bitsDamageType, int bitsDamageTypeMod);
+extern void DecalSafeSmallScorchMark(TraceResult* pTrace, int bitsDamageType, int bitsDamageTypeMod);
+extern void DecalSafeDecal(TraceResult* pTrace, int decalChoice, int bitsDamageType, int bitsDamageTypeMod);
 
 
 extern void EjectBrass (const Vector &vecOrigin, const Vector &vecVelocity, float rotation, int model, int soundtype );

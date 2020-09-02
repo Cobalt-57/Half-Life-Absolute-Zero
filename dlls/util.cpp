@@ -7327,7 +7327,7 @@ void DecalGunshot( TraceResult *pTrace, int iBulletType )
 // will still be used instead.   Unknown if scorch marks should always replace even that.
 // If unknown what iBulletType to use, just use DMG_CLUB, 0.
 // islave did that through calling DecalGunshot with BULLET_PLAYER_CROWBAR for bullettype.
-void DecalSafeScorchMark(TraceResult *pTrace, int bitsDamageType, int bitsDamageTypeMod){
+void DecalSafeSmallScorchMark(TraceResult *pTrace, int bitsDamageType, int bitsDamageTypeMod){
 	if (!UTIL_IsValidEntity(pTrace->pHit)) {
 		return;
 	}
@@ -7344,7 +7344,9 @@ void DecalSafeScorchMark(TraceResult *pTrace, int bitsDamageType, int bitsDamage
 
 		if(decalFromEnt >= DECAL_GUNSHOT1 && decalFromEnt <= DECAL_GUNSHOT5){
 			// ok, replace it.
-			int newDecal = DECAL_SMALLSCORCH1 + RANDOM_LONG(0, 2);
+			// CHANGE: use scorch marks 1 and 2 instead, 3 is larger.
+			//int newDecal = DECAL_SMALLSCORCH1 + RANDOM_LONG(0, 2);
+			int newDecal = DECAL_SMALLSCORCH1 + RANDOM_LONG(0, 1);
 			UTIL_DecalTrace( pTrace, newDecal );
 		}else{
 			// nope, use that.
@@ -7355,6 +7357,31 @@ void DecalSafeScorchMark(TraceResult *pTrace, int bitsDamageType, int bitsDamage
 		//UTIL_GunshotDecalTraceForceDefault( pTrace, DamageDecal( pEntity, DMG_BULLET ) );
 	}
 }
+
+// like above, but takes one custom decal to paint instead.
+void DecalSafeDecal(TraceResult *pTrace, int decalChoice, int bitsDamageType, int bitsDamageTypeMod){
+	if (!UTIL_IsValidEntity(pTrace->pHit)) {
+		return;
+	}
+	if ( VARS(pTrace->pHit)->solid == SOLID_BSP || VARS(pTrace->pHit)->movetype == MOVETYPE_PUSHSTEP )
+	{
+		CBaseEntity *pEntity = NULL;
+		if ( !FNullEnt(pTrace->pHit) )
+			pEntity = CBaseEntity::Instance(pTrace->pHit);
+
+		int decalFromEnt = DamageDecal(pEntity, bitsDamageType, bitsDamageTypeMod);
+
+		if(decalFromEnt >= DECAL_GUNSHOT1 && decalFromEnt <= DECAL_GUNSHOT5){
+			int newDecal = decalChoice;
+			UTIL_DecalTrace( pTrace, newDecal );
+		}else{
+			// nope, use that.
+			UTIL_DecalTrace( pTrace, decalFromEnt );
+		}
+	}
+}
+
+
 
 
 

@@ -65,8 +65,8 @@ extern BOOL g_firstFrameSinceRestore;
 
 // how often to place scorches while firing?  The delay begins after firing, so firing for the minimum amount of time
 // (enough to use 1 unit of ammo) will not leave a scorch.
-#define EGON_PRIMARY_SCORCH_INTERVAL	0.042 //0.18
-#define EGON_SECONDARY_SCORCH_INTERVAL	0.049 //0.055 //0.27
+#define EGON_PRIMARY_SCORCH_INTERVAL	0.044 //0.042 //0.18
+#define EGON_SECONDARY_SCORCH_INTERVAL	0.058 //0.055 //0.27
 
 
 
@@ -435,10 +435,8 @@ void CEgon::Attack( void )
 
 			if(m_fInAttack == FIRE_NARROW){
 				m_pPlayer->m_iWeaponVolume = EGON_PRIMARY_VOLUME + 100;
-
 			}else if(m_fInAttack == FIRE_WIDE){
 				m_pPlayer->m_iWeaponVolume = EGON_PRIMARY_VOLUME + 275;
-
 			}
 			
 			//if ( m_flReleaseThrow <= UTIL_WeaponTimeBase() )
@@ -456,7 +454,7 @@ void CEgon::Attack( void )
 
 			if ( !HasAmmo() )
 			{
-				easyForcePrintLine("GONNA GIVE IT YO YA 1");
+				//easyForcePrintLine("GONNA GIVE IT YO YA 1");
 				EndAttack();
 				// ran out cus' you be out of ammo?  Freeze until the player lets go of the mouse.
 				
@@ -1343,11 +1341,11 @@ void CEgon::Fire( const Vector &vecOrigSrc, const Vector &vecDir )
 			float decalDisto;
 			if(m_fInAttack == FIRE_NARROW){
 				nextScorchInterval = gpGlobals->time + EGON_PRIMARY_SCORCH_INTERVAL;
-				decalDisto = 11.25;
+				decalDisto = 10.00;
 			}else{
 				nextScorchInterval = gpGlobals->time + EGON_SECONDARY_SCORCH_INTERVAL;
 				//decalDisto = 37.5;
-				decalDisto = 16;
+				decalDisto = 16.5;
 			}
 
 			// But, can the scorch actually be drawn?  Don't draw too close to the previously
@@ -1767,10 +1765,11 @@ void CEgon::CreateEffect( void )
 		//MODDD - hit cloud size will varry on wide or narrow fire.
 		//m_pSprite->pev->scale = 1.0;
 
+		// was 2.8 and 4.4
 		if ( m_fInAttack == FIRE_NARROW ){
-			m_pSprite->pev->scale = 2.8;
+			m_pSprite->pev->scale = 1.4;
 		}else{
-			m_pSprite->pev->scale = 4.4;
+			m_pSprite->pev->scale = 2.25;
 		}
 		
 
@@ -1836,7 +1835,8 @@ void CEgon::DestroyEffect( void )
 			//	recentHitPlaneNormal * 12;
 			
 			//MODDD - see multiples
-			m_pSprite->ExpandAnimatePreserveEffects( 10 * 0.45, 500 * 0.88 );
+			// was 0.45, 0.28.  and 0.88, 1.42 for fade speed
+			m_pSprite->ExpandAnimatePreserveEffects( 10 * 0.70, 500 * 0.75 );
 
 		}else{
 			//MODDD - now, even narrow fire can use the expand-out effect to remove its hitcloud.
@@ -1848,7 +1848,7 @@ void CEgon::DestroyEffect( void )
 			//	recentHitPlaneNormal * 8;
 
 			//MODDD - reduced further.
-			m_pSprite->ExpandAnimatePreserveEffects( 10 * 0.28, 500 * 1.42 );
+			m_pSprite->ExpandAnimatePreserveEffects( 10 * 0.45, 500 * 1.15 );
 
 
 			//UTIL_Remove( m_pSprite );
