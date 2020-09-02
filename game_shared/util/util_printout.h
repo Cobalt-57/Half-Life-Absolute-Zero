@@ -13,17 +13,15 @@
 #ifndef UTIL_PRINTOUT
 #define UTIL_PRINTOUT
 
+#include <stdarg.h>
 
 
 #ifdef CLIENT_DLL
-
 	#include "wrect.h"
 	#include "cl_dll.h"
-
 	#include "cvardef.h"
 
 #else
-
 	#include "cdll_dll.h"
 	#include "activity.h"
 	#include "enginecallback.h"

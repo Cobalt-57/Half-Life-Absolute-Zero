@@ -121,7 +121,12 @@ dkms.conf
 # User-specific files
 *.rsuser
 *.suo
-*.user
+
+#MODDD - Disagree with this one being ignored, at least *.vcxproj.user
+# Has the settings for how to run the game on the 'play' button in visaul studio.
+# Specific path won't match on every machine but it's a good example at least.
+###*.user
+
 *.userosscache
 *.sln.docstates
 

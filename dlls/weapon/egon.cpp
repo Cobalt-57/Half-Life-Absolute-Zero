@@ -66,7 +66,7 @@ extern BOOL g_firstFrameSinceRestore;
 // how often to place scorches while firing?  The delay begins after firing, so firing for the minimum amount of time
 // (enough to use 1 unit of ammo) will not leave a scorch.
 #define EGON_PRIMARY_SCORCH_INTERVAL	0.042 //0.18
-#define EGON_SECONDARY_SCORCH_INTERVAL	0.055 //0.27
+#define EGON_SECONDARY_SCORCH_INTERVAL	0.049 //0.055 //0.27
 
 
 
@@ -1346,7 +1346,8 @@ void CEgon::Fire( const Vector &vecOrigSrc, const Vector &vecDir )
 				decalDisto = 11.25;
 			}else{
 				nextScorchInterval = gpGlobals->time + EGON_SECONDARY_SCORCH_INTERVAL;
-				decalDisto = 37.5;
+				//decalDisto = 37.5;
+				decalDisto = 16;
 			}
 
 			// But, can the scorch actually be drawn?  Don't draw too close to the previously
@@ -1375,9 +1376,13 @@ void CEgon::Fire( const Vector &vecOrigSrc, const Vector &vecDir )
 				previousScorchLocSet = TRUE;
 				previousScorchLoc = tr.vecEndPos;
 				if(m_fInAttack == FIRE_NARROW){
-					UTIL_DecalTrace(&tr, DECAL_SMALLSCORCH1 + RANDOM_LONG(0, 2) );
+					// CHANGE: use small scorch decals 1 & 2 instead (same size).
+					//UTIL_DecalTrace(&tr, DECAL_SMALLSCORCH1 + RANDOM_LONG(0, 2) );
+					UTIL_DecalTrace(&tr, DECAL_SMALLSCORCH1 + RANDOM_LONG(0, 1) );
 				}else{  // WIDE
-					UTIL_DecalTrace(&tr, DECAL_SCORCH1 + RANDOM_LONG(0, 1) );
+					// CHANGE: use small scorch decal 3 (little larger than the first two).
+					//UTIL_DecalTrace(&tr, DECAL_SCORCH1 + RANDOM_LONG(0, 1) );
+					UTIL_DecalTrace(&tr, DECAL_SMALLSCORCH1 + 2 );
 				}
 
 				// forget this, no more scorch marks in the same frame since it doesn't come from doing damage without
