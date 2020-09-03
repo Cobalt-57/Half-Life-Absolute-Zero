@@ -9,9 +9,10 @@
 #define VGUI_DAR_H
 
 
+// CUSTOM LIB INCLUDE.  Including all just slows down compilation.
+//#include "external_lib_include.h"
 
-#include "external_lib_include.h"
-//#include<stdlib.h>
+#include<stdlib.h>
 
 
 #include<string.h>

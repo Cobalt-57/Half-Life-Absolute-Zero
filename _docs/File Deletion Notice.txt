@@ -18,11 +18,11 @@ RemovedAI_BaseNPC_Schedule.cpp.  It was likely a backup of schedule.cpp even in 
 
 
 2) dlls/glock.cpp removed (clone of dlls/wpn_shared/hl_wpn_glock.cpp). REPLACED NOW - SEE 2b BELOW!
-Although glock.cpp is not an exact clone of hl_wpn_glock.cpp, the areas it differs in are exclusive to glock.cpp (as opposed to common among the rest of the weapons, such as skipping a few filtered calls, like using gpGlobals->time straight away instead of UTIL_WeaponTimeBase like retail).
+Although glock.cpp is not an exact clone of hl_wpn_glock.cpp, the areas it differs in are exclusive to glock.cpp (skipping a few filtered calls, like using gpGlobals->time straight away instead of UTIL_WeaponTimeBase like most other weapons do as-is).
 Also, glock.cpp calls some things in GlockFire that retail seems to leave to the event, client-side, in ev_hldm.cpp, like brass ejection.
 It is believable that glock.cpp is a version of hl_wpn_glock.cpp from an earlier version of development that does some things differently / put some responsibilities in different places.  Commenting out all of glock.cpp and running shows that it has no impact on the game too.  This makes it a strong candidate for deletion alone (also not a reference for valuable script; it is all outdated).
-One oteworthy thing was setting clip size to 18 instead of to the default 17 when reloading with at least one bullet still in clip.  This has to do with the glock having a bullet left in the firing chamber (but clip sizes are still a solid 12).  This was behavior present before some patch in the early WON days.  This is now optional by CVar support (glockOldReloadLogic).
-Furthermore, glock.cpp is not present in the solution explorer of Visual Studio for any projects.  This is practically proof it is simply not read.
+One noteworthy thing was setting clip size to 18 instead of to the default 17 when reloading with at least one bullet still in clip.  This has to do with the glock having a bullet left in the firing chamber (but clip sizes are still a solid 12).  This was behavior present before some patch in the early WON days.  This is now optional by CVar support (glockOldReloadLogic).
+Furthermore, glock.cpp is not present in the solution explorer of Visual Studio for any projects.
 
 2b) What used to be "dlls/wpn_shared/hl_wpn_glock.cpp" has been renamed to "dlls/glock.cpp" to be more consistent with the naming convensions and placement of other weapons.
 No other file belongs in the "wpn_shared" folder, and being "shared" is not a special aspect of the glock. All player weapon files are compiled both clientside and serverside. It does not need to be placed / named so differently.
