@@ -4756,10 +4756,12 @@ void CHGrunt::SetActivity ( Activity NewActivity )
 //=========================================================
 Schedule_t *CHGrunt::GetSchedule( void )
 {
-
-	if (monsterID == 0 || monsterID == 1) {
-		if (HasConditions(bits_COND_HEAR_SOUND)) {
-			return 0;
+	
+	if(monsterID == 9){
+		if(HasConditions(bits_COND_ENEMY_DEAD)){
+			easyForcePrintLine("$$$ THEY DEAD M8");
+		}else{
+			easyForcePrintLine("$$$ I SEE NO DEAD COND M8");
 		}
 	}
 

@@ -160,7 +160,7 @@ static globalvars_t Globals;
 static CBasePlayerWeapon* g_pWpns[ 32 ];
 
 float g_flApplyVel = 0.0;
-int g_irunninggausspred = 0;
+BOOL g_irunninggausspred = FALSE;
 
 vec3_t previousorigin;
 
@@ -1877,12 +1877,13 @@ void DLLEXPORT HUD_PostRunCmd(struct local_state_s* from, struct local_state_s* 
 		to->client.fov = g_lastFOV;
 	}
 
-	if (g_irunninggausspred == 1)
+	// ???? what  is  this  doing
+	if (g_irunninggausspred == TRUE)
 	{
 		Vector forward;
 		gEngfuncs.pfnAngleVectors(v_angles, forward, NULL, NULL);
 		to->client.velocity = to->client.velocity - forward * g_flApplyVel * 5;
-		g_irunninggausspred = false;
+		g_irunninggausspred = FALSE;
 	}
 
 	// All games can use FOV state

@@ -1,3 +1,5 @@
+CHANGELOG.  Skip to the bottom for the most recent version (in progress?).
+
 ---------------------------------------------------------------------------------------------
 <unversioned>
 
@@ -501,7 +503,7 @@ NEW CVars: pathfindForcePointHull, pathfindIgnoreNearestNodeCache, pathfindIgnor
 In maps where 'pathfindIgnoreStaticRoutes' being 1 makes a difference in pathfinding through nodes, their node routes should be rebuilt (saved to a file, do it on our end and ship them out).
 
 EGON
-- Both fire-modes show in multiplayer and the beams show much more consistently.
+- Both fire-modes show in multiplayer and the beams show much more consistently.  (uses client/serverside effect calls properly)
 - Hitcloud occurs as often in multiplayer as often as it does in singleplayer now, and adjusted to have the same tracking as a lasersight in multiplayer (default env_sprite tracking is not as fast).
 - Hitcloud animates faster and is much larger in general, moreso for secondary mode.
 - Hitcloud effect, when dissipating, does not clip into nearby surfaces just like during normal firing.
@@ -514,9 +516,14 @@ EGON
 - In multiplayer, egon primary fire no longer depletes ammo faster than secondary fire.
 - Leaves scorch marks where the egon hits at a regular interval, larger and less frequent in secondary fire.
 - Shake-effect on being near where secondary fire hits is slightly lessened but more consistent, range from hit affected also increased.
+- New CVars: egonRadiusDamageMode and egonFireRateMode, for enforcing the multiplayer ranged damage and slower fire-rate of the egon during single player (if 2), or single player behavior (1).  0 leaves this up to the game like retail does.
+
 
 Egon functions normally while going through map transitions while firing with either fire-mode.
 Gauss functions normally while going through map transitions while charging.
+
+
+
 
 Automatic weapon switches from picking up a new weapon no longer occur if picked up while reloading.
 
@@ -542,7 +549,8 @@ New CVar: cl_mp5_evil_skip, defaults to 0.  When on, simulates old behavior for 
 
 Tripmine hitbox may be slightly more responsive to bullets.
 
-New CVars: egonRadiusDamageMode and egonFireRateMode, for enforcing the multiplayer ranged damage and slower fire-rate of the egon during single player (if 2), or single player behavior (1).  0 leaves this up to the game like retail does.
+HAssault no longer stuck in freeze-during-idle (caused spinning without firing) unintentionally.  Sometimes stayed this way even after spin-down (makes a sound).
 
+'STUKA STARTTASK' and other stukabat printouts stops showing without 'stukaPrintout' turned on.
 
 

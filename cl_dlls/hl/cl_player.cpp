@@ -281,7 +281,7 @@ GENERATE_KILLED_IMPLEMENTATION(CBasePlayer)
 	if (m_pActiveItemCLIENTHISTORY)
 		m_pActiveItemCLIENTHISTORY->Holster();
 
-	g_irunninggausspred = false;
+	g_irunninggausspred = FALSE;
 
 }
 
@@ -305,7 +305,7 @@ void CBasePlayer::Spawn(void)
 	if (m_pActiveItemCLIENTHISTORY)
 		m_pActiveItemCLIENTHISTORY->Deploy();
 
-	g_irunninggausspred = false;
+	g_irunninggausspred = FALSE;
 }
 //MODDD - for the alt version, if ever called, do the same.  Doesn't involve that BOOL.
 void CBasePlayer::Spawn(BOOL revived)
@@ -313,7 +313,7 @@ void CBasePlayer::Spawn(BOOL revived)
 	if (m_pActiveItemCLIENTHISTORY)
 		m_pActiveItemCLIENTHISTORY->Deploy();
 
-	g_irunninggausspred = false;
+	g_irunninggausspred = FALSE;
 }
 
 

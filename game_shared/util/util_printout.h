@@ -14,6 +14,7 @@
 #define UTIL_PRINTOUT
 
 #include <stdarg.h>
+#include "vector.h"
 
 
 #ifdef CLIENT_DLL

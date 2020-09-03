@@ -3536,20 +3536,28 @@ void CHAssault::MonsterThink ( void )
 		
 		//could do  " || m_pSchedule == slDie ",  not as reliable for sound though.
 		if(spinuptimeremain <= gpGlobals->time || m_pSchedule == slDie){
-				//we're bored.  Play unspin.   Know this means we can try to scout where the enemy is.
+				// we're bored.  Play unspin.   Know this means we can try to scout where the enemy is.
 				UTIL_StopSound(ENT(pev), getIdleSpinChannel(), "hassault/hw_spin.wav");
 				UTIL_PlaySound( ENT(pev), getSpinUpDownChannel(), "hassault/hw_spindown.wav", 1, ATTN_NORM, 0, 100 );
 				spinuptimeremain = -1;
 				spinuptime = -1;
 				
-				//...apparently we are sticking to calling this ACT_WALK now.
+				// apparently sticking to calling this ACT_WALK now.
 				if(m_IdealActivity == ACT_WALK){
-					//Spinup finished while walking? We may be able to run now, do a check.
+					// Spinup finished while walking? We may be able to run now, do a check.
 					if(EASY_CVAR_GET_DEBUGONLY(hassaultSpinMovement) != 2){
 						this->signalActivityUpdate = TRUE;
 						SetActivity(ACT_WALK); //keep it as ACT_WALK regardless or else we'll get hell pretty soon.
 					}
 				}
+
+				// IMPORTANT.  Make the 'freeze while idle' for any other reason unfreeze.
+				// (no idle spinning anim yet)
+				if(m_IdealActivity == ACT_IDLE && pev->framerate == 0){
+					this->signalActivityUpdate = TRUE;
+					SetActivity(ACT_IDLE);
+				}
+
 		}else{
 			//if in the middle of spinning up, forget about the idle spinning.
 			if(spinuptimeIdleSoundDelay == -1 || spinuptimeIdleSoundDelay <= gpGlobals->time && EASY_CVAR_GET_DEBUGONLY(hassaultFireSound) != 3){

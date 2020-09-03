@@ -57,7 +57,7 @@ EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST(gauss_mode)
 extern BOOL g_firstFrameSinceRestore;
 
 #ifdef CLIENT_DLL
-extern int g_irunninggausspred;
+extern BOOL g_irunninggausspred;
 #endif
 
 
@@ -784,8 +784,9 @@ void CGauss::Fire(Vector vecOrigSrc, Vector vecDir, float flDamage)
 	pentIgnore = ENT(m_pPlayer->pev);
 
 #ifdef CLIENT_DLL
-	if (m_fPrimaryFire == false)
-		g_irunninggausspred = true;
+	if (m_fPrimaryFire == FALSE){
+		g_irunninggausspred = TRUE;
+	}
 #endif
 
 	// The main firing event is sent unreliably so it won't be delayed.

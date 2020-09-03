@@ -1,6 +1,5 @@
 
 #include "squidspit.h"
-//#include "weapons.h"
 #include "decals.h"
 #include "game.h"
 
@@ -26,7 +25,7 @@ EASY_CVAR_EXTERN_DEBUGONLY(bullsquidSpitSpriteScale)
 LINK_ENTITY_TO_CLASS( squidspit, CSquidSpit );
 
 
-int CSquidSpit::iSquidSpitSprite = 0;
+int CSquidSpit::iSquidSpitSprite = -1;
 
 
 
@@ -48,7 +47,6 @@ IMPLEMENT_SAVERESTORE( CSquidSpit, CBaseEntity );
 //IMPORTANT - dummied out!
 GENERATE_TRACEATTACK_IMPLEMENTATION_DUMMY(CSquidSpit)
 GENERATE_TAKEDAMAGE_IMPLEMENTATION_DUMMY(CSquidSpit)
-
 
 
 
@@ -98,19 +96,19 @@ void CSquidSpit::Spawn( void )
 
 
 //MODDD - different from the typical "precache" method. This one's static to be called by another class's precache instead.
-//Such as the bullsquid's precache, since it expects to spawn these projectiles.
-//This way they don't have to store the "iSquidSpitSprite", that's left up to this file.
+// Such as the bullsquid's precache, since it expects to spawn these projectiles.
+// This way they don't have to store the "iSquidSpitSprite", that's left up to this file.
 void CSquidSpit::precacheStatic(void){
-	CSquidSpit::iSquidSpitSprite = PRECACHE_MODEL("sprites/tinyspit.spr");// client side spittle.
+	
+	if(CSquidSpit::iSquidSpitSprite == -1){
+		CSquidSpit::iSquidSpitSprite = PRECACHE_MODEL("sprites/tinyspit.spr");// client side spittle.
+	}
 	
 	PRECACHE_MODEL("sprites/bigspit.spr");// spit projectile.
 	PRECACHE_MODEL("models/spit.mdl");
 }//END OF precacheStatic
 
 
-
-
-//#include "cbase.h"
 
 void CSquidSpit::Animate( void )
 {
@@ -134,8 +132,6 @@ void CSquidSpit::Animate( void )
 
 	pev->nextthink = gpGlobals->time + 0.1;
 
-
-	
 	//this->pev->gravity = 1;
 	//easyForcePrintLine("MAH GRAV: %.2f", this->pev->gravity);
 }
@@ -201,7 +197,6 @@ void CSquidSpit::Shoot( entvars_t *pevOwner, Vector vecStart, Vector vecDirectio
 		pSpit->pev->scale = EASY_CVAR_GET_DEBUGONLY(bullsquidSpitSpriteScale);
 	}
 	
-
 
 	if(EASY_CVAR_GET(cl_bullsquidspitarc) == 1){
 		//MODDD - new again.
@@ -403,15 +398,11 @@ void CSquidSpit::Touch ( CBaseEntity *pOther )
 
 			Vector velocityFlyOffNorm = velocityFlyOff.Normalize();
 
-
-
 			for(i = 0; i < EASY_CVAR_GET_DEBUGONLY(bullsquidSpitEffectHitSpawn); i++){
 				Vector particleDir = getParticleDir(velocityFlyOffNorm);
 				UTIL_SpawnBlood(tr.vecEndPos, particleDir, COLOR_SQUIDSPIT, RANDOM_LONG((long)EASY_CVAR_GET_DEBUGONLY(bullsquidSpitEffectHitMin), (long)EASY_CVAR_GET_DEBUGONLY(bullsquidSpitEffectHitMax)));
 			}
-
 		}
-
 	}
 	else
 	{
@@ -436,8 +427,5 @@ float CSquidSpit::massInfluence(void){
 int CSquidSpit::GetProjectileType(void){
 	return PROJECTILE_ORGANIC_DUMB;
 }
-
-
-
 
 

@@ -66,7 +66,7 @@ extern struct local_state_s *g_finalstate;
 extern CBasePlayer localPlayer;
 
 extern float g_flApplyVel;
-extern int g_irunninggausspred;
+extern BOOL g_irunninggausspred;
 
 extern vec3_t previousorigin;
 

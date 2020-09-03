@@ -802,7 +802,7 @@ void CStukaBat::SetYawSpeed ( void )
 		ys=90;
 	}
 
-	EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyPrintLine( "ACT SON!!!!! %d", m_Activity) );
+	EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyForcePrintLine( "ACT SON!!!!! %d", m_Activity) );
 	
 	//consistent mod.
 	ys *= 0.88;
@@ -964,12 +964,12 @@ float CStukaBat::ChangeYaw ( int yawSpeed )
 
 	//if alert?
 
-	EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyPrintLine("ENEMY??? A %d %d %d", m_pSchedule != slStukaBatAnimWait, this->onGround, this->m_MonsterState));
+	EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyForcePrintLine("ENEMY??? A %d %d %d", m_pSchedule != slStukaBatAnimWait, this->onGround, this->m_MonsterState));
 
 	if(m_hEnemy != NULL && m_pSchedule != slStukaBatAnimWait && this->onGround == 1 && (m_MonsterState == MONSTERSTATE_ALERT || m_MonsterState == MONSTERSTATE_COMBAT) && !seekingFoodOnGround ){
 		//we can start flying...?
 
-		EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyPrintLine("ENEMY??? B %d", m_hEnemy != NULL, this->HasConditions(bits_COND_ENEMY_OCCLUDED), this->HasConditions(bits_COND_NEW_ENEMY), this->HasConditions(bits_COND_SEE_ENEMY)));
+		EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyForcePrintLine("ENEMY??? B %d", m_hEnemy != NULL, this->HasConditions(bits_COND_ENEMY_OCCLUDED), this->HasConditions(bits_COND_NEW_ENEMY), this->HasConditions(bits_COND_SEE_ENEMY)));
 
 		//MODDD - TEST: or any "combat face" could do this too, try that if this isn't good!
 		//SCHED_COMBAT_FACE ,  or TASK_FACE_COMBAT    something?  I dunno.
@@ -1083,7 +1083,7 @@ void CStukaBat::CallForHelp( char *szClassname, float flDist, EHANDLE hEnemy, Ve
 
 void CStukaBat::AlertSound( void )
 {
-	//EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyPrintLine("YOU SNEEKY errr!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! %d", m_hEnemy==NULL) );
+	//EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyForcePrintLine("YOU SNEEKY errr!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! %d", m_hEnemy==NULL) );
 	if ( m_hEnemy != NULL )
 	{
 		//SENTENCEG_PlayRndSz(ENT(pev), "SLV_ALERT", 0.85, ATTN_NORM, 0, m_voicePitch);
@@ -1373,7 +1373,7 @@ void CStukaBat::Spawn()
 	//easyPrintLineGroup2("STUAK HEALTH: %.2f", gSkillData.stukaBatHealth);
 	//CHANGENOTICE: stuka bat probably has a different amount of health.  Make vars to scale with difficulty too?
 	pev->health			= gSkillData.stukaBatHealth;
-	EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyPrintLine("HEALTH BE %.2f", gSkillData.stukaBatHealth) );
+	EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyForcePrintLine("HEALTH BE %.2f", gSkillData.stukaBatHealth) );
 
 	//CHANGENOTICE: check the model and change if needed.
 	pev->view_ofs		= Vector( 0, 0, 15 );// position of the eyes relative to monster's origin.
@@ -1533,7 +1533,7 @@ void CStukaBat::checkStartSnap(){
 		}
 	}
 	
-	EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyPrintLine("STUKA SPAWN END %d: %d", monsterID, m_iSpawnLoc) );
+	EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyForcePrintLine("STUKA SPAWN END %d: %d", monsterID, m_iSpawnLoc) );
 
 
 	//okay?
@@ -1616,13 +1616,13 @@ void CStukaBat::getPathToEnemyCustom(){
 
 	BOOL enemyPresent = !(m_hEnemy==NULL||m_hEnemy.Get()==NULL|| CBaseMonster::Instance(m_hEnemy.Get())==NULL  || m_hEnemy->pev->deadflag != DEAD_NO);
 
-	//EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyPrintLine("ererererer %d", (m_hEnemy==NULL) ) );
+	//EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyForcePrintLine("ererererer %d", (m_hEnemy==NULL) ) );
 
 	if ( !enemyPresent )
 	{
 		
 		//???
-		EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyPrintLine("FAIL TO GET PATH 1") );
+		EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyForcePrintLine("FAIL TO GET PATH 1") );
 		TaskFail();
 
 		return;
@@ -1651,7 +1651,7 @@ void CStukaBat::getPathToEnemyCustom(){
 	{
 		// no way to get there =(
 		//ALERT ( at_aiconsole, "GetPathToEnemy failed!!\n" );
-		EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyPrintLine("FAIL TO GET PATH 2") );
+		EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyForcePrintLine("FAIL TO GET PATH 2") );
 		//TaskFail();
 		//no, say stumped.
 		TaskComplete();
@@ -1664,8 +1664,8 @@ void CStukaBat::getPathToEnemyCustom(){
 //=========================================================
 void CStukaBat::StartTask ( Task_t *pTask )
 {
-	//EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyPrintLine("START TASK: %d", pTask->iTask));
-	easyForcePrintLine("STUKA STARTTASK: %s %d", getScheduleName(), pTask->iTask);
+	EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyForcePrintLine("STUKA STARTTASK: %s %d", getScheduleName(), pTask->iTask) );
+	//easyForcePrintLine("STUKA STARTTASK: %s %d", getScheduleName(), pTask->iTask);
 
 
 	//EHANDLE* test = getEnemy();
@@ -2079,7 +2079,7 @@ void CStukaBat::StartTask ( Task_t *pTask )
 			this->m_IdealActivity = ACT_EAT;
 		}
 
-		EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyPrintLine("TASK_WAIT %s GT:%.2f WF:%.2f", m_pSchedule->pName, gpGlobals->time, m_flWaitFinished));
+		EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyForcePrintLine("TASK_WAIT %s GT:%.2f WF:%.2f", m_pSchedule->pName, gpGlobals->time, m_flWaitFinished));
 		m_flWaitFinished = gpGlobals->time + pTask->flData;	
 		break;
 	case TASK_EAT:
@@ -2212,7 +2212,7 @@ void CStukaBat::StartTask ( Task_t *pTask )
 		else
 		{
 			// no way to get there =(
-			//EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyPrintLine("PATH FAIL 0") );
+			//EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyForcePrintLine("PATH FAIL 0") );
 			//addToPrintQueue_path("PATH FAIL 0");
 
 
@@ -2224,7 +2224,7 @@ void CStukaBat::StartTask ( Task_t *pTask )
 	}
 	case TASK_GET_PATH_TO_ENEMY:
 		{
-			EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyPrintLine("yayFACE 4") );
+			EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyForcePrintLine("yayFACE 4") );
 			getPathToEnemyCustom();
 			break;
 		}
@@ -2425,7 +2425,7 @@ void CStukaBat::RunTask ( Task_t *pTask )
 
 	//shoot logic here?
 
-	EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyPrintLine("Stuka #%d RUNTASK: %d", monsterID, pTask->iTask) );
+	EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyForcePrintLine("Stuka #%d RUNTASK: %d", monsterID, pTask->iTask) );
 
 	switch ( pTask->iTask )
 	{
@@ -2443,7 +2443,7 @@ void CStukaBat::RunTask ( Task_t *pTask )
 
 		Vector floorVect = UTIL_getFloor(pev->origin, 120, ignore_monsters, ENT(pev));
 
-		//EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyPrintLine("WHAT THE hay IS THIS? %.2f %.2f %.2f AND THAT? %.2f %.2f %.2f", floorVect.x, floorVect.y, floorVect.z, pev->origin.x,pev->origin.y,pev->origin.z));
+		//EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyForcePrintLine("WHAT THE hay IS THIS? %.2f %.2f %.2f AND THAT? %.2f %.2f %.2f", floorVect.x, floorVect.y, floorVect.z, pev->origin.x,pev->origin.y,pev->origin.z));
 
 		if( isErrorVector(floorVect)){
 			PRINTQUEUE_STUKA_SEND(stukaPrint.eatRelated, "LANDROUTE_floorFAIL"  );
@@ -2540,7 +2540,7 @@ void CStukaBat::RunTask ( Task_t *pTask )
 
 
 
-		EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyPrintLine("BEWARE - the Stuka is waiting! %d %d F", eating, getEnemy()!=NULL));
+		EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyForcePrintLine("BEWARE - the Stuka is waiting! %d %d F", eating, getEnemy()!=NULL));
 		/*
 		//no, wrap animation-changes into a schedule!
 		//check if blockSetActivity is done?
@@ -2557,7 +2557,7 @@ void CStukaBat::RunTask ( Task_t *pTask )
 		//likely a mistake.
 		//TaskComplete();
 
-		EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyPrintLine("MY SCHED BE DDDDDDDDDDDDDDDD %s %d", m_pSchedule->pName, getEnemy() != NULL));
+		EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyForcePrintLine("MY SCHED BE DDDDDDDDDDDDDDDD %s %d", m_pSchedule->pName, getEnemy() != NULL));
 
 		if(getEnemy() != NULL){
 			ChangeSchedule( slStukaBatChaseEnemy);
@@ -2612,7 +2612,7 @@ void CStukaBat::RunTask ( Task_t *pTask )
 			
 			}
 
-			EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyPrintLine("schedule is: %s", m_pSchedule->pName));
+			EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyForcePrintLine("schedule is: %s", m_pSchedule->pName));
 			getPathToEnemyCustom();
 
 			//pEnemy == NULL?
@@ -2622,10 +2622,10 @@ void CStukaBat::RunTask ( Task_t *pTask )
 				abortAttack();
 
 				if(onGround){
-					EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyPrintLine("I AM AN ABJECT FAILUR1"));
+					EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyForcePrintLine("I AM AN ABJECT FAILUR1"));
 					this->ChangeSchedule(slIdleStand);
 				}else{
-					EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyPrintLine("I AM AN ABJECT FAILUR2"));
+					EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyForcePrintLine("I AM AN ABJECT FAILUR2"));
 					//??? hover or something?
 					this->ChangeSchedule(slStukaBatFail);
 				}
@@ -2680,7 +2680,7 @@ void CStukaBat::RunTask ( Task_t *pTask )
 
 			//also, if index is non-negative, disallow changing anims automatically (and vice versa)?
 
-			//EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyPrintLine("ALL THE yay %d %.2f", attackIndex, dist3d));
+			//EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyForcePrintLine("ALL THE yay %d %.2f", attackIndex, dist3d));
 
 
 			//MODDD TODO - only look like we're about to attack IF we're going towards the goal node
@@ -2755,7 +2755,7 @@ void CStukaBat::RunTask ( Task_t *pTask )
 
 
 					if(dist3d < STUKABAT_DIVE_DISTANCE){
-						EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyPrintLine("START THE DIVING stuff fine fellow! %.2f", gpGlobals->time ));
+						EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyForcePrintLine("START THE DIVING stuff fine fellow! %.2f", gpGlobals->time ));
 						chargeIndex = 0;
 						if(maxDiveTime == -1){
 							//not already that?
@@ -2817,7 +2817,7 @@ void CStukaBat::RunTask ( Task_t *pTask )
 					
 
 					if(dist3d < STUKABAT_DIVE_DISTANCE){
-						EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyPrintLine("START THE DIVING stuff fine fellow! %.2f", gpGlobals->time ));
+						EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyForcePrintLine("START THE DIVING stuff fine fellow! %.2f", gpGlobals->time ));
 						chargeIndex = 0;
 						if(maxDiveTime == -1){
 							//not already that?
@@ -2910,7 +2910,7 @@ void CStukaBat::RunTask ( Task_t *pTask )
 
 			TaskComplete();
 			//try something new.
-			EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyPrintLine("WHUT"));
+			EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyForcePrintLine("WHUT"));
 
 		}
 
@@ -3143,8 +3143,8 @@ Schedule_t *CStukaBat::GetSchedule ( void )
 		m_IdealMonsterState = MONSTERSTATE_COMBAT;
 	}
 
-	//EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyPrintLine("Stuka %d GetSchedule: %d", monsterID, m_MonsterState));
-	//EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyPrintLine("DO I SMELL food %d %d %d ", HasConditions(bits_COND_SMELL_FOOD), canSeeEnemy, FShouldEat()));
+	//EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyForcePrintLine("Stuka %d GetSchedule: %d", monsterID, m_MonsterState));
+	//EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyForcePrintLine("DO I SMELL food %d %d %d ", HasConditions(bits_COND_SMELL_FOOD), canSeeEnemy, FShouldEat()));
 
 	//MODDD - PAY ATTENTION TO THIS,
 	// AND THAT "TASK_ALERT_STAND" THING, THAT IS PRETTY NEW.
@@ -3197,7 +3197,7 @@ Schedule_t *CStukaBat::GetSchedule ( void )
 					}
 
 
-					EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyPrintLine("POO POO 5"));
+					EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyForcePrintLine("POO POO 5"));
 
 				}//END of ELSE of distcheck
 
@@ -3221,7 +3221,7 @@ Schedule_t *CStukaBat::GetSchedule ( void )
 						//onGround = FALSE;
 					}
 
-					EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyPrintLine("POO POO 4"));
+					EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyForcePrintLine("POO POO 4"));
 					
 				}
 				else if(dist >= 79){
@@ -3319,7 +3319,7 @@ Schedule_t* CStukaBat::GetScheduleOfType ( int Type )
 {
 	//TASK_STRAFE_PATH
 
-	EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyPrintLine("STUKA: GET SCHED OF TYPE %d!!!", Type));
+	EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyForcePrintLine("STUKA: GET SCHED OF TYPE %d!!!", Type));
 
 	// ALERT( at_console, "%d\n", m_iFrustration );
 	switch	( Type )
@@ -3525,8 +3525,7 @@ void CStukaBat::SetActivity ( Activity NewActivity, BOOL forceReset )
 	}
 
 
-
-	easyPrintLine("LISTEN HERE YA LITTLE man %d %d bat:%.2f : ct:%.2f", m_Activity, m_IdealActivity, blockSetActivity, gpGlobals->time);
+	EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyForcePrintLine("LISTEN HERE YA LITTLE man %d %d bat:%.2f : ct:%.2f", m_Activity, m_IdealActivity, blockSetActivity, gpGlobals->time));
 
 	////easyForcePrintLine("STEP 0");
 	easyPrintLineGroup3("blockSetActivity:%.2f time:%.2f", blockSetActivity, gpGlobals->time);
@@ -3558,18 +3557,18 @@ void CStukaBat::SetActivity ( Activity NewActivity, BOOL forceReset )
 		//canSetAnim = TRUE;
 
 	}
-	EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyPrintLine("STUKABAT: SETACTIVITY: %d %d %d", NewActivity, recentActivity, m_Activity)); 
+	EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyForcePrintLine("STUKABAT: SETACTIVITY: %d %d %d", NewActivity, recentActivity, m_Activity)); 
 
 	
 	////easyForcePrintLine("STEP 2");
 	if(!onGround){
 		if(NewActivity == ACT_IDLE){
 			//BOOL someBool = (getEnemy() == NULL);
-			EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyPrintLine("SO WHAT THE yay IS THAT yay %d %d %d", NewActivity, snappedToCeiling, attackIndex));
+			EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyForcePrintLine("SO WHAT THE yay IS THAT yay %d %d %d", NewActivity, snappedToCeiling, attackIndex));
 
 			//easyPrintLineGroup2("ATTA:::::%d %d %d", attackIndex, m_MonsterState, someBool);
 			if(attackIndex > -1){
-				easyForcePrintLine("I am incredibly 1");
+				EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyForcePrintLine("I am incredibly 1"));
 				return;
 			}else{
 				//if(m_MonsterState == MONSTERSTATE_COMBAT || someBool){
@@ -3599,14 +3598,13 @@ void CStukaBat::SetActivity ( Activity NewActivity, BOOL forceReset )
 	//easyPrintLineGroup2("STUKA %d: SET ACTIVITY: %d", monsterID, NewActivity);
 
 	if(recentActivity == NewActivity){
-		easyPrintLine("I am incredibly 2");
-		EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyPrintLine("OVERDONE ACT, PHAIL! %d", NewActivity));
+		EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyForcePrintLine("I am incredibly 2: OVERDONE ACT, PHAIL! %d", NewActivity));
 		return;
 	}else{
-		easyForcePrintLine("OH SHIT!!!");
+		EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyForcePrintLine("OH SHIT, STUKA!!!"));
 	}
 
-	EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyPrintLine("ASSSS %d", NewActivity));
+	EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyForcePrintLine("NEW Aaaaactivity is %d", NewActivity));
 	
 	////easyForcePrintLine("STEP 5");
 
@@ -3617,7 +3615,7 @@ void CStukaBat::SetActivity ( Activity NewActivity, BOOL forceReset )
 	}else{
 		if(!snappedToCeiling && NewActivity == ACT_IDLE){
 			
-			easyPrintLine("AHAH I SEE THAT stuff MAN");
+			EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyForcePrintLine("AHAH I SEE THAT stuff MAN"));
 			//you do it in the air right?
 			NewActivity = ACT_HOVER;
 		}
@@ -3645,7 +3643,7 @@ void CStukaBat::SetActivity ( Activity NewActivity, BOOL forceReset )
 
 	//easyPrintLineGroup2("deb3 %d %d %d", (NewActivity != ACT_CROUCHIDLE), !warpRandomAnim, m_fSequenceFinished) ;
 	
-	easyPrintLine("LISTEN HERE YA LITTLE man2 na:%d ma:%d mi:%d mf:%d", NewActivity, m_Activity, m_IdealActivity, m_fSequenceFinished);
+	EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyForcePrintLine("LISTEN HERE YA LITTLE man2 na:%d ma:%d mi:%d mf:%d", NewActivity, m_Activity, m_IdealActivity, m_fSequenceFinished));
 
 	if(NewActivity != ACT_CROUCHIDLE || !warpRandomAnim || m_fSequenceFinished){
 
@@ -3961,7 +3959,7 @@ Activity CStukaBat::GetStoppedActivity(){
 
 void CStukaBat::Stop( void ) 
 { 
-	//EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyPrintLine("YOU SHALL PERISH ALONG WITH THE REST OF YOUR amazing KIN"));
+	//EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyForcePrintLine("YOU SHALL PERISH ALONG WITH THE REST OF YOUR amazing KIN"));
 	//m_IdealActivity = GetStoppedActivity();
 	//NO STOPPING fine fellow!
 }
@@ -4147,7 +4145,7 @@ int CStukaBat::CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, CB
 void CStukaBat::setAnimation(char* animationName){
 	if(queueToggleSnappedToCeiling)return;
 	if(!dontResetActivity){recentActivity = ACT_RESET;}
-	EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyPrintLine("ANIMATION SET1: %s ", animationName));
+	EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyForcePrintLine("ANIMATION SET1: %s ", animationName));
 
 	pev->framerate = 1;
 	animFrameCutoffSuggestion = 255;
@@ -4159,7 +4157,7 @@ void CStukaBat::setAnimation(char* animationName){
 void CStukaBat::setAnimation(char* animationName, BOOL forceException){
 	if(queueToggleSnappedToCeiling)return;
 	if(!dontResetActivity){recentActivity = ACT_RESET;}
-	EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyPrintLine("ANIMATION SET2: %s ", animationName));
+	EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyForcePrintLine("ANIMATION SET2: %s ", animationName));
 	
 	pev->framerate = 1;
 	animFrameCutoffSuggestion = 255;
@@ -4171,7 +4169,7 @@ void CStukaBat::setAnimation(char* animationName, BOOL forceException){
 void CStukaBat::setAnimation(char* animationName, BOOL forceException, BOOL forceLoopsProperty){
 	if(queueToggleSnappedToCeiling)return;
 	if(!dontResetActivity){recentActivity = ACT_RESET;}
-	EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyPrintLine("ANIMATION SET3: %s ", animationName));
+	EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyForcePrintLine("ANIMATION SET3: %s ", animationName));
 	
 	pev->framerate = 1;
 	animFrameCutoffSuggestion = 255;
@@ -4185,7 +4183,7 @@ void CStukaBat::setAnimation(char* animationName, BOOL forceException, BOOL forc
 
 	//AHHH SHIT?
 	if(!dontResetActivity){recentActivity = ACT_RESET;}
-	EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyPrintLine("ANIMATION SET4: %s ", animationName));
+	EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyForcePrintLine("ANIMATION SET4: %s ", animationName));
 	
 	pev->framerate = 1;
 	animFrameCutoffSuggestion = 255;
@@ -4273,12 +4271,12 @@ void CStukaBat::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, floa
 	
 	PRINTQUEUE_STUKA_SEND(stukaPrint.moveRelated, "MOVE3 (%d)", onGround);
 	
-	//EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyPrintLine("&&&&& %.2f %.2f", pev->framerate, this->m_flFrameRate));
+	//EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyForcePrintLine("&&&&& %.2f %.2f", pev->framerate, this->m_flFrameRate));
 	//pev->yaw_speed = 4;
 
 	if(!onGround){
 		//flying!
-		//EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyPrintLine("ERRR flyint: %.2f,  attackin: %d", moveFlyNoInterrupt, attackIndex));
+		//EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyForcePrintLine("ERRR flyint: %.2f,  attackin: %d", moveFlyNoInterrupt, attackIndex));
 
 		//charge-anims not allowed at death, needless to say.
 		if(pev->deadflag == DEAD_NO){
@@ -4585,7 +4583,7 @@ int CStukaBat::ISoundMask ( void )
 
 void CStukaBat::Activate(void){
 	
-	//EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyPrintLine("STU flag@@@  %d  ", pev->spawnflags ));
+	//EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyForcePrintLine("STU flag@@@  %d  ", pev->spawnflags ));
 	CSquadMonster::Activate();
 }
 
@@ -4603,8 +4601,8 @@ void CStukaBat::ForceSpawnFlag(int arg_spawnFlag){
 void CStukaBat::MonsterThink(){
 	//UTIL_drawLineFrame(pev->origin, pev->origin + UTIL_YawToVec(pev->ideal_yaw)*60, 4, 255, 255, 24);
 	//Vector vecTry = UTIL_YawToVec(pev->ideal_yaw);
-	//EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyPrintLine("ang: %.2f vect: (%.2f %.2f %.2f)", pev->ideal_yaw, vecTry.x, vecTry.y, vecTry.z));
-	//EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyPrintLine("onGround:%d queueToggleGround%d", onGround, queueToggleGround));
+	//EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyForcePrintLine("ang: %.2f vect: (%.2f %.2f %.2f)", pev->ideal_yaw, vecTry.x, vecTry.y, vecTry.z));
+	//EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyForcePrintLine("onGround:%d queueToggleGround%d", onGround, queueToggleGround));
 
 	if(
 		(this->m_Activity == ACT_HOVER || this->m_IdealActivity == ACT_HOVER) &&
@@ -4688,7 +4686,7 @@ void CStukaBat::MonsterThink(){
 				}
 			}
 
-			EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyPrintLine("TOGGLE GROUND!  NOW IS %d %d", onGround, queueToggleGround));
+			EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyForcePrintLine("TOGGLE GROUND!  NOW IS %d %d", onGround, queueToggleGround));
 			if(queueToggleGround){
 			
 				onGround = !onGround;
@@ -4798,7 +4796,7 @@ void CStukaBat::MonsterThink(){
 	
 		EHANDLE* tempEnemy = getEnemy();
 	
-		//EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyPrintLine("STET %d %d, %.2f %.2f", HasConditions( bits_COND_HEAR_SOUND ), m_MonsterState, gpGlobals->time, m_flWaitFinished));
+		//EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyForcePrintLine("STET %d %d, %.2f %.2f", HasConditions( bits_COND_HEAR_SOUND ), m_MonsterState, gpGlobals->time, m_flWaitFinished));
 
 		// STUDetection
 		//0: never care.  Wait until a loud noise / getting hit by an attack provokes me.
@@ -4835,17 +4833,17 @@ void CStukaBat::MonsterThink(){
 		//HEARING STUFF USED TO BE HERE, MOVED TO getSchedule (where hearing something forces "getSchedule" to get called again).
 
 		if(m_hEnemy != NULL && m_hTargetEnt != NULL){
-			//EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyPrintLine("ENEMEH INFO: ENEM: %s TARG: %s", STRING(m_hEnemy->pev->classname), STRING(m_hTargetEnt->pev->classname) ));
+			//EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyForcePrintLine("ENEMEH INFO: ENEM: %s TARG: %s", STRING(m_hEnemy->pev->classname), STRING(m_hTargetEnt->pev->classname) ));
 			stukaPrint.enemyInfo.sendToPrintQueue("ENEMEH INFO: ENEM: %s TARG: %s", STRING(m_hEnemy->pev->classname), STRING(m_hTargetEnt->pev->classname)  );
 		}if(m_hEnemy != NULL){
-			//EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyPrintLine("ENEMEH INFO: ENEM: %s", STRING(m_hEnemy->pev->classname) ));
+			//EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyForcePrintLine("ENEMEH INFO: ENEM: %s", STRING(m_hEnemy->pev->classname) ));
 			stukaPrint.enemyInfo.sendToPrintQueue("ENEMEH INFO: ENEM: %s", STRING(m_hEnemy->pev->classname)   );
 
 		}else if(m_hTargetEnt != NULL){
-			//EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyPrintLine("ENEMEH INFO: TARG: %s", STRING(m_hTargetEnt->pev->classname) ));
+			//EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyForcePrintLine("ENEMEH INFO: TARG: %s", STRING(m_hTargetEnt->pev->classname) ));
 			stukaPrint.enemyInfo.sendToPrintQueue("ENEMEH INFO: TARG: %s", STRING(m_hTargetEnt->pev->classname)   );
 		}else{
-			//EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyPrintLine("ENEMEH INFO: NOTHING" ));
+			//EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyForcePrintLine("ENEMEH INFO: NOTHING" ));
 			stukaPrint.enemyInfo.sendToPrintQueue("E1: nothin" );
 		}
 
@@ -4860,7 +4858,7 @@ void CStukaBat::MonsterThink(){
 
 	stukaPrint.clearAll();
 
-	EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyPrintLine("HOW DARE YOU %d %d %d", monsterID, m_afMemory & bits_MEMORY_PROVOKED, wakeUp));
+	EASY_CVAR_PRINTIF_PRE(stukaPrintout, easyForcePrintLine("HOW DARE YOU %d %d %d", monsterID, m_afMemory & bits_MEMORY_PROVOKED, wakeUp));
 
 	CSquadMonster::MonsterThink();
 }

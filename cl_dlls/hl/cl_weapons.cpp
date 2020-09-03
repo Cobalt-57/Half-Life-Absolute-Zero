@@ -359,7 +359,7 @@ BOOL CBasePlayerWeapon::DefaultDeploy(char* szViewModel, char* szWeaponModel, in
 	}
 
 
-	g_irunninggausspred = false;
+	g_irunninggausspred = FALSE;
 	//m_pPlayer->m_flNextAttackCLIENTHISTORY = 0.5;
 	m_pPlayer->m_flNextAttackCLIENTHISTORY = fireDelayTime;
 
@@ -375,7 +375,7 @@ void CBasePlayerWeapon::DefaultHolster(int iAnim, int skiplocal /* = 0 */, int b
 	//Do the same things a Holster() call would do since we're effecitvely replacing that.
 	m_fInReload = FALSE; // cancel any reload in progress.
 	reloadBlocker = FALSE;
-	g_irunninggausspred = false;
+	g_irunninggausspred = FALSE;
 
 
 	//HACK - make this a little longer to stop the client from thinking it is done the moment this ends.
@@ -443,7 +443,7 @@ void CBasePlayerWeapon::Holster(int skiplocal /* = 0 */)
 	//easyPrintLine("MESSAGE8");
 	m_fInReload = FALSE; // cancel any reload in progress.
 	reloadBlocker = FALSE;
-	g_irunninggausspred = false;
+	g_irunninggausspred = FALSE;
 
 	//TODO - not quite, switch to our designated holder anim (fetch by a virtual method, could even be this same method that calls  CBaseWeapon's).
 	//Or have a "DefaultHolster" like "DefaultDeploy" exist to be called most of the time in any given weapon's own Holster implementation.

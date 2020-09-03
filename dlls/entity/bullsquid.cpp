@@ -918,7 +918,7 @@ void CBullsquid::Precache()
 	PRECACHE_MODEL("models/bullsquid.mdl");
 	
 
-	//sprite precache left to the SquidSpit file (separate).
+	// sprite precache left to the SquidSpit file (separate).
 	CSquidSpit::precacheStatic();
 
 	global_useSentenceSave = TRUE;

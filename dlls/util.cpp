@@ -253,13 +253,18 @@ void resetGlobalVars(void) {
 
 	g_sayBulletHitCooldown = -1;
 
+
 	CTalkMonster::g_talkWaitTime = 0;
 	CBarney::g_barneyAlertTalkWaitTime = 0;
 
+	// Reset these gibmodel references to re-get them when these turrets are precached again.
+	CTurret::gibModelRef = NULL;
+	CMiniTurret::gibModelRef = NULL;
+	CSentry::gibModelRef = NULL;
+
+	CBarnacle::s_iStandardGibID = -1;
+	
 }//resetGlobalVars
-
-
-
 
 
 
@@ -6224,14 +6229,8 @@ void method_precacheAll(void){
 
 	PRECACHE_MODEL("models/bullsquid.mdl");
 
-	//CSquidSpit::precacheStatic();   //necessary?
-	//No need. Its precaches are already below.
-	PRECACHE_MODEL("sprites/bigspit.spr");//spit projectile.
-	PRECACHE_MODEL("models/spit.mdl");
-	
-	//Just call this to set a static model reference (integer? by load order?) correctly.
+	// Call this to set a static model reference (int, by load order?) correctly.
 	CSquidSpit::precacheStatic();
-	//PRECACHE_MODEL("sprites/tinyspit.spr");//clientside spittle.
 
 	PRECACHE_MODEL("models/baby_headcrab.mdl");
 	PRECACHE_MODEL("models/headcrab.mdl");
@@ -6835,13 +6834,6 @@ void OnMapLoadStart(){
 		ResetDynamicStaticIDs();
 	}
 
-	// Reset these gibmodel references to re-get them when these turrets are precached again.
-	CTurret::gibModelRef = NULL;
-	CMiniTurret::gibModelRef = NULL;
-	CSentry::gibModelRef = NULL;
-
-	CBarnacle::s_iStandardGibID = -1;
-	
 	// Next time, will force these off in case there isn't a loaded game.
 	// NOTICE!  Don't rely on g_mapLoaded in any other gamelogic. It is only for detecting whether
 	// this map was going between a transition or not very early on, it seems.
@@ -6850,11 +6842,7 @@ void OnMapLoadStart(){
 	
 	// This var gets toggled the first time any map is loaded though.  Some things need to know this.
 	g_mapLoadedEver = TRUE;
-
-	// is that okay?
-	// Nevermind.
-	//cvar_skill_mem = cvar_skill->value;
-
+	
 }//END OF OnMapLoadStart
 
 

@@ -20,6 +20,8 @@
 #ifndef GAMERULES_H
 #define GAMERULES_H
 
+#include "build_settings.h"
+
 //#include "weapons.h"
 //#include "items.h"
 class CBaseMonster;
